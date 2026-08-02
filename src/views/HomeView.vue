@@ -3,10 +3,12 @@ import { computed } from 'vue'
 import { state, PLAYERS, selectPlayer, level, countMastered, resetPlayer,
          miei, affamati } from '../store/profile.js'
 import { WORDS } from '../data/words.js'
+import { VERBI } from '../data/verbi.js'
 
 defineEmits(['vai'])
 
 const imparateEn = computed(() => countMastered('en:'))
+const imparatiVerbi = computed(() => countMastered('verbo:'))
 const imparateMate = computed(() => countMastered('math:'))
 const totMate = 100
 
@@ -46,6 +48,11 @@ async function azzera() {
           <span class="ico">🔤</span>
           <b>English</b>
           <i>{{ imparateEn }}/{{ WORDS.length }} parole imparate</i>
+        </button>
+        <button class="carta verbi" @click="$emit('vai','verbi')">
+          <span class="ico">🎧</span>
+          <b>Verbi in inglese</b>
+          <i>{{ imparatiVerbi }}/{{ VERBI.length }} verbi · leggi e ascolta</i>
         </button>
         <button class="carta td" @click="$emit('vai','torri')">
           <span class="ico">🏰</span>
@@ -93,6 +100,7 @@ async function azzera() {
 .carta i { font-style:normal; font-size:13px; color:var(--tenue) }
 .carta.mate { background:linear-gradient(120deg,#e8f0ff,#fffffff0) }
 .carta.eng  { background:linear-gradient(120deg,#ffeaf2,#fffffff0) }
+.carta.verbi { background:linear-gradient(120deg,#efe6ff,#fffffff0) }
 .carta.td   { background:linear-gradient(120deg,#e6f7e2,#fffffff0) }
 .carta.room { background:linear-gradient(120deg,#fff6e0,#fffffff0) }
 .carta.pets { background:linear-gradient(120deg,#ffeede,#fffffff0) }

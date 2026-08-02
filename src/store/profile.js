@@ -22,7 +22,7 @@ const blank = () => ({
   pets: {},                        // 'watson' -> { adottato, pasto, sat, pasti }
   dispensa: {},                    // '🍗' -> quante porzioni in casa
   settings: { tables: [2, 3, 4, 5], sound: true, music: true },
-  totals: { math: 0, en: 0, td: 0, pasti: 0 },
+  totals: { math: 0, en: 0, verbi: 0, td: 0, pasti: 0 },
   best: { math: 0 },
   td: { tappa: 0, libera: false },  // tappe superate della campagna, partita libera sbloccata
 })
@@ -93,7 +93,7 @@ export function countMastered(prefix, now = Date.now()) {
 
 /* ---------- monete e livelli ---------- */
 export const level = computed(() => {
-  const imparati = countMastered('math:') + countMastered('en:')
+  const imparati = countMastered('math:') + countMastered('en:') + countMastered('verbo:')
   return 1 + Math.floor(imparati / 12)
 })
 
