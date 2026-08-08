@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Educagioco</title>
+<!-- Il manifest serve alla versione installata da un sito: da file:// non
+     viene trovato e non succede niente. `orientation: portrait` è il modo
+     vero di bloccare il verticale — sul web si può solo chiedere. -->
+<link rel="manifest" href="manifest.webmanifest">
+<!-- L'icona della scheda è incorporata nella pagina e non caricata da un
+     file, perché il build è un HTML unico che si apre anche con doppio
+     click: un `href="icona.svg"` lì accanto non ci sarebbe. La mette il
+     build leggendo `public/icona.svg`, così il disegno resta in un posto
+     solo (vedi `vite.config.js`). -->
+<link rel="icon" href="%ICONA%">
+<!-- iOS il manifest non lo legge: l'icona della schermata iniziale la
+     prende da qui, e questo è un file vero servito accanto alla pagina. -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4f6bd0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Il generale — eroi e terreno</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { color-scheme: dark }
+  * { box-sizing: border-box }
+  body { margin: 0; padding: 18px 16px 60px; background: #191d26; color: #e8e4dc;
+         font: 15px/1.5 system-ui, sans-serif }
+  h1 { font-size: 22px; margin: 0 0 4px }
+  h2 { font-size: 16px; margin: 30px 0 10px; color: #ffd24a;
+       border-bottom: 1px solid #ffd24a33; padding-bottom: 5px }
+  p.nota { margin: 0 0 6px; color: #9aa3b2; font-size: 13px; max-width: 78ch }
+  .fila { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end }
+  .carta { background: #222834; border: 1px solid #333b4a; border-radius: 10px;
+           padding: 8px 10px 6px }
+  .carta > .titolo { font-size: 12px; color: #9aa3b2; margin-bottom: 6px; letter-spacing: .04em }
+  .carta > .titolo b { color: #e8e4dc; font-weight: 600 }
+  .voce { display: flex; flex-direction: column; align-items: center; gap: 3px }
+  .voce span { font-size: 10px; color: #8b93a3 }
+  canvas { display: block; border-radius: 6px; background: #11141b }
+  .avviso { background: #3a2a12; border: 1px solid #ffd24a55; border-radius: 10px;
+            padding: 14px 16px; margin-top: 20px; display: none }
+  code { background: #0f1219; padding: 1px 6px; border-radius: 4px; color: #ffd24a }
+</style>
+</head>
+<body>
+<h1>Il generale — anteprima dei disegni</h1>
+<p class="nota">Tutto quello che sta in <code>src/grafica/generale.js</code> (chi si muove) e
+<code>src/grafica/ambienti.js</code> (il terreno), disegnato dal vero motore
+(<code>src/grafica/tela.js</code>). Niente immagini, niente font: solo tracciati.</p>
+
+<div id="dove"></div>
+
+<div class="avviso" id="avviso">
+  <b>I moduli non si caricano da <code>file://</code>.</b><br>
+  Servi la cartella e riapri:<br>
+  <code>cd &lt;la cartella del progetto&gt; &amp;&amp; python3 -m http.server 8080</code><br>
+  poi <code>http://localhost:8080/poc/eroi.html</code>
+</div>
+
+<script type="module">
+import { creaTela } from '../src/grafica/tela.js'
+import { PITTORI as ATTORI, PERSONAGGI, OGGETTI, COLORI_ALLARME, STILI_PORTA,
+         COLORI_CHIAVE, COLORI_GEMMA, COLORI_POZIONE } from '../src/grafica/generale.js'
+import { PITTORI_TERRENO, AMBIENTI, NOMI_AMBIENTI, creaFondale, dipingiMappa, POSATURE, MODULO }
+  from '../src/grafica/ambienti.js'
+import { MANTI as GATTI } from '../src/grafica/personaggi/gatto.js'
+import { MANTI as ORSI } from '../src/grafica/personaggi/orso.js'
+import { MANTI as PAPERE } from '../src/grafica/personaggi/papera.js'
+
+/* il gioco farà esattamente questo: una tabella sola, due file */
+const PITTORI = { ...ATTORI, ...PITTORI_TERRENO }
+
+const dove = document.getElementById('dove')
+const vive = []                      // ogni riquadro: { tela, scena(t) }
+
+function titolo(t, nota) {
+  const h = document.createElement('h2'); h.textContent = t; dove.appendChild(h)
+  if (nota) { const p = document.createElement('p'); p.className = 'nota'; p.innerHTML = nota; dove.appendChild(p) }
+}
+function fila() { const d = document.createElement('div'); d.className = 'fila'; dove.appendChild(d); return d }
+function carta(dentro, nome) {
+  const c = document.createElement('div'); c.className = 'carta'
+  if (nome) { const t = document.createElement('div'); t.className = 'titolo'; t.innerHTML = nome; c.appendChild(t) }
+  const f = document.createElement('div'); f.className = 'fila'; c.appendChild(f)
+  dentro.appendChild(c); return f
+}
+/* un canvas fermo, senza motore: serve alle vetrine del terreno */
+function telaNuda(dentro, w, h, etichetta) {
+  const v = document.createElement('div'); v.className = 'voce'
+  const cv = document.createElement('canvas')
+  cv.width = w * 2; cv.height = h * 2
+  cv.style.width = w + 'px'; cv.style.height = h + 'px'
+  v.appendChild(cv)
+  if (etichetta) { const s = document.createElement('span'); s.textContent = etichetta; v.appendChild(s) }
+  dentro.appendChild(v)
+  const c = cv.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0)
+  return c
+}
+
+/* un riquadro animato: canvas + tela vera. Il pavimento non si ridisegna
+   a ogni fotogramma — sta nel fondale in cache, come nel gioco. */
+function riquadro(dentro, { w, h, S, etichetta, ambiente = 'camminamento', mappa }, scena) {
+  const v = document.createElement('div'); v.className = 'voce'
+  const box = document.createElement('div')
+  box.style.width = w + 'px'; box.style.height = h + 'px'
+  const cv = document.createElement('canvas')
+  box.appendChild(cv); v.appendChild(box)
+  if (etichetta) { const s = document.createElement('span'); s.textContent = etichetta; v.appendChild(s) }
+  dentro.appendChild(v)
+  const tela = creaTela(cv, PITTORI, { unita: Math.min(w, h) / S, minimo: 0.01, massimo: 999 })
+  tela.ridimensiona()
+  const lato = 20 * S
+  tela.dipingiFondale(p => dipingiMappa(p.ctx, {
+    mappa: mappa || (() => false), ambiente, lato, seme: 3,
+    larghezza: Math.ceil(w / lato) + 1, altezza: Math.ceil(h / lato) + 1,
+  }))
+  vive.push({ tela, scena })
+  return tela
+}
+
+/* ═════ la vetrina degli ambienti ═════ */
+const CELLA = 36
+function stanza(w, h, blocchi) {
+  const g = Array.from({ length: h }, () => new Array(w).fill('.'))
+  for (let i = 0; i < w; i++) { g[0][i] = '#'; g[h - 1][i] = '#' }
+  for (let k = 0; k < h; k++) { g[k][0] = '#'; g[k][w - 1] = '#' }
+  for (const [x, y, bw, bh] of blocchi)
+    for (let k = y; k < y + bh; k++) for (let i = x; i < x + bw; i++)
+      if (g[k] && g[k][i] !== undefined) g[k][i] = '#'
+  return g.map(r => r.join(''))
+}
+const PIANTE = {
+  cortile:      stanza(16, 11, [[4, 4, 2, 2], [11, 7, 3, 2], [8, 2, 1, 3]]),
+  camminamento: stanza(16, 11, [[6, 0, 1, 5], [11, 7, 1, 4], [8, 5, 4, 1]]),
+  corridoio:    stanza(16, 11, [[5, 1, 2, 6], [10, 5, 2, 5], [13, 2, 2, 2]]),
+  cripta:       stanza(16, 11, [[3, 3, 3, 3], [8, 6, 2, 2], [12, 3, 2, 3], [10, 1, 1, 2]]),
+  ingranaggi:   stanza(16, 11, [[6, 4, 2, 2], [11, 4, 2, 2], [3, 8, 3, 1], [12, 8, 2, 1]]),
+  tesoro:       stanza(16, 11, [[7, 3, 4, 1], [7, 8, 4, 1], [2, 5, 1, 3], [13, 5, 1, 3]]),
+  // le cinque stanze nuove: piante un po' più mosse, perché roccia e
+  // alberi si giudicano sugli angoli e sugli spigoli, non sui muri dritti
+  grotta:       stanza(16, 11, [[4, 2, 3, 2], [3, 6, 2, 3], [9, 4, 3, 3], [12, 1, 2, 2], [13, 8, 2, 2]]),
+  bosco:        stanza(16, 11, [[3, 3, 2, 2], [7, 6, 3, 2], [11, 2, 3, 3], [5, 8, 2, 2]]),
+  miniera:      stanza(16, 11, [[5, 1, 1, 4], [10, 6, 1, 4], [7, 4, 3, 1], [13, 2, 2, 2]]),
+  trono:        stanza(16, 11, [[3, 3, 1, 1], [12, 3, 1, 1], [3, 7, 1, 1], [12, 7, 1, 1], [6, 1, 4, 1]]),
+  fogne:        stanza(16, 11, [[4, 4, 2, 3], [10, 2, 2, 3], [8, 8, 4, 1], [13, 6, 2, 2]]),
+}
+
+/* la vetrina: le sei stanze una accanto all'altra, stessa pianta e
+   stessa taglia, così l'unica cosa che cambia è l'ambiente */
+titolo('Gli ambienti — la vetrina',
+  'Una stanza per ambiente, stessa pianta, alla taglia vera di gioco (cella da 36&nbsp;px). ' +
+  'Ognuno è una voce di dati in <code>AMBIENTI</code>: che posa ha il pavimento, di che è fatto il muro, ' +
+  'quali dettagli si spargono, <b>in quanti modi diversi si può stare per terra</b>, quanto è cupo ' +
+  'e di che colore sono le torce. Aggiungerne un dodicesimo è aggiungere una voce lì, e nient\'altro.')
+{
+  const riga = fila()
+  for (const nome of NOMI_AMBIENTI) {
+    const A = AMBIENTI[nome]
+    const f = carta(riga, `<b>${A.nome}</b> — posa ${A.posa}, muratura ${A.muratura}` +
+      (A.torce ? ' · torce' : '') + (A.buio ? ` · buio ${A.buio}` : ''))
+    const fondo = creaFondale({ mappa: PIANTE[nome], ambiente: nome, lato: CELLA, seme: 5 })
+    const c = telaNuda(f, fondo.larghezza, fondo.altezza,
+                       `${fondo.larghezza}×${fondo.altezza} px · dipinto in ${fondo.millisecondi} ms · ${fondo.memoria} MB`)
+    fondo.mostra(c, 0, 0, fondo.larghezza, fondo.altezza)
+  }
+}
+
+/* ═════ le varianti di posa ═════
+   La prova che il pavimento non è una stampa: la stessa stanza, la
+   stessa posa, e otto modi diversi di stare per terra. */
+titolo('Le varianti di posa — perché due angoli non si somigliano',
+  `Un pavimento con la stessa densità dappertutto <b>si legge come una stampa</b>, e siccome
+   il passo è quello della cella l'occhio ci ritrova la griglia. Quindi ogni <b>${MODULO} celle</b>
+   — ${MODULO * CELLA}&nbsp;px, cinque volte la cella e mezzo schermo di telefono — la stanza pesca
+   una posatura dal suo sacchetto (<code>A.varianti</code>) e la stende in una macchia sfumata.
+   Un nome ripetuto pesa il doppio, e <code>liscio</code> ci sta sempre due o tre volte: se
+   ogni macchia facesse qualcosa, il pavimento tornerebbe uniforme.<br>
+   Qui sotto ognuna <b>da sola</b>, forzata su tutta la stanza — in gioco non succede mai,
+   e infatti presa così si vede più di quanto dovrebbe.`)
+{
+  const mappaV = ['........', '........', '........', '........', '........', '........']
+  const riga = fila()
+  for (const base of ['camminamento', 'corridoio']) {
+    const f = carta(riga, `<b>${AMBIENTI[base].nome}</b> — una posatura per volta`)
+    for (const nome of Object.keys(POSATURE)) {
+      const fondo = creaFondale({ mappa: mappaV, ambiente: { ...AMBIENTI[base], varianti: [nome] },
+                                  lato: CELLA, seme: 5 })
+      const c = telaNuda(f, fondo.larghezza, fondo.altezza, nome)
+      fondo.mostra(c, 0, 0, fondo.larghezza, fondo.altezza)
+    }
+  }
+}
+{
+  const riga = fila()
+  for (const nome of NOMI_AMBIENTI) {
+    const A = AMBIENTI[nome]
+    const f = carta(riga, `<b>${A.nome}</b> — sacchetto: ${A.varianti.join(' · ')}`)
+    const fondo = creaFondale({ mappa: Array.from({ length: 8 }, () => '.'.repeat(20)),
+                                ambiente: nome, lato: CELLA, seme: 5 })
+    const c = telaNuda(f, fondo.larghezza, fondo.altezza, 'come escono mescolate')
+    fondo.mostra(c, 0, 0, fondo.larghezza, fondo.altezza)
+  }
+}
+
+/* i due materiali di ogni ambiente, staccati: è il controllo che conta
+   per l'architettura — se pavimento e muro si somigliano troppo, in
+   stanza non si capisce più dove si cammina */
+titolo('Pavimento e muro, fianco a fianco',
+  'Per ogni ambiente: tre celle di solo pavimento e tre di solo muro. Devono restare <b>due materiali ' +
+  'diversi</b> — taglia dei blocchi e valore. I lastroni sono grandi il doppio dei conci apposta.')
+{
+  const riga = fila()
+  for (const nome of NOMI_AMBIENTI) {
+    const A = AMBIENTI[nome]
+    const f = carta(riga, `<b>${A.nome}</b>`)
+    for (const [chi, eti] of [['pavimento', 'pavimento'], ['muro', 'muro']]) {
+      const mappa = chi === 'muro'
+        ? ['####', '####', '....'] : ['....', '....', '....']
+      const fondo = creaFondale({ mappa, ambiente: nome, lato: CELLA, seme: 4 })
+      const c = telaNuda(f, fondo.larghezza, fondo.altezza, eti)
+      fondo.mostra(c, 0, 0, fondo.larghezza, fondo.altezza)
+    }
+  }
+}
+
+/* ═════ la fortezza: la mappa più grande, 34×22 ═════ */
+titolo('La fortezza — 34×22 celle, quattro schermate',
+  'La mappa grande del gioco. Il fondale sta in cache <b>grande quanto la mappa</b>, non quanto lo schermo: ' +
+  'trascinare non ridipinge niente. Sopra: tutta intera, rimpicciolita a metà (si legge ancora come muro?). ' +
+  'Sotto: la stessa, uno a uno, come la vede il bambino.')
+{
+  const g = Array.from({ length: 22 }, () => new Array(34).fill('#'))
+  const cava = (x0, y0, x1, y1) => {
+    for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++)
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) g[y][x] = '.'
+  }
+  cava(1, 1, 32, 1); cava(1, 20, 32, 20); cava(1, 1, 1, 20); cava(32, 1, 32, 20)
+  cava(1, 10, 32, 10); cava(3, 3, 8, 8); cava(5, 1, 5, 3)
+  cava(14, 13, 20, 18); cava(17, 10, 17, 13)
+  const mappa = g.map(r => r.join(''))
+  const fondo = creaFondale({ mappa, ambiente: 'corridoio', lato: CELLA, seme: 9 })
+  const f = carta(fila(), `<b>tutta intera, a metà</b> — ${fondo.larghezza}×${fondo.altezza} px · ` +
+    `dipinta in ${fondo.millisecondi} ms · ${fondo.memoria} MB in memoria`)
+  const c = telaNuda(f, fondo.larghezza / 2, fondo.altezza / 2, 'rimpicciolita 50%')
+  c.drawImage(fondo.canvas, 0, 0, fondo.canvas.width, fondo.canvas.height,
+              0, 0, fondo.larghezza / 2, fondo.altezza / 2)
+  const g2 = carta(fila(), '<b>uno a uno</b> — due finestre da 640×400, come sullo schermo')
+  for (const [cx, cy] of [[0, 0], [420, 300]]) {
+    const cc = telaNuda(g2, 640, 400, `camera ${cx},${cy}`)
+    fondo.mostra(cc, cx, cy, 640, 400)
+  }
+}
+
+/* ═════ si legge? terreno + personaggi alla taglia vera ═════ */
+titolo('Si legge?',
+  'Terreno, personaggi, forziere e oggetti insieme, a cella 36&nbsp;px. È la prova che conta: ' +
+  'se il pavimento è troppo carico i personaggi ci annegano dentro.')
+{
+  const mappa = stanza(18, 10, [[6, 0, 1, 4], [6, 6, 1, 4], [12, 4, 2, 2]])
+  for (const nome of NOMI_AMBIENTI) {
+    const f = carta(fila(), `<b>${AMBIENTI[nome].nome}</b>`)
+    const S = CELLA / 20
+    riquadro(f, { w: 18 * CELLA, h: 10 * CELLA, S, ambiente: nome, mappa }, t => {
+      const cx = i => i * CELLA + CELLA / 2, cy = k => k * CELLA + CELLA / 2
+      const passo = Math.floor(t * 4)
+      return [
+        { che: 'vista', x: cx(9), y: cy(7), dir: 'sx', raggio: 2.4, strato: -1 },
+        { che: 'ronda', celle: [{ x: cx(14), y: cy(2) }, { x: cx(16), y: cy(8) }], y: cy(0), strato: -1 },
+        { che: 'chiave', x: cx(2), y: cy(1) },
+        { che: 'campanello', x: cx(4), y: cy(6), colore: 'rosso', suona: (t % 4) > 2 },
+        { che: 'portone', x: cx(6), y: cy(5), aperto: (t % 6) > 3 },
+        { che: 'forziere', x: cx(16), y: cy(4), apertura: Math.max(0, (t % 7) - 4.2) },
+        { che: 'braciere', x: cx(4), y: cy(3) },
+        { che: 'torcia', x: cx(12), y: cy(6) },
+        { che: 'cassa', x: cx(2), y: cy(8) },
+        { che: 'botte', x: cx(16), y: cy(1) },
+        { che: 'sacco', x: cx(15), y: cy(1) },
+        // i dieci personaggi tutti insieme: è la prova vera — se il
+        // pavimento è troppo carico, qui si vede che ci annegano
+        { che: 'cavaliere', x: cx(3), y: cy(4), dir: 'dx', passo },
+        { che: 'ladra', x: cx(1), y: cy(7), dir: 'giu', passo: passo + 2 },
+        { che: 'elfo', x: cx(2), y: cy(3), dir: 'dx', passo: passo + 1 },
+        { che: 'mago', x: cx(8), y: cy(3), dir: 'giu', passo: 0, stato: 'lancia' },
+        { che: 'orco', x: cx(9), y: cy(7), dir: 'sx', passo },
+        { che: 'goblin', x: cx(10), y: cy(7), dir: 'dx', passo: passo + 2 },
+        { che: 'scheletro', x: cx(11), y: cy(3), dir: 'sx', passo: passo + 1 },
+        { che: 'guardia', x: cx(14), y: cy(2), dir: 'giu', passo: 0, stato: 'attesa' },
+        { che: 'capitano', x: cx(15), y: cy(6), dir: 'su', passo },
+        { che: 'lupo', x: cx(13), y: cy(8), dir: 'sx', passo: passo + 3 },
+      ]
+    })
+  }
+}
+
+/* ═════ le porte: cinque stili ═════ */
+titolo('Le porte — cinque stili, un pittore solo',
+  'Lo stile lo dice il livello (<code>{ che: \'porta\', stile: \'ferro\', apertura: 1 }</code>), non il caso: ' +
+  'sono cinque promesse diverse fatte a chi gioca — il legno si spalanca, il ferro lascia vedere di là, ' +
+  'la saracinesca cala dall\'alto, la tenda si scosta, la pietra si apre solo con un meccanismo (e la runa ' +
+  'lo dice). Lo stato è <b>un numero solo da 0 a 1</b> per tutti, così il gioco può animarne una senza ' +
+  'sapere che porta è.')
+{
+  const mappaP = ['######', '#....#', '#....#', '#....#', '######']
+  for (const stile of STILI_PORTA) {
+    const f = carta(fila(), `<b>${stile}</b>`)
+    for (const a of [0, 0.5, 1])
+      riquadro(f, { w: 4 * CELLA, h: 3 * CELLA, S: CELLA / 20, etichetta: 'apertura ' + a,
+                    mappa: mappaP, ambiente: 'corridoio' },
+        () => [{ che: 'porta', stile, x: 2 * CELLA + CELLA / 2, y: CELLA + CELLA / 2, apertura: a }])
+  }
+}
+
+/* ═════ il portone: orizzontale e verticale ═════ */
+titolo('Il varco, su un muro orizzontale e su uno verticale',
+  'Lo stesso <code>{ che: \'porta\' }</code>, senza nessun verso da dirgli: è un varco nel ' +
+  'pavimento — soglia, quattro stipiti d\'angolo, un vuoto — non una facciata disegnata su un muro. ' +
+  'Deve leggersi identico sia che il corridoio corra orizzontale sia che corra verticale.')
+{
+  const mappaOrizz = ['##.###', '#....#', '#....#', '#....#', '######']
+  const mappaVert = ['######', '#....#', '.....#', '#....#', '######']
+  const riga1 = fila()
+  for (const aperto of [false, true]) {
+    const f = carta(riga1, `muro orizzontale — ${aperto ? 'aperto' : 'chiuso'}`)
+    riquadro(f, { w: 6 * CELLA, h: 5 * CELLA, S: CELLA / 20, mappa: mappaOrizz, ambiente: 'corridoio' },
+      () => [{ che: 'portone', x: 2 * CELLA + CELLA / 2, y: CELLA / 2, aperto }])
+  }
+  for (const aperto of [false, true]) {
+    const f = carta(riga1, `muro verticale — ${aperto ? 'aperto' : 'chiuso'}`)
+    riquadro(f, { w: 6 * CELLA, h: 5 * CELLA, S: CELLA / 20, mappa: mappaVert, ambiente: 'corridoio' },
+      () => [{ che: 'portone', x: CELLA / 2, y: 2 * CELLA + CELLA / 2, aperto }])
+  }
+}
+
+/* ═════ muri spessi: bordo contro massa ═════ */
+titolo('Il muro: il bordo è disegnato, la massa no',
+  'Una cella di muro <b>circondata da altri muri</b> non è una parete che qualcuno guarda: è la roccia ' +
+  'dietro. Resta piatta e scura. Il dettaglio — conci, giunti, spessore, ombra, muschio — va solo sulla ' +
+  'faccia che tocca il pavimento. È il salto fra le due a far leggere la <b>forma</b> della stanza, ed è ' +
+  'anche il motivo per cui una mappa 34×22 sta sotto i venti millisecondi.')
+{
+  const spessa = [
+    '################', '#..............#', '#..####...###..#', '#..####...###..#',
+    '#..####...###..#', '#.........###..#', '#..............#', '####......######',
+    '#..............#', '#..............#', '################',
+  ]
+  const riga = fila()
+  for (const nome of ['corridoio', 'grotta', 'cripta', 'trono']) {
+    const f = carta(riga, `<b>${AMBIENTI[nome].nome}</b>`)
+    const fondo = creaFondale({ mappa: spessa, ambiente: nome, lato: CELLA, seme: 4 })
+    const c = telaNuda(f, fondo.larghezza, fondo.altezza,
+                       `${fondo.millisecondi} ms · blocchi interni piatti`)
+    fondo.mostra(c, 0, 0, fondo.larghezza, fondo.altezza)
+  }
+}
+
+/* ═════ personaggi: da vicino ═════ */
+const DIR = [['giu', 'fronte'], ['su', 'spalle'], ['dx', 'destra'], ['sx', 'sinistra']]
+titolo('Da vicino', 'Ingranditi sei volte: serve solo a giudicare i dettagli, in gioco non si vedono mai così.')
+for (const chi of PERSONAGGI) {
+  const f = carta(fila(), chi)
+  for (const [d, nome] of DIR)
+    riquadro(f, { w: 172, h: 186, S: 6, etichetta: nome },
+      () => [{ che: chi, x: 86, y: 156, dir: d, passo: 0 }])
+}
+
+/* ═════ personaggi: orientamenti e camminata ═════ */
+titolo('I quattro, nei quattro orientamenti e a tre passi',
+       'Ogni riga: fronte, spalle, profilo destro, profilo sinistro. Dentro ogni gruppo i tre fotogrammi della camminata.')
+for (const chi of PERSONAGGI) {
+  const f = carta(fila(), chi)
+  for (const [d, nome] of DIR) {
+    const g = document.createElement('div'); g.className = 'fila'; g.style.gap = '2px'
+    f.appendChild(g)
+    ;[0, 1, 3].forEach((passo, i) => {
+      riquadro(g, { w: 66, h: 92, S: 2.9, etichetta: i === 1 ? nome : '' },
+        () => [{ che: chi, x: 33, y: 76, dir: d, passo }])
+    })
+  }
+}
+
+/* ═════ personaggi: gli stati ═════ */
+titolo('Gli stati', 'normale · aspetta un ordine · ha sbagliato (lampeggia rosso) · colpito · sconfitto')
+const STATI = ['normale', 'attesa', 'errore', 'colpito', 'ko']
+for (const chi of PERSONAGGI) {
+  const f = carta(fila(), chi)
+  for (const st of STATI)
+    riquadro(f, { w: 84, h: 104, S: 2.9, etichetta: st },
+      () => [{ che: chi, x: 42, y: 86, dir: 'giu', passo: 0, stato: st }])
+}
+
+/* ═════ la taglia vera ═════ */
+titolo('Alla taglia vera: cella da 36 px',
+       'È così che si vedono sul telefono. Se qui due si confondono, sono da rifare.')
+{
+  const f = carta(fila(), 'cella 36 px')
+  for (const chi of PERSONAGGI) for (const [d] of DIR)
+    riquadro(f, { w: 36, h: 52, S: 36 / 20, etichetta: d === 'giu' ? chi : '' },
+      () => [{ che: chi, x: 18, y: 44, dir: d, passo: 0 }])
+}
+{
+  const f = carta(fila(), 'tutti in fila, 36 px')
+  for (const [d, p] of [['giu', 0], ['dx', 1]])
+    riquadro(f, { w: 45 * PERSONAGGI.length, h: 56, S: 36 / 20 },
+      () => PERSONAGGI.map((chi, i) => ({ che: chi, x: 22 + i * 45, y: 46, dir: d, passo: p })))
+}
+/* la coppia a rischio, uno accanto all'altro e nella stessa posa: se
+   goblin e orco si confondono qui, non serve a niente che da vicino
+   siano diversi */
+titolo('Le coppie che si potevano confondere',
+  'A sinistra la coppia a rischio: <b>goblin contro orco</b>, stessa razza e stesso verde. ' +
+  'Li separano tre cose insieme — la taglia (0.68 contro 1.02), la tinta (limone contro prato) e ' +
+  'la sagoma (due orecchie in orizzontale contro una pancia). Accanto, le altre due coppie che ' +
+  'condividono qualcosa: <b>guardia e capitano</b> (stessa corazza, ma l\'elmo d\'oro e il mantello) ' +
+  'e <b>ladra e mago</b> (stesso viola-blu, ma la campana e la barba bianca).')
+{
+  const coppie = [['goblin', 'orco'], ['guardia', 'capitano'], ['ladra', 'mago'],
+                  ['cavaliere', 'elfo'], ['scheletro', 'lupo']]
+  const riga = fila()
+  for (const [a, b] of coppie) {
+    const f = carta(riga, `<b>${a}</b> · ${b}`)
+    for (const [d, p] of [['giu', 0], ['dx', 1]])
+      riquadro(f, { w: 92, h: 56, S: 36 / 20, etichetta: d === 'giu' ? 'di faccia' : 'di profilo' },
+        () => [{ che: a, x: 24, y: 46, dir: d, passo: p },
+               { che: b, x: 68, y: 46, dir: d, passo: p }])
+  }
+}
+
+/* ═════ i tre quadrupedi: lupo, gatto, orso ═════ */
+titolo('I tre quadrupedi',
+  'Il lupo è lungo e basso, il gatto è piccolo e affusolato, l\'orso è grosso e tondo: alla ' +
+  'taglia vera (cella 36&nbsp;px) devono separarsi per <b>sagoma</b>, non solo per colore. ' +
+  'A destra i manti del gatto e dell\'orso — un dato (<code>{ che: \'gatto\', manto: \'nero\' }</code>), ' +
+  'non un disegno diverso — e le due pose in più: il gatto seduto con la coda arrotolata, ' +
+  'l\'orso ritto sulle zampe posteriori.')
+{
+  const f = carta(fila(), 'affiancati, cella 36 px')
+  for (const [d, nome] of [['giu', 'di faccia'], ['dx', 'di profilo']])
+    riquadro(f, { w: 3 * 45, h: 56, S: 36 / 20, etichetta: nome },
+      () => ['lupo', 'gatto', 'orso'].map((chi, i) =>
+        ({ che: chi, x: 22 + i * 45, y: 46, dir: d, passo: 1 })))
+}
+{
+  const f = carta(fila(), 'i manti del gatto')
+  for (const manto of Object.keys(GATTI))
+    for (const [d, nome] of DIR)
+      riquadro(f, { w: 100, h: 116, S: 4.4, etichetta: `${manto} · ${nome}` },
+        () => [{ che: 'gatto', manto, x: 50, y: 98, dir: d, passo: 1 }])
+}
+{
+  const f = carta(fila(), 'il gatto seduto')
+  for (const manto of Object.keys(GATTI))
+    riquadro(f, { w: 90, h: 106, S: 4.4, etichetta: manto },
+      () => [{ che: 'gatto', manto, x: 45, y: 92, dir: 'giu', stato: 'seduto' }])
+}
+{
+  const f = carta(fila(), 'i manti dell\'orso')
+  for (const manto of Object.keys(ORSI))
+    for (const [d, nome] of DIR)
+      riquadro(f, { w: 120, h: 150, S: 4.4, etichetta: `${manto} · ${nome}` },
+        () => [{ che: 'orso', manto, x: 60, y: 128, dir: d, passo: 1 }])
+}
+{
+  const f = carta(fila(), 'l\'orso ritto sulle zampe posteriori')
+  for (const manto of Object.keys(ORSI))
+    riquadro(f, { w: 110, h: 160, S: 4.4, etichetta: manto },
+      () => [{ che: 'orso', manto, x: 55, y: 148, dir: 'giu', stato: 'ritto' }])
+}
+
+/* ═════ la papera: non è un quadrupede ═════ */
+titolo('La papera, accanto a gatto e lupo',
+  'Non è un quarto quadrupede: due zampe palmate invece di quattro, corpo tondo e basso, collo ' +
+  'corto, coda a ventaglio. Alla taglia vera (cella 36&nbsp;px), affiancata a un quadrupede piccolo ' +
+  '(il gatto) e a uno grande (il lupo), deve leggersi come <b>uccello</b> a colpo d\'occhio — è il ' +
+  'segno del becco arancione a deciderlo, non la sagoma tonda da sola. A destra i suoi manti ' +
+  '(bianca, germano, gialla, grigia) e la posa in più che nessun quadrupede fa: <b>a mollo</b>, ' +
+  'mezza immersa — quella della storia «Bibi allo stagno».')
+{
+  const f = carta(fila(), 'affiancata a gatto e lupo, cella 36 px')
+  for (const [d, nome] of [['giu', 'di faccia'], ['dx', 'di profilo'], ['su', 'di spalle']])
+    riquadro(f, { w: 3 * 45, h: 56, S: 36 / 20, etichetta: nome },
+      () => ['gatto', 'papera', 'lupo'].map((chi, i) =>
+        ({ che: chi, x: 22 + i * 45, y: 46, dir: d, passo: 1 })))
+}
+{
+  const f = carta(fila(), 'i quattro orientamenti e la camminata')
+  for (const [d, nome] of DIR) {
+    const g = document.createElement('div'); g.className = 'fila'; g.style.gap = '2px'
+    f.appendChild(g)
+    ;[0, 1, 3].forEach((passo, i) => {
+      riquadro(g, { w: 100, h: 116, S: 4.4, etichetta: i === 1 ? nome : '' },
+        () => [{ che: 'papera', x: 50, y: 98, dir: d, passo }])
+    })
+  }
+}
+{
+  const f = carta(fila(), 'i manti della papera')
+  for (const manto of Object.keys(PAPERE))
+    for (const [d, nome] of DIR)
+      riquadro(f, { w: 100, h: 116, S: 4.4, etichetta: `${manto} · ${nome}` },
+        () => [{ che: 'papera', manto, x: 50, y: 98, dir: d, passo: 1 }])
+}
+{
+  const f = carta(fila(), 'gli stati')
+  for (const manto of Object.keys(PAPERE))
+    for (const st of STATI)
+      riquadro(f, { w: 84, h: 104, S: 3.6, etichetta: `${manto} · ${st}` },
+        () => [{ che: 'papera', manto, x: 42, y: 86, dir: 'giu', passo: 0, stato: st }])
+}
+{
+  const f = carta(fila(), 'a mollo, mezza immersa — "Bibi allo stagno"')
+  for (const manto of Object.keys(PAPERE))
+    riquadro(f, { w: 110, h: 100, S: 4.4, etichetta: manto },
+      () => [{ che: 'papera', manto, x: 55, y: 76, dir: 'giu', stato: 'mollo' }])
+}
+
+/* ═════ il mago che lancia ═════ */
+titolo('Il mago che lancia',
+  'Uno stato in più, <code>stato: \'lancia\'</code>: le braccia si alzano (ci pensa ' +
+  '<code>corpo.js</code>, non il mago), il bastone sale con la mano e sopra la punta si accende ' +
+  'la sfera con l\'anello di rune. Serve ai livelli che ancora non ci sono: il gioco dirà ' +
+  '«sta lanciando» e il disegno c\'è già.')
+{
+  const f = carta(fila(), 'nei quattro orientamenti')
+  for (const [d, nome] of DIR)
+    riquadro(f, { w: 110, h: 150, S: 3.4, etichetta: nome, ambiente: 'cripta' },
+      () => [{ che: 'mago', x: 55, y: 128, dir: d, passo: 0, stato: 'lancia' }])
+  const g = carta(fila(), 'fermo e mentre lancia, alla taglia vera')
+  for (const st of ['normale', 'lancia'])
+    riquadro(g, { w: 60, h: 76, S: 36 / 20, etichetta: st, ambiente: 'cripta' },
+      () => [{ che: 'mago', x: 30, y: 64, dir: 'giu', passo: 0, stato: st }])
+}
+
+/* ═════ il catalogo degli oggetti ═════
+   Uno per riquadro, tutti alla stessa taglia e sullo stesso pavimento:
+   è così che si vede se due si somigliano troppo. Chi ha due stati
+   compare due volte. */
+const CATALOGO = [
+  ['— da prendere: ondeggiano e scintillano —', [
+    ...COLORI_CHIAVE.map(c => ['chiave', { colore: c }, 'chiave ' + c]),
+    ...COLORI_GEMMA.map(c => ['gemma', { colore: c }, 'gemma ' + c]),
+    ['moneta', {}, 'monete'],
+    ['mappa', {}, 'mappa'], ['pergamena', {}, 'pergamena'], ['libro', {}, 'libro'],
+    ...COLORI_POZIONE.map(c => ['pozione', { colore: c }, 'pozione ' + c]),
+    ['bacchetta', {}, 'bacchetta'], ['scudo', {}, 'scudo'], ['elmo', {}, 'elmo'],
+    ['stivali', {}, 'stivali'], ['pane', {}, 'pane'], ['corda', {}, 'corda'],
+    ['secchio', { pieno: true }, 'secchio pieno'], ['secchio', { pieno: false }, 'secchio vuoto'],
+    ['martello', {}, 'martello'], ['piccone', {}, 'piccone'],
+    ['campana', {}, 'campana'], ['campana', { suona: true }, 'campana ▲'],
+    ['corno', {}, 'corno'],
+    ['lanterna', {}, 'lanterna'], ['lanterna', { accesa: false }, 'lanterna spenta'],
+    ['torciaMano', {}, 'torcia a mano'], ['torciaMano', { accesa: false }, 'torcia spenta'],
+  ]],
+  ['— da usare: hanno uno stato che il gioco muove —', [
+    ['leva', { tirata: 0 }, 'leva da tirare'], ['leva', { tirata: 1 }, 'leva tirata'],
+    ['pulsante', {}, 'piastra alzata'], ['pulsante', { premuto: true }, 'piastra premuta'],
+    ['ruota', {}, 'ruota'], ['argano', { avvolta: 0.2 }, 'argano'],
+    ['catena', { lunghezza: 1.4 }, 'catena'],
+    ['botola', { apertura: 0 }, 'botola chiusa'], ['botola', { apertura: 1 }, 'botola aperta'],
+    ['portone', {}, 'portone chiuso'], ['portone', { aperto: true }, 'portone aperto'],
+    ['cancello', { apertura: 0 }, 'cancello chiuso'], ['cancello', { apertura: 1 }, 'cancello aperto'],
+    ['saracinesca', { alzata: 0 }, 'saracinesca giù'], ['saracinesca', { alzata: 1 }, 'saracinesca su'],
+    ['ponte', {}, 'ponte'], ['ponte', { verso: 'verticale' }, 'ponte verticale'],
+    ['ponteLevatoio', { abbassato: 1 }, 'levatoio giù'],
+    ['ponteLevatoio', { abbassato: 0.15 }, 'levatoio su'],
+    ['scala', { verso: 'giu' }, 'scala giù'], ['scala', { verso: 'su' }, 'scala su'],
+  ]],
+  ['— di scena: stanno lì e fanno la stanza —', [
+    ['torcia', {}, 'torcia a muro'], ['torcia', { accesa: false }, 'torcia spenta'],
+    ['braciere', {}, 'braciere'], ['braciere', { acceso: false }, 'braciere spento'],
+    ['falo', {}, 'fuoco da campo'], ['falo', { acceso: false }, 'fuoco spento'],
+    ['altare', {}, 'altare'], ['fontana', {}, 'fontana'], ['pozzo', {}, 'pozzo'],
+    ['colonna', {}, 'colonna'],
+    ['cassa', {}, 'cassa'], ['cassa', { aperta: true }, 'cassa aperta'],
+    ['botte', {}, 'botte'], ['botte', { coricata: true }, 'botte coricata'],
+    ['barile', {}, 'barile'], ['sacco', {}, 'sacco'],
+    ['cartello', { verso: 'dx' }, 'cartello →'], ['cartello', { verso: 'su' }, 'cartello ↑'],
+    ['bandiera', {}, 'bandiera'], ['bandiera', { colore: '#2f8ce8' }, 'bandiera blu'],
+    ['tenda', {}, 'tenda'],
+    ['carrello', {}, 'carrello pieno'], ['carrello', { pieno: false }, 'carrello vuoto'],
+    ['binario', {}, 'binario'],
+    ['albero', {}, 'albero'], ['albero', { secco: true }, 'albero secco'],
+    ['cespuglio', {}, 'cespuglio'], ['roccia', {}, 'masso'],
+    ['stalagmite', {}, 'stalagmiti'], ['ossa', {}, 'ossa'], ['fungo', {}, 'funghi'],
+    ['cristallo', {}, 'cristallo'],
+    ['ragnatela', { ragno: true }, 'ragnatela'],
+    ['acqua', {}, 'acqua'], ['pozzanghera', {}, 'pozzanghera'],
+  ]],
+]
+
+titolo(`Il catalogo degli oggetti — ${OGGETTI.length} voci`,
+  'Ognuno è <b>un file suo</b> in <code>src/grafica/oggetti/</code> più una riga nell\'indice: ' +
+  'aggiungerne uno non allunga niente. Qui sono tutti alla stessa taglia (cella 36&nbsp;px, ' +
+  'ingranditi due volte per guardarli) e sullo stesso pavimento. Chi ha due stati — acceso/spento, ' +
+  'aperto/chiuso, pieno/vuoto — compare due volte: serviranno tutti e due.')
+for (const [gruppo, elenco] of CATALOGO) {
+  const f = carta(fila(), gruppo)
+  for (const [che, extra, nome] of elenco)
+    riquadro(f, { w: 76, h: 96, S: 3.6, etichetta: nome, ambiente: 'camminamento' },
+      () => [{ che, x: 38, y: 62, lato: 20, ...extra }])
+}
+{
+  const f = carta(fila(), 'terreno: una cella sola')
+  riquadro(f, { w: 76, h: 76, S: 3, etichetta: 'muro (una cella)' },
+    () => [{ che: 'muro', x: 38, y: 44, ambiente: 'camminamento' }])
+  riquadro(f, { w: 76, h: 76, S: 3, etichetta: 'pavimento di cripta' },
+    () => [{ che: 'pavimento', x: 38, y: 40, ambiente: 'cripta' }])
+}
+{
+  const f = carta(fila(), 'campanelli d\'allarme (fermi e che suonano)')
+  for (const suona of [false, true])
+    for (const col of COLORI_ALLARME)
+      riquadro(f, { w: 58, h: 76, S: 2.6, etichetta: col + (suona ? ' ▲' : '') },
+        () => [{ che: 'campanello', x: 29, y: 60, colore: col, suona }])
+}
+{
+  const f = carta(fila(), 'cono di vista e zona di ronda')
+  for (const [d, nome] of DIR)
+    riquadro(f, { w: 110, h: 110, S: 1.6, etichetta: 'vista ' + nome },
+      () => [{ che: 'vista', x: 55, y: 62, dir: d, raggio: 2.6, strato: -1 },
+             { che: 'orco', x: 55, y: 62, dir: d, passo: 0 }])
+  riquadro(f, { w: 150, h: 110, S: 1.6, etichetta: 'ronda' },
+    () => [{ che: 'ronda', x: 75, y: 60, w: 100, h: 60, strato: -1 },
+           { che: 'guardia', x: 50, y: 62, dir: 'dx', passo: 1 }])
+}
+
+/* ═════ il forziere ═════ */
+titolo('Il forziere che si apre',
+       'A sinistra il momento in ciclo. A destra sei istanti fermi: il tempo va da 0 a 1.')
+{
+  const f = carta(fila(), 'in ciclo (3 secondi)')
+  riquadro(f, { w: 220, h: 200, S: 3.4, ambiente: 'tesoro' },
+    t => [{ che: 'forziere', x: 110, y: 150, apertura: (t / 3) % 1.4 }])
+  const g = carta(fila(), 'istanti')
+  for (const t of [0, 0.15, 0.25, 0.4, 0.6, 1])
+    riquadro(g, { w: 120, h: 150, S: 2.6, etichetta: 't = ' + t, ambiente: 'tesoro' },
+      () => [{ che: 'forziere', x: 60, y: 120, apertura: t }])
+}
+
+/* ═════ il motore ═════ */
+function giro(ms) {
+  const t = ms / 1000
+  for (const v of vive) v.tela.disegna(v.scena(t), t)
+  requestAnimationFrame(giro)
+}
+requestAnimationFrame(giro)
+window.prontoEroi = true
+</script>
+<script>
+  // se i moduli non partono (doppio click su file://) almeno si capisce perché
+  setTimeout(() => { if (!window.prontoEroi) document.getElementById('avviso').style.display = 'block' }, 600)
+</script>
+</body>
+</html>

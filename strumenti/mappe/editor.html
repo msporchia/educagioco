@@ -1,0 +1,1532 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Editor delle mappe — Il generale</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     L'EDITOR DELLE MAPPE
+
+     Contare i caratteri di una riga di ASCII art è un lavoro da
+     macchina. Qui la mappa si disegna col mouse, gli ordini si mettono
+     insieme a menu, e il testo del livello esce già scritto, pronto da
+     incollare in `src/data/generale.js`.
+
+     È uno strumento di sviluppo: sta in `strumenti/`, non entra nel
+     build, non sa niente di Vue. Si apre con un doppio click, anche
+     senza server — è per questo che le regole arrivano da `nucleo.js`
+     con un tag <script> normale invece che con un `import`: da
+     `file://` i moduli non si caricano, e avere due copie delle regole
+     vorrebbe dire avere due validatori che prima o poi litigano.
+
+     Il giro completo che deve funzionare sempre:
+       disegno → testo → lo incollo da un'altra parte → ritrovo il disegno
+
+     E vale **ordini compresi**: sono la metà del livello, e sono la
+     metà che a mano costa di più.
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #1d2130; --pannello: #272c3e; --riga: #363c52;
+    --testo: #e8eaf2; --spento: #99a0bb; --acceso: #ffcc55; --verde: #6fd08c;
+    --rosso: #ff7a7a; --giallo: #ffcf6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; height: 100vh; overflow: hidden;
+    display: grid; grid-template-columns: 206px 1fr 494px;
+    font: 13px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--fondo); color: var(--testo);
+  }
+  /* le tre colonne stanno dentro lo schermo e scorrono per conto loro:
+     senza questo, la colonna più lunga allunga la pagina e la mappa
+     finisce fuori dal basso */
+  aside, main, .destra { min-height: 0; }
+  h1 { font-size: 15px; margin: 0 0 10px; letter-spacing: .02em; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
+       color: var(--spento); margin: 16px 0 6px; font-weight: 600; }
+  h2:first-of-type { margin-top: 0; }
+  aside { padding: 14px; overflow-y: auto; background: var(--pannello);
+          border-right: 1px solid var(--riga); }
+  /* A destra tre fasce: le linguette, la pagina che scorre (i metadati
+     oppure il costruttore degli ordini) e, sotto, i problemi e il testo
+     del livello, che **non si spostano mai**. Sono le due cose che si
+     guardano mentre si lavora: se scorrono via col resto, si lavora
+     alla cieca. */
+  .destra { border-left: 1px solid var(--riga); background: var(--pannello);
+            display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .scorre { overflow-y: auto; padding: 12px 14px 18px; }
+  .fondo { border-top: 1px solid var(--riga); background: #22273a; padding: 10px 14px 14px; }
+
+  /* ── strumenti e tavolozza ── */
+  .schede { display: flex; gap: 4px; margin-bottom: 12px; }
+  .schede button { flex: 1; }
+  button, select, input, textarea {
+    font: inherit; color: var(--testo); background: #323850;
+    border: 1px solid var(--riga); border-radius: 6px; padding: 5px 8px;
+  }
+  button { cursor: pointer; }
+  button:hover { background: #3d4460; }
+  button:disabled { cursor: not-allowed; opacity: .5; }
+  button.acceso { background: var(--acceso); color: #241f10; border-color: var(--acceso); font-weight: 600; }
+  .tav { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .tav button { display: flex; align-items: center; gap: 5px; padding: 4px 6px;
+                text-align: left; font-size: 12px; overflow: hidden; }
+  .tav .em { width: 17px; text-align: center; flex: none; }
+  .tav .quadro { width: 15px; height: 15px; border-radius: 3px; flex: none;
+                 border: 1px solid rgba(255,255,255,.25); }
+  .misure { display: flex; gap: 5px; align-items: center; }
+  .misure input { width: 52px; }
+  .aiuto { color: var(--spento); font-size: 11px; margin: 8px 0 0; }
+
+  /* ── la griglia ── */
+  main { display: flex; flex-direction: column; align-items: center;
+         justify-content: center; padding: 14px; overflow: auto; gap: 10px; }
+  #griglia { display: grid; gap: 1px; background: #11131c; padding: 1px;
+             border-radius: 6px; user-select: none; box-shadow: 0 8px 30px #0006; }
+  .cella { position: relative; display: flex; align-items: center; justify-content: center;
+           font-size: 17px; line-height: 1; cursor: crosshair; }
+  .cella .zona { position: absolute; inset: 0; display: flex; align-items: flex-start;
+                 justify-content: flex-end; font: 700 9px/1 system-ui; padding: 1px 2px;
+                 color: #0007; }
+  #titoloMappa { color: var(--spento); font-size: 12px; }
+  #linguette { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  #linguette button { padding: 4px 10px; font-size: 12px; }
+  #linguette input { width: 150px; padding: 4px 7px; font-size: 12px; }
+  /* la cartella della tappa: sta al centro, sopra la mappa, perché è
+     l'informazione che guida la matita — e si deve vedere anche mentre
+     si compongono gli ordini, cioè da tutte e due le linguette */
+  #cartella { max-width: 560px; background: var(--pannello); border: 1px solid var(--riga);
+              border-left: 4px solid var(--acceso); border-radius: 8px; padding: 8px 12px;
+              font-size: 12px; }
+  #cartella .dove { color: var(--spento); font-size: 11px; }
+  #cartella .concetto { color: var(--acceso); font-weight: 700; margin: 2px 0; }
+  #cartella .cosa, #cartella .storia { color: var(--testo); }
+  #cartella .storia { font-style: italic; color: var(--spento); margin-top: 3px; }
+  #cartella ol { margin: 5px 0 0; padding-left: 20px; color: var(--spento); }
+  #cartella .manca { color: var(--giallo); margin-top: 4px; }
+  .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .scelta select { min-width: 0; }
+  #avanzamento { margin-top: 6px; }
+  #avanzamento div { display: flex; justify-content: space-between; gap: 6px;
+                     color: var(--spento); font-size: 11px; }
+  #avanzamento b { color: var(--testo); font-weight: 600; }
+  .proposta { display: flex; gap: 6px; align-items: center; justify-content: space-between;
+              background: #2e3448; border-radius: 7px; padding: 6px 9px; margin-bottom: 14px;
+              color: var(--spento); font-size: 11px; }
+  /* nelle varianti si disegna e basta: nome, racconto, ordini e soluzioni
+     sono della base, e cambiarli da qui vorrebbe dire scriverli in una
+     versione sola senza accorgersene */
+  .spenta { opacity: .5; pointer-events: none; }
+  .cartello { background: #3a3324; color: var(--giallo); border-radius: 7px;
+              padding: 7px 11px; font-size: 12px; max-width: 460px; text-align: center; }
+
+  /* ── metadati ── */
+  label { display: block; margin: 7px 0 2px; color: var(--spento); font-size: 11px; }
+  input[type=text], input[type=number], textarea { width: 100%; }
+  textarea { resize: vertical; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; }
+  .verbi { display: flex; flex-wrap: wrap; gap: 4px; }
+  .verbi button { padding: 3px 7px; font-size: 12px; }
+  .fazione { display: grid; grid-template-columns: 1fr 88px 74px; gap: 4px; margin-bottom: 4px; }
+  .fazione input, .fazione select { padding: 4px 6px; font-size: 12px; }
+  .zonaRiga { display: grid; grid-template-columns: 24px 1fr; gap: 5px; align-items: center;
+              margin-bottom: 4px; }
+  .zonaRiga .lettera { text-align: center; font-weight: 700; border-radius: 4px; color: #0009; }
+  .rondaRiga { display: flex; gap: 4px; align-items: center; margin-bottom: 5px; flex-wrap: wrap; }
+  .rondaRiga input { width: 104px; }
+  .rondaRiga .giro { display: flex; gap: 3px; flex-wrap: wrap; }
+  .rondaRiga .tappa { border-radius: 4px; padding: 2px 6px; color: #0009; font-weight: 700;
+                      font-size: 11px; border: none; }
+
+  /* ── il costruttore degli ordini ── */
+  .schedeD { display: flex; gap: 4px; padding: 10px 14px 0; }
+  .schedeD button { flex: 1; }
+  .blocco { border: 1px solid var(--riga); border-radius: 9px; margin-bottom: 14px;
+            overflow: hidden; background: #232838; }
+  .blocco .capo { padding: 8px 10px; border-left: 4px solid var(--riga); background: #2e3448; }
+  .blocco.mio .capo, .blocco.mio .solCapo { border-left-color: var(--verde); }
+  .blocco.suo .capo { border-left-color: var(--rosso); }
+  .blocco .capo b { font-size: 13px; }
+  .blocco .capo .titolo { display: flex; gap: 6px; align-items: baseline; }
+  .blocco .capo .titolo span { color: var(--spento); font-size: 11px; }
+  .blocco .capo .chi { display: block; font-size: 11px; margin-top: 1px; }
+  button.caretto { background: transparent; border: none; padding: 0 2px; color: var(--spento);
+                   font-size: 12px; line-height: 1; }
+  button.caretto:hover { background: transparent; color: var(--testo); }
+  .blocco.mio .capo .chi { color: var(--verde); }
+  .blocco.suo .capo .chi { color: var(--rosso); }
+  .gruppo { padding: 7px 8px 2px; border-top: 1px solid var(--riga); }
+  .gruppo .testa { display: flex; gap: 5px; align-items: center; margin-bottom: 6px; }
+  .gruppo .testa select { flex: 1; min-width: 0; font-weight: 600; }
+  .gruppo .testa .faz { color: var(--spento); font-size: 11px; white-space: nowrap; }
+  .ordine { background: #2c3247; border: 1px solid #363c52; border-radius: 7px;
+            padding: 6px 7px; margin-bottom: 6px; }
+  .ordine .r1 { display: flex; gap: 5px; align-items: center; }
+  .ordine .r1 select { min-width: 0; padding: 4px 6px; }
+  .ordine .r1 .verbo { flex: none; width: 104px; font-weight: 700; color: var(--acceso); }
+  .ordine .r1 .bers { flex: 1; }
+  .ordine .r1 .niente { flex: 1; color: var(--spento); font-size: 12px; font-style: italic; }
+  .ordine .r2 { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; align-items: center; }
+  .ordine .r2 .et { color: var(--spento); font-size: 11px; flex: none; }
+  .ordine .r2 .cond { display: flex; gap: 4px; min-width: 0; flex: 1 1 100%; align-items: center; }
+  .ordine .r2 .cond select { padding: 3px 5px; font-size: 12px; min-width: 0; flex: 1; }
+  button.chip { padding: 2px 8px; font-size: 11px; color: var(--spento); background: transparent;
+                border-style: dashed; }
+  button.chip:hover { color: var(--testo); background: #3d4460; }
+  button.chip.insiste { color: var(--giallo); border-color: var(--giallo); }
+  .ordine .frecce { display: flex; gap: 3px; flex: none; }
+  .ordine .frecce button, button.mini { padding: 3px 7px; font-size: 11px; line-height: 1.3; }
+  select.guasto { border-color: var(--rosso); color: var(--rosso); }
+  select.vuoto { color: var(--spento); font-style: italic; }
+  .piede { padding: 7px 8px 8px; border-top: 1px dashed var(--riga); display: flex; gap: 5px; }
+  .piede select { flex: 1; min-width: 0; }
+  .solCapo { display: flex; gap: 6px; align-items: center; padding: 8px 10px;
+             border-left: 4px solid var(--verde); background: #2e3448; }
+  .solCapo input[type=text] { flex: 1; min-width: 0; padding: 4px 6px; font-weight: 600; }
+  .solCapo .frag { display: flex; align-items: center; gap: 4px; color: var(--spento);
+                   font-size: 11px; white-space: nowrap; cursor: pointer; margin: 0; }
+  .blocco.fragile { border-color: #6b5a2a; }
+  .blocco.fragile .solCapo { border-left-color: var(--giallo); background: #37331f; }
+  .conto { color: var(--spento); font-size: 11px; padding: 2px 10px 8px; }
+  .conto.male { color: var(--rosso); }
+  .nuovo { width: 100%; margin-bottom: 14px; }
+  .spiega { color: var(--spento); font-size: 11px; margin: 0 0 10px; }
+
+  /* ── problemi e testo ── */
+  #problemi { max-height: 116px; overflow-y: auto; }
+  #problemi div { padding: 4px 7px; border-radius: 5px; margin-bottom: 3px; font-size: 12px; }
+  .male { background: #43222b; color: var(--rosso); }
+  .forse { background: #40371f; color: var(--giallo); }
+  .bene { background: #1f3a2a; color: var(--verde); }
+  #testo { height: 104px; }
+  .barra { display: flex; gap: 6px; margin: 8px 0 4px; }
+  .barra button { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- ═══ sinistra: cosa disegno ═══ -->
+<aside>
+  <h1>🗺️ Editor delle mappe</h1>
+
+  <div class="schede">
+    <button id="stratoMappa" class="acceso">Mappa</button>
+    <button id="stratoCalco">Zone</button>
+  </div>
+
+  <h2>Attrezzo</h2>
+  <div class="tav" id="attrezzi"></div>
+
+  <h2 id="titoloTav">Tavolozza</h2>
+  <div id="tavolozza"></div>
+
+  <h2>Griglia</h2>
+  <div class="misure">
+    <input type="number" id="larg" min="4" max="40"> ×
+    <input type="number" id="alt" min="4" max="30">
+    <button id="ridimensiona">↔</button>
+  </div>
+  <p class="aiuto">
+    Trascina col tasto sinistro per dipingere. Col destro cancelli.
+    Con <b>sposta</b> trascini un'unità da una cella all'altra.
+  </p>
+</aside>
+
+<!-- ═══ centro: la mappa, e le linguette delle sue tre versioni ═══ -->
+<main>
+  <div id="cartella"></div>
+  <div id="linguette"></div>
+  <div id="cartelloVariante" class="cartello" style="display:none">
+    Stai disegnando una <b>variante</b>: sposta le cose e la differenza la ricavo io.
+    Nome, racconto, ordini e soluzioni restano quelli della base.
+  </div>
+  <div id="titoloMappa"></div>
+  <div id="griglia"></div>
+</main>
+
+<!-- ═══ destra: la tappa, gli ordini, i problemi, il testo ═══ -->
+<div class="destra">
+ <div class="schedeD">
+   <button id="schedaTappa" class="acceso">⚙️ La tappa</button>
+   <button id="schedaOrdini">📜 Ordini e soluzioni</button>
+ </div>
+
+ <div class="scorre" id="paginaTappa">
+  <h2>Quale delle 24</h2>
+  <div class="scelta">
+    <select id="campagna"></select>
+    <select id="tappa"></select>
+  </div>
+  <div id="avanzamento"></div>
+  <div class="barra">
+    <button id="rimettiDati" title="rimette nome, racconto, cassetta e par come li vuole la campagna">⬇ rimetti i dati</button>
+    <button id="partiDaQuesta" title="tiene la mappa, le zone e gli ordini e stacca il nome: si ritocca invece di ridisegnare">⧉ parti da questa</button>
+  </div>
+
+  <h2>La tappa</h2>
+  <label>nome</label><input type="text" id="nome">
+  <label>id (senza spazi, va nel codice)</label><input type="text" id="id">
+  <label>racconto — una riga per riga</label><textarea id="racconto" rows="2"></textarea>
+  <label>dritta (l'aiuto, se si blocca)</label><input type="text" id="dritta">
+  <label>par — quanti ordini bastano</label><input type="number" id="par" min="1" max="20">
+
+  <h2>Cassetta degli ordini</h2>
+  <p class="spiega">i verbi che il bambino ha in mano in questa tappa. È la scala della
+    difficoltà, ed è quello che il costruttore gli offre nelle soluzioni.</p>
+  <div class="verbi" id="cassetta"></div>
+
+  <h2>Fazioni</h2>
+  <div id="fazioni"></div>
+
+  <h2 id="titoloZone" style="display:none">Zone disegnate</h2>
+  <div id="zoneNomi"></div>
+
+  <h2 id="titoloRonde" style="display:none">Ronde — giri fatti di zone</h2>
+  <div id="ronde"></div>
+  <button id="nuovaRonda" style="display:none">＋ ronda</button>
+
+  <h2>Segnali</h2>
+  <p class="spiega">rosso, verde e blu ci sono sempre. Qui se ne aggiungono altri, separati
+    da una virgola: entrano subito nei menu di «quando» e di «chiama».</p>
+  <input type="text" id="segnali" placeholder="ritirata, coprifuoco">
+ </div>
+
+ <div class="scorre" id="paginaOrdini" style="display:none">
+   <p class="spiega">Un ordine è <b>chi · quando · fai · bersaglio · finché</b>. Le tendine
+     offrono solo quello che è già disegnato, e solo quello che quel verbo accetta.</p>
+   <div id="costruttore"></div>
+ </div>
+
+ <div class="fondo">
+  <h2>Problemi</h2>
+  <div id="problemi"></div>
+
+  <h2>Il livello, pronto da incollare</h2>
+  <div class="barra">
+    <button id="copia">📋 copia</button>
+    <button id="applica">⬅ disegna questo testo</button>
+    <button id="nuovo">✨ nuovo</button>
+    <button id="prova" disabled>▶️ prova</button>
+  </div>
+  <textarea id="testo" spellcheck="false"></textarea>
+ </div>
+</div>
+
+<!-- le 24 tappe già progettate, portate qui da
+     `node strumenti/mappe/estrai-campagne.mjs` (file generato) -->
+<script src="campagne.js"></script>
+<script src="nucleo.js"></script>
+<script>
+'use strict'
+const M = globalThis.MAPPE
+const $ = s => document.querySelector(s)
+
+/* ═══════════ lo stato ═══════════
+   Uno solo: il livello. Tutto il resto — griglia, pannelli, ordini,
+   testo — è una vista su questo, ridisegnata da capo a ogni tocco. È
+   lento in teoria e istantaneo in pratica, e non c'è modo che una vista
+   si disallinei dal dato. */
+let L = M.vuoto(14, 10)
+let base = L                            // il livello vero; quando si guarda una
+let vista = 0                           // variante, L è la sua copia già fusa
+let strato = 'mappa'                    // 'mappa' | 'calco'
+let scheda = 'tappa'                    // 'tappa' | 'ordini'
+let simbolo = '#'                       // cosa dipinge il pennello
+let lettera = 'A'                       // che zona dipinge, nel calco
+let attrezzo = 'pennello'               // 'pennello' | 'gomma' | 'sposta'
+let preso = null                        // l'unità in mano, con «sposta»
+const nomiRicordati = {}                // nomi di zone che tornano se le ridisegni
+
+const ATTREZZI = [
+  { id: 'pennello', em: '🖌️', nome: 'pennello' },
+  { id: 'gomma',    em: '🧽', nome: 'gomma' },
+  { id: 'sposta',   em: '✋', nome: 'sposta' },
+  { id: 'riempi',   em: '🪣', nome: 'riempi' },
+]
+const LETTERE = ['A', 'B', 'C', 'D', 'E', 'F']
+const COLORI_ZONA = { A: '#ffd27a', B: '#8fd7ff', C: '#b6f0a8', D: '#f4a9d8', E: '#c9b6ff', F: '#ffb38a' }
+
+/* ═══════════ la griglia ═══════════ */
+
+const W = () => M.larghezza(L)
+const H = () => L.mappa.length
+
+/* Il calco deve restare sovrapponibile alla mappa: se qualcuno
+   ridimensiona, o incolla un livello senza calco, si rimette a posto
+   qui una volta per tutte invece che in cinque punti diversi. */
+function normalizza() {
+  if (!Array.isArray(L.mappa) || !L.mappa.length) L = M.vuoto(14, 10)
+  const w = W(), h = H()
+  L.mappa = L.mappa.map(r => (String(r) + '.'.repeat(w)).slice(0, w))
+  const vecchio = Array.isArray(L.calco) ? L.calco : []
+  L.calco = []
+  for (let y = 0; y < h; y++)
+    L.calco.push(((vecchio[y] || '') + '.'.repeat(w)).slice(0, w))
+  /* una zona disegnata vuole un nome: glielo si dà subito, così non
+     bisogna ricordarselo dopo */
+  L.zone = L.zone || {}
+  for (const k of lettereDisegnate()) if (!L.zone[k]) L.zone[k] = nomiRicordati[k] || ('zona ' + k)
+  for (const k of Object.keys(L.zone)) nomiRicordati[k] = M.nomeZona(L.zone[k])
+  /* gli elenchi che il costruttore riempie ci sono sempre: così non c'è
+     un ramo «se non esiste ancora» in mezzo a ogni menu */
+  if (!Array.isArray(L.ordini)) L.ordini = []
+  if (!Array.isArray(L.soluzioni)) L.soluzioni = []
+}
+
+const lettereDisegnate = () => new Set(L.calco.join('').split('').filter(c => /[A-Z]/.test(c)))
+
+/* Il contrario — la zona cancellata col pennello che sparisce anche
+   dall'elenco — si fa solo quando è il pennello a lavorare. Farlo
+   sempre vorrebbe dire che incollare un livello con un calco storto ne
+   butta via le zone senza dire niente: meglio un errore rosso che un
+   dato che evapora. */
+function puliziaZone() {
+  const usate = lettereDisegnate()
+  for (const k of Object.keys(L.zone || {})) if (!usate.has(k)) delete L.zone[k]
+}
+
+function disegnaGriglia() {
+  const g = $('#griglia'), w = W(), h = H()
+  /* quanto spazio è rimasto: sopra la griglia ci sono la cartella della
+     tappa, le linguette e il titolo, e quanto sono alti dipende da cosa
+     c'è scritto — misurarli è più onesto che indovinare un numero */
+  const sopra = [...$('main').children]
+    .filter(c => c !== g && c.offsetParent !== null)
+    .reduce((n, c) => n + c.offsetHeight + 10, 0)
+  const alto = Math.floor(($('main').clientHeight - sopra - 32) / h)
+  const largo = Math.floor(($('main').clientWidth - 40) / w)
+  const lato = Math.max(15, Math.min(46, alto, largo))
+  g.style.gridTemplateColumns = `repeat(${w}, ${lato}px)`
+  g.innerHTML = ''
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const ch = L.mappa[y][x], v = M.voce(ch) || {}
+    const z = L.calco[y][x]
+    const c = document.createElement('div')
+    c.className = 'cella'
+    c.dataset.x = x; c.dataset.y = y
+    c.style.height = lato + 'px'
+    c.style.background = v.che === 'terreno' ? (v.colore || '#f2ead9') : '#f2ead9'
+    if (!M.voce(ch)) { c.style.background = '#ff5c5c'; c.textContent = ch }
+    else if (v.che !== 'terreno' || v.emoji) c.textContent = v.emoji || ''
+    if (/[A-Z]/.test(z)) {
+      const tinta = document.createElement('div')
+      tinta.className = 'zona'
+      tinta.style.background = (COLORI_ZONA[z] || '#ddd') + (strato === 'calco' ? 'aa' : '55')
+      // la lettera si vede solo mentre si disegnano le zone: sulla mappa
+      // sarebbe una scritta addosso a ogni casella e basta
+      if (strato === 'calco') tinta.textContent = z
+      c.appendChild(tinta)
+    }
+    g.appendChild(c)
+  }
+  /* il nome è sempre quello della tappa: `fondi` lascia che una variante
+     sovrascriva qualunque chiave, `nome` compreso, ma lì dentro `nome` è
+     l'etichetta della scena — la tappa si chiama in un modo solo */
+  $('#titoloMappa').textContent = `${base.nome || 'senza nome'} — ${w}×${h}` +
+    (vista ? ` · ${(base.varianti[vista - 1] || {}).nome || 'variante ' + vista}` : '') +
+    (strato === 'calco' ? ' · stai disegnando le zone' : '')
+}
+
+/* ═══════════ dipingere ═══════════ */
+
+function tocca(x, y, cancella) {
+  if (x < 0 || y < 0 || x >= W() || y >= H()) return
+  if (attrezzo === 'sposta') return
+  if (strato === 'mappa') {
+    const ch = cancella || attrezzo === 'gomma' ? '.' : simbolo
+    if (attrezzo === 'riempi' && !cancella) return riempi(x, y, ch)
+    L.mappa[y] = M.sostituisci(L.mappa[y], x, ch)
+  } else {
+    const ch = cancella || attrezzo === 'gomma' ? '.' : lettera
+    if (attrezzo === 'riempi' && !cancella) return riempi(x, y, ch)
+    L.calco[y] = M.sostituisci(L.calco[y], x, ch)
+  }
+}
+
+/* Il secchiello: riempie la macchia di caselle uguali a quella toccata.
+   Sul calco si ferma ai muri della mappa anche se il calco lì è uguale:
+   una zona è una stanza, e chi la disegna clicca dentro la stanza e si
+   aspetta che venga fuori quella e non tutto il castello. */
+function riempi(x, y, ch) {
+  const righe = strato === 'mappa' ? L.mappa : L.calco
+  const partenza = righe[y][x]
+  if (partenza === ch) return
+  const coda = [[x, y]]
+  while (coda.length) {
+    const [cx, cy] = coda.pop()
+    if (cx < 0 || cy < 0 || cx >= W() || cy >= H()) continue
+    if (righe[cy][cx] !== partenza) continue
+    if (strato === 'calco' && M.solido(L.mappa[cy][cx])) continue
+    righe[cy] = M.sostituisci(righe[cy], cx, ch)
+    coda.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1])
+  }
+}
+
+let giu = false
+$('#griglia').addEventListener('mousedown', ev => {
+  const c = ev.target.closest('.cella'); if (!c) return
+  ev.preventDefault()
+  const x = +c.dataset.x, y = +c.dataset.y
+  if (attrezzo === 'sposta' && strato === 'mappa') {
+    const ch = L.mappa[y][x]
+    const v = M.voce(ch)
+    if (v && v.che !== 'terreno') { preso = { ch, x, y }; return }
+    return
+  }
+  giu = true
+  tocca(x, y, ev.button === 2)
+  ridisegna()
+})
+$('#griglia').addEventListener('mousemove', ev => {
+  const c = ev.target.closest('.cella'); if (!c) return
+  if (!giu) return
+  tocca(+c.dataset.x, +c.dataset.y, ev.buttons === 2)
+  ridisegna()
+})
+$('#griglia').addEventListener('mouseup', ev => {
+  const c = ev.target.closest('.cella')
+  if (preso && c) {
+    const x = +c.dataset.x, y = +c.dataset.y
+    L.mappa[preso.y] = M.sostituisci(L.mappa[preso.y], preso.x, '.')
+    L.mappa[y] = M.sostituisci(L.mappa[y], x, preso.ch)
+    ridisegna()
+  }
+  preso = null
+})
+document.addEventListener('mouseup', () => { giu = false })
+$('#griglia').addEventListener('contextmenu', ev => ev.preventDefault())
+
+/* ═══════════ i pannelli ═══════════ */
+
+function disegnaAttrezzi() {
+  $('#attrezzi').innerHTML = ''
+  for (const a of ATTREZZI) {
+    const b = document.createElement('button')
+    b.innerHTML = `<span class="em">${a.em}</span>${a.nome}`
+    if (attrezzo === a.id) b.className = 'acceso'
+    b.onclick = () => { attrezzo = a.id; disegnaAttrezzi() }
+    $('#attrezzi').appendChild(b)
+  }
+}
+
+const GRUPPI = [['terreno', 'Terreno'], ['unità', 'Unità'], ['cosa', 'Cose'],
+                ['congegno', 'Congegni'], ['traguardo', 'Traguardi']]
+
+function disegnaTavolozza() {
+  const t = $('#tavolozza')
+  t.innerHTML = ''
+  $('#titoloTav').textContent = strato === 'mappa' ? 'Tavolozza' : 'Zone'
+  if (strato === 'calco') {
+    const box = document.createElement('div')
+    box.className = 'tav'
+    for (const l of LETTERE) {
+      const b = document.createElement('button')
+      b.innerHTML = `<span class="quadro" style="background:${COLORI_ZONA[l]}"></span>${L.zone[l] ? M.nomeZona(L.zone[l]).slice(0, 9) : 'zona ' + l}`
+      if (lettera === l) b.className = 'acceso'
+      b.onclick = () => { lettera = l; attrezzo = attrezzo === 'gomma' ? 'pennello' : attrezzo; disegna() }
+      box.appendChild(b)
+    }
+    t.appendChild(box)
+    return
+  }
+  for (const [che, titolo] of GRUPPI) {
+    const h = document.createElement('h2'); h.textContent = titolo; t.appendChild(h)
+    const box = document.createElement('div'); box.className = 'tav'
+    for (const [ch, v] of Object.entries(M.LEGENDA)) {
+      if (v.che !== che) continue
+      const b = document.createElement('button')
+      b.title = `${v.nome} (${ch})`
+      b.innerHTML = v.emoji
+        ? `<span class="em">${v.emoji}</span>${v.nome}`
+        : `<span class="quadro" style="background:${v.colore}"></span>${v.nome}`
+      if (simbolo === ch) b.className = 'acceso'
+      b.onclick = () => { simbolo = ch; if (attrezzo === 'gomma') attrezzo = 'pennello'; disegna() }
+      box.appendChild(b)
+    }
+    t.appendChild(box)
+  }
+}
+
+function disegnaMetadati() {
+  $('#nome').value = L.nome || ''
+  $('#id').value = L.id || ''
+  $('#racconto').value = (L.racconto || []).join('\n')
+  $('#dritta').value = L.dritta || ''
+  $('#par').value = L.par || 1
+  $('#larg').value = W(); $('#alt').value = H()
+  if (document.activeElement !== $('#segnali')) $('#segnali').value = (L.segnali || []).join(', ')
+
+  const c = $('#cassetta'); c.innerHTML = ''
+  for (const v of Object.keys(M.VERBI)) {
+    const b = document.createElement('button')
+    b.textContent = v; b.title = M.VERBI[v].che
+    if ((L.cassetta || []).includes(v)) b.className = 'acceso'
+    b.onclick = () => {
+      L.cassetta = (L.cassetta || []).includes(v)
+        ? L.cassetta.filter(x => x !== v) : (L.cassetta || []).concat(v)
+      disegna()
+    }
+    c.appendChild(b)
+  }
+
+  const f = $('#fazioni'); f.innerHTML = ''
+  for (const [k, faz] of Object.entries(L.fazioni || {})) {
+    const riga = document.createElement('div'); riga.className = 'fazione'
+    riga.innerHTML =
+      `<input type="text" value="${faz.nome || k}" title="come si chiama">` +
+      `<select><option value="giocatore">giocatore</option><option value="livello">livello</option></select>` +
+      `<input type="text" value="${faz.simboli || ''}" title="i simboli arruolati">`
+    const [nome, autore, simboli] = riga.children
+    autore.value = faz.autore || 'livello'
+    nome.oninput = () => { faz.nome = nome.value; soloTesto() }
+    autore.onchange = () => { faz.autore = autore.value; disegna() }
+    simboli.oninput = () => { faz.simboli = simboli.value; soloTesto() }
+    f.appendChild(riga)
+  }
+
+  const z = $('#zoneNomi'); z.innerHTML = ''
+  const zone = Object.keys(L.zone || {})
+  $('#titoloZone').style.display = zone.length ? '' : 'none'
+  for (const k of zone) {
+    const riga = document.createElement('div'); riga.className = 'zonaRiga'
+    riga.innerHTML = `<div class="lettera" style="background:${COLORI_ZONA[k] || '#ddd'}">${k}</div>` +
+                     `<input type="text" value="${M.nomeZona(L.zone[k])}">`
+    const campo = riga.children[1]
+    campo.oninput = () => { L.zone[k] = campo.value; nomiRicordati[k] = campo.value; soloTesto() }
+    z.appendChild(riga)
+  }
+  disegnaRonde(zone)
+}
+
+/* Le ronde: un giro fatto di zone, nell'ordine in cui si visitano. È
+   l'unica cosa che il disegno non sa dire da solo — e senza di lei
+   «pattuglia» ha metà dei bersagli che gli spettano. */
+function disegnaRonde(zone) {
+  const box = $('#ronde'); box.innerHTML = ''
+  const ronde = L.ronde || {}
+  const nomi = Object.keys(ronde)
+  $('#titoloRonde').style.display = zone.length ? '' : 'none'
+  $('#nuovaRonda').style.display = zone.length ? '' : 'none'
+  for (const nome of nomi) {
+    const riga = document.createElement('div'); riga.className = 'rondaRiga'
+    const campo = document.createElement('input')
+    campo.type = 'text'; campo.value = nome; campo.title = 'come si chiama il giro'
+    campo.onchange = () => {
+      const nuovo = campo.value.trim()
+      if (!nuovo || nuovo === nome) { campo.value = nome; return }
+      const rifatte = {}
+      for (const k of nomi) rifatte[k === nome ? nuovo : k] = ronde[k]
+      L.ronde = rifatte; disegna()
+    }
+    riga.appendChild(campo)
+    const giro = document.createElement('div'); giro.className = 'giro'
+    ;(ronde[nome] || []).forEach((l, i) => {
+      const b = document.createElement('button')
+      b.className = 'tappa'; b.textContent = l
+      b.style.background = COLORI_ZONA[l] || '#ddd'
+      b.title = 'togli questa tappa dal giro'
+      b.onclick = () => { ronde[nome].splice(i, 1); disegna() }
+      giro.appendChild(b)
+    })
+    for (const k of zone) {
+      const b = document.createElement('button')
+      b.className = 'tappa'; b.textContent = '+' + k
+      b.style.background = '#3d4460'; b.style.color = '#e8eaf2'
+      b.title = `aggiungi «${M.nomeZona(L.zone[k])}» in fondo al giro`
+      b.onclick = () => { ronde[nome] = (ronde[nome] || []).concat(k); disegna() }
+      giro.appendChild(b)
+    }
+    riga.appendChild(giro)
+    const via = document.createElement('button')
+    via.textContent = '✕'; via.className = 'mini'; via.title = 'butta via la ronda'
+    via.onclick = () => { delete L.ronde[nome]; if (!Object.keys(L.ronde).length) delete L.ronde; disegna() }
+    riga.appendChild(via)
+    box.appendChild(riga)
+  }
+}
+$('#nuovaRonda').onclick = () => {
+  L.ronde = L.ronde || {}
+  let n = 1
+  while (L.ronde['giro ' + n]) n++
+  L.ronde['giro ' + n] = Object.keys(L.zone || {}).slice(0, 2)
+  disegna()
+}
+
+/* ═══════════ IL COSTRUTTORE DEGLI ORDINI ═══════════
+
+   Il collo di bottiglia non è disegnare la mappa: è scrivere gli
+   ordini. Ventiquattro tappe vogliono dire qualche centinaio di
+   ordini, e a mano ognuno è un'occasione per sbagliare un nome,
+   comandare l'unità di qualcun altro o chiedere a un verbo un
+   bersaglio che non gli spetta.
+
+   Qui non si scrive: si sceglie. E le tendine non hanno un elenco
+   loro — lo ricavano dal livello che sta sotto (la mappa, le zone, le
+   fazioni, la cassetta) passando dalle stesse tabelle su cui gira il
+   validatore. Il risultato è che **un ordine impossibile non si riesce
+   a comporre**: se sulla mappa non c'è niente da aprire, «apri» non ha
+   nessun bersaglio da offrire, e lo dice invece di lasciar scegliere
+   una cosa che poi il validatore boccia. */
+
+const EMOJI_TIPO = { cosa: '📦', congegno: '⚙️', 'unità': '🧍', traguardo: '🏁',
+                     zona: '▦', ronda: '🔁', segnale: '📣' }
+const TITOLO_TIPO = { cosa: 'cose', congegno: 'congegni', 'unità': 'unità',
+                      traguardo: 'traguardi', zona: 'zone', ronda: 'ronde', segnale: 'segnali' }
+
+/* Una tendina. Se il valore che c'è nel dato non è fra le scelte — un
+   livello incollato che cita una chiave poi cancellata dalla mappa —
+   non lo si butta via di nascosto: entra come scelta rossa col punto
+   esclamativo. Perdere un dato senza dirlo è peggio che mostrarlo
+   rotto. */
+function menu(opzioni, valore, alCambio, extra) {
+  const e = extra || {}
+  const s = document.createElement('select')
+  const tutte = opzioni.slice()
+  const dentro = tutte.some(o => o.v === (valore || ''))
+  if (!dentro && valore) tutte.unshift({ v: valore, t: `⚠ ${valore} — non c'è`, gruppo: 'da aggiustare' })
+  if (!tutte.length) { tutte.push({ v: '', t: e.vuoto || '(niente)' }); s.disabled = true; s.classList.add('vuoto') }
+  const gruppi = new Map()
+  for (const o of tutte) {
+    const g = o.gruppo || ''
+    if (!gruppi.has(g)) gruppi.set(g, [])
+    gruppi.get(g).push(o)
+  }
+  for (const [g, lista] of gruppi) {
+    let dove = s
+    if (g && gruppi.size > 1) { dove = document.createElement('optgroup'); dove.label = g; s.appendChild(dove) }
+    for (const o of lista) {
+      const op = document.createElement('option')
+      op.value = o.v; op.textContent = o.t
+      if (o.aiuto) op.title = o.aiuto
+      dove.appendChild(op)
+    }
+  }
+  s.value = valore || ''
+  if (!dentro && valore) s.classList.add('guasto')
+  if (e.classe) s.className += ' ' + e.classe
+  if (e.titolo) s.title = e.titolo
+  s.onchange = () => alCambio(s.value)
+  return s
+}
+
+/* i bersagli che quel verbo (o quella condizione) accetta, presi da
+   quello che è disegnato: è la stessa regola con cui il validatore
+   boccia «pattuglia il tesoro», applicata prima invece che dopo */
+function bersagliPer(ammessi) {
+  const fuori = []
+  for (const [nome, b] of M.bersagli(L)) {
+    if (!ammessi.includes(b.tipo)) continue
+    const em = (b.ch && (M.LEGENDA[b.ch] || {}).emoji) || EMOJI_TIPO[b.tipo] || ''
+    fuori.push({ v: nome, t: `${em} ${nome}`, gruppo: TITOLO_TIPO[b.tipo] || b.tipo })
+  }
+  return fuori
+}
+
+/* a chi si può firmare un ordine: le unità di quella parte, una per
+   una quando ce n'è più d'una, e la fazione intera. Il livello non
+   comanda i nostri e il bambino non comanda i banditi — e qui non è un
+   errore da leggere dopo, è una scelta che non compare */
+function chiPer(autore) {
+  const opz = []
+  const perNome = new Map()
+  for (const u of M.unita(L)) {
+    if (!u.fazione || u.fazione.autore !== autore) continue
+    if (!perNome.has(u.nome)) perNome.set(u.nome, [])
+    perNome.get(u.nome).push(u)
+  }
+  for (const [nome, lista] of perNome) {
+    const em = (M.LEGENDA[lista[0].ch] || {}).emoji || ''
+    opz.push({ v: nome, t: `${em} ${nome}${lista.length > 1 ? ` — tutte e ${lista.length}` : ''}`, gruppo: 'unità' })
+    if (lista.length > 1) for (const u of lista) opz.push({ v: u.id, t: `${em} ${u.id}`, gruppo: 'unità' })
+  }
+  for (const [k, f] of Object.entries(L.fazioni || {}))
+    if (f.autore === autore) opz.push({ v: k, t: `🏳️ tutta «${f.nome || k}»`, gruppo: 'fazioni' })
+  return opz
+}
+
+function fazioneDiChi(chi) {
+  const [nome, n] = String(chi || '').split('#')
+  const trovate = M.unita(L).filter(u => (u.nome === nome || u.ch === nome) && (!n || String(u.n) === n))
+  if (trovate.length) return trovate[0].fazione
+  const f = (L.fazioni || {})[chi]
+  return f ? { id: chi, ...f } : null
+}
+
+const emojiDiChi = chi => {
+  const u = M.unita(L).find(u => u.nome === String(chi).split('#')[0])
+  return u ? (M.LEGENDA[u.ch] || {}).emoji || '🧍' : '🏳️'
+}
+
+const poni = (o, k, v) => { if (v) o[k] = v; else delete o[k] }
+
+/* cambiato il destinatario, l'ordine può essere diventato impossibile:
+   il cane non apre. Si sposta sul primo verbo che sa fare, invece di
+   restare lì rosso. */
+function sistemaVerbo(ord, verbi) {
+  const buoni = verbiPer(ord.chi, verbi)
+  if (buoni.includes(ord.fai)) return
+  ord.fai = buoni[0]
+  sistemaBersaglio(ord)
+}
+
+/* i verbi hanno bersagli obbligatori, vietati e di un genere solo:
+   cambiato il verbo, il bersaglio si rimette a posto da sé invece di
+   restare lì a far fallire il validatore */
+function sistemaBersaglio(ord) {
+  const v = M.VERBI[ord.fai] || {}
+  if (v.bersaglio === 'vietato') delete ord.bersaglio
+  else {
+    const opz = bersagliPer(v.ammessi || [])
+    if (!opz.some(o => o.v === ord.bersaglio)) poni(ord, 'bersaglio', opz.length ? opz[0].v : '')
+  }
+  if (v.vuoleFinche && !ord.finche) ord.finche = primaCondizione()
+}
+
+/* «aspetta» senza «finché» è un'unità che non riparte più: quando si
+   sceglie quel verbo il finché si presenta già riempito con qualcosa
+   che ha senso (l'allarme rosso c'è sempre). */
+function primaCondizione() {
+  for (const capo of Object.keys(M.CONDIZIONI)) {
+    const c = M.CONDIZIONI[capo]
+    if (c.solo) continue
+    const opz = bersagliPer(c.ammessi || [])
+    if (opz.length) return capo + ':' + (capo === 'segnale' ? 'rosso' : opz[0].v)
+  }
+  return 'mai'
+}
+
+/* Il terzo lato del filtro: non tutte le unità sanno tutto. Un ordine
+   firmato «alla guardia» lo eseguono tutte le guardie, quindi i verbi
+   offerti sono quelli che sanno fare **tutte** — e il cane non compare
+   mai accanto ad «apri». */
+function verbiPer(chi, verbi) {
+  const sanno = M.sannoTutti(M.chiRisolve(L, chi))
+  const buoni = verbi.filter(v => sanno.includes(v))
+  return buoni.length ? buoni : verbi
+}
+
+const saDire = chi => {
+  const u = M.chiRisolve(L, chi)
+  const sanno = M.sannoTutti(u)
+  return u.length ? `sa fare: ${sanno.join(', ')}` : ''
+}
+
+function nuovoOrdine(chi, verbi) {
+  const ord = { chi }
+  verbi = verbiPer(chi, verbi)
+  ord.fai = verbi.find(v => {
+    const V = M.VERBI[v] || {}
+    return V.bersaglio === 'vietato' || bersagliPer(V.ammessi || []).length
+  }) || verbi[0]
+  sistemaBersaglio(ord)
+  return ord
+}
+
+/* gli ordini stanno in un elenco solo, come nel file, ma si guardano
+   raggruppati per chi li esegue: è così che si leggono («la guardia fa
+   queste tre cose») ed è così che si scrivono */
+function gruppiDi(lista) {
+  const m = new Map()
+  lista.forEach((o, i) => {
+    const k = (o && o.chi) || ''
+    if (!m.has(k)) m.set(k, [])
+    m.get(k).push(i)
+  })
+  return [...m].map(([chi, indici]) => ({ chi, indici }))
+}
+
+function disegnaOrdini() {
+  const box = $('#costruttore'); box.innerHTML = ''
+  box.appendChild(bloccoOrdini({
+    titolo: 'Ordini del livello',
+    chiFirma: '🔴 li firma il livello — la vita che gira mentre il bambino guarda',
+    classe: 'suo', autore: 'livello', lista: L.ordini, chiave: 'livello',
+    /* gli ordini del livello non passano dalla cassetta: quelli li
+       scrive l'autore, non il bambino */
+    verbi: Object.keys(M.VERBI),
+  }))
+
+  const h = document.createElement('h2'); h.textContent = 'Soluzioni'; box.appendChild(h)
+  const p = document.createElement('p'); p.className = 'spiega'
+  p.textContent = 'La promessa che la tappa si chiude: le firma il bambino, quindi solo unità ' +
+                  'sue e solo verbi della cassetta. Una si può segnare «fragile» — quella che deve ' +
+                  'vincere la base e cadere su una variante.'
+  box.appendChild(p)
+  L.soluzioni.forEach((sol, i) => box.appendChild(bloccoSoluzione(sol, i)))
+  /* Il par è quanti ordini bastano, e la soluzione più corta che non è
+     fragile lo sa già. Si propone e non si impone: certe tappe vogliono
+     un par più stretto di quello che l'autore è riuscito a scrivere. */
+  const corte = L.soluzioni.filter(s => !s.fragile && (s.ordini || []).length)
+                           .map(s => s.ordini.length)
+  if (corte.length) {
+    const proposto = Math.min(...corte)
+    const p2 = document.createElement('div'); p2.className = 'proposta'
+    const detto = document.createElement('span')
+    detto.textContent = proposto === L.par
+      ? `il par è ${L.par}, e il piano più corto non fragile ne usa ${proposto}: torna`
+      : `il piano più corto non fragile usa ${proposto} ordini, e il par dice ${L.par || '?'}`
+    p2.appendChild(detto)
+    if (proposto !== L.par) {
+      const b = document.createElement('button')
+      b.className = 'mini'; b.id = 'usaPar'; b.textContent = `usa ${proposto}`
+      b.onclick = () => { L.par = proposto; disegna() }
+      p2.appendChild(b)
+    }
+    box.appendChild(p2)
+  }
+  const piu = document.createElement('button')
+  piu.className = 'nuovo'; piu.id = 'nuovaSoluzione'; piu.textContent = '＋ nuova soluzione'
+  piu.onclick = () => {
+    L.soluzioni.push({ nome: 'soluzione ' + (L.soluzioni.length + 1), ordini: [] })
+    aggiornaOrdini()
+  }
+  box.appendChild(piu)
+}
+
+/* Un blocco finito si ripiega. Su una tappa fitta gli ordini del
+   livello e le soluzioni non ci stanno insieme sullo schermo, e quello
+   che serve avere davanti è sempre uno solo dei due. */
+const piegati = {}
+function caretto(chiave, dentro) {
+  const b = document.createElement('button')
+  b.className = 'caretto'; b.textContent = piegati[chiave] ? '▸' : '▾'
+  b.title = piegati[chiave] ? 'apri' : 'ripiega'
+  b.onclick = () => { piegati[chiave] = !piegati[chiave]; aggiornaOrdini() }
+  dentro.appendChild(b)
+  return !piegati[chiave]
+}
+
+function bloccoOrdini(cfg) {
+  const box = document.createElement('div')
+  box.className = 'blocco ' + cfg.classe
+  const capo = document.createElement('div'); capo.className = 'capo'
+  const testa = document.createElement('div'); testa.className = 'titolo'
+  const aperto = caretto(cfg.chiave, testa)
+  const b = document.createElement('b'); b.textContent = cfg.titolo
+  testa.appendChild(b)
+  const conta = document.createElement('span')
+  conta.className = 'faz'; conta.textContent = `${cfg.lista.length} ordini`
+  testa.appendChild(conta)
+  capo.appendChild(testa)
+  const chi = document.createElement('span'); chi.className = 'chi'; chi.textContent = cfg.chiFirma
+  capo.appendChild(chi)
+  box.appendChild(capo)
+  if (aperto) corpoOrdini(box, cfg)
+  return box
+}
+
+/* i gruppi (uno per unità) più il piede che ne apre un altro */
+function corpoOrdini(box, cfg) {
+  for (const g of gruppiDi(cfg.lista)) box.appendChild(gruppoOrdini(g, cfg))
+  const piede = document.createElement('div'); piede.className = 'piede'
+  piede.appendChild(menu(
+    [{ v: '', t: '＋ aggiungi un ordine a…' }].concat(chiPer(cfg.autore)), '',
+    chi => { if (chi) { cfg.lista.push(nuovoOrdine(chi, cfg.verbi)); aggiornaOrdini() } },
+    { classe: 'aggiungi', vuoto: cfg.autore === 'giocatore'
+        ? 'nessuna unità del giocatore sulla mappa'
+        : 'nessuna unità del livello sulla mappa' }))
+  box.appendChild(piede)
+}
+
+function gruppoOrdini(g, cfg) {
+  const box = document.createElement('div'); box.className = 'gruppo'
+  const testa = document.createElement('div'); testa.className = 'testa'
+  testa.appendChild(document.createTextNode(emojiDiChi(g.chi)))
+  testa.appendChild(menu(chiPer(cfg.autore), g.chi, chi => {
+    for (const i of g.indici) { cfg.lista[i].chi = chi; sistemaVerbo(cfg.lista[i], cfg.verbi) }
+    aggiornaOrdini()
+  }, { titolo: 'a chi sono firmati questi ordini — ' + saDire(g.chi) }))
+  const faz = fazioneDiChi(g.chi)
+  const eti = document.createElement('span')
+  eti.className = 'faz'; eti.textContent = faz ? (faz.nome || faz.id) : ''
+  testa.appendChild(eti)
+  const piu = document.createElement('button')
+  piu.className = 'mini'; piu.textContent = '＋'; piu.title = 'un altro ordine a lui'
+  piu.onclick = () => {
+    cfg.lista.splice(g.indici[g.indici.length - 1] + 1, 0, nuovoOrdine(g.chi, cfg.verbi))
+    aggiornaOrdini()
+  }
+  testa.appendChild(piu)
+  box.appendChild(testa)
+  g.indici.forEach((i, k) => box.appendChild(cartaOrdine(cfg.lista, i, g, k, cfg)))
+  return box
+}
+
+function cartaOrdine(lista, i, g, k, cfg) {
+  const ord = lista[i]
+  const carta = document.createElement('div'); carta.className = 'ordine'
+  const verbo = M.VERBI[ord.fai] || {}
+
+  const r1 = document.createElement('div'); r1.className = 'r1'
+  r1.appendChild(menu(verbiPer(ord.chi, cfg.verbi).map(v => ({ v, t: v, aiuto: M.VERBI[v].che })), ord.fai, v => {
+    ord.fai = v; sistemaBersaglio(ord); aggiornaOrdini()
+  }, { classe: 'verbo', titolo: verbo.che || '' }))
+  if (verbo.bersaglio === 'vietato') {
+    const niente = document.createElement('span')
+    niente.className = 'niente'; niente.textContent = 'sta fermo dov\'è'
+    r1.appendChild(niente)
+  } else {
+    r1.appendChild(menu(bersagliPer(verbo.ammessi || []), ord.bersaglio || '',
+      v => { poni(ord, 'bersaglio', v); aggiornaOrdini() },
+      { classe: 'bers', vuoto: `niente da «${ord.fai}» su questa mappa`,
+        titolo: verbo.ammessi ? 'accetta: ' + verbo.ammessi.join(', ') : '' }))
+  }
+  const frecce = document.createElement('div'); frecce.className = 'frecce'
+  frecce.appendChild(tastino('↑', 'più su', k === 0, () => scambia(lista, g.indici[k], g.indici[k - 1])))
+  frecce.appendChild(tastino('↓', 'più giù', k === g.indici.length - 1, () => scambia(lista, g.indici[k], g.indici[k + 1])))
+  frecce.appendChild(tastino('✕', 'butta via l\'ordine', false, () => { lista.splice(i, 1) }))
+  r1.appendChild(frecce)
+  carta.appendChild(r1)
+
+  const r2 = document.createElement('div'); r2.className = 'r2'
+  pezzoCondizione(r2, ord, 'quando', 'quando')
+  pezzoCondizione(r2, ord, 'finche', 'finché', verbo.vuoleFinche)
+  carta.appendChild(r2)
+  return carta
+}
+
+const tastino = (testo, titolo, spento, fa) => {
+  const b = document.createElement('button')
+  b.textContent = testo; b.title = titolo; b.disabled = spento
+  b.onclick = () => { fa(); aggiornaOrdini() }
+  return b
+}
+const scambia = (lista, a, b) => { const t = lista[a]; lista[a] = lista[b]; lista[b] = t }
+
+/* Una condizione è sempre «verbo:bersaglio» — o una delle due che
+   stanno da sole. Due tendine: la prima dice che domanda si fa, la
+   seconda su cosa, e anche lì le scelte sono soltanto quelle che quella
+   domanda accetta.
+
+   Finché non c'è, la condizione è **un tastino e basta**. Un ordine su
+   tre ne ha una, e tenere quattro tendine spente sotto ogni riga
+   voleva dire tre righe per ordine: un piano di sei ordini non ci
+   stava più sullo schermo, e leggerlo tutto insieme è metà del lavoro
+   di chi lo scrive. */
+function pezzoCondizione(r2, ord, campo, etichetta, insiste) {
+  if (!ord[campo]) {
+    const b = document.createElement('button')
+    b.className = 'chip' + (insiste ? ' insiste' : '')
+    b.textContent = '＋ ' + etichetta
+    b.title = campo === 'quando'
+      ? 'l\'ordine parte solo quando questa cosa è vera (se no parte subito)'
+      : 'l\'ordine finisce quando questa cosa diventa vera (se no, quando è compiuto)'
+    b.onclick = () => { ord[campo] = primaCondizione(); aggiornaOrdini() }
+    r2.appendChild(b)
+    return
+  }
+  const cella = document.createElement('div'); cella.className = 'cond'
+  const et = document.createElement('span'); et.className = 'et'; et.textContent = etichetta
+  cella.appendChild(et)
+  const [capo, resto] = String(ord[campo]).split(':')
+  cella.appendChild(menu(
+    Object.keys(M.CONDIZIONI).map(c => ({ v: c, t: c, aiuto: M.CONDIZIONI[c].che })), capo || '', c => {
+      if (M.CONDIZIONI[c].solo) ord[campo] = c
+      else {
+        const opz = bersagliPer(M.CONDIZIONI[c].ammessi || [])
+        ord[campo] = c + ':' + (opz.length ? opz[0].v : '')
+      }
+      aggiornaOrdini()
+    }, { titolo: M.CONDIZIONI[capo] ? M.CONDIZIONI[capo].che : '' }))
+  const c = M.CONDIZIONI[capo]
+  if (!c || !c.solo)
+    cella.appendChild(menu(bersagliPer((c || {}).ammessi || []), resto || '',
+      v => { ord[campo] = capo + ':' + v; aggiornaOrdini() },
+      { vuoto: `niente di «${capo}» qui` }))
+  const via = document.createElement('button')
+  via.className = 'mini'; via.textContent = '✕'
+  via.title = campo === 'quando' ? 'toglila: l\'ordine parte subito' : 'toglila: finisce quando è compiuto'
+  via.onclick = () => { delete ord[campo]; aggiornaOrdini() }
+  cella.appendChild(via)
+  r2.appendChild(cella)
+}
+
+function bloccoSoluzione(sol, i) {
+  const box = document.createElement('div')
+  box.className = 'blocco mio' + (sol.fragile ? ' fragile' : '')
+  const capo = document.createElement('div'); capo.className = 'solCapo'
+  const aperto = caretto('sol:' + i, capo)
+  const nome = document.createElement('input')
+  nome.type = 'text'; nome.value = sol.nome || ''; nome.placeholder = 'come si chiama'
+  nome.oninput = () => { sol.nome = nome.value; soloTesto() }
+  capo.appendChild(nome)
+  const frag = document.createElement('label'); frag.className = 'frag'
+  frag.title = 'vince sulla base e cade su una variante: serve ai test, non ai bambini'
+  const spunta = document.createElement('input')
+  spunta.type = 'checkbox'; spunta.checked = !!sol.fragile
+  spunta.onchange = () => { if (spunta.checked) sol.fragile = true; else delete sol.fragile; aggiornaOrdini() }
+  frag.appendChild(spunta); frag.appendChild(document.createTextNode('fragile'))
+  capo.appendChild(frag)
+  const via = document.createElement('button')
+  via.className = 'mini'; via.textContent = '✕'; via.title = 'butta via la soluzione'
+  via.onclick = () => { L.soluzioni.splice(i, 1); aggiornaOrdini() }
+  capo.appendChild(via)
+  box.appendChild(capo)
+
+  if (!Array.isArray(sol.ordini)) sol.ordini = []
+  if (aperto) corpoOrdini(box, {
+    autore: 'giocatore', lista: sol.ordini,
+    /* la soluzione la firma il bambino: può usare solo i verbi che ha
+       in mano, cioè quelli della cassetta */
+    verbi: (L.cassetta || []).filter(v => M.VERBI[v]),
+  })
+  const conto = document.createElement('div')
+  const lunga = sol.ordini.length > (L.par || 0)
+  conto.className = 'conto' + (lunga ? ' male' : '')
+  conto.textContent = `${sol.ordini.length} ordini · par ${L.par || '?'}` +
+    (lunga ? ' — più lunga del par' : sol.fragile ? ' — fragile: deve cadere su una variante' : '')
+  box.appendChild(conto)
+  return box
+}
+
+/* ═══════════ LE 24 TAPPE ═══════════
+
+   Le campagne del Generale sono già progettate: ventiquattro tappe con
+   il loro titolo, la loro storia, il **concetto che devono insegnare**,
+   la cassetta e il par. Quello che manca a tutte è la mappa.
+
+   Tenere quel documento aperto di fianco e ricopiarlo a mano è il modo
+   più facile di disegnare una tappa che insegna un'altra cosa. Qui la
+   tappa si sceglie da una tendina: nome, racconto, cassetta e par
+   arrivano da soli, il concetto resta scritto sopra la mappa finché si
+   disegna, e le tre scene diventano i nomi delle linguette delle
+   varianti.
+
+   Il dato arriva da `campagne.js`, che è generato da
+   `node strumenti/mappe/estrai-campagne.mjs`: da `file://` un modulo ES
+   non si carica, e il file vero sta in `src/`, dove uno strumento non
+   mette le mani. */
+
+const CAMPAGNE = (globalThis.CAMPAGNE_MAPPE || {}).campagne || []
+let scelta = null                 // { c: campagna, t: tappa }
+
+const tappeDi = c => (c && c.tappe) || []
+const fatteDi = c => tappeDi(c).filter(t => t.haMappa).length
+
+function disegnaScelta() {
+  const cs = $('#campagna'), ts = $('#tappa')
+  cs.innerHTML = ''; ts.innerHTML = ''
+  if (!CAMPAGNE.length) {
+    cs.innerHTML = '<option>campagne.js non c\'è</option>'
+    cs.disabled = ts.disabled = true
+    $('#avanzamento').innerHTML =
+      '<div>lancia <b>node strumenti/mappe/estrai-campagne.mjs</b></div>'
+    return
+  }
+  const vuota = document.createElement('option')
+  vuota.value = ''; vuota.textContent = '— nessuna tappa —'
+  cs.appendChild(vuota)
+  for (const c of CAMPAGNE) {
+    const o = document.createElement('option')
+    o.value = c.id; o.textContent = `${c.emoji} ${c.nome}`
+    cs.appendChild(o)
+  }
+  cs.value = scelta ? scelta.c.id : ''
+  ts.disabled = !scelta
+  if (!scelta) {
+    const o = document.createElement('option'); o.textContent = '— scegli la campagna —'
+    ts.appendChild(o)
+  } else {
+    for (const t of tappeDi(scelta.c)) {
+      const o = document.createElement('option')
+      o.value = t.id
+      o.textContent = `${t.haMappa ? '✅' : '⬜'} ${t.n}. ${t.nome}`
+      ts.appendChild(o)
+    }
+    ts.value = scelta.t.id
+  }
+  /* a che punto sono le 24: una riga per campagna, e il totale */
+  const a = $('#avanzamento'); a.innerHTML = ''
+  let tutte = 0, fatte = 0
+  for (const c of CAMPAGNE) {
+    tutte += tappeDi(c).length; fatte += fatteDi(c)
+    const r = document.createElement('div')
+    r.innerHTML = `<span>${c.emoji} ${c.nome}</span><b>${fatteDi(c)}/${tappeDi(c).length}</b>`
+    a.appendChild(r)
+  }
+  const tot = document.createElement('div')
+  tot.innerHTML = `<span>con la mappa, secondo <b>src/data</b></span><b>${fatte}/${tutte}</b>`
+  a.appendChild(tot)
+}
+
+/* Il racconto vuole due righe, la storia della campagna è un paragrafo:
+   si taglia alle frasi, e quello che avanza si appende alla seconda. */
+function spezza(storia) {
+  const frasi = String(storia || '').match(/[^.!?]+[.!?]*/g) || []
+  const righe = frasi.map(f => f.trim()).filter(Boolean)
+  if (righe.length <= 2) return righe
+  return [righe[0], righe.slice(1).join(' ')]
+}
+
+function prendiDati() {
+  if (!scelta) return
+  const t = scelta.t
+  L.id = t.id
+  L.nome = t.nome
+  L.racconto = spezza(t.storia)
+  if (t.dritta) L.dritta = t.dritta
+  if (t.cassetta.length) L.cassetta = t.cassetta.slice()
+  L.par = t.par
+  /* le tre scene sono descritte a parole nella campagna: la prima è la
+     base, le altre due diventano le linguette delle varianti — con il
+     loro nome, che è quello che dice cosa disegnarci dentro */
+  if (t.scene.length === 3) {
+    L.varianti = L.varianti || []
+    for (let i = 0; i < 2; i++) {
+      if (L.varianti[i]) L.varianti[i].nome = t.scene[i + 1]
+      else L.varianti[i] = { nome: t.scene[i + 1] }
+    }
+  }
+  vista = 0; base = L
+  disegna()
+}
+
+function disegnaCartella() {
+  const box = $('#cartella')
+  if (!scelta) { box.style.display = 'none'; return }
+  box.style.display = ''
+  const t = scelta.t
+  box.innerHTML = ''
+  const riga = (classe, testo) => {
+    const d = document.createElement('div'); d.className = classe; d.textContent = testo
+    box.appendChild(d); return d
+  }
+  riga('dove', `${scelta.c.emoji} ${scelta.c.nome} · tappa ${t.n} di ${tappeDi(scelta.c).length} · ` +
+               `${t.haMappa ? 'ha già la mappa' : 'la mappa manca'} · par ${t.par}`)
+  riga('concetto', `🎯 ${t.concetto.nome} — quello che questa tappa deve insegnare`)
+  riga('cosa', t.concetto.cosa)
+  riga('storia', '« ' + t.storia + ' »')
+  if (t.scene.length) {
+    const ol = document.createElement('ol')
+    t.scene.forEach((sc, i) => {
+      const li = document.createElement('li')
+      li.textContent = sc + (i === 0 ? ' — la base' : ` — variante ${i}`)
+      ol.appendChild(li)
+    })
+    box.appendChild(ol)
+  }
+  /* La campagna è stata progettata con un vocabolario più fine di questo
+     formato: il passo contato, l'attacco, il «se» che qui è un campo e
+     non un verbo. Va detto — ma in una riga: il perché sta nel titolo,
+     e quello che conta è quando la cassetta resta vuota. */
+  if (t.scartati.length) {
+    const d = riga('manca', `⚠ la cassetta della campagna ha ${t.scartati.length} ordini che questo ` +
+      `formato non ha (${t.scartati.map(x => x.ordine).join(', ')})` +
+      (t.cassetta.length ? ': il resto è arrivato' : ' — e non resta niente: la cassetta mettila a mano'))
+    d.title = t.scartati.map(x => `«${x.ordine}»: ${x.perche}`).join('\n')
+  }
+}
+
+$('#campagna').onchange = () => {
+  const c = CAMPAGNE.find(x => x.id === $('#campagna').value)
+  scelta = c ? { c, t: tappeDi(c)[0] } : null
+  if (scelta) prendiDati(); else disegna()
+}
+$('#tappa').onchange = () => {
+  if (!scelta) return
+  const t = tappeDi(scelta.c).find(x => x.id === $('#tappa').value)
+  if (t) { scelta = { c: scelta.c, t }; prendiDati() }
+}
+$('#rimettiDati').onclick = prendiDati
+
+/* «Parti da questa»: tiene il disegno e stacca il nome. Fra ventiquattro
+   tappe ce ne sono molte con lo stesso impianto — la stessa fortezza con
+   una guardia in più — e ridisegnarla da capo è lavoro buttato. */
+$('#partiDaQuesta').onclick = () => {
+  vista = 0
+  L = clona(intero()); base = L
+  L.id = ''
+  L.nome = 'copia di ' + (L.nome || '')
+  disegna()
+}
+
+/* un livello incollato ritrova la sua tappa dall'id: così la cartella
+   col concetto torna su anche quando si riapre un livello vecchio */
+function ritrovaTappa() {
+  scelta = null
+  for (const c of CAMPAGNE) {
+    const t = tappeDi(c).find(x => x.id === L.id)
+    if (t) { scelta = { c, t }; return }
+  }
+}
+
+/* ═══════════ LE VARIANTI, DISEGNATE ═══════════
+
+   Un livello si gioca tre volte: la base e due varianti. Una variante è
+   una **differenza esplicita** stesa sopra la base — non un seme, ed è
+   una decisione, non una comodità: col seme il livello che il bambino
+   gioca davvero non sta scritto da nessuna parte, non si legge in una
+   diff e non si può correggere se viene storto.
+
+   Scrivere quelle differenze a mano però è il lavoro che questo editor
+   doveva togliere. Qui si disegnano: si prende la linguetta della
+   variante, si sposta la chiave, e **la differenza la ricava lui** —
+   uno `sposta` se basta, la mappa intera se non basta. Il dato che esce
+   resta quello di prima, leggibile e controllabile una per una. */
+
+const clona = x => JSON.parse(JSON.stringify(x))
+
+/* Due mappe che differiscono solo perché qualcosa ha cambiato posto si
+   scrivono con `sposta`, che è una riga invece di dieci. Se il cambio è
+   di altra natura — un muro in più, una cosa diventata un'altra — la
+   variante si porta dietro la mappa intera, che è l'unico modo di
+   leggerla. */
+function spostamenti(a, b) {
+  if (a.length !== b.length) return null
+  const partite = [], arrivate = []
+  for (let y = 0; y < a.length; y++) {
+    if (String(a[y]).length !== String(b[y]).length) return null
+    for (let x = 0; x < a[y].length; x++) {
+      if (a[y][x] === b[y][x]) continue
+      if (b[y][x] === '.') partite.push({ ch: a[y][x], x, y })
+      else if (a[y][x] === '.') arrivate.push({ ch: b[y][x], x, y })
+      else return null
+    }
+  }
+  if (!partite.length || partite.length !== arrivate.length) return null
+  const sposta = {}
+  for (const p of partite) {
+    const dove = arrivate.findIndex(w => w.ch === p.ch)
+    if (dove < 0) return null
+    if (a.join('').split(p.ch).length - 1 !== 1) return null   // si sposta solo l'unico
+    sposta[p.ch] = [arrivate[dove].x, arrivate[dove].y]
+    arrivate.splice(dove, 1)
+  }
+  return sposta
+}
+
+function differenzaVariante(b, c, vecchia) {
+  const v = { nome: (vecchia && vecchia.nome) || 'variante' }
+  if (c.mappa.join('|') !== b.mappa.join('|')) {
+    const sp = spostamenti(b.mappa, c.mappa)
+    if (sp) v.sposta = sp; else v.mappa = c.mappa.slice()
+  }
+  if ((c.calco || []).join('|') !== (b.calco || []).join('|')) v.calco = c.calco.slice()
+  const zone = {}
+  for (const k of Object.keys(c.zone || {}))
+    if (M.nomeZona(c.zone[k]) !== M.nomeZona((b.zone || {})[k] || '')) zone[k] = c.zone[k]
+  if (Object.keys(zone).length) v.zone = zone
+  return v
+}
+
+/* il livello intero, varianti comprese: è quello che si valida e quello
+   che si copia, anche mentre si sta disegnando la terza scena */
+function intero() {
+  if (!vista) return L
+  base.varianti[vista - 1] = differenzaVariante(base, L, base.varianti[vista - 1])
+  return base
+}
+
+function vaiA(n) {
+  intero()                                 // metto via quello che stavo disegnando
+  vista = n
+  if (!n) L = base
+  else {
+    base.varianti = base.varianti || []
+    L = clona(M.fondi({ ...base, varianti: [] }, base.varianti[n - 1]).liv)
+  }
+  disegna()
+}
+
+function disegnaLinguette() {
+  const box = $('#linguette'); box.innerHTML = ''
+  const varianti = base.varianti || []
+  const fai = (testo, n, titolo) => {
+    const b = document.createElement('button')
+    b.textContent = testo; b.title = titolo
+    if (vista === n) b.className = 'acceso'
+    b.onclick = () => vaiA(n)
+    box.appendChild(b)
+  }
+  fai('base', 0, 'la scena come si presenta la prima volta')
+  varianti.forEach((v, i) => fai(v.nome || `variante ${i + 1}`, i + 1,
+                                 'la stessa tappa con qualcosa di diverso'))
+  const piu = document.createElement('button')
+  piu.id = 'nuovaVariante'; piu.textContent = '＋ variante'
+  piu.title = 'copia la base e ci disegni sopra: la differenza la ricavo io'
+  piu.onclick = () => {
+    base.varianti = base.varianti || []
+    base.varianti.push({ nome: 'variante ' + (base.varianti.length + 1) })
+    vaiA(base.varianti.length)
+  }
+  box.appendChild(piu)
+  if (!vista) return
+  const nome = document.createElement('input')
+  nome.type = 'text'; nome.id = 'nomeVariante'
+  nome.value = (base.varianti[vista - 1] || {}).nome || ''
+  nome.title = 'come si chiama questa scena'
+  nome.oninput = () => { base.varianti[vista - 1].nome = nome.value; soloTesto(); disegnaLinguette() }
+  box.appendChild(nome)
+  const via = document.createElement('button')
+  via.textContent = '✕'; via.title = 'butta via questa variante'
+  /* prima si torna alla base e *poi* si toglie: `vaiA` mette via quello
+     che stavi disegnando, e dopo lo splice quel posto è di un'altra
+     variante — la scriveresti sopra con quella appena buttata */
+  via.onclick = () => {
+    const quale = vista - 1
+    vista = 0; L = base
+    base.varianti.splice(quale, 1)
+    disegna()
+  }
+  box.appendChild(via)
+}
+
+/* ═══════════ i problemi ═══════════ */
+
+function disegnaProblemi() {
+  const esito = M.validaTutto(intero())
+  const p = $('#problemi'); p.innerHTML = ''
+  if (esito.ok && !esito.avvisi.length) {
+    p.innerHTML = '<div class="bene">✅ tutto in ordine — si può incollare</div>'
+    return
+  }
+  for (const m of esito.errori) aggiungi('male', '· ' + m)
+  for (const m of esito.avvisi) aggiungi('forse', '~ ' + m)
+  function aggiungi(classe, testo) {
+    const d = document.createElement('div'); d.className = classe; d.textContent = testo
+    p.appendChild(d)
+  }
+}
+
+/* ═══════════ il testo ═══════════ */
+
+function disegnaTesto() {
+  if (document.activeElement === $('#testo')) return   // sta scrivendo: non gli si tira via
+  $('#testo').value = M.scrivi(intero())
+}
+
+function leggiTesto() {
+  try {
+    L = M.leggi($('#testo').value)
+    base = L; vista = 0
+    ritrovaTappa()
+    disegna()
+  } catch (e) {
+    $('#problemi').innerHTML = `<div class="male">· ${e.message}</div>`
+  }
+}
+
+/* ═══════════ ridisegnare ═══════════ */
+
+function disegna() {          // tutto
+  normalizza()
+  disegnaScelta(); disegnaCartella(); disegnaLinguette()
+  disegnaGriglia(); disegnaAttrezzi(); disegnaTavolozza()
+  disegnaMetadati(); disegnaOrdini(); disegnaProblemi(); disegnaTesto()
+  /* in una variante si disegna e basta: il resto è della base, e
+     cambiarlo di qui vorrebbe dire cambiarlo in una scena sola senza
+     essersene accorti */
+  $('#paginaTappa').className = 'scorre' + (vista ? ' spenta' : '')
+  $('#paginaOrdini').className = 'scorre' + (vista ? ' spenta' : '')
+  $('#cartelloVariante').style.display = vista ? '' : 'none'
+}
+function ridisegna() {        // solo quello che cambia mentre il mouse è giù
+  normalizza()
+  if (strato === 'calco') { puliziaZone(); disegnaMetadati() }
+  disegnaGriglia(); disegnaOrdini(); disegnaProblemi(); disegnaTesto()
+  disegnaTavolozza()
+}
+function aggiornaOrdini() {   // si è toccata una tendina: la mappa non si muove
+  normalizza(); disegnaOrdini(); disegnaProblemi(); disegnaTesto()
+}
+function soloTesto() {        // mentre si scrive in un campo: niente sfarfallii
+  normalizza(); disegnaProblemi(); disegnaTesto()
+}
+
+/* ═══════════ i comandi ═══════════ */
+
+$('#stratoMappa').onclick = () => { strato = 'mappa'; schede(); disegna() }
+$('#stratoCalco').onclick = () => { strato = 'calco'; schede(); disegna() }
+$('#schedaTappa').onclick = () => { scheda = 'tappa'; schede(); disegna() }
+$('#schedaOrdini').onclick = () => { scheda = 'ordini'; schede(); disegna() }
+function schede() {
+  $('#stratoMappa').className = strato === 'mappa' ? 'acceso' : ''
+  $('#stratoCalco').className = strato === 'calco' ? 'acceso' : ''
+  $('#schedaTappa').className = scheda === 'tappa' ? 'acceso' : ''
+  $('#schedaOrdini').className = scheda === 'ordini' ? 'acceso' : ''
+  $('#paginaTappa').style.display = scheda === 'tappa' ? '' : 'none'
+  $('#paginaOrdini').style.display = scheda === 'ordini' ? '' : 'none'
+}
+
+$('#ridimensiona').onclick = () => {
+  const w = Math.max(4, Math.min(40, +$('#larg').value || W()))
+  const h = Math.max(4, Math.min(30, +$('#alt').value || H()))
+  const righe = []
+  for (let y = 0; y < h; y++) righe.push(((L.mappa[y] || '') + '.'.repeat(w)).slice(0, w))
+  L.mappa = righe
+  /* il bordo si richiude da solo: una mappa col bordo aperto è sempre
+     un errore, e farlo a mano dopo ogni ridimensionamento è la noia che
+     questo editor doveva togliere */
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (x === 0 || y === 0 || x === w - 1 || y === h - 1)
+      L.mappa[y] = M.sostituisci(L.mappa[y], x, '#')
+  disegna()
+}
+
+$('#nome').oninput = () => { L.nome = $('#nome').value; soloTesto(); $('#titoloMappa').textContent = L.nome }
+$('#id').oninput = () => { L.id = $('#id').value; soloTesto() }
+$('#dritta').oninput = () => { L.dritta = $('#dritta').value; soloTesto() }
+$('#racconto').oninput = () => { L.racconto = $('#racconto').value.split('\n').filter(Boolean); soloTesto() }
+$('#par').oninput = () => { L.par = +$('#par').value; aggiornaOrdini() }
+$('#segnali').oninput = () => {
+  const lista = $('#segnali').value.split(',').map(s => s.trim()).filter(Boolean)
+  if (lista.length) L.segnali = lista; else delete L.segnali
+  aggiornaOrdini()
+}
+
+$('#copia').onclick = async () => {
+  const t = $('#testo')
+  try { await navigator.clipboard.writeText(t.value) }
+  catch (e) { t.select(); document.execCommand('copy') }
+  $('#copia').textContent = '✅ copiato'
+  setTimeout(() => { $('#copia').textContent = '📋 copia' }, 1200)
+}
+$('#applica').onclick = leggiTesto
+$('#nuovo').onclick = () => { L = M.vuoto(14, 10); base = L; vista = 0; scelta = null; disegna() }
+/* incollare un livello lo disegna subito: è metà del motivo per cui
+   questo editor esiste — correggerne uno che c'è già */
+$('#testo').addEventListener('paste', () => setTimeout(leggiTesto, 0))
+$('#testo').addEventListener('blur', leggiTesto)
+
+/* ═══════════ «prova questo livello» — il punto d'innesto ═══════════
+
+   Il tasto è spento apposta. Il validatore dice che un livello è ben
+   *scritto*; nessuno può ancora dire che è **vincibile**, perché il
+   motore del Generale (`src/motore/generale.js`) non esiste. Quando ci
+   sarà, qui non cambia niente di strutturale: si carica il motore, si
+   giocano le soluzioni dichiarate su tutte le versioni (base e
+   varianti) e si scrive l'esito fra i problemi. Le fragili hanno la
+   pretesa rovesciata — devono vincere la base e **perdere** su almeno
+   una variante, che è l'unico motivo per cui sono segnate.
+
+   Finché il motore non c'è, un tasto che finge di provare sarebbe
+   peggio di un tasto spento. */
+const MOTORE = globalThis.GENERALE || null
+$('#prova').disabled = !MOTORE
+$('#prova').title = MOTORE ? 'gioca le soluzioni dichiarate su tutte le versioni'
+  : 'spento: il motore del Generale (src/motore/generale.js) non esiste ancora. Quando ci ' +
+    'sarà, questo tasto giocherà le soluzioni su tutte le versioni e dirà quali vincono.'
+$('#prova').onclick = () => {
+  if (!MOTORE) return
+  const detto = []
+  for (const v of M.versioni(L))
+    for (const sol of L.soluzioni || [])
+      detto.push([MOTORE.gioca(v.liv, sol), `${v.etichetta} · ${sol.nome || 'senza nome'}`])
+  $('#problemi').innerHTML = detto
+    .map(([vinta, che]) => `<div class="${vinta ? 'bene' : 'male'}">${vinta ? '✅' : '❌'} ${che}</div>`)
+    .join('')
+}
+
+window.addEventListener('resize', disegnaGriglia)
+
+/* per i test: entrare e uscire senza passare dal mouse */
+globalThis.EDITOR = {
+  dammi: () => L,            // quello che si sta disegnando (base o variante)
+  intero: () => intero(),    // il livello con le sue varianti: quello che si copia
+  metti: t => { $('#testo').value = t; leggiTesto() },
+  testo: () => $('#testo').value,
+}
+
+schede(); disegna()
+</script>
+</body>
+</html>

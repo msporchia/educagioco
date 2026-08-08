@@ -1,0 +1,358 @@
+/* ═══════════════════════════════════════════════════════════════════
+   COSA SA IL BAMBINO — il catalogo e chi lo cita
+   tempo: 10
+
+   I macrogruppi di `src/data/saperi.js` sono un'anagrafe: da soli non
+   fanno niente: contano perché qualcuno li cita. Un modulo di quiz li
+   cita tipologia per tipologia (`sa:` dentro `tipi`) — o, se le
+   tipologie non le dichiara ancora, grado per grado (`saperi:` accanto
+   alla scaletta) — e il castello cita `divisioni` chiedendo
+   `divisioniAccese()`. Le due parti stanno
+   in file diversi apposta — la domanda dichiara di cosa ha bisogno, il
+   catalogo dice solo come si chiama — e questo test è il punto in cui
+   si controlla che si parlino:
+
+     · una chiave citata da un modulo e non elencata nel catalogo è un
+       refuso che nessuno vedrebbe mai: spegnere quel macrogruppo non
+       toglierebbe niente;
+     · un sapere elencato e citato da nessuno è un interruttore finto,
+       e qui vale la regola di sempre — peggio che non averlo;
+     · il DEGRADO deve reggere: spento un sapere, nessuna domanda che
+       lo dava per scontato deve più uscire, e i giochi devono avere
+       comunque qualcosa da chiedere. Questa è la parte che conta: un
+       filtro che lascia passare una conversione a chi non sa cosa è un
+       litro è peggio di nessun filtro, perché il genitore crede di
+       averla spenta.
+   ═══════════════════════════════════════════════════════════════════ */
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import { nota, controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+import { SAPERI, CHIAVI_SAPERI, MATERIE_SAPERI, sapereDi, esisteSapere } from '../../src/data/saperi.js'
+import { GIOCHI, serveA } from '../../src/data/giochi.js'
+import { Sorte } from '../../src/quiz/nucleo/sorte.js'
+import { classiDi, pescaClasse } from '../../src/quiz/nucleo/classi.js'
+import { sorgentiDi, esempioDa, esempioDi } from '../../src/quiz/nucleo/esempi.js'
+
+const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const CARTELLA = resolve(RADICE, 'src/quiz/moduli')
+
+/* i moduli si raccolgono dalla cartella, come nel banco: uno nuovo
+   entra in questo controllo il giorno in cui il suo file compare */
+const moduli = []
+if (existsSync(CARTELLA))
+  for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
+    const mod = (await import(pathToFileURL(resolve(CARTELLA, f)).href)).default
+    if (mod) moduli.push(mod)
+  }
+controlla('i moduli di quiz si raccolgono da soli', moduli.length > 0)
+
+/* ═══════════ 1. il catalogo sta in piedi ═══════════ */
+controlla('le chiavi dei saperi sono uniche',
+          new Set(CHIAVI_SAPERI).size === CHIAVI_SAPERI.length,
+          CHIAVI_SAPERI.filter((x, i) => CHIAVI_SAPERI.indexOf(x) !== i).join(', '))
+
+for (const s of SAPERI) {
+  const manca = ['nome', 'ico', 'materia', 'che', 'esempio', 'spegne'].filter(k => !s[k])
+  controlla(`${s.chiave}: ha tutto quello che serve a un genitore per decidere`,
+            manca.length === 0, 'manca ' + manca.join(', '))
+}
+uguale('le materie si ricavano dall\'elenco', MATERIE_SAPERI.length > 0, true)
+controlla('sapereDi() trova per chiave', sapereDi('divisioni')?.nome === 'Le divisioni')
+controlla('una chiave inventata non esiste', !esisteSapere('astrofisica'))
+
+/* ═══════════ 2. le due parti si parlano ═══════════ */
+const citati = new Set()
+for (const m of moduli) {
+  uguale(`${m.id}: un sapere per grado, quanti sono i gradi`, m.saperi.length, m.gradi)
+  m.saperi.flat().forEach(c => citati.add(c))
+  m.tipi.forEach(t => t.sa.forEach(c => citati.add(c)))
+  const ignoti = [...new Set(m.saperi.flat())].filter(c => !esisteSapere(c))
+  controlla(`${m.id}: cita solo saperi che esistono`, ignoti.length === 0,
+            'sconosciuti: ' + ignoti.join(', '))
+}
+
+/* ═══════════ 2b. le tipologie: quello che è scritto e quello che esce ═══════════
+   Un tipo dichiarato è una promessa in tre parti — questa domanda
+   esiste, sta in questo gruppo, esce a questi gradi — e tutte e tre si
+   possono controllare giocando. Se non si controllassero, il modo di
+   sbagliare sarebbe silenzioso e brutto: una tipologia che il genitore
+   vede nell'elenco, spegne, e che continua ad arrivare perché la chiave
+   scritta nella dichiarazione non è quella che il generatore emette. */
+const TIPI = moduli.flatMap(m => m.tipi.map(t => ({ ...t, dove: m.id })))
+const chiaviTipi = TIPI.map(t => t.chiave)
+controlla('le chiavi delle tipologie sono uniche', new Set(chiaviTipi).size === chiaviTipi.length,
+          chiaviTipi.filter((x, i) => chiaviTipi.indexOf(x) !== i).join(', '))
+nota(`${TIPI.length} tipologie dichiarate da ${moduli.filter(m => m.tipi.length).length} moduli`)
+
+for (const t of TIPI) {
+  const manca = []
+  if (!t.nome) manca.push('il nome che legge un genitore')
+  if (!Object.values(t.gradi).some(p => p > 0)) manca.push('un grado dove esce')
+  const ignoti = t.sa.filter(c => !esisteSapere(c))
+  if (ignoti.length) manca.push('un gruppo che esiste (' + ignoti.join(' ') + ')')
+  controlla(`${t.chiave} (${t.dove}): dichiarata per bene`, manca.length === 0, 'manca ' + manca.join(', '))
+}
+
+for (const m of moduli) {
+  if (!m.tipi.length) continue
+  const vuoti = []
+  for (let g = 1; g <= m.gradi; g++) if (!m.tipiDi(g).length) vuoti.push(g)
+  controlla(`${m.id}: nessun grado senza tipologie`, vuoti.length === 0, 'gradi vuoti: ' + vuoti.join(' '))
+
+  /* si gioca: la chiave che esce dev'essere una di quelle dichiarate a
+     quel grado, e ogni tipologia dichiarata deve farsi vedere */
+  const viste = new Set()
+  const fuoriPosto = new Set()
+  for (let g = 1; g <= m.gradi; g++) {
+    const attese = new Set(m.tipiDi(g).map(t => t.chiave))
+    for (let i = 0; i < 300; i++) {
+      const d = m.chiedi(g, new Sorte(i * 131 + g))
+      viste.add(d.chiave)
+      if (!attese.has(d.chiave)) fuoriPosto.add(`g${g}→${d.chiave}`)
+    }
+  }
+  controlla(`${m.id}: ogni domanda ha la chiave del tipo che l'ha chiesta`,
+            fuoriPosto.size === 0, [...fuoriPosto].join(' '))
+  const mai = m.tipi.map(t => t.chiave).filter(c => !viste.has(c))
+  controlla(`${m.id}: ogni tipologia dichiarata esce davvero`, mai.length === 0,
+            'mai viste: ' + mai.join(' '))
+}
+
+/* ── i giochi che dichiarano cosa danno per scontato ──
+   Un gioco può dire «io sono tutto conversioni» (`serve:` in
+   `data/giochi.js`) e sparire dalla home quando quel macrogruppo è
+   spento. Vale solo per i giochi che senza quel pezzo non hanno più
+   niente da chiedere: tutti gli altri degradano e restano. */
+for (const g of GIOCHI) {
+  const ignoti = (g.serve || []).filter(c => !esisteSapere(c))
+  controlla(`gioco ${g.chiave}: dichiara saperi che esistono`, ignoti.length === 0,
+            'sconosciuti: ' + ignoti.join(', '))
+  ;(g.serve || []).forEach(c => citati.add(c))
+}
+uguale('il laboratorio delle pozioni è tutto conversioni',
+       serveA('pozioni').includes('conversioni'), true)
+controlla('il castello invece degrada e non dichiara niente',
+          serveA('torri').length === 0)
+nota('giochi che dipendono da un macrogruppo: ' +
+     GIOCHI.filter(g => g.serve?.length).map(g => `${g.chiave}(${g.serve.join('+')})`).join(' '))
+
+/* Chi non lo cita nessun modulo deve agire da qualche altra parte —
+   `divisioni` vive nel castello. Si cerca la chiave nel sorgente fuori
+   dai quiz: se non si trova, quell'interruttore non fa niente. */
+const fuoriDaiQuiz = leggiSorgente(resolve(RADICE, 'src'))
+for (const c of CHIAVI_SAPERI) {
+  const nelGioco = fuoriDaiQuiz.includes(`'${c}'`) || fuoriDaiQuiz.includes(`"${c}"`)
+  controlla(`${c}: qualcuno lo guarda davvero`, citati.has(c) || nelGioco,
+            'nessun modulo lo cita e non compare nel sorgente: interruttore finto')
+}
+
+function leggiSorgente(dir, fuori = '') {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = resolve(dir, e.name)
+    if (e.isDirectory()) { fuori = leggiSorgente(p, fuori); continue }
+    if (!/\.(js|vue)$/.test(e.name)) continue
+    // il catalogo elenca le chiavi per forza, e i moduli le dichiarano:
+    // né l'uno né gli altri contano come «qualcuno le guarda»
+    if (p.includes('/data/saperi.js') || p.includes('/quiz/moduli/')) continue
+    fuori += readFileSync(p, 'utf8')
+  }
+  return fuori
+}
+
+/* ═══════════ 3. il degrado ═══════════ */
+
+/* la stessa scelta di `quiz/scelta.js`, rifatta qui perché quel file
+   gira solo sotto Vite (il registro usa `import.meta.glob`) */
+const moduliCon = spenti => moduli.filter(m => m.gradiLiberi(spenti).length)
+
+controlla('senza niente di spento non cambia niente',
+          moduliCon([]).length === moduli.length &&
+          moduli.every(m => m.gradiLiberi([]).length === m.gradi))
+
+for (const m of moduli) {
+  for (let g = 1; g <= m.gradi; g++) {
+    const serve = m.serve(g)
+    if (!serve.length) continue
+    /* il grado chiesto è chiuso: quello che si gioca al posto suo non
+       deve mai chiedere lo stesso sapere */
+    const vicino = m.gradoVicino(g, serve)
+    controlla(`${m.id} grado ${g}: il ripiego non ricasca nello stesso sapere`,
+              vicino === null || !serve.some(s => m.serve(vicino).includes(s)),
+              `ripiega su ${vicino}`)
+    controlla(`${m.id} grado ${g}: si ripiega verso il basso`,
+              vicino === null || vicino < g || m.gradiLiberi(serve).every(x => x > g))
+  }
+}
+
+/* ── spento TUTTO ──
+   Il gioco deve avere lo stesso qualcosa da chiedere: una schermata di
+   gioco senza domanda è un gioco rotto, e i genitori possono spegnere
+   tutto (per sbaglio, o per provare).
+
+   Finché un modulo non dichiarava niente — la logica, le sequenze —
+   qualcosa restava sempre in piedi da solo. Da quando ogni tipologia
+   sta in un gruppo, spegnerli tutti svuota davvero l'elenco: quello che
+   tiene su il gioco non è più un modulo scampato, è il **ripiego** di
+   `quiz/scelta.js`, che quando resta a mani vuote torna a pescare fra
+   tutte le classi ignorando gli spenti. Qui si controlla proprio quello,
+   perché è l'unico posto che lo salva. */
+const restano = moduliCon(CHIAVI_SAPERI)
+nota(`spento tutto restano ${restano.length} moduli su ${moduli.length}` +
+     (restano.length ? ': ' + restano.map(m => `${m.id}(${m.gradiLiberi(CHIAVI_SAPERI).length}/${m.gradi})`).join(' ') : ''))
+
+const senzaFiltro = classiDi(moduli, { difficolta: 0.5 })
+const conTuttoSpento = classiDi(moduliCon(CHIAVI_SAPERI), { spenti: CHIAVI_SAPERI, difficolta: 0.5 })
+controlla('spento tutto il ripiego serve davvero (nessuna classe sopravvive)',
+          conTuttoSpento.length === 0,
+          `${conTuttoSpento.length} classi in piedi: il ripiego non è più l'unica rete`)
+controlla('e il ripiego consegna comunque una domanda',
+          senzaFiltro.length > 0 && pescaClasse(new Sorte(3), senzaFiltro) !== null)
+
+/* i due casi veri: una bambina che le misure non le ha fatte, e chi non
+   legge l'orologio a lancette */
+const fuori = (spenti) => moduli.filter(m => !m.gradiLiberi(spenti).length).map(m => m.id)
+uguale('spente le misure, il modulo misure esce dal mazzo',
+       fuori(['misure', 'conversioni']).includes('misure'), true)
+uguale('spento l\'orologio, il modulo orologio esce dal mazzo',
+       fuori(['orologio']).includes('orologio'), true)
+controlla('spente le sole conversioni, le misure restano (a grado basso)',
+          !fuori(['conversioni']).includes('misure'))
+
+/* ═══════════ 4. mille domande con i saperi spenti ═══════════
+   La prova che conta: si gioca davvero. Per ogni combinazione si
+   pescano moduli e gradi come farebbe `scelta.js`, si genera la
+   domanda, e nessuna deve venire da un grado che chiedeva un sapere
+   spento. Se il degrado avesse un buco, qui esce. */
+const PROVE = [
+  ['misure', 'conversioni'],
+  ['orologio'],
+  ['analisi', 'tempi-verbali', 'accenti'],
+  CHIAVI_SAPERI,
+]
+for (const spenti of PROVE) {
+  const sorte = new Sorte(7)
+  const vivi = moduliCon(spenti)
+  /* nessun modulo in piedi vuol dire che i genitori hanno spento tutto:
+     lì entra il ripiego, e le domande tornano ad arrivare da chiunque.
+     È voluto, quindi in quel caso non si controlla che siano «pulite» —
+     si controlla che ARRIVINO. */
+  const ripiego = !vivi.length
+  const buoni = ripiego ? moduli : vivi
+  let guasti = 0, fatte = 0
+  for (let i = 0; i < 400; i++) {
+    const m = sorte.uno(buoni)
+    const difficolta = sorte.frazione
+    const g0 = Math.max(1, Math.min(m.gradi, Math.round(1 + difficolta * (m.gradi - 1))))
+    const g = ripiego ? g0 : m.gradoVicino(g0, spenti)
+    if (g === null) { guasti++; continue }
+    if (!ripiego && m.serve(g).some(s => spenti.includes(s))) { guasti++; continue }
+    const d = m.chiedi(g, sorte, ripiego ? [] : spenti)
+    if (!d || !d.chiave) guasti++
+    fatte++
+  }
+  controlla(ripiego
+    ? 'spenti tutti quanti: il ripiego consegna comunque 400 domande'
+    : `spenti [${spenti.join(' ')}]: 400 domande, nessuna di quelle spente`,
+            guasti === 0 && fatte === 400, `${guasti} guaste, ${fatte} fatte`)
+  nota(`spenti [${spenti.length > 6 ? 'tutti' : spenti.join(' ')}] → ${fatte} domande da ${buoni.length} moduli` +
+       (ripiego ? ' (ripiego)' : ''))
+}
+
+/* ═══════════ 5. spegnere UNA tipologia ═══════════
+   Il caso nuovo: il genitore non spegne «accenti e apostrofi», apre il
+   dettaglio e toglie solo la lettera h. Il grado resta aperto — le
+   altre tre tipologie ci sono ancora — e questo è proprio il punto in
+   cui un filtro sbagliato non si vedrebbe: il gioco continua a fare
+   domande, sembra tutto a posto, e ogni tanto ricasca quella spenta. */
+for (const m of moduli) {
+  for (const t of m.tipi) {
+    const spenti = [t.chiave]
+    let uscita = 0, fatte = 0
+    for (let g = 1; g <= m.gradi; g++) {
+      if (!m.puo(g, spenti)) continue
+      for (let i = 0; i < 40; i++) {
+        const d = m.chiedi(g, new Sorte(i * 977 + g), spenti)
+        if (d.chiave === t.chiave) uscita++
+        fatte++
+      }
+    }
+    controlla(`spenta «${t.nome}» (${t.chiave}): non arriva più`, uscita === 0,
+              `${uscita} domande su ${fatte}`)
+  }
+}
+
+/* e spegnere il GRUPPO deve togliere tutte le sue tipologie in un colpo */
+for (const s of CHIAVI_SAPERI) {
+  const suoi = TIPI.filter(t => t.sa.includes(s))
+  if (!suoi.length) continue
+  const chiavi = new Set(suoi.map(t => t.chiave))
+  let uscita = 0
+  for (const m of moduli) {
+    if (!m.tipi.length) continue
+    for (let g = 1; g <= m.gradi; g++) {
+      if (!m.puo(g, [s])) continue
+      for (let i = 0; i < 40; i++)
+        if (chiavi.has(m.chiedi(g, new Sorte(i * 613 + g), [s]).chiave)) uscita++
+    }
+  }
+  controlla(`spento «${s}»: spariscono tutte e ${suoi.length} le sue tipologie`, uscita === 0,
+            `${uscita} domande arrivate lo stesso`)
+}
+
+/* ═══════════ 6. l'esempio: la domanda che sparisce, fatta vedere ═══════════
+   Sulla carta dei genitori c'è un tasto che apre una domanda vera di
+   quella voce, generata al momento (`quiz/nucleo/esempi.js`). Prima lì
+   c'era una frase scritta a mano, e una frase scritta a mano invecchia
+   da sola: il modulo cambia, il grado si sposta, e quella riga resta a
+   raccontare una domanda che non esiste più.
+
+   Generata non può mentire, ma può mancare — ed è il modo peggiore di
+   rompersi, perché il tasto c'è e non apre niente. Quindi: ogni voce che
+   un genitore vede sa produrre il suo esempio, da OGNI sorgente e non da
+   una a caso, e quello che esce è la domanda di quella voce e non di
+   un'altra pescata lì vicino. */
+const primaChiave = new Sorte(20260808)
+
+for (const t of TIPI) {
+  const dove = sorgentiDi(moduli, t.chiave)
+  controlla(`${t.chiave}: si può far vedere`, dove.length > 0,
+            'nessun modulo la genera: il tasto «prova» aprirebbe il vuoto')
+  const male = []
+  for (const [i, s] of dove.entries()) {
+    let e
+    try { e = esempioDa(s, new Sorte(i * 977 + 13)) }
+    catch (err) { male.push(`${s.modulo.id} g${s.grado} esplode: ${err.message}`); continue }
+    const d = e.domanda
+    if (!d?.testo) male.push(`${s.modulo.id} g${s.grado} senza consegna`)
+    if (!(d?.risposte?.length >= 2)) male.push(`${s.modulo.id} g${s.grado} con meno di due risposte`)
+    if (!(d?.giusta >= 0 && d.giusta < d?.risposte?.length)) male.push(`${s.modulo.id} g${s.grado}: la giusta è fuori posto`)
+    /* la parte che conta: il tasto dice «prova L'APOSTROFO», e quello
+       che si apre dev'essere l'apostrofo */
+    if (d?.chiave !== t.chiave) male.push(`${s.modulo.id} g${s.grado} risponde ${d?.chiave}`)
+    if (!e.dice || !e.titolo) male.push(`${s.modulo.id} g${s.grado} non dice dove si è finiti`)
+  }
+  controlla(`${t.chiave}: l'esempio è suo, da tutte e ${dove.length} le sorgenti`,
+            male.length === 0, male.join(' · '))
+}
+
+/* i gruppi: quelli che le domande le fanno le sanno far vedere, e
+   quelli che non le fanno lo dicono invece di aprire il vuoto —
+   `divisioni` vive nel castello e il suo tasto non deve comparire */
+const senzaEsempio = []
+for (const s of SAPERI) {
+  const dove = sorgentiDi(moduli, s.chiave)
+  if (!dove.length) { senzaEsempio.push(s.chiave); continue }
+  const e = esempioDi(moduli, s.chiave, primaChiave)
+  controlla(`${s.chiave}: dal gruppo esce una domanda vera`,
+            !!e?.domanda?.testo && e.domanda.risposte?.length >= 2)
+  /* e quella domanda è di uno dei moduli che citano il gruppo: se
+     uscisse da un altro, spegnere il gruppo non la toglierebbe */
+  controlla(`${s.chiave}: l'esempio viene da un modulo che lo cita`,
+            citati.has(s.chiave) || senzaEsempio.includes(s.chiave))
+}
+uguale('l\'unico gruppo senza domande di quiz sono le divisioni (stanno nel castello)',
+       senzaEsempio.join(','), 'divisioni')
+nota(`esempi: ${TIPI.length} tipologie e ${SAPERI.length - senzaEsempio.length} gruppi su ${SAPERI.length} sanno mostrarsi`)
+
+riassunto('i macrogruppi di sapere')

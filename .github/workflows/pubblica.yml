@@ -1,0 +1,87 @@
+# Costruisce i giochi e li pubblica su GitHub Pages.
+#
+# Prima ci pensava `pubblica.sh`, che copiava sul NAS e poi *rileggeva il
+# sito* per confermare che stesse davvero servendo il build appena fatto.
+# Quel controllo è la parte che vale, e qui sotto è l'ultimo passo: senza,
+# un deploy andato a metà è indistinguibile da uno riuscito, e il modo in
+# cui te ne accorgi è un bambino che dice «non è cambiato niente».
+name: Pubblica
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:      # anche a mano, dal tasto su GitHub
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un deploy per volta; se ne parte un altro mentre questo è in coda, quello
+# in coda salta. Non si annulla quello in corso: a metà strada lascerebbe
+# il sito con dentro i file di due versioni diverse.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  costruisci:
+    runs-on: ubuntu-latest
+    outputs:
+      # la versione che è appena stata costruita, per il controllo finale:
+      # il job che pubblica non ha il codice sotto mano e non può ricavarla
+      versione: ${{ steps.versione.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # le prove che girano senza browser: le altre vogliono Chrome e
+      # qui servirebbe scaricarlo a ogni deploy
+      - run: npm run test:unita
+      - run: npm run build
+      - id: versione
+        run: |
+          id=$(node -p "require('./dist/versione.json').id")
+          echo "costruita la versione $id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  pubblica:
+    needs: costruisci
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      # Il controllo che chiude il giro: si chiede al sito cosa sta
+      # servendo e lo si confronta con quello che è appena stato
+      # costruito. Pages ci mette un momento a propagare, quindi si
+      # riprova per un minuto prima di dire che è andata male.
+      - name: Il sito serve davvero questa versione
+        run: |
+          atteso='${{ needs.costruisci.outputs.versione }}'
+          url="${{ steps.deploy.outputs.page_url }}versione.json"
+          echo "cerco la versione $atteso su $url"
+          for i in $(seq 1 12); do
+            servito=$(curl -fsS "$url" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).id' 2>/dev/null || true)
+            echo "prova $i: il sito serve «$servito»"
+            if [ "$servito" = "$atteso" ]; then
+              echo "il sito serve il build appena fatto"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "dopo un minuto il sito serve ancora un'altra versione."
+          echo "Non è detto sia un guasto: Pages a volte ci mette di più."
+          exit 1

@@ -1,0 +1,1822 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Il dungeon a bivi — prototipo</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  IL DUNGEON A BIVI — prototipo (non fa parte del build)
+
+  Un roguelite alla Slay the Spire per bambini. Il gioco non sta nelle
+  stanze: sta nella STRADA. Tre cuori, nessun salvataggio, una mappa
+  nuova ogni partita — e ogni bivio è una domanda vera: passo dal
+  mostro grosso per prendere i due forzieri, o giro largo e arrivo dal
+  boss povero ma intero?
+
+  Negli scontri non si fa una materia sola: c'è un BANCO DI SFIDE
+  (inglese, spagnolo, sequenze, memoria, l'intruso, gli indizi) e ogni
+  mostro ne porta una, annunciata dal suo colore e dal suo simbolo già
+  sulla mappa — così la strada si sceglie anche per quello che ti riesce
+  meglio. Niente matematica: nel repo è già coperta.
+
+  Tutto in un file solo: niente rete, niente librerie, niente immagini.
+  ══════════════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --pietra:#241f33; --pietra-chiara:#3a3350; --oro:#ffc93c; --oro-scuro:#d98e1c;
+  --rosso:#ef5f5f; --verde:#4fce7c; --viola:#8b6fe0; --testo:#f2eefb; --tenue:#a79ec4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  background:#0d0a15;color:var(--testo);user-select:none;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex;justify-content:center;
+}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+#app{position:relative;width:100%;max-width:430px;height:100dvh;height:100vh;
+     overflow:hidden;background:#151125;box-shadow:0 0 60px #0008}
+
+/* ── la fascia in cima ── */
+.hud{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;
+     gap:6px;padding:10px 10px 14px;font-weight:800;font-size:14px;
+     background:linear-gradient(180deg,#0d0a15f2,#0d0a1500);pointer-events:none}
+.hud > *{pointer-events:auto}
+.gettone{background:#ffffff14;border:1px solid #ffffff1a;border-radius:999px;
+         padding:6px 10px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.cuori{letter-spacing:-1px;font-size:16px}
+.doni{display:flex;gap:3px;font-size:15px}
+.hud .sp{flex:1}
+.tondo{width:44px;height:44px;border-radius:50%;background:#ffffff14;border:1px solid #ffffff1a;
+       font-size:18px;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* ── la mappa ── */
+#tela{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation}
+.piede{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:10px 14px 16px;
+       text-align:center;font-size:13px;color:var(--tenue);font-weight:700;
+       background:linear-gradient(0deg,#0d0a15f2,#0d0a1500);pointer-events:none}
+
+/* ── i fogli (scontri, stanze, riepilogo) ── */
+.foglio{position:absolute;inset:0;z-index:10;display:none;flex-direction:column;
+        padding:14px;gap:10px;background:linear-gradient(180deg,#1b1530,#120e1f 60%,#0d0a15);
+        overflow-y:auto;overscroll-behavior:contain}
+.foglio.su{display:flex;animation:sale .22s ease-out}
+@keyframes sale{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.titolo{font-size:22px;font-weight:900;text-align:center;line-height:1.15}
+.sotto{font-size:14.5px;color:var(--tenue);text-align:center;line-height:1.45;max-width:32ch;margin:0 auto}
+.centrata{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          flex:1;gap:12px;text-align:center}
+
+.mostro{font-size:72px;line-height:1;text-align:center;filter:drop-shadow(0 8px 14px #0009);
+        animation:ballonzola 2s ease-in-out infinite}
+/* il mostro sta in alto sotto un cono di luce, la domanda sotto di lui e i
+   tasti giù in fondo, dove arriva il pollice */
+.arena{flex:1;display:flex;flex-direction:column;align-items:center;
+       justify-content:center;gap:8px;padding:10px 0;
+       background:radial-gradient(ellipse 62% 46% at 50% 42%,#ffffff16,#ffffff00 70%)}
+/* domanda e tasti stanno in fondo, dove arriva il pollice; quello che c'è
+   sopra si allarga a riempire il resto */
+.fondo{margin-top:auto;display:flex;flex-direction:column;gap:9px;flex:none}
+.stato{display:flex;align-items:center;justify-content:center;gap:12px;font-size:17px;
+       flex:none;opacity:.95}
+.stato .m{font-size:14px;font-weight:800;color:var(--oro)}
+@keyframes ballonzola{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+.mostro.colpito{animation:scossa .34s}
+@keyframes scossa{0%,100%{transform:none}20%{transform:translateX(-12px) scale(.92)}
+                  50%{transform:translateX(10px) scale(1.04)}80%{transform:translateX(-5px)}}
+.vita{display:flex;gap:5px;justify-content:center}
+.vita i{width:26px;height:9px;border-radius:5px;background:#ffffff22;font-style:normal}
+.vita i.piena{background:linear-gradient(180deg,#ff8b6b,#e0432f);box-shadow:0 0 8px #ff5a3a66}
+
+.carta{background:#ffffff10;border:1px solid #ffffff18;border-radius:18px;padding:14px 12px;
+       text-align:center}
+.chiesto{font-size:13px;color:var(--tenue);font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.bersaglio{font-size:34px;font-weight:900;margin-top:4px;line-height:1.15;word-break:break-word}
+
+.opzioni{display:flex;flex-direction:column;gap:9px}
+.opz{min-height:56px;border-radius:16px;background:#ffffff14;border:1px solid #ffffff20;
+     font-size:19px;font-weight:800;padding:10px 14px;display:flex;align-items:center;
+     justify-content:center;gap:8px;transition:transform .1s,background .15s}
+.opz:active{transform:scale(.97)}
+.opz.grande{font-size:40px}
+.opz.giusta{background:linear-gradient(180deg,#5fe08c,#2fa85c);color:#07230f;border-color:#8ff0ae}
+.opz.sbagliata{background:linear-gradient(180deg,#ff8b8b,#d63d3d);color:#2b0505;border-color:#ffb0b0}
+.opz.spenta{opacity:.35}
+.opzioni.griglia{display:grid;grid-template-columns:repeat(2,1fr)}
+.opzioni.griglia.tre{grid-template-columns:repeat(3,1fr)}
+.opz .fig{width:52px;height:52px}
+.opz.figura{padding:6px}
+
+/* ── quello che si disegna dentro le sfide: figure, sequenze, indizi ── */
+.fig{display:block;width:100%;height:100%}
+.fila-figure{display:flex;gap:7px;justify-content:center;align-items:center;margin-top:8px}
+.casella{flex:1 1 0;max-width:60px;aspect-ratio:1;background:#ffffff0e;border:1px solid #ffffff14;
+         border-radius:14px;display:flex;align-items:center;justify-content:center;padding:5px}
+.casella.buco{border:2px dashed #ffc93c88;background:#ffc93c14;color:var(--oro);
+              font-size:26px;font-weight:900}
+.casella.velata{background:#2a2340;border-style:dashed}
+.nota{font-size:14px;color:var(--tenue);margin-top:5px;line-height:1.35}
+.indizi{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.indizio{display:flex;align-items:center;gap:9px;background:#ffffff0e;border:1px solid #ffffff14;
+         border-radius:14px;padding:8px 11px;font-size:16.5px;font-weight:800;text-align:left}
+.indizio .ic{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center}
+.indizio .no{color:var(--rosso);font-size:17px;flex:none}
+.pallino{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 -3px 0 #0003}
+/* il marchio della sfida: dice che tipo di domanda sta arrivando */
+.marchio{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 14px;
+         font-size:14px;font-weight:900;background:#ffffff14;border:1.5px solid currentColor}
+.marchio .ic{font-size:17px}
+.mostro.medio{font-size:52px}
+.conto{font-size:15px;font-weight:900;color:var(--oro)}
+
+.barratempo{height:9px;border-radius:5px;background:#ffffff18;overflow:hidden}
+.barratempo i{display:block;height:100%;background:linear-gradient(90deg,#ffd23f,#ff6b3d);
+              width:100%;transform-origin:left}
+
+.bottone{min-height:56px;border-radius:999px;padding:14px 26px;font-size:18px;font-weight:900;
+         background:linear-gradient(180deg,var(--oro),#f08d1e);color:#4a2a00;
+         box-shadow:0 5px 0 #a4600d;transition:transform .08s,box-shadow .08s}
+.bottone:active{transform:translateY(3px);box-shadow:0 2px 0 #a4600d}
+.bottone.calmo{background:#ffffff16;color:var(--testo);box-shadow:0 5px 0 #ffffff10;border:1px solid #ffffff1c}
+.bottone:disabled{opacity:.4;box-shadow:none;transform:none}
+
+.scelte{display:flex;flex-direction:column;gap:10px}
+.scelta{border-radius:18px;padding:14px;background:#ffffff12;border:1px solid #ffffff1e;
+        text-align:left;display:flex;gap:12px;align-items:center;min-height:64px;transition:transform .1s}
+.scelta:active{transform:scale(.98)}
+.scelta .em{font-size:30px;flex:none}
+.scelta b{display:block;font-size:17px;font-weight:900}
+.scelta span{font-size:13px;color:var(--tenue);line-height:1.35}
+.scelta:disabled{opacity:.35}
+.prezzo{margin-left:auto;font-weight:900;color:var(--oro);white-space:nowrap;font-size:15px}
+
+.esito{font-size:16px;line-height:1.5;background:#ffffff10;border-radius:16px;padding:14px;
+       text-align:center;border:1px solid #ffffff18}
+.riga-fatti{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.fatto{background:#ffffff10;border-radius:14px;padding:10px 14px;text-align:center;min-width:78px}
+.fatto b{display:block;font-size:22px;font-weight:900}
+.fatto span{font-size:11.5px;color:var(--tenue);text-transform:uppercase;letter-spacing:.4px}
+
+.lampo{position:absolute;inset:0;z-index:20;pointer-events:none;opacity:0;background:#ff3b3b}
+.lampo.acceso{animation:lampeggia .4s}
+@keyframes lampeggia{0%{opacity:.55}100%{opacity:0}}
+
+.legenda{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.legenda div{display:flex;gap:7px;align-items:center;font-size:13px;background:#ffffff0d;
+             border-radius:12px;padding:9px 8px}
+.legenda span{font-size:20px}
+</style>
+
+<div id="app">
+  <canvas id="tela"></canvas>
+
+  <div class="hud">
+    <div class="gettone cuori" id="cuoriHud">❤️❤️❤️</div>
+    <div class="gettone" id="moneteHud">🪙 0</div>
+    <div class="doni" id="doniHud"></div>
+    <div class="sp"></div>
+    <button class="tondo" id="tastoAiuto" aria-label="legenda">❔</button>
+  </div>
+
+  <div class="piede" id="piede">tocca una stanza illuminata</div>
+
+  <div class="foglio" id="foglio"></div>
+  <div class="lampo" id="lampo"></div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════════
+   1. LE PAROLE — A1, quello che serve a un bambino di sei anni.
+   `str` è la parola straniera, `it` quella italiana, `em` la figura.
+   Fuori niente sa che lingua sia: la sfida riceve un elenco e basta.
+   ═══════════════════════════════════════════════════════════════════════ */
+const PAROLE_EN = [
+  { str:'dog', it:'cane', em:'🐕' },      { str:'cat', it:'gatto', em:'🐈' },
+  { str:'bird', it:'uccello', em:'🐦' },  { str:'fish', it:'pesce', em:'🐟' },
+  { str:'horse', it:'cavallo', em:'🐴' }, { str:'bear', it:'orso', em:'🐻' },
+  { str:'mouse', it:'topo', em:'🐭' },    { str:'frog', it:'rana', em:'🐸' },
+  { str:'apple', it:'mela', em:'🍎' },    { str:'bread', it:'pane', em:'🍞' },
+  { str:'milk', it:'latte', em:'🥛' },    { str:'water', it:'acqua', em:'💧' },
+  { str:'cake', it:'torta', em:'🍰' },    { str:'cheese', it:'formaggio', em:'🧀' },
+  { str:'sun', it:'sole', em:'☀️' },      { str:'moon', it:'luna', em:'🌙' },
+  { str:'star', it:'stella', em:'⭐' },   { str:'tree', it:'albero', em:'🌳' },
+  { str:'flower', it:'fiore', em:'🌸' },  { str:'house', it:'casa', em:'🏠' },
+  { str:'book', it:'libro', em:'📕' },    { str:'ball', it:'palla', em:'⚽' },
+  { str:'key', it:'chiave', em:'🔑' },    { str:'hand', it:'mano', em:'✋' },
+  { str:'eye', it:'occhio', em:'👁️' },    { str:'heart', it:'cuore', em:'❤️' },
+  { str:'red', it:'rosso', em:'🔴' },     { str:'blue', it:'blu', em:'🔵' },
+  { str:'green', it:'verde', em:'🟢' },   { str:'yellow', it:'giallo', em:'🟡' },
+  { str:'one', it:'uno', em:'1️⃣' },       { str:'two', it:'due', em:'2️⃣' },
+  { str:'three', it:'tre', em:'3️⃣' },
+];
+
+/* Lo spagnolo è quello di casa: la mamma è boliviana. Quindi `papa` e non
+   `patata`, `palta`, `durazno`, `auto`, `celular`. Fuori le parole che in
+   italiano si scrivono uguale (luna, casa): non insegnano niente. */
+const PAROLE_ES = [
+  { str:'perro', it:'cane', em:'🐕' },      { str:'gato', it:'gatto', em:'🐈' },
+  { str:'pájaro', it:'uccello', em:'🐦' },  { str:'pez', it:'pesce', em:'🐟' },
+  { str:'caballo', it:'cavallo', em:'🐴' }, { str:'oso', it:'orso', em:'🐻' },
+  { str:'ratón', it:'topo', em:'🐭' },      { str:'vaca', it:'mucca', em:'🐄' },
+  { str:'manzana', it:'mela', em:'🍎' },    { str:'pan', it:'pane', em:'🍞' },
+  { str:'leche', it:'latte', em:'🥛' },     { str:'agua', it:'acqua', em:'💧' },
+  { str:'papa', it:'patata', em:'🥔' },     { str:'palta', it:'avocado', em:'🥑' },
+  { str:'durazno', it:'pesca', em:'🍑' },   { str:'plátano', it:'banana', em:'🍌' },
+  { str:'queso', it:'formaggio', em:'🧀' }, { str:'sol', it:'sole', em:'☀️' },
+  { str:'estrella', it:'stella', em:'⭐' }, { str:'árbol', it:'albero', em:'🌳' },
+  { str:'flor', it:'fiore', em:'🌸' },      { str:'cuaderno', it:'quaderno', em:'📓' },
+  { str:'pelota', it:'palla', em:'⚽' },    { str:'llave', it:'chiave', em:'🔑' },
+  { str:'pie', it:'piede', em:'🦶' },       { str:'auto', it:'macchina', em:'🚗' },
+  { str:'celular', it:'telefono', em:'📱' },{ str:'corazón', it:'cuore', em:'❤️' },
+  { str:'rojo', it:'rosso', em:'🔴' },      { str:'azul', it:'blu', em:'🔵' },
+  { str:'amarillo', it:'giallo', em:'🟡' }, { str:'silla', it:'sedia', em:'🪑' },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. UTILITÀ
+   ═══════════════════════════════════════════════════════════════════════ */
+const caso = () => Math.random();
+const fra = (a, b) => a + Math.random() * (b - a);
+const interoFra = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const scelta = a => a[Math.floor(Math.random() * a.length)];
+function mescola(a) {
+  const c = a.slice();
+  for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; }
+  return c;
+}
+const $ = s => document.querySelector(s);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. I SUONI — sintetizzati, si accendono al primo tocco
+   ═══════════════════════════════════════════════════════════════════════ */
+let AC = null;
+function accendiAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return AC; }
+  const C = window.AudioContext || window.webkitAudioContext;
+  if (!C) return null;
+  try { AC = new C(); } catch (e) { AC = null; }
+  return AC;
+}
+function nota(freq, quando, durata, volume, forma) {
+  if (!AC) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = forma || 'triangle';
+  o.frequency.setValueAtTime(freq, AC.currentTime + quando);
+  g.gain.setValueAtTime(0, AC.currentTime + quando);
+  g.gain.linearRampToValueAtTime(volume, AC.currentTime + quando + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + quando + durata);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime + quando); o.stop(AC.currentTime + quando + durata + 0.05);
+}
+function fruscio(quando, durata, volume, taglio) {
+  if (!AC) return;
+  const n = Math.floor(AC.sampleRate * durata);
+  const buf = AC.createBuffer(1, n, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = AC.createBufferSource(); s.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = taglio || 900;
+  const g = AC.createGain(); g.gain.value = volume;
+  s.connect(f); f.connect(g); g.connect(AC.destination);
+  s.start(AC.currentTime + quando);
+}
+function suona(che) {
+  if (!AC) return;
+  try {
+    switch (che) {
+      case 'giusto':   nota(660, 0, .12, .16); nota(880, .09, .18, .14); break;
+      case 'sbagliato':nota(200, 0, .18, .16, 'sawtooth'); nota(140, .1, .26, .13, 'sawtooth'); break;
+      case 'colpo':    fruscio(0, .16, .3, 1400); nota(110, 0, .12, .16, 'square'); break;
+      case 'passo':    nota(320, 0, .05, .05, 'sine'); break;
+      case 'forziere': [523, 659, 784, 1046].forEach((f, i) => nota(f, i * .07, .22, .11)); break;
+      case 'moneta':   nota(1180, 0, .07, .08); nota(1560, .05, .1, .06); break;
+      case 'cuore':    nota(523, 0, .16, .12); nota(784, .11, .24, .11); break;
+      case 'boss':     nota(70, 0, .7, .2, 'sawtooth'); nota(104, .05, .6, .12, 'square'); fruscio(0, .5, .2, 400); break;
+      case 'vittoria': [523, 659, 784, 1046, 1318].forEach((f, i) => nota(f, i * .1, .35, .13)); break;
+      case 'fine':     [392, 330, 262, 196].forEach((f, i) => nota(f, i * .16, .4, .13, 'sine')); break;
+    }
+  } catch (e) { /* un suono non deve mai fermare il gioco */ }
+}
+document.addEventListener('pointerdown', accendiAudio, { once: false, passive: true });
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. I TIPI DI STANZA E I POTENZIAMENTI
+   ═══════════════════════════════════════════════════════════════════════ */
+const TIPI = {
+  mostro:   { em:'⚔️', nome:'Mostro',        col:'#e0644f' },
+  grosso:   { em:'🐲', nome:'Mostro grosso', col:'#c2352a' },
+  forziere: { em:'🎁', nome:'Forziere',      col:'#f0b429' },
+  fuoco:    { em:'🔥', nome:'Fuoco',         col:'#ff8a3d' },
+  negozio:  { em:'🏪', nome:'Negozio',       col:'#4fb3e0' },
+  evento:   { em:'❓', nome:'Bivio',         col:'#a06fe0' },
+  boss:     { em:'👑', nome:'Boss',          col:'#ffd23f' },
+};
+
+const DONI = {
+  cuore: { em:'❤️', nome:'Cuore in più',  desc:'Un cuore in più, per sempre.',                 prezzo:12, ripetibile:true },
+  scudo: { em:'🛡️', nome:'Seconda occasione', desc:'In ogni scontro il primo sbaglio non conta.', prezzo:16 },
+  mappa: { em:'🗺️', nome:'Mappa vecchia', desc:'Vedi tutto il dungeon, fino al boss.',         prezzo:14 },
+  spada: { em:'🗡️', nome:'Spada affilata', desc:'I mostri normali cadono con una risposta sola.', prezzo:18 },
+};
+const doniPossibili = () => Object.keys(DONI).filter(k => DONI[k].ripetibile || !S.doni[k]);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. LA MAPPA
+   Otto file, dal basso verso il boss. Ogni fila ha da due a quattro
+   stanze; le file vicine si legano con una "scaletta": si parte da
+   (0,0), si arriva a (ultimo,ultimo) e a ogni passo si sale di un
+   gradino o si sposta di una colonna. Viene fuori un ventaglio di
+   sentieri che non si incrociano mai e — questo è il punto — in cui
+   OGNI stanza ha almeno una via che entra e almeno una che esce.
+   Cioè: nessuna stanza è irraggiungibile e dal basso al boss si arriva
+   sempre. `verificaMappa()` lo ricontrolla lo stesso, e se qualcosa non
+   torna si rigenera: un prototipo che ti chiude la strada non si prova.
+   ═══════════════════════════════════════════════════════════════════════ */
+const FILE = 8;
+
+function scaletta(a, b) {                    // archi fra una fila di `a` e una di `b`
+  const archi = [[0, 0]];
+  const esce = new Array(a).fill(0), entra = new Array(b).fill(0);
+  esce[0] = 1; entra[0] = 1;
+  let i = 0, j = 0;
+  while (i < a - 1 || j < b - 1) {
+    let saleI;
+    if (i >= a - 1) saleI = false;
+    else if (j >= b - 1) saleI = true;
+    // più di due sentieri che escono (o che entrano) dalla stessa stanza
+    // fanno una ragnatela: quando si arriva a due, si cambia lato
+    else if (esce[i] >= 2) saleI = true;
+    else if (entra[j] >= 2) saleI = false;
+    else saleI = caso() < 0.5;
+    if (saleI) i++; else j++;
+    esce[i]++; entra[j]++;
+    archi.push([i, j]);
+  }
+  return archi;
+}
+
+function quanteStanze(r) {
+  if (r === 0) return 3;
+  if (r === FILE - 1) return 1;              // il boss è uno solo
+  if (r === FILE - 2) return interoFra(2, 3);// la fila prima del boss: tutti fuochi
+  return interoFra(2, 4);
+}
+
+function tipoStanza(r, giaNellaFila) {
+  if (r === 0) return 'mostro';              // si comincia sempre picchiando
+  if (r === FILE - 1) return 'boss';
+  if (r === FILE - 2) return 'fuoco';
+  const sacco = r === 1
+    ? ['mostro', 'mostro', 'evento', 'forziere']
+    : ['mostro', 'mostro', 'mostro', 'evento', 'evento', 'forziere', 'fuoco', 'negozio'];
+  if (r >= 3) sacco.push('grosso', 'grosso');
+  let t, giri = 0;
+  do { t = scelta(sacco); giri++; }
+  while (giri < 12 && ((t === 'negozio' || t === 'forziere') && giaNellaFila.includes(t)));
+  return t;
+}
+
+function generaMappa() {
+  let m = null;
+  for (let tentativo = 0; tentativo < 30; tentativo++) {
+    m = costruisci();
+    if (verificaMappa(m).ok) return m;
+  }
+  return m;                                   // non è mai successo, ma meglio qualcosa che niente
+}
+
+function costruisci() {
+  const file = [];
+  let id = 0;
+  for (let r = 0; r < FILE; r++) {
+    const n = quanteStanze(r);
+    const fila = [];
+    for (let i = 0; i < n; i++) {
+      const tipo = tipoStanza(r, fila.map(s => s.tipo));
+      fila.push({
+        id: id++, riga: r, col: i, tipo, quante: n,
+        // lo scarto è una frazione del passo: le stanze si spostano quanto
+        // basta per non sembrare una griglia, mai tanto da toccarsi
+        xn: (i + 0.5) / n + fra(-0.22, 0.22) / n,   // 0..1 sulla larghezza
+        yn: r / (FILE - 1),                          // 0 in basso, 1 in cima
+        verso: [], da: [], visto: false, fatta: false,
+      });
+    }
+    // niente stanze appiccicate ai bordi né sovrapposte
+    fila.forEach(s => { s.xn = Math.max(0.14, Math.min(0.86, s.xn)); });
+    file.push(fila);
+  }
+
+  // i sentieri
+  for (let r = 0; r < FILE - 1; r++) {
+    for (const [i, j] of scaletta(file[r].length, file[r + 1].length)) {
+      const a = file[r][i], b = file[r + 1][j];
+      a.verso.push(b); b.da.push(a);
+    }
+  }
+
+  const tutte = file.flat();
+  // più di due negozi in una discesa vuol dire vetrine vuote: le monete
+  // non bastano mai per tre. Quelli in più tornano mostri.
+  const negozi = tutte.filter(s => s.tipo === 'negozio');
+  mescola(negozi).slice(2).forEach(s => { s.tipo = caso() < 0.5 ? 'mostro' : 'evento'; });
+  // almeno un forziere e almeno un negozio in tutta la discesa, se no il
+  // bottino non serve a niente
+  for (const garantito of ['forziere', 'negozio']) {
+    if (!tutte.some(s => s.tipo === garantito)) {
+      const candidate = tutte.filter(s => s.tipo === 'mostro' && s.riga >= 2 && s.riga <= FILE - 3);
+      if (candidate.length) scelta(candidate).tipo = garantito;
+    }
+  }
+
+  // curvatura dei sentieri, decisa una volta per tutte
+  for (const s of tutte) s.curve = s.verso.map(() => fra(-0.22, 0.22));
+  assegnaSfide(file);
+  return { file, tutte };
+}
+
+/* Che sfida porta ogni mostro, deciso qui e non davanti al mostro: sulla
+   mappa il simbolo si vede prima di entrare, e la strada si sceglie anche
+   per quello. Due regole:
+   — comunque tu cammini, due scontri di fila non sono mai dello stesso
+     tipo (ogni stanza si porta dietro l'elenco dei tipi con cui ci si può
+     arrivare, e sceglie fuori da quello);
+   — a parità di scelta vince quello ancora poco usato, così in una
+     discesa si vede quasi tutto il banco invece di tre inglesi di fila. */
+function assegnaSfide(file) {
+  const usate = {};
+  for (const k of CHIAVISFIDE) usate[k] = 0;
+  for (const fila of file) for (const s of fila) {
+    // `ultime` non è un elenco ma una distanza: per ogni tipo, quante
+    // stanze fa lo si è incontrato l'ultima volta, per la strada più
+    // corta che porta qui. Chi assegna prende il tipo più LONTANO — mai
+    // visto è lontanissimo — e a parità sceglie quello meno usato nella
+    // mappa. Le stanze hanno al massimo due strade che entrano e i tipi
+    // sono sei: due scontri attaccati dello stesso tipo non possono
+    // capitare
+    const arrivo = {};
+    for (const k of CHIAVISFIDE) {
+      let d = Infinity;
+      for (const p of s.da) d = Math.min(d, (p.ultime && p.ultime[k] !== undefined ? p.ultime[k] : Infinity) + 1);
+      arrivo[k] = d;
+    }
+    if (s.tipo === 'mostro' || s.tipo === 'grosso') {
+      const piuLontano = Math.max(...CHIAVISFIDE.map(k => arrivo[k]));
+      const libere = CHIAVISFIDE.filter(k => arrivo[k] === piuLontano);
+      const magre = Math.min(...libere.map(k => usate[k]));
+      s.sfida = scelta(libere.filter(k => usate[k] === magre));
+      usate[s.sfida]++;
+      s.ultime = { [s.sfida]: 0 };          // uno scontro chiude il conto: prima di lui non serve guardare
+    } else {
+      s.sfida = null;                       // il boss le usa tutte, le altre stanze nessuna
+      s.ultime = s.tipo === 'boss' ? {} : arrivo;
+    }
+  }
+}
+
+/* Controllo onesto: si arriva a tutte le stanze partendo dalla fila 0?
+   E da ogni stanza si arriva al boss? */
+function verificaMappa(m) {
+  const raggiunte = new Set();
+  const coda = m.file[0].slice();
+  coda.forEach(s => raggiunte.add(s.id));
+  while (coda.length) {
+    const s = coda.shift();
+    for (const v of s.verso) if (!raggiunte.has(v.id)) { raggiunte.add(v.id); coda.push(v); }
+  }
+  const irraggiungibili = m.tutte.filter(s => !raggiunte.has(s.id));
+  // all'indietro dal boss
+  const boss = m.file[FILE - 1][0];
+  const portano = new Set([boss.id]);
+  const coda2 = [boss];
+  while (coda2.length) {
+    const s = coda2.shift();
+    for (const d of s.da) if (!portano.has(d.id)) { portano.add(d.id); coda2.push(d); }
+  }
+  const cieche = m.tutte.filter(s => !portano.has(s.id));
+  return { ok: !irraggiungibili.length && !cieche.length, irraggiungibili, cieche };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. LO STATO DELLA PARTITA
+   ═══════════════════════════════════════════════════════════════════════ */
+const S = {
+  mappa: null, qui: null, cuori: 3, cuoriMax: 3, monete: 0, doni: {},
+  stanze: 0, schermo: 'mappa', pedina: null, cammino: null, scontro: null, finita: null,
+};
+
+function nuovaPartita() {
+  S.mappa = generaMappa();
+  S.qui = null; S.cuori = 3; S.cuoriMax = 3; S.monete = 0; S.doni = {};
+  S.stanze = 0; S.schermo = 'mappa'; S.cammino = null; S.scontro = null; S.finita = null;
+  S.pedina = null;
+  aggiornaVisibilita();
+  chiudiFoglio();
+  aggiornaHud();
+  piede('scegli da dove entrare');
+}
+
+const rigaOra = () => (S.qui ? S.qui.riga : 0);
+function aggiornaVisibilita() {
+  const limite = S.doni.mappa ? FILE : rigaOra() + 3;
+  for (const s of S.mappa.tutte) if (s.riga <= limite || s.tipo === 'boss') s.visto = true;
+}
+const raggiungibili = () => (S.schermo !== 'mappa' || S.cammino) ? []
+  : (S.qui ? S.qui.verso.slice() : S.mappa.file[0].slice());
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. IL DISEGNO DELLA MAPPA
+   Sfondo di pietra disegnato una volta sola e tenuto in cache; sopra,
+   ogni fotogramma, i sentieri, le stanze e la pedina.
+   ═══════════════════════════════════════════════════════════════════════ */
+const tela = $('#tela');
+const ctx = tela.getContext('2d');
+let L = 390, A = 700, DPR = 1, sfondo = null;
+const SOPRA = 84, SOTTO = 78;                 // spazio per la fascia e il piede
+
+function ridimensiona() {
+  const r = tela.getBoundingClientRect();
+  L = Math.max(200, Math.round(r.width));
+  A = Math.max(300, Math.round(r.height));
+  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  tela.width = Math.round(L * DPR); tela.height = Math.round(A * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  sfondo = null;
+}
+window.addEventListener('resize', ridimensiona);
+
+function posto(s) {                            // dove sta una stanza, in pixel
+  return { x: s.xn * L, y: A - SOTTO - s.yn * (A - SOTTO - SOPRA) };
+}
+function raggio(s) { return s.tipo === 'boss' ? 31 : s.quante >= 4 ? 23 : 26; }
+
+/* lo sfondo: pietra scura, mattoni appena accennati, muschio, vignetta */
+function disegnaSfondo() {
+  const c = document.createElement('canvas');
+  c.width = Math.round(L * DPR); c.height = Math.round(A * DPR);
+  const x = c.getContext('2d');
+  x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = x.createLinearGradient(0, 0, 0, A);
+  g.addColorStop(0, '#1d1730'); g.addColorStop(0.55, '#171227'); g.addColorStop(1, '#221a2e');
+  x.fillStyle = g; x.fillRect(0, 0, L, A);
+
+  // mattoni
+  const hM = 34, wM = 62;
+  for (let riga = 0, y = -hM; y < A + hM; y += hM, riga++) {
+    for (let px = (riga % 2 ? -wM / 2 : 0); px < L + wM; px += wM) {
+      x.fillStyle = `rgba(255,255,255,${0.012 + Math.random() * 0.02})`;
+      x.fillRect(px + 1.5, y + 1.5, wM - 3, hM - 3);
+      x.strokeStyle = 'rgba(0,0,0,0.22)'; x.lineWidth = 1;
+      x.strokeRect(px + 1.5, y + 1.5, wM - 3, hM - 3);
+    }
+  }
+  // macchie di muschio e umido
+  for (let i = 0; i < 70; i++) {
+    const cx = Math.random() * L, cy = Math.random() * A, r = 6 + Math.random() * 26;
+    const gg = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+    const verde = Math.random() < 0.45;
+    gg.addColorStop(0, verde ? 'rgba(80,150,90,0.10)' : 'rgba(120,90,180,0.09)');
+    gg.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gg; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+  }
+  // vignetta
+  const v = x.createRadialGradient(L / 2, A / 2, A * 0.22, L / 2, A / 2, A * 0.78);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.62)');
+  x.fillStyle = v; x.fillRect(0, 0, L, A);
+  return c;
+}
+
+/* il sentiero fra due stanze: un arco appena curvo, con il punto di
+   controllo spostato di lato — così i rami si distinguono a occhio */
+function controllo(a, b, curva) {
+  const pa = posto(a), pb = posto(b);
+  const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+  const dx = pb.x - pa.x, dy = pb.y - pa.y;
+  const len = Math.hypot(dx, dy) || 1;
+  // la pancia del sentiero è tagliata a 24 px: sui tratti lunghi una curva
+  // proporzionale scavallerebbe il sentiero vicino e sembrerebbero incrociarsi
+  const panza = Math.sign(curva) * Math.min(Math.abs(curva) * len, 24);
+  return { x: mx + (-dy / len) * panza, y: my + (dx / len) * panza };
+}
+function sulSentiero(a, b, curva, t) {
+  const pa = posto(a), pb = posto(b), q = controllo(a, b, curva), u = 1 - t;
+  return { x: u * u * pa.x + 2 * u * t * q.x + t * t * pb.x,
+           y: u * u * pa.y + 2 * u * t * q.y + t * t * pb.y };
+}
+function tracciaSentiero(a, b, curva) {
+  const pa = posto(a), pb = posto(b), q = controllo(a, b, curva);
+  ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.quadraticCurveTo(q.x, q.y, pb.x, pb.y);
+}
+
+const pulviscolo = [];
+function respira(t) { return 0.5 + 0.5 * Math.sin(t); }
+
+/* torce alle pareti: stanno nella striscia laterale dove le stanze non
+   arrivano mai (xn resta fra 0.14 e 0.86), quindi non danno fastidio */
+const TORCE = [{ s: 0, q: 0.18 }, { s: 1, q: 0.42 }, { s: 0, q: 0.66 }, { s: 1, q: 0.88 }];
+function disegnaTorce(t) {
+  for (let i = 0; i < TORCE.length; i++) {
+    const tc = TORCE[i];
+    const x = tc.s ? L - 17 : 17;
+    const y = SOPRA + tc.q * (A - SOPRA - SOTTO);
+    const guizzo = 0.72 + 0.28 * Math.sin(t * 7 + i * 2.1) * Math.sin(t * 11.3 + i);
+    const g = ctx.createRadialGradient(x, y, 2, x, y, 74 * guizzo);
+    g.addColorStop(0, `rgba(255,180,80,${0.30 * guizzo})`);
+    g.addColorStop(0.45, `rgba(255,140,50,${0.10 * guizzo})`);
+    g.addColorStop(1, 'rgba(255,120,40,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 74 * guizzo, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4a3a2c'; ctx.fillRect(x - 3, y + 2, 6, 20);   // il manico
+    ctx.fillStyle = '#6b5340'; ctx.fillRect(x - 6, y, 12, 5);       // la coppa
+    ctx.fillStyle = `rgba(255,175,55,${0.9 * guizzo})`;
+    ctx.beginPath(); ctx.ellipse(x, y - 7, 6.5, 12 * guizzo, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(255,235,150,${0.95 * guizzo})`;
+    ctx.beginPath(); ctx.ellipse(x, y - 5, 3.4, 7 * guizzo, 0, 0, 7); ctx.fill();
+  }
+}
+
+let tPrec = 0;
+function disegna(ora) {
+  const dt = Math.min(0.05, (ora - tPrec) / 1000 || 0);
+  tPrec = ora;
+  const t = ora / 1000;
+
+  if (!sfondo) sfondo = disegnaSfondo();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(sfondo, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  if (!S.mappa) { requestAnimationFrame(disegna); return; }
+
+  const apert = raggiungibili();
+  const apertiId = new Set(apert.map(s => s.id));
+
+  disegnaTorce(t);
+
+  /* pulviscolo: granelli che salgono nella luce */
+  if (pulviscolo.length < 34) pulviscolo.push({ x: Math.random() * L, y: A + 10, v: fra(6, 20), r: fra(0.7, 2), o: fra(.08, .3) });
+  for (const p of pulviscolo) {
+    p.y -= p.v * dt; p.x += Math.sin(t + p.y * 0.02) * 0.25;
+    if (p.y < -10) { p.y = A + 10; p.x = Math.random() * L; }
+    ctx.fillStyle = `rgba(255,225,170,${p.o})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+  }
+
+  /* i sentieri: prima tutti spenti, poi quelli che partono da dove sei */
+  ctx.lineCap = 'round';
+  for (const s of S.mappa.tutte) {
+    s.verso.forEach((b, k) => {
+      const acceso = S.qui === s && apertiId.has(b.id);
+      const percorso = s.fatta && b.fatta;
+      tracciaSentiero(s, b, s.curve[k]);
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 9; ctx.stroke();
+      tracciaSentiero(s, b, s.curve[k]);
+      ctx.setLineDash([2, 9]);
+      ctx.strokeStyle = percorso ? 'rgba(255,201,60,0.5)' : 'rgba(190,175,225,0.30)';
+      ctx.lineWidth = 4; ctx.stroke();
+      ctx.setLineDash([]);
+      if (acceso) {
+        tracciaSentiero(s, b, s.curve[k]);
+        ctx.setLineDash([3, 10]); ctx.lineDashOffset = -t * 26;
+        ctx.strokeStyle = 'rgba(255,214,110,0.95)'; ctx.lineWidth = 5.5;
+        ctx.shadowColor = 'rgba(255,190,70,0.9)'; ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0; ctx.setLineDash([]); ctx.lineDashOffset = 0;
+      }
+    });
+  }
+  // la prima scelta non ha un sentiero da cui arrivare: un tratteggio dal basso
+  if (!S.qui && !S.cammino) {
+    for (const s of apert) {
+      const p = posto(s);
+      ctx.beginPath(); ctx.moveTo(p.x, A - SOTTO + 40); ctx.lineTo(p.x, p.y);
+      ctx.setLineDash([3, 10]); ctx.lineDashOffset = -t * 26;
+      ctx.strokeStyle = 'rgba(255,214,110,0.8)'; ctx.lineWidth = 5;
+      ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    }
+  }
+
+  /* le stanze */
+  for (const s of S.mappa.tutte) {
+    const p = posto(s), R = raggio(s);
+    const aperta = apertiId.has(s.id);
+    const qui = S.qui === s;
+    const noto = s.visto;
+    const info = TIPI[s.tipo];
+
+    // alone
+    if (aperta || qui) {
+      const pulsa = respira(t * (qui ? 3.4 : 2.6) + s.id);
+      const ra = R + 10 + pulsa * 8;
+      const g = ctx.createRadialGradient(p.x, p.y, R * 0.4, p.x, p.y, ra);
+      const col = qui ? '255,255,255' : '255,201,60';
+      g.addColorStop(0, `rgba(${col},${0.30 + pulsa * 0.22})`);
+      g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, ra, 0, 7); ctx.fill();
+    } else if (s.tipo === 'boss' && noto) {
+      const pulsa = respira(t * 1.6);
+      const g = ctx.createRadialGradient(p.x, p.y, R * 0.5, p.x, p.y, R + 22);
+      g.addColorStop(0, `rgba(255,80,60,${0.16 + pulsa * 0.14})`);
+      g.addColorStop(1, 'rgba(255,80,60,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R + 22, 0, 7); ctx.fill();
+    }
+
+    // ombra e disco
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + R * 0.62, R * 0.92, R * 0.34, 0, 0, 7); ctx.fill();
+
+    const gd = ctx.createLinearGradient(0, p.y - R, 0, p.y + R);
+    if (s.fatta) { gd.addColorStop(0, '#3b3450'); gd.addColorStop(1, '#241f33'); }
+    else if (aperta || qui) { gd.addColorStop(0, '#4c4370'); gd.addColorStop(1, '#2b2440'); }
+    else { gd.addColorStop(0, '#2a2440'); gd.addColorStop(1, '#1d182c'); }
+    ctx.fillStyle = gd;
+    ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, 7); ctx.fill();
+
+    // anello — tratteggiato se la stanza è ancora al buio
+    ctx.lineWidth = qui ? 4 : 3;
+    ctx.strokeStyle = qui ? '#ffffff'
+      : aperta ? info.col
+      : s.fatta ? 'rgba(255,201,60,0.42)'
+      : noto ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.22)';
+    if (!noto) ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, 7); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // icona
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (noto) {
+      const dim = s.tipo === 'boss' ? 34 : 27;
+      ctx.globalAlpha = (aperta || qui || s.fatta) ? 1 : 0.42;
+      ctx.font = `${dim}px system-ui,"Noto Color Emoji","Segoe UI Emoji",sans-serif`;
+      ctx.fillText(info.em, p.x, p.y + 1);
+      ctx.globalAlpha = 1;
+    } else {
+      // al buio non si mette un punto interrogativo: c'è già ❓ come stanza,
+      // e due «?» diversi che vogliono dire cose diverse confondono. Tre
+      // puntini e l'anello tratteggiato: «qui non ci vedi ancora».
+      ctx.fillStyle = 'rgba(255,255,255,0.34)';
+      for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.arc(p.x + k * 8, p.y, 2.4, 0, 7); ctx.fill(); }
+    }
+    // il marchio della sfida: che domanda ti aspetta là dentro, prima di
+    // entrarci. È il motivo per cui un bivio si può scegliere anche per
+    // quello che ti riesce meglio
+    if (noto && !s.fatta && (s.sfida || s.tipo === 'boss')) {
+      const sf = s.sfida ? SFIDE[s.sfida] : null;
+      const bx = p.x + R * 0.74, by = p.y - R * 0.74;
+      ctx.globalAlpha = (aperta || qui) ? 1 : 0.45;
+      ctx.fillStyle = '#120e1e';
+      ctx.beginPath(); ctx.arc(bx, by, 13.5, 0, 7); ctx.fill();
+      ctx.strokeStyle = sf ? sf.col : '#ffd23f'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(bx, by, 13.5, 0, 7); ctx.stroke();
+      ctx.font = '16px system-ui,"Noto Color Emoji","Segoe UI Emoji",sans-serif';
+      ctx.fillText(sf ? sf.icona : '🎲', bx, by + 1);
+      ctx.globalAlpha = 1;
+    }
+
+    if (s.fatta) {                       // spuntata: già passata di qui
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffc93c'; ctx.font = '900 20px system-ui,sans-serif';
+      ctx.fillText('✓', p.x, p.y + 1);
+    }
+  }
+
+  /* la pedina */
+  if (S.cammino) {
+    const c = S.cammino;
+    c.t = Math.min(1, c.t + dt / c.durata);
+    const e = c.t < 0.5 ? 2 * c.t * c.t : 1 - Math.pow(-2 * c.t + 2, 2) / 2;   // dolce ai due capi
+    const p = c.b ? sulSentiero(c.da, c.a, c.curva, e)
+                  : { x: c.p0.x + (c.p1.x - c.p0.x) * e, y: c.p0.y + (c.p1.y - c.p0.y) * e };
+    S.pedina = p;
+    if (c.passo === undefined) c.passo = 0;
+    if (e > c.passo + 0.22) { c.passo = e; suona('passo'); }
+    if (c.t >= 1) { const poi = c.poi; S.cammino = null; poi(); }
+  }
+  if (S.pedina) {
+    // ferma, la pedina sta SOPRA la stanza, non sopra la sua icona: se la
+    // coprisse non si saprebbe più dove si è finiti
+    const alza = S.cammino ? 0 : 22;
+    const p = { x: S.pedina.x, y: S.pedina.y - alza };
+    const salto = Math.abs(Math.sin(t * 6)) * (S.cammino ? 5 : 1.6);
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + 15, 11, 4, 0, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(p.x, p.y - salto, 2, p.x, p.y - salto, 30);
+    g.addColorStop(0, 'rgba(255,220,150,0.5)'); g.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y - salto, 30, 0, 7); ctx.fill();
+    ctx.font = '29px system-ui,"Noto Color Emoji","Segoe UI Emoji",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🧒', p.x, p.y - salto - 2);
+  }
+
+  requestAnimationFrame(disegna);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. IL TOCCO SULLA MAPPA
+   ═══════════════════════════════════════════════════════════════════════ */
+tela.addEventListener('pointerdown', ev => {
+  accendiAudio();
+  if (S.schermo !== 'mappa' || S.cammino) return;
+  const r = tela.getBoundingClientRect();
+  const x = ev.clientX - r.left, y = ev.clientY - r.top;
+  for (const s of raggiungibili()) {
+    const p = posto(s);
+    if (Math.hypot(p.x - x, p.y - y) <= raggio(s) + 12) { vai(s); return; }
+  }
+});
+
+function vai(destinazione) {
+  const partenza = S.qui;
+  const pb = posto(destinazione);
+  if (partenza) {
+    const k = partenza.verso.indexOf(destinazione);
+    S.cammino = { da: partenza, a: destinazione, curva: partenza.curve[k], b: true, t: 0, durata: 0.72, poi: () => arriva(destinazione) };
+  } else {
+    const sotto = { x: pb.x, y: A - SOTTO + 40 };
+    S.pedina = sotto;
+    S.cammino = { p0: sotto, p1: pb, b: false, t: 0, durata: 0.55, poi: () => arriva(destinazione) };
+  }
+  piede('');
+}
+
+function arriva(s) {
+  S.qui = s; S.pedina = posto(s); S.stanze++;
+  s.fatta = true;
+  aggiornaVisibilita();
+  aggiornaHud();
+  apriStanza(s);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. LA FASCIA IN CIMA
+   ═══════════════════════════════════════════════════════════════════════ */
+function aggiornaHud() {
+  let c = '';
+  for (let i = 0; i < S.cuoriMax; i++) c += i < S.cuori ? '❤️' : '🖤';
+  $('#cuoriHud').textContent = c;
+  $('#moneteHud').textContent = '🪙 ' + S.monete;
+  $('#doniHud').innerHTML = Object.keys(S.doni)
+    .filter(k => k !== 'cuore' && S.doni[k])
+    .map(k => `<span title="${DONI[k].nome}">${DONI[k].em}</span>`).join('');
+}
+function piede(testo) {
+  const el = $('#piede');
+  if (S.schermo !== 'mappa') { el.textContent = ''; return; }
+  if (testo !== undefined && testo !== null) { el.textContent = testo; return; }
+  el.textContent = S.qui ? `fila ${S.qui.riga + 1} di ${FILE} — scegli dove salire` : 'scegli da dove entrare';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. I FOGLI (le stanze e gli scontri) — costruiti a mano, niente HTML
+       nascosto che non si sa più in che stato sia
+   ═══════════════════════════════════════════════════════════════════════ */
+const foglio = $('#foglio');
+function chiudiFoglio() {
+  foglio.classList.remove('su'); foglio.innerHTML = '';
+  S.schermo = 'mappa'; piede();
+}
+/* Il foglio copre la fascia in cima, e in uno scontro sapere quanti cuori
+   ti restano è la metà del gioco: la riga di stato la rimette lì, sempre
+   uguale, senza che ogni stanza se la ricostruisca a modo suo. */
+function apriFoglio(costruisci, senzaStato) {
+  foglio.innerHTML = '';
+  if (!senzaStato) {
+    const st = el('div', 'stato');
+    st.appendChild(el('div', '', '❤️'.repeat(S.cuori) + '🖤'.repeat(Math.max(0, S.cuoriMax - S.cuori))));
+    st.appendChild(el('div', 'm', '🪙 ' + S.monete));
+    const d = Object.keys(S.doni).filter(k => S.doni[k]).map(k => DONI[k].em).join('');
+    if (d) st.appendChild(el('div', '', d));
+    foglio.appendChild(st);
+  }
+  costruisci(foglio);
+  foglio.classList.add('su'); foglio.scrollTop = 0;
+  S.schermo = 'foglio'; piede('');
+}
+function el(tag, classe, testo) {
+  const e = document.createElement(tag);
+  if (classe) e.className = classe;
+  if (testo !== undefined) e.textContent = testo;
+  return e;
+}
+function bottone(testo, classe, azione) {
+  const b = el('button', 'bottone ' + (classe || ''), testo);
+  b.addEventListener('click', azione);
+  return b;
+}
+function lampeggia() {
+  const l = $('#lampo');
+  l.classList.remove('acceso'); void l.offsetWidth; l.classList.add('acceso');
+}
+
+/* ── conti: cuori, monete, doni ── */
+function togliCuore() {
+  S.cuori--; lampeggia(); aggiornaHud();
+  if (S.cuori <= 0) return true;
+  return false;
+}
+function dammiCuore(n) {
+  S.cuori = Math.min(S.cuoriMax, S.cuori + (n || 1)); suona('cuore'); aggiornaHud();
+}
+function dammiMonete(n) { S.monete += n; suona('moneta'); aggiornaHud(); }
+function dammiDono(chiave) {
+  if (chiave === 'cuore') { S.cuoriMax++; S.cuori++; }
+  else S.doni[chiave] = true;
+  if (chiave === 'mappa') aggiornaVisibilita();
+  suona('forziere'); aggiornaHud();
+}
+function donoACaso() {
+  const possibili = doniPossibili().filter(k => k !== 'cuore');
+  return possibili.length ? scelta(possibili) : 'cuore';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. LE FIGURE — l'alfabeto disegnato delle sfide
+
+   Una figura è un fatto piccolo: `{ forma, colore, taglia, quanti }`.
+   Sequenze, memoria e indizi parlano solo questa lingua, e chi disegna
+   (`figuraSvg`) non sa a cosa serva. Niente emoji qui dentro: le emoji
+   cambiano da telefono a telefono, e una regola «il colore che alterna»
+   con un'emoji che si vede gialla su uno e arancione sull'altro non è
+   più una regola.
+   ═══════════════════════════════════════════════════════════════════════ */
+const COLORI = {
+  rosso:  { hex:'#f2564f', m:'rosso',  f:'rossa'  },
+  blu:    { hex:'#4a9cf0', m:'blu',    f:'blu'    },
+  verde:  { hex:'#4fce7c', m:'verde',  f:'verde'  },
+  giallo: { hex:'#ffc93c', m:'giallo', f:'gialla' },
+  viola:  { hex:'#b07ff0', m:'viola',  f:'viola'  },
+};
+const NOMICOLORI = Object.keys(COLORI);
+const FORME = {
+  cerchio:   { art:'un cerchio',   genere:'m' },
+  quadrato:  { art:'un quadrato',  genere:'m' },
+  triangolo: { art:'un triangolo', genere:'m' },
+  stella:    { art:'una stella',   genere:'f' },
+  rombo:     { art:'un rombo',     genere:'m' },
+};
+const NOMIFORME = Object.keys(FORME);
+
+function sagoma(forma, cx, cy, r, colore) {
+  const p = (...pt) => `<polygon points="${pt.join(' ')}" fill="${colore}" stroke="#00000055" stroke-width="1.5"/>`;
+  switch (forma) {
+    case 'cerchio':
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${colore}" stroke="#00000055" stroke-width="1.5"/>`;
+    case 'quadrato':
+      return `<rect x="${cx - r * 0.88}" y="${cy - r * 0.88}" width="${r * 1.76}" height="${r * 1.76}"`
+           + ` rx="${r * 0.16}" fill="${colore}" stroke="#00000055" stroke-width="1.5"/>`;
+    case 'triangolo':
+      return p(`${cx},${cy - r}`, `${cx + r * 0.94},${cy + r * 0.76}`, `${cx - r * 0.94},${cy + r * 0.76}`);
+    case 'rombo':
+      return p(`${cx},${cy - r}`, `${cx + r * 0.78},${cy}`, `${cx},${cy + r}`, `${cx - r * 0.78},${cy}`);
+    default: {                                   // stella a cinque punte
+      const pt = [];
+      for (let i = 0; i < 10; i++) {
+        const ang = -Math.PI / 2 + i * Math.PI / 5;
+        const rr = i % 2 ? r * 0.45 : r;
+        pt.push(`${(cx + Math.cos(ang) * rr).toFixed(1)},${(cy + Math.sin(ang) * rr).toFixed(1)}`);
+      }
+      return p(...pt);
+    }
+  }
+}
+/* dove stanno le copie quando la figura è ripetuta: uno al centro, due
+   affiancate, tre a triangolo, quattro agli angoli, cinque come il dado */
+const POSTI = {
+  1: [[50, 50, 34]],
+  2: [[29, 50, 23], [71, 50, 23]],
+  3: [[31, 34, 20], [69, 34, 20], [50, 70, 20]],
+  4: [[31, 31, 19], [69, 31, 19], [31, 69, 19], [69, 69, 19]],
+  5: [[29, 29, 16], [71, 29, 16], [50, 50, 16], [29, 71, 16], [71, 71, 16]],
+};
+function figuraSvg(f, tinta) {
+  const q = Math.max(1, Math.min(5, f.quanti || 1));
+  const scala = f.taglia === 'piccola' ? 0.6 : 1;
+  const hex = tinta || COLORI[f.colore].hex;
+  const corpo = POSTI[q].map(([x, y, r]) => sagoma(f.forma, x, y, r * scala, hex)).join('');
+  return `<svg class="fig" viewBox="0 0 100 100" aria-hidden="true">${corpo}</svg>`;
+}
+const GRIGIO = '#cfc7e6';                          // per le figure che parlano di forma, non di colore
+const chiaveFigura = f => `${f.forma}|${f.colore}|${f.taglia || 'grande'}|${f.quanti || 1}`;
+function nomeFigura(f) {
+  const F = FORME[f.forma], c = COLORI[f.colore];
+  let n = `${F.art} ${c[F.genere]}`;
+  if (f.taglia === 'piccola') n += F.genere === 'f' ? ' piccola' : ' piccolo';
+  return n;
+}
+const figura = (forma, colore, taglia, quanti) => ({ forma, colore, taglia: taglia || 'grande', quanti: quanti || 1 });
+/* n valori diversi presi da un elenco */
+const diversi = (elenco, n) => mescola(elenco).slice(0, n);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. LE SFIDE — il banco delle domande
+
+   Prima ogni scontro era una domanda di inglese, e dopo dieci stanze il
+   dungeon era una scheda di vocabolario con le spade. Adesso lo scontro
+   non sa più cosa sta chiedendo: pesca una sfida dal banco e mostra
+   quello che riceve.
+
+   Una sfida è una voce di `SFIDE`:
+       { nome, icona, col, genera(difficolta) }
+   e `genera` restituisce sempre la stessa forma:
+       {
+         domanda: { chiesto, testo?, nota?, figure?, sequenza?, indizi? },
+         opzioni: [ {testo} | {emoji} | {figura} ],   // 3..6
+         giusta:  l'indice di quella buona,
+         spiega:  una riga che dice perché,
+         anteprima?: { figure, secondi }   // da guardare prima di scoprire
+       }
+   `difficolta` va da 0 (prima fila) a 1 (il drago). Nessuna sfida ha un
+   elenco di domande scritte a mano: si generano tutte, se no un bambino
+   che ci gioca ogni giorno le impara a memoria in una settimana.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── le due lingue: stessa forma, elenco diverso ── */
+function sfidaLingua(nomeLingua, parole, dif) {
+  const quante = dif < 0.45 ? 3 : 4;
+  const b = scelta(parole);
+  const falsi = mescola(parole.filter(p => p.it !== b.it && p.str !== b.str && p.em !== b.em)).slice(0, quante - 1);
+  const tutte = mescola([b, ...falsi]);
+  const g = tutte.indexOf(b);
+  const modo = caso();
+  if (modo < 0.40) return {
+    domanda: { chiesto: `che vuol dire in ${nomeLingua}`, testo: b.str },
+    opzioni: tutte.map(p => ({ testo: p.em + '  ' + p.it })),
+    giusta: g, spiega: `«${b.str}» vuol dire ${b.it}.`,
+  };
+  if (modo < 0.75) return {
+    domanda: { chiesto: `come si dice in ${nomeLingua}`, testo: b.em + '  ' + b.it },
+    opzioni: tutte.map(p => ({ testo: p.str })),
+    giusta: g, spiega: `${b.it} in ${nomeLingua} si dice «${b.str}».`,
+  };
+  return {
+    domanda: { chiesto: `in ${nomeLingua}, trova`, testo: b.str },
+    opzioni: tutte.map(p => ({ emoji: p.em })),
+    giusta: g, spiega: `«${b.str}» vuol dire ${b.it}.`,
+  };
+}
+
+/* ── la sequenza: una fila che segue una regola, manca l'ultima ──
+   Ogni regola è una funzione che, dato il posto nella fila, dice che
+   figura ci va. Così la fila si allunga quanto serve e la regola resta
+   una riga sola. */
+const REGOLE = [
+  { da:0, varia:['colore'], fai() {                 // il colore si dà il cambio
+      const [a, b] = diversi(NOMICOLORI, 2), forma = scelta(NOMIFORME);
+      return { passo: i => figura(forma, i % 2 ? b : a),
+               spiega: `I colori si danno il cambio: ${COLORI[a].m}, ${COLORI[b].m}, ${COLORI[a].m}…` }; } },
+  { da:0, varia:['forma'], fai() {                  // la forma gira
+      const f = diversi(NOMIFORME, 3), c = scelta(NOMICOLORI);
+      return { passo: i => figura(f[i % 3], c),
+               spiega: `Le forme girano sempre nello stesso ordine.` }; } },
+  { da:0, varia:['taglia'], fai() {                 // grande, piccola, grande…
+      const forma = scelta(NOMIFORME), c = scelta(NOMICOLORI);
+      return { passo: i => figura(forma, c, i % 2 ? 'piccola' : 'grande'),
+               spiega: `Una grande e una piccola, sempre a turno.` }; } },
+  { da:0.3, varia:['colore'], fai() {               // tre colori in giro
+      const c = diversi(NOMICOLORI, 3), forma = scelta(NOMIFORME);
+      return { passo: i => figura(forma, c[i % 3]),
+               spiega: `I colori girano a tre a tre: ${c.map(x => COLORI[x].m).join(', ')}…` }; } },
+  { da:0.3, quante:4, varia:['quanti'], fai() {     // se ne aggiunge una ogni volta
+      const forma = scelta(NOMIFORME), c = scelta(NOMICOLORI);
+      return { passo: i => figura(forma, c, 'grande', i + 1),
+               spiega: `Ogni volta ce n'è una in più.` }; } },
+  { da:0.55, varia:['forma','colore'], fai() {      // la forma va a due, il colore a tre
+      const f = diversi(NOMIFORME, 2), c = diversi(NOMICOLORI, 3);
+      return { passo: i => figura(f[i % 2], c[i % 3]),
+               spiega: `La forma cambia ogni volta, il colore ogni tre: vanno a passi diversi.` }; } },
+];
+
+function sfidaSequenza(dif) {
+  const buone = REGOLE.filter(r => dif >= r.da);
+  const r = scelta(buone);
+  const regola = r.fai();
+  const lung = r.quante || (dif < 0.4 ? 4 : 5);
+  const fila = [];
+  for (let i = 0; i < lung; i++) fila.push(regola.passo(i));
+  const giusta = fila[lung - 1];
+  const mostrate = fila.slice(0, lung - 1);
+
+  /* I falsi: la stessa figura con una cosa cambiata, più la trappola di
+     chi ripete l'ultima vista invece di guardare la regola. Taglia e
+     quantità si cambiano solo se la fila le fa già ballare: se tutte le
+     figure sono grandi uguali, mettere fra le risposte la stessa figura
+     un po' più piccola non è una domanda, è un tranello. */
+  const balla = c => r.varia.includes(c);
+  const candidati = [
+    figura(scelta(NOMIFORME.filter(x => x !== giusta.forma)), giusta.colore, giusta.taglia, giusta.quanti),
+    figura(giusta.forma, scelta(NOMICOLORI.filter(x => x !== giusta.colore)), giusta.taglia, giusta.quanti),
+    balla('taglia') ? figura(giusta.forma, giusta.colore, giusta.taglia === 'piccola' ? 'grande' : 'piccola', giusta.quanti) : null,
+    balla('quanti') ? figura(giusta.forma, giusta.colore, giusta.taglia, giusta.quanti > 1 ? giusta.quanti - 1 : giusta.quanti + 1) : null,
+    mostrate[lung - 2], mostrate[lung - 3] || mostrate[0],
+    figura(scelta(NOMIFORME.filter(x => x !== giusta.forma)), scelta(NOMICOLORI.filter(x => x !== giusta.colore)), giusta.taglia, giusta.quanti),
+  ].filter(Boolean);
+  const visti = new Set([chiaveFigura(giusta)]);
+  const falsi = [];
+  for (const c of mescola(candidati)) {
+    const k = chiaveFigura(c);
+    if (visti.has(k)) continue;
+    visti.add(k); falsi.push(c);
+    if (falsi.length === 3) break;
+  }
+  for (let giri = 0; giri < 60 && falsi.length < 3; giri++) {   // non è mai servito, ma non si sa mai
+    const c = figura(scelta(NOMIFORME), scelta(NOMICOLORI), giusta.taglia, giusta.quanti);
+    if (!visti.has(chiaveFigura(c))) { visti.add(chiaveFigura(c)); falsi.push(c); }
+  }
+  const opzioni = mescola([giusta, ...falsi]);
+  return {
+    domanda: { chiesto: 'cosa viene dopo?', sequenza: [...mostrate, null] },
+    opzioni: opzioni.map(f => ({ figura: f })),
+    giusta: opzioni.indexOf(giusta),
+    spiega: regola.spiega,
+  };
+}
+
+/* ── la memoria: si guarda, si copre, manca qualcosa ── */
+function sfidaMemoria(dif) {
+  const quante = dif < 0.35 ? 4 : dif < 0.7 ? 5 : 6;
+  const coppie = [];
+  for (const forma of NOMIFORME) for (const colore of NOMICOLORI) coppie.push([forma, colore]);
+  const figure = mescola(coppie).slice(0, quante).map(([f, c]) => figura(f, c));
+  const via = scelta(figure);
+  const restano = figure.filter(f => f !== via);     // stesso ordine: si confronta a occhio
+  const falsi = mescola(restano).slice(0, 3);
+  const opzioni = mescola([via, ...falsi]);
+  return {
+    anteprima: { figure, secondi: quante >= 6 ? 2.6 : 2.2 },
+    domanda: { chiesto: 'cosa è sparito?', figure: restano },
+    opzioni: opzioni.map(f => ({ figura: f })),
+    giusta: opzioni.indexOf(via),
+    spiega: `Mancava ${nomeFigura(via)}.`,
+  };
+}
+
+/* ── l'intruso: tre stanno insieme, uno no ── */
+const CATEGORIE = {
+  animali:  { molti:'animali', uno:'un animale', cose:[['🐕','cane'],['🐈','gatto'],['🐟','pesce'],['🐴','cavallo'],['🐻','orso'],['🐸','rana'],['🐭','topo'],['🦁','leone'],['🐘','elefante'],['🦋','farfalla']] },
+  veicoli:  { molti:'veicoli', uno:'un veicolo', cose:[['🚗','auto'],['🚌','autobus'],['🚲','bicicletta'],['✈️','aereo'],['🚂','treno'],['🚁','elicottero'],['⛵','barca'],['🚜','trattore'],['🛴','monopattino'],['🚀','razzo']] },
+  frutta:   { molti:'frutta', uno:'un frutto', cose:[['🍎','mela'],['🍌','banana'],['🍓','fragola'],['🍇','uva'],['🍉','anguria'],['🍑','pesca'],['🍐','pera'],['🍒','ciliegia'],['🥝','kiwi'],['🍊','arancia']] },
+  verdure:  { molti:'verdure', uno:'una verdura', cose:[['🥕','carota'],['🥦','broccolo'],['🌽','mais'],['🥔','patata'],['🍅','pomodoro'],['🥒','cetriolo'],['🧅','cipolla'],['🫑','peperone']] },
+  vestiti:  { molti:'vestiti', uno:'un vestito', cose:[['👕','maglietta'],['👖','pantaloni'],['🧦','calzini'],['👟','scarpe'],['🧢','cappello'],['🧥','giacca'],['🧣','sciarpa'],['🧤','guanti']] },
+  strumenti:{ molti:'strumenti', uno:'uno strumento', cose:[['🎸','chitarra'],['🥁','tamburo'],['🎺','tromba'],['🎻','violino'],['🎹','pianoforte'],['🪕','banjo'],['🎷','sassofono']] },
+  mobili:   { molti:'mobili', uno:'un mobile', cose:[['🛏️','letto'],['🪑','sedia'],['🚪','porta'],['🛋️','divano'],['🪞','specchio'],['🖼️','quadro'],['🪟','finestra'],['🗄️','armadio']] },
+  corpo:    { molti:'pezzi del corpo', uno:'un pezzo del corpo', cose:[['👁️','occhio'],['✋','mano'],['👂','orecchio'],['👃','naso'],['🦶','piede'],['🦷','dente'],['👅','lingua'],['🦵','gamba']] },
+  cielo:    { molti:'cose del cielo', uno:'una cosa del cielo', cose:[['☀️','sole'],['🌙','luna'],['⭐','stella'],['☁️','nuvola'],['🌈','arcobaleno'],['❄️','fiocco di neve'],['⛈️','temporale'],['🌪️','tornado']] },
+};
+const VICINE = [['frutta','verdure'], ['mobili','vestiti'], ['animali','corpo']];
+const sonoVicine = (a, b) => VICINE.some(v => v.includes(a) && v.includes(b));
+
+function sfidaIntruso(dif) {
+  const chiavi = Object.keys(CATEGORIE);
+  const coppie = [];
+  for (const a of chiavi) for (const b of chiavi)
+    if (a !== b && (dif >= 0.5 || !sonoVicine(a, b))) coppie.push([a, b]);
+  const [ka, kb] = scelta(coppie);
+  const A = CATEGORIE[ka], B = CATEGORIE[kb];
+  const tre = mescola(A.cose).slice(0, 3);
+  const fuori = scelta(B.cose.filter(c => !tre.some(t => t[1] === c[1] || t[0] === c[0])));
+  const tutte = mescola([...tre, fuori]);
+  return {
+    domanda: { chiesto: 'chi non c\'entra?', nota: 'tre stanno insieme, uno no' },
+    opzioni: tutte.map(c => ({ testo: c[0] + '  ' + c[1] })),
+    giusta: tutte.indexOf(fuori),
+    spiega: `${fuori[1]} è ${B.uno}, gli altri sono ${A.molti}.`,
+  };
+}
+
+/* ── gli indizi: si toglie finché ne resta una ──
+   Due regole che non si negoziano: gli indizi devono lasciare in piedi
+   UNA figura sola, e nessun indizio dev'essere lì per fare scena. La
+   prima si ottiene aggiungendone finché il gruppo non si stringe a uno;
+   la seconda togliendo, dopo, tutti quelli che si possono togliere senza
+   che il gruppo si riapra. */
+function veroPer(ind, f) {
+  const val = ind.campo === 'taglia' ? (f.taglia || 'grande') : f[ind.campo];
+  return ind.neg ? val !== ind.val : val === ind.val;
+}
+function sfidaIndizi(dif) {
+  const quante = dif < 0.4 ? 4 : dif < 0.75 ? 5 : 6;
+  const conTaglia = dif >= 0.35;
+  const forme = diversi(NOMIFORME, 4), colori = diversi(NOMICOLORI, 4);
+  const taglie = conTaglia ? ['grande', 'piccola'] : ['grande'];
+  const nuova = () => figura(scelta(forme), scelta(colori), scelta(taglie));
+
+  /* il bersaglio non dev'essere l'unico rosso né l'unico quadrato: se no
+     un indizio solo basterebbe e non c'è niente da dedurre */
+  const bersaglio = nuova();
+  const figure = [bersaglio];
+  const metti = f => { if (!figure.some(x => chiaveFigura(x) === chiaveFigura(f))) figure.push(f); };
+  for (let giri = 0; giri < 200 && figure.length < quante; giri++) {
+    const manca = ['forma', 'colore', 'taglia'].filter(campo =>
+      (campo !== 'taglia' || conTaglia) &&
+      !figure.slice(1).some(f => f[campo] === bersaglio[campo]));
+    if (manca.length) {                              // uno che condivide quello che manca
+      const campo = manca[0];
+      const f = nuova(); f[campo] = bersaglio[campo];
+      if (chiaveFigura(f) !== chiaveFigura(bersaglio)) metti(f);
+    } else metti(nuova());
+  }
+  for (let giri = 0; giri < 300 && figure.length < quante; giri++) metti(nuova()); // rete di sicurezza
+
+  /* tutti gli indizi veri sul bersaglio, positivi e negativi */
+  const campi = conTaglia ? ['forma', 'colore', 'taglia'] : ['forma', 'colore'];
+  const candidati = [];
+  for (const campo of campi) {
+    candidati.push({ campo, val: bersaglio[campo], neg: false });
+    const altri = [...new Set(figure.map(f => f[campo]))].filter(v => v !== bersaglio[campo]);
+    for (const v of altri) candidati.push({ campo, val: v, neg: true });
+  }
+  const peso = i => (i.neg ? (dif < 0.4 ? 0.25 : 0.75) : 1) * caso();
+  const ordinati = candidati.slice().sort((a, b) => peso(b) - peso(a));
+
+  const restano = ind => figure.filter(f => ind.every(i => veroPer(i, f)));
+  const indizi = [];
+  for (const c of ordinati) {
+    if (restano(indizi).length <= 1) break;
+    const prova = [...indizi, c];
+    if (restano(prova).length < restano(indizi).length) indizi.push(c);
+  }
+  for (const c of mescola(indizi.slice())) {         // via quelli che non servono
+    const senza = indizi.filter(i => i !== c);
+    if (restano(senza).length === 1) indizi.splice(indizi.indexOf(c), 1);
+  }
+
+  const opzioni = mescola(figure);
+  return {
+    domanda: { chiesto: 'chi è?', indizi: mescola(indizi).map(vestiIndizio) },
+    opzioni: opzioni.map(f => ({ figura: f })),
+    giusta: opzioni.indexOf(bersaglio),
+    spiega: `Era ${nomeFigura(bersaglio)}.`,
+  };
+}
+/* l'indizio in italiano, con la sua faccina: il soggetto è «la figura»,
+   quindi il colore va al femminile (è rossa, non è gialla) */
+function vestiIndizio(i) {
+  if (i.campo === 'colore')
+    return { neg: i.neg, testo: (i.neg ? 'non è ' : 'è ') + COLORI[i.val].f, colore: i.val };
+  if (i.campo === 'taglia')
+    return { neg: i.neg, testo: (i.neg ? 'non è ' : 'è ') + (i.val === 'piccola' ? 'piccola' : 'grande'),
+             taglia: i.val };
+  return { neg: i.neg, testo: (i.neg ? 'non è ' : 'è ') + FORME[i.val].art, forma: i.val };
+}
+
+const SFIDE = {
+  inglese:  { nome:'Inglese',          icona:'🇬🇧', col:'#4fb3e0', genera: d => sfidaLingua('inglese', PAROLE_EN, d) },
+  spagnolo: { nome:'Spagnolo',         icona:'🇪🇸', col:'#ff8a3d', genera: d => sfidaLingua('spagnolo', PAROLE_ES, d) },
+  sequenza: { nome:'Cosa viene dopo',  icona:'🔁', col:'#a97ff0', genera: sfidaSequenza },
+  memoria:  { nome:'Cosa è sparito',   icona:'🧠', col:'#4fce7c', genera: sfidaMemoria },
+  intruso:  { nome:'Chi non c\'entra', icona:'🔍', col:'#ffc93c', genera: sfidaIntruso },
+  indizi:   { nome:'Gli indizi',       icona:'🕵️', col:'#ef6f8f', genera: sfidaIndizi },
+};
+const CHIAVISFIDE = Object.keys(SFIDE);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12-bis. COME SI MOSTRA UNA SFIDA
+   Un posto solo: qualunque sfida nuova si disegna da sé senza toccare
+   lo scontro, purché rispetti la forma qui sopra.
+   ═══════════════════════════════════════════════════════════════════════ */
+function filaFigure(figure, velate) {
+  const r = el('div', 'fila-figure');
+  figure.forEach(f => {
+    const c = el('div', 'casella' + (f ? (velate ? ' velata' : '') : ' buco'));
+    if (f) c.innerHTML = figuraSvg(f); else c.textContent = '?';
+    r.appendChild(c);
+  });
+  return r;
+}
+function listaIndizi(indizi) {
+  const box = el('div', 'indizi');
+  indizi.forEach(i => {
+    const riga = el('div', 'indizio');
+    if (i.neg) riga.appendChild(el('span', 'no', '🚫'));
+    const ic = el('div', 'ic');
+    if (i.colore) { const p = el('div', 'pallino'); p.style.background = COLORI[i.colore].hex; ic.appendChild(p); }
+    // la forma si mostra grigia: se fosse colorata l'indizio direbbe due
+    // cose («non è una stella» diventerebbe «non è una stella viola»)
+    else if (i.forma) ic.innerHTML = figuraSvg(figura(i.forma, 'viola'), GRIGIO);
+    // la taglia si capisce solo per confronto: due cerchi, e quello di cui
+    // si parla è acceso
+    else ic.innerHTML = `<svg class="fig" viewBox="0 0 100 100" aria-hidden="true">`
+      + `<circle cx="33" cy="50" r="31" fill="${i.taglia === 'piccola' ? '#4b4363' : GRIGIO}"/>`
+      + `<circle cx="82" cy="66" r="16" fill="${i.taglia === 'piccola' ? GRIGIO : '#4b4363'}"/></svg>`;
+    riga.appendChild(ic);
+    riga.appendChild(el('div', '', i.testo));
+    box.appendChild(riga);
+  });
+  return box;
+}
+function disegnaDomanda(d) {
+  const c = el('div', 'carta');
+  if (d.chiesto) c.appendChild(el('div', 'chiesto', d.chiesto));
+  if (d.testo) c.appendChild(el('div', 'bersaglio', d.testo));
+  if (d.nota) c.appendChild(el('div', 'nota', d.nota));
+  if (d.sequenza) c.appendChild(filaFigure(d.sequenza));
+  if (d.figure) c.appendChild(filaFigure(d.figure));
+  if (d.indizi) c.appendChild(listaIndizi(d.indizi));
+  return c;
+}
+function disegnaOpzioni(g, quandoTocca) {
+  const mute = g.opzioni.every(o => o.figura || o.emoji);
+  const box = el('div', 'opzioni' + (mute ? (g.opzioni.length > 4 ? ' griglia tre' : ' griglia') : ''));
+  g.opzioni.forEach((o, i) => {
+    const b = el('button', 'opz' + (o.emoji ? ' grande' : '') + (o.figura ? ' figura' : ''));
+    if (o.figura) b.innerHTML = figuraSvg(o.figura);
+    else b.textContent = o.emoji || o.testo;
+    b.dataset.i = i;
+    b.addEventListener('click', () => quandoTocca(i, b));
+    box.appendChild(b);
+  });
+  return box;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. LO SCONTRO
+   Non sa cosa sta chiedendo: sceglie una sfida, la fa generare e mostra
+   quello che riceve. L'unica cosa che gli interessa è se il tocco è
+   finito sull'opzione giusta.
+   ═══════════════════════════════════════════════════════════════════════ */
+const FACCE = { mostro: ['👹', '👻', '🦂', '🕷️', '🐍', '🦇', '🧟', '👺'],
+                grosso: ['🐲', '🦖', '🦑', '🐙', '👾'],
+                boss:   ['🐉'] };
+
+function iniziaScontro(tipo, sfidaChiave, riga) {
+  const colpiTot = tipo === 'boss' ? 5 : tipo === 'grosso' ? 3 : (S.doni.spada ? 1 : 2);
+  const base = Math.min(1, (riga || 0) / (FILE - 1));
+  S.scontro = {
+    tipo, colpiTot, colpi: 0, faccia: scelta(FACCE[tipo]),
+    // il drago le usa tutte, un mostro porta la sua e l'ha già detto sulla mappa
+    fissa: tipo === 'boss' ? null : (SFIDE[sfidaChiave] ? sfidaChiave : scelta(CHIAVISFIDE)),
+    sfida: null, gen: null, guarda: false,
+    difficolta: Math.min(1, base + (tipo === 'grosso' ? 0.15 : tipo === 'boss' ? 0.25 : 0)),
+    scudoUsato: false, bloccato: false, tempo: null, resta: 0, orologio: null,
+  };
+  if (tipo === 'boss') suona('boss');
+  nuovoRound();
+}
+
+/* un round = una sfida nuova. Il drago non ripete mai due volte di fila
+   lo stesso tipo: cambia faccia a ogni colpo. */
+function nuovoRound() {
+  const sc = S.scontro;
+  if (!sc) return;
+  fermaTimer();
+  sc.sfida = sc.fissa || scelta(CHIAVISFIDE.filter(k => k !== sc.sfida));
+  sc.gen = SFIDE[sc.sfida].genera(sc.difficolta);
+  sc.guarda = !!sc.gen.anteprima;                  // c'è qualcosa da guardare prima
+  sc.bloccato = false;
+  mostraScontro();
+  if (sc.guarda) {
+    sc.orologio = setTimeout(() => {
+      sc.orologio = null;
+      if (S.scontro !== sc) return;
+      sc.guarda = false;
+      mostraScontro();
+      if (sc.tipo === 'boss') partiTimer();
+    }, sc.gen.anteprima.secondi * 1000);
+  } else if (sc.tipo === 'boss') partiTimer();
+}
+
+function mostraScontro() {
+  const sc = S.scontro;
+  const g = sc.gen, tipoSfida = SFIDE[sc.sfida];
+  const disegnata = !!(g.domanda.figure || g.domanda.sequenza || g.domanda.indizi || g.anteprima);
+  apriFoglio(f => {
+    const arena = el('div', 'arena'); f.appendChild(arena);
+    arena.style.background = `radial-gradient(ellipse 62% 46% at 50% 42%,${tipoSfida.col}26,#ffffff00 70%)`;
+
+    const mos = el('div', 'mostro' + (disegnata ? ' medio' : ''), sc.faccia);
+    mos.id = 'facciaMostro';
+    arena.appendChild(mos);
+
+    const nome = el('div', 'titolo',
+      sc.tipo === 'boss' ? 'IL DRAGO DEL DUNGEON' : sc.tipo === 'grosso' ? 'Mostro grosso' : 'Un mostro!');
+    if (sc.tipo === 'boss') nome.style.color = '#ffd23f';
+    arena.appendChild(nome);
+
+    // il marchio: che sfida sta arrivando, detto prima di leggerla
+    const marchio = el('div', 'marchio');
+    marchio.style.color = tipoSfida.col;
+    marchio.appendChild(el('span', 'ic', tipoSfida.icona));
+    marchio.appendChild(el('span', '', tipoSfida.nome));
+    arena.appendChild(marchio);
+
+    const vita = el('div', 'vita');
+    for (let i = 0; i < sc.colpiTot; i++) vita.appendChild(el('i', i < sc.colpiTot - sc.colpi ? 'piena' : ''));
+    arena.appendChild(vita);
+
+    if (S.doni.scudo && !sc.scudoUsato)
+      arena.appendChild(el('div', 'sotto', '🛡️ un errore te lo perdona lo scudo'));
+
+    const fondo = el('div', 'fondo'); f.appendChild(fondo);
+
+    if (sc.guarda) {                                 // la fase «guarda bene»
+      const carta = el('div', 'carta');
+      carta.appendChild(el('div', 'chiesto', 'guarda bene!'));
+      carta.appendChild(filaFigure(g.anteprima.figure));
+      carta.appendChild(el('div', 'nota', 'fra un attimo le copro'));
+      fondo.appendChild(carta);
+      const barra = el('div', 'barratempo');
+      const dentro = el('i');
+      dentro.style.transition = `transform ${g.anteprima.secondi}s linear`;
+      barra.appendChild(dentro); fondo.appendChild(barra);
+      requestAnimationFrame(() => { dentro.style.transform = 'scaleX(0)'; });
+      return;
+    }
+
+    if (sc.tipo === 'boss') {
+      const barra = el('div', 'barratempo');
+      const dentro = el('i'); dentro.id = 'tempoDentro';
+      barra.appendChild(dentro); fondo.appendChild(barra);
+    }
+    fondo.appendChild(disegnaDomanda(g.domanda));
+    fondo.appendChild(disegnaOpzioni(g, rispondi));
+  });
+}
+
+function fermaTimer() {
+  if (!S.scontro) return;
+  if (S.scontro.tempo) { clearInterval(S.scontro.tempo); S.scontro.tempo = null; }
+  if (S.scontro.orologio) { clearTimeout(S.scontro.orologio); S.scontro.orologio = null; }
+}
+function partiTimer() {
+  const sc = S.scontro;
+  fermaTimer();
+  sc.resta = 13;
+  sc.tempo = setInterval(() => {
+    if (!S.scontro || S.scontro !== sc) { clearInterval(sc.tempo); return; }
+    sc.resta -= 0.1;
+    const d = document.getElementById('tempoDentro');
+    if (d) d.style.transform = `scaleX(${Math.max(0, sc.resta / 13)})`;
+    if (sc.resta <= 0) { fermaTimer(); if (!sc.bloccato) tempoScaduto(); }
+  }, 100);
+}
+function tempoScaduto() {
+  const sc = S.scontro;
+  sc.bloccato = true;
+  document.querySelectorAll('.opz').forEach(b => b.classList.add('spenta'));
+  suona('sbagliato');
+  incassaColpo('Troppo lento! Il drago soffia.', sc.gen.spiega);
+}
+
+function rispondi(i, tastoPremuto) {
+  const sc = S.scontro;
+  if (!sc || sc.bloccato || sc.guarda) return;
+  sc.bloccato = true;
+  fermaTimer();
+  const tasti = [...document.querySelectorAll('.opz')];
+  tasti.forEach(b => { if (b !== tastoPremuto) b.classList.add('spenta'); });
+
+  if (i === sc.gen.giusta) {
+    tastoPremuto.classList.add('giusta');
+    suona('giusto'); suona('colpo');
+    const m = document.getElementById('facciaMostro');
+    if (m) { m.classList.add('colpito'); }
+    sc.colpi++;
+    setTimeout(() => {
+      if (!S.scontro || S.scontro !== sc) return;
+      if (sc.colpi >= sc.colpiTot) vintoScontro();
+      else nuovoRound();
+    }, 620);
+  } else {
+    tastoPremuto.classList.add('sbagliata');
+    // la giusta si accende lo stesso: sbagliare senza vedere dov'era non
+    // insegna niente
+    const buona = tasti[sc.gen.giusta];
+    if (buona) { buona.classList.remove('spenta'); buona.classList.add('giusta'); }
+    suona('sbagliato');
+    if (S.doni.scudo && !sc.scudoUsato) {
+      sc.scudoUsato = true;
+      setTimeout(() => { if (S.scontro === sc) nuovoRound(); }, 1100);
+      const avviso = el('div', 'sotto', '🛡️ la seconda occasione ti salva!');
+      avviso.style.color = '#8fd6ff'; foglio.appendChild(avviso);
+      return;
+    }
+    setTimeout(() => { if (S.scontro === sc) incassaColpo('Ahia!', sc.gen.spiega); }, 900);
+  }
+}
+
+function incassaColpo(perche, spiega) {
+  const morto = togliCuore();
+  const sc = S.scontro;
+  if (morto) { fermaTimer(); S.scontro = null; finePartita(false); return; }
+  fermaTimer();
+  apriFoglio(f => {
+    f.appendChild(el('div', 'centrata'));
+    const c = f.firstChild;
+    c.appendChild(el('div', 'mostro', '💥'));
+    c.appendChild(el('div', 'titolo', perche));
+    if (spiega) c.appendChild(el('div', 'esito', spiega));
+    c.appendChild(el('div', 'sotto', 'Hai perso un cuore. Ti restano ' + S.cuori + '.'));
+    const scappa = () => { fermaTimer(); S.scontro = null; suona('passo'); dopoStanza(); };
+    c.appendChild(bottone('continua a combattere ⚔️', '', nuovoRound));
+    if (sc.tipo !== 'boss') c.appendChild(bottone('scappa via 🏃', 'calmo', scappa));
+  });
+}
+
+function vintoScontro() {
+  const sc = S.scontro;
+  fermaTimer();
+  if (sc.tipo === 'boss') { S.scontro = null; finePartita(true); return; }
+  const bottino = sc.tipo === 'grosso' ? interoFra(12, 20) : interoFra(4, 9);
+  const donoExtra = sc.tipo === 'grosso' && caso() < 0.5 ? donoACaso() : null;
+  dammiMonete(bottino);
+  if (donoExtra) dammiDono(donoExtra);
+  S.scontro = null;
+  suona('vittoria');
+  apriFoglio(f => {
+    const c = el('div', 'centrata'); f.appendChild(c);
+    c.appendChild(el('div', 'mostro', '🎉'));
+    c.appendChild(el('div', 'titolo', 'Sconfitto!'));
+    c.appendChild(el('div', 'sotto', `Hai raccolto 🪙 ${bottino} monete.`));
+    if (donoExtra) c.appendChild(el('div', 'esito', `${DONI[donoExtra].em} ${DONI[donoExtra].nome} — ${DONI[donoExtra].desc}`));
+    c.appendChild(bottone('avanti →', '', dopoStanza));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   14. LE ALTRE STANZE
+   ═══════════════════════════════════════════════════════════════════════ */
+function apriStanza(s) {
+  switch (s.tipo) {
+    case 'mostro': case 'grosso': case 'boss': iniziaScontro(s.tipo, s.sfida, s.riga); break;
+    case 'forziere': stanzaForziere(); break;
+    case 'fuoco':    stanzaFuoco(); break;
+    case 'negozio':  stanzaNegozio(); break;
+    case 'evento':   stanzaEvento(); break;
+  }
+}
+
+function dopoStanza() {
+  chiudiFoglio();
+  if (S.cuori <= 0) { finePartita(false); return; }
+  aggiornaHud();
+  piede();
+}
+
+function scelteFoglio(f, titolo, emoji, sotto, voci) {
+  const t = el('div', 'centrata');
+  t.appendChild(el('div', 'mostro', emoji));
+  t.appendChild(el('div', 'titolo', titolo));
+  if (sotto) t.appendChild(el('div', 'sotto', sotto));
+  f.appendChild(t);
+  const box = el('div', 'scelte');
+  box.style.flex = 'none';
+  voci.forEach(v => {
+    const b = el('button', 'scelta');
+    b.disabled = !!v.spento;
+    b.appendChild(el('div', 'em', v.em));
+    const testo = el('div');
+    testo.appendChild(el('b', '', v.nome));
+    if (v.desc) testo.appendChild(el('span', '', v.desc));
+    b.appendChild(testo);
+    if (v.prezzo !== undefined) b.appendChild(el('div', 'prezzo', '🪙 ' + v.prezzo));
+    b.addEventListener('click', () => { if (!b.disabled) v.fai(); });
+    box.appendChild(b);
+  });
+  f.appendChild(box);
+}
+
+/* ── forziere: prendi e vai, o fruga ancora rischiando ── */
+function stanzaForziere() {
+  const monete = interoFra(9, 18);
+  apriFoglio(f => scelteFoglio(f, 'Un forziere!', '🎁',
+    'C\'è dentro qualcosa che luccica. Ma il fondo è buio.', [
+      { em:'🪙', nome:'Prendi le monete', desc:`${monete} monete, sicure.`,
+        fai: () => { dammiMonete(monete); suona('forziere'); esitoForziere(`🪙 +${monete} monete`, 'Nella borsa, senza fatica.'); } },
+      { em:'🔦', nome:'Fruga fino in fondo', desc:'Forse c\'è un tesoro. Forse una trappola.',
+        fai: () => {
+          if (caso() < 0.62) {
+            const d = donoACaso(); dammiDono(d);
+            esitoForziere(`${DONI[d].em} ${DONI[d].nome}`, DONI[d].desc);
+          } else {
+            suona('sbagliato');
+            if (togliCuore()) { finePartita(false); return; }
+            esitoForziere('🪤 Una trappola!', 'Uno spuntone. Hai perso un cuore.');
+          }
+        } },
+    ]));
+}
+function esitoForziere(titolo, testo) {
+  apriFoglio(f => {
+    const c = el('div', 'centrata'); f.appendChild(c);
+    c.appendChild(el('div', 'mostro', '🎁'));
+    c.appendChild(el('div', 'titolo', titolo));
+    c.appendChild(el('div', 'esito', testo));
+    c.appendChild(bottone('avanti →', '', dopoStanza));
+  });
+}
+
+/* ── fuoco: un cuore o un potenziamento, mai tutti e due ── */
+function stanzaFuoco() {
+  const dono = donoACaso();
+  apriFoglio(f => scelteFoglio(f, 'Fuoco da campo', '🔥',
+    'Ti siedi vicino alle braci. C\'è tempo per una cosa sola.', [
+      { em:'❤️', nome:'Riposa', desc: S.cuori >= S.cuoriMax ? 'Sei già a posto: ti farà bene lo stesso.' : 'Recuperi un cuore.',
+        fai: () => {
+          if (S.cuori >= S.cuoriMax) { S.cuoriMax++; S.cuori++; suona('cuore'); aggiornaHud(); esitoFuoco('❤️ Un cuore in più', 'Eri già pieno: il fuoco ti ha reso più forte.'); }
+          else { dammiCuore(1); esitoFuoco('❤️ +1 cuore', 'Riposato. Si riparte.'); }
+        } },
+      { em: DONI[dono].em, nome:'Allenati', desc: DONI[dono].nome + ' — ' + DONI[dono].desc,
+        fai: () => { dammiDono(dono); esitoFuoco(DONI[dono].em + ' ' + DONI[dono].nome, DONI[dono].desc); } },
+    ]));
+}
+function esitoFuoco(titolo, testo) {
+  apriFoglio(f => {
+    const c = el('div', 'centrata'); f.appendChild(c);
+    c.appendChild(el('div', 'mostro', '🔥'));
+    c.appendChild(el('div', 'titolo', titolo));
+    c.appendChild(el('div', 'esito', testo));
+    c.appendChild(bottone('avanti →', '', dopoStanza));
+  });
+}
+
+/* ── negozio ── */
+function stanzaNegozio() {
+  const merce = mescola(doniPossibili().filter(k => k !== 'cuore')).slice(0, 2)
+    .map(k => ({ chiave: k, prezzo: DONI[k].prezzo }));
+  merce.push({ chiave: 'cuore', prezzo: DONI.cuore.prezzo });
+  disegnaNegozio(merce, { prezzo: 7 });
+}
+function disegnaNegozio(merce, cura) {
+  apriFoglio(f => {
+    const voci = merce.filter(m => !m.venduto).map(m => ({
+      em: DONI[m.chiave].em, nome: DONI[m.chiave].nome, desc: DONI[m.chiave].desc,
+      prezzo: m.prezzo, spento: S.monete < m.prezzo,
+      fai: () => { S.monete -= m.prezzo; m.venduto = true; dammiDono(m.chiave); disegnaNegozio(merce, cura); },
+    }));
+    if (S.cuori < S.cuoriMax)
+      voci.push({ em:'🧪', nome:'Pozione rossa', desc:'Recuperi un cuore, subito.', prezzo: cura.prezzo,
+        spento: S.monete < cura.prezzo,
+        fai: () => { S.monete -= cura.prezzo; dammiCuore(1); disegnaNegozio(merce, cura); } });
+    voci.push({ em:'🚪', nome:'Vai via', desc:'La strada aspetta.', fai: dopoStanza });
+    scelteFoglio(f, 'Negozio', '🏪', `Hai 🪙 ${S.monete} monete.`, voci);
+  });
+}
+
+/* ── eventi: due righe e un bivio ── */
+const EVENTI = [
+  { em:'⛲', tit:'Una fontana che borbotta',
+    testo:'L\'acqua è limpida ma non si sa da dove arrivi. Un rospo ti guarda.',
+    a:{ nome:'Bevi un sorso', desc:'Chi non risica…',
+        fai:()=> caso()<0.6 ? (dammiCuore(1), ['💧 Che freschezza!','Ti senti meglio: +1 cuore.'])
+                            : (togliCuore(), ['🤢 Bleah!','Era acqua vecchia. Perdi un cuore.']) },
+    b:{ nome:'Riempi la borraccia', desc:'Meglio non fidarsi.',
+        fai:()=> (dammiMonete(6), ['🎒 Prudente','In fondo alla vasca c\'erano 6 monete.']) } },
+  { em:'🐭', tit:'Un topolino con un sacchetto',
+    testo:'Ti fissa. Il sacchetto è più grande di lui e tintinna.',
+    a:{ nome:'Gli dai da mangiare (5 🪙)', desc:'Costa 5 monete.',
+        fai:()=> { if (S.monete < 5) return ['🪙 Non hai 5 monete','Il topo se ne va offeso.'];
+                   S.monete -= 5; const d = donoACaso(); dammiDono(d);
+                   return ['🐭 Amici!', `Ti lascia ${DONI[d].em} ${DONI[d].nome}.`]; } },
+    b:{ nome:'Lo scacci', desc:'Non hai tempo da perdere.',
+        fai:()=> ['🐭 Scappa','Ti tira la lingua e sparisce in una crepa.'] } },
+  { em:'🗿', tit:'Una statua con la mano aperta',
+    testo:'Sotto c\'è scritto: «chi dona riceve». La mano è enorme.',
+    a:{ nome:'Ci metti 10 monete', desc:'Costa 10 monete.',
+        fai:()=> { if (S.monete < 10) return ['🪙 Non hai 10 monete','La statua non si muove.'];
+                   S.monete -= 10; S.cuoriMax++; S.cuori++; suona('cuore'); aggiornaHud();
+                   return ['🗿 La statua sorride','Un cuore in più, per sempre.']; } },
+    b:{ nome:'Le fai una linguaccia', desc:'Sarà mica viva.',
+        fai:()=> caso()<0.5 ? (dammiMonete(14), ['😄 Era cava!','Dentro c\'erano 14 monete.'])
+                            : (togliCuore(), ['🗿 Era viva','Ti ha dato uno scappellotto. -1 cuore.']) } },
+  { em:'🍄', tit:'Funghi che brillano',
+    testo:'Illuminano tutta la galleria di verde. Profumano di bosco.',
+    a:{ nome:'Ne mangi uno', desc:'Sembrano buoni.',
+        fai:()=> caso()<0.5 ? (dammiCuore(1), ['🍄 Buonissimo','+1 cuore e un ruttino.'])
+                            : (togliCuore(), ['🍄 Amarissimo','Ti gira la testa. -1 cuore.']) },
+    b:{ nome:'Li metti in tasca', desc:'Al mercato li pagano.',
+        fai:()=> (dammiMonete(8), ['🎒 Raccolta','8 monete di funghi luminosi.']) } },
+  { em:'🚪', tit:'Una porta chiusa a chiave',
+    testo:'Dietro si sente tintinnare. La serratura è arrugginita.',
+    a:{ nome:'La sfondi a spallate', desc:'Farà male.',
+        fai:()=> { const morto = togliCuore();
+                   if (morto) return ['🚪 Troppo dura','La porta ha vinto.'];
+                   dammiMonete(20); return ['💥 Aperta!','20 monete — e una spalla dolorante.']; } },
+    b:{ nome:'Cerchi un\'altra strada', desc:'Non si può avere tutto.',
+        fai:()=> ['🚶 Giri al largo','Niente monete, ma tutti i cuori.'] } },
+  { em:'📜', tit:'Una pergamena impolverata',
+    testo:'È scritta in una lingua che non conosci. Le lettere si muovono.',
+    a:{ nome:'La leggi ad alta voce', desc:'Cosa vuoi che succeda.',
+        fai:()=> { const d = donoACaso(); dammiDono(d);
+                   return ['✨ Magia!', `La pergamena diventa ${DONI[d].em} ${DONI[d].nome}.`]; } },
+    b:{ nome:'La rivendi', desc:'Vecchia carta, ma vecchia.',
+        fai:()=> (dammiMonete(11), ['🪙 Affare','11 monete da un mercante di passaggio.']) } },
+  { em:'🕸️', tit:'Una ragnatela gigante',
+    testo:'Occupa tutto il corridoio. In mezzo brilla qualcosa.',
+    a:{ nome:'Passi in mezzo', desc:'Quel luccichio…',
+        fai:()=> caso()<0.6 ? (dammiMonete(13), ['💎 Presa!','13 monete incastrate nella tela.'])
+                            : (togliCuore(), ['🕷️ Il ragno','Era in casa. -1 cuore.']) },
+    b:{ nome:'Fai il giro lungo', desc:'Nessun rischio.',
+        fai:()=> ['🚶 Giro lungo','Niente di che. Ma sei intero.'] } },
+  { em:'🕯️', tit:'Un candelabro dimenticato',
+    testo:'La fiamma non si spegne mai, dicono. Ci si vede lontano.',
+    a:{ nome:'Prendi la candela', desc:'Illumina la strada.',
+        fai:()=> { if (!S.doni.mappa) { dammiDono('mappa'); return ['🗺️ Ci vedi!','Adesso vedi tutto il dungeon fino al boss.']; }
+                   dammiMonete(9); return ['🕯️ Cera pregiata','La rivendi per 9 monete.']; } },
+    b:{ nome:'Lasci stare', desc:'Non si tocca la roba altrui.',
+        fai:()=> (dammiMonete(4), ['🪙 Sotto il candelabro','C\'erano 4 monete cadute.']) } },
+];
+
+function stanzaEvento() {
+  const e = scelta(EVENTI);
+  apriFoglio(f => scelteFoglio(f, e.tit, e.em, e.testo, [
+    { em:'👉', nome:e.a.nome, desc:e.a.desc, fai: () => risolviEvento(e, e.a) },
+    { em:'👉', nome:e.b.nome, desc:e.b.desc, fai: () => risolviEvento(e, e.b) },
+  ]));
+}
+function risolviEvento(e, opzione) {
+  const esito = opzione.fai() || ['…', 'Non succede niente.'];
+  aggiornaHud();
+  if (S.cuori <= 0) { finePartita(false); return; }
+  apriFoglio(f => {
+    const c = el('div', 'centrata'); f.appendChild(c);
+    c.appendChild(el('div', 'mostro', e.em));
+    c.appendChild(el('div', 'titolo', esito[0]));
+    c.appendChild(el('div', 'esito', esito[1]));
+    c.appendChild(bottone('avanti →', '', dopoStanza));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   15. FINE DELLA RUN
+   ═══════════════════════════════════════════════════════════════════════ */
+function finePartita(vinta) {
+  fermaTimer();
+  S.scontro = null; S.finita = vinta;
+  suona(vinta ? 'vittoria' : 'fine');
+  apriFoglio(f => {
+    const c = el('div', 'centrata'); f.appendChild(c);
+    c.appendChild(el('div', 'mostro', vinta ? '👑' : '💀'));
+    const t = el('div', 'titolo', vinta ? 'HAI BATTUTO IL DRAGO!' : 'Il dungeon ha vinto');
+    t.style.color = vinta ? '#ffd23f' : '#ef8f8f';
+    c.appendChild(t);
+    c.appendChild(el('div', 'sotto', vinta
+      ? 'Sei uscito con il tesoro. La prossima volta il dungeon sarà tutto diverso.'
+      : 'Fine dei cuori. Il dungeon si rimescola: la prossima mappa non è questa.'));
+
+    const fatti = el('div', 'riga-fatti');
+    const f1 = el('div', 'fatto'); f1.appendChild(el('b', '', String(S.stanze))); f1.appendChild(el('span', '', 'stanze'));
+    const f2 = el('div', 'fatto'); f2.appendChild(el('b', '', String(S.monete))); f2.appendChild(el('span', '', 'monete'));
+    const f3 = el('div', 'fatto'); f3.appendChild(el('b', '', (S.qui ? S.qui.riga + 1 : 0) + '/' + FILE)); f3.appendChild(el('span', '', 'fila'));
+    fatti.append(f1, f2, f3);
+    c.appendChild(fatti);
+
+    const doni = Object.keys(S.doni).filter(k => S.doni[k]);
+    if (doni.length || S.cuoriMax > 3) {
+      const riga = el('div', 'esito');
+      riga.textContent = 'Avevi: ' + doni.map(k => DONI[k].em + ' ' + DONI[k].nome).join(', ')
+        + (S.cuoriMax > 3 ? (doni.length ? ', ' : '') + `❤️ ${S.cuoriMax} cuori` : '');
+      c.appendChild(riga);
+    }
+    c.appendChild(bottone('ANCORA ↻', '', () => { suona('moneta'); nuovaPartita(); }));
+  }, true);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   16. LA LEGENDA
+   ═══════════════════════════════════════════════════════════════════════ */
+$('#tastoAiuto').addEventListener('click', () => {
+  if (S.schermo !== 'mappa') return;
+  apriFoglio(f => {
+    f.appendChild(el('div', 'titolo', 'Le stanze'));
+    const g = el('div', 'legenda');
+    [['⚔️', 'mostro: 2 risposte'], ['🐲', 'grosso: 3 risposte'], ['🎁', 'forziere: bottino'],
+     ['🔥', 'fuoco: cuore o forza'], ['🏪', 'negozio: si compra'], ['❓', 'bivio: si sceglie'],
+     ['👑', 'boss: 5 risposte'], ['⋯', 'buio: non lo sai ancora']].forEach(([e, t]) => {
+      const d = el('div'); d.appendChild(el('span', '', e)); d.appendChild(el('div', '', t)); g.appendChild(d);
+    });
+    f.appendChild(g);
+    f.appendChild(el('div', 'titolo', 'Le sfide'));
+    f.appendChild(el('div', 'sotto', 'Il bollino sul mostro dice che domanda ti farà. Il drago le usa tutte 🎲.'));
+    const gs = el('div', 'legenda');
+    CHIAVISFIDE.forEach(k => {
+      const d = el('div');
+      d.style.borderLeft = '4px solid ' + SFIDE[k].col;
+      d.appendChild(el('span', '', SFIDE[k].icona));
+      d.appendChild(el('div', '', SFIDE[k].nome));
+      gs.appendChild(d);
+    });
+    f.appendChild(gs);
+    f.appendChild(el('div', 'sotto', 'Si sale dal basso verso il boss. Da dove sei puoi andare solo dove porta un sentiero acceso. I cuori non tornano da soli: solo al fuoco, al negozio o con un po\' di fortuna.'));
+    const c = el('div', 'centrata'); c.appendChild(bottone('torna alla mappa', 'calmo', dopoStanza)); f.appendChild(c);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   17. VIA
+   ═══════════════════════════════════════════════════════════════════════ */
+ridimensiona();
+nuovaPartita();
+requestAnimationFrame(disegna);
+
+/* una finestrella per le prove automatiche */
+window.__dungeon = {
+  S, generaMappa, verificaMappa, nuovaPartita, FILE, SFIDE, CHIAVISFIDE,
+  firma: () => S.mappa.file.map(f => f.map(s => s.tipo[0]).join('')).join('|'),
+  vaiA: i => { const a = raggiungibili(); if (a[i]) vai(a[i]); },
+  quiSotto: () => raggiungibili().map(s => ({ tipo: s.tipo, sfida: s.sfida, riga: s.riga })),
+  apri: (tipo, sfida, riga) => apriStanza({ tipo, sfida, riga }),
+  fine: finePartita,
+};
+</script>

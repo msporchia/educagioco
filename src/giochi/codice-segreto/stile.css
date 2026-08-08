@@ -1,0 +1,230 @@
+/* ═══════════════════════════════════════════════════════════════════
+   CODICE SEGRETO — L'ASPETTO
+
+   Un file solo, e ogni classe comincia per `cs-`. Non è pignoleria: lo
+   stile globale dell'applicazione ha già `.riga`, `.carta`, `.tondo`, e
+   due fogli che si contendono lo stesso nome si rompono a distanza di
+   mesi, quando nessuno si ricorda più perché.
+
+   Il colore del tema arriva da `--cs-accento`, che il gioco scrive sul
+   contenitore: la tappa del mare è azzurra e quella della pasticceria è
+   ambra senza che qui ci sia scritto da nessuna parte cosa sia il mare.
+
+   La misura della casella non la calcola JavaScript: la riga è un
+   contenitore di dimensione (`container-type: size`) e la casella prende
+   il minore fra «l'altezza della riga» e «la larghezza che le tocca».
+   Sei righe più la tastiera stanno nello schermo senza scorrimento,
+   sempre, anche quando le caselle sono cinque.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cs {
+  --cs-accento: #4f6bd0;
+  --cs-carta: #fffdf7;
+  --cs-inchiostro: #33291f;
+  --cs-tenue: #a4917a;
+  --cs-bordo: #e0d2ba;
+  --cs-buca: #ece0c9;
+  --cs-pieno: #17a34a;
+  --cs-vuoto: #f0900e;
+  --cs-scuro: #3b3026;
+  --cs-raggio: 16px;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 7px;
+  width: 100%; max-width: 460px; margin: 0 auto;
+  padding: 6px 10px 10px;
+  color: var(--cs-inchiostro);
+  position: relative;
+}
+/* system-ui davanti apposta: Noto Color Emoji ha dentro anche le cifre
+   (gli servono per le keycap 0️⃣), e su un elemento con testo misto le
+   farebbe uscire larghe il doppio del resto. */
+.cs .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+                       "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la mappa della campagna ═══════════ */
+.cs-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 14px; padding: 2px 2px 20px }
+.cs-scalino > h3 { display: flex; align-items: center; gap: 7px;
+                   font-size: 15px; color: var(--cs-tenue); margin-bottom: 6px }
+.cs-scalino > h3 b { color: var(--cs-inchiostro); font-size: 16px }
+.cs-scalino > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right }
+.cs-tappe { display: flex; flex-direction: column; gap: 8px }
+
+.cs-tappa { display: flex; align-items: center; gap: 10px; text-align: left;
+            background: var(--cs-carta); border-radius: 14px; padding: 10px 12px;
+            box-shadow: 0 2px 0 var(--cs-bordo);
+            border-left: 6px solid var(--cs-accento);
+            transition: transform .12s }
+.cs-tappa:active { transform: scale(.98) }
+.cs-tappa .cs-faccia { font-size: 30px; flex: none }
+.cs-tappa .cs-testo { flex: 1; min-width: 0 }
+.cs-tappa b { display: block; font-size: 16px }
+.cs-tappa i { display: block; font-style: normal; font-size: 12.5px;
+              color: var(--cs-tenue); overflow: hidden; text-overflow: ellipsis;
+              white-space: nowrap }
+.cs-tappa .cs-stelle { font-size: 13px; letter-spacing: 1px; flex: none }
+.cs-tappa.cs-chiusa { opacity: .5; border-left-color: #cfc3ad; box-shadow: none }
+.cs-tappa.cs-adesso { box-shadow: 0 3px 0 var(--cs-accento) }
+
+.cs-libero { display: flex; align-items: center; gap: 10px; justify-content: center;
+             background: linear-gradient(180deg, var(--cs-scuro), #241d16); color: #ffe9c2;
+             border-radius: 14px; padding: 14px; font-weight: 800; font-size: 16px }
+.cs-libero.cs-chiusa { background: #e7dcc7; color: var(--cs-tenue) }
+
+/* le due manopole del gioco libero: difficoltà e vestito */
+.cs-manopole { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 }
+.cs-manopola > span { font-size: 12.5px; color: var(--cs-tenue); display: block;
+                      margin-bottom: 5px }
+.cs-scelte { display: flex; flex-wrap: wrap; gap: 6px }
+.cs-scelte button { border-radius: 12px; background: #fff; padding: 8px 11px;
+                    display: flex; align-items: center; gap: 5px;
+                    font-size: 13.5px; font-weight: 700; color: var(--cs-tenue);
+                    border: 2px solid var(--cs-bordo); transition: transform .1s }
+.cs-scelte button .em { font-size: 17px }
+.cs-scelte button[aria-pressed="true"] { border-color: var(--cs-accento);
+                                         color: var(--cs-inchiostro);
+                                         box-shadow: 0 2px 0 var(--cs-accento) }
+.cs-scelte button:active { transform: scale(.95) }
+
+/* ═══════════ il codice nascosto, in cima ═══════════ */
+.cs-segreto { flex: 0 0 auto; height: 54px; display: flex; align-items: center;
+              justify-content: center; gap: 8px; padding: 0 12px;
+              background: linear-gradient(180deg, var(--cs-scuro), #2a221a);
+              border-radius: var(--cs-raggio) }
+.cs-segreto .cs-lucchetto { font-size: 21px; margin-right: 2px }
+.cs-coperta { width: 38px; height: 38px; border-radius: 11px;
+              background: #55483a; color: #9d8b76;
+              display: grid; place-items: center; font-size: 21px; font-weight: 800;
+              box-shadow: inset 0 -3px 0 rgba(0,0,0,.25) }
+.cs-coperta.cs-scoperta { background: #fff6e0; color: var(--cs-inchiostro);
+                          animation: cs-gira .5s backwards }
+@keyframes cs-gira { 0% { transform: rotateY(90deg) scale(.7) } 100% { transform: none } }
+
+/* ═══════════ il tabellone ═══════════ */
+.cs-tabellone { flex: 1 1 auto; min-height: 0; display: grid; gap: 6px;
+                grid-template-rows: repeat(var(--cs-prove, 6), 1fr) }
+.cs-riga { display: flex; align-items: center; gap: 8px; padding: 0 8px;
+           border-radius: 14px; background: #faf5ea; border: 2px solid transparent }
+.cs-riga.cs-fatta { background: #f4ecdc }
+.cs-riga.cs-attiva { background: #fff; border-color: var(--cs-accento);
+                     box-shadow: 0 3px 0 color-mix(in srgb, var(--cs-accento) 35%, transparent) }
+.cs-caselle { flex: 1; height: 100%; container-type: size;
+              display: flex; align-items: center; justify-content: center; gap: 8px }
+.cs-casella {
+  --cs-c: min(78cqh, calc((100cqw - (var(--cs-n) - 1) * 8px) / var(--cs-n)));
+  width: var(--cs-c); height: var(--cs-c); flex: none;
+  border-radius: calc(var(--cs-c) * .23);
+  background: var(--cs-buca); box-shadow: inset 0 3px 5px rgba(0,0,0,.10);
+  display: grid; place-items: center; font-size: calc(var(--cs-c) * .62);
+}
+.cs-casella.cs-piena { background: #fff; box-shadow: 0 2px 0 var(--cs-bordo) }
+.cs-riga.cs-attiva .cs-casella.cs-prossima {
+  box-shadow: inset 0 0 0 3px var(--cs-accento); animation: cs-respira 1.5s infinite }
+@keyframes cs-respira { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
+.cs-casella.cs-posata { animation: cs-tonfo .22s }
+@keyframes cs-tonfo { 0% { transform: scale(.5) } 60% { transform: scale(1.14) }
+                      100% { transform: none } }
+
+/* i pallini: l'unico appunto che il bambino ha */
+.cs-indizi { flex: 0 0 54px; height: 46px; border-radius: 10px;
+             display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+             align-content: center; justify-items: center }
+.cs-riga.cs-fatta .cs-indizi { background: rgba(0,0,0,.045) }
+.cs-pallino { width: 19px; height: 19px; border-radius: 50% }
+.cs-pallino.cs-pieno { background: var(--cs-pieno); box-shadow: 0 1px 0 rgba(0,0,0,.2) }
+.cs-pallino.cs-vuoto { background: #fff; border: 4px solid var(--cs-vuoto) }
+/* «ho risposto, e la risposta è niente»: senza questo trattino il riquadro
+   vuoto sembra una domanda rimasta senza risposta */
+.cs-pallino.cs-zero { width: 22px; height: 6px; border-radius: 3px;
+                      background: #cbbda4; grid-column: 1 / -1 }
+.cs-pallino.cs-nuovo { animation: cs-pop .3s backwards }
+@keyframes cs-pop { 0% { transform: scale(0) } 65% { transform: scale(1.4) }
+                    100% { transform: none } }
+
+/* ═══════════ la tastiera e la conferma ═══════════ */
+.cs-tastiera { flex: 0 0 auto; display: flex; justify-content: center; gap: 6px }
+.cs-tasto { flex: 1 1 0; max-width: 62px; aspect-ratio: 1; min-height: 44px;
+            border-radius: 15px; background: #fff;
+            box-shadow: 0 3px 0 #d5c3a4, inset 0 0 0 2px var(--cs-bordo);
+            display: grid; place-items: center; font-size: min(32px, 7vw);
+            transition: transform .1s, box-shadow .1s }
+.cs-tasto:active { transform: translateY(3px); box-shadow: none }
+
+.cs-conferma { flex: 0 0 auto; height: 52px; border-radius: var(--cs-raggio);
+               background: var(--cs-pieno); color: #fff;
+               font-size: 26px; font-weight: 800; box-shadow: 0 4px 0 #0f7a36;
+               transition: transform .1s, box-shadow .1s }
+.cs-conferma:disabled { background: #ded2bd; color: #b6a68e;
+                        box-shadow: 0 4px 0 #cdbfa6; cursor: default }
+.cs-conferma:not(:disabled):active { transform: translateY(4px); box-shadow: none }
+.cs-scossa { animation: cs-scuoti .3s }
+@keyframes cs-scuoti { 0%, 100% { transform: none }
+                       25% { transform: translateX(-7px) }
+                       75% { transform: translateX(7px) } }
+
+/* ═══════════ i veli: fine partita e spiegazione ═══════════ */
+.cs-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
+           background: rgba(38,30,22,.72);
+           display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 14px; animation: cs-entra .25s }
+@keyframes cs-entra { from { opacity: 0 } to { opacity: 1 } }
+.cs-cartello { background: var(--cs-carta); border-radius: 24px; padding: 20px 16px;
+               width: 100%; display: flex; flex-direction: column; align-items: center;
+               gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.3) }
+.cs-cartello .cs-faccia { font-size: 50px }
+.cs-cartello h2 { font-size: 21px; text-align: center; color: var(--cs-inchiostro) }
+.cs-cartello p { font-size: 14px; color: var(--cs-tenue); text-align: center }
+.cs-punteggio { font-size: 24px; letter-spacing: 3px; min-height: 28px }
+.cs-fila { display: flex; gap: 8px }
+.cs-fila span { width: 50px; height: 50px; border-radius: 14px; background: #fff6e0;
+                display: grid; place-items: center; font-size: 30px;
+                box-shadow: 0 2px 0 var(--cs-bordo); animation: cs-pop .4s backwards }
+.cs-grosso { height: 56px; min-width: 190px; padding: 0 24px; border-radius: 18px;
+             background: var(--cs-accento); color: #fff; font-size: 20px; font-weight: 800;
+             display: flex; align-items: center; justify-content: center; gap: 10px;
+             box-shadow: 0 4px 0 rgba(0,0,0,.25) }
+.cs-grosso:active { transform: translateY(4px); box-shadow: none }
+.cs-grosso.cs-chiaro { background: #fff; color: var(--cs-inchiostro) }
+
+.cs-coriandoli { position: absolute; inset: 0; width: 100%; height: 100%;
+                 z-index: 8; pointer-events: none }
+
+/* ═══════════ la dimostrazione (la costruisce scena/dimostrazione.js) ═══════════ */
+.cs-dimo { background: var(--cs-carta); border-radius: 24px; padding: 16px 14px;
+           width: 100%; display: flex; flex-direction: column; gap: 10px;
+           box-shadow: 0 10px 30px rgba(0,0,0,.3); position: relative }
+.cs-drigo { display: flex; align-items: center; gap: 8px;
+            border-radius: 14px; padding: 7px 8px }
+.cs-drigo.cs-seg { background: var(--cs-scuro) }
+.cs-drigo.cs-tentativo { background: #faf5ea; border: 2px solid var(--cs-bordo) }
+.cs-dicona { font-size: 20px; width: 24px; text-align: center }
+.cs-dspazio { flex: 0 0 54px }
+.cs-dcaselle { flex: 1; display: flex; gap: 8px; justify-content: center }
+.cs-dcas { width: 50px; height: 50px; border-radius: 13px; background: #fff;
+           display: grid; place-items: center; font-size: 29px;
+           box-shadow: 0 2px 0 rgba(0,0,0,.12); position: relative;
+           transition: transform .35s, opacity .35s, box-shadow .25s }
+.cs-drigo.cs-seg .cs-dcas { background: #fff6e0 }
+.cs-dcas.cs-acceso { box-shadow: 0 0 0 4px var(--cs-pieno); z-index: 2 }
+.cs-dcas.cs-acceso-v { box-shadow: 0 0 0 4px var(--cs-vuoto); z-index: 2 }
+.cs-dcas.cs-spento { opacity: .28 }
+.cs-dcas.cs-no { animation: cs-scuoti .4s }
+.cs-dcas.cs-scoperta { animation: cs-pop .32s }
+.cs-dcas.cs-salta { animation: cs-salta 1.5s ease-in-out; z-index: 3 }
+@keyframes cs-salta {
+  0%   { transform: none }
+  28%  { transform: translate(calc(var(--dx) / 2), -34px) scale(1.1) rotate(-8deg) }
+  55%  { transform: translateX(var(--dx)) scale(1.05) }
+  72%  { transform: translateX(var(--dx)) scale(1.05) }
+  100% { transform: none }
+}
+.cs-dindizi { flex: 0 0 54px; height: 46px; border-radius: 10px;
+              background: rgba(0,0,0,.05); display: grid;
+              grid-template-columns: 1fr 1fr; gap: 4px;
+              align-content: center; justify-items: center }
+.cs-dvolante { position: absolute; width: 19px; height: 19px; border-radius: 50%;
+               z-index: 9; pointer-events: none;
+               transition: transform .55s cubic-bezier(.5,-0.3,.4,1.3) }
+.cs-dvolante.cs-pieno { background: var(--cs-pieno) }
+.cs-dvolante.cs-vuoto { background: #fff; border: 4px solid var(--cs-vuoto) }

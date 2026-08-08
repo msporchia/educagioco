@@ -1,0 +1,24 @@
+/* IL CAMPO
+   Ha una larghezza massima, e non è una scelta estetica: la strada è
+   disegnata in proporzione al riquadro, ma il raggio delle torri no. Su
+   un monitor largo la stessa strada diventa tre volte più lunga e i
+   mostri passano nei buchi fra una torre e l'altra — la simulazione
+   (`npm run simula`) dice che oltre i 520px l'ultima tappa non si
+   finisce più nemmeno spendendo tutto. Sotto quella misura la battaglia
+   è la stessa sul telefono e sul computer. */
+.campo { position:relative; height:min(52vh, 420px); min-height:240px; flex:none;
+         overflow:hidden; width:100%; max-width:520px; margin:0 auto }
+
+/* `touch-action:none` è ciò che rende possibile il trascinamento sul telefono:
+   senza, al primo movimento del dito il browser decide che è uno scorrimento,
+   si prende il gesto e annulla i pointer event a metà — sul computer con il
+   mouse non succede, ed è per questo che il difetto si vedeva solo lì. */
+canvas { display:block; width:100%; height:100%; touch-action:none;
+         -webkit-user-select:none; user-select:none }
+
+.annuncio { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;
+            font-size:clamp(20px,6vw,34px); font-weight:900; color:#222a38;
+            text-shadow:0 2px 0 #fff, 0 0 18px #fff;
+            animation:apparire 1.6s ease-out forwards }
+@keyframes apparire { 0%{opacity:0;transform:scale(.5)} 20%{opacity:1;transform:scale(1.1)}
+                      35%{transform:scale(1)} 70%{opacity:1} 100%{opacity:0;transform:translateY(-20px)} }

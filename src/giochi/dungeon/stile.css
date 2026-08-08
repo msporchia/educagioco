@@ -1,0 +1,421 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL DUNGEON — L'ASPETTO
+
+   Un file solo, e ogni classe comincia per `dng-`. Non è pignoleria: lo
+   stile globale dell'applicazione ha già `.carta`, `.riga`, `.tondo`, e
+   due fogli che si contendono lo stesso nome si rompono a distanza di
+   mesi, quando nessuno si ricorda più perché.
+
+   Il colore dell'ambiente arriva da `--dng-accento`, che il gioco scrive
+   sul contenitore: la fungaia è verde e la fucina arancione senza che
+   qui ci sia scritto da nessuna parte cosa sia una fungaia.
+
+   Qui sotto è tutto buio apposta. È l'unico gioco della raccolta che si
+   gioca al buio, e la fascia in cima è `scura` per lo stesso motivo:
+   una barra bianca sopra una caverna è una finestra aperta di notte.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dng {
+  --dng-accento: #a06fe0;
+  --dng-fondo: #12101c;
+  --dng-carta: #1e1a2e;
+  --dng-inchiostro: #f2eefb;
+  --dng-tenue: #a79ec4;
+  --dng-oro: #ffc93c;
+  --dng-rosso: #ef6f6f;
+  --dng-bordo: #ffffff1e;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 460px; margin: 0 auto;
+  position: relative;
+  color: var(--dng-inchiostro);
+  background: radial-gradient(120% 80% at 50% 0%, #241f38, var(--dng-fondo) 70%);
+}
+/* Il font di testo va PRIMA di quelli delle emoji: Noto Color Emoji ha
+   dentro anche le cifre (gli servono per le keycap 0️⃣), e senza questa
+   precedenza un «0:38» esce con le cifre larghe il doppio del resto. */
+.dng .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
+                       "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* i gettoni nella fascia in cima: vita, attacco, difesa, gemme */
+.dng-gettone { background: #ffffff14; border: 1px solid var(--dng-bordo);
+               border-radius: 999px; padding: 5px 9px; font-size: 13px;
+               font-weight: 800; white-space: nowrap; display: flex;
+               align-items: center; gap: 3px; color: #eef2fa }
+
+/* La vita dell'eroe è una barretta con dentro il numero, non una fila
+   di cuori: adesso è un numero vero che arriva a novanta, e novanta
+   cuoricini non ci starebbero né si conterebbero. Il colore va dal
+   verde al rosso da sé, così «sto per morire» si vede senza leggere. */
+/* `flex: none` e il padding azzerato non sono pignoleria: la pillola
+   porta anche la classe `dng-gettone`, che ha il suo padding, e senza
+   queste due righe la barra si stringe fino a tagliare il numero. */
+.dng-eroe-vita { position: relative; flex: none; box-sizing: border-box;
+                 width: 58px; height: 17px; padding: 0;
+                 border-radius: 999px; overflow: hidden; background: #00000055 }
+.dng-eroe-vita i { position: absolute; inset: 0 auto 0 0;
+                   background: var(--dng-polso, #4fce7c); transition: width .3s }
+.dng-eroe-vita b { position: relative; display: block; text-align: center;
+                   line-height: 17px; font-size: 11px; text-shadow: 0 1px 2px #0009 }
+
+/* ═══════════ la mappa delle tappe ═══════════ */
+.dng-tappe { flex: 1; min-height: 0; overflow-y: auto;
+             display: flex; flex-direction: column; gap: 15px;
+             padding: 10px 12px 22px }
+.dng-scalino > h3 { display: flex; align-items: center; gap: 7px;
+                    font-size: 15px; color: var(--dng-tenue); margin-bottom: 7px }
+.dng-scalino > h3 b { color: var(--dng-inchiostro); font-size: 16px }
+.dng-scalino > h3 i { font-style: normal; font-size: 11.5px; flex: 1; text-align: right;
+                      overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dng-fila { display: flex; flex-direction: column; gap: 8px }
+
+.dng-tappa { display: flex; align-items: center; gap: 10px; text-align: left;
+             background: var(--dng-carta); border-radius: 14px; padding: 10px 12px;
+             border: 1px solid var(--dng-bordo);
+             border-left: 6px solid var(--dng-accento);
+             color: var(--dng-inchiostro); transition: transform .12s }
+.dng-tappa:active { transform: scale(.98) }
+.dng-tappa .dng-faccia { font-size: 29px; flex: none }
+.dng-tappa .dng-testo { flex: 1; min-width: 0 }
+.dng-tappa b { display: block; font-size: 16px }
+.dng-tappa i { display: block; font-style: normal; font-size: 12.5px;
+               color: var(--dng-tenue); overflow: hidden; text-overflow: ellipsis;
+               white-space: nowrap }
+.dng-tappa .dng-conto { font-size: 13px; letter-spacing: 1px; flex: none;
+                        color: var(--dng-tenue) }
+.dng-tappa.dng-chiusa { opacity: .45; border-left-color: #4a4160 }
+.dng-tappa.dng-adesso { box-shadow: 0 0 0 2px var(--dng-accento) }
+
+.dng-libero { display: flex; flex-direction: column; gap: 8px; margin-top: 2px }
+.dng-portone { display: flex; align-items: center; gap: 10px; justify-content: center;
+               background: linear-gradient(180deg, #3a2f16, #241d16); color: var(--dng-oro);
+               border: 1px solid #ffc93c44;
+               border-radius: 14px; padding: 14px; font-weight: 800; font-size: 16px }
+.dng-libero.dng-chiusa .dng-portone { background: #201c2e; color: var(--dng-tenue);
+                                      border-color: var(--dng-bordo) }
+.dng-scelte { display: flex; gap: 6px }
+.dng-scelte button { flex: 1; border-radius: 12px; background: #ffffff10;
+                     border: 2px solid var(--dng-bordo); color: var(--dng-tenue);
+                     padding: 8px 6px; font-size: 13px; font-weight: 700;
+                     display: flex; align-items: center; justify-content: center; gap: 5px }
+.dng-scelte button .em { font-size: 16px }
+.dng-scelte button[aria-pressed="true"] { border-color: var(--dng-oro);
+                                          color: var(--dng-inchiostro) }
+
+/* ═══════════ la discesa ═══════════
+   Il campo è la finestra, la discesa è quello che ci scorre dentro:
+   una spedizione di quattordici file è più alta di un telefono, e
+   schiacciarla vorrebbe dire stanze che si toccano. La riga di piede
+   resta fuori dallo scorrimento, ferma in basso. */
+.dng-campo { flex: 1; min-height: 0; position: relative; overflow: hidden }
+.dng-scorri { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+              scrollbar-width: none }
+.dng-scorri::-webkit-scrollbar { display: none }
+.dng-discesa { position: relative; width: 100% }
+.dng-tela { position: absolute; inset: 0; width: 100%; height: 100% }
+
+/* una stanza è un bottone, non un cerchio disegnato: si tocca col dito
+   e si trova in un test */
+.dng-stanza {
+  position: absolute; transform: translate(-50%, 50%);
+  width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, #2a2440, #1d182c);
+  border: 3px solid #ffffff22; color: inherit;
+  transition: transform .12s;
+}
+.dng-stanza .dng-icona { font-size: 25px }
+.dng-stanza.dng-buio .dng-icona { font-size: 20px; color: #ffffff55 }
+.dng-stanza.dng-buio { border-style: dashed; border-color: #ffffff22 }
+.dng-stanza.dng-chiusa { opacity: .62; border-color: #ffffff28 }
+.dng-stanza.dng-aperta {
+  background: linear-gradient(180deg, #4c4370, #2b2440);
+  border-color: var(--dng-accento);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--dng-accento) 55%, transparent);
+  animation: dng-respira 1.8s infinite;
+}
+.dng-stanza.dng-aperta:active { transform: translate(-50%, 50%) scale(.92) }
+.dng-stanza.dng-qui { border-color: #fff; box-shadow: 0 0 16px #ffffff66 }
+.dng-stanza.dng-fatta { opacity: .55 }
+.dng-stanza.dng-fatta .dng-icona { filter: grayscale(.7) }
+@keyframes dng-respira {
+  0%, 100% { box-shadow: 0 0 14px 1px color-mix(in srgb, var(--dng-accento) 45%, transparent) }
+  50% { box-shadow: 0 0 24px 5px color-mix(in srgb, var(--dng-accento) 70%, transparent) }
+}
+/* il bollino del rischio: quante domande, e quanto toste */
+.dng-rischio { position: absolute; top: -8px; right: -12px;
+               background: #120e1e; border: 2px solid var(--dng-accento);
+               border-radius: 999px; padding: 1px 5px; font-size: 9px;
+               letter-spacing: -1px; line-height: 1.5 }
+.dng-spunta { position: absolute; bottom: -6px; right: -4px; font-size: 15px;
+              font-weight: 900; color: var(--dng-oro) }
+
+.dng-piede { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 14px 12px;
+             text-align: center; font-size: 12.5px; color: var(--dng-tenue);
+             font-weight: 700; pointer-events: none;
+             background: linear-gradient(0deg, #12101cf2, #12101c00) }
+
+/* ═══════════ dentro una stanza ═══════════ */
+.dng-stanzone { flex: 1; min-height: 0; display: flex; flex-direction: column;
+                gap: 10px; padding: 10px 12px 14px; overflow-y: auto }
+.dng-arena { flex: 1; min-height: 120px; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; gap: 9px; text-align: center;
+             background: radial-gradient(ellipse 62% 46% at 50% 42%,
+                         color-mix(in srgb, var(--dng-accento) 22%, transparent), transparent 70%) }
+.dng-bestia { font-size: 68px; filter: drop-shadow(0 8px 14px #0009);
+              animation: dng-ballonzola 2s ease-in-out infinite }
+@keyframes dng-ballonzola {
+  0%, 100% { transform: translateY(0) rotate(-2deg) }
+  50% { transform: translateY(-9px) rotate(2deg) }
+}
+.dng-bestia.dng-colpita { animation: dng-scossa .34s }
+@keyframes dng-scossa {
+  0%, 100% { transform: none }
+  20% { transform: translateX(-12px) scale(.92) }
+  50% { transform: translateX(10px) scale(1.04) }
+  80% { transform: translateX(-5px) }
+}
+/* ── il mostro sopra, la domanda sotto ──
+   Con una domanda in scena i due si dividono la schermata in due pezzi
+   che si toccano: la carta si prende quello che le serve appoggiata in
+   fondo, la stanza tiene tutto il resto e ci mette in mezzo il mostro,
+   più piccolo. Mentre si risponde si continua a vedere chi si ha
+   davanti e quanta vita gli resta. */
+.dng-stretta { justify-content: flex-start; gap: 4px;
+               padding: 6px 12px 0; overflow: hidden }
+.dng-stretta .dng-arena { flex: 1; min-height: 96px; gap: 4px }
+.dng-stretta .dng-bestia { font-size: 62px }
+.dng-stretta .dng-titolone { font-size: 16px }
+/* con la domanda in scena resta il minimo che serve a decidere: la
+   barra e i colpi che mancano, un filo più bassi */
+.dng-stretta .dng-barra { height: 13px }
+.dng-stretta .dng-barra b { line-height: 13px; font-size: 10px }
+.dng-stretta .dng-ossa { font-size: 12px }
+.dng-stretta .dng-scambi { font-size: 12px }
+
+/* La carta arriva da `quiz/Domanda.vue` col suo velo a
+   `position: absolute`: qui il velo non serve — non c'è niente da
+   coprire, la stanza sta sopra e non sotto — e diventa l'ultimo pezzo
+   della colonna, alto quanto la carta e non un dito di più.
+
+   `flex: none` è la riga che conta. Prima il velo cominciava a un
+   quarto dello schermo e ci centrava dentro la carta: fra il mostro e
+   la prima riga da leggere restava una striscia nera alta quanto la
+   carta stessa, che non era di nessuno. */
+.dng-domanda { flex: none; position: relative; z-index: 40; display: flex;
+               max-height: 72%; overflow-y: auto }
+/* `--qz-h` dice alla carta quanto schermo ha: qui non tutto, perché sta
+   in un pannello alto tre quarti scarsi. Senza questa riga i disegni si
+   misurerebbero sull'intero telefono e su uno schermo piccolo la scheda
+   sarebbe più alta del pannello che la contiene. */
+.dng .dng-domanda .qz-velo { --qz-h: .72vh;
+                             position: relative; inset: auto; padding: 0; width: 100%;
+                             background: none; backdrop-filter: none;
+                             align-items: flex-end }
+.dng .dng-domanda .qz-carta { max-width: none; padding: 14px 14px 12px;
+                              border-radius: 22px 22px 0 0 }
+.dng .dng-domanda .qz-esito { margin-top: 10px; min-height: 20px }
+
+/* i titoli si ricolorano: lo stile globale li fa viola scuro, che su
+   una caverna nera non si legge */
+.dng h2, .dng h3 { color: var(--dng-inchiostro) }
+.dng-titolone { font-size: 21px; font-weight: 900; line-height: 1.15 }
+.dng-racconto { font-size: 14px; color: var(--dng-tenue); line-height: 1.45;
+                max-width: 32ch; margin: 0 auto }
+.dng-attesa { font-size: 12.5px; color: var(--dng-tenue); letter-spacing: .5px;
+              animation: dng-lampeggia 1.2s infinite }
+@keyframes dng-lampeggia { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
+
+/* ── com'è messo chi hai davanti ──
+   I due numeri suoi (⚔️ 🛡️), la sua vita, e quanto gliene togli tu.
+   L'ordine è quello in cui servono: prima si guarda se picchia forte,
+   poi quanta ne ha, e solo alla fine quanti colpi mancano — che è il
+   numero su cui si decide se insistere o scappare, e infatti è
+   l'unico scritto grande. */
+.dng-ossa { display: flex; gap: 14px; justify-content: center;
+            font-size: 13px; color: var(--dng-tenue) }
+
+.dng-barra { position: relative; height: 16px; border-radius: 9px;
+             background: #00000055; border: 1px solid var(--dng-bordo);
+             overflow: hidden; max-width: 260px; margin: 0 auto; width: 100% }
+.dng-barra i { position: absolute; inset: 0 auto 0 0;
+               background: linear-gradient(180deg, #ff8b6b, #e0432f);
+               box-shadow: 0 0 10px #ff5a3a55; transition: width .25s ease-out }
+.dng-barra b { position: relative; display: block; text-align: center;
+               font-size: 11px; line-height: 16px; color: #fff;
+               text-shadow: 0 1px 2px #0009 }
+
+/* «gli togli 5 a colpo — ancora 3 colpi». Non si chiama `dng-conto`
+   perché quel nome è già delle stelle nella mappa delle tappe: due
+   classi con lo stesso nome in due schermate diverse si accorgono la
+   sera che si tocca il font dell'una e cambia l'altra. */
+.dng-scambi { font-size: 13px; color: var(--dng-tenue) }
+.dng-scambi b { color: var(--dng-inchiostro); font-size: 15px }
+
+/* «al posto di 🗡️ Spadino»: la casella è una sola, e lasciare quello
+   che si ha è metà della decisione */
+.dng-invece { display: block; font-size: 11.5px; color: #ffc866;
+              font-style: normal; margin-top: 2px }
+.dng-bottino { font-size: 15px }
+
+/* le voci: fuoco, mercante, stranezze */
+.dng-voci { display: flex; flex-direction: column; gap: 9px; flex: none }
+.dng-voce { display: flex; align-items: center; gap: 11px; text-align: left;
+            min-height: 62px; padding: 11px 13px; border-radius: 16px;
+            background: #ffffff12; border: 1px solid var(--dng-bordo);
+            color: var(--dng-inchiostro); transition: transform .1s }
+.dng-voce:active { transform: scale(.98) }
+.dng-voce:disabled { opacity: .35 }
+.dng-voce .dng-em { font-size: 27px; flex: none }
+.dng-voce .dng-testo { flex: 1; min-width: 0 }
+.dng-voce b { display: block; font-size: 16px; font-weight: 900 }
+.dng-voce i { display: block; font-style: normal; font-size: 12.5px;
+              color: var(--dng-tenue); line-height: 1.3 }
+.dng-prezzo { margin-left: auto; font-weight: 900; color: var(--dng-oro);
+              font-size: 14px; white-space: nowrap }
+.dng-prezzo.dng-forse { color: var(--dng-rosso) }
+
+/* il cartello: «ahia», «aperto!», «via di corsa» */
+.dng-cartello { flex: none; display: flex; flex-direction: column; align-items: center;
+                gap: 9px; text-align: center; padding: 14px 12px;
+                background: var(--dng-carta); border: 1px solid var(--dng-bordo);
+                border-radius: 20px; animation: dng-sale .22s ease-out }
+@keyframes dng-sale { from { opacity: 0; transform: translateY(14px) } to { opacity: 1 } }
+.dng-cartello .dng-em { font-size: 44px }
+.dng-cartello h3 { font-size: 19px; font-weight: 900 }
+.dng-cartello p { font-size: 14px; color: var(--dng-tenue); line-height: 1.4 }
+.dng-coda { font-size: 13.5px; color: var(--dng-oro); font-weight: 800 }
+
+.dng-grosso { min-height: 54px; width: 100%; max-width: 300px; padding: 0 22px;
+              border-radius: 999px; font-size: 18px; font-weight: 900;
+              display: flex; align-items: center; justify-content: center; gap: 9px;
+              background: linear-gradient(180deg, var(--dng-oro), #f08d1e); color: #4a2a00;
+              box-shadow: 0 5px 0 #a4600d; transition: transform .08s, box-shadow .08s }
+.dng-grosso:active { transform: translateY(3px); box-shadow: 0 2px 0 #a4600d }
+.dng-grosso.dng-chiaro { background: #ffffff16; color: var(--dng-inchiostro);
+                         box-shadow: 0 5px 0 #ffffff10; border: 1px solid var(--dng-bordo) }
+.dng-grosso.dng-chiaro:active { box-shadow: 0 2px 0 #ffffff10 }
+
+/* ═══════════ il cartello di fine discesa ═══════════ */
+.dng-velo { position: absolute; inset: 0; z-index: 30; padding: 16px;
+            background: rgba(10, 8, 18, .84);
+            display: flex; align-items: center; justify-content: center;
+            animation: dng-entra .25s }
+@keyframes dng-entra { from { opacity: 0 } to { opacity: 1 } }
+.dng-fine { width: 100%; max-width: 380px; max-height: 100%; overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center; gap: 11px;
+            padding: 20px 16px; border-radius: 24px;
+            background: linear-gradient(180deg, #241f38, #16121f);
+            border: 1px solid var(--dng-bordo); box-shadow: 0 18px 50px #000a }
+.dng-fine .dng-em { font-size: 52px }
+.dng-fine h2 { font-size: 21px; font-weight: 900; text-align: center; line-height: 1.15 }
+.dng-fine .dng-oro { color: var(--dng-oro) }
+.dng-fine .dng-rosso { color: var(--dng-rosso) }
+.dng-stelle { font-size: 24px; letter-spacing: 3px }
+.dng-fatti { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap }
+.dng-fatti > div { background: #ffffff10; border-radius: 14px; padding: 9px 14px;
+                   text-align: center; min-width: 78px }
+.dng-fatti b { display: block; font-size: 21px; font-weight: 900 }
+.dng-fatti small { font-size: 13px; color: var(--dng-tenue); font-weight: 700 }
+.dng-fatti span { font-size: 11px; color: var(--dng-tenue); text-transform: uppercase;
+                  letter-spacing: .4px }
+
+/* ═══════════ il cartello del bottino ═══════════
+   Si mette davanti quando si prende qualcosa. Prima un tesoro era una
+   riga in fondo a un cartello — «un tesoro in tasca!» — e passava
+   senza che nessuno capisse cosa avesse preso né perché fosse
+   contento. Qui il premio si ferma, si fa guardare, e soprattutto fa
+   vedere **il numero che cambia**: è quello il momento per cui si è
+   scesi fin lì. */
+.dng-premio { position: relative; width: 100%; max-width: 330px;
+              display: flex; flex-direction: column; align-items: center; gap: 9px;
+              padding: 22px 18px 18px; border-radius: 22px; text-align: center;
+              background: linear-gradient(180deg, #2b2544, #1b1730);
+              border: 2px solid var(--dng-oro); overflow: hidden;
+              box-shadow: 0 18px 44px #000a, 0 0 26px #ffd23f22;
+              animation: dng-arriva .28s cubic-bezier(.2, 1.5, .5, 1) }
+@keyframes dng-arriva { from { transform: scale(.7); opacity: 0 } to { transform: none; opacity: 1 } }
+
+/* il luccichio che passa dietro l'oggetto: dura mezzo secondo e non
+   torna, perché è una festa, non un'animazione di attesa */
+.dng-luccica { position: absolute; inset: -40% -120%; pointer-events: none;
+               background: linear-gradient(75deg, transparent 42%, #ffffff33 50%, transparent 58%);
+               animation: dng-lampo .85s ease-out }
+@keyframes dng-lampo { from { transform: translateX(-45%) } to { transform: translateX(45%) } }
+
+.dng-premio-em { font-size: 66px; line-height: 1;
+                 filter: drop-shadow(0 4px 14px #ffd23f66);
+                 animation: dng-salta .5s ease-out }
+@keyframes dng-salta { 0% { transform: scale(.4) rotate(-14deg) } 
+                       60% { transform: scale(1.15) rotate(6deg) } 
+                       100% { transform: none } }
+.dng-premio h3 { font-size: 19px; font-weight: 900; color: var(--dng-oro) }
+.dng-premio-fa { font-size: 14px; line-height: 1.4; color: var(--dng-inchiostro);
+                 max-width: 30ch }
+
+/* il numero che cambia: ⚔️ 3 → 5. La riga più importante di tutte, e
+   infatti è l'unica grossa */
+.dng-salto { display: flex; align-items: center; gap: 9px; margin-top: 2px;
+             padding: 7px 14px; border-radius: 999px; background: #00000044 }
+.dng-salto-segno { font-size: 19px }
+.dng-salto b { font-size: 22px; font-weight: 900 }
+.dng-prima { color: var(--dng-tenue) }
+.dng-dopo { color: #4fce7c }
+.dng-freccia { color: var(--dng-tenue); font-size: 13px }
+
+.dng-premio-invece { font-size: 12px; color: #ffc866 }
+
+/* ═══════════ i tuoi numeri, nella fascia in cima ═══════════
+   Un bottone solo al posto di cinque gettoni. Prima qui stava anche la
+   fila delle emoji degli oggetti, che cresceva a ogni forziere e
+   spingeva fuori il resto: su un telefono la fascia perdeva pezzi
+   proprio mentre servivano. Adesso l'equipaggiamento sta nella scheda,
+   che si apre di qui. */
+.dng-io { display: flex; align-items: center; gap: 7px; padding: 4px 8px;
+          border-radius: 999px; background: #ffffff14;
+          border: 1px solid var(--dng-bordo); color: #eef2fa }
+.dng-io:active { transform: scale(.96) }
+.dng-io-n { display: flex; align-items: center; gap: 2px; font-size: 12px }
+.dng-io-n b { font-size: 13px; font-weight: 800 }
+
+/* ═══════════ la scheda dell'eroe ═══════════ */
+.dng-scheda { width: 100%; max-width: 360px; max-height: 100%; overflow-y: auto;
+              display: flex; flex-direction: column; gap: 12px;
+              padding: 18px 16px; border-radius: 20px;
+              background: var(--dng-carta); border: 1px solid var(--dng-bordo);
+              box-shadow: 0 18px 44px #000a }
+.dng-scheda-testa { display: flex; align-items: center; gap: 12px }
+.dng-scheda-em { font-size: 46px; line-height: 1 }
+.dng-scheda-vita { flex: 1; display: flex; flex-direction: column; gap: 5px }
+.dng-scheda-vita b { font-size: 17px; font-weight: 900 }
+.dng-scheda-vita .dng-barra { max-width: none; height: 13px }
+
+/* i numeri con scritto cosa vogliono dire: «attacco 8» da solo non
+   dice niente a chi ha sei anni */
+.dng-numeroni { display: flex; flex-direction: column; gap: 7px }
+.dng-numerone { display: flex; align-items: center; gap: 10px;
+                padding: 8px 11px; border-radius: 13px; background: #ffffff0e }
+.dng-numerone > .em { font-size: 20px }
+.dng-numerone b { font-size: 20px; font-weight: 900; min-width: 30px }
+.dng-numerone i { font-style: normal; font-size: 12px; color: var(--dng-tenue);
+                  line-height: 1.3 }
+
+.dng-scheda-titolo { font-size: 13px; color: var(--dng-tenue);
+                     text-transform: uppercase; letter-spacing: .6px }
+.dng-zaino { display: flex; flex-direction: column; gap: 7px }
+.dng-oggetto { display: flex; align-items: center; gap: 10px;
+               padding: 8px 10px; border-radius: 13px; background: #ffffff0e }
+.dng-oggetto .dng-em { font-size: 25px }
+.dng-oggetto .dng-testo { flex: 1; min-width: 0 }
+.dng-oggetto b { display: block; font-size: 14px }
+.dng-oggetto i { display: block; font-style: normal; font-size: 11.5px;
+                 color: var(--dng-tenue); line-height: 1.3 }
+.dng-dove { font-size: 10.5px; color: var(--dng-oro); flex: none;
+            border: 1px solid #ffc93c55; border-radius: 999px; padding: 2px 7px }
+.dng-zaino-vuoto { font-size: 13px; color: var(--dng-tenue); line-height: 1.45 }
+
+/* lo scrigno: si dice prima che non c'è niente da combattere */
+.dng-serratura { font-size: 14px; color: var(--dng-tenue); line-height: 1.45;
+                 max-width: 30ch; margin: 0 auto }
+.dng-serratura b { color: var(--dng-oro) }

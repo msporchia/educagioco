@@ -1,0 +1,21 @@
+/* IL GUSCIO DEL CASTELLO
+   Solo quello che tiene insieme i pezzi: lo sfondo, il banco che scorre
+   e l'intestazione dell'operazione in corso. Il campo ha il suo foglio
+   (`components/castello/campo.css`), il banco il suo, e così via. */
+.td { background:linear-gradient(180deg,#eaf7e6,#e9e4ff) }
+
+.banco { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center;
+         justify-content:safe center; gap:8px; padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+         overflow-y:auto }
+
+/* l'intestazione dell'operazione: che torre si sta comprando, a che
+   gradino della scaletta, e quanto costa */
+.intestazione { display:flex; align-items:center; gap:7px; flex-wrap:wrap; justify-content:center }
+.intestazione .em { font-size:20px }
+.intestazione b { color:var(--viola-scuro) }
+.intestazione .grado { font-size:11.5px; font-weight:900; color:#5b3fa8; background:#e9e0ff;
+                       border-radius:999px; padding:3px 9px }
+.intestazione .prezzo { font-size:12px; font-weight:900; color:#8a6b00; background:#ffe9a8;
+                        border-radius:999px; padding:3px 9px }
+.intestazione .indietro { width:30px; height:30px; font-size:20px; line-height:1;
+                          padding:0; font-weight:900 }

@@ -1,0 +1,1324 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Il compagno che cresce — prototipo</title>
+<!--
+═══════════════════════════════════════════════════════════════════════
+  IL COMPAGNO CHE CRESCE — prototipo, non fa parte del build.
+
+  L'idea in una riga: un draghetto che vive fuori dai giochi e cresce
+  con quanto il bambino SA DAVVERO, non con quanto ha giocato.
+
+  Tre cose da guardare:
+
+  1. LO STADIO SI GUADAGNA SAPENDO. Lo stadio evolutivo dipende dalla
+     forza media degli elementi nel motore di ripasso — la stessa
+     `strength()` di `src/store/srs.js`, ricopiata qui sotto perché il
+     file dev'essere autonomo. Chi risponde a caso non fa crescere
+     niente: la forza scende di 2 a ogni errore e sale di 1 a ogni
+     risposta giusta.
+
+  2. IL DECADIMENTO NON PUNISCE. Se non si ripassa la forza efficace
+     cala da sola (curva dell'oblio). Il compagno però NON torna
+     indietro di stadio: si ADDORMENTA. Colori smorti, occhi chiusi,
+     zzz. Un ripasso lo risveglia. Perdere un drago per una settimana
+     di vacanza sarebbe una punizione; vederlo sonnecchiare è un
+     invito.
+
+  3. IL TEMPO SI PUÒ MUOVERE. In fondo c'è il «banco di prova»: manda
+     avanti l'orologio finto di un giorno, una settimana, un mese.
+     Guardare il drago addormentarsi mandando avanti il calendario è
+     esattamente la cosa da valutare.
+
+  Vincoli: un file solo, niente rete, niente dipendenze, tutto in
+  italiano. Lo stato sta in localStorage.
+═══════════════════════════════════════════════════════════════════════
+-->
+<style>
+:root{
+  --viola:#4f6bd0; --viola-scuro:#37509f; --giallo:#ffc93c; --arancio:#ff9f1c;
+  --verde:#38c172; --rosso:#ef5f5f; --testo:#222a38; --tenue:#6e7788;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  color:var(--testo);user-select:none;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:#20263a;
+  display:flex;align-items:stretch;justify-content:center;
+}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit;font-weight:800}
+
+/* la colonna: verticale, e su schermo grande resta centrata */
+#telaio{
+  position:relative;width:100%;max-width:430px;height:100%;overflow:hidden;
+  background:linear-gradient(180deg,#fff7ec,#eef4ef 52%,#e3ecf3);
+  box-shadow:0 0 60px #0006;
+}
+.schermo{position:absolute;inset:0;display:flex;flex-direction:column}
+.schermo[hidden]{display:none}
+
+/* ── intestazione ── */
+header{display:flex;align-items:center;gap:8px;padding:10px 12px 4px}
+header .nome{font-size:19px;font-weight:900;color:var(--viola-scuro);line-height:1}
+header .stadio{font-size:12.5px;color:var(--tenue);font-weight:700}
+header .sp{flex:1}
+.tondo{width:44px;height:44px;border-radius:50%;background:#ffffffcc;font-size:19px;
+       box-shadow:0 2px 8px #8593a833;flex:none}
+
+/* ── la scena ── */
+#scena{flex:1;width:100%;display:block;min-height:0}
+
+/* ── il cartello sotto la scena ── */
+.dice{text-align:center;font-size:14.5px;font-weight:700;color:var(--tenue);
+      padding:2px 18px;min-height:38px;display:flex;align-items:center;justify-content:center}
+.dice b{color:var(--viola-scuro)}
+
+/* ── la barra dello stadio ── */
+.crescita{padding:0 18px 6px}
+.crescita .etichette{display:flex;justify-content:space-between;font-size:12px;
+                     font-weight:800;color:var(--tenue);margin-bottom:5px}
+.crescita .etichette .meta{color:var(--viola)}
+.guscio{height:16px;border-radius:999px;background:#dfe5ee;overflow:hidden;
+        box-shadow:inset 0 2px 4px #00000012}
+.riempi{height:100%;width:0;border-radius:999px;
+        background:linear-gradient(90deg,var(--giallo),var(--arancio));
+        transition:width .9s cubic-bezier(.2,.8,.3,1)}
+.riempi.spenta{background:linear-gradient(90deg,#a9b3c6,#8d99b0)}
+
+/* ── il tasto grosso ── */
+.zonaTasto{padding:8px 18px 10px;display:flex;justify-content:center}
+.bottone{padding:16px 34px;border-radius:999px;font-size:20px;font-weight:900;
+         background:linear-gradient(180deg,var(--giallo),var(--arancio));color:#5a3200;
+         box-shadow:0 6px 0 #d97706;min-height:56px}
+.bottone:active{transform:translateY(3px);box-shadow:0 3px 0 #d97706}
+.bottone.chiaro{background:#ffffffdd;color:var(--viola-scuro);box-shadow:0 6px 0 #d4dce6}
+.bottone.chiaro:active{box-shadow:0 3px 0 #d4dce6}
+
+/* ── banco di prova ── */
+#banco{background:#242a3d;color:#cbd4e6;padding:10px 12px 12px;font-size:12.5px}
+#banco[hidden]{display:none}
+#banco .titolo{font-weight:900;color:#8fa6d8;letter-spacing:.04em;font-size:11px;
+               text-transform:uppercase;margin-bottom:6px}
+#banco .riga{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+#banco button{flex:1;min-width:72px;min-height:44px;border-radius:12px;
+              background:#39415c;color:#dde5f5;font-size:12.5px;padding:6px 4px}
+#banco button:active{background:#4c5578}
+#banco button.pericolo{background:#5a3340;color:#ffd7de}
+#banco .conti{display:flex;gap:10px;flex-wrap:wrap;color:#93a0bd;font-size:11.5px;
+              font-variant-numeric:tabular-nums}
+#banco .conti b{color:#ffd479;font-weight:800}
+
+/* ── la sessione ── */
+#quiz{background:linear-gradient(180deg,#fff7ec,#eaf0f8)}
+.pallini{display:flex;gap:5px;justify-content:center;padding:12px 0 2px}
+.pallini i{width:9px;height:9px;border-radius:50%;background:#d6dde8;display:block}
+.pallini i.fatta{background:var(--verde)}
+.pallini i.persa{background:var(--rosso)}
+.pallini i.ora{background:var(--viola);transform:scale(1.45)}
+.chiedo{flex:1;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;gap:6px;padding:6px 18px;min-height:0}
+.chiedo .comando{font-size:13px;font-weight:800;color:var(--tenue)}
+.chiedo .bersaglio{font-size:44px;font-weight:900;color:var(--viola-scuro);line-height:1.1;
+                   text-align:center;word-break:break-word}
+.chiedo .bersaglio.emoji{font-size:96px}
+.opzioni{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.opzioni button{min-height:78px;border-radius:20px;background:#fff;
+                box-shadow:0 4px 0 #d4dce6;font-size:21px;font-weight:900;
+                color:var(--viola-scuro);display:flex;align-items:center;
+                justify-content:center;gap:6px;padding:6px}
+.opzioni button.grande{font-size:46px}
+.opzioni button:active{transform:translateY(2px);box-shadow:0 2px 0 #d4dce6}
+.opzioni button.giusta{background:#d8f7e4;box-shadow:0 4px 0 #7bd6a2;color:#1c7a4a}
+.opzioni button.male{background:#ffe0e0;box-shadow:0 4px 0 #f0a5a5;color:#a33;
+                     animation:scrolla .32s}
+@keyframes scrolla{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+/* ── fine sessione ── */
+#fine{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:14px;background:#fff7ecf2;text-align:center;padding:24px}
+#fine[hidden]{display:none}
+#fine .punteggio{font-size:56px;font-weight:900;color:var(--viola-scuro)}
+#fine .commento{font-size:16px;color:var(--tenue);font-weight:700;max-width:26ch}
+
+/* ── l'evoluzione ── */
+/* L'evoluzione non copre il compagno con un velo: fa sparire la roba
+   sotto (frase, barra, tasto) e ci mette il suo. Col velo il drago
+   veniva slavato proprio nel momento in cui va guardato. */
+#casa.infesta .dice, #casa.infesta .crescita,
+#casa.infesta .zonaTasto, #casa.infesta #banco{visibility:hidden}
+#festa{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
+       align-items:center;justify-content:flex-end;padding-bottom:38px;text-align:center}
+#festa[hidden]{display:none}
+#festa .lampo{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,
+              #fff3b066 0%,#ffd97a33 30%,#ffffff00 62%);animation:pulsa 2.4s ease-in-out infinite}
+@keyframes pulsa{50%{transform:scale(1.09);opacity:.82}}
+#festa .raggi{position:absolute;left:50%;top:42%;width:640px;height:640px;margin:-320px 0 0 -320px;
+              background:conic-gradient(from 0deg,#ffffffaa 0 6deg,#ffffff00 6deg 30deg,
+              #ffffff99 30deg 36deg,#ffffff00 36deg 60deg);
+              animation:gira 14s linear infinite;opacity:.5;
+              -webkit-mask-image:radial-gradient(circle,#000 12%,transparent 62%);
+              mask-image:radial-gradient(circle,#000 12%,transparent 62%)}
+@keyframes gira{to{transform:rotate(360deg)}}
+/* il cartiglio: il nome nuovo deve leggersi anche sopra il prato */
+#festa .parole{position:relative;z-index:2;display:flex;flex-direction:column;
+               align-items:center;gap:4px;animation:sale .8s cubic-bezier(.2,1.3,.4,1);
+               background:#fff8ecdd;border-radius:22px;padding:12px 22px 14px;
+               margin:0 16px;box-shadow:0 8px 26px #a9700033}
+@keyframes sale{from{transform:translateY(26px) scale(.85);opacity:0}}
+#festa .evviva{font-size:15px;font-weight:900;letter-spacing:.14em;color:#a86a00}
+#festa .titolone{font-size:38px;font-weight:900;color:#7a3d00;
+                 text-shadow:0 2px 0 #fff,0 0 22px #ffdf8f}
+#festa .sotto{font-size:14px;font-weight:700;color:#8a5a1a;max-width:26ch}
+#festa .bottone{position:relative;z-index:2;margin-top:18px}
+.scintilla{position:absolute;font-size:22px;z-index:1;animation:vola 2.6s ease-out infinite}
+@keyframes vola{0%{transform:translate(0,0) scale(.4);opacity:0}
+                20%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.15);opacity:0}}
+</style>
+
+<div id="telaio">
+
+  <!-- ══ schermata del compagno ══ -->
+  <div class="schermo" id="casa">
+    <header>
+      <div>
+        <div class="nome" id="nomeCompagno">Scintilla</div>
+        <div class="stadio" id="nomeStadio">Uovo</div>
+      </div>
+      <div class="sp"></div>
+      <button class="tondo" id="tastoBanco" aria-label="banco di prova">🔧</button>
+    </header>
+
+    <canvas id="scena"></canvas>
+
+    <div class="dice"><span id="dice"></span></div>
+
+    <div class="crescita">
+      <div class="etichette">
+        <span id="oraSei">Uovo</span>
+        <span class="meta" id="prossimo">→ Draghetto</span>
+      </div>
+      <div class="guscio"><div class="riempi" id="riempi"></div></div>
+    </div>
+
+    <div class="zonaTasto">
+      <button class="bottone" id="tastoAllena">Allenati 🐣</button>
+    </div>
+
+    <!-- il banco di prova: serve a valutare l'idea in due minuti
+         invece che in tre settimane -->
+    <section id="banco" hidden>
+      <div class="titolo">banco di prova</div>
+      <div class="riga">
+        <button data-giorni="1">+1 giorno</button>
+        <button data-giorni="7">+1 settimana</button>
+        <button data-giorni="30">+1 mese</button>
+      </div>
+      <div class="riga">
+        <button id="tastoOggi">⟲ torna a oggi</button>
+        <button id="tastoStudia">▶ sessione perfetta</button>
+        <button id="tastoAzzera" class="pericolo">✕ azzera tutto</button>
+      </div>
+      <div class="conti">
+        <span>oggi (finto): <b id="dataFinta">—</b></span>
+        <span>forza media: <b id="contoForza">—</b>/6</span>
+        <span>sonno: <b id="contoSonno">—</b></span>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══ la micro-sessione ══ -->
+  <div class="schermo" id="quiz" hidden>
+    <header>
+      <button class="tondo" id="tastoEsci" aria-label="indietro">←</button>
+      <div class="sp"></div>
+      <div class="stadio" id="etichettaSessione">ripasso</div>
+    </header>
+    <div class="pallini" id="pallini"></div>
+    <div class="chiedo">
+      <div class="comando" id="comando">Che cos'è?</div>
+      <div class="bersaglio" id="bersaglio">dog</div>
+    </div>
+    <div class="opzioni" id="opzioni"></div>
+
+    <div id="fine" hidden>
+      <div class="punteggio" id="punteggio">8/8</div>
+      <div class="commento" id="commento"></div>
+      <button class="bottone" id="tastoTorna">Torna da Scintilla</button>
+    </div>
+  </div>
+
+  <!-- ══ l'evoluzione ══ -->
+  <div id="festa" hidden>
+    <div class="lampo"></div>
+    <div class="raggi"></div>
+    <div class="parole">
+      <div class="evviva">SI STA TRASFORMANDO</div>
+      <div class="titolone" id="titoloneFesta">Draghetto</div>
+      <div class="sotto" id="sottoFesta"></div>
+    </div>
+    <button class="bottone" id="tastoFesta">Evviva!</button>
+  </div>
+
+</div>
+
+<script>
+'use strict'
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. IL MOTORE DI RIPASSO
+   Ricopiato da `src/store/srs.js` (il file dev'essere autonomo: qui
+   non si importa niente). Stessi numeri, stessi conti — se lì cambiano
+   gli intervalli, qui restano vecchi: è un prototipo, non il gioco.
+   ═══════════════════════════════════════════════════════════════════ */
+const GIORNO = 86400000
+const IVL = [0.007, 0.03, 0.3, 1, 3, 8, 21]      // giorni fra un ripasso e l'altro
+const MAX_S = IVL.length - 1                      // forza massima: 6
+
+const nuovoElemento = () => ({ s: 0, ok: 0, err: 0, last: 0, seen: 0 })
+
+const scadenza = it => (it.last || 0) + IVL[Math.min(it.s, MAX_S)] * GIORNO
+
+/* quanto è in ritardo, in multipli del proprio intervallo */
+function ritardo(it, ora) {
+  if (!it.last) return 1
+  const passo = IVL[Math.min(it.s, MAX_S)] * GIORNO
+  return (ora - scadenza(it)) / passo
+}
+
+/* forza EFFICACE: quella nominale meno il decadimento accumulato.
+   È il cuore di tutto: il drago cresce su questa, non sulle risposte. */
+function forza(it, ora) {
+  if (!it.last) return 0
+  const tardi = Math.max(0, ritardo(it, ora))
+  return Math.max(0, it.s - Math.floor(tardi / 1.5))
+}
+
+/* peso di estrazione: alto = esce spesso */
+function peso(it, ora) {
+  const s = forza(it, ora)
+  const base = Math.max(0.35, (MAX_S + 1) - s * 1.4)
+  const tardi = Math.max(0, ritardo(it, ora))
+  return base * (1 + Math.min(2, tardi * 0.6))
+}
+
+/* registra una risposta: +1 se giusta, -2 se sbagliata, sempre
+   ripartendo dalla forza EFFICACE (non da quella di quando l'ha
+   imparata: se nel frattempo l'ha scordata, riparte da lì) */
+function registra(it, giusta, ora) {
+  it.seen++
+  it.last = ora
+  if (giusta) { it.ok++;  it.s = Math.min(MAX_S, forza(it, ora) + 1) }
+  else        { it.err++; it.s = Math.max(0,     forza(it, ora) - 2) }
+  return it
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. LE PAROLE
+   Venti parole A1, tutte con emoji. `c` è la categoria: i distrattori
+   escono dalla stessa, se no la domanda si risolve senza sapere niente
+   (fra un'anguria e un pipistrello sceglie anche chi non sa l'inglese).
+   ═══════════════════════════════════════════════════════════════════ */
+const PAROLE = [
+  { en:'dog',    it:'cane',      em:'🐶', c:'a' },
+  { en:'cat',    it:'gatto',     em:'🐱', c:'a' },
+  { en:'fish',   it:'pesce',     em:'🐟', c:'a' },
+  { en:'bird',   it:'uccello',   em:'🐦', c:'a' },
+  { en:'frog',   it:'rana',      em:'🐸', c:'a' },
+  { en:'bear',   it:'orso',      em:'🐻', c:'a' },
+  { en:'horse',  it:'cavallo',   em:'🐴', c:'a' },
+  { en:'bee',    it:'ape',       em:'🐝', c:'a' },
+  { en:'apple',  it:'mela',      em:'🍎', c:'f' },
+  { en:'banana', it:'banana',    em:'🍌', c:'f' },
+  { en:'cake',   it:'torta',     em:'🍰', c:'f' },
+  { en:'milk',   it:'latte',     em:'🥛', c:'f' },
+  { en:'bread',  it:'pane',      em:'🍞', c:'f' },
+  { en:'cheese', it:'formaggio', em:'🧀', c:'f' },
+  { en:'sun',    it:'sole',      em:'☀️', c:'m' },
+  { en:'moon',   it:'luna',      em:'🌙', c:'m' },
+  { en:'star',   it:'stella',    em:'⭐', c:'m' },
+  { en:'tree',   it:'albero',    em:'🌳', c:'m' },
+  { en:'house',  it:'casa',      em:'🏠', c:'m' },
+  { en:'car',    it:'macchina',  em:'🚗', c:'m' },
+]
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. GLI STADI
+   `da` è la FORZA MEDIA delle venti parole (0..6) che serve per
+   arrivarci. Una sessione perfetta da 8 domande porta circa +0,4 di
+   media, quindi: draghetto alla prima sessione, dragoncello alla
+   terza, drago verso la settima, alato verso la decima — sempre che
+   nel frattempo non si sia scordato niente, perché la media è quella
+   EFFICACE. Le soglie non sono lineari apposta: il primo scatto deve
+   arrivare subito, l'ultimo deve costare.
+   ═══════════════════════════════════════════════════════════════════ */
+const STADI = [
+  { id:'uovo',     nome:'Uovo',        da:0,
+    dice:'Dentro si muove qualcosa… ma solo se impari.' },
+  { id:'cucciolo', nome:'Draghetto',   da:0.40,
+    dice:'È appena nato e ti guarda: vuole imparare con te.' },
+  { id:'giovane',  nome:'Dragoncello', da:1.30,
+    dice:'Gli stanno spuntando le ali. Non vola ancora.' },
+  { id:'drago',    nome:'Drago',       da:2.60,
+    dice:'Ormai è più alto di te. Sputa scintille quando è contento.' },
+  { id:'alato',    nome:'Drago Alato', da:4.00,
+    dice:'Vola. Sa tutte le parole che sai tu, ed è tantissimo.' },
+]
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. LO STATO
+   ═══════════════════════════════════════════════════════════════════ */
+const CHIAVE = 'poc.compagno.v1'
+
+let stato = null
+
+function statoNuovo() {
+  return {
+    el: PAROLE.map(() => nuovoElemento()),  // uno stato SRS per parola
+    stadioMax: 0,                           // lo stadio NON torna indietro mai
+    scarto: 0,                              // di quanto è avanti l'orologio finto
+    ultimoRipasso: 0,
+  }
+}
+
+function carica() {
+  try {
+    const grezzo = localStorage.getItem(CHIAVE)
+    if (!grezzo) return statoNuovo()
+    const s = JSON.parse(grezzo)
+    if (!s || !Array.isArray(s.el) || s.el.length !== PAROLE.length) return statoNuovo()
+    return Object.assign(statoNuovo(), s)
+  } catch (e) { return statoNuovo() }
+}
+
+function salva() {
+  try { localStorage.setItem(CHIAVE, JSON.stringify(stato)) } catch (e) {}
+}
+
+/* l'orologio del prototipo: quello vero più lo scarto del banco di prova */
+const adesso = () => Date.now() + stato.scarto
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. IL COMPAGNO: forza media, stadio, sonno
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* la media di quello che sa ADESSO (col decadimento) */
+function forzaMedia(ora) {
+  let somma = 0
+  for (let i = 0; i < PAROLE.length; i++) somma += forza(stato.el[i], ora)
+  return somma / PAROLE.length
+}
+
+/* la media di quello che ha imparato una volta (senza decadimento):
+   serve solo a capire quanto si è appannato, non a far crescere niente */
+function forzaNominale() {
+  let somma = 0
+  for (let i = 0; i < PAROLE.length; i++) somma += stato.el[i].s
+  return somma / PAROLE.length
+}
+
+function stadioDa(media) {
+  let n = 0
+  for (let i = 0; i < STADI.length; i++) if (media >= STADI[i].da) n = i
+  return n
+}
+
+/* Lo stadio è un CRICCHETTO: prende il massimo fra quello meritato
+   adesso e quello già raggiunto. Perdere un drago perché si è stati in
+   vacanza sarebbe una punizione, e le punizioni ai bambini non le
+   diamo. Il decadimento si vede nel sonno, non nella regressione. */
+function stadioOra(ora) {
+  return Math.max(stato.stadioMax, stadioDa(forzaMedia(ora)))
+}
+
+/* Lo stadio a cui è riferita la barra: quello vero, che non torna
+   indietro. Se no un drago addormentato mostrava «→ Draghetto». */
+const stadioBarra = ora => stadioOra(ora)
+
+/* Quanto manca al prossimo stadio, 0..1 (sull'ultimo resta pieno).
+   Addormentato scende a zero: la barra è l'unica cosa che il
+   decadimento fa scendere davvero, e si riempie di nuovo ripassando. */
+function avanzamento(ora) {
+  const n = stadioBarra(ora)
+  if (n >= STADI.length - 1) return forzaMedia(ora) >= STADI[n].da ? 1
+       : Math.max(0, Math.min(1, forzaMedia(ora) / STADI[n].da))
+  const da = STADI[n].da, a = STADI[n + 1].da
+  return Math.max(0, Math.min(1, (forzaMedia(ora) - da) / (a - da)))
+}
+
+/* IL SONNO, 0..1.
+   È la parte di memoria che si è appannata: quanto della forza
+   imparata non è più efficace. Un ripasso appena fatto sveglia
+   comunque — il sonno torna nel giro di due giorni se il resto della
+   collezione è ancora da rinfrescare. Così la sessione di ripasso ha
+   un effetto IMMEDIATO e visibile, che è il punto. */
+function sonnolenza(ora) {
+  if (stato.stadioMax < 1) return 0                  // un uovo non dorme: non è ancora nato
+  const nominale = forzaNominale()
+  if (nominale < 0.3) return 0                       // non ha ancora imparato niente
+  const appannato = Math.max(0, 1 - forzaMedia(ora) / nominale)
+  const giorni = (ora - (stato.ultimoRipasso || 0)) / GIORNO
+  const sveglia = Math.max(0, 1 - giorni / 2)        // pieno oggi, esaurito in due giorni
+  return Math.max(0, Math.min(1, appannato * (1 - sveglia)))
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. IL SUONO — sintetizzato, niente file, acceso al primo tocco
+   ═══════════════════════════════════════════════════════════════════ */
+let audio = null
+function motoreAudio() {
+  if (!audio) {
+    const A = window.AudioContext || window.webkitAudioContext
+    if (!A) return null
+    audio = new A()
+  }
+  if (audio.state === 'suspended') audio.resume()
+  return audio
+}
+
+function nota(freq, quando, durata, tipo, volume) {
+  const a = motoreAudio(); if (!a) return
+  const t = a.currentTime + quando
+  const osc = a.createOscillator(), g = a.createGain()
+  osc.type = tipo || 'sine'
+  osc.frequency.setValueAtTime(freq, t)
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.exponentialRampToValueAtTime(volume, t + 0.02)
+  g.gain.exponentialRampToValueAtTime(0.0001, t + durata)
+  osc.connect(g); g.connect(a.destination)
+  osc.start(t); osc.stop(t + durata + 0.05)
+}
+
+const suonoGiusta   = () => { nota(660, 0, 0.13, 'sine', 0.16); nota(990, 0.09, 0.18, 'sine', 0.13) }
+const suonoSbaglia  = () => { nota(233, 0, 0.16, 'triangle', 0.13); nota(175, 0.1, 0.2, 'triangle', 0.1) }
+function suonoEvoluzione() {
+  const scala = [392, 523, 659, 784, 1047, 1319]
+  scala.forEach((f, i) => nota(f, i * 0.1, 0.5, 'triangle', 0.14))
+  nota(196, 0, 1.2, 'sine', 0.1)
+  nota(1568, 0.66, 1.4, 'sine', 0.07)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. IL DISEGNO
+   Cinque sagome, una per stadio, tutte con i piedi nell'origine e la
+   crescita verso l'alto. Non c'è nessuna libreria: canvas e basta.
+   ═══════════════════════════════════════════════════════════════════ */
+const tela = document.getElementById('scena')
+const ctx = tela.getContext('2d')
+let LARG = 390, ALT = 340, dpr = 1
+
+function ridimensiona() {
+  const r = tela.getBoundingClientRect()
+  dpr = Math.min(3, window.devicePixelRatio || 1)
+  LARG = Math.max(240, r.width); ALT = Math.max(200, r.height)
+  tela.width = Math.round(LARG * dpr); tela.height = Math.round(ALT * dpr)
+}
+
+/* Il sonno smorza TUTTI i colori: si passa da qui e da nessun'altra
+   parte, così una figura nuova diventa sonnacchiosa senza fare niente. */
+let sonnoOra = 0
+function C(esa) {
+  if (sonnoOra < 0.02) return esa
+  const n = parseInt(esa.slice(1), 16)
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255
+  const k = sonnoOra * 0.62
+  const grigio = (r * 0.35 + g * 0.45 + b * 0.2)
+  r = Math.round(r + (grigio * 0.72 + 26 - r) * k)
+  g = Math.round(g + (grigio * 0.74 + 30 - g) * k)
+  b = Math.round(b + (grigio * 0.88 + 52 - b) * k)
+  return 'rgb(' + r + ',' + g + ',' + b + ')'
+}
+
+function ell(x, y, rx, ry, rot) {
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 6.2832); ctx.fill()
+}
+function pieno(colore) { ctx.fillStyle = C(colore) }
+
+/* gli occhi: un solo posto per tutti gli stadi, così quando dorme li
+   chiude dappertutto senza scriverlo cinque volte */
+function occhi(x, y, r, apertura, distanza, guarda) {
+  const dx = distanza
+  for (const s of [-1, 1]) {
+    if (apertura > 0.12) {
+      pieno('#ffffff'); ell(x + s * dx, y, r, r * apertura)
+      pieno('#2b2233')
+      ell(x + s * dx + (guarda || 0) * r * 0.28, y + r * 0.08,
+          r * 0.52, Math.min(r * 0.52, r * apertura * 0.9))
+      pieno('#ffffff')
+      ell(x + s * dx - r * 0.24, y - r * 0.34, r * 0.2, r * 0.2 * apertura + 0.6)
+    } else {
+      /* occhio chiuso: un archetto sorridente all'ingiù */
+      ctx.strokeStyle = C('#2b2233'); ctx.lineWidth = Math.max(2, r * 0.34)
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.arc(x + s * dx, y - r * 0.1, r * 0.8, 0.55, 2.6)
+      ctx.stroke()
+    }
+  }
+}
+
+/* la nuvoletta di zzz */
+function zeta(x, y, t) {
+  const n = 3
+  for (let i = 0; i < n; i++) {
+    const f = ((t * 0.34 + i / n) % 1)
+    ctx.globalAlpha = Math.max(0, Math.sin(f * Math.PI)) * 0.9
+    const s = 12 + f * 16
+    ctx.fillStyle = '#e8f0ff'
+    ctx.font = '900 ' + s + 'px system-ui,sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('z', x + Math.sin(f * 5 + i) * 10 + f * 16, y - f * 62)
+  }
+  ctx.globalAlpha = 1
+}
+
+/* corno ricurvo: base, lunghezza, verso */
+function corno(x, y, lung, verso, spessore, colore) {
+  pieno(colore)
+  ctx.beginPath()
+  ctx.moveTo(x - spessore * verso, y)
+  ctx.quadraticCurveTo(x + verso * lung * 0.36, y - lung * 0.55,
+                       x + verso * lung * 0.78, y - lung)
+  ctx.quadraticCurveTo(x + verso * lung * 0.2, y - lung * 0.5, x + spessore * verso, y + 1)
+  ctx.closePath(); ctx.fill()
+}
+
+/* spuntoni lungo la schiena */
+function creste(punti, colore) {
+  pieno(colore)
+  for (const p of punti) {
+    ctx.beginPath()
+    ctx.moveTo(p[0] - p[2], p[1])
+    ctx.lineTo(p[0], p[1] - p[2] * 1.9)
+    ctx.lineTo(p[0] + p[2], p[1])
+    ctx.closePath(); ctx.fill()
+  }
+}
+
+/* Le scintille di fuoco che salgono di fianco alla testa.
+   Prima era una fiammata dalla bocca: su un muso visto di fronte
+   sembrava un becco, e girata di sbieco sembrava una spada. Di lato,
+   che salgono e si spengono, si capiscono e basta. */
+function scintilleFuoco(x, y, scala, t) {
+  for (let i = 0; i < 3; i++) {
+    const f = (t * 0.55 + i / 3) % 1
+    ctx.globalAlpha = Math.sin(f * Math.PI) * 0.95
+    const s = scala * (0.5 + f * 0.75)
+    const yy = y - f * 46 * scala, xx = x + Math.sin(f * 4.2 + i * 2) * 7 * scala
+    pieno('#ff9f1c')
+    ctx.beginPath()
+    ctx.moveTo(xx, yy - 10 * s)
+    ctx.quadraticCurveTo(xx + 6.5 * s, yy + 1 * s, xx, yy + 6 * s)
+    ctx.quadraticCurveTo(xx - 6.5 * s, yy + 1 * s, xx, yy - 10 * s)
+    ctx.fill()
+    pieno('#ffe066'); ell(xx, yy + 1 * s, 2.3 * s, 3.2 * s)
+  }
+  ctx.globalAlpha = 1
+}
+
+/* l'ombra a terra: dice quanto è grosso quello che sta sopra */
+function ombra(x, y, rx) {
+  ctx.globalAlpha = 0.16; pieno('#2b3a4a'); ell(x, y, rx, rx * 0.22); ctx.globalAlpha = 1
+}
+
+/* ── stadio 0: l'UOVO ─────────────────────────────────────────────── */
+function disegnaUovo(t, avanti) {
+  const dondola = Math.sin(t * 1.9) * 0.045 * (0.4 + avanti)
+  ombra(0, 2, 46)
+  /* il nido */
+  ctx.strokeStyle = C('#a97b46'); ctx.lineWidth = 7; ctx.lineCap = 'round'
+  for (let i = 0; i < 7; i++) {
+    const a = -0.5 + i * 0.34
+    ctx.beginPath()
+    ctx.ellipse(0, -4, 54 - i * 2, 16, a * 0.3, Math.PI * 0.05, Math.PI * 0.95)
+    ctx.stroke()
+  }
+  ctx.save()
+  ctx.translate(0, -6); ctx.rotate(dondola); ctx.translate(0, 6)
+  /* l'uovo */
+  pieno('#fff6df')
+  ctx.beginPath()
+  ctx.moveTo(0, -104)
+  ctx.bezierCurveTo(34, -96, 44, -52, 40, -34)
+  ctx.bezierCurveTo(36, -8, 18, -4, 0, -4)
+  ctx.bezierCurveTo(-18, -4, -36, -8, -40, -34)
+  ctx.bezierCurveTo(-44, -52, -34, -96, 0, -104)
+  ctx.fill()
+  /* le macchie */
+  pieno('#e6b98a')
+  const macchie = [[-16,-74,7,5],[12,-84,6,4.4],[20,-58,8,5.5],[-22,-46,6.5,4.6],
+                   [2,-40,7.5,5],[-6,-62,5,3.6],[26,-38,5.5,4]]
+  for (const m of macchie) ell(m[0], m[1], m[2], m[3], 0.5)
+  /* le crepe arrivano man mano che si impara: l'uovo si «carica» */
+  if (avanti > 0.35) {
+    ctx.strokeStyle = C('#a9784a'); ctx.lineWidth = 2.6; ctx.lineJoin = 'round'
+    ctx.beginPath()
+    ctx.moveTo(-24, -62); ctx.lineTo(-12, -54); ctx.lineTo(-20, -44); ctx.lineTo(-6, -36)
+    ctx.stroke()
+  }
+  if (avanti > 0.72) {
+    ctx.beginPath()
+    ctx.moveTo(10, -80); ctx.lineTo(20, -70); ctx.lineTo(8, -62); ctx.lineTo(18, -52)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/* ── stadio 1: il DRAGHETTO ───────────────────────────────────────── */
+function disegnaCucciolo(t, sveglio) {
+  const respiro = Math.sin(t * 2.2) * 2 * sveglio
+  ombra(0, 2, 50)
+  /* mezzo guscio rotto dietro */
+  pieno('#fff6df')
+  ctx.beginPath(); ctx.ellipse(0, -6, 46, 26, 0, Math.PI, 0); ctx.fill()
+  ctx.beginPath()
+  ctx.moveTo(-46, -6)
+  for (let i = 0; i <= 8; i++) ctx.lineTo(-46 + i * 11.5, -6 + (i % 2 ? -9 : 0))
+  ctx.lineTo(46, 4); ctx.lineTo(-46, 4); ctx.closePath(); ctx.fill()
+  /* coda */
+  pieno('#5fc46a')
+  ctx.beginPath()
+  ctx.moveTo(24, -30)
+  ctx.quadraticCurveTo(62, -34, 66, -12 + respiro)
+  ctx.quadraticCurveTo(54, -22, 26, -18)
+  ctx.closePath(); ctx.fill()
+  /* corpo */
+  pieno('#5fc46a'); ell(0, -38 + respiro * 0.3, 33, 31)
+  pieno('#d8f5a8'); ell(0, -32 + respiro * 0.3, 21, 20)
+  /* zampette */
+  pieno('#4fb45c'); ell(-19, -8, 12, 8); ell(19, -8, 12, 8)
+  /* alette appena accennate */
+  pieno('#4aa856')
+  for (const s of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(s * 22, -52)
+    ctx.quadraticCurveTo(s * 46, -70, s * 40, -44)
+    ctx.quadraticCurveTo(s * 32, -44, s * 22, -50)
+    ctx.closePath(); ctx.fill()
+  }
+  /* testa: grossa, è un cucciolo */
+  const ty = -84 + respiro
+  pieno('#5fc46a'); ell(0, ty, 34, 31)
+  pieno('#d8f5a8'); ell(0, ty + 9, 17, 12)
+  pieno('#3b8c46'); ell(-5, ty + 7, 2, 1.6); ell(5, ty + 7, 2, 1.6)
+  /* cornetti */
+  corno(-14, ty - 26, 16, -0.5, 4, '#ffd479')
+  corno(14, ty - 26, 16, 0.5, 4, '#ffd479')
+  /* guance */
+  ctx.globalAlpha = 0.5; pieno('#ff9f9f'); ell(-22, ty + 6, 7, 4.5); ell(22, ty + 6, 7, 4.5)
+  ctx.globalAlpha = 1
+  occhi(0, ty - 6, 9, sveglio, 13, 0)
+}
+
+/* ── stadio 2: il DRAGONCELLO ─────────────────────────────────────── */
+function disegnaGiovane(t, sveglio) {
+  const respiro = Math.sin(t * 2) * 2.4 * sveglio
+  ombra(0, 2, 56)
+  /* coda con la punta a lancia */
+  pieno('#3fa86e')
+  ctx.beginPath()
+  ctx.moveTo(20, -50)
+  ctx.quadraticCurveTo(76, -46, 84, -8 + respiro)
+  ctx.quadraticCurveTo(66, -30, 22, -34)
+  ctx.closePath(); ctx.fill()
+  pieno('#ffd479')
+  ctx.beginPath()
+  ctx.moveTo(84, -8 + respiro); ctx.lineTo(100, -18 + respiro)
+  ctx.lineTo(92, 4 + respiro); ctx.closePath(); ctx.fill()
+  /* ali: ci sono, ma non portano ancora niente */
+  pieno('#2f8f5c')
+  for (const s of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(s * 18, -92)
+    ctx.quadraticCurveTo(s * 74, -136, s * 66, -84)
+    ctx.quadraticCurveTo(s * 52, -96, s * 42, -76)
+    ctx.quadraticCurveTo(s * 34, -84, s * 18, -78)
+    ctx.closePath(); ctx.fill()
+  }
+  /* zampe */
+  pieno('#2f8f5c'); ell(-20, -12, 15, 13); ell(20, -12, 15, 13)
+  pieno('#ffd479'); ell(-26, -4, 4, 3); ell(-20, -3, 4, 3); ell(26, -4, 4, 3); ell(20, -3, 4, 3)
+  /* corpo, più alto che largo: non è più una palla */
+  pieno('#3fa86e'); ell(0, -62 + respiro * 0.3, 35, 46)
+  pieno('#dff3a8'); ell(0, -54 + respiro * 0.3, 21, 30)
+  ctx.globalAlpha = 0.55; pieno('#b9e07a')
+  for (let i = 0; i < 3; i++) ell(0, -34 - i * 15, 17 - i * 1.5, 4)
+  ctx.globalAlpha = 1
+  creste([[0,-104,7],[-12,-96,6],[12,-96,6]], '#ffd479')
+  /* collo e testa */
+  const ty = -128 + respiro
+  pieno('#3fa86e'); ell(0, ty + 26, 15, 20)
+  pieno('#3fa86e'); ell(0, ty, 29, 26)
+  pieno('#dff3a8'); ell(0, ty + 11, 16, 11)
+  pieno('#2b7a4c'); ell(-5, ty + 8, 2.2, 1.7); ell(5, ty + 8, 2.2, 1.7)
+  corno(-15, ty - 20, 26, -0.75, 4.5, '#ffd479')
+  corno(15, ty - 20, 26, 0.75, 4.5, '#ffd479')
+  occhi(0, ty - 4, 8, sveglio, 12, 0)
+}
+
+/* ── stadio 3: il DRAGO ───────────────────────────────────────────── */
+function disegnaDrago(t, sveglio) {
+  const respiro = Math.sin(t * 1.7) * 3 * sveglio
+  ombra(0, 2, 72)
+  /* coda lunga */
+  pieno('#c0483b')
+  ctx.beginPath()
+  ctx.moveTo(22, -78)
+  ctx.quadraticCurveTo(104, -74, 116, -10 + respiro)
+  ctx.quadraticCurveTo(92, -46, 26, -52)
+  ctx.closePath(); ctx.fill()
+  pieno('#ffd479')
+  ctx.beginPath()
+  ctx.moveTo(116, -10 + respiro); ctx.lineTo(140, -26 + respiro)
+  ctx.lineTo(132, 8 + respiro); ctx.closePath(); ctx.fill()
+  /* ali ripiegate ma grandi: si vede che sono vere */
+  pieno('#8f2f2c')
+  for (const s of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(s * 20, -132)
+    ctx.quadraticCurveTo(s * 96, -212, s * 92, -118)
+    ctx.quadraticCurveTo(s * 74, -140, s * 62, -104)
+    ctx.quadraticCurveTo(s * 50, -126, s * 40, -96)
+    ctx.quadraticCurveTo(s * 30, -112, s * 20, -108)
+    ctx.closePath(); ctx.fill()
+    ctx.strokeStyle = C('#5f1c1c'); ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(s * 20, -128); ctx.lineTo(s * 62, -108)
+    ctx.moveTo(s * 20, -128); ctx.lineTo(s * 88, -140)
+    ctx.stroke()
+  }
+  /* zampe con gli artigli */
+  pieno('#a63b31'); ell(-28, -18, 20, 19); ell(28, -18, 20, 19)
+  pieno('#ffe9b0')
+  for (const s of [-1, 1]) { ell(s * 40, -6, 5, 4); ell(s * 30, -4, 5, 4); ell(s * 20, -6, 5, 4) }
+  /* corpo grosso */
+  pieno('#c0483b'); ell(0, -92 + respiro * 0.3, 46, 62)
+  pieno('#ffcf8a'); ell(0, -84 + respiro * 0.3, 28, 42)
+  ctx.globalAlpha = 0.6; pieno('#e8a860')
+  for (let i = 0; i < 5; i++) ell(0, -50 - i * 17, 24 - i * 1.6, 5)
+  ctx.globalAlpha = 1
+  creste([[0,-150,10],[-16,-140,8],[16,-140,8],[-30,-124,7],[30,-124,7]], '#ffd479')
+  /* collo e testa */
+  const ty = -186 + respiro
+  pieno('#c0483b'); ell(0, ty + 34, 20, 28)
+  pieno('#c0483b'); ell(0, ty, 34, 30)
+  pieno('#ffcf8a'); ell(0, ty + 14, 20, 13)
+  pieno('#8f2f2c'); ell(-6, ty + 10, 2.6, 2); ell(6, ty + 10, 2.6, 2)
+  corno(-18, ty - 22, 36, -0.85, 6, '#ffd479')
+  corno(18, ty - 22, 36, 0.85, 6, '#ffd479')
+  corno(-30, ty - 6, 18, -1, 4, '#ffd479')
+  corno(30, ty - 6, 18, 1, 4, '#ffd479')
+  occhi(0, ty - 4, 9, sveglio, 14, 0)
+  if (sveglio > 0.5) scintilleFuoco(54, ty + 22, 0.9, t)
+}
+
+/* ── stadio 4: il DRAGO ALATO ─────────────────────────────────────── */
+function disegnaAlato(t, sveglio) {
+  const battito = Math.sin(t * 2.6)
+  const vola = sveglio                       /* addormentato si posa a terra */
+  const su = 34 * vola + battito * 6 * vola
+  ombra(0, 2, 78 - 12 * vola)
+  ctx.save()
+  ctx.translate(0, -su)
+
+  /* l'alone: solo l'ultimo stadio ce l'ha */
+  if (sveglio > 0.3) {
+    const g = ctx.createRadialGradient(0, -140, 10, 0, -140, 210)
+    g.addColorStop(0, 'rgba(255,226,150,' + (0.34 * sveglio) + ')')
+    g.addColorStop(1, 'rgba(255,226,150,0)')
+    ctx.fillStyle = g; ell(0, -140, 210, 200)
+  }
+
+  /* le ali, spalancate. Quando dorme si richiudono. */
+  const ap = 0.34 + 0.66 * vola
+  for (const s of [-1, 1]) {
+    ctx.save()
+    ctx.translate(s * 24, -150)
+    ctx.rotate(s * (1 - ap) * 0.85 + s * battito * 0.06 * vola)
+    ctx.scale(s, 1)
+    pieno('#6f3fbf')
+    ctx.beginPath()
+    ctx.moveTo(0, 0)
+    ctx.quadraticCurveTo(82, -104, 143, -60)
+    ctx.quadraticCurveTo(119, -44, 112, -18)
+    ctx.quadraticCurveTo(95, -34, 82, -6)
+    ctx.quadraticCurveTo(66, -22, 51, 12)
+    ctx.quadraticCurveTo(39, -6, 24, 20)
+    ctx.quadraticCurveTo(14, 8, 0, 10)
+    ctx.closePath(); ctx.fill()
+    pieno('#9b6ae0')
+    ctx.globalAlpha = 0.55
+    ctx.beginPath()
+    ctx.moveTo(0, 2); ctx.quadraticCurveTo(60, -60, 128, -54)
+    ctx.quadraticCurveTo(68, -30, 26, 6); ctx.closePath(); ctx.fill()
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = C('#4a2680'); ctx.lineWidth = 3; ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(4, 2); ctx.lineTo(136, -58)
+    ctx.moveTo(4, 2); ctx.lineTo(109, -20)
+    ctx.moveTo(4, 2); ctx.lineTo(80, -8)
+    ctx.moveTo(4, 2); ctx.lineTo(49, 10)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  /* coda lunghissima con la pinna. La pinna è disegnata INTORNO alla
+     punta della coda, non attaccata dopo: attaccata dopo si staccava
+     appena la coda ondeggiava. */
+  const cx = 122, cy = -26 + battito * 8
+  pieno('#4b64d8')
+  ctx.beginPath()
+  ctx.moveTo(24, -92)
+  ctx.quadraticCurveTo(104, -94, cx, cy)
+  ctx.quadraticCurveTo(92, -58, 28, -62)
+  ctx.closePath(); ctx.fill()
+  pieno('#ffd479')
+  ctx.beginPath()
+  ctx.moveTo(cx - 12, cy - 8)
+  ctx.lineTo(cx + 34, cy - 26)
+  ctx.lineTo(cx + 26, cy + 22)
+  ctx.closePath(); ctx.fill()
+
+  /* zampe */
+  pieno('#3c53bd'); ell(-30, -26, 20, 22); ell(30, -26, 20, 22)
+  pieno('#ffe9b0')
+  for (const s of [-1, 1]) { ell(s * 44, -12, 6, 5); ell(s * 32, -10, 6, 5); ell(s * 20, -12, 6, 5) }
+
+  /* corpo */
+  pieno('#4b64d8'); ell(0, -108, 50, 70)
+  pieno('#ffd9a0'); ell(0, -100, 31, 48)
+  ctx.globalAlpha = 0.6; pieno('#f0b46a')
+  for (let i = 0; i < 6; i++) ell(0, -60 - i * 17, 27 - i * 1.7, 5.5)
+  ctx.globalAlpha = 1
+  creste([[0,-176,12],[-18,-166,10],[18,-166,10],[-34,-146,8],[34,-146,8]], '#ffd479')
+
+  /* collo, testa, corona di corna */
+  const ty = -218
+  pieno('#4b64d8'); ell(0, ty + 38, 22, 32)
+  pieno('#4b64d8'); ell(0, ty, 37, 33)
+  pieno('#ffd9a0'); ell(0, ty + 16, 22, 14)
+  pieno('#33489f'); ell(-7, ty + 12, 3, 2.2); ell(7, ty + 12, 3, 2.2)
+  corno(-20, ty - 24, 44, -0.9, 7, '#ffd479')
+  corno(20, ty - 24, 44, 0.9, 7, '#ffd479')
+  corno(-34, ty - 8, 26, -1.1, 5, '#ffd479')
+  corno(34, ty - 8, 26, 1.1, 5, '#ffd479')
+  corno(0, ty - 30, 22, 0, 5, '#fff0b8')
+  occhi(0, ty - 4, 10, sveglio, 15, 0)
+  if (sveglio > 0.5) scintilleFuoco(60, ty + 26, 1.1, t)
+
+  /* le scintille che gli girano intorno */
+  if (sveglio > 0.3) {
+    for (let i = 0; i < 7; i++) {
+      const a = t * 0.9 + i * 0.9
+      const r = 120 + Math.sin(t * 1.3 + i) * 18
+      ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 2 + i)
+      pieno('#fff0b8')
+      ell(Math.cos(a) * r * 1.15, -130 + Math.sin(a) * r * 0.62, 4.5, 4.5)
+    }
+    ctx.globalAlpha = 1
+  }
+  ctx.restore()
+}
+
+const PITTORI = [disegnaUovo, disegnaCucciolo, disegnaGiovane, disegnaDrago, disegnaAlato]
+
+/* lo sfondo: di giorno o di notte, a seconda del sonno */
+function sfondo(t, suolo) {
+  const cielo = ctx.createLinearGradient(0, 0, 0, ALT)
+  const s = sonnoOra
+  cielo.addColorStop(0, mescola('#bfe6ff', '#232a52', s))
+  cielo.addColorStop(0.62, mescola('#eaf6ff', '#3a3a66', s))
+  cielo.addColorStop(1, mescola('#dff0dd', '#2e3a4a', s))
+  ctx.fillStyle = cielo; ctx.fillRect(0, 0, LARG, ALT)
+
+  /* sole o luna */
+  ctx.globalAlpha = 0.85
+  ctx.fillStyle = mescola('#ffe082', '#e8ecff', s)
+  ctx.beginPath(); ctx.arc(LARG - 56, 52, 22 - s * 5, 0, 6.2832); ctx.fill()
+  if (s > 0.5) {   /* la luna si mangia un pezzo di sole */
+    ctx.fillStyle = mescola('#eaf6ff', '#2b3159', s)
+    ctx.beginPath(); ctx.arc(LARG - 66, 45, 19, 0, 6.2832); ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  /* stelle, solo di notte */
+  if (s > 0.25) {
+    ctx.globalAlpha = (s - 0.25) * 1.2
+    ctx.fillStyle = '#ffffff'
+    for (let i = 0; i < 22; i++) {
+      const x = ((i * 97) % 37) / 37 * LARG, y = ((i * 53) % 23) / 23 * ALT * 0.6
+      const l = 1 + ((i * 7) % 3) * 0.6
+      ctx.beginPath(); ctx.arc(x, y, l, 0, 6.2832); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  /* le colline, gli alberi lontani e il prato */
+  ctx.fillStyle = mescola('#a8d5a2', '#3c4a52', s)
+  ctx.beginPath(); ctx.ellipse(LARG * 0.2, suolo - 6, LARG * 0.42, 52, 0, Math.PI, 0); ctx.fill()
+  ctx.beginPath(); ctx.ellipse(LARG * 0.84, suolo - 2, LARG * 0.36, 40, 0, Math.PI, 0); ctx.fill()
+  ctx.fillStyle = mescola('#7fbe86', '#2f3d48', s)
+  for (const a of [[0.08, 26], [0.16, 19], [0.93, 22]]) {
+    const x = LARG * a[0], y = suolo - 22
+    ctx.beginPath(); ctx.arc(x, y - a[1] * 0.5, a[1] * 0.62, 0, 6.2832); ctx.fill()
+    ctx.fillRect(x - 2.5, y - a[1] * 0.2, 5, a[1] * 0.55)
+  }
+  ctx.fillStyle = mescola('#8ec98a', '#33414a', s)
+  ctx.fillRect(0, suolo, LARG, ALT - suolo)
+  ctx.fillStyle = mescola('#7dbd7a', '#2c3a43', s)
+  ctx.beginPath(); ctx.ellipse(LARG / 2, suolo + 2, LARG * 0.42, 10, 0, Math.PI, 0); ctx.fill()
+
+  /* il prato in primo piano: ciuffi e sassi, se no è un rettangolo verde.
+     Posizioni fisse, niente caso: la scena dev'essere sempre la stessa. */
+  const sotto = ALT - suolo
+  ctx.strokeStyle = mescola('#69ac68', '#26333c', s)
+  ctx.lineWidth = 3; ctx.lineCap = 'round'
+  const ciuffi = [[0.07, 0.30], [0.19, 0.62], [0.34, 0.88], [0.62, 0.35],
+                  [0.78, 0.72], [0.90, 0.24], [0.50, 0.95], [0.26, 0.14]]
+  for (const c of ciuffi) {
+    const x = LARG * c[0], y = suolo + sotto * c[1], h = 7 + sotto * c[1] * 0.05
+    for (const d of [-1, 0, 1]) {
+      ctx.beginPath(); ctx.moveTo(x + d * 5, y)
+      ctx.quadraticCurveTo(x + d * 7, y - h * 0.7, x + d * 9, y - h)
+      ctx.stroke()
+    }
+  }
+  ctx.fillStyle = mescola('#b9c4c0', '#3d4750', s)
+  ctx.beginPath(); ctx.ellipse(LARG * 0.13, suolo + sotto * 0.48, 13, 7, 0, 0, 6.2832); ctx.fill()
+  ctx.beginPath(); ctx.ellipse(LARG * 0.86, suolo + sotto * 0.55, 9, 5, 0, 0, 6.2832); ctx.fill()
+}
+
+function mescola(a, b, k) {
+  const na = parseInt(a.slice(1), 16), nb = parseInt(b.slice(1), 16)
+  const r = Math.round(((na >> 16) & 255) + (((nb >> 16) & 255) - ((na >> 16) & 255)) * k)
+  const g = Math.round(((na >> 8) & 255) + (((nb >> 8) & 255) - ((na >> 8) & 255)) * k)
+  const bl = Math.round((na & 255) + ((nb & 255) - (na & 255)) * k)
+  return 'rgb(' + r + ',' + g + ',' + bl + ')'
+}
+
+let lampoFesta = 0        // il bianco che sbianca lo schermo all'evoluzione
+let stadioDisegnato = 0   // quale stadio sta disegnando la scena (la festa lo anticipa)
+
+function fotogramma(ms) {
+  const t = ms / 1000
+  const ora = adesso()
+  sonnoOra = sonnolenza(ora)
+  const sveglio = 1 - Math.min(1, sonnoOra * 1.15)
+
+  /* LA SCALA È UNA SOLA per tutti e cinque gli stadi: è tarata sul più
+     grosso, che deve starci sia in alto sia di lato. Se ognuno si
+     adattasse al suo spazio starebbero tutti uguali, e la crescita —
+     che è tutto il punto — non si vedrebbe. La linea di terra invece
+     si alza e si abbassa, così una bestia piccola non resta sola in
+     fondo a un cielo vuoto. */
+  const altezze = [120, 130, 175, 230, 280]
+  const mezzeLarghezze = [58, 70, 105, 145, 168]
+  const k = Math.min((ALT - 74) / 280, (LARG / 2 - 10) / 168)
+  const altoOra = altezze[stadioDisegnato] * k
+  const suolo = Math.min(ALT - 26, ALT * 0.66 + altoOra * 0.3)
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.clearRect(0, 0, LARG, ALT)
+  sfondo(t, suolo)
+
+  ctx.save()
+  ctx.translate(LARG / 2, suolo)
+  ctx.scale(k, k)
+  PITTORI[stadioDisegnato](t, stadioDisegnato === 0 ? avanzamento(ora) : sveglio)
+  ctx.restore()
+
+  if (sonnoOra > 0.22)
+    zeta(LARG / 2 + mezzeLarghezze[stadioDisegnato] * k * 0.55, suolo - altoOra * 0.86, t)
+
+  if (lampoFesta > 0) {
+    ctx.fillStyle = 'rgba(255,255,255,' + lampoFesta + ')'
+    ctx.fillRect(0, 0, LARG, ALT)
+    lampoFesta = Math.max(0, lampoFesta - 0.035)   // mezzo secondo di bianco, poi via
+  }
+  requestAnimationFrame(fotogramma)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. LA SCHERMATA DEL COMPAGNO
+   ═══════════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id)
+
+function aggiornaCasa() {
+  const ora = adesso()
+  const n = stadioOra(ora)
+  stadioDisegnato = n
+  const st = STADI[n]
+  $('nomeStadio').textContent = st.nome
+  $('oraSei').textContent = st.nome
+  const dorme = sonnolenza(ora)
+
+  if (dorme > 0.55)      $('dice').innerHTML = '<b>Scintilla dorme.</b> Un ripasso la sveglia.'
+  else if (dorme > 0.22) $('dice').textContent = 'Scintilla ha gli occhi pesanti… le manca un ripasso.'
+  else                   $('dice').textContent = st.dice
+
+  const p = avanzamento(ora)
+  const prossimo = STADI[stadioBarra(ora) + 1]
+  $('prossimo').textContent = prossimo ? '→ ' + prossimo.nome : 'al massimo!'
+  $('riempi').style.width = Math.round(p * 100) + '%'
+  $('riempi').classList.toggle('spenta', dorme > 0.22)
+  $('tastoAllena').textContent = dorme > 0.22 ? 'Sveglia Scintilla ☀️'
+                                : n === 0 ? 'Allenati 🐣' : 'Allenati ✨'
+
+  /* i conti del banco di prova */
+  $('dataFinta').textContent = new Date(ora).toLocaleDateString('it-IT',
+      { day:'numeric', month:'short', year:'numeric' })
+  $('contoForza').textContent = forzaMedia(ora).toFixed(2)
+  $('contoSonno').textContent = Math.round(dorme * 100) + '%'
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. LA MICRO-SESSIONE
+   Otto domande. La scelta è pesata come nel gioco vero (`weight`), con
+   una distanza minima perché la stessa parola non esca due volte di
+   fila. Il MODO di chiedere dipende dalla forza: appena imparata si
+   riconosce (figura → parola), quando è più solida si richiama
+   (parola → figura). È la stessa idea di `LinguaGame`.
+   ═══════════════════════════════════════════════════════════════════ */
+const QUANTE = 8
+let sessione = null
+
+function estrai(ora, recenti) {
+  let cand = []
+  for (let i = 0; i < PAROLE.length; i++) if (recenti.indexOf(i) < 0) cand.push(i)
+  if (!cand.length) cand = PAROLE.map((_, i) => i)
+  const pesi = cand.map(i => peso(stato.el[i], ora))
+  let r = Math.random() * pesi.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < cand.length; i++) { r -= pesi[i]; if (r <= 0) return cand[i] }
+  return cand[cand.length - 1]
+}
+
+function creaDomanda(i, ora) {
+  const p = PAROLE[i]
+  const versoFigura = forza(stato.el[i], ora) >= 2        // più solido: si richiama
+  /* i falsi escono dalla stessa categoria */
+  let pool = PAROLE.map((_, j) => j).filter(j => j !== i && PAROLE[j].c === p.c)
+  if (pool.length < 3) pool = PAROLE.map((_, j) => j).filter(j => j !== i)
+  pool.sort(() => Math.random() - 0.5)
+  const falsi = pool.slice(0, 3)
+  const opzioni = falsi.concat([i]).sort(() => Math.random() - 0.5)
+  return { i, versoFigura, opzioni }
+}
+
+function preparaSessione() {
+  const ora = adesso()
+  const recenti = [], domande = []
+  for (let n = 0; n < QUANTE; n++) {
+    const i = estrai(ora, recenti)
+    recenti.push(i); if (recenti.length > 4) recenti.shift()
+    domande.push(creaDomanda(i, ora))
+  }
+  sessione = { domande, n: 0, giuste: 0, esiti: [], bloccato: false, stadioPrima: stadioOra(ora) }
+}
+
+function mostraPallini() {
+  const cont = $('pallini'); cont.innerHTML = ''
+  for (let i = 0; i < QUANTE; i++) {
+    const p = document.createElement('i')
+    if (sessione.esiti[i] === true) p.className = 'fatta'
+    else if (sessione.esiti[i] === false) p.className = 'persa'
+    else if (i === sessione.n) p.className = 'ora'
+    cont.appendChild(p)
+  }
+}
+
+function mostraDomanda() {
+  const d = sessione.domande[sessione.n]
+  const p = PAROLE[d.i]
+  mostraPallini()
+  const bers = $('bersaglio')
+  if (d.versoFigura) {
+    $('comando').textContent = 'Tocca la figura giusta'
+    bers.textContent = p.en; bers.className = 'bersaglio'
+  } else {
+    $('comando').textContent = 'Come si dice in inglese?'
+    bers.textContent = p.em; bers.className = 'bersaglio emoji'
+  }
+  const cont = $('opzioni'); cont.innerHTML = ''
+  for (const j of d.opzioni) {
+    const b = document.createElement('button')
+    if (d.versoFigura) { b.textContent = PAROLE[j].em; b.className = 'grande' }
+    else b.textContent = PAROLE[j].en
+    b.dataset.i = j
+    b.addEventListener('click', () => rispondi(j, b))
+    cont.appendChild(b)
+  }
+  sessione.bloccato = false
+}
+
+function rispondi(j, bottone) {
+  if (!sessione || sessione.bloccato) return
+  sessione.bloccato = true
+  const d = sessione.domande[sessione.n]
+  const giusta = j === d.i
+  const ora = adesso()
+
+  registra(stato.el[d.i], giusta, ora)
+  sessione.esiti[sessione.n] = giusta
+  if (giusta) { sessione.giuste++; suonoGiusta() } else suonoSbaglia()
+
+  bottone.classList.add(giusta ? 'giusta' : 'male')
+  if (!giusta) {
+    /* l'errore mostra sempre la risposta buona: sbagliare deve
+       insegnare, non solo togliere punti */
+    const buono = $('opzioni').querySelector('button[data-i="' + d.i + '"]')
+    if (buono) buono.classList.add('giusta')
+  }
+  mostraPallini()
+  setTimeout(() => {
+    sessione.n++
+    if (sessione.n >= QUANTE) chiudiSessione()
+    else mostraDomanda()
+  }, giusta ? 620 : 1150)
+}
+
+function chiudiSessione() {
+  stato.ultimoRipasso = adesso()
+  salva()
+  $('punteggio').textContent = sessione.giuste + '/' + QUANTE
+  const commenti = ['Ci riproviamo domani, va bene lo stesso.',
+                    'Qualcosa è entrato. Scintilla se n\'è accorta.',
+                    'Bel ripasso! Scintilla è più forte.',
+                    'Quasi tutto giusto: si vede!',
+                    'Tutte giuste. Scintilla è raggiante.']
+  const q = sessione.giuste / QUANTE
+  $('commento').textContent = commenti[Math.min(4, Math.floor(q * 4.999))]
+  $('fine').hidden = false
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. L'EVOLUZIONE — il momento, non il cambio di sagoma
+   ═══════════════════════════════════════════════════════════════════ */
+function forseEvolve() {
+  const ora = adesso()
+  const n = stadioDa(forzaMedia(ora))
+  if (n <= stato.stadioMax) { aggiornaCasa(); return false }
+  stato.stadioMax = n
+  salva()
+  stadioDisegnato = n
+  lampoFesta = 1
+  aggiornaCasa()
+  suonoEvoluzione()
+  $('titoloneFesta').textContent = STADI[n].nome
+  $('sottoFesta').textContent = STADI[n].dice
+  /* le scintille */
+  const f = $('festa')
+  f.querySelectorAll('.scintilla').forEach(s => s.remove())
+  const emo = ['✨','⭐','🔥','💫','✨','⭐']
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('div')
+    s.className = 'scintilla'; s.textContent = emo[i % emo.length]
+    const a = (i / 14) * 6.2832
+    s.style.left = '50%'; s.style.top = '40%'
+    s.style.setProperty('--dx', Math.cos(a) * 170 + 'px')
+    s.style.setProperty('--dy', Math.sin(a) * 190 + 'px')
+    s.style.animationDelay = (i * 0.13) + 's'
+    f.appendChild(s)
+  }
+  f.hidden = false
+  $('casa').classList.add('infesta')
+  return true
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. I COLLEGAMENTI
+   ═══════════════════════════════════════════════════════════════════ */
+function vaiA(quale) {
+  $('casa').hidden = quale !== 'casa'
+  $('quiz').hidden = quale !== 'quiz'
+}
+
+$('tastoAllena').addEventListener('click', () => {
+  motoreAudio()
+  preparaSessione()
+  $('fine').hidden = true
+  vaiA('quiz')
+  mostraDomanda()
+})
+
+$('tastoEsci').addEventListener('click', () => {
+  salva(); vaiA('casa'); aggiornaCasa(); forseEvolve()
+})
+
+$('tastoTorna').addEventListener('click', () => {
+  $('fine').hidden = true
+  vaiA('casa')
+  aggiornaCasa()
+  forseEvolve()
+})
+
+$('tastoFesta').addEventListener('click', () => {
+  $('festa').hidden = true
+  $('casa').classList.remove('infesta')
+  aggiornaCasa()
+})
+
+/* ── il banco di prova ── */
+$('tastoBanco').addEventListener('click', () => {
+  const b = $('banco'); b.hidden = !b.hidden
+})
+
+document.querySelectorAll('#banco [data-giorni]').forEach(b => {
+  b.addEventListener('click', () => {
+    stato.scarto += Number(b.dataset.giorni) * GIORNO
+    salva(); aggiornaCasa()
+  })
+})
+
+$('tastoOggi').addEventListener('click', () => {
+  stato.scarto = 0; salva(); aggiornaCasa()
+})
+
+/* una sessione perfetta senza doverla giocare: serve a vedere i cinque
+   stadi in due minuti invece che in tre settimane */
+$('tastoStudia').addEventListener('click', () => {
+  const ora = adesso()
+  const recenti = []
+  for (let n = 0; n < QUANTE; n++) {
+    const i = estrai(ora, recenti)
+    recenti.push(i); if (recenti.length > 4) recenti.shift()
+    registra(stato.el[i], true, ora)
+  }
+  stato.ultimoRipasso = ora
+  salva(); aggiornaCasa()
+  if (!forseEvolve()) suonoGiusta()
+})
+
+$('tastoAzzera').addEventListener('click', () => {
+  stato = statoNuovo(); salva(); aggiornaCasa()
+})
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. AVVIO
+   ═══════════════════════════════════════════════════════════════════ */
+stato = carica()
+window.addEventListener('resize', () => { ridimensiona(); aggiornaCasa() })
+ridimensiona()
+aggiornaCasa()
+requestAnimationFrame(fotogramma)
+
+/* una manopola per il banco di prova da fuori (gli scatti di verifica) */
+window.banco = {
+  stato: () => stato,
+  stadio: () => stadioOra(adesso()),
+  imponi: n => {   /* porta la collezione alla forza che serve per lo stadio n */
+    const bersaglio = STADI[n].da
+    const ora = Date.now()
+    $('festa').hidden = true
+    $('casa').classList.remove('infesta')
+    stato.scarto = 0
+    const s = Math.min(MAX_S, Math.ceil(bersaglio))
+    const quanti = Math.ceil((bersaglio * PAROLE.length) / s)
+    stato.el = PAROLE.map((_, i) => (i < quanti
+      ? { s: s, ok: s, err: 0, last: ora, seen: s }
+      : nuovoElemento()))
+    stato.stadioMax = n
+    stato.ultimoRipasso = ora
+    salva(); aggiornaCasa()
+  },
+  avanti: giorni => { stato.scarto += giorni * GIORNO; salva(); aggiornaCasa() },
+}
+</script>

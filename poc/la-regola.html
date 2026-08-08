@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Indovina la regola</title>
+<style>
+  :root{
+    --fondo:#f6f1e7; --carta:#fffdf9; --inchiostro:#2f2b26; --tenue:#8b8175;
+    --bordo:#e3d9c8; --si:#2f9e5f; --no:#dd5b4c; --oro:#eba417; --vivo:#4a6fd4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#e6ded0;-webkit-tap-highlight-color:transparent}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--inchiostro);overflow-x:hidden}
+  #app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--fondo);
+       display:flex;flex-direction:column;overflow-x:hidden;
+       box-shadow:0 0 40px rgba(0,0,0,.08)}
+  button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:pointer;
+         touch-action:manipulation;font-weight:600}
+
+  /* ── barra ── */
+  .barra{display:flex;align-items:center;gap:10px;padding:10px 12px;min-height:60px;flex:0 0 auto}
+  .indietro{width:46px;height:46px;flex:0 0 auto;border-radius:15px;background:var(--inchiostro);
+            color:#fff;font-size:22px;line-height:46px;text-align:center}
+  .dove{font-size:17px;font-weight:700;letter-spacing:.2px}
+  .spinta{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .puntini{display:flex;gap:4px}
+  .puntini i{width:9px;height:9px;border-radius:50%;background:#ded3c1;display:block}
+  .puntini i.acceso{background:var(--oro)}
+  .filo{font-size:15px;font-weight:700;color:var(--tenue)}
+
+  /* ── casa ── */
+  .casa{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:22px 20px 34px}
+  .titolone{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.5px;margin:0 0 2px}
+  .titolone small{display:block;font-size:15px;font-weight:600;color:var(--tenue);letter-spacing:0;margin-top:8px}
+  .modo{display:flex;align-items:center;gap:14px;background:var(--carta);border:2px solid var(--bordo);
+        border-radius:22px;padding:16px;text-align:left;min-height:96px;width:100%;
+        box-shadow:0 3px 0 var(--bordo)}
+  .modo:active{transform:translateY(2px);box-shadow:0 1px 0 var(--bordo)}
+  .modo .icona{width:58px;height:58px;flex:0 0 auto;border-radius:18px;display:grid;place-items:center;font-size:30px}
+  .modo .nome{font-size:20px;font-weight:800;display:block}
+  .modo .detto{font-size:13.5px;font-weight:500;color:var(--tenue);margin-top:3px;line-height:1.35;display:block}
+
+  /* ── intruso ── */
+  .consegna{padding:2px 16px 12px;font-size:16px;font-weight:600;line-height:1.35;text-align:center;color:#4a443c}
+  .griglia{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 14px}
+  .carta{background:var(--carta);border:3px solid var(--bordo);border-radius:22px;aspect-ratio:1;
+         display:grid;place-items:center;position:relative;overflow:hidden;width:100%}
+  .carta:active{transform:scale(.97)}
+  .carta.buona{border-color:var(--si);background:#f0fbf4}
+  .carta.cattiva{border-color:var(--no);background:#fdf1f0}
+  .carta.indicata{border-color:var(--oro);background:#fff8e8}
+  .bollo{position:absolute;top:6px;right:8px;font-size:24px;font-weight:800}
+  .esito{padding:14px 16px 20px;text-align:center}
+  .esito .frase{font-size:16.5px;font-weight:700;line-height:1.4;min-height:46px}
+  .esito .frase em{font-style:normal;color:var(--vivo)}
+  .grosso{display:block;width:100%;min-height:56px;border-radius:18px;background:var(--inchiostro);
+          color:#fff;font-size:18px;font-weight:800;margin-top:12px;padding:0 10px}
+  .grosso.chiaro{background:var(--carta);color:var(--inchiostro);border:2px solid var(--bordo)}
+  .grosso:active{transform:translateY(2px)}
+
+  /* ── laboratorio ── */
+  .lab{flex:1;display:flex;flex-direction:column;gap:10px;padding:0 12px 14px}
+  .pannello{background:var(--carta);border:2px solid var(--bordo);border-radius:18px;padding:9px 11px}
+  .pannello h2{margin:0 0 7px;font-size:12px;font-weight:800;letter-spacing:.9px;
+               text-transform:uppercase;color:var(--tenue)}
+  .fila{display:flex;gap:9px;align-items:center}
+  .fila.scorre{overflow-x:auto;overflow-y:hidden;padding-bottom:3px;scrollbar-width:none}
+  .fila.scorre::-webkit-scrollbar{display:none}
+  .mini{position:relative;flex:0 0 auto;border-radius:13px;border:2px solid var(--bordo);background:#fff;
+        display:grid;place-items:center}
+  .mini.si{border-color:var(--si);background:#f2fbf5}
+  .mini.no{border-color:var(--no);background:#fdf2f1}
+  .mini b{position:absolute;bottom:-1px;right:2px;font-size:13px;line-height:1}
+  .mini.si b{color:var(--si)} .mini.no b{color:var(--no)}
+  .vuotostrip{font-size:13px;color:var(--tenue);font-weight:600;padding:6px 2px}
+
+  .banco{background:var(--carta);border:2px solid var(--bordo);border-radius:20px;padding:10px}
+  .anteprima{display:flex;align-items:center;justify-content:center;position:relative;height:104px}
+  .verdetto{position:absolute;inset:0;display:grid;place-items:center;font-size:74px;font-weight:900;
+            pointer-events:none;animation:sbuca .28s ease-out}
+  @keyframes sbuca{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .riga{display:flex;gap:7px;margin-top:7px}
+  .scelta{flex:1;min-height:46px;border-radius:14px;border:2px solid var(--bordo);background:#fff;
+          display:grid;place-items:center;font-size:15px;font-weight:700;color:var(--tenue)}
+  .scelta.attiva{border-color:var(--inchiostro);background:#f3ede1;color:var(--inchiostro);
+                 box-shadow:inset 0 0 0 2px var(--inchiostro)}
+  .scelta:active{transform:scale(.95)}
+  .pallino{width:22px;height:22px;border-radius:50%;display:block}
+  .azioni{display:flex;gap:9px}
+  .azioni .grosso{margin-top:0}
+  .prova{background:var(--vivo)}
+  .capito{flex:0 0 42%}
+
+  /* ── esame ── */
+  .esame{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         gap:16px;padding:10px 18px 24px}
+  .esame .cartona{background:var(--carta);border:3px solid var(--bordo);border-radius:26px;
+                  width:100%;max-width:270px;aspect-ratio:1;display:grid;place-items:center}
+  .doppio{display:flex;gap:11px;width:100%}
+  .doppio button{flex:1;min-height:72px;border-radius:20px;font-size:26px;font-weight:900;color:#fff}
+  .doppio .si{background:var(--si)} .doppio .no{background:var(--no)}
+  .doppio button:active{transform:translateY(2px)}
+  .tacche{display:flex;gap:8px}
+  .tacche i{width:13px;height:13px;border-radius:50%;background:#ded3c1;display:block}
+  .tacche i.fatta{background:var(--si)}
+  .tacche i.persa{background:var(--no)}
+
+  /* ── vittoria ── */
+  .vinto{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         gap:14px;padding:20px;text-align:center}
+  .vinto .urlo{font-size:64px;animation:sbuca .35s ease-out}
+  .vinto h2{margin:0;font-size:26px;font-weight:800}
+  .cartiglio{background:var(--carta);border:2px dashed var(--oro);border-radius:20px;padding:15px 16px;width:100%}
+  .cartiglio .etichetta{font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--tenue)}
+  .cartiglio .regola{font-size:20px;font-weight:800;margin-top:6px;line-height:1.3;color:var(--vivo)}
+  .avviso{background:#fff6e2;border:2px solid var(--oro);border-radius:16px;padding:10px 12px;
+          font-size:14px;font-weight:600;line-height:1.35}
+  .avviso .grosso{min-height:46px;font-size:16px;margin-top:0}
+  /* le due coppie dell'ultima riga sono cose diverse: si vede dallo stacco */
+  .riga.coppie{gap:5px}
+  .riga.coppie .stacco{flex:0 0 10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/*<<<MOTORE — da qui in giù non si tocca il documento: gira uguale in Node */
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL MONDO DELLE FIGURE
+   Cinque attributi, 4·4·4·2·2 = 256 figure in tutto. È poco, ed è un
+   bene: si può enumerare l'universo intero e ragionare sulle regole
+   come su insiemi. È questo che permette di *dimostrare* che un
+   indovinello non è ambiguo, invece di sperarlo.
+   ═══════════════════════════════════════════════════════════════════ */
+const FORME = ['cerchio','quadrato','triangolo','stella']
+const COLORI = ['rosso','blu','giallo','verde']
+const QUANTITA = [1,2,3,4]
+const DIMENSIONI = ['piccolo','grande']
+const RIEMPIMENTI = ['pieno','vuoto']
+const ATTRIBUTI = ['forma','colore','quantita','dimensione','riempimento']
+const VALORI = { forma:FORME, colore:COLORI, quantita:QUANTITA,
+                 dimensione:DIMENSIONI, riempimento:RIEMPIMENTI }
+
+const UNIVERSO = []
+for (const forma of FORME)
+  for (const colore of COLORI)
+    for (const quantita of QUANTITA)
+      for (const dimensione of DIMENSIONI)
+        for (const riempimento of RIEMPIMENTI)
+          UNIVERSO.push({ i:UNIVERSO.length, forma, colore, quantita, dimensione, riempimento })
+const INDICI = UNIVERSO.map(f => f.i)
+
+const PUNTE = new Set(['triangolo','stella'])   // forme appuntite
+const CALDI = new Set(['rosso','giallo'])       // colori caldi
+
+/* ── come si dicono le cose, in italiano che regge il plurale ── */
+const PLUR = { cerchio:'cerchi', quadrato:'quadrati', triangolo:'triangoli', stella:'stelle' }
+const GEN  = { cerchio:'m', quadrato:'m', triangolo:'m', stella:'f' }
+const ACC  = {
+  rosso:{m:'rossi',f:'rosse'}, blu:{m:'blu',f:'blu'},
+  giallo:{m:'gialli',f:'gialle'}, verde:{m:'verdi',f:'verdi'},
+  piccolo:{m:'piccoli',f:'piccole'}, grande:{m:'grandi',f:'grandi'},
+  pieno:{m:'pieni',f:'piene'}, vuoto:{m:'vuoti',f:'vuote'}
+}
+const NUM = { 1:'una', 2:'due', 3:'tre', 4:'quattro' }
+
+/* Mette in parole una congiunzione di uguaglianze: {colore:'rosso',quantita:2}
+   diventa «sono figure rosse, e ce ne sono due». */
+function frase (vincoli) {
+  const g = vincoli.forma ? GEN[vincoli.forma] : 'f'
+  const agg = []
+  for (const a of ['colore','dimensione','riempimento'])
+    if (vincoli[a]) agg.push(ACC[vincoli[a]][g])
+  let corpo = null
+  if (vincoli.forma || agg.length)
+    corpo = 'sono ' + (vincoli.forma ? PLUR[vincoli.forma] : 'figure') +
+            (agg.length ? ' ' + agg.join(' e ') : '')
+  let coda = null
+  if (vincoli.quantita)
+    coda = vincoli.quantita === 1 ? "ce n'è una sola" : 'ce ne sono ' + NUM[vincoli.quantita]
+  if (corpo && coda) return corpo + ', e ' + coda
+  return corpo || coda
+}
+function fraseOppure (attr, a, b) {
+  if (attr === 'forma') return 'sono ' + PLUR[a] + ' oppure ' + PLUR[b]
+  if (attr === 'quantita') return 'ce ne sono ' + NUM[a] + ' oppure ' + NUM[b]
+  return 'sono ' + ACC[a].f + ' oppure ' + ACC[b].f
+}
+function fraseNon (attr, v) {
+  if (attr === 'forma') return 'non sono ' + PLUR[v]
+  if (attr === 'quantita') return 'non ce ne sono ' + NUM[v]
+  return 'non sono ' + ACC[v].f
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL CATALOGO DELLE REGOLE
+   Ogni regola è una funzione che dice sì o no a una figura qualunque:
+   è questo che permette alla macchina di giudicare *qualsiasi*
+   esperimento del bambino, non solo quelli che avevamo previsto.
+   livello 1 semplice · 2 doppia · 3 negazione e tripla · 4 relazionale
+   ═══════════════════════════════════════════════════════════════════ */
+const CATALOGO = []
+function aggiungi (nome, livello, vale, mira) {
+  CATALOGO.push({ id:CATALOGO.length, nome, livello, vale, mira:mira !== false })
+}
+
+/* 1 · un attributo solo */
+for (const a of ATTRIBUTI)
+  for (const v of VALORI[a])
+    aggiungi(frase({ [a]:v }), 1, f => f[a] === v)
+
+/* 2 · congiunzione di due attributi */
+for (let i = 0; i < ATTRIBUTI.length; i++)
+  for (let j = i + 1; j < ATTRIBUTI.length; j++) {
+    const A = ATTRIBUTI[i], B = ATTRIBUTI[j]
+    for (const va of VALORI[A])
+      for (const vb of VALORI[B])
+        aggiungi(frase({ [A]:va, [B]:vb }), 2, f => f[A] === va && f[B] === vb)
+  }
+
+/* 2 · disgiunzione dentro la stessa famiglia. Fra famiglie diverse
+   («rosse oppure grandi») è troppo per un bambino e gonfia lo spazio
+   delle ipotesi al punto da rendere gli indovinelli irrisolvibili. */
+for (const a of ['forma','colore','quantita']) {
+  const vs = VALORI[a]
+  for (let i = 0; i < vs.length; i++)
+    for (let j = i + 1; j < vs.length; j++)
+      aggiungi(fraseOppure(a, vs[i], vs[j]), 2, f => f[a] === vs[i] || f[a] === vs[j])
+}
+
+/* 3 · negazione (solo dove nega davvero: su due valori è l'altro valore) */
+for (const a of ATTRIBUTI)
+  if (VALORI[a].length > 2)
+    for (const v of VALORI[a])
+      aggiungi(fraseNon(a, v), 3, f => f[a] !== v)
+
+/* 3 · congiunzione di tre attributi. Non sono mai il bersaglio (tre
+   cose insieme sono troppe da indovinare), ma devono stare nel
+   catalogo lo stesso: sono ipotesi che un bambino si fa davvero
+   («i cerchi rossi grandi»), e il gioco deve saperle smontare. */
+for (let i = 0; i < ATTRIBUTI.length; i++)
+  for (let j = i + 1; j < ATTRIBUTI.length; j++)
+    for (let k = j + 1; k < ATTRIBUTI.length; k++) {
+      const A = ATTRIBUTI[i], B = ATTRIBUTI[j], C = ATTRIBUTI[k]
+      for (const va of VALORI[A])
+        for (const vb of VALORI[B])
+          for (const vc of VALORI[C])
+            aggiungi(frase({ [A]:va, [B]:vb, [C]:vc }), 3,
+                     f => f[A] === va && f[B] === vb && f[C] === vc, false)
+    }
+
+/* 4 · relazionali: parlano di quantità o mettono d'accordo due
+   attributi fra loro. Sono le più belle perché non si vedono
+   guardando una figura sola: si scoprono solo confrontando. */
+aggiungi('ce ne sono più di due', 4, f => f.quantita > 2)
+aggiungi('sono un numero pari', 4, f => f.quantita % 2 === 0)
+aggiungi('hanno le punte (triangoli o stelle)', 4, f => PUNTE.has(f.forma))
+aggiungi('hanno un colore caldo (rosso o giallo)', 4, f => CALDI.has(f.colore))
+aggiungi('hanno le punte e un colore caldo', 4, f => PUNTE.has(f.forma) && CALDI.has(f.colore))
+aggiungi('hanno le punte oppure un colore caldo', 4, f => PUNTE.has(f.forma) || CALDI.has(f.colore))
+aggiungi('sono grandi e piene, oppure piccole e vuote', 4,
+         f => (f.dimensione === 'grande') === (f.riempimento === 'pieno'))
+aggiungi('sono grandi e vuote, oppure piccole e piene', 4,
+         f => (f.dimensione === 'grande') === (f.riempimento === 'vuoto'))
+aggiungi('hanno le punte col colore caldo, oppure niente punte col colore freddo', 4,
+         f => PUNTE.has(f.forma) === CALDI.has(f.colore))
+aggiungi('quando sono più di due sono piccole, se no grandi', 4,
+         f => (f.quantita > 2) === (f.dimensione === 'piccolo'))
+aggiungi('le punte vanno con le grandi, il tondo con le piccole', 4,
+         f => PUNTE.has(f.forma) === (f.dimensione === 'grande'))
+
+/* ── l'estensione: quali delle 256 figure la regola accetta, come
+   stringa di 0 e 1. Due regole con la stessa estensione *sono* la
+   stessa regola: «pari» e «due oppure quattro» non sono due risposte
+   diverse, e sarebbe ingiusto contarle come tali. ── */
+for (const r of CATALOGO) {
+  let s = ''
+  for (const f of UNIVERSO) s += r.vale(f) ? '1' : '0'
+  r.ext = s
+  r.dentro = INDICI.filter(i => s[i] === '1')
+}
+const ESTENSIONI = [...new Set(CATALOGO.map(r => r.ext))]
+
+/* le sedici regole «un attributo vale v», a portata di mano */
+const REGOLA_SEMPLICE = {}
+for (const a of ATTRIBUTI) {
+  REGOLA_SEMPLICE[a] = {}
+  for (const v of VALORI[a])
+    REGOLA_SEMPLICE[a][v] = CATALOGO.find(r => r.livello === 1 && r.nome === frase({ [a]:v }))
+}
+
+/* Fra due regole identiche come insieme si tiene la più semplice da
+   dire: è quella che il gioco mostrerà come spiegazione. */
+const PIU_SEMPLICE = new Map()
+for (const r of CATALOGO) {
+  const c = PIU_SEMPLICE.get(r.ext)
+  if (!c || r.livello < c.livello || (r.livello === c.livello && r.nome.length < c.nome.length))
+    PIU_SEMPLICE.set(r.ext, r)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   NON AMBIGUITÀ
+   Il difetto che uccide questi giochi: se la regola è «tutte rosse»
+   ma gli esempi sono anche tutti cerchi, chi risponde «cerchi» ha
+   ragione quanto noi. Qui il controllo è per costruzione e poi per
+   verifica contro l'intero catalogo.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Un'estensione «spiega» quattro carte se accetta le altre tre e
+   rifiuta la k-esima: cioè se elegge la k-esima a intrusa. */
+function spiega (ext, carte, k) {
+  for (let i = 0; i < carte.length; i++)
+    if ((ext[carte[i].i] === '1') !== (i !== k)) return false
+  return true
+}
+/* L'indovinello è onesto se una sola di quelle quattro carte può
+   essere l'intrusa: per nessun'altra esiste una regola del catalogo
+   che la lasci fuori tenendo dentro le altre tre. */
+function unicaIntrusa (carte, k) {
+  for (let j = 0; j < carte.length; j++) {
+    const esiste = ESTENSIONI.some(e => spiega(e, carte, j))
+    if (esiste !== (j === k)) return false
+  }
+  return true
+}
+
+/* ── attrezzi ── */
+function caso (n) { return Math.floor(Math.random() * n) }
+function pesca (arr) { return arr[caso(arr.length)] }
+function mischia (arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = caso(i + 1); const t = arr[i]; arr[i] = arr[j]; arr[j] = t }
+  return arr
+}
+function campionaDistinti (arr, n) { const c = arr.slice(); mischia(c); return c.slice(0, n) }
+function distanza (a, b) { return ATTRIBUTI.reduce((n, x) => n + (a[x] === b[x] ? 0 : 1), 0) }
+
+/* Quanti tentativi sono stati buttati: si misura, non si dà per buono.
+   Su 200 indovinelli dell'intruso: 42 set scartati perché due carte
+   sarebbero venute gemelle, 271 perché un'altra carta poteva essere
+   letta come l'intrusa. Quelli che arrivano al bambino sono puliti. */
+const SCARTI = { esempi:0, ambiguo:0 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   L'INTRUSO — tre seguono la regola, una no.
+
+   Un fatto piccolo ma decisivo, scoperto verificando: in un indovinello
+   a quattro carte la regola può essere soltanto «un attributo vale v».
+   · Una congiunzione non serve: l'intrusa ne viola comunque un pezzo, e
+     quel pezzo da solo spiega già tutto.
+   · Una disgiunzione o una negazione non si possono nemmeno mostrare:
+     con «non i quadrati» le tre buone avrebbero forme diverse, e allora
+     *ognuna* sarebbe l'intrusa di un «non quella forma lì». Il bambino
+     avrebbe ragione quanto noi, e il gioco sembrerebbe ingiusto.
+   Le regole composte restano quindi allo scienziato, che ha gli
+   esperimenti per distinguerle.
+
+   Qui la difficoltà non sta nella regola — sta nel RUMORE: quanti altri
+   attributi cambiano da carta a carta senza voler dire niente, e quanto
+   è appariscente quello che invece conta. Tre cerchi rossi e uno blu si
+   vedono da lontano; tre figure diverse in tutto tranne che sono piene,
+   e una vuota, sono un'altra cosa.
+
+   La ricetta che rende l'indovinello onesto: ogni attributo rumoroso fa
+   2+1 sulle tre buone, e l'intrusa prende il valore rimasto spaiato —
+   così sulle quattro carte finisce 2+2. Gli attributi fermi valgono
+   uguale per tutte e quattro. Risultato: nessuna carta è mai l'unica ad
+   avere qualcosa, e solo l'attributo della regola fa 3+1. Poi lo si
+   verifica lo stesso, carta per carta, contro tutto il catalogo.
+   ═══════════════════════════════════════════════════════════════════ */
+const SALIENTI = ['colore','forma']              // si vedono da lontano
+const SOTTILI = ['quantita','dimensione','riempimento']
+function ricettaIntruso (livello) {
+  if (livello <= 1) return { rumore:2, dove:SALIENTI }
+  if (livello === 2) return { rumore:3, dove:SALIENTI }
+  if (livello === 3) return { rumore:4, dove:SALIENTI.concat(['quantita']) }
+  return { rumore:4, dove:SOTTILI }
+}
+function generaIntruso (livello) {
+  const ricetta = ricettaIntruso(livello)
+  for (let giro = 0; giro < 150; giro++) {
+    const attr = pesca(ricetta.dove)                    // l'attributo che conta
+    const buono = pesca(VALORI[attr])
+    const altri = ATTRIBUTI.filter(a => a !== attr)
+    /* meno di due attributi rumorosi e due delle tre buone sarebbero la
+       stessa identica figura: il rumore parte da 2 per forza */
+    const rumorosi = campionaDistinti(altri, Math.max(2, Math.min(ricetta.rumore, altri.length)))
+    const fermi = altri.filter(a => rumorosi.indexOf(a) < 0)
+
+    const base = {}
+    for (const a of fermi) base[a] = pesca(VALORI[a])
+    const coppia = {}, spaiato = {}
+    for (const a of rumorosi) {
+      const due = campionaDistinti(VALORI[a], 2)
+      coppia[a] = due[0]; spaiato[a] = due[1]
+    }
+    /* chi delle tre buone tiene il valore spaiato, attributo per attributo */
+    const tiene = rumorosi.map(() => caso(3))
+    const buone = [0, 1, 2].map(n => {
+      const f = Object.assign({}, base)
+      f[attr] = buono
+      rumorosi.forEach((a, k) => { f[a] = tiene[k] === n ? spaiato[a] : coppia[a] })
+      return UNIVERSO.find(u => ATTRIBUTI.every(a => u[a] === f[a]))
+    })
+    if (new Set(buone.map(f => f.i)).size !== 3) { SCARTI.esempi++; continue }   // due gemelle
+
+    /* l'intrusa ricuce ogni attributo rumoroso prendendo lo spaiato, e
+       sbaglia soltanto quello che conta */
+    const candidate = mischia(VALORI[attr].filter(v => v !== buono).map(v => {
+      const f = Object.assign({}, base)
+      f[attr] = v
+      for (const a of rumorosi) f[a] = spaiato[a]
+      return UNIVERSO.find(u => ATTRIBUTI.every(x => u[x] === f[x]))
+    }))
+
+    for (const intrusa of candidate) {
+      const carte = mischia(buone.concat([intrusa]))
+      const k = carte.indexOf(intrusa)
+      if (unicaIntrusa(carte, k)) {
+        /* la spiegazione da mostrare è la lettura più semplice fra quelle
+           vere: così è sempre una risposta che il bambino riconosce */
+        const detta = ESTENSIONI.filter(e => spiega(e, carte, k))
+                                .map(e => PIU_SEMPLICE.get(e))
+                                .sort((a, b) => a.livello - b.livello || a.nome.length - b.nome.length)[0]
+        return { regola:REGOLA_SEMPLICE[attr][buono], carte, intrusa:k, detta }
+      }
+      SCARTI.ambiguo++
+    }
+  }
+  return null
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LO SCIENZIATO — due esempi buoni, uno no, e poi si sperimenta.
+
+   Qui la non ambiguità NON è (e non dev'essere) garantita all'inizio:
+   tre esempi non bastano mai a inchiodare una regola, ed è proprio
+   questo che dà un motivo per fare esperimenti. Quello che si
+   garantisce è:
+   · i due esempi buoni differiscono su ogni attributo che la regola
+     lascia libero — niente indizi falsi;
+   · il controesempio è un quasi-buono: sbaglia il meno possibile;
+   · l'esame finale viene costruito *dopo*, sulle ipotesi ancora vive,
+     in modo che chi ha in testa la regola sbagliata ci caschi.
+   ═══════════════════════════════════════════════════════════════════ */
+function scegliRegola (livello) {
+  const stretto = CATALOGO.filter(r => r.mira && r.livello === livello)
+  const largo = CATALOGO.filter(r => r.mira && r.livello <= livello)
+  return pesca(Math.random() < .72 && stretto.length ? stretto : largo)
+}
+
+function generaScienziato (livello) {
+  for (let giro = 0; giro < 300; giro++) {
+    const regola = scegliRegola(livello)
+    const dentro = regola.dentro
+    if (dentro.length < 3) { SCARTI.esempi++; continue }
+    const fuori = INDICI.filter(i => regola.ext[i] === '0')
+    /* attributi che la regola lascia respirare: lì i due esempi devono differire */
+    const liberi = ATTRIBUTI.filter(a => new Set(dentro.map(i => UNIVERSO[i][a])).size > 1)
+
+    let buoni = null
+    for (let t = 0; t < 400; t++) {
+      const c = campionaDistinti(dentro, 2)
+      if (liberi.every(a => UNIVERSO[c[0]][a] !== UNIVERSO[c[1]][a])) { buoni = c; break }
+    }
+    if (!buoni) { SCARTI.esempi++; continue }
+
+    /* Quanto dev'essere «quasi buono» il controesempio: è il pomello che
+       decide quante ipotesi restano in piedi, cioè quanto c'è da
+       sperimentare. Uno che sbaglia una cosa sola dice quasi tutto —
+       va bene per i piccoli; più è lontano, più resta da scoprire. */
+    const dist = fuori.map(i => Math.min(distanza(UNIVERSO[i], UNIVERSO[buoni[0]]),
+                                         distanza(UNIVERSO[i], UNIVERSO[buoni[1]])))
+    const minimo = Math.min.apply(null, dist)
+    const soglia = minimo + (livello >= 3 ? 1 : 0)
+    const vicini = fuori.filter((i, n) => dist[n] <= soglia)
+    const cattivo = pesca(vicini)
+
+    const esempi = [
+      { f:UNIVERSO[buoni[0]], ok:true },
+      { f:UNIVERSO[buoni[1]], ok:true },
+      { f:UNIVERSO[cattivo], ok:false }
+    ]
+    return { regola, esempi, superstiti:sopravvissute(ESTENSIONI, esempi) }
+  }
+  return null
+}
+
+/* Quali regole del catalogo reggono ancora, viste tutte le prove fatte. */
+function sopravvissute (elenco, prove) {
+  return elenco.filter(e => prove.every(p => (e[p.f.i] === '1') === p.ok))
+}
+
+/* L'esame: quattro figure mai viste che *separano* la regola vera da
+   tutte le ipotesi ancora in piedi. Chi ha capito passa; chi ha in
+   testa una regola che spiegava gli esempi ma non è quella, inciampa.
+   Due figure buone e due no, per non poter rispondere sempre uguale. */
+function scegliEsame (ext, superstiti, visti) {
+  let vive = superstiti.filter(e => e !== ext)
+  const scelte = []
+  let si = 0, no = 0
+  for (let k = 0; k < 4; k++) {
+    let migliori = [], punti = -1
+    for (const f of UNIVERSO) {
+      if (visti.has(f.i)) continue
+      if (scelte.some(s => s.i === f.i)) continue
+      const positiva = ext[f.i] === '1'
+      if (positiva && si >= 2) continue
+      if (!positiva && no >= 2) continue
+      let p = 0
+      for (const e of vive) if (e[f.i] !== ext[f.i]) p++
+      if (p > punti) { punti = p; migliori = [f] }
+      else if (p === punti) migliori.push(f)
+    }
+    if (!migliori.length) break
+    const f = pesca(migliori)
+    scelte.push(f)
+    if (ext[f.i] === '1') si++; else no++
+    vive = vive.filter(e => e[f.i] === ext[f.i])
+  }
+  return { figure:mischia(scelte), residue:vive.length }
+}
+
+/*MOTORE>>>*/
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL DISEGNO — SVG, non emoji: qui servono attributi puliti
+   ═══════════════════════════════════════════════════════════════════ */
+const TINTA = {
+  rosso:{ vivo:'#e04a3f', cupo:'#a83227' }, blu:{ vivo:'#3079d6', cupo:'#1d5495' },
+  giallo:{ vivo:'#f0b400', cupo:'#a97d00' }, verde:{ vivo:'#33a95c', cupo:'#1d7440' }
+}
+const POSTI = {
+  1:[[50,50]], 2:[[29,50],[71,50]],
+  3:[[50,29],[28,68],[72,68]], 4:[[29,29],[71,29],[29,71],[71,71]]
+}
+const RAGGI = { 1:33, 2:25, 3:23, 4:21 }
+
+function puntiStella (cx, cy, r) {
+  const p = []
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI / 2 + k * Math.PI / 5
+    const rr = k % 2 ? r * .44 : r
+    p.push((cx + rr * Math.cos(a)).toFixed(1) + ',' + (cy + rr * Math.sin(a)).toFixed(1))
+  }
+  return p.join(' ')
+}
+function sagoma (forma, cx, cy, r, vernice) {
+  if (forma === 'cerchio') return `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" ${vernice}/>`
+  if (forma === 'quadrato') {
+    const l = r * 1.78
+    return `<rect x="${(cx - l / 2).toFixed(1)}" y="${(cy - l / 2).toFixed(1)}" ` +
+           `width="${l.toFixed(1)}" height="${l.toFixed(1)}" rx="${(r * .16).toFixed(1)}" ${vernice}/>`
+  }
+  if (forma === 'triangolo') {
+    const p = `${cx},${(cy - r).toFixed(1)} ${(cx + r * .93).toFixed(1)},${(cy + r * .72).toFixed(1)} ` +
+              `${(cx - r * .93).toFixed(1)},${(cy + r * .72).toFixed(1)}`
+    return `<polygon points="${p}" stroke-linejoin="round" ${vernice}/>`
+  }
+  return `<polygon points="${puntiStella(cx, cy, r)}" stroke-linejoin="round" ${vernice}/>`
+}
+function svgFigura (fig, lato) {
+  const t = TINTA[fig.colore]
+  const r = RAGGI[fig.quantita] * (fig.dimensione === 'grande' ? 1 : .6)
+  const vernice = fig.riempimento === 'pieno'
+    ? `fill="${t.vivo}" stroke="${t.cupo}" stroke-width="2"`
+    : `fill="none" stroke="${t.vivo}" stroke-width="${Math.max(3.4, r * .26).toFixed(1)}"`
+  let s = `<svg viewBox="0 0 100 100" width="${lato}" height="${lato}" aria-hidden="true">`
+  for (const p of POSTI[fig.quantita]) s += sagoma(fig.forma, p[0], p[1], r, vernice)
+  return s + '</svg>'
+}
+/* la forma nuda, per i selettori del banco */
+function svgSagomaSola (forma, lato) {
+  return `<svg viewBox="0 0 100 100" width="${lato}" height="${lato}" aria-hidden="true">` +
+         sagoma(forma, 50, 50, 34, 'fill="none" stroke="currentColor" stroke-width="9"') + '</svg>'
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL SUONO — sintetizzato, si accende al primo tocco
+   ═══════════════════════════════════════════════════════════════════ */
+let audio = null
+function sblocca () {
+  if (audio === null) {
+    try { audio = new (window.AudioContext || window.webkitAudioContext)() } catch (e) { audio = false }
+  }
+  if (audio && audio.state === 'suspended') audio.resume()
+}
+function nota (hz, fra, quanto, tipo, volume) {
+  if (!audio) return
+  const o = audio.createOscillator(), g = audio.createGain()
+  const t = audio.currentTime + fra
+  o.type = tipo
+  o.frequency.setValueAtTime(hz, t)
+  g.gain.setValueAtTime(.0001, t)
+  g.gain.linearRampToValueAtTime(volume, t + .012)
+  g.gain.exponentialRampToValueAtTime(.0001, t + quanto)
+  o.connect(g); g.connect(audio.destination)
+  o.start(t); o.stop(t + quanto + .02)
+}
+function suona (che) {
+  if (!audio) return
+  if (che === 'si')       { nota(660, 0, .12, 'sine', .10); nota(990, .07, .16, 'sine', .09) }
+  if (che === 'no')       { nota(196, 0, .16, 'triangle', .08); nota(147, .08, .20, 'triangle', .06) }
+  if (che === 'vittoria') { [523, 659, 784, 1047].forEach((h, n) => nota(h, n * .09, .34, 'sine', .09)) }
+  if (che === 'tocco')    { nota(1200, 0, .04, 'square', .025) }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LO STATO E LE SCHERMATE
+   ═══════════════════════════════════════════════════════════════════ */
+const app = document.getElementById('app')
+const stato = {
+  schermata:'casa',
+  livelli:{ intruso:1, scienziato:1 },
+  filo:{ intruso:0, scienziato:0 },
+  gioco:null
+}
+
+function puntini (n) {
+  return '<span class="puntini">' +
+    [1, 2, 3, 4].map(k => `<i class="${k <= n ? 'acceso' : ''}"></i>`).join('') + '</span>'
+}
+function barra (dove, livello, filo) {
+  return `<div class="barra">
+      <button class="indietro" aria-label="indietro" data-vai="casa">←</button>
+      <span class="dove">${dove}</span>
+      <span class="spinta">${filo ? `<span class="filo">🔥 ${filo}</span>` : ''}${puntini(livello)}</span>
+    </div>`
+}
+
+/* ── casa ── */
+function schermataCasa () {
+  app.innerHTML = `
+    <div class="casa">
+      <h1 class="titolone">Indovina<br>la regola
+        <small>C'è una regola nascosta. Scoprila guardando, o mettila alla prova.</small></h1>
+      <button class="modo" data-modo="intruso">
+        <span class="icona" style="background:#ffeccd">🔍</span>
+        <span><span class="nome">L'intruso</span>
+        <span class="detto">Tre figure seguono la regola, una no. Qual è quella che non c'entra?</span></span>
+      </button>
+      <button class="modo" data-modo="scienziato">
+        <span class="icona" style="background:#dfe9ff">🧪</span>
+        <span><span class="nome">Lo scienziato</span>
+        <span class="detto">Costruisci figure e chiedi alla macchina se vanno bene. Poi dimostra di aver capito.</span></span>
+      </button>
+    </div>`
+}
+
+/* ── l'intruso ── */
+function nuovoIntruso () {
+  const g = generaIntruso(stato.livelli.intruso) || generaIntruso(1)
+  stato.gioco = Object.assign({ tipo:'intruso', risposta:null }, g)
+  stato.schermata = 'intruso'
+  disegna()
+}
+function schermataIntruso () {
+  const g = stato.gioco
+  const carte = g.carte.map((f, n) => {
+    let classe = '', bollo = ''
+    if (g.risposta !== null) {
+      if (n === g.intrusa) { classe = g.risposta === g.intrusa ? 'buona' : 'indicata'; bollo = '<b class="bollo">👉</b>' }
+      else if (n === g.risposta) { classe = 'cattiva'; bollo = '<b class="bollo">✗</b>' }
+    }
+    return `<button class="carta ${classe}" data-carta="${n}">${svgFigura(f, 126)}${bollo}</button>`
+  }).join('')
+
+  let sotto = '<div class="frase">&nbsp;</div>'
+  if (g.risposta !== null) {
+    sotto = g.risposta === g.intrusa
+      ? '<div class="frase">Bravo! 🎉</div>'
+      : `<div class="frase">Era quella indicata: le altre tre <em>${g.detta.nome}</em>.</div>
+         <button class="grosso" data-avanti="1">Avanti</button>`
+  }
+  app.innerHTML = barra("L'intruso", stato.livelli.intruso, stato.filo.intruso) +
+    `<p class="consegna">Tre seguono la stessa regola.<br>Tocca quella che <b>non c'entra</b>.</p>
+     <div class="griglia">${carte}</div>
+     <div class="esito">${sotto}</div>`
+}
+function rispondiIntruso (n) {
+  const g = stato.gioco
+  if (g.risposta !== null) return
+  g.risposta = n
+  if (n === g.intrusa) {
+    suona('si')
+    stato.filo.intruso++
+    if (stato.filo.intruso % 3 === 0) stato.livelli.intruso = Math.min(4, stato.livelli.intruso + 1)
+    disegna()
+    setTimeout(() => { if (stato.schermata === 'intruso') nuovoIntruso() }, 620)
+  } else {
+    suona('no')
+    stato.filo.intruso = 0
+    stato.livelli.intruso = Math.max(1, stato.livelli.intruso - 1)
+    disegna()
+  }
+}
+
+/* ── lo scienziato ── */
+function nuovoScienziato () {
+  const g = generaScienziato(stato.livelli.scienziato) || generaScienziato(1)
+  stato.gioco = Object.assign({
+    tipo:'scienziato',
+    banco:{ forma:'cerchio', colore:'rosso', quantita:1, dimensione:'grande', riempimento:'pieno' },
+    esperimenti:[], verdetto:null, avviso:false, esame:null
+  }, g)
+  stato.gioco.prove = g.esempi.slice()      // tutto ciò che il bambino ha visto
+  stato.schermata = 'lab'
+  disegna()
+}
+function figuraDelBanco () {
+  const b = stato.gioco.banco
+  return UNIVERSO.find(f => ATTRIBUTI.every(a => f[a] === b[a]))
+}
+function rigaScelte (attr, valori, dentro) {
+  const b = stato.gioco.banco
+  return '<div class="riga">' + valori.map(v =>
+    `<button class="scelta ${b[attr] === v ? 'attiva' : ''}" data-attr="${attr}" data-val="${v}">${dentro(v)}</button>`
+  ).join('') + '</div>'
+}
+function schermataLab () {
+  const g = stato.gioco
+  const fig = figuraDelBanco()
+
+  const esempi = g.esempi.map(e =>
+    `<span class="mini ${e.ok ? 'si' : 'no'}" style="width:62px;height:62px">
+       ${svgFigura(e.f, 50)}<b>${e.ok ? '✓' : '✗'}</b></span>`).join('')
+
+  const storia = g.esperimenti.length
+    ? g.esperimenti.slice().reverse().map(e =>
+        `<span class="mini ${e.ok ? 'si' : 'no'}" style="width:50px;height:50px">
+           ${svgFigura(e.f, 40)}<b>${e.ok ? '✓' : '✗'}</b></span>`).join('')
+    : '<span class="vuotostrip">Costruisci una figura qui sotto e premi «Prova».</span>'
+
+  app.innerHTML = barra('Lo scienziato', stato.livelli.scienziato, stato.filo.scienziato) +
+    `<div class="lab">
+      <div class="pannello"><h2>la macchina dice</h2><div class="fila">${esempi}</div></div>
+      <div class="pannello"><h2>i tuoi esperimenti · ${g.esperimenti.length}</h2>
+        <div class="fila scorre">${storia}</div></div>
+      ${g.avviso ? `<div class="avviso">La macchina non è ancora convinta 🤔
+         Più di una regola spiega quello che hai visto.
+         <div class="azioni" style="margin-top:8px">
+           <button class="grosso chiaro" data-annulla="1">Provo ancora</button>
+           <button class="grosso" data-esame="1">Vado lo stesso</button></div></div>` : ''}
+      <div class="banco">
+        <div class="anteprima">${svgFigura(fig, 100)}
+          ${g.verdetto !== null
+            ? `<span class="verdetto" style="color:${g.verdetto ? 'var(--si)' : 'var(--no)'}">${g.verdetto ? '✓' : '✗'}</span>`
+            : ''}
+        </div>
+        ${rigaScelte('forma', FORME, v => svgSagomaSola(v, 26))}
+        ${rigaScelte('colore', COLORI, v => `<span class="pallino" style="background:${TINTA[v].vivo}"></span>`)}
+        ${rigaScelte('quantita', QUANTITA, v => v)}
+        <div class="riga coppie">
+          ${DIMENSIONI.map(v => `<button class="scelta ${g.banco.dimensione === v ? 'attiva' : ''}" data-attr="dimensione" data-val="${v}">${v === 'piccolo' ? 'piccole' : 'grandi'}</button>`).join('')}
+          <span class="stacco"></span>
+          ${RIEMPIMENTI.map(v => `<button class="scelta ${g.banco.riempimento === v ? 'attiva' : ''}" data-attr="riempimento" data-val="${v}">${v === 'pieno' ? 'piene' : 'vuote'}</button>`).join('')}
+        </div>
+      </div>
+      <div class="azioni">
+        <button class="grosso prova" data-prova="1">Prova!</button>
+        <button class="grosso chiaro capito" data-capito="1">Ho capito</button>
+      </div>
+    </div>`
+}
+function esperimento () {
+  const g = stato.gioco
+  const f = figuraDelBanco()
+  const ok = g.regola.ext[f.i] === '1'
+  const prova = { f, ok }
+  g.verdetto = ok
+  g.avviso = false
+  g.esperimenti.push(prova)
+  g.prove.push(prova)
+  g.superstiti = sopravvissute(g.superstiti, [prova])
+  suona(ok ? 'si' : 'no')
+  disegna()
+  setTimeout(() => { if (stato.schermata === 'lab') { g.verdetto = null; disegna() } }, 750)
+}
+function vaiAllEsame () {
+  const g = stato.gioco
+  const visti = new Set(g.prove.map(p => p.f.i))
+  g.esame = { figure:scegliEsame(g.regola.ext, g.superstiti, visti).figure, passo:0, segni:[] }
+  g.avviso = false
+  stato.schermata = 'esame'
+  disegna()
+}
+/* Se più di una regola spiega ancora tutto, la macchina lo dice: è il
+   modo di insegnare «non hai abbastanza prove» senza svelare niente. */
+function chiediEsame () {
+  const g = stato.gioco
+  if (g.superstiti.length > 1 && !g.avviso) { g.avviso = true; suona('tocco'); disegna(); return }
+  vaiAllEsame()
+}
+function schermataEsame () {
+  const g = stato.gioco, e = g.esame
+  const f = e.figure[e.passo]
+  app.innerHTML = barra('La prova', stato.livelli.scienziato, 0) +
+    `<div class="esame">
+      <div class="tacche">${[0, 1, 2, 3].map(k =>
+        `<i class="${e.segni[k] === true ? 'fatta' : e.segni[k] === false ? 'persa' : ''}"></i>`).join('')}</div>
+      <p class="consegna" style="padding:0">Questa figura <b>segue la regola</b>?</p>
+      <div class="cartona">${svgFigura(f, 200)}</div>
+      <div class="doppio">
+        <button class="no" data-giudizio="no">✗</button>
+        <button class="si" data-giudizio="si">✓</button>
+      </div>
+    </div>`
+}
+function giudica (dice) {
+  const g = stato.gioco, e = g.esame
+  const f = e.figure[e.passo]
+  const vero = g.regola.ext[f.i] === '1'
+  const prova = { f, ok:vero }
+  g.prove.push(prova)
+  g.superstiti = sopravvissute(g.superstiti, [prova])
+  if (dice === vero) {
+    suona('si')
+    e.segni[e.passo] = true
+    e.passo++
+    if (e.passo >= e.figure.length) {
+      suona('vittoria')
+      stato.filo.scienziato++
+      if (stato.filo.scienziato % 2 === 0)
+        stato.livelli.scienziato = Math.min(4, stato.livelli.scienziato + 1)
+      stato.schermata = 'vinto'
+    }
+    disegna()
+  } else {
+    suona('no')
+    e.segni[e.passo] = false
+    stato.filo.scienziato = 0
+    stato.livelli.scienziato = Math.max(1, stato.livelli.scienziato - 1)
+    disegna()
+    /* lo sbaglio non è perso: quella figura entra fra le cose che sa */
+    setTimeout(() => {
+      if (stato.schermata !== 'esame') return
+      g.esame = null
+      g.esperimenti.push(prova)
+      stato.schermata = 'lab'
+      disegna()
+    }, 950)
+  }
+}
+function schermataVinto () {
+  const g = stato.gioco
+  const nome = PIU_SEMPLICE.get(g.regola.ext).nome
+  const n = g.esperimenti.length
+  app.innerHTML = barra('Scoperta!', stato.livelli.scienziato, stato.filo.scienziato) +
+    `<div class="vinto">
+      <div class="urlo">🏆</div>
+      <h2>Hai capito la regola!</h2>
+      <div class="cartiglio">
+        <div class="etichetta">la regola segreta era</div>
+        <div class="regola">${nome}</div>
+      </div>
+      <div style="font-size:14.5px;color:var(--tenue);font-weight:600">
+        Trovata con ${n} esperiment${n === 1 ? 'o' : 'i'}.</div>
+      <button class="grosso" data-nuova="1">Un'altra regola</button>
+      <button class="grosso chiaro" data-vai="casa">Torna a casa</button>
+    </div>`
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DISEGNA E ASCOLTA
+   ═══════════════════════════════════════════════════════════════════ */
+function disegna () {
+  if (stato.schermata === 'casa') return schermataCasa()
+  if (stato.schermata === 'intruso') return schermataIntruso()
+  if (stato.schermata === 'lab') return schermataLab()
+  if (stato.schermata === 'esame') return schermataEsame()
+  if (stato.schermata === 'vinto') return schermataVinto()
+}
+
+document.addEventListener('pointerdown', sblocca, { passive:true })
+app.addEventListener('click', ev => {
+  const b = ev.target.closest('button')
+  if (!b) return
+  const d = b.dataset
+  if (d.vai === 'casa') { suona('tocco'); stato.schermata = 'casa'; stato.gioco = null; return disegna() }
+  if (d.modo === 'intruso') { suona('tocco'); return nuovoIntruso() }
+  if (d.modo === 'scienziato') { suona('tocco'); return nuovoScienziato() }
+  if (d.carta !== undefined) return rispondiIntruso(Number(d.carta))
+  if (d.avanti) return nuovoIntruso()
+  if (d.attr) {
+    suona('tocco')
+    stato.gioco.banco[d.attr] = d.attr === 'quantita' ? Number(d.val) : d.val
+    stato.gioco.verdetto = null
+    return disegna()
+  }
+  if (d.prova) return esperimento()
+  if (d.capito) return chiediEsame()
+  if (d.annulla) { stato.gioco.avviso = false; return disegna() }
+  if (d.esame) return vaiAllEsame()
+  if (d.giudizio) return giudica(d.giudizio === 'si')
+  if (d.nuova) { suona('tocco'); return nuovoScienziato() }
+})
+
+disegna()
+</script>
+</body>
+</html>

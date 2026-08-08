@@ -1,0 +1,2917 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Il programma — il robot fa quello che gli dici</title>
+<style>
+  :root{
+    --fondo:#0e1220; --pannello:#171d2e; --alto:#1f2739; --bordo:#2c3550;
+    --testo:#e9eef8; --tenue:#8b97b4;
+    --moto:#4a86e8; --azione:#e8a33f; --ciclo:#3fb872; --cond:#e8703f; --msg:#e0554d;
+    --oro:#f0c04a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:#070a12;overflow-x:hidden}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--testo)}
+  button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:pointer;
+         touch-action:manipulation;font-weight:650}
+  #app{max-width:430px;margin:0 auto;height:100vh;height:100dvh;background:var(--fondo);
+       display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+  /* ── barra ── */
+  .barra{display:flex;align-items:center;gap:9px;padding:7px 10px;min-height:52px;flex:0 0 auto;
+         background:var(--pannello);border-bottom:1px solid var(--bordo)}
+  .indietro{width:44px;height:44px;flex:0 0 auto;border-radius:14px;background:var(--moto);
+            color:#fff;font-size:22px;line-height:44px;text-align:center}
+  .dove{font-size:15px;font-weight:750;line-height:1.15;min-width:0}
+  .dove small{display:block;font-size:11px;font-weight:600;color:var(--tenue)}
+  .destra{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .conta{font-size:14px;font-weight:800;background:var(--alto);border:1px solid var(--bordo);
+         border-radius:11px;padding:6px 9px;min-width:52px;text-align:center}
+  .conta.pieno{background:#4a1f22;border-color:#8d3a3a;color:#ffb9b3}
+  .mondi{display:flex;gap:5px}
+  .mondi i{width:10px;height:10px;border-radius:50%;background:#39435e;display:block}
+  .mondi i.ok{background:var(--ciclo)} .mondi i.ko{background:var(--msg)}
+  .mondi i.ora{background:var(--oro);box-shadow:0 0 0 3px rgba(240,192,74,.22)}
+
+  /* ── casa ── */
+  .casa{flex:1;overflow-y:auto;padding:16px 14px 30px}
+  .casa h1{font-size:27px;margin:0 0 4px;letter-spacing:-.5px}
+  .casa p.sotto{color:var(--tenue);font-size:13.5px;margin:0 0 18px;line-height:1.45}
+  .liv{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-bottom:9px;
+       background:var(--pannello);border:1px solid var(--bordo);border-radius:16px;padding:11px 12px;min-height:66px}
+  .liv:active{transform:scale(.985)}
+  .liv .num{width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:var(--alto);
+            display:grid;place-items:center;font-size:15px;font-weight:800;color:var(--tenue)}
+  .liv.fatto .num{background:var(--ciclo);color:#06210f}
+  .liv .tit{font-size:15.5px;font-weight:750}
+  .liv .che{font-size:12px;color:var(--tenue);margin-top:2px;line-height:1.35}
+  .liv .stelle{margin-left:auto;font-size:14px;flex:0 0 auto}
+
+  /* ── scena ── */
+  .scena{flex:0 0 auto;position:relative;background:#0a0e19;border-bottom:1px solid var(--bordo)}
+  canvas{display:block;width:100%;height:238px}
+  .dritta{padding:6px 12px 7px;font-size:12.5px;line-height:1.35;color:var(--tenue);
+          background:var(--pannello);border-bottom:1px solid var(--bordo);min-height:34px}
+  .dritta b{color:var(--oro);font-weight:700}
+  .dritta.male{color:#ffb9b3}
+  .dritta.bene{color:#a9edc4}
+
+  /* ── comandi ── */
+  .comandi{display:flex;gap:7px;padding:7px 10px;flex:0 0 auto;background:var(--pannello);
+           border-bottom:1px solid var(--bordo)}
+  .comandi button{height:46px;border-radius:13px;background:var(--alto);border:1px solid var(--bordo);
+                  display:grid;place-items:center;font-size:16px;font-weight:750;padding:0 10px}
+  .comandi button:active{transform:translateY(1px)}
+  .comandi .via{flex:1;background:var(--ciclo);color:#06210f;border-color:#2b8a53;font-size:17px}
+  .comandi .via.gira{background:var(--msg);color:#fff;border-color:#a83b34}
+  .comandi .q{width:50px;flex:0 0 auto}
+  .comandi button.spento{opacity:.4}
+
+  /* ── programma ── */
+  .prog{flex:1;min-height:86px;overflow-y:auto;padding:8px 10px 14px;background:var(--fondo)}
+  .riga{display:flex;align-items:center;gap:8px;min-height:46px;border-radius:12px;padding:5px 9px;
+        background:var(--pannello);border:1px solid var(--bordo);margin:4px 0;position:relative}
+  .riga .ico{font-size:19px;flex:0 0 auto;width:24px;text-align:center}
+  .riga .lab{font-size:14px;font-weight:700;flex:1;min-width:0;line-height:1.2}
+  .riga .val{flex:0 0 auto;background:var(--alto);border:1px solid var(--bordo);border-radius:9px;
+             padding:5px 9px;font-size:13px;font-weight:800;min-width:34px;text-align:center}
+  .riga.moto{border-left:5px solid var(--moto)}
+  .riga.azione{border-left:5px solid var(--azione)}
+  .riga.ciclo{border-left:5px solid var(--ciclo)}
+  .riga.cond{border-left:5px solid var(--cond)}
+  .riga.msg{border-left:5px solid var(--msg)}
+  .riga.scelto{outline:2px solid var(--oro);outline-offset:1px}
+  .riga.attivo{background:#3a3116;border-color:var(--oro);box-shadow:0 0 0 2px rgba(240,192,74,.3)}
+  .riga.attivo::after{content:'▶';position:absolute;left:-11px;color:var(--oro);font-size:12px}
+  .vuotoprog{color:var(--tenue);font-size:12.5px;padding:8px 4px;line-height:1.45}
+
+  /* ── pannellino di modifica ── */
+  .modif{background:var(--alto);border:1px solid var(--oro);border-radius:12px;padding:8px;margin:2px 0 6px}
+  .modif .tit{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+              color:var(--tenue);margin-bottom:6px}
+  .modif .fila{display:flex;flex-wrap:wrap;gap:6px}
+  .modif .fila button{min-width:44px;min-height:44px;border-radius:11px;background:var(--pannello);
+                      border:1px solid var(--bordo);font-size:14px;font-weight:800;padding:0 9px}
+  .modif .fila button.qui{background:var(--oro);color:#25200a;border-color:var(--oro)}
+  .modif .fila.lunghe button{width:100%;justify-content:flex-start;text-align:left;font-size:13px;font-weight:700}
+  .modif .via{width:100%;min-height:46px;border-radius:11px;background:#4a1f22;border:1px solid #8d3a3a;
+              color:#ffb9b3;font-size:14px;font-weight:800;margin-top:7px}
+
+  /* ── cassetta ── */
+  .cassetta{flex:0 0 auto;display:flex;gap:7px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+            overflow-x:auto;background:var(--pannello);border-top:1px solid var(--bordo);scrollbar-width:none}
+  .cassetta::-webkit-scrollbar{display:none}
+  .pezzo{flex:0 0 auto;width:62px;min-height:62px;border-radius:14px;background:var(--alto);
+         border:1px solid var(--bordo);display:flex;flex-direction:column;align-items:center;
+         justify-content:center;gap:2px;padding:4px 2px}
+  .pezzo .e{font-size:21px;line-height:1}
+  .pezzo .n{font-size:9.5px;font-weight:700;color:var(--tenue);text-align:center;line-height:1.1}
+  .pezzo:active{transform:scale(.94)}
+  .pezzo.spento{opacity:.32}
+  .pezzo.moto{border-bottom:4px solid var(--moto)}
+  .pezzo.azione{border-bottom:4px solid var(--azione)}
+  .pezzo.ciclo{border-bottom:4px solid var(--ciclo)}
+  .pezzo.cond{border-bottom:4px solid var(--cond)}
+  .pezzo.msg{border-bottom:4px solid var(--msg)}
+
+  /* ── velo di fine ── */
+  .velo{position:absolute;inset:0;background:rgba(7,10,18,.9);display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;z-index:9}
+  .velo .urlo{font-size:62px;animation:sbuca .3s ease-out}
+  @keyframes sbuca{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .velo h2{margin:0;font-size:24px}
+  .velo .stelline{font-size:30px;letter-spacing:4px}
+  .velo p{margin:0;color:var(--tenue);font-size:13.5px;line-height:1.45;max-width:290px}
+  .velo button{min-height:50px;border-radius:14px;padding:0 22px;background:var(--ciclo);color:#06210f;font-size:16px}
+  .velo button.grigio{background:var(--alto);border:1px solid var(--bordo);color:var(--testo)}
+  .velo .duebottoni{display:flex;gap:9px}
+
+  /* ── scena, minimappa, frecce ── */
+  .scena{flex:0 0 auto;position:relative;background:#0a0e19;border-bottom:1px solid var(--bordo)}
+  canvas#tela{display:block;width:100%;height:236px;touch-action:none}
+  canvas.mini{position:absolute;top:6px;right:6px;border:1px solid var(--bordo);border-radius:5px;
+              background:#0c1120;opacity:.92;pointer-events:none}
+  .frecce{position:absolute;inset:0;pointer-events:none}
+  .frecce i{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;
+            display:grid;place-items:center;font-size:12px;font-style:normal;opacity:.9;
+            box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+  .conta.bene{background:#183a26;border-color:#2b8a53;color:#a9edc4}
+  .conta small{display:block;font-size:9px;font-weight:700;color:var(--tenue);letter-spacing:.3px}
+  .liv .stelle small{display:block;font-size:9.5px;color:var(--tenue);font-weight:700}
+
+  /* ── righe d'ordine: verbo + chip del complemento ── */
+  .riga .chip{flex:0 0 auto;max-width:52%;background:var(--alto);border:1px solid var(--bordo);
+              border-radius:9px;padding:5px 8px;font-size:12.5px;font-weight:750;
+              white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .riga .lab{flex:0 0 auto;font-size:13px;color:var(--tenue)}
+  .riga.g1{border-left-color:#8b97b4}
+  .riga.guasta{border-color:#8d3a3a;background:#33191a}
+  .perche{margin:-2px 0 5px 34px;font-size:11.5px;color:#ffb9b3;line-height:1.3}
+
+  /* ── cassetta a tre gradi ── */
+  .cassetta{flex-direction:column;gap:4px;overflow-x:hidden;overflow-y:auto;max-height:196px}
+  .grado{display:flex;align-items:center;gap:7px}
+  .grado .et{flex:0 0 52px;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+             color:var(--tenue);line-height:1.1}
+  .grado .verbi{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .grado .verbi::-webkit-scrollbar{display:none}
+  .pezzo{width:auto;min-width:56px;padding:4px 8px;min-height:48px}
+  .pezzo.basso{border-bottom:4px solid #8b97b4}
+  .pezzo.attesa{border-bottom:4px solid #b06be0}
+
+  /* ── il registro: chiuso di default, si apre col tasto ── */
+  .comandi .reg{position:relative}
+  .comandi .reg.qui{background:var(--oro);color:#25200a;border-color:var(--oro)}
+  .pallo{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;
+         background:var(--msg);color:#fff;font-size:11px;font-weight:800;line-height:18px;padding:0 4px}
+  .registro{position:absolute;left:0;right:0;bottom:0;max-height:56%;display:none;z-index:8;
+            background:var(--pannello);border-top:2px solid var(--oro);
+            border-radius:16px 16px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.5);flex-direction:column}
+  .registro.aperto{display:flex}
+  .registro .capo{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:14px;font-weight:800;
+                  border-bottom:1px solid var(--bordo)}
+  .registro .capo small{font-weight:600;font-size:10.5px;color:var(--tenue)}
+  .registro .capo button{margin-left:auto;width:36px;height:36px;border-radius:10px;background:var(--alto);
+                         border:1px solid var(--bordo)}
+  .registro .corpo{overflow-y:auto;padding:6px 8px 12px}
+  .rr{display:flex;align-items:center;gap:8px;min-height:38px;padding:5px 8px;border-radius:10px;
+      margin-bottom:3px;background:var(--alto);border-left:4px solid var(--bordo)}
+  .rr.fa{border-left-color:var(--ciclo)} .rr.aspetto{border-left-color:var(--oro)}
+  .rr.no{border-left-color:var(--msg);background:#2e1919}
+  .rr .chi{width:24px;height:24px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;font-size:13px}
+  .rr .tt{flex:1;font-size:12.5px;font-weight:600;line-height:1.25}
+  .rr.no .tt{color:#ffb9b3}
+  .rr .tk{flex:0 0 auto;font-size:10px;color:var(--tenue);font-weight:700}
+  .rr.salto{border-left-color:#6c7a99;background:#1b2133}
+  .rr.salto .tt{color:#b6c0da}
+
+  /* ── il cartello: spiegazione e suggerimenti ── */
+  .cartello{border-top-color:#7fb0ff}
+  .cartello .racconto{margin:2px 0 10px;font-size:13.5px;line-height:1.5;color:var(--testo)}
+  .cartello .racconto b{color:var(--oro)}
+  .aiuto{background:var(--alto);border:1px solid var(--bordo);border-left:4px solid var(--oro);
+         border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;line-height:1.4}
+  .aiuto b{color:var(--oro);display:block;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
+  .aiuto.muto{border-left-color:#5a668a;color:var(--tenue)}
+  .chiedi{display:block;width:100%;min-height:56px;border-radius:12px;padding:8px 12px;text-align:left;
+          background:var(--alto);border:1px solid var(--bordo);font-size:14px;font-weight:750;margin-top:4px}
+  .chiedi small{display:block;font-size:11px;font-weight:600;color:var(--tenue);margin-top:2px}
+  .chiedi.gratis{border-color:var(--ciclo);color:#a9edc4}
+  .chiedi.gratis small{color:#7fc59a}
+
+  /* ── la scheda del personaggio ── */
+  .persona{border-top-color:var(--moto)}
+  .persona .dati{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--tenue);
+                 font-weight:700;margin-bottom:8px}
+  .tit2{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+        color:var(--tenue);margin:6px 0 5px}
+  .abil{display:flex;gap:6px;flex-wrap:wrap}
+  .abil .ab{font-size:12.5px;font-weight:750;background:var(--alto);border:1px solid var(--bordo);
+            border-radius:10px;padding:7px 9px;min-height:36px;display:flex;align-items:center;gap:5px}
+  .abil.no .ab{opacity:.55;text-decoration:line-through;border-style:dashed}
+
+  /* ── il modo scelta: la barra della conferma sopra la mappa ── */
+  .scelta{display:none}
+  .scelta.aperta{display:flex;align-items:center;gap:7px;flex:0 0 auto;
+                 background:var(--pannello);border-bottom:2px solid var(--oro);padding:6px 8px}
+  .scelta .dett{flex:1;min-width:0;font-size:12.5px;line-height:1.25;color:var(--testo);padding-left:4px}
+  .scelta .dett b{color:var(--oro)}
+  .scelta .dett i{font-style:normal;color:var(--oro);font-weight:800}
+  .scelta button{flex:0 0 auto;min-height:44px;border-radius:11px;padding:0 12px;font-size:14px;font-weight:800}
+  .scelta .ok{background:var(--ciclo);color:#06210f;border:1px solid #2b8a53}
+  .scelta .no{width:44px;background:var(--alto);border:1px solid var(--bordo);color:var(--testo)}
+  .smorza{opacity:.35;pointer-events:none}
+  .modif .mappa{display:block;width:100%;min-height:52px;border-radius:11px;padding:8px 10px;text-align:left;
+                background:var(--pannello);border:1px solid var(--oro);font-size:13.5px;font-weight:750}
+  .modif .mappa small{display:block;font-size:11px;font-weight:600;color:var(--tenue);margin-top:2px}
+  .riga .chip small{font-size:10.5px;color:var(--tenue);font-weight:700}
+
+  /* ══ GLI SCRIPT SONO PANNELLI ══
+     Il main per primo, i sottoprogrammi sotto. Chiusi, si legge la
+     forma del programma; aperti, dentro c'è la lista piatta. */
+  .zona{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .zona .prog{flex:1;min-height:0;padding-left:20px}   /* la corsia dei fili */
+  svg.fili{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+
+  .chi{display:flex;gap:6px;padding:7px 10px 2px;flex:0 0 auto;overflow-x:auto;scrollbar-width:none}
+  .chi::-webkit-scrollbar{display:none}
+  .chi button{flex:0 0 auto;min-height:40px;border-radius:12px;padding:0 11px;font-size:12.5px;
+              background:var(--pannello);border:1px solid var(--bordo);color:var(--tenue)}
+  .chi button.qui{background:var(--alto);color:var(--testo);border-color:var(--oro)}
+  .chi .pall{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+  .chi .n{font-size:10px;font-weight:800;color:var(--tenue);margin-left:5px}
+
+  .pan{border:1px solid var(--bordo);border-radius:13px;margin:6px 0;background:var(--pannello);
+       border-left:5px solid var(--c,#5a668a);overflow:hidden}
+  .pan.mira{border-color:var(--oro);border-left-color:var(--c,var(--oro))}
+  .pan .capo{display:flex;align-items:center;gap:7px;min-height:46px;padding:5px 9px;
+             background:var(--alto);font-size:12.5px;font-weight:750;line-height:1.2}
+  .pan .capo .frec{flex:0 0 auto;width:14px;color:var(--tenue);font-size:11px}
+  .pan .capo .tit{flex:1;min-width:0}
+  .pan .capo .quanti{flex:0 0 auto;font-size:10.5px;font-weight:800;color:var(--tenue);
+                     background:var(--pannello);border:1px solid var(--bordo);border-radius:8px;padding:3px 6px}
+  .pan .capo .corre{color:var(--oro)}
+  .pan .capo .ces{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--pannello);
+                  border:1px solid var(--bordo);font-size:14px}
+  .pan .dentro{margin:0;padding:2px 8px 8px;border:none;background:transparent}
+  .pan.ap>.capo{border-bottom:1px solid var(--bordo)}
+  .nuovo{display:block;width:100%;min-height:46px;border-radius:13px;margin:8px 0 4px;
+         border:2px dashed var(--bordo);color:var(--oro);font-size:13px;background:transparent}
+  .nuovo.qui{border-color:var(--oro);background:rgba(240,192,74,.08)}
+
+  /* la riga d'ordine: presa, verbo, cosa, e sotto la guardia */
+  .riga{flex-wrap:wrap}
+  .riga .presa{flex:0 0 auto;width:22px;min-height:44px;display:grid;place-items:center;
+               color:#5a668a;font-size:15px;cursor:grab;touch-action:none;margin-left:-4px}
+  .riga .segno{flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.5px;color:#f0a877;
+               background:rgba(232,112,63,.16);border:1px solid rgba(232,112,63,.55);
+               border-radius:7px;padding:3px 6px}
+  .riga .se{flex:0 0 100%;order:9;margin-top:4px;font-size:11.5px;font-weight:700;color:#f0a877;
+            background:rgba(232,112,63,.14);border:1px solid rgba(232,112,63,.5);
+            border-radius:8px;padding:4px 7px}
+  .riga.msg{border-left-color:var(--c,var(--msg))}
+  .ordi{position:relative;transition:transform .12s ease}
+  .ordi.vola{z-index:12;transition:none}
+  .ordi.vola .riga{box-shadow:0 10px 22px rgba(0,0,0,.55);border-color:var(--oro)}
+  .sveglia{display:flex;align-items:center;gap:5px;margin:-2px 0 6px 26px;min-height:24px;
+           font-size:11.5px;font-weight:750;color:var(--c,var(--tenue))}
+  .sveglia.muta{color:#8b97b4}
+  .perche.salto{color:#b6c0da}
+  .modif .fila.cond button{border-color:rgba(232,112,63,.45)}
+  .modif .fila button.segn{border-left:5px solid var(--c,var(--bordo))}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   MOTORE — INIZIO
+   Nessun DOM qui dentro: questo blocco, copiato in un file .mjs, gira
+   in Node tale e quale. È la condizione per poter provare i livelli.
+
+   IL MODELLO. Il bambino non pilota nessuno: scrive ORDINI PERMANENTI
+   alle unità, come un generale prima della battaglia. Poi guarda.
+   Un'unità sa già camminare (ci pensa una BFS): il bambino decide il
+   COSA e il QUANDO, mai il COME.
+
+   Non esiste una «AI dei mostri»: c'è UN solo linguaggio di ordini e UN
+   solo esecutore. Ogni fazione ha un AUTORE — il giocatore oppure il
+   livello. L'esecutore non sa e non gli importa chi ha scritto cosa.
+   ══════════════════════════════════════════════════════════════════ */
+const MOTORE = (function () {
+'use strict'
+
+const MAX_TICK = 300          // oltre, la scena è in loop: si ferma e lo dice
+const DIR = ['nord', 'est', 'sud', 'ovest']   // serve solo a raccontare dove va
+const DANNO = 1
+
+/* ── i segnali ────────────────────────────────────────────────────
+   Un segnale ha un NOME, non un colore. «nemico in vista» invece di
+   «allarme rosso» è il salto da una variabile chiamata x a una
+   chiamata nemicoInVista: dare il nome giusto a un concetto è metà del
+   programmare, e qui il bambino lo esercita scegliendo dall'elenco
+   quello che descrive davvero quel che succede. Il colore resta, ma
+   non è più il nome: è la vernice del filo che unisce chi manda a chi
+   ascolta. Niente tastiera: si sceglie, non si scrive. */
+const SEGNALI = {
+  nemico:  { nome:'nemico in vista', em:'👁️', col:'#e0554d' },
+  libero:  { nome:'tutto libero',    em:'✅', col:'#3fb872' },
+  aperta:  { nome:'porta aperta',    em:'🚪', col:'#c9853f' },
+  aiuto:   { nome:'aiuto',           em:'🆘', col:'#e8703f' },
+  ora:     { nome:'al mio segnale',  em:'⭐', col:'#f0c04a' },
+  ciSiamo: { nome:'ci siamo',        em:'🏁', col:'#dfe6f5' },
+  bottino: { nome:'tesoro trovato',  em:'💰', col:'#b06be0' },
+  chiave:  { nome:'ho la chiave',    em:'🔑', col:'#4a86e8' },
+}
+const ilSegnale = k => SEGNALI[k] || { nome: k, em:'📣', col:'#8b97b4' }
+
+/* ── il vocabolario ──────────────────────────────────────────────
+   OGNI ordine è VERBO + COMPLEMENTO. Senza eccezioni: è la regolarità
+   che rende il linguaggio imparabile. E ogni ordine punta a un
+   OBIETTIVO, mai a una direzione: `prendi a nord` non vuol dire
+   niente, e un gioco fatto di passi contati insegna a contare i passi.
+
+       [vai [chiave]] [prendi [chiave]] [vai [portone]] [apri [portone]]
+
+   Ogni verbo dichiara QUALI TIPI di cosa accetta (`prende`), e la
+   lista dei complementi si filtra di conseguenza: `apri [la chiave]`
+   non si compone più. L'errore di tipo era il meno interessante dei
+   due; quello che conta — la PRECONDIZIONE DI PROSSIMITÀ — resta
+   intatto: `apri [portone]` da lontano continua a non fare niente, e
+   il registro continua a dire perché. */
+const VERBI = {
+  vai:       { et:'🚶', cl:'moto',   nome:'vai a',     grado:1,
+               prende:['posto','zona','oggetto','porta','unita','fazione','cella'] },
+  prendi:    { et:'🎒', cl:'azione', nome:'prendi',    grado:2, prende:['oggetto'] },
+  apri:      { et:'🔓', cl:'azione', nome:'apri',      grado:2, prende:['porta'] },
+  attacca:   { et:'⚔️', cl:'azione', nome:'attacca',   grado:2, prende:['unita','fazione'] },
+  aspetta:   { et:'⏳', cl:'attesa', nome:'aspetta',   grado:2,
+               prende:['attimo','segnale','porta','unita','fazione','oggetto'] },
+  manda:     { et:'📣', cl:'msg',    nome:'manda',     grado:2, prende:['segnale'] },
+  avvista:   { et:'👁', cl:'attesa', nome:'avvista',   grado:3, prende:['unita','fazione'] },
+  pattuglia: { et:'🔁', cl:'ciclo',  nome:'pattuglia', grado:3, prende:['zona'] },
+}
+/* SI ASTRAE IL COME, NON IL COSA. È il metro per decidere se un ordine
+   nuovo può stare più in alto:
+     sì  — nascondere il MODO di fare una cosa che non è la lezione
+           (`vai a [x]` fa il pathfinding: trovare la strada fra i muri
+           non è quello che stiamo insegnando)
+     sì  — riassumere una RIPETIZIONE (`pattuglia [zona]` sta per dieci
+           mete contate, e che sia un ciclo è proprio la cosa da capire)
+     no  — fondere DUE INTENZIONI (`apri` non ti porta al portone: andarci
+           e aprirlo sono due decisioni del bambino, non un dettaglio)
+     no  — saltare un PREREQUISITO (se la chiave se la prende da sé, il
+           livello 2 non insegna più niente)
+
+   Tre gradi nella stessa cassetta, e convivono.
+     1 un posto alla volta — `vai [l'angolo]`, `vai [il passaggio]`…:
+       una fila di mete esplicite, tutto in chiaro, niente nascosto
+     2 un compito         — `vai [la chiave]`, `prendi`, `apri`, `attacca`
+     3 una strategia      — `pattuglia [le mura]`: uno vale dieci mete
+   Lo stesso livello si fa in tutti i modi. Il par premia quello corto
+   senza vietare quello lungo, e le varianti fanno vedere che quello
+   lungo è anche più fragile: i posti giusti cambiano da un mondo
+   all'altro, il giro di ronda no. Perciò `vai` scende di grado da sé:
+   puntato a un posto è il gradino basso, puntato a una cosa da fare
+   è il gradino di mezzo. */
+const gradoDi = (v, tipo) => {
+  const V = VERBI[v]; if (!V) return 2
+  if (v === 'vai') return (tipo === 'posto' || tipo === 'zona') ? 1 : 2
+  return V.grado
+}
+const GRADI = { 1:'un posto alla volta', 2:'un compito', 3:'una strategia' }
+
+/* le cose del livello, ricavate da quello che c'è davvero dentro.
+   Il TIPO sta nei dati — è la cosa che dichiara cos'è — e da lì
+   discende tutto: quali verbi la accettano, quali condizioni genera,
+   con che icona si vede. Aggiungere un oggetto nuovo è una riga. */
+function coseDi (liv) {
+  if (liv._cose) return liv._cose
+  const c = {}
+  const agg = (id, tipo, nome, em) => { if (id != null && !c[id]) c[id] = { id, tipo, nome, em } }
+  for (const k in (liv.porte || {}))   agg(k, 'porta',   etichetta(liv, k), '🚪')
+  for (const k in (liv.posti || {}))   agg(k, 'posto',   etichetta(liv, k), '📍')
+  for (const k in (liv.zone  || {}))   agg(k, 'zona',    etichetta(liv, k), '🔁')
+  ;(liv.oggetti || []).forEach(o =>    agg(o.nome, 'oggetto', etichetta(liv, o.nome), '🔑'))
+  liv.unita.forEach(u =>               agg(u.id, 'unita', u.nome, u.emoji))
+  for (const k in (liv.fazioni || {})) agg(k, 'fazione', etichetta(liv, k), '🚩')
+  ;(liv.segnali || []).forEach(k =>    agg(k, 'segnale', ilSegnale(k).nome, ilSegnale(k).em))
+  agg('momento', 'attimo', 'un momento', '⏱️')
+  liv._cose = c
+  return c
+}
+const etichetta = (liv, k) => (liv.nomi && liv.nomi[k]) || k
+/* ── LE CASELLE ───────────────────────────────────────────────────
+   Un bersaglio si sceglie toccandolo sulla mappa, e sulla mappa c'è
+   anche quello che nessuno ha battezzato: una casella qualunque.
+   `"12,10"` è una cosa a tutti gli effetti, solo che non ha un nome —
+   e questa è esattamente la sua debolezza. Un oggetto lo segui
+   ovunque vada; una casella è un numero scritto a mano, e se nella
+   scena dopo lì c'è un muro non vuol più dire niente.
+   Non lo spiega nessuno: succede, e si vede. */
+const CELLA = /^(\d+),(\d+)$/
+function laCosa (liv, id) {
+  const c = coseDi(liv)[id]
+  if (c) return c
+  const m = CELLA.exec(id || '')
+  if (!m) return null
+  return { id, tipo:'cella', nome:`la casella (${m[1]},${m[2]})`, em:'⬚',
+           x:+m[1], y:+m[2] }
+}
+/* la lista delle cose del livello: il livello può restringerla, ed è
+   così che si dosa la combinatoria per chi ha sei anni */
+function complementiDi (liv) {
+  const c = coseDi(liv)
+  return (liv.complementi || Object.keys(c)).filter(k => c[k])
+}
+/* quello che un verbo può davvero prendere, qui. Se è vuota, il verbo
+   non compare in cassetta: meglio una cassetta più piccola che un
+   verbo che non porta da nessuna parte. */
+function complementiPer (liv, v) {
+  const V = VERBI[v]; if (!V) return []
+  const c = coseDi(liv)
+  return complementiDi(liv).filter(k => V.prende.includes(c[k].tipo))
+}
+const verbiDi = liv => (liv.verbi || Object.keys(VERBI)).filter(v => VERBI[v] && complementiPer(liv, v).length)
+/* ── CHI SA COSA ──────────────────────────────────────────────────
+   Il filtro ha due dimensioni: verbo × tipo di complemento (sopra) e
+   verbo × CHI LO ESEGUE (qui). Un'unità dichiara nei dati cosa sa
+   fare (`sa: […]`); chi non lo dichiara sa tutto quello che il
+   livello offre. Il cavaliere è dentro un'armatura: combatte e
+   aspetta, ma non fruga per terra e non scassina.
+   Serve a poco come regola in più; serve molto come RAGIONE per
+   coordinarsi — se il compito lo sa fare uno solo, dare il compito
+   giusto alla persona giusta diventa parte del pensiero. */
+const saFare = (u, v) => !u || !u.sa || u.sa.includes(v)
+function verbiPer (liv, id) {
+  const u = liv.unita.find(z => z.id === id)
+  return verbiDi(liv).filter(v => saFare(u, v))
+}
+const nonSa = (liv, id) => {
+  const u = liv.unita.find(z => z.id === id)
+  return u && u.sa ? verbiDi(liv).filter(v => !saFare(u, v)) : []
+}
+/* IL VALIDATORE. Vale per il piano del bambino e per quello scritto a
+   mano dentro il livello: un ordine di tipo sbagliato non deve poter
+   esistere nemmeno nei dati. Restituisce l'elenco dei guai. */
+function guaiDi (liv, piano) {
+  const out = []
+  const c = coseDi(liv)
+  for (const id in (piano || {})) (piano[id] || []).forEach((sc, s) => (sc.ordini || []).forEach((o, i) => {
+    const dove = `${id}[${s}:${i}]`
+    const V = VERBI[o.v]
+    if (!V) { out.push(`${dove} verbo sconosciuto «${o.v}»`); return }
+    const C = c[o.c] || laCosa(liv, o.c)
+    if (!C) { out.push(`${dove} «${o.c}» non è una cosa di questo livello`); return }
+    if (!V.prende.includes(C.tipo)) out.push(`${dove} «${V.nome}» non prende ${C.tipo} («${C.nome}»)`)
+    if (!saFare(liv.unita.find(z => z.id === id), o.v)) out.push(`${dove} ${id} non sa «${V.nome}»`)
+    if (o.se && !valutabile(liv, o.se)) out.push(`${dove} condizione fuori posto`)
+  }))
+  return out
+}
+const valutabile = (liv, c) => !!(c && c.c && (
+  (c.c === 'vedi' || c.c === 'vivo' || c.c === 'qui') ? true :
+  c.c === 'hai'     ? !!coseDi(liv)[c.cosa] :
+  c.c === 'aperta'  ? !!(liv.porte && liv.porte[c.cosa]) :
+  c.c === 'segnale' ? !!coseDi(liv)[c.id] : c.c === 'sempre'))
+
+/* ── condizioni: percezione e stato, mai numeri astratti ── */
+function valuta (m, io, c) {
+  if (!c) return true
+  const v = grezza(m, io, c)
+  return c.non ? !v : v
+}
+function grezza (m, io, c) {
+  switch (c.c) {
+    case 'vedi':    return m.viva.some(u => u !== io && combacia(u, c.chi) && vede(m, io, u))
+    case 'vivo':    return m.viva.some(u => combacia(u, c.chi))
+    case 'hai': {
+      const u = c.chi ? m.unita[c.chi] : io
+      return !!(u && u.zaino.includes(c.cosa))
+    }
+    case 'aperta':  return !!(m.porte[c.cosa] && m.porte[c.cosa].aperta)
+    case 'segnale': return m.segnaliMandati.includes(c.id)
+    case 'qui': {
+      const u = c.chi ? m.unita[c.chi] : io
+      const p = m.liv.posti[c.posto]
+      return !!(u && u.viva && p && u.x === p.x && u.y === p.y)
+    }
+    case 'sempre':  return true
+    default:        return false
+  }
+}
+/* `chi` può essere l'id di un'unità oppure il nome di una fazione */
+const combacia = (u, chi) => u.viva && (u.id === chi || u.fazione === chi)
+
+/* ── LA GUARDIA IN CASSETTA ───────────────────────────────────────
+   `se ⟨condizione⟩` NON è un verbo: è un ATTRIBUTO dell'ordine, e si
+   sceglie nel pannellino sotto il complemento. Così ogni ordine resta
+   verbo + complemento — la forma unica — e la lista resta piatta.
+   Un `se` come blocco rimetterebbe l'annidamento; una fila di ordini
+   ciascuno con la sua guardia si legge male. Perciò il suo uso tipico
+   è UNO SOLO: decidere QUALE SEGNALE mandare. Il ramo vero non è la
+   guardia, sono gli script che si chiamano per nome.
+
+   Le condizioni non si inventano: escono dalle stesse cose del livello
+   da cui escono i complementi. Un livello può dettarle a mano
+   (`condizioni:`) quando la combinatoria è troppa per chi ha sei anni. */
+function condizioniDi (liv, io) {
+  if (liv.condizioni) return liv.condizioni
+  const out = [], c = coseDi(liv)
+  const due = (a, b) => { out.push(a, b) }
+  for (const k of complementiDi(liv)) {
+    const x = c[k]
+    if (!x || k === io) continue
+    switch (x.tipo) {
+      case 'unita': case 'fazione':
+        due({ c:'vedi', chi:k }, { c:'vedi', chi:k, non:true }); break
+      case 'oggetto':
+        due({ c:'hai', cosa:k }, { c:'hai', cosa:k, non:true }); break
+      case 'porta':
+        due({ c:'aperta', cosa:k }, { c:'aperta', cosa:k, non:true }); break
+      case 'segnale':
+        due({ c:'segnale', id:k }, { c:'segnale', id:k, non:true }); break
+    }
+  }
+  return out
+}
+/* due condizioni sono la stessa se dicono la stessa cosa */
+const chiaveCond = c => c
+  ? [c.c, c.chi || '', c.cosa || '', c.id || '', c.posto || '', c.non ? '!' : ''].join('|') : ''
+
+/* ── la mappa ────────────────────────────────────────────────────── */
+const dentro = (m, x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h
+function libera (m, x, y) {
+  if (!dentro(m, x, y)) return false
+  const c = m.celle[y][x]
+  if (c.muro) return false
+  if (c.porta && !m.porte[c.porta].aperta) return false
+  return true
+}
+/* Le unità NON si bloccano fra loro: due sulla stessa cella sono
+   ammesse (il disegno le sfalsa). Bloccarsi genererebbe stalli finti
+   che non hanno niente da insegnare. */
+
+/* BFS: la mappa delle distanze da una cella. È il «sa già camminare». */
+function distanze (m, x0, y0) {
+  const d = new Int16Array(m.w * m.h).fill(-1)
+  if (!libera(m, x0, y0)) { d[y0 * m.w + x0] = 0 } else d[y0 * m.w + x0] = 0
+  const coda = [[x0, y0]]
+  const P = [[0,-1],[1,0],[0,1],[-1,0]]
+  while (coda.length) {
+    const [x, y] = coda.shift(), q = d[y * m.w + x]
+    for (const [dx, dy] of P) {
+      const nx = x + dx, ny = y + dy
+      if (!libera(m, nx, ny)) continue
+      if (d[ny * m.w + nx] !== -1) continue
+      d[ny * m.w + nx] = q + 1
+      coda.push([nx, ny])
+    }
+  }
+  return d
+}
+function mappaDi (m, u) {
+  const k = u.x + ',' + u.y + ',' + m.versioneMappa
+  if (u._mk !== k) { u._mk = k; u._md = distanze(m, u.x, u.y) }
+  return u._md
+}
+/* un passo verso (bx,by): si va a ritroso sulla mappa di distanze del
+   bersaglio, così basta una BFS per unità e non una per passo */
+function passoVerso (m, u, bx, by) {
+  const d = distanze(m, bx, by)
+  const qui = d[u.y * m.w + u.x]
+  if (qui === -1 || qui === 0) return null
+  const P = [[0,-1],[1,0],[0,1],[-1,0]]
+  for (const [dx, dy] of P) {
+    const nx = u.x + dx, ny = u.y + dy
+    if (libera(m, nx, ny) && d[ny * m.w + nx] === qui - 1) return [nx, ny]
+  }
+  return null
+}
+const raggiungibile = (m, u, bx, by) => distanze(m, bx, by)[u.y * m.w + u.x] >= 0
+/* «vedere» è a distanza di cammino: un muro in mezzo toglie la vista
+   senza bisogno di tracciare raggi */
+function vede (m, io, altro) {
+  const d = mappaDi(m, io)[altro.y * m.w + altro.x]
+  return d >= 0 && d <= (io.vista || 0)
+}
+const adiacenti = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1
+const stessaCella = (a, b) => a.x === b.x && a.y === b.y
+
+/* ── creare il mondo ─────────────────────────────────────────────── */
+function creaMondo (liv) {
+  const h = liv.mappa.length, w = liv.mappa[0].length
+  const celle = []
+  for (let y = 0; y < h; y++) {
+    const riga = []
+    for (let x = 0; x < w; x++) {
+      const ch = liv.mappa[y][x]
+      riga.push({ muro: ch === '#', porta: null, erba: ch === ',' })
+    }
+    celle.push(riga)
+  }
+  const porte = {}
+  for (const nome in (liv.porte || {})) {
+    const p = liv.porte[nome]
+    porte[nome] = { nome, x: p.x, y: p.y, chiave: p.chiave || null, aperta: !!p.aperta, iniziale: !!p.aperta }
+    celle[p.y][p.x].porta = nome
+  }
+  const m = {
+    liv, w, h, celle, porte,
+    unita: {}, elenco: [], viva: [],
+    oggetti: (liv.oggetti || []).map(o => ({ ...o, preso: null })),
+    fili: [], segnaliMandati: [], pendenti: [],
+    tick: 0, finita: false, vinta: false, motivo: '', colpevole: null,
+    eventi: [], versioneMappa: 0, diario: [],
+    mia: Object.keys(liv.fazioni).find(f => liv.fazioni[f].autore === 'giocatore'),
+  }
+  for (const u0 of liv.unita) {
+    const u = { ...u0, x: u0.x, y: u0.y, vita: u0.vita || 3, vitaMax: u0.vita || 3,
+                vista: u0.vista || 0, viva: true, zaino: [], ordineOra: null, dir: 1, visti: {} }
+    m.unita[u.id] = u; m.elenco.push(u)
+  }
+  m.viva = m.elenco.slice()
+  return m
+}
+
+/* ── avviare la scena ────────────────────────────────────────────── */
+/* `piano` è { idUnità: [ script… ] } dove uno script è
+   { quando:{tipo:'inizio'} | {tipo:'segnale',id}, ordini:[…] }.
+   Gli script sono SOTTOPROGRAMMI: il «dall'inizio della battaglia» è
+   il main e c'è sempre; gli altri hanno una testa che dice quando
+   partono. Ognuno è una lista piatta — la gerarchia è fra gli script,
+   mai dentro uno script.
+   Il piano completo si compone con `pianoCompleto`: quello del
+   giocatore più quello scritto dal livello. */
+function avvia (m, piano) {
+  m.piano = piano || {}
+  m.tick = 0; m.finita = false; m.vinta = false; m.motivo = ''; m.colpevole = null
+  m.segnaliMandati = []; m.pendenti = []; m.eventi = []; m.diario = []
+  m.versioneMappa = 0
+  for (const nome in m.porte) m.porte[nome].aperta = m.porte[nome].iniziale
+  m.oggetti.forEach(o => { o.preso = null })
+  m.elenco.forEach(u => {
+    const o = m.liv.unita.find(z => z.id === u.id)
+    u.x = o.x; u.y = o.y; u.vita = u.vitaMax; u.viva = true; u.zaino = []
+    u.ordineOra = null; u._mk = null; u.dir = 1; u.visti = {}
+  })
+  m.viva = m.elenco.slice()
+  m.fili = []
+  for (const id in m.piano) for (let s = 0; s < m.piano[id].length; s++) {
+    const sc = m.piano[id][s]
+    if (sc.quando && sc.quando.tipo === 'inizio') m.fili.push(nuovoFilo(id, s, sc))
+  }
+  return m
+}
+const nuovoFilo = (id, s, sc) => ({ unita: id, script: s, ordini: sc.ordini || [],
+  i: 0, nuovo: true, st: {}, finito: false, attesa: false, ordine: null })
+
+function fine (m, vinta, motivo, colpevole) {
+  m.finita = true; m.vinta = vinta; m.motivo = motivo
+  m.colpevole = colpevole || null
+  /* Perdere senza un ordine colpevole non aiuta nessuno: se la scena è
+     finita male, si indica l'ordine che qualcuno stava eseguendo in quel
+     momento. È il fotogramma della rottura. */
+  if (!vinta && !m.colpevole) {
+    /* chi ci ha rimesso la pelle viene prima: l'ordine che stava eseguendo
+       quando è caduto è quasi sempre quello da riscrivere */
+    const u = m.elenco.find(z => !z.viva && z.ordineOra) || m.elenco.find(z => z.ordineOra)
+    if (u && u.ordineOra) m.colpevole = { unita: u.ordineOra.unita, script: u.ordineOra.script, i: u.ordineOra.i }
+    const r = [...m.diario].reverse().find(x => x.esito === 'no' && m.piano[x.unita])
+    if (r) m.colpevole = { unita: r.unita, script: r.script, i: r.i }
+  }
+  m.eventi.push(vinta ? 'vinta' : 'persa')
+}
+
+/* ── un tick ─────────────────────────────────────────────────────── */
+function passo (m) {
+  if (m.finita) return
+  m.eventi = []
+  m.tick++
+  if (m.tick > MAX_TICK) { fine(m, false, 'La scena non finisce più: qualcuno gira a vuoto.'); return }
+
+  let qualcunoAgisce = false
+  for (const f of m.fili) {
+    if (m.finita) break
+    if (f.finito) continue
+    const u = m.unita[f.unita]
+    if (!u.viva) { f.finito = true; f.ordine = null; continue }
+    const esito = passoFilo(m, f, u)
+    if (esito !== 'attesa') qualcunoAgisce = true
+  }
+
+  /* i segnali partono a fine tick: così un segnale mandato adesso si
+     sente al prossimo giro, uguale per tutti. E si dice sempre CHI si
+     sveglia: un salto che non si vede è la parte peggiore del goto. */
+  if (m.pendenti.length) {
+    qualcunoAgisce = true
+    const partiti = m.pendenti; m.pendenti = []
+    for (const p of partiti) {
+      if (!m.segnaliMandati.includes(p.seg)) m.segnaliMandati.push(p.seg)
+      const svegli = []
+      for (const id in m.piano) m.piano[id].forEach((sc, s) => {
+        if (!sc.quando || sc.quando.tipo !== 'segnale' || sc.quando.id !== p.seg) return
+        if (!m.unita[id] || !m.unita[id].viva) return
+        svegli.push(m.unita[id].nome)
+        const vecchio = m.fili.find(f => f.unita === id && f.script === s)
+        if (vecchio) { vecchio.i = 0; vecchio.nuovo = true; vecchio.st = {}; vecchio.finito = false }
+        else m.fili.push(nuovoFilo(id, s, sc))
+      })
+      const chi = m.unita[p.da]
+      const N = ilSegnale(p.seg).nome
+      if (chi) nota(m, chi.ordineOra, chi, svegli.length ? 'fa' : 'salto',
+        svegli.length ? `arriva «${N}»: si sveglia ${[...new Set(svegli)].join(' e ')}`
+                      : `arriva «${N}», ma non lo ascolta nessuno`,
+        svegli.length ? `manda ${N}` : `grida nel vuoto`)
+    }
+  }
+  if (m.finita) return
+
+  /* quello che si vede si tiene a mente: è la memoria su cui lavora
+     `vai [qualcuno]`, e il motivo per cui una ronda serve davvero */
+  for (const u of m.viva) for (const z of m.viva)
+    if (z !== u && vede(m, u, z)) u.visti[z.id] = { x: z.x, y: z.y }
+
+  /* esito della scena */
+  if (condizioni(m, m.liv.sconfitta)) { fine(m, false, m.liv.motivoSconfitta || 'La missione è fallita.'); return }
+  if (condizioni(m, m.liv.obiettivo)) { fine(m, true, ''); return }
+
+  const attivi = m.fili.filter(f => !f.finito)
+  if (!attivi.length) {
+    const r = [...m.diario].reverse().find(x => x.esito === 'no')
+    fine(m, false, 'Gli ordini sono finiti e la missione non è compiuta.' +
+                   (r ? ` L'ultimo intoppo: ${m.unita[r.unita].nome} — «${r.testo}».` : '')); return
+  }
+  /* STALLO: se tutti aspettano, niente potrà più cambiare. Non è un
+     ciclo infinito da far girare: è un errore, e va detto. */
+  if (!qualcunoAgisce) {
+    const f = attivi[0], u = m.unita[f.unita]
+    const che = f.ordine ? `«${descrivi(m.liv, f.ordine)}»` : 'qualcosa'
+    const altri = attivi.length > 1 ? ` (e con lui ${attivi.length - 1} altro/i)` : ''
+    fine(m, false, `Stallo: ${u.nome} è piantato su ${che} e non succederà mai${altri}.`,
+         { unita: f.unita, script: f.script, i: f.i })
+  }
+}
+
+const condizioni = (m, lista) => !!(lista && lista.length) && lista.every(c => valuta(m, null, c))
+
+/* ── un tick di un filo ──────────────────────────────────────────── */
+function passoFilo (m, f, u) {
+  let giri = 0
+  while (giri++ < 40) {
+    if (f.i >= f.ordini.length) { f.finito = true; f.ordine = null; u.ordineOra = null; return 'fine' }
+    const o = f.ordini[f.i]
+    if (f.nuovo) {
+      f.nuovo = false; f.st = {}
+      if (o.se && !valuta(m, u, o.se)) {          // la guardia: l'ordine si salta
+        /* saltare non è sbagliare: è la guardia che fa il suo mestiere.
+           Perciò non è una riga rossa e non incolpa nessuno — è una
+           riga a parte, che dice quale condizione non era vera. */
+        nota(m, f, u, 'salto', `${testoCond(m.liv, o.se)}? no — salto «${descrivi(m.liv, o, true)}»`, 'resta fermo')
+        f.i++; f.nuovo = true; return 'agisce'
+      }
+    }
+    f.ordine = o; u.ordineOra = { ordine: o, unita: f.unita, script: f.script, i: f.i }
+    const r = fai(m, f, u, o)
+    if (r === 'subito') { f.i++; f.nuovo = true; continue }
+    if (r === 'fatto')  { f.i++; f.nuovo = true; return 'agisce' }
+    if (r === 'salta')  { f.i++; f.nuovo = true; return 'agisce' }
+    if (r === 'attesa') { f.attesa = true; return 'attesa' }
+    if (r === 'errore') { f.finito = true; f.ordine = null; u.ordineOra = null; return 'agisce' }
+    f.attesa = false
+    return 'agisce'
+  }
+  nota(m, f, u, 'no', 'giro a vuoto fra i miei ordini', 'resta fermo')
+  f.finito = true
+  return 'errore'
+}
+
+/* ── IL REGISTRO ──────────────────────────────────────────────────
+   Una riga per ordine, in prima persona, con l'esito a colori:
+     fa      verde   ho fatto qualcosa
+     aspetto giallo  sto aspettando, e dico cosa
+     no      rosso   non ho potuto, e dico perché
+
+   Ogni riga porta due versioni. `testo` è quello che l'unità pensa —
+   e nomina l'ordine. `fatto` è quello che si VEDE da fuori. Di
+   un'unità coi piani coperti si mostra solo `fatto`, e solo se
+   qualcuno dei tuoi la sta guardando: il registro serve a DEDURRE il
+   piano nemico, non a leggerlo. Il gettone 🕵 resta l'altra strada. */
+/* due righe di grammatica: «vado a la chiave» non si può leggere */
+const ALLA = t => t
+  .replace(/\ba la /g, 'alla ').replace(/\ba il /g, 'al ').replace(/\ba l'/g, "all'").replace(/\ba le /g, 'alle ')
+  .replace(/\bdi la /g, 'della ').replace(/\bdi il /g, 'del ').replace(/\bdi l'/g, "dell'").replace(/\bdi le /g, 'delle ')
+function nota (m, f, u, esito, testo, fatto) {
+  testo = ALLA(testo); if (fatto) fatto = ALLA(fatto)
+  const visto = chiVede(m, u)
+  let p = null
+  for (let k = m.diario.length - 1; k >= 0 && k > m.diario.length - 12; k--)
+    if (m.diario[k].unita === u.id) { p = m.diario[k]; break }
+  if (p && p.testo === testo && p.esito === esito && p.visto === visto) {
+    p.n++; p.tFine = m.tick; return
+  }
+  m.diario.push({ t: m.tick, tFine: m.tick, n: 1, unita: u.id, fazione: u.fazione,
+                  emoji: u.emoji, esito, testo, fatto: fatto || testo,
+                  script: f ? f.script : 0, i: f ? f.i : 0, visto })
+  if (m.diario.length > 400) m.diario.shift()
+}
+/* chi dei «tuoi» sta guardando questa unità in questo momento */
+function chiVede (m, u) {
+  if (u.fazione === m.mia) return true
+  return m.viva.some(z => z.fazione === m.mia && vede(m, z, u))
+}
+const VERSO = DIR
+
+/* Una strada chiusa non è subito un errore: il portone potrebbe aprirlo
+   qualcun altro fra due secondi. L'unità aspetta, e solo se non succede
+   niente per un pezzo si arrende dicendo perché. */
+function attende (m, f, u, testo, limite) {
+  f.st.fermo = (f.st.fermo || 0) + 1
+  if (f.st.fermo > (limite || 25)) return guasto(m, f, u, testo)
+  nota(m, f, u, 'aspetto', testo, 'resta fermo')
+  return 'attesa'
+}
+/* Un ordine che non parte NON ferma la scena: ferma quell'ordine, lo
+   dice, e si passa al prossimo. Fermare tutto per un ordine sbagliato
+   toglierebbe al bambino la parte più utile — vedere cosa succede dopo. */
+function guasto (m, f, u, testo) {
+  nota(m, f, u, 'no', testo, 'si ferma')
+  if (!m.colpevole) m.colpevole = { unita: u.id, script: f.script, i: f.i }
+  return 'errore'
+}
+function salta (m, f, u, testo, fatto) {
+  nota(m, f, u, 'no', testo, fatto || 'resta fermo')
+  if (!m.colpevole) m.colpevole = { unita: u.id, script: f.script, i: f.i }
+  return 'salta'
+}
+
+/* muove di una cella verso (bx,by). Restituisce 'arrivato' | 'passo' | null */
+function verso (m, u, bx, by) {
+  if (u.x === bx && u.y === by) return 'arrivato'
+  const p = passoVerso(m, u, bx, by)
+  if (!p) return null
+  u.dir = p[0] > u.x ? 1 : p[0] < u.x ? 3 : p[1] > u.y ? 2 : 0
+  u.x = p[0]; u.y = p[1]; u._mk = null
+  m.eventi.push('passo')
+  return u.x === bx && u.y === by ? 'arrivato' : 'passo'
+}
+
+/* dov'è una cosa, adesso */
+function dove (m, u, C) {
+  switch (C.tipo) {
+    case 'posto': return m.liv.posti[C.id]
+    case 'porta': return m.porte[C.id]
+    case 'zona':  { const z = m.liv.zone[C.id]; return z && z[0] }
+    case 'cella': return { x: C.x, y: C.y }
+    case 'oggetto': {
+      const o = m.oggetti.find(z => z.nome === C.id)
+      if (!o) return null
+      return o.preso ? (m.unita[o.preso] && m.unita[o.preso].viva ? m.unita[o.preso] : null) : o
+    }
+    case 'unita':   return m.unita[C.id] && m.unita[C.id].viva ? m.unita[C.id] : null
+    case 'fazione': {
+      const b = m.viva.filter(z => z.fazione === C.id && z !== u)
+      if (!b.length) return null
+      b.sort((p, q) => mappaDi(m, u)[p.y * m.w + p.x] - mappaDi(m, u)[q.y * m.w + q.x])
+      return b[0]
+    }
+    default: return null
+  }
+}
+const MOBILE = { unita:1, fazione:1 }
+/* «essere a portata»: sulla cella o attaccati. È la precondizione di
+   tutte le azioni, ed è la ragione per cui prima si dice `vai`. */
+const aPortata = (u, t) => t && Math.abs(u.x - t.x) + Math.abs(u.y - t.y) <= 1
+const arrivato = (m, u, C, t) =>
+  MOBILE[C.tipo] || (C.tipo === 'porta' && !m.porte[C.id].aperta)
+    ? aPortata(u, t) : (u.x === t.x && u.y === t.y)
+
+function fai (m, f, u, o) {
+  const C = laCosa(m.liv, o.c)
+  if (!C) return salta(m, f, u, o.c ? `«${o.c}»? qui non c'è niente che si chiami così`
+                                     : 'questo ordine non dice su cosa')
+  const N = C.nome
+
+  /* Il tipo e il mestiere sono già filtrati in cassetta e dal
+     validatore. I controlli qui restano lo stesso: sono la rete
+     sotto, e servono a un livello scritto a mano che sbaglia. */
+  if (!saFare(m.liv.unita.find(z => z.id === u.id), o.v))
+    return salta(m, f, u, `non è il mio mestiere: non so ${VERBI[o.v] ? VERBI[o.v].nome : o.v}`)
+
+  switch (o.v) {
+
+    case 'vai': {
+      if (!VERBI.vai.prende.includes(C.tipo)) return salta(m, f, u, `a ${N} non ci si va`)
+      /* una casella scritta a mano può non esistere più: in questa
+         scena lì c'è un muro, e il piano cade */
+      if (C.tipo === 'cella' && !libera(m, C.x, C.y))
+        return salta(m, f, u, `${N}? qui non c'è più niente: è un muro`, 'si guarda intorno')
+      let t = dove(m, u, C)
+      if (MOBILE[C.tipo]) {
+        /* nessuna onniscienza: si va da chi si vede, o dove lo si è
+           visto l'ultima volta. Ecco perché serve prima la ronda. */
+        if (t && vede(m, u, t)) u.visti[t.id] = { x: t.x, y: t.y }
+        else {
+          const ric = t && u.visti[t.id] ? u.visti[t.id] : (u.visti[C.id] || null)
+          if (!ric) return salta(m, f, u, `${N}? non so dov'è`, 'si guarda intorno')
+          if (aPortata(u, ric) && (!t || !vede(m, u, t)))
+            return salta(m, f, u, `${N} non è più qui`, 'si guarda intorno')
+          t = ric
+        }
+      }
+      if (!t) return salta(m, f, u, `${N} non c'è più`, 'si guarda intorno')
+      if (arrivato(m, u, C, t)) { nota(m, f, u, 'fa', `sono a ${N}`, 'si ferma'); return 'fatto' }
+      const r = verso(m, u, t.x, t.y)
+      if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
+      f.st.fermo = 0
+      nota(m, f, u, 'fa', `vado a ${N}`, 'va verso ' + VERSO[u.dir])
+      return arrivato(m, u, C, t) ? 'fatto' : 'lavora'
+    }
+
+    case 'pattuglia': {
+      if (C.tipo !== 'zona') return salta(m, f, u, `${N} non è un giro di ronda`)
+      /* la ronda finisce quando si vede un estraneo: è il senso stesso
+         di «fai il giro finché non trovi qualcuno» */
+      const visto = m.viva.find(z => z.fazione !== u.fazione && vede(m, u, z))
+      if (visto) { nota(m, f, u, 'fa', `ho visto ${visto.nome}: smetto il giro`, 'si ferma di colpo'); return 'fatto' }
+      const z = m.liv.zone[C.id]
+      if (!z || !z.length) return salta(m, f, u, `${N} non ha tappe`)
+      if (f.st.k == null) f.st.k = tappaPiuVicina(m, u, z)
+      const r = verso(m, u, z[f.st.k].x, z[f.st.k].y)
+      if (r === null) return attende(m, f, u, `non riesco a fare il giro di ${N}`)
+      if (r === 'arrivato') f.st.k = (f.st.k + 1) % z.length
+      f.st.fermo = 0
+      nota(m, f, u, 'fa', `faccio il giro di ${N}`, 'va verso ' + VERSO[u.dir])
+      return 'lavora'
+    }
+
+    case 'prendi': {
+      if (C.tipo !== 'oggetto') return salta(m, f, u, `${N} non si prende`)
+      const og = m.oggetti.find(z => z.nome === C.id)
+      if (og.preso === u.id) return 'subito'
+      if (og.preso) return salta(m, f, u, `${N} ce l'ha già qualcun altro`)
+      if (!aPortata(u, og)) return salta(m, f, u, `${N} non è qui`, 'fruga per terra')
+      og.preso = u.id; u.zaino.push(C.id); m.eventi.push('presa')
+      nota(m, f, u, 'fa', `presa ${N}`, 'raccoglie qualcosa')
+      return 'fatto'
+    }
+
+    case 'apri': {
+      if (C.tipo !== 'porta') return salta(m, f, u, `${N} non si apre`)
+      const pt = m.porte[C.id]
+      if (pt.aperta) return 'subito'
+      if (!aPortata(u, pt)) return salta(m, f, u, `${N} non è qui`, 'spinge il vuoto')
+      if (pt.chiave && !u.zaino.includes(pt.chiave))
+        return salta(m, f, u, `${N} è bloccato: mi manca ${etichetta(m.liv, pt.chiave)}`, 'spinge il portone')
+      pt.aperta = true; m.versioneMappa++; m.elenco.forEach(z => { z._mk = null })
+      m.eventi.push('apre')
+      nota(m, f, u, 'fa', `aperto ${N}`, `apre ${N}`)
+      return 'fatto'
+    }
+
+    case 'attacca': {
+      if (!MOBILE[C.tipo]) return salta(m, f, u, `${N} non si attacca`)
+      let t = f.st.bersaglio ? m.unita[f.st.bersaglio] : null
+      if (t && !t.viva) t = null
+      if (!t) {
+        const b = dove(m, u, C)
+        if (!b) return 'subito'                               // non c'è più nessuno: fatto
+        /* Si attacca chi si VEDE, e gli si resta addosso finché non cade.
+           L'inseguimento è una SCELTA dichiarata di questo ordine — un
+           comportamento continuo, non un `vai`+`colpisci` mascherato:
+           `attacca` non è mai un modo per spostarsi da qualche parte.
+           Chi non vede nessuno resta in guardia, ed è per questo che
+           prima gli serve una ronda. */
+        if (!vede(m, u, b)) return attende(m, f, u, `non vedo ${N} da nessuna parte`, 60)
+        t = b; f.st.bersaglio = t.id                          // ingaggiato: adesso lo insegue
+      }
+      f.st.fermo = 0
+      if (aPortata(u, t)) {
+        t.vita -= DANNO; m.eventi.push('colpo')
+        if (t.vita <= 0) { t.viva = false; m.viva = m.elenco.filter(z => z.viva); m.eventi.push('morte')
+          nota(m, f, u, 'fa', `${t.nome} è fuori combattimento`, `abbatte ${t.nome}`); return 'fatto' }
+        nota(m, f, u, 'fa', `colpisco ${t.nome}`, `colpisce ${t.nome}`)
+        return 'lavora'
+      }
+      const r = verso(m, u, t.x, t.y)                          // ingaggiato: lo inseguo
+      if (r === null) return attende(m, f, u, `non riesco a raggiungere ${t.nome}`)
+      nota(m, f, u, 'fa', `inseguo ${t.nome}`, 'va verso ' + VERSO[u.dir])
+      return 'lavora'
+    }
+
+    case 'manda': {
+      if (C.tipo !== 'segnale') return salta(m, f, u, `${N} non è un segnale`)
+      m.pendenti.push({ seg: C.id, da: u.id }); m.eventi.push('segnale')
+      nota(m, f, u, 'fa', `mando «${N}»`, 'fa un segnale')
+      return 'fatto'
+    }
+
+    case 'aspetta': {
+      if (C.tipo === 'attimo') { nota(m, f, u, 'fa', 'aspetto un momento', 'resta fermo'); return 'fatto' }
+      let pronto = null, che = ''
+      if (C.tipo === 'porta')   { pronto = m.porte[C.id].aperta; che = `che ${N} si apra` }
+      else if (MOBILE[C.tipo])  { pronto = !dove(m, u, C); che = `che ${N} sia fuori combattimento` }
+      else if (C.tipo === 'segnale') { pronto = m.segnaliMandati.includes(C.id); che = `il segnale «${N}»` }
+      else if (C.tipo === 'oggetto') { const g = m.oggetti.find(z => z.nome === C.id)
+                                       pronto = !!(g && g.preso); che = `che qualcuno prenda ${N}` }
+      else return salta(m, f, u, `${N} non è una cosa che finisce: non c'è niente da aspettare`)
+      if (pronto) { nota(m, f, u, 'fa', `finalmente: ${che.replace(/^che /, '')}`, 'si rimette in moto'); return 'fatto' }
+      return attende(m, f, u, `aspetto ${che}`, 999)
+    }
+
+    case 'avvista': {
+      if (!MOBILE[C.tipo]) return salta(m, f, u, `${N} non si avvista: si avvista qualcuno che si muove`)
+      const b = m.viva.find(z => z !== u && (z.id === C.id || z.fazione === C.id) && vede(m, u, z))
+      if (b) { u.visti[b.id] = { x: b.x, y: b.y }
+        nota(m, f, u, 'fa', `eccolo: vedo ${b.nome}`, 'si volta di scatto'); return 'fatto' }
+      return attende(m, f, u, `sto di vedetta: non vedo ${N}`, 999)
+    }
+
+    default:
+      return salta(m, f, u, `«${o.v}»? non so cosa voglia dire`)
+  }
+}
+
+const celleAccanto = (m, p) => [[p.x, p.y - 1], [p.x + 1, p.y], [p.x, p.y + 1], [p.x - 1, p.y]]
+function tappaPiuVicina (m, u, z) {
+  const d = mappaDi(m, u)
+  let k = 0, best = 1e9
+  z.forEach((t, i) => { const q = d[t.y * m.w + t.x]; if (q >= 0 && q < best) { best = q; k = i } })
+  return (k + 1) % z.length          // si parte dalla tappa DOPO quella su cui si è
+}
+
+/* righe uguali di fila si accorpano: una ronda di trenta tick non deve
+   riempire lo schermo di trenta righe identiche */
+const registro = (m, quante) => quante ? m.diario.slice(-quante) : m.diario
+
+/* ── far girare tutto: è quello che usa il test ── */
+function esegui (mondo, piano, max) {
+  avvia(mondo, piano)
+  const lim = max || MAX_TICK
+  const traccia = []
+  while (!mondo.finita && mondo.tick < lim) {
+    passo(mondo)
+    traccia.push({ tick: mondo.tick,
+      unita: mondo.elenco.map(u => ({ id: u.id, x: u.x, y: u.y, viva: u.viva,
+        ordine: u.ordineOra ? u.ordineOra.i : null })) })
+  }
+  if (!mondo.finita) fine(mondo, false, 'La scena non finisce più.')
+  return { vinta: mondo.vinta, motivo: mondo.motivo, tick: mondo.tick,
+           colpevole: mondo.colpevole, traccia }
+}
+
+/* ── piano: quello del giocatore + quello scritto dal livello ────── */
+function pianoCompleto (liv, delGiocatore) {
+  const p = {}
+  /* prima tutto quello che ha scritto il livello — anche dentro la
+     fazione del giocatore: un alleato può avere ordini già suoi */
+  for (const nome in liv.fazioni)
+    for (const id in (liv.fazioni[nome].ordini || {})) p[id] = clona(liv.fazioni[nome].ordini[id])
+  for (const id in (delGiocatore || {})) p[id] = clona(delGiocatore[id])
+  return p
+}
+const clona = x => JSON.parse(JSON.stringify(x))
+
+/* le unità di cui il giocatore firma gli ordini: quelle della sua
+   fazione che il livello non ha già istruito */
+function mieUnita (liv) {
+  const out = []
+  for (const nome in liv.fazioni) {
+    const fz = liv.fazioni[nome]
+    if (fz.autore !== 'giocatore') continue
+    liv.unita.filter(u => u.fazione === nome && !(fz.ordini || {})[u.id]).forEach(u => out.push(u.id))
+  }
+  return out
+}
+/* le unità di cui il giocatore può LEGGERE gli ordini scritti da altri */
+function altruiUnita (liv) {
+  const out = []
+  for (const nome in liv.fazioni)
+    for (const id in (liv.fazioni[nome].ordini || {})) out.push(id)
+  return out
+}
+/* IL PAR. Nessun tetto agli ordini: il bambino ne mette quanti vuole.
+   Il livello dichiara però in anticipo in quanti si potrebbe fare —
+   come il par del golf — e chi ci sta dentro prende la seconda stella.
+   Si ricava dalla soluzione dichiarata più corta, così non può mentire. */
+const parDi = liv => Math.min.apply(null, liv.soluzioni.map(contaOrdini))
+/* su quanti mondi si prova il piano. I primi due livelli sono un
+   tutorial: si gioca un mondo solo, così il primo piano che si scrive
+   funziona davvero. Dal terzo in poi sono tre, e i piani rigidi
+   cominciano a cadere. */
+const mondiDi = liv => liv.mondi || 3
+function contaOrdini (piano) {
+  let n = 0
+  for (const id in piano) piano[id].forEach(s => { n += (s.ordini || []).length })
+  return n
+}
+/* il piano vuoto: le teste degli script ci sono, gli ordini no */
+function pianoVuoto (liv) {
+  const p = {}
+  mieUnita(liv).forEach(id => { p[id] = scriptDi(liv, id).map(s => ({ quando: s.quando, ordini: [] })) })
+  return p
+}
+const scriptDi = (liv, id) =>
+  (liv.script && liv.script[id]) || [{ quando: { tipo: 'inizio' } }]
+
+/* ── parole: le stesse etichette le usano il gioco e il test ─────── */
+const nomePosto = (liv, k) => (liv.nomi && liv.nomi[k]) || k
+const nomeZona  = (liv, k) => (liv.nomi && liv.nomi[k]) || k
+const nomePorta = (liv, k) => (liv.nomi && liv.nomi[k]) || k
+const nomeUnita = (liv, k) => {
+  const u = liv.unita.find(z => z.id === k)
+  return u ? u.nome : (liv.nomi && liv.nomi[k]) || k
+}
+function testoCond (liv, c) {
+  if (!c) return '…'
+  let t
+  switch (c.c) {
+    case 'vedi':    t = `vedi ${nomeUnita(liv, c.chi)}`; break
+    case 'vivo':    t = `${nomeUnita(liv, c.chi)} è vivo`; break
+    case 'hai':     t = `hai ${etichetta(liv, c.cosa)}`; break
+    case 'aperta':  t = `${nomePorta(liv, c.cosa)} è aperto`; break
+    case 'segnale': t = `è arrivato «${ilSegnale(c.id).nome}»`; break
+    case 'qui':     t = `${nomeUnita(liv, c.chi)} è a ${nomePosto(liv, c.posto)}`; break
+    default:        t = 'sempre'
+  }
+  if (!c.non) return t
+  return t.replace(' è vivo', ' è morto').replace(/^vedi /, 'non vedi ')
+          .replace(/^hai /, 'non hai ').replace(' è aperto', ' è chiuso')
+          .replace(/^è arrivato/, 'non è arrivato').replace(/ è a /, ' non è a ')
+}
+function descrivi (liv, o, secco) {
+  const V = VERBI[o.v]; if (!V) return '?'
+  const C = laCosa(liv, o.c)
+  return V.nome + ' [' + (C ? C.nome : (o.c || '…')) + ']' +
+         (o.se && !secco ? ' se [' + testoCond(liv, o.se) + ']' : '')
+}
+/* come si chiama uno script: è il nome del sottoprogramma, e si legge
+   uguale in cima al pannello, nel registro e nel filo */
+const nomeScript = q => q && q.tipo === 'segnale'
+  ? `quando arriva «${ilSegnale(q.id).nome}»` : 'dall\'inizio della battaglia'
+
+return { MAX_TICK, VERBI, SEGNALI, ilSegnale, creaMondo, avvia, passo, esegui, valuta, vede, distanze,
+         libera, pianoCompleto, pianoVuoto, mieUnita, altruiUnita, parDi, contaOrdini, scriptDi,
+         descrivi, testoCond, nomeScript, nomeUnita, clona, coseDi, laCosa, registro, etichetta,
+         complementiDi, complementiPer, verbiDi, verbiPer, nonSa, guaiDi, condizioniDi, chiaveCond,
+         gradoDi, GRADI, mondiDi,
+         LIVELLI: [], quanti: 0 }
+})();
+/* ══════════════════════════════════════════════════════════════════
+   I LIVELLI — dati puri, niente logica.
+   Un livello è una coreografia da far funzionare. Il giocatore firma
+   gli ordini di una fazione, il livello quelli dell'altra: stesso
+   linguaggio, autore diverso.
+
+   CATALOGO DEI BUG DELIBERATI (dal L7 in poi il piano nemico ha una
+   falla, e il livello si vince trovandola):
+     L7  la guardia troppo stretta — l'orco guarda solo la ladra
+     L8  il caso non coperto      — la ronda lascia un lato libero
+     L9  l'ordine sbagliato       — apre il portone prima di prendere la chiave
+     L10 il segnale morto         — il capo aspetta un segnale che nessuno manda
+     L11 l'attesa che non si sblocca — e tu puoi fare in modo che non arrivi
+     L12 il doppio incarico       — due orchi sullo stesso posto, uno scoperto
+     L14 non è un bug: è il RAMO  — il seguito dipende da cosa trovi
+   ══════════════════════════════════════════════════════════════════ */
+(function (M) {
+const A = () => ['#############','#.....#.....#','#.....#.....#','#...........#','#.....#.....#','#.....#.....#','#############']
+const B = () => ['#############','#...........#','#.#########.#','#.#.......#.#','#.#.......#.#','#.#.......#.#','#.####.####.#','#...........#','#############']
+const o   = (v, c, se) => se ? { v, c, se } : { v, c }   // verbo + complemento (+ guardia)
+const vedi    = chi => ({ c:'vedi', chi })
+const nonVedi = chi => ({ c:'vedi', chi, non:true })
+/* una mappa grande si costruisce, non si scrive a mano */
+function tela (w, h) { const g = []; for (let y = 0; y < h; y++) g.push(new Array(w).fill('#')); return g }
+function cava (g, x0, y0, x1, y1) {
+  for (let y = Math.min(y0,y1); y <= Math.max(y0,y1); y++)
+    for (let x = Math.min(x0,x1); x <= Math.max(x0,x1); x++) g[y][x] = '.'
+}
+const stampa = g => g.map(r => r.join(''))
+/* gli script: il main c'è sempre, gli altri hanno un nome */
+const main = (...ordini) => ({ quando: { tipo:'inizio' }, ordini })
+const sc   = (...ordini) => [main(...ordini)]
+const qn   = (id, ...ordini) => ({ quando: { tipo:'segnale', id }, ordini })
+const ruota = (a, s) => a[s % a.length]
+
+M.LIVELLI = [
+
+/* 1 ─ un ordine solo, e la strada la trova lui. Serve a far vedere
+      la forma: verbo + cosa, poi ▶. C'è anche un posto sbagliato in
+      elenco, così scegliere è già una scelta. */
+(s = 0) => ({
+  nome: 'Il primo ordine', idea: 'Un verbo, una cosa, e via',
+  dritta: "Ogni ordine è <b>un verbo</b> e <b>una cosa</b>. Digli dove andare e premi ▶: la strada fra i muri se la trova da solo.",
+  racconto: "L'eroe è nella corte di ponente, il tesoro è dall'altra parte del muro. Si vince quando l'eroe ci arriva sopra. Non devi spiegargli come girare intorno al muro — camminare lo sa fare da solo. Devi dirgli <b>dove</b> vuoi che vada.",
+  aiuti: ["Un ordine è fatto di due cose: un verbo, e la cosa su cui vale.",
+            "Nell'elenco delle cose ce n'è più di una: solo una fa vincere.",
+            "Guarda il verbo che hai in cassetta: chiede una meta, e la meta la scegli tu."],
+  mappa: A(), mondi: 1, nomi: { tesoro:'il tesoro', fontana:'la fontana' },
+  posti: { tesoro: { x:10, y:5 }, fontana: { x:2, y:1 } },
+  unita: [{ id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, x:2, y:5 }],
+  fazioni: { umani: { autore:'giocatore' } },
+  verbi: ['vai'], complementi: ['tesoro','fontana'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  soluzioni: [{ eroe: sc(o('vai','tesoro')) }],
+}),
+
+/* 2 ─ la sequenza del papà, per intero:
+      [vai [chiave]][prendi [chiave]][vai [portone]][apri [portone]][vai [tesoro]]
+      Nasce da sé dalla precondizione: un'azione funziona solo se hai
+      la cosa a portata, quindi prima ci vai. */
+(s = 0) => ({
+  nome: 'La chiave e il portone', idea: 'Prima vai, poi fai',
+  dritta: "Un'azione riesce solo se hai la cosa <b>lì vicino</b>. Se l'eroe dice «non è qui», gli manca un <b>vai</b>.",
+  racconto: "Il portone è chiuso a chiave e il tesoro è dietro. Si vince quando l'eroe arriva al tesoro. Il punto è un altro: <b>un'azione riesce solo se hai la cosa lì vicino</b>, e prendere o aprire non fanno camminare nessuno.",
+  aiuti: ["Prendere e aprire succedono dove sei già: non ti portano da nessuna parte.",
+            "Se un ordine dice «non è qui», vuol dire che manca un viaggio prima di lui.",
+            "La chiave, il portone e il tesoro sono in tre posti diversi: ogni azione vuole il suo viaggio."],
+  mappa: A(), mondi: 1, nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave' },
+  posti: { tesoro: {x:10, y:3} },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', x:2, y:1 }],
+  unita: [{ id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, x:2, y:3 }],
+  fazioni: { umani: { autore:'giocatore' } },
+  verbi: ['vai','prendi','apri'],
+  complementi: ['chiave','portone','tesoro'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  soluzioni: [
+    { eroe: sc(o('vai','chiave'), o('prendi','chiave'),
+               o('vai','portone'), o('apri','portone'), o('vai','tesoro')) },
+  ],
+}),
+
+/* 3 ─ INVERTITO. Il giro di ronda: `vai [qualcuno]` non è onnisciente,
+      ci vai solo se l'hai visto. Ecco perché serve `pattuglia`.
+      L'intruso sta fermo: il suo piano aspetta un segnale che nessuno
+      manderà — il primo bug che il bambino legge. */
+(s = 0) => ({
+  nome: 'Il giro delle mura', idea: 'Non sai dov\'è: cercalo',
+  dritta: "Un intruso è dentro le mura. <b>vai [l'intruso]</b> da solo non basta: non sai dov'è. Puoi passare i lati uno per uno, oppure fare <b>un giro solo</b> che li copre tutti.",
+  racconto: "Un intruso è entrato nelle mura e aspetta il momento buono per correre al tesoro. Si vince mettendolo fuori combattimento, si perde se ci arriva. Il guaio è che <b>l'orco non sa dov'è</b>: <b>vai [l'intruso]</b> da solo non basta, perché non si va da qualcuno che non hai mai visto.",
+  aiuti: ["L'orco vede solo vicino: per trovare qualcuno bisogna passargli accanto.",
+            "L'intruso non sta sempre nello stesso punto: quello che funziona in questa battaglia può fallire nella prossima.",
+            "Esiste un ordine che copre tutti i lati da solo e si ferma appena vede qualcuno."],
+  mappa: B(), nomi: { mura:'le mura', tesoro:'il tesoro',
+                      levante:'il lato di levante', mezzogiorno:'il lato di mezzogiorno',
+                      ponente:'il lato di ponente' },
+  posti: { tesoro:{x:6,y:4}, levante:{x:11,y:4}, mezzogiorno:{x:6,y:7}, ponente:{x:1,y:4} },
+  zone: { mura: [{x:1,y:1},{x:11,y:1},{x:11,y:7},{x:1,y:7}] },
+  segnali: ['ora'],
+  unita: [
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:2, vita:3, x:1, y:1 },
+    { id:'eroe', nome:"l'intruso", fazione:'umani', emoji:'🥷', vista:3, vita:2,
+      ...ruota([{x:11,y:4},{x:6,y:7},{x:1,y:4}], s) },
+  ],
+  fazioni: {
+    orchi: { autore:'giocatore' },
+    umani: { autore:'livello', ordini: { eroe: sc(o('aspetta','ora'), o('vai','tesoro')) } },
+  },
+  verbi: ['vai','pattuglia','attacca','aspetta'],
+  complementi: ['mura','eroe','tesoro','levante','mezzogiorno','ponente'],
+  obiettivo: [{ c:'vivo', chi:'eroe', non:true }],
+  sconfitta: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  motivoSconfitta: "L'intruso è arrivato al tesoro.",
+  mostraNemici: true,
+  /* QUI si vede l'astrazione. La stessa ronda si può fare a mete
+     esplicite — e funziona, ma solo nel mondo che hai davanti: nel
+     secondo l'intruso è da un'altra parte e la fila finisce lontano da
+     lui. `pattuglia` regge tutti e tre i mondi con due ordini. */
+  soluzioni: [
+    { orco: sc(o('pattuglia','mura'), o('attacca','eroe')) },
+    { orco: sc(...ruota([
+        [o('vai','levante')],
+        [o('vai','levante'), o('vai','mezzogiorno')],
+        [o('vai','levante'), o('vai','mezzogiorno'), o('vai','ponente')]], s),
+        o('attacca','eroe')) },
+  ],
+}),
+
+/* 4 ─ ASPETTA: la frase del papà, «aspettare che non ci sia in vita
+      l'orco per entrare». */
+(s = 0) => ({
+  nome: "Aspetta che l'orco cada", idea: 'Un ordine può aspettare un altro',
+  dritta: "Il cavaliere ci mette un po'. Se l'eroe parte subito, l'orco lo vede e lo prende. <b>aspetta [l'orco]</b> vuol dire: finché non è fuori combattimento.",
+  racconto: "L'orco è piantato in mezzo alla strada e l'eroe non regge i suoi colpi. Il cavaliere se ne occupa, ma ci mette un po'. Si vince quando l'eroe arriva al tesoro: quindi il problema non è <b>dove</b> va, è <b>quando</b> parte.",
+  aiuti: ["Chi parte troppo presto trova l'orco ancora in piedi.",
+            "Leggi gli ordini del cavaliere: prima o poi l'orco cade da sé.",
+            "C'è un verbo che vuol dire «non fare niente finché non è successa una certa cosa»."],
+  mappa: A(), nomi: { tesoro:'il tesoro' },
+  posti: { tesoro: ruota([{x:11,y:1},{x:11,y:5},{x:10,y:1}], s) },
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, vita:2, x:2, y:3 },
+    { id:'cava', nome:'il cavaliere', fazione:'umani', emoji:'🛡️', vista:12, vita:6, x:2, y:5,
+        sa:['vai','attacca','aspetta','avvista'] },
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:3, vita:8,
+      ...ruota([{x:7,y:3},{x:7,y:2},{x:8,y:3}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore',
+             ordini: { cava: sc(o('attacca','orco')) } },
+    orchi: { autore:'livello', ordini: { orco: sc(
+      o('avvista','eroe'), o('attacca','eroe')) } },
+  },
+  verbi: ['vai','aspetta','avvista'], complementi: ['tesoro','orco'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'orco ha preso l'eroe.",
+  mostraNemici: true,
+  soluzioni: [
+    { eroe: sc(o('aspetta','orco'), o('vai','tesoro')) },
+  ],
+}),
+
+/* 5 ─ i segnali: un'unità sveglia l'altra, e il segnale ha un nome. */
+(s = 0) => ({
+  nome: 'Tutto libero', idea: 'Un segnale sveglia chi lo ascolta',
+  dritta: "L'eroe non parte dall'inizio: ha uno script che parte <b>quando arriva «tutto libero»</b>. La ladra deve aprirgli la strada e poi mandarlo.",
+  racconto: "L'eroe non ha ordini per l'inizio della battaglia: ha un secondo script che parte solo <b>quando arriva un segnale</b>. La ladra invece parte subito, e ha la strada da aprire. Si vince quando l'eroe è sul tesoro.",
+  aiuti: ["Un segnale è una parola detta a voce alta: la sente chi ha uno script che aspetta proprio quella.",
+            "Apri il pannello dell'eroe: c'è scritto quale segnale sta aspettando.",
+            "Alla ladra manca un verbo, ed è quello che manda un segnale."],
+  mappa: A(), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave' },
+  posti: { tesoro: ruota([{x:10,y:1},{x:11,y:5},{x:9,y:1}], s) },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', ...ruota([{x:2,y:1},{x:1,y:5},{x:4,y:1}], s) }],
+  segnali: ['libero','aiuto'],
+  unita: [
+    { id:'ladra', nome:'la ladra', fazione:'umani', emoji:'🥷', vista:4, x:2, y:3 },
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, x:1, y:1 },
+  ],
+  fazioni: { umani: { autore:'giocatore' } },
+  script: { ladra:[{quando:{tipo:'inizio'}}],
+            eroe:[{quando:{tipo:'inizio'}}, {quando:{tipo:'segnale',id:'libero'}}] },
+  verbi: ['vai','prendi','apri','manda','aspetta'],
+  complementi: ['chiave','portone','tesoro','libero','aiuto'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  soluzioni: [{
+    ladra: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+              o('apri','portone'), o('manda','libero')),
+    eroe: [main(), qn('libero', o('vai','tesoro'))],
+  }],
+}),
+
+/* 6 ─ tutto insieme, e due modi di dire la stessa attesa. */
+(s = 0) => ({
+  nome: 'Il portone sorvegliato', idea: 'Due unità, un piano solo',
+  dritta: "Il cavaliere non può passare finché il portone è chiuso, e l'orco non lo vede nemmeno. Chi fa cosa, e in che ordine?",
+  racconto: "Il portone è chiuso, l'orco è di là e l'eroe cade al primo colpo. Il cavaliere regge, ma finché il portone è chiuso non può nemmeno arrivarci. Si vince quando l'eroe arriva al tesoro <b>vivo</b>.",
+  aiuti: ["Due unità, un piano solo: chi apre la strada non è per forza chi la usa per primo.",
+            "Guarda gli ordini dell'orco: cerca l'eroe, non il cavaliere.",
+            "All'eroe non basta evitare l'orco: gli serve un ordine che lo aspetti."],
+  mappa: A(), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave' },
+  posti: { tesoro: ruota([{x:11,y:1},{x:11,y:5},{x:10,y:5}], s) },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', ...ruota([{x:2,y:1},{x:1,y:5},{x:3,y:5}], s) }],
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, vita:1, x:2, y:3 },
+    { id:'cava', nome:'il cavaliere', fazione:'umani', emoji:'🛡️', vista:12, vita:8, x:1, y:3,
+        sa:['vai','attacca','aspetta','avvista'] },
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:4, vita:16,
+      ...ruota([{x:10,y:3},{x:10,y:2},{x:9,y:4}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore' },
+    orchi: { autore:'livello', ordini: { orco: sc(
+      o('avvista','eroe'), o('attacca','eroe')) } },
+  },
+  verbi: ['vai','prendi','apri','attacca','aspetta','avvista'],
+  complementi: ['chiave','portone','tesoro','orco'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'orco ha preso l'eroe.",
+  mostraNemici: true,
+  soluzioni: [
+    { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+               o('apri','portone'), o('aspetta','orco'), o('vai','tesoro')),
+      cava: sc(o('attacca','orco')) },
+    { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+               o('apri','portone'), o('aspetta','orco'), o('vai','tesoro')),
+      cava: sc(o('aspetta','portone'), o('attacca','orco')) },
+  ],
+}),
+
+/* 7 ─ BUG: la guardia troppo stretta. L'orco smette la ronda appena
+      vede qualcuno — ma poi va a cercare LA LADRA, che è dall'altra
+      parte. L'eroe gli passa davanti e lui non lo considera. */
+(s = 0) => ({
+  nome: 'Occhi solo per la ladra', idea: 'Leggi il piano nemico e trovaci il buco',
+  dritta: "Tocca l'orco per leggere i suoi ordini. Chi sta cercando, <b>esattamente</b>?",
+  racconto: "L'orco fa il giro delle mura, e appena vede qualcuno smette il giro e va a cercare una persona precisa. Si vince quando l'eroe arriva al tesoro. Prima di muoverti, <b>leggi i suoi ordini</b>: c'è scritto chi sta cercando.",
+  aiuti: ["Anche il piano nemico si legge come il tuo: tocca l'orco.",
+            "Guarda il complemento del suo ultimo ordine: è un nome, ed è uno solo.",
+            "Se il nome scritto non è quello dell'eroe, l'eroe può andarsene per la sua strada."],
+  mappa: B(), nomi: { mura:'le mura', tesoro:'il tesoro', passaggio:'il passaggio' },
+  posti: { tesoro:{x:6,y:4}, passaggio:{x:6,y:7} },
+  zone: { mura: [{x:1,y:1},{x:11,y:1},{x:11,y:7},{x:1,y:7}] },
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:2,
+      ...ruota([{x:1,y:7},{x:11,y:7},{x:1,y:1}], s) },
+    { id:'ladra', nome:'la ladra', fazione:'umani', emoji:'🥷', vista:3, vita:2, x:11, y:1 },
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:2, vita:4,
+      ...ruota([{x:6,y:1},{x:1,y:4},{x:11,y:4}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore' },
+    orchi: { autore:'livello', ordini: { orco: sc(
+      o('pattuglia','mura'), o('attacca','ladra')) } },
+  },
+  verbi: ['vai','aspetta','avvista'],
+  complementi: ['tesoro','passaggio','orco','ladra'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'orco ha preso l'eroe.",
+  mostraNemici: true,
+  soluzioni: [
+    { eroe: sc(o('vai','tesoro')) },
+    { eroe: sc(o('vai','passaggio'), o('vai','tesoro')) },
+  ],
+}),
+
+/* 8 ─ BUG: il caso non coperto. La ronda copre la costa di destra, che
+      è anche la strada più corta: quella che l'eroe prende da solo. */
+(s = 0) => ({
+  nome: 'Il lato scoperto', idea: 'La strada più corta è quella sorvegliata',
+  dritta: "«vai al tesoro» sceglie la via più corta — ed è proprio dove passano loro. Mandalo prima da un'altra parte.",
+  racconto: "La ronda copre la costa di destra, che è anche la strada più corta per il tesoro — e <b>vai [al tesoro]</b> sceglie sempre la più corta. Si vince quando l'eroe arriva al tesoro vivo.",
+  aiuti: ["Non decidi la strada, decidi le tappe: la strada la sceglie lui, fra una tappa e l'altra.",
+            "Guarda dove passa la ronda, e poi guarda la parte opposta della mappa.",
+            "Una tappa in più, dalla parte opposta, cambia tutto il percorso."],
+  mappa: B(), nomi: { costa:'la costa di destra', tesoro:'il tesoro',
+                      angolo:"l'angolo in alto a sinistra", passaggio:'il passaggio' },
+  posti: { tesoro:{x:6,y:4}, angolo:{x:1,y:1}, passaggio:{x:6,y:7} },
+  zone: { costa: [{x:11,y:1},{x:11,y:7}] },
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:2, x:9, y:1 },
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:2, vita:4,
+      ...ruota([{x:11,y:4},{x:11,y:5},{x:11,y:3}], s) },
+    { id:'orco2', nome:'la guardia', fazione:'orchi', emoji:'👺', vista:2, vita:4,
+      ...ruota([{x:11,y:7},{x:11,y:6},{x:11,y:7}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore' },
+    orchi: { autore:'livello', ordini: {
+      orco:  sc(o('pattuglia','costa'), o('attacca','umani')),
+      orco2: sc(o('avvista','umani'), o('attacca','umani')) } },
+  },
+  verbi: ['vai','aspetta','avvista'],
+  complementi: ['tesoro','angolo','passaggio','orco','costa'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'eroe è passato sotto il naso della ronda.",
+  mostraNemici: true,
+  soluzioni: [
+    { eroe: sc(o('vai','angolo'), o('vai','tesoro')) },
+    { eroe: sc(o('vai','angolo'), o('vai','passaggio'), o('vai','tesoro')) },
+  ],
+}),
+
+/* 9 ─ BUG: l'ordine mancante. Il piano degli umani dice `apri [portone]`
+      senza il `vai [portone]` prima: l'eroe si pianta sulla chiave e
+      non si muove più. Leggere il suo piano dice ANCHE dove trovarlo. */
+(s = 0) => ({
+  nome: 'Il piano rotto', idea: 'Gli manca un vai, e si vede',
+  dritta: "Il loro piano ha un ordine che non parte. Trovalo: ti dice anche dove resterà piantato.",
+  racconto: "Nel piano degli umani c'è un ordine che non partirà mai, e quello dopo non arriverà mai. Si vince se l'eroe cade, si perde se arriva al tesoro. Capire dove si pianta ti dice anche dove trovarlo.",
+  aiuti: ["Anche per loro vale la regola: un'azione riesce solo da vicino.",
+            "Se un ordine non parte, il piano si ferma lì: l'eroe resta dov'è.",
+            "All'orco basta arrivare dove l'altro si è piantato — e non è lontano."],
+  mappa: A(), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave',
+                      mura:'la stanza di sinistra' },
+  posti: { tesoro:{x:11,y:1} },
+  zone: { mura: [{x:1,y:1},{x:5,y:1},{x:5,y:5},{x:1,y:5}] },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', ...ruota([{x:2,y:5},{x:1,y:5},{x:2,y:4}], s) }],
+  unita: [
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:2, vita:6, x:5, y:1 },
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:3,
+      ...ruota([{x:1,y:1},{x:1,y:2},{x:1,y:3}], s) },
+  ],
+  fazioni: {
+    orchi: { autore:'giocatore' },
+    umani: { autore:'livello', ordini: { eroe: sc(
+      o('vai','chiave'), o('prendi','chiave'), o('apri','portone'), o('vai','tesoro')) } },
+  },
+  verbi: ['vai','pattuglia','attacca','avvista','aspetta'],
+  complementi: ['mura','eroe','chiave','portone','tesoro'],
+  obiettivo: [{ c:'vivo', chi:'eroe', non:true }],
+  sconfitta: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  motivoSconfitta: "L'eroe è arrivato al tesoro.",
+  mostraNemici: 'gettoni', gettoni: 2,
+  soluzioni: [
+    { orco: sc(o('pattuglia','mura'), o('attacca','eroe')) },
+    { orco: sc(o('vai','chiave'), o('attacca','eroe')) },
+  ],
+}),
+
+/* 10 ─ BUG: il segnale morto. La guardia manda «nemico in vista», il
+       capo aspetta «aiuto»: non si sveglia mai. Due nomi giusti, ma
+       non lo stesso nome. */
+(s = 0) => ({
+  nome: 'Il segnale che non arriva', idea: 'Un segnale che nessuno ascolta',
+  dritta: "La guardia dà l'allarme e il capo dovrebbe accorrere. Guarda bene <b>quale segnale</b> manda uno e <b>quale</b> aspetta l'altro.",
+  racconto: "La guardia dà l'allarme appena vede qualcuno, e il capo dovrebbe accorrere. Si vince quando l'eroe arriva al tesoro. Leggi i due piani e confronta con calma: i segnali hanno un nome, e i nomi contano.",
+  aiuti: ["Un segnale lo sente solo chi sta aspettando quel nome preciso.",
+            "Metti a confronto il nome che manda la guardia e il nome che aspetta il capo.",
+            "Se il capo non si sveglia mai, resta un nemico solo di cui occuparsi."],
+  mappa: A(), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave' },
+  posti: { tesoro: ruota([{x:11,y:1},{x:11,y:5},{x:11,y:4}], s) },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', ...ruota([{x:2,y:1},{x:1,y:5},{x:2,y:5}], s) }],
+  segnali: ['nemico','aiuto','libero'],
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:1, x:2, y:3 },
+    { id:'cava', nome:'il cavaliere', fazione:'umani', emoji:'🛡️', vista:12, vita:8, x:1, y:3,
+        sa:['vai','attacca','aspetta','avvista'] },
+    { id:'guardia', nome:'la guardia', fazione:'orchi', emoji:'👺', vista:4, vita:16, x:10, y:3 },
+    { id:'capo', nome:'il capo', fazione:'orchi', emoji:'👹', vista:3, vita:9,
+      ...ruota([{x:11,y:5},{x:11,y:1},{x:10,y:5}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore' },
+    orchi: { autore:'livello', ordini: {
+      guardia: sc(o('avvista','umani'), o('manda','nemico'), o('attacca','eroe')),
+      capo:    sc(o('aspetta','aiuto'), o('attacca','umani')) } },
+  },
+  verbi: ['vai','prendi','apri','attacca','aspetta','avvista','manda'],
+  complementi: ['chiave','portone','tesoro','guardia','capo','nemico','aiuto','libero'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'eroe è caduto.",
+  mostraNemici: 'gettoni', gettoni: 2,
+  soluzioni: [
+    { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+               o('apri','portone'), o('aspetta','guardia'), o('vai','tesoro')),
+      cava: sc(o('attacca','guardia')) },
+    { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+               o('apri','portone'), o('aspetta','guardia'), o('vai','tesoro')),
+      cava: sc(o('avvista','guardia'), o('attacca','guardia')) },
+  ],
+}),
+
+/* 11 ─ BUG: l'attesa che non si sblocca, e sei tu a tenerla chiusa.
+       (INVERTITO) L'eroe aspetta il segnale della ladra: zitta lei,
+       fermo lui. */
+(s = 0) => ({
+  nome: 'Zitta, ladra', idea: 'Togli il segnale e il piano si spegne',
+  dritta: "Il loro piano si regge su un segnale. Chi lo deve mandare? E se non ce la facesse?",
+  racconto: "Il piano degli umani si regge tutto su un segnale: se non parte, l'eroe non si muove di un passo. Si vince se la ladra cade, si perde se l'eroe arriva al tesoro.",
+  aiuti: ["Chi manda il segnale e chi lo aspetta sono due persone diverse.",
+            "Guarda quanti ordini deve fare la ladra prima di poter mandare il segnale.",
+            "Non serve fermare l'eroe: serve arrivare prima all'altra."],
+  mappa: A(), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave' },
+  posti: { tesoro:{x:11,y:1} },
+  porte: { portone: { x:6, y:3, chiave:'chiave' } },
+  oggetti: [{ nome:'chiave', ...ruota([{x:2,y:5},{x:1,y:1},{x:3,y:5}], s) }],
+  segnali: ['libero'],
+  unita: [
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:3, vita:6, x:2, y:3 },
+    { id:'ladra', nome:'la ladra', fazione:'umani', emoji:'🥷', vista:3, vita:2, x:1, y:3 },
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:4, x:1, y:5 },
+  ],
+  fazioni: {
+    orchi: { autore:'giocatore' },
+    umani: { autore:'livello', ordini: {
+      ladra: sc(o('vai','chiave'), o('prendi','chiave'), o('vai','portone'),
+                o('apri','portone'), o('manda','libero')),
+      eroe:  sc(o('aspetta','libero'), o('vai','tesoro')) } },
+  },
+  verbi: ['vai','attacca','avvista','aspetta'],
+  complementi: ['ladra','eroe','chiave','portone','libero','tesoro'],
+  obiettivo: [{ c:'vivo', chi:'ladra', non:true }],
+  sconfitta: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+  motivoSconfitta: "Il segnale è partito e l'eroe è arrivato al tesoro.",
+  mostraNemici: 'gettoni', gettoni: 3,
+  soluzioni: [
+    { orco: sc(o('attacca','ladra')) },
+    { orco: sc(o('avvista','ladra'), o('attacca','ladra')) },
+  ],
+}),
+
+/* 12 ─ BUG: il doppio incarico. Due orchi mandati nello stesso posto:
+       quello che restava da guardare non lo guarda nessuno. */
+(s = 0) => ({
+  nome: 'Due orchi, un posto solo', idea: 'In due sullo stesso muro',
+  dritta: "Hanno gli stessi ordini tutti e due. Guarda dove vanno a mettersi, e passa dall'altra parte.",
+  racconto: "I due orchi hanno gli stessi identici ordini, e vanno tutti e due nello stesso posto. Si vince quando l'eroe è sul tesoro <b>e</b> la ladra è ancora viva.",
+  aiuti: ["Due guardie sullo stesso muro lasciano scoperto tutto il resto del muro.",
+            "Guarda dove si fermano, e conta quante strade portano al tesoro.",
+            "Basta una tappa dalla parte dove non è rimasto nessuno."],
+  mappa: B(), nomi: { tesoro:'il tesoro', passaggio:'il passaggio',
+                      angolo:"l'angolo in alto a sinistra", costa:'la costa di destra' },
+  posti: { tesoro:{x:6,y:4}, passaggio:{x:6,y:7}, angolo:{x:1,y:1}, costa:{x:11,y:4} },
+  segnali: ['ora'],
+  unita: [
+    { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:3, vita:2, x:9, y:1 },
+    { id:'ladra', nome:'la ladra', fazione:'umani', emoji:'🥷', vista:4, vita:4, x:1, y:7 },
+    { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:2, vita:5,
+      ...ruota([{x:11,y:5},{x:11,y:6},{x:11,y:4}], s) },
+    { id:'orco2', nome:'la guardia', fazione:'orchi', emoji:'👺', vista:2, vita:5,
+      ...ruota([{x:11,y:6},{x:11,y:5},{x:11,y:5}], s) },
+  ],
+  fazioni: {
+    umani: { autore:'giocatore' },
+    orchi: { autore:'livello', ordini: {
+      orco:  sc(o('vai','costa'), o('avvista','umani'), o('attacca','umani')),
+      orco2: sc(o('vai','costa'), o('avvista','umani'), o('attacca','umani')) } },
+  },
+  verbi: ['vai','aspetta','avvista','manda'],
+  complementi: ['tesoro','passaggio','angolo','costa','orco','orco2','ora'],
+  obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }, { c:'vivo', chi:'ladra' }],
+  sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+  motivoSconfitta: "L'eroe è caduto.",
+  mostraNemici: 'gettoni', gettoni: 3,
+  soluzioni: [
+    { eroe: sc(o('vai','angolo'), o('vai','tesoro')) },
+    { ladra: sc(o('manda','ora')),
+      eroe: [main(), qn('ora', o('vai','angolo'), o('vai','passaggio'), o('vai','tesoro'))] },
+  ],
+}),
+
+]
+/* 13 ─ LA FORTEZZA: 34×22, quattro schermate di mappa. Qui la fila di
+       mete esplicite non è più «lunga», è impraticabile — e l'ordine di
+       alto livello smette di essere un'eleganza per diventare l'unico
+       modo. È la ragione per cui la mappa è grande.
+       Il `racconto` è la spiegazione lunga, quella che si apre col 💡. */
+M.LIVELLI.push((s = 0) => {
+  const g = tela(34, 22)
+  cava(g, 1, 1, 32, 1); cava(g, 1, 20, 32, 20)          // corridoi lunghi
+  cava(g, 1, 1, 1, 20); cava(g, 32, 1, 32, 20)          // le due coste
+  cava(g, 1, 10, 32, 10)                                // la traversa
+  cava(g, 3, 3, 8, 8); cava(g, 5, 1, 5, 3)              // la stanza della chiave
+  cava(g, 14, 13, 20, 18); cava(g, 17, 10, 17, 13)      // il maschio e il suo collo
+  const kx = ruota([6, 4, 7], s), ky = ruota([6, 7, 4], s)
+  return {
+    nome: 'La fortezza', idea: 'Quattro schermate: a mete non si fa più',
+    dritta: "La mappa è grande: <b>trascinala</b> col dito, e guarda la minimappa in alto. Qui le mete una per una non bastano più: servono gli ordini alti.",
+    racconto: "La fortezza è larga quattro schermate. Il guardiano sta al collo del maschio e l'eroe non regge due colpi; il cavaliere sì, ma deve arrivarci. La chiave è nella stanza di ponente, il portone è sotto il guardiano. Si vince quando l'eroe arriva al tesoro.",
+    aiuti: ["Qui le mete una per una non bastano più: gli ordini alti servono proprio a questo.",
+              "Il cavaliere è l'unico che regge il guardiano, e nessuno dei due è vicino all'altro.",
+              "Mentre uno tiene occupato il guardiano, l'altro può portarsi avanti col lavoro."],
+    mappa: stampa(g), nomi: { tesoro:'il tesoro', portone:'il portone', chiave:'la chiave',
+                              incrocio:"l'incrocio", ronda:'la costa di levante' },
+    posti: { tesoro:{x:17,y:16}, incrocio:{x:17,y:10} },
+    porte: { portone: { x:17, y:12, chiave:'chiave' } },
+    oggetti: [{ nome:'chiave', x:kx, y:ky }],
+    zone: { ronda: [{x:32,y:1},{x:32,y:20}] },
+    unita: [
+      { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:4, vita:2, x:1, y:1 },
+      { id:'cava', nome:'il cavaliere', fazione:'umani', emoji:'🛡️', vista:14, vita:20, x:1, y:20,
+        sa:['vai','attacca','aspetta','avvista'] },
+      { id:'orco', nome:'il guardiano', fazione:'orchi', emoji:'👹', vista:5, vita:26, x:17, y:11 },
+      { id:'orco2', nome:'la ronda', fazione:'orchi', emoji:'👺', vista:3, vita:6, x:32, y:1 },
+    ],
+    fazioni: {
+      umani: { autore:'giocatore' },
+      orchi: { autore:'livello', ordini: {
+        orco:  sc(o('avvista','eroe'), o('attacca','eroe')),
+        orco2: sc(o('pattuglia','ronda'), o('attacca','umani')) } },
+    },
+    verbi: ['vai','prendi','apri','attacca','aspetta','avvista','pattuglia'],
+    complementi: ['chiave','portone','tesoro','incrocio','orco','orco2','ronda'],
+    obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+    sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+    motivoSconfitta: "Il guardiano ha preso l'eroe.",
+    mostraNemici: 'gettoni', gettoni: 2,
+    soluzioni: [
+      { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('aspetta','orco'),
+                 o('vai','portone'), o('apri','portone'), o('vai','tesoro')),
+        cava: sc(o('vai','incrocio'), o('attacca','orco')) },
+      { eroe: sc(o('vai','chiave'), o('prendi','chiave'), o('aspetta','orco'),
+                 o('vai','portone'), o('apri','portone'), o('vai','tesoro')),
+        cava: sc(o('vai','portone'), o('attacca','orco')) },
+    ],
+  }
+})
+
+/* 14 ─ IL RAMO, e si fa a segnali.
+       Due strade per il tesoro e una sola è sorvegliata — ma quale
+       cambia da un mondo all'altro. Nessuna fila di ordini, per quanto
+       lunga, può indovinarlo: il seguito DIPENDE da cosa si trova.
+
+       Il ramo non è un blocco dentro un blocco: sono due sottoprogrammi
+       che si chiamano per nome. La vedetta guarda e sceglie QUALE
+       SEGNALE mandare (ed è lì che serve la guardia `se`); l'eroe ha
+       uno script per ciascuno dei due segnali. Ogni script resta una
+       lista piatta, e il programma ha due punti d'ingresso.
+
+       Perché non basta la guardia da sola: l'eroe ha la vista corta
+       come il naso, l'orco ce l'ha lunga. Chiunque si avvicini
+       abbastanza da VEDERE è già stato visto — e chi è stato visto non
+       torna indietro. Solo la vedetta, ferma e lontana, può guardare
+       senza essere presa: perciò chi decide non è chi cammina, e
+       l'informazione deve viaggiare.
+
+       E `vai [al tesoro]` non è una scappatoia: l'orco sta sempre alla
+       porta PIÙ VICINA al tesoro, e la strada più corta è quella che
+       `vai` sceglie da sé. Andare dritti vuol dire andargli addosso,
+       sempre. Bisogna dire da dove passare, e per dirlo bisogna
+       saperlo. */
+M.LIVELLI.push((s = 0) => {
+  const g = tela(13, 13)
+  cava(g, 1, 1, 5, 11)                                  // la corte di ponente
+  cava(g, 6, 2, 6, 2); cava(g, 6, 10, 6, 10)            // le due porte
+  cava(g, 7, 2, 11, 2); cava(g, 7, 10, 11, 10)          // i due camminamenti
+  cava(g, 11, 2, 11, 10)                                // la costa che li unisce
+  /* il tesoro sta dalla parte dell'orco: la via corta è la sua */
+  const dove = ruota([{ nord:true, t:{x:11,y:4} },
+                      { nord:false, t:{x:11,y:8} },
+                      { nord:true, t:{x:11,y:3} }], s)
+  const aNord = dove.nord
+  return {
+    nome: 'Due strade', idea: 'Il seguito dipende da cosa trovi',
+    dritta: "L'orco sta alla porta <b>più vicina al tesoro</b>, e cambia ogni volta: andarci dritti non funziona mai. Solo la vedetta lo vede da lontano.",
+    racconto: "Ci sono due porte per la corte di levante, e l'orco sta sempre a quella <b>più vicina al tesoro</b> — che cambia a ogni battaglia. L'eroe cade al primo colpo e vede solo a un passo; la vedetta vede lontano, e l'orco non la degna di uno sguardo. Si vince quando l'eroe arriva al tesoro.",
+    aiuti: ["Chi decide non è chi cammina: quello che si sa da una parte deve arrivare dall'altra.",
+              "La vedetta ne vede una sola, delle due porte: e sapere che l'orco NON è lì dice dov'è.",
+              "Un ordine può avere una condizione, e uno script può partire quando arriva un segnale: due segnali diversi, due seguiti diversi."],
+    mappa: stampa(g),
+    nomi: { tesoro:'il tesoro', pnord:'la porta di sopra', psud:'la porta di sotto' },
+    posti: { tesoro: dove.t, pnord:{x:6,y:2}, psud:{x:6,y:10} },
+    segnali: ['nemico','libero'],
+    unita: [
+      { id:'eroe', nome:"l'eroe", fazione:'umani', emoji:'🦸', vista:1, vita:1, x:2, y:6,
+        sa:['vai','aspetta'] },
+      { id:'vedetta', nome:'la vedetta', fazione:'umani', emoji:'🔭', vista:5, vita:3, x:2, y:1,
+        sa:['aspetta','manda'] },
+      { id:'orco', nome:"l'orco", fazione:'orchi', emoji:'👹', vista:4, vita:9,
+        ...(aNord ? { x:6, y:2 } : { x:6, y:10 }) },
+    ],
+    fazioni: {
+      umani: { autore:'giocatore' },
+      orchi: { autore:'livello', ordini: { orco: sc(
+        o('avvista','eroe'), o('attacca','eroe')) } },
+    },
+    verbi: ['vai','aspetta','manda'],
+    complementi: ['pnord','psud','tesoro','orco','nemico','libero','momento'],
+    /* le condizioni le detta il livello: qui la domanda è una sola —
+       la vedetta lo vede o no? */
+    condizioni: [{ c:'vedi', chi:'orco' }, { c:'vedi', chi:'orco', non:true }],
+    obiettivo: [{ c:'qui', chi:'eroe', posto:'tesoro' }],
+    sconfitta: [{ c:'vivo', chi:'eroe', non:true }],
+    motivoSconfitta: "L'eroe è finito addosso all'orco.",
+    mostraNemici: true,
+    soluzioni: [{
+      vedetta: sc(o('manda','nemico', vedi('orco')),
+                  o('manda','libero', nonVedi('orco'))),
+      eroe: [main(),
+             qn('nemico', o('vai','psud'),  o('vai','tesoro')),
+             qn('libero', o('vai','pnord'), o('vai','tesoro'))],
+    }],
+  }
+})
+
+M.quanti = M.LIVELLI.length
+M.costruisci = (i, s) => M.LIVELLI[i % M.LIVELLI.length](s || 0)
+})(MOTORE);
+/* ══ MOTORE — FINE ══ */
+/* ══════════════════════════════════════════════════════════════════
+   L'INTERFACCIA — tutto a tocchi.
+   Gli ordini sono una lista piatta di verbo+complemento: niente
+   annidamento, niente trascinamenti sui blocchi. L'unico trascinamento
+   è quello della mappa, e si distingue dal tocco per soglia.
+   ══════════════════════════════════════════════════════════════════ */
+const M = MOTORE
+const app = document.getElementById('app')
+const FAZ = { umani:'#4a86e8', orchi:'#e0554d' }
+const ESITO = { fa:'#43b96a', aspetto:'#f0c04a', no:'#e0554d', salto:'#b6c0da' }
+
+let L = 0, liv = null, mondo = null, piano = {}
+let unitaOra = null, scriptOra = 0, sel = null, letta = null
+let aperti = new Set(), creando = false      // quali pannelli sono aperti
+/* i suggerimenti: il primo è gratis, gli altri costano una stella.
+   Non c'è nessun tasto che mostri la soluzione, e non ci dev'essere. */
+let aiuti = 0, pagato = false, cartello = false, visti = new Set()
+let scheda = null                            // la scheda del personaggio aperta
+/* IL MODO SCELTA. Scelto il verbo, il bersaglio si tocca sulla mappa:
+   si illumina solo quello che quel verbo può prendere davvero, e il
+   filtro che era una tendina diventa luminoso. Per i complementi che
+   sulla mappa non stanno (i segnali, un momento) resta l'elenco. */
+let scegliendo = null                        // { v, i } — verbo in cerca di bersaglio
+const POSATO = { posto:1, oggetto:1, porta:1, unita:1, fazione:1, zona:1, cella:1 }
+const suMappa = v => {
+  const l = M.complementiPer(liv, v)
+  return l.length > 0 && l.every(k => POSATO[M.laCosa(liv, k).tipo])
+}
+let auto = false, vel = 420, serie = [0], serieI = 0, esiti = []
+let animT0 = 0, prec = [], gettoni = 0, scoperte = new Set()
+let cam = { x:0, y:0, z:34 }, segui = true, logAperto = false, logLetto = 0
+let record = {}
+try { record = JSON.parse(localStorage.getItem('progr.record') || '{}') } catch (e) { record = {} }
+
+/* ── suoni ── */
+let AC = null
+addEventListener('pointerdown', () => { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)() } catch (e) {} }, true)
+function bip (f, d, tipo, vol) {
+  if (!AC) return
+  const o = AC.createOscillator(), g = AC.createGain()
+  o.type = tipo || 'square'; o.frequency.value = f
+  g.gain.setValueAtTime(vol || .05, AC.currentTime)
+  g.gain.exponentialRampToValueAtTime(.0008, AC.currentTime + d)
+  o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d)
+}
+function suoni (ev) {
+  if (ev.includes('vinta')) { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>bip(f,.16,'triangle',.07),i*95)); return }
+  if (ev.includes('persa')) { bip(200,.2,'sawtooth',.06); setTimeout(()=>bip(140,.28,'sawtooth',.06),150); return }
+  if (ev.includes('morte')) bip(150,.22,'sawtooth',.06)
+  else if (ev.includes('colpo')) bip(320,.05,'square',.035)
+  else if (ev.includes('allarme')) { bip(880,.1,'sine',.06); setTimeout(()=>bip(660,.12,'sine',.06),110) }
+  else if (ev.includes('apre')) bip(420,.13,'triangle',.05)
+  else if (ev.includes('presa')) bip(760,.09,'triangle',.05)
+  else if (ev.includes('passo')) bip(150,.028,'sine',.022)
+}
+
+/* ══ la casa ══ */
+function casa () {
+  const c = []
+  for (let i = 0; i < M.quanti; i++) {
+    const l = M.costruisci(i, 0), r = record['l' + i]
+    c.push(`<button class="liv ${r ? 'fatto' : ''}" data-liv="${i}">
+      <span class="num">${r ? '✓' : i + 1}</span>
+      <span class="testo"><span class="tit">${l.nome}</span><span class="che">${l.idea}</span></span>
+      <span class="stelle">${r ? (r <= M.parDi(l) && record['s' + i] ? '⭐⭐' : '⭐') + `<small>${r}</small>` : ''}
+        <small>par ${M.parDi(l)}</small></span></button>`)
+  }
+  app.innerHTML = `<div class="casa"><h1>Il generale</h1>
+    <p class="sotto">Non comandi nessuno a mano: scrivi gli <b>ordini</b>, premi ▶ e
+      guardi se il piano regge. Ogni ordine è <b>un verbo</b> e <b>una cosa</b>.</p>
+    ${c.join('')}</div>`
+  app.querySelectorAll('[data-liv]').forEach(b => b.onclick = () => apri(+b.dataset.liv))
+}
+
+/* ══ aprire un livello ══ */
+function apri (i) {
+  L = i
+  liv = M.costruisci(L, 0)
+  gettoni = liv.gettoni || 0; scoperte = new Set()
+  if (liv.mostraNemici === true) M.altruiUnita(liv).forEach(u => scoperte.add(u))
+  piano = {}
+  M.mieUnita(liv).forEach(id => {
+    piano[id] = M.scriptDi(liv, id).map(s => ({ quando: s.quando, ordini: [] }))
+  })
+  unitaOra = M.mieUnita(liv)[0]; scriptOra = 0; sel = null; letta = null
+  /* si parte col main aperto e i sottoprogrammi chiusi: la forma del
+     programma prima del dettaglio */
+  aperti = new Set([unitaOra + ':0']); creando = false
+  mondo = M.creaMondo(liv); M.avvia(mondo, M.pianoCompleto(liv, piano))
+  mondo.finita = false; mondo.tick = 0
+  auto = false; serie = Array.from({ length: M.mondiDi(liv) }, (_, k) => k)
+  serieI = 0; esiti = []; logAperto = false; logLetto = 0; segui = true
+  aiuti = 0; pagato = false
+  /* la prima volta il cartello si apre da sé: è la spiegazione del
+     livello, non un aiuto, e leggerla non costa niente */
+  cartello = !visti.has(L); visti.add(L)
+  telaio(); inquadra(true); disegnaTutto()
+}
+
+/* ══ lo scheletro ══ */
+function telaio () {
+  app.innerHTML = `
+  <div class="barra">
+    <button class="indietro" aria-label="indietro">←</button>
+    <span class="dove"><span id="nome"></span><small id="idea"></small></span>
+    <span class="destra"><span class="mondi" id="mondi"></span><span class="conta" id="conta"></span></span>
+  </div>
+  <div class="scena">
+    <canvas id="tela"></canvas>
+    <canvas id="mini" class="mini"></canvas>
+    <div class="frecce" id="frecce"></div>
+  </div>
+  <div class="scelta" id="scelta"></div>
+  <div class="dritta" id="dritta"></div>
+  <div class="comandi">
+    <button class="via" id="via">▶ Via</button>
+    <button class="q" id="uno">⏭</button>
+    <button class="q" id="stop">⏹</button>
+    <button class="q" id="lento">🐢</button>
+    <button class="q" id="spia" style="display:none">🕵<span id="gett"></span></button>
+    <button class="q reg" id="idea">💡</button>
+    <button class="q reg" id="reg">📜<span class="pallo" id="pallo"></span></button>
+  </div>
+  <div class="zona" id="zona">
+    <div class="chi" id="chi"></div>
+    <div class="prog" id="prog"></div>
+    <svg class="fili" id="fili"></svg>
+  </div>
+  <div class="cassetta" id="cassetta"></div>
+  <div class="registro" id="registro"></div>
+  <div class="registro cartello" id="cartello"></div>
+  <div class="registro persona" id="scheda"></div>`
+  app.querySelector('.indietro').onclick = () => { auto = false; casa() }
+  app.querySelector('#via').onclick = via
+  app.querySelector('#uno').onclick = unPasso
+  app.querySelector('#stop').onclick = ferma
+  app.querySelector('#lento').onclick = e => {
+    vel = vel === 420 ? 170 : vel === 170 ? 760 : 420
+    e.currentTarget.textContent = vel === 170 ? '🐇' : vel === 760 ? '🐌' : '🐢'
+  }
+  app.querySelector('#spia').onclick = intercetta
+  app.querySelector('#idea').onclick = () => { cartello = !cartello; logAperto = false; pannelli() }
+  app.querySelector('#reg').onclick = () => {
+    logAperto = !logAperto; cartello = false
+    if (logAperto) logLetto = M.registro(mondo).filter(r => r.esito === 'no').length
+    pannelli()
+  }
+  /* i fili seguono la lista mentre scorre */
+  app.querySelector('#prog').addEventListener('scroll', fili, { passive:true })
+  trascina(app.querySelector('#tela'))
+  addEventListener('resize', () => { inquadra(); disegnaTutto() })
+  requestAnimationFrame(giro)
+}
+
+/* ── la mappa si trascina; il tocco resta il tocco (soglia 9px) ── */
+function trascina (cv) {
+  let giu = null, mosso = 0, vx = 0, vy = 0, ultimo = 0
+  cv.style.touchAction = 'none'
+  cv.addEventListener('pointerdown', e => {
+    giu = { x:e.clientX, y:e.clientY, cx:cam.x, cy:cam.y }; mosso = 0; vx = vy = 0
+    cv.setPointerCapture(e.pointerId)
+  })
+  cv.addEventListener('pointermove', e => {
+    if (!giu) return
+    const dx = e.clientX - giu.x, dy = e.clientY - giu.y
+    mosso = Math.max(mosso, Math.abs(dx) + Math.abs(dy))
+    if (mosso < 9) return
+    segui = false
+    const nx = giu.cx - dx / cam.z, ny = giu.cy - dy / cam.z
+    vx = nx - cam.x; vy = ny - cam.y
+    cam.x = nx; cam.y = ny; limita(); ultimo = performance.now()
+  })
+  cv.addEventListener('pointerup', e => {
+    if (!giu) return
+    if (mosso < 9) tocca(e)
+    else if (performance.now() - ultimo < 90) inerzia(vx, vy)
+    giu = null
+  })
+  cv.addEventListener('pointercancel', () => { giu = null })
+}
+function inerzia (vx, vy) {
+  let k = 0
+  const passo = () => {
+    if (k++ > 14) return
+    cam.x += vx * (1 - k / 14) * 1.6; cam.y += vy * (1 - k / 14) * 1.6; limita()
+    requestAnimationFrame(passo)
+  }
+  passo()
+}
+function tocca (e) {
+  const cv = document.getElementById('tela'), r = cv.getBoundingClientRect()
+  const x = Math.floor(cam.x + (e.clientX - r.left) / cam.z)
+  const y = Math.floor(cam.y + (e.clientY - r.top) / cam.z)
+  if (scegliendo) { toccaBersaglio(x, y); return }
+  const u = mondo.elenco.find(z => z.viva && z.x === x && z.y === y)
+  if (!u) return
+  if (piano[u.id]) { unitaOra = u.id; scriptOra = 0; sel = null; letta = null; segui = true
+                     mira() }
+  else letta = letta === u.id ? null : u.id
+  /* toccare qualcuno sul campo apre anche la sua scheda: chi è, cosa
+     sa fare e cosa no. Una regola che non si capisce sembra un bug. */
+  scheda = u.id; cartello = false; logAperto = false
+  pannelli()
+}
+/* ══ IL MODO SCELTA ══════════════════════════════════════════════
+   Si illumina solo quello che il verbo può prendere davvero. Poi si
+   conferma: due tocchi invece di uno, e va benissimo — qui non si
+   gioca in tempo reale, si scrive un piano. E la conferma DICE IL
+   NOME della cosa, che è la stessa parola che poi si legge
+   nell'ordine e nel registro. */
+function bersagli () {
+  if (!scegliendo) return []
+  const v = scegliendo.v, out = []
+  const agg = (id, x, y) => {
+    const C = M.laCosa(liv, id); if (!C) return
+    out.push({ id, x, y, nome: C.nome, em: C.em })
+  }
+  M.complementiPer(liv, v).forEach(k => {
+    const C = M.laCosa(liv, k)
+    switch (C.tipo) {
+      case 'posto': { const p = liv.posti[k]; agg(k, p.x, p.y); break }
+      case 'porta': { const p = mondo.porte[k]; agg(k, p.x, p.y); break }
+      case 'oggetto': { const o = mondo.oggetti.find(z => z.nome === k)
+        if (o && !o.preso) agg(k, o.x, o.y)
+        else if (o && o.preso && mondo.unita[o.preso].viva) agg(k, mondo.unita[o.preso].x, mondo.unita[o.preso].y)
+        break }
+      case 'zona': (liv.zone[k] || []).forEach(t => agg(k, t.x, t.y)); break
+      case 'unita': { const u = mondo.unita[k]; if (u && u.viva) agg(k, u.x, u.y); break }
+      case 'fazione': mondo.viva.filter(z => z.fazione === k).forEach(z => agg(k, z.x, z.y)); break
+    }
+  })
+  return out
+}
+const celleLibere = () => M.VERBI[scegliendo.v].prende.includes('cella')
+function toccaBersaglio (x, y) {
+  const b = bersagli().filter(t => t.x === x && t.y === y)
+  if (b.length) { scegliendo.scelta = b[0]; bip(660, .06, 'triangle', .05); pannelli(); return }
+  if (celleLibere() && M.libera(mondo, x, y)) {
+    const id = x + ',' + y, C = M.laCosa(liv, id)
+    scegliendo.scelta = { id, x, y, nome: 'questa posizione', em: '⬚' }
+    bip(560, .06, 'triangle', .05); pannelli(); return
+  }
+  bip(180, .07, 'square', .04)          // lì non c'è niente da scegliere
+}
+function confermaScelta () {
+  const s = scegliendo.scelta; if (!s) return
+  const l = piano[unitaOra][scriptOra].ordini
+  if (scegliendo.i != null) l[scegliendo.i].c = s.id        // cambia bersaglio: il resto resta
+  else { l.push({ v: scegliendo.v, c: s.id }); sel = l.length - 1 }
+  scegliendo = null
+  bip(720, .07, 'triangle', .05); pannelli()
+}
+/* i numeri delle caselle: ①②③ nell'ordine in cui compaiono nel piano
+   di questa unità, gli stessi sull'ordine e sulla mappa */
+const CERCHI = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩']
+function numeriCelle () {
+  const n = {}; let k = 0
+  ;(piano[unitaOra] || []).forEach(sc => (sc.ordini || []).forEach(o => {
+    if (CELLA_UI.test(o.c || '') && !n[o.c]) n[o.c] = CERCHI[k++] || '⬚'
+  }))
+  return n
+}
+const CELLA_UI = /^\d+,\d+$/
+const numeroDi = id => numeriCelle()[id] || '⬚'
+
+/* la barra della conferma, sopra la mappa */
+function pannelloScelta () {
+  const box = document.getElementById('scelta'); if (!box) return
+  if (!scegliendo) { box.className = 'scelta'; box.innerHTML = ''; return }
+  box.className = 'scelta aperta'
+  const s = scegliendo.scelta
+  const V = M.VERBI[scegliendo.v]
+  box.innerHTML = s
+    ? `<div class="dett">hai scelto <b>${s.em} ${s.nome}</b>${CELLA_UI.test(s.id) ? ` <i>(${s.x},${s.y})</i>` : ''}</div>
+       <button class="ok" id="okScelta">✓ ${V.nome} qui</button>
+       <button class="no" id="noScelta" aria-label="annulla">✕</button>`
+    : `<div class="dett">tocca il bersaglio di <b>${V.et} ${V.nome}</b>${celleLibere() ? ' — anche una casella vuota' : ''}</div>
+       <button class="no" id="noScelta" aria-label="annulla">✕</button>`
+  const ok = box.querySelector('#okScelta'); if (ok) ok.onclick = confermaScelta
+  box.querySelector('#noScelta').onclick = () => {
+    if (scegliendo.scelta) scegliendo.scelta = null       // torna a scegliere
+    else scegliendo = null                                 // esce dal modo scelta
+    pannelli()
+  }
+}
+
+/* la vista non è la mappa: il mondo può essere molto più grande */
+function limita () {
+  const cv = document.getElementById('tela'); if (!cv) return
+  const R = cv.getBoundingClientRect()
+  const w = R.width / cam.z, h = R.height / cam.z
+  cam.x = mondo.w <= w ? (mondo.w - w) / 2 : Math.max(0, Math.min(mondo.w - w, cam.x))
+  cam.y = mondo.h <= h ? (mondo.h - h) / 2 : Math.max(0, Math.min(mondo.h - h, cam.y))
+}
+function inquadra (primo) {
+  const cv = document.getElementById('tela'); if (!cv) return
+  const R = cv.getBoundingClientRect()
+  if (primo) {
+    const z = Math.min(R.width / mondo.w, R.height / mondo.h)
+    cam.z = Math.max(16, Math.min(40, Math.floor(z)))      // mai celle microscopiche
+  }
+  limita()
+}
+function centraSu (x, y) {
+  const cv = document.getElementById('tela'); if (!cv) return
+  const R = cv.getBoundingClientRect()
+  cam.x = x - R.width / cam.z / 2 + .5; cam.y = y - R.height / cam.z / 2 + .5
+  limita()
+}
+
+/* ══ i comandi ══ */
+function via () {
+  if (auto) { auto = false; disegnaTutto(); return }
+  if (mondo.finita || !mondo.tick) partiMondo(0)
+  auto = true; segui = true; disegnaTutto()
+}
+function unPasso () {
+  auto = false
+  if (mondo.finita || !mondo.tick) partiMondo(0)
+  fai1(); disegnaTutto()
+}
+function ferma () {
+  auto = false; serieI = 0; esiti = []
+  liv = M.costruisci(L, 0)
+  mondo = M.creaMondo(liv); M.avvia(mondo, M.pianoCompleto(liv, piano))
+  mondo.finita = false; mondo.tick = 0; logLetto = 0
+  disegnaTutto()
+}
+function partiMondo (k) {
+  serieI = k
+  if (k === 0) { esiti = []; logLetto = 0 }
+  liv = M.costruisci(L, serie[serieI])
+  mondo = M.creaMondo(liv)
+  M.avvia(mondo, M.pianoCompleto(liv, piano))
+  animT0 = performance.now(); prec = mondo.elenco.map(u => ({ x:u.x, y:u.y }))
+}
+function fai1 () {
+  if (mondo.finita) return
+  const rosseP = M.registro(mondo).filter(r => r.esito === 'no').length
+  prec = mondo.elenco.map(u => ({ x:u.x, y:u.y }))
+  M.passo(mondo)
+  animT0 = performance.now()
+  suoni(mondo.eventi)
+  /* quando qualcosa va storto, la vista ci salta sopra da sola */
+  const reg = M.registro(mondo)
+  const rosse = reg.filter(r => r.esito === 'no')
+  if (rosse.length > rosseP) {
+    const u = mondo.unita[rosse[rosse.length - 1].unita]
+    if (u) { centraSu(u.x, u.y); u.lampo = mondo.tick }
+    bip(240, .09, 'sawtooth', .05)
+  } else if (segui && mondo.unita[unitaOra] && mondo.unita[unitaOra].viva) {
+    const u = mondo.unita[unitaOra]; centraSu(u.x, u.y)
+  }
+  if (mondo.finita) chiudi()
+}
+/* riavvolgere: la scena è deterministica, quindi si rigioca da capo */
+function riavvolgi (t) {
+  auto = false
+  const k = serieI
+  liv = M.costruisci(L, serie[k])
+  mondo = M.creaMondo(liv); M.avvia(mondo, M.pianoCompleto(liv, piano))
+  for (let n = 0; n < t && !mondo.finita; n++) M.passo(mondo)
+  prec = mondo.elenco.map(u => ({ x:u.x, y:u.y })); animT0 = 0
+  disegnaTutto()
+}
+function chiudi () {
+  esiti[serieI] = mondo.vinta
+  suoni([mondo.vinta ? 'vinta' : 'persa'])
+  if (mondo.vinta && serieI < serie.length - 1) {
+    setTimeout(() => { if (!auto) return; partiMondo(serieI + 1); disegnaTutto() }, 760)
+    return
+  }
+  auto = false
+  if (mondo.vinta && esiti.filter(Boolean).length === serie.length) vittoria()
+  else if (!mondo.vinta && mondo.colpevole) {
+    const c = mondo.colpevole
+    /* il pannello dell'ordine colpevole si apre da sé: se resta chiuso
+       il piano si vede ma non si legge */
+    if (piano[c.unita]) { unitaOra = c.unita; scriptOra = c.script; sel = c.i
+                          aperti.add(c.unita + ':' + c.script) }
+    else letta = c.unita
+    const u = mondo.unita[c.unita]; if (u) centraSu(u.x, u.y)
+  }
+}
+function vittoria () {
+  const n = M.contaOrdini(piano), par = M.parDi(liv)
+  /* le due stelle sono per chi ci arriva da solo: un aiuto pagato
+     costa il vanto, non il passaggio */
+  const dentro = n <= par && !pagato
+  const prima = record['l' + L]
+  if (!prima || n < prima) record['l' + L] = n
+  if (dentro) record['s' + L] = 1
+  try { localStorage.setItem('progr.record', JSON.stringify(record)) } catch (e) {}
+  const v = document.createElement('div')
+  v.className = 'velo'
+  v.innerHTML = `<div class="urlo">${dentro ? '🏅' : '🎖️'}</div>
+    <h2>${dentro ? 'Piano elegante!' : 'Il piano regge!'}</h2>
+    <div class="stelline">${dentro ? '⭐⭐' : '⭐'}</div>
+    <p>Ha funzionato ${serie.length > 1 ? 'su tutte e ' + serie.length + ' le battaglie' : ''}
+       con <b>${n} ordin${n === 1 ? 'e' : 'i'}</b>. Il par è <b>${par}</b>.
+       ${pagato ? 'Hai chiesto un aiuto: questa vale una stella. Rifallo senza, e sono due.'
+                : dentro ? 'Non si poteva fare più corto.' : 'C’è un modo più corto: cercalo.'}
+       ${prima ? `<br>Il tuo record era ${prima}.` : ''}</p>
+    <div class="duebottoni"><button class="grigio" id="ancora">Riprova</button>
+      <button id="poi">${L + 1 < M.quanti ? 'Avanti →' : 'Torna'}</button></div>`
+  app.appendChild(v)
+  v.querySelector('#ancora').onclick = () => { v.remove(); ferma() }
+  v.querySelector('#poi').onclick = () => { v.remove(); L + 1 < M.quanti ? apri(L + 1) : casa() }
+}
+function intercetta () {
+  const nascoste = M.altruiUnita(liv).filter(u => !scoperte.has(u))
+  if (!gettoni || !nascoste.length) return
+  gettoni--; scoperte.add(nascoste[0]); letta = nascoste[0]
+  bip(660, .12, 'sine', .05); pannelli()
+}
+
+/* ══ il giro ══ */
+function giro (ts) {
+  if (mondo && auto && !mondo.finita && ts - animT0 >= vel) { fai1(); disegna(); pannelli() }
+  else if (mondo) disegna()
+  requestAnimationFrame(giro)
+}
+function disegnaTutto () { if (mondo) { disegna(); pannelli() } }
+
+/* ══ la scena ══ */
+function disegna () {
+  const cv = document.getElementById('tela'); if (!cv) return
+  const R = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2)
+  if (cv.width !== Math.round(R.width * dpr)) { cv.width = Math.round(R.width * dpr); cv.height = Math.round(R.height * dpr); limita() }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  const W = R.width, H = R.height, m = mondo, c = cam.z
+  g.fillStyle = '#0a0e19'; g.fillRect(0, 0, W, H)
+  const px = x => Math.round((x - cam.x) * c), py = y => Math.round((y - cam.y) * c)
+  const x0 = Math.max(0, Math.floor(cam.x)), x1 = Math.min(m.w - 1, Math.ceil(cam.x + W / c))
+  const y0 = Math.max(0, Math.floor(cam.y)), y1 = Math.min(m.h - 1, Math.ceil(cam.y + H / c))
+  const alz = Math.max(3, Math.round(c * .18))
+
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    if (m.celle[y][x].muro) continue
+    g.fillStyle = (x + y) % 2 ? '#1b2233' : '#1f2740'
+    g.fillRect(px(x), py(y), c, c)
+  }
+  for (const nz in (liv.zone || {})) {
+    const z = liv.zone[nz]
+    g.strokeStyle = 'rgba(224,85,77,.5)'; g.lineWidth = 2; g.setLineDash([5, 5]); g.beginPath()
+    z.forEach((t, i) => i ? g.lineTo(px(t.x) + c/2, py(t.y) + c/2) : g.moveTo(px(t.x) + c/2, py(t.y) + c/2))
+    if (z.length > 2) g.closePath()
+    g.stroke(); g.setLineDash([])
+  }
+  m.viva.filter(u => u.fazione !== m.mia && u.vista).forEach(u => {
+    const d = M.distanze(m, u.x, u.y)
+    g.fillStyle = 'rgba(224,85,77,.13)'
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const q = d[y * m.w + x]
+      if (q >= 0 && q <= u.vista) g.fillRect(px(x), py(y), c, c)
+    }
+  })
+  for (const k in (liv.posti || {})) {
+    const p = liv.posti[k]
+    g.fillStyle = 'rgba(240,192,74,.16)'; g.fillRect(px(p.x) + 2, py(p.y) + 2, c - 4, c - 4)
+    g.strokeStyle = 'rgba(240,192,74,.5)'; g.lineWidth = 1.5; g.setLineDash([3, 3])
+    g.strokeRect(px(p.x) + 2, py(p.y) + 2, c - 4, c - 4); g.setLineDash([])
+    if (k === 'tesoro') { g.font = `${Math.round(c*.55)}px serif`; g.textAlign = 'center'; g.textBaseline = 'middle'
+      g.fillText('💎', px(p.x) + c/2, py(p.y) + c/2) }
+  }
+  m.oggetti.filter(o => !o.preso).forEach(o => {
+    g.font = `${Math.round(c*.55)}px serif`; g.textAlign = 'center'; g.textBaseline = 'middle'
+    g.fillText('🔑', px(o.x) + c/2, py(o.y) + c/2)
+  })
+  for (const k in m.porte) {
+    const p = m.porte[k]
+    if (p.aperta) { g.fillStyle = '#4a3a24'; g.fillRect(px(p.x), py(p.y), c, 4); g.fillRect(px(p.x), py(p.y) + c - 4, c, 4) }
+    else {
+      g.fillStyle = '#6d4b26'; g.fillRect(px(p.x) + 1, py(p.y) + 1, c - 2, c - 2)
+      g.fillStyle = '#8c6231'; g.fillRect(px(p.x) + 1, py(p.y) + 1, c - 2, Math.round(c * .18))
+      g.fillStyle = '#f0c04a'; g.beginPath(); g.arc(px(p.x) + c*.72, py(p.y) + c/2, Math.max(2, c*.07), 0, 7); g.fill()
+    }
+  }
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    if (!m.celle[y][x].muro) continue
+    g.fillStyle = '#161b29'; g.fillRect(px(x), py(y), c, c)
+    g.fillStyle = '#2b3450'; g.fillRect(px(x), py(y) - alz, c, c)
+    g.fillStyle = '#39456a'; g.fillRect(px(x), py(y) - alz, c, Math.max(2, alz * .7))
+  }
+
+  const u01 = animT0 ? Math.min(1, (performance.now() - animT0) / vel) : 1
+  const reg = M.registro(m)
+  m.elenco.forEach((u, i) => {
+    if (!u.viva) return
+    const p0 = prec[i] || u
+    const X = px(p0.x + (u.x - p0.x) * u01) + c/2, Y = py(p0.y + (u.y - p0.y) * u01) + c/2
+    if (X < -c || X > W + c || Y < -c || Y > H + c) return
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(X, Y + c*.3, c*.3, c*.12, 0, 0, 7); g.fill()
+    const rosso = u.lampo && m.tick - u.lampo < 3
+    g.fillStyle = rosso && m.tick % 2 ? '#e0554d' : (FAZ[u.fazione] || '#888')
+    g.beginPath(); g.arc(X, Y, c * .36, 0, 7); g.fill()
+    g.strokeStyle = u.id === letta || u.id === unitaOra ? '#f0c04a' : 'rgba(255,255,255,.35)'
+    g.lineWidth = (u.id === letta || u.id === unitaOra) ? 3 : 1.5; g.stroke()
+    g.font = `${Math.round(c*.46)}px serif`; g.textAlign = 'center'; g.textBaseline = 'middle'
+    g.fillText(u.emoji, X, Y + 1)
+    if (u.vitaMax > 1) {
+      const w = c * .62
+      g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(X - w/2, Y - c*.52, w, 4)
+      g.fillStyle = u.fazione === m.mia ? '#43b96a' : '#e0554d'
+      g.fillRect(X - w/2, Y - c*.52, w * Math.max(0, u.vita / u.vitaMax), 4)
+    }
+    /* il fumetto: l'ultima cosa che ha detto, e in rosso se non ha potuto */
+    const r = [...reg].reverse().find(z => z.unita === u.id && z.tFine >= m.tick - 2)
+    if (r && m.tick) {
+      const t = (mio(u) || scoperte.has(u.id)) ? r.testo : (r.visto ? r.fatto : null)
+      if (t) {
+        g.font = '600 10px system-ui,sans-serif'; g.textAlign = 'center'
+        const lw = Math.min(W - 6, g.measureText(t).width + 9)
+        const bx = Math.max(2, Math.min(W - lw - 2, X - lw/2)), by = Y - c*.52 - 16 - (i % 2) * 15
+        g.fillStyle = r.esito === 'no' ? 'rgba(120,26,26,.94)' : 'rgba(8,11,20,.86)'
+        g.fillRect(bx, by, lw, 14)
+        if (r.esito === 'no') { g.strokeStyle = '#e0554d'; g.lineWidth = 1; g.strokeRect(bx, by, lw, 14) }
+        g.fillStyle = r.esito === 'no' ? '#ffd7d3' : (ESITO[r.esito] || '#e9eef8')
+        g.fillText(t, bx + lw/2, by + 11)
+      }
+    }
+  })
+  /* le caselle scritte a mano del piano: il numero sulla mappa è lo
+     stesso che si legge nell'ordine */
+  if (piano[unitaOra]) {
+    const num = numeriCelle()
+    for (const id in num) {
+      const mm = CELLA_UI.exec(id); if (!mm) continue
+      const [cx, cy] = id.split(',').map(Number)
+      const suo = sel != null && piano[unitaOra][scriptOra] &&
+                  piano[unitaOra][scriptOra].ordini[sel] &&
+                  piano[unitaOra][scriptOra].ordini[sel].c === id
+      g.strokeStyle = suo ? '#f0c04a' : 'rgba(240,192,74,.55)'
+      g.lineWidth = suo ? 3 : 1.5
+      g.setLineDash(suo ? [] : [4, 3])
+      g.strokeRect(px(cx) + 3, py(cy) + 3, c - 6, c - 6); g.setLineDash([])
+      g.fillStyle = suo ? '#f0c04a' : 'rgba(240,192,74,.75)'
+      g.font = `700 ${Math.round(c * .5)}px system-ui,sans-serif`
+      g.textAlign = 'center'; g.textBaseline = 'middle'
+      g.fillText(num[id], px(cx) + c / 2, py(cy) + c / 2)
+    }
+  }
+
+  /* il modo scelta: velo su tutto, luce solo sui bersagli buoni */
+  if (scegliendo) {
+    g.fillStyle = 'rgba(6,9,16,.62)'; g.fillRect(0, 0, W, H)
+    if (celleLibere()) {
+      const d = M.distanze(mondo, mondo.unita[unitaOra].x, mondo.unita[unitaOra].y)
+      g.fillStyle = 'rgba(122,180,255,.16)'
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++)
+        if (d[y * m.w + x] >= 0) g.fillRect(px(x) + 1, py(y) + 1, c - 2, c - 2)
+    }
+    bersagli().forEach(t => {
+      g.fillStyle = 'rgba(240,192,74,.3)'; g.fillRect(px(t.x), py(t.y), c, c)
+      g.strokeStyle = '#f0c04a'; g.lineWidth = 2.5
+      g.strokeRect(px(t.x) + 1.5, py(t.y) + 1.5, c - 3, c - 3)
+      g.font = `${Math.round(c * .5)}px serif`; g.textAlign = 'center'; g.textBaseline = 'middle'
+      g.fillText(t.em, px(t.x) + c / 2, py(t.y) + c / 2)
+    })
+    const s = scegliendo.scelta
+    if (s) {
+      g.strokeStyle = '#fff'; g.lineWidth = 3
+      g.beginPath(); g.arc(px(s.x) + c / 2, py(s.y) + c / 2, c * .48, 0, 7); g.stroke()
+      g.strokeStyle = '#f0c04a'; g.lineWidth = 2
+      g.beginPath()
+      g.moveTo(px(s.x) + c * .2, py(s.y) + c * .2); g.lineTo(px(s.x) + c * .8, py(s.y) + c * .8)
+      g.moveTo(px(s.x) + c * .8, py(s.y) + c * .2); g.lineTo(px(s.x) + c * .2, py(s.y) + c * .8)
+      g.stroke()
+    }
+  }
+  minimappa()
+  frecce(W, H)
+}
+const mio = u => !!piano[u.id]
+
+/* la minimappa: dove sono tutti, e dove sto guardando */
+function minimappa () {
+  const cv = document.getElementById('mini'); if (!cv) return
+  const m = mondo
+  const grande = m.w > 16 || m.h > 12
+  cv.style.display = grande ? 'block' : 'none'
+  if (!grande) return
+  const dpr = Math.min(devicePixelRatio || 1, 2)
+  const LARGO = 92, k = Math.max(1, Math.floor(LARGO / m.w)), Wm = m.w * k, Hm = m.h * k
+  cv.style.width = Wm + 'px'; cv.style.height = Hm + 'px'
+  if (cv.width !== Wm * dpr) { cv.width = Wm * dpr; cv.height = Hm * dpr }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  g.fillStyle = '#0c1120'; g.fillRect(0, 0, Wm, Hm)
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++)
+    if (!m.celle[y][x].muro) { g.fillStyle = '#243052'; g.fillRect(x*k, y*k, k, k) }
+  m.viva.forEach(u => { g.fillStyle = FAZ[u.fazione] || '#888'; g.fillRect(u.x*k - 1, u.y*k - 1, k + 2, k + 2) })
+  const tela = document.getElementById('tela').getBoundingClientRect()
+  g.strokeStyle = '#f0c04a'; g.lineWidth = 1.5
+  g.strokeRect(cam.x*k, cam.y*k, (tela.width/cam.z)*k, (tela.height/cam.z)*k)
+}
+/* frecce ai bordi per chi è fuori campo */
+function frecce (W, H) {
+  const box = document.getElementById('frecce'); if (!box) return
+  const out = []
+  mondo.viva.forEach(u => {
+    const X = (u.x - cam.x) * cam.z, Y = (u.y - cam.y) * cam.z
+    if (X >= 0 && X <= W && Y >= 0 && Y <= H) return
+    const cx = Math.max(10, Math.min(W - 10, X)), cy = Math.max(10, Math.min(H - 10, Y))
+    out.push(`<i style="left:${cx}px;top:${cy}px;background:${FAZ[u.fazione]}">${u.emoji}</i>`)
+  })
+  box.innerHTML = out.join('')
+}
+
+/* ══ i pannelli ══ */
+function pannelli () {
+  const q = s => document.getElementById(s); if (!q('nome')) return
+  q('nome').textContent = liv.nome
+  const n = M.contaOrdini(piano)
+  q('idea').textContent = liv.idea
+  q('conta').innerHTML = `${n} <small>par ${M.parDi(liv)}</small>`
+  const vinto = esiti.length === serie.length && esiti.every(Boolean)
+  q('conta').className = 'conta' + (vinto && n <= M.parDi(liv) ? ' bene' : '')
+  q('mondi').innerHTML = serie.map((_, i) =>
+    `<i class="${esiti[i] === true ? 'ok' : esiti[i] === false ? 'ko' : (mondo.tick && i === serieI ? 'ora' : '')}"></i>`).join('')
+  q('via').textContent = auto ? '⏸ Pausa' : '▶ Via'
+  q('via').className = 'via' + (auto ? ' gira' : '')
+  const sp = q('spia')
+  sp.style.display = liv.mostraNemici === 'gettoni' ? '' : 'none'
+  q('gett').textContent = gettoni
+  const rosse = M.registro(mondo).filter(r => r.esito === 'no').length
+  const nuove = Math.max(0, rosse - logLetto)
+  q('pallo').textContent = nuove || ''
+  q('pallo').style.display = nuove ? '' : 'none'
+  q('reg').className = 'q reg' + (logAperto ? ' qui' : '')
+
+  const d = q('dritta')
+  if (mondo.finita && !mondo.vinta) { d.className = 'dritta male'; d.innerHTML = '💥 ' + mondo.motivo }
+  else if (mondo.finita && mondo.vinta) { d.className = 'dritta bene'; d.innerHTML = '✔ Battaglia ' + (serieI + 1) + ' vinta.' }
+  else { d.className = 'dritta'; d.innerHTML = liv.dritta }
+
+  q('idea').className = 'q reg' + (cartello ? ' qui' : '')
+  /* mentre si sceglie sulla mappa, il resto si smorza */
+  document.getElementById('zona').className = 'zona' + (scegliendo ? ' smorza' : '')
+  document.getElementById('cassetta').className = 'cassetta' + (scegliendo ? ' smorza' : '')
+  chiRiga(); programma(); cassetta(); registroPannello(); cartelloPannello()
+  schedaPannello(); pannelloScelta(); fili()
+}
+
+/* ══ LA SCHEDA DEL PERSONAGGIO ══
+   Chi è, cosa sa fare e cosa non sa fare, con le stesse icone che
+   stanno in cassetta: così il legame fra «questo è il cavaliere» e
+   «al cavaliere manca quel tasto» è ovvio, e non sembra un guasto. */
+function schedaPannello () {
+  const box = document.getElementById('scheda')
+  box.className = 'registro persona' + (scheda ? ' aperto' : '')
+  if (!scheda) { box.innerHTML = ''; return }
+  const u = liv.unita.find(z => z.id === scheda)
+  if (!u) { scheda = null; box.innerHTML = ''; return }
+  const viva = mondo.unita[u.id]
+  const sa = M.verbiPer(liv, u.id), no = M.nonSa(liv, u.id)
+  const pezzi = l => l.map(v => `<span class="ab">${M.VERBI[v].et} ${M.VERBI[v].nome.replace(/ a$/, '')}</span>`).join('')
+  const h = [`<div class="capo">${u.emoji} ${u.nome}
+    <small>${piano[u.id] ? 'lo comandi tu' : 'non prende ordini da te'}</small>
+    <button id="chiudiS">✕</button></div><div class="corpo">`]
+  h.push(`<div class="dati">
+    <span>❤️ ${viva ? viva.vita : (u.vita || 3)}/${u.vita || 3} di vita</span>
+    <span>👁 vede a ${u.vista || 0} caselle</span></div>`)
+  h.push(`<div class="tit2">sa fare</div><div class="abil">${pezzi(sa) || '<i>niente, in questo livello</i>'}</div>`)
+  if (no.length) h.push(`<div class="tit2">non sa fare</div><div class="abil no">${pezzi(no)}</div>`)
+  h.push('</div>')
+  box.innerHTML = h.join('')
+  box.querySelector('#chiudiS').onclick = () => { scheda = null; pannelli() }
+}
+
+/* ══ IL CARTELLO ══ la spiegazione del livello, e i suggerimenti.
+   Il primo indirizza il pensiero, il secondo dice dove guardare, il
+   terzo quale ordine serve — nessuno dice mai dove metterlo, e il
+   piano non si mostra mai. Dal secondo in poi costano una stella, e il
+   prezzo si legge PRIMA di chiedere. */
+function cartelloPannello () {
+  const box = document.getElementById('cartello')
+  box.className = 'registro cartello' + (cartello ? ' aperto' : '')
+  if (!cartello) { box.innerHTML = ''; return }
+  const lista = liv.aiuti || []
+  const h = [`<div class="capo">💡 ${liv.nome} <small>${liv.idea}</small>
+    <button id="chiudiC">✕</button></div><div class="corpo">`]
+  h.push(`<p class="racconto">${liv.racconto || liv.dritta}</p>`)
+  for (let k = 0; k < Math.min(aiuti, lista.length); k++)
+    h.push(`<div class="aiuto"><b>Aiuto ${k + 1}</b> ${lista[k]}</div>`)
+  if (aiuti < lista.length) {
+    const gratis = aiuti === 0
+    h.push(`<button class="chiedi ${gratis ? 'gratis' : ''}" id="chiediAiuto">
+      ${gratis ? '💡 Il primo aiuto è gratis' : '💡 Un altro aiuto'}
+      <small>${gratis ? 'non costa niente' : 'ti costa una stella: chiuderai il livello con ⭐ invece di ⭐⭐'}</small></button>`)
+  } else if (lista.length) {
+    h.push(`<div class="aiuto muto">Gli aiuti sono finiti. Il resto è tuo: la soluzione non te la dà nessuno.</div>`)
+  }
+  if (pagato) h.push(`<div class="aiuto muto">⭐ Questa battaglia vale una stella: hai chiesto un aiuto.</div>`)
+  h.push('</div>')
+  box.innerHTML = h.join('')
+  box.querySelector('#chiudiC').onclick = () => { cartello = false; pannelli() }
+  const c = box.querySelector('#chiediAiuto')
+  if (c) c.onclick = () => {
+    if (aiuti > 0) pagato = true
+    aiuti++; bip(700, .1, 'triangle', .05); pannelli()
+    const corpo = box.querySelector('.corpo'); if (corpo) corpo.scrollTop = corpo.scrollHeight
+  }
+}
+
+/* ── chi comanda: una riga di unità, non di script ─────────────────
+   Gli script non stanno più qui: sono pannelli, e stanno nel
+   programma. Qui si sceglie solo DI CHI stai scrivendo il piano. */
+function chiRiga () {
+  const box = document.getElementById('chi'); if (!box) return
+  const b = []
+  M.mieUnita(liv).forEach(id => {
+    const u = liv.unita.find(z => z.id === id)
+    const n = piano[id].reduce((k, s) => k + s.ordini.length, 0)
+    const sig = piano[id].filter(s => s.quando.tipo === 'segnale').length
+    b.push(`<button class="${id === unitaOra && !letta ? 'qui' : ''}" data-u="${id}" data-chip="${id}">
+      <span class="pall" style="background:${FAZ[u.fazione]}"></span>${u.emoji} ${u.nome}
+      <span class="n">${n}${sig ? ' · 🎬' + sig : ''}</span></button>`)
+  })
+  M.altruiUnita(liv).forEach(id => {
+    const u = liv.unita.find(z => z.id === id); if (!u) return
+    b.push(`<button class="altrui ${letta === id ? 'qui' : ''}" data-leggi="${id}" data-chip="${id}">
+      ${scoperte.has(id) ? '👁' : '🔒'} ${u.emoji} ${u.nome}</button>`)
+  })
+  box.innerHTML = b.join('')
+  box.querySelectorAll('[data-u]').forEach(x => x.onclick = () => {
+    unitaOra = x.dataset.u; sel = null; letta = null; segui = true
+    scriptOra = 0; aperti.add(unitaOra + ':0'); creando = false; pannelli() })
+  box.querySelectorAll('[data-leggi]').forEach(x => x.onclick = () => {
+    letta = letta === x.dataset.leggi ? null : x.dataset.leggi; sel = null; creando = false; pannelli() })
+}
+
+/* ── una riga d'ordine: presa, verbo, complemento, guardia ───────── */
+/* La guardia sta CHIUSA finché non apri l'ordine: in riga si vede solo
+   un segno che c'è, e la lista resta leggibile come una sequenza di
+   azioni. Le condizioni sono dettaglio, non prima linea — lo stesso
+   principio dei pannelli. */
+function riga (o, extra, i, aperta) {
+  const V = M.VERBI[o.v], C = M.laCosa(liv, o.c)
+  const seg = C && C.tipo === 'segnale' ? M.ilSegnale(C.id) : null
+  const g = M.gradoDi(o.v, C ? C.tipo : null)
+  return `<div class="riga ${V.cl} g${g} ${extra}" ${i != null ? `data-i="${i}"` : ''}
+       ${seg ? `style="--c:${seg.col}" data-seg="${C.id}"` : ''}>
+    ${i != null ? '<span class="presa" data-presa aria-label="sposta">⣿</span>' : ''}
+    <span class="ico">${V.et}</span><span class="lab">${V.nome}</span>
+    <span class="chip">${C ? (C.tipo === 'cella'
+        ? `${numeroDi(C.id)} <small>(${C.x},${C.y})</small>` : C.em + ' ' + C.nome) : '…'}</span>
+    ${o.se && !aperta ? '<span class="segno" title="ha una condizione">se</span>' : ''}
+    ${o.se && aperta ? `<span class="se">se ${M.testoCond(liv, o.se)}</span>` : ''}</div>`
+}
+
+/* ── IL PROGRAMMA: pannelli impilati ──────────────────────────────
+   Il main sta per primo e non si cancella; gli altri sono
+   sottoprogrammi che partono quando arriva il loro segnale. Chiuso,
+   un pannello dice il nome e quanti ordini contiene: con tutti chiusi
+   si vede la FORMA del programma in quattro righe, che su un telefono
+   è quello che salva la leggibilità. Aperto, dentro c'è la solita
+   lista piatta. Nessun annidamento: la gerarchia è fra i pannelli. */
+function programma () {
+  const P = document.getElementById('prog')
+  if (letta) { leggiAltrui(P); return }
+  const reg = M.registro(mondo)
+  const base = M.scriptDi(liv, unitaOra).length
+  const inCorso = mondo.tick && !mondo.finita && mondo.unita[unitaOra] && mondo.unita[unitaOra].ordineOra
+                  ? mondo.unita[unitaOra].ordineOra : null
+  const h = []
+  piano[unitaOra].forEach((sc, k) => {
+    const ap = aperti.has(unitaOra + ':' + k)
+    const seg = sc.quando.tipo === 'segnale' ? M.ilSegnale(sc.quando.id) : null
+    const corre = inCorso && inCorso.script === k
+    h.push(`<div class="pan ${ap ? 'ap' : ''} ${k === scriptOra ? 'mira' : ''}"
+      data-pan="${k}" ${seg ? `style="--c:${seg.col}" data-ascolta="${sc.quando.id}"` : ''}>
+      <div class="capo" data-apri="${k}">
+        <span class="frec">${ap ? '▼' : '▶'}</span>
+        <span class="tit">${seg ? `🎬 quando arriva «${seg.nome}» ${seg.em}` : '▶ dall’inizio della battaglia'}</span>
+        <span class="quanti">${corre ? '<b class="corre">▶</b> ' : ''}${sc.ordini.length || 'vuoto'}${sc.ordini.length ? (sc.ordini.length === 1 ? ' ordine' : ' ordini') : ''}</span>
+        ${k >= base ? `<button class="ces" data-butta="${k}" aria-label="togli lo script">🗑</button>` : ''}
+      </div>`)
+    if (ap) {
+      h.push('<div class="dentro">')
+      if (!sc.ordini.length) h.push(`<div class="vuotoprog">Nessun ordine. Tocca un <b>verbo</b> qui sotto,
+        poi tocca il <b>bersaglio sulla mappa</b>.</div>`)
+      sc.ordini.forEach((oo, i) => {
+        const mie = z => z.unita === unitaOra && z.script === k && z.i === i
+        const guasta = reg.some(z => mie(z) && z.esito === 'no')
+        const saltata = !guasta && reg.some(z => mie(z) && z.esito === 'salto')
+        const vivo = inCorso && inCorso.script === k && inCorso.i === i
+        h.push(`<div class="ordi" data-i="${i}" data-s="${k}">`)
+        const qui = sel === i && scriptOra === k
+        h.push(riga(oo, (qui ? 'scelto ' : '') +
+                        (vivo ? 'attivo ' : '') + (guasta ? 'guasta' : ''), i, qui))
+        if (guasta || saltata) {
+          const r = reg.filter(z => mie(z) && (z.esito === 'no' || z.esito === 'salto')).pop()
+          h.push(`<div class="perche ${saltata ? 'salto' : ''}">${saltata ? '⤳' : '⚠'} ${r.testo}</div>`)
+        }
+        if (oo.v === 'manda' && M.laCosa(liv, oo.c) && M.laCosa(liv, oo.c).tipo === 'segnale')
+          h.push(sveglia(oo.c))
+        h.push('</div>')
+        if (sel === i && scriptOra === k) h.push(modifica(oo))
+      })
+      h.push('</div>')
+    }
+    h.push('</div>')
+  })
+  if (segnaliLiberi().length)
+    h.push(`<button class="nuovo ${creando ? 'qui' : ''}" id="nuovoScript">＋ 🎬 un altro script</button>`)
+  if (creando) h.push(pannelloNuovo())
+  P.innerHTML = h.join('')
+
+  /* la riga su cui si sta lavorando resta in vista, e il pannellino
+     che si apre sotto di lei pure: si porta in alto, non al centro */
+  const mira0 = P.querySelector('.riga.scelto')
+  if (mira0) mira0.scrollIntoView({ block:'start' })
+  else {
+    const rotta = P.querySelector('.riga.guasta') || P.querySelector('.riga.attivo')
+    if (rotta) rotta.scrollIntoView({ block:'nearest' })
+  }
+
+  P.querySelectorAll('[data-apri]').forEach(x => x.onclick = e => {
+    if (e.target.closest('[data-butta]')) return
+    const k = +x.dataset.apri, ch = unitaOra + ':' + k
+    if (aperti.has(ch)) {
+      aperti.delete(ch)
+      /* se si chiude il pannello in cui finivano gli ordini nuovi, il
+         bersaglio passa a un altro aperto — e se non ce n'è, ci pensa
+         `mira()` quando arriverà il prossimo ordine */
+      if (scriptOra === k) {
+        const j = piano[unitaOra].findIndex((_, z) => aperti.has(unitaOra + ':' + z))
+        if (j >= 0) scriptOra = j
+      }
+    } else { aperti.add(ch); scriptOra = k }
+    sel = null; pannelli() })
+  P.querySelectorAll('[data-butta]').forEach(x => x.onclick = e => {
+    e.stopPropagation()
+    const k = +x.dataset.butta
+    piano[unitaOra].splice(k, 1)
+    aperti = new Set([...aperti].filter(c => !c.startsWith(unitaOra + ':')))
+    scriptOra = 0; aperti.add(unitaOra + ':0'); sel = null; pannelli() })
+  P.querySelectorAll('.riga[data-i]').forEach(x => x.onclick = e => {
+    if (e.target.closest('[data-presa]')) return
+    const k = +x.closest('.ordi').dataset.s, i = +x.dataset.i
+    if (scriptOra === k && sel === i) sel = null
+    else { scriptOra = k; sel = i }
+    pannelli() })
+  P.querySelectorAll('[data-set]').forEach(x => x.onclick = () => {
+    piano[unitaOra][scriptOra].ordini[sel].c = x.dataset.set; pannelli() })
+  P.querySelectorAll('[data-ripesca]').forEach(x => x.onclick = () => {
+    const o = piano[unitaOra][scriptOra].ordini[sel]
+    const C = M.laCosa(liv, o.c)
+    scegliendo = { v: o.v, i: sel }
+    /* il bersaglio di adesso si vede già segnato: si sa da dove si parte */
+    const b = bersagli().find(t => t.id === o.c)
+    if (b) scegliendo.scelta = b
+    else if (C && C.tipo === 'cella') scegliendo.scelta = { id:C.id, x:C.x, y:C.y, nome:'questa posizione', em:'⬚' }
+    cartello = false; scheda = null; pannelli() })
+  P.querySelectorAll('[data-se]').forEach(x => x.onclick = () => {
+    const o = piano[unitaOra][scriptOra].ordini[sel]
+    const k = x.dataset.se
+    const c = M.condizioniDi(liv, unitaOra).find(z => M.chiaveCond(z) === k)
+    if (c) o.se = M.clona(c); else delete o.se
+    pannelli() })
+  const via = P.querySelector('#togli'); if (via) via.onclick = () => {
+    piano[unitaOra][scriptOra].ordini.splice(sel, 1); sel = null; pannelli() }
+  P.querySelectorAll('[data-sposta]').forEach(x => x.onclick = () => {
+    sposta(scriptOra, sel, sel + (+x.dataset.sposta)) })
+  const nuovo = P.querySelector('#nuovoScript')
+  if (nuovo) nuovo.onclick = () => { creando = !creando; pannelli() }
+  P.querySelectorAll('[data-crea]').forEach(x => x.onclick = () => {
+    const id = x.dataset.crea
+    piano[unitaOra].push({ quando: { tipo:'segnale', id }, ordini: [] })
+    scriptOra = piano[unitaOra].length - 1
+    aperti.add(unitaOra + ':' + scriptOra); creando = false; sel = null
+    bip(660, .09, 'triangle', .05); pannelli() })
+  P.querySelectorAll('[data-presa]').forEach(x => x.addEventListener('pointerdown', presaGiu))
+}
+/* il pannello in cui finiscono gli ordini nuovi dev'essere aperto */
+function mira () {
+  if (aperti.has(unitaOra + ':' + scriptOra)) return
+  const k = piano[unitaOra].findIndex((_, j) => aperti.has(unitaOra + ':' + j))
+  scriptOra = k < 0 ? 0 : k
+  aperti.add(unitaOra + ':' + scriptOra)
+}
+function sposta (k, da, a) {
+  const l = piano[unitaOra][k].ordini
+  if (a < 0 || a >= l.length) return
+  const t = l[da]; l[da] = l[a]; l[a] = t
+  if (sel === da) sel = a
+  bip(440, .04, 'triangle', .04); pannelli()
+}
+
+/* i segnali che questa unità non ascolta ancora */
+function segnaliLiberi () {
+  if (!(liv.segnali || []).length || !M.verbiDi(liv).includes('manda')) return []
+  const usati = new Set(piano[unitaOra].filter(s => s.quando.tipo === 'segnale').map(s => s.quando.id))
+  return liv.segnali.filter(k => !usati.has(k))
+}
+function pannelloNuovo () {
+  const h = ['<div class="modif"><div class="tit">parte quando arriva…</div><div class="fila lunghe">']
+  segnaliLiberi().forEach(k => {
+    const S = M.ilSegnale(k)
+    h.push(`<button data-crea="${k}" style="--c:${S.col}" class="segn">${S.em} «${S.nome}»</button>`)
+  })
+  h.push('</div></div>')
+  return h.join('')
+}
+
+/* ── il filo, in parole: chi si sveglia quando parte questo segnale ── */
+function ascoltatori (id) {
+  const out = []
+  for (const u in piano) piano[u].forEach((sc, k) => {
+    if (sc.quando.tipo === 'segnale' && sc.quando.id === id) out.push({ u, k, mio:true })
+  })
+  const alt = M.pianoCompleto(liv, {})
+  M.altruiUnita(liv).forEach(u => {
+    if (!scoperte.has(u)) return
+    ;(alt[u] || []).forEach((sc, k) => {
+      if (sc.quando && sc.quando.tipo === 'segnale' && sc.quando.id === id) out.push({ u, k })
+    })
+  })
+  return out
+}
+function sveglia (id) {
+  const S = M.ilSegnale(id), chi = ascoltatori(id)
+  if (!chi.length) return `<div class="sveglia muta">⤳ nessuno ascolta «${S.nome}»: questo segnale non sveglia niente</div>`
+  const nomi = chi.map(c => {
+    const u = liv.unita.find(z => z.id === c.u)
+    return `${u.emoji} ${u.id === unitaOra ? 'qui sotto' : u.nome}`
+  })
+  return `<div class="sveglia" style="--c:${S.col}">⤳ sveglia ${nomi.join(' e ')}</div>`
+}
+
+/* ── IL FILO DISEGNATO ────────────────────────────────────────────
+   Si vede PRIMA di premere ▶, che è tutto il punto: un salto che si
+   scopre solo guardando la scena è la parte peggiore del goto. Va da
+   `manda [segnale]` alla testa dello script che quel segnale lo
+   ascolta — o alla pastiglia dell'unità, se lo ascolta un altro. */
+function fili () {
+  const svg = document.getElementById('fili'), zona = document.getElementById('zona')
+  if (!svg || !zona) return
+  const R = zona.getBoundingClientRect()
+  const out = []
+  document.querySelectorAll('#prog .riga[data-seg]').forEach(el => {
+    const id = el.dataset.seg, S = M.ilSegnale(id)
+    const b = el.getBoundingClientRect()
+    ascoltatori(id).forEach(c => {
+      const capo = c.u === unitaOra
+        ? document.querySelector(`#prog [data-pan="${c.k}"] .capo`)
+        : document.querySelector(`#chi [data-chip="${c.u}"]`)
+      if (!capo) return
+      const t = capo.getBoundingClientRect()
+      const x1 = b.left - R.left + 4, y1 = b.top - R.top + b.height / 2
+      const x2 = t.left - R.left + 6, y2 = t.top - R.top + t.height / 2
+      const g = 8                       // il filo corre nella sua corsia, non fuori schermo
+      out.push(`<path d="M${x1} ${y1} C ${g} ${y1}, ${g} ${y2}, ${x2} ${y2}"
+        fill="none" stroke="${S.col}" stroke-width="2" stroke-dasharray="5 4" opacity=".9"/>`)
+      out.push(`<circle cx="${x2}" cy="${y2}" r="3.5" fill="${S.col}"/>`)
+      out.push(`<circle cx="${x1}" cy="${y1}" r="3" fill="${S.col}"/>`)
+    })
+  })
+  svg.innerHTML = out.join('')
+}
+
+function leggiAltrui (P) {
+  const id = letta, u = liv.unita.find(z => z.id === id)
+  if (!scoperte.has(id)) {
+    P.innerHTML = `<div class="pan ap"><div class="capo"><span class="tit">${u.emoji} ${u.nome} — ordini coperti</span></div>
+      <div class="dentro"><div class="vuotoprog">I suoi ordini non li conosci. Puoi <b>dedurli</b> guardando cosa fa:
+      apri il <b>registro 📜</b> e leggi quello che di lui si vede. Oppure spendi un gettone 🕵
+      e li leggi. Il livello si vince anche senza spenderne nessuno.</div></div></div>`
+    return
+  }
+  const p = M.pianoCompleto(liv, {})[id] || []
+  const h = []
+  p.forEach((sc, k) => {
+    const seg = sc.quando.tipo === 'segnale' ? M.ilSegnale(sc.quando.id) : null
+    h.push(`<div class="pan ap" ${seg ? `style="--c:${seg.col}"` : ''}>
+      <div class="capo"><span class="frec">▼</span>
+      <span class="tit">${u.emoji} ${M.nomeScript(sc.quando)}</span></div><div class="dentro">`)
+    ;(sc.ordini || []).forEach(oo => {
+      const vivo = mondo.tick && !mondo.finita && mondo.unita[id] && mondo.unita[id].ordineOra &&
+                   mondo.unita[id].ordineOra.ordine === oo
+      h.push(`<div class="ordi">` + riga(oo, vivo ? 'attivo' : '') + '</div>')
+    })
+    h.push('</div></div>')
+  })
+  P.innerHTML = h.join('')
+}
+
+/* Il complemento si sceglie da una lista FILTRATA dal verbo: `prendi`
+   offre le cose che si raccolgono, `apri` quelle che si aprono. E
+   sotto c'è la guardia: `se ⟨condizione⟩` è un attributo dell'ordine,
+   non un verbo, così la forma verbo+complemento resta una sola. */
+function modifica (o) {
+  const cose = M.complementiPer(liv, o.v).map(k => M.laCosa(liv, k))
+  const cond = M.condizioniDi(liv, unitaOra)
+  const C = M.laCosa(liv, o.c)
+  const h = ['<div class="modif"><div class="tit">su quale cosa</div>']
+  if (suMappa(o.v)) {
+    /* da un ordine si torna sempre a ciascuna delle sue parti senza
+       cancellarlo: il bersaglio si ripesca sulla mappa, e la guardia
+       resta dov'è */
+    h.push(`<button class="mappa" data-ripesca="1">🎯 cambia bersaglio sulla mappa
+      <small>adesso è ${C ? (CELLA_UI.test(C.id) ? numeroDi(C.id) + ' ' : C.em + ' ') + C.nome : '—'}</small></button>`)
+  } else {
+    h.push('<div class="fila lunghe">')
+    cose.forEach(c => h.push(`<button class="${c.id === o.c ? 'qui' : ''}" data-set="${c.id}">${c.em} ${c.nome}</button>`))
+    h.push('</div>')
+  }
+  if (cond.length) {
+    h.push('<div class="tit">solo se</div><div class="fila lunghe cond">')
+    h.push(`<button class="${o.se ? '' : 'qui'}" data-se="">sempre</button>`)
+    cond.forEach(c => h.push(`<button class="${o.se && M.chiaveCond(o.se) === M.chiaveCond(c) ? 'qui' : ''}"
+      data-se="${M.chiaveCond(c)}">se ${M.testoCond(liv, c)}</button>`))
+    h.push('</div>')
+  }
+  h.push('<div class="fila" style="margin-top:7px">')
+  h.push('<button data-sposta="-1">↑ su</button><button data-sposta="1">↓ giù</button></div>')
+  h.push('<button class="via" id="togli">🗑 Togli questo ordine</button></div>')
+  return h.join('')
+}
+
+/* ── TRASCINARE UN ORDINE ─────────────────────────────────────────
+   Con una presa dedicata: il resto della riga continua ad aprire il
+   pannellino e la lista continua a scorrere. Un ordine appartiene al
+   suo script e non esce dal suo pannello. I tasti ↑↓ restano: il
+   trascinamento è la scorciatoia per chi ce la fa, non l'unica strada. */
+let trasc = null
+function presaGiu (e) {
+  const ordi = e.currentTarget.closest('.ordi')
+  const cont = ordi.parentElement
+  const righe = [...cont.children].filter(x => x.classList.contains('ordi'))
+  const b = ordi.getBoundingClientRect()
+  trasc = { k: +ordi.dataset.s, da: +ordi.dataset.i, a: +ordi.dataset.i, ordi, righe,
+            y0: e.clientY, h: b.height + 8,
+            centri: righe.map(r => { const q = r.getBoundingClientRect(); return q.top + q.height / 2 }) }
+  ordi.classList.add('vola')
+  e.currentTarget.setPointerCapture(e.pointerId)
+  e.currentTarget.addEventListener('pointermove', presaMuovi)
+  e.currentTarget.addEventListener('pointerup', presaSu)
+  e.currentTarget.addEventListener('pointercancel', presaSu)
+  e.preventDefault()
+}
+function presaMuovi (e) {
+  if (!trasc) return
+  const dy = e.clientY - trasc.y0
+  trasc.ordi.style.transform = `translateY(${dy}px) scale(1.03)`
+  const y = trasc.centri[trasc.da] + dy
+  let a = trasc.da
+  while (a > 0 && y < trasc.centri[a - 1]) a--
+  while (a < trasc.centri.length - 1 && y > trasc.centri[a + 1]) a++
+  trasc.a = a
+  trasc.righe.forEach((r, j) => {
+    if (j === trasc.da) return
+    const su = trasc.da < a && j > trasc.da && j <= a
+    const giu = trasc.da > a && j >= a && j < trasc.da
+    r.style.transform = su ? `translateY(${-trasc.h}px)` : giu ? `translateY(${trasc.h}px)` : ''
+  })
+  /* vicino al bordo, la lista scorre da sola */
+  const P = document.getElementById('prog'), R = P.getBoundingClientRect()
+  if (e.clientY < R.top + 46) P.scrollTop -= 9
+  else if (e.clientY > R.bottom - 46) P.scrollTop += 9
+  fili()
+}
+function presaSu (e) {
+  if (!trasc) return
+  const { k, da, a } = trasc
+  e.currentTarget.removeEventListener('pointermove', presaMuovi)
+  e.currentTarget.removeEventListener('pointerup', presaSu)
+  e.currentTarget.removeEventListener('pointercancel', presaSu)
+  trasc.righe.forEach(r => { r.style.transform = ''; r.classList.remove('vola') })
+  trasc = null
+  if (a !== da) {
+    const l = piano[unitaOra][k].ordini
+    l.splice(a, 0, l.splice(da, 1)[0])
+    if (sel === da) sel = a
+    bip(520, .05, 'triangle', .04)
+  }
+  pannelli()
+}
+
+/* ── la cassetta: tre gradi, e solo i verbi che qui hanno un senso ── */
+function cassetta () {
+  const C = document.getElementById('cassetta')
+  const per = { 1:[], 2:[], 3:[] }
+  /* la cassetta è di CHI stai comandando: mostra solo quello che sa fare */
+  M.verbiPer(liv, letta || unitaOra).forEach(v => per[M.VERBI[v].grado].push(v))
+  const blocchi = []
+  for (const g of [1, 2, 3]) {
+    if (!per[g].length) continue
+    blocchi.push(`<div class="grado"><span class="et">${M.GRADI[g]}</span><div class="verbi">` +
+      per[g].map(v => {
+        const V = M.VERBI[v]
+        return `<button class="pezzo ${V.cl} ${letta ? 'spento' : ''}" data-a="${v}">
+          <span class="e">${V.et}</span><span class="n">${V.nome.replace(/ a$/, '')}</span></button>`
+      }).join('') + '</div></div>')
+  }
+  C.innerHTML = blocchi.join('')
+  C.querySelectorAll('[data-a]').forEach(x => x.onclick = () => {
+    if (letta) return
+    mira()
+    const v = x.dataset.a
+    bip(520, .05, 'triangle', .04)
+    /* se il bersaglio sta sulla mappa, lo si tocca sulla mappa */
+    if (suMappa(v)) { scegliendo = { v }; sel = null; cartello = false; scheda = null; pannelli(); return }
+    const l = piano[unitaOra][scriptOra].ordini
+    l.push({ v, c: M.complementiPer(liv, v)[0] })
+    sel = l.length - 1
+    pannelli()
+  })
+}
+
+/* ══ IL REGISTRO ══ chiuso di default: aprirlo è il gesto da imparare */
+function registroPannello () {
+  const box = document.getElementById('registro')
+  box.className = 'registro' + (logAperto ? ' aperto' : '')
+  if (!logAperto) { box.innerHTML = ''; return }
+  const righe = M.registro(mondo).filter(r => mio(mondo.unita[r.unita]) || scoperte.has(r.unita) || r.visto)
+  const h = [`<div class="capo">📜 Registro <small>tocca una riga per tornare a quel momento</small>
+    <button id="chiudi">✕</button></div><div class="corpo">`]
+  if (!righe.length) h.push('<div class="vuotoprog">Niente ancora. Premi ▶.</div>')
+  righe.slice(-80).forEach(r => {
+    const u = mondo.unita[r.unita]
+    /* dei nemici a ordini coperti si vede solo quello che FANNO */
+    const testo = (mio(u) || scoperte.has(r.unita)) ? r.testo : r.fatto
+    h.push(`<div class="rr ${r.esito}" data-t="${r.t}">
+      <span class="chi" style="background:${FAZ[u.fazione]}">${u.emoji}</span>
+      <span class="tt">${testo}${r.n > 1 ? ` <b>×${r.n}</b>` : ''}</span>
+      <span class="tk">${r.t}</span></div>`)
+  })
+  h.push('</div>')
+  box.innerHTML = h.join('')
+  box.querySelector('#chiudi').onclick = () => { logAperto = false; pannelli() }
+  box.querySelectorAll('[data-t]').forEach(x => x.onclick = () => { riavvolgi(+x.dataset.t) })
+  const c = box.querySelector('.corpo'); c.scrollTop = c.scrollHeight
+}
+
+casa()
+window.__prog = { apri, via, unPasso, ferma, riavvolgi,
+  get liv () { return liv }, get mondo () { return mondo }, get piano () { return piano },
+  get cam () { return cam }, get scegliendo () { return scegliendo },
+  log: () => { logAperto = !logAperto; pannelli() },
+  mostrami: (k) => {
+    const s = M.clona(M.costruisci(L, 0).soluzioni[k || 0])
+    for (const id in s) if (piano[id]) piano[id] = s[id]
+    sel = null; pannelli()
+  }, M }
+
+</script>
+</body>
+</html>

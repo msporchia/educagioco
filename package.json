@@ -1,0 +1,31 @@
+{
+  "name": "giochi-bambini",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "voci": "node strumenti/incidi-voci.mjs",
+    "simula": "node strumenti/simula-castello.mjs",
+    "tara": "node strumenti/tara-castello.mjs",
+    "mappe": "node strumenti/mappe/valida.mjs",
+    "percorsi": "node strumenti/valida-percorsi.mjs",
+    "pubblica": "./pubblica.sh",
+    "test": "node test/esegui.mjs",
+    "test:unita": "node test/esegui.mjs unita",
+    "test:browser": "node test/esegui.mjs integrazione",
+    "quiz": "vite --port 5199 --strictPort --open /poc/quiz.html",
+    "quiz:banco": "node strumenti/quiz/banco.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7",
+    "vite-plugin-singlefile": "^2.1.0",
+    "playwright": "^1.62.1"
+  }
+}

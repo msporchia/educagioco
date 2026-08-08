@@ -1,0 +1,27 @@
+/* IL NASTRO DEL PREAVVISO
+   Tre riquadri in fila sotto il campo, alti quanto una riga di testo e
+   mezzo: devono starci su un telefono verticale senza spingere fuori
+   schermo i bottoni delle torri, che sono la cosa che si tocca. */
+.preavviso { display:flex; align-items:center; gap:5px; width:100%; max-width:420px }
+.titolo { font-size:10px; font-weight:900; color:var(--tenue); text-transform:uppercase;
+          letter-spacing:.3px; writing-mode:vertical-rl; transform:rotate(180deg);
+          line-height:1; opacity:.75 }
+ /* la pastiglia ha una taglia sola: quando le ondate che restano sono
+    una o due, il nastro si accorcia invece di gonfiare i riquadri —
+    una tappa che finisce non deve cambiare aspetto al banco */
+.avviso { flex:1 1 0; min-width:0; max-width:calc(33.4% - 4px); position:relative; display:flex; align-items:center; gap:3px;
+          background:var(--carta); border-radius:11px; padding:3px 4px;
+          box-shadow:0 2px 0 #dde3ea, inset 0 0 0 1.5px #e2dcee }
+/* la prossima è quella che conta: si stacca dalle altre due */
+.avviso.subito { box-shadow:0 2px 0 #dde3ea, inset 0 0 0 2px #c9b6e8; background:#fbf8ff }
+.faccia { position:relative; width:28px; height:28px; flex:none }
+.dati { display:flex; flex-direction:column; line-height:1.15; min-width:0 }
+.dati b { font-size:10px; color:var(--viola-scuro); overflow:hidden; text-overflow:ellipsis;
+          white-space:nowrap }
+.dati i { font-style:normal; font-size:9px; font-weight:800; color:var(--tenue) }
+/* il punto debole: l'emoji della torre che gli fa il doppio, su un
+   pallino del suo colore, appiccicato al mostro. È l'unica cosa del
+   nastro che deve saltare all'occhio. */
+.punto { position:absolute; right:-6px; bottom:-5px; font-size:10px; line-height:1;
+         background:color-mix(in srgb, var(--c) 20%, #fff); border-radius:999px;
+         padding:1.5px 2px; box-shadow:0 0 0 1.5px var(--c) }

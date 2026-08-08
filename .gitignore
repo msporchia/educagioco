@@ -1,0 +1,14 @@
+node_modules/
+dist/
+# dove pubblica ./pubblica.sh: e' roba di casa, non del progetto
+.nas
+.venv-voci/
+.DS_Store
+*.log
+.claude/settings.local.json
+.voci-cache/
+.voci-cache-es/
+test/scatti/
+# in radice non ci va nessuna immagine: gli scatti stanno in test/scatti/
+# (quelli dei poc, versionati apposta, in poc/scatti/)
+/*.png

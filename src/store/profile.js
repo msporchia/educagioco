@@ -1,0 +1,1094 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PROFILO CONDIVISO
+   Un solo profilo per bambino, alimentato da tutti i giochi: monete,
+   oggetti della cameretta e stato di apprendimento di ogni elemento.
+   Le chiavi degli elementi sono con prefisso (`math:` / `en:`) così un
+   motore solo serve materie diverse senza confonderle.
+   ═══════════════════════════════════════════════════════════════════ */
+import { reactive, computed } from 'vue'
+import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
+import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
+import { acceso as suonoAcceso } from '../audio.js'
+import { PETS, PRODOTTI, SOGLIE, PREFERITO, petDi, prodottoDi, preferisce,
+         livelloDi, urgenza, nuovoAnimale, migraAnimale } from '../data/pets.js'
+import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
+import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
+import { allineaCalcolo } from './calcolo.js'
+import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
+         progressoArea, statoTraguardi, abilita, difficolta,
+         tabellineIntereDi, allineaMate, allineaInglese,
+         allineaSpagnolo, allineaPozioni } from './progressi.js'
+
+/* ── CHI GIOCA ──
+   Prima qui c'era un elenco fisso di nomi scritto nel codice. Adesso è un
+   dato come gli altri: sta nella chiave `giocatori`, i genitori lo
+   cambiano, e nel repo non compare il nome di nessun bambino.
+
+   Un giocatore è `{ id, nome }`, e i due campi servono a cose diverse:
+   l'**id** è la chiave del salvataggio (`profilo:<id>`) e non cambia mai
+   più una volta creato; il **nome** è l'etichetta che si legge a schermo
+   e si può correggere quando si scrive male. Tenerli separati è ciò che
+   rende la rinomina gratuita: si tocca un'etichetta, non si sposta un
+   byte di progressi.
+
+   Per i profili che esistono già l'id *è* il nome con cui erano stati
+   salvati, e la loro chiave resta dov'è: l'aggiornamento non copia e non
+   cancella niente, e una build vecchia ripubblicata per sbaglio ritrova
+   tutto al suo posto. Per chi nasce da oggi l'id è opaco (`g1`, `g2`):
+   il nome resta solo dentro il valore, e cambiarlo non lascia in giro
+   una chiave che se lo porta dietro. */
+const KEY_ROSTER = 'giocatori'
+const KEY = id => 'profilo:' + id
+const PREFISSO = 'profilo:'
+
+const blank = () => ({
+  v: 6,
+  coins: 0,
+  owned: [],
+  layout: [[], [], []],
+  items: {},                       // 'math:7x8' | 'en:butterfly' -> stato
+  pets: {},                        // 'watson' -> { adottato, val{}, t{}, pasti, addosso{} }
+  dispensa: {},                    // '🍗' -> quante porzioni in casa
+  accessori: [],                   // emoji uscite dalle capsule
+  serie: 0,                        // a che serie di sorprese siamo arrivati
+  /* `sa` sono i macrogruppi di scuola che i genitori hanno SPENTO
+     (`data/saperi.js`): una voce a `false` per ognuno. Chi a scuola non
+     ha ancora fatto le misure non deve vedersi chiedere quanti
+     centilitri sono due litri — non è una domanda difficile, è una
+     domanda muta: si può solo indovinare. Chi lo legge sono i moduli di
+     quiz (`quiz/scelta.js`, che degrada al grado più facile invece di
+     sparire) e il castello per le divisioni. Elenco di eccezioni come
+     `giochi`: un sapere nuovo nasce acceso per tutti.
+     `divisioni: true/false` è la forma vecchia dello stesso flag, prima
+     che i macrogruppi esistessero: si legge ancora in `selectPlayer`
+     per non riaccendere le divisioni a chi le aveva spente. */
+  /* `giochi` sono le carte spente in home: una voce a `false` per ogni
+     gioco che i genitori hanno tolto di mezzo. È un elenco di eccezioni e
+     non di permessi apposta — un gioco nuovo nasce acceso anche per chi
+     ha il profilo di ieri, senza migrazioni. */
+  /* `tuttoAperto` toglie i lucchetti alle campagne: tutte le tappe di
+     tutti i giochi giocabili subito, senza superare quelle prima. Chi lo
+     legge è `tappaAperta()`, qui sotto, e i giochi passano da lì: la
+     regola sta in un posto solo perché quando stava in cinque il flag si
+     è scollato senza che nessuno se ne accorgesse. */
+  settings: { tables: [2, 3, 4, 5], sound: true, music: true,
+              giochi: {}, sa: {}, tuttoAperto: false },
+  /* contatori che salgono e non scendono mai: sono la memoria di quanto
+     si è giocato, e i traguardi si misurano quasi tutti qui sopra */
+  /* i contatori dello spagnolo hanno un nome loro (`es`, `verbiEs`,
+     `frasiEs`): sommarli a quelli inglesi vorrebbe dire non sapere più
+     in quale lingua si è giocato */
+  /* `misure` sono gli ingredienti dosati giusti, `incasso` sta in centesimi
+     come tutto il resto della bancarella */
+  /* del generale si contano quattro cose: i livelli portati a casa, le
+     stelle raccolte, gli ordini firmati in tutto e i livelli chiusi
+     restando dentro il par. `avanzati` è quello che dice se si sta
+     davvero imparando: un livello vinto con un ordine di alto livello
+     (un ciclo, una condizione, un evento) e non con la fila di passi. */
+  totals: { math: 0, mente: 0, en: 0, verbi: 0, frasi: 0, es: 0, verbiEs: 0, frasiEs: 0, td: 0, pasti: 0,
+            partiteMath: 0, torri: 0, perfette: 0, ondate: 0,
+            misure: 0, pozioni: 0, pozioniPerfette: 0,
+            clienti: 0, restiPerfetti: 0, incasso: 0, mercati: 0,
+            missioni: 0, stelle: 0, ordini: 0, nelPar: 0, avanzati: 0,
+            preferiti: 0, monete: 0, cure: 0, capsule: 0 },
+  best: { math: 0, serieMath: 0, onda: 0, serieGiorni: 0, pozioni: 0, clienti: 0 },
+  /* Il castello: quante tappe sono state superate (indice della prossima) e
+     se la partita libera è sbloccata. `v` dice su quale campagna quel numero
+     è stato scritto — le tappe sono passate da sei a quindici, e senza il
+     numero di versione un salvataggio di ieri direbbe «due» intendendo una
+     cosa diversa da quello che intende oggi. Vedi `migraCastello`. */
+  td: { tappa: 0, libera: false, v: 2 },
+  mate: { tappa: 0, libera: false },// stessa cosa per la campagna delle tabelline
+  calc: { tappa: 0, libera: false },// e per le stazioni del calcolo a mente
+  eng: { tappa: 0, libera: false }, // e per la campagna di English
+  esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
+  mercato: { tappa: 0, libera: false }, // e per le giornate di mercato della bancarella
+  lab: { tappa: 0, libera: false },     // e per le tappe del laboratorio delle pozioni
+  /* Il generale ha la stessa forma delle altre campagne — `tappa` è quanti
+     livelli sono stati superati ed è l'indice del prossimo — più due cose
+     sue, tenute per livello e non in totale: `ordini` è il RECORD (il
+     minor numero di ordini con cui quel livello è stato chiuso) e `stelle`
+     quante stelle vale adesso, una o due. Stanno per livello perché
+     rigiocarne uno già fatto non deve gonfiare il totale: le stelle sono
+     la somma dei propri primati, non delle partite. */
+  gen: { tappa: 0, libera: false, ordini: {}, stelle: {} },
+  /* LE AVVENTURE DEL GENERALE — una voce per storia, e le storie non si
+     mescolano fra loro: `fondi` non sa niente di `torre`. Dentro ognuna:
+       capitolo  quanti capitoli sono stati superati (indice del prossimo)
+       stelle    per CAPITOLO, con la chiave del capitolo e non il numero:
+                 quando arriveranno i rami l'ordine dei capitoli cambierà,
+                 le stelle già prese no
+       fatti     quello che i capitoli lasciano dietro («lanterna-presa»,
+                 «pozzo-aperto»). Oggi non li legge nessuno: il posto c'è
+                 e la funzione che li aggiunge pure, l'interpretazione no.
+     Chi le muove è `store/storie.js`, non questo file. */
+  storie: {},                       // 'fondi' -> { capitolo, stelle:{}, fatti:[] }
+  /* I GIOCHI NUOVI (`src/giochi/`) stanno tutti qui, con una forma sola:
+     'codice' -> { tappa, libera, stelle:{}, cfg:{} }. Sopra si vede il
+     contrario — otto campi che dicono la stessa cosa in otto modi — ed è
+     il motivo per cui questo esiste: un gioco nuovo non deve più
+     aggiungere un campo al profilo né una migrazione. Chi lo muove è
+     `src/giochi/campagne.js`, e sa crearsi la voce che non c'è: un
+     profilo salvato ieri gioca a un gioco di oggi senza migrazioni. */
+  campagne: {},
+  giorni: { ultimo: '', serie: 0, record: 0, totali: 0 },   // i giorni di fila
+  badge: {},                        // id traguardo -> { g: grado preso, t: quando }
+  badgeInit: 0,                     // 1 = i traguardi già meritati sono stati registrati
+})
+
+export const state = reactive({
+  giocatori: [],            // [{ id, nome }] — vuoto vuol dire «primo avvio»
+  player: '',               // l'id di chi sta giocando, '' se non c'è nessuno
+  profile: blank(),
+  loaded: false,
+  storage: 'memoria',
+  regalo: { n: 0, k: 0 },   // monete arrivate dall'indirizzo: quante, e un
+                            // contatore per rifare l'animazione ogni volta
+  festa: [],                // traguardi appena presi, in attesa di essere mostrati
+})
+
+/* Accendere e spegnere il suono passa di qui e non da `audio.js`, perché
+   è una preferenza del profilo e va salvata: `suono.muta()` da solo
+   cambiava il ref e basta. */
+export function accendiSuono(si) {
+  suonoAcceso.value = !!si
+  state.profile.settings.sound = !!si
+  persist()
+}
+
+/* ---------- il roster ----------
+   Una voce vale se ha un id: il nome può essere vuoto (un profilo
+   ricostruito da una chiave rovinata) e si rimedia con l'id, ma senza id
+   non si sa nemmeno quale salvataggio caricare. */
+function normalizzaVoce(v) {
+  if (typeof v === 'string') return { id: v, nome: v }        // forma vecchia, mai pubblicata
+  if (!v || typeof v !== 'object' || !v.id) return null
+  return { id: String(v.id), nome: String(v.nome ?? v.id) }
+}
+
+/* Ricostruisce l'elenco senza cercare nessun nome: quello che c'è è
+   quello che sta nell'archivio. Ordine alfabetico per id, che per i due
+   profili di casa dà lo stesso ordine di prima. */
+async function rosterDalleChiavi() {
+  const ks = await chiavi(PREFISSO)
+  return ks.map(k => k.slice(PREFISSO.length)).filter(Boolean).map(id => ({ id, nome: id }))
+}
+
+async function caricaRoster() {
+  const salvato = await load(KEY_ROSTER)
+  if (Array.isArray(salvato)) {
+    const buone = salvato.map(normalizzaVoce).filter(Boolean)
+    if (buone.length) return buone
+  }
+  /* Nessun roster: o è il primo avvio dopo l'aggiornamento — e allora i
+     profili ci sono e vanno raccolti — oppure è un'installazione nuova,
+     e allora non c'è niente da raccogliere e l'app chiede un nome. */
+  return rosterDalleChiavi()
+}
+
+function salvaRoster() {
+  save(KEY_ROSTER, state.giocatori.map(g => ({ id: g.id, nome: g.nome })))
+}
+
+export const giocatore = id => state.giocatori.find(g => g.id === id) || null
+export const nomeDi = id => (giocatore(id) || {}).nome || ''
+export const nomeCorrente = () => nomeDi(state.player)
+
+/* Un id che non è mai stato usato. Opaco apposta: `g3` non dice a
+   nessuno chi è, e rinominare non lascia dietro una chiave col nome
+   sbagliato. Guarda anche l'archivio, non solo il roster, perché un
+   profilo eliminato può aver lasciato la sua chiave. */
+async function idLibero() {
+  const presi = new Set(state.giocatori.map(g => g.id))
+  for (const k of await chiavi(PREFISSO)) presi.add(k.slice(PREFISSO.length))
+  for (let i = 1; ; i++) if (!presi.has('g' + i)) return 'g' + i
+}
+
+/* Crea un giocatore. Il nome si ripulisce ma non si controlla che sia
+   unico: due fratelli possono chiamarsi uguale sullo schermo, gli id
+   restano diversi ed è quello che conta.
+
+   `entra` dice se metterlo subito al posto di chi sta giocando. Al primo
+   avvio sì — è l'unico che c'è, e la domanda «come ti chiami?» finisce
+   con lui che gioca. Dalla schermata dei genitori no: aggiungere un
+   fratellino non vuol dire buttare fuori chi ha in mano il telefono, e
+   cambiare giocatore lì ricarica la schermata e richiede il codice. */
+export async function creaGiocatore(nome, entra = true) {
+  const pulito = String(nome || '').trim().slice(0, 20)
+  if (!pulito) throw new Error('Serve un nome')
+  const id = await idLibero()
+  state.giocatori.push({ id, nome: pulito })
+  salvaRoster()
+  if (entra) await selectPlayer(id)
+  else save(KEY(id), blank())     // il suo profilo esiste da subito, vuoto
+  /* Subito su disco, senza aspettare il salvataggio a scatto ritardato:
+     questo è il primo dato che esiste, e chi chiude l'app appena scritto
+     il nome si ritroverebbe daccapo davanti a «come ti chiami?» — che
+     dopo aver già risposto una volta sembra che il gioco sia rotto. */
+  await flush()
+  return id
+}
+
+/* Cambiare il nome è cambiare un'etichetta: l'id resta, la chiave del
+   salvataggio resta, i progressi non si spostano di un byte. È tutto il
+   motivo per cui id e nome sono due cose separate. */
+export function rinominaGiocatore(id, nome) {
+  const pulito = String(nome || '').trim().slice(0, 20)
+  if (!pulito) throw new Error('Serve un nome')
+  const g = giocatore(id)
+  if (!g) throw new Error('Questo giocatore non c\'è')
+  g.nome = pulito
+  salvaRoster()
+  return flush()
+}
+
+/* Eliminare invece butta via davvero: la voce dal roster e il
+   salvataggio dall'archivio. Non è una cosa da fare per sbaglio, e
+   infatti la schermata la fa confermare — qui si esegue e basta.
+
+   Se si cancella chi sta giocando bisogna spostarsi su qualcun altro,
+   altrimenti resterebbe aperto un profilo che non esiste più e il primo
+   salvataggio lo farebbe rinascere. Se non resta nessuno si torna al
+   primo avvio, che è la verità: non c'è più nessun giocatore. */
+export async function eliminaGiocatore(id) {
+  const i = state.giocatori.findIndex(g => g.id === id)
+  if (i < 0) throw new Error('Questo giocatore non c\'è')
+  state.giocatori.splice(i, 1)
+  salvaRoster()
+  await remove(KEY(id))
+  if (state.player === id) {
+    const prossimo = (state.giocatori[0] || {}).id
+    if (prossimo) await selectPlayer(prossimo)
+    else {
+      state.player = ''
+      state.profile = blank()
+      state.festa = []
+      await remove('ultimo-giocatore')
+    }
+  }
+  await flush()
+}
+
+/* ---------- caricamento / salvataggio ---------- */
+export async function init() {
+  state.storage = await detectBackend()
+  state.giocatori = await caricaRoster()
+  salvaRoster()                    // da qui in poi l'elenco è esplicito
+  const last = await load('ultimo-giocatore')
+  const chi = state.giocatori.some(g => g.id === last) ? last : (state.giocatori[0] || {}).id
+  /* Nessun giocatore: non se ne inventa uno. Lo stato resta vuoto e
+     l'interfaccia chiede «come ti chiami?» — inventarne uno vorrebbe dire
+     scrivere un nome nel codice, che è esattamente ciò che si sta
+     togliendo. */
+  if (chi) await selectPlayer(chi)
+  segnala(riscuotiCheat())
+  // scrivere l'indirizzo a pagina già aperta cambia solo il frammento e non
+  // ricarica niente: senza questo il cheat sembrerebbe non funzionare
+  if (typeof window !== 'undefined')
+    window.addEventListener('hashchange', () => segnala(riscuotiCheat()))
+  state.loaded = true
+}
+
+function segnala(n) {
+  if (n) state.regalo = { n, k: state.regalo.k + 1 }
+}
+
+/* ---------- il cheat delle monete ----------
+   `giochi.html#monete=500` regala 500 monete al giocatore in corso, e
+   `#monete=-100` le toglie. Serve ai grandi per provare i negozi senza
+   rifarsi mille tabelline, e si scrive dove si scrivono gli indirizzi.
+
+   Sta nel frammento (#) e non nella query (?) per un motivo pratico: il
+   frammento si può cancellare da dentro la pagina anche aprendo il file
+   con doppio click, la query no. Così il regalo si riscuote una volta
+   sola e un aggiornamento della pagina non lo raddoppia.
+
+   Un secondo giocatore scelto dopo non lo riceve: le monete vanno a chi
+   stava giocando quando si è aperto l'indirizzo. */
+export function riscuotiCheat() {
+  if (typeof location === 'undefined') return 0
+  // il numero deve finire lì: senza il controllo in coda `#monete=1e9`
+  // regalerebbe 1 moneta, prendendo la prima cifra e ignorando il resto
+  const m = /(?:^#?|&)monete=(-?\d{1,7})(?=&|$)/i.exec(location.hash || '')
+  if (!m) return 0
+  const n = parseInt(m[1], 10)
+  try { location.hash = '' } catch (e) { /* pazienza: al massimo si ripete */ }
+  if (!n) return 0
+  addCoins(n)
+  // chi usa il cheat spesso chiude subito la scheda: senza questo il
+  // salvataggio ritardato di un terzo di secondo può non arrivare mai
+  flush()
+  return n
+}
+
+/* ── il posto delle migrazioni una-tantum ──
+   `da` è la versione da cui viene il profilo (0 = non esisteva). Qui
+   dentro si mette quello che si può fare **una volta sola**, perché al
+   prossimo avvio `da` sarà già la versione di adesso e nessuno saprà più
+   da dove veniva.
+
+   Oggi non c'è niente da fare: il roster si ricostruisce dalle chiavi
+   dell'archivio e i profili in sé non cambiano forma. La funzione esiste
+   lo stesso, con il numero già letto e messo in mano a chi serve, perché
+   il momento per agganciarla è questo — quando la prossima build tocca i
+   telefoni, l'informazione non c'è più. Chi aggiunge un caso qui scriva
+   anche il suo test in `test/unita/profilo.test.mjs`. */
+export function migraProfilo(p, da) {
+  if (da === 0) return p        // profilo nuovo: non c'è niente da cui migrare
+  // if (da < 7) { … }          ← la forma di un caso futuro
+  return p
+}
+
+export async function selectPlayer(id) {
+  state.player = id
+  const raw = await load(KEY(id))
+  const vuoto = blank()
+  const p = { ...vuoto, ...(raw && typeof raw === 'object' ? raw : {}) }
+  /* ── da quale versione viene questo profilo ──
+     Va letto QUI, prima della riga sotto che lo timbra: `p.v = vuoto.v`
+     riscrive il numero a ogni avvio senza averlo mai guardato, quindi
+     appena un telefono apre una build nuova l'informazione è persa per
+     sempre. Era vero anche prima — semplicemente non se ne era accorto
+     nessuno, perché nessuna migrazione l'aveva mai chiesta.
+     0 vuol dire «profilo che non esisteva», ed è giusto così: un profilo
+     nuovo non ha niente da migrare. */
+  const daVersione = Number.isFinite(raw && raw.v) ? raw.v : 0
+  p.v = vuoto.v
+  migraProfilo(p, daVersione)
+  p.settings = { ...vuoto.settings, ...(p.settings || {}) }
+  migraSaperi(p.settings)
+  p.totals = { ...vuoto.totals, ...(p.totals || {}) }
+  p.best = { ...vuoto.best, ...(p.best || {}) }
+  p.td = migraCastello(vuoto.td, raw && raw.td)
+  p.mate = { ...vuoto.mate, ...(p.mate || {}) }
+  p.calc = { ...vuoto.calc, ...(p.calc || {}) }
+  p.eng = { ...vuoto.eng, ...(p.eng || {}) }
+  p.esp = { ...vuoto.esp, ...(p.esp || {}) }
+  p.mercato = { ...vuoto.mercato, ...(p.mercato || {}) }
+  p.lab = { ...vuoto.lab, ...(p.lab || {}) }
+  p.gen = { ...vuoto.gen, ...(p.gen || {}) }
+  p.giorni = { ...vuoto.giorni, ...(p.giorni || {}) }
+  /* i due dizionari del generale: un profilo salvato prima che il gioco
+     esistesse non ce li ha, e uno rovinato a mano potrebbe averli di un
+     altro tipo. In tutti e due i casi si riparte da vuoto, non da rotto. */
+  if (!p.gen.ordini || typeof p.gen.ordini !== 'object') p.gen.ordini = {}
+  if (!p.gen.stelle || typeof p.gen.stelle !== 'object') p.gen.stelle = {}
+  /* le avventure: un profilo di ieri non ha `storie`, e uno rovinato a
+     mano potrebbe averle di un altro tipo. In tutti e due i casi si
+     riparte da vuoto — e vuoto qui vuol dire «nessuna storia cominciata»,
+     che è esattamente quello che era vero prima che esistessero. */
+  if (!p.storie || typeof p.storie !== 'object' || Array.isArray(p.storie)) p.storie = {}
+  for (const k of Object.keys(p.storie)) p.storie[k] = normalizzaStoria(p.storie[k])
+  if (!p.items || typeof p.items !== 'object') p.items = {}
+  if (!p.pets || typeof p.pets !== 'object') p.pets = {}
+  if (!p.dispensa || typeof p.dispensa !== 'object') p.dispensa = {}
+  if (!p.badge || typeof p.badge !== 'object') p.badge = {}
+  if (!Array.isArray(p.owned)) p.owned = []
+  if (!Array.isArray(p.accessori)) p.accessori = []
+  Object.values(p.pets).forEach(migraAnimale)
+  state.profile = p
+  state.festa = []
+  /* Il muto è del bambino, non del telefono. `settings.sound` esisteva
+     dal principio ma non lo leggeva nessuno: l'audio era una variabile
+     globale accesa a ogni avvio, quindi chi lo spegneva se lo ritrovava
+     acceso il giorno dopo, e spegnerlo per uno lo spegneva per tutti. */
+  suonoAcceso.value = p.settings.sound !== false
+  fixLayout()
+  // chi giocava prima che le campagne esistessero non deve ricominciare da capo
+  allineaMate(p)
+  allineaCalcolo(p)
+  allineaInglese(p)
+  allineaSpagnolo(p)
+  allineaPozioni(p)
+  apriGiornata()
+  save('ultimo-giocatore', id)
+  persist()
+}
+
+/* ---------- la giornata ----------
+   Un giorno di fila si conta appena si sceglie il giocatore: entrare è
+   già il gesto che conta, non serve indovinare qualcosa per meritarlo. */
+function apriGiornata(now = Date.now()) {
+  const p = state.profile
+  segnaGiorno(p, now)
+  p.giorni.serie = serieViva(p, now) || p.giorni.serie
+  p.best.serieGiorni = Math.max(p.best.serieGiorni || 0, p.giorni.serie || 0)
+  controllaTraguardi(now)
+}
+
+/* ── cosa sa il bambino ──
+   I macrogruppi di scuola (`data/saperi.js`): accesi salvo che i
+   genitori li spengano, per bambino come tutto il resto di `settings`.
+   Spegnere non toglie un gioco e non tocca nessun progresso: toglie le
+   domande che senza quel pezzo di scuola non si possono ragionare. */
+export const sapereAcceso = chiave => (state.profile.settings.sa || {})[chiave] !== false
+export function accendiSapere(chiave, si) {
+  const s = state.profile.settings
+  if (!s.sa) s.sa = {}
+  if (si) delete s.sa[chiave]      // acceso è l'assenza: niente voci inutili nel salvataggio
+  else s.sa[chiave] = false
+  persist()
+}
+/* quelli spenti, che è la forma in cui li vuole chi fa le domande:
+   `quiz/scelta.js` non chiede «è acceso questo?», chiede «cosa devo
+   evitare» e degrada da sé.
+
+   Si leggono le eccezioni salvate invece di filtrare il catalogo,
+   perché qui dentro finiscono due specie di chiavi: i gruppi di
+   `data/saperi.js` («accenti») e le singole tipologie dichiarate dai
+   moduli di quiz («orto:apostrofo»). Le seconde il profilo non le
+   conosce e non deve conoscerle — sarebbe l'elenco di tutti i moduli
+   dentro lo store — e per chi fa le domande sono comunque la stessa
+   cosa: una chiave da evitare. Una chiave rimasta nel salvataggio di
+   una tipologia che non esiste più non fa danno: non la chiede
+   nessuno. */
+export const saperiSpenti = () =>
+  Object.keys(state.profile.settings.sa || {}).filter(c => !sapereAcceso(c))
+
+/* Le divisioni sono un sapere come gli altri; questi due nomi restano
+   perché il castello li chiama così da sempre e dire `sapereAcceso
+   ('divisioni')` dentro la cassa non lo renderebbe più chiaro. */
+export const divisioniAccese = () => sapereAcceso('divisioni')
+export const accendiDivisioni = si => accendiSapere('divisioni', si)
+
+/* Il flag di ieri diventa il sapere di oggi. Prima le divisioni erano
+   `settings.divisioni`, un booleano tutto loro; chi le aveva spente non
+   se le deve ritrovare accese al primo avvio dopo l'aggiornamento —
+   sarebbe il caso peggiore, perché il gioco tornerebbe a chiedere
+   proprio quello che il bambino non sa fare. Si legge una volta e poi
+   il vecchio flag sparisce dal profilo. */
+function migraSaperi(s) {
+  if (!s.sa || typeof s.sa !== 'object') s.sa = {}
+  if (s.divisioni === false && s.sa.divisioni === undefined) s.sa.divisioni = false
+  delete s.divisioni
+}
+
+/* ── i giochi in prova ──
+   Un gioco `sperimentale` sta dietro un cancello: finché questo flag è
+   spento non esiste per chi gioca — non è in home, non è fra le carte
+   da accendere, e non conta nel «non hai nessun gioco acceso». È uno
+   solo per tutti i giochi in prova, ed è **per bambino** come tutto il
+   resto di `settings`: si può dare il gioco a metà al più grande e non
+   alla piccola. Resta raggiungibile dall'indirizzo (`#generale`), che è
+   la strada dei grandi e dei test. */
+export const sperimentaliAccesi = () => state.profile.settings.sperimentali === true
+export function accendiSperimentali(si) {
+  state.profile.settings.sperimentali = !!si
+  persist()
+}
+
+/* i giochi in home: accesi salvo che i genitori li spengano, ed è per
+   bambino — uno può avere il castello e l'altro no. Quelli in prova
+   passano prima dal cancello qui sopra. */
+export const giocoAcceso = chiave =>
+  (!eSperimentale(chiave) || sperimentaliAccesi()) &&
+  giocoGiocabile(chiave) &&
+  (state.profile.settings.giochi || {})[chiave] !== false
+
+/* Un gioco fatto tutto della stessa classe di domande — il laboratorio
+   delle pozioni, che è conversioni e basta — non si può giocare se quel
+   macrogruppo è spento: non sarebbe difficile, sarebbe da indovinare.
+   Non è l'interruttore dei genitori messo giù, è la carta che non si
+   accende, e la schermata dei genitori scrive perché. */
+export const giocoGiocabile = chiave => serveA(chiave).every(sapereAcceso)
+export const saperiCheMancano = chiave => serveA(chiave).filter(c => !sapereAcceso(c))
+export function accendiGioco(chiave, si) {
+  const s = state.profile.settings
+  if (!s.giochi) s.giochi = {}
+  if (si) delete s.giochi[chiave]      // acceso è l'assenza: niente voci inutili nel salvataggio
+  else s.giochi[chiave] = false
+  persist()
+}
+/* quanti ne restano accesi: se sono zero la home lo dice invece di
+   mostrare una pagina vuota */
+export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
+
+/* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
+   che è il comportamento di sempre. Acceso, tutte le tappe di tutti i
+   giochi si aprono subito. */
+export const tuttoAperto = () => state.profile.settings.tuttoAperto === true
+export function accendiTuttoAperto(si) {
+  state.profile.settings.tuttoAperto = !!si
+  persist()
+}
+
+/* ── una tappa è aperta? ──
+   La domanda che ogni campagna si faceva per conto suo, con la stessa
+   riga copiata in cinque giochi: `i <= progresso.tappa`. Adesso è qui,
+   una volta sola, perché il lucchetto dei genitori la deve poter
+   scavalcare tutta insieme — e perché una regola scritta in cinque
+   posti prima o poi diverge in cinque modi.
+
+   `fatto` è quante tappe sono state superate (`progresso.tappa`): la
+   prossima è sempre aperta, quelle dopo no. È una funzione pura tranne
+   che per il flag, quindi la si può provare senza browser. */
+export const tappaAperta = (i, fatto) => tuttoAperto() || i <= fatto
+
+/* Senza giocatore non si scrive: durante l'onboarding il profilo in
+   memoria è un `blank()` che non è di nessuno, e salvarlo creerebbe una
+   chiave `profilo:` senza id — che poi il roster ricostruito dalle
+   chiavi si ritroverebbe fra i piedi come un giocatore senza nome. */
+export function persist() {
+  if (!state.player) return
+  save(KEY(state.player), JSON.parse(JSON.stringify(state.profile)))
+}
+export const flushNow = flush
+
+export async function resetPlayer() {
+  state.profile = blank()
+  state.festa = []
+  await remove(KEY(state.player))
+  apriGiornata()
+  persist()
+}
+
+/* ---------- salvataggio da portare via ----------
+   I progressi vivono solo dentro il browser del telefono: se si rompe, o
+   se un giorno cambia l'indirizzo da cui si aprono i giochi, spariscono.
+   Queste due funzioni sono la rete di sicurezza, e stanno dietro il PIN
+   della schermata dei genitori. */
+
+/* La firma serve a non farsi dare un JSON qualsiasi. Un salvataggio
+   scaricato prima di questa versione ne ha una diversa, e va importato
+   lo stesso: per questo il controllo qui sotto non guarda che il nome
+   combaci, ma che il file **abbia la forma** di un salvataggio. Inseguire
+   l'elenco delle firme vecchie sarebbe stato peggio del male — e una di
+   quelle era un pezzo di storia di casa che in un repo pubblico non ha
+   motivo di stare. */
+const FIRMA = 'giochi-bambini'
+
+export async function esportaTutto() {
+  // il profilo aperto può essere più fresco di quello già scritto su disco
+  persist()
+  await flush()
+  /* Si esporta quello che c'è nell'archivio, non quello che c'è nel
+     roster: se un profilo è rimasto orfano — roster perso, voce
+     cancellata per sbaglio — questo è l'ultimo momento in cui qualcuno
+     se ne può accorgere, e buttarlo qui vorrebbe dire buttarlo davvero. */
+  const profili = {}
+  for (const k of await chiavi(PREFISSO)) {
+    const p = await load(k)
+    if (p) profili[k.slice(PREFISSO.length)] = p
+  }
+  /* I nomi viaggiano col file: senza, un profilo con id opaco tornerebbe
+     indietro chiamandosi `g2`. */
+  const giocatori = state.giocatori.map(g => ({ id: g.id, nome: g.nome }))
+  return { tipo: FIRMA, v: 2, esportato: new Date().toISOString(), giocatori, profili }
+}
+
+/* Ritorna i nomi ripristinati, così la schermata può dire cosa è successo
+   invece di un generico "fatto". */
+export async function importaTutto(dati) {
+  if (!dati || !dati.profili || typeof dati.profili !== 'object' || Array.isArray(dati.profili))
+    throw new Error('Questo non è un salvataggio dei giochi')
+
+  /* Il roster si ricostruisce da quello che c'è nel file, non da un
+     elenco scritto qui: un salvataggio può arrivare da un'altra casa,
+     con altri bambini e altri id, e deve entrare comunque. */
+  const ripristinati = []
+  for (const [id, p] of Object.entries(dati.profili)) {
+    if (!id || !p || typeof p !== 'object') continue
+    save(KEY(id), p)
+    ripristinati.push(id)
+  }
+  if (!ripristinati.length) throw new Error('Nel file non c\'è nessun profilo da ripristinare')
+
+  /* I nomi, se il file li porta; altrimenti l'id fa anche da nome, come
+     per i profili di prima che il roster esistesse. */
+  const nomi = new Map()
+  if (Array.isArray(dati.giocatori))
+    for (const v of dati.giocatori.map(normalizzaVoce)) if (v) nomi.set(v.id, v.nome)
+  const prima = new Map(state.giocatori.map(g => [g.id, g]))
+  for (const id of ripristinati) prima.set(id, { id, nome: nomi.get(id) || prima.get(id)?.nome || id })
+  state.giocatori = [...prima.values()]
+  salvaRoster()
+
+  await flush()
+  // ricarica quello aperto adesso, altrimenti a schermo resta il vecchio
+  await selectPlayer(state.giocatori.some(g => g.id === state.player)
+    ? state.player : state.giocatori[0].id)
+  return ripristinati.map(id => nomi.get(id) || id)
+}
+
+/* ---------- elementi ---------- */
+export function item(id) {
+  const it = state.profile.items[id]
+  if (it) return it
+  const fresh = newItem()
+  state.profile.items[id] = fresh
+  return fresh
+}
+
+export function answer(id, { correct, ms = 0 }) {
+  srsRecord(item(id), { correct, ms })
+  controllaTraguardi()
+  persist()
+}
+
+export const mastered = (id, now = Date.now()) => isMastered(item(id), now)
+export const strengthOf = (id, now = Date.now()) => strength(item(id), now)
+
+export function countMastered(prefix, now = Date.now()) {
+  return Object.entries(state.profile.items)
+    .filter(([k, v]) => k.startsWith(prefix) && isMastered(v, now)).length
+}
+
+/* ---------- monete e livelli ----------
+   Il livello è uno solo per tutto il profilo ed è la somma dell'esperienza
+   di ogni gioco (vedi store/progressi.js): è anche il moltiplicatore delle
+   monete, così giocare a inglese fa guadagnare di più anche alle torri.
+   I livelli per singolo gioco esistono, ma stanno nella pagina Albo e non
+   toccano l'economia: un salvadanaio solo, un livello solo. */
+export const level = computed(() => livelloTotale(state.profile).n)
+
+export function addCoins(n) {
+  // mai sotto zero: un salvadanaio in rosso non vuol dire niente per un bambino
+  state.profile.coins = Math.max(0, (state.profile.coins || 0) + n)
+  // il salvadanaio conta quanto è ENTRATO, non quanto è rimasto: comprare
+  // qualcosa non deve cancellare la fatica che è servita a guadagnarlo
+  if (n > 0) state.profile.totals.monete = (state.profile.totals.monete || 0) + n
+  persist()
+  return state.profile.coins
+}
+
+export function buy(emoji, cost) {
+  if (state.profile.owned.includes(emoji) || state.profile.coins < cost) return false
+  state.profile.coins -= cost
+  state.profile.owned.push(emoji)
+  fixLayout()
+  controllaTraguardi()
+  persist()
+  return true
+}
+
+/* ═══════════ contatori e traguardi ═══════════
+   I giochi non toccano `totals` e `best` a mano: chiamano queste due, che
+   sanno anche far scattare i traguardi. Un contatore che nessuno guarda
+   non serve a niente, uno guardato dal posto sbagliato si dimentica. */
+export function segna(chiave, n = 1) {
+  const t = state.profile.totals
+  t[chiave] = (t[chiave] || 0) + n
+  controllaTraguardi()
+  persist()
+  return t[chiave]
+}
+
+/* Registra un primato. Torna true se è un record nuovo, così il gioco può
+   festeggiare senza doversi ricordare il valore di prima. */
+export function segnaBest(chiave, valore) {
+  const b = state.profile.best
+  if (!(valore > (b[chiave] || 0))) return false
+  b[chiave] = valore
+  controllaTraguardi()
+  persist()
+  return true
+}
+
+/* Guarda se qualche traguardo è stato raggiunto adesso.
+   È rientrante — il premio in monete richiama addCoins, che richiama
+   persist — quindi si protegge da sola.
+
+   La PRIMA volta (profilo che esisteva prima dei traguardi, o appena
+   azzerato) i traguardi già meritati vengono registrati in silenzio:
+   niente monete e niente festa. Regalare duemila monete e venti popup
+   per cose fatte il mese scorso non è un premio, è rumore. */
+let dentro = false
+export function controllaTraguardi(now = Date.now()) {
+  if (dentro) return []
+  dentro = true
+  try {
+    const p = state.profile
+    const primaVolta = !p.badgeInit
+    const { nuovi, monete } = riscuotiTraguardi(p, now)
+    if (primaVolta) { p.badgeInit = 1; persist(); return [] }
+    if (!nuovi.length) return []
+    if (monete) addCoins(monete)
+    state.festa = [...state.festa, ...nuovi]
+    flush()          // un traguardo si prende di rado: non deve perdersi
+    return nuovi
+  } finally { dentro = false }
+}
+
+/* la vista che mostra la festa la toglie di mezzo appena l'ha mostrata */
+export function festaVista() { state.festa = [] }
+
+/* ---------- la fotografia dei progressi, per la pagina Albo ---------- */
+export const traguardi = (now = Date.now()) => statoTraguardi(state.profile, now)
+export const livelloOra = (now = Date.now()) => livelloTotale(state.profile, now)
+export const areaOra = (area, now = Date.now()) => progressoArea(state.profile, area, now)
+export const serieGiorni = (now = Date.now()) => serieViva(state.profile, now)
+
+/* ---------- "a che punto sei" in una materia ----------
+   `abilitaOra('mate')` dice quanto si sa adesso, `difficoltaOra('mate')`
+   traduce lo stesso numero in un livello 1..5 da dare a un generatore di
+   domande. È il gancio con cui i giochi smettono di ripartire da zero. */
+export const abilitaOra = (materia, now = Date.now()) => abilita(state.profile, materia, now)
+export const difficoltaOra = (materia, now = Date.now()) => difficolta(state.profile, materia, now)
+
+/* ---------- campagna del tower defense ----------
+   `tappa` è quante tappe sono state superate: è anche l'indice della prossima
+   da giocare. Vinta l'ultima si apre la partita libera, senza fine. */
+export const tdProgresso = () => state.profile.td
+
+/* ---------- il salvataggio di chi giocava alle sei tappe ----------
+
+   Il castello aveva sei tappe; adesso ne ha quindici, tre campagne da
+   cinque. `td.tappa` è un indice su quella fila, quindi un «4» scritto
+   ieri e un «4» scritto oggi non parlano dello stesso posto: senza
+   rimappare, chi era arrivato in fondo si ritroverebbe a metà del bosco.
+
+   La regola è che **nessuno torna indietro**. Le sei tappe di ieri
+   coprivano, per scaletta e difficoltà, quello che oggi sono le prime
+   due campagne: chi le aveva finite tutte trova aperto tutto il bosco e
+   tutto il sotterraneo — e le mura, che sono nuove, restano da
+   conquistare. La partita libera, se era sbloccata, resta sbloccata: era
+   un premio già preso, e i premi non si tolgono.
+
+   La tabella è scritta a mano e non è una proporzione: dieci diviso sei
+   darebbe numeri che non cadono su un confine di campagna, e la prima
+   cosa che un bambino guarda è dove si ferma la fila delle bandierine.
+
+   `v` è il segno che la migrazione è già stata fatta. Va letto **prima**
+   di fondere il salvataggio con il profilo vuoto: se si fondesse per
+   primo, il `v` del vuoto coprirebbe l'assenza nel salvataggio e la
+   rimappatura non partirebbe mai. */
+export const TD_VERSIONE = 2
+const TD_DA_SEI = [0, 2, 3, 5, 7, 8, 10]
+
+export function migraCastello(vuoto, salvato) {
+  const dati = salvato && typeof salvato === 'object' ? salvato : {}
+  const td = { ...vuoto, ...dati }
+  // il `v` che conta è quello del salvataggio, non quello del profilo
+  // vuoto: fondendo per primo, il vuoto coprirebbe l'assenza
+  if (dati.v === TD_VERSIONE) return td
+  const vecchia = Math.max(0, Math.min(TD_DA_SEI.length - 1, Math.round(td.tappa || 0)))
+  td.tappa = Math.max(td.tappa || 0, TD_DA_SEI[vecchia])
+  td.libera = !!td.libera
+  td.v = TD_VERSIONE
+  return td
+}
+
+export function tdCompleta(indice, quanteTappe) {
+  const td = state.profile.td
+  td.tappa = Math.max(td.tappa || 0, indice + 1)
+  if (td.tappa >= quanteTappe) td.libera = true
+  controllaTraguardi()
+  persist()
+  flush()          // una tappa si vince di rado: non deve perdersi per una scheda chiusa
+  return td
+}
+
+/* ---------- campagna delle tabelline ----------
+   Stessa forma della campagna del castello: `tappa` è quante ne sono
+   state superate ed è l'indice della prossima. Le stelle invece non si
+   segnano da nessuna parte: si ricalcolano dal motore ogni volta che si
+   guarda, perché una tabellina che non si ripassa smette di essere sicura
+   e la stella deve poter tornare indietro. */
+export const mateProgresso = () => state.profile.mate
+export const tabellineIntere = (now = Date.now()) => tabellineIntereDi(state.profile, now)
+
+export function mateCompleta(indice, quanteTappe) {
+  const mate = state.profile.mate
+  mate.tappa = Math.max(mate.tappa || 0, indice + 1)
+  if (mate.tappa >= quanteTappe) mate.libera = true
+  controllaTraguardi()
+  persist()
+  flush()
+  return mate
+}
+
+/* ---------- campagna del calcolo a mente ----------
+   Le stazioni stanno accanto ai pianeti e nel profilo hanno un campo
+   loro: le due campagne degli asteroidi si aprono in parallelo, perché
+   3+4 viene prima delle tabelline e 4×23 viene dopo. */
+export const calcProgresso = () => state.profile.calc
+
+export function calcCompleta(indice, quanteTappe) {
+  const c = state.profile.calc
+  c.tappa = Math.max(c.tappa || 0, indice + 1)
+  if (c.tappa >= quanteTappe) c.libera = true
+  controllaTraguardi()
+  persist()
+  flush()
+  return c
+}
+
+/* ═══════════ campagne delle lingue ═══════════
+   English e Spagnolo sono lo stesso gioco su due strade separate, e nel
+   profilo stanno in due campi diversi: `eng` e `esp`. Il gioco non li
+   nomina, passa il campo che gli ha dato `data/lingue.js`. */
+export const linguaProgresso = campo => state.profile[campo]
+
+export function linguaCompleta(campo, indice, quanteTappe) {
+  const c = state.profile[campo]
+  c.tappa = Math.max(c.tappa || 0, indice + 1)
+  if (c.tappa >= quanteTappe) c.libera = true
+  controllaTraguardi()
+  persist()
+  flush()          // una tappa si vince di rado: non deve perdersi
+  return c
+}
+
+/* ═══════════ campagna della bancarella ═══════════
+   Le giornate di mercato: `tappa` è quante giornate sono state finite ed è
+   l'indice della prossima da aprire. Finita l'ultima si apre la giornata
+   libera, che non chiude mai. */
+export const mercatoProgresso = () => state.profile.mercato
+
+export function mercatoCompleta(indice, quanteGiornate) {
+  const m = state.profile.mercato
+  m.tappa = Math.max(m.tappa || 0, indice + 1)
+  if (m.tappa >= quanteGiornate) m.libera = true
+  state.profile.totals.mercati = (state.profile.totals.mercati || 0) + 1
+  controllaTraguardi()
+  persist()
+  flush()          // una giornata si finisce di rado: non deve perdersi
+  return m
+}
+
+/* ═══════════ campagna del laboratorio delle pozioni ═══════════
+   `tappa` è quante tappe sono state superate ed è l'indice della prossima.
+   Finita l'ultima si apre il laboratorio libero, che non chiude mai. */
+export const labProgresso = () => state.profile.lab
+
+export function labCompleta(indice, quanteTappe) {
+  const l = state.profile.lab
+  l.tappa = Math.max(l.tappa || 0, indice + 1)
+  if (l.tappa >= quanteTappe) l.libera = true
+  controllaTraguardi()
+  persist()
+  flush()          // una tappa si vince di rado: non deve perdersi
+  return l
+}
+
+/* ═══════════ campagna del generale ═══════════
+   Stessa forma delle altre campagne, con due cose in più che il gioco non
+   deve tenersi in tasca: il record di ordini per livello e le stelle
+   guadagnate su quel livello.
+
+   Un livello si vince superandone tutte e tre le varianti, quindi qui ci
+   si arriva una volta sola per partita: chi chiama questa funzione ha
+   già finito. `ordini` è quanti ne ha firmati, `par` il par del livello,
+   `avanzato` dice se fra quegli ordini ce n'era almeno uno di alto
+   livello (ciclo, condizione, evento) — è il salto che il gioco insegna,
+   e va contato a parte da «ce l'ho fatta».
+
+   I contatori li muove questa funzione, con `segna()`: così il gioco non
+   deve ricordarsi cinque nomi e non c'è modo di contare due volte. */
+export const genProgresso = () => state.profile.gen
+
+export function genCompleta(indice, quantiLivelli,
+                            { ordini = 0, par = 0, avanzato = false } = {}) {
+  const g = state.profile.gen
+  const primaVolta = indice + 1 > (g.tappa || 0)
+  g.tappa = Math.max(g.tappa || 0, indice + 1)
+  if (g.tappa >= quantiLivelli) g.libera = true
+
+  // il record è il MINORE: chiudere con meno ordini vuol dire aver capito
+  // meglio, non aver giocato di più
+  const rec = g.ordini[indice] || 0
+  if (ordini > 0 && (!rec || ordini < rec)) g.ordini[indice] = ordini
+
+  // due stelle a chi sta nel par, una a chi ce la fa e basta. Si tiene la
+  // migliore: una partita storta non toglie la stella già guadagnata.
+  const dentroPar = par > 0 && ordini > 0 && ordini <= par
+  const stelle = dentroPar ? 2 : 1
+  const prima = g.stelle[indice] || 0
+  if (stelle > prima) g.stelle[indice] = stelle
+
+  if (primaVolta) segna('missioni')
+  if (ordini > 0) segna('ordini', ordini)
+  // il par si conta una volta per livello — la prima volta che ci si sta —
+  // perché è una cosa capita, non una cosa ripetuta
+  if (dentroPar && prima < 2) segna('nelPar')
+  if (stelle > prima) segna('stelle', stelle - prima)
+  // questo invece è una vittoria per volta, come le operazioni perfette
+  // del castello: scrivere un ciclo resta il gesto che vale, anche la
+  // decima volta
+  if (avanzato) segna('avanzati')
+
+  controllaTraguardi()
+  persist()
+  flush()          // un livello si vince di rado: non deve perdersi
+  return g
+}
+
+/* ═══════════ le avventure del generale ═══════════
+   Qui c'è solo il POSTO dove stanno e la garanzia che sia sano: chi le
+   legge e chi le muove è `store/storie.js`, che di profili non sa
+   niente e resta un modulo di funzioni. */
+export function normalizzaStoria(s) {
+  const r = s && typeof s === 'object' ? s : {}
+  return {
+    capitolo: Number.isFinite(r.capitolo) && r.capitolo > 0 ? Math.floor(r.capitolo) : 0,
+    stelle: r.stelle && typeof r.stelle === 'object' && !Array.isArray(r.stelle) ? { ...r.stelle } : {},
+    fatti: Array.isArray(r.fatti) ? r.fatti.filter(f => typeof f === 'string') : [],
+  }
+}
+
+/* la voce di una storia, creata al primo bisogno: leggere non deve
+   scrivere niente, ma chi scrive vuole trovarla già lì */
+export function storiaProfilo(id, crea = false) {
+  const p = state.profile
+  if (!p.storie || typeof p.storie !== 'object') p.storie = {}
+  if (!p.storie[id]) {
+    if (!crea) return normalizzaStoria(null)
+    p.storie[id] = normalizzaStoria(null)
+  }
+  return p.storie[id]
+}
+
+/* i due nomi di prima, che la home e i test usano ancora */
+export const engProgresso = () => linguaProgresso('eng')
+export const espProgresso = () => linguaProgresso('esp')
+export const engCompleta = (i, n) => linguaCompleta('eng', i, n)
+export const espCompleta = (i, n) => linguaCompleta('esp', i, n)
+
+/* ═══════════ animali ═══════════ */
+export const haAnimale = id => !!state.profile.pets[id]
+export const miei = () => PETS.filter(p => haAnimale(p.id))
+
+/* quanto vale una barra adesso: cala da sola col passare delle ore,
+   anche a gioco chiuso */
+export const bisogno = (id, k, now = Date.now()) =>
+  livelloDi(state.profile.pets[id], k, now)
+
+/* di cosa ha bisogno adesso: la barra più bassa */
+export const chiede = (id, now = Date.now()) => urgenza(state.profile.pets[id], now)
+
+/* la pancia ha un nome suo perché mezzo gioco parla di lei */
+export const sazieta = (id, now = Date.now()) => bisogno(id, 'fame', now)
+
+/* chi ha almeno una barra sotto la soglia: è la riga che la schermata
+   iniziale mostra per far tornare qui il bambino */
+export const daCurare = (now = Date.now()) =>
+  miei().filter(p => chiede(p.id, now).grado === 'basso')
+
+export function adotta(id) {
+  const def = petDi(id)
+  if (!def || haAnimale(id) || state.profile.coins < def.costo) return false
+  state.profile.coins -= def.costo
+  state.profile.pets[id] = nuovoAnimale()
+  controllaTraguardi()
+  persist()
+  return true
+}
+
+export function compraProdotto(e) {
+  const c = prodottoDi(e)
+  if (!c || state.profile.coins < c.costo) return false
+  state.profile.coins -= c.costo
+  state.profile.dispensa[e] = (state.profile.dispensa[e] || 0) + 1
+  persist()
+  return true
+}
+
+export const inDispensa = e => state.profile.dispensa[e] || 0
+export const dispensaPiena = () => PRODOTTI.some(c => inDispensa(c.e) > 0)
+export const dispensaDi = k =>
+  PRODOTTI.filter(c => c.bisogno === k && inDispensa(c.e) > 0)
+
+/* Usa un prodotto su un animale: cibo, gioco, spazzola o vitamina, è
+   sempre lo stesso gesto su una barra diversa.
+   Torna 'preferito' | 'ok' | 'pieno' | false.
+   A barra piena il prodotto NON viene consumato: sprecare qualcosa pagato
+   con le monete sarebbe una punizione per una distrazione. */
+export function usa(id, e) {
+  const a = state.profile.pets[id], c = prodottoDi(e)
+  if (!a || !c || inDispensa(e) <= 0) return false
+  const adesso = bisogno(id, c.bisogno)
+  if (adesso >= SOGLIE.pieno) return 'pieno'
+  const pref = preferisce(id, e)
+  state.profile.dispensa[e]--
+  if (!state.profile.dispensa[e]) delete state.profile.dispensa[e]
+  a.val[c.bisogno] = Math.min(100, adesso + c.dona * (pref ? PREFERITO : 1))
+  a.t[c.bisogno] = Date.now()
+  const t = state.profile.totals
+  if (c.bisogno === 'fame') { a.pasti = (a.pasti || 0) + 1; t.pasti = (t.pasti || 0) + 1 }
+  else t.cure = (t.cure || 0) + 1
+  if (pref) t.preferiti = (t.preferiti || 0) + 1
+  controllaTraguardi()
+  persist()
+  return pref ? 'preferito' : 'ok'
+}
+
+/* ═══════════ la macchina delle sorprese ═══════════
+   Una capsula per volta, dalla serie a cui si è arrivati, e mai un
+   doppione: esce sempre qualcosa che non si ha. La prima è offerta dalla
+   casa, perché una macchina di cui non hai visto l'effetto non la provi. */
+export const serieOra = () => SERIE[Math.min(state.profile.serie || 0, SERIE.length - 1)]
+export const finite = () => (state.profile.serie || 0) >= SERIE.length
+export const miePezzi = s => (s.pezzi || []).filter(p => state.profile.accessori.includes(p.e))
+export const costoCapsula = () =>
+  (state.profile.totals.capsule ? serieOra().costo : 0)
+
+export function apriCapsula(rnd = Math.random) {
+  const p = state.profile
+  if (finite()) return false
+  const s = serieOra()
+  const resta = mancanti(s, p.accessori)
+  if (!resta.length) return false
+  const costo = costoCapsula()
+  if (p.coins < costo) return false
+  p.coins -= costo
+  const pezzo = estrai(resta, rnd)
+  p.accessori.push(pezzo.e)
+  p.totals.capsule = (p.totals.capsule || 0) + 1
+  // finita la serie si apre la successiva: è lì che il prezzo sale
+  if (!mancanti(s, p.accessori).length) p.serie = (p.serie || 0) + 1
+  controllaTraguardi()
+  // persist accoda, flush scrive subito: una capsula si apre di rado e si
+  // paga, non deve perdersi se la scheda si chiude nel terzo di secondo dopo
+  persist()
+  flush()
+  return pezzo
+}
+
+export const serieComplete = () => Math.min(state.profile.serie || 0, SERIE.length)
+
+/* Vestire e svestire: un accessorio per posto, e lo stesso pezzo non può
+   stare addosso a due animali insieme — è uno solo. */
+export function indossa(id, e) {
+  const a = state.profile.pets[id]
+  const posto = postoDi(e)
+  if (!a || !posto || !state.profile.accessori.includes(e)) return false
+  for (const altro of Object.values(state.profile.pets))
+    if (altro.addosso && altro.addosso[posto] === e) delete altro.addosso[posto]
+  a.addosso[posto] = e
+  controllaTraguardi()
+  persist()
+  return true
+}
+
+export function togli(id, posto) {
+  const a = state.profile.pets[id]
+  if (!a || !a.addosso[posto]) return false
+  delete a.addosso[posto]
+  persist()
+  return true
+}
+
+/* le mensole devono contenere esattamente gli oggetti posseduti */
+export function fixLayout() {
+  const p = state.profile
+  if (!Array.isArray(p.layout) || p.layout.length !== 3) p.layout = [[], [], []]
+  p.layout = p.layout.map(r => (Array.isArray(r) ? r.filter(e => p.owned.includes(e)) : []))
+  const placed = new Set(p.layout.flat())
+  for (const e of p.owned) {
+    if (placed.has(e)) continue
+    p.layout.reduce((a, b) => (b.length < a.length ? b : a)).push(e)
+    placed.add(e)
+  }
+}
+
+export function moveItem(fromRow, fromCol, toRow, toIndex) {
+  const L = state.profile.layout
+  const [e] = L[fromRow].splice(fromCol, 1)
+  if (e == null) return
+  let idx = toIndex
+  if (toRow === fromRow && idx > fromCol) idx--
+  L[toRow].splice(Math.max(0, Math.min(idx, L[toRow].length)), 0, e)
+  persist()
+}
+
+export { backend }

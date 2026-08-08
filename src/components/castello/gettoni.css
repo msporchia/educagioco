@@ -1,0 +1,6 @@
+/* i gettoni del castello vivono nella barra comune: piccoli, perché
+   lassù dividono lo spazio con il nome del gioco e i tasti */
+.gettone { font-size:13px; padding:5px 8px }
+.energia { color:#8a6b00; background:#ffeeb8 }
+.veloce { font-size:12px; letter-spacing:-1px }
+.veloce.acceso { background:#ffd76a }

@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Indovinelli — il banco dei micro-enigmi</title>
+<style>
+  :root{
+    --fondo:#f6f1e7; --carta:#fffdf9; --inchiostro:#2f2b26; --tenue:#8b8175;
+    --bordo:#e3d9c8; --si:#2f9e5f; --no:#dd5b4c; --oro:#eba417; --vivo:#4a6fd4;
+    --ombra:#3b3630;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#e6ded0;-webkit-tap-highlight-color:transparent}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--inchiostro);
+       overflow-x:hidden;overscroll-behavior:none}
+  #app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--fondo);
+       display:flex;flex-direction:column;overflow-x:hidden;position:relative;
+       box-shadow:0 0 40px rgba(0,0,0,.08)}
+  button{font:inherit;color:inherit;border:none;background:none;padding:0;cursor:pointer;
+         touch-action:manipulation;font-weight:600}
+  svg{display:block;max-width:100%;max-height:100%}
+
+  /* ── striscia ── */
+  .striscia{display:flex;align-items:center;gap:9px;padding:9px 12px 6px;min-height:54px;flex:0 0 auto}
+  .fam{display:flex;align-items:center;gap:7px;font-size:15.5px;font-weight:800}
+  .fam .ico{font-size:20px}
+  .spinta{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .filotto{font-size:16px;font-weight:800;color:var(--tenue);min-width:44px;text-align:right}
+  .filotto.caldo{color:var(--oro)}
+  .attrezzi{width:44px;height:44px;border-radius:14px;background:#ece3d3;font-size:18px;
+            display:grid;place-items:center;flex:0 0 auto}
+  .livello{height:5px;margin:0 14px 4px;border-radius:3px;background:#e6dbc8;overflow:hidden;flex:0 0 auto}
+  .livello i{display:block;height:100%;background:linear-gradient(90deg,#7bc47f,#eba417,#dd5b4c);
+             border-radius:3px;transition:width .35s ease}
+
+  /* ── scena ── */
+  /* i tasti stanno sempre alla stessa altezza: si sfoglia col pollice fermo */
+  .corpo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+         gap:14px;padding:4px 14px 6px;min-height:0}
+  .corpo.sola{justify-content:center}
+  .scena{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         gap:11px;width:100%;min-height:0}
+  .consegna{font-size:15.5px;font-weight:700;color:#5c554b;text-align:center;line-height:1.3}
+  .consegna b{font-size:20px}
+
+  .fila{display:flex;align-items:center;justify-content:center;gap:7px;width:100%}
+  .cella{background:var(--carta);border:3px solid var(--bordo);border-radius:16px;
+         flex:1 1 0;max-width:84px;aspect-ratio:1;display:grid;place-items:center;
+         overflow:hidden;padding:3px}
+  .cella.chiesta{border-style:dashed;border-color:var(--vivo);background:#eef2fd;
+                 font-size:30px;font-weight:900;color:var(--vivo)}
+  .cella.marcata{border-color:var(--oro);background:#fff8e8}
+  .cella.vuota{border-style:dashed;background:#f1ebdd}
+
+  .indizi{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+  .indizio{background:var(--carta);border:3px solid var(--bordo);border-radius:18px;
+           width:96px;padding:8px 5px 7px;display:flex;flex-direction:column;align-items:center;gap:5px}
+  .indizio.acceso{border-color:var(--oro);background:#fff8e8}
+  .indizio .segno{position:relative;width:52px;height:52px;display:grid;place-items:center;font-size:34px;line-height:1}
+  .indizio .bollo{position:absolute;right:-4px;bottom:-4px;font-size:19px;font-weight:900;line-height:1}
+  .indizio .bollo.no{color:var(--no)} .indizio .bollo.si{color:var(--si)}
+  .indizio .detto{font-size:11.5px;font-weight:700;line-height:1.2;text-align:center;color:#5c554b}
+  /* con uno o due indizi si respira: il pittogramma diventa il protagonista */
+  .indizi.pochi .indizio{width:138px;padding:12px 8px 10px;gap:7px}
+  .indizi.pochi .segno{width:76px;height:76px;font-size:52px}
+  .indizi.pochi .bollo{font-size:24px}
+  .indizi.pochi .detto{font-size:14px}
+
+  .analogia{display:flex;flex-direction:column;gap:10px;align-items:center}
+  .coppia{display:flex;align-items:center;gap:10px}
+  .gettone{width:74px;height:74px;border-radius:20px;background:var(--carta);border:3px solid var(--bordo);
+           display:grid;place-items:center;font-size:40px;line-height:1}
+  .gettone.chiesto{border-style:dashed;border-color:var(--vivo);background:#eef2fd;color:var(--vivo);font-weight:900;font-size:34px}
+  .verso{font-size:26px;color:var(--tenue);font-weight:900}
+  .come{font-size:13px;font-weight:800;color:var(--tenue);letter-spacing:1px;text-transform:uppercase}
+
+  .clessidra{width:70%;max-width:220px;height:8px;border-radius:4px;background:#e6dbc8;overflow:hidden}
+  .clessidra i{display:block;height:100%;background:var(--oro);width:100%;transform-origin:left center}
+  @keyframes cala{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+  .gettone.marcato{border-color:var(--si);background:#f0fbf4}
+
+  .mappa{background:var(--carta);border:3px solid var(--bordo);border-radius:20px;padding:8px}
+
+  /* ── risposte ── */
+  .risposte{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;width:100%;flex:0 0 auto}
+  .risposte.tre{grid-template-columns:repeat(3,1fr)}
+  .op{background:var(--carta);border:3px solid var(--bordo);border-radius:20px;min-height:104px;
+      display:grid;place-items:center;position:relative;padding:6px;overflow:hidden;
+      box-shadow:0 3px 0 var(--bordo)}
+  .op:active{transform:translateY(2px);box-shadow:0 1px 0 var(--bordo)}
+  .op.emoji{font-size:50px;line-height:1}
+  .op.buona{border-color:var(--si);background:#f0fbf4;box-shadow:0 3px 0 #cbe9d6}
+  .op.cattiva{border-color:var(--no);background:#fdf1f0;box-shadow:0 3px 0 #f2d3cf}
+  .op.spenta{opacity:.45}
+  .op .bollo{position:absolute;top:3px;right:7px;font-size:22px;font-weight:900}
+  .op.buona .bollo{color:var(--si)} .op.cattiva .bollo{color:var(--no)}
+
+  /* ── esito ── */
+  .esito{flex:0 0 auto;padding:2px 14px 18px;min-height:78px}
+  .parola{font-size:14.5px;font-weight:700;line-height:1.35;color:#5c554b;text-align:center;
+          min-height:38px;display:flex;align-items:center;justify-content:center}
+  .parola em{font-style:normal;color:var(--vivo);font-weight:800}
+  .avanti{display:block;width:100%;min-height:52px;border-radius:18px;background:var(--inchiostro);
+          color:#fff;font-size:17px;font-weight:800}
+  .avanti:active{transform:translateY(2px)}
+  .lampo{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:900;
+         pointer-events:none;color:var(--si);animation:sbuca .45s ease-out forwards}
+  @keyframes sbuca{0%{transform:scale(.4);opacity:0}30%{opacity:.95}100%{transform:scale(1.25);opacity:0}}
+
+  /* ── banco di prova ── */
+  .velo{position:fixed;inset:0;background:rgba(30,26,22,.45);z-index:9}
+  .banco{position:fixed;left:0;right:0;bottom:0;z-index:10;margin:0 auto;max-width:430px;
+         background:var(--carta);border-radius:24px 24px 0 0;padding:14px 14px 20px;
+         box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+  .banco h2{margin:0 0 9px;font-size:12px;font-weight:800;letter-spacing:1px;
+            text-transform:uppercase;color:var(--tenue)}
+  .scelte{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+  .scelte button{min-height:56px;border-radius:15px;border:2px solid var(--bordo);background:#fff;
+                 font-size:11.5px;font-weight:800;line-height:1.15;padding:4px;display:flex;
+                 flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5c554b}
+  .scelte button b{font-size:20px;font-weight:400;line-height:1}
+  .scelte button.attiva{border-color:var(--inchiostro);background:#f3ede1;color:var(--inchiostro)}
+  .manopola{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .manopola input[type=range]{flex:1;height:44px;accent-color:var(--vivo)}
+  .manopola .num{font-size:15px;font-weight:800;min-width:58px;text-align:right}
+  .chiudi{display:block;width:100%;min-height:50px;border-radius:16px;background:var(--inchiostro);color:#fff;
+          font-size:16px;font-weight:800}
+  .nota{font-size:11.5px;color:var(--tenue);line-height:1.4;margin-top:9px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/*<<<GENERATORE — da qui in giù non si tocca il documento: gira uguale in Node.
+   È il pezzo che deve sopravvivere al prototipo: dentro c'è solo il contenuto
+   degli enigmi (dati puri), fuori c'è chi li disegna. Un altro gioco può
+   prendersi questo blocco e mostrarlo come vuole. */
+
+/* ═══════════════════════════════════════════════════════════════════
+   ATTREZZI
+   ═══════════════════════════════════════════════════════════════════ */
+function caso (n) { return Math.floor(Math.random() * n) }
+function fra (a, b) { return a + caso(b - a + 1) }
+function scegli (a) { return a[caso(a.length)] }
+function mescola (a) {
+  const b = a.slice()
+  for (let i = b.length - 1; i > 0; i--) { const j = caso(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t }
+  return b
+}
+function prendi (a, n) { return mescola(a).slice(0, n) }
+function stretto (x, a, b) { return x < a ? a : x > b ? b : x }
+/* «a difficoltà d, quale scaglione?» — le soglie sono crescenti */
+function scaglione (d, soglie, valori) {
+  for (let i = 0; i < soglie.length; i++) if (d < soglie[i]) return valori[i]
+  return valori[valori.length - 1]
+}
+function unici (lista, chiave) {
+  const visti = new Set(); const fuori = []
+  for (const x of lista) { const k = chiave(x); if (visti.has(k)) continue; visti.add(k); fuori.push(x) }
+  return fuori
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL VOCABOLARIO DELLE FIGURE
+   Attributi puliti, niente emoji: servono a sequenze, deduzione e
+   memoria, dove il gioco è proprio confrontare *un* attributo per volta.
+   ═══════════════════════════════════════════════════════════════════ */
+const FORME = ['cerchio', 'quadrato', 'triangolo', 'stella', 'cuore', 'rombo']
+const COLORI = ['rosso', 'blu', 'giallo', 'verde', 'viola', 'arancio']
+const VALORI = {
+  forma: FORME,
+  colore: COLORI,
+  quantita: [1, 2, 3, 4],
+  dimensione: ['piccolo', 'grande'],
+  rotazione: [0, 45, 90, 135, 180, 225, 270, 315]
+}
+const NOMEFORMA = {
+  cerchio:'un cerchio', quadrato:'un quadrato', triangolo:'un triangolo',
+  stella:'una stella', cuore:'un cuore', rombo:'un rombo', freccia:'una freccia'
+}
+const NOMEQUANTI = { 1:'uno', 2:'due', 3:'tre', 4:'quattro', 5:'cinque' }
+
+function figuraBase () {
+  return { forma:scegli(FORME), colore:scegli(COLORI), quantita:1,
+           dimensione:'grande', rotazione:0 }
+}
+function chiaveFig (f) {
+  return f.forma + '/' + f.colore + '/' + f.quantita + '/' + f.dimensione + '/' + (f.rotazione || 0)
+}
+function copiaFig (f, cambi) { return Object.assign({}, f, cambi || {}) }
+/* quanti attributi separano due figure */
+function distanza (a, b) {
+  let n = 0
+  for (const k of ['forma', 'colore', 'quantita', 'dimensione', 'rotazione'])
+    if ((a[k] || 0) !== (b[k] || 0)) n++
+  return n
+}
+/* una figura diversa da `f` di esattamente `quanti` attributi */
+function figuraVicina (f, quanti, assi) {
+  const usa = prendi(assi || ['forma', 'colore', 'quantita', 'dimensione'], quanti)
+  const cambi = {}
+  for (const a of usa) cambi[a] = scegli(VALORI[a].filter(v => v !== f[a]))
+  return copiaFig(f, cambi)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. SEQUENZE — una fila che segue una regola, manca l'ultima
+   ═══════════════════════════════════════════════════════════════════ */
+function regolaCiclo (asse, periodo) {
+  const valori = prendi(VALORI[asse], periodo)
+  return { asse, tipo:'ciclo', valori, periodo,
+           valore: i => valori[((i % periodo) + periodo) % periodo] }
+}
+function regolaPasso (asse, lung) {
+  if (asse === 'quantita') {
+    const su = lung > 5 ? true : Math.random() < .75
+    const inizio = su ? fra(1, Math.max(1, 6 - lung)) : fra(lung, 5)
+    const passo = su ? 1 : -1
+    return { asse, tipo:'passo', passo, inizio,
+             valore: i => stretto(inizio + passo * i, 1, 5) }
+  }
+  const passo = scegli([90, -90])
+  const inizio = scegli([0, 90, 180, 270])
+  return { asse, tipo:'passo', passo, inizio,
+           valore: i => ((inizio + passo * i) % 360 + 360) % 360 }
+}
+function fraseRegola (r) {
+  if (r.asse === 'colore') return 'i colori tornano a turno: ' + r.valori.join(', ')
+  if (r.asse === 'forma') return 'le forme tornano a turno: ' + r.valori.join(', ')
+  if (r.asse === 'dimensione') return 'grande e piccolo si danno il cambio'
+  if (r.asse === 'quantita' && r.tipo === 'ciclo') return 'le quantità tornano a turno: ' + r.valori.join(', ')
+  if (r.asse === 'quantita') return r.passo > 0 ? "ogni volta ce n'è uno in più" : "ogni volta ce n'è uno in meno"
+  return r.passo > 0 ? 'la freccia gira sempre verso destra' : 'la freccia gira sempre verso sinistra'
+}
+
+function generaSequenze (d) {
+  const lung = scaglione(d, [.3, .7], [4, 5, Math.random() < .5 ? 5 : 6])
+  const conFreccia = d > .35 && Math.random() < .34
+  const quante = scaglione(d, [.28, .55, .82], [1, Math.random() < .5 ? 1 : 2, 2, Math.random() < .55 ? 2 : 3])
+
+  let assi
+  if (conFreccia) assi = ['rotazione'].concat(prendi(['colore', 'quantita', 'dimensione'], quante - 1))
+  else if (d < .3) assi = prendi(['colore', 'forma'], quante)
+  else if (d < .55) assi = prendi(['colore', 'forma', 'quantita'], quante)
+  else assi = prendi(['colore', 'forma', 'quantita', 'dimensione'], quante)
+
+  const regole = assi.map(a => {
+    if (a === 'rotazione') return regolaPasso(a, lung)
+    if (a === 'quantita' && lung <= 5 && Math.random() < .55) return regolaPasso(a, lung)
+    if (a === 'dimensione') return regolaCiclo(a, 2)
+    const periodo = (lung >= 5 && Math.random() < (d < .4 ? .2 : .6)) ? 3 : 2
+    return regolaCiclo(a, periodo)
+  })
+
+  const base = figuraBase()
+  if (conFreccia) base.forma = 'freccia'
+  const celle = []
+  for (let i = 0; i < lung; i++) {
+    const f = copiaFig(base)
+    for (const r of regole) f[r.asse] = r.valore(i)
+    celle.push(f)
+  }
+  const risposta = celle[lung - 1]
+
+  /* i falsi: il valore che la regola darebbe *un passo prima o dopo*.
+     È lì che casca chi ha visto il ritmo ma non l'ha contato. */
+  const falsi = []
+  for (const r of regole) {
+    const sbagliati = new Set()
+    for (const k of [lung - 2, lung - 3, lung, lung + 1]) sbagliati.add(r.valore(k))
+    sbagliati.delete(risposta[r.asse])
+    for (const v of sbagliati) falsi.push({ f: copiaFig(risposta, { [r.asse]: v }), vicino: 1 })
+    if (d < .45) for (const v of prendi(VALORI[r.asse].filter(v => v !== risposta[r.asse]), 2))
+      falsi.push({ f: copiaFig(risposta, { [r.asse]: v }), vicino: 1 })
+  }
+  /* i falsi non toccano mai un attributo *fermo* difficile da giudicare:
+     due figure identiche salvo la taglia sarebbero una domanda a tradimento,
+     perché in fila e nei tasti le figure non si vedono alla stessa scala. */
+  const assiFalsi = (conFreccia ? ['colore', 'quantita', 'rotazione'] : ['forma', 'colore', 'quantita'])
+    .concat(assi.indexOf('dimensione') >= 0 ? ['dimensione'] : [])
+  if (d < .45) for (let i = 0; i < 6; i++)
+    falsi.push({ f: figuraVicina(risposta, 2, assiFalsi), vicino: 2 })
+
+  /* a bassa difficoltà i falsi lontani prima, ad alta i quasi-giusti */
+  const ordinati = mescola(falsi).sort((a, b) => d < .45 ? b.vicino - a.vicino : a.vicino - b.vicino)
+  const scelti = []
+  const visti = new Set([chiaveFig(risposta)])
+  for (const c of ordinati) {
+    const k = chiaveFig(c.f)
+    if (visti.has(k)) continue
+    visti.add(k); scelti.push(c.f)
+    if (scelti.length === 3) break
+  }
+  let guardia = 0
+  while (scelti.length < 3 && guardia++ < 60) {
+    const f = figuraVicina(risposta, fra(1, 2), assiFalsi)
+    const k = chiaveFig(f)
+    if (visti.has(k)) continue
+    visti.add(k); scelti.push(f)
+  }
+
+  const opzioni = mescola(scelti.concat([risposta])).map(f => ({ che:'figura', fig:f }))
+  const giusta = opzioni.findIndex(o => chiaveFig(o.fig) === chiaveFig(risposta))
+  return {
+    famiglia:'sequenze',
+    consegna:'Cosa viene dopo?',
+    domanda:{ tipo:'sequenza', celle:celle.slice(0, lung - 1), risposta },
+    opzioni, giusta,
+    spiega:'La regola: ' + regole.map(fraseRegola).join(' · ') + '.'
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. DEDUZIONE A INDIZI — «non è rosso», «è grande»: ne resta una
+   Gli indizi si scelgono per forza bruta, non a occhio: si tengono solo
+   i gruppi che lasciano *una* figura e in cui *nessun indizio è inutile*
+   (toglierne uno deve far tornare più superstiti). Così non capita mai
+   l'indizio decorativo, che è quello che fa perdere fiducia al bambino.
+   ═══════════════════════════════════════════════════════════════════ */
+function soddisfa (ind, f) {
+  return ind.positivo ? f[ind.asse] === ind.val : f[ind.asse] !== ind.val
+}
+function testoIndizio (ind) {
+  const neg = ind.positivo ? '' : 'non '
+  if (ind.asse === 'colore') return neg + 'è ' + ind.val
+  if (ind.asse === 'forma') return neg + 'è ' + NOMEFORMA[ind.val]
+  if (ind.asse === 'dimensione') return neg + 'è ' + ind.val
+  return ind.val === 1 ? neg + "ce n'è uno" : neg + 'ce ne sono ' + NOMEQUANTI[ind.val]
+}
+/* tutti i gruppi di `quanti` indizi che isolano il bersaglio senza sprechi */
+function gruppiBuoni (figure, bersaglio, cand, quanti) {
+  const buoni = []
+  const prova = sub => {
+    let sup = 0
+    for (const f of figure) if (sub.every(c => soddisfa(c, f))) sup++
+    if (sup !== 1) return
+    for (let i = 0; i < sub.length; i++) {
+      const senza = sub.filter((_, k) => k !== i)
+      let s2 = 0
+      for (const f of figure) if (senza.every(c => soddisfa(c, f))) s2++
+      if (s2 === 1) return                    // quell'indizio non serviva
+    }
+    buoni.push(sub)
+  }
+  const n = cand.length
+  if (quanti === 1) { for (let i = 0; i < n; i++) prova([cand[i]]) }
+  else if (quanti === 2) { for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) prova([cand[i], cand[j]]) }
+  else { for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) prova([cand[i], cand[j], cand[k]]) }
+  return buoni
+}
+
+function generaDeduzione (d, giu) {
+  for (let tentativo = 0; tentativo < 40; tentativo++) {
+    const quante = scaglione(d, [.35, .7], [4, 5, 6])
+    const nAssi = scaglione(d, [.3, .68], [2, 2, 3])
+    const assi = prendi(['colore', 'forma', 'dimensione', 'quantita'], nAssi)
+    const usati = {}
+    const conta = () => assi.reduce((n, a) => n * usati[a].length, 1)
+    for (const a of assi) usati[a] = prendi(VALORI[a], a === 'dimensione' ? 2 : (d < .4 ? 2 : fra(2, 3)))
+    /* servono almeno tante combinazioni quante figure da mettere in tavola */
+    let allarga = 0
+    while (conta() < quante && allarga++ < 8) {
+      const cresce = assi.filter(a => usati[a].length < VALORI[a].length)
+      if (!cresce.length) break
+      const a = scegli(cresce)
+      usati[a] = prendi(VALORI[a], usati[a].length + 1)
+    }
+    if (conta() < quante) continue
+
+    /* tutte le combinazioni possibili sugli assi che variano, poi ne pesco alcune */
+    const base = figuraBase()
+    let tutte = [copiaFig(base)]
+    for (const a of assi) {
+      const dopo = []
+      for (const f of tutte) for (const v of usati[a]) dopo.push(copiaFig(f, { [a]: v }))
+      tutte = dopo
+    }
+    const figure = prendi(tutte, quante)
+    const bersaglio = scegli(figure)
+
+    const cand = []
+    for (const a of assi) for (const v of usati[a]) {
+      cand.push({ asse:a, val:v, positivo: bersaglio[a] === v })
+    }
+
+    const vuoi = scaglione(d, [.25, .6], [[2, 1], [2, 3], [3, 2]])
+    let gruppo = null
+    for (const q of vuoi) {
+      let buoni = gruppiBuoni(figure, bersaglio, cand, q)
+      if (!buoni.length) continue
+      /* facile: indizi affermativi. difficile: almeno una negazione. */
+      const filtro = d < .35 ? buoni.filter(g => g.every(c => c.positivo))
+                             : d > .6 ? buoni.filter(g => g.some(c => !c.positivo)) : []
+      gruppo = scegli(filtro.length ? filtro : buoni)
+      break
+    }
+    if (!gruppo) continue
+
+    const indizi = mescola(gruppo).map(c => Object.assign({}, c, { testo: testoIndizio(c) }))
+    const opzioni = mescola(figure).map(f => ({ che:'figura', fig:f }))
+    const giusta = opzioni.findIndex(o => chiaveFig(o.fig) === chiaveFig(bersaglio))
+    /* per ogni figura scartata: il primo indizio che la esclude */
+    const perche = opzioni.map(o => {
+      if (chiaveFig(o.fig) === chiaveFig(bersaglio)) return null
+      const i = indizi.findIndex(c => !soddisfa(c, o.fig))
+      return { indizio:i, testo:'quella figura ' + (indizi[i].positivo ? 'non ' : '') +
+               (indizi[i].asse === 'quantita' ? 'ne ha ' + NOMEQUANTI[indizi[i].val] :
+                indizi[i].asse === 'forma' ? 'è ' + NOMEFORMA[indizi[i].val] : 'è ' + indizi[i].val) }
+    })
+    return {
+      famiglia:'deduzione',
+      consegna:'Chi sono io?',
+      domanda:{ tipo:'indizi', indizi },
+      opzioni, giusta, perche,
+      spiega:'Gli indizi dicevano: ' + indizi.map(c => c.testo).join(' · ') + '.'
+    }
+  }
+  if ((giu || 0) < 3) return generaDeduzione(Math.max(0, d - .4), (giu || 0) + 1)
+  return deduzioneDiRipiego()
+}
+/* la rete sotto: due colori per due forme, due indizi, sempre risolvibile */
+function deduzioneDiRipiego () {
+  const cc = prendi(COLORI, 2), ff = prendi(FORME, 2)
+  const figure = []
+  for (const c of cc) for (const f of ff)
+    figure.push({ forma:f, colore:c, quantita:1, dimensione:'grande', rotazione:0 })
+  const bersaglio = scegli(figure)
+  const indizi = mescola([
+    { asse:'colore', val:bersaglio.colore, positivo:true },
+    { asse:'forma', val:bersaglio.forma, positivo:true }
+  ]).map(c => Object.assign({}, c, { testo: testoIndizio(c) }))
+  const opzioni = mescola(figure).map(f => ({ che:'figura', fig:f }))
+  const giusta = opzioni.findIndex(o => chiaveFig(o.fig) === chiaveFig(bersaglio))
+  const perche = opzioni.map(o => {
+    if (chiaveFig(o.fig) === chiaveFig(bersaglio)) return null
+    const i = indizi.findIndex(c => !soddisfa(c, o.fig))
+    return { indizio:i, testo:'quella figura non è ' + (indizi[i].asse === 'forma' ? NOMEFORMA[indizi[i].val] : indizi[i].val) }
+  })
+  return { famiglia:'deduzione', consegna:'Chi sono io?',
+           domanda:{ tipo:'indizi', indizi }, opzioni, giusta, perche,
+           spiega:'Gli indizi dicevano: ' + indizi.map(c => c.testo).join(' · ') + '.' }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. SPAZIALE — pezzi fatti di caselle: ruotarli è esatto, non «a occhio»
+   Un poliomino su griglia si gira con una formula e si confronta con una
+   stringa: è l'unico modo per *sapere* che i quattro orientamenti sono
+   davvero diversi invece di sperarlo.
+   ═══════════════════════════════════════════════════════════════════ */
+const DIR = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+function normalizza (celle) {
+  let mr = Infinity, mc = Infinity
+  for (const c of celle) { if (c[0] < mr) mr = c[0]; if (c[1] < mc) mc = c[1] }
+  return celle.map(c => [c[0] - mr, c[1] - mc]).sort((a, b) => a[0] - b[0] || a[1] - b[1])
+}
+function chiavePezzo (celle) { return celle.map(c => c.join(',')).join(' ') }
+function altezza (celle) { return Math.max.apply(null, celle.map(c => c[0])) }
+function larghezza (celle) { return Math.max.apply(null, celle.map(c => c[1])) }
+function ruotaPezzo (celle) { const h = altezza(celle); return normalizza(celle.map(c => [c[1], h - c[0]])) }
+function specchiaPezzo (celle) { const w = larghezza(celle); return normalizza(celle.map(c => [c[0], w - c[1]])) }
+function orientamenti (celle) {
+  const fuori = []; let p = normalizza(celle)
+  for (let i = 0; i < 4; i++) { fuori.push(p); p = ruotaPezzo(p) }
+  let s = specchiaPezzo(celle)
+  for (let i = 0; i < 4; i++) { fuori.push(s); s = ruotaPezzo(s) }
+  return fuori
+}
+function pezzoCasuale (n) {
+  const celle = [[0, 0]]; const dentro = new Set(['0,0'])
+  let guardia = 0
+  while (celle.length < n && guardia++ < 400) {
+    const c = scegli(celle); const dr = scegli(DIR)
+    const r = c[0] + dr[0], q = c[1] + dr[1], k = r + ',' + q
+    if (dentro.has(k)) continue
+    dentro.add(k); celle.push([r, q])
+  }
+  return normalizza(celle)
+}
+function connesso (celle) {
+  if (!celle.length) return false
+  const dentro = new Set(celle.map(c => c.join(',')))
+  const coda = [celle[0]]; const visti = new Set([celle[0].join(',')])
+  while (coda.length) {
+    const c = coda.pop()
+    for (const dr of DIR) {
+      const k = (c[0] + dr[0]) + ',' + (c[1] + dr[1])
+      if (dentro.has(k) && !visti.has(k)) { visti.add(k); coda.push([c[0] + dr[0], c[1] + dr[1]]) }
+    }
+  }
+  return visti.size === celle.length
+}
+/* stessa quantità di caselle, una spostata: il falso più cattivo che ci sia */
+function spostaUnaCella (celle) {
+  for (let t = 0; t < 40; t++) {
+    const via = caso(celle.length)
+    const resto = celle.filter((_, i) => i !== via)
+    if (!connesso(resto)) continue
+    const dentro = new Set(resto.map(c => c.join(',')))
+    const bordi = []
+    for (const c of resto) for (const dr of DIR) {
+      const k = (c[0] + dr[0]) + ',' + (c[1] + dr[1])
+      if (!dentro.has(k)) bordi.push([c[0] + dr[0], c[1] + dr[1]])
+    }
+    if (!bordi.length) continue
+    const nuovo = normalizza(resto.concat([scegli(bordi)]))
+    if (chiavePezzo(nuovo) !== chiavePezzo(celle)) return nuovo
+  }
+  return null
+}
+/* pesca falsi finché non ne ha tre diversi fra loro e dalla risposta */
+function treFalsi (risposta, fabbriche) {
+  const visti = new Set([chiavePezzo(risposta)])
+  const fuori = []
+  let guardia = 0
+  while (fuori.length < 3 && guardia++ < 200) {
+    const p = scegli(fabbriche)()
+    if (!p) continue
+    const k = chiavePezzo(p)
+    if (visti.has(k)) continue
+    visti.add(k); fuori.push(p)
+  }
+  return fuori.length === 3 ? fuori : null
+}
+
+function generaSpaziale (d, giu) {
+  const tipi = d < .3 ? ['ombra', 'incastro'] : d < .65 ? ['ombra', 'incastro', 'ruota'] : ['ruota', 'incastro', 'ruota', 'ombra']
+  const tipo = scegli(tipi)
+  /* mai meno di quattro caselle: con tre i pezzi possibili sono così pochi
+     che il banco comincerebbe a ripetersi */
+  const n = scaglione(d, [.3, .6, .85], [4, 4, 5, 6])
+
+  if (tipo === 'ombra') {
+    for (let t = 0; t < 30; t++) {
+      const pezzo = pezzoCasuale(n)
+      const tinte = pezzo.map(() => scegli(COLORI))
+      const falsi = treFalsi(pezzo, d < .4
+        ? [() => pezzoCasuale(n), () => pezzoCasuale(n), () => spostaUnaCella(pezzo)]
+        : [() => spostaUnaCella(pezzo), () => spostaUnaCella(pezzo), () => scegli(orientamenti(pezzo))])
+      if (!falsi) continue
+      const opzioni = mescola(falsi.concat([pezzo])).map(p => ({ che:'pezzo', celle:p, ombra:true }))
+      const giusta = opzioni.findIndex(o => chiavePezzo(o.celle) === chiavePezzo(pezzo))
+      return { famiglia:'spaziale', consegna:'Qual è la sua ombra?',
+               domanda:{ tipo:'ombra', celle:pezzo, tinte }, opzioni, giusta,
+               spiega:"L'ombra ha le stesse caselle, nella stessa posizione." }
+    }
+  }
+  if (tipo === 'ruota') {
+    for (let t = 0; t < 40; t++) {
+      const pezzo = pezzoCasuale(Math.max(3, n))
+      const giri = []; let p = pezzo
+      for (let i = 0; i < 4; i++) { giri.push(p); p = ruotaPezzo(p) }
+      if (new Set(giri.map(chiavePezzo)).size < 4) continue     // pezzo simmetrico: due risposte giuste
+      const risposta = giri[1]
+      const fabbriche = d < .5
+        ? [() => giri[0], () => giri[2], () => giri[3], () => specchiaPezzo(pezzo)]
+        : [() => giri[2], () => giri[3], () => specchiaPezzo(giri[1]), () => spostaUnaCella(risposta)]
+      const falsi = treFalsi(risposta, fabbriche)
+      if (!falsi) continue
+      const tinte = pezzo.map(() => 'blu')
+      const opzioni = mescola(falsi.concat([risposta])).map(x => ({ che:'pezzo', celle:x, ombra:true }))
+      const giusta = opzioni.findIndex(o => chiavePezzo(o.celle) === chiavePezzo(risposta))
+      return { famiglia:'spaziale', consegna:'Come si vede se lo giri?',
+               domanda:{ tipo:'ruota', celle:pezzo, tinte, verso:'orario' }, opzioni, giusta,
+               spiega:'Girando di un quarto verso destra, quello che era in alto va a destra.' }
+    }
+  }
+  /* incastro */
+  for (let t = 0; t < 40; t++) {
+    const alt = fra(3, 4), larg = fra(3, 4)
+    const k = stretto(scaglione(d, [.3, .65], [4, 4, 5]), 3, alt * larg - 2)
+    const buco = pezzoCasuale(k)
+    if (altezza(buco) >= alt || larghezza(buco) >= larg) continue
+    const dr = caso(alt - altezza(buco)), dc = caso(larg - larghezza(buco))
+    const posto = buco.map(c => [c[0] + dr, c[1] + dc])
+    const falsi = treFalsi(buco, d < .4
+      ? [() => pezzoCasuale(k), () => pezzoCasuale(k + 1), () => scegli(orientamenti(buco))]
+      : [() => scegli(orientamenti(buco)), () => scegli(orientamenti(buco)), () => spostaUnaCella(buco)])
+    if (!falsi) continue
+    const opzioni = mescola(falsi.concat([buco])).map(p => ({ che:'pezzo', celle:p }))
+    const giusta = opzioni.findIndex(o => chiavePezzo(o.celle) === chiavePezzo(buco))
+    return { famiglia:'spaziale', consegna:'Quale pezzo riempie il buco?',
+             domanda:{ tipo:'incastro', alt, larg, buco:posto }, opzioni, giusta,
+             spiega:'Il pezzo giusto entra così com\'è: non si gira.' }
+  }
+  if ((giu || 0) < 3) return generaSpaziale(Math.max(0, d - .4), (giu || 0) + 1)
+  if ((giu || 0) < 3) return generaIntruso(Math.max(0, d - .4), (giu || 0) + 1)
+  return intrusoDiRipiego()
+}
+/* la rete sotto anche qui: due categorie lontanissime, quattro caselle */
+function intrusoDiRipiego () {
+  const casa = CATEGORIE[0], altra = CATEGORIE[5]
+  const dentro = prendi(casa.capi, 3), intruso = scegli(altra.capi)
+  const opzioni = mescola(dentro.concat([intruso])).map(e => ({ che:'emoji', em:e }))
+  return { famiglia:'intruso', consegna:"Chi non c'entra?", domanda:{ tipo:'nudo' },
+           opzioni, giusta: opzioni.findIndex(o => o.em === intruso),
+           spiega:'Gli altri sono ' + casa.nome + '. ' + intruso + ' invece sta con ' + altra.nome + '.' }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. MEMORIA — quattro figure, due secondi, poi coperte
+   ═══════════════════════════════════════════════════════════════════ */
+function generaMemoria (d) {
+  const quante = scaglione(d, [.2, .45, .7, .9], [3, 4, 4, 5, 6])
+  const tempo = Math.round(scaglione(d, [.2, .5, .8], [2600, 2200, 1700, 1300]))
+  const lontano = d < .4 ? 2 : 1
+  const modo = d < .4 ? 'sparito' : (Math.random() < .5 ? 'sparito' : 'cambiato')
+
+  const prima = []
+  const visti = new Set()
+  let guardia = 0
+  while (prima.length < quante && guardia++ < 200) {
+    const f = figuraBase()
+    f.quantita = 1
+    f.dimensione = 'grande'
+    const k = chiaveFig(f)
+    if (visti.has(k)) continue
+    visti.add(k); prima.push(f)
+  }
+  const indice = caso(prima.length)
+  const bersaglio = prima[indice]
+
+  /* prima la figura che comparirà al posto suo: i falsi non devono somigliarle,
+     altrimenti in tavola resterebbero due risposte plausibili */
+  let dopo, consegna, spiega
+  if (modo === 'sparito') {
+    dopo = prima.map((f, i) => i === indice ? null : f)
+    consegna = "Cos'è sparito?"
+    spiega = 'Era sparita quella figura: guarda il buco.'
+  } else {
+    const cambiata = figuraVicina(bersaglio, 1, ['forma', 'colore'])
+    visti.add(chiaveFig(cambiata))
+    dopo = prima.map((f, i) => i === indice ? cambiata : f)
+    consegna = "Com'era prima quella segnata?"
+    spiega = 'Una figura è cambiata: quella segnata prima era diversa.'
+  }
+
+  const falsi = []
+  let g2 = 0
+  while (falsi.length < 3 && g2++ < 300) {
+    const f = figuraVicina(bersaglio, g2 > 150 ? fra(1, 2) : lontano, ['forma', 'colore'])
+    const k = chiaveFig(f)
+    if (visti.has(k)) continue
+    visti.add(k); falsi.push(f)
+  }
+
+  const opzioni = mescola(falsi.concat([bersaglio])).map(f => ({ che:'figura', fig:f }))
+  const giusta = opzioni.findIndex(o => chiaveFig(o.fig) === chiaveFig(bersaglio))
+  return {
+    famiglia:'memoria', consegna,
+    domanda:{ tipo:'memoria', modo, prima, dopo, indice, tempo },
+    opzioni, giusta, spiega
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. L'INTRUSO SEMANTICO — non è la figura a stonare, è il significato
+   Le categorie stanno dentro «famiglie grandi»: da lontano l'intruso
+   arriva da un'altra famiglia (facile), da vicino da una categoria
+   sorella — pesci fra uccelli — e lì bisogna sapere le cose.
+   ═══════════════════════════════════════════════════════════════════ */
+const CATEGORIE = [
+  { nome:'animali della fattoria', gruppo:'animali', capi:['🐄','🐖','🐔','🐎','🐑','🐐','🦃','🐓','🐕','🐈'] },
+  { nome:'animali selvatici', gruppo:'animali', capi:['🦁','🐯','🐘','🦒','🦓','🐺','🦊','🐻','🦏','🦛','🐆','🦌'] },
+  { nome:'animali del mare', gruppo:'animali', capi:['🐟','🐬','🐋','🦈','🐙','🦑','🦐','🦀','🐚','🐳'] },
+  { nome:'uccelli', gruppo:'animali', capi:['🦅','🦉','🦜','🐦','🕊️','🦩','🦚','🐧','🦆','🦢'] },
+  { nome:'insetti', gruppo:'animali', capi:['🐝','🦋','🐞','🐜','🦗','🕷️','🦟','🪲','🐛'] },
+  { nome:'veicoli della strada', gruppo:'veicoli', capi:['🚗','🚕','🚌','🚛','🏍️','🚓','🚑','🚒','🛵','🚜'] },
+  { nome:'veicoli che volano', gruppo:'veicoli', capi:['✈️','🚁','🚀','🛩️','🛸','🪂','🎈'] },
+  { nome:'veicoli dell\'acqua', gruppo:'veicoli', capi:['🚢','⛵','🛶','🚤','⛴️','🛥️'] },
+  { nome:'frutta', gruppo:'cibo', capi:['🍎','🍌','🍓','🍇','🍊','🍑','🍒','🍍','🥝','🍐','🍉','🥭'] },
+  { nome:'verdura', gruppo:'cibo', capi:['🥕','🥦','🌽','🍅','🥬','🧅','🧄','🥒','🫑','🥔'] },
+  { nome:'dolci', gruppo:'cibo', capi:['🍰','🍫','🍭','🍪','🎂','🍩','🧁','🍦','🍬'] },
+  { nome:'vestiti', gruppo:'cose', capi:['👕','👖','🧥','👗','🧦','👟','🧢','🧤','🩳','👔'] },
+  { nome:'mobili di casa', gruppo:'casa', capi:['🛏️','🪑','🚪','🛋️','🪞','🗄️','🪟','🚽','🛁'] },
+  { nome:'roba da cucina', gruppo:'casa', capi:['🍴','🥄','🔪','🍽️','🥣','🍳','🫖','🥤','☕'] },
+  { nome:'strumenti musicali', gruppo:'cose', capi:['🎸','🥁','🎺','🎻','🎹','🪕','🎷','🪗'] },
+  { nome:'sport', gruppo:'cose', capi:['⚽','🏀','🏈','🎾','🏐','⚾','🏓','🏸','🥊','⛳'] },
+  { nome:'attrezzi', gruppo:'cose', capi:['🔨','🪛','🔧','🪚','⛏️','🪓','🔩','📏'] },
+  { nome:'fiori e piante', gruppo:'natura', capi:['🌸','🌻','🌹','🌷','🌺','🌼','🍀','🌳','🌴','🌵'] },
+  { nome:'cose del cielo', gruppo:'natura', capi:['☀️','🌙','⭐','☁️','🌈','⚡','❄️','🌪️'] }
+]
+
+function generaIntruso (d, giu) {
+  const quante = scaglione(d, [.4, .75], [4, 5, 6])
+  const vicino = d >= .7
+  for (let t = 0; t < 40; t++) {
+    const casa = scegli(CATEGORIE)
+    if (casa.capi.length < quante - 1) continue
+    const fuori = CATEGORIE.filter(c => vicino ? (c.gruppo === casa.gruppo && c !== casa)
+                                               : c.gruppo !== casa.gruppo)
+    if (!fuori.length) continue
+    const altra = scegli(fuori)
+    const dentro = prendi(casa.capi, quante - 1)
+    const intruso = scegli(altra.capi.filter(x => dentro.indexOf(x) < 0))
+    if (!intruso) continue
+    const opzioni = mescola(dentro.concat([intruso])).map(e => ({ che:'emoji', em:e }))
+    const giusta = opzioni.findIndex(o => o.em === intruso)
+    return {
+      famiglia:'intruso',
+      consegna:'Chi non c\'entra?',
+      domanda:{ tipo:'nudo' },
+      opzioni, giusta,
+      spiega:'Gli altri sono ' + casa.nome + '. ' + intruso + ' invece sta con ' + altra.nome + '.'
+    }
+  }
+  return generaIntruso(0)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. ANALOGIE — «🐕 sta a 🦴 come 🐈 sta a ?»
+   Ogni relazione è una tabella di coppie in cui la seconda colonna non
+   ha doppioni: così un falso non è mai una risposta buona per sbaglio.
+   ═══════════════════════════════════════════════════════════════════ */
+const RELAZIONI = [
+  { nome:'mangia', detto:'CHI MANGIA COSA', coppie:[
+    ['🐕','🦴'], ['🐈','🐟'], ['🐒','🍌'], ['🐭','🧀'], ['🐰','🥕'], ['🐼','🎋'],
+    ['🐨','🌿'], ['🐝','🌸'], ['🐦','🐛'], ['🐴','🌾'], ['🐔','🌽'], ['🐛','🍃'] ] },
+  { nome:'vive', detto:'CHI VIVE DOVE', coppie:[
+    ['🐟','🌊'], ['🐪','🏜️'], ['🐧','❄️'], ['🐒','🌴'], ['🦉','🌳'], ['🐁','🕳️'],
+    ['🦁','🌾'], ['🐄','🏡'], ['🐐','🏔️'], ['🕷️','🕸️'], ['🐢','🏖️'] ] },
+  { nome:'opposto', detto:'IL CONTRARIO', coppie:[
+    ['☀️','🌙'], ['🔥','❄️'], ['⬆️','⬇️'], ['😀','😢'], ['🐘','🐭'], ['🐢','🐇'],
+    ['⬅️','➡️'], ['👍','👎'], ['🌊','🏜️'], ['🔊','🔇'], ['🥵','🥶'], ['🌑','🌕'] ] },
+  { nome:'mestiere', detto:'CHI USA COSA', coppie:[
+    ['👨‍🍳','🍳'], ['👨‍🌾','🚜'], ['👮','🚓'], ['👨‍🚒','🚒'], ['👨‍⚕️','💉'], ['👨‍🏫','📚'],
+    ['👨‍🎨','🎨'], ['🧑‍🚀','🚀'], ['🧑‍🔧','🔧'], ['🎅','🎁'], ['🧙','🪄'], ['🕵️','🔍'] ] },
+  { nome:'viene', detto:'DA DOVE ARRIVA', coppie:[
+    ['🥛','🐄'], ['🥚','🐔'], ['🍯','🐝'], ['🍿','🌽'], ['🍞','🌾'], ['🍎','🌳'],
+    ['🧥','🐑'], ['🍟','🥔'], ['🍣','🐟'], ['🧀','🐐'] ] }
+]
+
+function generaAnalogie (d, giu) {
+  for (let t = 0; t < 30; t++) {
+    const rel = scegli(RELAZIONI)
+    const due = prendi(rel.coppie, 2)
+    const mostra = due[0], chiede = due[1]
+    const risposta = chiede[1]
+
+    /* facile: i falsi arrivano da altre relazioni, si vede a occhio che stonano.
+       difficile: arrivano dalla stessa colonna, e allora bisogna applicare la regola. */
+    let serbatoio
+    if (d < .35) {
+      serbatoio = []
+      for (const r of RELAZIONI) if (r !== rel) for (const c of r.coppie) serbatoio.push(c[1])
+    } else if (d < .7) {
+      serbatoio = rel.coppie.map(c => c[1]).concat(scegli(RELAZIONI.filter(r => r !== rel)).coppie.map(c => c[1]))
+    } else {
+      serbatoio = rel.coppie.map(c => c[1])
+    }
+    serbatoio = serbatoio.filter(x => x !== risposta && x !== mostra[1] && x !== mostra[0] && x !== chiede[0])
+    const falsi = unici(prendi(serbatoio, 6), x => x).slice(0, 3)
+    if (falsi.length < 3) continue
+
+    const opzioni = mescola(falsi.concat([risposta])).map(e => ({ che:'emoji', em:e }))
+    const giusta = opzioni.findIndex(o => o.em === risposta)
+    return {
+      famiglia:'analogie',
+      consegna:'Cosa manca?',
+      domanda:{ tipo:'analogia', a:mostra[0], b:mostra[1], c:chiede[0], detto:rel.detto },
+      opzioni, giusta,
+      spiega: mostra[0] + ' sta a ' + mostra[1] + ' come ' + chiede[0] + ' sta a ' + risposta + '.'
+    }
+  }
+  if ((giu || 0) < 3) return generaAnalogie(Math.max(0, d - .4), (giu || 0) + 1)
+  return generaIntruso(0)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. INDOVINELLO A INDIZI — «sono giallo · cresco sull'albero ·
+   la scimmia mi adora». Stessa forza bruta della deduzione, ma su
+   significati invece che su forme: gli indizi sono un sottoinsieme
+   minimo che lascia in piedi una cosa sola fra le quattro in ballo.
+   ═══════════════════════════════════════════════════════════════════ */
+const SEGNI = {
+  giallo:{ em:'🟡', testo:'sono giallo' }, rosso:{ em:'🔴', testo:'sono rosso' },
+  verde:{ em:'🟢', testo:'sono verde' }, marrone:{ em:'🟤', testo:'sono marrone' },
+  bianco:{ em:'⚪', testo:'sono bianco' }, nero:{ em:'⚫', testo:'sono nero' },
+  blu:{ em:'🔵', testo:'sono blu' },
+  arancione:{ em:'🟠', testo:'sono arancione' }, viola:{ em:'🟣', testo:'sono viola' },
+  albero:{ em:'🌳', testo:"cresco sull'albero" }, orto:{ em:'🌱', testo:"cresco nell'orto" },
+  mare:{ em:'🌊', testo:"vivo nell'acqua" }, cielo:{ em:'☁️', testo:'sto nel cielo' },
+  casa:{ em:'🏠', testo:'sto in casa' }, bosco:{ em:'🌲', testo:'vivo nel bosco' },
+  fattoria:{ em:'🚜', testo:'vivo nella fattoria' },
+  vola:{ em:'🕊️', testo:'volo' }, nuota:{ em:'🏊', testo:'nuoto' },
+  corre:{ em:'🏃', testo:'corro veloce' }, salta:{ em:'🦘', testo:'salto' },
+  lento:{ em:'🐌', testo:'sono lento', astratto:true },
+  mangiare:{ em:'🍽️', testo:'mi puoi mangiare' }, dolce:{ em:'🍬', testo:'sono dolce' },
+  grande:{ em:'🐘', testo:'sono grande', astratto:true },
+  piccolo:{ em:'🤏', testo:'sono piccolo', astratto:true },
+  ruote:{ em:'🛞', testo:'ho le ruote' }, zampe:{ em:'🐾', testo:'ho quattro zampe' },
+  freddo:{ em:'❄️', testo:'sono freddo' }, caldo:{ em:'🔥', testo:'sono caldo' },
+  scimmia:{ em:'🐒', testo:'la scimmia mi adora' }, coniglio:{ em:'🐰', testo:'il coniglio mi adora' },
+  notte:{ em:'🌙', testo:'si vede di notte' }, suona:{ em:'🎵', testo:'faccio musica' },
+  legge:{ em:'📖', testo:'si legge' }
+}
+const COSE = [
+  { em:'🍌', nome:'la banana', tag:['giallo','albero','dolce','mangiare','scimmia'] },
+  { em:'🍎', nome:'la mela', tag:['rosso','albero','dolce','mangiare'] },
+  { em:'🍓', nome:'la fragola', tag:['rosso','orto','dolce','mangiare','piccolo'] },
+  { em:'🍇', nome:"l'uva", tag:['viola','albero','dolce','mangiare','piccolo'] },
+  { em:'🍊', nome:"l'arancia", tag:['arancione','albero','dolce','mangiare'] },
+  { em:'🍉', nome:"l'anguria", tag:['verde','orto','dolce','mangiare','grande'] },
+  { em:'🍋', nome:'il limone', tag:['giallo','albero','mangiare'] },
+  { em:'🥕', nome:'la carota', tag:['arancione','orto','mangiare','coniglio'] },
+  { em:'🥦', nome:'il broccolo', tag:['verde','orto','mangiare'] },
+  { em:'🌽', nome:'il mais', tag:['giallo','orto','mangiare','fattoria'] },
+  { em:'🍅', nome:'il pomodoro', tag:['rosso','orto','mangiare'] },
+  { em:'🥔', nome:'la patata', tag:['marrone','orto','mangiare'] },
+  { em:'🍫', nome:'il cioccolato', tag:['marrone','dolce','mangiare','casa'] },
+  { em:'🍪', nome:'il biscotto', tag:['marrone','dolce','mangiare','piccolo'] },
+  { em:'🐘', nome:"l'elefante", tag:['grande','zampe','lento'] },
+  { em:'🐁', nome:'il topo', tag:['piccolo','casa','zampe','corre'] },
+  { em:'🐟', nome:'il pesce', tag:['mare','nuota','piccolo','blu'] },
+  { em:'🐦', nome:"l'uccellino", tag:['cielo','vola','piccolo'] },
+  { em:'🐝', nome:"l'ape", tag:['giallo','vola','piccolo','corre'] },
+  { em:'🐄', nome:'la mucca', tag:['bianco','fattoria','zampe','grande'] },
+  { em:'🐖', nome:'il maiale', tag:['fattoria','zampe','mangiare'] },
+  { em:'🐔', nome:'la gallina', tag:['fattoria','bianco'] },
+  { em:'🐧', nome:'il pinguino', tag:['nero','nuota','freddo'] },
+  { em:'🦁', nome:'il leone', tag:['giallo','zampe','grande','corre'] },
+  { em:'🐢', nome:'la tartaruga', tag:['verde','lento','mare'] },
+  { em:'🐇', nome:'il coniglio', tag:['bianco','bosco','salta','zampe','piccolo'] },
+  { em:'🐿️', nome:'lo scoiattolo', tag:['marrone','bosco','salta','piccolo','zampe'] },
+  { em:'🦉', nome:'il gufo', tag:['bosco','vola','notte'] },
+  { em:'🚗', nome:"l'automobile", tag:['ruote','corre'] },
+  { em:'🚲', nome:'la bicicletta', tag:['ruote'] },
+  { em:'🚜', nome:'il trattore', tag:['ruote','fattoria','lento'] },
+  { em:'⚽', nome:'il pallone', tag:['bianco','salta'] },
+  { em:'🛏️', nome:'il letto', tag:['casa','grande'] },
+  { em:'🪑', nome:'la sedia', tag:['casa','marrone'] },
+  { em:'☀️', nome:'il sole', tag:['giallo','cielo','caldo','grande'] },
+  { em:'🌙', nome:'la luna', tag:['bianco','cielo','notte'] },
+  { em:'⭐', nome:'la stella', tag:['giallo','cielo','notte','piccolo'] },
+  { em:'❄️', nome:'il fiocco di neve', tag:['bianco','freddo','cielo','piccolo'] },
+  { em:'🔥', nome:'il fuoco', tag:['rosso','caldo'] },
+  { em:'🎸', nome:'la chitarra', tag:['marrone','suona','casa'] },
+  { em:'📖', nome:'il libro', tag:['casa','legge'] },
+  { em:'🕯️', nome:'la candela', tag:['caldo','casa','notte','bianco'] },
+  { em:'🐺', nome:'il lupo', tag:['bosco','zampe','corre','grande'] },
+  { em:'🦊', nome:'la volpe', tag:['arancione','bosco','zampe','corre'] },
+  { em:'🐻', nome:"l'orso", tag:['marrone','bosco','zampe','grande'] },
+  { em:'🦋', nome:'la farfalla', tag:['viola','vola','piccolo'] },
+  { em:'🐌', nome:'la lumaca', tag:['marrone','lento','piccolo','orto'] },
+  { em:'🦆', nome:"l'anatra", tag:['bianco','nuota','vola','fattoria'] },
+  { em:'🐬', nome:'il delfino', tag:['mare','nuota','grande','blu'] },
+  { em:'🦈', nome:'lo squalo', tag:['mare','nuota','grande','corre'] },
+  { em:'🌻', nome:'il girasole', tag:['giallo','orto','grande'] },
+  { em:'🌹', nome:'la rosa', tag:['rosso','orto','piccolo'] },
+  { em:'🍄', nome:'il fungo', tag:['marrone','bosco','piccolo','mangiare'] },
+  { em:'🥚', nome:"l'uovo", tag:['bianco','fattoria','mangiare','piccolo'] },
+  { em:'⛄', nome:'il pupazzo di neve', tag:['bianco','freddo','grande'] },
+  { em:'🎈', nome:'il palloncino', tag:['rosso','vola','cielo'] },
+  { em:'🚂', nome:'il treno', tag:['ruote','corre','grande','nero'] },
+  { em:'🥁', nome:'il tamburo', tag:['suona','casa','grande'] },
+  { em:'🦅', nome:"l'aquila", tag:['marrone','vola','cielo','grande'] },
+  { em:'🐳', nome:'la balena', tag:['mare','nuota','grande','blu','lento'] },
+  { em:'🌵', nome:'il cactus', tag:['verde','orto','lento'] },
+  { em:'🍐', nome:'la pera', tag:['verde','albero','dolce','mangiare'] }
+]
+
+/* stesso motore della deduzione, ma gli indizi sono etichette */
+function gruppiTag (cose, bersaglio, cand, quanti) {
+  const buoni = []
+  const passa = (c, t) => c.tag.indexOf(t) >= 0
+  const prova = sub => {
+    let sup = 0
+    for (const c of cose) if (sub.every(t => passa(c, t))) sup++
+    if (sup !== 1) return
+    for (let i = 0; i < sub.length; i++) {
+      const senza = sub.filter((_, k) => k !== i)
+      let s2 = 0
+      for (const c of cose) if (senza.every(t => passa(c, t))) s2++
+      if (s2 === 1) return
+    }
+    buoni.push(sub)
+  }
+  const n = cand.length
+  if (quanti === 1) { for (let i = 0; i < n; i++) prova([cand[i]]) }
+  else if (quanti === 2) { for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) prova([cand[i], cand[j]]) }
+  else { for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) prova([cand[i], cand[j], cand[k]]) }
+  return buoni
+}
+
+function generaIndovinello (d, giu) {
+  const vicini = d < .3 ? [1, 2] : d < .7 ? [1, 3] : [2, 4]
+  for (let t = 0; t < 60; t++) {
+    const bersaglio = scegli(COSE)
+    const quanti = c => c.tag.filter(x => bersaglio.tag.indexOf(x) >= 0).length
+    const possibili = COSE.filter(c => c !== bersaglio &&
+      quanti(c) >= vicini[0] && quanti(c) <= vicini[1])
+    if (possibili.length < 3) continue
+    const cose = mescola(prendi(possibili, 3).concat([bersaglio]))
+    /* al piccolo si parla per figure: gli indizi da leggere vengono dopo */
+    let cand = bersaglio.tag.slice()
+    if (d < .45) {
+      const concreti = cand.filter(t => !SEGNI[t].astratto)
+      if (concreti.length >= 2) cand = concreti
+    }
+    const vuoi = scaglione(d, [.25, .6], [[2, 1], [2, 3], [3, 2]])
+    let gruppo = null
+    for (const q of vuoi) {
+      const buoni = gruppiTag(cose, bersaglio, cand, q)
+      if (buoni.length) { gruppo = scegli(buoni); break }
+    }
+    if (!gruppo) continue
+    const indizi = mescola(gruppo).map(t => ({ tag:t, em:SEGNI[t].em, testo:SEGNI[t].testo }))
+    const opzioni = cose.map(c => ({ che:'emoji', em:c.em }))
+    const giusta = opzioni.findIndex(o => o.em === bersaglio.em)
+    const perche = cose.map(c => {
+      if (c === bersaglio) return null
+      const i = indizi.findIndex(x => c.tag.indexOf(x.tag) < 0)
+      return { indizio:i, testo:'no: ' + c.nome + ' non ' + (indizi[i].testo.replace(/^sono /, 'è ')
+                 .replace(/^ho /, 'ha ').replace(/^cresco /, 'cresce ').replace(/^vivo /, 'vive ')
+                 .replace(/^sto /, 'sta ').replace(/^volo/, 'vola').replace(/^nuoto/, 'nuota')
+                 .replace(/^corro /, 'corre ').replace(/^salto/, 'salta')
+                 .replace(/^mi puoi mangiare/, 'si mangia').replace(/^si vede/, 'si vede')
+                 .replace(/^faccio /, 'fa ').replace(/^si legge/, 'si legge')
+                 .replace(/^la scimmia mi adora/, 'piace alla scimmia')
+                 .replace(/^il coniglio mi adora/, 'piace al coniglio')) }
+    })
+    return {
+      famiglia:'indovinello',
+      consegna:'Chi sono?',
+      domanda:{ tipo:'indovinello', indizi },
+      opzioni, giusta, perche,
+      spiega:'Era ' + bersaglio.nome + ': ' + indizi.map(x => x.testo).join(' · ') + '.'
+    }
+  }
+  if ((giu || 0) < 3) return generaIndovinello(Math.max(0, d - .4), (giu || 0) + 1)
+  return deduzioneDiRipiego()
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. PERCORSI — quale strada arriva al tesoro senza passare dal mostro
+   ═══════════════════════════════════════════════════════════════════ */
+function cercaVia (L, da, a, vietate, maxLung) {
+  const dentro = new Set([da.join(',')])
+  const via = [da]
+  const passo = () => {
+    const u = via[via.length - 1]
+    if (u[0] === a[0] && u[1] === a[1]) return true
+    if (via.length > maxLung) return false
+    for (const dr of mescola(DIR)) {
+      const r = u[0] + dr[0], c = u[1] + dr[1], k = r + ',' + c
+      if (r < 0 || c < 0 || r >= L || c >= L) continue
+      if (dentro.has(k) || vietate.has(k)) continue
+      dentro.add(k); via.push([r, c])
+      if (passo()) return true
+      dentro.delete(k); via.pop()
+    }
+    return false
+  }
+  return passo() ? via.slice() : null
+}
+function saldaVie (a, b) {                       // b comincia dove a finisce
+  const dentro = new Set(a.map(c => c.join(',')))
+  for (let i = 1; i < b.length; i++) if (dentro.has(b[i].join(','))) return null
+  return a.concat(b.slice(1))
+}
+function chiaveVia (via) { return via.map(c => c.join(',')).join(' ') }
+
+function generaPercorsi (d, giu) {
+  for (let t = 0; t < 60; t++) {
+    const L = scaglione(d, [.3, .65], [3, 4, 5])
+    const partenza = [L - 1, 0], tesoro = [0, L - 1]
+    const nMostri = scaglione(d, [.3, .7], [1, 2, 3])
+    const liberi = []
+    for (let r = 0; r < L; r++) for (let c = 0; c < L; c++) {
+      if (r === partenza[0] && c === partenza[1]) continue
+      if (r === tesoro[0] && c === tesoro[1]) continue
+      liberi.push([r, c])
+    }
+    const mostri = prendi(liberi, nMostri)
+    const vietate = new Set(mostri.map(c => c.join(',')))
+    const soloTesoro = new Set([tesoro.join(',')])
+    const buona = cercaVia(L, partenza, tesoro, vietate, L * 2 + 1)
+    if (!buona) continue
+    const ok = via => {
+      const u = via[via.length - 1]
+      if (u[0] !== tesoro[0] || u[1] !== tesoro[1]) return false
+      return !via.some(c => vietate.has(c.join(',')))
+    }
+    const strade = [buona]
+    const visti = new Set([chiaveVia(buona)])
+    let giri = 0
+    while (strade.length < 4 && giri++ < 250) {
+      let via = null
+      if (Math.random() < (d < .3 ? .6 : .85)) {
+        const m = scegli(mostri)
+        const a = cercaVia(L, partenza, m, soloTesoro, L + 2)
+        if (!a) continue
+        const b = cercaVia(L, m, tesoro, new Set(a.slice(0, -1).map(c => c.join(','))), L + 2)
+        if (!b) continue
+        via = saldaVie(a, b)
+      } else {
+        const meta = scegli(liberi.filter(c => !(c[0] === tesoro[0] && c[1] === tesoro[1])))
+        via = cercaVia(L, partenza, meta, soloTesoro, L * 2)
+      }
+      if (!via || via.length < 2 || ok(via)) continue
+      const k = chiaveVia(via)
+      if (visti.has(k)) continue
+      visti.add(k); strade.push(via)
+    }
+    if (strade.length < 4) continue
+
+    const griglia = { L, partenza, tesoro, mostri }
+    const opzioni = mescola(strade).map(v => ({ che:'via', griglia, via:v }))
+    const giusta = opzioni.findIndex(o => chiaveVia(o.via) === chiaveVia(buona))
+    const perche = opzioni.map(o => {
+      if (chiaveVia(o.via) === chiaveVia(buona)) return null
+      const urto = o.via.findIndex(c => vietate.has(c.join(',')))
+      return urto >= 0 ? { cella:o.via[urto], testo:'quella strada passa dal mostro' }
+                       : { cella:o.via[o.via.length - 1], testo:'quella strada non arriva al tesoro' }
+    })
+    return {
+      famiglia:'percorsi',
+      consegna:'Quale strada arriva al tesoro senza incontrare il mostro?',
+      domanda:{ tipo:'mappa', griglia },
+      opzioni, giusta, perche,
+      spiega:'Una sola strada arriva al 💎 girando alla larga dai 👹.'
+    }
+  }
+  if ((giu || 0) < 3) return generaPercorsi(Math.max(0, d - .4), (giu || 0) + 1)
+  return generaIntruso(0)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL BANCO — l'unica cosa che serve sapere da fuori
+   ═══════════════════════════════════════════════════════════════════ */
+const FAMIGLIE = {
+  sequenze:    { nome:'Sequenze',    icona:'➡️', genera:generaSequenze },
+  deduzione:   { nome:'Indizi',      icona:'🔎', genera:generaDeduzione },
+  spaziale:    { nome:'Spaziale',    icona:'🧩', genera:generaSpaziale },
+  memoria:     { nome:'Memoria',     icona:'🧠', genera:generaMemoria },
+  intruso:     { nome:"L'intruso",   icona:'🚫', genera:generaIntruso },
+  analogie:    { nome:'Analogie',    icona:'🔗', genera:generaAnalogie },
+  indovinello: { nome:'Indovinello', icona:'💡', genera:generaIndovinello },
+  percorsi:    { nome:'Percorsi',    icona:'🗺️', genera:generaPercorsi }
+}
+const NOMIFAM = Object.keys(FAMIGLIE)
+
+/* La firma serve a due cose: misurare quante volte il banco si ripete,
+   e non riproporre a un bambino l'enigma di cinque minuti fa. */
+function firmaEnigma (e) {
+  const opz = e.opzioni.map(o => JSON.stringify(o)).sort()
+  return JSON.stringify([e.famiglia, e.domanda, opz, e.opzioni[e.giusta]])
+}
+/* `visti` è un Set di firme: se l'enigma è già passato, si ritenta. */
+function nuovoEnigma (famiglia, difficolta, visti) {
+  const fam = FAMIGLIE[famiglia] ? famiglia : scegli(NOMIFAM)
+  const d = stretto(difficolta, 0, 1)
+  let e = null
+  for (let t = 0; t < 8; t++) {
+    e = FAMIGLIE[fam].genera(d)
+    e.difficolta = d
+    e.firma = firmaEnigma(e)
+    if (!visti || !visti.has(e.firma)) break
+  }
+  if (visti) visti.add(e.firma)
+  return e
+}
+/*GENERATORE>>>*/
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL DISEGNO — da qui in giù si tocca il documento.
+   Il generatore non sa niente di questo: manda descrizioni («figura»,
+   «pezzo», «emoji», «via») e qui si decide come si vedono.
+   ═══════════════════════════════════════════════════════════════════ */
+const TINTA = {
+  rosso:{ vivo:'#e04a3f', cupo:'#a83227' }, blu:{ vivo:'#3079d6', cupo:'#1d5495' },
+  giallo:{ vivo:'#f0b400', cupo:'#a97d00' }, verde:{ vivo:'#33a95c', cupo:'#1d7440' },
+  viola:{ vivo:'#8b5cd6', cupo:'#5f3a9c' }, arancio:{ vivo:'#ef7d29', cupo:'#b0561a' }
+}
+const POSTI = {
+  1:[[50,50]], 2:[[30,50],[70,50]], 3:[[50,28],[28,70],[72,70]],
+  4:[[30,30],[70,30],[30,70],[70,70]], 5:[[28,28],[72,28],[50,50],[28,72],[72,72]]
+}
+const RAGGI = { 1:34, 2:25, 3:23, 4:22, 5:19 }
+
+function puntiStella (cx, cy, r) {
+  const p = []
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI / 2 + k * Math.PI / 5
+    const rr = k % 2 ? r * .44 : r
+    p.push((cx + rr * Math.cos(a)).toFixed(1) + ',' + (cy + rr * Math.sin(a)).toFixed(1))
+  }
+  return p.join(' ')
+}
+function sagoma (forma, cx, cy, r, vernice) {
+  if (forma === 'cerchio') return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r.toFixed(1) + '" ' + vernice + '/>'
+  if (forma === 'quadrato') {
+    const l = r * 1.74
+    return '<rect x="' + (cx - l / 2).toFixed(1) + '" y="' + (cy - l / 2).toFixed(1) +
+           '" width="' + l.toFixed(1) + '" height="' + l.toFixed(1) + '" rx="' + (r * .16).toFixed(1) + '" ' + vernice + '/>'
+  }
+  if (forma === 'triangolo')
+    return '<polygon points="' + cx + ',' + (cy - r).toFixed(1) + ' ' + (cx + r * .93).toFixed(1) + ',' +
+           (cy + r * .72).toFixed(1) + ' ' + (cx - r * .93).toFixed(1) + ',' + (cy + r * .72).toFixed(1) +
+           '" stroke-linejoin="round" ' + vernice + '/>'
+  if (forma === 'stella')
+    return '<polygon points="' + puntiStella(cx, cy, r) + '" stroke-linejoin="round" ' + vernice + '/>'
+  if (forma === 'rombo')
+    return '<polygon points="' + cx + ',' + (cy - r).toFixed(1) + ' ' + (cx + r * .78).toFixed(1) + ',' + cy + ' ' +
+           cx + ',' + (cy + r).toFixed(1) + ' ' + (cx - r * .78).toFixed(1) + ',' + cy +
+           '" stroke-linejoin="round" ' + vernice + '/>'
+  if (forma === 'freccia') {
+    const g = r, m = r * .34
+    const p = [[g, 0], [g * .3, -g * .62], [g * .3, -m], [-g, -m], [-g, m], [g * .3, m], [g * .3, g * .62]]
+      .map(q => (cx + q[0]).toFixed(1) + ',' + (cy + q[1]).toFixed(1)).join(' ')
+    return '<polygon points="' + p + '" stroke-linejoin="round" ' + vernice + '/>'
+  }
+  /* cuore */
+  const s = r / 32
+  return '<path transform="translate(' + cx + ' ' + cy + ') scale(' + s.toFixed(3) + ')" ' +
+         'd="M0 26 C-26 8 -32 -8 -20 -20 C-11 -29 -2 -24 0 -14 C2 -24 11 -29 20 -20 C32 -8 26 8 0 26 Z" ' +
+         'stroke-linejoin="round" ' + vernice + '/>'
+}
+function svgFigura (fig, lato) {
+  const t = TINTA[fig.colore] || TINTA.blu
+  const r = RAGGI[fig.quantita] * (fig.dimensione === 'piccolo' ? .62 : 1)
+  const vernice = 'fill="' + t.vivo + '" stroke="' + t.cupo + '" stroke-width="2.5"'
+  let s = '<svg viewBox="0 0 100 100" width="' + lato + '" height="' + lato + '" aria-hidden="true">'
+  const rot = fig.rotazione || 0
+  if (rot) s += '<g transform="rotate(' + rot + ' 50 50)">'
+  for (const p of POSTI[fig.quantita] || POSTI[1]) s += sagoma(fig.forma, p[0], p[1], r, vernice)
+  if (rot) s += '</g>'
+  return s + '</svg>'
+}
+/* un pezzo di caselle: colorato se ha le tinte, nero se è un'ombra */
+function svgPezzo (celle, lato, tinte, ombra) {
+  const h = Math.max.apply(null, celle.map(c => c[0])) + 1
+  const w = Math.max.apply(null, celle.map(c => c[1])) + 1
+  /* la casella ha sempre la stessa misura, anche se il pezzo è più corto:
+     i pezzi si confrontano per forma, non per quanto sono stati ingranditi */
+  const n = Math.max(h, w, 4)
+  const u = 100 / n
+  const ox = (100 - w * u) / 2, oy = (100 - h * u) / 2
+  let s = '<svg viewBox="0 0 100 100" width="' + lato + '" height="' + lato + '" aria-hidden="true">'
+  celle.forEach((c, i) => {
+    const t = ombra ? { vivo:'#3b3630', cupo:'#3b3630' } : (TINTA[(tinte || [])[i]] || TINTA.blu)
+    s += '<rect x="' + (ox + c[1] * u + u * .04).toFixed(1) + '" y="' + (oy + c[0] * u + u * .04).toFixed(1) +
+         '" width="' + (u * .92).toFixed(1) + '" height="' + (u * .92).toFixed(1) +
+         '" rx="' + (u * .18).toFixed(1) + '" fill="' + t.vivo + '" stroke="' + t.cupo + '" stroke-width="1.5"/>'
+  })
+  return s + '</svg>'
+}
+/* il rettangolo col buco */
+function svgIncastro (alt, larg, buco, lato) {
+  const dentro = new Set(buco.map(c => c.join(',')))
+  const n = Math.max(alt, larg), u = 100 / n
+  const ox = (100 - larg * u) / 2, oy = (100 - alt * u) / 2
+  let s = '<svg viewBox="0 0 100 100" width="' + lato + '" height="' + lato + '" aria-hidden="true">'
+  for (let r = 0; r < alt; r++) for (let c = 0; c < larg; c++) {
+    const buca = dentro.has(r + ',' + c)
+    s += '<rect x="' + (ox + c * u + u * .04).toFixed(1) + '" y="' + (oy + r * u + u * .04).toFixed(1) +
+         '" width="' + (u * .92).toFixed(1) + '" height="' + (u * .92).toFixed(1) + '" rx="' + (u * .18).toFixed(1) +
+         (buca ? '" fill="#f1ebdd" stroke="#c9bda6" stroke-width="1.8" stroke-dasharray="4 3"/>'
+               : '" fill="#c9a227" stroke="#96762c" stroke-width="1.5"/>')
+  }
+  return s + '</svg>'
+}
+/* la mappa del tesoro, con o senza una strada sopra */
+function svgMappa (g, via, lato, segna) {
+  const u = 100 / g.L
+  const mostri = new Set(g.mostri.map(c => c.join(',')))
+  let s = '<svg viewBox="-3 -3 106 106" width="' + lato + '" height="' + lato + '" aria-hidden="true">'
+  for (let r = 0; r < g.L; r++) for (let c = 0; c < g.L; c++)
+    s += '<rect x="' + (c * u + .8).toFixed(1) + '" y="' + (r * u + .8).toFixed(1) + '" width="' + (u - 1.6).toFixed(1) +
+         '" height="' + (u - 1.6).toFixed(1) + '" rx="' + (u * .16).toFixed(1) + '" fill="#f4eee0" stroke="#ded1b8" stroke-width="1"/>'
+  if (via && via.length > 1) {
+    const p = via.map(c => ((c[1] + .5) * u).toFixed(1) + ',' + ((c[0] + .5) * u).toFixed(1)).join(' ')
+    s += '<polyline points="' + p + '" fill="none" stroke="#4a6fd4" stroke-width="' + (u * .3).toFixed(1) +
+         '" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>'
+    const u2 = via[via.length - 1]
+    s += '<circle cx="' + ((u2[1] + .5) * u).toFixed(1) + '" cy="' + ((u2[0] + .5) * u).toFixed(1) +
+         '" r="' + (u * .17).toFixed(1) + '" fill="#4a6fd4"/>'
+  }
+  const scritta = (c, testo, dim) =>
+    '<text x="' + ((c[1] + .5) * u).toFixed(1) + '" y="' + ((c[0] + .5) * u).toFixed(1) +
+    '" font-size="' + dim + '" text-anchor="middle" dominant-baseline="central">' + testo + '</text>'
+  for (const m of g.mostri) s += scritta(m, '👹', (u * .62).toFixed(1))
+  s += scritta(g.tesoro, '💎', (u * .62).toFixed(1))
+  s += scritta(g.partenza, '🧒', (u * .62).toFixed(1))
+  if (segna) s += '<rect x="' + (segna[1] * u + .8).toFixed(1) + '" y="' + (segna[0] * u + .8).toFixed(1) +
+    '" width="' + (u - 1.6).toFixed(1) + '" height="' + (u - 1.6).toFixed(1) + '" rx="' + (u * .16).toFixed(1) +
+    '" fill="none" stroke="#dd5b4c" stroke-width="3.2"/>'
+  return s + '</svg>'
+}
+/* il pittogramma di un indizio: si capisce senza saper leggere */
+function svgSegno (ind, lato) {
+  const grigio = 'fill="#8b8175" stroke="#5c554b" stroke-width="2"'
+  let dentro = ''
+  if (ind.asse === 'colore') {
+    const t = TINTA[ind.val]
+    dentro = '<circle cx="50" cy="50" r="33" fill="' + t.vivo + '" stroke="' + t.cupo + '" stroke-width="3"/>'
+  } else if (ind.asse === 'forma') {
+    dentro = sagoma(ind.val, 50, 50, 34, grigio)
+  } else if (ind.asse === 'dimensione') {
+    dentro = '<circle cx="50" cy="50" r="' + (ind.val === 'grande' ? 34 : 15) + '" ' + grigio + '/>'
+  } else {
+    /* il contare si disegna in fila, se no si confonde con la forma */
+    const n = ind.val, passo = 76 / n
+    for (let k = 0; k < n; k++)
+      dentro += '<circle cx="' + (12 + passo * (k + .5)).toFixed(1) + '" cy="50" r="' +
+                Math.min(13, passo * .38).toFixed(1) + '" ' + grigio + '/>'
+  }
+  const barra = ind.positivo ? '' :
+    '<line x1="14" y1="86" x2="86" y2="14" stroke="#dd5b4c" stroke-width="9" stroke-linecap="round"/>'
+  return '<svg viewBox="0 0 100 100" width="' + lato + '" height="' + lato + '" aria-hidden="true">' +
+         dentro + barra + '</svg>'
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL SUONO — sintetizzato, si accende al primo tocco
+   ═══════════════════════════════════════════════════════════════════ */
+let audio = null
+function sblocca () {
+  if (audio === null) {
+    try { audio = new (window.AudioContext || window.webkitAudioContext)() } catch (e) { audio = false }
+  }
+  if (audio && audio.state === 'suspended') audio.resume()
+}
+function nota (hz, fra, quanto, tipo, volume) {
+  if (!audio) return
+  const o = audio.createOscillator(), g = audio.createGain()
+  const t = audio.currentTime + fra
+  o.type = tipo
+  o.frequency.setValueAtTime(hz, t)
+  g.gain.setValueAtTime(.0001, t)
+  g.gain.linearRampToValueAtTime(volume, t + .012)
+  g.gain.exponentialRampToValueAtTime(.0001, t + quanto)
+  o.connect(g); g.connect(audio.destination)
+  o.start(t); o.stop(t + quanto + .02)
+}
+function suona (che) {
+  if (!audio) return
+  if (che === 'si') { nota(660, 0, .11, 'sine', .10); nota(990, .06, .15, 'sine', .085) }
+  if (che === 'no') { nota(196, 0, .15, 'triangle', .075); nota(147, .08, .19, 'triangle', .055) }
+  if (che === 'filotto') [523, 659, 784, 1047].forEach((h, n) => nota(h, n * .075, .3, 'sine', .085))
+  if (che === 'tocco') nota(1200, 0, .04, 'square', .022)
+  if (che === 'guarda') nota(880, 0, .08, 'sine', .05)
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LO STATO
+   ═══════════════════════════════════════════════════════════════════ */
+const app = document.getElementById('app')
+const stato = {
+  enigma:null, scelta:null, filotto:0, meglio:0,
+  d:.12,                       // difficoltà che sale da sola
+  forzata:null,                // famiglia imposta dal banco di prova
+  dForzata:null,               // difficoltà imposta dal banco di prova
+  fase:'rispondi',             // per la memoria: 'guarda' poi 'rispondi'
+  banco:false,
+  visti:new Set(), ultima:null
+}
+let orologi = []
+function fraPoco (f, ms) { orologi.push(setTimeout(f, ms)) }
+function azzeraTempi () { orologi.forEach(clearTimeout); orologi = [] }
+
+function difficoltaOra () {
+  return stato.dForzata === null ? stato.d : stato.dForzata
+}
+function prossimo () {
+  azzeraTempi()
+  let fam = stato.forzata
+  if (!fam) {
+    const scelte = NOMIFAM.filter(f => f !== stato.ultima)
+    fam = scegli(scelte)
+  }
+  stato.ultima = fam
+  stato.enigma = nuovoEnigma(fam, difficoltaOra(), stato.visti)
+  if (stato.visti.size > 400) stato.visti = new Set()
+  stato.scelta = null
+  stato.fase = stato.enigma.domanda.tipo === 'memoria' ? 'guarda' : 'rispondi'
+  disegna()
+  if (stato.fase === 'guarda') {
+    suona('guarda')
+    fraPoco(() => { stato.fase = 'rispondi'; disegna() }, stato.enigma.domanda.tempo)
+  }
+}
+function rispondi (n) {
+  const e = stato.enigma
+  if (!e || stato.scelta !== null || stato.fase !== 'rispondi') return
+  stato.scelta = n
+  if (n === e.giusta) {
+    stato.filotto++
+    if (stato.filotto > stato.meglio) stato.meglio = stato.filotto
+    stato.d = stretto(stato.d + .055, 0, 1)
+    suona(stato.filotto % 5 === 0 ? 'filotto' : 'si')
+    disegna()
+    fraPoco(prossimo, 620)
+  } else {
+    stato.filotto = 0
+    stato.d = stretto(stato.d - .1, 0, 1)
+    suona('no')
+    disegna()
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LE SCHERMATE
+   ═══════════════════════════════════════════════════════════════════ */
+function scenaHTML (e) {
+  const dm = e.domanda
+  const finito = stato.scelta !== null
+  const sbagliata = finito && stato.scelta !== e.giusta
+  const dito = (sbagliata && e.perche) ? e.perche[stato.scelta] : null
+
+  if (dm.tipo === 'sequenza') {
+    const celle = dm.celle.map(f => '<div class="cella">' + svgFigura(f, 68) + '</div>').join('')
+    const ultima = finito
+      ? '<div class="cella marcata">' + svgFigura(dm.risposta, 68) + '</div>'
+      : '<div class="cella chiesta">?</div>'
+    return '<div class="fila">' + celle + ultima + '</div>'
+  }
+  if (dm.tipo === 'indizi') {
+    return '<div class="indizi' + (dm.indizi.length < 3 ? ' pochi' : '') + '">' + dm.indizi.map((c, i) =>
+      '<div class="indizio' + (dito && dito.indizio === i ? ' acceso' : '') + '">' +
+        '<span class="segno">' + svgSegno(c, 74) +
+        '<b class="bollo ' + (c.positivo ? 'si' : 'no') + '">' + (c.positivo ? '✓' : '✗') + '</b></span>' +
+        '<span class="detto">' + c.testo + '</span></div>').join('') + '</div>'
+  }
+  if (dm.tipo === 'indovinello') {
+    return '<div class="indizi' + (dm.indizi.length < 3 ? ' pochi' : '') + '">' + dm.indizi.map((c, i) =>
+      '<div class="indizio' + (dito && dito.indizio === i ? ' acceso' : '') + '">' +
+        '<span class="segno">' + c.em + '</span>' +
+        '<span class="detto">' + c.testo + '</span></div>').join('') + '</div>'
+  }
+  if (dm.tipo === 'analogia') {
+    const g = (t, cl) => '<span class="gettone ' + (cl || '') + '">' + t + '</span>'
+    return '<div class="analogia">' +
+      '<div class="coppia">' + g(dm.a) + '<span class="verso">→</span>' + g(dm.b) + '</div>' +
+      '<div class="coppia">' + g(dm.c) + '<span class="verso">→</span>' +
+        (finito ? g(e.opzioni[e.giusta].em, 'marcato') : g('?', 'chiesto')) + '</div>' +
+      (finito ? '<div class="come">' + dm.detto + '</div>' : '') + '</div>'
+  }
+  if (dm.tipo === 'ombra')
+    return '<div class="fila"><div class="cella" style="max-width:150px">' +
+           svgPezzo(dm.celle, 132, dm.tinte, false) + '</div></div>'
+  if (dm.tipo === 'ruota')
+    return '<div class="fila" style="gap:14px"><div class="cella" style="max-width:132px">' +
+           svgPezzo(dm.celle, 116, dm.tinte, false) + '</div>' +
+           '<div style="font-size:46px;color:#4a6fd4;font-weight:900">⟳</div></div>'
+  if (dm.tipo === 'incastro')
+    return '<div class="fila"><div class="cella" style="max-width:160px">' +
+           svgIncastro(dm.alt, dm.larg, dm.buco, 140) + '</div></div>'
+  if (dm.tipo === 'mappa')
+    return '<div class="mappa">' + svgMappa(dm.griglia, null, 148,
+           dito && dito.cella ? dito.cella : null) + '</div>'
+  if (dm.tipo === 'memoria') {
+    const guarda = stato.fase === 'guarda'
+    const lista = guarda ? dm.prima : dm.dopo
+    const celle = lista.map((f, i) => {
+      if (!f) return '<div class="cella vuota chiesta">?</div>'
+      const segna = !guarda && dm.modo === 'cambiato' && i === dm.indice
+      return '<div class="cella' + (segna ? ' marcata' : '') + '">' + svgFigura(f, 60) + '</div>'
+    }).join('')
+    return '<div class="fila">' + celle + '</div>' +
+      (guarda ? '<div class="clessidra"><i style="animation:cala ' + dm.tempo + 'ms linear forwards"></i></div>' : '')
+  }
+  return ''                       // l'intruso non ha scena: le figure sono già i tasti
+}
+
+function opzioneHTML (o, i, e) {
+  const finito = stato.scelta !== null
+  let classe = 'op'
+  let bollo = ''
+  if (finito) {
+    if (i === e.giusta) { classe += ' buona'; bollo = '<b class="bollo">✓</b>' }
+    else if (i === stato.scelta) { classe += ' cattiva'; bollo = '<b class="bollo">✗</b>' }
+    else classe += ' spenta'
+  }
+  let dentro = ''
+  if (o.che === 'figura') dentro = svgFigura(o.fig, 70)
+  else if (o.che === 'emoji') { classe += ' emoji'; dentro = o.em }
+  else if (o.che === 'pezzo') dentro = svgPezzo(o.celle, 72, o.tinte, o.ombra)
+  else if (o.che === 'via') {
+    const dito = finito && i === stato.scelta && e.perche && e.perche[i] ? e.perche[i].cella : null
+    dentro = svgMappa(o.griglia, o.via, 138, dito)
+  }
+  return '<button class="' + classe + '" data-op="' + i + '" aria-label="risposta ' + (i + 1) + '">' + dentro + bollo + '</button>'
+}
+
+function disegna () {
+  const e = stato.enigma
+  if (!e) return
+  const fam = FAMIGLIE[e.famiglia]
+  const finito = stato.scelta !== null
+  const giusto = finito && stato.scelta === e.giusta
+  const guarda = stato.fase === 'guarda'
+
+  const striscia =
+    '<div class="striscia">' +
+      '<span class="fam"><span class="ico">' + fam.icona + '</span>' + fam.nome + '</span>' +
+      '<span class="spinta">' +
+        '<span class="filotto' + (stato.filotto >= 3 ? ' caldo' : '') + '">' +
+          (stato.filotto ? '🔥 ' + stato.filotto : '·') + '</span>' +
+        '<button class="attrezzi" data-banco="1" aria-label="banco di prova">🔧</button>' +
+      '</span></div>' +
+    '<div class="livello"><i style="width:' + Math.round(difficoltaOra() * 100) + '%"></i></div>'
+
+  const consegna = guarda
+    ? '<div class="consegna"><b>👀</b><br>Guarda bene!</div>'
+    : '<div class="consegna">' + e.consegna + '</div>'
+
+  const risposte = guarda ? ''
+    : '<div class="risposte' + (e.opzioni.length >= 5 ? ' tre' : '') + '">' +
+      e.opzioni.map((o, i) => opzioneHTML(o, i, e)).join('') + '</div>'
+
+  let esito = '<div class="parola">&nbsp;</div>'
+  if (finito && giusto) esito = '<div class="parola">' + scegli(['Bravo!', 'Esatto!', 'Preciso!', 'Sì!']) + ' 🎉</div>'
+  else if (finito) {
+    const dito = e.perche ? e.perche[stato.scelta] : null
+    esito = '<div class="parola"><em>' + (dito ? dito.testo : e.spiega) + '</em></div>' +
+            (dito ? '<div class="parola" style="min-height:0;font-size:13px">' + e.spiega + '</div>' : '') +
+            '<button class="avanti" data-avanti="1">Avanti →</button>'
+  }
+
+  const scena = scenaHTML(e)
+  app.innerHTML = striscia +
+    '<div class="corpo' + (scena ? '' : ' sola') + '">' + consegna +
+      (scena ? '<div class="scena">' + scena + '</div>' : '') + risposte + '</div>' +
+    '<div class="esito">' + esito + '</div>' +
+    (giusto ? '<div class="lampo">✓</div>' : '') +
+    (stato.banco ? bancoHTML() : '')
+}
+
+/* ── il banco di prova: il papà valuta una famiglia per volta ── */
+function bancoHTML () {
+  const tasti = NOMIFAM.map(f =>
+    '<button data-fam="' + f + '" class="' + (stato.forzata === f ? 'attiva' : '') + '">' +
+    '<b>' + FAMIGLIE[f].icona + '</b>' + FAMIGLIE[f].nome + '</button>').join('') +
+    '<button data-fam="" class="' + (stato.forzata ? '' : 'attiva') + '"><b>🎲</b>a caso</button>'
+  const d = difficoltaOra()
+  return '<div class="velo" data-chiudi="1"></div><div class="banco">' +
+    '<h2>banco di prova</h2>' +
+    '<div class="scelte">' + tasti + '</div>' +
+    '<h2>difficoltà</h2>' +
+    '<div class="manopola">' +
+      '<input type="range" min="0" max="100" value="' + Math.round(d * 100) + '" id="manopola" aria-label="difficoltà">' +
+      '<span class="num">' + (stato.dForzata === null ? 'auto ' : '') + d.toFixed(2) + '</span></div>' +
+    '<button class="chiudi" data-chiudi="1">Chiudi e gioca</button>' +
+    '<div class="nota">Filotto migliore: ' + stato.meglio + '. Senza toccare niente la difficoltà ' +
+    'sale da sola a ogni risposta giusta e scende a ogni errore.</div></div>'
+}
+
+/* ── i tocchi ── */
+app.addEventListener('click', ev => {
+  sblocca()
+  const t = ev.target.closest('[data-op],[data-avanti],[data-banco],[data-fam],[data-chiudi]')
+  if (!t) return
+  const d = t.dataset
+  if (d.banco !== undefined && d.banco) { suona('tocco'); stato.banco = true; return disegna() }
+  if (d.chiudi !== undefined && d.chiudi) { stato.banco = false; return disegna() }
+  if (d.fam !== undefined) {
+    suona('tocco')
+    stato.forzata = d.fam || null
+    stato.banco = false
+    return prossimo()
+  }
+  if (d.avanti !== undefined) { suona('tocco'); return prossimo() }
+  if (d.op !== undefined) return rispondi(Number(d.op))
+})
+app.addEventListener('input', ev => {
+  if (ev.target.id !== 'manopola') return
+  stato.dForzata = Number(ev.target.value) / 100
+  const n = app.querySelector('.manopola .num')
+  if (n) n.textContent = stato.dForzata.toFixed(2)
+})
+app.addEventListener('change', ev => {
+  if (ev.target.id !== 'manopola') return
+  stato.dForzata = Number(ev.target.value) / 100
+  prossimo()
+  stato.banco = true
+  disegna()
+})
+document.addEventListener('pointerdown', sblocca, { once:true })
+
+/* la manopola da fuori: serve agli scatti di verifica */
+window.provaFamiglia = function (fam, d) {
+  stato.forzata = fam || null
+  if (d !== undefined && d !== null) stato.dForzata = stretto(d, 0, 1)
+  stato.banco = false
+  prossimo()
+}
+
+prossimo()
+</script>
+</body>
+</html>
