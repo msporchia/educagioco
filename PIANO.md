@@ -129,9 +129,9 @@ bisogno — è l'occasione, e non ne torna un'altra.
 | T1 | ✅ **fatto** — roster, id stabili, gancio su `v` | agente | T0 |
 | T2 | ~metà — helper fatti, restano i nomi finti nei test | agente | T1 |
 | T3 | ✅ **fatto** — aggiungi/rinomina/elimina, CSS, i due bug | agente | T1 |
-| T4 | ~metà — nome fatto, resta l'icona | agente | — |
-| T5 | Service worker + deploy su Pages | — | T1-T4 |
-| T6 | Repo pubblico, storia buttata, README | — | T5 |
+| T4 | ✅ **fatto** — nome e icona a dado | agente | — |
+| T5 | ✅ **fatto** — service worker + Pages | — | T1-T4 |
+| T6 | ✅ **fatto** — repo pubblico, storia nuova, README | — | T5 |
 | T7 | Travaso dei profili | Marco | T6 |
 | T8 | Robustezza dello storage | — | **forse prima di tutto** |
 
@@ -298,6 +298,41 @@ dentro: vanno rigenerati con `./pubblica.sh` prima del commit di partenza.
 **Una cosa da sapere prima di rilasciare**: `integrazione/torri-equilibrio` è
 instabile di suo. La tappa 15 si decide sull'ultima ondata e ogni tanto si perde
 per un soffio — visto una volta su tre esecuzioni, e non c'entra col roster.
+
+## Fatto l'8 agosto (T4, T5, T6): è online
+
+**https://msporchia.github.io/games/** — repo pubblico, storia nuova, deploy
+automatico. Provato sul sito vero e non solo in locale: primo avvio che chiede il
+nome, dieci giochi in home, service worker che si registra, zero errori.
+
+- **T4, l'icona.** Un dado disegnato con forme vere in `public/icona.svg`, e i
+  PNG che vogliono Android e iOS generati da lì con `strumenti/icone.mjs`. La
+  variante ritagliabile non mette un bordo attorno all'icona — si vedrebbe lo
+  stacco con la sfumatura — ma toglie gli angoli tondi al fondo e rimpicciolisce
+  il dado, così qualunque forma Android scelga morde solo cielo. L'icona della
+  scheda invece la incorpora il build nella pagina, perché l'HTML unico non ha
+  file accanto a cui puntare.
+- **T5, l'aggiornamento.** Service worker generato dal build con **la versione
+  nel nome della cache**: un build nuovo ha un nome nuovo, e all'attivazione le
+  altre si cancellano. `versione.json` è l'unica cosa che non passa dalla cache,
+  se no risponderebbe sempre la versione di se stesso. La action costruisce, fa
+  girare le prove senza browser, pubblica, e **richiede al sito che versione sta
+  servendo** finché non combacia: è il controllo che faceva l'ultima riga di
+  `pubblica.sh`, ed è la parte che vale.
+- **T6, il repo.** Storia buttata e ricominciata da un commit solo. Prima:
+  ripuliti hostname, percorsi personali e nomi da codice, documenti e artefatti;
+  `pubblica.sh` legge l'indirizzo da `.nas`, che git ignora, così il doppio
+  deploy resta possibile senza pubblicare dove abito. README col taglio deciso,
+  licenza MIT.
+- **Due cose trovate solo pubblicando.** C'era un **secondo branch remoto** con
+  dentro ancora i nomi: buttare la storia di `main` non sarebbe bastato, e l'ho
+  cancellato prima che il repo diventasse pubblico. E `package-lock.json` era
+  fuori sincrono — mancava playwright — quindi `npm ci` sulla action falliva:
+  in locale non si vedeva perché `node_modules` c'era già.
+
+**Cosa resta.** T7, il travaso dei profili, che è tuo: export dai due telefoni
+dal NAS, import sul dominio nuovo, e il NAS acceso in parallelo qualche settimana
+finché non è verificato. Più T2 (i nomi finti nei test, `generale`) e T8.
 
 ## La questione aperta (7 agosto): il salvataggio dal telefono
 
