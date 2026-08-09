@@ -142,7 +142,7 @@ domande escono e come cambia la difficoltà**.
 | [<img src="docs/img/pozioni-gioco.png" width="200">](docs/pozioni.md) | ### [⚗️ Il laboratorio delle pozioni](docs/pozioni.md)<br>Litri, chili e metri: si dosa con gli attrezzi che si hanno. Le otto tappe salgono **a coppie**, e quella che porta un gesto nuovo riparte coi numeri facili.<br>*→ [le misure e le conversioni](docs/pozioni.md)* |
 | [<img src="docs/img/bancarella-gioco.png" width="200">](docs/bancarella.md) | ### [🛒 La bancarella](docs/bancarella.md)<br>Si vende, si incassa, si dà il resto. La difficoltà non sta nelle cifre ma in **quante monete deve chiedere il resto** — e nell'ultima giornata il resto lo calcola il bambino.<br>*→ [euro, centesimi e resto](docs/bancarella.md)* |
 | [<img src="docs/img/codice-gioco.png" width="200">](docs/codice-segreto.md) | ### [🔐 Codice Segreto](docs/codice-segreto.md)<br>Deduzione pura, tipo Mastermind: si indovina la combinazione leggendo i pallini. Niente conti, solo ragionamento.<br>*→ [le nove tappe](docs/codice-segreto.md)* |
-| [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza. **Più si scende, più le domande diventano difficili** — e le domande sono di tutte le materie, non solo matematica.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
+| [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza, e ogni risposta giusta porta **bottino: armi, armature, oggetti** con cui equipaggiarsi per scendere ancora più a fondo. È quello che tiene incollati a una fila di domande — che sono di tutte le materie, non solo matematica, e **si fanno più difficili man mano che si scende**.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
 | [<img src="docs/img/survivors-gioco.png" width="200">](docs/survivors.md) | ### [🏹 Survivors](docs/survivors.md)<br>Sopravvivenza a ondate. **Ogni potenziamento ha un prezzo in difficoltà**: la carta più forte si paga con la domanda più tosta. Scegliere è il gioco.<br>*→ [il prezzo delle carte](docs/survivors.md)* |
 | [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Programmazione senza codice: si dà una fila di ordini a una squadretta e si guarda cosa succede. Cicli, condizioni, eventi.<br>*→ [le cinque storie](docs/generale.md)* |
 | [<img src="docs/img/cameretta.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md)<br>Dove finiscono le monete guadagnate negli altri giochi: animali da accudire, vestiti, sorprese. Non ci sono domande — è il motivo per cui si torna.<br>*→ [animali e negozio](docs/cameretta.md)* |
@@ -191,12 +191,25 @@ npm test           # tutto: ricostruisce, poi unità e browser
 npm run test:unita # solo quelle senza browser, sono secondi
 ```
 
-Sono 37 file. Quelle di unità fanno girare i motori veri **senza schermo** —
-il tower defense giocato da un finto giocatore tappa per tappa, i livelli del
-gioco di programmazione risolti davvero, i moduli di quiz misurati anche
-sulla *varietà*, perché un grado che produce venti domande diverse si impara
-a memoria e vale zero. Quelle di integrazione aprono `dist/index.html` in
-Chrome e giocano col dito.
+Sono di due tipi, e la differenza conta.
+
+**Quelle di unità girano senza browser**, perché i motori dei giochi sono
+scritti apposta per funzionare anche fuori da uno schermo: non toccano un
+canvas, non importano Vue, non sanno cosa sia un pulsante. Questo permette di
+**giocare le partite per davvero, migliaia di volte, in pochi secondi** — il
+tower defense affrontato tappa per tappa da un finto giocatore che sbaglia un
+conto ogni tanto, i livelli del gioco di programmazione risolti sul serio, il
+gioco di deduzione vinto ragionando. Non si controlla che una funzione
+restituisca il numero atteso: si controlla che una tappa sia superabile, che
+non lo sia spendendo male, e che un bambino distratto ce la faccia lo stesso.
+
+I moduli di quiz hanno una prova a parte che misura anche la **varietà**: un
+grado che produce sempre le stesse domande si impara a memoria e vale zero.
+
+**Quelle di integrazione aprono il file costruito in Chrome e giocano col
+dito**, come farebbe un bambino: toccano le carte, rispondono alle domande,
+comprano, controllano che i progressi finiscano davvero nel salvataggio. Sono
+quelle che si accorgono se una schermata non si apre più.
 
 ### Gli altri comandi
 
@@ -226,14 +239,15 @@ node strumenti/icone.mjs       # rigenera i PNG delle icone da public/icona.svg
 - **Chi gioca non disegna.** Una schermata costruisce la lista delle cose in
   scena e la passa al pittore; chi dipinge non sa cosa siano energia, prezzi
   e ondate.
-- **L'equilibrio si misura, non si deduce.** Il tower defense ha il suo
-  motore senza schermo e un simulatore che gioca migliaia di partite per
-  trovare quanta vita devono avere i nemici. Prima si tirava a indovinare, e
-  una tappa poteva chiedere cinquanta operazioni.
-
-Molti commenti nel codice spiegano *perché* una cosa è fatta così e cosa
-c'era prima. In un progetto scritto a quattro mani con un modello, quelli
-valgono più del codice.
+- **L'equilibrio si ricalcola da solo.** Il tower defense ha il suo motore
+  senza schermo e un simulatore che gioca migliaia di partite per trovare
+  quanta vita devono avere i nemici, ondata per ondata. Il punto non è che
+  sia più preciso: è che **quando si cambia una decisione — un prezzo, la
+  potenza di una torre, quante operazioni deve costare una tappa — non c'è
+  niente da ritoccare a mano.** Si rilancia la taratura e tutti i numeri si
+  riallineano insieme. Senza, ogni ritocco vorrebbe dire rimettere in fila
+  decine di valori sperando di non averne dimenticato uno, e in pratica non
+  si toccherebbe più niente.
 
 </details>
 

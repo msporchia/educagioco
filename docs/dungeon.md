@@ -14,10 +14,37 @@ Ogni tappa è una discesa. Si entra in una stanza, e la stanza può essere un
 mostro, un forziere, una trappola, un mercante. Davanti a una sfida il gioco
 **fa una domanda**: rispondendo giusto si passa, sbagliando si perde qualcosa.
 
-Il bottino serve a comprare armi e armature, che servono a scendere più a
-fondo, dove c'è il bottino migliore. Il ritiro volontario è sempre possibile:
-**tornare su con poco è meglio che perdere tutto in fondo**, ed è una delle
-cose che il gioco insegna senza dirlo.
+## Perché un bambino continua a rispondere
+
+Questa è la parte che fa funzionare il gioco, e vale la pena dirla chiara:
+**ogni risposta giusta porta bottino**.
+
+Ci sono due caselle, **un'arma in mano e un'armatura addosso**, e tre gradi
+per ognuna:
+
+- ⚔️ l'arma dà attacco — i mostri cadono in meno scambi
+- 🛡️ l'armatura dà difesa — sbagliare una domanda costa meno vita
+- 💎 le gemme sono i soldi del dungeon, si spendono dal mercante
+
+E il patto è che **i mostri difficili lasciano roba migliore**: il topo
+lascia lo spadino, il mostro grosso la spada di ferro, lo scrigno in fondo la
+lama del drago. Chi gira largo dai mostri grossi arriva al guardiano con lo
+spadino e lo vede scendere di un punto per volta — nessuno glielo dice, lo
+legge sulla barra della vita.
+
+Il risultato è che il bambino non sta «facendo una fila di esercizi»: sta
+cercando una spada migliore. Le domande sono il prezzo, e in un pomeriggio ne
+risponde molte più di quante ne farebbe su una scheda — perché ogni risposta
+lo avvicina a qualcosa che vuole.
+
+Le armi buone cadono **presto**, nel primo e secondo piano: una spada trovata
+alla penultima stanza non è un premio, è una notifica. Al piano più profondo
+si trovano cure e gemme, perché è lì che l'equipaggiamento si usa.
+
+Il ritiro volontario è sempre possibile: **tornare su con poco è meglio che
+perdere tutto in fondo**, ed è una delle cose che il gioco insegna senza
+dirlo. A fine discesa l'equipaggiamento sparisce — quello che resta è l'eroe
+di base, che cresce con le tappe portate a casa.
 
 ## Quali domande escono
 

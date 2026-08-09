@@ -97,8 +97,11 @@ const RICETTE = [
     passi: [['.tappa:not(.chiusa), .cs-tappa', 3000]] },
 
   { file: 'generale-mappa', dove: 'generale', attesa: '.scelta-avv' },
+  /* il Generale ha tre porte prima del gioco vero: scegli l'avventura,
+     apri il capitolo, premi «gioca». Fermarsi alla prima fotografa un
+     menù, che è la cosa meno interessante che ha da mostrare. */
   { file: 'generale-gioco', dove: 'generale', attesa: '.scelta-avv',
-    passi: [['.avventura', 1500]] },
+    passi: [['.avventura', 1200], ['.capitolo', 900], ['.gioca', 2200], ['button:has-text("✕")', 900]] },
 
   { file: 'cameretta', dove: 'cameretta', attesa: '.stanza, .posto, .porta' },
   { file: 'albo', dove: 'albo', attesa: '.testata' },

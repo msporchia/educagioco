@@ -35,23 +35,19 @@ Le divisioni si possono **spegnere dai settaggi**: quando sono spente, la
 torre che le chiederebbe passa a moltiplicazioni più difficili. Il gioco
 degrada invece di sbarrare — nessuna tappa diventa impossibile.
 
-## La cosa insolita: il numero di conti è deciso a monte
+## Quanto dura una tappa lo decido io, non il caso
 
-Qui c'è una scelta che vale la pena raccontare, perché è nata da un
-fallimento.
+**Ogni tappa dichiara quante operazioni costa finirla** — poche nelle prime,
+parecchie nelle ultime — e tutto il resto viene calcolato da quel numero: il
+piano degli acquisti, quante ondate servono a pagarlo, l'energia di
+partenza, quante postazioni ci sono.
 
-All'inizio funzionava al contrario: si decidevano le ondate, i prezzi e la
-vita dei mostri, e **quante operazioni servissero per finire una tappa
-usciva come conseguenza**. Il risultato è che una tappa poteva chiedere da 21
-a 52 operazioni in colonna. Una partita diventava un compito, e il bambino
-smetteva.
+È il verso giusto in cui prendere il problema. La domanda che conta per un
+genitore non è «quanti mostri ci sono», è **quanto tempo di esercizio chiede
+questa tappa** — e quel numero deve essere una decisione, non il risultato
+accidentale di quanto sono forti i goblin.
 
-Adesso è rovesciato: **ogni tappa dichiara quante operazioni costa finirla**
-— da 6 nella prima a 30 nell'ultima — e tutto il resto (il piano degli
-acquisti, le ondate, l'energia di partenza, quante postazioni ci sono) viene
-calcolato da quel numero.
-
-## E l'equilibrio si misura, non si indovina
+## E il bilanciamento si ricalcola da solo
 
 La vita dei mostri non è una formula: è **un numero per ogni singola ondata,
 trovato giocando la tappa migliaia di volte** con un finto giocatore, senza
@@ -59,10 +55,16 @@ schermo. Il simulatore risponde a domande vere: *chi spende tutto quello che
 guadagna, finisce? Chi si tiene un quarto dei soldi in tasca, perde? Un
 bambino che sbaglia un conto su quattro ce la fa lo stesso?*
 
-Se una tappa risulta troppo dura, la domanda giusta non è «quanta vita
-tolgo» ma «cosa non torna nel modello». È anche il motivo per cui le prove
-automatiche di questo gioco **giocano davvero tutte e quindici le tappe** a
-ogni modifica.
+Il vantaggio non è la precisione: è che **il gioco si ribilancia da solo**.
+Quando cambio un prezzo, la potenza di una torre o quanto deve costare una
+tappa, non c'è niente da rimettere a posto a mano — si rilancia la taratura e
+tutti i numeri si riallineano insieme, coerenti fra loro. Senza, ogni ritocco
+vorrebbe dire rifare in fila decine di valori sperando di non dimenticarne
+uno; in pratica vorrebbe dire non toccare più niente.
+
+Per lo stesso motivo le prove automatiche di questo gioco **giocano davvero
+tutte le tappe** a ogni modifica, e diventano rosse se i dati di equilibrio
+sono rimasti indietro rispetto alle regole.
 
 ## Cosa allena
 
