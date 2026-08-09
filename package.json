@@ -17,7 +17,8 @@
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",
     "quiz": "vite --port 5199 --strictPort --open /poc/quiz.html",
-    "quiz:banco": "node strumenti/quiz/banco.mjs"
+    "quiz:banco": "node strumenti/quiz/banco.mjs",
+    "scatti": "node strumenti/scatti.mjs"
   },
   "dependencies": {
     "vue": "^3.5.13"

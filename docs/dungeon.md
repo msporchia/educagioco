@@ -1,0 +1,73 @@
+[← torna al README](../README.md)
+
+# ⚔️ Il Dungeon
+
+*Si scende di stanza in stanza, e più si scende più le domande si fanno
+difficili.* Un gioco a carte dove si sceglie sempre fra scendere ancora o
+tornare su col bottino.
+
+<img src="img/dungeon-gioco.png" width="230"> <img src="img/dungeon-mappa.png" width="230">
+
+## Come è fatto
+
+Ogni tappa è una discesa. Si entra in una stanza, e la stanza può essere un
+mostro, un forziere, una trappola, un mercante. Davanti a una sfida il gioco
+**fa una domanda**: rispondendo giusto si passa, sbagliando si perde qualcosa.
+
+Il bottino serve a comprare armi e armature, che servono a scendere più a
+fondo, dove c'è il bottino migliore. Il ritiro volontario è sempre possibile:
+**tornare su con poco è meglio che perdere tutto in fondo**, ed è una delle
+cose che il gioco insegna senza dirlo.
+
+## Quali domande escono
+
+Qui non è matematica: sono **domande di tutte le materie**, dagli stessi
+moduli che alimentano anche Survivors. Italiano, matematica, spazio, tempo,
+logica, scienze — ortografia, sillabe, contrari, area e perimetro,
+l'orologio, i solidi, le sequenze, gli insiemi.
+
+## Come cresce la difficoltà
+
+Questa è la parte che si nota giocando, ed è deliberata: **la difficoltà
+dipende da quanto si è scesi**.
+
+Ogni tappa dichiara una fascia — poniamo *da 0,2 a 0,7* — e la domanda che
+esce dipende da **a che riga del dungeon si è arrivati**: alla prima riga si
+sta al minimo della fascia, all'ultima al massimo. Certe stanze hanno un
+**rincaro** loro: il forziere sorvegliato chiede più del corridoio vuoto.
+
+Quindi:
+
+- le prime stanze di una tappa fanno domande facili;
+- man mano che si scende, la stessa tappa diventa più tosta;
+- le tappe più avanti partono già più in alto.
+
+Ed è per questo che scendere ancora è una scelta vera e non un automatismo:
+la ricompensa cresce, ma cresce anche quello che ti viene chiesto.
+
+## Da 0 a 1: cosa vuol dire «difficile»
+
+La difficoltà è **una manopola sola**, da 0 a 1, e ogni modulo di domande la
+traduce nel proprio grado: 0 è il più facile che quel modulo sa fare, 1 il
+più difficile. Il gioco non sa quali materie esistano — chiede «una domanda
+di questa durezza» e riceve.
+
+Non pesca un modulo a caso e poi il grado: pesca direttamente **una classe di
+domande** (modulo + grado) fra tutte quelle ammesse, con un peso che cala man
+mano che ci si allontana dalla difficoltà chiesta. È una correzione a un
+difetto vero della prima versione, dove le domande più facili e quelle più
+difficili di ogni modulo non uscivano quasi mai.
+
+## Cosa allena
+
+Il ragionamento sotto pressione — c'è sempre la tentazione di scendere
+ancora — e un ripasso trasversale che tocca materie diverse nella stessa
+partita. È anche il gioco che introduce l'idea del **rischio calcolato**.
+
+## Note per i genitori
+
+- Le domande rispettano quello che hai spento in *Genitori → cosa sa*: se il
+  bambino non ha ancora fatto le misure, quelle domande non escono, e se un
+  intero grado resta senza domande valide il modulo scende a un grado più
+  facile invece di sparire.
+- È uno dei giochi più recenti e cambia spesso.

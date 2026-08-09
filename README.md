@@ -1,106 +1,241 @@
 # Educagioco
 
-### → **[msporchia.github.io/educagioco](https://msporchia.github.io/educagioco/)** ←
+### 🎲 **[Si gioca qui → msporchia.github.io/educagioco](https://msporchia.github.io/educagioco/)**
 
 Giochi educativi per bambini delle elementari: inglese, spagnolo, matematica
 in colonna, calcolo a mente, un tower defense che si paga facendo le
 operazioni, un mercato dove si dà il resto, un laboratorio di pozioni, un
 dungeon a carte, un gioco di programmazione a ordini.
 
-**Sono giochi fatti per due bambini in particolare, i miei.** Non è un
-portfolio e non è un prodotto: è roba di casa, messa qui perché possa
-servire a qualcun altro. Se lo trovate utile, prendetelo pure.
+**Gira interamente sul dispositivo: nessun server, nessun account, nessuna
+pubblicità, e funziona senza internet.**
 
-## Provarlo in dieci secondi
+---
 
-Non serve installare niente e non serve un server. Il gioco è **un unico
-file HTML** che si apre con doppio click:
+> [!TIP]
+> ### Se vuoi solo farci giocare tuo figlio
+>
+> **Apri il link qui sopra dal telefono e aggiungilo alla schermata iniziale.**
+> Da lì in poi si comporta come un'app vera: icona sua, a tutto schermo.
+>
+> - **Android (Chrome)** → menù ⋮ → *Aggiungi a schermata Home*
+> - **iPhone (Safari)** → tasto Condividi → *Aggiungi a Home*
+> - **Computer** → l'icona ⊕ nella barra degli indirizzi, oppure si gioca
+>   direttamente nel browser
+>
+> ### ✈️ Funziona completamente offline
+>
+> **Dopo la prima apertura non serve più internet.** Né per giocare, né per
+> salvare i progressi, né per sentire la pronuncia inglese e spagnola: le
+> voci sono registrate dentro l'app, non chieste a un servizio. In aereo, in
+> macchina, in montagna senza campo, in ospedale: funziona uguale.
+>
+> Non è un ripiego degradato — è *tutta* l'app. Non c'è una sola funzione che
+> richieda la rete, perché non c'è nessun server con cui parlare.
+>
+> **Si aggiorna da solo.** Quando pubblico una versione nuova, l'app se la
+> prende al primo avvio in cui c'è rete: non c'è niente da reinstallare, e
+> nel frattempo si continua a giocare con quella che si ha. In fondo alla
+> schermata iniziale è scritto di quando è la versione in uso (*aggiornato il
+> 9 agosto alle 14:30*), così si capisce a colpo d'occhio se è arrivata.
+>
+> Non serve registrarsi, non c'è pubblicità, non ci sono acquisti, non c'è
+> niente da scaricare oltre alla pagina stessa.
 
-```bash
-npm ci
-npm run build      # esce dist/index.html, ~3,7 MB, apribile offline
-```
+> [!IMPORTANT]
+> ### Dove finiscono i progressi
+>
+> **Tutto resta nel dispositivo su cui si gioca.** Monete, parole imparate,
+> tappe superate, animali della cameretta: stanno nella memoria del browser
+> (IndexedDB), sul telefono o sul computer di chi gioca.
+>
+> **Non c'è nessun server e non viene inviato niente a nessuno.** Non esiste
+> un account, non c'è un database dall'altra parte, e io non vedo né potrei
+> vedere come sta andando tuo figlio. Il rovescio della medaglia è che i
+> progressi sono legati a quel browser: se si cancellano i dati del sito, o
+> si cambia telefono, senza un backup non tornano.
+>
+> **Per questo c'è il salvataggio su file** (Genitori → codice → *Salva su
+> file*): scarica un `.json` con dentro tutto, che si rimette con *Rimetti da
+> un file*. È anche il modo di **passare i progressi da un dispositivo a un
+> altro** — o di tenerne una copia da parte, che è la cosa che consiglio di
+> fare la prima sera. Vedi [i settaggi per i genitori](docs/genitori.md).
 
-Dentro quel file c'è tutto: il codice, gli stili, le immagini disegnate a
-canvas e le voci incise. Nessuna rete, nessun backend, nessun account. I
-progressi restano nel browser di chi gioca (IndexedDB, con ripiego su
-localStorage), e si portano via con un file JSON dalla schermata dei
-genitori.
+---
 
-Sul telefono conviene invece installarlo come app da un indirizzo web:
-così si aggiorna da solo e sta a schermo intero.
+## ⚠️ Che cos'è, e che cosa non è
 
-## Cosa c'è dentro
+Mettiamo le cose in chiaro, perché un repo di questa taglia può dare
+un'impressione sbagliata.
+
+**Questo è un giocattolo fatto in casa per i miei due figli**, con un solo
+scopo: aiutarli a esercitarsi su quello che stanno facendo a scuola, e dargli
+qualcosa di un po' più costruttivo da aprire quando chiedono il telefono. È
+nato in un paio di sere ed è cresciuto per aggiunte successive, guardandoli
+giocare: quello che li divertiva restava, quello che li annoiava lo buttavo.
+
+Quindi, per essere espliciti:
+
+- **Non è un prodotto** e non è un progetto serio. Non c'è un piano
+  didattico dietro, non è stato validato da nessuno che si intenda di
+  didattica, e le scelte le ho fatte a naso guardando due bambini.
+- **Non è calibrato per tutte le età.** È tarato su *quei* due bambini e su
+  quello che stavano facendo a scuola in quel momento. Per un bambino più
+  piccolo certe cose sono impossibili, per uno più grande sono noiose.
+- **Non è un esempio di come scrivo codice**, e non va preso come indicativo
+  delle mie capacità professionali. È codice da sera, scritto per far
+  funzionare una cosa in fretta e cambiarla il giorno dopo: ci sono scelte
+  discutibili, roba fatta due volte in modi diversi, e giochi interi rimasti
+  a metà.
+- **Alcuni giochi sono in prova** e si vedono solo accendendo un
+  interruttore nei settaggi. Sono lì perché li sto ancora scrivendo.
+- **Gran parte del codice l'ha scritta Claude Code**, in un lavoro a quattro
+  mani: io ho deciso cosa doveva fare e cosa era accettabile, lui ha scritto
+  la maggioranza delle righe e dei test. Lo dico subito perché è la prima
+  cosa che uno si chiede.
+
+Detto questo: se serve a un altro bambino, è tutto qui e si prende
+liberamente.
+
+---
+
+## 👨‍👩‍👧 Se qualcosa non va bene per tuo figlio, si spegne
+
+C'è una schermata per i genitori, dietro un codice di quattro cifre —
+**all'inizio è `0000`**, e si cambia da lì dentro.
+
+<img src="docs/img/genitori.png" width="260" align="right">
+
+Da lì si può:
+
+- **Spegnere un gioco intero.** Se uno non piace, o è troppo difficile, o
+  fa perdere tempo: sparisce dalla home e basta. I progressi restano dove
+  sono, e riaccendendolo si ritrovano.
+- **Dire cosa a scuola non ha ancora fatto.** Questa è la parte che uso di
+  più. I litri, i chili, le divisioni, l'orologio a lancette, l'analisi
+  grammaticale: si spengono uno per uno, e da quel momento **quelle domande
+  non escono più**. Non è una difficoltà in meno, è una domanda muta in
+  meno — un bambino che non ha ancora visto i litri non può ragionare su
+  «quanti centilitri sono due litri», può solo tirare a indovinare.
+- **Salvare e rimettere i progressi**, come detto sopra.
+- **Gestire chi gioca**: aggiungere un bambino, cambiargli nome,
+  eliminarlo. Ognuno ha i suoi progressi, separati.
+
+Se qualcosa è ancora troppo difficile, in fondo c'è anche l'interruttore che
+apre tutte le tappe: a volte serve per far vedere a un fratello più grande
+un gioco che il piccolo ha appena cominciato.
+
+**[→ Come funzionano i settaggi, per esteso](docs/genitori.md)**
+
+---
+
+## 🎮 I giochi
+
+Ogni riquadro porta a una pagina con più immagini e la spiegazione di **quali
+domande escono e come cambia la difficoltà**.
 
 | | |
-|---|---|
-| **Asteroidi** | tabelline e calcolo a mente, a campagna |
-| **English / Spagnolo** | parole, verbi e frasi, con la pronuncia incisa |
-| **Difendi il Castello** | tower defense: ogni torre si paga con un'operazione in colonna |
-| **La bancarella** | si vende, si incassa, si dà il resto |
-| **Il laboratorio delle pozioni** | dosare, misurare, convertire |
-| **Codice Segreto** | deduzione, tipo Mastermind |
-| **Il Generale** | si comanda una squadretta a ordini: cicli, condizioni, eventi |
-| **Il Dungeon / Survivors** | due giochi a carte, ancora in prova |
-| **La cameretta** | dove finiscono le monete: animali da accudire, vestiti, sorprese |
+|:--|:--|
+| [<img src="docs/img/asteroidi-gioco.png" width="200">](docs/asteroidi.md) | ### [☄️ Asteroidi](docs/asteroidi.md)<br>Tabelline e calcolo a mente. È il gioco che **tiene davvero conto di cosa il bambino sa**: ogni tabellina ha la sua storia, e quelle incerte tornano più spesso.<br>*→ [come sceglie le domande](docs/asteroidi.md)* |
+| [<img src="docs/img/inglese-gioco.png" width="200">](docs/lingue.md) | ### [🌐 English e 🇪🇸 Spagnolo](docs/lingue.md)<br>Parole, verbi e frasi, con la **pronuncia incisa da una voce vera**. Più una parola è sicura, più il modo di chiederla si fa difficile.<br>*→ [i sei modi di chiedere](docs/lingue.md)* |
+| [<img src="docs/img/castello-gioco.png" width="200">](docs/castello.md) | ### [🏰 Difendi il Castello](docs/castello.md)<br>Un tower defense dove **ogni torre si paga con un'operazione in colonna**. Quante ne servono per finire una tappa è deciso a monte, e misurato da un simulatore.<br>*→ [quante operazioni e di che tipo](docs/castello.md)* |
+| [<img src="docs/img/pozioni-gioco.png" width="200">](docs/pozioni.md) | ### [⚗️ Il laboratorio delle pozioni](docs/pozioni.md)<br>Litri, chili e metri: si dosa con gli attrezzi che si hanno. Le otto tappe salgono **a coppie**, e quella che porta un gesto nuovo riparte coi numeri facili.<br>*→ [le misure e le conversioni](docs/pozioni.md)* |
+| [<img src="docs/img/bancarella-gioco.png" width="200">](docs/bancarella.md) | ### [🛒 La bancarella](docs/bancarella.md)<br>Si vende, si incassa, si dà il resto. La difficoltà non sta nelle cifre ma in **quante monete deve chiedere il resto** — e nell'ultima giornata il resto lo calcola il bambino.<br>*→ [euro, centesimi e resto](docs/bancarella.md)* |
+| [<img src="docs/img/codice-gioco.png" width="200">](docs/codice-segreto.md) | ### [🔐 Codice Segreto](docs/codice-segreto.md)<br>Deduzione pura, tipo Mastermind: si indovina la combinazione leggendo i pallini. Niente conti, solo ragionamento.<br>*→ [le nove tappe](docs/codice-segreto.md)* |
+| [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza. **Più si scende, più le domande diventano difficili** — e le domande sono di tutte le materie, non solo matematica.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
+| [<img src="docs/img/survivors-gioco.png" width="200">](docs/survivors.md) | ### [🏹 Survivors](docs/survivors.md)<br>Sopravvivenza a ondate. **Ogni potenziamento ha un prezzo in difficoltà**: la carta più forte si paga con la domanda più tosta. Scegliere è il gioco.<br>*→ [il prezzo delle carte](docs/survivors.md)* |
+| [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Programmazione senza codice: si dà una fila di ordini a una squadretta e si guarda cosa succede. Cicli, condizioni, eventi.<br>*→ [le cinque storie](docs/generale.md)* |
+| [<img src="docs/img/cameretta.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md)<br>Dove finiscono le monete guadagnate negli altri giochi: animali da accudire, vestiti, sorprese. Non ci sono domande — è il motivo per cui si torna.<br>*→ [animali e negozio](docs/cameretta.md)* |
 
-Sopra ci sta un motore di ripetizione dilazionata (SM-2 addolcito) che
-decide cosa richiedere e quando, uguale per tutte le materie, e un sistema
-di livelli e traguardi condiviso.
+---
 
-Una schermata dei genitori, dietro un codice di quattro cifre, permette di
-accendere e spegnere i singoli giochi, dire cosa il bambino a scuola non ha
-ancora fatto (così non gli arrivano domande che può solo indovinare),
-salvare e rimettere i progressi, e gestire chi gioca.
+## 🧠 La cosa che tiene insieme tutto
 
-## Le scelte che spiegano il resto
+Sotto i giochi c'è **un motore di ripetizione dilazionata** condiviso: ogni
+cosa da imparare — una tabellina, una parola inglese — ha una sua *forza*, che
+sale quando si risponde giusto e scende quando si sbaglia, e che **cala da
+sola con il tempo** se non la si rivede. Una parola imparata dieci giorni fa
+non vale quanto una imparata ieri, e torna a farsi vedere senza che nessuno
+l'abbia sbagliata.
 
-- **Un file solo.** Il prodotto finale è `dist/index.html`, autonomo e
-  offline. Da qui viene quasi tutto il resto: nessuna dipendenza a runtime
-  oltre a Vue, effetti sonori sintetizzati invece che campionati, icone
-  emoji invece che file, grafica disegnata a canvas con un motorino fatto in
-  casa (Pixi o Konva peserebbero da 100 a 450 KB).
+Da qui viene il comportamento che si nota giocando: le cose incerte tornano
+spesso, quelle sicure spariscono per settimane e poi rispuntano per un
+controllo. Chi risponde giusto due volte di fila su una stessa cosa non se la
+ritrova più per il resto della partita — è tempo tolto a quello che non sa.
+
+I dettagli, se interessano, stanno in [`LEGGIMI.md`](LEGGIMI.md).
+
+---
+
+## 🛠️ Per chi vuole metterci le mani
+
+<details>
+<summary><b>Costruirlo, provarlo, modificarlo</b></summary>
+
+<br>
+
+Il prodotto finale è **un unico file HTML** che si apre con doppio click:
+dentro c'è tutto, codice, stili, immagini e voci incise. Niente server,
+niente rete, niente backend.
+
+```bash
+npm ci             # installazione pulita (usare questo, non npm install)
+npm run dev        # server di sviluppo
+npm run build      # produce dist/index.html, il file unico (~3,7 MB)
+```
+
+### Le prove
+
+```bash
+npm test           # tutto: ricostruisce, poi unità e browser
+npm run test:unita # solo quelle senza browser, sono secondi
+```
+
+Sono 37 file. Quelle di unità fanno girare i motori veri **senza schermo** —
+il tower defense giocato da un finto giocatore tappa per tappa, i livelli del
+gioco di programmazione risolti davvero, i moduli di quiz misurati anche
+sulla *varietà*, perché un grado che produce venti domande diverse si impara
+a memoria e vale zero. Quelle di integrazione aprono `dist/index.html` in
+Chrome e giocano col dito.
+
+### Gli altri comandi
+
+```bash
+npm run voci       # incide la pronuncia inglese (solo se aggiungi parole)
+npm run voci -- --lingua es    # la stessa cosa per lo spagnolo
+npm run simula     # gioca il tower defense senza browser: quanto è duro davvero
+npm run tara       # ritrova la vita dei nemici ondata per ondata e riscrive i dati
+npm run mappe      # controlla i livelli del Generale
+npm run quiz       # apre nel browser le palestre dei moduli di quiz
+npm run quiz:banco # li prova tutti senza browser: forma, varietà, doppioni
+npm run scatti     # rifà le immagini di questa documentazione
+node strumenti/icone.mjs       # rigenera i PNG delle icone da public/icona.svg
+```
+
+### Le scelte che spiegano il resto
+
+- **Un file solo.** Da qui viene quasi tutto: nessuna dipendenza a runtime
+  oltre a Vue, effetti sonori sintetizzati invece che campionati, icone emoji
+  invece che file, grafica disegnata a canvas con un motorino fatto in casa
+  (Pixi o Konva peserebbero da 100 a 450 KB).
 - **La pronuncia non usa `speechSynthesis`.** La voce del dispositivo è una
   lotteria — su Linux esce espeak, incomprensibile — e a un bambino una
   pronuncia sbagliata fa più danno del silenzio. Le clip sono incise a monte
-  e concatenate in sprite. Sono due terzi del peso del file: è il prezzo di
-  una pronuncia che non dipende dal telefono.
-- **Il codice è in italiano.** Nomi, funzioni, commenti. È la lingua in cui
-  ci ho pensato.
+  e concatenate in sprite. Sono due terzi del peso del file.
+- **Il codice è in italiano.** Nomi, funzioni, commenti.
 - **Chi gioca non disegna.** Una schermata costruisce la lista delle cose in
-  scena e la passa al pittore; chi dipinge non sa cosa siano energia,
-  prezzi e ondate.
+  scena e la passa al pittore; chi dipinge non sa cosa siano energia, prezzi
+  e ondate.
 - **L'equilibrio si misura, non si deduce.** Il tower defense ha il suo
-  motore senza schermo, e un simulatore che gioca migliaia di partite per
-  trovare quanta vita devono avere i nemici (`npm run tara`). Prima si
-  tirava a indovinare, e una tappa poteva chiedere cinquanta operazioni.
+  motore senza schermo e un simulatore che gioca migliaia di partite per
+  trovare quanta vita devono avere i nemici. Prima si tirava a indovinare, e
+  una tappa poteva chiedere cinquanta operazioni.
 
-## Le prove
+Molti commenti nel codice spiegano *perché* una cosa è fatta così e cosa
+c'era prima. In un progetto scritto a quattro mani con un modello, quelli
+valgono più del codice.
 
-```bash
-npm test              # tutto: ricostruisce, poi unità e browser
-npm run test:unita    # solo quelle senza browser, sono secondi
-```
-
-Sono 37 file. Quelle di unità fanno girare i motori veri senza schermo —
-il tower defense giocato da un finto giocatore tappa per tappa, i livelli
-del Generale risolti davvero, i moduli di quiz misurati anche sulla
-*varietà*, perché un grado che produce venti domande diverse si impara a
-memoria e vale zero. Quelle di integrazione aprono `dist/index.html` in
-Chrome e giocano col dito.
-
-## Una nota su come è stato scritto
-
-**Gran parte di questo codice l'ha scritta Claude Code**, in un lungo
-lavoro a quattro mani: io ho deciso cosa doveva fare, come doveva sentirsi
-un bambino a giocarci e cosa era accettabile, lui ha scritto la maggior
-parte delle righe e dei test. Lo scrivo qui perché è la prima cosa che uno
-si chiede guardando un repo di questa taglia fatto da una persona sola, e
-saperlo prima evita l'equivoco.
-
-Si vede anche nello stile: molti commenti spiegano *perché* una cosa è
-fatta così e cosa c'era prima. Sono la memoria del progetto, e in un lavoro
-del genere valgono più del codice.
+</details>
 
 ## Licenza
 
