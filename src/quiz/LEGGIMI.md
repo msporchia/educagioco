@@ -62,17 +62,18 @@ Le tre cose che fanno la differenza fra un modulo e un quiz qualunque:
 ```bash
 npm run quiz:banco              # tutti, senza browser
 npm run quiz:banco orologio --mostra 3
-npm run quiz                    # apre l'elenco delle palestre nel browser
-node strumenti/quiz/scatta.mjs orologio   # uno scatto della palestra
 node test/esegui.mjs quiz --niente-build
 ```
 
 Il banco (`strumenti/quiz/banco.mjs`) dice se un modulo è **giusto**: la
 forma delle domande, le risposte doppie, le scene senza pittore, il caso
 ripetibile, la varietà, e che la risposta buona non stia sempre nello
-stesso posto. La palestra (`grafica/palestra.js`, una pagina per modulo
-in `poc/`, generata da `strumenti/quiz/pagine.mjs`) dice se è **bello**,
-e quello lo sa solo un occhio.
+stesso posto. Se è **bello** lo sa solo un occhio, e si guarda **nel
+gioco vero**: schermata dei genitori → «cosa ha fatto a scuola» → il
+tasto «prova» di una carta o di una sottovoce (`Prova.vue`). Le domande
+sono le stesse che riceve il bambino, messe in scena da `Domanda.vue` —
+che è il punto: prima c'era una palestra a parte in `poc/`, e una
+palestra a parte è una seconda messa in scena da tenere allineata.
 
 Guardare conta quanto provare. I difetti trovati a schermo in questo
 giro non li avrebbe presi nessun controllo automatico: una domanda sulle
@@ -95,9 +96,6 @@ date esatte restano dove servono — nell'`aiuto`, che la regola te la
 regala — e le poche cose da sapere a memoria si chiedono solo se hanno
 una filastrocca che le tiene su (i giorni dei mesi) o se sono la materia
 stessa (i contrari, i participi irregolari).
-
-Le pagine dei quiz vogliono un server (`npm run quiz`) perché caricano
-moduli veri: col doppio click il browser blocca gli import.
 
 ## Usarli in un gioco
 

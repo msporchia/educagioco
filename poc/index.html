@@ -43,26 +43,20 @@
 <main>
   <h1>Idee da provare</h1>
   <p class="sotto">Prototipi, non giochi. Servono a capire in cinque minuti
-     se una cosa diverte — poi si butta via quasi tutto.</p>
+     se una cosa diverte — poi si butta via quasi tutto. Qui resta solo
+     quello che <b>non è ancora stato scritto davvero</b>: appena un'idea
+     diventa un gioco, il suo prototipo se ne va.</p>
 
-  <a class="carta" href="survivors.html">
-    <span class="icona">🏹</span>
+  <a class="carta" href="indovinelli.html">
+    <span class="icona">🧩</span>
     <span class="testo">
-      <span class="nome">Survivors</span>
-      <div class="che">Spara da solo, tu schivi. Sali di livello e scegli
-        fra tre carte scritte in inglese.</div>
-      <span class="tag primo">da valutare per prima</span>
-    </span>
-  </a>
-
-  <a class="carta" href="quiz.html">
-    <span class="icona">🎴</span>
-    <span class="testo">
-      <span class="nome">I moduli di quiz</span>
-      <div class="che">Non un gioco: i mazzi di domande che i giochi
-        useranno per far pagare un potenziamento. Uno per materia, e
-        ognuno si prova da solo.</div>
-      <span class="tag">vuole <code>npm run quiz</code></span>
+      <span class="nome">Il banco degli indovinelli</span>
+      <div class="che">Otto famiglie di micro-enigmi che si generano e non
+        finiscono mai. Cinque sono già diventate moduli di quiz: restano
+        la <b>deduzione per esclusione</b> e l'<b>indovinello a indizi</b>,
+        con la forza bruta che garantisce che nessun indizio sia
+        decorativo.</div>
+      <span class="tag primo">da portare per prima</span>
     </span>
   </a>
 
@@ -76,49 +70,25 @@
     </span>
   </a>
 
-  <a class="carta" href="dungeon.html">
-    <span class="icona">🗺️</span>
-    <span class="testo">
-      <span class="nome">Il dungeon a bivi</span>
-      <div class="che">Mappa nuova ogni partita, tre cuori, nessun
-        salvataggio. Scegliere la strada è il gioco.</div>
-    </span>
-  </a>
-
-  <a class="carta" href="programma.html">
-    <span class="icona">🤖</span>
-    <span class="testo">
-      <span class="nome">Il generale</span>
-      <div class="che">Non comandi nessuno: firmi ordini permanenti alle
-        truppe, premi ▶ e guardi se il piano regge.</div>
-      <span class="tag">imparare a programmare</span>
-    </span>
-  </a>
-
-  <a class="carta" href="indovinelli.html">
-    <span class="icona">🧩</span>
-    <span class="testo">
-      <span class="nome">Il banco degli indovinelli</span>
-      <div class="che">Sequenze, deduzioni, memoria, analogie: micro-enigmi
-        che si generano e non finiscono mai.</div>
-    </span>
-  </a>
-
-  <a class="carta" href="codice-segreto.html">
-    <span class="icona">🔐</span>
-    <span class="testo">
-      <span class="nome">Il codice segreto</span>
-      <div class="che">Quattro animali nascosti, sei tentativi, e dei
-        pallini che dicono quanto ti avvicini.</div>
-    </span>
-  </a>
-
   <a class="carta" href="la-regola.html">
     <span class="icona">🔬</span>
     <span class="testo">
       <span class="nome">Indovina la regola</span>
       <div class="che">C'è una legge segreta: fai esperimenti finché non
-        la capisci. Non serve saperla dire.</div>
+        la capisci. Non serve saperla dire. Le sequenze se ne sono già
+        andate nei quiz; quello che resta è <b>lo scienziato</b>, che è
+        un gioco a più mosse — se si fa, va in <code>src/giochi/</code>.</div>
+    </span>
+  </a>
+
+  <a class="carta" href="eroi.html">
+    <span class="icona">🎨</span>
+    <span class="testo">
+      <span class="nome">Gli eroi e il terreno</span>
+      <div class="che">Non un'idea da provare: l'anteprima dei pittori del
+        Generale, disegnata dai file veri di <code>src/grafica/</code>.
+        Sta qui perché è una pagina a sé, ma è un attrezzo.</div>
+      <span class="tag">vuole un server</span>
     </span>
   </a>
 
@@ -126,7 +96,11 @@
     Nessuno di questi entra nel build: sono pagine a sé, si aprono col
     doppio click.<br>
     <code>node poc/prova.mjs</code> li apre tutti in Chrome e dice se
-    qualcuno si rompe.
+    qualcuno si rompe.<br><br>
+    Già diventati giochi veri, e tolti di qui: Survivors, il codice
+    segreto, il dungeon e il generale (<code>src/giochi/</code> e
+    <code>src/views/generale/</code>). Le palestre dei moduli di quiz sono
+    finite nella schermata dei genitori (<code>src/quiz/Prova.vue</code>).
   </footer>
 </main>
 </body>

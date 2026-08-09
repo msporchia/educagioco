@@ -9,14 +9,16 @@
    riceverebbe il bambino, generata dallo stesso modulo — e si può
    rispondere, sbagliare e leggere il perché.
 
-   È la palestra di `poc/quiz-*.html` con due differenze, tutte e due
-   volute. Là si prova un MODULO a raffica, per vedere se le domande
-   sono belle; qui si prova UNA VOCE — un gruppo di sapere o una singola
-   tipologia — perché la domanda che il genitore ha in mente è «cosa
-   perdo se spengo questa?». E là le domande si rincorrono da sole,
-   perché chi prova un modulo ne vuole venti di fila; qui una alla
-   volta, col tasto per chiederne un'altra: chi è entrato voleva
-   decidere, non giocare.
+   Ha preso il posto delle palestre che stavano in `poc/`, una pagina
+   per modulo, e le ha mandate in pensione. Là si provava un MODULO a
+   raffica, per vedere se le domande erano belle; qui si prova UNA VOCE
+   — un gruppo di sapere o una singola tipologia — perché la domanda che
+   il genitore ha in mente è «cosa perdo se spengo questa?». E là le
+   domande si rincorrevano da sole; qui una alla volta, col tasto per
+   chiederne un'altra: chi è entrato voleva decidere, non giocare.
+   Guardare se una domanda è bella si fa lo stesso, e si fa qui: sono
+   le stesse domande, nella stessa messa in scena del gioco vero, che è
+   più di quanto una palestra a parte potesse promettere.
 
    NON DECIDE NIENTE. Riceve una chiave, mostra le sue domande, e quando
    si chiude non ha toccato né il profilo né i progressi: l'interruttore

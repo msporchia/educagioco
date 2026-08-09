@@ -63,6 +63,6 @@ export class Sorte {
   }
 }
 
-/* comodità: `sorte()` quando non importa la ripetibilità (la palestra,
-   il gioco vero), `new Sorte(seme)` quando importa (il banco). */
+/* comodità: `sorte()` quando non importa la ripetibilità (il gioco vero,
+   la prova nei settaggi), `new Sorte(seme)` quando importa (il banco). */
 export const sorteQualunque = () => new Sorte((Math.random() * 2 ** 31) | 0)

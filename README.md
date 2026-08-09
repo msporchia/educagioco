@@ -228,8 +228,7 @@ npm run voci -- --lingua es    # la stessa cosa per lo spagnolo
 npm run simula     # gioca il tower defense senza browser: quanto è duro davvero
 npm run tara       # ritrova la vita dei nemici ondata per ondata e riscrive i dati
 npm run mappe      # controlla i livelli del Generale
-npm run quiz       # apre nel browser le palestre dei moduli di quiz
-npm run quiz:banco # li prova tutti senza browser: forma, varietà, doppioni
+npm run quiz:banco # prova i moduli di quiz senza browser: forma, varietà, doppioni
 npm run scatti     # rifà le immagini di questa documentazione
 node strumenti/icone.mjs       # rigenera i PNG delle icone da public/icona.svg
 ```

@@ -1,10 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL BANCO DI PROVA DEI PROTOTIPI
 
-   I file di `poc/` non sono il gioco: sono cinque pagine HTML autonome
-   che servono a capire se un'idea diverte prima di scriverla davvero.
-   Non hanno test veri e non devono averne. Hanno però bisogno di una
-   cosa sola: la certezza che si aprano senza esplodere.
+   I file di `poc/` non sono il gioco: sono pagine HTML autonome che
+   servono a capire se un'idea diverte prima di scriverla davvero. Non
+   hanno test veri e non devono averne. Hanno però bisogno di una cosa
+   sola: la certezza che si aprano senza esplodere.
+
+   Ne resta poco apposta: un prototipo che è diventato un gioco viene
+   tolto da qui, così quello che si vede in `poc/` è sempre e solo
+   quello che non è ancora stato scritto. `eroi.html` è l'eccezione —
+   è un attrezzo, e da `file://` non carica i moduli: lo dice da sé.
 
    Questo script apre un prototipo in Chrome, lo lascia girare qualche
    secondo battendoci sopra qualche tocco a caso, e riporta ogni errore

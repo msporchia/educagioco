@@ -30,8 +30,7 @@ npm run voci -- --lingua es
 npm run simula         # gioca il tower defense senza browser
 npm run tara           # rimisura la vita dei nemici e riscrive i dati
 npm run mappe          # valida i livelli del Generale
-npm run quiz           # palestre dei moduli di quiz nel browser
-npm run quiz:banco     # li prova tutti senza browser
+npm run quiz:banco     # prova tutti i moduli di quiz senza browser
 npm run scatti         # rifà le immagini di docs/img/
 node strumenti/icone.mjs   # rigenera i PNG delle icone da public/icona.svg
 ```

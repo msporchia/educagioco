@@ -339,7 +339,8 @@ function indietro() {
    scrive il gioco non può guardarla solo giocando: `salta()` fa salire
    di livello subito, e i potenziamenti passati fanno finta che la
    partita sia già avanti — è così che si scattano le carte mature senza
-   giocare mezz'ora (lo faceva anche il prototipo, `poc/survivors.html`).
+   giocare mezz'ora (lo faceva anche il prototipo da cui viene il gioco,
+   e ce lo siamo portati dietro).
 
    Per chi gioca **non esiste**: `import.meta.env.DEV` è falso quando si
    costruisce il file unico e tutto questo blocco sparisce dal build. */
