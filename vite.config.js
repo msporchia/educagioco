@@ -38,7 +38,7 @@ function versione () {
 const VERSIONE = versione()
 
 // Accanto all'HTML esce anche versione.json: e' il modo di chiedere al NAS
-// cosa sta servendo davvero (`curl .../games/versione.json`) senza aprire il
+// cosa sta servendo davvero (`curl <indirizzo>/versione.json`) senza aprire il
 // browser, e lo usa pubblica.sh per confermare che il deploy sia arrivato.
 function scriviVersione () {
   return {

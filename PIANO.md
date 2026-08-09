@@ -301,8 +301,10 @@ per un soffio — visto una volta su tre esecuzioni, e non c'entra col roster.
 
 ## Fatto l'8 agosto (T4, T5, T6): è online
 
-**https://msporchia.github.io/games/** — repo pubblico, storia nuova, deploy
-automatico. Provato sul sito vero e non solo in locale: primo avvio che chiede il
+**https://msporchia.github.io/educagioco/** — repo pubblico, storia nuova, deploy
+automatico. (Il repo si chiamava `games` ed è stato rinominato il 9 agosto: il
+vecchio indirizzo di Pages adesso dà 404, mentre `git` segue il redirect da sé.
+I progressi non ne risentono — cambia il path, non l'origine.) Provato sul sito vero e non solo in locale: primo avvio che chiede il
 nome, dieci giochi in home, service worker che si registra, zero errori.
 
 - **T4, l'icona.** Un dado disegnato con forme vere in `public/icona.svg`, e i
