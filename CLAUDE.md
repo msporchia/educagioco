@@ -169,6 +169,15 @@ committate: non è ricostruibile da git.
 - **Gli id dei contenuti non si rinominano** (`en:dog`, `math:7x8`,
   `frase:…`): sono le chiavi dello stato SRS, e cambiarli fa tornare una
   parola «mai vista».
+- **`VERSION` in `store/storage.js` non si abbassa mai.** `indexedDB.open`
+  fallirebbe e il ripiego su localStorage diventerebbe permanente e silenzioso.
+- **Il timeout di 2,5 s in `openDb()` è l'unico modo noto di perdere
+  progressi.** Su un telefono lento IndexedDB non risponde in tempo,
+  `dbPromise` resta memoizzata su `null` per tutta la vita della pagina e
+  l'app gioca su localStorage; al riavvio `load()` legge IndexedDB per prima
+  e ignora quella copia, quindi la sessione appena giocata *sembra* sparita.
+  I dati veri non vengono sovrascritti e non c'è nessun avviso a schermo. Non
+  si riproduce su desktop, dove IndexedDB risponde in millisecondi.
 
 ### Cosa possono spegnere i genitori
 

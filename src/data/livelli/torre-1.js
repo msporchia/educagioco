@@ -212,7 +212,7 @@ export const TORRE_1 = {
      cassetta è di due verbi — `vai` e `prendi` — e con due verbi non
      esiste **nessun modo di dire «adesso»**. La sincronizzazione
      arriva dal capitolo 2 in poi; qui le due liste girano insieme e
-     basta. Sta scritto in `tmp/attriti-torre.md`. */
+     basta. */
   verifiche: {
     /* nessuno dei due arriva in fondo da solo: Cric non può stare alle
        sbarre e Marta non può uscire a prendere la chiave */

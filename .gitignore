@@ -20,3 +20,5 @@ test/scatti/
 # in radice non ci va nessuna immagine: gli scatti stanno in test/scatti/
 # (quelli dei poc, versionati apposta, in poc/scatti/)
 /*.png
+# il piano del travaso e delle tappe: roba di casa, resta sul disco
+PIANO.md

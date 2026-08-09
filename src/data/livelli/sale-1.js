@@ -254,9 +254,8 @@ export const SALE_1 = {
      con quei tre verbi il vocabolario non ha modo di dire «parti
      quando te lo dico». La coordinazione che questo capitolo chiede è
      un'altra — tre liste che girano insieme contro un orologio — e il
-     banco di prova non sa misurarla (sta scritto in
-     `tmp/attriti-sale.md`). `serveOgnuno` è quello che ci si avvicina
-     di più: da solo non ce la fa nessuno. */
+     banco di prova non sa misurarla. `serveOgnuno` è quello che ci si
+     avvicina di più: da solo non ce la fa nessuno. */
   verifiche: {
     /* nessuno dei tre arriva in fondo da solo: Bugo non è il carro,
        Rea non apre niente, Vito nemmeno */
