@@ -68,38 +68,50 @@ pubblicità, e funziona senza internet.**
 
 ---
 
-## ⚠️ Che cos'è, e che cosa non è
+## Per chi è
 
-Mettiamo le cose in chiaro, perché un repo di questa taglia può dare
-un'impressione sbagliata.
+**È nato per i miei due figli**, per farli esercitare su quello che stanno
+facendo a scuola e per dargli qualcosa di più costruttivo da aprire quando
+chiedono il telefono. È cresciuto guardandoli giocare: quello che funzionava
+restava, il resto lo buttavo.
 
-**Questo è un giocattolo fatto in casa per i miei due figli**, con un solo
-scopo: aiutarli a esercitarsi su quello che stanno facendo a scuola, e dargli
-qualcosa di un po' più costruttivo da aprire quando chiedono il telefono. È
-nato in un paio di sere ed è cresciuto per aggiunte successive, guardandoli
-giocare: quello che li divertiva restava, quello che li annoiava lo buttavo.
+Due conseguenze da sapere prima di darlo a un bambino:
 
-Quindi, per essere espliciti:
+- **È tarato su di loro**, e su quello che stavano facendo a scuola in quel
+  momento. Per un bambino più piccolo certe cose sono impossibili, per uno
+  più grande sono noiose. Quello che non va bene [si spegne](docs/genitori.md).
+- **Alcuni giochi sono in prova** e restano nascosti finché non si accende
+  l'interruttore apposta nei settaggi.
 
-- **Non è un prodotto** e non è un progetto serio. Non c'è un piano
-  didattico dietro, non è stato validato da nessuno che si intenda di
-  didattica, e le scelte le ho fatte a naso guardando due bambini.
-- **Non è calibrato per tutte le età.** È tarato su *quei* due bambini e su
-  quello che stavano facendo a scuola in quel momento. Per un bambino più
-  piccolo certe cose sono impossibili, per uno più grande sono noiose.
-- **Non è un esempio di come scrivo codice**, e non va preso come indicativo
-  delle mie capacità professionali. È codice da sera, scritto per far
-  funzionare una cosa in fretta e cambiarla il giorno dopo: ci sono scelte
-  discutibili, roba fatta due volte in modi diversi, e giochi interi rimasti
-  a metà.
-- **Alcuni giochi sono in prova** e si vedono solo accendendo un
-  interruttore nei settaggi. Sono lì perché li sto ancora scrivendo.
-- **Gran parte del codice e della documentazione l'ha scritta Claude Code**, in un lavoro a quattro
-  mani: io ho deciso cosa doveva fare e cosa era accettabile, lui ha scritto
-  la maggioranza delle righe e dei test, non ho riverificato la struttura del codice ne altro, mi basta che funzioni e che i bambini si divertano
+Se serve a un altro bambino, è tutto qui e si prende liberamente.
 
-Detto questo: se serve a un altro bambino, è tutto qui e si prende
-liberamente.
+---
+
+## Sull'implementazione
+
+Questo progetto è **volutamente un prototipo personale**, non software di
+produzione.
+
+Ho usato Claude Code in modo estensivo durante lo sviluppo, e
+**deliberatamente non ho applicato gli standard ingegneristici che userei per
+il codice di produzione**. In particolare non ho revisionato né rifattorizzato
+a mano ogni parte dell'implementazione generata.
+
+La parte interessante di questo progetto, per me, non è quindi la qualità di
+ogni singola riga di codice. Sono **le decisioni di prodotto e di
+ingegneria** che ci stanno dietro: definire i vincoli, progettare le
+meccaniche di gioco, costruire il modello di progressione e di
+apprendimento, tenere un'architettura completamente offline, e usare
+simulazione e test automatici per validare e bilanciare i giochi.
+
+In un progetto di produzione applicherei gli standard consueti su code
+review, manutenibilità, sicurezza, osservabilità, documentazione e
+proprietà del codice nel tempo. Quelle preoccupazioni erano
+**intenzionalmente fuori dallo scopo** di questo lavoro.
+
+È stato un esperimento su quanto lontano possa arrivare un flusso di
+sviluppo assistito dall'IA: da un'idea a un prototipo funzionante e
+davvero usato.
 
 ---
 
