@@ -87,34 +87,6 @@ Se serve a un altro bambino, è tutto qui e si prende liberamente.
 
 ---
 
-## Sull'implementazione
-
-Questo progetto è **volutamente un prototipo personale**, non software di
-produzione.
-
-Ho usato Claude Code in modo estensivo durante lo sviluppo, e
-**deliberatamente non ho applicato gli standard ingegneristici che userei per
-il codice di produzione**. In particolare non ho revisionato né rifattorizzato
-a mano ogni parte dell'implementazione generata.
-
-La parte interessante di questo progetto, per me, non è quindi la qualità di
-ogni singola riga di codice. Sono **le decisioni di prodotto e di
-ingegneria** che ci stanno dietro: definire i vincoli, progettare le
-meccaniche di gioco, costruire il modello di progressione e di
-apprendimento, tenere un'architettura completamente offline, e usare
-simulazione e test automatici per validare e bilanciare i giochi.
-
-In un progetto di produzione applicherei gli standard consueti su code
-review, manutenibilità, sicurezza, osservabilità, documentazione e
-proprietà del codice nel tempo. Quelle preoccupazioni erano
-**intenzionalmente fuori dallo scopo** di questo lavoro.
-
-È stato un esperimento su quanto lontano possa arrivare un flusso di
-sviluppo assistito dall'IA: da un'idea a un prototipo funzionante e
-davvero usato.
-
----
-
 ## 👨‍👩‍👧 Se qualcosa non va bene per tuo figlio, si spegne
 
 C'è una schermata per i genitori, dietro un codice di quattro cifre —
@@ -270,6 +242,25 @@ node strumenti/icone.mjs       # rigenera i PNG delle icone da public/icona.svg
   si toccherebbe più niente.
 
 </details>
+
+## Sull'implementazione
+
+È un prototipo per due bambini, e l'ho scritto con Claude Code. **Il rigore
+l'ho messo in proporzione alla posta in gioco**, che su un progetto così è la
+decisione che conta: non ho revisionato riga per riga l'implementazione, ho
+fatto verificare a macchina le cose che si rompono in silenzio. Che una tappa
+sia superabile da chi sbaglia un conto su quattro, che un modulo di quiz non
+produca sempre le stesse venti domande, che i progressi finiscano davvero nel
+salvataggio: quelle sono provate, e si riprovano da sole a ogni modifica.
+
+Il resto di quello che si fa su un prodotto — review riga per riga,
+osservabilità, sicurezza, manutenibilità a due anni, proprietà del codice nel
+tempo — qui non serviva a nessuno, e metterci attenzione dove non c'è rischio
+è attenzione tolta a dove il rischio c'è.
+
+Quindi la parte interessante non è la singola riga: sono le decisioni. I
+vincoli (un file solo, tutto offline), le meccaniche, il modello di
+apprendimento, l'equilibrio misurato con un simulatore invece che a occhio.
 
 ## Licenza
 
