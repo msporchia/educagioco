@@ -5,7 +5,7 @@
 *Dove finiscono le monete.* Non ci sono domande: è il motivo per cui si
 torna a fare gli esercizi.
 
-<img src="img/cameretta.png" width="230">
+<img src="img/cameretta-animale.png" width="230"> <img src="img/cameretta.png" width="230">
 
 ## Come è fatto
 
@@ -34,14 +34,43 @@ per volta e grande: la stanza deve restare una stanza, non un cruscotto.
 
 La fame si sazia col cibo comprato al negozio, che va tenuto in dispensa.
 
+## La macchina delle sorprese, e perché non è una lotteria
+
+È la macchinetta delle capsule: si paga, esce un accessorio da mettere
+addosso a un animale — un cappellino, gli occhiali, una sciarpa, uno zaino.
+Ci sono quattro posti su ogni animale, e sei serie da completare.
+
+Vale la pena spiegare bene com'è fatta, perché somiglia a una cosa che non è.
+
+**Non si può perdere niente.** La capsula pesca **solo fra i pezzi che
+mancano**: esce sempre qualcosa di nuovo, mai un doppione. Non c'è nessun
+rischio di buttare via le monete, e quindi non c'è niente da cui prendere il
+vizio. La sorpresa è **quale** pezzo esce, non *se* esce qualcosa — è
+l'ovetto, non la slot machine.
+
+**Col tempo si ottiene tutto.** Continuando a giocare si completano le serie,
+tutte quante. Non c'è un pezzo raro che non arriva mai, non ci sono
+probabilità nascoste.
+
+**A cosa serve, allora.** A dare una destinazione alle monete che avanzano.
+Completare tutte le serie costa più di quindici volte l'intero negozio, e
+questo tiene le monete sempre *quasi* finite: c'è sempre qualcosa che si sta
+per potersi permettere. Ed è il motivo per cui vale la pena tornare a fare
+esercizi anche dopo aver comprato tutti i mobili della stanza.
+
+**E cambia le facce.** Un cane sempre uguale a un certo punto stufa. Un
+cappellino nuovo lo fa tornare interessante per una settimana — a costo
+zero di contenuti, perché sono quattro emoji su un disegno che c'è già.
+
+La prima capsula la offre la casa: una macchina di cui non hai mai visto
+l'effetto non la provi, e vedere un cappello comparire sul cane spiega tutto
+meglio di qualsiasi scritta.
+
 ## Il resto
 
 - **Il negozio**: mobili e oggetti per la stanza, cibo per gli animali.
-- **Le sorprese**: capsule a sorpresa con accessori da mettere agli animali,
-  in serie da completare — senza doppioni all'interno di una serie, così
-  raccogliere non diventa una lotteria frustrante.
-- **L'albo** (accessibile dalla fascia in alto in home): livelli, traguardi,
-  giorni di fila, quante cose si sanno per materia.
+- **L'albo** (dalla fascia in alto in home): livelli, traguardi, giorni di
+  fila, quante cose si sanno per materia.
 
 ## A cosa serve, davvero
 

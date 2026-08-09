@@ -312,10 +312,16 @@ export const STRUMENTI = {
     { emoji: '🫙', nome: 'caraffa',   cap: 2000,  grana: 100 },
     { emoji: '🪣', nome: 'secchio',   cap: 5000,  grana: 250 },
   ],
+  /* Come per le lunghezze qui sotto: si chiamano come le chiamerebbe un
+     bambino, e il nome dice già la taglia. Prima erano «bilancino» e
+     «stadera» — la seconda è una parola che non usa più nessuno, e la
+     prima aveva per icona un alambicco, che non è una bilancia. Quando
+     il nome non dice niente, scegliere lo strumento diventa provare a
+     caso, e scegliere lo strumento è metà del gioco. */
   polvere: [
-    { emoji: '⚗️', nome: 'bilancino', cap: 200,   grana: 1 },
-    { emoji: '⚖️', nome: 'bilancia',  cap: 2000,  grana: 5 },
-    { emoji: '🏋️', nome: 'stadera',   cap: 20000, grana: 50 },
+    { emoji: '⚖️', nome: 'bilancia da spezie',   cap: 200,   grana: 1 },
+    { emoji: '🍰', nome: 'bilancia da cucina',   cap: 2000,  grana: 5 },
+    { emoji: '📦', nome: 'bilancia da magazzino', cap: 20000, grana: 50 },
   ],
   // Le misure di lunghezza sono quelle che un bambino ha in mano davvero: il
   // righello dell'astuccio, la squadra, il metro da sarto della mamma, la

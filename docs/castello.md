@@ -6,7 +6,7 @@
 mostri camminano lungo il sentiero verso il castello; per fermarli servono
 torri, e per costruire una torre bisogna fare il conto.
 
-<img src="img/castello-gioco.png" width="230"> <img src="img/castello-mappa.png" width="230">
+<img src="img/castello-gioco.png" width="230"> <img src="img/castello-calcolo.png" width="230"> <img src="img/castello-mappa.png" width="230">
 
 ## Come è fatto
 
@@ -17,54 +17,51 @@ Il ciclo è: arriva l'ondata → serve una torre → **compare l'operazione in
 colonna** → si scrive il risultato cifra per cifra, coi riporti → la torre si
 costruisce. Chi sbaglia paga una penale in energia, non perde la partita.
 
-## Quali operazioni escono
+## Quali operazioni escono, e quanto crescono
 
-La scaletta è progressiva e ogni tappa dichiara **fin dove può arrivare**:
+Ogni tipo di operazione ha **dieci gradini**, e ogni gradino cambia *una cosa
+sola*: prima quante cifre, poi i riporti, poi quanti numeri in colonna.
+Perché «sai fare 27+15, adesso prova 247+185+96» è un salto, non un passo.
 
-| | tipo | esempio |
+Qualche esempio vero, generato dal gioco:
+
+| gradino | addizioni | sottrazioni |
 |---|---|---|
-| 1 | addizioni senza riporto | `34 + 25` |
-| 2 | addizioni con riporto | `47 + 38` |
-| 3 | sottrazioni senza prestito | `58 − 23` |
-| 4 | sottrazioni con prestito | `52 − 27` |
-| 5 | moltiplicazioni per una cifra | `47 × 6` |
-| 6 | moltiplicazioni per due cifre | `47 × 23` |
-| 7 | divisioni | `97 : 4` |
+| 1 | `31 + 15` | `58 − 23` |
+| 2 | `71 + 75` — arriva il riporto | `604 − 87` — arriva il prestito |
+| 3 | `247 + 185` | `587 − 357` |
+| 4 | tre addendi | prestiti doppi, zeri di mezzo |
+
+| gradino | moltiplicazioni | divisioni |
+|---|---|---|
+| 1 | `47 × 6` | `84 : 4`, esatta |
+| 2 | `47 × 6` con riporti | `421 : 3`, col resto |
+| 3 | `21 × 32` — due cifre | `8155 : 7`, dividendo lungo |
+| 4 | numeri grandi | con lo zero nel quoziente |
+
+Una torre si costruisce al primo gradino e sale uno alla volta: la scaletta
+si percorre tutta e in ordine, non si salta.
+
+**Ogni tappa dichiara fin dove può arrivare.** Le prime si fermano ai primi
+gradini delle addizioni; le ultime arrivano in fondo, divisioni comprese.
 
 Le divisioni si possono **spegnere dai settaggi**: quando sono spente, la
 torre che le chiederebbe passa a moltiplicazioni più difficili. Il gioco
 degrada invece di sbarrare — nessuna tappa diventa impossibile.
 
-## Quanto dura una tappa lo decido io, non il caso
+## Quanto dura una tappa è calibrato, non casuale
 
-**Ogni tappa dichiara quante operazioni costa finirla** — poche nelle prime,
-parecchie nelle ultime — e tutto il resto viene calcolato da quel numero: il
-piano degli acquisti, quante ondate servono a pagarlo, l'energia di
-partenza, quante postazioni ci sono.
+**Ogni tappa dichiara quante operazioni costa finirla** — sei nella prima,
+trenta nell'ultima — e tutto il resto viene calcolato a partire da quel
+numero: il piano degli acquisti, quante ondate servono a pagarlo, l'energia
+di partenza, quante postazioni ci sono.
 
-È il verso giusto in cui prendere il problema. La domanda che conta per un
-genitore non è «quanti mostri ci sono», è **quanto tempo di esercizio chiede
-questa tappa** — e quel numero deve essere una decisione, non il risultato
-accidentale di quanto sono forti i goblin.
-
-## E il bilanciamento si ricalcola da solo
-
-La vita dei mostri non è una formula: è **un numero per ogni singola ondata,
-trovato giocando la tappa migliaia di volte** con un finto giocatore, senza
-schermo. Il simulatore risponde a domande vere: *chi spende tutto quello che
-guadagna, finisce? Chi si tiene un quarto dei soldi in tasca, perde? Un
-bambino che sbaglia un conto su quattro ce la fa lo stesso?*
-
-Il vantaggio non è la precisione: è che **il gioco si ribilancia da solo**.
-Quando cambio un prezzo, la potenza di una torre o quanto deve costare una
-tappa, non c'è niente da rimettere a posto a mano — si rilancia la taratura e
-tutti i numeri si riallineano insieme, coerenti fra loro. Senza, ogni ritocco
-vorrebbe dire rifare in fila decine di valori sperando di non dimenticarne
-uno; in pratica vorrebbe dire non toccare più niente.
-
-Per lo stesso motivo le prove automatiche di questo gioco **giocano davvero
-tutte le tappe** a ogni modifica, e diventano rosse se i dati di equilibrio
-sono rimasti indietro rispetto alle regole.
+Per un genitore la domanda che conta non è «quanti mostri ci sono» ma
+**quanto esercizio chiede questa tappa**: sei conti sono dieci minuti, trenta
+sono un pomeriggio. Quel numero è scritto nel gioco, tappa per tappa, e il
+resto si adatta di conseguenza — compresa la resistenza dei mostri, che un
+simulatore misura giocando la tappa migliaia di volte per assicurarsi che sia
+superabile senza essere una passeggiata.
 
 ## Cosa allena
 

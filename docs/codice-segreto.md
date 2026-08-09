@@ -5,6 +5,10 @@
 *Deduzione pura, tipo Mastermind.* Niente conti: si indovina una combinazione
 nascosta leggendo gli indizi di quelle già provate.
 
+> **Spoiler: è più complicato di quello che sembra.** Le prime tappe si
+> risolvono a occhio, poi non più. Provatelo prima di darlo per «troppo
+> facile» — e se un adulto ci mette qualche tentativo, è normale.
+
 <img src="img/codice-gioco.png" width="230"> <img src="img/codice-mappa.png" width="230">
 
 ## Come è fatto

@@ -26,6 +26,7 @@ const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const GIOCO = 'file://' + resolve(RADICE, 'dist/index.html')
 const FUORI = resolve(RADICE, 'docs/img')
 const TELEFONO = { width: 390, height: 844 }
+const ADESSO = Date.now()
 
 /* Un profilo che ha giocato: serve a far vedere i giochi come sono
    davvero, non come appaiono il primo giorno. `tuttoAperto` toglie i
@@ -53,7 +54,58 @@ const PROFILO = {
     'codice-segreto': { tappa: 5, libera: true, stelle: {}, cfg: {} },
   },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
+  /* Un animale adottato e **vestito**: la cameretta fotografata vuota non
+     racconta a cosa servono le monete, ed è quello il suo mestiere. Gli
+     accessori sono quattro perché i posti addosso sono quattro. */
+  accessori: ['🧢', '🕶️', '🧣', '🎒'],
+  pets: {
+    /* `t` è quando ogni bisogno è stato soddisfatto l'ultima volta: senza,
+       le barre risultano scariche da sempre e si fotografa un cane
+       trascurato. Qui è adesso, così si vede un animale accudito. */
+    watson: { adottato: 1, pasti: 24, addosso: { testa: '🧢', occhi: '🕶️', collo: '🧣', schiena: '🎒' },
+              val: { fame: 82, gioco: 74, pulizia: 90, forma: 95 },
+              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
+  },
 }
+
+/* ── giocare un pezzo di castello ──
+   `window.__td` è la porta che il gioco apre per le prove: da lì si sceglie
+   una torre, si leggono le cifre attese dell'operazione in colonna e si
+   premono i tasti. Serve perché la torre si paga col conto: senza risolverlo
+   non si costruisce niente, e il campo resta un prato. */
+async function scegliTorre (page) {
+  await page.evaluate(async () => {
+    const T = window.__td
+    T.inizia(0)
+    await new Promise(r => setTimeout(r, 1200))
+    T.scegliTorre('add')
+  })
+  await page.waitForTimeout(700)
+}
+
+async function costruisciEChiama (page) {
+  await page.evaluate(async () => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td
+    T.inizia(0)
+    await attesa(1200)
+    for (let i = 0; i < 3; i++) {
+      T.scegliTorre('add')
+      await attesa(120)
+      if (!T.op.value) break                 // finita l'energia: va bene lo stesso
+      const tasti = [...document.querySelectorAll('.tastiera button')]
+      T.op.value.passi.forEach(p => tasti.find(x => +x.textContent === p.atteso)?.click())
+      await attesa(250)
+    }
+    T.chiamaOnda()
+    await attesa(2600)                       // i mostri entrano in campo e camminano
+  })
+  await page.waitForTimeout(500)
+}
+
+/* le quattro cifre del codice, che di partenza è 0000 */
+const PIN = [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
+             ['.tasto >> text="0"', 120], ['.tasto >> text="0"', 900]]
 
 /* le ricette. `dove` è il frammento dell'indirizzo, `passi` quello che
    si fa prima di scattare. Un passo è [selettore, attesa dopo]. */
@@ -73,8 +125,15 @@ const RICETTE = [
     passi: [['.tappa:not(.chiusa)', 1600]] },
 
   { file: 'castello-mappa', dove: 'torri', attesa: '.tappe' },
+  /* Il castello va giocato per davvero prima di fotografarlo: appena
+     entrati il prato è vuoto, e un tower defense senza torri né mostri non
+     fa capire niente. Si passa da `window.__td`, la stessa porta che usano
+     le prove, per costruire tre torri e chiamare l'ondata. */
   { file: 'castello-gioco', dove: 'torri', attesa: '.tappe',
-    passi: [['.tap:not(.chiusa)', 2000]] },
+    passi: [['.tap:not(.chiusa)', 1500], costruisciEChiama] },
+  /* la schermata che si vede a ogni torre: il conto da fare per pagarla */
+  { file: 'castello-calcolo', dove: 'torri', attesa: '.tappe',
+    passi: [['.tap:not(.chiusa)', 1500], scegliTorre] },
 
   { file: 'pozioni-mappa', dove: 'pozioni', attesa: '.tappe, .mappa' },
   { file: 'pozioni-gioco', dove: 'pozioni', attesa: '.tappe, .mappa',
@@ -104,14 +163,20 @@ const RICETTE = [
     passi: [['.avventura', 1200], ['.capitolo', 900], ['.gioca', 2200], ['button:has-text("✕")', 900]] },
 
   { file: 'cameretta', dove: 'cameretta', attesa: '.stanza, .posto, .porta' },
+  /* l'animale con addosso quello che è uscito dalle capsule: è la risposta
+     alla domanda «a cosa servono le monete» */
+  { file: 'cameretta-animale', dove: 'cameretta', attesa: '.stanza, .posto',
+    passi: [['.posto:not(.libero)', 1200]] },
   { file: 'albo', dove: 'albo', attesa: '.testata' },
-  { file: 'genitori', dove: 'genitori', attesa: '.tastierino',
-    passi: [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
-            ['.tasto >> text="0"', 120], ['.tasto >> text="0"', 900]] },
+  { file: 'genitori', dove: 'genitori', attesa: '.tastierino', passi: [...PIN] },
   { file: 'genitori-giochi', dove: 'genitori', attesa: '.tastierino',
-    passi: [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
-            ['.tasto >> text="0"', 120], ['.tasto >> text="0"', 900],
-            ['.schede button[data-scheda="sa"]', 800]] },
+    passi: [...PIN, ['.schede button[data-scheda="sa"]', 800]] },
+  /* Il tasto ▶ accanto a ogni voce: si vede una domanda vera di quella
+     tipologia prima di decidere se spegnerla. Raccontarlo a parole non
+     rende: si fotografa il tasto, e poi la domanda che ne esce. */
+  { file: 'domanda-prova', dove: 'genitori', attesa: '.tastierino',
+    passi: [...PIN, ['.schede button[data-scheda="sa"]', 700],
+            ['button[data-prova]', 1400]] },
 ]
 
 const filtro = process.argv.slice(2).filter(a => !a.startsWith('-'))
@@ -153,10 +218,14 @@ for (const r of scelte) {
   try {
     await page.goto(GIOCO + (r.dove ? '#' + r.dove : ''))
     await page.waitForSelector(r.attesa, { timeout: 12000 })
-    for (const [sel, attesa] of r.passi || []) {
+    for (const passo of r.passi || []) {
       try {
-        await page.click(sel, { timeout: 6000 })
-        await page.waitForTimeout(attesa)
+        if (typeof passo === 'function') await passo(page)
+        else {
+          const [sel, attesa] = passo
+          await page.click(sel, { timeout: 6000 })
+          await page.waitForTimeout(attesa)
+        }
       } catch (e) { nota = '(un passo non è riuscito)'; storte++ }
     }
     await page.waitForTimeout(400)          // le animazioni si posano

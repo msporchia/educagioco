@@ -48,10 +48,11 @@ di base, che cresce con le tappe portate a casa.
 
 ## Quali domande escono
 
-Qui non è matematica: sono **domande di tutte le materie**, dagli stessi
-moduli che alimentano anche Survivors. Italiano, matematica, spazio, tempo,
-logica, scienze — ortografia, sillabe, contrari, area e perimetro,
-l'orologio, i solidi, le sequenze, gli insiemi.
+Qui non è matematica: sono **domande di tutte le materie** — italiano,
+matematica, spazio, tempo, logica. Ortografia, sillabe, contrari, area e
+perimetro, l'orologio a lancette, le sequenze da completare.
+
+**[→ Cosa c'è dentro, materia per materia](domande.md)**
 
 ## Come cresce la difficoltà
 
@@ -74,16 +75,10 @@ la ricompensa cresce, ma cresce anche quello che ti viene chiesto.
 
 ## Da 0 a 1: cosa vuol dire «difficile»
 
-La difficoltà è **una manopola sola**, da 0 a 1, e ogni modulo di domande la
-traduce nel proprio grado: 0 è il più facile che quel modulo sa fare, 1 il
-più difficile. Il gioco non sa quali materie esistano — chiede «una domanda
-di questa durezza» e riceve.
-
-Non pesca un modulo a caso e poi il grado: pesca direttamente **una classe di
-domande** (modulo + grado) fra tutte quelle ammesse, con un peso che cala man
-mano che ci si allontana dalla difficoltà chiesta. È una correzione a un
-difetto vero della prima versione, dove le domande più facili e quelle più
-difficili di ogni modulo non uscivano quasi mai.
+La difficoltà è **una manopola sola**, da 0 a 1, e ogni tipo di domanda la
+traduce nel proprio grado: 0 è il più facile che sa fare, 1 il più difficile.
+Il gioco non sa quali materie esistano — chiede «una domanda di questa
+durezza» e riceve. [Come funziona il magazzino](domande.md).
 
 ## Cosa allena
 
@@ -95,6 +90,7 @@ partita. È anche il gioco che introduce l'idea del **rischio calcolato**.
 
 - Le domande rispettano quello che hai spento in *Genitori → cosa sa*: se il
   bambino non ha ancora fatto le misure, quelle domande non escono, e se un
-  intero grado resta senza domande valide il modulo scende a un grado più
-  facile invece di sparire.
-- È uno dei giochi più recenti e cambia spesso.
+  intero grado resta senza domande valide si scende a un grado più facile
+  invece di sparire.
+- Si può sempre risalire prima di rischiare: il gioco non punisce chi si
+  ferma, e il bottino portato a casa resta.

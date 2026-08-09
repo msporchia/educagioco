@@ -42,9 +42,12 @@ Una parola appena incontrata si vede col disegno accanto; la stessa parola,
 tre giorni dopo, arriva da sola e va riconosciuta all'ascolto. **Il bambino
 non se ne accorge**: sente solo che «adesso è più difficile».
 
-Sotto c'è lo stesso motore degli Asteroidi: la forza sale con le risposte
-giuste, scende con gli errori, e **cala da sola col tempo**. Una parola
-imparata due settimane fa rispunta per un controllo.
+Quanto una parola sia sicura non lo decide il numero di volte che si è vista:
+ogni parola ha una **forza**, che sale con le risposte giuste, scende con gli
+errori e **cala da sola con il tempo**. Una parola imparata due settimane fa
+e mai più rivista torna a farsi vedere senza che nessuno l'abbia sbagliata —
+ed è così che il modo di chiederla può anche tornare più facile per un giro,
+se serve.
 
 I distrattori — le tre risposte sbagliate — escono **sempre dalla stessa
 lingua**, mai mescolati.

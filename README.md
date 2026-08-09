@@ -148,8 +148,13 @@ domande escono e come cambia la difficoltà**.
 | [<img src="docs/img/codice-gioco.png" width="200">](docs/codice-segreto.md) | ### [🔐 Codice Segreto](docs/codice-segreto.md)<br>Deduzione pura, tipo Mastermind: si indovina la combinazione leggendo i pallini. Niente conti, solo ragionamento.<br>*→ [le nove tappe](docs/codice-segreto.md)* |
 | [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza, e ogni risposta giusta porta **bottino: armi, armature, oggetti** con cui equipaggiarsi per scendere ancora più a fondo. È quello che tiene incollati a una fila di domande — che sono di tutte le materie, non solo matematica, e **si fanno più difficili man mano che si scende**.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
 | [<img src="docs/img/survivors-gioco.png" width="200">](docs/survivors.md) | ### [🏹 Survivors](docs/survivors.md)<br>Sopravvivenza a ondate. **Ogni potenziamento ha un prezzo in difficoltà**: la carta più forte si paga con la domanda più tosta. Scegliere è il gioco.<br>*→ [il prezzo delle carte](docs/survivors.md)* |
-| [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Programmazione senza codice: si dà una fila di ordini a una squadretta e si guarda cosa succede. Cicli, condizioni, eventi.<br>*→ [le cinque storie](docs/generale.md)* |
-| [<img src="docs/img/cameretta.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md)<br>Dove finiscono le monete guadagnate negli altri giochi: animali da accudire, vestiti, sorprese. Non ci sono domande — è il motivo per cui si torna.<br>*→ [animali e negozio](docs/cameretta.md)* |
+| [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Si dà una fila di ordini a una squadretta e si guarda cosa succede: sequenze, condizioni, cicli, e **segnali fra personaggi diversi** che non partono insieme. È programmazione asincrona travestita da gioco.<br>*→ [i concetti, uno per uno](docs/generale.md)* |
+| [<img src="docs/img/cameretta-animale.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md)<br>Dove finiscono le monete guadagnate negli altri giochi: animali da accudire, mobili, e una macchinetta delle sorprese da cui **non esce mai un doppione**. Non ci sono domande — è il motivo per cui si torna.<br>*→ [animali, negozio e sorprese](docs/cameretta.md)* |
+
+**[❓ Le domande di tutte le materie](docs/domande.md)** — il Dungeon e
+Survivors non hanno un contenuto proprio: pescano da un magazzino comune di
+italiano, matematica, spazio, tempo e logica. Cosa c'è dentro, come si fa più
+difficile, e come si spegne quello che tuo figlio non ha ancora fatto.
 
 ---
 
