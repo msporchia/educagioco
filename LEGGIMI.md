@@ -1,19 +1,20 @@
-# Educagioco
+# Come è fatto, e perché
 
-## Per giocare
-Apri **`giochi.html`** con doppio click. È un file solo, funziona offline su
-telefono, tablet e computer. Non serve installare niente.
+Questo è il documento **tecnico**: le regole esatte, i numeri, e soprattutto
+il *perché* delle scelte — compresi i tentativi che non hanno funzionato e
+cosa ci hanno insegnato. Serve a chi mette le mani nel motore.
 
-I dati (monete, oggetti, progressi) restano nel browser del dispositivo su cui
-si gioca. Aprendolo dentro un'anteprima o un iframe il salvataggio non è
-possibile: il gioco lo rileva e lo dice, continuando a funzionare per la sessione.
+Se cerchi altro:
 
-## Per sviluppare
-```
-npm install
-npm run dev      # server di sviluppo con ricarica automatica
-npm run build    # produce dist/index.html, il file unico da distribuire
-```
+| | |
+|---|---|
+| Come si gioca, cosa sono i giochi, i settaggi | [`README.md`](README.md) |
+| Un gioco alla volta, con le immagini | [`docs/`](docs/) |
+| Come si lavora sul repo: comandi, convenzioni, test | [`CLAUDE.md`](CLAUDE.md) |
+
+**Leggi la sezione che ti riguarda prima di toccare `src/store/srs.js` o il
+bilanciamento del castello**: sono le due parti in cui una modifica
+ragionevole a prima vista rompe qualcosa che non si vede subito.
 
 ## Com'è fatto
 ```
@@ -943,9 +944,9 @@ dal browser l'orientamento non si può imporre, e girando il telefono compare un
 cartello che chiede di rimetterlo dritto — su tablet e computer non compare mai.
 
 ### Le monete di scorta
-Per provare i negozi senza rifarsi mille tabelline si apre il gioco con
-`giochi.html#monete=500`: cinquecento monete al giocatore in corso, e
-`#monete=-100` le toglie. Funziona anche scrivendolo nella barra degli
+Per provare i negozi senza rifarsi mille tabelline si aggiunge
+`#monete=500` all'indirizzo del gioco: cinquecento monete al giocatore in
+corso, e `#monete=-100` le toglie. Funziona anche scrivendolo nella barra degli
 indirizzi a gioco già aperto.
 
 Il regalo si riscuote una volta sola — l'indirizzo viene ripulito subito, così

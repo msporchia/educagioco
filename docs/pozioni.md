@@ -51,6 +51,6 @@ resta astratta finché non si versa qualcosa.
 ## Note per i genitori
 
 Questo gioco **si nasconde da solo** se hai spento le misure o le
-conversioni in *Genitori → cosa sa*: senza quel pezzo di scuola non c'è
-niente da ragionare, e mostrarlo lo stesso vorrebbe dire farlo giocare a
-indovinare. È l'unico gioco con questo comportamento.
+conversioni in *Genitori → cosa sa*: qui le misure non sono un tipo di
+domanda fra tanti, sono tutto il gioco, e senza quel pezzo di scuola non
+resterebbe niente da ragionare.

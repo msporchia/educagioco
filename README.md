@@ -41,6 +41,11 @@ pubblicità, e funziona senza internet.**
 >
 > Non serve registrarsi, non c'è pubblicità, non ci sono acquisti, non c'è
 > niente da scaricare oltre alla pagina stessa.
+>
+> **Se preferisci il file da tenerti**, il gioco *è* una pagina sola:
+> [scaricala](https://msporchia.github.io/educagioco/index.html) e aprila con
+> doppio click. Funziona uguale, anche passata su una chiavetta a un
+> computer che non ha mai visto internet.
 
 > [!IMPORTANT]
 > ### Dove finiscono i progressi
@@ -89,10 +94,9 @@ Quindi, per essere espliciti:
   a metà.
 - **Alcuni giochi sono in prova** e si vedono solo accendendo un
   interruttore nei settaggi. Sono lì perché li sto ancora scrivendo.
-- **Gran parte del codice l'ha scritta Claude Code**, in un lavoro a quattro
+- **Gran parte del codice e della documentazione l'ha scritta Claude Code**, in un lavoro a quattro
   mani: io ho deciso cosa doveva fare e cosa era accettabile, lui ha scritto
-  la maggioranza delle righe e dei test. Lo dico subito perché è la prima
-  cosa che uno si chiede.
+  la maggioranza delle righe e dei test, non ho riverificato la struttura del codice ne altro, mi basta che funzioni e che i bambini si divertano
 
 Detto questo: se serve a un altro bambino, è tutto qui e si prende
 liberamente.
@@ -136,7 +140,7 @@ domande escono e come cambia la difficoltà**.
 
 | | |
 |:--|:--|
-| [<img src="docs/img/asteroidi-gioco.png" width="200">](docs/asteroidi.md) | ### [☄️ Asteroidi](docs/asteroidi.md)<br>Tabelline e calcolo a mente. È il gioco che **tiene davvero conto di cosa il bambino sa**: ogni tabellina ha la sua storia, e quelle incerte tornano più spesso.<br>*→ [come sceglie le domande](docs/asteroidi.md)* |
+| [<img src="docs/img/asteroidi-gioco.png" width="200">](docs/asteroidi.md) | ### [☄️ Asteroidi](docs/asteroidi.md)<br>Tabelline e calcolo a mente. **Ogni tabellina ha la sua storia**: quelle incerte tornano spesso, quelle sicure spariscono per settimane e poi rispuntano per un controllo.<br>*→ [come sceglie le domande](docs/asteroidi.md)* |
 | [<img src="docs/img/inglese-gioco.png" width="200">](docs/lingue.md) | ### [🌐 English e 🇪🇸 Spagnolo](docs/lingue.md)<br>Parole, verbi e frasi, con la **pronuncia incisa da una voce vera**. Più una parola è sicura, più il modo di chiederla si fa difficile.<br>*→ [i sei modi di chiedere](docs/lingue.md)* |
 | [<img src="docs/img/castello-gioco.png" width="200">](docs/castello.md) | ### [🏰 Difendi il Castello](docs/castello.md)<br>Un tower defense dove **ogni torre si paga con un'operazione in colonna**. Quante ne servono per finire una tappa è deciso a monte, e misurato da un simulatore.<br>*→ [quante operazioni e di che tipo](docs/castello.md)* |
 | [<img src="docs/img/pozioni-gioco.png" width="200">](docs/pozioni.md) | ### [⚗️ Il laboratorio delle pozioni](docs/pozioni.md)<br>Litri, chili e metri: si dosa con gli attrezzi che si hanno. Le otto tappe salgono **a coppie**, e quella che porta un gesto nuovo riparte coi numeri facili.<br>*→ [le misure e le conversioni](docs/pozioni.md)* |

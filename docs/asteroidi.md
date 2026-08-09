@@ -22,8 +22,8 @@ per chi non ha ancora fatto nessuna tabellina.
 
 ## Quali domande escono, e perché proprio quelle
 
-Questo è il gioco in cui **il motore tiene davvero il conto di cosa il
-bambino sa**, tabellina per tabellina.
+Le domande non escono a caso: **il motore tiene il conto di cosa il bambino
+sa**, tabellina per tabellina.
 
 Ogni singolo fatto (`7×8`, `6×4`…) ha uno stato suo: quante volte è stato
 giusto, quante sbagliato, quando è stato visto l'ultima volta, e **quanto in
@@ -64,8 +64,8 @@ arriverebbe alla risposta per esclusione invece che calcolando.
 ## Cosa allena
 
 Il recupero rapido dei fatti moltiplicativi — cioè saperli **senza
-ricalcolarli** — e le strategie di calcolo mentale. La velocità qui conta
-davvero: è l'unico gioco in cui rispondere piano ha un peso.
+ricalcolarli** — e le strategie di calcolo mentale. Qui la velocità è parte
+del saperlo: rispondere piano conta, non solo rispondere giusto.
 
 ## Note per i genitori
 

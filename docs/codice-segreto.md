@@ -35,9 +35,8 @@ automatica dedicata solo a quello.)
 ## Cosa allena
 
 Il ragionamento deduttivo e, soprattutto, **l'eliminazione sistematica**: non
-tirare a indovinare, ma usare quello che si è già scoperto. È l'unico gioco
-della raccolta senza nessun contenuto scolastico dentro — non serve sapere
-niente, serve solo pensare.
+tirare a indovinare, ma usare quello che si è già scoperto. Non c'è dentro
+nessun contenuto scolastico: non serve sapere niente, serve solo pensare.
 
 Ed è quello che consiglio quando un bambino è stanco di esercizi ma non ha
 voglia di smettere.

@@ -1,11 +1,19 @@
 node_modules/
 dist/
-# dove pubblica ./pubblica.sh: e' roba di casa, non del progetto
+# Il deploy su un server di casa e' roba mia: non riguarda chi clona il
+# repo, e l'indirizzo non ha motivo di stare qui dentro. Lo script resta
+# sul disco e continua a funzionare, semplicemente non e' versionato.
+pubblica.sh
+pubblico/
+# la copia buildata da doppio click: si rifa' con `npm run build`
+giochi.html
 .nas
 .venv-voci/
 .DS_Store
 *.log
-.claude/settings.local.json
+.claude/
+.idea/
+.vscode/
 .voci-cache/
 .voci-cache-es/
 test/scatti/
