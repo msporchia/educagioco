@@ -18,9 +18,9 @@ tappe, prendendo traguardi — e si spendono qui.
 
 ## Gli animali
 
-Ce ne sono **tredici da adottare** — tre cani, quattro gatti, due pappagalli,
-due pesciolini nella boccia, un cucciolo di dinosauro e un draghetto — e in
-cameretta ne stanno **quattro per volta**. Chi adotta **gli dà il nome**: il
+Ce ne sono **ventinove da adottare** — sette cani, sette gatti, cinque
+uccellini, cinque pesciolini nella boccia e cinque bestie speciali fra
+dinosauri e draghi — e in cameretta ne stanno **quattro per volta**. Chi adotta **gli dà il nome**: il
 catalogo ne propone uno, ma si scrive quello che si vuole, e si cambia quando
 si vuole toccandolo nella scheda.
 
@@ -48,8 +48,9 @@ per volta e grande: la stanza deve restare una stanza, non un cruscotto.
 
 La fame si sazia col cibo comprato al negozio, che va tenuto in dispensa — ma
 **non tutti mangiano le stesse cose**. Il cane vuole la ciotola, il gatto anche
-il pesce, il pappagallo semi e frutta, il pesciolino i fiocchi e i vermetti, il
-draghetto carbone e peperoncini. Ognuno ha poi **due preferiti tutti suoi**,
+il pesce, gli uccellini semi e frutta, i pesciolini fiocchi e vermetti, i
+draghi carbone e peperoncini — e il triceratopo, che è un erbivoro, solo
+frutta e verdura. Ognuno ha poi **due preferiti tutti suoi**,
 che rendono un terzo in più.
 
 Offrire a qualcuno una cosa che non mangia lo fa storcere il naso: la barra non
@@ -77,9 +78,10 @@ tutte quante. Non c'è un pezzo raro che non arriva mai, non ci sono
 probabilità nascoste.
 
 **A cosa serve, allora.** A dare una destinazione alle monete che avanzano.
-Completare tutte le serie costa più di quindici volte l'intero negozio, e
-questo tiene le monete sempre *quasi* finite: c'è sempre qualcosa che si sta
-per potersi permettere. Ed è il motivo per cui vale la pena tornare a fare
+Completare tutte le serie costa circa dodicimila monete, l'intero negozio
+degli oggetti altre quindicimila, e adottare tutti gli amici quasi
+quattromila: messi insieme tengono le monete sempre *quasi* finite, e c'è
+sempre qualcosa che si sta per potersi permettere. Ed è il motivo per cui vale la pena tornare a fare
 esercizi anche dopo aver comprato tutti i mobili della stanza.
 
 **E cambia le facce.** Un cane sempre uguale a un certo punto stufa. Un

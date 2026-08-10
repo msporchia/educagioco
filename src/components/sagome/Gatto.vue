@@ -1,10 +1,15 @@
 <script setup>
 /* IL GATTO.
 
-   Una sagoma sola per tutti e quattro: quello che cambia sono le macchie
-   (che il catalogo elenca una per una), le strisce del soriano e il
-   colore della coda — nel siamese è scura come il musetto, ed è la cosa
-   che lo fa riconoscere prima di tutte le altre. */
+   Una sagoma sola per tutti: quello che cambia sono le macchie (che il
+   catalogo elenca una per una), le strisce del soriano e il colore
+   della coda — nel siamese è scura come il musetto, ed è la cosa che lo
+   fa riconoscere prima di tutte le altre.
+
+   `pelo: 'lungo'` è il persiano: un collare di ciuffi attorno alla
+   testa e la coda a pennacchio. Non è una sagoma nuova, è la stessa con
+   il contorno sfrangiato — che è poi come si riconosce un gatto a pelo
+   lungo anche dal vero. */
 const props = defineProps({
   pet:    { type: Object, required: true },
   felice: { type: Boolean, default: false },
@@ -23,14 +28,21 @@ const macchie = dove => props.pet.macchie?.filter(m => m.dove === dove) || []
   <g class="coda">
     <path v-if="pet.coda === 'lunga' || pet.coda === 'scura'"
           d="M84,110 C104,108 112,86 100,70"
-          :stroke="pet.codaColore || pet.manto" stroke-width="10"
+          :stroke="pet.codaColore || pet.manto"
+          :stroke-width="pet.pelo === 'lungo' ? 16 : 10"
           stroke-linecap="round" fill="none" />
     <path v-else d="M83,108 C93,106 95,99 92,93"
-          :stroke="pet.codaColore || pet.manto" stroke-width="11"
+          :stroke="pet.codaColore || pet.manto"
+          :stroke-width="pet.pelo === 'lungo' ? 16 : 11"
           stroke-linecap="round" fill="none" />
   </g>
 
   <g class="corpo">
+    <!-- il pelo lungo: ciuffi tutt'intorno alla sagoma, sotto di essa -->
+    <circle v-for="(c, i) in (pet.pelo === 'lungo' ?
+                              [[34,80,9],[33,94,9],[36,108,9],[86,80,9],[87,94,9],[84,108,9],
+                               [44,118,9],[60,120,9],[76,118,9]] : [])" :key="'cf'+i"
+            :cx="c[0]" :cy="c[1]" :r="c[2]" :fill="pet.manto" />
     <path d="M36,118 C32,88 40,62 60,62 C80,62 88,88 84,118 Z" :fill="pet.manto" />
     <g :clip-path="'url(#cc-' + uid + ')'">
       <ellipse v-for="(m, i) in macchie('corpo')" :key="i"
@@ -55,6 +67,12 @@ const macchie = dove => props.pet.macchie?.filter(m => m.dove === dove) || []
     <polygon points="41,28 37,13 51,23" fill="#f2a3b6" />
     <polygon points="79,28 83,13 69,23" fill="#f2a3b6" />
 
+    <!-- il collare di pelo del persiano: sta sotto la testa, e la fa
+         sembrare il doppio -->
+    <circle v-for="(c, i) in (pet.pelo === 'lungo' ?
+                              [[34,50,11],[38,68,10],[86,50,11],[82,68,10],
+                               [46,74,10],[60,78,10],[74,74,10],[42,26,10],[78,26,10]] : [])"
+            :key="'ct'+i" :cx="c[0]" :cy="c[1]" :r="c[2]" :fill="pet.manto" />
     <circle cx="60" cy="46" r="26" :fill="pet.manto" />
     <g :clip-path="'url(#ct-' + uid + ')'">
       <template v-for="(m, i) in macchie('testa')" :key="i">

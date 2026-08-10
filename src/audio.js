@@ -72,6 +72,8 @@ export const suono = {
   bau:    () => { nota(300, 150, 0.1, 'square', 0.12); nota(260, 130, 0.11, 'square', 0.1, 150) },
   // il pappagallo: due fischi acuti attaccati, come un cip-cip
   cip:    () => { nota(1800, 2400, 0.07, 'triangle', 0.07); nota(2400, 1700, 0.09, 'triangle', 0.07, 90) },
+  // il gufo: due note basse e tonde, la seconda più giù
+  uhu:    () => { nota(420, 380, 0.22, 'sine', 0.11); nota(360, 320, 0.26, 'sine', 0.1, 260) },
   // il pesce non fa rumore: fa una bollicina, e si sente appena
   blub:   () => { nota(240, 700, 0.09, 'sine', 0.09); nota(180, 520, 0.1, 'sine', 0.07, 120) },
   // il draghetto: un ruggito piccolo, che è un ruggito con la voce da cucciolo

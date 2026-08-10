@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════
    GLI ANIMALI E I LORO BISOGNI
 
-   Un catalogo di amici da adottare — cani, gatti, pappagalli, pesciolini
-   e due bestie che in natura non esistono — e quattro barre che si
+   Un catalogo di amici da adottare — cani, gatti, uccellini, pesciolini
+   e bestie che in natura non esistono (più) — e quattro barre che si
    svuotano da sole: la pancia, l'allegria, il pulito e la forma. Ogni
    barra cala col passare delle ore — la stessa idea del decadimento nel
    motore di apprendimento — e cala anche a gioco chiuso: così tornare
@@ -175,38 +175,83 @@ export const PETS = [
   /* ---------- cani ---------- */
   {
     id: 'watson', nome: 'Watson', razza: 'bobtail inglese', famiglia: 'cani',
-    specie: 'cane', taglio: 'bobtail', verso: 'bau', costo: 40,
+    specie: 'cane', taglio: 'bobtail', verso: 'bau', costo: 60,
     manto: '#93a3b3', pancia: '#f7f4ee', frangia: '#e6e3dc', occhi: '#4a3b2f',
     preferiti: ['🍗', '🎾'],
     descr: 'tutto pelo e niente coda',
   },
   {
+    id: 'pepita', nome: 'Pepita', razza: 'chihuahua', famiglia: 'cani',
+    specie: 'cane', taglio: 'chihuahua', verso: 'bau', costo: 70,
+    manto: '#e3b878', pancia: '#fdf0da', occhi: '#3b2a1e',
+    preferiti: ['🥣', '🪢'],
+    descr: 'due orecchie e sotto un cane',
+  },
+  {
     id: 'biscotto', nome: 'Biscotto', razza: 'bassotto', famiglia: 'cani',
-    specie: 'cane', taglio: 'orecchione', verso: 'bau', costo: 55,
+    specie: 'cane', taglio: 'orecchione', verso: 'bau', costo: 85,
     manto: '#b9743a', pancia: '#f3d6b0', occhi: '#3b2a1e',
     preferiti: ['🥩', '🦴'],
     descr: 'lungo un metro e alto un palmo',
   },
   {
+    id: 'miele', nome: 'Miele', razza: 'golden retriever', famiglia: 'cani',
+    specie: 'cane', taglio: 'liscio', verso: 'bau', costo: 100,
+    manto: '#e8b45c', pancia: '#fbe8c8', occhi: '#4a3b2f',
+    preferiti: ['🍲', '🎾'],
+    descr: 'riporta tutto quello che gli tiri',
+  },
+  {
     id: 'nuvola', nome: 'Nuvola', razza: 'barboncino', famiglia: 'cani',
-    specie: 'cane', taglio: 'riccio', verso: 'bau', costo: 70,
+    specie: 'cane', taglio: 'riccio', verso: 'bau', costo: 105,
     manto: '#f2ece2', pancia: '#fffdf8', occhi: '#4a3b2f',
-    preferiti: ['🥣', '🎾'],
+    preferiti: ['🥣', '🥏'],
     descr: 'una nuvola con le zampe',
+  },
+  {
+    id: 'rocky', nome: 'Rocky', razza: 'pastore tedesco', famiglia: 'cani',
+    specie: 'cane', taglio: 'lupo', verso: 'bau', costo: 145,
+    manto: '#c08a4a', pancia: '#f0d6ae', occhi: '#3b2a1e',
+    sella: '#3a3128', muso: '#3a3128', orecchie: '#4a3f33',
+    preferiti: ['🥩', '🪃'],
+    descr: 'serio come una guardia, coccolone come un cucciolo',
+  },
+  {
+    id: 'yuki', nome: 'Yuki', razza: 'husky siberiano', famiglia: 'cani',
+    specie: 'cane', taglio: 'lupo', verso: 'bau', costo: 165,
+    manto: '#7c8794', pancia: '#f7f9fb', occhi: '#6fc0e8',
+    muso: '#f7f9fb', orecchie: '#6b7683',
+    preferiti: ['🍗', '🥏'],
+    descr: 'occhi di ghiaccio e voglia di correre',
   },
 
   /* ---------- gatti ---------- */
   {
+    id: 'ombra', nome: 'Ombra', razza: 'gatto nero', famiglia: 'gatti',
+    specie: 'gatto', verso: 'miao', costo: 75,
+    manto: '#33303c', pancia: '#4a4655', occhi: '#f0b429', coda: 'lunga',
+    preferiti: ['🐟', '🧶'],
+    descr: 'di notte si vedono solo gli occhi',
+  },
+  {
     id: 'pepe', nome: 'Pepe', razza: 'soriano grigio', famiglia: 'gatti',
-    specie: 'gatto', verso: 'miao', costo: 60,
+    specie: 'gatto', verso: 'miao', costo: 90,
     manto: '#8e93a0', pancia: '#e8ebef', occhi: '#7fd06a', coda: 'lunga',
     strisce: '#5d626f',
     preferiti: ['🍥', '🎾'],
     descr: 'a righe come una tigre in miniatura',
   },
   {
+    id: 'zenzero', nome: 'Zenzero', razza: 'gatto rosso', famiglia: 'gatti',
+    specie: 'gatto', verso: 'miao', costo: 100,
+    manto: '#e8913f', pancia: '#ffeacb', occhi: '#7fd06a', coda: 'lunga',
+    strisce: '#c26a25',
+    preferiti: ['🍗', '🥏'],
+    descr: 'dorme sedici ore al giorno, e le altre otto mangia',
+  },
+  {
     id: 'sherlock', nome: 'Sherlock', razza: 'gatto tuxedo', famiglia: 'gatti',
-    specie: 'gatto', verso: 'miao', costo: 70,
+    specie: 'gatto', verso: 'miao', costo: 105,
     manto: '#2d2d3a', pancia: '#ffffff', occhi: '#8fd06a', coda: 'lunga',
     macchie: [{ dove: 'testa', blaze: true, cx: 60, cy: 38, rx: 8, ry: 20, c: '#ffffff' }],
     preferiti: ['🍣', '🪶'],
@@ -214,63 +259,119 @@ export const PETS = [
   },
   {
     id: 'irene', nome: 'Irene', razza: 'gatta arancione e nera', famiglia: 'gatti',
-    specie: 'gatto', verso: 'miao', costo: 70,
+    specie: 'gatto', verso: 'miao', costo: 105,
     manto: '#e0872a', pancia: '#ffe7c9', occhi: '#f0b429', coda: 'lunga',
     macchie: [{ dove: 'testa', cx: 42, cy: 38, r: 16, c: '#33292b' },
               { dove: 'corpo', cx: 76, cy: 92, rx: 14, ry: 22, c: '#33292b' }],
     preferiti: ['🥩', '🧶'],
-    descr: 'metà fuoco e metà notte',
+    descr: 'met\u00e0 fuoco e met\u00e0 notte',
   },
   {
     id: 'luna', nome: 'Luna', razza: 'gatta siamese', famiglia: 'gatti',
-    specie: 'gatto', verso: 'miao', costo: 85,
+    specie: 'gatto', verso: 'miao', costo: 130,
     manto: '#e8ddcb', pancia: '#fbf5ea', occhi: '#6fc0e8', coda: 'scura',
     codaColore: '#6b5847', orecchie: '#6b5847',
     macchie: [{ dove: 'testa', cx: 60, cy: 58, rx: 18, ry: 13, c: '#6b5847' }],
     preferiti: ['🍤', '🪶'],
     descr: 'occhi di ghiaccio e musetto scuro',
   },
+  {
+    id: 'perla', nome: 'Perla', razza: 'gatta persiana', famiglia: 'gatti',
+    specie: 'gatto', verso: 'miao', costo: 135,
+    manto: '#f4eee4', pancia: '#fffdf8', occhi: '#f0a63c', coda: 'lunga',
+    pelo: 'lungo',
+    preferiti: ['🍲', '🪞'],
+    descr: 'tutta pelo, e lo sa',
+  },
 
-  /* ---------- pappagalli ---------- */
+  /* ---------- uccelli ---------- */
+  {
+    id: 'sole', nome: 'Sole', razza: 'canarino', famiglia: 'uccelli',
+    specie: 'pappagallo', taglio: 'beccuccio', verso: 'cip', costo: 90,
+    manto: '#f5cf3d', pancia: '#fff0a8', occhi: '#2b2b33',
+    ala: '#e0af22', becco: '#f0a63c',
+    preferiti: ['🍎', '🪢'],
+    descr: 'canta appena vede la luce',
+  },
+  {
+    id: 'cielo', nome: 'Cielo', razza: 'cocorita', famiglia: 'uccelli',
+    specie: 'pappagallo', taglio: 'beccuccio', verso: 'cip', costo: 115,
+    manto: '#6fc3ea', pancia: '#d7f0fb', occhi: '#2b2b33',
+    ala: '#4a9bc4', becco: '#f0a63c',
+    preferiti: ['🍌', '🥏'],
+    descr: 'piccola, azzurra e chiacchierona',
+  },
   {
     id: 'kiwi', nome: 'Kiwi', razza: 'parrocchetto', famiglia: 'uccelli',
-    specie: 'pappagallo', verso: 'cip', costo: 90,
+    specie: 'pappagallo', verso: 'cip', costo: 135,
     manto: '#5fbf63', pancia: '#c9ec9a', occhi: '#2b2b33',
     ala: '#3f9a54', becco: '#f0a63c', ciuffo: '#ffd24a',
-    preferiti: ['🌾', '🎈'],
+    preferiti: ['🌾', '🪢'],
     descr: 'verde come una foglia, chiacchiera sempre',
   },
   {
     id: 'rio', nome: 'Rio', razza: 'ara blu e gialla', famiglia: 'uccelli',
-    specie: 'pappagallo', verso: 'cip', costo: 115,
+    specie: 'pappagallo', verso: 'cip', costo: 175,
     manto: '#4a86d8', pancia: '#ffd24a', occhi: '#2b2b33',
     ala: '#2f63ad', becco: '#3b3b45', ciuffo: '#5aa0e8',
     preferiti: ['🥜', '🪞'],
     descr: 'blu sopra e giallo sotto, e ripete tutto',
   },
+  {
+    id: 'bubo', nome: 'Bubo', razza: 'gufetto', famiglia: 'uccelli',
+    specie: 'pappagallo', taglio: 'gufo', verso: 'uhu', costo: 195,
+    manto: '#a97f57', pancia: '#f0e0c8', occhi: '#2b2b33', occhiColore: '#f0a63c',
+    ala: '#8a6541', becco: '#e0a83c',
+    preferiti: ['🥜', '🪶'],
+    descr: 'sta sveglio quando dormi tu',
+  },
 
   /* ---------- pesciolini ---------- */
   {
     id: 'bolla', nome: 'Bolla', razza: 'pesce rosso', famiglia: 'pesci',
-    specie: 'pesce', verso: 'blub', costo: 35,
+    specie: 'pesce', verso: 'blub', costo: 55,
     manto: '#f57f3c', pancia: '#ffd9a8', occhi: '#2b2b33',
     pinna: '#ffb05e',
-    preferiti: ['🥫', '🪀'],
+    preferiti: ['🥫', '🥏'],
     descr: 'gira in tondo e non si annoia mai',
   },
   {
     id: 'neon', nome: 'Neon', razza: 'pesce tropicale', famiglia: 'pesci',
-    specie: 'pesce', verso: 'blub', costo: 55,
+    specie: 'pesce', verso: 'blub', costo: 85,
     manto: '#3fb6d8', pancia: '#d9f4ff', occhi: '#2b2b33',
     pinna: '#8be0ef', strisce: '#1f6f9a',
-    preferiti: ['🪱', '🪀'],
+    preferiti: ['🪱', '🥏'],
     descr: 'a strisce fosforescenti, sembra acceso',
   },
+  {
+    id: 'ciccio', nome: 'Ciccio', razza: 'pesce pagliaccio', famiglia: 'pesci',
+    specie: 'pesce', verso: 'blub', costo: 100,
+    manto: '#f47a2a', pancia: '#ffd4a8', occhi: '#2b2b33',
+    pinna: '#ff9d4a', bande: '#fffdf8',
+    preferiti: ['🥬', '🪢'],
+    descr: 'arancione a bande bianche, sta fra gli anemoni',
+  },
+  {
+    id: 'blu', nome: 'Blu', razza: 'pesce chirurgo', famiglia: 'pesci',
+    specie: 'pesce', verso: 'blub', costo: 115,
+    manto: '#3a6fd8', pancia: '#9fc4ff', occhi: '#2b2b33',
+    pinna: '#ffd24a', strisce: '#1b2f6b',
+    preferiti: ['🪱', '🧶'],
+    descr: 'blu elettrico con la coda gialla',
+  },
+  {
+    id: 'velo', nome: 'Velo', razza: 'pesce combattente', famiglia: 'pesci',
+    specie: 'pesce', verso: 'blub', costo: 130,
+    manto: '#a05fd0', pancia: '#e0c4f5', occhi: '#2b2b33',
+    pinna: '#d48fe8', velo: true,
+    preferiti: ['🥦', '🪞'],
+    descr: 'pinne lunghe come un mantello',
+  },
 
-  /* ---------- bestie che non esistono ---------- */
+  /* ---------- bestie che non esistono pi\u00f9, e bestie che non sono mai esistite ---------- */
   {
     id: 'rex', nome: 'Rex', razza: 'cucciolo di dinosauro', famiglia: 'strani',
-    specie: 'drago', taglio: 'dino', verso: 'ruggito', costo: 130,
+    specie: 'drago', taglio: 'dino', verso: 'ruggito', costo: 195,
     manto: '#6bbf5a', pancia: '#dff0b8', occhi: '#2b2b33',
     cresta: '#f0a63c',
     preferiti: ['🥩', '🦴'],
@@ -278,11 +379,35 @@ export const PETS = [
   },
   {
     id: 'brace', nome: 'Brace', razza: 'draghetto sputafuoco', famiglia: 'strani',
-    specie: 'drago', taglio: 'drago', verso: 'ruggito', costo: 150,
+    specie: 'drago', taglio: 'drago', verso: 'ruggito', costo: 225,
     manto: '#d9503f', pancia: '#ffd9a8', occhi: '#ffd24a',
     cresta: '#ffb03a', ala: '#f08a5d',
     preferiti: ['🌶️', '🪃'],
     descr: 'mangia peperoncini e fa il fumo dal naso',
+  },
+  {
+    id: 'tricorno', nome: 'Tricorno', razza: 'triceratopo', famiglia: 'strani',
+    specie: 'erbivoro', taglio: 'triceratopo', verso: 'ruggito', costo: 240,
+    manto: '#7fa86b', pancia: '#e2eec4', occhi: '#2b2b33',
+    cresta: '#c9a06a', corna: '#f6efe0',
+    preferiti: ['🥦', '🪃'],
+    descr: 'tre corna e un collare, ma mangia solo insalata',
+  },
+  {
+    id: 'spino', nome: 'Spino', razza: 'stegosauro', famiglia: 'strani',
+    specie: 'erbivoro', taglio: 'stego', verso: 'ruggito', costo: 255,
+    manto: '#5f9e8f', pancia: '#d5ebd8', occhi: '#2b2b33',
+    cresta: '#e2913f',
+    preferiti: ['🍇', '🥏'],
+    descr: 'le placche sulla schiena e la coda a punte',
+  },
+  {
+    id: 'gelo', nome: 'Gelo', razza: 'drago di ghiaccio', famiglia: 'strani',
+    specie: 'drago', taglio: 'drago', verso: 'ruggito', costo: 300,
+    manto: '#7cc6e8', pancia: '#e8f7ff', occhi: '#3a6fd8',
+    cresta: '#dff2ff', ala: '#a8dcf2',
+    preferiti: ['🪨', '🪞'],
+    descr: 'invece del fumo fa i fiocchi di neve',
   },
 ]
 
@@ -310,6 +435,12 @@ export const DIETE = {
   pappagallo: ['semi', 'frutta', 'verdura'],
   pesce:      ['acquario', 'verdura'],
   drago:      ['carne', 'fuoco'],
+  /* i dinosauri erbivori: la stessa sagoma dei draghi, la dieta
+     opposta. È il posto dove la regola «ognuno mangia le sue cose»
+     smette di essere una questione di gusti e diventa quello che è —
+     il triceratopo non mangia carne perché è un erbivoro, e vederselo
+     rifiutare la bistecca vale più di una scheda. */
+  erbivoro:   ['verdura', 'frutta'],
 }
 
 export const dietaDi = id => DIETE[petDi(id)?.specie] || []
@@ -320,47 +451,47 @@ export const dietaDi = id => DIETE[petDi(id)?.specie] || []
    `cibo` è la categoria che le diete nominano: ce l'ha solo la roba da
    mangiare, perché solo lì esiste il «questo a te non piace». */
 export const PRODOTTI = [
-  { e: '🥣', nome: 'Croccantini', costo:  3, dona:  26, bisogno: 'fame', tipo: 'ciotola',  cibo: 'croccantini' },
-  { e: '🍗', nome: 'Pollo',       costo:  4, dona:  34, bisogno: 'fame', tipo: 'ciotola',  cibo: 'carne' },
-  { e: '🍲', nome: 'Pappa',       costo:  5, dona:  44, bisogno: 'fame', tipo: 'ciotola',  cibo: 'croccantini' },
-  { e: '🥩', nome: 'Carne',       costo:  6, dona:  50, bisogno: 'fame', tipo: 'ciotola',  cibo: 'carne' },
+  { e: '🥣', nome: 'Croccantini', costo:  5, dona:  26, bisogno: 'fame', tipo: 'ciotola',  cibo: 'croccantini' },
+  { e: '🍗', nome: 'Pollo',       costo:  6, dona:  34, bisogno: 'fame', tipo: 'ciotola',  cibo: 'carne' },
+  { e: '🍲', nome: 'Pappa',       costo:  8, dona:  44, bisogno: 'fame', tipo: 'ciotola',  cibo: 'croccantini' },
+  { e: '🥩', nome: 'Carne',       costo:  9, dona:  50, bisogno: 'fame', tipo: 'ciotola',  cibo: 'carne' },
 
-  { e: '🍥', nome: 'Narutomaki',  costo:  4, dona:  30, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
-  { e: '🍣', nome: 'Nigiri',      costo:  6, dona:  40, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
-  { e: '🍤', nome: 'Gambero',     costo:  7, dona:  46, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
-  { e: '🐟', nome: 'Sashimi',     costo:  9, dona:  62, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
+  { e: '🍥', nome: 'Narutomaki',  costo:  6, dona:  30, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
+  { e: '🍣', nome: 'Nigiri',      costo:  9, dona:  40, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
+  { e: '🍤', nome: 'Gambero',     costo: 10, dona:  46, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
+  { e: '🐟', nome: 'Sashimi',     costo: 14, dona:  62, bisogno: 'fame', tipo: 'sushi',    cibo: 'pesce' },
 
-  { e: '🥬', nome: 'Insalata',    costo:  3, dona:  24, bisogno: 'fame', tipo: 'orto',     cibo: 'verdura' },
-  { e: '🍎', nome: 'Mela',        costo:  4, dona:  32, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
-  { e: '🥦', nome: 'Broccolo',    costo:  5, dona:  42, bisogno: 'fame', tipo: 'orto',     cibo: 'verdura' },
-  { e: '🍌', nome: 'Banana',      costo:  5, dona:  42, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
-  { e: '🍇', nome: 'Uva',         costo:  7, dona:  58, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
+  { e: '🥬', nome: 'Insalata',    costo:  5, dona:  24, bisogno: 'fame', tipo: 'orto',     cibo: 'verdura' },
+  { e: '🍎', nome: 'Mela',        costo:  6, dona:  32, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
+  { e: '🥦', nome: 'Broccolo',    costo:  8, dona:  42, bisogno: 'fame', tipo: 'orto',     cibo: 'verdura' },
+  { e: '🍌', nome: 'Banana',      costo:  8, dona:  42, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
+  { e: '🍇', nome: 'Uva',         costo: 11, dona:  58, bisogno: 'fame', tipo: 'orto',     cibo: 'frutta' },
 
-  { e: '🌾', nome: 'Spighe',      costo:  3, dona:  25, bisogno: 'fame', tipo: 'semi',     cibo: 'semi' },
-  { e: '🥜', nome: 'Arachidi',    costo:  5, dona:  44, bisogno: 'fame', tipo: 'semi',     cibo: 'semi' },
+  { e: '🌾', nome: 'Spighe',      costo:  5, dona:  25, bisogno: 'fame', tipo: 'semi',     cibo: 'semi' },
+  { e: '🥜', nome: 'Arachidi',    costo:  8, dona:  44, bisogno: 'fame', tipo: 'semi',     cibo: 'semi' },
 
-  { e: '🥫', nome: 'Fiocchi',     costo:  3, dona:  26, bisogno: 'fame', tipo: 'acquario', cibo: 'acquario' },
-  { e: '🪱', nome: 'Vermetti',    costo:  5, dona:  45, bisogno: 'fame', tipo: 'acquario', cibo: 'acquario' },
+  { e: '🥫', nome: 'Fiocchi',     costo:  5, dona:  26, bisogno: 'fame', tipo: 'acquario', cibo: 'acquario' },
+  { e: '🪱', nome: 'Vermetti',    costo:  8, dona:  45, bisogno: 'fame', tipo: 'acquario', cibo: 'acquario' },
 
-  { e: '🪨', nome: 'Carbone',     costo:  4, dona:  32, bisogno: 'fame', tipo: 'fuoco',    cibo: 'fuoco' },
-  { e: '🌶️', nome: 'Peperoncino', costo:  6, dona:  50, bisogno: 'fame', tipo: 'fuoco',    cibo: 'fuoco' },
+  { e: '🪨', nome: 'Carbone',     costo:  6, dona:  32, bisogno: 'fame', tipo: 'fuoco',    cibo: 'fuoco' },
+  { e: '🌶️', nome: 'Peperoncino', costo:  9, dona:  50, bisogno: 'fame', tipo: 'fuoco',    cibo: 'fuoco' },
 
-  { e: '🧶', nome: 'Gomitolo',   costo:  5, dona:  40, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🎈', nome: 'Palloncino', costo:  6, dona:  50, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🪀', nome: 'Yo-yo',      costo:  6, dona:  50, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🎾', nome: 'Palla',      costo:  7, dona:  55, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🦴', nome: 'Osso',       costo:  7, dona:  55, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🪞', nome: 'Specchietto', costo:  8, dona:  62, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🪶', nome: 'Piumino',    costo:  9, dona:  75, bisogno: 'gioco',   tipo: 'giochi' },
-  { e: '🪃', nome: 'Boomerang',  costo: 10, dona:  80, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🧶', nome: 'Gomitolo',   costo:  8, dona:  40, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🪢', nome: 'Cordina',    costo:  9, dona:  50, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🥏', nome: 'Frisbee',    costo:  9, dona:  50, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🎾', nome: 'Palla',      costo: 11, dona:  55, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🦴', nome: 'Osso',       costo: 11, dona:  55, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🪞', nome: 'Specchietto', costo: 12, dona:  62, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🪶', nome: 'Piumino',    costo: 14, dona:  75, bisogno: 'gioco',   tipo: 'giochi' },
+  { e: '🪃', nome: 'Boomerang',  costo: 15, dona:  80, bisogno: 'gioco',   tipo: 'giochi' },
 
-  { e: '🪥', nome: 'Spazzola',   costo:  4, dona:  40, bisogno: 'pulizia', tipo: 'bagno' },
-  { e: '🧼', nome: 'Sapone',     costo:  7, dona:  70, bisogno: 'pulizia', tipo: 'bagno' },
-  { e: '🧴', nome: 'Shampoo',    costo: 10, dona: 100, bisogno: 'pulizia', tipo: 'bagno' },
+  { e: '🪥', nome: 'Spazzola',   costo:  6, dona:  40, bisogno: 'pulizia', tipo: 'bagno' },
+  { e: '🧼', nome: 'Sapone',     costo: 11, dona:  70, bisogno: 'pulizia', tipo: 'bagno' },
+  { e: '🧴', nome: 'Shampoo',    costo: 15, dona: 100, bisogno: 'pulizia', tipo: 'bagno' },
 
-  { e: '🥕', nome: 'Carota',     costo:  5, dona:  35, bisogno: 'forma',   tipo: 'salute' },
-  { e: '💊', nome: 'Vitamine',   costo:  9, dona:  70, bisogno: 'forma',   tipo: 'salute' },
-  { e: '🩺', nome: 'Controllo',  costo: 13, dona: 100, bisogno: 'forma',   tipo: 'salute' },
+  { e: '🥕', nome: 'Carota',     costo:  8, dona:  35, bisogno: 'forma',   tipo: 'salute' },
+  { e: '💊', nome: 'Vitamine',   costo: 14, dona:  70, bisogno: 'forma',   tipo: 'salute' },
+  { e: '🩺', nome: 'Controllo',  costo: 20, dona: 100, bisogno: 'forma',   tipo: 'salute' },
 ]
 
 export const prodottoDi = e => PRODOTTI.find(c => c.e === e) || null
@@ -417,6 +548,7 @@ export const ANCORE = {
   // il pesce sta in una boccia: il cappello va sul vetro, il resto addosso a lui
   pesce:      { testa: [60, 26, 26], occhi: [56, 62, 20], collo: [60, 118, 24], schiena: [92, 104, 20] },
   drago:      { testa: [60, 22, 28], occhi: [60, 52, 24], collo: [60, 82, 26], schiena: [90, 92, 22] },
+  erbivoro:   { testa: [60, 22, 28], occhi: [60, 52, 24], collo: [60, 82, 26], schiena: [90, 92, 22] },
 }
 
 /* Quanto costa al giorno rimettere a posto un bisogno, comprando al prezzo

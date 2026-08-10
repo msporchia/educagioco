@@ -48,19 +48,26 @@ controlla('ognuno sta in una famiglia che esiste',
           PETS.every(p => FAMIGLIE.some(f => f.k === p.famiglia)))
 controlla('nessuna famiglia vuota',
           FAMIGLIE.every(f => PETS.some(p => p.famiglia === f.k)))
-controlla('almeno cinque specie diverse', new Set(PETS.map(p => p.specie)).size >= 5)
-controlla('cani, gatti, pappagalli, pesci e bestie strane',
-          ['cane', 'gatto', 'pappagallo', 'pesce', 'drago']
+controlla('almeno sei specie diverse', new Set(PETS.map(p => p.specie)).size >= 6)
+controlla('cani, gatti, uccelli, pesci, draghi e dinosauri erbivori',
+          ['cane', 'gatto', 'pappagallo', 'pesce', 'drago', 'erbivoro']
             .every(s => PETS.some(p => p.specie === s)))
+/* Con ventinove amici la scelta è vera solo se dentro ogni famiglia c'è
+   più di una possibilità: due cani e sei draghi non sarebbero un
+   catalogo, sarebbero un drago con qualche cane intorno. */
+controlla('ogni famiglia ha almeno tre amici',
+          FAMIGLIE.every(f => PETS.filter(p => p.famiglia === f.k).length >= 3))
+controlla('e nessuna famiglia si prende metà del catalogo',
+          FAMIGLIE.every(f => PETS.filter(p => p.famiglia === f.k).length <= PETS.length / 3))
 controlla('ogni specie sa dove si appoggiano gli accessori',
           PETS.every(p => ANCORE[p.specie] &&
             ['testa', 'occhi', 'collo', 'schiena'].every(k => ANCORE[p.specie][k])))
 controlla('ognuno ha il suo verso',
-          PETS.every(p => ['bau', 'miao', 'cip', 'blub', 'ruggito'].includes(p.verso)))
+          PETS.every(p => ['bau', 'miao', 'cip', 'uhu', 'blub', 'ruggito'].includes(p.verso)))
 controlla('ognuno costa il suo', PETS.every(p => p.costo > 0))
-controlla('si comincia con pochi spiccioli', Math.min(...PETS.map(p => p.costo)) <= 40)
+controlla('si comincia con poco', Math.min(...PETS.map(p => p.costo)) <= 60)
 controlla('e c\'è qualcosa da desiderare a lungo',
-          Math.max(...PETS.map(p => p.costo)) >= 120)
+          Math.max(...PETS.map(p => p.costo)) >= 250)
 controlla('riprenderlo dal rifugio costa molto meno che comprarlo',
           PETS.every(p => quotaRientro(p.id) >= 5 && quotaRientro(p.id) < p.costo / 3))
 controlla('ognuno ha dei preferiti, e sono roba che esiste',
@@ -187,7 +194,8 @@ monete(0)
 controlla('senza monete non si adotta', senzaPremi(() => adotta('watson', 'Watson')) === false)
 monete(1000)
 controlla('con le monete si adotta', senzaPremi(() => adotta('watson', 'Watson')) === true)
-controlla('e il prezzo è quello scritto', state.profile.coins === 1000 - 40)
+controlla('e il prezzo è quello scritto',
+          state.profile.coins === 1000 - petDi('watson').costo)
 controlla('non si adotta due volte', senzaPremi(() => adotta('watson', 'Ancora')) === false)
 controlla('un animale che non esiste non si adotta',
           senzaPremi(() => adotta('unicorno', 'Boh')) === false)
@@ -382,8 +390,13 @@ controlla('e non spreca la porzione', inDispensa('🥣') === 1)
 const costi = PETS.map(p => ({ chi: p.nome, alGiorno: +costoGiornaliero(1, p.id).toFixed(1) }))
 const caro = Math.max(...costi.map(c => c.alGiorno))
 const economico = Math.min(...costi.map(c => c.alGiorno))
-controlla('mantenere un animale costa qualcosa di serio', economico > 20)
-controlla('ma non quanto una giornata intera di gioco', caro < 45)
+/* Le due soglie sono la ragione per cui questo test stampa una tabella:
+   sotto la prima tenere un animale non si sente, sopra la seconda una
+   cameretta piena si mangia tutto quello che si guadagna altrove. Sono
+   salite insieme ai prezzi — la cameretta è il posto dove le monete
+   devono finire, non un dettaglio da saldare in due sere. */
+controlla('mantenere un animale costa qualcosa di serio', economico > 35)
+controlla('ma non quanto una giornata intera di gioco', caro < 70)
 controlla('e nessuna specie costa il doppio di un\'altra', caro < economico * 1.5)
 
 console.log('\n🐾  LA CAMERETTA\n')

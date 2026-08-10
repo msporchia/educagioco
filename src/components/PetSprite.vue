@@ -20,7 +20,8 @@ import Pappagallo from './sagome/Pappagallo.vue'
 import Pesce from './sagome/Pesce.vue'
 import Drago from './sagome/Drago.vue'
 
-const SAGOME = { cane: Cane, gatto: Gatto, pappagallo: Pappagallo, pesce: Pesce, drago: Drago }
+const SAGOME = { cane: Cane, gatto: Gatto, pappagallo: Pappagallo, pesce: Pesce,
+                 drago: Drago, erbivoro: Drago }
 
 const props = defineProps({
   pet:   { type: Object, required: true },

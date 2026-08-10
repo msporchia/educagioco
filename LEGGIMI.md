@@ -41,7 +41,7 @@ src/
   data/shop.js       30 oggetti della cameretta
   data/ops.js        operazioni in colonna: riporti, prestiti, divisione
   data/tabelline.js  i dieci pianeti della campagna delle tabelline
-  data/pets.js       i tredici amici, le diete, i quattro bisogni e cosa li sazia
+  data/pets.js       i ventinove amici, le diete, i bisogni e cosa li sazia
   data/capsule.js    le sei serie di accessori della macchina delle sorprese
   components/ColumnOp.vue   tastierino e caselle, cifra per cifra
   components/PetSprite.vue  la cornice del disegno; le sagome stanno in sagome/
@@ -852,16 +852,26 @@ La stanza **non scorre mai**: si adatta allo schermo che trova, perché un
 disegno che scorre a metà non è più una stanza. Le misure sono in `cqw`
 (centesimi della larghezza della stanza), non in pixel.
 
-**Tredici amici da adottare, quattro posti in casa.** Il catalogo è diviso in
-cinque famiglie — cani (il bobtail **Watson** a 40, il bassotto **Biscotto**,
-il barboncino **Nuvola**), gatti (**Pepe** soriano, **Sherlock** in smoking,
-**Irene** arancione e nera, **Luna** siamese), pappagalli (**Kiwi** e **Rio**),
-pesciolini nella boccia (**Bolla** a 35, **Neon**) e due bestie che non
-esistono: il cucciolo di dinosauro **Rex** e il draghetto **Brace**, che a 150
-monete è il traguardo. Non sono emoji ma disegni in SVG: le emoji di gatto
-disponibili sono tre volte lo stesso gatto, e un bobtail non c'è affatto. Ogni
-specie fa il suo verso — bau, miao, cip, blub, e un ruggito con la voce da
-cucciolo.
+**Ventinove amici da adottare, quattro posti in casa.** Il catalogo è
+diviso in cinque famiglie, e in ognuna c'è da scegliere per davvero:
+
+| famiglia | chi c'è | da |
+|---|---|---|
+| 🐶 cani | bobtail, chihuahua, bassotto, golden retriever, barboncino, pastore tedesco, husky | 60 |
+| 🐱 gatti | nero, soriano, rosso, tuxedo, arancione e nero, siamese, persiano | 75 |
+| 🦜 uccelli | canarino, cocorita, parrocchetto, ara, gufetto | 90 |
+| 🐠 pesciolini | rosso, tropicale, pagliaccio, chirurgo, combattente (nella boccia) | 55 |
+| 🐲 bestie speciali | cucciolo di dinosauro, draghetto, triceratopo, stegosauro, drago di ghiaccio | 195 |
+
+Non sono emoji ma disegni in SVG: le emoji di gatto disponibili sono tre
+volte lo stesso gatto, e un bobtail non c'è affatto. Le sagome sono cinque
+(`components/sagome/`) e le razze sono varianti della stessa: cambiano le
+orecchie, il pelo e la coda, che sono le tre cose da cui un bambino
+riconosce un cane. Ogni specie fa il suo verso — bau, miao, cip, uhu,
+blub, e un ruggito con la voce da cucciolo.
+
+Il **drago di ghiaccio** a 300 monete è il traguardo lontano, e il
+pesciolino rosso a 55 il primo amico possibile con pochi spiccioli.
 
 **Il nome lo dà chi adotta.** Il catalogo ne propone uno, ma si scrive quello
 che si vuole e si cambia quando si vuole toccandolo nella scheda: è l'unica
@@ -895,8 +905,12 @@ mangiare e una no, che rendono un terzo in più.
 **Ognuno mangia le sue cose.** La dieta è della *specie* (`DIETE`), i preferiti
 dell'*individuo*: tutti i gatti mangiano pesce, ma il sushi lo adora solo
 Sherlock. Il cane sta su carne, croccantini e verdura; il gatto su carne,
-croccantini e pesce; il pappagallo su semi, frutta e verdura; il pesciolino su
-fiocchi, vermetti e verdura; il draghetto su carne, carbone e peperoncini.
+croccantini e pesce; gli uccelli su semi, frutta e verdura; il pesciolino su
+fiocchi, vermetti e verdura; i draghi su carne, carbone e peperoncini — e i
+**dinosauri erbivori** solo su frutta e verdura, che è il posto dove la
+regola smette di essere una questione di gusti: il triceratopo rifiuta la
+bistecca perché è un erbivoro, e vederselo rifiutare vale più di una
+scheda.
 Offrire a qualcuno una cosa che non mangia lo fa **storcere il naso**: la barra
 non sale e **la porzione resta in dispensa**. È la sola garanzia che rende la
 scoperta gratis — provare cosa mangia un pappagallo non deve costare monete —

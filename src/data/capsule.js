@@ -32,7 +32,7 @@ export const POSTI = [
 
 export const SERIE = [
   {
-    id: 'sport', nome: 'Sportivi', emoji: '🏅', costo: 30,
+    id: 'sport', nome: 'Sportivi', emoji: '🏅', costo: 45,
     pezzi: [
       { e: '🧢', nome: 'Cappellino',   posto: 'testa' },
       { e: '⛑️', nome: 'Caschetto',    posto: 'testa' },
@@ -49,7 +49,7 @@ export const SERIE = [
     ],
   },
   {
-    id: 'spazio', nome: 'Spaziali', emoji: '🚀', costo: 55,
+    id: 'spazio', nome: 'Spaziali', emoji: '🚀', costo: 83,
     pezzi: [
       { e: '🪐', nome: 'Saturno',      posto: 'testa' },
       { e: '⭐', nome: 'Stellina',     posto: 'testa' },
@@ -66,7 +66,7 @@ export const SERIE = [
     ],
   },
   {
-    id: 'mare', nome: 'Mare', emoji: '🌊', costo: 85,
+    id: 'mare', nome: 'Mare', emoji: '🌊', costo: 128,
     pezzi: [
       { e: '🐚', nome: 'Conchiglia',   posto: 'testa' },
       { e: '🌊', nome: 'Onda',         posto: 'testa' },
@@ -83,7 +83,7 @@ export const SERIE = [
     ],
   },
   {
-    id: 'festa', nome: 'Festa', emoji: '🎉', costo: 120,
+    id: 'festa', nome: 'Festa', emoji: '🎉', costo: 180,
     pezzi: [
       { e: '🎩', nome: 'Cilindro',     posto: 'testa' },
       { e: '👑', nome: 'Corona',       posto: 'testa' },
@@ -100,7 +100,7 @@ export const SERIE = [
     ],
   },
   {
-    id: 'bosco', nome: 'Bosco', emoji: '🍂', costo: 170,
+    id: 'bosco', nome: 'Bosco', emoji: '🍂', costo: 255,
     pezzi: [
       { e: '🍄', nome: 'Fungo',        posto: 'testa' },
       { e: '🍁', nome: 'Foglia',       posto: 'testa' },
@@ -117,7 +117,7 @@ export const SERIE = [
     ],
   },
   {
-    id: 'notte', nome: 'Notte', emoji: '🌙', costo: 230,
+    id: 'notte', nome: 'Notte', emoji: '🌙', costo: 345,
     pezzi: [
       { e: '🌙', nome: 'Lunetta',      posto: 'testa' },
       { e: '🎃', nome: 'Zucca',        posto: 'testa' },

@@ -29,7 +29,12 @@ controlla('ogni serie veste almeno tre posti diversi',
    un pozzo senza fondo invece di una spesa che si esaurisce */
 controlla('il prezzo delle capsule sale sempre',
           SERIE.every((s, i) => i === 0 || s.costo > SERIE[i - 1].costo))
-controlla('la prima capsula non spaventa', SERIE[0].costo <= 40)
+/* La prima serie deve restare alla portata di chi ha appena cominciato:
+   la capsula di prova è in regalo, ma la seconda si paga, e se costasse
+   come un animale la macchina resterebbe una cosa vista una volta. Il
+   tetto è salito con tutti gli altri prezzi della cameretta — quello
+   che conta è il rapporto con quanto si guadagna, non il numero. */
+controlla('la prima capsula non spaventa', SERIE[0].costo <= 60)
 controlla('l\'ultima serie costa parecchio', SERIE[SERIE.length - 1].costo >= 200)
 
 /* un accessorio non deve essere anche un oggetto della cameretta o un

@@ -44,15 +44,27 @@ defineProps({
 
     <!-- ═══ il pesce ═══ -->
     <g class="pescetto">
-      <!-- coda -->
-      <path d="M34,72 L18,60 L20,72 L18,86 Z" :fill="pet.pinna" />
+      <!-- coda: a ventaglio, o il velo lungo del combattente -->
+      <path v-if="pet.velo" d="M36,72 C16,44 6,60 10,72 C6,86 16,102 36,72 Z"
+            :fill="pet.pinna" opacity=".85" />
+      <path v-else d="M34,72 L18,60 L20,72 L18,86 Z" :fill="pet.pinna" />
       <!-- pinna dorsale -->
-      <path d="M56,50 L46,58 L68,58 Z" :fill="pet.pinna" />
+      <path v-if="pet.velo" d="M50,52 C38,36 74,34 74,54 Z" :fill="pet.pinna" opacity=".85" />
+      <path v-else d="M56,50 L46,58 L68,58 Z" :fill="pet.pinna" />
       <ellipse cx="62" cy="72" rx="28" ry="19" :fill="pet.manto" />
       <ellipse cx="66" cy="78" rx="20" ry="11" :fill="pet.pancia" opacity=".8" />
       <path v-if="pet.strisce" d="M56,56 q-4,16 0,32 M70,55 q-4,17 0,34"
             :stroke="pet.strisce" stroke-width="5" stroke-linecap="round"
             fill="none" opacity=".9" />
+      <!-- le bande larghe del pesce pagliaccio, bordate di scuro -->
+      <template v-if="pet.bande">
+        <path d="M52,55 q-5,17 0,34 M72,54 q-5,18 0,36" :stroke="pet.bande"
+              stroke-width="8" stroke-linecap="round" fill="none" />
+        <path d="M52,55 q-5,17 0,34 M72,54 q-5,18 0,36" stroke="#00000033"
+              stroke-width="11" stroke-linecap="round" fill="none" opacity=".35" />
+        <path d="M52,55 q-5,17 0,34 M72,54 q-5,18 0,36" :stroke="pet.bande"
+              stroke-width="7" stroke-linecap="round" fill="none" />
+      </template>
       <!-- pinna laterale, che batte -->
       <path class="pinna" d="M62,80 q10,4 12,12 q-12,0 -16,-8 Z" :fill="pet.pinna" />
       <!-- occhio e bocca -->
