@@ -255,9 +255,16 @@ const TRAGUARDI_TUTTI = [
     soglie: [1], valore: m => m.campagnaGen() },
 
   /* ---------- Animali ---------- */
+  /* Le soglie sono [1, 3, 8] e non [1, 4, 8] apposta: chi aveva già
+     adottato i tre animali di quando ce n'erano tre si tiene l'oro di
+     allora, e la medaglia mostrata si ricalcola ogni volta — alzare il
+     secondo gradino gliela farebbe tornare indietro sotto gli occhi. */
   { id: 'pets-adozioni', area: 'animali', emoji: '🐾', nome: 'Famiglia',
-    come: n => n === 1 ? 'Adotta il primo amico' : `Adotta tutti e ${n} gli amici`,
-    soglie: [1, 3], valore: m => m.animali() },
+    come: n => n === 1 ? 'Adotta il primo amico' : `Adotta ${n} amici`,
+    soglie: [1, 3, 8], valore: m => m.animali() },
+  { id: 'pets-specie', area: 'animali', emoji: '🦜', nome: 'Che varietà',
+    come: n => `Adotta amici di ${n} specie diverse`,
+    soglie: [2, 3, 5], valore: m => m.specie() },
   { id: 'pets-pasti', area: 'animali', emoji: '🍖', nome: 'Cuoco di casa',
     come: n => `Servi ${n} pasti`,
     soglie: [10, 60, 250], valore: m => m.tot('pasti') },

@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA CAMERETTA, GIOCATA DAVVERO
 
-   Le regole (fame, prezzi, doppioni) sono già provate senza browser da
-   `unita/animali` e `unita/capsule`. Qui si prova quello che quei test
-   non possono vedere: che i gesti arrivino allo schermo, che quello che
-   si compra sopravviva a una ricarica, e che dalla stanza si riesca a
-   uscire.
+   Le regole (fame, prezzi, diete, rifugio) sono già provate senza
+   browser da `unita/animali` e `unita/capsule`. Qui si prova quello che
+   quei test non possono vedere: che i gesti arrivino allo schermo, che
+   quello che si compra sopravviva a una ricarica, e che dalla stanza si
+   riesca a uscire.
 
    Da quando cameretta, negozio e animali sono una stanza sola, la
    navigazione È il disegno: si entra nel negozio dalla porta, si tocca
@@ -14,7 +14,8 @@
    nessun elenco di riserva da cui arrivarci: per questo si provano tutti
    e tre.
 
-   Due punti valgono più degli altri, perché sono già stati rotti:
+   Tre punti valgono più degli altri, perché sono già stati rotti o
+   perché sono la parte nuova:
 
    · IL SALVATAGGIO. Aprire una capsula si paga: se il gesto non arriva
      su disco, quelle monete sono buttate. È già successo — `apriCapsula`
@@ -26,6 +27,11 @@
      dove nessuna barra ci arriva più. Su una finestra alta non si vede —
      il negozio ci sta tutto — quindi quella parte si prova a misura di
      telefono.
+
+   · I QUATTRO POSTI. Adottare è un gesto in due tempi (il nome, e se la
+     casa è piena chi va al rifugio), e nessuno dei due deve poter
+     lasciare la cameretta con un buco o il salvadanaio vuoto per
+     niente.
 
    ATTENZIONE ai controlli sulle monete: il salvadanaio non lo muove solo
    la spesa. Adottare fa scattare "Famiglia" e il "Salvadanaio", che ne
@@ -54,6 +60,28 @@ const dove = async () => {
   return (await page.locator('.barra-app .dove').innerText()).trim()
 }
 const tocca = (nome, opzioni) => page.getByRole('button', { name: nome }).click(opzioni)
+const annuncio = () => page.locator('.annuncio').innerText()
+
+/* il negozio, banco degli animali: ci si torna un sacco di volte */
+async function alBancoAnimali() {
+  await page.locator('.porta').click()
+  await attendi(page, 350)
+  await page.locator('.reparti button').nth(1).click()
+  await attendi(page, 300)
+}
+
+/* adottare in due tempi: si tocca la carta, si scrive il nome, si conferma */
+async function adotta(chi, nome, esce = null) {
+  await page.locator('.adozione', { hasText: chi }).first().click()
+  await attendi(page, 300)
+  if (nome) await page.locator('.cartello input').fill(nome)
+  if (esce) {
+    await page.locator('.chi-esce', { hasText: esce }).click()
+    await attendi(page, 150)
+  }
+  await page.locator('.cartello .ok').click()
+  await attendi(page, 450)
+}
 
 await tocca(/La cameretta/)
 await attendi(page, 400)
@@ -61,39 +89,65 @@ await attendi(page, 400)
 /* ══════════ 1. la stanza appena aperta ══════════ */
 const prima = await monete()
 controlla('le monete di scorta sono arrivate', prima >= 3000, `ne vedo ${prima}`)
-uguale('ci sono tre posti sul tappeto', await page.locator('.posto').count(), 3)
-uguale('e sono tutti e tre liberi', await page.locator('.posto.libero').count(), 3)
-/* il posto vuoto non è un punto interrogativo: è la sagoma di chi manca,
-   col nome e quanto costa */
-uguale('e si vedono le tre sagome', await page.locator('.fantasma svg.bestia').count(), 3)
+uguale('ci sono quattro posti sul tappeto', await page.locator('.posto').count(), 4)
+uguale('e sono tutti e quattro liberi', await page.locator('.posto.libero').count(), 4)
+/* il posto vuoto non è un punto interrogativo: è la sagoma di chi
+   potrebbe starci, col nome e quanto costa */
+uguale('e si vedono quattro sagome', await page.locator('.fantasma svg.bestia').count(), 4)
 const cartellini = (await page.locator('.chi-manca').allInnerTexts()).join(' / ')
-controlla('con nome e prezzo di ciascuno',
-          /Watson.*40.*Sherlock.*70.*Irene.*70/s.test(cartellini), cartellini)
+controlla('a partire dal più economico', /Bolla.*35/s.test(cartellini), cartellini)
+nota('in vetrina:', cartellini)
 
 /* ══════════ 2. adottare, entrando dalla porta ══════════ */
-await page.locator('.porta').click()
-await attendi(page, 350)
+await alBancoAnimali()
 uguale('la porta porta al negozio', await dove(), 'Negozio')
-await page.locator('.reparti button').nth(1).click()
-await attendi(page, 250)
-
 const cartellino = await page.locator('.adozione', { hasText: 'Watson' }).locator('.prezzo').innerText()
 controlla('Watson è in vetrina a 40 🪙', cartellino.includes('40'), cartellino)
-await tocca(/Watson.*bobtail/s)
-await attendi(page, 400)
+controlla('e il cartellino dice cosa mangia',
+          (await page.locator('.adozione', { hasText: 'Watson' }).locator('.menu').innerText())
+            .startsWith('mangia'))
+/* il catalogo è diviso per famiglia: cani, gatti, pappagalli, pesci e
+   bestie che non esistono */
+controlla('ci sono almeno cinque famiglie di animali',
+          await page.locator('.titolino').count() >= 5)
+controlla('e più di dieci amici fra cui scegliere',
+          await page.locator('.adozione').count() >= 10)
+
+/* il nome lo sceglie chi adotta: è l'unica cosa di un animale che è sua */
+await page.locator('.adozione', { hasText: 'Watson' }).click()
+await attendi(page, 300)
+uguale('toccando un animale si apre il cartello', await page.locator('.cartello').count(), 1)
+uguale('col nome già proposto',
+       await page.locator('.cartello input').inputValue(), 'Watson')
+await page.locator('.cartello .annulla').click()
+await attendi(page, 250)
+uguale('e si può cambiare idea', await page.locator('.cartello').count(), 0)
+
+await adotta('Watson', 'Fuffi')
 uguale('adottato, si torna nella stanza', await dove(), 'La cameretta')
-uguale('e il posto libero è diventato Watson', await page.locator('.posto.libero').count(), 2)
-uguale('il disegno di Watson è sul tappeto', await page.locator('.posto:not(.libero) svg.bestia').count(), 1)
+uguale('e un posto libero è diventato Fuffi', await page.locator('.posto.libero').count(), 3)
+uguale('il disegno è sul tappeto', await page.locator('.posto:not(.libero) svg.bestia').count(), 1)
 /* nella stanza si dice UNA cosa sola, con un'icona: le barre e le parole
-   stanno nella scheda, e tre animali con quattro barrette ciascuno erano
-   dodici numeri addosso a un disegno */
+   stanno nella scheda, e quattro animali con quattro barrette ciascuno
+   sarebbero sedici numeri addosso a un disegno */
 uguale('nella stanza non ci sono barre', await page.locator('.posto .sbarra').count(), 0)
 
-/* ══════════ 3. comprare e usare, un bisogno per volta ══════════ */
-await page.locator('.porta').click()
-await attendi(page, 300)
-await page.locator('.reparti button').nth(1).click()
+await page.locator('.posto:not(.libero)').click()
+await attendi(page, 400)
+uguale('e si chiama come ha deciso lui', await dove(), 'Fuffi')
+
+/* rinominare: si tocca il nome e si riscrive */
+await page.locator('.suo-nome').click()
 await attendi(page, 250)
+await page.locator('.campo-nome').fill('Watson')
+await page.keyboard.press('Enter')
+await attendi(page, 400)
+uguale('il nome si può correggere', await dove(), 'Watson')
+
+/* ══════════ 3. comprare e usare, un bisogno per volta ══════════ */
+await page.locator('.barra-app button[aria-label="indietro"]').click()
+await attendi(page, 300)
+await alBancoAnimali()
 const primaDellaSpesa = await monete()
 for (const nome of ['Pollo', 'Palla', 'Spazzola', 'Carota']) {
   await page.locator('.scheda', { hasText: nome }).first().click()
@@ -101,6 +155,18 @@ for (const nome of ['Pollo', 'Palla', 'Spazzola', 'Carota']) {
 }
 // pollo 4 + palla 7 + spazzola 4 + carota 5, e comprare non premia nessuno
 uguale('la spesa toglie esattamente 20 🪙', await monete(), primaDellaSpesa - 20)
+
+/* Gli scaffali che non servono a nessuno dei tuoi restano da parte: con
+   un cane in casa il sushi non si vede, e chi lo vuole lo va a cercare. */
+uguale('il sushi non è in vista: in casa c\'è un cane',
+       await page.locator('.scheda', { hasText: 'Nigiri' }).count(), 0)
+await page.locator('.altro').click()
+await attendi(page, 250)
+controlla('ma gli altri scaffali si aprono a richiesta',
+          await page.locator('.scheda', { hasText: 'Nigiri' }).count() === 1)
+/* e se ne compra una porzione apposta, per provare a darla a un cane */
+await page.locator('.scheda', { hasText: 'Nigiri' }).first().click()
+await attendi(page, 200)
 
 await page.locator('.barra-app button[aria-label="indietro"]').click()
 await attendi(page, 300)
@@ -119,19 +185,31 @@ const frasi = await bisogni.locator('.testa-bisogno i').allInnerTexts()
 controlla('ognuno dice come sta a parole', frasi.length === 4 && frasi.every(f => f.length > 5),
           frasi.join(' / '))
 nota('per esempio:', frasi.join(' · '))
+controlla('la pancia dice anche cosa mangia questo qui',
+          (await page.locator('.menu').first().innerText()).includes('mangia'))
+
+/* ── il sushi al cane: si vede, è spento, e provarci non costa niente ── */
+uguale('il sushi comprato si vede lo stesso, spento',
+       await page.locator('.piatto.storto').count(), 1)
+await page.locator('.piatto.storto').click()
+await attendi(page, 400)
+controlla('e chi ci prova se lo sente dire', (await annuncio()).includes('non piace'),
+          await annuncio())
+uguale('la porzione resta in dispensa', await page.locator('.piatto.storto').count(), 1)
 
 const barre = () => page.locator('.cartellino .sbarra i').evaluateAll(
   els => els.map(e => Math.round(parseFloat(e.style.width))))
 const bPrima = await barre()
 // ogni porzione usata sparisce dalla dispensa: si ripesca sempre la prima
 for (let i = 0; i < 4; i++) {
-  await page.locator('.piatto').first().click()
+  await page.locator('.piatto:not(.storto)').first().click()
   await attendi(page, 1500)
 }
 const bDopo = await barre()
 controlla('tutte e quattro le barre sono salite', bDopo.every((v, i) => v > bPrima[i]),
           `${bPrima} → ${bDopo}`)
-uguale('e la dispensa si è svuotata', await page.locator('.piatto').count(), 0)
+uguale('e la dispensa si è svuotata di quello che gli piace',
+       await page.locator('.piatto:not(.storto)').count(), 0)
 await scatto(page, 'animali-scheda')
 
 /* ══════════ 4. la macchina delle sorprese ══════════ */
@@ -190,12 +268,8 @@ uguale('l\'accessorio si vede anche nella stanza',
        await page.locator('.posto svg text.addosso').count(), 1)
 
 /* ══════════ 6. lo slider fra gli animali ══════════ */
-await page.locator('.porta').click()
-await attendi(page, 300)
-await page.locator('.reparti button').nth(1).click()
-await attendi(page, 250)
-await tocca(/Sherlock.*tuxedo/s)
-await attendi(page, 400)
+await alBancoAnimali()
+await adotta('Sherlock', 'Sherlock')
 await page.locator('.posto:not(.libero)').first().click()
 await attendi(page, 400)
 uguale('si apre Watson', await dove(), 'Watson')
@@ -209,7 +283,61 @@ await page.getByRole('button', { name: 'animale precedente' }).click()
 await attendi(page, 450)
 uguale('e si torna indietro a Watson', await dove(), 'Watson')
 
-/* ══════════ 7. dopo una ricarica ══════════
+/* ══════════ 7. i quattro posti, e il rifugio ══════════
+   Il gesto delicato di tutta la cameretta: la casa è piena, ne arriva
+   uno nuovo, e uno deve andare ad aspettare. Non si butta via nessuno e
+   non si paga due volte. */
+await page.locator('.barra-app button[aria-label="indietro"]').click()
+await attendi(page, 300)
+await alBancoAnimali()
+await adotta('Bolla', 'Bolla')
+await alBancoAnimali()
+await adotta('Kiwi', 'Kiwi')
+uguale('la cameretta è piena', await page.locator('.posto:not(.libero)').count(), 4)
+uguale('e non ci sono più posti liberi', await page.locator('.posto.libero').count(), 0)
+await scatto(page, 'cameretta-piena')
+
+await alBancoAnimali()
+await page.locator('.adozione', { hasText: 'Irene' }).click()
+await attendi(page, 300)
+controlla('a casa piena il cartello chiede chi lascia il posto',
+          await page.locator('.chi-esce').count() === 4)
+controlla('e non si conferma finché non lo si è scelto',
+          await page.locator('.cartello .ok').isDisabled())
+const primaDelloScambio = await monete()
+await page.locator('.chi-esce', { hasText: 'Kiwi' }).click()
+await attendi(page, 150)
+await page.locator('.cartello .ok').click()
+await attendi(page, 500)
+uguale('lo scambio è avvenuto, e i posti restano quattro',
+       await page.locator('.posto:not(.libero)').count(), 4)
+/* si paga il nuovo e basta: salutare non costa. Il saldo può risalire un
+   po' — i traguardi premiano — ma non deve mai scendere più del prezzo. */
+const dopoLoScambio = await monete()
+controlla('si è pagato il nuovo arrivato, e nient\'altro',
+          dopoLoScambio < primaDelloScambio && dopoLoScambio >= primaDelloScambio - 70,
+          `${primaDelloScambio} → ${dopoLoScambio}`)
+
+await alBancoAnimali()
+uguale('chi è uscito aspetta al rifugio', await page.locator('.adozione.mio').count(), 1)
+const rientro = await page.locator('.adozione.mio .prezzo').innerText()
+controlla('e riprenderlo costa una quota, non il prezzo pieno',
+          /riprendilo/.test(rientro) && /\b[5-9]\b|\b1[0-9]\b/.test(rientro), rientro)
+await page.locator('.adozione.mio').click()
+await attendi(page, 300)
+controlla('il suo nome non si tocca: torna com\'era',
+          await page.locator('.cartello input').isDisabled())
+await page.locator('.chi-esce', { hasText: 'Bolla' }).click()
+await attendi(page, 150)
+await page.locator('.cartello .ok').click()
+await attendi(page, 500)
+uguale('e torna a casa', await dove(), 'La cameretta')
+const chiCe = (await page.locator('.posto:not(.libero)').evaluateAll(
+  els => els.map(e => e.getAttribute('aria-label')))).join(' ')
+controlla('al posto di chi è andato ad aspettare', chiCe.includes('Kiwi') && !chiCe.includes('Bolla'),
+          chiCe)
+
+/* ══════════ 8. dopo una ricarica ══════════
    il salvataggio è accorpato con 350 ms di ritardo: ricaricare prima
    proverebbe il debounce, non la persistenza */
 await attendi(page, 600)
@@ -220,18 +348,20 @@ await attendi(page, 400)
 await tocca(/La cameretta/)
 await attendi(page, 400)
 uguale('le monete sono rimaste', await monete(), monetePrima)
-uguale('gli animali adottati sono ancora lì', await page.locator('.posto:not(.libero)').count(), 2)
+uguale('gli animali in casa sono ancora quattro',
+       await page.locator('.posto:not(.libero)').count(), 4)
 uguale('con addosso il loro accessorio', await page.locator('.posto svg text.addosso').count(), 1)
 await page.locator('.macchina').click()
 await attendi(page, 350)
 uguale('e la collezione è salva', await page.locator('.pezzo.mio').count(), 2)
-
-/* ══════════ 8. andare e tornare, a misura di telefono ══════════ */
-await page.setViewportSize(TELEFONO)
 await page.locator('.barra-app button[aria-label="indietro"]').click()
 await attendi(page, 300)
-await page.locator('.porta').click()
-await attendi(page, 400)
+await alBancoAnimali()
+uguale('e chi aspetta al rifugio aspetta ancora', await page.locator('.adozione.mio').count(), 1)
+
+/* ══════════ 9. andare e tornare, a misura di telefono ══════════ */
+await page.setViewportSize(TELEFONO)
+await attendi(page, 300)
 
 const misura = () => page.evaluate(() => {
   const c = document.querySelector('.centro'), t = document.querySelector('.reparti')
@@ -249,7 +379,7 @@ const giu = await misura()
 controlla('restano in cima anche scorrendo in fondo', giu.diff < 30, `distano ${giu.diff}px`)
 await scatto(page, 'animali-negozio-in-fondo')
 
-await page.locator('.reparti button').nth(1).click()
+await page.locator('.reparti button').nth(0).click()
 await attendi(page, 350)
 uguale('cambiando banco si riparte dall\'alto',
        await page.evaluate(() => document.querySelector('.centro').scrollTop), 0)

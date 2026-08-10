@@ -58,14 +58,29 @@ const PROFILO = {
      racconta a cosa servono le monete, ed è quello il suo mestiere. Gli
      accessori sono quattro perché i posti addosso sono quattro. */
   accessori: ['🧢', '🕶️', '🧣', '🎒'],
+  /* Quattro amici di quattro specie diverse: la cameretta fotografata con
+     un cane solo non racconta né i quattro posti né che ognuno mangia le
+     sue cose, che sono le due cose da guardare.
+
+     `t` è quando ogni bisogno è stato soddisfatto l'ultima volta: senza,
+     le barre risultano scariche da sempre e si fotografa un animale
+     trascurato. Qui è adesso, così si vedono animali accuditi. */
   pets: {
-    /* `t` è quando ogni bisogno è stato soddisfatto l'ultima volta: senza,
-       le barre risultano scariche da sempre e si fotografa un cane
-       trascurato. Qui è adesso, così si vede un animale accudito. */
-    watson: { adottato: 1, pasti: 24, addosso: { testa: '🧢', occhi: '🕶️', collo: '🧣', schiena: '🎒' },
+    watson: { adottato: 1, nome: 'Watson', pasti: 24,
+              addosso: { testa: '🧢', occhi: '🕶️', collo: '🧣', schiena: '🎒' },
               val: { fame: 82, gioco: 74, pulizia: 90, forma: 95 },
               t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
+    luna:   { adottato: 1, nome: 'Luna', pasti: 12, addosso: {},
+              val: { fame: 88, gioco: 80, pulizia: 92, forma: 96 },
+              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
+    kiwi:   { adottato: 1, nome: 'Kiwi', pasti: 9, addosso: {},
+              val: { fame: 76, gioco: 88, pulizia: 94, forma: 90 },
+              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
+    brace:  { adottato: 1, nome: 'Brace', pasti: 6, addosso: {},
+              val: { fame: 84, gioco: 79, pulizia: 88, forma: 93 },
+              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
   },
+  casa: ['watson', 'luna', 'kiwi', 'brace'],
 }
 
 /* ── giocare un pezzo di castello ──

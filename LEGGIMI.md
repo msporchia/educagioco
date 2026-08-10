@@ -41,10 +41,10 @@ src/
   data/shop.js       30 oggetti della cameretta
   data/ops.js        operazioni in colonna: riporti, prestiti, divisione
   data/tabelline.js  i dieci pianeti della campagna delle tabelline
-  data/pets.js       il cane, i due gatti, i quattro bisogni e cosa li sazia
+  data/pets.js       i tredici amici, le diete, i quattro bisogni e cosa li sazia
   data/capsule.js    le sei serie di accessori della macchina delle sorprese
   components/ColumnOp.vue   tastierino e caselle, cifra per cifra
-  components/PetSprite.vue  il cane e i gatti, disegnati in SVG
+  components/PetSprite.vue  la cornice del disegno; le sagome stanno in sagome/
   components/MappaTabelline.vue  la tavola dei calcoli che si sanno e no
   components/Stanza.vue          la cameretta disegnata: mensole, porta, tappeto
   components/SchedaAnimale.vue   un animale per volta, grande, con lo slider
@@ -838,32 +838,51 @@ carta da parati, finestra, letto, tappeto — e la navigazione **è il disegno**
 |---|---|
 | 🚪 la porta con l'insegna | il negozio |
 | 🐾 un animale sul tappeto | la sua scheda |
-| 🛏️ una cuccia vuota con il ❓ | il negozio, banco animali |
+| 🛏️ un posto libero, con la sagoma di chi potrebbe starci | il negozio, banco animali |
 | 🎁 la macchina delle capsule | le sorprese |
 
 Gli oggetti comprati stanno sulle **tre mensole** e si trascinano col dito da
 una mensola all'altra; la loro grandezza la decide la mensola più piena, così
 trenta oggetti ci stanno come tre — solo più piccoli. Sopra un animale compare
 **una sola icona** quando gli manca qualcosa (🍽️ 🎾 🫧 💪) e nient'altro: le
-quattro barre e le parole stanno nella sua scheda, e tre animali con quattro
-barrette ciascuno erano dodici numeri appiccicati addosso a un disegno.
+quattro barre e le parole stanno nella sua scheda, e quattro animali con
+quattro barrette ciascuno sarebbero sedici numeri appiccicati a un disegno.
 
 La stanza **non scorre mai**: si adatta allo schermo che trova, perché un
 disegno che scorre a metà non è più una stanza. Le misure sono in `cqw`
 (centesimi della larghezza della stanza), non in pixel.
 
-Tre amici da adottare — **Watson** a 40 monete, bobtail inglese, il cane
-pastore tutto pelo e senza coda, e i gatti **Sherlock** (tuxedo) e **Irene**
-(arancione e nera) a 70 l'uno. Non sono emoji ma disegni in SVG: le emoji di
-gatto disponibili sono tre volte lo stesso gatto, e un bobtail non c'è affatto.
-Il cane abbaia e ansima, i gatti miagolano e fanno le fusa.
+**Tredici amici da adottare, quattro posti in casa.** Il catalogo è diviso in
+cinque famiglie — cani (il bobtail **Watson** a 40, il bassotto **Biscotto**,
+il barboncino **Nuvola**), gatti (**Pepe** soriano, **Sherlock** in smoking,
+**Irene** arancione e nera, **Luna** siamese), pappagalli (**Kiwi** e **Rio**),
+pesciolini nella boccia (**Bolla** a 35, **Neon**) e due bestie che non
+esistono: il cucciolo di dinosauro **Rex** e il draghetto **Brace**, che a 150
+monete è il traguardo. Non sono emoji ma disegni in SVG: le emoji di gatto
+disponibili sono tre volte lo stesso gatto, e un bobtail non c'è affatto. Ogni
+specie fa il suo verso — bau, miao, cip, blub, e un ruggito con la voce da
+cucciolo.
+
+**Il nome lo dà chi adotta.** Il catalogo ne propone uno, ma si scrive quello
+che si vuole e si cambia quando si vuole toccandolo nella scheda: è l'unica
+cosa di un animale che appartiene al bambino, e sta nel profilo
+(`pets[id].nome`) e non nel catalogo.
+
+**In cameretta ce ne stanno quattro** (`POSTI`), e il quinto entra solo se uno
+esce. Non esiste «abbandona»: chi esce va **al rifugio**, dove resta con il suo
+nome, i suoi pasti e quello che aveva addosso, e si riprende dal negozio
+pagando una quota piccola (un decimo del prezzo, minimo 5 monete) invece del
+prezzo pieno. Torna anche riposato, perché al rifugio l'hanno tenuto bene:
+`curato()` rimette le barre al valore di partenza. La cosa che si paga è il
+nuovo arrivato, mai il saluto — e nel cartello dell'adozione **chi esce non è
+mai preselezionato**, così un tocco distratto non manda via nessuno.
 
 Ognuno ha **quattro barre** che si svuotano da sole, a velocità diverse:
 
 | barra | si svuota in | cosa la rimette su |
 |---|---|---|
-| 🍽️ pancia | 7 ore | pollo e carne nella ciotola, quattro sushi |
-| 🎾 allegria | 16 ore | gomitolo, palla, osso, piumino |
+| 🍽️ pancia | 7 ore | **quello che quella specie mangia**: ciotola, sushi, orto, semi, acquario o roba da draghi |
+| 🎾 allegria | 16 ore | gomitolo, palloncino, yo-yo, palla, osso, specchietto, piumino, boomerang |
 | 🫧 pulito | 40 ore | spazzola, sapone, shampoo |
 | 💪 forma | 90 ore | carota, vitamine, controllo |
 
@@ -872,6 +891,19 @@ apprendimento, applicata a una pancia. Quando qualcuno ha bisogno di qualcosa
 lo dice già dalla schermata iniziale — *"Watson vuole giocare"* — ed è lì il
 motivo per riaprire il gioco domani. Ognuno ha due cose preferite, una da
 mangiare e una no, che rendono un terzo in più.
+
+**Ognuno mangia le sue cose.** La dieta è della *specie* (`DIETE`), i preferiti
+dell'*individuo*: tutti i gatti mangiano pesce, ma il sushi lo adora solo
+Sherlock. Il cane sta su carne, croccantini e verdura; il gatto su carne,
+croccantini e pesce; il pappagallo su semi, frutta e verdura; il pesciolino su
+fiocchi, vermetti e verdura; il draghetto su carne, carbone e peperoncini.
+Offrire a qualcuno una cosa che non mangia lo fa **storcere il naso**: la barra
+non sale e **la porzione resta in dispensa**. È la sola garanzia che rende la
+scoperta gratis — provare cosa mangia un pappagallo non deve costare monete —
+e nella scheda i cibi sbagliati si vedono lo stesso, spenti e con scritto
+«no», perché nasconderli vorrebbe dire non insegnare niente. Nel negozio gli
+scaffali che non servono a nessuno dei tuoi restano da parte, dietro un tasto:
+con due cani in casa non si scorrono i fiocchi per pesci.
 
 Toccando un animale si apre **la sua scheda**: uno per volta, grande mezza
 schermata, e si passa da un amico all'altro con le frecce, i pallini o una
@@ -895,7 +927,8 @@ ricordarsi di rispegnerlo: vestire e accudire sono la risposta alla stessa
 domanda — *cosa faccio con lui adesso?* — e stanno nello stesso posto.
 
 Il negozio è **uno solo**, con due banchi: 🛏️ Cameretta (i trenta oggetti da
-mettere sulle mensole) e 🐾 Animali (le adozioni e i cinque reparti). Le monete
+mettere sulle mensole) e 🐾 Animali (le adozioni, il rifugio e i nove
+reparti). Le monete
 sono sempre le stesse, e due negozi in due stanze diverse volevano dire
 ricordarsi in quale delle due si comprava cosa. I banchi sono **appiccicati in
 cima** e restano a portata di pollice anche in fondo a cinque scaffali;

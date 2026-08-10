@@ -13,10 +13,10 @@
    alla stessa domanda — *cosa faccio con lui adesso?* — e stanno nello
    stesso posto.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, onUnmounted } from 'vue'
-import { state, miei, usa, bisogno, chiede, inDispensa, dispensaDi,
-         indossa, togli } from '../store/profile.js'
-import { BISOGNI, grado, preferisce, petDi } from '../data/pets.js'
+import { ref, computed, onUnmounted, nextTick } from 'vue'
+import { state, miei, usa, bisogno, chiede, inDispensa, dispensaPer,
+         indossa, togli, animale, rinominaAnimale } from '../store/profile.js'
+import { BISOGNI, grado, preferisce, menuDi } from '../data/pets.js'
 import { POSTI, pezzoDi } from '../data/capsule.js'
 import PetSprite from './PetSprite.vue'
 import { suono } from '../audio.js'
@@ -27,7 +27,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['cambia', 'avviso', 'negozio', 'sorprese'])
 
-const bestia = computed(() => petDi(props.chi))
+const bestia = computed(() => animale(props.chi))
 const lista = computed(() => miei())
 const indice = computed(() => lista.value.findIndex(p => p.id === props.chi))
 
@@ -86,7 +86,35 @@ const sommario = computed(() => {
 
 /* ognuno fa il suo verso: le fusa a un bobtail non si addicono */
 const versoDi = p => suono[p.verso]()
-const felice = p => (p.specie === 'cane' ? suono.ansima() : suono.fusa())
+/* il suono della contentezza, uno per specie: chi non ne ha uno suo
+   rifà il proprio verso, che è sempre meglio delle fusa a un pesce */
+const CONTENTO = { cane: 'ansima', gatto: 'fusa', pappagallo: 'cip',
+                   pesce: 'blub', drago: 'ansima' }
+const felice = p => suono[CONTENTO[p.specie] || p.verso]()
+
+/* ---------- il nome, che è del bambino ---------- */
+const scrive = ref(false)
+const bozza = ref('')
+const campo = ref(null)
+
+async function apriNome() {
+  bozza.value = bestia.value.nome
+  scrive.value = true
+  await nextTick()
+  campo.value?.focus()
+  campo.value?.select()
+}
+
+function salvaNome() {
+  if (!scrive.value) return
+  scrive.value = false
+  const pulito = bozza.value.trim()
+  if (!pulito || pulito === bestia.value.nome) return
+  if (rinominaAnimale(props.chi, pulito)) {
+    suono.ok()
+    emit('avviso', 'adesso si chiama ' + pulito)
+  }
+}
 
 /* Dare qualcosa è sempre lo stesso gesto: cambia solo la barra che sale
    e l'aria che l'animale si dà mentre lo riceve. */
@@ -96,6 +124,14 @@ function porgi(c) {
   if (esito === 'pieno') {
     versoDi(bestia.value)
     return emit('avviso', bestia.value.nome + ' sta già bene, grazie!')
+  }
+  /* Non gli piace: storce il naso e la porzione resta in dispensa. È il
+     solo modo perché provare cosa mangia un pappagallo non costi
+     monete — e senza quella garanzia i cibi sbagliati sarebbero una
+     tagliola invece di una cosa da scoprire. */
+  if (esito === 'no') {
+    suono.no()
+    return emit('avviso', 'a ' + bestia.value.nome + ' non piace ' + c.e)
   }
   modo.value = { fame: 'mangia', gioco: 'gioca', pulizia: 'lavato', forma: 'mangia' }[c.bisogno]
   occupato.value = true
@@ -150,7 +186,13 @@ onUnmounted(() => clearTimeout(timerDono))
   </div>
 
   <div class="cartellino">
-    <b>{{ bestia.nome }}</b>
+    <!-- il nome si tocca e si cambia: è l'unica cosa di un animale che
+         appartiene a chi ci gioca, e scriverla male capita a tutti -->
+    <button v-if="!scrive" class="suo-nome" aria-label="cambia nome" @click="apriNome">
+      {{ bestia.nome }} <span class="matita">✏️</span>
+    </button>
+    <input v-else ref="campo" v-model="bozza" class="campo-nome" maxlength="14"
+           aria-label="nome dell'animale" @blur="salvaNome" @keyup.enter="salvaNome" />
     <i>{{ bestia.razza }}</i>
     <div class="barre">
       <div v-for="b in BISOGNI" :key="b.k" class="sbarra" :title="b.nome">
@@ -177,19 +219,30 @@ onUnmounted(() => clearTimeout(timerDono))
       <div class="asta-bisogno">
         <i :class="grado(val(b.k))" :style="{ width: val(b.k) + '%' }"></i>
       </div>
+      <!-- cosa mangia questo qui: sta nel riquadro della pancia perché è
+           lì che serve saperlo, non in una scheda a parte -->
+      <p v-if="b.k === 'fame'" class="menu">mangia {{ menuDi(chi).join(' ') }}</p>
       <div class="dai">
-        <button v-for="c in dispensaDi(b.k)" :key="c.e" class="piatto"
+        <button v-for="c in dispensaPer(chi, b.k).si" :key="c.e" class="piatto"
                 :class="{ voluto: preferisce(chi, c.e) }" @click="porgi(c)">
           <span class="e">{{ c.e }}</span>
           <span class="q">×{{ inDispensa(c.e) }}</span>
         </button>
+        <!-- quello che a lui non piace si vede lo stesso, spento: è così
+             che si impara che il gatto non mangia i semi. Toccarlo lo fa
+             storcere il naso e non spreca niente. -->
+        <button v-for="c in dispensaPer(chi, b.k).no" :key="'x' + c.e" class="piatto storto"
+                :title="'a ' + bestia.nome + ' non piace'" @click="porgi(c)">
+          <span class="e">{{ c.e }}</span>
+          <span class="q">no</span>
+        </button>
         <!-- niente in casa: si dice dove si compra, ma solo se serve
              davvero. Una barra piena non ha bisogno di consigli. -->
-        <button v-if="!dispensaDi(b.k).length && grado(val(b.k)) !== 'alto'"
+        <button v-if="!dispensaPer(chi, b.k).si.length && grado(val(b.k)) !== 'alto'"
                 class="manca" @click="emit('negozio', 'animali')">
-          niente in dispensa — <u>vai al negozio</u>
+          niente per lui in dispensa — <u>vai al negozio</u>
         </button>
-        <span v-else-if="!dispensaDi(b.k).length" class="apposto">tutto a posto</span>
+        <span v-else-if="!dispensaPer(chi, b.k).si.length" class="apposto">tutto a posto</span>
       </div>
     </div>
 
@@ -259,6 +312,15 @@ onUnmounted(() => clearTimeout(timerDono))
               width:100%; max-width:240px; margin-top:-4px }
 .cartellino b { font-size:22px; font-weight:900; color:var(--viola-scuro); line-height:1.1 }
 .cartellino i { font-style:normal; font-size:12.5px; color:var(--tenue) }
+.suo-nome { font-size:22px; font-weight:900; color:var(--viola-scuro); line-height:1.1;
+            background:none; padding:2px 8px; border-radius:12px; max-width:100%;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.suo-nome:active { background:#ffffffcc }
+.suo-nome .matita { font-size:13px; opacity:.5 }
+.campo-nome { width:min(100%,200px); text-align:center; font-size:21px; font-weight:900;
+              color:var(--viola-scuro); background:#fff; border:2px solid var(--viola);
+              border-radius:12px; padding:3px 8px; font-family:inherit }
+.campo-nome:focus { outline:none }
 .barre { width:100%; display:flex; flex-direction:column; gap:3px; margin-top:3px }
 .sbarra { height:6px; border-radius:4px; background:#e4e9f0; overflow:hidden }
 .sbarra i { display:block; height:100%; border-radius:4px; transition:width .5s ease }
@@ -310,6 +372,10 @@ onUnmounted(() => clearTimeout(timerDono))
 .piatto.voluto { box-shadow:0 3px 0 #f3c9a0, 0 0 0 2px #ffb35e88 }
 .piatto .e { font-size:25px }
 .piatto .q { font-size:10.5px; font-weight:900; color:var(--tenue) }
+/* quello che non gli piace: c'è, si vede, ma è spento e lo dice */
+.piatto.storto { box-shadow:0 3px 0 #e6e6e6; opacity:.5; filter:grayscale(.7) }
+.piatto.storto .q { color:var(--rosso) }
+.menu { font-size:11.5px; font-weight:800; color:var(--tenue); margin:0 0 5px }
 
 /* ---------- guardaroba: il quinto riquadro ---------- */
 .bisogno.vestiti { border-left-color:var(--viola) }

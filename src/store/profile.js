@@ -9,8 +9,9 @@ import { reactive, computed } from 'vue'
 import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
 import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
-import { PETS, PRODOTTI, SOGLIE, PREFERITO, petDi, prodottoDi, preferisce,
-         livelloDi, urgenza, nuovoAnimale, migraAnimale } from '../data/pets.js'
+import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
+         quotaRientro, livelloDi, urgenza, nuovoAnimale, migraAnimale,
+         curato } from '../data/pets.js'
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { allineaCalcolo } from './calcolo.js'
@@ -47,7 +48,17 @@ const blank = () => ({
   owned: [],
   layout: [[], [], []],
   items: {},                       // 'math:7x8' | 'en:butterfly' -> stato
-  pets: {},                        // 'watson' -> { adottato, val{}, t{}, pasti, addosso{} }
+  /* Gli animali ADOTTATI, tutti, anche quelli che adesso non sono in
+     cameretta: 'watson' -> { adottato, nome, val{}, t{}, pasti, addosso{} }.
+     Il `nome` è quello che gli ha dato il bambino, e il catalogo lo
+     propone soltanto. */
+  pets: {},
+  /* Chi sta in cameretta ADESSO: fino a `POSTI_CASA` id, e l'ordine è quello
+     sul tappeto. Gli altri sono al rifugio — non cancellati, non persi:
+     si riprendono pagando una quota piccola. È un elenco e non un flag
+     dentro `pets` perché i posti hanno un ordine e un tetto, e tutte e
+     due le cose si leggono meglio da una fila che da un dizionario. */
+  casa: [],
   dispensa: {},                    // '🍗' -> quante porzioni in casa
   accessori: [],                   // emoji uscite dalle capsule
   serie: 0,                        // a che serie di sorprese siamo arrivati
@@ -385,7 +396,22 @@ export async function selectPlayer(id) {
   if (!p.badge || typeof p.badge !== 'object') p.badge = {}
   if (!Array.isArray(p.owned)) p.owned = []
   if (!Array.isArray(p.accessori)) p.accessori = []
-  Object.values(p.pets).forEach(migraAnimale)
+  const ora = Date.now()
+  for (const [id, a] of Object.entries(p.pets)) migraAnimale(a, ora, id)
+  /* Chi giocava quando gli animali erano tre e stavano tutti in casa non
+     ha `casa`: la si ricostruisce da quello che ha adottato. Il taglio a
+     `POSTI_CASA` non toglie niente a nessuno — i tre di prima ci stanno tutti
+     e quattro — e quello che eventualmente avanza finisce al rifugio,
+     dove si riprende.
+
+     La domanda si fa a `raw` e non a `p`: `p` viene dalla fusione col
+     profilo vuoto, che una `casa` vuota ce l'ha sempre, e chiederlo a lui
+     vorrebbe dire non distinguere «non l'ha mai avuta» da «l'ha svuotata».
+     Un salvataggio di ieri si ritroverebbe tutti gli animali al rifugio,
+     da ricomprare uno per uno. */
+  if (!Array.isArray(raw && raw.casa)) p.casa = Object.keys(p.pets)
+  p.casa = p.casa.filter((id, i, l) => p.pets[id] && petDi(id) && l.indexOf(id) === i)
+                 .slice(0, POSTI_CASA)
   state.profile = p
   state.festa = []
   /* Il muto è del bambino, non del telefono. `settings.sound` esisteva
@@ -944,9 +970,31 @@ export const espProgresso = () => linguaProgresso('esp')
 export const engCompleta = (i, n) => linguaCompleta('eng', i, n)
 export const espCompleta = (i, n) => linguaCompleta('esp', i, n)
 
-/* ═══════════ animali ═══════════ */
+/* ═══════════ animali ═══════════
+   Tre insiemi diversi, e la differenza conta: **adottati** (`pets`) è
+   tutto quello che è stato preso almeno una volta, **in casa**
+   (`casa`, fino a quattro) è chi sta in cameretta adesso, e **al
+   rifugio** è la differenza fra i due. I bisogni li ha solo chi è in
+   casa: al rifugio se ne occupano loro, ed è per questo che chi torna
+   trova le barre rimesse a posto invece di un rimprovero. */
 export const haAnimale = id => !!state.profile.pets[id]
-export const miei = () => PETS.filter(p => haAnimale(p.id))
+export const inCasa = id => (state.profile.casa || []).includes(id)
+export const postiLiberi = () => Math.max(0, POSTI_CASA - (state.profile.casa || []).length)
+
+/* Il nome è del bambino, la sagoma del catalogo: chi disegna e chi
+   scrive l'etichetta guardano lo stesso oggetto fuso. Le viste chiedono
+   `animale(id)` e usano `.nome` senza sapere da dove viene. */
+export function animale(id) {
+  const def = petDi(id)
+  if (!def) return null
+  const mio = state.profile.pets[id]
+  return { ...def, nome: (mio && mio.nome) || def.nome, mio: !!mio }
+}
+
+export const miei = () => (state.profile.casa || []).map(animale).filter(Boolean)
+export const alRifugio = () => Object.keys(state.profile.pets)
+  .filter(id => !inCasa(id) && petDi(id)).map(animale)
+export const nomeAnimale = id => animale(id)?.nome || ''
 
 /* quanto vale una barra adesso: cala da sola col passare delle ore,
    anche a gioco chiuso */
@@ -964,13 +1012,72 @@ export const sazieta = (id, now = Date.now()) => bisogno(id, 'fame', now)
 export const daCurare = (now = Date.now()) =>
   miei().filter(p => chiede(p.id, now).grado === 'basso')
 
-export function adotta(id) {
+/* Adottare: si paga il prezzo pieno, si sceglie il nome e ci vuole un
+   posto libero. Chi ha la casa piena passa da `sostituisci`, che è la
+   stessa cosa con un saluto in mezzo. */
+export function adotta(id, nome = '') {
   const def = petDi(id)
-  if (!def || haAnimale(id) || state.profile.coins < def.costo) return false
+  if (!def || haAnimale(id) || !postiLiberi() || state.profile.coins < def.costo) return false
   state.profile.coins -= def.costo
-  state.profile.pets[id] = nuovoAnimale()
+  state.profile.pets[id] = nuovoAnimale(Date.now(), String(nome || '').trim() || def.nome)
+  state.profile.casa.push(id)
   controllaTraguardi()
   persist()
+  flush()          // si adotta di rado e si paga: non deve perdersi
+  return true
+}
+
+/* Riprenderlo dal rifugio: costa la quota, non il prezzo pieno, e torna
+   con tutto quello che era suo — il nome, i pasti serviti, il cappello. */
+export function riprendi(id) {
+  if (!haAnimale(id) || inCasa(id) || !postiLiberi()) return false
+  const quota = quotaRientro(id)
+  if (state.profile.coins < quota) return false
+  state.profile.coins -= quota
+  curato(state.profile.pets[id])
+  state.profile.casa.push(id)
+  controllaTraguardi()
+  persist()
+  flush()
+  return true
+}
+
+/* Salutarlo: esce dalla cameretta e va al rifugio. Non si cancella
+   niente — non esiste un gesto che butti via un animale — e infatti
+   questa funzione non chiede conferme: quella la chiede la schermata. */
+export function mandaAlRifugio(id) {
+  const i = (state.profile.casa || []).indexOf(id)
+  if (i < 0) return false
+  state.profile.casa.splice(i, 1)
+  persist()
+  flush()
+  return true
+}
+
+/* Il gesto vero, quando i quattro posti sono pieni: uno saluta e uno
+   arriva, e si controlla PRIMA che il nuovo sia davvero pagabile.
+   Altrimenti basterebbe non avere abbastanza monete per ritrovarsi con
+   un animale in meno e nessuno al suo posto. */
+export function sostituisci(esce, entra, nome = '') {
+  if (!inCasa(esce) || esce === entra) return false
+  const nuovo = !haAnimale(entra)
+  const def = petDi(entra)
+  if (!def || (!nuovo && inCasa(entra))) return false
+  const prezzo = nuovo ? def.costo : quotaRientro(entra)
+  if (state.profile.coins < prezzo) return false
+  mandaAlRifugio(esce)
+  return nuovo ? adotta(entra, nome) : riprendi(entra)
+}
+
+/* Cambiare nome è come per i giocatori: si tocca un'etichetta, non si
+   sposta un byte di progressi. */
+export function rinominaAnimale(id, nome) {
+  const a = state.profile.pets[id]
+  const pulito = String(nome || '').trim().slice(0, 14)
+  if (!a || !pulito) return false
+  a.nome = pulito
+  persist()
+  flush()
   return true
 }
 
@@ -988,17 +1095,31 @@ export const dispensaPiena = () => PRODOTTI.some(c => inDispensa(c.e) > 0)
 export const dispensaDi = k =>
   PRODOTTI.filter(c => c.bisogno === k && inDispensa(c.e) > 0)
 
+/* Quello che si ha in casa per un bisogno, diviso in due: cosa a lui
+   piace e cosa non mangerebbe mai. La scheda le mostra tutte e due —
+   spente le seconde — perché scoprire che al pesce non piace la carne è
+   metà del gioco, e nasconderle vorrebbe dire non insegnarlo. */
+export const dispensaPer = (id, k) => {
+  const tutte = dispensaDi(k)
+  return { si: tutte.filter(c => gradimento(id, c.e) !== 'no'),
+           no: tutte.filter(c => gradimento(id, c.e) === 'no') }
+}
+
 /* Usa un prodotto su un animale: cibo, gioco, spazzola o vitamina, è
    sempre lo stesso gesto su una barra diversa.
-   Torna 'preferito' | 'ok' | 'pieno' | false.
-   A barra piena il prodotto NON viene consumato: sprecare qualcosa pagato
-   con le monete sarebbe una punizione per una distrazione. */
+   Torna 'preferito' | 'ok' | 'pieno' | 'no' | false.
+   A barra piena, e davanti a qualcosa che non gli piace, il prodotto NON
+   viene consumato: sprecare qualcosa pagato con le monete sarebbe una
+   punizione per una distrazione — o peggio, per non sapere ancora cosa
+   mangia un pappagallo. */
 export function usa(id, e) {
   const a = state.profile.pets[id], c = prodottoDi(e)
   if (!a || !c || inDispensa(e) <= 0) return false
+  const piace = gradimento(id, e)
+  if (piace === 'no') return 'no'
   const adesso = bisogno(id, c.bisogno)
   if (adesso >= SOGLIE.pieno) return 'pieno'
-  const pref = preferisce(id, e)
+  const pref = piace === 'ama'
   state.profile.dispensa[e]--
   if (!state.profile.dispensa[e]) delete state.profile.dispensa[e]
   a.val[c.bisogno] = Math.min(100, adesso + c.dona * (pref ? PREFERITO : 1))

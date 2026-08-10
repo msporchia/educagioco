@@ -70,6 +70,12 @@ export const suono = {
   miao:   () => { nota(560, 880, 0.13, 'sawtooth', 0.09); nota(880, 520, 0.2, 'triangle', 0.1, 110) },
   // il bau è corto e basso, e ne servono due: uno solo sembra un rutto
   bau:    () => { nota(300, 150, 0.1, 'square', 0.12); nota(260, 130, 0.11, 'square', 0.1, 150) },
+  // il pappagallo: due fischi acuti attaccati, come un cip-cip
+  cip:    () => { nota(1800, 2400, 0.07, 'triangle', 0.07); nota(2400, 1700, 0.09, 'triangle', 0.07, 90) },
+  // il pesce non fa rumore: fa una bollicina, e si sente appena
+  blub:   () => { nota(240, 700, 0.09, 'sine', 0.09); nota(180, 520, 0.1, 'sine', 0.07, 120) },
+  // il draghetto: un ruggito piccolo, che è un ruggito con la voce da cucciolo
+  ruggito:() => { nota(180, 90, 0.3, 'sawtooth', 0.13); rumore(0.35, 0.1, 900, 160) },
   fusa:   () => { rumore(0.55, 0.05, 240, 70); rumore(0.5, 0.04, 200, 60) },
   ansima: () => [0, 190, 380].forEach(r => setTimeout(() => rumore(0.1, 0.05, 1100, 320), r)),
   sgranocchia: () => [0, 150, 300].forEach(r => setTimeout(() => rumore(0.09, 0.07, 1900, 350), r)),

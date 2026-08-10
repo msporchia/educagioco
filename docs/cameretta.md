@@ -11,15 +11,27 @@ torna a fare gli esercizi.
 
 Una stanza disegnata, e **la navigazione è il disegno**: la porta porta al
 negozio, la macchinina alle sorprese, l'animale sul tappeto alla sua scheda,
-la cuccia vuota all'adozione. Non c'è nessun menù.
+il posto libero all'adozione. Non c'è nessun menù.
 
 Le monete si guadagnano negli altri giochi — rispondendo giusto, finendo
 tappe, prendendo traguardi — e si spendono qui.
 
 ## Gli animali
 
-Si adotta un animale e poi va accudito. Ha quattro bisogni che calano da
-soli col passare del tempo reale, a velocità diverse:
+Ce ne sono **tredici da adottare** — tre cani, quattro gatti, due pappagalli,
+due pesciolini nella boccia, un cucciolo di dinosauro e un draghetto — e in
+cameretta ne stanno **quattro per volta**. Chi adotta **gli dà il nome**: il
+catalogo ne propone uno, ma si scrive quello che si vuole, e si cambia quando
+si vuole toccandolo nella scheda.
+
+Quando i quattro posti sono pieni non si abbandona nessuno: si **sostituisce**,
+e chi lascia il posto va al rifugio ad aspettare. Lì resta con il suo nome, i
+suoi pasti e il suo cappello, e si riporta a casa quando si vuole pagando una
+quota piccola invece del prezzo pieno. Il gioco non ha nessun gesto che butti
+via un animale.
+
+Ogni animale ha quattro bisogni che calano da soli col passare del tempo
+reale, a velocità diverse:
 
 | | bisogno | si svuota in |
 |---|---|---|
@@ -32,7 +44,19 @@ Nella stanza l'animale dice **una cosa sola, con un'icona** — l'osso, la
 palla — e nient'altro. Barre, parole e vestiti stanno nella sua scheda, una
 per volta e grande: la stanza deve restare una stanza, non un cruscotto.
 
-La fame si sazia col cibo comprato al negozio, che va tenuto in dispensa.
+## Ognuno mangia le sue cose
+
+La fame si sazia col cibo comprato al negozio, che va tenuto in dispensa — ma
+**non tutti mangiano le stesse cose**. Il cane vuole la ciotola, il gatto anche
+il pesce, il pappagallo semi e frutta, il pesciolino i fiocchi e i vermetti, il
+draghetto carbone e peperoncini. Ognuno ha poi **due preferiti tutti suoi**,
+che rendono un terzo in più.
+
+Offrire a qualcuno una cosa che non mangia lo fa storcere il naso: la barra non
+sale, e **la porzione resta in dispensa**. Provare non costa mai niente, ed è
+apposta — è così che si scopre chi mangia cosa. Nella scheda i cibi sbagliati
+si vedono lo stesso, spenti e con scritto «no»: nasconderli sarebbe più comodo
+e non insegnerebbe niente.
 
 ## La macchina delle sorprese, e perché non è una lotteria
 
@@ -89,3 +113,8 @@ cane, e questo tiene insieme giochi che altrimenti non si parlerebbero.
 - I bisogni calano col tempo reale, quindi un animale trascurato per una
   settimana si ritrova malmesso. Non muore e non succede niente di
   irreversibile — è pensato apposta per non mettere ansia.
+- **Sostituire un animale non lo cancella**: va al rifugio e si può riprendere.
+  Le parole «elimina» e «abbandona» non compaiono da nessuna parte, e nessun
+  tocco distratto può mandare via qualcuno: chi esce va scelto apposta.
+- Il nome di un animale è testo scritto dal bambino, resta nel telefono e non
+  esce di lì, come tutto il resto del salvataggio.

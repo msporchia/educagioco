@@ -16,8 +16,7 @@
    della pancia non si contraddicono mai.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { state, miei, haAnimale } from '../store/profile.js'
-import { petDi } from '../data/pets.js'
+import { state, miei, inCasa, animale } from '../store/profile.js'
 import Barra from '../components/Barra.vue'
 import Stanza from '../components/Stanza.vue'
 import SchedaAnimale from '../components/SchedaAnimale.vue'
@@ -39,7 +38,7 @@ let battito = 0
 
 const titolo = computed(() => ({
   stanza:   'La cameretta',
-  animale:  petDi(chi.value)?.nome || 'La cameretta',
+  animale:  animale(chi.value)?.nome || 'La cameretta',
   negozio:  'Negozio',
   sorprese: 'Sorprese',
 }[sez.value]))
@@ -54,7 +53,7 @@ function vaiA(s) {
 }
 
 function apriAnimale(id) {
-  if (!haAnimale(id)) return apriNegozio('animali')
+  if (!inCasa(id)) return apriNegozio('animali')
   chi.value = id
   vaiA('animale')
 }
@@ -74,7 +73,7 @@ function cambiaBanco(b) {
 function adottato(id) {
   chi.value = id
   vaiA('stanza')
-  avvisa(petDi(id).nome + ' è arrivato!')
+  avvisa(animale(id).nome + ' è arrivato!')
 }
 
 /* la freccia torna indietro di un passo: da una schermata si torna alla

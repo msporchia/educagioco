@@ -243,7 +243,14 @@ export function misure(p, now = Date.now()) {
     best: k => (p.best && p.best[k]) || 0,
     imparati: conta,
     oggetti: () => (p.owned || []).length,
+    /* gli animali ADOTTATI, non quelli in cameretta adesso: chi è al
+       rifugio è stato scelto e pagato lo stesso, e una medaglia già
+       presa non si toglie perché si è fatto posto a un altro */
     animali: () => PETS.filter(x => p.pets && p.pets[x.id]).length,
+    /* quante specie diverse: è il traguardo che spinge a provare il
+       pappagallo invece del quarto gatto */
+    specie: () => new Set(PETS.filter(x => p.pets && p.pets[x.id])
+      .map(x => x.specie)).size,
     tappe: () => (p.td && p.td.tappa) || 0,
     tappeMate: () => (p.mate && p.mate.tappa) || 0,
     tappeMente: () => (p.calc && p.calc.tappa) || 0,
@@ -290,22 +297,28 @@ export function misure(p, now = Date.now()) {
     categorieEn: (k = 3) => m.categorieDi(WORDS, 'en:', k),
     categorieEs: (k = 3) => m.categorieDi(PAROLE_ES, 'es:', k),
 
+    /* Chi sta in CAMERETTA adesso: i bisogni li ha solo lui. Di quelli
+       al rifugio se ne occupano là, e farli pesare sui traguardi
+       vorrebbe dire punire chi ha adottato tanti amici. */
+    inCasa: () => (Array.isArray(p.casa) ? p.casa : Object.keys(p.pets || {}))
+      .filter(id => p.pets && p.pets[id]),
+
     /* tutti gli animali di casa sopra la soglia della fame, adesso.
        Vale 1 solo se un animale ce l'hai: a casa vuota nessuno ha fame,
        ma non è un traguardo. */
     tuttiSazi: () => {
-      const miei = PETS.filter(x => p.pets && p.pets[x.id])
-      if (!miei.length) return 0
-      return miei.every(x => sazietaDi(p.pets[x.id], now) >= SOGLIE.basso) ? 1 : 0
+      const casa = m.inCasa()
+      if (!casa.length) return 0
+      return casa.every(id => sazietaDi(p.pets[id], now) >= SOGLIE.basso) ? 1 : 0
     },
 
     /* più difficile del precedente: tutte e quattro le barre in alto, per
        tutti gli animali di casa. Vuol dire essere passati oggi e aver
        pensato a tutto, non solo alla ciotola. */
     tuttiContenti: () => {
-      const miei = PETS.filter(x => p.pets && p.pets[x.id])
-      if (!miei.length) return 0
-      return miei.every(x => contento(p.pets[x.id], now)) ? 1 : 0
+      const casa = m.inCasa()
+      if (!casa.length) return 0
+      return casa.every(id => contento(p.pets[id], now)) ? 1 : 0
     },
 
     accessori: () => (p.accessori || []).length,

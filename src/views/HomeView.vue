@@ -74,6 +74,8 @@ const richiesta = computed(() => {
   if (!chi.length) return ''
   const nomi = chi.map(p => p.nome)
   if (chi.length === 1) return `${nomi[0]} ${chiede(chi[0].id).def.chiede}`
+  // da tre in su i nomi in fila diventano una filastrocca: si conta e basta
+  if (chi.length > 2) return `${chi.length} amici hanno bisogno di te`
   return `${nomi.join(' e ')} hanno bisogno di te`
 })
 const oggetti = computed(() => state.profile.owned.length)
@@ -197,7 +199,7 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
         <button class="carta room" @click="$emit('vai','cameretta')">
           <span class="ico">🛏️</span>
           <b>La cameretta</b>
-          <i v-if="!animali">Watson, Sherlock e Irene ti aspettano</i>
+          <i v-if="!animali">cani, gatti, pappagalli e un draghetto ti aspettano</i>
           <i v-else-if="richiesta" class="fame">{{ richiesta }}</i>
           <i v-else>{{ animali }} {{ animali > 1 ? 'animali' : 'animale' }} ·
             {{ oggetti }} {{ oggetti === 1 ? 'oggetto' : 'oggetti' }} sugli scaffali</i>

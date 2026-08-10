@@ -21,8 +21,8 @@
    — trenta oggetti stanno sulle mensole come tre, solo più piccoli.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed } from 'vue'
-import { state, moveItem, haAnimale, chiede } from '../store/profile.js'
-import { PETS } from '../data/pets.js'
+import { state, moveItem, haAnimale, chiede, miei, alRifugio } from '../store/profile.js'
+import { PETS, POSTI_CASA, quotaRientro } from '../data/pets.js'
 import PetSprite from './PetSprite.vue'
 
 const props = defineProps({
@@ -30,17 +30,24 @@ const props = defineProps({
 })
 const emit = defineEmits(['animale', 'negozio', 'sorprese'])
 
-/* ---------- gli animali sul tappeto ---------- */
-const ha = id => haAnimale(id)
+/* ---------- gli animali sul tappeto ----------
+   Quattro posti, e in ognuno o c'è un amico o c'è la sagoma di uno che
+   potrebbe starci. I posti liberi non sono un `+` grigio: mostrano chi
+   si potrebbe adottare, dal più economico in su, perché la cosa che fa
+   venir voglia di adottare Watson è vedere Watson. Finiti quelli nuovi,
+   nei posti liberi si affacciano gli amici che aspettano al rifugio. */
+const inCasa = computed(() => miei())
+const vetrina = computed(() => {
+  const nuovi = PETS.filter(p => !haAnimale(p.id)).sort((a, b) => a.costo - b.costo)
+    .map(p => ({ ...p, prezzo: p.costo }))
+  const aspettano = alRifugio().map(p => ({ ...p, prezzo: quotaRientro(p.id) }))
+  return [...nuovi, ...aspettano].slice(0, Math.max(0, POSTI_CASA - inCasa.value.length))
+})
+
 const urgenza = id => chiede(id, props.adesso)
-const bisognoso = id => ha(id) && urgenza(id).grado === 'basso'
+const bisognoso = id => urgenza(id).grado === 'basso'
 const posa = id => ({ alto: 'contento', medio: 'normale', basso: 'chiede' })[urgenza(id).grado]
 const addosso = id => state.profile.pets[id]?.addosso || {}
-
-function tocca(p) {
-  if (ha(p.id)) emit('animale', p.id)
-  else emit('negozio', 'animali')
-}
 
 /* ---------- gli oggetti sulle mensole ----------
    La misura la detta la mensola più affollata: `--n` entra nel CSS e da
@@ -215,26 +222,23 @@ function bersaglio(x, y) {
       </button>
 
       <div class="fila">
-        <!-- un posto per ciascuno: o c'è l'animale, o c'è la sua cuccia vuota -->
-        <button v-for="p in PETS" :key="p.id" class="posto"
-                :class="{ libero: !ha(p.id) }"
-                :aria-label="ha(p.id) ? p.nome : 'adotta ' + p.nome"
-                @click="tocca(p)">
-          <template v-if="ha(p.id)">
-            <span v-if="bisognoso(p.id)" class="bolla">{{ urgenza(p.id).def.emoji }}</span>
-            <span class="ombra"></span>
-            <PetSprite :pet="p" :stato="posa(p.id)" :addosso="addosso(p.id)" :size="120" />
-          </template>
-          <!-- Chi non è stato adottato non è un punto interrogativo: è la
-               sua sagoma sulla cuccia, col nome e quanto costa. Un `?` da
-               solo non dice chi ci dovrebbe stare, e la cosa che invoglia
-               ad adottare Watson è vedere Watson. -->
-          <template v-else>
-            <span class="fantasma">
-              <PetSprite :pet="p" stato="normale" :size="120" />
-            </span>
-            <span class="chi-manca">{{ p.nome }} · 🪙 {{ p.costo }}</span>
-          </template>
+        <!-- prima chi ci vive -->
+        <button v-for="p in inCasa" :key="p.id" class="posto"
+                :aria-label="p.nome" @click="emit('animale', p.id)">
+          <span v-if="bisognoso(p.id)" class="bolla">{{ urgenza(p.id).def.emoji }}</span>
+          <span class="ombra"></span>
+          <PetSprite :pet="p" :stato="posa(p.id)" :addosso="addosso(p.id)" :size="120" />
+        </button>
+        <!-- poi i posti liberi: la sagoma di chi potrebbe starci, col nome
+             e quanto costa. Un `?` da solo non dice chi ci dovrebbe
+             stare, e la cosa che invoglia ad adottare Watson è vedere
+             Watson. -->
+        <button v-for="p in vetrina" :key="'v' + p.id" class="posto libero"
+                :aria-label="'adotta ' + p.nome" @click="emit('negozio', 'animali')">
+          <span class="fantasma">
+            <PetSprite :pet="p" stato="normale" :size="120" />
+          </span>
+          <span class="chi-manca">{{ p.nome }} · 🪙 {{ p.prezzo }}</span>
         </button>
       </div>
     </div>
