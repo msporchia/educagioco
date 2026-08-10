@@ -28,6 +28,15 @@
    preso a caso si scarterebbe a occhio, e la domanda si risolverebbe
    senza guardare niente.
 
+   GLI INDOVINELLI SONO L'ECCEZIONE, e sono l'unico posto dove qui si
+   fa un conto. «Penso a un numero, lo raddoppio e tolgo 6: viene 18»
+   non chiede di calcolare in avanti — quello lo fa già il castello —
+   ma di **disfare** una catena partendo dalla fine, e disfarla in
+   ordine inverso. È ancora senso del numero: chi ce l'ha capisce
+   subito che il numero di partenza è più piccolo di 18, chi non ce
+   l'ha prova a caso. La catena si allunga col grado: un passo al 4,
+   due al 5, anche tre al 6.
+
    IL DISEGNO NON È UN ORNAMENTO. La linea dei numeri *è* la domanda:
    in tre gradi su sei si sceglie fra quattro disegni, non fra quattro
    parole. I pittori stanno in `grafica/pittori/numero.js` e ricevono
@@ -43,9 +52,9 @@ const SCALETTA = [
   'il colpo d\'occhio: quanti sono, senza contarli',
   'la linea dei numeri fino a 20',
   'prima, dopo, in mezzo e in ordine',
-  'la linea fino a 100 e il numero più vicino',
-  'le decine e il valore delle cifre',
-  'la stima: circa quanto fa, e cosa è impossibile',
+  'la linea fino a 100, il numero più vicino e i primi indovinelli',
+  'le decine, il valore delle cifre e gli indovinelli a due passi',
+  'la stima, cosa è impossibile, e gli indovinelli da disfare',
 ]
 
 /* Le tipologie. Tre gruppi: quello che si fa contando e confrontando,
@@ -55,15 +64,16 @@ const SCALETTA = [
 const TIPI = [
   { chiave: 'num:colpo-docchio', nome: "Il colpo d'occhio: quanti sono", sa: 'numeri', gradi: { 1: 0.58 } },
   { chiave: 'num:confronto', nome: 'Chi è di più, chi è di meno', sa: 'numeri', gradi: { 1: 0.42 } },
-  { chiave: 'num:linea', nome: 'Leggere la linea dei numeri', sa: 'numeri', gradi: { 2: 0.62, 4: 0.4 } },
-  { chiave: 'num:posiziona', nome: 'Mettere un numero al suo posto', sa: 'numeri', gradi: { 2: 0.38, 4: 0.32 } },
+  { chiave: 'num:linea', nome: 'Leggere la linea dei numeri', sa: 'numeri', gradi: { 2: 0.62, 4: 0.32 } },
+  { chiave: 'num:posiziona', nome: 'Mettere un numero al suo posto', sa: 'numeri', gradi: { 2: 0.38, 4: 0.26 } },
   { chiave: 'num:ordine', nome: 'Prima, dopo, in mezzo e in ordine', sa: 'numeri', gradi: { 3: 1 } },
-  { chiave: 'num:vicino', nome: 'Il numero più vicino', sa: 'numeri', gradi: { 4: 0.28 } },
-  { chiave: 'num:decine', nome: 'Le decine', sa: 'decine', gradi: { 5: 0.5 } },
-  { chiave: 'num:cifre', nome: 'Quanto vale ogni cifra', sa: 'decine', gradi: { 5: 0.5 } },
-  { chiave: 'num:stima', nome: 'Circa quanto fa', sa: 'stima', gradi: { 6: 0.3 } },
-  { chiave: 'num:arrotonda', nome: 'Arrotondare', sa: 'stima', gradi: { 6: 0.25 } },
-  { chiave: 'num:grandezza', nome: "L'ordine di grandezza, e cosa è impossibile", sa: 'stima', gradi: { 6: 0.45 } },
+  { chiave: 'num:vicino', nome: 'Il numero più vicino', sa: 'numeri', gradi: { 4: 0.22 } },
+  { chiave: 'num:indovinello', nome: 'Indovina il numero', sa: 'numeri', gradi: { 4: 0.2, 5: 0.2, 6: 0.25 } },
+  { chiave: 'num:decine', nome: 'Le decine', sa: 'decine', gradi: { 5: 0.4 } },
+  { chiave: 'num:cifre', nome: 'Quanto vale ogni cifra', sa: 'decine', gradi: { 5: 0.4 } },
+  { chiave: 'num:stima', nome: 'Circa quanto fa', sa: 'stima', gradi: { 6: 0.25 } },
+  { chiave: 'num:arrotonda', nome: 'Arrotondare', sa: 'stima', gradi: { 6: 0.2 } },
+  { chiave: 'num:grandezza', nome: "L'ordine di grandezza, e cosa è impossibile", sa: 'stima', gradi: { 6: 0.3 } },
 ]
 
 /* le cifre girate: l'errore principe di tutta questa materia. Un
@@ -105,6 +115,27 @@ function pescaFalsi(candidati, quanti, { escludi = [], distanza = 0, dentro = ()
   return presi
 }
 
+/* ── i passi di un indovinello ──
+   `va` è quello che la domanda racconta, `torna` è il suo contrario
+   (`torna(va(v))` è sempre `v`) e `disfa` è come si dice tornando
+   indietro, che è quello che serve nell'aiuto. `svista` è l'errore di
+   chi scambia il moltiplicare con l'aggiungere, e vale solo quando il
+   passo è uno: con la catena lunga ci sono errori più istruttivi. */
+const RADDOPPIA = { dice: 'lo raddoppio', disfa: 'lo dimezzo', va: v => v * 2, torna: v => v / 2,
+  svista: r => F(r - 2, 'raddoppiare non è aggiungere 2: quello lì raddoppiato non fa il numero giusto') }
+const TRIPLICA = { dice: 'lo moltiplico per 3', disfa: 'lo divido per 3', va: v => v * 3, torna: v => v / 3,
+  svista: r => F(r - 3, 'moltiplicare per 3 non è aggiungere 3') }
+const META = { dice: 'ne prendo la metà', disfa: 'lo raddoppio', va: v => v / 2, torna: v => v * 2,
+  svista: r => F(r + 2, 'prendere la metà non è togliere 2') }
+const AGGIUNGI = k => ({ dice: `aggiungo ${k}`, disfa: `tolgo ${k}`, va: v => v + k, torna: v => v - k })
+const TOGLI = k => ({ dice: `tolgo ${k}`, disfa: `rimetto ${k}`, va: v => v - k, torna: v => v + k })
+
+/* «lo raddoppio, aggiungo 3 e tolgo 5» */
+const inFila = dette => dette.length < 2 ? dette.join('')
+  : `${dette.slice(0, -1).join(', ')} e ${dette[dette.length - 1]}`
+
+const FRASI_INDOVINELLO = ['A che numero avevo pensato?', 'Qual era il numero?', 'Da che numero sono partito?']
+
 class SensoDelNumero extends Modulo {
   constructor() {
     super({
@@ -134,6 +165,7 @@ class SensoDelNumero extends Modulo {
         return q < 0.34 ? this.inMezzo(sorte) : q < 0.67 ? this.subito(sorte) : this.ordine(sorte)
       }
       case 'num:vicino': return this.vicino(sorte)
+      case 'num:indovinello': return this.indovinello(grado, sorte)
       case 'num:decine': return sorte.forse(0.6) ? this.mucchiDiDieci(sorte) : this.quanteDecine(sorte)
       case 'num:cifre': return sorte.forse(0.5) ? this.cifra(sorte) : this.scomponi(sorte)
       case 'num:stima': return this.stima(sorte)
@@ -259,25 +291,40 @@ class SensoDelNumero extends Modulo {
 
   /* ── grado 3: il numero come posto in fila ──────────────────────── */
 
-  /* che numero viene fra 68 e 70 */
+  /* che numero sta esattamente in mezzo fra 37 e 57.
+     Prima gli estremi erano attaccati — «fra 94 e 96» — e la risposta
+     si leggeva senza pensarci: in mezzo a due numeri vicini ce n'è uno
+     solo, e si vede. Larghi, «in mezzo» torna a voler dire qualcosa:
+     stessa distanza da una parte e dall'altra, e per trovarla un passo
+     va fatto. */
   inMezzo(sorte) {
-    const n = sorte.fra(11, 98)
+    const passo = sorte.uno([2, 3, 4, 5, 5, 10, 10, 15, 20])
+    const n = sorte.fra(passo + 2, 99 - passo)
+    const giu = n - passo
+    const su = n + passo
+    const mezzo = Math.ceil(passo / 2)
     const falsi = pescaFalsi([
+      ...sorte.mescola([
+        F(n + mezzo, `non è proprio in mezzo: di qui a ${su} ci sono ${passo - mezzo} e a ${giu} ce ne sono ${passo + mezzo}`),
+        F(n - mezzo, `non è proprio in mezzo: di qui a ${giu} ci sono ${passo - mezzo} e a ${su} ce ne sono ${passo + mezzo}`),
+      ]),
+      F(decina(n) === n ? NaN : decina(n), 'quello è il numero tondo lì vicino, ma non è a pari distanza dai due'),
+      F(passo >= 5 ? passo : NaN, `quella è metà della distanza fra i due, non il numero in mezzo: va contata a partire da ${giu}`),
       F(girate(n), 'sono le stesse cifre, ma girate'),
       ...sorte.mescola([
-        F(n + 10, 'quella è la decina dopo'),
-        F(n - 10, 'quella è la decina prima'),
-        F(n + 2, 'è troppo in là: fra due numeri vicini ce n\'è uno solo'),
-        F(n - 2, 'è troppo indietro: fra due numeri vicini ce n\'è uno solo'),
+        F(giu + 10, `${giu} + 10 non arriva in mezzo se i due sono lontani ${passo * 2}`),
+        F(su - 10, `da ${su} indietro di 10 non si arriva in mezzo se i due sono lontani ${passo * 2}`),
       ]),
-    ], 3, { escludi: [n, n - 1, n + 1], dentro: v => v > 0 && v < 130 })
+    ], 3, { escludi: [n, giu, su], dentro: v => v > 0 && v < 130 })
 
     return domanda({
-      testo: `Che numero viene fra ${n - 1} e ${n + 1}?`,
+      testo: sorte.forse(0.5)
+        ? `Che numero sta esattamente in mezzo fra ${giu} e ${su}?`
+        : `A metà strada fra ${giu} e ${su}, che numero c'è?`,
       buona: testo(n),
       falsi: falsi.map(f => testo(f.v, f.perche)),
       chiave: 'num:ordine',
-      aiuto: `dopo ${il(n - 1)} viene ${il(n)}, e subito dopo ${il(n + 1)}`,
+      aiuto: `da ${giu} a ${su} ci sono ${passo * 2}: metà sono ${passo}, e ${giu} + ${passo} fa ${n}`,
       sorte,
     })
   }
@@ -600,6 +647,109 @@ class SensoDelNumero extends Modulo {
       aiuto: piccolo
         ? 'una somma non può venire più piccola dei numeri che sommi'
         : 'due numeri sotto il 50 messi insieme non arrivano a 100',
+      sorte,
+    })
+  }
+
+  /* ── gradi 4, 5 e 6: gli indovinelli ────────────────────────────────
+     L'unico posto del modulo dove si fa un conto, e si fa al contrario:
+     la domanda racconta il viaggio di andata e chiede da dove è
+     partito. La catena si allunga col grado — un passo, due, tre — che
+     è il modo più onesto di renderla più difficile: non numeri più
+     grossi, ma un passo in più da disfare. */
+
+  indovinello(grado, sorte) {
+    /* al grado 4 metà delle volte la forma corta, quella che si può
+       ancora fare a occhio: nessuna catena, solo il doppio o il triplo
+       che deve cascare dentro una fascia */
+    if (grado <= 4 && sorte.forse(0.5)) return this.fascia(sorte)
+
+    const quanti = grado >= 6 ? sorte.uno([2, 3, 3]) : grado >= 5 ? 2 : 1
+    const c = this.catenaDi(quanti, grado >= 6 ? 30 : grado >= 5 ? 25 : 20, sorte)
+    const { n, passi, risultato } = c
+
+    const ultimo = passi[passi.length - 1]
+    /* i tre modi veri di sbagliare: fermarsi al primo passo indietro,
+       disfarli nell'ordine in cui sono stati detti invece che dal
+       fondo, e rifarli in avanti sul risultato */
+    const soloUltimo = ultimo.torna(risultato)
+    const soloPrimo = passi[0].torna(risultato)
+    const nellOrdineDetto = passi.reduce((v, p) => p.torna(v), risultato)
+    const rifattiAvanti = passi.reduce((v, p) => p.va(v), risultato)
+
+    const falsi = pescaFalsi([
+      F(soloUltimo, `hai disfatto un passo solo: ne restava ${passi.length - 1 > 1 ? 'ancora qualcuno' : 'ancora uno'}`),
+      F(nellOrdineDetto, 'i passi vanno disfatti dall\'ultimo al primo, non nell\'ordine in cui te li ho detti'),
+      F(rifattiAvanti, 'quelle sono le operazioni rifatte in avanti: qui vanno disfatte'),
+      F(soloPrimo, 'quello è il primo passo disfatto, ma tornando indietro si comincia dall\'ultimo'),
+      passi.length === 1 && passi[0].svista ? passi[0].svista(risultato) : F(NaN, null),
+      F(risultato, 'quello è quello che viene alla fine, non il numero di partenza'),
+    ], 3, { escludi: [n], dentro: v => Number.isInteger(v) && v > 0 && v < 500 })
+
+    /* la strada del ritorno, tappa per tappa: è l'aiuto, ed è anche
+       l'unica spiegazione che serve */
+    let v = risultato
+    const ritorno = passi.slice().reverse().map(p => { v = p.torna(v); return `${p.disfa} → ${v}` })
+
+    return domanda({
+      testo: `Penso a un numero, ${inFila(passi.map(p => p.dice))}: viene ${risultato}. ${sorte.uno(FRASI_INDOVINELLO)}`,
+      buona: testo(n),
+      falsi: falsi.map(f => testo(f.v, f.perche)),
+      chiave: 'num:indovinello',
+      aiuto: `si torna indietro dal fondo: parti da ${risultato}, ${ritorno.join(', ')}`,
+      sorte,
+    })
+  }
+
+  /* una catena che torna: ogni passaggio intero, positivo e sotto il
+     tetto. Si tira e si ritira invece di ragionarci sopra, perché le
+     combinazioni sono poche e il primo tiro buono arriva quasi sempre;
+     il ripiego in fondo è una catena che non può non funzionare. */
+  catenaDi(quanti, tetto, sorte) {
+    for (let giro = 0; giro < 60; giro++) {
+      const molt = sorte.uno([RADDOPPIA, RADDOPPIA, TRIPLICA, META])
+      const add = () => (sorte.forse(0.5) ? AGGIUNGI(sorte.fra(2, 12)) : TOGLI(sorte.fra(2, 12)))
+      const passi = quanti === 1 ? [molt]
+        : quanti === 2 ? (sorte.forse(0.55) ? [molt, add()] : [add(), molt])
+          : [add(), molt, add()]
+      const n = sorte.fra(3, tetto)
+      let v = n
+      let buona = true
+      for (const p of passi) {
+        v = p.va(v)
+        if (!Number.isInteger(v) || v < 2 || v > 300) { buona = false; break }
+      }
+      if (buona && v !== n) return { n, passi, risultato: v }
+    }
+    const passi = [RADDOPPIA, TOGLI(6)]
+    return { n: 12, passi, risultato: 18 }
+  }
+
+  /* «quale di questi ha il doppio fra 50 e 60?» — la fascia è larga
+     dieci e il numero giusto ci casca dentro; i falsi stanno lontani
+     almeno dieci nel prodotto, così nessuno dei quattro è difendibile
+     oltre a quello vero. Si risponde provando: raddoppia e guarda. */
+  fascia(sorte) {
+    const molt = sorte.forse(0.6) ? 2 : 3
+    const nome = molt === 2 ? 'doppio' : 'triplo'
+    let n = sorte.fra(molt === 2 ? 12 : 8, molt === 2 ? 46 : 31)
+    if ((n * molt) % 10 === 0) n += 1          // mai sul bordo della fascia
+    const prod = n * molt
+    const da = Math.floor(prod / 10) * 10
+    const a = da + 10
+
+    /* uno scarto che nel prodotto vale almeno una fascia intera */
+    const scarti = sorte.mescola(molt === 2 ? [5, 6, 7, 8, 9] : [4, 5, 6, 7])
+    const candidati = scarti.flatMap(d => sorte.mescola([n + d, n - d]))
+      .map(x => F(x, `il suo ${nome} fa ${x * molt}: ${x * molt < da ? 'troppo poco' : 'troppo'}`))
+    const falsi = pescaFalsi(candidati, 3, { escludi: [n], dentro: v => v > 0 && v < 100 })
+
+    return domanda({
+      testo: `Quale di questi numeri ha il ${nome} fra ${da} e ${a}?`,
+      buona: testo(n),
+      falsi: falsi.map(f => testo(f.v, f.perche)),
+      chiave: 'num:indovinello',
+      aiuto: `prova a fare il ${nome} di ognuno: ${n} per ${molt} fa ${prod}, e ${prod} sta fra ${da} e ${a}`,
       sorte,
     })
   }
