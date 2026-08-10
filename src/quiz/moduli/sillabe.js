@@ -16,10 +16,19 @@
      2. come si divide (la doppia spezzata in mezzo, il digramma unito)
      3. le rime (e il suo rovescio: chi non fa rima)
      4. la sillaba che manca in un buco
-     5. l'accento tonico — tronche, piane, sdrucciole: la stessa parola
-        con l'accento disegnato in tre punti diversi, si sceglie quello
-        vero. Non è scrittura reale (le piane e le sdrucciole normalmente
-        non si segnano): è solo il modo di farlo *sentire*.
+     5. l'accento tonico: la stessa parola con l'accento disegnato in tre
+        punti diversi, si sceglie quello vero. Non è scrittura reale (di
+        solito quell'accento non si segna): è solo il modo di farlo
+        *sentire*.
+
+   I NOMI NON SI CHIEDONO. «Tronca, piana, sdrucciola» è nomenclatura:
+   la parola giusta non si ricava da niente, si ricorda — e chiederla
+   sulle parole con l'accento già scritto era anche peggio, perché la
+   risposta era sempre «tronca» e bastava impararsi quella. Qui si
+   chiede solo la cosa che c'è sotto, e quella si sente: dove batte la
+   voce. Per lo stesso motivo le parole con l'accento scritto (città,
+   perché, lunedì) non stanno in questo file: lì il segno risponde da
+   sé, e sono materia di `ortografia`.
    ═══════════════════════════════════════════════════════════════════ */
 
 import { Modulo } from '../nucleo/modulo.js'
@@ -128,60 +137,41 @@ const RIME = [
   ] },
 ]
 
-/* ── l'accento tonico: parola, sillabe, indice della sillaba forte, tipo ──
-   tronca = sull'ultima (e si scrive: città, però…), piana = sulla
-   penultima (la maggior parte delle parole), sdrucciola = sulla
-   terzultima.
-
-   Le tronche portano quasi sempre l'accento scritto: chiederne «dove
-   batte la voce» sarebbe una domanda che si risolve leggendo l'accento
-   già disegnato, non sentendolo. Per questo le tronche non entrano nel
-   grado «dove batte la voce» (che vuole parole senza accento grafico:
-   bambino, tavolo, domenica…) — hanno un formato loro, dove l'accento
-   scritto è l'indizio giusto: «è tronca, piana o sdrucciola?». */
+/* ── l'accento tonico: parola, sillabe, indice della sillaba forte ──
+   Solo parole SENZA accento scritto. Su «città» o «lunedì» la domanda
+   si risolverebbe guardando il segno invece di ascoltare la parola, e
+   non insegnerebbe niente. */
 const ACCENTO = [
-  ['città', ['cit', 'tà'], 1, 'tronca'], ['però', ['pe', 'rò'], 1, 'tronca'],
-  ['caffè', ['caf', 'fè'], 1, 'tronca'], ['papà', ['pa', 'pà'], 1, 'tronca'],
-  ['così', ['co', 'sì'], 1, 'tronca'], ['virtù', ['vir', 'tù'], 1, 'tronca'],
-  ['lunedì', ['lu', 'ne', 'dì'], 2, 'tronca'], ['martedì', ['mar', 'te', 'dì'], 2, 'tronca'],
-  ['giovedì', ['gio', 've', 'dì'], 2, 'tronca'], ['venerdì', ['ve', 'ner', 'dì'], 2, 'tronca'],
-  ['perché', ['per', 'ché'], 1, 'tronca'], ['chissà', ['chis', 'sà'], 1, 'tronca'],
-  ['laggiù', ['lag', 'giù'], 1, 'tronca'], ['quassù', ['quas', 'sù'], 1, 'tronca'],
+  ['cane', ['ca', 'ne'], 0], ['pane', ['pa', 'ne'], 0],
+  ['gatto', ['gat', 'to'], 0], ['cavallo', ['ca', 'val', 'lo'], 1],
+  ['bambino', ['bam', 'bi', 'no'], 1], ['sorella', ['so', 'rel', 'la'], 1],
+  ['ombrello', ['om', 'brel', 'lo'], 1], ['farfalla', ['far', 'fal', 'la'], 1],
+  ['formica', ['for', 'mi', 'ca'], 1], ['gelato', ['ge', 'la', 'to'], 1],
+  ['pomodoro', ['po', 'mo', 'do', 'ro'], 2], ['giardino', ['giar', 'di', 'no'], 1],
+  ['coniglio', ['co', 'ni', 'glio'], 1], ['elefante', ['e', 'le', 'fan', 'te'], 2],
 
-  ['cane', ['ca', 'ne'], 0, 'piana'], ['pane', ['pa', 'ne'], 0, 'piana'],
-  ['gatto', ['gat', 'to'], 0, 'piana'], ['cavallo', ['ca', 'val', 'lo'], 1, 'piana'],
-  ['bambino', ['bam', 'bi', 'no'], 1, 'piana'], ['sorella', ['so', 'rel', 'la'], 1, 'piana'],
-  ['ombrello', ['om', 'brel', 'lo'], 1, 'piana'], ['farfalla', ['far', 'fal', 'la'], 1, 'piana'],
-  ['formica', ['for', 'mi', 'ca'], 1, 'piana'], ['gelato', ['ge', 'la', 'to'], 1, 'piana'],
-  ['pomodoro', ['po', 'mo', 'do', 'ro'], 2, 'piana'], ['giardino', ['giar', 'di', 'no'], 1, 'piana'],
-  ['coniglio', ['co', 'ni', 'glio'], 1, 'piana'], ['elefante', ['e', 'le', 'fan', 'te'], 2, 'piana'],
-
-  ['tavolo', ['ta', 'vo', 'lo'], 0, 'sdrucciola'], ['musica', ['mu', 'si', 'ca'], 0, 'sdrucciola'],
-  ['pettine', ['pet', 'ti', 'ne'], 0, 'sdrucciola'], ['macchina', ['mac', 'chi', 'na'], 0, 'sdrucciola'],
-  ['medico', ['me', 'di', 'co'], 0, 'sdrucciola'], ['sabato', ['sa', 'ba', 'to'], 0, 'sdrucciola'],
-  ['domenica', ['do', 'me', 'ni', 'ca'], 1, 'sdrucciola'], ['ultimo', ['ul', 'ti', 'mo'], 0, 'sdrucciola'],
-  ['numero', ['nu', 'me', 'ro'], 0, 'sdrucciola'], ['angolo', ['an', 'go', 'lo'], 0, 'sdrucciola'],
-  ['ottimo', ['ot', 'ti', 'mo'], 0, 'sdrucciola'], ['semplice', ['sem', 'pli', 'ce'], 0, 'sdrucciola'],
-  ['pratico', ['pra', 'ti', 'co'], 0, 'sdrucciola'], ['rapido', ['ra', 'pi', 'do'], 0, 'sdrucciola'],
-  ['simpatico', ['sim', 'pa', 'ti', 'co'], 1, 'sdrucciola'],
+  ['tavolo', ['ta', 'vo', 'lo'], 0], ['musica', ['mu', 'si', 'ca'], 0],
+  ['pettine', ['pet', 'ti', 'ne'], 0], ['macchina', ['mac', 'chi', 'na'], 0],
+  ['medico', ['me', 'di', 'co'], 0], ['sabato', ['sa', 'ba', 'to'], 0],
+  ['domenica', ['do', 'me', 'ni', 'ca'], 1], ['ultimo', ['ul', 'ti', 'mo'], 0],
+  ['numero', ['nu', 'me', 'ro'], 0], ['angolo', ['an', 'go', 'lo'], 0],
+  ['ottimo', ['ot', 'ti', 'mo'], 0], ['semplice', ['sem', 'pli', 'ce'], 0],
+  ['pratico', ['pra', 'ti', 'co'], 0], ['rapido', ['ra', 'pi', 'do'], 0],
+  ['simpatico', ['sim', 'pa', 'ti', 'co'], 1],
 ]
 
-/* le tronche (accento scritto) vanno al formato «che tipo è»; le altre
-   (nessun accento scritto) al formato «dove batte la voce» */
-const ACCENTO_TRONCA = ACCENTO.filter(v => v[3] === 'tronca')
-const ACCENTO_SENZA = ACCENTO.filter(v => v[3] !== 'tronca')
-
-const AIUTO_ACCENTO = {
-  piana: 'le parole piane, la maggior parte, portano l\'accento sulla penultima sillaba',
-  sdrucciola: 'le parole sdrucciole portano l\'accento sulla terzultima sillaba',
-}
+/* l'aiuto si dice contando le sillabe dalla fine, non col nome che ha
+   quella famiglia di parole: «penultima» è una cosa che si può andare
+   a guardare, «piana» è una parola da ricordare e basta */
+const aiutoAccento = (sill, idx) => sill.length - 1 - idx === 1
+  ? 'quasi sempre la voce batte sulla penultima sillaba: prova a dirla forte'
+  : 'qui la voce batte più indietro del solito: sulla terzultima sillaba'
 
 /* ── le frasi, per non chiedere sempre con le stesse parole ── */
 const FRASI_QUANTE = ['Quante sillabe ha questa parola?', 'In quante sillabe si divide?', 'Conta le sillabe: quante sono?']
 const FRASI_DIVIDI = ['Come si divide in sillabe', 'Qual è la sillabazione giusta di', 'Qual è la divisione giusta di']
 const FRASI_MANCA = ['Che sillaba manca?', 'Qual è la sillaba che manca?', 'Con che cosa si completa?']
 const FRASI_ACCENTO = ['Dove cade l\'accento?', 'Dove batte la voce?', 'Su quale sillaba batte l\'accento?']
-const FRASI_TIPO = ['è tronca, piana o sdrucciola?', 'che tipo è: tronca, piana o sdrucciola?', 'come si chiama: tronca, piana o sdrucciola?']
 const FRASI_RIMA = ['Quale parola fa rima con', 'Che cosa fa rima con', 'Trova la parola che fa rima con']
 const FRASI_INTRUSO = ['Quale di queste NON fa rima con', 'Chi non fa rima con', 'Qual è l\'intruso: chi non fa rima con']
 
@@ -245,14 +235,13 @@ function conAccento(s) {
    sta nel suo gruppo; l'accento tonico invece è la stessa lezione degli
    accenti scritti — dove batte la voce — e sta con quelli, così chi
    spegne «accenti e apostrofi» non si ritrova a dover spegnere anche le
-   rime per far sparire «tronca o sdrucciola?». */
+   rime per far sparire l'accento. */
 const TIPI = [
   { chiave: 'sil:quante', nome: 'Quante sillabe ha la parola', sa: 'sillabe', gradi: { 1: 1 } },
   { chiave: 'sil:dividi', nome: 'Dividere in sillabe', sa: 'sillabe', gradi: { 2: 1 } },
   { chiave: 'sil:rima', nome: 'Le rime', sa: 'sillabe', gradi: { 3: 1 } },
   { chiave: 'sil:manca', nome: 'La sillaba che manca', sa: 'sillabe', gradi: { 4: 1 } },
-  { chiave: 'sil:accento-tonico', nome: 'Dove batte la voce', sa: 'accenti', gradi: { 5: 0.65 } },
-  { chiave: 'sil:tronca-piana-sdrucciola', nome: 'Tronche, piane e sdrucciole', sa: 'accenti', gradi: { 5: 0.35 } },
+  { chiave: 'sil:accento-tonico', nome: 'Dove batte la voce', sa: 'accenti', gradi: { 5: 1 } },
 ]
 
 class Sillabe extends Modulo {
@@ -268,11 +257,10 @@ class Sillabe extends Modulo {
         'come si divide in sillabe',
         'le rime',
         'la sillaba che manca',
-        'l\'accento tonico: piane, tronche e sdrucciole',
+        'l\'accento tonico: dove batte la voce',
       ],
-      /* contare le sillabe e sentire le rime si fa a orecchio; «piana,
-         tronca o sdrucciola» sono parole di scuola, e stanno con gli
-         accenti perché è lì che servono */
+      /* contare le sillabe e sentire le rime si fa a orecchio; l'accento
+         tonico sta con gli accenti scritti, perché è la stessa lezione */
       tipi: TIPI,
     })
   }
@@ -283,7 +271,6 @@ class Sillabe extends Modulo {
       case 'sil:rima': return this.rima(sorte)
       case 'sil:manca': return this.manca(sorte)
       case 'sil:accento-tonico': return this.doveBatte(sorte)
-      case 'sil:tronca-piana-sdrucciola': return this.tronca(sorte)
       default: return this.quante(sorte)
     }
   }
@@ -370,31 +357,11 @@ class Sillabe extends Modulo {
     })
   }
 
-  /* grado 5: l'accento tonico — due formati, mai mescolati.
-     Le tronche hanno l'accento già scritto: chiederne «dove batte la
-     voce» si risolverebbe leggendo il segno, non sentendolo. Lì l'unica
-     domanda onesta è riconoscerle («tronca, piana o sdrucciola?»),
-     dove l'accento scritto è l'indizio che insegna la regola. */
-
-  /* le tronche: l'accento scritto è l'indizio legittimo */
-  tronca(sorte) {
-    const [parola] = sorte.uno(ACCENTO_TRONCA)
-    return domanda({
-      testo: `«${parola}» ${sorte.uno(FRASI_TIPO)}`,
-      buona: testo('tronca', 'l\'accento scritto lo dice: cade sull\'ultima sillaba'),
-      falsi: [
-        testo('piana', 'ma l\'accento è scritto: è tronca'),
-        testo('sdrucciola', 'ma l\'accento è scritto: è tronca'),
-      ],
-      chiave: 'sil:tronca-piana-sdrucciola',
-      aiuto: 'quando l\'accento si vede scritto, la parola è tronca: la voce cade sull\'ultima sillaba',
-      sorte,
-    })
-  }
-
-  /* le altre, senza accento scritto: bisogna sentirla */
+  /* grado 5: l'accento tonico. La parola non porta nessun segno, e le
+     tre risposte sono la stessa parola con l'accento disegnato in tre
+     punti: l'unico modo di sceglierla è dirla. */
   doveBatte(sorte) {
-    const [parola, sill, idx, tipo] = sorte.uno(ACCENTO_SENZA)
+    const [parola, sill, idx] = sorte.uno(ACCENTO)
     const altre = sill.map((_, i) => i).filter(i => i !== idx)
     const scelte = sorte.alcuni(altre, Math.min(2, altre.length))
     return domanda({
@@ -403,7 +370,7 @@ class Sillabe extends Modulo {
       buona: testo(accentua(sill, idx)),
       falsi: scelte.map(i => testo(accentua(sill, i), 'l\'accento non cade lì')),
       chiave: 'sil:accento-tonico',
-      aiuto: AIUTO_ACCENTO[tipo],
+      aiuto: aiutoAccento(sill, idx),
       sorte,
     })
   }

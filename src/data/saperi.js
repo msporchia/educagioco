@@ -27,8 +27,8 @@
    — peggio che non averlo.
 
    DUE LIVELLI. Un gruppo è grosso — «accenti e apostrofi» — e le
-   tipologie che ci stanno dentro sono cinque: l'accento, l'apostrofo,
-   la lettera h, l'accento tonico, tronche e piane. Il genitore che
+   tipologie che ci stanno dentro sono quattro: l'accento, l'apostrofo,
+   la lettera h, l'accento tonico. Il genitore che
    spegne il gruppo le toglie tutte; quello che apre il dettaglio ne
    toglie una sola. Le sottovoci NON stanno in questo file — sono le
    `tipi` dei moduli, e chi le raccoglie per la schermata dei genitori è
