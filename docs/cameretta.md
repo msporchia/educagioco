@@ -30,6 +30,11 @@ suoi pasti e il suo cappello, e si riporta a casa quando si vuole pagando una
 quota piccola invece del prezzo pieno. Il gioco non ha nessun gesto che butti
 via un animale.
 
+Uno si può anche salutare **senza prenderne un altro**: in fondo alla sua
+scheda, in piccolo, c'è «va al rifugio», e un cartello dice cosa succede prima
+di farlo. Serve a chi ne vuole tre invece di quattro — prima l'unico modo di
+liberare un posto era comprare qualcuno per occuparlo.
+
 Ogni animale ha quattro bisogni che calano da soli col passare del tempo
 reale, a velocità diverse:
 
@@ -115,8 +120,9 @@ cane, e questo tiene insieme giochi che altrimenti non si parlerebbero.
 - I bisogni calano col tempo reale, quindi un animale trascurato per una
   settimana si ritrova malmesso. Non muore e non succede niente di
   irreversibile — è pensato apposta per non mettere ansia.
-- **Sostituire un animale non lo cancella**: va al rifugio e si può riprendere.
-  Le parole «elimina» e «abbandona» non compaiono da nessuna parte, e nessun
-  tocco distratto può mandare via qualcuno: chi esce va scelto apposta.
+- **Salutare un animale non lo cancella**: va al rifugio e si può riprendere,
+  sia che lo si sostituisca sia che lo si saluti e basta. Le parole «elimina» e
+  «abbandona» non compaiono da nessuna parte, e nessun tocco distratto può
+  mandare via qualcuno: chi esce va scelto apposta e confermato.
 - Il nome di un animale è testo scritto dal bambino, resta nel telefono e non
   esce di lì, come tutto il resto del salvataggio.

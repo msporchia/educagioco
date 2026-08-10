@@ -176,9 +176,15 @@ export const PETS = [
   {
     id: 'watson', nome: 'Watson', razza: 'bobtail inglese', famiglia: 'cani',
     specie: 'cane', taglio: 'bobtail', verso: 'bau', costo: 60,
-    manto: '#93a3b3', pancia: '#f7f4ee', frangia: '#e6e3dc', occhi: '#4a3b2f',
+    /* Grigio scuro e quasi neutro, non azzurro: il grigio-blu chiaro che
+       aveva prima è il colore di un bobtail vecchio, e comunque tirava al
+       celeste. `brizzolo` è il pelo screziato — un bobtail non è a due
+       colori netti, ha ciocche chiare dentro il grigio e chiazze grigie
+       che sconfinano sul bianco. */
+    manto: '#6d7378', pancia: '#f7f4ee', frangia: '#e6e3dc', occhi: '#5b4433',
+    orecchie: '#565c61', brizzolo: '#98a0a4',
     preferiti: ['🍗', '🎾'],
-    descr: 'tutto pelo e niente coda',
+    descr: 'tutto pelo, e una coda che non sta mai ferma',
   },
   {
     id: 'pepita', nome: 'Pepita', razza: 'chihuahua', famiglia: 'cani',
@@ -212,7 +218,7 @@ export const PETS = [
     id: 'rocky', nome: 'Rocky', razza: 'pastore tedesco', famiglia: 'cani',
     specie: 'cane', taglio: 'lupo', verso: 'bau', costo: 145,
     manto: '#c08a4a', pancia: '#f0d6ae', occhi: '#3b2a1e',
-    sella: '#3a3128', muso: '#3a3128', orecchie: '#4a3f33',
+    sella: '#3a3128', muso: '#3a3128', orecchie: '#4a3f33', sopracciglia: '#e8b45c',
     preferiti: ['🥩', '🪃'],
     descr: 'serio come una guardia, coccolone come un cucciolo',
   },
@@ -220,7 +226,7 @@ export const PETS = [
     id: 'yuki', nome: 'Yuki', razza: 'husky siberiano', famiglia: 'cani',
     specie: 'cane', taglio: 'lupo', verso: 'bau', costo: 165,
     manto: '#7c8794', pancia: '#f7f9fb', occhi: '#6fc0e8',
-    muso: '#f7f9fb', orecchie: '#6b7683',
+    muso: '#f7f9fb', orecchie: '#6b7683', sopracciglia: '#e9eef3',
     preferiti: ['🍗', '🥏'],
     descr: 'occhi di ghiaccio e voglia di correre',
   },

@@ -359,7 +359,39 @@ await attendi(page, 300)
 await alBancoAnimali()
 uguale('e chi aspetta al rifugio aspetta ancora', await page.locator('.adozione.mio').count(), 1)
 
-/* ══════════ 9. andare e tornare, a misura di telefono ══════════ */
+/* ══════════ 9. salutarne uno, senza comprarne un altro ══════════
+   Prima l'unico modo di far uscire un amico dalla cameretta era
+   adottarne uno nuovo: chi ne aveva quattro e ne voleva tre restava con
+   quattro. Adesso il gesto sta in fondo alla sua scheda e passa da un
+   cartello — e il rifugio non è un cestino: chi saluta resta adottato,
+   col suo nome. */
+await page.locator('.barra-app button[aria-label="indietro"]').click()
+await attendi(page, 300)
+const chiSaluta = await page.locator('.posto:not(.libero)').first().getAttribute('aria-label')
+await page.locator('.posto:not(.libero)').first().click()
+await attendi(page, 400)
+await page.locator('.saluta').click()
+await attendi(page, 300)
+uguale('salutare passa da un cartello', await page.locator('.cartello').count(), 1)
+await page.locator('.cartello .annulla').click()
+await attendi(page, 250)
+uguale('e annullare non muove niente', await page.locator('.cartello').count(), 0)
+
+await page.locator('.saluta').click()
+await attendi(page, 250)
+await page.locator('.cartello .ok').click()
+await attendi(page, 500)
+uguale('confermando si torna nella stanza', await dove(), 'La cameretta')
+uguale('e in cameretta ne resta uno in meno',
+       await page.locator('.posto:not(.libero)').count(), 3)
+await alBancoAnimali()
+uguale('chi ha salutato aspetta al rifugio, non è sparito',
+       await page.locator('.adozione.mio').count(), 2)
+controlla('e ci aspetta col suo nome',
+          (await page.locator('.adozione.mio').allInnerTexts()).join(' ').includes(chiSaluta),
+          chiSaluta)
+
+/* ══════════ 10. andare e tornare, a misura di telefono ══════════ */
 await page.setViewportSize(TELEFONO)
 await attendi(page, 300)
 

@@ -16,7 +16,7 @@
    della pancia non si contraddicono mai.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { state, miei, inCasa, animale } from '../store/profile.js'
+import { state, miei, inCasa, animale, mandaAlRifugio } from '../store/profile.js'
 import Barra from '../components/Barra.vue'
 import Stanza from '../components/Stanza.vue'
 import SchedaAnimale from '../components/SchedaAnimale.vue'
@@ -70,6 +70,18 @@ function cambiaBanco(b) {
   if (centro.value) centro.value.scrollTop = 0
 }
 
+/* Salutarlo: la scheda ha già chiesto conferma, qui si esegue e si torna
+   nella stanza — restare sulla scheda di uno che non è più in cameretta
+   sarebbe una pagina che parla di un assente. Chi ne aveva uno solo torna
+   a una stanza vuota, ed è giusto così: è quello che ha chiesto. */
+function saluta(id) {
+  const nome = animale(id)?.nome || ''
+  if (!mandaAlRifugio(id)) return
+  chi.value = miei()[0]?.id || null
+  vaiA('stanza')
+  avvisa(nome + ' ti aspetta al rifugio')
+}
+
 function adottato(id) {
   chi.value = id
   vaiA('stanza')
@@ -103,7 +115,7 @@ onUnmounted(() => clearInterval(battito))
     <!-- ═══════════ LE ALTRE TRE ═══════════ -->
     <div v-else class="centro" ref="centro">
       <SchedaAnimale v-if="sez === 'animale' && chi" :chi="chi" :adesso="adesso"
-                     @cambia="chi = $event" @avviso="avvisa"
+                     @cambia="chi = $event" @avviso="avvisa" @saluta="saluta"
                      @negozio="apriNegozio" @sorprese="vaiA('sorprese')" />
 
       <Negozio v-else-if="sez === 'negozio'" :banco="banco" @banco="cambiaBanco"

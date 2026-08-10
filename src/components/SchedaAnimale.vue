@@ -16,7 +16,7 @@
 import { ref, computed, onUnmounted, nextTick } from 'vue'
 import { state, miei, usa, bisogno, chiede, inDispensa, dispensaPer,
          indossa, togli, animale, rinominaAnimale } from '../store/profile.js'
-import { BISOGNI, grado, preferisce, menuDi } from '../data/pets.js'
+import { BISOGNI, grado, preferisce, menuDi, quotaRientro } from '../data/pets.js'
 import { POSTI, pezzoDi } from '../data/capsule.js'
 import PetSprite from './PetSprite.vue'
 import { suono } from '../audio.js'
@@ -25,7 +25,7 @@ const props = defineProps({
   chi:    { type: String, required: true },   // l'id dell'animale aperto
   adesso: { type: Number, default: () => Date.now() },
 })
-const emit = defineEmits(['cambia', 'avviso', 'negozio', 'sorprese'])
+const emit = defineEmits(['cambia', 'avviso', 'negozio', 'sorprese', 'saluta'])
 
 const bestia = computed(() => animale(props.chi))
 const lista = computed(() => miei())
@@ -161,6 +161,21 @@ function vesti(a) {
   else if (indossa(props.chi, a.e)) { suono.compra(); emit('avviso', 'sta benissimo!') }
 }
 
+/* ---------- salutarlo ----------
+   Fino a ieri l'unico modo di far uscire un amico dalla cameretta era
+   comprarne un altro: chi ne aveva quattro e ne voleva tre restava con
+   quattro. Il gesto adesso c'è da solo, ma non è un tasto grande in
+   fondo alla lista dei bisogni — sta sotto tutto, in piccolo, e passa da
+   un cartello di conferma. Al rifugio non si perde niente: nome, pasti e
+   accessori sono suoi, e riprenderlo costa la quota di sempre. */
+const saluti = ref(false)
+const quota = computed(() => quotaRientro(props.chi))
+
+function confermaSaluto() {
+  saluti.value = false
+  emit('saluta', props.chi)
+}
+
 onUnmounted(() => clearTimeout(timerDono))
 </script>
 
@@ -266,6 +281,27 @@ onUnmounted(() => clearTimeout(timerDono))
       <button v-else class="manca" @click="emit('sorprese')">
         nessun accessorio — <u>prova la macchina delle sorprese</u>
       </button>
+    </div>
+  </div>
+
+  <!-- ---------- salutarlo ----------
+       In fondo a tutto e in piccolo: è un gesto che si cerca, non uno in
+       cui si inciampa scorrendo. -->
+  <button class="saluta" @click="saluti = true">
+    🏡 {{ bestia.nome }} va al rifugio
+  </button>
+
+  <div v-if="saluti" class="velo" @click.self="saluti = false">
+    <div class="cartello">
+      <PetSprite :pet="bestia" stato="contento" :size="120" />
+      <p class="dritto"><b>{{ bestia.nome }}</b> va ad aspettarti al rifugio.</p>
+      <p class="mini">Lì sta benissimo e non costa niente. Tiene il suo nome,
+        i suoi pasti e quello che aveva addosso, e quando lo rivuoi a casa
+        lo riprendi dal negozio per 🪙 {{ quota }}.</p>
+      <div class="tasti">
+        <button class="annulla" @click="saluti = false">annulla</button>
+        <button class="ok" @click="confermaSaluto">Va al rifugio</button>
+      </div>
     </div>
   </div>
 </template>
@@ -389,4 +425,28 @@ onUnmounted(() => clearTimeout(timerDono))
 .capo:active { transform:translateY(1px); box-shadow:none }
 .capo.addosso { border-color:var(--viola); background:#e7ecf9; box-shadow:0 0 0 3px #4f6bd022 }
 .spiega { margin-top:7px; text-align:left; font-size:11px }
+
+/* ---------- salutarlo ----------
+   Piccolo, scolorito e in fondo: deve trovarlo chi lo cerca, e non deve
+   capitare sotto il pollice a chi sta dando da mangiare. */
+.saluta { margin:14px auto 4px; background:none; color:var(--tenue);
+          font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
+          text-decoration:underline; text-underline-offset:3px }
+.saluta:active { transform:translateY(1px) }
+
+.velo { position:fixed; inset:0; z-index:40; background:#2a2136aa;
+        display:grid; place-items:center; padding:14px }
+.cartello { background:#fdf8f0; border-radius:24px; padding:14px 16px 16px;
+            width:min(100%,360px); max-height:92vh; overflow:auto;
+            display:flex; flex-direction:column; align-items:center; gap:4px;
+            box-shadow:0 18px 40px #00000044 }
+.cartello .dritto { font-size:15px; font-weight:800; color:var(--viola-scuro);
+                    margin:2px 0 0; text-align:center }
+.cartello .mini { font-size:12px; color:var(--tenue); font-weight:700;
+                  margin:4px 0 0; text-align:center; line-height:1.45 }
+.tasti { display:flex; gap:8px; margin-top:12px; width:100% }
+.tasti button { flex:1; border-radius:16px; padding:11px 8px; font-weight:900; font-size:14px }
+.annulla { background:#ffffffcc; color:var(--tenue); box-shadow:0 3px 0 #dde3ea }
+.ok { background:linear-gradient(180deg,var(--viola),var(--viola-scuro)); color:#fff;
+      box-shadow:0 3px 0 #3d4f9e }
 </style>
