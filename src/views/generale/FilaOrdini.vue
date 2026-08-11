@@ -101,7 +101,7 @@ function caselle (o) {
     <div v-for="{ o, i } in voci" :key="i" class="ordi" :class="{ bivio: eBlocco(o) }"
          :data-i="i">
       <div class="riga" :class="[cl(o), E.statoRiga(via(perc, i))]">
-        <span class="presa" aria-label="sposta" @pointerdown="E.presaGiu($event, via(perc, i))"
+        <span v-if="!E.sola" class="presa" aria-label="sposta" @pointerdown="E.presaGiu($event, via(perc, i))"
               @pointermove="E.presaMuovi" @pointerup="E.presaSu"
               @pointercancel="E.presaSu">⣿</span>
         <span class="ico">{{ et(o) }}</span>
@@ -116,7 +116,7 @@ function caselle (o) {
                   @click.stop="E.tocca(via(perc, i), c, $event)">
             {{ c.testo || '＋ ' + c.vuota }}</button>
         </template>
-        <button class="viaqui" aria-label="togli l'ordine"
+        <button v-if="!E.sola" class="viaqui" aria-label="togli l'ordine"
                 @click.stop="E.togli(via(perc, i))">✕</button>
       </div>
       <!-- ═════ IL CORPO DEL CICLO ═════
@@ -165,7 +165,7 @@ function caselle (o) {
          quando ci si passa, e ripeterlo due volte è rumore. -->
     <!-- l'evento serve a una cosa sola: la domanda si apre attaccata a
          QUESTO tasto, non in fondo allo schermo -->
-    <button class="posto" :class="{ solo: !voci.length && !perc.length }"
+    <button v-if="!E.sola" class="posto" :class="{ solo: !voci.length && !perc.length }"
             @click.stop="E.chiedi(perc, $event)">
       ＋<span v-if="!voci.length && !perc.length"> e qui cosa fa?</span></button>
   </div>

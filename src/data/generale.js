@@ -235,6 +235,26 @@ const DEPOSITO = (() => {
   cava(g, 5, 7, 5, 8); cava(g, 4, 8, 4, 8)              // la nicchia da cui si origlia
   return stampa(g)
 })()
+/* L'ANELLO A DUE STRADE — un giro solo, e due modi di attraversarlo.
+   Il deposito sta in mezzo con due porte, una per lato; il rifugio è
+   una cella con l'uscio, appoggiata alla strada di tramontana. Fra il
+   rifugio e il deposito ci sono due strade: quella di sopra e quella
+   di sotto, e sono la stessa distanza.
+
+   Una RONDA SOLA gira l'anello, e dice DOVE NON È: passando dalla
+   strada di mezzogiorno annuncia «libero a tramontana», e viceversa.
+   Con una sentinella sola non c'è niente da sincronizzare — è la
+   ragione per cui è una e non due — e il segnale è sempre vero. */
+const ANELLO = (() => {
+  const g = tela(13, 11)
+  cava(g, 1, 1, 11, 1); cava(g, 1, 9, 11, 9)            // le due strade
+  cava(g, 1, 1, 1, 9); cava(g, 11, 1, 11, 9)            // le coste che le uniscono
+  cava(g, 4, 4, 7, 6)                                   // il deposito
+  cava(g, 6, 2, 6, 3)                                   // il braccio e la porta di tramontana
+  cava(g, 6, 7, 6, 8)                                   // quelli di mezzogiorno
+  cava(g, 9, 2, 9, 3)                                   // il rifugio e il suo uscio
+  return stampa(g)
+})()
 const DUE_CORTI = (() => {
   const g = tela(13, 13)
   cava(g, 1, 1, 5, 11)                                  // la corte di ponente
@@ -687,177 +707,101 @@ export const LIVELLI = [
 
 
 
-/* 7 ─ ORIGLIARE. Il primo livello dopo il tutorial, e mette insieme le
-      due cose imparate per ultime — l'evento e la decisione — su
-      un'informazione che arriva DAL NEMICO invece che da un compagno.
+/* 7 ─ DUE STRADE E UNA PORTA CHE SI CHIUDE. L'ultimo prima della
+      fortezza, e mette insieme tutto quello di prima con due cose
+      nuove: una porta che si chiude alle spalle, e un segnale che dice
+      DA CHE PARTE è libero.
 
-      Il buco nel piano avversario non è un ordine sbagliato: è una
-      parola di troppo. Le sentinelle, a ogni capo del loro giro, si
-      dicono «tutto libero» — e un segnale non ha destinatari: chi è in
-      ascolto lo sente, amico o no. Quel «tutto libero» diventa il tuo
-      orologio.
+      ── LA RONDA È UNA SOLA, ED È UNA SCELTA ──
+      Con due sentinelle bisogna sincronizzarle, e lo scarto fra le due
+      diventa la vera difficoltà del livello — una cosa che il bambino
+      non può né vedere né dedurre. Con una sola, il segnale è sempre
+      vero e sempre completo: lei dice DOVE NON È. Passando dalla
+      strada di mezzogiorno grida «libero a tramontana», e passando da
+      quella di tramontana grida «libero a mezzogiorno».
 
-      MA NON BASTA, ed è il punto del livello. Le sentinelle sono due e
-      parlano tutte e due: il segnale dice dov'è CHI HA PARLATO, e non
-      dice niente dell'altra. Quindi il piano è «quando lo senti,
-      guarda: se c'è qualcuno in giro, lascia perdere e aspetta il giro
-      dopo» — un evento con dentro una decisione, che è esattamente la
-      somma delle prove 4 e 5. È anche il primo posto dove il ciclo si
-      legge dalla parte di chi lo subisce: quello lo scrive il livello,
-      e tu ci giri intorno.
+      ── LA PORTA È IL TEMPO ──
+      Dentro il deposito, con la porta chiusa, non ti vede nessuno e tu
+      non vedi niente — ma SENTI. È la regola del gioco resa letterale:
+      quello che non vedi te lo deve dire qualcuno. Da qui viene che
+      aspettare non costa più niente, e che tutto il rischio si
+      concentra nell'istante in cui riapri.
 
-      Prima qui c'era un altro livello, «il lato scoperto»: la ronda
-      copriva la strada corta e si vinceva mettendo una tappa
-      dall'altra parte. Insegnava una cosa vera (le tappe cambiano il
-      percorso) ma la insegnava con tre meccaniche nuove in fila, e non
-      si capiva quale si stesse imparando. */
+      ⚠️ TARATURA DA FINIRE. La soluzione dichiarata vince su tutte e
+      tre le scene, ma le scorciatoie non cadono ancora tutte: uscire
+      subito senza aspettare il secondo segnale, o riuscire dalla porta
+      da cui si è entrati, oggi funzionano. La causa è misurata — il
+      viaggio dura quasi mezzo giro, quindi quando sei dentro la ronda
+      si è già spostata da sé — e la cura è accorciare il tragitto e
+      far sì che al ritorno la ronda venga incontro invece di seguire. */
 {
-  id: 'origlia', nome: 'Tutto libero', idea: 'Due domande: quando entri e quando esci',
-  dritta: "Obiettivo: <b>il tesoro deve tornare nel nascondiglio</b>, in mano all'eroe. E l'eroe cade al primo colpo.",
-  racconto: "Ogni volta che una sentinella arriva a un capo del suo giro si dice «tutto libero», e <b>lo senti anche tu</b> — ma non ti dice quale delle due ha parlato. E dalla nicchia vedi il camminamento qui davanti, non quello che succede in fondo. Il tesoro è in fondo al deposito: la strada è lunga e va rifatta al contrario, ma là dietro non arrivano a vederti, e chi è al sicuro può aspettare.",
-  aiuti: ['Il loro piano si legge: tocca una sentinella e guarda cosa fa a ogni giro.',
-          'Il segnale ti dice dov\'è quella che ha parlato. Dell\'altra non dice niente — e la strada va rifatta anche al contrario.',
-          'In fondo al deposito sei al sicuro, e lì si può <b>aspettare</b> che il campo si liberi. Ma dentro il ramo di una domanda non ce ne sta un\'altra: quella per uscire va scritta in una <b>azione</b> a parte, e chiamata.'],
-  griglia: DEPOSITO, ambiente: 'camminamento',
-  nomi: { tesoro: 'il tesoro', orchi: 'le sentinelle', tana: 'il nascondiglio' },
-  posti: { tana: { x: 4, y: 8 } },
-  /* il sacco non si prende e non si nomina: sta lì a dire che quella
-     buca in fondo alla nicchia è la tana di qualcuno, e non un vicolo
-     cieco qualsiasi. Il posto vero è la cella accanto, quella verde. */
-  scenografia: [{ che: 'sacco', x: 5, y: 8 }],
-  /* IL TESORO STA IN FONDO, e sposta tutto il livello. Al centro, a due
-     passi dall'ingresso, si faceva in tempo a entrare e uscire in una
-     finestra sola: il momento del ritorno non era una scelta, era una
-     conseguenza. In fondo a levante il viaggio è lungo il doppio — la
-     finestra non basta più — ma là dietro le sentinelle non arrivano a
-     vedere, e allora si può ENTRARE, ASPETTARE che passino, e uscire al
-     momento buono. Tre celle di differenza, e la domanda del livello
-     diventa doppia: quando parto, e quando torno. */
-  oggetti: [{ nome: 'tesoro', x: 8, y: 3, em: '💰', pittore: 'forziere' }],
-  segnali: ['libero'],
+  id: 'due-vie', nome: 'Da una parte e dall\'altra',
+  idea: 'Entra da sopra, esci da sotto',
+  dritta: "Obiettivo: <b>il tesoro deve tornare nel rifugio</b>. E l'eroe cade al primo colpo.",
+  racconto: "Il deposito ha due porte, una per lato, e attorno gira un anello con due strade: quella di tramontana e quella di mezzogiorno. La ronda è <b>una sola</b>, e dice dove non è: quando passa di sotto grida «libero a tramontana», quando passa di sopra «libero a mezzogiorno». Dentro il deposito, con la porta chiusa, nessuno ti vede e tu non vedi niente — ma senti.",
+  aiuti: ['Il suo piano si legge: tocca la ronda e guarda cosa grida, e da dove.',
+          'Una porta chiusa toglie la vista a tutti e due, e non toglie l\'udito a nessuno: chiuso là dentro puoi aspettare quanto vuoi.',
+          'Il segnale che ti fa entrare non è quello che ti fa uscire. E un ascolto scritto <b>dentro un\'azione</b> comincia solo quando quell\'azione parte.'],
+  griglia: ANELLO, ambiente: 'camminamento', intera: true,
+  nomi: { tesoro: 'il tesoro', rifugio: 'il rifugio', uscio: "l'uscio",
+          portaN: 'la porta di tramontana', portaS: 'la porta di mezzogiorno' },
+  posti: { rifugio: { x: 9, y: 3 } },
+  porte: { uscio: { x: 9, y: 2 }, portaN: { x: 6, y: 3 }, portaS: { x: 6, y: 7 } },
+  oggetti: [{ nome: 'tesoro', x: 4, y: 5, em: '💰', pittore: 'forziere' }],
+  segnali: ['tramontana', 'mezzogiorno'],
   unita: [
-    /* VEDE PIÙ DI QUANTO SIA VISTO, ed è tutta la sua arma: nove passi
-       contro due. Dalla nicchia copre il camminamento davanti
-       all'ingresso e le due strade che ci portano — cioè quello che gli
-       può capitare addosso mentre attraversa — e non un passo oltre. Se
-       vedesse tutto il giro il segnale non servirebbe a niente; se
-       vedesse quanto loro, «guarda prima di partire» sarebbe un ordine
-       che non si può eseguire. */
     { id: 'eroe', nome: "l'eroe", fazione: 'umani', emoji: '🦸', chi: 'ladra',
-      vista: 9, vita: 1, x: 4, y: 8 },
-    /* DUE SENTINELLE, E NESSUNA DELLE DUE È «QUELLA MUTA». Fanno lo
-       stesso mestiere su due strade diverse e parlano tutte e due:
-       «tutto libero» arriva quattro volte per giro, da quattro posti
-       diversi, e ogni volta è vero — per chi lo dice. Che è il modo
-       preciso in cui un'informazione può essere onesta e insufficiente
-       insieme. */
+      vista: 6, vita: 1, x: 9, y: 3 },
     { id: 'ronda', nome: 'la ronda', fazione: 'orchi', emoji: '👹', chi: 'orco',
-      vista: 2, vita: 6, x: 10, y: 1 },
-    { id: 'guardia', nome: 'la guardia', fazione: 'orchi', emoji: '👺', chi: 'guardia',
-      vista: 2, vita: 6, x: 10, y: 2 },
+      vista: 2, vita: 6, x: 6, y: 9 },
   ],
   fazioni: {
     umani: { nome: 'i nostri', autore: 'giocatore' },
-    /* DUE SPOLE SPECULARI, NON UN CORTEO. I due piani sono la stessa
-       cosa riflessa: la ronda fa su e giù per la metà di ponente
-       (5,6)⇄(5,1), la guardia per quella di levante (6,6)⇄(6,1), e a
-       ogni capo che tocca si dice «tutto libero». Due ordini di
-       cammino e due annunci, ed è tutto.
-
-       LE DUE STRADE SONO LUNGHE UGUALE — tredici celle — e non è
-       simmetria per bellezza: due giri di durata diversa si sfasano a
-       ogni tornata, e l'apertura non capita mai due volte nello stesso
-       punto del ritmo. Uguali, lo scarto fra le due resta quello di
-       partenza per tutta la partita: chi guarda un giro ha visto tutti
-       i giri. E il verso non le fa mai incolonnare — camminano una
-       incontro all'altra e si separano.
-
-       OGNUNA ANNUNCIA DA DUE POSTI: quello di sopra, lontano
-       dall'ingresso, e quello di sotto, che gli sta a un passo. È qui
-       che il segnale diventa una domanda invece di una risposta —
-       «tutto libero» è sempre vero per chi lo dice, e non dice niente
-       su dove sia l'altra. */
+    /* il giro, e i due annunci in mezzo. Il verso conta: va a levante
+       lungo il sud, sale, torna a ponente lungo il nord. Chi esce dal
+       deposito e torna al rifugio passando da levante se la trova
+       incontro; chi aspetta il secondo segnale no. */
     orchi: { nome: 'gli orchi', autore: 'livello', ordini: {
-      /* tutte e due cominciano il giro DAL BASSO: il primo ordine di un
-         ciclo è anche il primo posto dove si va, quindi decide da dove
-         arriva il primo annuncio. A chi le guarda partire, la prima
-         cosa che succede è che scendono verso l'ingresso — e il primo
-         «tutto libero» è quello che NON bisogna ascoltare. */
-      ronda: [ciclo([o('vai', '5,6'), o('suona', 'libero'),
-                     o('vai', '5,1'), o('suona', 'libero')],
+      ronda: [ciclo([o('vai', '6,9'), o('suona', 'tramontana'),
+                     o('vai', '11,9'), o('vai', '11,1'),
+                     o('vai', '6,1'), o('suona', 'mezzogiorno'),
+                     o('vai', '1,1'), o('vai', '1,9')],
                     { cond: 'vedi', complemento: 'umani' }),
               o('attacca', 'umani')],
-      guardia: [ciclo([o('vai', '6,6'), o('suona', 'libero'),
-                       o('vai', '6,1'), o('suona', 'libero')],
-                      { cond: 'vedi', complemento: 'umani' }),
-                o('attacca', 'umani')],
     } },
   },
-  complementi: ['tesoro', 'orchi', 'libero', 'tana'],
-  /* la domanda è una sola, e il livello la detta: ce n'è uno in vista
-     oppure no. Il nome «le sentinelle» le tiene insieme tutte e due —
-     indicarne una col dito sarebbe chiedere «quella lì», e quella lì
-     non è il problema. */
-  condizioni: [vedi('orchi'), nonVedi('orchi')],
-  /* `esegui` c'è perché il ritorno è la parte cieca: una volta preso il
-     tesoro bisogna rifare la strada, e dentro il ramo di un bivio non
-     entra un secondo bivio. L'azione è il modo di farsi la domanda una
-     seconda volta. */
-  verbi: ['vai', 'prendi', 'quando', 'esegui', 'aspetta'],
-  /* ── SI PRENDE E SI TORNA ──
-     Non basta metterci le mani sopra: il tesoro deve tornare nel
-     nascondiglio. Non è una tappa in più per allungare il brodo — è
-     quello che rende il MOMENTO una scelta. Con la sola presa la
-     strada era di sei battiti e nessun errore si pagava: a velocità
-     uguali chi ti ha visto non ti prende mai, ti insegue e basta, e tu
-     arrivi lo stesso. Dovendo rifare la strada al contrario, invece,
-     chi ti ha visto te lo ritrovi davanti. */
-  obiettivo: [ha('eroe', 'tesoro'), qui('eroe', 'tana')],
+  complementi: ['tesoro', 'rifugio', 'uscio', 'portaN', 'portaS',
+                'tramontana', 'mezzogiorno'],
+  verbi: ['vai', 'prendi', 'apri', 'chiudi', 'quando', 'esegui'],
+  obiettivo: [ha('eroe', 'tesoro'), qui('eroe', 'rifugio')],
   sconfitta: [caduto('eroe')],
-  motivoSconfitta: "L'eroe è finito sotto gli occhi di una sentinella.",
+  motivoSconfitta: "L'eroe è finito sotto gli occhi della ronda.",
   mostraNemici: true,
-  /* LE SCENE SPOSTANO LE SENTINELLE, non le cose: quello che cambia è
-     in che punto del loro giro le trovi, cioè LO SCARTO FRA LE DUE — e
-     siccome i due giri durano uguale, quello scarto è l'unica cosa che
-     la scena decide, e non cambia più fino alla fine. Ognuna parte
-     sempre dentro la sua metà: se le si mettesse dall'altra parte, il
-     primo tratto sarebbe una corsa contromano per tornare al proprio
-     giro, e la prima cosa che il bambino vede sarebbe l'eccezione. */
+  /* LA RONDA PARTE DI SOPRA, e non è un dettaglio di scena: la strada
+     che ti serve per entrare è proprio quella occupata, quindi la prima
+     cosa che si impara è che bisogna lasciarla passare. E parte sempre
+     nella METÀ DI PONENTE del lato di tramontana: da lì il cammino
+     verso il primo punto del suo giro è concorde col verso in cui gira,
+     e non la si vede fare un tratto contromano prima di ingranare. */
   varianti: [
-    { nome: 'lontane tutte e due', unita: { ronda: { x: 2, y: 1 }, guardia: { x: 10, y: 6 } } },
-    { nome: "la guardia è davanti all'ingresso", unita: { ronda: { x: 1, y: 1 }, guardia: { x: 6, y: 6 } } },
-    { nome: 'la ronda scende a ponente', unita: { ronda: { x: 1, y: 3 }, guardia: { x: 6, y: 6 } } },
+    { nome: 'la ronda è di sopra', unita: { ronda: { x: 4, y: 1 } } },
+    { nome: 'la ronda scende a ponente', unita: { ronda: { x: 1, y: 4 } } },
+    { nome: 'la ronda è appena passata', unita: { ronda: { x: 2, y: 9 } } },
   ],
-  par: 7,
+  par: 12,
   soluzioni: [
-    /* ── DUE DOMANDE, E LA SECONDA NON CI STAREBBE ──
-       All'andata basta il segnale più un'occhiata. Al ritorno serve
-       chiedersi di nuovo «è libero?», e dentro il ramo di un bivio un
-       secondo bivio non ci va — è la regola che tiene i piani leggibili
-       su un telefono. Per questo il ritorno è un'AZIONE con un nome:
-       la si chiama, e là dentro la fila è di nuovo piatta.
-       E l'attesa è un'attesa vera (`aspetta che [non vedi]`), non un
-       giro a vuoto: si sta fermi nell'angolo dove non arrivano, e si
-       riparte quando il mondo dice di sì. */
-    { nome: 'entra col segnale, esci quando è libero', piano: { eroe: [
-      quando('libero', bivio(vedi('orchi'), [],
-                             [o('prendi', 'tesoro'), o('esegui', 'azione 2')])),
-      azione('azione 2', [aspettaChe(nonVedi('orchi')), o('vai', 'tana')]),
-    ] } },
-    /* FRAGILE: la stessa cosa senza l'occhiata di partenza. Il segnale
-       dice dov'è chi parla e non dice niente dell'altra: due volte su
-       tre ci si incammina addosso a quella zitta. */
-    { nome: 'parte appena lo sente', fragile: true, piano: { eroe: [
-      quando('libero', o('prendi', 'tesoro'), o('esegui', 'azione 2')),
-      azione('azione 2', [aspettaChe(nonVedi('orchi')), o('vai', 'tana')]),
-    ] } },
-    /* FRAGILE, e la più istruttiva: aspettare di non vedere nessuno E
-       BASTA, senza il segnale. Dalla nicchia si vede solo il
-       camminamento qui davanti: «non vedo nessuno» vuol dire «non c'è
-       nessuno QUI», e chi sta arrivando dall'altra parte non lo sai.
-       Il segnale serve proprio a sapere quello che non si vede. */
-    { nome: 'aspetta di non vedere nessuno, e corri', fragile: true, piano: { eroe: [
-      aspettaChe(nonVedi('orchi')), o('prendi', 'tesoro'), o('vai', 'tana'),
+    /* DUE ASCOLTI, MA NON INSIEME: il secondo è scritto DENTRO l'azione
+       che entra, quindi comincia a valere solo quando sei dentro col
+       tesoro in mano. Prima di allora «libero a mezzogiorno» non vuol
+       dire niente per te, e infatti non lo senti. */
+    { nome: 'entra da sopra, esci da sotto', piano: { eroe: [
+      quando('tramontana', o('esegui', 'entra')),
+      azione('entra', [
+        o('apri', 'uscio'), o('apri', 'portaN'), o('prendi', 'tesoro'),
+        o('chiudi', 'portaN'),
+        quando('mezzogiorno', o('esegui', 'esci')),
+      ]),
+      azione('esci', [o('apri', 'portaS'), o('vai', 'rifugio')]),
     ] } },
   ],
 },

@@ -150,6 +150,11 @@ export const SEGNALI = {
   chiave:  { nome: 'ho la chiave',    em: '🔑', col: '#4a86e8' },
   richiamo: { nome: 'un baccano',    em: '🔔', col: '#e8a33f' },
   fracasso: { nome: 'un fracasso',   em: '💥', col: '#e8703f' },
+  /* i due lati: un segnale che dice DOVE è libero, non solo che lo è.
+     Colori diversi apposta — la vignetta di chi parla si legge a colpo
+     d'occhio, e sono la stessa cosa detta di due posti. */
+  tramontana: { nome: 'libero a tramontana', em: '⬆️', col: '#4a86e8' },
+  mezzogiorno: { nome: 'libero a mezzogiorno', em: '⬇️', col: '#e8a33f' },
 }
 export const ilSegnale = k => SEGNALI[k] || { nome: k, em: '📣', col: '#8b97b4' }
 
@@ -182,6 +187,18 @@ export const VERBI = {
                accetta: ['posto', 'oggetto', 'porta', 'unita', 'fazione', 'cella'] },
   prendi:    { et: '🎒', cl: 'azione', nome: 'prendi', grado: 2, accetta: ['oggetto'] },
   apri:      { et: '🔓', cl: 'azione', nome: 'apri', grado: 2, accetta: ['porta'] },
+  /* ── CHIUDERSI DIETRO UNA PORTA ──
+     Il gemello di `apri`, e non è una simmetria per bellezza: una porta
+     chiusa **taglia la vista** (di qua e di là: si vede a distanza di
+     cammino, e da una porta chiusa non ci si cammina) ma **non taglia
+     il suono**. Chi si chiude dentro diventa cieco e resta in ascolto:
+     l'unica cosa che gli arriva è un segnale, ed è esattamente il
+     principio del gioco reso letterale — quello che non vedi te lo
+     deve dire qualcuno.
+     Da qui viene anche il tempo: dietro una porta chiusa aspettare non
+     costa niente, e il rischio si concentra tutto nell'istante in cui
+     riapri. */
+  chiudi:    { et: '🔒', cl: 'azione', nome: 'chiudi', grado: 2, accetta: ['porta'] },
   /* `elenco: true` — QUESTO BERSAGLIO NON SI INDICA COL DITO.
      Indicare un nemico sulla mappa vuol dire «quell'orco lì, quello in
      quel punto», e non è quello che si sta scrivendo: un piano si firma
@@ -817,9 +834,13 @@ export function guaiDi (mondo, piano) {
         if (dentro.some(eRoutine))
           out.push({ unita: id, ordine: o,
                      motivo: `${dove} — dentro un'azione non se ne scrive un'altra: si chiama` })
-        if (dentro.some(q => q && q.verbo === 'quando'))
-          out.push({ unita: id, ordine: o,
-                     motivo: `${dove} — dentro un'azione non ci va un «quando senti»` })
+        /* un «quando senti» DENTRO un'azione invece ci sta, ed è una
+           cosa che serve: l'ascolto si arma quando l'azione viene
+           chiamata, cioè «da adesso in poi ascolto anche questo». È il
+           modo di non sentire un segnale prima di essere nel punto in
+           cui quel segnale vuol dire qualcosa. Dentro il ramo di un
+           bivio resta vietato: lì un piano che parte da capo non ci
+           sta, perché il ramo è una strada, non un posto. */
         continue
       }
       /* ── il ciclo ──
@@ -1639,6 +1660,27 @@ function fai (m, f, u, o) {
       pt.aperta = true; m.versioneMappa++; m.unita.forEach(z => { z._mk = null })
       m.eventi.push('apre')
       nota(m, f, u, 'fa', `aperto ${N}`, `apre ${N}`)
+      return 'fatto'
+    }
+
+    case 'chiudi': {
+      const pt = m.porte[C.id]
+      if (!pt.aperta) return 'subito'
+      if (!aPortata(u, pt)) {
+        const r = verso(m, u, pt.x, pt.y)
+        if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
+        f.st.fermo = 0
+        nota(m, f, u, 'fa', `torno a chiudere ${N}`, 'va verso ' + VERSO[u.dir])
+        return 'lavora'
+      }
+      /* non si chiude una porta addosso a qualcuno: chi sta sulla
+         soglia resterebbe murato dentro la sua cella, e sarebbe una
+         cosa che succede senza che si veda perché */
+      if (vive(m).some(z => z.x === pt.x && z.y === pt.y))
+        return salta(m, f, u, `c'è qualcuno sulla soglia: ${N} non si chiude`, 'spinge la porta')
+      pt.aperta = false; m.versioneMappa++; m.unita.forEach(z => { z._mk = null })
+      m.eventi.push('apre')
+      nota(m, f, u, 'fa', `chiuso ${N}`, `chiude ${N}`)
       return 'fatto'
     }
 

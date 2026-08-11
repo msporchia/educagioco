@@ -111,6 +111,12 @@ export function aggiungiIn (ordini, perc, o) {
      quando lo chiami — e stanno accanto alla fila, non dentro. */
   if (o.verbo === 'quando') {
     if (!o.allora) o.allora = []
+    /* di regola nasce in cima al piano: è un programma a parte, non un
+       ordine. L'eccezione è il corpo di un'AZIONE — lì un ascolto vuol
+       dire «da quando arrivo qui, sto anche in ascolto di questo», e
+       spostarlo in cima cambierebbe quello che dice. */
+    const l = perc.length === 2 && perc[1] === 'corpo' ? listaIn(ordini, perc) : null
+    if (l) { l.push(o); return [...perc, l.length - 1] }
     ordini.push(o)
     return [ordini.length - 1]
   }

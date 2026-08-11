@@ -50,8 +50,8 @@ import { LIVELLI, QUANTI, proveDi } from '../data/generale.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita,
          contaOrdini, VERBI, ilSegnale, testoCond, laCosa,
          registro, eAvanzato, libera, perdute,
-         manca, eCondizione, eRipeti, eBlocco, ramoDi, corpoDi, dentroA, RAMI, BLOCCHI,
-         raccogliRoutine }
+         manca, eCondizione, eRipeti, eRoutine, eBlocco, ramoDi, corpoDi, dentroA,
+         RAMI, BLOCCHI, raccogliRoutine }
        from '../motore/generale.js'
 
 const emit = defineEmits(['vai'])
@@ -402,27 +402,6 @@ const ordiniAltrui = computed(() => {
 /* gli ordini di un altro, appiattiti per essere LETTI: un bivio diventa
    la sua domanda e poi le due strade rientrate, che è come si racconta a
    parole. Qui non si tocca niente — si deduce. */
-const righeAltrui = computed(() => {
-  const out = []
-  const giro = (lista, liv) => (lista || []).forEach(o => {
-    if (eCondizione(o)) {
-      out.push({ liv, bivio: true, testo: testoGuardia(o.cond) })
-      RAMI.forEach(r => {
-        out.push({ liv: liv + 1, capo: r.et + ' ' + r.nome })
-        const dentro = ramoDi(o, r.ramo)
-        /* un ramo vuoto si DICE: se no le righe che vengono dopo il
-           blocco sembrano le sue, e il piano si legge al contrario */
-        if (!dentro.length) out.push({ liv: liv + 2, capo: 'e allora niente', niente: true })
-        else giro(dentro, liv + 2)
-      })
-      return
-    }
-    out.push({ liv, o })
-    if (o.allora) giro(o.allora, liv + 1)
-  })
-  giro(ordiniAltrui.value, 0)
-  return out
-})
 function intercetta () {
   const nascoste = altrui.value.filter(u => !scoperte.value.includes(u))
   if (!gettoni.value || !nascoste.length) return
@@ -590,29 +569,22 @@ async function ridimensiona () {
       <EditorPiano v-if="!letta" ref="editor" :ordini="ordini" :mondo-ora="mondoOra"
                    :tic="tic" :unita-ora="unitaOra" @mira="chiediMira" />
 
-      <!-- gli ordini di qualcun altro: si leggono, non si scrivono -->
-      <section v-else class="lista">
-        <div v-if="!ordiniAltrui" class="vuoto">I suoi ordini non li conosci. Puoi
+      <!-- ═════ GLI ORDINI DI QUALCUN ALTRO ═════
+           Lo stesso componente del proprio piano, che non si tocca. Ne
+           esisteva una seconda versione qui dentro, più povera: sapeva
+           disegnare gli ordini e i bivi e basta, quindi un ciclo la
+           faceva esplodere e le azioni non le avrebbe mai viste. Una
+           forma nuova del linguaggio deve costare una riga in un posto
+           solo — e in regalo, del piano nemico si vede anche QUALE RIGA
+           sta correndo adesso. -->
+      <section v-else-if="!ordiniAltrui" class="lista">
+        <div class="vuoto">I suoi ordini non li conosci. Puoi
           <b>dedurli</b> guardando cosa fa: apri il <b>registro 📜</b>.
           <template v-if="liv.mostraNemici === 'gettoni'">Oppure spendi un gettone 🕵 e li
           leggi — il livello si vince anche senza spenderne nessuno.</template></div>
-        <div v-else>
-          <div v-for="(r, i) in righeAltrui" :key="i" class="ordi"
-               :style="{ marginLeft: r.liv * 14 + 'px' }">
-            <div v-if="r.capo" class="capoAltrui" :class="{ niente: r.niente }">{{ r.capo }}</div>
-            <div v-else-if="r.bivio" class="riga altrui scelta">
-              <span class="ico">❓</span>
-              <span class="lab">condizione</span>
-              <span class="chip">{{ r.testo }}</span>
-            </div>
-            <div v-else class="riga altrui" :class="VERBI[r.o.verbo].cl">
-              <span class="ico">{{ VERBI[r.o.verbo].et }}</span>
-              <span class="lab">{{ VERBI[r.o.verbo].nome }}</span>
-              <span class="chip">{{ emDi(r.o.complemento) }} {{ nomeDi(r.o.complemento) }}</span>
-            </div>
-          </div>
-        </div>
       </section>
+      <EditorPiano v-else sola :ordini="ordiniAltrui" :mondo-ora="mondoOra"
+                   :tic="tic" :unita-ora="letta" />
 
       <!-- ═════ I FOGLI ═════
            Registro, spiegazione, scheda ed elenco dei nomi: si aprono

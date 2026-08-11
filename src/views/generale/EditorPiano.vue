@@ -39,6 +39,14 @@ const props = defineProps({
   mondoOra: { type: Function, default: () => null },
   tic: { type: Number, default: 0 },
   unitaOra: { type: String, default: '' },
+  /* ── LO STESSO PIANO, MA NON SI TOCCA ──
+     Gli ordini di un nemico si leggono con questo componente, non con
+     una copia: erano due viste della stessa cosa, e la seconda sapeva
+     disegnare solo gli ordini semplici e i bivi — un ciclo la faceva
+     esplodere, e le azioni non le avrebbe mai viste. Una forma nuova
+     deve costare una riga in un posto, non in due. Qui l'unica
+     differenza è che niente si può cambiare. */
+  sola: { type: Boolean, default: false },
 })
 const emit = defineEmits(['mira'])
 
@@ -388,10 +396,18 @@ const inRamo = perc => {
   return !(perc.length === 2 && perc[1] === 'corpo' && eRoutine(props.ordini[perc[0]]))
 }
 
-provide('editor', {
-  chiedi, tocca, togli, sposta, presaGiu, presaMuovi, presaSu,
-  statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando,
-})
+/* in sola lettura tutto quello che cambia il piano diventa un gesto a
+   vuoto: le righe restano, i tasti spariscono (`sola` lo sa anche
+   FilaOrdini), e quello che si vede è com'è fatto il piano e quale
+   riga sta correndo adesso — che è il motivo per cui lo si apre. */
+const niente = () => {}
+provide('editor', props.sola
+  ? { chiedi: niente, tocca: niente, togli: niente, sposta: niente,
+      presaGiu: niente, presaMuovi: niente, presaSu: niente,
+      statoRiga, ramoPreso, perche: () => '', frase, comeSiChiama,
+      mirando: () => false, sola: true }
+  : { chiedi, tocca, togli, sposta, presaGiu, presaMuovi, presaSu,
+      statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando, sola: false })
 defineExpose({ posaBersaglio, nienteMira })
 </script>
 
@@ -411,7 +427,7 @@ defineExpose({ posaBersaglio, nienteMira })
         <button class="casella" :class="{ manca: !o.complemento }"
                 @click.stop="tocca([i], { cosa: true }, $event)">
           {{ o.complemento ? comeSiChiama(o.complemento) : '＋ quale segnale' }}</button>
-        <button class="viaqui" aria-label="togli l'ascolto" @click.stop="togli([i])">✕</button>
+        <button v-if="!sola" class="viaqui" aria-label="togli l'ascolto" @click.stop="togli([i])">✕</button>
       </div>
       <div class="dentro">
         <FilaOrdini :voci="(o.allora || []).map((oo, j) => ({ o: oo, i: j }))" :perc="[i]" />
@@ -426,7 +442,7 @@ defineExpose({ posaBersaglio, nienteMira })
       <div class="testa">
         <span class="ico">{{ BLOCCHI.routine.et }}</span>
         <span class="lab">{{ o.nome }}</span>
-        <button class="viaqui" aria-label="togli l'azione" @click.stop="togli([i])">✕</button>
+        <button v-if="!sola" class="viaqui" aria-label="togli l'azione" @click.stop="togli([i])">✕</button>
       </div>
       <div class="dentro">
         <FilaOrdini :voci="(o.corpo || []).map((oo, j) => ({ o: oo, i: j }))"
@@ -439,12 +455,12 @@ defineExpose({ posaBersaglio, nienteMira })
          davvero: questo tasto stava fuori dal filtro dei verbi, e nei
          livelli senza segnali apriva «quale segnale» su un elenco
          vuoto — un tasto che porta a una stanza vuota. -->
-    <button v-if="verbiDisponibili.includes('quando')"
+    <button v-if="!sola && verbiDisponibili.includes('quando')"
             class="posto ascolto-nuovo" @click="scegliAscolto">
       ＋ {{ VERBI.quando.et }} {{ VERBI.quando.nome }}…</button>
     <!-- e un'azione nuova. C'è sempre: non dipende da cosa offre il
          livello, perché quello che ci metti dentro lo decidi tu. -->
-    <button class="posto azione-nuova" @click="scegliAzione">
+    <button v-if="!sola" class="posto azione-nuova" @click="scegliAzione">
       ＋ {{ BLOCCHI.routine.et }} una azione…</button>
   </section>
 

@@ -123,7 +123,7 @@ const AUTORI = ['giocatore', 'livello']
    e non altri. `fai un passo` e `girati` sono stati tolti apposta: un
    ordine che dice una direzione invece di una meta è troppo specifico
    per insegnare qualcosa, e «prendi a nord» non vuol dire niente. */
-const BASI = ['vai', 'prendi', 'apri', 'attacca', 'aspetta',
+const BASI = ['vai', 'prendi', 'apri', 'chiudi', 'attacca', 'aspetta',
               'quando', 'suona', 'allarme', 'esegui']
 const base = v => BASI.find(b => String(v).toLowerCase().includes(b)) || null
 /* e queste non sono più complementi di niente */
