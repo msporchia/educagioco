@@ -130,7 +130,7 @@ export const TERRENO_BOSCO = {
     g.addColorStop(0, mescola(A.fondo[0], '#ffffff', 0.12))
     g.addColorStop(0.5, A.fondo[0]); g.addColorStop(1, A.fondo[1])
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
-    POSE[A.posa](ctx, reg, A, lato)
+    POSE[A.posa](ctx, reg, A, lato, A.lastra)
     variazioni(ctx, reg, A, lato, 71)
   },
 

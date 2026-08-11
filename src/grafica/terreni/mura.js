@@ -160,7 +160,7 @@ export const TERRENO_MURA = {
     const largo = { x0: -r, y0: -r, x1: r, y1: r }
     ctx.save()
     ctx.translate(W / 2, H / 2); ctx.rotate(0.52)
-    POSE[A.posa](ctx, largo, A, lato)
+    POSE[A.posa](ctx, largo, A, lato, A.lastra)
     variazioni(ctx, largo, A, lato, 71)
     ctx.restore()
   },
