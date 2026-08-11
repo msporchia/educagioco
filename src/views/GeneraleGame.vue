@@ -128,8 +128,10 @@ function avviaLivello (l) {
 /* ═══════════ la partita ═══════════ */
 function nuovoMondo (k) {
   serieI.value = k
-  mondo = creaMondo(liv.value, liv.value.varianti[k])
-  avvia(mondo, pianoCompleto(liv.value, piano.value))
+  /* un livello può non avere varianti: dove non c'è niente da
+     indovinare la scena è una sola, e `creaMondo` la sa prendere da sé */
+  mondo = creaMondo(liv.value, (liv.value.varianti || [])[k])
+  avvia(mondo, pianoCompleto(mondo, piano.value))
   mondo.passi = 0
   campo.value?.azzera()
   /* una scena nuova si mette in modo che si veda chi ha degli ordini:
@@ -397,7 +399,7 @@ const unita = id => (mondo ? mondo.perId[id] : null)
 const ordiniAltrui = computed(() => {
   if (!letta.value || !mondo) return []
   if (!scoperte.value.includes(letta.value)) return null
-  return pianoCompleto(liv.value, {})[letta.value] || []
+  return pianoCompleto(mondo || liv.value, {})[letta.value] || []
 })
 /* gli ordini di un altro, appiattiti per essere LETTI: un bivio diventa
    la sua domanda e poi le due strade rientrate, che è come si racconta a

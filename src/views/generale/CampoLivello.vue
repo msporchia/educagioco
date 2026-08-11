@@ -175,8 +175,11 @@ async function misura () {
     tela.ridimensiona()
   }
   zoomOra.value = zoom
-  fondale = creaFondale({ mappa: props.liv.griglia, ambiente: props.liv.ambiente, lato,
-                          seme: props.liv.id })
+  /* la griglia la dice il mondo, non il livello: da quando una scena
+     può ridisegnare la stanza, «com'è fatta» dipende dalla variante che
+     si sta giocando */
+  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [], 
+                          ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   limita(); rifaiFondale()
 }
@@ -191,8 +194,11 @@ let latoFondale = 26
    staccano. */
 function ridipingiStanza () {
   if (!mondo() || !props.liv || lato === latoFondale) return
-  fondale = creaFondale({ mappa: props.liv.griglia, ambiente: props.liv.ambiente, lato,
-                          seme: props.liv.id })
+  /* la griglia la dice il mondo, non il livello: da quando una scena
+     può ridisegnare la stanza, «com'è fatta» dipende dalla variante che
+     si sta giocando */
+  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [], 
+                          ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   tela = creaTela(telaEl.value, PITTORI, { unita: 420, minimo: lato / 20, massimo: lato / 20 })
   tela.ridimensiona()
@@ -334,7 +340,7 @@ function scena () {
      aveva appena preso il tesoro si ritrovava una partita che non
      finiva senza capire cosa mancasse: il posto dove finisce la
      missione dev'essere una cosa che si vede sulla mappa. */
-  const mete = new Set((m.livello.obiettivo || [])
+  const mete = new Set((m.livello.vince || [])
     .filter(c => c && c.cond === 'qui' && c.complemento).map(c => c.complemento))
   for (const k in m.posti) {
     if (k === 'tesoro') continue

@@ -132,6 +132,7 @@
    Il mondo qui dentro le costruisce e le interroga; il COME si
    comportano sta in `motore/generale/`, non in questo `switch`. */
 import { Porta, Oggetto, Posto, Leva, Totem } from './generale/elementi/indice.js'
+import { leggiCampo, campoDi } from './generale/campo.js'
 
 /* oltre questi passi la scena è in giro a vuoto: si chiude e lo dice */
 export const PASSI_MASSIMI = 300
@@ -162,6 +163,10 @@ export const SEGNALI = {
   mezzogiorno: { nome: 'libero a mezzogiorno', em: '⬇️', col: '#e8a33f' },
 }
 export const ilSegnale = k => SEGNALI[k] || { nome: k, em: '📣', col: '#8b97b4' }
+/* quello che vale in QUESTA stanza: prima il vocabolario del livello,
+   poi la tabella comune */
+export const segnaleDi = (m, k) =>
+  (m && m.vocabolario && m.vocabolario[k]) || ilSegnale(k)
 
 /* ── il vocabolario ─────────────────────────────────────────────
    SI ASTRAE IL COME, NON IL COSA. È il metro per decidere se un verbo
@@ -353,7 +358,12 @@ const clona = x => JSON.parse(JSON.stringify(x))
 
 const varianteDi = (livello, variante) => {
   if (variante && typeof variante === 'object') return variante
-  const v = (livello.varianti || [])[variante || 0]
+  /* un livello può non avere varianti: quando quello che si chiede non
+     si può sbagliare in più modi, tre scene sarebbero tre volte la
+     stessa prova */
+  const tutte = livello.varianti || []
+  if (!tutte.length) return {}
+  const v = tutte[variante || 0]
   if (!v) throw new Error('variante sconosciuta')
   return v
 }
@@ -364,7 +374,22 @@ const patch = (base, cambi) => ({ ...base, ...(cambi || {}) })
    nessuno se ne accorgerebbe finché un bambino non rigioca la tappa. */
 export function creaMondo(livello, variante) {
   const v = varianteDi(livello, variante)
-  const griglia = livello.griglia
+  /* ── LA SCENA SI LEGGE DALLA MAPPA ──
+     Una variante **ridisegna** la stanza invece di elencare coordinate
+     nuove: `mappa` per intero (che è l'unico modo di leggere in una
+     diff dove si è spostato l'orco) e, se serve, una `legenda` che
+     ritocca i parametri senza toccare il disegno. Le posizioni non si
+     scrivono in nessuno dei due posti: le dice il token. */
+  /* una scena può fare due cose, e spesso le fa insieme: **ridisegnare**
+     la stanza (`scena`) e **mettere qualcuno** in uno dei posti che la
+     mappa aveva già preparato (`metti`) */
+  const base = livello.scena
+  const scena = {
+    righe: (v.scena && v.scena.righe) || base.righe,
+    legenda: { ...base.legenda, ...((v.scena && v.scena.legenda) || {}), ...(v.metti || {}) },
+  }
+  const L = leggiCampo({ ...livello, scena })
+  const griglia = L.griglia
   const h = griglia.length, w = griglia[0].length
   const celle = []
   for (let y = 0; y < h; y++) {
@@ -373,35 +398,38 @@ export function creaMondo(livello, variante) {
     celle.push(riga)
   }
   const porte = {}
-  for (const k in (livello.porte || {})) {
-    const p = patch(livello.porte[k], (v.porte || {})[k])
+  for (const k in L.porte) {
+    const p = L.porte[k]
     porte[k] = new Porta(k, p)
     celle[p.y][p.x].porta = k
   }
   const posti = {}
-  for (const k in (livello.posti || {}))
-    posti[k] = new Posto(k, patch(livello.posti[k], (v.posti || {})[k]))
-  /* i congegni: una leva scatta al primo `premi`, un totem conta.
-     Stessa forma delle porte e dei posti — la variante può toccarne i
-     parametri, mai il filo (`collegata`), che è la mappa che decide */
+  for (const k in L.posti) posti[k] = new Posto(k, L.posti[k])
+  /* i congegni: una leva scatta al primo `premi`, un totem conta. */
   const leve = {}
-  for (const k in (livello.leve || {}))
-    leve[k] = new Leva(k, patch(livello.leve[k], (v.leve || {})[k]))
+  for (const k in L.leve) leve[k] = new Leva(k, L.leve[k])
   const totem = {}
-  for (const k in (livello.totem || {}))
-    totem[k] = new Totem(k, patch(livello.totem[k], (v.totem || {})[k]))
+  for (const k in L.totem) totem[k] = new Totem(k, L.totem[k])
   const m = {
     livello, variante: v.nome || '', ordiniScena: v.ordini || null,
+    campo: L,
     w, h, celle, porte, posti, leve, totem,
-    oggetti: (livello.oggetti || [])
-      .map(o => new Oggetto(o.nome, patch(o, (v.oggetti || {})[o.nome]))),
-    segnali: [...(livello.segnali || [])],
-    unita: livello.unita.map(u0 => {
-      const u = patch(u0, (v.unita || {})[u0.id])
-      return { ...u, x0: u.x, y0: u.y, vita: u.vita || 3, vitaMax: u.vita || 3,
-               vista: u.vista || 0, viva: true, zaino: [], dir: 2, visti: {},
-               ordineOra: null, attesa: null }
-    }),
+    oggetti: L.oggetti.map(o => new Oggetto(o.nome, o)),
+    /* ── I SEGNALI LI DICHIARA IL LIVELLO ──
+       Prima erano una tabella globale nel motore, e un livello che ne
+       voleva uno suo («la campana del carro») otteneva il ripiego:
+       nome grezzo e 📣 grigio. Adesso `cose.segnale(...)` porta nome,
+       faccia e colore, e la tabella globale resta solo per i dieci che
+       tornano in tutte le storie — quelli sì che devono essere uguali
+       dappertutto, perché un bambino li impara una volta. */
+    segnali: (livello.segnali || []).map(s => (typeof s === 'string' ? s : s.id)),
+    vocabolario: Object.fromEntries((livello.segnali || [])
+      .filter(s => s && typeof s === 'object')
+      .map(s => [s.id, { nome: s.nome, em: s.em, col: s.col }])),
+    unita: L.unita.map(u => ({
+      ...u, x0: u.x, y0: u.y, vita: u.vita || 3, vitaMax: u.vita || 3,
+      vista: u.vista || 0, viva: true, zaino: [], dir: 2, visti: {},
+      ordineOra: null, attesa: null })),
     fili: [], ascolti: [], segnaliMandati: [], pendenti: [],
     /* la coda dei congegni: un `premi` che scatta non comanda subito —
        accoda qui, e `passo()` la consegna a fine battito, con lo
@@ -409,7 +437,7 @@ export function creaMondo(livello, variante) {
     comandiPendenti: [],
     passi: 0, finita: false, vinto: false, motivo: '', colpevole: null,
     eventi: [], traccia: [], versioneMappa: 0, colpi: [], allarmi: [],
-    mia: Object.keys(livello.fazioni).find(f => livello.fazioni[f].autore === 'giocatore'),
+    mia: Object.keys(L.fazioni).find(f => L.fazioni[f].autore === 'giocatore'),
   }
   m.perId = {}
   m.unita.forEach(u => { m.perId[u.id] = u })
@@ -430,7 +458,7 @@ export function creaMondo(livello, variante) {
   return m
 }
 
-const etichetta = (m, k) => ((m.livello.nomi || {})[k]) || k
+const etichetta = (m, k) => ((m.campo && m.campo.nomi) || {})[k] || ((m.livello.nomi || {})[k]) || k
 const vive = m => m.unita.filter(u => u.viva)
 
 /* ── IL SIGILLO SI DERIVA, NON SI DICHIARA ──
@@ -474,8 +502,8 @@ function coseDi (m) {
   for (const k in m.totem) agg(k, m.totem[k].tipo, etichetta(m, k), m.totem[k].em)
   m.oggetti.forEach(o => agg(o.nome, o.tipo, etichetta(m, o.nome), o.em))
   m.unita.forEach(u => agg(u.id, 'unita', u.nome || u.id, u.emoji))
-  for (const k in m.livello.fazioni) agg(k, 'fazione', etichetta(m, k), '🚩')
-  m.segnali.forEach(k => agg(k, 'segnale', ilSegnale(k).nome, ilSegnale(k).em))
+  for (const k in m.campo.fazioni) agg(k, 'fazione', etichetta(m, k), '🚩')
+  m.segnali.forEach(k => agg(k, 'segnale', segnaleDi(m, k).nome, segnaleDi(m, k).em))
   agg('momento', 'attimo', 'un momento', '⏱️')
   return c
 }
@@ -790,11 +818,20 @@ function vedePorta (m, io, p) {
    `piano` è { idUnità: [ordini] }. Il piano completo è quello scritto
    dal livello più quello del giocatore, che ha l'ultima parola sulle
    sue unità. */
-export function pianoCompleto (livello, delGiocatore) {
+/* ── GLI ORDINI DEI NEMICI VENGONO DALLA SCENA CHE SI STA GIOCANDO ──
+   Accetta il mondo, non il livello: nel mondo c'è la variante, e una
+   variante può riscrivere il piano di chi non è tuo — è così che «da
+   che parte entra l'orco» smette di essere sempre la stessa cosa.
+   Prendendoli dal livello si giocavano quattro scene diverse con lo
+   stesso piano nemico, e le tre varianti non smentivano più niente. */
+export function pianoCompleto (mondoOLivello, delGiocatore) {
+  const livello = mondoOLivello.livello || mondoOLivello
+  const campoOra = mondoOLivello.campo || campoDi(livello)
   const p = {}
-  for (const nome in livello.fazioni)
-    for (const id in (livello.fazioni[nome].ordini || {}))
-      p[id] = clona(livello.fazioni[nome].ordini[id])
+  const fazioni = campoOra.fazioni
+  for (const nome in fazioni)
+    for (const id in (fazioni[nome].ordini || {}))
+      p[id] = clona(fazioni[nome].ordini[id])
   for (const id in (delGiocatore || {})) p[id] = clona(delGiocatore[id])
   return p
 }
@@ -802,10 +839,11 @@ export function pianoCompleto (livello, delGiocatore) {
    fazione che il livello non ha già istruito */
 export function mieUnita (livello) {
   const out = []
-  for (const nome in livello.fazioni) {
-    const fz = livello.fazioni[nome]
+  const campo = campoDi(livello)
+  for (const nome in campo.fazioni) {
+    const fz = campo.fazioni[nome]
     if (fz.autore !== 'giocatore') continue
-    livello.unita.filter(u => u.fazione === nome && !(fz.ordini || {})[u.id])
+    campo.unita.filter(u => u.fazione === nome && !(fz.ordini || {})[u.id])
       .forEach(u => out.push(u.id))
   }
   return out
@@ -813,8 +851,9 @@ export function mieUnita (livello) {
 /* le unità di cui il giocatore può LEGGERE gli ordini scritti da altri */
 export function altruiUnita (livello) {
   const out = []
-  for (const nome in livello.fazioni)
-    for (const id in (livello.fazioni[nome].ordini || {})) out.push(id)
+  const fazioni = campoDi(livello).fazioni
+  for (const nome in fazioni)
+    for (const id in (fazioni[nome].ordini || {})) out.push(id)
   return out
 }
 export const pianoVuoto = livello =>
@@ -1359,10 +1398,10 @@ export function passo (m) {
       if (z.fazione !== u.fazione) chiamaAllarme(m, u, 'visto')
     }
 
-  if (condizioni(m, m.livello.sconfitta)) {
+  if (condizioni(m, m.livello.perde)) {
     fine(m, false, m.livello.motivoSconfitta || 'La missione è fallita.'); return
   }
-  if (condizioni(m, m.livello.obiettivo)) { fine(m, true, 'Missione compiuta.'); return }
+  if (condizioni(m, m.livello.vince)) { fine(m, true, 'Missione compiuta.'); return }
 
   const attivi = m.fili.filter(f => !f.finito && !f.sospeso)
   const inAscolto = m.ascolti.filter(a => {
@@ -1999,7 +2038,7 @@ export function esegui (mondo, ordini) {
     return { vinto: false, motivo: 'Ci sono ordini che non si possono dare: ' + guai[0].motivo,
              passi: 0, traccia: [], rifiutati: guai, mondo }
 
-  avvia(mondo, pianoCompleto(mondo.livello, piano))
+  avvia(mondo, pianoCompleto(mondo, piano))
   while (!mondo.finita) passo(mondo)
   return { vinto: mondo.vinto, motivo: mondo.motivo, passi: mondo.passi,
            traccia: mondo.traccia, rifiutati: [], colpevole: mondo.colpevole,

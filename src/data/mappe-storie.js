@@ -18,7 +18,19 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { STORIA } from './storie-generale.js'
 
-const MODULI = import.meta.glob('./livelli/*.js', { eager: true })
+/* `**` perché ogni campagna ha la sua cartella: `livelli/tutorial/`,
+   `livelli/todo/` — il nome del file non deve più portarsi dietro a chi
+   appartiene, lo dice dove sta. */
+const MODULI = import.meta.glob('./livelli/**/*.js', { eager: true })
+
+/* ── `todo/` NON È IN GIOCO ──
+   Le cinque storie vecchie sono nel formato di prima — coordinate a
+   mano, `fazioni`, `obiettivo` — e aspettano di essere riscritte. Sono
+   lì per essere riguardate, non per essere giocate: tenerle nel giro
+   vorrebbe dire far finta che siano vive, e vedersele cadere addosso a
+   ogni prova. Il giorno che una viene rifatta, esce da quella cartella
+   e torna in gioco da sé. */
+const inGioco = f => !f.includes('/todo/')
 
 /* un modulo può esportare il livello come default o con un nome: si
    prende il primo oggetto che assomiglia a un livello (ha una griglia) */
@@ -26,7 +38,7 @@ function estrai (mod) {
   if (!mod || typeof mod !== 'object') return null
   const forse = [mod.default, mod.LIVELLO, mod.livello, ...Object.values(mod)]
   return forse.find(v => v && typeof v === 'object' && !Array.isArray(v) &&
-                         (v.griglia || v.unita)) || null
+                         (v.scena || v.griglia || v.unita)) || null
 }
 
 /* Da quello che il livello dichiara all'indice vero. I capitoli si
@@ -56,7 +68,7 @@ function indiceDi (storiaId, liv, daNome) {
 const MAPPE = {}
 const SPAIATE = []
 
-for (const [via, mod] of Object.entries(MODULI)) {
+for (const [via, mod] of Object.entries(MODULI).filter(([f]) => inGioco(f))) {
   const liv = estrai(mod)
   const nome = via.split('/').pop().replace(/\.js$/, '')
   if (!liv) { SPAIATE.push(nome + ': non esporta nessun livello'); continue }

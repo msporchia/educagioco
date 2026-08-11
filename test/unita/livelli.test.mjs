@@ -17,7 +17,7 @@
    campo `verifiche` del livello, e il verificatore lo esegue. Il
    contratto di quel campo è scritto in testa a `test/aiuto/livello.mjs`.
    ═══════════════════════════════════════════════════════════════════ */
-import { readdirSync, existsSync } from 'node:fs'
+import { readdirSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { nota, controlla, riassunto } from '../aiuto/verifica.mjs'
@@ -31,21 +31,47 @@ const PROVA = resolve(RADICE, 'src/data/generale.js')
    prende il primo oggetto che assomiglia a un livello — la stessa
    regola di `data/mappe-storie.js`, che è quella che vale nel gioco */
 const estrai = mod => [mod.default, mod.LIVELLO, mod.livello, ...Object.values(mod)]
-  .find(v => v && typeof v === 'object' && !Array.isArray(v) && (v.griglia || v.unita)) || null
+  .find(v => v && typeof v === 'object' && !Array.isArray(v) && (v.scena || v.griglia || v.unita)) || null
 
 const livelli = []
 
+/* si scende anche nelle cartelle: da quando ogni campagna ha la sua
+   (`tutorial/`, `todo/`), i livelli non stanno più tutti in fila */
+const tuttiIFile = dove => existsSync(dove)
+  ? readdirSync(dove).sort().flatMap(x => {
+      const pieno = resolve(dove, x)
+      /* i moduli con cui i livelli si SCRIVONO non sono livelli, ed è
+         giusto che non lo siano: stanno in questo elenco perché il
+         banco non li scambi per uno scenario rotto */
+      const SUPPORTO = new Set(['scorciatoie.js', 'livello.js', 'scrivi.js'])
+      /* `todo/` è la cartella delle cinque storie vecchie, che aspettano
+         di essere riscritte nel formato nuovo: il banco non le prova,
+         perché non sono in gioco */
+      if (x === 'todo') return []
+      return statSync(pieno).isDirectory() ? tuttiIFile(pieno)
+           : x.endsWith('.js') && !SUPPORTO.has(x) ? [pieno] : []
+    })
+  : []
+
 if (existsSync(CARTELLA))
-  for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
-    const liv = estrai(await import(pathToFileURL(resolve(CARTELLA, f)).href))
-    if (liv) livelli.push({ nome: f.replace(/\.js$/, ''), liv })
-    else controlla(`${f}: esporta un livello`, false, 'non esporta niente che assomigli a un livello')
+  for (const f of tuttiIFile(CARTELLA)) {
+    const liv = estrai(await import(pathToFileURL(f).href))
+    const corto = f.slice(CARTELLA.length + 1).replace(/\.js$/, '')
+    if (liv) livelli.push({ nome: corto, liv })
+    else controlla(`${corto}: esporta un livello`, false, 'non esporta niente che assomigli a un livello')
   }
 
 if (existsSync(PROVA)) {
   const dati = await import(pathToFileURL(PROVA).href)
   const LIVELLI = dati.LIVELLI || dati.livelli || dati.default || []
-  LIVELLI.forEach((liv, i) => livelli.push({ nome: `prova ${i + 1}. ${liv.nome || liv.id}`, liv }))
+  /* le prove del tutorial stanno in `livelli/tutorial/` e sono già
+     state raccolte lì sopra: qui si prende l'ORDINE, che è la cosa che
+     solo questo elenco sa, e non si conta due volte lo stesso livello */
+  const gia = new Set(livelli.map(x => x.liv && x.liv.id))
+  LIVELLI.forEach((liv, i) => {
+    if (gia.has(liv.id)) return
+    livelli.push({ nome: `prova ${i + 1}. ${liv.nome || liv.id}`, liv })
+  })
 }
 
 controlla('i livelli si raccolgono da soli', livelli.length > 0)

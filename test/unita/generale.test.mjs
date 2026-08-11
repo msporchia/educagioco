@@ -76,6 +76,7 @@
 import { existsSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import { campoDi } from '../../src/motore/generale/campo.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
@@ -124,7 +125,13 @@ const AUTORI = ['giocatore', 'livello']
    ordine che dice una direzione invece di una meta è troppo specifico
    per insegnare qualcosa, e «prendi a nord» non vuol dire niente. */
 const BASI = ['vai', 'prendi', 'apri', 'chiudi', 'attacca', 'aspetta',
-              'quando', 'suona', 'allarme', 'esegui']
+              'quando', 'suona', 'allarme', 'esegui',
+              /* i congegni: un verbo solo per tutti (`tira`, `gira`,
+                 `accendi` sono stati scartati apposta), e cosa succede
+                 quando lo ricevi lo decide il congegno. `parla` è il
+                 gemello di `suona`: uno grida a chiunque, l'altro lo
+                 dice a qualcuno in particolare — e solo a chi vede. */
+              'premi', 'parla']
 const base = v => BASI.find(b => String(v).toLowerCase().includes(b)) || null
 /* e queste non sono più complementi di niente */
 const DIREZIONI = ['nord', 'sud', 'est', 'ovest', 'destra', 'sinistra', 'su', 'giu', 'giù',
@@ -202,19 +209,25 @@ function soluzioniDi(liv) {
     fragile: !!(s && !Array.isArray(s) && s.fragile),
   }))
 }
+/* ── LA FORMA SI CHIEDE AL MOTORE ──
+   Un livello non elenca più unità, fazioni e griglia: disegna una mappa
+   a token con la sua legenda, e il campo lo legge `campoDi`. Queste tre
+   funzioni chiedono a lui, così il giorno che la mappa si scrivesse in
+   un altro modo qui non cambierebbe niente. */
 function unitaDi(cosa) {
+  if (cosa && cosa.scena) return campoDi(cosa).unita
   const u = (cosa && (cosa.unita || cosa.unità)) || []
   if (Array.isArray(u)) return u
   return Object.entries(u).flatMap(([f, lista]) =>
     (Array.isArray(lista) ? lista : []).map(x => ({ fazione: f, ...x })))
 }
 function fazioniDi(liv) {
-  const f = liv.fazioni || {}
+  const f = (liv.scena ? campoDi(liv).fazioni : liv.fazioni) || {}
   return Array.isArray(f) ? f : Object.entries(f).map(([id, v]) => ({ id, ...v }))
 }
 const ordiniDiFazione = f => f.ordini || f.ordiniFissi || null
 function misureDi(liv) {
-  const g = liv.griglia
+  const g = liv.scena ? campoDi(liv).griglia : liv.griglia
   if (Array.isArray(g) && g.length && (typeof g[0] === 'string' || Array.isArray(g[0])))
     return { larghezza: g[0].length, altezza: g.length }
   if (g && typeof g === 'object') {
@@ -361,7 +374,14 @@ const IMPRONTA_DATI = scritta(LIVELLI)
        serve guardarlo. Chi ne dichiara di più deve però giocarsele
        tutte, se no la variante in fondo non la vede nessuno. */
     const quante = (liv.varianti || []).length
-    controlla(`${n}: le varianti sono almeno tre`, quante >= 3, String(quante))
+    /* ── O TRE, O NESSUNA ──
+       Tre scene servono a far cadere un piano che indovina invece di
+       ragionare. Dove non c'è niente da indovinare — la prima prova è
+       «prendi il tesoro» — spostare le cose darebbe tre volte la stessa
+       prova, e allora se ne dichiara zero: è una scelta, e si vede. Una
+       o due invece sono una promessa a metà. */
+    controlla(`${n}: le varianti sono tre, o nessuna`, quante === 0 || quante >= 3,
+              String(quante))
     controlla(`${n}: e se sono più di tre, si giocano tutte`,
               quante <= 3 || (liv.prove || 3) >= quante,
               `${quante} varianti, ${liv.prove || 3} scene`)
@@ -420,7 +440,10 @@ const IMPRONTA_DATI = scritta(LIVELLI)
    dichiarata non vince, il livello sta chiedendo al bambino una cosa che
    il motore non sa fare. E deve vincere su tutte e tre le varianti,
    perché il piano si firma prima di sapere quale tocca. */
-const VARIANTI = liv => (liv.varianti || []).map((_, i) => i)
+/* un livello senza varianti ha comunque una scena — la sua. Con zero
+   scene ogni controllo passava per vacuità, e `esiti[0]` era
+   `undefined`: il test esplodeva invece di dire cosa non andava. */
+const VARIANTI = liv => ((liv.varianti || []).length ? liv.varianti.map((_, i) => i) : [0])
 for (const [i, liv] of LIVELLI.entries()) {
   const n = nomeDi(liv, i)
   for (const s of soluzioniDi(liv)) {
@@ -534,7 +557,15 @@ for (const [i, liv] of LIVELLI.entries()) {
   const chi = c.unita || (unitaDi(liv).find(u => u.id) || {}).id
   const mosso = !!(partenza && arrivo && chi in partenza && arrivo[chi] !== partenza[chi])
   const m = motivoDi(solo, c.gesto)
-  controlla(`${n}: «${eti}» da solo ci va — il gesto cammina`, mosso || !m,
+  /* ── A MENO CHE LA STRADA SIA CHIUSA DAVVERO ──
+     Da quando esistono le porte a comando, un bersaglio può essere
+     irraggiungibile all'inizio della partita: il tesoro dietro la grata
+     che apre la leva. Lì «non riesco ad arrivare: la strada è chiusa»
+     non è la lamentela che questa sonda va a caccia — è la verità, ed è
+     il livello che funziona. La lamentela da prendere resta l'altra:
+     quella di chi sta fermo senza dire perché. */
+  const strada = /strada è chiusa|non riesco ad arrivare/i.test(m || '')
+  controlla(`${n}: «${eti}» da solo ci va — il gesto cammina`, mosso || !m || strada,
             `fermo dov'era e la traccia dice «${m}»`)
   const lontano = m && /lontan|non è qui|a portata/i.test(m)
   controlla(`${n}: e non si lamenta più che «${c.gesto.complemento}» è lontano`, !lontano, m)
@@ -950,9 +981,14 @@ for (const [i, liv] of LIVELLI.entries()) {
                 !p || p[miei[0].id] !== p[miei[1].id] ||
                 r.esito.traccia.some(e => e && typeof e.motivo === 'string' && e.motivo.trim()),
                 `tutte e due in ${p && p[miei[0].id]} e la traccia non dice niente`)
+      /* si contano le unità DELLA SCENA GIOCATA, non quelle della mappa
+         base: da quando una scena può mettere qualcuno in un posto
+         preparato (`metti`), la base ne ha meno — e non è che ne siano
+         sparite, è che lì non c'erano */
+      const quante = creaMondo(liv, 0).unita.length
       controlla(`${n}: nessuna unità sparisce dal mondo`,
-                unitaDi(r.mondo).length === unita.length,
-                `da ${unita.length} a ${unitaDi(r.mondo).length}`)
+                unitaDi(r.mondo).length === quante,
+                `da ${quante} a ${unitaDi(r.mondo).length}`)
     }
   }
 

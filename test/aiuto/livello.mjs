@@ -103,6 +103,7 @@
    `verifiche` scritto male non deve passare inosservato.
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla } from './verifica.mjs'
+import { campoDi } from '../../src/motore/generale/campo.js'
 import { creaMondo, esegui, guaiDi, contaOrdini, pianoVuoto, mieUnita, VERBI,
          eCondizione, ramoDi } from '../../src/motore/generale.js'
 /* i nomi dei pittori: un disegno che non esiste è un buco nella mappa —
@@ -113,7 +114,13 @@ import { PERSONAGGI } from '../../src/grafica/personaggi/indice.js'
 /* ── attrezzi ───────────────────────────────────────────────────── */
 const scritta = x => JSON.stringify(x)
 const clona = x => JSON.parse(JSON.stringify(x))
-const scene = liv => (liv.varianti || []).map((_, i) => i)
+/* ── UN LIVELLO SENZA VARIANTI HA UNA SCENA, NON ZERO ──
+   Le tre scene servono a far cadere un piano che indovina; dove non
+   c'è niente da indovinare (la prima prova: «prendi il tesoro») il
+   livello ne dichiara zero. Senza questa riga il banco ci girava
+   sopra a vuoto e ogni controllo passava per vacuità — «vince su
+   tutte le scene» è vero se le scene sono zero. */
+const scene = liv => ((liv.varianti || []).length ? liv.varianti.map((_, i) => i) : [0])
 const soluzioni = liv => liv.soluzioni || []
 /* quelle che devono vincere sempre */
 const buone = liv => soluzioni(liv).filter(s => !s.fragile)
@@ -194,22 +201,61 @@ export function provaLivello (liv, nome) {
   const n = nome || liv.nome || liv.id || 'livello'
   const impronta = scritta(liv)
 
-  if (!controlla(`${n}: è un livello (griglia, unità, fazioni, soluzioni)`,
-                 !!liv && Array.isArray(liv.griglia) && Array.isArray(liv.unita) &&
-                 !!liv.fazioni && soluzioni(liv).length > 0)) return
+  /* ── LA FORMA SI CHIEDE AL MOTORE ──
+     Un livello non elenca più griglia, unità e fazioni: disegna una
+     mappa a token e la sua legenda, e da lì il campo lo **legge** il
+     motore (`campoDi`). Il banco chiede a lui invece di rifarsi il
+     conto per suo conto: se un giorno la mappa si scrivesse in un
+     terzo modo, qui non cambierebbe una riga. */
+  if (!controlla(`${n}: è un livello (scena, legenda, soluzioni)`,
+                 !!liv && !!liv.scena && Array.isArray(liv.scena.righe) &&
+                 soluzioni(liv).length > 0)) return
+  const C = campoDi(liv)
+  /* con `metti`, chi gioca può comparire solo nelle scene: si guarda
+     l'unione, non la mappa base */
+  const tutte = scene(liv).map(i => campoDi({ ...liv, scena: {
+    righe: (liv.varianti?.[i]?.scena?.righe) || liv.scena.righe,
+    legenda: { ...liv.scena.legenda, ...(liv.varianti?.[i]?.scena?.legenda || {}),
+               ...(liv.varianti?.[i]?.metti || {}) } } }))
 
-  forma(liv, n)
+
+  forma(liv, n, C, tutte)
   vincono(liv, n)
   necessari(liv, n)
   ilPar(liv, n)
   particolari(liv, n)
 
+  /* ── UN ID SBAGLIATO NON ESPLODE: VIENE IGNORATO ──
+     `complementi` e `verbi` sono due elenchi di nomi, e un nome che non
+     esiste non fa niente — il bersaglio semplicemente non compare in
+     cassetta, e non lo dice nessuno. Sono due righe che tolgono di
+     mezzo una classe intera di refusi muti.
+     L'elenco dei nomi vivi si prende dall'UNIONE delle scene: con
+     `metti`, l'orco e il tesoro possono esistere solo in una variante. */
+  const noti = new Set(['momento'])
+  for (const c of tutte) {
+    for (const k of Object.keys(c.posti)) noti.add(k)
+    for (const k of Object.keys(c.porte)) noti.add(k)
+    for (const k of Object.keys(c.leve || {})) noti.add(k)
+    for (const k of Object.keys(c.totem || {})) noti.add(k)
+    for (const k of Object.keys(c.fazioni)) noti.add(k)
+    for (const o of c.oggetti) noti.add(o.nome)
+    for (const u of c.unita) noti.add(u.id)
+  }
+  for (const s of (liv.segnali || [])) noti.add(typeof s === 'string' ? s : s.id)
+  const orfani = (liv.complementi || []).filter(c => !noti.has(c))
+  controlla(`${n}: ogni complemento esiste sul campo`, !orfani.length,
+            `«${orfani.join('», «')}» non c'è in nessuna scena`)
+  const finti = (liv.verbi || []).filter(v => !VERBI[v])
+  controlla(`${n}: ogni verbo dichiarato è un verbo`, !finti.length,
+            `«${finti.join('», «')}» non esiste`)
+
   controlla(`${n}: giocare non sporca i dati del livello`, scritta(liv) === impronta)
 }
 
 /* ── 1. la forma: la mappa, le fazioni, le cose al loro posto ── */
-function forma (liv, n) {
-  const g = liv.griglia
+function forma (liv, n, C, tutte) {
+  const g = C.griglia
   const w = g[0].length
   controlla(`${n}: la griglia è rettangolare`, g.every(r => typeof r === 'string' && r.length === w),
             `righe da ${[...new Set(g.map(r => r.length))].join(', ')}`)
@@ -218,16 +264,16 @@ function forma (liv, n) {
                 g.every(r => r[0] === '#' && r[w - 1] === '#')
   controlla(`${n}: il bordo è chiuso`, bordo)
 
-  const fz = Object.values(liv.fazioni)
+  const fz = Object.values(Object.assign({}, ...tutte.map(c => c.fazioni)))
   controlla(`${n}: ogni fazione dice chi la governa`,
             fz.every(f => f.autore === 'giocatore' || f.autore === 'livello'))
   controlla(`${n}: una fazione è del giocatore`, fz.some(f => f.autore === 'giocatore'))
   controlla(`${n}: ogni unità sta in una fazione dichiarata`,
-            liv.unita.every(u => !!liv.fazioni[u.fazione]))
+            tutte.every(c => c.unita.every(u => !!c.fazioni[u.fazione])))
   /* la faccia: `chi` è il nome di un pittore di `grafica/personaggi/`, e
      se non esiste sul campo si vede un orco al posto di quel qualcuno —
      cioè il livello racconta una cosa e ne disegna un'altra */
-  const senzaFaccia = liv.unita.filter(u => !PERSONAGGI.includes(u.chi))
+  const senzaFaccia = tutte.flatMap(c => c.unita).filter(u => !PERSONAGGI.includes(u.corpo || u.chi))
     .map(u => `${u.nome || u.id} (${u.chi || 'niente'})`)
   controlla(`${n}: ogni unità ha una faccia che esiste`, !senzaFaccia.length,
             `${senzaFaccia.join(', ')} — le facce sono: ${PERSONAGGI.join(', ')}`)
