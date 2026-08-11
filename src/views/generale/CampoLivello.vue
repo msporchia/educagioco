@@ -309,6 +309,14 @@ function scena () {
   if (!m) return s
   const px = c => (c + 0.5) * lato - cam.x
   const py = c => (c + 0.5) * lato - cam.y
+  /* ── IL RENDER INTERROGA ──
+     `faccia()` di un `Elemento` risponde in CELLE, non in pixel — se
+     rispondesse in pixel il motore saprebbe di uno schermo e
+     smetterebbe di girare in Node. Qui, e solo qui, si passa dall'uno
+     all'altro: è l'unico punto in cui questo file e il motore si
+     parlano attraverso un descrittore invece che attraverso un ciclo
+     scritto a mano per ogni famiglia. */
+  const proietta = d => ({ ...d, x: px(d.x), y: py(d.y) })
   /* ── LA SCENOGRAFIA ──
      Casse, botti, ragnatele, carrelli: roba che il livello dichiara in
      `scenografia` e che **non è in gioco**. Non passa da `creaMondo`,
@@ -367,10 +375,10 @@ function scena () {
       s.push({ che: 'forziere', x: px(o.x), y: py(o.y), apertura: o.preso ? 1 : 0 })
     else if (!o.preso) s.push({ che: facciaDi(o), x: px(o.x), y: py(o.y) })
   })
-  for (const k in m.porte) {
-    const p = m.porte[k]
-    s.push({ che: 'portone', x: px(p.x), y: py(p.y), aperto: p.aperta })
-  }
+  /* i cinque stili sono già dipinti in `grafica/oggetti/porte/`: prima
+     qui c'era `che:'portone'` cablato, e li si vedeva tutti uguali —
+     adesso lo dice la porta stessa, con `faccia()` */
+  for (const k in m.porte) m.porte[k].faccia().forEach(d => s.push(proietta(d)))
   /* i bersagli che si possono toccare adesso */
   props.bersagli.forEach(b => s.push({ che: 'ronda', strato: 1, colore: '#ffd24a',
     celle: [{ x: px(b.x), y: py(b.y) }] }))
