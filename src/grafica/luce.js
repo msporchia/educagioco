@@ -66,22 +66,33 @@ export function luceEBuio(c, W, H, A, torce, lato) {
 
   if (!torce.length) return
 
-  /* ── il calore: satura quello che c'è sotto, non lo copre ── */
+  /* ── il calore: satura quello che c'è sotto, non lo copre ──
+     Tre fermate equidistanti (piena, media, spenta) è la stessa curva
+     di un dissolvenza — un ginocchio piatto e una sola rampa dopo,
+     letta dall'occhio come «alone intorno al pennello», non come
+     fuoco. Il fuoco vero non sbiadisce: resta quasi pieno vicino alla
+     fiamma, poi cede di colpo, poi lascia una coda lunga e sottile.
+     Sono le stesse quattro tappe di `caduta()` più sotto (e le stesse
+     del velo del buio: `pozza(v, ...)` qui sopra), non a caso — è la
+     forma con cui in questo file la luce **smette**, sempre. */
   const prima = c.globalCompositeOperation
   c.globalCompositeOperation = 'soft-light'
   for (const [i, k] of torce) {
     const x = i * lato + lato / 2, y = (k + 1) * lato - lato * 0.2
     pozza(c, x, y, R * 0.95, 0.82,
-          [[0, fiamma + 'ee'], [0.45, fiamma + '99'], [1, fiamma + '00']])
+          [[0, fiamma + 'ff'], [0.22, fiamma + 'e8'], [0.48, fiamma + '70'],
+           [0.75, fiamma + '24'], [1, fiamma + '00']])
   }
-  /* ── il cuore della pozza: piccolo e acceso ── */
+  /* ── il cuore della pozza: piccolo e acceso, lo stesso ginocchio ma
+         più stretto — è il mezzo metro che deve sembrare che bruci,
+         non solo essere un po' più chiaro del resto ── */
   c.globalCompositeOperation = 'screen'
   for (const [i, k] of torce) {
     const x = i * lato + lato / 2, y = (k + 1) * lato - lato * 0.35
     pozza(c, x, y, R * 0.5, 0.86,
-          [[0, A.luce + '66'], [0.4, A.luce + '2a'], [1, A.luce + '00']])
+          [[0, A.luce + '99'], [0.3, A.luce + '55'], [0.6, A.luce + '18'], [1, A.luce + '00']])
     pozza(c, x, y - lato * 0.28, lato * 0.5, 1,
-          [[0, '#fff6d0aa'], [1, '#fff6d000']])
+          [[0, '#fff6d0cc'], [0.4, '#fff6d066'], [1, '#fff6d000']])
   }
   c.globalCompositeOperation = prima
 }

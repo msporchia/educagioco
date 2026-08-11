@@ -41,6 +41,20 @@ export const PIETRA = {
   chiara: '#a49a86', media: '#8b8071', scura: '#6f6455', bordo: '#3c352b',
 }
 
+/* i sigilli: quando una mappa ha più porte a chiave, il motore assegna a
+   ogni serratura e alla sua chiave la stessa tinta, nell'ordine rosso, blu,
+   verde, giallo, viola — la tabella sta qui, un posto solo, perché sia le
+   porte (`porte/`) sia la chiave (`chiave.js`) la leggono, e nessuno
+   inventa il suo colore per conto suo.
+
+   Cinque tinte scelte apposta lontane dalla tavolozza di LEGNO e PIETRA qui
+   sopra (terre, ori spenti, grigi) e ben sature: in una cripta illuminata
+   da una torcia sola un colore spento sparisce, e un sigillo che non si
+   vede non abbina niente a nessuno. */
+export const SIGILLI = {
+  rosso: '#e14b3d', blu: '#3d8fe0', verde: '#4cb35a', giallo: '#f2d21e', viola: '#a24fd6',
+}
+
 /* l'ombra a terra: la stessa per tutti, così tutti sembrano poggiati
    sullo stesso pavimento e non ritagliati e incollati */
 export const ombra = (p, x, y, rx, ry = rx * 0.36) =>

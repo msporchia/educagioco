@@ -4,11 +4,11 @@
    scorcio: chiusa occupa tutta la cella, alzata resta una fascia
    spessa in cima con le punte che pendono. È la porta che fa più paura
    di tutte, e per questo le punte sono smussate. */
-import { mescola, poligono } from '../../comune.js'
-import { LATO, LEGNO } from '../attrezzi.js'
+import { mescola, poligono, tondo } from '../../comune.js'
+import { LATO, LEGNO, SIGILLI } from '../attrezzi.js'
 
 export function saracinesca(p, cosa, S = p.S) {
-  const { x, y, alzata = 0, lato = LATO } = cosa
+  const { x, y, alzata = 0, lato = LATO, sigillo } = cosa
   const L = lato * S, h = L / 2
   const a = Math.max(0, Math.min(1, alzata))
   const c = p.ctx
@@ -42,4 +42,11 @@ export function saracinesca(p, cosa, S = p.S) {
   }
   // l'ombra sotto la grata alzata: dice che è sospesa
   if (a > 0.2) p.velo(0.3 * a, () => p.rett(x - h, cima + alt, L, L * 0.12, '#000000'))
+
+  // il sigillo, se la grata ne ha uno: una placca agganciata alle
+  // sbarre, ben visibile finché la saracinesca è giù — appena si alza
+  // sparisce insieme al resto della grata, coerente col fatto che non è
+  // più chiusa
+  const T = sigillo && SIGILLI[sigillo]
+  if (T && a < 0.15) tondo(p, x, y, L * 0.11, L * 0.11, T, mescola(T, '#000000', 0.5), Math.max(1, L * 0.03))
 }

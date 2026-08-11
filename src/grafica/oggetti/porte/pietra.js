@@ -8,14 +8,18 @@
 
    `apertura` da 0 (chiusa) a 1 (rientrata nel muro a sinistra). */
 import { mescola } from '../../comune.js'
-import { LATO, PIETRA } from '../attrezzi.js'
+import { LATO, PIETRA, SIGILLI } from '../attrezzi.js'
 
 export function pietraPorta(p, cosa, S = p.S) {
-  const { x, y, apertura = 0, lato = LATO, runa = '#7fe0ff' } = cosa
+  const { x, y, apertura = 0, lato = LATO, runa = '#7fe0ff', sigillo } = cosa
   const L = lato * S, h = L / 2
   const a = Math.max(0, Math.min(1, apertura))
   const t = p.tempo || 0
   const c = p.ctx
+  // la runa è il sigillo di questa porta: se ne ha uno dichiarato si
+  // tinge di quello, la stessa tinta della chiave che la fa cedere —
+  // non un lucchetto appoggiato sopra, è incisa nella pietra stessa
+  const tintaRuna = (sigillo && SIGILLI[sigillo]) || runa
 
   // la guida: due binari di pietra sopra e sotto
   p.rett(x - h, y - h * 0.92, L, L * 0.92, mescola(PIETRA.scura, '#000000', 0.35))
@@ -46,14 +50,14 @@ export function pietraPorta(p, cosa, S = p.S) {
   // la runa: un occhio dentro un rombo, e pulsa
   const puls = 0.55 + 0.45 * Math.sin(t * 2.4)
   const cx = x0 + L * 0.5
-  p.velo(0.25 + 0.35 * puls, () => p.ellisse(cx, y, L * 0.3, L * 0.3, runa))
-  c.strokeStyle = runa; c.lineWidth = Math.max(1, L * 0.035); c.lineJoin = 'round'
+  p.velo(0.25 + 0.35 * puls, () => p.ellisse(cx, y, L * 0.3, L * 0.3, tintaRuna))
+  c.strokeStyle = tintaRuna; c.lineWidth = Math.max(1, L * 0.035); c.lineJoin = 'round'
   c.beginPath()
   c.moveTo(cx, y - L * 0.18); c.lineTo(cx + L * 0.13, y)
   c.lineTo(cx, y + L * 0.18); c.lineTo(cx - L * 0.13, y)
   c.closePath(); c.stroke()
   c.beginPath(); c.arc(cx, y, L * 0.05, 0, 6.29)
-  c.fillStyle = mescola(runa, '#ffffff', 0.4); c.fill()
+  c.fillStyle = mescola(tintaRuna, '#ffffff', 0.4); c.fill()
   c.restore()
 
   // il bordo della lastra dove entra nel muro: una riga netta

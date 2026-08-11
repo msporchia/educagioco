@@ -5,10 +5,10 @@
    dall'altra parte — e in un gioco di ordini è tutta un'altra cosa da
    una porta cieca. */
 import { mescola, tondo } from '../../comune.js'
-import { LATO, LEGNO } from '../attrezzi.js'
+import { LATO, LEGNO, SIGILLI } from '../attrezzi.js'
 
 export function cancello(p, cosa, S = p.S) {
-  const { x, y, apertura = 0, lato = LATO } = cosa
+  const { x, y, apertura = 0, lato = LATO, sigillo } = cosa
   const L = lato * S, h = L / 2
   const a = Math.max(0, Math.min(1, apertura))
   const c = p.ctx
@@ -42,5 +42,12 @@ export function cancello(p, cosa, S = p.S) {
     c.moveTo(v > 0 ? -larg : 0, 0); c.lineTo(v > 0 ? 0 : larg, 0); c.stroke()
     c.restore()
   }
-  if (a < 0.1) tondo(p, x, y, L * 0.07, L * 0.07, mescola(LEGNO.oro, '#000000', 0.1))
+  if (a < 0.1) {
+    // il lucchetto che tiene chiuse le due ante: dorato di norma, ma
+    // se la porta ha un sigillo si tinge di quello, ben più grande —
+    // è la sola cosa fissa sul cancello, e deve leggersi da lontano
+    const T = sigillo && SIGILLI[sigillo]
+    if (T) tondo(p, x, y, L * 0.1, L * 0.1, T, mescola(T, '#000000', 0.5), Math.max(1, L * 0.03))
+    else tondo(p, x, y, L * 0.07, L * 0.07, mescola(LEGNO.oro, '#000000', 0.1))
+  }
 }

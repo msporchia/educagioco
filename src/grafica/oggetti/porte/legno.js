@@ -11,13 +11,14 @@
    aperto, i due battenti si vedono spalancati **nella stanza**, come
    li vedrebbe davvero chi guarda dall'alto. */
 import { mescola, tondo } from '../../comune.js'
-import { LATO } from '../attrezzi.js'
+import { LATO, SIGILLI } from '../attrezzi.js'
 
 export function portone(p, cosa, S = p.S) {
-  const { x, y, aperto = false, lato = LATO } = cosa
+  const { x, y, aperto = false, lato = LATO, sigillo } = cosa
   const L = lato * S, h = L / 2
   const c = p.ctx
   const pietra = '#8b8071', pietraS = '#6f6455', pietraC = mescola(pietra, '#ffffff', 0.22)
+  const T = sigillo && SIGILLI[sigillo]
 
   // l'ombra portata e la soglia: una lastra chiara che segna il
   // passaggio sul pavimento, non un muro
@@ -34,6 +35,11 @@ export function portone(p, cosa, S = p.S) {
     p.rett(bx - b / 2, by - b / 2, b, b, pietra)
     p.rett(bx - b / 2, by - b / 2, b, b * 0.3, pietraC)
   }
+
+  // il sigillo, se la porta ne ha uno: una borchia sull'architrave, la
+  // stessa tinta della chiave che apre. Sta sul telaio, non sulla
+  // serratura, così resta visibile anche a battenti spalancati
+  if (T) tondo(p, x, y - h * 0.86, L * 0.1, L * 0.1, T, mescola(T, '#000000', 0.5), Math.max(1, L * 0.03))
 
   // il vuoto: scuro al centro, sfumato ai bordi — dice «qui si passa
   // sotto» senza bisogno di un arco disegnato in prospettiva
