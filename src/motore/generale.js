@@ -1681,15 +1681,8 @@ function fai (m, f, u, o) {
         nota(m, f, u, 'fa', `torno a chiudere ${N}`, 'va verso ' + VERSO[u.dir])
         return 'lavora'
       }
-      /* non si chiude una porta addosso a qualcuno: chi sta sulla
-         soglia resterebbe murato dentro la sua cella, e sarebbe una
-         cosa che succede senza che si veda perché */
-      if (vive(m).some(z => z.x === pt.x && z.y === pt.y))
-        return salta(m, f, u, `c'è qualcuno sulla soglia: ${N} non si chiude`, 'spinge la porta')
-      pt.aperta = false; m.versioneMappa++; m.unita.forEach(z => { z._mk = null })
-      m.eventi.push('apre')
-      nota(m, f, u, 'fa', `chiuso ${N}`, `chiude ${N}`)
-      return 'fatto'
+      /* è a portata: chi può chiudersi e quando lo sa la porta */
+      return esitoOrdine(m, f, u, pt.ricevi('chiudi', u, { m, f }))
     }
 
     case 'attacca': {

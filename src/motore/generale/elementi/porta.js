@@ -55,13 +55,14 @@ export class Porta extends Elemento {
     return null
   }
 
-  accetta (cmd) { return cmd === 'apri' }
+  accetta (cmd) { return cmd === 'apri' || cmd === 'chiudi' }
 
   /* `ctx` porta `{ m, f }`: il mondo (per il rumore e per la mappa che
      cambia) e il filo di chi sta spingendo (per contare le SUE
      spallate — due unità che spingono la stessa porta in fili diversi
      non sommano le forze, ognuna fa il suo conto). */
   ricevi (cmd, chi, ctx) {
+    if (cmd === 'chiudi') return this.chiudi(chi, ctx)
     if (cmd !== 'apri') return null
     if (this.aperta) return { esito: 'subito' }
     const N = this.nomeIn(ctx.m)
@@ -112,6 +113,29 @@ export class Porta extends Elemento {
     ctx.m.unita.forEach(z => { z._mk = null })
     ctx.m.eventi.push('apre')
     return { esito: 'fatto', dice: `aperto ${N}`, fatto: `apre ${N}` }
+  }
+
+  /* ── CHIUDERSI DIETRO UNA PORTA ──
+     Il gemello di `apri`, ed è la porta a sapere quando si può: non si
+     chiude addosso a qualcuno. Chi sta sulla soglia resterebbe murato
+     dentro la sua cella, e sarebbe una cosa che succede senza che si
+     veda perché.
+     Sta qui e non nello switch dei verbi per la stessa ragione di
+     `apri`: la serratura, le spallate e adesso anche la soglia sono
+     fatti della porta, e un varco nuovo che si chiude in un altro modo
+     non deve far crescere il motore. */
+  chiudi (chi, ctx) {
+    if (!this.aperta) return { esito: 'subito' }
+    const N = this.nomeIn(ctx.m)
+    const qualcuno = ctx.m.unita.some(z => z.viva && z.x === this.x && z.y === this.y)
+    if (qualcuno)
+      return { esito: 'salta', dice: `c'è qualcuno sulla soglia: ${N} non si chiude`,
+               fatto: 'spinge la porta' }
+    this.aperta = false
+    ctx.m.versioneMappa++
+    ctx.m.unita.forEach(z => { z._mk = null })
+    ctx.m.eventi.push('apre')
+    return { esito: 'fatto', dice: `chiuso ${N}`, fatto: `chiude ${N}` }
   }
 
   nomeChiave (mondo) { return ((mondo.livello.nomi || {})[this.chiave]) || this.chiave }
