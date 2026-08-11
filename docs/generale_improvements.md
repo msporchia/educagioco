@@ -308,76 +308,131 @@ prova può controllare che una porta a lucchetto mostri il lucchetto.
 
 ### 6. Il tema
 
-Il pittore riceve **la struttura e il nome del tema**, e nient'altro. Il tema
-è un file in `grafica/ambienti/` — dove ce ne sono già undici — che oltre alla
-tavolozza porta due cose che oggi non esistono: **le murature al plurale** e
-**l'arredo piazzabile con le sue regole**.
+Il pittore riceve **la struttura e il nome dell'ambiente**, e nient'altro.
+L'ambiente è un file in `grafica/ambienti/` — undici, uno a testa — che oltre
+alla tavolozza porta **due liste**: `mura` e `suolo`. Non è la forma
+immaginata quando questo piano è stato scritto — sotto, perché — ma il
+principio che la voleva è rimasto lo stesso: chi disegna una mappa non
+scrive mai «qui c'è un pezzo di roccia», lo decide il tema.
+
+#### 6.1 Due tentativi sbagliati, prima di questo
+
+Ci sono voluti due giri a vuoto per arrivarci, ed è la parte più utile da
+raccontare a chi arriva dopo, perché nessuno dei due sembrava sbagliato prima
+di essere provato (il racconto per esteso è in testa a
+`src/grafica/tessuto.js`).
+
+**Il primo: materiali alla pari, mescolati a chiazze.** L'idea era giusta —
+una stanza deve avere dei luoghi, non un valore medio — ma la resa no: le tinte
+si sceglievano a mano per ogni materiale, e materiali diversi con tinte
+scelte a mano danno **due famiglie cromatiche che non si conoscono**. Il
+confine fra l'una e l'altra, deciso cella per cella, tagliava i mattoni a
+metà invece di fermarsi ai giunti.
+
+**Il secondo: una sola anomalia, cablata nel motore** (un campo `sotto:` che
+diceva «e sotto c'è quest'altro materiale»). Si guardava meglio, ma quante
+anomalie ci sono e dove stanno lo decideva il motore, non l'ambiente: per
+averne due — o una macchia di disturbo qualsiasi — bisognava riaprire il file
+che tutte le stanze condividono. E i «veli» stesi sopra per simulare varietà
+erano un secondo sistema che rifaceva, peggio, quello che un pittore sa già
+fare da sé — lo stesso genere di confusione fra chi decide e chi disegna che
+il resto di questo documento cerca di togliere altrove.
+
+#### 6.2 Quello che c'è
+
+Una tessitura non è più un nome che pesca i colori da un dizionario
+dell'ambiente (`A.muro`, `A.lastra`): è **una chiamata che si porta dietro i
+suoi colori**.
 
 ```js
-export const CRIPTA = {
-  nome: 'cripta',
-  /* non UNA muratura: tre, distribuite a chiazze larghe */
-  murature: [
-    { che:'roccia',   peso: 0.6 },
-    { che:'mattoni',  peso: 0.3, dove: c => c.asciutto },
-    { che:'intonaco', peso: 0.1, dove: c => c.umido, sfrangia: 0.4 },
-  ],
-  pose: [ { che:'lastre', peso:0.7 }, { che:'ghiaia', peso:0.3, dove: c => c.passaggio } ],
-
-  /* L'ARREDO CHE SI PIAZZA DA SÉ: il tema sa cosa ci sta in una cripta
-     e dove ci sta. Chi disegna la mappa non lo scrive mai. */
-  arredo: [
-    { che:'ragnatela',  dove:'angoloAlto',  ogni:14, peso: c => c.umido },
-    { che:'sarcofago',  dove:'controMuro',  ogni:40, minimo:2 },
-    { che:'ossa',       dove:'aterra',      ogni:25 },
-    { che:'gocciolina', dove:'sottoMuro',   ogni:10, peso: c => c.umido },
-    { che:'crepa',      dove:'muroDiBordo', ogni:6 },
-    { che:'torcia',     dove:'pareteLunga', ogni:18, luce:true },
-  ],
-  luce: { fondo:'#0d1018', buio:0.55, caldo:'#ffb46a' },
-}
+// src/grafica/ambienti/cripta.js
+mura: [
+  mattoni('#8f6146', '#5c3a29'),                                        // cotto rosso
+  mattoni('#7e6350', '#4e3b2e', { seme: 2, quanto: 0.26 }),             // cotto bruno
+  mattoni('#6f6157', '#443a33', { seme: 9, quanto: 0.2, dove: 'freddo' }),
+  mattoni('#7a5340', '#4a3020', { modo: 'vecchio', dove: 'usura', quanto: 0.18, seme: 5 }),
+  mattoni('#6a4736', '#40281c', { modo: 'rotto', dove: 'umido', quanto: 0.12, seme: 7 }),
+  roccia('#5f5148', '#332a25', { modo: 'stratificata', dove: 'umido', quanto: 0.09 }),
+],
 ```
 
-**I contesti** sono la parte che oggi manca del tutto. Il pittore li calcola
-una volta sola dalla griglia, prima di piazzare qualsiasi cosa:
+Sei righe sono sei decisioni, non sei materiali: le prime tre sono lo stesso
+mattone di tre cotture diverse — varietà quasi gratis, tre righe e nessun
+pittore nuovo — le ultime due sono il muro che cede, in due gradini invece di
+uno solo, uno dentro l'altro.
 
-```
-  vicini(i,k)      →  la maschera a 8: angolo interno, parete dritta, capo di muro, sperone
-  distanzaDalMuro  →  centro stanza / addossato / corridoio stretto
-  umido            →  rumore a chiazze larghe, dal seme del livello
-  passaggio        →  le celle sulle strade brevi fra le porte: lì il pavimento si consuma
-  rispetto         →  le celle degli elementi e dei bersagli, più una di cuscinetto
-```
+- **I modi stanno dentro il pittore.** Un mattone rotto non è una macchia
+  stesa sopra da qualcun altro: è quel mattone, disegnato in un altro modo.
+  Chi chiama scrive `modo: 'rotto'` e non deve sapere altro — la tessitura
+  dichiara da sé quanti modi sa fare (`mattoni.modi = ['normale', 'vecchio',
+  'rotto']`), e il catalogo (più sotto) li legge da lì.
+- **`quanto` è una fetta esatta, non una soglia a caso.** `quanto: 0.12`
+  vuol dire il 12% della superficie candidata, misurato sul **quantile** dei
+  valori veri — non una soglia fissa, che con un rumore qualunque sballava di
+  qualche punto e restituiva o niente o tutta la stanza
+  (`src/grafica/tessuto.js:129`).
+- **`dove` nomina un campo** — una delle mappe invisibili di cui sotto: senza,
+  l'anomalia ha una macchia tutta sua, scorrelata da ogni altra cosa, che è
+  quello che serve a un disturbo indipendente. Con, cade dove cade quel campo.
+- **La cucitura si fa per blocco, non per cella.** Prima di posare ogni
+  concio la tessitura chiede «tocca a me qui?» al **centro del blocco**, non
+  a ogni pixel: il confine fra due materiali corre allora lungo i giunti —
+  mancano conci interi — invece di tagliare le pietre a metà
+  (`src/grafica/tessuto.js:149`, la passata per voce in
+  `src/grafica/muri.js:138`). `sporco` interdigita il bordo: qualche blocco
+  cade di là, qualcuno regge di qua, invece di un taglio netto.
+- **Il seme sposta tutto il caso di una voce**: due mattoni uguali con due
+  semi diversi sono partite parenti, non gemelle — la varietà più economica
+  che c'è, una riga in più e nessun pittore nuovo.
+- **Chi vince è l'ultima voce che cade**: l'ordine di dichiarazione è
+  l'ordine di sovrapposizione.
 
-`dove:'angoloAlto'` non è una posizione: è un **predicato sul contesto**. Ed è
-la risposta a «il pittore non conosce i contesti»: oggi muschio e ragnatele
-sono due `if` cablati con dentro `A.muratura === 'mattoni'`, cioè un contesto
-solo, globale, scritto a mano (`muri.js:202-210`).
+**I campi** sono le mappe invisibili condivise — l'unica parte sopravvissuta
+del piano originale (i «contesti»), anche se in una forma più piccola. Un
+campo (`umido`, `usura`, `freddo`…) è un rumore a chiazze larghe, dichiarato
+una volta per ambiente (`campi: { umido: 5, usura: 6.5, freddo: 8 }` in
+`cripta.js`; il numero è quanto sono larghe le chiazze, in celle) e condiviso
+da chiunque lo nomini con `dove`. Il muro marcio, il muschio e le pozze
+nominano tutti `umido`, e per questo finiscono nello stesso angolo invece che
+in tre angoli scelti a caso — è il meccanismo, non i predicati posizionali
+che il piano originale immaginava (§7).
 
-**I bordi non retti** sono la stessa famiglia: `sfrangia: 0.4` vuol dire che
-il ritaglio di quel materiale non segue il rettangolo della cella ma un
-profilo mosso da `dado(i,k,…)` — la roccia mangia l'intonaco, e i due
-materiali si raccordano invece di accostarsi. Le altre due tecniche di
-raccordo, in ordine di costo: il **filo di confine** (la stessa riga che oggi
-stacca il bordo dalla massa, `muri.js:123-140`) e la **doppia passata
-sfumata** con `velo`. Le ultime due dietro l'interruttore di `resa.js`, come
-`RESA.ombraMuri`.
+Il contratto completo — firma, parametri, le misure già tarate, come si
+prova un modo — è scritto una volta sola in
+`src/grafica/materiali/LEGGIMI.md` e vale per ogni tessitura, presente o
+futura: **aggiungerne una è un file in `materiali/` più una riga nel
+registro** (`materiali/indice.js`), niente da tenere allineato a mano.
 
-**La varianza deve avere una scala grande.** `dado(i,k,seme)` fa già rumore
-*per cella*, ma il puntinismo uniforme non toglie la monotonia: la sposta di
-frequenza, e la mappa resta ovunque «grigio con puntini». Serve un rumore a
-chiazze larghe (valori su una griglia da 4-6 celle, interpolati) che moduli
-umidità, tinta, usura e densità: allora la cripta ha un angolo allagato e uno
-asciutto, e l'occhio legge *luoghi diversi* invece di texture diversa.
+Per giudicare tutto questo sono nati due banchi, sullo stesso principio di
+`strumenti/banco/` per i personaggi (§7.5): `strumenti/banco/banco.html`
+mette in scena **una stanza intera**, per giudicare la mescolanza;
+`strumenti/banco/catalogo.html` stampa **ogni tessitura da sola**, in tutti i
+modi che dichiara e con quattro semi, alla misura vera del gioco — è lì che
+si vede se un modo ha carattere o è solo rumore, cosa che guardando una
+stanza intera non si vede perché le tessiture si coprono a vicenda.
 
-**Il pavimento non è meno colpevole del muro**, ed è dove si notano di più:
-lastre grandi al centro, ghiaia ai bordi, consumo lungo i passaggi.
+**Il residuo.** Tre pittori non rispettano ancora la cucitura per blocco:
+`alberi` — i tronchi sotto le chiome sono seminati con un predicato `dentro`
+passato come `null`, quindi ignorano il confine (`materiali/verde.js:102`) —
+i pali del `legno` — i montanti verticali si disegnano senza mai chiedere
+«tocca a me?» (`materiali/legno.js:159`) — e il bordo del `tappeto`, che si
+stende su tutta l'altezza della regione invece di fermarsi al blocco
+(`materiali/marmo.js:111`). È quello che manca perché la tappa **b** (§9) sia
+chiusa del tutto.
 
-**La luce rende più della texture, e c'è già** (`luce.js`, e `p.luce` passata
-ai pittori proprio perché dipende da dove sta la cosa). Tre torce e il resto
-in penombra fanno più varietà di cinque murature nuove.
+### 7. Le invarianti dell'arredo automatico *(non ancora costruito)*
 
-### 7. Le invarianti dell'arredo automatico
+Questo pezzo del piano — un tema che piazza da sé ragnatele e sarcofaghi con
+dei predicati di posizione (`dove:'angoloAlto'`, `controMuro`, `pareteLunga`…)
+— non è stato nemmeno cominciato: nessun `vicini(i,k)`, nessuna
+`distanzaDalMuro`, nessun modulo di piazzamento. Quello che esiste dei
+«contesti» sono solo **i campi** (§6.2): una macchia larga come `umido`
+mette d'accordo cose con la stessa causa, ma per **densità**, non per
+**posizione** — un dettaglio dichiara `['pozze', 3.4, 'umido']` (passo in
+celle, campo che decide dove ha senso), non «nell'angolo in alto a sinistra».
+Le invarianti qui sotto restano il bersaglio per quando questo pezzo si
+costruirà davvero, e vale la pena tenerle scritte apposta perché non vadano
+perse per strada:
 
 1. **Deterministico**: seme = id livello + numero della variante. Stessa
    mappa, stesse ossa negli stessi punti, sempre. Serve al riconoscimento
@@ -602,17 +657,28 @@ chiama `routine`, perché `azione` è già la classe dei verbi che agiscono
 Ogni tappa si chiude con la build in mano e i test verdi. Le prime due non
 toccano il motore; si possono fare per prime proprio perché **si guardano**.
 
-| # | cosa | tocca | fatto quando |
-|---|---|---|---|
-| **a** | parser a token + legenda, livelli attuali convertiti in automatico | parser mappa, `data/livelli/*`, validatore | a schermo è tutto identico, test verdi |
-| **b** | murature al plurale, chiazze larghe, sfrangiature | `mappa.js`, `muri.js`, `ambienti/`, `resa.js` | la cripta non è più a tinta unita |
-| **c** | il tema con l'arredo automatico e i contesti | `ambienti/`, un modulo di piazzamento | una mappa nuda si arreda da sé, deterministica |
-| **d** | `Elemento`, `faccia()`, `Porta`/`Oggetto`/`Posto`; la vista smette di avere un ciclo per famiglia | `motore/generale/`, `CampoLivello.vue` | comportamento identico, i cinque stili di porta in scena |
-| **e** | le porte vere: `forza` scorporata, `aMano`, sigillo derivato, chi sa sfondare | `Porta`, un livello di prova | un livello nuovo che le usa tutte |
-| **f** | `Unita extends Elemento` con `parti()`/`osserva()` | motore | `chiamaAllarme`/`accorri`/`dove` spariscono nel polimorfismo |
-| **g** | `Leva`, `premi`, `premuto:`, il cablaggio e la scheda | motore, cassetta, editor | una tappa con due leve e una gabbia |
-| **h** | `Totem`, `conta`, `almeno:` | motore | una tappa «premi i tre bracieri» |
-| **i** | `parla` (messaggio diretto, solo a chi vedi) | motore, cassetta | una tappa dove serve dirlo a uno solo |
+| # | cosa | tocca | fatto quando | stato |
+|---|---|---|---|---|
+| **a** | parser a token + legenda, livelli attuali convertiti in automatico | parser mappa, `data/livelli/*`, validatore | a schermo è tutto identico, test verdi | da fare |
+| **b** | murature al plurale, chiazze larghe, sfrangiature | `mappa.js`, `muri.js`, `ambienti/`, `resa.js` | la cripta non è più a tinta unita | **fatta**, in una forma diversa da quella scritta qui — §6 |
+| **c** | il tema con l'arredo automatico e i contesti | `ambienti/`, un modulo di piazzamento | una mappa nuda si arreda da sé, deterministica | da fare — solo i campi (§6.2) ne anticipano il principio |
+| **d** | `Elemento`, `faccia()`, `Porta`/`Oggetto`/`Posto`; la vista smette di avere un ciclo per famiglia | `motore/generale/`, `CampoLivello.vue` | comportamento identico, i cinque stili di porta in scena | da fare |
+| **e** | le porte vere: `forza` scorporata, `aMano`, sigillo derivato, chi sa sfondare | `Porta`, un livello di prova | un livello nuovo che le usa tutte | da fare |
+| **f** | `Unita extends Elemento` con `parti()`/`osserva()` | motore | `chiamaAllarme`/`accorri`/`dove` spariscono nel polimorfismo | da fare |
+| **g** | `Leva`, `premi`, `premuto:`, il cablaggio e la scheda | motore, cassetta, editor | una tappa con due leve e una gabbia | da fare |
+| **h** | `Totem`, `conta`, `almeno:` | motore | una tappa «premi i tre bracieri» | da fare |
+| **i** | `parla` (messaggio diretto, solo a chi vedi) | motore, cassetta | una tappa dove serve dirlo a uno solo | da fare |
+
+Le tappe **a** e **d–i** sono ancora il piano, tale e quale: nessuna riga di
+motore è cambiata, e restano intatti `Elemento`, le porte, `Leva`, `Totem`,
+`parla`, il parser a token — tutto quello che la Parte I, la Parte II e la
+Parte IV descrivono. La tappa **b** è fatta, ma non nella forma scritta in
+questo documento quando è stato pensato: il tema che ne è uscito, i due
+tentativi sbagliati prima di trovarlo e il residuo che resta (tre pittori) si
+raccontano per esteso al §6. La tappa **c** non è stata cominciata: quello
+che dei «contesti» esiste sono i campi del §6.2, che mettono d'accordo le
+cose per causa condivisa, non per posizione — mancano ancora `vicini`,
+`distanzaDalMuro` e i predicati come `angoloAlto`.
 
 Lo **schema/editor** aggiornato ai generi nuovi va in coda: finché l'elenco
 dei generi non è fermo, si rifarebbe due volte.
@@ -713,6 +779,8 @@ Il codice è in italiano, e i nomi che useremo sono questi:
 | rimettersi come all'inizio | `azzera()` |
 | il contenitore della partita | `scena` |
 | il vestito di un ambiente | `tema` |
+| una superficie che dipinge sé stessa, coi suoi colori | `tessitura` (`mura`/`suolo` in un ambiente) |
+| la mappa invisibile che accorda cose con la stessa causa | `campo` |
 | le cose che il tema piazza da sé | `arredo` |
 | gli interruttori della resa (cantiere) | `RESA`, in `grafica/resa.js` |
 | di che cosa è fatto un pezzo | `materie: { manica: 'stoffa' }` |
