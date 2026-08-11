@@ -12,13 +12,17 @@
    mondo e la tela. Qui si decide QUALE livello e si cambia schermata.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed } from 'vue'
-import { STORIA } from '../../data/storie-generale.js'
+import { STORIA, AVVENTURE_APERTE } from '../../data/storie-generale.js'
 import { mappaDi, giocabile } from '../../data/mappe-storie.js'
 import { prossimi } from '../../store/storie.js'
 import { LIVELLI, QUANTI } from '../../data/generale.js'
 
 export function creaNavigazione ({ avvia, aCasa, nome }) {
-  const fase = ref('avventure')    // 'avventure' | 'capitoli' | 'prove' | 'gioco'
+  /* SENZA AVVENTURE SI ENTRA DALLE PROVE. Le storie sono spente
+     (`AVVENTURE_APERTE`), e una schermata di scelta con una scelta sola
+     è una porta girevole: si toglie di mezzo, e il ← delle prove torna
+     dritto a casa invece che su una pagina vuota. */
+  const fase = ref(AVVENTURE_APERTE ? 'avventure' : 'prove')  // 'avventure' | 'capitoli' | 'prove' | 'gioco'
   const storiaOra = ref('')        // quale avventura si sta guardando
   const contesto = ref(null)       // { tipo:'prova', i } | { tipo:'capitolo', storia, n, capId }
   const L = ref(0)                 // quale prova: le prove restano una fila
@@ -43,7 +47,8 @@ export function creaNavigazione ({ avvia, aCasa, nome }) {
       fase.value = contesto.value && contesto.value.tipo === 'capitolo' ? 'capitoli' : 'prove'
       return
     }
-    if (fase.value === 'capitoli' || fase.value === 'prove') { fase.value = 'avventure'; return }
+    if (AVVENTURE_APERTE && (fase.value === 'capitoli' || fase.value === 'prove'))
+      { fase.value = 'avventure'; return }
     aCasa()
   }
 
@@ -72,9 +77,11 @@ export function creaNavigazione ({ avvia, aCasa, nome }) {
   const numeroTappa = computed(() =>
     (contesto.value && contesto.value.tipo === 'capitolo' ? contesto.value.n : L.value) + 1)
 
+  /* «Le prove» solo se sono una delle strade: quando sono l'unica, la
+     barra dice il nome del gioco, come in tutte le altre home */
   const titolo = computed(() =>
     fase.value === 'capitoli' ? (STORIA[storiaOra.value]?.nome || nome)
-    : fase.value === 'prove' ? 'Le prove' : nome)
+    : fase.value === 'prove' && AVVENTURE_APERTE ? 'Le prove' : nome)
 
   const inStoria = () => contesto.value && contesto.value.tipo === 'capitolo'
 

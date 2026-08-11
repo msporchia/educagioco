@@ -123,8 +123,8 @@ const AUTORI = ['giocatore', 'livello']
    e non altri. `fai un passo` e `girati` sono stati tolti apposta: un
    ordine che dice una direzione invece di una meta è troppo specifico
    per insegnare qualcosa, e «prendi a nord» non vuol dire niente. */
-const BASI = ['vai', 'prendi', 'apri', 'attacca', 'pattuglia', 'aspetta',
-              'quando', 'suona', 'allarme']
+const BASI = ['vai', 'prendi', 'apri', 'attacca', 'aspetta',
+              'quando', 'suona', 'allarme', 'esegui']
 const base = v => BASI.find(b => String(v).toLowerCase().includes(b)) || null
 /* e queste non sono più complementi di niente */
 const DIREZIONI = ['nord', 'sud', 'est', 'ovest', 'destra', 'sinistra', 'su', 'giu', 'giù',
@@ -139,12 +139,19 @@ const scritta = x => {
 }
 const clona = x => JSON.parse(scritta(x))
 const eOrdine = o => !!o && typeof o === 'object' && typeof o.verbo === 'string'
-/* un blocco condizione non è un ordine: non ha un verbo, ha una domanda
-   e due rami. In una fila stanno accanto agli ordini, e tutte e due le
-   forme sono voci legittime di un piano. */
-const eBlocco = o => !!o && typeof o === 'object' && o.blocco === 'condizione'
+/* un BLOCCO non è un ordine: non ha un verbo, ha delle liste dentro.
+   Ce ne sono due — la condizione, con i suoi due rami, e il ciclo, con
+   il suo corpo — e in una fila stanno accanto agli ordini: tutte e tre
+   le forme sono voci legittime di un piano. */
+const eCond = o => !!o && typeof o === 'object' && o.blocco === 'condizione'
+const eRipeti = o => !!o && typeof o === 'object' && o.blocco === 'ripeti'
+/* un'AZIONE è una fila di ordini con un nome, che parte solo se
+   qualcuno la chiama con `esegui`: sta accanto al piano come un
+   «quando senti», e il suo corpo è una lista come tutte le altre */
+const eRoutine = o => !!o && typeof o === 'object' && o.blocco === 'routine'
+const eBlocco = o => eCond(o) || eRipeti(o) || eRoutine(o)
 const eVoce = o => eOrdine(o) || eBlocco(o)
-const RAMI = ['vero', 'falso']
+const RAMI = ['vero', 'falso', 'corpo']
 const ramoDi = (o, r) => (eBlocco(o) && Array.isArray(o[r]) ? o[r] : [])
 
 /* un piano è o una lista di ordini (un'unità sola) o una tabella
@@ -247,6 +254,12 @@ const complementiDi = typeof motore.complementiDi === 'function'
   ? (mondo, v) => sicuro(() => motore.complementiDi(mondo, v)) : null
 const verbiDi = typeof motore.verbiDi === 'function'
   ? mondo => sicuro(() => motore.verbiDi(mondo)) : null
+/* le sole cose CON UN NOME che un verbo accetta. Serve qui perché una
+   casella libera è sempre un bersaglio buono — anche in un livello che
+   non parla di caselle — ma non è un motivo per offrire il verbo che
+   vive solo di quelle: la ronda la apre il livello. */
+const nomiDi = typeof motore.nomiDi === 'function'
+  ? (mondo, v) => sicuro(() => motore.nomiDi(mondo, v)) || [] : null
 const PASSI_MASSIMI = [motore.PASSI_MASSIMI, motore.LIMITE_PASSI]
   .find(x => Number.isFinite(x)) || null
 
@@ -341,7 +354,17 @@ const IMPRONTA_DATI = scritta(LIVELLI)
     controlla(`${n}: ogni unità sta in una fazione dichiarata`,
               unita.every(u => fazioni.some(f => f.id === u.fazione)),
               unita.map(u => `${u.id}→${u.fazione}`).join(' '))
-    uguale(`${n}: le varianti sono tre`, (liv.varianti || []).length, 3)
+    /* TRE È IL MINIMO, non la regola: due mondi si possono ancora
+       indovinare a occhio, tre no. Un livello può averne di più quando
+       le varianti SONO la scelta — «Il giro delle mura» ha un ingresso
+       per lato, e toglierne uno vorrebbe dire che il quarto lato non
+       serve guardarlo. Chi ne dichiara di più deve però giocarsele
+       tutte, se no la variante in fondo non la vede nessuno. */
+    const quante = (liv.varianti || []).length
+    controlla(`${n}: le varianti sono almeno tre`, quante >= 3, String(quante))
+    controlla(`${n}: e se sono più di tre, si giocano tutte`,
+              quante <= 3 || (liv.prove || 3) >= quante,
+              `${quante} varianti, ${liv.prove || 3} scene`)
     controlla(`${n}: il par è un numero di ordini`, Number.isInteger(liv.par) && liv.par > 0,
               scritta(liv.par))
     controlla(`${n}: dichiara almeno una soluzione`, soluzioniDi(liv).length > 0)
@@ -354,16 +377,24 @@ const IMPRONTA_DATI = scritta(LIVELLI)
     controlla(`${n}: le soluzioni parlano solo alle unità del giocatore`,
               !estranee.length, [...new Set(estranee)].join(', '))
     const rotti = suoi.flatMap(s => vociDi(s.piano)).filter(v => !eVoce(v.ordine))
-    controlla(`${n}: ogni voce di una soluzione è un ordine o un blocco condizione`,
+    controlla(`${n}: ogni voce di una soluzione è un ordine o un blocco`,
               !rotti.length, scritta(rotti.map(v => v.ordine).slice(0, 2)))
-    /* un blocco è fatto bene: ha la sua domanda, i rami sono liste, e
-       dentro un ramo non c'è un altro blocco — quello sarebbe un albero */
+    /* un blocco è fatto bene, ognuno a modo suo: la condizione ha la sua
+       domanda e due rami, il ciclo ha il corpo e l'uscita. E dentro non
+       c'è mai un altro blocco — quello sarebbe un albero, e un albero
+       non lo si legge più in una schermata di telefono. */
     const blocchi = suoi.flatMap(s => vociDi(s.piano).map(v => v.ordine)).filter(eBlocco)
-    controlla(`${n}: ogni blocco condizione ha una domanda e due rami di ordini`,
-              blocchi.every(b => b.cond && typeof b.cond.cond === 'string' &&
-                RAMI.every(r => b[r] === undefined || Array.isArray(b[r]))),
-              scritta(blocchi.filter(b => !b.cond).slice(0, 2)))
-    controlla(`${n}: dentro un ramo non c'è un altro blocco`,
+    const conde = blocchi.filter(eCond)
+    controlla(`${n}: ogni condizione ha una domanda e due rami di ordini`,
+              conde.every(b => b.cond && typeof b.cond.cond === 'string' &&
+                ['vero', 'falso'].every(r => b[r] === undefined || Array.isArray(b[r]))),
+              scritta(conde.filter(b => !b.cond).slice(0, 2)))
+    const cicli = blocchi.filter(eRipeti)
+    controlla(`${n}: ogni ciclo ha un corpo di ordini e la sua uscita`,
+              cicli.every(b => Array.isArray(b.corpo) && b.corpo.length &&
+                               b.finche && typeof b.finche.cond === 'string'),
+              scritta(cicli.filter(b => !Array.isArray(b.corpo) || !b.finche).slice(0, 2)))
+    controlla(`${n}: dentro un blocco non c'è un altro blocco`,
               blocchi.every(b => RAMI.every(r => !ramoDi(b, r).some(eBlocco))))
   }
 
@@ -539,6 +570,19 @@ controlla('almeno un livello fa vedere che il gesto cammina', camminate > 0,
     const n = nomeDi(liv, i)
     const mondo = sicuro(() => mondoDi(liv, 0))
     if (!mondo || !c2) continue
+    /* le AZIONI le scrive il piano, non il livello: prima di chiedere al
+       motore cosa si può nominare qui, gli si dice cosa c'è scritto —
+       come fa il gioco quando il bambino ne aggiunge una. */
+    if (typeof motore.raccogliRoutine === 'function') {
+      /* tutte insieme, non una alla volta: la registrazione rifà
+         l'elenco da capo, e passandogliele in fila resterebbero solo
+         quelle dell'ultima */
+      const insieme = {}
+      soluzioniDi(liv).forEach((s, k) => {
+        insieme['p' + k] = Object.values(s.piano || {}).flat().filter(Boolean)
+      })
+      sicuro(() => motore.raccogliRoutine(mondo, insieme))
+    }
 
     /* I DUE ESEMPI DA CUI È NATA LA REGOLA. Quello che una soluzione
        prende è roba da zaino: «apri la chiave» non deve stare nel menù.
@@ -584,12 +628,24 @@ controlla('almeno un livello fa vedere che il gesto cammina', camminate > 0,
       const offerti = verbiDi(mondo)
       controlla(`${n}: verbiDi dà una lista di verbi`, Array.isArray(offerti))
       if (Array.isArray(offerti)) {
-        const vuoti = offerti.filter(v => !(complementiDi(mondo, v) || []).length)
+        /* chi vuole una DOMANDA (`aspetta che…`) non ha bersagli da
+           elencare: la sua cosa è la domanda, e quella si compone */
+        const aDomanda = v => !!(VERBI && VERBI[v] && VERBI[v].vuoleCond)
+        const vuoti = offerti.filter(v => !aDomanda(v) && !(complementiDi(mondo, v) || []).length)
         controlla(`${n}: nessun verbo offerto è senza complementi validi`, !vuoti.length,
                   vuoti.join(', '))
-        if (c1) {
+        /* «utile» vuol dire che ha qualcosa DA NOMINARE. Un verbo che
+           prende solo caselle ne avrebbe sempre — le caselle libere
+           valgono in ogni livello — e allora la ronda comparirebbe già
+           al primo, dove il menù è fatto di un verbo solo apposta.
+           E se il livello dichiara la sua lista di verbi, quella
+           comanda: è la manopola con cui si introducono a scaglioni, e
+           un verbo lasciato fuori apposta non è un verbo scordato. */
+        if (c1 && nomiDi) {
+          const scelti = liv.verbi || null
           const scordati = Object.keys(VERBI)
-            .filter(v => (complementiDi(mondo, v) || []).length && !offerti.includes(v))
+            .filter(v => (!scelti || scelti.includes(v)) &&
+                         nomiDi(mondo, v).length && !offerti.includes(v))
           controlla(`${n}: e nessun verbo utile resta fuori dal menù`, !scordati.length,
                     scordati.join(', '))
         }

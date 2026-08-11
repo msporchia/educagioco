@@ -11,6 +11,7 @@
     "simula": "node strumenti/simula-castello.mjs",
     "tara": "node strumenti/tara-castello.mjs",
     "mappe": "node strumenti/mappe/valida.mjs",
+    "banco": "vite --open /strumenti/banco/banco.html",
     "percorsi": "node strumenti/valida-percorsi.mjs",
     "pubblica": "./pubblica.sh",
     "test": "node test/esegui.mjs",

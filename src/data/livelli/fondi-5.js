@@ -73,7 +73,8 @@
       ricopiate qui perché questo file deve stare in piedi da solo) ── */
 const o = (verbo, complemento) => ({ verbo, complemento })
 const quando = (segnale, ...allora) => ({ verbo: 'quando', complemento: segnale, allora })
-const giro = (punti, finche) => ({ verbo: 'pattuglia', complemento: punti[0], punti, finche })
+const giro = (punti, finche) =>
+  ({ blocco: 'ripeti', corpo: punti.map(p => ({ verbo: 'vai', complemento: p })), finche })
 const bivio = (cond, vero, falso) =>
   ({ blocco: 'condizione', cond, vero: vero || [], falso: falso || [] })
 const vedi = complemento => ({ cond: 'vedi', complemento })

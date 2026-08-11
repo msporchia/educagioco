@@ -12,12 +12,41 @@
    anche una porta.
    ═══════════════════════════════════════════════════════════════════ */
 import { tondo, tinge } from './comune.js'
+import { RESA } from './resa.js'
+
+/* ─────────── la luce della stanza ───────────
+   Passa **tutto** di qui, e non è un caso: è l'unico punto che ogni
+   personaggio attraversa prima di essere dipinto, quindi è l'unico
+   posto dove si può dire «adesso siete tutti dentro la stessa
+   stanza» senza aprire i tredici file di `personaggi/`.
+
+   Due spinte, in ordine. Prima la notte, che toglie: un orco al buio
+   non è un orco più scuro, è un orco che tende al blu della notte,
+   perché è quello il colore che resta quando la luce se ne va.
+   Poi il fuoco, che aggiunge: chi sta nella pozza di una torcia
+   prende il caldo della fiamma sulla pelle e sul ferro.
+
+   Le quantità sono volutamente forti. Timide non si vedevano, e il
+   punto di questo lavoro era proprio smettere di fare cose che non si
+   vedono. */
+function illumina(p, pal, x, y) {
+  if (!RESA.luce || !p.luce) return pal
+  let C = pal
+  const L = p.luce(x, y)
+  if (L.buio > 0.01) C = tinge(C, L.notte, L.buio * 0.78)
+  if (L.forza > 0.01) C = tinge(C, L.tinta, L.forza * 0.40)
+  return C
+}
 
 /* ─────────── lo stato ───────────
    Lo stato non cambia il disegno: cambia la tavolozza. Un colore solo
    da spostare invece di trenta figure da riscrivere. */
 export function tavolozzaStato(p, pal, stato, t, x, y, s) {
-  let C = pal, velo = 1, giro = 0, scarto = 0
+  /* la stanza tinge per prima, lo stato per ultimo: un personaggio
+     rosso di errore deve restare rosso anche in fondo a una cripta,
+     se no l'unica cosa che il bambino deve vedere è quella che il
+     buio si mangia */
+  let C = illumina(p, pal, x, y), velo = 1, giro = 0, scarto = 0
   if (stato === 'errore') {
     // sempre rosso, e a tratti rosso acceso: se il lampeggio scendeva
     // sotto la metà il personaggio diventava marrone, non «sbagliato»

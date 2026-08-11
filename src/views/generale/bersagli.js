@@ -14,11 +14,12 @@
    di elenco: su una mappa 30×18 diventavano cinquecento righe «la
    casella 19,15», e fra quelle la chiave non si trovava più.
    ═══════════════════════════════════════════════════════════════════ */
-import { VERBI, complementiDi, laCosa } from '../../motore/generale.js'
+import { VERBI, nomiDi, laCosa } from '../../motore/generale.js'
 
-/* le cose che quel verbo accetta E che hanno un nome */
-export const conNome = (mondo, v) => (mondo ? complementiDi(mondo, v) : [])
-  .filter(k => { const C = laCosa(mondo, k); return C && C.tipo !== 'cella' })
+/* le cose che quel verbo accetta E che hanno un nome. Le caselle sono
+   sempre un bersaglio buono, ma non sono voci di elenco: la lista che
+   serve qui è quella dei nomi, e il motore la sa già fare. */
+export const conNome = (mondo, v) => (mondo ? nomiDi(mondo, v) : [])
 
 /* le stesse, già pronte da mostrare: `{ id, nome, em }` */
 export const cosePer = (mondo, v) =>
@@ -30,6 +31,9 @@ const POSATO = { posto: 1, oggetto: 1, porta: 1, unita: 1, fazione: 1, zona: 1 }
 
 /* questo verbo il bersaglio se lo fa dare dalla mappa o da un elenco? */
 export function suMappa (mondo, v) {
+  /* c'è chi lo dichiara: `attacca` parla di CLASSI di nemici, e una
+     classe non sta in un punto della mappa */
+  if (VERBI[v] && VERBI[v].elenco) return false
   const l = conNome(mondo, v)
   /* un verbo che qui non ha nemmeno una cosa con un nome vive solo di
      caselle: allora il bersaglio si indica, per forza */

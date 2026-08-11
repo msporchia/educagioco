@@ -65,7 +65,8 @@ const bivio = (cond, vero, falso) =>
 /* un giro di ronda: i punti in fila (il primo è anche il complemento) e
    l'uscita. I punti sono caselle e non posti: il giro si segna sulla
    mappa col dito, ed è l'unico ordine che lavora così. */
-const giro = (punti, finche) => ({ verbo: 'pattuglia', complemento: punti[0], punti, finche })
+const giro = (punti, finche) =>
+  ({ blocco: 'ripeti', corpo: punti.map(p => ({ verbo: 'vai', complemento: p })), finche })
 const vedi = complemento => ({ cond: 'vedi', complemento })
 const qui = (chi, complemento) => ({ cond: 'qui', chi, complemento })
 

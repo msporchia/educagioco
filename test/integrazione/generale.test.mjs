@@ -19,6 +19,15 @@
 import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO }
        from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+/* da dove si entra dipende da un dato, non da com'è fatta la vista: se
+   le avventure sono spente non c'è nessuna scelta da fare e si cade
+   dritti nelle prove. Il test legge lo stesso flag del gioco, così il
+   giorno che si riaccendono non c'è niente da riscrivere qui. */
+import { AVVENTURE_APERTE } from '../../src/data/storie-generale.js'
+/* quante prove ci sono lo dicono i dati. Era cablato («almeno dieci») e
+   diventava rosso ogni volta che l'elenco cambiava — cioè diceva una
+   cosa sui livelli mentre voleva dirne una sulla schermata. */
+import { QUANTI } from '../../src/data/generale.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -60,21 +69,31 @@ if (entrata) {
   const titolo = await page.evaluate(() => document.querySelector('.barra-app .dove')?.textContent.trim())
   controlla('la barra dice dove si è', !!titolo, JSON.stringify(titolo))
 
-  /* ---------- 3. la scelta dell'avventura ----------
-     Entrando non si cade più in una fila di quattordici numeri: si
-     sceglie una STORIA. Le prove restano, ma sotto, in una voce loro. */
-  uguale('entrando si sceglie l\'avventura', await page.locator('.scelta-avv').count(), 1)
-  controlla('le storie sono in elenco', await page.locator('.avventura:not(.prove)').count() >= 4,
-            String(await page.locator('.avventura:not(.prove)').count()))
-  await scatto(page, 'generale-avventure')
-  await page.locator('.avventura.prove').click()
+  /* ---------- 3. da dove si entra ----------
+     Con le avventure accese si sceglie una STORIA, e le prove stanno
+     sotto in una voce loro. Con le avventure spente quella schermata
+     non esiste: una scelta con una voce sola è una porta girevole. */
+  if (AVVENTURE_APERTE) {
+    uguale('entrando si sceglie l\'avventura', await page.locator('.scelta-avv').count(), 1)
+    controlla('le storie sono in elenco', await page.locator('.avventura:not(.prove)').count() >= 4,
+              String(await page.locator('.avventura:not(.prove)').count()))
+    await scatto(page, 'generale-avventure')
+    await page.locator('.avventura.prove').click()
+  } else {
+    uguale('senza avventure non c\'è niente da scegliere',
+           await page.locator('.scelta-avv').count(), 0)
+    uguale('e nessuna storia si affaccia da nessuna parte',
+           await page.locator('.avventura').count(), 0)
+  }
   await page.waitForSelector('.tappa', { timeout: 5000 })
 
   /* ---------- 3b. la sala delle mappe ----------
      Il primo livello è aperto dal primo giorno, gli altri no: una
      campagna che si apre tutta insieme non è una campagna. */
+  /* quante siano lo dicono i dati, non questo file: qui interessa che la
+     schermata le elenchi TUTTE, non che siano un certo numero. */
   const quante = await page.locator('.tappa').count()
-  controlla('la sala delle mappe elenca i livelli', quante >= 14, String(quante))
+  uguale('la sala delle mappe elenca tutte le prove', quante, QUANTI)
   uguale('a profilo vuoto è aperto solo il primo',
          await page.locator('.tappa:not(.chiusa)').count(), 1)
   await scatto(page, 'generale-mappe')
@@ -119,7 +138,11 @@ if (entrata) {
   await page.waitForTimeout(200)
   uguale('dal posto vuoto si apre il foglio delle scelte',
          await page.locator('.foglio-scelta').count(), 1)
-  await page.locator('.foglio-scelta .pezzo').first().click()
+  /* IL VERBO È «PRENDI», non il primo che capita: al primo livello si
+     vince avendo il tesoro, non calpestandolo, e `vai` è lì apposta
+     come la strada sbagliata. Il test sceglie come sceglierebbe un
+     bambino che ha letto la dritta — dal nome del verbo. */
+  await page.locator('.foglio-scelta .pezzo', { hasText: 'prendi' }).first().click()
   await page.waitForTimeout(200)
   uguale('scelta l\'azione, il foglio si richiude da solo',
          await page.locator('.foglio-scelta').count(), 0)
@@ -132,7 +155,7 @@ if (entrata) {
             await page.locator('.scelta').count() === 0)
   uguale('è nato un ordine', await page.locator('.lista .riga').count(), 1)
   const testo = await page.evaluate(() => document.querySelector('.lista .riga').innerText)
-  controlla('e l\'ordine dice il verbo e la cosa', /vai/.test(testo) && /tesoro/.test(testo),
+  controlla('e l\'ordine dice il verbo e la cosa', /prendi/.test(testo) && /tesoro/.test(testo),
             JSON.stringify(testo))
   await scatto(page, 'generale-ordine')
 
@@ -181,14 +204,19 @@ if (entrata) {
   controlla('il livello dopo si è aperto',
             await page.locator('.tappa:not(.chiusa)').count() >= 2,
             String(await page.locator('.tappa:not(.chiusa)').count()))
+  /* e da lì fuori: con le avventure accese c'è la scelta in mezzo, con
+     le avventure spente si esce dritti in home — una schermata in meno,
+     non un passo saltato */
   await page.locator('button[aria-label="indietro"]').click()
-  let allaScelta = true
-  try { await page.waitForSelector('.scelta-avv', { timeout: 5000 }) } catch (e) { allaScelta = false }
-  controlla('dalla sala delle mappe si torna alla scelta', allaScelta)
-  await page.locator('button[aria-label="indietro"]').click()
+  if (AVVENTURE_APERTE) {
+    let allaScelta = true
+    try { await page.waitForSelector('.scelta-avv', { timeout: 5000 }) } catch (e) { allaScelta = false }
+    controlla('dalla sala delle mappe si torna alla scelta', allaScelta)
+    await page.locator('button[aria-label="indietro"]').click()
+  }
   let tornato = true
   try { await page.waitForSelector('.carte', { timeout: 5000 }) } catch (e) { tornato = false }
-  controlla('e dalla scelta si torna alla home', tornato)
+  controlla('e si torna alla home', tornato)
 }
 
 /* ---------- 10. niente errori per strada ---------- */

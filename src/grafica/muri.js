@@ -7,7 +7,9 @@
    tutti gli ambienti: **il bordo è disegnato, la massa no**.
    ═══════════════════════════════════════════════════════════════════ */
 import { mescola, dado, rett, velo } from './comune.js'
+import { RESA } from './resa.js'
 import { MURI, DETTAGLI, semina } from './materiali/indice.js'
+import { tessuto as filaturaDi } from './tessuto.js'
 
 /* ═══════════════════════════════════════════════════════════════════
    I MURI, IN SEI PASSATE
@@ -21,8 +23,21 @@ import { MURI, DETTAGLI, semina } from './materiali/indice.js'
        il fianco sotto in ombra.
      · sotto ci va l'**ombra portata**, e negli angoli il muschio.
      · in cima un filo di luce, dove il muro si affaccia sul vuoto.
+
+   ── e una quinta, che è arrivata dopo ──
+   **Il paramento può mancare.** Un ambiente può dichiarare quello che
+   ha sotto (`sotto: { muro: 'roccia' }`), e allora il bordo si dipinge
+   due volte: prima il nucleo, poi il rivestimento che **salta i
+   blocchi caduti**. Non sono due materiali che confinano da pari —
+   quelli si leggono come due immagini incollate — è uno sopra
+   l'altro, e il confine passa lungo i giunti perché a mancare sono
+   mattoni interi. La prima idea qui sopra resta intera: le due
+   murature continuano a generarsi su tutta la mappa e a non
+   accorgersi delle celle. Chi non dichiara `sotto` passa esattamente
+   da dove passava prima.
    ═══════════════════════════════════════════════════════════════════ */
-export function dipingiMuri(c, { A, lato, larghezza, altezza, muro }) {
+export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
+  const T = tessuto || filaturaDi({ larghezza, altezza, muro, A })
   const sp = lato * 0.34                       // lo spessore che si vede
   const s = lato / 20
   const celle = []
@@ -106,18 +121,36 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro }) {
      terzo. Nessuna muratura *deve* usarla: chi non la chiama disegna
      tutto, come prima. */
   const suBordo = new Set(bordo.map(([i, k]) => i + ',' + k))
-  const dentro = (x, y, w, h) => {
+  const reg = { x0: -lato, y0: -lato - sp, x1: larghezza * lato + lato, y1: altezza * lato }
+  /* il ritaglio per risparmio, ristretto alle celle di UN gruppo: la
+     muratura si genera sempre su tutta la mappa, ma i blocchi che
+     cascano fuori da queste celle verrebbero comunque buttati via */
+  const soloSu = insieme => (x, y, w, h) => {
     const i0 = Math.floor(x / lato), i1 = Math.floor((x + w) / lato)
     const k0 = Math.floor(y / lato), k1 = Math.floor((y + h + sp) / lato)
     for (let k = k0; k <= k1; k++)
-      for (let i = i0; i <= i1; i++) if (suBordo.has(i + ',' + k)) return true
+      for (let i = i0; i <= i1; i++) if (insieme.has(i + ',' + k)) return true
     return false
   }
   const orlo = new Path2D()
   for (const [i, k] of bordo) orlo.rect(i * lato, k * lato - sp, lato, lato + sp)
   c.save(); c.clip(orlo)
-  MURI[A.muratura](c, { x0: -lato, y0: -lato - sp, x1: larghezza * lato + lato, y1: altezza * lato },
-                   A, lato, A.muro, dentro)
+  /* ── UNA PASSATA PER VOCE ──
+     La lista `mura` dell'ambiente, in ordine: la prima tiene quello
+     che le altre non si prendono, ognuna delle altre dipinge solo dove
+     tocca a lei. E «dove tocca a lei» si chiede **per blocco**, quindi
+     il confine corre lungo i giunti: mancano conci interi, e con lo
+     sporco qualcuno cade di là e qualcuno regge di qua. Nessuna delle
+     voci sa di essere un'anomalia — sa solo dipingere il suo pezzo di
+     muro. */
+  const nel = soloSu(suBordo)
+  T.mura.forEach((v, n) => {
+    if (!v.dipingi) return
+    v.dipingi(c, reg, A, lato, v.tinte,
+      (x, y, w, h) => nel(x, y, w, h) &&
+                      T.vinceMuro(n, (x + w / 2) / lato, (y + h / 2) / lato, true),
+      { modo: v.modo, seme: v.seme })
+  })
   c.restore()
   // il filo scuro che stacca il bordo dalla massa: senza, il salto fra
   // i conci e il piatto sembra un errore invece che una scelta
@@ -152,6 +185,41 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro }) {
     rett(c, x, y + sp - sp * 0.16, lato, sp * 0.16, mescola(A.giunto, '#000000', 0.35))
   }
 
+  /* 4-bis ─ L'OMBRA CHE IL MURO GETTA PER TERRA.
+
+       Il fianco qui sopra dà al blocco il suo spessore, ma lo spessore
+       da solo non basta: un muro che non fa ombra sul pavimento resta
+       un rettangolo **appoggiato sopra** la stanza, coi bordi netti,
+       e la scenografia sembra una collezione di adesivi ritagliati.
+       L'ombra è la sola cosa che dice «questo sta più in alto di
+       quello», ed è per questo che si nota quando manca anche senza
+       saper dire cosa manca.
+
+       Va per terra e non sul muro, quindi si dipinge qui, dopo i
+       blocchi e prima di tutto il resto — con `multiply`, per la
+       stessa ragione degli aloni: un velo grigio spegnerebbe il
+       rilievo delle lastre insieme al fondo, moltiplicato invece il
+       pavimento si abbassa di tono tenendosi le sue pietre.
+
+       Cade verso il basso perché la luce di questo gioco viene
+       dall'alto, dappertutto e sempre. */
+  if (RESA.ombraMuri) {
+    const lungo = sp * 1.15
+    c.save()
+    c.globalCompositeOperation = 'multiply'
+    for (const [i, k] of celle) {
+      if (muro(i, k + 1)) continue
+      const x = i * lato, y = (k + 1) * lato
+      const g = c.createLinearGradient(0, y, 0, y + lungo)
+      g.addColorStop(0, '#6a6a78'); g.addColorStop(0.55, '#a8a8b4'); g.addColorStop(1, '#ffffff')
+      c.fillStyle = g
+      // sborda di un filo ai lati: un'ombra che finisce esattamente
+      // dove finisce il blocco ridisegna il bordo che doveva ammorbidire
+      c.fillRect(x - lato * 0.04, y, lato * 1.08, lungo)
+    }
+    c.restore()
+  }
+
   /* 5 ─ il filo di luce in cima, dove il muro si affaccia sul vuoto */
   for (const [i, k] of celle) {
     if (muro(i, k - 1)) continue
@@ -166,10 +234,14 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro }) {
     if (giu && A.dettagli.some(d => d[0] === 'muschio') && dado(i, k, 900) > 0.55)
       DETTAGLI.muschio(c, i * lato + lato * dado(i, k, 901), (k + 1) * lato, s, A,
                        m => dado(i, k, 910 + m))
-    // la ragnatela guarda la **muratura**, non la posa del pavimento:
-    // guardando la posa non compariva mai, perché nessuna stanza ha il
-    // pavimento di mattoni e quella dei mattoni ce li ha sui muri
-    if (giu && A.muratura === 'mattoni' && dado(i, k, 920) > 0.8)
+    /* la ragnatela guarda la **muratura**, non la posa del pavimento:
+       guardando la posa non compariva mai, perché nessuna stanza ha il
+       pavimento di mattoni e quella dei mattoni ce li ha sui muri.
+       E la guarda **di quella cella**: finché la muratura era una sola
+       per stanza, qui c'era `A.muratura === 'mattoni'`, cioè «se tutta
+       la mappa è di mattoni» — un contesto solo, globale, e nessun
+       dettaglio poteva rispondere a dov'era messo. */
+    if (giu && T.muroQui(i, k).che === 'mattoni' && dado(i, k, 920) > 0.8)
       DETTAGLI.ragnatele(c, i * lato + lato * 0.06, (k + 1) * lato + lato * 0.04, s, A,
                          m => dado(i, k, 930 + m))
   }

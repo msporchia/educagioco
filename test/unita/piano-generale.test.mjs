@@ -13,7 +13,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, riassunto, nota } from '../aiuto/verifica.mjs'
 import { stessaVia, inRamo, listaIn, listaDi, ordineIn, aggiungiIn, togliIn,
-         spostaIn, partiDaCapo, partiParallele, puntiDi, togliDalGiro, ogniVoce }
+         spostaIn, partiDaCapo, partiParallele, ogniVoce }
        from '../../src/views/generale/piano.js'
 
 const o = (verbo, complemento) => ({ verbo, complemento })
@@ -105,15 +105,25 @@ controlla('uno che finisce con un numero no', !inRamo([2, 1]))
   uguale('anche dentro un ramo', listaIn(r, [0, 'vero']).map(x => x.complemento).join(''), 'ba')
 }
 
-/* ---------- 6. i punti di un giro ---------- */
+/* ---------- 6. il corpo di un ciclo è una fila come le altre ----------
+   Da quando il giro non è più un verbo con dentro una lista di punti ma
+   un BLOCCO con dentro degli ordini, non serve nessuna funzione sua: le
+   vie ci entrano come entrano nei rami di un bivio (`[i, 'corpo', j]`),
+   e tutto il resto del file vale già. Questo test lo inchioda. */
 {
-  uguale('senza punti, il giro è il suo complemento', puntiDi(o('pattuglia', '3,4')).join(''), '3,4')
-  const g = { verbo: 'pattuglia', complemento: '1,1', punti: ['1,1', '2,2', '3,3'] }
-  uguale('con i punti, sono quelli', puntiDi(g).length, 3)
-  controlla('un punto si può togliere', togliDalGiro(g, 0))
-  uguale('e il primo punto diventa il complemento', g.complemento, '2,2')
-  const solo = { verbo: 'pattuglia', complemento: '1,1', punti: ['1,1'] }
-  controlla('l\'ultimo punto no: un giro senza punti non è un giro', !togliDalGiro(solo, 0))
+  const c = { blocco: 'ripeti', corpo: [o('vai', 'a')], finche: { cond: 'vedi' } }
+  const p = [c]
+  aggiungiIn(p, [0, 'corpo'], o('vai', 'b'))
+  uguale('un ordine si aggiunge dentro il ciclo', c.corpo.map(x => x.complemento).join(''), 'ab')
+  uguale('e la via ci arriva', ordineIn(p, [0, 'corpo', 1]).complemento, 'b')
+  spostaIn(p, [0, 'corpo', 0], 1)
+  uguale('dentro il ciclo si sposta come in un ramo',
+         c.corpo.map(x => x.complemento).join(''), 'ba')
+  togliIn(p, [0, 'corpo', 0])
+  uguale('e si toglie', c.corpo.map(x => x.complemento).join(''), 'a')
+  const vuoto = [{ blocco: 'ripeti', finche: {} }]
+  aggiungiIn(vuoto, [0, 'corpo'], o('vai', 'z'))
+  uguale('un ciclo senza corpo se lo fa nascere', vuoto[0].corpo.length, 1)
 }
 
 /* ---------- 7. camminare su tutto ---------- */

@@ -7,7 +7,7 @@
 
      vai a [chiave]                     sequenza
      prendi [chiave]                    sequenza
-     pattuglia [le mura]                ciclo
+     ripeti { vai, vai } smetti quando  ciclo
      ❓ condizione [vedi l'orco] → …     decisione, due rami
      quando arriva [tutto libero] → …   evento
      aspetta [l'orco]                   attesa
@@ -41,7 +41,6 @@ import FogliLivello from './generale/FogliLivello.vue'
 import EditorPiano from './generale/EditorPiano.vue'
 import { ogniVoce } from './generale/piano.js'
 import { bersagliDi } from './generale/bersagli.js'
-import { cerchio } from './generale/segni.js'
 import { cosaCambia, nomiScene } from './generale/scene.js'
 import { creaNavigazione } from './generale/navigazione.js'
 import { genProgresso, genCompleta } from '../store/profile.js'
@@ -51,7 +50,8 @@ import { LIVELLI, QUANTI, proveDi } from '../data/generale.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita,
          contaOrdini, VERBI, ilSegnale, testoCond, laCosa,
          registro, eAvanzato, libera, perdute,
-         manca, eCondizione, ramoDi, RAMI, BLOCCHI }
+         manca, eCondizione, eRipeti, eBlocco, ramoDi, corpoDi, dentroA, RAMI, BLOCCHI,
+         raccogliRoutine }
        from '../motore/generale.js'
 
 const emit = defineEmits(['vai'])
@@ -132,11 +132,21 @@ function nuovoMondo (k) {
   avvia(mondo, pianoCompleto(liv.value, piano.value))
   mondo.passi = 0
   campo.value?.azzera()
+  /* una scena nuova si mette in modo che si veda chi ha degli ordini:
+     è l'unica inquadratura automatica rimasta, e succede da fermi */
   campo.value?.inquadraSu(mondo.unita.find(u => piano.value[u.id]) || mondo.unita[0])
   tic.value++
 }
+/* ── UN TASTO SOLO, E FA UNA COSA SOLA ──
+   Erano quattro: ▶, un passo, da capo, velocità. Adesso il tasto grande
+   dice sempre cosa succede se lo premi — «Via» quando è fermo, «Stop»
+   mentre gira — e Stop vuol dire «rimetti tutto com'era», che è l'unica
+   cosa che si vuole davvero fare a metà di una scena andata storta. La
+   pausa non c'era per niente: fermare una scena e lasciarla a metà non
+   serve, perché il piano non si può correggere mentre gira — è la
+   regola del gioco. */
 function via () {
-  if (auto.value) { auto.value = false; return }
+  if (auto.value) { ferma(); return }
   /* Non si fa partire una scena che non può finire: si dice cosa manca
      e si resta fermi. Prima il giro senza uscita partiva e girava per
      trecento passi. */
@@ -148,6 +158,9 @@ function via () {
   }
   manchevole.value = ''
   if (!mondo || mondo.finita || !mondo.passi) nuovoMondo(mondo && mondo.finita ? 0 : serieI.value)
+  /* si parte vedendo tutta la stanza: il piano si giudica guardando le
+     unità muoversi insieme, non seguendone una */
+  campo.value?.mostraTutto()
   auto.value = true
 }
 function unPasso () {
@@ -169,15 +182,14 @@ function fai1 () {
   else if (ev.includes('apre')) suono.compra()
   else if (ev.includes('presa')) suono.moneta()
   else if (ev.includes('segnale')) suono.vita()
-  const rosse = mondo.traccia.filter(r => r.esito === 'no')
-  if (rosse.length > rosseP) {
-    const u = mondo.perId[rosse[rosse.length - 1].unita]
-    if (u) campo.value?.inquadraSu(u)
-    suono.no()
-  } else {
-    const u = mondo.perId[unitaOra.value]
-    if (u && u.viva) campo.value?.inquadraSu(u)
-  }
+  /* LA VISTA NON INSEGUE PIÙ NESSUNO. Prima a ogni passo la camera
+     saltava sull'unità di turno, e con più unità in movimento la mappa
+     scattava avanti e indietro: si perdeva il filo di quello che stava
+     succedendo proprio mentre lo si voleva guardare. Adesso la scena
+     sta ferma e la si guarda tutta — il campo al via si porta
+     all'ingrandimento in cui la mappa ci sta intera, e spostarsi è una
+     cosa che si fa col dito quando si vuole. */
+  if (mondo.traccia.filter(r => r.esito === 'no').length > rosseP) suono.no()
   tic.value++
   if (mondo.finita) chiudiVariante()
 }
@@ -230,8 +242,8 @@ function vittoria () {
   const n = quantiOrdini.value
   /* «avanzato» vuol dire che nel piano c'è un ciclo, un evento o una
      decisione — e conta anche se sta dentro un ramo o dentro un ascolto */
-  const dentroTutto = l => (l || []).flatMap(o => eCondizione(o)
-    ? [o, ...RAMI.flatMap(r => dentroTutto(ramoDi(o, r.ramo)))]
+  const dentroTutto = l => (l || []).flatMap(o => eBlocco(o)
+    ? [o, ...dentroA(o).flatMap(dentroTutto)]
     : [o, ...dentroTutto(o.allora)])
   const avanzato = dentroTutto(Object.values(piano.value).flat()).some(eAvanzato)
   /* Due cose costano il vanto, non il passaggio: un aiuto pagato e un
@@ -268,18 +280,6 @@ function giro (ts) {
    comporre un giro di ronda, mirare il bersaglio di un verbo, o
    guardare in faccia qualcuno. */
 function tocca ({ x, y }) {
-  /* il giro di ronda: i punti si toccano uno dopo l'altro, e si vedono
-     comparire numerati sulla mappa */
-  if (scegliendo.value && scegliendo.value.verbo === 'pattuglia') {
-    if (!libera(mondo, x, y)) { suono.nota(180, 160, 0.07, 'square', 0.05); return }
-    const id = x + ',' + y
-    const g = scegliendo.value
-    /* toccare di nuovo il primo punto chiude l'anello */
-    if (g.punti.length > 1 && id === g.punti[0]) { finisciGiro(); return }
-    scegliendo.value = { ...g, punti: [...g.punti, id] }
-    suono.nota(620, 700, 0.06)
-    return
-  }
   /* IL TOCCO È L'ORDINE. Nessuna conferma: quello che hai scelto si
      legge subito nella riga («vai a [🔑 la chiave]»), e se hai sbagliato
      tocchi la casella e cambi bersaglio. Una conferma proteggeva da un
@@ -311,24 +311,21 @@ function tocca ({ x, y }) {
    che quel verbo può prendere davvero, e il dito sceglie. Non c'è
    nessuna conferma: quello che hai toccato si legge subito nella riga,
    e se hai sbagliato ritocchi la casella e cambi. */
-const scegliendo = ref(null)          // { verbo, punti } — un verbo in cerca di bersaglio
-function chiediMira ({ verbo, punti }) {
+/* UN TOCCO, UNA COSA. Anche i punti di una ronda si chiedono uno per
+   uno: prima c'era una modalità che li raccoglieva in fila e si
+   chiudeva con «fatto», e quel tasto era l'unico posto del gioco dove
+   bisognava dire «ho finito» invece di vedere quello che avevi
+   scritto. Adesso la lista dei punti sta nel piano, e qui resta solo il
+   mestiere di far indicare UNA casella. */
+const scegliendo = ref(null)          // { verbo } — un verbo in cerca di bersaglio
+function chiediMira ({ verbo }) {
   pannello.value = ''
-  scegliendo.value = { verbo, punti: punti || [] }
+  scegliendo.value = { verbo }
 }
 /* dove sono adesso le cose che il verbo in corso può prendere: la lista
    la fa `generale/bersagli.js`, qui si dice solo per quale verbo */
 const bersagli = () =>
   (scegliendo.value ? bersagliDi(mondo, scegliendo.value.verbo) : [])
-function finisciGiro () {
-  const punti = scegliendo.value.punti
-  scegliendo.value = null
-  editor.value?.posaGiro(punti)
-}
-const togliPunto = () => {
-  const g = scegliendo.value
-  scegliendo.value = { ...g, punti: g.punti.slice(0, -1) }
-}
 const esci = () => { scegliendo.value = null; editor.value?.nienteMira() }
 
 
@@ -341,24 +338,34 @@ const esci = () => { scegliendo.value = null; editor.value?.nienteMira() }
    il dito sceglie torna indietro con `posaBersaglio`/`posaGiro`. */
 const ordini = computed(() => piano.value[unitaOra.value] || [])
 
-/* i giri da far vedere sulla mappa: quelli degli ordini che si stanno
-   guardando, e quello che si sta componendo adesso. Qui si dicono i
-   NOMI dei punti; a trasformarli in pixel ci pensa il campo, che è
-   l'unico a sapere dov'è finita la camera. */
+/* i giri da far vedere sulla mappa. Qui si dicono i NOMI dei punti; a
+   trasformarli in pixel ci pensa il campo, che è l'unico a sapere dov'è
+   finita la camera.
+   Non c'è più un giro «che si sta componendo»: i punti stanno
+   nell'ordine dal momento in cui li tocchi, quindi il giro sulla mappa
+   cresce da sé mentre lo scrivi, ed è lo stesso disegno di quando è
+   finito — una cosa in meno da tenere in piedi. */
 const giri = computed(() => {
   tic.value
   if (!mondo) return []
   const out = []
   const agg = (punti, ora) => { if (punti && punti.length) out.push({ punti, ora }) }
   const daOrdini = lista => (lista || []).forEach(o => {
+    /* IL GIRO DA DISEGNARE lo si legge dentro il ciclo: sono i `vai`
+       che ha nel corpo, in fila. Prima era una lista di punti dentro un
+       verbo; adesso è un blocco di ordini, e la mappa continua a
+       mostrare la stessa cosa — dove passerà. */
+    if (eRipeti(o)) {
+      agg(corpoDi(o).filter(q => q && q.verbo === 'vai').map(q => q.complemento).filter(Boolean),
+          !!scegliendo.value)
+      corpoDi(o).forEach(q => daOrdini([q]))
+      return
+    }
     if (eCondizione(o)) { RAMI.forEach(r => daOrdini(ramoDi(o, r.ramo))); return }
-    if (o.verbo === 'pattuglia') agg(o.punti && o.punti.length ? o.punti : [o.complemento], false)
     if (o.allora) daOrdini(o.allora)
   })
   if (letta.value && ordiniAltrui.value) daOrdini(ordiniAltrui.value)
   else if (!letta.value) daOrdini(ordini.value)
-  if (scegliendo.value && scegliendo.value.verbo === 'pattuglia')
-    agg(scegliendo.value.punti, true)
   return out
 })
 
@@ -367,6 +374,9 @@ const giri = computed(() => {
 const incompleti = computed(() => {
   tic.value
   if (!mondo) return []
+  /* il mondo deve sapere che azioni ci sono scritte, se no «esegui
+     [azione 1]» sembra un ordine senza bersaglio e ▶ non parte */
+  raccogliRoutine(mondo, piano.value)
   const out = []
   for (const id in piano.value)
     for (const o of ogniVoce(piano.value[id])) {
@@ -530,15 +540,12 @@ async function ridimensiona () {
            per il giro di ronda, i punti presi finora. Sta SOTTO la mappa:
            sopra coprirebbe proprio le caselle da toccare. -->
       <div v-if="scegliendo" class="scelta">
-        <template v-if="scegliendo.verbo === 'pattuglia'">
-          <div class="dett">tocca i punti del giro, uno dopo l'altro
-            <b v-if="scegliendo.punti.length">{{ scegliendo.punti.map((_, i) => cerchio(i)).join('→') }}</b></div>
-          <button v-if="scegliendo.punti.length" class="ok" @click="finisciGiro">✓ fatto</button>
-          <button v-if="scegliendo.punti.length" class="no" aria-label="togli l'ultimo punto"
-                  @click="togliPunto">↩</button>
-        </template>
-        <div v-else class="dett">tocca sulla mappa il bersaglio di
-          <b>{{ VERBI[scegliendo.verbo].et }} {{ VERBI[scegliendo.verbo].nome }}</b></div>
+        <!-- se il verbo prende anche una casella, si dice: le cose con
+             un nome si accendono, un punto qualsiasi no, e senza una
+             riga nessuno scopre che si può indicare anche il vuoto -->
+        <div class="dett">tocca sulla mappa il bersaglio di
+          <b>{{ VERBI[scegliendo.verbo].et }} {{ VERBI[scegliendo.verbo].nome }}</b>
+          <i v-if="VERBI[scegliendo.verbo].accetta.includes('cella')">— o un punto qualsiasi</i></div>
         <button class="no" aria-label="annulla" @click="esci">✕</button>
       </div>
 
@@ -546,10 +553,11 @@ async function ridimensiona () {
                                   bene: mondo && mondo.finita && mondo.vinto }" v-html="dritta"></p>
 
       <div class="comandi">
+        <!-- il tasto grande dice cosa fa premendolo, e non c'è nient'altro
+             da decidere: «un passo» era una scorciatoia da grandi, e
+             «da capo» faceva la stessa cosa che fa Stop -->
         <button class="tasto via" :class="{ gira: auto }" @click="via">
-          {{ auto ? '⏸ Pausa' : '▶ Via' }}</button>
-        <button class="tasto q" aria-label="un passo" @click="unPasso">⏭</button>
-        <button class="tasto q" aria-label="da capo" @click="ferma">⏹</button>
+          {{ auto ? '⏹ Stop' : '▶ Via' }}</button>
         <button class="tasto q" aria-label="velocità"
                 @click="vel = vel === 420 ? 180 : vel === 180 ? 760 : 420">
           {{ vel === 180 ? '🐇' : vel === 760 ? '🐌' : '🐢' }}</button>
@@ -668,6 +676,7 @@ async function ridimensiona () {
           background:#101828; border-bottom:2px solid var(--giallo) }
 .scelta .dett { flex:1; min-width:0; font-size:12px; line-height:1.25; color:#eef2fa }
 .scelta .dett b { color:var(--giallo) }
+.scelta .dett i { font-style:normal; color:#aeb9cf }
 .scelta button { flex:none; min-height:38px; border-radius:11px; padding:0 12px; font-size:13px;
                  font-weight:900 }
 .scelta .ok { background:var(--verde); color:#06210f }

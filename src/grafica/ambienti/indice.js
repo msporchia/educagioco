@@ -40,10 +40,29 @@ import { MINIERA } from './miniera.js'
 import { TRONO } from './trono.js'
 import { FOGNE } from './fogne.js'
 
-export const AMBIENTI = {
+/* ── I NOMI VECCHI SI DERIVANO, NON SI RIPETONO ──
+   `muratura`, `posa`, `muro` e `lastra` li chiede ancora chi non passa
+   dalle liste: l'anteprima di una cella sola (`PITTORI_TERRENO`), la
+   vetrina, i dettagli che pescano `A.lastra` per intonarsi al
+   pavimento. Un ambiente che dichiara `mura` e `suolo` **non li scrive
+   più**: sono la prima voce delle sue liste, e derivarli qui è l'unico
+   modo perché non possano discordare da quello che si vede davvero. */
+const completa = A => {
+  const capo = (lista, tinte) => (Array.isArray(lista) && lista[0]) || null
+  const m = capo(A.mura), s = capo(A.suolo)
+  return {
+    ...A,
+    muratura: A.muratura || (m && m.che) || 'pietra',
+    posa: A.posa || (s && s.che) || 'lastre',
+    muro: A.muro || (m && m.tinte) || ['#7a7168', '#4a443e'],
+    lastra: A.lastra || (s && s.tinte) || ['#5c5c6b', '#43434f'],
+  }
+}
+
+export const AMBIENTI = Object.fromEntries(Object.entries({
   cortile: CORTILE, camminamento: CAMMINAMENTO, corridoio: CORRIDOIO,
   cripta: CRIPTA, ingranaggi: INGRANAGGI, tesoro: TESORO,
   grotta: GROTTA, bosco: BOSCO, miniera: MINIERA, trono: TRONO, fogne: FOGNE,
-}
+}).map(([k, A]) => [k, completa(A)]))
 
 export const NOMI_AMBIENTI = Object.keys(AMBIENTI)

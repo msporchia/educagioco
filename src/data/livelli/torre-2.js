@@ -110,7 +110,8 @@ const PIANO_CELLE = [
    La sentinella invece non gira: sta al suo posto e guarda. Vede poco
    (2), ma quel poco lo vede sempre. */
 const RONDA = [
-  { verbo: 'pattuglia', complemento: '1,5', punti: ['1,5', '1,10', '24,10', '24,5'],
+  { blocco: 'ripeti',
+    corpo: [o('vai', '1,5'), o('vai', '1,10'), o('vai', '24,10'), o('vai', '24,5')],
     finche: vedi('prigionieri') },
 ]
 const POSTO = [o('aspettaDiVedere', 'prigionieri')]

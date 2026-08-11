@@ -45,7 +45,7 @@
 const o = (verbo, complemento) => ({ verbo, complemento })
 const quando = (segnale, ...allora) => ({ verbo: 'quando', complemento: segnale, allora })
 const giro = (punti, finche) =>
-  ({ verbo: 'pattuglia', complemento: punti[0], punti, finche })
+  ({ blocco: 'ripeti', corpo: punti.map(p => ({ verbo: 'vai', complemento: p })), finche })
 const vedi = complemento => ({ cond: 'vedi', complemento })
 const nonVedi = complemento => ({ cond: 'vedi', complemento, non: true })
 const qui = (chi, complemento) => ({ cond: 'qui', chi, complemento })

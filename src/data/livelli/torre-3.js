@@ -93,7 +93,8 @@ const RETRO_CUCINE = [
    quando per voi è già finita. Quello che non è scritto qui sta nella
    loro scheda: **gridano**, e un grido solo basta. */
 const GIRO = [
-  { verbo: 'pattuglia', complemento: '1,6', punti: ['1,6', '1,11', '26,11', '26,6'],
+  { blocco: 'ripeti',
+    corpo: [o('vai', '1,6'), o('vai', '1,11'), o('vai', '26,11'), o('vai', '26,6')],
     finche: vedi('prigionieri') },
 ]
 
