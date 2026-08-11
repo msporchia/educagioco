@@ -1,10 +1,11 @@
 /* ── LA CHIAVE ──
    La cosa da raccogliere per antonomasia. `colore` la fa d'oro, di
-   ferro, di rame o d'argento: quando in una mappa ci saranno tre
-   porte diverse, tre chiavi dello stesso colore delle loro serrature
-   valgono più di qualsiasi scritta. */
-import { capsula, tondo } from '../comune.js'
-import { raccolta } from './attrezzi.js'
+   ferro, di rame o d'argento — è il *materiale*. `sigillo`, quando
+   c'è, è un'altra cosa: è la gemma incastonata nell'anello, tinta
+   uguale alla serratura che apre. In una mappa con più porte è
+   l'abbinamento che conta, e si deve vedere senza leggere niente. */
+import { capsula, mescola, tondo } from '../comune.js'
+import { raccolta, SIGILLI } from './attrezzi.js'
 
 const TINTE = {
   oro:     { c: '#f2c94c', b: '#8a6412', l: '#fff3c4' },
@@ -16,10 +17,15 @@ export const COLORI_CHIAVE = Object.keys(TINTE)
 
 export function chiave(p, cosa, S = p.S) {
   const T = TINTE[cosa.colore] || TINTE.oro
+  const G = cosa.sigillo && SIGILLI[cosa.sigillo]
   raccolta(p, cosa, S, 1.05, (q, s) => {
     q.ctx.save(); q.ctx.rotate(-0.22)
     tondo(q, -3.4 * s, 0, 2.6 * s, 2.6 * s, T.c, T.b, 0.7 * s)
-    tondo(q, -3.4 * s, 0, 1.1 * s, 1.1 * s, T.b)
+    // il foro dell'anello: a vuoto è solo l'ombra del metallo (T.b),
+    // ma con un sigillo diventa la gemma che abbina la chiave alla
+    // sua porta — più grande e incorniciata, perché è lei il segno
+    if (G) tondo(q, -3.4 * s, 0, 1.3 * s, 1.3 * s, G, mescola(G, '#000000', 0.5), 0.4 * s)
+    else tondo(q, -3.4 * s, 0, 1.1 * s, 1.1 * s, T.b)
     capsula(q, 1.6 * s, 0, 3.4 * s, 0.85 * s, 0.6 * s, T.c, T.b, 0.7 * s)
     // i due denti, disegnati e poi ripassati: senza il contorno a 36 px
     // la chiave diventa un bastoncino

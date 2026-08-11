@@ -9,11 +9,11 @@
    passare**, basta scostarlo.
 
    `apertura` da 0 (telo disteso) a 1 (telo raccolto ai lati). */
-import { mescola } from '../../comune.js'
-import { LATO, PIETRA } from '../attrezzi.js'
+import { mescola, tondo } from '../../comune.js'
+import { LATO, PIETRA, SIGILLI } from '../attrezzi.js'
 
 export function arco(p, cosa, S = p.S) {
-  const { x, y, apertura = 0, lato = LATO, colore = '#8a3a4a' } = cosa
+  const { x, y, apertura = 0, lato = LATO, colore = '#8a3a4a', sigillo } = cosa
   const L = lato * S, h = L / 2
   const a = Math.max(0, Math.min(1, apertura))
   const scuro = mescola(colore, '#000000', 0.35), chiaro = mescola(colore, '#ffffff', 0.16)
@@ -61,6 +61,12 @@ export function arco(p, cosa, S = p.S) {
     // la piega scura sul fianco destro di ogni telo
     p.velo(0.5, () => p.rett(cx + w * 0.3, y - h * 0.78, w * 0.7, alt, scuro))
   }
+  // il sigillo, se il telo ne ha uno: una spilla che lo chiude in mezzo
+  // — la tenda non ha né cardini né serratura, ed è l'unico posto dove
+  // può stare un fermaglio colorato. Sparisce insieme al telo raccolto
+  const T = sigillo && SIGILLI[sigillo]
+  if (T && a < 0.15) tondo(p, x, y - h * 0.1, L * 0.09, L * 0.09, T, mescola(T, '#000000', 0.5), Math.max(1, L * 0.025))
+
   // le due corde che tengono i teli quando è aperto
   if (a > 0.3) for (const v of [-1, 1]) {
     c.strokeStyle = '#e8c569'; c.lineWidth = Math.max(1, L * 0.03)
