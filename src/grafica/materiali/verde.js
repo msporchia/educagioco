@@ -79,18 +79,27 @@ export function alberi(c, reg, A, lato, tinte, dentro, opz = {}) {
      più spesso, come un bosco che ha già perso metà foglie */
   const vira = col => modo === 'autunno' ? mescola(col, '#c96a2c', 0.55)
                      : modo === 'secco' ? mescola(col, '#8a7a52', 0.55) : col
-  // il sottobosco scuro sotto le chiome: senza, fra un ciuffo e
-  // l'altro si vedrebbe il pavimento
-  rett(c, reg.x0, reg.y0, reg.x1 - reg.x0, reg.y1 - reg.y0, mescola(tinte[1], '#000000', 0.35))
+  const sotto = mescola(tinte[1], '#000000', 0.35)
   const passo = lato * 0.5
   for (let k = Math.floor(reg.y0 / passo) - 1; k < Math.ceil(reg.y1 / passo) + 1; k++)
     for (let i = Math.floor(reg.x0 / passo) - 1; i < Math.ceil(reg.x1 / passo) + 1; i++) {
-      if (dentro && !dentro(i * passo, k * passo, passo, passo)) continue
       const r = m => dado(i, k, 1300 + m + sm)
-      if (modo === 'secco' && r(6) > 0.72) continue    // la chioma persa
       const cx = (i + 0.5 + (r(1) - 0.5) * 0.9) * passo
       const cy = (k + 0.5 + (r(2) - 0.5) * 0.9) * passo
       const rr = passo * (0.55 + r(3) * 0.45) * (modo === 'secco' ? 0.8 : 1)
+      /* IL RIQUADRO VERO DELLA CHIOMA — non la cella (`i*passo,k*passo`):
+         il jitter del centro e il raggio si conoscono solo dopo i dadi,
+         e un ciuffo spostato dal jitter sbordava nel blocco vicino, che
+         magari tocca a un'altra tessitura. Il permesso si chiede quindi
+         su un riquadro grande quanto il ciuffo, ombra sotto compresa,
+         come già fa `terra`. */
+      if (dentro && !dentro(cx - rr, cy - rr * 1.1, rr * 2, rr * 2.2)) continue
+      // il sottobosco scuro sotto ogni ciuffo, tessera per tessera e non
+      // più un unico rettangolo su tutta la regione: quel rettangolo
+      // ignorava il permesso e, come voce mascherata, dipingeva il buio
+      // anche dove toccava a un'altra tessitura
+      rett(c, i * passo, k * passo, passo, passo, sotto)
+      if (modo === 'secco' && r(6) > 0.72) continue    // la chioma persa
       const col = vira(mescola(tinte[0], tinte[1], r(4)))
       ell(c, cx, cy + rr * 0.25, rr, rr * 0.82, mescola(col, '#000000', 0.3))
       ell(c, cx, cy, rr, rr * 0.86, col)
@@ -99,14 +108,16 @@ export function alberi(c, reg, A, lato, tinte, dentro, opz = {}) {
         ell(c, cx - rr * 0.28, cy - rr * 0.3, rr * 0.45, rr * 0.32,
             mescola(col, modo === 'autunno' ? '#ffe08a' : '#ffffff', 0.22))
     }
-  semina(reg, lato * 1.9, 37 + sm, 1, null, (x, y, r) => {
-    // il secco dirada le chiome, quindi mostra più tronchi: è la stessa
-    // logica di un bosco che sta perdendo la copertura
-    if (r(1) < (modo === 'secco' ? 0.4 : 0.62)) return
-    velo(c, 0.55, () => {
-      ell(c, x, y, lato * 0.16, lato * 0.13, '#4a3520')
-      ell(c, x - lato * 0.05, y - lato * 0.04, lato * 0.07, lato * 0.05, '#6a4f30')
+  semina(reg, lato * 1.9, 37 + sm, 1,
+    dentro ? (x, y) => dentro(x - lato * 0.25, y - lato * 0.25, lato * 0.5, lato * 0.5) : null,
+    (x, y, r) => {
+      // il secco dirada le chiome, quindi mostra più tronchi: è la stessa
+      // logica di un bosco che sta perdendo la copertura
+      if (r(1) < (modo === 'secco' ? 0.4 : 0.62)) return
+      velo(c, 0.55, () => {
+        ell(c, x, y, lato * 0.16, lato * 0.13, '#4a3520')
+        ell(c, x - lato * 0.05, y - lato * 0.04, lato * 0.07, lato * 0.05, '#6a4f30')
+      })
     })
-  })
 }
 alberi.modi = ['normale', 'autunno', 'secco']

@@ -108,22 +108,35 @@ export function tappeto(c, reg, A, lato, tinte, scoperto, opz = {}) {
   // `logoro`: il rosso si smorza verso il tono spento del marmo intorno
   const base = modo === 'logoro' ? mescola(base0, '#8a7a5e', 0.3) : base0
   const scuro = modo === 'logoro' ? mescola(scuro0, '#8a7a5e', 0.3) : scuro0
-  rett(c, cx - w, reg.y0, w * 2, reg.y1 - reg.y0, base)
-  // l'ombra lungo i due bordi: senza, il tappeto è una striscia di
-  // vernice invece che un tessuto posato sopra
-  velo(c, 0.5, () => {
-    rett(c, cx - w, reg.y0, lato * 0.16, reg.y1 - reg.y0, scuro)
-    rett(c, cx + w - lato * 0.16, reg.y0, lato * 0.16, reg.y1 - reg.y0, scuro)
-  })
-  for (const d of [-1, 1]) {
-    rett(c, cx + d * w * 0.82 - lato * 0.05, reg.y0, lato * 0.1, reg.y1 - reg.y0, A.oro || '#e8c569')
-    rett(c, cx + d * w * 0.7 - lato * 0.03, reg.y0, lato * 0.06, reg.y1 - reg.y0, scuro)
+  /* IL TAPPETO A PEZZI, NON UNA STRISCIA SOLA: prima la stoffa (corpo,
+     ombra ai bordi, frangia d'oro) chiedeva il permesso solo per
+     `marmoLiscio` sotto, e poi si stendeva da `reg.y0` a `reg.y1` senza
+     mai chiamare `scoperto` — come voce mascherata usciva dalla sua
+     fetta per tutta l'altezza della stanza. Il pezzo è un corso di
+     tappeto (`h`, lo stesso passo di `marmoLiscio`): un pezzo per corso,
+     un permesso per pezzo. */
+  const h = lato * 0.53
+  for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
+    const y = k * h
+    if (scoperto && !scoperto(cx - w, y, w * 2, h)) continue
+    rett(c, cx - w, y, w * 2, h, base)
+    // l'ombra lungo i due bordi: senza, il tappeto è una striscia di
+    // vernice invece che un tessuto posato sopra
+    velo(c, 0.5, () => {
+      rett(c, cx - w, y, lato * 0.16, h, scuro)
+      rett(c, cx + w - lato * 0.16, y, lato * 0.16, h, scuro)
+    })
+    for (const d of [-1, 1]) {
+      rett(c, cx + d * w * 0.82 - lato * 0.05, y, lato * 0.1, h, A.oro || '#e8c569')
+      rett(c, cx + d * w * 0.7 - lato * 0.03, y, lato * 0.06, h, scuro)
+    }
   }
-  // il motivo: un rombo ogni due celle, tono su tono
+  // il motivo: un rombo ogni due celle, tono su tono — un pezzo per rombo
   for (let k = Math.floor(reg.y0 / (lato * 2)); k < Math.ceil(reg.y1 / (lato * 2)); k++) {
     // `strappato`: uno strappo salta il rombo e lascia vedere il marmo sotto
     if (modo === 'strappato' && dado(k, 7, 900 + sm) > 0.75) continue
     const y = k * lato * 2 + lato
+    if (scoperto && !scoperto(cx - lato * 0.34, y - lato * 0.44, lato * 0.68, lato * 0.88)) continue
     poly(c, [[cx, y - lato * 0.44], [cx + lato * 0.34, y], [cx, y + lato * 0.44],
              [cx - lato * 0.34, y]], scuro)
     poly(c, [[cx, y - lato * 0.24], [cx + lato * 0.18, y], [cx, y + lato * 0.24],

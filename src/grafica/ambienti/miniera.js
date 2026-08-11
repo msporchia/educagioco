@@ -19,6 +19,11 @@ export const MINIERA = {
   mura: [
     legno('#8a6640', '#543b24'),
     legno('#836142', '#4d3a26', { seme: 4, quanto: 0.22 }),
+    /* i montanti ora chiedono il permesso corso per corso, come le
+       assi: questa voce, travi marce sul bordo del crollo, è anche la
+       prova che il contratto è chiuso — se un montante uscisse dal suo
+       pezzo lascerebbe un buco nero appena fuori dal blocco */
+    legno('#6a4a2c', '#3a2a18', { modo: 'marcio', dove: 'crollo', quanto: 0.18, seme: 6 }),
     roccia('#6b6053', '#433a2f', { modo: 'frantumata', dove: 'crollo', quanto: 0.16, seme: 3 }),
     mattoni('#7a5c42', '#4a3826', { dove: 'crollo', quanto: 0.08, seme: 5 }),
   ],

@@ -42,6 +42,8 @@ export const GROTTA = {
 
   varianti: ['liscio', 'liscio', 'usura', 'detriti', 'licheni', 'ombra'],
 
-  dettagli: [['ciottoli', 2.3, 'crollo'], ['funghi', 3.6], ['crepe', 4.3, 'strati'],
-             ['muschio', 5, 'crollo']],
+  /* i ciottoli guardano ancora il crollo, ma anche il muro — è lì che
+     la ghiaia si ferma rotolando, non in mezzo al passaggio */
+  dettagli: [['ciottoli', 2.3, ['crollo', 'controMuro']], ['funghi', 3.6],
+             ['crepe', 4.3, 'strati'], ['muschio', 5, 'crollo']],
 }

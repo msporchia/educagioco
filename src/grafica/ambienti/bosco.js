@@ -22,12 +22,16 @@ export const BOSCO = {
     // le chiome: due verdi **distanti fra loro**, se no i ciuffi si
     // impastano e il bosco torna un rettangolo verde scuro
     alberi('#4a7a45', '#1d3a24'),
-    /* LA CHIOMA RESTA UNA VOCE SOLA, e non è una dimenticanza:
-       `alberi` dipinge a macchie che sbordano dal blocco che sta
-       riempiendo, quindi come voce mascherata lascia buchi neri dove
-       il predicato le taglia. Finché quel pittore non chiede il
-       permesso per ogni chioma come fanno gli altri, qui si varia col
-       pavimento e con le rocce della radura. */
+    /* `alberi` ora chiede il permesso per ogni ciuffo — sottobosco e
+       chioma comprese — come fanno tutte le altre tessiture, quindi la
+       chioma può tornare a essere più di una voce sola. Le due righe
+       qui sotto sono anche la prova che il contratto è chiuso: una
+       seconda specie su un campo suo, e una chioma secca sul bordo
+       della radura, prima che il bosco lasci il posto alla roccia. Se
+       il predicato le taglia senza lasciare buchi neri, il permesso lo
+       chiedono per davvero. */
+    alberi('#5a8a4f', '#2a4a2c', { seme: 4, quanto: 0.3 }),
+    alberi('#4a7a45', '#1d3a24', { modo: 'secco', dove: 'radura', quanto: 0.16 }),
     roccia('#6b6153', '#443c34', { dove: 'radura', quanto: 0.14, sporco: 0.18, seme: 3 }),
     roccia('#5c5346', '#372f27', { modo: 'frantumata', dove: 'radura', quanto: 0.08, seme: 6 }),
   ],

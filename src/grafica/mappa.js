@@ -132,19 +132,86 @@ export function dipingiMappa(ctx, opz) {
            lega le due cose invece di lasciarle succedere nello stesso
            posto per caso. */
   const libera = (x, y) => !muro(Math.floor(x / lato), Math.floor(y / lato))
-  /* `dove` è il nome di un campo della stanza — gli stessi che le
-     tessiture nominano, quindi il muschio può cadere **dove cola** e
-     il paramento può essere caduto per la stessa ragione. Tre forme:
-       'umido'   dove quel campo è alto
-       '!umido'  dove è basso
-       'rotto'   dove il pavimento non è quello di fondo */
-  const ammessoDa = dove => {
-    if (!dove) return null
+
+  /* ── I CONTESTI — le mappe invisibili che nascono dalla forma della
+         stanza, non da un campo. Un campo (`umido`, `usura`) dice
+         *quanto* un punto è messo in un certo modo, e si sfuma; un
+         contesto dice *dov'è* rispetto ai muri, ed è netto — una cella
+         o è un angolo o non lo è. Si calcolano una volta sola sulla
+         griglia, come `scoperto` qui sopra, e servono a mettere
+         l'arredo dove l'occhio se lo aspetta: una ragnatela in un
+         angolo, un sarcofago contro il muro, non in mezzo alla stanza.
+
+         Cinque forme, tutte booleane per cella:
+           angolo       pavimento in un angolo interno (due muri adiacenti)
+           controMuro   pavimento che tocca un muro — dove sta l'arredo vero
+           aperto       pavimento lontano da ogni muro — il centro
+           pareteLunga  muro che dà sul pavimento, in una fila di almeno 3
+           passaggio    celle strette, corridoi di una o due celle
+
+         I cicli che misurano una fila (`pareteLunga`, `passaggio`) sono
+         limitati alla mappa: senza il limite, un bordo di mappa senza
+         muro attorno li manderebbe fuori indice all'infinito. */
+  const chiaveDi = (i, k) => i + ',' + k
+  const contesti = (() => {
+    const angolo = new Set(), controMuro = new Set(), aperto = new Set()
+    const pareteLunga = new Set(), passaggio = new Set()
+    for (let k = 0; k < altezza; k++)
+      for (let i = 0; i < larghezza; i++) {
+        if (!muro(i, k)) {
+          const su = muro(i, k - 1), giu = muro(i, k + 1)
+          const sx = muro(i - 1, k), dx = muro(i + 1, k)
+          if (su || giu || sx || dx) controMuro.add(chiaveDi(i, k))
+          if ((su || giu) && (sx || dx)) angolo.add(chiaveDi(i, k))
+          let vuoto = true
+          for (let dk = -2; dk <= 2 && vuoto; dk++)
+            for (let di = -2; di <= 2; di++)
+              if (muro(i + di, k + dk)) { vuoto = false; break }
+          if (vuoto) aperto.add(chiaveDi(i, k))
+          let i0 = i, i1 = i
+          while (i0 > 0 && !muro(i0 - 1, k)) i0--
+          while (i1 < larghezza - 1 && !muro(i1 + 1, k)) i1++
+          let k0 = k, k1 = k
+          while (k0 > 0 && !muro(i, k0 - 1)) k0--
+          while (k1 < altezza - 1 && !muro(i, k1 + 1)) k1++
+          if (Math.min(i1 - i0 + 1, k1 - k0 + 1) <= 2) passaggio.add(chiaveDi(i, k))
+        } else if (!muro(i - 1, k) || !muro(i + 1, k) || !muro(i, k - 1) || !muro(i, k + 1)) {
+          let i0 = i, i1 = i
+          while (i0 > 0 && muro(i0 - 1, k)) i0--
+          while (i1 < larghezza - 1 && muro(i1 + 1, k)) i1++
+          let k0 = k, k1 = k
+          while (k0 > 0 && muro(i, k0 - 1)) k0--
+          while (k1 < altezza - 1 && muro(i, k1 + 1)) k1++
+          if (Math.max(i1 - i0 + 1, k1 - k0 + 1) >= 3) pareteLunga.add(chiaveDi(i, k))
+        }
+      }
+    return { angolo, controMuro, aperto, pareteLunga, passaggio }
+  })()
+  const NOMI_CONTESTI = new Set(Object.keys(contesti))
+
+  /* `dove` è il nome di un campo della stanza, o di un contesto, o
+     'rotto' — gli stessi che le tessiture nominano, quindi il muschio
+     può cadere **dove cola** e il paramento può essere caduto per la
+     stessa ragione. Quattro forme:
+       'umido'              dove quel campo è alto
+       '!umido'             dove è basso
+       'rotto'              dove il pavimento non è quello di fondo
+       'angolo' (o un altro contesto)   dove dice la geometria
+     e una lista le compone tutte con un «e»: `['angolo', 'umido']`
+     vuol dire «negli angoli e dove è umido». */
+  const unaCondizione = dove => {
+    if (NOMI_CONTESTI.has(dove))
+      return (x, y) => contesti[dove].has(chiaveDi(Math.floor(x / lato), Math.floor(y / lato)))
     if (dove === 'rotto')
       return (x, y) => T.suoloQui(Math.floor(x / lato), Math.floor(y / lato)) !== T.suolo[0]
     const meno = dove[0] === '!'
     const nome = meno ? dove.slice(1) : dove
     return (x, y) => (T.valore(nome, x / lato, y / lato) > 0.54) !== meno
+  }
+  const ammessoDa = dove => {
+    if (!dove) return null
+    const cond = (Array.isArray(dove) ? dove : [dove]).map(unaCondizione)
+    return (x, y) => cond.every(f => f(x, y))
   }
   for (const [nome, passo, dove] of A.dettagli) {
     const fn = DETTAGLI[nome]

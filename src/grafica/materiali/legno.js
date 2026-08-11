@@ -156,16 +156,26 @@ export function legno(c, reg, A, lato, tinte, dentro, opz = {}) {
       if (modo === 'bruciato' && r(10) > 0.5)
         crepa(c, x + w * 0.15, k * h + h * 0.4, w * 0.7, '#000000', m => dado(i, k, 1450 + m + sm))
     }
-  // i montanti, sopra a tutto, con i chiodi
+  // i montanti, sopra a tutto, con i chiodi — a pezzi come le assi, e
+  // non una colonna intera da un capo all'altro di `reg`: una colonna
+  // intera non chiedeva mai il permesso, e come voce mascherata usciva
+  // dal suo blocco per tutta l'altezza della stanza
   const passo = lato * 1.8
   for (let i = Math.floor(reg.x0 / passo) - 1; i < Math.ceil(reg.x1 / passo); i++) {
     const x = i * passo + passo * 0.5
     let col = mescola(tinte[0], '#000000', 0.22)
     if (modo === 'bruciato') col = mescola(col, '#000000', 0.5)
-    rett(c, x - lato * 0.11, reg.y0, lato * 0.22, reg.y1 - reg.y0, col)
-    rett(c, x - lato * 0.11, reg.y0, lato * 0.07, reg.y1 - reg.y0, mescola(col, '#ffffff', modo === 'bruciato' ? 0.04 : 0.16))
-    for (let k = Math.floor(reg.y0 / (lato * 0.52)); k < Math.ceil(reg.y1 / (lato * 0.52)); k++)
-      ell(c, x, k * lato * 0.52 + lato * 0.26, lato * 0.03, lato * 0.03, modo === 'marcio' ? '#5a4a30' : '#3f4550')
+    for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
+      const y = k * h
+      if (dentro && !dentro(x - lato * 0.11, y, lato * 0.22, h)) continue
+      rett(c, x - lato * 0.11, y, lato * 0.22, h, col)
+      rett(c, x - lato * 0.11, y, lato * 0.07, h, mescola(col, '#ffffff', modo === 'bruciato' ? 0.04 : 0.16))
+    }
+    for (let k = Math.floor(reg.y0 / (lato * 0.52)); k < Math.ceil(reg.y1 / (lato * 0.52)); k++) {
+      const cy = k * lato * 0.52 + lato * 0.26
+      if (dentro && !dentro(x - lato * 0.03, cy - lato * 0.03, lato * 0.06, lato * 0.06)) continue
+      ell(c, x, cy, lato * 0.03, lato * 0.03, modo === 'marcio' ? '#5a4a30' : '#3f4550')
+    }
   }
 }
 legno.modi = ['normale', 'marcio', 'bruciato']

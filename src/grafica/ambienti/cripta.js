@@ -94,9 +94,15 @@ export const CRIPTA = {
 
   /* `[nome, passo in celle, dove]`: il passo è la densità (uno ogni
      passo×passo celle, quindi più piccolo è più fitto), e `dove` è il
-     campo che dice dove ha senso. `rotto` non è un campo: vuol dire
-     «dove il pavimento non è quello di fondo», cioè i pezzi caduti
-     stanno sotto il punto in cui il lastricato è saltato. */
-  dettagli: [['crepe', 2.3], ['ossa', 3.3], ['muschio', 4, 'umido'],
-             ['pozze', 3.4, 'umido'], ['ciottoli', 5.2], ['ciottoli', 3, 'rotto']],
+     campo — o il contesto — che dice dove ha senso. `rotto` non è un
+     campo: vuol dire «dove il pavimento non è quello di fondo», cioè i
+     pezzi caduti stanno sotto il punto in cui il lastricato è saltato.
+     L'arredo qui sotto usa i contesti geometrici, non solo i campi: le
+     ragnatele negli angoli (dove un ragno tesse per davvero, fra due
+     muri), i ciottoli caduti contro il muro (dove si ammucchia quello
+     che rotola), le ossa nell'aperto (in mezzo alla cripta, non
+     nascoste in un angolo — è lì che devono saltare all'occhio). */
+  dettagli: [['crepe', 2.3], ['ossa', 3.3, 'aperto'], ['muschio', 4, 'umido'],
+             ['pozze', 3.4, 'umido'], ['ciottoli', 5.2, 'controMuro'],
+             ['ciottoli', 3, 'rotto'], ['ragnatele', 4.6, 'angolo']],
 }

@@ -40,6 +40,8 @@ export const FOGNE = {
 
   varianti: ['liscio', 'liscio', 'umidiccio', 'licheni', 'usura'],
 
+  /* i ciottoli restano nella melma, ma anche loro si ammucchiano contro
+     il muro: la corrente li spinge lì, non al centro del canale */
   dettagli: [['pozze', 1.9, 'melma'], ['muschio', 2.9, 'umido'],
-             ['crepe', 4.3, 'rotto'], ['ciottoli', 5, 'melma']],
+             ['crepe', 4.3, 'rotto'], ['ciottoli', 5, ['melma', 'controMuro']]],
 }
