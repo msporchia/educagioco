@@ -51,10 +51,11 @@ export class Oggetto extends Elemento {
   /* il nome del pittore preferito, in celle: la vista decide ancora lei
      i sinonimi (`ALTRI_NOMI`) e il ripiego se quel pittore non esiste,
      perché quel catalogo sta in `grafica/` e il motore non lo importa
-     mai */
+     mai. `alone: true`: è una cosa che si nomina in un ordine, non
+     arredo dipinto sul fondale */
   faccia () {
     if (this.preso) return []
-    return [{ che: this.pittore || this.nome, x: this.x, y: this.y, sigillo: this.sigillo }]
+    return [{ che: this.pittore || this.nome, x: this.x, y: this.y, sigillo: this.sigillo, alone: true }]
   }
 
   scheda () {

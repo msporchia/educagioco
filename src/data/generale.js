@@ -131,42 +131,6 @@ function tondo (g, cx, cy, r) {
 }
 const stampa = g => g.map(r => r.join(''))
 
-/* LA FORTEZZA — 34×22, e la pianta è la prima cosa che si legge.
-   Prima era tutta a squadra: quattro corridoi dritti, due scatole e il
-   maschio, che a schermo si leggeva come una griglia invece che come
-   un posto. Adesso ogni stanza ha una forma sua — due tonde, due a
-   elle, il maschio ottagonale con le sue colonne — e i corridoi non
-   sono più righe.
-
-   QUELLO CHE NON PUÒ CAMBIARE, e vale per qualunque ritocco futuro:
-   il portone (17,12) è l'UNICO ingresso al maschio, il tesoro sta al
-   centro (17,16) e il guardiano nel collo (17,11). Se una galleria
-   nuova arriva al maschio da un'altra parte, il livello non esiste
-   più — si passa senza chiave e senza cavaliere. */
-const FORTEZZA = (() => {
-  const g = tela(34, 22)
-  /* il cammino di ronda: sotto dritto, sopra scende attorno alla
-     cisterna e risale */
-  cava(g, 1, 1, 12, 1); cava(g, 12, 1, 12, 4); cava(g, 12, 4, 22, 4)
-  cava(g, 22, 1, 22, 4); cava(g, 22, 1, 32, 1)
-  cava(g, 1, 20, 32, 20)
-  cava(g, 1, 1, 1, 20); cava(g, 32, 1, 32, 20)          // le due coste
-  cava(g, 1, 10, 32, 10)                                // la traversa
-  cava(g, 15, 9, 19, 9)                                 // la piazzetta
-  cava(g, 3, 3, 8, 6); cava(g, 3, 6, 5, 8)              // l'armeria, a elle
-  cava(g, 5, 1, 5, 3); cava(g, 4, 8, 4, 10)             //   e le sue due bocche
-  tondo(g, 27, 6, 3.4)                                  // la cisterna
-  cava(g, 27, 1, 27, 3); cava(g, 27, 9, 27, 10)
-  tondo(g, 17, 15.5, 3.4); cava(g, 17, 10, 17, 12)      // il maschio e il collo
-  g[14][15] = '#'; g[14][19] = '#'                      //   le quattro colonne
-  g[17][15] = '#'; g[17][19] = '#'
-  cava(g, 3, 14, 8, 16); cava(g, 3, 16, 5, 18)          // le prigioni, a elle
-  cava(g, 4, 18, 4, 20); cava(g, 1, 14, 3, 14)
-  tondo(g, 26, 16, 3.4); cava(g, 26, 18, 26, 20)        // le stalle, e l'androne
-  cava(g, 10, 19, 10, 20)                               // due ripostigli, perché
-  cava(g, 30, 12, 30, 13); cava(g, 30, 13, 32, 13)      //   i corridoi non siano tutti uguali
-  return stampa(g)
-})()
 /* LA CINTA — mura SOLO attorno alla principessa, e campo aperto tutto
    intorno. Non è una fortezza: è un cortile murato in mezzo a un prato,
    con due porte sbarrate, una a ponente e una a levante.
@@ -707,10 +671,24 @@ export const LIVELLI = [
 
 
 
-/* 7 ─ DUE STRADE E UNA PORTA CHE SI CHIUDE. L'ultimo prima della
-      fortezza, e mette insieme tutto quello di prima con due cose
-      nuove: una porta che si chiude alle spalle, e un segnale che dice
-      DA CHE PARTE è libero.
+/* 7 ─ DUE STRADE E UNA PORTA CHE SI CHIUDE. L'ULTIMA PROVA, e mette
+      insieme tutto quello di prima con due cose nuove: una porta che si
+      chiude alle spalle, e un segnale che dice DA CHE PARTE è libero.
+
+      Dopo di questa ce n'era una nona, «La fortezza» — 34×22, quattro
+      schermate — ed è stata tolta il giorno che le si è chiesto cosa
+      insegnasse. Prometteva l'astrazione («qui le mete una per una non
+      bastano più»), ma quella tesi non si può più dimostrare da quando
+      `prendi` e `apri` CAMMINANO DA SOLI: una fila di mete esplicite non
+      è più una tentazione in nessun livello, e infatti la fortezza non
+      aveva nemmeno una soluzione `fragile` da far cadere. Quello che
+      chiedeva davvero — coordinarsi con un segnale mentre l'altro tiene
+      occupato il nemico — è la quarta prova, su una mappa dieci volte
+      più grande che per giunta non ci sta nello schermo. Le sue tre
+      scene spostavano solo la chiave, dentro la stessa stanza, e
+      `prendi [la chiave]` la segue: erano la stessa scena tre volte.
+      Una mappa così è roba da CAMPAGNA, dove le quattro schermate le
+      attraversa una storia in più capitoli.
 
       ── LA RONDA È UNA SOLA, ED È UNA SCELTA ──
       Con due sentinelle bisogna sincronizzarle, e lo scarto fra le due
@@ -806,67 +784,6 @@ export const LIVELLI = [
   ],
 },
 
-/* 8 ─ LA FORTEZZA, e adesso è l'ultima. 34×22, quattro schermate: qui
-      la fila di mete esplicite non è più «lunga», è impraticabile — e
-      l'ordine di alto livello smette di essere un'eleganza per
-      diventare l'unico modo. È la ragione per cui la mappa è grande, e
-      il motivo per cui questa prova è rimasta quando le quattro sui
-      bug se ne sono andate: non c'è niente da smascherare, c'è da
-      farcela. */
-{
-  id: 'fortezza', nome: 'La fortezza', idea: 'Quattro schermate: a mete non si fa più',
-  dritta: "Obiettivo: <b>l'eroe deve arrivare al tesoro</b>. E non regge due colpi del guardiano.",
-  racconto: "La mappa non ci sta nello schermo: <b>trascinala</b> col dito, o guarda la minimappa in alto. Il guardiano lo regge solo il cavaliere, che però parte dall'altro capo della fortezza: da laggiù non vede l'eroe, e l'eroe non vede lui.",
-  aiuti: ['Su una mappa così i tempi non si contano: nessuno sa quanto ci mette l\'altro.',
-          'Finché il cavaliere lo tiene impegnato, il guardiano non guarda più l\'ingresso.',
-          'L\'eroe può prendere la chiave e fermarsi lì, ad aspettare che qualcuno gli dica quando.'],
-  griglia: FORTEZZA, ambiente: 'ingranaggi',
-  nomi: { tesoro: 'il tesoro', portone: 'il portone', chiave: 'la chiave',
-          incrocio: "l'incrocio" },
-  posti: { tesoro: { x: 17, y: 16 }, incrocio: { x: 17, y: 10 } },
-  celle: true,
-  porte: { portone: { x: 17, y: 12, chiave: 'chiave' } },
-  oggetti: [{ nome: 'chiave', x: 6, y: 6 }],
-  segnali: ['viaLibera'],
-  unita: [
-    { id: 'eroe', nome: "l'eroe", fazione: 'umani', emoji: '🦸', chi: 'ladra', vista: 4, vita: 2, x: 1, y: 1 },
-    { id: 'cava', nome: 'il cavaliere', fazione: 'umani', emoji: '🛡️', chi: 'cavaliere',
-      vista: 14, vita: 20, x: 1, y: 20, sa: ['vai', 'attacca', 'aspetta', 'aspettaDiVedere', 'suona'] },
-    /* QUI IL RUMORE NON C'È, ED È UNA SCELTA. Provato: il guardiano
-       che grida e la ronda che accorre fanno arrivare una seconda
-       spada addosso al cavaliere, che tiene il guardiano e non
-       l'altra — e la strada da due stelle sparisce. Il livello
-       promette «il cavaliere regge il guardiano», non due; per
-       tenerlo in piedi col rumore bisognerebbe dargli il doppio della
-       vita, e allora la reazione non si sentirebbe più. */
-    { id: 'orco', nome: 'il guardiano', fazione: 'orchi', emoji: '👹', chi: 'orco', vista: 5, vita: 26, x: 17, y: 11 },
-    { id: 'orco2', nome: 'la ronda', fazione: 'orchi', emoji: '👺', chi: 'guardia', vista: 3, vita: 6, x: 32, y: 1 },
-  ],
-  fazioni: {
-    umani: { nome: 'i nostri', autore: 'giocatore' },
-    orchi: { nome: 'gli orchi', autore: 'livello', ordini: {
-      orco: [o('aspettaDiVedere', 'eroe'), o('attacca', 'eroe')],
-      orco2: [giro(['32,1', '32,20'], { cond: 'vedi', complemento: 'umani' }),
-              o('attacca', 'umani')],
-    } },
-  },
-  complementi: ['chiave', 'portone', 'tesoro', 'incrocio', 'orco', 'orco2', 'viaLibera'],
-  obiettivo: [qui('eroe', 'tesoro')],
-  sconfitta: [caduto('eroe')],
-  motivoSconfitta: "Il guardiano ha preso l'eroe.",
-  mostraNemici: 'gettoni', gettoni: 2,
-  varianti: [
-    { nome: 'la chiave in mezzo', oggetti: { chiave: { x: 6, y: 6 } } },
-    { nome: 'la chiave in fondo', oggetti: { chiave: { x: 4, y: 7 } } },
-    { nome: 'la chiave in alto', oggetti: { chiave: { x: 7, y: 4 } } },
-  ],
-  par: 7,
-  soluzioni: [{ nome: 'uno tiene, l\'altro passa', piano: {
-    eroe: [o('prendi', 'chiave'),
-           quando('viaLibera', o('apri', 'portone'), o('vai', 'tesoro'))],
-    cava: [o('vai', 'incrocio'), o('attacca', 'orco'), o('suona', 'viaLibera')],
-  } }],
-},
 
 
 ]
