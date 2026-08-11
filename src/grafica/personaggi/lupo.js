@@ -13,6 +13,7 @@ import { mescola, capsula, poligono, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
 
 export const LUPO = {
+  materie: { manto: 'pelo' },
   taglia: 1, quadrupede: true,
   col: {
     pelo: '#7c8798', peloS: '#5a6373', peloC: '#a4aebc',

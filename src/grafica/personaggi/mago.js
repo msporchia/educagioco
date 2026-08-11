@@ -25,6 +25,14 @@ function stella(q, x, y, r, col) {
 }
 
 export const MAGO = {
+  /* DI CHE COSA È FATTO. Il mago è il caso dove la materia si vede
+     più che su chiunque altro, e per una ragione sola: **è quasi
+     tutto stoffa**. Il cavaliere ha la veste coperta dalla corazza e
+     resta poco panno in vista; qui la tonaca è due terzi della
+     figura, e sotto una tinta piatta era il pezzo più grande e più
+     morto del disegno. Il bastone resta legno liscio, la gemma pure:
+     una gemma con una trama non sarebbe più una gemma. */
+  materie: { manica: 'stoffa', gambe: 'stoffa', scarpe: 'cuoio' },
   spalle: 4.6, taglia: 1.05, arti: 0.9,
   col: {
     pelle: '#f2c9a0', pelleS: '#d9a97f',
@@ -46,7 +54,7 @@ export const MAGO = {
        serve per farlo «scivolare» invece che camminare. */
     poligono(q, [[-w * s, -12.4 * s], [w * s, -12.4 * s], [w * 1.5 * s, -3 * s],
                  [w * 1.75 * s, 0.6 * s], [-w * 1.75 * s, 0.6 * s], [-w * 1.5 * s, -3 * s]],
-             C.veste, b, sp)
+             C.veste, b, sp, 'stoffa')
     // l'orlo dorato e le due pieghe: senza, la campana era una macchia
     q.rett(-w * 1.72 * s, -0.9 * s, w * 3.44 * s, 1.1 * s, C.oro)
     q.ctx.strokeStyle = C.vesteS; q.ctx.lineWidth = 0.7 * s
@@ -62,7 +70,7 @@ export const MAGO = {
       for (const [sx, sy, r] of [[-2.6, -9.6, 1], [2.9, -7.4, 0.8], [-1.4, -4.6, 0.7]])
         stella(q, sx * s, sy * s, r * 1.5 * s, C.oro)
     }
-    capsula(q, 0, -12.4 * s, (dir === 'dx' ? 3.2 : 4.2) * s, 1.3 * s, 1.1 * s, C.vesteC, b, sp)
+    capsula(q, 0, -12.4 * s, (dir === 'dx' ? 3.2 : 4.2) * s, 1.3 * s, 1.1 * s, C.vesteC, b, sp, 'stoffa')
   },
   testa(q, s, C, dir, stato) {
     const b = C.bordo, sp = 0.75 * s, R = 4.3 * s
@@ -103,7 +111,7 @@ export const MAGO = {
     const punta = dir === 'dx' ? [-R * 1.5, cy - R * 2.5] : [R * 0.55, cy - R * 2.7]
     poligono(q, [[-tesa, cy], [-R * 0.55, cy - R * 0.5], [R * 0.55, cy - R * 0.5], [tesa, cy],
                  [tesa * 0.75, cy + R * 0.42], [-tesa * 0.75, cy + R * 0.42]], C.veste, b, sp)
-    poligono(q, [[-R * 0.95, cy - R * 0.2], [R * 0.95, cy - R * 0.2], punta], C.veste, b, sp)
+    poligono(q, [[-R * 0.95, cy - R * 0.2], [R * 0.95, cy - R * 0.2], punta], C.veste, b, sp, 'stoffa')
     poligono(q, [[-R * 0.2, cy - R * 0.3], [R * 0.95, cy - R * 0.2], punta], C.vesteS)
     q.rett(-tesa * 0.8, cy - R * 0.28, tesa * 1.6, 0.8 * s, C.oro)          // il nastro
     // la punta ricade, e in cima ci sta una stellina: è il tocco che

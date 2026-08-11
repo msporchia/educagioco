@@ -11,11 +11,12 @@
    una tela di scorta grande quanto la mappa, e poi si ricopia —
    esattamente come `campo()` fa per il castello.
    ═══════════════════════════════════════════════════════════════════ */
-import { dado } from './comune.js'
+import { dado, velo } from './comune.js'
 import { POSE, MURI, DETTAGLI, semina, variazioni } from './materiali/indice.js'
 import { AMBIENTI } from './ambienti/indice.js'
-import { luceEBuio, chiazzeDiLuce, torciaFerma } from './luce.js'
+import { luceEBuio, chiazzeDiLuce, torciaFerma, creaLuce } from './luce.js'
 import { dipingiMuri } from './muri.js'
+import { tessuto } from './tessuto.js'
 
 export { dipingiMuri }
 
@@ -28,6 +29,29 @@ export function leggiMappa(mappa, larghezza, altezza) {
     larghezza: righe[0].length, altezza: righe.length,
     muro: (i, k) => righe[k] !== undefined && righe[k][i] === '#',
   }
+}
+
+/* Dove sono appese le torce: una ogni sei colonne, sulla faccia di un
+   muro che dà sul pavimento (là si vedono). Più fitte di così le pozze
+   si toccano e tornano una fascia gialla continua: senza buio in
+   mezzo, la luce non si vede.
+
+   Sta fuori da `dipingiMappa` perché adesso la risposta serve due
+   volte: al fondale, che ci dipinge sopra le pozze, e ai personaggi,
+   che vogliono sapere se ci stanno dentro. Ed è **lo stesso conto**,
+   non due che si somigliano: se domani le torce cambiassero passo, un
+   orco continuerebbe ad accendersi dove il pavimento si accende. */
+export function torceDi(A, larghezza, altezza, muro) {
+  const torce = []
+  if (!A.torce) return torce
+  for (let k = 0; k < altezza; k++)
+    for (let i = 0; i < larghezza; i++)
+      // `k + 1 < altezza`: una torcia sull'ultima fila illuminerebbe
+      // fuori dalla mappa, e in gioco sarebbe un lume sprecato
+      if (muro(i, k) && k + 1 < altezza && !muro(i, k + 1) &&
+          i % 6 === 3 && dado(i, k, 800) > 0.3)
+        torce.push([i, k])
+  return torce
 }
 
 export function dipingiMappa(ctx, opz) {
@@ -63,7 +87,25 @@ export function dipingiMappa(ctx, opz) {
       for (let i = i0; i <= i1; i++) if (!muro(i, k)) return true
     return false
   }
-  POSE[A.posa](c, reg, A, lato, scoperto)
+  /* DI CHE COSA È FATTA OGNI CELLA. Il tessuto si costruisce una volta
+     e serve tre volte: qui per la posa, sotto per i muri, e poi per i
+     dettagli. Con un ambiente che dichiara una posa e una muratura
+     sole risponde sempre quelle, e questo file passa esattamente da
+     dove passava prima. */
+  const T = tessuto({ larghezza, altezza, muro, A, seme: opz.seme })
+  /* una passata per voce, come per i muri: la lista `suolo`
+     dell'ambiente, in ordine, e ognuna sa solo dipingere il suo pezzo
+     di pavimento. La firma è la stessa delle murature — `tinte` è un
+     parametro esplicito, non più pescato da `A.lastra` — quindi la
+     roccia viva di una cripta può avere il suo colore senza dover
+     truccare la tavolozza dell'ambiente per farglielo vedere. */
+  T.suolo.forEach((v, n) => {
+    if (!v.dipingi) return
+    v.dipingi(c, reg, A, lato, v.tinte,
+      (x, y, w, h) => scoperto(x, y, w, h) &&
+                      T.vinceSuolo(n, (x + w / 2) / lato, (y + h / 2) / lato, true),
+      { modo: v.modo, seme: v.seme })
+  })
 
   /* 3 ─ le variazioni: il fondo mosso dappertutto, e sopra le macchie
          di posa — otto celle di passo, tre o quattro modi diversi di
@@ -75,31 +117,116 @@ export function dipingiMappa(ctx, opz) {
 
   /* 4 ─ i dettagli, mai dentro un muro. La densità è nei dati: il
          numero è il passo della semina in celle, quindi più è piccolo
-         più sono fitti. */
+         più sono fitti.
+
+         ── DUE COSE CHE MANCAVANO, E SI VEDEVANO ──
+         · **il seme era costante** (`nome.length * 7 + 5`): le pozze
+           di ogni stanza del gioco cadevano esattamente negli stessi
+           punti relativi. Adesso ci si somma il seme della tappa, e
+           due cripte non hanno più le stesse pozzanghere.
+         · **cadevano ovunque**. Un dettaglio può dichiarare dove ha
+           senso — `['pozze', 3.2, 'umido']` — e allora si semina solo
+           lì. È lo stesso campo che decide dove il rivestimento è
+           caduto, quindi le pozze stanno **sotto le lacune**, dove
+           l'acqua che le ha fatte sta ancora colando. È quello che
+           lega le due cose invece di lasciarle succedere nello stesso
+           posto per caso. */
   const libera = (x, y) => !muro(Math.floor(x / lato), Math.floor(y / lato))
-  for (const [nome, passo] of A.dettagli) {
+
+  /* ── I CONTESTI — le mappe invisibili che nascono dalla forma della
+         stanza, non da un campo. Un campo (`umido`, `usura`) dice
+         *quanto* un punto è messo in un certo modo, e si sfuma; un
+         contesto dice *dov'è* rispetto ai muri, ed è netto — una cella
+         o è un angolo o non lo è. Si calcolano una volta sola sulla
+         griglia, come `scoperto` qui sopra, e servono a mettere
+         l'arredo dove l'occhio se lo aspetta: una ragnatela in un
+         angolo, un sarcofago contro il muro, non in mezzo alla stanza.
+
+         Cinque forme, tutte booleane per cella:
+           angolo       pavimento in un angolo interno (due muri adiacenti)
+           controMuro   pavimento che tocca un muro — dove sta l'arredo vero
+           aperto       pavimento lontano da ogni muro — il centro
+           pareteLunga  muro che dà sul pavimento, in una fila di almeno 3
+           passaggio    celle strette, corridoi di una o due celle
+
+         I cicli che misurano una fila (`pareteLunga`, `passaggio`) sono
+         limitati alla mappa: senza il limite, un bordo di mappa senza
+         muro attorno li manderebbe fuori indice all'infinito. */
+  const chiaveDi = (i, k) => i + ',' + k
+  const contesti = (() => {
+    const angolo = new Set(), controMuro = new Set(), aperto = new Set()
+    const pareteLunga = new Set(), passaggio = new Set()
+    for (let k = 0; k < altezza; k++)
+      for (let i = 0; i < larghezza; i++) {
+        if (!muro(i, k)) {
+          const su = muro(i, k - 1), giu = muro(i, k + 1)
+          const sx = muro(i - 1, k), dx = muro(i + 1, k)
+          if (su || giu || sx || dx) controMuro.add(chiaveDi(i, k))
+          if ((su || giu) && (sx || dx)) angolo.add(chiaveDi(i, k))
+          let vuoto = true
+          for (let dk = -2; dk <= 2 && vuoto; dk++)
+            for (let di = -2; di <= 2; di++)
+              if (muro(i + di, k + dk)) { vuoto = false; break }
+          if (vuoto) aperto.add(chiaveDi(i, k))
+          let i0 = i, i1 = i
+          while (i0 > 0 && !muro(i0 - 1, k)) i0--
+          while (i1 < larghezza - 1 && !muro(i1 + 1, k)) i1++
+          let k0 = k, k1 = k
+          while (k0 > 0 && !muro(i, k0 - 1)) k0--
+          while (k1 < altezza - 1 && !muro(i, k1 + 1)) k1++
+          if (Math.min(i1 - i0 + 1, k1 - k0 + 1) <= 2) passaggio.add(chiaveDi(i, k))
+        } else if (!muro(i - 1, k) || !muro(i + 1, k) || !muro(i, k - 1) || !muro(i, k + 1)) {
+          let i0 = i, i1 = i
+          while (i0 > 0 && muro(i0 - 1, k)) i0--
+          while (i1 < larghezza - 1 && muro(i1 + 1, k)) i1++
+          let k0 = k, k1 = k
+          while (k0 > 0 && muro(i, k0 - 1)) k0--
+          while (k1 < altezza - 1 && muro(i, k1 + 1)) k1++
+          if (Math.max(i1 - i0 + 1, k1 - k0 + 1) >= 3) pareteLunga.add(chiaveDi(i, k))
+        }
+      }
+    return { angolo, controMuro, aperto, pareteLunga, passaggio }
+  })()
+  const NOMI_CONTESTI = new Set(Object.keys(contesti))
+
+  /* `dove` è il nome di un campo della stanza, o di un contesto, o
+     'rotto' — gli stessi che le tessiture nominano, quindi il muschio
+     può cadere **dove cola** e il paramento può essere caduto per la
+     stessa ragione. Quattro forme:
+       'umido'              dove quel campo è alto
+       '!umido'             dove è basso
+       'rotto'              dove il pavimento non è quello di fondo
+       'angolo' (o un altro contesto)   dove dice la geometria
+     e una lista le compone tutte con un «e»: `['angolo', 'umido']`
+     vuol dire «negli angoli e dove è umido». */
+  const unaCondizione = dove => {
+    if (NOMI_CONTESTI.has(dove))
+      return (x, y) => contesti[dove].has(chiaveDi(Math.floor(x / lato), Math.floor(y / lato)))
+    if (dove === 'rotto')
+      return (x, y) => T.suoloQui(Math.floor(x / lato), Math.floor(y / lato)) !== T.suolo[0]
+    const meno = dove[0] === '!'
+    const nome = meno ? dove.slice(1) : dove
+    return (x, y) => (T.valore(nome, x / lato, y / lato) > 0.54) !== meno
+  }
+  const ammessoDa = dove => {
+    if (!dove) return null
+    const cond = (Array.isArray(dove) ? dove : [dove]).map(unaCondizione)
+    return (x, y) => cond.every(f => f(x, y))
+  }
+  for (const [nome, passo, dove] of A.dettagli) {
     const fn = DETTAGLI[nome]
     if (!fn) continue
-    semina(reg, lato * passo, nome.length * 7 + 5, 1, libera,
+    const ammesso = ammessoDa(dove)
+    semina(reg, lato * passo, nome.length * 7 + 5 + T.seme, 1,
+           ammesso ? (x, y) => libera(x, y) && ammesso(x, y) : libera,
            (x, y, r) => fn(c, x, y, s, A, r))
   }
 
-  /* 5 ─ dove sono appese le torce: una ogni sei colonne, sulla faccia
-         di un muro che dà sul pavimento (là si vedono). Più fitte di
-         così le pozze si toccano e tornano una fascia gialla continua:
-         senza buio in mezzo, la luce non si vede. */
-  const torce = []
-  if (A.torce)
-    for (let k = 0; k < altezza; k++)
-      for (let i = 0; i < larghezza; i++)
-        // `k + 1 < altezza`: una torcia sull'ultima fila illuminerebbe
-        // fuori dalla mappa, e in gioco sarebbe un lume sprecato
-        if (muro(i, k) && k + 1 < altezza && !muro(i, k + 1) &&
-            i % 6 === 3 && dado(i, k, 800) > 0.3)
-          torce.push([i, k])
+  /* 5 ─ dove sono appese le torce */
+  const torce = torceDi(A, larghezza, altezza, muro)
 
   /* 6 ─ i muri */
-  dipingiMuri(c, { A, lato, larghezza, altezza, muro })
+  dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto: T })
 
   /* 7 ─ le torce vere e proprie, appese alla faccia del muro */
   for (const [i, k] of torce) torciaFerma(c, i * lato + lato / 2, (k + 1) * lato - lato * 0.34, s, A)
@@ -132,7 +259,8 @@ export function dipingiMappa(ctx, opz) {
    ═══════════════════════════════════════════════════════════════════ */
 export function creaFondale(opz) {
   const { lato = 36 } = opz
-  const { larghezza, altezza } = leggiMappa(opz.mappa, opz.larghezza, opz.altezza)
+  const { larghezza, altezza, muro } = leggiMappa(opz.mappa, opz.larghezza, opz.altezza)
+  const A = (typeof opz.ambiente === 'object' ? opz.ambiente : AMBIENTI[opz.ambiente]) || AMBIENTI.corridoio
   const dpr = Math.min(2, opz.dpr || (typeof window !== 'undefined' && window.devicePixelRatio) || 1)
   const W = larghezza * lato, H = altezza * lato
   const cv = document.createElement('canvas')
@@ -143,11 +271,31 @@ export function creaFondale(opz) {
   dipingiMappa(c, opz)
   const millisecondi = Math.round((typeof performance !== 'undefined' ? performance : Date).now() - avvio)
   return {
-    canvas: cv, larghezza: W, altezza: H, millisecondi,
+    canvas: cv, larghezza: W, altezza: H, millisecondi, ambiente: A,
     memoria: Math.round(cv.width * cv.height * 4 / 1048576 * 10) / 10,   // MB
-    /* la finestra che si vede adesso, ricopiata di netto */
-    mostra(ctx, camX = 0, camY = 0, vw = W, vh = H) {
-      ctx.drawImage(cv, camX * dpr, camY * dpr, vw * dpr, vh * dpr, 0, 0, vw, vh)
+    /* La luce di questa stanza, da chiedere punto per punto. Esce di
+       qui e non da chi mette in scena perché è **la stessa** che il
+       fondale si è appena dipinto addosso: le torce sono quelle, e
+       nessuno le deve contare una seconda volta. */
+    luce: creaLuce({ ambiente: A, torce: torceDi(A, larghezza, altezza, muro), lato }),
+    /* La finestra che si vede adesso, ricopiata di netto.
+
+       `scala` serve a una cosa sola, ed è il pinch: mentre due dita
+       stringono, il lato della cella cambia a ogni fotogramma, e
+       ridipingere la stanza a ogni fotogramma costa decine di
+       millisecondi — il gesto verrebbe a scatti proprio mentre lo si
+       fa. Quindi durante il gesto si continua a ricopiare **questa**
+       stanza, tirata o schiacciata (`scala` = quanto è grande la cella
+       adesso rispetto a quando è stata dipinta): si vede un filo
+       morbida, ma segue il dito. Al rilascio chi comanda ne dipinge
+       una nuova alla misura giusta e la scala torna a 1.
+
+       Il resto del disegno — personaggi, oggetti, macchie — non passa
+       di qui e resta nitido anche durante il gesto: a sfocarsi è solo
+       il terreno, che è la cosa che se ne accorge di meno. */
+    mostra(ctx, camX = 0, camY = 0, vw = W, vh = H, scala = 1) {
+      const k = dpr / (scala || 1)
+      ctx.drawImage(cv, camX * k, camY * k, vw * k, vh * k, 0, 0, vw, vh)
     },
   }
 }
@@ -180,7 +328,7 @@ function unaCella(p, cosa, S, chi) {
     const g = c.createLinearGradient(0, 0, lato * 3, lato * 3)
     g.addColorStop(0, A.fondo[0]); g.addColorStop(1, A.fondo[1])
     c.fillStyle = g; c.fillRect(0, 0, lato * 3, lato * 3)
-    POSE[A.posa](c, reg, A, lato)
+    POSE[A.posa](c, reg, A, lato, A.lastra)
   } else {
     dipingiMuri(c, { A, lato, larghezza: 3, altezza: 3, muro: (i, k) => i === 1 && k === 1 })
   }
