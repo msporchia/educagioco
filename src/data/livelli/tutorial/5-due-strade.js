@@ -81,10 +81,19 @@ export const DUE_STRADE = livello({
     { nome: "l'orco di sopra, tesoro in alto", metti: { oa: orco, t3: tesoro } },
   ],
 
-  par: 4,
+  /* ── IL RAMO DEL FALSO È VUOTO, ED È LA COSA GIUSTA ──
+     «Se lo vedi passa di sotto; se no, niente.» Il ramo vuoto vuol dire
+     esattamente «in quel caso non c'è niente da fare», ed è vero: la
+     strada di sopra è quella che `prendi` prende da sé, perché cammina.
+     Scriverci dentro «vai alla porta di sopra» sarebbe ripetere una cosa
+     che succede comunque — un ordine che si può togliere senza che il
+     piano smetta di funzionare, cioè un ordine di troppo. Il bivio resta
+     un bivio: quello che cambia è che una delle due strade è la strada
+     che si prende non facendo niente. */
+  par: 3,
   soluzioni: [
     { nome: 'guarda, poi scegli', piano: { eroe: [
-      fai.bivio(se.vedi('orchi'), [fai.vai(sotto)], [fai.vai(sopra)]),
+      fai.bivio(se.vedi('orchi'), [fai.vai(sotto)]),
       fai.prendi(tesoro),
     ] } },
     /* FRAGILE: «passo sempre di sotto». Due scene su tre l'orco è di

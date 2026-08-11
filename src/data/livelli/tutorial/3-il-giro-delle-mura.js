@@ -80,6 +80,10 @@ export const RONDA = livello({
           'Sfondare costa tempo. Non devi essere già lì: devi arrivarci prima che abbia finito.',
           'Fermo in un posto ne copri uno solo. C\'è un ordine che ne copre più di uno, e che si ferma quando dici tu.'],
   ambiente: 'cortile', prove: 4, intera: true,
+  /* il prato non ha un muro attorno, ed è la scena: chiudere anche il
+     perimetro farebbe un labirinto, e la domanda del livello non è
+     «come si entra» ma «da quale delle due porte» */
+  campoAperto: true,
 
   scena: CINTA,
 

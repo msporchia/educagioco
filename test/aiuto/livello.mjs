@@ -262,7 +262,17 @@ function forma (liv, n, C, tutte) {
   const bordo = g[0].split('').every(c => c === '#') &&
                 g[g.length - 1].split('').every(c => c === '#') &&
                 g.every(r => r[0] === '#' && r[w - 1] === '#')
-  controlla(`${n}: il bordo è chiuso`, bordo)
+  /* ── O IL BORDO È CHIUSO, O È UN CAMPO APERTO E LO DICE ──
+     Un muro tutt'intorno è la regola: senza, un'unità cammina fino al
+     margine e la stanza non si legge più come una stanza. Ma ci sono
+     livelli in cui il fuori È la scena — «Il giro delle mura» è un
+     cortile murato **in mezzo a un prato**, e chiudere anche il
+     perimetro ne farebbe un labirinto, cancellando la domanda del
+     livello: non «come si entra», ma «da quale delle due porte». Quei
+     livelli lo dichiarano, e allora la garanzia che nessuno esca dalla
+     griglia la dà il motore, non il muro. */
+  controlla(`${n}: il bordo è chiuso, o il campo è dichiarato aperto`,
+            bordo || !!liv.campoAperto)
 
   const fz = Object.values(Object.assign({}, ...tutte.map(c => c.fazioni)))
   controlla(`${n}: ogni fazione dice chi la governa`,

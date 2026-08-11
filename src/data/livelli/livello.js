@@ -76,7 +76,7 @@ const CAMPI = {
   id: undefined, nome: undefined, idea: undefined,
   dritta: undefined, racconto: undefined, aiuti: undefined,
   scena: undefined,
-  ambiente: 'corridoio', intera: false, prove: 3,
+  ambiente: 'corridoio', intera: false, prove: 3, campoAperto: false,
   nomi: undefined, segnali: undefined, scenografia: undefined,
   complementi: undefined, verbi: undefined, celle: false, condizioni: undefined,
   vince: undefined, perde: undefined, motivoSconfitta: undefined,
