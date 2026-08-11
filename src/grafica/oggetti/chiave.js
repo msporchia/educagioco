@@ -20,11 +20,17 @@ export function chiave(p, cosa, S = p.S) {
   const G = cosa.sigillo && SIGILLI[cosa.sigillo]
   raccolta(p, cosa, S, 1.05, (q, s) => {
     q.ctx.save(); q.ctx.rotate(-0.22)
-    tondo(q, -3.4 * s, 0, 2.6 * s, 2.6 * s, T.c, T.b, 0.7 * s)
-    // il foro dell'anello: a vuoto è solo l'ombra del metallo (T.b),
-    // ma con un sigillo diventa la gemma che abbina la chiave alla
-    // sua porta — più grande e incorniciata, perché è lei il segno
-    if (G) tondo(q, -3.4 * s, 0, 1.3 * s, 1.3 * s, G, mescola(G, '#000000', 0.5), 0.4 * s)
+    /* ── LA TESTA INTERA PRENDE IL COLORE, NON SOLO IL FORO ──
+       La gemma nell'anello era due pixel a 36: sullo schermo rosso,
+       blu e viola erano la stessa chiave gialla, e l'abbinamento —
+       che è tutto il punto — non si leggeva. Adesso è la **testa**
+       a tingersi, che è la parte grossa e quella che si riconosce da
+       lontano; i denti restano del metallo, se no non è più una
+       chiave, è un gettone colorato. */
+    tondo(q, -3.4 * s, 0, 2.6 * s, 2.6 * s,
+          G ? mescola(T.c, G, 0.78) : T.c,
+          G ? mescola(G, '#000000', 0.45) : T.b, 0.7 * s)
+    if (G) tondo(q, -3.4 * s, 0, 1.15 * s, 1.15 * s, mescola(G, '#ffffff', 0.4))
     else tondo(q, -3.4 * s, 0, 1.1 * s, 1.1 * s, T.b)
     capsula(q, 1.6 * s, 0, 3.4 * s, 0.85 * s, 0.6 * s, T.c, T.b, 0.7 * s)
     // i due denti, disegnati e poi ripassati: senza il contorno a 36 px
