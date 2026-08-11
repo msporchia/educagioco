@@ -53,7 +53,7 @@ export const GIOCHI = [
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto' },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
-    che: 'sequenze, cicli ed eventi', sperimentale: true },
+    che: 'sequenze, cicli ed eventi' },
   /* I giochi scritti con la convenzione nuova (`src/giochi/`) si
      aggiungono da soli: il loro manifesto dice già chiave, nome e icona,
      e ripeterli qui vorrebbe dire tenerli allineati a mano. Il registro è

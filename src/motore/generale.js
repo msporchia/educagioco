@@ -154,7 +154,7 @@ export const SEGNALI = {
   viaLibera: { nome: 'via libera',   em: '⚔️', col: '#3fb872' },
   bottino: { nome: 'tesoro trovato',  em: '💰', col: '#b06be0' },
   chiave:  { nome: 'ho la chiave',    em: '🔑', col: '#4a86e8' },
-  richiamo: { nome: 'un baccano',    em: '🔔', col: '#e8a33f' },
+  richiamo: { nome: 'un rumore',    em: '🔔', col: '#e8a33f' },
   fracasso: { nome: 'un fracasso',   em: '💥', col: '#e8703f' },
   /* i due lati: un segnale che dice DOVE è libero, non solo che lo è.
      Colori diversi apposta — la vignetta di chi parla si legge a colpo

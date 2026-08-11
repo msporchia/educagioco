@@ -44,8 +44,13 @@ import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
 
 const eroe = chi.nostro('eroe', "l'eroe", { corpo: 'ladra', emoji: '🦸', vista: 6, vita: 1 })
 
-const tramontana = cose.segnale('tramontana', 'libero a tramontana', { em: '⬆️', col: '#4a86e8' })
-const mezzogiorno = cose.segnale('mezzogiorno', 'libero a mezzogiorno', { em: '⬇️', col: '#e8a33f' })
+/* ── I DUE GRIDI STANNO AI LATI, NON SOPRA E SOTTO ──
+   La ronda annuncia da che parte NON è, e quel «da che parte» si legge
+   meglio se è **ponente o levante**: sono i due capi corti dell'anello,
+   quelli che a colpo d'occhio si distinguono. Sopra e sotto sono i due
+   tratti lunghi, e da fermo dentro il rifugio uno vale l'altro. */
+const ponente = cose.segnale('ponente', 'libero a ponente', { em: '⬅️', col: '#4a86e8' })
+const levante = cose.segnale('levante', 'libero a levante', { em: '➡️', col: '#e8a33f' })
 
 /* il giro, e i due annunci in mezzo. Il verso conta: va a levante lungo
    il sud, sale, torna a ponente lungo il nord. Chi esce dal deposito e
@@ -53,10 +58,11 @@ const mezzogiorno = cose.segnale('mezzogiorno', 'libero a mezzogiorno', { em: '�
    aspetta il secondo segnale no. */
 const ronda = chi.nemico('ronda', 'la ronda', { corpo: 'orco', emoji: '👹', vista: 2, vita: 6,
   schiera: 'orchi', schieraNome: 'gli orchi',
-  fa: [fai.ripeti([fai.vai('6,9'), fai.suona(tramontana),
-                   fai.vai('11,9'), fai.vai('11,1'),
-                   fai.vai('6,1'), fai.suona(mezzogiorno),
-                   fai.vai('1,1'), fai.vai('1,9')],
+  fa: [fai.ripeti([fai.vai('6,9'), fai.vai('11,9'),
+                   fai.vai('11,5'), fai.suona(ponente),
+                   fai.vai('11,1'), fai.vai('6,1'), fai.vai('1,1'),
+                   fai.vai('1,5'), fai.suona(levante),
+                   fai.vai('1,9')],
                   se.vedi('nostri')),
        fai.attacca('nostri')] })
 
@@ -94,16 +100,16 @@ export const DUE_VIE = livello({
   id: 'due-vie', nome: 'Da una parte e dall\'altra',
   idea: 'Entra da sopra, esci da sotto',
   dritta: "Obiettivo: <b>il tesoro deve tornare nel rifugio</b>. E l'eroe cade al primo colpo.",
-  racconto: "Il deposito ha due porte, una per lato, e attorno gira un anello con due strade: quella di tramontana e quella di mezzogiorno. La ronda è <b>una sola</b>, e dice dove non è: quando passa di sotto grida «libero a tramontana», quando passa di sopra «libero a mezzogiorno». Dentro il deposito, con la porta chiusa, nessuno ti vede e tu non vedi niente — ma senti.",
+  racconto: "Il deposito ha due porte, una per lato, e attorno gira un anello con due strade: quella di tramontana e quella di mezzogiorno. La ronda è <b>una sola</b>, e dice dove non è: quando è al capo di levante grida «libero a ponente», quando è a ponente «libero a levante». Dentro il deposito, con la porta chiusa, nessuno ti vede e tu non vedi niente — ma senti.",
   aiuti: ['Il suo piano si legge: tocca la ronda e guarda cosa grida, e da dove.',
           'Una porta chiusa toglie la vista a tutti e due, e non toglie l\'udito a nessuno: chiuso là dentro puoi aspettare quanto vuoi.',
           'Il segnale che ti fa entrare non è quello che ti fa uscire. E un ascolto scritto <b>dentro un\'azione</b> comincia solo quando quell\'azione parte.'],
   ambiente: 'camminamento', intera: true,
 
   scena: ANELLO,
-  segnali: [tramontana, mezzogiorno],
+  segnali: [ponente, levante],
   complementi: ['tesoro', 'rifugio', 'uscio', 'portaN', 'portaS',
-                'tramontana', 'mezzogiorno'],
+                'ponente', 'levante'],
   verbi: ['vai', 'prendi', 'apri', 'chiudi', 'quando', 'esegui'],
   vince: [se.ha(eroe, tesoro), se.qui(eroe, rifugio)],
   perde: [se.caduto(eroe)],
@@ -126,11 +132,11 @@ export const DUE_VIE = livello({
        tesoro in mano. Prima di allora «libero a mezzogiorno» non vuol
        dire niente per te, e infatti non lo senti. */
     { nome: 'entra da sopra, esci da sotto', piano: { eroe: [
-      fai.quando(tramontana, fai.esegui('entra')),
+      fai.quando(levante, fai.esegui('entra')),
       fai.azione('entra', [
         fai.apri(uscio), fai.apri(portaN), fai.prendi(tesoro),
         fai.chiudi(portaN),
-        fai.quando(mezzogiorno, fai.esegui('esci')),
+        fai.quando(ponente, fai.esegui('esci')),
       ]),
       fai.azione('esci', [fai.apri(portaS), fai.vai(rifugio)]),
     ] } },

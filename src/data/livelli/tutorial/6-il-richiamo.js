@@ -29,7 +29,7 @@ const ladra = chi.nostro('ladra', 'la ladra', { corpo: 'ladra', emoji: '🥷', v
 const carce = chi.orco('carce', 'il carceriere', { vista: 2, vita: 44, accorre: 'richiamo',
   fa: [fai.aspettaDiVedere('nostri'), fai.attacca('nostri')] })
 
-const richiamo = cose.segnale('richiamo', 'un baccano', { em: '🔔', col: '#e8a33f' })
+const richiamo = cose.segnale('richiamo', 'un rumore', { em: '🔔', col: '#e8a33f' })
 const chiave = cose.chiave()
 const portone = cose.porta('portone', 'il portone', { chiave: 'chiave' })
 const tesoro = cose.tesoro()

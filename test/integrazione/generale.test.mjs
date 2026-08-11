@@ -33,19 +33,14 @@ const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 
-/* ---------- 1. è un gioco in prova ----------
-   Finché è taggato `sperimentale` sta dietro un cancello: in home non
-   c'è, e non c'è nemmeno l'interruttore per accenderlo. Ci arriva solo
-   chi accende il flag dei giochi in prova nella schermata dei genitori
-   — che è quello che qui si fa scrivendolo nel profilo. */
-const prima = await page.$$eval('.carta b', e => e.map(x => x.textContent.trim()))
-controlla('finché è in prova, in home non compare', !prima.some(c => /generale/i.test(c)),
-          prima.join(' · '))
-await semina(page, { settings: { sperimentali: true } })
-
+/* ---------- 1. il generale è in casa ----------
+   È stato dietro il cancello dei giochi in prova finché il tutorial non
+   ha retto: adesso le sette prove si giocano tutte, il formato dei
+   livelli è quello nuovo, e la carta sta in home come le altre. */
 const carte = await page.$$eval('.carta b', e => e.map(x => x.textContent.trim()))
-controlla('acceso il flag, la carta del generale c\'è', carte.some(c => /generale/i.test(c)),
+controlla('la carta del generale è in home', carte.some(c => /generale/i.test(c)),
           carte.join(' · '))
+
 await page.locator('.carta.gen').click()
 
 let entrata = true

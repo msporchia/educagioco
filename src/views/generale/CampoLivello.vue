@@ -404,7 +404,13 @@ function scena () {
        colpi era otto volte la stessa figura ferma. */
     const c = (m.colpi || []).find(z => z.a === u.id)
     const mena = (m.colpi || []).some(z => z.da === u.id)
-    s.push({ che: u.chi || 'orco', x, y, dir: CARDINE[u.dir] || 'giu',
+    /* `corpo` è come si disegna, e da lì viene anche la faccina. Si
+       chiamava `chi`, e quando il nome è cambiato questa riga ha
+       continuato a chiedere il vecchio: non trovandolo ripiegava
+       sull'orco, e in partita l'eroe era un orco. Il ripiego resta —
+       un personaggio senza corpo deve pur disegnarsi — ma adesso è
+       l'ultima spiaggia, non la regola. */
+    s.push({ che: u.corpo || u.chi || 'orco', x, y, dir: CARDINE[u.dir] || 'giu',
              passo: andature[u.id] || 0,
              stato: !u.viva ? 'ko'
                   : c ? 'colpito'

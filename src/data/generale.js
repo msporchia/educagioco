@@ -121,10 +121,13 @@ import DUE_VIE from './livelli/tutorial/7-da-una-parte-e-dallaltra.js'
    ancora in travaso — quindi per ora si prova in fondo, e il giorno in
    cui la si infila al quinto posto **è questa riga** che si sposta. Gli
    `id` non c'entrano e non si toccano: sono le chiavi dei progressi. */
-import TOTEM from './livelli/tutorial/8-il-totem.js'
+/* IL TOTEM È FERMO IN PANCHINA. Il livello c'è ed è finito, ma il
+   congegno che insegna è appena nato e va guardato giocare da vicino
+   prima di metterlo davanti a un bambino. Il file resta dov'è: per
+   rimetterlo in campo basta togliere i commenti a queste due righe. */
+// import TOTEM from './livelli/tutorial/8-il-totem.js'
 
-export const LIVELLI = [PRIMO, CHIAVE, RONDA, ATTESA, DUE_STRADE, RICHIAMO, DUE_VIE,
-                        TOTEM]
+export const LIVELLI = [PRIMO, CHIAVE, RONDA, ATTESA, DUE_STRADE, RICHIAMO, DUE_VIE]
 
 export const QUANTI = LIVELLI.length
 /* ── IL TUTORIAL SONO TUTTE ──
