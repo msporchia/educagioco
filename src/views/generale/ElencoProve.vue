@@ -1,8 +1,14 @@
 <script setup>
 /* ═══════════════════════════════════════════════════════════════════
-   LE PROVE — i quattordici livelli sciolti, quelli che c'erano prima
-   delle storie. Non sono avanzi: sono il banco di prova del gioco, uno
-   per idea, e restano l'allenamento. Si aprono in fila, come sempre.
+   LE PROVE — l'elenco, una riga per livello, e si aprono in fila.
+
+   NIENTE RIGHE IN MEZZO. Per un pezzo la lista era spezzata in due —
+   «il tutorial» e poi il resto — e la riga di mezzo ha detto prima «e
+   da qui in poi, per allenarsi» e poi «e da qui in poi si mescolano».
+   Erano tutt'e due false, e la seconda anche inutile: sono otto prove
+   e sono tutte tutorial, una idea per volta fino in fondo. Una
+   divisione a schermo promette che di là cambia qualcosa, e di là non
+   cambia niente.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
 import { LIVELLI } from '../../data/generale.js'
@@ -23,13 +29,16 @@ const apribile = i => tappaAperta(i, progresso.value.tappa || 0)
   <div class="prove">
     <p class="intro">Non comandi nessuno a mano: scrivi gli <b>ordini</b>, premi ▶
       e guardi se il piano regge. Ogni ordine è <b>un verbo</b> e <b>una cosa</b>.</p>
-    <button v-for="(l, i) in LIVELLI" :key="l.id" class="tappa"
-            :class="{ chiusa: !apribile(i), fatta: (progresso.stelle[i] || 0) > 0 }"
-            :disabled="!apribile(i)" @click="$emit('apri', i)">
-      <span class="num">{{ apribile(i) ? (progresso.stelle[i] ? '✓' : i + 1) : '🔒' }}</span>
-      <span class="che"><b>{{ l.nome }}</b><i>{{ l.idea }}</i></span>
-      <span class="voto">{{ '⭐'.repeat(progresso.stelle[i] || 0) }}<small>par {{ l.par }}</small></span>
-    </button>
+    <template v-for="(l, i) in LIVELLI" :key="l.id">
+      <div v-if="i === 0" class="riga-titolo">il tutorial, una idea per volta</div>
+      <button class="tappa"
+              :class="{ chiusa: !apribile(i), fatta: (progresso.stelle[i] || 0) > 0 }"
+              :disabled="!apribile(i)" @click="$emit('apri', i)">
+        <span class="num">{{ apribile(i) ? (progresso.stelle[i] ? '✓' : i + 1) : '🔒' }}</span>
+        <span class="che"><b>{{ l.nome }}</b><i>{{ l.idea }}</i></span>
+        <span class="voto">{{ '⭐'.repeat(progresso.stelle[i] || 0) }}<small>par {{ l.par }}</small></span>
+      </button>
+    </template>
   </div>
 </template>
 
@@ -48,4 +57,6 @@ const apribile = i => tappaAperta(i, progresso.value.tappa || 0)
 .tappa .voto { flex:none; font-size:13px; text-align:right }
 .tappa .voto small { display:block; font-size:10px; color:var(--tenue); font-weight:800 }
 .tappa.chiusa { opacity:.55; box-shadow:none }
+.riga-titolo { font-size:10px; font-weight:900; letter-spacing:.7px; text-transform:uppercase;
+               color:var(--tenue); margin:10px 2px 7px }
 </style>

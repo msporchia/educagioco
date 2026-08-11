@@ -115,6 +115,85 @@ export function chiazzeDiLuce(c, reg, A, lato) {
   c.globalCompositeOperation = prima
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   LA LUCE CHE SI PUÒ CHIEDERE
+
+   Fin qui questo file sapeva **dipingere** la luce, e la dipingeva sul
+   fondale. Il guaio è che il fondale è solo il pavimento: i
+   personaggi si posano sopra, dipinti a piena luce, e in una cripta
+   nera restano gli unici a essere illuminati. Sembrano ritagliati e
+   incollati, ed è quello — più del numero di cerchi con cui sono
+   fatti — che tiene la scena a livello di bozza.
+
+   Perché un orco possa essere dorato dentro la pozza della torcia e
+   blu notte due passi più in là, il disegno deve poter **chiedere**:
+   in questo punto, che luce arriva? Da qui la funzione. Le pozze non
+   si dipingono due volte: si dipingono come sempre sul fondale, e qui
+   si risponde con la stessa forma che là si vede — stesso raggio,
+   stesso schiacciamento, stesse fermate — se no i personaggi si
+   accenderebbero dove il pavimento è ancora scuro.
+
+   Torna `{ tinta, forza, buio }`: quanto fuoco arriva (0-1), di che
+   colore, e quanto invece è notte. Chi la usa decide quanto darle
+   retta — `segni.js` la gira in una tavolozza spostata.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* la stessa curva delle fermate del gradiente della pozza, letta come
+   numero invece che come colore: piena al centro, mezza a due terzi,
+   spenta al bordo */
+function caduta(q) {
+  if (q >= 1) return 0
+  if (q <= 0.3) return 1 - q * 0.16
+  if (q <= 0.62) return 0.95 - (q - 0.3) / 0.32 * 0.39
+  if (q <= 0.85) return 0.56 - (q - 0.62) / 0.23 * 0.37
+  return 0.19 * (1 - (q - 0.85) / 0.15)
+}
+
+export function creaLuce({ ambiente, torce = [], lato = 36 }) {
+  const A = ambiente || {}
+  const R = lato * 2.7                       // fin dove arriva una torcia: come sopra
+  const fiamma = A.fiamma || A.luce || '#ffb45a'
+  const notte = A.buio || 0
+  /* la tinta della stanza è quella del suo pavimento in ombra: è il
+     colore che l'occhio si aspetta di veder tornare su tutto il
+     resto, ed è il motivo per cui un'illustrazione sembra *una* */
+  const tintaAmbiente = (A.fondo && A.fondo[1]) || null
+  /* i fuochi in pixel, una volta sola: la scena li interroga a ogni
+     fotogramma per ogni personaggio, e rifare il conto delle celle
+     ogni volta sarebbe lavoro buttato */
+  const fuochi = torce.map(([i, k]) => ({
+    x: i * lato + lato / 2,
+    y: (k + 1) * lato - lato * 0.35,
+  }))
+
+  return {
+    fuochi,
+    /* `x`, `y` sono in pixel della **mappa**, come li ha il fondale:
+       chi disegna in coordinate schermo ci somma la camera prima di
+       chiedere. */
+    in(x, y) {
+      let forza = 0, vicino = null, dmin = Infinity
+      for (const f of fuochi) {
+        const dx = x - f.x, dy = (y - f.y) / 0.82      // la pozza è schiacciata
+        const d = Math.hypot(dx, dy)
+        const q = caduta(d / R)
+        if (q > forza) forza = q
+        if (d < dmin) { dmin = d; vicino = f }
+      }
+      return { tinta: fiamma, forza, buio: notte * (1 - forza), fuoco: vicino,
+               notte: NOTTE, ambiente: tintaAmbiente }
+    },
+  }
+}
+
+/* Chi non ha un fondale — una vetrina, un ritratto, l'anteprima di un
+   editor — non deve per questo scrivere un caso a parte: questa dice
+   «pieno giorno, nessuna ombra da nessuna parte». */
+export const LUCE_PIENA = {
+  fuochi: [],
+  in: () => ({ tinta: '#ffffff', forza: 0, buio: 0, fuoco: null, notte: NOTTE, ambiente: null }),
+}
+
 /* la torcia del fondale: un braccio di ferro, la fiaccola, la fiamma.
    Sta nel fondale, quindi la fiamma è **ferma** — a 36 px si vede il
    bagliore, non il guizzo, e il bagliore ce l'ha già dipinto sotto.

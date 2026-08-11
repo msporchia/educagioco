@@ -126,12 +126,19 @@ export function creaTela(canvas, pittori, { unita = 420, minimo = 0.62, massimo 
      È il motivo per cui un mostro passa *dietro* alla torre più in
      basso e *davanti* a quella più in alto senza che nessuno se ne
      debba occupare. */
-  function disegna(scena, tempo = 0) {
+  function disegna(scena, tempo = 0, luce = null) {
     if (!ctx) return
     ctx.clearRect(0, 0, W, H)
     if (fondale) ctx.drawImage(fondale, 0, 0, W, H)
     const p = pennello(ctx, { W, H, S })
     p.tempo = tempo
+    /* CHE LUCE C'È QUI. Arriva come funzione e non come dato perché
+       dipende da *dove* sta la cosa che si sta dipingendo, e questo
+       lo sa solo il pittore un attimo prima di posare il colore.
+       Chi non la passa disegna in piena luce, come ha sempre fatto:
+       un ritratto, una vetrina e un'anteprima non hanno una stanza
+       attorno, e non devono inventarsene una. */
+    p.luce = luce
     const ordinata = scena.slice().sort((a, b) =>
       (a.strato || 0) - (b.strato || 0) || (a.y || 0) - (b.y || 0))
     for (const cosa of ordinata) {

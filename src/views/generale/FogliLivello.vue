@@ -15,7 +15,7 @@
    si dice cosa ha toccato il dito. Il registro non riavvolge — chiede
    di riavvolgere; il cartello non paga la stella — chiede l'aiuto.
    ═══════════════════════════════════════════════════════════════════ */
-import { VERBI, reazioniDi, verbiPer, nonSa } from '../../motore/generale.js'
+import { VERBI, reazioniDi, verbiPer, nonSa, scusaDi } from '../../motore/generale.js'
 
 const props = defineProps({
   quale: { type: String, default: '' },        // '' | 'registro' | 'cartello' | 'scheda'
@@ -39,7 +39,11 @@ const unita = () => {
 }
 const reazioni = () => reazioniDi(props.mondoOra(), props.scheda) || []
 const sa = () => verbiPer(props.mondoOra(), props.scheda) || []
-const nonSaFare = () => nonSa(props.mondoOra(), props.scheda) || []
+/* e il perché, quando il livello lo dice: un «non sa aprire» barrato e
+   basta è una regola calata dall'alto, «ha le mani occupate» è un
+   personaggio */
+const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
+  .map(v => ({ v, perche: scusaDi(props.mondoOra(), props.scheda, v) }))
 </script>
 
 <template>
@@ -102,8 +106,9 @@ const nonSaFare = () => nonSa(props.mondoOra(), props.scheda) || []
       <template v-if="nonSaFare().length">
         <div class="tit2">non sa fare</div>
         <div class="abil no">
-          <span v-for="v in nonSaFare()" :key="v" class="ab">
-            {{ VERBI[v].et }} {{ VERBI[v].nome }}</span>
+          <span v-for="n in nonSaFare()" :key="n.v" class="ab">
+            <b>{{ VERBI[n.v].et }} {{ VERBI[n.v].nome }}</b>
+            <i v-if="n.perche">{{ n.perche }}</i></span>
         </div>
       </template>
     </div>
@@ -176,7 +181,10 @@ const nonSaFare = () => nonSa(props.mondoOra(), props.scheda) || []
 .abil { display:flex; gap:5px; flex-wrap:wrap }
 .abil .ab { font-size:12px; font-weight:800; background:#f4f7fb; border-radius:10px; padding:6px 8px;
             color:var(--viola-scuro) }
-.abil.no .ab { opacity:.6; text-decoration:line-through }
+.abil.no .ab { opacity:.75 }
+.abil.no .ab b { font-weight:800; text-decoration:line-through }
+.abil.no .ab i { display:block; font-style:normal; font-size:11px; font-weight:700;
+                 color:var(--tenue); margin-top:2px }
 /* com'è fatto: una riga per reazione, e si legge come una regola */
 .reaz { display:flex; flex-direction:column; gap:5px }
 .reaz span { font-size:12.5px; font-weight:700; line-height:1.3; background:#fff5e6;

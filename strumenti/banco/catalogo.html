@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il catalogo delle tessiture</title>
+<style>
+  :root {
+    --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a;
+    --testo: #e2e5e0; --tenue: #98a09c; --acceso: #7fe0c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 22px 80px; background: var(--fondo); color: var(--testo);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header { max-width: 1100px; margin: 0 auto 26px; }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--tenue); max-width: 64ch; font-size: 14px; }
+  .comandi {
+    max-width: 1100px; margin: 0 auto 30px; display: flex; gap: 22px; flex-wrap: wrap;
+    align-items: end; padding: 14px 16px; background: var(--carta);
+    border: 1px solid var(--riga); border-radius: 4px;
+  }
+  label.campo { display: block; font-size: 12px; color: var(--tenue); }
+  label.campo span { display: block; margin-bottom: 4px; }
+  select, input[type=range] { min-width: 190px; }
+  select {
+    background: #10131a; color: var(--testo); border: 1px solid var(--riga);
+    border-radius: 3px; padding: 5px 8px;
+  }
+  .nota { font-size: 11.5px; color: var(--tenue); margin-top: 4px; }
+  #elenco { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+  .tessitura {
+    background: var(--carta); border: 1px solid var(--riga); border-radius: 4px;
+    padding: 16px 18px 18px;
+  }
+  .tessitura h3 {
+    margin: 0 0 12px; font-size: 16px; font-weight: 600;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .tessitura h3 span {
+    font: 500 10.5px/1 ui-monospace, Menlo, monospace; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--acceso);
+    border: 1px solid var(--riga); border-radius: 2px; padding: 3px 6px;
+  }
+  .riga { display: flex; gap: 14px; align-items: flex-start; margin-top: 10px; }
+  .modo {
+    width: 90px; flex: none; padding-top: 6px;
+    font: 500 11.5px/1.3 ui-monospace, Menlo, monospace; color: var(--tenue);
+  }
+  .strip { display: flex; gap: 10px; flex-wrap: wrap; }
+  figure { margin: 0; }
+  figure canvas { display: block; border-radius: 2px; }
+  figcaption {
+    font: 10.5px/1.4 ui-monospace, Menlo, monospace; color: var(--tenue);
+    margin-top: 4px; text-align: center;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Il catalogo delle tessiture</h1>
+    <p>Ogni pittore da solo, in tutti i modi che sa fare e con quattro semi diversi.
+       La cella è 36&nbsp;px, cioè la misura vera del gioco: se un modo qui non si
+       distingue, in partita non si distinguerà.</p>
+  </header>
+
+  <div class="comandi">
+    <label class="campo">
+      <span>tinte dell'ambiente</span>
+      <select id="ambiente"></select>
+    </label>
+    <label class="campo">
+      <span>ingrandimento</span>
+      <input type="range" id="zoom" min="1" max="3" step="0.5" value="1">
+      <div class="nota" id="nota-zoom">1.0× · cella 36 px</div>
+    </label>
+    <label class="campo">
+      <span>grana</span>
+      <input type="checkbox" id="grana">
+      <div class="nota">le lastre in scala con chi ci cammina</div>
+    </label>
+  </div>
+
+  <div id="elenco"></div>
+
+  <script type="module">
+    import { avvia } from './catalogo.js'
+    avvia()
+  </script>
+</body>
+</html>

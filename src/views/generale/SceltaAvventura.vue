@@ -7,14 +7,33 @@
    sono una fila: sono cinque, si scelgono, e quella di Bibi deve poter
    essere la prima per chi ha sei anni.
 
-   Le quattordici prove non spariscono — sono il banco di prova, una
-   idea per livello — ma stanno sotto, in una voce loro.
+   ── MA PRIMA SI IMPARA A COMANDARE ───────────────────────────────
+   Questa schermata ha due facce, e quale delle due si vede dipende da
+   una cosa sola: se il tutorial è finito.
+
+     · finché non lo è — in cima c'è IL TUTORIALE, e le avventure si
+       vedono col lucchetto. Si vedono, non spariscono: sapere cosa ti
+       aspetta è metà della voglia di arrivarci.
+     · quando lo è — le storie prendono il posto loro, e le prove che
+       restano scendono sotto come allenamento.
+
+   Le prove stavano già qui, ma sotto la riga «e poi, quando vuoi»: e
+   così un bambino entrava nel primo capitolo di una storia senza aver
+   mai scritto un ordine in vita sua.
+
+   ── E OGGI LE AVVENTURE NON CI SONO ──────────────────────────────
+   `AVVENTURE_APERTE` è a `false`, e allora questa schermata **non si
+   vede affatto**: senza storie da scegliere non c'è niente da
+   scegliere, e si entra dritti nelle prove (`navigazione.js`). Il
+   codice delle avventure resta qui, spento dietro il flag, perché il
+   giorno che si riaccende non ci sia niente da riscrivere.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
 import { elencoStorie } from '../../store/storie.js'
 import { quanteMappe } from '../../data/mappe-storie.js'
-import { genProgresso } from '../../store/profile.js'
-import { QUANTI } from '../../data/generale.js'
+import { AVVENTURE_APERTE } from '../../data/storie-generale.js'
+import { genProgresso, tappaAperta } from '../../store/profile.js'
+import { QUANTI, TUTORIAL } from '../../data/generale.js'
 
 defineEmits(['apri', 'prove'])
 
@@ -24,44 +43,99 @@ const prove = computed(() => {
   return { fatte: Math.min(g.tappa || 0, QUANTI),
            stelle: Object.values(g.stelle || {}).reduce((n, s) => n + s, 0) }
 })
+/* il tutorial è finito quando le prime prove sono fatte. La regola del
+   lucchetto è una sola in tutto il progetto (`tappaAperta`), e passa da
+   lì anche questo: così l'interruttore dei genitori che apre tutto apre
+   anche le avventure, senza una seconda scappatoia da tenere allineata */
+const imparato = computed(() => tappaAperta(TUTORIAL, prove.value.fatte))
+const rimaste = computed(() => Math.max(0, QUANTI - prove.value.fatte))
 </script>
 
 <template>
   <div class="scelta-avv">
-    <p class="intro">Ogni avventura è una <b>storia a capitoli</b>: quello che fai in uno
-      te lo ritrovi in quelli dopo.</p>
+    <!-- ════════ PRIMA DEL TUTORIAL ════════ -->
+    <template v-if="!imparato">
+      <p class="intro">Un generale non comanda a mano: <b>scrive gli ordini</b> e guarda
+        se il piano regge. {{ TUTORIAL }} prove per impararlo<span v-if="AVVENTURE_APERTE">, poi si parte</span>.</p>
 
-    <button v-for="s in storie" :key="s.id" class="avventura"
-            :class="{ finita: s.finita, nuova: !s.cominciata }" @click="$emit('apri', s.id)">
-      <span class="em">{{ s.emoji }}</span>
-      <span class="che">
-        <b>{{ s.nome }}</b>
-        <i>{{ s.sottotitolo }}</i>
-        <span v-if="s.fatti" class="barra"><span :style="{ width: (s.fatti / s.quanti * 100) + '%' }"></span></span>
-      </span>
-      <span class="dove">
-        <b>{{ s.fatti }} <small>di {{ s.quanti }}</small></b>
-        <span v-if="s.stelle" class="stelle">⭐ {{ s.stelle }}</span>
-        <span v-else-if="!s.mappe" class="presto">in arrivo</span>
-        <span v-else class="via">comincia →</span>
-      </span>
-    </button>
+      <button class="avventura prove tutorial" @click="$emit('prove')">
+        <span class="em">🎖️</span>
+        <span class="che">
+          <b>Il tutorial</b>
+          <i>una prova per idea: un ordine, una fila, un giro, un segnale, una scelta, un rumore,
+             e due per farli stare insieme</i>
+          <span v-if="prove.fatte" class="barra"><span :style="{ width: (Math.min(prove.fatte, TUTORIAL) / TUTORIAL * 100) + '%' }"></span></span>
+        </span>
+        <span class="dove">
+          <b>{{ Math.min(prove.fatte, TUTORIAL) }} <small>di {{ TUTORIAL }}</small></b>
+          <span class="via">{{ prove.fatte ? 'continua →' : 'comincia →' }}</span>
+        </span>
+      </button>
 
-    <div class="riga-titolo">e poi, quando vuoi</div>
+      <!-- chiuse, ma non nascoste: si vede dove si sta andando. Quando
+           invece le avventure non esistono ancora (`AVVENTURE_APERTE`)
+           non c'è nessun lucchetto da mostrare: un lucchetto prometterebbe
+           che finito il tutorial si aprono, e non è vero. -->
+      <template v-if="AVVENTURE_APERTE">
+        <div class="riga-titolo">e poi le avventure</div>
+        <div v-for="s in storie" :key="s.id" class="avventura chiusa">
+          <span class="em">{{ s.emoji }}</span>
+          <span class="che">
+            <b>{{ s.nome }}</b>
+            <i>{{ s.sottotitolo }}</i>
+          </span>
+          <span class="dove"><b>🔒</b></span>
+        </div>
+      </template>
+    </template>
 
-    <button class="avventura prove" @click="$emit('prove')">
-      <span class="em">🎖️</span>
-      <span class="che">
-        <b>Le prove</b>
-        <i>quattordici livelli sciolti, uno per idea: si aprono in fila</i>
-        <span v-if="prove.fatte" class="barra"><span :style="{ width: (prove.fatte / QUANTI * 100) + '%' }"></span></span>
-      </span>
-      <span class="dove">
-        <b>{{ prove.fatte }} <small>di {{ QUANTI }}</small></b>
-        <span v-if="prove.stelle" class="stelle">⭐ {{ prove.stelle }}</span>
-        <span v-else class="via">allenati →</span>
-      </span>
-    </button>
+    <!-- ════════ DOPO ════════ ─────────────────────────────────
+         LE PROVE RESTANO IN CIMA anche a tutorial finito, e non è una
+         dimenticanza: sono il prerequisito, e una cosa che viene prima
+         si mette prima. Stavano in fondo sotto «e poi, quando vuoi», e
+         chi tornava dopo un mese leggeva la home dall'alto trovando
+         cinque storie e nessuna traccia di quello che va imparato per
+         starci dentro. -->
+    <template v-else>
+      <p v-if="AVVENTURE_APERTE" class="intro">Prima si impara a comandare, poi si parte: le <b>prove</b> sono una
+        idea per volta, le <b>avventure</b> sono storie a capitoli.</p>
+      <p v-else class="intro">Le <b>prove</b> sono una idea per livello: si aprono in fila, e
+        ognuna ha una cosa nuova da capire.</p>
+
+      <button class="avventura prove" @click="$emit('prove')">
+        <span class="em">🎖️</span>
+        <span class="che">
+          <b>Le prove</b>
+          <i>una idea per livello, e si aprono in fila</i>
+          <span v-if="prove.fatte" class="barra"><span :style="{ width: (prove.fatte / QUANTI * 100) + '%' }"></span></span>
+        </span>
+        <span class="dove">
+          <b>{{ prove.fatte }} <small>di {{ QUANTI }}</small></b>
+          <span v-if="prove.stelle" class="stelle">⭐ {{ prove.stelle }}</span>
+          <span v-else class="via">{{ rimaste }} rimaste</span>
+        </span>
+      </button>
+
+      <template v-if="AVVENTURE_APERTE">
+        <div class="riga-titolo">le avventure</div>
+
+        <button v-for="s in storie" :key="s.id" class="avventura"
+                :class="{ finita: s.finita, nuova: !s.cominciata }" @click="$emit('apri', s.id)">
+          <span class="em">{{ s.emoji }}</span>
+          <span class="che">
+            <b>{{ s.nome }}</b>
+            <i>{{ s.sottotitolo }}</i>
+            <span v-if="s.fatti" class="barra"><span :style="{ width: (s.fatti / s.quanti * 100) + '%' }"></span></span>
+          </span>
+          <span class="dove">
+            <b>{{ s.fatti }} <small>di {{ s.quanti }}</small></b>
+            <span v-if="s.stelle" class="stelle">⭐ {{ s.stelle }}</span>
+            <span v-else-if="!s.mappe" class="presto">in arrivo</span>
+            <span v-else class="via">comincia →</span>
+          </span>
+        </button>
+      </template>
+    </template>
   </div>
 </template>
 
@@ -97,4 +171,10 @@ const prove = computed(() => {
                color:var(--tenue); margin:16px 2px 7px }
 .avventura.prove { background:#f4f7fb }
 .avventura.prove .em { background:#e6ecf6 }
+/* il tutorial in cima è la cosa da fare adesso: si vede che è quella */
+.avventura.tutorial { background:var(--carta); box-shadow:0 3px 0 #d9c98e, 0 0 0 2px var(--giallo) }
+.avventura.tutorial .em { background:var(--giallo) }
+/* una storia chiusa: si legge, non si tocca */
+.avventura.chiusa { opacity:.62; box-shadow:none; background:#f4f7fb }
+.avventura.chiusa .dove b { font-size:16px }
 </style>

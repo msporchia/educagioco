@@ -241,8 +241,8 @@ export const TORRE_4 = {
        il coperchio la corda è sotto un legno, e senza il «quando arriva»
        Marta arriva al pozzo mentre la guardia è ancora lì. */
     { nome: 'gira finché ti vedono', piano: {
-      nilo: [{ verbo: 'pattuglia', complemento: '19,5',
-               punti: ['19,5', '19,11'], finche: vedi('guardia') },
+      nilo: [{ blocco: 'ripeti', corpo: [o('vai', '19,5'), o('vai', '19,11')],
+               finche: vedi('guardia') },
              o('suona', 'via'), o('vai', 'sottoscala')],
       marta: [quando('via', o('apri', 'coperchio'), o('prendi', 'corda'))],
       cric: [o('prendi', 'secchio')],
@@ -254,8 +254,8 @@ export const TORRE_4 = {
        il ramo del falso resta vuoto: «e allora niente». Costa un ordine
        in più, ed è il prezzo di dirlo. */
     { nome: 'si parte se il pozzo è sgombro', piano: {
-      nilo: [{ verbo: 'pattuglia', complemento: '19,5',
-               punti: ['19,5', '19,11'], finche: vedi('guardia') },
+      nilo: [{ blocco: 'ripeti', corpo: [o('vai', '19,5'), o('vai', '19,11')],
+               finche: vedi('guardia') },
              o('suona', 'via'), o('vai', 'sottoscala')],
       marta: [quando('via', o('apri', 'coperchio'),
                      bivio(nonVedi('guardia'), [o('prendi', 'corda')]))],
@@ -267,8 +267,8 @@ export const TORRE_4 = {
        benissimo; quando la guardia si sposta, Nilo resta lì impalato a
        farsi guardare da nessuno e la notte finisce senza corda. */
     { nome: 'farsi vedere in un punto solo', fragile: true, piano: {
-      nilo: [{ verbo: 'pattuglia', complemento: '19,5',
-               punti: ['19,5'], finche: vedi('guardia') },
+      nilo: [{ blocco: 'ripeti', corpo: [o('vai', '19,5')],
+               finche: vedi('guardia') },
              o('suona', 'via'), o('vai', 'sottoscala')],
       marta: [quando('via', o('apri', 'coperchio'), o('prendi', 'corda'))],
       cric: [o('prendi', 'secchio')],

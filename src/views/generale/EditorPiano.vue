@@ -27,10 +27,10 @@
 import { ref, computed, watch, provide } from 'vue'
 import FilaOrdini from './FilaOrdini.vue'
 import SceltaAzione from './SceltaAzione.vue'
-import { VERBI, BLOCCHI, eCondizione, ilSegnale, testoCond, manca,
-         verbiPer, condCompone, laCosa } from '../../motore/generale.js'
+import { VERBI, BLOCCHI, eCondizione, eRipeti, eRoutine, eBlocco, ilSegnale, testoCond, manca,
+         verbiPer, nonSa, scusaDi, condCompone, laCosa, raccogliRoutine } from '../../motore/generale.js'
 import { aggiungiIn, togliIn, spostaIn, ordineIn, listaIn, partiDaCapo, partiParallele,
-         puntiDi, stessaVia } from './piano.js'
+         partiChiamate, nomeLibero, stessaVia } from './piano.js'
 import { suMappa, cosePer, nomeDi, emDi } from './bersagli.js'
 import { suono } from '../../audio.js'
 
@@ -46,6 +46,20 @@ const mondo = () => props.mondoOra()
 const foglio = ref(null)      // { modo, perc?, via?, verbo?, campo?, cose? }
 let chiesto = null            // cosa si è chiesto alla mappa: { verbo, via, perc }
 
+/* ── DOVE SI APRE LA DOMANDA ──
+   Attaccata al tasto che l'ha chiamata. Il foglio saliva dal basso, e
+   fra il `＋` che avevi premuto e le risposte c'era mezzo schermo: il
+   posto vuoto È il tasto, quindi la risposta deve nascergli accanto.
+   Qui si prende solo la misura di quel tasto — in coordinate di
+   finestra, che è quello che serve a chi si posiziona. */
+const ancora = ref(null)
+function segnaDove (e) {
+  const el = e && (e.currentTarget || e.target)
+  if (!el || !el.getBoundingClientRect) return
+  const r = el.getBoundingClientRect()
+  ancora.value = { cx: r.left + r.width / 2, su: r.top, giu: r.bottom }
+}
+
 /* cambiare unità vuol dire cambiare piano: quello che era aperto era di
    un'altra fila */
 watch(() => props.unitaOra, () => { foglio.value = null; chiesto = null })
@@ -54,17 +68,18 @@ watch(() => props.unitaOra, () => { foglio.value = null; chiesto = null })
 const chiudi = () => { foglio.value = null }
 
 /* il posto vuoto: «e qui cosa fa?» */
-function chiedi (perc) {
+function chiedi (perc, e) {
+  segnaDove(e)
   suono.nota(520, 520, 0.05)
   foglio.value = { modo: 'azione', perc }
 }
 
 /* una casella di un ordine che c'è già */
-function tocca (via, casella) {
+function tocca (via, casella, e) {
+  segnaDove(e)
   const o = ordineIn(props.ordini, via)
   if (!o) return
   if (casella.campo) { foglio.value = { modo: 'cond', via, campo: casella.campo }; return }
-  if (casella.punti) { chiediMira('pattuglia', via, null, puntiDi(o)); return }
   chiediBersaglio(o.verbo, via, null)
 }
 
@@ -72,13 +87,32 @@ function tocca (via, casella) {
    elenco se è un nome. Vale per un ordine nuovo (`perc`) e per uno che
    c'è già (`via`). */
 function chiediBersaglio (verbo, via, perc) {
-  if (suMappa(mondo(), verbo)) { chiediMira(verbo, via, perc, null); return }
+  conLeAzioni()                     // «esegui» sceglie fra le azioni scritte
+  /* ── C'È CHI VUOLE UNA DOMANDA, NON UNA COSA ──
+     `aspetta che [non vedi le sentinelle]`: l'ordine nasce già e poi si
+     compone la domanda, com'è per un bivio. Chiederla prima non si
+     potrebbe — la domanda si scrive dentro una riga che deve esistere. */
+  if ((VERBI[verbo] || {}).vuoleCond) {
+    /* NASCE GIÀ CON UNA DOMANDA, come il bivio. Con la domanda in
+       bianco il foglio si apriva mostrando i verbi («vedi») e
+       l'interruttore «non», ma NIENTE su cui applicarli: le cose
+       compaiono sotto il verbo scelto, e finché non ne scegli uno la
+       pagina sembra vuota. Partendo dalla prima domanda possibile la
+       riga dice già qualcosa di sensato — «aspetta che vedi le
+       sentinelle» — e cambiarla è toccare quello che c'è scritto. */
+    const g = gruppi.value[0]
+    const v = via || nasce(perc, { verbo,
+      cond: g ? { cond: g.cond, complemento: (g.cose[0] || {}).id } : {} })
+    foglio.value = { modo: 'cond', via: v, campo: 'cond' }
+    return
+  }
+  if (suMappa(mondo(), verbo)) { chiediMira(verbo, via, perc); return }
   foglio.value = { modo: 'cosa', via, perc, verbo, cose: cosePer(mondo(), verbo) }
 }
-function chiediMira (verbo, via, perc, punti) {
+function chiediMira (verbo, via, perc) {
   chiesto = { verbo, via, perc }
   foglio.value = null
-  emit('mira', { verbo, punti: punti || [] })
+  emit('mira', { verbo })
 }
 
 /* ═══════════ scrivere ═══════════ */
@@ -91,15 +125,19 @@ function nasce (perc, o) {
    chiede su cosa vale */
 function scegliVerbo (v) {
   const { perc } = foglio.value
-  if (v === 'pattuglia') {
-    /* IL «FINCHÉ» DI UN GIRO NON È FACOLTATIVO: nasce con l'ordine.
-       Senza uscita il giro non finisce mai e gli ordini dopo non
-       partono — non dev'essere nemmeno componibile. */
-    chiediMira('pattuglia', null, perc, [])
-    return
-  }
   chiediBersaglio(v, null, perc)
   if (foglio.value && foglio.value.modo === 'cosa') foglio.value.verbo = v
+}
+/* IL CICLO NASCE VUOTO E BASTA. Non gli si chiede niente subito: la
+   decisione ha solo la sua domanda, quindi tanto vale chiederla nello
+   stesso gesto, ma un ciclo ha due cose — cosa rifà e quando smette —
+   e aprire d'ufficio la seconda vuol dire mettersi davanti alla prima.
+   Prima ti trovavi il foglio dell'uscita in faccia mentre stavi ancora
+   pensando a cosa mettergli dentro. */
+function scegliCiclo () {
+  const { perc } = foglio.value
+  nasce(perc, { blocco: 'ripeti', corpo: [], finche: {} })
+  chiudi()
 }
 /* la cosa scelta dall'elenco */
 function scegliCosa (id) {
@@ -123,14 +161,24 @@ function scegliDecisione () {
 }
 /* UN «QUANDO SENTI» NON STA MAI DENTRO NIENTE: nasce in cima al piano
    anche se lo chiedi da dentro un ramo, e poi chiede il suo segnale. */
-function scegliAscolto () {
+function scegliAscolto (e) {
+  segnaDove(e)
   const via = nasce([], { verbo: 'quando', complemento: null, allora: [] })
   foglio.value = { modo: 'cosa', via, verbo: 'quando', cose: cosePer(mondo(), 'quando') }
+}
+/* UN'AZIONE NASCE VUOTA E COL NOME GIÀ MESSO. Niente da chiedere: il
+   nome lo sceglie il gioco (a sei anni una tastiera in mezzo al
+   pensiero è una porta chiusa) e cosa ci va dentro si scrive dopo, nel
+   suo riquadro. Sta accanto al piano, come un ascolto. */
+function scegliAzione () {
+  nasce([], { blocco: 'routine', nome: nomeLibero(props.ordini), corpo: [] })
+  chiudi()
 }
 const cambiaCond = c => {
   const { via, campo } = foglio.value
   ordineIn(props.ordini, via)[campo] = { ...c }
 }
+
 
 /* ═══════════ quello che torna dalla mappa ═══════════ */
 function posaBersaglio (id) {
@@ -138,15 +186,6 @@ function posaBersaglio (id) {
   const { verbo, via, perc } = chiesto
   if (via) ordineIn(props.ordini, via).complemento = id
   else nasce(perc, { verbo, complemento: id })
-  chiesto = null
-}
-function posaGiro (punti) {
-  if (!chiesto || !punti.length) { chiesto = null; return }
-  const { via, perc } = chiesto
-  if (via) {
-    const o = ordineIn(props.ordini, via)
-    o.complemento = punti[0]; o.punti = [...punti]
-  } else nasce(perc, { verbo: 'pattuglia', complemento: punti[0], punti: [...punti], finche: {} })
   chiesto = null
 }
 const nienteMira = () => { chiesto = null }
@@ -208,6 +247,18 @@ function presaSu () {
    La riga della DECISIONE è quella che ha il ramo ma non il `j`: è il
    momento in cui il bivio ha guardato e ha scelto. */
 function coordinate (via) {
+  /* ── DENTRO UN'AZIONE ──
+     Quando il motore entra in un'azione ne prende la fila: da lì in poi
+     `filo` è il nome dell'azione e `i` conta gli ordini di QUELLA lista.
+     La via invece parte sempre dal piano — `[3, 'corpo', 1]` — quindi si
+     saltano i due passi che ci sono entrati. */
+  const capo = props.ordini[via[0]]
+  if (eRoutine(capo)) {
+    const q = via.slice(2)
+    return typeof q[1] === 'string'
+      ? { filo: capo.nome, i: q[0], ramo: q[1], j: q[2] }
+      : { filo: capo.nome, i: q[0], ramo: null, j: null }
+  }
   const dentroQuando = typeof via[1] === 'number'
   const filo = dentroQuando
     ? `quando «${ilSegnale(props.ordini[via[0]].complemento).nome}»` : 'principale'
@@ -275,13 +326,33 @@ const gruppi = computed(() => {
     ...g, cose: g.cose.map(k => laCosa(mondo(), k)).filter(Boolean),
   }))
 })
+/* ── IL MONDO DEVE SAPERE CHE AZIONI HAI SCRITTO ──
+   `esegui` compare in cassetta solo se c'è qualcosa da eseguire, e
+   quel qualcosa non sta nel livello: lo stai scrivendo adesso. Prima
+   di chiedere al motore cosa si può fare, gli si dice cosa c'è. */
+const azioni = computed(() => { props.tic; return partiChiamate(props.ordini) })
+function conLeAzioni () {
+  const m = mondo()
+  if (m) raccogliRoutine(m, { [props.unitaOra]: props.ordini })
+  return m
+}
 const verbiDisponibili = computed(() => {
+  props.tic; azioni.value
+  return conLeAzioni() ? verbiPer(mondo(), props.unitaOra) : []
+})
+/* ── QUELLO CHE QUESTA NON SA FARE ──
+   Si vede lo stesso, spento, con la ragione scritta sotto. Sparire era
+   peggio che essere negato: chi gioca non si chiede «perché il
+   cavaliere non prende il tesoro?», si chiede «dov'è finito prendi?» —
+   e si mette a cercare un tasto invece di dividersi i compiti. */
+const verbiNegati = computed(() => {
   props.tic
-  return mondo() ? verbiPer(mondo(), props.unitaOra) : []
+  const m = mondo()
+  if (!m) return []
+  return nonSa(m, props.unitaOra).map(v => ({ v, perche: scusaDi(m, props.unitaOra, v) }))
 })
 /* la casella che sta aspettando una risposta dalla mappa si accende */
-const mirando = (via, casella) => !!chiesto && stessaVia(chiesto.via, via) &&
-  ((casella.punti && chiesto.verbo === 'pattuglia') || (casella.cosa && !casella.punti))
+const mirando = (via, casella) => !!chiesto && stessaVia(chiesto.via, via) && !!casella.cosa
 
 const daCapo = computed(() => { props.tic; return partiDaCapo(props.ordini) })
 const ascolti = computed(() => { props.tic; return partiParallele(props.ordini) })
@@ -291,7 +362,7 @@ const titoloFoglio = computed(() => {
   const f = foglio.value
   if (!f) return ''
   if (f.modo === 'azione') return 'E qui cosa fa?'
-  if (f.modo === 'cond') return f.campo === 'finche' ? 'Finché…' : 'La domanda'
+  if (f.modo === 'cond') return f.campo === 'finche' ? 'Smetti quando…' : 'La domanda'
   return f.verbo === 'quando' ? 'Quale segnale' : `${VERBI[f.verbo].et} ${VERBI[f.verbo].nome}`
 })
 const cosaScelta = computed(() => {
@@ -308,14 +379,20 @@ const condOra = computed(() => {
 })
 
 /* dentro un ramo non ci va un altro bivio: la decisione si offre solo
-   dove una fila è ancora piatta */
-const inRamo = perc => typeof perc[perc.length - 1] === 'string'
+   dove una fila è ancora piatta. Il CORPO DI UN'AZIONE non è un ramo —
+   è una fila come il piano, e una domanda ci va eccome: è esattamente
+   il motivo per cui le azioni esistono, fare la seconda scelta dove
+   annidarla non si poteva. */
+const inRamo = perc => {
+  if (typeof perc[perc.length - 1] !== 'string') return false
+  return !(perc.length === 2 && perc[1] === 'corpo' && eRoutine(props.ordini[perc[0]]))
+}
 
 provide('editor', {
   chiedi, tocca, togli, sposta, presaGiu, presaMuovi, presaSu,
   statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando,
 })
-defineExpose({ posaBersaglio, posaGiro, nienteMira })
+defineExpose({ posaBersaglio, nienteMira })
 </script>
 
 <template>
@@ -332,7 +409,7 @@ defineExpose({ posaBersaglio, posaGiro, nienteMira })
         <span class="ico">{{ VERBI.quando.et }}</span>
         <span class="lab">{{ VERBI.quando.nome }}</span>
         <button class="casella" :class="{ manca: !o.complemento }"
-                @click.stop="tocca([i], { cosa: true })">
+                @click.stop="tocca([i], { cosa: true }, $event)">
           {{ o.complemento ? comeSiChiama(o.complemento) : '＋ quale segnale' }}</button>
         <button class="viaqui" aria-label="togli l'ascolto" @click.stop="togli([i])">✕</button>
       </div>
@@ -341,19 +418,46 @@ defineExpose({ posaBersaglio, posaGiro, nienteMira })
       </div>
     </div>
 
+    <!-- ═════ LE AZIONI ═════ un pezzo di piano con un nome, che parte
+         solo se qualcuno lo chiama. Si vede come un ascolto — un
+         riquadro a parte con la sua testa — perché è la stessa cosa
+         con un altro modo di partire. -->
+    <div v-for="{ o, i } in azioni" :key="'a' + i" class="azione">
+      <div class="testa">
+        <span class="ico">{{ BLOCCHI.routine.et }}</span>
+        <span class="lab">{{ o.nome }}</span>
+        <button class="viaqui" aria-label="togli l'azione" @click.stop="togli([i])">✕</button>
+      </div>
+      <div class="dentro">
+        <FilaOrdini :voci="(o.corpo || []).map((oo, j) => ({ o: oo, i: j }))"
+                    :perc="[i, 'corpo']" />
+      </div>
+    </div>
+
     <!-- anche un ascolto nuovo è un posto vuoto: non c'è nessun posto
-         dove andarlo a prendere -->
-    <button class="posto ascolto-nuovo" @click="scegliAscolto">
+         dove andarlo a prendere. Ma solo dove i segnali esistono
+         davvero: questo tasto stava fuori dal filtro dei verbi, e nei
+         livelli senza segnali apriva «quale segnale» su un elenco
+         vuoto — un tasto che porta a una stanza vuota. -->
+    <button v-if="verbiDisponibili.includes('quando')"
+            class="posto ascolto-nuovo" @click="scegliAscolto">
       ＋ {{ VERBI.quando.et }} {{ VERBI.quando.nome }}…</button>
+    <!-- e un'azione nuova. C'è sempre: non dipende da cosa offre il
+         livello, perché quello che ci metti dentro lo decidi tu. -->
+    <button class="posto azione-nuova" @click="scegliAzione">
+      ＋ {{ BLOCCHI.routine.et }} una azione…</button>
   </section>
 
   <SceltaAzione :modo="foglio ? foglio.modo : ''" :titolo="titoloFoglio"
-                :verbi="verbiDisponibili"
+                :ancora="ancora" :verbi="verbiDisponibili" :negati="verbiNegati"
                 :con-decisione="!!(foglio && foglio.modo === 'azione' && gruppi.length
                                    && !inRamo(foglio.perc))"
+                :con-ciclo="!!(foglio && foglio.modo === 'azione' && gruppi.length
+                               && !inRamo(foglio.perc))"
                 :cose="foglio && foglio.cose || []" :scelto="cosaScelta"
                 :gruppi="gruppi" :cond="condOra" :frase="frase(condOra)"
-                @verbo="scegliVerbo" @decisione="scegliDecisione" @ascolto="scegliAscolto"
+                @verbo="scegliVerbo" @decisione="scegliDecisione" @ciclo="scegliCiclo"
+                @ascolto="scegliAscolto"
                 @cosa="scegliCosa" @cond-cambia="cambiaCond" @chiudi="chiudi" />
 </template>
 
@@ -381,4 +485,14 @@ defineExpose({ posaBersaglio, posaGiro, nienteMira })
          font-size:12.5px; font-weight:900 }
 .posto:active { background:var(--giallo); color:#3a2c00; border-style:solid }
 .posto.ascolto-nuovo { border-color:#f0c2bc; color:#a8564d }
+
+/* ── un'azione ── stessa forma di un ascolto, colore suo: quello che
+   parte quando lo chiami non si confonde con quello che parte da sé */
+.azione { margin:6px 0 2px }
+.azione .testa { display:flex; align-items:center; gap:6px; min-height:38px; padding:4px 8px;
+                 border-radius:12px; background:#eef7f1; border-left:5px solid #3fb872 }
+.azione .testa .ico { font-size:15px; flex:none }
+.azione .testa .lab { flex:1; font-size:12.5px; font-weight:900; color:#1c6b3f }
+.azione .dentro { margin:0 0 4px 14px; padding:1px 4px 0; border-left:2px dashed #a8dcc0 }
+.posto.azione-nuova { border-color:#a8dcc0; color:#2a8a63 }
 </style>

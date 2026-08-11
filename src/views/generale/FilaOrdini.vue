@@ -14,7 +14,7 @@
    casella è il tasto per cambiarla:
 
        🚶 vai a      [🏮 la lanterna]
-       🔁 pattuglia  [①→②→③]  finché [👁 vedi qualcuno]
+       🔁 ripeti → (dentro: vai a […], vai a […])  smetti quando […]
        ❓ se         [🥷 vedi Ras]
 
    Prima toccare una riga apriva sotto un pannello con titoli, elenchi
@@ -34,9 +34,8 @@
    gioco, non un limite di questo file.
    ═══════════════════════════════════════════════════════════════════ */
 import { inject } from 'vue'
-import { eCondizione, ramoDi, RAMI, VERBI, BLOCCHI } from '../../motore/generale.js'
-import { puntiDi, stessaVia } from './piano.js'
-import { cerchio } from './segni.js'
+import { eCondizione, eRipeti, eBlocco, ramoDi, corpoDi, RAMI, VERBI, BLOCCHI }
+       from '../../motore/generale.js'
 
 defineProps({
   voci: { type: Array, default: () => [] },      // [{ o, i }] con l'indice VERO nella fila
@@ -49,40 +48,57 @@ const viaRamo = (perc, i, r) => [...perc, i, r]
 const conIndice = lista => (lista || []).map((o, k) => ({ o, i: k }))
 const rami = o => RAMI.map(r => ({ ...r, voci: conIndice(ramoDi(o, r.ramo)) }))
 
-const cl = o => (eCondizione(o) ? 'scelta' : (VERBI[o.verbo] || {}).cl || '')
-const nome = o => (eCondizione(o) ? BLOCCHI.condizione.nome : (VERBI[o.verbo] || {}).nome || o.verbo)
-const et = o => (eCondizione(o) ? BLOCCHI.condizione.et : (VERBI[o.verbo] || {}).et || '•')
+const bloccoDi = o => eCondizione(o) ? BLOCCHI.condizione : eRipeti(o) ? BLOCCHI.ripeti : null
+const cl = o => (bloccoDi(o) ? bloccoDi(o).cl : (VERBI[o.verbo] || {}).cl || '')
+const nome = o => (bloccoDi(o) ? bloccoDi(o).nome : (VERBI[o.verbo] || {}).nome || o.verbo)
+const et = o => (bloccoDi(o) ? bloccoDi(o).et : (VERBI[o.verbo] || {}).et || '•')
 
 /* ── DI COSA È FATTA UNA RIGA ──
    Le caselle di un ordine, in fila come si leggono. Ognuna sa da sola
    come si riempie: `cosa` chiede un bersaglio (elenco o mappa), `punti`
    i punti di un giro, `cond` una domanda. */
 const UNA_PAROLA = { posto: 'dove', cella: 'dove', oggetto: 'cosa', porta: 'cosa',
-                     unita: 'chi', fazione: 'chi', segnale: 'quale segnale', attimo: 'quanto' }
+                     unita: 'chi', fazione: 'chi', segnale: 'quale segnale', attimo: 'quanto',
+                     routine: 'quale azione' }
 const chePosto = verbo => {
   const acc = (VERBI[verbo] || {}).accetta || []
   return UNA_PAROLA[acc[0]] || 'cosa'
 }
 function caselle (o) {
   if (eCondizione(o)) return [{ campo: 'cond', testo: E.frase(o.cond), vuota: 'la domanda' }]
+  /* un ciclo non ha caselle nella sua riga: ha una fila di ordini sotto
+     e l'uscita in fondo, che è dove si legge */
+  if (eRipeti(o)) return []
   const out = []
-  if (o.verbo === 'pattuglia')
-    out.push({ punti: true, testo: puntiDi(o).map((_, k) => cerchio(k)).join('→'),
-               vuota: 'i punti del giro' })
-  else
-    out.push({ cosa: true, testo: o.complemento ? E.comeSiChiama(o.complemento) : '',
-               vuota: chePosto(o.verbo) })
-  /* il «finché» c'è quando il verbo lo pretende (un giro senza uscita
-     non finisce mai) o quando qualcuno ce l'ha messo */
+  /* chi aspetta una DOMANDA non ha un bersaglio: la sua unica casella è
+     la domanda, come per un bivio */
+  if ((VERBI[o.verbo] || {}).vuoleCond && !o.complemento)
+    return [{ campo: 'cond', testo: E.frase(o.cond), vuota: 'la domanda' }]
+  out.push({ cosa: true, testo: o.complemento ? E.comeSiChiama(o.complemento) : '',
+             vuota: chePosto(o.verbo) })
+  /* L'USCITA SI CHIAMA «SMETTI QUANDO», e non è una parola più carina:
+     è l'unica giusta. Il campo si chiama `finche` da sempre e il motore
+     esce QUANDO la condizione diventa vera — cioè è un `until`. Scritto
+     «pattuglia finché vedi un orco» si legge all'incontrario: sembra
+     «continua MENTRE lo vedi», che è esattamente il contrario di quello
+     che fa. In italiano ci vorrebbe «finché NON vedi», e il «non» in
+     una riga che ha già l'interruttore «non» dentro la condizione è una
+     trappola. «Smetti quando» non ha versi in cui leggerlo. */
+  /* IL «SMETTI QUANDO» DI UN GIRO NON STA NELLA RIGA: sta in fondo ai
+     punti, perché è lì che si legge. «pattuglia — smetti quando vedi
+     gli orchi — ① ② ③» è scritto al contrario di come si dice: prima i
+     giri che fai, poi quando la pianti. Gli altri verbi non hanno
+     punti sotto, e per loro la casella resta dov'è. */
   if ((VERBI[o.verbo] || {}).vuoleFinche || o.finche)
-    out.push({ campo: 'finche', prima: 'finché', testo: E.frase(o.finche), vuota: 'finché' })
+    out.push({ campo: 'finche', prima: 'smetti quando', testo: E.frase(o.finche),
+               vuota: 'la domanda' })
   return out
 }
 </script>
 
 <template>
   <div class="fila-ordini">
-    <div v-for="{ o, i } in voci" :key="i" class="ordi" :class="{ bivio: eCondizione(o) }"
+    <div v-for="{ o, i } in voci" :key="i" class="ordi" :class="{ bivio: eBlocco(o) }"
          :data-i="i">
       <div class="riga" :class="[cl(o), E.statoRiga(via(perc, i))]">
         <span class="presa" aria-label="sposta" @pointerdown="E.presaGiu($event, via(perc, i))"
@@ -90,16 +106,36 @@ function caselle (o) {
               @pointercancel="E.presaSu">⣿</span>
         <span class="ico">{{ et(o) }}</span>
         <span class="lab">{{ nome(o) }}</span>
+        <!-- una riga senza caselle (il ciclo) non ha niente che si
+             allarghi: senza questo, le sue tre cose finiscono in mezzo -->
+        <i v-if="!caselle(o).length" class="riempi"></i>
         <!-- le caselle: quello che c'è scritto È il tasto per cambiarlo -->
         <template v-for="(c, k) in caselle(o)" :key="k">
           <i v-if="c.prima" class="giunto">{{ c.prima }}</i>
           <button class="casella" :class="{ manca: !c.testo, mira: E.mirando(via(perc, i), c) }"
-                  @click.stop="E.tocca(via(perc, i), c)">
+                  @click.stop="E.tocca(via(perc, i), c, $event)">
             {{ c.testo || '＋ ' + c.vuota }}</button>
         </template>
         <button class="viaqui" aria-label="togli l'ordine"
                 @click.stop="E.togli(via(perc, i))">✕</button>
       </div>
+      <!-- ═════ IL CORPO DEL CICLO ═════
+           Gli ordini che rifà in tondo, e in fondo l'uscita. È la
+           stessa forma dei rami di un bivio — una fila piatta rientrata
+           sotto la sua riga — perché è la stessa cosa: un blocco che
+           contiene ordini. -->
+      <div v-if="eRipeti(o)" class="ciclo">
+        <div class="corpo">
+          <FilaOrdini :voci="conIndice(corpoDi(o))" :perc="viaRamo(perc, i, 'corpo')" />
+        </div>
+        <div class="uscita">
+          <i class="giunto">smetti quando</i>
+          <button class="casella" :class="{ manca: !E.frase(o.finche) }"
+                  @click.stop="E.tocca(via(perc, i), { campo: 'finche' }, $event)">
+            {{ E.frase(o.finche) || '＋ la domanda' }}</button>
+        </div>
+      </div>
+
       <div v-if="E.perche(via(perc, i))" class="perche">⚠ {{ E.perche(via(perc, i)) }}</div>
 
       <!-- ═════ I DUE RAMI ═════
@@ -127,8 +163,10 @@ function caselle (o) {
          La domanda per esteso la fa una volta sola, sul piano vuoto:
          dentro un ramo ci sono già scritte sopra due righe che dicono
          quando ci si passa, e ripeterlo due volte è rumore. -->
+    <!-- l'evento serve a una cosa sola: la domanda si apre attaccata a
+         QUESTO tasto, non in fondo allo schermo -->
     <button class="posto" :class="{ solo: !voci.length && !perc.length }"
-            @click.stop="E.chiedi(perc)">
+            @click.stop="E.chiedi(perc, $event)">
       ＋<span v-if="!voci.length && !perc.length"> e qui cosa fa?</span></button>
   </div>
 </template>
@@ -144,6 +182,7 @@ function caselle (o) {
 .riga .ico { font-size:16px; flex:none }
 .riga .lab { flex:none; font-size:12px; color:var(--tenue); font-weight:800 }
 .riga .giunto { flex:none; font-style:normal; font-size:11px; font-weight:800; color:var(--tenue) }
+.riga .riempi { flex:1 }
 
 /* la casella: quello che l'ordine dice, ed è il posto dove metterci le
    mani. Vuota si vede che è vuota, e dice cosa ci va. */
@@ -164,6 +203,9 @@ function caselle (o) {
 .riga.ciclo { border-left-color:#3fb872 }
 .riga.attesa { border-left-color:#b06be0 }
 .riga.msg { border-left-color:#e0554d }
+/* chiamare un'azione: verde come il riquadro dell'azione, così si vede
+   che quella riga e quel pezzo di piano sono la stessa cosa */
+.riga.chiama { border-left-color:#3fb872 }
 /* la decisione ha un colore suo: non è un'azione e non è un evento */
 .riga.scelta { border-left-color:#8a63d2; background:#f6f2ff }
 .riga.attivo { background:#fff6d8 }
@@ -171,6 +213,28 @@ function caselle (o) {
 .riga.saltata { opacity:.65 }
 .perche { margin:-2px 0 4px 28px; font-size:11px; line-height:1.3; color:#a8322c }
 .riga.saltata + .perche { color:var(--tenue) }
+
+/* ── i punti del giro ── una lista che cresce, rientrata sotto la sua
+   riga come i rami di un bivio: si vede che appartengono a quell'ordine */
+.punti { margin:-2px 0 4px 22px; padding:1px 4px 2px; border-left:2px dashed #a8dcc0 }
+.punto { display:flex; align-items:center; gap:6px; margin:3px 0 }
+.punto .cerchio { flex:none; width:20px; text-align:center; font-size:13px; font-weight:900;
+                  color:#2a8a63 }
+.punto .casella { flex:1 }
+.punto .viaqui { flex:none; width:28px; height:28px; border:0; border-radius:9px;
+                 background:transparent; color:#a8b0c2; font-size:14px; font-weight:900 }
+.punto .viaqui:active { background:#ffe4e4; color:#d0503f }
+.punto-nuovo { min-height:32px; font-size:12px; border-color:#a8dcc0; color:#2a8a63 }
+/* ── il corpo di un ciclo ── rientrato sotto la sua riga come i rami di
+   un bivio: si vede a colpo d'occhio che quegli ordini stanno DENTRO il
+   giro, e non dopo. È la stessa forma perché è la stessa cosa — un
+   blocco che contiene una fila. */
+.ciclo { margin:0 0 6px 10px }
+.ciclo .corpo { margin:0 0 2px 14px; padding:1px 4px 2px; border-left:2px dashed #a8dcc0 }
+.uscita { display:flex; align-items:center; gap:6px; margin:4px 0 2px 24px }
+.uscita .giunto { flex:none; font-style:normal; font-size:11px; font-weight:800; color:var(--tenue) }
+.uscita .casella { flex:1 }
+.posto.mira, .casella.mira { box-shadow:inset 0 0 0 2px var(--giallo); background:#fff6d8 }
 
 /* ── il posto vuoto ── */
 .posto { display:block; width:100%; min-height:32px; margin:2px 0 4px; border-radius:11px;

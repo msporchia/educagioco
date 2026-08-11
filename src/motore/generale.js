@@ -24,14 +24,20 @@
 
        { verbo:'vai', complemento:'chiave' }
        { verbo:'prendi', complemento:'chiave' }
-       { verbo:'pattuglia', complemento:'3,5', punti:['3,5','9,5'],
-         finche:{cond:'vedi', complemento:'eroe'} }
        { verbo:'suona', complemento:'libero' }
        { verbo:'quando', complemento:'libero', allora:[ …altri ordini… ] }
 
    `quando` non è un'azione: arma un ascolto e passa oltre, e quando
    quel segnale arriva parte una fila nuova. È così che un programma ha
    due punti d'ingresso senza annidare niente.
+
+   E UN PERSONAGGIO FA UNA COSA ALLA VOLTA. Il segnale sveglia solo chi
+   è libero: se sta ancora eseguendo qualcos'altro — il piano di
+   partenza, un altro ascolto, o lo stesso ascolto sentito un giro fa —
+   quel segnale gli scivola addosso, e il registro lo dice. Niente code
+   e niente interruzioni a metà: due file che comandano lo stesso
+   personaggio nello stesso battito darebbero una scena che non si
+   spiega con nessuno dei due piani.
 
    ── TRE COSE DIVERSE, TRE FORME DIVERSE ─────────────────────────
    Prima la decisione era un attributo dell'azione — `suona [x] se
@@ -102,6 +108,17 @@
    `quando senti [aiuto]` di un'unità tua parte quando grida un orco.
    Non serve nessun costrutto nuovo — serve che il mondo faccia rumore.
 
+   DA FARE — LE SENTINELLE CHE SI PARLANO. Oggi un nemico apre bocca
+   solo quando le prende o quando ti vede (`grida`). Ma una ronda che
+   ogni giro si dice «tutto libero» sarebbe un segnale a orologeria
+   scritto dal livello, non da chi gioca: origliarlo è la mossa —
+   `quando senti [tutto libero] → parti`, cioè sincronizzarsi con un
+   OROLOGIO ALTRUI invece che con un compagno. È lo stesso meccanismo
+   già in piedi (una coda di segnali, un ascolto che parte), quindi
+   costa poco: serve un modo per un ordine nemico di suonare in mezzo
+   a una pattuglia, e serve decidere se il bambino il nome del segnale
+   lo legge nel piano nemico o lo deve dedurre sentendolo.
+
    ── i due prerequisiti che restano ──────────────────────────────
    Camminare non è un ordine: `prendi [x]` e `apri [x]` ci vanno da
    soli, perché toccare una cosa lontana e non vedere succedere niente
@@ -131,6 +148,8 @@ export const SEGNALI = {
   viaLibera: { nome: 'via libera',   em: '⚔️', col: '#3fb872' },
   bottino: { nome: 'tesoro trovato',  em: '💰', col: '#b06be0' },
   chiave:  { nome: 'ho la chiave',    em: '🔑', col: '#4a86e8' },
+  richiamo: { nome: 'un baccano',    em: '🔔', col: '#e8a33f' },
+  fracasso: { nome: 'un fracasso',   em: '💥', col: '#e8703f' },
 }
 export const ilSegnale = k => SEGNALI[k] || { nome: k, em: '📣', col: '#8b97b4' }
 
@@ -140,8 +159,9 @@ export const ilSegnale = k => SEGNALI[k] || { nome: k, em: '📣', col: '#8b97b4
      sì — nascondere il MODO di fare una cosa che non è la lezione
           (`vai` fa il pathfinding: girare intorno a un muro non è
           quello che stiamo insegnando)
-     sì — riassumere una RIPETIZIONE (`pattuglia` sta per dieci mete
-          contate, e che sia un ciclo è proprio la cosa da capire)
+     sì — riassumere una RIPETIZIONE: ma la ripetizione è un BLOCCO
+          (`ripeti`), non un verbo — dieci mete contate diventano due
+          ordini dentro un ciclo, e che sia un ciclo si vede
      no — fondere DUE INTENZIONI (`apri` non ti porta al portone)
      no — saltare un PREREQUISITO (se la chiave se la prende da sé, il
           secondo livello non insegna più niente)
@@ -162,7 +182,16 @@ export const VERBI = {
                accetta: ['posto', 'oggetto', 'porta', 'unita', 'fazione', 'cella'] },
   prendi:    { et: '🎒', cl: 'azione', nome: 'prendi', grado: 2, accetta: ['oggetto'] },
   apri:      { et: '🔓', cl: 'azione', nome: 'apri', grado: 2, accetta: ['porta'] },
-  attacca:   { et: '⚔️', cl: 'azione', nome: 'attacca', grado: 2, accetta: ['unita', 'fazione'] },
+  /* `elenco: true` — QUESTO BERSAGLIO NON SI INDICA COL DITO.
+     Indicare un nemico sulla mappa vuol dire «quell'orco lì, quello in
+     quel punto», e non è quello che si sta scrivendo: un piano si firma
+     prima della battaglia, quando l'orco è ancora dove gli pare. Quello
+     che si vuole dire è «un orco», cioè la classe — ed è anche la
+     stessa cosa che dice la guardia: «smetti quando vedi un orco».
+     Perciò il bersaglio si sceglie da un elenco di nomi, dove «gli
+     orchi» è una voce come le altre. */
+  attacca:   { et: '⚔️', cl: 'azione', nome: 'attacca', grado: 2,
+               accetta: ['unita', 'fazione'], elenco: true },
   /* NESSUNA UNITÀ È ONNISCIENTE. Prima `aspetta [l'orco]` voleva dire
      «finché non è fuori combattimento», e lo sapeva anche da tre stanze
      più in là senza aver visto niente: era un fatto globale travestito
@@ -182,24 +211,31 @@ export const VERBI = {
      È la regola dell'onniscienza vista dall'altro lato: quello che
      vedi lo puoi aspettare, quello che non vedi te lo deve dire
      qualcuno. Per questo i segnali qui NON ci sono più. */
-  aspetta:   { et: '⏳', cl: 'attesa', nome: 'aspetta', grado: 2,
-               accetta: ['attimo', 'porta'] },
+  /* ── ASPETTARE UNA DOMANDA, cioè `await` ──
+     `aspetta che [non vedi le sentinelle]` è l'attesa vera: si sta
+     fermi finché il mondo non dice di sì. Prima si poteva aspettare
+     solo una COSA — un momento, una porta — e per aspettare uno stato
+     bisognava girarci intorno con un ciclo che non fa niente, o
+     peggio con un'azione che richiama sé stessa: due modi contorti di
+     scrivere una cosa che il linguaggio aveva già mezza in mano, le
+     domande dei bivi.
+     Resta il vincolo di sempre: si aspetta quello che si VEDE da dove
+     si è. Quello che non vedi te lo deve dire qualcuno — e per quello
+     c'è «quando senti». */
+  aspetta:   { et: '⏳', cl: 'attesa', nome: 'aspetta che', grado: 2,
+               vuoleCond: true, accetta: ['attimo', 'porta'] },
   aspettaDiVedere: { et: '👁', cl: 'attesa', nome: 'aspetta di vedere', grado: 3,
                      accetta: ['unita', 'fazione'] },
   suona:     { et: '📣', cl: 'msg', nome: 'suona', grado: 2, accetta: ['segnale'] },
   quando:    { et: '🎬', cl: 'msg', nome: 'quando senti', grado: 3, accetta: ['segnale'] },
-  /* il giro di ronda non è una scatola disegnata dal livello: è una
-     LISTA DI PUNTI che il bambino tocca sulla mappa, e l'unità li fa in
-     fila e ricomincia. Il complemento è il primo punto, `punti` sono
-     tutti quanti, `finche` è l'uscita — e senza uscita il giro non
-     finisce mai, il che dev'essere detto e non scoperto. */
-  /* `vuoleFinche`: l'uscita non è un ornamento, è parte dell'ordine. Un
-     giro senza `finche` non finisce mai e gli ordini dopo non partono —
-     non è una scelta di stile, è un ciclo infinito, e non dev'essere
-     nemmeno componibile. Stessa idea del `vuoleFinche` che l'editor
-     delle mappe ha per `aspetta`. */
-  pattuglia: { et: '🔁', cl: 'ciclo', nome: 'pattuglia', grado: 3, accetta: ['cella'],
-               vuoleFinche: true },
+  /* ── CHIAMARE UN PEZZO DI PIANO CHE HAI SCRITTO TU ──
+     È l'unico verbo che non punta a una cosa del mondo: punta a una
+     AZIONE, cioè a una fila di ordini con un nome. Serve a spezzare un
+     piano in pezzi che stanno in piedi da soli, e soprattutto a mettere
+     una domanda dove una domanda non ci starebbe: dentro il ramo di un
+     bivio non entra un altro bivio, ma ci entra un `esegui`, e la
+     seconda domanda si fa di là. */
+  esegui:    { et: '▶️', cl: 'chiama', nome: 'esegui', grado: 3, accetta: ['routine'] },
 }
 
 export const GRADI = { 1: 'un posto alla volta', 2: 'un compito', 3: 'una strategia' }
@@ -209,28 +245,66 @@ export const gradoDi = (v, tipo) => {
   return V.grado
 }
 /* ── i blocchi ──
-   Non sono verbi e non stanno in cassetta coi verbi: sono STRUTTURE, e
-   ce n'è una sola. Sta qui e non nella vista perché è il motore a
-   sapere cosa vuol dire, e la stessa parola la usano il registro e il
-   validatore. */
+   Non sono verbi e non stanno in cassetta coi verbi: sono STRUTTURE,
+   cioè cose che CONTENGONO ordini. Stanno qui e non nella vista perché
+   è il motore a sapere cosa vogliono dire, e le stesse parole le usano
+   il registro e il validatore.
+
+   ── PERCHÉ «RIPETI» È UN BLOCCO E NON UN VERBO ───────────────────
+   Per un pezzo il ciclo è stato il verbo `pattuglia`: prendeva una
+   lista di PUNTI e li faceva in tondo. Funzionava, e nascondeva la
+   cosa da imparare — perché quella lista di punti era un `for`
+   travestito, e dentro non ci si poteva mettere nient'altro. Una ronda
+   che a metà giro grida «tutto libero» non era scrivibile; una che
+   apre una porta a ogni passaggio nemmeno.
+   `ripeti` invece contiene ORDINI QUALSIASI, come i rami di un bivio
+   contengono ordini qualsiasi, e sotto ha la sua uscita: è un `while`,
+   e la ronda diventa il suo caso più semplice — «ripeti: vai qui, vai
+   là — smetti quando vedi qualcuno». Una struttura in meno da spiegare
+   e un mondo in più da comporre. */
 export const BLOCCHI = {
   condizione: { et: '❓', cl: 'scelta', nome: 'condizione',
                 che: 'guarda una volta sola, quando ci arriva, e da lì prende ' +
                      'una delle due strade: mai tutte e due, mai nessuna.' },
+  ripeti: { et: '🔁', cl: 'ciclo', nome: 'ripeti',
+            che: 'rifà gli ordini che ha dentro, uno dopo l\'altro, e quando ' +
+                 'sono finiti ricomincia da capo. Smette quando la domanda ' +
+                 'diventa vera — e la guarda a ogni battito, non a fine giro.' },
+  /* ── L'AZIONE, cioè un pezzo di piano con un nome ──
+     Non sta nella fila: sta accanto, come un «quando senti», e non
+     parte da sé. Parte quando qualcuno la chiama con `esegui`, e
+     quando ha finito si torna all'ordine dopo la chiamata — è una
+     chiamata, non un lancio, e il personaggio resta uno solo.
+     Il nome lo mette il gioco («azione 1», «azione 2»): a sei anni
+     scrivere un nome è una tastiera in mezzo al pensiero. */
+  routine: { et: '▶️', cl: 'chiama', nome: 'azione',
+             che: 'una fila di ordini con un nome. Non parte da sola: la chiami ' +
+                  'con «esegui», e quando finisce si riprende da dov\'eri. Dentro ' +
+                  'ci può stare una domanda — ed è così che si fa una seconda ' +
+                  'scelta dove non ci starebbe.' },
 }
 export const eCondizione = o => !!o && o.blocco === 'condizione'
+export const eRipeti = o => !!o && o.blocco === 'ripeti'
+export const eRoutine = o => !!o && o.blocco === 'routine'
+export const eBlocco = o => eCondizione(o) || eRipeti(o) || eRoutine(o)
 export const RAMI = [
   { ramo: 'vero', nome: 'se è vero', et: '✔' },
   { ramo: 'falso', nome: 'se è falso', et: '✘' },
 ]
 /* la lista di un ramo, sempre una lista anche quando non c'è */
 export const ramoDi = (o, r) => (eCondizione(o) && Array.isArray(o[r]) ? o[r] : [])
+/* e quella di un ciclo o di un'azione: si chiama `corpo`, ed è una fila
+   come le altre */
+export const corpoDi = o => ((eRipeti(o) || eRoutine(o)) && Array.isArray(o.corpo) ? o.corpo : [])
+/* le liste che un blocco si porta dentro, chiunque sia */
+export const dentroA = o => eCondizione(o) ? [ramoDi(o, 'vero'), ramoDi(o, 'falso')]
+                          : (eRipeti(o) || eRoutine(o)) ? [corpoDi(o)] : []
 
 /* gli ordini che fanno la differenza fra «ce l'ho fatta» e «ho capito»:
    un ciclo, un evento, una decisione. È quello che il profilo conta a
    parte con `avanzati`. */
-export const eAvanzato = o => !!o && (eCondizione(o) || o.verbo === 'pattuglia' ||
-                                      o.verbo === 'quando' ||
+export const eAvanzato = o => !!o && (eBlocco(o) || o.verbo === 'quando' ||
+                                      o.verbo === 'esegui' ||
                                       o.verbo === 'aspettaDiVedere' || !!o.finche)
 
 const clona = x => JSON.parse(JSON.stringify(x))
@@ -262,13 +336,15 @@ export function creaMondo(livello, variante) {
   for (const k in (livello.porte || {})) {
     const p = patch(livello.porte[k], (v.porte || {})[k])
     porte[k] = { nome: k, x: p.x, y: p.y, chiave: p.chiave || null,
+                 forza: p.forza || 0, rumore: p.rumore || null, hafattoRumore: false,
                  aperta: !!p.aperta, iniziale: !!p.aperta }
     celle[p.y][p.x].porta = k
   }
   const posti = {}
   for (const k in (livello.posti || {})) posti[k] = patch(livello.posti[k], (v.posti || {})[k])
   const m = {
-    livello, variante: v.nome || '', w, h, celle, porte, posti,
+    livello, variante: v.nome || '', ordiniScena: v.ordini || null,
+    w, h, celle, porte, posti,
     oggetti: (livello.oggetti || []).map(o => ({ ...patch(o, (v.oggetti || {})[o.nome]), preso: null })),
     segnali: [...(livello.segnali || [])],
     unita: livello.unita.map(u0 => {
@@ -285,11 +361,17 @@ export function creaMondo(livello, variante) {
   m.perId = {}
   m.unita.forEach(u => { m.perId[u.id] = u })
   /* le caselle nominabili: un punto di ronda è una cosa a tutti gli
-     effetti, solo che non ha un nome. Si contano una volta sola. */
+     effetti, solo che non ha un nome. Si contano una volta sola.
+     CI SONO SEMPRE. Prima le apriva `celle: true` del livello, e il
+     risultato era che il dito poteva indicare un punto qualsiasi — il
+     campo lo accetta da sempre — e poi il piano veniva rifiutato con
+     «non è in gioco in questo livello». Il livello continua a decidere
+     quali VERBI offrire (`celle: true` è quello che fa comparire la
+     ronda), ma dove si può camminare non lo decide più: se il dito lo
+     può indicare, l'ordine lo può dire. */
   m.caselle = []
-  if (livello.celle)
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
-      if (!celle[y][x].muro) m.caselle.push(x + ',' + y)
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (!celle[y][x].muro) m.caselle.push(x + ',' + y)
   m.cose = coseDi(m)
   return m
 }
@@ -326,6 +408,37 @@ function coseDi (m) {
    è esattamente la sua debolezza. Un oggetto lo segui ovunque vada; una
    casella è un numero scritto a mano, e nella scena dopo lì potrebbe
    esserci un muro. Non lo spiega nessuno: si vede. */
+/* ── LE AZIONI NON SONO COSE DEL MONDO ──
+   Un posto, una porta, un segnale esistono prima che qualcuno scriva un
+   piano: stanno nel livello. Un'azione no — la scrive chi gioca, e il
+   mondo la conosce solo perché gliela si dice. Perciò le si raccoglie
+   dal piano e si registrano qui, e da quel momento `esegui [azione 2]`
+   è un ordine come tutti gli altri: un verbo e una cosa che ha un nome.
+
+   Sono di TUTTI, non di chi le ha scritte. Un'azione è una fila di
+   ordini, e una fila di ordini la può fare chiunque: chi la chiama la
+   esegue con le proprie gambe. Il posto dove è scritta dice solo dove
+   la si trova a schermo. */
+export function raccogliRoutine (mondo, piano) {
+  const R = {}
+  const giro = lista => (lista || []).forEach(o => {
+    if (eRoutine(o) && o.nome) R[o.nome] = corpoDi(o)
+    if (eBlocco(o)) dentroA(o).forEach(giro)
+    else if (o && o.allora) giro(o.allora)
+  })
+  for (const id in (piano || {})) giro(piano[id])
+  mondo.routine = R
+  /* ── E DIVENTANO COSE COME LE ALTRE ──
+     Non un elenco a parte da consultare con un «se è un'azione allora»
+     sparso per il motore e per la vista: entrano in `m.cose`, che è il
+     registro di tutto quello che ha un nome. Da qui in poi nessuno deve
+     sapere che sono speciali — `laCosa`, i complementi di un verbo, la
+     cassetta e gli elenchi dei bersagli funzionano già. */
+  for (const k of Object.keys(mondo.cose || {}))
+    if (mondo.cose[k].tipo === 'routine') delete mondo.cose[k]
+  for (const k in R) mondo.cose[k] = { id: k, tipo: 'routine', nome: k, em: '▶️' }
+  return R
+}
 const CASELLA = /^(\d+),(\d+)$/
 export function laCosa (m, id) {
   const c = (m.cose || {})[id]
@@ -344,26 +457,54 @@ export function laCosa (m, id) {
   return { id, tipo: 'cella', nome: `la casella (${x},${y})`, em: '⬚', x, y }
 }
 
-/* la lista delle cose che il livello mette in gioco: il livello può
-   restringerla, ed è così che si dosa la combinatoria per chi ha sei
-   anni. Quello che non è in elenco esiste sul campo ma non si nomina. */
-const nominabili = m => [
-  ...(m.livello.complementi || Object.keys(m.cose)).filter(k => m.cose[k]),
-  ...m.caselle,
-]
+/* la lista delle cose CON UN NOME che il livello mette in gioco: il
+   livello può restringerla, ed è così che si dosa la combinatoria per
+   chi ha sei anni. Quello che non è in elenco esiste sul campo ma non
+   si nomina. Le caselle non stanno qui: non hanno un nome, e a nessuno
+   si chiede di sceglierle da un elenco. */
+const nominabili = m => {
+  const suoi = (m.livello.complementi || Object.keys(m.cose)).filter(k => m.cose[k])
+  /* le AZIONI non passano dalla manopola del livello: quando il livello
+     è stato scritto non esistevano, le ha scritte chi gioca adesso.
+     Sono l'unica cosa nominabile che non viene dal mondo. */
+  const azioni = Object.keys(m.routine || {})
+  return azioni.length ? [...new Set([...suoi, ...azioni])] : suoi
+}
 
-/* quello che un verbo può davvero prendere, qui. Se è vuota, il verbo
-   non si offre: meglio una cassetta più piccola di un verbo che non
-   porta da nessuna parte. */
+/* le cose con un nome che quel verbo accetta */
+export function nomiDi (mondo, verbo) {
+  const V = VERBI[verbo]
+  if (!V || !mondo || !mondo.cose) return []
+  return nominabili(mondo).filter(k => V.accetta.includes(mondo.cose[k].tipo))
+}
+
+/* quello che un verbo può davvero prendere, qui: i nomi in gioco e —
+   se le accetta — tutte le caselle libere. */
 export function complementiDi (mondo, verbo) {
   const V = VERBI[verbo]
   if (!V || !mondo || !mondo.cose) return []
-  return nominabili(mondo).filter(k => {
-    const C = laCosa(mondo, k)
-    return C && V.accetta.includes(C.tipo)
-  })
+  const nomi = nomiDi(mondo, verbo)
+  return V.accetta.includes('cella') ? [...nomi, ...mondo.caselle] : nomi
 }
-export const verbiDi = mondo => Object.keys(VERBI).filter(v => complementiDi(mondo, v).length)
+/* ── QUALE VERBO COMPARE IN CASSETTA ──
+   Non è la stessa domanda di «cosa può prendere». Le caselle libere
+   valgono sempre come bersaglio, ma se bastassero a far comparire un
+   verbo la ronda spunterebbe in ogni livello, primo compreso: un verbo
+   che vive SOLO di caselle si offre dove il livello lo dichiara
+   (`celle: true`), gli altri si offrono se hanno almeno una cosa da
+   nominare. Meglio una cassetta più piccola di un verbo che non porta
+   da nessuna parte. */
+/* ── QUANDO UN VERBO SI OFFRE ──
+   Quando qui c'è qualcosa da mordere, e «qualcosa» dipende da cosa
+   chiede: chi vuole una COSA si offre se quella cosa ha un nome in
+   gioco; chi vive di caselle solo dove il livello le apre; chi vuole
+   una DOMANDA (`aspetta che…`) si offre dove una domanda si può fare.
+   Tre righe per la stessa regola, non tre eccezioni. */
+export const verbiDi = mondo => Object.keys(VERBI).filter(v =>
+  (!mondo.livello.verbi || mondo.livello.verbi.includes(v)) &&
+  (nomiDi(mondo, v).length ||
+   (mondo.livello.celle && VERBI[v].accetta.includes('cella')) ||
+   (VERBI[v].vuoleCond && condizioniDi(mondo).length)))
 
 /* ── CHI SA COSA ──
    Il filtro ha due dimensioni: verbo × tipo (sopra) e verbo × CHI LO
@@ -373,12 +514,35 @@ export const verbiDi = mondo => Object.keys(VERBI).filter(v => complementiDi(mon
    terra e non scassina. Serve poco come regola in più, serve molto
    come RAGIONE per coordinarsi. */
 const saFare = (u, v) => !u || !u.sa || u.sa.includes(v)
+/* ── UN SEGNALE SI DICE A QUALCUNO ──
+   `suona` e `quando senti` sono i due capi dello stesso filo, e da soli
+   sul campo il filo non ha l'altro capo: la cassetta offriva «quando
+   senti» a un'unità che era l'unica cosa viva della mappa, e la
+   domanda «quale segnale» si apriva su un elenco vuoto.
+   Chi manda però non dev'essere per forza dei nostri — un orco che
+   grida «aiuto» è un mittente a tutti gli effetti, e origliarlo è una
+   mossa. Perciò la domanda non è «ho due unità mie», è «c'è qualcun
+   altro là fuori». */
+const SEGNALE = { suona: 1, quando: 1 }
+const conChiParlare = (mondo, id) => mondo.unita.some(u => u.id !== id && u.viva)
 export const verbiPer = (mondo, id) =>
-  verbiDi(mondo).filter(v => saFare(mondo.perId[id], v))
+  verbiDi(mondo).filter(v => saFare(mondo.perId[id], v) &&
+                             (!SEGNALE[v] || conChiParlare(mondo, id)))
 export const nonSa = (mondo, id) => {
   const u = mondo.perId[id]
   return u && u.sa ? verbiDi(mondo).filter(v => !saFare(u, v)) : []
 }
+/* ── QUELLO CHE NON GLI RIESCE ──
+   Diverso da `sa`, e la differenza è tutta nel MOMENTO in cui si
+   scopre. `sa` toglie il verbo dalla cassetta: serve per quello che un
+   personaggio non c'entra proprio a fare. `nonRiesce` invece lo lascia
+   lì — l'ordine si scrive, la scena parte, e quando tocca a lui il
+   cavaliere risponde «ho le mani occupate: scudo e spada».
+   Un divieto muto sembra un capriccio del gioco e lascia la domanda
+   «dov'è finito prendi?»; un ordine che fallisce parlando lascia «ah,
+   allora ci deve andare l'altro» — che è la lezione. */
+export const nonRiesce = (u, v) => (u && u.nonRiesce && u.nonRiesce[v]) || ''
+export const scusaDi = (mondo, id, v) => nonRiesce(mondo && mondo.perId[id], v)
 
 /* ═══════════ le condizioni ═══════════
    Percezione e stato, mai numeri astratti. Ogni condizione nomina UNA
@@ -576,7 +740,7 @@ export function contaOrdini (piano) {
   let n = 0
   const conta = l => (l || []).forEach(o => {
     n++
-    if (eCondizione(o)) { conta(ramoDi(o, 'vero')); conta(ramoDi(o, 'falso')); return }
+    if (eBlocco(o)) { dentroA(o).forEach(conta); return }
     if (o && o.allora) conta(o.allora)
   })
   for (const id in (piano || {})) conta(piano[id])
@@ -584,8 +748,8 @@ export function contaOrdini (piano) {
 }
 /* tutte le voci di una fila, blocchi compresi e con dentro i loro rami:
    il validatore le guarda una per una */
-const tutteLeVoci = l => (l || []).flatMap(o => eCondizione(o)
-  ? [o, ...tutteLeVoci(ramoDi(o, 'vero')), ...tutteLeVoci(ramoDi(o, 'falso'))]
+const tutteLeVoci = l => (l || []).flatMap(o => eBlocco(o)
+  ? [o, ...dentroA(o).flatMap(tutteLeVoci)]
   : [o, ...tutteLeVoci(o && o.allora)])
 
 /* ── IL RIFIUTO ──
@@ -595,6 +759,11 @@ const tutteLeVoci = l => (l || []).flatMap(o => eCondizione(o)
    dice quali ordini non stanno in piedi. */
 export function guaiDi (mondo, piano) {
   const out = []
+  /* le azioni del piano si registrano PRIMA di guardarlo: `esegui
+     [azione 2]` è un ordine buono solo se azione 2 esiste, e chi la
+     dichiara è il piano stesso. Chiunque validi — il gioco mentre si
+     scrive, il test prima di giocare — parte da qui. */
+  raccogliRoutine(mondo, piano)
   for (const id in (piano || {})) {
     const u = mondo.perId[id]
     if (!u) { out.push({ unita: id, motivo: `«${id}» non è sul campo` }); continue }
@@ -615,13 +784,63 @@ export function guaiDi (mondo, piano) {
             out.push({ unita: id, ordine: o,
                        motivo: `${dove} — il ramo «${r}» non è una lista di ordini` })
         const dentro = [...ramoDi(o, 'vero'), ...ramoDi(o, 'falso')]
-        if (dentro.some(eCondizione))
+        /* NESSUN BLOCCO dentro un ramo, non solo nessuna condizione. Il
+           controllo guardava solo i bivi, e un ciclo infilato in un ramo
+           passava la validazione per poi essere SALTATO in partita come
+           un ordine senza verbo: il piano sembrava buono, la scena
+           faceva finta di niente e il bambino non poteva capire perché.
+           Chi ha bisogno di un secondo blocco lì dentro scrive
+           un'azione e la chiama. */
+        if (dentro.some(eBlocco))
           out.push({ unita: id, ordine: o,
-                     motivo: `${dove} — dentro un ramo non ci va un'altra condizione` })
+                     motivo: `${dove} — dentro un ramo non ci va un altro blocco: ` +
+                             'scrivi un\'azione e chiamala con «esegui»' })
         if (dentro.some(q => q && q.verbo === 'quando'))
           out.push({ unita: id, ordine: o,
                      motivo: `${dove} — dentro un ramo non ci va un «quando senti»: ` +
                              'quello è un piano che parte da capo, e sta accanto agli altri' })
+        continue
+      }
+      /* ── l'azione ──
+         Una definizione, non un ordine: sta accanto alla fila, ha un
+         nome e una lista dentro. Le regole sono due, e sono le stesse
+         di tutti gli altri blocchi: dentro non ci va un «quando senti»
+         (quello è un piano che parte da sé, e non si nasconde dentro
+         una chiamata) né un'altra definizione di azione — le azioni si
+         CHIAMANO fra loro, non si contengono. */
+      if (eRoutine(o)) {
+        const dove = `${id}: azione`
+        if (!o.nome) out.push({ unita: id, ordine: o, motivo: `${dove} — senza nome non si può chiamare` })
+        if (o.corpo !== undefined && !Array.isArray(o.corpo))
+          out.push({ unita: id, ordine: o, motivo: `${dove} — il corpo non è una lista di ordini` })
+        const dentro = corpoDi(o)
+        if (dentro.some(eRoutine))
+          out.push({ unita: id, ordine: o,
+                     motivo: `${dove} — dentro un'azione non se ne scrive un'altra: si chiama` })
+        if (dentro.some(q => q && q.verbo === 'quando'))
+          out.push({ unita: id, ordine: o,
+                     motivo: `${dove} — dentro un'azione non ci va un «quando senti»` })
+        continue
+      }
+      /* ── il ciclo ──
+         Una lista di ordini e un'uscita. Le regole sono le stesse dei
+         rami: dentro non ci va un altro blocco (un ciclo dentro un
+         ciclo non lo si legge più) né un «quando senti», che è un piano
+         a parte. E l'uscita non è facoltativa: senza, il giro non
+         finisce mai e gli ordini dopo non partono. */
+      if (eRipeti(o)) {
+        const dove = `${id}: ripeti`
+        if (o.corpo !== undefined && !Array.isArray(o.corpo))
+          out.push({ unita: id, ordine: o, motivo: `${dove} — il corpo non è una lista di ordini` })
+        if (!valutabile(mondo, o.finche))
+          out.push({ unita: id, ordine: o,
+                     motivo: `${dove} — senza «smetti quando» è un giro che non finisce mai` })
+        const dentro = corpoDi(o)
+        if (dentro.some(eBlocco))
+          out.push({ unita: id, ordine: o, motivo: `${dove} — dentro un ciclo non ci va un altro blocco` })
+        if (dentro.some(q => q && q.verbo === 'quando'))
+          out.push({ unita: id, ordine: o,
+                     motivo: `${dove} — dentro un ciclo non ci va un «quando senti»` })
         continue
       }
       if (o && o.blocco)
@@ -629,6 +848,14 @@ export function guaiDi (mondo, piano) {
       const V = VERBI[o && o.verbo]
       const dove = `${id}: ${o && o.verbo}`
       if (!V) { out.push({ unita: id, ordine: o, motivo: `${dove} — non è un verbo` }); continue }
+      /* un'attesa con la domanda non ha bersaglio: si controlla la
+         domanda e si passa oltre */
+      if (V.vuoleCond && o.cond) {
+        if (!valutabile(mondo, o.cond))
+          out.push({ unita: id, ordine: o,
+                     motivo: `${dove} — la domanda parla di una cosa che non c'è` })
+        continue
+      }
       const C = laCosa(mondo, o.complemento)
       if (!C) {
         out.push({ unita: id, ordine: o, motivo: o.complemento
@@ -654,10 +881,10 @@ export function guaiDi (mondo, piano) {
         out.push({ unita: id, ordine: o,
                    motivo: `${dove} — un ordine non porta una condizione addosso: ` +
                            'per scegliere fra due strade serve un blocco condizione' })
-      /* l'uscita obbligatoria: un giro senza «finché» non finisce mai */
+      /* l'uscita obbligatoria: un giro senza uscita non finisce mai */
       if (V.vuoleFinche && !valutabile(mondo, o.finche))
         out.push({ unita: id, ordine: o,
-                   motivo: `${dove} — «${V.nome}» senza «finché» è un giro che non finisce mai` })
+                   motivo: `${dove} — «${V.nome}» senza «smetti quando» è un giro che non finisce mai` })
     }
   }
   return out
@@ -679,11 +906,24 @@ export function manca (mondo, o) {
       return 'i due rami sono vuoti: metti almeno un ordine in uno dei due'
     return ''
   }
+  if (eRipeti(o)) {
+    if (!corpoDi(o).length) return 'il ciclo è vuoto: mettici dentro almeno un ordine'
+    if (!valutabile(mondo, o.finche))
+      return 'manca lo «smetti quando»: senza, il giro non finisce mai e gli ordini dopo non partono'
+    return ''
+  }
   const V = VERBI[o && o.verbo]
   if (!V) return ''
+  /* chi vuole una domanda è finito quando la domanda c'è, e non gli si
+     chiede nessun bersaglio: la sua «cosa» è la domanda. (La vecchia
+     forma con il complemento — «aspetta [il portone]» — resta buona.) */
+  if (V.vuoleCond) {
+    if (valutabile(mondo, o.cond)) return ''
+    if (!laCosa(mondo, o.complemento)) return 'manca la domanda: cosa aspetti che succeda?'
+  }
   if (V.vuoleFinche && !valutabile(mondo, o.finche))
-    return 'manca il «finché»: senza, il giro non finisce mai e gli ordini dopo non partono'
-  if (o.finche && !valutabile(mondo, o.finche)) return 'la condizione del «finché» non è finita'
+    return 'manca il «smetti quando»: senza, il giro non finisce mai e gli ordini dopo non partono'
+  if (o.finche && !valutabile(mondo, o.finche)) return 'la domanda dello «smetti quando» non è finita'
   if (!laCosa(mondo, o.complemento)) return 'manca il bersaglio'
   return ''
 }
@@ -692,10 +932,31 @@ export function manca (mondo, o) {
 export function avvia (mondo, piano) {
   const m = mondo
   m.piano = piano || {}
+  /* le azioni scritte nel piano diventano cose che si possono nominare:
+     da qui in poi `esegui [azione 2]` sa dove andare a leggere */
+  raccogliRoutine(m, m.piano)
+  /* ── UNA SCENA PUÒ AVERE IL SUO PIANO NEMICO ──
+     Le varianti finora spostavano solo le cose: dove sta l'orco, dove
+     la chiave. Ma «da che parte entra» non è una posizione — è un
+     ORDINE, e senza questo il piano nemico era per forza lo stesso in
+     tutte le scene: se l'orco sfonda la porta di ponente lo sfonda
+     sempre, e non c'è più niente da indovinare. Una variante può
+     riscrivere gli ordini di chi non è tuo (`ordini: { orco: [...] }`),
+     e per il resto del motore non cambia niente: sono ordini come
+     tutti gli altri, si leggono nel registro e si spiano con 🕵.
+     Le unità del giocatore non si toccano mai: quelle le comandi tu. */
+  const scena = m.ordiniScena
+  if (scena) for (const id in scena) {
+    const u = m.perId[id]
+    if (u && u.fazione !== m.mia) m.piano[id] = clona(scena[id])
+  }
   m.passi = 0; m.finita = false; m.vinto = false; m.motivo = ''; m.colpevole = null
   m.segnaliMandati = []; m.pendenti = []; m.eventi = []; m.traccia = []
   m.versioneMappa = 0; m.ascolti = []; m.colpi = []; m.allarmi = []
-  for (const k in m.porte) m.porte[k].aperta = m.porte[k].iniziale
+  for (const k in m.porte) {
+    m.porte[k].aperta = m.porte[k].iniziale
+    m.porte[k].hafattoRumore = false          // si ricomincia da capo, silenzio compreso
+  }
   m.oggetti.forEach(o => { o.preso = null })
   m.unita.forEach(u => {
     u.x = u.x0; u.y = u.y0; u.vita = u.vitaMax; u.viva = true; u.zaino = []
@@ -708,6 +969,13 @@ export function avvia (mondo, piano) {
 const nuovoFilo = (unita, ordini, nome) => ({
   unita, ordini: ordini || [], nome: nome || 'evento', i: 0, nuovo: true,
   st: {}, finito: false, ordine: null,
+  /* ── LA PILA DELLE CHIAMATE ──
+     `esegui [azione 2]` non fa partire un secondo personaggio: fa
+     scendere QUESTO dentro un'altra fila. Qui si tiene da parte dov'era
+     — quale fila, a che punto, dentro quale ramo — per poterci tornare
+     quando l'azione finisce. È l'unica pila del gioco, e c'è solo
+     perché un'azione può chiamarne un'altra (e sé stessa). */
+  pila: [],
   /* dentro quale ramo di un blocco condizione e a che punto di quel ramo:
      null tutte e due quando si sta nella fila di fuori */
   ramo: null, rj: null, rnuovo: false,
@@ -744,7 +1012,7 @@ function mancato0 (m, f) {
       return `nessuno si è mai fatto vedere da ${chi}, che sta ancora aspettando`
     case 'aspetta':
       return `nessuno ha mandato «${N}», che ${chi} sta ancora aspettando`
-    case 'vai': case 'prendi': case 'apri': case 'pattuglia':
+    case 'vai': case 'prendi': case 'apri':
       return `la strada verso ${N} è rimasta chiusa, e da lì non si è mosso più niente`
     default:
       return 'non è più successo niente, e il piano è finito lì'
@@ -833,7 +1101,14 @@ export function passo (m) {
   m.eventi = []
   m.colpi = []; m.allarmi = []
   if (m.passi >= PASSI_MASSIMI) {
-    fine(m, false, 'La scena non finisce più: qualcuno gira a vuoto.')
+    /* e se qualcuno dei tuoi è fermo ad aspettare, la scena finisce
+       dicendo COSA aspettava: «gira a vuoto» è vero per un ciclo che
+       non esce, ma su un'attesa che non arriverà mai è una diagnosi
+       che non si può usare */
+    const fermo = m.unita.find(u => u.viva && u.fazione === m.mia && u.attesa)
+    fine(m, false, fermo
+      ? `La scena non finisce più: ${fermo.nome || fermo.id} è ancora lì — «${fermo.attesa}».`
+      : 'La scena non finisce più: qualcuno gira a vuoto.')
     return
   }
   m.passi++
@@ -849,6 +1124,18 @@ export function passo (m) {
     if (r !== 'attesa') agisce = true
   }
 
+  /* ── CHI HA FINITO, HA FINITO ADESSO ──
+     Una fila arrivata in fondo si marcava conclusa solo al battito
+     dopo, quando qualcuno tornava a guardarla. Un battito di niente,
+     tranne che nell'unico momento in cui conta: i segnali si
+     consegnano qui sotto, e un'unità che ha appena suonato come ultimo
+     ordine risultava «ancora impegnata» — così non poteva **lanciarsi
+     da sé una seconda routine**, che è il modo con cui in questo gioco
+     si scrive un sottoprogramma (`suona [nome]` di qua, `quando senti
+     [nome]` di là, tutti e due suoi). */
+  for (const f of m.fili)
+    if (!f.finito && f.i >= f.ordini.length) { f.finito = true; f.ordine = null }
+
   /* i segnali partono a fine passo: così un segnale mandato adesso si
      sente al giro dopo, uguale per tutti. E si dice sempre CHI si
      sveglia: un salto che non si vede è la parte peggiore del goto. */
@@ -857,13 +1144,35 @@ export function passo (m) {
     const partiti = m.pendenti; m.pendenti = []
     for (const p of partiti) {
       if (!m.segnaliMandati.includes(p.seg)) m.segnaliMandati.push(p.seg)
-      const svegli = []
+      const svegli = [], occupati = []
       for (const a of m.ascolti) {
         if (a.segnale !== p.seg) continue
         const u = m.perId[a.unita]
         if (!u || !u.viva) continue
-        svegli.push(u.nome || u.id)
         const vecchio = m.fili.find(f => f.ascolto === a)
+        /* ── UNA COSA ALLA VOLTA ──
+           Un segnale sveglia qualcuno solo se quel qualcuno è LIBERO.
+           Finché sta eseguendo qualcosa — il piano che parte
+           all'inizio, un altro ascolto, o l'ascolto di questo stesso
+           segnale arrivato un giro fa — il segnale gli scivola addosso
+           e passa oltre. Non si accoda e non lo interrompe.
+
+           Prima succedevano due cose, tutte e due sbagliate a
+           guardarle giocare. Il segnale che tornava RIAVVOLGEVA
+           l'ascolto: su una ronda che annuncia a ogni giro, chi era
+           partito al segnale scorso si fermava a metà strada — allo
+           scoperto — perché la domanda in cima al piano, rivalutata da
+           lì, diceva un'altra cosa. E due ascolti diversi della stessa
+           unità GIRAVANO INSIEME: due file che comandano lo stesso
+           personaggio nello stesso battito, una lo manda di qua e una
+           di là, e quello che si vede sullo schermo non è più
+           spiegabile con nessuno dei due piani.
+
+           Un personaggio è uno: fa una cosa per volta, e quando ha
+           finito è di nuovo in ascolto. */
+        const impegnata = m.fili.some(f => f.unita === u.id && !f.finito && !f.sospeso)
+        if (impegnata) { occupati.push(u.nome || u.id); continue }
+        svegli.push(u.nome || u.id)
         if (vecchio) {
           vecchio.i = 0; vecchio.nuovo = true; vecchio.st = {}; vecchio.finito = false
           vecchio.ramo = null; vecchio.rj = null
@@ -887,10 +1196,13 @@ export function passo (m) {
       /* la riga porta il verbo di chi ha suonato: così chi legge la
          traccia sa a quale ordine appartiene */
       const filo = { nome: 'segnali', i: 0, ordine: { verbo: 'suona', complemento: p.seg } }
-      if (chi) nota(m, filo, chi, svegli.length ? 'fa' : 'salto',
+      const desti = svegli.length || occupati.length
+      if (chi) nota(m, filo, chi, desti ? 'fa' : 'salto',
         svegli.length ? `arriva «${N}»: si sveglia ${[...new Set(svegli)].join(' e ')}`
-                      : `arriva «${N}», ma non lo ascolta nessuno`,
-        svegli.length ? `manda ${N}` : 'grida nel vuoto')
+        : occupati.length ? `arriva «${N}», ma ${[...new Set(occupati)].join(' e ')} ` +
+                            'sta ancora facendo quello di prima'
+        : `arriva «${N}», ma non lo ascolta nessuno`,
+        desti ? `manda ${N}` : 'grida nel vuoto')
     }
   }
   if (m.finita) return
@@ -965,8 +1277,18 @@ const nomeDi = (m, id) => (m.perId[id] && (m.perId[id].nome || id)) || id
 function passoFilo (m, f, u) {
   let giri = 0
   while (giri++ < 40) {
-    if (f.i >= f.ordini.length) { f.finito = true; f.ordine = null; u.ordineOra = null; return 'fine' }
+    if (f.i >= f.ordini.length) {
+      /* finita una fila: se ci si era scesi da una chiamata, si risale
+         all'ordine dopo l'`esegui`; se no il filo ha finito davvero */
+      if (f.pila && f.pila.length) { Object.assign(f, f.pila.pop()); continue }
+      f.finito = true; f.ordine = null; u.ordineOra = null; return 'fine'
+    }
     const o = f.ordini[f.i]
+
+    /* un'AZIONE nella fila non si esegue: è una definizione, sta lì per
+       essere chiamata da qualche altra parte. Si scavalca senza che
+       costi un battito, come una riga di intestazione. */
+    if (eRoutine(o)) { f.i++; f.nuovo = true; continue }
 
     /* ── IL BIVIO SI DECIDE UNA VOLTA SOLA, quando il blocco comincia ──
        Da lì in poi il ramo scelto va fino in fondo. Se si rivalutasse a
@@ -994,6 +1316,39 @@ function passoFilo (m, f, u) {
       u.ordineOra = { ordine: q, unita: f.unita, i: f.i, filo: f.nome, ramo: f.ramo, j: f.rj }
       const r = fai(m, f, u, q)
       if (r === 'subito') { f.rj++; f.rnuovo = true; continue }
+      if (r === 'entra') return 'agisce'      // la chiamata ha già spostato tutto
+      if (r === 'fatto' || r === 'salta') { f.rj++; f.rnuovo = true; return 'agisce' }
+      if (r === 'attesa') return 'attesa'
+      if (r === 'errore') { f.finito = true; f.ordine = null; u.ordineOra = null; return 'agisce' }
+      return 'agisce'
+    }
+
+    /* ── IL CICLO: gli ordini che ha dentro, in tondo ──
+       La differenza con il bivio è tutta in due righe: la lista è una
+       sola, e quando finisce non si esce — si torna al principio.
+       L'USCITA SI GUARDA A OGNI BATTITO, non a fine giro: «smetti
+       quando vedi gli orchi» deve valere nell'istante in cui li vedi,
+       se no si finisce di fare il giro con il nemico alle spalle. È la
+       stessa promessa che faceva `pattuglia`, e l'unica ragione per cui
+       questo non è un `while` da manuale — è un `while` che controlla
+       anche in mezzo. */
+    if (eRipeti(o)) {
+      if (o.finche && valuta(m, u, o.finche)) {
+        nota(m, f, u, 'fa', `${testoCond(m, o.finche)}: smetto di girare`, 'si ferma')
+        f.i++; f.nuovo = true; f.ramo = null; f.rj = null
+        return 'agisce'
+      }
+      const corpo = corpoDi(o)
+      if (!corpo.length) { f.i++; f.nuovo = true; f.ramo = null; f.rj = null; continue }
+      if (f.nuovo) { f.nuovo = false; f.st = {}; f.ramo = 'corpo'; f.rj = 0; f.rnuovo = true }
+      if (f.rj >= corpo.length) { f.rj = 0; f.rnuovo = true }   // si ricomincia da capo
+      const q = corpo[f.rj]
+      if (f.rnuovo) { f.rnuovo = false; f.st = {} }
+      f.ordine = q
+      u.ordineOra = { ordine: q, unita: f.unita, i: f.i, filo: f.nome, ramo: 'corpo', j: f.rj }
+      const r = fai(m, f, u, q)
+      if (r === 'subito') { f.rj++; f.rnuovo = true; continue }
+      if (r === 'entra') return 'agisce'
       if (r === 'fatto' || r === 'salta') { f.rj++; f.rnuovo = true; return 'agisce' }
       if (r === 'attesa') return 'attesa'
       if (r === 'errore') { f.finito = true; f.ordine = null; u.ordineOra = null; return 'agisce' }
@@ -1005,6 +1360,7 @@ function passoFilo (m, f, u) {
     u.ordineOra = { ordine: o, unita: f.unita, i: f.i, filo: f.nome, ramo: null, j: null }
     const r = fai(m, f, u, o)
     if (r === 'subito') { f.i++; f.nuovo = true; continue }
+    if (r === 'entra') return 'agisce'
     if (r === 'fatto' || r === 'salta') { f.i++; f.nuovo = true; return 'agisce' }
     if (r === 'attesa') return 'attesa'
     if (r === 'errore') { f.finito = true; f.ordine = null; u.ordineOra = null; return 'agisce' }
@@ -1137,6 +1493,16 @@ const arrivato = (m, u, C, t) =>
     ? aPortata(u, t) : (u.x === t.x && u.y === t.y)
 
 function fai (m, f, u, o) {
+  /* ── L'ATTESA DI UNA DOMANDA non ha un bersaglio ──
+     Sta prima di tutto il resto perché non ha un complemento da
+     cercare: la sua «cosa» è la domanda, e la domanda si valuta. */
+  if (o.verbo === 'aspetta' && o.cond && o.cond.cond) {
+    if (valuta(m, u, o.cond)) {
+      nota(m, f, u, 'fa', `${testoCond(m, o.cond)}: riparto`, 'si rimette in moto')
+      return 'fatto'
+    }
+    return attende(m, f, u, `aspetto che ${testoCond(m, o.cond)}`, 9999)
+  }
   const C = laCosa(m, o.complemento)
   if (!C) return salta(m, f, u, o.complemento
     ? `«${o.complemento}»? qui non c'è niente che si chiami così`
@@ -1150,6 +1516,31 @@ function fai (m, f, u, o) {
   if (!V) return salta(m, f, u, `«${o.verbo}»? non so cosa voglia dire`)
   if (!V.accetta.includes(C.tipo)) return salta(m, f, u, `${N} non si può ${V.nome}`)
   if (!saFare(u, o.verbo)) return salta(m, f, u, `non è il mio mestiere: non so ${V.nome}`)
+  /* ── QUELLO CHE NON RIESCE A FARE, LO DICE LUI, QUANDO GLIELO CHIEDI ──
+     Non è `sa`: quel verbo è in cassetta, l'ordine si scrive, e la
+     scena parte. Poi arriva il suo turno e il cavaliere risponde «ho le
+     mani occupate: scudo e spada» — e a quel punto è UNA COSA
+     SUCCESSA, non un tasto che non c'era. Un verbo tolto dal menù
+     lascia la domanda «dov'è finito prendi?»; un ordine che fallisce
+     parlando lascia «ah, allora ci deve andare l'altro», che è la
+     lezione del livello. */
+  const scusa = nonRiesce(u, o.verbo)
+  if (scusa) {
+    /* e ci va lo stesso, prima. Fallire da fermo, dall'altra parte
+       della corte, sembra che l'ordine non sia nemmeno partito: il
+       cavaliere cammina fino al forziere, ci arriva, e LÌ allarga le
+       braccia. È una cosa che si guarda succedere, e si capisce senza
+       leggere niente. */
+    const t = dove(m, u, C)
+    if (t && !arrivato(m, u, C, t)) {
+      const r = verso(m, u, t.x, t.y)
+      if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
+      f.st.fermo = 0
+      nota(m, f, u, 'fa', `vado a ${N}`, 'va verso ' + VERSO[u.dir])
+      return 'lavora'
+    }
+    return salta(m, f, u, scusa, 'allarga le braccia')
+  }
 
   switch (o.verbo) {
 
@@ -1174,31 +1565,6 @@ function fai (m, f, u, o) {
       f.st.fermo = 0
       nota(m, f, u, 'fa', `vado a ${N}`, 'va verso ' + VERSO[u.dir])
       return arrivato(m, u, C, t) ? 'fatto' : 'lavora'
-    }
-
-    /* ── il giro di ronda ──
-       I punti sono quelli scritti nell'ordine, in fila, e alla fine si
-       ricomincia. L'uscita è `finche`, e si legge nell'ordine: se non
-       c'è, il giro non finisce — non è una sorpresa, è quello che c'è
-       scritto. Appena la condizione è vera si smette **e parte l'ordine
-       dopo**: è così che «avvista e chiama» e «avvista e attacca»
-       diventano due piani diversi senza nessun costrutto nuovo. */
-    case 'pattuglia': {
-      const punti = puntiDi(m, o)
-      if (!punti.length) return salta(m, f, u, 'questo giro non ha punti')
-      if (o.finche && valuta(m, u, o.finche)) {
-        nota(m, f, u, 'fa', `${testoCond(m, o.finche)}: smetto il giro`, 'si ferma di colpo')
-        return 'fatto'
-      }
-      if (f.st.k == null) f.st.k = tappaPiuVicina(m, u, punti)
-      const t = punti[f.st.k]
-      const r = verso(m, u, t.x, t.y)
-      if (r === null) return attende(m, f, u, 'non riesco a fare il giro: la strada è chiusa')
-      if (r === 'arrivato') f.st.k = (f.st.k + 1) % punti.length
-      f.st.fermo = 0
-      nota(m, f, u, 'fa', `faccio il giro (punto ${f.st.k + 1} di ${punti.length})`,
-           'va verso ' + VERSO[u.dir])
-      return 'lavora'
     }
 
     /* ── prendere e aprire CAMMINANO ──
@@ -1235,9 +1601,41 @@ function fai (m, f, u, o) {
         nota(m, f, u, 'fa', `vado ad aprire ${N}`, 'va verso ' + VERSO[u.dir])
         return 'lavora'
       }
-      if (pt.chiave && !u.zaino.includes(pt.chiave))
-        return salta(m, f, u, `${N} è chiuso a chiave, e ${etichetta(m, pt.chiave)} non ce l'ho`,
-                     'spinge il portone')
+      if (pt.chiave && !u.zaino.includes(pt.chiave)) {
+        /* ── SFONDARE COSTA TEMPO ──
+           Una porta può dichiarare `forza: n`: senza la chiave si apre
+           lo stesso, ma ci vogliono n battiti di spallate. Quel tempo
+           non è un dettaglio di colore — è la FINESTRA. Un nemico che
+           entra in un istante non si può fermare da nessun posto che
+           non sia la porta stessa; uno che ci mette sei battiti si può
+           raggiungere, e allora girare intorno alle mura comincia ad
+           avere senso. Chi ha la chiave non forza niente: apre. */
+        if (!pt.forza)
+          return salta(m, f, u, `${N} è chiuso a chiave, e ${etichetta(m, pt.chiave)} non ce l'ho`,
+                       'spinge il portone')
+        f.st.spinte = (f.st.spinte || 0) + 1
+        f.st.fermo = 0
+        /* ── E SFONDARE FA RUMORE ──
+           Il rumore in questo gioco è già una cosa vera: chi le prende
+           chiama i suoi, e quel grido è un segnale come tutti gli altri
+           — si può ascoltare con un «quando senti» e si vede partire
+           dalla mappa. Una spallata a un portone non è più silenziosa
+           di una spada: la porta dichiara `rumore: '<segnale>'`, e da
+           quel momento chi era in ascolto sa non solo CHE qualcuno sta
+           entrando, ma anche DA DOVE. Parte una volta sola: un fracasso
+           che si ripete a ogni spinta trascinerebbe mezza mappa avanti
+           e indietro, come il grido. */
+        if (pt.rumore && !pt.hafattoRumore) {
+          pt.hafattoRumore = true
+          m.pendenti.push({ seg: pt.rumore, da: u.id, x: pt.x, y: pt.y, rumore: true })
+          m.eventi.push('allarme')
+          m.allarmi.push({ x: pt.x, y: pt.y, seg: pt.rumore, da: u.id })
+        }
+        if (f.st.spinte < pt.forza) {
+          nota(m, f, u, 'fa', `sto sfondando ${N}`, 'spinge il portone')
+          return 'lavora'
+        }
+      }
       pt.aperta = true; m.versioneMappa++; m.unita.forEach(z => { z._mk = null })
       m.eventi.push('apre')
       nota(m, f, u, 'fa', `aperto ${N}`, `apre ${N}`)
@@ -1250,12 +1648,34 @@ function fai (m, f, u, o) {
       if (!t) {
         const b = dove(m, u, C)
         if (!b) return 'subito'                       // non c'è più nessuno: fatto
-        /* Si attacca chi si VEDE, e gli si resta addosso finché non
-           cade. L'inseguimento è una scelta dichiarata di questo
-           ordine, non un `vai` mascherato: chi non vede nessuno resta
-           in guardia, ed è per questo che prima gli serve una ronda. */
-        if (!vede(m, u, b)) return attende(m, f, u, `non vedo ${N} da nessuna parte`, 60)
-        t = b; f.st.bersaglio = t.id
+        /* ── ATTACCA È «VAI ADDOSSO E MENA» ──
+           Chi si vede lo si insegue e gli si resta addosso finché non
+           cade; e vale anche il RICORDO, come per `vai` — se l'hai
+           visto un attimo fa dietro l'angolo, sai dove andare a
+           cercarlo. Erano due verbi con due memorie diverse, e uno dei
+           due sembrava rotto.
+           Quello che NON si fa è partire verso qualcuno che non hai mai
+           visto: lì l'ordine fallisce SUBITO e lo dice. Prima restava
+           in attesa per sessanta battiti, e in mezzo alla mappa si
+           vedeva solo un personaggio fermo che ogni tanto lampeggiava:
+           sembrava un guasto del gioco, non una cosa che avevi scritto
+           tu. Ed è la ragione per cui serve una ronda — detta a voce,
+           una volta, invece che lasciata indovinare. */
+        if (vede(m, u, b)) { u.visti[b.id] = { x: b.x, y: b.y }; t = b; f.st.bersaglio = b.id }
+        else {
+          /* un RICORDO non è un bersaglio: è un posto dove andare a
+             guardare. Ci si cammina e basta — se arrivati non c'è più
+             nessuno, l'ordine lo dice e finisce lì */
+          const ric = u.visti[b.id] || u.visti[C.id] || null
+          if (!ric) return salta(m, f, u, `${N}? non so dove sono: prima devo trovarli`,
+                                 'si guarda intorno')
+          if (aPortata(u, ric)) return salta(m, f, u, `qui non c'è più nessuno`, 'si guarda intorno')
+          const rr = verso(m, u, ric.x, ric.y)
+          if (rr === null) return salta(m, f, u, `non riesco ad arrivare dove li ho visti`)
+          f.st.fermo = 0
+          nota(m, f, u, 'fa', `vado dove ho visto ${N}`, 'va verso ' + VERSO[u.dir])
+          return 'lavora'
+        }
       }
       f.st.fermo = 0
       if (aPortata(u, t)) {
@@ -1286,7 +1706,21 @@ function fai (m, f, u, o) {
     }
 
     case 'suona': {
-      m.pendenti.push({ seg: C.id, da: u.id }); m.eventi.push('segnale')
+      /* ── SUONARE È FARE RUMORE, E IL RUMORE HA UN POSTO ──
+         Il segnale porta con sé DA DOVE è partito. Serve a chi lo
+         ascolta soltanto per sapere che è successo, ma a chi è fatto
+         per accorrere serve eccome: corre lì. È così che «fai rumore
+         lontano da dove devi passare» diventa una mossa scrivibile —
+         prima solo il grido di un nemico aveva una posizione, e il
+         diversivo lo si poteva sperare, non organizzare. */
+      m.pendenti.push({ seg: C.id, da: u.id, x: u.x, y: u.y, rumore: true })
+      m.eventi.push('segnale')
+      /* e SI VEDE: un segnale mandato è una cosa che succede sulla
+         mappa, nel punto in cui succede. Finiva solo nel registro —
+         cioè dietro un tasto — e chi guardava la scena vedeva un
+         personaggio fermarsi un battito senza motivo apparente. La
+         stessa lista dei gridi: una cosa sola, un disegno solo. */
+      m.allarmi.push({ x: u.x, y: u.y, seg: C.id, da: u.id })
       nota(m, f, u, 'fa', `suono «${N}»`, 'fa un segnale')
       return 'fatto'
     }
@@ -1302,6 +1736,44 @@ function fai (m, f, u, o) {
         nota(m, f, u, 'fa', `sto in ascolto di «${N}»`, 'resta in ascolto')
       }
       return 'subito'
+    }
+
+    /* ── ESEGUI: si scende dentro un'altra fila e poi si risale ──
+       Non parte niente di nuovo e non si sdoppia nessuno: è lo stesso
+       personaggio che va a leggere un altro pezzo del suo piano.
+       Costa un battito, e non è un dettaglio contabile — è quello che
+       rende scrivibile «riprova»: un'azione che richiama sé stessa
+       diventa un'attesa attiva, e nel frattempo il mondo si muove.
+       Senza il battito sarebbe un giro a vuoto dentro lo stesso
+       istante, cioè un blocco del gioco. */
+    case 'esegui': {
+      const corpo = (m.routine || {})[C.id]
+      if (!Array.isArray(corpo) || !corpo.length)
+        return salta(m, f, u, `${N} non ha ancora niente dentro`, 'si guarda intorno')
+      /* ── SE NON RESTA NIENTE DA FARE DOPO, NON C'È NIENTE A CUI TORNARE ──
+         `esegui` in fondo a una fila non impila niente: prende il posto
+         di quello che c'era. Sembra un'ottimizzazione da manuale e
+         invece è la differenza fra un costrutto che serve e uno che
+         no — «se vedi ancora qualcuno, RIPROVA» si scrive facendo
+         chiamare l'azione a sé stessa, e senza questo diventerebbe una
+         pila che cresce fino a sbattere. Così invece è un'attesa
+         attiva: un battito per giro, e intanto il mondo si muove.
+         Dentro un ciclo non vale mai — lì dopo c'è sempre il giro dopo. */
+      const b = f.ramo ? f.ordini[f.i] : null
+      const coda = !f.ramo ? f.i + 1 >= f.ordini.length
+        : eCondizione(b) ? (f.rj + 1 >= ramoDi(b, f.ramo).length &&
+                            f.i + 1 >= f.ordini.length)
+        : false
+      /* e una pila che cresce e basta è un'azione che ne chiama
+         un'altra all'infinito: si dice invece di lasciarla correre */
+      if (!coda && f.pila.length >= 12)
+        return guasto(m, f, u, `${N} chiama e richiama e non si torna più indietro`)
+      if (!coda) f.pila.push({ ordini: f.ordini, i: f.i + 1, ramo: f.ramo, rj: f.rj,
+                               st: f.st, nome: f.nome })
+      f.ordini = corpo; f.i = 0; f.nuovo = true; f.st = {}
+      f.ramo = null; f.rj = null; f.nome = C.id
+      nota(m, f, u, 'fa', `faccio ${N}`, 'si mette al lavoro')
+      return 'entra'
     }
 
     /* si aspetta uno STATO, e lo si aspetta guardando: se quella cosa
@@ -1336,17 +1808,6 @@ function fai (m, f, u, o) {
   }
 }
 
-/* i punti di un giro: `punti` se c'è, se no il solo complemento */
-export function puntiDi (m, o) {
-  const ids = (o && o.punti && o.punti.length) ? o.punti : [o && o.complemento]
-  return ids.map(id => laCosa(m, id)).filter(c => c && Number.isFinite(c.x))
-}
-function tappaPiuVicina (m, u, z) {
-  const d = mappaDi(m, u)
-  let k = 0, best = 1e9
-  z.forEach((t, i) => { const q = d[t.y * m.w + t.x]; if (q >= 0 && q < best) { best = q; k = i } })
-  return (k + 1) % z.length          // si parte dalla tappa DOPO quella su cui si è
-}
 
 /* ═══════════ far girare tutto ═══════════
    È quello che usa il test, ed è quello che usa il gioco quando vuole
@@ -1399,6 +1860,7 @@ export function descrivi (mondo, o, secco) {
     return `${testa}: se è vero ${via('vero')}, se è falso ${via('falso')}`
   }
   const V = VERBI[o.verbo]; if (!V) return '?'
+  if (V.vuoleCond && o.cond) return `${V.nome} [${testoCond(mondo, o.cond)}]`
   const C = laCosa(mondo, o.complemento)
   return V.nome + ' [' + (C ? C.nome : (o.complemento || '…')) + ']'
 }

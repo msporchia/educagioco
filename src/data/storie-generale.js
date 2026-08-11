@@ -858,6 +858,20 @@ export const STORIE = [
     cassetta: [], capitoli: TORRE },
 ].map(conCassetta)
 
+/* ── LE AVVENTURE NON CI SONO ANCORA ──
+   Un interruttore solo, e sta qui perché è una decisione sui CONTENUTI,
+   non sull'interfaccia: le cinque storie sono scritte ma non sono mai
+   state provate da nessuno, e il linguaggio del Generale sta ancora
+   cambiando sotto. Finché è a `false` non si vedono affatto — non col
+   lucchetto: proprio non ci sono. Un lucchetto è una promessa («finisci
+   e si apre»), e non è quello che sta succedendo qui.
+
+   Da qui discende anche da quale schermata si entra nel gioco: senza
+   avventure la scelta non è una scelta, e si va dritti alle prove
+   (`views/generale/navigazione.js`). Il giorno che si riaprono, questa
+   riga torna `true` e non c'è nient'altro da ricordarsi. */
+export const AVVENTURE_APERTE = false
+
 export const STORIA = Object.fromEntries(STORIE.map(s => [s.id, s]))
 export const storiaDi = id => STORIA[id] ?? null
 export const capitoloDi = (id, n) => STORIA[id]?.capitoli[n] ?? null

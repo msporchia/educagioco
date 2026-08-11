@@ -38,7 +38,7 @@
    alla vista, e restituirne una copia vorrebbe dire riattaccarla a
    mano ogni volta.
    ═══════════════════════════════════════════════════════════════════ */
-import { eCondizione, RAMI } from '../../motore/generale.js'
+import { eBlocco, dentroA } from '../../motore/generale.js'
 
 /* due vie sono la stessa via? */
 export const stessaVia = (a, b) =>
@@ -80,8 +80,21 @@ export const ordineIn = (ordini, via) => listaDi(ordini, via)[via[via.length - 1
    quelli veri**: la via di una voce non cambia perché a schermo sta
    altrove. */
 const conIndice = ordini => (ordini || []).map((o, i) => ({ o, i }))
-export const partiDaCapo = ordini => conIndice(ordini).filter(x => x.o.verbo !== 'quando')
+const eRoutine = o => !!o && o.blocco === 'routine'
+/* tre pile, e si distinguono guardando la voce: quello che parte
+   all'inizio, quello che parte a un segnale, e quello che parte solo se
+   qualcuno lo chiama. Gli indici restano quelli veri anche qui. */
+export const partiDaCapo = ordini =>
+  conIndice(ordini).filter(x => x.o.verbo !== 'quando' && !eRoutine(x.o))
 export const partiParallele = ordini => conIndice(ordini).filter(x => x.o.verbo === 'quando')
+export const partiChiamate = ordini => conIndice(ordini).filter(x => eRoutine(x.o))
+
+/* il nome della prossima azione: il primo numero libero, così
+   cancellarne una in mezzo non fa nascere due «azione 3» */
+export function nomeLibero (ordini) {
+  const presi = new Set(partiChiamate(ordini).map(x => x.o.nome))
+  for (let n = 1; ; n++) if (!presi.has(`azione ${n}`)) return `azione ${n}`
+}
 
 /* ── aggiungere ──
    Torna la via della voce appena nata, che è quello che serve a chi
@@ -93,8 +106,16 @@ export const partiParallele = ordini => conIndice(ordini).filter(x => x.o.verbo 
    finiva annidato nel primo — e i piani paralleli diventavano una
    matriosca invece che due strade. */
 export function aggiungiIn (ordini, perc, o) {
+  /* un «quando senti» e un'AZIONE non stanno mai dentro niente: sono
+     piani che partono per conto loro — uno a un segnale, l'altro
+     quando lo chiami — e stanno accanto alla fila, non dentro. */
   if (o.verbo === 'quando') {
     if (!o.allora) o.allora = []
+    ordini.push(o)
+    return [ordini.length - 1]
+  }
+  if (o.blocco === 'routine') {
+    if (!o.corpo) o.corpo = []
     ordini.push(o)
     return [ordini.length - 1]
   }
@@ -120,19 +141,6 @@ export function spostaIn (ordini, via, d) {
   return [...via.slice(0, -1), i + d]
 }
 
-/* ── i punti di un giro ──
-   Il complemento è il primo punto, `punti` sono tutti quanti: un giro
-   con un punto solo è legittimo (ci gira intorno), uno con nessuno no. */
-export const puntiDi = o => (o && o.punti && o.punti.length ? o.punti
-                             : o && o.complemento ? [o.complemento] : [])
-export function togliDalGiro (o, k) {
-  const p = [...puntiDi(o)]
-  if (p.length <= 1) return false               // un giro senza punti non è un giro
-  p.splice(k, 1)
-  o.punti = p; o.complemento = p[0]
-  return true
-}
-
 /* ── camminare su tutto il piano ──
    Ogni voce, dovunque stia: dentro un ramo, dentro un ascolto, dentro
    un ramo dentro un ascolto. Serve a contare, a cercare i buchi e a
@@ -141,7 +149,7 @@ export function ogniVoce (lista) {
   const out = []
   const giro = l => (l || []).forEach(o => {
     out.push(o)
-    if (eCondizione(o)) { RAMI.forEach(r => giro(o[r.ramo])); return }
+    if (eBlocco(o)) { dentroA(o).forEach(giro); return }
     giro(o.allora)
   })
   giro(lista)
