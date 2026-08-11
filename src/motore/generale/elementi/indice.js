@@ -3,3 +3,5 @@
 export { Porta } from './porta.js'
 export { Oggetto } from './oggetto.js'
 export { Posto } from './posto.js'
+export { Leva } from './leva.js'
+export { Totem } from './totem.js'

@@ -662,23 +662,27 @@ toccano il motore; si possono fare per prime proprio perché **si guardano**.
 | **a** | parser a token + legenda, livelli attuali convertiti in automatico | parser mappa, `data/livelli/*`, validatore | a schermo è tutto identico, test verdi | da fare |
 | **b** | murature al plurale, chiazze larghe, sfrangiature | `mappa.js`, `muri.js`, `ambienti/`, `resa.js` | la cripta non è più a tinta unita | **fatta**, in una forma diversa da quella scritta qui — §6 |
 | **c** | il tema con l'arredo automatico e i contesti | `ambienti/`, un modulo di piazzamento | una mappa nuda si arreda da sé, deterministica | da fare — solo i campi (§6.2) ne anticipano il principio |
-| **d** | `Elemento`, `faccia()`, `Porta`/`Oggetto`/`Posto`; la vista smette di avere un ciclo per famiglia | `motore/generale/`, `CampoLivello.vue` | comportamento identico, i cinque stili di porta in scena | da fare |
-| **e** | le porte vere: `forza` scorporata, `aMano`, sigillo derivato, chi sa sfondare | `Porta`, un livello di prova | un livello nuovo che le usa tutte | da fare |
+| **d** | `Elemento`, `faccia()`, `Porta`/`Oggetto`/`Posto`; la vista smette di avere un ciclo per famiglia | `motore/generale/`, `CampoLivello.vue` | comportamento identico, i cinque stili di porta in scena | **fatta** |
+| **e** | le porte vere: `forza` scorporata, `aMano`, sigillo derivato, chi sa sfondare | `Porta`, un livello di prova | un livello nuovo che le usa tutte | **fatta** |
 | **f** | `Unita extends Elemento` con `parti()`/`osserva()` | motore | `chiamaAllarme`/`accorri`/`dove` spariscono nel polimorfismo | da fare |
-| **g** | `Leva`, `premi`, `premuto:`, il cablaggio e la scheda | motore, cassetta, editor | una tappa con due leve e una gabbia | da fare |
-| **h** | `Totem`, `conta`, `almeno:` | motore | una tappa «premi i tre bracieri» | da fare |
-| **i** | `parla` (messaggio diretto, solo a chi vedi) | motore, cassetta | una tappa dove serve dirlo a uno solo | da fare |
+| **g** | `Leva`, `premi`, `premuto:`, il cablaggio e la scheda | motore, cassetta, editor | una tappa con due leve e una gabbia | **fatta** — `motore/generale/elementi/leva.js`, livello di prova `data/livelli/congegni.js` |
+| **h** | `Totem`, `conta`, `almeno:` | motore | una tappa «premi i tre bracieri» | **fatta** — `motore/generale/elementi/totem.js`, stesso livello di prova |
+| **i** | `parla` (messaggio diretto, solo a chi vedi) | motore, cassetta | una tappa dove serve dirlo a uno solo | **fatta** — in `motore/generale.js`, non ancora provata da un livello dedicato |
 
-Le tappe **a** e **d–i** sono ancora il piano, tale e quale: nessuna riga di
-motore è cambiata, e restano intatti `Elemento`, le porte, `Leva`, `Totem`,
-`parla`, il parser a token — tutto quello che la Parte I, la Parte II e la
-Parte IV descrivono. La tappa **b** è fatta, ma non nella forma scritta in
-questo documento quando è stato pensato: il tema che ne è uscito, i due
-tentativi sbagliati prima di trovarlo e il residuo che resta (tre pittori) si
-raccontano per esteso al §6. La tappa **c** non è stata cominciata: quello
-che dei «contesti» esiste sono i campi del §6.2, che mettono d'accordo le
-cose per causa condivisa, non per posizione — mancano ancora `vicini`,
-`distanzaDalMuro` e i predicati come `angoloAlto`.
+Le tappe **a** e **c** sono ancora il piano, tale e quale. La tappa **b** è
+fatta, ma non nella forma scritta in questo documento quando è stato pensato:
+il tema che ne è uscito, i due tentativi sbagliati prima di trovarlo e il
+residuo che resta (tre pittori) si raccontano per esteso al §6. La tappa
+**c** non è stata cominciata: quello che dei «contesti» esiste sono i campi
+del §6.2, che mettono d'accordo le cose per causa condivisa, non per
+posizione — mancano ancora `vicini`, `distanzaDalMuro` e i predicati come
+`angoloAlto`.
+
+Le tappe **d–i** invece sono fatte, ed esattamente nella forma scritta qui:
+`Elemento`, `Porta`/`Oggetto`/`Posto`, `Leva`, `Totem` e `parla` sono tutti in
+piedi in `motore/generale.js` e `motore/generale/`. Quello che manca ancora è
+**f** (`Unita extends Elemento`): le unità restano fuori dal polimorfismo, e
+`chiamaAllarme`/`accorri`/`dove` sono ancora un `case` per famiglia.
 
 Lo **schema/editor** aggiornato ai generi nuovi va in coda: finché l'elenco
 dei generi non è fermo, si rifarebbe due volte.

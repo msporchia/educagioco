@@ -66,6 +66,21 @@ export class Porta extends Elemento {
     if (this.aperta) return { esito: 'subito' }
     const N = this.nomeIn(ctx.m)
 
+    /* ── UN COMANDO DI CONGEGNO APRE SEMPRE ──
+       Qui non è arrivato nessuno camminando: chi ha pagato il prezzo di
+       arrivare è stato chi ha premuto la leva o toccato il totem, non
+       questa porta. Chiave, forza e `aMano` restano regole di chi entra
+       CAMMINANDO — è proprio per questo che `aMano:false` esiste: dice
+       «non così, ci vuole un congegno», e un congegno è quello che sta
+       succedendo in questo ramo. */
+    if (ctx.congegno) {
+      this.aperta = true
+      ctx.m.versioneMappa++
+      ctx.m.unita.forEach(z => { z._mk = null })
+      ctx.m.eventi.push('apre')
+      return { esito: 'fatto', dice: `si apre ${N}`, fatto: `si apre ${N}` }
+    }
+
     if (!this.aMano)
       return { esito: 'salta', dice: `${N} non si apre così: ci vuole un congegno`,
                fatto: 'spinge il portone' }
@@ -118,10 +133,12 @@ export class Porta extends Elemento {
 
   /* i cinque stili sono già dipinti in `grafica/oggetti/porte/`: qui si
      dichiara solo il fatto già deciso, in celle — `apertura` da 0 a 1
-     come vuole il pittore unico (`porte/indice.js`) */
+     come vuole il pittore unico (`porte/indice.js`). `alone: true`: è
+     una cosa che si nomina in un ordine, non arredo dipinto sul
+     fondale — l'alone la stacca da un sarcofago o una cassa finta */
   faccia () {
     return [{ che: 'porta', x: this.x, y: this.y, stile: this.stile,
-              apertura: this.aperta ? 1 : 0, sigillo: this.sigillo }]
+              apertura: this.aperta ? 1 : 0, sigillo: this.sigillo, alone: true }]
   }
 
   scheda (ctx) {

@@ -127,11 +127,11 @@
    senza la chiave in mano, e chi non ha mai visto qualcuno non sa
    dove sia. Sono prerequisiti di stato, non di posizione.
    ═══════════════════════════════════════════════════════════════════ */
-/* le cose passive del campo — porte, oggetti, posti — sono `Elemento`:
-   non camminano, e sanno rispondere da sole a un comando. Il mondo qui
-   dentro le costruisce e le interroga; il COME si comportano sta in
-   `motore/generale/`, non in questo `switch`. */
-import { Porta, Oggetto, Posto } from './generale/elementi/indice.js'
+/* le cose passive del campo — porte, oggetti, posti, leve, totem — sono
+   `Elemento`: non camminano, e sanno rispondere da sole a un comando.
+   Il mondo qui dentro le costruisce e le interroga; il COME si
+   comportano sta in `motore/generale/`, non in questo `switch`. */
+import { Porta, Oggetto, Posto, Leva, Totem } from './generale/elementi/indice.js'
 
 /* oltre questi passi la scena è in giro a vuoto: si chiude e lo dice */
 export const PASSI_MASSIMI = 300
@@ -187,6 +187,13 @@ export const VERBI = {
                accetta: ['posto', 'oggetto', 'porta', 'unita', 'fazione', 'cella'] },
   prendi:    { et: '🎒', cl: 'azione', nome: 'prendi', grado: 2, accetta: ['oggetto'] },
   apri:      { et: '🔓', cl: 'azione', nome: 'apri', grado: 2, accetta: ['porta'] },
+  /* ── UN VERBO SOLO PER OGNI CONGEGNO ──
+     Una leva e un totem non si dicono in due modi diversi (`tira`,
+     `gira`, `accendi` sono stati scartati apposta, §10 del piano):
+     `premi` basta per tutti e due, e cosa succede quando arrivi a
+     zero — o a `tacche` — lo decide il congegno che lo riceve, non
+     questo verbo. Come `apri` e `prendi`, ci si arriva camminando. */
+  premi:     { et: '👆', cl: 'azione', nome: 'premi', grado: 2, accetta: ['congegno'] },
   /* `elenco: true` — QUESTO BERSAGLIO NON SI INDICA COL DITO.
      Indicare un nemico sulla mappa vuol dire «quell'orco lì, quello in
      quel punto», e non è quello che si sta scrivendo: un piano si firma
@@ -232,6 +239,17 @@ export const VERBI = {
   aspettaDiVedere: { et: '👁', cl: 'attesa', nome: 'aspetta di vedere', grado: 3,
                      accetta: ['unita', 'fazione'] },
   suona:     { et: '📣', cl: 'msg', nome: 'suona', grado: 2, accetta: ['segnale'] },
+  /* ── IL MESSAGGIO DIRETTO ──
+     `suona` è il grido a chiunque stia ascoltando, ovunque sia:
+     rumore, con una posizione ma senza un destinatario. `parla` è la
+     CHIAMATA — la stessa parola, lo stesso segnale, ma consegnata solo
+     a chi il mittente VEDE nell'istante in cui arriva (§3.2 del
+     piano). Il vincolo non è un dettaglio: il motore ha un principio
+     esplicito — «quello che vedi lo puoi aspettare, quello che non
+     vedi te lo deve dire qualcuno» — e un messaggio diretto a distanza
+     infinita lo cancellerebbe. Per questo non fa rumore e non chiama
+     chi accorre: è un mezzo silenzio, non un allarme. */
+  parla:     { et: '🗨️', cl: 'msg', nome: 'parla', grado: 2, accetta: ['segnale'] },
   quando:    { et: '🎬', cl: 'msg', nome: 'quando senti', grado: 3, accetta: ['segnale'] },
   /* ── CHIAMARE UN PEZZO DI PIANO CHE HAI SCRITTO TU ──
      È l'unico verbo che non punta a una cosa del mondo: punta a una
@@ -346,9 +364,18 @@ export function creaMondo(livello, variante) {
   const posti = {}
   for (const k in (livello.posti || {}))
     posti[k] = new Posto(k, patch(livello.posti[k], (v.posti || {})[k]))
+  /* i congegni: una leva scatta al primo `premi`, un totem conta.
+     Stessa forma delle porte e dei posti — la variante può toccarne i
+     parametri, mai il filo (`collegata`), che è la mappa che decide */
+  const leve = {}
+  for (const k in (livello.leve || {}))
+    leve[k] = new Leva(k, patch(livello.leve[k], (v.leve || {})[k]))
+  const totem = {}
+  for (const k in (livello.totem || {}))
+    totem[k] = new Totem(k, patch(livello.totem[k], (v.totem || {})[k]))
   const m = {
     livello, variante: v.nome || '', ordiniScena: v.ordini || null,
-    w, h, celle, porte, posti,
+    w, h, celle, porte, posti, leve, totem,
     oggetti: (livello.oggetti || [])
       .map(o => new Oggetto(o.nome, patch(o, (v.oggetti || {})[o.nome]))),
     segnali: [...(livello.segnali || [])],
@@ -359,6 +386,10 @@ export function creaMondo(livello, variante) {
                ordineOra: null, attesa: null }
     }),
     fili: [], ascolti: [], segnaliMandati: [], pendenti: [],
+    /* la coda dei congegni: un `premi` che scatta non comanda subito —
+       accoda qui, e `passo()` la consegna a fine battito, con lo
+       stesso principio dei segnali (`pendenti`, poco sopra) */
+    comandiPendenti: [],
     passi: 0, finita: false, vinto: false, motivo: '', colpevole: null,
     eventi: [], traccia: [], versioneMappa: 0, colpi: [], allarmi: [],
     mia: Object.keys(livello.fazioni).find(f => livello.fazioni[f].autore === 'giocatore'),
@@ -422,6 +453,8 @@ function coseDi (m) {
   const agg = (id, tipo, nome, em) => { if (id != null && !c[id]) c[id] = { id, tipo, nome, em } }
   for (const k in m.porte) agg(k, m.porte[k].tipo, etichetta(m, k), m.porte[k].em)
   for (const k in m.posti) agg(k, m.posti[k].tipo, etichetta(m, k), m.posti[k].em)
+  for (const k in m.leve) agg(k, m.leve[k].tipo, etichetta(m, k), m.leve[k].em)
+  for (const k in m.totem) agg(k, m.totem[k].tipo, etichetta(m, k), m.totem[k].em)
   m.oggetti.forEach(o => agg(o.nome, o.tipo, etichetta(m, o.nome), o.em))
   m.unita.forEach(u => agg(u.id, 'unita', u.nome || u.id, u.emoji))
   for (const k in m.livello.fazioni) agg(k, 'fazione', etichetta(m, k), '🚩')
@@ -549,7 +582,7 @@ const saFare = (u, v) => !u || !u.sa || u.sa.includes(v)
    grida «aiuto» è un mittente a tutti gli effetti, e origliarlo è una
    mossa. Perciò la domanda non è «ho due unità mie», è «c'è qualcun
    altro là fuori». */
-const SEGNALE = { suona: 1, quando: 1 }
+const SEGNALE = { suona: 1, quando: 1, parla: 1 }
 const conChiParlare = (mondo, id) => mondo.unita.some(u => u.id !== id && u.viva)
 export const verbiPer = (mondo, id) =>
   verbiDi(mondo).filter(v => saFare(mondo.perId[id], v) &&
@@ -589,6 +622,12 @@ function grezza (m, io, c) {
       return !!(u && u.zaino.includes(chi))
     }
     case 'aperta': return !!(m.porte[chi] && m.porte[chi].chiedi('aperta'))
+    case 'premuto': { const e = elementoConId(m, chi); return !!(e && e.chiedi('premuto')) }
+    case 'almeno': {
+      const e = elementoConId(m, chi)
+      const v = e ? e.chiedi('almeno') : null
+      return v != null && v >= (c.n || 0)
+    }
     case 'segnale': return m.segnaliMandati.includes(chi)
     case 'qui': {
       const u = c.chi ? m.perId[c.chi] : io
@@ -638,6 +677,11 @@ export const CONDIZIONI = {
   aperta:  { nome: 'è aperto', em: '🚪' },
   segnale: { nome: 'hai sentito', em: '📣' },
   qui:     { nome: 'è arrivato a', em: '📍' },
+  premuto: { nome: 'è stata premuta', em: '👆' },
+  /* «il totem è a 3 o più»: il numero sta nella condizione (`n`), non
+     nel totem — è la stessa `c.complemento` degli ordini, con un
+     parametro in più, come `qui` ha `chi` */
+  almeno:  { nome: 'è almeno a', em: '🗿' },
 }
 /* quello che si può chiedere qui, raggruppato per verbo di condizione.
    Esce dalle stesse cose da cui escono i complementi — e se il livello
@@ -977,12 +1021,14 @@ export function avvia (mondo, piano) {
     if (u && u.fazione !== m.mia) m.piano[id] = clona(scena[id])
   }
   m.passi = 0; m.finita = false; m.vinto = false; m.motivo = ''; m.colpevole = null
-  m.segnaliMandati = []; m.pendenti = []; m.eventi = []; m.traccia = []
+  m.segnaliMandati = []; m.pendenti = []; m.comandiPendenti = []; m.eventi = []; m.traccia = []
   m.versioneMappa = 0; m.ascolti = []; m.colpi = []; m.allarmi = []
   /* rigiocare la scena: ogni elemento si rimette com'era da sé — è il
      patto di `azzera()`, e un elemento nuovo non può dimenticarselo */
   for (const k in m.porte) m.porte[k].azzera()
   for (const k in m.posti) m.posti[k].azzera()
+  for (const k in m.leve) m.leve[k].azzera()
+  for (const k in m.totem) m.totem[k].azzera()
   m.oggetti.forEach(o => o.azzera())
   m.unita.forEach(u => {
     u.x = u.x0; u.y = u.y0; u.vita = u.vitaMax; u.viva = true; u.zaino = []
@@ -1175,6 +1221,18 @@ export function passo (m) {
         if (a.segnale !== p.seg) continue
         const u = m.perId[a.unita]
         if (!u || !u.viva) continue
+        /* ── PARLA CONSEGNA SOLO A CHI SI VEDE, ADESSO ──
+           `diretto` viene da `parla` (non da `suona`): il messaggio non
+           ha destinatari scelti, ma la vista sì — si guarda con gli
+           occhi di CHI L'HA DETTO, nell'istante in cui arriva, non in
+           quello in cui è partito, perché nel frattempo qualcuno può
+           essersi mosso. Chi non è visto in quel momento non riceve
+           niente: «quello che non vedi te lo deve dire qualcuno», e
+           qui nessuno gliel'ha detto. */
+        if (p.diretto) {
+          const mitt = m.perId[p.da]
+          if (!mitt || !mitt.viva || !vede(m, mitt, u)) continue
+        }
         const vecchio = m.fili.find(f => f.ascolto === a)
         /* ── UNA COSA ALLA VOLTA ──
            Un segnale sveglia qualcuno solo se quel qualcuno è LIBERO.
@@ -1219,16 +1277,53 @@ export function passo (m) {
       }
       const chi = m.perId[p.da]
       const N = ilSegnale(p.seg).nome
-      /* la riga porta il verbo di chi ha suonato: così chi legge la
-         traccia sa a quale ordine appartiene */
-      const filo = { nome: 'segnali', i: 0, ordine: { verbo: 'suona', complemento: p.seg } }
+      /* la riga porta il verbo di chi ha suonato o parlato: così chi
+         legge la traccia sa a quale ordine appartiene */
+      const filo = { nome: 'segnali', i: 0,
+                     ordine: { verbo: p.diretto ? 'parla' : 'suona', complemento: p.seg } }
       const desti = svegli.length || occupati.length
       if (chi) nota(m, filo, chi, desti ? 'fa' : 'salto',
-        svegli.length ? `arriva «${N}»: si sveglia ${[...new Set(svegli)].join(' e ')}`
-        : occupati.length ? `arriva «${N}», ma ${[...new Set(occupati)].join(' e ')} ` +
+        svegli.length ? `${p.diretto ? 'dico' : 'arriva'} «${N}»: si sveglia ${[...new Set(svegli)].join(' e ')}`
+        : occupati.length ? `${p.diretto ? 'dico' : 'arriva'} «${N}», ma ${[...new Set(occupati)].join(' e ')} ` +
                             'sta ancora facendo quello di prima'
-        : `arriva «${N}», ma non lo ascolta nessuno`,
-        desti ? `manda ${N}` : 'grida nel vuoto')
+        : p.diretto ? `dico «${N}», ma non mi vede nessuno` : `arriva «${N}», ma non lo ascolta nessuno`,
+        desti ? `manda ${N}` : (p.diretto ? 'parla a vuoto' : 'grida nel vuoto'))
+    }
+  }
+
+  /* ── LA CODA DEI CONGEGNI ──
+     Stesso principio dei segnali qui sopra, e per lo stesso motivo: un
+     comando mandato ADESSO arriva al battito DOPO. Senza, una leva che
+     ne comanda un'altra che rimanda un comando alla prima girerebbe
+     nello stesso istante all'infinito; così invece si rimbalzano un
+     messaggio al giro, e si vede — non si pianta. */
+  if (m.comandiPendenti.length) {
+    agisce = true
+    const partiti = m.comandiPendenti; m.comandiPendenti = []
+    for (const p of partiti) {
+      const Nmitt = p.mittente.nomeIn(m)
+      const chiFinto = { id: p.mittente.id, x: p.mittente.x, y: p.mittente.y,
+                         fazione: null, emoji: p.mittente.em }
+      const filo = { nome: 'congegni', i: 0, ordine: { verbo: 'premi', complemento: p.a } }
+      const dest = elementoConId(m, p.a)
+      /* ── OGNI CONSEGNA LASCIA UNA RIGA COL MITTENTE ──
+         Il rischio vero di un modello a eventi è l'azione a distanza:
+         una porta che si apre e sullo schermo non c'è nessuno che
+         l'ha aperta. Qui la riga la scrive chi ha mandato il comando,
+         non chi lo riceve — è la leva o il totem che «dice», la porta
+         che ascolta. */
+      if (!dest || !dest.accetta(p.cmd)) {
+        nota(m, filo, chiFinto, 'no', `${Nmitt} manda «${p.cmd}» a «${p.a}», ma lì non c'è niente che lo ascolti`,
+             'aziona un congegno')
+        continue
+      }
+      const ris = dest.ricevi(p.cmd, null, { m, f: filo, congegno: true })
+      if (ris && (ris.esito === 'fatto' || ris.esito === 'lavora')) {
+        const Ndest = dest.nomeIn(m)
+        nota(m, filo, chiFinto, 'fa', `${Nmitt} dice a ${Ndest}: ${p.cmd}`, `${Nmitt} aziona ${Ndest}`)
+      }
+      /* 'subito' — era già fatto — non lascia riga, come un `apri` su
+         una porta già aperta: non è successo niente di nuovo */
     }
   }
   if (m.finita) return
@@ -1529,6 +1624,13 @@ function dove (m, u, C) {
     default: return null
   }
 }
+/* un elemento comandabile, qualunque famiglia sia: la coda dei
+   congegni (`m.comandiPendenti`) non sa se sta parlando a una porta,
+   una leva o un totem — lo chiede qui, e chi risponde decide da sé
+   cosa fare del comando (`ricevi`, §8.2 del piano) */
+function elementoConId (m, id) {
+  return (m.porte && m.porte[id]) || (m.leve && m.leve[id]) || (m.totem && m.totem[id]) || null
+}
 const MOBILE = { unita: 1, fazione: 1 }
 /* «essere a portata»: sulla cella o attaccati. È la precondizione di
    tutte le azioni, ed è la ragione per cui prima si dice `vai`. */
@@ -1650,6 +1752,24 @@ function fai (m, f, u, o) {
       return esitoOrdine(m, f, u, pt.ricevi('apri', u, { m, f }))
     }
 
+    /* ── PREMERE UN CONGEGNO CAMMINA, ESATTAMENTE COME APRIRE ──
+       Il prerequisito che conta non è la posizione — è arrivarci — e
+       ci si arriva da soli, come per `apri` e `prendi`. Cosa succede
+       DOPO (scatta subito, o conta e basta) lo decide il congegno: una
+       leva e un totem rispondono in modo diverso allo stesso comando. */
+    case 'premi': {
+      const cg = elementoConId(m, C.id)
+      if (!cg) return salta(m, f, u, `${N} non c'è più`)
+      if (!aPortata(u, cg)) {
+        const r = verso(m, u, cg.x, cg.y)
+        if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
+        f.st.fermo = 0
+        nota(m, f, u, 'fa', `vado a premere ${N}`, 'va verso ' + VERSO[u.dir])
+        return 'lavora'
+      }
+      return esitoOrdine(m, f, u, cg.ricevi('premi', u, { m, f }))
+    }
+
     case 'attacca': {
       let t = f.st.bersaglio ? m.perId[f.st.bersaglio] : null
       if (t && !t.viva) t = null
@@ -1730,6 +1850,20 @@ function fai (m, f, u, o) {
          stessa lista dei gridi: una cosa sola, un disegno solo. */
       m.allarmi.push({ x: u.x, y: u.y, seg: C.id, da: u.id })
       nota(m, f, u, 'fa', `suono «${N}»`, 'fa un segnale')
+      return 'fatto'
+    }
+
+    /* ── PARLA: LA CHIAMATA, NON IL GRIDO ──
+       Stessa coda di `suona` (`m.pendenti`, consegnata al battito
+       dopo), ma `diretto: true` dice alla consegna di guardare CHI IL
+       MITTENTE VEDE in quel momento, non chi sta semplicemente
+       ascoltando quel segnale ovunque sia sulla mappa. Non fa rumore
+       (`rumore` non c'è) e non chiama chi accorre: è una parola detta
+       a chi hai davanti, non un allarme. */
+    case 'parla': {
+      m.pendenti.push({ seg: C.id, da: u.id, x: u.x, y: u.y, diretto: true })
+      m.eventi.push('parla')
+      nota(m, f, u, 'fa', `dico «${N}»`, 'parla sottovoce')
       return 'fatto'
     }
 
@@ -1849,6 +1983,8 @@ export function testoCond (mondo, c) {
     case 'vivo': t = `${N} è in piedi`; break
     case 'hai': t = `hai ${N}`; break
     case 'aperta': t = `${N} è aperto`; break
+    case 'premuto': t = `${N} è stata premuta`; break
+    case 'almeno': t = `${N} è almeno a ${c.n || 0}`; break
     case 'segnale': t = `è arrivato «${N}»`; break
     case 'qui': t = `${nomeDi(mondo, c.chi)} è a ${N}`; break
     default: t = 'sempre'
@@ -1856,6 +1992,7 @@ export function testoCond (mondo, c) {
   if (!c.non) return t
   return t.replace(' è in piedi', ' è fuori combattimento').replace(/^vedi /, 'non vedi ')
           .replace(/^hai /, 'non hai ').replace(' è aperto', ' è chiuso')
+          .replace(' è stata premuta', ' non è stata premuta')
           .replace(/^è arrivato/, 'non è arrivato').replace(' è a ', ' non è a ')
 }
 export function descrivi (mondo, o, secco) {
