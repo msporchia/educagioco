@@ -127,6 +127,11 @@
    senza la chiave in mano, e chi non ha mai visto qualcuno non sa
    dove sia. Sono prerequisiti di stato, non di posizione.
    ═══════════════════════════════════════════════════════════════════ */
+/* le cose passive del campo — porte, oggetti, posti — sono `Elemento`:
+   non camminano, e sanno rispondere da sole a un comando. Il mondo qui
+   dentro le costruisce e le interroga; il COME si comportano sta in
+   `motore/generale/`, non in questo `switch`. */
+import { Porta, Oggetto, Posto } from './generale/elementi/indice.js'
 
 /* oltre questi passi la scena è in giro a vuoto: si chiude e lo dice */
 export const PASSI_MASSIMI = 300
@@ -352,17 +357,17 @@ export function creaMondo(livello, variante) {
   const porte = {}
   for (const k in (livello.porte || {})) {
     const p = patch(livello.porte[k], (v.porte || {})[k])
-    porte[k] = { nome: k, x: p.x, y: p.y, chiave: p.chiave || null,
-                 forza: p.forza || 0, rumore: p.rumore || null, hafattoRumore: false,
-                 aperta: !!p.aperta, iniziale: !!p.aperta }
+    porte[k] = new Porta(k, p)
     celle[p.y][p.x].porta = k
   }
   const posti = {}
-  for (const k in (livello.posti || {})) posti[k] = patch(livello.posti[k], (v.posti || {})[k])
+  for (const k in (livello.posti || {}))
+    posti[k] = new Posto(k, patch(livello.posti[k], (v.posti || {})[k]))
   const m = {
     livello, variante: v.nome || '', ordiniScena: v.ordini || null,
     w, h, celle, porte, posti,
-    oggetti: (livello.oggetti || []).map(o => ({ ...patch(o, (v.oggetti || {})[o.nome]), preso: null })),
+    oggetti: (livello.oggetti || [])
+      .map(o => new Oggetto(o.nome, patch(o, (v.oggetti || {})[o.nome]))),
     segnali: [...(livello.segnali || [])],
     unita: livello.unita.map(u0 => {
       const u = patch(u0, (v.unita || {})[u0.id])
@@ -389,12 +394,33 @@ export function creaMondo(livello, variante) {
   m.caselle = []
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
     if (!celle[y][x].muro) m.caselle.push(x + ',' + y)
+  assegnaSigilli(m)
   m.cose = coseDi(m)
   return m
 }
 
 const etichetta = (m, k) => ((m.livello.nomi || {})[k]) || k
 const vive = m => m.unita.filter(u => u.viva)
+
+/* ── IL SIGILLO SI DERIVA, NON SI DICHIARA ──
+   La porta sa già qual è la sua chiave; qui si assegna un colore a ogni
+   chiave DISTINTA, nell'ordine in cui compare — e lo stesso colore va
+   alla porta e, se esiste come oggetto da raccogliere, alla chiave
+   stessa. Chi scrive il livello non deve tenere allineate due
+   dichiarazioni, e non può sbagliarsi: è la risposta al problema dei
+   lucchetti tutti gialli, che a schermo non si distinguono. */
+const SIGILLI = ['rosso', 'blu', 'verde', 'giallo', 'viola', 'arancio']
+function assegnaSigilli (m) {
+  const colore = {}
+  let n = 0
+  for (const k in m.porte) {
+    const pt = m.porte[k]
+    if (!pt.chiave) continue
+    if (!colore[pt.chiave]) colore[pt.chiave] = SIGILLI[n++ % SIGILLI.length]
+    pt.sigillo = colore[pt.chiave]
+  }
+  m.oggetti.forEach(o => { if (colore[o.nome]) o.sigillo = colore[o.nome] })
+}
 
 /* Quanti dei SUOI sono rimasti sul campo. Non fa perdere la battaglia —
    a volte mandare avanti qualcuno è la mossa giusta — ma costa una
@@ -404,16 +430,16 @@ export const perdute = m => m.unita.filter(u => !u.viva && u.fazione === m.mia).
 
 /* ── le cose del mondo, ognuna col suo tipo ──
    Il tipo sta nei dati: da lì discende quali verbi la accettano, quali
-   condizioni genera, con che icona si vede. Una cosa nuova è una riga. */
+   condizioni genera, con che icona si vede. Porte, posti e oggetti sono
+   `Elemento`: dichiarano da soli tipo e icona, e una cosa nuova di
+   quella famiglia non aggiunge più una riga qui — la aggiunge solo se
+   è una famiglia NUOVA (come lo erano finora unità, fazioni, segnali). */
 function coseDi (m) {
   const c = {}
   const agg = (id, tipo, nome, em) => { if (id != null && !c[id]) c[id] = { id, tipo, nome, em } }
-  for (const k in m.porte) agg(k, 'porta', etichetta(m, k), '🚪')
-  for (const k in m.posti) agg(k, 'posto', etichetta(m, k), '📍')
-  /* l'icona la dichiara l'oggetto: prima erano tutte una chiave, e la
-     lanterna del primo capitolo si presentava come un mazzo di chiavi.
-     Chi non la dichiara resta una chiave, che è il caso più comune. */
-  m.oggetti.forEach(o => agg(o.nome, 'oggetto', etichetta(m, o.nome), o.em || o.emoji || '🔑'))
+  for (const k in m.porte) agg(k, m.porte[k].tipo, etichetta(m, k), m.porte[k].em)
+  for (const k in m.posti) agg(k, m.posti[k].tipo, etichetta(m, k), m.posti[k].em)
+  m.oggetti.forEach(o => agg(o.nome, o.tipo, etichetta(m, o.nome), o.em))
   m.unita.forEach(u => agg(u.id, 'unita', u.nome || u.id, u.emoji))
   for (const k in m.livello.fazioni) agg(k, 'fazione', etichetta(m, k), '🚩')
   m.segnali.forEach(k => agg(k, 'segnale', ilSegnale(k).nome, ilSegnale(k).em))
@@ -579,7 +605,7 @@ function grezza (m, io, c) {
       const u = c.chi ? m.perId[c.chi] : io
       return !!(u && u.zaino.includes(chi))
     }
-    case 'aperta': return !!(m.porte[chi] && m.porte[chi].aperta)
+    case 'aperta': return !!(m.porte[chi] && m.porte[chi].chiedi('aperta'))
     case 'segnale': return m.segnaliMandati.includes(chi)
     case 'qui': {
       const u = c.chi ? m.perId[c.chi] : io
@@ -974,11 +1000,11 @@ export function avvia (mondo, piano) {
   m.passi = 0; m.finita = false; m.vinto = false; m.motivo = ''; m.colpevole = null
   m.segnaliMandati = []; m.pendenti = []; m.eventi = []; m.traccia = []
   m.versioneMappa = 0; m.ascolti = []; m.colpi = []; m.allarmi = []
-  for (const k in m.porte) {
-    m.porte[k].aperta = m.porte[k].iniziale
-    m.porte[k].hafattoRumore = false          // si ricomincia da capo, silenzio compreso
-  }
-  m.oggetti.forEach(o => { o.preso = null })
+  /* rigiocare la scena: ogni elemento si rimette com'era da sé — è il
+     patto di `azzera()`, e un elemento nuovo non può dimenticarselo */
+  for (const k in m.porte) m.porte[k].azzera()
+  for (const k in m.posti) m.posti[k].azzera()
+  m.oggetti.forEach(o => o.azzera())
   m.unita.forEach(u => {
     u.x = u.x0; u.y = u.y0; u.vita = u.vitaMax; u.viva = true; u.zaino = []
     u.ordineOra = null; u._mk = null; u.dir = 2; u.visti = {}; u.attesa = null
@@ -1474,6 +1500,24 @@ function salta (m, f, u, testo, fatto) {
   return 'salta'
 }
 
+/* ── TRADURRE LA RISPOSTA DI UN ELEMENTO ──
+   `Elemento.ricevi` risponde con `{ esito, dice, fatto }`, riusando il
+   vocabolario di `passoFilo` (fatto/lavora/salta/attesa/subito) ma
+   senza sapere come si scrive una riga di registro — quello lo sa solo
+   il motore, che qui traduce l'esito nella chiamata giusta a `nota`,
+   `salta` o `attende`. È il punto in cui il mondo torna a parlare con
+   `fai()`, dopo aver deciso da sé cosa fare. */
+function esitoOrdine (m, f, u, ris) {
+  if (!ris) return 'subito'
+  switch (ris.esito) {
+    case 'fatto': nota(m, f, u, 'fa', ris.dice, ris.fatto); return 'fatto'
+    case 'lavora': nota(m, f, u, 'fa', ris.dice, ris.fatto); return 'lavora'
+    case 'salta': return salta(m, f, u, ris.dice, ris.fatto)
+    case 'attesa': return attende(m, f, u, ris.dice, ris.limite)
+    default: return 'subito'
+  }
+}
+
 /* muove di una cella verso (bx,by) */
 function verso (m, u, bx, by) {
   if (u.x === bx && u.y === by) return 'arrivato'
@@ -1485,16 +1529,16 @@ function verso (m, u, bx, by) {
   return u.x === bx && u.y === by ? 'arrivato' : 'passo'
 }
 
-/* dov'è una cosa, adesso */
+/* dov'è una cosa, adesso: per un `Elemento` lo decide lui — la porta sta
+   ferma, un oggetto preso segue chi lo tiene */
 function dove (m, u, C) {
   switch (C.tipo) {
-    case 'posto': return m.posti[C.id]
-    case 'porta': return m.porte[C.id]
+    case 'posto': return m.posti[C.id].dove(m)
+    case 'porta': return m.porte[C.id].dove(m)
     case 'cella': return { x: C.x, y: C.y }
     case 'oggetto': {
       const o = m.oggetti.find(z => z.nome === C.id)
-      if (!o) return null
-      return o.preso ? (m.perId[o.preso] && m.perId[o.preso].viva ? m.perId[o.preso] : null) : o
+      return o ? o.dove(m) : null
     }
     case 'unita': return m.perId[C.id] && m.perId[C.id].viva ? m.perId[C.id] : null
     case 'fazione': {
@@ -1510,7 +1554,7 @@ const MOBILE = { unita: 1, fazione: 1 }
 /* «essere a portata»: sulla cella o attaccati. È la precondizione di
    tutte le azioni, ed è la ragione per cui prima si dice `vai`. */
 const arrivato = (m, u, C, t) =>
-  MOBILE[C.tipo] || (C.tipo === 'porta' && !m.porte[C.id].aperta)
+  MOBILE[C.tipo] || (C.tipo === 'porta' && !m.porte[C.id].chiedi('aperta'))
     ? aPortata(u, t) : (u.x === t.x && u.y === t.y)
 
 function fai (m, f, u, o) {
@@ -1599,7 +1643,6 @@ function fai (m, f, u, o) {
       const og = m.oggetti.find(z => z.nome === C.id)
       if (!og) return salta(m, f, u, `${N} non c'è più`)
       if (og.preso === u.id) return 'subito'
-      if (og.preso) return salta(m, f, u, `${N} ce l'ha già qualcun altro`)
       if (!aPortata(u, og)) {
         const r = verso(m, u, og.x, og.y)
         if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
@@ -1607,14 +1650,13 @@ function fai (m, f, u, o) {
         nota(m, f, u, 'fa', `vado a prendere ${N}`, 'va verso ' + VERSO[u.dir])
         return 'lavora'
       }
-      og.preso = u.id; u.zaino.push(C.id); m.eventi.push('presa')
-      nota(m, f, u, 'fa', `presa ${N}`, 'raccoglie qualcosa')
-      return 'fatto'
+      /* è a portata: da qui in poi decide l'oggetto, non questo switch */
+      return esitoOrdine(m, f, u, og.ricevi('prendi', u, { m, f }))
     }
 
     case 'apri': {
       const pt = m.porte[C.id]
-      if (pt.aperta) return 'subito'
+      if (pt.chiedi('aperta')) return 'subito'
       if (!aPortata(u, pt)) {
         const r = verso(m, u, pt.x, pt.y)
         if (r === null) return attende(m, f, u, `non riesco ad arrivare a ${N}: la strada è chiusa`)
@@ -1622,45 +1664,11 @@ function fai (m, f, u, o) {
         nota(m, f, u, 'fa', `vado ad aprire ${N}`, 'va verso ' + VERSO[u.dir])
         return 'lavora'
       }
-      if (pt.chiave && !u.zaino.includes(pt.chiave)) {
-        /* ── SFONDARE COSTA TEMPO ──
-           Una porta può dichiarare `forza: n`: senza la chiave si apre
-           lo stesso, ma ci vogliono n battiti di spallate. Quel tempo
-           non è un dettaglio di colore — è la FINESTRA. Un nemico che
-           entra in un istante non si può fermare da nessun posto che
-           non sia la porta stessa; uno che ci mette sei battiti si può
-           raggiungere, e allora girare intorno alle mura comincia ad
-           avere senso. Chi ha la chiave non forza niente: apre. */
-        if (!pt.forza)
-          return salta(m, f, u, `${N} è chiuso a chiave, e ${etichetta(m, pt.chiave)} non ce l'ho`,
-                       'spinge il portone')
-        f.st.spinte = (f.st.spinte || 0) + 1
-        f.st.fermo = 0
-        /* ── E SFONDARE FA RUMORE ──
-           Il rumore in questo gioco è già una cosa vera: chi le prende
-           chiama i suoi, e quel grido è un segnale come tutti gli altri
-           — si può ascoltare con un «quando senti» e si vede partire
-           dalla mappa. Una spallata a un portone non è più silenziosa
-           di una spada: la porta dichiara `rumore: '<segnale>'`, e da
-           quel momento chi era in ascolto sa non solo CHE qualcuno sta
-           entrando, ma anche DA DOVE. Parte una volta sola: un fracasso
-           che si ripete a ogni spinta trascinerebbe mezza mappa avanti
-           e indietro, come il grido. */
-        if (pt.rumore && !pt.hafattoRumore) {
-          pt.hafattoRumore = true
-          m.pendenti.push({ seg: pt.rumore, da: u.id, x: pt.x, y: pt.y, rumore: true })
-          m.eventi.push('allarme')
-          m.allarmi.push({ x: pt.x, y: pt.y, seg: pt.rumore, da: u.id })
-        }
-        if (f.st.spinte < pt.forza) {
-          nota(m, f, u, 'fa', `sto sfondando ${N}`, 'spinge il portone')
-          return 'lavora'
-        }
-      }
-      pt.aperta = true; m.versioneMappa++; m.unita.forEach(z => { z._mk = null })
-      m.eventi.push('apre')
-      nota(m, f, u, 'fa', `aperto ${N}`, `apre ${N}`)
-      return 'fatto'
+      /* è a portata: la serratura, le spallate, il fracasso — la porta
+         li conosce, questo switch no. `ctx.f` porta il filo di CHI sta
+         spingendo, perché le spallate si contano per unità: due che
+         spingono la stessa porta in fili diversi non sommano le forze. */
+      return esitoOrdine(m, f, u, pt.ricevi('apri', u, { m, f }))
     }
 
     case 'chiudi': {
@@ -1825,7 +1833,7 @@ function fai (m, f, u, o) {
       if (C.tipo === 'attimo') { nota(m, f, u, 'fa', 'aspetto un momento', 'resta fermo'); return 'fatto' }
       const pt = m.porte[C.id]
       if (!pt) return salta(m, f, u, `${N} non è una cosa che posso stare a guardare`)
-      if (pt.aperta) {
+      if (pt.chiedi('aperta')) {
         nota(m, f, u, 'fa', `${N} è aperto: riparto`, 'si rimette in moto')
         return 'fatto'
       }

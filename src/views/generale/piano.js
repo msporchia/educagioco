@@ -125,6 +125,11 @@ export function aggiungiIn (ordini, perc, o) {
     ordini.push(o)
     return [ordini.length - 1]
   }
+  if (o.blocco === 'routine') {
+    if (!o.corpo) o.corpo = []
+    ordini.push(o)
+    return [ordini.length - 1]
+  }
   const l = listaIn(ordini, perc) || ordini
   l.push(o)
   const dove = listaIn(ordini, perc) ? perc : []
