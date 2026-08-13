@@ -50,7 +50,17 @@ const tuttiIFile = dove => existsSync(dove)
       const pieno = resolve(dove, x)
       /* i moduli con cui i livelli si SCRIVONO non sono livelli, ed è
          giusto che non lo siano: stanno in questo elenco perché il
-         banco non li scambi per uno scenario rotto */
+         banco non li scambi per uno scenario rotto.
+         ── E NON SONO SOLO QUELLI DELLA RADICE ──
+         Una campagna può avere il suo **mondo** in un file a parte —
+         `cortile/casa.js` è la mappa di Rosa più le fabbriche di chi ci
+         abita, e la importano tutti i suoi episodi. Non esporta uno
+         scenario perché non è uno scenario, e il banco lo bocciava con
+         «non esporta niente che assomigli a un livello»: un guasto che
+         non era un guasto, cioè la cosa peggiore che un banco possa
+         dire. Un file così lo si riconosce da quello che dichiara di
+         sé (`export const mondo = true`), non dal nome — il nome
+         cambia con la prossima campagna. */
       const SUPPORTO = new Set(['scorciatoie.js', 'livello.js', 'scrivi.js'])
       /* `todo/` è la cartella delle cinque storie vecchie, che aspettano
          di essere riscritte nel formato nuovo: il banco non le prova,
@@ -63,7 +73,9 @@ const tuttiIFile = dove => existsSync(dove)
 
 if (existsSync(CARTELLA))
   for (const f of tuttiIFile(CARTELLA)) {
-    const liv = estrai(await import(pathToFileURL(f).href))
+    const dentro = await import(pathToFileURL(f).href)
+    if (dentro.mondo === true) continue          // è il mondo di una campagna, non uno scenario
+    const liv = estrai(dentro)
     const corto = f.slice(CARTELLA.length + 1).replace(/\.js$/, '')
     if (liv) livelli.push({ nome: corto, liv })
     else controlla(`${corto}: esporta un livello`, false, 'non esporta niente che assomigli a un livello')

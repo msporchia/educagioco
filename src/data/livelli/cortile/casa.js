@@ -15,6 +15,17 @@
         aia ──┘        └── orto     le uova di là, la verdura di qua
               stagno            dove Bibi passa le giornate
 
+   ── I DUE IMBOCCHI ──
+   L'aia e l'orto sono due stanze sotto il cortile, e per un pezzo sono
+   state **murate su tutti e quattro i lati**: il disegno qui sopra le
+   attaccava al cortile, la mappa no. Non se n'era accorto nessuno
+   perché il guasto non si vede leggendo — si vede solo giocando, e
+   infatti l'ha trovato il banco, che a «La colazione» rispondeva
+   «Rosa è piantato su: non riesco ad arrivare a le uova, la strada è
+   chiusa». Adesso ognuna ha il suo imbocco sulla riga di mezzo, ed è
+   una casella sola per parte: si passa di lì, e da nessun'altra
+   parte.
+
    ── COSA C'È, E PERCHÉ ──
    · il **tavolo** in cucina è dove finisce la roba: è un `posto`, e un
      posto adesso ha una faccia (`elementi/posto.js`), quindi si
@@ -34,6 +45,13 @@
    storia. Un episodio nuovo è un file, non una mappa.
    ═══════════════════════════════════════════════════════════════════ */
 import { campo, cose, chi, fai, se, quando, reagisce, dove } from '../scrivi.js'
+
+/* ── QUESTO FILE NON È UNO SCENARIO, ED È LUI A DIRLO ──
+   Il banco raccoglie i livelli dalla cartella e prova tutto quello che
+   trova: senza questa riga bocciava la casa di Rosa con «non esporta
+   niente che assomigli a un livello», che è un guasto che non è un
+   guasto. Lo dichiara il file, non un elenco di nomi tenuto altrove. */
+export const mondo = true
 
 /* ═══════════ chi ci abita ═══════════ */
 export const rosa = () => chi.nostro('rosa', 'Rosa',
@@ -94,7 +112,7 @@ export const MAPPA = [
   '##|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|##',
   '##|..|..|..|..|..|..|SE|PZ|..|..|..|..|..|..|..|BM|..|..|##',
   '##|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|##',
-  '##|##|##|##|##|..|..|..|..|..|..|..|..|..|##|##|##|##|##|##',
+  '##|##|##|..|##|..|..|..|..|..|..|..|..|..|##|..|##|##|##|##',
   '##|UO|ND|..|##|..|..|..|..|..|..|..|..|..|##|..|VE|FL|..|##',
   '##|..|..|..|##|..|..|..|RV|BI|..|..|..|..|##|..|..|..|..|##',
   '##|##|##|##|##|##|##|##|##|##|##|##|##|##|##|##|##|##|##|##',

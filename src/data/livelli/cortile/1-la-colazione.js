@@ -48,16 +48,25 @@ const TAVOLO = tavolo(), POZZO = pozzo(), NIDO = nido()
 const BIBI = bibi(), VERDURA = verdura(), FILARE = filare(), RIVA = riva()
 const P_CASA = portaCasa(), P_DISPENSA = portaDispensa()
 
-/* ── BOMBO ASPETTA, POI PROVA ──
-   Non è un agguato: è un cane che gira per il cortile e a un certo
-   punto ha fame. Diciotto battiti sono il tempo di due viaggi e mezzo:
-   chi chiude la porta appena ha finito di uscire e rientrare ce la fa
-   con margine, chi se ne ricorda alla fine lo trova già dentro.
+/* ── BOMBO ASPETTA CHE CI SIA DA RUBARE ──
+   Non è un agguato: è un cane che gira per il cortile e va dove sente
+   odore di roba buona. Aspettava **diciotto battiti** e poi partiva, e
+   quel numero era tarato su un piano che nel frattempo era cambiato:
+   arrivava mentre la farina era ancora chiusa in dispensa o in mano a
+   Rosa, non riusciva a prenderla, e dopo un po' si arrendeva. Risultato,
+   il cane non entrava mai — e chiudere la porta, che è la lezione di
+   questo episodio, non serviva a niente: il banco lo diceva («senza
+   "chiudi portaCasa" vince lo stesso»), ed era una lezione che nessuno
+   avrebbe imparato giocando.
+   Adesso aspetta **la cosa, non il tempo**: parte quando la farina è
+   sul tavolo, cioè quando c'è davvero qualcosa da portar via. Un numero
+   di battiti è una taratura che scade a ogni ritocco del piano; una
+   condizione no.
    Se la porta è chiusa non entra: non la sfonda, resta fuori — e la
    riga «non riesco ad arrivare» si legge nel registro come la
    conferma che il piano ha retto. */
 const BOMBO = bombo([
-  fai.aspettaUnPo(18),
+  fai.aspettaChe(se.qui(FARINA, TAVOLO)),
   fai.prendi(FARINA),
 ])
 
@@ -99,17 +108,20 @@ export const COLAZIONE = livello({
 
   par: 12,
   soluzioni: [
-    /* DODICI ORDINI, TRE TAPPE UGUALI E UNA GUARDIA.
-       La porta si chiude **subito dopo essere rientrati col primo
-       carico**: da lì in poi la casa è al sicuro e i due viaggi che
-       restano non hanno fretta. */
-    { nome: 'tre giri, e la porta chiusa', piano: { rosa: [
-      fai.prendi(CHIAVE), fai.apri(P_DISPENSA),
-      fai.prendi(FARINA), fai.vai(TAVOLO), fai.posa(FARINA),
+    /* DODICI ORDINI, DUE VIAGGI E UNA GUARDIA. */
+    { nome: "prima quello di fuori, poi la farina, e chiudi", piano: { rosa: [
+      /* ── L'ORDINE DEI VIAGGI È IL LIVELLO ──
+         Bombo si muove quando c'è qualcosa da rubare, cioè quando la
+         farina è sul tavolo. Allora la farina si porta **per ultima**:
+         quando lui parte, Rosa è già dentro e le resta un ordine solo
+         da dare — chiudere. Fatta al contrario, si esce di casa con la
+         farina in tavola e un cane che ha già cominciato a camminare. */
       fai.apri(P_CASA),
-      fai.prendi(UOVA), fai.vai(TAVOLO), fai.posa(UOVA),
+      fai.prendi(UOVA), fai.prendi(SECCHIO),
+      fai.vai(TAVOLO), fai.posa(UOVA), fai.posa(SECCHIO),
+      fai.prendi(CHIAVE), fai.apri(P_DISPENSA), fai.prendi(FARINA),
+      fai.vai(TAVOLO), fai.posa(FARINA),
       fai.chiudi(P_CASA),
-      fai.prendi(SECCHIO), fai.vai(TAVOLO), fai.posa(SECCHIO),
     ] } },
   ],
 
