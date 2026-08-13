@@ -1,4 +1,5 @@
 import { Elemento } from '../elemento.js'
+import { Esito } from '../azioni/esiti.js'
 
 /* ═══════════════════════════════════════════════════════════════════
    IL TOTEM — la variabile che si vede
@@ -42,18 +43,18 @@ export class Totem extends Elemento {
 
   ricevi (cmd, chi, ctx) {
     if (cmd !== 'premi') return null
-    if (this.mandato) return { esito: 'subito' }
-    const N = this.nomeIn(ctx.m)
+    if (this.mandato) return { esito: Esito.finitoSubito() }
+    const N = this.nomeIn(ctx.mondo)
     this.n++
     if (this.n >= this.tacche) {
       this.mandato = true
       /* stesso principio della leva: il comando arriva al battito
          dopo, dalla coda dei congegni */
       for (const id of this.collegata)
-        ctx.m.comandiPendenti.push({ cmd: 'apri', a: id, mittente: this })
-      return { esito: 'fatto', dice: `tocco ${N}: arrivo a ${this.n} — scatta`, fatto: `tocca ${N}` }
+        ctx.mondo.comandiPendenti.push({ cmd: 'apri', a: id, mittente: this })
+      return { esito: Esito.finito(), penso: `tocco ${N}: arrivo a ${this.n} — scatta`, siVede: `tocca ${N}` }
     }
-    return { esito: 'fatto', dice: `tocco ${N}: adesso è a ${this.n} su ${this.tacche}`, fatto: `tocca ${N}` }
+    return { esito: Esito.finito(), penso: `tocco ${N}: adesso è a ${this.n} su ${this.tacche}`, siVede: `tocca ${N}` }
   }
 
   /* IN CELLE, NON UN NUMERO: quante tacche accese e quante in tutto, così

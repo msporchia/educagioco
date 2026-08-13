@@ -1,4 +1,5 @@
 import { Elemento } from '../elemento.js'
+import { Esito } from '../azioni/esiti.js'
 
 /* ═══════════════════════════════════════════════════════════════════
    LA LEVA — il primo congegno: la si preme, e lei comanda ad altri
@@ -44,15 +45,15 @@ export class Leva extends Elemento {
 
   ricevi (cmd, chi, ctx) {
     if (cmd !== 'premi') return null
-    if (this.premuta) return { esito: 'subito' }
+    if (this.premuta) return { esito: Esito.finitoSubito() }
     this.premuta = true
-    const N = this.nomeIn(ctx.m)
+    const N = this.nomeIn(ctx.mondo)
     /* il comando parte ma non arriva subito: la coda dei congegni si
        consegna a fine passo, esattamente come quella dei segnali —
        vedi il commento accanto a `m.comandiPendenti` in generale.js */
     for (const id of this.collegata)
-      ctx.m.comandiPendenti.push({ cmd: 'apri', a: id, mittente: this })
-    return { esito: 'fatto', dice: `premo ${N}`, fatto: `preme ${N}` }
+      ctx.mondo.comandiPendenti.push({ cmd: 'apri', a: id, mittente: this })
+    return { esito: Esito.finito(), penso: `premo ${N}`, siVede: `preme ${N}` }
   }
 
   /* in celle, un solo fatto: se è già stata premuta. Il disegno del
