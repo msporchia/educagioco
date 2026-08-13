@@ -49,7 +49,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { capsula, tondo, mescola } from './comune.js'
 import { tavolozzaStato, pensiero, botta } from './segni.js'
-import { RESA } from './resa.js'
+/* per disegnare in mano quello che uno ha raccolto. Nessun ciclo: gli
+   oggetti non sanno che esistono le persone, e non le disegnano mai. */
+import { PITTORI_OGGETTI } from './oggetti/indice.js'
 
 const CICLO = [0, 1, 0, -1]              // tre pose, quattro fotogrammi
 
@@ -70,7 +72,6 @@ const CICLO = [0, 1, 0, -1]              // tre pose, quattro fotogrammi
    `frazione` la mette in scena chi sa quanto manca all'arrivo — nel
    Generale è il campo, che è l'unico a sapere cos'è un pixel. */
 function dondolio(passo, frazione) {
-  if (!RESA.camminata) return CICLO[((passo | 0) % 4 + 4) % 4]
   return Math.sin(((passo | 0) + (frazione || 0)) * Math.PI / 2)
 }
 
@@ -86,7 +87,7 @@ function dondolio(passo, frazione) {
    invece di finire di netto. Al buio pesto non c'è ombra da fare: non
    c'è luce che la getti. */
 function ombra(p, x, y, s, largo) {
-  const L = (RESA.ombra && p.luce) ? p.luce(x, y) : null
+  const L = p.luce ? p.luce(x, y) : null
   if (!L || !L.fuoco || L.forza < 0.03) {
     p.ellisse(x, y, largo * s, largo * 0.37 * s, '#00000032')
     return
@@ -122,7 +123,6 @@ function ombra(p, x, y, s, largo) {
    perché è quello che appoggia per terra e dà alla figura il suo peso.
    Sopra, il risvolto in cima e un filo di luce sulla punta. */
 function stivale(q, x, y, r, s, colore, scuro, bordo, sp, verso, materia) {
-  if (!RESA.dettaglio) { tondo(q, x, y, r * 2.4 * s, r * 1.3 * s, colore, bordo, sp, materia); return }
   const l = r * s
   // il collo del piede, allungato nel verso in cui si guarda
   capsula(q, x + verso * l * 0.5, y - l * 0.5, l * 1.7, l * 0.95, l * 0.6, colore, bordo, sp, materia)
@@ -258,7 +258,22 @@ export function persona(p, cosa, S, cfg) {
     arti(q, s, C, d, sw, cfg)
     cfg.tronco(q, s, C, d, sw, cfg, stato)
     const mani = braccia(q, s, C, d, sw, cfg, alza)
-    if (cfg.arma) cfg.arma(q, s, C, d, sw, mani, stato)
+    /* ── QUELLO CHE HA IN MANO SI VEDE ──
+       `cfg.arma` è quello che quel personaggio impugna *sempre*: fa
+       parte di com'è fatto, come il mantello. `cosa.mano` invece è
+       quello che ha **raccolto adesso** — e sono due cose diverse, con
+       due conseguenze diverse: una ladra senza i suoi pugnali è
+       disarmata e si vede, e quando li ritrova si vede anche quello.
+       `cosa.disarmato` toglie l'arma di serie: è come si racconta a
+       colpo d'occhio che gliel'hanno portata via.
+       Il disegno sta alla mano destra, in scala ridotta: gli oggetti
+       sono dipinti per stare su una casella, e una casella è tre volte
+       una mano. */
+    if (cfg.arma && !cosa.disarmato) cfg.arma(q, s, C, d, sw, mani, stato)
+    if (cosa.mano && PITTORI_OGGETTI[cosa.mano] && mani.dx) {
+      const dritta = stato === 'lancia' ? -0.35 : 0.35
+      PITTORI_OGGETTI[cosa.mano](q, { x: mani.dx.x + 0.6 * s, y: mani.dx.y, ang: dritta }, s * 0.55)
+    }
     // di profilo la testa sta un dito più avanti del busto: è il segno
     // che dice «sta guardando di là» prima ancora della faccia
     q.in(d === 'dx' ? 0.9 * s : 0, (-15.4 - Math.abs(sw) * 0.7) * s,

@@ -7,7 +7,6 @@
    tutti gli ambienti: **il bordo è disegnato, la massa no**.
    ═══════════════════════════════════════════════════════════════════ */
 import { mescola, dado, rett, velo } from './comune.js'
-import { RESA } from './resa.js'
 import { MURI, DETTAGLI, semina } from './materiali/indice.js'
 import { tessuto as filaturaDi } from './tessuto.js'
 
@@ -203,7 +202,7 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
 
        Cade verso il basso perché la luce di questo gioco viene
        dall'alto, dappertutto e sempre. */
-  if (RESA.ombraMuri) {
+  {
     const lungo = sp * 1.15
     c.save()
     c.globalCompositeOperation = 'multiply'

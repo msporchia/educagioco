@@ -18,7 +18,6 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { MURA, SUOLO } from '../../src/grafica/materiali/pattern.js'
 import { AMBIENTI, NOMI_AMBIENTI } from '../../src/grafica/ambienti/indice.js'
-import { RESA, accendi } from '../../src/grafica/resa.js'
 
 const LATO = 36                  // la misura del gioco: si giudica lì
 const LARGO = 6, ALTO = 3        // celle per riquadro
@@ -119,12 +118,7 @@ export function avvia() {
       `${S.zoom.toFixed(1)}× · cella ${Math.round(LATO * S.zoom)} px`
     costruisci()
   })
-  document.getElementById('grana').addEventListener('change', e => {
-    accendi({ grana: e.target.checked }); costruisci()
-  })
-  accendi({ grana: true })
-  document.getElementById('grana').checked = true
   costruisci()
 }
 
-window.__catalogo = { RESA, accendi, S, costruisci }
+window.__catalogo = { S, costruisci }

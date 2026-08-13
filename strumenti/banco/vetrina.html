@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La vetrina del Generale</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     LA VETRINA — tutto il catalogo grafico, in fila, in un colpo solo
+
+     Nessun test del Generale guarda i pixel — è una scelta dichiarata
+     (vedi CLAUDE.md): gli scatti servono a un occhio umano e si chiedono
+     apposta con `--scatti`. Il rovescio è che una porta che si apre può
+     restare dipinta chiusa, o un totem a due tacche disegnarsi come se
+     fosse a zero, e nessun test se ne accorge finché non lo vede un
+     bambino. Questa pagina è la cartina di tornasole: ogni pittore di
+     `src/grafica/personaggi/` e `src/grafica/oggetti/`, in ogni stato che
+     sa disegnare, etichettato col nome con cui si nomina nei dati.
+
+     A DIFFERENZA di `strumenti/mappe/editor.html` **non si apre col
+     doppio click**. Quello ci riesce perché tira dentro le regole con
+     un <script> normale, senza `import`; qui servono i moduli veri di
+     `src/grafica/` — la stessa scelta già fatta da
+     `catalogo.html`, per lo stesso motivo: da `file://` i moduli non si
+     caricano (Chrome rifiuta anche `fetch` fra due file locali). Quindi
+     passa da Vite:
+
+         npm run vetrina              e si apre da solo
+         npm run vetrina -- --host    e si apre anche dal telefono
+
+     Non c'è niente di finto: chiama gli stessi `PITTORI` di
+     `grafica/generale.js` che usa `CampoLivello.vue`. Se qui una porta
+     viene bella, viene bella anche in partita.
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #10131a; --carta: #171b26; --riga: #262c3c;
+    --testo: #e6e9f2; --tenue: #8b93aa; --acceso: #ffcc55;
+    --rosso: #ff7a7a; --verde: #7fe0c0; --campo: #0d1424;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 26px 22px 70px; background: var(--fondo); color: var(--testo);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header { max-width: 1180px; margin: 0 auto 20px; }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  header p { margin: 4px 0; color: var(--tenue); max-width: 78ch; font-size: 13px; }
+  header code { background: #0009; padding: 1px 5px; border-radius: 3px; }
+
+  .comandi {
+    max-width: 1180px; margin: 0 auto 22px; display: flex; gap: 16px; align-items: center;
+    padding: 10px 14px; background: var(--carta); border: 1px solid var(--riga); border-radius: 8px;
+    font-size: 12.5px; color: var(--tenue); flex-wrap: wrap;
+  }
+  .comandi label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  main { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+
+  .riquadro {
+    border: 1px solid var(--riga); border-radius: 8px; padding: 14px 16px 16px; background: var(--carta);
+  }
+  .riquadro.avviso { border-color: #6b5a2a; background: #241f10; }
+  .riquadro.guasto { border-color: #6b2a2a; background: #241010; }
+  .riquadro h2 { margin: 0 0 8px; font-size: 15px; }
+  .riquadro > p { margin: 0 0 6px; color: var(--tenue); font-size: 12.5px; max-width: 90ch; }
+  .riquadro ul { margin: 6px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .riquadro li { margin: 3px 0; }
+  .riquadro code { background: #0006; padding: 0 4px; border-radius: 3px; }
+
+  section.gruppo { }
+  section.gruppo h2 {
+    font-size: 16px; margin: 0 0 3px; padding-bottom: 8px; border-bottom: 1px solid var(--riga);
+  }
+  section.gruppo > p.nota { margin: 6px 0 12px; color: var(--tenue); font-size: 12.5px; max-width: 90ch; }
+  h3.sotto {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--tenue);
+    margin: 16px 0 8px; font-weight: 600;
+  }
+  h3.sotto:first-of-type { margin-top: 6px; }
+
+  .strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+  figure { margin: 0; }
+  figure canvas { display: block; border-radius: 5px; background: var(--campo); }
+  figure.manca canvas { outline: 2px dashed var(--rosso); outline-offset: -2px; }
+  figcaption {
+    font: 11px/1.35 ui-monospace, Menlo, monospace; color: var(--tenue);
+    margin-top: 4px; max-width: 108px; text-align: center;
+  }
+  figcaption b { color: var(--testo); display: block; font-weight: 600; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🗄️ La vetrina — Il Generale</h1>
+    <p>Ogni personaggio, oggetto e porta, in ogni stato che sa disegnare, con sotto il nome
+       (<code>che: '…'</code>) con cui compare nei dati. Un controllo a mano, da rifare dopo
+       ogni modifica grafica significativa — non un test: qui non guarda un pixel nessuno
+       finché non lo guardi tu.</p>
+  </header>
+
+  <main id="tavola"></main>
+
+  <script type="module">
+    import { avvia } from './vetrina.js'
+    avvia()
+  </script>
+</body>
+</html>

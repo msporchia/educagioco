@@ -17,7 +17,6 @@
      stanza perde l'architettura.
    ═══════════════════════════════════════════════════════════════════ */
 import { mescola, dado, rett } from '../comune.js'
-import { RESA } from '../resa.js'
 import { lastra, concio, crepa } from './semina.js'
 
 /* ── il pavimento a lastroni ──
@@ -53,7 +52,7 @@ export function lastre(c, reg, A, lato, tinte, scoperto, opz = {}) {
      griglia rispunta a bande larghe: 53/100 coincide dopo
      cinquantatré celle, 41/100 dopo quarantuno — oltre la mappa più
      grande che c'è, in tutti e due i casi */
-  const h = lato * (RESA.grana ? 0.34 : 0.53), g = lato * 0.028
+  const h = lato * 0.34, g = lato * 0.028
   for (let k = Math.floor(reg.y0 / h) - 1; k < Math.ceil(reg.y1 / h); k++) {
     // ogni corso comincia spostato di suo: senza, i giunti verticali si
     // incolonnano ogni tanto e la griglia rispunta
@@ -61,7 +60,7 @@ export function lastre(c, reg, A, lato, tinte, scoperto, opz = {}) {
     while (x < reg.x1 + lato) {
       const chiave = Math.round(x / 3)
       const r = m => dado(chiave, k, 10 + m + sm)
-      const w = lato * (RESA.grana ? 0.45 + r(1) * 0.48 : 0.95 + r(1) * 1.15)
+      const w = lato * (0.45 + r(1) * 0.48)
       if (x + w > reg.x0 - lato && (!scoperto || scoperto(x, k * h, w, h))) {
         /* la lastra che manca: si vede il sottofondo, che è scuro */
         if (r(8) > perde) {
@@ -73,8 +72,8 @@ export function lastre(c, reg, A, lato, tinte, scoperto, opz = {}) {
         // ogni pietra è di suo un po' più chiara o più scura delle
         // vicine: è il tono, più della forma, quello che a colpo
         // d'occhio dice «tante pietre» invece di «una superficie»
-        if (RESA.grana) col = mescola(col, r(6) > 0.5 ? '#ffffff' : '#000000',
-                                      Math.abs(r(7) - 0.5) * 0.22)
+        col = mescola(col, r(6) > 0.5 ? '#ffffff' : '#000000',
+                      Math.abs(r(7) - 0.5) * 0.22)
         lastra(c, x + g, k * h + g, w - g * 2, h - g * 2,
                col, mescola(col, '#ffffff', 0.15), mescola(col, '#000000', 0.16),
                m => dado(chiave + m, k, 30))
@@ -145,13 +144,13 @@ export function pietra(c, reg, A, lato, tinte, dentro, opz = {}) {
      pavimento di `lastre` che gli sta appena sotto */
   const perde = modo === 'rotto' ? 0.87 : 2
   const g = lato * (modo === 'vecchio' ? 0.03 : 0.018)
-  const h = lato * 0.26
+  const h = lato * 0.19
   const vuoto = mescola(tinte[1], '#0b0a0c', 0.6)
   for (let k = Math.floor(reg.y0 / h); k < Math.ceil(reg.y1 / h); k++) {
     let x = Math.floor(reg.x0 / lato) * lato - lato
     while (x < reg.x1 + lato) {
       const r = m => dado(Math.round(x / 3), k, 400 + m + sm)
-      const w = lato * (0.42 + r(1) * 0.5)
+      const w = lato * (0.3 + r(1) * 0.32)
       if (x + w > reg.x0 - lato && (!dentro || dentro(x, k * h, w, h))) {
         if (r(5) > perde) {
           rett(c, x + g, k * h + g, w - g * 2, h - g * 2, vuoto)
@@ -192,7 +191,7 @@ export function mattoni(c, reg, A, lato, tinte, dentro, opz = {}) {
      rotto ne perde uno ogni quattro o cinque */
   const g0 = modo === 'vecchio' ? 0.2 : 0.13
   const perde = modo === 'rotto' ? 0.76 : modo === 'vecchio' ? 0.955 : 2
-  const h = lato * 0.26, w = lato * 0.62, g = h * g0
+  const h = lato * 0.18, w = lato * 0.44, g = h * g0
   const vuoto = mescola(tinte[1], '#0b0a0c', 0.62)
   for (let k = Math.floor(reg.y0 / h); k < Math.ceil(reg.y1 / h); k++) {
     const off = (k % 2) * w * 0.5

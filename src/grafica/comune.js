@@ -14,7 +14,6 @@
        li usa chi dipinge il fondale, che lavora su una tela di scorta
        che il motore non conosce.
    ═══════════════════════════════════════════════════════════════════ */
-import { RESA } from './resa.js'
 import { trama } from './materia.js'
 
 /* ─────────── colore ───────────
@@ -88,7 +87,7 @@ const tinta = c => typeof c === 'string' && c.length === 7 && c[0] === '#'
    E in fondo il colore non va nel nero ma nel blu della notte: il
    nero spegne e basta, un'ombra colorata resta materia. */
 function volume(c, col, alto, basso) {
-  if (!RESA.volume || !tinta(col)) return col
+  if (!tinta(col)) return col
   const g = c.createLinearGradient(0, alto, 0, basso)
   g.addColorStop(0, mescola(col, CHIARO, 0.46))     // il colmo
   g.addColorStop(0.16, mescola(col, CHIARO, 0.22))  // il ginocchio
@@ -109,7 +108,7 @@ function volume(c, col, alto, basso) {
    qualche decina di pixel, e sbagliarlo stretto lascerebbe un angolo
    della forma senza trama. */
 function posaMateria(c, materia, x, y, w, h) {
-  if (!materia || !RESA.materia) return
+  if (!materia) return
   const t = trama(c, materia)
   if (!t) return
   c.save()
@@ -145,7 +144,7 @@ export function poligono(q, punti, col, bordo, sp, materia) {
   punti.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y))
   c.closePath()
   let alto = Infinity, basso = -Infinity
-  if (RESA.volume) for (const [, y] of punti) { if (y < alto) alto = y; if (y > basso) basso = y }
+  for (const [, y] of punti) { if (y < alto) alto = y; if (y > basso) basso = y }
   c.fillStyle = volume(c, col, alto, basso); c.fill()
   if (materia) {
     let sx = Infinity, dx = -Infinity

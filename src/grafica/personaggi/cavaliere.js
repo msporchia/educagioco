@@ -4,7 +4,6 @@
    l'unico che ha qualcosa di **acceso in cima**. */
 import { mescola, capsula, poligono, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
-import { RESA } from '../resa.js'
 
 /* ─────────── il secondo livello ───────────
    Quello che distingue «una forma con un colore dentro» da «un
@@ -79,7 +78,7 @@ export const CAVALIERE = {
        un filo di luce sopra. Sono quattro righe e due file di
        chiodi, e sono la differenza fra «ferro» e «una macchia
        grigia a forma di busto». */
-    if (RESA.dettaglio) {
+    {
       const c = q.ctx
       const largo = (dir === 'dx' ? 3.4 : 4.8) * s
       // le fasce del ventre: due lame sovrapposte sotto il petto
@@ -158,7 +157,7 @@ export const CAVALIERE = {
        i chiodi della calotta, e il filo di luce lungo la cresta della
        calotta stessa: è quello che le dà curvatura invece di
        lasciarla un cerchio pieno. */
-    if (RESA.dettaglio) {
+    {
       const c = q.ctx
       // l'orlo dell'elmo
       c.strokeStyle = mescola(C.ferroS, '#000000', 0.4); c.lineWidth = 0.34 * s
@@ -198,12 +197,6 @@ export const CAVALIERE = {
        stessa di prima. */
     const scudo = (x, y, f) => {
       const rx = 3.6 * s * f, ry = 4 * s
-      if (!RESA.dettaglio) {
-        tondo(q, x, y, rx, ry, C.blu, b, sp)
-        tondo(q, x, y, 2.6 * s * f, 2.9 * s, C.bluS)
-        tondo(q, x, y, 1.2 * s * f, 1.3 * s, C.oro)
-        return
-      }
       // la fascia di ferro: lo scudo ha un orlo, e l'orlo ha spessore
       tondo(q, x, y, rx, ry, C.ferroS, b, sp, 'ferro')
       tondo(q, x, y, rx * 0.84, ry * 0.86, C.blu, null, 0, 'stoffa')

@@ -20,6 +20,7 @@ codice che le applica.
 | **Il formato dei livelli** — mappa a token, legenda, fabbriche | ✅ fatto, tutorial convertito |
 | **Il terreno** — tessiture al plurale, modi, cuciture, contesti | ✅ fatto |
 | **`Unita extends Elemento`** | ❌ da fare — è il pezzo grosso rimasto |
+| **La prima campagna** — il cortile di Rosa, cinque capitoli | ✅ fatta e in gioco, in coda alle sette prove |
 | **L'arredo che il tema piazza da sé** | ◐ a metà: i contesti ci sono, il tema non li usa ancora |
 | **L'editor e il validatore delle mappe** | ❌ fermi a due formati fa |
 | **Le cinque storie vecchie** | ❌ in `todo/`, fuori dal gioco |
@@ -90,7 +91,97 @@ ordine **non apre una porta**: le si avvicina e le consegna `apri`; la porta
 decide e risponde. Le classi passive esistono (`Porta`, `Oggetto`, `Posto`,
 `Leva`, `Totem`); **le unità no**, ed è la tappa che manca.
 
-Le tre regole del bus, che valgono anche per i comandi dei congegni:
+### 3.1 Le regole a cui il motore va riportato
+
+> Queste non descrivono com'è oggi: sono i **vincoli concordati** a cui la
+> ristrutturazione deve arrivare. Stanno qui perché sono decisioni, non
+> dettagli, e perché ogni volta che una si perde il motore torna a essere un
+> file solo con dentro uno `switch`.
+
+**Un'azione è una classe.** `Vai`, `Attacca`, `Ripeti`, `Bivio` estendono
+`Azione` e hanno una sola interfaccia: `esegui(contesto)` fa **un passo** e
+dice se ha finito o se va richiamata. `vai` non arriva a destinazione: fa una
+cella e risponde «non ancora». Sono componibili e ricorsive — un ciclo con
+dentro dei bivi funziona perché il ciclo esegue quello che ha dentro e guarda
+l'esito.
+
+**Nessuna classe conosce i suoi sottocomponenti.** Un contenitore chiama
+`esegui` e legge la risposta: non sa, e non deve poter sapere, cosa sta
+eseguendo. È la condizione perché un'azione nuova non rompa i contenitori che
+ci sono già, e viceversa. Ogni classe dichiara i parametri che ne definiscono
+il comportamento, e per il resto è chiusa.
+
+**Un'azione compilata non guarda più il piano.** L'editor (o il livello) è
+solo un modo di *compilare*: `{verbo:'vai', complemento:'chiave'}` costruisce
+l'oggetto, e da lì in poi l'oggetto vive dei suoi parametri. Un'azione che
+rilegge il piano mentre gira può cambiare sotto i piedi di chi la sta
+eseguendo — e il piano è un oggetto reattivo che appartiene alla vista.
+
+**Ogni cosa si racconta da sé.** È l'azione a emettere «sto andando alla
+chiave», «attacco l'orco», e la domanda a dire «vedi l'orco». Il registro non
+guarda dentro a niente e non ricostruisce niente da un `verbo`: riceve una
+frase già scritta. Un tag `verbo` usato per smistare non serve — smista la
+classe; la parola resta solo come chiave del vocabolario, per i permessi che
+il livello scrive (`sa:`, `nonRiesce:`).
+
+**Un orchestratore per personaggio.** Il metodo `esegui` del personaggio: fa
+avanzare di un passo l'azione in corso, poi guarda se c'è un evento a cui
+reagire, sospende e riprende. Il battito non conosce più i fili: chiama
+l'orchestratore di ognuno.
+
+**Le domande sono oggetti come le azioni.** `valuta` non è una funzione
+esterna con uno `switch` dentro: `Vedi`, `Ha`, `Aperta` rispondono da sé e si
+scrivono da sé, nello stesso file. Il `non` è un decoratore, non una copia di
+ogni domanda.
+
+**Un elenco solo di cose, e non lo si tocca direttamente.** Niente registri
+separati per famiglia (`porte`, `posti`, `leve`, `totem`): separarli non dà
+nessun vantaggio e costringe ogni verbo a sapere in che cassetto guardare —
+`apri` deve poter aprire qualcosa che non è una porta. E l'accesso passa
+**sempre** da un metodo del mondo, mai da `cose[id]`: così il giorno che una
+cosa non deve essere nominabile da tutti la regola si scrive in un punto solo.
+
+**Prima ci si avvicina, poi si fa.** Mai un verbo che decide da fermo che
+«tanto era già aperto»: se una cosa è già come la volevi lo dice lei quando
+gliela chiedi.
+
+**Una cosa che si apre fa rumore.** Non è un effetto sonoro: è
+informazione. Una grata che si apre dall'altra parte della stanza non la
+vedi, e la regola del gioco dice che quello che non vedi te lo deve dire
+qualcuno — quindi lo dice lei. Da qui il piano del totem smette di
+essere «premi finché la grata è aperta» (una domanda a cui chi preme non
+può rispondere, e infatti il motore ora si rifiuta di mentirgli) e
+diventa «premi finché **senti** la grata aprirsi». La stessa mossa vale
+per la differenza fra aprire con la chiave e sfondare: due rumori di
+portata diversa, quindi due mosse diverse anche quando la porta si apre
+uguale.
+
+**Chi tiene cosa è scritto due volte, e si scrive in un punto solo.**
+L'oggetto sa chi lo tiene (`preso`), l'unità sa cosa porta (`zaino`): due
+copie, perché rispondono a due domande diverse — «dove sei» e «cosa hai» — e
+una sola scansione al posto dell'altra costerebbe a ogni battito. Il patto è
+che **si registrano e si de-registrano sempre insieme**, e per non dipendere
+da chi se ne ricorda l'unico punto che le tocca è `Oggetto.passaA()` /
+`.lascia()`. Il giorno del `posa` si aggiunge lì.
+
+**E si dipinge da sé.** Il disegno itera le cose e chiede a ognuna la sua
+`faccia()` — quale pittore, con quali parametri — invece di iterare le
+famiglie e decidere lui. Aggiungere una cosa, o un tipo di cose, non deve
+rompere niente; e una cosa che vuole comportarsi in modo strano (comparire
+solo se le passi vicino, cambiare aspetto quando è vuota) restituisce il
+pittore giusto al momento giusto senza che il disegno sappia perché.
+
+**Un file per classe, e nomi parlanti.** Niente `m`, `u`, `C`, `N`, `pt`: non
+c'è nessun risparmio e si perde la leggibilità. Il registro stesso va portato
+a classe.
+
+**Un test per azione.** Oggetti sparsi che si provano solo tutti insieme sono
+oggetti che non si possono mantenere: ogni azione deve avere la sua prova
+isolata, oltre alle partite intere che il banco dei livelli già gioca.
+
+### 3.2 Le tre regole del bus
+
+Valgono anche per i comandi dei congegni:
 
 1. un evento pubblicato adesso si consegna **al battito dopo** — senza, due
    elementi che si comandano a vicenda bloccherebbero il battito;
@@ -130,10 +221,16 @@ campi: { umido: 5, usura: 6.5 },
   pozze nominano tutti `umido`, e finiscono nello stesso angolo perché hanno
   la stessa causa.
 
-Due strumenti per giudicare, che si aprono col server di sviluppo:
-`strumenti/banco/banco.html` (una stanza intera, per la mescolanza) e
+Due strumenti per giudicare, che si aprono col server di sviluppo (`npm run
+vetrina`, o `vite --open` sull'altro):
 `strumenti/banco/catalogo.html` (ogni tessitura da sola, coi suoi modi e
-quattro semi, alla misura vera del gioco).
+quattro semi, alla misura vera del gioco) e `strumenti/banco/vetrina.html`
+(ogni personaggio, oggetto e porta, in ogni stato che sa disegnare — la
+cartina di tornasole per un catalogo dove nessun test guarda i pixel: una
+porta che si apre e resta dipinta chiusa non fa scattare niente di rosso,
+quindi qui non si controlla, si **mostra**, ed è un occhio umano a fare il
+resto). La vetrina segnala anche da sé i nomi senza pittore — oggi il
+totem, vedi §5.7.
 
 ---
 
@@ -183,6 +280,28 @@ Gli elementi in gioco dichiarano `alone: true` in `faccia()`; nessuno lo
 disegna ancora. Serve appena l'arredo si fa più fitto, perché un sarcofago
 dipinto dal fondale non si confonda con una cassa che si apre.
 
+### 5.7 I congegni non si vedono — trovato con la vetrina
+
+Due guasti distinti, scoperti costruendo `strumenti/banco/vetrina.html`:
+
+- **manca il pittore del totem.** `Totem.faccia()`
+  (`src/motore/generale/elementi/totem.js`) consegna `che: 'totem'`, ma
+  `PITTORI` (`src/grafica/generale.js`) non ha nessuna voce `totem`: nessun
+  file in `src/grafica/oggetti/` lo disegna. Se venisse chiamato, sarebbe
+  un buco muto nella scena.
+- **e infatti non viene mai chiamato**, né lui né la leva: `CampoLivello.vue`
+  (`scena()`, riga ~387) costruisce la lista da disegnare guardando
+  `m.porte` e `m.oggetti`, mai `m.cose` — che è dove `allestimento.js`
+  mette leve e totem (`cose[k] = new Leva(...)`, `cose[k] = new Totem(...)`).
+  `.faccia()` oggi si chiama solo sulle `Porta`. Il livello «Il totem»
+  (`data/livelli/tutorial/8-il-totem.js`) e la «Prova dei congegni»
+  giocano quindi con un totem e una leva del tutto invisibili sullo
+  schermo, indipendentemente dal pittore che manca.
+
+Due lavori diversi: il primo è un file nuovo in `src/grafica/oggetti/` più
+una riga in `PITTORI_OGGETTI`; il secondo è far chiedere a `CampoLivello.vue`
+la `faccia()` anche di `m.cose`, non solo di `m.porte`.
+
 ---
 
 ## 6. Da rifinire
@@ -190,12 +309,66 @@ dipinto dal fondale non si confonda con una cassa che si apre.
 - **Il pavimento è la metà debole del terreno**: la lacuna del lastricato si
   legge molto meno di quella del muro, perché per terra manca lo spessore che
   la spiega.
-- **Due guasti noti nel banco** (2 su 305 controlli), tutti e due preesistenti
-  al travaso: `ronda` dice «il bordo è chiuso» — la cinta è un cortile in
-  mezzo a un prato e il controllo pretende un perimetro murato — e in
-  `due-strade` un ordine della soluzione non risulta necessario.
 - **`parla` non ha un livello che lo insegni**: esiste nel motore e nessuno lo
   incontra giocando.
+
+---
+
+## 6bis. Le cose aperte, in ordine di quanto fanno male
+
+Sono i guasti trovati **giocando** il 12 agosto 2026, mentre si scriveva la
+prima campagna. Nessuno è una teoria: ognuno è stato misurato con una partita
+e la traccia in mano. Le ragioni per esteso — e quelle didattiche — stanno nel
+§13 di [`generale-didattica.md`](generale-didattica.md); qui c'è cosa fare.
+
+**1. `segnaleDi` non fonde, e il fracasso della terza prova vale 20 invece di
+40.** `mondo.js` riga 66: `vocabolario[k] || ilSegnale(k)`, o l'uno o l'altro.
+Un livello che ridichiara un segnale della tabella globale solo per dargli un
+nome e un'emoji suoi si porta via tutto il resto, `voce` compresa. La terza
+prova fa esattamente questo, e il rumore delle venti spallate arriva a metà di
+quanto dovrebbe. Da fondere in `segnaleDi`, **omettendo le chiavi non
+dichiarate** (se no un `em: undefined` cancella l'emoji buona). Non è un cambio
+di bilanciamento: quei 20 non li ha scelti nessuno.
+
+**2. Le opzioni di un'unità non le controlla nessuno.** `livello()` rifiuta le
+chiavi sconosciute del livello col suggerimento; `chi.orco({ accorre: … })`
+passa liscio e non fa niente, in silenzio. È così che la sesta prova è rimasta
+rotta: `accorre` non è più letta da nessuno da quando chi corre al rumore si
+dichiara con `reagisce`, e il livello che insegna il rumore era l'unico in cui
+il rumore non spostava niente (riparato nel livello il 12 agosto). Il controllo
+va messo all'import, accanto a quello dei campi.
+
+**3. Il rifiuto di una porta non porta con sé il suo `motivo`.** La frase
+giusta c'è («*la dispensa è chiusa a chiave, e la chiave non ce l'ho*») ma
+quella voce della traccia non ha il campo `motivo`: ce l'ha solo la riga
+generica dopo. Chi legge la traccia da fuori non riesce ad attribuire il
+fallimento alla porta — e sono i tre guasti che restano oggi in
+`unita/generale`. Vale doppio il giorno che i fallimenti diventano vignette
+sul campo: una vignetta si attacca a un motivo, e questo non ce l'ha.
+
+**4. `srotola` non ricorsa dentro `ripeti.corpo` e `routine.corpo`**
+(`test/aiuto/livello.mjs`): finché non lo fa, `nonInFila` tace proprio sui
+livelli dove la struttura costa di più.
+
+**5. Una soluzione dichiarata dovrebbe essere scrivibile con la cassetta che
+il livello offre.** Il banco valida gli ordini contro il motore (`guaiDi`), non
+contro `verbi:`.
+
+### Fatte lo stesso giorno, per non rifarle
+
+- **`chiudi` era ineseguibile**: una porta aperta si tocca standoci **sopra**
+  (`Porta.raggioDiPresa`), e da sopra `Porta.chiudi()` rifiuta sempre («c'è
+  qualcuno sulla soglia»). Ogni piano con `chiudi` cadeva, settima prova
+  compresa. Ora `Chiudi` si ferma **accanto** (`azioni/chiudi.js`).
+- **`voce` non arrivava dal livello al rumore**: `allestimento.js` copiava dal
+  segnale dichiarato solo `{ nome, em, col }`, quindi `{ voce: 40 }` diventava
+  in silenzio 20. Ora c'è (resta il punto 1, che è l'altra metà).
+- **`u.viva` non esiste più sulle unità** (`inPiedi`/`eInPiedi()`): rendeva
+  `se.qui(...)` sempre falso e faceva sparire gli oggetti in mano a qualcuno.
+- **Due controlli del banco riallineati** al motore invece che aggirati:
+  `posa` mancava dal vocabolario concordato, e «ogni verbo dichiara i tipi che
+  accetta» pretendeva un elenco anche da `aspetta`, che punta a una domanda e
+  non a una cosa (`vuoleCond`).
 
 ---
 

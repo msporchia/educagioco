@@ -12,7 +12,6 @@
    anche una porta.
    ═══════════════════════════════════════════════════════════════════ */
 import { tondo, tinge } from './comune.js'
-import { RESA } from './resa.js'
 
 /* ─────────── la luce della stanza ───────────
    Passa **tutto** di qui, e non è un caso: è l'unico punto che ogni
@@ -30,7 +29,7 @@ import { RESA } from './resa.js'
    punto di questo lavoro era proprio smettere di fare cose che non si
    vedono. */
 function illumina(p, pal, x, y) {
-  if (!RESA.luce || !p.luce) return pal
+  if (!p.luce) return pal
   let C = pal
   const L = p.luce(x, y)
   if (L.buio > 0.01) C = tinge(C, L.notte, L.buio * 0.78)

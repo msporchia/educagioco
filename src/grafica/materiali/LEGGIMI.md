@@ -129,8 +129,10 @@ pozzanghera.
 tessitura da sola**, in tutti i modi che dichiara e con quattro semi, alla
 misura del gioco. È lì che si giudica se un modo ha carattere o è solo rumore.
 
-`strumenti/banco/banco.html` mostra invece una stanza intera: serve a
-giudicare la mescolanza, non la singola tessitura.
+`strumenti/banco/vetrina.html` mostra tutti i pittori in fila: serve a
+giudicare la mescolanza, non la singola tessitura. (C'era anche un
+`banco.html` con le manopole della resa: è servito a decidere, le
+migliorie che ha promosso sono nel codice, e con loro se n'è andato.)
 
 ## 9. Aggiungerne una
 
