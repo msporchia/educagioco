@@ -35,7 +35,7 @@
    castello, e vale identica qui dentro.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, watch, nextTick } from 'vue'
-import { ilSegnale, laCosa } from '../../motore/generale.js'
+import { ilSegnale, laCosa, distanze } from '../../motore/generale.js'
 import { cerchio } from './segni.js'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI, OGGETTI } from '../../grafica/generale.js'
@@ -49,7 +49,7 @@ const props = defineProps({
      sempre quello di adesso. */
   mondoOra: { type: Function, default: () => null },
   liv: { type: Object, required: true },
-  vel: { type: Number, default: 420 },
+  vel: { type: Number, default: 180 },
   tic: { type: Number, default: 0 },          // batte a ogni passo: rinfresca le pastiglie
   /* i giri di ronda da mostrare, detti come li dice il piano:
      `{ punti: [nomi], ora }`. Da nome a pixel ci pensa questo file. */
@@ -57,6 +57,10 @@ const props = defineProps({
   bersagli: { type: Array, default: () => [] },
   mirando: { type: Boolean, default: false },  // si sta scegliendo un bersaglio
   mie: { type: Array, default: () => [] },     // le unità del giocatore
+  /* chi ha la scheda aperta: la sua roba si annota sul campo, quella
+     degli altri no. Una targhetta su ogni guardia era rumore addosso
+     alla mappa — il nome di una cosa si legge quando l'hai chiesta. */
+  aperta: { type: String, default: '' },
 })
 const emit = defineEmits(['tocca'])
 
@@ -68,6 +72,10 @@ const sottoIlDito = ref(null)                  // la casella accesa prima di sta
 
 let tela = null, fondale = null, lato = 26
 let prec = {}, andature = {}, animT0 = 0
+/* quando ogni forziere si è spalancato: serve solo a far durare il
+   momento, e si butta a ogni scena nuova (`azzera`) — se no una cassa
+   già aperta in una battaglia riparte con la seconda già finita */
+const apertoDa = {}
 const cam = { x: 0, y: 0 }
 const mondo = () => props.mondoOra()
 
@@ -139,15 +147,15 @@ async function misura () {
      si scende mai. Se la mappa non ci sta, **si scorre** — il
      trascinamento e le frecce sul bordo esistono apposta. */
   const sta = Math.floor(Math.min(largo / mondo().w, massimo / mondo().h))
-  /* ── UNA MAPPA CHE DEVE VEDERSI TUTTA ──
-     `intera: true` è per i livelli dove la mappa NON è un fondale ma
-     l'informazione: nel forte a due aperture la domanda è «e la porta
-     che non stai guardando?», e una mappa da scorrere quella domanda
-     la cancella. Lì la cella scende fino a 22 pixel — si vede meno
-     bene, ma si vede tutto, ed è il male minore. */
-  latoBase = props.liv.intera ? Math.max(22, Math.min(46, sta))
-       : sta >= 36 ? Math.min(46, sta)   // ci sta comoda: si prende quello che c'è
-       : sta >= 32 ? sta                 // ci sta di misura: meglio intera che da scorrere
+  /* ── E NON SI RIMPICCIOLISCE PER FAR STARE LA MAPPA ──
+     C'era un `intera: true` che lo faceva: scendeva fino a 22 pixel per
+     cella pur di mostrare tutto. Il prezzo non era la leggibilità — era
+     che chi scriveva i livelli disegnava mappe piccole per stare dentro
+     quel vincolo. Le mappe grandi si trascinano: è quello che il campo
+     sa fare da sempre, ed è anche quello che rende un piano lungo, cioè
+     un lavoro invece di un gesto. */
+  latoBase = sta >= 36 ? Math.min(46, sta)   // ci sta comoda: si prende quello che c'è
+       : sta >= 32 ? sta                 // ci sta di misura: meglio tutta che da scorrere
        : 36                              // non ci sta: si legge e si scorre
   lato = Math.round(latoBase * zoom)   // i limiti si applicano sotto, quando la tela c'è
   /* l'altezza del campo resta quella della mappa **a zoom 1**: se
@@ -178,7 +186,10 @@ async function misura () {
   /* la griglia la dice il mondo, non il livello: da quando una scena
      può ridisegnare la stanza, «com'è fatta» dipende dalla variante che
      si sta giocando */
-  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [], 
+  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [],
+                          suoli: (mondo() && mondo().campo.suoli) || {},
+                          muri: (mondo() && mondo().campo.muri) || {},
+                          arredi: (mondo() && mondo().campo.arredi) || {},
                           ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   limita(); rifaiFondale()
@@ -197,7 +208,10 @@ function ridipingiStanza () {
   /* la griglia la dice il mondo, non il livello: da quando una scena
      può ridisegnare la stanza, «com'è fatta» dipende dalla variante che
      si sta giocando */
-  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [], 
+  fondale = creaFondale({ mappa: (mondo() && mondo().campo.griglia) || [],
+                          suoli: (mondo() && mondo().campo.suoli) || {},
+                          muri: (mondo() && mondo().campo.muri) || {},
+                          arredi: (mondo() && mondo().campo.arredi) || {},
                           ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   tela = creaTela(telaEl.value, PITTORI, { unita: 420, minimo: lato / 20, massimo: lato / 20 })
@@ -263,6 +277,7 @@ function puntoDi (x, y) {
    farli saltare. */
 function azzera () {
   prec = {}; andature = {}; animT0 = 0
+  for (const k in apertoDa) delete apertoDa[k]
   scordaVignette()          // una scena nuova non eredita le parole di quella prima
   if (!mondo()) return
   mondo().unita.forEach(u => { prec[u.id] = { x: u.x, y: u.y }; andature[u.id] = 0 })
@@ -296,7 +311,7 @@ const fuoriCampo = computed(() => {
   const { W, H } = tela.misure
   const out = []
   for (const u of mondo().unita) {
-    if (!u.viva) continue
+    if (!u.eInPiedi()) continue
     const x = (u.x + 0.5) * lato - cam.x, y = (u.y + 0.5) * lato - cam.y
     if (x >= 6 && x <= W - 6 && y >= 6 && y <= H - 6) continue
     const dir = x < 6 ? 'sx' : x > W - 6 ? 'dx' : y < 6 ? 'su' : 'giu'
@@ -309,6 +324,51 @@ const vaiSu = id => { const u = mondo() && mondo().perId[id]; if (u) inquadraSu(
 
 /* ═══════════ la scena ═══════════ */
 const CARDINE = ['su', 'dx', 'giu', 'sx']
+
+/* ── FIN DOVE ARRIVA QUALCUNO IN N PASSI ──
+   La stessa BFS che fa camminare tutto il gioco (`mappa.js`), chiesta
+   qui per disegnare: le caselle che stanno entro `quanti` passi da
+   dove sta. Vale per la vista di una guardia e per il cerchio di una
+   lanterna, che si misurano nello stesso modo — a cammino, con i muri
+   che allontanano invece di tagliare in linea retta.
+   È il punto in cui il disegno smette di approssimare: prima era un
+   cerchio, e un cerchio sopra una siepe prometteva una guardia che
+   vede di là. Adesso quello che si vede a schermo È quello che il
+   motore calcola. */
+/* ── COSA TIENE IN MANO, E SE HA LE MANI VUOTE ──
+   Quello che uno ha raccolto si vede addosso a lui, non solo nella
+   scheda: una ladra senza i suoi pugnali è disarmata e si riconosce
+   a colpo d'occhio, e quando li ritrova si riconosce anche quello. Le
+   armi hanno la precedenza — se porta una chiave e una spada, in mano
+   si disegna la spada — e `disarmato` spegne l'arma di serie del
+   personaggio, che è il modo di raccontare che gliel'hanno portata via.
+   Il numero che conta lo tiene il motore (`Unita.arma`): qui si
+   racconta soltanto. */
+function manoDi (m, u) {
+  let pittore = null
+  for (const id of (u.zaino || [])) {
+    const cosa = m.cose[id]
+    if (!cosa) continue
+    const nome = cosa.pittore || id
+    if (!OGGETTI.includes(nome)) continue
+    if (cosa.d && cosa.d.arma) return { pittore: nome, disarmato: false }
+    if (!pittore) pittore = nome
+  }
+  const base = u.armaBase
+  return { pittore, disarmato: !!base && base.danno <= 0 }
+}
+
+function celleEntro (m, da, quanti) {
+  if (!(quanti > 0) || da.x == null) return []
+  const d = distanze(m, da.x, da.y)
+  const out = []
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    const q = d[y * m.w + x]
+    if (q >= 0 && q <= quanti)
+      out.push({ x: (x + 0.5) * lato - cam.x, y: (y + 0.5) * lato - cam.y })
+  }
+  return out
+}
 function scena () {
   const s = []
   const m = mondo()
@@ -330,8 +390,23 @@ function scena () {
      ordine, non compare fra i bersagli. Serve a una cosa sola — che una
      stanza non sia un rettangolo vuoto — e si disegna per prima, sotto
      tutto il resto. */
-  for (const d of (props.liv.scenografia || []))
-    s.push({ ...d, x: px(d.x), y: py(d.y) })
+  /* ── E STA INDIETRO ──
+     Non basta che non sia in gioco: deve anche non SEMBRARLO. Una
+     cassa dipinta accanto a un forziere da aprire, tutte e due a
+     colori pieni, sono due inviti identici — e uno dei due è falso.
+     Il velo la manda un passo indietro; il `fiato` che la tela mette
+     sotto alle cose vere (`alone`, `grafica/tela.js`) la porta un passo
+     avanti. Un livello può ritoccarlo scrivendo `velo` nella sua voce
+     di scenografia, ma il valore giusto è quasi sempre questo. */
+  /* ── E LA LISTA LA DÀ IL CAMPO, NON IL LIVELLO ──
+     Perché nel mezzo è successo qualcosa: quello che il livello ha
+     scritto è passato da `campo.js`, che ne ha tolto i mobili (una
+     botte su una casella di muro è un arredo, e si disegna col
+     pavimento sotto) e ci ha aggiunto quello che l'ambiente si è messo
+     in casa da sé — ragnatele negli angoli, torce di scena,
+     pozzanghere. Chi ce l'ha messa non deve vedersi. */
+  for (const d of ((m.campo && m.campo.scenografia) || props.liv.scenografia || []))
+    s.push({ velo: 0.42, ...d, x: px(d.x), y: py(d.y) })
   /* le zone di ronda e i posti che hanno un nome: macchie sul pavimento.
      ── E LA META SI VEDE CHE È LA META ──
      Un posto che l'obiettivo nomina («l'eroe deve arrivare a…») è
@@ -342,16 +417,68 @@ function scena () {
      missione dev'essere una cosa che si vede sulla mappa. */
   const mete = new Set((m.livello.vince || [])
     .filter(c => c && c.cond === 'qui' && c.complemento).map(c => c.complemento))
-  for (const k in m.posti) {
-    if (k === 'tesoro') continue
-    s.push({ che: 'ronda', strato: -1, colore: mete.has(k) ? '#3fb872' : '#f0c04a',
+  /* ── SI DISEGNA DOVE FINISCE LA MISSIONE, E NIENT'ALTRO ──
+     Prima si accendeva un quadratino su OGNI posto, e il campo si
+     riempiva di caselle tratteggiate che promettevano qualcosa: «il
+     sentiero di mezzogiorno», «l'aia», «l'imbocco». Ma un posto non è
+     un obiettivo — quasi sempre è solo un'ancora che serve al livello
+     per scrivere una condizione, e disegnarla vuol dire dire al
+     bambino «vai lì» quando nessuno gliel'ha chiesto. Peggio: fa
+     sembrare il gioco una caccia ai puntini, che è l'opposto di
+     scrivere un piano.
+     Resta solo quello che sta in `vince`: quello sì dev'essere una
+     cosa che si vede, se no la missione finisce senza che si capisca
+     dove. Le ancore invece fanno il loro mestiere in silenzio. */
+  for (const k of mete) {
+    if (k === 'tesoro' || !m.posti[k]) continue
+    s.push({ che: 'ronda', strato: -1, colore: '#3fb872',
              celle: [{ x: px(m.posti[k].x), y: py(m.posti[k].y) }] })
   }
+  /* ── LA LUCE, DOV'È ADESSO ──
+     Una lanterna non è un oggetto come gli altri: cambia chi vede chi,
+     e chi la porta se la tira dietro. Il cerchio si chiede al mondo con
+     la stessa domanda che usa il motore (`luce()` su ogni cosa,
+     `Mondo.illuminato`), così quello che si vede a schermo e quello che
+     conta in partita non possono scollarsi. Caldo, e sotto tutto: è
+     terreno illuminato, non un'insidia. */
+  for (const k in m.cose) {
+    const luce = typeof m.cose[k].luce === 'function' ? m.cose[k].luce(m) : null
+    if (!luce || luce.da.x == null) continue
+    s.push({ che: 'vista', strato: -1, colore: '#ffd88a', lato,
+             celle: celleEntro(m, luce.da, luce.raggio.limite) })
+  }
   /* quello che i nemici vedono: è l'informazione che serve a scrivere il
-     piano, e va vista prima di premere ▶ */
-  m.unita.filter(u => u.viva && u.fazione !== m.mia && u.vista)
-    .forEach(u => s.push({ che: 'vista', strato: -1, x: px(u.x), y: py(u.y),
-                           raggio: u.vista, giro: true, colore: '#ff7a6a' }))
+     piano, e va vista prima di premere ▶.
+     ── E AL BUIO VEDONO MENO ──
+     Il raggio è quello che il motore userebbe ADESSO
+     (`limiteVista`), non il numero scritto nella scheda: con un tetto
+     in gioco erano due cose diverse, e il cerchio rosso prometteva una
+     guardia cieca là dove il motore ne aveva una che ci vede. L'anello
+     esterno, pallido, è l'altra metà della regola — **fin lì ti vede
+     se porti la luce** — ed è la sola parte insidiosa della lanterna:
+     va letta sulla mappa prima di scoprirla a proprie spese. */
+  m.unita.filter(u => u.eInPiedi() && u.fazione !== m.mia && u.vista)
+    .forEach(u => {
+      const ora = u.limiteVista(m, null)
+      /* più spento, non più trasparente: il pittore l'alfa se la
+         attacca da sé (`colore + '2e'`), e un colore che se la porta
+         già scritta diventa una stringa che non è un colore */
+      if (ora < u.vista)
+        s.push({ che: 'vista', strato: -1, colore: '#7a3a34', lato,
+                 celle: celleEntro(m, u, u.vista) })
+      s.push({ che: 'vista', strato: -1, colore: '#ff7a6a', lato,
+               celle: celleEntro(m, u, ora) })
+      /* ── E SI DICE CHE COS'È, MA SOLO A CHI LO CHIEDE ──
+         Una macchia rossa sul terreno non si spiega da sé: la prima
+         domanda di chi l'ha vista è stata «e quelli cosa sono?». Ma una
+         targhetta appiccicata addosso a ogni guardia, sempre, è rumore
+         sopra la mappa — e grossa quanto il resto delle scritte lo è il
+         doppio. Compare quando quella guardia la tocchi: la scheda si
+         apre di là e il campo dice qui che cos'è quel rosso. */
+      if (ora > 0 && props.aperta === u.id)
+        s.push({ che: 'targhetta', strato: 2, testo: 'vede fin qui', em: '👁',
+                 lato: lato * 0.66, x: px(u.x), y: py(u.y) - lato * 0.95 })
+    })
   if (m.posti.tesoro)
     s.push({ che: 'forziere', x: px(m.posti.tesoro.x), y: py(m.posti.tesoro.y),
              apertura: m.vinto ? 1 : 0 })
@@ -360,34 +487,75 @@ function scena () {
      chiama `ossa` perché disegna un mucchietto */
   const ALTRI_NOMI = { osso: 'ossa', olio: 'botte', chiavetta: 'chiave',
                        lanternina: 'lanterna', bottino: 'gemma' }
-  const facciaDi = o => {
-    const n = o.pittore || ALTRI_NOMI[o.nome] || o.nome
-    return OGGETTI.includes(n) ? n : 'chiave'
+  /* OGNI COSA HA LA SUA FACCIA, E SI CHIEDE A `m.cose` — TUTTE INSIEME.
+     Qui c'erano due giri separati, uno per `m.porte` e uno per
+     `m.oggetti`: un terzo elenco, `m.cose`, non lo guardava nessuno —
+     ed è lì che `allestimento.js` mette anche le leve e i totem («LE
+     COSE DEL CAMPO, TUTTE NELLO STESSO ELENCO», niente cassetti per
+     famiglia). Il rimedio non è un terzo giro per i congegni: è
+     smettere di sapere che esistono le famiglie e chiedere a ognuna la
+     sua `faccia()` — porte, posti, leve, totem e oggetti sono già
+     tutti lì dentro (`allestimento.js` li aggiunge tutti a `cose`).
+     Un posto non ha niente da dire (`Posto` non sovrascrive `faccia`),
+     un «cartellino» (un'unità, una fazione: `cartellino()` in
+     `allestimento.js`) non è nemmeno un `Elemento` e non ha `faccia`
+     affatto — da qui il controllo prima di chiamarla. */
+  const conSinonimo = d => (OGGETTI.includes(d.che) ? d
+    : { ...d, che: ALTRI_NOMI[d.che] || 'chiave' })
+
+  /* ── UN FORZIERE NON SI APRE DI SCATTO ──
+     Le altre porte hanno un'apertura che è un fatto — o è aperta o no,
+     e il battente di legno è binario per scelta. Il forziere invece è
+     l'unico disegno del gioco che sia un MOMENTO (`grafica/oggetti/
+     forziere.js`): coperchio, lampo, quattordici gemme, e tutto vive
+     su un tempo che va da 0 a 1. Se gli si passa 1 di colpo, quel
+     tempo non lo vede nessuno — si vede solo l'ultimo fotogramma, che
+     è esattamente quello che si vedeva prima che il tesoro si aprisse.
+     Qui si tiene solo l'ISTANTE in cui è scattato, e il resto è una
+     sottrazione: il motore non sa che esiste un orologio, e la fine
+     della partita non aspetta la fine dell'animazione. */
+  const momento = (k, d) => {
+    if (d.che !== 'porta' || d.stile !== 'forziere') return d
+    if (!d.apertura) { delete apertoDa[k]; return d }
+    if (!apertoDa[k]) apertoDa[k] = performance.now()
+    return { ...d, apertura: Math.min(1.4, (performance.now() - apertoDa[k]) / 900) }
   }
-  /* OGNI COSA HA LA SUA FACCIA. Qui c'era `che: 'chiave'` cablato, e in
-     tutti i livelli la lanterna, l'osso, il pane e l'olio erano un
-     mazzo di chiavi: il bambino leggeva «porta l'osso a Bombo» e vedeva
-     una chiave. Adesso si usa il pittore che porta il nome della cosa —
-     ce n'è uno per quasi tutto in `grafica/oggetti/` — e chi non ce l'ha
-     può dirlo nei dati con `pittore:`. La chiave resta il ripiego. */
+
+  for (const k in m.cose) {
+    const cosa = m.cose[k]
+    if (typeof cosa.faccia !== 'function') continue
+    cosa.faccia().forEach(d => s.push(proietta(conSinonimo(momento(k, d)))))
+  }
   /* ── UN FORZIERE NON SE NE VA: SI APRE ──
      Da quando il tesoro si prende invece di calpestarlo è un oggetto
-     come gli altri, e gli oggetti presi spariscono dalla mappa perché
-     stanno nello zaino. Una cassa però non se la infila in tasca
-     nessuno: resta dov'era, aperta e vuota, e il colpo d'occhio dice
-     «qui è già passato qualcuno». */
+     come gli altri, e `Oggetto.faccia()` fa sparire dalla mappa chi è
+     stato preso: giusto per una chiave che finisce nello zaino,
+     sbagliato per una cassa — non se la infila in tasca nessuno. Resta
+     dov'era, aperta e vuota, e il colpo d'occhio dice «qui è già
+     passato qualcuno». Il giro qui sopra l'ha già saltata (presa ⇒
+     `faccia()` vuota): questo secondo giro, piccolo apposta, la
+     ridisegna da sola. */
   m.oggetti.forEach(o => {
-    if (facciaDi(o) === 'forziere')
-      s.push({ che: 'forziere', x: px(o.x), y: py(o.y), apertura: o.preso ? 1 : 0 })
-    else if (!o.preso) s.push({ che: facciaDi(o), x: px(o.x), y: py(o.y) })
+    if (!o.preso) return
+    /* per id, non per nome: `nome` adesso è quello che si legge in una
+       frase («il tesoro»), e come chiave non vale più niente */
+    if ((o.pittore || ALTRI_NOMI[o.id] || o.id) === 'forziere')
+      s.push({ che: 'forziere', x: px(o.x), y: py(o.y), apertura: 1 })
   })
-  /* i cinque stili sono già dipinti in `grafica/oggetti/porte/`: prima
-     qui c'era `che:'portone'` cablato, e li si vedeva tutti uguali —
-     adesso lo dice la porta stessa, con `faccia()` */
-  for (const k in m.porte) m.porte[k].faccia().forEach(d => s.push(proietta(d)))
-  /* i bersagli che si possono toccare adesso */
-  props.bersagli.forEach(b => s.push({ che: 'ronda', strato: 1, colore: '#ffd24a',
-    celle: [{ x: px(b.x), y: py(b.y) }] }))
+  /* ── I BERSAGLI, COL LORO NOME ADDOSSO ──
+     Il quadratino giallo diceva «qui puoi toccare» e basta: il nome
+     stava nell'elenco dall'altra parte dello schermo, e l'abbinamento
+     lo doveva fare il bambino — «la strada sotto la prima corte» quale
+     dei tre sarà? Su una mappa con tre posti nominati è un rebus, e su
+     un livello a due bivi diventa impossibile.
+     Il nome va scritto SUL bersaglio: si legge dove serve, e non c'è
+     niente da tenere a mente. */
+  props.bersagli.forEach(b => {
+    s.push({ che: 'ronda', strato: 1, colore: '#ffd24a',
+             celle: [{ x: px(b.x), y: py(b.y) }] })
+    if (b.nome) s.push({ che: 'targhetta', strato: 2, testo: b.nome, em: b.em,
+                         x: px(b.x), y: py(b.y) - lato * 0.52, lato })
+  })
   if (sottoIlDito.value)
     s.push({ che: 'ronda', strato: 1, colore: '#ffffff',
              celle: [{ x: px(sottoIlDito.value.x), y: py(sottoIlDito.value.y) }] })
@@ -410,13 +578,23 @@ function scena () {
        sull'orco, e in partita l'eroe era un orco. Il ripiego resta —
        un personaggio senza corpo deve pur disegnarsi — ma adesso è
        l'ultima spiaggia, non la regola. */
+    const mano = manoDi(m, u)
     s.push({ che: u.corpo || u.chi || 'orco', x, y, dir: CARDINE[u.dir] || 'giu',
-             passo: andature[u.id] || 0,
-             stato: !u.viva ? 'ko'
+             passo: andature[u.id] || 0, mano: mano.pittore, disarmato: mano.disarmato,
+             /* ── UN ORDINE CHE NON RIESCE NON È UNA FERITA ──
+                Il rosso di `errore` è lo stesso registro visivo della
+                botta, e su un cane che non riesce ad arrivare — perché
+                la gabbia è ancora chiusa — si legge come «sta morendo».
+                Ma quello non è un guasto: è uno che **riprova**, e il
+                fumetto dell'attesa lo dice per quello che è. Il rosso
+                resta solo a chi ha finito la fila senza riuscirci, cioè
+                a un ordine che non tornerà più. */
+             stato: !u.eInPiedi() ? 'ko'
                   : c ? 'colpito'
                   : mena ? 'lancia'
-                  : r && r.esito === 'no' ? 'errore'
-                  : r && r.esito === 'aspetto' ? 'attesa' : 'normale' })
+                  : r && r.esito === 'aspetto' ? 'attesa'
+                  : r && r.esito === 'no' ? (u.eImpegnata() ? 'attesa' : 'errore')
+                  : 'normale' })
   }
   return s
 }
@@ -447,7 +625,7 @@ const soprala = computed(() => {
   const py = c => (c + 0.5) * lato - cam.y
   const feriti = new Set((m.colpi || []).map(z => z.a))
   return {
-    vite: m.unita.filter(u => u.viva && u.vita < u.vitaMax)
+    vite: m.unita.filter(u => u.eInPiedi() && u.vita < u.vitaMax)
       .map(u => ({ id: u.id, x: px(u.x), y: py(u.y) - lato * 0.52,
                    q: Math.max(0, u.vita) / u.vitaMax,
                    mio: u.fazione === m.mia, ora: feriti.has(u.id) })),

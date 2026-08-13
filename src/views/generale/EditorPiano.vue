@@ -115,7 +115,33 @@ function chiediBersaglio (verbo, via, perc) {
     return
   }
   if (suMappa(mondo(), verbo)) { chiediMira(verbo, via, perc); return }
-  foglio.value = { modo: 'cosa', via, perc, verbo, cose: cosePer(mondo(), verbo) }
+  /* ── E QUANDO VALGONO TUTTI E DUE I MODI ──
+     Un verbo che accetta una CASELLA QUALSIASI (`vai`) ha due bersagli
+     legittimi e diversi: un nome — «il tesoro», che lo segue dovunque
+     finisca — e un punto della mappa, «lì dietro quel muro», che non ha
+     nome e non ce l'avrà mai.
+
+     ── LA MAPPA È SEMPRE VIVA, PER OGNI VERBO ──
+     Prima lo era solo per `vai`, e solo dopo aver scelto «un punto
+     sulla mappa» in fondo a un elenco: tre gesti per la cosa più
+     immediata che ci sia. Adesso **il foglio dei nomi e la mappa sono
+     vivi insieme, sempre**: «prendi» apre l'elenco delle cose e nello
+     stesso momento accende sul campo quelle che si possono prendere —
+     tocchi il sacco dov'è e l'ordine è scritto.
+     È il verso giusto delle due strade: l'elenco serve per quello che
+     **non si può indicare** — un segnale, una schiera, una cosa in
+     tasca a qualcuno — e per chi preferisce leggere un nome. Tutto
+     quello che sta sul campo si tocca dove sta. */
+  foglio.value = { modo: 'cosa', via, perc, verbo, conMappa: true,
+                   cose: cosePer(mondo(), verbo) }
+  chiesto = { verbo, via, perc }
+  emit('mira', { verbo })
+}
+/* «lo indico io»: si chiude l'elenco e si passa alla mappa, con lo
+   stesso meccanismo che usano i verbi che hanno solo bersagli fermi */
+function dallaMappa () {
+  const f = foglio.value
+  if (f) chiediMira(f.verbo, f.via, f.perc)
 }
 function chiediMira (verbo, via, perc) {
   chiesto = { verbo, via, perc }
@@ -195,6 +221,9 @@ function posaBersaglio (id) {
   if (via) ordineIn(props.ordini, via).complemento = id
   else nasce(perc, { verbo, complemento: id })
   chiesto = null
+  /* la mappa e l'elenco erano vivi insieme: se la risposta è arrivata
+     dalla mappa, l'elenco dei nomi non serve più */
+  if (foglio.value) foglio.value = null
 }
 const nienteMira = () => { chiesto = null }
 
@@ -471,10 +500,12 @@ defineExpose({ posaBersaglio, nienteMira })
                 :con-ciclo="!!(foglio && foglio.modo === 'azione' && gruppi.length
                                && !inRamo(foglio.perc))"
                 :cose="foglio && foglio.cose || []" :scelto="cosaScelta"
+                :con-mappa="!!(foglio && foglio.conMappa)"
                 :gruppi="gruppi" :cond="condOra" :frase="frase(condOra)"
                 @verbo="scegliVerbo" @decisione="scegliDecisione" @ciclo="scegliCiclo"
                 @ascolto="scegliAscolto"
-                @cosa="scegliCosa" @cond-cambia="cambiaCond" @chiudi="chiudi" />
+                @cosa="scegliCosa" @mappa="dallaMappa"
+                @cond-cambia="cambiaCond" @chiudi="chiudi" />
 </template>
 
 <style scoped>

@@ -11,6 +11,17 @@ import { LATO } from './attrezzi.js'
 const VERSO = { giu: Math.PI / 2, su: -Math.PI / 2, dx: 0, sx: Math.PI }
 
 export function vista(p, cosa, S = p.S) {
+  /* ── QUANDO SI SA ESATTAMENTE COSA VEDE, SI DISEGNA QUELLO ──
+     Un cerchio è una bugia comoda: la vista di questo gioco si misura
+     **camminando** (`ACammino`), quindi una siepe in mezzo la taglia, e
+     un cerchio disegnato sopra la siepe prometteva una guardia che vede
+     di là. Chi passa le celle già contate — `celle`, in pixel, quelle
+     che il motore raggiunge davvero — ottiene la macchia vera: si
+     ferma sui muri, gira per i passaggi, e a occhio si legge la regola
+     più importante del gioco senza che nessuno la debba spiegare.
+     Chi non le passa ha ancora il cerchio di prima: serve dove una
+     misura di cammino non c'è (un raggio di scena, un'anteprima). */
+  if (cosa.celle) return macchiaDiCelle(p, cosa, S)
   const { x, y, dir = 'giu', raggio = 3, apertura = 0.85, colore = '#ffd24a', giro = false } = cosa
   const R = raggio * LATO * S
   const a0 = VERSO[dir] ?? 0
@@ -26,6 +37,41 @@ export function vista(p, cosa, S = p.S) {
   p.ctx.strokeStyle = colore + '2a'; p.ctx.lineWidth = 1 * S
   p.ctx.stroke()
   p.ctx.restore()
+}
+
+/* le celle che qualcuno raggiunge davvero: una macchia sola, non
+   quaranta quadrati. Si dipingono tutte le caselle in un tracciato
+   unico e poi si riempie una volta — così i bordi interni fra due
+   caselle vicine non si vedono, e il velo non si somma dove si
+   toccano. `lato` è quanto è larga una casella a schermo: lo sa solo
+   chi ha in mano la telecamera, quindi arriva da fuori. */
+function macchiaDiCelle(p, cosa, S) {
+  const { celle, colore = '#ffd24a', lato = LATO * S } = cosa
+  if (!celle.length) return
+  const c = p.ctx
+  const traccia = () => {
+    c.beginPath()
+    for (const q of celle) c.rect(q.x - lato / 2, q.y - lato / 2, lato, lato)
+  }
+  c.save()
+  /* ── UNO SGUARDO NON HA I BORDI DRITTI ──
+     La prima stesura riempiva le caselle e ci passava un contorno
+     attorno: a schermo si leggevano come **quadretti**, cioè come una
+     griglia di roba, e la prima domanda di chi guardava è stata «e
+     quelli cosa sono?». Sono un'area, e un'area si dipinge sfumata: lo
+     stesso tracciato steso due volte, una sfocata e larga per il fiato
+     esterno e una netta e bassa per il corpo. Le caselle restano la
+     verità sotto — quello che si vede è esattamente quello che il
+     motore raggiunge — ma smettono di sembrare una scacchiera. */
+  if ('filter' in c) {
+    c.filter = `blur(${Math.max(2, lato * 0.28)}px)`
+    c.fillStyle = colore + '3a'
+    traccia(); c.fill()
+    c.filter = 'none'
+  }
+  c.fillStyle = colore + '22'
+  traccia(); c.fill()
+  c.restore()
 }
 
 /* il tratteggio che gira: le formichine del bordo dicono «questo è un

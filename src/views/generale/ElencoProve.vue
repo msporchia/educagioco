@@ -2,16 +2,23 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE PROVE — l'elenco, una riga per livello, e si aprono in fila.
 
-   NIENTE RIGHE IN MEZZO. Per un pezzo la lista era spezzata in due —
-   «il tutorial» e poi il resto — e la riga di mezzo ha detto prima «e
-   da qui in poi, per allenarsi» e poi «e da qui in poi si mescolano».
-   Erano tutt'e due false, e la seconda anche inutile: sono otto prove
-   e sono tutte tutorial, una idea per volta fino in fondo. Una
-   divisione a schermo promette che di là cambia qualcosa, e di là non
-   cambia niente.
+   ── LE RIGHE IN MEZZO SONO TORNATE, E STAVOLTA DICONO IL VERO ──
+   Per un pezzo la lista era spezzata in due — «il tutorial» e poi il
+   resto — e la riga di mezzo ha detto prima «e da qui in poi, per
+   allenarsi» e poi «e da qui in poi si mescolano»: erano tutt'e due
+   false, perché di là non cambiava niente. Erano otto prove tutte
+   tutorial, e una divisione che promette un cambio di passo inesistente
+   è peggio di nessuna divisione.
+   Adesso i tratti ci sono per davvero: dopo le sette prove comincia il
+   consolidamento, una campagna per costrutto, e in fondo il cortile,
+   dove c'è qualcuno che non comandi. Ventisei righe di fila senza dire
+   dove finisce una cosa e comincia l'altra non si leggono più.
+   I titoli non stanno qui: vengono da `data/generale.js` (`TITOLI`),
+   dallo stesso dato che decide l'ordine — perché sono la stessa
+   decisione, e separati si scollerebbero.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
-import { LIVELLI } from '../../data/generale.js'
+import { LIVELLI, TITOLI } from '../../data/generale.js'
 import { genProgresso, tappaAperta } from '../../store/profile.js'
 
 defineEmits(['apri'])
@@ -30,7 +37,7 @@ const apribile = i => tappaAperta(i, progresso.value.tappa || 0)
     <p class="intro">Non comandi nessuno a mano: scrivi gli <b>ordini</b>, premi ▶
       e guardi se il piano regge. Ogni ordine è <b>un verbo</b> e <b>una cosa</b>.</p>
     <template v-for="(l, i) in LIVELLI" :key="l.id">
-      <div v-if="i === 0" class="riga-titolo">il tutorial, una idea per volta</div>
+      <div v-if="TITOLI[i]" class="riga-titolo">{{ TITOLI[i] }}</div>
       <button class="tappa"
               :class="{ chiusa: !apribile(i), fatta: (progresso.stelle[i] || 0) > 0 }"
               :disabled="!apribile(i)" @click="$emit('apri', i)">

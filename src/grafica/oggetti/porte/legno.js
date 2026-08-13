@@ -14,7 +14,7 @@ import { mescola, tondo } from '../../comune.js'
 import { LATO, SIGILLI } from '../attrezzi.js'
 
 export function portone(p, cosa, S = p.S) {
-  const { x, y, aperto = false, lato = LATO, sigillo } = cosa
+  const { x, y, aperto = false, lato = LATO, sigillo, sbarrata = false, sfondabile = false } = cosa
   const L = lato * S, h = L / 2
   const c = p.ctx
   const pietra = '#8b8071', pietraS = '#6f6455', pietraC = mescola(pietra, '#ffffff', 0.22)
@@ -62,6 +62,42 @@ export function portone(p, cosa, S = p.S) {
     }
     battente(x - h * 0.7, y - h * 0.55, -1.15, '#a2703f')
     battente(x - h * 0.7, y + h * 0.55, 1.15, '#8d5f33')
+  } else if (sbarrata) {
+    /* ── SBARRATA: DUE TRAVI INCHIODATE, E NESSUNA TOPPA ──
+       Una toppa dice «cerca la chiave». Questa porta la chiave non ce
+       l'ha e non ce l'avrà: dirlo con una serratura è mandare un
+       bambino a girare la mappa per niente. Le due travi di traverso
+       si leggono al primo colpo d'occhio — «di qui non si passa
+       aprendo» — e i chiodi agli estremi dicono che qualcuno le ha
+       messe lì apposta.
+       Il legno è più chiaro del battente: deve staccarsi dal vuoto
+       scuro anche quando la cella è in ombra. */
+    const trave = (ang) => {
+      c.save(); c.translate(x, y); c.rotate(ang)
+      p.velo(0.4, () => p.rett(-L * 0.46, -L * 0.05, L * 0.92, L * 0.16, '#000000'))
+      p.rett(-L * 0.46, -L * 0.08, L * 0.92, L * 0.16, '#a2703f')
+      p.rett(-L * 0.46, -L * 0.08, L * 0.92, L * 0.05, mescola('#a2703f', '#ffffff', 0.3))
+      p.rett(-L * 0.46, L * 0.03, L * 0.92, L * 0.05, mescola('#a2703f', '#000000', 0.28))
+      /* i chiodi: due per trave, agli estremi, dove morde lo stipite */
+      for (const v of [-1, 1])
+        tondo(p, v * L * 0.38, 0, L * 0.035, L * 0.035, '#6b7280', '#3a3f4c', Math.max(1, L * 0.012))
+      c.restore()
+    }
+    trave(-0.42); trave(0.42)
+    /* ── E SE SI PUÒ BUTTARE GIÙ, SI VEDE CHE IL LEGNO HA CEDUTO ──
+       Una crepa sola, in mezzo: non è decorazione, è la differenza fra
+       «questa strada è chiusa» e «questa strada costa venti spallate».
+       Le due cose si scrivono uguali nel livello (`chiave` che non
+       esiste, più `forza`), quindi a schermo devono distinguersi. */
+    if (sfondabile) {
+      c.strokeStyle = '#2b2119'; c.lineWidth = Math.max(1, L * 0.03); c.lineCap = 'round'
+      c.beginPath()
+      c.moveTo(x - L * 0.1, y - L * 0.3)
+      c.lineTo(x + L * 0.04, y - L * 0.06)
+      c.lineTo(x - L * 0.06, y + L * 0.1)
+      c.lineTo(x + L * 0.09, y + L * 0.3)
+      c.stroke()
+    }
   } else {
     // la toppa e gli anelli, sul vuoto: chiuso a chiave
     tondo(p, x, y, L * 0.1, L * 0.1, '#3a3f4c')

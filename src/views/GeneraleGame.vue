@@ -47,7 +47,7 @@ import { genProgresso, genCompleta } from '../store/profile.js'
 import { superaCapitolo, stelleDi } from '../store/storie.js'
 import { suono } from '../audio.js'
 import { LIVELLI, QUANTI, proveDi } from '../data/generale.js'
-import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita,
+import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
          contaOrdini, VERBI, ilSegnale, testoCond, laCosa,
          registro, eAvanzato, libera, perdute,
          manca, eCondizione, eRipeti, eRoutine, eBlocco, ramoDi, corpoDi, dentroA,
@@ -72,8 +72,47 @@ const editor = ref(null)           // chi scrive gli ordini: `generale/EditorPia
 const pannello = ref('')           // '' | 'registro' | 'cartello' | 'scheda'
 const scheda = ref(null)
 const aiuti = ref(0), pagato = ref(false)
-const auto = ref(false), vel = ref(420)
+const auto = ref(false)
+/* ── UNA VELOCITÀ SOLA, E SVELTA ──
+   C'erano tre andature e un tasto per girarle (🐢 🐇 🐌). Non era una
+   scelta di gioco: la scena si guarda per capire dove il piano si è
+   rotto, e per quello serve vederla **subito** — chi rallentava lo
+   faceva una volta, per curiosità, e poi ci restava lento. Il tasto in
+   più costava un posto nella barra e una domanda a ogni partita
+   («e questo?»), e la risposta giusta era sempre la stessa: la più
+   veloce. Adesso è quella, e basta.
+   Il montaggio delle scene dopo la prima resta più svelto ancora: là
+   non si sta capendo, si sta verificando (vedi `battito`). */
+const VEL = 180
 const serieI = ref(0), esiti = ref([])
+/* ── IL MONTAGGIO ──
+   Vinta una scena, le altre si giocano **a schermo**, accelerate, una
+   dopo l'altra. Prima si provavano senza schermo e si andava dritti al
+   velo: era la scelta giusta per il tempo e quella sbagliata per la
+   soddisfazione, perché chi ha appena scritto sei ordini vuole VEDERE
+   che reggono anche dove la chiave sta dall'altra parte — se no non sa
+   se ha faticato per niente, e il velo che gli dice «ha retto in tre
+   situazioni» è la parola di qualcun altro.
+
+   Va veloce perché la seconda scena non si guarda come la prima: la
+   prima è la partita, queste sono la prova che era un piano. Chi ha già
+   capito ha «salta →», che le manda giù senza schermo come prima. */
+const montaggio = ref(false)
+/* e più va avanti, più stringe: dopo una ventina di passi si è visto
+   come si mette, e quello che resta è la conferma. Una scena da
+   trecento passi guardata tutta allo stesso ritmo sarebbe cinque volte
+   la partita che si è appena giocata. */
+const VEL_MONTAGGIO = 105, VEL_SPICCIA = 55, DOPO_QUANTI = 20
+const battito = computed(() => {
+  if (!montaggio.value) return VEL
+  tic.value                        // il mondo non è reattivo: si guarda attraverso il battito
+  return (mondo && mondo.passi > DOPO_QUANTI) ? VEL_SPICCIA : VEL_MONTAGGIO
+})
+/* l'attesa del cartello fra una scena e l'altra: si cancella, perché
+   uscire dal livello mentre è appeso farebbe ripartire una scena in una
+   schermata che non c'è più */
+let attesaCambio = 0
+const fermaAttesa = () => { clearTimeout(attesaCambio); attesaCambio = 0 }
 const gettoni = ref(0), scoperte = ref([])
 const tic = ref(0)                 // batte a ogni passo: è quello che rinfresca la scena
 const manchevole = ref('')         // cosa manca al piano, se ▶ non può partire
@@ -116,9 +155,9 @@ function avviaLivello (l) {
   unitaOra.value = mieUnita(l)[0]
   letta.value = null; scegliendo.value = null
   gettoni.value = l.gettoni || 0
-  scoperte.value = l.mostraNemici === true ? altruiUnita(l) : []
+  scoperte.value = l.mostraNemici === true ? altriInCampo(l) : []
   aiuti.value = 0; pagato.value = false; finito.value = null; andato.value = null
-  cambio.value = null
+  cambio.value = null; fermaAttesa(); montaggio.value = false
   serieI.value = 0; esiti.value = []; auto.value = false; caduttiFondo = 0
   pannello.value = 'cartello'          // la prima cosa è la spiegazione, e non costa niente
   nuovoMondo(0)
@@ -139,6 +178,19 @@ function nuovoMondo (k) {
   campo.value?.inquadraSu(mondo.unita.find(u => piano.value[u.id]) || mondo.unita[0])
   tic.value++
 }
+/* ── SFOGLIARE LE SITUAZIONI, DA FERMI ──
+   Non è una partita: è guardare il caso successivo. Si rifà il mondo su
+   quella variante e lo si disegna, senza toccare il piano — gli ordini
+   scritti restano, ed è il punto: **lo stesso piano, un'altra
+   battaglia**. Premendo Via si riparte comunque dalla prima, perché il
+   giudizio è su tutte e l'ordine in cui si guardano non c'entra. */
+function guarda (k) {
+  if (auto.value || montaggio.value) return
+  const q = Math.max(0, Math.min(prove.value - 1, k))
+  nuovoMondo(q)
+  campo.value?.mostraTutto()
+}
+
 /* ── UN TASTO SOLO, E FA UNA COSA SOLA ──
    Erano quattro: ▶, un passo, da capo, velocità. Adesso il tasto grande
    dice sempre cosa succede se lo premi — «Via» quando è fermo, «Stop»
@@ -148,7 +200,7 @@ function nuovoMondo (k) {
    serve, perché il piano non si può correggere mentre gira — è la
    regola del gioco. */
 function via () {
-  if (auto.value) { ferma(); return }
+  if (auto.value || montaggio.value) { ferma(); return }
   /* Non si fa partire una scena che non può finire: si dice cosa manca
      e si resta fermi. Prima il giro senza uscita partiva e girava per
      trecento passi. */
@@ -159,7 +211,11 @@ function via () {
     return
   }
   manchevole.value = ''
-  if (!mondo || mondo.finita || !mondo.passi) nuovoMondo(mondo && mondo.finita ? 0 : serieI.value)
+  /* si comincia SEMPRE dalla prima: le situazioni si sfogliano da fermi
+     per guardarle, ma il giudizio è su tutte e in ordine — se no
+     «passate 3 di 3» vorrebbe dire cose diverse a seconda di dove si
+     era rimasti a guardare */
+  if (!mondo || mondo.finita || !mondo.passi || serieI.value !== 0) nuovoMondo(0)
   /* si parte vedendo tutta la stanza: il piano si giudica guardando le
      unità muoversi insieme, non seguendone una */
   campo.value?.mostraTutto()
@@ -170,7 +226,11 @@ function unPasso () {
   if (mondo.finita || !mondo.passi) nuovoMondo(0)
   fai1()
 }
-function ferma () { auto.value = false; esiti.value = []; andato.value = null; nuovoMondo(0) }
+function ferma () {
+  fermaAttesa()
+  auto.value = false; montaggio.value = false; cambio.value = null
+  esiti.value = []; andato.value = null; nuovoMondo(0)
+}
 function fai1 () {
   if (!mondo || mondo.finita) return
   const rosseP = mondo.traccia.filter(r => r.esito === 'no').length
@@ -179,7 +239,11 @@ function fai1 () {
   campo.value?.animaPasso(() => passo(mondo))
   ultimoPasso = performance.now()
   const ev = mondo.eventi
+  /* nel montaggio i passi sono quattro volte più fitti e i suoni
+     diventerebbero un tamburello: resta quello che conta, cioè qualcuno
+     che cade, che è l'unica cosa che si vuole sentire senza guardare */
   if (ev.includes('morte')) suono.boom()
+  else if (montaggio.value) { /* il resto tace */ }
   else if (ev.includes('colpo')) suono.sparo()
   else if (ev.includes('apre')) suono.compra()
   else if (ev.includes('presa')) suono.moneta()
@@ -197,32 +261,22 @@ function fai1 () {
 }
 function chiudiVariante () {
   const e = esiti.value.slice(); e[serieI.value] = mondo.vinto; esiti.value = e
-  /* Vinta questa scena, le altre NON si fanno riguardare: si provano
-     subito senza schermo, con lo stesso motore che gioca i livelli nei
-     test — `esegui()` su un mondo nuovo per ogni variante, migliaia di
-     volte più svelto di un fotogramma. Il piano provato è esattamente
-     quello firmato: nessuna scorciatoia. Se reggono tutte, è vittoria e
-     basta — il messaggio finale resta vero, perché sono state giocate
-     davvero. Se una cede, è quella sola a comparire: dall'inizio, col
-     cartello che dice cosa cambia, così il bambino VEDE dove si rompe. */
-  if (mondo.vinto && serieI.value < prove.value - 1) {
-    suono.ok()
-    let ceduta = -1
-    for (let k = serieI.value + 1; k < prove.value; k++) {
-      const r = esegui(creaMondo(liv.value, liv.value.varianti[k]), piano.value)
-      caduttiFondo = Math.max(caduttiFondo, r.perdute || 0)
-      if (r.vinto) { const e2 = esiti.value.slice(); e2[k] = true; esiti.value = e2 }
-      else { ceduta = k; break }
-    }
-    if (ceduta === -1) { auto.value = false; vittoria(); return }
-    cambio.value = { n: ceduta + 1, quante: prove.value, testo: cosaCambia(liv.value, ceduta) }
-    setTimeout(() => {
-      cambio.value = null
-      nuovoMondo(ceduta)
-    }, 2200)
-    return
-  }
+  /* Vinta questa scena, LE ALTRE SI GIOCANO A SCHERMO. Per un pezzo si
+     provavano di nascosto — `esegui()` su un mondo nuovo, migliaia di
+     volte più svelto di un fotogramma — e vinte tutte si andava dritti
+     al velo. Il conto tornava e la soddisfazione no: il bambino aveva
+     appena scritto un piano per tre mondi e ne vedeva uno. «Ha retto in
+     tre situazioni» era una cosa che gli veniva detta, non una cosa che
+     aveva visto; e senza vederla non sa se quel giro di ronda in più
+     serviva davvero o l'ha scritto per niente.
+
+     Adesso la scena dopo comincia da sé, col cartello che dice cosa
+     cambia e a passo svelto, e si guarda lo stesso piano cavarsela in
+     un mondo che non è quello di prima. La scena che cede si comporta
+     come sempre, perché è sempre stata così: si vede cadere. */
+  if (mondo.vinto && serieI.value < prove.value - 1) { prossimaScena(); return }
   cambio.value = null
+  montaggio.value = false
   auto.value = false
   if (mondo.vinto && e.filter(Boolean).length === prove.value) vittoria()
   else {
@@ -239,6 +293,55 @@ function chiudiVariante () {
                      chi: c && c.unita, quando: mondo.passi }
   }
 }
+
+/* ── la scena dopo ──
+   Il cartello dice cosa cambia e resta il tempo di leggerlo, poi la
+   scena parte da sola. Meno dei due secondi e due di prima: quello era
+   il tempo giusto per un cartello che annunciava l'unica scena rimasta
+   da giocare, ed è troppo per il secondo di tre. */
+function prossimaScena () {
+  suono.ok()
+  const k = serieI.value + 1
+  montaggio.value = true
+  auto.value = false                 // ferma sotto il cartello: riparte lei
+  cambio.value = { n: k + 1, quante: prove.value, testo: cosaCambia(liv.value, k) }
+  fermaAttesa()
+  attesaCambio = setTimeout(() => {
+    attesaCambio = 0
+    cambio.value = null
+    nuovoMondo(k)
+    campo.value?.mostraTutto()       // la prova si guarda intera, come la partita
+    auto.value = true
+  }, 1500)
+}
+
+/* ── salta ──
+   Non salta il giudizio: le scene che restano si giocano lo stesso, ma
+   senza schermo — è il modo di prima, che resta per chi ha già capito e
+   vuole il risultato. Se una cede si va a vederla, perché quella è
+   l'unica che vale davvero la pena guardare. */
+function saltaMontaggio () {
+  fermaAttesa()
+  montaggio.value = false; auto.value = false; cambio.value = null
+  let ceduta = -1
+  for (let k = serieI.value; k < prove.value; k++) {
+    if (esiti.value[k] === true) continue
+    const r = esegui(creaMondo(liv.value, liv.value.varianti[k]), piano.value)
+    caduttiFondo = Math.max(caduttiFondo, r.perdute || 0)
+    const e = esiti.value.slice(); e[k] = r.vinto; esiti.value = e
+    if (!r.vinto) { ceduta = k; break }
+  }
+  if (ceduta === -1) { vittoria(); return }
+  cambio.value = { n: ceduta + 1, quante: prove.value, testo: cosaCambia(liv.value, ceduta) }
+  attesaCambio = setTimeout(() => {
+    attesaCambio = 0
+    cambio.value = null
+    nuovoMondo(ceduta)
+    campo.value?.mostraTutto()
+    auto.value = true
+  }, 1500)
+}
+
 function vittoria () {
   suono.livello()
   const n = quantiOrdini.value
@@ -270,7 +373,7 @@ function vittoria () {
 let ultimoPasso = 0
 function giro (ts) {
   if (mondo && fase.value === 'gioco') {
-    if (auto.value && !mondo.finita && ts - ultimoPasso >= vel.value) fai1()
+    if (auto.value && !mondo.finita && ts - ultimoPasso >= battito.value) fai1()
     campo.value?.disegna()
   }
   raf = requestAnimationFrame(giro)
@@ -300,7 +403,7 @@ function tocca ({ x, y }) {
     editor.value?.posaBersaglio(id)
     return
   }
-  const u = mondo.unita.find(z => z.viva && z.x === x && z.y === y)
+  const u = mondo.unita.find(z => z.eInPiedi() && z.x === x && z.y === y)
   if (!u) return
   if (piano.value[u.id]) { unitaOra.value = u.id; letta.value = null }
   else letta.value = letta.value === u.id ? null : u.id
@@ -394,7 +497,13 @@ const incompleti = computed(() => {
 
 /* le unità del giocatore e quelle di cui si possono leggere gli ordini */
 const mieie = computed(() => (mondo ? mieUnita(liv.value) : []))
-const altrui = computed(() => (mondo ? altruiUnita(liv.value) : []))
+/* ── LA FILA IN FONDO È «CHI C'È» ──
+   Tutti quelli che non comandi, anche chi non ha un piano: se non sta
+   qui non lo si può toccare, e la sua scheda non la legge nessuno.
+   Quelli di cui si può leggere il piano restano un elenco a parte
+   (`altruiUnita`), ed è quello che il gettone della spia scopre. */
+const altrui = computed(() => (mondo ? altriInCampo(liv.value) : []))
+const conPiano = computed(() => (mondo ? altruiUnita(liv.value) : []))
 const unita = id => (mondo ? mondo.perId[id] : null)
 const ordiniAltrui = computed(() => {
   if (!letta.value || !mondo) return []
@@ -405,7 +514,7 @@ const ordiniAltrui = computed(() => {
    la sua domanda e poi le due strade rientrate, che è come si racconta a
    parole. Qui non si tocca niente — si deduce. */
 function intercetta () {
-  const nascoste = altrui.value.filter(u => !scoperte.value.includes(u))
+  const nascoste = conPiano.value.filter(u => !scoperte.value.includes(u))
   if (!gettoni.value || !nascoste.length) return
   gettoni.value--
   scoperte.value = [...scoperte.value, nascoste[0]]
@@ -443,6 +552,15 @@ const dritta = computed(() => {
   if (!mondo) return ''
   if (mondo.finita && !mondo.vinto) return '💥 ' + mondo.motivo
   if (mondo.finita && mondo.vinto) return '✔ Battaglia ' + (serieI.value + 1) + ' vinta.'
+  /* ── E COSA CAMBIA IN QUESTA, PRIMA DI FIRMARE ──
+     Sta qui e non in una striscia sua: la riga dell'obiettivo è dove si
+     guarda per sapere cosa si deve ottenere, e «stavolta l'orco arriva
+     da tramontana» è la seconda metà della stessa domanda. Compare solo
+     da fermi e solo dove le battaglie sono più d'una — durante la
+     partita quella riga serve a dire com'è andata. */
+  if (prove.value > 1 && !auto.value && !montaggio.value)
+    return liv.value.dritta +
+      ` <i class="quale">· battaglia ${serieI.value + 1}: ${cosaCambia(liv.value, serieI.value)}</i>`
   return liv.value.dritta
 })
 const listaAiuti = computed(() => (liv.value.aiuti || []).slice(0, aiuti.value))
@@ -462,12 +580,16 @@ onMounted(() => {
   window.addEventListener('resize', ridimensiona)
   window.__gen = { apri, apriStoria, apriCapitolo, via, unPasso, ferma, riavvolgi,
                    piano, LIVELLI, fase, L, storiaOra, contesto, esiti, finito, cambio,
+                   montaggio, saltaMontaggio, serieI,
                    mondo: () => mondo, scegliendo, unitaOra,
                    /* dove sta una cella sullo schermo: serve ai test per
                       toccare il bersaglio come lo tocca un dito */
                    dove: (x, y) => campo.value.puntoDi(x, y) }
 })
-onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('resize', ridimensiona) })
+onUnmounted(() => {
+  cancelAnimationFrame(raf); fermaAttesa()
+  window.removeEventListener('resize', ridimensiona)
+})
 async function ridimensiona () {
   if (fase.value !== 'gioco') return
   await campo.value?.misura(); campo.value?.disegna()
@@ -485,10 +607,21 @@ async function ridimensiona () {
         <div class="gettone mini">📜 <b>{{ quantiOrdini }}</b><i>· par {{ par }}</i></div>
         <!-- le scene: numerate, così si sa a quale si è e quali sono
              già passate. Erano tre pallini vuoti e non diceva niente. -->
-        <div v-if="prove > 1" class="prove" :title="'scena ' + (serieI + 1) + ' di ' + prove">
-          <i v-for="n in prove" :key="n"
-             :class="{ presa: esiti[n - 1] === true, persa: esiti[n - 1] === false,
-                       ora: n - 1 === serieI && !esiti[n - 1] }">{{ esiti[n - 1] === true ? '✓' : n }}</i>
+        <!-- ── E SONO ANCHE IL SELETTORE ──
+             Dicevano già «a quale battaglia siamo, e quali sono
+             passate»: farci anche sfogliare non aggiunge niente da
+             capire, e toglie di mezzo la striscia con le frecce che
+             stava sopra al campo (e ne rubava i tocchi). Da fermi si
+             tocca un numero e si guarda quella situazione: il piano
+             scritto resta, ed è il punto — lo stesso piano, un'altra
+             battaglia. Mentre gira non si tocca: la scena la decide il
+             gioco, in ordine. -->
+        <div v-if="prove > 1" class="prove"
+             :title="auto || montaggio ? '' : 'tocca un numero per guardare quella battaglia'">
+          <button v-for="n in prove" :key="n" :disabled="auto || montaggio"
+                  :aria-label="'guarda la battaglia ' + n" @click="guarda(n - 1)"
+                  :class="{ presa: esiti[n - 1] === true, persa: esiti[n - 1] === false,
+                            ora: n - 1 === serieI && !esiti[n - 1] }">{{ esiti[n - 1] === true ? '✓' : n }}</button>
         </div>
         <div class="gettone mini stelline">{{ '⭐'.repeat(stelle) || '☆' }}</div>
       </template>
@@ -509,11 +642,29 @@ async function ridimensiona () {
     <template v-else>
       <!-- il campo: canvas, camera, animazione e dito stanno tutti là
            dentro. Qui si dice solo cosa c'è da far vedere. -->
-      <CampoLivello ref="campo" :mondo-ora="mondoOra" :liv="liv" :vel="vel" :tic="tic"
+      <!-- la scivolata dura quanto il passo: nel montaggio i passi sono
+           più fitti, e un'andatura tarata su 420 ms resterebbe indietro
+           mostrando le unità a metà casella per tutto il tempo -->
+      <CampoLivello ref="campo" :mondo-ora="mondoOra" :liv="liv" :vel="battito" :tic="tic"
                     :giri="giri" :bersagli="bersagli()" :mirando="!!scegliendo"
-                    :mie="mieie" @tocca="tocca">
+                    :mie="mieie" :aperta="pannello === 'scheda' ? (scheda || '') : ''"
+                    @tocca="tocca">
         <!-- fra una scena e l'altra: cosa è cambiato -->
         <CartelloScena v-if="cambio" v-bind="cambio" />
+
+        <!-- IL MONTAGGIO. Le scene che restano si giocano da sole e
+             svelte: la striscia dice quale si sta guardando e perché è
+             diversa, che è tutto quello che serve sapere mentre scorre.
+             «salta» sta lì dentro perché è l'unica cosa da fare qui: il
+             piano non si tocca mentre gira, e il tasto grande sotto
+             ferma tutto invece di andare avanti. -->
+        <div v-if="montaggio && !cambio" class="montaggio">
+          <div class="che">
+            <span class="et">prova {{ serieI + 1 }} di {{ prove }} · lo stesso piano</span>
+            <b>stavolta {{ cosaCambia(liv, serieI) }}</b>
+          </div>
+          <button class="salta" @click="saltaMontaggio">salta →</button>
+        </div>
       </CampoLivello>
 
       <!-- Mentre si sceglie: la striscia dice cosa si sta facendo. Non è
@@ -537,11 +688,13 @@ async function ridimensiona () {
         <!-- il tasto grande dice cosa fa premendolo, e non c'è nient'altro
              da decidere: «un passo» era una scorciatoia da grandi, e
              «da capo» faceva la stessa cosa che fa Stop -->
-        <button class="tasto via" :class="{ gira: auto }" @click="via">
-          {{ auto ? '⏹ Stop' : '▶ Via' }}</button>
-        <button class="tasto q" aria-label="velocità"
-                @click="vel = vel === 420 ? 180 : vel === 180 ? 760 : 420">
-          {{ vel === 180 ? '🐇' : vel === 760 ? '🐌' : '🐢' }}</button>
+        <!-- durante il montaggio il tasto resta «Stop» anche nel mezzo
+             secondo di cartello in cui la scena è ferma: lì dentro sta
+             girando il livello, e un «Via» offerto in quell'istante
+             rimetterebbe tutto alla prima scena proprio mentre si sta
+             guardando la seconda -->
+        <button class="tasto via" :class="{ gira: auto || montaggio }" @click="via">
+          {{ auto || montaggio ? '⏹ Stop' : '▶ Via' }}</button>
         <button v-if="liv.mostraNemici === 'gettoni'" class="tasto q spia"
                 aria-label="intercetta" @click="intercetta">🕵<b>{{ gettoni }}</b></button>
         <button class="tasto q" :class="{ qui: pannello === 'cartello' }" aria-label="spiegazione"
@@ -646,6 +799,29 @@ async function ridimensiona () {
    e si portano dietro il loro stile */
 
 /* la striscia di quando si sta mirando un bersaglio */
+/* la striscia del montaggio: sta SOPRA la mappa e non la spinge in giù —
+   il campo è già inquadrato per starci tutto, e una striscia che ruba
+   altezza gli farebbe rimpicciolire le celle a metà scena. Per lo stesso
+   motivo è translucida: sotto ci passano le unità che si stanno
+   guardando. */
+.montaggio { position:absolute; top:0; left:0; right:0; z-index:14;
+             pointer-events:none;          /* come la striscia dello sfoglio */
+             display:flex; align-items:center; gap:8px; padding:7px 9px;
+             background:linear-gradient(180deg,#101828e8,#10182800);
+             animation:entra-su .22s ease }
+.montaggio .che { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.montaggio .et { font-size:9.5px; font-weight:900; letter-spacing:.7px;
+                 text-transform:uppercase; color:var(--giallo) }
+.montaggio b { font-size:13px; line-height:1.25; color:#eef2fa;
+               overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.montaggio .salta { flex:none; min-height:34px; border-radius:11px; padding:0 12px;
+                    font-size:12.5px; font-weight:900; color:#eef2fa; background:#ffffff26 }
+.montaggio .salta { pointer-events:auto }
+.montaggio .salta:active { transform:translateY(1px) }
+@keyframes entra-su { from { opacity:0; transform:translateY(-6px) } to { opacity:1 } }
+
+
+
 .scelta { flex:none; display:flex; align-items:center; gap:7px; padding:6px 8px;
           background:#101828; border-bottom:2px solid var(--giallo) }
 .scelta .dett { flex:1; min-width:0; font-size:12px; line-height:1.25; color:#eef2fa }
@@ -676,7 +852,13 @@ async function ridimensiona () {
 .spia b { font-size:11px }
 
 /* ── chi comanda ── */
-.chi { flex:none; display:flex; gap:5px; padding:0 8px 4px; overflow-x:auto; scrollbar-width:none }
+/* ── SI VEDONO TUTTI, SENZA SCORRERE ──
+   Era una riga sola con `overflow-x:auto`: con quattro personaggi in
+   campo il quarto finiva oltre il bordo e non lo trovava nessuno — «il
+   guardiano non me lo mostra fra i tab». Una fila che scorre nasconde
+   senza dirlo; una che va a capo no, e due righe di pastiglie costano
+   trenta pixel. */
+.chi { flex:none; display:flex; flex-wrap:wrap; gap:5px; padding:0 8px 4px }
 .chi::-webkit-scrollbar { display:none }
 .chi button { flex:none; min-height:32px; border-radius:11px; padding:0 9px; font-size:11.5px;
               font-weight:800; background:#ffffffaa; color:var(--tenue) }
@@ -744,10 +926,15 @@ async function ridimensiona () {
 .gettone.mini i { font-style:normal; font-size:10.5px; color:var(--tenue) }
 .gettone.mini.stelline { font-size:11px; letter-spacing:-1px }
 .prove { display:flex; gap:3px; flex:none }
-.prove i { width:16px; height:16px; border-radius:50%; background:#ffffffcc; font-style:normal;
-           font-size:9.5px; font-weight:900; line-height:16px; text-align:center;
+/* più grandi di prima: adesso si toccano, e sedici pixel non sono un
+   bersaglio per un dito. Restano pastiglie, non tasti: non devono
+   sembrare un comando in più da capire. */
+.prove button { width:22px; height:22px; border-radius:50%; background:#ffffffcc;
+           font-size:10.5px; font-weight:900; line-height:22px; text-align:center; padding:0;
            color:var(--tenue); box-shadow:inset 0 0 0 1.5px #c6cfdd }
-.prove i.presa { background:var(--verde); color:#06210f; box-shadow:none }
-.prove i.persa { background:#e0554d; color:#fff; box-shadow:none }
-.prove i.ora { background:var(--giallo); color:#3a2c00; box-shadow:none }
+.prove button:disabled { opacity:.85 }
+.prove button:active:not(:disabled) { transform:translateY(1px) }
+.prove button.presa { background:var(--verde); color:#06210f; box-shadow:none }
+.prove button.persa { background:#e0554d; color:#fff; box-shadow:none }
+.prove button.ora { background:var(--giallo); color:#3a2c00; box-shadow:none }
 </style>

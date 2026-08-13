@@ -70,6 +70,15 @@ function scriviVersione () {
 // rete: si risponde da lì e in parallelo si va a vedere se c'è di nuovo,
 // così l'aggiornamento arriva al caricamento dopo invece di far
 // aspettare quello in corso.
+//
+// CON UN'ECCEZIONE: LA PAGINA. Per il documento si prova prima la rete,
+// con pochi secondi di pazienza e la cache pronta dietro. Cache-first
+// anche lì vuol dire che una copia arrivata storta — o una versione
+// pubblicata con un guasto — si ripresenta identica ad ogni avvio, e da
+// dentro il telefono non c'è ricarica che la smuova: l'unica strada
+// resta il menu del browser, che è esattamente dove un bambino non
+// arriva. Offline non cambia niente: `fetch` fallisce subito e risponde
+// la cache, come prima.
 function scriviServiceWorker () {
   return {
     name: 'scrivi-service-worker',
@@ -99,6 +108,21 @@ self.addEventListener('activate', e => {
     .then(() => self.clients.claim()))
 })
 
+// la rete, ma con un tetto all'attesa: passato quello si va di cache,
+// perché una pagina che tarda è indistinguibile da una che non arriva
+const PAZIENZA = 2500
+function conRete (req) {
+  return new Promise((si, no) => {
+    const scaduta = setTimeout(() => no(new Error('lenta')), PAZIENZA)
+    fetch(req).then(r => {
+      clearTimeout(scaduta)
+      if (!r || !r.ok) return no(new Error('storta'))
+      caches.open(CACHE).then(c => c.put(req, r.clone())).catch(() => {})
+      si(r)
+    }).catch(x => { clearTimeout(scaduta); no(x) })
+  })
+}
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return
   const url = new URL(e.request.url)
@@ -107,6 +131,12 @@ self.addEventListener('fetch', e => {
   // la cache direbbe sempre la versione di questo service worker, cioè
   // proprio la domanda a cui deve rispondere
   if (url.pathname.endsWith('versione.json')) return
+  // la pagina: prima la rete, e la cache resta la rete di sicurezza
+  if (e.request.mode === 'navigate') {
+    e.respondWith(conRete(e.request)
+      .catch(() => caches.match(e.request).then(t => t || caches.match('./'))))
+    return
+  }
   e.respondWith(caches.match(e.request).then(trovato => {
     const dalla_rete = fetch(e.request).then(r => {
       if (r && r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()))

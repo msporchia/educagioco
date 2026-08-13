@@ -1,16 +1,18 @@
 /* ── LA LEVA ──
-   `tirata` da 0 (in su, da tirare) a 1 (giù, tirata). Il pomello è
-   rosso quando è da tirare e verde quando è tirata: a sei anni il
-   colore si legge prima della posizione dell'asta, e il numero fra 0 e
-   1 invece di un vero/falso serve perché un giorno la si vedrà
-   scendere piano. */
+   Il pomello è rosso quando è da tirare e verde quando è tirata: a sei
+   anni il colore si legge prima della posizione dell'asta.
+   `Leva.faccia()` (`motore/generale/elementi/leva.js`) consegna un
+   booleano, `premuta` — «premuta una volta, fatto per sempre», non un
+   interruttore — e questo pittore lo traduce in un numero fra 0 e 1
+   perché un giorno, quando ci sarà l'animazione, sarà quel numero a
+   farla scendere piano invece di scattare. */
 import { buio, capsula, poligono, tondo } from '../comune.js'
 import { LEGNO, ombra } from './attrezzi.js'
 
 export function leva(p, cosa, S = p.S) {
-  const { x, y, tirata = 0 } = cosa
+  const { x, y, premuta = false } = cosa
   const s = S
-  const t = Math.max(0, Math.min(1, tirata))
+  const t = premuta ? 1 : 0
   ombra(p, x, y, 4 * s, 1.6 * s)
   // la base: un ceppo di ferro con la fessura
   poligono(p, [[x - 3.4 * s, y], [x + 3.4 * s, y], [x + 2.6 * s, y - 3 * s], [x - 2.6 * s, y - 3 * s]],

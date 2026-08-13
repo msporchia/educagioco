@@ -58,12 +58,15 @@ const props = defineProps({
   /* modo «cosa» */
   cose: { type: Array, default: () => [] },
   scelto: { type: String, default: '' },
+  /* il verbo accetta anche una casella qualsiasi: in fondo all'elenco
+     compare la voce che passa la parola alla mappa */
+  conMappa: { type: Boolean, default: false },
   /* modo «cond» */
   gruppi: { type: Array, default: () => [] },
   cond: { type: Object, default: null },
   frase: { type: String, default: '' },
 })
-const emit = defineEmits(['verbo', 'decisione', 'ciclo', 'ascolto', 'cosa',
+const emit = defineEmits(['verbo', 'decisione', 'ciclo', 'ascolto', 'cosa', 'mappa',
                           'cond-cambia', 'chiudi'])
 
 /* i verbi in tre scaglioni, come li nomina il motore: un posto alla
@@ -141,7 +144,8 @@ const posa = computed(() => {
 </script>
 
 <template>
-  <div v-if="modo" class="velo-scelta" :class="{ centrato: !posa }" @click.self="emit('chiudi')">
+  <div v-if="modo" class="velo-scelta" :class="{ centrato: !posa, passa: conMappa }"
+       @click.self="emit('chiudi')">
     <div class="foglio-scelta" :class="posa ? (posa.giu ? 'giu' : 'su') : 'mezzo'"
          :style="posa ? { ...posa.stile, '--punta': posa.punta + 'px' } : null">
       <div class="capo">{{ titolo }}
@@ -200,6 +204,14 @@ const posa = computed(() => {
       <div v-else-if="modo === 'cosa'" class="corpo nomi">
         <button v-for="c in cose" :key="c.id" class="nome" :class="{ qui: c.id === scelto }"
                 @click="emit('cosa', c.id)">{{ c.em }} {{ c.nome }}</button>
+        <!-- ── E LA MAPPA È VIVA MENTRE QUESTO È APERTO ──
+             Non è una voce dell'elenco: è la mappa stessa. Il velo qui
+             lascia passare il dito (`.passa`), quindi si tocca una
+             casella e l'ordine è scritto — senza aprire niente, senza
+             scegliere «un punto sulla mappa» in fondo a una lista. Il
+             cartellino lo dice, perché una cosa che si può fare e non
+             si vede è una cosa che non esiste. -->
+        <div v-if="conMappa" class="oppure">…oppure tocca la cosa dov'è, sulla mappa</div>
       </div>
 
       <!-- ═════ QUALE DOMANDA ═════ -->
@@ -226,6 +238,13 @@ const posa = computed(() => {
 /* il velo non nasconde, intercetta: serve a chiudere toccando fuori, e
    deve lasciar vedere la riga da cui la domanda è partita */
 .velo-scelta { position:fixed; inset:0; z-index:30; background:#0b12201f }
+/* quando il bersaglio può essere una casella, il velo NON intercetta:
+   il dito deve poter arrivare alla mappa che sta sotto. Si chiude con
+   la ✕ invece che toccando fuori, ed è il prezzo giusto — toccare
+   fuori qui vuol dire «voglio quella casella lì». */
+.velo-scelta.passa { pointer-events:none }
+.velo-scelta.passa .foglio-scelta { pointer-events:auto }
+.oppure { padding:7px 10px 2px; font-size:11.5px; color:var(--tenue); font-weight:700 }
 .velo-scelta.centrato { display:flex; align-items:center; justify-content:center;
                         padding:12px; background:#0b122055 }
 /* fondo PIENO, non `--carta`: quello è bianco al 94%, e appoggiato

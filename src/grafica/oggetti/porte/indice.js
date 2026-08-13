@@ -30,6 +30,7 @@ import { cancello } from './ferro.js'
 import { saracinesca } from './saracinesca.js'
 import { arco } from './arco.js'
 import { pietraPorta } from './pietra.js'
+import { apriForziere } from '../forziere.js'
 
 export { portone, cancello, saracinesca, arco, pietraPorta }
 
@@ -40,6 +41,19 @@ export const PORTE = {
   saracinesca: (p, cosa, S, a) => saracinesca(p, { ...cosa, alzata: a }, S),
   arco: (p, cosa, S, a) => arco(p, { ...cosa, apertura: a }, S),
   pietra: (p, cosa, S, a) => pietraPorta(p, { ...cosa, apertura: a }, S),
+  /* ── E IL SESTO VARCO NON È UN VARCO ──
+     Un forziere si apre come si apre un cancello: `apri [il tesoro]`,
+     stessa parola, stessa struttura, faccia diversa — è l'esercizio
+     che la didattica chiama «stessa struttura, facce diverse» (§5), e
+     la cassa è il caso in cui si vede meglio, perché nessuno
+     scambierebbe un forziere per una porta.
+     Il disegno c'era già e stava fermo: `apriForziere` è il solo
+     pittore del gioco che sappia fare un MOMENTO — coperchio, lampo,
+     quattordici gemme — e finché il tesoro si prendeva invece di
+     aprirsi si vedeva solo il suo ultimo fotogramma. `a` qui non è
+     mai binario: chi disegna lo fa scorrere (`CampoLivello.vue`), e
+     sopra 1 la cassa resta aperta a luccicare. */
+  forziere: (p, cosa, S, a) => apriForziere(p, cosa.x, cosa.y, a, S),
 }
 
 export const STILI_PORTA = Object.keys(PORTE)

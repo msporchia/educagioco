@@ -20,6 +20,7 @@ import { persona, bestia } from '../corpo.js'
 import { CAVALIERE } from './cavaliere.js'
 import { LADRA } from './ladra.js'
 import { ELFO } from './elfo.js'
+import { PRINCIPESSA } from './principessa.js'
 import { MAGO } from './mago.js'
 import { ORCO } from './orco.js'
 import { GUARDIA } from './guardia.js'
@@ -34,7 +35,7 @@ import { PAPERA, MANTI as MANTI_PAPERA } from './papera.js'
 /* gli eroi prima, i mostri poi, gli animali per ultimi: è l'ordine in
    cui compaiono nella vetrina, e non conta per nient'altro */
 export const PERSONE = {
-  cavaliere: CAVALIERE, ladra: LADRA, elfo: ELFO, mago: MAGO,
+  cavaliere: CAVALIERE, ladra: LADRA, elfo: ELFO, principessa: PRINCIPESSA, mago: MAGO,
   orco: ORCO, guardia: GUARDIA, capitano: CAPITANO,
   goblin: GOBLIN, scheletro: SCHELETRO, lupo: LUPO,
   gatto: GATTO, orso: ORSO, papera: PAPERA,

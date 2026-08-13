@@ -18,6 +18,7 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali } from '../store/profile.js'
 import { leggiPin, scriviPin, PIN_INIZIALE } from '../store/pin.js'
+import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
 import { GIOCHI } from '../data/giochi.js'
 import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
 import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
@@ -57,7 +58,47 @@ const nuovo = ref('')
    compaiono, e quali domande hanno senso per questo bambino. */
 const scheda = ref('giochi')
 
-onMounted(async () => { pin.value = await leggiPin() })
+/* i guasti registrati da `incidenti.js`: si leggono una volta all'entrata
+   e non si stanno a guardare in diretta — chi apre questa pagina lo fa
+   dopo, per capire cos'è successo prima */
+const incidenti = ref([])
+
+onMounted(async () => {
+  pin.value = await leggiPin()
+  incidenti.value = await leggiIncidenti()
+})
+
+/* l'ora e basta se è di oggi, altrimenti anche il giorno: «alle 17:42»
+   è quello che un genitore confronta col «si è rotto prima di cena» */
+function quando (iso) {
+  const d = new Date(iso)
+  if (isNaN(d)) return '?'
+  const ore = d.toLocaleTimeString('it', { hour: '2-digit', minute: '2-digit' })
+  const oggi = new Date().toDateString() === d.toDateString()
+  return oggi ? ore : d.toLocaleDateString('it', { day: 'numeric', month: 'short' }) + ' ' + ore
+}
+
+/* copiare serve a mandarlo a chi ci mette le mani: negli appunti finisce
+   tutto quello che c'è, pila compresa, che a schermo sarebbe illeggibile */
+async function copiaGuasti () {
+  const testo = incidenti.value.map(g =>
+    `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || ''}`).join('\n\n')
+  try {
+    await navigator.clipboard.writeText(testo)
+    esito.value = { ok: true, testo: 'Copiato negli appunti.' }
+  } catch (e) {
+    esito.value = { ok: false, testo: 'Non si riesce a copiare: si legge da qui.' }
+  }
+}
+
+async function scordaGuasti () {
+  await scordaIncidenti()
+  incidenti.value = []
+  esito.value = { ok: true, testo: 'Cancellati.' }
+}
+
+/* la riparazione ricarica la pagina da sé: non c'è niente da dire dopo */
+const riparaApp = () => ripara()
 
 const pallini = computed(() => [0, 1, 2, 3].map(i => i < cifre.value.length))
 const titoloCambio = computed(() => modo.value === 'ripeti' ? 'Ripeti il codice nuovo' : 'Il codice nuovo')
@@ -598,6 +639,47 @@ async function azzera() {
         </button>
       </div>
 
+      <!-- ── SE QUALCOSA SI ROMPE ──
+           Un guasto su un telefono che non è il tuo è, di solito, il
+           racconto di un bambino: «si è piantato». Qui c'è scritto cosa
+           è successo davvero, con l'ora e la versione, e sotto il tasto
+           che rimette a posto la copia dell'app senza toccare i
+           progressi. La sezione compare solo quando c'è qualcosa da
+           dire: una riga «nessun guasto» sarebbe una riga in più da
+           leggere ogni volta per non sapere niente. -->
+      <template v-if="incidenti.length">
+        <h2>Se qualcosa si è rotto</h2>
+
+        <div class="carte">
+          <div class="carta guasti" data-azione="guasti">
+            <span class="ico">🔧</span>
+            <b>Ultimi inciampi</b>
+            <i>Da leggere se il gioco si è chiuso o un tasto non rispondeva</i>
+            <ul class="lista-guasti">
+              <li v-for="(g, i) in incidenti.slice().reverse()" :key="i">
+                <b>{{ quando(g.quando) }}</b>
+                <span>{{ g.testo }}</span>
+                <small>{{ g.dove }}{{ g.versione ? ' · ' + g.versione : '' }}{{
+                  g.volte > 1 ? ' · ' + g.volte + ' volte' : '' }}</small>
+              </li>
+            </ul>
+            <div class="riga">
+              <button class="bottone chiaro" data-azione="copia-guasti" @click="copiaGuasti">
+                Copia</button>
+              <button class="bottone chiaro" data-azione="scorda-guasti" @click="scordaGuasti">
+                Cancella</button>
+            </div>
+          </div>
+
+          <button class="carta" data-azione="ripara" @click="riparaApp">
+            <span class="ico">♻️</span>
+            <b>Ripara l'app</b>
+            <i>Riscarica il gioco da capo. I progressi non si toccano — quelli
+              stanno da un'altra parte, e li porta via solo il tasto rosso qui sopra</i>
+          </button>
+        </div>
+      </template>
+
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
     </div>
 
@@ -716,6 +798,23 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .carta.gioco.prova b small { margin-left:6px; font-size:10px; font-weight:900; letter-spacing:.4px;
                              text-transform:uppercase; color:#8a6a1f; background:#fff2cf;
                              border-radius:7px; padding:2px 6px; vertical-align:middle }
+
+/* ── il libretto dei guasti ──
+   Una carta che si legge, non che si preme: il testo dell'errore va a
+   capo quanto serve e resta in monospazio, perché è roba da girare a chi
+   ci mette le mani, non da capire a colpo d'occhio. */
+.carta.guasti { grid-template-rows:auto auto auto auto }
+.carta.guasti .ico { grid-row:1/3 }
+.lista-guasti { grid-column:1/3; margin:8px 0 0; padding:0; list-style:none;
+                display:flex; flex-direction:column; gap:7px }
+.lista-guasti li { display:flex; flex-direction:column; gap:1px; padding:7px 10px;
+                   background:#fff0e6; border-radius:11px }
+.lista-guasti b { font-size:12px; color:#b4603f }
+.lista-guasti span { font-size:11.5px; line-height:1.35; word-break:break-word;
+                     font-family:ui-monospace,monospace; color:var(--viola-scuro) }
+.lista-guasti small { font-size:10.5px; color:var(--tenue); opacity:.8 }
+.carta.guasti .riga { grid-column:1/3; justify-content:flex-start; margin-top:9px }
+.carta.guasti .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
 
 /* Cancellare non deve somigliare alle altre due: si vede da lontano che è
    quella che fa danni. */

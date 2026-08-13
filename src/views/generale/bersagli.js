@@ -25,9 +25,20 @@ export const conNome = (mondo, v) => (mondo ? nomiDi(mondo, v) : [])
 export const cosePer = (mondo, v) =>
   conNome(mondo, v).map(k => laCosa(mondo, k)).filter(Boolean)
 
-/* i tipi che stanno FERMI in un posto, e quindi si possono indicare col
-   dito invece che leggere in un elenco */
-const POSATO = { posto: 1, oggetto: 1, porta: 1, unita: 1, fazione: 1, zona: 1 }
+/* ── SI INDICA COL DITO SOLO QUELLO CHE NON SI SPOSTA ──
+   Un punto sulla mappa vuol dire «quella casella lì». Va bene per le
+   cose immobili — una porta, un posto, una zona: dove sono adesso è
+   dove saranno sempre, e indicarle è dire il loro nome con un gesto.
+   Non va bene per un tesoro e per un'unità: **la stessa cosa sta in un
+   punto diverso in ogni battaglia**, e il piano si firma prima di
+   sapere quale tocca. Indicare il forziere che si vede adesso insegna
+   il contrario di quello che il gioco vuole insegnare — e a schermo si
+   vede subito: si sceglie un bersaglio, si sfoglia la situazione dopo,
+   e quel bersaglio non è più lì.
+   Quindi le cose che si spostano si scelgono **per nome**, da un
+   elenco: «il tesoro» segue il tesoro dovunque finisca, ed è la stessa
+   ragione per cui `prendi [il tesoro]` batte `vai [8,1]`. */
+const POSATO = { posto: 1, porta: 1, zona: 1 }
 
 /* questo verbo il bersaglio se lo fa dare dalla mappa o da un elenco? */
 export function suMappa (mondo, v) {
@@ -47,6 +58,14 @@ export function suMappa (mondo, v) {
 export function bersagliDi (mondo, verbo) {
   if (!mondo || !verbo) return []
   const out = []
+  /* ── «È IN PIEDI?» SI CHIEDE A LEI ──
+     Le viste leggevano `u.viva`, che non esiste più: la classe `Unita`
+     tiene lo stato per sé e risponde a `eInPiedi()`. `undefined` è
+     falso, quindi ogni unità risultava caduta — nessuna compariva fra i
+     bersagli, e sul campo si disegnavano tutte stese. Una riga sola, e
+     chi la chiama non deve sapere come è fatta dentro. */
+  const inPiedi = u => !!u && (typeof u.eInPiedi === 'function' ? u.eInPiedi() : u.inPiedi !== false)
+
   const agg = (id, x, y) => {
     const C = laCosa(mondo, id)
     if (C) out.push({ id, x, y, nome: C.nome, em: C.em })
@@ -57,13 +76,19 @@ export function bersagliDi (mondo, verbo) {
     else if (C.tipo === 'porta') agg(k, mondo.porte[k].x, mondo.porte[k].y)
     else if (C.tipo === 'zona') (mondo.zone[k] || []).forEach(t => agg(k, t.x, t.y))
     else if (C.tipo === 'oggetto') {
-      const o = mondo.oggetti.find(z => z.nome === k)
+      /* ── SI CERCA PER `id`, NON PER `nome` ──
+         Erano la stessa stringa, e questa riga diceva `z.nome === k`.
+         Da quando `allestimento.js` dà a ogni cosa il nome che si legge
+         in una frase («il tesoro»), cercare per nome una chiave
+         (`tesoro`) non trova più niente: il bersaglio spariva
+         dall'elenco, e l'ordine non si poteva nemmeno comporre. */
+      const o = mondo.oggetti.find(z => z.id === k)
       if (o && !o.preso) agg(k, o.x, o.y)
-      else if (o && o.preso && mondo.perId[o.preso].viva)
+      else if (o && o.preso && inPiedi(mondo.perId[o.preso]))
         agg(k, mondo.perId[o.preso].x, mondo.perId[o.preso].y)
-    } else if (C.tipo === 'unita') { const u = mondo.perId[k]; if (u && u.viva) agg(k, u.x, u.y) }
+    } else if (C.tipo === 'unita') { const u = mondo.perId[k]; if (inPiedi(u)) agg(k, u.x, u.y) }
     else if (C.tipo === 'fazione')
-      mondo.unita.filter(z => z.viva && z.fazione === k).forEach(z => agg(k, z.x, z.y))
+      mondo.unita.filter(z => inPiedi(z) && z.fazione === k).forEach(z => agg(k, z.x, z.y))
   }
   return out
 }

@@ -58,7 +58,20 @@ export const MANTI = {
 }
 
 export const PAPERA = {
-  taglia: 0.62, quadrupede: true,
+  /* ── QUANTO GRANDE, E PERCHÉ NON «QUANTO UNA PAPERA VERA» ──
+     Stava a 0.62, la più piccola di tutto il catalogo — sotto al gatto
+     (0.72) e al goblin (0.68). In proporzione è giusto: una papera è
+     piccola. A schermo era sbagliato, ed è il difetto che si vede
+     giocando invece che guardando la vetrina: **Bibi non si trova**.
+     E Bibi non è arredamento, è il personaggio attorno a cui gira
+     tutta la campagna del cortile — quello che si segue con gli occhi
+     per capire dove sta andando il pane.
+     Qui la scala non racconta la zoologia, racconta **quanto conta una
+     cosa**: chi si guarda tutto il tempo dev'essere grande abbastanza
+     da riconoscersi in un'occhiata, su una cella da 36 px e sul
+     telefono di un bambino. Resta comunque nettamente sotto a un
+     umano (1.0), che è l'unica proporzione che deve leggersi. */
+  taglia: 0.88, quadrupede: true,
   col: MANTI.bianca,
   disegna(q, s, C, dir, sw, stato) {
     const b = C.bordo, sp = 0.65 * s

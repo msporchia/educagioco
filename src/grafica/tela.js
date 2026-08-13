@@ -143,8 +143,52 @@ export function creaTela(canvas, pittori, { unita = 420, minimo = 0.62, massimo 
       (a.strato || 0) - (b.strato || 0) || (a.y || 0) - (b.y || 0))
     for (const cosa of ordinata) {
       const pittore = pittori[cosa.che]
-      if (pittore) pittore(p, cosa)
+      if (!pittore) continue
+      /* ── QUESTA SI NOMINA, QUELLA È DIPINTA ──
+         Due righe, e sono la differenza fra un campo leggibile e un
+         campo pieno di roba. Il motore lo dichiara da sempre — ogni
+         `faccia()` di una cosa in gioco passa `alone: true`, e i
+         commenti in `elementi/porta.js` e `elementi/oggetto.js` dicono
+         cosa vuol dire: «è una cosa che si nomina in un ordine, non
+         arredo dipinto sul fondale». Solo che non lo disegnava
+         nessuno, e allora una cassa di scena e un forziere da aprire
+         erano due disegni con lo stesso peso.
+         Il segno sta A TERRA e non addosso alla figura: non copre il
+         disegno, non lampeggia, e si legge anche quando le cose sono
+         fitte. `velo` è il rovescio della stessa medaglia — quanto una
+         cosa deve stare indietro — e chi non lo passa dipinge in
+         pieno, come ha sempre fatto. */
+      if (cosa.alone) {
+        /* ── E IL BORDO SEGUE LA FIGURA, NON LA CASELLA ──
+           Il fiato a terra dice «qui c'è qualcosa» ma non stacca la
+           cosa dal fondo: un sacco marrone su un pavimento marrone
+           resta invisibile anche con un alone sotto. L'ombra chiara
+           invece si attacca alla **sagoma** — la disegna il canvas da
+           sé, seguendo l'alfa di quello che il pittore posa — quindi è
+           un bordino luminoso attorno al contorno vero, qualunque
+           forma abbia, senza che nessun pittore debba saperne niente. */
+        fiato(p, cosa)
+        ctx.save()
+        ctx.shadowColor = '#fffbe8'
+        ctx.shadowBlur = 3.5 * S
+        pittore(p, cosa)
+        ctx.restore()
+      } else if (cosa.velo != null) p.velo(cosa.velo, () => pittore(p, cosa))
+      else pittore(p, cosa)
     }
+  }
+
+  /* il fiato sotto una cosa che si può nominare: un'ellisse chiara e
+     bassa, schiacciata come tutto quello che sta a terra */
+  function fiato(p, cosa) {
+    const R = S * 13
+    const g = p.ctx.createRadialGradient(cosa.x, cosa.y, R * 0.2, cosa.x, cosa.y, R)
+    g.addColorStop(0, '#ffe9b422'); g.addColorStop(0.7, '#ffe9b40e'); g.addColorStop(1, '#ffe9b400')
+    p.ctx.save()
+    p.ctx.translate(cosa.x, cosa.y); p.ctx.scale(1, 0.5); p.ctx.translate(-cosa.x, -cosa.y)
+    p.ctx.fillStyle = g
+    p.ctx.beginPath(); p.ctx.arc(cosa.x, cosa.y, R, 0, 6.29); p.ctx.fill()
+    p.ctx.restore()
   }
 
   return {

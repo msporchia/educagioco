@@ -89,6 +89,7 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
       <div class="dati">
         <span>❤️ {{ unita().vita }}/{{ unita().vitaMax }} di vita</span>
         <span>👁 vede a {{ unita().vista }} caselle</span>
+        <span>✋ {{ unita().mani }} {{ unita().mani === 1 ? 'mano' : 'mani' }}<template v-if="unita().mani"> ({{ unita().maniLibere }} libere)</template></span>
       </div>
       <!-- COME È FATTO. Non è un ordine che gli ha dato qualcuno: è la
            sua natura, e va letta prima di scrivere il piano — perché è
