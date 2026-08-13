@@ -127,7 +127,137 @@ import DUE_VIE from './livelli/tutorial/7-da-una-parte-e-dallaltra.js'
    rimetterlo in campo basta togliere i commenti a queste due righe. */
 // import TOTEM from './livelli/tutorial/8-il-totem.js'
 
-export const LIVELLI = [PRIMO, CHIAVE, RONDA, ATTESA, DUE_STRADE, RICHIAMO, DUE_VIE]
+/* ── E POI IL CORTILE DI ROSA, che è la prima CAMPAGNA ──
+   Cinque capitoli con una storia sola dentro: Rosa, la papera Bibi e il
+   cane del vicino. Non sono altre prove — sono un'altra cosa, e si
+   vede dal primo minuto: **la papera non la comandi**. Ha un piano suo
+   di una riga, che si legge toccandola, e tutto quello che puoi fare è
+   spostare il pane. Chi ha finito il tutorial ha in mano esattamente
+   le parole che servono.
+
+   Stanno in coda a questa lista perché oggi il gioco ha una fila sola
+   di livelli. Il giorno che le campagne avranno una schermata loro —
+   una fila di storie invece di una fila di prove — queste cinque righe
+   escono di qui e ci vanno da sole, e gli `id` (`cortile-…`) restano
+   quelli, perché sono le chiavi dei progressi. */
+/* ── E POI LE QUATTRO CAMPAGNE DI CONSOLIDAMENTO ──
+   Il tutorial insegna un costrutto per prova; queste lo fanno usare
+   finché non è in mano, e sono quattro cartelle sotto `livelli/` — una
+   per costrutto, nell'ordine in cui si imparano. Le regole con cui sono
+   scritte stanno in `docs/generale-didattica.md`: un livello muove un
+   asse solo (o il vocabolario o il mondo), il primo di ogni campagna
+   acquisisce e gli altri consolidano MESCOLANDO (mai due volte di fila
+   lo stesso pattern: si impara a riconoscere la forma di un problema,
+   non a ripetere una ricetta), e ogni livello si gioca su più scene,
+   perché il piano si firma prima di sapere quale tocca.
+
+   ── STANNO DOPO IL TUTORIAL, E NON È LA FILA DEFINITIVA ──
+   La fila giusta le vorrebbe INTERLACCIATE — la prova che insegna il
+   bivio, poi i suoi drill, poi quella che insegna il ciclo, e così via
+   — e vorrebbe anche il tutorial in un altro ordine (la decisione prima
+   del ciclo: l'uscita di un ciclo è la stessa domanda di un bivio, e
+   incontrarla dove costa meno è un concetto per volta invece di due).
+   Quel riordino cambia il modo in cui si impara e si fa guardando
+   giocare, non a tavolino: finché non è stato provato, queste stanno in
+   coda in blocco, che è la cosa reversibile. Il §3 e il §4 della
+   didattica dicono dove dovranno andare.
+
+   `azioni/1-la-ronda-che-decide.js` NON è in questa lista, ed è
+   scritto in testa al suo file: srotolato vince tutte le scene, cioè
+   non dimostra ancora che la struttura serva. Il file resta lì, fuori
+   dal gioco, finché non è ridisegnato. */
+import DUE_CHIAVI from './livelli/parole/1-due-chiavi.js'
+import DUE_LAVORI from './livelli/parole/3-due-lavori.js'
+import PRINCIPESSA from './livelli/parole/4-la-principessa-e-lorco.js'
+import BUIO from './livelli/parole/5-il-buio-e-la-lanterna.js'
+import SCELTA_PORTE from './livelli/scelta/1-le-due-porte.js'
+import SCELTA_SPIA from './livelli/scelta/2-la-spia.js'
+import SCELTA_BIVI from './livelli/scelta/3-due-bivi.js'
+import SCELTA_KEY from './livelli/scelta/4-quale-chiave.js'
+import GIRO_TROVATO from './livelli/giro/3-chi-hai-trovato.js'
+import GIRO_ASPETTA from './livelli/giro/4-non-contare-aspetta.js'
+import ACCORDO_STAFFETTA from './livelli/accordo/1-la-staffetta.js'
+import ACCORDO_AVVISA from './livelli/accordo/2-il-giro-che-avvisa.js'
+import ACCORDO_PASSAMANO from './livelli/accordo/3-il-passamano.js'
+import ACCORDO_LIBERO from './livelli/accordo/4-chi-e-libero-ascolta.js'
+
+import BIBI from './livelli/cortile/1-bibi.js'
+import AIA from './livelli/cortile/2-laia.js'
+import BOMBO from './livelli/cortile/3-bombo.js'
+import ORTO from './livelli/cortile/4-lorto.js'
+import STAGNO from './livelli/cortile/5-lo-stagno.js'
+
+/* ── LA FILA È FATTA DI TRATTI, E I TRATTI HANNO UN NOME ──
+   Erano una lista piatta finché erano otto prove tutte uguali di
+   intenzione. Adesso sono ventisei e vengono da cinque posti diversi:
+   una lista piatta di ventisei righe non dice più che dopo la settima
+   comincia un'altra cosa, e chi la scorre non sa se sta ancora
+   imparando o se sta già consolidando.
+   Il tratto si dichiara QUI, accanto all'ordine, perché è la stessa
+   decisione: **l'ordine delle prove è la lezione**, e dove finisce una
+   campagna e comincia l'altra ne fa parte. `LIVELLI` e i titoli escono
+   dallo stesso dato, così non si possono scollare — che è il difetto
+   che avrebbe una lista di indici scritti a mano da un'altra parte. */
+/* ── UNA COSA NUOVA, POI LA SI USA FINCHÉ NON È IN MANO ──
+   Per un pezzo la fila è stata: sette prove che introducevano sette
+   idee di fila, e solo dopo i livelli per consolidarle. È il difetto
+   che il documento chiama la curva ripida — **tutto l'apprendimento in
+   una volta**, e il rinforzo dopo, quando la prima idea è già
+   evaporata. Adesso ogni tratto comincia con la prova che INSEGNA e
+   prosegue con quelle che la fanno usare in situazioni diverse, prima
+   di introdurre la cosa dopo.
+
+   E l'ordine dei costrutti lo decide quanto costano, non quanto
+   servono al mondo: **la decisione prima del ciclo**, perché l'uscita
+   di un ciclo («smetti quando vedi qualcuno») è la stessa domanda di
+   un bivio messa in un altro posto — incontrarla dove costa meno vuol
+   dire imparare un concetto per volta invece di due. Il giro delle
+   mura, che era la terza prova, arriva dopo quattro livelli di scelta:
+   quando ci si arriva, «smetti quando» è già una parola nota.
+
+   ⚠ Cambiare quest'ordine sposta le stelle già prese: i progressi del
+   Generale sono per POSIZIONE (`stelle[i]`), non per id. Finché il
+   gioco è in prova va bene; il giorno che è pubblicato, spostare una
+   riga qui dentro va fatto sapendo che rimescola i voti di chi ha già
+   giocato. */
+export const TRATTI = [
+  /* `CHIAVE_FORSE` è fuori, e il perché sta in testa al suo file: la
+     mossa giusta lì si ricava senza guardare la situazione («prendi
+     tutto quello che trovi»), e un'abitudine di prudenza non è un
+     problema. Tornerà quando ci saranno le ombre sui posti possibili e
+     il bivio già in mano — cioè quando ci sarà qualcosa da DECIDERE. */
+  /* ── I PRIMI ORDINI, E POI I MODI DI USARLI ──
+     I primi due insegnano la forma di un ordine e la fila; i quattro
+     dopo non insegnano nessuna parola nuova — le stesse tre, `vai
+     prendi apri` — e cambiano il MONDO sotto (§2 della didattica): una
+     porta vuole la sua chiave, una si sfonda, qualcuno guarda, e al
+     buio non si vede. Erano due soli, e facevano tutti la stessa cosa
+     in stanze da tredici caselle: un blocco che «funzionava» e non
+     mostrava niente di quello che le tre parole sanno fare. */
+  { titolo: 'i primi ordini — un verbo, una cosa, e tutti i modi di usarli',
+    livelli: [PRIMO, CHIAVE, DUE_CHIAVI, DUE_LAVORI, PRINCIPESSA, BUIO] },
+  { titolo: 'la scelta — guarda prima di decidere',
+    livelli: [DUE_STRADE, SCELTA_PORTE, SCELTA_SPIA, SCELTA_BIVI, SCELTA_KEY] },
+  { titolo: 'ancora e ancora — quando non sai dov\'è, girare è l\'unico modo',
+    livelli: [RONDA, GIRO_TROVATO, GIRO_ASPETTA] },
+  { titolo: 'mettersi d\'accordo — quello che non vedi te lo deve dire qualcuno',
+    livelli: [ATTESA, ACCORDO_STAFFETTA, ACCORDO_AVVISA, ACCORDO_PASSAMANO, ACCORDO_LIBERO] },
+  { titolo: 'il rumore — e poi tutto insieme',
+    livelli: [RICHIAMO, DUE_VIE] },
+  { titolo: 'il cortile di Rosa — e qualcuno che non comandi',
+    campagna: true,
+    livelli: [BIBI, AIA, BOMBO, ORTO, STAGNO] },
+]
+
+export const LIVELLI = TRATTI.flatMap(t => t.livelli)
+
+/* dove comincia ogni tratto: `{ [indice]: titolo }`, per chi disegna
+   l'elenco. Si deriva, non si scrive. */
+export const TITOLI = TRATTI.reduce((out, t) => {
+  out.mappa[out.i] = t.titolo
+  out.i += t.livelli.length
+  return out
+}, { i: 0, mappa: {} }).mappa
 
 export const QUANTI = LIVELLI.length
 /* ── IL TUTORIAL SONO TUTTE ──
@@ -147,7 +277,19 @@ export const QUANTI = LIVELLI.length
    costante invece di un `QUANTI` scritto due volte, perché il giorno
    in cui le avventure si riaprono qui si torna a decidere DA DOVE si
    parte, che è una domanda diversa da QUANTE prove ci sono. */
-export const TUTORIAL = QUANTI
+/* ⚠ E DA OGGI NON COINCIDE PIÙ CON `QUANTI`: dopo le sette prove
+   vengono i cinque capitoli del cortile, che tutorial non sono. La
+   barra in `SceltaAvventura.vue` conta su questo numero, e deve
+   continuare a dire «7 prove per impararlo» anche adesso che i livelli
+   in fila sono dodici. */
+/* ── E ADESSO SI DERIVA ──
+   Era un 7 scritto a mano accanto a una fila che ne conteneva sette:
+   due posti da tenere allineati, e uno dei due si sarebbe scollato al
+   primo livello aggiunto in mezzo. Il tutorial è **il primo tratto**,
+   per definizione — quello che si fa prima di consolidare — quindi la
+   soglia è quanto è lungo quel tratto, e non un numero. */
+export const TUTORIAL = TRATTI.filter(t => !t.campagna)
+                              .reduce((n, t) => n + t.livelli.length, 0)
 export const livelloDi = i => LIVELLI[Math.max(0, Math.min(LIVELLI.length - 1, i))]
 /* su quanti mondi si prova il piano: i primi due livelli sono un
    tutorial e ne giocano uno solo, così il primo piano che si scrive

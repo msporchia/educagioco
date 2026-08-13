@@ -104,7 +104,7 @@ export const DUE_VIE = livello({
   aiuti: ['Il suo piano si legge: tocca la ronda e guarda cosa grida, e da dove.',
           'Una porta chiusa toglie la vista a tutti e due, e non toglie l\'udito a nessuno: chiuso là dentro puoi aspettare quanto vuoi.',
           'Il segnale che ti fa entrare non è quello che ti fa uscire. E un ascolto scritto <b>dentro un\'azione</b> comincia solo quando quell\'azione parte.'],
-  ambiente: 'camminamento', intera: true,
+  ambiente: 'camminamento',
 
   scena: ANELLO,
   segnali: [ponente, levante],

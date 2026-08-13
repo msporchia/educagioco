@@ -58,11 +58,68 @@
    — ma non sono più il modo normale. */
 export const idDi = x => (x && typeof x === 'object' ? x.id : x)
 
+import { vicino } from './livello.js'
+import { NOMI_SUOLI, NOMI_MURI } from '../../grafica/materiali/suoli.js'
+import { NOMI_ARREDO } from '../../grafica/oggetti/indice.js'
+
+/* ── LE OPZIONI CHE OGNI GENERE CAPISCE ──
+   `livello()` rifiuta da un pezzo le chiavi sconosciute *del livello*;
+   qui sotto ci sono quelle di una COSA e di un'UNITÀ, che finora non le
+   guardava nessuno. Una chiave che il motore non legge passava liscia e
+   non faceva niente, **in silenzio** — ed è così che la sesta prova del
+   tutorial è rimasta rotta a lungo: il carceriere era scritto
+   `{ accorre: 'richiamo' }`, ma `accorre` non esiste più da quando chi
+   corre al rumore si dichiara con `reagisce`. Il livello che insegna
+   «il rumore sposta chi lo sente» era l'unico in cui il rumore non
+   spostava niente, e il banco poteva solo dire «perde», mai «perché».
+   Un refuso come `vede: 4` invece di `vista: 4` fa la stessa fine, e
+   lascia un livello tarato a occhio su un nemico cieco.
+
+   ── QUANDO IL MOTORE CAMBIA, QUESTO ELENCO CAMBIA CON LUI ──
+   È il suo prezzo, ed è quello giusto da pagare: una chiave tolta dal
+   motore e lasciata qui torna a passare in silenzio, ma una chiave
+   tolta dal motore e tolta anche da qui fa **esplodere all'import** i
+   livelli che la usano ancora — cioè dice subito chi va aggiornato,
+   che è esattamente quello che è mancato con `accorre`. */
+export const COMUNI = ['id', 'nome', 'genere']
+export const OPZIONI = {
+  unita: ['corpo', 'emoji', 'vista', 'vita', 'sa', 'nonRiesce', 'fa', 'reagisce',
+          'schiera', 'schieraNome', 'parte', 'arma', 'grida', 'zaino', 'mani', 'tasche'],
+  porta: ['stile', 'chiave', 'forza', 'aMano', 'aperta', 'rumore', 'cigolio'],
+  oggetto: ['pittore', 'em', 'specie', 'raggio', 'arma', 'tasca'],
+  leva: ['collegata'],
+  totem: ['collegata', 'tacche'],
+  segnale: ['em', 'col', 'voce'],
+  /* un posto può avere una faccia: la legnaia si disegna come una
+     catasta, la siepe come un cespuglio (vedi `elementi/posto.js`) */
+  posto: ['pittore', 'em', 'strato'],
+  segnaposto: [],
+  suolo: [],
+  muro: [],
+  arredo: [],
+}
+
+export function controllaOpzioni (genere, id, opz) {
+  const ammesse = OPZIONI[genere]
+  if (!ammesse) return                     // genere nuovo: non si inventa una regola
+  /* le specifiche PRIMA delle comuni: a parità di distanza `vicino`
+     tiene la prima, e «vede» deve suggerire «vista», non «id» */
+  const tutte = [...ammesse, ...COMUNI]
+  for (const k of Object.keys(opz || {})) {
+    if (tutte.includes(k)) continue
+    const forse = vicino(k, tutte)
+    throw new Error(`${genere} «${id}»: «${k}» non è un'opzione di ${genere}` +
+                    (forse ? ` — forse intendevi «${forse}»?` : '') +
+                    `\n  quelle che capisce: ${tutte.join(', ')}`)
+  }
+}
+
 const fabbrica = (genere, fissi = {}) => (...arg) => {
   const testi = arg.filter(a => typeof a === 'string')
   const opz = arg.find(a => a && typeof a === 'object') || {}
   const id = testi[0] || fissi.id
   if (!id) throw new Error(`${genere}: senza id non si può nominare negli ordini`)
+  controllaOpzioni(genere, id, opz)
   return { ...fissi, genere, id, nome: testi[1] || opz.nome || fissi.nome || id, ...opz }
 }
 
@@ -97,15 +154,49 @@ export const cose = {
   grata: fabbrica('porta', { id: 'grata', nome: 'la grata', stile: 'ferro' }),
   saracinesca: fabbrica('porta', { id: 'saracinesca', nome: 'la saracinesca', stile: 'saracinesca' }),
   botola: fabbrica('porta', { id: 'botola', nome: 'la botola', stile: 'pietra' }),
+  /* ── IL TESORO SI APRE, NON SI PRENDE ──
+     Ed è **una porta**, per quanto non ci si passi attraverso: le cose
+     che si aprono sono una famiglia sola, e questa è la quinta faccia
+     della stessa `Porta` — chiave, spallate e `aMano` valgono qui
+     esattamente come su un cancello, senza una riga di motore in più.
+     Cambia la lezione del primo livello, e in meglio: «prendi il
+     tesoro» finiva con un forziere che spariva in tasca, «apri il
+     tesoro» finisce con la cassa che si spalanca dove sta.
+     `cose.tesoro()` resta, ed è ancora un oggetto da raccogliere: lo
+     usano le campagne più avanti, e il giorno che passeranno anche
+     loro a questa quella riga si toglie. */
+  forziere: fabbrica('porta', { id: 'tesoro', nome: 'il tesoro', stile: 'forziere' }),
 
   /* le cose da raccogliere. Sono tutte oggetti, ma ognuna sa già come
      si disegna e come si chiama: è quello che toglie di mezzo la
      tabella dei ripieghi («se non lo conosco disegno una chiave»). */
   oggetto: fabbrica('oggetto'),
   tesoro: fabbrica('oggetto', { id: 'tesoro', nome: 'il tesoro', pittore: 'forziere', em: '💰' }),
-  chiave: fabbrica('oggetto', { id: 'chiave', nome: 'la chiave', pittore: 'chiave', em: '🔑' }),
-  lanterna: fabbrica('oggetto', { id: 'lanterna', nome: 'la lanterna', pittore: 'lanterna', em: '🏮' }),
+  /* `tasca: true`: una chiave non occupa una mano. Senza, ogni livello
+     con due porte diventa un balletto di «posa la chiave» */
+  chiave: fabbrica('oggetto', { id: 'chiave', nome: 'la chiave', pittore: 'chiave',
+                                em: '🔑', tasca: true }),
+  /* `specie: 'lanterna'` non è per il lettore della mappa (quello
+     guarda `genere`, ed è sempre 'oggetto': si prende, si posa): è per
+     `allestimento.js`, che sa costruire la classe giusta — una
+     `Lanterna` (`motore/generale/elementi/lanterna.js`) invece di un
+     `Oggetto` — solo per chi porta questo bollino. `raggio` (in
+     celle) è facoltativo: senza, la lanterna illumina come una vista
+     normale. */
+  lanterna: fabbrica('oggetto', { id: 'lanterna', nome: 'la lanterna', pittore: 'lanterna', em: '🏮',
+                                   specie: 'lanterna' }),
   osso: fabbrica('oggetto', { id: 'osso', nome: "l'osso", pittore: 'ossa', em: '🦴' }),
+  /* ── LE COSE CHE SI IMPUGNANO ──
+     Un oggetto con `arma: { danno: n }` non sta solo nello zaino: chi
+     lo raccoglie **colpisce con quello** (`Oggetto.passaA`), e da quel
+     momento glielo si vede in mano (`grafica/corpo.js`). È quello che
+     permette di raccontare un personaggio disarmato — che si dichiara
+     con `arma: { danno: 0 }` nella sua scheda — e di farlo tornare
+     pericoloso raccogliendo la sua roba, invece di dirlo e basta. */
+  pugnale: fabbrica('oggetto', { id: 'pugnale', nome: 'il pugnale', pittore: 'pugnale',
+                                 em: '🗡️', arma: { nome: 'il pugnale', danno: 2 } }),
+  spada: fabbrica('oggetto', { id: 'spada', nome: 'la spada', pittore: 'spada',
+                               em: '⚔️', arma: { nome: 'la spada', danno: 3 } }),
   pane: fabbrica('oggetto', { id: 'pane', nome: 'il pane', pittore: 'pane', em: '🍞' }),
   corda: fabbrica('oggetto', { id: 'corda', nome: 'la corda', pittore: 'corda', em: '🪢' }),
 
@@ -129,6 +220,57 @@ export const cose = {
   /* conta le pressioni, e quando arriva a `tacche` manda il comando */
   totem: fabbrica('totem', { id: 'totem', nome: 'il totem', tacche: 3 }),
 }
+
+/* ═══════════ suoli — di che è fatto il pavimento ═══════════
+   ── LA MAPPA DICE ANCHE DOV'È IL LASTRICATO ──
+   Un livello dichiarava un `ambiente` e quello valeva ovunque: una
+   mappa era un posto solo, o tutto cortile o tutto cripta. Ma «porto
+   la roba fuori dal castello» è una storia con due posti, e disegnarla
+   su un pavimento unico la appiattisce.
+   Adesso un token della mappa può dire **di che è fatto il pavimento
+   lì**, e si dichiara dove si dichiara tutto il resto — nella legenda,
+   accanto a chi ci cammina:
+
+       scena: campo([
+         '##|##|##|##|##',
+         '##|==|..|,,|##',
+         '##|==|@@|,,|##',
+       ], { '@@': eroe, '==': suoli.lastre, ',,': suoli.erba }),
+
+   Il token resta pavimento a tutti gli effetti — ci si cammina, il
+   motore non sa nemmeno che sia diverso: cambia solo chi lo dipinge
+   (`grafica/materiali/suoli.js`). L'ambiente resta ed è quello che
+   deve essere: l'aria della stanza, non il suo pavimento. */
+export const suoli = Object.fromEntries(NOMI_SUOLI.map(
+  nome => [nome, () => ({ genere: 'suolo', id: nome })]))
+
+/* ── E LO STESSO PER LA MURATURA ──
+   `muri.legno` al posto di `##` dice «questo muro è di assi»: resta un
+   muro a tutti gli effetti — non ci si passa, la vista si ferma — e
+   cambia solo di che è fatto. Serve alla stessa storia del pavimento:
+   il castello di pietra e il fienile di legno nella stessa mappa. */
+export const muri = Object.fromEntries(NOMI_MURI.map(
+  nome => [nome, () => ({ genere: 'muro', id: nome })]))
+
+/* ── E L'ARREDO, CHE OCCUPA LA CELLA ──
+   Un mobile non è scenografia dipinta: **è un ostacolo**. Si scrive
+   qui, come una porta o un'unità, e la cella diventa piena — ci si
+   sbatte contro, la vista si ferma, e il disegno dice la verità.
+   Prima l'unico modo era metterlo in `scenografia`, che non passa dal
+   motore: o lo si disegnava su una casella calpestabile (una bugia) o
+   lo si disegnava sopra un muro (un'assurdità). */
+export const arredo = Object.fromEntries(NOMI_ARREDO.map(
+  nome => [nome, () => ({ genere: 'arredo', id: nome })]))
+
+/* ── E LA CELLA CHE DEVE RESTARE VUOTA ──
+   `arredo.niente()` non mette niente: dice che lì **non ci va niente**,
+   nemmeno all'arredatore automatico. Serve quando lo spazio libero è
+   parte del livello — la piazzola davanti alla porta, il punto dove
+   qualcuno si ferma ad aspettare — e le regole strutturali non possono
+   saperlo, perché è una cosa che sa solo chi ha scritto la storia.
+   È l'ultima parola del livello sull'arredamento, e il motivo per cui
+   l'arredamento automatico si può lasciare acceso. */
+arredo.niente = () => ({ genere: 'libero', id: 'niente' })
 
 /* ═══════════ chi — le unità ═══════════
 
@@ -200,8 +342,15 @@ export const fai = {
   premi: ordine('premi'),
   attacca: ordine('attacca'),
   suona: ordine('suona'),
-  aspetta: ordine('aspetta'),
-  aspettaDiVedere: ordine('aspettaDiVedere'),
+  /* ── LE SCORCIATOIE DI SCRITTURA ──
+     Nel gioco c'è UN modo di aspettare — `aspetta che [domanda]` — e
+     una voce sola in cassetta. Qui restano i nomi comodi per chi
+     scrive un livello in JavaScript, e sono zucchero: producono
+     esattamente quell'ordine, con la domanda giusta dentro. Chi scrive
+     `aspettaDiVedere(orco)` sta scrivendo `aspetta che [vedi l'orco]`. */
+  aspetta: cosa => ({ verbo: 'aspetta', cond: { cond: 'aperta', complemento: idDi(cosa) } }),
+  aspettaDiVedere: cosa => ({ verbo: 'aspetta', cond: { cond: 'vedi', complemento: idDi(cosa) } }),
+  aspettaUnPo: (quanti = 1) => ({ verbo: 'aspetta', cond: { cond: 'passati', n: quanti } }),
   esegui: nome => ({ verbo: 'esegui', complemento: nome }),
   /* parlare a qualcuno in particolare, invece di gridare a chiunque:
      funziona **solo con chi si vede**, se no cadrebbe il principio per
@@ -241,6 +390,57 @@ export const se = {
   almeno: (cosa, n) => ({ cond: 'almeno', complemento: idDi(cosa), n }),
   vivo: domanda('vivo'),
   caduto: domanda('vivo', { non: true }),
+}
+
+/* ═══════════ quando — le reazioni ═══════════
+   ── QUELLO CHE UN PERSONAGGIO FA SENZA CHE NESSUNO GLIELO DICA ──
+   Un ordine sta nel piano e lo scrive chi gioca. Una reazione sta nella
+   SCHEDA e dice com'è fatto quel personaggio: il carceriere corre al
+   rumore perché è un carceriere, non perché qualcuno gliel'ha ordinato.
+   La differenza che si vede giocando è una sola: un «quando senti»
+   aspetta educatamente che tu sia libero, una reazione **ti interrompe**
+   e poi ti restituisce dov'eri.
+
+   Dentro `fai:` ci sono ORDINI NORMALI, gli stessi che scrive il
+   bambino. Il motore non sa cosa facciano — sa solo quando farli
+   partire. È per questo che la scheda che si apre col dito può mostrare
+   la reazione come una fila di ordini invece che come una frase scritta
+   a mano da qualche parte: «una scheda si legge come un piano». */
+export const quando = {
+  senti: (segnale, ...fai) => ({ quando: 'senti', segnale: idDi(segnale), fai: fai.flat() }),
+  vedi: (chi, ...fai) => ({ quando: 'vedi', chi: idDi(chi), fai: fai.flat() }),
+  colpito: (...fai) => ({ quando: 'colpito', fai: fai.flat() }),
+}
+
+/* i due bersagli che un livello non può scrivere prima, perché li
+   decide l'evento: dove è partito il rumore, e dove stavi tu quando ti
+   ha colto. Diventano celle vere nell'istante in cui la reazione parte,
+   quindi nel registro si leggono come qualunque altro `vai`. */
+export const dove = {
+  hoSentito: 'dove-ho-sentito',
+  ero: 'dov-ero',
+}
+
+/* ── I PRESET, che NON sono comandi ──
+   Sono modi di scrivere in fretta una reazione che torna spesso. Quello
+   che producono è **dato**, identico a quello che scriveresti a mano: si
+   possono leggere, copiare e cambiare. La differenza con un
+   comportamento cablato nel motore è tutta qui — una guardia che corre
+   e NON torna si scrive nel livello, non modificando il motore. */
+export const reagisce = {
+  /* corre dov'è il rumore, si guarda intorno, e torna al suo posto.
+     Quel viaggio è la finestra in cui il passaggio resta scoperto: è il
+     livello del richiamo, ed è tutto qui dentro. */
+  alRumore: (segnale, { sosta = 3, torna = true } = {}) => quando.senti(segnale, [
+    fai.vai(dove.hoSentito),
+    ...(sosta > 0 ? [fai.aspettaUnPo(sosta)] : []),
+    ...(torna ? [fai.vai(dove.ero)] : []),
+  ]),
+  /* chiama i suoi quando le prende */
+  chiedeAiuto: segnale => quando.colpito([fai.suona(segnale)]),
+  /* si butta su chi vede: è quello che un nemico fa di suo, e senza
+     scriverlo ci si passa davanti senza che succeda niente */
+  assale: (chi = 'nostri') => quando.vedi(chi, [fai.attacca(chi)]),
 }
 
 export { livello } from './livello.js'

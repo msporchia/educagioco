@@ -23,7 +23,7 @@ const cava = chi.nostro('cava', 'il cavaliere', { corpo: 'cavaliere', emoji: '�
    una persona — quattro colpi — invece di diventare un sacco da boxe
    che incassa per quattordici battiti aspettando i soccorsi. */
 const principessa = chi.terzo('principessa', 'la principessa',
-  { corpo: 'elfo', emoji: '👸', schiera: 'corte', schieraNome: 'la corte',
+  { corpo: 'principessa', emoji: '👸', schiera: 'corte', schieraNome: 'la corte',
     vista: 2, vita: 4 })
 const fracasso = cose.segnale('fracasso', 'un fracasso', { em: '💥', col: '#e8703f' })
 
@@ -79,7 +79,7 @@ export const RONDA = livello({
   aiuti: ['Le mura in mezzo tolgono la vista: quello che succede dall\'altra parte lo sai solo andandoci.',
           'Sfondare costa tempo. Non devi essere già lì: devi arrivarci prima che abbia finito.',
           'Fermo in un posto ne copri uno solo. C\'è un ordine che ne copre più di uno, e che si ferma quando dici tu.'],
-  ambiente: 'cortile', prove: 4, intera: true,
+  ambiente: 'cortile', prove: 4,
   /* il prato non ha un muro attorno, ed è la scena: chiudere anche il
      perimetro farebbe un labirinto, e la domanda del livello non è
      «come si entra» ma «da quale delle due porte» */

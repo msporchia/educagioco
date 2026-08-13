@@ -15,7 +15,7 @@
       farsi vedere costa, perché conta DOVE combatti. È il sesto e
       ultimo pezzo del vocabolario, non un esercizio. */
 
-import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, reagisce } from '../scrivi.js'
 
 /* UNA UNITÀ SOLA, e il livello ci guadagna. Con due, questa era la
    terza volta di fila che la lezione era «mettetevi d'accordo»; con
@@ -26,7 +26,16 @@ const ladra = chi.nostro('ladra', 'la ladra', { corpo: 'ladra', emoji: '🥷', v
 /* non lo si tocca: quarantaquattro punti di vita sono il modo di dire
    «questa strada è chiusa» senza vietarla. Tutto il livello sta
    nell'unica riga della sua scheda: accorre. */
-const carce = chi.orco('carce', 'il carceriere', { vista: 2, vita: 44, accorre: 'richiamo',
+/* ⚠ QUI C'ERA `accorre: 'richiamo'`, E DAL TRAVASO NON VOLEVA PIÙ DIRE
+   NIENTE. Il motore non legge più quella chiave — chi corre al rumore
+   lo dichiara con una REAZIONE, che è dato leggibile nella scheda
+   invece di un comportamento cablato (`scrivi.js`, `reagisce`). Il
+   livello continuava a scriverla, quindi il carceriere **non accorreva
+   più**: restava sul portone, e la ladra gli camminava addosso su tutte
+   e tre le scene. Il livello che insegna il rumore era l'unico in cui
+   il rumore non faceva niente. */
+const carce = chi.orco('carce', 'il carceriere', { vista: 2, vita: 44,
+  reagisce: [reagisce.alRumore('richiamo')],
   fa: [fai.aspettaDiVedere('nostri'), fai.attacca('nostri')] })
 
 const richiamo = cose.segnale('richiamo', 'un rumore', { em: '🔔', col: '#e8a33f' })

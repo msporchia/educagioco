@@ -46,7 +46,6 @@
  * @property {string[]} [aiuti]     i suggerimenti a scalare
  * @property {string[]} griglia     le righe della mappa: '#' muro, il resto pavimento
  * @property {string} [ambiente]    quale stanza la veste (`grafica/ambienti/`)
- * @property {boolean} [intera]     la mappa non si scorre: si deve vedere tutta
  * @property {number} [prove]       su quanti mondi si prova il piano
  * @property {Object<string,string>} [nomi]     id → come si chiama in una frase
  * @property {Object} [posti]       i punti con un nome
@@ -76,9 +75,44 @@ const CAMPI = {
   id: undefined, nome: undefined, idea: undefined,
   dritta: undefined, racconto: undefined, aiuti: undefined,
   scena: undefined,
-  ambiente: 'corridoio', intera: false, prove: 3, campoAperto: false,
+  /* ── `intera` NON ESISTE PIÙ ──
+     Era un tetto: «questa mappa deve starci tutta nello schermo», e su
+     un telefono starci tutta vuol dire celle da ventidue pixel, cioè
+     al massimo diciassette colonne. Chi scriveva un livello finiva per
+     disegnare stanzette per rispettare un vincolo che nessuno gli aveva
+     chiesto — è successo per un pomeriggio intero.
+     Le mappe grandi il motore le ha sempre gestite: si trascinano, e le
+     frecce sul bordo dicono chi è fuori campo. Una stanza che non ci
+     sta in uno schermo non è un difetto, è una stanza grande — ed è
+     anche quello che fa nascere i piani lunghi, perché la distanza fra
+     due cose diventa parte del lavoro. */
+  ambiente: 'corridoio', prove: 3, campoAperto: false,
+  /* ── QUANTO SI VEDE AL BUIO ──
+     Un tetto sulla vista, in celle: `min(vista dichiarata, questo)`. Non
+     si deriva dall'ambiente — il `buio` che sta in `grafica/ambienti/` è
+     l'opacità di un velo, tarata per come si legge a schermo, e sarebbe
+     una regola di gioco presa da un numero di disegno. Qui è un input
+     esplicito, nello spirito di `calcoli`/`cap` del castello.
+     Chi non lo dichiara ci vede come sempre: senza questo default a
+     infinito, accendere il buio avrebbe cambiato sotto i piedi ogni
+     livello scritto finora, perché `vedi` sta dappertutto — nelle
+     uscite dei cicli, nelle attese, nelle reazioni dei nemici. */
+  vistaAlBuio: undefined,
   nomi: undefined, segnali: undefined, scenografia: undefined,
-  complementi: undefined, verbi: undefined, celle: false, condizioni: undefined,
+  complementi: undefined, verbi: undefined,
+  /* ── INDICARE UN PUNTO SI PUÒ SEMPRE ──
+     Era `false`, e voleva dire che in quasi tutti i livelli «vai lì
+     dietro quel muro» non si poteva dire: l'elenco offriva solo i nomi.
+     Ma il motore una casella libera la accetta **sempre** — sta scritto
+     in `Mondo.laCosa`: «se il dito può indicarla, l'ordine deve poterla
+     dire» — e l'editor legge `celle !== false`, cioè è scritto per
+     essere acceso di default. Erano due pezzi che dicevano il
+     contrario, e a perderci era `vai`, che senza la mappa sa fare metà
+     di quello che sa fare.
+     Chi vuole una cassetta stretta lo spegne a mano (`celle: false`),
+     e resta una scelta dichiarata invece di un default che nessuno
+     aveva deciso. */
+  celle: true, condizioni: undefined,
   vince: undefined, perde: undefined, motivoSconfitta: undefined,
   varianti: undefined, soluzioni: undefined, par: undefined,
   verifiche: undefined,
@@ -91,8 +125,10 @@ const CAMPI = {
 const OBBLIGATORI = ['id', 'nome', 'scena', 'vince']
 
 /* «volevi dire questo?»: la distanza fra due parole, per suggerire il
-   campo giusto invece di dire solo che quello scritto non esiste */
-function vicino (parola, candidati) {
+   campo giusto invece di dire solo che quello scritto non esiste.
+   Lo usa anche `scrivi.js`, per le opzioni di una cosa o di un'unità:
+   è la stessa domanda un gradino più in basso. */
+export function vicino (parola, candidati) {
   const dist = (a, b) => {
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)])
     for (let j = 0; j <= b.length; j++) d[0][j] = j

@@ -33,16 +33,40 @@
           il giro si ferma su QUELLO CHE VUOI OTTENERE,
           non sul conto che hai tirato a indovinare.
 
-      Le tacche sono il mezzo, la grata che si apre è il risultato. */
+      Le tacche sono il mezzo, la grata che si apre è il risultato.
+
+      ── E IL RISULTATO NON SI VEDE: SI SENTE ──
+      Chi preme il totem sta davanti al totem, non davanti alla grata
+      del tesoro — sono in due nicchie diverse, separate da un corridoio.
+      «Ripeti finché [la grata] è aperta» sembrerebbe la mossa onesta, e
+      oggi non è nemmeno scrivibile: il motore rifiuta un giro la cui
+      uscita chiede una cosa che da lì non si vede (`NonPossoSaperlo`).
+      Ma una porta che si apre, anche piano, **fa rumore** — un cigolio,
+      che si sente vicino a prescindere da cosa si veda — ed è per quello
+      che esiste: «premi finché SENTI la grata aprirsi» (`se.sentito`) è
+      la stessa idea del giro delle mura («smetti quando VEDI qualcuno»)
+      spostata dall'occhio all'orecchio, perché qui l'occhio non basta. */
 
 import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
 
 const eroe = chi.eroe()
 const tesoro = cose.tesoro()
+/* il cigolio con cui una porta a comando si apre da sé: lo stesso nome
+   della voce comune in `SEGNALI` (mondo.js), qui reso nominabile — senza
+   questa riga «senti [un cigolio]» non sarebbe una domanda valutabile,
+   perché il motore non offre un segnale che il livello non ha dichiarato */
+const cigolio = cose.segnale('cigolio', 'un cigolio', { em: '🚪', col: '#8b97b4' })
 
 /* le due grate sono uguali a vedersi, e quello che le apre no: è il
-   paragone, e per questo stanno in fila sulla stessa parete */
-const grataTotem = cose.saracinesca('grataTotem', 'la grata del totem', { aMano: false })
+   paragone, e per questo stanno in fila sulla stessa parete.
+   GRATATOTEM SUONA DIVERSO DA GRATATESORO APPOSTA: le apre un congegno
+   tutte e due, quindi farebbero lo stesso cigolio — e la leva scatta
+   PRIMA che l'eroe arrivi al totem, quindi «senti un cigolio» sarebbe
+   già vero fin dal primo battito, per un varco che non è quello giusto.
+   `cigolio: 'scatto'` le dà una voce sua: la stessa cosa piccola, ma
+   distinguibile (vedi `SEGNALI.scatto` in mondo.js). */
+const grataTotem = cose.saracinesca('grataTotem', 'la grata del totem',
+  { aMano: false, cigolio: 'scatto' })
 const grataTesoro = cose.saracinesca('grataTesoro', 'la grata del tesoro', { aMano: false })
 
 /* il filo lo dichiara il livello; cosa succede quando il comando arriva
@@ -79,10 +103,10 @@ export const TOTEM = livello({
   id: 'totem', nome: 'Il totem',
   idea: 'Il giro si ferma su quello che vuoi, non sul conto',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano all'eroe</b>. Le grate non si aprono spingendole.",
-  racconto: "Due congegni, e si premono tutti e due allo stesso modo. La leva scatta e non la tocchi più; il totem conta, e <b>quante tacche gli servano cambia a ogni battaglia</b>.",
+  racconto: "Due congegni, e si premono tutti e due allo stesso modo. La leva scatta e non la tocchi più; il totem conta, e <b>quante tacche gli servano cambia a ogni battaglia</b>. Dal totem la grata del tesoro non si vede — ma quando si apre si sente.",
   aiuti: ['I congegni si toccano come tutto il resto, e la loro scheda dice cosa fanno.',
           'Il totem non scatta al primo tocco: guarda quante tacche gli mancano mentre lo premi.',
-          'Non sai quante tacche avrà. Fermati quando la grata si apre, non quando hai finito di contare.'],
+          'Non sai quante tacche avrà, e dal totem la grata non la vedi. Fermati quando la SENTI aprirsi, non quando hai finito di contare.'],
   ambiente: 'ingranaggi',
 
   scena: SALA,
@@ -90,11 +114,12 @@ export const TOTEM = livello({
   /* LE GRATE SONO NOMINABILI APPOSTA: `apri [la grata]` deve essere
      scrivibile, perché è la mossa che insegna la regola, e costa un ▶
      come `vai [il tesoro]` nella prima prova. */
-  complementi: ['leva', 'totem', 'grataTotem', 'grataTesoro', 'tesoro'],
+  complementi: ['leva', 'totem', 'grataTotem', 'grataTesoro', 'tesoro', 'cigolio'],
   verbi: ['vai', 'prendi', 'apri', 'premi'],
+  segnali: [cigolio],
   /* le due domande fra cui si sceglie l'uscita del giro, e sono
      esattamente le due della lezione: il conto, o il risultato */
-  condizioni: [se.almeno(totem, 3), se.aperto(grataTesoro)],
+  condizioni: [se.almeno(totem, 3), se.sentito(cigolio)],
 
   vince: [se.ha(eroe, tesoro)],
 
@@ -111,14 +136,15 @@ export const TOTEM = livello({
   par: 4,
   soluzioni: [
     /* QUATTRO ORDINI: la leva, il giro (che ne conta uno) col suo
-       `premi` dentro (un altro), e il tesoro. L'uscita guarda LA GRATA,
-       non le tacche — ed è l'unica cosa che regge su tutte e tre le
-       scene. Togliendone uno qualsiasi si perde: senza la leva non si
-       arriva nemmeno al totem, senza il giro la grata del tesoro resta
-       chiusa, senza l'ultimo ordine il tesoro resta per terra. */
-    { nome: 'premi finché si apre', piano: { eroe: [
+       `premi` dentro (un altro), e il tesoro. L'uscita ascolta LA
+       GRATA — non la guarda, perché da lì non si vede — e non le
+       tacche: è l'unica cosa che regge su tutte e tre le scene.
+       Togliendone uno qualsiasi si perde: senza la leva non si arriva
+       nemmeno al totem, senza il giro la grata del tesoro resta chiusa,
+       senza l'ultimo ordine il tesoro resta per terra. */
+    { nome: 'premi finché si sente', piano: { eroe: [
       fai.premi(leva),
-      fai.ripeti([fai.premi(totem)], se.aperto(grataTesoro)),
+      fai.ripeti([fai.premi(totem)], se.sentito(cigolio)),
       fai.prendi(tesoro),
     ] } },
 
