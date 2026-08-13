@@ -189,6 +189,14 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
      limite arriva in pochi secondi invece che in venti. */
   const attesaOndata = await page.evaluate(async () => {
     const attesa = ms => new Promise(r => setTimeout(r, ms))
+    // sonda una condizione invece di dormire alla cieca: finisce appena è
+    // vera, e non oltre `tetto` ms — lo stesso margine di sicurezza di
+    // un'attesa fissa, ma pagato solo quando serve davvero
+    const finche = async (cond, tetto, passo = 100) => {
+      const fine = Date.now() + tetto
+      while (!cond() && Date.now() < fine) await attesa(passo)
+      return cond()
+    }
     const T = window.__td
     T.inizia(0)
     T.velocita.value = 6
@@ -196,15 +204,20 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
     T.scegliTorre('add')                       // un'operazione aperta ferma il conto
     await attesa(60)
     const ondaConCalcolo = T.hud.onda
-    await attesa(9000)                         // ben oltre il limite, ma sta calcolando
+    // il conto resta fermo finché il calcolo è aperto: qui non c'è una
+    // condizione da sondare (si prova un'ASSENZA di cambiamento), quindi
+    // resta un'attesa a tempo — ma 3,5 s bastano lo stesso a smascherare
+    // un'onda che ripartisse da sola, senza pagare i 9 s di prima
+    await attesa(3500)
     const restaFermo = T.hud.onda === ondaConCalcolo
     const tasti = [...document.querySelectorAll('.tastiera button')]
     T.op.value.passi.forEach(p => tasti.find(x => +x.textContent === p.atteso).click())
     await attesa(120)
     const primaDiAspettare = T.hud.onda
-    // la prima tappa lascia 45 secondi di calma, che a velocità 6 sono sette e mezzo
-    await attesa(9000)                         // adesso sta solo a guardare
-    const partitaDaSola = T.hud.onda > primaDiAspettare
+    // la prima tappa lascia 45 secondi di calma, che a velocità 6 sono sette
+    // e mezzo: qui la condizione c'è (l'onda che parte da sola), quindi si
+    // sonda invece di dormire fino al tetto anche quando parte prima
+    const partitaDaSola = await finche(() => T.hud.onda > primaDiAspettare, 9000)
     T.velocita.value = 1
     return { restaFermo, partitaDaSola, primaDiAspettare, onda: T.hud.onda }
   })

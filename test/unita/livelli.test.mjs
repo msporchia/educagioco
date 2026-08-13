@@ -1,6 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
    TUTTI I LIVELLI DEL GENERALE, SULLO STESSO BANCO
-   tempo: 600
+   ── QUANTO COSTA ──
+   Un decimo di secondo per NOVE livelli, tutte le scene, tutte le
+   soluzioni e le mutazioni che il banco genera da sé. Qui c'era
+   scritto «un tempo massimo di sei secondi», sei secondi di budget: una dichiarazione
+   rimasta da quando questo banco faceva un'altra cosa. Costava caro —
+   `--svelti` la leggeva e saltava proprio il test che serve mentre si
+   lavora sul motore. Un tempo dichiarato è una promessa: quando non è
+   più vera va tolta, non alzata.
 
    Un test solo, non uno per scenario. Raccoglie i livelli da dove
    stanno — i sei (e più) scenari delle storie in `src/data/livelli/` e
@@ -22,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { nota, controlla, riassunto } from '../aiuto/verifica.mjs'
 import { provaLivello } from '../aiuto/livello.mjs'
+import { chi, cose, OPZIONI, controllaOpzioni } from '../../src/data/livelli/scrivi.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CARTELLA = resolve(RADICE, 'src/data/livelli')
@@ -80,6 +88,72 @@ controlla('gli id dei livelli sono unici', new Set(ids).size === ids.length,
           ids.filter((x, i) => ids.indexOf(x) !== i).join(', '))
 
 for (const { nome, liv } of livelli) provaLivello(liv, nome)
+
+/* ── LE OPZIONI SI CONFRONTANO CON UN ELENCO DI QUELLE CHE ESISTONO ──
+   I controlli qui sopra provano i livelli che ci sono; questi provano
+   il CONTROLLO, cioè che un livello scritto male non riesca a nascere.
+
+   La regola vera sta in `scrivi.js` ed è un elenco di **ammesse** per
+   genere (`OPZIONI`): tutto quello che non c'è dentro non passa. Qui
+   non si riscrive quell'elenco — sarebbe la stessa cosa detta due
+   volte, e la copia invecchierebbe per prima: si prova che il confronto
+   faccia il suo mestiere, dalle due parti. Che ogni chiave ammessa
+   passi serve quanto l'altra metà: è il controllo che diventa rosso il
+   giorno che qualcuno **restringe** l'elenco senza accorgersi che il
+   motore quella chiave la legge ancora.
+
+   Nessuna chiave di prova è scritta a mano: quella buona viene
+   dall'elenco, quella cattiva è costruita per non poterci stare, e il
+   refuso si ottiene storpiandone una vera. Un test scritto sui casi
+   storici — «rifiuta *accorre*» — direbbe la verità solo finché quella
+   parola resta morta, e non direbbe niente su tutte le altre.
+
+   (Il guasto da cui è nata questa rete: il carceriere della sesta prova
+   era `{ accorre: 'richiamo' }`, chiave non più letta da nessuno da
+   quando chi corre al rumore si dichiara con `reagisce`. Passava
+   liscia, il carceriere non si muoveva, e il livello che insegna «il
+   rumore sposta chi lo sente» era l'unico dove il rumore non spostava
+   niente: il banco poteva solo dire «perde», mai «perché».) */
+{
+  const scoppia = fai => { try { fai(); return null } catch (e) { return e.message } }
+
+  /* ── LE VERE PASSANO TUTTE ──
+     Si prende l'elenco delle ammesse e lo si scrive per intero: se
+     qualcuno restringe la lista senza accorgersi che il motore quella
+     chiave la legge ancora, il rosso arriva qui e non tre livelli
+     più in là. */
+  for (const [genere, ammesse] of Object.entries(OPZIONI)) {
+    const finto = Object.fromEntries(ammesse.map(k => [k, 1]))
+    controlla(`${genere}: le sue opzioni sono tutte scrivibili`,
+              !scoppia(() => controllaOpzioni(genere, 'prova', finto)))
+  }
+
+  /* ── E UNA CHE NON È NELL'ELENCO NON PASSA ──
+     La chiave di prova non è una storica né una inventata a mano: è
+     costruita perché **non possa** stare nell'elenco, così questo
+     controllo dice la regola e non un aneddoto. */
+  for (const genere of Object.keys(OPZIONI))
+    controlla(`${genere}: una chiave fuori elenco non passa in silenzio`,
+              !!scoppia(() => controllaOpzioni(genere, 'prova', { ['non-esiste-' + genere]: 1 })))
+
+  /* ── E DICE QUALE INTENDEVI ──
+     Un errore che dice solo «non esiste» costringe ad aprire un file;
+     uno che dice «forse intendevi vista» si legge e si chiude. Si prova
+     su un refuso costruito da una chiave vera, togliendole una lettera:
+     vale per qualunque elenco, oggi e domani. */
+  const vera = OPZIONI.unita[2]                       // una chiave vera qualsiasi
+  const storpiata = vera.slice(0, -1)
+  const detto = scoppia(() => controllaOpzioni('unita', 'prova', { [storpiata]: 1 })) || ''
+  controlla(`un refuso su «${vera}» suggerisce la chiave giusta`,
+            detto.includes(vera), detto.split('\n')[0] || 'accettato in silenzio')
+
+  /* e la stessa regola vale passando dalle fabbriche, che è come la
+     incontra chi scrive un livello */
+  controlla('la fabbrica di un\'unità applica lo stesso controllo',
+            !!scoppia(() => chi.nemico('tale', { ['non-esiste']: 4 })))
+  controlla('e quella di una porta pure',
+            !!scoppia(() => cose.porta('p', { ['non-esiste']: 'oro' })))
+}
 
 nota(`livelli sul banco: ${livelli.length} — ${livelli.map(x => x.nome).join(', ')}`)
 const dichiarano = livelli.filter(x => x.liv.verifiche)

@@ -126,31 +126,48 @@ if (entrata) {
 
   /* ---------- 5. comporre un ordine col dito ----------
      Si tocca il POSTO VUOTO, si sceglie l'azione dal foglio che si apre,
-     poi si tocca il bersaglio SULLA MAPPA: sono i gesti del gioco, e non
-     ce ne sono altri. Nessuna conferma — quello che hai scelto è scritto
-     nella riga, e se hai sbagliato tocchi la casella e la cambi. */
+     poi si sceglie il bersaglio: sono i gesti del gioco, e non ce ne
+     sono altri. Nessuna conferma — quello che hai scelto è scritto
+     nella riga, e se hai sbagliato tocchi la casella e la cambi.
+
+     ── IL BERSAGLIO SI SCEGLIE PER NOME, NON SULLA MAPPA ──
+     Questo pezzo toccava la casella del tesoro. Non lo fa più, e non è
+     un dettaglio di comodo: una cosa che si SPOSTA fra una battaglia e
+     l'altra non si può indicare col dito, perché il piano si firma
+     prima di sapere quale battaglia tocca — indicare il forziere che si
+     vede adesso insegna il contrario di quello che il gioco insegna.
+     Restano sulla mappa le cose immobili (porte, posti, celle). */
   await page.locator('.posto').first().click()
   await page.waitForTimeout(200)
   uguale('dal posto vuoto si apre il foglio delle scelte',
          await page.locator('.foglio-scelta').count(), 1)
-  /* IL VERBO È «PRENDI», non il primo che capita: al primo livello si
-     vince avendo il tesoro, non calpestandolo, e `vai` è lì apposta
-     come la strada sbagliata. Il test sceglie come sceglierebbe un
-     bambino che ha letto la dritta — dal nome del verbo. */
-  await page.locator('.foglio-scelta .pezzo', { hasText: 'prendi' }).first().click()
+  /* IL VERBO È «APRI», non il primo che capita: al primo livello si
+     vince **aprendo** il forziere, non calpestandolo né portandoselo
+     via — un forziere in tasca non ci sta — e `vai` è lì apposta come
+     la strada sbagliata. Il test sceglie come sceglierebbe un bambino
+     che ha letto la dritta: dal nome del verbo. */
+  await page.locator('.foglio-scelta .pezzo', { hasText: 'apri' }).first().click()
   await page.waitForTimeout(200)
-  uguale('scelta l\'azione, il foglio si richiude da solo',
+  /* ── E IL BERSAGLIO SI TOCCA DOVE STA ──
+     Il foglio si chiude e passa la parola alla mappa: `apri`, qui, ha
+     un solo bersaglio possibile e **è fermo** — un forziere non si
+     sposta fra una battaglia e l'altra. Le cose ferme si indicano col
+     dito dove stanno, che è il gesto più corto che ci sia; l'elenco dei
+     nomi resta per quello che il dito non può raggiungere (un segnale,
+     una schiera, una cosa in tasca a qualcuno).
+     Il test tocca come tocca un bambino: chiede al gioco dove sta il
+     forziere sullo schermo (`__gen.dove`) e ci mette il dito sopra. */
+  uguale('scelto il verbo, il foglio lascia il posto alla mappa',
          await page.locator('.foglio-scelta').count(), 0)
-  controlla('scelto il verbo, la mappa chiede il bersaglio',
-            await page.locator('.scelta').count() === 1)
-  const p = await page.evaluate(() => window.__gen.dove(10, 5))   // il tesoro
-  await page.mouse.click(p.x, p.y)
+  const punto = await page.evaluate(() => {
+    const t = window.__gen.mondo().cose.tesoro
+    return window.__gen.dove(t.x, t.y)
+  })
+  await page.mouse.click(punto.x, punto.y)
   await page.waitForTimeout(300)
-  controlla('toccato il bersaglio, la scelta si chiude da sola',
-            await page.locator('.scelta').count() === 0)
   uguale('è nato un ordine', await page.locator('.lista .riga').count(), 1)
   const testo = await page.evaluate(() => document.querySelector('.lista .riga').innerText)
-  controlla('e l\'ordine dice il verbo e la cosa', /prendi/.test(testo) && /tesoro/.test(testo),
+  controlla('e l\'ordine dice il verbo e la cosa', /apri/.test(testo) && /tesoro/.test(testo),
             JSON.stringify(testo))
   await scatto(page, 'generale-ordine')
 

@@ -180,8 +180,8 @@ npm run build      # produce dist/index.html, il file unico (~3,7 MB)
 ### Le prove
 
 ```bash
-npm test           # tutto: ricostruisce, poi unità e browser
-npm run test:unita # solo quelle senza browser, sono secondi
+npm test            # il giro di ogni giorno: solo quelle senza browser, secondi
+npm run test:tutto  # tutto: ricostruisce, poi unità e browser (~5 minuti e mezzo)
 ```
 
 Sono di due tipi, e la differenza conta.

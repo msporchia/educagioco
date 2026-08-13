@@ -15,12 +15,29 @@ in `docs/`.
 npm ci                 # installazione pulita (non npm install)
 npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
-npm test               # ricostruisce, poi unità e browser
-npm run test:unita     # solo senza browser, secondi
+npm test               # il giro di sempre: senza browser, una decina di secondi
+npm run test:svelto    # solo i test sotto il secondo, mentre si scrive
+npm run test:browser   # solo dentro Chrome, ~5 minuti e mezzo — vedi sotto
+npm run test:tutto     # tutto, browser compreso: prima di pubblicare
 node test/esegui.mjs animali            # solo i file che contengono "animali"
 node test/esegui.mjs --niente-build     # non ricompilare prima
 node test/esegui.mjs torri --scatti     # e lascia anche le foto
 ```
+
+`npm test` (= `npm run test:unita`) è il comando di ogni giorno: nessun
+browser, nessuna build, un risultato in secondi. La cartella
+`test/integrazione/` apre Chrome e da sola vale 327 dei 340 secondi
+dell'intera suite (misurato in
+[`docs/tempi-dei-test.md`](docs/tempi-dei-test.md)) — costa un caffè, non
+va lanciata a ogni riga scritta. Si chiede quando serve davvero: tutta con
+`npm run test:tutto` o `npm run test:browser`, o **un file solo** con
+`node test/esegui.mjs <nome>` — il modo giusto quando si è appena toccata
+una schermata (`node test/esegui.mjs pozioni`, per dire, prova solo il
+gioco delle pozioni). La CI lancia solo `npm run test:unita` prima di
+costruire e pubblicare — Chrome non lo scarica, non l'ha mai fatto — quindi
+un guasto che vive solo dentro `test/integrazione/` lo scopre chi l'ha
+lanciato a mano, non la pipeline: un motivo in più per chiederlo quando si
+tocca lo schermo, non solo quando si scrive la logica sotto.
 
 Strumenti che si usano di rado:
 
@@ -73,6 +90,20 @@ tutti (`unita/livelli`), che raccoglie i livelli dalla cartella e li passa al
 banco. Quello che uno scenario ha *di suo* si dichiara nel campo `verifiche`
 dello scenario, e il banco lo esegue: il contratto sta in testa a
 `test/aiuto/livello.mjs`, e una chiave sconosciuta è un guasto.
+
+**`npm run test:svelto` è quello da tenere acceso mentre si scrive.** La
+suite unità intera costa una decina di secondi, e gran parte li spende un
+pugno di test che giocano una campagna intera per davvero (il castello
+tappa per tappa, la bancarella, i saperi citati e non). Sono giusti così —
+è il prezzo di provare sul serio invece che a occhio — ma quel prezzo non
+va pagato a ogni riga scritta, solo quando si tocca quella parte lì. Un
+test si dichiara pesante scrivendo `tempo: 100` (o più) fra i primi
+commenti — la stessa riga che allunga il tempo massimo prima di essere
+segnato ⏱, letta in testa al file entro i primi 1200 caratteri — e resta
+fuori da `--svelti`; chi non dice niente resta dentro, ed è la maggioranza.
+I test di integrazione non ci entrano mai, dichiarino o no: aprono Chrome,
+e Chrome da solo costa più di un secondo. Il contratto è in testa a
+`test/esegui.mjs`.
 
 ### In un ambiente pulito
 
@@ -131,6 +162,15 @@ committate: non è ricostruibile da git.
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio
   click. `campagne.js` è **generato** da `estrai-campagne.mjs`.
+- **`src/incidenti.js`** — la rete di sicurezza: un errore, ovunque
+  scatti, finisce in archivio sotto `incidenti` (fuori dai profili, come
+  il codice dei genitori) e mette a schermo un cartello in DOM puro —
+  puro perché quando è Vue quello rotto un componente Vue non
+  comparirebbe. I guasti si rileggono dalla pagina dei grandi, che è
+  come si diagnostica un telefono che non è il proprio. `ripara()` e
+  `#ripara` buttano cache e service worker e ricaricano: **non toccano
+  IndexedDB né localStorage**, e questa è tutta la differenza con
+  «cancella i dati del sito».
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni
@@ -151,6 +191,14 @@ committate: non è ricostruibile da git.
   solo fatti già decisi (`potenziabile: true`).
 - **I giochi non toccano i contatori a mano**: usano `segna()` e
   `segnaBest()` di `store/profile.js`.
+- **Un errore non resta muto.** Vue scrive in console e lascia la
+  schermata com'era: a un bambino col telefono in mano quello si
+  presenta come un tasto che non fa niente, e chi deve capirlo il giorno
+  dopo non ha in mano niente. `src/incidenti.js` lo scrive e lo dice.
+- **La pagina la serve prima la rete, il resto prima la cache**
+  (il service worker in `vite.config.js`). Cache-first anche sul
+  documento vuol dire che una versione con un guasto si ripresenta
+  identica a ogni avvio, e dal telefono non c'è ricarica che la smuova.
 - **La pronuncia non usa `speechSynthesis`**: le clip sono incise a monte e
   concatenate in sprite (`src/data/voci.js`, `voci-es.js`). `src/voce.js` è
   l'unico punto che le riproduce.

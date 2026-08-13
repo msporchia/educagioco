@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
    COSA SA IL BAMBINO — il catalogo e chi lo cita
-   tempo: 10
 
    I macrogruppi di `src/data/saperi.js` sono un'anagrafe: da soli non
    fanno niente: contano perché qualcuno li cita. Un modulo di quiz li

@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
    TUTTI I MODULI DI QUIZ, SULLO STESSO BANCO
-   tempo: 120
 
    Un test solo, non uno per modulo — come per i livelli del Generale.
    I moduli si raccolgono dalla cartella, quindi uno nuovo entra nel

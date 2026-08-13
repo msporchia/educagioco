@@ -104,11 +104,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla } from './verifica.mjs'
 import { campoDi } from '../../src/motore/generale/campo.js'
-import { creaMondo, esegui, guaiDi, contaOrdini, pianoVuoto, mieUnita, VERBI,
+import { creaMondo, esegui, guaiDi, contaOrdini, pianoVuoto, mieUnita, VERBI, verbiPer,
          eCondizione, ramoDi } from '../../src/motore/generale.js'
 /* i nomi dei pittori: un disegno che non esiste è un buco nella mappa —
    la scenografia sparisce, e un'unità col `chi` sbagliato non si vede */
-import { OGGETTI } from '../../src/grafica/oggetti/indice.js'
+import { OGGETTI, INGOMBRANTI } from '../../src/grafica/oggetti/indice.js'
 import { PERSONAGGI } from '../../src/grafica/personaggi/indice.js'
 
 /* ── attrezzi ───────────────────────────────────────────────────── */
@@ -221,6 +221,7 @@ export function provaLivello (liv, nome) {
 
   forma(liv, n, C, tutte)
   vincono(liv, n)
+  dallaCassetta(liv, n)
   necessari(liv, n)
   ilPar(liv, n)
   particolari(liv, n)
@@ -325,8 +326,21 @@ function scenografia (liv, n, iv, m, suolo) {
   const senzaPittore = roba.filter(d => !OGGETTI.includes(d.che)).map(d => d.che)
   controlla(`${dove}: ogni cosa di scena ha il suo pittore`, !senzaPittore.length,
             `non c'è nessun pittore che si chiami «${[...new Set(senzaPittore)].join('», «')}»`)
-  const fuori = roba.filter(d => !suolo(d.x, d.y)).map(d => `${d.che} (${d.x},${d.y})`)
-  controlla(`${dove}: la scenografia sta su pavimento`, !fuori.length, fuori.join(', '))
+  /* ── E STA DOVE IL SUO INGOMBRO È VERO ──
+     Non «su pavimento» e basta, che era la regola di prima e diceva il
+     contrario di quello che serve. Un albero, un cespuglio, una
+     fontana disegnati in mezzo a una stanza dicono a chi guarda «di lì
+     non si passa» — e invece si passa, perché la scenografia il motore
+     non la vede nemmeno. Il bambino si costruisce allora una mappa più
+     stretta di quella vera e scarta la strada giusta: un disegno che
+     mente sulla geometria è peggio che niente.
+     Quindi: quello che ha un volume (`INGOMBRANTI`, in
+     `grafica/oggetti/indice.js`) sta **sui muri**, dove l'ingombro è
+     vero; sul pavimento ci va solo quello che si calpesta — una
+     pozzanghera, un mucchio d'ossa, una ragnatela. */
+  const male = roba.filter(d => (INGOMBRANTI.has(d.che) ? suolo(d.x, d.y) : !suolo(d.x, d.y)))
+    .map(d => `${d.che} (${d.x},${d.y}) ${INGOMBRANTI.has(d.che) ? 'ha un volume e sta sul pavimento' : 'è piatta e sta dentro un muro'}`)
+  controlla(`${dove}: quello che ha un volume sta su una casella di muro`, !male.length, male.join(', '))
   /* le caselle che il gioco usa davvero: lì la scenografia non va */
   const usate = new Set([
     ...m.unita.map(u => u.x + ',' + u.y),
@@ -361,6 +375,43 @@ function vincono (liv, n) {
     })
     controlla(`${n} · ${s.nome}: nessun ordine viene rifiutato`, !rifiutati.length,
               rifiutati.slice(0, 2).join(' · '))
+  }
+}
+
+/* ── 2b. la soluzione dev'essere SCRIVIBILE ──
+   `guaiDi` dice se il MOTORE accetta un ordine; questo dice se il
+   BAMBINO può comporlo. Sono due domande diverse, e finché c'era solo
+   la prima un livello poteva dichiarare una soluzione che nessuno
+   riesce a scrivere giocando — è successo davvero, con un «aspetta
+   che» in un livello che offriva cinque verbi senza quello: banco
+   verde, e la promessa del livello non mantenibile.
+
+   La cassetta non si ricostruisce qui: la si CHIEDE al motore
+   (`verbiPer`), che è lo stesso identico elenco che l'editor mette a
+   schermo. Così il controllo prende anche i casi che un confronto con
+   `liv.verbi` si perderebbe — il verbo tolto perché nessun complemento
+   lo accetta, quello che quell'unità non sa fare (`sa:`), quello di
+   segnale quando è rimasta sola in campo. */
+function dallaCassetta (liv, n) {
+  for (const iv of scene(liv)) {
+    let m
+    try { m = creaMondo(liv, iv) } catch { continue }
+    for (const s of soluzioni(liv)) {
+      /* le AZIONI vengono dal piano, non dal mondo: senza registrarle
+         `esegui` non ha complementi e la cassetta non lo offrirebbe mai
+         — lo stesso che fa `guaiDi` prima di validare */
+      try { m.registraRoutine(clona(s.piano)) } catch { /* piano senza azioni */ }
+      for (const id of Object.keys(s.piano || {})) {
+        if (!m.perId[id] || !m.mio(id)) continue     // i piani del livello non passano dalla cassetta
+        const offerti = verbiPer(m, id)
+        const usati = [...new Set(voci({ [id]: s.piano[id] })
+          .map(v => v.ordine && v.ordine.verbo).filter(Boolean))]
+        const fuori = usati.filter(v => !offerti.includes(v))
+        controlla(`${n} · ${s.nome}: «${id}» compone i suoi ordini con la cassetta che ha`,
+                  !fuori.length,
+                  `usa «${fuori.join('», «')}», ma in cassetta ha [${offerti.join(', ')}]`)
+      }
+    }
   }
 }
 
@@ -415,17 +466,44 @@ const REGOLE = {
        è esattamente «partire subito», che è quello che questa prova
        vuole far fallire. */
     const attesa = o => ((VERBI[o && o.verbo] || {}).cl === 'attesa')
+    /* ── E SI SCENDE ANCHE DENTRO I CICLI E DENTRO LE AZIONI ──
+       Per un pezzo `srotola` guardava solo dentro i «quando senti» e i
+       rami dei bivi: dentro `ripeti.corpo` e dentro il corpo di
+       un'azione non entrava. Il risultato è che su un livello di solo
+       ciclo la fila srotolata veniva identica all'originale, il
+       controllo «c'è qualcosa da srotolare» falliva **per
+       costruzione**, e `nonInFila` taceva proprio dove la struttura
+       costa di più. Peggio: siccome due blocchi non si annidano
+       direttamente (`piano.js`), un bivio dentro un ciclo si scrive per
+       forza come azione + `esegui` — cioè finiva in un punto cieco.
+       Adesso un ciclo srotolato è «il suo corpo, una volta sola» (senza
+       la ripetizione) e una chiamata è «il corpo dell'azione al posto
+       della chiamata»: quello che resta è il piano senza nessuna delle
+       sue strutture, che è la cosa che deve perdere. */
+    const corpiDelleAzioni = fila => Object.fromEntries((fila || [])
+      .filter(o => o && o.blocco === 'routine' && o.nome)
+      .map(o => [o.nome, o.corpo || []]))
+    let azioni = {}
     const srotola = lista => (lista || []).flatMap(o => {
+      if (!o) return []
       if (o.verbo === 'quando') return srotola(o.allora)
       /* un bivio srotolato è «fai tutto, senza scegliere»: i due rami
          uno dietro l'altro, che è esattamente quello che un piano senza
          decisioni sarebbe costretto a fare */
       if (eCondizione(o)) return RAMI.flatMap(r => srotola(ramoDi(o, r)))
+      if (o.blocco === 'ripeti') return srotola(o.corpo)
+      /* la definizione sta accanto alla fila e non parte da sé: srotolata
+         sparisce, e a portarne dentro il corpo è la chiamata */
+      if (o.blocco === 'routine') return []
+      if (o.verbo === 'esegui') return srotola(azioni[o.complemento] || [])
       if (attesa(o)) return []
       return [{ ...o }]
     })
     for (const s of buone(liv)) {
-      const fila = Object.fromEntries(Object.keys(s.piano).map(id => [id, srotola(s.piano[id])]))
+      const fila = Object.fromEntries(Object.keys(s.piano).map(id => {
+        azioni = corpiDelleAzioni(s.piano[id])
+        return [id, srotola(s.piano[id])]
+      }))
       if (!controlla(`${n} · ${s.nome}: «nonInFila» ha qualcosa da srotolare`,
                      scritta(fila) !== scritta(s.piano),
                      'nessun «quando senti», nessuna guardia, nessuna attesa: ' +

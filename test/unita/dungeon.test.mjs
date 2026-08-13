@@ -8,8 +8,7 @@
    ed è quella che il gioco promette: **potenziarsi si deve sentire**.
    Un test che dicesse solo «la tappa si vince» passerebbe anche con un
    bottino finto, cioè col gioco svuotato di quello per cui esiste.
-   `node test/esegui.mjs dungeon --niente-build`
-   tempo: 300 */
+   `node test/esegui.mjs dungeon --niente-build` */
 import { STANZE, SACCHI, guastiDelleStanze, rischioDi, pianoDi, finePiano,
          eFinePiano, gradoBottino, QUANTI_PIANI, GRADO_DEL_PIANO }
   from '../../src/giochi/dungeon/dati/stanze.js'

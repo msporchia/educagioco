@@ -37,6 +37,19 @@
    la spesa. Adottare fa scattare "Famiglia" e il "Salvadanaio", che ne
    rimettono dentro. Perciò il prelievo secco si misura su un acquisto
    che non premia nessuno.
+
+   Le attese fisse dopo un gesto (`attendi(page, N)`) proteggono per lo
+   più una transizione fra stanze o l'apertura/chiusura di un cartello:
+   sono tante — un censimento (`docs/tempi-dei-test.md`) ne conta 58 — ma
+   non sono tutte uguali, e riscriverle a occhio senza guardare ogni
+   animazione una per una rischia di rendere il test capriccioso invece
+   che veloce (l'unico scambio che *non* vale la pena: un test che a volte
+   passa e a volte no costa più caro di uno lento e affidabile). Dov'era
+   ovvio sostituire un'attesa con una condizione l'abbiamo fatto (il ciclo
+   che dà da mangiare, qui sotto, sonda la dispensa invece di dormire 1500
+   ms per quattro volte); il resto resta così finché non tocca davvero
+   questo file — che oggi non è più il prezzo di ogni `npm test`, vedi
+   `test/README.md`.
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { uguale, controlla, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -200,10 +213,17 @@ uguale('la porzione resta in dispensa', await page.locator('.piatto.storto').cou
 const barre = () => page.locator('.cartellino .sbarra i').evaluateAll(
   els => els.map(e => Math.round(parseFloat(e.style.width))))
 const bPrima = await barre()
-// ogni porzione usata sparisce dalla dispensa: si ripesca sempre la prima
+// ogni porzione usata sparisce dalla dispensa: si ripesca sempre la prima.
+// La condizione c'è (la dispensa si accorcia di uno), quindi si sonda
+// invece di dormire 1500 ms alla cieca quattro volte — il tetto resta lo
+// stesso, così un rallentamento vero si vede ancora, non si nasconde
 for (let i = 0; i < 4; i++) {
+  const primaConta = await page.locator('.piatto:not(.storto)').count()
   await page.locator('.piatto:not(.storto)').first().click()
-  await attendi(page, 1500)
+  await page.waitForFunction(
+    n => document.querySelectorAll('.piatto:not(.storto)').length < n,
+    primaConta, { timeout: 1500 }
+  ).catch(() => {})  // se non scende, ci pensa l'asserzione sulle barre a dirlo
 }
 const bDopo = await barre()
 controlla('tutte e quattro le barre sono salite', bDopo.every((v, i) => v > bPrima[i]),

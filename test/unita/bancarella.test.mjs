@@ -16,7 +16,8 @@
    E il tempo, che è il punto della campagna: si stringe di tappa in
    tappa dentro la giornata, e di giornata in giornata — ma non
    diventa mai la corsa punitiva di prima.
-   ═══════════════════════════════════════════════════════════════════ */
+
+   `node test/esegui.mjs bancarella --niente-build` */
 import { generaCliente, esposizione, tappaDi, campagnaDi,
          merceDi, scaffale, scomponi, euro, chiaveResto, fasciaDi,
          LISTINO, BANCHI, CAMPAGNE, LIBERA, FASCE, TAGLI,

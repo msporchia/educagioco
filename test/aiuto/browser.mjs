@@ -163,9 +163,9 @@ export async function azzera(page, { attesa = '.carte' } = {}) {
 /* ── Le foto sono spente, se non le chiedi ──
    Uno scatto non verifica niente: nessun test guarda i pixel, le
    immagini servono a un umano che vuole vedere com'è venuta una
-   schermata. Farle a ogni `npm test` costa secondi e sporca la
-   cartella di file che cambiano da soli (il gioco è pieno di caso), e
-   quelli che finivano in radice arrivavano perfino nei commit.
+   schermata. Farle a ogni giro di `test/integrazione/` costa secondi e
+   sporca la cartella di file che cambiano da soli (il gioco è pieno di
+   caso), e quelli che finivano in radice arrivavano perfino nei commit.
    Quindi: `SCATTI=1` nell'ambiente, o `--scatti` al lanciatore, e
    sempre e solo dentro `test/scatti/`, che git non guarda. */
 export const SCATTI_ACCESI = !!process.env.SCATTI && process.env.SCATTI !== '0'

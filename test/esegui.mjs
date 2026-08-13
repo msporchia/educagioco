@@ -9,6 +9,7 @@
      node test/esegui.mjs --niente-build   non ricompila prima
      node test/esegui.mjs --tempo=600      alza il tempo massimo per test
      node test/esegui.mjs torri --scatti   lascia anche le foto in test/scatti/
+     node test/esegui.mjs --svelti         solo i test sotto il secondo
 
    Ogni test è un processo a sé: uno che va in crash non porta via gli
    altri, e il codice di uscita è quello che conta. Chi esce con 0 è
@@ -28,6 +29,18 @@
    lascia in giro immagini che cambiano da sole (il gioco è pieno di
    caso). Si chiedono con `--scatti`, quando servono davvero, e finiscono
    tutte in `test/scatti/`, che git non guarda.
+
+   E poi c'è `--svelti`. Aspettare secondi per un test mentre si scrive
+   codice è la differenza fra lanciarli spesso e smettere di lanciarli:
+   un pugno di giochi si vincono giocandoli davvero, con un finto
+   giocatore che finisce la campagna intera, e da soli fanno gran parte
+   dei secondi della suite. Non sono rotti, sono semplicemente il prezzo
+   di provare sul serio invece che a occhio — ma quel prezzo non va
+   pagato a ogni riga scritta, solo quando si tocca quella parte lì.
+   `--svelti` tiene fuori chi dichiara un `tempo:` (lo stesso di sopra,
+   in secondi) da 100 in su — cioè chi ha già detto «ci metto sul serio»
+   — e fa girare il resto: la parte che dà una risposta prima ancora di
+   aver tolto le dita dalla tastiera.
    ═══════════════════════════════════════════════════════════════════ */
 import { spawn } from 'node:child_process'
 import { readdirSync, existsSync, readFileSync } from 'node:fs'
@@ -41,27 +54,54 @@ const GRUPPI = ['unita', 'integrazione']
 const argomenti = process.argv.slice(2)
 const senzaBuild = argomenti.includes('--niente-build')
 const conScatti = argomenti.includes('--scatti')
+const soloSvelti = argomenti.includes('--svelti')
 const filtri = argomenti.filter(a => !a.startsWith('--'))
 const TEMPO = Number(argomenti.find(a => a.startsWith('--tempo='))?.slice(8)) || 240
 
 /* Un test può chiedersi più tempo scrivendo `tempo: 900` fra i primi
    commenti: le simulazioni lunghe sono legittime, purché lo dichiarino.
-   Chi non dice niente ha il tempo normale, e se sfora è rotto. */
+   Chi non dice niente ha il tempo normale, e se sfora è rotto.
+
+   La riga dev'essere SOLO `tempo:` (a parte spazi davanti): una
+   dichiarazione vera sta sempre da sola sulla propria riga, mai in
+   mezzo a una frase. Senza l'ancoraggio a inizio riga, `\s` attraversa
+   anche gli a capo e la regex legge "tempo:" pure dentro la prosa di un
+   commento — è già successo con "...perde tempo:\n\n  1. il grafo..."
+   che veniva letto come "tempo: 1". */
 function tempoDichiarato(file) {
   const testa = readFileSync(file, 'utf8').slice(0, 1200)
-  const m = /tempo:\s*(\d{1,4})/.exec(testa)
+  const m = /^[ \t]*tempo:\s*(\d{1,4})/m.exec(testa)
   return m ? Number(m[1]) : 0
 }
+
+/* La soglia di `--svelti`. Chi non dichiara niente vale 0 e resta
+   dentro: la maggioranza dei test è così. Chi dichiara un tempo vero
+   (100 e oltre — sotto sta solo qualche margine simbolico, come i 10-15
+   di saperi/quiz-pesi, che restano test istantanei) ha già detto da sé
+   di essere un altro genere di prova, e qui viene preso in parola.
+
+   L'integrazione non entra mai: apre Chrome, e Chrome da solo costa più
+   di un secondo prima ancora di toccare un pulsante. Non è una domanda
+   di soglia, è la natura del test — dichiararsi svelto non basterebbe. */
+const SOGLIA_SVELTA = 100
+const svelto = t => t.gruppo !== 'integrazione' && t.suo < SOGLIA_SVELTA
 
 function raccogli() {
   const fuori = []
   for (const g of GRUPPI) {
     const dir = resolve(QUI, g)
     if (!existsSync(dir)) continue
-    for (const f of readdirSync(dir).sort())
-      if (f.endsWith('.test.mjs')) {
+    /* ── ANCHE NELLE SOTTOCARTELLE ──
+       Un test per argomento va bene finché l'argomento è un gioco. Per i
+       pezzi di un motore no: «le azioni del Generale» in un file solo
+       diventa un elenco in cui non si vede più cosa è provato e cosa
+       no. Con le cartelle il nome del file È l'indice — `generale/
+       azioni/vai` — e a colpo d'occhio si sa cosa manca. */
+    for (const f of readdirSync(dir, { recursive: true }).sort())
+      if (String(f).endsWith('.test.mjs')) {
         const file = resolve(dir, f)
-        fuori.push({ gruppo: g, nome: f.replace('.test.mjs', ''), file, suo: tempoDichiarato(file) })
+        fuori.push({ gruppo: g, nome: String(f).replace(/\.test\.mjs$/, '').replace(/\\/g, '/'),
+                     file, suo: tempoDichiarato(file) })
       }
   }
   if (!filtri.length) return fuori
@@ -79,9 +119,16 @@ function esegui(comando, argomenti, opzioni = {}) {
   })
 }
 
-const prove = raccogli()
-if (!prove.length) {
+const raccolti = raccogli()
+if (!raccolti.length) {
   console.log('nessun test trovato' + (filtri.length ? ' per: ' + filtri.join(', ') : ''))
+  process.exit(1)
+}
+
+const lenti = soloSvelti ? raccolti.filter(t => !svelto(t)) : []
+const prove = soloSvelti ? raccolti.filter(svelto) : raccolti
+if (!prove.length) {
+  console.log('nessun test svelto trovato' + (filtri.length ? ' per: ' + filtri.join(', ') : ''))
   process.exit(1)
 }
 
@@ -116,4 +163,6 @@ for (const e of esiti) {
 console.log('═'.repeat(60))
 console.log(rotti.length ? `❌ ${rotti.length} test su ${esiti.length} non passano`
                          : `✅ tutti e ${esiti.length} passano`)
+if (lenti.length)
+  console.log(`saltati ${lenti.length} test lenti: node test/esegui.mjs`)
 process.exit(rotti.length ? 1 : 0)

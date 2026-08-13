@@ -1002,9 +1002,9 @@ mai sotto zero.
 
 ### Verifiche
 ```
-npm test               tutto
-npm run test:unita     solo quelli veloci, senza browser
+npm test               solo quelli veloci, senza browser (il default)
 npm run test:browser   solo quelli dentro Chrome
+npm run test:tutto     tutto, browser compreso — prima di pubblicare
 ```
 I test stanno in `test/`, divisi fra `unita/` (aritmetica, motori, dati:
 millisecondi) e `integrazione/` (il gioco vero dentro Chrome). Gli attrezzi

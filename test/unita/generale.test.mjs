@@ -131,7 +131,15 @@ const BASI = ['vai', 'prendi', 'apri', 'chiudi', 'attacca', 'aspetta',
                  quando lo ricevi lo decide il congegno. `parla` è il
                  gemello di `suona`: uno grida a chiunque, l'altro lo
                  dice a qualcuno in particolare — e solo a chi vede. */
-              'premi', 'parla']
+              'premi', 'parla',
+              /* ── E `posa`, che è il gemello di `prendi` ──
+                 Non è un verbo di comodo: senza, una cosa presa è una
+                 cosa tolta dal mondo, e un oggetto non può cambiare
+                 padrone né essere lasciato dove serve a qualcun altro.
+                 Questa lista era rimasta indietro di un giorno rispetto
+                 al motore, e segnalava come «non concordato» un verbo
+                 che il gioco insegna in un capitolo suo. */
+              'posa']
 const base = v => BASI.find(b => String(v).toLowerCase().includes(b)) || null
 /* e queste non sono più complementi di niente */
 const DIREZIONI = ['nord', 'sud', 'est', 'ovest', 'destra', 'sinistra', 'su', 'giu', 'giù',
@@ -402,7 +410,21 @@ const IMPRONTA_DATI = scritta(LIVELLI)
     /* un blocco è fatto bene, ognuno a modo suo: la condizione ha la sua
        domanda e due rami, il ciclo ha il corpo e l'uscita. E dentro non
        c'è mai un altro blocco — quello sarebbe un albero, e un albero
-       non lo si legge più in una schermata di telefono. */
+       non lo si legge più in una schermata di telefono.
+       ── CON UNA SOLA ECCEZIONE, ED È IL MOTIVO PER CUI LE AZIONI
+          ESISTONO ──
+       Dentro un'AZIONE un blocco ci sta, e ce lo mette il motore: la
+       regola vera (`piano.js`) vieta un blocco dentro un ramo e dentro
+       un ciclo, ma dentro un'azione vieta soltanto un'altra azione —
+       «le azioni si chiamano fra loro, non si contengono». È l'unica
+       via che il motore stesso indica per comporre due strutture, e il
+       suo messaggio d'errore la scrive: «scrivi un'azione e chiamala
+       con esegui». Un controllo che la vietasse qui renderebbe
+       `esegui` inutilizzabile, cioè vieterebbe la sola strada
+       praticabile — ed è quello che faceva finché questa prova non ha
+       imparato che le azioni esistono. L'albero resta scongiurato: a
+       schermo un'azione è una fila a parte col suo nome, non un ramo
+       che rientra. */
     const blocchi = suoi.flatMap(s => vociDi(s.piano).map(v => v.ordine)).filter(eBlocco)
     const conde = blocchi.filter(eCond)
     controlla(`${n}: ogni condizione ha una domanda e due rami di ordini`,
@@ -414,8 +436,11 @@ const IMPRONTA_DATI = scritta(LIVELLI)
               cicli.every(b => Array.isArray(b.corpo) && b.corpo.length &&
                                b.finche && typeof b.finche.cond === 'string'),
               scritta(cicli.filter(b => !Array.isArray(b.corpo) || !b.finche).slice(0, 2)))
-    controlla(`${n}: dentro un blocco non c'è un altro blocco`,
-              blocchi.every(b => RAMI.every(r => !ramoDi(b, r).some(eBlocco))))
+    controlla(`${n}: dentro un ramo o un ciclo non c'è un altro blocco`,
+              blocchi.filter(b => !eRoutine(b))
+                     .every(b => RAMI.every(r => !ramoDi(b, r).some(eBlocco))))
+    controlla(`${n}: e dentro un'azione non se ne scrive un'altra`,
+              blocchi.filter(eRoutine).every(b => !ramoDi(b, 'corpo').some(eRoutine)))
   }
 
   const senzaVerbo = TUTTI_GLI_ORDINI.filter(o => !base(o.verbo))
@@ -587,9 +612,17 @@ controlla('almeno un livello fa vedere che il gesto cammina', camminate > 0,
                        !!complementiDi)
   controlla('e quali verbi l\'interfaccia può offrire (verbiDi)', !!verbiDi)
   if (c1)
-    controlla('ogni verbo dichiara i tipi che accetta',
-              Object.values(VERBI).every(v => Array.isArray(v.accetta) && v.accetta.length),
-              Object.entries(VERBI).filter(([, v]) => !(v.accetta || []).length)
+    /* ── SALVO CHI NON PUNTA A UNA COSA ──
+       `aspetta che [domanda]` non ha un complemento e non deve averlo:
+       quello che guarda è una DOMANDA, non un bersaglio, e lo dichiara
+       con `vuoleCond`. Pretendere da lui un elenco di tipi vuol dire
+       pretendere che sia un verbo come gli altri, cioè il contrario di
+       quello che è. La regola resta per tutti quelli che a una cosa ci
+       puntano davvero. */
+    controlla('ogni verbo che punta a una cosa dichiara i tipi che accetta',
+              Object.values(VERBI).every(v => v.vuoleCond ||
+                (Array.isArray(v.accetta) && v.accetta.length)),
+              Object.entries(VERBI).filter(([, v]) => !v.vuoleCond && !(v.accetta || []).length)
                 .map(([k]) => k).join(', '))
   if (c1)
     controlla('i verbi del motore e quelli usati nei livelli sono gli stessi',
@@ -754,6 +787,21 @@ function oggettoDaPrendere(liv) {
    porta trova uno stato che non lo permette — ed è un guasto diverso da
    tutti gli altri, perché è l'unico che il bambino risolve pensando
    all'ORDINE dei gesti e non al gesto. */
+/* ── E LA PORTA DEVE AVERE QUELLA SERRATURA ──
+   «Si prende una cosa e più avanti se ne apre un'altra» non basta a
+   dire che le due si riguardano: nel cortile di Rosa si prende il pane
+   e si apre un cancello che non ha nessuna serratura, e togliendo il
+   `prendi` non si blocca proprio niente — il piano perde per un'altra
+   ragione, e pretendere una spiegazione di stato è pretendere che il
+   motore menta. Quindi si guarda la porta: solo se la sua `chiave` è
+   proprio la cosa che si è presa, quella è una coppia. */
+const chiaveDi = (liv, id) => {
+  const leg = (liv.scena && liv.scena.legenda) || {}
+  for (const v of Object.values(leg))
+    for (const x of (Array.isArray(v) ? v : [v]))
+      if (x && x.id === id) return x.chiave || null
+  return null
+}
 function coppiaChiavePorta(liv) {
   for (const s of soluzioniDi(liv).filter(x => !x.fragile)) {
     const p = s.piano
@@ -764,7 +812,8 @@ function coppiaChiavePorta(liv) {
         if (!eOrdine(lista[a]) || base(lista[a].verbo) !== 'prendi') continue
         for (let b = a + 1; b < lista.length; b++)
           if (eOrdine(lista[b]) && base(lista[b].verbo) === 'apri' &&
-              lista[b].complemento && lista[b].complemento !== lista[a].complemento)
+              lista[b].complemento && lista[b].complemento !== lista[a].complemento &&
+              chiaveDi(liv, lista[b].complemento) === lista[a].complemento)
             return { piano: p, unita: u, via: u === null ? [a] : [u, a], porta: lista[b] }
       }
     }
@@ -812,14 +861,28 @@ for (const [i, liv] of LIVELLI.entries()) {
   rifiutatoOSpiegato(`${n} · vai verso una meta che non c'è`,
                      prova(liv, 0, pianoPer(modello, chi, [miraggio])), miraggio)
 
-  /* stato che non lo permette: il portone senza la chiave */
+  /* stato che non lo permette: il portone senza la chiave.
+     ── SU TUTTE LE SCENE, E BASTA CHE UNA CADA ──
+     Si guardava solo la prima, e pretendeva che senza la chiave non si
+     vincesse mai. Ma un livello può avere una scena in cui la chiave
+     NON serve, e non è un difetto: è una lezione — «prendila lo stesso,
+     perché non sai in quale battaglia finisci». Preteso su una scena
+     sola, questo controllo vietava proprio i livelli che insegnano il
+     caso peggiore. Quello che deve restare vero è che la chiave serva
+     DAVVERO da qualche parte: almeno una scena, senza, si perde. */
   const cp = coppiaChiavePorta(liv)
   if (cp) {
     bloccatiProvati++
-    const r = prova(liv, 0, senza(cp.piano, cp.via))
-    esitoSano(`${n} · il portone senza la chiave`, r)
-    controlla(`${n}: senza aver preso la chiave non si apre niente`, !vinta(r))
-    const m = motivoDi(r, cp.porta)
+    const senzaChiave = senza(cp.piano, cp.via)
+    const quante = Math.max(1, (liv.varianti || []).length)
+    const esiti = []
+    for (let k = 0; k < quante; k++) esiti.push(prova(liv, k, senzaChiave))
+    esitoSano(`${n} · il portone senza la chiave`, esiti[0])
+    const perse = esiti.filter(r => !vinta(r))
+    controlla(`${n}: senza aver preso la chiave, almeno una battaglia si perde`,
+              perse.length > 0, `si vince lo stesso in tutte e ${quante}: la chiave non serve`)
+    /* il motivo si cerca dove il piano si è fermato davvero */
+    const m = perse.map(r => motivoDi(r, cp.porta)).find(Boolean)
     controlla(`${n}: e la traccia dice che è lo stato a non permetterlo`, !!m)
     if (m && !motivi[i].bloccato) motivi[i].bloccato = m
   }

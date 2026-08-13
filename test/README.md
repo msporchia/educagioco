@@ -1,15 +1,59 @@
 # I test
 
 ```
-npm test                 tutto (ricompila prima, da solo)
-npm run test:unita       solo quelli che non aprono il browser — un secondo
-npm run test:browser     solo quelli nel browser
+npm test                 il giro di ogni giorno: senza browser — una decina di secondi
+npm run test:unita       lo stesso comando, per esteso
+npm run test:svelto      solo quelli sotto il secondo — mentre si scrive
+npm run test:browser     solo quelli nel browser — Chrome, ~5 minuti e mezzo
+npm run test:tutto       tutto: unità e browser, ricompila prima — prima di pubblicare
 
-node test/esegui.mjs animali        solo i file che contengono "animali"
+node test/esegui.mjs pozioni        solo i file che contengono "pozioni"
 node test/esegui.mjs --niente-build non ricompilare (se hai appena compilato)
 node test/esegui.mjs --tempo=600    alza il tempo massimo per test
+node test/esegui.mjs --svelti       solo i test sotto il secondo
 node test/esegui.mjs torri --scatti lascia anche le foto (test/scatti/)
 ```
+
+**Quale lanciare, e quando.** `npm test` è il comando di ogni riga scritta:
+niente browser, niente build, un risultato prima di aver tolto le dita
+dalla tastiera. `test/integrazione/` non ci entra mai — apre Chrome, e da
+sola vale 327 dei 340 secondi dell'intera suite (misurato in
+[`docs/tempi-dei-test.md`](../docs/tempi-dei-test.md)) — quindi si chiede
+solo per «estrema necessità»: si è appena toccata *quella* schermata e si
+vuole esserne sicuri prima di committare. In quel caso il modo giusto non
+è `npm run test:browser` (tutti e 15, ~5 minuti e mezzo) ma **un file
+solo**: `node test/esegui.mjs pozioni` prova solo `integrazione/pozioni` (e
+`unita/pozioni`, se esiste un file con lo stesso nome — vedi più sotto).
+`npm run test:tutto` è il giro completo, lento apposta: prima di
+pubblicare, o quando si vuole la certezza di prima che questo file
+esistesse.
+
+## I lenti si dichiarano, non si scoprono
+
+`npm test` costa una decina di secondi, e non è colpa di tutti: un pugno
+di test giocano una campagna intera con un finto giocatore — il castello
+tappa per tappa, il tower defense, il dungeon a bivi, i livelli del
+Generale — e da soli si mangiano la maggior parte del tempo. Sono giusti
+così: è il prezzo di provare le regole giocandole invece di fidarsi a
+occhio. Ma è un prezzo che ha senso pagare quando si tocca *quella*
+parte, non a ogni riga scritta altrove — altrimenti si smette di
+lanciare i test mentre si lavora, che è l'unico momento in cui contano.
+
+`--svelti` (e `npm run test:svelto`, che aggiunge anche `--niente-build`)
+tiene fuori chi dichiara un `tempo: 100` o più fra i primi commenti — la
+stessa riga di `tempo: 900` usata per allungare il tempo massimo prima di
+essere fermato ⏱, letta nei primi 1200 caratteri del file: un test la
+scrive quando il suo costo è un fatto, non un incidente. Chi non dichiara
+niente vale 0 e resta dentro il giro svelto: è la stragrande maggioranza,
+quella per cui il default va bene. `test/integrazione/` non ci entra mai,
+qualunque cosa dichiari: apre Chrome, e solo aprirlo costa più di un
+secondo.
+
+`npm test` (= `npm run test:unita`) gira tutta la cartella `unita/`, lenti
+compresi: `--svelti` sceglie chi entra in *quel* giro più stretto, non
+cosa entra in `npm test`. Ed è `npm run test:unita` il comando su cui si
+appoggia la CI prima di pubblicare — un test lento in meno lì sarebbe un
+buco, non un guadagno.
 
 ## Le foto si chiedono
 
