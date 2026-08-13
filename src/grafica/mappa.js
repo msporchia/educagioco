@@ -14,6 +14,8 @@
 import { dado, velo } from './comune.js'
 import { POSE, MURI, DETTAGLI, semina, variazioni } from './materiali/indice.js'
 import { AMBIENTI } from './ambienti/indice.js'
+import { PITTORI_OGGETTI } from './oggetti/indice.js'
+import { pennello } from './tela.js'
 import { luceEBuio, chiazzeDiLuce, torciaFerma, creaLuce } from './luce.js'
 import { dipingiMuri } from './muri.js'
 import { tessuto } from './tessuto.js'
@@ -60,7 +62,15 @@ export function dipingiMappa(ctx, opz) {
      dati, e serve a chi vuole vedere *una* variante alla volta (la
      vetrina) senza dover inventare un ambiente finto nell'indice */
   const A = (typeof ambiente === 'object' ? ambiente : AMBIENTI[ambiente]) || AMBIENTI.corridoio
-  const { larghezza, altezza, muro } = leggiMappa(opz.mappa, opz.larghezza, opz.altezza)
+  const { larghezza, altezza, muro: muroVero } = leggiMappa(opz.mappa, opz.larghezza, opz.altezza)
+  /* ── UNA BOTTE NON È UN MURO, ANCHE SE OCCUPA ──
+     Per il motore l'arredo è pieno: di lì non ci si passa. Per chi
+     dipinge no — sotto una botte c'è il pavimento della stanza, e la
+     botte ci sta sopra. Se il fondale la trattasse come muratura si
+     vedrebbe un blocco di pietra col disegno di una botte addosso, che
+     è esattamente com'era finché l'arredo stava in `scenografia`. */
+  const arredi = opz.arredi || {}
+  const muro = (i, k) => muroVero(i, k) && !arredi[i + ',' + k]
   const W = larghezza * lato, H = altezza * lato
   const s = lato / 20                                   // l'unità di disegno
   const reg = { x0: 0, y0: 0, x1: W, y1: H }
@@ -92,7 +102,22 @@ export function dipingiMappa(ctx, opz) {
      dettagli. Con un ambiente che dichiara una posa e una muratura
      sole risponde sempre quelle, e questo file passa esattamente da
      dove passava prima. */
-  const T = tessuto({ larghezza, altezza, muro, A, seme: opz.seme })
+  const T = tessuto({ larghezza, altezza, muro, A, seme: opz.seme, suoli: opz.suoli, muri: opz.muri })
+  /* ── IL FONDO DI CHI HA UN SUOLO SUO ──
+     Il gradiente di sopra è quello dell'ambiente — l'erba di un
+     cortile. Dove il livello ha detto «qui è lastricato», l'erba non
+     deve trasparire fra una lastra e l'altra: si stende prima il fondo
+     di quel materiale, e sopra il pattern ci dipinge le sue pietre.
+     Senza questa passata il castello sembrava un prato con delle
+     lastre appoggiate — che è esattamente quello che era. */
+  for (const k in (opz.suoli || {})) {
+    const voce = T.suolo.find(v => v && v.che === opz.suoli[k])
+    const tinte = (voce && voce.tinte) || null
+    if (!tinte) continue
+    const [i, j] = k.split(',').map(Number)
+    c.fillStyle = tinte[1] || tinte[0]
+    c.fillRect(i * lato, j * lato, lato, lato)
+  }
   /* una passata per voce, come per i muri: la lista `suolo`
      dell'ambiente, in ordine, e ognuna sa solo dipingere il suo pezzo
      di pavimento. La firma è la stessa delle murature — `tinte` è un
@@ -131,7 +156,16 @@ export function dipingiMappa(ctx, opz) {
            l'acqua che le ha fatte sta ancora colando. È quello che
            lega le due cose invece di lasciarle succedere nello stesso
            posto per caso. */
-  const libera = (x, y) => !muro(Math.floor(x / lato), Math.floor(y / lato))
+  /* ── E I CIUFFI NON CRESCONO SUL LASTRICATO ──
+     I dettagli di un ambiente (ciuffi, fiori, pozzanghere) cadono su
+     tutto il pavimento libero. Ma dove il livello ha detto «qui è
+     lastricato» quel pavimento non è più il suo, e l'erba che spuntava
+     fra le pietre del castello smentiva il materiale appena messo. */
+  const suoloDetto = opz.suoli || {}
+  const libera = (x, y) => {
+    const i = Math.floor(x / lato), k = Math.floor(y / lato)
+    return !muro(i, k) && !suoloDetto[i + ',' + k]
+  }
 
   /* ── I CONTESTI — le mappe invisibili che nascono dalla forma della
          stanza, non da un campo. Un campo (`umido`, `usura`) dice
@@ -227,6 +261,18 @@ export function dipingiMappa(ctx, opz) {
 
   /* 6 ─ i muri */
   dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto: T })
+
+  /* 6b ─ l'arredo: sta fermo come un muro, quindi si dipinge nel
+          fondale e non nella scena di ogni fotogramma. Dopo le
+          murature perché una cassa appoggiata alla parete deve
+          coprirla, non finirci sotto. */
+  for (const k in arredi) {
+    const disegna = PITTORI_OGGETTI[arredi[k]]
+    if (!disegna) continue
+    const [i, j] = k.split(',').map(Number)
+    disegna({ ...pennello(c, { W, H, S: s }), tempo: 0 },
+            { x: i * lato + lato / 2, y: j * lato + lato * 0.62 }, s)
+  }
 
   /* 7 ─ le torce vere e proprie, appese alla faccia del muro */
   for (const [i, k] of torce) torciaFerma(c, i * lato + lato / 2, (k + 1) * lato - lato * 0.34, s, A)

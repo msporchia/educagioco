@@ -46,6 +46,10 @@
    questo è il lettore, non una seconda strada.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { mappaPiena } from './stanze.js'
+import { arreda } from './arreda.js'
+import { ARREDAMENTO } from '../../data/arredamento.js'
+
 const MURO = '##'
 const VUOTO = '..'
 
@@ -67,6 +71,35 @@ export function tokenDi (riga) {
    la produce la mappa invece di doverla scrivere. */
 const idNumero = (id, n) => (n ? `${id}#${n + 1}` : id)
 
+/* ── LA STESSA STANZA, APERTA UNA VOLTA SOLA ──
+   Decompressione e arredamento sono puri, e costano: una visita in
+   profondità per i passi obbligati, e un giro di cammini per ogni cosa
+   solida che si prova a posare. Ma la stessa scena si rilegge in
+   continuazione — il mondo, il piano, la vista, e il banco che rigioca
+   la stessa battaglia per ogni soluzione dichiarata — e la risposta è
+   sempre quella. Si tiene da parte: la chiave è tutto quello che la
+   decide, così due scene diverse non si scambiano la stanza.
+   Il tetto è basso apposta: serve a non rifare il lavoro dentro una
+   partita, non a ricordarsi il gioco intero. */
+const stanzeLette = new Map()
+function decomprimi (griglia, opz) {
+  const chiave = griglia.join('|') + '¦' + opz.ambiente + '¦' + opz.seme + '¦' +
+    JSON.stringify(opz.suoli) + JSON.stringify(opz.muri) + JSON.stringify(opz.arredi) + '¦' +
+    opz.occupate.join(' ') + '¦' + opz.liberi.join(' ')
+  if (stanzeLette.has(chiave)) return stanzeLette.get(chiave)
+  const piena = mappaPiena(griglia, {
+    suoli: opz.suoli, muri: opz.muri, arredi: opz.arredi, riempi: opz.occupate })
+  /* ── E LA STANZA SI ARREDA DA SÉ ──
+     Quello che il livello non ha detto, se l'ambiente sa metterlo.
+     Quello che nasce qui non entra mai in gioco — le solide occupano
+     una cella e basta, e l'arredatore ha appena controllato che non
+     abbiano allungato la strada di nessuno. */
+  const auto = arreda(piena, ARREDAMENTO[opz.ambiente], opz)
+  if (stanzeLette.size > 48) stanzeLette.clear()
+  stanzeLette.set(chiave, { piena, auto })
+  return { piena, auto }
+}
+
 export function leggiCampo (livello) {
   const righe = livello.scena && livello.scena.righe
   if (!Array.isArray(righe) || !righe.length)
@@ -79,12 +112,47 @@ export function leggiCampo (livello) {
                     `celle, la prima ne ha ${w}`)
 
   const legenda = (livello.scena && livello.scena.legenda) || {}
-  const griglia = celle.map(r => r.map(t => (t === MURO ? '#' : '.')).join(''))
+  /* ── QUALI TOKEN SONO MURO ──
+     `##` sempre, e in più quelli che la legenda dichiara come muratura
+     (`muri.pietra`, `muri.legno`…): un muro con un materiale suo resta
+     muro a tutti gli effetti — di lì non ci si passa, la vista si ferma
+     — e cambia solo chi lo dipinge. */
+  const genereDi = t => {
+    const v = legenda[t]
+    return (v && !Array.isArray(v) && v.genere) || null
+  }
+  /* muro per il MOTORE: `##`, la muratura dichiarata, e **l'arredo** —
+     una botte è un ostacolo, non un disegno. Di lì non ci si passa e
+     la vista si ferma, che è quello che si vede guardandola. */
+  const eMuro = t => t === MURO || genereDi(t) === 'muro' || genereDi(t) === 'arredo'
+  const griglia = celle.map(r => r.map(t => (eMuro(t) ? '#' : '.')).join(''))
 
   const posti = {}, porte = {}, leve = {}, totem = {}
   const oggetti = [], unita = [], nomi = {}
   const schiere = {}
   const quanti = {}
+  /* ── I POSTI PREPARATI CHE QUESTA SCENA HA LASCIATO VUOTI ──
+     Erano scartati in silenzio, e con loro se ne andava l'unica cosa
+     che rende leggibile un livello a scene: **dove la cosa POTEVA
+     finire**. Un bambino che vede l'orco in un punto non ha nessun
+     motivo di scrivere un piano che regga altrove — la situazione ce
+     l'ha sotto gli occhi. Vedere invece i quattro angoli da cui può
+     arrivare è vedere il problema.
+     Qui si raccoglie solo dove sono; **cosa** possa comparirci lo sa il
+     livello (le sue varianti), e lo mette insieme chi disegna. */
+  const attese = []
+  /* di che è fatto il pavimento, cella per cella: solo dove il livello
+     l'ha detto — le altre restano quelle dell'ambiente */
+  const suoli = {}
+  /* e di che è fatto il muro, dove il livello l'ha detto */
+  const muri = {}
+  /* e i mobili: cella occupata, disegno sopra */
+  const arredi = {}
+  /* le celle che ospitano qualcosa: prendono il terreno dei vicini, e
+     l'arredatore non ci mette niente sopra */
+  const occupate = []
+  /* e quelle che il livello vuole vuote per forza */
+  const liberi = []
 
   for (let y = 0; y < celle.length; y++)
     for (let x = 0; x < w; x++) {
@@ -101,8 +169,28 @@ export function leggiCampo (livello) {
          l'ordine conta quanto conta sempre — è quello dei fili. */
       for (const voce of (Array.isArray(dichiarata) ? dichiarata : [dichiarata])) {
       /* un POSTO PREPARATO che questa scena non ha riempito: resta
-         prato. È dichiarato, quindi non si confonde con un refuso. */
-      if (voce.genere === 'segnaposto') continue
+         prato — ma si segna, perché è informazione da mostrare. */
+      if (voce.genere === 'segnaposto') { attese.push({ x, y, token: t }); occupate.push(x + ',' + y); continue }
+      /* ── UN TOKEN CHE DICE SOLO DI CHE È FATTO IL PAVIMENTO ──
+         Non è una cosa e non cammina: è pavimento come `..`, e l'unica
+         differenza è chi lo dipinge. Il motore non lo sa nemmeno — se
+         lo tiene il campo e lo passa a chi disegna. */
+      if (voce.genere === 'suolo') { suoli[x + ',' + y] = voce.id; continue }
+      /* e il gemello per la muratura: la cella è già segnata muro nella
+         griglia, qui si tiene solo di che è fatta */
+      if (voce.genere === 'muro') { muri[x + ',' + y] = voce.id; continue }
+      /* un mobile: la cella è già piena nella griglia, qui si tiene
+         solo cosa ci sta sopra — lo disegna il fondale, perché è fermo
+         come un muro e non cambia mai */
+      if (voce.genere === 'arredo') { arredi[x + ',' + y] = voce.id; occupate.push(x + ',' + y); continue }
+      /* ── LA CELLA CHE DEVE RESTARE VUOTA ──
+         La valvola di sfogo dell'arredamento automatico: quando serve
+         uno spazio libero per forza — una piazzola, il punto dove
+         qualcuno si ferma — il livello lo dice e nessuno ci mette
+         niente. Le regole strutturali coprono i casi che si possono
+         dedurre; questo copre quelli che sa solo chi ha scritto il
+         livello, e gli lascia l'ultima parola. */
+      if (voce.genere === 'libero') { liberi.push(x + ',' + y); continue }
 
       const { genere, nome, parte, schiera, schieraNome, fa, ...resto } = voce
       const n = quanti[voce.id] = (quanti[voce.id] || 0)
@@ -127,6 +215,7 @@ export function leggiCampo (livello) {
         unita.push({ id, nome, fazione: chiave, x, y, token: t, ...resto })
         nomi[chiave] = schieraNome || chiave
       } else throw new Error(`livello «${livello.id}»: «${t}» ha un genere sconosciuto (${genere})`)
+      occupate.push(x + ',' + y)
       }
     }
 
@@ -145,9 +234,27 @@ export function leggiCampo (livello) {
   unita.sort((a, b) => posto2.indexOf(a.token) - posto2.indexOf(b.token))
   unita.forEach(u => { delete u.token })
 
+  /* ── LA DECOMPRESSIONE ──
+     Fin qui si sono letti i token: è **la forma compressa**. Adesso si
+     apre — il reticolo pieno, con il terreno risolto cella per cella e
+     i fatti che riguardano la forma della stanza (dov'è una soglia,
+     cos'è un bordo, quale casella è un passo obbligato). Non è un
+     dettaglio di disegno: è la conoscenza che serve a chiunque debba
+     decidere *dove va una cosa*, e prima non ce l'aveva nessuno.
+     Il riempimento dei buchi lasciati dalle cose sta lì dentro. */
+  const { piena, auto } = decomprimi(griglia, {
+    suoli, muri, arredi, occupate, liberi,
+    ambiente: livello.ambiente,
+    /* il seme è l'id del livello: la stessa stanza si riapre uguale */
+    seme: [...String(livello.id || '')].reduce((s, c) => s * 31 + c.charCodeAt(0), 7) >>> 0,
+    gia: livello.scenografia || [],
+  })
+
   /* i nomi scritti a mano vincono su quelli dedotti: servono per le
      cose che non stanno sulla mappa, come i segnali */
-  return { griglia, posti, porte, leve, totem, oggetti, unita,
+  return { griglia, posti, porte, leve, totem, oggetti, unita, attese,
+           suoli: piena.suoli, muri, arredi, piena,
+           scenografia: [...(livello.scenografia || []), ...auto.scenografia],
            fazioni: schiere, nomi: { ...nomi, ...(livello.nomi || {}) } }
 }
 

@@ -29,6 +29,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { dado, mescola } from './comune.js'
 import { daNome } from './materiali/pattern.js'
+import { SUOLI, MURI } from './materiali/suoli.js'
 
 /* ── il rumore a chiazze ──
    Valori casuali su una griglia larga `scala` celle, interpolati con
@@ -73,7 +74,8 @@ export const tinteSotto = ([chiaro, scuro], forza = 1) => [
    cose che hanno la stessa causa. */
 const CAMPI = { umido: 5.5, usura: 7, rovina: 3.4 }
 
-export function tessuto({ larghezza, altezza, muro, A, seme = 0 }) {
+export function tessuto({ larghezza, altezza, muro, A, seme = 0,
+                          suoli: suoliMappa = {}, muri: muriMappa = {} }) {
   const s = semeDi(seme)
 
   /* ── le due liste ──
@@ -90,6 +92,24 @@ export function tessuto({ larghezza, altezza, muro, A, seme = 0 }) {
   }
   const mura = lista(A.mura, 'muro', 'mura')
   const suolo = lista(A.suolo, 'suolo', 'suolo')
+  /* ── I SUOLI DETTI DALLA MAPPA ──
+     Il livello può dire, cella per cella, di che è fatto il pavimento
+     (`suoli.lastre` in legenda, vedi `data/livelli/scrivi.js`). Quelle
+     voci si aggiungono in coda alla lista dell'ambiente — quindi non
+     spostano di un pixel i pavimenti già dipinti — e non hanno un
+     campo di rumore: **vincono per dichiarazione**, non per caso, e
+     solo sulle celle che le nominano. */
+  const accoda = (lista, tavola, mappa) => {
+    const dove = {}
+    for (const nome of new Set(Object.values(mappa))) {
+      if (!tavola[nome]) continue
+      dove[nome] = lista.length
+      lista.push(tavola[nome]())
+    }
+    return dove
+  }
+  const indiceDetto = accoda(suolo, SUOLI, suoliMappa)
+  const indiceMuro = accoda(mura, MURI, muriMappa)
 
   /* le tinte mancanti si derivano da quelle del fondo della sua lista */
   const vesti = (voci, forza) => {
@@ -172,8 +192,23 @@ export function tessuto({ larghezza, altezza, muro, A, seme = 0 }) {
   return {
     mura: M, suolo: S, seme: s,
     uniforme: M.length < 2 && S.length < 2,
-    vinceMuro: vince(M, suMuro),
-    vinceSuolo: vince(S, suSuolo),
+    /* la dichiarazione batte il rumore, identica a quella del suolo */
+    vinceMuro: (n, fx, fy, conSporco) => {
+      const detto = muriMappa[Math.floor(fx) + ',' + Math.floor(fy)]
+      if (detto && indiceMuro[detto] != null) return n === indiceMuro[detto]
+      if (detto) return n === 0
+      if (Object.values(indiceMuro).includes(n)) return false
+      return vince(M, suMuro)(n, fx, fy, conSporco)
+    },
+    /* la dichiarazione batte il rumore: se quella cella ha un suolo
+       scritto nella mappa, vince quello e nient'altro */
+    vinceSuolo: (n, fx, fy, conSporco) => {
+      const detto = suoliMappa[Math.floor(fx) + ',' + Math.floor(fy)]
+      if (detto && indiceDetto[detto] != null) return n === indiceDetto[detto]
+      if (detto) return n === 0
+      if (Object.values(indiceDetto).includes(n)) return false
+      return vince(S, suSuolo)(n, fx, fy, conSporco)
+    },
     /* quanto è bagnato lì: serve ai dettagli, che non cadono più dove
        capita — il muschio e le pozze stanno dove cola */
     valore: (nome, fx, fy) => campo(nome, 0)(fx, fy),
