@@ -19,8 +19,9 @@
 import codiceSegreto from './codice-segreto/gioco.js'
 import survivors from './survivors/gioco.js'
 import dungeon from './dungeon/gioco.js'
+import conta from './conta/gioco.js'
 
-export const GIOCHI_NUOVI = [codiceSegreto, survivors, dungeon]
+export const GIOCHI_NUOVI = [codiceSegreto, survivors, dungeon, conta]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null
 

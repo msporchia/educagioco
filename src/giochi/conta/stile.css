@@ -1,0 +1,167 @@
+/* ═══════════════════════════════════════════════════════════════════
+   CONTA GLI ANIMALI — L'ASPETTO
+
+   Un file solo, ogni classe comincia per `ct-` (come `.cs-` nel Codice
+   Segreto: due fogli con lo stesso nome si rompono a distanza di mesi).
+
+   La regola che conta più delle altre: **niente sotto i 56px**. È
+   scritta una volta sola, qui (`--ct-gettone`), e ogni bottone che un
+   bambino di quattro anni deve toccare la eredita — un dito è grosso, e
+   un bersaglio piccolo non è "difficile", è ingiocabile.
+
+   Le posizioni dei gettoni arrivano dal motore in percentuale
+   (`gettone.x`, `gettone.y`): qui si leggono e basta, con
+   `transform: translate(-50%,-50%)` a centrarle sul punto invece che
+   sull'angolo. La stessa proprietà `left`/`top` che si anima quando
+   «gli stessi» si sparpagliano è quella che il motore ha già calcolato
+   senza sapere che sarebbe stata animata — non sa nemmeno che esiste
+   un CSS.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ct {
+  --ct-accento: #65a30d;
+  --ct-carta: #fffdf7;
+  --ct-inchiostro: #2c3320;
+  --ct-tenue: #7c8a68;
+  --ct-bordo: #dfe8d0;
+  --ct-gettone: 60px;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  width: 100%; max-width: 480px; margin: 0 auto;
+  padding: 8px 10px 12px;
+  color: var(--ct-inchiostro);
+  position: relative;
+}
+.ct .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+                       "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la mappa della campagna ═══════════
+   Carte più grandi di quelle del Codice Segreto apposta: qui legge un
+   bambino di quattro anni, cioè spesso non legge affatto — l'icona e il
+   lucchetto devono bastare da soli. */
+.ct-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 16px; padding: 2px 2px 20px }
+.ct-scalino > h3 { display: flex; align-items: center; gap: 8px;
+                   font-size: 16px; color: var(--ct-tenue); margin-bottom: 7px }
+.ct-scalino > h3 b { color: var(--ct-inchiostro); font-size: 17px }
+.ct-scalino > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right }
+.ct-tappe { display: flex; flex-direction: column; gap: 10px }
+
+.ct-tappa { display: flex; align-items: center; gap: 12px; text-align: left;
+            background: var(--ct-carta); border-radius: 18px; padding: 14px 14px;
+            min-height: 64px;
+            box-shadow: 0 3px 0 var(--ct-bordo);
+            border-left: 8px solid var(--ct-accento);
+            transition: transform .12s }
+.ct-tappa:active { transform: scale(.97) }
+.ct-tappa .ct-faccia { font-size: 38px; flex: none }
+.ct-tappa .ct-testo { flex: 1; min-width: 0 }
+.ct-tappa b { display: block; font-size: 17px }
+.ct-tappa i { display: block; font-style: normal; font-size: 13px;
+              color: var(--ct-tenue); overflow: hidden; text-overflow: ellipsis;
+              white-space: nowrap }
+.ct-tappa .ct-stelle { font-size: 15px; letter-spacing: 1px; flex: none }
+.ct-tappa.ct-chiusa { opacity: .5; border-left-color: #d7e0c8; box-shadow: none }
+.ct-tappa.ct-adesso { box-shadow: 0 4px 0 var(--ct-accento) }
+
+/* La scena è una colonna alta quanto lo schermo: senza questa riga il
+   `flex: 1` del campo non ha su cosa crescere, e il prato resta un
+   francobollo in cima con mezza pagina bianca sotto. */
+.ct-scena { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px }
+
+/* ═══════════ la consegna: sempre icone, testo piccolo sotto ═══════════ */
+.ct-consegna { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+               gap: 4px; padding: 8px 10px; background: var(--ct-carta);
+               border-radius: 18px; box-shadow: 0 2px 0 var(--ct-bordo) }
+.ct-icone { display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-size: 34px }
+.ct-frase { font-size: 12.5px; color: var(--ct-tenue); text-align: center; margin: 0 }
+
+/* ═══════════ il campo: uno o due recinti ═══════════ */
+.ct-campo { flex: 1 1 auto; min-height: 230px; position: relative;
+            background: linear-gradient(180deg, #f3f9ec, #eaf3e0);
+            border-radius: 20px; box-shadow: inset 0 0 0 2px var(--ct-bordo);
+            overflow: hidden }
+.ct-campo.ct-due::after {
+  /* la staccionata fra i due recinti: giusto una riga, non un disegno */
+  content: ''; position: absolute; left: 50%; top: 6%; bottom: 6%; width: 3px;
+  background: repeating-linear-gradient(180deg, var(--ct-bordo) 0 10px, transparent 10px 18px);
+  transform: translateX(-50%);
+}
+.ct-gruppo { position: absolute; inset: 0 }
+
+.ct-gettone {
+  position: absolute; transform: translate(-50%, -50%);
+  width: var(--ct-gettone); height: var(--ct-gettone);
+  border-radius: 50%; background: #fff; border: none;
+  box-shadow: 0 3px 0 rgba(0,0,0,.12);
+  display: grid; place-items: center; font-size: calc(var(--ct-gettone) * .58);
+  transition: left .8s cubic-bezier(.4,0,.2,1), top .8s cubic-bezier(.4,0,.2,1),
+              transform .18s, box-shadow .18s;
+}
+.ct-gettone:active:not(:disabled) { transform: translate(-50%, -50%) scale(.92) }
+.ct-gettone.ct-contato { box-shadow: 0 0 0 4px var(--ct-accento), 0 3px 0 rgba(0,0,0,.12) }
+.ct-gettone.ct-acceso { box-shadow: 0 0 0 4px #ffb703, 0 3px 0 rgba(0,0,0,.12) }
+.ct-gettone:disabled { opacity: 1 }   /* durante il «conta insieme» restano ben visibili, solo non si toccano */
+
+/* «ne arriva una»: parte invisibile e piccola, poi scoppia al suo posto */
+.ct-gettone.ct-nuovo { opacity: 0; transform: translate(-50%, -50%) scale(.2) }
+.ct-gettone.ct-nuovo.ct-nuovo-qui { opacity: 1; transform: translate(-50%, -50%) scale(1);
+  transition: opacity .5s, transform .5s cubic-bezier(.34,1.56,.64,1) }
+/* «una scappa via»: si vede bene, poi sfuma */
+.ct-gettone.ct-via.ct-via-via { opacity: .12; transform: translate(-50%, -50%) scale(.35);
+  transition: opacity .6s, transform .6s }
+
+.ct-numero { position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px;
+             border-radius: 50%; background: var(--ct-accento); color: #fff;
+             font-size: 13px; font-weight: 800; display: grid; place-items: center;
+             padding: 0 3px; box-shadow: 0 1px 0 rgba(0,0,0,.2);
+             animation: ct-pop .28s backwards }
+@keyframes ct-pop { 0% { transform: scale(0) } 65% { transform: scale(1.35) } 100% { transform: scale(1) } }
+
+/* ═══════════ le risposte ═══════════ */
+.ct-risposte { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center;
+               gap: 10px; padding: 4px 0 2px }
+
+.ct-cifra { min-width: var(--ct-gettone); height: var(--ct-gettone); padding: 0 10px;
+            border-radius: 16px; background: #fff;
+            box-shadow: 0 4px 0 var(--ct-bordo), inset 0 0 0 2px var(--ct-bordo);
+            font-size: 28px; font-weight: 800; color: var(--ct-inchiostro);
+            transition: transform .1s, box-shadow .1s }
+.ct-cifra:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 2px var(--ct-bordo) }
+
+.ct-scelta { display: flex; flex-direction: column; align-items: center; gap: 4px;
+             min-width: 96px; min-height: var(--ct-gettone); padding: 10px 14px;
+             border-radius: 16px; background: #fff;
+             box-shadow: 0 4px 0 var(--ct-bordo), inset 0 0 0 2px var(--ct-bordo);
+             font-size: 13.5px; font-weight: 700; color: var(--ct-inchiostro);
+             transition: transform .1s, box-shadow .1s }
+.ct-scelta .em { font-size: 26px }
+.ct-scelta:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 2px var(--ct-bordo) }
+
+.ct-conferma { width: 72px; height: 72px; border-radius: 50%;
+               background: var(--ct-accento); color: #fff; font-size: 32px; font-weight: 800;
+               box-shadow: 0 4px 0 color-mix(in srgb, var(--ct-accento) 65%, black);
+               transition: transform .1s, box-shadow .1s }
+.ct-conferma:active:not(:disabled) { transform: translateY(4px); box-shadow: none }
+
+button:disabled { opacity: .55 }
+
+/* ═══════════ il cartello di fine tappa ═══════════ */
+.ct-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
+           background: rgba(44,51,32,.68);
+           display: flex; align-items: center; justify-content: center; animation: ct-entra .25s }
+@keyframes ct-entra { from { opacity: 0 } to { opacity: 1 } }
+.ct-cartello { background: var(--ct-carta); border-radius: 26px; padding: 24px 18px;
+               width: 100%; max-width: 340px; display: flex; flex-direction: column;
+               align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.3) }
+.ct-cartello .ct-faccia { font-size: 54px }
+.ct-cartello h2 { font-size: 21px; text-align: center; color: var(--ct-inchiostro) }
+.ct-cartello p { font-size: 15px; color: var(--ct-tenue) }
+.ct-punteggio { font-size: 28px; letter-spacing: 4px }
+.ct-grosso { height: 58px; min-width: 190px; padding: 0 26px; border-radius: 18px;
+             background: var(--ct-accento); color: #fff; font-size: 19px; font-weight: 800;
+             display: flex; align-items: center; justify-content: center; gap: 10px;
+             box-shadow: 0 4px 0 rgba(0,0,0,.25) }
+.ct-grosso:active { transform: translateY(4px); box-shadow: none }

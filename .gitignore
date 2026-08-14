@@ -17,6 +17,9 @@ giochi.html
 .voci-cache/
 .voci-cache-es/
 test/scatti/
+# il banco da lavoro: ci scrive `strumenti/scatta-app.mjs`, e sono foto
+# per un occhio umano che non servono a nessun altro
+tmp/
 # in radice non ci va nessuna immagine: gli scatti stanno in test/scatti/
 # (quelli dei poc, versionati apposta, in poc/scatti/)
 /*.png

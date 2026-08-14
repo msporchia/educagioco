@@ -12,9 +12,11 @@
 import CodiceSegreto from './codice-segreto/Gioco.vue'
 import Dungeon from './dungeon/Gioco.vue'
 import Survivors from './survivors/Gioco.vue'
+import Conta from './conta/Gioco.vue'
 
 export const SCHERMATE = {
   codice: CodiceSegreto,
   dungeon: Dungeon,
   survivors: Survivors,
+  conta: Conta,
 }
