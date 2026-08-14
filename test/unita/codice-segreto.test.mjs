@@ -4,7 +4,7 @@
    vincono **giocandole davvero** col giocatore finto invece che a occhio.
    `node test/esegui.mjs codice-segreto` */
 import { TEMI, guastiDeiTemi, MINIMO_SIMBOLI } from '../../src/giochi/codice-segreto/dati/temi.js'
-import { SCAGLIONI, guastiDegliScaglioni, scaglione }
+import { SCAGLIONI, guastiDegliScaglioni, scaglione, stellePer }
   from '../../src/giochi/codice-segreto/dati/difficolta.js'
 import { CAMPAGNA, SCALINI, guastiDellaCampagna }
   from '../../src/giochi/codice-segreto/dati/campagna.js'
@@ -142,7 +142,12 @@ uguale('il pieno viene prima del vuoto',
             subito.monete === regole.premio * 3)
 }
 
-/* ══════════ 5. le nove tappe si vincono davvero ══════════ */
+/* ══════════ 5. le nove tappe si vincono davvero ══════════
+   La soglia su chi ragiona a sprazzi è la ragione per cui le prove
+   concesse crescono con lo scaglione: quando erano sei per tutti, l'ultimo
+   scalino ne faceva perdere una su quattro e nessun test se ne accorgeva —
+   il minimo chiesto qui era «più di una volta su due». Perdere una partita
+   su quattro non è un gioco difficile, è un gioco che sembra rotto. */
 nota('tappa                       ragiona sempre   ragiona a sprazzi   prove medie')
 for (const [i, t] of CAMPAGNA.entries()) {
   const regole = Regole.perTappa(t)
@@ -154,7 +159,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla(`tappa ${i + 1} (${t.nome}): chi ragiona la vince quasi sempre`,
             attento.quota >= 0.95, `ce la fa il ${(attento.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): ce la fa anche chi ragiona a sprazzi`,
-            distratto.quota >= 0.5, `ce la fa il ${(distratto.quota * 100).toFixed(0)}%`)
+            distratto.quota >= 0.9, `ce la fa il ${(distratto.quota * 100).toFixed(0)}%`)
   dentro(`tappa ${i + 1} (${t.nome}): non si vince né al primo colpo né all'ultimo`,
          Number(attento.proveMedie.toFixed(2)), 2, regole.prove - 0.5)
 }
@@ -166,6 +171,42 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('anche «esperto» si vince ragionando', esperto.quota >= 0.9,
             `ce la fa il ${(esperto.quota * 100).toFixed(0)}%`)
   nota(`esperto: ${(esperto.quota * 100).toFixed(0)}% in ${esperto.proveMedie.toFixed(1)} prove medie`)
+}
+
+/* ══════════ 5-bis. il tetto delle prove è tarato, non tondo ══════════
+   Due mestieri diversi, e vanno provati e basta: le prove concesse dicono
+   quando si perde, le soglie delle stelle dicono quanto si è stati bravi.
+   Un tetto troppo stretto fa perdere chi ragionava; una soglia sbagliata
+   rende le tre stelle un regalo o una cosa che non capita mai — e in
+   entrambi i casi la mappa smette di raccontare qualcosa. */
+nota('scaglione   codici  prove   perse   ★★★   ★★    ★     (chi ragiona a sprazzi)')
+for (const s of SCAGLIONI) {
+  const regole = Regole.libere(s.chiave, 'animali')
+  const rnd = caso(300)
+  const conto = [0, 0, 0, 0]
+  const VOLTE = 300
+  for (let i = 0; i < VOLTE; i++) conto[gioca(regole, { rnd, attenzione: 0.55 }).stelle]++
+  const perc = n => (conto[n] / VOLTE * 100)
+  nota(`${s.chiave.padEnd(10)} ${String(regole.quantiCodici).padStart(6)} ` +
+       `${String(s.prove).padStart(5)} ` +
+       [0, 3, 2, 1].map(n => `${perc(n).toFixed(0)}%`.padStart(6)).join(''))
+
+  controlla(`«${s.chiave}»: chi ragiona a sprazzi non perde più di una volta su dieci`,
+            perc(0) <= 10, `ne perde il ${perc(0).toFixed(0)}%`)
+  /* le tre stelle si devono poter prendere, ma non a ogni partita: se le
+     prende sempre non sono un premio, se non le prende mai non esistono */
+  dentro(`«${s.chiave}»: le tre stelle capitano, ma non sempre`, perc(3), 10, 60)
+  controlla(`«${s.chiave}»: e capita anche di prenderne una sola`, perc(1) > 0)
+}
+
+/* le soglie non si scavalcano mai col tetto: la stella singola deve avere
+   almeno una riga tutta sua, o vincere in extremis vale come vincere bene */
+for (const s of SCAGLIONI) {
+  const regole = Regole.libere(s.chiave, 'animali')
+  uguale(`«${s.chiave}»: al primo colpo tre stelle`, stellePer(regole, 1), 3)
+  uguale(`«${s.chiave}»: sulla soglia «perfetto» ancora tre`, stellePer(regole, s.perfetto), 3)
+  uguale(`«${s.chiave}»: una prova dopo sono due`, stellePer(regole, s.perfetto + 1), 2)
+  uguale(`«${s.chiave}»: all'ultima riga concessa una sola`, stellePer(regole, s.prove), 1)
 }
 
 /* ══════════ 6. la corsa: una persa non fa arretrare ══════════ */

@@ -8,8 +8,13 @@
 
    Le righe le prepara il motore (`partita.righe`): qui non si conta
    quante prove restano né quale riga è attiva, si disegna e basta.
+
+   L'unica cosa che il tavolo fa di testa sua è **tenere in vista la riga
+   che si sta scrivendo**: il tabellone scorre quando le righe non ci stanno
+   tutte, e una riga attiva finita sotto il bordo è un gioco che sembra non
+   aver reagito al dito.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 const props = defineProps({
   partita: { type: Object, required: true },
@@ -28,6 +33,15 @@ watch(() => props.rifiuti, () => {
     setTimeout(() => { trema.value = false }, 320)
   })
 })
+
+/* Consegnata una riga, quella nuova va portata in vista — `nearest` scorre
+   il minimo indispensabile, così la riga appena giocata resta lì sopra da
+   guardare invece di scappare in cima. */
+const tabellone = ref(null)
+watch(() => props.partita.usate, () => nextTick(() => {
+  tabellone.value?.querySelector('.cs-riga.cs-attiva')
+    ?.scrollIntoView({ block: 'nearest' })
+}))
 </script>
 
 <template>
@@ -39,7 +53,26 @@ watch(() => props.rifiuti, () => {
          :style="{ animationDelay: (i * 80) + 'ms' }">{{ partita.finita ? s : '?' }}</div>
   </div>
 
-  <div class="cs-tabellone" :style="{ '--cs-prove': partita.regole.prove }">
+  <!-- la regola che cambia tutto: si può ripetere un disegno o no. Sta
+       sotto il codice coperto perché è una domanda che torna a ogni riga
+       («questo l'ho già messo lì: può stare anche qui?»), e una risposta
+       letta una volta sola nel racconto della tappa a metà partita non si
+       ricorda più. Si dice due volte: due caselline uguali col sì o col no
+       per chi non legge, e la frase per chi legge. -->
+  <div class="cs-regola" :class="{ 'cs-nienteDoppioni': !partita.regole.ripetizioni }"
+       :aria-label="partita.regole.ripetizioni
+                    ? 'lo stesso disegno può tornare più volte'
+                    : 'ogni disegno una volta sola'">
+    <span class="cs-esempio">
+      <i class="em">{{ partita.regole.pool[0] }}</i>
+      <i class="em">{{ partita.regole.pool[0] }}</i>
+    </span>
+    <b>{{ partita.regole.ripetizioni ? '✓' : '✕' }}</b>
+    <span>{{ partita.regole.ripetizioni
+             ? 'lo stesso disegno può tornare' : 'ogni disegno una volta sola' }}</span>
+  </div>
+
+  <div ref="tabellone" class="cs-tabellone">
     <div v-for="riga in partita.righe" :key="riga.n"
          class="cs-riga" :class="{ 'cs-fatta': !!riga.fatta, 'cs-attiva': riga.attiva }">
       <div class="cs-caselle" :style="{ '--cs-n': partita.regole.caselle }">

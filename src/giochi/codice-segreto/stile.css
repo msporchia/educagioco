@@ -13,8 +13,9 @@
    La misura della casella non la calcola JavaScript: la riga è un
    contenitore di dimensione (`container-type: size`) e la casella prende
    il minore fra «l'altezza della riga» e «la larghezza che le tocca».
-   Sei righe più la tastiera stanno nello schermo senza scorrimento,
-   sempre, anche quando le caselle sono cinque.
+   Quando le righe non ci stanno tutte non si schiacciano: si fermano a
+   un'altezza minima e il tabellone scorre — quante prove concede uno
+   scaglione lo decide la taratura, non la diagonale del telefono.
    ═══════════════════════════════════════════════════════════════════ */
 
 .cs {
@@ -101,9 +102,39 @@
                           animation: cs-gira .5s backwards }
 @keyframes cs-gira { 0% { transform: rotateY(90deg) scale(.7) } 100% { transform: none } }
 
-/* ═══════════ il tabellone ═══════════ */
+/* ═══════════ la regola dei doppioni, sotto il codice ═══════════
+   Bassa e larga: è un promemoria, non un titolo. Il ✕ rosso e il ✓ verde
+   fanno il lavoro anche a chi non legge, e le due caselline mostrano
+   *cosa* si sta dicendo di sì o di no. */
+.cs-regola { flex: 0 0 auto; display: flex; align-items: center; gap: 7px;
+             padding: 3px 10px; border-radius: 999px;
+             background: color-mix(in srgb, var(--cs-pieno) 12%, var(--cs-carta));
+             font-size: 12px; font-weight: 700; color: var(--cs-inchiostro);
+             align-self: center; max-width: 100% }
+.cs-regola.cs-nienteDoppioni {
+  background: color-mix(in srgb, #d84a2f 12%, var(--cs-carta)) }
+.cs-esempio { display: flex; gap: 2px; flex: none }
+.cs-esempio i { width: 18px; height: 18px; border-radius: 5px; background: #fff;
+                box-shadow: inset 0 0 0 1.5px var(--cs-bordo);
+                display: grid; place-items: center; font-size: 12px }
+.cs-regola b { flex: none; font-size: 15px; color: var(--cs-pieno) }
+.cs-regola.cs-nienteDoppioni b { color: #d84a2f }
+.cs-regola span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+
+/* ═══════════ il tabellone ═══════════
+   Le righe **non si schiacciano per starci tutte**: sotto una certa altezza
+   una riga non è più leggibile, e allora il tabellone scorre. È quello che
+   slega quante prove concede uno scaglione da quante righe entrano in uno
+   schermo — il tetto lo decide la taratura (`dati/difficolta.js`), non la
+   diagonale del telefono. `minmax(56px, 1fr)`: finché lo spazio basta le
+   righe se lo dividono e non c'è niente da scorrere, quando non basta più
+   si fermano a 56px e il dito scorre. */
 .cs-tabellone { flex: 1 1 auto; min-height: 0; display: grid; gap: 6px;
-                grid-template-rows: repeat(var(--cs-prove, 6), 1fr) }
+                grid-auto-rows: minmax(56px, 1fr);
+                overflow-y: auto; overscroll-behavior: contain;
+                scrollbar-width: thin; scroll-behavior: smooth;
+                /* la riga portata in vista non resta incollata al bordo */
+                scroll-padding: 6px 0 }
 .cs-riga { display: flex; align-items: center; gap: 8px; padding: 0 8px;
            border-radius: 14px; background: #faf5ea; border: 2px solid transparent }
 .cs-riga.cs-fatta { background: #f4ecdc }
@@ -126,24 +157,38 @@
 @keyframes cs-tonfo { 0% { transform: scale(.5) } 60% { transform: scale(1.14) }
                       100% { transform: none } }
 
-/* i pallini: l'unico appunto che il bambino ha */
-.cs-indizi { flex: 0 0 54px; height: 46px; border-radius: 10px;
+/* I pallini: l'unico appunto che il bambino ha. Le misure sono legate
+   all'altezza della riga invece che fisse — `--cs-p` è il lato del pallino,
+   e ci stanno sempre due file più il gap. Con l'altezza minima di riga di
+   oggi non si stringono mai: è la rete per il giorno in cui quel minimo
+   scende, che è l'unico modo per cui due file da 19px smetterebbero di
+   starci senza che nulla lo dica. */
+.cs-indizi { flex: 0 0 54px; container-type: size;
+             height: min(46px, 100%); border-radius: 10px;
+             --cs-p: min(19px, calc((100cqh - 4px) / 2));
              display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
              align-content: center; justify-items: center }
 .cs-riga.cs-fatta .cs-indizi { background: rgba(0,0,0,.045) }
-.cs-pallino { width: 19px; height: 19px; border-radius: 50% }
+.cs-pallino { width: var(--cs-p, 19px); height: var(--cs-p, 19px); border-radius: 50% }
 .cs-pallino.cs-pieno { background: var(--cs-pieno); box-shadow: 0 1px 0 rgba(0,0,0,.2) }
-.cs-pallino.cs-vuoto { background: #fff; border: 4px solid var(--cs-vuoto) }
+.cs-pallino.cs-vuoto { background: #fff;
+                       border: max(2px, calc(var(--cs-p, 19px) * .21)) solid var(--cs-vuoto) }
 /* «ho risposto, e la risposta è niente»: senza questo trattino il riquadro
    vuoto sembra una domanda rimasta senza risposta */
-.cs-pallino.cs-zero { width: 22px; height: 6px; border-radius: 3px;
+.cs-pallino.cs-zero { width: calc(var(--cs-p, 19px) * 1.15); height: 6px;
+                      border-radius: 3px;
                       background: #cbbda4; grid-column: 1 / -1 }
 .cs-pallino.cs-nuovo { animation: cs-pop .3s backwards }
 @keyframes cs-pop { 0% { transform: scale(0) } 65% { transform: scale(1.4) }
                     100% { transform: none } }
 
 /* ═══════════ la tastiera e la conferma ═══════════ */
-.cs-tastiera { flex: 0 0 auto; display: flex; justify-content: center; gap: 6px }
+/* La tastiera va a capo invece di sbordare: sette disegni da 44px non
+   entrano in uno schermo da 320, e un tasto mezzo fuori è un disegno che
+   il bambino non può giocare — nel gioco non sparisce niente, né dalle
+   righe fatte né da qui. Il tabellone si stringe di conseguenza e scorre. */
+.cs-tastiera { flex: 0 0 auto; display: flex; flex-wrap: wrap;
+               justify-content: center; gap: 6px }
 .cs-tasto { flex: 1 1 0; max-width: 62px; aspect-ratio: 1; min-height: 44px;
             border-radius: 15px; background: #fff;
             box-shadow: 0 3px 0 #d5c3a4, inset 0 0 0 2px var(--cs-bordo);

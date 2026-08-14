@@ -10,7 +10,7 @@
      Prova    una riga già giocata: i disegni e i due numeri di risposta
      Partita  il codice nascosto, la riga in composizione, l'esito
    ═══════════════════════════════════════════════════════════════════ */
-import { scaglione, STELLE, quantiCodici } from '../dati/difficolta.js'
+import { scaglione, stellePer, quantiCodici } from '../dati/difficolta.js'
 import { tema } from '../dati/temi.js'
 import { confronta } from './indizi.js'
 
@@ -28,7 +28,8 @@ export class Regole {
   }
 
   constructor(voce, vestito) {
-    const { chiave, nome, icona, caselle, simboli, prove, ripetizioni, premio } = voce
+    const { chiave, nome, icona, caselle, simboli, prove, ripetizioni, premio,
+            perfetto, bene } = voce
     this.chiave = chiave
     this.nome = nome
     this.icona = icona
@@ -36,6 +37,8 @@ export class Regole {
     this.prove = prove
     this.ripetizioni = ripetizioni
     this.premio = premio
+    this.perfetto = perfetto      // entro quante prove vale tre stelle
+    this.bene = bene              // …e due
     this.tema = vestito
     this.pool = vestito.simboli.slice(0, simboli)
 
@@ -141,8 +144,7 @@ export class Partita {
      qui c'è solo il conto. Perdere vale zero, e non toglie niente. */
   get stelle() {
     if (!this.vinta) return 0
-    const avanzate = this.rimaste / this.regole.prove
-    return (STELLE.find(s => avanzate >= s.avanzate) || { stelle: 1 }).stelle
+    return stellePer(this.regole, this.usate)
   }
 
   get monete() { return this.vinta ? this.regole.premio * this.stelle : 0 }
