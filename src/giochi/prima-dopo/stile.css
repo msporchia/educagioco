@@ -1,0 +1,142 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PRIMA E DOPO — L'ASPETTO
+
+   Un file solo, ogni classe comincia per `pd-` (vedi il perché in
+   `codice-segreto/stile.css`: due fogli che si contendono lo stesso
+   nome si rompono a distanza di mesi).
+
+   Il colore arriva da `--pd-accento`, che il gioco scrive sul
+   contenitore: qui non è il vestito di uno scaglione di difficoltà, è
+   la tinta di ogni singola tappa — dichiarata in `dati/campagna.js`.
+
+   Le vignette sono bersagli grossi apposta: almeno 76px, ben
+   distanziate, perché a quattro anni un dito è largo e la mira corta.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pd {
+  --pd-accento: #2f9e44;
+  --pd-carta: #fffdf7;
+  --pd-inchiostro: #2b3320;
+  --pd-tenue: #7c8a6e;
+  --pd-bordo: #dbe8cf;
+  --pd-buca: #eef4e6;
+  --pd-raggio: 18px;
+  /* buche e vignette sono la stessa misura per forza: una vignetta che
+     non riempie la sua buca si legge come «non ci sta» */
+  --pd-vignetta: clamp(76px, 20vw, 92px);
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  width: 100%; max-width: 480px; margin: 0 auto;
+  padding: 8px 12px 14px;
+  color: var(--pd-inchiostro);
+  position: relative;
+}
+.pd .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+                       "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la scena di gioco ═══════════ */
+/* Tre blocchi e basta — consegna, striscia del tempo, vignette da pescare —
+   in uno schermo alto: distribuiti (`space-evenly`) invece che accatastati
+   in cima, altrimenti la metà bassa del telefono resta bianca. */
+.pd-storia { flex: 1; min-height: 0; display: flex; flex-direction: column;
+             gap: 14px }
+
+/* ═══════════ la mappa della campagna ═══════════ */
+.pd-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 16px; padding: 2px 2px 20px }
+.pd-scalino > h3 { display: flex; align-items: center; gap: 7px;
+                   font-size: 15px; color: var(--pd-tenue); margin-bottom: 7px }
+.pd-scalino > h3 b { color: var(--pd-inchiostro); font-size: 16px }
+.pd-scalino > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right }
+.pd-tappe { display: flex; flex-direction: column; gap: 10px }
+
+.pd-tappa { display: flex; align-items: center; gap: 12px; text-align: left;
+            background: var(--pd-carta); border-radius: 16px; padding: 14px 14px;
+            box-shadow: 0 2px 0 var(--pd-bordo);
+            border-left: 7px solid var(--pd-accento);
+            min-height: 76px;
+            transition: transform .12s }
+.pd-tappa:active { transform: scale(.98) }
+.pd-tappa .pd-faccia { font-size: 34px; flex: none }
+.pd-tappa .pd-testo { flex: 1; min-width: 0 }
+.pd-tappa b { display: block; font-size: 17px }
+.pd-tappa i { display: block; font-style: normal; font-size: 13px;
+              color: var(--pd-tenue); overflow: hidden; text-overflow: ellipsis;
+              white-space: nowrap }
+.pd-tappa .pd-stelle { font-size: 14px; letter-spacing: 1px; flex: none }
+.pd-tappa.pd-chiusa { opacity: .5; border-left-color: #cfd8c3; box-shadow: none }
+.pd-tappa.pd-adesso { box-shadow: 0 3px 0 var(--pd-accento) }
+
+/* ═══════════ la consegna, senza parole ═══════════ */
+.pd-consegna { flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+               background: var(--pd-carta); border-radius: 14px; padding: 10px 14px;
+               box-shadow: 0 2px 0 var(--pd-bordo) }
+.pd-consegna > .em { font-size: 30px; flex: none }
+.pd-consegna p { font-size: 12.5px; color: var(--pd-tenue); margin: 0 }
+
+/* ═══════════ la striscia del tempo ═══════════ */
+/* striscia e pesca si spartiscono in parti uguali lo spazio sotto la
+   consegna, e ognuna sta in mezzo al suo: così su uno schermo alto non
+   si accatasta tutto in cima, e su uno basso non esce niente fuori */
+.pd-striscia { flex: 1 1 0; display: flex; justify-content: center;
+               align-items: center; gap: 10px; padding: 4px 0 }
+.pd-striscia-intrusa { flex-wrap: wrap }
+.pd-buca { width: var(--pd-vignetta); height: var(--pd-vignetta); flex: none; border-radius: 18px;
+           background: var(--pd-buca); box-shadow: inset 0 3px 6px rgba(0,0,0,.08);
+           display: grid; place-items: center; font-size: calc(var(--pd-vignetta) * .5); font-weight: 800;
+           color: var(--pd-tenue); transition: transform .18s, box-shadow .18s }
+.pd-buca.pd-piena { background: #fff; box-shadow: 0 2px 0 var(--pd-bordo); color: inherit;
+                    animation: pd-tonfo .22s }
+.pd-buca:disabled { opacity: 1 }
+@keyframes pd-tonfo { 0% { transform: scale(.55) } 60% { transform: scale(1.12) }
+                      100% { transform: none } }
+
+/* ═══════════ la zona di pesca: le vignette da toccare ═══════════ */
+.pd-pesca { flex: 1 1 0; min-height: 0; overflow-y: auto;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            align-content: center; gap: 12px; padding: 8px 0 20px }
+.pd-vignetta { width: var(--pd-vignetta); height: var(--pd-vignetta); flex: none; border-radius: 18px;
+               background: #fff; box-shadow: 0 3px 0 var(--pd-bordo), inset 0 0 0 2px var(--pd-bordo);
+               display: grid; place-items: center; font-size: calc(var(--pd-vignetta) * .5);
+               transition: transform .1s, box-shadow .1s }
+.pd-vignetta:active { transform: translateY(3px); box-shadow: inset 0 0 0 2px var(--pd-bordo) }
+
+/* la striscia in modalità congelata: durante il replay o il segno di
+   giusto non si interagisce più, ma si vede lo stesso */
+.pd-congelata .pd-buca, .pd-congelata .pd-vignetta { pointer-events: none }
+
+/* ═══════════ il replay: la storia si racconta da sola ═══════════ */
+.pd-replay { flex: 1; min-height: 0; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; gap: 18px }
+.pd-replay .pd-buca { color: transparent }
+.pd-replay .pd-buca.pd-adesso { box-shadow: inset 0 0 0 4px var(--pd-accento);
+                                animation: pd-respira .6s ease-out }
+@keyframes pd-respira { 0% { transform: scale(1.25) } 100% { transform: none } }
+.pd-verso { font-size: 26px; opacity: .35; transition: opacity .2s }
+.pd-verso.pd-scorre { opacity: 1; animation: pd-avanti .7s ease-out }
+@keyframes pd-avanti { 0% { transform: translateX(-8px) } 100% { transform: translateX(8px) } }
+
+/* ═══════════ il segno di giusto ═══════════ */
+.pd-spunta { position: absolute; inset: 0; display: grid; place-items: center;
+             font-size: 96px; pointer-events: none; animation: pd-pop .4s backwards }
+@keyframes pd-pop { 0% { transform: scale(0) } 65% { transform: scale(1.25) } 100% { transform: none } }
+
+/* ═══════════ il velo: il cartello di fine tappa ═══════════ */
+.pd-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
+           background: rgba(35,45,25,.72);
+           display: flex; flex-direction: column; align-items: center;
+           justify-content: center; gap: 14px; animation: pd-entra .25s }
+@keyframes pd-entra { from { opacity: 0 } to { opacity: 1 } }
+.pd-cartello { background: var(--pd-carta); border-radius: 26px; padding: 22px 18px;
+               width: 100%; display: flex; flex-direction: column; align-items: center;
+               gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.3) }
+.pd-cartello .pd-faccia { font-size: 52px }
+.pd-cartello h2 { font-size: 22px; text-align: center; color: var(--pd-inchiostro) }
+.pd-cartello p { font-size: 14px; color: var(--pd-tenue); text-align: center }
+.pd-punteggio { font-size: 26px; letter-spacing: 3px; min-height: 28px }
+.pd-grosso { height: 56px; min-width: 190px; padding: 0 24px; border-radius: 18px;
+             background: var(--pd-accento); color: #fff; font-size: 20px; font-weight: 800;
+             display: flex; align-items: center; justify-content: center; gap: 10px;
+             box-shadow: 0 4px 0 rgba(0,0,0,.25) }
+.pd-grosso:active { transform: translateY(4px); box-shadow: none }
