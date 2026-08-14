@@ -11,7 +11,11 @@ import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { SCALE, TAPPE as TAPPE_POZ } from '../data/pozioni.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
-import { QUANTI as QUANTI_GEN } from '../data/generale.js'
+/* la riga del generale conta le prove CHE SI VEDONO, non tutte quelle
+   che ci sono: quelle non ancora approvate stanno dietro il cancello dei
+   giochi in prova, e «livello 4 di 26» a chi ne ha sei in elenco non
+   direbbe niente di vero */
+import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 import { progresso as progressoDi } from '../giochi/campagne.js'
 
@@ -173,7 +177,7 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
         <button v-if="acceso('generale')" class="carta gen" @click="$emit('vai','generale')">
           <span class="ico">🎖️</span>
           <b>Il generale</b>
-          <i v-if="generale.tappa">🎖️ livello {{ Math.min(generale.tappa + 1, QUANTI_GEN) }} ·
+          <i v-if="generale.tappa">🎖️ livello {{ Math.min(proveFatte + 1, proveQuante) }} ·
             ⭐ {{ stelleGen }} stelle</i>
           <i v-else>dai gli ordini e guarda · sequenze, cicli, eventi</i>
         </button>

@@ -26,8 +26,12 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { AVVENTURE_APERTE } from '../../src/data/storie-generale.js'
 /* quante prove ci sono lo dicono i dati. Era cablato («almeno dieci») e
    diventava rosso ogni volta che l'elenco cambiava — cioè diceva una
-   cosa sui livelli mentre voleva dirne una sulla schermata. */
-import { QUANTI } from '../../src/data/generale.js'
+   cosa sui livelli mentre voleva dirne una sulla schermata.
+   E sono quelle APPROVATE, non tutte: le altre stanno dietro il cancello
+   dei giochi in prova, che qui è spento come nel profilo di un bambino
+   appena creato. `fila(false)` è lo stesso conto che fa la schermata. */
+import { fila } from '../../src/data/generale.js'
+const QUANTI = fila(false).length
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })

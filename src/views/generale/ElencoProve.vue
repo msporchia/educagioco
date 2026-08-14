@@ -13,13 +13,20 @@
    consolidamento, una campagna per costrutto, e in fondo il cortile,
    dove c'è qualcuno che non comandi. Ventisei righe di fila senza dire
    dove finisce una cosa e comincia l'altra non si leggono più.
-   I titoli non stanno qui: vengono da `data/generale.js` (`TITOLI`),
-   dallo stesso dato che decide l'ordine — perché sono la stessa
-   decisione, e separati si scollerebbero.
+   I titoli non stanno qui: vengono da `data/generale.js`, dallo stesso
+   dato che decide l'ordine — perché sono la stessa decisione, e
+   separati si scollerebbero.
+
+   ── E NON CI SONO SEMPRE TUTTE ──
+   I livelli non ancora approvati stanno dietro il cancello dei giochi
+   in prova: a flag spento questa lista non li ha proprio, a flag acceso
+   ci sono e portano un 🧪, perché chi li sta guardando giocare deve
+   sapere quali sta guardando. Chi decide è `fila()`; qui si disegna e
+   basta.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
-import { LIVELLI, TITOLI } from '../../data/generale.js'
-import { genProgresso, tappaAperta } from '../../store/profile.js'
+import { FILA, apribile } from './fila.js'
+import { genProgresso } from '../../store/profile.js'
 
 defineEmits(['apri'])
 
@@ -27,23 +34,23 @@ defineEmits(['apri'])
    genitori (`settings.tuttoAperto`): un interruttore solo per tutti i
    giochi, invece di una costante cablata qui dentro che poi qualcuno si
    dimentica di rimettere a posto prima di pubblicare. La regola sta in
-   `tappaAperta`, in comune con le campagne degli altri giochi. */
+   `fila.js`, che la prende da `tappaAperta` come le campagne degli
+   altri giochi. */
 const progresso = computed(() => genProgresso())
-const apribile = i => tappaAperta(i, progresso.value.tappa || 0)
 </script>
 
 <template>
   <div class="prove">
     <p class="intro">Non comandi nessuno a mano: scrivi gli <b>ordini</b>, premi ▶
       e guardi se il piano regge. Ogni ordine è <b>un verbo</b> e <b>una cosa</b>.</p>
-    <template v-for="(l, i) in LIVELLI" :key="l.id">
-      <div v-if="TITOLI[i]" class="riga-titolo">{{ TITOLI[i] }}</div>
+    <template v-for="(r, k) in FILA" :key="r.liv.id">
+      <div v-if="r.titolo" class="riga-titolo">{{ r.titolo }}</div>
       <button class="tappa"
-              :class="{ chiusa: !apribile(i), fatta: (progresso.stelle[i] || 0) > 0 }"
-              :disabled="!apribile(i)" @click="$emit('apri', i)">
-        <span class="num">{{ apribile(i) ? (progresso.stelle[i] ? '✓' : i + 1) : '🔒' }}</span>
-        <span class="che"><b>{{ l.nome }}</b><i>{{ l.idea }}</i></span>
-        <span class="voto">{{ '⭐'.repeat(progresso.stelle[i] || 0) }}<small>par {{ l.par }}</small></span>
+              :class="{ chiusa: !apribile(k), fatta: (progresso.stelle[r.i] || 0) > 0 }"
+              :disabled="!apribile(k)" @click="$emit('apri', r.i)">
+        <span class="num">{{ apribile(k) ? (progresso.stelle[r.i] ? '✓' : k + 1) : '🔒' }}</span>
+        <span class="che"><b>{{ r.liv.nome }}<template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i></span>
+        <span class="voto">{{ '⭐'.repeat(progresso.stelle[r.i] || 0) }}<small>par {{ r.liv.par }}</small></span>
       </button>
     </template>
   </div>

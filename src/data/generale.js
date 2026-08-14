@@ -219,7 +219,10 @@ import STAGNO from './livelli/cortile/5-lo-stagno.js'
    Generale sono per POSIZIONE (`stelle[i]`), non per id. Finché il
    gioco è in prova va bene; il giorno che è pubblicato, spostare una
    riga qui dentro va fatto sapendo che rimescola i voti di chi ha già
-   giocato. */
+   giocato. Promuovere un livello dietro il cancello (qui sotto) invece
+   NON sposta niente: la fila resta questa, cambia solo quanto se ne
+   vede — ed è il motivo per cui i livelli in prova stanno dove stanno
+   invece che tutti in coda. */
 export const TRATTI = [
   /* `CHIAVE_FORSE` è fuori, e il perché sta in testa al suo file: la
      mossa giusta lì si ricava senza guardare la situazione («prendi
@@ -249,17 +252,73 @@ export const TRATTI = [
     livelli: [BIBI, AIA, BOMBO, ORTO, STAGNO] },
 ]
 
+/* ── QUELLI CHE SI POSSONO GIÀ DARE IN MANO A UN BAMBINO ──
+   Il gioco è in giro, e i livelli non sono tutti pronti allo stesso
+   modo: alcuni sono stati guardati giocare e vanno bene, gli altri
+   aspettano di essere approvati o sistemati. Finché aspettano stanno
+   **dietro il cancello dei giochi in prova** (`settings.sperimentali`,
+   lo stesso flag che nasconde i giochi non finiti): a flag spento non
+   compaiono nell'elenco e non si aprono, a flag acceso ci sono tutti,
+   perché è così che si guardano giocare prima di promuoverli.
+
+   Si dichiara chi è APPROVATO, non chi è in prova: un livello nuovo
+   nasce dietro il cancello, che è il verso giusto — un livello arriva
+   ai bambini quando qualcuno lo ha deciso, non perché nessuno si è
+   ricordato di aggiungere una riga.
+
+   Si scrive per riferimento e non per id, così una prova promossa a
+   nome sbagliato non passa silenziosa: `IL_TOTEM` che non esiste è un
+   errore di build, `'totem'` scritto storto sarebbe solo un livello che
+   resta nascosto senza dirlo.
+
+   ⚠ La fila `LIVELLI` NON cambia con il flag, e gli indici nemmeno:
+   sono le chiavi dei progressi (`gen.stelle[i]`), e devono valere
+   uguale col cancello aperto o chiuso. Quello che il flag cambia è
+   soltanto QUALI righe si vedono — `fila()`, qui sotto. */
+const APPROVATI = new Set([PRIMO, CHIAVE, DUE_CHIAVI, DUE_STRADE, ATTESA, RICHIAMO]
+  .map(l => l.id))
+export const inProva = liv => !APPROVATI.has(liv.id)
+
+/* la fila PIENA, quella su cui sono scritti i progressi */
 export const LIVELLI = TRATTI.flatMap(t => t.livelli)
 
-/* dove comincia ogni tratto: `{ [indice]: titolo }`, per chi disegna
-   l'elenco. Si deriva, non si scrive. */
-export const TITOLI = TRATTI.reduce((out, t) => {
-  out.mappa[out.i] = t.titolo
-  out.i += t.livelli.length
-  return out
-}, { i: 0, mappa: {} }).mappa
+/* ── LA FILA CHE SI VEDE ──
+   Una riga per livello visibile, e ognuna si porta dietro l'`i` che ha
+   nella fila piena: chi disegna l'elenco scorre queste, chi scrive i
+   progressi usa quell'indice. Il titolo del tratto va sulla prima riga
+   VISIBILE del tratto — se le prime del blocco sono in prova, il titolo
+   scivola su quella che si vede davvero invece di sparire con loro; un
+   tratto rimasto senza righe non compare affatto.
 
-export const QUANTI = LIVELLI.length
+   È una funzione e non una costante perché il flag si accende dalla
+   schermata dei genitori mentre il gioco è aperto: chi la chiama la
+   avvolge in un `computed` e l'elenco si rifà da sé — lo fa in un posto
+   solo, `views/generale/fila.js`, che è anche dove sta il conto dei
+   lucchetti.
+
+   Di qui escono anche i numeri che prima erano costanti — quante prove
+   ci sono (`QUANTI`) e quante ne conta il tutorial (`TUTORIAL`) — e non
+   potevano restare tali: col cancello chiuso la fila è più corta, e una
+   barra che promette ventisei prove a chi ne ha sei in elenco non
+   arriva mai in fondo. Il tutorial resta quello che era per
+   definizione: **tutto quello che non è una campagna**, e ogni riga se
+   lo porta scritto. */
+export function fila (conProva = false) {
+  const righe = []
+  let i = 0
+  for (const t of TRATTI) {
+    let primo = true
+    for (const liv of t.livelli) {
+      if (conProva || !inProva(liv)) {
+        righe.push({ liv, i, campagna: !!t.campagna, prova: inProva(liv),
+                     titolo: primo ? t.titolo : '' })
+        primo = false
+      }
+      i++
+    }
+  }
+  return righe
+}
 /* ── IL TUTORIAL SONO TUTTE ──
    Non è un allenamento facoltativo: sono le cose senza le quali una
    storia non si può nemmeno leggere — un ordine, una sequenza, un
@@ -269,27 +328,11 @@ export const QUANTI = LIVELLI.length
    senza sapere cosa fosse un ordine. Adesso vengono prima, e le
    avventure aspettano.
 
-   E LA SOGLIA È IN FONDO, non a metà. Per un pezzo `TUTORIAL` valeva
-   sei e le prove dopo erano «quelle dove le idee si mescolano»: una
-   divisione che a schermo prometteva un cambio di passo che non
-   c'era. Adesso la soglia coincide con l'ultima prova — cioè non c'è
-   più nessun «dopo» finché le avventure restano chiuse — e resta una
-   costante invece di un `QUANTI` scritto due volte, perché il giorno
-   in cui le avventure si riaprono qui si torna a decidere DA DOVE si
-   parte, che è una domanda diversa da QUANTE prove ci sono. */
-/* ⚠ E DA OGGI NON COINCIDE PIÙ CON `QUANTI`: dopo le sette prove
-   vengono i cinque capitoli del cortile, che tutorial non sono. La
-   barra in `SceltaAvventura.vue` conta su questo numero, e deve
-   continuare a dire «7 prove per impararlo» anche adesso che i livelli
-   in fila sono dodici. */
-/* ── E ADESSO SI DERIVA ──
-   Era un 7 scritto a mano accanto a una fila che ne conteneva sette:
-   due posti da tenere allineati, e uno dei due si sarebbe scollato al
-   primo livello aggiunto in mezzo. Il tutorial è **il primo tratto**,
-   per definizione — quello che si fa prima di consolidare — quindi la
-   soglia è quanto è lungo quel tratto, e non un numero. */
-export const TUTORIAL = TRATTI.filter(t => !t.campagna)
-                              .reduce((n, t) => n + t.livelli.length, 0)
+   E LA SOGLIA È IN FONDO, non a metà: tutorial è tutto quello che non è
+   una campagna, cioè non c'è nessun «dopo» finché le avventure restano
+   chiuse. Non è più un numero esportato da qui — sarebbe il conto della
+   fila piena, e quella che si gioca è più corta — ma un fatto scritto su
+   ogni riga di `fila()`: `campagna` sì o no. */
 export const livelloDi = i => LIVELLI[Math.max(0, Math.min(LIVELLI.length - 1, i))]
 /* su quanti mondi si prova il piano: i primi due livelli sono un
    tutorial e ne giocano uno solo, così il primo piano che si scrive

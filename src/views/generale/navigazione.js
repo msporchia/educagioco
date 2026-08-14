@@ -15,7 +15,8 @@ import { ref, computed } from 'vue'
 import { STORIA, AVVENTURE_APERTE } from '../../data/storie-generale.js'
 import { mappaDi, giocabile } from '../../data/mappe-storie.js'
 import { prossimi } from '../../store/storie.js'
-import { LIVELLI, QUANTI } from '../../data/generale.js'
+import { LIVELLI } from '../../data/generale.js'
+import { dopoDi } from './fila.js'
 
 export function creaNavigazione ({ avvia, aCasa, nome }) {
   /* SENZA AVVENTURE SI ENTRA DALLE PROVE. Le storie sono spente
@@ -63,7 +64,13 @@ export function creaNavigazione ({ avvia, aCasa, nome }) {
       const aperti = prossimi(c.storia).filter(x => giocabile(c.storia, x.n))
       return aperti.length === 1 ? { tipo: 'capitolo', n: aperti[0].n } : null
     }
-    return L.value + 1 < QUANTI ? { tipo: 'prova', i: L.value + 1 } : null
+    /* e nemmeno qui è «il numero dopo»: i livelli non ancora approvati
+       stanno dietro il cancello dei giochi in prova, e la fila che si
+       sta giocando ha dei buchi. Il prossimo è la prossima riga che si
+       VEDE — se no il ▶ di fine livello porterebbe dritto dentro una
+       prova che l'elenco non mostra. */
+    const p = dopoDi(L.value)
+    return p === null ? null : { tipo: 'prova', i: p }
   })
 
   function avanti () {

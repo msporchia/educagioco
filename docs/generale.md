@@ -8,9 +8,12 @@ squadretta, si preme play, e si guarda cosa succede.
 <img src="img/generale-gioco.png" width="230"> <img src="img/generale-mappa.png" width="230">
 
 > [!NOTE]
-> Questo gioco è **in prova**: non compare in home finché non si accende
-> l'interruttore *giochi in prova* nei settaggi. È il più incompleto della
-> raccolta.
+> Il gioco è in home come gli altri, ma **non tutti i livelli sono
+> approvati**: se ne giocano sei, quelli guardati giocare da vicino. Gli
+> altri sono scritti e stanno dietro l'interruttore *giochi in prova* nei
+> settaggi — chi lo accende li vede tutti, segnati con 🧪. Promuoverne uno
+> è una riga in `data/generale.js` (`APPROVATI`) e **non sposta le stelle
+> già prese**: la fila è sempre quella, cambia solo quanto se ne vede.
 
 ## Come è fatto
 
@@ -24,15 +27,21 @@ funziona si guarda dove si è rotto e si corregge la fila.
 ## Prima il tutorial, poi il resto
 
 Entrando si cade dritti nelle **prove**, che sono una fila di livelli sciolti,
-uno per idea. Le prime sei sono il tutorial e vanno fatte in fila, perché sono
-i sei concetti senza i quali il resto non si legge nemmeno — **un ordine, una
-fila, un giro, un segnale, una decisione, il rumore**.
+uno per idea, e vanno fatte in fila perché ognuna dà per scontata quella
+prima. Quelle approvate oggi sono sei — *il primo ordine, la chiave e il
+portone, lo sgombero del castello, due strade, mettetevi d'accordo, il
+richiamo* — e coprono **un ordine, una fila, una decisione, un segnale, il
+rumore**.
 
-Dal settimo in poi le idee **si mescolano**: non è allenamento su cose già
-viste, è la somma di due o tre di quelle sei in una situazione che nessuna di
-loro copriva da sola. Il settimo, per dire, chiede di *origliare il nemico* —
-l'evento e la decisione insieme, su un'informazione che arriva da chi ti sta
-dando la caccia.
+Le altre venti sono scritte e si vedono col cancello aperto (la nota qui
+sopra): i drill di consolidamento per ogni costrutto, e il cortile di Rosa,
+che è la prima campagna con una storia sola dentro.
+
+Più avanti le idee **si mescolano**: non è allenamento su cose già viste, è la
+somma di due o tre di quelle in una situazione che nessuna di loro copriva da
+sola. *Da una parte e dall'altra*, per dire, chiede di **origliare il nemico**
+— l'evento e la decisione insieme, su un'informazione che arriva da chi ti sta
+dando la caccia. Quella parte lì è ancora dietro il cancello.
 
 > [!NOTE]
 > Le cinque **avventure a capitoli** (`data/storie-generale.js`) sono scritte

@@ -900,15 +900,27 @@ export function labCompleta(indice, quanteTappe) {
    e va contato a parte da «ce l'ho fatta».
 
    I contatori li muove questa funzione, con `segna()`: così il gioco non
-   deve ricordarsi cinque nomi e non c'è modo di contare due volte. */
+   deve ricordarsi cinque nomi e non c'è modo di contare due volte.
+
+   ── `finita` LA DECIDE CHI CHIAMA, E NON È UN CONTO DI POSIZIONI ──
+   Prima qui arrivava «quanti livelli ci sono» e la campagna era finita
+   quando `tappa` li raggiungeva. Non regge più da quando i livelli non
+   ancora approvati stanno dietro il cancello dei giochi in prova: la
+   fila che si sta giocando ha dei buchi, e `tappa` è una punta nella
+   fila piena — con sei livelli visibili su ventisei quel confronto non
+   sarebbe mai vero. Chi sa quali si vedono è il gioco
+   (`views/generale/fila.js`), e passa la risposta già fatta. */
 export const genProgresso = () => state.profile.gen
 
-export function genCompleta(indice, quantiLivelli,
-                            { ordini = 0, par = 0, avanzato = false } = {}) {
+export function genCompleta(indice,
+                            { ordini = 0, par = 0, avanzato = false, finita = false } = {}) {
   const g = state.profile.gen
   const primaVolta = indice + 1 > (g.tappa || 0)
+  /* la punta toccata nella fila piena: non apre più i lucchetti — quelli
+     si leggono dalle stelle — ma resta quello che guardano i contatori
+     e la riga in home */
   g.tappa = Math.max(g.tappa || 0, indice + 1)
-  if (g.tappa >= quantiLivelli) g.libera = true
+  if (finita) g.libera = true
 
   // il record è il MINORE: chiudere con meno ordini vuol dire aver capito
   // meglio, non aver giocato di più

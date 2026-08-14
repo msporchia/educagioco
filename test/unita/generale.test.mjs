@@ -1163,4 +1163,43 @@ for (const [i, liv] of LIVELLI.entries()) {
 controlla('giocare non sporca i livelli', scritta(LIVELLI) === IMPRONTA_DATI,
           'dopo tutte queste partite i dati dei livelli sono cambiati')
 
+/* ═══════════ 12. il cancello dei livelli in prova ═══════════
+   I livelli non ancora approvati si vedono solo con i giochi in prova
+   accesi. La cosa che qui si difende non è QUANTI se ne vedono — quello
+   cambia ogni volta che uno viene promosso — ma che il cancello non
+   sposti niente: la posizione di un livello nella fila piena è la chiave
+   dei suoi progressi (`gen.stelle[i]`), e dev'essere la stessa col
+   cancello aperto o chiuso. Se un giorno i livelli in prova venissero
+   spostati in coda «per comodità», questo diventerebbe rosso — e
+   giustamente: le stelle già prese si rimescolerebbero addosso a chi
+   accende l'interruttore. */
+{
+  const chiusa = dati.fila(false), aperta = dati.fila(true)
+  controlla('col cancello chiuso restano solo i livelli approvati',
+            chiusa.length > 0 && chiusa.length < aperta.length,
+            `${chiusa.length} di ${aperta.length}`)
+  uguale('col cancello aperto ci sono tutti', aperta.length, LIVELLI.length)
+  controlla('e il primo della fila è uno di quelli approvati',
+            chiusa[0].i === 0, `si comincia da ${chiusa[0].liv.id}`)
+  controlla('nessun livello approvato porta il segno della prova',
+            chiusa.every(r => !r.prova), chiusa.filter(r => r.prova).map(r => r.liv.id).join(', '))
+
+  const dove = new Map(aperta.map(r => [r.liv.id, r.i]))
+  const spostati = chiusa.filter(r => dove.get(r.liv.id) !== r.i)
+  controlla('il cancello non sposta nessuno: la posizione è la stessa aperta o chiusa',
+            !spostati.length,
+            spostati.map(r => `${r.liv.id}: ${r.i} invece di ${dove.get(r.liv.id)}`).join(', '))
+  controlla('e la posizione è quella della fila piena',
+            aperta.every(r => LIVELLI[r.i] === r.liv))
+
+  /* i titoli dei tratti: se le prime prove di un blocco sono in prova, il
+     titolo scivola sulla prima che si vede — non sparisce con loro, se no
+     l'elenco avrebbe un blocco senza intestazione */
+  const conRighe = dati.TRATTI.filter(t => t.livelli.some(l => !dati.inProva(l))).length
+  uguale('ogni tratto rimasto in elenco ha il suo titolo',
+         chiusa.filter(r => r.titolo).length, conRighe)
+  nota(`${chiusa.length} livelli approvati su ${aperta.length}: ` +
+       chiusa.map(r => r.liv.id).join(', '))
+}
+
 riassunto('il generale')

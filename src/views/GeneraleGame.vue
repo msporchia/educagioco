@@ -46,7 +46,8 @@ import { creaNavigazione } from './generale/navigazione.js'
 import { genProgresso, genCompleta } from '../store/profile.js'
 import { superaCapitolo, stelleDi } from '../store/storie.js'
 import { suono } from '../audio.js'
-import { LIVELLI, QUANTI, proveDi } from '../data/generale.js'
+import { LIVELLI, proveDi } from '../data/generale.js'
+import { filaFinita } from './generale/fila.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
          contaOrdini, VERBI, ilSegnale, testoCond, laCosa,
          registro, eAvanzato, libera, perdute,
@@ -362,7 +363,7 @@ function vittoria () {
      fila, un capitolo ha la sua storia. Il metro è lo stesso. */
   if (nav.inStoria())
     superaCapitolo(contesto.value.storia, contesto.value.n, conto)
-  else genCompleta(L.value, QUANTI, conto)
+  else genCompleta(L.value, { ...conto, finita: filaFinita(L.value) })
   finito.value = { ordini: n, dentroPar, caduti }
 }
 

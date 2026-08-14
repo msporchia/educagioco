@@ -33,22 +33,25 @@ import { elencoStorie } from '../../store/storie.js'
 import { quanteMappe } from '../../data/mappe-storie.js'
 import { AVVENTURE_APERTE } from '../../data/storie-generale.js'
 import { genProgresso, tappaAperta } from '../../store/profile.js'
-import { QUANTI, TUTORIAL } from '../../data/generale.js'
+/* i conti si fanno sulla fila CHE SI VEDE: le prove non ancora approvate
+   stanno dietro il cancello dei giochi in prova, e prometterne
+   ventisei a chi ne ha sei in elenco sarebbe una barra che non
+   arriva mai in fondo */
+import { avanzamento, fatte, quante, quanteTutorial } from './fila.js'
 
 defineEmits(['apri', 'prove'])
 
 const storie = computed(() => elencoStorie().map(s => ({ ...s, mappe: quanteMappe(s.id) })))
-const prove = computed(() => {
-  const g = genProgresso()
-  return { fatte: Math.min(g.tappa || 0, QUANTI),
-           stelle: Object.values(g.stelle || {}).reduce((n, s) => n + s, 0) }
-})
+const prove = computed(() => ({
+  fatte: fatte.value,
+  stelle: Object.values(genProgresso().stelle || {}).reduce((n, s) => n + s, 0),
+}))
 /* il tutorial è finito quando le prime prove sono fatte. La regola del
    lucchetto è una sola in tutto il progetto (`tappaAperta`), e passa da
    lì anche questo: così l'interruttore dei genitori che apre tutto apre
    anche le avventure, senza una seconda scappatoia da tenere allineata */
-const imparato = computed(() => tappaAperta(TUTORIAL, prove.value.fatte))
-const rimaste = computed(() => Math.max(0, QUANTI - prove.value.fatte))
+const imparato = computed(() => tappaAperta(quanteTutorial.value, avanzamento.value))
+const rimaste = computed(() => Math.max(0, quante.value - prove.value.fatte))
 </script>
 
 <template>
@@ -56,7 +59,7 @@ const rimaste = computed(() => Math.max(0, QUANTI - prove.value.fatte))
     <!-- ════════ PRIMA DEL TUTORIAL ════════ -->
     <template v-if="!imparato">
       <p class="intro">Un generale non comanda a mano: <b>scrive gli ordini</b> e guarda
-        se il piano regge. {{ TUTORIAL }} prove per impararlo<span v-if="AVVENTURE_APERTE">, poi si parte</span>.</p>
+        se il piano regge. {{ quanteTutorial }} prove per impararlo<span v-if="AVVENTURE_APERTE">, poi si parte</span>.</p>
 
       <button class="avventura prove tutorial" @click="$emit('prove')">
         <span class="em">🎖️</span>
@@ -64,10 +67,10 @@ const rimaste = computed(() => Math.max(0, QUANTI - prove.value.fatte))
           <b>Il tutorial</b>
           <i>una prova per idea: un ordine, una fila, un giro, un segnale, una scelta, un rumore,
              e due per farli stare insieme</i>
-          <span v-if="prove.fatte" class="barra"><span :style="{ width: (Math.min(prove.fatte, TUTORIAL) / TUTORIAL * 100) + '%' }"></span></span>
+          <span v-if="prove.fatte" class="barra"><span :style="{ width: (Math.min(prove.fatte, quanteTutorial) / quanteTutorial * 100) + '%' }"></span></span>
         </span>
         <span class="dove">
-          <b>{{ Math.min(prove.fatte, TUTORIAL) }} <small>di {{ TUTORIAL }}</small></b>
+          <b>{{ Math.min(prove.fatte, quanteTutorial) }} <small>di {{ quanteTutorial }}</small></b>
           <span class="via">{{ prove.fatte ? 'continua →' : 'comincia →' }}</span>
         </span>
       </button>
@@ -107,10 +110,10 @@ const rimaste = computed(() => Math.max(0, QUANTI - prove.value.fatte))
         <span class="che">
           <b>Le prove</b>
           <i>una idea per livello, e si aprono in fila</i>
-          <span v-if="prove.fatte" class="barra"><span :style="{ width: (prove.fatte / QUANTI * 100) + '%' }"></span></span>
+          <span v-if="prove.fatte" class="barra"><span :style="{ width: (prove.fatte / quante * 100) + '%' }"></span></span>
         </span>
         <span class="dove">
-          <b>{{ prove.fatte }} <small>di {{ QUANTI }}</small></b>
+          <b>{{ prove.fatte }} <small>di {{ quante }}</small></b>
           <span v-if="prove.stelle" class="stelle">⭐ {{ prove.stelle }}</span>
           <span v-else class="via">{{ rimaste }} rimaste</span>
         </span>
