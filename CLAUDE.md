@@ -152,7 +152,9 @@ committate: non è ricostruibile da git.
 - **`src/grafica/`** — `tela.js` (canvas, sfondo in cache, ordinamento per
   profondità), `geometria.js` (tracciati: è l'unico posto dove gioco e
   disegno devono essere d'accordo su dove passa la strada), `castello.js`
-  (i pittori, nella tabella `PITTORI`).
+  (i pittori, nella tabella `PITTORI`), `spazio.js` (il cielo degli
+  asteroidi: nave, pianeta, sassi, raggi — riceve `danno: 0.5`, non sa
+  che esistano le vite).
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`

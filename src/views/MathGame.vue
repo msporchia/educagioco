@@ -29,6 +29,9 @@ import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
          tabellineSalde, prereqDeboli } from '../store/calcolo.js'
 import { suono } from '../audio.js'
+import { dipingiFondale, disegnaPianeta, disegnaNave, disegnaAsteroide,
+         disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
+import { POTENZIAMENTI, DOPPIO, EMERGENZA, premioDaSerie } from '../data/potenziamenti.js'
 import MappaTabelline from '../components/MappaTabelline.vue'
 import MappaConcetti from '../components/MappaConcetti.vue'
 import Barra from '../components/Barra.vue'
@@ -93,8 +96,33 @@ const premio = ref(0)
 
 const tela = ref(null)
 let ctx = null, W = 0, H = 0, S = 1, suolo = 0, altezzaDomanda = 0
-let asteroidi = [], particelle = [], anelli = [], stelle = []
+let asteroidi = [], particelle = [], anelli = [], stelle = [], frammenti = [], raggi = []
 let scossa = 0, lampo = 0, pulsa = 0, raf = 0, ultimo = 0
+let fondale = null, pianetaBotta = 0, fumo = 0
+
+/* ═══════════ L'ASTRONAVE ═══════════
+   È l'unico personaggio del gioco, e fa due mestieri: spara quando si
+   colpisce, e **dice a che punto è la partita senza numeri**. Le vite
+   sono ancora nella fascia in alto, ma quello è il posto dove non si sta
+   guardando: chi gioca guarda il cielo, e la nave sta appena sotto.
+   Il campo `danno` è tutto quello che il disegno sa dello stato — la
+   traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto. */
+const nave = reactive({
+  x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
+  scudo: 0, doppio: false, botta: 0, riparata: 0, t: 0,
+})
+/* a una vita sola la nave è un rottame che lampeggia, a tre è nuova:
+   `CFG.vite` è il riferimento, così le vite di scorta guadagnate col
+   filotto si vedono come una nave sana e non come una nave super */
+function sincronizzaNave() {
+  nave.danno = Math.max(0, Math.min(1, 1 - (hud.vite - 1) / Math.max(1, CFG.vite - 1)))
+  const lv = hud.livello >= 6 ? 3 : hud.livello >= 3 ? 2 : 1
+  if (lv > nave.lv) {
+    nave.lv = lv
+    mostraCartello(lv === 3 ? '🛰️ INCROCIATORE!' : '🛸 NAVE POTENZIATA!', '#7fe3ff')
+    suono.compra()
+  } else nave.lv = lv
+}
 /* La domanda in corso, una sola per tutte e due le campagne: `testo` è
    quello che si legge in fondo allo schermo, `chiave` quello che il
    motore segna, `peso` quanto costa in testa — da lì il gioco decide
@@ -301,7 +329,10 @@ function ondata() {
                             : distrattori(domanda.a, domanda.b, quanti - 1)
   const valori = [domanda.ris, ...falsi].sort(() => Math.random() - 0.5)
   const colonna = W / quanti
-  const lento = boss ? CFG.bossLento : (domanda.difficile ? CFG.difficileLento : 1)
+  let lento = boss ? CFG.bossLento : (domanda.difficile ? CFG.difficileLento : 1)
+  // l'ultima vita allunga il tempo: chi è arrivato qui di solito sa il
+  // conto e non fa in tempo a farlo — vedi `data/potenziamenti.js`
+  if (hud.vite <= EMERGENZA.sotto) lento *= EMERGENZA.tempo
   const vel = suolo / (caduta * lento)
 
   valori.forEach((v, i) => {
@@ -316,6 +347,12 @@ function ondata() {
       vy: vel, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * (boss ? 0.3 : 0.5),
       ph: Math.random() * 6.28, morto: false,
       forma: Array.from({ length: boss ? 11 : 9 }, () => 0.76 + Math.random() * 0.34),
+      // i crateri si sorteggiano qui una volta sola: sorteggiarli a ogni
+      // fotogramma farebbe ribollire il sasso invece di farlo ruotare
+      crateri: Array.from({ length: boss ? 5 : 3 }, () => {
+        const ang = Math.random() * 6.28, d = Math.random() * 0.5
+        return [Math.cos(ang) * d, Math.sin(ang) * d, 0.10 + Math.random() * 0.13]
+      }),
     })
   })
   if (boss) mostraCartello('☄️ BOSS!', '#ff6b6b')
@@ -345,6 +382,69 @@ function eMirata(k) {
          (domanda.a === tappa.value.nuova || domanda.b === tappa.value.nuova)
 }
 
+/* ---------- il colpo ----------
+   Il cannone punta il sasso toccato e spara sul posto: nessuna attesa
+   fra il dito e l'esplosione, perché quella mezza mezzeria di secondo la
+   si paga a ogni singola risposta. */
+function spara(a, colore = '#7fe3ff') {
+  nave.mira = Math.atan2(a.y - nave.y, a.x - nave.x)
+  const bocca = nave.r * 1.25
+  raggi.push({ x0: nave.x + Math.cos(nave.mira) * bocca, y0: nave.y + Math.sin(nave.mira) * bocca,
+               x1: a.x, y1: a.y, vita: 1, c: colore })
+  nave.spinta = 1
+  suono.sparo()
+}
+
+/* il sasso si rompe in spicchi della sua stessa forma: sono i pezzi che
+   restano quando esplode un sasso, e costano un poligono a testa */
+function rompi(a, colore) {
+  const n = a.boss ? 9 : 6
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * 6.2832, ap = 6.2832 / n
+    const punti = [[0, 0],
+      [Math.cos(ang) * a.r * 0.9, Math.sin(ang) * a.r * 0.9],
+      [Math.cos(ang + ap) * a.r * 0.9, Math.sin(ang + ap) * a.r * 0.9]]
+    const sp = (60 + Math.random() * 150) * S
+    frammenti.push({ x: a.x, y: a.y, punti, rot: 0,
+                     vr: (Math.random() - 0.5) * 7,
+                     vx: Math.cos(ang + ap / 2) * sp, vy: Math.sin(ang + ap / 2) * sp - 40 * S,
+                     vita: 1, c: a.boss ? '#8f2a22' : '#6d6153' })
+  }
+  esplodi(a.x, a.y, colore, a.boss ? 46 : 30)
+  anello(a.x, a.y, colore, a.r * (a.boss ? 7 : 3))
+}
+
+/* i due sassi sbagliati più vicini se ne vanno con l'onda del cannone
+   doppio. Non tutti: la domanda dopo deve trovare un cielo, non un vuoto */
+function spazza(centro) {
+  const vicini = asteroidi
+    .filter(x => !x.morto && x !== centro)
+    .sort((p, q) => (p.x - centro.x) ** 2 - (q.x - centro.x) ** 2)
+    .slice(0, DOPPIO.spazza)
+  for (const v of vicini) {
+    v.morto = true
+    spara(v, '#ffd94a'); rompi(v, '#ffd94a')
+  }
+}
+
+/* ---------- i premi del filotto ----------
+   Le soglie stanno in `data/potenziamenti.js`, non qui: sono un dato di
+   equilibrio e vanno lette accanto alla ragione per cui sono quelle. */
+function premia(serie) {
+  const p = premioDaSerie(serie, CFG.serieVita)
+  if (p === 'vita') dammiVita('🔥 ' + serie + ' DI FILA!')
+  else if (p === 'doppio') accendi('doppio', '🔥 ' + serie + ' DI FILA!  ')
+}
+
+function accendi(quale, prefisso = '') {
+  const P = POTENZIAMENTI[quale]
+  if (quale === 'doppio') nave.doppio = true
+  if (quale === 'scudo') nave.scudo = 1
+  mostraCartello(prefisso + P.grido, P.colore)
+  suono.compra()
+  anello(nave.x, nave.y, P.colore, nave.r * 9)
+}
+
 function colpisci(a) {
   const k = domanda.chiave
   const ms = performance.now() - apertoIl
@@ -357,29 +457,40 @@ function colpisci(a) {
     // il filotto si registra mentre cresce: chiudere la partita a metà non
     // deve buttare via il record
     segnaBest('serieMath', hud.serie)
+    const moltiplica = nave.doppio ? DOPPIO.punti : 1
     if (a.boss) {
-      esplodi(a.x, a.y, '#ffd94a', 46); esplodi(a.x, a.y, '#ff6b6b', 30)
-      anello(a.x, a.y, '#ffd94a', a.r * 7); scossa = 14; lampo = 0.5
-      hud.punti += CFG.bossPunti; suono.boss(); dammiVita('☄️ BOSS ABBATTUTO!')
+      spara(a, '#ffd94a'); rompi(a, '#ffd94a')
+      esplodi(a.x, a.y, '#ff6b6b', 30); scossa = 14; lampo = 0.5
+      hud.punti += CFG.bossPunti * moltiplica; suono.boss()
+      dammiVita('☄️ BOSS ABBATTUTO!')
+      // il boss lascia lo scudo: è la ricompensa che permette di
+      // rischiare una risposta invece di guardare cadere il sasso
+      if (!nave.scudo) accendi('scudo')
     } else {
-      esplodi(a.x, a.y, '#7fe3ff', 30); anello(a.x, a.y, '#7fe3ff', a.r * 3)
-      hud.punti += CFG.puntiOk; suono.ok()
-      if (hud.serie % CFG.serieVita === 0) dammiVita('🔥 ' + hud.serie + ' DI FILA!')
+      spara(a); rompi(a, '#7fe3ff')
+      hud.punti += CFG.puntiOk * moltiplica; suono.ok()
+      premia(hud.serie)
     }
+    if (nave.doppio) spazza(a)
     if (hud.giuste % CFG.perMoneta === 0) {
       addCoins(level.value); mostraCartello('+' + level.value + ' 🪙', '#ffd94a'); suono.moneta()
     }
     segna(mente.value ? 'mente' : 'math')
     const nuovo = 1 + Math.floor(hud.giuste / CFG.salitaOgni)
     if (nuovo > hud.livello) { hud.livello = nuovo; salitaLivello() }
+    sincronizzaNave()
     if (centrato()) return tappaSuperata()
     ondata()
   } else {
     answer(k, { correct: false, ms })
     picker.afterAnswer(k, false)
     a.morto = true; hud.serie = 0; hud.sbagliate++
+    spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
     hud.punti = Math.max(0, hud.punti + CFG.puntiNo)
+    // il cannone doppio si perde sbagliando: è la regola che lo rende
+    // qualcosa da difendere invece di un regalo che scade da solo
+    if (nave.doppio) { nave.doppio = false; mostraCartello('🔫 cannone perso', '#ff9d1c') }
     if (mente.value) suggerisci(k)
     perdiVita()
   }
@@ -404,10 +515,27 @@ function suggerisci(k) {
 }
 
 function dammiVita(perche) {
-  if (hud.vite < CFG.viteMax) { hud.vite++; mostraCartello(perche + '  +1 ♥', '#ff8fa3'); suono.vita() }
-  else mostraCartello(perche, '#ffd94a')
+  if (hud.vite < CFG.viteMax) {
+    hud.vite++; mostraCartello(perche + '  +1 ♥', '#ff8fa3'); suono.vita()
+    nave.riparata = 1; sincronizzaNave()
+  } else mostraCartello(perche, '#ffd94a')
 }
-function perdiVita() { hud.serie = 0; if (--hud.vite <= 0) finePartita() }
+
+/* Lo scudo si mette davanti alla botta, e lo si vede: l'esagono va in
+   frantumi e la vita resta. Senza il lampo e il cartello sarebbe un
+   errore che «non è successo niente», cioè la cosa più confusa di tutte. */
+function perdiVita() {
+  hud.serie = 0
+  if (nave.scudo > 0) {
+    nave.scudo = 0
+    esplodi(nave.x, nave.y, '#7fe3ff', 26); anello(nave.x, nave.y, '#7fe3ff', nave.r * 7)
+    mostraCartello('🛡️ SCUDO PARATO!', '#7fe3ff'); suono.vita(); scossa = 8
+    return
+  }
+  nave.botta = 1
+  if (--hud.vite <= 0) { sincronizzaNave(); return finePartita() }
+  sincronizzaNave()
+}
 
 function salitaLivello() {
   mostraCartello('LIVELLO ' + hud.livello, '#7fe3ff')
@@ -441,53 +569,145 @@ function ridimensiona() {
   S = Math.max(0.6, Math.min(1.6, Math.min(W, H) / 700))
   altezzaDomanda = Math.max(96, H * 0.17)
   suolo = H - altezzaDomanda
-  stelle = Array.from({ length: 110 }, () => ({
-    x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6 + 0.4,
-    s: Math.random() * 14 + 4, a: Math.random() * 0.6 + 0.3,
-  }))
+  // le stelle vive: tre strati che scendono a velocità diverse. La
+  // parallasse è l'unica cosa che dà profondità a un cielo nero, e costa
+  // un campo in più. Il grosso del cielo — nebulose e polvere — sta
+  // fermo nel fondale in cache, che si ridipinge solo qui.
+  stelle = Array.from({ length: 90 }, () => {
+    const z = Math.random() < 0.5 ? 0.35 : Math.random() < 0.7 ? 0.7 : 1.2
+    return { x: Math.random() * W, y: Math.random() * H, z,
+             r: (0.4 + Math.random() * 1.2) * z, s: (6 + Math.random() * 10) * z,
+             a: 0.25 + Math.random() * 0.55 * z }
+  })
+  fondale = dipingiFondale(W, H)
+  nave.r = Math.max(30, Math.min(54, Math.min(W, H) * 0.1))
+  nave.x = W / 2; nave.y = suolo - nave.r * 0.8
+}
+
+/* ---------- dove guarda il cannone ----------
+   Prima seguiva il sasso più basso. Era vivo da vedere e sbagliato: un
+   puntatore agganciato a *un* asteroide tira l'occhio là, e a un bambino
+   quello si legge come un consiglio. Peggio, arriva il momento in cui i
+   sassi sbagliati sono già morti e l'unico vivo è quello giusto: lì il
+   cannone lo indica per davvero.
+
+   Quindi la regola è che **il cannone non sa dove sono gli asteroidi**.
+   Spazza il cielo da una parte all'altra, avanti e indietro, con un moto
+   che dipende solo dal tempo: passando dappertutto non indica niente, e
+   nel frattempo la torretta sembra viva invece che spenta. Punta un
+   bersaglio solo dopo che il dito ha già scelto — vedi `spara()` — e ci
+   resta finché il raggio è in aria.
+
+   L'ampiezza è larga apposta. Un dondolio stretto attorno alla verticale
+   si legge ancora come «guarda in mezzo»: per non dire niente il cannone
+   deve arrivare *sopra ogni colonna*, comprese quelle di bordo. */
+const SPAZZATA = { arco: 0.95, giroSec: 3.4 }   // ±54°, un'andata e ritorno ogni 3,4 s
+
+function miraARiposo(dt) {
+  if (raggi.length) return          // sta sparando: il colpo tiene la mira
+  const meta = -Math.PI / 2 + Math.sin(pulsa * (6.2832 / SPAZZATA.giroSec)) * SPAZZATA.arco
+  let d = meta - nave.mira
+  while (d > Math.PI) d -= 6.2832
+  while (d < -Math.PI) d += 6.2832
+  // il ritorno dopo un colpo è un raggiungimento, non un salto: la
+  // torretta riprende la spazzata da dov'è, senza scattare
+  nave.mira += d * Math.min(1, dt * 6)
 }
 
 function aggiorna(dt) {
-  let caduto = false
+  let caduto = null
   for (const a of asteroidi) {
     if (a.morto) continue
     a.y += a.vy * dt; a.rot += a.vr * dt
-    if (a.y - a.r > suolo) { a.morto = true; if (a.ok) caduto = true }
+    if (a.y - a.r > suolo) { a.morto = true; if (a.ok) caduto = a }
   }
   if (caduto) {
     const k = domanda.chiave
     answer(k, { correct: false, ms: 9000 })
     picker.afterAnswer(k, false)
     hud.sbagliate++
-    esplodi(W / 2, suolo, '#ff9d1c', 34); suono.boom(); scossa = 16
+    // il sasso arriva sul pianeta: l'atmosfera si accende di rosso lì
+    // dove ha colpito, ed è per questo che quella riga in fondo conta
+    esplodi(caduto.x, suolo, '#ff9d1c', 34)
+    anello(caduto.x, suolo, '#ff9d1c', W * 0.5)
+    pianetaBotta = 1
+    suono.boom(); scossa = 16
     perdiVita()
     if (fase.value === 'gioco') ondata()
   }
-  for (const p of particelle) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt * S; p.vita -= dt * 1.6 }
+}
+
+/* Scintille, fumo e raggi vivono di vita loro: si consumano anche
+   quando il gioco è fermo. Se stessero dentro `aggiorna` — che il
+   cartello di un traguardo mette in pausa — un raggio sparato un attimo
+   prima resterebbe appeso in cielo per tutta la durata della festa. */
+function effetti(dt) {
+  // la spazzata sta qui e non in `aggiorna` per la stessa ragione: il
+  // cartello di un traguardo ferma il gioco, e una torretta che si
+  // inchioda mentre il resto è in festa sembra la nave che si è spenta
+  miraARiposo(dt)
+  for (const p of particelle) {
+    p.x += p.vx * dt; p.y += p.vy * dt
+    p.vy += (p.leggera ? -40 : 260) * dt * S
+    p.vita -= dt * (p.leggera ? 0.7 : 1.6)
+  }
   particelle = particelle.filter(p => p.vita > 0)
+  for (const f of frammenti) {
+    f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt * S
+    f.rot += f.vr * dt; f.vita -= dt * 1.1
+  }
+  frammenti = frammenti.filter(f => f.vita > 0)
+  for (const r of raggi) r.vita -= dt * 5
+  raggi = raggi.filter(r => r.vita > 0)
   for (const g of anelli) { g.r += g.max * dt * 1.8; g.vita -= dt * 1.8 }
   anelli = anelli.filter(g => g.vita > 0)
   if (scossa > 0) scossa -= dt * 40
   if (lampo > 0) lampo -= dt * 1.6
+  if (pianetaBotta > 0) pianetaBotta -= dt * 1.1
+  if (nave.botta > 0) nave.botta -= dt * 2.2
+  if (nave.riparata > 0) nave.riparata -= dt * 1.6
+  if (nave.spinta > 0) nave.spinta -= dt * 2.5
+  // la nave malconcia fuma, e quando è messa peggio butta anche
+  // scintille: sono le due cose che si vedono di sfuggita mentre si
+  // guarda in alto, e dicono «questa sta per saltare» meglio di un cuore
+  if (nave.danno > 0.6 && (fumo -= dt) <= 0) {
+    fumo = 0.12
+    const x = nave.x + (Math.random() - 0.5) * nave.r
+    particelle.push({ x, y: nave.y - nave.r * 0.2, vx: (Math.random() - 0.5) * 24 * S,
+                      vy: -34 * S, vita: 0.85, leggera: true,
+                      r: (2.5 + Math.random() * 3.5) * S,
+                      c: nave.danno > 0.8 ? '#6a6a78' : '#9898a6' })
+    if (nave.danno > 0.8 && Math.random() < 0.5)
+      particelle.push({ x, y: nave.y, vx: (Math.random() - 0.5) * 70 * S,
+                        vy: -(40 + Math.random() * 60) * S, vita: 0.7,
+                        r: (1.5 + Math.random() * 2) * S,
+                        c: Math.random() < 0.5 ? '#ffd94a' : '#ff9d1c' })
+  }
 }
 
+/* L'ordine dei piani, che è la sola cosa da non sbagliare qui dentro:
+   il cielo, la nave, **poi** gli asteroidi. La nave sta dietro perché i
+   numeri devono restare leggibili anche quando un sasso le passa
+   davanti — è il momento in cui si ha più fretta di leggerli. */
 function disegna(dt) {
   ctx.save()
   if (scossa > 0) ctx.translate((Math.random() - 0.5) * scossa, (Math.random() - 0.5) * scossa)
-  const g = ctx.createLinearGradient(0, 0, 0, H)
-  g.addColorStop(0, '#05081a'); g.addColorStop(1, '#0e1338')
-  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40)
 
+  if (fondale) ctx.drawImage(fondale, 0, 0, W, H)
   for (const s of stelle) {
     s.y += s.s * dt; if (s.y > H) { s.y = 0; s.x = Math.random() * W }
-    ctx.globalAlpha = s.a; ctx.fillStyle = '#fff'
+    ctx.globalAlpha = s.a; ctx.fillStyle = s.z > 1 ? '#dff1ff' : '#fff'
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.29); ctx.fill()
   }
   ctx.globalAlpha = 1
-  ctx.strokeStyle = '#4aa3ff55'; ctx.lineWidth = 2 * S; ctx.setLineDash([10 * S, 10 * S])
-  ctx.beginPath(); ctx.moveTo(0, suolo); ctx.lineTo(W, suolo); ctx.stroke(); ctx.setLineDash([])
 
-  if (fase.value === 'gioco') for (const a of asteroidi) if (!a.morto) disegnaAsteroide(a)
+  disegnaPianeta(ctx, { W, suolo, t: pulsa, botta: pianetaBotta })
+
+  nave.t = pulsa
+  disegnaNave(ctx, nave)
+
+  if (fase.value === 'gioco') for (const a of asteroidi) if (!a.morto) disegnaAsteroide(ctx, a, S, pulsa)
+  for (const f of frammenti) disegnaFrammento(ctx, f)
 
   for (const gg of anelli) {
     ctx.globalAlpha = Math.max(0, gg.vita) * 0.55
@@ -498,39 +718,11 @@ function disegna(dt) {
     ctx.globalAlpha = Math.max(0, p.vita)
     ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.29); ctx.fill()
   }
-  ctx.globalAlpha = 1; ctx.restore()
+  ctx.globalAlpha = 1
+  for (const r of raggi) disegnaRaggio(ctx, r, S)
+  ctx.restore()
   if (lampo > 0) { ctx.globalAlpha = Math.max(0, lampo) * 0.45; ctx.fillStyle = '#fff'
                    ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1 }
-}
-
-function disegnaAsteroide(a) {
-  ctx.save(); ctx.translate(a.x, a.y)
-  if (a.boss) {
-    const k = 1 + Math.sin(pulsa * 4 + a.ph) * 0.06
-    const h = ctx.createRadialGradient(0, 0, a.r * 0.8, 0, 0, a.r * 1.75 * k)
-    h.addColorStop(0, '#ff6b6b66'); h.addColorStop(1, '#ff6b6b00')
-    ctx.fillStyle = h; ctx.beginPath(); ctx.arc(0, 0, a.r * 1.75 * k, 0, 6.29); ctx.fill()
-    ctx.scale(k, k)
-  }
-  ctx.rotate(a.rot)
-  ctx.beginPath()
-  a.forma.forEach((m, i) => {
-    const ang = i / a.forma.length * 6.2832
-    const x = Math.cos(ang) * a.r * m, y = Math.sin(ang) * a.r * m
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
-  })
-  ctx.closePath()
-  const rg = ctx.createRadialGradient(-a.r * 0.3, -a.r * 0.3, a.r * 0.15, 0, 0, a.r)
-  if (a.boss) { rg.addColorStop(0, '#d1584f'); rg.addColorStop(1, '#4a1512') }
-  else { rg.addColorStop(0, '#9c8f7d'); rg.addColorStop(1, '#4b4238') }
-  ctx.fillStyle = rg; ctx.fill()
-  ctx.lineWidth = (a.boss ? 5 : 3) * S; ctx.strokeStyle = a.boss ? '#ffd94a' : '#2a241d'; ctx.stroke()
-  ctx.restore()
-
-  ctx.fillStyle = '#fff'; ctx.font = `900 ${a.r * 0.85}px system-ui, sans-serif`
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.lineWidth = 5 * S; ctx.strokeStyle = '#00000099'
-  ctx.strokeText(a.v, a.x, a.y); ctx.fillText(a.v, a.x, a.y)
 }
 
 /* Il volo si ferma anche col cartello di un traguardo davanti
@@ -541,6 +733,7 @@ function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
   pulsa += dt
   if (fase.value === 'gioco' && !state.festa.length) aggiorna(dt)
+  effetti(dt)
   disegna(dt)
   raf = requestAnimationFrame(ciclo)
 }
@@ -554,7 +747,13 @@ function inizia(i = tappaIdx.value) {
   if (!mente.value && i < 0) state.profile.settings.tables = [...sel].sort((a, b) => a - b)
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
   hud.livello = 1; hud.serie = 0
-  particelle = []; anelli = []; scossa = 0; lampo = 0; chieste = 0
+  particelle = []; anelli = []; frammenti = []; raggi = []
+  scossa = 0; lampo = 0; pianetaBotta = 0; chieste = 0
+  // la nave torna nuova a ogni partita: i potenziamenti sono il premio di
+  // questa partita e non un salvataggio (`data/potenziamenti.js`)
+  nave.lv = 1; nave.scudo = 0; nave.doppio = false
+  nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
+  sincronizzaNave()
   picker.reset()
   sbagli.clear(); dritta.value = ''
   segna('partiteMath')
@@ -656,6 +855,9 @@ function tutte() {
 
 const cuori = computed(() => '♥'.repeat(Math.max(0, hud.vite)) +
                             '♡'.repeat(Math.max(0, CFG.vite - hud.vite)))
+/* c'è almeno un potenziamento acceso: la fascia in alto si stringe per
+   fargli posto invece di andare a capo */
+const potenziata = computed(() => !!nave.scudo || nave.doppio)
 const quota = (n, tot) => Math.min(100, Math.round((n / tot) * 100)) + '%'
 
 onMounted(() => {
@@ -663,7 +865,7 @@ onMounted(() => {
   // aggancio per i test automatici: permette di colpire l'asteroide giusto
   // senza dover indovinare dove il numero e' disegnato sul canvas
   window.__mate = { hud, domanda, colpisci, inizia, sel, CAMPAGNA, tappaIdx, tappa,
-                    asteroidi: () => asteroidi, fase, finale, progresso,
+                    asteroidi: () => asteroidi, fase, finale, progresso, nave,
                     // -1 è il volo libero: tabelline a scelta, nessun bersaglio
                     iniziaLibero: () => inizia(-1),
                     // la seconda campagna: stazioni del calcolo a mente
@@ -686,10 +888,16 @@ onUnmounted(() => {
 
     <Barra v-if="fase === 'gioco'" :titolo="mente ? 'A mente' : 'Asteroidi'" scura
            @indietro="allaMappa">
+      <!-- Su un telefono stretto i gettoni stanno in cinque, non in
+           sette: quando c'è un potenziamento acceso quello vince, e il
+           filotto e il livello si leggono lo stesso dalla nave — il
+           cannone doppio *è* il filotto, lo scafo grosso *è* il livello. -->
       <div class="gettone">{{ cuori }}</div>
-      <div v-if="hud.serie >= 3" class="gettone">🔥{{ hud.serie }}</div>
+      <div v-if="hud.serie >= 3 && !potenziata" class="gettone">🔥{{ hud.serie }}</div>
+      <div v-if="nave.scudo" class="gettone potenz scudo">🛡️</div>
+      <div v-if="nave.doppio" class="gettone potenz doppio">🔫×2</div>
       <div class="gettone">{{ hud.punti }} p</div>
-      <div class="gettone">Liv. {{ hud.livello }}</div>
+      <div v-if="!potenziata" class="gettone">Liv. {{ hud.livello }}</div>
     </Barra>
 
     <!-- quanto manca a superare il pianeta: si vede sempre, come le ondate del castello -->
@@ -790,6 +998,21 @@ onUnmounted(() => {
         <p v-if="!progressoMente.libera" class="mini">Il volo a mente — tutti i trucchi
           insieme, con i numeri che continuano a crescere — si apre alla fine.</p>
         </template>
+
+        <!-- l'astronave: si guadagna giocando, quindi va detto una volta
+             che esiste. Altrimenti il primo cannone doppio arriva come un
+             lampo giallo che nessuno ha capito. -->
+        <div class="hangar">
+          <div class="capitolo">🚀 La tua astronave</div>
+          <p class="testo">Si potenzia da sola mentre giochi, e a fine partita torna
+            com'era. Più risposte giuste di fila, più diventa forte — e se prendi
+            botte si vede: ammaccata, poi con l'ala rotta e la luce rossa.</p>
+          <div v-for="(P, id) in POTENZIAMENTI" :key="id" class="potere">
+            <span class="em">{{ P.emoji }}</span>
+            <b>{{ P.nome }}</b>
+            <i>{{ P.spiega }}</i>
+          </div>
+        </div>
 
         <div class="riga">
           <button class="bottone chiaro" @click="apriTavola">📊 Cosa so</button>
@@ -916,6 +1139,15 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
 .liv { color:#7fe3ff }
 .tondo.scuro { pointer-events:auto; background:#ffffff18; color:#fff; box-shadow:none }
 
+/* i potenziamenti accesi: pulsano appena, quel tanto che basta a farsi
+   notare in mezzo agli altri gettoni senza rubare l'occhio al cielo */
+.gettone.potenz { font-weight:900; animation:pulsa-potenz 1.6s ease-in-out infinite }
+.gettone.potenz.scudo { background:#7fe3ff33 !important; color:#dff6ff !important;
+                        box-shadow:0 0 0 1.5px #7fe3ff88 }
+.gettone.potenz.doppio { background:#ffd94a33 !important; color:#fff3c4 !important;
+                         box-shadow:0 0 0 1.5px #ffd94a88 }
+@keyframes pulsa-potenz { 50% { transform:scale(1.08) } }
+
 /* ---- il bersaglio del pianeta, sotto la fascia ---- */
 .bersaglio { position:absolute; top:clamp(44px,11vw,54px); left:12px; right:12px;
              display:flex; flex-direction:column; gap:4px; pointer-events:none }
@@ -998,6 +1230,18 @@ h1.chiaro span { color:#7fe3ff }
 .pianeta.chiuso, .stazione.chiuso { opacity:.5; box-shadow:0 3px 0 #e9ddf5 }
 .pianeta.chiuso b, .pianeta.chiuso i,
 .stazione.chiuso b, .stazione.chiuso i { color:var(--tenue) }
+
+/* l'hangar: non è un negozio — è la spiegazione di cosa può capitare
+   alla nave mentre si gioca, e sta in fondo perché si legge una volta */
+.hangar { width:100%; max-width:400px; display:flex; flex-direction:column; gap:7px;
+          margin-top:6px }
+.hangar .testo { margin:0; text-align:left }
+.potere { display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
+          gap:0 11px; align-items:center; text-align:left; padding:9px 13px;
+          border-radius:16px; background:#ffffffb8; box-shadow:0 3px 0 #e6dcf2 }
+.potere .em { grid-row:1/3; font-size:25px }
+.potere b { font-size:14px; font-weight:900; color:var(--viola-scuro) }
+.potere i { font-style:normal; font-size:12px; color:var(--tenue); line-height:1.35 }
 
 /* le due facce di "Cosa so": i fatti in tavola, le strategie in elenco */
 .schede { display:flex; gap:8px; width:100%; max-width:420px }

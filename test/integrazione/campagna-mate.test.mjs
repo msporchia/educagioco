@@ -9,7 +9,7 @@
      · superato il bersaglio la tappa si chiude, paga, e resta superata
        anche dopo aver richiuso il gioco
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -37,19 +37,57 @@ await scatto(page, 'campagna-mate-mappa')
 await page.locator('.pianeta').first().click()
 await page.waitForTimeout(300)
 
+/* Il cannone della nave non deve **mai** inseguire un asteroide prima che
+   il dito abbia scelto: quando i sassi sbagliati sono già morti finirebbe
+   per indicare proprio quello giusto. Spazza il cielo avanti e indietro
+   con un moto che dipende dal solo tempo, e qui si controllano le due
+   facce della stessa cosa: che spazzi davvero da una parte all'altra, e
+   che l'angolo verso il sasso giusto gli scorra sotto senza agganciarsi. */
+const GRADI = 180 / Math.PI
+const puntamento = await page.evaluate(async () => {
+  const m = window.__mate
+  const letture = []
+  for (let i = 0; i < 24; i++) {
+    await new Promise(r => setTimeout(r, 120))
+    const giusto = m.asteroidi().find(a => a.ok && !a.morto)
+    letture.push({
+      mira: m.nave.mira,
+      vivi: m.asteroidi().filter(a => !a.morto).length,
+      // dove sarebbe puntato il cannone se stesse seguendo la risposta
+      verso: giusto ? Math.atan2(giusto.y - m.nave.y, giusto.x - m.nave.x) : null,
+    })
+  }
+  return letture
+})
+const scarti = puntamento.map(l => (l.mira + Math.PI / 2) * GRADI)
+const inScena = Math.max(...puntamento.map(l => l.vivi))
+controlla('ci sono asteroidi in scena mentre si guarda il cannone', inScena >= 2)
+controlla('il cannone spazza il cielo da una parte all\'altra',
+          Math.min(...scarti) < -25 && Math.max(...scarti) > 25,
+          `è andato da ${Math.round(Math.min(...scarti))}° a ${Math.round(Math.max(...scarti))}°`)
+
+/* se inseguisse la risposta, questa distanza resterebbe intorno a zero
+   per tutte le letture: è il controllo che vale davvero */
+const addosso = puntamento.filter(l => l.verso !== null)
+  .map(l => Math.abs(l.mira - l.verso) * GRADI)
+dentro('e non resta addosso all\'asteroide giusto',
+       Math.round(Math.max(...addosso) - Math.min(...addosso)), 25, 180)
+
 const partita = await page.evaluate(async () => {
   const m = window.__mate
   const bersaglio = m.tappa.value.bersaglio
   const viste = []
+  let doppio = false
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
   for (let i = 0; i < 200 && m.fase.value === 'gioco'; i++) {
     viste.push([m.domanda.a, m.domanda.b])
     const giusto = m.asteroidi().find(x => x.ok && !x.morto)
     if (!giusto) break
     m.colpisci(giusto)
+    doppio = doppio || m.nave.doppio
     await new Promise(r => setTimeout(r, 15))
   }
-  return { viste, bersaglio, fase: m.fase.value, giuste: m.hud.giuste,
+  return { viste, bersaglio, fase: m.fase.value, giuste: m.hud.giuste, doppio,
            mirate: m.hud.mirate, tappa: m.progresso.value.tappa }
 })
 
@@ -70,6 +108,20 @@ const fuori = partita.viste.filter(([a, b]) => ![1, 2].includes(a) && ![1, 2].in
 uguale('e non esce nessuna tabellina non ancora aperta', fuori.length, 0)
 
 await scatto(page, 'campagna-mate-vinta')
+
+/* ---------- 2b. il cannone doppio non risponde al posto del bambino ----------
+   Il potenziamento porta via anche i sassi sbagliati vicini: è l'unico
+   punto del gioco dove qualcosa succede a un asteroide che nessuno ha
+   toccato, ed è invisibile giocando. Se quelle esplosioni finissero nel
+   motore come risposte, il bambino risulterebbe più bravo o più scarso
+   di quello che è, e le domande di domani sarebbero sbagliate. */
+controlla('il cannone doppio si accende durante la tappa', partita.doppio)
+const profilo = await leggiProfilo(page)
+const risposte = Object.entries(profilo.items || {})
+  .filter(([k]) => k.startsWith('math:'))
+  .reduce((n, [, it]) => n + (it.ok || 0) + (it.err || 0), 0)
+uguale('e in archivio c\'è una risposta per colpo, non una per esplosione',
+       risposte, partita.viste.length)
 
 /* ---------- 3. il progresso resta dopo aver chiuso ---------- */
 await page.reload()

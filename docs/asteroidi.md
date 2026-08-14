@@ -20,6 +20,27 @@ Non sono una il seguito dell'altra — 3+4 viene prima delle tabelline e 4×23
 viene dopo — quindi **la prima stazione è aperta dal primo giorno**, anche
 per chi non ha ancora fatto nessuna tabellina.
 
+## L'astronave
+
+In fondo allo schermo c'è una nave che difende il pianeta, e **dice come sta
+andando senza numeri**: nuova, poi ammaccata, poi con l'ala squarciata, il
+vetro rotto, il fumo e la luce rossa. Se resta una vita sola gli asteroidi
+rallentano un po' — chi è arrivato lì il conto di solito lo sa, e non fa in
+tempo a farlo. Man mano che si sale di livello la nave cresce: navetta,
+caccia, incrociatore.
+
+Due potenziamenti si guadagnano giocando e finiscono con la partita:
+
+- 🔫 **cannone doppio** — dopo cinque risposte giuste di fila. I punti valgono
+  doppio e l'onda porta via anche i sassi sbagliati vicini. Si perde
+  sbagliando.
+- 🛡️ **scudo** — abbattendo un boss. Para il prossimo errore, o il prossimo
+  sasso caduto, senza costare una vita.
+
+Nessuno dei due tocca il calcolo: non accorciano una domanda, non ne saltano
+una e non dicono qual è l'asteroide giusto. Non si comprano con le monete —
+si pagano con le risposte giuste.
+
 ## Quali domande escono, e perché proprio quelle
 
 Le domande non escono a caso: **il motore tiene il conto di cosa il bambino

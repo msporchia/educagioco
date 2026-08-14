@@ -283,6 +283,46 @@ che riporta da dove si è arrivati. Le tabelline in gioco adesso si riconoscono
 dai numeri di riga e colonna accesi; le altre caselle restano visibili ma
 smorzate.
 
+#### L'astronave, e cosa può e non può fare
+
+In fondo al cielo c'è una nave, e non è un ornamento: è **il secondo posto
+dove si legge come sta andando**, quello dove l'occhio è già. I cuori nella
+fascia in alto dicono il numero esatto, la nave dice la sostanza — intatta,
+poi ammaccata, poi con l'ala squarciata, il vetro crepato, il fumo e la luce
+rossa d'emergenza. Con una vita sola gli asteroidi rallentano di un quarto:
+chi è arrivato lì di solito il conto lo sa e non fa in tempo a farlo, e la
+differenza è fra chiudere la partita avendo imparato qualcosa e chiuderla e
+basta. Cresce anche: al livello 3 diventa un caccia, al 6 un incrociatore.
+
+Due potenziamenti si guadagnano **giocando**, e finiscono con la partita:
+
+| | come arriva | cosa fa |
+|---|---|---|
+| 🔫 cannone doppio | 5, 15, 25… risposte giuste di fila | i punti valgono doppio e l'onda porta via due sassi sbagliati vicini. **Si perde sbagliando** |
+| 🛡️ scudo | abbattendo un boss | para il prossimo errore, o il prossimo sasso caduto, senza costare una vita |
+
+Alla stessa regola risponde anche il cannone: **a riposo non punta niente**.
+Spazza il cielo da una parte all'altra (±54°, avanti e indietro ogni 3,4 s)
+con un moto che dipende dal solo tempo, e si ferma su un bersaglio solo dopo
+che il dito ha già scelto. La prima versione seguiva il sasso più basso —
+vivo da vedere, ma un puntatore agganciato a un asteroide tira l'occhio là, e
+quando i sassi sbagliati sono già morti finisce per indicare proprio quello
+giusto. Nemmeno un dondolio stretto attorno alla verticale bastava: passando
+sempre in mezzo si legge come «guarda lì». Per non dire niente, il cannone
+deve arrivare sopra ogni colonna.
+
+La regola che li tiene in riga è una sola: **un potenziamento non risponde
+mai al posto del bambino**. Nessuno accorcia un calcolo, ne salta uno o
+segnala qual è l'asteroide giusto — un aiuto così alzerebbe i punti e
+abbasserebbe quello che si impara, che è l'unica cosa per cui il gioco
+esiste. Possono pagare meglio chi va bene, perdonare una botta, dare più
+tempo a chi è in difficoltà. Per lo stesso motivo **non si comprano**: le
+monete sono la valuta della cameretta, e un hangar che le succhia sposterebbe
+l'equilibrio di un gioco che non c'entra niente. Qui si paga con le risposte
+giuste. I numeri e le ragioni stanno in `src/data/potenziamenti.js`; il
+disegno — nave, pianeta, sassi, raggi — in `src/grafica/spazio.js`, che di
+vite e di punti non sa niente e riceve solo fatti già decisi (`danno: 0.5`).
+
 Dentro gli asteroidi ci sono **due campagne**, in due schede: i pianeti — le
 tabelline — e le stazioni, che sono il calcolo a mente.
 
