@@ -317,3 +317,149 @@ Non è un rifacimento, ma tocca più punti di quanti sembri a prima vista:
 - Tutto il resto — ordinamento per profondità, ombre, cartello del prezzo,
   numerini volanti, anellino di pressione — non dipende da come è disegnata
   la figura sopra e resta com'è.
+
+## 0x72 — 16x16 DungeonTileset II, per il sotterraneo
+
+Questo è un secondo set, scaricato per un prototipo diverso
+(`poc/sotterraneo.html`, non ancora scritto): un dungeon esplorabile
+dall'alto a celle 16×16, con pavimenti, muri, porte, una scala che scende,
+forzieri e qualche mostro. Non c'entra con la fattoria — lo segno in questo
+stesso file solo perché è la stessa cartella di lavoro (`sorgenti/`) e lo
+stesso metodo (scaricare per davvero, ritagliare, verificare a occhio prima
+di fidarsi).
+
+**Dove sta.** `strumenti/sprite/sorgenti/0x72/`: il foglio
+`0x72_DungeonTilesetII_v1.7.png` (512×512, versione **1.7**, quella con gli
+autotile — non un ripiego), il catalogo dei ritagli in
+`pezzi.json`, e le carte che provano da dove viene: `PROVENIENZA.txt`,
+`licenza-itch-pagina.html` (l'HTML della pagina itch salvato il giorno del
+download, non solo il link), `tile_list_v1.7` e `README_originale.txt`
+(distribuiti dall'autore *dentro* lo zip stesso), più i tre atlas
+già impacchettati per gli autotile (`atlas_floor-16x16.png`,
+`atlas_walls_high-16x32.png`, `atlas_walls_low-16x16.png`) nel caso servano
+in un secondo momento invece dei ritagli singoli.
+
+**Come è arrivato qui.** La pagina itch (https://0x72.itch.io/dungeontileset-ii)
+non si scarica senza sessione autenticata, quindi il PNG viene da un mirror
+GitHub (`mosuwat/BladeEcho`, che ha committato lo zip già estratto con tutti
+i nomi originali intatti) — **verificato non essere un rifacimento**
+confrontando lo sha256 dello stesso file scaricato da altri due mirror
+indipendenti (`Logabe/escape-atlantis`, `lxxse/TwrDfns`): identico byte per
+byte su tutti e tre. La licenza invece è stata letta direttamente
+dall'HTML della pagina ufficiale, non riportata a memoria: *"You can use
+this tileset for whatever you like (CC-0)."* seguita da *"Credit is not
+necessary, but if you create something using this tileset I'd be happy to
+see your work (you can comment with a link)."* — CC0, nessuna attribuzione
+dovuta, il link "CC-0" punta a
+`tldrlegal.com/license/creative-commons-cc0-1-0-universal`.
+
+**Un colpo di fortuna che vale la pena spiegare**: l'autore di 0x72
+distribuisce, dentro lo stesso zip, un file di testo (`tile_list_v1.7`) che
+elenca ogni singolo pezzo del foglio con nome-in-inglese e coordinate in
+pixel — non è qualcosa che ho dedotto a occhio, è la fonte primaria
+dell'autore stesso, e i nomi corrispondono uno a uno ai file della cartella
+`frames/` (370 PNG già ritagliati) che lo stesso zip contiene. Ho quindi
+potuto costruire `pezzi.json` incrociando quella lista con l'ispezione
+visiva, invece di indovinare i bordi a occhio — ma **l'ho comunque
+verificata pezzo per pezzo**: ho ritagliato ogni voce di `pezzi.json`
+dal PNG e ricomposto un foglio di contatto ingrandito ×6/×8 con etichette,
+perché su un paio di tessere alte (i personaggi, 16×28 o 16×36) la prima
+prova di ritaglio usciva tagliata — non perché le coordinate fossero
+sbagliate, ma perché il foglio di contatto stesso aveva celle troppo
+piccole per pezzi più alti di 16 px. Corretto quello, il foglio finale
+torna pulito: lo script che lo genera è usa-e-getta (era nello scratchpad
+di lavoro), ma il procedimento — ritagliare da `pezzi.json`, non a mano —
+è lo stesso già descritto per gli atlas Tiny sopra.
+
+**Cosa contiene, in pratica:**
+
+- **Pavimento**: 8 varianti (`suolo-0`…`suolo-7`), tutte texture di pietra
+  con crepe diverse, nessuna a tinta piatta — si mescolano bene a caso.
+  Più una scala che scende (`scala-giu`), un buco/voragine (`buco`), una
+  grata/scaletta (`grata` — il nome originale è `floor_ladder`, ma
+  visivamente è più una grata con sbarre che una scala a pioli: verificarla
+  a occhio prima di usarla) e una trappola a punte animata in 4 fotogrammi
+  (`trappola-punte-0`…`-3`).
+- **Muri, la parte che conta di più.** Il set separa davvero due famiglie,
+  non una: il **muro frontale** (quello che si vede attraversando una
+  stanza verso l'alto) ha la fascia alta merlata e quella bassa in mattoni
+  come due tessere sovrapposte — `muro-alto-centro`/`-estremita-sx`/`-dx` e
+  `muro-basso-centro`/`-estremita-sx`/`-dx` — e **si ripete e si chiude
+  bene**: le estremità sono pensate per stare ai lati, il centro per
+  ripetersi in mezzo. Poi c'è una **seconda famiglia per i lati est/ovest
+  e i pilastri**, `muro-o-*`/`muro-e-*` (`-cima`, `-alto`, `-centro`,
+  `-basso`) più le varianti `-esterno-*` (la stessa parete vista da fuori
+  l'edificio invece che da dentro la stanza) e `-bivio`/`-bivio-alto` (dove
+  un corridoio si stacca lateralmente). **Questa seconda famiglia è un
+  autotile a blob** (nello stile "3x3 minimal" che Godot usa per i
+  terreni, lo dice lo stesso `README_originale.txt` dentro lo zip): **da
+  sola una tessera non è quasi mai un disegno completo** — `muro-o-cima`
+  per esempio è quasi tutta trasparente, con solo un accenno in basso, e
+  prende senso solo impilata sopra `muro-o-alto`/`-centro`/`-basso`. Il
+  foglio di contatto lo mostra chiaramente: chi li usa deve comporli in
+  colonna, non piazzarne uno isolato aspettandosi un pilastro intero.
+  **Quello che manca davvero**: non esiste un'unica tessera diagonale per
+  l'angolo esterno o per l'angolo interno di una stanza — il set non la
+  fornisce, l'angolo si ottiene accostando l'estremità del muro frontale
+  (`muro-alto-estremita-sx`) alla cima del muro laterale
+  (`muro-o-cima`), due pezzi distinti messi vicini, non un pezzo solo.
+  Chi disegna la mappa deve saperlo prima di cercare un file che non c'è.
+  Due pilastri decorativi indipendenti completano il set
+  (`pilastro`, `pilastro-muro`, 16×48, più alti di una singola cella).
+- **Porte e scale**: telaio in tre pezzi (`porta-telaio-sx/dx/alto`) più
+  porta chiusa (`porta-chiusa`, un'unica tessera 32×32 già completa, non un
+  blob) e porta aperta (`porta-aperta`, idem).
+- **Forzieri, monete, pozioni**: `forziere-chiuso`/`-mezzo`/`-aperto` sono
+  davvero tre stadi distinti (non un'animazione riciclata), `moneta-0`…`-3`
+  è l'animazione della moneta che gira (tessere minuscole, 6×7 px — non è
+  un errore di ritaglio, è così nel foglio originale), quattro colori di
+  pozione (`pozione-rossa/blu/verde/gialla`) e tre cuori per l'interfaccia
+  (`cuore-pieno/mezzo/vuoto`), non richiesti dal compito ma quasi gratis da
+  includere visto che erano nello stesso foglio.
+- **Cosa NON c'è**: nessuna torcia (né fissa né animata) nonostante il set
+  abbia fontane e bracieri decorativi — cercata esplicitamente nei nomi dei
+  370 file della cartella `frames/`, non c'è. Niente ratto/topo: stessa
+  ricerca, stesso esito negativo — i piccoli mostri disponibili sono
+  scheletro, goblin, orco, oltre a una decina di altre creature fantasy
+  (lucertole, nani, maghi, zombi, angeli) che qui non servono e sono state
+  ignorate in fase di ritaglio.
+
+**Personaggi: misure diverse dal terreno, come avvisa il compito.** Non
+sono 16×16: il cavaliere (`eroe-fermo-0..3`, `eroe-corsa-0..3`,
+`eroe-colpito-0`) è **16×28**, coerente con quasi tutti gli umanoidi del
+set (elfi, maghi, nani, lucertole sono tutti 16×28); scheletro e goblin
+restano **16×16** perché sono piccoli e tozzi; l'orco è **16×23**
+(via di mezzo); il mostro grosso (`mostro-grosso-fermo-0..3`,
+`mostro-grosso-corsa-0..3` — nel foglio originale è "big demon", il boss)
+è **32×36**, doppio in larghezza. Disegnarli tutti ancorati al piede (non
+al centro) è l'unico modo per cui restino appoggiati alla stessa cella di
+terreno nonostante l'altezza diversa — lo stesso principio già usato in
+`src/grafica/atlante.js` per "il piede, lo specchio, la scala intera".
+
+**Inventario: armi sì, difesa no.** Il foglio ha **26 armi diverse**
+(`weapon_*` nel `tile_list_v1.7`: coltelli, sciabole, mazze, asce,
+martelli, un arco, una lancia, perfino bastoni magici) — molte più delle
+tre che servivano, quindi la scelta non era "cosa c'è" ma "cosa si legge
+a colpo d'occhio a 16 px". Tre misure ben separate, non solo per nome:
+`arma-1` è `weapon_knife` (293,10, **6×13**, la più stretta del foglio),
+`arma-2` è `weapon_regular_sword` (323,10, **10×21**, la sagoma di spada
+più pulita — niente intagli o decorazioni che si perdono in piccolo),
+`arma-3` è `weapon_double_axe` (288,167, **16×24**, larga quanto un'intera
+cella): non è la più lunga disponibile (`weapon_big_hammer` arriva a 37 px
+di altezza), ma è quella che **si allarga** invece di allungarsi, ed è
+proprio l'ingombro in larghezza a farla leggere come "la più grossa" anche
+in miniatura, dove un'altezza in più si nota meno di una sagoma più
+tozza. **Corazze, scudi, elmi: cercati e non ci sono.** Ho scandito tutti
+e 370 i nomi dei file distribuiti nello zip (non solo i 26 `weapon_*`, la
+lista intera) cercando shield/helm/armor/boot/glove/cape/crown/ring —
+niente: 0x72 equipaggia solo le mani, non la testa o il corpo. Per un
+inventario che preveda armature va cercato un altro set (o disegnate a
+mano, come già ipotizzato per cane e gatto della fattoria) — non ho
+aggiunto `difesa-1/2/3` a `pezzi.json` per questo, e sarebbe stato
+inventare pezzi che il foglio non contiene.
+
+**Due oggetti di scena**, per non far sembrare le stanze vuote:
+`scena-cassa` (`crate`, 288,408, 16×24, una cassa di legno con le fasce
+arancioni) e `scena-teschio` (`skull`, 288,432, 16×16, un teschio isolato
+sul pavimento). Cercati anche barile, ossa sparse e ragnatele — con lo
+stesso giro sui 370 nomi — e non ci sono: solo questi due.

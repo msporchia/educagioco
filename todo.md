@@ -256,6 +256,116 @@ nessun test prende:
 
 ---
 
+## Le storie di «Prima e dopo» sono fatte di emoji, e non dovrebbero
+
+Il 15 agosto 2026 sono state riviste tutte e 44 le storie del gioco: undici
+avevano una fila che non stava in piedi (il burro fra il latte e il formaggio,
+la cassetta degli attrezzi dopo il martello, l'uovo di gallina davanti al
+bruco). Sistemate. Ma il lavoro per sistemarle ha reso evidente **la vera
+causa**, che non è stata sistemata affatto.
+
+Una storia, oggi, è una fila di emoji. Il che vuol dire che la storia non si
+sceglie: si cerca. Si parte da cosa il set di emoji mette a disposizione e si
+prova a incastrarci un prima e un dopo — e quando l'incastro non torna, o si
+scarta la storia (la farfalla è stata scartata: non esiste l'emoji del bruco
+nel bozzolo) o si accetta un passo che «più o meno» va bene: 🥣 per l'impasto
+del pane, 🏰 per il castello di sabbia, 🧴 per lo shampoo. Il criterio è
+diventato *quali emoji stanno insieme senza stonare*, che è un criterio di
+inventario, non di didattica.
+
+E il costo grosso non sono i tre passi zoppi: è **tutto quello che non si può
+raccontare**. Un bambino che cade e si sbuccia il ginocchio, e poi il cerotto.
+Uno che rompe qualcosa e lo dice. Uno triste che viene consolato. La sequenza
+di un litigio che finisce bene. Sono esattamente le storie che a quattro anni
+servono di più — causa ed effetto sulle *persone*, non sugli oggetti — e non ce
+n'è nemmeno una, perché con le emoji non si disegnano.
+
+**La strada**: le storie diventano scene disegnate, come tutto il resto del
+progetto (`src/grafica/`: i pittori, `corpo.js`, le schede di dati). Un passo di
+una storia sarebbe una scheda — chi c'è, che faccia fa, cosa tiene in mano —
+e non una stringa di due caratteri. Il gioco è già pronto a riceverlo: `passi`
+è un array opaco che il motore non guarda mai dentro, e solo `viste/Storia.vue`
+lo stampa. Cambiare il contenuto dei passi non tocca né `motore/` né la
+campagna.
+
+Non è un lavoro da infilare in coda a una correzione: è il gioco rifatto nel
+suo pezzo più importante. Va guardato quando c'è tempo per guardarlo bene.
+Vedi anche il tetto della resa grafica, che per il castello è già stato
+ribaltato una volta.
+
+---
+
+## Il sotterraneo, e lo spazio dove si cammina
+
+Il prototipo è fatto e regge: `poc/sotterraneo.html` (a rettangoli) e
+`poc/sotterraneo-gfx.html` (con gli sprite di **0x72 DungeonTileset II**, CC-0,
+10 KB di atlante dentro il file). Lo stato del lavoro, le decisioni prese e i
+numeri misurati stanno in [`poc/sotterraneo.md`](poc/sotterraneo.md), che è il
+posto da leggere prima di ripartire — qui c'è solo cosa manca.
+
+**Fatto e già in `src/`**: `src/grafica/tessere.js` sa scegliere le bordature a
+**otto vicini** (l'angolo interno concavo, che a quattro vicini non si
+distingue da una parete dritta), e `src/motore/passi.js` è il concetto di
+**spazio percorribile** che due giochi stavano scrivendo ognuno per conto suo —
+`percorso`, `raggiungibili`, `accanto`, `primaLibera`, `passiFra`. La regola è
+che lo spazio arriva da fuori: si passa `buona(x, y)` e il motore non sa perché
+una cella sia buona. Provati in `unita/tessere` e `unita/passi`.
+
+### 1. Pubblicare il sotterraneo come gioco in prova
+
+Va portato in `src/giochi/sotterraneo/` con la convenzione
+(`src/giochi/CONVENZIONE.md`): `dati/` con le sue `guasti…()`, `motore/`
+(livello + corsa + banco, sopra `passi.js`), `scena/tela.js`, `viste/`,
+`Gioco.vue`, `stile.css`; registrazione in `indice.js` e `schermate.js`,
+avanzamento via `campagne.js`, traguardi nel manifesto, `sperimentale: true`.
+Più `test/unita/sotterraneo.test.mjs` che **giochi le tappe davvero** col
+giocatore finto, e `docs/sotterraneo.md`.
+
+Due cose da non dimenticare, perché sono quelle che si scordano:
+
+- **Le domande vere.** Adesso il prototipo ha un banchetto finto di conti
+  dentro il file. Nel gioco vanno prese da `domandaPerGioco({ difficolta,
+  evita })` di `src/quiz/scelta.js` col componente `Domanda.vue`, come fa il
+  dungeon: la difficoltà da 0 a 1 la portano la profondità del piano e il
+  rincaro della stanza, e i saperi spenti in *Genitori → cosa sa* vanno
+  rispettati — si degrada, non si sbarra.
+- **La barra della vita sopra il personaggio**, non nella fascia in cima: in
+  `scena/tela.js`, dove già si disegnano le barrette dei mostri feriti.
+
+Quello che il prototipo **non** risponde, e che va deciso prima di pubblicare:
+cosa resta fra una discesa e l'altra. Se l'equipaggiamento persiste, la
+campagna diventa un'altra cosa e va pensata l'economia; se non resta, serve un
+motivo diverso per riaprire il gioco domani.
+
+### 2. La fattoria: chi cammina non attraversa le case
+
+Oggi `Attore.muovi()` in `scena/tela.js` conosce solo `dentroMio` — dentro la
+terra comprata — quindi Watson passa dentro case, fontane e staccionate. Il
+catalogo però **dichiara già tutto quello che serve**: `piede` è l'ingombro
+vero (e cambia col verso: `piedeDi()` risolve i giri, staccionata sdraiata
+`[2,1]` contro palo in piedi `[1,2]`), e `sotto: true` distingue ciò che è
+*terreno* — orto, fiori, radura — da ciò che è oggetto. Quella riga, che oggi
+serve solo all'ordine di disegno, è già la risposta: **si cammina su quello che
+sta sotto, non su quello che sta sopra**.
+
+- **Un solo `calpestabile(cx, cy)`** nel motore, che mette insieme le quattro
+  cose che oggi stanno in quattro posti: è terra mia, non è acqua dipinta, non
+  c'è un ostacolo (ceppo, masso, tronco col suo piede), non c'è un oggetto
+  solido — cioè senza `sotto: true` — con l'ingombro preso da `piedeDi(cosa)` e
+  non da `v.piede`, o una staccionata girata bloccherebbe le celle sbagliate.
+  Poi `libera()` e `cellaLibera()` si riscrivono sopra quello invece di
+  rifare ognuna il proprio conto.
+- **Gli attori camminano con `passi.js`**: `percorso()` per aggirare invece di
+  andare in linea retta, `primaLibera()` per non piazzare un animale sopra una
+  fontana. E il vagabondaggio esce da `scena/tela.js`, dove è **una regola
+  dentro il disegno**: va nel motore, e la scena torna a disegnare e basta.
+- **I test** (`unita/fattoria`): un cane non entra in casa, una staccionata
+  girata blocca le celle giuste, l'acqua ferma chi cammina, una meta
+  irraggiungibile non fa camminare nessuno dentro i muri. È il genere di guasto
+  che si vede solo a schermo, e tardi.
+
+---
+
 ## Quello che vale più di tutto il resto
 
 **Giocarlo con i miei due.** In mezz'ora di prova erano usciti: l'osso

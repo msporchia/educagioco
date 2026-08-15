@@ -26,13 +26,32 @@ Le tre cose che fa:
 
 Il risultato è un PNG solo in base64 dentro `poc/castello-atlante.js`, con la
 tabella dei ritagli accanto: un file solo, come vuole il build.
+
+── QUESTO ATTREZZO È PROVVISORIO ──
+`atlante.py` non indovina più niente: legge il foglietto `.json` accanto alla
+sorgente (vedi `FORMATO.md`) e ignora i fogli che non ce l'hanno. È la strada
+giusta, e questo file è la strada vecchia — indovina tutto, e infatti sbaglia
+in silenzio: sei torri escono con un pezzo di scacchiera addosso, e i nomi
+dei terreni sono quelli che gli abbiamo dato contando le figure a occhio, non
+quelli delle figure (`erba-alta` è un lastricato).
+
+Quello che manca al foglietto per descrivere questo foglio è che qui le
+griglie sono **due**, e nessuna delle due ha il passo uguale alla cella. Le
+misure sono queste, e sono l'unica cosa di questo file che valga la pena
+salvare:
+
+    torri     12 colonne a passo 117,33 px, tre bande: y 4-115, 115-245,
+              245-380 (nel secondo foglio: 44-120, 120-193, 193-268)
+    terreni   celle da 74 px a passo 99 × 82, la prima a (10, 443)
+    scala     74 → 32, cioè una tessera di terreno vale 32 px veri
+
+Quando il foglietto saprà dire «una tabella di celle a passo P», questo file
+si butta e restano quelle sette righe.
 """
 import base64
 import io
-import math
-import json
 import sys
-from collections import deque
+from collections import Counter, deque
 from pathlib import Path
 
 from PIL import Image
@@ -80,120 +99,52 @@ def neutro(c, t=14):
     return abs(c[0] - c[1]) < t and abs(c[1] - c[2]) < t and abs(c[0] - c[2]) < t
 
 
-def salti_di(valori, soglia=15):
-    """Dove la striscia cambia gradino. Due salti a un pixel di distanza
-    sono lo stesso salto sfumato dal JPEG: si fondono."""
-    grezzi = [i - 0.5 for i in range(1, len(valori)) if abs(valori[i] - valori[i - 1]) > soglia]
-    gruppi = []
-    for v in grezzi:
-        if gruppi and v - gruppi[-1][-1] <= 3:
-            gruppi[-1].append(v)
-        else:
-            gruppi.append([v])
-    return [sum(g) / len(g) for g in gruppi]
-
-
-def passo_di(salti):
-    """Passo e fase da una fila di salti regolari. Il passo si prende dalla
-    distanza fra il primo e l'ultimo diviso quanti ce ne stanno: su cento
-    caselle l'errore di misura di una si divide per cento."""
-    if len(salti) < 6:
-        return None
-    d = sorted(salti[i + 1] - salti[i] for i in range(len(salti) - 1))
-    grezzo = d[len(d) // 2]
-    base = salti[len(salti) // 2]           # un salto di mezzo, non il primo:
-    #                                          il primo è quello che ha più
-    #                                          probabilità di essere spurio
-    fuori = [s for s in salti if abs((s - base) / grezzo - round((s - base) / grezzo)) < 0.2]
-    # quante caselle stanno fra il primo e l'ultimo: si contano una per
-    # una, non dividendo la distanza per il passo grezzo. Con centoventi
-    # caselle un passo grezzo sbagliato di due decimi ne conta due di più,
-    # e il passo che ne esce è sbagliato per sempre.
-    n = sum(max(1, round((fuori[i + 1] - fuori[i]) / grezzo)) for i in range(len(fuori) - 1))
-    if n < 4:
-        return None
-    p = (fuori[-1] - fuori[0]) / n
-    disp = sum(abs((s - fuori[0]) / p - round((s - fuori[0]) / p)) for s in fuori) / len(fuori)
-    # quanti salti stanno in fila conta più di quanto stanno dritti: una
-    # riga di fondo scoperto ne allinea centoventi, una che attraversa una
-    # torre ne allinea quattro e sembra regolarissima
-    return p, fuori[0] % p, len(fuori), disp
-
-
-def scacchiera_di(im):
-    """Passo, fasi e i due grigi della scacchiera.
-
-    Si misurano **dai salti** lungo i bordi del foglio, dove il fondo è
-    scoperto, e non cercando a tentoni: un passo sbagliato di due centesimi,
-    moltiplicato per centoventi caselle, sfasa il pattern di due caselle
-    piene, e la scacchiera stimata non combacia più con quella vera. Le due
-    fasi si misurano separate perché **non sono la stessa**: il foglio è
-    ritagliato dove capita, e in alto ne resta mezza casella."""
+def grigi_di(im):
+    """I due grigi della scacchiera «trasparente», che di trasparente non ha
+    niente perché è un JPEG: i due valori più frequenti fra i pixel neutri
+    dei bordi, dove il fondo è scoperto."""
     W, H = im.size
     px = im.load()
-
-    def asse(file, quanti, leggi):
-        """Il passo lungo un asse, letto sulle file di bordo. Non si media
-        con l'altro asse: i due passi sono diversi di un centesimo, e un
-        centesimo alla centesima casella è un pixel."""
-        letture = [s for k in file
-                   if (s := passo_di(salti_di([sum(leggi(k, i)) / 3 for i in range(quanti)])))]
-        if not letture:
-            return 12.0, 0.0
-        p, f, _, _ = max(letture, key=lambda s: (s[2], -s[3]))
-        return p, f
-
-    passo_x, fx = asse([0, 1, 2, H - 3, H - 2, H - 1], W, lambda y, x: px[x, y])
-    passo_y, fy = asse([0, 1, 2, W - 3, W - 2, W - 1], H, lambda x, y: px[x, y])
-
-    # ── il ritocco delle sole fasi ──
-    # Il passo misurato è buono; la fase può essere presa da una fila
-    # sporca, e allora tutto il modello scivola di mezza casella. Si prova
-    # e si tiene quella che separa di più i due grigi del fondo.
-    orlo = [(x, y, sum(px[x, y]) / 3)
-            for x in range(0, W, 2) for y in (0, 1, H - 2, H - 1) if neutro(px[x, y])]
-    orlo += [(x, y, sum(px[x, y]) / 3)
-             for y in range(0, H, 2) for x in (0, 1, W - 2, W - 1) if neutro(px[x, y])]
-
-    def separazione(ax, ay):
-        c, s = [], []
-        for x, y, v in orlo:
-            pari = (math.floor((x - ax) / passo_x) + math.floor((y - ay) / passo_y)) % 2 == 0
-            (c if pari else s).append(v)
-        if len(c) < 30 or len(s) < 30:
-            return -1e9, 0, 0
-        mc, ms = sorted(c)[len(c) // 2], sorted(s)[len(s) // 2]
-        return abs(mc - ms), mc, ms
-
-    fx, fy = max(((fx + i * 0.5, fy + j * 0.5)
-                  for i in range(int(passo_x * 2))
-                  for j in range(int(passo_y * 2))),
-                 key=lambda t: separazione(*t)[0])
-    _, a, b = separazione(fx, fy)
-    return passo_x, passo_y, fx, fy, a, b
+    conto = Counter()
+    orlo = [(x, y) for x in range(W) for y in (0, 1, H - 2, H - 1)]
+    orlo += [(x, y) for y in range(H) for x in (0, 1, W - 2, W - 1)]
+    for x, y in orlo:
+        c = px[x, y]
+        if neutro(c, 10):
+            conto[round(sum(c) / 3)] += 1
+    picchi = []
+    for v, _ in conto.most_common():
+        if all(abs(v - p) > 12 for p in picchi):
+            picchi.append(v)
+        if len(picchi) == 2:
+            break
+    return picchi if len(picchi) == 2 else [67, 110]
 
 
-def maschera_di(im):
-    """Vero dove c'è disegno.
+def maschera_di(im, stretta=False):
+    """Vero dove c'è disegno. Ce ne vogliono due, e servono a due cose.
 
-    Il fondo si riconosce dal **pattern**, non dal colore: mezze torri sono
-    di pietra grigia, e i due grigi della scacchiera stanno in mezzo alla
-    loro ombreggiatura. Un pixel è fondo se è neutro *e* combacia col
-    grigio che la scacchiera avrebbe proprio lì. La coincidenza casuale
-    capita, ma capita a scacchi — e un allagamento a quattro vicini non
-    attraversa una scacchiera, che è tutto quello che serve."""
+    Quella **larga** — grigio neutro e scuro — dice dove stanno le figure:
+    il fondo esce nero pieno e i pezzi si contano bene. Ma cancella la
+    pietra delle torri, che è dello stesso grigio.
+
+    Quella **stretta** tiene le due tinte del fondo — cinque livelli di grigio
+    — cinque livelli di grigio e basta — ed è quella con cui si toglie il
+    fondo davvero. Qualche pixel di pietra ci casca dentro lo stesso, ma ci
+    casca **sparso**, e un allagamento a quattro vicini non passa
+    attraverso dei granelli: è tutto quello che serve."""
     W, H = im.size
     px = im.load()
-    passo_x, passo_y, fx, fy, a, b = scacchiera_di(im)
+    a, b = grigi_di(im)
     m = bytearray(W * H)
     for y in range(H):
         r = y * W
-        j = math.floor((y - fy) / passo_y)
         for x in range(W):
             c = px[x, y]
-            atteso = a if (math.floor((x - fx) / passo_x) + j) % 2 == 0 else b
             v = (c[0] + c[1] + c[2]) / 3
-            if not (neutro(c, 16) and abs(v - atteso) <= 13):
+            fondo = (neutro(c, 12) and (abs(v - a) < 9 or abs(v - b) < 9)) if stretta \
+                else (neutro(c, 14) and v < 130)
+            if not fondo:
                 m[r + x] = 1
 
     # i separatori fra una colonna e l'altra: righe verticali scure e
@@ -296,6 +247,20 @@ def ritaglia(im, m, W, box):
     return sub
 
 
+def piena(im, quota=0.9):
+    """Se il disegno tocca tutti e quattro i bordi ed è quasi quadrato, è
+    una tessera di terreno: sta in griglia e va alla misura esatta."""
+    w, h = im.size
+    if not (0.85 < w / h < 1.18 and w > 50):
+        return False
+    a = im.getchannel('A').load()
+    for fila in ([(x, 0) for x in range(w)], [(x, h - 1) for x in range(w)],
+                 [(0, y) for y in range(h)], [(w - 1, y) for y in range(h)]):
+        if sum(1 for x, y in fila if a[x, y] > 128) < len(fila) * quota:
+            return False
+    return True
+
+
 def rimpicciolisci(im, scala):
     """Ridurre un RGBA sbava il colore dei pixel trasparenti sui vicini.
     Si tinge il vuoto col colore medio di quello che c'è, si riduce, e si
@@ -365,23 +330,23 @@ def main():
     # ── foglio 1: torri, terreni, alberi ──
     f1 = Image.open(SORGENTI / 'tower_def.jpeg').convert('RGB')
     W1, H1 = f1.size
-    m1 = maschera_di(f1)
-    for nome, box in torri_da(f1, m1, W1, TORRI_1, [(4, 115), (115, 245), (245, 380)]).items():
-        pezzi[nome] = ritaglia(f1, m1, W1, box); sorgente[nome] = 1
+    largo1, stretto1 = maschera_di(f1), maschera_di(f1, stretta=True)
+    for nome, box in torri_da(f1, largo1, W1, TORRI_1, [(4, 115), (115, 245), (245, 380)]).items():
+        pezzi[nome] = ritaglia(f1, stretto1, W1, box); sorgente[nome] = 1
 
-    trovati = componenti(m1, W1, H1, (0, 425, W1, H1))
+    trovati = componenti(largo1, W1, H1, (0, 425, W1, H1))
     if len(trovati) != len(TERRENI_1):
         print(f'! terreni: trovati {len(trovati)}, nomi {len(TERRENI_1)}')
     for nome, box in zip(TERRENI_1, trovati):
         if nome:
-            pezzi[nome] = ritaglia(f1, m1, W1, box); sorgente[nome] = 1
+            pezzi[nome] = ritaglia(f1, stretto1, W1, box); sorgente[nome] = 1
 
     # ── foglio 2: solo le torri, che sono l'altra metà del catalogo ──
     f2 = Image.open(SORGENTI / 'tower_def2.jpeg').convert('RGB')
     W2 = f2.width
-    m2 = maschera_di(f2)
-    for nome, box in torri_da(f2, m2, W2, TORRI_2, [(44, 120), (120, 193), (193, 268)]).items():
-        pezzi[nome] = ritaglia(f2, m2, W2, box); sorgente[nome] = 2
+    largo2, stretto2 = maschera_di(f2), maschera_di(f2, stretta=True)
+    for nome, box in torri_da(f2, largo2, W2, TORRI_2, [(44, 120), (120, 193), (193, 268)]).items():
+        pezzi[nome] = ritaglia(f2, stretto2, W2, box); sorgente[nome] = 2
 
     if provini:
         prov = REPO / 'poc' / 'scatti'
@@ -390,7 +355,21 @@ def main():
             im.save(prov / f'grezzo-{nome}.png')
 
     # ── alla misura vera, poi in un foglio solo ──
-    piccoli = {n: rimpicciolisci(im, SCALA) for n, im in pezzi.items()}
+    # Una tessera di terreno va alla misura esatta, non a quella che esce
+    # dal conto: 31 px invece di 32 vuol dire una fuga scura fra una
+    # tessera e l'altra, e un prato che sembra un pavimento di piastrelle.
+    # Si riconosce da sola — è l'unica cosa che riempie il suo quadrato
+    # fino ai quattro bordi.
+    def alla_misura(im):
+        if not piena(im):
+            return rimpicciolisci(im, SCALA)
+        # il margine di ritaglio porta con sé un filo di scacchiera: sulla
+        # tessera diventa una fuga scura fra una zolla e l'altra
+        m = 3
+        return im.crop((m, m, im.width - m, im.height - m)) \
+                 .resize((TESSERA, TESSERA), Image.LANCZOS).convert('RGBA')
+
+    piccoli = {n: alla_misura(im) for n, im in pezzi.items()}
     foglio, posti = impacchetta(piccoli)
     foglio = taglia_tavolozza(foglio, COLORI)
 
@@ -398,7 +377,11 @@ def main():
     foglio.save(buf, 'PNG', optimize=True)
     dati = base64.b64encode(buf.getvalue()).decode()
 
-    righe = ',\n  '.join(f"{n}: [{v[0]}, {v[1]}, {v[2]}, {v[3]}]" for n, v in sorted(posti.items()))
+    # i nomi col trattino vogliono gli apici: `strada-v:` da solo non è
+    # una chiave valida, ed è un errore di sintassi che spegne tutto il file
+    righe = ',\n  '.join(f"{n if n.isidentifier() else repr(n)}: "
+                         f"[{v[0]}, {v[1]}, {v[2]}, {v[3]}]"
+                         for n, v in sorted(posti.items()))
     USCITA.write_text(
         "/* GENERATO da strumenti/sprite/torri.py — non si scrive a mano.\n\n"
         f"   {len(posti)} figure ritagliate da `strumenti/sprite/sorgenti/tower_def.jpeg`\n"
@@ -409,8 +392,22 @@ def main():
         f"export const PEZZI = {{\n  {righe},\n}}\n\n"
         f"export const ATLANTE = 'data:image/png;base64,{dati}'\n", encoding='utf-8')
 
+    # ...e dentro il poc, che deve aprirsi col doppio click: da `file://`
+    # Chrome non lascia importare un modulo, quindi l'atlante ci sta dentro
+    poc = REPO / 'poc' / 'castello-gfx.html'
+    if poc.exists():
+        testo = poc.read_text(encoding='utf-8')
+        a = testo.index('/* ↓↓ atlante ↓↓')
+        a = testo.index('\n', a) + 1
+        b = testo.index('/* ↑↑ atlante ↑↑')
+        poc.write_text(testo[:a] + f'const TESSERA = {TESSERA}\n'
+                       f'const PEZZI = {{\n  {righe},\n}}\n'
+                       f"const ATLANTE = 'data:image/png;base64,{dati}'\n" + testo[b:],
+                       encoding='utf-8')
+
     print(f'{len(posti)} figure, atlante {foglio.width}×{foglio.height}, '
-          f'{len(buf.getvalue()) / 1024:.0f} KB → {USCITA.relative_to(REPO)}')
+          f'{len(buf.getvalue()) / 1024:.0f} KB → {USCITA.relative_to(REPO)}'
+          + (' e poc/castello-gfx.html' if poc.exists() else ''))
 
 
 if __name__ == '__main__':

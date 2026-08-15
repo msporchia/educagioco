@@ -37,6 +37,12 @@
    Chi non dichiara un mondo lo prende dal canvas, com'è sempre stato,
    e la vista resta l'identità: per tutti gli altri giochi qui non
    cambia niente.
+
+   Un mondo può chiedere anche `passoIntero: true`, e allora la
+   telecamera si ferma sugli ingrandimenti interi invece di riempire lo
+   schermo al pixel. Serve a chi dipinge con degli sprite — vedi
+   `atlante.js` — e a nessun altro: una figura fatta di pixel, ingrandita
+   di una volta e mezza, si sfrangia.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Il pennello: il contesto 2D più le poche scorciatoie che nel disegno
@@ -156,6 +162,20 @@ export function creaTela(canvas, pittori,
     const visibile = Hc
     const base = Math.min(Wc / W, visibile / H)
     mira.k = base * zoom
+    /* ── un mondo a tessere si ferma sugli interi ──
+       Chi dipinge coi poligoni prende qualunque scala e sta bene. Chi
+       dipinge con degli sprite no: a 1,4 ingrandimenti i pixel si
+       sfrangiano, e sfrangiato è più brutto di piccolo. Un mondo che
+       dichiara `passoIntero` rinuncia a riempire lo schermo fino
+       all'ultimo pixel e in cambio resta nitido — e resta indietro un
+       margine, che è il prezzo vero e va visto, non nascosto.
+
+       Si arrotonda il *prodotto* S·k, non k: è quello che finisce sullo
+       schermo, perché i pittori moltiplicano già per S. */
+    if (mondo && mondo.passoIntero) {
+      const passo = Math.max(1, Math.floor(mira.k * S))
+      mira.k = passo / S
+    }
     // lo scostamento è quello che centra il mondo nella fascia libera, più
     // quanto l'ha spostato il dito; oltre il bordo non si va
     const spanX = Math.max(0, W * mira.k - Wc), spanY = Math.max(0, H * mira.k - visibile)

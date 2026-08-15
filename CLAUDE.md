@@ -169,6 +169,14 @@ committate: non è ricostruibile da git.
   emoji le disegna il telefono, quindi hanno lo stile di Apple in mezzo
   a uno schermo disegnato a mano, non si tingono dell'ambiente e non
   tremano quando le colpisci.
+  Poi ci sono due file **predisposti e non ancora agganciati a niente**,
+  che servono a disegnare con degli sprite invece che coi poligoni:
+  `atlante.js` (un foglio di figure e come si posano: il piede, lo
+  specchio, la scala intera) e `tessere.js` (*quale* tessera va in una
+  cella, ricavata dai vicini — strade, pozze, recinti; niente canvas,
+  gira in Node e si prova in `unita/tessere`). Un mondo a tessere chiede
+  alla tela `passoIntero: true`, se no gli sprite si sfrangiano. Il
+  prototipo che li giustifica è `poc/castello-gfx.html`.
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`
