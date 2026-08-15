@@ -27,6 +27,8 @@ from PIL import Image
 
 T = 16
 QUI = Path(__file__).parent
+REPO = Path(__file__).resolve().parents[2]
+SORGENTI = QUI / 'sorgenti' / 'gfx'
 
 
 # ── il dizionario delle tessere non sta qui ──────────────────────────
@@ -35,7 +37,7 @@ QUI = Path(__file__).parent
 # due copie di una tabella vogliono dire, prima o poi, due tabelle diverse
 # — e quel guasto si presenta come uno sprite sbagliato a schermo, che è
 # il modo peggiore di scoprirlo. Aggiungere una tessera è una riga di là.
-TESSERE_JS = Path(__file__).parent.parent / 'src/giochi/fattoria/dati/tessere.js'
+TESSERE_JS = REPO / 'src/giochi/fattoria/dati/tessere.js'
 
 
 def leggi_tessere():
@@ -158,11 +160,11 @@ def provini(ritagli, dove):
     print('provini in', dove)
 
 
-MODULO = """/* GENERATO da poc/atlante-gfx.py — non si scrive a mano.
+MODULO = """/* GENERATO da strumenti/sprite/atlante.py — non si scrive a mano.
 
    L'atlante è ritagliato dal set CC0 di ArMM1998 (Zelda-like tilesets and
    sprites, https://opengameart.org/content/zelda-like-tilesets-and-sprites)
-   più gli attori che stanno in `poc/attori/`. Il PNG intero pesa {kb} KB:
+   più gli attori che stanno in `strumenti/sprite/attori/`. Il PNG intero pesa {kb} KB:
    sta qui dentro in base64 perché il build deve restare un file solo.
 
    PEZZI: nome → [x, y, larghezza, altezza] dentro l'atlante. */
@@ -178,7 +180,7 @@ export const FOTOGRAMMI = 4
 export const pezzoAttore = (chi, verso, fr) => PEZZI[`${{chi}}_${{verso}}${{fr}}`] || null
 
 /* Gli attori che l'atlante contiene davvero, ricavati dai pezzi invece che
-   scritti a mano: aggiungerne uno è mettere un png in `poc/attori/`. */
+   scritti a mano: aggiungerne uno è mettere un png in `strumenti/sprite/attori/`. */
 export const ATTORI = [...new Set(Object.keys(PEZZI)
   .map(n => /^(.+)_giu0$/.exec(n)).filter(Boolean).map(m => m[1]))].sort()
 """
@@ -191,20 +193,17 @@ def scrivi_modulo(b64, mappa):
     vogliono dire, prima o poi, un atlante e una tabella che non
     combaciano più — e quel guasto si presenta come uno sprite sbagliato
     a schermo, che è il modo peggiore di scoprirlo."""
-    dove = QUI.parent / 'src' / 'giochi' / 'fattoria' / 'dati' / 'atlante.js'
+    dove = REPO / 'src/giochi/fattoria/dati/atlante.js'
     if not dove.parent.is_dir():
         return
     dove.write_text(MODULO.format(
         kb=len(b64) * 3 // 4 // 1024, b64=b64,
         mappa=json.dumps(mappa, separators=(',', ':'), sort_keys=True)))
-    print(f'  → {dove.relative_to(QUI.parent)}')
+    print(f'  → {dove.relative_to(REPO)}')
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        return 1
-    gfx = Path(sys.argv[1]).expanduser()
+    gfx = Path(sys.argv[1]).expanduser() if len(sys.argv) > 1 else SORGENTI
     if not (gfx / 'Overworld.png').exists():
         print(f'in {gfx} non c\'è Overworld.png — passa la cartella gfx/ dello zip')
         return 1
@@ -215,7 +214,7 @@ def main():
     b64 = base64.b64encode(png.read_bytes()).decode()
     png.unlink()
 
-    pagina = QUI / 'fattoria-gfx.html'
+    pagina = REPO / 'poc/fattoria-gfx.html'
     testo = pagina.read_text()
     testo = re.sub(r"(const ATLANTE = 'data:image/png;base64,)[^']*'",
                    lambda m: m.group(1) + b64 + "'", testo, count=1)
@@ -230,7 +229,7 @@ def main():
           f'{len(b64) * 3 // 4 // 1024} KB di PNG, {len(mappa)} pezzi '
           f'→ {pagina.name} ({len(testo) // 1024} KB)')
     if '--provini' in sys.argv:
-        provini(ritagli, QUI / 'scatti' / 'atlante-gfx.png')
+        provini(ritagli, REPO / 'poc/scatti/atlante-gfx.png')
     return 0
 
 

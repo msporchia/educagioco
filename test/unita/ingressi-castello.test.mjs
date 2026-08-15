@@ -22,7 +22,7 @@
      · da dove arriva l'ondata si sa **tre ondate prima**, se no
        spostare una torre è una carezza invece che una mossa.
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, MONDO, ingressiDi, postiDi,
+import { TAPPE, LIBERA, MONDO, CFG, ingressiDi, postiDi,
          PIAZZOLE_PER_INGRESSO } from '../../src/data/castello.js'
 import { Percorso } from '../../src/motore/castello/percorso.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
@@ -128,6 +128,36 @@ for (const t of doppie) {
   const divise = new Set(c.nemici.map(n => n.via))
   controlla('l\'ondata che entra da tutte e due si divide davvero', divise.size === 2)
   nota('all\'ondata 3 in campo ci sono nemici su', divise.size, 'strade')
+}
+
+/* ── e spostare costa ──
+   Finché la strada era una sola era gratis: spostarsi voleva dire
+   spostarsi lungo la stessa fila di mostri. Con due ingressi portare la
+   torre giusta dalla parte giusta è la mossa che vince, e una mossa che
+   vince si paga — poco, ma si paga. La regola sta nel motore, perché il
+   prezzo dev'essere lo stesso che la torre l'abbia mossa un dito che
+   trascina o un tocco sulla piazzola. */
+{
+  const b = creaBattaglia({ tappa: doppie[0], misure, stato: {} })
+  b.inizia()
+  const torre = b.costruisci('add', {})
+  const dove = b.liberi()[0]
+  const prima = b.tabellone.energia
+  controlla('la torre si sposta su una piazzola libera', b.sposta(torre, dove))
+  uguale('e costa quello che dice CFG', prima - b.tabellone.energia, CFG.spostamento)
+  const posto = b.percorso.postazioni[dove]
+  controlla('ed è arrivata davvero', Math.hypot(torre.x - posto.x, torre.y - posto.y) < 1)
+
+  const tasche = b.tabellone.energia
+  controlla('rimetterla dov\'è già non costa niente', b.sposta(torre, b.postoDi(torre)))
+  uguale('e infatti non paga', b.tabellone.energia, tasche)
+  const altra = b.costruisci('add', {})
+  controlla('sulla piazzola di un\'altra torre non ci va',
+            !b.sposta(torre, b.postoDi(altra)))
+  b.tabellone.paga(b.tabellone.energia)      // tasche vuote
+  const ferma = { x: torre.x, y: torre.y }
+  controlla('e senza energia non si muove', !b.sposta(torre, b.liberi()[0]))
+  controlla('resta dov\'era', torre.x === ferma.x && torre.y === ferma.y)
 }
 
 riassunto('le tappe a due ingressi')

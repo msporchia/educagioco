@@ -15,9 +15,10 @@
 
    ── DA DOVE ARRIVANO ──────────────────────────────────────────────
    Dal foglio `Overworld.png` del set CC0 di ArMM1998
-   (https://opengameart.org/content/zelda-like-tilesets-and-sprites),
-   che non è versionato: si scarica, e `poc/atlante-gfx.py` ritaglia da
-   lì. Il modo pratico di trovare le coordinate di una tessera nuova è
+   (https://opengameart.org/content/zelda-like-tilesets-and-sprites), che
+   sta versionato in `strumenti/sprite/sorgenti/` — è CC0, pesa poco, e un
+   atlante che non si rigenera da un clone è un atlante che prima o poi si
+   rompe. Ritaglia `strumenti/sprite/atlante.py`. Il modo pratico di trovare le coordinate di una tessera nuova è
    lanciare il generatore con `--provini`, che sputa un foglio con ogni
    pezzo e il suo nome: le coordinate si sbagliano, e guardarle tutte
    insieme è il modo più rapido di accorgersene.
@@ -26,7 +27,8 @@
    Chi cammina (la bambina, Watson, la prossima gallina) non ha
    coordinate da dichiarare: ha un formato fisso — 16×32, quattro
    fotogrammi per riga, tre versi — e basta mettere il png in
-   `poc/attori/` perché il generatore lo trovi da sé. Vedi `poc/attori.py`.
+   `strumenti/sprite/attori/` perché il generatore lo trovi da sé.
+   Vedi `strumenti/sprite/attori.py`.
 
    ── SE UNA TESSERA VIENE MALE ─────────────────────────────────────
    Quasi sempre è il ritaglio, non il disegno. Un paio di casi già

@@ -89,6 +89,10 @@ const libera = computed(() => progresso.value.libera || tuttoAperto())
    Il terzo non nasce mai da solo: ci si arriva dal primo o dal secondo,
    e si porta dietro dove va a finire la torre. */
 const foglio = ref(null)
+/* la torre che sta cercando un posto nuovo: il foglio si toglie di
+   mezzo e il campo aspetta che gli si dica dove. È un modo e non una
+   schermata — si annulla toccando qualunque altra cosa. */
+const sposto = ref(null)
 
 /* ── l'acquisto ──
    Il prezzo lo si paga in energia, ma prima si paga in calcolo: la
@@ -113,10 +117,16 @@ const S = () => campo.value?.misure()?.S || 1
    raggio d'azione. È l'unica cosa che la schermata dice al campo su
    cosa disegnare, e resta un dato: nessuno qui tocca un pixel. */
 const mira = computed(() => {
-  const f = foglio.value
-  if (!f || fase.value !== 'gioco') return null
+  if (fase.value !== 'gioco') return null
   const m = motore()
   if (!m) return null
+  /* mentre si cerca dove posarla, il campo mostra lei e tutte le
+     piazzole libere: è l'unica domanda aperta */
+  const t = sposto.value
+  if (t) return { torre: t, x: t.x, y: t.y, tipo: t.tipo,
+                  raggio: t.raggio(S()), muovendo: true }
+  const f = foglio.value
+  if (!f) return null
   if (f.torre) return { torre: f.torre, x: f.torre.x, y: f.torre.y,
                         tipo: f.torre.tipo, raggio: f.torre.raggio(S()) }
   const p = m.postazioni[f.piazzola]
@@ -132,16 +142,41 @@ const debole = computed(() => (vista.prossime[0] && vista.prossime[0].debole) ||
 /* ── aprire e chiudere ── */
 function apriPiazzola(i) {
   if (fase.value !== 'gioco' || op.value) return
+  if (sposto.value) return posala(i)
   foglio.value = { che: 'costruisci', piazzola: i }
 }
 
 function apriTorre(torre) {
   if (fase.value !== 'gioco' || op.value || !torre) return
+  sposto.value = null                 // toccare una torre annulla lo spostamento
   foglio.value = { che: 'torre', torre }
 }
 
+/* ── spostare ──
+   Il tasto nella scheda apre il modo; il tocco su una piazzola lo
+   chiude. Chi paga e chi decide se si può è il motore: qui si dice solo
+   com'è andata. */
+function chiediSposta() {
+  const t = foglio.value && foglio.value.torre
+  if (!t) return
+  sposto.value = t
+  foglio.value = null
+  avvisa('Tocca la piazzola dove spostarla')
+}
+
+function posala(i) {
+  const t = sposto.value
+  if (motore().sposta(t, i)) {
+    sposto.value = null
+    avvisa(`${TORRI[t.tipo].nome} spostata · −${CFG.spostamento} ⚡`)
+  } else avvisa(`Servono ${CFG.spostamento} ⚡ per spostarla`)
+}
+
+const posti = () => (motore() ? motore().liberi().length : 0)
+
 function chiudi() {
   foglio.value = null
+  sposto.value = null
   annulla()
 }
 
@@ -357,7 +392,12 @@ onMounted(() => {
            battaglia lasciano il posto alla scheda del mostro che è in
            campo — le due cose non servono mai insieme, e su un telefono
            lo spazio in alto è uno solo. -->
-      <template v-if="fase === 'gioco' && vista.inAttesa">
+      <!-- mentre si cerca dove posare una torre, il fondo dice cosa sta
+           succedendo e come tirarsene fuori -->
+      <button v-if="fase === 'gioco' && sposto" class="bottone chiaro stretto onda"
+              @click="sposto = null">Tocca dove spostarla · annulla</button>
+
+      <template v-else-if="fase === 'gioco' && vista.inAttesa">
         <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime" /></div>
         <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
                 @click="chiamaOnda">
@@ -393,7 +433,8 @@ onMounted(() => {
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
                      :energia="hud.energia" :divisioni="divisioni" :rami="rami"
-                     @potenzia="salgo" />
+                     :costo-sposta="CFG.spostamento" :puoi-spostare="posti() > 0"
+                     @potenzia="salgo" @sposta="chiediSposta" />
 
         <template v-else-if="foglio && foglio.che === 'conto' && op">
           <div class="intestazione">

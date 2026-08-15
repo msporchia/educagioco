@@ -194,6 +194,10 @@ export class Battaglia {
      la torre la rimette dov'era. */
   sposta(torre, posto) {
     if (!torre || !this.libera(posto, torre)) return false
+    /* rimetterla dov'è già non è uno spostamento: capita a chi solleva
+       una torre e la riappoggia, e farglielo pagare sarebbe una multa
+       per aver cambiato idea */
+    if (this.postoDi(torre) === posto) return true
     if (this.tabellone.energia < CFG.spostamento) return false
     const p = this.percorso.postazioni[posto]
     if (!p) return false

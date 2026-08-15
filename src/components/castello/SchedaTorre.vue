@@ -6,13 +6,14 @@
    cose e ne offre una: chi è, a che punto è della sua scaletta, cosa sa
    fare — e poi la si fa salire.
 
-   ── lo spostamento si dice, non si comanda ──
-   Trascinare una torre da una piazzola all'altra si è sempre potuto, e
-   non costa niente: è tattica, non un acquisto. Per un momento c'è
-   stato anche un tasto «spostala», che chiudeva il foglio e aspettava
-   il dito: due modi per la stessa cosa, e nessuno dei due chiaro. Un
-   gesto si racconta, non si trasforma in un bottone — resta una riga
-   che dice come si fa, per chi non l'ha ancora scoperto.
+   ── spostarla ──
+   Da quando ci sono tappe con due ingressi, portare la torre giusta
+   dalla parte giusta è la mossa che vince, e costa due punti di
+   energia. Si fa in due modi che sono la stessa cosa: trascinandola, o
+   da qui — si preme, il foglio si toglie di mezzo e il campo aspetta
+   che gli si dica dove. Il tasto non toglie il trascinamento: lo
+   racconta a chi non l'ha scoperto, e adesso che la mossa ha un prezzo
+   il prezzo va scritto da qualche parte.
 
    ── il bivio ──
    Quando la torre arriva al gradino in cui si specializza, al posto del
@@ -33,8 +34,11 @@ const props = defineProps({
   divisioni: { type: Boolean, default: true },
   /* i due mestieri fra cui scegliere, quando è il momento: [{ id, nome, descr }] */
   rami: { type: Array, default: () => [] },
+  /* quanto costa spostarla, e se c'è un posto dove metterla */
+  costoSposta: { type: Number, default: 0 },
+  puoiSpostare: { type: Boolean, default: true },
 })
-defineEmits(['potenzia'])
+defineEmits(['potenzia', 'sposta'])
 
 const modello = computed(() => TORRI[props.torre.tipo])
 const massimo = computed(() => props.torre.lv >= props.cap)
@@ -82,7 +86,11 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
   </button>
   <div v-else class="dritta finita">Questa torre è al massimo della sua scaletta</div>
 
-  <div class="trascina">✋ Trascinala sul campo per cambiarle posto — non costa niente</div>
+  <button class="bottone chiaro stretto" :class="{ cara: !puoiSpostare || energia < costoSposta }"
+          data-azione="sposta" @click="$emit('sposta')">
+    ✋ Spostala <span class="prezzo">{{ costoSposta }} ⚡</span>
+  </button>
+  <div class="trascina">…o trascinala col dito, è la stessa cosa</div>
 </template>
 
 <style scoped src="./scheda.css"></style>

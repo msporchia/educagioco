@@ -35,10 +35,13 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
      aperto, o quella dove sta per cadere la torre trascinata. */
   const inMano = trascino && trascino.mosso ? trascino.torre : null
   const mirata = mira && mira.piazzola != null ? mira.piazzola : -1
-  const posso = energia >= costoNuova && !occupato
+  /* si accendono quando toccarle serve a qualcosa: c'è l'energia per una
+     torre nuova, oppure una torre sta cercando dove posarsi */
+  const posso = (energia >= costoNuova && !occupato) || !!(mira && mira.muovendo)
 
+  const sciolta = inMano || (mira && mira.muovendo ? mira.torre : null)
   motore.postazioni.forEach((p, i) => {
-    if (!motore.libera(i, inMano)) return
+    if (!motore.libera(i, sciolta)) return
     const scelta = inMano ? trascino.posto === i : i === mirata
     // spenta: c'è la piazzola sul fondale, ma niente che inviti a toccarla
     if (!scelta && !posso && !inMano) return
