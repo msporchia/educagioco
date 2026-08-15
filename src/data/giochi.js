@@ -41,25 +41,28 @@ import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
 export const GIOCHI = [
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
-    che: 'tabelline e calcolo a mente' },
+    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande' },
   { chiave: 'inglese',    ico: '🌐', nome: 'English',
-    che: 'parole, verbi e frasi in inglese' },
+    che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande' },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
-    che: 'parole, verbi e frasi in spagnolo' },
+    che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande' },
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
-    che: 'operazioni in colonna, torri e nemici' },
+    che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia' },
   { chiave: 'pozioni',    ico: '⚗️', nome: 'Il laboratorio delle pozioni',
-    che: 'litri, chili e metri', serve: ['misure', 'conversioni'] },
+    che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
+    area: 'numeri', come: 'fare' },
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
-    che: 'euro, centesimi e resto' },
+    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare' },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
-    che: 'sequenze, cicli ed eventi' },
+    che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia' },
   /* I giochi scritti con la convenzione nuova (`src/giochi/`) si
      aggiungono da soli: il loro manifesto dice già chiave, nome e icona,
      e ripeterli qui vorrebbe dire tenerli allineati a mano. Il registro è
      dato puro apposta — importarlo qui non tira dentro né Vue né lo
      store, e non si chiude nessun anello di import. */
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
+                              area: g.area, come: g.come, piccoli: !!g.piccoli,
+                              tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [] })),
 ]
 

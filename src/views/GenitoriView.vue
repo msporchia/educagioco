@@ -19,7 +19,11 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          sperimentaliAccesi, accendiSperimentali } from '../store/profile.js'
 import { leggiPin, scriviPin, PIN_INIZIALE } from '../store/pin.js'
 import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
+import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
+         dimentica as svuotaGiudizi, riga as rigaGiudizio,
+         pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
+import { PARTENZE } from '../data/partenze.js'
 import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
 import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
 import Barra from '../components/Barra.vue'
@@ -63,9 +67,14 @@ const scheda = ref('giochi')
    dopo, per capire cos'è successo prima */
 const incidenti = ref([])
 
+/* i giudizi sulle domande, dallo stesso posto e per lo stesso motivo:
+   si sono accumulati mentre si giocava, e si guardano dopo */
+const giudizi = ref([])
+
 onMounted(async () => {
   pin.value = await leggiPin()
   incidenti.value = await leggiIncidenti()
+  giudizi.value = await leggiGiudizi()
 })
 
 /* l'ora e basta se è di oggi, altrimenti anche il giorno: «alle 17:42»
@@ -109,7 +118,18 @@ const riparaApp = () => ripara()
    utile costi una frase invece di una traduzione.
 
    La pila non entra nell'indirizzo: sarebbe lunga il triplo del limite
-   che i browser reggono in fila. Per quella c'è «Copia» qui sopra. */
+   che i browser reggono in fila. Per quella c'è «Copia» qui sopra.
+
+   ── COME ARRIVANO DALL'ALTRA PARTE ──
+   In Tally i parametri dell'indirizzo riempiono **solo i campi
+   nascosti**, che nell'editor si aggiungono scrivendo `/hidden`, e sono
+   **sensibili alle maiuscole**: il nome del campo dev'essere identico
+   al parametro, lettera per lettera. Un campo normale — una casella di
+   testo, un indirizzo di posta — dall'indirizzo non si tocca affatto.
+   Quindi un parametro che nel form non ha il suo campo nascosto non dà
+   nessun errore: il modulo si apre come sempre e il dato sparisce.
+
+   Questo qui vuole `versione` e `guasto`. */
 const SEGNALA = 'https://tally.so/r/D4OO1q'
 
 const linkSegnala = computed(() => {
@@ -118,6 +138,70 @@ const linkSegnala = computed(() => {
   if (ultimo) q.set('guasto', `${ultimo.dove} · ${ultimo.testo}`.slice(0, 300))
   return `${SEGNALA}?${q}`
 })
+
+/* ── i giudizi sulle domande ──
+   L'interruttore mette tre tastini sopra ogni domanda dei quiz. Sta qui
+   dentro e non in `settings` perché è del telefono e non di un bambino:
+   chi giudica è il grande seduto di fianco, e cambiando giocatore non
+   deve riaccenderlo. */
+function cambiaGiudizi() {
+  accendiGiudizi(!giudiziAccesi.value)
+  esito.value = { ok: true, testo: giudiziAccesi.value
+    ? 'Acceso: sopra ogni domanda compaiono 😴 😰 🐛.'
+    : 'Spento: le domande tornano come prima.' }
+}
+
+/* la riga da leggere a schermo: la stessa che partirebbe nel modulo,
+   che è il punto — quello che si manda si vede prima */
+const righeGiudizi = computed(() =>
+  giudizi.value.slice().reverse().map(g => ({
+    ico: verdettoDi(g.verdetto)?.ico || '·',
+    testo: rigaGiudizio(g),
+  })))
+
+/* ── dove vanno ──
+   Non c'è un server a cui mandarli e non ci sarà: un modulo è l'unico
+   canale che da un telefono senza posta configurata non chiede niente a
+   nessuno.
+
+   Ma è un modulo **suo**, non quello dei guasti, e i due non vanno
+   mescolati: il primo lo compila chiunque inciampi nel gioco e chiede
+   di raccontare cosa è successo, questo lo apre chi ha in mano il
+   telefono di casa e non ha niente da scrivere — si apre e si tocca
+   invia. Un campo obbligatorio, qui, sarebbe un pedaggio su un gesto
+   che deve costare un tocco.
+
+   Vuole un campo nascosto `giudizi` e uno `versione` (vedi sopra come
+   si aggiungono). */
+const SEGNALA_GIUDIZI = 'https://tally.so/r/D4OO1q'
+
+const paccoDaMandare = computed(() => paccoGiudizi(giudizi.value))
+const linkGiudizi = computed(() => {
+  const q = new URLSearchParams({
+    versione: __VERSIONE__.id,
+    giudizi: paccoDaMandare.value.testo,
+  })
+  return `${SEGNALA_GIUDIZI}?${q}`
+})
+
+async function copiaGiudizi() {
+  try {
+    await navigator.clipboard.writeText(paccoDaMandare.value.testo)
+    esito.value = { ok: true, testo: 'Copiati negli appunti.' }
+  } catch (e) {
+    esito.value = { ok: false, testo: 'Non si riesce a copiare: si legge da qui.' }
+  }
+}
+
+/* Cancellare è a mano, e apposta: il modulo si apre in un'altra scheda
+   e da qui non si sa se è stato davvero inviato. Svuotare da soli dopo
+   aver aperto il link vorrebbe dire buttare via i giudizi di chi ci ha
+   ripensato a metà. */
+async function scordaGiudizi () {
+  await svuotaGiudizi()
+  giudizi.value = []
+  esito.value = { ok: true, testo: 'Cancellati.' }
+}
 
 const pallini = computed(() => [0, 1, 2, 3].map(i => i < cifre.value.length))
 const titoloCambio = computed(() => modo.value === 'ripeti' ? 'Ripeti il codice nuovo' : 'Il codice nuovo')
@@ -216,7 +300,13 @@ function chiudiTutto() {
   rinominando.value = ''; eliminando.value = ''; aggiungendo.value = false; nomeInCorso.value = ''
 }
 function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.value = g.nome }
-function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
+/* nessuna preselezionata: la partenza è una domanda vera, e una risposta
+   già data si preme senza leggerla — con l'effetto che un bambino di
+   quattro anni si ritroverebbe la home di un quinta elementare perché
+   nessuno ha guardato. Il tasto «Aggiungi» resta spento finché non si
+   sceglie, che è il modo di chiederlo senza scriverlo. */
+const partenzaScelta = ref('')
+function apriAggiungi() { chiudiTutto(); partenzaScelta.value = ''; aggiungendo.value = true }
 function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 
 async function salvaNome() {
@@ -226,8 +316,10 @@ async function salvaNome() {
     if (aggiungendo.value) {
       /* senza entrarci: cambiare giocatore da qui ricarica la schermata
          e rimanderebbe al codice chi sta ancora sistemando le cose */
-      await creaGiocatore(nome, false)
-      esito.value = { ok: true, testo: `${nome} adesso può giocare: lo trova in home, dove si sceglie chi gioca.` }
+      await creaGiocatore(nome, false, partenzaScelta.value)
+      const p = PARTENZE.find(p => p.chiave === partenzaScelta.value)
+      esito.value = { ok: true, testo: `${nome} adesso può giocare: lo trova in home, dove si sceglie chi gioca.`
+        + (p ? ` È partito da «${p.nome}» — quello che vede si cambia qui sotto.` : '') }
     } else {
       const prima = nomeCorrente()
       await rinominaGiocatore(rinominando.value, nome)
@@ -602,10 +694,31 @@ async function azzera() {
             <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
                    autocomplete="off" autocapitalize="words" spellcheck="false"
                    placeholder="il nome" aria-label="il nome">
-            <button class="bottone chiaro" type="button" @click="chiudiTutto">Lascia stare</button>
-            <button class="bottone" type="submit" :disabled="!nomeInCorso.trim()">Aggiungi</button>
           </form>
-          <i>Parte da zero, con i suoi progressi separati da quelli degli altri.</i>
+
+          <!-- ── da dove parte ──
+               Chiedere qui e non dopo è il punto: spegnere a mano dodici
+               giochi e tre saperi si può fare da sempre, ma va fatto
+               PRIMA che il bambino apra il gioco la prima volta — cioè
+               nel momento in cui uno ha meno voglia di configurare. Tre
+               tocchi al posto di trenta, e niente che resti appiccicato
+               al profilo: da domani si tocca tutto a mano come prima. -->
+          <div class="partenze">
+            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
+                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
+                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
+              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
+              <i>{{ p.che }}</i>
+            </button>
+          </div>
+
+          <div class="riga">
+            <button class="bottone chiaro" type="button" @click="chiudiTutto">Lascia stare</button>
+            <button class="bottone" type="button" :disabled="!nomeInCorso.trim() || !partenzaScelta"
+                    @click="salvaNome">Aggiungi</button>
+          </div>
+          <i>Parte da zero, con i suoi progressi separati da quelli degli altri.
+            Quello che si accende adesso si cambia quando si vuole, da qui.</i>
         </div>
         <button v-else class="carta" data-azione="aggiungi-giocatore" @click="apriAggiungi">
           <span class="ico">➕</span>
@@ -718,6 +831,53 @@ async function azzera() {
             e l'ultimo inciampo: non resta da scrivere niente di tecnico</i>
           <i v-else>Si apre un modulo, con già dentro la versione del gioco</i>
         </a>
+      </div>
+
+      <!-- ── GIUDICARE LE DOMANDE ──
+           L'altra metà di quello che non va, e quella che nessun errore
+           segnala: una domanda giusta ma fuori misura. Il difetto non lo
+           vede il gioco — per lui la domanda è ineccepibile — lo vede
+           solo chi sta seduto di fianco mentre il bambino ci sbatte, e
+           finora finiva su un foglietto. Acceso l'interruttore, tre
+           tastini sopra ogni domanda: il verdetto lo dà il grande, tutto
+           il resto (modulo, grado, tipologia, tempo, esito) se lo
+           annota il gioco da solo. -->
+      <h2>Le domande dei quiz</h2>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !giudiziAccesi }"
+                data-flag="giudizi" @click="cambiaGiudizi">
+          <span class="ico">😰</span>
+          <b>Giudicare le domande</b>
+          <i>{{ giudiziAccesi
+                ? 'Sopra ogni domanda ci sono 😴 troppo facile, 😰 troppo difficile, 🐛 storta'
+                : 'Spento: nessun tastino in più mentre si gioca' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <div v-if="giudizi.length" class="carta guasti" data-azione="giudizi">
+          <span class="ico">📝</span>
+          <b>{{ giudizi.length === 1 ? '1 domanda segnata' : giudizi.length + ' domande segnate' }}</b>
+          <i>Questo è quello che parte: verdetto, chi giocava, il modulo col grado,
+            la tipologia, quanto ci ha messo e com'è finita</i>
+          <ul class="lista-guasti">
+            <li v-for="(g, i) in righeGiudizi" :key="i">
+              <span>{{ g.ico }} {{ g.testo }}</span>
+            </li>
+          </ul>
+          <p v-if="paccoDaMandare.lasciati" class="mini">
+            Nel modulo ci stanno gli ultimi {{ paccoDaMandare.mandati }}: gli altri
+            {{ paccoDaMandare.lasciati }} restano qui, e si mandano con «Copia».
+          </p>
+          <div class="riga">
+            <a class="bottone chiaro" data-azione="manda-giudizi" :href="linkGiudizi"
+               target="_blank" rel="noopener">Manda</a>
+            <button class="bottone chiaro" data-azione="copia-giudizi" @click="copiaGiudizi">
+              Copia</button>
+            <button class="bottone chiaro" data-azione="scorda-giudizi" @click="scordaGiudizi">
+              Cancella</button>
+          </div>
+        </div>
       </div>
 
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
@@ -860,6 +1020,28 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
    e la sottolineatura del browser, e in mezzo alle altre si leggerebbe
    come una cosa d'altro tipo */
 .carta.segnala { text-decoration:none; color:inherit }
+/* e l'unico bottone che è un link, per lo stesso motivo: «Manda» apre il
+   modulo fuori dal gioco, ma in fila con «Copia» e «Cancella» deve
+   sembrare uno dei tre */
+a.bottone { text-decoration:none; display:inline-flex; align-items:center;
+            justify-content:center }
+
+/* ── da dove parte un bambino ──
+   Tre righe da leggere e non tre pastiglie da premere: la differenza fra
+   «terza» e «quarta» sta tutta nella riga sotto, e chi sceglie senza
+   leggerla sceglie a caso. Per questo la scritta piccola c'è sempre,
+   anche sulla scelta non selezionata. */
+.partenze { display:flex; flex-direction:column; gap:7px; width:100% }
+.partenza { display:flex; flex-direction:column; gap:2px; width:100%; text-align:left;
+            padding:10px 13px; border-radius:14px; background:#fff;
+            box-shadow:inset 0 0 0 2px #e3e8ef; transition:.14s }
+.partenza b { display:flex; align-items:baseline; gap:7px; font-size:14.5px; font-weight:800;
+              color:var(--viola-scuro) }
+.partenza b em { font-style:normal; font-size:11px; font-weight:700; color:var(--tenue) }
+.partenza i { font-style:normal; font-size:11.5px; line-height:1.35; color:var(--tenue) }
+.partenza.on { background:#f4f1ff; box-shadow:inset 0 0 0 2px var(--viola) }
+.partenza.on b { color:var(--viola) }
+.partenza:active { transform:translateY(1px) }
 
 /* Cancellare non deve somigliare alle altre due: si vede da lontano che è
    quella che fa danni. */

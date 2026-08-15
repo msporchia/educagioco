@@ -35,7 +35,7 @@ await semina(page, { coins: 777, totals: { math: 42, en: 0, verbi: 0, frasi: 0, 
   campagne: { dungeon: { tappa: 2, libera: false, stelle: {}, cfg: {} } } })
 
 const vaiAiGenitori = async () => {
-  await page.click('button.link')
+  await page.click('.carta[data-azione="grandi"]')
   await page.waitForSelector('.tastierino', { timeout: 5000 })
 }
 const digita = async pin => { for (const c of pin) await page.click(`.tasto >> text="${c}"`) }
@@ -349,10 +349,14 @@ await page.waitForTimeout(200)
 await page.click('.schede button[data-scheda="sa"]')
 await page.waitForSelector('.carta[data-sapere="accenti"]', { timeout: 5000 })
 
+/* due gruppi non hanno domande di quiz, e sono le due operazioni che
+   vivono nel castello: lì non sparisce una domanda, scende un'operazione */
 controlla('ogni gruppo che fa domande ha il tasto per provarle',
-  (await page.locator('.prova-tasto[data-prova]').count()) >= SAPERI.length - 1)
+  (await page.locator('.prova-tasto[data-prova]').count()) >= SAPERI.length - 2)
 uguale('tranne le divisioni, che le domande le fa il castello',
   await page.locator('.prova-tasto[data-prova="divisioni"]').count(), 0)
+uguale('e le moltiplicazioni, per lo stesso motivo',
+  await page.locator('.prova-tasto[data-prova="moltiplicazioni"]').count(), 0)
 
 /* il dettaglio: chiuso di suo, si apre e mostra le sue voci */
 uguale('il dettaglio sta chiuso finché non lo si chiede',
@@ -479,7 +483,21 @@ uguale('di partenza c\'è un giocatore solo',
 await page.click('.carta[data-azione="aggiungi-giocatore"]')
 await page.waitForSelector('.carta[data-azione="nuovo-nome"]', { timeout: 5000 })
 await page.fill('.carta[data-azione="nuovo-nome"] .nome', 'Federica')
-await page.click('.carta[data-azione="nuovo-nome"] button[type="submit"]')
+
+/* ── da dove parte ──
+   Col solo nome non si aggiunge: la partenza decide cosa il bambino si
+   troverà in home la prima volta, e una scelta preselezionata si preme
+   senza leggerla. Il tasto spento è il modo di chiederlo senza
+   scriverlo, e qui si prova che lo sia davvero. */
+controlla('col solo nome il tasto non si può ancora premere',
+  await page.locator('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)').isDisabled())
+uguale('le partenze offerte sono tre',
+  await page.locator('.partenza').count(), 3)
+await page.click('.partenza[data-partenza="terza"]')
+await page.waitForTimeout(150)
+controlla('scelta la partenza, il tasto si accende',
+  !(await page.locator('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)').isDisabled()))
+await page.click('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)')
 await page.waitForTimeout(500)
 uguale('aggiungerne uno lo mette nell\'elenco',
   await page.locator('.carta.chi-gioca').count(), 2)
@@ -501,6 +519,20 @@ const moneteNuovo = await page.evaluate(() => {
 })
 uguale('e chi entra la prima volta parte da zero, non con le monete dell\'altro',
   moneteNuovo, 0)
+
+/* ── la partenza ha fatto qualcosa ──
+   Si guarda dalla home di Federica e non dallo store: quello che conta è
+   che il bambino non veda quelle carte, non che una chiave sia scritta
+   da qualche parte. «Terza» toglie i giochi per i più piccoli e lascia
+   tutto il resto — se togliesse anche il castello sarebbe una partenza
+   che spegne troppo, e nessuno se ne accorgerebbe fino a che un bambino
+   non chiede dov'è finito. */
+controlla('a chi parte dalla terza i giochi per i piccoli non compaiono',
+  !(await page.isVisible('.carta[data-gioco="conta"]')))
+controlla('e nemmeno il secondo dei due',
+  !(await page.isVisible('.carta[data-gioco="prima-dopo"]')))
+controlla('ma il castello c\'è', await page.isVisible('.carta.td'))
+controlla('e gli asteroidi pure', await page.isVisible('.carta.mate'))
 
 // si torna sul primo: eliminare chi sta giocando è un altro caso, sotto
 await page.click(`.gioc:has-text("${GIOCATORE}")`)
@@ -545,6 +577,65 @@ controlla('e con lui il suo salvataggio', !(await page.evaluate(() =>
       g.onsuccess = () => ok(g.result.some(k => String(k).startsWith('profilo:g')))
     }
   }))))
+
+/* ── 10b. giudicare una domanda ──
+   Il giro completo di quello che non lancia nessun errore: una domanda
+   giusta ma fuori misura. Si accende l'interruttore, si apre una
+   domanda vera dalla scheda «cosa sa» — è il posto dove le domande si
+   scorrono apposta — si tocca 😰, e quello che si è toccato deve
+   ritrovarsi qui dentro pronto da mandare.
+
+   Il pezzo che conta è la RICARICA: giudizi e interruttore stanno fuori
+   dai profili, come il codice dei genitori, e devono sopravvivere a un
+   riavvio e a un cambio di bambino. Se finissero in `settings` questo
+   controllo li perderebbe. */
+controlla('l\'interruttore dei giudizi c\'è', await page.isVisible('.carta[data-flag="giudizi"]'))
+controlla('e parte spento',
+  await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento')))
+uguale('spento non c\'è niente da mandare',
+  await page.locator('.carta[data-azione="giudizi"]').count(), 0)
+
+await page.click('.carta[data-flag="giudizi"]')
+await page.waitForTimeout(200)
+
+await page.click('button[data-scheda="sa"]')
+await page.waitForSelector('.prova-tasto', { timeout: 5000 })
+await page.locator('.prova-tasto').first().click()
+await page.waitForSelector('.prova-velo', { timeout: 5000 })
+controlla('sopra la domanda compaiono i tre tasti',
+  await page.isVisible('[data-che="giudizio"]'))
+await scatto(page, 'giudizio')
+
+await page.click('[data-verdetto="difficile"]')
+await page.waitForTimeout(400)
+await page.click('.prova-x')
+await page.waitForTimeout(300)
+
+/* riaperta da capo: è il controllo vero */
+await page.reload()
+await page.waitForSelector('.carte', { timeout: 8000 })
+await vaiAiGenitori()
+await digita('0000')
+await page.waitForSelector('.carta[data-flag="giudizi"]', { timeout: 5000 })
+controlla('l\'interruttore è rimasto acceso dopo il riavvio',
+  !(await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento'))))
+
+const carta = page.locator('.carta[data-azione="giudizi"]')
+uguale('il giudizio è in archivio', await carta.count(), 1)
+const scritto = await carta.innerText()
+controlla('e dice cosa parte', scritto.includes('1 domanda segnata'), scritto)
+controlla('con dentro il verdetto e il modulo', scritto.includes('difficile'), scritto)
+
+const modulo = await page.getAttribute('[data-azione="manda-giudizi"]', 'href')
+controlla('il modulo si apre già compilato',
+  modulo.includes('giudizi=') && modulo.includes('versione='), modulo)
+controlla('e ci sta dentro un indirizzo', modulo.length < 6500, modulo.length + ' caratteri')
+
+await page.click('[data-azione="scorda-giudizi"]')
+await page.waitForTimeout(300)
+uguale('cancellati spariscono', await page.locator('.carta[data-azione="giudizi"]').count(), 0)
+await page.click('.carta[data-flag="giudizi"]')   // rimesso com'era
+await page.waitForTimeout(200)
 
 /* ── 11. il muto è del bambino, non del telefono ──
    `settings.sound` c'era dal principio e non lo leggeva nessuno:

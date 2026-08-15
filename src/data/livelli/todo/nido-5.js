@@ -241,7 +241,6 @@ export const NIDO_5 = {
                sbieco: { x: 5, y: 18 }, mora: { x: 5, y: 18 }, riccio: { x: 5, y: 18 } } },
   ],
 
-  par: 10,
   soluzioni: [
     /* dieci ordini per quattro draghi, e nessuno di troppo. Brasa
        tiene la cengia scoperta perché di là solo lei li ferma; Roccia

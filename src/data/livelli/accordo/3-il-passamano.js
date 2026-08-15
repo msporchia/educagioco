@@ -82,7 +82,6 @@ export const PASSAMANO = livello({
     { nome: "il secondo guardiano è vicino all'eroe", metti: { g3: guardiano2 } },
   ],
 
-  par: 10,
   soluzioni: [
     { nome: 'uno chiama, l\'altra risponde, il primo chiude la catena', piano: {
       cavaliere: [fai.attacca(orco1), fai.suona(pronto),

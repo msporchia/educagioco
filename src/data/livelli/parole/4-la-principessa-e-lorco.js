@@ -175,7 +175,6 @@ export const PRINCIPESSA = livello({
   motivoSconfitta: "L'orco è uscito di ronda e l'ha trovata nel covo.",
   mostraNemici: true,
 
-  par: 11,
   soluzioni: [
     { nome: 'chiudi la corta, poi fai con calma', piano: { principessa: [
       /* il primo ordine non fa avanzare la missione di un passo, e

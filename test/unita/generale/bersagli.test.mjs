@@ -56,8 +56,12 @@ const idDi = l => l.map(b => b.id)
   controlla('e sta dove sta davvero',
             !!b && b.x === m.cose.tesoro.x && b.y === m.cose.tesoro.y,
             b ? `${b.x},${b.y}` : 'non c\'è')
+  /* l'id resta `tesoro` — è una chiave, e le chiavi non si rinominano —
+     ma quello che si legge nella riga è la cosa che si vede sulla
+     mappa: nel primo ordine del gioco la casella e la dritta devono
+     dire la stessa parola */
   controlla('e si legge col nome della frase, non con la chiave',
-            nomeDi(m, 'tesoro') === 'il tesoro', nomeDi(m, 'tesoro'))
+            nomeDi(m, 'tesoro') === 'il forziere', nomeDi(m, 'tesoro'))
   controlla('«apri» offre il tesoro anche nell\'elenco',
             cosePer(m, 'apri').some(c => c.id === 'tesoro'))
   /* `vai` accetta più tipi: il tesoro c'è lo stesso, ed è la mossa che

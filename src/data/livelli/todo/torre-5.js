@@ -237,7 +237,6 @@ export const TORRE_5 = {
                prima: { x: 4, y: 7 }, seconda: { x: 10, y: 7 }, capo: { x: 18, y: 5 } } },
   ],
 
-  par: 12,
   soluzioni: [
     /* dodici ordini, ed è il par. Tre a Cric e tre a Nilo — scendi di
        sotto e piantati lì, e poi il «quando arriva» con dentro la

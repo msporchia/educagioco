@@ -41,6 +41,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
+import Giudizio from '../components/Giudizio.vue'
+import { giudiziAccesi } from '../store/giudizi.js'
 
 const props = defineProps({
   domanda: { type: Object, required: true },
@@ -48,6 +50,15 @@ const props = defineProps({
   titolo: { type: String, default: '' },
   /* quanto resta a vedere l'esito prima di sparire */
   respiro: { type: Number, default: 1500 },
+  /* Da dove viene la domanda: il pacchetto che `scelta.js` ha
+     consegnato (`{ modulo, grado, materia, … }`) e il nome del gioco
+     che l'ha chiesta. Non servono a mostrarla — la domanda si mette in
+     scena benissimo senza — ma a chi la giudica troppo facile o troppo
+     difficile: sono le due cose che rendono un giudizio azionabile
+     invece che un «una domanda era difficile». Facoltativi: un gioco
+     che non li passa mostra la domanda come sempre. */
+  origine: { type: Object, default: null },
+  gioco: { type: String, default: '' },
 })
 const emit = defineEmits(['risposto'])
 
@@ -89,6 +100,21 @@ function scegli(i) {
   }), attesa)
 }
 
+/* Quello che si sa di questa domanda **adesso**: il tempo scorre e
+   l'esito arriva dopo, quindi non è un oggetto ma una funzione, che i
+   tre tasti chiamano nel momento in cui li tocchi. */
+const daGiudicare = () => ({
+  gioco: props.gioco,
+  modulo: props.origine?.modulo || '',
+  grado: props.origine?.grado ?? '',
+  materia: props.origine?.materia || '',
+  chiave: props.domanda.chiave || '',
+  testo: props.domanda.testo || '',
+  esito: scelto.value < 0 ? 'aperta'
+    : scelto.value === props.domanda.giusta ? 'giusta' : 'sbagliata',
+  tempo: partenza.value ? (performance.now() - partenza.value) / 1000 : 0,
+})
+
 /* I disegni si fanno dopo il layout: prima il canvas non sa quanto è
    largo, e un riquadro dipinto a misura sbagliata resta sgranato. */
 onMounted(async () => {
@@ -105,7 +131,14 @@ onMounted(async () => {
 <template>
   <div class="qz-velo">
     <div class="qz-carta">
-      <div v-if="titolo" class="qz-testa">{{ titolo }}</div>
+      <!-- la riga in cima porta due cose che non c'entrano fra loro: di
+           che materia è la domanda, e i tre tasti per giudicarla. I
+           secondi ci sono solo se un grande li ha accesi, e allora la
+           riga compare anche senza titolo. -->
+      <div v-if="titolo || giudiziAccesi" class="qz-testa">
+        <span>{{ titolo }}</span>
+        <Giudizio :voce="daGiudicare" />
+      </div>
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
       <div v-if="domanda.soggetto" class="qz-soggetto">
@@ -161,6 +194,7 @@ onMounted(async () => {
   box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
 }
 .qz-testa {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
   font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase;
   color: #ffd58a; font-weight: 700;
   margin-bottom: clamp(5px, calc(1.2 * var(--qz-h)), 12px);

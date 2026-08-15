@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>La corsa dei numeri — prototipo</title>
+<style>
+  :root { color-scheme: dark }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none }
+  html, body { height:100%; margin:0; overflow:hidden }
+  body { background:#0d1220; color:#eef3ff; touch-action:none;
+         font:16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif }
+
+  #tela { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none }
+
+  /* ---------- il cruscotto ---------- */
+  #hud { position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column }
+  .riga { display:flex; align-items:flex-start; justify-content:space-between;
+          padding:calc(env(safe-area-inset-top) + 10px) 12px 0 12px; gap:8px }
+  .pill { background:#00000059; border:1px solid #ffffff1f; border-radius:999px;
+          padding:5px 12px; font-size:13px; font-weight:700; color:#cfe0ff; white-space:nowrap }
+  .pill b { color:#fff; font-size:15px }
+  #esci { pointer-events:auto; background:#00000059; border:1px solid #ffffff1f; color:#cfe0ff;
+          width:34px; height:34px; border-radius:999px; font-size:17px; font-weight:800 }
+
+  /* la domanda: è l'unica cosa da leggere, quindi è la più grande */
+  #domanda { align-self:center; margin-top:10px; text-align:center;
+             font-size:clamp(30px,10vw,52px); font-weight:900; letter-spacing:-.02em;
+             text-shadow:0 3px 0 #00000055, 0 0 26px #7fb2ff55 }
+  /* nel modo dei pulcini il numero è un promemoria, non il titolo della
+     pagina: sta in alto piccolo, e quello che conta si guarda in strada */
+  #domanda.piccola { font-size:clamp(20px,6vw,30px) }
+  #domanda.pop { animation:pop .35s ease-out }
+  @keyframes pop { 0%{transform:scale(.7); opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1)} }
+  #sotto { align-self:center; font-size:13px; color:#cfe0ff; margin-top:2px; font-weight:700;
+           background:#00000045; border-radius:999px; padding:2px 10px }
+
+  /* il fiato: una barra sola, in alto, che si svuota mentre corri */
+  #fiato { align-self:center; width:min(78%,320px); height:11px; margin-top:9px;
+           border-radius:999px; background:#00000059; border:1px solid #ffffff1f; overflow:hidden }
+  #fiato i { display:block; height:100%; width:100%; border-radius:999px;
+             background:linear-gradient(90deg,#ffd24a,#8ef0a8); transition:width .2s linear }
+  #fiato.poco i { background:linear-gradient(90deg,#ff7d7d,#ffb15c); animation:lampeggia .6s infinite }
+  @keyframes lampeggia { 50% { opacity:.45 } }
+  #bonus { align-self:center; margin-top:6px; font-size:15px; letter-spacing:2px; min-height:18px }
+
+  /* ---------- la sosta: si è a piedi fermi, e solo qui si fa un conto ---------- */
+  #sosta { position:absolute; inset:0; z-index:9; display:none; pointer-events:auto;
+           align-items:center; justify-content:center; padding:20px;
+           background:#070b16e6; backdrop-filter:blur(3px) }
+  #sosta.c-e { display:flex }
+  .pannello { width:100%; max-width:380px; text-align:center }
+  .pannello .titolo { font-size:20px; font-weight:900; margin-bottom:4px }
+  .pannello .spiega { color:#9fb3d9; font-size:13.5px; margin-bottom:20px; line-height:1.5 }
+  .conto { font-size:clamp(34px,12vw,58px); font-weight:900; margin-bottom:18px; letter-spacing:-.02em }
+  .scelte { display:flex; gap:10px; justify-content:center }
+  .scelte button { flex:1; padding:20px 6px; border-radius:18px; border:1px solid #ffffff26;
+                   background:#ffffff12; color:#fff; font-size:26px; font-weight:900 }
+  .scelte button:active { transform:scale(.96); background:#ffffff20 }
+  .scelte button.si { background:#2f6b4a; border-color:#8ef0a8 }
+  .scelte button.no { background:#6b3040; border-color:#ff9db0 }
+  .doni { display:flex; gap:10px; justify-content:center; margin-top:6px }
+  .doni button { flex:1; padding:14px 8px; border-radius:18px; border:1px solid #ffffff26;
+                 background:#ffffff12; color:#fff }
+  .doni .em { font-size:30px; display:block }
+  .doni .nm { font-size:12px; color:#cfe0ff; font-weight:700; margin-top:4px; display:block }
+
+  /* il contorno scuro non è vezzo: su strada chiara una scritta chiara
+     sparisce, e questa è quella che dice com'è andata */
+  #grido { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;
+           font-size:clamp(26px,9vw,44px); font-weight:900; opacity:0;
+           text-shadow:0 2px 0 #00000088, 0 0 18px #00000066 }
+  #grido.va { animation:grida 1s ease-out }
+  @keyframes grida { 0%{opacity:0; transform:scale(.6)} 25%{opacity:1; transform:scale(1.12)}
+                     70%{opacity:1; transform:scale(1)} 100%{opacity:0; transform:translateY(-24px)} }
+
+  /* ---------- il menù ---------- */
+  #menu { position:absolute; inset:0; overflow:auto; padding:26px 16px 40px;
+          background:radial-gradient(120% 80% at 50% 0%, #1d2a4a 0%, #0d1220 60%, #080b14 100%) }
+  #menu.via { display:none }
+  .box { max-width:440px; margin:0 auto }
+  h1 { font-size:27px; margin:0 0 4px; letter-spacing:-.02em }
+  .che { color:#93a0bd; font-size:14px; margin:0 0 22px }
+  .modo { display:block; width:100%; text-align:left; margin-bottom:12px; padding:15px 16px;
+          border-radius:18px; background:#ffffff0e; border:1px solid #ffffff1a; color:inherit }
+  .modo:active { transform:scale(.985); background:#ffffff16 }
+  .modo .nome { font-size:18px; font-weight:800; display:flex; align-items:center; gap:9px }
+  .modo .det { color:#93a0bd; font-size:13.5px; margin-top:6px; line-height:1.5 }
+  .modo .tag { display:inline-block; margin-top:9px; padding:2px 9px; border-radius:999px;
+               font-size:11.5px; font-weight:700; background:#78aaff28; color:#a8c6ff }
+  footer { margin-top:20px; color:#6f7c98; font-size:12.5px; line-height:1.6 }
+  kbd { background:#ffffff12; border:1px solid #ffffff20; border-radius:6px; padding:1px 6px; font-size:12px }
+</style>
+</head>
+<body>
+
+<canvas id="tela"></canvas>
+
+<div id="hud">
+  <div class="riga">
+    <span class="pill" id="sinistra">🏁 <b>0</b> m</span>
+    <span class="pill" id="destra">⭐ <b>0</b></span>
+  </div>
+  <div id="domanda"></div>
+  <div id="sotto"></div>
+  <div id="fiato"><i></i></div>
+  <div id="bonus"></div>
+  <div style="flex:1"></div>
+  <div class="riga" style="justify-content:flex-end; padding-bottom:calc(env(safe-area-inset-bottom) + 10px)">
+    <button id="esci">✕</button>
+  </div>
+</div>
+
+<div id="grido"></div>
+
+<!-- la sosta: l'unico posto dove si fa un conto, e qui non corre nessuno -->
+<div id="sosta">
+  <div class="pannello">
+    <div class="titolo" id="s-titolo">Ti manca il fiato!</div>
+    <div class="spiega" id="s-spiega">Rispondi con calma: nessuno ti sta correndo dietro.</div>
+    <div class="conto" id="s-conto"></div>
+    <div class="scelte" id="s-scelte"></div>
+    <div class="doni" id="s-doni"></div>
+  </div>
+</div>
+
+<div id="menu">
+  <div class="box">
+    <h1>La corsa dei numeri</h1>
+    <p class="che">Si corre da soli, si sceglie solo <b>dove</b>. Due gameplay
+       diversi sullo stesso motore: servono a decidere quale dei due vale la
+       pena scrivere davvero.</p>
+
+    <button class="modo" data-modo="fiato">
+      <span class="nome">⚡ Il fiato che finisce</span>
+      <div class="det">Correndo si consuma fiato. Per strada ci sono ⚡ da
+        raccogliere: se le prendi in tempo non ti fermi mai. Se resti a
+        secco ti pieghi in due, e per ripartire fai <b>un conto da fermo</b>,
+        con tutto il tempo che vuoi — poi scegli un regalo e riparti.
+        <b>Correre è destrezza, i conti si fanno da fermi.</b></div>
+      <span class="tag">la tua idea</span>
+    </button>
+
+    <button class="modo" data-modo="porta">
+      <span class="nome">🚪 La porta giusta</span>
+      <div class="det">In alto c'è un'operazione, sulle tre corsie tre
+        risultati. Adesso la corsa <b>rallenta</b> quando la porta si
+        avvicina, se no non c'è tempo di calcolare — ed è esattamente il
+        difetto che questo modo ha per natura.</div>
+      <span class="tag">quello che immaginavi</span>
+    </button>
+
+    <button class="modo" data-modo="squadra">
+      <span class="nome">🎖️ La truppa</span>
+      <div class="det">Porti dietro dei soldati e ogni cancello li cambia —
+        <b>×3</b>, <b>+50</b>, <b>−20</b>. Sono un numero in base dieci
+        <b>che si conta con gli occhi</b>: dieci verdi diventano un rosso,
+        dieci rossi un blu, dieci blu un giallo, e ognuno spara quanto vale.
+        I mostri li affronti sparando mentre ti avvicini; davanti al
+        <b>boss</b> si rallenta e lo si affronta. Se restano a zero,
+        <b>si muore</b>. Un cancello ogni tanto è d'oro col libro: <b>×5</b>,
+        ma bisogna fermarsi a fare un conto — mai obbligatorio, e sbagliare
+        non toglie niente.</div>
+      <span class="tag">la variante da provare</span>
+    </button>
+
+    <footer>
+      Dito a sinistra o a destra per cambiare corsia — anche solo toccando
+      quel lato dello schermo. Da tastiera <kbd>←</kbd> <kbd>→</kbd>.<br>
+      Prototipo: nessun salvataggio, nessun suono di scena, nessuna sconfitta.
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   LA CORSA DEI NUMERI — prototipo
+
+   Un endless runner a tre corsie, verticale, col dito. Il motore di corsa
+   è uno solo; sopra ci girano due gameplay diversi, che è il vero motivo
+   per cui questo file esiste:
+
+   · «fiato»   — correre consuma. Le ⚡ per strada si prendono con il dito e
+                 basta: nessun conto mentre si corre, solo destrezza. Chi
+                 resta a secco si ferma, e **da fermo** fa un esercizio per
+                 riprendere fiato, senza nessuna fretta addosso — poi sceglie
+                 un regalo e riparte. Lo studio non è un pedaggio all'ingresso
+                 né una domanda a tempo: è quello che ti rimette in piedi.
+   · «porta»   — la domanda sta in alto, le tre corsie sono tre risposte.
+                 È il gioco a quiz travestito da corsa: la matematica non
+                 c'entra col correre, corre e basta. Provandolo si vede
+                 subito il difetto — leggere «7 × 8» e scegliere la corsia
+                 in due secondi non è calcolare, è tirare a indovinare — e
+                 per questo qui la corsa rallenta quando la porta si
+                 avvicina. È una toppa: dice che il problema è il modello.
+   · «squadra» — non c'è nessuna domanda. Hai una truppa e i cancelli sono
+                 operatori: ×3, +50, −20. Devi scegliere quale conviene
+                 *adesso*. La truppa **è un numero in base dieci**: dieci
+                 verdi valgono un rosso, dieci rossi un blu, dieci blu un
+                 giallo, e ognuno spara quanto vale — 243 sono due blu,
+                 quattro rossi e tre verdi, e si contano con gli occhi.
+                 Ogni tanto arriva un mostro e **la truppa gli spara
+                 addosso mentre vi avvicinate**: il numero è la potenza di
+                 fuoco, e quello che il mostro ha ancora di vita quando lo
+                 raggiungi te lo porta via. Ogni quarto scontro è un boss:
+                 lì la corsa **rallenta** invece di fermarsi, perché il
+                 tempo in più è tempo di fuoco. Se la truppa arriva a zero
+                 **si muore** e si ricomincia da capo: senza sconfitta,
+                 scegliere bene il cancello non varrebbe niente.
+                 Un cancello su tre porta il **libro**: ×5, ma bisogna
+                 fermarsi e fare un conto. Dichiarato prima, mai
+                 obbligatorio, e sbagliare non toglie niente — è
+                 un'offerta, non un pedaggio, ed è il modo più promettente
+                 di infilare lo studio dentro un gioco d'azione.
+
+   Tutto in un file, niente dipendenze: si apre con doppio click.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ---------- la tela e la prospettiva ----------
+   Una sola funzione sa dove finisce un punto della pista sullo schermo:
+   più è lontano (z grande), più si stringe verso l'orizzonte. Tutto il
+   resto del disegno passa da qui, così la strada e le cose sopra non
+   possono mai andare fuori registro. */
+const tela = document.getElementById('tela')
+const ctx  = tela.getContext('2d')
+let W = 0, H = 0, ORIZ = 0, BASE = 0, LARG = 0
+
+function misura() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1)
+  W = window.innerWidth; H = window.innerHeight
+  tela.width = Math.round(W * dpr); tela.height = Math.round(H * dpr)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  /* L'orizzonte sta in alto: il cielo è bello ma non ci si gioca, e metà
+     schermo di azzurro è metà schermo buttato. Quello che serve — la
+     strada e le scelte — prende tutto il resto. */
+  ORIZ = H * 0.19
+  BASE = H * 0.90            // dove tocca terra quello che ti sta addosso
+  /* La corsia è larga: lo spazio ai lati non serve a niente e l'occhio va
+     tenuto al centro, dove si gioca. Del prato resta una striscia per
+     parte, giusto perché gli alberi che sfilano dicano la velocità. */
+  LARG = Math.min(W * 0.275, 145)
+}
+window.addEventListener('resize', misura)
+misura()
+
+const K = 0.115              // quanto in fretta le cose rimpiccioliscono
+function punto(corsia, z) {
+  const s = 1 / (1 + Math.max(z, -0.9) * K)
+  return { s, x: W / 2 + corsia * LARG * s, y: ORIZ + (BASE - ORIZ) * s }
+}
+
+/* ---------- il caso, i suoni, gli aiuti ---------- */
+const caso   = (a, b) => a + Math.floor(Math.random() * (b - a + 1))
+const pesca  = a => a[Math.floor(Math.random() * a.length)]
+const mescola = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1])
+
+let audio = null
+function bip(freq, dur = .09, tipo = 'triangle', vol = .16) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)()
+    const o = audio.createOscillator(), g = audio.createGain()
+    o.type = tipo; o.frequency.value = freq
+    g.gain.setValueAtTime(vol, audio.currentTime)
+    g.gain.exponentialRampToValueAtTime(.0001, audio.currentTime + dur)
+    o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + dur)
+  } catch (e) { /* un prototipo senza audio è comunque un prototipo */ }
+}
+const suonoBene  = () => { bip(660, .08); setTimeout(() => bip(990, .12), 70) }
+const suonoMale  = () => bip(150, .18, 'sawtooth', .12)
+const suonoPunto = () => bip(1320, .05, 'sine', .10)
+
+/* ═══════════ LE DOMANDE (modo «porta») ═══════════
+   Difficoltà a scaglioni: si sale ogni cinque porte passate. I distrattori
+   non sono numeri a caso — sono gli errori che si fanno davvero: uno di
+   troppo, la decina sbagliata, la tabellina vicina. */
+function generaDomanda(passate) {
+  const grado = Math.min(3, Math.floor(passate / 5))
+  let testo, giusta
+  if (grado === 0) {
+    const a = caso(1, 9), b = caso(1, 9)
+    testo = `${a} + ${b}`; giusta = a + b
+  } else if (grado === 1) {
+    const a = caso(5, 18), b = caso(2, 9)
+    if (Math.random() < .5) { testo = `${a} + ${b}`; giusta = a + b }
+    else { testo = `${a} − ${b}`; giusta = a - b }
+  } else if (grado === 2) {
+    const a = caso(2, 9), b = caso(2, 9)
+    testo = `${a} × ${b}`; giusta = a * b
+  } else {
+    const b = caso(3, 9), r = caso(3, 9)
+    if (Math.random() < .5) { testo = `${b * r} : ${b}`; giusta = r }
+    else { testo = `${caso(4, 12)} × ${caso(4, 12)}`; giusta = Number(testo.split(' × ')[0]) * Number(testo.split(' × ')[1]) }
+  }
+  const vicini = mescola([giusta + 1, giusta - 1, giusta + 2, giusta - 2,
+                          giusta + 10, giusta - 10, giusta + giusta % 5 + 3])
+  const opz = [giusta]
+  for (const v of vicini) { if (opz.length < 3 && v > 0 && !opz.includes(v)) opz.push(v) }
+  while (opz.length < 3) { const v = giusta + caso(3, 12); if (!opz.includes(v)) opz.push(v) }
+  return { testo, giusta, opzioni: mescola(opz) }
+}
+
+/* ═══════════ LA TRUPPA, CHE È UN NUMERO SCRITTO IN TERRA ═══════════
+   Cinque verdi valgono un rosso, cinque rossi un blu, cinque blu un
+   giallo — e ognuno spara quanto vale. Non è una trovata grafica per non
+   disegnare duecento figure: è il **raggruppamento** messo in terra. 87
+   non è un mucchio: sono tre blu, due rossi e due verdi, e si contano con
+   gli occhi. Il numero scritto e quello che corre sono sempre la stessa
+   cosa, gruppo per gruppo. */
+/* Si cambia **ogni cinque**, non ogni dieci. Con dieci il branco arrivava a
+   quattromila e i cancelli dovevano offrire «+6000» per contare qualcosa:
+   numeri che nessuno somma a mente e che non si vedono più in terra. Con
+   cinque il massimo è 624 — quattro gradi, al massimo quattro figure per
+   grado, sedici soldati in scena — e ogni bonus torna un numero umano. */
+const CAMBIO = 5
+const ORDINI = [
+  { v: 1,             c: '#6fd46a', s: '#2f8f3c', nome: 'verdi' },
+  { v: CAMBIO,        c: '#f2705f', s: '#9c2a20', nome: 'rossi' },
+  { v: CAMBIO ** 2,   c: '#5aa9ff', s: '#1f5fb0', nome: 'blu' },
+  { v: CAMBIO ** 3,   c: '#ffcf3a', s: '#b98c00', nome: 'gialli' },
+]
+
+function scomponi(n) {
+  const out = []
+  let r = Math.max(0, Math.floor(n))
+  for (let g = ORDINI.length - 1; g >= 0; g--) {
+    const q = Math.floor(r / ORDINI[g].v); r -= q * ORDINI[g].v
+    if (q) out.push({ g, q })
+  }
+  return out
+}
+
+/* ═══════════ I CANCELLI (modo «squadra») ═══════════
+   Tre operatori diversi fra loro *e* diversi nel risultato: due cancelli
+   che portano allo stesso numero sono una scelta finta. La scelta è
+   interessante solo se il migliore non è sempre lo stesso simbolo — per
+   questo il moltiplicatore convive con un'addizione grossa: con 4 pulcini
+   conviene +18, con 12 conviene ×3, e capirlo È il gioco. */
+/* Un numero tondo dell'ordine di grandezza giusto: con 7 soldati «+30» è
+   un regalo assurdo, con 700 è polvere. Le addizioni si tarano su quanti
+   ce ne sono già, e restano numeri tondi perché un «+237» non lo somma
+   nessuno mentre corre. */
+function tondo(base, frazione) {
+  const grezzo = Math.max(2, base * frazione)
+  const passo = grezzo < 10 ? 1 : grezzo < 60 ? 5 : grezzo < 300 ? 25 : 100
+  return Math.max(passo, Math.round(grezzo / passo) * passo)
+}
+
+function generaCancelli(n) {
+  /* Le scelte composte: «÷5 +80» contro «×2 −40». Servono a togliere la
+     scorciatoia — finché i cancelli sono `+50` e `×2` basta guardare quale
+     numero è più grosso, e non si sta calcolando niente. Arrivano quando
+     il branco è abbastanza numeroso da rendere la divisione sensata. */
+  const composti = n < 40 ? [] : [
+    { seg: '÷' + CAMBIO + ' +' + tondo(n, .55), f: null, doppio: true },
+    { seg: '×2 −' + tondo(n, .5), f: null, doppio: true },
+    { seg: '÷2 +' + tondo(n, .35), f: null, doppio: true },
+  ]
+
+  const cand = [
+    // il cancello col libro: il premio più forte del gioco, ma va pagato
+    // fermandosi a fare un conto
+    ...(Math.random() < .34 ? [{ seg: '×' + CAMBIO, esercizio: true, f: v => v * CAMBIO }] : []),
+    ...mescola(composti).slice(0, 2),
+    { seg: '×2', f: v => v * 2 },
+    ...(n <= 120 ? [{ seg: '×3', f: v => v * 3 }] : []),
+    { seg: '+' + tondo(n, .35), f: null },
+    { seg: '+' + tondo(n, .7), f: null },
+    /* Con tre soldati in croce niente cancelli che tolgono: chi è finito
+       in fondo deve poter risalire scegliendo, se no resta a uno per
+       sempre e il gioco diventa una corsa senza scelte. */
+    ...(n > 4 ? [{ seg: '−' + tondo(n, .35), f: null },
+                 { seg: '÷2', f: v => Math.max(1, Math.floor(v / 2)) }] : []),
+  ].map(c => {
+    if (c.f) return c
+    if (c.doppio) {
+      // «÷5 +80»: prima quello che divide o moltiplica, poi quello che
+      // aggiunge o toglie — l'ordine in cui è scritto, che è l'unico che
+      // un bambino può dedurre guardandolo
+      const [uno, due] = c.seg.split(' ')
+      const a = Number(uno.slice(1)), b = Number(due.slice(1))
+      const primo = uno[0] === '÷' ? v => Math.floor(v / a) : v => v * a
+      const poi = due[0] === '+' ? v => v + b : v => Math.max(1, v - b)
+      return { ...c, f: v => Math.max(1, poi(primo(v))) }
+    }
+    const k = Number(c.seg.slice(1))
+    // `...c` e non `{seg, f}`: se no il cancello col libro perde il libro
+    return { ...c, f: c.seg[0] === '+' ? v => v + k : v => Math.max(1, v - k) }
+  })
+
+  /* Il cancello con l'esercizio, quando esce, ha la precedenza: è quello
+     che il prototipo deve far provare. Non è una trappola e non è
+     obbligatorio — è un'offerta dichiarata prima, «vuoi fermarti un
+     attimo a fare un conto per prenderne cinque volte tanti?». Chi tira
+     dritto non perde niente, e questa è tutta la differenza con un quiz. */
+  const ordine = [...cand.filter(c => c.esercizio), ...mescola(cand.filter(c => !c.esercizio))]
+  const scelti = []
+  for (const c of ordine) {
+    if (scelti.length === 3) break
+    if (scelti.some(s => s.f(n) === c.f(n))) continue   // niente scelte finte
+    scelti.push(c)
+  }
+  return mescola(scelti)          // la corsia buona non è sempre la stessa
+}
+
+/* Quanto vale un cancello quando devo prevedere il futuro: il ×5 lo conto
+   come un ×2, perché presuppone una risposta giusta — tarare i nemici sul
+   caso perfetto vuol dire mandare contro un esercito chi ha sbagliato. */
+const resaPrevista = o => (o.esercizio ? v => v * 2 : o.f)
+
+/* ═══════════ LO STATO ═══════════ */
+const S = {
+  fase: 'menu',       // menu | corsa | sosta
+  modo: 'porta',
+  fiato: 100,         // quanto ne resta: a zero ci si ferma
+  calamita: 0, scudo: 0, scatto: 0,   // i regali, a tempo o a botte
+  dist: 0,            // quanti metri di pista sono passati sotto i piedi
+  v: 7,               // metri al secondo
+  corsia: 0,          // dove vuoi essere (-1, 0, 1)
+  corsiaX: 0,         // dove sei davvero: l'interpolazione fa lo scarto
+  cose: [],           // tutto quello che sta sulla pista, con la sua z
+  prossima: 0,        // dove finisce la pista già generata
+  punti: 0, passate: 0, sbagli: 0,
+  squadra: 3, muri: 0,
+  scossa: 0, brividi: [], colpi: [], dannoSubito: 0, scontri: 0,
+}
+
+function avvia(modo) {
+  S.modo = modo; S.fase = 'corsa'
+  // più lenta di prima: il tempo per vedere il cancello, leggerlo e
+  // scegliere è la cosa che questo gioco deve dare, non la fretta
+  S.dist = 0; S.v = modo === 'porta' ? 5 : 5.5
+  S.fiato = 100; S.calamita = 0; S.scudo = 0; S.scatto = 0
+  svuotaSosta()
+  S.corsia = 0; S.corsiaX = 0
+  S.cose = []; S.prossima = 22
+  S.punti = 0; S.passate = 0; S.sbagli = 0
+  /* Si parte in dieci, non in tre: con tre, un cancello sbagliato e il
+     primo mostro ti cancellano prima ancora di aver capito il gioco —
+     misurato, nove morti in un minuto e mezzo. */
+  S.squadra = 10; S.muri = 0; S.scontri = 0; S.daScontro = 0; S.causa = ''
+  S.scossa = 0; S.brividi = []; S.colpi = []; S.dannoSubito = 0
+  document.getElementById('menu').classList.add('via')
+  aggiornaHud()
+}
+
+/* Chiudere il pannello non basta: i bottoni restavano nel DOM, invisibili
+   ma cliccabili, e un tocco fuori posto (o un test che pilota da solo)
+   faceva ricominciare la partita da sé. Si svuota. */
+function svuotaSosta() {
+  const s = document.getElementById('sosta')
+  s.classList.remove('c-e')
+  document.getElementById('s-scelte').innerHTML = ''
+  document.getElementById('s-doni').innerHTML = ''
+}
+
+function alMenu() {
+  S.fase = 'menu'
+  svuotaSosta()
+  document.getElementById('menu').classList.remove('via')
+  document.getElementById('domanda').textContent = ''
+  document.getElementById('sotto').textContent = ''
+}
+
+/* ═══════════ LA PISTA CHE SI GENERA DA SÉ ═══════════
+   Si costruisce sempre una quarantina di metri più avanti dello sguardo.
+   Nel modo «squadra» il muro sa esattamente quali cancelli ha davanti —
+   sono già tutti generati — quindi la soglia si può calcolare sul serio:
+   si prende il minimo e il massimo raggiungibili e si mette l'asticella
+   a poco più della metà. Impossibile è ingiusto, regalato è noioso. */
+function generaAvanti() {
+  while (S.prossima < S.dist + 46) {
+    if (S.modo === 'porta') generaPezzoPorta()
+    else if (S.modo === 'squadra') generaPezzoSquadra()
+    else generaPezzoFiato()
+  }
+}
+
+/* Il modo «fiato» non ha niente da leggere: solo roba da prendere e roba
+   da scansare. La ⚡ sta quasi sempre nella corsia scomoda — se bastasse
+   restare al centro non sarebbe una scelta, e la corsa sarebbe un video. */
+function generaPezzoFiato() {
+  // la ⚡ nella corsia scomoda: se bastasse restare al centro non sarebbe
+  // una scelta, sarebbe un video
+  S.cose.push({ tipo: 'lampo', z: S.prossima + caso(2, 6), corsia: pesca([-1, 1]), fatto: false })
+  if (Math.random() < .5)
+    S.cose.push({ tipo: 'lampo', z: S.prossima + caso(12, 18), corsia: caso(-1, 1), fatto: false })
+
+  // una scia di monete su una corsia sola: è quello che dà il gusto di
+  // *seguire* una linea invece di stare fermi in mezzo
+  const c = caso(-1, 1), quante = caso(4, 7), da = S.prossima + caso(6, 10)
+  for (let i = 0; i < quante; i++)
+    S.cose.push({ tipo: 'moneta', z: da + i * 1.7, corsia: c, fatto: false })
+
+  for (let i = 0; i < caso(2, 3); i++)
+    S.cose.push({ tipo: 'cono', z: S.prossima + caso(3, 19), corsia: caso(-1, 1), fatto: false })
+
+  S.prossima += 20
+}
+
+function generaPezzoPorta() {
+  const q = generaDomanda(S.passate + S.cose.filter(c => c.tipo === 'porta').length)
+  S.cose.push({ tipo: 'porta', z: S.prossima, q, fatto: false })
+  // fra una porta e l'altra: qualche moneta da prendere e qualche cono da
+  // scansare, perché fra un conto e l'altro le mani devono fare qualcosa
+  for (let i = 0; i < caso(1, 3); i++) {
+    S.cose.push({ tipo: Math.random() < .68 ? 'moneta' : 'cono',
+                  z: S.prossima + caso(4, 12), corsia: caso(-1, 1), fatto: false })
+  }
+  S.cose.push({ tipo: 'lampo', z: S.prossima + caso(6, 14), corsia: caso(-1, 1), fatto: false })
+  S.prossima += 17
+}
+
+function generaPezzoSquadra() {
+  const fila = S.cose.filter(c => c.tipo === 'cancelli' && !c.fatto)
+  // con quanti pulcini arriverò fin qui, nel caso migliore e nel peggiore:
+  // i cancelli in volo sono tutti già generati, quindi il conto è esatto
+  let min = S.squadra, max = S.squadra
+  for (const c of fila) {
+    const v = c.ops.flatMap(o => [resaPrevista(o)(min), resaPrevista(o)(max)])
+    // il tetto vale anche qui: senza, il mostro veniva dimensionato su una
+    // truppa che il tetto poi tagliava, e arrivava cinque volte troppo
+    // grosso proprio contro chi stava giocando meglio di tutti
+    min = Math.min(...v, TETTO); max = Math.min(Math.max(...v), TETTO)
+  }
+
+  /* Uno scontro ogni tre cancelli, contati da quando c'è stato l'ultimo.
+     Prima la condizione era «tre cancelli ancora in volo», e ha smesso di
+     avverarsi il giorno in cui i cancelli sono stati distanziati: in volo
+     ne stanno due, e per quattrocento metri non è arrivato un mostro —
+     trovato misurando, non giocando, perché a occhio sembrava solo una
+     partita tranquilla. */
+  if (S.daScontro >= 3) {
+    S.daScontro = 0
+    /* Ogni tre cancelli, una banda di mostri. È lei che tiene i numeri in
+       una fascia dove il conto si fa ancora a mente: senza qualcosa che
+       consuma, il branco arriva a novecento pulcini e «×3» smette di
+       essere una domanda. Quanti ne servono sta fra il peggio e il meglio
+       — ma **in proporzione**, non a metà strada: qui si moltiplica, e fra
+       1 e 135 la metà aritmetica è praticamente il massimo. */
+    /* La vita sta poco sopra il **caso peggiore**, non a due terzi verso il
+       migliore. A .68 il mostro era più forte del minimo raggiungibile,
+       cioè chi sceglieva sotto la media moriva al primo scontro, sempre:
+       misurato, tre morti in quarantacinque secondi. Ora chi sceglie male
+       una volta ci arriva col fiato corto e perde quasi tutti; muore chi
+       sbaglia due volte di fila, ed è una morte che si capisce. */
+    const base = Math.max(2, Math.round(min * Math.pow(max / Math.max(1, min), .45)))
+    /* Ogni quarto scontro è un boss: vale il triplo, e davanti a lui la
+       corsa **rallenta** invece di fermarsi — si affronta correndo piano,
+       non si legge una schermata. Il tempo in più è tempo di fuoco, che è
+       l'unica cosa che serve. */
+    const boss = ++S.scontri % 4 === 0
+    const quanti = boss ? Math.round(base * 2.6) : base
+    S.cose.push({ tipo: 'nemici', z: S.prossima, quanti, vita: quanti, boss, fatto: false })
+    S.prossima += boss ? 26 : 18
+    return
+  }
+
+  S.daScontro++
+  S.cose.push({ tipo: 'cancelli', z: S.prossima, ops: generaCancelli(Math.round((min + max) / 2)), fatto: false })
+  for (let i = 0; i < caso(0, 2); i++) {
+    S.cose.push({ tipo: 'cono', z: S.prossima + caso(3, 8), corsia: caso(-1, 1), fatto: false })
+  }
+  if (Math.random() < .6)
+    S.cose.push({ tipo: 'lampo', z: S.prossima + caso(4, 12), corsia: caso(-1, 1), fatto: false })
+  // un cancello ogni diciotto metri: prima erano undici, e la scelta dopo
+  // arrivava addosso mentre si stava ancora guardando quella di adesso
+  S.prossima += 18
+}
+
+/* ═══════════ COSA SUCCEDE QUANDO CI PASSI SOPRA ═══════════ */
+function attraversa(e) {
+  const qui = Math.round(S.corsiaX)
+
+  if (e.tipo === 'porta') {
+    const scelta = e.q.opzioni[qui + 1]
+    S.passate++
+    if (scelta === e.q.giusta) {
+      S.punti += 10; S.v = Math.min(15, S.v + .45)
+      grida('giusto!', '#8ef0a8'); suonoBene(); coriandoli(qui, '#8ef0a8')
+    } else {
+      S.sbagli++; S.v = Math.max(5.5, S.v - 1.4); S.scossa = 12
+      grida(e.q.testo + ' = ' + e.q.giusta, '#ff9d9d'); suonoMale()
+      // la domanda sbagliata torna: rispondere a caso non la fa sparire
+      S.cose.push({ tipo: 'porta', z: S.dist + 44, q: e.q, fatto: false })
+    }
+  }
+
+  else if (e.tipo === 'cancelli') {
+    const op = e.ops[qui + 1]
+    S.passate++
+    // il cancello con l'esercizio ferma tutto: si risponde da fermi
+    if (op.esercizio) return apriSosta('bonus', op)
+    const prima = S.squadra
+    S.squadra = Math.max(1, op.f(S.squadra))
+    if (S.squadra > prima) { suonoBene(); coriandoli(qui, '#ffd98a') }
+    else { suonoMale() }
+    grida((S.squadra >= prima ? '+' : '') + (S.squadra - prima), S.squadra >= prima ? '#8ef0a8' : '#ff9d9d')
+    // il migliore che c'era: serve solo a far vedere quanto si è lasciato
+    const meglio = Math.max(...e.ops.map(o => o.f(prima)))
+    if (S.squadra === meglio) S.punti += 5
+  }
+
+  else if (e.tipo === 'nemici') {
+    /* Il conto è già stato fatto durante l'avvicinamento: il branco ha
+       sparato per tutto il tragitto (vedi `sparatoria`). Qui si tira solo
+       la riga. Se il mostro è ancora in piedi, quello che resta della sua
+       vita è quello che ti porta via addosso. */
+    if (e.vita <= 0) {
+      S.muri++; S.punti += 8 + e.quanti * 2; S.v = Math.min(16, S.v + .6)
+      grida('abbattuto!', '#8ef0a8'); suonoBene(); coriandoli(0, '#9fd0ff', 40)
+    } else {
+      const persi = Math.min(S.squadra, Math.ceil(e.vita))
+      // chi ti ha steso, e con quanta vita gli era rimasta: è la prima cosa
+      // che si vuole sapere davanti a una schermata di sconfitta
+      S.causa = `${e.boss ? 'un boss' : 'un mostro'} da ${e.quanti}, ancora in piedi con ${Math.ceil(e.vita)}`
+      S.squadra -= persi; S.scossa = 20
+      S.v = Math.max(6, S.v - 2)
+      grida('non è caduto! −' + persi, '#ff9d9d'); suonoMale()
+    }
+  }
+
+  else if (e.tipo === 'moneta') {
+    // la calamita allarga la mano di una corsia: si vede subito che serve
+    if (e.corsia === qui || (S.calamita > 0 && Math.abs(e.corsia - qui) === 1)) {
+      S.punti += 3; suonoPunto(); coriandoli(e.corsia, '#ffd98a', 6)
+    }
+  }
+
+  else if (e.tipo === 'lampo') {
+    if (e.corsia === qui || (S.calamita > 0 && Math.abs(e.corsia - qui) === 1)) {
+      S.fiato = Math.min(100, S.fiato + 34); S.punti += 2
+      bip(880, .07); coriandoli(e.corsia, '#9fd0ff', 10)
+    }
+  }
+
+  else if (e.tipo === 'cono') {
+    if (e.corsia !== qui) return
+    if (S.scudo > 0) { S.scudo--; bip(520, .1, 'sine', .12); return }
+    S.v = Math.max(5, S.v - 1.1); S.scossa = 14; S.fiato = Math.max(0, S.fiato - 12); suonoMale()
+    if (S.modo === 'squadra') {
+      S.squadra = Math.max(0, S.squadra - 1)
+      if (S.squadra <= 0) S.causa = 'un cono, con un soldato solo rimasto'
+    }
+  }
+}
+
+/* ═══════════ LA SPARATORIA ═══════════
+   Il branco spara da solo per tutto l'avvicinamento, e **il numero è la
+   potenza di fuoco**: è questo che dà un senso ai pulcini raccolti. Il
+   danno si conta **per metro percorso**, non per secondo — se no correre
+   più forte vorrebbe dire sparare di meno, e l'esito di uno scontro
+   dipenderebbe da com'è andata la corsa prima invece che dai numeri.
+
+   Alla portata di tiro (INGAGGIO metri) un branco grande esattamente
+   quanto il mostro lo stende giusto sul filo dell'impatto: sopra si vince
+   con margine, sotto si prendono le legnate. E finché il mostro è in
+   piedi spara anche lui: chi ci mette di più a stenderlo ne perde di più,
+   ed è per questo che il branco non cresce all'infinito. */
+const INGAGGIO = 16
+// il massimo che i quattro gradi sanno rappresentare: 4 gialli, 4 blu,
+// 4 rossi, 4 verdi. Oltre, i soldati in più diventano stelle.
+const TETTO = CAMBIO ** 4 - 1
+let daColpo = 0
+
+function sparatoria(metri) {
+  if (S.modo !== 'squadra' || metri <= 0) return
+  const bersaglio = S.cose.find(e => e.tipo === 'nemici' && !e.fatto &&
+                                     e.z - S.dist <= INGAGGIO && e.z - S.dist > 0)
+  if (!bersaglio || bersaglio.vita <= 0) return
+
+  bersaglio.vita -= S.squadra * metri / INGAGGIO
+  // il fuoco di risposta: proporzionale a quanto è ancora vivo
+  S.dannoSubito = (S.dannoSubito || 0) + Math.max(0, bersaglio.vita) * metri * .035
+  if (S.dannoSubito >= 1) {
+    /* Durante l'avvicinamento si perdono soldati ma non si muore: resta
+       sempre l'ultimo. Si muore **all'impatto**, se il mostro è ancora in
+       piedi — così la sconfitta ha una causa che si vede («non l'ho
+       abbattuto in tempo») invece di essere un'emorragia che ti spegne
+       mentre guardavi il cancello dopo. */
+    const persi = Math.min(S.squadra - 1, Math.floor(S.dannoSubito))
+    S.dannoSubito -= persi
+    S.squadra -= persi
+  }
+  if (bersaglio.vita <= 0) { bersaglio.vita = 0; S.dannoSubito = 0; bip(180, .14, 'sawtooth', .12) }
+
+  // i colpi: puntini che partono dal branco e volano avanti
+  daColpo += metri
+  if (daColpo > .55) {
+    daColpo = 0
+    S.colpi.push({ z: .5, corsia: S.corsiaX + (Math.random() - .5) * .5, meta: bersaglio.z - S.dist })
+    bip(1500 + Math.random() * 300, .02, 'square', .04)
+  }
+}
+
+/* ═══════════ LA SOSTA ═══════════
+   Il fiato finisce, ci si ferma, e SOLO QUI si fa un conto. È il punto di
+   tutto il prototipo: mentre si corre non c'è tempo di calcolare — leggere
+   «7 × 8» e scegliere la corsia in due secondi è tirare a indovinare, non
+   fare matematica. Da fermi il tempo è tutto quello che serve, e la
+   ricompensa non è «hai risposto giusto»: è ripartire, più il regalo. */
+const DONI = [
+  { e: '🧲', n: 'calamita', usa: () => S.calamita = 22 },
+  { e: '🛡️', n: 'scudo',    usa: () => S.scudo += 3 },
+  { e: '👟', n: 'scatto',   usa: () => { S.scatto = 8; S.v += 2.5 } },
+]
+
+const elSosta = document.getElementById('sosta')
+let quesito = null
+let perche = 'fiato'      // perché ci si è fermati: fiato | bonus
+let premio = null         // l'operatore da riscuotere, nel caso del bonus
+
+function apriSosta(tipo = 'fiato', op = null) {
+  S.fase = 'sosta'
+  perche = tipo; premio = op
+  quesito = generaDomanda(S.passate)
+  document.getElementById('s-titolo').textContent =
+    tipo === 'bonus' ? `Il cancello ${op.seg}` : 'Ti manca il fiato!'
+  document.getElementById('s-spiega').textContent = tipo === 'bonus'
+    ? `Rispondi e il branco diventa ${op.seg}. Sbagliare non toglie niente: resti come sei.`
+    : 'Riprendi fiato con calma: qui non corre nessuno, e la risposta non ha un tempo.'
+  document.getElementById('s-conto').textContent = quesito.testo + ' ='
+  const sc = document.getElementById('s-scelte')
+  sc.innerHTML = ''
+  document.getElementById('s-doni').innerHTML = ''
+  for (const v of quesito.opzioni) {
+    const b = document.createElement('button')
+    b.textContent = v
+    b.onclick = () => rispondi(v, b)
+    sc.appendChild(b)
+  }
+  elSosta.classList.add('c-e')
+  aggiornaHud()
+  bip(300, .2, 'sine', .12)
+}
+
+function rispondi(v, b) {
+  if (!quesito) return
+  const giusto = v === quesito.giusta
+  ;[...document.getElementById('s-scelte').children].forEach(x => x.onclick = null)
+  b.classList.add(giusto ? 'si' : 'no')
+  if (!giusto) {
+    // la risposta giusta si vede sempre: sbagliare deve insegnare, non punire
+    ;[...document.getElementById('s-scelte').children]
+      .find(x => Number(x.textContent) === quesito.giusta)?.classList.add('si')
+    document.getElementById('s-conto').textContent = quesito.testo + ' = ' + quesito.giusta
+  }
+  quesito = null
+  giusto ? suonoBene() : suonoMale()
+
+  if (perche === 'bonus') {
+    // il premio è il branco moltiplicato; sbagliare non toglie niente,
+    // si è solo perso il tempo di provarci
+    if (giusto) {
+      const prima = S.squadra
+      S.squadra = Math.max(1, premio.f(S.squadra))
+      document.getElementById('s-titolo').textContent = `+${S.squadra - prima}!`
+    }
+    S.punti += giusto ? 20 : 2
+    return setTimeout(riparti, giusto ? 900 : 1500)
+  }
+
+  S.fiato = giusto ? 100 : 62
+  S.punti += giusto ? 15 : 4
+  setTimeout(offriDono, giusto ? 550 : 1300)
+}
+
+/* Il regalo arriva DOPO il conto, sempre, anche a chi ha sbagliato: la
+   sosta deve essere un posto in cui si torna volentieri, non una multa. */
+function offriDono() {
+  document.getElementById('s-titolo').textContent = 'Scegli cosa portarti'
+  document.getElementById('s-spiega').textContent = 'Uno solo, e poi si riparte.'
+  document.getElementById('s-scelte').innerHTML = ''
+  const d = document.getElementById('s-doni')
+  d.innerHTML = ''
+  for (const dono of mescola(DONI).slice(0, 3)) {
+    const b = document.createElement('button')
+    b.innerHTML = `<span class="em">${dono.e}</span><span class="nm">${dono.n}</span>`
+    b.onclick = () => { dono.usa(); riparti() }
+    d.appendChild(b)
+  }
+}
+
+/* La fine. Non si riparte da lì con quel che resta: si muore, e si
+   ricomincia da capo. Un runner senza sconfitta è un video con dei tasti;
+   il senso di scegliere bene il cancello viene tutto da qui. */
+function finita() {
+  S.fase = 'finita'
+  document.getElementById('s-titolo').textContent = 'Ti hanno travolto'
+  document.getElementById('s-spiega').textContent =
+    (S.causa ? 'Ti ha fermato ' + S.causa + '.\n' : '') +
+    `${Math.floor(S.dist)} metri · ${S.muri} scontri vinti · ⭐ ${S.punti}`
+  document.getElementById('s-conto').textContent = '💀'
+  document.getElementById('s-scelte').innerHTML = ''
+  const d = document.getElementById('s-doni')
+  d.innerHTML = ''
+  const ancora = document.createElement('button')
+  ancora.innerHTML = '<span class="em">🔄</span><span class="nm">di nuovo</span>'
+  ancora.onclick = () => avvia('squadra')
+  const via = document.createElement('button')
+  via.innerHTML = '<span class="em">🏠</span><span class="nm">al menù</span>'
+  via.onclick = alMenu
+  d.append(ancora, via)
+  elSosta.classList.add('c-e')
+  suonoMale(); S.scossa = 26
+}
+
+function riparti() {
+  svuotaSosta()
+  S.fase = 'corsa'
+  S.v = Math.max(S.v, S.modo === 'porta' ? 7 : 8)
+  ultimo = performance.now()      // se no il primo dt vale tutta la sosta
+  bip(700, .1); grida('via!', '#8ef0a8')
+}
+
+/* ═══════════ IL GIRO DI GIOCO ═══════════ */
+let ultimo = performance.now()
+function giro(ora) {
+  const dt = Math.min(.05, (ora - ultimo) / 1000); ultimo = ora
+  if (S.fase === 'corsa') passo(dt)
+  disegna()
+  requestAnimationFrame(giro)
+}
+
+function passo(dt) {
+  /* Il freno davanti alla porta: senza, la domanda in alto compare e
+     sparisce prima che un bambino l'abbia finita di leggere. È una toppa
+     al modo «porta», e si sente che è una toppa — la corsa fa su e giù. */
+  let freno = 1
+  if (S.modo === 'porta') {
+    const p = S.cose.filter(c => c.tipo === 'porta' && !c.fatto).sort((a, b) => a.z - b.z)[0]
+    if (p) {
+      const z = p.z - S.dist
+      if (z < 11) freno = .38 + .62 * Math.max(0, (z - 2) / 9)
+    }
+  }
+  /* Davanti a un boss si rallenta e lo si affronta: non ci si ferma —
+     fermarsi spezza la corsa e trasforma uno scontro in una schermata.
+     Il rallentamento è tempo di fuoco in più, cioè l'unica cosa che
+     serve davvero contro qualcosa che ha il triplo della vita. */
+  const capo = S.cose.find(c => c.tipo === 'nemici' && c.boss && !c.fatto && c.z - S.dist < 18)
+  if (capo && capo.vita > 0) freno = Math.min(freno, .5)
+
+  S.dist += S.v * freno * dt
+  S.v = Math.min(S.modo === 'porta' ? 9 : 10, S.v + dt * .035)   // si accelera piano
+  S.corsiaX += (S.corsia - S.corsiaX) * Math.min(1, dt * 15)
+  S.scossa = Math.max(0, S.scossa - dt * 45)
+
+  // il fiato: si consuma correndo, e più forte si corre più costa
+  /* Il tetto del branco. Senza, chi sceglie bene arriva a un milione di
+     pulcini in un minuto e mezzo — misurato — e a quel punto «×3» non è
+     più una domanda di matematica, è una scritta. Quelli in più corrono
+     al traguardo e diventano stelle: il numero resta leggibile e il gioco
+     bravo viene premiato lo stesso. */
+  // l'eccesso vale poco apposta: a 1:1 un solo ×5 al tetto regalava
+  // quarantamila stelle e il punteggio smetteva di dire qualcosa
+  if (S.squadra > TETTO) { S.punti += Math.round((S.squadra - TETTO) / 20); S.squadra = TETTO }
+  if (S.modo === 'squadra' && S.squadra <= 0) return finita()
+
+  S.calamita = Math.max(0, S.calamita - dt)
+  if (S.scatto > 0 && (S.scatto -= dt) <= 0) S.v = Math.max(6, S.v - 2.5)
+  S.fiato -= dt * (2.1 + S.v * .22)
+  if (S.fiato <= 0) { S.fiato = 0; return apriSosta() }
+
+  generaAvanti()
+  sparatoria(S.v * freno * dt)
+  for (const e of S.cose) {
+    if (!e.fatto && e.z - S.dist <= 0.5) { e.fatto = true; attraversa(e) }
+  }
+  S.cose = S.cose.filter(e => e.z - S.dist > -3)
+
+  for (const p of S.brividi) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.vita -= dt }
+  S.brividi = S.brividi.filter(p => p.vita > 0)
+
+  for (const c of S.colpi) { c.z += 42 * dt; c.meta -= S.v * freno * dt }
+  S.colpi = S.colpi.filter(c => c.z < c.meta)
+
+  aggiornaHud()
+}
+
+/* ═══════════ IL DISEGNO ═══════════ */
+function disegna() {
+  const sx = S.scossa ? (Math.random() - .5) * S.scossa * .6 : 0
+  ctx.save(); ctx.translate(sx, S.scossa ? (Math.random() - .5) * S.scossa * .4 : 0)
+
+  cielo()
+  strada()
+  contorno()
+
+  if (S.fase === 'corsa') {
+    // dal più lontano al più vicino, o le cose vicine finiscono sotto
+    const ordinate = [...S.cose].sort((a, b) => b.z - a.z)
+    const primaPorta = S.cose.filter(c => (c.tipo === 'porta') && !c.fatto)
+      .sort((a, b) => a.z - b.z)[0]
+    const primoCancello = S.cose.filter(c => c.tipo === 'cancelli' && !c.fatto)
+      .sort((a, b) => a.z - b.z)[0]
+    for (const e of ordinate) {
+      const z = e.z - S.dist
+      if (z < -1.2 || z > 46) continue
+      if (e.tipo === 'porta')   disegnaPorta(e, z, e === primaPorta)
+      if (e.tipo === 'cancelli') disegnaCancelli(e, z, e === primoCancello)
+      if (e.tipo === 'nemici')   disegnaNemici(e, z)
+      if (e.tipo === 'moneta')   disegnaCosetta(e, z, '🪙')
+      if (e.tipo === 'cono')     disegnaCosetta(e, z, '🚧')
+      if (e.tipo === 'lampo')    disegnaCosetta(e, z, '⚡', 1.25)
+    }
+    disegnaColpi()
+    corridore()
+  }
+
+  for (const p of S.brividi) {
+    ctx.globalAlpha = Math.max(0, p.vita * 1.6)
+    ctx.fillStyle = p.c
+    ctx.fillRect(p.x - 3, p.y - 3, 6, 6)
+  }
+  ctx.globalAlpha = 1
+  ctx.restore()
+}
+
+/* Il fondale. Tre piani a velocità diverse — nuvole lentissime, colline
+   lente, alberi a bordo strada veloci: è la parallasse a dire «stai
+   correndo», più della strada stessa. Il sole sta basso apposta: più in
+   alto finisce dietro alla scritta, che è l'unica cosa da leggere. */
+function cielo() {
+  const g = ctx.createLinearGradient(0, 0, 0, ORIZ * 1.06)
+  g.addColorStop(0, '#4aa6e8'); g.addColorStop(.55, '#a5dcf6'); g.addColorStop(1, '#ecf7dc')
+  ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, ORIZ + 42)
+
+  ctx.fillStyle = '#fff6c0'
+  ctx.beginPath(); ctx.arc(W * .8, ORIZ - H * .115, Math.min(W, H) * .048, 0, 7); ctx.fill()
+  ctx.fillStyle = '#ffffff55'
+  ctx.beginPath(); ctx.arc(W * .8, ORIZ - H * .115, Math.min(W, H) * .07, 0, 7); ctx.fill()
+
+  for (let i = 0; i < 3; i++) {
+    const larg = W * 1.9
+    const x = W * 1.35 - ((S.dist * 2.4 + i * 430) % larg)
+    nuvola(x, ORIZ * (.2 + i * .17), Math.min(W, H) * (.05 + i * .014))
+  }
+
+  // due creste: la lontana più chiara, come si vede davvero la distanza
+  ctx.fillStyle = '#a8cf9a'
+  ctx.beginPath(); ctx.moveTo(-40, ORIZ + 2)
+  ctx.quadraticCurveTo(W * .18, ORIZ - H * .085, W * .46, ORIZ + 2)
+  ctx.quadraticCurveTo(W * .72, ORIZ - H * .11, W + 40, ORIZ + 2)
+  ctx.closePath(); ctx.fill()
+  ctx.fillStyle = '#7cb572'
+  ctx.beginPath(); ctx.moveTo(-40, ORIZ + 2)
+  ctx.quadraticCurveTo(W * .3, ORIZ - H * .045, W * .62, ORIZ + 2)
+  ctx.quadraticCurveTo(W * .84, ORIZ - H * .06, W + 40, ORIZ + 2)
+  ctx.closePath(); ctx.fill()
+}
+
+function nuvola(x, y, r) {
+  ctx.fillStyle = '#ffffffdd'
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, 7); ctx.arc(x + r * .9, y + r * .2, r * .75, 0, 7)
+  ctx.arc(x - r * .9, y + r * .25, r * .6, 0, 7); ctx.arc(x + r * .1, y + r * .5, r * .8, 0, 7)
+  ctx.fill()
+}
+
+function strada() {
+  // il prato: due verdi, così l'erba non è una campitura piatta
+  const g = ctx.createLinearGradient(0, ORIZ, 0, H)
+  g.addColorStop(0, '#7cb572'); g.addColorStop(1, '#5d9b58')
+  ctx.fillStyle = g; ctx.fillRect(-40, ORIZ - 1, W + 80, H - ORIZ + 40)
+
+  const lontano = punto(0, 60), vicino = punto(0, -1)
+  const bordo = (c, p) => W / 2 + c * LARG * 1.62 * p.s
+  const nastro = (c0, c1, colore, za = 60, zb = -1) => {
+    const a = punto(0, za), b = punto(0, zb)
+    ctx.fillStyle = colore
+    ctx.beginPath()
+    ctx.moveTo(bordo(c0, a), a.y); ctx.lineTo(bordo(c1, a), a.y)
+    ctx.lineTo(bordo(c1, b), b.y); ctx.lineTo(bordo(c0, b), b.y)
+    ctx.closePath(); ctx.fill()
+  }
+
+  nastro(-1.12, 1.12, '#a9855c')          // la banchina di terra
+  nastro(-1, 1, '#e2c391')                // la strada battuta
+
+  // le fasce che scorrono: sono loro a dire che si corre
+  for (let i = 0; i < 26; i++) {
+    const z0 = i * 4 - (S.dist % 8), z1 = z0 + 4
+    if (z1 < -1 || z0 > 60) continue
+    if (Math.floor((i * 4 + S.dist - (S.dist % 8)) / 4) % 2) continue
+    const a = punto(0, Math.max(z0, -1)), b = punto(0, Math.max(z1, -1))
+    ctx.fillStyle = '#00000010'
+    ctx.beginPath()
+    ctx.moveTo(bordo(-1, b), b.y); ctx.lineTo(bordo(1, b), b.y)
+    ctx.lineTo(bordo(1, a), a.y);  ctx.lineTo(bordo(-1, a), a.y)
+    ctx.closePath(); ctx.fill()
+  }
+
+  // le due righe fra le corsie, tratteggiate a pezzi che scorrono
+  for (let i = 0; i < 20; i++) {
+    const z0 = i * 3 - (S.dist % 6), z1 = z0 + 1.5
+    if (z1 < -1 || z0 > 55) continue
+    for (const c of [-.34, .34]) {
+      const a = punto(0, Math.max(z0, -1)), b = punto(0, Math.max(z1, -1))
+      ctx.fillStyle = '#fffaf0aa'
+      ctx.beginPath()
+      ctx.moveTo(W / 2 + c * LARG * 2 * a.s - 1.5 * a.s, a.y)
+      ctx.lineTo(W / 2 + c * LARG * 2 * a.s + 1.5 * a.s, a.y)
+      ctx.lineTo(W / 2 + c * LARG * 2 * b.s + 1.5 * b.s, b.y)
+      ctx.lineTo(W / 2 + c * LARG * 2 * b.s - 1.5 * b.s, b.y)
+      ctx.closePath(); ctx.fill()
+    }
+  }
+
+  ctx.strokeStyle = '#fffaf0cc'; ctx.lineWidth = 2.5
+  for (const c of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(bordo(c, lontano), lontano.y); ctx.lineTo(bordo(c, vicino), vicino.y); ctx.stroke()
+  }
+}
+
+/* Gli alberi a bordo strada. Non decorano: sono la cosa che *si vede*
+   passare, e senza qualcosa che passa vicino la velocità non si sente —
+   il fondale lontano si muove troppo poco per dirla. */
+function contorno() {
+  const PASSO = 6.5
+  const primo = Math.ceil((S.dist - 1) / PASSO) * PASSO
+  for (let z = primo + 60; z >= primo - PASSO; z -= PASSO) {
+    const zr = z - S.dist
+    if (zr < -1.5 || zr > 62) continue
+    const n = Math.round(z / PASSO)
+    const lato = n % 2 ? 1 : -1
+    const fuori = 1.55 + ((n * 7) % 5) * .22
+    albero(punto(lato * fuori, zr), n)
+    if (n % 3 === 0) paletto(punto(-lato * 1.35, zr))
+  }
+}
+
+function albero(p, seme) {
+  const h = 150 * p.s
+  if (h < 1.2) return
+  ctx.globalAlpha = Math.min(1, Math.max(0, (58 - (1 / p.s - 1) / K) / 14))
+  ctx.fillStyle = '#00000018'
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, h * .22, h * .06, 0, 0, 7); ctx.fill()
+  ctx.fillStyle = '#8b6039'
+  ctx.fillRect(p.x - h * .045, p.y - h * .42, h * .09, h * .42)
+  const verdi = ['#4f9a4a', '#5cae53', '#469143']
+  ctx.fillStyle = verdi[seme % 3]
+  ctx.beginPath()
+  ctx.arc(p.x, p.y - h * .58, h * .27, 0, 7)
+  ctx.arc(p.x - h * .2, p.y - h * .44, h * .2, 0, 7)
+  ctx.arc(p.x + h * .19, p.y - h * .46, h * .21, 0, 7)
+  ctx.fill()
+  ctx.fillStyle = '#ffffff22'
+  ctx.beginPath(); ctx.arc(p.x - h * .08, p.y - h * .66, h * .12, 0, 7); ctx.fill()
+  ctx.globalAlpha = 1
+}
+
+function paletto(p) {
+  const h = 46 * p.s
+  if (h < .8) return
+  ctx.fillStyle = '#fffaf0'
+  ctx.fillRect(p.x - h * .09, p.y - h, h * .18, h)
+  ctx.fillStyle = '#e2584f'
+  ctx.fillRect(p.x - h * .09, p.y - h, h * .18, h * .3)
+}
+
+/* una porta per corsia: telaio, pannello, numero grande.
+   I numeri li mostra solo la porta di cui si sta leggendo la domanda —
+   quelli della porta dopo appartengono a un'altra domanda e, letti
+   insieme, sono solo rumore. */
+function disegnaPorta(e, z, attiva) {
+  const alfa = Math.min(1, Math.max(0, (40 - z) / 12))
+  for (let c = -1; c <= 1; c++) {
+    const p = punto(c, z)
+    // la scala si ferma a .72: da vicinissimo un «22» alto mezzo schermo
+    // non si legge meglio, copre solo la strada
+    const s = Math.min(p.s, .72)
+    const w = LARG * .84 * s, h = H * .17 * s
+    ctx.globalAlpha = alfa
+    riquadro(p.x, p.y, w, h, attiva ? '#3d5fa8' : '#2a3a5c', attiva ? '#8fb6ff' : '#41527a')
+    if (attiva) {
+      ctx.fillStyle = '#ffffff'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      testoDentro(String(e.q.opzioni[c + 1]), p.x, p.y - h * .52, w * .78, Math.max(9, h * .42))
+    }
+  }
+  ctx.globalAlpha = 1
+}
+
+/* i cancelli: stessa forma delle porte, ma quello che c'è scritto non è
+   una risposta — è quello che ti succede se ci passi. */
+function disegnaCancelli(e, z, attivo) {
+  /* Solo il cancello su cui si sta decidendo è leggibile: quello dopo si
+     intravede appena. Tre scelte alla volta bastano — sei numeri in fila
+     non sono una decisione più ricca, sono confusione. */
+  const alfa = Math.min(1, Math.max(0, (40 - z) / 12)) * (attivo ? 1 : .22)
+  for (let c = -1; c <= 1; c++) {
+    const op = e.ops[c + 1]
+    const p = punto(c, z)
+    const s = Math.min(p.s, .72)
+    const w = LARG * .84 * s, h = H * .15 * s
+    const buono = op.seg[0] === '×' || op.seg[0] === '+'
+    ctx.globalAlpha = alfa
+    // il cancello con l'esercizio si vede da lontano che è diverso: oro,
+    // e il libro. Se si scoprisse solo passandoci è una trappola.
+    if (op.esercizio) riquadro(p.x, p.y, w, h, '#7a5a12', '#ffd24a')
+    else riquadro(p.x, p.y, w, h, buono ? '#2f6b4a' : '#6b3040', buono ? '#7ee0a0' : '#ff9db0')
+    ctx.fillStyle = '#ffffff'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    const righe = op.seg.split(' ')
+    if (righe.length > 1) {
+      // «÷5» sopra e «+80» sotto: su una riga sola diventa una stringa
+      // lunga che il ridimensionamento riduce a niente
+      testoDentro(righe[0], p.x, p.y - h * .72, w * .72, Math.max(8, h * .3))
+      testoDentro(righe[1], p.x, p.y - h * .44, w * .72, Math.max(8, h * .3))
+    } else {
+      testoDentro(op.seg, p.x, p.y - h * .58, w * .76, Math.max(9, h * .44))
+    }
+    if (op.esercizio) {
+      ctx.font = `${Math.max(8, h * .26)}px system-ui, sans-serif`
+      ctx.fillText('📚', p.x, p.y - h * .19)
+    }
+  }
+  ctx.globalAlpha = 1
+}
+
+/* Il mostro: una barra della vita che scende mentre gli si spara addosso,
+   e il numero che resta. Fa vedere in un colpo d'occhio la cosa che tiene
+   in piedi tutto il gioco — che il branco È la potenza di fuoco. */
+function disegnaNemici(e, z) {
+  const s = Math.min(punto(0, z).s, .8)     // oltre una certa vicinanza smette di crescere
+  const p = punto(0, z)
+  const quota = Math.max(0, e.vita) / e.quanti
+  const largo = LARG * 2.4 * s
+  ctx.globalAlpha = Math.min(1, Math.max(0, (40 - z) / 10))
+
+  // la banda: tanti mostri quanti ne restano, fino a cinque. Di più si
+  // sovrapponevano e diventavano una macchia viola senza facce. Il boss
+  // è uno solo e grosso: si vede da lontano che quello è un altro affare.
+  const quanti = e.boss ? 1 : Math.max(1, Math.min(5, Math.ceil(quota * 5)))
+  const d = Math.max(10, (e.boss ? 150 : 74) * s)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+  for (let i = 0; i < quanti; i++) {
+    const dx = (i - (quanti - 1) / 2) * largo / 4.2
+    const su = Math.abs(Math.sin(S.dist * 2 + i)) * d * .12
+    ctx.fillStyle = '#00000022'
+    ctx.beginPath(); ctx.ellipse(p.x + dx, p.y, d * .3, d * .08, 0, 0, 7); ctx.fill()
+    ctx.font = `${d}px system-ui, sans-serif`
+    ctx.fillText(e.boss ? '👹' : '👾', p.x + dx, p.y - su)
+  }
+
+  // la barra della vita, sopra la banda
+  const bw = largo * 1.15, bh = Math.max(4, 15 * s), by = p.y - d * 1.35
+  ctx.fillStyle = '#00000077'
+  ctx.beginPath(); ctx.roundRect(p.x - bw / 2, by, bw, bh, bh / 2); ctx.fill()
+  ctx.fillStyle = quota > .5 ? '#ff8080' : '#ffd24a'
+  ctx.beginPath(); ctx.roundRect(p.x - bw / 2, by, bw * quota, bh, bh / 2); ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  ctx.textBaseline = 'bottom'
+  testoDentro(String(Math.ceil(e.vita)), p.x, by - bh * .4, bw * .55, Math.max(10, 30 * s))
+  ctx.globalAlpha = 1
+}
+
+/* i colpi in volo: sono la ragione per cui si capisce, senza una riga di
+   spiegazione, che più pulcini vuol dire più fuoco */
+function disegnaColpi() {
+  for (const c of S.colpi) {
+    const p = punto(c.corsia, c.z)
+    ctx.globalAlpha = .9
+    ctx.fillStyle = '#ffe9a3'
+    ctx.beginPath(); ctx.ellipse(p.x, p.y - 26 * p.s, Math.max(1.5, 5 * p.s), Math.max(3, 11 * p.s), 0, 0, 7)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+}
+
+function disegnaCosetta(e, z, emoji, scala = 1) {
+  const p = punto(e.corsia, z)
+  // come i cancelli: oltre una certa vicinanza smettono di crescere, se no
+  // l'ultima moneta prima di sparire è larga mezza strada
+  const d = Math.max(6, 46 * Math.min(p.s, .8) * scala)
+  ctx.globalAlpha = Math.min(1, Math.max(0, (40 - z) / 10))
+  if (e.tipo === 'lampo') {
+    // un alone dietro: da lontano un'emoji piccola su asfalto scuro non
+    // si vede, e una cosa che non si vede non si può decidere di prendere
+    const g = ctx.createRadialGradient(p.x, p.y - d * .35, 0, p.x, p.y - d * .35, d)
+    g.addColorStop(0, '#9fd0ff88'); g.addColorStop(1, '#9fd0ff00')
+    ctx.fillStyle = g
+    ctx.beginPath(); ctx.arc(p.x, p.y - d * .35, d, 0, 7); ctx.fill()
+  }
+  ctx.font = `${d}px system-ui, sans-serif`
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+  ctx.fillText(emoji, p.x, p.y)
+  ctx.globalAlpha = 1
+}
+
+/* Una scritta che sta dentro la sua scatola, sempre. Il corpo del
+   carattere si sceglieva dall'altezza del riquadro: «+22» e «×5» sono due
+   e tre caratteri, e il primo sbordava di netto. Qui si misura e, se non
+   ci sta, si rimpicciolisce — costa una `measureText` per cancello. */
+function testoDentro(txt, x, y, largoMax, corpo) {
+  ctx.font = `900 ${corpo}px system-ui, sans-serif`
+  const w = ctx.measureText(txt).width
+  if (w > largoMax) ctx.font = `900 ${Math.max(7, corpo * largoMax / w)}px system-ui, sans-serif`
+  ctx.fillText(txt, x, y)
+}
+
+function riquadro(x, y, w, h, dentro, bordo) {
+  // l'ombra a terra: senza, un cancello sembra appeso al cielo e non si
+  // capisce in che corsia sia piantato
+  ctx.fillStyle = '#00000026'
+  ctx.beginPath(); ctx.ellipse(x, y, w * .52, h * .07, 0, 0, 7); ctx.fill()
+  ctx.fillStyle = dentro
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - h, w, h, Math.max(2, h * .12)); ctx.fill()
+  ctx.strokeStyle = bordo; ctx.lineWidth = Math.max(1.5, h * .05); ctx.stroke()
+  // la fascia in alto: dà spessore senza costare un disegno vero
+  ctx.fillStyle = '#ffffff1a'
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - h, w, h * .16, Math.max(2, h * .1)); ctx.fill()
+}
+
+/* chi corre. Nel modo «squadra» dietro al capofila c'è la truppa, e
+   quello che si vede in terra È il numero: mai un mucchio a occhio. */
+function corridore() {
+  const p = punto(S.corsiaX, 0)
+  const d = Math.min(W * .17, 78)
+  const salto = Math.sin(S.dist * 3.4) * d * .07
+
+  if (S.modo === 'squadra') {
+    /* I più forti **al centro**, come in una formazione vera: il giallo in
+       mezzo e i verdi ai lati. Prima erano in fila per grado e sembrava una
+       coda al supermercato, invece che una squadra schierata.
+
+       Cinque per riga, e il posto si assegna per distanza dal centro: si
+       ordinano le caselle da quella centrale a quelle di bordo, e ci si
+       mettono i soldati dal più potente al più debole. */
+    const truppa = []
+    for (const { g, q } of scomponi(S.squadra))
+      for (let k = 0; k < q; k++) truppa.push(g)
+
+    // il centro dello **schieramento**, non la prima fila: i gialli in
+    // mezzo, circondati, e i verdi sui bordi — è come si guarda una
+    // formazione, e infatti è lì che l'occhio li cerca
+    const file = Math.max(1, Math.ceil(truppa.length / 5))
+    const caselle = []
+    for (let i = 0; i < truppa.length; i++)
+      caselle.push({ fila: Math.floor(i / 5), col: i % 5 })
+    const mezzo = (file - 1) / 2
+    const lontano = c => Math.abs(c.col - 2) * 1.15 + Math.abs(c.fila - mezzo)
+    caselle.sort((a, b) => lontano(a) - lontano(b))
+
+    // si disegna dal fondo in avanti, o chi sta dietro finisce sopra chi
+    // gli sta davanti e la formazione si sfalda
+    truppa
+      .map((g, i) => ({ ...caselle[i], g, i }))
+      .sort((a, b) => b.fila - a.fila)
+      .forEach(({ fila, col, g, i }) => {
+        const lato = (col - 2) * .3 + Math.sin(i * 2.1) * .04
+        const s = punto(S.corsiaX + lato, .2 + fila * .5)
+        soldato(s.x, s.y + Math.sin(S.dist * 3.4 + i) * 3, d * .66 * s.s / p.s * (1 + g * .16), g)
+      })
+
+    // il conto di quanti sono, attaccato a loro: il numero in cima allo
+    // schermo è lontano dall'occhio proprio quando si sceglie il cancello
+    const q = punto(S.corsiaX, .2)
+    const testo = String(S.squadra)
+    ctx.font = `900 ${Math.max(13, d * .34)}px system-ui, sans-serif`
+    const largo = ctx.measureText(testo).width + d * .3
+    ctx.fillStyle = '#00000077'
+    ctx.beginPath()
+    ctx.roundRect(q.x - largo / 2, q.y - d * 1.75, largo, d * .42, d * .21)
+    ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText(testo, q.x, q.y - d * 1.54)
+  }
+
+  // la polvere sotto i piedi: due sbuffi che si allargano e svaniscono
+  for (let i = 0; i < 2; i++) {
+    const t = ((S.dist * 1.6 + i * .5) % 1)
+    ctx.globalAlpha = (1 - t) * .35
+    ctx.fillStyle = '#fff3d8'
+    ctx.beginPath(); ctx.arc(p.x - t * 26 * (i ? 1 : -1), p.y + 4, 6 + t * 16, 0, 7); ctx.fill()
+  }
+  ctx.globalAlpha = 1
+  // l'ombra è del capofila: nel modo truppa non c'è nessun capofila, e
+  // restava una macchia scura per terra senza niente sopra
+  if (S.modo !== 'squadra') {
+    ctx.fillStyle = '#00000055'
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, d * .34, d * .1, 0, 0, 7); ctx.fill()
+  }
+  // nel modo squadra non c'è un capofila: la truppa *è* il giocatore
+  if (S.modo !== 'squadra') {
+    ctx.font = `${d}px system-ui, sans-serif`
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+    ctx.fillText('🐰', p.x, p.y + salto)
+  }
+}
+
+/* Un soldatino: corpo, testa, elmetto del suo colore e un'arma che cresce
+   col grado. Disegnato e non emoji, perché il colore deve dire quanto
+   vale — ed è l'unica informazione che questo gioco chiede di leggere. */
+function soldato(x, y, h, g) {
+  if (h < 2) return
+  const o = ORDINI[g]
+  ctx.fillStyle = '#00000022'
+  ctx.beginPath(); ctx.ellipse(x, y, h * .3, h * .09, 0, 0, 7); ctx.fill()
+  ctx.fillStyle = '#3b3b46'
+  ctx.fillRect(x + h * .16, y - h * .56, h * (.26 + g * .07), h * (.08 + g * .02))
+  ctx.fillStyle = o.c
+  ctx.beginPath(); ctx.roundRect(x - h * .22, y - h * .62, h * .44, h * .5, h * .16); ctx.fill()
+  ctx.beginPath(); ctx.arc(x, y - h * .74, h * .19, 0, 7); ctx.fill()
+  ctx.fillStyle = o.s
+  ctx.beginPath(); ctx.arc(x, y - h * .77, h * .2, Math.PI, 0); ctx.fill()
+  if (g >= 2) {   // i gradi alti portano una banda chiara sul petto
+    ctx.fillStyle = '#ffffff66'
+    ctx.fillRect(x - h * .22, y - h * .38, h * .44, h * .07)
+  }
+}
+
+function coriandoli(corsia, colore, n = 18) {
+  const p = punto(corsia, 0)
+  for (let i = 0; i < n; i++) {
+    S.brividi.push({ x: p.x, y: p.y - 40, vx: (Math.random() - .5) * 420,
+                     vy: -Math.random() * 480 - 60, vita: .5 + Math.random() * .4, c: colore })
+  }
+}
+
+/* ═══════════ IL CRUSCOTTO ═══════════ */
+const elDom = document.getElementById('domanda')
+const elSotto = document.getElementById('sotto')
+const elSin = document.getElementById('sinistra')
+const elDes = document.getElementById('destra')
+const elGrido = document.getElementById('grido')
+
+const elFiato = document.getElementById('fiato')
+const elBonus = document.getElementById('bonus')
+
+let ultimaDomanda = ''
+function aggiornaHud() {
+  elSin.innerHTML = `🏁 <b>${Math.floor(S.dist)}</b> m`
+  elDes.innerHTML = `⭐ <b>${S.punti}</b>`
+  elFiato.firstElementChild.style.width = Math.max(0, S.fiato) + '%'
+  elFiato.classList.toggle('poco', S.fiato < 25)
+  elBonus.textContent = [S.calamita > 0 ? '🧲' : '', S.scudo > 0 ? '🛡️'.repeat(S.scudo) : '',
+                         S.scatto > 0 ? '👟' : ''].join(' ').trim()
+
+  if (S.modo !== 'squadra') elDom.classList.remove('piccola')
+
+  if (S.modo === 'fiato') {
+    const t = '⚡ prendi le scintille'
+    if (t !== ultimaDomanda) { ultimaDomanda = t; elDom.textContent = '' }
+    elSotto.textContent = S.fiato < 25 ? 'stai finendo il fiato!' : 'niente da leggere: corri e prendi'
+    return
+  }
+
+  if (S.modo === 'porta') {
+    const p = S.cose.filter(c => c.tipo === 'porta' && !c.fatto).sort((a, b) => a.z - b.z)[0]
+    const t = p ? p.q.testo + ' =' : ''
+    if (t !== ultimaDomanda) {
+      ultimaDomanda = t; elDom.textContent = t
+      elDom.classList.remove('pop'); void elDom.offsetWidth; elDom.classList.add('pop')
+    }
+    const g = S.passate - S.sbagli
+    elSotto.textContent = S.passate ? `${g} ${g === 1 ? 'giusta' : 'giuste'} su ${S.passate}` : 'passa nella porta giusta'
+  } else {
+    const t = String(S.squadra)
+    elDom.classList.add('piccola')
+    if (t !== ultimaDomanda) {
+      ultimaDomanda = t; elDom.textContent = t
+      elDom.classList.remove('pop'); void elDom.offsetWidth; elDom.classList.add('pop')
+    }
+    // la scomposizione scritta accanto a quella che corre in terra: è la
+    // stessa cosa detta in due modi, ed è lì che si impara a leggerla
+    const m = S.cose.filter(c => c.tipo === 'nemici' && !c.fatto).sort((a, b) => a.z - b.z)[0]
+    const comp = scomponi(S.squadra).map(({ g, q }) => q + ' ' + ORDINI[g].nome).join(' · ')
+    // l'avviso arriva presto apposta: sapere che fra poco c'è un mostro da
+    // quaranta è quello che rende la scelta del cancello una decisione
+    elSotto.textContent = m && m.z - S.dist < 44
+      ? (m.boss ? '👹 BOSS da ' + m.quanti : 'in arrivo un mostro da ' + m.quanti)
+      : (comp || 'nessuno rimasto')
+  }
+}
+
+function grida(testo, colore) {
+  elGrido.textContent = testo; elGrido.style.color = colore
+  elGrido.classList.remove('va'); void elGrido.offsetWidth; elGrido.classList.add('va')
+}
+
+/* ═══════════ IL DITO ═══════════
+   Una strisciata cambia corsia; un tocco secco vale come una strisciata
+   verso quel lato dello schermo — su un telefono in corsa il gesto preciso
+   non viene, e restare fermi perché lo swipe era corto di dieci pixel è la
+   cosa che fa posare il telefono. */
+let giu = null
+function sposta(d) {
+  const n = Math.max(-1, Math.min(1, S.corsia + d))
+  if (n !== S.corsia) { S.corsia = n; bip(420, .04, 'square', .07) }
+}
+tela.addEventListener('pointerdown', e => { giu = { x: e.clientX, y: e.clientY, t: performance.now() } })
+tela.addEventListener('pointerup', e => {
+  if (!giu || S.fase !== 'corsa') { giu = null; return }
+  const dx = e.clientX - giu.x
+  if (Math.abs(dx) > 26) sposta(dx > 0 ? 1 : -1)
+  else sposta(e.clientX > W / 2 ? 1 : -1)
+  giu = null
+})
+window.addEventListener('keydown', e => {
+  if (S.fase !== 'corsa') return
+  if (e.key === 'ArrowLeft')  sposta(-1)
+  if (e.key === 'ArrowRight') sposta(1)
+  if (e.key === 'Escape') alMenu()
+})
+
+document.querySelectorAll('.modo').forEach(b =>
+  b.addEventListener('click', () => avvia(b.dataset.modo)))
+document.getElementById('esci').addEventListener('click', alMenu)
+
+requestAnimationFrame(giro)
+</script>
+</body>
+</html>

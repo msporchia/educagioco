@@ -118,7 +118,7 @@ if (entrata) {
   uguale('e nessuna cassetta fissa in fondo allo schermo',
          await page.locator('.cassetta').count(), 0)
 
-  /* gli indicatori nella barra: livello, ordini e par, le scene, le stelle.
+  /* gli indicatori nella barra: livello, ordini, le scene, le stelle.
      Il primo livello si gioca su UNA scena sola — è il primo ordine, non
      c'è ancora niente da dimostrare su tre mappe — e le pastiglie delle
      scene non compaiono: sono l'indicatore di una cosa che qui non
@@ -126,7 +126,12 @@ if (entrata) {
   uguale('sul livello a scena unica non ci sono pastiglie',
          await page.locator('.prove i').count(), 0)
   const barra = await page.evaluate(() => document.querySelector('.barra-app').innerText)
-  controlla('la barra mostra ordini e par', /par/.test(barra), JSON.stringify(barra))
+  controlla('la barra conta gli ordini firmati', /📜/.test(barra), JSON.stringify(barra))
+  /* ── E NON DICE PIÙ UN PAR ──
+     Il tetto di ordini non c'è più in nessun posto del gioco: qui si
+     controlla che non sia rimasto proprio in cima allo schermo, che è
+     dove stava e dove si sarebbe notato meno togliendolo a metà. */
+  controlla('e non annuncia nessun par', !/par/.test(barra), JSON.stringify(barra))
 
   /* ---------- 5. comporre un ordine col dito ----------
      Si tocca il POSTO VUOTO, si sceglie l'azione dal foglio che si apre,
@@ -171,7 +176,10 @@ if (entrata) {
   await page.waitForTimeout(300)
   uguale('è nato un ordine', await page.locator('.lista .riga').count(), 1)
   const testo = await page.evaluate(() => document.querySelector('.lista .riga').innerText)
-  controlla('e l\'ordine dice il verbo e la cosa', /apri/.test(testo) && /tesoro/.test(testo),
+  /* e la cosa si chiama come quella che si vede sulla mappa: «il
+     forziere», non «il tesoro» — nel primo ordine del gioco la casella
+     e la dritta devono dire la stessa parola */
+  controlla('e l\'ordine dice il verbo e la cosa', /apri/.test(testo) && /forziere/.test(testo),
             JSON.stringify(testo))
   await scatto(page, 'generale-ordine')
 
@@ -186,8 +194,12 @@ if (entrata) {
             await page.evaluate(() => window.__gen.mondo().motivo))
   if (vinto) {
     const velo = await page.evaluate(() => document.querySelector('.velo').innerText)
-    controlla('e il velo di fine dice quanti ordini e qual era il par',
-              /par/.test(velo) && /ordine|ordini/.test(velo), JSON.stringify(velo))
+    controlla('e il velo di fine dice con quanti ordini ha funzionato',
+              /ordine|ordini/.test(velo), JSON.stringify(velo))
+    /* due stelle senza aver chiesto niente: è il metro nuovo — non
+       «quanto corto», ma «ci sei arrivato da solo» */
+    controlla('e dà due stelle a chi non ha chiesto niente',
+              /⭐⭐/.test(velo) && !/par/.test(velo), JSON.stringify(velo))
     await scatto(page, 'generale-vinto')
   }
 
@@ -199,6 +211,82 @@ if (entrata) {
             JSON.stringify((profilo.gen || {}).stelle))
   controlla('il contatore delle missioni è salito', (profilo.totals || {}).missioni >= 1,
             JSON.stringify((profilo.totals || {}).missioni))
+
+  /* ---------- 7b. la scala degli aiuti ----------
+     Un tasto solo, e ogni volta che lo premi scendi di un gradino:
+     prima le parole, poi quello che scrive nel piano. È la cosa più
+     rischiosa dell'intero foglio — sostituisce quello che il bambino ha
+     scritto — e sbagliata non si nota finché qualcuno non preme quel
+     tasto: qui si preme, fino in fondo.
+     Si va sul SECONDO livello perché la sua soluzione ha tre ordini in
+     fila: un piano che compare vuol dire tre righe, non una, e un solo
+     ordine non distinguerebbe «ha svelato» da «era già lì». */
+  await page.locator('.velo .grigio').click()          // via il velo
+  await page.evaluate(() => window.__gen.apri(1))
+  await page.waitForTimeout(400)
+  /* il cartello si apre da sé all'inizio di ogni livello: la
+     spiegazione è la prima cosa, e non costa niente */
+  uguale('entrando in un livello il cartello è già aperto',
+         await page.locator('.cartello').count(), 1)
+  uguale('e non c\'è ancora nessun gradino sceso',
+         await page.locator('.cartello .aiuto').count(), 0)
+  const primoTasto = await page.evaluate(() =>
+    document.querySelector('.cartello .chiedi').innerText)
+  controlla('il primo gradino è un suggerimento, e non costa niente',
+            /non costa niente/.test(primoTasto), JSON.stringify(primoTasto))
+
+  /* si scende finché il tasto non promette di scrivere nel piano: i
+     livelli hanno scale diverse, e il test non deve sapere quanto è
+     lunga quella di questo — deve sapere che si arriva in fondo */
+  let giri = 0
+  while (giri < 8 && await page.evaluate(() =>
+      !/⭐/.test((document.querySelector('.cartello .chiedi') || {}).innerText || ''))) {
+    await page.locator('.cartello .chiedi').click()
+    await page.waitForTimeout(150)
+    giri++
+  }
+  controlla('scendendo si arriva al gradino che scrive nel piano', giri < 8, `${giri} gradini`)
+  controlla('e i suggerimenti letti restano scritti',
+            await page.locator('.cartello .aiuto').count() === giri,
+            `${await page.locator('.cartello .aiuto').count()} letti, ${giri} chiesti`)
+
+  /* il gradino che scrive: qui è la forma, senza i bersagli */
+  await page.locator('.cartello .chiedi').click()
+  await page.waitForTimeout(300)
+  uguale('la struttura scrive nel piano le righe della soluzione',
+         await page.locator('.lista .riga').count(), 3)
+  const vuote = await page.evaluate(() =>
+    [...document.querySelectorAll('.lista .casella')].every(c => c.classList.contains('manca')))
+  controlla('e le lascia tutte da riempire', vuote)
+
+  /* e l'ultimo: tutto, e si guarda girare */
+  await page.locator('.tasto.q[aria-label="spiegazione"]').click()
+  await page.waitForTimeout(200)
+  await page.locator('.cartello .chiedi').click()
+  await page.waitForTimeout(300)
+  const piene = await page.evaluate(() =>
+    [...document.querySelectorAll('.lista .casella')].filter(c => !c.classList.contains('manca')).length)
+  controlla('la soluzione riempie anche i bersagli', piene >= 3, String(piene))
+  await scatto(page, 'generale-svelato')
+  /* e la scala è finita: non c'è più niente da chiedere */
+  await page.locator('.tasto.q[aria-label="spiegazione"]').click()
+  await page.waitForTimeout(200)
+  uguale('finita la scala, il tasto sparisce',
+         await page.locator('.cartello .chiedi').count(), 0)
+  await page.locator('.cartello .capo button').click()
+
+  await page.locator('.tasto.via').click()
+  let chiuso = false
+  for (let i = 0; i < 30 && !chiuso; i++) {
+    await page.waitForTimeout(500)
+    chiuso = await page.evaluate(() => !!window.__gen.finito.value)
+  }
+  controlla('il piano svelato vince davvero', chiuso)
+  if (chiuso) {
+    const velo2 = await page.evaluate(() => document.querySelector('.velo').innerText)
+    controlla('e vale una stella sola, perché non ci sei arrivato da solo',
+              /⭐/.test(velo2) && !/⭐⭐/.test(velo2), JSON.stringify(velo2))
+  }
 
   /* ---------- 8. ci sta in verticale, senza scorrere ---------- */
   await page.locator('.velo .grigio').click()          // via il velo

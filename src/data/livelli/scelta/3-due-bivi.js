@@ -93,7 +93,6 @@ export const DUE_BIVI = livello({
     { nome: 'due guardie di sotto', metti: { b1: orco1, b2: orco2 } },
   ],
 
-  par: 6,
   soluzioni: [
     { nome: 'guarda due volte, scegli due volte', piano: { eroe: [
       fai.bivio(se.vedi('orco1'), [fai.vai(sotto1)]),

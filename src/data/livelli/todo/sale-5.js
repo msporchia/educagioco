@@ -198,7 +198,6 @@ export const SALE_5 = {
       posti: { riparo: { x: 1, y: 15 }, scalino: { x: 14, y: 15 }, cengia: { x: 12, y: 10 } } },
   ],
 
-  par: 8,
   soluzioni: [
     /* otto ordini, ed è il par. Cinque a Vito: **un** giro con la sua
        uscita, tre «attacca» perché un attacca vale un brigante, e il

@@ -95,7 +95,6 @@ export const CHIAVE_FORSE = livello({
       metti: { k1: chiave, t2: tesoro } },
   ],
 
-  par: 3,
   soluzioni: [
     { nome: 'la chiave prima, sempre', piano: { eroe: [
       fai.prendi(chiave), fai.apri(portone), fai.prendi(tesoro),

@@ -62,7 +62,7 @@ export { libera, distanze, vede } from './generale/mappa.js'
 
 /* il piano: comporlo, pesarlo, rifiutarlo prima di giocarlo */
 export {
-  pianoCompleto, mieUnita, altruiUnita, altriInCampo, pianoVuoto, contaOrdini, guaiDi, manca,
+  pianoCompleto, mieUnita, altruiUnita, altriInCampo, eOstile, pianoVuoto, contaOrdini, guaiDi, manca,
 } from './generale/piano.js'
 
 /* le parole con cui si legge un ordine */

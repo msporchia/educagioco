@@ -28,9 +28,12 @@
    una storia dice al disegnatore sta in `varianti` (cosa cambia fra le
    tre scene) e in `obiettivo` (quando è vinta).
 
-   **I par sono provvisori** come quelli delle campagne: sono contati sul
-   piano più corto che si riesce a scrivere sulla mappa che avevamo in
-   testa. Quando la mappa esiste si rimisurano giocandola.
+   **Il `par` non c'è più.** Ogni capitolo dichiarava con quanti ordini
+   si poteva chiudere, e valeva la seconda stella: il gioco però non
+   chiede di risolvere in poche mosse, chiede di risolvere. Adesso la
+   seconda stella la dà l'esserci arrivati da soli — la regola sta in
+   `daSolo()` di `store/profile.js`, ed è la stessa per le prove e per i
+   capitoli.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* La scala dei concetti è **una sola** in tutto il Generale, e sta nelle
@@ -247,7 +250,6 @@ const FONDI = [
     nuovo: ['vai', 'prendi'], attori: ['tilde'], nemico: null,
     eredita: [],
     lascia: [{ filo: 'lanterna', come: 'accesa, l\'olio pieno, addosso a Tilde' }],
-    par: 5,
     varianti: [
       'la lanterna sullo scaffale alto, l\'olio nel ripostiglio',
       'lo stesso magazzino, la lanterna dietro le casse',
@@ -266,7 +268,6 @@ const FONDI = [
       { filo: 'lanterna', come: 'giù nei Fondi, addosso a Ras' },
       { filo: 'pozzo', come: 'la grata resta aperta: è la porta di casa' },
     ],
-    par: 4,
     varianti: [
       'la chiave al verricello, la grata sopra il pozzo',
       'la chiave è nella cassetta degli attrezzi, che è anche lei chiusa',
@@ -282,7 +283,6 @@ const FONDI = [
     nuovo: ['aspetta', 'se'], attori: ['ras', 'bea', 'orso'], nemico: 'le falene bianche',
     eredita: [{ filo: 'lanterna', come: 'accesa in mano a Ras, e sono guai' }],
     lascia: [{ filo: 'falene', come: 'adesso lo sapete: le falene vanno dove c\'è luce, e la luce potete metterla dove volete' }],
-    par: 7,
     varianti: [
       'le falene dormono a metà galleria',
       'sono in due sciami, uno per imbocco',
@@ -301,7 +301,6 @@ const FONDI = [
       { filo: 'pozzo', come: 'si entra ancora dal pozzo aperto nel secondo capitolo' },
     ],
     lascia: [{ filo: 'varco', come: 'la galleria vecchia è aperta, e gira intorno alla sala grande' }],
-    par: 9,
     varianti: [
       'la frana sottile: Orso ci mette poco',
       'la frana spessa: ci mette il doppio, e chi conta i momenti sbaglia',
@@ -322,7 +321,6 @@ const FONDI = [
       { filo: 'falene', come: 'la stessa regola di due capitoli fa: si va dove c\'è da guardare' },
     ],
     lascia: [{ filo: 'tamburo', come: 'rotto: da adesso in poi gli orchi non si chiamano più fra loro' }],
-    par: 8,
     varianti: [
       'due guardie, il tamburo in mezzo alla sala',
       'tre guardie, e una non lascia mai il tamburo',
@@ -345,7 +343,6 @@ const FONDI = [
       { filo: 'falene', come: 'la luce le porta dove volete voi' },
     ],
     lascia: [],
-    par: 14,
     varianti: [
       'due guardie sveglie e la galleria vecchia libera',
       'le falene si sono spostate sull\'imbocco del pozzo',
@@ -381,7 +378,6 @@ const BIBI = [
     nuovo: ['vai', 'prendi'], attori: ['rosa'], nemico: null,
     eredita: [],
     lascia: [{ filo: 'pane', come: 'in tasca a Rosa, e Bibi lo sa' }],
-    par: 3,
     varianti: ['il pane sul tavolo', 'il pane sulla sedia', 'il pane sulla mensola bassa'] },
 
   { id: 'bibi', emoji: '🦆', nome: 'Bibi',
@@ -393,7 +389,6 @@ const BIBI = [
     nuovo: ['aspetta'], attori: ['rosa', 'bibi'], nemico: null,
     eredita: [{ filo: 'pane', come: 'senza quello Bibi non si muove' }],
     lascia: [{ filo: 'bibi', come: 'da adesso Bibi viene dietro a chi ha il pane' }],
-    par: 4,
     varianti: ['Bibi sotto il melo', 'Bibi vicino alla pompa', 'Bibi dietro il fienile'] },
 
   { id: 'bombo', emoji: '🦴', nome: 'Bombo',
@@ -408,7 +403,6 @@ const BIBI = [
       { filo: 'bibi', come: 'Bibi è con voi, e non sa niente dei cani' },
     ],
     lascia: [{ filo: 'cortile', come: 'il cancello del cortile resta aperto: è la strada dello stagno' }],
-    par: 7,
     varianti: ['la cuccia in mezzo al cortile', 'la cuccia in alto, l\'osso in fondo',
                'la cuccia in basso, l\'osso in alto'] },
 
@@ -426,7 +420,6 @@ const BIBI = [
       { filo: 'cortile', come: 'si passa dal cancello lasciato aperto' },
     ],
     lascia: [],
-    par: 5,
     varianti: ['lo stagno in fondo al prato', 'lo stagno dietro la siepe', 'lo stagno di lato, e l\'oca in mezzo'] },
 ]
 
@@ -456,7 +449,6 @@ const NIDO = [
     pianoVisibile: true,
     eredita: [],
     lascia: [{ filo: 'voce', come: 'è tornato a valle e ha raccontato: adesso in paese sanno che al nido c\'è un drago' }],
-    par: 4,
     varianti: [
       'sale dal sentiero di ponente',
       'sale dalla cengia, che è più lunga',
@@ -472,7 +464,6 @@ const NIDO = [
     nuovo: ['se'], attori: ['cenere'], nemico: 'le sentinelle dei ladri',
     eredita: [{ filo: 'voce', come: 'sono venuti in sei proprio perché il primo ha raccontato' }],
     lascia: [{ filo: 'conto', come: 'sapete quanti sono, dove dormono e da dove vogliono salire: da qui in poi il loro piano si legge' }],
-    par: 6,
     varianti: [
       'il fuoco a ponente, la sentinella a levante',
       'due fuochi e una sentinella che gira',
@@ -489,7 +480,6 @@ const NIDO = [
     pianoVisibile: true,
     eredita: [{ filo: 'conto', come: 'sapete dove tengono la roba e chi fa il turno' }],
     lascia: [{ filo: 'corde', come: 'le corde sono al nido: alla parete non si sale più a mani nude' }],
-    par: 9,
     varianti: [
       'le corde vicino al fuoco',
       'le corde sotto il telo, dalla parte opposta al fuoco',
@@ -506,7 +496,6 @@ const NIDO = [
     pianoVisibile: true,
     eredita: [{ filo: 'corde', come: 'la scala esiste solo perché le corde gliele avete prese' }],
     lascia: [{ filo: 'scala', come: 'giù: la parete torna una parete' }],
-    par: 8,
     varianti: [
       'tornano a metà notte dal sentiero',
       'tornano tardi e dalla cengia',
@@ -528,7 +517,6 @@ const NIDO = [
       { filo: 'scala', come: 'e senza scala' },
     ],
     lascia: [],
-    par: 15,
     varianti: [
       'salgono tutti insieme dalla cengia',
       'si dividono in due gruppi, uno per lato',
@@ -561,7 +549,6 @@ const SALE = [
     nuovo: ['vai', 'prendi'], attori: ['rea', 'vito', 'bugo'], nemico: null,
     eredita: [],
     lascia: [{ filo: 'sale', come: 'sei sacchi sul carro' }],
-    par: 7,
     varianti: [
       'i sacchi nel magazzino, i tre in tre punti del paese',
       'il magazzino è chiuso e la chiave è dal fornaio',
@@ -577,7 +564,6 @@ const SALE = [
     nuovo: ['apri'], attori: ['bugo', 'rea', 'vito'], nemico: 'il gabelliere che dorme',
     eredita: [{ filo: 'sale', come: 'sul carro, e il carro è pesante: di strade ne ha una' }],
     lascia: [{ filo: 'sbarra', come: 'alzata e lasciata così: al ritorno di qui si passa senza fermarsi' }],
-    par: 6,
     varianti: [
       'la garitta a destra della sbarra',
       'la garitta dall\'altra parte, e si passa davanti alla finestra',
@@ -593,7 +579,6 @@ const SALE = [
     nuovo: ['aspetta', 'se'], attori: ['rea', 'vito', 'bugo', 'sisa'], nemico: 'i lupi',
     eredita: [{ filo: 'sale', come: 'il carico rallenta il carro di un terzo' }],
     lascia: [{ filo: 'sisa', come: 'la capra è della carovana adesso, e nessuno l\'ha decisa' }],
-    par: 8,
     varianti: [
       'due lupi sul tornante',
       'tre lupi, e uno taglia dal bosco',
@@ -613,7 +598,6 @@ const SALE = [
       { filo: 'sale', come: 'il carro non può accelerare: il tempo se lo devi comprare tu' },
     ],
     lascia: [{ filo: 'sisa', come: 'è rimasta di là dal crinale, e i briganti adesso sono fra lei e voi' }],
-    par: 9,
     varianti: [
       'i fuochi sul costone di ponente',
       'i fuochi in due punti, e uno resta sempre di guardia alla strada',
@@ -630,7 +614,6 @@ const SALE = [
     pianoVisibile: true,
     eredita: [{ filo: 'sisa', come: 'è in cima e scende da sola: tu puoi solo tenerle libera la strada' }],
     lascia: [{ filo: 'sisa', come: 'è tornata, e adesso quel versante lo conosce meglio di tutti' }],
-    par: 9,
     varianti: [
       'risalgono in due dall\'imbocco basso',
       'risalgono in tre e si dividono sui due imbocchi',
@@ -651,7 +634,6 @@ const SALE = [
       { filo: 'sisa', come: 'la conoscete, e lei conosce il versante' },
     ],
     lascia: [],
-    par: 14,
     varianti: [
       'i briganti sulla strada del pedaggio',
       'i briganti alla piazza, davanti al forno',
@@ -683,7 +665,6 @@ const TORRE = [
     nuovo: ['vai', 'prendi'], attori: ['cric', 'marta'], nemico: null,
     eredita: [],
     lascia: [{ filo: 'chiave', come: 'la chiave della cella, in mano a Marta' }],
-    par: 5,
     varianti: [
       'la chiave al gancio davanti alla porta',
       'la chiave in fondo al corridoio',
@@ -700,7 +681,6 @@ const TORRE = [
     pianoVisibile: true,
     eredita: [{ filo: 'chiave', come: 'senza quella la cella non si apre' }],
     lascia: [{ filo: 'porta', come: 'la porta di servizio in fondo al corridoio è rimasta aperta, e nessuno l\'ha richiusa' }],
-    par: 8,
     varianti: [
       'la guardia fa il giro corto',
       'il giro lungo, e si ferma a bere',
@@ -717,7 +697,6 @@ const TORRE = [
     pianoVisibile: true,
     eredita: [{ filo: 'porta', come: 'si passa di lì, e nessuno se n\'è ancora accorto' }],
     lascia: [{ filo: 'pero', come: 'Pero è con voi, e sa del pozzo del cortile e della corda che ci sta dentro' }],
-    par: 8,
     varianti: [
       'le due guardie in fondo, ferme',
       'una gira e una sta al passaggio',
@@ -734,7 +713,6 @@ const TORRE = [
     pianoVisibile: true,
     eredita: [{ filo: 'pero', come: 'del pozzo l\'ha detto lui, e il pozzo non si vede dal cortile' }],
     lascia: [{ filo: 'corda', come: 'venti braccia di corda, addosso a Marta' }],
-    par: 9,
     varianti: [
       'la guardia dal lato del porticato',
       'la guardia dall\'altro lato: Nilo deve farsi vedere più lontano',
@@ -755,7 +733,6 @@ const TORRE = [
       { filo: 'pero', come: 'lento come sempre, e prezioso come sempre' },
     ],
     lascia: [],
-    par: 13,
     varianti: [
       'tre guardie ferme ai tre passaggi',
       'una fa il giro e le altre due stanno',

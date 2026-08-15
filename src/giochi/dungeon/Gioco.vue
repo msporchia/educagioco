@@ -467,7 +467,8 @@ function indietro() {
            `stile.css`, sotto `.dng-stretta`. -->
       <div v-if="domanda" class="dng-domanda">
         <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                 :titolo="`${domanda.icona} ${domanda.nome}`" @risposto="risposto" />
+                 :titolo="`${domanda.icona} ${domanda.nome}`"
+                 :origine="domanda" gioco="dungeon" @risposto="risposto" />
       </div>
 
       <!-- il bottino sta sopra a tutto: è il momento in cui si è

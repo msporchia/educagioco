@@ -253,10 +253,20 @@ fondo è il modo di accorgersi di cosa non si era previsto.
 ## Note per i genitori
 
 - È il gioco più difficile della raccolta e il meno finito.
-- Ogni livello ha un **par**: il numero di ordini con cui si può risolvere in
-  modo elegante. Vincere è facile, vincere dentro il par è il vero gioco. Il
-  par conta anche gli ordini dentro un ciclo e dentro un ascolto: un blocco
-  che ne nasconde due dentro non è più economico, è solo meno leggibile.
+- **Non conta quanto è corto il piano.** Un livello si chiude in tutti i modi
+  che funzionano: quello che vale la seconda stella è **esserci arrivati da
+  soli** — senza farsi svelare la struttura o la soluzione, e senza lasciare
+  compagni sul campo. (Per un pezzo c'è stato un «par», un numero di ordini da
+  rispettare; diceva a chi aveva appena vinto che il suo piano non era quello
+  giusto, ed è stato tolto.)
+- **Gli aiuti sono una scala, e il primo gradino è gratis.** Dal 💡 si chiede
+  un aiuto per volta: prima suggerimenti a parole — che non costano niente e
+  non tolgono niente, sono la frase che direbbe chi gli sta accanto — e poi,
+  per chi resta bloccato, il gioco gli scrive nel piano un pezzo, la struttura
+  (gli ordini al loro posto, con le caselle da riempire) e infine la soluzione
+  intera, da guardare girare. Questi ultimi costano la seconda stella, e il
+  tasto lo dice prima di essere premuto. Nessuno resta chiuso dentro un
+  livello.
 - Le prove automatiche giocano davvero tutti i livelli, e verificano anche
   che le soluzioni *sbagliate ma plausibili* perdano almeno una delle scene:
   un livello che si lascia vincere dalla fila di passi non insegna quello che

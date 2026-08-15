@@ -159,15 +159,29 @@ function caselle (o) {
 
     <!-- ═════ IL POSTO VUOTO ═════
          Non è un tasto «aggiungi» messo da qualche parte: è la riga che
-         ancora non c'è, dove sarà. Lo tocchi e ti si chiede cosa fa.
-         La domanda per esteso la fa una volta sola, sul piano vuoto:
-         dentro un ramo ci sono già scritte sopra due righe che dicono
-         quando ci si passa, e ripeterlo due volte è rumore. -->
+         ancora non c'è, dove sarà. Lo tocchi e scegli cosa ci va.
+
+         ── E DICE COSA FARE, NON FA UNA DOMANDA ──
+         C'era scritto «＋ e qui cosa fa?», ed era la domanda sbagliata
+         nel posto sbagliato: chi apre il primo livello non sa ancora
+         che quel rettangolo tratteggiato è il modo di scrivere, quindi
+         una domanda gli chiede di rispondere a un gioco che non ha
+         ancora capito di poter giocare. Adesso è un'istruzione — «scrivi
+         il primo ordine» — e la domanda («cosa gli fai fare?») arriva
+         dopo, quando l'hai toccato: prima si dice dove si tocca, poi si
+         chiede cosa si vuole.
+         L'istruzione lunga si scrive una volta sola, sul piano vuoto.
+         Una fila annidata (un ramo, il corpo di un ciclo, un'azione) ha
+         già scritte sopra le righe che dicono quando ci si passa, e
+         dice solo cosa ci va; una fila che ha già ordini dentro non
+         dice niente, perché il gesto lo si è già fatto una volta. -->
     <!-- l'evento serve a una cosa sola: la domanda si apre attaccata a
          QUESTO tasto, non in fondo allo schermo -->
-    <button v-if="!E.sola" class="posto" :class="{ solo: !voci.length && !perc.length }"
+    <button v-if="!E.sola" class="posto"
+            :class="{ solo: !voci.length && !perc.length,
+                      indicato: E.indica() && !voci.length && !perc.length }"
             @click.stop="E.chiedi(perc, $event)">
-      ＋<span v-if="!voci.length && !perc.length"> e qui cosa fa?</span></button>
+      ＋<span v-if="!voci.length"> {{ perc.length ? 'un ordine' : 'Scrivi il primo ordine' }}</span></button>
   </div>
 </template>
 
@@ -242,6 +256,12 @@ function caselle (o) {
          font-size:14px; font-weight:900 }
 .posto:active { background:var(--giallo); color:#3a2c00; border-style:solid }
 .posto.solo { min-height:44px; font-size:12.5px; color:var(--tenue) }
+/* la guida del primissimo giro lo sta indicando: bordo pieno e un alone
+   che respira. Non lampeggia — deve farsi trovare, non gridare. */
+.posto.indicato { border-style:solid; border-color:#e8c05a; background:#fff8e8;
+                  color:#6b4310; animation:cerca 1.6s ease-in-out infinite }
+@keyframes cerca { 0%,100% { box-shadow:0 0 0 0 #ffd45c00 }
+                   50% { box-shadow:0 0 0 6px #ffd45c55 } }
 
 /* ── i due rami ── rientrati di un dito, appesi alla riga di sopra */
 .rami { margin:0 0 6px 10px }

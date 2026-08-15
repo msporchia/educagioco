@@ -91,6 +91,12 @@ export const SAPERI = [
     spegne: 'le conversioni, i confronti e i problemi con le misure dentro; restano le domande su cosa si misura con cosa',
   },
   {
+    chiave: 'moltiplicazioni', nome: 'Le moltiplicazioni', ico: '✖️', materia: 'matematica',
+    che: 'moltiplicare: le tabelline e la moltiplicazione in colonna',
+    esempio: '«24 × 3»',
+    spegne: 'le moltiplicazioni in colonna del castello — la torre Ghiaccio chiede sottrazioni più difficili, e le Bombe scendono con lei',
+  },
+  {
     chiave: 'divisioni', nome: 'Le divisioni', ico: '➗', materia: 'matematica',
     che: 'dividere: in colonna e a mente',
     esempio: '«84 : 4»',

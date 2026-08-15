@@ -160,7 +160,6 @@ const BIBI_4 = {
       unita: { oca: { x: 13, y: 9 }, rosa: { x: 2, y: 10 }, bibi: { x: 2, y: 11 } } },
   ],
 
-  par: 3,
   soluzioni: [
     /* tre ordini, ed è il par: senza la siepe non si passa, senza il
        cancello non si arriva allo stagno, senza quel «vai» Bibi non

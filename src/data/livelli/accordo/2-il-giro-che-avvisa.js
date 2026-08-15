@@ -85,7 +85,6 @@ export const GIRO_CHE_AVVISA = livello({
       metti: { o3: chi.orco({ vista: 2, vita: 1, fa: [fai.aspettaDiVedere('nostri'), fai.attacca('nostri')] }) } },
   ],
 
-  par: 8,
   soluzioni: [
     { nome: 'cerca, e chiama solo quando è finita', piano: {
       cercatrice: [cerca, fai.attacca('orchi'), fai.suona(libero)],

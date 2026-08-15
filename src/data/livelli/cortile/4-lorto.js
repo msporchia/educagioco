@@ -117,7 +117,6 @@ export const LORTO = livello({
     { nome: 'Bibi è già nell\'orto', metti: { b3: bibi, c1: bomboChe(11) } },
   ],
 
-  par: 6,
   soluzioni: [
     /* il cancello parte chiuso: la prima cosa da fare è aprirlo, e
        l'ultima è richiuderlo. Fra le due c'è tutto il livello. */

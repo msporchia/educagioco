@@ -40,7 +40,11 @@ await azzera(page)
 /* ---------- 1. la home ---------- */
 uguale('in home c’è una carta English sola', await page.locator('.carta.eng').count(), 1)
 uguale('la carta dei verbi non c’è più', await page.locator('.carta.verbi').count(), 0)
-const inHome = await page.locator('.carta.eng i').textContent()
+/* la carta ha due righe e dicono due cose diverse: `i` è cosa insegna e
+   non cambia mai, `.modo` è come si gioca più dove sei arrivato */
+const insegna = await page.locator('.carta.eng i').textContent()
+controlla('la carta dice cosa si impara', /parole, verbi e frasi/.test(insegna), insegna)
+const inHome = await page.locator('.carta.eng .modo').textContent()
 controlla('la carta dice a che tappa si è', /tappa 1 di 13/.test(inHome), inHome)
 
 /* ---------- 2. la mappa ---------- */
@@ -147,7 +151,7 @@ if (controlla('a parole già sapute il gioco toglie il testo e le fa sentire',
 /* ---------- 5. i progressi restano ---------- */
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
-const dopo = await page.locator('.carta.eng i').textContent()
+const dopo = await page.locator('.carta.eng .modo').textContent()
 const numero = Number((dopo.match(/tappa (\d+)/) || [])[1])
 controlla('riaprendo il gioco le tappe superate sono ancora aperte', numero >= 2, dopo)
 

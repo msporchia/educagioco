@@ -211,7 +211,6 @@ export const SALE_1 = {
       unita: { rea: { x: 1, y: 12 }, vito: { x: 25, y: 2 }, bugo: { x: 10, y: 10 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* sette ordini, ed è il par. Cinque a Bugo — un viaggio a levante
        che prende la chiave e la pagnotta insieme, poi il magazzino,

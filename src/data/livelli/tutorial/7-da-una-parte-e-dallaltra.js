@@ -125,7 +125,6 @@ export const DUE_VIE = livello({
     { nome: 'la ronda è appena passata', metti: { r3: ronda } },
   ],
 
-  par: 12,
   soluzioni: [
     /* DUE ASCOLTI, MA NON INSIEME: il secondo è scritto DENTRO l'azione
        che entra, quindi comincia a valere solo quando sei dentro col

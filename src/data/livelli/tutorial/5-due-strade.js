@@ -63,7 +63,16 @@ export const DUE_STRADE = livello({
   aiuti: ['Da qui vedi solo la strada di sopra. Guardala.',
           'Sapere che l\'orco NON è qui dice dov\'è.',
           'C\'è un blocco che guarda una volta sola e poi prende una delle due strade.'],
-  ambiente: 'cripta',
+  /* ── E SI VEDE, PERCHÉ QUI LA MAPPA È LA DOMANDA ──
+     Era una `cripta`, che ha un velo di buio al 42%: bello, e sbagliato
+     proprio qui. Questo livello si vince GUARDANDO la mappa — dov'è
+     l'orco, dove passa l'altra strada — e sotto quel velo le due corti
+     e i due camminamenti diventavano una macchia scura sola. Il
+     `camminamento` è chiaro (buio 0.06) ed è anche il posto giusto: il
+     file lo chiama così da sempre, «i due camminamenti dove l'orco può
+     stare in agguato». Dove la mappa è l'informazione, la luce è una
+     regola di gioco travestita da disegno. */
+  ambiente: 'camminamento',
 
   scena: DUE_CORTI,
   complementi: ['portaSopra', 'portaSotto', 'tesoro', 'orchi'],
@@ -90,7 +99,6 @@ export const DUE_STRADE = livello({
      piano smetta di funzionare, cioè un ordine di troppo. Il bivio resta
      un bivio: quello che cambia è che una delle due strade è la strada
      che si prende non facendo niente. */
-  par: 3,
   soluzioni: [
     { nome: 'guarda, poi scegli', piano: { eroe: [
       fai.bivio(se.vedi('orchi'), [fai.vai(sotto)]),

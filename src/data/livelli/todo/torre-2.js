@@ -239,7 +239,6 @@ export const TORRE_2 = {
                pero: { x: 2, y: 3 }, guardia: { x: 14, y: 5 }, sentinella: { x: 7, y: 5 } } },
   ],
 
-  par: 8,
   soluzioni: [
     /* otto ordini, ed è il par. Cinque a Marta, perché è l'unica che
        apre e l'unica che guarda; **uno solo** agli altri tre, e qui c'è

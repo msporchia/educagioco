@@ -152,6 +152,85 @@ export function spostaIn (ordini, via, d) {
   return [...via.slice(0, -1), i + d]
 }
 
+/* ═══════════ la scala degli aiuti ═══════════
+   Gli ultimi due gradini non sono parole: sono ordini che compaiono nel
+   piano. Il dato c'è già ed è quello che il banco di prova gioca per
+   davvero — `liv.soluzioni` — quindi qui non si scrive nessuna
+   soluzione a mano, e non ce n'è nessuna che possa diventare stantia:
+   se una soluzione dichiarata smettesse di vincere, il banco lo direbbe
+   prima che qualcuno la veda a schermo.
+
+   ── QUALE SOLUZIONE ──
+   La STRETTA: quella che non è né fragile (che è lì per cadere) né
+   lunga (che è lì per far vedere che la strada lunga si può fare). È la
+   stessa che il banco tiene senza ordini di troppo. */
+export const laSoluzione = liv =>
+  ((liv && liv.soluzioni) || []).find(s => !s.fragile && !s.lunga) || null
+
+/* ── LA SCALA, GRADINO PER GRADINO ──
+   Quello che il livello dichiara in `aiuti` non è ancora una scala: è
+   una lista mista di stringhe (i livelli scritti prima), gradini a
+   parole e gradini che scrivono nel piano. Qui diventa una lista sola,
+   ordinata, dove ogni voce sa **cosa fa** e **quanto costa** — e il
+   gioco non deve sapere niente di come è stata scritta.
+
+   In coda ci vanno da sé i due gradini finali, se il livello non ne ha
+   già uno che scrive: la via d'uscita esiste sempre, e non dipende dal
+   fatto che l'autore del livello ci abbia pensato. Vengono dalla
+   soluzione dichiarata — quella che il banco di prova gioca a ogni
+   build — quindi non c'è nessuna seconda soluzione da tenere
+   aggiornata. */
+export function scalaDi (liv) {
+  const grezzi = (liv && liv.aiuti) || []
+  const passi = grezzi.map(a => (typeof a === 'string' ? { aiuto: 'dice', testo: a } : a))
+    .filter(a => a && a.aiuto)
+  if (laSoluzione(liv)) {
+    const scrive = passi.some(a => a.aiuto !== 'dice')
+    if (!scrive) passi.push({ aiuto: 'forma' }, { aiuto: 'svela' })
+    else if (!passi.some(a => a.aiuto === 'svela')) passi.push({ aiuto: 'svela' })
+  }
+  /* il costo non lo decide chi scrive il livello: lo decide che tipo di
+     gradino è. Se no lo stesso gesto costerebbe una stella in un
+     livello e niente in quello dopo. */
+  return passi.map(a => ({ ...a, costa: a.aiuto !== 'dice' }))
+}
+
+/* ── SOLO LA FORMA ──
+   Il gradino di mezzo: **quali ordini, e in che disposizione**, ma non
+   su cosa valgono. Restano i verbi, i due rami di un bivio, il corpo di
+   un ciclo — cioè la parte che a sei anni è difficile immaginare da
+   zero — e spariscono tutti i bersagli e tutte le domande, che sono la
+   parte che si trova guardando la mappa. A schermo diventa un piano
+   fatto di caselle tratteggiate: `vai a [＋ dove]`, e il posto giusto
+   dove metterle è già segnato.
+
+   Sparisce anche il nome dell'AZIONE? No: quello lo sceglie il gioco e
+   non c'è niente da indovinare — riscriverlo sarebbe un compito di
+   copiatura. */
+export function soloLaForma (piano) {
+  const forma = o => {
+    if (!o || typeof o !== 'object') return o
+    if (o.blocco === 'condizione')
+      return { blocco: 'condizione', cond: {},
+               vero: (o.vero || []).map(forma), falso: (o.falso || []).map(forma) }
+    if (o.blocco === 'ripeti')
+      return { blocco: 'ripeti', corpo: (o.corpo || []).map(forma), finche: {} }
+    if (o.blocco === 'routine')
+      return { blocco: 'routine', nome: o.nome, corpo: (o.corpo || []).map(forma) }
+    if (o.verbo === 'quando')
+      return { verbo: 'quando', complemento: null, allora: (o.allora || []).map(forma) }
+    /* un ordine: resta il verbo, se ne va quello su cui vale. Chi vuole
+       una domanda (`aspetta che …`) la perde come tutti gli altri. */
+    const q = { verbo: o.verbo, complemento: null }
+    if (o.cond) q.cond = {}
+    if (o.finche) q.finche = {}
+    return q
+  }
+  const out = {}
+  for (const id in piano) out[id] = (piano[id] || []).map(forma)
+  return out
+}
+
 /* ── camminare su tutto il piano ──
    Ogni voce, dovunque stia: dentro un ramo, dentro un ascolto, dentro
    un ramo dentro un ascolto. Serve a contare, a cercare i buchi e a

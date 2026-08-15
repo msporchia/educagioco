@@ -119,7 +119,6 @@ const BIBI_1 = {
       oggetti: { pane: { x: 21, y: 4 } }, unita: { rosa: { x: 5, y: 11 } } },
   ],
 
-  par: 3,
   soluzioni: [
     { nome: 'il cancello, la porta, il pane', piano: { rosa: [
       o('apri', 'cancello'), o('apri', 'porta'), o('prendi', 'pane'),

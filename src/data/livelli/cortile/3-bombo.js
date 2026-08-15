@@ -130,7 +130,6 @@ export const BOMBO = livello({
     { nome: 'Bombo si è appena fermato', metti: { CN: bomboDa(2) } },
   ],
 
-  par: 6,
   soluzioni: [
     { nome: 'lo lascio passare', piano: { rosa: [
       fai.prendi(pane),

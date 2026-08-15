@@ -18,14 +18,17 @@ const props = defineProps({
   premio: { type: Number, default: 0 },
   quante: { type: Number, default: 0 },        // le tappe della campagna
   campagna: { type: Boolean, default: true },
-  divisioni: { type: Boolean, default: true },
+  /* cosa il bambino può calcolare: { div, mul }. Era un booleano
+     («le divisioni»), ed è diventato una coppia quando anche le
+     moltiplicazioni si sono potute spegnere. */
+  sa: { type: Object, default: () => ({}) },
 })
 defineEmits(['avanti', 'mappa', 'libera', 'riprova'])
 
 /* le torri che la tappa dopo porta in dote e questa non aveva */
 const nuove = () => (props.prossima
   ? props.prossima.torri.filter(k => !props.tappa.torri.includes(k)) : [])
-const segno = k => segnoDi(k, props.divisioni)
+const segno = k => segnoDi(k, props.sa)
 </script>
 
 <template>

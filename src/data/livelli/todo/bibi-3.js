@@ -258,7 +258,6 @@ const BIBI_3 = {
       unita: { rosa: { x: 2, y: 11 }, bibi: { x: 2, y: 12 }, bombo: { x: 13, y: 9 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* sette ordini, ed è il par: non se ne può togliere nemmeno uno.
        Senza il cancelletto Bibi non esce dall'orto; senza l'osso Bombo

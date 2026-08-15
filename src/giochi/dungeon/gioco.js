@@ -35,7 +35,9 @@ export default {
   chiave: CHIAVE,
   nome: 'Il Dungeon',
   icona: '🗝️',
-  che: 'avventura: scegli la strada, le domande aprono le porte',
+  che: 'scegli la strada, le domande aprono le porte',
+  area: 'avventure',
+  come: 'domande',
   tappe: QUANTE_TAPPE,
   /* Il colore della carta in home: se lo porta il gioco, aggiungerne uno
      non vuol dire aggiungere una riga al foglio di stile della home.

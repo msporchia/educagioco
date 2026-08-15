@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { installa, riparaSeChiesto } from './incidenti.js'
+import { avviaGiudizi } from './store/giudizi.js'
 import './style.css'
 
 /* `#ripara` prima di tutto: se si è qui per buttare via una copia
@@ -11,6 +12,12 @@ if (!riparaSeChiesto()) {
      primo disegno è proprio quello che senza cartello lascia lo schermo
      vuoto e nessuna traccia (`incidenti.js`) */
   installa(app, { versione: __VERSIONE__.id })
+  /* i tre tasti per giudicare una domanda compaiono solo se un grande
+     li ha accesi, e a domanda comparsa non c'è tempo di interrogare
+     l'archivio: si legge una volta qui, e non si aspetta — spenti sono
+     il caso normale, e un ritardo di mezzo secondo all'avvio per un
+     interruttore da sviluppo non si paga. */
+  avviaGiudizi()
   app.mount('#app')
 }
 

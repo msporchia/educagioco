@@ -196,7 +196,6 @@ export const NIDO_3 = {
                cenere: { x: 23, y: 10 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* sette ordini: quattro a Fumo, tre a Cenere, e Brasa non si
        nomina. Ognuno serve — senza la sporgenza non lo vede nessuno,

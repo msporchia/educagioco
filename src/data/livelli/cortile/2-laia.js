@@ -73,7 +73,6 @@ export const LAIA = livello({
     { nome: 'Bibi è in fondo al cortile', metti: { b3: bibi } },
   ],
 
-  par: 4,
   soluzioni: [
     /* QUATTRO ORDINI, e non serve nemmeno passarle davanti come ieri:
        **il pane per terra lo vede da qualunque parte del cortile**, e

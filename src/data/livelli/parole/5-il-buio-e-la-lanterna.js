@@ -123,7 +123,6 @@ export const BUIO = livello({
       metti: { n2: nicchia, g3: orco } },
   ],
 
-  par: 4,
   soluzioni: [
     { nome: 'la luce a chi la regge', piano: {
       cavaliere: [fai.prendi(lanterna), fai.vai(nicchia), fai.posa(lanterna)],

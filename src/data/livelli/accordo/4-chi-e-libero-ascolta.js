@@ -73,7 +73,6 @@ export const CHI_E_LIBERO = livello({
     { nome: "il guardiano è vicino all'eroe", metti: { g3: guardiano } },
   ],
 
-  par: 4,
   soluzioni: [
     { nome: "l'eroe resta libera e aspetta", piano: {
       esploratrice: [fai.attacca('orchi'), fai.suona(via)],

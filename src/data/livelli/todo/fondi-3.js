@@ -222,7 +222,6 @@ export const FONDI_3 = {
       posti: { uscita: { x: 27, y: 4 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* 7 ordini, ed è il par. La luce va per prima, e chi resta al buio
        parte quando glielo dicono. Ogni ordine serve, provato a levarli

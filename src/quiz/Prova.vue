@@ -85,7 +85,11 @@ onMounted(unAltra)
     </div>
 
     <div class="prova-palco">
+      <!-- qui i tre tasti del giudizio contano più che nel gioco: è il
+           posto dove una tipologia si scorre apposta, una domanda dopo
+           l'altra, ed è lì che si vede che una è fuori misura -->
       <Domanda v-if="esempio" :key="giro" :domanda="esempio.domanda" :pittori="esempio.pittori"
+               :origine="esempio" gioco="prova"
                :respiro="600" @risposto="risposto = true" />
       <!-- non dovrebbe succedere: il tasto per arrivare qui compare
            solo dove `siPuoProvare` è vero. Se succede lo dice, invece

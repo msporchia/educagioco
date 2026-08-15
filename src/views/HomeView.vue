@@ -16,8 +16,10 @@ import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
    giochi in prova, e «livello 4 di 26» a chi ne ha sei in elenco non
    direbbe niente di vero */
 import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
-import { GIOCHI_NUOVI } from '../giochi/indice.js'
+import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi } from '../giochi/campagne.js'
+import { GIOCHI } from '../data/giochi.js'
+import { AREE, MODI } from '../data/aree.js'
 
 defineEmits(['vai'])
 
@@ -95,6 +97,75 @@ const oggetti = computed(() => state.profile.owned.length)
    Cameretta e albo non si spengono: sono le monete e i progressi. */
 const acceso = chiave => giocoAcceso(chiave)
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
+
+/* ═══════════ le carte, che adesso si costruiscono da sole ═══════════
+   Erano tredici blocchi scritti a mano, ognuno con la sua riga di
+   descrizione — e quella riga diceva già, con parole diverse, quello
+   che `data/giochi.js` dice nel campo `che`. Due posti da tenere
+   d'accordo per la stessa frase, e infatti non lo erano più: il
+   castello in home si presentava «operazioni in colonna · torri e
+   nemici» e nei settaggi dei genitori «operazioni in colonna, torri e
+   nemici». Adesso la frase è una, sta col gioco, e qui si legge.
+
+   Il colore invece resta CSS e non dato, per i sette vecchi: sono
+   sfumature scritte a mano una per una (`.carta.td`, `.carta.poz`) e
+   spostarle in una tabella di stringhe le renderebbe più difficili da
+   ritoccare, non meno. I giochi nuovi portano la loro `tinta` nel
+   manifesto perché nascono senza una riga di CSS dedicata. */
+const CLASSE = {
+  mate: 'mate', inglese: 'eng', spagnolo: 'esp', torri: 'td',
+  pozioni: 'poz', bancarella: 'banco', generale: 'gen',
+}
+
+/* Un gruppo senza nemmeno un gioco acceso non si disegna: i genitori
+   possono spegnere tutte le parole, e «PAROLE» su una fila vuota
+   sarebbe un titolo che promette qualcosa che non c'è. */
+const gruppi = computed(() => AREE
+  .map(a => ({ ...a, giochi: GIOCHI.filter(g => g.area === a.chiave && acceso(g.chiave)) }))
+  .filter(a => a.giochi.length))
+
+/* A che punto sei, gioco per gioco. I cinque nuovi se lo sanno dire da
+   soli (`riassunto()` nel manifesto); i sette vecchi no, e le loro
+   righe stavano nel template — le stesse identiche espressioni, spostate
+   qui perché il template adesso è un ciclo solo e non ha più un posto
+   dove metterle. Una riga vuota è legittima: vuol dire «non l'hai
+   ancora aperto», e la carta dice comunque cosa insegna. */
+const dove = computed(() => {
+  const q = (n, tot) => `${Math.min(n + 1, tot)} di ${tot}`
+  const staz = `stazione ${q(stazione.value.tappa, STAZIONI.length)}`
+  return {
+    mate: pianeta.value.libera
+      ? `volo libero ♾️ · ${staz}`
+      : `pianeta ${q(pianeta.value.tappa, CAMPAGNA.length)} · ${staz}`,
+    inglese: tappaEn.value.libera
+      ? `gioco libero ♾️ · 🎯 ${imparateEn.value} sicure`
+      : `tappa ${q(tappaEn.value.tappa, TAPPE_EN.length)} · 🎯 ${imparateEn.value} sicure`,
+    spagnolo: tappaEs.value.libera
+      ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
+      : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
+    torri: '',
+    pozioni: lab.value.libera
+      ? `♾️ laboratorio libero · 🪜 ${misure.value}/${QUANTE_MISURE} conversioni`
+      : pozioni.value
+        ? `⚗️ tappa ${lab.value.tappa + 1} di ${QUANTE_TAPPE_POZ} · 🧪 ${pozioni.value} preparate`
+        : '',
+    bancarella: mercato.value.libera
+      ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`
+      : clienti.value
+        ? `🧺 giornata ${mercato.value.tappa + 1} di ${QUANTE_GIORNATE} · ✨ ${restiPerfetti.value} resti precisi`
+        : '',
+    generale: generale.value.tappa
+      ? `🎖️ livello ${Math.min(proveFatte + 1, proveQuante)} · ⭐ ${stelleGen.value} stelle`
+      : '',
+  }
+})
+
+/* i nuovi passano dal manifesto, i vecchi dalla tabella qui sopra */
+function aChePunto (chiave) {
+  if (chiave in dove.value) return dove.value[chiave]
+  const m = giocoNuovo(chiave)
+  return m ? m.riassunto(progressoDi(chiave)) : ''
+}
 </script>
 
 <template>
@@ -130,76 +201,42 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
       </button>
 
       <div class="carte">
-        <button v-if="acceso('mate')" class="carta mate" @click="$emit('vai','mate')">
-          <span class="ico">☄️</span>
-          <b>Asteroidi</b>
-          <i v-if="pianeta.libera">volo libero ♾️ · stazione
-            {{ Math.min(stazione.tappa + 1, STAZIONI.length) }} di {{ STAZIONI.length }}</i>
-          <i v-else>pianeta {{ Math.min(pianeta.tappa + 1, CAMPAGNA.length) }} di
-            {{ CAMPAGNA.length }} · stazione
-            {{ Math.min(stazione.tappa + 1, STAZIONI.length) }} di {{ STAZIONI.length }}</i>
-        </button>
-        <button v-if="acceso('inglese')" class="carta eng" @click="$emit('vai','inglese')">
-          <span class="ico">🌐</span>
-          <b>English</b>
-          <i v-if="tappaEn.libera">gioco libero ♾️ · 🎯 {{ imparateEn }} sicure</i>
-          <i v-else>tappa {{ Math.min(tappaEn.tappa + 1, TAPPE_EN.length) }} di
-            {{ TAPPE_EN.length }} · 🎯 {{ imparateEn }} sicure</i>
-        </button>
-        <button v-if="acceso('spagnolo')" class="carta esp" @click="$emit('vai','spagnolo')">
-          <span class="ico">🇪🇸</span>
-          <b>Spagnolo</b>
-          <i v-if="tappaEs.libera">gioco libero ♾️ · 🎯 {{ imparateEs }} sicure</i>
-          <i v-else>tappa {{ Math.min(tappaEs.tappa + 1, TAPPE_ES.length) }} di
-            {{ TAPPE_ES.length }} · 🎯 {{ imparateEs }} sicure</i>
-        </button>
-        <button v-if="acceso('torri')" class="carta td" @click="$emit('vai','torri')">
-          <span class="ico">🏰</span>
-          <b>Difendi il Castello</b>
-          <i>operazioni in colonna · torri e nemici</i>
-        </button>
-        <button v-if="acceso('pozioni')" class="carta poz" @click="$emit('vai','pozioni')">
-          <span class="ico">⚗️</span>
-          <b>Il laboratorio delle pozioni</b>
-          <i v-if="lab.libera">♾️ laboratorio libero · 🪜 {{ misure }}/{{ QUANTE_MISURE }} conversioni</i>
-          <i v-else-if="pozioni">⚗️ tappa {{ lab.tappa + 1 }} di {{ QUANTE_TAPPE_POZ }}
-            · 🧪 {{ pozioni }} preparate</i>
-          <i v-else>litri, chili e metri · versa, pesa e taglia</i>
-        </button>
-        <button v-if="acceso('bancarella')" class="carta banco" @click="$emit('vai','bancarella')">
-          <span class="ico">🛒</span>
-          <b>La bancarella</b>
-          <i v-if="mercato.libera">♾️ mercato libero · ✨ {{ restiPerfetti }} resti precisi</i>
-          <i v-else-if="clienti">🧺 giornata {{ mercato.tappa + 1 }} di {{ QUANTE_GIORNATE }}
-            · ✨ {{ restiPerfetti }} resti precisi</i>
-          <i v-else>euro e centesimi · dai tu il resto</i>
-        </button>
-        <button v-if="acceso('generale')" class="carta gen" @click="$emit('vai','generale')">
-          <span class="ico">🎖️</span>
-          <b>Il generale</b>
-          <i v-if="generale.tappa">🎖️ livello {{ Math.min(proveFatte + 1, proveQuante) }} ·
-            ⭐ {{ stelleGen }} stelle</i>
-          <i v-else>dai gli ordini e guarda · sequenze, cicli, eventi</i>
-        </button>
-        <!-- I giochi della cartella `src/giochi/` portano con sé nome,
-             icona, colore e la riga di avanzamento: qui non c'è una carta
-             scritta a mano per ognuno, ce n'è una sola che le fa tutte.
-             Un gioco nuovo compare in home senza toccare questo file. -->
-        <button v-for="g in GIOCHI_NUOVI" :key="g.chiave" v-show="acceso(g.chiave)"
-                class="carta gioco" :data-gioco="g.chiave"
-                :style="{ background: `linear-gradient(120deg,${g.tinta},#fffffff0)` }"
-                @click="$emit('vai', g.chiave)">
-          <span class="ico">{{ g.icona }}</span>
-          <b>{{ g.nome }}</b>
-          <i>{{ g.riassunto(progressoDi(g.chiave)) }}</i>
-        </button>
+        <!-- ═══ un ciclo solo, per tutti e dodici ═══
+             I gruppi vengono da `data/aree.js` e le carte da
+             `data/giochi.js`: qui non c'è più una carta scritta a mano
+             per gioco, e un gioco nuovo compare senza toccare questo
+             file — vale per i cinque della convenzione nuova come per i
+             sette vecchi, che prima stavano scritti uno per uno.
+
+             Tre righe per carta, e sono tre cose diverse: il nome, cosa
+             insegna, e come si gioca più dove sei arrivato. La seconda
+             è quella che mancava, ed è quella che serve a chi la home
+             la guarda per scegliere invece che per riprendere. -->
+        <template v-for="a in gruppi" :key="a.chiave">
+          <h2 class="area">{{ a.emoji }} {{ a.nome }}</h2>
+          <button v-for="g in a.giochi" :key="g.chiave"
+                  class="carta gioco tre" :class="CLASSE[g.chiave]" :data-gioco="g.chiave"
+                  :style="g.tinta ? { background: `linear-gradient(120deg,${g.tinta},#fffffff0)` } : null"
+                  @click="$emit('vai', g.chiave)">
+            <span class="ico">{{ g.ico }}</span>
+            <b>{{ g.nome }}<em v-if="g.piccoli" class="tag">piccoli</em></b>
+            <i>{{ g.che }}</i>
+            <small class="modo">{{ MODI[g.come].emoji }} {{ MODI[g.come].nome
+              }}<template v-if="aChePunto(g.chiave)"> · {{ aChePunto(g.chiave) }}</template></small>
+          </button>
+        </template>
+
         <!-- se i genitori li hanno spenti tutti, la home lo dice: senza,
              sarebbe una schermata rotta invece di una scelta -->
         <p v-if="nessunGioco" class="mini vuoto">I giochi sono spenti.
-          Si riaccendono da <b>genitori</b>, qui sotto.</p>
-        <!-- una carta sola: la stanza, gli amici e il negozio sono lo stesso
-             posto, e la riga sotto dice la cosa che cambia da sola — chi ha
-             bisogno di te — perché è quella che fa riaprire il gioco -->
+          Si riaccendono da <b>Per i grandi</b>, qui sotto.</p>
+
+        <!-- ═══ quello che non è una materia ═══
+             La cameretta non insegna niente e non sta in nessun gruppo:
+             è il posto delle monete e degli animali, e il commento in
+             `data/giochi.js` lo dice da sempre. Il lucchetto le sta
+             accanto perché sono le due carte che non sono giochi. -->
+        <h2 class="area">🏡 A casa</h2>
         <button class="carta room" @click="$emit('vai','cameretta')">
           <span class="ico">🛏️</span>
           <b>La cameretta</b>
@@ -208,9 +245,18 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
           <i v-else>{{ animali }} {{ animali > 1 ? 'animali' : 'animale' }} ·
             {{ oggetti }} {{ oggetti === 1 ? 'oggetto' : 'oggetti' }} sugli scaffali</i>
         </button>
-        <!-- ai progressi si va dalla fascia in cima, che dice già livello,
-             monete e medaglie: la carta qui sotto era la stessa strada
-             detta due volte -->
+
+        <!-- Era la scritta «genitori» in fondo, in grigio e in minuscolo:
+             si trovava solo sapendo già che c'era. Il codice a quattro
+             cifre è la porta, non l'essere nascosti — e una porta che
+             non si vede la cerca soltanto chi sa già di doverla cercare.
+             Il nome dice cosa c'è dentro, perché «genitori» diceva a chi
+             è rivolta la pagina e non cosa ci si fa. -->
+        <button class="carta grandi" data-azione="grandi" @click="$emit('vai','genitori')">
+          <span class="ico">🔒</span>
+          <b>Per i grandi</b>
+          <i>quali giochi si vedono, chi gioca, i progressi e il codice</i>
+        </button>
       </div>
 
       <div v-if="state.regalo.n" :key="state.regalo.k" class="regalo">
@@ -221,10 +267,11 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
         Questa anteprima non può salvare nulla. Scarica il file e aprilo dal telefono
         o dal computer perché monete e progressi restino.
       </p>
-      <!-- il piede è roba da grandi: sta su una riga sola, in fondo, e non
-           si porta via lo spazio delle carte -->
+      <!-- nel piede resta la sola versione: la strada per i grandi adesso
+           è una carta come le altre, qui sopra. Questa riga serve a
+           rispondere «il telefono ha preso l'aggiornamento?» guardando
+           lo schermo, e non è una cosa da toccare. -->
       <p class="piede">
-        <button class="link" @click="$emit('vai','genitori')">genitori</button>
         <span class="versione">aggiornato il {{ versione.etichetta
           }}<span v-if="versione.commit"> · {{ versione.commit }}</span></span>
       </p>
@@ -261,6 +308,29 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 .carta.banco{ background:linear-gradient(120deg,#fff0dc,#fffffff0) }
 .carta.gen  { background:linear-gradient(120deg,#e4f0e8,#fffffff0) }
 .carta.room { background:linear-gradient(120deg,#ffeede,#fff6e0 45%,#fffffff0) }
+/* grigio, e l'unica carta che non è colorata: in mezzo a undici carte a
+   pastello quella dei grandi si deve vedere senza chiamare */
+.carta.grandi { background:linear-gradient(120deg,#eceff4,#fffffff0) }
+
+/* ── il titolo di un gruppo ──
+   Non è una carta e non si tocca: sta fuori dal riquadro, in piccolo e
+   in maiuscoletto, e serve a dire «da qui in giù sono numeri». Grosso
+   com'era una carta si sarebbe letto come una cosa da aprire. */
+.area { align-self:flex-start; margin:13px 0 -3px 7px; font-size:12px; font-weight:900;
+        letter-spacing:.8px; text-transform:uppercase; color:var(--viola-scuro); opacity:.55 }
+.area:first-child { margin-top:0 }
+
+/* tre righe invece di due: il nome, cosa insegna, e come si gioca più
+   dove sei arrivato. L'icona le attraversa tutte e tre. */
+.carta.tre { grid-template-rows:auto auto auto }
+.carta.tre .ico { grid-row:1/4 }
+.modo { font-size:11.5px; color:var(--tenue); opacity:.9; line-height:1.3 }
+/* i giochi che si aprono a quattro anni: un'etichetta e non un gruppo a
+   parte, perché stanno benissimo dove sono — un bambino di sei anni che
+   apre «Conta gli animali» non sta sbagliando schermata */
+.tag { margin-left:7px; font-style:normal; font-size:10px; font-weight:900;
+       letter-spacing:.4px; text-transform:uppercase; color:#2f6b3f;
+       background:#dff0d8; border-radius:7px; padding:2px 6px; vertical-align:middle }
 /* la fascia: livello, quanto manca al prossimo, monete e medaglie */
 .fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px;
           padding:9px 14px; border-radius:18px; text-align:left;

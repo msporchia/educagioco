@@ -109,7 +109,6 @@ export const BIBI = livello({
     { nome: 'Bibi è in fondo al cortile', metti: { b3: bibi } },
   ],
 
-  par: 3,
   soluzioni: [
     /* TRE ORDINI, e quello di mezzo è la lezione: `vai [Bibi]` non
        serve a prenderla — serve a **farsi vedere** da lei. */

@@ -85,7 +85,6 @@ export const CONGEGNI = livello({
     { nome: 'si parte vicino al totem', metti: { e3: eroe } },
   ],
 
-  par: 5,
   soluzioni: [
     /* IL FOR SENZA INVENTARE UN BLOCCO NUOVO: premi la leva (apre grata
        e saracinesca insieme), prendi il tesoro, un «ripeti» che preme il

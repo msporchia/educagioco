@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La cameretta viva — prototipo</title>
+<link rel="icon" href="data:,">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LA CAMERETTA VIVA — prototipo autonomo, un file solo
+
+     Nella cameretta vera (src/views/CamerettaView.vue, src/components/
+     Stanza.vue, SchedaAnimale.vue) gli animali sono fermi su un tappeto:
+     per accudirli si apre la loro scheda e si tocca un bottone — «dai la
+     ciotola», «dai la palla». Funziona, ma è un menù travestito da stanza.
+
+     La domanda a cui deve rispondere QUESTO file è una sola:
+     prendere l'animale in braccio col dito e portarlo dove serve è più
+     bello che premere un tasto?
+
+     Per rispondere, qui gli animali camminano da soli, si fermano,
+     dormono, si grattano, si avvicinano fra loro — il moto passivo è
+     metà dell'effetto, perché una stanza dove nessuno si muove è un
+     menù travestito lo stesso. Quando a uno manca qualcosa (fame,
+     sporco, voglia di giocare) gli compare sopra la testa una sola
+     icona che sobbalza: niente barre, niente cruscotto.
+
+     Si prende un animale col dito e lo si trascina fino a una delle
+     quattro stazioni disegnate — la ciotola, la vaschetta, il cesto dei
+     giochi, la cuccia — e lì parte un piccolo gioco manuale di pochi
+     secondi: si versa il mangime inclinando il sacchetto, si strofina
+     via lo sporco, si tira indietro la palla come una fionda e si
+     lascia, si accarezza avanti e indietro finché non si addormenta.
+     Lasciarlo in mezzo alla stanza, o nel posto sbagliato, non è mai un
+     errore: torna semplicemente a camminare.
+
+     Non importa nulla da src/: è deliberatamente un doppione, come da
+     convenzione dei prototipi in poc/. Nessuna libreria, nessun asset
+     remoto — solo emoji di sistema, CSS e un filo di SVG inline. Qui si
+     prova il gesto, non la grafica.
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<style>
+  :root {
+    --parete-1: #f9fbf7; --parete-2: #e9f0e6;
+    --pavimento-1: #eabb8c; --pavimento-2: #d79f6d;
+    --tappeto-1: #eef1e6; --tappeto-2: #d7e2d2;
+    --legno: #c9914e; --carta: #fffdf8; --inchiostro: #4a4438;
+    --ombra: #00000022;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
+  html, body {
+    height: 100%; margin: 0; overscroll-behavior: none;
+    background: #dbe3da; color: var(--inchiostro);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  body {
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden; touch-action: none; padding: env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+  }
+
+  /* ---------- l'intestazione: solo un titolo e una riga di aiuto,
+     non un cruscotto. Sparisce quasi subito dalla vista una volta
+     capito il gesto. ---------- */
+  header {
+    flex: none; width: 100%; max-width: 480px; text-align: center;
+    padding: 10px 14px 6px;
+  }
+  header h1 { margin: 0; font-size: 17px; letter-spacing: .01em }
+  header p {
+    margin: 3px 0 0; font-size: 12.5px; color: #6b6558; opacity: .85;
+  }
+
+  /* ---------- la stanza: contenitore quadrato-verticale, mai scroll ---------- */
+  .cornice {
+    flex: 1; min-height: 0; width: 100%; max-width: 480px;
+    display: flex; padding: 6px 10px 12px;
+  }
+  .stanza {
+    position: relative; flex: 1; min-height: 0;
+    border-radius: 22px; overflow: hidden;
+    box-shadow: 0 10px 26px #00000022, 0 1px 0 #ffffff77 inset;
+    background: linear-gradient(180deg, var(--parete-1) 0%, var(--parete-1) 26%, var(--parete-2) 26%, var(--pavimento-1) 26%, var(--pavimento-2) 100%);
+  }
+
+  /* la finestra: pura scenografia, in alto a sinistra */
+  .finestra { position: absolute; left: 5%; top: 5%; width: 22%; max-width: 90px; opacity: .95 }
+  .finestra svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 2px 3px #00000018) }
+
+  .battiscopa {
+    position: absolute; left: 0; right: 0; top: 26%; height: 2.6%;
+    background: linear-gradient(180deg, var(--carta), #f0e2d2);
+    box-shadow: 0 2px 5px #00000018;
+  }
+  .tappeto {
+    position: absolute; left: 10%; right: 10%; top: 42%; height: 42%;
+    border-radius: 50%; opacity: .92;
+    background: radial-gradient(closest-side, var(--tappeto-1) 0 55%, var(--tappeto-2) 55% 78%, #b8ccc0 78% 100%);
+  }
+
+  /* ---------- il pavimento: dove vive tutto quello che si tocca ---------- */
+  .zona {
+    position: absolute; left: 0; right: 0; top: 28.5%; bottom: 0;
+    overflow: hidden; touch-action: none;
+  }
+
+  /* ---------- le quattro stazioni ---------- */
+  .stazione {
+    position: absolute; width: 19%; max-width: 92px; aspect-ratio: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 2;
+  }
+  .stazione .cerchio {
+    width: 72%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(closest-side, #fffdf8ee, #fff3dfcc 72%, #e8cfa677 100%);
+    box-shadow: 0 3px 8px #00000022, 0 1px 0 #ffffffaa inset;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(20px, 7vw, 34px);
+  }
+  .stazione .etichetta {
+    margin-top: 4px; font-size: 10.5px; font-weight: 700; color: #5c5343;
+    background: #fffdf8cc; border-radius: 999px; padding: 1px 8px;
+    white-space: nowrap;
+  }
+  .stazione.calda .cerchio { box-shadow: 0 0 0 4px #ffd24a99, 0 3px 10px #00000022 }
+
+  .staz-ciotola  { left: 3%;  bottom: 3%;  }
+  .staz-vaschetta{ right: 3%; bottom: 3%;  }
+  .staz-cesto    { left: 3%;  top: 3%;     }
+  .staz-cuccia   { right: 3%; top: 3%;     }
+
+  /* ---------- un animale ---------- */
+  .animale {
+    position: absolute; left: 0; top: 0; width: var(--taglia); height: var(--taglia);
+    display: flex; align-items: flex-end; justify-content: center;
+    cursor: grab; z-index: 5; touch-action: none; user-select: none;
+    transition: filter .15s;
+  }
+  .animale .corpo {
+    font-size: calc(var(--taglia) * 0.82); line-height: 1; display: block;
+    filter: drop-shadow(0 2px 2px #00000022);
+    transition: transform .12s ease-out;
+  }
+  .animale.volta .corpo { transform: scaleX(-1) }
+  .animale .ombra {
+    position: absolute; left: 18%; right: 18%; bottom: 2%; height: 12%;
+    border-radius: 50%; background: var(--ombra); filter: blur(1.5px);
+    transition: all .15s;
+  }
+  .animale.in-braccio { cursor: grabbing; z-index: 40; filter: drop-shadow(0 10px 14px #00000033) }
+  .animale.in-braccio .corpo { transform: translateY(-14px) scale(1.08) }
+  .animale.in-braccio.volta .corpo { transform: translateY(-14px) scale(1.08) scaleX(-1) }
+  .animale.in-braccio .ombra { transform: scale(1.5); opacity: .5 }
+
+  .animale.gratta .corpo { animation: grattarsi .55s ease-in-out 0 }
+  @keyframes grattarsi {
+    0%, 100% { transform: rotate(0) }
+    25% { transform: rotate(-9deg) }
+    50% { transform: rotate(0) }
+    75% { transform: rotate(7deg) }
+  }
+  .animale.dorme .corpo { transform: rotate(0); opacity: .92 }
+  .animale.scrolla .corpo { animation: scrollarsi .6s ease-in-out }
+  @keyframes scrollarsi {
+    0%, 100% { transform: rotate(0) }
+    20% { transform: rotate(-12deg) }
+    40% { transform: rotate(11deg) }
+    60% { transform: rotate(-9deg) }
+    80% { transform: rotate(6deg) }
+  }
+  .animale.mangia .corpo { animation: sgranocchia .3s ease-in-out infinite }
+  @keyframes sgranocchia {
+    0%, 100% { transform: translateY(0) } 50% { transform: translateY(2px) scale(.96) }
+  }
+
+  /* la nuvoletta del bisogno: una icona sola, che sobbalza */
+  .bolla {
+    position: absolute; left: 50%; top: -14%; transform: translateX(-50%);
+    font-size: calc(var(--taglia) * 0.42); line-height: 1;
+    background: var(--carta); border-radius: 999px; padding: 3px 6px;
+    box-shadow: 0 2px 0 #dfe0d4, 0 4px 8px #00000033;
+    opacity: 0; pointer-events: none; z-index: 6;
+    animation: sobbalza 1.4s ease-in-out infinite;
+  }
+  .bolla.mostra { opacity: 1 }
+  @keyframes sobbalza { 0%, 100% { transform: translateX(-50%) translateY(0) } 50% { transform: translateX(-50%) translateY(-7px) } }
+
+  /* zzz del sonno: diverso dalla bolla dei bisogni, non è un bisogno */
+  .zzz {
+    position: absolute; left: 68%; top: -6%; font-size: calc(var(--taglia) * 0.34);
+    opacity: 0; pointer-events: none; z-index: 6;
+  }
+  .animale.dorme .zzz { opacity: 1; animation: sale 2.2s ease-in infinite }
+  @keyframes sale {
+    0% { opacity: 0; transform: translateY(4px) scale(.7) }
+    25% { opacity: .9 }
+    100% { opacity: 0; transform: translateY(-22px) scale(1.15) }
+  }
+
+  /* il fumetto del verso, un lampo alla presa in braccio */
+  .fumetto {
+    position: absolute; left: 50%; top: -34%; transform: translateX(-50%) scale(.6);
+    font-size: 12px; font-weight: 800; color: #5c4b3a;
+    background: var(--carta); border-radius: 999px; padding: 3px 9px;
+    white-space: nowrap; box-shadow: 0 3px 8px #00000030;
+    opacity: 0; pointer-events: none; z-index: 41;
+  }
+  .fumetto.mostra { animation: dice .95s ease-out forwards }
+  @keyframes dice {
+    0%   { opacity: 0; transform: translateX(-50%) scale(.5) }
+    22%  { opacity: 1; transform: translateX(-50%) scale(1.08) }
+    75%  { opacity: 1; transform: translateX(-50%) scale(1) }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1) }
+  }
+
+  /* ---------- il velo che intercetta il tocco "fuori" durante un
+     minigioco, per poterlo abbandonare senza un bottone da premere ---------- */
+  #velo { position: absolute; inset: 0; z-index: 10; display: none; touch-action: none }
+  #velo.attivo { display: block }
+
+  /* ---------- livello dei minigiochi: sacchetto, palla, macchie, cuori... ---------- */
+  #livello-giochi { position: absolute; inset: 0; z-index: 30; pointer-events: none }
+  #livello-giochi > * { pointer-events: auto }
+
+  .sacchetto {
+    position: absolute; width: 15%; max-width: 60px; aspect-ratio: .8;
+    font-size: clamp(24px, 8vw, 40px); cursor: grab; touch-action: none;
+    filter: drop-shadow(0 4px 6px #00000030); z-index: 32;
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 2px;
+  }
+  .crocchetta {
+    position: absolute; font-size: 13px; z-index: 31; pointer-events: none;
+    transition: top .5s cubic-bezier(.4,.2,.7,1), left .5s cubic-bezier(.4,.2,.7,1);
+  }
+  .bocconcino { position: absolute; font-size: 12px; pointer-events: none }
+
+  .palla {
+    position: absolute; width: 9%; max-width: 34px; aspect-ratio: 1;
+    font-size: clamp(18px, 6vw, 28px); cursor: grab; touch-action: none;
+    filter: drop-shadow(0 3px 5px #00000030); z-index: 32; text-align: center;
+    transition: left .45s cubic-bezier(.3,.6,.4,1), top .45s cubic-bezier(.3,.6,.4,1);
+  }
+  .fionda-linea {
+    position: absolute; height: 3px; background: #ffffffaa; border-radius: 3px;
+    transform-origin: 0 50%; z-index: 31; pointer-events: none;
+    box-shadow: 0 1px 2px #00000022;
+  }
+
+  .macchia {
+    position: absolute; width: 15%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(closest-side, #8a6a4188, #6b4d2a55 80%);
+    transition: opacity .25s, transform .25s; z-index: 33;
+  }
+  .macchia.pulita { opacity: 0; transform: scale(.3) }
+  .bolla-sapone {
+    position: absolute; font-size: 15px; pointer-events: none; z-index: 34;
+    animation: bolla-su .7s ease-out forwards;
+  }
+  @keyframes bolla-su { 0% { opacity: .95; transform: translateY(0) scale(.6) } 100% { opacity: 0; transform: translateY(-24px) scale(1.3) } }
+  .goccia { position: absolute; font-size: 13px; pointer-events: none; animation: goccia-via .55s ease-out forwards }
+  @keyframes goccia-via { to { opacity: 0; transform: translate(var(--dx), var(--dy)) } }
+
+  .cuoricino { position: absolute; font-size: 15px; pointer-events: none; animation: cuore-su 1.1s ease-out forwards }
+  @keyframes cuore-su { 0% { opacity: .95; transform: translate(-50%, 0) scale(.6) } 100% { opacity: 0; transform: translate(-50%, -30px) scale(1.2) } }
+
+  .suggerimento {
+    position: absolute; left: 50%; bottom: 2.5%; transform: translateX(-50%);
+    font-size: 11.5px; font-weight: 700; color: #5c5343; text-align: center;
+    background: #fffdf8dd; border-radius: 999px; padding: 4px 12px; z-index: 35;
+    white-space: nowrap; pointer-events: none; max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🐾 La cameretta viva</h1>
+  <p>Prendi un animale col dito e portalo alla ciotola, alla vaschetta, al cesto o alla cuccia.</p>
+</header>
+
+<div class="cornice">
+  <div class="stanza" id="stanza">
+    <div class="finestra" aria-hidden="true">
+      <svg viewBox="0 0 104 90">
+        <rect x="4" y="4" width="96" height="70" rx="5" fill="#c6e8ff" />
+        <circle cx="80" cy="20" r="8" fill="#ffe9a3" />
+        <path d="M4,58 q18,-10 32,-2 q16,8 30,1 q16,-7 34,0 V74 H4 Z" fill="#a9e0a0" />
+        <rect x="47" y="4" width="6" height="70" fill="#fffdf8" />
+        <rect x="4" y="36" width="96" height="6" fill="#fffdf8" />
+        <rect x="1" y="1" width="102" height="76" rx="6" fill="none" stroke="#fffdf8" stroke-width="5" />
+        <rect x="-1" y="76" width="106" height="8" rx="4" fill="#ffe7d0" />
+      </svg>
+    </div>
+    <div class="battiscopa"></div>
+    <div class="tappeto"></div>
+
+    <div class="zona" id="zona">
+      <!-- le quattro stazioni e gli animali vengono creati da JS -->
+      <div id="velo"></div>
+      <div id="livello-giochi"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   Tutto quello che segue vive in una zona sola (#zona): un rettangolo
+   con coordinate proprie in pixel, dove animali e stazioni sono
+   entrambi posizionati con `left/top` assoluti. Non si usa mai
+   getBoundingClientRect() per il gioco: solo per tradurre le
+   coordinate del puntatore (che sono coordinate di schermo) in
+   coordinate della zona.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const zona = document.getElementById('zona');
+const velo = document.getElementById('velo');
+const livelloGiochi = document.getElementById('livello-giochi');
+
+const TAGLIA = 62;              // lato del riquadro di un animale, in px
+const SOGLIA_BISOGNO = 34;      // sotto questa soglia compare la nuvoletta
+const MARGINE = 8;              // quanto restano staccati dai bordi
+
+function casuale(a, b) { return a + Math.random() * (b - a); }
+function distanza(x1, y1, x2, y2) { return Math.hypot(x1 - x2, y1 - y2); }
+function ce(tag, classe) { const e = document.createElement(tag); if (classe) e.className = classe; return e; }
+function puntoZona(e) {
+  const r = zona.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+/* ---------- le quattro stazioni ----------
+   Sono dato puro: dove stanno (classe CSS), cosa disegnano, e quale
+   bisogno rispondono (la cuccia non ne ha uno — è la prima a saltare
+   se il prototipo va tagliato, come da consegna). */
+const STAZIONI = [
+  { id: 'ciotola',   emoji: '🥣', nome: 'la ciotola',   classe: 'staz-ciotola',   bisogno: 'fame' },
+  { id: 'vaschetta', emoji: '🛁', nome: 'la vaschetta', classe: 'staz-vaschetta', bisogno: 'sporco' },
+  { id: 'cesto',     emoji: '🧺', nome: 'il cesto',     classe: 'staz-cesto',     bisogno: 'noia' },
+  { id: 'cuccia',    emoji: '🛏️', nome: 'la cuccia',    classe: 'staz-cuccia',    bisogno: null },
+];
+const ICONA_BISOGNO = { fame: '🍖', sporco: '🫧', noia: '🎾' };
+
+STAZIONI.forEach(st => {
+  const el = ce('div', 'stazione ' + st.classe);
+  el.innerHTML = `<div class="cerchio">${st.emoji}</div><div class="etichetta">${st.nome}</div>`;
+  zona.appendChild(el);
+  st.el = el;
+});
+/* la zona dei giochi resta sopra le stazioni, il velo appena sotto */
+zona.appendChild(velo);
+zona.appendChild(livelloGiochi);
+
+/* il rettangolo di una stazione, in coordinate della zona: si legge da
+   offsetLeft/offsetTop perché stazione e animali stanno nello stesso
+   contenitore posizionato — niente conversioni dallo schermo. */
+function rettStazione(st) {
+  return {
+    sx: st.el.offsetLeft, sy: st.el.offsetTop,
+    dx: st.el.offsetLeft + st.el.offsetWidth, dy: st.el.offsetTop + st.el.offsetHeight,
+  };
+}
+function stazioneSotto(cx, cy) {
+  const M = 14;
+  for (const st of STAZIONI) {
+    const r = rettStazione(st);
+    if (cx >= r.sx - M && cx <= r.dx + M && cy >= r.sy - M && cy <= r.dy + M) return st;
+  }
+  return null;
+}
+function centroStazione(st) {
+  const r = rettStazione(st);
+  return { x: (r.sx + r.dx) / 2, y: (r.sy + r.dy) / 2 };
+}
+
+/* ---------- i tre animali ----------
+   cammina | ferma | dorme | gratta | trascinato | minigioco | insegue */
+const ANIMALI_DEF = [
+  { tipo: 'cane',     emoji: '🐶', verso: 'Bau!' },
+  { tipo: 'gatto',    emoji: '🐱', verso: 'Miao!' },
+  { tipo: 'coniglio', emoji: '🐰', verso: 'Squit!' },
+];
+
+const animali = ANIMALI_DEF.map((def, i) => creaAnimale(def, i));
+
+function creaAnimale(def, indice) {
+  const el = ce('div', 'animale');
+  el.style.setProperty('--taglia', TAGLIA + 'px');
+  el.innerHTML = `
+    <span class="ombra"></span>
+    <span class="corpo">${def.emoji}</span>
+    <span class="bolla"></span>
+    <span class="zzz">💤</span>
+    <span class="fumetto">${def.verso}</span>`;
+  zona.appendChild(el);
+
+  const a = {
+    ...def, el,
+    corpoEl: el.querySelector('.corpo'),
+    bollaEl: el.querySelector('.bolla'),
+    fumettoEl: el.querySelector('.fumetto'),
+    x: casuale(MARGINE, 220) + indice * 40,
+    y: casuale(MARGINE, 160) + indice * 30,
+    tx: 0, ty: 0,
+    stato: 'ferma',
+    fino: 0,                       // quando scade lo stato corrente (ms epoch)
+    velta: false,
+    velocita: casuale(26, 40),     // px/s durante 'cammina'
+    // ogni bisogno svuota da 100 a 0 in 40-90s, a un ritmo tutto suo
+    bisogni: {
+      fame:   casuale(55, 95),
+      sporco: casuale(55, 95),
+      noia:   casuale(55, 95),
+    },
+    tassi: {
+      fame:   100 / casuale(40000, 90000),
+      sporco: 100 / casuale(40000, 90000),
+      noia:   100 / casuale(40000, 90000),
+    },
+    minigioco: null,               // null oppure { tipo, ...roba sua }
+  };
+
+  el.addEventListener('pointerdown', e => gestisciGiu(a, e));
+  return a;
+}
+
+function bisognoUrgente(a) {
+  let peggio = null, valore = SOGLIA_BISOGNO;
+  for (const k in a.bisogni) if (a.bisogni[k] < valore) { valore = a.bisogni[k]; peggio = k; }
+  return peggio;
+}
+
+/* ---------- scegliere dove andare ---------- */
+function limiti() {
+  return { minX: MARGINE, minY: MARGINE, maxX: zona.clientWidth - TAGLIA - MARGINE, maxY: zona.clientHeight - TAGLIA - MARGINE };
+}
+function nuovaMeta(a) {
+  const L = limiti();
+  a.tx = casuale(L.minX, Math.max(L.minX, L.maxX));
+  a.ty = casuale(L.minY, Math.max(L.minY, L.maxY));
+}
+function metaVicinoA(a, altro) {
+  const L = limiti();
+  a.tx = clampeggia(altro.x + casuale(-70, 70), L.minX, L.maxX);
+  a.ty = clampeggia(altro.y + casuale(-50, 50), L.minY, L.maxY);
+}
+function clampeggia(v, mn, mx) { return Math.min(Math.max(v, mn), mx); }
+
+/* dopo una sosta, l'animale decide da sé cosa fare: è questo che rende
+   la stanza viva anche se nessuno la tocca */
+function decidiProssimaMossa(a) {
+  const dado = Math.random();
+  if (dado < 0.22) {
+    addormenta(a, casuale(3000, 6500));
+  } else if (dado < 0.36) {
+    a.stato = 'gratta'; a.fino = Date.now() + 560;
+    a.el.classList.add('gratta');
+  } else if (dado < 0.5 && animali.length > 1) {
+    const altri = animali.filter(x => x !== a);
+    metaVicinoA(a, altri[Math.floor(Math.random() * altri.length)]);
+    a.stato = 'cammina';
+  } else {
+    nuovaMeta(a);
+    a.stato = 'cammina';
+  }
+}
+function addormenta(a, durata) {
+  a.stato = 'dorme'; a.fino = Date.now() + durata;
+  a.el.classList.add('dorme');
+}
+
+/* ---------- il ciclo: un solo requestAnimationFrame, mai setInterval a raffica ---------- */
+let ultimo = performance.now();
+function ciclo(ts) {
+  const dt = Math.min(60, ts - ultimo); ultimo = ts;
+  const ora = Date.now();
+  for (const a of animali) aggiornaAnimale(a, dt, ora);
+  requestAnimationFrame(ciclo);
+}
+
+function aggiornaAnimale(a, dt, ora) {
+  switch (a.stato) {
+    case 'cammina': {
+      const d = distanza(a.x, a.y, a.tx, a.ty);
+      if (d < 3) { a.stato = 'ferma'; a.fino = ora + casuale(700, 2400); break; }
+      const passo = a.velocita * dt / 1000;
+      const passoX = (a.tx - a.x) / d * passo, passoY = (a.ty - a.y) / d * passo;
+      if (Math.abs(passoX) > 0.05) a.el.classList.toggle('volta', passoX < 0);
+      a.x += passoX; a.y += passoY;
+      break;
+    }
+    case 'ferma':
+      if (ora >= a.fino) decidiProssimaMossa(a);
+      break;
+    case 'dorme':
+      if (ora >= a.fino) { a.el.classList.remove('dorme'); a.stato = 'ferma'; a.fino = ora + casuale(300, 900); }
+      break;
+    case 'gratta':
+      if (ora >= a.fino) { a.el.classList.remove('gratta'); a.stato = 'ferma'; a.fino = ora + casuale(200, 700); }
+      break;
+    case 'insegue':
+      aggiornaInsegue(a, dt);
+      break;
+    case 'trascinato':
+    case 'minigioco':
+      break; // la posizione la decide chi ha in mano il gesto, non questo ciclo
+  }
+
+  // i bisogni calano da soli, tranne quando l'animale dorme o è già
+  // occupato in un minigioco a risolverne uno
+  if (a.stato !== 'dorme' && a.stato !== 'minigioco') {
+    for (const k in a.bisogni) a.bisogni[k] = Math.max(0, a.bisogni[k] - a.tassi[k] * dt);
+  }
+
+  // la nuvoletta: una sola icona, solo mentre l'animale è libero
+  const libero = a.stato === 'cammina' || a.stato === 'ferma' || a.stato === 'gratta';
+  const urg = libero ? bisognoUrgente(a) : null;
+  if (urg) { a.bollaEl.textContent = ICONA_BISOGNO[urg]; a.bollaEl.classList.add('mostra'); }
+  else a.bollaEl.classList.remove('mostra');
+
+  a.el.style.left = a.x + 'px';
+  a.el.style.top = a.y + 'px';
+}
+
+requestAnimationFrame(ciclo);
+addEventListener('resize', () => {
+  const L = limiti();
+  for (const a of animali) { a.x = clampeggia(a.x, L.minX, L.maxX); a.y = clampeggia(a.y, L.minY, L.maxY); }
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL GESTO: prendere in braccio e trascinare
+
+   Un solo pointerdown per animale, che si comporta in modo diverso a
+   seconda di cosa sta facendo l'animale in quel momento: se è libero,
+   lo si prende in braccio; se è già dentro un minigioco (vaschetta o
+   cuccia), lo stesso tocco è il gesto di quel minigioco.
+   ═══════════════════════════════════════════════════════════════════ */
+function gestisciGiu(a, e) {
+  if (a.stato === 'minigioco') {
+    if (a.minigioco?.tipo === 'vaschetta') return tocchaVaschetta(a, e);
+    if (a.minigioco?.tipo === 'cuccia') return tocchaCuccia(a, e);
+    return; // ciotola e cesto si toccano sul sacchetto/palla, non sull'animale
+  }
+  if (a.stato === 'trascinato') return;
+  e.preventDefault();
+  a.el.setPointerCapture(e.pointerId);
+  const p = puntoZona(e);
+  a.presaDx = p.x - a.x; a.presaDy = p.y - a.y;
+  a.stato = 'trascinato';
+  a.el.classList.add('in-braccio');
+  a.el.classList.remove('dorme', 'gratta');
+  a.fumettoEl.classList.remove('mostra'); void a.fumettoEl.offsetWidth; a.fumettoEl.classList.add('mostra');
+
+  a.el.addEventListener('pointermove', muoviTrascinato);
+  a.el.addEventListener('pointerup', lasciaTrascinato);
+  a.el.addEventListener('pointercancel', lasciaTrascinato);
+
+  function muoviTrascinato(ev) {
+    const pp = puntoZona(ev);
+    const L = limiti();
+    a.x = clampeggia(pp.x - a.presaDx, L.minX, L.maxX);
+    a.y = clampeggia(pp.y - a.presaDy, L.minY, L.maxY);
+  }
+  function lasciaTrascinato(ev) {
+    a.el.removeEventListener('pointermove', muoviTrascinato);
+    a.el.removeEventListener('pointerup', lasciaTrascinato);
+    a.el.removeEventListener('pointercancel', lasciaTrascinato);
+    a.el.classList.remove('in-braccio');
+    const cx = a.x + TAGLIA / 2, cy = a.y + TAGLIA / 2;
+    const st = stazioneSotto(cx, cy);
+    if (st) avviaMinigioco(a, st);
+    else { a.stato = 'cammina'; nuovaMeta(a); }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   I MINIGIOCHI
+
+   Ognuno vive dentro `a.minigioco`, popola #livello-giochi con le sue
+   cose, e si chiude da sé chiamando `chiudiMinigioco(a)` — che pulisce
+   il DOM e rimette l'animale a camminare. Toccare il "velo" (il resto
+   della stanza) durante un minigioco lo abbandona a metà: nessun
+   errore, nessuna barra da riempire per forza.
+   ═══════════════════════════════════════════════════════════════════ */
+function avviaMinigioco(a, st) {
+  a.stato = 'minigioco';
+  a.minigioco = { tipo: st.id };
+  const c = centroStazione(st);
+  a.x = clampeggia(c.x - TAGLIA / 2, 0, zona.clientWidth - TAGLIA);
+  a.y = clampeggia(c.y - TAGLIA / 2 - 6, 0, zona.clientHeight - TAGLIA);
+  a.el.style.left = a.x + 'px'; a.el.style.top = a.y + 'px';
+  a.el.style.zIndex = 20;
+
+  velo.classList.add('attivo');
+  velo.onpointerdown = () => chiudiMinigioco(a);
+
+  if (st.id === 'ciotola') avviaCiotola(a, st);
+  else if (st.id === 'vaschetta') avviaVaschetta(a, st);
+  else if (st.id === 'cesto') avviaCesto(a, st);
+  else if (st.id === 'cuccia') avviaCuccia(a, st);
+}
+
+function chiudiMinigioco(a) {
+  a.minigioco?.pulisci?.();
+  a.minigioco = null;
+  a.el.style.zIndex = '';
+  velo.classList.remove('attivo');
+  velo.onpointerdown = null;
+  livelloGiochi.innerHTML = '';
+  const suggerimento = livelloGiochi.querySelector('.suggerimento');
+  if (suggerimento) suggerimento.remove();
+  if (a.stato === 'minigioco') { a.stato = 'cammina'; nuovaMeta(a); }
+}
+function suggerisci(testo) {
+  livelloGiochi.querySelectorAll('.suggerimento').forEach(n => n.remove());
+  const s = ce('div', 'suggerimento'); s.textContent = testo;
+  livelloGiochi.appendChild(s);
+  return s;
+}
+
+/* ---------- 1) la ciotola: si inclina il sacchetto per versare ---------- */
+function avviaCiotola(a, st) {
+  const c = centroStazione(st);
+  const bag = ce('div', 'sacchetto'); bag.textContent = '🥫';
+  bag.style.left = (c.x - 20) + 'px'; bag.style.top = (c.y - 96) + 'px';
+  livelloGiochi.appendChild(bag);
+  const sugg = suggerisci('tieni premuto e inclina il sacchetto sulla ciotola');
+
+  let versato = 0; const obiettivo = 6;
+  let giu = false, startX = 0, ultimoVersamento = 0;
+
+  bag.addEventListener('pointerdown', e => {
+    e.preventDefault(); bag.setPointerCapture(e.pointerId);
+    giu = true; startX = e.clientX;
+  });
+  bag.addEventListener('pointermove', e => {
+    if (!giu || versato >= obiettivo) return;
+    const angolo = clampeggia((e.clientX - startX) / 1.6, -42, 42);
+    bag.style.transform = `rotate(${angolo}deg)`;
+    if (Math.abs(angolo) > 20 && performance.now() - ultimoVersamento > 210) {
+      ultimoVersamento = performance.now();
+      versato++;
+      cadeCrocchetta(c, versato, obiettivo);
+      if (versato >= obiettivo) { giu = false; setTimeout(() => animaMangiare(a, c), 420); }
+    }
+  });
+  const rilascia = e => { giu = false; bag.style.transform = ''; };
+  bag.addEventListener('pointerup', rilascia);
+  bag.addEventListener('pointercancel', rilascia);
+
+  a.minigioco.pulisci = () => { bag.remove(); sugg.remove(); };
+}
+function cadeCrocchetta(c, n, obiettivo) {
+  const k = ce('span', 'crocchetta'); k.textContent = '•';
+  const partenzaX = c.x - 10 + casuale(-6, 6);
+  k.style.left = partenzaX + 'px'; k.style.top = (c.y - 70) + 'px';
+  livelloGiochi.appendChild(k);
+  requestAnimationFrame(() => {
+    k.style.left = (c.x - 14 + (n / obiettivo) * 20 + casuale(-4, 4)) + 'px';
+    k.style.top = (c.y - 4) + 'px';
+  });
+  setTimeout(() => k.remove(), 900);
+}
+function animaMangiare(a, c) {
+  a.el.classList.add('mangia');
+  let bocconi = 5;
+  const via = setInterval(() => {
+    bocconi--;
+    if (bocconi <= 0) {
+      clearInterval(via);
+      a.el.classList.remove('mangia');
+      a.bisogni.fame = 100;
+      chiudiMinigioco(a);
+    }
+  }, 260);
+}
+
+/* ---------- 2) la vaschetta: si strofina via lo sporco ---------- */
+function avviaVaschetta(a, st) {
+  const sugg = suggerisci('strofina col dito le zone sporche');
+  const macchie = [];
+  const n = 4 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < n; i++) {
+    const m = ce('div', 'macchia');
+    const lx = casuale(14, 62), ly = casuale(10, 60);
+    m.style.left = lx + '%'; m.style.top = ly + '%';
+    a.el.appendChild(m);
+    macchie.push({ el: m, lx, ly, pulita: false });
+  }
+
+  function toccaPunto(ev) {
+    const r = a.el.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * 100;
+    const py = ((ev.clientY - r.top) / r.height) * 100;
+    for (const m of macchie) {
+      if (m.pulita) continue;
+      if (distanza(px, py, m.lx + 7, m.ly + 7) < 16) {
+        m.pulita = true; m.el.classList.add('pulita');
+        spruzzoBolla(ev.clientX, ev.clientY);
+      }
+    }
+    if (macchie.every(m => m.pulita)) finisciLavaggio(a);
+  }
+  a.el.addEventListener('pointermove', toccaPunto);
+  a.el.addEventListener('pointerdown', toccaPunto);
+
+  a.minigioco.pulisci = () => {
+    a.el.removeEventListener('pointermove', toccaPunto);
+    a.el.removeEventListener('pointerdown', toccaPunto);
+    macchie.forEach(m => m.el.remove());
+    sugg.remove();
+  };
+}
+function tocchaVaschetta(a, e) { /* il gesto è già su pointermove/down dell'elemento, qui non serve altro */ }
+function spruzzoBolla(clientX, clientY) {
+  const r = zona.getBoundingClientRect();
+  const b = ce('span', 'bolla-sapone'); b.textContent = '🫧';
+  b.style.left = (clientX - r.left - 7) + 'px'; b.style.top = (clientY - r.top - 7) + 'px';
+  livelloGiochi.appendChild(b);
+  setTimeout(() => b.remove(), 720);
+}
+function finisciLavaggio(a) {
+  a.el.classList.add('scrolla');
+  const r = a.el.getBoundingClientRect(), zr = zona.getBoundingClientRect();
+  for (let i = 0; i < 6; i++) {
+    const g = ce('span', 'goccia'); g.textContent = '💧';
+    g.style.left = (r.left - zr.left + TAGLIA / 2) + 'px';
+    g.style.top = (r.top - zr.top + TAGLIA / 2) + 'px';
+    g.style.setProperty('--dx', casuale(-40, 40) + 'px');
+    g.style.setProperty('--dy', casuale(-30, 10) + 'px');
+    livelloGiochi.appendChild(g);
+    setTimeout(() => g.remove(), 600);
+  }
+  setTimeout(() => {
+    a.el.classList.remove('scrolla');
+    a.bisogni.sporco = 100;
+    chiudiMinigioco(a);
+  }, 620);
+}
+
+/* ---------- 3) il cesto: si tira indietro la palla come una fionda ---------- */
+function avviaCesto(a, st) {
+  const c = centroStazione(st);
+  const sugg = suggerisci('trascina la pallina indietro e lasciala andare');
+  const anchor = { x: c.x, y: c.y + 8 };
+  const palla = ce('div', 'palla'); palla.textContent = '🎾';
+  palla.style.left = (anchor.x - 15) + 'px'; palla.style.top = (anchor.y - 15) + 'px';
+  livelloGiochi.appendChild(palla);
+  const linea = ce('div', 'fionda-linea'); linea.style.display = 'none';
+  livelloGiochi.appendChild(linea);
+
+  let giu = false, presa = null;
+  palla.addEventListener('pointerdown', e => {
+    e.preventDefault(); palla.setPointerCapture(e.pointerId);
+    giu = true; presa = puntoZona(e); linea.style.display = 'block';
+  });
+  palla.addEventListener('pointermove', e => {
+    if (!giu) return;
+    const p = puntoZona(e);
+    const d = distanza(anchor.x, anchor.y, p.x, p.y);
+    const ang = Math.atan2(p.y - anchor.y, p.x - anchor.x) * 180 / Math.PI;
+    linea.style.left = anchor.x + 'px'; linea.style.top = anchor.y + 'px';
+    linea.style.width = d + 'px'; linea.style.transform = `rotate(${ang}deg)`;
+    palla.style.transition = 'none';
+    palla.style.left = (p.x - 15) + 'px'; palla.style.top = (p.y - 15) + 'px';
+  });
+  const rilascia = e => {
+    if (!giu) return;
+    giu = false; linea.style.display = 'none';
+    const p = puntoZona(e);
+    const pullX = anchor.x - p.x, pullY = anchor.y - p.y;
+    const forza = Math.min(distanza(0, 0, pullX, pullY), 90);
+    if (forza < 14) { // tiro troppo debole: la pallina torna al cesto
+      palla.style.transition = ''; palla.style.left = (anchor.x - 15) + 'px'; palla.style.top = (anchor.y - 15) + 'px';
+      return;
+    }
+    const L = limiti();
+    let landX = clampeggia(anchor.x + (pullX / forza) * forza * 3.1, L.minX, L.maxX + TAGLIA);
+    let landY = clampeggia(anchor.y + (pullY / forza) * forza * 3.1, L.minY, L.maxY + TAGLIA);
+    palla.style.transition = '';
+    palla.style.left = (landX - 15) + 'px'; palla.style.top = (landY - 15) + 'px';
+    inseguiPalla(a, palla, anchor, { x: landX, y: landY });
+  };
+  palla.addEventListener('pointerup', rilascia);
+  palla.addEventListener('pointercancel', rilascia);
+
+  a.minigioco.pulisci = () => { palla.remove(); linea.remove(); sugg.remove(); };
+  a.minigioco.palla = palla;
+}
+function inseguiPalla(a, pallaEl, anchor, atterraggio) {
+  a.stato = 'insegue';
+  a.minigioco.fase = 'vai';
+  a.minigioco.meta = atterraggio;
+  a.minigioco.anchor = anchor;
+  a.minigioco.pallaEl = pallaEl;
+}
+function aggiornaInsegue(a, dt) {
+  const mg = a.minigioco; if (!mg) { a.stato = 'cammina'; return; }
+  const meta = mg.meta;
+  const cx = a.x + TAGLIA / 2, cy = a.y + TAGLIA / 2;
+  const d = distanza(cx, cy, meta.x, meta.y);
+  if (d < 10) {
+    if (mg.fase === 'vai') {
+      mg.pallaEl.style.opacity = '0'; // la prende, sparisce dalle zampe a terra
+      mg.fase = 'torna'; mg.meta = mg.anchor;
+    } else {
+      a.bisogni.noia = Math.min(100, a.bisogni.noia + 40);
+      if (a.bisogni.noia >= 100) { chiudiMinigioco(a); return; }
+      // ancora voglia di giocare: la pallina riparte dal cesto
+      mg.pallaEl.style.opacity = '1';
+      mg.pallaEl.style.left = (mg.anchor.x - 15) + 'px'; mg.pallaEl.style.top = (mg.anchor.y - 15) + 'px';
+      a.stato = 'minigioco';
+    }
+    return;
+  }
+  const passo = 85 * dt / 1000;
+  const px = (meta.x - cx) / d * passo, py = (meta.y - cy) / d * passo;
+  if (Math.abs(px) > 0.05) a.el.classList.toggle('volta', px < 0);
+  a.x += px; a.y += py;
+}
+
+/* ---------- 4) la cuccia: si accarezza avanti e indietro ---------- */
+function avviaCuccia(a, st) {
+  const sugg = suggerisci('accarezzalo avanti e indietro');
+  a.minigioco.carezza = 0;
+  a.minigioco.obiettivo = 220;
+  a.minigioco.pulisci = () => { sugg.remove(); };
+}
+function tocchaCuccia(a, e) {
+  e.preventDefault();
+  a.el.setPointerCapture(e.pointerId);
+  let ultimoX = e.clientX;
+  function muovi(ev) {
+    const dx = Math.abs(ev.clientX - ultimoX); ultimoX = ev.clientX;
+    if (dx < 1) return;
+    const mg = a.minigioco; if (!mg) return;
+    const prima = Math.floor(mg.carezza / 40);
+    mg.carezza += dx;
+    if (Math.floor(mg.carezza / 40) > prima) spawnCuoricino(a);
+    if (mg.carezza >= mg.obiettivo) {
+      finisci();
+      a.bisogni.noia = a.bisogni.noia; // la cuccia non tocca un bisogno: è riposo, non gioco
+      chiudiMinigioco(a);
+      addormenta(a, casuale(6000, 9000));
+    }
+  }
+  function finisci() {
+    a.el.removeEventListener('pointermove', muovi);
+    a.el.removeEventListener('pointerup', finisci);
+    a.el.removeEventListener('pointercancel', finisci);
+  }
+  a.el.addEventListener('pointermove', muovi);
+  a.el.addEventListener('pointerup', finisci);
+  a.el.addEventListener('pointercancel', finisci);
+}
+function spawnCuoricino(a) {
+  const c = ce('span', 'cuoricino'); c.textContent = '💗';
+  c.style.left = (a.x + TAGLIA / 2) + 'px'; c.style.top = (a.y - 4) + 'px';
+  livelloGiochi.appendChild(c);
+  setTimeout(() => c.remove(), 1150);
+}
+</script>
+</body>
+</html>

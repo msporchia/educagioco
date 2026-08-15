@@ -14,6 +14,7 @@ import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
          curato } from '../data/pets.js'
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
+import { eccezioniDi } from '../data/partenze.js'
 import { allineaCalcolo } from './calcolo.js'
 import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
          progressoArea, statoTraguardi, abilita, difficolta,
@@ -93,14 +94,15 @@ const blank = () => ({
      come tutto il resto della bancarella */
   /* del generale si contano quattro cose: i livelli portati a casa, le
      stelle raccolte, gli ordini firmati in tutto e i livelli chiusi
-     restando dentro il par. `avanzati` è quello che dice se si sta
-     davvero imparando: un livello vinto con un ordine di alto livello
-     (un ciclo, una condizione, un evento) e non con la fila di passi. */
+     **da soli** — senza farsi svelare niente e senza lasciare nessuno
+     sul campo. `avanzati` è quello che dice se si sta davvero
+     imparando: un livello vinto con un ordine di alto livello (un
+     ciclo, una condizione, un evento) e non con la fila di passi. */
   totals: { math: 0, mente: 0, en: 0, verbi: 0, frasi: 0, es: 0, verbiEs: 0, frasiEs: 0, td: 0, pasti: 0,
             partiteMath: 0, torri: 0, perfette: 0, ondate: 0,
             misure: 0, pozioni: 0, pozioniPerfette: 0,
             clienti: 0, restiPerfetti: 0, incasso: 0, mercati: 0,
-            missioni: 0, stelle: 0, ordini: 0, nelPar: 0, avanzati: 0,
+            missioni: 0, stelle: 0, ordini: 0, daSolo: 0, avanzati: 0,
             preferiti: 0, monete: 0, cure: 0, capsule: 0 },
   best: { math: 0, serieMath: 0, onda: 0, serieGiorni: 0, pozioni: 0, clienti: 0 },
   /* Il castello: quante tappe sono state superate (indice della prossima) e
@@ -224,14 +226,24 @@ async function idLibero() {
    con lui che gioca. Dalla schermata dei genitori no: aggiungere un
    fratellino non vuol dire buttare fuori chi ha in mano il telefono, e
    cambiare giocatore lì ricarica la schermata e richiede il codice. */
-export async function creaGiocatore(nome, entra = true) {
+export async function creaGiocatore(nome, entra = true, partenza = null) {
   const pulito = String(nome || '').trim().slice(0, 20)
   if (!pulito) throw new Error('Serve un nome')
   const id = await idLibero()
   state.giocatori.push({ id, nome: pulito })
   salvaRoster()
-  if (entra) await selectPlayer(id)
-  else save(KEY(id), blank())     // il suo profilo esiste da subito, vuoto
+  /* La partenza è un pugno di eccezioni scritte una volta sola: da qui
+     in poi il profilo è come tutti gli altri e si tocca a mano. Si
+     applica al profilo VUOTO, prima che esista sul serio, così non
+     esiste un istante in cui un bambino di quattro anni ha in home le
+     divisioni in colonna. */
+  const fresco = blank()
+  if (partenza) {
+    const { giochi, sa } = eccezioniDi(partenza)
+    fresco.settings = { ...fresco.settings, giochi, sa }
+  }
+  if (entra) { await selectPlayer(id); if (partenza) { state.profile.settings = fresco.settings; persist() } }
+  else save(KEY(id), fresco)      // il suo profilo esiste da subito
   /* Subito su disco, senza aspettare il salvataggio a scatto ritardato:
      questo è il primo dato che esiste, e chi chiude l'app appena scritto
      il nome si ritroverebbe daccapo davanti a «come ti chiami?» — che
@@ -369,6 +381,18 @@ export async function selectPlayer(id) {
   p.settings = { ...vuoto.settings, ...(p.settings || {}) }
   migraSaperi(p.settings)
   p.totals = { ...vuoto.totals, ...(p.totals || {}) }
+  /* ── `nelPar` È DIVENTATO `daSolo` ──
+     Il par non esiste più, e la seconda stella adesso la dà l'esserci
+     arrivati da soli. Il travaso è ESATTO e non generoso: `dentroPar`
+     ha sempre voluto dire «nel par **e** senza aiuti pagati **e** senza
+     compagni caduti», cioè conteneva già tutto quello che oggi si
+     chiede — chi lo aveva meritato lo merita anche adesso. Senza questa
+     riga il traguardo tornerebbe indietro sotto gli occhi di chi lo
+     aveva già preso. */
+  if (p.totals.nelPar) {
+    p.totals.daSolo = Math.max(p.totals.daSolo || 0, p.totals.nelPar)
+    delete p.totals.nelPar
+  }
   p.best = { ...vuoto.best, ...(p.best || {}) }
   p.td = migraCastello(vuoto.td, raw && raw.td)
   p.mate = { ...vuoto.mate, ...(p.mate || {}) }
@@ -476,6 +500,15 @@ export const saperiSpenti = () =>
    ('divisioni')` dentro la cassa non lo renderebbe più chiaro. */
 export const divisioniAccese = () => sapereAcceso('divisioni')
 export const accendiDivisioni = si => accendiSapere('divisioni', si)
+
+/* Quello che il castello sa fare, nella forma che `data/ops.js` si
+   aspetta. Sta qui e non nella cassa perché lo chiedono in tre — la
+   cassa, il banco e il cartello di fine tappa — e tre copie della stessa
+   coppia di chiamate erano tre posti dove dimenticarne una. */
+export const contiPermessi = () => ({
+  div: sapereAcceso('divisioni'),
+  mul: sapereAcceso('moltiplicazioni'),
+})
 
 /* Il flag di ieri diventa il sapere di oggi. Prima le divisioni erano
    `settings.divisioni`, un booleano tutto loro; chi le aveva spente non
@@ -894,10 +927,11 @@ export function labCompleta(indice, quanteTappe) {
 
    Un livello si vince superandone tutte e tre le varianti, quindi qui ci
    si arriva una volta sola per partita: chi chiama questa funzione ha
-   già finito. `ordini` è quanti ne ha firmati, `par` il par del livello,
-   `avanzato` dice se fra quegli ordini ce n'era almeno uno di alto
-   livello (ciclo, condizione, evento) — è il salto che il gioco insegna,
-   e va contato a parte da «ce l'ho fatta».
+   già finito. `ordini` è quanti ne ha firmati, `avanzato` dice se fra
+   quegli ordini ce n'era almeno uno di alto livello (ciclo, condizione,
+   evento) — è il salto che il gioco insegna, e va contato a parte da
+   «ce l'ho fatta». `svelato` e `caduti` sono quello che decide la
+   seconda stella, e la regola sta in `daSolo()`.
 
    I contatori li muove questa funzione, con `segna()`: così il gioco non
    deve ricordarsi cinque nomi e non c'è modo di contare due volte.
@@ -912,8 +946,22 @@ export function labCompleta(indice, quanteTappe) {
    (`views/generale/fila.js`), e passa la risposta già fatta. */
 export const genProgresso = () => state.profile.gen
 
-export function genCompleta(indice,
-                            { ordini = 0, par = 0, avanzato = false, finita = false } = {}) {
+/* ── COSA VALE LA SECONDA STELLA ──
+   Una regola sola per le prove e per i capitoli, scritta qui perché è
+   una regola di progressione e non di partita.
+   Prima era **il par**: chiudere con pochi ordini. Il gioco però non
+   chiede di risolvere in poche mosse, chiede di risolvere — e quel
+   numero diceva al bambino che il piano che funziona, il suo, non era
+   quello giusto. Adesso la seconda stella dice una cosa che il gioco
+   intende davvero: **ci sei arrivato da solo**. La perde chi si è fatto
+   dare la struttura o la soluzione (i due gradini grossi della scala
+   degli aiuti — il suggerimento leggero resta gratis e non toglie
+   niente) e chi lascia qualcuno sul campo, perché se no mandare avanti
+   un compagno a morire sarebbe gratis. */
+export const daSolo = ({ svelato = false, caduti = 0 } = {}) => !svelato && !caduti
+
+export function genCompleta(indice, conto = {}) {
+  const { ordini = 0, avanzato = false, finita = false } = conto
   const g = state.profile.gen
   const primaVolta = indice + 1 > (g.tappa || 0)
   /* la punta toccata nella fila piena: non apre più i lucchetti — quelli
@@ -927,18 +975,19 @@ export function genCompleta(indice,
   const rec = g.ordini[indice] || 0
   if (ordini > 0 && (!rec || ordini < rec)) g.ordini[indice] = ordini
 
-  // due stelle a chi sta nel par, una a chi ce la fa e basta. Si tiene la
-  // migliore: una partita storta non toglie la stella già guadagnata.
-  const dentroPar = par > 0 && ordini > 0 && ordini <= par
-  const stelle = dentroPar ? 2 : 1
+  // due stelle a chi ci è arrivato da solo, una a chi ce la fa e basta.
+  // Si tiene la migliore: una partita storta non toglie la stella già
+  // guadagnata.
+  const solo = daSolo(conto)
+  const stelle = solo ? 2 : 1
   const prima = g.stelle[indice] || 0
   if (stelle > prima) g.stelle[indice] = stelle
 
   if (primaVolta) segna('missioni')
   if (ordini > 0) segna('ordini', ordini)
-  // il par si conta una volta per livello — la prima volta che ci si sta —
+  // si conta una volta per livello — la prima volta che ci si riesce —
   // perché è una cosa capita, non una cosa ripetuta
-  if (dentroPar && prima < 2) segna('nelPar')
+  if (solo && prima < 2) segna('daSolo')
   if (stelle > prima) segna('stelle', stelle - prima)
   // questo invece è una vittoria per volta, come le operazioni perfette
   // del castello: scrivere un ciclo resta il gesto che vale, anche la

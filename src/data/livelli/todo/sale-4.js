@@ -197,7 +197,6 @@ export const SALE_4 = {
                sisa: { x: 8, y: 9 } } },
   ],
 
-  par: 9,
   soluzioni: [
     /* nove ordini, ed è il par. Due a Sisa — e sono due, non uno, e
        nemmeno tre: farsi vedere, e poi dirlo. Due a testa al carro e

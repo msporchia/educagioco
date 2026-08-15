@@ -137,7 +137,6 @@ const BIBI_2 = {
       posti: { prato: { x: 21, y: 11 } }, unita: { bibi: { x: 21, y: 11 } } },
   ],
 
-  par: 4,
   soluzioni: [
     /* quattro ordini, ed è il par: nessuno si può togliere. Senza la
        chiavetta il cancelletto non si apre; senza il cancelletto al

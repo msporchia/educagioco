@@ -85,7 +85,6 @@ export const STAFFETTA = livello({
     { nome: "l'orco a settentrione, il tesoro più lontano", metti: { o1: orco, t3: tesoro } },
   ],
 
-  par: 8,
   soluzioni: [
     { nome: 'la vedetta guarda, l\'eroe ascolta', piano: {
       vedetta: [fai.bivio(se.vedi('orchi'), [fai.suona(liberoSotto)], [fai.suona(liberoSopra)])],

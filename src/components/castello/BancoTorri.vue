@@ -23,12 +23,13 @@ const props = defineProps({
   vista: { type: Object, required: true },
   costoNuova: { type: Number, default: 0 },
   postiFiniti: { type: Boolean, default: false },
-  divisioni: { type: Boolean, default: true },
+  /* cosa il bambino può calcolare: { div, mul } — vedi data/ops.js */
+  sa: { type: Object, default: () => ({}) },
 })
 defineEmits(['scegli', 'potenzia', 'onda'])
 
 const disponibile = k => props.tappa.torri.includes(k)
-const segno = k => segnoDi(k, props.divisioni)
+const segno = k => segnoDi(k, props.sa)
 const cara = k => disponibile(k) && (props.hud.energia < props.costoNuova || props.postiFiniti)
 </script>
 

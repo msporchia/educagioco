@@ -56,9 +56,26 @@ export const CHIAVE = livello({
   ],
 
   complementi: ['chiave', 'portone', 'tesoro'],
+  /* ── TRE VERBI, E SONO QUELLI DELLA LEZIONE ──
+     Senza questa riga la cassetta offriva anche `posa` e `chiudi`,
+     perché il livello ha una chiave e una porta e il motore li deduce.
+     Nessuno dei due porta da qualche parte qui: «posa la chiave» è un
+     ordine che si può dare e che non fa niente di utile, e nel secondo
+     livello del gioco ogni voce in più nel foglio è una cosa in più da
+     escludere prima di trovare quella giusta. I verbi si introducono a
+     scaglioni: qui lo scaglione è vai-prendi-apri. */
+  verbi: ['vai', 'prendi', 'apri'],
+  /* ── E ANCORA NIENTE DOMANDE ──
+     Qui una la genererebbe: la chiave è un oggetto, e da un oggetto
+     nasce «hai la chiave». Il foglio si riempirebbe di un bivio, di un
+     ciclo e di un'azione nel livello che insegna **la fila** — tre
+     strutture offerte due prove prima che il gioco spieghi cosa sia
+     una domanda. I costrutti si introducono a scaglioni, e il primo
+     scaglione è «un ordine dietro l'altro»: la domanda arriva a «Due
+     strade», dove il livello la detta. */
+  condizioni: [],
   vince: [se.aperto(tesoro)],
 
-  par: 3,
   soluzioni: [{ nome: 'chiave, portone, tesoro', piano: { eroe: [
     fai.prendi(chiave), fai.apri(portone), fai.apri(tesoro),
   ] } }],

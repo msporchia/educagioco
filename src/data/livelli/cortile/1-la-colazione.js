@@ -116,7 +116,6 @@ export const COLAZIONE = livello({
   motivoSconfitta: 'Bombo è entrato in casa e si è preso le uova.',
   mostraNemici: true,
 
-  par: 12,
   soluzioni: [
     /* DODICI ORDINI, DUE VIAGGI E UNA GUARDIA. */
     { nome: "quello di fuori, chiudi, e poi la farina", piano: { rosa: [

@@ -173,6 +173,15 @@ committate: non è ricostruibile da git.
   `#ripara` buttano cache e service worker e ricaricano: **non toccano
   IndexedDB né localStorage**, e questa è tutta la differenza con
   «cancella i dati del sito».
+- **`src/store/giudizi.js`** — il quaderno dei giudizi sulle domande.
+  Acceso l'interruttore nella pagina dei grandi, sopra ogni domanda dei
+  quiz compaiono tre tastini (😴 troppo facile, 😰 troppo difficile, 🐛
+  storta): il verdetto lo dà il grande, il contesto — modulo, grado,
+  tipologia, tempo, esito — se lo annota il gioco. Sta **fuori dai
+  profili** come il codice dei genitori, e esce da lì per l'unica strada
+  che c'è: il modulo di segnalazione, precompilato. È il difetto che
+  nessun controllo automatico trova, perché una domanda fuori misura è
+  formalmente ineccepibile.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni
@@ -219,6 +228,12 @@ committate: non è ricostruibile da git.
 - **Gli id dei contenuti non si rinominano** (`en:dog`, `math:7x8`,
   `frase:…`): sono le chiavi dello stato SRS, e cambiarli fa tornare una
   parola «mai vista».
+- **Nell'archivio non si salva `true` da solo.** `load()` scarta quel
+  valore quando lo rilegge (`fromIdb !== true`: è il segnale di
+  «scrittura riuscita» di `idbRun`), quindi un `save(chiave, true)`
+  torna sempre `null` senza che niente sembri rotto — un interruttore
+  che si spegne a ogni riavvio. Si mette dentro un oggetto
+  (`{ acceso: true }`), come fa `store/giudizi.js`.
 - **`VERSION` in `store/storage.js` non si abbassa mai.** `indexedDB.open`
   fallirebbe e il ripiego su localStorage diventerebbe permanente e silenzioso.
 - **Il timeout di 2,5 s in `openDb()` è l'unico modo noto di perdere

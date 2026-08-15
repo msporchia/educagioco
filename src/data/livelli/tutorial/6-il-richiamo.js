@@ -15,7 +15,7 @@
       farsi vedere costa, perché conta DOVE combatti. È il sesto e
       ultimo pezzo del vocabolario, non un esercizio. */
 
-import { livello, campo, cose, chi, fai, se, reagisce } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, reagisce, aiuto } from '../scrivi.js'
 
 /* UNA UNITÀ SOLA, e il livello ci guadagna. Con due, questa era la
    terza volta di fila che la lezione era «mettetevi d'accordo»; con
@@ -65,9 +65,23 @@ export const RICHIAMO = livello({
   id: 'richiamo', nome: 'Il richiamo', idea: 'Fai rumore lontano da dove devi passare',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano alla ladra</b>. Il carceriere non si batte.",
   racconto: "Con quella corazza il carceriere non lo butta giù nessuno, e la ladra cade al primo colpo. Ma lui è fatto in un modo solo, e sta scritto nella sua scheda.",
-  aiuti: ['Una scheda si legge come un piano: tocca il carceriere e guarda a cosa reagisce.',
-          'Corre dove sente il rumore, e ci mette un pezzo ad andare e tornare.',
-          'Il rumore lo puoi fare dove vuoi — ma non dove devi passare tu.'],
+  /* ── LA SCALA, SCRITTA A MANO ──
+     Qui i gradini non sono solo parole: in mezzo ce n'è uno che
+     **scrive nel piano** la prima metà — prendi la chiave, e chiamalo
+     da dove sei — e poi si torna a parlare per la seconda, che è la
+     parte in cui sta la lezione. Chi arriva a quel punto ha già davanti
+     agli occhi come si dice «fai rumore»; quello che gli resta da
+     capire è *dove conviene farlo*, e quello non glielo scrive nessuno.
+     È il motivo per cui la scala si può comporre invece di essere
+     sempre «tre frasi, poi tutto». */
+  aiuti: [
+    aiuto.dice('Una scheda si legge come un piano: tocca il carceriere e guarda a cosa reagisce.'),
+    aiuto.dice('Corre dove sente il rumore, e ci mette un pezzo ad andare e tornare.'),
+    aiuto.scrive({ ladra: [fai.prendi('chiave'), fai.suona('richiamo')] },
+                 'Ecco le prime due mosse: prendi la chiave e chiamalo. Il resto è tuo.'),
+    aiuto.dice('Adesso lui sta correndo dove ti ha sentita. Il portone, in quel momento, è libero: il rumore lo puoi fare dove vuoi — ma non dove devi passare tu.'),
+    aiuto.svela(),
+  ],
   ambiente: 'camminamento',
 
   scena: MURA,
@@ -93,7 +107,6 @@ export const RICHIAMO = livello({
     { nome: 'la chiave in fondo a levante', metti: { k3: chiave } },
   ],
 
-  par: 4,
   soluzioni: [
     /* QUATTRO ORDINI, e non ce n'è uno di troppo: la chiave sta sempre
        lontana dal portone, quindi il punto in cui ti trovi dopo averla

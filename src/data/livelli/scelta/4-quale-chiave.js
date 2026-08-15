@@ -90,7 +90,6 @@ export const QUALE_CHIAVE = livello({
     { nome: 'sportello aperto di nuovo: guardia sulla blu', metti: { SP: spiaDa(true), PP: portaDa('chiaveRossa'), g2: guardia } },
   ],
 
-  par: 5,
   soluzioni: [
     { nome: 'guarda lo sportello, poi scegli la chiave', piano: { eroe: [
       fai.bivio(se.aperto('spia'), [fai.prendi(chiaveRossa)], [fai.prendi(chiaveBlu)]),

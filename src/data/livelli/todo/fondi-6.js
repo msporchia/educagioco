@@ -294,7 +294,6 @@ export const FONDI_6 = {
                falena1: { x: 14, y: 7 }, falena2: { x: 15, y: 9 }, falena3: { x: 14, y: 11 } } },
   ],
 
-  par: 14,
   soluzioni: [
     /* QUATTORDICI ORDINI, ED È IL PAR — il piano più lungo della
        storia, e non ha dentro niente che non si sia già visto. Si legge

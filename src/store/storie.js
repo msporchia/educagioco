@@ -21,7 +21,7 @@
    Di profili questo file non sa niente più di quello che gli serve:
    legge e scrive attraverso `storiaProfilo()`, il resto è aritmetica.
    ═══════════════════════════════════════════════════════════════════ */
-import { storiaProfilo, persist, flushNow, segna, tuttoAperto } from './profile.js'
+import { storiaProfilo, persist, flushNow, segna, tuttoAperto, daSolo } from './profile.js'
 import { STORIA, STORIE } from '../data/storie-generale.js'
 
 /* ═══════════ leggere ═══════════ */
@@ -85,22 +85,24 @@ export function aggiungiFatto (storiaId, fatto) {
   return [...r.fatti]
 }
 
-/* Un capitolo portato a casa. Stesso metro del resto del Generale: due
-   stelle a chi sta nel par, una a chi ce la fa e basta, e si tiene la
-   migliore. I contatori sono quelli di sempre (`missioni`, `stelle`,
-   `ordini`, `nelPar`, `avanzati`): un capitolo è una missione come le
-   altre, e i traguardi non devono imparare un nome nuovo. */
-export function superaCapitolo (storiaId, n, { ordini = 0, par = 0, avanzato = false } = {}) {
+/* Un capitolo portato a casa. Stesso metro del resto del Generale — che
+   sta scritto una volta sola, in `daSolo()` di `store/profile.js`: due
+   stelle a chi ci è arrivato da solo, una a chi ce la fa e basta, e si
+   tiene la migliore. I contatori sono quelli di sempre (`missioni`,
+   `stelle`, `ordini`, `daSolo`, `avanzati`): un capitolo è una missione
+   come le altre, e i traguardi non devono imparare un nome nuovo. */
+export function superaCapitolo (storiaId, n, conto = {}) {
   const st = STORIA[storiaId]
   const c = st && st.capitoli[n]
   if (!c) return null
   const r = storiaProfilo(storiaId, true)
+  const { ordini = 0, avanzato = false } = conto
 
   const primaVolta = n + 1 > (r.capitolo || 0)
   r.capitolo = Math.max(r.capitolo || 0, n + 1)
 
-  const dentroPar = par > 0 && ordini > 0 && ordini <= par
-  const stelle = dentroPar ? 2 : 1
+  const solo = daSolo(conto)
+  const stelle = solo ? 2 : 1
   const prima = r.stelle[c.id] || 0
   if (stelle > prima) r.stelle[c.id] = stelle
 
@@ -111,7 +113,7 @@ export function superaCapitolo (storiaId, n, { ordini = 0, par = 0, avanzato = f
 
   if (primaVolta) segna('missioni')
   if (ordini > 0) segna('ordini', ordini)
-  if (dentroPar && prima < 2) segna('nelPar')
+  if (solo && prima < 2) segna('daSolo')
   if (stelle > prima) segna('stelle', stelle - prima)
   if (avanzato) segna('avanzati')
 

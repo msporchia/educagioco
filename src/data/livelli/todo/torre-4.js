@@ -231,7 +231,6 @@ export const TORRE_4 = {
                guardia: { x: 22, y: 10, vista: 7 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* sette ordini, ed è il par. Tre a Nilo — il giro, la voce, la
        strada per tornare — tre a Marta dentro il «quando arriva», e uno

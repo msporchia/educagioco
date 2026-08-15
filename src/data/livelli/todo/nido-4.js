@@ -199,7 +199,6 @@ export const NIDO_4 = {
       unita: { ladro1: { x: 23, y: 15 }, ladro2: { x: 22, y: 15 }, ladro3: { x: 21, y: 15 } } },
   ],
 
-  par: 6,
   soluzioni: [
     /* sei ordini: due a Fumo, tre a Roccia, uno a Cenere. Il giro dura
        tutta la notte e finisce da sé; Roccia si porta avanti fin dove

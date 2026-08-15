@@ -97,7 +97,6 @@ export const NON_CONTARE = livello({
 
   /* IL PAR: il ciclo (il blocco e i due «vai» agli estremi) più il
      «prendi» finale, DOPO che il cancello è già aperto. */
-  par: 4,
   soluzioni: [
     { nome: "gira finché non è aperto, poi prendi", piano: { cava: [
       fai.ripeti([fai.vai('11,1'), fai.vai('1,1')], se.aperto(cancello)),

@@ -82,7 +82,6 @@ export const LA_SPIA = livello({
     { nome: 'la spia aperta, tesoro in alto', metti: { oa: orco, t3: tesoro, SP: spiaDa(true) } },
   ],
 
-  par: 3,
   soluzioni: [
     { nome: 'guarda la spia, poi scegli', piano: { eroe: [
       fai.bivio(se.aperto('spia'), [fai.vai(sotto)]),

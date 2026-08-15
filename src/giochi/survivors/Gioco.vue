@@ -385,7 +385,8 @@ onUnmounted(() => {
              @scegli="scegliCarta" />
 
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
-               :titolo="`${domanda.icona} ${domanda.nome}`" @risposto="risposto" />
+               :titolo="`${domanda.icona} ${domanda.nome}`"
+               :origine="domanda" gioco="survivors" @risposto="risposto" />
 
       <Finale v-if="finale" v-bind="finale"
               @ancora="ancora" @esci="allaMappa" @resta="resta" />

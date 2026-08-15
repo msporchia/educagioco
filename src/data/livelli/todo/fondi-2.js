@@ -254,7 +254,6 @@ export const POZZO = {
       unita: { ras: { x: 24, y: 5 }, orso: { x: 26, y: 4 } } },
   ],
 
-  par: 7,
   soluzioni: [
     /* sette ordini, ed è il par: Orso cammina (uno), e la catena di Ras
        sta tutta dentro l'ascolto, perché prima del grido non si può

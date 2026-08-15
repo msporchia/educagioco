@@ -21,15 +21,13 @@
        almeno una (se vincesse sempre non dimostrerebbe niente, se non
        vincesse mai non sarebbe una tentazione);
      · una soluzione marcata `lunga` vince su tutte le scene ma costa
-       più del par — è la strada lunga, quella che il par non premia e
-       non vieta: da lì un ordine si può togliere, ed è il solo caso in
-       cui è ammesso;
+       più di quella stretta — è la strada lunga, quella che il gioco
+       non vieta e non premia: da lì un ordine si può togliere, ed è il
+       solo caso in cui è ammesso;
      · il piano vuoto non vince **mai**;
      · togliendo un ordine qualsiasi da una soluzione non fragile e non
        `lunga`, quel piano non è più una soluzione — cioè perde almeno
        una scena;
-     · il par è raggiungibile (una soluzione ci sta dentro) e non è largo
-       di manica (nessuna soluzione buona è più corta del par);
      · nessun ordine delle soluzioni viene rifiutato da `guaiDi`;
      · la **scenografia**, se c'è, è soltanto disegno: ogni voce nomina
        un pittore che esiste, sta su pavimento, e non siede sopra
@@ -126,8 +124,8 @@ const soluzioni = liv => liv.soluzioni || []
 const buone = liv => soluzioni(liv).filter(s => !s.fragile)
 /* quelle che devono anche essere STRETTE: nessun ordine di troppo. La
    strada lunga (`lunga: true`) vince uguale e costa di più — è dichiarata
-   apposta per far vedere che il par premia senza vietare — e da lì un
-   ordine si può togliere. */
+   apposta per far vedere che il gioco non vieta la strada lunga — e da lì
+   un ordine si può togliere. */
 const strette = liv => soluzioni(liv).filter(s => !s.fragile && !s.lunga)
 /* come si nomina una voce di un piano: un ordine è «verbo complemento»,
    un blocco condizione è «condizione + la sua domanda» */
@@ -223,7 +221,7 @@ export function provaLivello (liv, nome) {
   vincono(liv, n)
   dallaCassetta(liv, n)
   necessari(liv, n)
-  ilPar(liv, n)
+  stradeLunghe(liv, n)
   particolari(liv, n)
 
   /* ── UN ID SBAGLIATO NON ESPLODE: VIENE IGNORATO ──
@@ -430,21 +428,23 @@ function necessari (liv, n) {
     }
 }
 
-/* ── 4. il par: una promessa, non un numero di bellezza ── */
-function ilPar (liv, n) {
-  controlla(`${n}: il par è un numero di ordini`, Number.isInteger(liv.par) && liv.par > 0, `par ${liv.par}`)
+/* ── 4. la strada lunga dev'essere davvero lunga ──
+   Il `par` non c'è più, e con lui il numero scritto a mano che diceva
+   «si può fare con questi». Restava però una cosa da tenere onesta: chi
+   marca una soluzione `lunga` sta chiedendo al banco di NON pretendere
+   che ogni suo ordine sia necessario (§3), e quella marca vale solo se
+   quella strada costa davvero di più di quella stretta. Il metro adesso
+   è **derivato** — la soluzione stretta più corta — invece che
+   dichiarato: non può diventare stantio, e non c'è più niente da
+   aggiornare quando una soluzione cambia. */
+function stradeLunghe (liv, n) {
   const corte = strette(liv).map(s => contaOrdini(s.piano))
   if (!controlla(`${n}: c'è una soluzione stretta, non solo strade lunghe`, corte.length > 0)) return
   const min = Math.min(...corte)
-  controlla(`${n}: il par è raggiungibile`, min <= liv.par,
-            `par ${liv.par}, soluzioni da ${corte.join(', ')} ordini`)
-  controlla(`${n}: il par non è largo di manica`, min >= liv.par,
-            `par ${liv.par}, ma si vince con ${min} ordini`)
-  /* e una strada lunga dev'essere davvero lunga: se ci sta nel par,
-     quella marca è una scusa per saltare il controllo di sopra */
   for (const s of soluzioni(liv).filter(x => x.lunga && !x.fragile))
-    controlla(`${n} · ${s.nome} (lunga): costa più del par`, contaOrdini(s.piano) > liv.par,
-              `par ${liv.par}, e questa ne conta ${contaOrdini(s.piano)}`)
+    controlla(`${n} · ${s.nome} (lunga): costa più della strada stretta`,
+              contaOrdini(s.piano) > min,
+              `la stretta ne conta ${min}, e questa ${contaOrdini(s.piano)}`)
 }
 
 /* ── 5. quello che questo livello ha di suo ── */

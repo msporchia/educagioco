@@ -95,10 +95,25 @@ const CASTELLO = campo([
      CS: cesto, GT: gatto, P1: camera, P2: dispensa, K2: chiavetta, SE: secchio })
 
 export const DUE_CHIAVI = livello({
-  id: 'parole-due-chiavi', nome: 'Lo sgombero del castello',
+  /* il posto è un MULINO — lo dicono il commento in testa, il racconto e
+     la mappa — e si chiamava «lo sgombero del castello»: due nomi per lo
+     stesso posto, e quello sbagliato era il titolo, cioè la prima cosa
+     che si legge. L'`id` resta `parole-due-chiavi`: è una chiave. */
+  id: 'parole-due-chiavi', nome: 'Lo sgombero del mulino',
   idea: 'Tre cose da portare via, e due mani',
-  dritta: 'Obiettivo: <b>il libro, la farina, il secchio e il gatto sul carro</b>, prima che arrivi l\'acqua.',
-  racconto: "L'acqua sale e il castello va sgomberato prima che arrivi. Da portare via ci sono il libro del nonno, chiuso in camera, il sacco di farina, chiuso in dispensa, il secchio del pozzo e il gatto. Le due chiavi stanno in due stanze diverse — ma quelle vanno in tasca. <b>Le mani sono due, e le cose tre</b>: al carro ci si torna.",
+  /* ── E IL GIOCO NON PROMETTE QUELLO CHE NON FA ──
+     Qui c'era scritto «prima che arrivi l'acqua», e l'acqua non arriva
+     mai: non c'è nessun limite, nessuna sconfitta, e un piano di
+     quaranta ordini vince come uno di tredici. Una fretta annunciata e
+     non mantenuta è peggio di nessuna fretta — chi ci crede gioca
+     stretto per niente, chi se ne accorge impara che le dritte si
+     possono ignorare. Il fiume resta nel racconto come il MOTIVO per
+     cui si sgombera (e lo è: un mulino non si svuota per capriccio),
+     ma la promessa è quella che il livello mantiene davvero — portare
+     via tutto con due mani sole. Il giorno che l'acqua salirà per
+     davvero, sarà una regola del mondo e non una riga di testo. */
+  dritta: 'Obiettivo: <b>il libro, la farina, il secchio e il gatto sul carro</b>.',
+  racconto: "Il fiume è in piena e il mulino va sgomberato. Da portare via ci sono il libro del nonno, chiuso in camera, il sacco di farina, chiuso in dispensa, il secchio del pozzo e il gatto. Le due chiavi stanno in due stanze diverse — ma quelle vanno in tasca. <b>Le mani sono due, e le cose tre</b>: al carro ci si torna.",
   aiuti: ['Guarda la tua scheda: ✋ due mani. Le cose da portare sono tre.',
           'Le chiavi stanno in tasca e non pesano: quelle non ti fermano mai.',
           'Il gatto non pesa: cammina da sé, e ti viene dietro appena aperto il cesto.'],
@@ -123,10 +138,25 @@ export const DUE_CHIAVI = livello({
   complementi: ['chiave', 'chiavetta', 'libro', 'farina', 'secchio', 'camera',
                 'dispensa', 'cesto', 'carro', 'gatto'],
   verbi: ['vai', 'prendi', 'posa', 'apri'],
+  /* ── E NIENTE DOMANDE, COME NEI DUE PRIMA ──
+     Qui gli oggetti sono cinque, quindi il foglio offrirebbe «hai il
+     libro», «hai la farina», «hai il secchio»… e con loro il bivio, il
+     ciclo e l'azione. Ma la lezione è il lavoro fatto nell'ordine
+     giusto con due mani: una domanda non serve a niente e il foglio
+     delle scelte diventerebbe un elenco lungo il doppio proprio nel
+     livello che ha già più cose di tutti. La domanda arriva dopo, dove
+     è la lezione. */
+  condizioni: [],
   vince: [se.qui(libro, carro), se.qui(farina, carro), se.qui(secchio, carro),
           se.qui(gatto, carro)],
+  /* ── E IL PIANO DEL GATTO SI LEGGE ──
+     Il secondo aiuto dice «cammina da sé, e ti viene dietro appena
+     aperto il cesto»: una promessa che si verifica toccandolo, e senza
+     questa riga toccarlo dava un lucchetto. Qui non c'è niente da
+     spiare — non è un nemico, è il gatto da portare in salvo — quindi
+     quello che fa sta scritto e si legge. */
+  mostraNemici: true,
 
-  par: 13,
   soluzioni: [
     { nome: 'due mani, due viaggi', piano: { bimba: [
       fai.prendi(chiave), fai.apri(camera), fai.apri(cesto),

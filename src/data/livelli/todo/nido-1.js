@@ -198,7 +198,6 @@ export const NIDO_1 = {
       unita: { ladro: { x: 26, y: 15 } } },
   ],
 
-  par: 3,
   soluzioni: [
     /* tre ordini, ed è il par: entra nella tana, aspetta di vederlo,
        esci dove lui non ha più una seconda strada. Provati a togliere

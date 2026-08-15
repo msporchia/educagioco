@@ -133,7 +133,6 @@ export const TOTEM = livello({
     { nome: 'cinque tacche', metti: { TT: totemDa(5) } },
   ],
 
-  par: 4,
   soluzioni: [
     /* QUATTRO ORDINI: la leva, il giro (che ne conta uno) col suo
        `premi` dentro (un altro), e il tesoro. L'uscita ascolta LA

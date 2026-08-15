@@ -41,6 +41,12 @@ export const PRIMO = livello({
   aiuti: ['Un ordine è fatto di due cose: un verbo, e la cosa su cui vale.',
           'Stare accanto a una cosa non vuol dire averla aperta.',
           "Guarda i verbi che hai: uno ti porta lì e basta, l'altro fa succedere qualcosa."],
+  /* ── E QUI SI IMPARA ANCHE DOVE SI TOCCA ──
+     È il primo schermo del gioco: prima ancora di «cosa gli dico»
+     c'è «dove metto il dito». La riga in fondo lo dice, indica il
+     rettangolo tratteggiato, e sparisce al primo ▶ — solo per chi non
+     ha mai chiuso un livello. Vedi `guida` in `livelli/livello.js`. */
+  guida: true,
   ambiente: 'cortile', prove: 1,
 
   /* Due corti divise da un muro, con un varco in mezzo. La stanza non ha
@@ -83,10 +89,27 @@ export const PRIMO = livello({
   ],
 
   complementi: ['tesoro'],
+  /* ── DUE VERBI, E UNO È LA STRADA SBAGLIATA ──
+     `vai` c'è apposta: portarci l'eroe accanto non fa vincere, ed è la
+     prima cosa che si impara sbagliando. `apri` è quella giusta. Il
+     terzo che compariva — `chiudi`, dedotto dal fatto che un forziere è
+     una cosa che si apre — non è una lezione: è una voce in più da
+     scartare nel primissimo foglio del gioco, dove le voci sono due e
+     si guardano una per una. */
+  verbi: ['vai', 'apri'],
+  /* ── NIENTE DOMANDE, QUI ──
+     Un forziere non genera domande da sé (una porta non si chiede da
+     lontano), quindi oggi questa riga non toglie niente — ma la scrive
+     lo stesso, perché è la dichiarazione che rende la cosa una scelta
+     invece di una coincidenza: nel livello in cui si impara che un
+     ordine è un verbo e una cosa, il foglio non offre bivi, cicli né
+     azioni. Il giorno che qui dentro entrasse un oggetto da
+     raccogliere, «hai il…» comparirebbe da sé senza che nessuno
+     l'abbia deciso. */
+  condizioni: [],
   vince: [se.aperto(tesoro)],
 
-  par: 1,
-  soluzioni: [{ nome: 'dritto al tesoro', piano: { eroe: [fai.apri(tesoro)] } }],
+  soluzioni: [{ nome: 'dritto al forziere', piano: { eroe: [fai.apri(tesoro)] } }],
 })
 
 export default PRIMO

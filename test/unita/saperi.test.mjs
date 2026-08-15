@@ -350,8 +350,13 @@ for (const s of SAPERI) {
   controlla(`${s.chiave}: l'esempio viene da un modulo che lo cita`,
             citati.has(s.chiave) || senzaEsempio.includes(s.chiave))
 }
-uguale('l\'unico gruppo senza domande di quiz sono le divisioni (stanno nel castello)',
-       senzaEsempio.join(','), 'divisioni')
+/* Due gruppi non passano da nessun modulo di quiz, e sono le due
+   operazioni che vivono nel castello: chi le chiede è la cassa, che
+   scende di scalino invece di far sparire una domanda. Sono elencati
+   qui uno per uno apposta — se domani un terzo gruppo smettesse di
+   avere domande sarebbe un interruttore finto, e va visto subito. */
+uguale('i soli gruppi senza domande di quiz sono le due operazioni del castello',
+       senzaEsempio.join(','), 'moltiplicazioni,divisioni')
 nota(`esempi: ${TIPI.length} tipologie e ${SAPERI.length - senzaEsempio.length} gruppi su ${SAPERI.length} sanno mostrarsi`)
 
 riassunto('i macrogruppi di sapere')

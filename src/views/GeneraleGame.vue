@@ -13,11 +13,18 @@
      aspetta [l'orco]                   attesa
 
    È un gioco che insegna a programmare, e la cosa che insegna sta
-   tutta nel **par**: vincere allungando la lista lo fa chiunque,
-   vincere con quattro ordini vuol dire aver trovato il modo giusto di
-   dirlo. Ogni livello si gioca su più varianti e si vince solo
-   superandole tutte — un piano che funziona su una mappa sola non è
-   un piano, è fortuna.
+   tutta nelle **varianti**: ogni livello si gioca su più mappe e si
+   vince solo superandole tutte — un piano che funziona su una mappa
+   sola non è un piano, è fortuna, e il piano si firma prima di sapere
+   quale tocca.
+
+   Per un pezzo la cosa che insegnava è stata il **par**, cioè
+   risolvere con pochi ordini. Non c'è più: il gioco chiede di
+   risolvere, non di risolvere in poche mosse, e un tetto scritto in
+   cima allo schermo diceva a chi aveva appena vinto che il suo piano
+   non era quello giusto. Quello che resta a valere la seconda stella è
+   **esserci arrivati da soli** — senza farsi svelare la struttura o la
+   soluzione, e senza lasciare compagni sul campo.
 
    ── i tre file ────────────────────────────────────────────────────
    · le REGOLE stanno in `motore/generale.js` e non sanno che esiste
@@ -39,17 +46,17 @@ import CartelloScena from './generale/CartelloScena.vue'
 import CampoLivello from './generale/CampoLivello.vue'
 import FogliLivello from './generale/FogliLivello.vue'
 import EditorPiano from './generale/EditorPiano.vue'
-import { ogniVoce } from './generale/piano.js'
+import { ogniVoce, laSoluzione, soloLaForma, scalaDi } from './generale/piano.js'
 import { bersagliDi } from './generale/bersagli.js'
 import { cosaCambia, nomiScene } from './generale/scene.js'
 import { creaNavigazione } from './generale/navigazione.js'
-import { genProgresso, genCompleta } from '../store/profile.js'
+import { genProgresso, genCompleta, daSolo } from '../store/profile.js'
 import { superaCapitolo, stelleDi } from '../store/storie.js'
 import { suono } from '../audio.js'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
 import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, altriInCampo,
-         contaOrdini, VERBI, ilSegnale, testoCond, laCosa,
+         contaOrdini, VERBI, ilSegnale, testoCond, laCosa, eOstile,
          registro, eAvanzato, libera, perdute,
          manca, eCondizione, eRipeti, eRoutine, eBlocco, ramoDi, corpoDi, dentroA,
          RAMI, BLOCCHI, raccogliRoutine }
@@ -64,7 +71,7 @@ const NOME = 'Il generale'
    schermata sia arrivato non è affare di questo file. */
 const nav = creaNavigazione({ avvia: avviaLivello, aCasa: () => emit('vai', 'home'), nome: NOME })
 const { fase, storiaOra, contesto, L, apri, apriCapitolo, apriStoria,
-        indietro, dopo, numeroTappa, titolo } = nav
+        indietro, dopo, titolo } = nav
 const livOra = ref(null)           // il livello in corso, da qualunque parte venga
 const piano = ref({})              // gli ordini firmati: { unità: [ordini] }
 const unitaOra = ref('')           // di chi stiamo scrivendo il piano
@@ -72,7 +79,13 @@ const letta = ref(null)            // di chi stiamo LEGGENDO gli ordini
 const editor = ref(null)           // chi scrive gli ordini: `generale/EditorPiano.vue`
 const pannello = ref('')           // '' | 'registro' | 'cartello' | 'scheda'
 const scheda = ref(null)
-const aiuti = ref(0), pagato = ref(false)
+/* ── LA SCALA DEGLI AIUTI ──
+   `aiuti` è a che gradino si è scesi — la scala la compone
+   `generale/piano.js` mettendo in fila quello che il livello dichiara.
+   `svelato` è il gradino PIÙ GROSSO fra quelli che hanno scritto nel
+   piano (`scrive`, `forma`, `svela`): serve alla stella, e a dire alla
+   fine cosa è stato dato invece che trovato. */
+const aiuti = ref(0), svelato = ref('')
 const auto = ref(false)
 /* ── UNA VELOCITÀ SOLA, E SVELTA ──
    C'erano tre andature e un tasto per girarle (🐢 🐇 🐌). Non era una
@@ -123,7 +136,6 @@ const andato = ref(null)           // com'è andata storta: si tocca e si ripart
 
 const progresso = computed(() => genProgresso())
 const liv = computed(() => livOra.value || LIVELLI[L.value])
-const par = computed(() => liv.value.par)
 const quantiOrdini = computed(() => contaOrdini(piano.value))
 const prove = computed(() => proveDi(liv.value))
 const stelle = computed(() => nav.inStoria()
@@ -157,12 +169,22 @@ function avviaLivello (l) {
   letta.value = null; scegliendo.value = null
   gettoni.value = l.gettoni || 0
   scoperte.value = l.mostraNemici === true ? altriInCampo(l) : []
-  aiuti.value = 0; pagato.value = false; finito.value = null; andato.value = null
+  aiuti.value = 0; svelato.value = ''; finito.value = null; andato.value = null
+  guidaFinita.value = false
   cambio.value = null; fermaAttesa(); montaggio.value = false
   serieI.value = 0; esiti.value = []; auto.value = false; caduttiFondo = 0
   pannello.value = 'cartello'          // la prima cosa è la spiegazione, e non costa niente
   nuovoMondo(0)
-  nextTick(async () => { await campo.value?.misura(); campo.value?.disegna() })
+  /* entrando in un livello la tela non c'è ancora, quindi «mostrala
+     tutta» dentro `nuovoMondo` non ha niente da misurare: si rifà qui,
+     appena la tela è stata misurata. Senza questa riga il primo schermo
+     di ogni livello resta all'ingrandimento di partenza — cioè la cosa
+     che si è appena finito di togliere. */
+  nextTick(async () => {
+    await campo.value?.misura()
+    campo.value?.mostraTutto()
+    campo.value?.disegna()
+  })
 }
 
 /* ═══════════ la partita ═══════════ */
@@ -174,9 +196,18 @@ function nuovoMondo (k) {
   avvia(mondo, pianoCompleto(mondo, piano.value))
   mondo.passi = 0
   campo.value?.azzera()
-  /* una scena nuova si mette in modo che si veda chi ha degli ordini:
-     è l'unica inquadratura automatica rimasta, e succede da fermi */
-  campo.value?.inquadraSu(mondo.unita.find(u => piano.value[u.id]) || mondo.unita[0])
+  /* ── UNA SCENA NUOVA SI VEDE INTERA ──
+     Prima ci si metteva addosso a chi ha degli ordini, all'ingrandimento
+     di partenza. Su una mappa che non ci sta in uno schermo il risultato
+     era un muro: in «Due strade» — il livello la cui lezione è *da dove
+     parti ne vedi una sola* — si apriva su un personaggio e una parete,
+     e le due strade non c'erano proprio. Il piano si firma **guardando
+     la mappa**, quindi la mappa è la prima cosa da far vedere; le mappe
+     grandi restano piccole ma intere, e per guardarci dentro ci sono il
+     pizzico e il dito. È anche quello che il campo fa già al ▶ e quando
+     si sfoglia una battaglia: adesso lo fa da subito, invece che al
+     primo gesto. */
+  campo.value?.mostraTutto()
   tic.value++
 }
 /* ── SFOGLIARE LE SITUAZIONI, DA FERMI ──
@@ -201,6 +232,9 @@ function guarda (k) {
    serve, perché il piano non si può correggere mentre gira — è la
    regola del gioco. */
 function via () {
+  /* la guida ha finito il suo lavoro: il giro l'hai fatto tutto, e da
+     qui in poi la riga in fondo torna a essere quella dell'obiettivo */
+  guidaFinita.value = true
   if (auto.value || montaggio.value) { ferma(); return }
   /* Non si fa partire una scena che non può finire: si dice cosa manca
      e si resta fermi. Prima il giro senza uscita partiva e girava per
@@ -352,19 +386,22 @@ function vittoria () {
     ? [o, ...dentroA(o).flatMap(dentroTutto)]
     : [o, ...dentroTutto(o.allora)])
   const avanzato = dentroTutto(Object.values(piano.value).flat()).some(eAvanzato)
-  /* Due cose costano il vanto, non il passaggio: un aiuto pagato e un
-     compagno lasciato sul campo. Si vince lo stesso — l'esca a volte è
-     la mossa giusta — ma con una stella invece di due, se no mandare
-     avanti qualcuno a morire sarebbe gratis. */
+  /* Due cose costano il vanto, non il passaggio: essersi fatti svelare
+     la struttura o la soluzione, e un compagno lasciato sul campo. Si
+     vince lo stesso — l'esca a volte è la mossa giusta — ma con una
+     stella invece di due, se no mandare avanti qualcuno a morire
+     sarebbe gratis. Quanti ordini siano non c'entra più niente: il
+     gioco non chiede di risolvere in poche mosse, chiede di risolvere.
+     La regola sta in un posto solo (`daSolo` in `store/profile.js`) —
+     qui si dice solo cosa è successo. */
   const caduti = Math.max(mondo ? perdute(mondo) : 0, caduttiFondo)
-  const dentroPar = n <= par.value && !pagato.value && caduti === 0
-  const conto = { ordini: dentroPar ? n : Math.max(n, par.value + 1), par: par.value, avanzato }
+  const conto = { ordini: n, svelato: !!svelato.value, caduti, avanzato }
   /* la vittoria va segnata dove è stata presa: le prove hanno la loro
      fila, un capitolo ha la sua storia. Il metro è lo stesso. */
   if (nav.inStoria())
     superaCapitolo(contesto.value.storia, contesto.value.n, conto)
   else genCompleta(L.value, { ...conto, finita: filaFinita(L.value) })
-  finito.value = { ordini: n, dentroPar, caduti }
+  finito.value = { ordini: n, daSolo: daSolo(conto), caduti, svelato: svelato.value }
 }
 
 /* ═══════════ il battito ═══════════
@@ -504,6 +541,13 @@ const mieie = computed(() => (mondo ? mieUnita(liv.value) : []))
    Quelli di cui si può leggere il piano restano un elenco a parte
    (`altruiUnita`), ed è quello che il gettone della spia scopre. */
 const altrui = computed(() => (mondo ? altriInCampo(liv.value) : []))
+/* ── E FRA QUELLI, CHI TI VUOLE MALE ──
+   La pastiglia era rossa per tutti quelli che non comandi, orco o gatto
+   di casa che fossero: nello sgombero del mulino «il gatto» — quello da
+   portare in salvo — si presentava con lo stesso rosso dell'orco. Chi
+   comanda uno e se quello ti è contro sono due domande diverse, e la
+   seconda adesso sta nel dato (`ostile` sulla schiera). */
+const ostile = id => eOstile(liv.value, id)
 const conPiano = computed(() => (mondo ? altruiUnita(liv.value) : []))
 const unita = id => (mondo ? mondo.perId[id] : null)
 const ordiniAltrui = computed(() => {
@@ -543,6 +587,32 @@ function riavvolgi (t) {
   tic.value++
 }
 
+/* ═══════════ la guida del primissimo giro ═══════════
+   Non è un tutorial: non c'è niente da chiudere, niente da saltare e
+   niente che aspetti un gesto per andare avanti. È una riga che dice
+   **dove si tocca**, e l'evidenziatura del posto da toccare — perché al
+   primo schermo del gioco la domanda vera non è «cosa gli dico», è
+   «dove metto il dito», e quella non la risolve nessuna spiegazione.
+
+   Tre condizioni perché compaia, e sono strette apposta:
+     · il livello la chiede (`guida: true`, e ce l'ha solo il primo);
+     · non si è mai chiuso un livello del Generale — chi ha già una
+       stella sa dove si tocca, e rivedere la guida rigiocando il primo
+       livello sarebbe una lezione data a chi l'ha già imparata;
+     · la partita non sta girando.
+   E finisce da sé: al primo ▶ premuto la riga sparisce e non torna, in
+   questa partita, nemmeno se il piano si svuota. Chi ha visto girare la
+   scena ha capito il giro. */
+const guidaFinita = ref(false)
+const guida = computed(() => {
+  tic.value
+  if (guidaFinita.value || !liv.value.guida) return ''
+  if (auto.value || montaggio.value || finito.value || andato.value) return ''
+  /* la sola volta della vita: nessun livello chiuso, in nessuna fila */
+  if (Object.keys(progresso.value.stelle || {}).length) return ''
+  return quantiOrdini.value ? 'via' : 'posto'
+})
+
 /* l'avviso vale finché il pezzo manca davvero */
 const avvisoOra = computed(() => (manchevole.value && incompleti.value.length ? manchevole.value : ''))
 const dritta = computed(() => {
@@ -564,11 +634,68 @@ const dritta = computed(() => {
       ` <i class="quale">· battaglia ${serieI.value + 1}: ${cosaCambia(liv.value, serieI.value)}</i>`
   return liv.value.dritta
 })
-const listaAiuti = computed(() => (liv.value.aiuti || []).slice(0, aiuti.value))
+/* ═══════════ gli aiuti ═══════════
+   UNA SCALA SOLA, e un tasto solo: «un altro aiuto». Non c'è niente da
+   scegliere — scegliere fra «dammi un suggerimento» e «svelami tutto»
+   vuol dire sapere in anticipo quanto aiuto serve, che è proprio la
+   cosa che uno bloccato non sa. Si scende di un gradino, e il gradino
+   dopo è quello che il livello ha messo lì.
+
+   I gradini si mescolano: due parole, poi il pezzo di piano che quelle
+   parole descrivevano, poi altre due parole, e alla fine tutto. La
+   scala la compone `scalaDi()` in `generale/piano.js`, che è anche
+   quello che ci attacca in coda la via d'uscita quando il livello non
+   se l'è scritta.
+
+   Le parole non costano niente — un suggerimento che si paga è un
+   suggerimento che chi ne ha bisogno non prende. I gradini che
+   SCRIVONO NEL PIANO costano la seconda stella, e il tasto lo dice
+   prima di essere premuto. */
+const scala = computed(() => scalaDi(liv.value))
+/* quelli già scesi, in ordine: sono quello che si legge nel cartello */
+const fatti = computed(() => scala.value.slice(0, aiuti.value))
+/* e il prossimo, che è quello che il tasto promette */
+const prossimo = computed(() => scala.value[aiuti.value] || null)
+
 function chiediAiuto () {
-  if (aiuti.value > 0) pagato.value = true
+  const p = prossimo.value
+  if (!p) return
   aiuti.value++
-  suono.nota(700, 700, 0.1)
+  if (p.aiuto === 'dice') { suono.nota(700, 700, 0.1); return }
+  scrivi(p)
+}
+/* ── SCRIVERE NEL PIANO ──
+   Un gradino può portarsi dietro il suo pezzo di piano (`aiuto.scrive`)
+   oppure ricavarlo dalla soluzione dichiarata dal livello — che è la
+   stessa che il banco di prova gioca a ogni build: se comparisse a
+   schermo un piano che non vince, il banco sarebbe già rosso.
+   `soloLaForma` toglie i bersagli e lascia la disposizione.
+
+   SOSTITUISCE LE FILE CHE NOMINA e lascia stare le altre: un pezzo
+   scritto per la ladra non cancella quello che hai dato al cavaliere.
+
+   Si ferma la scena, perché il piano non si cambia mentre gira: è la
+   regola del gioco, e vale anche quando a cambiarlo è il gioco stesso. */
+function scrivi (passo) {
+  const s = laSoluzione(liv.value)
+  const dato = passo.piano || (s && s.piano)
+  if (!dato) return
+  ferma()
+  const pezzo = JSON.parse(JSON.stringify(dato))
+  piano.value = { ...piano.value,
+                  ...(passo.aiuto === 'forma' ? soloLaForma(pezzo) : pezzo) }
+  /* «svela» vince su tutto il resto: chi ha visto la soluzione intera
+     l'ha vista, e nessun gradino più piccolo dopo la rimette in gioco */
+  if (svelato.value !== 'svela') svelato.value = passo.aiuto
+  /* si va a guardare quello che è comparso: il cartello sta sopra la
+     lista degli ordini, cioè proprio sopra la cosa che è cambiata */
+  pannello.value = ''
+  letta.value = null
+  if (!(piano.value[unitaOra.value] || []).length) {
+    const chi = mieUnita(liv.value).find(id => (piano.value[id] || []).length)
+    if (chi) unitaOra.value = chi
+  }
+  suono.compra()
 }
 
 function avanti () { finito.value = null; auto.value = false; nav.avanti() }
@@ -601,11 +728,22 @@ async function ridimensiona () {
   <div class="schermo generale">
     <Barra :titolo="fase === 'gioco' ? liv.nome : titolo" @indietro="torna">
       <template v-if="fase === 'gioco'">
-        <!-- il numero della prova serve solo alle prove: dentro una
-             storia il capitolo ce l'ha scritto nel titolo, e la barra di
-             un telefono da 390 non tiene un gettone in più -->
-        <div v-if="!nav.inStoria()" class="gettone mini">🎖️ <b>{{ numeroTappa }}</b></div>
-        <div class="gettone mini">📜 <b>{{ quantiOrdini }}</b><i>· par {{ par }}</i></div>
+        <!-- ── E IL NUMERO DELLA PROVA NON C'È PIÙ ──
+             Diceva a che punto della fila si è, cioè una cosa che si
+             legge nell'elenco da cui si è appena entrati e che durante
+             la battaglia non serve a decidere niente. Su un telefono da
+             390, con un titolo lungo («Mettetevi d'accordo») e le
+             pastiglie delle tre battaglie, era il gettone che spingeva
+             fuori tutti gli altri: si vedeva mezzo, tagliato dal bordo
+             del titolo. Quello che resta in barra è quello che si
+             guarda mentre si gioca — quanti ordini hai firmato, a quale
+             battaglia sei, quante stelle vale. -->
+
+        <!-- quanti ordini hai firmato, e basta: accanto c'era «· par 5»,
+             cioè un tetto da rispettare che questo gioco non ha mai
+             voluto chiedere. Il numero resta perché è utile vedere il
+             piano crescere, non perché ci sia un traguardo -->
+        <div class="gettone mini">📜 <b>{{ quantiOrdini }}</b></div>
         <!-- le scene: numerate, così si sa a quale si è e quali sono
              già passate. Erano tre pallini vuoti e non diceva niente. -->
         <!-- ── E SONO ANCHE IL SELETTORE ──
@@ -685,6 +823,24 @@ async function ridimensiona () {
       <p class="dritta" :class="{ male: (mondo && mondo.finita && !mondo.vinto) || !!avvisoOra,
                                   bene: mondo && mondo.finita && mondo.vinto }" v-html="dritta"></p>
 
+      <!-- ═════ LA GUIDA DEL PRIMISSIMO GIRO ═════
+           Una riga sola, che dice dove si tocca. Non ha una ✕ perché
+           non c'è niente da chiudere: se ne va da sé appena il gesto è
+           fatto, e la freccia punta all'unica cosa da toccare adesso.
+           Sta SOTTO l'obiettivo e sopra i comandi, cioè in mezzo alle
+           due cose di cui parla. -->
+      <!-- il testo sta in UN solo figlio: qui il contenitore è un flex,
+           e lasciare le parole nude accanto a un <b> spezzava la frase
+           in tre colonne — «premi», «▶ Via», «e guarda» uno di fianco
+           all'altro invece che in fila -->
+      <p v-if="guida" class="guidina">
+        <span class="dito">👇</span>
+        <span v-if="guida === 'posto'">Tocca <b>«＋ Scrivi il primo ordine»</b> qui sotto,
+          e scegli cosa deve fare.</span>
+        <span v-else>Ordine firmato. Adesso premi <b>▶ Via</b> e guarda se il piano
+          regge.</span>
+      </p>
+
       <div class="comandi">
         <!-- il tasto grande dice cosa fa premendolo, e non c'è nient'altro
              da decidere: «un passo» era una scorciatoia da grandi, e
@@ -694,7 +850,8 @@ async function ridimensiona () {
              girando il livello, e un «Via» offerto in quell'istante
              rimetterebbe tutto alla prima scena proprio mentre si sta
              guardando la seconda -->
-        <button class="tasto via" :class="{ gira: auto || montaggio }" @click="via">
+        <button class="tasto via" :class="{ gira: auto || montaggio, indicato: guida === 'via' }"
+                @click="via">
           {{ auto || montaggio ? '⏹ Stop' : '▶ Via' }}</button>
         <button v-if="liv.mostraNemici === 'gettoni'" class="tasto q spia"
                 aria-label="intercetta" @click="intercetta">🕵<b>{{ gettoni }}</b></button>
@@ -712,9 +869,14 @@ async function ridimensiona () {
           {{ unita(id).emoji }} {{ unita(id).nome }}
           <b>{{ (piano[id] || []).length }}</b>
         </button>
-        <button v-for="id in altrui" :key="'a' + id" class="nemico" :class="{ qui: letta === id }"
+        <!-- il lucchetto dice «il suo piano non lo conosci», e ha senso
+             solo per chi un piano ce l'ha: su un animale che non prende
+             ordini da nessuno era un mistero annunciato e mai svelato -->
+        <button v-for="id in altrui" :key="'a' + id"
+                :class="{ nemico: ostile(id), terzo: !ostile(id), qui: letta === id }"
                 @click="letta = letta === id ? null : id">
-          {{ scoperte.includes(id) ? '👁' : '🔒' }} {{ unita(id).emoji }} {{ unita(id).nome }}
+          <template v-if="conPiano.includes(id)">{{ scoperte.includes(id) ? '👁' : '🔒' }} </template>
+          {{ unita(id).emoji }} {{ unita(id).nome }}
         </button>
       </div>
 
@@ -723,7 +885,8 @@ async function ridimensiona () {
            di caselle che si toccano, e in fondo a ogni fila il posto
            vuoto da cui ne nasce un altro. -->
       <EditorPiano v-if="!letta" ref="editor" :ordini="ordini" :mondo-ora="mondoOra"
-                   :tic="tic" :unita-ora="unitaOra" @mira="chiediMira" />
+                   :tic="tic" :unita-ora="unitaOra" :indica="guida === 'posto'"
+                   @mira="chiediMira" />
 
       <!-- ═════ GLI ORDINI DI QUALCUN ALTRO ═════
            Lo stesso componente del proprio piano, che non si tocca. Ne
@@ -748,9 +911,10 @@ async function ridimensiona () {
            verbi è un avviso che ti impedisce di fare la cosa che ti sta
            suggerendo. Il disegno sta tutto in `FogliLivello.vue`. -->
       <FogliLivello :quale="pannello" :liv="liv" :mondo-ora="mondoOra"
-                    :righe="righeRegistro" :aiuti-dati="liv.aiuti || []" :aiuti="aiuti"
-                    :pagato="pagato" :scheda="scheda || ''" :mia="!!piano[scheda]"
-                    @chiudi="pannello = ''" @riavvolgi="riavvolgi" @aiuto="chiediAiuto" />
+                    :righe="righeRegistro" :fatti="fatti" :prossimo="prossimo"
+                    :scheda="scheda || ''" :mia="!!piano[scheda]"
+                    @chiudi="pannello = ''" @riavvolgi="riavvolgi"
+                    @aiuto="chiediAiuto" />
 
       <!-- ═════ NON HA RETTO ═════
            Si dice cosa è andato storto e si riparte con un tocco: le
@@ -768,21 +932,27 @@ async function ridimensiona () {
 
       <!-- ═════ IL VELO DI FINE ═════ -->
       <div v-if="finito" class="velo">
-        <div class="urlo">{{ finito.dentroPar ? '🏅' : '🎖️' }}</div>
-        <h2>{{ finito.dentroPar ? 'Piano elegante!' : 'Il piano regge!' }}</h2>
-        <div class="stelline grandi">{{ finito.dentroPar ? '⭐⭐' : '⭐' }}</div>
+        <div class="urlo">{{ finito.daSolo ? '🏅' : '🎖️' }}</div>
+        <h2>{{ finito.daSolo ? 'Il piano è tuo!' : 'Il piano regge!' }}</h2>
+        <div class="stelline grandi">{{ finito.daSolo ? '⭐⭐' : '⭐' }}</div>
         <!-- non «hai vinto tre volte»: il piano ha retto in tre mondi
              diversi, ed è quello che il gioco sta insegnando -->
         <p v-if="prove > 1" class="tenute">Il tuo piano ha retto in
           <b>{{ prove }} situazioni diverse</b>:
           <i v-for="(s, k) in nomiScene(liv, prove)" :key="k">✓ {{ s }}</i></p>
+        <!-- QUANTI ORDINI, E NIENTE GIUDIZIO SOPRA. Qui c'era «il par è
+             4», cioè il gioco che dice a chi ha appena vinto che la sua
+             soluzione non era quella giusta. Il numero resta perché è
+             suo — è il piano che ha scritto lui — e non ha un voto
+             attaccato. -->
         <p>Ha funzionato
           con <b>{{ finito.ordini }} ordin{{ finito.ordini === 1 ? 'e' : 'i' }}</b>.
-          Il par è <b>{{ par }}</b>.
           {{ finito.caduti ? (finito.caduti === 1 ? 'Ma uno dei tuoi è rimasto sul campo: questa vale una stella. Portali a casa tutti, e sono due.'
                                                   : `Ma ${finito.caduti} dei tuoi sono rimasti sul campo: questa vale una stella. Portali a casa tutti, e sono due.`)
-             : pagato ? 'Hai chiesto un aiuto: questa vale una stella. Rifallo senza, e sono due.'
-             : finito.dentroPar ? 'Non si poteva fare più corto.' : 'C’è un modo più corto: cercalo.' }}</p>
+             : finito.svelato === 'svela' ? 'Questa volta il piano te l’ho scritto io: vale una stella. Adesso che l’hai visto girare, riprova a scriverlo tu — e sono due.'
+             : finito.svelato === 'forma' ? 'La forma te l’ho data io, i bersagli li hai trovati tu: vale una stella. Rifallo dal foglio bianco, e sono due.'
+             : finito.svelato ? 'Un pezzo di piano te l’ho scritto io: vale una stella. Rifallo tutto tu, e sono due.'
+             : 'Nessuno ti ha detto niente: questo piano l’hai pensato tu.' }}</p>
         <div class="due">
           <button class="grigio" @click="finito = null; ferma()">Riprova</button>
           <button @click="avanti">{{ dopo ? 'Avanti →' : 'Torna alla mappa' }}</button>
@@ -838,6 +1008,27 @@ async function ridimensiona () {
 .dritta.male { color:#a8322c; background:#ffe6e3 }
 .dritta.bene { color:#1c6b3f; background:#dff5e6 }
 
+/* ── la guida del primissimo giro ──
+   Un colore che non è quello di nessun altro messaggio del gioco (né
+   l'obiettivo, né l'errore, né la vittoria): è una voce che parla una
+   volta sola. Il dito respira piano — non lampeggia: un lampeggio in
+   uno schermo per bambini si prende tutta l'attenzione, e qui
+   l'attenzione deve andare al tasto che indica. */
+.guidina { flex:none; display:flex; align-items:center; gap:7px; margin:0;
+           padding:7px 12px; font-size:12.5px; line-height:1.3; font-weight:800;
+           color:#6b4310; background:#fff5e0; border-top:1px solid #f0dcae }
+.guidina b { color:#3a2c00 }
+.guidina span:not(.dito) { flex:1; min-width:0 }
+.guidina .dito { flex:none; font-size:15px; animation:respira 1.6s ease-in-out infinite }
+@keyframes respira { 0%,100% { transform:translateY(0); opacity:.85 }
+                     50% { transform:translateY(3px); opacity:1 } }
+/* il tasto indicato: un alone giallo che pulsa piano, senza toccare il
+   colore del tasto — resta il tasto verde di sempre, con addosso un
+   dito che lo mostra */
+.tasto.via.indicato { animation:alone 1.6s ease-in-out infinite }
+@keyframes alone { 0%,100% { box-shadow:0 3px 0 #2b8a53, 0 0 0 0 #ffd45c00 }
+                   50% { box-shadow:0 3px 0 #2b8a53, 0 0 0 7px #ffd45c66 } }
+
 /* ── i comandi ── */
 .comandi { flex:none; display:flex; gap:6px; padding:6px 8px }
 .tasto { height:42px; border-radius:13px; background:#ffffffcc; font-size:15px; font-weight:900;
@@ -866,6 +1057,9 @@ async function ridimensiona () {
 .chi button.qui { background:#fff; color:var(--viola-scuro); box-shadow:inset 0 0 0 2px var(--giallo) }
 .chi button b { margin-left:4px; font-size:10.5px; color:var(--tenue) }
 .chi button.nemico { background:#ffe9e6; color:#9a3a33 }
+/* chi non comandi ma non ti vuole male: il gatto da portare in salvo,
+   la papera che segue il pane. Non è rosso, e non è nemmeno tuo. */
+.chi button.terzo { background:#eef7f1; color:#2a6b4a }
 
 /* ── la lista, quando si LEGGONO gli ordini di un altro ──
    Gli ordini che si scrivono se li disegna `EditorPiano.vue`, con il

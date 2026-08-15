@@ -29,7 +29,11 @@ export default {
   chiave: CHIAVE,
   nome: 'Codice Segreto',
   icona: '🔐',
-  che: 'logica: dedurre il codice dagli indizi',
+  /* senza il prefisso «logica:» da quando la home raggruppa: il gruppo
+     sopra la carta dice già Ragionare, e ripeterlo rubava mezza riga */
+  che: 'dedurre il codice dagli indizi',
+  area: 'logica',
+  come: 'pensare',
   tappe: QUANTE_TAPPE,
   /* il colore della carta in home: se lo porta il gioco, così aggiungerne
      uno non vuol dire aggiungere una riga al foglio di stile della home */

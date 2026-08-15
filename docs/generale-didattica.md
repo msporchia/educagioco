@@ -324,6 +324,20 @@ sei anni: metà del giro di correzione è, di fatto, non disponibile.
 
 ## 8. Niente par: vale quello che regge, non quello che è corto
 
+> **Fatto il 15 agosto 2026.** Il campo `par` non esiste più: né nei livelli,
+> né nella barra, né nel velo di fine, né nel banco di prova, né nei
+> traguardi. La seconda stella la dà **esserci arrivati da soli** — senza
+> farsi svelare la struttura o la soluzione, e senza lasciare compagni sul
+> campo (`daSolo()` in `store/profile.js`, uguale per le prove e per i
+> capitoli). Quello che il par teneva onesto — una soluzione dichiarata non
+> deve avere ordini di troppo — resta nel banco senza numeri scritti a mano:
+> ogni ordine di una soluzione stretta deve essere necessario (§3 di
+> `test/aiuto/livello.mjs`), e una `lunga` deve costare più della stretta più
+> corta, che è una misura **derivata** e non può diventare stantia.
+> Il resto di questo paragrafo è il ragionamento con cui ci si è arrivati, e
+> resta perché la regola in grassetto qui sotto vale ancora ogni volta che si
+> scrive un livello nuovo.
+
 Il par fa **due mestieri diversi**, e solo uno serve:
 
 1. **premia lo stile** — da quando `prendi` e `apri` camminano da soli, la
@@ -554,6 +568,8 @@ le chiede:
   puntano davvero. Vale la pena dirlo qui perché è la specie di guasto che si
   ripresenta a ogni verbo nuovo: **un test che elenca il vocabolario invecchia
   ogni volta che il vocabolario cresce**;
-- **il par si toglie dopo aver irrobustito le scene**, non prima (§8);
+- **il par è stato tolto** (§8), e la regola che lo sostituiva resta: se
+  tolto il conto degli ordini vince anche la mossa goffa, manca una scena —
+  non un punteggio;
 - **`insegna:` / `chiede:`** sono il dato da cui discendono sblocchi, reti e
   griglia (§9, §11).

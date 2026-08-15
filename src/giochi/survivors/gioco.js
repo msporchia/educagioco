@@ -28,6 +28,8 @@ export default {
   nome: 'Survivors',
   icona: '🏹',
   che: 'schivare i mostri e scegliere i potenziamenti',
+  area: 'avventure',
+  come: 'riflessi',
   tappe: QUANTE_TAPPE,
   /* il colore della carta in home: se lo porta il gioco, così aggiungerne
      uno non vuol dire aggiungere una riga al foglio di stile della home */

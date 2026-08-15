@@ -47,6 +47,11 @@ const props = defineProps({
      deve costare una riga in un posto, non in due. Qui l'unica
      differenza è che niente si può cambiare. */
   sola: { type: Boolean, default: false },
+  /* la guida del primissimo giro sta indicando il posto vuoto: qui non
+     si sa perché, si sa solo che va acceso. Chi decide è
+     `GeneraleGame.vue`, ed è l'unico che sappia se questa è la prima
+     partita della vita. */
+  indica: { type: Boolean, default: false },
 })
 const emit = defineEmits(['mira'])
 
@@ -391,14 +396,32 @@ const verbiNegati = computed(() => {
 /* la casella che sta aspettando una risposta dalla mappa si accende */
 const mirando = (via, casella) => !!chiesto && stessaVia(chiesto.via, via) && !!casella.cosa
 
+/* ── E LE AZIONI SI OFFRONO DOVE SERVONO A QUALCOSA ──
+   Un'azione è un pezzo di piano che si chiama con `esegui`: dove il
+   livello non offre quel verbo, scriverne una vuol dire fabbricare una
+   fila che non partirà mai. Prima il tasto c'era sempre — anche nel
+   primo livello del gioco, sotto a un piano di un ordine solo — ed era
+   una porta che dà su una stanza vuota. Un livello che non dichiara i
+   suoi verbi li dà tutti, `esegui` compreso: lì si offre. */
+const conAzioni = computed(() => {
+  props.tic
+  const l = mondo() && mondo().livello
+  return !!l && (!l.verbi || l.verbi.includes('esegui'))
+})
+
 const daCapo = computed(() => { props.tic; return partiDaCapo(props.ordini) })
 const ascolti = computed(() => { props.tic; return partiParallele(props.ordini) })
 
-/* il titolo del foglio: cosa si sta scegliendo, in tre parole */
+/* il titolo del foglio: cosa si sta scegliendo, in tre parole.
+   «E qui cosa fa?» diceva due cose insieme e nessuna delle due bene —
+   dove («qui») e cosa — e a chi non aveva ancora capito che stava
+   scrivendo un programma non diceva niente. Il dove adesso è ovvio: il
+   foglio nasce attaccato al posto che hai toccato, con la punta rivolta
+   verso di lui. Resta la domanda, e chiede una cosa sola. */
 const titoloFoglio = computed(() => {
   const f = foglio.value
   if (!f) return ''
-  if (f.modo === 'azione') return 'E qui cosa fa?'
+  if (f.modo === 'azione') return 'Cosa gli fai fare?'
   if (f.modo === 'cond') return f.campo === 'finche' ? 'Smetti quando…' : 'La domanda'
   return f.verbo === 'quando' ? 'Quale segnale' : `${VERBI[f.verbo].et} ${VERBI[f.verbo].nome}`
 })
@@ -434,9 +457,10 @@ provide('editor', props.sola
   ? { chiedi: niente, tocca: niente, togli: niente, sposta: niente,
       presaGiu: niente, presaMuovi: niente, presaSu: niente,
       statoRiga, ramoPreso, perche: () => '', frase, comeSiChiama,
-      mirando: () => false, sola: true }
+      mirando: () => false, sola: true, indica: () => false }
   : { chiedi, tocca, togli, sposta, presaGiu, presaMuovi, presaSu,
-      statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando, sola: false })
+      statoRiga, ramoPreso, perche, frase, comeSiChiama, mirando, sola: false,
+      indica: () => props.indica })
 defineExpose({ posaBersaglio, nienteMira })
 </script>
 
@@ -479,18 +503,48 @@ defineExpose({ posaBersaglio, nienteMira })
       </div>
     </div>
 
-    <!-- anche un ascolto nuovo è un posto vuoto: non c'è nessun posto
-         dove andarlo a prendere. Ma solo dove i segnali esistono
-         davvero: questo tasto stava fuori dal filtro dei verbi, e nei
-         livelli senza segnali apriva «quale segnale» su un elenco
-         vuoto — un tasto che porta a una stanza vuota. -->
-    <button v-if="!sola && verbiDisponibili.includes('quando')"
-            class="posto ascolto-nuovo" @click="scegliAscolto">
-      ＋ {{ VERBI.quando.et }} {{ VERBI.quando.nome }}…</button>
-    <!-- e un'azione nuova. C'è sempre: non dipende da cosa offre il
-         livello, perché quello che ci metti dentro lo decidi tu. -->
-    <button v-if="!sola" class="posto azione-nuova" @click="scegliAzione">
-      ＋ {{ BLOCCHI.routine.et }} una azione…</button>
+    <!-- ═════ E I DUE PEZZI CHE NON STANNO NELLA FILA ═════
+         Un ascolto e un'azione non sono ordini da aggiungere in fondo:
+         sono altri PEZZI DI PIANO, che partono per conto loro — uno
+         quando arriva un segnale, l'altro quando lo chiami. Stavano
+         qui sotto travestiti da posti vuoti, tre rettangoli
+         tratteggiati uno sotto l'altro, e la differenza fra «aggiungi
+         un ordine» e «apri un secondo programma» non si vedeva.
+
+         Adesso hanno un titoletto sopra che dice che sono un'altra
+         cosa, e ognuno si porta scritto **cosa fa** — la riga la dice
+         il vocabolario (`BLOCCHI.routine.che`), non questa vista, così
+         se un giorno cambia la regola cambia anche il tasto. Il nome
+         da solo non bastava: «una azione» a sei anni non vuol dire
+         niente, e nemmeno a molti grandi. -->
+    <!-- ── E NON DOVE NON SERVONO A NIENTE ──
+         La sezione compare solo dove almeno uno dei due ha senso. Un
+         livello che non ha né segnali né domande — il primo, dove si
+         impara che un ordine è un verbo e una cosa — non ha niente da
+         far partire per conto suo, e «una azione» in fondo al primo
+         schermo del gioco è una porta che dà su una stanza vuota. È la
+         stessa regola dei verbi: quello che non porta da nessuna parte
+         non si offre. Le azioni servono a dare un nome a un pezzo di
+         piano e a fare la seconda scelta dove annidarla non si può:
+         senza domande in giro, nessuna delle due cose esiste. -->
+    <div v-if="!sola && (verbiDisponibili.includes('quando') || conAzioni)" class="altri-pezzi">
+      <div class="et">altri pezzi di piano</div>
+      <!-- l'ascolto c'è solo dove i segnali esistono davvero: questo
+           tasto stava fuori dal filtro dei verbi, e nei livelli senza
+           segnali apriva «quale segnale» su un elenco vuoto — un tasto
+           che porta a una stanza vuota. -->
+      <button v-if="verbiDisponibili.includes('quando')"
+              class="pezzo-nuovo ascolto-nuovo" @click="scegliAscolto">
+        <span class="e">{{ VERBI.quando.et }}</span>
+        <span class="n">{{ VERBI.quando.nome }}…
+          <i>parte da sé quando arriva un segnale, anche mentre stai facendo altro</i></span>
+      </button>
+      <button v-if="conAzioni" class="pezzo-nuovo azione-nuova" @click="scegliAzione">
+        <span class="e">{{ BLOCCHI.routine.et }}</span>
+        <span class="n">una azione
+          <i>una fila di ordini con un nome: non parte da sola, la chiami con «esegui»</i></span>
+      </button>
+    </div>
   </section>
 
   <SceltaAzione :modo="foglio ? foglio.modo : ''" :titolo="titoloFoglio"
@@ -527,11 +581,24 @@ defineExpose({ posaBersaglio, nienteMira })
           color:#c49a94; font-size:15px; font-weight:900 }
 .viaqui:active { background:#ffe4e4; color:#d0503f }
 
-.posto { display:block; width:100%; min-height:38px; margin:4px 0 2px; border-radius:11px;
-         border:1.5px dashed #c6cfdd; background:#ffffff66; color:var(--tenue);
-         font-size:12.5px; font-weight:900 }
-.posto:active { background:var(--giallo); color:#3a2c00; border-style:solid }
-.posto.ascolto-nuovo { border-color:#f0c2bc; color:#a8564d }
+/* ── gli altri pezzi di piano ──
+   Non sono posti vuoti e non devono somigliarci: hanno un fondo pieno,
+   il colore del riquadro che apriranno, e una riga che dice cosa fanno.
+   Il titoletto sopra li stacca dalla fila degli ordini. */
+.altri-pezzi { margin:10px 0 2px; padding-top:8px; border-top:1px dashed #d6def0 }
+.altri-pezzi .et { font-size:9.5px; font-weight:900; letter-spacing:.5px; text-transform:uppercase;
+                   color:var(--tenue); margin:0 2px 6px }
+.pezzo-nuovo { display:flex; align-items:flex-start; gap:8px; width:100%; text-align:left;
+               min-height:44px; padding:7px 10px; margin-bottom:5px; border-radius:12px;
+               background:#f4f7fb; box-shadow:0 2px 0 #dde3ea; border-left:5px solid #c6cfdd }
+.pezzo-nuovo:active { transform:translateY(2px); box-shadow:none }
+.pezzo-nuovo .e { flex:none; font-size:16px; line-height:1.2 }
+.pezzo-nuovo .n { flex:1; min-width:0; font-size:12.5px; font-weight:900;
+                  color:var(--viola-scuro); line-height:1.2 }
+.pezzo-nuovo .n i { display:block; font-style:normal; font-size:11px; font-weight:700;
+                    line-height:1.3; color:var(--tenue); margin-top:2px }
+.pezzo-nuovo.ascolto-nuovo { background:#fff1ef; border-left-color:#e0554d }
+.pezzo-nuovo.azione-nuova { background:#eef7f1; border-left-color:#3fb872 }
 
 /* ── un'azione ── stessa forma di un ascolto, colore suo: quello che
    parte quando lo chiami non si confonde con quello che parte da sé */
@@ -541,5 +608,4 @@ defineExpose({ posaBersaglio, nienteMira })
 .azione .testa .ico { font-size:15px; flex:none }
 .azione .testa .lab { flex:1; font-size:12.5px; font-weight:900; color:#1c6b3f }
 .azione .dentro { margin:0 0 4px 14px; padding:1px 4px 0; border-left:2px dashed #a8dcc0 }
-.posto.azione-nuova { border-color:#a8dcc0; color:#2a8a63 }
 </style>

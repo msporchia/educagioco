@@ -70,7 +70,6 @@ export const VAI_DRITTO_O_CERCA = livello({
 
   /* IL PAR: l'azione «cerca» (il ciclo dentro) più il bivio che la
      richiama, più i due ordini finali — attacca e prendi. */
-  par: 8,
   soluzioni: [
     { nome: 'guarda, e solo se serve cerca', piano: { eroe: [
       fai.azione('cerca', [

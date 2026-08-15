@@ -192,7 +192,7 @@ export function leggiCampo (livello) {
          livello, e gli lascia l'ultima parola. */
       if (voce.genere === 'libero') { liberi.push(x + ',' + y); continue }
 
-      const { genere, nome, parte, schiera, schieraNome, fa, ...resto } = voce
+      const { genere, nome, parte, ostile, schiera, schieraNome, fa, ...resto } = voce
       const n = quanti[voce.id] = (quanti[voce.id] || 0)
       quanti[voce.id]++
       const id = idNumero(voce.id, n)
@@ -209,7 +209,13 @@ export function leggiCampo (livello) {
            schiera — che serve a nominarlo tutto insieme, «attacca gli
            orchi» */
         const chiave = schiera || (parte === 'giocatore' ? 'nostri' : 'nemici')
+        /* `ostile` sta sulla SCHIERA e non sull'unità: è una proprietà
+           del gruppo — «gli orchi» sono avversari, «quelli del mulino»
+           no — ed è così che la legge chi disegna la fila di chi c'è in
+           campo. Chi non lo dichiara si comporta come prima: nemico se
+           lo comanda il livello. */
         schiere[chiave] = { nome: schieraNome || chiave, autore: parte,
+                            ostile: ostile ?? (parte === 'livello'),
                             ordini: schiere[chiave]?.ordini || {} }
         if (fa) schiere[chiave].ordini[id] = fa
         unita.push({ id, nome, fazione: chiave, x, y, token: t, ...resto })

@@ -39,10 +39,18 @@ export class Porta extends Elemento {
      perché è una cosa mia: chi mi apre non deve sapere che sono una
      porta, e domani un baule o una grata risponderanno diverso. */
   raggioDiPresa () { return this.aperta ? SOPRA : ACCANTO }
-  get em () { return '🚪' }
+  /* ── E LA FACCIA CHE HA NELLA RIGA ──
+     Una porta è 🚪, ma la famiglia delle cose che si aprono è più larga
+     della porta: un forziere è la quinta faccia della stessa `Porta`
+     (`cose.forziere` in `livelli/scrivi.js`) e nella riga si leggeva
+     `apri [🚪 il forziere]` — un'emoji che smentisce quello che c'è
+     scritto accanto, nel primissimo ordine del gioco. Chi ne dichiara
+     una sua la tiene; chi non dice niente resta una porta. */
+  get em () { return this.emoji || '🚪' }
 
   constructor (id, d) {
     super(id, d)
+    this.emoji = d.em || null
     this.chiave = d.chiave || null
     this.forza = d.forza || 0
     this.rumore = d.rumore || null

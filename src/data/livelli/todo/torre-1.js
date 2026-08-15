@@ -183,7 +183,6 @@ export const TORRE_1 = {
       unita: { marta: { x: 4, y: 7 }, cric: { x: 7, y: 1 } } },
   ],
 
-  par: 4,
   soluzioni: [
     /* quattro ordini, ed è il par: due per uno, e non se ne toglie
        nessuno. Senza «prendi chiave» non c'è niente da consegnare;

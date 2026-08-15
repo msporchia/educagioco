@@ -324,7 +324,6 @@ export const FONDI_5 = {
                falena1: { x: 6, y: 6 }, falena2: { x: 7, y: 8 }, falena3: { x: 6, y: 9 } } },
   ],
 
-  par: 8,
   soluzioni: [
     /* OTTO ORDINI, ED È IL PAR. Tre file, e si leggono come tre
        mestieri: Bea gira finché la vedono e lo dice; Tilde porta la

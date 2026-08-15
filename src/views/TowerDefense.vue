@@ -32,7 +32,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { state, answer, level, addCoins, tdProgresso, tdCompleta,
-         segna, segnaBest, divisioniAccese, tuttoAperto } from '../store/profile.js'
+         segna, segnaBest, contiPermessi, tuttoAperto } from '../store/profile.js'
 import { TORRI, emojiTorre } from '../data/ops.js'
 import { CFG, TAPPE, LIBERA, premioTappa } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
@@ -63,7 +63,7 @@ const progresso = computed(() => tdProgresso())
 const tappaIdx = ref(0)            // -1 = partita libera
 const tappa = computed(() => (tappaIdx.value < 0 ? LIBERA : TAPPE[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
-const divisioni = computed(() => divisioniAccese())
+const sa = computed(() => contiPermessi())
 /* la partita libera si apre vincendo l'ultima tappa — o subito, se i
    genitori hanno acceso «tutto aperto» */
 const libera = computed(() => progresso.value.libera || tuttoAperto())
@@ -217,7 +217,7 @@ onMounted(() => {
                   inAttesa: computed(() => vista.inAttesa),
                   pronti: computed(() => vista.pronti),
                   prossime: () => vista.prossime,
-                  massimo, costoNuova, costoSalita, CFG, divisioni,
+                  massimo, costoNuova, costoSalita, CFG, sa,
                   // -1 è la partita libera: tutte le torri, nessun traguardo
                   iniziaLibera: () => inizia(-1),
                   // aggancio per i test: apre un'operazione a un livello preciso
@@ -247,7 +247,7 @@ onMounted(() => {
     <div class="banco">
       <!-- scelta della torre -->
       <BancoTorri v-if="fase === 'gioco' && !scelta" :tappa="tappa" :hud="hud" :vista="vista"
-                  :costo-nuova="costoNuova" :posti-finiti="postiFiniti" :divisioni="divisioni"
+                  :costo-nuova="costoNuova" :posti-finiti="postiFiniti" :sa="sa"
                   @scegli="scegliTorre" @potenzia="potenziaIndice" @onda="chiamaOnda" />
 
       <!-- operazione in corso -->
@@ -271,7 +271,7 @@ onMounted(() => {
       <!-- vinta · trionfo · sconfitta -->
       <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                  :premio="premio" :quante="TAPPE.length" :campagna="campagna"
-                 :divisioni="divisioni"
+                 :sa="sa"
                  @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1)"
                  @riprova="inizia()" />
     </div>

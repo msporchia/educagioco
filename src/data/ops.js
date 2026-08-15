@@ -281,20 +281,59 @@ export function generaDiv(lv) {
 
 export const GENERATORI = { add: generaAdd, sub: generaSub, mul: generaMul, div: generaDiv }
 
-/* ── quando le divisioni sono spente ──
-   Un bambino che le divisioni in colonna non le ha ancora fatte a scuola
-   non deve restare fuori dall'ultima tappa: nelle impostazioni dei
-   genitori si spengono, e la torre Bombe chiede moltiplicazioni al posto
-   loro. Non le stesse della torre magica, però: tre gradini più su, così
-   la torre che costa di più resta quella che chiede di più, e il gioco
-   non diventa più facile — diventa un'altra strada per lo stesso posto. */
-export const SALTO_SENZA_DIVISIONI = 3
-export const contoDi = (tipo, divisioni = true) =>
-  (tipo === 'div' && !divisioni ? 'mul' : tipo)
-export const gradoDi = (tipo, lv, divisioni = true) =>
-  (tipo === 'div' && !divisioni ? Math.min(LIVELLI, lv + SALTO_SENZA_DIVISIONI) : lv)
+/* ── quando un'operazione non si è ancora fatta a scuola ──
+   Un bambino che le divisioni in colonna non le ha ancora viste non deve
+   restare fuori dall'ultima tappa: nelle impostazioni dei genitori si
+   spengono, e la torre Bombe chiede moltiplicazioni al posto loro. Non le
+   stesse della torre magica, però: tre gradini più su, così la torre che
+   costa di più resta quella che chiede di più, e il gioco non diventa più
+   facile — diventa un'altra strada per lo stesso posto.
+
+   Da quando anche le moltiplicazioni si possono spegnere, la stessa
+   regola vale una scala intera: si scende all'operazione più difficile
+   che resta, e ogni scalino sceso costa tre gradini di difficoltà in più.
+   Divisioni spente → moltiplicazioni a +3. Spente pure quelle →
+   sottrazioni a +6. Il patto è sempre quello, e vale la pena scriverlo:
+   **togliere un'operazione non abbassa l'asticella**, sposta soltanto
+   dove il bambino la incontra. Altrimenti spegnere un sapere sarebbe una
+   scorciatoia, e un genitore lo userebbe per far vincere invece che per
+   dire la verità su cosa il figlio ha già fatto.
+
+   Sotto la sottrazione non si scende: addizione e sottrazione sono il
+   pavimento del castello, e un gioco che chiede solo addizioni non è più
+   il castello — a quel punto si spegne il gioco, che è un interruttore
+   che i genitori hanno già. */
+export const SALTO_SENZA = 3
+/* alias storico: era il nome di quando l'unica spegnibile era la divisione */
+export const SALTO_SENZA_DIVISIONI = SALTO_SENZA
+export const RIPIEGO = { div: 'mul', mul: 'sub' }
+
+/* `sa` dice cosa il bambino può fare. Regge due forme apposta: l'oggetto
+   `{ div, mul }` di adesso, e il booleano di prima — che voleva dire «le
+   divisioni» e basta. Non è pigrizia: `contoDi(t, false)` è scritto nei
+   test e in mezzo castello, e cambiarlo tutto insieme al resto avrebbe
+   mescolato un refuso di conversione con un cambio di regole. */
+const normalizza = sa =>
+  (sa === undefined || sa === null) ? {}
+  : typeof sa === 'boolean' ? { div: sa }
+  : sa
+
+function ripiega (tipo, sa) {
+  const puoi = t => t === 'div' ? sa.div !== false
+                  : t === 'mul' ? sa.mul !== false
+                  : true
+  let t = tipo, scesi = 0
+  while (!puoi(t) && RIPIEGO[t]) { t = RIPIEGO[t]; scesi++ }
+  return { tipo: t, scesi }
+}
+
+export const contoDi = (tipo, sa) => ripiega(tipo, normalizza(sa)).tipo
+export const gradoDi = (tipo, lv, sa) => {
+  const { scesi } = ripiega(tipo, normalizza(sa))
+  return Math.min(LIVELLI, lv + scesi * SALTO_SENZA)
+}
 /* il segno che il banco mostra sul tasto della torre */
-export const segnoDi = (tipo, divisioni = true) => TORRI[contoDi(tipo, divisioni)].segno
+export const segnoDi = (tipo, sa) => TORRI[contoDi(tipo, sa)].segno
 
 /* Le torri. `stadi` è come cambiano di aspetto salendo la scaletta: una torre
    che ha superato sei operazioni deve *vedersi* che è un'altra cosa, altrimenti

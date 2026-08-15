@@ -22,9 +22,12 @@ const props = defineProps({
   liv: { type: Object, required: true },
   mondoOra: { type: Function, default: () => null },
   righe: { type: Array, default: () => [] },   // le righe del registro
-  aiutiDati: { type: Array, default: () => [] },
-  aiuti: { type: Number, default: 0 },
-  pagato: { type: Boolean, default: false },
+  /* la scala degli aiuti, già composta da `generale/piano.js`: i
+     gradini scesi finora e quello che verrebbe adesso. Qui dentro non
+     si sa cosa faccia un gradino — si sa che tipo è, e quel tipo è
+     tutto quello che serve per scriverci sopra un tasto onesto. */
+  fatti: { type: Array, default: () => [] },
+  prossimo: { type: Object, default: null },
   scheda: { type: String, default: '' },       // di chi è la scheda aperta
   mia: { type: Boolean, default: false },      // ...e se lo comanda il giocatore
   /* l'elenco dei nomi ha una vita sua: non è uno dei tre pannelli, si
@@ -32,6 +35,26 @@ const props = defineProps({
   elenco: { type: Object, default: null },     // { verbo, cose, scelto }
 })
 const emit = defineEmits(['chiudi', 'riavvolgi', 'aiuto', 'scegli-nome', 'chiudi-elenco'])
+
+/* ── COME SI PRESENTA UN GRADINO ──
+   Prima di essere premuto dice cosa farà e quanto costa; dopo, dice
+   cos'è comparso. Le parole di un gradino le può scrivere il livello
+   (`aiuto.scrive(piano, 'ti metto il giro di ronda')`); se non lo fa,
+   queste sono buone per tutti. */
+const FACCIA = {
+  dice: { em: '💡', tasto: 'Dammi un suggerimento', ancora: 'Un altro suggerimento',
+          sotto: 'non costa niente', fatto: 'Suggerimento' },
+  scrive: { em: '🧩', tasto: 'Scrivimelo tu', ancora: 'Scrivimene un altro pezzo',
+            sotto: 'ti metto nel piano un pezzo già fatto',
+            fatto: 'Te l’ho scritto io' },
+  forma: { em: '🧩', tasto: 'Mettimi la struttura', ancora: 'Mettimi la struttura',
+           sotto: 'ti scrivo quali ordini e in che disposizione, con le caselle da riempire',
+           fatto: 'La struttura è nel piano' },
+  svela: { em: '✅', tasto: 'Svelami la soluzione', ancora: 'Svelami la soluzione',
+           sotto: 'ti scrivo il piano intero: premi ▶ e guardalo girare',
+           fatto: 'Il piano è scritto' },
+}
+const faccia = p => (p && FACCIA[p.aiuto]) || FACCIA.dice
 
 const unita = () => {
   const m = props.mondoOra()
@@ -66,18 +89,32 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
       <button aria-label="chiudi" @click="emit('chiudi')">✕</button></div>
     <div class="corpo">
       <p class="racconto" v-html="liv.racconto || liv.dritta"></p>
-      <div v-for="(a, k) in aiutiDati.slice(0, aiuti)" :key="k" class="aiuto">
-        <b>Aiuto {{ k + 1 }}</b> {{ a }}</div>
-      <button v-if="aiuti < aiutiDati.length" class="chiedi" :class="{ gratis: aiuti === 0 }"
+
+      <!-- ═════ LA SCALA ═════
+           Un gradino per volta, in ordine, e un tasto solo. Quello che
+           è già sceso resta scritto qui: i suggerimenti si rileggono, e
+           quelli che hanno scritto nel piano si vedono nel piano — qui
+           ne resta la riga che dice cos'è successo. -->
+      <div v-for="(a, k) in fatti" :key="k" class="aiuto" :class="{ scritto: a.aiuto !== 'dice' }">
+        <b>{{ faccia(a).em }} {{ a.aiuto === 'dice' ? 'Suggerimento' : faccia(a).fatto }}</b>
+        {{ a.testo || (a.aiuto === 'dice' ? '' : faccia(a).sotto) }}</div>
+
+      <!-- e il prossimo, che dice cosa farà PRIMA di essere premuto: il
+           prezzo si annuncia, non si scopre dopo -->
+      <!-- «un altro» solo se di quel tipo ne è già sceso uno: al primo
+           pezzo scritto nel piano il tasto diceva «scrivimene un altro
+           pezzo» perché prima erano stati letti due suggerimenti, che
+           sono un'altra cosa -->
+      <button v-if="prossimo" class="chiedi" :class="prossimo.costa ? 'grosso' : 'gratis'"
               @click="emit('aiuto')">
-        {{ aiuti === 0 ? '💡 Il primo aiuto è gratis' : '💡 Un altro aiuto' }}
-        <small>{{ aiuti === 0 ? 'non costa niente'
-                : 'ti costa una stella: chiuderai il livello con ⭐ invece di ⭐⭐' }}</small>
+        {{ faccia(prossimo).em }}
+        {{ fatti.some(a => a.aiuto === prossimo.aiuto)
+             ? faccia(prossimo).ancora : faccia(prossimo).tasto }}
+        <small>{{ faccia(prossimo).sotto
+                }}<template v-if="prossimo.costa"> · il piano che hai adesso viene sostituito, e
+          questa battaglia varrà ⭐ invece di ⭐⭐</template></small>
       </button>
-      <div v-else class="aiuto muto">Gli aiuti sono finiti. Il resto è tuo: la soluzione non
-        te la dà nessuno.</div>
-      <div v-if="pagato" class="aiuto muto">⭐ Questa battaglia vale una stella: hai chiesto
-        un aiuto.</div>
+      <div v-else class="aiuto muto">Non ho altro da dirti: il resto è tuo.</div>
     </div>
   </div>
 
@@ -171,8 +208,16 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
 .chiedi { display:block; width:100%; min-height:52px; border-radius:12px; padding:8px 12px;
           text-align:left; background:#f4f7fb; font-size:13.5px; font-weight:900;
           color:var(--viola-scuro); box-shadow:0 2px 0 #dde3ea }
-.chiedi small { display:block; font-size:11px; font-weight:700; color:var(--tenue) }
+.chiedi small { display:block; font-size:11px; font-weight:700; color:var(--tenue);
+                line-height:1.35; margin-top:2px }
+.chiedi small b { color:var(--viola-scuro) }
 .chiedi.gratis { background:#dff5e6 }
+/* un gradino che scrive nel piano si vede che è un'altra cosa da un
+   suggerimento — bordo pieno invece del verde — e il prezzo sta dentro */
+.chiedi.grosso { background:#fff; box-shadow:inset 0 0 0 1.5px #d6def0, 0 2px 0 #dde3ea }
+/* e quando è già sceso, la riga che lo racconta ha il suo colore */
+.aiuto.scritto { border-left-color:#8a63d2; background:#f6f2ff }
+.aiuto.scritto b { color:#6b52ab }
 
 /* la scheda: come è fatto uno che sta in campo */
 .dati { display:flex; gap:10px; flex-wrap:wrap; font-size:12.5px; color:var(--tenue);

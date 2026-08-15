@@ -246,14 +246,40 @@ function rifaiFondale () {
 function mostraTutto () {
   if (!tela || !mondo()) return
   const z = zoomMinimo()
-  if (Math.abs(z - zoom) < 0.01) return
+  if (Math.abs(z - zoom) < 0.01) { stringiSullaMappa(); return }
   zoom = z
   lato = Math.round(latoBase * zoom)
+  stringiSullaMappa()
   const r = telaEl.value.getBoundingClientRect()
   grande.value = mondo().w * lato > r.width + 1 || mondo().h * lato > r.height + 1
   limita()
   ridipingiStanza()
   zoomOra.value = zoom
+}
+
+/* ── E IL CAMPO SI STRINGE SU QUELLO CHE MOSTRA ──
+   L'altezza è decisa da `misura()` sulla mappa **a zoom 1**, ed è la
+   cosa giusta mentre si sta dentro: se crescesse con l'ingrandimento,
+   avvicinarsi spingerebbe giù gli ordini. Ma quando ci si allontana per
+   vedere tutto, quell'altezza resta quella di prima e sopra e sotto la
+   mappa restano due bande di fondo scuro — una cornice nera attorno
+   alla stanza, che è la prima cosa che si vede aprendo un livello.
+   Qui si stringe: il campo diventa alto quanto la mappa che sta
+   mostrando, mai più di quanto `misura()` gli aveva concesso. */
+function stringiSullaMappa () {
+  if (!telaEl.value || !mondo()) return
+  const tetto = Math.max(150, Math.round(window.innerHeight * 0.4))
+  const alto = Math.min(tetto, mondo().h * lato) + 'px'
+  if (altoCampo.value === alto) return
+  altoCampo.value = alto
+  /* la tela è alta quanto il suo riquadro, quindi va rimisurata: senza,
+     il canvas resta grande com'era e la stanza si ritrova disegnata in
+     un pezzo di tela che non si vede più — cioè spostata in su */
+  nextTick(() => {
+    if (!telaEl.value || !tela) return
+    tela.ridimensiona()
+    limita(); rifaiFondale()
+  })
 }
 
 function inquadraSu (u) {

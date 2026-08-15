@@ -64,7 +64,6 @@
  * @property {string} [motivoSconfitta]
  * @property {Object[]} [varianti]  le altre scene: almeno tre
  * @property {Object[]} [soluzioni] la promessa che si può chiudere
- * @property {number} [par]         con quanti ordini
  * @property {Object[]} [scenografia] roba che sta lì e basta
  * @property {Object} [verifiche]   cosa questo livello ha di suo (lo legge il banco)
  */
@@ -112,9 +111,28 @@ const CAMPI = {
      Chi vuole una cassetta stretta lo spegne a mano (`celle: false`),
      e resta una scelta dichiarata invece di un default che nessuno
      aveva deciso. */
+  /* ── LA GUIDA DEL PRIMISSIMO GIRO ──
+     `guida: true` accende, in questo livello e solo per chi non ha mai
+     chiuso niente nel Generale, una riga che dice dove si tocca: prima
+     il posto vuoto, poi ▶. Non è un tutorial e non blocca niente — non
+     c'è nulla da chiudere e nulla da saltare — e finisce da sé al primo
+     ▶ premuto. La dichiara il livello perché è il livello a sapere di
+     essere il primo, e non un id scritto dentro una vista. */
+  guida: false,
   celle: true, condizioni: undefined,
   vince: undefined, perde: undefined, motivoSconfitta: undefined,
-  varianti: undefined, soluzioni: undefined, par: undefined,
+  /* ── IL `par` NON ESISTE PIÙ ──
+     Era «con quanti ordini si può fare», e valeva la seconda stella. Il
+     gioco però non chiede di risolvere in poche mosse: chiede di
+     risolvere. Un numero da mantenere a mano accanto a ogni livello
+     costava un controllo nel banco, una riga nella barra, una frase nel
+     velo di fine — e diceva al bambino che la sua soluzione, quella che
+     funziona, non è quella giusta. Chi lo scrive ancora se lo sente dire
+     («campo sconosciuto»), che è meglio di un numero ignorato in
+     silenzio. Quello che il par teneva onesto — una soluzione dichiarata
+     non deve avere ordini di troppo — lo controlla il banco senza numeri
+     scritti a mano (`test/aiuto/livello.mjs`, §3 e §4). */
+  varianti: undefined, soluzioni: undefined,
   verifiche: undefined,
   /* questi li mettono i livelli delle storie, e li legge `mappe-storie.js` */
   storia: undefined, capitolo: undefined, emoji: undefined,
@@ -208,6 +226,24 @@ export function livello (d) {
   if (orfani.size)
     throw new Error(`livello ${chi}: nella mappa c'è «${[...orfani].join('», «')}» ` +
                     'che nessuna scena spiega — è un refuso, o manca la voce in legenda')
+
+  /* ── I GRADINI DELLA SCALA DEGLI AIUTI ──
+     `aiuti` è una lista mista: stringhe (i livelli scritti prima che la
+     scala esistesse) e gradini fatti con `aiuto.*`. Un oggetto che non
+     viene da lì è quasi sempre un refuso — `{ testo: '…' }` invece di
+     `aiuto.dice('…')` — e senza questo controllo sparirebbe in
+     silenzio, cioè il bambino chiederebbe un aiuto e non succederebbe
+     niente. */
+  const TIPI = ['dice', 'scrive', 'forma', 'svela']
+  for (const [i, a] of (d.aiuti || []).entries()) {
+    if (typeof a === 'string') continue
+    if (!a || !TIPI.includes(a.aiuto))
+      throw new Error(`livello ${chi}: l'aiuto ${i + 1} non è un gradino — ` +
+                      'scrivilo con aiuto.dice / aiuto.scrive / aiuto.forma / aiuto.svela')
+    if (a.aiuto === 'scrive' && (!a.piano || typeof a.piano !== 'object'))
+      throw new Error(`livello ${chi}: l'aiuto ${i + 1} scrive nel piano ` +
+                      'ma non dice cosa scrivere')
+  }
 
   const fuori = { ...d }
   for (const [k, v] of Object.entries(CAMPI))

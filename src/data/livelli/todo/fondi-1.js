@@ -207,7 +207,6 @@ const FONDI_1 = {
       unita: { tilde: { x: 13, y: 3 }, orso: { x: 26, y: 14 }, fosco: { x: 3, y: 5 } } },
   ],
 
-  par: 4,
   soluzioni: [
     /* quattro ordini, ed è il par. Orso cammina e basta; Tilde non fa
        niente finché non sente il fracasso, e poi prende la lanterna per

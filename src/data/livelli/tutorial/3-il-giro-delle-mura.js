@@ -114,7 +114,6 @@ export const RONDA = livello({
 
   /* IL PAR CONTA QUELLO CHE HAI SCRITTO: il ciclo si vede tutto — il
      blocco e i due «vai» che ha dentro — più l'attacco. */
-  par: 4,
   soluzioni: [
     { nome: 'il giro delle due porte', piano: { cava: [
       fai.giro(['2,5', '12,5'], se.vedi('orchi')), fai.attacca('orchi'),

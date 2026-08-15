@@ -133,7 +133,6 @@ export const DUE_LAVORI = livello({
       metti: { s1: sacco, b1: pugnali, t2: tesoro } },
   ],
 
-  par: 5,
   soluzioni: [
     { nome: 'lui sfonda, lei prende', piano: {
       cavaliere: [fai.apri(portone), fai.apri(grata), fai.apri(tesoro)],

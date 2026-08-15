@@ -219,7 +219,6 @@ export const TORRE_3 = {
                guardia: { x: 10, y: 6 }, ronda: { x: 14, y: 6 } } },
   ],
 
-  par: 8,
   soluzioni: [
     /* otto ordini, ed è il par. Tre a Nilo, che è quello che guarda:
        sale, aspetta **la seconda** ronda, e parla. Tre a Marta — la

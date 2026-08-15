@@ -88,7 +88,6 @@ export const LO_STAGNO = livello({
     { nome: 'Bombo si è appena fermato', metti: { CN: bomboDa(2) } },
   ],
 
-  par: 6,
   soluzioni: [
     { nome: 'lo lascio passare, poi lo stagno', piano: { rosa: [
       fai.prendi(pane),

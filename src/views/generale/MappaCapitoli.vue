@@ -41,9 +41,6 @@ const capitoli = computed(() => {
        legge la dritta del capitolo, che c'è sempre. */
     return { ...c, n, fatto, aperto, mappa,
              racconto: (l && (l.racconto || l.dritta)) || c.dritta || '',
-             /* il par vero è quello dello scenario: quello del capitolo
-                è una stima scritta prima che la mappa esistesse */
-             par: (l && l.par) || c.par,
              stato: fatto ? 'fatto' : aperto ? (mappa ? 'aperto' : 'presto') : 'chiuso',
              stelle: stelleDi(props.storiaId, c.id) }
   })
@@ -71,7 +68,7 @@ function azzera () {
         </span>
         <span class="voto">
           <span v-if="c.stelle" class="stelle">{{ '⭐'.repeat(c.stelle) }}</span>
-          <small v-else-if="c.stato === 'aperto'">par {{ c.par }}</small>
+          <small v-else-if="c.stato === 'aperto'">☆☆</small>
         </span>
       </button>
 

@@ -229,18 +229,25 @@ const TRAGUARDI_TUTTI = [
     soglie: [10000, 50000, 200000], valore: m => m.tot('incasso') },
 
   /* ---------- Il generale ----------
-     Qui non si conta quante volte si è indovinato: si conta quanto poco è
-     bastato dire. Il par è il cuore del gioco — «ce l'ho fatta» lo fa
-     chiunque allungando la lista, «ce l'ho fatta con quattro ordini» vuol
-     dire aver trovato il modo giusto di dirlo. */
+     Qui non si conta quante volte si è indovinato: si conta quante volte
+     ci si è arrivati da soli. Per un pezzo il metro è stato il par — «ce
+     l'ho fatta con quattro ordini» — ed era il metro sbagliato: il gioco
+     non chiede di risolvere in poche mosse, chiede di risolvere. Adesso
+     quello che vale è aver chiuso senza farsi svelare né la struttura né
+     la soluzione, e senza lasciare nessuno sul campo. */
   { id: 'gen-livelli', area: 'generale', emoji: '🎖️', nome: 'Sul campo',
     come: n => n === 1 ? 'Supera il primo livello del generale'
                        : `Supera ${n} livelli del generale`,
     soglie: [1, 5, 12], valore: m => m.tot('missioni') },
-  { id: 'gen-par', area: 'generale', emoji: '🎯', nome: 'Nemmeno un ordine di troppo',
-    come: n => n === 1 ? 'Vinci un livello restando dentro il par'
-                       : `Vinci ${n} livelli restando dentro il par`,
-    soglie: [1, 6, 20], valore: m => m.tot('nelPar') },
+  /* l'`id` resta `gen-par` anche se il par non c'è più: è la chiave con
+     cui la medaglia è già salvata nei profili (`p.badge[id]`), e
+     cambiarla farebbe ripartire da zero chi l'aveva presa — che è
+     esattamente quello che il travaso `nelPar` → `daSolo` in
+     `store/profile.js` serve a evitare. Gli id sono chiavi, non nomi. */
+  { id: 'gen-par', area: 'generale', emoji: '🎯', nome: 'Ci sono arrivato da solo',
+    come: n => n === 1 ? 'Vinci un livello senza farti svelare niente'
+                       : `Vinci ${n} livelli senza farti svelare niente`,
+    soglie: [1, 6, 20], valore: m => m.tot('daSolo') },
   /* La riga che il gioco è venuto a insegnare: dire una volta sola una
      cosa che va fatta cento volte. */
   { id: 'gen-avanzati', area: 'generale', emoji: '🔁', nome: 'Non lo ripeto due volte',

@@ -34,6 +34,24 @@ Chiave, nome, icona, componente, quante tappe. È l'unico file che `App.vue`,
 la home e la schermata dei genitori importano: aggiungere un gioco non deve
 voler dire mettere le mani in cinque file dell'applicazione.
 
+**Come si presenta in home**, e sono tre campi che vanno insieme:
+
+- `che` — *cosa insegna*, in una riga breve (`'euro, centesimi e resto'`).
+  Sta sulla carta sotto il nome, quindi invita e non spiega: se serve una
+  subordinata è troppo lungo, e il posto di quella spiegazione sono i
+  traguardi. Non ci va il nome del gruppo — il gruppo sta scritto sopra la
+  carta, e ripeterlo (`'logica: dedurre…'`) ruba mezza riga.
+- `area` — *di cosa parla*, e decide **in quale gruppo compare la carta**:
+  una delle chiavi di `src/data/aree.js`. Senza, il gioco non finisce in
+  nessun gruppo e **sparisce dalla home** senza dare errore.
+- `come` — *che tipo di gioco è* (`domande`, `pensare`, `riflessi`,
+  `strategia`, `fare`): una delle chiavi di `MODI`, sempre in `aree.js`.
+
+`test/unita/aree.test.mjs` diventa rosso se uno dei due manca o cita una
+chiave che non esiste. Facoltativi: `tinta` (lo sfondo della carta, che i
+giochi nuovi portano con sé perché non hanno una riga di CSS dedicata) e
+`piccoli: true`, che mette l'etichetta per la fascia dei quattro-sei anni.
+
 ### `dati/` — il dato
 
 Tabelle e basta: temi, scaglioni di difficoltà, tappe. Nessun `import` di

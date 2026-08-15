@@ -13,8 +13,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, riassunto, nota } from '../aiuto/verifica.mjs'
 import { stessaVia, inRamo, listaIn, listaDi, ordineIn, aggiungiIn, togliIn,
-         spostaIn, partiDaCapo, partiParallele, ogniVoce }
+         spostaIn, partiDaCapo, partiParallele, ogniVoce, laSoluzione, soloLaForma, scalaDi }
        from '../../src/views/generale/piano.js'
+import { LIVELLI } from '../../src/data/generale.js'
 
 const o = (verbo, complemento) => ({ verbo, complemento })
 const quando = (segnale, ...allora) => ({ verbo: 'quando', complemento: segnale, allora })
@@ -137,6 +138,89 @@ controlla('uno che finisce con un numero no', !inRamo([2, 1]))
             tutte.some(x => x.complemento === 'e'))
   controlla('e quelle dentro un bivio dentro un bivio',
             tutte.some(x => x.complemento === 'c'))
+}
+
+/* ---------- 8. la scala degli aiuti ----------
+   Gli ultimi due gradini scrivono nel piano, e quello che scrivono
+   viene dalle soluzioni dichiarate dal livello. Due cose vanno provate
+   qui, perché sbagliate non si notano finché un bambino non preme quel
+   tasto: che la FORMA sia davvero solo la forma (niente bersagli, ma
+   tutta la disposizione), e che i livelli che si giocano una soluzione
+   da svelare ce l'abbiano. */
+{
+  const dentro = [o('vai', 'chiave'), o('prendi', 'chiave')]
+  const piano = { eroe: [
+    o('vai', 'porta'),
+    bivio({ cond: 'vedi', complemento: 'orchi' }, [o('vai', 'sotto')], []),
+    { blocco: 'ripeti', corpo: dentro, finche: { cond: 'aperta', complemento: 'grata' } },
+    quando('libero', o('apri', 'portone')),
+    { blocco: 'routine', nome: 'azione 1', corpo: [o('prendi', 'tesoro')] },
+    { verbo: 'aspetta', cond: { cond: 'vedi', complemento: 'orco' } },
+  ] }
+  const forma = soloLaForma(piano)
+  uguale('la forma ha le stesse righe della soluzione',
+         ogniVoce(forma.eroe).length, ogniVoce(piano.eroe).length)
+  controlla('e nessun bersaglio',
+            ogniVoce(forma.eroe).every(v => !v.complemento))
+  controlla('nessuna domanda già scritta, né nei bivi né nelle uscite',
+            ogniVoce(forma.eroe).every(v =>
+              (!v.cond || !v.cond.cond) && (!v.finche || !v.finche.cond)))
+  uguale('il bivio resta un bivio, coi suoi due rami', forma.eroe[1].blocco, 'condizione')
+  uguale('e il ramo del vero tiene il suo ordine', forma.eroe[1].vero.length, 1)
+  uguale('il ciclo tiene il suo corpo', forma.eroe[2].corpo.length, 2)
+  uguale('e i verbi ci sono tutti', forma.eroe[2].corpo[0].verbo, 'vai')
+  /* il nome di un'azione lo sceglie il gioco: riscriverlo sarebbe un
+     compito di copiatura, non un pezzo da capire */
+  uguale('il nome dell\'azione resta scritto', forma.eroe[4].nome, 'azione 1')
+
+  /* e la forma non tocca il dato da cui viene: il piano del livello è
+     lo stesso oggetto che il banco gioca a ogni build */
+  uguale('la soluzione di partenza non si sporca', piano.eroe[0].complemento, 'porta')
+
+  const senza = LIVELLI.filter(l => !laSoluzione(l))
+  controlla('ogni livello ha una soluzione da svelare, se serve',
+            !senza.length,
+            'senza: ' + senza.map(l => l.id).join(', ') +
+            ' — lì i due gradini grossi degli aiuti non compaiono')
+}
+
+/* ---------- 9. la scala degli aiuti ----------
+   Una lista mista di stringhe e gradini diventa una scala sola, e la
+   via d'uscita c'è sempre: chi non se l'è scritta se la trova in coda.
+   È la cosa che, sbagliata, lascia un bambino chiuso dentro un livello
+   con un tasto che non fa niente. */
+{
+  const finti = { soluzioni: [{ nome: 'x', piano: { eroe: [o('vai', 'a')] } }] }
+
+  const vecchio = scalaDi({ ...finti, aiuti: ['uno', 'due'] })
+  uguale('le stringhe di ieri restano gradini a parole', vecchio[0].aiuto, 'dice')
+  uguale('e in coda arrivano forma e soluzione', vecchio.length, 4)
+  uguale('la forma prima', vecchio[2].aiuto, 'forma')
+  uguale('e la soluzione ultima', vecchio[3].aiuto, 'svela')
+
+  const misto = scalaDi({ ...finti, aiuti: [
+    { aiuto: 'dice', testo: 'guarda dov’è' },
+    { aiuto: 'scrive', piano: { eroe: [o('vai', 'a')] } },
+    { aiuto: 'dice', testo: 'e adesso passa' },
+    { aiuto: 'svela' },
+  ] })
+  uguale('una scala scritta a mano resta com’è', misto.length, 4)
+  uguale('e i gradini restano nell’ordine dichiarato', misto.map(a => a.aiuto).join(' '),
+         'dice scrive dice svela')
+
+  /* chi scrive di suo ma si dimentica la fine se la trova in coda: un
+     livello non deve poter diventare un vicolo cieco per distrazione */
+  const senzaFine = scalaDi({ ...finti, aiuti: [{ aiuto: 'scrive', piano: {} }] })
+  uguale('a chi scrive senza svelare, lo svelamento si aggiunge', senzaFine.length, 2)
+  uguale('ed è l’ultimo', senzaFine[1].aiuto, 'svela')
+
+  controlla('le parole non costano niente', misto[0].costa === false)
+  controlla('quello che scrive nel piano sì', misto[1].costa === true)
+
+  /* un livello senza soluzione dichiarata non promette una via
+     d'uscita che non ha */
+  uguale('senza soluzione la scala è solo quello che c’è scritto',
+         scalaDi({ aiuti: ['uno'] }).length, 1)
 }
 
 nota('il piano si regge senza Vue, senza canvas e senza mondo: sono liste e vie')

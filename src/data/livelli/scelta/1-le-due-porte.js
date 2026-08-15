@@ -94,7 +94,6 @@ export const LE_DUE_PORTE = livello({
     { nome: "l'orco di sopra, tesoro in alto", metti: { oa: orco, t3: tesoro } },
   ],
 
-  par: 4,
   soluzioni: [
     /* se lo vedo di sopra, la strada di sotto è quella buona — ma è
        chiusa: prima la chiave, poi la porta. Se non lo vedo, la strada

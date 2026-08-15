@@ -183,7 +183,6 @@ export const SALE_2 = {
       unita: { rea: { x: 4, y: 11 }, vito: { x: 2, y: 11 }, bugo: { x: 2, y: 11 } } },
   ],
 
-  par: 11,
   soluzioni: [
     /* undici ordini, ed è il par. Cinque a Bugo — e il terzo è quello
        che sorprende: dopo la manovella deve **rifare tutto il sentiero

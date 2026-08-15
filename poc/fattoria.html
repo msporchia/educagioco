@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>La fattoria — prototipo</title>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     LA FATTORIA — prototipo di espansione e decorazione
+
+     IL MODELLO — Non si semina e non si aspetta. C'è un pezzo di prato,
+     e tutto intorno bosco. Il gioco è una frase sola, ripetuta: «lì ci
+     starebbe bene una fontanina» → quel pezzo non è mio → lo compro →
+     è pieno di alberi → li tolgo → adesso ci sta. Il desiderio viene
+     prima della fatica, ed è per questo che la fatica non pesa.
+
+     COSA HO PRESO DA HAY DAY
+     1. Il terreno chiuso si VEDE: non è nero né fuori schermo, è prato
+        vero, un po' più scuro, col cartello del prezzo piantato sopra.
+        Si desidera solo quello che si guarda.
+     2. Si compra solo di fianco a quello che è già tuo, e il prezzo sale
+        a ogni acquisto: la fattoria cresce a macchia, non a salti.
+     3. Gli ostacoli non sono un pedaggio, sono una MINIERA. In Hay Day
+        abbattere un albero fa cadere i materiali che servono a comprare
+        terra: sgombrare non toglie risorse, ne dà, ed è il giro che
+        regge tutto il gioco. Qui ogni ostacolo lascia legna, sassi,
+        fiori — e rende più di quanto è costato toglierlo.
+     4. Un oggetto piazzato non si sposta col tocco ma TENENDOLO premuto
+        finché un anellino si riempie. Dove il verbo principale è
+        «tocca», il trascinamento va chiesto apposta, o si smonta la
+        fattoria per sbaglio.
+     5. Rimettere via una cosa non la distrugge e non la rivende: finisce
+        in un magazzino, da dove si ripiazza quante volte si vuole.
+     6. **Spostare o ripiazzare costa una monetina.** Non serve a fare
+        cassa — serve perché questo posto resti la *ricompensa* per gli
+        esercizi fatti altrove, e non un tavolino dove si passa il
+        pomeriggio a spostare avanti e indietro la stessa panchina.
+        Rimettere una cosa esattamente dov'era non costa niente, e chi è
+        senza monete non resta bloccato: la fattoria semplicemente sta
+        ferma finché non se ne guadagnano altre.
+
+     COSA HO SCARTATO, E PERCHÉ
+     - Le attese a ore e l'energia che si ricarica: servono a far tornare
+       chi ha il telefono in tasca tutto il giorno. Qui si gioca venti
+       minuti e si chiude, e sgombrare un albero dura un secondo.
+     - Le tre valute dell'espansione (atti, paletti, mazze) e i permessi:
+       sono lì per rallentare chi non paga. Qui la moneta è una sola, e
+       arriva dagli altri giochi del progetto — matematica, inglese.
+     - Livelli, amici, mercatino: niente di tutto questo funziona offline
+       e da soli.
+     - Le colture a tempo — che sono precisamente la parte di Hay Day che
+       il modello precedente aveva copiato, ed è la parte bocciata.
+
+     LA FATTORIA NON CONTIENE MATEMATICA — decisione, non dimenticanza.
+     Un ostacolo si toglie pagando, punto: niente esercizio accanto al
+     bottone, niente «se ti va lo paghi con la testa». Qui non si guadagna
+     niente, si SPENDE quello che si è già guadagnato altrove — nel
+     castello, nel codice segreto, negli altri giochi del progetto. È lo
+     stesso patto della cameretta (`src/views/Stanza.vue` nel gioco vero):
+     un posto dove finiscono le monete, non dove se ne fanno di nuove.
+     Due sfoghi diversi per lo stesso salvadanaio bastano e avanzano.
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<style>
+  :root { color-scheme: light }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none }
+  html, body { height:100%; margin:0; overflow:hidden }
+  body { background:#2f4a35; color:#243024; touch-action:none; font:16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif }
+  #tela { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none }
+  /* ---------- il cruscotto: poche cose, e mai in mezzo al prato ---------- */
+  #alto { position:absolute; left:0; right:0; top:0; z-index:5; pointer-events:none; display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top) + 10px) 12px 0 12px }
+  .gettone { background:#fffdf6ec; border:1px solid #00000018; border-radius:999px; padding:6px 14px; font-size:15px; font-weight:800; color:#4a3a1c; box-shadow:0 3px 10px #0000002e; white-space:nowrap }
+  .gettone.su { animation:sobbalzo .4s ease-out }
+  @keyframes sobbalzo { 40% { transform:scale(1.14) } }
+  #spazio { flex:1 }
+  .tondo { pointer-events:auto; background:#fffdf6ec; border:1px solid #00000018; color:#4a3a1c; width:38px; height:38px; border-radius:999px; font-size:18px; font-weight:800; box-shadow:0 3px 10px #0000002e }
+  .tondo:active { transform:scale(.92) }
+  .tondo.attesa { background:#ffd9d0; border-color:#c2432a; color:#8e2c17 }
+  #suggerimento { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 58px); transform:translateX(-50%); z-index:5; pointer-events:none; background:#fffdf6e8; border-radius:999px; padding:6px 16px; font-size:13.5px; font-weight:700; color:#5a4a30; max-width:88vw; text-align:center; box-shadow:0 3px 10px #00000026; opacity:0; transition:opacity .3s }
+  #suggerimento.c-e { opacity:1 }
+  /* ---------- il cassetto in fondo ---------- */
+  #cassetto { position:absolute; left:0; right:0; bottom:0; z-index:6; background:#fffdf6; border-radius:20px 20px 0 0; touch-action:none; box-shadow:0 -6px 26px #0000003d; transition:transform .28s ease; transform:translateY(calc(100% - 54px)); padding-bottom:env(safe-area-inset-bottom) }
+  #cassetto.aperto { transform:translateY(0) }
+  #maniglia { height:54px; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:15px; color:#5a4a30 }
+  #maniglia i { display:block; width:38px; height:5px; border-radius:999px; background:#0000001f }
+  #categorie { display:flex; gap:6px; overflow-x:auto; padding:0 12px 8px 12px; scrollbar-width:none }
+  #categorie::-webkit-scrollbar { display:none }
+  #categorie button { flex:0 0 auto; border:1px solid #00000014; background:#f0ebdd; color:#6b5a3c; border-radius:999px; padding:7px 13px; font-size:13px; font-weight:800 }
+  #categorie button.viva { background:#3f7d4e; border-color:#3f7d4e; color:#fff }
+  #scaffale { display:grid; grid-template-columns:repeat(auto-fill,minmax(74px,1fr)); gap:8px; padding:0 12px 14px 12px; max-height:34vh; overflow-y:auto }
+  .voce { background:#f6f2e6; border:1px solid #00000012; border-radius:16px; padding:8px 4px 6px; text-align:center; touch-action:none; position:relative }
+  .voce .fig { font-size:30px; line-height:1.1; filter:drop-shadow(0 3px 2px #0000002e) }
+  .voce .nm { font-size:10.5px; font-weight:700; color:#6b5a3c; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .voce .pr { font-size:11px; font-weight:800; color:#8a6a24 }
+  .voce.caro { opacity:.42 }
+  .voce:active { transform:scale(.94) }
+  /* ---------- la barretta delle cure: compare sotto l'animale scelto ---------- */
+  #cure { position:absolute; left:0; right:0; bottom:0; z-index:7; display:none; background:#fffdf6; border-radius:20px 20px 0 0; box-shadow:0 -6px 26px #0000003d; padding:10px 12px calc(env(safe-area-inset-bottom) + 12px); touch-action:none }
+  #cure.c-e { display:block }
+  #cure .titolo { font-size:13px; font-weight:800; color:#5a4a30; text-align:center; margin-bottom:8px }
+  #cure .titolo b { color:#2f6b3f }
+  #cureRiga { display:flex; gap:10px; justify-content:center }
+  .cura { flex:0 0 68px; background:#f6f2e6; border:1px solid #00000012; border-radius:16px; padding:8px 2px 6px; text-align:center; touch-action:none }
+  .cura .fig { font-size:28px; line-height:1.15; filter:drop-shadow(0 3px 2px #0000002e) }
+  .cura .nm { font-size:10.5px; font-weight:700; color:#6b5a3c }
+  .cura.fatta { opacity:.35 }
+  .cura:active { transform:scale(.92) }
+  /* ---------- il fantasma che segue il dito ---------- */
+  #fantasma { position:fixed; z-index:30; pointer-events:none; display:none; font-size:44px; transform:translate(-50%,-58%); filter:drop-shadow(0 6px 5px #00000047) }
+  #fantasma.c-e { display:block }
+  /* ---------- i pannelli ---------- */
+  #velo { position:absolute; inset:0; z-index:20; display:none; align-items:flex-end; justify-content:center; background:#0d1a12a6; padding:14px }
+  #velo.c-e { display:flex }
+  .foglio { width:100%; max-width:400px; background:#fffdf6; border-radius:22px; padding:18px 16px calc(env(safe-area-inset-bottom) + 16px); box-shadow:0 10px 40px #0000005c; animation:sali .22s ease-out }
+  @keyframes sali { from { transform:translateY(30px); opacity:0 } }
+  .foglio .cap { text-align:center; font-size:44px; line-height:1; filter:drop-shadow(0 4px 3px #00000030) }
+  .foglio h2 { margin:8px 0 2px; font-size:20px; font-weight:900; text-align:center; color:#33402f }
+  .foglio p { margin:0 0 16px; font-size:13.5px; color:#7b6b52; text-align:center; line-height:1.5 }
+  .scelte { display:flex; flex-direction:column; gap:9px }
+  .scelte button { padding:15px 12px; border-radius:16px; border:1px solid #00000014; background:#f0ebdd; color:#4a3a1c; font-size:15.5px; font-weight:800; text-align:left; display:flex; align-items:center; gap:10px }
+  .scelte button .e { font-size:22px }
+  .scelte button .costo { margin-left:auto; font-weight:900; color:#8a6a24 }
+  .scelte button:active { transform:scale(.975) }
+  .scelte button.forte { background:#3f7d4e; border-color:#3f7d4e; color:#fff }
+  .scelte button.forte .costo { color:#e8ffd9 }
+  .scelte button.spenta { opacity:.4 }
+  .scelte button.piano { background:none; border:none; justify-content:center; color:#8a7a60; font-size:14px; padding:8px }
+  .gira { position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:#2f4a35; color:#fff; font-size:19px; font-weight:800; text-align:center; padding:30px }
+  @media (orientation:landscape) and (max-height:520px) { .gira { display:flex } }
+</style>
+</head>
+<body>
+
+<canvas id="tela"></canvas>
+
+<div id="alto">
+  <div class="gettone" id="borsa">🪙 <span id="monete">0</span></div>
+  <div id="spazio"></div>
+  <button class="tondo" id="centra" aria-label="torna a casa">🏡</button>
+  <button class="tondo" id="daccapo" aria-label="ricomincia">↺</button>
+</div>
+<div id="suggerimento"></div>
+
+<div id="cassetto">
+  <div id="maniglia"><i></i><span>Cassetto delle cose</span><i></i></div>
+  <div id="categorie"></div>
+  <div id="scaffale"></div>
+</div>
+
+<div id="cure">
+  <div class="titolo">Cosa vuoi dare a <b id="nomeAnimale">—</b>? <span style="font-weight:600">trascinaglielo sopra</span></div>
+  <div id="cureRiga"></div>
+</div>
+
+<div id="fantasma"></div>
+
+<div id="velo"><div class="foglio" id="foglio"></div></div>
+
+<div class="gira">Gira il telefono 🙂<br>la fattoria si guarda in piedi</div>
+
+<script>
+'use strict';
+
+/* ═══ le misure del mondo ═══════════════════════════════════════════
+   Una piazzola è il pezzo che si compra: 6×6 celle. Il mondo ne ha
+   7×7, ma solo l'anello interno (1..5) è comprabile — la corona di
+   fuori resta bosco per sempre, così all'orizzonte c'è sempre qualcosa
+   di più scuro e la fattoria non finisce mai contro un muro. */
+const CELLA = 48, CELLE = 6, LATO = CELLA * CELLE;
+const PIAZZOLE = 7, MONDO = LATO * PIAZZOLE, CASA = 3; const PRIMA = 1, ULTIMA = 5;
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+const tela = document.getElementById('tela'); const ctx = tela.getContext('2d');
+let L = 0, A = 0;                                   // schermo, in pixel css
+
+/* ═══ il catalogo ══════════════════════════════════════════════════
+   Emoji, ma ognuna appoggiata su un basamento disegnato (ombra + terra
+   calpestata): è quello che tiene insieme il piano di gioco e impedisce
+   che sembrino adesivi appiccicati sopra una foto. */
+/* Ogni voce è una riga: id, faccia, nome, prezzo, e quanto è grande.
+   Chi sta in «animali» una volta posato si comporta da sé — cammina e
+   vuole qualcosa — e la categoria è l'unica cosa che glielo dice. */
+const CATALOGO = [], CATEGORIE = [];
+function voci(c, titolo, righe) {
+  CATEGORIE.push([c, titolo]);
+  for (const [id, e, n, p, s] of righe)
+    CATALOGO.push({ id, e, n, p, c, s: s || 1, a: c === 'animali' });
+}
+voci('piante', '🌻 Piante', [['querciolo','🌳','Querciolo',30,1.15], ['pino','🌲','Pino',30,1.15],
+  ['palma','🌴','Palma',45,1.15], ['girasoli','🌻','Girasoli',12], ['tulipani','🌷','Tulipani',12],
+  ['rose','🌹','Rose',14], ['vaso','🪴','Vaso',16], ['cactus','🌵','Cactus',18]]);
+voci('recinti', '🪵 Recinti', [['staccio','🪵','Staccionata',8], ['muretto','🧱','Muretto',10],
+  ['cartello','🪧','Cartello',9], ['cancello','🚧','Cancello',12], ['lampione','🏮','Lampione',20]]);
+voci('acqua', '⛲ Acqua', [['fontana','⛲','Fontana',70,1.2], ['fontanina','🚰','Fontanina',35],
+  ['stagno','🌊','Stagnetto',40], ['ninfea','🪷','Ninfea',15], ['secchio','🪣','Secchio',8]]);
+voci('case', '🏡 Casette', [['casetta','🏡','Casetta',90,1.25], ['capanno','🛖','Capanno',55,1.15],
+  ['fienile','🏚️','Fienile',60,1.15], ['tenda','⛺','Tenda',30], ['mulino','🏰','Torretta',110,1.25]]);
+voci('animali', '🐄 Animali', [['cane','🐕','Cane',60], ['gatto','🐈','Gatto',50],
+  ['mucca','🐄','Mucca',80], ['gallina','🐔','Gallina',40], ['pecora','🐑','Pecora',70]]);
+voci('deco', '🎪 Deco', [['giostra','🎠','Giostra',75,1.15], ['tendone','🎪','Tendone',65,1.15],
+  ['statua','🗿','Statua',45], ['falo','🔥','Falò',22], ['panchina','🪑','Panchina',18],
+  ['ombrellone','⛱️','Ombrellone',24], ['aquilone','🪁','Aquilone',14], ['palloncini','🎈','Palloncini',14]]);
+const PER_ID = Object.fromEntries(CATALOGO.map(v => [v.id, v]));
+
+/* Gli ostacoli. `resa` è quello che lascia una volta tolto: sgombrare
+   rende più di quanto costa, sennò nessuno lo farebbe volentieri. */
+const OSTACOLI = {
+  albero:   { e:'🌳', n:'Albero',   p:24, s:1.2,  resa:16, cade:'🪵' },
+  pino:     { e:'🌲', n:'Pino',     p:24, s:1.2,  resa:16, cade:'🪵' },
+  ceppo:    { e:'🪵', n:'Ceppo',    p:12, s:1.0,  resa:9,  cade:'🪵' },
+  sasso:    { e:'🪨', n:'Sasso',    p:18, s:1.0,  resa:13, cade:'🪨' },
+  cespuglio:{ e:'🌿', n:'Cespuglio',p:8,  s:1.0,  resa:6,  cade:'🍀' },
+  fungo:    { e:'🍄', n:'Funghi',   p:8,  s:0.95, resa:7,  cade:'🍄' },
+};
+const CURE = [
+  { id:'cibo',      e:'🥕', n:'Da mangiare' },
+  { id:'acqua',     e:'💧', n:'Da bere' },
+  { id:'palla',     e:'🎾', n:'Giocare' },
+  { id:'spazzola',  e:'🧽', n:'Spazzolata' },
+];
+const DONI = { cane:['❤️',14], gatto:['❤️',12], mucca:['🥛',20], gallina:['🥚',12], pecora:['🧶',18] };
+
+/* ═══ lo stato ═════════════════════════════════════════════════════ */
+const CHIAVE = 'poc-fattoria'; let S = null; let prossimoId = 1;
+
+function chiave(x, y) { return x + ',' + y; }
+
+/* Rumore ripetibile: la stessa cella ha sempre lo stesso ciuffo d'erba,
+   così il prato non balla fra un disegno e l'altro. */
+function caso(x, y, sale) {
+  let h = (x * 374761393 + y * 668265263 + (sale || 0) * 1442695040) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177) | 0;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+function mondoNuovo() {
+  const s = { monete: 260, piazzole: {}, ostacoli: {}, cose: [], animali: [],
+              magazzino: {}, vista: { x:0, y:0 }, prossimo: 1 };
+  s.piazzole[chiave(CASA, CASA)] = true;
+
+  /* Il bosco c'è già tutto, dal primo secondo: gli alberi che dovrai
+     abbattere fra mezz'ora sono lì che si vedono. Serve a quello. */
+  for (let cx = 0; cx < PIAZZOLE * CELLE; cx++)
+    for (let cy = 0; cy < PIAZZOLE * CELLE; cy++) {
+      const px = (cx / CELLE) | 0, py = (cy / CELLE) | 0;
+      if (px === CASA && py === CASA) continue;
+      const fuori = px < PRIMA || px > ULTIMA || py < PRIMA || py > ULTIMA;
+      const r = caso(cx, cy, 7);
+      /* Un terzo in meno di prima (0.42→0.61, 0.63→0.75), e per di più
+         diradati: se la cella a sinistra o sopra ha già un albero, si
+         salta la prossima — così il bosco non fa più tappeto continuo,
+         e si vede dove finisce la fattoria e comincia il selvatico. */
+      if (r > (fuori ? 0.61 : 0.75) &&
+          !s.ostacoli[chiave(cx - 1, cy)] && !s.ostacoli[chiave(cx, cy - 1)]) {
+        const q = caso(cx, cy, 11);
+        const t = q < 0.34 ? 'albero' : q < 0.55 ? 'pino' : q < 0.68 ? 'cespuglio'
+                : q < 0.82 ? 'sasso' : q < 0.92 ? 'ceppo' : 'fungo';
+        s.ostacoli[chiave(cx, cy)] = t;
+      }
+    }
+
+  /* Una casa da subito. Un prato vuoto non fa venire voglia di niente:
+     la prima cosa che si vede deve già essere un posto dove si abita. */
+  const c0 = CASA * CELLE;
+  const metti = (id, dx, dy) => s.cose.push({ i: s.prossimo++, id, x: c0 + dx, y: c0 + dy });
+  metti('casetta', 1, 1); metti('fontana', 3, 3); metti('girasoli', 0, 2);
+  metti('tulipani', 4, 1); metti('staccio', 0, 4); metti('staccio', 1, 4);
+  metti('vaso', 2, 1); metti('panchina', 4, 4); metti('falo', 2, 5);
+  animaleNuovo(s, 'cane', c0 + 3, c0 + 1); animaleNuovo(s, 'gallina', c0 + 1, c0 + 3);
+  return s;
+}
+
+function animaleNuovo(s, id, cx, cy) {
+  s.animali.push({ i: s.prossimo++, id, x: cx, y: cy,
+                   mx: cx * CELLA + CELLA / 2, my: cy * CELLA + CELLA / 2,
+                   bx: cx * CELLA + CELLA / 2, by: cy * CELLA + CELLA / 2,
+                   cure: {}, gioia: 30, dono: null, attesa: 0 });
+}
+
+function carica() {
+  try {
+    const grezzo = localStorage.getItem(CHIAVE);
+    if (grezzo) {
+      const s = JSON.parse(grezzo);
+      if (s && s.piazzole && s.animali) {
+        if (!s.magazzino) s.magazzino = {};   // salvataggi di prima del magazzino
+        return s;
+      }
+    }
+  } catch (e) { /* archivio pieno o rotto: si riparte, non si esplode */ }
+  return mondoNuovo();
+}
+let salvaFra = 0;
+function salva() { salvaFra = 1.2; }
+function salvaOra() {
+  try { localStorage.setItem(CHIAVE, JSON.stringify(S)); } catch (e) {}
+  salvaFra = 0;
+}
+
+/* ═══ piazzole: chi è mia, chi posso comprare, quanto costa ═════════ */
+function mia(px, py) { return !!S.piazzole[chiave(px, py)]; }
+function comprabile(px, py) {
+  if (px < PRIMA || px > ULTIMA || py < PRIMA || py > ULTIMA) return false;
+  if (mia(px, py)) return false;
+  return mia(px - 1, py) || mia(px + 1, py) || mia(px, py - 1) || mia(px, py + 1);
+}
+function quante() { return Object.keys(S.piazzole).length; }
+/* Il prezzo sale col numero di pezzi già presi: la fattoria grande
+   costa più di quella piccola, e ogni acquisto è una decisione. */
+function prezzoPiazzola() {
+  const n = quante() - 1;
+  return Math.round(90 * Math.pow(1.45, n) / 5) * 5;
+}
+function cellaMia(cx, cy) {
+  return mia((cx / CELLE) | 0, (cy / CELLE) | 0);
+}
+function libera(cx, cy) {
+  if (!cellaMia(cx, cy)) return false; if (S.ostacoli[chiave(cx, cy)]) return false;
+  return !S.cose.some(o => o.x === cx && o.y === cy);
+}
+
+/* ═══ il terreno ═══════════════════════════════════════════════════
+   Ogni piazzola si disegna una volta sola su una tela sua e poi si
+   ricopia. Il disegno usa coordinate del mondo, non della piazzola:
+   le macchie di colore e la strada attraversano le cuciture e il prato
+   non si vede a quadrati. Era il difetto che ha affossato la versione
+   di prima — sembrava una tabella perché era disegnata a tabella. */
+const tessere = new Map();
+function scorda(px, py) {
+  for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++)
+    tessere.delete(chiave(px + a, py + b));
+}
+
+function stradaY(x) {
+  return MONDO / 2 + Math.sin(x * 0.0042) * 250 + Math.sin(x * 0.0131 + 1.7) * 66;
+}
+
+function tessera(px, py) {
+  const k = chiave(px, py); if (tessere.has(k)) return tessere.get(k);
+
+  const c = document.createElement('canvas'); c.width = c.height = Math.round(LATO * DPR);
+  const g = c.getContext('2d'); g.scale(DPR, DPR); const ox = px * LATO, oy = py * LATO;
+  const sua = mia(px, py);
+  g.translate(-ox, -oy);                 // da qui in poi si disegna nel mondo
+
+  /* 1. il prato di fondo, uguale dappertutto. Il bosco non è un altro
+        prato: è lo stesso prato con sopra la nebbia. Se il colore di
+        base cambiasse alla cucitura, il pezzo comprato resterebbe un
+        tappeto rettangolare buttato sul bosco — che è esattamente come
+        veniva finché ho provato a distinguerli col colore. */
+  const base = g.createLinearGradient(ox, oy, ox + LATO, oy + LATO);
+  base.addColorStop(0, '#88bf66'); base.addColorStop(1, '#79b25b');
+  g.fillStyle = base; g.fillRect(ox, oy, LATO, LATO);
+
+  /* 2. macchie morbide, calcolate su una griglia larga del mondo intero:
+        rompono la quadrettatura perché non sanno dove finisce la piazzola. */
+  for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+    for (let n = 0; n < 7; n++) {
+      const gx = px + a, gy = py + b; const mx = (gx + caso(gx, gy, n * 3 + 1)) * LATO;
+      const my = (gy + caso(gx, gy, n * 3 + 2)) * LATO;
+      const r = 70 + caso(gx, gy, n * 3 + 3) * 160;
+      const chiara = caso(gx, gy, n * 3 + 4) > 0.5;
+      const col = chiara ? '176,213,126' : '92,146,72';
+      const sf = g.createRadialGradient(mx, my, 0, mx, my, r);
+      sf.addColorStop(0, 'rgba(' + col + ',0.46)'); sf.addColorStop(1, 'rgba(' + col + ',0)');
+      g.fillStyle = sf; g.fillRect(ox - 20, oy - 20, LATO + 40, LATO + 40);
+    }
+  }
+
+  /* 3. la strada di terra: una curva sola che attraversa tutto il mondo.
+        È la cosa che più di ogni altra dice «questo è un posto». */
+  const strada = (larghezza, colore, alfa) => {
+    g.save(); g.globalAlpha = alfa; g.strokeStyle = colore;
+    g.lineWidth = larghezza; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath();
+    for (let x = ox - 60; x <= ox + LATO + 60; x += 12) {
+      const y = stradaY(x); x === ox - 60 ? g.moveTo(x, y) : g.lineTo(x, y);
+    }
+    g.stroke(); g.restore();
+  };
+  strada(54, '#8a6f45', 0.5); strada(42, '#c2a06a', 0.85); strada(26, '#d8bd8c', 0.6);
+
+  /* 4. ciuffi d'erba e sassolini, uno per cella e sempre gli stessi. */
+  for (let i = 0; i < CELLE; i++) for (let j = 0; j < CELLE; j++) {
+    const cx = px * CELLE + i, cy = py * CELLE + j; const n = sua ? 3 : 5;
+    for (let t = 0; t < n; t++) {
+      const r1 = caso(cx, cy, 20 + t * 2), r2 = caso(cx, cy, 21 + t * 2);
+      const x = ox + i * CELLA + r1 * CELLA, y = oy + j * CELLA + r2 * CELLA;
+      if (Math.abs(y - stradaY(x)) < 22) continue;      // niente erba sulla strada
+      g.strokeStyle = sua ? 'rgba(63,110,52,0.5)' : 'rgba(28,58,34,0.55)';
+      g.lineWidth = 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, y);
+      g.quadraticCurveTo(x + (r1 - 0.5) * 6, y - 4, x + (r1 - 0.5) * 9, y - 8); g.stroke();
+    }
+    /* qualche fiorellino, solo dove è curato */
+    if (sua && caso(cx, cy, 40) > 0.86) {
+      const x = ox + i * CELLA + caso(cx, cy, 41) * CELLA;
+      const y = oy + j * CELLA + caso(cx, cy, 42) * CELLA;
+      g.fillStyle = ['#f6e07a', '#f5a3c0', '#fff3d6'][((caso(cx, cy, 43) * 3) | 0)];
+      g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill();
+    }
+  }
+
+  /* 5. la nebbia del bosco. Il confine non è una linea ma una RAMPA
+        larga il doppio di una cella, e la rampa è disegnata da tutte e
+        due le parti: il pezzo selvatico la schiarisce verso casa, il
+        pezzo di casa la scurisce verso il bosco. A metà strada le due
+        metà si incontrano allo stesso valore, e il rettangolo che si
+        vedeva prima non esiste più — non perché sia stato ammorbidito,
+        ma perché il bordo non è più un posto dove cambia qualcosa. */
+  const NEBBIA = 'rgba(14,32,25,'; const RAMPA = 76;
+  const lati = [[px, py - 1, 0, 0, 0, 1], [px, py + 1, 0, LATO, 0, -1],
+                [px - 1, py, 0, 0, 1, 0], [px + 1, py, LATO, 0, -1, 0]];
+  g.save(); g.translate(ox, oy);
+  if (!sua) {
+    g.fillStyle = NEBBIA + '0.46)'; g.fillRect(0, 0, LATO, LATO);
+    g.globalCompositeOperation = 'destination-out';
+    for (const [vx, vy, sx, sy, dx, dy] of lati) {
+      if (!mia(vx, vy)) continue;
+      const gr = g.createLinearGradient(sx, sy, sx + dx * RAMPA, sy + dy * RAMPA);
+      gr.addColorStop(0, 'rgba(0,0,0,0.5)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, LATO, LATO);
+    }
+  } else {
+    for (const [vx, vy, sx, sy, dx, dy] of lati) {
+      if (mia(vx, vy)) continue;
+      const gr = g.createLinearGradient(sx, sy, sx + dx * RAMPA, sy + dy * RAMPA);
+      gr.addColorStop(0, NEBBIA + '0.23)'); gr.addColorStop(1, NEBBIA + '0)');
+      g.fillStyle = gr; g.fillRect(0, 0, LATO, LATO);
+    }
+  }
+  g.restore();
+
+  tessere.set(k, c);
+  return c;
+}
+
+/* ═══ vista e coordinate ═══════════════════════════════════════════ */
+function limita() {
+  S.vista.x = Math.max(-L * 0.35, Math.min(MONDO - L * 0.65, S.vista.x));
+  S.vista.y = Math.max(-A * 0.35, Math.min(MONDO - A * 0.65, S.vista.y));
+}
+function aMondo(sx, sy) { return { x: sx + S.vista.x, y: sy + S.vista.y }; }
+function aSchermo(mx, my) { return { x: mx - S.vista.x, y: my - S.vista.y }; }
+function vaiACasa() {
+  S.vista.x = (CASA + 0.5) * LATO - L / 2; S.vista.y = (CASA + 0.5) * LATO - A / 2 + 30;
+  limita();
+}
+
+/* ═══ disegno ══════════════════════════════════════════════════════ */
+let volanti = [];      // i «+12 🪙» che salgono e svaniscono
+let scintille = [];    // i cocci di un ostacolo appena tolto
+let tempo = 0;
+
+function volante(mx, my, testo, colore) {
+  volanti.push({ x: mx, y: my, t: 0, testo, colore: colore || '#fff6d8' });
+}
+
+function ombra(x, y, r) {
+  ctx.save(); ctx.fillStyle = 'rgba(20,40,20,0.20)';
+  ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.42, 0, 0, 7); ctx.fill(); ctx.restore();
+}
+function basamento(x, y, r) {
+  /* la terra calpestata sotto una cosa: è quello che la posa sul prato
+     invece di lasciarla galleggiare sopra */
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, 'rgba(141,113,68,0.52)'); g.addColorStop(0.55, 'rgba(146,119,74,0.30)');
+  g.addColorStop(1, 'rgba(150,124,80,0)'); ctx.fillStyle = g;
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.45);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ctx.restore();
+}
+function figura(e, x, y, taglia) {
+  ctx.font = taglia + 'px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText(e, x, y);
+}
+
+function disegna() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, L, A); ctx.fillStyle = '#33543a';
+  ctx.fillRect(0, 0, L, A);
+
+  const p0x = Math.max(0, ((S.vista.x) / LATO | 0) - 1);
+  const p0y = Math.max(0, ((S.vista.y) / LATO | 0) - 1);
+  const p1x = Math.min(PIAZZOLE - 1, ((S.vista.x + L) / LATO | 0) + 1);
+  const p1y = Math.min(PIAZZOLE - 1, ((S.vista.y + A) / LATO | 0) + 1);
+
+  /* il terreno */
+  for (let px = p0x; px <= p1x; px++) for (let py = p0y; py <= p1y; py++) {
+    const s = aSchermo(px * LATO, py * LATO);
+    ctx.drawImage(tessera(px, py), s.x, s.y, LATO, LATO);
+  }
+
+  /* Il bordo della fattoria, disegnato vivo e non nella tessera perché è
+     l'unica linea netta di tutto il prato: staccionata dove finisce
+     quello che è mio, tratteggio d'oro dove comincia un pezzo in
+     vendita. Il tratteggio corre SOLO sul lato che tocca la fattoria —
+     la cornice intera rimetteva a schermo la stessa quadrettatura che
+     tutto il resto lavora per far sparire, perché quattro pezzi in
+     vendita attorno a casa facevano una tabella di tratteggi. */
+  const LATI = [[0, 0, 1, 0, 0, 1], [0, LATO, 1, 0, 0, -1],
+                [0, 0, 0, 1, 1, 0], [LATO, 0, 0, 1, -1, 0]];
+  for (let px = p0x; px <= p1x; px++) for (let py = p0y; py <= p1y; py++) {
+    const sua = mia(px, py), vendita = !sua && comprabile(px, py);
+    if (!sua && !vendita) continue; const s = aSchermo(px * LATO, py * LATO); ctx.save();
+    for (const [ax, ay, dx, dy, nx, ny] of LATI) {
+      const vic = mia(px - nx, py - ny), gx = s.x + ax, gy = s.y + ay;
+      if (vendita && vic) {
+        const gr = ctx.createLinearGradient(gx, gy, gx + nx * 90, gy + ny * 90);
+        gr.addColorStop(0, 'rgba(255,222,110,0.26)'); gr.addColorStop(1, 'rgba(255,222,110,0)');
+        ctx.fillStyle = gr; ctx.fillRect(s.x, s.y, LATO, LATO);
+        ctx.strokeStyle = 'rgba(255,231,130,' + (0.7 + Math.sin(tempo * 2.2) * 0.25) + ')';
+        ctx.lineWidth = 4; ctx.setLineDash([16, 12]); ctx.lineDashOffset = -tempo * 24; ctx.beginPath();
+        ctx.moveTo(gx + nx * 4 + dx * 6, gy + ny * 4 + dy * 6);
+        ctx.lineTo(gx + nx * 4 + dx * (LATO - 6), gy + ny * 4 + dy * (LATO - 6)); ctx.stroke();
+      } else if (sua && !vic) {
+        ctx.setLineDash([]);
+        /* i pali: un trattino a ogni cella di confine, angoli compresi.
+           «Su» in questa vista è sempre verso l'alto dello schermo, quindi
+           il palo si disegna uguale qualunque lato stia disegnando. */
+        for (let t = 0; t <= LATO; t += CELLA) {
+          const x = gx + dx * t, y = gy + dy * t;
+          if (x < -30 || x > L + 30 || y < -30 || y > A + 30) continue; ombra(x, y + 2, 7);
+          ctx.strokeStyle = '#9a7548'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 17); ctx.stroke();
+        }
+        /* la traversa: UNA riga sola da un angolo del lato all'altro, non
+           un pezzetto per palo. Prima ogni palo si portava dietro solo
+           mezza traversa centrata su di sé — su un lato orizzontale i
+           mezzi pezzi si toccavano per caso, su un lato verticale la
+           formula usava lo spostamento orizzontale (dx) anche lì, quindi
+           il segmento veniva lungo zero e la staccionata spariva. Una
+           riga sola, da un capo all'altro, non lascia scelta: o c'è
+           tutta o non c'è. */
+        ctx.strokeStyle = '#b08a58'; ctx.lineWidth = 3; ctx.beginPath();
+        ctx.moveTo(gx, gy - 6); ctx.lineTo(gx + dx * LATO, gy + dy * LATO - 6); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  /* tutto quello che sta in piedi, ordinato per profondità: chi è più
+     in basso è più vicino e copre chi sta dietro */
+  const scena = []; const cx0 = Math.max(0, (S.vista.x / CELLA | 0) - 1);
+  const cy0 = Math.max(0, (S.vista.y / CELLA | 0) - 1);
+  const cx1 = Math.min(PIAZZOLE * CELLE - 1, ((S.vista.x + L) / CELLA | 0) + 1);
+  const cy1 = Math.min(PIAZZOLE * CELLE - 1, ((S.vista.y + A) / CELLA | 0) + 2);
+  for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) {
+    const t = S.ostacoli[chiave(cx, cy)];
+    if (t) scena.push({ che:'ost', t, cx, cy, y:(cy + 1) * CELLA });
+  }
+  for (const o of S.cose) {
+    if (o.x < cx0 || o.x > cx1 || o.y < cy0 || o.y > cy1) continue;
+    if (preso && preso.tipo === 'cosa' && preso.rif === o) continue;
+    scena.push({ che:'cosa', o, y:(o.y + 1) * CELLA });
+  }
+  for (const a of S.animali) scena.push({ che:'ani', a, y:a.my + CELLA / 2 });
+  for (let px = p0x; px <= p1x; px++) for (let py = p0y; py <= p1y; py++)
+    if (comprabile(px, py)) scena.push({ che:'cartello', px, py, y:(py + 0.5) * LATO });
+  scena.sort((a, b) => a.y - b.y);
+
+  for (const v of scena) {
+    if (v.che === 'ost') {
+      const d = OSTACOLI[v.t];
+      const s = aSchermo(v.cx * CELLA + CELLA / 2, (v.cy + 1) * CELLA - 4);
+      const dondolo = Math.sin(tempo * 1.1 + v.cx * 1.3 + v.cy) * 1.2;
+      ombra(s.x, s.y + 1, 13 * d.s); figura(d.e, s.x + dondolo, s.y, 38 * d.s);
+    } else if (v.che === 'cosa') {
+      disegnaCosa(v.o.id, v.o.x, v.o.y);
+    } else if (v.che === 'ani') {
+      disegnaAnimale(v.a);
+    } else {
+      /* il cartello del prezzo, piantato in mezzo alla piazzola */
+      const s = aSchermo((v.px + 0.5) * LATO, (v.py + 0.5) * LATO);
+      const su = Math.sin(tempo * 2 + v.px) * 2; ombra(s.x, s.y + 6, 30);
+      ctx.save(); ctx.translate(s.x, s.y + su); ctx.fillStyle = '#8a6a3e'; ctx.fillRect(-3, -6, 6, 22);
+      ctx.fillStyle = '#f6e6c4'; ctx.strokeStyle = '#8a6a3e'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(-58, -46, 116, 42, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#6b5324'; ctx.font = '800 13px system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('questo pezzo', 0, -30); ctx.font = '900 18px system-ui, sans-serif';
+      ctx.fillStyle = S.monete >= prezzoPiazzola() ? '#3f7d4e' : '#b2522e';
+      ctx.fillText('🪙 ' + prezzoPiazzola(), 0, -12); ctx.restore();
+    }
+  }
+
+  /* la cella sotto il dito, mentre si trascina */
+  if (preso && preso.cella) {
+    const s = aSchermo(preso.cella.x * CELLA, preso.cella.y * CELLA); ctx.save();
+    const ok = preso.cella.ok;
+    ctx.fillStyle = ok ? 'rgba(255,255,255,0.30)' : 'rgba(210,60,40,0.28)';
+    ctx.strokeStyle = ok ? 'rgba(255,255,255,0.85)' : 'rgba(210,60,40,0.9)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(s.x + 3, s.y + 3, CELLA - 6, CELLA - 6, 10);
+    ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+
+  /* l'anellino che si riempie mentre si tiene premuto: è il modo di
+     chiedere «vuoi davvero spostarlo?» senza scrivere una domanda */
+  if (tenuta && tenuta.quota > 0.04) {
+    const s = aSchermo(tenuta.mx, tenuta.my);
+    ctx.save(); ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 24, 0, 7); ctx.stroke();
+    ctx.strokeStyle = '#ffe36b'; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 24, -Math.PI / 2, -Math.PI / 2 + tenuta.quota * 6.283);
+    ctx.stroke(); ctx.restore();
+  }
+
+  /* cocci e numerini */
+  for (const s of scintille) {
+    const p = aSchermo(s.x + s.vx * s.t, s.y + s.vy * s.t + 140 * s.t * s.t);
+    ctx.save(); ctx.globalAlpha = Math.max(0, 1 - s.t / 0.9);
+    figura(s.e, p.x, p.y, 20); ctx.restore();
+  }
+  for (const v of volanti) {
+    const p = aSchermo(v.x, v.y - v.t * 46);
+    ctx.save(); ctx.globalAlpha = Math.max(0, 1 - v.t / 1.1);
+    ctx.font = '900 20px system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(30,50,30,0.6)';
+    ctx.strokeText(v.testo, p.x, p.y); ctx.fillStyle = v.colore;
+    ctx.fillText(v.testo, p.x, p.y); ctx.restore();
+  }
+}
+
+function disegnaCosa(id, cx, cy, alfa) {
+  const d = PER_ID[id]; if (!d) return;
+  const s = aSchermo(cx * CELLA + CELLA / 2, (cy + 1) * CELLA - 5); const t = (d.s || 1);
+  ctx.save(); if (alfa != null) ctx.globalAlpha = alfa; basamento(s.x, s.y + 2, 20 * t);
+  ombra(s.x, s.y + 1, 12 * t); figura(d.e, s.x, s.y, 34 * t); ctx.restore();
+}
+
+function disegnaAnimale(a) {
+  const d = PER_ID[a.id]; if (!d) return; const s = aSchermo(a.mx, a.my + CELLA / 2 - 6);
+  const salto = Math.abs(Math.sin(tempo * 4 + a.i)) * (a.muove ? 3.5 : 0.8);
+  ombra(s.x, s.y + 1, 12);
+  if (a === scelto) {
+    ctx.save(); ctx.strokeStyle = 'rgba(255,236,130,' + (0.7 + Math.sin(tempo * 4) * 0.3) + ')';
+    ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(s.x, s.y + 1, 22, 10, 0, 0, 7); ctx.stroke();
+    ctx.restore();
+  }
+  figura(d.e, s.x, s.y - salto, 34);
+
+  if (a.dono) {                       /* il regalo aspetta un tocco */
+    const su = Math.sin(tempo * 3 + a.i) * 3;
+    ctx.save(); ctx.fillStyle = 'rgba(255,253,246,0.92)';
+    ctx.beginPath(); ctx.arc(s.x, s.y - 46 + su, 17, 0, 7); ctx.fill(); ctx.restore();
+    figura(a.dono, s.x, s.y - 39 + su, 22);
+  } else if (a.gioia < 45) {          /* ha voglia di qualcosa */
+    const su = Math.sin(tempo * 5 + a.i) * 2; ctx.save(); ctx.globalAlpha = 0.8;
+    figura('💭', s.x + 15, s.y - 30 + su, 14); ctx.restore();
+  }
+}
+
+/* ═══ gli animali: si muovono piano, e non vanno nel bosco ══════════ */
+const DIREZIONI = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+function muoviAnimali(dt) {
+  for (const a of S.animali) {
+    a.attesa -= dt;
+    if (a.attesa <= 0) {
+      a.attesa = 1.4 + Math.random() * 3.2;
+      /* Un passo alla volta, non un salto a caso di due celle: il vecchio
+         modo puntava un punto lontano e ci scivolava dritto sopra, senza
+         guardare cosa c'era in mezzo — attraversava fiori, panchine,
+         qualunque cosa fosse in mezzo alla strada. Qui si guarda la
+         cella accanto PRIMA di entrarci (`libera`, la stessa che decide
+         dove si può posare un oggetto): se è occupata da un ostacolo o
+         da una cosa piazzata si prova un'altra direzione, non serve un
+         pathfinder — bastano quattro tentativi in ordine mescolato. Ogni
+         tanto non si muove affatto: un animale che cammina sempre non
+         sembra vivo, sembra un ingranaggio. */
+      let ok = false;
+      if (Math.random() >= 0.22) {
+        const ordine = [...DIREZIONI].sort(() => Math.random() - 0.5);
+        for (const [ddx, ddy] of ordine) {
+          const nx = a.x + ddx, ny = a.y + ddy;
+          if (libera(nx, ny)) {
+            a.bx = nx * CELLA + CELLA / 2; a.by = ny * CELLA + CELLA / 2;
+            a.x = nx; a.y = ny; ok = true; break;
+          }
+        }
+      }
+      if (!ok) { a.bx = a.mx; a.by = a.my; }   // circondato, o tocca fermarsi un po'
+    }
+    const dx = a.bx - a.mx, dy = a.by - a.my; const dist = Math.hypot(dx, dy);
+    a.muove = dist > 2;
+    if (a.muove) {
+      const v = Math.min(dist, 22 * dt); a.mx += dx / dist * v; a.my += dy / dist * v;
+    }
+    /* Chi è stato accudito prima o poi ringrazia. Pochi secondi, non ore:
+       il bambino è ancora lì che guarda. */
+    if (!a.dono && a.gioia >= 100) {
+      a.maturo = (a.maturo || 0) + dt;
+      if (a.maturo > 5) {
+        const [e, v] = DONI[a.id] || ['❤️', 10];
+        a.dono = e; a.valore = v; a.maturo = 0; a.gioia = 40; a.cure = {};
+        salva();
+      }
+    }
+  }
+}
+
+/* ═══ i tocchi ═════════════════════════════════════════════════════ */
+let trascina = null;      // il dito che sposta la mappa
+let preso = null;         // quello che sta appeso al dito
+let tenuta = null;        // la pressione lunga in corso
+let scelto = null;        // l'animale illuminato
+const fantasma = document.getElementById('fantasma');
+
+function cellaDa(sx, sy) {
+  const m = aMondo(sx, sy);
+  return { x: Math.floor(m.x / CELLA), y: Math.floor(m.y / CELLA) };
+}
+function animaleSotto(sx, sy) {
+  for (let i = S.animali.length - 1; i >= 0; i--) {
+    const a = S.animali[i], s = aSchermo(a.mx, a.my);
+    if (Math.hypot(sx - s.x, sy - s.y - 8) < 28) return a;
+  }
+  return null;
+}
+
+tela.addEventListener('pointerdown', e => {
+  if (velo.classList.contains('c-e')) return; tela.setPointerCapture(e.pointerId);
+  const sx = e.clientX, sy = e.clientY;
+
+  /* Un oggetto già piazzato si prende tenendolo premuto. Il tocco
+     secco resta libero per «guarda cosa c'è qui», che è il gesto che
+     un bambino fa cento volte. */
+  const c = cellaDa(sx, sy); const cosa = S.cose.find(o => o.x === c.x && o.y === c.y);
+  if (cosa && !animaleSotto(sx, sy)) {
+    tenuta = { rif: cosa, quota: 0, mx: c.x * CELLA + CELLA / 2, my: (c.y + 0.6) * CELLA };
+  }
+  trascina = { id: e.pointerId, x: sx, y: sy, x0: sx, y0: sy, mosso: 0 };
+});
+
+tela.addEventListener('pointermove', e => {
+  if (!trascina || trascina.id !== e.pointerId) return;
+  const dx = e.clientX - trascina.x, dy = e.clientY - trascina.y;
+  trascina.mosso += Math.hypot(dx, dy); trascina.x = e.clientX; trascina.y = e.clientY;
+
+  if (preso) { muoviPreso(e.clientX, e.clientY); return; }
+  if (trascina.mosso > 10) tenuta = null;
+  if (trascina.mosso > 6) { S.vista.x -= dx; S.vista.y -= dy; limita(); }
+});
+
+function finePuntatore(e) {
+  if (!trascina || trascina.id !== e.pointerId) return;
+  const secco = trascina.mosso < 10;
+  const sx = trascina.x, sy = trascina.y; trascina = null; tenuta = null;
+
+  if (preso) { posaPreso(sx, sy); return; }
+  if (!secco) { salva(); return; }
+
+  /* tocco secco: si guarda cosa c'è sotto, dal più in alto al più in basso */
+  const a = animaleSotto(sx, sy);
+  if (a) {
+    if (a.dono) {
+      S.monete += a.valore; volante(a.mx, a.my, '+' + a.valore + ' 🪙');
+      a.dono = null; aggiornaBorsa(true); salva();
+    } else { scegliAnimale(a); }
+    return;
+  }
+  const c = cellaDa(sx, sy); const t = S.ostacoli[chiave(c.x, c.y)];
+  if (t) { scegliAnimale(null); pannelloOstacolo(c.x, c.y, t); return; }
+  const cosa = S.cose.find(o => o.x === c.x && o.y === c.y);
+  if (cosa) { scegliAnimale(null); pannelloCosa(cosa); return; }
+  const px = (c.x / CELLE) | 0, py = (c.y / CELLE) | 0;
+  if (comprabile(px, py)) { scegliAnimale(null); pannelloPiazzola(px, py); return; }
+  scegliAnimale(null);
+}
+tela.addEventListener('pointerup', finePuntatore);
+tela.addEventListener('pointercancel', finePuntatore);
+
+/* ═══ prendere, portare, posare ═════════════════════════════════════ */
+function prendi(oggetto) {
+  preso = oggetto; fantasma.textContent = oggetto.emoji; fantasma.classList.add('c-e');
+}
+function muoviPreso(sx, sy) {
+  fantasma.style.left = sx + 'px'; fantasma.style.top = sy + 'px';
+  if (preso.tipo === 'cura') { preso.cella = null; return; }
+  const c = cellaDa(sx, sy - 24);
+  const suSe = preso.tipo === 'cosa' && preso.rif.x === c.x && preso.rif.y === c.y;
+  preso.cella = { x:c.x, y:c.y, ok: libera(c.x, c.y) || suSe };
+}
+function posaPreso(sx, sy) {
+  const p = preso; preso = null; fantasma.classList.remove('c-e');
+
+  if (p.tipo === 'cura') {                       /* dato a un animale? */
+    const a = animaleSotto(sx, sy);
+    if (a && a === scelto) daiCura(a, p.cura);
+    else suggerisci('Trascinalo proprio sopra ' + PER_ID[scelto ? scelto.id : 'cane'].n.toLowerCase());
+    return;
+  }
+  if (!p.cella || !p.cella.ok) {
+    if (p.tipo === 'cosa') { /* torna dov'era: non si perde niente */ }
+    else suggerisci('Lì non ci sta: serve un pezzo di prato tuo e sgombro');
+    return;
+  }
+  const c = p.cella;
+  /* ═══ LA MONETINA DEL TOCCO ═══
+     Muovere una cosa costa una moneta, e ripiazzarne una dal magazzino pure.
+     Non è una tassa: è quello che tiene la fattoria una **ricompensa per gli
+     esercizi fatti** invece di un tavolino dove si passa il pomeriggio a
+     spostare avanti e indietro la stessa panchina. Chi è a zero non resta
+     bloccato: le cose restano dove sono, e le monete si guadagnano giocando. */
+  const COSTO_TOCCO = 1;
+  if (p.tipo === 'cosa' || p.tipo === 'magazzino') {
+    if (S.monete < COSTO_TOCCO) {
+      suggerisci('Ti serve una monetina per spostare le cose: falla negli altri giochi');
+      return;
+    }
+  }
+
+  if (p.tipo === 'cosa') {
+    if (p.rif.x === c.x && p.rif.y === c.y) return;   // rimesso dov'era: gratis
+    S.monete -= COSTO_TOCCO; aggiornaBorsa(true);
+    p.rif.x = c.x; p.rif.y = c.y;
+    volante(c.x * CELLA + CELLA / 2, c.y * CELLA, '−1 🪙', '#ffd0b8');
+  } else if (p.tipo === 'magazzino') {
+    if (!S.magazzino[p.id]) { salva(); return; }
+    S.monete -= COSTO_TOCCO; aggiornaBorsa(true);
+    S.magazzino[p.id]--; if (S.magazzino[p.id] <= 0) delete S.magazzino[p.id];
+    const d = PER_ID[p.id];
+    if (d.a) animaleNuovo(S, d.id, c.x, c.y);
+    else S.cose.push({ i: S.prossimo++, id: d.id, x: c.x, y: c.y });
+    volante(c.x * CELLA + CELLA / 2, c.y * CELLA, '📦 −1 🪙', '#cfe9ff');
+    riempiScaffale();
+  } else {
+    const d = PER_ID[p.id];
+    if (S.monete < d.p) { suggerisci('Ti mancano ' + (d.p - S.monete) + ' monete'); return; }
+    S.monete -= d.p; aggiornaBorsa(true);
+    if (d.a) animaleNuovo(S, d.id, c.x, c.y);
+    else S.cose.push({ i: S.prossimo++, id: d.id, x: c.x, y: c.y });
+    volante(c.x * CELLA + CELLA / 2, c.y * CELLA, '−' + d.p + ' 🪙', '#ffd0b8');
+    riempiScaffale();
+  }
+  salva();
+}
+
+/* trascinamento che parte dal cassetto o dalla barretta delle cure */
+function daListino(el, fai) {
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); el.setPointerCapture(e.pointerId); const p = fai(); if (!p) return;
+    prendi(p);
+    trascina = { id: e.pointerId, x: e.clientX, y: e.clientY, mosso: 99 };
+    muoviPreso(e.clientX, e.clientY);
+    const muovi = ev => { if (preso) muoviPreso(ev.clientX, ev.clientY); };
+    const su = ev => {
+      el.removeEventListener('pointermove', muovi); el.removeEventListener('pointerup', su);
+      el.removeEventListener('pointercancel', su); trascina = null;
+      if (preso) posaPreso(ev.clientX, ev.clientY);
+    };
+    el.addEventListener('pointermove', muovi); el.addEventListener('pointerup', su);
+    el.addEventListener('pointercancel', su);
+  });
+}
+
+/* ═══ il cassetto ══════════════════════════════════════════════════ */
+const cassetto = document.getElementById('cassetto');
+const scaffale = document.getElementById('scaffale'); let categoria = 'piante';
+
+document.getElementById('maniglia').addEventListener('click', () => {
+  cassetto.classList.toggle('aperto');
+  if (cassetto.classList.contains('aperto')) scegliAnimale(null);
+});
+const barraCat = document.getElementById('categorie');
+for (const [id, nome] of CATEGORIE) {
+  const b = document.createElement('button'); b.textContent = nome; b.dataset.cat = id;
+  b.addEventListener('click', () => { categoria = id; riempiScaffale(); });
+  barraCat.appendChild(b);
+}
+/* Il magazzino non è una categoria del catalogo: è quello che si è
+   rimesso via. Una linguetta a sé, sempre in fondo. */
+const bMagazzino = document.createElement('button');
+bMagazzino.textContent = '📦 Magazzino'; bMagazzino.dataset.cat = 'magazzino';
+bMagazzino.addEventListener('click', () => { categoria = 'magazzino'; riempiScaffale(); });
+barraCat.appendChild(bMagazzino);
+
+function riempiScaffale() {
+  for (const b of barraCat.children) b.classList.toggle('viva', b.dataset.cat === categoria);
+  scaffale.textContent = '';
+
+  if (categoria === 'magazzino') {
+    const id = Object.keys(S.magazzino).filter(k => S.magazzino[k] > 0);
+    if (!id.length) {
+      scaffale.innerHTML = '<p style="grid-column:1/-1;text-align:center;font-size:12.5px;' +
+        'color:#9a8a6c;padding:10px 6px;margin:0">Vuoto per ora: quello che rimetti via' +
+        ' dal prato finisce qui, pronto a tornare gratis.</p>';
+      return;
+    }
+    for (const k of id) {
+      const d = PER_ID[k]; if (!d) continue; const n = S.magazzino[k];
+      const el = document.createElement('div'); el.className = 'voce'; el.dataset.voce = k;
+      el.innerHTML = '<div class="fig">' + d.e + '</div><div class="nm">' + d.n +
+                     '</div><div class="pr">×' + n + ' · gratis</div>';
+      daListino(el, () => {
+        if (!S.magazzino[k]) return null;
+        return { tipo:'magazzino', id:k, emoji:d.e };
+      });
+      scaffale.appendChild(el);
+    }
+    return;
+  }
+
+  for (const d of CATALOGO) {
+    if (d.c !== categoria) continue; const el = document.createElement('div');
+    el.className = 'voce' + (S.monete < d.p ? ' caro' : ''); el.dataset.voce = d.id;
+    el.innerHTML = '<div class="fig">' + d.e + '</div><div class="nm">' + d.n +
+                   '</div><div class="pr">🪙 ' + d.p + '</div>';
+    daListino(el, () => {
+      if (S.monete < d.p) { suggerisci('Costa ' + d.p + ' monete, ne hai ' + S.monete); return null; }
+      return { tipo:'nuovo', id:d.id, emoji:d.e };
+    });
+    scaffale.appendChild(el);
+  }
+}
+
+/* ═══ le cure: la barretta che compare sotto l'animale scelto ═══════ */
+const pannelloCure = document.getElementById('cure');
+const rigaCure = document.getElementById('cureRiga');
+
+function scegliAnimale(a) {
+  scelto = a; pannelloCure.classList.toggle('c-e', !!a); if (!a) return;
+  cassetto.classList.remove('aperto');
+  document.getElementById('nomeAnimale').textContent = PER_ID[a.id].n;
+  rigaCure.textContent = '';
+  for (const c of CURE) {
+    const el = document.createElement('div');
+    el.className = 'cura' + (a.cure[c.id] ? ' fatta' : ''); el.dataset.cura = c.id;
+    el.innerHTML = '<div class="fig">' + c.e + '</div><div class="nm">' + c.n + '</div>';
+    daListino(el, () => {
+      if (scelto && scelto.cure[c.id]) { suggerisci('Gliel\'hai già dato poco fa'); return null; }
+      return { tipo:'cura', cura:c, emoji:c.e };
+    });
+    rigaCure.appendChild(el);
+  }
+  /* la vista si alza un po', sennò la barretta copre l'animale */
+  const s = aSchermo(a.mx, a.my);
+  if (s.y > A - 230) { S.vista.y += s.y - (A - 230); limita(); }
+}
+
+function daiCura(a, c) {
+  if (a.cure[c.id]) return; a.cure[c.id] = true; a.gioia = Math.min(100, a.gioia + 25);
+  volante(a.mx, a.my - 20, c.e + ' ✨', '#ffe9a8');
+  for (let i = 0; i < 5; i++)
+    scintille.push({ x:a.mx, y:a.my, vx:(Math.random() - 0.5) * 90,
+                     vy:-60 - Math.random() * 60, t:0, e:'💗' });
+  scegliAnimale(a);
+  if (a.gioia >= 100) suggerisci(PER_ID[a.id].n + ' è felicissimo: fra poco ti dà qualcosa');
+  salva();
+}
+
+/* ═══ i pannelli ═══════════════════════════════════════════════════ */
+const velo = document.getElementById('velo'); const foglio = document.getElementById('foglio');
+function chiudi() { velo.classList.remove('c-e'); }
+velo.addEventListener('pointerdown', e => { if (e.target === velo) chiudi(); });
+
+function apri(html) { foglio.innerHTML = html; velo.classList.add('c-e'); }
+function tasto(sel, fn) { const b = foglio.querySelector(sel); if (b) b.addEventListener('click', fn); }
+
+function pannelloPiazzola(px, py) {
+  const costo = prezzoPiazzola(); const puoi = S.monete >= costo;
+  apri(
+    '<div class="cap">🚜</div><h2>Un pezzo di prato in più</h2>' +
+    '<p>È di fianco al tuo. Dentro c\'è del bosco da sgombrare:<br>gli alberi che togli ti lasciano legna e sassi da vendere.</p>' +
+    '<div class="scelte">' +
+    '<button class="forte ' + (puoi ? '' : 'spenta') + '" data-compra><span class="e">🗺️</span>Prendi questo pezzo<span class="costo">🪙 ' + costo + '</span></button>' +
+    (puoi ? '' : '<button class="piano" data-no>Ti mancano ' + (costo - S.monete) + ' monete — sgombra qualche albero</button>') +
+    '<button class="piano" data-chiudi>Più tardi</button></div>');
+  tasto('[data-compra]', () => {
+    if (S.monete < costo) return; S.monete -= costo; aggiornaBorsa(true);
+    S.piazzole[chiave(px, py)] = true; scorda(px, py);
+    volante((px + 0.5) * LATO, (py + 0.5) * LATO, '🎉 tuo!', '#c8ffb0');
+    for (let i = 0; i < 14; i++)
+      scintille.push({ x:(px + 0.5) * LATO, y:(py + 0.5) * LATO,
+                       vx:(Math.random() - 0.5) * 300, vy:-90 - Math.random() * 140,
+                       t:0, e:'✨' });
+    chiudi(); salva(); suggerisci('Adesso è tuo. Tocca un albero per toglierlo di mezzo');
+  });
+  tasto('[data-chiudi]', chiudi); tasto('[data-no]', chiudi);
+}
+
+function pannelloOstacolo(cx, cy, t) {
+  const d = OSTACOLI[t];
+  if (!cellaMia(cx, cy)) {
+    apri('<div class="cap">' + d.e + '</div><h2>' + d.n + '</h2>' +
+         '<p>Questo pezzo non è ancora tuo.<br>Prima prendi il prato, poi togli quello che c\'è sopra.</p>' +
+         '<div class="scelte"><button class="piano" data-chiudi>Va bene</button></div>');
+    tasto('[data-chiudi]', chiudi);
+    return;
+  }
+  /* Un solo modo di togliere un ostacolo: pagare. Niente scorciatoia
+     gratis — chi non ha abbastanza lo vede scritto, e il bottone è
+     spento invece che nascosto: si sa cosa manca, non solo che manca. */
+  const puoi = S.monete >= d.p;
+  apri(
+    '<div class="cap">' + d.e + '</div><h2>' + d.n + '</h2>' +
+    '<p>Finché è lì, su questa casella non ci metti niente.<br>Toglierlo ti lascia ' + d.cade + ' per <b>🪙 ' + d.resa + '</b>.</p>' +
+    '<div class="scelte">' +
+    '<button class="forte ' + (puoi ? '' : 'spenta') + '" data-paga><span class="e">💪</span>Toglilo<span class="costo">🪙 ' + d.p + '</span></button>' +
+    (puoi ? '' : '<button class="piano" data-no>Ti mancano ' + (d.p - S.monete) + ' monete</button>') +
+    '<button class="piano" data-chiudi>Lascialo stare</button></div>');
+  tasto('[data-paga]', () => { if (S.monete >= d.p) { S.monete -= d.p; togli(cx, cy, t); chiudi(); } });
+  tasto('[data-chiudi]', chiudi); tasto('[data-no]', chiudi);
+}
+
+function togli(cx, cy, t) {
+  const d = OSTACOLI[t]; delete S.ostacoli[chiave(cx, cy)]; S.monete += d.resa;
+  const mx = cx * CELLA + CELLA / 2, my = (cy + 0.6) * CELLA;
+  volante(mx, my, '+' + d.resa + ' 🪙 ' + d.cade);
+  for (let i = 0; i < 8; i++)
+    scintille.push({ x:mx, y:my, vx:(Math.random() - 0.5) * 200,
+                     vy:-80 - Math.random() * 110, t:0, e:d.cade });
+  aggiornaBorsa(true); salva();
+}
+
+/* Rimettere via una cosa e rimettere via un animale sono lo stesso
+   pannello: cambia solo da quale elenco si toglie. Non rivende e non
+   distrugge: l'oggetto entra nel magazzino, da dove si ripiazza gratis
+   quante volte si vuole — comprare resta l'unico modo di farne entrare
+   di nuovi, ma spostare non deve mai costare due volte. */
+function pannelloRimetti(rif, elenco, spiega, resta) {
+  const d = PER_ID[rif.id];
+  apri('<div class="cap">' + d.e + '</div><h2>' + d.n + '</h2><p>' + spiega + '</p>' +
+       '<div class="scelte"><button data-via><span class="e">📦</span>Mettilo in magazzino' +
+       '<span class="costo">si ripiazza gratis</span></button>' +
+       '<button class="piano" data-chiudi>' + resta + '</button></div>');
+  tasto('[data-via]', () => {
+    const i = elenco.indexOf(rif); if (i >= 0) elenco.splice(i, 1);
+    if (scelto === rif) scegliAnimale(null);
+    S.magazzino[rif.id] = (S.magazzino[rif.id] || 0) + 1;
+    volante(rif.mx != null ? rif.mx : rif.x * CELLA + CELLA / 2,
+            rif.my != null ? rif.my : rif.y * CELLA, '📦 in magazzino');
+    chiudi(); salva(); riempiScaffale();
+  });
+  tasto('[data-chiudi]', chiudi);
+}
+const pannelloCosa = o => pannelloRimetti(o, S.cose,
+  'Per spostarlo tienilo premuto sul prato<br>finché l\'anellino si riempie.', 'Lascialo lì');
+const pannelloAnimale = a => pannelloRimetti(a, S.animali,
+  'Sta bene qui? Se vuoi puoi rimetterlo via.', 'Resta qui');
+
+/* ═══ cruscotto ════════════════════════════════════════════════════ */
+const borsa = document.getElementById('borsa');
+const etichettaMonete = document.getElementById('monete');
+function aggiornaBorsa(sobbalza) {
+  etichettaMonete.textContent = S.monete;
+  if (sobbalza) {
+    borsa.classList.remove('su'); void borsa.offsetWidth; borsa.classList.add('su');
+  }
+  riempiScaffale();
+}
+let suggFra = 0; const suggEl = document.getElementById('suggerimento');
+function suggerisci(testo) {
+  suggEl.textContent = testo; suggEl.classList.add('c-e'); suggFra = 3.4;
+}
+
+document.getElementById('centra').addEventListener('click', () => { vaiACasa(); scegliAnimale(null); });
+
+const bDaccapo = document.getElementById('daccapo'); let confermaFra = 0;
+bDaccapo.addEventListener('click', () => {
+  if (confermaFra > 0) {
+    localStorage.removeItem(CHIAVE); S = mondoNuovo(); tessere.clear(); scelto = null;
+    scegliAnimale(null); chiudi(); vaiACasa(); aggiornaBorsa(false);
+    bDaccapo.classList.remove('attesa'); bDaccapo.textContent = '↺';
+    confermaFra = 0; salvaOra();
+    return;
+  }
+  confermaFra = 3; bDaccapo.classList.add('attesa'); bDaccapo.textContent = '✓';
+  suggerisci('Tocca di nuovo ✓ per buttare via questa fattoria');
+});
+
+/* ═══ il giro ══════════════════════════════════════════════════════ */
+function ridimensiona() {
+  L = window.innerWidth; A = window.innerHeight;
+  tela.width = Math.round(L * DPR); tela.height = Math.round(A * DPR);
+  tela.style.width = L + 'px'; tela.style.height = A + 'px'; limita();
+}
+window.addEventListener('resize', ridimensiona);
+
+let ultimo = performance.now();
+function giro(ora) {
+  const dt = Math.min(0.05, (ora - ultimo) / 1000); ultimo = ora; tempo += dt;
+
+  muoviAnimali(dt);
+
+  /* la pressione lunga che matura in trascinamento */
+  if (tenuta) {
+    tenuta.quota += dt / 0.42;
+    if (tenuta.quota >= 1) {
+      const o = tenuta.rif; tenuta = null;
+      prendi({ tipo:'cosa', rif:o, emoji:PER_ID[o.id].e });
+      if (trascina) muoviPreso(trascina.x, trascina.y);
+      suggerisci('Portalo dove vuoi e lascia il dito');
+    }
+  }
+
+  for (let i = volanti.length - 1; i >= 0; i--) {
+    volanti[i].t += dt; if (volanti[i].t > 1.1) volanti.splice(i, 1);
+  }
+  for (let i = scintille.length - 1; i >= 0; i--) {
+    scintille[i].t += dt; if (scintille[i].t > 0.9) scintille.splice(i, 1);
+  }
+  if (suggFra > 0) { suggFra -= dt; if (suggFra <= 0) suggEl.classList.remove('c-e'); }
+  if (confermaFra > 0) {
+    confermaFra -= dt;
+    if (confermaFra <= 0) { bDaccapo.classList.remove('attesa'); bDaccapo.textContent = '↺'; }
+  }
+  if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra(); }
+
+  disegna(); requestAnimationFrame(giro);
+}
+
+/* ═══ avvio ════════════════════════════════════════════════════════ */
+S = carica(); if (!S.prossimo) S.prossimo = 1000; ridimensiona();
+if (!S.vista || (S.vista.x === 0 && S.vista.y === 0)) vaiACasa(); else limita();
+aggiornaBorsa(false); riempiScaffale(); requestAnimationFrame(giro);
+setTimeout(() => suggerisci('Tocca un albero per toglierlo, o il cartello 🪙 per prendere un pezzo di prato'), 700);
+
+/* Il tocco lungo su un animale apre il suo pannello: il tocco secco lo
+   sceglie per dargli da mangiare, quindi «rimettilo via» ha bisogno di
+   un gesto suo. */
+let lungoAnimale = null;
+tela.addEventListener('pointerdown', e => {
+  const a = animaleSotto(e.clientX, e.clientY); if (!a) return;
+  lungoAnimale = setTimeout(() => {
+    lungoAnimale = null; tenuta = null; trascina = null; pannelloAnimale(a);
+  }, 700);
+});
+const stopLungo = () => { if (lungoAnimale) { clearTimeout(lungoAnimale); lungoAnimale = null; } };
+tela.addEventListener('pointerup', stopLungo);
+tela.addEventListener('pointercancel', stopLungo);
+tela.addEventListener('pointermove', e => { if (trascina && trascina.mosso > 12) stopLungo(); });
+</script>
+</body>
+</html>

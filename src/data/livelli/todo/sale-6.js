@@ -222,7 +222,6 @@ export const SALE_6 = {
                dentro: { x: 30, y: 13 } } },
   ],
 
-  par: 14,
   soluzioni: [
     /* quattordici ordini, ed è il par: il più lungo di tutta la storia,
        e non c'è dentro un verbo che non sia già stato usato. Due a

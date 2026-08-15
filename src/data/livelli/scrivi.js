@@ -165,7 +165,16 @@ export const cose = {
      `cose.tesoro()` resta, ed è ancora un oggetto da raccogliere: lo
      usano le campagne più avanti, e il giorno che passeranno anche
      loro a questa quella riga si toglie. */
-  forziere: fabbrica('porta', { id: 'tesoro', nome: 'il tesoro', stile: 'forziere' }),
+  /* ── E SI CHIAMA COME QUELLO CHE SI VEDE ──
+     Si chiamava «il tesoro» e portava l'emoji di serie delle porte: nel
+     primissimo ordine del gioco si leggeva `apri [🚪 il tesoro]`
+     accanto a una dritta che diceva «il forziere deve essere aperto» —
+     due nomi e un disegno sbagliato per la stessa cosa, nella riga in
+     cui si impara cos'è un ordine. Adesso la casella dice quello che il
+     dito vede sulla mappa. L'`id` resta `tesoro`: quello è una chiave,
+     e le chiavi non si rinominano. */
+  forziere: fabbrica('porta', { id: 'tesoro', nome: 'il forziere',
+                                stile: 'forziere', em: '💰' }),
 
   /* le cose da raccogliere. Sono tutte oggetti, ma ognuna sa già come
      si disegna e come si chiama: è quello che toglie di mezzo la
@@ -301,9 +310,19 @@ const CORPI = {
    orchi» si scrive `attacca('orchi')`), il nome è come si legge in una
    frase. Erano la stessa stringa, e siccome il nome ha gli spazi la
    chiave diventava `gli-orchi`: nessun ordine la trovava più. */
-const persona = (parte, [schiera, comeSiChiama], fissi = {}) => (...arg) => {
+/* ── E DICE ANCHE SE È UN AVVERSARIO ──
+   `parte` distingue chi comanda (io o il livello) e basta: sotto quella
+   voce stavano insieme l'orco e il gatto di casa, e a schermo finivano
+   tutti e due nella stessa pastiglia rossa col lucchetto — «il gatto»
+   che sembra una minaccia, nel livello in cui il gatto va portato in
+   salvo. `ostile` è l'altra domanda, e va fatta a parte: **chi comanda
+   uno** e **se quello ti vuole male** non sono la stessa cosa. Lo
+   dichiara la fabbrica, non il livello: `chi.terzo` non è ostile per
+   definizione, ed è tutto quello che serve. */
+const persona = (parte, [schiera, comeSiChiama], fissi = {}, ostile = parte === 'livello') =>
+  (...arg) => {
   const v = fabbrica('unita', fissi)(...arg)
-  return { ...v, parte,
+  return { ...v, parte, ostile: v.ostile ?? ostile,
            schiera: v.schiera || schiera,
            schieraNome: v.schieraNome || (v.schiera ? v.schiera : comeSiChiama),
            corpo: v.corpo || 'cavaliere',
@@ -315,8 +334,9 @@ export const chi = {
   nostro: persona('giocatore', ['nostri', 'i nostri']),
   nemico: persona('livello', ['nemici', 'i nemici']),
   /* chi non è né dei tuoi né contro: la principessa da difendere, il
-     cane che passa. Lo comanda il livello, ma non è un avversario. */
-  terzo: persona('livello', ['altri', 'gli altri']),
+     cane che passa. Lo comanda il livello, ma non è un avversario — e
+     `ostile: false` è quello che glielo fa vedere a schermo. */
+  terzo: persona('livello', ['altri', 'gli altri'], {}, false),
 
   /* i tre che tornano in mezzo tutorial, già vestiti */
   eroe: persona('giocatore', ['nostri', 'i nostri'], { id: 'eroe', nome: "l'eroe", corpo: 'cavaliere' }),
@@ -372,6 +392,51 @@ export const fai = {
 
 }
 
+
+/* ═══════════ aiuto — la scala di chi è bloccato ═══════════
+   Un livello dichiara `aiuti: [...]`, ed è **una scala sola**: chi è
+   bloccato chiede «un altro aiuto» e scende di un gradino, qualunque
+   cosa quel gradino sia. Non ci sono due tasti da scegliere — quello
+   sarebbe chiedere a un bambino di sapere in anticipo quanto aiuto gli
+   serve.
+
+   I gradini si mescolano, ed è tutto il punto: si può dire una cosa a
+   parole, poi scrivere il pezzo di piano che quella cosa descriveva,
+   poi tornare a parlare, e alla fine svelare tutto.
+
+       aiuti: [
+         aiuto.dice('Guarda dove sta il carceriere: se fai rumore lontano, corre lì.'),
+         aiuto.scrive({ ladra: [fai.prendi(chiave), fai.suona(richiamo)] }),
+         aiuto.dice('Adesso il portone è libero: passa mentre lui è dall’altra parte.'),
+         aiuto.svela(),
+       ]
+
+   Una STRINGA vale `aiuto.dice(…)`, e i livelli scritti prima che
+   questa scala esistesse restano com'erano. A chi non dichiara nessun
+   gradino che scriva nel piano, il gioco aggiunge in coda `forma()` e
+   `svela()` da sé: la via d'uscita c'è sempre, e nessuno resta chiuso
+   dentro un livello perché l'autore non ci ha pensato.
+
+   ── QUANTO COSTA ──
+   Le parole non costano niente: sono la frase che direbbe chi ti sta
+   accanto, e un suggerimento che si paga è un suggerimento che chi ne
+   ha bisogno non prende. Quelli che SCRIVONO NEL PIANO costano la
+   seconda stella, e lo dicono prima di essere premuti. */
+export const aiuto = {
+  /* una frase, e basta */
+  dice: testo => ({ aiuto: 'dice', testo }),
+  /* un pezzo di piano già scritto: `{ unità: [ordini] }`, con gli
+     stessi `fai.*` di una soluzione. Sostituisce la fila delle unità
+     che nomina e lascia stare le altre. `dice` è la riga che compare
+     insieme, per spiegare cosa è appena comparso a schermo. */
+  scrive: (piano, testo) => ({ aiuto: 'scrive', piano, testo }),
+  /* la FORMA della soluzione dichiarata: quali ordini e in che
+     disposizione, con le caselle da riempire. Non ha bisogno di
+     argomenti — la ricava dalla soluzione, quindi non può invecchiare */
+  forma: testo => ({ aiuto: 'forma', testo }),
+  /* tutto, e si guarda girare */
+  svela: testo => ({ aiuto: 'svela', testo }),
+}
 
 /* ═══════════ se — le domande ═══════════
    Stanno in un nome loro perché **non sono ordini**: un ordine si fa,

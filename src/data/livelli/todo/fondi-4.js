@@ -235,7 +235,6 @@ export const FONDI_4 = {
                ras: { x: 9, y: 5 }, bea: { x: 10, y: 2 } } },
   ],
 
-  par: 9,
   soluzioni: [
     /* NOVE ORDINI, ED È IL PAR. Si legge come una frase sola: Orso
        prende il piccone e buca; Tilde guarda il varco, e appena si apre

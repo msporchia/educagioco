@@ -214,7 +214,6 @@ export const SALE_3 = {
       posti: { guado: { x: 17, y: 15 }, bosco: { x: 15, y: 11 }, rifugio: { x: 30, y: 7 } } },
   ],
 
-  par: 9,
   soluzioni: [
     /* nove ordini, ed è il par. Sei a Vito, e il bivio è uno di quei
        sei: guardare costa, e vale. Due a Rea, che non fa niente finché

@@ -120,7 +120,6 @@ export const CHI_HAI_TROVATO = livello({
      bivio — tre ordini in ciascun ramo, che «vai» sa fare da solo il
      cammino a più tappe (torna al punto di guardia di ponente, poi
      alla torretta) senza bisogno di dirglielo un passo alla volta. */
-  par: 8,
   soluzioni: [
     { nome: "sbircia da tutti e due i lati, poi scegli il verso", piano: { eroe: [
       fai.giro(['1,4', '11,4'], se.vedi('orchi')),

@@ -22,7 +22,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { GENERATORI, contoDi, gradoDi, segnoDi } from '../../data/ops.js'
 import { costoNuovaTorre, costoSalita } from '../../data/castello.js'
-import { item, divisioniAccese } from '../../store/profile.js'
+import { item, divisioniAccese, contiPermessi } from '../../store/profile.js'
 import { weight } from '../../store/srs.js'
 
 export class Cassa {
@@ -32,10 +32,14 @@ export class Cassa {
   perTappa(tappa) { this.tappa = tappa; return this }
 
   get divisioni() { return divisioniAccese() }
+  /* cosa si può chiedere: le divisioni e le moltiplicazioni insieme,
+     perché il ripiego è una scala e non due interruttori indipendenti —
+     spente tutte e due, le Bombe scendono di due scalini e non di uno */
+  get sa() { return contiPermessi() }
   get tetto() { return this.tappa ? this.tappa.cap : 1 }
 
-  conto(t) { return contoDi(t, this.divisioni) }
-  segno(t) { return segnoDi(t, this.divisioni) }
+  conto(t) { return contoDi(t, this.sa) }
+  segno(t) { return segnoDi(t, this.sa) }
   chiave(t) { return 'op:' + this.conto(t) }
 
   /* ── i prezzi ──
@@ -52,7 +56,7 @@ export class Cassa {
 
   operazioneA(tipo, gradino) {
     const k = this.conto(tipo)
-    const lv = gradoDi(tipo, gradino, this.divisioni)
+    const lv = gradoDi(tipo, gradino, this.sa)
     return k === 'mul' ? GENERATORI.mul(lv, this.moltiplicatoreDebole()) : GENERATORI[k](lv)
   }
 

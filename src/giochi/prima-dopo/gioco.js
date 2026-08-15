@@ -22,7 +22,9 @@ export default {
   chiave: CHIAVE,
   nome: 'Prima e dopo',
   icona: '⏭️',
-  che: 'sequenza: rimettere in fila una storia',
+  che: 'rimettere in fila una storia',
+  area: 'logica',
+  come: 'pensare',
   tappe: QUANTE_TAPPE,
   tinta: '#e7f5e0',
 

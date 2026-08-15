@@ -86,6 +86,20 @@ export function altriInCampo (livello) {
     .map(u => u.id)
 }
 
+/* ── E FRA QUELLI, CHI TI È CONTRO ──
+   Non tutti quelli che non comandi sono avversari: il gatto da portare
+   in salvo, la papera che segue il pane, la principessa da tirare fuori
+   stanno in campo e non ti vogliono male. `ostile` è dichiarato dalla
+   fabbrica con cui l'unità è nata (`chi.terzo` non lo è) e viaggia sulla
+   schiera; qui si traduce in una domanda su un'unità, che è come la fa
+   chi disegna. */
+export const eOstile = (livello, id) => {
+  const campo = campoDi(livello)
+  const u = campo.unita.find(z => z.id === id)
+  const f = u && campo.fazioni[u.fazione]
+  return f ? f.ostile !== false : true
+}
+
 export const pianoVuoto = livello =>
   Object.fromEntries(mieUnita(livello).map(id => [id, []]))
 

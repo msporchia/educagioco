@@ -182,7 +182,6 @@ export const NIDO_2 = {
       posti: { sopra: { x: 11, y: 3 }, sotto: { x: 10, y: 11 } } },
   ],
 
-  par: 10,
   soluzioni: [
     /* dieci ordini, ed è il par: uno per arrivare a guardare, il
        blocco, e dentro ogni ramo il viaggio intero. I due «vai» che

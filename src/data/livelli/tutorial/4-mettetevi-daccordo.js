@@ -69,7 +69,6 @@ export const ATTESA = livello({
     { nome: "l'orco più avanti", metti: { o3: orco, t3: tesoro } },
   ],
 
-  par: 4,
   soluzioni: [
     { nome: 'uno suona, l\'altro parte', piano: {
       cava: [fai.attacca('orchi'), fai.suona(viaLibera)],

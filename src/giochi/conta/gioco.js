@@ -28,7 +28,13 @@ export default {
   chiave: CHIAVE,
   nome: 'Conta gli animali',
   icona: '🐑',
-  che: 'contare: dal contare in fila alla conservazione del numero, agli insiemi',
+  /* accorciato quando `che` è finito sulla carta in home: per esteso
+     («dal contare in fila alla conservazione del numero, agli insiemi»)
+     prendeva tre righe e diceva a un genitore quello che qui non serve
+     — la carta invita, non spiega. Il lungo vive nei traguardi. */
+  che: 'contare davvero: in fila, sparpagliati e a insiemi',
+  area: 'numeri',
+  come: 'domande',
   tappe: QUANTE_TAPPE,
   tinta: '#eaf6e3',
 

@@ -50,7 +50,12 @@ const progresso = computed(() => genProgresso())
               :disabled="!apribile(k)" @click="$emit('apri', r.i)">
         <span class="num">{{ apribile(k) ? (progresso.stelle[r.i] ? '✓' : k + 1) : '🔒' }}</span>
         <span class="che"><b>{{ r.liv.nome }}<template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i></span>
-        <span class="voto">{{ '⭐'.repeat(progresso.stelle[r.i] || 0) }}<small>par {{ r.liv.par }}</small></span>
+        <!-- le stelle prese, e niente altro: qui sotto c'era «par 4»,
+             cioè un compito annunciato prima ancora di aprire il
+             livello. Chi non l'ha ancora fatto vede due stelle spente,
+             che dicono quello che c'è da prendere senza dire come -->
+        <span class="voto">{{ '⭐'.repeat(progresso.stelle[r.i] || 0)
+                           }}<small v-if="!progresso.stelle[r.i]">☆☆</small></span>
       </button>
     </template>
   </div>

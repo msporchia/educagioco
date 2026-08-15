@@ -108,7 +108,6 @@ export const RONDA_DECIDE = livello({
      bivio dentro, tre righe) più il ciclo (il blocco, i due «vai»
      alle due tappe, i due «esegui» che li seguono) — otto in tutto,
      il tetto della campagna. Giocato, si legge come due righe sole. */
-  par: 8,
   soluzioni: [
     { nome: 'gira le due tappe e decidi a ognuna', piano: { cava: [
       fai.azione('decidi', [

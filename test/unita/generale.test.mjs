@@ -393,8 +393,6 @@ const IMPRONTA_DATI = scritta(LIVELLI)
     controlla(`${n}: e se sono più di tre, si giocano tutte`,
               quante <= 3 || (liv.prove || 3) >= quante,
               `${quante} varianti, ${liv.prove || 3} scene`)
-    controlla(`${n}: il par è un numero di ordini`, Number.isInteger(liv.par) && liv.par > 0,
-              scritta(liv.par))
     controlla(`${n}: dichiara almeno una soluzione`, soluzioniDi(liv).length > 0)
 
     const suoi = soluzioniDi(liv)
@@ -493,18 +491,17 @@ for (const [i, liv] of LIVELLI.entries()) {
 }
 if (perIndice) nota('creaMondo vuole l\'indice della variante, non la variante')
 
-/* ═══════════ 3. il par è raggiungibile ═══════════
-   Il par è la promessa fatta al bambino: «si può fare con questi». Se
-   nessuna soluzione ci sta dentro, è un numero messo lì per bellezza. */
+/* ═══════════ 3. quanto costa risolverli ═══════════
+   Il `par` non c'è più — il gioco non chiede di risolvere in poche
+   mosse, chiede di risolvere — e con lui è sparito il controllo che
+   quel numero fosse mantenuto. Resta la misura, che serve a chi scrive
+   i livelli per vedere la curva: se il terzo costa dieci ordini e il
+   decimo due, la fila è in disordine. */
 const contaOrdini = piano => vociDi(piano).length
-for (const [i, liv] of LIVELLI.entries()) {
-  const buone = soluzioniDi(liv).filter(s => !s.fragile)
-  const corte = buone.map(s => contaOrdini(s.piano))
-  controlla(`${nomeDi(liv, i)}: il par è raggiungibile`,
-            corte.some(q => q <= liv.par),
-            `par ${liv.par}, soluzioni da ${corte.join(', ')} ordini`)
-}
-nota('par per livello: ' + LIVELLI.map(l => l.par).join(' → '))
+nota('ordini della soluzione più corta: ' + LIVELLI.map(l => {
+  const corte = soluzioniDi(l).filter(s => !s.fragile).map(s => contaOrdini(s.piano))
+  return corte.length ? Math.min(...corte) : '?'
+}).join(' → '))
 
 /* ═══════════ 4. necessità ═══════════
    Il piano vuoto non vince mai — se no la tappa è una schermata da
