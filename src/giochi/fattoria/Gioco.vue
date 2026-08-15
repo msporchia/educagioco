@@ -32,6 +32,7 @@ import { Fattoria } from './motore/fattoria.js'
 import { Tela, Attore } from './scena/tela.js'
 import { PER_ID, puoGirare } from './dati/catalogo.js'
 import { animale, siDisegna } from './dati/animali.js'
+import { pezzoAttore } from './dati/atlante.js'
 import { PRIMA, ULTIMA, CELLE, SCALA_INIZIALE } from './dati/mondo.js'
 
 import Roba from './viste/Roba.vue'
@@ -206,7 +207,6 @@ function premi(e) {
     return
   }
   if (!cosa || !mondo.cellaMia(c.x, c.y)) return
-  if (cosa === scelto.value) return prendi(PER_ID[cosa.id], cosa, p)
 
   /* L'anello che si riempie dice «sto per prenderlo»: finché non è pieno
      non è successo niente, e lasciando adesso non hai mosso nulla. */
@@ -266,9 +266,16 @@ function lascia(e) {
   giu = null
   if (!fermo || pennello.value) return
 
-  /* Le bestie si toccano per prime: hanno un riquadro più grande della
-     cella su cui poggiano — un cane di profilo è largo due celle — e
-     cercandole per cella se ne mancherebbe metà. */
+  const c = scena.cellaDa(p.x, p.y)
+  const px = (c.x / CELLE) | 0, py = (c.y / CELLE) | 0
+
+  /* Comprare la terra viene PRIMA di tutto. Le bestie non ci vanno mai —
+     restano su quello che è tuo — ma il loro bersaglio è più largo della
+     cella su cui poggiano, e sporgendo sul bosco accanto si mangiava il
+     tocco: alcune piazzole diventavano incomprabili a seconda di dove si
+     era fermato il cane, il che è il tipo di guasto che sembra un caso. */
+  if (mondo.comprabile(px, py)) { pannello.value = { tipo: 'piazzola', px, py }; return }
+
   const bestia = attoreSotto(p.x, p.y)
   if (bestia) {
     scelto.value = bestia
@@ -276,12 +283,17 @@ function lascia(e) {
     bestia.vaiA(bambino.cella.x, bambino.cella.y + 1)
     return
   }
-  const c = scena.cellaDa(p.x, p.y)
+
+  /* Un tocco secco su una cosa la **seleziona**: compaiono i suoi
+     attrezzi, e da lì la si gira o la si mette via. Prima non faceva
+     niente e per muoverla si teneva premuto — ma chi la teneva premuta
+     una seconda volta finiva dritto nel trascinamento, senza mai vedere
+     il tastino «mettila via». Adesso i due gesti sono separati: tocchi
+     per scegliere, tieni premuto per spostare. */
   const cosa = mondo.cosaSotto(c.x, c.y)
-  if (scelto.value && cosa !== scelto.value) scelto.value = null
-  if (cosa) return
-  const px = (c.x / CELLE) | 0, py = (c.y / CELLE) | 0
-  if (mondo.comprabile(px, py)) { pannello.value = { tipo: 'piazzola', px, py }; return }
+  if (cosa && mondo.cellaMia(c.x, c.y)) { scelto.value = cosa; return }
+  if (scelto.value) { scelto.value = null; return }
+
   const o = mondo.ostacoloSotto(c.x, c.y)
   if (o) { pannello.value = { tipo: 'ostacolo', o }; return }
   if (mondo.cellaMia(c.x, c.y)) bambino.vaiA(c.x, c.y)
@@ -294,7 +306,8 @@ function attoreSotto(sx, sy) {
   for (let i = attori.length - 1; i >= 0; i--) {
     const a = attori[i]
     if (a === bambino) continue
-    const r = a.riquadro(scena.cellaPx, scena.vista)
+    const p2 = pezzoAttore(a.nome, a.verso === 'sinistra' ? 'lato' : a.verso, 0)
+    const r = a.riquadro(scena.cellaPx, scena.vista, p2)
     if (sx >= r.x - 4 && sx <= r.x + r.w + 4 && sy >= r.y && sy <= r.y + r.h + 4) return a
   }
   return null
