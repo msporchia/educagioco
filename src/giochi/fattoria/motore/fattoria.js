@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LE REGOLE DELLA FATTORIA, SENZA SCHERMO
+
+   Classe pura: non tocca il DOM, non importa Vue, non sa che esista un
+   profilo. Gira uguale nel browser e in Node, ed è l'unico motivo per
+   cui una fattoria si può *giocare in un test* invece di provarla a
+   occhio — comprare dieci pezzi di terra, sgombrare il bosco, contare
+   le monete e vedere se l'economia sta in piedi.
+
+   ── LE MONETE ENTRANO DA FUORI ────────────────────────────────────
+   La fattoria conosce i **prezzi** (che sono dato) ma non il
+   salvadanaio: riceve una `borsa` con due metodi, `quante()` e
+   `paga(n)`. In gioco è il profilo, nei test è un finto portafoglio da
+   quattro righe. Così le regole economiche stanno tutte qui — e non
+   sparse fra un componente Vue e un pannello — restando provabili.
+
+   ── COSA C'È DENTRO ───────────────────────────────────────────────
+     piazzole   quali pezzi di terra sono tuoi           `"3,4" → 1`
+     cose       quello che hai messo giù     `{ i, id, g, x, y }`
+     ostacoli   quello che il bosco aveva già     `"14,9" → 'albero'`
+     magazzino  quello che hai comprato e non è in mappa   `id → n`
+
+   Le posizioni sono in **celle**, mai in pixel: lo zoom cambia mentre
+   si gioca, e un mondo misurato in pixel andrebbe riscalato ogni volta.
+
+   ── PERCHÉ NON SI PERDE MAI NIENTE ────────────────────────────────
+   Non c'è nessun metodo che distrugge. Quello che rimetti via va in
+   magazzino e da lì si ripiazza gratis quante volte vuoi; non ti
+   rimborsa, ma non sparisce. È la regola su cui un bambino conta.
+   ═══════════════════════════════════════════════════════════════════ */
+import {
+  CELLE, PIAZZOLE, CELLE_MONDO, PRIMA, ULTIMA, COSTO_SPOSTARE,
+  DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
+} from '../dati/mondo.js'
+import { PER_ID, PARTENZA, piedeDi } from '../dati/catalogo.js'
+import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
+
+/* Una borsa che non paga mai: serve a far girare la fattoria in un test
+   che dell'economia non gliene importa niente. */
+export const borsaInfinita = () => ({ quante: () => Infinity, paga: () => true })
+
+export class Fattoria {
+  /* `dato` è quello che torna da `serializza()`: un oggetto semplice,
+     buono da mettere in un profilo. Senza, nasce una fattoria nuova. */
+  constructor({ borsa = borsaInfinita(), dato = null } = {}) {
+    this.borsa = borsa
+    if (dato) this.deserializza(dato)
+    else this.nuova()
+  }
+
+  /* ═══════════ nascere ═══════════ */
+  nuova() {
+    this.piazzole = {}
+    this.cose = []
+    this.ostacoli = {}
+    this.magazzino = {}
+    this.prossimo = 1
+
+    for (let px = PRIMA; px <= ULTIMA; px++)
+      for (let py = PRIMA; py <= ULTIMA; py++) this.piazzole[chiave(px, py)] = 1
+
+    /* Il bosco non si tira a caso: si ricava dalle coordinate, così la
+       stessa fattoria riaperta domani ha gli stessi alberi negli stessi
+       posti — e un test può dire «lì c'è un masso» e restare vero. */
+    for (let cx = 0; cx < CELLE_MONDO; cx++)
+      for (let cy = 0; cy < CELLE_MONDO; cy++) {
+        if (this.cellaMia(cx, cy)) continue
+        if (caso(cx, cy, 1) > DENSITA_BOSCO) continue
+        const t = TIPI[((caso(cx, cy, 2) * 977) | 0) % TIPI.length]
+        const [larg] = OSTACOLI[t].piede
+        if (cx % larg) continue                   // niente pezzi grossi a metà
+        let libero = true
+        for (let i = 0; i < larg; i++) if (this.ostacoli[chiave(cx + i, cy)]) libero = false
+        if (libero) this.ostacoli[chiave(cx, cy)] = t
+      }
+
+    const c0 = PRIMA * CELLE
+    for (const p of PARTENZA)
+      this.cose.push({ i: this.prossimo++, id: p.id, g: p.g || 0,
+                       x: c0 + p.dx, y: c0 + p.dy })
+    return this
+  }
+
+  serializza() {
+    return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
+             magazzino: this.magazzino, prossimo: this.prossimo }
+  }
+
+  /* Regge un salvataggio di ieri senza pretendere una migrazione: quello
+     che manca si rimette a posto qui, e un id che non è più in catalogo
+     si butta invece di far cadere tutto il disegno. */
+  deserializza(d) {
+    this.piazzole = (d && d.piazzole) || {}
+    this.ostacoli = (d && d.ostacoli) || {}
+    this.magazzino = (d && d.magazzino) || {}
+    this.cose = ((d && d.cose) || []).filter(c => c && PER_ID[c.id])
+      .map(c => ({ i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }))
+    this.prossimo = Math.max(1, (d && d.prossimo) || 0,
+                             ...this.cose.map(c => (c.i || 0) + 1))
+    if (!Object.keys(this.piazzole).length) this.nuova()
+    return this
+  }
+
+  /* ═══════════ il terreno ═══════════ */
+  mia(px, py) { return !!this.piazzole[chiave(px, py)] }
+
+  cellaMia(cx, cy) {
+    if (cx < 0 || cy < 0 || cx >= CELLE_MONDO || cy >= CELLE_MONDO) return false
+    return this.mia((cx / CELLE) | 0, (cy / CELLE) | 0)
+  }
+
+  /* Si compra solo quello che tocca casa: la fattoria cresce da sé, non
+     a macchia di leopardo con dei buchi in mezzo. */
+  comprabile(px, py) {
+    if (px < 0 || py < 0 || px >= PIAZZOLE || py >= PIAZZOLE || this.mia(px, py)) return false
+    return this.mia(px - 1, py) || this.mia(px + 1, py) ||
+           this.mia(px, py - 1) || this.mia(px, py + 1)
+  }
+
+  get quantePiazzole() { return Object.keys(this.piazzole).length }
+  get prezzoDellaProssima() { return prezzoPiazzola(this.quantePiazzole) }
+
+  compraPiazzola(px, py) {
+    if (!this.comprabile(px, py)) return { ok: false, motivo: 'non-si-tocca' }
+    const costo = this.prezzoDellaProssima
+    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+    this.borsa.paga(costo)
+    this.piazzole[chiave(px, py)] = 1
+    return { ok: true, costo }
+  }
+
+  /* ═══════════ chi occupa cosa ═══════════ */
+  ingombro(cosa) {
+    const p = piedeDi(cosa)
+    return { x: cosa.x, y: cosa.y, w: p[0], h: p[1] }
+  }
+
+  cosaSotto(cx, cy) {
+    for (let i = this.cose.length - 1; i >= 0; i--) {
+      const g = this.ingombro(this.cose[i])
+      if (cx >= g.x && cx < g.x + g.w && cy >= g.y && cy < g.y + g.h) return this.cose[i]
+    }
+    return null
+  }
+
+  ostacoloSotto(cx, cy) {
+    for (const k in this.ostacoli) {
+      const [ox, oy] = k.split(',').map(Number)
+      const [ow, oh] = OSTACOLI[this.ostacoli[k]].piede
+      if (cx >= ox && cx < ox + ow && cy >= oy && cy < oy + oh)
+        return { k, x: ox, y: oy, tipo: this.ostacoli[k], ...OSTACOLI[this.ostacoli[k]] }
+    }
+    return null
+  }
+
+  /* Una cosa ci sta se il suo piede cade tutto su terra tua, e non
+     inciampa in niente. `salta` è quello che si sta spostando: sé stesso
+     non è un ostacolo per sé stesso. */
+  libera(cx, cy, w, h, salta = null) {
+    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++)
+      if (!this.cellaMia(cx + i, cy + j)) return false
+    for (const c of this.cose) {
+      if (c === salta || !PER_ID[c.id]) continue
+      const g = this.ingombro(c)
+      if (cx < g.x + g.w && cx + w > g.x && cy < g.y + g.h && cy + h > g.y) return false
+    }
+    for (const k in this.ostacoli) {
+      const [ox, oy] = k.split(',').map(Number)
+      const [ow, oh] = OSTACOLI[this.ostacoli[k]].piede
+      if (cx < ox + ow && cx + w > ox && cy < oy + oh && cy + h > oy) return false
+    }
+    return true
+  }
+
+  /* ═══════════ sgombrare ═══════════
+     Rende più di quanto costa: è quello che fa girare tutto. Comprare un
+     pezzo di bosco è un investimento, non una punizione. */
+  sgombra(cx, cy) {
+    const o = this.ostacoloSotto(cx, cy)
+    if (!o) return { ok: false, motivo: 'niente-da-sgombrare' }
+    if (this.borsa.quante() < o.costo) return { ok: false, motivo: 'poche-monete', costo: o.costo }
+    this.borsa.paga(o.costo)
+    this.borsa.paga(-o.resa)                 // pagare in negativo è incassare
+    delete this.ostacoli[o.k]
+    return { ok: true, costo: o.costo, resa: o.resa, guadagno: o.resa - o.costo, tipo: o.tipo }
+  }
+
+  /* ═══════════ mettere giù ═══════════
+     Un solo metodo per le due cose che sembrano diverse e non lo sono:
+     posare qualcosa di nuovo e spostare qualcosa che c'è già. Cambia
+     solo chi paga cosa. */
+  posa(id, cx, cy, { sposta = null, g = null } = {}) {
+    const v = PER_ID[id]
+    if (!v) return { ok: false, motivo: 'non-esiste' }
+    const finto = { id, g: g === null ? (sposta ? sposta.g : 0) : g }
+    const [w, h] = piedeDi(finto, v)
+    if (!this.libera(cx, cy, w, h, sposta)) return { ok: false, motivo: 'non-ci-sta' }
+
+    if (sposta) {
+      /* rimettere una cosa esattamente dov'era è gratis: se no chi
+         cambia idea a metà gesto si ritrova punito per niente */
+      if (sposta.x === cx && sposta.y === cy) return { ok: true, costo: 0, cosa: sposta }
+      if (this.borsa.quante() < COSTO_SPOSTARE)
+        return { ok: false, motivo: 'poche-monete', costo: COSTO_SPOSTARE }
+      this.borsa.paga(COSTO_SPOSTARE)
+      sposta.x = cx; sposta.y = cy
+      return { ok: true, costo: COSTO_SPOSTARE, cosa: sposta }
+    }
+
+    if (this.quantiNe(id) > 0) {
+      this.magazzino[id]--
+      if (!this.magazzino[id]) delete this.magazzino[id]
+      const cosa = { i: this.prossimo++, id, g: finto.g, x: cx, y: cy }
+      this.cose.push(cosa)
+      return { ok: true, costo: 0, dalMagazzino: true, cosa }
+    }
+    if (this.borsa.quante() < v.prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: v.prezzo }
+    this.borsa.paga(v.prezzo)
+    const cosa = { i: this.prossimo++, id, g: finto.g, x: cx, y: cy }
+    this.cose.push(cosa)
+    return { ok: true, costo: v.prezzo, cosa }
+  }
+
+  /* ═══════════ girare ═══════════
+     Non ruota dei pixel — cambia tessera, e solo dove il set ha davvero
+     la variante. Se girato non ci sta, si torna com'era: meglio un
+     rifiuto che una staccionata dentro una casa. */
+  gira(cosa) {
+    const v = PER_ID[cosa.id]
+    if (!v || !v.giri || v.giri.length < 2) return { ok: false, motivo: 'non-si-gira' }
+    const prima = cosa.g || 0
+    const dopo = (prima + 1) % v.giri.length
+    cosa.g = dopo
+    const [w, h] = piedeDi(cosa, v)
+    if (!this.libera(cosa.x, cosa.y, w, h, cosa)) {
+      cosa.g = prima
+      return { ok: false, motivo: 'non-ci-sta' }
+    }
+    return { ok: true, verso: dopo }
+  }
+
+  /* ═══════════ il magazzino ═══════════ */
+  quantiNe(id) { return this.magazzino[id] || 0 }
+
+  mettiVia(cosa) {
+    const i = this.cose.indexOf(cosa)
+    if (i < 0) return { ok: false, motivo: 'non-in-mappa' }
+    this.cose.splice(i, 1)
+    this.magazzino[cosa.id] = this.quantiNe(cosa.id) + 1
+    return { ok: true, id: cosa.id }
+  }
+
+  /* Comprarne uno senza metterlo giù: dal pannello della roba si compra
+     e resta da parte, che è come si fa la spesa. */
+  compra(id) {
+    const v = PER_ID[id]
+    if (!v) return { ok: false, motivo: 'non-esiste' }
+    if (this.borsa.quante() < v.prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: v.prezzo }
+    this.borsa.paga(v.prezzo)
+    this.magazzino[id] = this.quantiNe(id) + 1
+    return { ok: true, costo: v.prezzo }
+  }
+
+  /* ═══════════ per chi guarda da fuori ═══════════ */
+  get quanteCose() { return this.cose.length }
+  get quantiOstacoli() { return Object.keys(this.ostacoli).length }
+  get tipiPosseduti() {
+    return new Set([...this.cose.map(c => c.id), ...Object.keys(this.magazzino)]).size
+  }
+
+  /* Una cella libera e tua, buona per far comparire qualcuno che
+     cammina. Cerca a spirale dal punto chiesto invece di tirare a caso:
+     un cane che nasce nel bosco è un cane che non si trova più. */
+  cellaLibera(cx, cy, raggio = 6) {
+    for (let r = 0; r <= raggio; r++)
+      for (let dx = -r; dx <= r; dx++)
+        for (let dy = -r; dy <= r; dy++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue
+          const x = cx + dx, y = cy + dy
+          if (this.cellaMia(x, y) && this.libera(x, y, 1, 1)) return { x, y }
+        }
+    return { x: cx, y: cy }
+  }
+}

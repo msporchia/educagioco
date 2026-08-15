@@ -186,6 +186,24 @@ export class Battaglia {
     return torre
   }
 
+  /* ── spostare una torre ──
+     Si paga in energia come tutto il resto, e si paga **qui**: che sia
+     arrivata da un trascinamento o da un tocco sulla piazzola, la
+     regola è una sola e sta nel motore. Torna `false` se non si può —
+     energia che non basta, piazzola occupata — e allora chi ha in mano
+     la torre la rimette dov'era. */
+  sposta(torre, posto) {
+    if (!torre || !this.libera(posto, torre)) return false
+    if (this.tabellone.energia < CFG.spostamento) return false
+    const p = this.percorso.postazioni[posto]
+    if (!p) return false
+    this.tabellone.paga(CFG.spostamento)
+    torre.sposta(p.x, p.y)
+    this.pausa = 0
+    this.suona('compra')
+    return true
+  }
+
   /* ── chi occupa cosa ──
      Una piazzola è presa se ci sta sopra una torre. Il confronto è sulla
      posizione e non su un indice perché le torri si spostano col dito, e

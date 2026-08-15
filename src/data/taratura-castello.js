@@ -28,5 +28,5 @@ export const VITE = {
 /* di quanto cresce la vita nella partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
 export const OLTRE = 2.11
-export const FIRMA = "c0d628a5"
+export const FIRMA = "641905d6"
 export const BERSAGLIO = [0.6, 0.85]

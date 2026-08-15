@@ -26,7 +26,7 @@ import { campo as disegnaCampo } from '../../grafica/terreni/indice.js'
 import { creaBattaglia } from '../../motore/battaglia.js'
 import { scenaDi } from '../../views/castello/scena.js'
 import { Trascino } from '../../views/castello/trascino.js'
-import { costoNuovaTorre, MONDO } from '../../data/castello.js'
+import { costoNuovaTorre, MONDO, CFG } from '../../data/castello.js'
 import SchedaMostro from '../SchedaMostro.vue'
 
 const props = defineProps({
@@ -53,6 +53,8 @@ let raf = 0, ultimo = 0, chiuso = false
 const dito = new Trascino({
   tocca: torre => emit('potenzia', torre),
   apri: piazzola => emit('piazzola', piazzola),
+  avvisa: t => props.eventi.avvisa?.(t),
+  costo: CFG.spostamento,
   suona: che => props.eventi.suona?.(che),
 })
 

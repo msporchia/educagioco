@@ -4,9 +4,11 @@
    Il campo si tocca in due modi, e sono lo stesso gesto finché non si
    muove: fermo, si apre la scheda di quello che si è toccato — una
    torre da far salire, una piazzola dove costruire; scivolando, la
-   torre cambia postazione. Spostare non costa energia — è tattica, non
-   acquisto — ma vale solo sulle piazzole libere, che si illuminano
-   mentre si trascina.
+   torre cambia postazione. Spostare costa poco ma costa
+   (`CFG.spostamento`), e vale solo sulle piazzole libere, che si
+   illuminano mentre si trascina: da quando ci sono tappe con due
+   ingressi, portare la torre giusta dalla parte giusta è la mossa che
+   vince, e una mossa che vince non si fa a costo zero.
 
    Qui c'è la **regola** del gesto: quando comincia, cosa ha preso il
    dito, quale piazzola è a tiro, dove finisce. Il DOM — coordinate del
@@ -22,9 +24,11 @@ const RAGGIO_TORRE = 26
 const RAGGIO_PIAZZOLA = 44
 
 export class Trascino {
-  constructor({ tocca, apri, suona = () => {} }) {
+  constructor({ tocca, apri, avvisa = () => {}, costo = 0, suona = () => {} }) {
     this.tocca = tocca              // il dito si alza su una torre senza aver mosso
     this.apri = apri || (() => {})  // ...o su una piazzola libera
+    this.avvisa = avvisa
+    this.costo = costo              // quanto costa spostare, per dirlo a chi non ce l'ha
     this.suona = suona
     this.motore = null; this.S = 1
     this.attivo = null              // { torre, da, mosso, posto } oppure { piazzola }
@@ -95,9 +99,13 @@ export class Trascino {
     this.attivo = null
     if (g.piazzola != null) { this.apri(g.piazzola); return }
     if (!g.mosso) { this.tocca(g.torre); return }
-    if (g.posto >= 0) {
-      const p = this.motore.postazioni[g.posto]
-      g.torre.sposta(p.x, p.y); this.suona('compra')
-    } else g.torre.sposta(g.da.x, g.da.y)      // fuori dalle piazzole: torna a casa
+    /* chi decide se lo spostamento si può fare — e lo fa pagare — è il
+       motore: la regola è una sola, che la torre l'abbia mossa un
+       trascinamento o un tocco sulla piazzola. Se dice di no, la torre
+       torna dov'era, come quando il dito la lascia cadere sull'erba. */
+    if (g.posto < 0 || !this.motore.sposta(g.torre, g.posto)) {
+      g.torre.sposta(g.da.x, g.da.y)
+      if (g.posto >= 0) this.avvisa(`Servono ${this.costo} ⚡ per spostarla`)
+    }
   }
 }

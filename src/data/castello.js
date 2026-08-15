@@ -101,6 +101,15 @@ export const CFG = {
      perdere un sesto della difesa per un riporto. Sei punti sono un sesto
      di gradino: si sente, non si paga per tutta la partita. */
   malusErrore: 6,
+  /* ── spostare una torre ──
+     Costa poco ma costa: due punti, quanto un nemico fermato. Finché
+     c'era una strada sola era giusto che fosse gratis — spostare voleva
+     dire spostarsi lungo la stessa fila di mostri. Con due ingressi è
+     un'altra cosa: portare il ghiaccio dalla parte da cui scenderanno
+     è **la** mossa, e una mossa che vince non si fa a costo zero. Due
+     punti non fermano nessuno: fanno pensare un secondo prima di
+     trascinare, che è tutto quello che devono fare. */
+  spostamento: 2,
   perMoneta: 5,                    // partita libera: monete ogni N ondate
 }
 
