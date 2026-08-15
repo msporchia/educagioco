@@ -589,14 +589,21 @@ for (const [i, t] of CAMPAGNA.entries()) {
 /* ══════════ 12. le facce del posto ══════════ */
 {
   const rnd = caso(12)
-  let fuori = 0
+  let fuori = 0, confusi = 0
   for (const [k, a] of Object.entries(AMBIENTI))
     for (let i = 0; i < 60; i++) {
       if (!a.mostri.includes(faccia(k, 'mostro', rnd))) fuori++
       if (!a.grossi.includes(faccia(k, 'grosso', rnd))) fuori++
+      if (!a.capi.includes(faccia(k, 'capo', rnd))) fuori++
       if (faccia(k, 'boss', rnd) !== a.boss) fuori++
+      /* Il capo di un piano ha la vita tripla e non si può evitare: se
+         pescasse dallo stesso mazzo dei mostri normali — come faceva —
+         chiuderebbe il piano con la faccia di chi l'ha aperto. */
+      const f = faccia(k, 'capo', rnd)
+      if (a.mostri.includes(f) || a.grossi.includes(f)) confusi++
     }
   uguale('i mostri sono sempre quelli di casa', fuori, 0)
+  uguale('un capo di piano non ha la faccia di un mostro qualunque', confusi, 0)
 }
 
 riassunto('dungeon a bivi')

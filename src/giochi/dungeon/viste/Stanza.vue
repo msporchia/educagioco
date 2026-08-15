@@ -26,7 +26,8 @@
    Non tocca il profilo, non chiama il motore: riceve quello che deve
    mostrare e manda fuori quello che il dito ha fatto.
    ═══════════════════════════════════════════════════════════════════ */
-import { computed } from 'vue'
+import { computed, ref, watch, onUnmounted } from 'vue'
+import Bestia from './Bestia.vue'
 
 const props = defineProps({
   stanza: { type: Object, required: true },
@@ -48,6 +49,51 @@ const ancora = computed(() =>
   mostro.value ? Math.max(1, Math.ceil(mostro.value.vita / quanto.value)) : 0)
 const pieno = computed(() =>
   mostro.value ? Math.max(0, mostro.value.vita) / Math.max(1, mostro.value.vitaMax) : 0)
+
+/* ── quanto è grosso quello che si ha davanti ──
+   La barra dice quanta vita gli resta, non quanto è grosso: due mostri
+   con la stessa figura alla stessa misura sembrano lo stesso mostro
+   anche quando uno ha il triplo della vita e non si può nemmeno
+   evitare. La stazza è l'unica cosa che si legge prima di contare
+   qualsiasi numero, e qui la decide il tipo di stanza — non le ossa:
+   chi disegna non sa cosa sia un punto di vita. */
+const stazza = computed(() =>
+  props.stanza.che === 'sfida' ? 'dng-s-' + (props.stanza.tipo || 'mostro') : '')
+
+/* ── chi è disegnato e chi resta un'emoji ──
+   Le creature sono disegnate (`grafica/bestiario/`). Tutto il resto —
+   uno scrigno, un fuoco da campo, un mercante, un cartello — è una
+   **cosa**, non qualcuno, e le cose restano emoji: disegnare a mano un
+   forziere che compare due volte a partita sarebbe lavoro speso dove
+   non si vede. La riga di confine è netta e sta qui: se la stanza ha
+   una taglia di mostro c'è qualcuno, se no c'è qualcosa. */
+const viva = computed(() =>
+  props.stanza.che === 'sfida' && props.stanza.taglia && props.stanza.taglia !== 'serratura')
+
+/* ── come sta adesso ──
+   Il lampo bianco della botta lo fa la tavolozza di `grafica/segni.js`,
+   che tutto il gioco già usa: da qui basta dire che è stata colpita.
+
+   `scosso` però è un **contatore che sale**, non un interruttore: è
+   fatto per far ripartire un'animazione CSS cambiando la chiave del
+   nodo. Su una tela quella strada non si può prendere — cambiare
+   chiave vuol dire buttare il canvas e rifarlo a ogni colpo — quindi
+   il lampo lo si spegne a tempo, una volta sola per colpo. Da zero
+   vite invece si ribalta e ci resta. */
+const botta = ref(false)
+let spegni = 0
+watch(() => props.scosso, () => {
+  botta.value = true
+  clearTimeout(spegni)
+  spegni = setTimeout(() => { botta.value = false }, 340)
+})
+onUnmounted(() => clearTimeout(spegni))
+
+const comeSta = computed(() => {
+  if (!mostro.value) return 'normale'
+  if (mostro.value.vita <= 0) return 'ko'
+  return botta.value ? 'colpito' : 'normale'
+})
 </script>
 
 <template>
@@ -55,7 +101,10 @@ const pieno = computed(() =>
        :style="{ '--dng-accento': stanza.colore }">
     <!-- ═══ chi ti aspetta ═══ -->
     <div class="dng-arena">
-      <div class="dng-bestia em" :class="{ 'dng-colpita': scosso }" :key="scosso">
+      <!-- chi ti aspetta è disegnato; le cose restano emoji -->
+      <Bestia v-if="viva" :chi="stanza.faccia" :tipo="stanza.tipo" :stato="comeSta"
+              class="dng-viva" :class="stazza" />
+      <div v-else class="dng-bestia em" :class="[stazza, { 'dng-colpita': scosso }]" :key="scosso">
         {{ stanza.che === 'sfida' ? stanza.faccia : stanza.em }}
       </div>
       <h2 class="dng-titolone">{{ stanza.che === 'sfida' ? stanza.nome : stanza.tit }}</h2>

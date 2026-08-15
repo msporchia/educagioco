@@ -9,66 +9,90 @@
    Un ambiente porta:
      accento   il colore di tutto: bollini, sentieri, cartelli
      pietra    il fondo della caverna, che il pittore schiarisce da sé
-     mostri    i tre normali, grossi i due cattivi, boss il padrone di casa
+     mostri    i tre normali, grossi i due cattivi, capi i due di fine
+               piano, boss il padrone di casa
      bossNome  come si chiama, che è metà della paura
+
+   ── CHI CI ABITA SONO NOMI DI CREATURE, NON EMOJI ──
+   Per un pezzo di strada sono state emoji, e a un certo punto non
+   reggevano più: un'emoji la disegna il telefono, non il gioco, quindi
+   ha lo stile di Apple in mezzo a uno schermo disegnato a mano, non si
+   può tingere dell'ambiente in cui sta, non trema quando la colpisci e
+   su due telefoni diversi non è nemmeno la stessa figura. I nomi qui
+   sotto sono quelli di `grafica/bestiario/`, dove ognuno è disegnato.
+   Un nome che lì non esiste **non è un errore silenzioso**: il pittore
+   ripiega su un'altra creatura, ma `unita/bestiario` lo trova prima —
+   è lui a mettere questo elenco accanto a quello delle creature
+   disegnate, perché qui dentro la grafica non entra.
 
    L'ambiente è **solo il vestito**: quanto picchia un mostro non
    dipende da che faccia ha. Le ossa — vita, attacco, difesa — stanno
    in `TAGLIE`, in fondo a questo file, e dipendono da due cose sole:
    che taglia è (normale, grosso, guardiano) e quanto si è scesi.
 
-   Come si sceglie una faccia, in ordine di importanza:
-   1. **si riconosce da piccola**: il bollino sulla mappa è 26 pixel;
-   2. **è una bestia intera**, non un oggetto (🕸️ no, 🕷️ sì);
-   3. **c'è su tutti i telefoni**: le emoji arrivate da poco (🦣, 🐻‍❄️) su
-      un telefono di quattro anni fa sono un rettangolo vuoto.
+   ── I QUATTRO MAZZI SONO UNA SCALA, NON QUATTRO ELENCHI ──
+   Le ossa crescono di taglia in taglia, e la figura deve crescere
+   insieme a loro: se il capo del piano — quello con la vita tripla e
+   che non si può nemmeno evitare — si presenta come uno scorpione,
+   il bambino non legge «attento», legge «un altro insetto». Per un
+   po' i capi hanno pescato dal mazzo dei grossi ed era esattamente
+   quello che succedeva. Dentro un ambiente le quattro file vanno
+   lette in fila, dalla bestiola al padrone di casa:
+
+       mostri            →  grossi              →  capi              →  boss
+       ragno topo verme     scorpione serpe        vampiro spettro      zombi
+
+   Chi ritocca un mazzo controlla che la fila regga ancora a occhio:
+   nessun controllo automatico sa che un pipistrello fa meno paura di
+   un orso, e a schermo la differenza la fa anche la stazza della
+   figura (`scena/bestia.js`, `STAZZE`), che cresce con la taglia.
    ═══════════════════════════════════════════════════════════════════ */
 
 export const AMBIENTI = {
   cantina: {
     nome: 'ragni e topi', icona: '🕯️', accento: '#a06fe0', pietra: '#241f33',
-    mostri: ['🕷️', '🐀', '🦟'], grossi: ['🦂', '🐍'],
-    boss: '🧟', bossNome: 'Lo Zombi Impolverato',
+    mostri: ['ragno', 'topo', 'verme'], grossi: ['scorpione', 'serpe'],
+    capi: ['vampiro', 'spettro'], boss: 'zombi', bossNome: 'Lo Zombi Impolverato',
   },
   cripta: {
     nome: 'ossa e fantasmi', icona: '💀', accento: '#8b8bf0', pietra: '#1d1c33',
-    mostri: ['💀', '🦴', '👻'], grossi: ['🧛', '🧙'],
-    boss: '☠️', bossNome: 'Il Re delle Ossa',
+    mostri: ['spettro', 'topo', 'ragno'], grossi: ['stregone', 'vampiro'],
+    capi: ['zombi', 'golem'], boss: 'scheletro', bossNome: 'Il Re delle Ossa',
   },
   grotta: {
-    nome: 'pipistrelli e lucertole', icona: '🪨', accento: '#4fb3e0', pietra: '#182430',
-    mostri: ['🦇', '🦎', '🐛'], grossi: ['🦍', '🐗'],
-    boss: '🦉', bossNome: 'Il Gufo di Pietra',
+    nome: 'pipistrelli e serpenti', icona: '🪨', accento: '#4fb3e0', pietra: '#182430',
+    mostri: ['pipistrello', 'serpe', 'verme'], grossi: ['ragno', 'cinghiale'],
+    capi: ['lupo', 'troll'], boss: 'golem', bossNome: 'Il Colosso di Pietra',
   },
   fungaia: {
-    nome: 'funghi e insetti', icona: '🍄', accento: '#4fce7c', pietra: '#152a1f',
-    mostri: ['🐌', '🐜', '🦗'], grossi: ['🐛', '🕷️'],
-    boss: '🍄', bossNome: 'Il Fungo che Parla',
+    nome: 'bestie della muffa', icona: '🍄', accento: '#4fce7c', pietra: '#152a1f',
+    mostri: ['rana', 'ragno', 'granchio'], grossi: ['scorpione', 'cinghiale'],
+    capi: ['troll', 'orco'], boss: 'verme', bossNome: 'Il Vermone delle Radici',
   },
   fogne: {
     nome: 'roba d\'acqua', icona: '💧', accento: '#3fa6a0', pietra: '#132628',
-    mostri: ['🐸', '🐟', '🐊'], grossi: ['🐙', '🦑'],
-    boss: '🦈', bossNome: 'Il Pescecane della Fogna',
+    mostri: ['rana', 'topo', 'pipistrello'], grossi: ['serpe', 'verme'],
+    capi: ['orco', 'troll'], boss: 'granchio', bossNome: 'Il Granchione della Fogna',
   },
   fucina: {
     nome: 'orchi e bestioni', icona: '🔥', accento: '#ff8a3d', pietra: '#301a16',
-    mostri: ['👹', '🐗', '🦏'], grossi: ['🦍', '🐂'],
-    boss: '👺', bossNome: 'Il Fabbro Furioso',
+    mostri: ['goblin', 'topo', 'ragno'], grossi: ['cinghiale', 'orco'],
+    capi: ['golem', 'zombi'], boss: 'troll', bossNome: 'Il Fabbro Furioso',
   },
   ghiacciaia: {
     nome: 'bestie del freddo', icona: '❄️', accento: '#6fc6ff', pietra: '#17263a',
-    mostri: ['🐧', '🦭', '🦌'], grossi: ['🐻', '🐗'],
-    boss: '🐺', bossNome: 'Il Lupo Bianco',
+    mostri: ['topo', 'pipistrello', 'serpe'], grossi: ['cinghiale', 'golem'],
+    capi: ['lupo', 'orso'], boss: 'orsoBianco', bossNome: 'L\'Orso Bianco',
   },
   tana: {
     nome: 'bestie con le zanne', icona: '🕳️', accento: '#d98e1c', pietra: '#2b2113',
-    mostri: ['🦔', '🐍', '🦡'], grossi: ['🐗', '🦁'],
-    boss: '🐯', bossNome: 'La Tigre della Tana',
+    mostri: ['ragno', 'serpe', 'topo'], grossi: ['scorpione', 'cinghiale'],
+    capi: ['orso', 'troll'], boss: 'lupo', bossNome: 'Il Lupo della Tana',
   },
   covo: {
-    nome: 'draghi e lucertoloni', icona: '🐉', accento: '#ffd23f', pietra: '#331a14',
-    mostri: ['🦖', '🦅', '🐲'], grossi: ['🦕', '🐊'],
-    boss: '🐉', bossNome: 'Il Drago del Fondo',
+    nome: 'serpenti e draghi', icona: '🐉', accento: '#ffd23f', pietra: '#331a14',
+    mostri: ['serpe', 'pipistrello', 'ragno'], grossi: ['scorpione', 'cinghiale'],
+    capi: ['golem', 'troll'], boss: 'drago', bossNome: 'Il Drago del Fondo',
   },
 }
 
@@ -78,11 +102,16 @@ export const ambiente = chiave => AMBIENTI[chiave] || AMBIENTI[CHIAVI_AMBIENTI[0
 
 /* La faccia di uno scontro. Il tipo lo decide la stanza, chi ci abita
    l'ambiente: così un mostro grosso nelle fogne è un polpo e nella
-   fucina un gorilla, senza che nessuno dei due file sappia dell'altro. */
+   fucina un rinoceronte, senza che nessuno dei due file sappia
+   dell'altro. Un tipo che non è di casa qui — lo scrigno, il fuoco —
+   non ha una faccia da pescare e non deve arrivarci: chiede il mazzo
+   dei piccoli e si prende un ragno. */
+const MAZZI = { grosso: 'grossi', capo: 'capi' }
+
 export function faccia(chiaveAmbiente, tipo, rnd = Math.random) {
   const a = ambiente(chiaveAmbiente)
   if (tipo === 'boss') return a.boss
-  const mazzo = tipo === 'grosso' ? a.grossi : a.mostri
+  const mazzo = a[MAZZI[tipo]] || a.mostri
   return mazzo[Math.floor(rnd() * mazzo.length)]
 }
 
@@ -223,8 +252,16 @@ export function guastiDelleTaglie(taglie = TAGLIE) {
   return guasti
 }
 
-export function guastiDegliAmbienti(ambienti = AMBIENTI) {
+/* `disegnate` è l'elenco delle creature che esistono davvero, e arriva
+   **da fuori**: importarlo qui vorrebbe dire che i dati del dungeon
+   tirano dentro i pittori, e da lì il motore — che deve girare in Node
+   senza schermo, ed è l'unico motivo per cui una campagna intera si
+   può giocare in un test da tre decimi di secondo. Chi controlla i
+   guasti glielo passa (`unita/bestiario`); chi non lo passa fa gli
+   altri controlli e salta questo. */
+export function guastiDegliAmbienti(ambienti = AMBIENTI, disegnate = null) {
   const guasti = []
+  const esiste = disegnate && new Set(disegnate)
   for (const [chiave, a] of Object.entries(ambienti)) {
     const dove = `ambiente "${chiave}"`
     if (!a.nome || !a.icona || !a.bossNome) guasti.push(`${dove}: senza nome, icona o nome del boss`)
@@ -232,11 +269,24 @@ export function guastiDegliAmbienti(ambienti = AMBIENTI) {
       if (!/^#[0-9a-f]{6}$/i.test(a[campo] || '')) guasti.push(`${dove}: ${campo} "${a[campo]}" non è un colore`)
     if (!Array.isArray(a.mostri) || a.mostri.length < 3) guasti.push(`${dove}: servono almeno tre mostri normali`)
     if (!Array.isArray(a.grossi) || a.grossi.length < 2) guasti.push(`${dove}: servono almeno due mostri grossi`)
+    /* senza il mazzo dei capi il capo del piano ripiega sui piccoli, e
+       quello che chiude un piano si presenta come quello che l'ha
+       aperto: il mazzo che manca non si vede da nessuna parte, se non
+       da un guardiano che sembra un insetto */
+    if (!Array.isArray(a.capi) || a.capi.length < 2) guasti.push(`${dove}: servono almeno due capi di piano`)
     if (!a.boss) guasti.push(`${dove}: senza boss`)
     /* dentro un ambiente le facce non si ripetono: due ragni identici
-       in due stanze diverse fanno sembrare il dungeon più corto */
-    const tutte = [...(a.mostri || []), ...(a.grossi || []), a.boss]
+       in due stanze diverse fanno sembrare il dungeon più corto, e la
+       stessa faccia in due mazzi cancella la scala fra le taglie */
+    const tutte = [...(a.mostri || []), ...(a.grossi || []), ...(a.capi || []), a.boss]
     if (new Set(tutte).size !== tutte.length) guasti.push(`${dove}: una faccia è ripetuta`)
+    /* Una creatura che non è disegnata non si vede: il pittore
+       ripiega su un'altra e a schermo compare un ragno dove doveva
+       esserci un drago, senza che niente sembri rotto. È il tipo di
+       guasto che si scopre solo giocando fino in fondo, cioè tardi. */
+    if (esiste)
+      for (const chi of tutte)
+        if (chi && !esiste.has(chi)) guasti.push(`${dove}: "${chi}" non è disegnato in grafica/bestiario/`)
   }
   return guasti
 }

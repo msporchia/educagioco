@@ -139,6 +139,15 @@
 .dng-stanza.dng-qui { border-color: #fff; box-shadow: 0 0 16px #ffffff66 }
 .dng-stanza.dng-fatta { opacity: .55 }
 .dng-stanza.dng-fatta .dng-icona { filter: grayscale(.7) }
+/* Chi chiude un piano si vede da lontano, come si vede grosso una
+   volta dentro. **Ma solo se è già stato illuminato**: al buio si sa
+   che c'è una stanza e non cosa, e un bollino più largo la
+   racconterebbe prima del tempo — il `data-tipo` sta nel DOM anche
+   quando la stanza è ancora un `⋯`. */
+.dng-stanza:not(.dng-buio)[data-tipo="capo"] { width: 60px; height: 60px }
+.dng-stanza:not(.dng-buio)[data-tipo="capo"] .dng-icona { font-size: 29px }
+.dng-stanza:not(.dng-buio)[data-tipo="boss"] { width: 68px; height: 68px; border-width: 4px }
+.dng-stanza:not(.dng-buio)[data-tipo="boss"] .dng-icona { font-size: 33px }
 @keyframes dng-respira {
   0%, 100% { box-shadow: 0 0 14px 1px color-mix(in srgb, var(--dng-accento) 45%, transparent) }
   50% { box-shadow: 0 0 24px 5px color-mix(in srgb, var(--dng-accento) 70%, transparent) }
@@ -163,11 +172,56 @@
              align-items: center; justify-content: center; gap: 9px; text-align: center;
              background: radial-gradient(ellipse 62% 46% at 50% 42%,
                          color-mix(in srgb, var(--dng-accento) 22%, transparent), transparent 70%) }
-.dng-bestia { font-size: 68px; filter: drop-shadow(0 8px 14px #0009);
-              animation: dng-ballonzola 2s ease-in-out infinite }
+/* ── IL RIQUADRO DI CHI TI ASPETTA ──
+   Dentro c'è una tela, non un'emoji: la creatura è disegnata
+   (`grafica/bestiario/`), respira, sbianca quando la colpisci e si
+   ribalta quando cade. Il riquadro si prende lo spazio che l'arena
+   gli lascia e non cambia misura con la taglia del mostro — la stazza
+   la fa la telecamera dentro la tela (`scena/bestia.js`, `STAZZE`),
+   che è l'unico posto dove è scritta.
+
+   Quello che resta al CSS è l'alone dei due capoccia, che sta *dietro*
+   la tela e non dentro: è atmosfera della stanza, non anatomia della
+   creatura. */
+.dng-viva { position: relative; flex: 1 1 auto; width: 100%;
+            min-height: 120px; max-height: 56vh; align-self: center }
+.dng-viva canvas { display: block; width: 100%; height: 100% }
+/* Centrato con `left`/`right` e non con una `translate`: l'animazione
+   qui sotto muove la `transform`, e una `transform` ne cancella
+   un'altra — l'alone finiva in un angolo dello schermo invece che
+   dietro la creatura. Chi anima la trasformazione non la usa anche per
+   mettere le cose a posto. */
+.dng-viva.dng-s-capo::before, .dng-viva.dng-s-boss::before {
+  content: ''; position: absolute; left: 19%; right: 19%; bottom: 4%; height: 62%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+              color-mix(in srgb, var(--dng-accento) 46%, transparent), transparent 68%);
+  animation: dng-alone 2.6s ease-in-out infinite;
+}
+.dng-viva.dng-s-boss::before { left: 11%; right: 11%; height: 74%; animation-duration: 3.2s }
+
+/* ── LA STAZZA DELLE COSE, che emoji sono rimaste ──
+   Uno scrigno, un fuoco, un mercante: non sono nessuno, e restano
+   scritti col carattere. Vale per loro la stessa regola di prima —
+   cresce la figura e insieme rallenta — perché anche uno scrigno di
+   fine piano deve pesare più di uno di passaggio. */
+.dng-bestia { --dng-stazza: 68px; --dng-onda: 9px; --dng-lento: 2s; --dng-fattore: 1;
+              position: relative; font-size: calc(var(--dng-stazza) * var(--dng-fattore));
+              filter: drop-shadow(0 8px 14px #0009);
+              animation: dng-ballonzola var(--dng-lento) ease-in-out infinite }
+.dng-bestia.dng-s-mostro  { --dng-stazza: 60px; --dng-onda: 10px; --dng-lento: 1.6s }
+.dng-bestia.dng-s-grosso  { --dng-stazza: 86px; --dng-onda: 8px; --dng-lento: 2.4s }
+.dng-bestia.dng-s-capo    { --dng-stazza: 106px; --dng-onda: 6px; --dng-lento: 3s }
+.dng-bestia.dng-s-boss    { --dng-stazza: 124px; --dng-onda: 5px; --dng-lento: 3.6s }
+/* uno scrigno non respira come una bestia: sta fermo e basta */
+.dng-bestia.dng-s-scrigno { --dng-stazza: 74px; --dng-onda: 3px; --dng-lento: 4s }
 @keyframes dng-ballonzola {
   0%, 100% { transform: translateY(0) rotate(-2deg) }
-  50% { transform: translateY(-9px) rotate(2deg) }
+  50% { transform: translateY(calc(var(--dng-onda) * -1)) rotate(2deg) }
+}
+@keyframes dng-alone {
+  0%, 100% { opacity: .5; transform: scale(.92) }
+  50% { opacity: .95; transform: scale(1.06) }
 }
 .dng-bestia.dng-colpita { animation: dng-scossa .34s }
 @keyframes dng-scossa {
@@ -185,7 +239,12 @@
 .dng-stretta { justify-content: flex-start; gap: 4px;
                padding: 6px 12px 0; overflow: hidden }
 .dng-stretta .dng-arena { flex: 1; min-height: 96px; gap: 4px }
-.dng-stretta .dng-bestia { font-size: 62px }
+/* con la domanda in scena la figura si stringe, ma la scala fra le
+   taglie resta: si rimpicciolisce tutto insieme, di un fattore */
+.dng-stretta .dng-bestia { --dng-fattore: .76 }
+/* la creatura non rimpicciolisce: si accorcia il riquadro, e la
+   telecamera dentro la tela la incornicia da sé in quello che resta */
+.dng-stretta .dng-viva { min-height: 96px; max-height: 30vh }
 .dng-stretta .dng-titolone { font-size: 16px }
 /* con la domanda in scena resta il minimo che serve a decidere: la
    barra e i colpi che mancano, un filo più bassi */

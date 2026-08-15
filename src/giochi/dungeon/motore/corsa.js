@@ -152,7 +152,11 @@ export class Corsa {
          mappa un attimo prima. */
       faccia: scheda.taglia === 'serratura'
         ? scheda.icona
-        : faccia(this.tappa.ambiente, s.tipo === 'capo' ? 'grosso' : s.tipo, this.rnd),
+        : faccia(this.tappa.ambiente, s.tipo, this.rnd),
+      /* quanto è grossa la figura in scena, e se le tocca l'aura: chi
+         disegna non deve sapere che il capo ha vita tripla, gli basta
+         sapere che è un capo */
+      taglia: scheda.taglia,
       colore: scheda.colore,
       mostro: { ...ossa, vitaMax: ossa.vita },
       /* quanto dev'essere tosta la domanda: se l'è segnata la stanza

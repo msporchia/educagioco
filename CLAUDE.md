@@ -157,7 +157,18 @@ committate: non è ricostruibile da git.
   passa la strada), `castello.js`
   (i pittori, nella tabella `PITTORI`), `spazio.js` (il cielo degli
   asteroidi: nave, pianeta, sassi, raggi — riceve `danno: 0.5`, non sa
-  che esistano le vite).
+  che esistano le vite), `corpo.js` (**lo scheletro**: `persona()` per
+  chi cammina su due gambe, `bestia()` per tutti gli altri — chi lo usa
+  scrive una *scheda di dati*, e si ritrova ombra, respiro, il lampo
+  bianco della botta e il ribaltamento da ko senza chiederli).
+  Le schede stanno in tre cassetti: `personaggi/` (il Generale),
+  `castello/corpi-mostri.js` (il tower defense) e `bestiario/` (il
+  dungeon — venti creature viste **grandi e di fronte**, dove la
+  paura la fa la forma e mai il macabro, con l'`ingombro` che le tiene
+  dentro il riquadro). Un mostro del dungeon **non è un'emoji**: le
+  emoji le disegna il telefono, quindi hanno lo stile di Apple in mezzo
+  a uno schermo disegnato a mano, non si tingono dell'ambiente e non
+  tremano quando le colpisci.
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`
