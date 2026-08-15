@@ -8,9 +8,9 @@
    consegna è la freccia del tempo in cima, il testo sotto è per chi
    legge e per i genitori.
 
-   Una storia sbagliata non punisce: si conta l'errore, e la sequenza
-   giusta scorre da sola prima di riprovare — è `viste/Storia.vue` che
-   la fa vedere, questo file decide solo *quando* farla vedere. Questo è
+   Una storia sbagliata non punisce: si conta l'errore, la fila giusta
+   si accende un istante e si riprova — è `viste/Storia.vue` che la fa
+   vedere, questo file decide solo *quando* farla vedere. Questo è
    l'unico file del gioco che sa che esistono le monete: le regole
    stanno in `motore/`, le storie e i verbi in `dati/`, le schermate in
    `viste/`.
@@ -41,7 +41,7 @@ const vista = ref('mappa')          // mappa | tavolo
 const tappaIdx = ref(-1)
 const corsa = ref(null)             // la tappa in corso (motore, reso reattivo)
 const finale = ref(null)            // il cartello di fine tappa, quando c'è
-const fase = ref('gioca')           // gioca | vinta | replay
+const fase = ref('gioca')           // gioca | vinta | lampo
 const serie = ref(0)                // storie filate senza un errore, di fila
 
 const avanza = progresso(CHIAVE)
@@ -73,14 +73,15 @@ const titolo = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value].nom
    Una scala che sale sarebbe informazione affidata all'audio, e l'audio
    qui si spegne dalla barra — un gioco che col silenzio non si capisce
    più è un gioco rotto per metà dei bambini.
-   Per lo stesso motivo il replay non suona «no»: sbagliare non fa
-   rumore, fa rivedere la storia.
+   Sono due soltanto: il tonfo di una vignetta che si posa e la nota
+   che scende quando la fila era sbagliata. Il lampo che segue non
+   suona niente — la fila giusta si guarda, e una nota per vignetta
+   allungava l'errore invece di spiegarlo.
    NOTA PER DOMANI: quando ci sarà la voce italiana, la consegna letta
    ad alta voce entra qui, non nella vista — `Storia.vue` riceve solo
    funzioni già decise. */
 const suoni = {
   posa: () => suono.nota(520, 520, 0.09, 'triangle', 0.10),
-  passoReplay: () => suono.nota(480, 480, 0.12, 'triangle', 0.11),
   storto: () => suono.nota(320, 260, 0.2, 'sine', 0.08),
 }
 
@@ -132,10 +133,10 @@ function sbagliata() {
   corsa.value.registraErrore()
   serie.value = 0
   suoni.storto()
-  fase.value = 'replay'          // Storia.vue racconta la sequenza giusta e poi emette fine-replay
+  fase.value = 'lampo'          // Storia.vue accende la fila giusta e poi emette fine-lampo
 }
 
-function fineReplay() {
+function fineLampo() {
   corsa.value.riprova()
   fase.value = 'gioca'
 }
@@ -170,7 +171,7 @@ function indietro() {
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" @gioca="avviaTappa" />
 
       <Storia v-else-if="quesito" :quesito="quesito" :verbo="verboAttuale" :fase="fase"
-              :suona-passo="suoni.passoReplay" @tocca="tocca" @fine-replay="fineReplay" />
+              @tocca="tocca" @fine-lampo="fineLampo" />
 
       <Finale v-if="finale" v-bind="finale" @avanti="allaMappa" />
     </div>

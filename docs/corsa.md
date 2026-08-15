@@ -53,9 +53,24 @@ domanda di matematica, è una scritta.
 ## I mostri, e perché la truppa non cresce all'infinito
 
 Ogni tre cancelli arriva una banda di mostri, e **la truppa gli spara
-addosso mentre ci si avvicina**: il numero è la potenza di fuoco. Quello
-che al mostro resta di vita quando lo si raggiunge, te lo porta via
-addosso. Se la truppa arriva a zero si perde e si ricomincia la tappa.
+addosso mentre ci si avvicina**: il numero è la potenza di fuoco. La
+truppa stende esattamente un mostro grande quanto lei, quindi la domanda
+da farsi è sempre la stessa e sta scritta su due numeri — *il mio è più
+grosso del suo?*
+
+Il mostro **non spara**. Durante tutto l'avvicinamento la truppa non
+cambia di un soldato: si vede scendere solo la barra della vita del
+mostro. Il conto si paga tutto insieme all'impatto, e solo se è ancora in
+piedi: quello che gli resta di vita te lo porta via **moltiplicato per
+tre**. Sopra la sua misura si passa puliti, sotto si paga caro.
+
+(Per un giro il mostro sparava anche lui, con un fuoco di risposta
+continuo. Sulla carta era più giusto; a schermo il numero della truppa
+cambiava sessanta volte al secondo e la formazione per terra si rifaceva
+a ogni fotogramma. Un numero che lampeggia non si legge, e qui il numero
+*è* il gioco.)
+
+Se la truppa arriva a zero si perde e si ricomincia la tappa.
 
 Il mostro non è mai imbattibile e non è mai regalato: si dimensiona su
 **dove la truppa sarà**, non su dov'è adesso. I cancelli in volo sono già
@@ -92,20 +107,30 @@ calcolare, è tirare a indovinare.
 
 ## Chi ha fretta
 
-Ogni tocco, oltre a spostare di corsia, **spinge in avanti**: martellando
-lo schermo si vola, e i venti metri vuoti fra un cancello e l'altro non si
-stanno lì ad aspettare. Misurato, una tappa si accorcia di circa un quinto
-senza che cambi niente di quello che succede — il danno agli scontri si
-conta per metro percorso, non per secondo, quindi correre più forte non
-rende un mostro più facile né più difficile.
+**Si tiene premuto e si corre più forte** — col dito, col mouse, con la
+barra spaziatrice o la freccia su. Un tocco secco dà comunque una
+spintarella, oltre a spostare di corsia. Serve a saltare i venti metri
+vuoti fra un cancello e l'altro senza stare lì ad aspettare, e gli scontri
+finiscono identici: il danno si conta per metro percorso e non per
+secondo, quindi correre più forte non rende un mostro né più facile né
+più difficile.
 
 C'è un limite, ed è l'unico punto del gioco in cui il dito non comanda:
-**da sedici metri dal cancello in giù si torna al passo**, qualunque cosa
-faccia il bambino. A sei anni non si sa ancora di aver bisogno di qualche
-secondo per leggere tre numeri, e non si può lasciare che la fretta se li
-porti via. Le righe di corsa ai lati dello schermo si spengono lì: si vede
-quando la spinta smette di funzionare, invece di continuare a martellare
-senza capire perché.
+**all'avvicinamento di un cancello restano sempre almeno tre secondi**,
+qualunque cosa si faccia. A sei anni non si sa ancora di aver bisogno di
+qualche secondo per leggere tre numeri, e non si può lasciare che la
+fretta se li porti via.
+
+Il limite è in *secondi* e non in metri, e la prima versione sbagliava
+proprio lì: frenava sotto i sedici metri dal cancello, ma i cancelli
+distano diciassette-ventun metri — la rampa cominciava prima del cancello
+precedente e la spinta piena non arrivava mai. Un vincolo scritto in metri
+non sa quanto sono distanti i cancelli di quella tappa; scritto in secondi
+lo sa da sé.
+
+Le righe di corsa ai lati dello schermo si spengono quando la spinta
+smette di lavorare: si vede, invece di continuare a premere senza capire
+perché.
 
 ## Le tre stelle
 

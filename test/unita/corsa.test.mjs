@@ -166,7 +166,11 @@ for (const [i, t] of CAMPAGNA.entries()) {
             `chi tira sempre dritto la vince ${(m.quota * 100).toFixed(0)}% delle volte`)
   controlla(`«${t.nome}»: e senza esercizi si prendono lo stesso le stelle`,
             m.stelleMedie >= 1.8, `${m.stelleMedie.toFixed(1)}⭐ di media`)
-  uguale(`«${t.nome}»: chi tira dritto non fa domande`, Math.round(m.domandeMedie * 10) <= 5, true)
+  /* qualche domanda scappa lo stesso: il cambio di corsia non è
+     istantaneo, e ogni tanto ci si passa dentro mentre si sta ancora
+     spostando. Deve restare un incidente, non un'abitudine. */
+  controlla(`«${t.nome}»: chi tira dritto quasi non fa domande`, m.domandeMedie <= 1,
+            `${m.domandeMedie.toFixed(1)} esercizi a partita`)
 }
 
 /* sbagliare l'esercizio non toglie niente: si resta esattamente com'era */
@@ -238,47 +242,98 @@ for (const [i, t] of CAMPAGNA.entries()) {
 }
 
 /* ══════════ LA SPINTA NON RUBA IL TEMPO DI LEGGERE ══════════
-   Un tocco fa correre più forte, così i venti metri vuoti fra un cancello
-   e l'altro non si stanno lì ad aspettare. Ma davanti alla scelta la
-   spinta si spegne da sola, e **quello è il pezzo che non si negozia**: a
-   sei anni non si sa ancora di aver bisogno di qualche secondo per
-   leggere tre numeri, quindi non si può lasciare che il dito se li porti
-   via. Qui si misura giocando, con un pilota che martella lo schermo. */
-for (const [i, t] of [[0, CAMPAGNA[0]], [8, CAMPAGNA[8]]]) {
+   Tenendo premuto si corre più forte, così i venti metri vuoti fra un
+   cancello e l'altro non si stanno lì ad aspettare. Ma all'avvicinamento
+   restano sempre `RESPIRO` secondi, qualunque cosa faccia il dito — a sei
+   anni non si sa ancora di aver bisogno di qualche secondo per leggere
+   tre numeri, quindi non glielo si può lasciar buttare via.
+
+   Il limite è in **secondi** e non in metri, e questo test è il motivo:
+   la prima versione frenava sotto i sedici metri dal cancello, ma i
+   cancelli distano diciassette-ventun metri — la spinta piena non
+   arrivava mai, e a schermo sembrava semplicemente che non funzionasse. */
+for (const [i, t] of [[0, CAMPAGNA[0]], [4, CAMPAGNA[4]], [8, CAMPAGNA[8]]]) {
+  /* il tempo speso negli ultimi metri prima di ogni cancello, col dito
+     inchiodato sullo schermo per tutta la tappa */
+  const avvicinamenti = []
   const p = new Partita(new Regole(t), { rnd: caso(61 + i) })
-  let vicino = 0, lontano = 0        // secondi spesi sotto e sopra i 16 m
-  let piuVeloce = 0
+  p.premi(true)
+  let dentro = 0
   while (!p.finita) {
     if (p.inPausa) { p.rispondi(true); continue }
-    p.spingi()
     const c = p.cose.filter(x => x.tipo === 'cancelli' && !x.fatto && x.z - p.dist > 0)
       .sort((a, b) => a.z - b.z)[0]
     const quanto = c ? c.z - p.dist : Infinity
-    if (quanto <= 16) { vicino += 1 / 30; piuVeloce = Math.max(piuVeloce, p.spintaOra) }
-    else lontano += 1 / 30
+    if (quanto <= 14) dentro += 1 / 30
+    else if (dentro) { avvicinamenti.push(dentro); dentro = 0 }
     p.avanza(1 / 30)
     p.svuotaEventi()
   }
-  uguale(`«${t.nome}»: sotto i 16 metri dal cancello si va al passo`,
-         Math.round(piuVeloce * 1000) / 1000, 1)
-  controlla(`«${t.nome}»: ma nel vuoto si vola`, lontano > 0,
-            'il tratto libero esiste e la spinta ci lavora')
+  const peggiore = Math.min(...avvicinamenti)
+  controlla(`«${t.nome}»: col dito premuto restano secondi per leggere`,
+            avvicinamenti.length > 2 && peggiore >= 2.7,
+            `il più corto è ${peggiore.toFixed(1)}s su ${avvicinamenti.length} cancelli`)
 }
 
-/* e con la spinta la tappa dura meno, se no non serviva a niente */
+/* e tenendo premuto la tappa si accorcia davvero, se no non serviva */
+for (const i of [0, 8]) {
+  const regole = new Regole(CAMPAGNA[i])
+  const quanto = fretta => {
+    const p = new Partita(regole, { rnd: caso(71 + i) })
+    p.premi(fretta)
+    let s = 0
+    while (!p.finita && s < 400) {
+      if (p.inPausa) { p.rispondi(true); continue }
+      const c = p.cose.filter(x => x.tipo === 'cancelli' && !x.fatto && x.z - p.dist > 0.6)
+        .sort((a, b) => a.z - b.z)[0]
+      if (c && c.z - p.dist < 26) {
+        let dove = 0, meglio = -Infinity
+        c.ops.forEach((o, k) => {
+          const v = Math.min(regole.tetto, o.libro ? regole.tetto : o.f(p.truppa))
+          if (v > meglio) { meglio = v; dove = k }
+        })
+        p.punta(dove - 1)
+      }
+      p.avanza(1 / 30); p.svuotaEventi(); s += 1 / 30
+    }
+    return { s, p }
+  }
+  const calmo = quanto(false), svelto = quanto(true)
+  controlla(`«${CAMPAGNA[i].nome}»: premendo si arriva prima`,
+            svelto.s < calmo.s * 0.92,
+            `${calmo.s.toFixed(0)}s contro ${svelto.s.toFixed(0)}s`)
+  uguale(`«${CAMPAGNA[i].nome}»: e la si vince lo stesso`, svelto.p.vinta, true)
+  /* gli scontri finiscono uguale: il danno si conta per metro percorso e
+     non per secondo, ed è per questo che si può correre più forte senza
+     che un mostro diventi più facile */
+  uguale(`«${CAMPAGNA[i].nome}»: gli scontri finiscono uguale`,
+         svelto.p.persi, calmo.p.persi)
+}
+
+/* ══════════ IL NUMERO DELLA TRUPPA NON LAMPEGGIA ══════════
+   Il mostro non spara: durante tutto l'avvicinamento la truppa non cambia
+   di un soldato, e cala solo agli eventi che si vedono — un cancello, una
+   cassa, un cono, l'impatto. Col fuoco di risposta continuo il numero
+   cambiava sessanta volte al secondo e la formazione in terra si rifaceva
+   a ogni fotogramma: un numero che lampeggia non si legge, e qui il
+   numero **è** il gioco. */
 {
-  const regole = new Regole(CAMPAGNA[4])
-  const calmo = gioca(regole, { rnd: caso(71), bravura: 1, sapienza: 1 })
-  const svelto = gioca(regole, { rnd: caso(71), bravura: 1, sapienza: 1, fretta: true })
-  const giri = p => p.partita.dist / regole.metri
-  controlla('chi tocca lo schermo arriva prima',
-            svelto.partita.dist >= calmo.partita.dist * 0.99 && giri(svelto) >= 0.99,
-            'la spinta deve accorciare i tratti vuoti, non la tappa')
-  uguale('e la vince lo stesso', svelto.partita.vinta, true)
-  /* il conto degli scontri non cambia: il danno si conta per metro, non
-     per secondo, ed è per questo che si può correre più forte senza che
-     un mostro diventi più facile */
-  uguale('gli scontri finiscono uguale', svelto.partita.persi, calmo.partita.persi)
+  const p = new Partita(new Regole(CAMPAGNA[6]), { rnd: caso(88) })
+  let cambi = 0, eventi = 0, prima = p.truppa
+  while (!p.finita) {
+    if (p.inPausa) { p.rispondi(true); continue }
+    p.avanza(1 / 30)
+    const detti = p.svuotaEventi()
+    if (p.truppa !== prima) {
+      cambi++
+      /* ogni cambio deve avere un motivo dichiarato nello stesso istante */
+      if (detti.some(e => ['meglio', 'peggio', 'cassa', 'cono', 'colpito'].includes(e))) eventi++
+      prima = p.truppa
+    }
+  }
+  uguale('la truppa cambia solo quando succede qualcosa che si vede', cambi, eventi)
+  controlla('e succede poche volte, non a ogni fotogramma', cambi < 60,
+            `${cambi} cambi in tutta la tappa`)
 }
 
 /* ── il mostro non è mai imbattibile ──

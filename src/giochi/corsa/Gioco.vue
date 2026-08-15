@@ -211,6 +211,16 @@ function vai(delta) {
   partita.value?.spingi()
 }
 
+/* Il dito (o il tasto) tenuto giù: si spinge finché resta giù. Col mouse
+   è **il** gesto — battere il pulsante per andare avanti non lo fa
+   nessuno — e sul telefono il pollice appoggiato è comodo quanto il
+   tocco. Va rilasciato anche quando la schermata sparisce, se no la
+   partita dopo comincia già in corsa. */
+function premi(giu) {
+  if (giu) toccato.value = true
+  partita.value?.premi(giu)
+}
+
 /* ═══════════ l'esercizio si paga con niente ═══════════
    Chi indovina moltiplica la truppa; chi sbaglia resta com'era. Non c'è
    nessuna penale, e non è una gentilezza: è la condizione senza cui
@@ -331,7 +341,7 @@ onUnmounted(() => {
 
       <PistaVista v-else :cruscotto="cruscotto" :buio="vestito.buio"
                   :dritta="!toccato && cruscotto.metri < 14 && !finale"
-                  @tela="prendiTela" @vai="vai" />
+                  @tela="prendiTela" @vai="vai" @premi="premi" />
 
       <div v-if="brindisi" class="co-brindisi em">{{ brindisi }}</div>
 

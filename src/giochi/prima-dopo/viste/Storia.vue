@@ -3,13 +3,17 @@
    LA SCENA — dove si gioca
 
    Tre disegni diversi per tre forme di quesito (`quesito.tipo`), più un
-   quarto stato che non è un quesito: il replay. Quando una risposta è
-   sbagliata non si dice «no» — la storia si racconta da sola, una
-   vignetta alla volta con una nota che sale, e solo allora si può
-   riprovare. È tutto CSS e `setTimeout`: una coreografia così piccola
-   non merita una cartella `scena/` (vedi `Tavolo.vue` del Codice
-   Segreto, che tiene lo stesso genere di animazione — il tremolio —
-   qui dentro con un `ref` locale).
+   quarto stato che non è un quesito: il lampo. Quando una risposta è
+   sbagliata non si dice «no» — la fila giusta si accende tutta insieme
+   al posto della striscia, mezzo secondo, e si riprova.
+
+   C'era, prima, un replay: una schermata a parte che copriva il tavolo
+   e riaccendeva le vignette una alla volta con una nota, quattro
+   secondi. Diceva due volte quello che il bambino vedeva già — il verso
+   della storia — e in mezzo non c'era niente da fare che aspettare: la
+   parte peggiore di un errore era la pausa, non l'errore. Il lampo dice
+   la stessa cosa nel tempo di un'occhiata, senza togliere il tavolo da
+   sotto e senza suono. È tutto CSS e un `setTimeout` solo.
 
    Non tocca il motore: tocca una vignetta ed emette `tocca`, e chi
    coordina (`Gioco.vue`) decide cosa vuol dire. Non sa nemmeno cosa sia
@@ -17,53 +21,42 @@
 
    NOTA PER DOMANI: quando arriverà la voce italiana, è qui — nella
    consegna in alto e nella frase piccola — che andrà agganciata: oggi
-   c'è solo `suono.nota()` sintetizzato, perché `strumenti/incidi-voci.mjs`
-   parla ancora solo inglese e spagnolo.
+   non c'è niente da leggere ad alta voce, perché
+   `strumenti/incidi-voci.mjs` parla ancora solo inglese e spagnolo.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { computed, watch, onUnmounted } from 'vue'
 
 const props = defineProps({
   quesito: { type: Object, required: true },
   verbo: { type: Object, required: true },      // { icona, frase, ... } da dati/verbi.js
-  fase: { type: String, default: 'gioca' },      // 'gioca' | 'vinta' | 'replay'
-  suonaPasso: { type: Function, default: null },
+  fase: { type: String, default: 'gioca' },      // 'gioca' | 'vinta' | 'lampo'
 })
-const emit = defineEmits(['tocca', 'fine-replay'])
+const emit = defineEmits(['tocca', 'fine-lampo'])
 
 const NUMERI = ['1️⃣', '2️⃣', '3️⃣', '4️⃣']
 
-/* La sequenza vera da far scorrere nel replay, qualunque sia il tipo di
-   quesito: per "ordina" è la fila corretta, per "manca/dopo/prima" è la
-   fila mostrata con il buco riempito dalla risposta giusta, per
+/* Quanto resta accesa la fila giusta: il tempo di un'occhiata, non di
+   un'attesa. Sotto i 400 ms non si legge, sopra i 900 si aspetta. */
+const LAMPO = 700
+
+/* La fila giusta da far vedere nel lampo, qualunque sia il tipo di
+   quesito: per "ordina" è la sequenza corretta, per "manca/dopo/prima"
+   è la fila mostrata con il buco riempito dalla risposta giusta, per
    "intruso" è la storia vera, senza l'intruso al posto di un passo. */
-const replaySequenza = computed(() => {
+const filaGiusta = computed(() => {
   const q = props.quesito
   if (q.tipo === 'ordina') return q.sequenza
   if (q.tipo === 'intruso') return q.storia.passi.slice(0, q.vignette.length)
   return q.mostrati.map(e => e ?? q.corretta)
 })
 
-const passoReplay = ref(-1)
-let orologi = []
-function fermaReplay() {
-  orologi.forEach(clearTimeout)
-  orologi = []
-  passoReplay.value = -1
-}
-function avviaReplay() {
-  fermaReplay()
-  const seq = replaySequenza.value
-  const PRIMO = 500, PASSO = 750
-  seq.forEach((_, i) => {
-    orologi.push(setTimeout(() => {
-      passoReplay.value = i
-      props.suonaPasso?.(i)
-    }, PRIMO + i * PASSO))
-  })
-  orologi.push(setTimeout(() => emit('fine-replay'), PRIMO + seq.length * PASSO + 900))
-}
-watch(() => props.fase, f => { if (f === 'replay') avviaReplay(); else fermaReplay() })
-onUnmounted(fermaReplay)
+let orologio = 0
+const fermaLampo = () => clearTimeout(orologio)
+watch(() => props.fase, f => {
+  fermaLampo()
+  if (f === 'lampo') orologio = setTimeout(() => emit('fine-lampo'), LAMPO)
+})
+onUnmounted(fermaLampo)
 </script>
 
 <template>
@@ -74,18 +67,16 @@ onUnmounted(fermaReplay)
       <p>{{ verbo.frase }}</p>
     </div>
 
-    <!-- il replay copre tutto il resto: si guarda e basta -->
-    <div v-if="fase === 'replay'" class="pd-replay">
+    <!-- il lampo: la fila giusta prende il posto della striscia, tutta
+         insieme, il tempo di guardarla. Sotto resta il vuoto della zona
+         di pesca, se ce n'era una: senza, la striscia si allargherebbe
+         e il tavolo salterebbe proprio nel momento in cui va guardato. -->
+    <template v-if="fase === 'lampo'">
       <div class="pd-striscia">
-        <div v-for="(e, i) in replaySequenza" :key="i" class="pd-buca em"
-             :class="{ 'pd-piena': i <= passoReplay, 'pd-adesso': i === passoReplay }">
-          {{ i <= passoReplay ? e : '' }}
-        </div>
+        <div v-for="(e, i) in filaGiusta" :key="i" class="pd-buca pd-piena pd-lampo em">{{ e }}</div>
       </div>
-      <!-- la freccia del tempo, non una nota musicale: col suono spento
-           una 🎵 che pulsa promette qualcosa che non arriva -->
-      <p class="pd-verso em" :class="{ 'pd-scorre': passoReplay >= 0 }">➡️</p>
-    </div>
+      <div v-if="quesito.tipo !== 'intruso'" class="pd-pesca"></div>
+    </template>
 
     <template v-else>
       <!-- ORDINA: la striscia numerata, e sotto le vignette da pescare -->

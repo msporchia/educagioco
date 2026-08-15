@@ -8,8 +8,8 @@
    monete si sono guadagnate.
 
    Un errore **non fa perdere la storia**: `registraErrore()` conta il
-   colpo, e chi coordina (`Gioco.vue`) mostra la sequenza giusta che
-   scorre da sola; poi `riprova()` genera un nuovo quesito sulla stessa
+   colpo, e chi coordina (`Gioco.vue`) accende un istante la fila
+   giusta; poi `riprova()` genera un nuovo quesito sulla stessa
    storia, per riprovarla senza che sia rimasta bloccata nello stesso
    stato sbagliato. Le stelle raccontano quanto è filata liscia, non se
    è stata portata a casa: qui non si perde mai.
@@ -77,8 +77,8 @@ export class Corsa {
     return this.quesito
   }
 
-  /* Un colpo sbagliato: si conta e basta. Chi coordina fa vedere la
-     sequenza giusta e poi chiama `riprova()`. */
+  /* Un colpo sbagliato: si conta e basta. Chi coordina fa lampeggiare
+     la fila giusta e poi chiama `riprova()`. */
   registraErrore() {
     this.errori++
   }

@@ -19,6 +19,8 @@
    1. **Il danno si conta per metro percorso, non per secondo.** Se no
       correre più forte vorrebbe dire sparare di meno, e uno scontro si
       deciderebbe su com'è andata la corsa prima invece che sui numeri.
+      Vuol dire anche che la truppa stende esattamente un mostro grande
+      quanto lei: sopra si passa puliti, sotto si paga all'impatto.
    2. **Il mostro si dimensiona su dove la truppa *sarà*.** I cancelli in
       volo sono già tutti generati, quindi il caso peggiore e il migliore
       si calcolano davvero. La vita sta poco sopra il caso peggiore: chi
@@ -42,8 +44,26 @@ export const ORIZZONTE = 46
    sopra si vince con margine, sotto si prendono le legnate. */
 export const INGAGGIO = 16
 
-const RISPOSTA = 0.035        // quanto picchia il mostro mentre è vivo
 const FRENO_BOSS = 0.45       // davanti al boss si rallenta, non ci si ferma
+
+/* ═══════════ QUANTO COSTA UNO SCONTRO PERSO ═══════════
+   Il mostro **non spara**. Sparava, per un giro: un fuoco di risposta
+   continuo, proporzionale alla vita che gli restava. Sulla carta era
+   giusto — chi ci mette di più a stenderlo ne perde di più — e a schermo
+   era un disastro: il numero della truppa cambiava sessanta volte al
+   secondo, e con lui la formazione in terra si rifaceva a ogni
+   fotogramma. Un numero che lampeggia non è un numero che si legge, e
+   qui il numero **è** il gioco.
+
+   Adesso la truppa cala solo quando succede qualcosa che si vede: un
+   cancello, una cassa, un cono, uno scontro. Lo scontro si paga tutto
+   insieme **all'impatto**, e solo se il mostro è ancora in piedi: quello
+   che gli resta di vita te lo porta via moltiplicato per `PEDAGGIO`.
+
+   È anche una regola più semplice da leggere, ed è la stessa che il
+   bambino vede scritta sui due numeri: **la truppa dev'essere più grossa
+   di quel mostro lì**. Sopra, non si perde niente; sotto, si paga caro. */
+const PEDAGGIO = 3
 
 /* ═══════════ LA SPINTA ═══════════
    Ogni tocco dà una spintarella, e tenendo il ritmo si vola. Serve a una
@@ -51,17 +71,26 @@ const FRENO_BOSS = 0.45       // davanti al boss si rallenta, non ci si ferma
    un cancello e l'altro ci sono venti metri di strada vuota, e aspettare
    che passino non insegna niente a nessuno.
 
-   Ma la spinta **si spegne da sola** quando la scelta si avvicina: da
-   `LETTURA` metri in giù si torna al passo dichiarato dalla tappa,
-   qualunque cosa faccia il dito. È la riga che tiene in piedi tutto il
-   gioco — il tempo per leggere tre numeri non è una cosa che il bambino
-   possa rinunciare a prendersi, perché a sei anni non sa ancora di
-   averne bisogno. Chi ha fretta la salta dove non serve, non dove serve. */
-const SPINTA = 0.4            // quanta ne dà un tocco
-const SPINTA_MAX = 1.3        // fin dove si accumula: al massimo si va più del doppio
-const CALO = 0.7              // quanto in fretta si esaurisce da sola
-const LETTURA = 16            // sotto questa distanza da un cancello, si va al passo
-const RAMPA = 12              // e ci si arriva frenando, non di colpo
+   Ma la spinta **si spegne da sola** quando la scelta si avvicina, e il
+   limite è **in secondi, non in metri**. La prima versione frenava sotto
+   i sedici metri dal cancello, con una rampa di dodici: sembrava
+   ragionevole finché non si è fatto il conto — i cancelli distano
+   diciassette-ventun metri, quindi la rampa cominciava *prima* del
+   cancello precedente e la spinta piena non arrivava mai. Un vincolo
+   scritto in metri non sa quanto sono distanti i cancelli di quella
+   tappa; scritto in secondi lo sa da sé.
+
+   La regola è una riga: **all'avvicinamento restano sempre almeno
+   `RESPIRO` secondi**. La velocità massima concessa è quella che ancora
+   li garantisce, e sotto il passo della tappa non si scende comunque. È
+   il tempo per leggere tre numeri, e non è una cosa che un bambino di sei
+   anni sappia di dover pretendere: chi ha fretta salta i tratti vuoti,
+   non la scelta. */
+const SPINTA = 0.45           // quanta ne dà un tocco secco
+const RIEMPI = 2.4            // ...e quanta al secondo se si tiene premuto
+const SPINTA_MAX = 1.4        // fin dove si accumula: si arriva a più del doppio
+const CALO = 1.6              // quanto in fretta si esaurisce, mollato il dito
+const RESPIRO = 2.8           // i secondi di avvicinamento che nessuno può togliere
 
 export class Regole {
   constructor(t) {
@@ -100,11 +129,11 @@ export class Partita {
     this.prossima = 24         // il primo cancello arriva dopo un respiro
     this.colpi = []
     this.scossa = 0
-    this.fretta = 0            // la spinta accumulata a forza di tocchi
+    this.fretta = 0            // la spinta accumulata
+    this.tieni = false         // il dito è giù adesso
 
     this.daScontro = 0
     this.scontri = 0
-    this.dannoSubito = 0
     this.daColpo = 0
 
     this.vinti = 0             // scontri chiusi prima dell'impatto
@@ -171,27 +200,36 @@ export class Partita {
 
   punta(corsia) { return this.vai(Math.max(-1, Math.min(1, corsia)) - this.corsia) }
 
-  /* Un tocco = una spintarella. Vale anche quando la corsia è già quella
-     giusta: il gesto è «voglio andare», non «voglio spostarmi». */
+  /* Un tocco secco = una spintarella. Vale anche quando la corsia è già
+     quella giusta: il gesto è «voglio andare», non «voglio spostarmi». */
   spingi() {
     if (this.finita || this.inPausa) return 0
     this.fretta = Math.min(SPINTA_MAX, this.fretta + SPINTA)
     return this.fretta
   }
 
-  /* Quanto vale la spinta **adesso**, tenuto conto di cosa c'è davanti.
-     Zero fino a `LETTURA` metri dal prossimo cancello, e ci si arriva
-     frenando lungo `RAMPA` invece che di colpo: una frenata secca a metà
-     rettilineo si sente come un inciampo. */
+  /* Il dito tenuto giù. È il modo in cui la spinta si chiede davvero —
+     col mouse, e anche col pollice, «premere» viene prima di «battere» —
+     e senza questo restava un gioco in cui bisognava martellare lo
+     schermo per andare avanti, cioè una cosa che non fa nessuno. */
+  premi(giu) {
+    this.tieni = !!giu && !this.finita && !this.inPausa
+    return this.tieni
+  }
+
+  /* Quanto vale la spinta **adesso**, tenuto conto di cosa c'è davanti:
+     tanta quanta ne resta dopo aver messo da parte `RESPIRO` secondi di
+     avvicinamento al prossimo cancello. Sotto il passo della tappa non si
+     scende mai — la spinta accelera, non frena. */
   get spintaOra() {
     if (!this.fretta) return 1
     const scelta = this.cose
       .filter(c => c.tipo === 'cancelli' && !c.fatto && c.z - this.dist > 0)
       .sort((a, b) => a.z - b.z)[0]
-    const quanto = scelta
-      ? Math.min(1, Math.max(0, (scelta.z - this.dist - LETTURA) / RAMPA))
-      : 1
-    return 1 + this.fretta * quanto
+    const libera = 1 + this.fretta
+    if (!scelta) return libera
+    const concessa = (scelta.z - this.dist) / (RESPIRO * this.v)
+    return Math.min(libera, Math.max(1, concessa))
   }
 
   /* ═══════════ il giro ═══════════ */
@@ -207,7 +245,8 @@ export class Partita {
     const freno = capo ? FRENO_BOSS : 1
 
     const metri = this.v * freno * this.spintaOra * dt
-    this.fretta = Math.max(0, this.fretta - dt * CALO)
+    if (this.tieni) this.fretta = Math.min(SPINTA_MAX, this.fretta + dt * RIEMPI)
+    else this.fretta = Math.max(0, this.fretta - dt * CALO)
     this.dist += metri
     this.v = Math.min(this.regole.punta, this.v + dt * this.regole.spinta)
     this.corsiaX += (this.corsia - this.corsiaX) * Math.min(1, dt * 12)
@@ -281,7 +320,7 @@ export class Partita {
          domanda. Quanti ne servono sta fra il peggio e il meglio — ma **in
          proporzione**, non a metà strada: qui si moltiplica, e fra 1 e 135
          la metà aritmetica è praticamente il massimo. */
-      const base = Math.max(2, Math.round(min * Math.pow(max / Math.max(1, min), 0.45)))
+      const base = Math.max(2, Math.round(min * Math.pow(max / Math.max(1, min), 0.42)))
       /* Ogni quarto scontro è un boss: vale quasi il doppio, ma **mai più
          di quanto la truppa possa diventare**. Un nemico che non si può
          battere non è difficile, è rotto — e lo prenderebbe in faccia
@@ -370,10 +409,13 @@ export class Partita {
         this.segnala('abbattuto')
         return
       }
-      const persi = Math.min(this.truppa, Math.ceil(e.vita))
-      /* chi ti ha steso, e con quanta vita gli era rimasta: è la prima
-         cosa che si vuole sapere davanti a una schermata di sconfitta */
-      this.causa = `${e.boss ? 'un boss' : 'un mostro'} da ${e.quanti}, ancora in piedi con ${Math.ceil(e.vita)}`
+      const resta = Math.ceil(e.vita)
+      const persi = Math.min(this.truppa, resta * PEDAGGIO)
+      /* chi ti ha steso, con quanta vita gli era rimasta e quanto ti è
+         costato: è la prima cosa che si vuole sapere davanti a una
+         schermata di sconfitta */
+      this.causa = `${e.boss ? 'un boss' : 'un mostro'} da ${e.quanti}: ` +
+                   `era ancora in piedi con ${resta}, e te ne ha presi ${persi}`
       this.persi++
       this.truppa -= persi
       this.scossa = 20
@@ -420,20 +462,13 @@ export class Partita {
                                           e.z - this.dist <= INGAGGIO && e.z - this.dist > 0)
     if (!bersaglio || bersaglio.vita <= 0) return
 
+    /* Si spara e basta: durante l'avvicinamento **la truppa non cambia di
+       un soldato**. Quello che si vede scendere è la barra del mostro, e
+       il conto da fare è sempre lo stesso — il mio numero è più grosso
+       del suo? */
     bersaglio.vita -= this.truppa * metri / INGAGGIO
-    this.dannoSubito += Math.max(0, bersaglio.vita) * metri * RISPOSTA
-    if (this.dannoSubito >= 1) {
-      /* Durante l'avvicinamento si perdono soldati ma non si muore: resta
-         sempre l'ultimo. Si muore **all'impatto**, se il mostro è ancora
-         in piedi — così la sconfitta ha una causa che si vede invece di
-         essere un'emorragia che ti spegne mentre guardavi il cancello
-         dopo. */
-      const persi = Math.min(this.truppa - 1, Math.floor(this.dannoSubito))
-      if (persi > 0) { this.dannoSubito -= persi; this.truppa -= persi }
-    }
     if (bersaglio.vita <= 0) {
       bersaglio.vita = 0
-      this.dannoSubito = 0
       this.segnala('caduto')
     }
 

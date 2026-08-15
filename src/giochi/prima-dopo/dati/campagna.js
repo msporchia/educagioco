@@ -13,8 +13,8 @@
    c'è bisogno di scrivere venti righe di dati per ogni tappa.
 
    `quante` è quante storie servono per portarla a casa. Sbagliarne una
-   non toglie niente: la storia si riproduce da sola nell'ordine giusto
-   e si riprova — qui non si perde mai, si vede solo nelle stelle.
+   non toglie niente: la fila giusta si accende un istante e si riprova
+   — qui non si perde mai, si vede solo nelle stelle.
    ═══════════════════════════════════════════════════════════════════ */
 
 export const SCALINI = [
@@ -36,7 +36,7 @@ export const CAMPAGNA = [
     racconto: 'La sveglia, la colazione, la scuola: in che ordine vengono?' },
   { chiave: 'cambia-forma', nome: 'Che forma prende', icona: '🍇', accento: '#9c36b5',
     scalino: 'facile', verbo: 'ordina3', categorie: ['trasformazione', 'cucina'], quante: 5,
-    racconto: "L'uva, il latte, le patate: in cosa diventano?" },
+    racconto: 'Il latte, la mela, le patate: in cosa diventano?' },
 
   /* ── scalino 2: la storia lunga ── */
   { chiave: 'quattro-passi', nome: 'Quattro passi',    icona: '🚂', accento: '#1971c2',

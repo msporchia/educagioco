@@ -9,8 +9,8 @@
 
    `probErrore` è quanto spesso il finto giocatore sbaglia la prima
    risposta di una storia: un bambino vero, non un ragionatore perfetto.
-   Non sbaglia mai la seconda — ha appena visto la sequenza giusta
-   scorrere davanti agli occhi, ed è proprio quello che il replay deve
+   Non sbaglia mai la seconda — ha appena visto la fila giusta
+   accendersi davanti agli occhi, ed è proprio quello che il lampo deve
    ottenere.
    ═══════════════════════════════════════════════════════════════════ */
 import { Corsa } from './corsa.js'

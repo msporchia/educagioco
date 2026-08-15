@@ -32,7 +32,7 @@ const props = defineProps({
   buio: { type: Boolean, default: false },
   dritta: { type: Boolean, default: true },
 })
-const emit = defineEmits(['tela', 'vai'])
+const emit = defineEmits(['tela', 'vai', 'premi'])
 
 const tela = ref(null)
 
@@ -42,8 +42,13 @@ const gruppi = computed(() => (props.cruscotto.gruppi || []).map(g => ({
 
 /* ═══════════ il dito ═══════════ */
 let giu = null
-function premuto(e) { giu = { x: e.clientX, t: e.timeStamp } }
+function premuto(e) {
+  giu = { x: e.clientX, t: e.timeStamp }
+  try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* pazienza */ }
+  emit('premi', true)
+}
 function mollato(e) {
+  emit('premi', false)
   if (!giu) return
   const dx = e.clientX - giu.x
   giu = null
@@ -51,21 +56,36 @@ function mollato(e) {
   if (Math.abs(dx) > 26) return emit('vai', dx > 0 ? 1 : -1)
   emit('vai', e.clientX > (largo ? largo.left + largo.width / 2 : 0) ? 1 : -1)
 }
+const annulla = () => { giu = null; emit('premi', false) }
 
-/* le frecce, per chi gioca al computer. Non è un vezzo: i test e gli
-   scatti girano senza dito. */
+/* Le frecce, per chi gioca al computer. Non è un vezzo: i test e gli
+   scatti girano senza dito — e col mouse «tenere premuto» è il gesto
+   naturale per andare più forte, che a battere il tasto non ci pensa
+   nessuno. Freccia su e barra spaziatrice spingono e basta. */
+const SPINGE = new Set(['ArrowUp', 'w', ' ', 'Spacebar'])
 const tasto = e => {
   if (e.key === 'ArrowLeft' || e.key === 'a') emit('vai', -1)
-  if (e.key === 'ArrowRight' || e.key === 'd') emit('vai', 1)
+  else if (e.key === 'ArrowRight' || e.key === 'd') emit('vai', 1)
+  else if (SPINGE.has(e.key)) { e.preventDefault(); emit('premi', true) }
 }
+const mollaTasto = e => { if (SPINGE.has(e.key)) emit('premi', false) }
 
-onMounted(() => { emit('tela', tela.value); addEventListener('keydown', tasto) })
-onUnmounted(() => removeEventListener('keydown', tasto))
+onMounted(() => {
+  emit('tela', tela.value)
+  addEventListener('keydown', tasto)
+  addEventListener('keyup', mollaTasto)
+})
+onUnmounted(() => {
+  removeEventListener('keydown', tasto)
+  removeEventListener('keyup', mollaTasto)
+  emit('premi', false)
+})
 </script>
 
 <template>
   <div class="co-pista" :class="{ 'co-buio': buio }"
-       @pointerdown="premuto" @pointerup="mollato" @pointercancel="giu = null">
+       @pointerdown="premuto" @pointerup="mollato"
+       @pointercancel="annulla" @pointerleave="annulla">
     <canvas ref="tela" class="co-tela"></canvas>
 
     <div class="co-cruscotto">

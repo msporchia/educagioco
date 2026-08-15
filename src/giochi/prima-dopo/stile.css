@@ -102,20 +102,19 @@
                transition: transform .1s, box-shadow .1s }
 .pd-vignetta:active { transform: translateY(3px); box-shadow: inset 0 0 0 2px var(--pd-bordo) }
 
-/* la striscia in modalità congelata: durante il replay o il segno di
+/* la striscia in modalità congelata: durante il lampo o il segno di
    giusto non si interagisce più, ma si vede lo stesso */
 .pd-congelata .pd-buca, .pd-congelata .pd-vignetta { pointer-events: none }
 
-/* ═══════════ il replay: la storia si racconta da sola ═══════════ */
-.pd-replay { flex: 1; min-height: 0; display: flex; flex-direction: column;
-             align-items: center; justify-content: center; gap: 18px }
-.pd-replay .pd-buca { color: transparent }
-.pd-replay .pd-buca.pd-adesso { box-shadow: inset 0 0 0 4px var(--pd-accento);
-                                animation: pd-respira .6s ease-out }
-@keyframes pd-respira { 0% { transform: scale(1.25) } 100% { transform: none } }
-.pd-verso { font-size: 26px; opacity: .35; transition: opacity .2s }
-.pd-verso.pd-scorre { opacity: 1; animation: pd-avanti .7s ease-out }
-@keyframes pd-avanti { 0% { transform: translateX(-8px) } 100% { transform: translateX(8px) } }
+/* ═══════════ il lampo: la fila giusta, un istante ═══════════ */
+/* Tutte le vignette insieme, bordate dell'accento della tappa: si
+   guarda com'era e si riprova. Niente scorrimento una alla volta —
+   quello era il replay, e faceva aspettare mezzo minuto per storia. */
+.pd-buca.pd-lampo { box-shadow: 0 2px 0 var(--pd-bordo), inset 0 0 0 4px var(--pd-accento);
+                    animation: pd-lampo .7s ease-out }
+@keyframes pd-lampo { 0% { transform: scale(.9); opacity: .4 }
+                      25% { transform: scale(1.06); opacity: 1 }
+                      100% { transform: none; opacity: 1 } }
 
 /* ═══════════ il segno di giusto ═══════════ */
 .pd-spunta { position: absolute; inset: 0; display: grid; place-items: center;
