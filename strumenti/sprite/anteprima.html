@@ -109,8 +109,7 @@
 
 <script type="module">
 /* ── i file veri, non una copia ────────────────────────────────────── */
-import { ATLANTE, PEZZI, ATTORI, VERSI, FOTOGRAMMI } from '../../src/giochi/fattoria/dati/atlante.js'
-import { TESSERE, guastiDelleTessere } from '../../src/giochi/fattoria/dati/tessere.js'
+import { ATLANTE, PEZZI, ATTORI, VERSI, DA, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
 import { CATEGORIE, CATALOGO, guastiDelCatalogo } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { OSTACOLI, guastiDegliOstacoli } from '../../src/giochi/fattoria/dati/ostacoli.js'
 import { guastiDelMondo } from '../../src/giochi/fattoria/dati/mondo.js'
@@ -178,7 +177,7 @@ function dati(d, voci) {
 /* ── i guasti che i dati trovano da soli ──────────────────────────── */
 function sezioneGuasti() {
   const tutti = [
-    ...guastiDelMondo(), ...guastiDelleTessere(),
+    ...guastiDelMondo(),
     ...guastiDelCatalogo(), ...guastiDegliOstacoli(),
   ]
   if (!tutti.length) return
@@ -194,7 +193,7 @@ function sezioneGuasti() {
 function sezioneAttori() {
   const h = el('h2', null, 'Chi cammina')
   h.appendChild(el('small', null,
-    `${ATTORI.length} attori · ${VERSI.length} versi × ${FOTOGRAMMI} fotogrammi`))
+    `${ATTORI.length} attori · ${VERSI.length} versi`))
   dove.appendChild(h)
   dove.appendChild(el('p', 'sotto',
     'Le pose di lato guardano a destra: «sinistra» non esiste nell\'atlante, ' +
@@ -212,13 +211,13 @@ function sezioneAttori() {
     for (const verso of VERSI) {
       const v = el('div', 'variante')
       v.appendChild(tela(`${chi}_${verso}0`, {
-        anima: Array.from({ length: FOTOGRAMMI }, (_, i) => `${chi}_${verso}${i}`) }))
+        anima: Array.from({ length: fotogrammi(chi, verso) }, (_, i) => `${chi}_${verso}${i}`) }))
       v.appendChild(el('em', null, verso))
       t1.appendChild(v)
     }
     const sx = el('div', 'variante')
     const cs = tela(`${chi}_lato0`, {
-      anima: Array.from({ length: FOTOGRAMMI }, (_, i) => `${chi}_lato${i}`) })
+      anima: Array.from({ length: fotogrammi(chi, 'lato') }, (_, i) => `${chi}_lato${i}`) })
     cs.dataset.specchio = '1'
     sx.appendChild(cs)
     sx.appendChild(el('em', null, 'sinistra'))
@@ -234,14 +233,14 @@ function sezioneAttori() {
       const d = carta(chi, `${chi}_${verso}`, `${chi} ${verso}`, chi)
       d.appendChild(el('div', 'etichetta', verso))
       const t = el('div', 'tela')
-      for (let i = 0; i < FOTOGRAMMI; i++) {
+      for (let i = 0; i < fotogrammi(chi, verso); i++) {
         const v = el('div', 'variante')
         v.appendChild(tela(`${chi}_${verso}${i}`))
         v.appendChild(el('em', null, i))
         t.appendChild(v)
       }
       d.appendChild(t)
-      d.appendChild(el('code', null, `${chi}_${verso}0…${FOTOGRAMMI - 1}`))
+      d.appendChild(el('code', null, `${chi}_${verso}0…${fotogrammi(chi, verso) - 1}`))
       fila.appendChild(d)
     }
     dove.appendChild(fila)
@@ -314,37 +313,37 @@ function sezioneOstacoli() {
   dove.appendChild(fila)
 }
 
-/* ── le tessere ───────────────────────────────────────────────────── */
+/* ── tutti i pezzi ────────────────────────────────────────────────── */
 function sezioneTessere() {
-  /* chi cita cosa si ricava, non si scrive: così una tessera che nessuno
-     usa più si vede da sola invece di restare lì per anni */
+  /* chi cita cosa si ricava, non si scrive: cosi' un pezzo che nessuno usa
+     piu' si vede da solo invece di restare li' per anni */
   const citate = new Set([
     ...CATALOGO.flatMap(v => [v.pezzo, ...(v.anima || []), ...(v.giri || []).map(g => g.pezzo)]),
     ...Object.values(OSTACOLI).map(o => o.pezzo),
   ])
-  const nomi = Object.keys(TESSERE).sort()
+  const nomi = Object.keys(PEZZI).filter(n => !/_\w+\d+$/.test(n)).sort()
   const orfane = nomi.filter(n => !citate.has(n) && !n.startsWith('erba'))
 
-  const h = el('h2', null, 'Tutte le tessere')
+  const h = el('h2', null, 'Tutti i pezzi')
   h.appendChild(el('small', null,
-    `${nomi.length} dichiarate in tessere.js` +
-    (orfane.length ? ` · ${orfane.length} non citate da nessuno` : '')))
+    `${nomi.length} nell'atlante` +
+    (orfane.length ? ` · ${orfane.length} non citati da nessuno` : '')))
   dove.appendChild(h)
   dove.appendChild(el('p', 'sotto',
-    'Le coordinate sono quelle sul foglio sorgente: colonna, riga, larghezza, ' +
-    'altezza in tessere da 16 px. Per cambiarne una si tocca solo tessere.js.'))
+    'Ognuno arriva da un foglio in strumenti/sprite/sorgenti/, ritagliato ' +
+    'dove dice il suo foglietto .json. Per cambiarne uno si tocca quello.'))
 
   const fila = el('div', 'fila')
   for (const n of nomi) {
-    const [c, r, w, hh] = TESSERE[n]
-    const d = carta(n, n, `${n} tessera`, n)
+    const [x, y, w, hh] = PEZZI[n]
+    const d = carta(n, n, `${n} ${DA[n] || ''}`, n)
     const t = el('div', 'tela')
     t.appendChild(tela(n))
     d.appendChild(t)
     d.appendChild(el('code', null, n))
     dati(d, [
-      ['col', c], ['riga', r], ['', `${w}×${hh}`],
-      ...(orfane.includes(n) ? [['', 'non citata', 'cattivo']] : []),
+      ['', `${w}×${hh}`], ['da', DA[n] || '?'],
+      ...(orfane.includes(n) ? [['', 'non citato', 'cattivo']] : []),
     ])
     fila.appendChild(d)
   }

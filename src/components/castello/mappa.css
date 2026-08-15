@@ -11,3 +11,17 @@
 .tap.chiusa { opacity:.45; box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px #d8cee6 }
 .tap.chiusa:active { transform:none }
 .spunta { position:absolute; top:5px; right:8px; color:#38c172; font-weight:900; font-size:13px }
+
+/* ── il titolo di un arco ──
+   Una riga sola, larga quanto la fila di tappe che introduce: serve a
+   dire «qui comincia un capitolo», non a farsi guardare. Quando l'arco
+   è finito il conto si tinge di verde, ed è l'unica medaglia che c'è. */
+.arco { display:flex; align-items:center; gap:8px; width:100%; max-width:420px;
+        margin:10px 0 -2px; padding:0 4px }
+.arco .faccia { font-size:19px }
+.arco b { font-size:14px; color:var(--viola-scuro); flex:1 }
+.arco i { font-style:normal; font-size:11.5px; font-weight:900; color:var(--tenue);
+          background:#ffffffcc; border-radius:999px; padding:2px 9px }
+.arco.finito i { color:#1c7a45; background:#dff5e6 }
+/* il primo titolo non ha bisogno di staccarsi da quello che c'è sopra */
+.arco:first-of-type { margin-top:2px }

@@ -29,6 +29,7 @@ tabella dei ritagli accanto: un file solo, come vuole il build.
 """
 import base64
 import io
+import math
 import json
 import sys
 from collections import deque
@@ -104,14 +105,19 @@ def passo_di(salti):
     #                                          il primo è quello che ha più
     #                                          probabilità di essere spurio
     fuori = [s for s in salti if abs((s - base) / grezzo - round((s - base) / grezzo)) < 0.2]
-    n = round((fuori[-1] - fuori[0]) / grezzo)
+    # quante caselle stanno fra il primo e l'ultimo: si contano una per
+    # una, non dividendo la distanza per il passo grezzo. Con centoventi
+    # caselle un passo grezzo sbagliato di due decimi ne conta due di più,
+    # e il passo che ne esce è sbagliato per sempre.
+    n = sum(max(1, round((fuori[i + 1] - fuori[i]) / grezzo)) for i in range(len(fuori) - 1))
     if n < 4:
         return None
     p = (fuori[-1] - fuori[0]) / n
     disp = sum(abs((s - fuori[0]) / p - round((s - fuori[0]) / p)) for s in fuori) / len(fuori)
-    # gli scartati contano: una fila sporca ne perde tanti, e senza questo
-    # il costo la premierebbe proprio per averli buttati
-    return p, fuori[0] % p, disp + (len(salti) - len(fuori)) / len(salti)
+    # quanti salti stanno in fila conta più di quanto stanno dritti: una
+    # riga di fondo scoperto ne allinea centoventi, una che attraversa una
+    # torre ne allinea quattro e sembra regolarissima
+    return p, fuori[0] % p, len(fuori), disp
 
 
 def scacchiera_di(im):
@@ -127,46 +133,44 @@ def scacchiera_di(im):
     px = im.load()
 
     def asse(file, quanti, leggi):
+        """Il passo lungo un asse, letto sulle file di bordo. Non si media
+        con l'altro asse: i due passi sono diversi di un centesimo, e un
+        centesimo alla centesima casella è un pixel."""
         letture = [s for k in file
                    if (s := passo_di(salti_di([sum(leggi(k, i)) / 3 for i in range(quanti)])))]
         if not letture:
             return 12.0, 0.0
-        buone = sorted(letture, key=lambda s: s[2])[:max(2, len(letture) // 2)]
-        p = sorted(s[0] for s in buone)[len(buone) // 2]
-        return p, buone[0][1]
+        p, f, _, _ = max(letture, key=lambda s: (s[2], -s[3]))
+        return p, f
 
-    px_, fx = asse([0, 1, 2, 3, H - 4, H - 3, H - 2, H - 1], W, lambda y, x: px[x, y])
-    py_, fy = asse([0, 1, 2, 3, W - 4, W - 3, W - 2, W - 1], H, lambda x, y: px[x, y])
+    passo_x, fx = asse([0, 1, 2, H - 3, H - 2, H - 1], W, lambda y, x: px[x, y])
+    passo_y, fy = asse([0, 1, 2, W - 3, W - 2, W - 1], H, lambda x, y: px[x, y])
 
-    # ── il ritocco ──
-    # La misura dai salti prende il passo quasi giusto; «quasi» non basta,
-    # perché su centoventi caselle mezzo centesimo di errore sfasa tutto.
-    # L'ultima parola ce l'ha la prova: si tiene la terna che separa di più
-    # i due grigi del fondo, provata su un pugno di pixel di bordo.
+    # ── il ritocco delle sole fasi ──
+    # Il passo misurato è buono; la fase può essere presa da una fila
+    # sporca, e allora tutto il modello scivola di mezza casella. Si prova
+    # e si tiene quella che separa di più i due grigi del fondo.
     orlo = [(x, y, sum(px[x, y]) / 3)
-            for x in range(0, W, 3) for y in (0, 1, H - 2, H - 1) if neutro(px[x, y])]
+            for x in range(0, W, 2) for y in (0, 1, H - 2, H - 1) if neutro(px[x, y])]
     orlo += [(x, y, sum(px[x, y]) / 3)
-             for y in range(0, H, 3) for x in (0, 1, W - 2, W - 1) if neutro(px[x, y])]
+             for y in range(0, H, 2) for x in (0, 1, W - 2, W - 1) if neutro(px[x, y])]
 
-    def separazione(p, ax, ay):
+    def separazione(ax, ay):
         c, s = [], []
         for x, y, v in orlo:
-            (c if (int((x - ax) / p) + int((y - ay) / p)) % 2 == 0 else s).append(v)
+            pari = (math.floor((x - ax) / passo_x) + math.floor((y - ay) / passo_y)) % 2 == 0
+            (c if pari else s).append(v)
         if len(c) < 30 or len(s) < 30:
             return -1e9, 0, 0
-        mc = sorted(c)[len(c) // 2]
-        ms = sorted(s)[len(s) // 2]
+        mc, ms = sorted(c)[len(c) // 2], sorted(s)[len(s) // 2]
         return abs(mc - ms), mc, ms
 
-    passo0 = (px_ + py_) / 2
-    migliore = max(((passo0 + k * 0.005, fx + i, fy + j)
-                    for k in range(-12, 13)
-                    for i in range(int(passo0) + 1)
-                    for j in range(int(passo0) + 1)),
-                   key=lambda t: separazione(*t)[0])
-    passo, fx, fy = migliore
-    _, a, b = separazione(passo, fx, fy)
-    return passo, fx, fy, a, b
+    fx, fy = max(((fx + i * 0.5, fy + j * 0.5)
+                  for i in range(int(passo_x * 2))
+                  for j in range(int(passo_y * 2))),
+                 key=lambda t: separazione(*t)[0])
+    _, a, b = separazione(fx, fy)
+    return passo_x, passo_y, fx, fy, a, b
 
 
 def maschera_di(im):
@@ -180,14 +184,14 @@ def maschera_di(im):
     attraversa una scacchiera, che è tutto quello che serve."""
     W, H = im.size
     px = im.load()
-    passo, fx, fy, a, b = scacchiera_di(im)
+    passo_x, passo_y, fx, fy, a, b = scacchiera_di(im)
     m = bytearray(W * H)
     for y in range(H):
         r = y * W
-        j = int((y - fy) / passo)
+        j = math.floor((y - fy) / passo_y)
         for x in range(W):
             c = px[x, y]
-            atteso = a if (int((x - fx) / passo) + j) % 2 == 0 else b
+            atteso = a if (math.floor((x - fx) / passo_x) + j) % 2 == 0 else b
             v = (c[0] + c[1] + c[2]) / 3
             if not (neutro(c, 16) and abs(v - atteso) <= 13):
                 m[r + x] = 1

@@ -13,6 +13,11 @@
    preciso non viene, e restare fermi perché lo swipe era corto di dieci
    pixel è la cosa che fa posare il telefono.
 
+   Ogni tocco **spinge anche in avanti**, che ci si sposti o no: serve a
+   non stare ad aspettare i venti metri vuoti fra un cancello e l'altro.
+   Quanto valga quella spinta lo decide il motore, non questa schermata —
+   e davanti a una scelta vale zero.
+
    ── IL CRUSCOTTO È PICCOLO APPOSTA ───────────────────────────────
    Quello che conta si guarda **in strada**: il numero della truppa sta
    attaccato ai soldati, i cancelli hanno il conto scritto sopra. Qui in
@@ -96,6 +101,6 @@ onUnmounted(() => removeEventListener('keydown', tasto))
       <b>{{ cruscotto.mostro.quanti }}</b> fra {{ cruscotto.mostro.fra }} m
     </div>
 
-    <div v-if="dritta" class="co-dritta em">tocca a destra o a sinistra 👆</div>
+    <div v-if="dritta" class="co-dritta em">tocca a destra o a sinistra<br>più tocchi, più corri 👆</div>
   </div>
 </template>

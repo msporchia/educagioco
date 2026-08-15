@@ -45,6 +45,24 @@ export const INGAGGIO = 16
 const RISPOSTA = 0.035        // quanto picchia il mostro mentre è vivo
 const FRENO_BOSS = 0.45       // davanti al boss si rallenta, non ci si ferma
 
+/* ═══════════ LA SPINTA ═══════════
+   Ogni tocco dà una spintarella, e tenendo il ritmo si vola. Serve a una
+   cosa sola: **saltare i tratti in cui non c'è niente da decidere**. Fra
+   un cancello e l'altro ci sono venti metri di strada vuota, e aspettare
+   che passino non insegna niente a nessuno.
+
+   Ma la spinta **si spegne da sola** quando la scelta si avvicina: da
+   `LETTURA` metri in giù si torna al passo dichiarato dalla tappa,
+   qualunque cosa faccia il dito. È la riga che tiene in piedi tutto il
+   gioco — il tempo per leggere tre numeri non è una cosa che il bambino
+   possa rinunciare a prendersi, perché a sei anni non sa ancora di
+   averne bisogno. Chi ha fretta la salta dove non serve, non dove serve. */
+const SPINTA = 0.4            // quanta ne dà un tocco
+const SPINTA_MAX = 1.3        // fin dove si accumula: al massimo si va più del doppio
+const CALO = 0.7              // quanto in fretta si esaurisce da sola
+const LETTURA = 16            // sotto questa distanza da un cancello, si va al passo
+const RAMPA = 12              // e ci si arriva frenando, non di colpo
+
 export class Regole {
   constructor(t) {
     this.chiave = t.chiave
@@ -82,6 +100,7 @@ export class Partita {
     this.prossima = 24         // il primo cancello arriva dopo un respiro
     this.colpi = []
     this.scossa = 0
+    this.fretta = 0            // la spinta accumulata a forza di tocchi
 
     this.daScontro = 0
     this.scontri = 0
@@ -152,6 +171,29 @@ export class Partita {
 
   punta(corsia) { return this.vai(Math.max(-1, Math.min(1, corsia)) - this.corsia) }
 
+  /* Un tocco = una spintarella. Vale anche quando la corsia è già quella
+     giusta: il gesto è «voglio andare», non «voglio spostarmi». */
+  spingi() {
+    if (this.finita || this.inPausa) return 0
+    this.fretta = Math.min(SPINTA_MAX, this.fretta + SPINTA)
+    return this.fretta
+  }
+
+  /* Quanto vale la spinta **adesso**, tenuto conto di cosa c'è davanti.
+     Zero fino a `LETTURA` metri dal prossimo cancello, e ci si arriva
+     frenando lungo `RAMPA` invece che di colpo: una frenata secca a metà
+     rettilineo si sente come un inciampo. */
+  get spintaOra() {
+    if (!this.fretta) return 1
+    const scelta = this.cose
+      .filter(c => c.tipo === 'cancelli' && !c.fatto && c.z - this.dist > 0)
+      .sort((a, b) => a.z - b.z)[0]
+    const quanto = scelta
+      ? Math.min(1, Math.max(0, (scelta.z - this.dist - LETTURA) / RAMPA))
+      : 1
+    return 1 + this.fretta * quanto
+  }
+
   /* ═══════════ il giro ═══════════ */
   avanza(dt) {
     if (this.finita || this.inPausa) return
@@ -164,7 +206,8 @@ export class Partita {
                                      c.z - this.dist < 18 && c.vita > 0)
     const freno = capo ? FRENO_BOSS : 1
 
-    const metri = this.v * freno * dt
+    const metri = this.v * freno * this.spintaOra * dt
+    this.fretta = Math.max(0, this.fretta - dt * CALO)
     this.dist += metri
     this.v = Math.min(this.regole.punta, this.v + dt * this.regole.spinta)
     this.corsiaX += (this.corsia - this.corsiaX) * Math.min(1, dt * 12)
@@ -471,6 +514,10 @@ export class Partita {
     return {
       veste: this.regole.veste,
       dist: this.dist, corsia: this.corsiaX, scossa: this.scossa,
+      /* quanto sta spingendo **davvero**: davanti a un cancello è zero
+         anche col dito che martella, e chi disegna le righe di corsa deve
+         far vedere quella, non l'intenzione */
+      spinta: this.spintaOra - 1,
       truppa: this.truppa, soldati: figure(this.truppa),
       cose: cose.sort((a, b) => b.z - a.z),
       colpi: this.colpi.map(c => ({ z: c.z, corsia: c.corsia })),

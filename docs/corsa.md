@@ -90,6 +90,23 @@ E i conti si fanno **da fermi**: finché la domanda è a schermo la corsa non
 avanza di un centimetro. Leggere un esercizio mentre si corre non è
 calcolare, è tirare a indovinare.
 
+## Chi ha fretta
+
+Ogni tocco, oltre a spostare di corsia, **spinge in avanti**: martellando
+lo schermo si vola, e i venti metri vuoti fra un cancello e l'altro non si
+stanno lì ad aspettare. Misurato, una tappa si accorcia di circa un quinto
+senza che cambi niente di quello che succede — il danno agli scontri si
+conta per metro percorso, non per secondo, quindi correre più forte non
+rende un mostro più facile né più difficile.
+
+C'è un limite, ed è l'unico punto del gioco in cui il dito non comanda:
+**da sedici metri dal cancello in giù si torna al passo**, qualunque cosa
+faccia il bambino. A sei anni non si sa ancora di aver bisogno di qualche
+secondo per leggere tre numeri, e non si può lasciare che la fretta se li
+porti via. Le righe di corsa ai lati dello schermo si spengono lì: si vede
+quando la spinta smette di funzionare, invece di continuare a martellare
+senza capire perché.
+
 ## Le tre stelle
 
 - ⭐ **arrivare** in fondo

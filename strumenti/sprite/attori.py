@@ -1,43 +1,22 @@
 #!/usr/bin/env python3
-"""Porta un foglio di personaggio generato dentro `strumenti/sprite/attori/`.
+"""Come si toglie un fondo, e come si misura un foglio che non si conosce.
 
-    python3 strumenti/sprite/attori.py sorgenti/gatto-nero.jpeg gatto-nero --zampe
-    python3 strumenti/sprite/attori.py sorgenti/arciera-generata.jpeg arciera --guarda
+Non ritaglia piu' niente: da quando ogni sorgente ha il suo foglietto
+`.json` (vedi FORMATO.md) i ritagli li fa `atlante.py`, che legge quello.
+Qui restano le due cose che un foglietto non puo' dichiarare perche' non
+si sanno guardando:
 
-Un «attore» è chiunque cammini: la bambina, il cane, una gallina. Il formato
-è quello di `character.png` del set di ArMM1998, e non è una scelta nostra —
-è quello che i generatori di immagini restituiscono se glielo si fa vedere,
-il che lo rende lo standard di fatto:
+  · **togliere il fondo** — `fondi_di`, `allaga`, `sfrangia`. Il fondo si
+    toglie allagando dai bordi, mai per colore: un cane bianco ha addosso
+    lo stesso bianco della carta, e cancellando «tutto il bianco» gli si
+    aprono buchi in mezzo alla schiena. E i colori del fondo si
+    raggruppano prima di contarli, se no un JPEG che sgrana una scacchiera
+    in centinaia di grigi non ne fa riconoscere nemmeno uno.
+  · **misurare un foglio nuovo** — `scala`, `gruppi`, per capire dove
+    cadono le bande e i fotogrammi quando si scrive il suo foglietto la
+    prima volta.
 
-    una tessera 16 largo × 32 alto, quattro fotogrammi per riga,
-    bande a passo 32: y=0 verso il basso, y=32 di lato, y=64 verso l'alto.
-    Le pose di lato guardano a DESTRA; la sinistra è la stessa specchiata.
-
-Quello che arriva da un generatore non è mai già in quella misura: è un
-ingrandimento, spesso JPEG, su fondo bianco. Questo script fa le tre cose
-che servono e nient'altro:
-
-  1. **rimpicciolisce alla misura vera** — dalla forma del foglio, che è
-     272:256; misurare il passo fra le bande è la strada lunga e sbaglia
-     contro un fondo a scacchiera.
-  2. **toglie il fondo**, che sembra trasparente e non lo è: certi
-     generatori disegnano la scacchiera coi pixel veri. Si allaga dai
-     bordi, mai per colore — un cane bianco ha addosso lo stesso bianco
-     della carta, e cancellando «tutto il bianco» gli si aprono buchi in
-     mezzo alla schiena.
-  3. **riduce i colori**, perché il ricampionamento di un JPEG ne lascia
-     migliaia e la pixel art ne vuole una decina.
-
-E soprattutto **normalizza le bande**. Con `--zampe`, per un quadrupede:
-nel suo foglio la metà di sopra è l'animale in piedi, visto di fronte e di
-spalle, e la metà di sotto è quello di profilo su quattro zampe. Preso col
-tracciato di un umano, il cane camminava su due zampe appena ti spostavi
-di lato. Quello che esce di qui è sempre nella forma canonica, così il
-generatore dell'atlante non deve sapere chi cammina su quante zampe.
-
-Il risultato va in `strumenti/sprite/attori/<nome>.png` ed è versionato — è
-roba nostra. Poi si rilancia `atlante.py`, che raccoglie da sé tutto quello
-che trova lì dentro.
+    python3 strumenti/sprite/attori.py sorgenti/cane-bobtail2.png
 """
 import sys
 from collections import Counter
@@ -192,20 +171,22 @@ def riordina(im, mappa):
     return fuori
 
 
-def allaga(px, fondi, tolleranza=26):
+def allaga(px, fondi, tolleranza=26, largo=None, alto=None):
     """Toglie il fondo partendo dai bordi. Non per colore: un cane bianco ha
     addosso lo stesso bianco della carta, e cancellando «tutto il bianco»
     gli si aprono buchi in mezzo alla schiena. Via va solo quello che si
     raggiunge camminando dal bordo, cioè quello che sta fuori dalla sagoma."""
-    visti = bytearray(FOGLIO_W * FOGLIO_H)
-    coda = [(x, y) for x in range(FOGLIO_W) for y in (0, FOGLIO_H - 1)]
-    coda += [(x, y) for y in range(FOGLIO_H) for x in (0, FOGLIO_W - 1)]
+    largo = largo or FOGLIO_W
+    alto = alto or FOGLIO_H
+    visti = bytearray(largo * alto)
+    coda = [(x, y) for x in range(largo) for y in (0, alto - 1)]
+    coda += [(x, y) for y in range(alto) for x in (0, largo - 1)]
     via = 0
     while coda:
         x, y = coda.pop()
-        if x < 0 or y < 0 or x >= FOGLIO_W or y >= FOGLIO_H:
+        if x < 0 or y < 0 or x >= largo or y >= alto:
             continue
-        i = y * FOGLIO_W + x
+        i = y * largo + x
         if visti[i]:
             continue
         visti[i] = 1
@@ -219,23 +200,25 @@ def allaga(px, fondi, tolleranza=26):
     return via
 
 
-def sfrangia(px, fondi, giri=2):
+def sfrangia(px, fondi, largo=None, alto=None, giri=2):
     """Toglie la frangia. Il JPEG lascia intorno a ogni sagoma un contorno
     di pixel color-fondo che l'allagamento non raggiunge — in mappa sono
     quelle righine bianche che compaiono e spariscono mentre l'animale
     cammina, ed e' la cosa che si nota di piu'. Si tolgono solo i pixel
     color-fondo **che toccano il trasparente**: dentro la sagoma non si
     entra mai."""
+    largo = largo or FOGLIO_W
+    alto = alto or FOGLIO_H
     via = 0
     for _ in range(giri):
         orlo = []
-        for y in range(FOGLIO_H):
-            for x in range(FOGLIO_W):
+        for y in range(alto):
+            for x in range(largo):
                 if not px[x, y][3] or not e_fondo(px[x, y], fondi, 46):
                     continue
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     a, b = x + dx, y + dy
-                    if a < 0 or b < 0 or a >= FOGLIO_W or b >= FOGLIO_H or not px[a, b][3]:
+                    if a < 0 or b < 0 or a >= largo or b >= alto or not px[a, b][3]:
                         orlo.append((x, y))
                         break
         for x, y in orlo:
@@ -331,22 +314,19 @@ def normalizza(sorgente, nome, guarda=False, mappa=CANONICA):
 
 
 def main():
-    voci = [a for a in sys.argv[1:] if not a.startswith('--')]
-    if len(voci) < 2:
+    """Misura un foglio e propone il suo foglietto: si guarda, si corregge
+    quello che serve, e si salva accanto all'immagine."""
+    if len(sys.argv) < 2:
         print(__doc__)
         return 1
-    sorgente = Path(voci[0]).expanduser()
-    if not sorgente.exists():
-        print(f'{sorgente} non c\'è')
-        return 1
-    nome = voci[1].strip().lower()
-    mappa = MAPPE['quadrupede'] if '--zampe' in sys.argv else MAPPE['umano']
-    print(f'{sorgente.name} → {nome}' + (' (quattro zampe)' if '--zampe' in sys.argv else ''))
-    if normalizza(sorgente, nome, '--guarda' in sys.argv, mappa) is None:
-        return 1
-    print('ora: python3 strumenti/sprite/atlante.py')
+    f = Path(sys.argv[1]).expanduser()
+    im = Image.open(f).convert('RGBA')
+    print(f'{f.name}: {im.width}x{im.height} {im.mode}')
+    trasparente = im.mode == 'RGBA' and any(p[3] < 255 for p in im.getdata())
+    print(f'  fondo: {"trasparente" if trasparente else "da togliere (auto)"}')
+    z = scala(im.convert('RGB'))
+    if z:
+        print(f'  passo fra le bande: {z * CELLA_H:.0f} px → scala ~{z:.3f}')
+        print(f'  cioe\' un foglio da {im.width / z:.0f}x{im.height / z:.0f} px veri')
+    print('  ora scrivi il foglietto: vedi FORMATO.md')
     return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())

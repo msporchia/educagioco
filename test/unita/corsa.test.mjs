@@ -237,6 +237,50 @@ for (const [i, t] of CAMPAGNA.entries()) {
   }
 }
 
+/* ══════════ LA SPINTA NON RUBA IL TEMPO DI LEGGERE ══════════
+   Un tocco fa correre più forte, così i venti metri vuoti fra un cancello
+   e l'altro non si stanno lì ad aspettare. Ma davanti alla scelta la
+   spinta si spegne da sola, e **quello è il pezzo che non si negozia**: a
+   sei anni non si sa ancora di aver bisogno di qualche secondo per
+   leggere tre numeri, quindi non si può lasciare che il dito se li porti
+   via. Qui si misura giocando, con un pilota che martella lo schermo. */
+for (const [i, t] of [[0, CAMPAGNA[0]], [8, CAMPAGNA[8]]]) {
+  const p = new Partita(new Regole(t), { rnd: caso(61 + i) })
+  let vicino = 0, lontano = 0        // secondi spesi sotto e sopra i 16 m
+  let piuVeloce = 0
+  while (!p.finita) {
+    if (p.inPausa) { p.rispondi(true); continue }
+    p.spingi()
+    const c = p.cose.filter(x => x.tipo === 'cancelli' && !x.fatto && x.z - p.dist > 0)
+      .sort((a, b) => a.z - b.z)[0]
+    const quanto = c ? c.z - p.dist : Infinity
+    if (quanto <= 16) { vicino += 1 / 30; piuVeloce = Math.max(piuVeloce, p.spintaOra) }
+    else lontano += 1 / 30
+    p.avanza(1 / 30)
+    p.svuotaEventi()
+  }
+  uguale(`«${t.nome}»: sotto i 16 metri dal cancello si va al passo`,
+         Math.round(piuVeloce * 1000) / 1000, 1)
+  controlla(`«${t.nome}»: ma nel vuoto si vola`, lontano > 0,
+            'il tratto libero esiste e la spinta ci lavora')
+}
+
+/* e con la spinta la tappa dura meno, se no non serviva a niente */
+{
+  const regole = new Regole(CAMPAGNA[4])
+  const calmo = gioca(regole, { rnd: caso(71), bravura: 1, sapienza: 1 })
+  const svelto = gioca(regole, { rnd: caso(71), bravura: 1, sapienza: 1, fretta: true })
+  const giri = p => p.partita.dist / regole.metri
+  controlla('chi tocca lo schermo arriva prima',
+            svelto.partita.dist >= calmo.partita.dist * 0.99 && giri(svelto) >= 0.99,
+            'la spinta deve accorciare i tratti vuoti, non la tappa')
+  uguale('e la vince lo stesso', svelto.partita.vinta, true)
+  /* il conto degli scontri non cambia: il danno si conta per metro, non
+     per secondo, ed è per questo che si può correre più forte senza che
+     un mostro diventi più facile */
+  uguale('gli scontri finiscono uguale', svelto.partita.persi, calmo.partita.persi)
+}
+
 /* ── il mostro non è mai imbattibile ──
    Un nemico che non si può battere non è difficile, è rotto — e lo
    prende in faccia proprio chi ha scelto meglio di tutti. */

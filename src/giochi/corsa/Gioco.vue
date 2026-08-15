@@ -199,9 +199,16 @@ function prendiTela(tela) {
 
 function ridimensiona() { pittore?.misura() }
 
+/* Un tocco fa due cose insieme, e non è un doppio significato: è lo
+   stesso gesto letto per intero. Sposta nella corsia toccata — se ci sei
+   già, non sposta niente — e in ogni caso **spinge**. Serve a saltare i
+   venti metri di strada vuota fra un cancello e l'altro senza stare lì ad
+   aspettare; davanti alla scelta la spinta si spegne da sé, e quel pezzo
+   lì si corre sempre al passo (vedi `motore/corsa.js`). */
 function vai(delta) {
   toccato.value = true
   partita.value?.vai(delta)
+  partita.value?.spingi()
 }
 
 /* ═══════════ l'esercizio si paga con niente ═══════════

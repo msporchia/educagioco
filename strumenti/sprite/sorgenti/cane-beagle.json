@@ -9,14 +9,14 @@
   ],
   "fondo": "auto",
   "sprite": {
-    "pappagallo_giu": {
+    "cane-beagle_giu": {
       "da": [
         0,
         0
       ],
       "quanti": 4
     },
-    "pappagallo_lato": {
+    "cane-beagle_lato": {
       "da": [
         0,
         4
@@ -27,7 +27,7 @@
         32
       ]
     },
-    "pappagallo_su": {
+    "cane-beagle_su": {
       "da": [
         0,
         2

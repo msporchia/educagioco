@@ -67,6 +67,7 @@ export class Pista {
     this.tela = tela
     this.ctx = tela.getContext('2d')
     this.brividi = []
+    this.striscia = 0
     this.misura()
   }
 
@@ -128,6 +129,7 @@ export class Pista {
     }
     this.colpi(s.colpi)
     this.truppa(s)
+    this.corsa(s.spinta || 0)
 
     this.particelle(dt)
     ctx.restore()
@@ -621,7 +623,27 @@ export class Pista {
     }
   }
 
+  /* Le righe di corsa: dicono che la spinta **sta funzionando adesso**, e
+     spariscono da sole nei metri prima di un cancello — che è esattamente
+     dove il motore la spegne. Senza, il bambino continuerebbe a martellare
+     lo schermo senza capire perché non succede più niente. */
+  corsa(spinta) {
+    if (spinta < 0.1) return
+    const { ctx, W, H } = this
+    ctx.globalAlpha = Math.min(0.5, spinta * 0.34)
+    ctx.fillStyle = '#ffffff'
+    for (let i = 0; i < 7; i++) {
+      const lato = i % 2 ? 1 : -1
+      const t = ((i * 0.37 + this.striscia) % 1)
+      const x = W / 2 + lato * (W * 0.3 + W * 0.2 * ((i * 3) % 4) / 4)
+      const y = this.oriz + (H - this.oriz) * (0.2 + t * 0.85)
+      ctx.fillRect(x - 2, y, 4, H * 0.05 * (0.5 + t))
+    }
+    ctx.globalAlpha = 1
+  }
+
   particelle(dt) {
+    this.striscia = ((this.striscia || 0) + dt * 2.2) % 1
     const { ctx } = this
     for (const p of this.brividi) {
       p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.vita -= dt

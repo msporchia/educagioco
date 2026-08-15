@@ -31,11 +31,16 @@ import { Partita } from './corsa.js'
 const SGUARDO = 26
 
 export class Pilota {
-  constructor({ rnd = Math.random, bravura = 1, sapienza = 0.8, gusto = 'studioso' } = {}) {
+  constructor({ rnd = Math.random, bravura = 1, sapienza = 0.8, gusto = 'studioso',
+                fretta = false } = {}) {
     this.rnd = rnd
     this.bravura = bravura
     this.sapienza = sapienza
     this.gusto = gusto
+    /* `fretta` è il bambino che martella lo schermo per non aspettare.
+       Serve a provare la cosa che la spinta non deve mai fare: rubare il
+       tempo di leggere i cancelli. */
+    this.fretta = fretta
     this.domande = 0
     this.giuste = 0
   }
@@ -53,6 +58,7 @@ export class Pilota {
   }
 
   guida(partita) {
+    if (this.fretta) partita.spingi()
     const cose = partita.cose.filter(c => !c.fatto && c.z - partita.dist > 0.6)
     const cancello = cose.filter(c => c.tipo === 'cancelli')
       .sort((a, b) => a.z - b.z)[0]
@@ -93,10 +99,10 @@ export class Pilota {
    gioco non è quello dell'orologio, è quello che gli si dà. */
 export function gioca(regole, {
   rnd = Math.random, dt = 1 / 30, bravura = 1, sapienza = 0.8, gusto = 'studioso',
-  fermo = false, fino = 240,
+  fermo = false, fino = 240, fretta = false,
 } = {}) {
   const partita = new Partita(regole, { rnd })
-  const pilota = new Pilota({ rnd, bravura, sapienza, gusto })
+  const pilota = new Pilota({ rnd, bravura, sapienza, gusto, fretta })
   const massimo = Math.ceil(fino / dt) + 400
   let passi = 0
   while (passi++ < massimo) {
