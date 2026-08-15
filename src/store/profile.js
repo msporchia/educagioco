@@ -15,6 +15,7 @@ import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { eccezioniDi } from '../data/partenze.js'
+import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
 import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
          progressoArea, statoTraguardi, abilita, difficolta,
@@ -169,6 +170,34 @@ export function accendiSuono(si) {
   persist()
 }
 
+/* ── con che personaggio si vede in mappa ──
+   È un attributo del bambino, come il nome — non di un gioco: i giochi
+   nuovi non toccano il profilo (vedi `src/giochi/campagne.js`), ma qui non
+   sta nascendo un campo per la fattoria, sta nascendo un campo per il
+   bambino che la fattoria (e domani chiunque altro disegni un personaggio
+   in mappa) si limita a leggere. `PERSONE` — chi si può scegliere, contro
+   le bestie che camminano per conto loro — viene dall'atlante degli
+   sprite, generato da `strumenti/sprite/atlante.py` dal `tipo` dichiarato
+   in ogni foglietto sorgente (`strumenti/sprite/FORMATO.md`).
+
+   Il valore di partenza non sta in `blank()`: si calcola qui, alla
+   lettura, come fa già `progresso()` in `campagne.js` — un profilo
+   salvato ieri non ha bisogno di una migrazione per giocare oggi. Stessa
+   idea per chi punta a un personaggio che l'atlante non ha più (un
+   aggiornamento che ne toglie uno, o un salvataggio importato da un'altra
+   casa): si ricade sul primo disponibile invece di piantare il gioco. */
+export function aspettoDi() {
+  const p = state.profile
+  if (typeof p.aspetto !== 'string' || !PERSONE.includes(p.aspetto)) p.aspetto = PERSONE[0]
+  return p.aspetto
+}
+export function scegliAspetto(nome) {
+  if (!PERSONE.includes(nome)) return false
+  state.profile.aspetto = nome
+  persist()
+  return true
+}
+
 /* ---------- il roster ----------
    Una voce vale se ha un id: il nome può essere vuoto (un profilo
    ricostruito da una chiave rovinata) e si rimedia con l'id, ma senza id
@@ -225,8 +254,15 @@ async function idLibero() {
    avvio sì — è l'unico che c'è, e la domanda «come ti chiami?» finisce
    con lui che gioca. Dalla schermata dei genitori no: aggiungere un
    fratellino non vuol dire buttare fuori chi ha in mano il telefono, e
-   cambiare giocatore lì ricarica la schermata e richiede il codice. */
-export async function creaGiocatore(nome, entra = true, partenza = null) {
+   cambiare giocatore lì ricarica la schermata e richiede il codice.
+
+   `aspetto`, se c'è, è il personaggio scelto in fase di creazione — non
+   obbligatorio: chi non lo passa si ritrova comunque `aspettoDi()` a
+   posto al primo bisogno, col primo di `PERSONE`. Va applicato al
+   profilo VUOTO come `partenza`, per lo stesso motivo: quando `entra` è
+   falso il profilo non passa mai da `state.profile`, quindi
+   `scegliAspetto()` (che scrive lì) non lo raggiungerebbe. */
+export async function creaGiocatore(nome, entra = true, partenza = null, aspetto = null) {
   const pulito = String(nome || '').trim().slice(0, 20)
   if (!pulito) throw new Error('Serve un nome')
   const id = await idLibero()
@@ -242,7 +278,16 @@ export async function creaGiocatore(nome, entra = true, partenza = null) {
     const { giochi, sa } = eccezioniDi(partenza)
     fresco.settings = { ...fresco.settings, giochi, sa }
   }
-  if (entra) { await selectPlayer(id); if (partenza) { state.profile.settings = fresco.settings; persist() } }
+  // un nome che PERSONE non ha (mai dovrebbe capitare, da un tasto che
+  // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere
+  // sul primo disponibile alla lettura che salvare un aspetto fantasma
+  if (aspetto && PERSONE.includes(aspetto)) fresco.aspetto = aspetto
+  if (entra) {
+    await selectPlayer(id)
+    if (partenza) state.profile.settings = fresco.settings
+    if (fresco.aspetto) state.profile.aspetto = fresco.aspetto
+    if (partenza || fresco.aspetto) persist()
+  }
   else save(KEY(id), fresco)      // il suo profilo esiste da subito
   /* Subito su disco, senza aspettare il salvataggio a scatto ritardato:
      questo è il primo dato che esiste, e chi chiude l'app appena scritto

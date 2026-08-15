@@ -16,15 +16,22 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref } from 'vue'
 import { creaGiocatore } from '../store/profile.js'
+import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import SceltaAspetto from './SceltaAspetto.vue'
 
 const nome = ref('')
 const occupato = ref(false)
+/* Preselezionato, non chiesto vuoto come la partenza in GenitoriView: qui
+   non cambia cosa il bambino vede o sa, solo con che faccia si vede in
+   mappa — un tasto spento finché non si sceglie sarebbe attrito su una
+   schermata che vuole restare "tre tocchi", non una in più. */
+const aspetto = ref(PERSONE[0])
 
 async function entra() {
   const pulito = nome.value.trim()
   if (!pulito || occupato.value) return
   occupato.value = true
-  try { await creaGiocatore(pulito) }
+  try { await creaGiocatore(pulito, true, null, aspetto.value) }
   finally { occupato.value = false }
 }
 </script>
@@ -39,6 +46,7 @@ async function entra() {
         <input v-model="nome" class="nome" type="text" maxlength="20"
                autocomplete="off" autocapitalize="words" spellcheck="false"
                placeholder="il tuo nome" aria-label="il tuo nome">
+        <SceltaAspetto :scelto="aspetto" data-scelta="aspetto" @scegli="aspetto = $event" />
         <button class="via" type="submit" :disabled="!nome.trim() || occupato">Si gioca!</button>
       </form>
 

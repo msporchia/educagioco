@@ -15,6 +15,7 @@ import Survivors from './survivors/Gioco.vue'
 import Conta from './conta/Gioco.vue'
 import PrimaDopo from './prima-dopo/Gioco.vue'
 import Corsa from './corsa/Gioco.vue'
+import Fattoria from './fattoria/Gioco.vue'
 
 export const SCHERMATE = {
   codice: CodiceSegreto,
@@ -23,4 +24,5 @@ export const SCHERMATE = {
   conta: Conta,
   prima: PrimaDopo,
   corsa: Corsa,
+  fattoria: Fattoria,
 }

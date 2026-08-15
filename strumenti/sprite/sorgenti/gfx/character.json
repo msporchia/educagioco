@@ -8,6 +8,7 @@
     32
   ],
   "fondo": "trasparente",
+  "tipo": "persona",
   "sprite": {
     "bimbo_giu": {
       "da": [

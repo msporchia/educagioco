@@ -41,20 +41,26 @@ export const CATEGORIE = [
     V('fiori2',    'fiori2',      'Fioritura',      5, [1, 1], { sotto: true }),
     V('orto',      'orto',        'Orto',          22, [2, 2], { sotto: true }),
   ] },
+  /* Lo stagno e le ninfee erano qui e sono stati tolti: **si vendeva un
+     disegno, non uno specchio d'acqua**. Un pezzo 3×3 che o ci sta o non
+     ci sta non è una pozza, e le ninfee senz'acqua sotto sono foglie
+     appoggiate sull'erba. L'acqua vera si dipinge (`dipingi` nel motore,
+     `dati/terreni.js`), e torna in vendita quando il pittore sa
+     raccordarla — non prima, per non vendere una cosa storta. */
   { chiave: 'acqua', nome: 'Acqua', icona: '💧', voci: [
-    V('stagno',    'stagno',      'Stagno',        34, [3, 3], { sotto: true }),
     /* la fontana è l'unica cosa animata: tre fotogrammi in giro */
     V('fontana',   'fontana0',    'Fontana',       60, [3, 2],
       { anima: ['fontana0', 'fontana1', 'fontana2'] }),
-    V('ninfea',    'ninfea',      'Ninfea',         3, [1, 1], { sotto: true }),
-    V('ninfee',    'ninfee',      'Ninfee',         6, [2, 1], { sotto: true }),
   ] },
   { chiave: 'recinti', nome: 'Recinti', icona: '🚧', voci: [
     V('staccio',   'staccionata', 'Staccionata',    6, [2, 1], { giri: [
       { pezzo: 'staccionata', piede: [2, 1] },     // sdraiata
       { pezzo: 'palo',        piede: [1, 2] },     // in piedi
     ] }),
-    V('cancello',  'cancello',    'Cancello',      12, [2, 1]),
+    /* Il cancello non si vende: da solo non vuol dire niente, perché è
+       un pezzo di raccordo — ha senso in mezzo a una staccionata che il
+       pittore sa comporre, e quel pittore non c'è ancora. La tessera
+       resta nell'atlante, pronta. */
     V('ringhiera', 'ringhiera',   'Ringhiera',      9, [3, 1]),
   ] },
   { chiave: 'case', nome: 'Case', icona: '🏚️', voci: [
@@ -111,23 +117,13 @@ export function pezzoDi(cosa, v = PER_ID[cosa && cosa.id]) {
 
 export const puoGirare = v => !!(v && v.giri && v.giri.length > 1)
 
-/* La fattoria del primo giorno. Aprire su un prato vuoto non dice
-   niente: due cose già in mezzo mostrano che si può mettere roba. */
-export const PARTENZA = [
-  { id: 'casetta',  dx: 7,  dy: 4 },
-  { id: 'orto',     dx: 4,  dy: 9 },
-  { id: 'staccio',  dx: 4,  dy: 8 },
-  { id: 'staccio',  dx: 6,  dy: 8 },
-  { id: 'staccio',  dx: 8,  dy: 8 },
-  { id: 'staccio',  dx: 10, dy: 8, g: 1 },
-  { id: 'fiori0',   dx: 11, dy: 6 },
-  { id: 'fiori1',   dx: 3,  dy: 12 },
-  { id: 'panchina', dx: 8,  dy: 11 },
-  { id: 'barile',   dx: 10, dy: 4 },
-  { id: 'cassa',    dx: 11, dy: 4 },
-  { id: 'vaso_f',   dx: 6,  dy: 4 },
-  { id: 'albero',   dx: 12, dy: 10 },
-]
+/* ── SI PARTE DA ZERO ─────────────────────────────────────────────
+   Niente. Nemmeno una panchina. C'era una fattoria di partenza già
+   arredata, e sembrava una buona idea — «aprire su un prato vuoto non
+   dice niente» — ma regalava tredici oggetti che nessuno aveva
+   comprato, in un gioco che è tutto lì: guadagnare fuori e spendere
+   qui. La prima panchina messa giù vale perché è costata. */
+export const PARTENZA = []
 
 export function guastiDelCatalogo() {
   const g = []

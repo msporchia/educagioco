@@ -569,6 +569,54 @@
     16,
     32
    ]
-  }
+  },
+
+  "__nota_estrazione": "Da qui in giu': roba nuova trovata guardando il foglio a zone (vedi la risposta finale per l'elenco per famiglia). La cernita di cosa mettere in vendita la fa l'utente dopo, terreni.js/catalogo.js non sono stati toccati.",
+
+  "mare0": { "da": [16, 0], "cella": [16, 16] },
+  "mare1": { "da": [17, 0], "cella": [16, 16] },
+  "mare2": { "da": [18, 0], "cella": [16, 16] },
+  "mare3": { "da": [19, 0], "cella": [16, 16] },
+
+  "laghetto_no":     { "da": [15, 6], "cella": [16, 16] },
+  "laghetto_n":      { "da": [16, 6], "cella": [16, 16] },
+  "laghetto_ne":     { "da": [17, 6], "cella": [16, 16] },
+  "laghetto_o":      { "da": [15, 7], "cella": [16, 16] },
+  "laghetto_centro": { "da": [16, 7], "cella": [16, 16] },
+  "laghetto_e":      { "da": [17, 7], "cella": [16, 16] },
+  "laghetto_so":      { "da": [15, 8], "cella": [16, 16] },
+  "laghetto_s":      { "da": [16, 8], "cella": [16, 16] },
+  "laghetto_se":     { "da": [17, 8], "cella": [16, 16] },
+
+  "stagno_interno_no": { "da": [15, 9], "cella": [16, 16] },
+  "stagno_interno_ne": { "da": [16, 9], "cella": [16, 16] },
+  "stagno_interno_so": { "da": [15, 10], "cella": [16, 16] },
+  "stagno_interno_se": { "da": [16, 10], "cella": [16, 16] },
+
+  "erba4": { "da": [3, 16], "cella": [16, 16] },
+  "erba5": { "da": [14, 29], "cella": [16, 16] },
+
+  "bandiera_stemma": { "da": [5, 27], "cella": [16, 32] },
+  "bandiera0":       { "da": [4, 29], "cella": [16, 32] },
+  "bandiera1":       { "da": [6, 29], "cella": [16, 32] },
+  "bandiera_asta":   { "da": [3, 29], "cella": [16, 48] },
+
+  "teschio":      { "da": [28, 2], "cella": [16, 16] },
+  "ossa":         { "da": [29, 2], "cella": [16, 16] },
+  "ossa_mucchio": { "da": [27, 1], "cella": [16, 16] },
+
+  "recinto_incrociato":       { "da": [2, 17], "cella": [32, 32] },
+  "recinto_incrociato_giunto": { "da": [4, 17], "cella": [16, 32] },
+  "recinto_asse":             { "da": [26, 4], "cella": [16, 64] },
+
+  "siepe_tonda":       { "da": [0, 16], "cella": [32, 16] },
+  "cespuglio":         { "da": [5, 16], "cella": [48, 32] },
+  "pianta_germoglio":  { "da": [35, 0], "cella": [16, 16] },
+  "pianta_vaso2":      { "da": [35, 1], "cella": [16, 16] },
+  "fioriera":          { "da": [34, 2], "cella": [32, 16] },
+
+  "torrione_rotondo": { "da": [0, 21], "cella": [48, 48] },
+  "torrione_porta":   { "da": [25, 22], "cella": [80, 112] },
+  "tetto_conico":     { "da": [3, 22], "cella": [48, 32] }
  }
 }

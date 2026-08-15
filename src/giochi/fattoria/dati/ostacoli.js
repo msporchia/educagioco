@@ -1,30 +1,41 @@
 /* ═══════════════════════════════════════════════════════════════════
-   QUELLO CHE C'È NEL BOSCO, E COSA RENDE TOGLIERLO
+   QUELLO CHE C'È NEL BOSCO, E QUANTO COSTA TOGLIERLO
 
-   ── LA REGOLA CHE FA GIRARE TUTTO: RENDE PIÙ DI QUANTO COSTA ─────
-   Sgombrare **finanzia** l'espansione invece di frenarla. È la
-   struttura di Hay Day senza le sue tre valute: compri un pezzo di
-   bosco, dentro ci trovi legna e sassi che valgono più di quanto costa
-   toglierli, e quel guadagno ti avvicina al pezzo dopo. Se `resa` fosse
-   minore di `costo`, comprare terra sarebbe una punizione e il gioco si
-   fermerebbe al primo pezzo.
+   ── SGOMBRARE COSTA E BASTA ───────────────────────────────────────
+   Non rende niente. Per un giro il bosco pagava più di quanto costasse
+   toglierlo — la struttura di Hay Day, dove sgombrare finanzia
+   l'espansione — ed è stato tolto apposta: **qui non si guadagna**.
 
-   Il margine è volutamente stretto (mezza moneta ogni due, più o meno):
-   deve convenire, non deve diventare una macchina per fare soldi che
-   svuota di senso gli esercizi fatti negli altri giochi.
+   La fattoria è il posto dove si *spende* quello che si è guadagnato
+   facendo esercizi negli altri giochi, e un bosco che paga sarebbe una
+   seconda fonte di monete che non passa da nessun esercizio. Il primo
+   bambino che se ne accorge smette di giocare agli altri giochi e
+   comincia a tagliare alberi, e da quel momento la fattoria non è più
+   la ricompensa di niente: è il gioco.
 
-   `guastiDegliOstacoli()` controlla proprio questa cosa, che è la sola
-   che rompe il gioco senza far comparire nessun errore.
+   Quindi il conto è tutto in una direzione. Un pezzo di terra costa,
+   quello che ci trovi dentro costa toglierlo, e le monete arrivano solo
+   da fuori. `costo` è l'unico numero che serve.
+
+   `guastiDegliOstacoli()` controlla che i costi siano numeri sensati e
+   che le tessere citate esistano davvero nell'atlante.
    ═══════════════════════════════════════════════════════════════════ */
 import { PEZZI } from './atlante.js'
 
+/* I costi vanno con la fatica: un tronco di traverso costa più di due
+   sassi. Sono piccoli apposta — devono pesare nel conto della giornata,
+   non fermare la giornata.
+
+   Nel bosco c'è solo **roba da buttare**: massi, sassi, ceppi, tronchi
+   caduti. Prima c'erano anche l'albero e la siepe, che però si comprano
+   dal catalogo — e pagare per togliere una cosa che dieci secondi dopo
+   puoi ricomprare è un giro che non vuol dire niente. Quello che si
+   sgombra non deve essere in vendita, e viceversa. */
 export const OSTACOLI = {
-  albero: { pezzo: 'albero', nome: 'Albero', piede: [2, 1], costo: 10, resa: 16 },
-  siepe:  { pezzo: 'siepe',  nome: 'Siepe',  piede: [2, 1], costo:  5, resa:  8 },
-  ceppo:  { pezzo: 'ceppo',  nome: 'Ceppo',  piede: [1, 1], costo:  4, resa:  7 },
-  sasso:  { pezzo: 'sasso',  nome: 'Masso',  piede: [1, 1], costo:  6, resa: 10 },
-  sassi:  { pezzo: 'sassi',  nome: 'Sassi',  piede: [1, 1], costo:  3, resa:  5 },
-  tronco: { pezzo: 'tronco', nome: 'Tronco', piede: [3, 1], costo:  8, resa: 13 },
+  ceppo:  { pezzo: 'ceppo',  nome: 'Ceppo',  piede: [1, 1], costo: 4 },
+  sasso:  { pezzo: 'sasso',  nome: 'Masso',  piede: [1, 1], costo: 6 },
+  sassi:  { pezzo: 'sassi',  nome: 'Sassi',  piede: [1, 1], costo: 3 },
+  tronco: { pezzo: 'tronco', nome: 'Tronco', piede: [3, 1], costo: 8 },
 }
 
 export const TIPI = Object.keys(OSTACOLI)
@@ -34,12 +45,10 @@ export function guastiDegliOstacoli() {
   for (const [id, o] of Object.entries(OSTACOLI)) {
     if (!PEZZI[o.pezzo]) g.push(`${id}: la tessera «${o.pezzo}» non è nell'atlante`)
     if (!(o.costo > 0)) g.push(`${id}: costo impossibile`)
-    /* la regola che tiene in piedi l'economia, e l'unica che si rompe in
-       silenzio: nessun errore a schermo, solo un gioco che non gira più */
-    if (!(o.resa > o.costo))
-      g.push(`${id}: rende ${o.resa} e costa ${o.costo} — sgombrare deve convenire`)
-    if (o.resa > o.costo * 2)
-      g.push(`${id}: rende più del doppio, il bosco diventa una zecca`)
+    /* Un ostacolo che paga rimetterebbe in piedi la seconda fonte di
+       monete che abbiamo tolto apposta: si vede solo giocando, e allora
+       è tardi. */
+    if (o.resa !== undefined) g.push(`${id}: ha una «resa» — nel bosco non si guadagna`)
     if (!Array.isArray(o.piede) || o.piede.length !== 2 || o.piede.some(n => n < 1))
       g.push(`${id}: piede impossibile`)
   }

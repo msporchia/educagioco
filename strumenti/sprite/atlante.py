@@ -24,10 +24,11 @@ Il formato del foglietto sta in `FORMATO.md`. Serve `pillow`.
 """
 import base64
 import json
+import re
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from attori import allaga, fondi_di, sfrangia
 
@@ -44,7 +45,9 @@ MODULO = """/* GENERATO da strumenti/sprite/atlante.py — non si scrive a mano.
    restare un file solo.
 
    PEZZI: nome → [x, y, larghezza, altezza] dentro l'atlante.
-   DA: nome → da quale foglio arriva, per ritrovarlo. */
+   DA: nome → da quale foglio arriva, per ritrovarlo.
+   PERSONE e BESTIE: chi è un attore controllabile e chi è un animale, vedi
+   sotto. */
 export const ATLANTE = 'data:image/png;base64,{b64}'
 
 export const PEZZI = {mappa}
@@ -60,6 +63,17 @@ export const pezzoAttore = (chi, verso, fr) => PEZZI[`${{chi}}_${{verso}}${{fr}}
 
 export const ATTORI = [...new Set(Object.keys(PEZZI)
   .map(n => /^(.+)_giu0$/.exec(n)).filter(Boolean).map(m => m[1]))].sort()
+
+/* PERSONE e BESTIE: la stessa distinzione di ATTORI, ma per chi PILOTA e
+   chi no — un bambino sceglie con che personaggio vedersi in mappa, non
+   con che cane. Non si ricava dal nome (un cane si può chiamare in mille
+   modi): viene dal `tipo` dichiarato nel foglietto della sorgente
+   (FORMATO.md), e lo scrive `atlante.py` una volta per tutte qui sotto —
+   niente elenco da tenere allineato a mano quando arriva un personaggio
+   nuovo. */
+export const PERSONE = {persone}
+
+export const BESTIE = {bestie}
 
 /* Quanti fotogrammi ha davvero un verso: i fogli non ne hanno tutti
    quattro, e contarli qui evita di disegnare un buco. */
@@ -181,7 +195,16 @@ def ritagli_di(im, fg, provenienza, ritagli):
                 print(f'  ! {nome}{i if quanti > 1 else ""} cade fuori dal foglio')
                 continue
             chi = f'{nome}{i}' if quanti > 1 else nome
-            ritagli[chi] = im.crop((x, y, x + pw, y + ph))
+            pezzo = im.crop((x, y, x + pw, y + ph))
+            # `specchia`: alcuni fogli disegnano un quadrupede di lato che
+            # guarda a sinistra, e la convenzione (FORMATO.md) vuole che
+            # `_lato` guardi sempre a destra — la sinistra la fa `ctx.scale
+            # (-1,1)` a schermo. Si dichiara nel foglietto invece di
+            # rigirare il PNG sorgente, che resta la prova di quello che ha
+            # dato il generatore.
+            if d.get('specchia'):
+                pezzo = ImageOps.mirror(pezzo)
+            ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
 
 
@@ -227,9 +250,21 @@ def main():
         print(f'nessun foglio con foglietto in {SORGENTI}')
         return 1
 
+    # Il `tipo` (persona/bestia) è dichiarato una volta per foglio, non per
+    # sprite: un foglio intero è o l'uno o l'altro, e ridirlo sprite per
+    # sprite sarebbe solo rumore da tenere allineato. Si tiene per NOME DEL
+    # FILE, non per foglietto: le copie (la bambina) non hanno un file loro
+    # e vanno cercate per provenienza, sotto.
+    TIPI_VALIDI = ('persona', 'bestia')
+    tipo_di_file = {}
     ritagli, provenienza = {}, {}
     for f, fg in fogli:
         fg['_file'] = str(f)
+        t = fg.get('tipo')
+        if t is not None and t not in TIPI_VALIDI:
+            print(f'  ! {f.name}: tipo "{t}" sconosciuto, atteso persona o bestia')
+            t = None
+        tipo_di_file[f.name] = t
         utili = [n for n in (fg.get('sprite') or {}) if not n.startswith('__')]
         if not utili:
             print(f'  {f.name}: foglietto senza sprite, da calibrare — saltato')
@@ -252,6 +287,20 @@ def main():
                 ritagli[chi] = filtro(ritagli[nome]) if filtro else ritagli[nome].copy()
                 provenienza[chi] = provenienza[nome]
 
+    # Chi è un attore si ricava dai nomi (`_giu0`), come farà poi il JS;
+    # di che TIPO è, invece, non lo dice il nome — lo dice da quale file è
+    # arrivato. La bambina non ha un file suo (è una copia di character.json,
+    # vedi sopra), e infatti eredita `provenienza[nome_originale]`.
+    attori = sorted({m.group(1) for n in ritagli
+                      for m in [re.match(r'^(.+)_giu0$', n)] if m})
+    persone, bestie, senza_tipo = [], [], []
+    for chi in attori:
+        tipo = tipo_di_file.get(provenienza.get(f'{chi}_giu0', ''))
+        (persone if tipo == 'persona' else bestie if tipo == 'bestia' else senza_tipo).append(chi)
+    if senza_tipo:
+        print(f'  ! senza "tipo" nel foglietto sorgente, fuori da PERSONE e BESTIE: '
+              f'{", ".join(senza_tipo)}')
+
     atlante, mappa = impacchetta(ritagli)
     png = QUI / '.atlante.png'
     atlante.save(png)
@@ -262,7 +311,9 @@ def main():
     dest.write_text(MODULO.format(
         kb=len(b64) * 3 // 4 // 1024, b64=b64,
         mappa=json.dumps(mappa, separators=(',', ':'), sort_keys=True),
-        provenienza=json.dumps(provenienza, separators=(',', ':'), sort_keys=True)))
+        provenienza=json.dumps(provenienza, separators=(',', ':'), sort_keys=True),
+        persone=json.dumps(persone, separators=(',', ':')),
+        bestie=json.dumps(bestie, separators=(',', ':'))))
 
     print(f'atlante {atlante.width}×{atlante.height}, '
           f'{len(b64) * 3 // 4 // 1024} KB di PNG, {len(mappa)} pezzi '

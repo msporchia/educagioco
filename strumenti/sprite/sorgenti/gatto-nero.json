@@ -8,6 +8,7 @@
     32
   ],
   "fondo": "auto",
+  "tipo": "bestia",
   "sprite": {
     "gatto-nero_giu": {
       "da": [

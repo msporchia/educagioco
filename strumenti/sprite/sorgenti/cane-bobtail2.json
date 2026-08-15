@@ -1,11 +1,140 @@
 {
-  "scala": 8,
+  "scala": 6,
   "fondo": "trasparente",
-  "cella": [
-    32,
-    16
+  "foglio": [
+    256,
+    171
   ],
+  "cella": [
+    1,
+    1
+  ],
+  "tipo": "bestia",
+  "__nota": "Foglio nativo 1536x1024 di ChatGPT, senza griglia regolare: il passo fra un fotogramma e l'altro cambia da riga a riga e anche da colonna a colonna, quindi ogni fotogramma e' dichiarato a se' invece che con `quanti`+`passo`. `foglio`+`cella:[1,1]` fa fare ad `atlante.py` la stessa cosa che fa per un JPEG rigonfiato: riporta il foglio a una misura vera (qui 256x171, scala 6) PRIMA di ritagliare, cosi' `da`/`cella` per sprite sono gia' nel piccolo e coincidono col pixel. Riga 1 (y~11-133 nel foglio nativo) e riga 3 (y~270-398) sono ferme (il cane respira, non cammina); riga 5 (y~547-668) e' il cane di fronte che cammina davvero, riga 2 (y~143-251) e' di lato ma guarda a sinistra - da qui `specchia` su ogni fotogramma. Le righe 6-7 portano un bastoncino in bocca (variante, non usata). A destra del foglio (x>800 nativi) ci sono pose singole (abbaia, si acquatta, scava, si scrolla, felice): non fanno un ciclo di 4 fotogrammi e non sono state estratte. La scala si e' trovata GUARDANDOLO accanto agli altri, non a tavolino. A scala 4 il cane usciva 30x31 px contro i 16x19 degli altri cani e i 16x22 della bambina: grande il doppio di una persona. Dimezzato (scala 8) diventava piu' piccolo del gatto, cioe' un cucciolo. Scala 6 lo mette all'altezza dell'altro bobtail, che e' il metro giusto. La risoluzione persa e' quella che serve: gli altri sprite sono disegnati cosi'.",
   "sprite": {
-    "__nota": "da calibrare guardando i provini: quale riga e' quale verso"
+    "cane-bobtail2_giu0": {
+      "da": [
+        6,
+        90
+      ],
+      "cella": [
+        20,
+        22
+      ]
+    },
+    "cane-bobtail2_giu1": {
+      "da": [
+        29,
+        90
+      ],
+      "cella": [
+        20,
+        22
+      ]
+    },
+    "cane-bobtail2_giu2": {
+      "da": [
+        54,
+        90
+      ],
+      "cella": [
+        22,
+        22
+      ]
+    },
+    "cane-bobtail2_giu3": {
+      "da": [
+        80,
+        90
+      ],
+      "cella": [
+        22,
+        22
+      ]
+    },
+    "cane-bobtail2_lato0": {
+      "da": [
+        6,
+        22
+      ],
+      "cella": [
+        22,
+        20
+      ],
+      "specchia": true
+    },
+    "cane-bobtail2_lato1": {
+      "da": [
+        29,
+        24
+      ],
+      "cella": [
+        23,
+        19
+      ],
+      "specchia": true
+    },
+    "cane-bobtail2_lato2": {
+      "da": [
+        54,
+        24
+      ],
+      "cella": [
+        23,
+        19
+      ],
+      "specchia": true
+    },
+    "cane-bobtail2_lato3": {
+      "da": [
+        78,
+        24
+      ],
+      "cella": [
+        22,
+        19
+      ],
+      "specchia": true
+    },
+    "cane-bobtail2_su0": {
+      "da": [
+        8,
+        44
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail2_su1": {
+      "da": [
+        32,
+        44
+      ],
+      "cella": [
+        15,
+        24
+      ]
+    },
+    "cane-bobtail2_su2": {
+      "da": [
+        54,
+        44
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail2_su3": {
+      "da": [
+        78,
+        44
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    }
   }
 }

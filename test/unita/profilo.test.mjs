@@ -13,8 +13,10 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          rinominaGiocatore, eliminaGiocatore,
-         esportaTutto, importaTutto, persist } from '../../src/store/profile.js'
+         esportaTutto, importaTutto, persist,
+         aspettoDi, scegliAspetto } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
+import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* L'archivio è uno solo per tutto il file: fra un caso e l'altro si
@@ -191,6 +193,40 @@ controlla('un file che non è un salvataggio viene rifiutato', scartato)
 let vuoto = false
 try { await importaTutto({ profili: {} }) } catch (e) { vuoto = true }
 controlla('e uno senza nessun profilo dentro pure', vuoto)
+
+/* ── 11. con che faccia si vede in mappa ──
+   Come il nome: un attributo del bambino, e non un campo che serve a un
+   gioco. `PERSONE` viene dall'atlante degli sprite (generato, non è un
+   elenco scritto qui), e ci deve essere almeno un personaggio o questo
+   file di test è la prima cosa che se ne accorge. */
+controlla('c\'è almeno un personaggio scelto in PERSONE', PERSONE.length > 0)
+
+await pulisci()
+await init()
+const id4 = await creaGiocatore('Uga')
+controlla('un profilo appena creato ha già un aspetto valido', PERSONE.includes(aspettoDi()))
+
+controlla('si può scegliere un personaggio dell\'atlante', scegliAspetto(PERSONE[0]))
+uguale('e resta quello scelto', aspettoDi(), PERSONE[0])
+
+controlla('un nome che PERSONE non ha viene rifiutato', scegliAspetto('non-esiste') === false)
+uguale('l\'aspetto di prima non si tocca', aspettoDi(), PERSONE[0])
+
+/* Un salvataggio di ieri non ha `aspetto`, e uno rovinato a mano potrebbe
+   puntare a un personaggio che l'atlante non ha più: in tutti e due i
+   casi si ricade sul primo di PERSONE, senza piantare il gioco. */
+state.profile.aspetto = 'personaggio-tolto-da-un-aggiornamento'
+uguale('un aspetto che non esiste più ricade sul primo disponibile', aspettoDi(), PERSONE[0])
+delete state.profile.aspetto
+uguale('e un profilo senza il campo pure', aspettoDi(), PERSONE[0])
+
+/* Chi lo sceglie in fase di creazione — la schermata dei genitori, quando
+   aggiunge un fratellino senza entrarci — non passa da `state.profile`:
+   va applicato al profilo scritto su disco. */
+const secondo = PERSONE[PERSONE.length - 1]
+const id5 = await creaGiocatore('Bibi', false, null, secondo)
+const salvato = await load('profilo:' + id5)
+uguale('l\'aspetto scelto alla creazione arriva sul profilo salvato', salvato.aspetto, secondo)
 
 nota('l\'archivio qui è quello in memoria: fuori dal browser è il ripiego previsto')
 riassunto('Chi gioca: roster, migrazione, salvataggio')

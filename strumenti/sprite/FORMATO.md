@@ -50,7 +50,25 @@ basta: l'attrezzo non cambia.
   così cambiare `scala` non obbliga a riscrivere tutte le coordinate.
   `quanti` è il numero di fotogrammi in fila; se manca è 1.
   `passo` (facoltativo, in celle) serve quando i fotogrammi non sono
-  attaccati: `"passo": [3, 0]` li prende ogni tre celle.
+  attaccati: `"passo": [3, 0]` li prende ogni tre celle. Un foglio senza
+  un passo costante — i fotogrammi disegnati a mano, non su una griglia —
+  si dichiara **un fotogramma per riga**, scrivendo `nome0`, `nome1`...
+  come sprite separati invece di un `quanti` che non torna: ognuno ha il
+  suo `da`, e nessuno obbliga a un passo unico.
+  `specchia: true` ritaglia lo sprite e lo rovescia: serve quando un
+  quadrupede sul foglio guarda a sinistra invece che a destra (la
+  convenzione di sotto per `_lato`) — si dichiara così invece di rigirare
+  il PNG sorgente, che deve restare quello che ha dato il generatore.
+- **`tipo`** — solo per i fogli che contengono un attore (uno sprite con
+  nomi `_giu`/`_lato`/`_su`): `"persona"` o `"bestia"`. Non si ricava dal
+  nome — un cane si può chiamare come si vuole — e serve a distinguere chi
+  un bambino **sceglie come proprio aspetto** da chi cammina per conto suo
+  nella scena. Un foglio senza attori (le tessere, `gfx/Overworld.json`)
+  non lo dichiara. Vale per **tutto il foglio**, non sprite per sprite: un
+  foglio è o l'uno o l'altro, e ridirlo riga per riga sarebbe solo rumore.
+  Chi lo legge è `atlante.py`, che ne scrive due elenchi nel modulo
+  generato — `PERSONE` e `BESTIE` — un attore senza `tipo` dichiarato resta
+  fuori da entrambi e lo script lo segnala in console.
 
 ## Un file, N sprite — e le animazioni
 

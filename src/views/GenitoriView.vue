@@ -16,7 +16,11 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          sapereAcceso, accendiSapere, saperiSpenti, saperiCheMancano,
          giocoAcceso, accendiGioco, quantiGiochiAccesi,
          tuttoAperto, accendiTuttoAperto,
-         sperimentaliAccesi, accendiSperimentali } from '../store/profile.js'
+         sperimentaliAccesi, accendiSperimentali,
+         aspettoDi, scegliAspetto } from '../store/profile.js'
+import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
+import SceltaAspetto from '../components/SceltaAspetto.vue'
 import { leggiPin, scriviPin, PIN_INIZIALE } from '../store/pin.js'
 import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
@@ -50,6 +54,15 @@ const dentro = ref(false)
 const sbagliato = ref(false)
 const esito = ref(null)          // { ok: bool, testo: string }
 const confermaAzzera = ref(false)
+const confermaFattoria = ref(false)
+
+/* Ricomincia la fattoria e basta. Passa da `campagne.js` come tutti i
+   giochi nuovi: qui non si sa nemmeno com'è fatta dentro. */
+function azzeraFattoria() {
+  azzeraCampagna('fattoria')
+  confermaFattoria.value = false
+  esito.value = { ok: true, testo: 'La fattoria di ' + chi.value + ' riparte da zero.' }
+}
 const file = ref(null)
 /* il cambio del codice: 'nuovo' mentre lo si sceglie, 'ripeti' mentre lo
    si conferma. Chiedere due volte non è una formalità — un codice
@@ -173,7 +186,7 @@ const righeGiudizi = computed(() =>
 
    Vuole un campo nascosto `giudizi` e uno `versione` (vedi sopra come
    si aggiungono). */
-const SEGNALA_GIUDIZI = 'https://tally.so/r/D4OO1q'
+const SEGNALA_GIUDIZI = 'https://tally.so/r/lb28zp'
 
 const paccoDaMandare = computed(() => paccoGiudizi(giudizi.value))
 const linkGiudizi = computed(() => {
@@ -306,7 +319,14 @@ function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.
    nessuno ha guardato. Il tasto «Aggiungi» resta spento finché non si
    sceglie, che è il modo di chiederlo senza scriverlo. */
 const partenzaScelta = ref('')
-function apriAggiungi() { chiudiTutto(); partenzaScelta.value = ''; aggiungendo.value = true }
+/* Un valore c'è sempre — a differenza della partenza, che si chiede
+   apposta vuota: qui non è una domanda che cambia cosa il bambino vede,
+   e un tasto spento finché non si sceglie sarebbe attrito senza motivo.
+   Il primo di `PERSONE` è la stessa ricaduta di `aspettoDi()`. */
+const aspettoScelto = ref(PERSONE[0])
+function apriAggiungi() {
+  chiudiTutto(); partenzaScelta.value = ''; aspettoScelto.value = PERSONE[0]; aggiungendo.value = true
+}
 function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
 
 async function salvaNome() {
@@ -316,7 +336,7 @@ async function salvaNome() {
     if (aggiungendo.value) {
       /* senza entrarci: cambiare giocatore da qui ricarica la schermata
          e rimanderebbe al codice chi sta ancora sistemando le cose */
-      await creaGiocatore(nome, false, partenzaScelta.value)
+      await creaGiocatore(nome, false, partenzaScelta.value, aspettoScelto.value)
       const p = PARTENZE.find(p => p.chiave === partenzaScelta.value)
       esito.value = { ok: true, testo: `${nome} adesso può giocare: lo trova in home, dove si sceglie chi gioca.`
         + (p ? ` È partito da «${p.nome}» — quello che vede si cambia qui sotto.` : '') }
@@ -417,6 +437,19 @@ function cambiaAperto() {
     : 'Tornato al normale: le tappe si aprono una per volta.' }
 }
 
+/* ── con che faccia si vede in mappa ──
+   Si può cambiare solo per chi sta giocando adesso: il profilo degli
+   altri fratelli non è caricato in memoria, e caricarlo solo per
+   guardare un aspetto sarebbe un giro lungo per una carta che oggi non
+   lo mostra. Sta nella carta di «Chi gioca» che ha la spunta 🎮, non
+   quassù fra gli interruttori: è un attributo del bambino, come il nome,
+   non una preferenza su cosa si vede in home. */
+const aspettoAttuale = computed(() => aspettoDi())
+function cambiaAspetto(nome) {
+  if (nome === aspettoAttuale.value) return
+  scegliAspetto(nome)
+}
+
 /* Le carte della home, una per gioco. Spegnere non cancella niente: i
    progressi restano dove sono e riaccendendo si ritrovano tutti. Serve a
    togliere di mezzo quello che a un bambino adesso non serve — e a
@@ -463,6 +496,7 @@ function cambiaGioco(g) {
 async function azzera() {
   await resetPlayer()
   confermaAzzera.value = false
+  confermaFattoria.value = false
   esito.value = { ok: true, testo: 'I progressi di ' + chi.value + ' sono stati cancellati.' }
 }
 </script>
@@ -685,6 +719,14 @@ async function azzera() {
               <button class="bottone chiaro" data-azione="elimina"
                       @click="apriElimina(g)">Elimina</button>
             </div>
+            <!-- solo per chi sta giocando adesso: il profilo di un altro
+                 fratello non è in memoria, vedi il commento sopra
+                 `aspettoAttuale` -->
+            <div v-if="g.id === state.player" class="aspetto-sezione">
+              <p class="mini">Con che faccia si vede in mappa</p>
+              <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
+                             @scegli="cambiaAspetto" />
+            </div>
           </div>
         </template>
 
@@ -711,6 +753,10 @@ async function azzera() {
               <i>{{ p.che }}</i>
             </button>
           </div>
+
+          <p class="mini">Con che faccia si vede in mappa</p>
+          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
+                         @scegli="aspettoScelto = $event" />
 
           <div class="riga">
             <button class="bottone chiaro" type="button" @click="chiudiTutto">Lascia stare</button>
@@ -757,6 +803,32 @@ async function azzera() {
             <button class="bottone rosso" @click="azzera">Sì, cancella</button>
           </div>
         </div>
+
+        <!-- Ricominciare UN gioco solo, che non è la stessa cosa di
+             cancellare tutto. Sta in un blocco a sé e non dentro la catena
+             qui sopra: infilata lì in mezzo spezzava il `v-else` del
+             cancella-tutto, che smetteva di comparire — e il tasto rosso
+             sembrava non fare niente. Compare solo se quel bambino la
+             fattoria l'ha davvero aperta. -->
+        <template v-if="haGiocato('fattoria')">
+          <button v-if="!confermaFattoria" class="carta pericolo"
+                  data-azione="azzera-fattoria" @click="confermaFattoria = true">
+            <span class="ico">🚜</span>
+            <b>Ricomincia la fattoria di {{ chi }}</b>
+            <i>Solo la fattoria: il resto dei progressi non si tocca</i>
+          </button>
+          <div v-else class="carta pericolo aperta">
+            <b>Ricominciare la fattoria di {{ chi }}?</b>
+            <i>Terra, cose comprate e animali spariscono, e il prato torna
+               vuoto. <b>Le monete spese non tornano indietro.</b> Tutto il
+               resto — gli altri giochi, i traguardi, il salvadanaio — resta
+               com'è.</i>
+            <div class="riga">
+              <button class="bottone chiaro" @click="confermaFattoria = false">No, lascia stare</button>
+              <button class="bottone rosso" @click="azzeraFattoria">Sì, ricomincia</button>
+            </div>
+          </div>
+        </template>
       </div>
 
       <h2>Codice</h2>
@@ -805,9 +877,10 @@ async function azzera() {
 
           <button class="carta" data-azione="ripara" @click="riparaApp">
             <span class="ico">♻️</span>
-            <b>Ripara l'app</b>
-            <i>Riscarica il gioco da capo. I progressi non si toccano — quelli
-              stanno da un'altra parte, e li porta via solo il tasto rosso qui sopra</i>
+            <b>Riscarica il gioco</b>
+            <i>Butta la copia tenuta da parte e riprende l'applicazione da capo.
+              I progressi non si toccano — quelli stanno da un'altra parte, e li
+              porta via solo il tasto rosso qui sopra</i>
           </button>
         </div>
       </template>
@@ -1064,6 +1137,12 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .carta.chi-gioca .riga { grid-column:2; justify-content:flex-start; margin-top:7px }
 .carta.chi-gioca .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
 .carta.chi-gioca .bottone:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
+/* l'aspetto è un quarto rigo che solo chi sta giocando adesso ha: le
+   altre carte restano a tre righe, quindi occupa colonna intera invece
+   di lasciare l'icona a mezz'aria sotto di sé */
+.carta.chi-gioca .aspetto-sezione { grid-column:1/3; margin-top:9px;
+  padding-top:9px; border-top:1px solid #8593a822 }
+.carta.chi-gioca .aspetto-sezione .mini { text-align:left; margin:0 0 7px }
 /* la carta aperta a scrivere un nome: stessa forma di quella che chiede
    conferma prima di cancellare, senza il rosso */
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }

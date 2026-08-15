@@ -34,6 +34,8 @@ import {
 } from '../dati/mondo.js'
 import { PER_ID, PARTENZA, piedeDi } from '../dati/catalogo.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
+import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
+import { CHIAVI as BISOGNI_CHIAVI, nuovo as bisogniNuovi, scendi } from '../dati/bisogni.js'
 
 /* Una borsa che non paga mai: serve a far girare la fattoria in un test
    che dell'economia non gliene importa niente. */
@@ -54,6 +56,8 @@ export class Fattoria {
     this.cose = []
     this.ostacoli = {}
     this.magazzino = {}
+    this.terreno = {}
+    this.bestie = []
     this.prossimo = 1
 
     for (let px = PRIMA; px <= ULTIMA; px++)
@@ -83,7 +87,8 @@ export class Fattoria {
 
   serializza() {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
-             magazzino: this.magazzino, prossimo: this.prossimo }
+             magazzino: this.magazzino, terreno: this.terreno,
+             bestie: this.bestie, prossimo: this.prossimo }
   }
 
   /* Regge un salvataggio di ieri senza pretendere una migrazione: quello
@@ -91,8 +96,29 @@ export class Fattoria {
      si butta invece di far cadere tutto il disegno. */
   deserializza(d) {
     this.piazzole = (d && d.piazzole) || {}
-    this.ostacoli = (d && d.ostacoli) || {}
+    /* Un tipo di ostacolo che non esiste più si butta **qui**, non lo si
+       lascia arrivare a chi disegna. È già successo due volte: prima col
+       `palo` diventato una staccionata girata, poi con l'albero e la
+       siepe tolti dal bosco perché erano anche in vendita. Un salvataggio
+       di ieri non deve poter far cadere il gioco di oggi, e un `undefined`
+       che arriva fino al disegno diventa una schermata di guasto. */
+    this.ostacoli = Object.fromEntries(
+      Object.entries((d && d.ostacoli) || {}).filter(([, tipo]) => OSTACOLI[tipo]))
     this.magazzino = (d && d.magazzino) || {}
+    /* Le bestie si rileggono **tutte**, anche quelle che oggi non si
+       sanno disegnare: chi non ha lo sprite viene ignorato da chi mette
+       in scena, non buttato via qui. Un travaso a senso unico non deve
+       cancellare niente per strada. */
+    /* Erano nomi di sprite e basta, prima che si potessero battezzare:
+       una stringa diventa una bestia senza nome, e il salvataggio di
+       ieri si rilegge senza chiedere niente a nessuno. */
+    this.bestie = ((d && d.bestie) || [])
+      .map(b => typeof b === 'string' ? { chi: b, nome: '' } : b)
+      .filter(b => b && typeof b.chi === 'string')
+    /* `acqua` era il nome di prima, quando la materia era una sola:
+       un salvataggio di ieri si rilegge senza chiedere una migrazione. */
+    this.terreno = (d && d.terreno) ||
+      Object.fromEntries(Object.keys((d && d.acqua) || {}).map(k => [k, 'acqua']))
     this.cose = ((d && d.cose) || []).filter(c => c && PER_ID[c.id])
       .map(c => ({ i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }))
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
@@ -129,6 +155,51 @@ export class Fattoria {
     return { ok: true, costo }
   }
 
+  /* ═══════════ l'acqua si dipinge ═══════════
+     Uno stagno non è un oggetto 3×3 che o ci sta o non ci sta: è una
+     **macchia di celle**, della forma che vuoi. Qui si segna solo dove
+     c'è acqua; che aspetto abbia il bordo lo decide chi disegna
+     guardando i vicini (`scena/bordi.js`), e non è una cosa che il
+     motore debba sapere.
+
+     Costa a cella, e si può togliere: scavare una pozza e ripensarci
+     non deve essere una condanna. Come tutto il resto, non rimborsa.
+
+     `terreno` tiene **solo le celle diverse dal prato**: una fattoria
+     tutta d'erba non deve portarsi dietro milleottocento voci che
+     dicono «qui c'è erba». Chi non è scritto è `BASE`. */
+  materiaDi(cx, cy) { return this.terreno[chiave(cx, cy)] || BASE }
+
+  eAcqua(cx, cy) { return this.materiaDi(cx, cy) === 'acqua' }
+
+  get quantaAcqua() {
+    return Object.values(this.terreno).filter(m => m === 'acqua').length
+  }
+
+  dipingi(cx, cy, materia) {
+    if (this.materiaDi(cx, cy) === materia) return { ok: true, costo: 0 }
+    if (!this.cellaMia(cx, cy)) return { ok: false, motivo: 'non-e-tua' }
+    if (!this.libera(cx, cy, 1, 1)) return { ok: false, motivo: 'occupata' }
+    const costo = prezzoDi(materia)
+    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+    if (costo) this.borsa.paga(costo)
+    if (materia === BASE) delete this.terreno[chiave(cx, cy)]
+    else this.terreno[chiave(cx, cy)] = materia
+    return { ok: true, costo, materia }
+  }
+
+  /* Rimettere il prato è togliere: la materia di base non si scrive. */
+  spiana(cx, cy) {
+    if (this.materiaDi(cx, cy) === BASE) return { ok: false, motivo: 'gia-prato' }
+    delete this.terreno[chiave(cx, cy)]
+    return { ok: true }
+  }
+
+  /* Le due vecchie porte, tenute perché ci passa già del codice: sono
+     la stessa cosa con la materia scritta dentro. */
+  dipingiAcqua(cx, cy) { return this.dipingi(cx, cy, 'acqua') }
+  togliAcqua(cx, cy) { return this.spiana(cx, cy) }
+
   /* ═══════════ chi occupa cosa ═══════════ */
   ingombro(cosa) {
     const p = piedeDi(cosa)
@@ -145,8 +216,10 @@ export class Fattoria {
 
   ostacoloSotto(cx, cy) {
     for (const k in this.ostacoli) {
+      const o = OSTACOLI[this.ostacoli[k]]
+      if (!o) continue
       const [ox, oy] = k.split(',').map(Number)
-      const [ow, oh] = OSTACOLI[this.ostacoli[k]].piede
+      const [ow, oh] = o.piede
       if (cx >= ox && cx < ox + ow && cy >= oy && cy < oy + oh)
         return { k, x: ox, y: oy, tipo: this.ostacoli[k], ...OSTACOLI[this.ostacoli[k]] }
     }
@@ -157,32 +230,37 @@ export class Fattoria {
      inciampa in niente. `salta` è quello che si sta spostando: sé stesso
      non è un ostacolo per sé stesso. */
   libera(cx, cy, w, h, salta = null) {
-    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++)
+    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) {
       if (!this.cellaMia(cx + i, cy + j)) return false
+      if (!siPassa(this.materiaDi(cx + i, cy + j))) return false   // in acqua non si posa
+    }
     for (const c of this.cose) {
       if (c === salta || !PER_ID[c.id]) continue
       const g = this.ingombro(c)
       if (cx < g.x + g.w && cx + w > g.x && cy < g.y + g.h && cy + h > g.y) return false
     }
     for (const k in this.ostacoli) {
+      const o = OSTACOLI[this.ostacoli[k]]
+      if (!o) continue
       const [ox, oy] = k.split(',').map(Number)
-      const [ow, oh] = OSTACOLI[this.ostacoli[k]].piede
+      const [ow, oh] = o.piede
       if (cx < ox + ow && cx + w > ox && cy < oy + oh && cy + h > oy) return false
     }
     return true
   }
 
   /* ═══════════ sgombrare ═══════════
-     Rende più di quanto costa: è quello che fa girare tutto. Comprare un
-     pezzo di bosco è un investimento, non una punizione. */
+     Costa e basta: non rende niente. Il perché sta in `dati/ostacoli.js`
+     — un bosco che paga sarebbe una seconda fonte di monete che non
+     passa da nessun esercizio, e la fattoria smetterebbe di essere la
+     ricompensa di qualcosa. */
   sgombra(cx, cy) {
     const o = this.ostacoloSotto(cx, cy)
     if (!o) return { ok: false, motivo: 'niente-da-sgombrare' }
     if (this.borsa.quante() < o.costo) return { ok: false, motivo: 'poche-monete', costo: o.costo }
     this.borsa.paga(o.costo)
-    this.borsa.paga(-o.resa)                 // pagare in negativo è incassare
     delete this.ostacoli[o.k]
-    return { ok: true, costo: o.costo, resa: o.resa, guadagno: o.resa - o.costo, tipo: o.tipo }
+    return { ok: true, costo: o.costo, tipo: o.tipo }
   }
 
   /* ═══════════ mettere giù ═══════════
@@ -238,6 +316,72 @@ export class Fattoria {
       return { ok: false, motivo: 'non-ci-sta' }
     }
     return { ok: true, verso: dopo }
+  }
+
+  /* ═══════════ le bestie ═══════════
+     Una bestia non è un oggetto: non si posa, non si sposta, non si
+     mette via. Si compra, e da lì gira per il prato per conto suo. Una
+     per tipo — due beagle identici sono due disegni uguali, non due
+     cani. */
+  hoLaBestia(chi) { return this.bestie.some(b => b.chi === chi) }
+
+  laBestia(chi) { return this.bestie.find(b => b.chi === chi) || null }
+
+  compraBestia(chi, prezzo, nome = '') {
+    if (this.hoLaBestia(chi)) return { ok: false, motivo: 'gia-tua' }
+    if (this.borsa.quante() < prezzo) return { ok: false, motivo: 'poche-monete', costo: prezzo }
+    this.borsa.paga(prezzo)
+    const bestia = { chi, nome: String(nome || '').slice(0, 16).trim(),
+                     ...bisogniNuovi() }
+    this.bestie.push(bestia)
+    return { ok: true, costo: prezzo, bestia }
+  }
+
+  /* Come sta, adesso. Il calo si applica **leggendo**: chi guarda fa
+     scendere e riscrive l'orologio, così il conto non dipende da quanto
+     spesso si guarda — che è l'errore classico di questi bisogni. Una
+     bestia salvata prima che esistessero se li trova al volo. */
+  stato(chi, ora = Date.now()) {
+    const b = this.laBestia(chi)
+    if (!b) return null
+    if (typeof b.pancia !== 'number') Object.assign(b, bisogniNuovi(ora))
+    return scendi(b, ora)
+  }
+
+  /* Dare da mangiare costa, ed è il motivo per cui una bestia è un
+     impegno e non una spesa una volta sola. */
+  nutri(chi, cibo) {
+    const b = this.stato(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (b.pancia > 0.93) return { ok: false, motivo: 'non-ha-fame' }
+    if (this.borsa.quante() < cibo.prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
+    this.borsa.paga(cibo.prezzo)
+    b.pancia = Math.min(1, b.pancia + cibo.quanto)
+    b.quando = Date.now()
+    return { ok: true, costo: cibo.prezzo }
+  }
+
+  /* Spazzolare e giocare non costano: sono le due cose che un bambino
+     può sempre fare, e chi è a zero monete deve poter comunque
+     accarezzare il suo cane. */
+  coccola(chi, gesto) {
+    const b = this.stato(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (b[gesto.bisogno] > 0.93) return { ok: false, motivo: 'non-serve' }
+    b[gesto.bisogno] = Math.min(1, b[gesto.bisogno] + gesto.quanto)
+    b.quando = Date.now()
+    return { ok: true, costo: 0 }
+  }
+
+  /* Rinominare è gratis e si può fare sempre: un nome scelto a otto anni
+     non deve restare addosso a undici, e far pagare un ripensamento è il
+     modo più rapido di far smettere di sceglierne uno. */
+  rinominaBestia(chi, nome) {
+    const b = this.laBestia(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    b.nome = String(nome || '').slice(0, 16).trim()
+    return { ok: true, nome: b.nome }
   }
 
   /* ═══════════ il magazzino ═══════════ */

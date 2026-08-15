@@ -330,3 +330,7 @@ def main():
         print(f'  cioe\' un foglio da {im.width / z:.0f}x{im.height / z:.0f} px veri')
     print('  ora scrivi il foglietto: vedi FORMATO.md')
     return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -70,6 +70,29 @@ export const scelta = (chiave, campo, seNiente = null) => {
   return v === undefined ? seNiente : v
 }
 
+/* Ricominciare un gioco da capo, e **solo quello**: i progressi degli
+   altri, le monete e i traguardi restano dove sono. Serve soprattutto
+   ai giochi ancora in prova, dove la forma dei dati cambia e ripartire
+   puliti è più onesto che portarsi dietro un salvataggio di ieri fatto
+   in un altro modo.
+
+   Non rimborsa niente. Sembra duro e non lo è: se restituisse le monete
+   spese, ricominciare diventerebbe il modo più rapido di farsele
+   ridare — si compra, si azzera, si ricompra. Sta scritto nel cartello
+   che chiede conferma, così chi tocca il tasto lo sa prima. */
+export function azzeraCampagna(chiave) {
+  const p = state.profile
+  if (p.campagne) delete p.campagne[chiave]
+  persist()
+  flushNow()
+  return true
+}
+
+export const haGiocato = chiave => {
+  const c = state.profile.campagne
+  return !!(c && c[chiave])
+}
+
 export function ricorda(chiave, campo, valore) {
   progresso(chiave).cfg[campo] = valore
   persist()

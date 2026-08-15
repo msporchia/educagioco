@@ -96,7 +96,7 @@ export async function registra (dove, errore, mostra = true) {
   } catch (x) { /* se non si riesce nemmeno a scrivere il guasto, pazienza */ }
 }
 
-/* ── riparare ──
+/* ── riscaricare l'applicazione ──
    Butta la copia dell'app e chi la serviva, e basta. I progressi stanno
    in IndexedDB e in localStorage, che qui non si toccano: è tutta la
    differenza fra questo tasto e «cancella i dati del sito», che invece
@@ -153,9 +153,10 @@ export function cartello (testo) {
     align-items:center; gap:12px`
   dentro.innerHTML = `
     <div style="font-size:52px">🔧</div>
-    <b style="font-size:20px">Il gioco si è impigliato</b>
+    <b style="font-size:20px">Qui si è rotto qualcosa</b>
     <p style="margin:0; font-size:15px; line-height:1.4">
-      Non hai perso niente: quello che hai imparato è al sicuro.</p>`
+      Non è colpa tua e non hai perso niente: quello che hai imparato è
+      al sicuro.</p>`
 
   const riga = document.createElement('div')
   riga.style.cssText = 'display:flex; gap:10px; flex-wrap:wrap; justify-content:center'
@@ -172,7 +173,12 @@ export function cartello (testo) {
   riga.append(
     tasto('↻ Riprova', 'linear-gradient(180deg,#ffd166,#f4a261)', '#c9803f', '#5a3200',
           () => location.reload()),
-    tasto('🔧 Ripara', '#ffffffdd', '#d4dce6', '#4b3f72', ripara))
+    /* «Ripara» non diceva cosa fa, e a un bambino «riparare» suona come
+       «aggiusta il mio gioco» — cioè una promessa che questo tasto non
+       mantiene. Quello che fa davvero è **riscaricare l'applicazione**
+       buttando la copia tenuta da parte: i progressi non li tocca (stanno
+       in archivio, non nella cache), e per questo il tasto lo dice. */
+    tasto('⤓ Riscarica il gioco', '#ffffffdd', '#d4dce6', '#4b3f72', ripara))
 
   const dettaglio = document.createElement('small')
   dettaglio.dataset.che = 'dettaglio'
