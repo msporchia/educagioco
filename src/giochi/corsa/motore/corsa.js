@@ -30,7 +30,7 @@
       è lì.
    ═══════════════════════════════════════════════════════════════════ */
 import { TETTO, figure, scomponi } from '../dati/ordini.js'
-import { generaCancelli, resaPrevista, cancelloBuono, tondo } from './cancelli.js'
+import { generaCancelli, resaPrevista, tondo } from './cancelli.js'
 
 /* Fin dove si vede la pista. Non è una scelta di disegno: è **quanto
    tempo hai per decidere**. A quattro metri al secondo, quarantasei
@@ -433,11 +433,23 @@ export class Partita {
       if (z < -1.2 || z > ORIZZONTE) continue
       if (e.tipo === 'cancelli') {
         cose.push({ che: 'cancelli', z, passato: e.fatto, ops: e.ops.map(o => ({
-          testo: o.seg, oro: !!o.libro, buono: cancelloBuono(o),
+          /* si consegna il conto e basta. Non si dice se è un cancello
+             buono, perché **il buono è quello che il bambino deve
+             ricavare**: dirlo qui vorrebbe dire risolvergli il gioco un
+             fotogramma prima che ci provi. Il libro sì — quello non è la
+             risposta, è il prezzo. */
+          testo: o.seg, oro: !!o.libro,
         })) })
       } else if (e.tipo === 'nemici') {
+        /* Un mostro abbattuto **sparisce**. Restava in scena, con la barra
+           a zero, fino a che non gli si passava sopra: una carcassa in
+           mezzo alla strada che sembra ancora un ostacolo, proprio nei
+           secondi in cui bisogna guardare il cancello dopo. Lo scontro è
+           già finito — il colpo che lo chiude si sente e si vede — e
+           quello che resta da fare è correre. */
+        if (e.vita <= 0) continue
         cose.push({ che: 'nemici', z, quanti: e.quanti, boss: e.boss,
-                    quota: Math.max(0, e.vita) / e.quanti, resta: Math.ceil(Math.max(0, e.vita)) })
+                    quota: e.vita / e.quanti, resta: Math.ceil(e.vita) })
       } else if (e.tipo === 'traguardo') {
         cose.push({ che: 'traguardo', z })
       } else {
@@ -466,7 +478,10 @@ export class Partita {
   }
 
   get cruscotto() {
-    const avanti = this.cose.filter(c => c.tipo === 'nemici' && !c.fatto)
+    /* l'avviso parla solo di chi è ancora in piedi: annunciare «in arrivo
+       un mostro da 40» quando quel mostro è già a terra è la stessa
+       carcassa, detta a parole */
+    const avanti = this.cose.filter(c => c.tipo === 'nemici' && !c.fatto && c.vita > 0)
       .sort((a, b) => a.z - b.z)[0]
     return {
       truppa: this.truppa,

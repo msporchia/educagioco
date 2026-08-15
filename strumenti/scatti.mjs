@@ -33,8 +33,11 @@ const ADESSO = Date.now()
    lucchetti, così si possono fotografare anche le tappe in fondo. */
 const PROFILO = {
   coins: 340,
+  /* `sperimentali` acceso: i giochi ancora in prova hanno una pagina nel
+     README come gli altri, e senza il cancello aperto uscirebbe uno
+     scatto della home invece del gioco. */
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
-              giochi: {}, sa: {}, tuttoAperto: true },
+              giochi: {}, sa: {}, tuttoAperto: true, sperimentali: true },
   totals: { math: 260, mente: 90, en: 140, verbi: 40, frasi: 25, es: 60,
             td: 45, pasti: 18, partiteMath: 22, torri: 30, perfette: 7,
             ondate: 40, misure: 30, pozioni: 12, clienti: 26, mercati: 4,
@@ -52,6 +55,7 @@ const PROFILO = {
     dungeon: { tappa: 7, libera: true, stelle: {}, cfg: {} },
     survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
     'codice-segreto': { tappa: 5, libera: true, stelle: {}, cfg: {} },
+    corsa: { tappa: 5, libera: false, stelle: {}, cfg: {} },
   },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
   /* Un animale adottato e **vestito**: la cameretta fotografata vuota non
@@ -165,6 +169,14 @@ const RICETTE = [
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
     passi: [['.sv-tappa.sv-adesso, .sv-tappa', 2200]] },
+
+  { file: 'corsa-mappa', dove: 'corsa', attesa: '.co-mappa' },
+  /* La corsa si fotografa **dopo qualche secondo**: al primo istante i
+     cancelli sono ancora un puntino all'orizzonte, e lo scatto
+     racconterebbe una strada vuota invece della scelta fra tre numeri,
+     che è il gioco. */
+  { file: 'corsa-gioco', dove: 'corsa', attesa: '.co-mappa',
+    passi: [['.co-tappa.co-adesso, .co-tappa', 4200]] },
 
   { file: 'codice-mappa', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe' },
   { file: 'codice-gioco', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe',

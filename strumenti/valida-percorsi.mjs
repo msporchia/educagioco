@@ -120,6 +120,13 @@ const FASCE = {
   bosco:       { lung: [780, 1000], presidio: [2.15, 2.70] },
   sotterraneo: { lung: [520, 950],  presidio: [1.95, 2.40] },
   mura:        { lung: [420, 800],  presidio: [1.80, 2.20] },
+  /* La Palude è fuori dalla scala del presidio, e non per svista: le
+     sue strade sono corte perché sono due o tre, e la difficoltà non
+     sta più in quanto una torre presidia ma in **quanti fronti** ci
+     sono. Chiederle di scendere ancora sotto le Mura vorrebbe dire
+     rettifili nudi su tre ingressi, cioè una tappa impossibile per una
+     ragione che non si vede. */
+  palude:      { lung: [420, 720],  presidio: [1.80, 2.15] },
 }
 const PRESIDIO_MINIMO = 1.85    // il pavimento, ovunque: sotto è un tiro al bersaglio
 
@@ -462,6 +469,11 @@ console.log(`      con le postazioni vere della tappa: presidio almeno ${PRESIDI
 
 /* l'ordine fra le campagne: il presidio medio deve scendere, e di un
    passo che si senta */
+/* Il presidio deve scendere lungo i **primi tre** archi: è la lezione
+   che raccontano — sentieri che si ripiegano e perdonano, poi cunicoli,
+   poi rettifili. La Palude non ci entra: lì a crescere sono gli
+   ingressi, e il presidio delle sue strade è un numero che parla
+   d'altro. */
 const ordine = ['bosco', 'sotterraneo', 'mura']
 console.log('\n      presidio medio: ' +
   ordine.map(k => `${k} ${medie[k].toFixed(2)}`).join('  >  '))

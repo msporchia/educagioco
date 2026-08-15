@@ -51,10 +51,16 @@ const PIEDI = 0.95          // dove tocca terra quello che ti sta addosso
    prodotto dei due è quello che decide quanta vista prende l'asfalto. */
 const LARGHEZZA = 0.335     // quanto è larga una corsia, in larghezze di schermo
 const LARGA_MAX = 215       // ...ma su un tablet non oltre questo
-const STRETTA = 0.055       // quanto in fretta si stringe con la distanza
+/* Una prospettiva **dolce**. Non è un gusto: con la stretta del prototipo
+   la strada a venti metri era già un terzo di quella sotto i piedi, e
+   quello che restava ai lati era prato — cioè metà schermo dedicata a
+   qualcosa dove non succede niente. Dimezzata due volte, a venti metri la
+   strada è ancora larga più della metà, i cancelli si leggono da lontano,
+   e il verde si riduce a due cunei che la foschia finisce di cancellare. */
+const STRETTA = 0.034       // quanto in fretta si stringe con la distanza
 const BORDO = 1.76          // dove finisce l'asfalto, in corsie
 const BANCHINA = 1.15       // e dove finisce la terra battuta, in bordi
-const FONDO = 420           // fin dove si disegna la strada: oltre è foschia
+const FONDO = 900           // fin dove si disegna la strada: oltre è foschia
 
 export class Pista {
   constructor(tela) {
@@ -195,25 +201,28 @@ export class Pista {
     nastro(BANCHINA, v.banchina)
     nastro(1, v.strada)
 
-    // le fasce che scorrono: sono loro a dire che si corre
-    for (let i = 0; i < 30; i++) {
-      const z0 = i * 5 - (dist % 10), z1 = z0 + 5
-      if (z1 < -1 || z0 > FONDO) continue
-      if (Math.floor((i * 5 + dist - (dist % 10)) / 5) % 2) continue
-      const a = this.punto(0, Math.max(z0, -1)), b = this.punto(0, Math.max(z1, -1))
-      ctx.fillStyle = '#00000012'
-      ctx.beginPath()
-      ctx.moveTo(bordo(-1, b), b.y); ctx.lineTo(bordo(1, b), b.y)
-      ctx.lineTo(bordo(1, a), a.y); ctx.lineTo(bordo(-1, a), a.y)
-      ctx.closePath(); ctx.fill()
-    }
+    /* ── niente fasce a tutta larghezza ──
+       C'erano, e sfarfallavano. Una campitura che copre l'intera strada
+       ha un bordo lungo quanto la strada è larga, e in prospettiva quel
+       bordo finisce sotto il pixel man mano che si allontana: il browser
+       lo arrotonda a un lato o all'altro un fotogramma sì e uno no, e su
+       una superficie grande quel salto si legge come un lampeggio.
+
+       Sono state tolte e non sostituite. La velocità la dicono già i
+       tratteggi fra le corsie e gli alberi che sfilano a bordo strada, e
+       quelli sono figure **strette**: quando diventano sub-pixel
+       sbiadiscono e basta, invece di far battere le palpebre a tutto lo
+       schermo. */
 
     // le due righe fra le corsie: dicono dove finisce una scelta e dove
     // comincia l'altra, ed è l'unica cosa che le separa
-    ctx.fillStyle = v.righe + 'bb'
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 24; i++) {
       const z0 = i * 4 - (dist % 8), z1 = z0 + 2
-      if (z1 < -1 || z0 > 90) continue
+      if (z1 < -1 || z0 > 70) continue
+      /* i tratteggi lontani si spengono invece di ridursi a un puntino
+         che tremola: sotto una certa scala non dicono più niente */
+      ctx.fillStyle = v.righe + 'bb'
+      ctx.globalAlpha = Math.min(1, Math.max(0, (70 - z0) / 26))
       for (const c of [-0.5, 0.5]) {
         const a = this.punto(0, Math.max(z0, -1)), b = this.punto(0, Math.max(z1, -1))
         const xa = W / 2 + c * this.larg * a.s, xb = W / 2 + c * this.larg * b.s
@@ -223,6 +232,7 @@ export class Pista {
         ctx.closePath(); ctx.fill()
       }
     }
+    ctx.globalAlpha = 1
 
     ctx.strokeStyle = v.righe + 'cc'
     ctx.lineWidth = 2.5
@@ -233,23 +243,37 @@ export class Pista {
       ctx.stroke()
     }
 
-    // la foschia che chiude il fondo: nasconde il punto in cui la strada
-    // finisce, e fa sembrare che continui
-    const f = ctx.createLinearGradient(0, o - 2, 0, o + H * 0.13)
-    f.addColorStop(0, v.cielo[2]); f.addColorStop(1, v.cielo[2] + '00')
+    /* ── la foschia, che fa due mestieri ──
+       Nasconde il punto in cui la strada finisce, e **si mangia il prato
+       lontano**. Il secondo è quello che conta: sotto l'orizzonte, dove
+       la strada è ancora stretta, restano due cunei di verde che l'occhio
+       legge come «il gioco è un nastrino in mezzo a un campo». La
+       prospettiva da sola non li può togliere — è geometria, non una
+       scelta — ma sfumati nel colore dell'aria smettono di esistere. */
+    const f = ctx.createLinearGradient(0, o - 2, 0, o + H * 0.17)
+    f.addColorStop(0, v.cielo[2]); f.addColorStop(0.45, v.cielo[2] + '90')
+    f.addColorStop(1, v.cielo[2] + '00')
     ctx.fillStyle = f
-    ctx.fillRect(-40, o - 2, W + 80, H * 0.14)
+    ctx.fillRect(-40, o - 2, W + 80, H * 0.18)
   }
 
   /* Quello che sfila a lato. Non decora: è la cosa che *si vede* passare,
      e senza qualcosa che passa vicino la velocità non si sente — il
      fondale lontano si muove troppo poco per dirla. */
   contorno(v, dist) {
+    /* Si arriva **fino all'orizzonte**, non a centocinquanta metri. Con
+       la prospettiva dolce la fila di alberi finiva a mezza altezza e
+       sopra restava una fascia di prato vuota larga tutto lo schermo —
+       quella «montagna» che si vedeva sotto il cielo. Portata fino in
+       fondo, la fila si chiude in una macchia di bosco e il verde piatto
+       sparisce: costa una quarantina di figure, quasi tutte grandi come
+       un'unghia. */
     const PASSO = 7
+    const FIN_LA = 300
     const primo = Math.ceil((dist - 1) / PASSO) * PASSO
-    for (let z = primo + 150; z >= primo - PASSO; z -= PASSO) {
+    for (let z = primo + FIN_LA; z >= primo - PASSO; z -= PASSO) {
       const zr = z - dist
-      if (zr < -1.5 || zr > 150) continue
+      if (zr < -1.5 || zr > FIN_LA) continue
       const n = Math.round(z / PASSO)
       const lato = n % 2 ? 1 : -1
       const fuori = BORDO * BANCHINA + 0.25 + ((n * 7) % 5) * 0.16
@@ -261,7 +285,7 @@ export class Pista {
     const { ctx } = this
     const h = this.H * 0.28 * p.s
     if (h < 1.5 || p.x < -this.W * 0.4 || p.x > this.W * 1.4) return
-    ctx.globalAlpha = Math.min(1, Math.max(0, (140 - (1 / p.s - 1) / STRETTA) / 40))
+    ctx.globalAlpha = Math.min(1, Math.max(0, (300 - (1 / p.s - 1) / STRETTA) / 90))
     ctx.fillStyle = '#00000018'
     ctx.beginPath(); ctx.ellipse(p.x, p.y, h * 0.22, h * 0.06, 0, 0, 7); ctx.fill()
     const chioma = v.chioma[seme % v.chioma.length]
@@ -333,7 +357,7 @@ export class Pista {
        guardare proprio in quel momento, per vedere quanto è cresciuta. Si
        dissolve negli ultimi due metri, che è anche quello che fa sembrare
        di attraversarlo invece di sbatterci contro. */
-    const alfa = Math.min(1, Math.max(0, (44 - c.z) / 14))
+    const alfa = Math.min(1, Math.max(0, (46 - c.z) / 10))
                  * (c.attivo ? 1 : 0.22)
                  * Math.min(1, Math.max(0, (c.z + 1) / 3))
     for (let i = 0; i < 3; i++) {
@@ -344,9 +368,14 @@ export class Pista {
       const s = Math.min(p.s, 0.62)
       const w = this.larg * 0.86 * s, h = H * 0.2 * s
       ctx.globalAlpha = alfa
+      /* Tre cancelli **uguali**, e un solo colore per tutti: quello che
+         cambia è il numero scritto sopra, che è l'unica cosa da leggere.
+         Il verde e il rosso di prima rispondevano alla domanda da soli —
+         due corsie rosse su tre e non c'era più niente da calcolare.
+         L'oro resta, perché non dice quanto vale: dice che lì ci si
+         ferma. */
       if (op.oro) this.riquadro(p.x, p.y, w, h, '#7a5a12', '#ffd24a')
-      else this.riquadro(p.x, p.y, w, h, op.buono ? '#2f6b4a' : '#6b3040',
-                         op.buono ? '#7ee0a0' : '#ff9db0')
+      else this.riquadro(p.x, p.y, w, h, '#33405e', '#93a8d4')
       ctx.fillStyle = '#ffffff'
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
       const righe = op.testo.split(' ')
@@ -375,7 +404,7 @@ export class Pista {
     const p = this.punto(0, c.z)
     const s = Math.min(p.s, 0.7)
     const largo = this.larg * 2.2 * s
-    ctx.globalAlpha = Math.min(1, Math.max(0, (44 - c.z) / 12))
+    ctx.globalAlpha = Math.min(1, Math.max(0, (46 - c.z) / 10))
 
     // tanti mostri quanti ne restano, fino a cinque: di più si
     // sovrappongono e diventano una macchia senza facce. Il boss è uno
@@ -454,7 +483,7 @@ export class Pista {
     const { ctx } = this
     const p = this.punto(c.corsia, c.z)
     const d = Math.max(7, 54 * Math.min(p.s, 0.7) * scala)
-    ctx.globalAlpha = Math.min(1, Math.max(0, (44 - c.z) / 12))
+    ctx.globalAlpha = Math.min(1, Math.max(0, (46 - c.z) / 10))
     ctx.font = `${d}px system-ui, sans-serif`
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
     ctx.fillText(emoji, p.x, p.y)
@@ -468,7 +497,7 @@ export class Pista {
     const { ctx } = this
     const p = this.punto(c.corsia, c.z)
     const d = Math.max(7, 54 * Math.min(p.s, 0.7))
-    ctx.globalAlpha = Math.min(1, Math.max(0, (44 - c.z) / 12))
+    ctx.globalAlpha = Math.min(1, Math.max(0, (46 - c.z) / 10))
     const g = ctx.createRadialGradient(p.x, p.y - d * 0.35, 0, p.x, p.y - d * 0.35, d)
     g.addColorStop(0, '#9fffb488'); g.addColorStop(1, '#9fffb400')
     ctx.fillStyle = g

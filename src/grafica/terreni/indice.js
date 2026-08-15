@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    I TERRENI DEL CASTELLO — l'indice
 
-   Tre terreni e quindici tavolozze, una per tappa. Il terreno è
+   Tre terreni e venti tavolozze, una per tappa. Il terreno è
    **come** si dipinge il campo (che posa ha il fondo, com'è fatta la
    via, che cosa ci sta intorno); la tavolozza è **con che colori**. Una
    tappa nomina una tavolozza — `ambiente: 'bosco-guado'` — e da lì si
@@ -41,7 +41,7 @@
    il bosco di mezzogiorno, quindi il primo cambio funziona da solo.
    ═══════════════════════════════════════════════════════════════════ */
 import { seminato } from '../tela.js'
-import { BOSCO, VARIANTI_BOSCO, TERRENO_BOSCO } from './bosco.js'
+import { BOSCO, VARIANTI_BOSCO, VARIANTI_PALUDE, TERRENO_BOSCO } from './bosco.js'
 import { SOTTERRANEO, VARIANTI_SOTTERRANEO, TERRENO_SOTTERRANEO } from './sotterraneo.js'
 import { MURA, VARIANTI_MURA, TERRENO_MURA } from './mura.js'
 
@@ -56,6 +56,10 @@ function tavolozze(base, varianti, terreno) {
 
 export const TERRENI = {
   ...tavolozze(BOSCO, VARIANTI_BOSCO, TERRENO_BOSCO),
+  /* la palude è un bosco allagato: stesso terreno, altri colori — ed è
+     tutto il motivo per cui una campagna nuova costa cinque tavolozze
+     e non un terreno intero */
+  ...tavolozze(BOSCO, VARIANTI_PALUDE, TERRENO_BOSCO),
   ...tavolozze(SOTTERRANEO, VARIANTI_SOTTERRANEO, TERRENO_SOTTERRANEO),
   ...tavolozze(MURA, VARIANTI_MURA, TERRENO_MURA),
 }

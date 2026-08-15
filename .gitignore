@@ -25,3 +25,4 @@ tmp/
 /*.png
 # il piano del travaso e delle tappe: roba di casa, resta sul disco
 PIANO.md
+__pycache__/

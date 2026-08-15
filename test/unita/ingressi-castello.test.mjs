@@ -1,18 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE TAPPE A DUE INGRESSI
 
-   Tre tappe e la partita libera hanno due strade: due bocche in cima al
-   campo, due file di mostri, un castello solo. Non è una mappa più
+   Sette tappe hanno più di una strada: due bocche in cima al campo —
+   tre nell'ultima della Palude — altrettante file di mostri, e un
+   castello solo. Non è una mappa più
    grande — è una difesa da dividere, ed è l'unica cosa che il gioco
    chiede quando non ha più operazioni nuove da insegnare.
 
    Le regole che questo test tiene, e che a occhio non si vedono:
 
-     · le due strade **non si fondono**: arrivano alla stessa porta da
-       parti diverse, e fino a lì restano due. Se si unissero prima, si
-       difenderebbe il tratto comune e i due ingressi non li
-       guarderebbe più nessuno — una mappa a due ingressi giocata come
-       se ne avesse uno;
+     · le strade **non si fondono**: arrivano alla stessa porta da parti
+       diverse, e fino a lì restano distinte. Se si unissero prima, si
+       difenderebbe il tratto comune e gli ingressi non li guarderebbe
+       più nessuno — una mappa a più bocche giocata come se ne avesse
+       una;
      · le piazzole si spartiscono fra le strade e si occupano **a
        giro**, una per parte: se si riempisse una strada per volta, la
        prima torre difenderebbe metà campo e l'altra metà passerebbe
@@ -33,31 +34,34 @@ const doppie = TAPPE.filter(t => ingressiDi(t) > 1)
 const misure = { ...MONDO }
 
 controlla('qualche tappa ha due ingressi', doppie.length >= 2)
-nota('a due ingressi:', doppie.map(t => t.nome).join(' · '),
-     '· e la partita libera:', ingressiDi(LIBERA) > 1 ? 'sì' : 'no')
-controlla('anche la partita libera', ingressiDi(LIBERA) > 1)
+nota('a più ingressi:', doppie.map(t => `${t.nome} (${ingressiDi(t)})`).join(' · '))
+/* la partita libera no, ed è scritto perché è una scelta: le sue vite
+   non stanno in una tabella completa, e un'ondata che si divide fa
+   saltare il punto in cui la tabella finisce e la progressione comincia */
+uguale('la partita libera resta a una strada sola', ingressiDi(LIBERA), 1)
 
-for (const t of [...doppie, LIBERA]) {
+for (const t of doppie) {
   const p = new Percorso(t.forme, t.posti, misure)
-  uguale(`${t.nome}: due strade`, p.quanteVie, 2)
+  const quante = p.quanteVie
+  controlla(`${t.nome}: più di una strada (${quante})`, quante >= 2)
 
-  /* la porta è una sola */
+  /* la porta è una sola, comunque siano tante le strade */
   const fini = p.vie.map(v => v.fine)
   controlla(`${t.nome}: arrivano tutte allo stesso castello`,
-            Math.hypot(fini[0].x - fini[1].x, fini[0].y - fini[1].y) < 20)
+            fini.every(f => Math.hypot(f.x - fini[0].x, f.y - fini[0].y) < 20))
 
-  /* ma gli ingressi sono due, e lontani */
-  const inizi = p.vie.map(v => v.inizio)
-  controlla(`${t.nome}: e partono da due bocche diverse`,
-            Math.abs(inizi[0].x - inizi[1].x) > MONDO.W * 0.25)
+  /* ma le bocche sono distinte, e distanti */
+  const inizi = p.vie.map(v => v.inizio.x).sort((a, b) => a - b)
+  controlla(`${t.nome}: e partono da bocche diverse`,
+            inizi.every((x, i) => i === 0 || x - inizi[i - 1] > MONDO.W * 0.2))
 
   /* le piazzole: spartite, alternate, e mai una sopra l'altra */
-  const perVia = [0, 1].map(k => p.postazioni.filter(q => q.via === k).length)
-  controlla(`${t.nome}: piazzole su tutte e due le strade (${perVia.join(' + ')})`,
+  const perVia = p.vie.map((_, k) => p.postazioni.filter(q => q.via === k).length)
+  controlla(`${t.nome}: piazzole su tutte le strade (${perVia.join(' + ')})`,
             perVia.every(n => n >= 2))
-  const primeDue = p.postazioni.slice(0, 2).map(q => q.via)
-  controlla(`${t.nome}: le prime due torri vanno una per strada`,
-            primeDue[0] !== primeDue[1])
+  const prime = p.postazioni.slice(0, quante).map(q => q.via)
+  controlla(`${t.nome}: le prime ${quante} torri vanno una per strada`,
+            new Set(prime).size === quante)
   let minima = Infinity
   for (let i = 0; i < p.postazioni.length; i++)
     for (let k = i + 1; k < p.postazioni.length; k++)
@@ -72,17 +76,27 @@ for (const t of [...doppie, LIBERA]) {
    la metà. */
 for (const t of doppie) {
   const finta = { ...t, forme: undefined, forma: t.forme[0] }
-  uguale(`${t.nome}: ${PIAZZOLE_PER_INGRESSO} piazzole in più per il secondo ingresso`,
-         postiDi(t) - postiDi(finta), PIAZZOLE_PER_INGRESSO)
+  const extra = (ingressiDi(t) - 1) * PIAZZOLE_PER_INGRESSO
+  uguale(`${t.nome}: ${extra} piazzole in più per gli ingressi oltre il primo`,
+         postiDi(t) - postiDi(finta), extra)
 }
 
 /* ── da che parte arrivano ── */
 {
-  const o = new Ondate(doppie[0])
-  const lati = [1, 2, 3, 4, 5, 6].map(n => o.viaDi(n, 2))
-  nota('le prime sei ondate entrano da:', lati.map(v => (v < 0 ? 'tutte e due' : v)).join(' · '))
+  const t = doppie[0]
+  const o = new Ondate(t)
+  const lati = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => o.viaDi(n, 2))
+  nota('le ondate di', t.nome, 'entrano da:',
+       lati.map(v => (v < 0 ? '·tutte·' : v)).join(' '),
+       `(insieme dalla ${o.daQuandoInsieme}ª)`)
   controlla('si alternano', lati[0] !== lati[1])
-  controlla('e ogni terza arriva da tutte e due', lati[2] === -1 && lati[5] === -1)
+  /* le prime arrivano da una bocca per volta: con la difesa ancora
+     bassa, dividerla in due vuol dire perdere per una ragione che non
+     si vede */
+  controlla('all\'inizio mai da tutte e due insieme',
+            lati.slice(0, o.daQuandoInsieme - 1).every(v => v >= 0))
+  controlla('poi ogni terza arriva da tutte e due',
+            lati.some((v, i) => v === -1 && (i + 1) % 3 === 0))
   uguale('con una strada sola non c\'è niente da scegliere', o.viaDi(7, 1), 0)
 }
 
@@ -120,9 +134,12 @@ for (const t of doppie) {
   const c = creaBattaglia({ tappa, misure, stato: {} })
   c.inizia()
   c.costruisci('add', {})
-  // dritti alla terza, che è quella che arriva da tutte e due: chiamarle
-  // una per una vorrebbe dire aspettare che il campo si pulisca
-  c.nuovaOnda(); c.nuovaOnda(); c.nuovaOnda()
+  /* dritti alla prima ondata che arriva da tutte e due — che non è più
+     la terza: chiamarle una per una vorrebbe dire aspettare ogni volta
+     che il campo si pulisca */
+  const quando = c.ondate.daQuandoInsieme
+  const insieme = [quando, quando + 1, quando + 2].find(n => c.ondate.viaDi(n, 2) < 0)
+  for (let n = 0; n < insieme; n++) c.nuovaOnda()
   // e si aspetta che ne siano usciti almeno un paio: escono a intervalli
   for (let i = 0; i < 80; i++) c.avanza(0.05)
   const divise = new Set(c.nemici.map(n => n.via))

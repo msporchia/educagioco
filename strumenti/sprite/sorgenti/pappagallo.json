@@ -1,0 +1,35 @@
+{
+  "scala": "auto",
+  "fondo": "auto",
+  "cella": [
+    16,
+    32
+  ],
+  "sprite": {
+    "pappagallo_giu": {
+      "da": [
+        0,
+        0
+      ],
+      "quanti": 4
+    },
+    "pappagallo_lato": {
+      "da": [
+        0,
+        4
+      ],
+      "quanti": 4,
+      "cella": [
+        32,
+        32
+      ]
+    },
+    "pappagallo_su": {
+      "da": [
+        0,
+        2
+      ],
+      "quanti": 4
+    }
+  }
+}

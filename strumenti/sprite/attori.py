@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Porta un foglio di personaggio generato dentro `poc/attori/`.
+"""Porta un foglio di personaggio generato dentro `strumenti/sprite/attori/`.
 
-    python3 poc/attori.py ~/Scaricati/Senza\\ titolo.jpeg bobtail
-    python3 poc/attori.py ~/Scaricati/gatto.png gatto --guarda
+    python3 strumenti/sprite/attori.py sorgenti/gatto-nero.jpeg gatto-nero --zampe
+    python3 strumenti/sprite/attori.py sorgenti/arciera-generata.jpeg arciera --guarda
 
 Un «attore» è chiunque cammini: la bambina, il cane, una gallina. Il formato
 è quello di `character.png` del set di ArMM1998, e non è una scelta nostra —
@@ -17,17 +17,27 @@ Quello che arriva da un generatore non è mai già in quella misura: è un
 ingrandimento, spesso JPEG, su fondo bianco. Questo script fa le tre cose
 che servono e nient'altro:
 
-  1. **rimpicciolisce alla misura vera.** Non a occhio: misura il passo fra
-     le bande scure, ne ricava la scala, e verifica che torni. Se non torna
-     lo dice invece di consegnare un foglio storto.
-  2. **toglie il fondo**, che è bianco e non trasparente.
+  1. **rimpicciolisce alla misura vera** — dalla forma del foglio, che è
+     272:256; misurare il passo fra le bande è la strada lunga e sbaglia
+     contro un fondo a scacchiera.
+  2. **toglie il fondo**, che sembra trasparente e non lo è: certi
+     generatori disegnano la scacchiera coi pixel veri. Si allaga dai
+     bordi, mai per colore — un cane bianco ha addosso lo stesso bianco
+     della carta, e cancellando «tutto il bianco» gli si aprono buchi in
+     mezzo alla schiena.
   3. **riduce i colori**, perché il ricampionamento di un JPEG ne lascia
-     migliaia e la pixel art ne vuole una decina: senza questo passaggio i
-     bordi restano sporchi e in gioco si vede.
+     migliaia e la pixel art ne vuole una decina.
 
-Il risultato va in `poc/attori/<nome>.png` ed è versionato — è roba nostra,
-non un pacchetto scaricato. Poi si rilancia `atlante-gfx.py`, che raccoglie
-da sé tutto quello che trova lì dentro.
+E soprattutto **normalizza le bande**. Con `--zampe`, per un quadrupede:
+nel suo foglio la metà di sopra è l'animale in piedi, visto di fronte e di
+spalle, e la metà di sotto è quello di profilo su quattro zampe. Preso col
+tracciato di un umano, il cane camminava su due zampe appena ti spostavi
+di lato. Quello che esce di qui è sempre nella forma canonica, così il
+generatore dell'atlante non deve sapere chi cammina su quante zampe.
+
+Il risultato va in `strumenti/sprite/attori/<nome>.png` ed è versionato — è
+roba nostra. Poi si rilancia `atlante.py`, che raccoglie da sé tutto quello
+che trova lì dentro.
 """
 import sys
 from collections import Counter
@@ -39,6 +49,7 @@ QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
 ATTORI = QUI / 'attori'
 CELLA_W, CELLA_H = 16, 32
+FOTOGRAMMI = 4
 FOGLIO_W, FOGLIO_H = 272, 256          # la misura di character.png
 COLORI = 12
 
@@ -125,15 +136,59 @@ MAPPE = {
 }
 CANONICA = {'giu': 0, 'lato': 1, 'su': 2}
 
+# Di lato un quadrupede e' **lungo**: un cane visto di profilo occupa 24-28
+# px, non 16. Tagliato ogni 16 si spezzava in due, e in gioco camminava a
+# meta'. Quindi la cella di «lato» e' larga il doppio — per tutti, anche per
+# gli umani che ci ballano dentro: una regola sola vale piu' di due px
+# risparmiati, e chi disegna gia' legge la larghezza dal pezzo.
+LARGHEZZE = {'giu': CELLA_W, 'lato': CELLA_W * 2, 'su': CELLA_W}
+
+
+def gruppi(px, y0, larg, alt):
+    """Le colonne dove c'e' qualcosa, raccolte a gruppi: sono i fotogrammi.
+    Si misurano invece di darli per scontati perche' il passo cambia da una
+    banda all'altra, ed e' proprio quello che spezzava il cane."""
+    piene = [x for x in range(larg) if any(px[x, y][3] for y in range(y0, y0 + alt))]
+    if not piene:
+        return []
+    fuori, inizio, prec = [], piene[0], piene[0]
+    for x in piene[1:]:
+        if x > prec + 2:                    # due colonne vuote separano davvero
+            fuori.append((inizio, prec))
+            inizio = x
+        prec = x
+    fuori.append((inizio, prec))
+    return fuori
+
 
 def riordina(im, mappa):
-    if mappa == CANONICA:
-        return im
-    fuori = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    for verso, dove in CANONICA.items():
-        da = mappa[verso] * CELLA_H
-        banda = im.crop((0, da, im.width, min(im.height, da + CELLA_H)))
-        fuori.paste(banda, (0, dove * CELLA_H))
+    """Rimette le bande nella forma canonica **ricomponendo i fotogrammi uno
+    per uno**: ognuno si ritaglia dov'e' davvero e si incolla centrato nella
+    sua cella. Copiare la banda di peso non basta — i fogli generati non
+    hanno il passo che ci aspettiamo."""
+    px = im.load()
+    largo = max(LARGHEZZE.values()) * FOTOGRAMMI
+    fuori = Image.new('RGBA', (largo, CELLA_H * len(CANONICA)), (0, 0, 0, 0))
+    for verso, riga in CANONICA.items():
+        y0 = mappa[verso] * CELLA_H
+        if y0 + CELLA_H > im.height:
+            continue
+        cella = LARGHEZZE[verso]
+        # Di fronte e di spalle i fotogrammi **si toccano**: fra un cane e
+        # l'altro non c'e' una colonna vuota, e cercare i gruppi ne fonde due
+        # in uno. Li' il passo fisso e' l'unica cosa che regge. Di lato invece
+        # sono staccati e larghi a caso, e li' misurare e' l'unica cosa che
+        # regge. Due bande diverse, due regole diverse.
+        if cella == CELLA_W:
+            tagli = [(i * CELLA_W, i * CELLA_W + CELLA_W - 1) for i in range(FOTOGRAMMI)]
+        else:
+            tagli = gruppi(px, y0, im.width, CELLA_H)[:FOTOGRAMMI]
+        for i, (a, b) in enumerate(tagli):
+            pezzo = im.crop((a, y0, min(im.width, b + 1), y0 + CELLA_H))
+            if pezzo.width > cella:          # non ci sta: si tiene il centro
+                t = (pezzo.width - cella) // 2
+                pezzo = pezzo.crop((t, 0, t + cella, CELLA_H))
+            fuori.paste(pezzo, (i * cella + (cella - pezzo.width) // 2, riga * CELLA_H))
     return fuori
 
 
@@ -161,6 +216,33 @@ def allaga(px, fondi, tolleranza=26):
             px[x, y] = (0, 0, 0, 0)
             via += 1
         coda += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    return via
+
+
+def sfrangia(px, fondi, giri=2):
+    """Toglie la frangia. Il JPEG lascia intorno a ogni sagoma un contorno
+    di pixel color-fondo che l'allagamento non raggiunge — in mappa sono
+    quelle righine bianche che compaiono e spariscono mentre l'animale
+    cammina, ed e' la cosa che si nota di piu'. Si tolgono solo i pixel
+    color-fondo **che toccano il trasparente**: dentro la sagoma non si
+    entra mai."""
+    via = 0
+    for _ in range(giri):
+        orlo = []
+        for y in range(FOGLIO_H):
+            for x in range(FOGLIO_W):
+                if not px[x, y][3] or not e_fondo(px[x, y], fondi, 46):
+                    continue
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    a, b = x + dx, y + dy
+                    if a < 0 or b < 0 or a >= FOGLIO_W or b >= FOGLIO_H or not px[a, b][3]:
+                        orlo.append((x, y))
+                        break
+        for x, y in orlo:
+            px[x, y] = (0, 0, 0, 0)
+            via += 1
+        if not orlo:
+            break
     return via
 
 
@@ -226,6 +308,7 @@ def normalizza(sorgente, nome, guarda=False, mappa=CANONICA):
     # rischio di bucare l'animale — si può togliere solo quello che è
     # attaccato al fuori, e il fuori è già tutto trasparente.
     via += allaga(px, fondi, 40)
+    via += sfrangia(px, fondi)
 
     fuori = riordina(fuori, mappa)
 

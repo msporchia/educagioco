@@ -11,7 +11,14 @@
    la tabella dei corpi è cambiare quell'import, niente altro.
    ═══════════════════════════════════════════════════════════════════ */
 import { TINTA } from './tinte.js'
-import { BESTIE } from './corpi-mostri.js'
+import { BESTIE as VECCHIE } from './corpi-mostri.js'
+/* le otto bestie disegnate nell'altro cantiere (`grafica/mostri/`), che
+   per un pezzo sono rimaste lì senza che nessuno le chiamasse: erano
+   fatte apposta per confluire qui, indicizzate per lo stesso `id`.
+   Adesso confluiscono, ed è la palude che le porta in campo. */
+import { PITTORI_MOSTRI } from '../mostri/indice.js'
+
+const BESTIE = { ...VECCHIE, ...PITTORI_MOSTRI }
 
 /* i nomi delle bestie disegnate: il test controlla che ogni mostro di
    `data/mostri.js` abbia qui il suo disegno, e non un ripiego */

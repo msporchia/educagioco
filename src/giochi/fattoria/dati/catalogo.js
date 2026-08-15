@@ -58,8 +58,12 @@ export const CATEGORIE = [
     V('ringhiera', 'ringhiera',   'Ringhiera',      9, [3, 1]),
   ] },
   { chiave: 'case', nome: 'Case', icona: '🏚️', voci: [
-    V('casa',      'casa',        'Casa',         120, [4, 2]),
-    V('fienile',   'fienile',     'Fienile',      110, [4, 2]),
+    /* una voce sola che si gira: davanti c'è la porta, dietro il muro
+       cieco. Erano due voci di catalogo, ed era la stessa casa. */
+    V('casa',      'casa',        'Casa',         120, [5, 2], { giri: [
+      { pezzo: 'casa',       piede: [5, 2] },     // il davanti, con la porta
+      { pezzo: 'casa_retro', piede: [5, 2] },     // il dietro
+    ] }),
     V('casetta',   'casetta',     'Casetta',       55, [2, 1]),
     V('cantina',   'pozzo',       'Cantina',       40, [2, 1]),
   ] },

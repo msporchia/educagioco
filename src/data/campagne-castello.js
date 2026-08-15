@@ -15,12 +15,20 @@
    la prima tappa, cinquantadue per l'ultima. Una partita diventava un
    compito.
 
-   Tre archi da cinque tappe, ognuno che riparte più basso della fine
-   del precedente ma arriva più in alto:
+   Quattro archi da cinque tappe. I primi tre ripartono più bassi della
+   fine del precedente ma arrivano più in alto; il quarto no, e apposta:
 
      Bosco         6 · 7 · 8 · 10 · 12
      Sotterraneo   9 · 11 · 13 · 16 · 19
      Mura         14 · 18 · 22 · 26 · 30
+     Palude       12 · 15 · 18 · 21 · 24
+
+   Alla fine delle Mura il gioco ha finito le operazioni da insegnare, e
+   trenta calcoli sono già un pomeriggio: continuare a salire vorrebbe
+   dire trasformare una partita in un compito, che è esattamente
+   l'errore da cui questo riassetto è partito. Quindi nella Palude i
+   calcoli **scendono** e a crescere è la difficoltà tattica — gli
+   ingressi da cui arrivano i mostri, che diventano due e poi tre.
 
    Le quattro torri: `add` arciere 🏹, `sub` magica 🔮 (danno a zona),
    `mul` ghiaccio ❄️ (non fa danno: gela), `div` bombe 💣.
@@ -229,6 +237,58 @@ const MURA_TORRIONE = [
   [[0.24, 0.04], [0.34, 0.22], [0.16, 0.40], [0.32, 0.58], [0.22, 0.76], [0.48, 0.95]],
   [[0.76, 0.04], [0.66, 0.24], [0.84, 0.42], [0.68, 0.60], [0.78, 0.78], [0.48, 0.95]]]
 
+
+/* ── PALUDE: acqua ferma e più di una strada ──
+   La quarta campagna, e la prima che non cresce chiedendo più conti.
+   Dalle Mura in giù il gioco aveva finito le operazioni da insegnare —
+   trenta calcoli sono un pomeriggio, e più di così diventa un compito.
+   Quindi qui i calcoli **scendono** (dodici, come a metà bosco) e a
+   crescere è quello che si deve capire: da dove arrivano, quanti fronti
+   ci sono, quale torre dove.
+
+   Tutte e cinque hanno **due ingressi**, e sono le mappe più corte del
+   gioco: una strada corta con due bocche costa più attenzione di una
+   lunga con una.
+
+   Tre bocche sono state provate e rimandate, ed è giusto sapere
+   perché: con tre strade servono tre torri prima di cominciare a
+   salire, e il gioco non ha nessun modo di dirlo. Chi apre come ha
+   sempre aperto — due torri, poi si sale — lascia una bocca senza
+   nessuno davanti e perde alla terza ondata senza capire di cosa. Non
+   è un problema di numeri: è che manca il pezzo che lo insegna. */
+
+// il guado: due canali che scendono paralleli e sboccano insieme
+const PALUDE_GUADO = [
+  [[0.22, 0.04], [0.16, 0.22], [0.36, 0.36], [0.18, 0.54], [0.34, 0.72], [0.50, 0.95]],
+  [[0.74, 0.04], [0.80, 0.22], [0.60, 0.36], [0.78, 0.54], [0.62, 0.72], [0.50, 0.95]]]
+
+// il canneto: uno stretto e lungo, uno largo e corto — non sono uguali,
+// e la difesa non si può dividere a metà
+const PALUDE_CANNETO = [
+  [[0.18, 0.04], [0.14, 0.20], [0.34, 0.32], [0.16, 0.48], [0.32, 0.64], [0.24, 0.80],
+   [0.48, 0.95]],
+  [[0.70, 0.04], [0.78, 0.24], [0.62, 0.42], [0.80, 0.60], [0.66, 0.78], [0.48, 0.95]]]
+
+// le isole: due sentieri che si sfiorano a metà strada. Lì una torre
+// sola guarda tutti e due, ed è l'unico posto della campagna dove
+// succede
+const PALUDE_ISOLE = [
+  [[0.24, 0.04], [0.18, 0.24], [0.38, 0.40], [0.20, 0.58], [0.36, 0.76], [0.50, 0.95]],
+  [[0.72, 0.04], [0.78, 0.26], [0.58, 0.42], [0.76, 0.58], [0.62, 0.78], [0.50, 0.95]]]
+
+// il pantano: due strade che si allontanano invece di avvicinarsi, e
+// si ritrovano solo davanti alla porta. Qui una torre non guarda mai
+// dall'altra parte.
+const PALUDE_PANTANO = [
+  [[0.16, 0.04], [0.10, 0.24], [0.26, 0.44], [0.10, 0.64], [0.26, 0.82], [0.50, 0.95]],
+  [[0.84, 0.04], [0.90, 0.24], [0.74, 0.44], [0.90, 0.64], [0.74, 0.82], [0.50, 0.95]]]
+
+// la foce: due canali che arrivano alla stessa porta, e l'ultimo tratto
+// è cortissimo. Non c'è più tempo per rimediare a niente.
+const PALUDE_FOCE = [
+  [[0.12, 0.04], [0.18, 0.24], [0.30, 0.44], [0.14, 0.64], [0.32, 0.84], [0.50, 0.95]],
+  [[0.88, 0.04], [0.82, 0.24], [0.70, 0.44], [0.86, 0.64], [0.68, 0.84], [0.50, 0.95]]]
+
 /* ═══════════════ LE TAPPE ═══════════════
 
    `ambiente` è la chiave di `grafica/terreni/indice.js`: tre terreni
@@ -329,6 +389,36 @@ export const CAMPAGNE = [
         // 🏹 🔮 💣 🏹 🔮 💣 — sei bestie diverse sul tracciato più corto
         mostri: ['ragno', 'golem', 'orco', 'arpia', 'fantasma', 'drago'],
         forme: MURA_TORRIONE },
+    ],
+  },
+  {
+    id: 'palude', nome: 'La palude', emoji: '🐸',
+    /* La campagna che non chiede più conti, ma più attenzione. I
+       calcoli ripartono da dodici — meno delle Mura, meno del
+       Sotterraneo — e a crescere è quanto c'è da guardare: due bocche
+       in ogni tappa, e strade che si allontanano sempre di più. Tutte
+       le torri, tutti i rami, e le bestie che nella palude ci vivono. */
+    tappe: [
+      { nome: 'Il guado', emoji: '💧', ambiente: 'palude-alba', calcoli: 12, cap: 8,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        // 🔮 🏹 💣
+        mostri: ['blatta', 'lupo', 'verme'], forme: PALUDE_GUADO },
+      { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 15, cap: 9,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        // 💣 🏹 🔮
+        mostri: ['rovo', 'corvo', 'troll'], forme: PALUDE_CANNETO },
+      { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        // 💣 🔮 🏹 🔮
+        mostri: ['verme', 'blatta', 'corvo', 'troll'], forme: PALUDE_ISOLE },
+      { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        // 🔮 💣 🏹 🔮 💣 🏹 — tre bocche, e il giro delle tre torri
+        mostri: ['troll', 'rovo', 'lupo', 'blatta', 'verme', 'corvo'], forme: PALUDE_PANTANO },
+      { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        // 💣 🔮 🏹 🔮 💣 🏹 — e il drago chiude, come nelle Mura
+        mostri: ['drago', 'blatta', 'lupo', 'troll', 'verme', 'corvo'], forme: PALUDE_FOCE },
     ],
   },
 ]

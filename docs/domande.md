@@ -2,7 +2,8 @@
 
 # ❓ Le domande di tutte le materie
 
-Alcuni giochi — [il Dungeon](dungeon.md) e [Survivors](survivors.md) — non
+Alcuni giochi — [il Dungeon](dungeon.md), [Survivors](survivors.md) e il
+cancello d'oro della [Corsa dei numeri](corsa.md) — non
 hanno un contenuto scolastico proprio: chiedono **una domanda** e basta. Le
 domande arrivano da un magazzino comune, e questa pagina spiega cosa c'è
 dentro.
@@ -44,12 +45,16 @@ Ogni tipo di domanda ha **da quattro a sette gradi**, dal più facile al più
 difficile. Un gioco non li conosce: chiede una domanda con una certa
 **durezza, da 0 a 1**, e ognuno traduce quel numero nel proprio grado.
 
-Questo permette ai due giochi di usare la stessa scorta in modi opposti:
+Questo permette a giochi diversissimi di usare la stessa scorta in modi
+opposti:
 
 - nel **Dungeon** la durezza dipende da quanto si è scesi — più giù si va,
   più le domande si fanno toste;
 - in **Survivors** la sceglie il bambino, perché ogni carta ha il suo prezzo
-  in difficoltà.
+  in difficoltà;
+- nella **Corsa dei numeri** la dice la tappa, e la domanda non è mai
+  obbligatoria: paga il cancello d'oro, che si vede prima e che si può
+  benissimo non prendere.
 
 Non viene pescata una materia a caso e poi il grado: si pesca direttamente
 **una classe di domande** (tipo + grado) fra quelle ammesse a quella durezza.

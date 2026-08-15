@@ -86,6 +86,59 @@ export const VARIANTI_BOSCO = {
   },
 }
 
+/* ── la palude ──
+   Cinque tavolozze in più sullo stesso terreno: un bosco allagato non
+   ha bisogno di un'altra tecnica per dipingersi, ha bisogno di altri
+   colori. Verde che vira al marcio, acqua ferma sotto l'erba, e le vie
+   che diventano passerelle di legno bagnato. La luce cala di tappa in
+   tappa: si comincia all'alba e si finisce col fuoco delle torce. */
+export const VARIANTI_PALUDE = {
+  'palude-alba': {
+    fondo: ['#7ba876', '#4e7a5f'], chiazze: ['#8fc084', '#3f6a56'],
+    erbaC: '#9ac98a', erbaS: '#3f7a58', muschio: '#41866a', terra: '#7b6a45',
+    chioma: ['#3c8060', '#245844'], tronco: '#6b563a',
+    luce: '#ffe9c4', buio: 0.06, chiazzeLuce: 0.24,
+    via: { scarpata: '#5d4a30', corpo: '#7d6743', battuto: '#a89272',
+           ghiaiaC: '#c4ab84', ghiaiaS: '#7f6440',
+           ciottoloC: '#9d9483', ciottoloS: '#7d7466', ciottoloOmbra: '#4b3d2c' },
+    dettagli: [['ciuffi', 0.8], ['muschio', 2.2], ['funghi', 4], ['foglie', 3.4]],
+  },
+  'palude-verde': {
+    fondo: ['#6f9c6c', '#3f6b52'], chiazze: ['#84b47a', '#33604a'],
+    erbaC: '#8cbd7c', erbaS: '#356b4d', muschio: '#387a5e', terra: '#6d5f3e',
+    chioma: ['#2f7355', '#1c4c3a'], tronco: '#5f4c33',
+    luce: '#e8f0cf', buio: 0.1, chiazzeLuce: 0.18,
+    dettagli: [['ciuffi', 1], ['muschio', 1.8], ['funghi', 3.2], ['foglie', 3.8]],
+  },
+  'palude-stagno': {
+    fondo: ['#5f8f74', '#33604f'], chiazze: ['#74a882', '#2a5545'],
+    erbaC: '#7db589', erbaS: '#2e6249', muschio: '#2f7a63', terra: '#5e5439',
+    chioma: ['#2a6a52', '#173f31'], tronco: '#55442e',
+    luce: '#d5e8dd', buio: 0.14, chiazzeLuce: 0.14,
+    dettagli: [['ciuffi', 1.2], ['muschio', 1.4], ['funghi', 2.6], ['foglie', 4.2]],
+  },
+  'palude-marcio': {
+    fondo: ['#57795f', '#325247'], chiazze: ['#6a9068', '#28463c'],
+    erbaC: '#6f9c72', erbaS: '#2c5442', muschio: '#356b58', terra: '#544b34',
+    chioma: ['#265c47', '#14372b'], tronco: '#4d3e2a',
+    luce: '#cfe0d6', buio: 0.2, chiazzeLuce: 0.1,
+    via: { scarpata: '#463726', corpo: '#5f4e33', battuto: '#8a7554',
+           ghiaiaC: '#a68f6c', ghiaiaS: '#6b5637',
+           ciottoloC: '#877e6e', ciottoloS: '#6a6255', ciottoloOmbra: '#3a2f22' },
+    dettagli: [['ciuffi', 1.4], ['muschio', 1.2], ['funghi', 2.2], ['foglie', 4.6]],
+  },
+  'palude-torce': {
+    fondo: ['#456354', '#26413a'], chiazze: ['#547260', '#1e352f'],
+    erbaC: '#5c8168', erbaS: '#264639', muschio: '#2c5c4c', terra: '#463e2c',
+    chioma: ['#1f4c3b', '#102b22'], tronco: '#3f3324',
+    luce: '#ffca7a', buio: 0.3, chiazzeLuce: 0.08,
+    via: { scarpata: '#3b2e20', corpo: '#50412b', battuto: '#75634a',
+           ghiaiaC: '#8d7a5c', ghiaiaS: '#584730',
+           ciottoloC: '#726b5d', ciottoloS: '#585245', ciottoloOmbra: '#2f271c' },
+    dettagli: [['ciuffi', 1.6], ['muschio', 1.1], ['funghi', 1.8], ['foglie', 5]],
+  },
+}
+
 /* ═════ le figure che stanno in piedi ═════
    Un albero visto dall'alto è chioma, e la chioma è un grappolo di
    ellissi con il lume in cima: il tronco si indovina appena. Sono le

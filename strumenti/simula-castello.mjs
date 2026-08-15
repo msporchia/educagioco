@@ -31,8 +31,10 @@
      node strumenti/simula-castello.mjs 6                # solo la sesta
      node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, CFG, MONDO, costoNuovaTorre, costoSalita } from '../src/data/castello.js'
+import { TAPPE, LIBERA, CFG, MONDO, primeQuante,
+         costoNuovaTorre, costoSalita } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
+import { TORRI } from '../src/data/ops.js'
 import { torreDebole } from '../src/data/mostri.js'
 
 /* ── il campo su cui si tara ──
@@ -67,8 +69,8 @@ const LIMITE = 3600           // un'ora di gioco simulato: oltre, è uno stallo
 /* ── il giocatore finto ──
 
    Non è un'intelligenza artificiale: è un bambino diligente. Costruisce
-   le prime due torri per non restare scoperto, poi sceglie il gradino
-   più conveniente — che è quasi sempre potenziare, ed è il punto di
+   due torri per non restare scoperto — una per ingresso, dove gli
+   ingressi sono di più — poi sceglie il gradino più conveniente — che è quasi sempre potenziare, ed è il punto di
    tutto il gioco. Ogni acquisto gli costa il tempo di un'operazione in
    colonna, durante il quale il campo va avanti senza di lui.
 
@@ -175,7 +177,7 @@ export function gioca(tappa, opzioni = {}) {
     const bassa = torri.filter(x => x.lv < tappa.cap).sort((a, b) => a.lv - b.lv)[0]
     const salita = bassa ? { che: 'salita', torre: bassa, costo: costoSalita(bassa.lv) } : null
     const cistanno = torri.length < tappa.posti
-    if (torri.length < 2 && cistanno) return nuova
+    if (torri.length < primeQuante(tappa) && cistanno) return nuova
     if (strategia === 'costruisci' && cistanno) return nuova
     if (!salita) return cistanno ? nuova : null
     if (!cistanno) return salita
@@ -187,11 +189,24 @@ export function gioca(tappa, opzioni = {}) {
      che non fa danno ma vale come tempo in più per sparare. Chi legge il
      preavviso anticipa il tipo che gli serve, ma solo se non ce l'ha già:
      riempire il campo del tipo dell'ondata in arrivo vorrebbe dire
-     restare senza gelo, e il gelo vale più del doppio danno. */
+     restare senza gelo, e il gelo vale più del doppio danno.
+
+     ── ma le prime no ──
+     Le prime torri — una per ingresso — devono **sparare**. A giro,
+     con tre bocche, la terza si prendeva il ghiaccio: quella strada non
+     faceva un danno che fosse uno e l'ondata che ne usciva arrivava
+     intera al castello. Non è una stranezza del simulatore, è una
+     verità del gioco che il modello deve conoscere: il gelo è tempo in
+     più *per chi spara*, e su una strada dove non spara nessuno il
+     tempo in più non serve a niente. */
+  const spara = k => !!TORRI[k].danno
   function tipoNuovo() {
+    const apertura = motore.torri.length < primeQuante(tappa)
+    const scelte = apertura ? tappa.torri.filter(spara) : tappa.torri
     const giusta = deboleInArrivo()
-    if (giusta && !motore.torri.some(t => t.tipo === giusta)) return giusta
-    return tappa.torri[motore.torri.length % tappa.torri.length]
+    if (giusta && (!apertura || spara(giusta)) &&
+        !motore.torri.some(t => t.tipo === giusta)) return giusta
+    return scelte[motore.torri.length % scelte.length]
   }
 
   while (t < LIMITE) {

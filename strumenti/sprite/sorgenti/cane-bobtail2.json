@@ -1,0 +1,11 @@
+{
+  "scala": 8,
+  "fondo": "trasparente",
+  "cella": [
+    32,
+    16
+  ],
+  "sprite": {
+    "__nota": "da calibrare guardando i provini: quale riga e' quale verso"
+  }
+}

@@ -127,6 +127,11 @@ const VERSI = {
 }
 const LAMPI = {
   meglio: ['#8ef0a8', 24], abbattuto: ['#9fd0ff', 40],
+  /* il colpo che stende il mostro **si vede**: da quando i mostri
+     abbattuti spariscono dalla strada invece di restarci a terra, senza
+     questo lampo lo scontro finirebbe con una cosa che smette di
+     esserci */
+  caduto: ['#ffd98a', 30],
   cassa: ['#ffd98a', 10], peggio: ['#ff9d9d', 10],
 }
 function reagisci(eventi) {

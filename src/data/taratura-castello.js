@@ -23,10 +23,15 @@ export const VITE = {
   "mura/Il corridoio": [54, 54, 54, 95, 97, 97, 153, 160, 160, 201, 201, 201, 310, 834],
   "mura/La sala del trono": [96, 96, 96, 159, 159, 159, 205, 205, 205, 301, 301, 301, 460, 460, 605],
   "mura/Il torrione": [46, 46, 46, 46, 46, 46, 130, 130, 130, 182, 182, 182, 182, 182, 182, 371, 371],
-  "Partita libera": [30, 30, 40, 44, 44, 45, 137, 137, 137, 137, 137, 137, 169, 169, 178, 178, 178, 367, 917, 1624],
+  "palude/Il guado": [29, 29, 29, 29, 41, 41, 41, 177],
+  "palude/Il canneto": [20, 31, 31, 40, 40, 40, 40, 70, 70, 70],
+  "palude/Le isole": [20, 22, 22, 22, 58, 58, 58, 58, 58, 58, 128, 194],
+  "palude/Il pantano": [39, 42, 42, 42, 45, 45, 45, 64, 64, 64, 94, 94, 94],
+  "palude/La foce": [39, 44, 44, 44, 44, 44, 44, 63, 63, 63, 92, 92, 92, 371],
+  "Partita libera": [106, 108, 126, 152, 187, 193, 246, 365, 365, 365, 375, 375, 508, 508, 962, 962, 1069, 1351, 1390, 2839],
 }
 /* di quanto cresce la vita nella partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = 2.11
-export const FIRMA = "641905d6"
+export const OLTRE = 1.36
+export const FIRMA = "1ac9c914"
 export const BERSAGLIO = [0.6, 0.85]

@@ -60,8 +60,27 @@ export const TESSERE = {
 
   /* ── acqua ───────────────────────────────────────────────────────
      La fontana ha tre fotogrammi ed è l'unica cosa animata: stanno
-     uno accanto all'altro, tre tessere di distanza. */
+     uno accanto all'altro, tre tessere di distanza.
+
+     Lo stagno grande [2,6,3,3] è un solo disegno già composto — come
+     la casa, una tessera più larga della cella — ma sul foglio è in
+     realtà **fatto di nove pezzi che si incastrano**: quattro angoli,
+     quattro bordi e un centro, tutti da 1×1. Sono dichiarati anche
+     loro, `stagno_*`, perché uno specchio d'acqua di misura diversa
+     da 3×3 si compone affiancandoli — cosa che una tessera sola,
+     fissa, non permette. La ninfea è un accento che si mette *dentro*
+     l'acqua (sopra un bordo o un centro), non un pezzo d'acqua a sé:
+     per questo ha già il suo alone incluso, pensato per sovrapporsi. */
   stagno:   [2, 6, 3, 3],
+  stagno_angolo_no: [2, 6, 1, 1],
+  stagno_bordo_n:   [3, 6, 1, 1],
+  stagno_angolo_ne: [4, 6, 1, 1],
+  stagno_bordo_o:   [2, 7, 1, 1],
+  stagno_centro:    [3, 7, 1, 1],
+  stagno_bordo_e:   [4, 7, 1, 1],
+  stagno_angolo_so: [2, 8, 1, 1],
+  stagno_bordo_s:   [3, 8, 1, 1],
+  stagno_angolo_se: [4, 8, 1, 1],
   ninfea:   [2, 0, 1, 1],
   ninfee:   [4, 0, 2, 1],
   fontana0: [22, 9, 3, 3],
@@ -71,20 +90,42 @@ export const TESSERE = {
   /* ── costruzioni ─────────────────────────────────────────────────
      Sono alte più del loro piede: la casa occupa 4×2 celle per terra
      ma è cinque tessere, e il tetto sta sopra. Il piede si dichiara
-     nel catalogo, non qui — qui c'è solo la figura. */
-  casa:    [7, 0, 4, 5],
-  fienile: [12, 0, 4, 5],
+     nel catalogo, non qui — qui c'è solo la figura.
+
+     Sul foglio i due edifici stanno fianco a fianco senza uno spazio
+     bianco fra loro: le coordinate di prima tagliavano una colonna
+     troppo a destra, e ognuno perdeva la falda sinistra del tetto.
+     Misurate, sono cinque tessere larghe e non quattro.
+
+     E non sono due edifici: sono **la stessa casa davanti e dietro** —
+     stesso tetto, stesse proporzioni, ma uno ha la porta e l'altro un
+     muro cieco con gli abbaini. Per questo nel catalogo sono una voce
+     sola che si gira, come la staccionata. Chiamarlo «fienile» era
+     l'equivoco che teneva in piedi due voci per una cosa. */
+  casa:       [6, 0, 5, 5],
+  casa_retro: [11, 0, 5, 5],
   casetta: [13, 5, 2, 3],
   pozzo:   [33, 5, 2, 2],
 
   /* ── recinti ─────────────────────────────────────────────────────
      `staccionata` e `palo` sono la stessa staccionata, sdraiata e in
      piedi: è per questo che nel catalogo sono una voce sola che si
-     gira, invece di due voci diverse. */
-  staccionata: [0, 19, 2, 1],
-  palo:        [0, 17, 1, 2],
-  cancello:    [3, 17, 2, 2],
-  ringhiera:   [27, 8, 3, 1],
+     gira, invece di due voci diverse.
+
+     `cancello` puntava a [3,17,2,2], che non è un cancello: è metà
+     dello snodo a doppia traversa qui sotto e metà del palo di
+     giunzione accanto, incollate per un taglio sbagliato di una
+     colonna. Il vero cancello — due pali robusti e due traverse, una
+     su e una giù, aperto in mezzo — è a fianco del palo semplice.
+     `recinto_giunto` è il pezzo di raccordo vero: un palo con una
+     traversa che passa **da entrambi i lati**, quello che serve per
+     proseguire una staccionata oltre i due passi di un singolo
+     pannello invece di ripartire da un palo isolato. */
+  staccionata:   [0, 19, 2, 1],
+  palo:          [0, 17, 1, 2],
+  cancello:      [2, 17, 2, 2],
+  recinto_giunto: [4, 17, 1, 2],
+  ringhiera:     [27, 8, 3, 1],
 
   /* ── arredo ──────────────────────────────────────────────────── */
   panchina:  [28, 4, 3, 2],

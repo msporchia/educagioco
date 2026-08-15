@@ -53,8 +53,18 @@ export class Ondate {
      che una carezza. */
   viaDi(o, quante = 1) {
     if (quante < 2) return 0
-    if (o % 3 === 0) return -1
+    if (o % 3 === 0 && o >= this.daQuandoInsieme) return -1
     return Math.floor((o - 1 - Math.floor((o - 1) / 3)) % quante)
+  }
+
+  /* ── da quando arrivano da tutte le bocche insieme ──
+     Non dalla terza ondata: con tre strade quello vuol dire dividere in
+     tre una difesa che ha ancora tre torri di livello uno, e la tappa
+     si perde per una ragione che nessuno può vedere. Si comincia a un
+     terzo della tappa — mai prima della quinta ondata — quando le torri
+     sono cresciute abbastanza da reggere un fronte per parte. */
+  get daQuandoInsieme() {
+    return this.campagna ? Math.max(5, Math.ceil(this.quante / 3)) : 6
   }
 
   /* ── il preavviso ──

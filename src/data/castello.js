@@ -414,20 +414,31 @@ export const costoSalita = lv => CFG.potenziamento + CFG.potenziamentoPiu * (lv 
 
 /* ── il piano ──
    I `calcoli` acquisti di chi gioca bene, nell'ordine in cui li fa:
-   prima due torri per non restare scoperto, poi sempre il gradino più
+   prima una torre per ingresso, poi sempre il gradino più
    conveniente fra salire la torre più bassa e costruirne una nuova. È
    la stessa strategia di `difesaCon` e del giocatore finto del
    simulatore — deve essere la stessa, o il bersaglio si centrerebbe su
    un bambino che non esiste. Qui le postazioni non fanno da tetto: il
    piano dice di quante c'è bisogno, e `postiDi` gliene dà almeno
    tante. */
-export function pianoDi({ calcoli, cap }) {
+/* Quante torri si comprano prima di cominciare a salire: **due, o una
+   per ingresso se gli ingressi sono di più**. Due è la regola di sempre
+   — con una torre sola la prima ondata è una lotteria — e una per
+   bocca è quello che serve da quando le bocche possono essere tre: se
+   una resta senza nessuno davanti, l'ondata che ne esce passa intera.
+   Non è una scelta di stile del giocatore modello, è il minimo per non
+   regalare cuori. */
+export const primeQuante = tappa => Math.max(2, ingressiDi(tappa))
+
+export function pianoDi(tappa) {
+  const { calcoli, cap } = tappa
+  const prime = primeQuante(tappa)
   const torri = [], passi = []
   for (let k = 0; k < calcoli; k++) {
     const nuova = costoNuovaTorre(torri.length)
     const piuBassa = torri.length ? Math.min(...torri) : null
     const salita = piuBassa != null && piuBassa < cap ? costoSalita(piuBassa) : Infinity
-    if (torri.length < 2) { passi.push(nuova); torri.push(1); continue }
+    if (torri.length < prime) { passi.push(nuova); torri.push(1); continue }
     if (salita <= nuova) { passi.push(salita); torri[torri.indexOf(piuBassa)]++ }
     else { passi.push(nuova); torri.push(1) }
   }
@@ -441,10 +452,14 @@ export function pianoDi({ calcoli, cap }) {
    fare. */
 export const entrataOnda = o => nemiciDiOnda(o) * CFG.perNemico + CFG.fineOnda + CFG.ondataPulita
 
-/* le due torri con cui si comincia: è il pavimento sotto a `partenzaDi`
-   e la sola parte del piano che le ondate non possono pagare, perché
-   viene prima della prima */
-const dueTorri = () => costoNuovaTorre(0) + costoNuovaTorre(1)
+/* le torri con cui si comincia — una per ingresso: è il pavimento sotto
+   a `partenzaDi` e la sola parte del piano che le ondate non possono
+   pagare, perché viene prima della prima */
+const primeTorri = tappa => {
+  let costo = 0
+  for (let i = 0; i < primeQuante(tappa); i++) costo += costoNuovaTorre(i)
+  return costo
+}
 
 /* ── quante ondate ──
    Tante quante ne servono perché le entrate paghino il piano meno le
@@ -457,7 +472,7 @@ const dueTorri = () => costoNuovaTorre(0) + costoNuovaTorre(1)
    ogni campagna che comincia si torna corti. Non è una scelta di gusto
    — è il numero di ondate che quella tappa si può permettere. */
 export function ondateDi(tappa) {
-  const daGuadagnare = pianoDi(tappa).costo - dueTorri()
+  const daGuadagnare = pianoDi(tappa).costo - primeTorri(tappa)
   let quante = 0, entrate = 0
   while (entrate + entrataOnda(quante + 1) <= daGuadagnare) entrate += entrataOnda(++quante)
   return Math.max(3, quante)
@@ -470,14 +485,14 @@ export function ondateDi(tappa) {
    libera — riceve due torri e mezza scaletta, come si è sempre fatto. */
 export function partenzaDi(tappa) {
   if (!tappa.calcoli) {
-    let e = dueTorri()
+    let e = primeTorri(tappa)
     for (let lv = 1; lv < Math.max(2, Math.ceil(tappa.cap / 2)); lv++) e += costoSalita(lv)
     return Math.round(e)
   }
   const ondate = tappa.ondate || ondateDi(tappa)
   let entrate = 0
   for (let o = 1; o <= ondate; o++) entrate += entrataOnda(o)
-  return Math.max(dueTorri(), pianoDi(tappa).costo - entrate)
+  return Math.max(primeTorri(tappa), pianoDi(tappa).costo - entrate)
 }
 
 /* ── quante postazioni ──
@@ -508,7 +523,10 @@ export function partenzaDi(tappa) {
    Per la stessa ragione «c'è sempre qualcosa da comprare» resta vero per
    costruzione, senza il vecchio margine: le piazzole vuote e i gradini
    che restano costano sempre più di quello che resta in tasca. */
-export const PIAZZOLE = { bosco: 4, sotterraneo: 6, mura: 8 }
+/* Nella Palude si riparte da sei e non da otto: i calcoli sono scesi, e
+   con essi le torri che si comprano. Quello che le manca in piazzole lo
+   ritrova negli ingressi, che ne aggiungono tre per ciascuno. */
+export const PIAZZOLE = { bosco: 4, sotterraneo: 6, mura: 8, palude: 5 }
 /* Quante piazzole in più per ogni ingresso oltre il primo. Non è un
    regalo: con due strade la difesa va divisa in due, e le stesse sei
    piazzole vorrebbero dire tre torri per strada — cioè metà difesa su
@@ -552,11 +570,14 @@ export function energiaMassima({ ondate, partenza }) {
 }
 
 /* ── cosa ci si compra con l'energia che si ha in mano ──
-   È il giocatore modello: prima due torri per non restare scoperto, poi
+   È il giocatore modello: prima una torre per ingresso — due dove la
+   strada è una sola, tre dove sono tre — per non restare scoperto, poi
    sempre il gradino più conveniente fra salire la torre più bassa e
    costruirne una nuova. È la stessa strategia che il test gioca davvero,
    ed è il piano di `pianoDi` con un tetto di postazioni e un portafoglio. */
-export function difesaCon(energia, { cap, posti, torri: tipi }) {
+export function difesaCon(energia, tappa) {
+  const { cap, posti, torri: tipi } = tappa
+  const prime = primeQuante(tappa)
   const torri = []
   let resta = energia
   for (let giro = 0; giro < 200; giro++) {
@@ -564,7 +585,7 @@ export function difesaCon(energia, { cap, posti, torri: tipi }) {
     const piuBassa = torri.length ? Math.min(...torri) : null
     const salita = piuBassa != null && piuBassa < cap ? costoSalita(piuBassa) : Infinity
     const possoNuova = torri.length < posti && resta >= nuova
-    if (torri.length < 2 && possoNuova) { resta -= nuova; torri.push(1); continue }
+    if (torri.length < prime && possoNuova) { resta -= nuova; torri.push(1); continue }
     if (salita <= resta && (salita <= nuova || !possoNuova)) {
       resta -= salita; torri[torri.indexOf(piuBassa)]++; continue
     }
@@ -602,7 +623,7 @@ export const MARGINE = 1.35
    per forza, e non per come si gioca — è il numero da tenere d'occhio. */
 export function margineDi(tappa, o) {
   const { cap, posti, partenza, durezza, torri } = tappa
-  const { potenza } = difesaCon(energiaAll(o, partenza), { cap, posti, torri })
+  const { potenza } = difesaCon(energiaAll(o, partenza), tappa)
   /* ── e quanta di quella potenza lavora davvero ──
      Con due ingressi le torri stanno su due strade e l'ondata ne
      percorre una: contro di lei combatte metà difesa. Il modello non
@@ -712,12 +733,16 @@ export const firmaTaratura = () => FIRMA
    punto. Il modello dice dove cede (test unita/castello lo stampa). */
 export const LIBERA = {
   nome: 'Partita libera', emoji: '♾️', ondate: Infinity, posti: 14, cap: 10,
-  torri: ['add', 'sub', 'mul', 'div'], forme: RACCONTO[14].forme,
-  /* le strade sono quelle del torrione — **due ingressi**, perché la
-     partita libera è la modalità di chi sa già tutto e l'ultima cosa
-     che il gioco ha da insegnare è difendere due fronti. Il terreno va
-     detto lo stesso: senza, si dipingerebbe il bosco di mezzogiorno
-     sopra il tracciato sbagliato */
+  torri: ['add', 'sub', 'mul', 'div'], forma: RACCONTO[3].forma,
+  /* Una strada sola, ed è una scelta. Con due bocche la partita libera
+     diventa intarabile: le sue vite non escono da una tabella completa
+     — oltre la ventesima ondata c'è solo una progressione che sale — e
+     un'ondata che si divide fra due strade fa saltare il gradino dove
+     la tabella finisce e la progressione comincia. I due ingressi sono
+     il tema della Palude, che è tarata ondata per ondata; qui il tema è
+     un altro, cioè quanto si resiste.
+     La forma è quella del folto, e il terreno va detto: senza, si
+     dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
   ambiente: 'bosco-fitto',
   debolezze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
   mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js

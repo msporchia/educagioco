@@ -199,9 +199,27 @@ for (const [i, t] of TAPPE.entries()) {
    torri diverse. */
 const faticaVera = t => t.vite.reduce((s, v, k) => s + v * nemiciDiOnda(k + 1), 0) /
                         energiaAll(t.ondate + 1, t.partenza) * ingressiDi(t)
+/* ── e le campagne dove la fatica non è il metro ──
+   Nella Palude i mostri arrivano da due bocche, e da tre nell'ultima
+   tappa: la difesa si divide, il modello se ne accorge a modo suo
+   (`margineDi` la dimezza) e la taratura ne esce a scatti — una tappa
+   dove il giocatore modello compra tre torri invece di due salta in su
+   di colpo. La fatica resta una misura onesta *fra tappe fatte allo
+   stesso modo*, e lì smette di esserlo.
+   Quello che si controlla in quelle campagne è la promessa vera, che di
+   scatti non ne ha: **i calcoli crescono tappa dopo tappa**, e la cima
+   della campagna è più alta di quella di prima. */
+const A_SCATTI = new Set(['palude'])
 const perCampagna = CAMPAGNE.map(c => c.tappe.map(t => TAPPE.find(x => x.nome === t.nome)))
 for (const [k, arco] of perCampagna.entries()) {
   const fatiche = arco.map(faticaVera)
+  if (A_SCATTI.has(CAMPAGNE[k].id)) {
+    const calcoli = arco.map(t => t.calcoli)
+    controlla(`${CAMPAGNE[k].nome}: i calcoli crescono tappa dopo tappa`,
+              calcoli.every((c, i) => i === 0 || c > calcoli[i - 1]),
+              calcoli.join(' → ') + ` · fatica ${fatiche.map(f => f.toFixed(0)).join(' → ')}`)
+    continue
+  }
   controlla(`${CAMPAGNE[k].nome}: la fatica non cala dentro la campagna`,
             fatiche.every((f, i) => i === 0 || f >= fatiche[i - 1] * 0.95),
             fatiche.map(f => f.toFixed(0)).join(' → '))
@@ -220,14 +238,38 @@ for (const [k, arco] of perCampagna.entries()) {
   controlla(`${CAMPAGNE[k].nome}: ogni tappa chiede più calcoli della precedente`,
             calcoli.every((n, i) => i === 0 || n > calcoli[i - 1]), calcoli.join(' → '))
 }
+/* ── le cime, e fin dove arriva la scala ──
+   I tre archi di scuola salgono uno sull'altro: il Bosco finisce dove
+   il Sotterraneo comincia a fare sul serio, e così via fino al
+   Torrione. La Palude no, ed è la decisione da cui è nata: alla fine
+   delle Mura il gioco ha finito le operazioni da insegnare, e trenta
+   calcoli sono già un pomeriggio. Continuare a salire vorrebbe dire
+   trasformare la partita in un compito — l'errore da cui tutto il
+   riassetto è partito. Quindi la Palude chiede **meno** conti e cambia
+   la domanda: da «sai fare questa operazione» a «hai guardato da che
+   parte arrivano». Le sue strade sono corte e sono due, e questa
+   misura — vita in arrivo per energia ricevuta — quella roba lì non la
+   vede: dice solo che i suoi mostri sono più molli, ed è vero, perché
+   il tempo per spararglisi è la metà. */
+const SCUOLA = ['bosco', 'sotterraneo', 'mura']
 const cime = perCampagna.map(a => faticaVera(a.at(-1)))
-controlla('ogni campagna finisce più in alto della precedente',
-          cime.every((f, i) => i === 0 || f > cime[i - 1]),
-          cime.map(f => f.toFixed(0)).join(' → '))
+const cimeScuola = cime.filter((_, i) => SCUOLA.includes(CAMPAGNE[i].id))
+controlla('ogni campagna di scuola finisce più in alto della precedente',
+          cimeScuola.every((f, i) => i === 0 || f > cimeScuola[i - 1]),
+          cime.map((f, i) => `${CAMPAGNE[i].id} ${f.toFixed(0)}`).join(' → '))
 const inizi = perCampagna.map(a => a[0].calcoli)
 controlla('ogni campagna riparte più bassa della fine della precedente',
           inizi.every((n, i) => i === 0 || n < perCampagna[i - 1].at(-1).calcoli),
           perCampagna.map(a => a.map(t => t.calcoli).join('·')).join(' | '))
+/* e nessuna campagna dopo le tre di scuola può chiedere più conti
+   dell'ultima tappa del Torrione: è il tetto che ci si è dati */
+const TETTO = Math.max(...perCampagna[2].map(t => t.calcoli))
+for (const [k, arco] of perCampagna.entries()) {
+  if (SCUOLA.includes(CAMPAGNE[k].id)) continue
+  controlla(`${CAMPAGNE[k].nome}: non chiede più conti delle Mura`,
+            Math.max(...arco.map(t => t.calcoli)) <= TETTO,
+            `${Math.max(...arco.map(t => t.calcoli))} contro ${TETTO}`)
+}
 nota('fatica (vita in arrivo per ⚡ ricevuto): ' +
      TAPPE.map(t => faticaVera(t).toFixed(0)).join(' → '))
 

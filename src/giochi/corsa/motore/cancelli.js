@@ -132,10 +132,20 @@ function costruisci(c) {
   return { ...c, f: c.seg[0] === '+' ? v => v + k : v => Math.max(1, v - k) }
 }
 
-/* Chi guadagna e chi toglie, per chi disegna: il verde e il rosso si
-   leggono da lontano, il conto si legge da vicino. Non è un aiuto — il
-   `−40` è rosso ma con la truppa a uno può essere l'unico che resta. */
-export const cancelloBuono = op => op.seg[0] === '×' || op.seg[0] === '+'
+/* ── PERCHÉ UN CANCELLO NON HA UN COLORE ──
+   C'è stato, per un giro: verde chi moltiplicava o aggiungeva, rosso chi
+   toglieva o divideva. Era comodo da lontano ed era **il difetto più
+   grave che questo gioco potesse avere**: con due corsie rosse su tre non
+   resta niente da calcolare, si va sull'unica verde. E con due verdi si
+   guarda quale numero è più grosso, che è ancora leggere, non contare.
+
+   Il colore rispondeva alla domanda al posto del bambino. Adesso i tre
+   cancelli sono identici e c'è scritto solo il conto: `÷2`, `+9`, `×2`,
+   e quale conviene dipende da quanti soldati hai *adesso*.
+
+   L'unico che resta diverso è quello col libro, ed è diverso per il
+   motivo opposto: non dice quanto vale, dice che **si paga fermandosi**.
+   Un'offerta che si scopre solo dopo averla presa è una trappola. */
 
 /* Il guasto che nessun occhio trova: una terna che non è una scelta.
    Girata su mille truppe diverse, dice se i cancelli restano tre cose

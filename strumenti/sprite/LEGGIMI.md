@@ -17,6 +17,37 @@ python3 strumenti/sprite/attori.py <file> gatto  # porta dentro un animale nuovo
 Serve `pillow`. Il generatore legge le coordinate passando da `node`, che
 è già una dipendenza del repo.
 
+## Guardare quello che c'è
+
+```bash
+python3 -m http.server 8000        # dalla radice del repo
+# http://localhost:8000/strumenti/sprite/anteprima.html
+```
+
+Va bene **un server qualsiasi** — quello sopra parte in un secondo e non
+vuole niente di installato; `npm run dev` fa lo stesso e in più ricarica da
+sé quando tocchi un file. Col doppio click invece no: Chrome non lascia
+importare dei moduli da `file://`, ed è lo stesso motivo per cui
+`poc/eroi.html` vuole un server.
+
+`anteprima.html` **non ha un elenco dentro**: importa i moduli veri — atlante,
+tessere, catalogo, ostacoli — e disegna quello che ci trova. Aggiungere uno
+sprite e rilanciare `atlante.py` basta perché compaia lì, e non c'è niente da
+aggiornare a mano che possa restare indietro.
+
+In cima c'è il **campo di prova**: tocchi una carta e la cosa compare
+sull'erba vera; da lì la trascini, o tocchi il prato e l'attore ci va
+camminando. Uno sprite fermo su un fondo a scacchi non dice se funziona —
+un cane si giudica mentre cammina, un oggetto appoggiato accanto a un
+altro.
+
+Sotto, mostra ogni attore nei tre versi più lo specchio, con la camminata in moto;
+ogni voce del catalogo col suo codice, il prezzo, il piede e **le varianti
+una accanto all'altra**; ogni ostacolo col conto costo/resa; e tutte le
+tessere dichiarate, segnando quelle che non usa più nessuno. In cima elenca
+i guasti che i dati trovano da soli. È il posto dove si dice «questo non va
+bene» avendo davanti il codice da citare.
+
 ## Aggiungere roba
 
 **Una tessera** — una panchina, un albero, una fontana — è **una riga** in

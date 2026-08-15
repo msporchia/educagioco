@@ -5,7 +5,8 @@
 Giochi educativi per bambini delle elementari: inglese, spagnolo, matematica
 in colonna, calcolo a mente, un tower defense che si paga facendo le
 operazioni, un mercato dove si dà il resto, un laboratorio di pozioni, un
-dungeon a carte, un gioco di programmazione a ordini.
+dungeon a carte, una corsa dove i cancelli sono operazioni, un gioco di
+programmazione a ordini.
 
 **Gira interamente sul dispositivo: nessun server, nessun account, nessuna
 pubblicità, e funziona senza internet.**
@@ -132,12 +133,14 @@ domande escono e come cambia la difficoltà**.
 | [<img src="docs/img/codice-gioco.png" width="200">](docs/codice-segreto.md) | ### [🔐 Codice Segreto](docs/codice-segreto.md)<br>Deduzione pura, tipo Mastermind: si indovina la combinazione leggendo i pallini. Niente conti, solo ragionamento.<br>*→ [le nove tappe](docs/codice-segreto.md)* |
 | [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza, e ogni risposta giusta porta **bottino: armi, armature, oggetti** con cui equipaggiarsi per scendere ancora più a fondo. È quello che tiene incollati a una fila di domande — che sono di tutte le materie, non solo matematica, e **si fanno più difficili man mano che si scende**.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
 | [<img src="docs/img/survivors-gioco.png" width="200">](docs/survivors.md) | ### [🏹 Survivors](docs/survivors.md)<br>Sopravvivenza a ondate. **Ogni potenziamento ha un prezzo in difficoltà**: la carta più forte si paga con la domanda più tosta. Scegliere è il gioco.<br>*→ [il prezzo delle carte](docs/survivors.md)* |
+| [<img src="docs/img/corsa-gioco.png" width="200">](docs/corsa.md) | ### [🏃 La corsa dei numeri](docs/corsa.md) *(in prova)*<br>Un runner a tre corsie dove i cancelli sono operazioni: `×3`, `+18`, `÷2`. La truppa che ti corre dietro **è il numero scritto per terra** — cinque verdi fanno un rosso — e sceglierne bene uno si vede subito, perché è lei a sparare ai mostri. Il cancello d'oro vale `×5` ma bisogna fermarsi a fare un esercizio: dichiarato prima, mai obbligatorio, e sbagliarlo non toglie niente.<br>*→ [il raggruppamento e le tre stelle](docs/corsa.md)* |
 | [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Si dà una fila di ordini a una squadretta e si guarda cosa succede: sequenze, condizioni, cicli, e **segnali fra personaggi diversi** che non partono insieme. È programmazione asincrona travestita da gioco.<br>*→ [i concetti, uno per uno](docs/generale.md)* |
 | [<img src="docs/img/cameretta-animale.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md)<br>Dove finiscono le monete guadagnate negli altri giochi: animali da accudire, mobili, e una macchinetta delle sorprese da cui **non esce mai un doppione**. Non ci sono domande — è il motivo per cui si torna.<br>*→ [animali, negozio e sorprese](docs/cameretta.md)* |
 
-**[❓ Le domande di tutte le materie](docs/domande.md)** — il Dungeon e
-Survivors non hanno un contenuto proprio: pescano da un magazzino comune di
-italiano, matematica, spazio, tempo e logica. Cosa c'è dentro, come si fa più
+**[❓ Le domande di tutte le materie](docs/domande.md)** — il Dungeon,
+Survivors e il cancello d'oro della Corsa non hanno un contenuto proprio:
+pescano da un magazzino comune di italiano, matematica, spazio, tempo e
+logica. Cosa c'è dentro, come si fa più
 difficile, e come si spegne quello che tuo figlio non ha ancora fatto.
 
 ---

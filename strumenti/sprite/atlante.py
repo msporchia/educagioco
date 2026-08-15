@@ -96,13 +96,24 @@ def bambina(cella):
     return im
 
 
+# Di lato un quadrupede e' lungo: un cane di profilo occupa 24-28 px, non
+# 16. La cella di «lato» e' larga il doppio — la mette cosi' `attori.py`, che
+# normalizza all'importazione. Qui basta saperlo leggere; il gioco no, perche'
+# la larghezza di ogni pezzo sta gia' scritta nell'atlante.
+LARGHEZZE = {'giu': T, 'lato': T * 2, 'su': T}
+CANONICO = (T * 2 * 4, 32 * 3)          # la misura di un foglio normalizzato
+
+
 def taglia_attore(foglio, nome, ritagli, filtro=None):
-    """Un attore è sempre lo stesso formato: 16×32, quattro fotogrammi per
-    riga, bande a passo 32. Vale per la bambina come per il cane, ed è per
-    questo che il gioco ne sa disegnare uno senza sapere chi è."""
-    for verso, y0 in VERSI.items():
+    """Un attore e' sempre tre versi per quattro fotogrammi. Le celle sono
+    16x32, tranne quelle di lato che sono 32x32: e' l'unica differenza, e
+    tagliare tutto a 16 spezzava in due i cani."""
+    canonico = foglio.size == CANONICO
+    for i, verso in enumerate(VERSI):
+        larg = LARGHEZZE[verso] if canonico else T
+        y0 = i * 32 if canonico else VERSI[verso]
         for fr in range(4):
-            p = foglio.crop((fr * T, y0, fr * T + T, y0 + 32))
+            p = foglio.crop((fr * larg, y0, fr * larg + larg, y0 + 32))
             ritagli[f'{nome}_{verso}{fr}'] = filtro(p) if filtro else p
 
 
@@ -203,7 +214,8 @@ def scrivi_modulo(b64, mappa):
 
 
 def main():
-    gfx = Path(sys.argv[1]).expanduser() if len(sys.argv) > 1 else SORGENTI
+    voci = [a for a in sys.argv[1:] if not a.startswith('--')]
+    gfx = Path(voci[0]).expanduser() if voci else SORGENTI
     if not (gfx / 'Overworld.png').exists():
         print(f'in {gfx} non c\'è Overworld.png — passa la cartella gfx/ dello zip')
         return 1
