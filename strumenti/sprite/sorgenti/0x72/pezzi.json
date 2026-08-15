@@ -115,5 +115,12 @@
   "mostro-grosso-corsa-0": [144, 428, 32, 36],
   "mostro-grosso-corsa-1": [176, 428, 32, 36],
   "mostro-grosso-corsa-2": [208, 428, 32, 36],
-  "mostro-grosso-corsa-3": [240, 428, 32, 36]
+  "mostro-grosso-corsa-3": [240, 428, 32, 36],
+
+  "arma-1": [293, 10, 6, 13],
+  "arma-2": [323, 10, 10, 21],
+  "arma-3": [288, 167, 16, 24],
+
+  "scena-cassa": [288, 408, 16, 24],
+  "scena-teschio": [288, 432, 16, 16]
 }

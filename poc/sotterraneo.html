@@ -1,0 +1,1606 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Il sotterraneo — prototipo</title>
+<style>
+  :root { color-scheme: dark; --oro: #ffd23f; --gemma: #6fc6ff; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: #07080d; color: #e8edf7; touch-action: none;
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+  }
+  #campo { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* ═══ la fascia in cima: quello che si guarda mentre si cammina ═══ */
+  #fascia {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 5;
+    display: flex; align-items: center; gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px;
+    background: linear-gradient(#0b0d16f0, #0b0d16b0 70%, #0b0d1600);
+    font-weight: 650; font-size: 14px;
+  }
+  .conta { display: flex; align-items: center; gap: 4px; padding: 4px 9px;
+           background: #ffffff12; border-radius: 999px; white-space: nowrap; }
+  .conta.vita { background: #e0644f22; color: #ffb3a7; min-width: 84px; }
+  .barretta { position: relative; flex: 1; height: 8px; border-radius: 999px;
+              background: #ffffff18; overflow: hidden; }
+  .barretta i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg,#e0644f,#ff9b7a); }
+  #zaino-tasto { margin-left: auto; font-size: 20px; padding: 4px 10px;
+                 background: #ffffff12; border: 0; border-radius: 12px; color: inherit; }
+
+  /* ═══ i pannelli che salgono dal basso ═══ */
+  .foglio {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    padding: 14px 14px max(16px, env(safe-area-inset-bottom));
+    background: #141826; border-radius: 22px 22px 0 0;
+    box-shadow: 0 -12px 40px #000a; animation: sale .16s ease-out;
+  }
+  @keyframes sale { from { transform: translateY(28px); opacity: 0 } }
+  .foglio h2 { margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px; }
+  .foglio p  { margin: 0 0 10px; color: #93a0bd; font-size: 13.5px; }
+  .em { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
+
+  /* la domanda: è il prezzo di ogni cosa, quindi è sempre uguale a sé stessa */
+  .quesito { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0 12px; letter-spacing: .01em; }
+  .risposte { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .risposte button {
+    padding: 16px 8px; font-size: 22px; font-weight: 700; color: inherit;
+    background: #ffffff10; border: 1px solid #ffffff18; border-radius: 16px;
+  }
+  .risposte button:active { background: #ffffff22; }
+  .risposte button.giusta { background: #2f7d4f; border-color: #4fd07f; }
+  .risposte button.sbagliata { background: #7d2f2f; border-color: #ff8b8b; }
+  .grosso { display: block; width: 100%; margin-top: 9px; padding: 14px;
+            font-size: 16px; font-weight: 700; color: #101422; background: var(--oro);
+            border: 0; border-radius: 16px; }
+  .chiaro { background: #ffffff16; color: inherit; }
+
+  /* lo scontro: la vita di chi hai davanti, e quanto ti costa */
+  .nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .nemico .faccia { font-size: 40px; }
+  .nemico .dati { flex: 1; min-width: 0; }
+  .ossa { display: flex; gap: 10px; font-size: 12.5px; color: #93a0bd; }
+  .costo { font-size: 13px; color: #ffd9a0; margin-top: 3px; }
+
+  /* lo zaino: sei tasche e due caselle addosso */
+  .caselle { display: flex; gap: 9px; margin-bottom: 12px; }
+  .casella { flex: 1; padding: 10px; text-align: center; border-radius: 14px;
+             background: #ffffff0d; border: 1px dashed #ffffff22; }
+  .casella .em { font-size: 26px; display: block; }
+  .casella b { display: block; font-size: 12px; margin-top: 2px; }
+  .casella i { display: block; font-size: 11px; color: #93a0bd; font-style: normal; }
+  .tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .tasca { padding: 12px 6px; text-align: center; border-radius: 14px; color: inherit;
+           background: #ffffff10; border: 1px solid #ffffff14; font-size: 11px; }
+  .tasca .em { font-size: 26px; display: block; }
+  .tasca.vuota { opacity: .35; }
+
+  #brindisi { position: fixed; left: 0; right: 0; top: 46%; z-index: 8; text-align: center;
+              font-size: 17px; font-weight: 700; pointer-events: none; text-shadow: 0 2px 8px #000; }
+  #brindisi span { display: inline-block; padding: 8px 16px; border-radius: 999px;
+                   background: #141826e8; animation: sbuca 1.6s ease-out forwards; }
+  @keyframes sbuca { 0% { transform: scale(.8); opacity: 0 } 12% { transform: scale(1); opacity: 1 }
+                     70% { opacity: 1 } 100% { transform: translateY(-26px); opacity: 0 } }
+
+  #suggerimento { position: fixed; left: 0; right: 0; bottom: 22px; z-index: 4;
+                  text-align: center; color: #7f8db0; font-size: 13px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="campo"><canvas id="tela"></canvas></div>
+
+<div id="fascia">
+  <span class="conta vita"><span class="em">❤️</span> <b id="vita">20</b></span>
+  <div class="barretta"><i id="barra-vita"></i></div>
+  <span class="conta"><span class="em">⚔️</span> <b id="att">3</b></span>
+  <span class="conta"><span class="em">🛡️</span> <b id="dif">1</b></span>
+  <span class="conta"><span class="em">💎</span> <b id="gemme">0</b></span>
+  <button id="zaino-tasto" class="em">🎒</button>
+</div>
+
+<div id="suggerimento">tocca dove vuoi andare</div>
+<div id="brindisi"></div>
+<div id="pannelli"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   IL SOTTERRANEO — prototipo, un file solo, si apre col doppio click
+
+   L'IDEA IN UNA RIGA: un sotterraneo che si **cammina**, dove ogni cosa
+   che vuoi — una porta, un forziere, un mostro fra te e l'uscita — ha un
+   prezzo, e il prezzo è **rispondere**.
+
+   Non è il Dungeon a carte che sta in `src/giochi/dungeon/`: quello è una
+   mappa a nodi dove si sceglie un bivio alla volta e non si torna
+   indietro. Qui la mappa è un posto, non un diagramma: si gira, si torna
+   sui propri passi, si guarda cosa promette una porta e si decide dopo.
+
+   ── PERCHÉ IL PREZZO È SEMPRE UN ESERCIZIO ────────────────────────────
+   In un gioco di esplorazione la tentazione è mettere l'esercizio
+   *accanto* al gioco: cammina, e ogni tanto un quiz. Non funziona, perché
+   il quiz diventa un pedaggio che interrompe la cosa bella. Qui è il
+   contrario: **l'esercizio è la chiave, la spada e il piede di porco**.
+   Non c'è nessuna azione interessante che si compia senza rispondere, e
+   nessuna risposta che non apra qualcosa che si vede.
+
+     🚪 una porta chiusa      1 domanda, facile
+     🎁 un forziere           1 domanda, tosta — se sbagli resta chiuso
+     👹 un mostro             una domanda per colpo, finché non cade
+     ⛲ una fonte             1 domanda, e ti ridà vita
+     🏪 un mercante           niente domande: si spendono le gemme
+
+   ── LA SCELTA CHE RESTA, ANCHE POTENDO TORNARE INDIETRO ───────────────
+   Se si può girare tutto, cosa si sceglie? Si sceglie **dove spendere le
+   risposte**, perché la mappa contiene sempre più roba di quanta ne farà
+   un bambino in una seduta, e perché sbagliare costa vita: chi ripulisce
+   tutto arriva alla scala con mezzo cuore. I segni sopra le porte —
+   💀 c'è una guardia, 💎 c'è roba buona, 🏪 un mercante — servono
+   esattamente a questo: **si legge prima di pagare**, e si può andarsene
+   e tornare più tardi con la spada migliore.
+
+   ── COSA C'È DENTRO QUESTO FILE, IN ORDINE ────────────────────────────
+     1. i dati        mostri, tesori, segni: le tabelle
+     2. le domande    un banchetto finto: nel gioco vero sono i moduli
+                      di `src/quiz/`, che consegnano una domanda data una
+                      difficoltà da 0 a 1 e non sanno chi gliel'ha chiesta
+     3. il livello    generazione a stanze e corridoi, con i contenuti
+                      già decisi e un controllo che la mappa sia giocabile
+     4. la tela       tessere disegnate a codice (niente sprite: sono la
+                      cosa che manca, e il prototipo serve a decidere se
+                      vale la pena andarli a prendere)
+     5. l'eroe        il percorso, il passo, la nebbia
+     6. il gioco      i tocchi, i pannelli, l'inventario
+
+   Il codice è in italiano come il resto del repo. Duplica cose che
+   esistono in `src/` (il caso stabile, le tessere dai vicini): è voluto —
+   un prototipo si butta, e finché vive non deve trascinarsi dietro il
+   gioco vero.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════ 1. I DATI ═══════════════════ */
+
+const T = 16                 // la tessera, in pixel logici
+/* Lo zoom è **a numeri interi**: a scala 2,3 i pixel verrebbero larghi
+   due e altri tre, e da vicino si vede. Si parte da 3 — a 2 si vedeva
+   mezzo piano per volta e la stanza attorno si leggeva come una
+   mappina, cioè come un diagramma; e un diagramma ce l'abbiamo già in
+   alto a destra, che è il suo posto. Da 3 in su una stanza riempie lo
+   schermo e le cose dentro hanno una misura loro. */
+const SCALA_MIN = 2, SCALA_MAX = 5, SCALA = 3
+const LARGO = 52, ALTO = 52  // il mondo, in celle
+
+/* Le celle del mondo. Roccia è tutto quello che non è stato scavato. */
+const ROCCIA = 0, PAVIMENTO = 1, PORTA = 2, MURO = 3
+
+/* ── chi ci abita ──
+   `ossa` è la vita, `att` quanto picchia, `dif` quanto para. Il costo in
+   domande non sta qui e non ci deve stare: **è la vita divisa il tuo
+   attacco**, cioè cambia con quello che hai trovato. È tutto il motivo
+   per cui si va a cercare una spada.
+
+   La difesa di un mostro è la cosa più velenosa di tutta la tabella e
+   va tenuta bassa: con attacco 3 e difesa 2 il colpo scende a 1, e
+   abbattere un golem costa **diciotto risposte di fila**. Un numero
+   così non si vede leggendo la tabella, si vede solo contando — ed è
+   il motivo per cui il conto sta nel banco di prova e non a occhio.
+   Il tetto è: nessun mostro deve costare più di ~8 risposte a chi lo
+   incontra quando è il suo momento. */
+const MOSTRI = {
+  topo:    { em: '🐀', nome: 'Un topone',      ossa: 4,  att: 2, dif: 0, gemme: 2 },
+  pipi:    { em: '🦇', nome: 'Un pipistrello', ossa: 5,  att: 2, dif: 0, gemme: 3 },
+  ragno:   { em: '🕷️', nome: 'Un ragno',       ossa: 7,  att: 3, dif: 1, gemme: 4 },
+  scheletro:{em: '💀', nome: 'Uno scheletro',  ossa: 10, att: 4, dif: 1, gemme: 6 },
+  golem:   { em: '🗿', nome: 'Un golem',       ossa: 14, att: 5, dif: 1, gemme: 9 },
+  drago:   { em: '🐲', nome: 'Il drago',       ossa: 20, att: 6, dif: 2, gemme: 15, capo: true },
+}
+
+/* ── cosa si trova ──
+   Due caselle addosso (mano e corpo) e sei tasche. Le tasche non sono
+   decorazione: sono **il limite**. Uno zaino pieno vuol dire scegliere
+   cosa lasciare per terra, ed è la stessa domanda del bivio di prima
+   fatta con le mani invece che con una freccia. */
+const COSE = {
+  spadino:  { em: '🗡️', nome: 'Spadino',      dove: 'mano',  att: 1, prezzo: 8,  dice: 'I mostri cadono un po\' prima.' },
+  spada:    { em: '⚔️', nome: 'Spada',        dove: 'mano',  att: 2, prezzo: 16, dice: 'Ogni risposta giusta fa più male.' },
+  ascia:    { em: '🪓', nome: 'Ascia',        dove: 'mano',  att: 3, prezzo: 26, dice: 'Anche i grossi cadono in pochi colpi.' },
+  panciotto:{ em: '🦺', nome: 'Panciotto',    dove: 'corpo', dif: 1, prezzo: 9,  dice: 'Sbagliare fa un po\' meno male.' },
+  corazza:  { em: '🛡️', nome: 'Corazza',      dove: 'corpo', dif: 2, prezzo: 18, dice: 'Sbagliare fa molto meno male.' },
+  manto:    { em: '🧥', nome: 'Manto',        dove: 'corpo', dif: 3, prezzo: 28, dice: 'Sbagliare non fa quasi più male.' },
+  pozione:  { em: '🧪', nome: 'Pozione',      usa: 'cura',   cura: 10, prezzo: 10, dice: 'Dieci punti di vita, subito.' },
+  torcia:   { em: '🔦', nome: 'Torcia',       usa: 'luce',   prezzo: 7,  dice: 'Vedi più lontano, per un po\'.' },
+  chiave:   { em: '🗝️', nome: 'Chiave',       usa: 'porta',  prezzo: 6,  dice: 'Apre una porta senza rispondere.' },
+}
+
+/* Quello che una porta chiusa lascia intravedere: è l'informazione con
+   cui si sceglie, quindi non mente mai. */
+const SEGNI = {
+  guardia: { em: '💀', dice: 'C\'è qualcosa di grosso, là dentro.' },
+  tesoro:  { em: '💎', dice: 'Da qui si sente odore di roba buona.' },
+  mercante:{ em: '🏪', dice: 'Qualcuno, là dentro, vende.' },
+  fonte:   { em: '⛲', dice: 'Si sente acqua.' },
+  vuoto:   { em: '·',  dice: 'Non si sente niente.' },
+}
+
+const EROE = { vita: 20, att: 3, dif: 1 }
+const GRAFFIO = 1        // quello che costa uno scambio anche quando lo vinci
+
+/* ═══════════════════ 2. LE DOMANDE ═══════════════════
+   Un banchetto finto, e si vede: nel gioco vero la domanda arriva dai
+   moduli di `src/quiz/`, che ne consegnano una data una difficoltà da 0
+   a 1 senza sapere chi gliel'ha chiesta. Qui basta che ci sia qualcosa
+   da rispondere e che salga di difficoltà scendendo, per capire se il
+   ritmo «cammino → tocco → rispondo → apro» funziona.               */
+
+function domanda(dif) {
+  const d = Math.max(0, Math.min(1, dif))
+  const su = n => 1 + Math.floor(Math.random() * n)
+  let testo, giusta
+  if (d < 0.3) {
+    const a = su(6 + d * 20), b = su(6 + d * 20)
+    testo = `${a} + ${b}`; giusta = a + b
+  } else if (d < 0.55) {
+    const a = su(20) + 10, b = su(a - 1)
+    testo = `${a} − ${b}`; giusta = a - b
+  } else if (d < 0.8) {
+    const a = su(9), b = su(9)
+    testo = `${a} × ${b}`; giusta = a * b
+  } else {
+    const b = su(9), r = su(9)
+    testo = `${b * r} : ${b}`; giusta = r
+  }
+  /* Tre risposte finte vicine a quella giusta: lontane si scartano a
+     occhio e la domanda non chiede più di calcolare. */
+  const finte = new Set()
+  while (finte.size < 3) {
+    const scarto = (Math.floor(Math.random() * 9) - 4) || 5
+    const f = giusta + scarto
+    if (f !== giusta && f >= 0) finte.add(f)
+  }
+  const scelte = mescola([giusta, ...finte])
+  return { testo, giusta, scelte }
+}
+
+const mescola = l => l.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1])
+
+/* ═══════════════════ 3. IL LIVELLO ═══════════════════
+
+   Si genera **tutto in una volta**, contenuti compresi: quando l'eroe
+   entra in una stanza non si decide niente lì per lì, si accende
+   soltanto la luce su cose già decise. È la differenza fra un posto e un
+   distributore di sorprese, e si sente: un posto lo si può ricordare, e
+   tornarci con l'ascia in mano dopo esserne scappati.
+
+   Il metodo è quello classico: si taglia il rettangolo in due, e ancora
+   in due, finché non restano stanze della misura giusta (BSP); dentro
+   ogni ritaglio si scava una stanza più piccola, e i due lati di ogni
+   taglio si uniscono con un corridoio a elle. Dove il corridoio buca il
+   muro di una stanza nasce una porta.
+
+   `caso()` è il caso che non cambia: stesso seme, stesso sotterraneo.
+   Serve a poter dire «riaprilo col seme 812 e guarda la stanza in basso
+   a destra» invece di «fidati». */
+
+function seminato(seme) {
+  let s = seme >>> 0 || 1
+  return () => {
+    s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0
+    return s / 4294967296
+  }
+}
+
+/* stabile per posizione: la stessa cella ha sempre la stessa crepa */
+function caso(x, y, k = 0) {
+  let n = (x * 374761393 + y * 668265263 + k * 2246822519) | 0
+  n = ((n ^ (n >>> 13)) * 1274126177) | 0
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296
+}
+
+class Livello {
+  constructor(seme, piano = 0) {
+    this.seme = seme
+    this.piano = piano
+    this.celle = new Uint8Array(LARGO * ALTO)
+    this.stanze = []
+    this.robe = []           // tutto quello che sta su una cella e si tocca
+    this.rnd = seminato(seme + piano * 7919)
+    this.scava()
+    this.arreda()
+  }
+
+  a(x, y) { return (x < 0 || y < 0 || x >= LARGO || y >= ALTO) ? ROCCIA : this.celle[y * LARGO + x] }
+  metti(x, y, v) { if (x >= 0 && y >= 0 && x < LARGO && y < ALTO) this.celle[y * LARGO + x] = v }
+  calpestabile(x, y) { const c = this.a(x, y); return c === PAVIMENTO || c === PORTA }
+
+  /* ── il taglio ricorsivo ──
+     Si ferma quando il pezzo è piccolo abbastanza: sotto quella misura
+     le stanze diventano stanzini e i corridoi più lunghi di loro. */
+  scava() {
+    const foglie = []
+    const taglia = (r, giri) => {
+      const puoiInAltezza = r.h > 15, puoiInLarghezza = r.w > 15
+      if (giri <= 0 || (!puoiInAltezza && !puoiInLarghezza)) { foglie.push(r); return null }
+      const orizzontale = puoiInAltezza && (!puoiInLarghezza || this.rnd() < 0.5)
+      let a, b
+      if (orizzontale) {
+        const t = Math.floor(r.h * (0.35 + this.rnd() * 0.3))
+        a = { x: r.x, y: r.y, w: r.w, h: t }
+        b = { x: r.x, y: r.y + t, w: r.w, h: r.h - t }
+      } else {
+        const t = Math.floor(r.w * (0.35 + this.rnd() * 0.3))
+        a = { x: r.x, y: r.y, w: t, h: r.h }
+        b = { x: r.x + t, y: r.y, w: r.w - t, h: r.h }
+      }
+      taglia(a, giri - 1); taglia(b, giri - 1)
+    }
+    taglia({ x: 1, y: 1, w: LARGO - 2, h: ALTO - 2 }, 4)
+
+    /* le stanze dentro i ritagli */
+    for (const f of foglie) {
+      const w = Math.max(5, Math.min(f.w - 3, 5 + Math.floor(this.rnd() * 6)))
+      const h = Math.max(4, Math.min(f.h - 3, 4 + Math.floor(this.rnd() * 5)))
+      const x = f.x + 1 + Math.floor(this.rnd() * Math.max(1, f.w - w - 1))
+      const y = f.y + 1 + Math.floor(this.rnd() * Math.max(1, f.h - h - 1))
+      const st = { x, y, w, h, id: this.stanze.length, vicine: [], porte: [], vista: false }
+      st.cx = x + (w >> 1); st.cy = y + (h >> 1)
+      this.stanze.push(st)
+      for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) this.metti(x + i, y + j, PAVIMENTO)
+    }
+
+    /* ── i corridoi ──
+       Si collega ogni stanza alla più vicina fra quelle già collegate
+       (albero di copertura): garantisce che si arrivi ovunque senza fare
+       una ragnatela. Poi due o tre scorciatoie in più, perché un
+       sotterraneo ad albero costringe sempre a tornare dalla stessa
+       strada, e tornare indietro deve poter essere una scelta e non una
+       penitenza. */
+    const dentro = [0], fuori = this.stanze.map((_, i) => i).slice(1)
+    while (fuori.length) {
+      let miglior = null
+      for (const a of dentro) for (const b of fuori) {
+        const d = Math.abs(this.stanze[a].cx - this.stanze[b].cx) +
+                  Math.abs(this.stanze[a].cy - this.stanze[b].cy)
+        if (!miglior || d < miglior.d) miglior = { a, b, d }
+      }
+      this.corridoio(this.stanze[miglior.a], this.stanze[miglior.b])
+      dentro.push(miglior.b)
+      fuori.splice(fuori.indexOf(miglior.b), 1)
+    }
+    for (let i = 0; i < 3; i++) {
+      const a = this.stanze[Math.floor(this.rnd() * this.stanze.length)]
+      const b = this.stanze[Math.floor(this.rnd() * this.stanze.length)]
+      if (a !== b && !a.vicine.includes(b.id)) this.corridoio(a, b)
+    }
+    this.scavaPorte()
+  }
+
+  corridoio(a, b) {
+    const prima = this.rnd() < 0.5
+    const x0 = a.cx, y0 = a.cy, x1 = b.cx, y1 = b.cy
+    const passo = (x, y) => { if (this.a(x, y) === ROCCIA) this.metti(x, y, PAVIMENTO) }
+    if (prima) {
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) passo(x, y0)
+      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) passo(x1, y)
+    } else {
+      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) passo(x0, y)
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) passo(x, y1)
+    }
+    a.vicine.push(b.id); b.vicine.push(a.id)
+  }
+
+  /* Una porta sta dove un corridoio tocca il bordo di una stanza: è
+     l'unico posto dove ha senso, ed è quello che rende una stanza una
+     stanza invece di uno slargo. */
+  scavaPorte() {
+    for (const st of this.stanze) {
+      for (let i = -1; i <= st.w; i++) for (let j = -1; j <= st.h; j++) {
+        const bordo = (i === -1 || j === -1 || i === st.w || j === st.h)
+        if (!bordo) continue
+        const x = st.x + i, y = st.y + j
+        if (this.a(x, y) !== PAVIMENTO) continue
+        /* gli angoli no: una porta d'angolo si attraversa in diagonale
+           e non chiude niente */
+        const angolo = (i === -1 || i === st.w) && (j === -1 || j === st.h)
+        if (angolo) continue
+        this.metti(x, y, PORTA)
+        st.porte.push({ x, y })
+      }
+    }
+  }
+
+  /* ── chi e cosa ci sta dentro ──
+     Prima si decide il ruolo delle stanze (ingresso, uscita, tesoro,
+     mercante, fonte), poi si riempiono. L'ordine conta: se si spargesse
+     prima la roba e poi si scegliesse l'uscita, l'uscita potrebbe capitare
+     accanto all'ingresso e il piano si attraverserebbe in tre passi. */
+  arreda() {
+    const st = this.stanze
+    const ingresso = st[0]
+    ingresso.ruolo = 'ingresso'
+    /* l'uscita è la stanza più lontana in linea d'aria: si vuole che il
+       piano si attraversi, non che si sfiori */
+    let uscita = st[1] || st[0]
+    for (const s of st) {
+      const d = Math.hypot(s.cx - ingresso.cx, s.cy - ingresso.cy)
+      if (!uscita.d || d > uscita.d) { uscita = s; uscita.d = d }
+    }
+    uscita.ruolo = 'uscita'
+    this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️', nome: 'La scala che scende' })
+
+    const libere = st.filter(s => !s.ruolo)
+    const pesca = () => libere.length ? libere.splice(Math.floor(this.rnd() * libere.length), 1)[0] : null
+
+    const mercante = pesca(); if (mercante) { mercante.ruolo = 'mercante'
+      this.robe.push({ che: 'mercante', x: mercante.cx, y: mercante.cy, em: '🧙', nome: 'Il mercante' }) }
+    const fonte = pesca(); if (fonte) { fonte.ruolo = 'fonte'
+      this.robe.push({ che: 'fonte', x: fonte.cx, y: fonte.cy, em: '⛲', nome: 'Una fonte' }) }
+    /* due o tre stanze del tesoro: la cosa che si va a cercare */
+    for (let i = 0; i < 2 + (this.rnd() < 0.5 ? 1 : 0); i++) {
+      const s = pesca(); if (!s) break
+      s.ruolo = 'tesoro'
+      this.robe.push({ che: 'forziere', x: s.cx, y: s.cy, em: '🎁', nome: 'Un forziere', aperto: false })
+    }
+
+    /* ── i mostri ──
+       Più giù si è, più grossi. Nelle stanze del tesoro c'è la guardia:
+       è il patto che rende leggibile il segno 💀 sopra la porta — se
+       dietro un teschio non ci fosse niente, il segno diventerebbe una
+       decorazione e non lo guarderebbe più nessuno. */
+    const scala = Math.min(1, this.piano / 5)
+    const branco = ['topo', 'pipi', 'ragno', 'scheletro', 'golem']
+    const tipoPer = forza => {
+      const i = Math.min(branco.length - 1,
+        Math.floor((forza + scala) * branco.length * 0.6 + this.rnd() * 1.4))
+      return branco[Math.max(0, i)]
+    }
+    for (const s of st) {
+      if (s.ruolo === 'ingresso') continue
+      const quanti = s.ruolo === 'tesoro' ? 1 : Math.floor(this.rnd() * 2.4)
+      for (let i = 0; i < quanti; i++) {
+        const x = s.x + Math.floor(this.rnd() * s.w), y = s.y + Math.floor(this.rnd() * s.h)
+        if (this.robeSu(x, y).length) continue
+        const tipo = tipoPer(s.ruolo === 'tesoro' ? 0.6 : 0.15)
+        this.robe.push(this.mostro(tipo, x, y))
+      }
+    }
+    /* ── LA CHIAVE DEL PIANO ────────────────────────────────────────
+       Senza questa riga il sotterraneo ha una falla che si vede solo
+       giocando storto: i mostri si possono **aggirare tutti**, quindi
+       un bambino sveglio scende di piano in piano senza rispondere a
+       una sola domanda, e il gioco diventa una passeggiata al buio.
+
+       La cura è quella di sempre nei giochi di questo tipo: la scala è
+       chiusa, e la chiave ce l'ha qualcuno. Così il minimo assoluto per
+       scendere è **battere un guardiano**, e tutto il resto — porte,
+       forzieri, mostri per strada — resta facoltativo, che è quello che
+       si voleva. Il guardiano è il più lontano dall'ingresso: la chiave
+       non deve capitare a due passi dalla partenza. */
+    const chiGuarda = this.piano >= 5 ? 'drago' : this.piano >= 3 ? 'golem' : 'scheletro'
+    const guardiano = this.mostro(chiGuarda, uscita.cx, uscita.cy - 1)
+    if (!this.calpestabile(guardiano.x, guardiano.y)) { guardiano.x = uscita.cx; guardiano.y = uscita.cy + 1 }
+    if (this.calpestabile(guardiano.x, guardiano.y)) {
+      guardiano.chiave = true
+      this.robe.push(guardiano)
+    } else {
+      /* nessun posto buono accanto alla scala: la chiave la porta il
+         mostro già in mappa più lontano dall'ingresso */
+      const lontano = this.robe.filter(r => r.che === 'mostro')
+        .sort((a, b) => Math.hypot(b.x - ingresso.cx, b.y - ingresso.cy) -
+                        Math.hypot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
+      if (lontano) lontano.chiave = true
+    }
+
+    /* gemme sparse: servono a far tornare la pena di scostarsi dalla
+       strada anche quando in una stanza non c'è niente di scritto */
+    for (const s of st) {
+      if (this.rnd() > 0.55) continue
+      const x = s.x + Math.floor(this.rnd() * s.w), y = s.y + Math.floor(this.rnd() * s.h)
+      if (!this.robeSu(x, y).length)
+        this.robe.push({ che: 'gemme', x, y, em: '💎', quante: 2 + Math.floor(this.rnd() * 5) })
+    }
+
+    this.chiudiPorte()
+  }
+
+  mostro(tipo, x, y) {
+    const m = MOSTRI[tipo]
+    /* le ossa crescono col piano: lo stesso scheletro, più giù, costa
+       più risposte — ed è l'unico modo perché scendere si senta */
+    const su = 1 + (this.piano - 1) * 0.22
+    return { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
+             ossa: Math.round(m.ossa * su), ossaMax: Math.round(m.ossa * su),
+             att: m.att + Math.floor((this.piano - 1) / 2), dif: m.dif }
+  }
+
+  /* ── le porte chiuse, e il loro segno ──
+     Non tutte le porte si chiudono: solo quelle che danno su qualcosa
+     che vale. Una porta chiusa su una stanza vuota è una bugia, e le
+     bugie qui costano care — il segno sopra la porta è l'unica cosa con
+     cui si sceglie. */
+  chiudiPorte() {
+    for (const s of this.stanze) {
+      if (!s.ruolo || s.ruolo === 'ingresso' || !s.porte.length) continue
+      const segno = s.ruolo === 'tesoro'
+        ? (this.robe.some(r => r.che === 'mostro' && this.dentroStanza(r, s)) ? 'guardia' : 'tesoro')
+        : s.ruolo === 'mercante' ? 'mercante'
+        : s.ruolo === 'fonte' ? 'fonte' : null
+      if (!segno) continue
+      /* si chiude una porta sola: chiuderle tutte vorrebbe dire pagare
+         due volte per la stessa stanza a chi gira in tondo */
+      const p = s.porte[Math.floor(this.rnd() * s.porte.length)]
+      this.robe.push({ che: 'porta', x: p.x, y: p.y, em: '🚪', nome: 'Una porta chiusa',
+                       segno, aperta: false })
+    }
+  }
+
+  dentroStanza(r, s) { return r.x >= s.x && r.y >= s.y && r.x < s.x + s.w && r.y < s.y + s.h }
+  robeSu(x, y) { return this.robe.filter(r => r.x === x && r.y === y) }
+  stanzaDi(x, y) { return this.stanze.find(s => x >= s.x - 1 && y >= s.y - 1 && x < s.x + s.w + 1 && y < s.y + s.h + 1) || null }
+
+  /* ── il controllo onesto ──
+     Un sotterraneo in cui la scala sta dietro una porta che non si può
+     aprire non è difficile: è rotto. Si verifica camminando davvero,
+     dall'ingresso, e trattando le porte chiuse come **muri** — perché
+     una porta si apre rispondendo, e a una domanda si può sbagliare.
+     Se anche così si arriva alla scala, il piano è sempre finibile. */
+  guasti() {
+    const g = []
+    const partenza = this.stanze[0]
+    const bloccate = new Set(this.robe.filter(r => r.che === 'porta').map(r => r.x + ',' + r.y))
+    const visti = new Set([partenza.cx + ',' + partenza.cy])
+    const coda = [[partenza.cx, partenza.cy]]
+    while (coda.length) {
+      const [x, y] = coda.pop()
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny
+        if (visti.has(k) || !this.calpestabile(nx, ny) || bloccate.has(k)) continue
+        visti.add(k); coda.push([nx, ny])
+      }
+    }
+    const scala = this.robe.find(r => r.che === 'scala')
+    if (!scala) g.push('non c\'è nessuna scala che scende')
+    else if (!visti.has(scala.x + ',' + scala.y))
+      g.push('alla scala non si arriva senza aprire una porta chiusa')
+    if (this.stanze.length < 6) g.push(`solo ${this.stanze.length} stanze: il piano si gira in un minuto`)
+    /* senza qualcuno che porti la chiave, la scala non si apre e il
+       piano è una stanza chiusa a chiave con la chiave dentro */
+    if (!this.robe.some(r => r.che === 'mostro' && r.chiave))
+      g.push('nessuno porta la chiave della scala')
+    for (const r of this.robe.filter(r => r.che === 'porta'))
+      if (this.a(r.x, r.y) !== PORTA) g.push(`una porta chiusa non sta su una porta (${r.x},${r.y})`)
+    return g
+  }
+}
+
+/* Si genera finché non torna un piano sano: capita di rado, ma un piano
+   senza uscita non si dà in mano a un bambino. */
+function generaLivello(seme, piano) {
+  let ultimo = null
+  for (let i = 0; i < 20; i++) {
+    ultimo = new Livello(seme + i * 131, piano)
+    if (!ultimo.guasti().length) return ultimo
+  }
+  console.warn('livello con guasti:', ultimo.guasti())
+  return ultimo
+}
+
+/* ═══════════════════ 4. LA TELA ═══════════════════
+
+   Niente sprite: il sotterraneo è disegnato a codice — rettangoli, un
+   po' di rumore stabile per le crepe, e le facce dei muri più chiare
+   dove danno sul pavimento. È **il pezzo che manca davvero**, e sta
+   così apposta: il prototipo serve a decidere se il modo di giocare
+   regge *prima* di andare a cercare un foglio di tessere. Se regge, la
+   grafica vera si aggancia qui e in nessun altro posto.
+
+   Le tre luci non sono un effetto: sono l'informazione. Nero = non ci
+   sei mai stato. Scuro = te lo ricordi. Pieno = lo stai vedendo adesso.
+   Un sotterraneo tutto illuminato è una piantina, e su una piantina non
+   c'è niente da esplorare.                                            */
+
+class Tela {
+  constructor(canvas) {
+    this.canvas = canvas
+    this.ctx = canvas.getContext('2d')
+    this.scala = SCALA
+    this.vista = { x: 0, y: 0 }
+    this.L = 0; this.A = 0; this.dpr = 1
+  }
+
+  get cella() { return T * this.scala }
+
+  misura() {
+    const r = this.canvas.parentElement.getBoundingClientRect()
+    if (!r.width || !r.height) return false
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    if (Math.round(r.width) === this.L && Math.round(r.height) === this.A && dpr === this.dpr) return true
+    this.L = Math.round(r.width); this.A = Math.round(r.height); this.dpr = dpr
+    this.canvas.width = Math.round(this.L * dpr)
+    this.canvas.height = Math.round(this.A * dpr)
+    return true
+  }
+
+  /* La telecamera sta addosso all'eroe e non lo lascia mai: in un posto
+     che non si vede tutto, perdere di vista sé stessi è il modo più
+     rapido di non capire più dove si è. */
+  segui(ex, ey) {
+    const c = this.cella
+    const M = { x: LARGO * c, y: ALTO * c }
+    this.vista.x = M.x <= this.L ? (M.x - this.L) / 2 : Math.max(0, Math.min(ex * c - this.L / 2, M.x - this.L))
+    this.vista.y = M.y <= this.A ? (M.y - this.A) / 2 : Math.max(0, Math.min(ey * c - this.A / 2, M.y - this.A))
+  }
+
+  /* Non serve ancorare lo zoom a un punto come nella fattoria: qui la
+     telecamera sta addosso all'eroe a ogni fotogramma, quindi il centro
+     è sempre lui e stringere non sposta niente. */
+  zoomA(voluta) {
+    const n = Math.max(SCALA_MIN, Math.min(SCALA_MAX, Math.round(voluta)))
+    if (n === this.scala) return false
+    this.scala = n
+    return true
+  }
+
+  cellaDa(sx, sy) {
+    const c = this.cella
+    return { x: Math.floor((sx + this.vista.x) / c), y: Math.floor((sy + this.vista.y) / c) }
+  }
+
+  disegna(g) {
+    if (!this.misura()) return
+    const ctx = this.ctx, c = this.cella, liv = g.livello
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+    ctx.fillStyle = '#05060a'
+    ctx.fillRect(0, 0, this.L, this.A)
+
+    const c0x = Math.max(0, Math.floor(this.vista.x / c) - 1)
+    const c0y = Math.max(0, Math.floor(this.vista.y / c) - 1)
+    const c1x = Math.min(LARGO, c0x + Math.ceil(this.L / c) + 3)
+    const c1y = Math.min(ALTO, c0y + Math.ceil(this.A / c) + 3)
+
+    for (let x = c0x; x < c1x; x++) for (let y = c0y; y < c1y; y++) {
+      const luce = g.luceDi(x, y)
+      if (!luce) continue
+      const sx = Math.round(x * c - this.vista.x), sy = Math.round(y * c - this.vista.y)
+      const cosa = liv.a(x, y)
+      if (cosa === ROCCIA) this.roccia(liv, x, y, sx, sy, luce)
+      else this.pavimento(x, y, sx, sy, luce, cosa === PORTA)
+    }
+
+    /* le cose per terra, e poi chi cammina: chi cammina sta sempre
+       sopra, o passandoci davanti sparirebbe dentro un forziere */
+    for (const r of liv.robe) {
+      if (r.presa || r.morto) continue
+      const luce = g.luceDi(r.x, r.y)
+      if (!luce) continue
+      this.roba(r, luce)
+    }
+    this.eroe(g)
+    if (g.bersaglio) this.bersaglio(g.bersaglio)
+    this.minimappa(g)
+  }
+
+  /* ── i tre stati di una cella, in colore ──
+     In luce si vede il colore vero; a memoria si spegne **e si raffredda
+     verso il blu**, che è il modo di dire «questo te lo ricordi, non lo
+     stai guardando» senza scriverlo. Spegnere e basta non bastava: un
+     grigio scuro e un marrone scuro, da lontano, sono la stessa cosa. */
+  tinta(r, g, b, luce) {
+    if (luce === 2) return `rgb(${r | 0},${g | 0},${b | 0})`
+    const k = 0.42, f = 0.4
+    return `rgb(${(r * k * (1 - f) + 16 * f) | 0},${(g * k * (1 - f) + 19 * f) | 0},${(b * k * (1 - f) + 34 * f) | 0})`
+  }
+
+  roccia(liv, x, y, sx, sy, luce) {
+    const ctx = this.ctx, c = this.cella
+    /* la faccia: il pezzo di muro che si vede perché sotto c'è il
+       pavimento. È tutta la profondità che ha questo disegno, e basta a
+       far leggere le stanze come stanze */
+    const faccia = liv.a(x, y + 1) === PAVIMENTO || liv.a(x, y + 1) === PORTA
+    const n = caso(x, y, 3)
+    const base = faccia ? 104 + n * 14 : 34 + n * 7
+    ctx.fillStyle = this.tinta(base * 0.92, base * 0.94, base * 1.12, luce)
+    ctx.fillRect(sx, sy, c + 1, c + 1)
+    if (faccia) {
+      /* la riga di luce sul cornicione: è quella che stacca il muro dal
+         pavimento anche quando li si guarda con la coda dell'occhio */
+      ctx.fillStyle = luce === 2 ? 'rgba(255,244,220,.16)' : 'rgba(255,244,220,.05)'
+      ctx.fillRect(sx, sy + c * 0.76, c + 1, c * 0.24)
+      ctx.fillStyle = 'rgba(0,0,0,.4)'
+      ctx.fillRect(sx, sy, c + 1, 2)
+      /* le fughe fra i mattoni: solo in piena luce, o a memoria
+         diventano un reticolo che sfarina tutto */
+      if (luce === 2 && caso(x, y, 9) > 0.7) {
+        ctx.fillStyle = 'rgba(0,0,0,.22)'
+        ctx.fillRect(sx + (caso(x, y, 11) * c * 0.5), sy + c * 0.28, 2, c * 0.44)
+      }
+    }
+  }
+
+  pavimento(x, y, sx, sy, luce, porta) {
+    const ctx = this.ctx, c = this.cella
+    const n = caso(x, y, 1)
+    const base = 72 + n * 9
+    ctx.fillStyle = this.tinta(base, base * 0.88, base * 0.72, luce)
+    ctx.fillRect(sx, sy, c + 1, c + 1)
+    /* il fondo delle celle di pavimento è quasi piatto apposta: la
+       varietà la fanno i ciottoli, non la tinta — un pavimento dove ogni
+       cella ha il suo marrone si legge come un quadrettato */
+    if (luce === 2 && caso(x, y, 5) > 0.86) {
+      ctx.fillStyle = 'rgba(255,255,255,.08)'
+      ctx.fillRect(sx + c * (0.2 + caso(x, y, 6) * 0.5), sy + c * (0.25 + caso(x, y, 7) * 0.5),
+                   c * 0.16, c * 0.12)
+    }
+    if (porta) {                                        // lo stipite
+      ctx.fillStyle = this.tinta(150, 110, 70, luce)
+      ctx.fillRect(sx, sy, c + 1, 5)
+      ctx.fillRect(sx, sy + c - 4, c + 1, 5)
+    }
+  }
+
+  /* ── la minimappa ──
+     In un posto grande la domanda che torna sempre è «da che parte non
+     sono ancora stato». Senza, ci si perde e si ricammina due volte
+     sulle stesse stanze — che è la cosa che fa smettere. Mostra solo
+     quello che si è visto, e i due punti che servono davvero: dove sei
+     tu e dove sono le porte ancora chiuse. */
+  minimappa(g) {
+    const ctx = this.ctx
+    const p = 2                                     // pixel per cella
+    const larg = LARGO * p, alt = ALTO * p
+    const x0 = this.L - larg - 10, y0 = 62
+    ctx.save()
+    ctx.fillStyle = 'rgba(6,8,14,.78)'
+    ctx.fillRect(x0 - 4, y0 - 4, larg + 8, alt + 8)
+    ctx.strokeStyle = 'rgba(255,255,255,.14)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x0 - 4.5, y0 - 4.5, larg + 9, alt + 9)
+    for (let x = 0; x < LARGO; x++) for (let y = 0; y < ALTO; y++) {
+      if (!g.visto[y * LARGO + x]) continue
+      const c = g.livello.a(x, y)
+      if (c === ROCCIA) continue
+      ctx.fillStyle = 'rgba(180,170,150,.5)'
+      ctx.fillRect(x0 + x * p, y0 + y * p, p, p)
+    }
+    for (const r of g.livello.robe) {
+      if (r.presa || r.morto || !g.visto[r.y * LARGO + r.x]) continue
+      const colore = r.che === 'mostro' && r.chiave ? '#ffd23f'
+        : r.che === 'porta' && !r.aperta ? '#c9a227'
+        : r.che === 'scala' ? '#6fc6ff'
+        : r.che === 'forziere' ? '#ff9b3d' : null
+      if (!colore) continue
+      ctx.fillStyle = colore
+      ctx.fillRect(x0 + r.x * p - 1, y0 + r.y * p - 1, p + 2, p + 2)
+    }
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(x0 + Math.floor(g.eroe.x) * p - 1, y0 + Math.floor(g.eroe.y) * p - 1, p + 2, p + 2)
+    ctx.restore()
+  }
+
+  /* Una cosa per terra è un'emoji e nient'altro: qui non si sta
+     decidendo come si disegna il gioco, si sta decidendo se si gioca. */
+  roba(r, luce) {
+    const ctx = this.ctx, c = this.cella
+    /* chi cammina ha una posizione a virgola (`fx`), le cose ferme no:
+       un mostro che insegue si muove fra le celle, un forziere sta
+       nella sua */
+    const px = r.fx != null ? r.fx : r.x + 0.5, py = r.fy != null ? r.fy : r.y + 0.5
+    const sx = px * c - this.vista.x, sy = py * c - this.vista.y
+    ctx.save()
+    ctx.globalAlpha = luce === 2 ? 1 : 0.42
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    if (r.che === 'mostro') {
+      /* l'alone dice «questo ti costa»: si vede da lontano, prima di
+         essere arrivati addosso. Quando si sveglia diventa rosso e
+         pulsa — è l'unico avviso che c'è, e deve bastare a far capire
+         che adesso conviene decidere in fretta */
+      const q = r.sveglio ? 0.34 + 0.16 * Math.sin(performance.now() / 140) : 0.18
+      ctx.fillStyle = `rgba(224,100,79,${q})`
+      ctx.beginPath(); ctx.arc(sx, sy, c * (r.sveglio ? 0.66 : 0.52), 0, 7); ctx.fill()
+    }
+    ctx.font = `${Math.round(c * (r.che === 'scala' ? 0.95 : 0.8))}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+    ctx.fillText(r.em, sx, sy + 1)
+    /* il segno sopra una porta chiusa: è l'unica cosa con cui si sceglie
+       dove andare, quindi si vede anche a memoria, in un piano già
+       girato */
+    if (r.che === 'porta' && !r.aperta) {
+      const s = SEGNI[r.segno]
+      ctx.font = `${Math.round(c * 0.5)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+      ctx.fillText(s.em, sx, sy - c * 0.62)
+    }
+    /* chi dorme lo dice, perché è quello che permette di passargli
+       accanto in punta di piedi e lasciarlo stare */
+    if (r.che === 'mostro' && !r.sveglio && r.fx != null) {
+      ctx.font = `${Math.round(c * 0.32)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+      ctx.fillText('💤', sx + c * 0.36, sy - c * 0.34)
+    }
+    /* chi porta la chiave lo dice: cercarla girando a caso in sedici
+       stanze non è esplorare, è perdere tempo */
+    if (r.che === 'mostro' && r.chiave) {
+      ctx.font = `${Math.round(c * 0.45)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+      ctx.fillText('🗝️', sx, sy - c * 0.6)
+    }
+    if (r.che === 'mostro' && r.ossa < r.ossaMax) {      // ferito e lasciato lì
+      const w = c * 0.7
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(sx - w / 2, sy + c * 0.42, w, 4)
+      ctx.fillStyle = '#e0644f'
+      ctx.fillRect(sx - w / 2, sy + c * 0.42, w * (r.ossa / r.ossaMax), 4)
+    }
+    ctx.restore()
+  }
+
+  eroe(g) {
+    const ctx = this.ctx, c = this.cella
+    const sx = g.eroe.x * c - this.vista.x, sy = g.eroe.y * c - this.vista.y
+    ctx.save()
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    /* la torcia in mano: piccola e calda, non un faro. Serve a dire
+       «la luce sei tu», e a far vedere che entrando in una stanza la
+       luce che si accende è un'altra cosa */
+    const alone = ctx.createRadialGradient(sx, sy, c * 0.3, sx, sy, c * 2.2)
+    alone.addColorStop(0, 'rgba(255,214,140,.22)')
+    alone.addColorStop(1, 'rgba(255,214,140,0)')
+    ctx.fillStyle = alone
+    ctx.beginPath(); ctx.arc(sx, sy, c * 2.2, 0, 7); ctx.fill()
+    ctx.fillStyle = 'rgba(0,0,0,.35)'
+    ctx.beginPath(); ctx.ellipse(sx, sy + c * 0.34, c * 0.3, c * 0.12, 0, 0, 7); ctx.fill()
+    ctx.font = `${Math.round(c * 0.9)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+    ctx.fillText('🧝', sx, sy)
+    ctx.restore()
+  }
+
+  bersaglio(b) {
+    const ctx = this.ctx, c = this.cella
+    const sx = b.x * c - this.vista.x + c / 2, sy = b.y * c - this.vista.y + c / 2
+    const q = (performance.now() % 900) / 900
+    ctx.save()
+    ctx.strokeStyle = `rgba(255,210,120,${0.8 - q * 0.7})`
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.arc(sx, sy, c * (0.25 + q * 0.35), 0, 7); ctx.stroke()
+    ctx.restore()
+  }
+}
+
+/* ═══════════════════ 5. IL CAMMINO ═══════════════════
+   Una ricerca in ampiezza sulla griglia: il sotterraneo è piccolo
+   (52×52) e i pesi sono tutti uguali, quindi non serve niente di più
+   sofisticato — e una ricerca semplice è una ricerca che si legge.
+
+   Le celle **bloccate** (una porta ancora chiusa, un mostro) non si
+   attraversano: si può girargli intorno, ed è metà del gioco. Chi vuole
+   raggiungere proprio quella cosa lì non ci cammina sopra: si ferma
+   accanto, e da lì la tocca.                                          */
+function percorso(liv, bloccata, da, a) {
+  const chiave = (x, y) => y * LARGO + x
+  const prima = new Int32Array(LARGO * ALTO).fill(-1)
+  const visto = new Uint8Array(LARGO * ALTO)
+  const coda = [da]
+  visto[chiave(da.x, da.y)] = 1
+  let testa = 0
+  while (testa < coda.length) {
+    const q = coda[testa++]
+    if (q.x === a.x && q.y === a.y) {
+      const strada = []
+      let k = chiave(q.x, q.y)
+      while (k !== chiave(da.x, da.y) && k >= 0) {
+        strada.push({ x: k % LARGO, y: (k / LARGO) | 0 })
+        k = prima[k]
+      }
+      return strada.reverse()
+    }
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = q.x + dx, ny = q.y + dy, k = chiave(nx, ny)
+      if (nx < 0 || ny < 0 || nx >= LARGO || ny >= ALTO || visto[k]) continue
+      if (!liv.calpestabile(nx, ny)) continue
+      if (bloccata(nx, ny) && !(nx === a.x && ny === a.y)) continue
+      visto[k] = 1; prima[k] = chiave(q.x, q.y); coda.push({ x: nx, y: ny })
+    }
+  }
+  return null
+}
+
+/* ═══════════════════ 6. IL GIOCO ═══════════════════
+
+   Qui si tengono insieme le tre cose che il prototipo deve provare:
+   che camminare col dito funzioni, che toccare una cosa apra la
+   domanda giusta al momento giusto, e che l'inventario faccia venire
+   voglia di andare a cercare la roba invece di aspettarla.
+
+   ── UNA DECISIONE PRESA APPOSTA, CONTRO QUELLA DELLA FATTORIA ───────
+   Nella fattoria «prima ci va, poi si decide» è stato provato e buttato:
+   fra il tocco e il pannello si metteva un'attesa che non serviva a
+   niente. Qui è il contrario, e la differenza non è di gusto: là il
+   camminare era un ritardo davanti a un menù, qui il camminare **è il
+   gioco**. Il pannello arriva quando si è arrivati, e quel viaggio è la
+   cosa che si stava facendo.                                          */
+
+class Gioco {
+  constructor() {
+    this.tela = new Tela(document.getElementById('tela'))
+    this.seme = Number(new URLSearchParams(location.hash.slice(1)).get('seme')) ||
+                Math.floor(Math.random() * 100000)
+    this.piano = 1
+    this.vitaMax = EROE.vita
+    this.vita = EROE.vita
+    this.gemme = 0
+    this.zaino = []                 // fino a TASCHE cose
+    this.mano = null
+    this.corpo = null
+    this.pannello = null
+    this.nuovoPiano()
+    this.aggancia()
+    this.giro()
+  }
+
+  static get TASCHE() { return 6 }
+
+  /* ── com'è messo l'eroe adesso ──
+     L'unico posto dove si sommano: chi vuole sapere quanto picchia
+     chiede qui, e non va a guardare dentro le tasche. */
+  get att() { return EROE.att + (this.mano ? (COSE[this.mano].att || 0) : 0) }
+  get dif() { return EROE.dif + (this.corpo ? (COSE[this.corpo].dif || 0) : 0) }
+  colpo(m) { return Math.max(1, this.att - m.dif) }
+  colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
+  danno(m) { return Math.max(1, m.att - this.dif) }
+
+  /* La difficoltà della domanda: la porta il piano, e ogni cosa ha il
+     suo rincaro. È l'unico posto dove si decide, come in
+     `dungeon/dati/campagna.js`: chi vuole un sotterraneo più gentile
+     cambia questi numeri e non apre il resto. */
+  durezza(rincaro = 0) {
+    return Math.max(0, Math.min(1, 0.08 + (this.piano - 1) * 0.13 + rincaro))
+  }
+
+  nuovoPiano() {
+    this.livello = generaLivello(this.seme, this.piano)
+    const dentro = this.livello.stanze[0]
+    this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    this.strada = null
+    this.mira = null
+    this.bersaglio = null
+    this.visto = new Uint8Array(LARGO * ALTO)
+    this.luce = new Set()
+    this.chiaveDelPiano = false
+    this.aggiornaLuce()
+    this.tela.segui(this.eroe.x, this.eroe.y)
+  }
+
+  /* ── le tre luci ──
+     Dentro una stanza si accende la stanza intera: si è entrati, la si
+     è vista. In corridoio si vede un pezzo attorno, che è il motivo per
+     cui i corridoi mettono addosso una fretta che le stanze non hanno. */
+  aggiornaLuce() {
+    const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
+    this.luce = new Set()
+    const accendi = (x, y) => {
+      if (x < 0 || y < 0 || x >= LARGO || y >= ALTO) return
+      this.luce.add(y * LARGO + x)
+      this.visto[y * LARGO + x] = 1
+    }
+    const raggio = 3.2 + (this.torcia ? 3 : 0)
+    for (let x = cx - 8; x <= cx + 8; x++) for (let y = cy - 8; y <= cy + 8; y++)
+      if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
+    const st = this.livello.stanzaDi(cx, cy)
+    if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h)
+      for (let x = st.x - 1; x <= st.x + st.w; x++)
+        for (let y = st.y - 1; y <= st.y + st.h; y++) accendi(x, y)
+  }
+
+  luceDi(x, y) {
+    const k = y * LARGO + x
+    return this.luce.has(k) ? 2 : this.visto[k] ? 1 : 0
+  }
+
+  /* Una cella bloccata non si attraversa camminando: ci si gira intorno,
+     o si paga quello che chiede. */
+  /* Un mostro che dorme è un ostacolo da aggirare — ed è il senso di
+     tutto: si sceglie chi pagare. Uno sveglio no: si sta muovendo, e
+     un percorso calcolato su dov'era un secondo fa manderebbe l'eroe
+     a sbattere in un posto vuoto. */
+  bloccata(x, y) {
+    return this.livello.robe.some(r => r.x === x && r.y === y && !r.morto &&
+      ((r.che === 'mostro' && !r.sveglio) || (r.che === 'porta' && !r.aperta)))
+  }
+
+  /* ═══════ i tocchi ═══════ */
+  aggancia() {
+    const tela = this.tela.canvas
+    let premuto = false, ultimo = 0
+    const punta = e => {
+      const r = tela.getBoundingClientRect()
+      return { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
+    tela.addEventListener('pointerdown', e => {
+      if (this.pannello) return
+      premuto = true; tela.setPointerCapture(e.pointerId)
+      this.verso(punta(e), true)
+    })
+    /* tenendo premuto e trascinando, l'eroe insegue il dito: è il modo
+       di girare in un posto grande senza toccare quaranta volte. Si
+       ricalcola di rado apposta — a ogni fotogramma il percorso
+       tremerebbe e il passo verrebbe a scatti. */
+    tela.addEventListener('pointermove', e => {
+      if (!premuto || this.pannello) return
+      const ora = performance.now()
+      if (ora - ultimo < 140) return
+      ultimo = ora
+      this.verso(punta(e), false)
+    })
+    const su = e => { premuto = false; dita.delete(e.pointerId); pizzico = 0 }
+    tela.addEventListener('pointerup', su)
+    tela.addEventListener('pointercancel', su)
+
+    /* ── lo zoom ──
+       Due dita sul telefono, la rotella sul portatile. Sta nel
+       prototipo perché «quanto si sta vicini» è **una delle domande a
+       cui questo file deve rispondere**: si prova a 2, a 3 e a 4 e si
+       guarda quale fa sembrare le stanze delle stanze. */
+    const dita = new Map()
+    let pizzico = 0
+    tela.addEventListener('pointerdown', e => dita.set(e.pointerId, e))
+    tela.addEventListener('pointermove', e => {
+      if (!dita.has(e.pointerId)) return
+      dita.set(e.pointerId, e)
+      if (dita.size !== 2) return
+      premuto = false                                  // due dita non camminano
+      const [a, b] = [...dita.values()]
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+      if (!pizzico) { pizzico = d; return }
+      if (Math.abs(d - pizzico) < 45) return
+      if (this.tela.zoomA(this.tela.scala + (d > pizzico ? 1 : -1)))
+        this.dillo(`vista ×${this.tela.scala}`)
+      pizzico = d
+    })
+    tela.addEventListener('wheel', e => {
+      e.preventDefault()
+      if (this.tela.zoomA(this.tela.scala + (e.deltaY < 0 ? 1 : -1)))
+        this.dillo(`vista ×${this.tela.scala}`)
+    }, { passive: false })
+
+    document.getElementById('zaino-tasto').addEventListener('click', () => this.apriZaino())
+    window.addEventListener('resize', () => this.tela.misura())
+  }
+
+  /* Dove si vuole andare, e cosa si vuole toccare. Il dito di un
+     bambino non centra la cella: si guarda anche attorno, e si prende
+     la cosa più vicina al punto toccato. */
+  verso(p, preciso) {
+    const c = this.tela.cellaDa(p.x, p.y)
+    let mira = null
+    if (preciso) {
+      /* Prima si guarda **esattamente dove è caduto il dito**, e solo
+         se lì non c'è niente si allarga di poco. Guardando subito nel
+         raggio, un mostro che passa di lì si prende il tocco destinato
+         alla scala che gli sta accanto — e chi tocca si vede aprire
+         una cosa che non aveva puntato, che è il modo più rapido di
+         far sembrare il gioco impreciso. */
+      const buona = r => !r.presa && !r.morto && this.luce.has(r.y * LARGO + r.x) &&
+        ['mostro', 'porta', 'forziere', 'mercante', 'fonte', 'scala'].includes(r.che) &&
+        !(r.che === 'porta' && r.aperta)
+      mira = this.livello.robe.find(r => r.x === c.x && r.y === c.y && buona(r)) || null
+      if (!mira) {
+        let piuVicina = 9
+        for (const r of this.livello.robe) {
+          if (!buona(r)) continue
+          const d = Math.hypot(r.x - c.x, r.y - c.y)
+          if (d <= 1.2 && d < piuVicina) { piuVicina = d; mira = r }
+        }
+      }
+    }
+    /* un tocco che non porta da nessuna parte spegne il segno di dove
+       si stava andando: lasciarlo acceso è un cerchietto che pulsa su
+       un posto dove non si sta andando più */
+    const meta = mira ? this.accanto(mira) : c
+    if (!meta || !this.livello.calpestabile(meta.x, meta.y)) { this.bersaglio = null; return }
+    const da = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    if (meta.x === da.x && meta.y === da.y) {
+      this.strada = null
+      if (mira) this.interagisci(mira)
+      return
+    }
+    const strada = percorso(this.livello, (x, y) => this.bloccata(x, y), da, meta)
+    if (!strada) { this.bersaglio = null; this.dillo('di là non si passa'); return }
+    this.strada = strada
+    this.mira = mira
+    this.bersaglio = mira ? { x: mira.x, y: mira.y } : meta
+  }
+
+  /* La cella libera più comoda accanto a una cosa: è lì che ci si ferma
+     per toccarla. Una porta si tocca dal lato da cui si arriva, e non
+     importa quale sia. */
+  accanto(r) {
+    const da = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    let meglio = null
+    for (const [dx, dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]) {
+      const x = r.x + dx, y = r.y + dy
+      if (dx === 0 && dy === 0 && r.che !== 'scala' && r.che !== 'mercante' && r.che !== 'fonte') continue
+      if (!this.livello.calpestabile(x, y) || this.bloccata(x, y)) continue
+      const d = Math.abs(x - da.x) + Math.abs(y - da.y)
+      if (!meglio || d < meglio.d) meglio = { x, y, d }
+    }
+    return meglio
+  }
+
+  /* ═══════ il passo ═══════ */
+  giro() {
+    let prima = performance.now()
+    const passo = ora => {
+      const dt = Math.min(0.05, (ora - prima) / 1000); prima = ora
+      this.muovi(dt)
+      this.tela.segui(this.eroe.x, this.eroe.y)
+      this.tela.disegna(this)
+      requestAnimationFrame(passo)
+    }
+    requestAnimationFrame(passo)
+  }
+
+  /* ═══════ i mostri, e la stanza come confine ═══════
+     Un mostro dorme finché non entri **nella sua stanza**: da lì ti
+     viene addosso, e smette appena esci. Non è una gentilezza — è la
+     regola che rende la stanza una stanza. Il corridoio diventa il
+     posto dove si è al sicuro, la soglia diventa una decisione, e
+     «scappo via» dallo scontro vuol dire davvero uscire di lì invece
+     di premere un bottone e restare dov'eri.
+
+     Il mostro è **più lento di te** (3,1 celle al secondo contro 5,4):
+     scappare deve funzionare sempre, o la stanza è una trappola e non
+     una scelta. Chi esce se lo lascia dietro, e quando torna lo ritrova
+     al suo posto — ferito com'era. */
+  muoviMostri(dt) {
+    if (this.pannello) return                  // col foglio aperto sta fermo tutto
+    const eroeCella = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    const mia = this.livello.stanzaDi(eroeCella.x, eroeCella.y)
+    for (const m of this.livello.robe) {
+      if (m.che !== 'mostro' || m.morto) continue
+      if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
+      if (m.calmo > 0) m.calmo -= dt
+      const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
+      const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0)
+      m.sveglio = sveglio
+
+      const meta = sveglio ? { x: this.eroe.x, y: this.eroe.y }
+                           : { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
+      const dx = meta.x - m.fx, dy = meta.y - m.fy
+      const d = Math.hypot(dx, dy)
+
+      if (sveglio && d < 0.75) {               // ti ha preso
+        this.strada = null; this.mira = null; this.bersaglio = null
+        return this.scontro(m)
+      }
+      if (d < 0.05) continue
+      const v = (sveglio ? 3.1 : 2.2) * dt
+      let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
+      /* non esce mai dalla sua stanza: è tutto il patto. Il muro lo
+         ferma sull'asse che lo porterebbe fuori, e l'altro lo lascia
+         libero — così ti insegue lungo la parete invece di incastrarsi
+         in un angolo e sembrare rotto. */
+      if (sua) {
+        if (nx < sua.x || nx > sua.x + sua.w) nx = m.fx
+        if (ny < sua.y || ny > sua.y + sua.h) ny = m.fy
+      }
+      if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
+      if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
+      m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
+    }
+  }
+
+  muovi(dt) {
+    this.muoviMostri(dt)
+    if (!this.strada || !this.strada.length) {
+      if (this.mira && !this.strada) { const m = this.mira; this.mira = null; this.interagisci(m) }
+      return
+    }
+    const meta = this.strada[0]
+    const mx = meta.x + 0.5, my = meta.y + 0.5
+    const dx = mx - this.eroe.x, dy = my - this.eroe.y
+    const d = Math.hypot(dx, dy)
+    const v = 5.4 * dt
+    if (d <= v) {
+      this.eroe.x = mx; this.eroe.y = my
+      this.strada.shift()
+      this.aggiornaLuce()
+      this.raccogli()
+      if (!this.strada.length) {
+        this.strada = null; this.bersaglio = null
+        if (this.mira) { const m = this.mira; this.mira = null; this.interagisci(m) }
+      }
+    } else {
+      this.eroe.x += dx / d * v; this.eroe.y += dy / d * v
+    }
+  }
+
+  /* Gemme e roba per terra si prendono camminandoci sopra: raccogliere
+     non è una decisione, e chiedere di confermarla la trasformerebbe in
+     una pratica. Lo zaino pieno è l'unica cosa che ferma la mano. */
+  raccogli() {
+    const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
+    for (const r of this.livello.robe) {
+      if (r.presa || r.x !== cx || r.y !== cy) continue
+      if (r.che === 'gemme') {
+        this.gemme += r.quante; r.presa = true
+        this.dillo(`💎 +${r.quante}`)
+      } else if (r.che === 'cosa') {
+        if (this.zaino.length >= Gioco.TASCHE) { if (!r.detto) { r.detto = true; this.dillo('🎒 zaino pieno') } ; continue }
+        this.zaino.push(r.cosa); r.presa = true
+        this.dillo(`${COSE[r.cosa].em} ${COSE[r.cosa].nome}`)
+      }
+    }
+    this.fascia()
+  }
+
+  /* ═══════ cosa succede toccando una cosa ═══════ */
+  interagisci(r) {
+    if (r.morto || r.presa) return
+    if (r.che === 'mostro') return this.scontro(r)
+    if (r.che === 'porta') return this.porta(r)
+    if (r.che === 'forziere') return this.forziere(r)
+    if (r.che === 'fonte') return this.fonte(r)
+    if (r.che === 'mercante') return this.mercante(r)
+    if (r.che === 'scala') return this.scala(r)
+  }
+
+  scontro(m) {
+    const chiedi = () => {
+      const q = domanda(this.durezza(m.tipo === 'golem' || MOSTRI[m.tipo].capo ? 0.2 : 0.05))
+      this.apri(`
+        <div class="nemico">
+          <div class="faccia em">${m.em}</div>
+          <div class="dati">
+            <h2>${m.nome}</h2>
+            <div class="ossa"><span>❤️ ${m.ossa}</span><span>⚔️ ${m.att}</span><span>🛡️ ${m.dif}</span></div>
+            <div class="costo">gli togli ${this.colpo(m)} a colpo — ancora
+              <b>${this.colpiPer(m)}</b> ${this.colpiPer(m) === 1 ? 'risposta' : 'risposte'}</div>
+          </div>
+        </div>
+        <div class="quesito">${q.testo}</div>
+        <div class="risposte">${q.scelte.map(s => `<button data-r="${s}">${s}</button>`).join('')}</div>
+        <button class="grosso chiaro" data-via="1">🏃 scappo via</button>
+      `, box => {
+        /* scappare dà tre secondi di vantaggio, non l'immunità: il
+           mostro resta fermo il tempo di uscire dalla stanza, e se si
+           resta lì dentro a girare, torna addosso. Senza questi tre
+           secondi si riaprirebbe lo scontro nel fotogramma dopo, e
+           «scappo via» sarebbe un bottone che non fa niente. */
+        box.querySelector('[data-via]').addEventListener('click', () => { m.calmo = 3; this.chiudi() })
+        for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+          const giusta = Number(b.dataset.r) === q.giusta
+          b.classList.add(giusta ? 'giusta' : 'sbagliata')
+          box.querySelectorAll('button').forEach(x => x.disabled = true)
+          setTimeout(() => {
+            if (giusta) {
+              m.ossa -= this.colpo(m)
+              if (m.ossa <= 0) { this.cade(m); this.chiudi(); return }
+            } else {
+              this.ferisci(this.danno(m))
+              if (this.vita <= 0) return this.svieni()
+            }
+            chiedi()
+          }, 480)
+        })
+      })
+    }
+    chiedi()
+  }
+
+  cade(m) {
+    m.morto = true
+    /* la chiave non cade per terra: la si ha e basta. Una chiave da
+       raccogliere è una cosa in più che si può dimenticare lì, e
+       dimenticarla vorrebbe dire rifare la strada per niente */
+    if (m.chiave) {
+      this.chiaveDelPiano = true
+      setTimeout(() => this.dillo('🗝️ la chiave della scala!'), 900)
+    }
+    const scheda = MOSTRI[m.tipo]
+    const gemme = scheda.gemme + Math.floor(this.piano * 1.5)
+    this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎', quante: gemme })
+    /* il bottino grosso lo lasciano i mostri grossi: è il patto che fa
+       venire voglia di andarseli a cercare invece di girargli intorno */
+    const tavola = { topo: [], pipi: ['pozione'], ragno: ['spadino', 'panciotto'],
+                     scheletro: ['spada', 'corazza', 'pozione'],
+                     golem: ['ascia', 'manto', 'corazza'], drago: ['ascia', 'manto'] }
+    const possibili = tavola[m.tipo] || []
+    if (possibili.length && Math.random() < 0.7) {
+      const cosa = possibili[Math.floor(Math.random() * possibili.length)]
+      const dove = this.livello.calpestabile(m.x + 1, m.y) ? { x: m.x + 1, y: m.y } : { x: m.x, y: m.y }
+      this.livello.robe.push({ che: 'cosa', cosa, x: dove.x, y: dove.y, em: COSE[cosa].em })
+    }
+    this.dillo(`${m.em} è caduto!`)
+    this.fascia()
+  }
+
+  ferisci(quanto) {
+    this.vita = Math.max(0, this.vita - quanto)
+    this.fascia()
+    document.body.animate([{ filter: 'brightness(1.6) saturate(.4)' }, { filter: 'none' }], 220)
+  }
+
+  svieni() {
+    this.chiudi()
+    this.apri(`
+      <h2><span class="em">💫</span> Ti sei svegliato all'ingresso</h2>
+      <p>Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più,
+         ma quello che avevi addosso sì.</p>
+      <button class="grosso" data-ok="1">riprovo</button>
+    `, box => box.querySelector('[data-ok]').addEventListener('click', () => {
+      this.gemme = Math.floor(this.gemme / 2)
+      this.vita = Math.max(6, Math.round(this.vitaMax / 2))
+      const dentro = this.livello.stanze[0]
+      this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+      this.strada = null; this.mira = null
+      this.aggiornaLuce(); this.fascia(); this.chiudi()
+    }), true)
+  }
+
+  /* Una porta chiusa: il segno dice cosa promette, e la domanda è il
+     prezzo. Sbagliando non si perde niente — si riprova — perché una
+     porta che si chiude per sempre trasformerebbe il girare in una
+     partita a scacchi. Quello che si chiude per sempre è il forziere. */
+  porta(p) {
+    const s = SEGNI[p.segno]
+    const q = domanda(this.durezza(-0.05))
+    this.apri(`
+      <h2><span class="em">🚪</span> Una porta chiusa</h2>
+      <p><span class="em">${s.em}</span> ${s.dice}</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">ci torno dopo</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          if (giusta) { p.aperta = true; p.presa = true; this.dillo('🚪 la porta si apre') }
+          else this.dillo('la serratura non si muove')
+          this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  /* Il forziere è l'unica cosa che si può perdere per sempre, ed è
+     apposta: senza una cosa che si perde, non c'è niente in tutto il
+     sotterraneo che faccia venire un po' di batticuore. Va detto prima
+     del tocco, mai dopo. */
+  forziere(f) {
+    const q = domanda(this.durezza(0.25))
+    this.apri(`
+      <h2><span class="em">🎁</span> Un forziere</h2>
+      <p><b>Una domanda sola.</b> Se la sbagli, resta chiuso per sempre.</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">non me la sento</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          f.morto = true
+          if (!giusta) { this.dillo('🎁 il forziere resta chiuso'); return this.chiudi() }
+          const buone = ['spada', 'corazza', 'ascia', 'manto', 'pozione', 'torcia']
+          const cosa = buone[Math.floor(Math.random() * buone.length)]
+          this.livello.robe.push({ che: 'cosa', cosa, x: f.x, y: f.y, em: COSE[cosa].em })
+          this.livello.robe.push({ che: 'gemme', x: f.x, y: f.y + 1, em: '💎',
+                                   quante: 6 + this.piano * 3 })
+          this.dillo('🎁 si apre!')
+          this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  fonte(f) {
+    const q = domanda(this.durezza(0))
+    this.apri(`
+      <h2><span class="em">⛲</span> Una fonte</h2>
+      <p>Acqua pulita. Rispondi e bevi: <b>+8</b> di vita.</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">più tardi</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          if (giusta) {
+            this.vita = Math.min(this.vitaMax, this.vita + 8)
+            f.morto = true
+            this.dillo('❤️ +8')
+          } else this.dillo("l'acqua è torbida")
+          this.fascia(); this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  /* Il mercante non chiede domande: è il posto dove **si spende** quello
+     che le domande hanno fruttato. Un gioco in cui ogni singola cosa
+     costa un esercizio diventa un compito lungo; ci vuole un posto dove
+     il lavoro già fatto vale da solo. */
+  mercante(m) {
+    if (!m.roba) {
+      const catalogo = Object.keys(COSE).filter(k => COSE[k].prezzo)
+      m.roba = mescola(catalogo).slice(0, 3)
+    }
+    const riga = k => {
+      const c = COSE[k]
+      const posso = this.gemme >= c.prezzo
+      return `<button class="tasca" data-c="${k}" ${posso ? '' : 'disabled style="opacity:.4"'}>
+        <span class="em">${c.em}</span><b>${c.nome}</b><br>💎 ${c.prezzo}</button>`
+    }
+    this.apri(`
+      <h2><span class="em">🧙</span> Il mercante</h2>
+      <p>Hai <b>💎 ${this.gemme}</b>. Quello che compri finisce nello zaino.</p>
+      <div class="tasche">${m.roba.map(riga).join('')}</div>
+      <button class="grosso chiaro" data-via="1">basta così</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-c]')) b.addEventListener('click', () => {
+        const k = b.dataset.c, c = COSE[k]
+        if (this.gemme < c.prezzo) return
+        if (this.zaino.length >= Gioco.TASCHE) return this.dillo('🎒 zaino pieno')
+        this.gemme -= c.prezzo
+        this.zaino.push(k)
+        m.roba.splice(m.roba.indexOf(k), 1)
+        this.fascia(); this.chiudi(); this.mercante(m)
+      })
+    })
+  }
+
+  scala() {
+    /* chiusa finché non si è battuto chi porta la chiave: è l'unica
+       cosa che in tutto il sotterraneo **non si può aggirare**, e
+       quindi è il pavimento sotto a tutto il resto — il minimo di
+       esercizi che un piano costa comunque */
+    if (!this.chiaveDelPiano) {
+      const chi = this.livello.robe.find(r => r.che === 'mostro' && r.chiave && !r.morto)
+      const visto = chi && this.visto[chi.y * LARGO + chi.x]
+      return this.apri(`
+        <h2><span class="em">🔒</span> La scala è chiusa</h2>
+        <p>Un cancello di ferro, e la serratura non ha buco per le dita.
+           ${visto ? `La chiave ce l'ha <b>${chi.nome.toLowerCase()}</b>, qui vicino — è segnato in oro sulla mappina.`
+                   : 'La chiave ce l\'ha qualcuno, qua sotto. Gira, e la trovi.'}</p>
+        <button class="grosso" data-via="1">vado a cercarla</button>
+      `, box => box.querySelector('[data-via]').addEventListener('click', () => this.chiudi()))
+    }
+    this.apri(`
+      <h2><span class="em">🕳️</span> La scala che scende</h2>
+      <p>Sotto è più buio, i mostri hanno più ossa e le domande si fanno
+         toste. Quello che hai addosso e nello zaino scende con te —
+         quello che hai lasciato in giro, no.</p>
+      <button class="grosso" data-giu="1">scendo al piano ${this.piano + 1}</button>
+      <button class="grosso chiaro" data-via="1">prima giro ancora</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      box.querySelector('[data-giu]').addEventListener('click', () => {
+        this.piano++
+        this.vitaMax += 2
+        this.vita = Math.min(this.vitaMax, this.vita + 4)
+        this.nuovoPiano(); this.chiudi(); this.fascia()
+        this.dillo(`piano ${this.piano}`)
+      })
+    })
+  }
+
+  /* ═══════ lo zaino ═══════
+     Due caselle addosso e sei tasche. Toccare una tasca fa la sola cosa
+     sensata per quell'oggetto — si indossa quello che si indossa, si
+     beve quello che si beve — perché un menù con «equipaggia / usa /
+     butta» su ogni riga è tre volte la stessa domanda. */
+  apriZaino() {
+    if (this.pannello) return
+    const casella = (dove, k) => {
+      const c = k ? COSE[k] : null
+      return `<div class="casella">
+        <span class="em">${c ? c.em : '·'}</span>
+        <b>${c ? c.nome : '—'}</b>
+        <i>${dove === 'mano' ? 'in mano' : 'addosso'}</i>
+      </div>`
+    }
+    const tasche = []
+    for (let i = 0; i < Gioco.TASCHE; i++) {
+      const k = this.zaino[i]
+      tasche.push(k
+        ? `<button class="tasca" data-i="${i}"><span class="em">${COSE[k].em}</span>${COSE[k].nome}</button>`
+        : `<div class="tasca vuota"><span class="em">·</span>vuota</div>`)
+    }
+    this.apri(`
+      <h2><span class="em">🎒</span> Lo zaino</h2>
+      <p>⚔️ ${this.att} attacco · 🛡️ ${this.dif} difesa · 💎 ${this.gemme} · piano ${this.piano}</p>
+      <div class="caselle">${casella('mano', this.mano)}${casella('corpo', this.corpo)}</div>
+      <div class="tasche">${tasche.join('')}</div>
+      <button class="grosso chiaro" data-via="1">chiudo</button>
+      <button class="grosso chiaro" data-nuovo="1">un altro sotterraneo (seme ${this.seme})</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      box.querySelector('[data-nuovo]').addEventListener('click', () => {
+        this.seme = Math.floor(Math.random() * 100000)
+        this.piano = 1; this.nuovoPiano(); this.chiudi(); this.fascia()
+      })
+      for (const b of box.querySelectorAll('[data-i]')) b.addEventListener('click', () => {
+        this.usa(Number(b.dataset.i)); this.chiudi(); this.apriZaino()
+      })
+    })
+  }
+
+  usa(i) {
+    const k = this.zaino[i]; if (!k) return
+    const c = COSE[k]
+    if (c.dove) {
+      /* quello che si aveva addosso torna nello zaino: non sparisce,
+         perché una spada lasciata cadere per prenderne un'altra è la
+         cosa che fa arrabbiare di più */
+      const vecchio = c.dove === 'mano' ? this.mano : this.corpo
+      if (c.dove === 'mano') this.mano = k; else this.corpo = k
+      this.zaino.splice(i, 1)
+      if (vecchio) this.zaino.push(vecchio)
+      this.dillo(`${c.em} ${c.nome}`)
+    } else if (c.usa === 'cura') {
+      this.vita = Math.min(this.vitaMax, this.vita + c.cura)
+      this.zaino.splice(i, 1)
+      this.dillo(`❤️ +${c.cura}`)
+    } else if (c.usa === 'luce') {
+      this.torcia = true
+      this.zaino.splice(i, 1)
+      this.aggiornaLuce()
+      this.dillo('🔦 si vede più lontano')
+    } else if (c.usa === 'porta') {
+      const vicina = this.livello.robe.find(r => r.che === 'porta' && !r.aperta &&
+        Math.abs(r.x - this.eroe.x) < 2 && Math.abs(r.y - this.eroe.y) < 2)
+      if (!vicina) return this.dillo('nessuna porta qui vicino')
+      vicina.aperta = true; vicina.presa = true
+      this.zaino.splice(i, 1)
+      this.dillo('🗝️ la porta si apre')
+    }
+    this.fascia()
+  }
+
+  /* ═══════ i pannelli ═══════ */
+  apri(html, aggancia, sopra = false) {
+    this.chiudi()
+    const box = document.createElement('div')
+    box.className = 'foglio'
+    box.innerHTML = html
+    document.getElementById('pannelli').appendChild(box)
+    this.pannello = box
+    if (aggancia) aggancia(box)
+  }
+
+  chiudi() {
+    if (this.pannello) this.pannello.remove()
+    this.pannello = null
+  }
+
+  dillo(testo) {
+    const b = document.getElementById('brindisi')
+    b.innerHTML = `<span>${testo}</span>`
+    clearTimeout(this._brindisi)
+    this._brindisi = setTimeout(() => { b.innerHTML = '' }, 1600)
+  }
+
+  fascia() {
+    document.getElementById('vita').textContent = this.vita
+    document.getElementById('barra-vita').style.width = (this.vita / this.vitaMax * 100) + '%'
+    document.getElementById('att').textContent = this.att
+    document.getElementById('dif').textContent = this.dif
+    document.getElementById('gemme').textContent = this.gemme
+    document.getElementById('suggerimento').textContent = this.chiaveDelPiano
+      ? `piano ${this.piano} · 🗝️ hai la chiave: la scala è aperta`
+      : `piano ${this.piano} · la scala è chiusa, la chiave ce l'ha qualcuno`
+  }
+}
+
+const gioco = new Gioco()
+gioco.fascia()
+</script>
+</body>
+</html>

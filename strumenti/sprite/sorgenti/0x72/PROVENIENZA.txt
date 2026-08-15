@@ -1,0 +1,47 @@
+0x72 — 16x16 DungeonTileset II (v1.7)
+======================================
+
+Fonte originale (pagina itch.io, non scaricabile in automatico senza
+sessione):
+  https://0x72.itch.io/dungeontileset-ii
+  file dichiarato: 0x72_DungeonTilesetII_v1.7.zip (406 KB)
+
+Scaricato invece da un mirror GitHub che contiene lo zip già estratto
+(commit pubblico, file identico byte per byte — vedi sha256 sotto):
+  https://github.com/mosuwat/BladeEcho
+  (path: Images/tilesets/0x72_DungeonTilesetII_v1.7/)
+
+0x72_DungeonTilesetII_v1.7.png
+  sha256: b222e563f9006e609cb0a5ec99878b7ef9a92953de3abf4cf2ae9d2aff1355d2
+  512x512 px — verificato identico scaricando la stessa immagine anche
+  da un secondo mirror indipendente (Logabe/escape-atlantis) e da un
+  terzo (lxxse/TwrDfns): stesso hash su tutti e tre.
+
+tile_list_v1.7, README_originale.txt, atlas_floor-16x16.png,
+atlas_walls_high-16x32.png, atlas_walls_low-16x16.png,
+atlas_walls_low-16x16.tsx
+  file inclusi nello stesso zip originale (l'autore del mirror li ha
+  committati così come li ha estratti: nomi e struttura sono quelli di
+  0x72, non del mirror). tile_list_v1.7 è la lista ufficiale
+  "nome pezzo -> coordinate in pixel nel PNG" che l'autore stesso
+  distribuisce dentro lo zip: è la fonte usata per compilare pezzi.json,
+  poi verificata a occhio ritagliando ogni pezzo (vedi
+  strumenti/sprite/FORMATO.md e il contatto sheet di verifica).
+
+Licenza — CC0, verificata leggendo l'HTML della pagina itch.io
+(salvata qui in licenza-itch-pagina.html per prova, scaricata il
+2026-08-15):
+
+  "You can use this tileset for whatever you like (CC-0)."
+  "Credit is not necessary, but if you create something using this
+  tileset I'd be happy to see your work (you can comment with a link)."
+
+  Il link "CC-0" nella pagina punta a
+  https://www.tldrlegal.com/license/creative-commons-cc0-1-0-universal
+
+pezzi.json
+  Catalogo dei ritagli in italiano, prodotto a mano incrociando
+  tile_list_v1.7 con l'ispezione visiva del PNG (griglie ingrandite e
+  un foglio di contatto rigenerato dal file stesso). Vedi il rapporto
+  in poc/SPRITE.md per la sezione dedicata a questo set: cosa contiene,
+  quali bordature ha e quali no.

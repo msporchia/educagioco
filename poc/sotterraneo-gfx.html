@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Il sotterraneo, con gli sprite — prototipo</title>
+<style>
+  :root { color-scheme: dark; --oro: #ffd23f; --gemma: #6fc6ff; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: #07080d; color: #e8edf7; touch-action: none;
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+  }
+  #campo { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* ═══ la fascia in cima: quello che si guarda mentre si cammina ═══ */
+  #fascia {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 5;
+    display: flex; align-items: center; gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px;
+    background: linear-gradient(#0b0d16f0, #0b0d16b0 70%, #0b0d1600);
+    font-weight: 650; font-size: 14px;
+  }
+  .conta { display: flex; align-items: center; gap: 4px; padding: 4px 9px;
+           background: #ffffff12; border-radius: 999px; white-space: nowrap; }
+  .conta.vita { background: #e0644f22; color: #ffb3a7; min-width: 84px; }
+  .barretta { position: relative; flex: 1; height: 8px; border-radius: 999px;
+              background: #ffffff18; overflow: hidden; }
+  .barretta i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg,#e0644f,#ff9b7a); }
+  #zaino-tasto { margin-left: auto; font-size: 20px; padding: 4px 10px;
+                 background: #ffffff12; border: 0; border-radius: 12px; color: inherit; }
+
+  /* ═══ i pannelli che salgono dal basso ═══ */
+  .foglio {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    padding: 14px 14px max(16px, env(safe-area-inset-bottom));
+    background: #141826; border-radius: 22px 22px 0 0;
+    box-shadow: 0 -12px 40px #000a; animation: sale .16s ease-out;
+  }
+  @keyframes sale { from { transform: translateY(28px); opacity: 0 } }
+  .foglio h2 { margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px; }
+  .foglio p  { margin: 0 0 10px; color: #93a0bd; font-size: 13.5px; }
+  .em { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
+
+  /* la domanda: è il prezzo di ogni cosa, quindi è sempre uguale a sé stessa */
+  .quesito { font-size: 30px; font-weight: 700; text-align: center; margin: 6px 0 12px; letter-spacing: .01em; }
+  .risposte { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .risposte button {
+    padding: 16px 8px; font-size: 22px; font-weight: 700; color: inherit;
+    background: #ffffff10; border: 1px solid #ffffff18; border-radius: 16px;
+  }
+  .risposte button:active { background: #ffffff22; }
+  .risposte button.giusta { background: #2f7d4f; border-color: #4fd07f; }
+  .risposte button.sbagliata { background: #7d2f2f; border-color: #ff8b8b; }
+  .grosso { display: block; width: 100%; margin-top: 9px; padding: 14px;
+            font-size: 16px; font-weight: 700; color: #101422; background: var(--oro);
+            border: 0; border-radius: 16px; }
+  .chiaro { background: #ffffff16; color: inherit; }
+
+  /* lo scontro: la vita di chi hai davanti, e quanto ti costa */
+  .nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .nemico .faccia { font-size: 40px; }
+  .nemico .dati { flex: 1; min-width: 0; }
+  .ossa { display: flex; gap: 10px; font-size: 12.5px; color: #93a0bd; }
+  .costo { font-size: 13px; color: #ffd9a0; margin-top: 3px; }
+
+  /* lo zaino: sei tasche e due caselle addosso */
+  .caselle { display: flex; gap: 9px; margin-bottom: 12px; }
+  .casella { flex: 1; padding: 10px; text-align: center; border-radius: 14px;
+             background: #ffffff0d; border: 1px dashed #ffffff22; }
+  .casella .em { font-size: 26px; display: block; }
+  .casella b { display: block; font-size: 12px; margin-top: 2px; }
+  .casella i { display: block; font-size: 11px; color: #93a0bd; font-style: normal; }
+  .tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .tasca { padding: 12px 6px; text-align: center; border-radius: 14px; color: inherit;
+           background: #ffffff10; border: 1px solid #ffffff14; font-size: 11px; }
+  .tasca .em { font-size: 26px; display: block; }
+  .tasca.vuota { opacity: .35; }
+
+  #brindisi { position: fixed; left: 0; right: 0; top: 46%; z-index: 8; text-align: center;
+              font-size: 17px; font-weight: 700; pointer-events: none; text-shadow: 0 2px 8px #000; }
+  #brindisi span { display: inline-block; padding: 8px 16px; border-radius: 999px;
+                   background: #141826e8; animation: sbuca 1.6s ease-out forwards; }
+  @keyframes sbuca { 0% { transform: scale(.8); opacity: 0 } 12% { transform: scale(1); opacity: 1 }
+                     70% { opacity: 1 } 100% { transform: translateY(-26px); opacity: 0 } }
+
+  #suggerimento { position: fixed; left: 0; right: 0; bottom: 22px; z-index: 4;
+                  text-align: center; color: #7f8db0; font-size: 13px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="campo"><canvas id="tela"></canvas></div>
+
+<div id="fascia">
+  <span class="conta vita"><span class="em">❤️</span> <b id="vita">20</b></span>
+  <div class="barretta"><i id="barra-vita"></i></div>
+  <span class="conta"><span class="em">⚔️</span> <b id="att">3</b></span>
+  <span class="conta"><span class="em">🛡️</span> <b id="dif">1</b></span>
+  <span class="conta"><span class="em">💎</span> <b id="gemme">0</b></span>
+  <button id="zaino-tasto" class="em">🎒</button>
+</div>
+
+<div id="suggerimento">tocca dove vuoi andare</div>
+<div id="brindisi"></div>
+<div id="pannelli"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   IL SOTTERRANEO — prototipo, un file solo, si apre col doppio click
+
+   L'IDEA IN UNA RIGA: un sotterraneo che si **cammina**, dove ogni cosa
+   che vuoi — una porta, un forziere, un mostro fra te e l'uscita — ha un
+   prezzo, e il prezzo è **rispondere**.
+
+   Non è il Dungeon a carte che sta in `src/giochi/dungeon/`: quello è una
+   mappa a nodi dove si sceglie un bivio alla volta e non si torna
+   indietro. Qui la mappa è un posto, non un diagramma: si gira, si torna
+   sui propri passi, si guarda cosa promette una porta e si decide dopo.
+
+   ── PERCHÉ IL PREZZO È SEMPRE UN ESERCIZIO ────────────────────────────
+   In un gioco di esplorazione la tentazione è mettere l'esercizio
+   *accanto* al gioco: cammina, e ogni tanto un quiz. Non funziona, perché
+   il quiz diventa un pedaggio che interrompe la cosa bella. Qui è il
+   contrario: **l'esercizio è la chiave, la spada e il piede di porco**.
+   Non c'è nessuna azione interessante che si compia senza rispondere, e
+   nessuna risposta che non apra qualcosa che si vede.
+
+     🚪 una porta chiusa      1 domanda, facile
+     🎁 un forziere           1 domanda, tosta — se sbagli resta chiuso
+     👹 un mostro             una domanda per colpo, finché non cade
+     ⛲ una fonte             1 domanda, e ti ridà vita
+     🏪 un mercante           niente domande: si spendono le gemme
+
+   ── LA SCELTA CHE RESTA, ANCHE POTENDO TORNARE INDIETRO ───────────────
+   Se si può girare tutto, cosa si sceglie? Si sceglie **dove spendere le
+   risposte**, perché la mappa contiene sempre più roba di quanta ne farà
+   un bambino in una seduta, e perché sbagliare costa vita: chi ripulisce
+   tutto arriva alla scala con mezzo cuore. I segni sopra le porte —
+   💀 c'è una guardia, 💎 c'è roba buona, 🏪 un mercante — servono
+   esattamente a questo: **si legge prima di pagare**, e si può andarsene
+   e tornare più tardi con la spada migliore.
+
+   ── COSA C'È DENTRO QUESTO FILE, IN ORDINE ────────────────────────────
+     1. i dati        mostri, tesori, segni: le tabelle
+     2. le domande    un banchetto finto: nel gioco vero sono i moduli
+                      di `src/quiz/`, che consegnano una domanda data una
+                      difficoltà da 0 a 1 e non sanno chi gliel'ha chiesta
+     3. il livello    generazione a stanze e corridoi, con i contenuti
+                      già decisi e un controllo che la mappa sia giocabile
+     4. la tela       tessere disegnate a codice (niente sprite: sono la
+                      cosa che manca, e il prototipo serve a decidere se
+                      vale la pena andarli a prendere)
+     5. l'eroe        il percorso, il passo, la nebbia
+     6. il gioco      i tocchi, i pannelli, l'inventario
+
+   Il codice è in italiano come il resto del repo. Duplica cose che
+   esistono in `src/` (il caso stabile, le tessere dai vicini): è voluto —
+   un prototipo si butta, e finché vive non deve trascinarsi dietro il
+   gioco vero.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ═══ ATLANTE GENERATO — non si scrive a mano ═══ */
+const ATLANTE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAC3CAYAAAD9yoAfAAApXElEQVR42u19fWxV15XvunBTA4P5SBPLHhdcn6mdMpg4xbjqM6J1RzwVTSkkEW6Yqq+VwsyjEc1UaicqRKGq6igkohOpD6w2r4Uq06jjxFFwSNPn6EUTazL4RcNH42DKw55exqYIy03jOPBCnJSc94e9jvfZd+999tf5uNd7Sdb1OWevs/bZe6/fXmvtLwBHjhw5cuTIkSNHJUie5/muFBw5KkMF9DzPxz+WTJZsBwiOZCmn2ngKhULORBmi+EtJ6QuFQg5/Wc/SAhhevhw5oilPN7TnjxwQMmzftY/bsEz5S7nHFwGCLYXfX9EEAACd00PQ11QFAAAnRmZ+NzZMBNedHvhxAJEjcWdQivJztPKePzMoZFizvhm279oHrF7PhD+rFaBjTtsGgv0VTYHSnxipCgHAXzz9IgAA/O6eLwbXDWtbA55ysrqypIBJWoBxyl+ADB1tLZHKCwBw/swgdLS1hBTDlN9EOXgFYKugeQXZ11QFfU1VsL+iCfZXNIWuRf65rmxUeOzpo0g2XalbYXHXv4oFGJf7R8eBWL/kn4r8BfhPz8BpOP2bkUiG078ZgZ6B00X3TfmzVgF0oaP5jb9IXzvzc/jamZ+Hrsl0Jo0ReTunh+DESFVg7pPUsLYVGta2hq7TdofScsFsKyCtWFGBWNtlQb6Pbk9RHRAvz9wYQEdbi5Ri9gycZqY15ZcpBB7S264AuuA7p4dgY8ME9EEVnBiRe8fGhgnYPzLDa9oosfKxV99f0QRbhoZCabYMTVDpJ2I1/3nfFGcANKn6p105lkyZGEyUFakCchsbJgCGIOTakR0OuoBfO/Nz6KRcQFGdBAAwePGylGJ2tLXA4MXLRfdN+WUqgSyUqArQbYSsRoSyyIqge1xMQ/bAdFrdPHROD80q/cSsLAg1Bvp3Y8NECBCSDILalmVa/8ijmjf6G+kytqWAUeDqeZ6PgD4TA5LvgGCIDWJMACCVWES08pIvV+WXKZgoVOdVgG7Fkzye5/md00Owf0S/Bzb1/Uk3gJQ1cu4kNKxtjfxNIkAaVw9so/5V2wBP8U0sQNXyp8EL2yArriPqgGR0LI8C35mY9Dc0r5Hqnc+dL8Clt8ZDLz01eB5U+Neu8fBjpSqch8Ais1nH/KYLnza/ycqVDcCZKCAPwemK5l3bGIlgvSMuC4zXBnTr3wb4khagigJiL6wDwrQbiuWLbU+lAxLJD4KAlYuWwIULo5EZu3BhFK6/Px1cP7pnJ3S0tSjzN9fXwr13twsrgFZAVkXwgmAbGyasBOKwEWEB4y/2CqxfTBenGS4DBDaDYaIemBUENTX7bda/ThvgBWDxvXT9ktd0oFhVPssFZLUlOjBNysX0UW0g5ALkllXAyPAl+ND/kJl4QW4B5JZVQCUAvHltsui5Cr9KL0z74LIIaNMHp0FA1gSPMyCVRHAP5er2YrogRH6vaf2blFuaFiBd53PfqNb+Il0ApMaaahiGceCl9mfTXHhnrqdfs745GP5T5V+zvlkKgWkfXLUCdJSfZQqmYYKnAQR0EEq3FzUBAdv1r1sPZAC2r6kq+MXJWPT9LUMzsQJT6y8qvzLtT+ab8/SNxppqGL4yDo011aH7rHsAAE8deRZeOHNZmX+G51ktBFZVcp0YgA1fPK0ZeDZAIm3+tOpf1g2M0wJkWWC6QBBFC0wrSGVIT5aX/GCeDy7za8sHxwqRbUhx9PqyIGXD7GQpIW8ilEhxdWMwWan/QqGQ45Vj0hag7kiCEgBcuDAKzfW13MTN9bUwMnxJGOAz4ecVPA+Bo35tmsQqDTmJ1YA8ULAhF99B9r46QTjdQGwW6l+2HLNoAapQyAW47bY6eKZvAG67rY6pyPiMjPYPXxnX4n/vvXEYvqIWDEwKgVljyLq9mE2F5Jn6cc7Io5VedRhKNxCbZv3bcKtsKr+MS0C2BZV8Bi+uv6XWv+22OgAAZiR/QW4BNDSuCnr6i29ezgEAfPerHf4LZy7D9YlRUOFfXFUHX1pfC4891ZNTVcqkKiFKJs/PY903HRdnKTsPqExWI7ImwrD8bta6BJ5/LjsklbX6F9VDFFDE0fvTdWujk8mzbvqVN8FtjCCerB8vyy+KH5AfpxtQMqkIkUxawXmBH91AUFS+49wFiCxvXgBONQhXKuawqTVg0w0ziUUpLwfOGskOPfH8PPK+junOm4mGvw1rW6GvqUr4i+lM3BBWOch8j61lyKxJTapBuCQmQ6XZPk1iRbb0gpartRxYl4avjMN7740r883EAMa1egta8fGad18nAMUKhPU1VYWCYaJfeiaabm9pYzmxDRAwCcKZAqCJBRgF7LrKFsXHW0UY13foztdYQProOtTR1gKLFlUr8y9aVK3UcJPugWnZvPX4IjKZkCSTZ1kLyCSAmdYwmEzwVfX7Tebj606CMuVVla/qHgZa+6H/IYwMX4ocxqPn+6Mfr8PPmlhEV1YaPTBJZA9IK7QqIJi4ICYWUFz5kAGCOKwXne83XZFn6oLaCMjGUX+hbruhcRU80zcAjTXV0FxfG/prrKkOhvG4jcGQn9frpNED04EwVHjyj7xHp9GtSF7DS9ICknVB4ojBiKywpGMwaQKwbQDikfEwIArw35lWGgbMLauIrJyoaPSJkapIJVcdghINg5lYELrmJ7khqCrhBqIm6+F5DUxmGqzsghRRXpL+flE7IJcjc9cBzP6absoqMwplo/yNhwE72lrghTOX4TqxQEiGf9Gi6pl5ANR+AFE9MKuSSXCgr02Ql6f8vHXmdHqTBkAPx+FGFCrfpTMJhzfERSqAag9so/dP6vvpcqA3BAHAX4hwRec2BLFVBrrlL2p/mV8LoIL2PFPcxrhs5/RQ8EeOFJB/dGXb3I/AJAahc7AImX8y9qIag7FlQSX5/baDwCaTmOKOgeUBAP7i1lVKGVyQWwD1t9T66AbgPRV+2QLo9MDn9axRvbCu+afbixcKhRy5ISQqgEovIHJBkrCARL2vVg8MYLQng63v19mXD+vfxAXVlW/TAhIFIvOe5/lw9QPwK2+CCxdG4ctb2rjmfnN9LTzTNzDjv78zHZj2/jvTkFtWocR/fWIUht+riAxCoVKRp+KITiYilS1J5WfJRDBQ5de1gNjXE8Zr4UU9cBznD8Tx/bpzAGwAkMnwoy0A4uUh53men7v6ATQ0rgqUmbWYZ/Di5SB411hTDSPDl8CvvAnIAKAOv0zhkL7YfDnqihWDkN0Lz8QC4jV+2d6epQBbhibAfFdcvRiM6foDGy6MSRBQVj6v/KPKPihkBIHm+lp49qXXmFH8HV/4TEiRSWTV4e9oa5FaDKS7w2upA4AsivMarY0IuM25FCbrMmQtQNNvNwHiUgSg0Mqi3NUPAABgxxc+w0z87EuvzfT4RM+9ZWObj66ACj/OFZBdDehIveGYNECRycxqlCLrxMaqTJnvictSLGcAypMrjLDSeT04mvz0kkf0+dGNEPHj7L/hK+PCWYOO0iVRw6EDs0m4ZrKBVFvDbrpWjO0DWVViYLLpilwAlt8l2yg8z/NJpY7aC5C8dhaAI0fpUp6l3CrHDpPKzZrbT28SykrjyJGjdIjry6hMnTVR6r4TA84CcOQoJVoQR9BGllwMwJGjDAJAUmQyjdiRI0cZAADn0zty5CwA5wI4cjQfAYA379+5AI4cOQvAkSNHDgCcC+DIkQMAR44cZYrypi/oaGsp8umb62th8OJl5pJg1+s7cpQdyswsPM/z/Ef37AQAgL1d3fD8kQPBs+279mm9E9+xfdc+wHfj+1nTnNOU78jRvAUAUvnWrG8uUjq0MnoGTocsDplrWhnPnxksUsK05WeN4jrc0lEZugC2lR8Vj+Va0P/LXON78L3PHzkQKCGuekxTftYUzfM8v6+pCrYAOBBwFkD89Mw/Puijyb19175Qb0suM9aNT5BxCbJXpk3ytOSnaQmwjhvHfe2d8jsLIDFC5WusqQ71oKh4uo2xB6BoXwNcnrxmfXPQE0fJn5yc1Pou0gXgyX90z07Y29WdeG+LlteXv/OI0wIHAOkRaXaTijc5OQmTk5NGSkEpVQgMtu/aFwrSseQjfa+5Gn4wOA7fa55b9/CDwXG46+bVsG7V+8E1/fz+1RXwg8EZEBmm8obyEYSyYvrf0v6u9mEajhwAaFNHW0vQY7bnKuEYTFp9P25yQpr4JAiQ8lH5SYVWobOXPhICDwSElStXAi0f3YEkrQAy7sKiU99cChsOJxufUNmFSpZXhX++ujypAwBpeqMSrlv1Phx7Kx556NujKc6Sjz0+KjP28jIKryo/LStgb1c38/6b/UvglvZ3lUHAVIHxVJtb2t8NPYvKA8lrwr+F4S6auJ/zBgBsomfPwOmZ3nd1PEuMow6IUJWPwCACLBJAJicnYeXKlcx0SVkB9KjLus/fEzzDwy113QcjBZw9xBXP3cP3RAFRoVDIkcqry6+b/1K3YPK2FV81M/R+ArpmtwqRUX1V+SyLgLQARNbA95qr4dDYdEi+7iQj27EXEhzf7F8iPRJgS4GDbeZnlREtEdVYjy4/gohq/kvdgsnrKr8tFCKVAXtfFZPaRiyAli8y8aPcgSjXoD1XCf3+1VAsAN0Anlkej/nfzaxTVGRePdN1bFOByTzgOzA/ovPteD26CpDp5r/ULRgjFwArhf5VDf6hIiTR+yPhcJ+qfJmYAO0mIBAgb/9YunshPLpnJ3P05c5fPctMf7C+DgCAe9y3igJHKTHm4Sd4XZwH7ntIGTwgsw0gpW7BaAMAIg7rcMROT34W2eDFy4EVcGhsGu5fXZGoMkTJJxVYVeFtWVdJ02/+5/8OXW9m5I9XvxIKLJ2HT/33/xpcP3BxFAAARs6dFL5HAsSMAIRnBdkCwKQtGOMg4NfO/BwAAH53zxeD607JSqYrrnfrDjg0Ng3tuY8k3uhJ+QAAK1eunM1LpXI8AIOC/f5V6B8DAJimwGGaGw+59+522NvVDR1tLdDyqYaQ2S4auqNNfB7/0ef6pd5BKh/Sywf+VlqJTUCEBQT4u3nfz4J8pAQgke1IFwB1AcgEQFIfBiRjACPnTkr3EDblkvIfuDgKB+vr4IGLo9C7dQezR6evyVGAdaveh0Nj00G0H4EFAeX+1QD9Y8Xyjz7XD/fe3R5ck8qrQzz+e+9uh6PP9cPB2UVPcSifLRCxZc3oAogJgOnymwCQDoDkeS+i54jHNTxFTsDBj4tzHgAdeyADgSi/V/FdLJOfrEj8v3frjsACIGMPDzz0Izj48LcI7u5gVaL4Ho/E/AfXN8MDD/0o0wqYBTIFMBP+pAAkL0ITGyAQxYfBsN6tOwAAYp0HwJKLFJJPkkReSMAiTXx8J6tiSPnN9bXw1JHwc/qavIeARYIYLy3vXnN9rdGGrkkrIf4mDR6mAGbCnwSA5Hl+hOd5PgsE4gho4ay4ycnJREcCePLPXvoIHHtrTDkvpCVwsL4uZEnQ1yIwirqHcxfIFYu678y68tHUcPyJkvqGNAFIBkDypkqML8JRAbyWVX6yF0pS+Vm9n4x8MibAGw6cnJyEhrWtQcAJy2VychLg5kqufB3gyrLyxaWAspaorW8oZYoCEKkgIHnmeF9TFZwYqYItQ+ElY2TQgUwf5QqQvjBG0OOcCMSKAdDy6V5dNSaBawlIM21ychLuunk187tZYCB7TwXgZPlZPcfB+jpoOP6E0tx4EwUU5SEpALEBYFm3QPIin31/RRN0Tg8FY/w4yWBjwwTsH2nivhTTY5pOD3xZXzwpkpXL6uVpn19kCcjIb6ypDm0YgoFRFkix/H5ys1UVfowloLXWu3UH1G3bzczvZghGNKTGs3VBhAUaSA8w3hkngJhaEKXgwuSjzH7e4hBUchEFaYbkeqt+/yqsg4rEwUAkX3XmH8+lwNWFMoAwePEyNNZUM318HnCZ8tdt2w2jx59gKg4dx8C0cSiwjHxVpbMNIDIWhA0rKgkAyfMCgGjCkz29jNLrKl/SE4Foczg8EWiamAiklhdZsMhiBJ7X+6ukMVVgU0obQLICQLIAkpfx/W0oPi/T5DyAJCcCsUxh1kQg24RrAUQxAPJa9EwGXGT5sUcfFfQwcSqv53l+3bbdQaNl5eM323bPANDxJ3zRNN40AaTULBghAHROD8H+iqa5lU6zq55kf1V98aSUn2cKR00EMnEHRPJlfHaW/16V/zP43Kc/yY0PiPhJ4LM5yYunwHXbdofGonmEfMw8HX/CF4GHDflpU9IAIpwHgCCAhEq9ZWgi6K2jfmUJe9v7V1fA2UvJFzx3ItDNlUwgiAOMosbu6ecrbq0UPo/ij4tGWWYqR3kj+SSsSJbCs+TLuDjYDsi0+O7eBAAwaQDJ8wKA9AonXm8pcx3Vw+BEHFyJl8RUYDSFye257l9dEcz8w00+o8CItAh4Q4jFG4ZMF5niUWP6cT+PVflBbhmubfeyKE0ECIXeM5sWgUAlf3QZoA6NSvjvugBCulA8ENi872dFLlSO9zKZD+X18vT9qB1N8P+Z3n9GaX4wOG68K7BIJndDkASI3hw0TXL7/0e3Fdly4qWVfQdvybDMUmLVGIgRAMia/yQQkBYF+RHf/WqHn4YiYI9IH9iRtPzhK+PMgKSOP6/6vGfgtAOAeU55GcUnZ/btr2iChrWt0NdUJfzFdFHvJnfm6Rk4zVzzvvvhH8MTD90Xee+xX74E3/3KF0L3vn+kH76/qz10j9x6y6Z82Xv01l+y4/XkWgDWASay8QCa39H8pRyv96en/+oQ7hZEBhPpHmfLxrYAGJrra5nKMHxlXOueLF+a8mV4ovKt+3z4yrizABwAsF0ABACadOcE4M4kpisMHbkYgKOYAACVk7YCeMp/YqRKGhDIeQGu0TlylFEAoP1+WSI3BWWBBQKAU35HjkooBmCLOqeHnPI7clQqMQCRJUDODiQpKq0DAEeOSgAAdEh1soMDA0dxUNRkHIC5macksUZiyDT0zNhyaed5W4VOz/4TbUU8m9Z3IODItvLf+atnZ1a9MdoXqeSiIVN8Rk4W65k9eefUN5fCP3TlACJGr9pzlfDDPT5sOGwXCGwDkNVzAXDHGBR6/+oK+PTH/wT/7V9vhCrIkaO4lJ/XydhYC3Hqm0th6aYVsO74H+CH25YK0z55/H1YuulWOAUAGw5fM1ZgvLYNQFaOByc3vyS3jTo0Ng0wFl1BunMBnAXhKEk6/8Z1WEP8DwDw7/+ZD20S++mP/ylQrWuvvh2kwzb+f5/+GHxj55SUAv+kezl88p657fRsAFBsFgAevYQgEJUWDypAwpWA5Jp7ev09eY1HeDlyJEP0TEhcA8Ij1lTp1j01M+2wawr2HLwVAACO7JyCn3QvBwCAb+wM31+6aTm0bloB8K+/DxT42qtvw7pVH0gp8LVX35493PMaF4BExj0JQIm4ADRdemMAAABW3d5WckEkZ32UF7EWf5G7UdGbsmA6Egg+ec/v4dQ3l8K6VR/AJ+/5fdBTX3v1bVi6aUWQBju0a6++Hep9z79xHVr31MDZrik4/4b44M6zl5bA0k3L4WTXFWE6vgUiR7ECQBqKb0OBl9fdAUvX3+DyXj521gFICVoAoiXY5D16Z2UEgV98dmGROd3vX4V/6KoE6JqCfv9qcP/Q2DQcOjwNv/jswiAGBgCBBRBF61bNWAA2LZBEAYDeTy/J4J+JAqct3xRAHADxibctOi8tySPai5FU/ChaumkFnO2aiuypz176CCzdtByAMOFNLZBYAQA30iSVnxwF6N26IwAB2v93ZBfAStmCiVt+1L4PrOc2l07TFgDPhGdZADYsECEAsApfZiunhrWtwUhA79YdwIrsFwqFXO/WHcFIQMPa1sz3QtfOLJxBbUKZ8F4S/KUIQGm7YKIYQNpbscdhwqtaIFwA8DzP72uqglvaw8GJDYflTwVG5RdVeu/WHf5BYtgwywo8Nfr6LP+6ontJ8M9XCyYuIoN+KjwYQ8BeWJdsmPAm8rkAgMq/ZWgiOP4LgWBmGEIMAmgFyApNqvc3UcAooIg69tyUPwsWSKlaMLwgIKnQUUCA6Ujz/8irSzSlXw2UfcPhuf+x995wGABmFR3vHxq7CocOT0N7rjLo4U3lMwGAVP5CoZDbAuD3NVXBm/1LiqwBGz4ZL93Xt900+58PAKz/w9eHDk/HqsCnfv1T2PDXfzd7dSPUu5369U8jtzw35c+CBZK2BRMHAJFbwMmkI0n3TIj+MYL/UmX4XZcq2TKIdCF+A/lMAEClJ/12PNzjzf4lwTp+mZ1JTejJ4x9YfZ8NBTz1659C+0P3Ft1TyYMuf9oWSBYsGBkAItslBp97JWISKoG95vpaGL4yrnUwDG4Dj//T/Lz3kZPhRPwq8rkuAFmRGKT7CV7P/mLkPs7Te2QP3JAtBBMFpPnI+5ePnY0EQVP+tC2QtC0YFQBqeeTbwrSnH3w88TaaVX5uEJAm+oihzQxUjcMSIKf64vRg8n/ZAjBRwE+N/S5Yw8AMYiVkAqdpgaRtwcgCUKFQyMGDj0ce+IHbz5O9f3N9behodfI5a6qwSbQ9C/xKAADAPmYIjxdO8hw/VTJV4CgLQ+RT2QKQtC2QtC0YFQAiV8y1PPJtWHV7W9GI1GNP9RTlt+9E+Jf1rNwpciIQHjWEv5v3/azojPGska4C29qhOG0AKQcLRheAVt3eFqxBcWQBAOYLeZ7nL6+7AwAA/onjr+Lz5XUA3mzgNIsAUuoWjIn8S28MwKrb2+A0PO4adSkDAPr89P8y9E+5NUIFBng9MnBFxzg8z/NlAljL6+6IBBCR/FK2oLLggjkLwDIAYBwAf+M0/3+4hx73Z5EPTx6PftfU6OvF+8IB+FE8tOKzwEDmHSwAkS0Hcq8DBA2V8XcTAMwCgOgSzjRVqS8HABH+P00N1LHFNsnWXACW8kc1ChsNRuYdvLyJQCOKR0aOyrvSBhAT+U7xLQEAawTgYH0dNEicca5Dtnb4yXIDsKHIJjyy72JZQqQLFPUO07o0le9InoqCWHXbdgvdgagFPzyT11WaI0clYAGwen7SAugtg57YkSNHM7TAFYEjR84CCAgDf6NUsK9u2+7QdGBHjhyVYQyAZ8LHvRrQkSNHKQOAo/lHts7MK1XCRUL0hqEksTYTpdOq8JP3AaL3JpCRLyvv0T07g+u9Xd1uKrAjszPzHisUSvrbyX0BRHsE0M9YaVX4ZZ+pyFd9J4ALAjrlt3BmXrmRaPNQmY1FTdOYyI96vmZ9c/DnXABHsGVjm/YCpub6WuYy21J1geYj5dMoUBdEzFZvR1oB+xv+AMf/dAcz7bb869A5cmtZfT99JJiuL6/DT25MaiJf5XlkDMCGAou2hY7aEtoBSDouwNwOOH+AnoHTRdtPIyiwzswr9RhAY021diwAyzBNfh3fX2gBmCiwDUoTQOYbANFn5m2bVfzi02TmntFn5s13qylL/KrvjnUUAJW19q51WuChy88DkLqKChjoPpVpAErDBWOZjrQFgIBAn5lX6ltnsYJmMkE40yAemYZOH6d8JQAwVWBRIzVRAll+Ov8yyl/qFoyufFTsf//PPADcYJ4nh890zc2sxgB0fGqZMXwZftE7ZOXz8iJzGGo+LgXsf/gobDgT3hRSZUNIU/44ACSpI62SdMF4Z+bRuzDZWq6dxRiA7nPad9f1yXV9flI+Ly/0PRz+m6Fu/jyA/oePwvK6O4hNGGYa5ojgXD+69zr165+GGrLKltSm/Kz8f2z9x4X5t2lmo7KSCpv0mXiy8sleArddPzQ2HfojnyEPa+vscnMHSolfhrbv2hf8RVoA9K6uMgqICrfhr/8utKPL8ro7iG2io4m1qSRvo0nZ/L/yix4lAClXC4SUT5+Z94f/MzxT1rnwkVW4Jz3rzLxyUnodf1yXn5VGVz4vHX1feiowT4FldpVh7ugSsR8fTdfOLCySj++WUR4WWHy98z4Y6D4lHYTTAcCsAIiq/OCwjP/SCB0sK4FjUpb6RBqZ8fe4nrN8d5m5BiZ5iIwBFAqFnAcQbJGNZwbKbkqpsx9fFICoNrKp0ddharR4Q02VPssEALMCIDryVc/Mu/fu9qA3aaypDq5J2tvVXdTzkNeq/OR9slc7+ly/svyjz/VbiQeYPJed528aT2AR0wJAEFBV3rg21qRBSYYfQYsEMhUAYQGgjPysAIgN+arEUr5S4ueZ0KwVkTq8qvwy8qPeF/U8H6cy2yQalKTSK1guIj4dK8gkH1OjrzN7+YZjrVJ1oyKfNBl1zsybiyp3UxFmgAce+hEcfPhbjGfFadX453jCeQBl+cOzVoSMHx01Bh8VE+Dxy17L8KvOa1BScs/zfNqUUvFXWHORVYCGJT9Jft47aR8u7TyVep2WUptKkuJoa8rzAGgkVfVXaH5T+Vkg04h41r7JxActB/lZJtttTRkAcPxQ14dR5TeVXwoAYvpNpsQrE1kfdm9Xd2LyWRSX/HIkuq0ZuwCqlLYLYDvWYfrOLLgApu+wXSdpy8+yC2C7rRkvBuKtpxaNe6ZJpgAmCqJl5RtNy0RlPNvG90bJZ7Up8l7W2kScRJeN6ZZsxgDAW0/dWFMNPQOny37LqXL0S22vOTeRj24A3oua++5iAGrk9gR0pExJzFl3lAzl42gMMnOUnTKU9jfF+d2q49wOfBMEADpiKppLTftsLH5T+VnwyVjfWerfxIpr8Mbh48i/SruaT1F8ulxUYwDWhwGj9jKj75XbMCDtm6bxTaZElwkrdiPyueOoE5V2VY5DwzIxAJ02R5eVMgDwIqa4sQQv6IfPbQ8jlpqyxfFNpkSXiWrg1nadqM5tL8c2kVRbsx4D0FkPXcrKJrNHW6k1CtX55HHLj7tNldIwoO14SN50IgbLV1OZA5D2enJb3x/1nUnm33Qii+pc/DjqNMrvF8Vckm5TJvJU68r6PADeOmve2myWT4JIpOOfmMq3if6q8vd2dWdiLNp2D2YyF59Vnkef6y9y/6LyG+X38+aY2JJvox3J5OHL33nESt3oEncegIrysQJGpmZKEspvS365Dk0NXxm3Yn7r1iUpS9TGst6W4siDrTaX562z5q2xptPp7EtGkor882cGrVeMqfxyiAHIxnV43yrbVkRr+lXL1Vabiivqb6ZXycUA3BFbJU6m/m6WFr7Ifgsvz6b885HyrghKnxZXVGjxXZ+ezpQCAwA8f+QA/OVnNnN5o/ZDNOV3AOBo3pDOTLIoyooCohzyHIgo2fPRAik7AIiqhKjCL0X+FUsWQ+WiRUV+4eKKCrg+Pc39zTLpKHAWAKzULJCytADwWKtPf/xPofus8+7KjZ886otW8iSVPi0FJhWRlDty7iQ8f+RApmf9pWFBlCUA/P3/+jd4aWgMpoh7X2haDSDZAEudn+frY8+f9d7fhgKTvTCC0Mw9OX5TANPlN7EgdACk7ACgUCjkGta2+iPnTsJLQ2OB8jSsbZVCzlLnBwBYtmQx/NlsYPDK5NtcCyDOWYtpK/B8JVUAKesg4C8OvjWjQE+u1uLfDN+a/e+YFv8nOu+b+efpF7X4D3R/fyb/Dx/VLoOalStCIECSKAh49pWnfXLew5e/84iS2VnqCmwKYKb8SblQ82IU4G+evGjEP/Xjz6fKv633K5Fprr73nvJ7eRbA2Vee9gHmJrOcPzMIz/zjg74qCOjQjILsCymRit9O8puQKYClDYCyAFLWW4Ld+KvlAADwz1+v1+K/9upMz7n8vle0+G9pf9eIf9mGGaU+fucvI9NWLloU/NG0uKICli1ZDMuWLC6yAPhKNHeUtMrste279kHD2lZoWNsKv33tZfjtay8H11E9WKFQyOEfKgwqEv1Mhv/5IwcCEJHhz5oFgnnHciOtCmcBSPT6C/9lStsCmPrx52HpphXaPfjUjz8Pb/Yv0ebf1vsVeOfUImkLQBpUliyGd969rswnAwKh06A9z5/rBfdJxS9EQSx8pqLApPw0LBAdflsWhKwLUrYA8M9fr4ev/svr2vzL73sFbgzdZcT/Zv8XtfmP3/lLaD91b6xlxHMBsKGQjUilEbMUWeZIc7Lh0grw29dels6D7vRoUwAz5bdJsgCiBACldIjC3zx5EWDWBUjL77+l3czvX7ZBn///CYb6cOqwaDhwtl591d4L2wjpexIK7EeZ8Nt37fN5vbZKWyPBa+TcSWhY2+on1VZNANCWBSFLxicDmc5sU0Vm3UpQfUep8Hue59esXBHy/cenpoJhQACAt9+9DjctnAv3fHDjQwAA2NrSBI891ZOz3fhF0e4klJDV5jBPsvI9z/MRxFSGYFkASPrxKvpCypcpP/q7eQAS+zwAMiM0YPA2ZRCl29vVrez/mTa0UuenCZU+CcIGl5Z1yJI7Z1nI029fe1lL/vNHDhQFPFWHEHVdINY8gJFzm4PviTUGgIpPK7noDHn2/ZlrHId+dM9O2NvVrRUIKneSOUaLfpa08mWBdPKla3rTAOh5np/UUKYqb86W0gOE56GT95BwR1feRgaO3z6/ThpXfvL8hUIhJ+qYblz/Y6AfCxd/NBd1P0keawCge/5fc32t0fmBKvxYaR1tLcG+anHIH74yHpKR9veLlJ11uCZaCFnJf9b5H3uqJ+d5nn/nr56F3q07QiBw4/of/XUtXwrSnz39Aixc/NEc736SPNZcANPDP5Pix3R0hduU31xfy5SR5vfjcxYQsIYB8R7y4TfxAKFU6l+W/8WXX4Avbv4SM63oGfrqONqAytf7ibnYy7qWLwXKunolFN3H/3k8rPv4P+t9vPskCOSjoqel4OdFNVKbDYYlG+Wi4mfxRGSe6RvlEtCAIGNlsdKLntnkn1VCJj/vWVLU+4kPi5RVlodU/ihavRKk5SxgRRFHzp3k/qmYmDJE86Myq/D3DJzWXtlmmn9Srk7Dsl1+USBJm/s8fkwfBWi8zTtFm1eynmWB/9rf3guf6z4GL778QlEa3jMdEEiCRxZkjNcC2DLBmutrA59s+Mq4NBBgA9XNR2NNdSC7XF0gLFcVfqwHWfn06AJ5LXpG82Mnw+JnPSP5/3z/g/C57mMwcu5kET/vmWn+Venv/5it5Tc52gXAcUTRaiJ6yqNJI6Yjq7TPGhVQE51HqNqDigJgpKlvW37c/LyylRkRUCl/EkRpHt6zUufvOzEQBAEP1teFJg2xfHcaBMYm2QE9Ua9/538sYPKIen1ajrUgoKn/jIdP8A5+EAXUkN9UPm3O00DAixbbli8y23mgpNJL0zz4P6kAtKWgUv4ioJDJfyny953glzsZiUeFFik/j0ek/DQPCwR4yi90AZJYjoiFKurBsJdimemmxyTx+DGmgA2EpwRxyadjG5gXE6AhRyh48skgpoxVEuf3p8X/4ssvcNPTzwYvXg4C571bdwR6QgbTFy7+aO7s6Rfgzv+YUbX/8dEPI5WS5hEpP80zNimv/EILQHY1kYn5KtOocVyd7p1tWiD0d+A9kzFiUx+eNs9ZeZHJH3m8F63YdPmrHr9F86tG8ePgVxkFMAFVsv3Ubdsduj96/AmuJbB6ZbRSsiwBkfKbyMn0hiDk8B42XrJXtAUyUSazzXer8LMUUDVgmdSQl24UPkv8uqMAo8efCP3xlBN76CilZFkCqjyycooAQHVHFxMfmDxZmBe5ZvVK+CfiJ3tJnsKQJiCZhhwCEwGNDROUlX9SyfFbO9pagjIhI/SyMQCeC2Or/nSi6Cx+lVEAmh8j/X++/0GpUQAb+ceA3zdu/xh84/aPFQXJWcopo8hJ8QhPOKGXI7I+zNYogG50XJSODGrJTD6hz5w3la/7/awREJGiZmUUYj6PApBpS2mxWj5K+fH/hrWt0psamEbBZaPbUemifGTeKICsUtH8qnPLeflH/z/uGITtUYz5OgpQyqtTmUFA0/XMphTnfvVxKpNNhRUF5MrpKHJH6VKOZwGQpgzrHtJ3v9rh0yiJk2ZYw3aiABb5XJffRD450pAGv2z+SYAk/VMb5e/41fht76iUGr31+O0+uXYY6cb1PzLvv3/ys/5bj9/uy77HkSNH2aMFqLRLN62AG0N3hTYQ4P0vAhHWexw5cpRRAEClDRTdKa8jR/PLAnDkyJEDAEeOHM03ALj522/k8Aw8AICFTceUZh05cuSoDMiNAjhyNP/o/wO2iL9t2NV6DwAAAABJRU5ErkJggg=='
+const PEZZI = {"arma-1":[208,160,6,13],"arma-2":[176,84,10,21],"arma-3":[16,84,16,24],"buco":[186,84,16,16],"cuore-mezzo":[214,160,13,12],"cuore-pieno":[227,160,13,12],"cuore-vuoto":[240,160,13,12],"eroe-colpito-0":[128,48,16,28],"eroe-corsa-0":[144,48,16,28],"eroe-corsa-1":[160,48,16,28],"eroe-corsa-2":[176,48,16,28],"eroe-corsa-3":[192,48,16,28],"eroe-fermo-0":[208,48,16,28],"eroe-fermo-1":[224,48,16,28],"eroe-fermo-2":[240,48,16,28],"eroe-fermo-3":[0,84,16,28],"forziere-aperto":[202,84,16,16],"forziere-chiuso":[218,84,16,16],"forziere-mezzo":[234,84,16,16],"goblin-corsa-0":[0,112,16,16],"goblin-corsa-1":[16,112,16,16],"goblin-corsa-2":[32,112,16,16],"goblin-corsa-3":[48,112,16,16],"goblin-fermo-0":[64,112,16,16],"goblin-fermo-1":[80,112,16,16],"goblin-fermo-2":[96,112,16,16],"goblin-fermo-3":[112,112,16,16],"grata":[128,112,16,16],"moneta-0":[0,176,6,7],"moneta-1":[6,176,6,7],"moneta-2":[12,176,6,7],"moneta-3":[18,176,6,7],"mostro-grosso-corsa-0":[32,0,32,36],"mostro-grosso-corsa-1":[64,0,32,36],"mostro-grosso-corsa-2":[96,0,32,36],"mostro-grosso-corsa-3":[128,0,32,36],"mostro-grosso-fermo-0":[160,0,32,36],"mostro-grosso-fermo-1":[192,0,32,36],"mostro-grosso-fermo-2":[224,0,32,36],"mostro-grosso-fermo-3":[0,48,32,36],"muro-alto-centro":[144,112,16,16],"muro-alto-estremita-dx":[160,112,16,16],"muro-alto-estremita-sx":[176,112,16,16],"muro-basso-centro":[192,112,16,16],"muro-basso-estremita-dx":[208,112,16,16],"muro-basso-estremita-sx":[224,112,16,16],"muro-e-alto":[240,112,16,16],"muro-e-basso":[0,128,16,16],"muro-e-bivio":[16,128,16,16],"muro-e-bivio-alto":[32,128,16,16],"muro-e-centro":[48,128,16,16],"muro-e-cima":[64,128,16,16],"muro-e-esterno-basso":[80,128,16,16],"muro-e-esterno-centro":[96,128,16,16],"muro-e-esterno-cima":[112,128,16,16],"muro-o-alto":[128,128,16,16],"muro-o-basso":[144,128,16,16],"muro-o-bivio":[160,128,16,16],"muro-o-bivio-alto":[176,128,16,16],"muro-o-centro":[192,128,16,16],"muro-o-cima":[208,128,16,16],"muro-o-esterno-basso":[224,128,16,16],"muro-o-esterno-centro":[240,128,16,16],"muro-o-esterno-cima":[0,144,16,16],"orco-corsa-0":[48,84,16,23],"orco-corsa-1":[64,84,16,23],"orco-corsa-2":[80,84,16,23],"orco-corsa-3":[96,84,16,23],"orco-fermo-0":[112,84,16,23],"orco-fermo-1":[128,84,16,23],"orco-fermo-2":[144,84,16,23],"orco-fermo-3":[160,84,16,23],"pilastro":[0,0,16,48],"pilastro-muro":[16,0,16,48],"porta-aperta":[32,48,32,32],"porta-chiusa":[64,48,32,32],"porta-telaio-alto":[16,144,32,16],"porta-telaio-dx":[96,48,16,32],"porta-telaio-sx":[112,48,16,32],"pozione-blu":[48,144,16,16],"pozione-gialla":[64,144,16,16],"pozione-rossa":[80,144,16,16],"pozione-verde":[96,144,16,16],"scala-giu":[112,144,16,16],"scena-cassa":[32,84,16,24],"scena-teschio":[128,144,16,16],"scheletro-corsa-0":[144,144,16,16],"scheletro-corsa-1":[160,144,16,16],"scheletro-corsa-2":[176,144,16,16],"scheletro-corsa-3":[192,144,16,16],"scheletro-fermo-0":[208,144,16,16],"scheletro-fermo-1":[224,144,16,16],"scheletro-fermo-2":[240,144,16,16],"scheletro-fermo-3":[0,160,16,16],"suolo-0":[16,160,16,16],"suolo-1":[32,160,16,16],"suolo-2":[48,160,16,16],"suolo-3":[64,160,16,16],"suolo-4":[80,160,16,16],"suolo-5":[96,160,16,16],"suolo-6":[112,160,16,16],"suolo-7":[128,160,16,16],"trappola-punte-0":[144,160,16,16],"trappola-punte-1":[160,160,16,16],"trappola-punte-2":[176,160,16,16],"trappola-punte-3":[192,160,16,16]}
+/* ═══ fine dell'atlante generato ═══ */
+
+/* ═══════════════════ 1. I DATI ═══════════════════ */
+
+const T = 16                 // la tessera, in pixel logici
+/* Lo zoom è **a numeri interi**: a scala 2,3 i pixel verrebbero larghi
+   due e altri tre, e da vicino si vede. Si parte da 3 — a 2 si vedeva
+   mezzo piano per volta e la stanza attorno si leggeva come una
+   mappina, cioè come un diagramma; e un diagramma ce l'abbiamo già in
+   alto a destra, che è il suo posto. Da 3 in su una stanza riempie lo
+   schermo e le cose dentro hanno una misura loro. */
+const SCALA_MIN = 2, SCALA_MAX = 5, SCALA = 3
+const LARGO = 52, ALTO = 52  // il mondo, in celle
+
+/* Le celle del mondo. Roccia è tutto quello che non è stato scavato. */
+const ROCCIA = 0, PAVIMENTO = 1, PORTA = 2, MURO = 3
+
+/* ── chi ci abita ──
+   `ossa` è la vita, `att` quanto picchia, `dif` quanto para. Il costo in
+   domande non sta qui e non ci deve stare: **è la vita divisa il tuo
+   attacco**, cioè cambia con quello che hai trovato. È tutto il motivo
+   per cui si va a cercare una spada.
+
+   La difesa di un mostro è la cosa più velenosa di tutta la tabella e
+   va tenuta bassa: con attacco 3 e difesa 2 il colpo scende a 1, e
+   abbattere un golem costa **diciotto risposte di fila**. Un numero
+   così non si vede leggendo la tabella, si vede solo contando — ed è
+   il motivo per cui il conto sta nel banco di prova e non a occhio.
+   Il tetto è: nessun mostro deve costare più di ~8 risposte a chi lo
+   incontra quando è il suo momento. */
+const MOSTRI = {
+  goblin:    { em: '👺', sprite: 'goblin',        nome: 'Un goblin',    ossa: 4,  att: 2, dif: 0, gemme: 2 },
+  scheletro: { em: '💀', sprite: 'scheletro',     nome: 'Uno scheletro', ossa: 8, att: 3, dif: 1, gemme: 5 },
+  orco:      { em: '👹', sprite: 'orco',          nome: 'Un orco',      ossa: 12, att: 4, dif: 1, gemme: 8 },
+  gigante:   { em: '🗿', sprite: 'mostro-grosso', nome: 'Il gigante',   ossa: 17, att: 5, dif: 1, gemme: 12, capo: true },
+}
+
+/* ── cosa si trova ──
+   Due caselle addosso (mano e corpo) e sei tasche. Le tasche non sono
+   decorazione: sono **il limite**. Uno zaino pieno vuol dire scegliere
+   cosa lasciare per terra, ed è la stessa domanda del bivio di prima
+   fatta con le mani invece che con una freccia. */
+const COSE = {
+  spadino:  { em: '🗡️', nome: 'Spadino', sprite: 'arma-1',      dove: 'mano',  att: 1, prezzo: 8,  dice: 'I mostri cadono un po\' prima.' },
+  spada:    { em: '⚔️', nome: 'Spada', sprite: 'arma-2',        dove: 'mano',  att: 2, prezzo: 16, dice: 'Ogni risposta giusta fa più male.' },
+  ascia:    { em: '🪓', nome: 'Ascia', sprite: 'arma-3',        dove: 'mano',  att: 3, prezzo: 26, dice: 'Anche i grossi cadono in pochi colpi.' },
+  panciotto:{ em: '🦺', nome: 'Panciotto', sprite: 'difesa-1',    dove: 'corpo', dif: 1, prezzo: 9,  dice: 'Sbagliare fa un po\' meno male.' },
+  corazza:  { em: '🛡️', nome: 'Corazza', sprite: 'difesa-2',      dove: 'corpo', dif: 2, prezzo: 18, dice: 'Sbagliare fa molto meno male.' },
+  manto:    { em: '🧥', nome: 'Manto', sprite: 'difesa-3',        dove: 'corpo', dif: 3, prezzo: 28, dice: 'Sbagliare non fa quasi più male.' },
+  pozione:  { em: '🧪', nome: 'Pozione', sprite: 'pozione-rossa',      usa: 'cura',   cura: 10, prezzo: 10, dice: 'Dieci punti di vita, subito.' },
+  torcia:   { em: '🔦', nome: 'Torcia',       usa: 'luce',   prezzo: 7,  dice: 'Vedi più lontano, per un po\'.' },
+  chiave:   { em: '🗝️', nome: 'Chiave',       usa: 'porta',  prezzo: 6,  dice: 'Apre una porta senza rispondere.' },
+}
+
+/* Quello che una porta chiusa lascia intravedere: è l'informazione con
+   cui si sceglie, quindi non mente mai. */
+const SEGNI = {
+  guardia: { em: '💀', dice: 'C\'è qualcosa di grosso, là dentro.' },
+  tesoro:  { em: '💎', dice: 'Da qui si sente odore di roba buona.' },
+  mercante:{ em: '🏪', dice: 'Qualcuno, là dentro, vende.' },
+  fonte:   { em: '⛲', dice: 'Si sente acqua.' },
+  vuoto:   { em: '·',  dice: 'Non si sente niente.' },
+}
+
+const EROE = { vita: 20, att: 3, dif: 1 }
+const GRAFFIO = 1        // quello che costa uno scambio anche quando lo vinci
+
+/* ═══════════════════ 2. LE DOMANDE ═══════════════════
+   Un banchetto finto, e si vede: nel gioco vero la domanda arriva dai
+   moduli di `src/quiz/`, che ne consegnano una data una difficoltà da 0
+   a 1 senza sapere chi gliel'ha chiesta. Qui basta che ci sia qualcosa
+   da rispondere e che salga di difficoltà scendendo, per capire se il
+   ritmo «cammino → tocco → rispondo → apro» funziona.               */
+
+function domanda(dif) {
+  const d = Math.max(0, Math.min(1, dif))
+  const su = n => 1 + Math.floor(Math.random() * n)
+  let testo, giusta
+  if (d < 0.3) {
+    const a = su(6 + d * 20), b = su(6 + d * 20)
+    testo = `${a} + ${b}`; giusta = a + b
+  } else if (d < 0.55) {
+    const a = su(20) + 10, b = su(a - 1)
+    testo = `${a} − ${b}`; giusta = a - b
+  } else if (d < 0.8) {
+    const a = su(9), b = su(9)
+    testo = `${a} × ${b}`; giusta = a * b
+  } else {
+    const b = su(9), r = su(9)
+    testo = `${b * r} : ${b}`; giusta = r
+  }
+  /* Tre risposte finte vicine a quella giusta: lontane si scartano a
+     occhio e la domanda non chiede più di calcolare. */
+  const finte = new Set()
+  while (finte.size < 3) {
+    const scarto = (Math.floor(Math.random() * 9) - 4) || 5
+    const f = giusta + scarto
+    if (f !== giusta && f >= 0) finte.add(f)
+  }
+  const scelte = mescola([giusta, ...finte])
+  return { testo, giusta, scelte }
+}
+
+const mescola = l => l.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1])
+
+/* ═══════════════════ 3. IL LIVELLO ═══════════════════
+
+   Si genera **tutto in una volta**, contenuti compresi: quando l'eroe
+   entra in una stanza non si decide niente lì per lì, si accende
+   soltanto la luce su cose già decise. È la differenza fra un posto e un
+   distributore di sorprese, e si sente: un posto lo si può ricordare, e
+   tornarci con l'ascia in mano dopo esserne scappati.
+
+   Il metodo è quello classico: si taglia il rettangolo in due, e ancora
+   in due, finché non restano stanze della misura giusta (BSP); dentro
+   ogni ritaglio si scava una stanza più piccola, e i due lati di ogni
+   taglio si uniscono con un corridoio a elle. Dove il corridoio buca il
+   muro di una stanza nasce una porta.
+
+   `caso()` è il caso che non cambia: stesso seme, stesso sotterraneo.
+   Serve a poter dire «riaprilo col seme 812 e guarda la stanza in basso
+   a destra» invece di «fidati». */
+
+function seminato(seme) {
+  let s = seme >>> 0 || 1
+  return () => {
+    s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0
+    return s / 4294967296
+  }
+}
+
+/* stabile per posizione: la stessa cella ha sempre la stessa crepa */
+function caso(x, y, k = 0) {
+  let n = (x * 374761393 + y * 668265263 + k * 2246822519) | 0
+  n = ((n ^ (n >>> 13)) * 1274126177) | 0
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296
+}
+
+class Livello {
+  constructor(seme, piano = 0) {
+    this.seme = seme
+    this.piano = piano
+    this.celle = new Uint8Array(LARGO * ALTO)
+    this.stanze = []
+    this.robe = []           // tutto quello che sta su una cella e si tocca
+    this.rnd = seminato(seme + piano * 7919)
+    this.scava()
+    this.arreda()
+  }
+
+  a(x, y) { return (x < 0 || y < 0 || x >= LARGO || y >= ALTO) ? ROCCIA : this.celle[y * LARGO + x] }
+  metti(x, y, v) { if (x >= 0 && y >= 0 && x < LARGO && y < ALTO) this.celle[y * LARGO + x] = v }
+  calpestabile(x, y) { const c = this.a(x, y); return c === PAVIMENTO || c === PORTA }
+
+  /* ── il taglio ricorsivo ──
+     Si ferma quando il pezzo è piccolo abbastanza: sotto quella misura
+     le stanze diventano stanzini e i corridoi più lunghi di loro. */
+  scava() {
+    const foglie = []
+    const taglia = (r, giri) => {
+      const puoiInAltezza = r.h > 15, puoiInLarghezza = r.w > 15
+      if (giri <= 0 || (!puoiInAltezza && !puoiInLarghezza)) { foglie.push(r); return null }
+      const orizzontale = puoiInAltezza && (!puoiInLarghezza || this.rnd() < 0.5)
+      let a, b
+      if (orizzontale) {
+        const t = Math.floor(r.h * (0.35 + this.rnd() * 0.3))
+        a = { x: r.x, y: r.y, w: r.w, h: t }
+        b = { x: r.x, y: r.y + t, w: r.w, h: r.h - t }
+      } else {
+        const t = Math.floor(r.w * (0.35 + this.rnd() * 0.3))
+        a = { x: r.x, y: r.y, w: t, h: r.h }
+        b = { x: r.x + t, y: r.y, w: r.w - t, h: r.h }
+      }
+      taglia(a, giri - 1); taglia(b, giri - 1)
+    }
+    taglia({ x: 1, y: 1, w: LARGO - 2, h: ALTO - 2 }, 4)
+
+    /* le stanze dentro i ritagli */
+    for (const f of foglie) {
+      const w = Math.max(5, Math.min(f.w - 3, 5 + Math.floor(this.rnd() * 6)))
+      const h = Math.max(4, Math.min(f.h - 3, 4 + Math.floor(this.rnd() * 5)))
+      const x = f.x + 1 + Math.floor(this.rnd() * Math.max(1, f.w - w - 1))
+      const y = f.y + 1 + Math.floor(this.rnd() * Math.max(1, f.h - h - 1))
+      const st = { x, y, w, h, id: this.stanze.length, vicine: [], porte: [], vista: false }
+      st.cx = x + (w >> 1); st.cy = y + (h >> 1)
+      this.stanze.push(st)
+      for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) this.metti(x + i, y + j, PAVIMENTO)
+    }
+
+    /* ── i corridoi ──
+       Si collega ogni stanza alla più vicina fra quelle già collegate
+       (albero di copertura): garantisce che si arrivi ovunque senza fare
+       una ragnatela. Poi due o tre scorciatoie in più, perché un
+       sotterraneo ad albero costringe sempre a tornare dalla stessa
+       strada, e tornare indietro deve poter essere una scelta e non una
+       penitenza. */
+    const dentro = [0], fuori = this.stanze.map((_, i) => i).slice(1)
+    while (fuori.length) {
+      let miglior = null
+      for (const a of dentro) for (const b of fuori) {
+        const d = Math.abs(this.stanze[a].cx - this.stanze[b].cx) +
+                  Math.abs(this.stanze[a].cy - this.stanze[b].cy)
+        if (!miglior || d < miglior.d) miglior = { a, b, d }
+      }
+      this.corridoio(this.stanze[miglior.a], this.stanze[miglior.b])
+      dentro.push(miglior.b)
+      fuori.splice(fuori.indexOf(miglior.b), 1)
+    }
+    for (let i = 0; i < 3; i++) {
+      const a = this.stanze[Math.floor(this.rnd() * this.stanze.length)]
+      const b = this.stanze[Math.floor(this.rnd() * this.stanze.length)]
+      if (a !== b && !a.vicine.includes(b.id)) this.corridoio(a, b)
+    }
+    this.scavaPorte()
+  }
+
+  corridoio(a, b) {
+    const prima = this.rnd() < 0.5
+    const x0 = a.cx, y0 = a.cy, x1 = b.cx, y1 = b.cy
+    const passo = (x, y) => { if (this.a(x, y) === ROCCIA) this.metti(x, y, PAVIMENTO) }
+    if (prima) {
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) passo(x, y0)
+      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) passo(x1, y)
+    } else {
+      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) passo(x0, y)
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) passo(x, y1)
+    }
+    a.vicine.push(b.id); b.vicine.push(a.id)
+  }
+
+  /* Una porta sta dove un corridoio tocca il bordo di una stanza: è
+     l'unico posto dove ha senso, ed è quello che rende una stanza una
+     stanza invece di uno slargo. */
+  scavaPorte() {
+    for (const st of this.stanze) {
+      for (let i = -1; i <= st.w; i++) for (let j = -1; j <= st.h; j++) {
+        const bordo = (i === -1 || j === -1 || i === st.w || j === st.h)
+        if (!bordo) continue
+        const x = st.x + i, y = st.y + j
+        if (this.a(x, y) !== PAVIMENTO) continue
+        /* gli angoli no: una porta d'angolo si attraversa in diagonale
+           e non chiude niente */
+        const angolo = (i === -1 || i === st.w) && (j === -1 || j === st.h)
+        if (angolo) continue
+        this.metti(x, y, PORTA)
+        st.porte.push({ x, y })
+      }
+    }
+  }
+
+  /* ── chi e cosa ci sta dentro ──
+     Prima si decide il ruolo delle stanze (ingresso, uscita, tesoro,
+     mercante, fonte), poi si riempiono. L'ordine conta: se si spargesse
+     prima la roba e poi si scegliesse l'uscita, l'uscita potrebbe capitare
+     accanto all'ingresso e il piano si attraverserebbe in tre passi. */
+  arreda() {
+    const st = this.stanze
+    const ingresso = st[0]
+    ingresso.ruolo = 'ingresso'
+    /* l'uscita è la stanza più lontana in linea d'aria: si vuole che il
+       piano si attraversi, non che si sfiori */
+    let uscita = st[1] || st[0]
+    for (const s of st) {
+      const d = Math.hypot(s.cx - ingresso.cx, s.cy - ingresso.cy)
+      if (!uscita.d || d > uscita.d) { uscita = s; uscita.d = d }
+    }
+    uscita.ruolo = 'uscita'
+    this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️', nome: 'La scala che scende' })
+
+    const libere = st.filter(s => !s.ruolo)
+    const pesca = () => libere.length ? libere.splice(Math.floor(this.rnd() * libere.length), 1)[0] : null
+
+    const mercante = pesca(); if (mercante) { mercante.ruolo = 'mercante'
+      this.robe.push({ che: 'mercante', x: mercante.cx, y: mercante.cy, em: '🧙', nome: 'Il mercante' }) }
+    const fonte = pesca(); if (fonte) { fonte.ruolo = 'fonte'
+      this.robe.push({ che: 'fonte', x: fonte.cx, y: fonte.cy, em: '⛲', nome: 'Una fonte' }) }
+    /* due o tre stanze del tesoro: la cosa che si va a cercare */
+    for (let i = 0; i < 2 + (this.rnd() < 0.5 ? 1 : 0); i++) {
+      const s = pesca(); if (!s) break
+      s.ruolo = 'tesoro'
+      this.robe.push({ che: 'forziere', x: s.cx, y: s.cy, em: '🎁', nome: 'Un forziere', aperto: false })
+    }
+
+    /* ── i mostri ──
+       Più giù si è, più grossi. Nelle stanze del tesoro c'è la guardia:
+       è il patto che rende leggibile il segno 💀 sopra la porta — se
+       dietro un teschio non ci fosse niente, il segno diventerebbe una
+       decorazione e non lo guarderebbe più nessuno. */
+    const scala = Math.min(1, this.piano / 5)
+    const branco = ['goblin', 'goblin', 'scheletro', 'orco']
+    const tipoPer = forza => {
+      const i = Math.min(branco.length - 1,
+        Math.floor((forza + scala) * branco.length * 0.6 + this.rnd() * 1.4))
+      return branco[Math.max(0, i)]
+    }
+    for (const s of st) {
+      if (s.ruolo === 'ingresso') continue
+      const quanti = s.ruolo === 'tesoro' ? 1 : Math.floor(this.rnd() * 2.4)
+      for (let i = 0; i < quanti; i++) {
+        const x = s.x + Math.floor(this.rnd() * s.w), y = s.y + Math.floor(this.rnd() * s.h)
+        if (this.robeSu(x, y).length) continue
+        const tipo = tipoPer(s.ruolo === 'tesoro' ? 0.6 : 0.15)
+        this.robe.push(this.mostro(tipo, x, y))
+      }
+    }
+    /* ── LA CHIAVE DEL PIANO ────────────────────────────────────────
+       Senza questa riga il sotterraneo ha una falla che si vede solo
+       giocando storto: i mostri si possono **aggirare tutti**, quindi
+       un bambino sveglio scende di piano in piano senza rispondere a
+       una sola domanda, e il gioco diventa una passeggiata al buio.
+
+       La cura è quella di sempre nei giochi di questo tipo: la scala è
+       chiusa, e la chiave ce l'ha qualcuno. Così il minimo assoluto per
+       scendere è **battere un guardiano**, e tutto il resto — porte,
+       forzieri, mostri per strada — resta facoltativo, che è quello che
+       si voleva. Il guardiano è il più lontano dall'ingresso: la chiave
+       non deve capitare a due passi dalla partenza. */
+    const chiGuarda = this.piano >= 4 ? 'gigante' : this.piano >= 2 ? 'orco' : 'scheletro'
+    const guardiano = this.mostro(chiGuarda, uscita.cx, uscita.cy - 1)
+    if (!this.calpestabile(guardiano.x, guardiano.y)) { guardiano.x = uscita.cx; guardiano.y = uscita.cy + 1 }
+    if (this.calpestabile(guardiano.x, guardiano.y)) {
+      guardiano.chiave = true
+      this.robe.push(guardiano)
+    } else {
+      /* nessun posto buono accanto alla scala: la chiave la porta il
+         mostro già in mappa più lontano dall'ingresso */
+      const lontano = this.robe.filter(r => r.che === 'mostro')
+        .sort((a, b) => Math.hypot(b.x - ingresso.cx, b.y - ingresso.cy) -
+                        Math.hypot(a.x - ingresso.cx, a.y - ingresso.cy))[0]
+      if (lontano) lontano.chiave = true
+    }
+
+    /* gemme sparse: servono a far tornare la pena di scostarsi dalla
+       strada anche quando in una stanza non c'è niente di scritto */
+    for (const s of st) {
+      if (this.rnd() > 0.55) continue
+      const x = s.x + Math.floor(this.rnd() * s.w), y = s.y + Math.floor(this.rnd() * s.h)
+      if (!this.robeSu(x, y).length)
+        this.robe.push({ che: 'gemme', x, y, em: '💎', quante: 2 + Math.floor(this.rnd() * 5) })
+    }
+
+    this.chiudiPorte()
+  }
+
+  mostro(tipo, x, y) {
+    const m = MOSTRI[tipo]
+    /* le ossa crescono col piano: lo stesso scheletro, più giù, costa
+       più risposte — ed è l'unico modo perché scendere si senta */
+    const su = 1 + (this.piano - 1) * 0.22
+    return { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
+             ossa: Math.round(m.ossa * su), ossaMax: Math.round(m.ossa * su),
+             att: m.att + Math.floor((this.piano - 1) / 2), dif: m.dif }
+  }
+
+  /* ── le porte chiuse, e il loro segno ──
+     Non tutte le porte si chiudono: solo quelle che danno su qualcosa
+     che vale. Una porta chiusa su una stanza vuota è una bugia, e le
+     bugie qui costano care — il segno sopra la porta è l'unica cosa con
+     cui si sceglie. */
+  chiudiPorte() {
+    for (const s of this.stanze) {
+      if (!s.ruolo || s.ruolo === 'ingresso' || !s.porte.length) continue
+      const segno = s.ruolo === 'tesoro'
+        ? (this.robe.some(r => r.che === 'mostro' && this.dentroStanza(r, s)) ? 'guardia' : 'tesoro')
+        : s.ruolo === 'mercante' ? 'mercante'
+        : s.ruolo === 'fonte' ? 'fonte' : null
+      if (!segno) continue
+      /* si chiude una porta sola: chiuderle tutte vorrebbe dire pagare
+         due volte per la stessa stanza a chi gira in tondo */
+      const p = s.porte[Math.floor(this.rnd() * s.porte.length)]
+      this.robe.push({ che: 'porta', x: p.x, y: p.y, em: '🚪', nome: 'Una porta chiusa',
+                       segno, aperta: false })
+    }
+  }
+
+  dentroStanza(r, s) { return r.x >= s.x && r.y >= s.y && r.x < s.x + s.w && r.y < s.y + s.h }
+  robeSu(x, y) { return this.robe.filter(r => r.x === x && r.y === y) }
+  stanzaDi(x, y) { return this.stanze.find(s => x >= s.x - 1 && y >= s.y - 1 && x < s.x + s.w + 1 && y < s.y + s.h + 1) || null }
+
+  /* ── il controllo onesto ──
+     Un sotterraneo in cui la scala sta dietro una porta che non si può
+     aprire non è difficile: è rotto. Si verifica camminando davvero,
+     dall'ingresso, e trattando le porte chiuse come **muri** — perché
+     una porta si apre rispondendo, e a una domanda si può sbagliare.
+     Se anche così si arriva alla scala, il piano è sempre finibile. */
+  guasti() {
+    const g = []
+    const partenza = this.stanze[0]
+    const bloccate = new Set(this.robe.filter(r => r.che === 'porta').map(r => r.x + ',' + r.y))
+    const visti = new Set([partenza.cx + ',' + partenza.cy])
+    const coda = [[partenza.cx, partenza.cy]]
+    while (coda.length) {
+      const [x, y] = coda.pop()
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny
+        if (visti.has(k) || !this.calpestabile(nx, ny) || bloccate.has(k)) continue
+        visti.add(k); coda.push([nx, ny])
+      }
+    }
+    const scala = this.robe.find(r => r.che === 'scala')
+    if (!scala) g.push('non c\'è nessuna scala che scende')
+    else if (!visti.has(scala.x + ',' + scala.y))
+      g.push('alla scala non si arriva senza aprire una porta chiusa')
+    if (this.stanze.length < 6) g.push(`solo ${this.stanze.length} stanze: il piano si gira in un minuto`)
+    /* senza qualcuno che porti la chiave, la scala non si apre e il
+       piano è una stanza chiusa a chiave con la chiave dentro */
+    if (!this.robe.some(r => r.che === 'mostro' && r.chiave))
+      g.push('nessuno porta la chiave della scala')
+    for (const r of this.robe.filter(r => r.che === 'porta'))
+      if (this.a(r.x, r.y) !== PORTA) g.push(`una porta chiusa non sta su una porta (${r.x},${r.y})`)
+    return g
+  }
+}
+
+/* Si genera finché non torna un piano sano: capita di rado, ma un piano
+   senza uscita non si dà in mano a un bambino. */
+function generaLivello(seme, piano) {
+  let ultimo = null
+  for (let i = 0; i < 20; i++) {
+    ultimo = new Livello(seme + i * 131, piano)
+    if (!ultimo.guasti().length) return ultimo
+  }
+  console.warn('livello con guasti:', ultimo.guasti())
+  return ultimo
+}
+
+/* ═══════════════════ 4. LA TELA, CON GLI SPRITE ═══════════════════
+
+   La differenza fra questo prototipo e `sotterraneo.html` sta tutta
+   qui dentro: là il sotterraneo era disegnato a rettangoli, qui è
+   posato da un foglio di tessere vero — **0x72, "16x16 DungeonTileset
+   II", CC-0** — ritagliato su misura da `strumenti/sprite/dungeon.py` e
+   incorporato in base64 più su. Nove chilobyte per centouno pezzi: il
+   file resta uno solo e si apre col doppio click, che è il vincolo di
+   tutto il progetto.
+
+   Il gioco non è cambiato di una riga. Non sa che esistano gli sprite,
+   chiede le stesse cose di prima, e questa classe è l'unico posto che è
+   stato riscritto — è la prova che il confine fra «le regole» e «il
+   disegno» stava dove doveva stare.
+
+   ── COME SI SCEGLIE LA TESSERA DI UN MURO ─────────────────────────
+   Non si sceglie a mano: si guarda **da che parti finisce la roccia**.
+   `bordoOtto` (la copia autonoma di `src/grafica/tessere.js`, che per
+   questo prototipo è stato potenziato apposta) dà una chiave — `'S'`
+   se il pavimento sta sotto, `'SE'` se sta sotto e a destra, `'se'` se
+   quello che manca è solo l'angolo — e la tavola dice quale pezzo
+   mettere. Aggiungere una forma vuol dire aggiungere una riga alla
+   tavola, mai un `if` in mezzo al disegno.
+
+   ── I MURI SONO ALTI DUE CELLE, E NON È UN DETTAGLIO ──────────────
+   Questo set disegna la parete come la si vedrebbe da davanti: una
+   fascia di mattoni (`muro-basso-*`) con sopra il suo coronamento
+   (`muro-alto-*`). Quindi la parete a nord di una stanza **occupa due
+   celle** di roccia, non una, e la cella subito sopra il pavimento
+   porta la faccia mentre quella ancora sopra porta la cima. È la
+   ragione per cui cambiare famiglia di sprite non è mai gratis: un set
+   con muri visti dall'alto vorrebbe un'altra geometria, e quella vive
+   qui.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── il motore delle tessere, copiato apposta ──
+   Sta in `src/grafica/tessere.js` ed è provato lì (`unita/tessere`).
+   Qui c'è una copia perché un prototipo si butta, e finché vive non
+   deve trascinarsi dietro il gioco vero: la stessa scelta già presa
+   per la fattoria. */
+const VERSI = { N: [0, -1], S: [0, 1], O: [-1, 0], E: [1, 0] }
+const ORDINE = ['N', 'S', 'O', 'E']
+const DIAGONALI = { NO: ['N', 'O'], NE: ['N', 'E'], SO: ['S', 'O'], SE: ['S', 'E'] }
+const chiaveDi = versi => ORDINE.filter(v => versi.includes(v)).join('')
+
+/* Gli angoli concavi: i due lati sono dentro ma la diagonale no. Un
+   angolo diagonale isolato non conta — è la riduzione che porta le 256
+   combinazioni alle poche forme che un foglio di tessere disegna
+   davvero. */
+function angoliInterni(dentro, x, y) {
+  return Object.keys(DIAGONALI).filter(d => {
+    const [a, b] = DIAGONALI[d]
+    const dx = VERSI[a][0] + VERSI[b][0], dy = VERSI[a][1] + VERSI[b][1]
+    return dentro(x + VERSI[a][0], y + VERSI[a][1]) &&
+           dentro(x + VERSI[b][0], y + VERSI[b][1]) &&
+           !dentro(x + dx, y + dy)
+  })
+}
+
+function bordoOtto(dentro, x, y) {
+  const fuori = ORDINE.filter(v => !dentro(x + VERSI[v][0], y + VERSI[v][1]))
+  const conc = angoliInterni(dentro, x, y).map(d => d.toLowerCase())
+  const lati = chiaveDi(fuori)
+  if (!lati.length && !conc.length) return 'centro'
+  return [lati, conc.join('')].filter(Boolean).join('-')
+}
+
+const variante = (lista, x, y, k = 0) =>
+  lista[Math.min(lista.length - 1, Math.floor(caso(x, y, k) * lista.length))]
+
+/* ── la tavola: forma → pezzo ──
+   Si legge «dove finisce la roccia»: `S` vuol dire che sotto c'è il
+   pavimento, cioè questa cella è la parete che si vede di fronte.
+   Quello che non c'è nella tavola non si disegna: un buco si nota, una
+   tessera a caso no — e una tessera a caso è il modo in cui i muri
+   diventano un mosaico che nessuno capisce. */
+const FACCE = {
+  S: 'muro-basso-centro',            // parete di fronte
+  SE: 'muro-basso-estremita-dx',     // …e la stanza gira a destra
+  SO: 'muro-basso-estremita-sx',
+  SOE: 'muro-basso-centro',
+}
+const CIME = {
+  S: 'muro-alto-centro',
+  SE: 'muro-alto-estremita-dx',
+  SO: 'muro-alto-estremita-sx',
+  SOE: 'muro-alto-centro',
+}
+/* i fianchi: colonne da impilare. `cima` dove la colonna comincia,
+   `basso` dove finisce, `centro` in mezzo — il set li disegna proprio
+   per essere impilati, e presi a caso non combaciano */
+const FIANCHI = {
+  E: ['muro-o-cima', 'muro-o-centro', 'muro-o-basso'],   // pavimento a est: parete sinistra
+  O: ['muro-e-cima', 'muro-e-centro', 'muro-e-basso'],   // pavimento a ovest: parete destra
+}
+
+const SUOLI = ['suolo-0', 'suolo-1', 'suolo-2', 'suolo-3', 'suolo-4',
+               'suolo-0', 'suolo-0', 'suolo-5', 'suolo-6', 'suolo-7']
+
+class Tela {
+  constructor(canvas) {
+    this.canvas = canvas
+    this.ctx = canvas.getContext('2d')
+    this.scala = SCALA
+    this.vista = { x: 0, y: 0 }
+    this.L = 0; this.A = 0; this.dpr = 1
+    /* L'atlante si carica da sé: disegnare prima che sia pronto non
+       rompe niente (`drawImage` su un'immagine non caricata è un
+       no-op), e il primo fotogramma buono arriva al giro dopo perché
+       il disegno è continuo. */
+    this.immagine = new Image()
+    this.immagine.src = ATLANTE
+  }
+
+  get cella() { return T * this.scala }
+
+  misura() {
+    const r = this.canvas.parentElement.getBoundingClientRect()
+    if (!r.width || !r.height) return false
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    if (Math.round(r.width) === this.L && Math.round(r.height) === this.A && dpr === this.dpr) return true
+    this.L = Math.round(r.width); this.A = Math.round(r.height); this.dpr = dpr
+    this.canvas.width = Math.round(this.L * dpr)
+    this.canvas.height = Math.round(this.A * dpr)
+    return true
+  }
+
+  zoomA(voluta) {
+    const n = Math.max(SCALA_MIN, Math.min(SCALA_MAX, Math.round(voluta)))
+    if (n === this.scala) return false
+    this.scala = n
+    return true
+  }
+
+  /* La telecamera sta addosso all'eroe. `alza` è quanto tirarlo su:
+     con un foglio aperto in basso, un eroe centrato finisce **sotto il
+     pannello**, e si sta rispondendo a domande su un mostro che non si
+     vede. Il castello risolve la stessa cosa stringendo il campo; qui
+     basta spostare il centro, che costa una riga. */
+  segui(ex, ey, alza = 0) {
+    const c = this.cella
+    const M = { x: LARGO * c, y: ALTO * c }
+    this.vista.x = M.x <= this.L ? (M.x - this.L) / 2 : Math.max(0, Math.min(ex * c - this.L / 2, M.x - this.L))
+    const mira = ey * c - this.A / 2 + alza
+    this.vista.y = M.y <= this.A ? (M.y - this.A) / 2 : Math.max(0, Math.min(mira, M.y - this.A))
+  }
+
+  cellaDa(sx, sy) {
+    const c = this.cella
+    return { x: Math.floor((sx + this.vista.x) / c), y: Math.floor((sy + this.vista.y) / c) }
+  }
+
+  /* ── posare un pezzo ──
+     `cx, cy` sono celle. Uno sprite più alto di una cella — un
+     personaggio, una porta ad arco — **si appoggia col fondo sul fondo
+     della sua cella** e sborda verso l'alto: è quello che permette a
+     un mostro di stare dietro al muro che ha davanti invece di
+     galleggiarci sopra. La stessa regola imparata sulla fattoria. */
+  posa(nome, cx, cy, opz = {}) {
+    const p = PEZZI[nome]
+    if (!p || !this.immagine.width) return false
+    const ctx = this.ctx, c = this.cella, s = this.scala
+    const w = p[2] * s, h = p[3] * s
+    const x = Math.round(cx * c - this.vista.x + (c - w) / 2 + (opz.dx || 0) * s)
+    const y = Math.round((cy + 1) * c - this.vista.y - h + (opz.dy || 0) * s)
+    if (opz.alfa != null) ctx.globalAlpha = opz.alfa
+    if (opz.specchia) {
+      ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1)
+      ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3], 0, 0, w, h)
+      ctx.restore()
+    } else {
+      ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3], x, y, w, h)
+    }
+    if (opz.alfa != null) ctx.globalAlpha = 1
+    return true
+  }
+
+  /* Una tessera di terreno riempie il suo quadrato e basta: non
+     sborda, non si appoggia. */
+  tessera(nome, cx, cy, alfa) {
+    const p = PEZZI[nome]
+    if (!p || !this.immagine.width) return false
+    const ctx = this.ctx, c = this.cella
+    if (alfa != null) ctx.globalAlpha = alfa
+    ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3],
+      Math.round(cx * c - this.vista.x), Math.round(cy * c - this.vista.y), c, c)
+    if (alfa != null) ctx.globalAlpha = 1
+    return true
+  }
+
+  disegna(g) {
+    if (!this.misura()) return
+    const ctx = this.ctx, c = this.cella, liv = g.livello
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+    ctx.imageSmoothingEnabled = false
+    ctx.fillStyle = '#05060a'
+    ctx.fillRect(0, 0, this.L, this.A)
+
+    const c0x = Math.max(0, Math.floor(this.vista.x / c) - 2)
+    const c0y = Math.max(0, Math.floor(this.vista.y / c) - 2)
+    const c1x = Math.min(LARGO, c0x + Math.ceil(this.L / c) + 4)
+    const c1y = Math.min(ALTO, c0y + Math.ceil(this.A / c) + 4)
+
+    /* prima il suolo, poi i muri: i muri sono alti e devono poter
+       coprire il suolo della cella sopra la loro */
+    for (let x = c0x; x < c1x; x++) for (let y = c0y; y < c1y; y++) {
+      const luce = g.luceDi(x, y)
+      if (!luce || liv.a(x, y) === ROCCIA) continue
+      this.tessera(variante(SUOLI, x, y, 3), x, y, luce === 2 ? 1 : 0.5)
+      if (luce === 1) this.velo(x, y)
+    }
+    for (let x = c0x; x < c1x; x++) for (let y = c0y; y < c1y; y++) {
+      const luce = g.luceDi(x, y)
+      if (!luce || liv.a(x, y) !== ROCCIA) continue
+      this.muro(liv, x, y, luce)
+    }
+
+    for (const r of liv.robe) {
+      if (r.presa || r.morto) continue
+      const luce = g.luceDi(r.x, r.y)
+      if (!luce) continue
+      this.roba(r, luce, g)
+    }
+    this.eroe(g)
+    if (g.bersaglio) this.bersaglio(g.bersaglio)
+    this.minimappa(g)
+  }
+
+  /* Il ricordo: quello che si è visto ma non si sta guardando. Si
+     spegne **e si raffredda** — un velo blu — perché spegnere e basta
+     non basta: due tessere scure, da lontano, sono la stessa cosa. */
+  velo(cx, cy) {
+    const ctx = this.ctx, c = this.cella
+    ctx.fillStyle = 'rgba(8,12,30,.5)'
+    ctx.fillRect(Math.round(cx * c - this.vista.x), Math.round(cy * c - this.vista.y), c + 1, c + 1)
+  }
+
+  /* ── il muro ──
+     Prima si **riempie**: ogni cella di roccia che tocca il pavimento,
+     anche solo per un angolo, si dipinge di mattoni. Senza questo passo
+     restano dei buchi neri dentro le pareti — le celle che toccano il
+     pavimento solo in diagonale — e una parete bucata si legge come un
+     guasto, perché è quello che sembra.
+
+     Poi si rifinisce, e solo dove il foglio ha un pezzo apposta: la
+     parete vista di fronte con il suo coronamento sopra, e il
+     coronamento da solo sul lato di sotto della stanza. I fianchi
+     restano mattoni: questo set le colonne laterali le disegna per
+     essere impilate in un'altra geometria, e infilarle qui lasciava
+     delle strisce che non combaciavano con niente. Meglio un muro
+     semplice e giusto che uno ricco e storto — e vale la pena
+     ricordarlo, perché è la tentazione di ogni foglio di tessere. */
+  muro(liv, x, y, luce) {
+    const solido = (a, b) => liv.a(a, b) === ROCCIA
+    const alfa = luce === 2 ? 1 : 0.5
+    let tocca = false
+    for (let dx = -1; dx <= 1 && !tocca; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        if ((dx || dy) && !solido(x + dx, y + dy)) { tocca = true; break }
+    /* la roccia profonda non è un buco: è muro anche lei, solo più
+       scuro. Lasciarla nera spezzava le pareti in due, e una parete
+       bucata si legge come un guasto */
+    if (!tocca) return this.tessera('muro-basso-centro', x, y, alfa * 0.45)
+
+    this.tessera('muro-basso-centro', x, y, alfa)
+
+    const k = bordoOtto(solido, x, y)
+    const lati = k.split('-')[0]
+    if (lati.includes('S')) {
+      this.tessera(FACCE[lati] || FACCE.S, x, y, alfa)
+      if (solido(x, y - 1)) this.tessera(CIME[lati] || CIME.S, x, y - 1, alfa)
+    } else if (lati.includes('N')) {
+      /* il lato di sotto della stanza: da qui si vede il coronamento
+         del muro, non la sua faccia */
+      this.tessera('muro-alto-centro', x, y, alfa)
+    }
+    if (luce === 1) this.velo(x, y)
+  }
+
+  /* ── le cose ──
+     Ognuna ha il suo pezzo; quelle animate scorrono i fotogrammi
+     sull'orologio. Quello che nel foglio non c'è si disegna
+     com'era prima, con l'emoji: un buco si nota, e non voglio che
+     un pezzo mancante faccia sparire un forziere. */
+  roba(r, luce, g) {
+    const ctx = this.ctx, c = this.cella
+    const px = r.fx != null ? r.fx : r.x + 0.5, py = r.fy != null ? r.fy : r.y + 0.5
+    const alfa = luce === 2 ? 1 : 0.45
+    const t = performance.now() / 1000
+
+    if (r.che === 'mostro') {
+      const scheda = MOSTRI[r.tipo]
+      const posa = r.sveglio ? 'corsa' : 'fermo'
+      const fr = ((t * (r.sveglio ? 8 : 4)) | 0) % 4
+      /* l'alone dice «questo ti costa», e da sveglio pulsa: si vede
+         prima di essergli arrivati addosso */
+      ctx.save()
+      const q = r.sveglio ? 0.3 + 0.14 * Math.sin(t * 7) : 0.14
+      ctx.fillStyle = `rgba(224,100,79,${q * alfa})`
+      ctx.beginPath()
+      ctx.arc(px * c - this.vista.x, py * c - this.vista.y + c * 0.2, c * 0.5, 0, 7)
+      ctx.fill()
+      ctx.restore()
+      const nome = `${scheda.sprite}-${posa}-${fr}`
+      if (!this.posa(nome, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
+        this.emoji(r.em, px, py, alfa)
+      if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
+      if (!r.sveglio) this.emoji('💤', px + 0.4, py - 0.4, alfa * 0.8, 0.32)
+      if (r.ossa < r.ossaMax) this.barretta(px, py, r.ossa / r.ossaMax, alfa)
+      return
+    }
+
+    const nome = {
+      forziere: r.aperto ? 'forziere-aperto' : 'forziere-chiuso',
+      porta: r.aperta ? 'porta-aperta' : 'porta-chiusa',
+      scala: 'scala-giu',
+      gemme: `moneta-${((t * 8) | 0) % 4}`,
+      fonte: null,          // il foglio non ha una fontana: resta l'emoji
+      mercante: null,
+      cosa: COSE[r.cosa]?.sprite || null,
+    }[r.che]
+
+    if (!nome || !this.posa(nome, px - 0.5, py - 0.5, { alfa }))
+      this.emoji(r.em, px, py, alfa)
+
+    /* il segno sopra una porta chiusa: l'unica cosa con cui si sceglie
+       dove andare, quindi si vede anche a memoria in un piano già
+       girato */
+    if (r.che === 'porta' && !r.aperta)
+      this.emoji(SEGNI[r.segno].em, px, py - 1.25, alfa, 0.5)
+  }
+
+  emoji(em, px, py, alfa, quanto = 0.8) {
+    const ctx = this.ctx, c = this.cella
+    ctx.save()
+    ctx.globalAlpha = alfa
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.font = `${Math.round(c * quanto)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
+    ctx.fillText(em, px * c - this.vista.x, py * c - this.vista.y)
+    ctx.restore()
+  }
+
+  barretta(px, py, q, alfa) {
+    const ctx = this.ctx, c = this.cella
+    const w = c * 0.7, x = px * c - this.vista.x - w / 2, y = py * c - this.vista.y + c * 0.42
+    ctx.save(); ctx.globalAlpha = alfa
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x, y, w, 4)
+    ctx.fillStyle = '#e0644f'; ctx.fillRect(x, y, w * q, 4)
+    ctx.restore()
+  }
+
+  eroe(g) {
+    const c = this.cella
+    const t = performance.now() / 1000
+    const cammina = !!(g.strada && g.strada.length)
+    const fr = ((t * (cammina ? 9 : 4)) | 0) % 4
+    const ctx = this.ctx
+    const sx = g.eroe.x * c - this.vista.x, sy = g.eroe.y * c - this.vista.y
+    /* la torcia in mano: piccola e calda, non un faro. Dice «la luce
+       sei tu», e fa vedere che la luce di una stanza è un'altra cosa */
+    const alone = ctx.createRadialGradient(sx, sy, c * 0.3, sx, sy, c * 2.4)
+    alone.addColorStop(0, 'rgba(255,214,140,.20)')
+    alone.addColorStop(1, 'rgba(255,214,140,0)')
+    ctx.fillStyle = alone
+    ctx.beginPath(); ctx.arc(sx, sy, c * 2.4, 0, 7); ctx.fill()
+    ctx.fillStyle = 'rgba(0,0,0,.4)'
+    ctx.beginPath(); ctx.ellipse(sx, sy + c * 0.38, c * 0.28, c * 0.1, 0, 0, 7); ctx.fill()
+    if (!this.posa(`eroe-${cammina ? 'corsa' : 'fermo'}-${fr}`,
+                   g.eroe.x - 0.5, g.eroe.y - 0.5, { specchia: g.guarda === 'sx' }))
+      this.emoji('🧝', g.eroe.x, g.eroe.y, 1)
+  }
+
+  bersaglio(b) {
+    const ctx = this.ctx, c = this.cella
+    const sx = b.x * c - this.vista.x + c / 2, sy = b.y * c - this.vista.y + c / 2
+    const q = (performance.now() % 900) / 900
+    ctx.save()
+    ctx.strokeStyle = `rgba(255,210,120,${0.8 - q * 0.7})`
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.arc(sx, sy, c * (0.25 + q * 0.35), 0, 7); ctx.stroke()
+    ctx.restore()
+  }
+
+  /* ── la mappina ──
+     In un posto grande la domanda che torna sempre è «da che parte non
+     sono ancora stato». Mostra solo quello che si è visto, e i punti
+     che servono: dove sei, dov'è la scala, chi ha la chiave. */
+  minimappa(g) {
+    const ctx = this.ctx
+    const p = 2
+    const larg = LARGO * p, alt = ALTO * p
+    const x0 = this.L - larg - 10, y0 = 62
+    ctx.save()
+    ctx.fillStyle = 'rgba(6,8,14,.78)'
+    ctx.fillRect(x0 - 4, y0 - 4, larg + 8, alt + 8)
+    ctx.strokeStyle = 'rgba(255,255,255,.14)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x0 - 4.5, y0 - 4.5, larg + 9, alt + 9)
+    for (let x = 0; x < LARGO; x++) for (let y = 0; y < ALTO; y++) {
+      if (!g.visto[y * LARGO + x] || g.livello.a(x, y) === ROCCIA) continue
+      ctx.fillStyle = 'rgba(180,170,150,.5)'
+      ctx.fillRect(x0 + x * p, y0 + y * p, p, p)
+    }
+    for (const r of g.livello.robe) {
+      if (r.presa || r.morto || !g.visto[r.y * LARGO + r.x]) continue
+      const colore = r.che === 'mostro' && r.chiave ? '#ffd23f'
+        : r.che === 'porta' && !r.aperta ? '#c9a227'
+        : r.che === 'scala' ? '#6fc6ff'
+        : r.che === 'forziere' ? '#ff9b3d' : null
+      if (!colore) continue
+      ctx.fillStyle = colore
+      ctx.fillRect(x0 + r.x * p - 1, y0 + r.y * p - 1, p + 2, p + 2)
+    }
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(x0 + Math.floor(g.eroe.x) * p - 1, y0 + Math.floor(g.eroe.y) * p - 1, p + 2, p + 2)
+    ctx.restore()
+  }
+}
+
+/* ═══════════════════ 5. IL CAMMINO ═══════════════════
+   Una ricerca in ampiezza sulla griglia: il sotterraneo è piccolo
+   (52×52) e i pesi sono tutti uguali, quindi non serve niente di più
+   sofisticato — e una ricerca semplice è una ricerca che si legge.
+
+   Le celle **bloccate** (una porta ancora chiusa, un mostro) non si
+   attraversano: si può girargli intorno, ed è metà del gioco. Chi vuole
+   raggiungere proprio quella cosa lì non ci cammina sopra: si ferma
+   accanto, e da lì la tocca.                                          */
+function percorso(liv, bloccata, da, a) {
+  const chiave = (x, y) => y * LARGO + x
+  const prima = new Int32Array(LARGO * ALTO).fill(-1)
+  const visto = new Uint8Array(LARGO * ALTO)
+  const coda = [da]
+  visto[chiave(da.x, da.y)] = 1
+  let testa = 0
+  while (testa < coda.length) {
+    const q = coda[testa++]
+    if (q.x === a.x && q.y === a.y) {
+      const strada = []
+      let k = chiave(q.x, q.y)
+      while (k !== chiave(da.x, da.y) && k >= 0) {
+        strada.push({ x: k % LARGO, y: (k / LARGO) | 0 })
+        k = prima[k]
+      }
+      return strada.reverse()
+    }
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = q.x + dx, ny = q.y + dy, k = chiave(nx, ny)
+      if (nx < 0 || ny < 0 || nx >= LARGO || ny >= ALTO || visto[k]) continue
+      if (!liv.calpestabile(nx, ny)) continue
+      if (bloccata(nx, ny) && !(nx === a.x && ny === a.y)) continue
+      visto[k] = 1; prima[k] = chiave(q.x, q.y); coda.push({ x: nx, y: ny })
+    }
+  }
+  return null
+}
+
+/* ═══════════════════ 6. IL GIOCO ═══════════════════
+
+   Qui si tengono insieme le tre cose che il prototipo deve provare:
+   che camminare col dito funzioni, che toccare una cosa apra la
+   domanda giusta al momento giusto, e che l'inventario faccia venire
+   voglia di andare a cercare la roba invece di aspettarla.
+
+   ── UNA DECISIONE PRESA APPOSTA, CONTRO QUELLA DELLA FATTORIA ───────
+   Nella fattoria «prima ci va, poi si decide» è stato provato e buttato:
+   fra il tocco e il pannello si metteva un'attesa che non serviva a
+   niente. Qui è il contrario, e la differenza non è di gusto: là il
+   camminare era un ritardo davanti a un menù, qui il camminare **è il
+   gioco**. Il pannello arriva quando si è arrivati, e quel viaggio è la
+   cosa che si stava facendo.                                          */
+
+class Gioco {
+  constructor() {
+    this.tela = new Tela(document.getElementById('tela'))
+    this.seme = Number(new URLSearchParams(location.hash.slice(1)).get('seme')) ||
+                Math.floor(Math.random() * 100000)
+    this.piano = 1
+    this.vitaMax = EROE.vita
+    this.vita = EROE.vita
+    this.gemme = 0
+    this.zaino = []                 // fino a TASCHE cose
+    this.mano = null
+    this.corpo = null
+    this.pannello = null
+    this.nuovoPiano()
+    this.aggancia()
+    this.giro()
+  }
+
+  static get TASCHE() { return 6 }
+
+  /* ── com'è messo l'eroe adesso ──
+     L'unico posto dove si sommano: chi vuole sapere quanto picchia
+     chiede qui, e non va a guardare dentro le tasche. */
+  get att() { return EROE.att + (this.mano ? (COSE[this.mano].att || 0) : 0) }
+  get dif() { return EROE.dif + (this.corpo ? (COSE[this.corpo].dif || 0) : 0) }
+  colpo(m) { return Math.max(1, this.att - m.dif) }
+  colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
+  danno(m) { return Math.max(1, m.att - this.dif) }
+
+  /* La difficoltà della domanda: la porta il piano, e ogni cosa ha il
+     suo rincaro. È l'unico posto dove si decide, come in
+     `dungeon/dati/campagna.js`: chi vuole un sotterraneo più gentile
+     cambia questi numeri e non apre il resto. */
+  durezza(rincaro = 0) {
+    return Math.max(0, Math.min(1, 0.08 + (this.piano - 1) * 0.13 + rincaro))
+  }
+
+  nuovoPiano() {
+    this.livello = generaLivello(this.seme, this.piano)
+    const dentro = this.livello.stanze[0]
+    this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    this.strada = null
+    this.mira = null
+    this.bersaglio = null
+    this.visto = new Uint8Array(LARGO * ALTO)
+    this.luce = new Set()
+    this.chiaveDelPiano = false
+    this.aggiornaLuce()
+    this.tela.segui(this.eroe.x, this.eroe.y)
+  }
+
+  /* ── le tre luci ──
+     Dentro una stanza si accende la stanza intera: si è entrati, la si
+     è vista. In corridoio si vede un pezzo attorno, che è il motivo per
+     cui i corridoi mettono addosso una fretta che le stanze non hanno. */
+  aggiornaLuce() {
+    const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
+    this.luce = new Set()
+    const accendi = (x, y) => {
+      if (x < 0 || y < 0 || x >= LARGO || y >= ALTO) return
+      this.luce.add(y * LARGO + x)
+      this.visto[y * LARGO + x] = 1
+    }
+    const raggio = 3.2 + (this.torcia ? 3 : 0)
+    for (let x = cx - 8; x <= cx + 8; x++) for (let y = cy - 8; y <= cy + 8; y++)
+      if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
+    const st = this.livello.stanzaDi(cx, cy)
+    if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h)
+      for (let x = st.x - 1; x <= st.x + st.w; x++)
+        for (let y = st.y - 1; y <= st.y + st.h; y++) accendi(x, y)
+  }
+
+  luceDi(x, y) {
+    const k = y * LARGO + x
+    return this.luce.has(k) ? 2 : this.visto[k] ? 1 : 0
+  }
+
+  /* Una cella bloccata non si attraversa camminando: ci si gira intorno,
+     o si paga quello che chiede. */
+  /* Un mostro che dorme è un ostacolo da aggirare — ed è il senso di
+     tutto: si sceglie chi pagare. Uno sveglio no: si sta muovendo, e
+     un percorso calcolato su dov'era un secondo fa manderebbe l'eroe
+     a sbattere in un posto vuoto. */
+  bloccata(x, y) {
+    return this.livello.robe.some(r => r.x === x && r.y === y && !r.morto &&
+      ((r.che === 'mostro' && !r.sveglio) || (r.che === 'porta' && !r.aperta)))
+  }
+
+  /* ═══════ i tocchi ═══════ */
+  aggancia() {
+    const tela = this.tela.canvas
+    let premuto = false, ultimo = 0
+    const punta = e => {
+      const r = tela.getBoundingClientRect()
+      return { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
+    tela.addEventListener('pointerdown', e => {
+      if (this.pannello) return
+      premuto = true; tela.setPointerCapture(e.pointerId)
+      this.verso(punta(e), true)
+    })
+    /* tenendo premuto e trascinando, l'eroe insegue il dito: è il modo
+       di girare in un posto grande senza toccare quaranta volte. Si
+       ricalcola di rado apposta — a ogni fotogramma il percorso
+       tremerebbe e il passo verrebbe a scatti. */
+    tela.addEventListener('pointermove', e => {
+      if (!premuto || this.pannello) return
+      const ora = performance.now()
+      if (ora - ultimo < 140) return
+      ultimo = ora
+      this.verso(punta(e), false)
+    })
+    const su = e => { premuto = false; dita.delete(e.pointerId); pizzico = 0 }
+    tela.addEventListener('pointerup', su)
+    tela.addEventListener('pointercancel', su)
+
+    /* ── lo zoom ──
+       Due dita sul telefono, la rotella sul portatile. Sta nel
+       prototipo perché «quanto si sta vicini» è **una delle domande a
+       cui questo file deve rispondere**: si prova a 2, a 3 e a 4 e si
+       guarda quale fa sembrare le stanze delle stanze. */
+    const dita = new Map()
+    let pizzico = 0
+    tela.addEventListener('pointerdown', e => dita.set(e.pointerId, e))
+    tela.addEventListener('pointermove', e => {
+      if (!dita.has(e.pointerId)) return
+      dita.set(e.pointerId, e)
+      if (dita.size !== 2) return
+      premuto = false                                  // due dita non camminano
+      const [a, b] = [...dita.values()]
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+      if (!pizzico) { pizzico = d; return }
+      if (Math.abs(d - pizzico) < 45) return
+      if (this.tela.zoomA(this.tela.scala + (d > pizzico ? 1 : -1)))
+        this.dillo(`vista ×${this.tela.scala}`)
+      pizzico = d
+    })
+    tela.addEventListener('wheel', e => {
+      e.preventDefault()
+      if (this.tela.zoomA(this.tela.scala + (e.deltaY < 0 ? 1 : -1)))
+        this.dillo(`vista ×${this.tela.scala}`)
+    }, { passive: false })
+
+    document.getElementById('zaino-tasto').addEventListener('click', () => this.apriZaino())
+    window.addEventListener('resize', () => this.tela.misura())
+  }
+
+  /* Dove si vuole andare, e cosa si vuole toccare. Il dito di un
+     bambino non centra la cella: si guarda anche attorno, e si prende
+     la cosa più vicina al punto toccato. */
+  verso(p, preciso) {
+    const c = this.tela.cellaDa(p.x, p.y)
+    let mira = null
+    if (preciso) {
+      /* Prima si guarda **esattamente dove è caduto il dito**, e solo
+         se lì non c'è niente si allarga di poco. Guardando subito nel
+         raggio, un mostro che passa di lì si prende il tocco destinato
+         alla scala che gli sta accanto — e chi tocca si vede aprire
+         una cosa che non aveva puntato, che è il modo più rapido di
+         far sembrare il gioco impreciso. */
+      const buona = r => !r.presa && !r.morto && this.luce.has(r.y * LARGO + r.x) &&
+        ['mostro', 'porta', 'forziere', 'mercante', 'fonte', 'scala'].includes(r.che) &&
+        !(r.che === 'porta' && r.aperta)
+      mira = this.livello.robe.find(r => r.x === c.x && r.y === c.y && buona(r)) || null
+      if (!mira) {
+        let piuVicina = 9
+        for (const r of this.livello.robe) {
+          if (!buona(r)) continue
+          const d = Math.hypot(r.x - c.x, r.y - c.y)
+          if (d <= 1.2 && d < piuVicina) { piuVicina = d; mira = r }
+        }
+      }
+    }
+    /* un tocco che non porta da nessuna parte spegne il segno di dove
+       si stava andando: lasciarlo acceso è un cerchietto che pulsa su
+       un posto dove non si sta andando più */
+    const meta = mira ? this.accanto(mira) : c
+    if (!meta || !this.livello.calpestabile(meta.x, meta.y)) { this.bersaglio = null; return }
+    const da = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    if (meta.x === da.x && meta.y === da.y) {
+      this.strada = null
+      if (mira) this.interagisci(mira)
+      return
+    }
+    const strada = percorso(this.livello, (x, y) => this.bloccata(x, y), da, meta)
+    if (!strada) { this.bersaglio = null; this.dillo('di là non si passa'); return }
+    this.strada = strada
+    this.mira = mira
+    this.bersaglio = mira ? { x: mira.x, y: mira.y } : meta
+  }
+
+  /* La cella libera più comoda accanto a una cosa: è lì che ci si ferma
+     per toccarla. Una porta si tocca dal lato da cui si arriva, e non
+     importa quale sia. */
+  accanto(r) {
+    const da = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    let meglio = null
+    for (const [dx, dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]) {
+      const x = r.x + dx, y = r.y + dy
+      if (dx === 0 && dy === 0 && r.che !== 'scala' && r.che !== 'mercante' && r.che !== 'fonte') continue
+      if (!this.livello.calpestabile(x, y) || this.bloccata(x, y)) continue
+      const d = Math.abs(x - da.x) + Math.abs(y - da.y)
+      if (!meglio || d < meglio.d) meglio = { x, y, d }
+    }
+    return meglio
+  }
+
+  /* ═══════ il passo ═══════ */
+  giro() {
+    let prima = performance.now()
+    const passo = ora => {
+      const dt = Math.min(0.05, (ora - prima) / 1000); prima = ora
+      this.muovi(dt)
+      this.tela.segui(this.eroe.x, this.eroe.y, this.pannello ? this.tela.A * 0.26 : 0)
+      this.tela.disegna(this)
+      requestAnimationFrame(passo)
+    }
+    requestAnimationFrame(passo)
+  }
+
+  /* ═══════ i mostri, e la stanza come confine ═══════
+     Un mostro dorme finché non entri **nella sua stanza**: da lì ti
+     viene addosso, e smette appena esci. Non è una gentilezza — è la
+     regola che rende la stanza una stanza. Il corridoio diventa il
+     posto dove si è al sicuro, la soglia diventa una decisione, e
+     «scappo via» dallo scontro vuol dire davvero uscire di lì invece
+     di premere un bottone e restare dov'eri.
+
+     Il mostro è **più lento di te** (3,1 celle al secondo contro 5,4):
+     scappare deve funzionare sempre, o la stanza è una trappola e non
+     una scelta. Chi esce se lo lascia dietro, e quando torna lo ritrova
+     al suo posto — ferito com'era. */
+  muoviMostri(dt) {
+    if (this.pannello) return                  // col foglio aperto sta fermo tutto
+    const eroeCella = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    const mia = this.livello.stanzaDi(eroeCella.x, eroeCella.y)
+    for (const m of this.livello.robe) {
+      if (m.che !== 'mostro' || m.morto) continue
+      if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
+      if (m.calmo > 0) m.calmo -= dt
+      const sua = this.livello.stanzaDi(m.casa.x, m.casa.y)
+      const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0)
+      m.sveglio = sveglio
+
+      const meta = sveglio ? { x: this.eroe.x, y: this.eroe.y }
+                           : { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
+      const dx = meta.x - m.fx, dy = meta.y - m.fy
+      const d = Math.hypot(dx, dy)
+
+      if (sveglio && d < 0.75) {               // ti ha preso
+        this.strada = null; this.mira = null; this.bersaglio = null
+        return this.scontro(m)
+      }
+      if (d < 0.05) continue
+      const v = (sveglio ? 3.1 : 2.2) * dt
+      let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
+      /* non esce mai dalla sua stanza: è tutto il patto. Il muro lo
+         ferma sull'asse che lo porterebbe fuori, e l'altro lo lascia
+         libero — così ti insegue lungo la parete invece di incastrarsi
+         in un angolo e sembrare rotto. */
+      if (sua) {
+        if (nx < sua.x || nx > sua.x + sua.w) nx = m.fx
+        if (ny < sua.y || ny > sua.y + sua.h) ny = m.fy
+      }
+      if (Math.abs(dx) > 0.05) m.guarda = dx < 0 ? 'sx' : 'dx'
+      if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
+      if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
+      m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
+    }
+  }
+
+  muovi(dt) {
+    this.muoviMostri(dt)
+    if (!this.strada || !this.strada.length) {
+      if (this.mira && !this.strada) { const m = this.mira; this.mira = null; this.interagisci(m) }
+      return
+    }
+    const meta = this.strada[0]
+    const mx = meta.x + 0.5, my = meta.y + 0.5
+    const dx = mx - this.eroe.x, dy = my - this.eroe.y
+    const d = Math.hypot(dx, dy)
+    const v = 5.4 * dt
+    if (d <= v) {
+      this.eroe.x = mx; this.eroe.y = my
+      this.strada.shift()
+      this.aggiornaLuce()
+      this.raccogli()
+      if (!this.strada.length) {
+        this.strada = null; this.bersaglio = null
+        if (this.mira) { const m = this.mira; this.mira = null; this.interagisci(m) }
+      }
+    } else {
+      /* da che parte guarda: le pose del foglio guardano a destra, la
+         sinistra è la stessa specchiata — la convenzione della fattoria */
+      if (Math.abs(dx) > 0.05) this.guarda = dx < 0 ? 'sx' : 'dx'
+      this.eroe.x += dx / d * v; this.eroe.y += dy / d * v
+    }
+  }
+
+  /* Gemme e roba per terra si prendono camminandoci sopra: raccogliere
+     non è una decisione, e chiedere di confermarla la trasformerebbe in
+     una pratica. Lo zaino pieno è l'unica cosa che ferma la mano. */
+  raccogli() {
+    const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
+    for (const r of this.livello.robe) {
+      if (r.presa || r.x !== cx || r.y !== cy) continue
+      if (r.che === 'gemme') {
+        this.gemme += r.quante; r.presa = true
+        this.dillo(`💎 +${r.quante}`)
+      } else if (r.che === 'cosa') {
+        if (this.zaino.length >= Gioco.TASCHE) { if (!r.detto) { r.detto = true; this.dillo('🎒 zaino pieno') } ; continue }
+        this.zaino.push(r.cosa); r.presa = true
+        this.dillo(`${COSE[r.cosa].em} ${COSE[r.cosa].nome}`)
+      }
+    }
+    this.fascia()
+  }
+
+  /* ═══════ cosa succede toccando una cosa ═══════ */
+  interagisci(r) {
+    if (r.morto || r.presa) return
+    if (r.che === 'mostro') return this.scontro(r)
+    if (r.che === 'porta') return this.porta(r)
+    if (r.che === 'forziere') return r.aperto ? this.dillo('è già vuoto') : this.forziere(r)
+    if (r.che === 'fonte') return this.fonte(r)
+    if (r.che === 'mercante') return this.mercante(r)
+    if (r.che === 'scala') return this.scala(r)
+  }
+
+  scontro(m) {
+    const chiedi = () => {
+      const q = domanda(this.durezza(MOSTRI[m.tipo].capo ? 0.2 : 0.05))
+      this.apri(`
+        <div class="nemico">
+          <div class="faccia em">${m.em}</div>
+          <div class="dati">
+            <h2>${m.nome}</h2>
+            <div class="ossa"><span>❤️ ${m.ossa}</span><span>⚔️ ${m.att}</span><span>🛡️ ${m.dif}</span></div>
+            <div class="costo">gli togli ${this.colpo(m)} a colpo — ancora
+              <b>${this.colpiPer(m)}</b> ${this.colpiPer(m) === 1 ? 'risposta' : 'risposte'}</div>
+          </div>
+        </div>
+        <div class="quesito">${q.testo}</div>
+        <div class="risposte">${q.scelte.map(s => `<button data-r="${s}">${s}</button>`).join('')}</div>
+        <button class="grosso chiaro" data-via="1">🏃 scappo via</button>
+      `, box => {
+        /* scappare dà tre secondi di vantaggio, non l'immunità: il
+           mostro resta fermo il tempo di uscire dalla stanza, e se si
+           resta lì dentro a girare, torna addosso. Senza questi tre
+           secondi si riaprirebbe lo scontro nel fotogramma dopo, e
+           «scappo via» sarebbe un bottone che non fa niente. */
+        box.querySelector('[data-via]').addEventListener('click', () => { m.calmo = 3; this.chiudi() })
+        for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+          const giusta = Number(b.dataset.r) === q.giusta
+          b.classList.add(giusta ? 'giusta' : 'sbagliata')
+          box.querySelectorAll('button').forEach(x => x.disabled = true)
+          setTimeout(() => {
+            if (giusta) {
+              m.ossa -= this.colpo(m)
+              if (m.ossa <= 0) { this.cade(m); this.chiudi(); return }
+            } else {
+              this.ferisci(this.danno(m))
+              if (this.vita <= 0) return this.svieni()
+            }
+            chiedi()
+          }, 480)
+        })
+      })
+    }
+    chiedi()
+  }
+
+  cade(m) {
+    m.morto = true
+    /* la chiave non cade per terra: la si ha e basta. Una chiave da
+       raccogliere è una cosa in più che si può dimenticare lì, e
+       dimenticarla vorrebbe dire rifare la strada per niente */
+    if (m.chiave) {
+      this.chiaveDelPiano = true
+      setTimeout(() => this.dillo('🗝️ la chiave della scala!'), 900)
+    }
+    const scheda = MOSTRI[m.tipo]
+    const gemme = scheda.gemme + Math.floor(this.piano * 1.5)
+    this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎', quante: gemme })
+    /* il bottino grosso lo lasciano i mostri grossi: è il patto che fa
+       venire voglia di andarseli a cercare invece di girargli intorno */
+    const tavola = { goblin: ['pozione'], scheletro: ['spadino', 'panciotto', 'pozione'],
+                     orco: ['spada', 'corazza', 'pozione'],
+                     gigante: ['ascia', 'manto', 'corazza'] }
+    const possibili = tavola[m.tipo] || []
+    if (possibili.length && Math.random() < 0.7) {
+      const cosa = possibili[Math.floor(Math.random() * possibili.length)]
+      const dove = this.livello.calpestabile(m.x + 1, m.y) ? { x: m.x + 1, y: m.y } : { x: m.x, y: m.y }
+      this.livello.robe.push({ che: 'cosa', cosa, x: dove.x, y: dove.y, em: COSE[cosa].em })
+    }
+    this.dillo(`${m.em} è caduto!`)
+    this.fascia()
+  }
+
+  ferisci(quanto) {
+    this.vita = Math.max(0, this.vita - quanto)
+    this.fascia()
+    document.body.animate([{ filter: 'brightness(1.6) saturate(.4)' }, { filter: 'none' }], 220)
+  }
+
+  svieni() {
+    this.chiudi()
+    this.apri(`
+      <h2><span class="em">💫</span> Ti sei svegliato all'ingresso</h2>
+      <p>Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più,
+         ma quello che avevi addosso sì.</p>
+      <button class="grosso" data-ok="1">riprovo</button>
+    `, box => box.querySelector('[data-ok]').addEventListener('click', () => {
+      this.gemme = Math.floor(this.gemme / 2)
+      this.vita = Math.max(6, Math.round(this.vitaMax / 2))
+      const dentro = this.livello.stanze[0]
+      this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+      this.strada = null; this.mira = null
+      this.aggiornaLuce(); this.fascia(); this.chiudi()
+    }), true)
+  }
+
+  /* Una porta chiusa: il segno dice cosa promette, e la domanda è il
+     prezzo. Sbagliando non si perde niente — si riprova — perché una
+     porta che si chiude per sempre trasformerebbe il girare in una
+     partita a scacchi. Quello che si chiude per sempre è il forziere. */
+  porta(p) {
+    const s = SEGNI[p.segno]
+    const q = domanda(this.durezza(-0.05))
+    this.apri(`
+      <h2><span class="em">🚪</span> Una porta chiusa</h2>
+      <p><span class="em">${s.em}</span> ${s.dice}</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">ci torno dopo</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          if (giusta) { p.aperta = true; p.presa = true; this.dillo('🚪 la porta si apre') }
+          else this.dillo('la serratura non si muove')
+          this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  /* Il forziere è l'unica cosa che si può perdere per sempre, ed è
+     apposta: senza una cosa che si perde, non c'è niente in tutto il
+     sotterraneo che faccia venire un po' di batticuore. Va detto prima
+     del tocco, mai dopo. */
+  forziere(f) {
+    const q = domanda(this.durezza(0.25))
+    this.apri(`
+      <h2><span class="em">🎁</span> Un forziere</h2>
+      <p><b>Una domanda sola.</b> Se la sbagli, resta chiuso per sempre.</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">non me la sento</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          /* non sparisce: resta lì aperto. Un forziere svuotato è un
+             segno che dice «di qui sono già passato», e in un posto
+             grande vale più di quello che conteneva */
+          f.aperto = true
+          if (!giusta) { f.vuoto = true; this.dillo('🎁 il forziere resta chiuso'); return this.chiudi() }
+          const buone = ['spada', 'corazza', 'ascia', 'manto', 'pozione', 'torcia']
+          const cosa = buone[Math.floor(Math.random() * buone.length)]
+          this.livello.robe.push({ che: 'cosa', cosa, x: f.x, y: f.y, em: COSE[cosa].em })
+          this.livello.robe.push({ che: 'gemme', x: f.x, y: f.y + 1, em: '💎',
+                                   quante: 6 + this.piano * 3 })
+          this.dillo('🎁 si apre!')
+          this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  fonte(f) {
+    const q = domanda(this.durezza(0))
+    this.apri(`
+      <h2><span class="em">⛲</span> Una fonte</h2>
+      <p>Acqua pulita. Rispondi e bevi: <b>+8</b> di vita.</p>
+      <div class="quesito">${q.testo}</div>
+      <div class="risposte">${q.scelte.map(x => `<button data-r="${x}">${x}</button>`).join('')}</div>
+      <button class="grosso chiaro" data-via="1">più tardi</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-r]')) b.addEventListener('click', () => {
+        const giusta = Number(b.dataset.r) === q.giusta
+        b.classList.add(giusta ? 'giusta' : 'sbagliata')
+        box.querySelectorAll('button').forEach(x => x.disabled = true)
+        setTimeout(() => {
+          if (giusta) {
+            this.vita = Math.min(this.vitaMax, this.vita + 8)
+            f.morto = true
+            this.dillo('❤️ +8')
+          } else this.dillo("l'acqua è torbida")
+          this.fascia(); this.chiudi()
+        }, 480)
+      })
+    })
+  }
+
+  /* Il mercante non chiede domande: è il posto dove **si spende** quello
+     che le domande hanno fruttato. Un gioco in cui ogni singola cosa
+     costa un esercizio diventa un compito lungo; ci vuole un posto dove
+     il lavoro già fatto vale da solo. */
+  mercante(m) {
+    if (!m.roba) {
+      const catalogo = Object.keys(COSE).filter(k => COSE[k].prezzo)
+      m.roba = mescola(catalogo).slice(0, 3)
+    }
+    const riga = k => {
+      const c = COSE[k]
+      const posso = this.gemme >= c.prezzo
+      return `<button class="tasca" data-c="${k}" ${posso ? '' : 'disabled style="opacity:.4"'}>
+        <span class="em">${c.em}</span><b>${c.nome}</b><br>💎 ${c.prezzo}</button>`
+    }
+    this.apri(`
+      <h2><span class="em">🧙</span> Il mercante</h2>
+      <p>Hai <b>💎 ${this.gemme}</b>. Quello che compri finisce nello zaino.</p>
+      <div class="tasche">${m.roba.map(riga).join('')}</div>
+      <button class="grosso chiaro" data-via="1">basta così</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      for (const b of box.querySelectorAll('[data-c]')) b.addEventListener('click', () => {
+        const k = b.dataset.c, c = COSE[k]
+        if (this.gemme < c.prezzo) return
+        if (this.zaino.length >= Gioco.TASCHE) return this.dillo('🎒 zaino pieno')
+        this.gemme -= c.prezzo
+        this.zaino.push(k)
+        m.roba.splice(m.roba.indexOf(k), 1)
+        this.fascia(); this.chiudi(); this.mercante(m)
+      })
+    })
+  }
+
+  scala() {
+    /* chiusa finché non si è battuto chi porta la chiave: è l'unica
+       cosa che in tutto il sotterraneo **non si può aggirare**, e
+       quindi è il pavimento sotto a tutto il resto — il minimo di
+       esercizi che un piano costa comunque */
+    if (!this.chiaveDelPiano) {
+      const chi = this.livello.robe.find(r => r.che === 'mostro' && r.chiave && !r.morto)
+      const visto = chi && this.visto[chi.y * LARGO + chi.x]
+      return this.apri(`
+        <h2><span class="em">🔒</span> La scala è chiusa</h2>
+        <p>Un cancello di ferro, e la serratura non ha buco per le dita.
+           ${visto ? `La chiave ce l'ha <b>${chi.nome.toLowerCase()}</b>, qui vicino — è segnato in oro sulla mappina.`
+                   : 'La chiave ce l\'ha qualcuno, qua sotto. Gira, e la trovi.'}</p>
+        <button class="grosso" data-via="1">vado a cercarla</button>
+      `, box => box.querySelector('[data-via]').addEventListener('click', () => this.chiudi()))
+    }
+    this.apri(`
+      <h2><span class="em">🕳️</span> La scala che scende</h2>
+      <p>Sotto è più buio, i mostri hanno più ossa e le domande si fanno
+         toste. Quello che hai addosso e nello zaino scende con te —
+         quello che hai lasciato in giro, no.</p>
+      <button class="grosso" data-giu="1">scendo al piano ${this.piano + 1}</button>
+      <button class="grosso chiaro" data-via="1">prima giro ancora</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      box.querySelector('[data-giu]').addEventListener('click', () => {
+        this.piano++
+        this.vitaMax += 2
+        this.vita = Math.min(this.vitaMax, this.vita + 4)
+        this.nuovoPiano(); this.chiudi(); this.fascia()
+        this.dillo(`piano ${this.piano}`)
+      })
+    })
+  }
+
+  /* ═══════ lo zaino ═══════
+     Due caselle addosso e sei tasche. Toccare una tasca fa la sola cosa
+     sensata per quell'oggetto — si indossa quello che si indossa, si
+     beve quello che si beve — perché un menù con «equipaggia / usa /
+     butta» su ogni riga è tre volte la stessa domanda. */
+  apriZaino() {
+    if (this.pannello) return
+    const casella = (dove, k) => {
+      const c = k ? COSE[k] : null
+      return `<div class="casella">
+        <span class="em">${c ? c.em : '·'}</span>
+        <b>${c ? c.nome : '—'}</b>
+        <i>${dove === 'mano' ? 'in mano' : 'addosso'}</i>
+      </div>`
+    }
+    const tasche = []
+    for (let i = 0; i < Gioco.TASCHE; i++) {
+      const k = this.zaino[i]
+      tasche.push(k
+        ? `<button class="tasca" data-i="${i}"><span class="em">${COSE[k].em}</span>${COSE[k].nome}</button>`
+        : `<div class="tasca vuota"><span class="em">·</span>vuota</div>`)
+    }
+    this.apri(`
+      <h2><span class="em">🎒</span> Lo zaino</h2>
+      <p>⚔️ ${this.att} attacco · 🛡️ ${this.dif} difesa · 💎 ${this.gemme} · piano ${this.piano}</p>
+      <div class="caselle">${casella('mano', this.mano)}${casella('corpo', this.corpo)}</div>
+      <div class="tasche">${tasche.join('')}</div>
+      <button class="grosso chiaro" data-via="1">chiudo</button>
+      <button class="grosso chiaro" data-nuovo="1">un altro sotterraneo (seme ${this.seme})</button>
+    `, box => {
+      box.querySelector('[data-via]').addEventListener('click', () => this.chiudi())
+      box.querySelector('[data-nuovo]').addEventListener('click', () => {
+        this.seme = Math.floor(Math.random() * 100000)
+        this.piano = 1; this.nuovoPiano(); this.chiudi(); this.fascia()
+      })
+      for (const b of box.querySelectorAll('[data-i]')) b.addEventListener('click', () => {
+        this.usa(Number(b.dataset.i)); this.chiudi(); this.apriZaino()
+      })
+    })
+  }
+
+  usa(i) {
+    const k = this.zaino[i]; if (!k) return
+    const c = COSE[k]
+    if (c.dove) {
+      /* quello che si aveva addosso torna nello zaino: non sparisce,
+         perché una spada lasciata cadere per prenderne un'altra è la
+         cosa che fa arrabbiare di più */
+      const vecchio = c.dove === 'mano' ? this.mano : this.corpo
+      if (c.dove === 'mano') this.mano = k; else this.corpo = k
+      this.zaino.splice(i, 1)
+      if (vecchio) this.zaino.push(vecchio)
+      this.dillo(`${c.em} ${c.nome}`)
+    } else if (c.usa === 'cura') {
+      this.vita = Math.min(this.vitaMax, this.vita + c.cura)
+      this.zaino.splice(i, 1)
+      this.dillo(`❤️ +${c.cura}`)
+    } else if (c.usa === 'luce') {
+      this.torcia = true
+      this.zaino.splice(i, 1)
+      this.aggiornaLuce()
+      this.dillo('🔦 si vede più lontano')
+    } else if (c.usa === 'porta') {
+      const vicina = this.livello.robe.find(r => r.che === 'porta' && !r.aperta &&
+        Math.abs(r.x - this.eroe.x) < 2 && Math.abs(r.y - this.eroe.y) < 2)
+      if (!vicina) return this.dillo('nessuna porta qui vicino')
+      vicina.aperta = true; vicina.presa = true
+      this.zaino.splice(i, 1)
+      this.dillo('🗝️ la porta si apre')
+    }
+    this.fascia()
+  }
+
+  /* ═══════ i pannelli ═══════ */
+  apri(html, aggancia, sopra = false) {
+    this.chiudi()
+    const box = document.createElement('div')
+    box.className = 'foglio'
+    box.innerHTML = html
+    document.getElementById('pannelli').appendChild(box)
+    this.pannello = box
+    if (aggancia) aggancia(box)
+  }
+
+  chiudi() {
+    if (this.pannello) this.pannello.remove()
+    this.pannello = null
+  }
+
+  dillo(testo) {
+    const b = document.getElementById('brindisi')
+    b.innerHTML = `<span>${testo}</span>`
+    clearTimeout(this._brindisi)
+    this._brindisi = setTimeout(() => { b.innerHTML = '' }, 1600)
+  }
+
+  fascia() {
+    document.getElementById('vita').textContent = this.vita
+    document.getElementById('barra-vita').style.width = (this.vita / this.vitaMax * 100) + '%'
+    document.getElementById('att').textContent = this.att
+    document.getElementById('dif').textContent = this.dif
+    document.getElementById('gemme').textContent = this.gemme
+    document.getElementById('suggerimento').textContent = this.chiaveDelPiano
+      ? `piano ${this.piano} · 🗝️ hai la chiave: la scala è aperta`
+      : `piano ${this.piano} · la scala è chiusa, la chiave ce l'ha qualcuno`
+  }
+}
+
+const gioco = new Gioco()
+gioco.fascia()
+</script>
+</body>
+</html>
