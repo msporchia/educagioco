@@ -156,10 +156,13 @@ export class Battaglia {
     return torre
   }
 
-  potenzia(torre, { prezzo = 0, penale = 0 } = {}) {
+  /* Salire di un gradino, e — se è il gradino del bivio — prendere anche
+     una strada. Il ramo arriva da fuori perché è una scelta di chi
+     gioca, non una regola del campo. */
+  potenzia(torre, { prezzo = 0, penale = 0, ramo = null } = {}) {
     this.tabellone.paga(prezzo + penale)
     this.pausa = 0
-    torre.sale()
+    torre.sale(ramo)
     return torre
   }
 
@@ -235,20 +238,26 @@ export class Battaglia {
   }
 
   muoviNemici(dt) {
-    const lunghezza = this.percorso.lunghezza
-    for (const n of this.nemici) n.cammina(dt, lunghezza)
+    for (const n of this.nemici) n.cammina(dt, this.viaDi(n).lunghezza)
     for (const n of this.nemici) {
       if (!n.arrivato) continue
       this.ondataPulita = false
       this.suona('no')
       if (this.tabellone.cuoreVia()) return this.chiudi('persa')
     }
+    /* chi è caduto camminando è caduto di veleno — o di fuoco, che è lo
+       stesso male con un altro nome. Vale come un'uccisione: se no il
+       ramo del veleno regalerebbe morti che non pagano energia, e
+       sceglierlo sarebbe una punizione. */
+    for (const n of this.nemici)
+      if (!n.vivo && !n.arrivato) { this.tabellone.ucciso(); this.tabellone.perNemico() }
     this.nemici = this.nemici.filter(n => n.vivo)
     return null
   }
 
   faiFuoco(dt) {
-    const campo = { nemici: this.nemici, via: this.percorso, S: this.misure.S }
+    const campo = { nemici: this.nemici, via: this.percorso,
+                    viaDi: n => this.viaDi(n), S: this.misure.S }
     for (const t of this.torri) {
       const esito = t.agisci(dt, campo)
       if (!esito) continue
@@ -259,14 +268,19 @@ export class Battaglia {
   }
 
   muoviColpi(dt) {
+    const dove = n => this.viaDi(n).puntoA(n.d)
+    // i rimbalzi si mettono in campo *dopo* il giro, non dentro: un colpo
+    // nato adesso non deve prendersi anche il tempo di questo fotogramma
+    const nati = []
     for (const c of this.colpi) {
       if (!c.avanza(dt)) continue
-      const { colpiti, morti, schizzo } = c.impatto(this.nemici, this.percorso)
+      const { colpiti, morti, schizzo, rimbalzi } = c.impatto(this.nemici, this.percorso, dove)
       for (const _ of morti) { this.tabellone.ucciso(); this.tabellone.perNemico() }
       if (schizzo) this.schizzi.push(schizzo)
+      if (rimbalzi && rimbalzi.length) nati.push(...rimbalzi)
       if (colpiti) this.suona('colpito')
     }
-    this.colpi = this.colpi.filter(c => !c.fatto)
+    this.colpi = this.colpi.filter(c => !c.fatto).concat(nati)
     this.nemici = this.nemici.filter(n => n.vivo)
   }
 

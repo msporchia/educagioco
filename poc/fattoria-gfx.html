@@ -777,12 +777,32 @@ function pannelloMagazzino() {
 }
 
 // ---------------------------------------------------------------- il dito
-function pos(e) {
-  const t = e.touches ? e.touches[0] : e;
-  return { x: t.clientX, y: t.clientY };
+// Un solo registro di dita: con uno si scorre, con due si stringe. Tenerli
+// in una mappa invece che in due variabili e' l'unico modo perche' alzare
+// un dito solo non mandi tutto in bambola.
+const dita = new Map();
+let pizzico = null;
+
+function pos(e) { return { x: e.clientX, y: e.clientY }; }
+
+function centro() {
+  const v = [...dita.values()];
+  return { x: (v[0].x + v[1].x) / 2, y: (v[0].y + v[1].y) / 2,
+           d: Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y) };
 }
 
 tela.addEventListener('pointerdown', e => {
+  dita.set(e.pointerId, pos(e));
+  if (dita.size === 2) {
+    // due dita: si smette di fare qualunque altra cosa si stesse facendo
+    if (lungo) { clearTimeout(lungo); lungo = null; }
+    giu = null; scorrendo = false;
+    const c = centro();
+    pizzico = { d0: c.d, scala0: SCALA };
+    return;
+  }
+  if (dita.size > 2) return;
+
   const p = pos(e);
   giu = { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now(), mosso: false };
   scorrendo = false;
@@ -798,6 +818,13 @@ tela.addEventListener('pointerdown', e => {
 });
 
 addEventListener('pointermove', e => {
+  if (dita.has(e.pointerId)) dita.set(e.pointerId, pos(e));
+
+  if (pizzico && dita.size >= 2) {
+    const c = centro();
+    if (c.d > 24) zoomA(pizzico.scala0 * (c.d / pizzico.d0), c.x, c.y);
+    return;
+  }
   const p = pos(e);
   if (preso) { muoviPreso(p.x, p.y); return; }
   if (!giu) return;
@@ -810,66 +837,46 @@ addEventListener('pointermove', e => {
   giu.x = p.x; giu.y = p.y;
 });
 
-addEventListener('pointercancel', () => {
+function finita(e) {
+  dita.delete(e.pointerId);
+  if (dita.size < 2) pizzico = null;
+}
+
+addEventListener('pointercancel', e => {
+  finita(e);
   if (lungo) { clearTimeout(lungo); lungo = null; }
   preso = null; fantasma.style.display = 'none'; giu = null;
 });
 
 addEventListener('pointerup', e => {
+  const eraPizzico = !!pizzico;
+  finita(e);
   if (lungo) { clearTimeout(lungo); lungo = null; }
-  const p = pos(e.changedTouches ? { touches: e.changedTouches } : e);
+  const p = pos(e);
   if (preso) { posaPreso(p.x, p.y); giu = null; return; }
-  if (!giu) return;
+  if (eraPizzico || !giu) { giu = null; return; }
   const veloce = performance.now() - giu.t < 400;
   const fermo = !giu.mosso;
   giu = null;
   if (!fermo || !veloce) return;
 
   const c = cellaDa(p.x, p.y);
+  const bestia = attoreSotto(p.x, p.y);
+  if (bestia && bestia.cura) { pannelloBestia(bestia); return; }
   const px = (c.x / CELLE) | 0, py = (c.y / CELLE) | 0;
-  if (comprabile(px, py)) return vaiEpoi(c.x, c.y, () => pannelloPiazzola(px, py));
+  if (comprabile(px, py)) { pannelloPiazzola(px, py); return; }
   const o = ostacoloSotto(c.x, c.y);
-  if (o) return vaiEpoi(c.x, c.y, () => pannelloOstacolo(o));
+  if (o) { pannelloOstacolo(o); return; }
   const cosa = cosaSotto(c.x, c.y);
-  if (cosa) return vaiEpoi(c.x, c.y, () => pannelloCosa(cosa));
+  if (cosa) { pannelloCosa(cosa); return; }
   if (cellaMia(c.x, c.y)) bambina.vaiA(c.x, c.y);
 });
 
-// Prima ci va, poi si decide. Non e' un vezzo: se il pannello si apre da
-// lontano, la bambina in scena e' un disegno che si muove e basta — e' il
-// fatto di doverci arrivare che la rende quella che fa le cose. E si vede
-// anche meglio di cosa stiamo parlando, perche' lei ci sta accanto.
-let inArrivo = null;
-const VICINO = 2.2;                 // celle: piu' vicino di cosi' e' «li'»
-
-function vaiEpoi(cx, cy, fai) {
-  if (bambina.distanzaDa(cx, cy) <= VICINO) { fai(); return; }
-  // sul selvatico non ci si mette i piedi: ci si ferma sul bordo di casa
-  let mx = cx, my = cy;
-  if (!cellaMia(cx, cy)) {
-    let meglio = Infinity;
-    for (let dx = -3; dx <= 3; dx++) for (let dy = -3; dy <= 3; dy++) {
-      const x = cx + dx, y = cy + dy;
-      if (!cellaMia(x, y)) continue;
-      const d = Math.abs(dx) + Math.abs(dy);
-      if (d < meglio) { meglio = d; mx = x; my = y; }
-    }
-    if (meglio === Infinity) { fai(); return; }
-  }
-  bambina.vaiA(mx, my);
-  inArrivo = { cx, cy, fai, scadenza: orologio + 6 };
-}
-
-function controllaArrivo() {
-  if (!inArrivo) return;
-  if (bambina.distanzaDa(inArrivo.cx, inArrivo.cy) <= VICINO ||
-      (!bambina.meta && orologio > inArrivo.scadenza - 5.5) ||
-      orologio > inArrivo.scadenza) {
-    const fai = inArrivo.fai; inArrivo = null;
-    bambina.meta = null;
-    fai();
-  }
-}
+// col mouse non si pizzica: la rotella fa lo stesso mestiere
+tela.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomA(SCALA * (e.deltaY < 0 ? 1.18 : 1 / 1.18), e.clientX, e.clientY);
+}, { passive: false });
 
 // trascinare dallo scaffale
 robaEl.addEventListener('pointerdown', e => {

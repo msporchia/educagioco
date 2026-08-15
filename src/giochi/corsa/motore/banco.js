@@ -43,10 +43,13 @@ export class Pilota {
   /* Quanto vale un cancello per lui, adesso. Il cancello d'oro vale
      quanto pensa di saperne: chi non risponde mai lo conta come niente e
      tira dritto. */
-  valore(op, truppa) {
-    if (!op.libro) return op.f(truppa)
+  valore(op, truppa, tetto) {
+    /* si guarda dove si arriva **dopo il tetto**: sopra il tetto due
+       cancelli diversissimi sono la stessa cosa, e un pilota che non lo
+       sapesse racconterebbe una precisione che non c'è */
+    if (!op.libro) return Math.min(tetto, op.f(truppa))
     if (this.gusto !== 'studioso') return -1
-    return truppa * (1 + 4 * this.sapienza)
+    return Math.min(tetto, truppa * (1 + 4 * this.sapienza))
   }
 
   guida(partita) {
@@ -60,7 +63,7 @@ export class Pilota {
       if (this.rnd() > this.bravura) return partita.punta(Math.floor(this.rnd() * 3) - 1)
       let miglioreI = 0, migliore = -Infinity
       for (const [i, op] of cancello.ops.entries()) {
-        const v = this.valore(op, partita.truppa)
+        const v = this.valore(op, partita.truppa, partita.regole.tetto)
         if (v > migliore) { migliore = v; miglioreI = i }
       }
       return partita.punta(miglioreI - 1)

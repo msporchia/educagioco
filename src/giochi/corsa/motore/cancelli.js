@@ -57,7 +57,7 @@ const LIBRO = () => ({ seg: '×' + CAMBIO, libro: true, f: v => v * CAMBIO })
    conto, cioè proprio contro chi aveva più bisogno di cavarsela. */
 export const resaPrevista = o => (o.libro ? v => v * 2 : o.f)
 
-export function generaCancelli(n, { rnd = Math.random, libri = 0.34 } = {}) {
+export function generaCancelli(n, { rnd = Math.random, libri = 0.34, tetto = Infinity } = {}) {
   /* Le scelte composte: «÷5 +80» contro «×2 −40». Servono a togliere la
      scorciatoia — finché i cancelli sono `+50` e `×2` basta guardare
      quale numero è più grosso, e non si sta calcolando niente. Arrivano
@@ -87,11 +87,29 @@ export function generaCancelli(n, { rnd = Math.random, libri = 0.34 } = {}) {
      l'offerta che questo gioco esiste per fare. */
   const ordine = [...candidati.filter(c => c.libro),
                   ...mescola(candidati.filter(c => !c.libro), rnd)]
+
+  /* ── niente scelte finte, e si guarda **dove si arriva davvero** ──
+     Il confronto va fatto sul risultato già tagliato dal tetto: con la
+     truppa a 620 su 624, `×2` e `+400` sono numeri diversi sulla carta e
+     la stessa identica cosa in terra. Prima si confrontavano i numeri
+     grezzi, e vicino al tetto uscivano terne con tre corsie che facevano
+     tutte lo stesso — cioè nessuna scelta, proprio nel momento in cui il
+     bambino aveva giocato meglio. */
+  const dove = c => Math.min(tetto, Math.max(0, c.f(n)))
   const scelti = []
   for (const c of ordine) {
     if (scelti.length === 3) break
-    if (scelti.some(s => s.f(n) === c.f(n))) continue    // niente scelte finte
+    if (scelti.some(s => dove(s) === dove(c))) continue
     scelti.push(c)
+  }
+  /* Con la truppa a uno o due i cancelli possibili sono pochissimi e
+     alcuni cadono per l'assurdo (`−2` su una truppa di uno) o per il
+     doppione: si riempie con addizioni piccole finché la terna è piena.
+     Una corsia vuota non esiste — quella corsia si può comunque
+     attraversare. */
+  for (let k = 1; scelti.length < 3 && k < 40; k++) {
+    const c = costruisci({ seg: '+' + k })
+    if (!scelti.some(s => dove(s) === dove(c))) scelti.push(c)
   }
   /* la corsia buona non è sempre la stessa: se no si impara la posizione
      invece del conto, e il gioco diventa un riflesso */
@@ -122,16 +140,16 @@ export const cancelloBuono = op => op.seg[0] === '×' || op.seg[0] === '+'
 /* Il guasto che nessun occhio trova: una terna che non è una scelta.
    Girata su mille truppe diverse, dice se i cancelli restano tre cose
    distinte anche ai numeri che nessuno prova a mano. */
-export function guastiDeiCancelli({ rnd = Math.random, volte = 400 } = {}) {
+export function guastiDeiCancelli({ rnd = Math.random, volte = 400, tetti = [24, 124, 624] } = {}) {
   const guasti = []
   const truppe = [1, 2, 3, 4, 5, 9, 10, 24, 25, 40, 87, 120, 200, 400, 624]
-  for (const n of truppe) {
+  for (const tetto of tetti) for (const n of truppe.filter(v => v <= tetto)) {
     for (let i = 0; i < Math.ceil(volte / truppe.length); i++) {
-      const ops = generaCancelli(n, { rnd, libri: 0.34 })
+      const ops = generaCancelli(n, { rnd, libri: 0.34, tetto })
       if (ops.length !== 3) { guasti.push(`con ${n} soldati escono ${ops.length} cancelli invece di tre`); break }
-      const esiti = ops.map(o => o.f(n))
+      const esiti = ops.map(o => Math.min(tetto, o.f(n)))
       if (new Set(esiti).size !== 3) {
-        guasti.push(`con ${n} soldati due cancelli portano allo stesso numero (${esiti.join(', ')})`); break
+        guasti.push(`con ${n} soldati e tetto ${tetto} due cancelli portano allo stesso numero (${esiti.join(', ')})`); break
       }
       if (esiti.some(v => v < 1 || !Number.isFinite(v))) {
         guasti.push(`con ${n} soldati un cancello porta a ${esiti.join(', ')}`); break

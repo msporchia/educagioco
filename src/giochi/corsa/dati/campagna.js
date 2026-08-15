@@ -19,30 +19,53 @@
    `spinta` è quanto si accelera stando in strada, e `punta` è il tetto:
    la corsa cresce, ma non fino a mangiarsi il tempo di pensare.
 
+   ── UN GRADO ALLA VOLTA ──────────────────────────────────────────
+   `tetto` è quanto può diventare grande la truppa, e non è una manopola
+   di difficoltà: è **quanti gradi si stanno imparando**. Con quattro
+   verdi e quattro rossi si arriva a 24; col blu a 124; col giallo a 624.
+   Le prime due tappe vivono fra 1 e 24 — numeri che si contano in terra
+   con gli occhi — e il grado nuovo arriva quando il precedente è di casa.
+
+   Serve anche a tenere in piedi il gioco: i cancelli moltiplicano, e una
+   truppa senza tetto arriva a diecimila in un minuto. A quel punto «×3»
+   non è più una domanda di matematica, è una scritta. I soldati di
+   troppo non spariscono — corrono al traguardo e diventano monete.
+
    ── LE LEVE ──────────────────────────────────────────────────────
      metri        quanto è lunga
      passo/punta  quanto si corre, all'inizio e al massimo
      fraCancelli  ogni quanti metri arriva una scelta
      fraScontri   ogni quanti cancelli arriva un mostro
+     tetto        quanto può diventare grande la truppa
      truppa       con quanti si parte
      libri        quanto spesso il cancello d'oro entra nella terna
      studio       quanto è tosta la domanda che paga il cancello d'oro
-     soglia       la truppa al traguardo che vale la terza stella
+     mira         quanti cancelli migliori servono per la terza stella
      coni         quanti ostacoli fra un cancello e l'altro
      premio       le monete per stella
 
    ── LE STELLE ────────────────────────────────────────────────────
      ⭐    arrivare in fondo
      ⭐⭐   senza perdere nemmeno uno scontro
-     ⭐⭐⭐  e con la truppa oltre `soglia`
+     ⭐⭐⭐  e aver scelto il cancello migliore almeno `mira` volte su una
 
-   La seconda stella premia esattamente quello che il gioco insegna: un
-   mostro si abbatte prima dell'impatto solo se la truppa è grossa, e la
-   truppa è grossa solo se i cancelli sono stati scelti bene.
+   Le prime due premiano il risultato, la terza premia **il conto**: un
+   mostro si abbatte solo se la truppa è grossa, e la truppa è grossa solo
+   se i cancelli sono stati letti invece che indovinati. La terza si può
+   prendere anche perdendo, perché misura una cosa sola — quante volte hai
+   avuto ragione — e quella non dipende dalla fortuna della corsa.
 
    Finite le nove tappe si apre la **corsa infinita**: non c'è traguardo,
    e il punteggio è quanto lontano si arriva.
    ═══════════════════════════════════════════════════════════════════ */
+
+import { CAMBIO, ORDINI } from './ordini.js'
+
+/* I tetti che i gradi sanno scrivere: 4 (solo verdi), 24 (verdi e
+   rossi), 124 (col blu), 624 (col giallo). Una tappa ne sceglie uno, e
+   non un numero qualunque — «truppa piena» deve voler dire davvero
+   quattro figure per ogni grado in terra. */
+export const TETTI = ORDINI.map((_, i) => CAMBIO ** (i + 1) - 1)
 
 export const SCALINI = [
   { chiave: 'sentieri', nome: 'I sentieri', icona: '🌿',
@@ -54,47 +77,47 @@ export const SCALINI = [
 ]
 
 export const CAMPAGNA = [
-  /* ── scalino 1: si impara a scegliere ── */
+  /* ── scalino 1: verdi e rossi, e si impara a scegliere ── */
   { chiave: 'sentiero', nome: 'Il sentiero', veste: 'prato', scalino: 'sentieri',
-    metri: 180, passo: 3.0, punta: 3.8, spinta: 0.012, fraCancelli: 21, fraScontri: 3,
-    truppa: 10, libri: 0.30, studio: 0.10, soglia: 55, coni: 1, premio: 3,
-    racconto: 'Due cancelli e un mostro solo. Guarda i numeri, non le crocette.' },
+    metri: 170, passo: 3.0, punta: 3.8, spinta: 0.012, fraCancelli: 21, fraScontri: 3,
+    tetto: 24, truppa: 5, libri: 0.30, studio: 0.10, mira: 0.55, coni: 1, premio: 3,
+    racconto: 'Solo verdi e rossi. Guarda i numeri, non le crocette.' },
   { chiave: 'campi', nome: 'I campi gialli', veste: 'grano', scalino: 'sentieri',
-    metri: 220, passo: 3.1, punta: 3.9, spinta: 0.012, fraCancelli: 20, fraScontri: 3,
-    truppa: 10, libri: 0.32, studio: 0.18, soglia: 90, coni: 1, premio: 3,
-    racconto: 'Cinque verdi diventano un rosso: guarda la truppa mentre cresce.' },
+    metri: 210, passo: 3.1, punta: 3.9, spinta: 0.012, fraCancelli: 20, fraScontri: 3,
+    tetto: 24, truppa: 5, libri: 0.32, studio: 0.18, mira: 0.60, coni: 1, premio: 3,
+    racconto: 'Cinque verdi fanno un rosso: guardali cambiare mentre corri.' },
   { chiave: 'bosco', nome: 'Il bosco', veste: 'bosco', scalino: 'sentieri',
-    metri: 260, passo: 3.2, punta: 4.0, spinta: 0.013, fraCancelli: 20, fraScontri: 3,
-    truppa: 12, libri: 0.34, studio: 0.28, soglia: 130, coni: 2, premio: 4,
-    racconto: 'Il cancello d\'oro col libro: fermarsi costa tempo, non soldati.' },
+    metri: 250, passo: 3.2, punta: 4.0, spinta: 0.013, fraCancelli: 20, fraScontri: 3,
+    tetto: 124, truppa: 8, libri: 0.34, studio: 0.28, mira: 0.62, coni: 2, premio: 4,
+    racconto: 'Arriva il blu, e con lui il cancello d\'oro col libro.' },
 
   /* ── scalino 2: la scelta si complica ── */
   { chiave: 'ponte', nome: 'Il ponte lungo', veste: 'fiume', scalino: 'vialunga',
-    metri: 300, passo: 3.3, punta: 4.2, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
-    truppa: 12, libri: 0.34, studio: 0.38, soglia: 180, coni: 2, premio: 5,
-    racconto: 'Adesso i cancelli fanno due cose: «÷5 +80» va letto in ordine.' },
+    metri: 290, passo: 3.3, punta: 4.1, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
+    tetto: 124, truppa: 8, libri: 0.34, studio: 0.38, mira: 0.66, coni: 2, premio: 5,
+    racconto: 'Adesso un cancello fa due cose: «÷5 +80» si legge in ordine.' },
   { chiave: 'dune', nome: 'Le dune', veste: 'deserto', scalino: 'vialunga',
-    metri: 340, passo: 3.4, punta: 4.3, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
-    truppa: 14, libri: 0.36, studio: 0.48, soglia: 240, coni: 2, premio: 5,
-    racconto: 'Il primo boss ha il triplo di vita, e davanti a lui si rallenta.' },
+    metri: 330, passo: 3.4, punta: 4.2, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
+    tetto: 124, truppa: 10, libri: 0.36, studio: 0.48, mira: 0.70, coni: 2, premio: 5,
+    racconto: 'Il primo boss ha il doppio di vita, e davanti a lui si rallenta.' },
   { chiave: 'notte', nome: 'La notte', veste: 'notte', scalino: 'vialunga',
-    metri: 380, passo: 3.5, punta: 4.4, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
-    truppa: 14, libri: 0.36, studio: 0.58, soglia: 300, coni: 3, premio: 6,
-    racconto: 'Al buio i cancelli si leggono lo stesso, i coni un po\' meno.' },
+    metri: 370, passo: 3.5, punta: 4.3, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
+    tetto: 624, truppa: 10, libri: 0.36, studio: 0.58, mira: 0.72, coni: 3, premio: 6,
+    racconto: 'Arriva il giallo: da qui la truppa piena sta a 624.' },
 
   /* ── scalino 3: tenere la truppa grossa ── */
   { chiave: 'valico', nome: 'Il valico', veste: 'neve', scalino: 'cima',
-    metri: 420, passo: 3.6, punta: 4.6, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
-    truppa: 16, libri: 0.38, studio: 0.68, soglia: 360, coni: 3, premio: 7,
-    racconto: 'Un mostro ogni tre cancelli: sbagliarne uno si sente subito.' },
+    metri: 410, passo: 3.6, punta: 4.35, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
+    tetto: 624, truppa: 12, libri: 0.38, studio: 0.68, mira: 0.75, coni: 3, premio: 7,
+    racconto: 'Un mostro ogni tre cancelli: uno sbagliato si sente subito.' },
   { chiave: 'bruciata', nome: 'La terra che brucia', veste: 'lava', scalino: 'cima',
-    metri: 460, passo: 3.7, punta: 4.7, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
-    truppa: 16, libri: 0.38, studio: 0.78, soglia: 430, coni: 3, premio: 8,
-    racconto: 'Qui non basta scegliere bene una volta: bisogna non sbagliarne.' },
+    metri: 450, passo: 3.7, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
+    tetto: 624, truppa: 12, libri: 0.38, studio: 0.78, mira: 0.78, coni: 3, premio: 8,
+    racconto: 'Qui non basta sceglierne bene uno: bisogna non sbagliarne.' },
   { chiave: 'cima', nome: 'La cima', veste: 'cima', scalino: 'cima',
-    metri: 500, passo: 3.8, punta: 4.8, spinta: 0.016, fraCancelli: 17, fraScontri: 3,
-    truppa: 18, libri: 0.40, studio: 0.88, soglia: 500, coni: 3, premio: 10,
-    racconto: 'Cinquecento metri e due boss. La truppa piena sta a 624.' },
+    metri: 490, passo: 3.8, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
+    tetto: 624, truppa: 14, libri: 0.40, studio: 0.88, mira: 0.80, coni: 3, premio: 10,
+    racconto: 'Quasi cinquecento metri e due boss. Con la truppa piena si passa.' },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -107,8 +130,8 @@ export const tappa = indice =>
    dopo, quando i cancelli si leggono senza pensarci. */
 export const LIBERA = {
   chiave: 'infinita', nome: 'La corsa infinita', veste: 'notte', scalino: null,
-  metri: Infinity, passo: 3.4, punta: 5.0, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
-  truppa: 12, libri: 0.36, studio: 0.55, soglia: Infinity, coni: 3, premio: 4,
+  metri: Infinity, passo: 3.4, punta: 4.4, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
+  tetto: 624, truppa: 12, libri: 0.36, studio: 0.55, mira: 1.1, coni: 3, premio: 4,
   racconto: 'Non finisce: si corre finché la truppa regge.',
 }
 
@@ -156,14 +179,21 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, vesti = null) {
         guasti.push(`${dove}: solo ${cancelli.toFixed(1)} cancelli — non c'è niente da scegliere`)
     }
     if (!(t.fraScontri >= 2)) guasti.push(`${dove}: un mostro ogni ${t.fraScontri} cancelli è troppo spesso`)
-    if (!(t.truppa >= 5)) guasti.push(`${dove}: si parte in ${t.truppa}, e un cancello sbagliato cancella la partita`)
+    if (!(t.truppa >= 3)) guasti.push(`${dove}: si parte in ${t.truppa}, e un cancello sbagliato cancella la partita`)
+    /* Il tetto è «quanti gradi sto imparando», quindi è per forza il
+       massimo che un certo numero di gradi sa scrivere: 4, 24, 124, 624.
+       Un tetto a 200 vorrebbe dire una truppa piena che non è piena. */
+    if (!TETTI.includes(t.tetto))
+      guasti.push(`${dove}: tetto ${t.tetto} — i gradi scrivono ${TETTI.join(', ')}, non altro`)
+    if (!(t.truppa < t.tetto / 2))
+      guasti.push(`${dove}: si parte in ${t.truppa} con il tetto a ${t.tetto}: non c'è spazio per crescere`)
     if (!(t.libri > 0 && t.libri <= 0.5))
       guasti.push(`${dove}: il libro esce ${t.libri} volte su una — o non si vede mai, o diventa un pedaggio`)
     if (!(t.studio >= 0 && t.studio <= 1)) guasti.push(`${dove}: studio ${t.studio} non è una manopola da 0 a 1`)
+    if (!(t.mira > 0.4 && t.mira <= 0.9))
+      guasti.push(`${dove}: mira ${t.mira} — sotto il caso (0.33) è regalata, sopra 0.9 la vuole perfetta`)
     if (!(t.coni >= 0 && t.coni <= 4)) guasti.push(`${dove}: ${t.coni} coni fra un cancello e l'altro`)
     if (!(t.premio > 0)) guasti.push(`${dove}: premio ${t.premio}`)
-    if (Number.isFinite(t.soglia) && !(t.soglia > t.truppa))
-      guasti.push(`${dove}: la soglia (${t.soglia}) è sotto la truppa di partenza`)
   }
 
   /* ── la campagna deve salire, e cambiare vestito ── */
@@ -171,12 +201,18 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, vesti = null) {
     const dove = `tappa ${i + 1}`
     if (campagna[i].metri < campagna[i - 1].metri) guasti.push(`${dove}: più corta della precedente`)
     if (campagna[i].studio < campagna[i - 1].studio) guasti.push(`${dove}: le domande sono più facili della tappa prima`)
-    if (campagna[i].soglia <= campagna[i - 1].soglia) guasti.push(`${dove}: la terza stella costa meno della tappa prima`)
+    if (campagna[i].mira <= campagna[i - 1].mira) guasti.push(`${dove}: la terza stella costa meno della tappa prima`)
+    if (campagna[i].tetto < campagna[i - 1].tetto) guasti.push(`${dove}: la truppa può diventare meno grande di prima`)
     if (campagna[i].veste === campagna[i - 1].veste)
       guasti.push(`${dove}: stesso vestito della precedente ("${campagna[i].veste}")`)
     if (campagna[i].fraCancelli > campagna[i - 1].fraCancelli)
       guasti.push(`${dove}: i cancelli sono più radi della tappa prima`)
   }
+  /* i gradi si presentano uno alla volta: due gradi nuovi in una tappa
+     sola sono due cose nuove da capire mentre si corre */
+  for (let i = 1; i < campagna.length; i++)
+    if (TETTI.indexOf(campagna[i].tetto) - TETTI.indexOf(campagna[i - 1].tetto) > 1)
+      guasti.push(`tappa ${i + 1}: la truppa guadagna due gradi in un colpo solo`)
 
   /* gli scalini arrivano in fila e nessuno resta vuoto */
   const ordine = SCALINI.map(s => s.chiave)

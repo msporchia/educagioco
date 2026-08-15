@@ -56,10 +56,11 @@ export class Regole {
     this.spinta = t.spinta
     this.fraCancelli = t.fraCancelli
     this.fraScontri = t.fraScontri
+    this.tetto = Math.min(t.tetto ?? TETTO, TETTO)
     this.truppa = t.truppa
     this.libri = t.libri
     this.studio = t.studio
-    this.soglia = t.soglia
+    this.mira = t.mira
     this.coni = t.coni
     this.premio = t.premio
   }
@@ -110,21 +111,31 @@ export class Partita {
   get inPausa() { return this.offerta !== null }
   get restano() { return this.regole.infinita ? Infinity : Math.max(0, this.regole.metri - this.dist) }
 
-  /* ⭐ arrivare · ⭐⭐ senza perdere uno scontro · ⭐⭐⭐ e con la truppa
-     oltre la soglia. La seconda premia quello che il gioco insegna: un
-     mostro si abbatte prima dell'impatto solo se i cancelli sono stati
-     scelti bene. */
+  /* Quanti dei cancelli attraversati erano il migliore dei tre. È
+     l'unica misura in tutto il gioco che dica **se il conto è venuto**,
+     e non dipende da come è andata la corsa. */
+  get precisione() { return this.cancelli ? this.meglio / this.cancelli : 0 }
+
+  /* ⭐ arrivare · ⭐⭐ senza perdere uno scontro · ⭐⭐⭐ e aver scelto il
+     cancello migliore abbastanza spesso. La seconda premia il risultato
+     — un mostro si abbatte prima dell'impatto solo se la truppa è grossa
+     — la terza premia il conto. */
   get stelle() {
     if (!this.vinta) return 0
     let s = 1
     if (this.persi === 0) s++
-    if (this.truppa >= this.regole.soglia) s++
+    if (this.cancelli >= 3 && this.precisione >= this.regole.mira) s++
     return s
   }
 
+  /* I soldati che non entrano più in terra corrono al traguardo e
+     diventano monete: chi ha tenuto la truppa piena per mezza tappa non
+     deve vedere quel lavoro sparire in un tetto. */
+  get avanzo() { return Math.min(15, Math.floor(this.eccesso / 40)) }
+
   get monete() {
-    if (this.regole.infinita) return Math.min(20, Math.floor(this.dist / 60))
-    return this.vinta ? this.regole.premio * this.stelle : 0
+    if (this.regole.infinita) return Math.min(20, Math.floor(this.dist / 60)) + this.avanzo
+    return this.vinta ? this.regole.premio * this.stelle + this.avanzo : 0
   }
 
   segnala(che) { if (this.eventi.length < 60) this.eventi.push(che) }
@@ -204,12 +215,13 @@ export class Partita {
      arrivava cinque volte troppo grosso proprio contro chi stava giocando
      meglio di tutti. */
   previsione() {
+    const tetto = this.regole.tetto
     let min = this.truppa, max = this.truppa
     for (const c of this.cose) {
       if (c.tipo !== 'cancelli' || c.fatto) continue
       const v = c.ops.flatMap(o => [resaPrevista(o)(min), resaPrevista(o)(max)])
-      min = Math.min(...v, TETTO)
-      max = Math.min(Math.max(...v), TETTO)
+      min = Math.min(...v, tetto)
+      max = Math.min(Math.max(...v), tetto)
     }
     return { min: Math.max(1, min), max: Math.max(1, max) }
   }
@@ -227,13 +239,20 @@ export class Partita {
          proporzione**, non a metà strada: qui si moltiplica, e fra 1 e 135
          la metà aritmetica è praticamente il massimo. */
       const base = Math.max(2, Math.round(min * Math.pow(max / Math.max(1, min), 0.45)))
-      /* Ogni quarto scontro è un boss: vale di più, ma **mai più di quanto
-         la truppa possa diventare**. Un nemico che non si può battere non
-         è difficile, è rotto — e lo prenderebbe in faccia proprio chi ha
-         scelto meglio di tutti. */
+      /* Ogni quarto scontro è un boss: vale quasi il doppio, ma **mai più
+         di quanto la truppa possa diventare**. Un nemico che non si può
+         battere non è difficile, è rotto — e lo prenderebbe in faccia
+         proprio chi ha scelto meglio di tutti.
+
+         I due tetti non sono lo stesso numero, e il motivo si vede solo
+         misurando: al massimo previsto non ci si arriva mai davvero,
+         perché durante l'avvicinamento il mostro spara e la truppa si
+         consuma. Un boss tarato sul 90% del massimo teorico arrivava
+         addosso a chi aveva scelto tutto giusto ed era comunque sceso a
+         quattro quinti — uno scontro perso in partenza, sempre. */
       const boss = ++this.scontri % 4 === 0
-      const quanti = Math.max(2, Math.min(boss ? Math.round(base * 2.2) : base,
-                                          Math.round(max * 0.9)))
+      const quanti = Math.max(2, Math.min(boss ? Math.round(base * 1.9) : base,
+                                          Math.round(max * (boss ? 0.72 : 0.82))))
       this.cose.push({ tipo: 'nemici', z: this.prossima, quanti, vita: quanti, boss, fatto: false })
       this.prossima += r.fraCancelli * (boss ? 2 : 1.45)
       return
@@ -243,7 +262,7 @@ export class Partita {
     const mezzo = Math.round((min + max) / 2)
     this.cose.push({
       tipo: 'cancelli', z: this.prossima, fatto: false,
-      ops: generaCancelli(mezzo, { rnd: this.rnd, libri: r.libri }),
+      ops: generaCancelli(mezzo, { rnd: this.rnd, libri: r.libri, tetto: r.tetto }),
     })
 
     /* fra un cancello e l'altro le mani devono fare qualcosa: un cono da
@@ -269,23 +288,34 @@ export class Partita {
 
     if (e.tipo === 'cancelli') {
       const op = e.ops[qui + 1]
+      const prima = this.truppa
       this.cancelli++
-      /* il cancello col libro ferma tutto: si risponde da fermi, e
-         sbagliare non toglie niente */
+      /* ── il conto della mira, e le due cose che protegge ──
+         Si guarda **prima** di applicare, sul valore nominale.
+
+         Chi prende il cancello d'oro ha sempre scelto bene, anche se poi
+         l'esercizio va male: sbagliare una domanda non toglie una stella,
+         o l'offerta torna a essere un pedaggio.
+
+         Chi **non** lo prende viene confrontato con i due cancelli
+         normali, non con l'oro: se no la stella della mira sarebbe
+         irraggiungibile per chi tira dritto, e «non è mai obbligatorio»
+         sarebbe una bugia scritta in un commento. */
+      const dove = o => Math.min(this.regole.tetto, o.f(prima))
+      const migliore = op.libro
+        ? dove(op)
+        : Math.max(...e.ops.filter(o => !o.libro).map(dove))
+      if (dove(op) === migliore) this.meglio++
+
+      /* il cancello col libro ferma tutto: si risponde da fermi */
       if (op.libro) {
         this.libriProvati++
-        this.offerta = { seg: op.seg, f: op.f, prima: this.truppa }
+        this.offerta = { seg: op.seg, f: op.f, prima }
         this.segnala('libro')
         return
       }
-      const prima = this.truppa
-      this.applica(op.f(this.truppa))
-      if (this.truppa > prima) this.segnala('meglio')
-      else this.segnala('peggio')
-      /* il migliore che c'era: non si dice, si conta — serve alla stella
-         e a far vedere quanto si è lasciato per strada */
-      if (this.truppa === Math.max(...e.ops.map(o => o.f(prima)))) this.meglio++
-      e.reso = this.truppa - prima
+      this.applica(op.f(prima))
+      this.segnala(this.truppa > prima ? 'meglio' : 'peggio')
       return
     }
 
@@ -329,8 +359,9 @@ export class Partita {
      scritta. Quelli in più non spariscono: si contano a parte, e il
      cartello di fine li dice. */
   applica(n) {
+    const tetto = this.regole.tetto
     const v = Math.max(0, Math.floor(n))
-    if (v > TETTO) { this.eccesso += v - TETTO; this.truppa = TETTO }
+    if (v > tetto) { this.eccesso += v - tetto; this.truppa = tetto }
     else this.truppa = v
   }
 
@@ -420,6 +451,7 @@ export class Partita {
     if (attivo) attivo.attivo = true
 
     return {
+      veste: this.regole.veste,
       dist: this.dist, corsia: this.corsiaX, scossa: this.scossa,
       truppa: this.truppa, soldati: figure(this.truppa),
       cose: cose.sort((a, b) => b.z - a.z),
@@ -433,6 +465,7 @@ export class Partita {
     return {
       truppa: this.truppa,
       gruppi: scomponi(this.truppa),
+      piena: this.truppa >= this.regole.tetto,
       metri: Math.floor(this.dist),
       restano: Math.max(0, Math.ceil(this.restano)),
       infinita: this.regole.infinita,

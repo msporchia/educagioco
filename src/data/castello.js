@@ -206,17 +206,76 @@ export const CRESCITA = {
 }
 const crescitaDi = k => CRESCITA[TORRI[k].aspetto] || CRESCITA.arciere
 
-/* Come tira la torre `k` al livello `lv`: è l'unica funzione che il gioco
-   interroga quando spara, e la stessa che il modello usa per i conti. */
-export function tiroDi(k, lv) {
+/* ═══════════ i due rami ═══════════
+
+   A metà scaletta una torre sceglie che cosa diventare, e la scelta non
+   costa un calcolo in più: è quello che il calcolo del gradino compra.
+
+   ── la regola che tiene in piedi tutto ──
+   **I due rami valgono lo stesso.** Cambia la forma del danno — tutto
+   in un colpo o spalmato, su uno o su molti, subito o nel tempo — non
+   la quantità. Il perché non è estetico: `pianoDi`, `difesaCon`,
+   `durezzaDi` e la tabella delle vite in `taratura-castello.js` sono
+   tutti costruiti su `dpsDi(tipo, livello)`. Se un ramo fosse più
+   forte, il bambino che sceglie bene troverebbe le tappe facili e
+   quello che sceglie male impossibili, e il taratore non saprebbe più
+   quale delle due partite sta misurando. Con i rami a pari valore il
+   modello può continuare a **ignorarli**, ed è quello che fa.
+
+   I numeri qui sotto vanno letti come moltiplicatori del caso base, e
+   il conto da far tornare è quello di `dpsDi`: danno × salve ÷
+   ricarica. Il veleno conta come danno, solo che arriva dopo.
+
+     cecchino   1,7 ÷ 1,7 = 1     e vede il 30% più lontano
+     raffica    0,55 × 2 ÷ 1,1 = 1  su due bersagli diversi
+     veleno     0,4 subito + 0,6 nel tempo = 1
+     catena     0,7 sul primo, metà sul rimbalzo: perde sul solo,
+                guadagna sul gruppo
+     mortaio    1,5 ÷ 1,5 = 1     e arriva molto più lontano
+     napalm     0,45 + 0,55 che brucia = 1, su un'area più larga
+
+   Il ghiaccio è fuori dal conto perché non fa danno: i suoi due rami si
+   dividono fra largo-e-gentile e stretto-e-cattivo, e la brina in più
+   rende fragile chi ha gelato — l'unico modo in cui una torre che non
+   ferisce può far male. */
+export const RAMI = {
+  cecchino: { danno: 1.7,  ricarica: 1.7, raggio: 1.3 },
+  raffica:  { danno: 0.55, ricarica: 1.1, salve: 2 },
+  veleno:   { danno: 0.4,  veleno: 0.6,   durata: 3 },
+  catena:   { danno: 0.7,  rimbalzi: 2 },
+  bufera:   { area: 1.55,  freno: 0.78,   raggio: 1.15 },
+  brina:    { area: 0.85,  freno: 1.18,   fragile: 1.25 },
+  mortaio:  { danno: 1.5,  ricarica: 1.5, raggio: 1.35, area: 0.85 },
+  napalm:   { danno: 0.45, veleno: 0.55,  durata: 4, area: 1.25 },
+}
+
+/* Da che gradino si sceglie. Quarto: prima ci sono tre salite per
+   capire *che cosa fa* la torre così com'è, e chi non ha ancora capito
+   non ha niente da decidere. */
+export const RAMI_DA = 4
+
+/* Come tira la torre `k` al livello `lv`, per il ramo che ha preso: è
+   l'unica funzione che il gioco interroga quando spara, e la stessa che
+   il modello usa per i conti — che infatti la chiama senza ramo. */
+export function tiroDi(k, lv, ramo = null) {
   const c = crescitaDi(k), n = Math.max(0, lv - 1), T = TORRI[k]
+  const r = RAMI[ramo] || {}
+  const danno = T.danno * (1 + n * c.danno)
   return {
-    danno: T.danno * (1 + n * c.danno),
-    ricarica: T.ricarica / (1 + n * c.cadenza),
-    area: T.area * (1 + n * c.area),
-    salve: c.salveDa && lv >= c.salveDa ? c.salve : 1,
+    danno: danno * (r.danno ?? 1),
+    ricarica: T.ricarica / (1 + n * c.cadenza) * (r.ricarica ?? 1),
+    area: T.area * (1 + n * c.area) * (r.area ?? 1),
+    salve: r.salve || (c.salveDa && lv >= c.salveDa ? c.salve : 1),
+    /* quanto male continua a fare dopo il colpo, e per quanto */
+    veleno: r.veleno ? danno * r.veleno : 0,
+    durata: r.durata || 0,
+    rimbalzi: r.rimbalzi || 0,
   }
 }
+
+/* di quanto il ramo allarga la gittata: sta fuori da `tiroDi` perché il
+   raggio lo chiede la torre una volta, non a ogni colpo */
+export const raggioDi = ramo => (RAMI[ramo] || {}).raggio || 1
 
 /* quanto rende salire di un gradino, per quella torre: serve a raccontare
    il potenziamento e a controllare che convenga sempre */
@@ -227,10 +286,17 @@ export const forzaDi = (k, lv) => dpsDi(k, lv) / dpsDi(k, 1)
    durata, e potenziare il ghiaccio era l'unico potenziamento che non si
    vedeva. Il freno si ferma al 70%: un nemico bloccato del tutto non è
    più un nemico, è un bersaglio fermo, e la partita si spegne. */
-export const geloDi = lv => ({
-  freno: Math.min(0.7, 0.45 + (lv - 1) * 0.028),
-  durata: 1.2 + (lv - 1) * 0.15,
-})
+export const geloDi = (lv, ramo = null) => {
+  const r = RAMI[ramo] || {}
+  return {
+    freno: Math.min(0.75, (0.45 + (lv - 1) * 0.028) * (r.freno ?? 1)),
+    durata: 1.2 + (lv - 1) * 0.15,
+    /* la brina non ferisce: rende fragile. Chi è gelato da lei prende
+       più danno da tutti gli altri, ed è il modo in cui una torre che
+       non fa male diventa la più importante del campo. */
+    fragile: r.fragile || 1,
+  }
+}
 
 /* Quanto vale una torre, in danni al secondo, al livello che ha. Il colpo a
    zona conta di più di quello che dice il danno secco, perché prende più di
@@ -598,9 +664,10 @@ export const TAPPE = RACCONTO.map((t, i) => {
    taratura invece di andare avanti con numeri di ieri. */
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO,
+    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
-    RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri, !!t.debolezze, t.forma]),
+    RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
+                       !!t.debolezze, !!t.rami, t.forma]),
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una
     // tappa tarata su mostri più lenti non è la stessa tappa
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
@@ -620,7 +687,8 @@ export const LIBERA = {
   /* la forma è quella del folto, e il terreno va detto: senza, si
      dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
   ambiente: 'bosco-fitto',
-  debolezze: true, mostri: null,          // i mostri li pesca tutti, vedi data/mostri.js
+  debolezze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
+  mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js
   partenza: partenzaDi({ cap: 4 }), durezza: 1, attesa: 30,
   /* le prime venti ondate sono tarate come una tappa; dopo, la vita
      continua a salire di questo passo e prima o poi vince lei */

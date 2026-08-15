@@ -31,6 +31,18 @@
    aperte, perché chi arriva lì il tutorial l'ha già fatto e il gioco
    non è più «quale torre si sblocca» ma «quale torre serve adesso».
 
+   ── i rami, e perché non nel Bosco ──
+   `rami: true` accende il bivio a metà scaletta: al quarto gradino la
+   torre sceglie un mestiere — cecchino o raffica, veleno o catena — e
+   la scelta non costa un calcolo in più, è quello che il calcolo
+   compra. Sta acceso **dal Sotterraneo in poi**, dieci tappe su
+   quindici. Nel Bosco no, nemmeno nell'ultima che pure ha già tutte e
+   quattro le torri: lì la lezione è ancora «salire conviene più che
+   allargarsi», e un bivio davanti a chi non ha ancora capito a cosa
+   serve potenziare è una domanda senza contesto. Chi arriva sotto
+   terra l'ha capito, e allora il gioco può cominciare a chiedergli
+   *come* vuole salire.
+
    ── le debolezze, e perché quasi dappertutto ──
    Ogni mostro ha un tipo di torre che gli fa doppio danno
    (`data/mostri.js`). Accenderlo in una tappa sola lo rendeva un
@@ -241,6 +253,7 @@ export const CAMPAGNE = [
         // 🏹 🔮 🏹 🔮 — entra il ghiaccio, che di debolezze non ne ha
         mostri: ['pipistrello', 'golem', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
       { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
+        // niente rami: il bosco insegna a salire, non ancora a scegliere
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
         // 🏹 🔮 💣 🏹 🔮 💣 — arrivano le bombe, e con loro orco e scheletro
         mostri: ['ragno', 'fantasma', 'scheletro', 'goblin', 'golem', 'orco'],
@@ -254,24 +267,24 @@ export const CAMPAGNE = [
        raddrizzano tappa dopo tappa. */
     tappe: [
       { nome: 'La grotta', emoji: '🕳️', ambiente: 'grotta', calcoli: 9, cap: 5,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🏹 🔮 💣
         mostri: ['pipistrello', 'golem', 'scheletro'], forma: SOTTO_GROTTA },
       { nome: 'La miniera', emoji: '⛏️', ambiente: 'miniera', calcoli: 11, cap: 6,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 💣 🏹 🔮
         mostri: ['scheletro', 'goblin', 'golem'], forma: SOTTO_MINIERA },
       { nome: 'Le fogne', emoji: '🕸️', ambiente: 'fogne', calcoli: 13, cap: 7,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣
         mostri: ['slime', 'ragno', 'orco'], forma: SOTTO_FOGNE },
       { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣 🔮 🏹 💣
         mostri: ['fantasma', 'arpia', 'scheletro', 'golem', 'pipistrello', 'orco'],
         forma: SOTTO_CRIPTA },
       { nome: 'La gola', emoji: '⛰️', ambiente: 'gola', calcoli: 19, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 💣 🔮 🏹 💣 🔮 🏹
         mostri: ['orco', 'golem', 'arpia', 'scheletro', 'fantasma', 'ragno'],
         forma: SOTTO_GOLA },
@@ -285,25 +298,25 @@ export const CAMPAGNE = [
        ultime due chiamano il drago. */
     tappe: [
       { nome: 'Il cortile', emoji: '🚪', ambiente: 'cortile', calcoli: 14, cap: 7,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 💣 🏹
         mostri: ['golem', 'orco', 'arpia'], forma: MURA_CORTILE },
       { nome: 'Il camminamento', emoji: '🧱', ambiente: 'camminamento', calcoli: 18, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🏹 🔮 💣 — e due su tre volano, che sopra le mura è il posto giusto
         mostri: ['arpia', 'fantasma', 'scheletro'], forma: MURA_CAMMINAMENTO },
       { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🏹 🔮 💣 🏹 🔮 💣
         mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'fantasma', 'orco'],
         forma: MURA_CORRIDOIO },
       { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣 🔮 🏹 💣 — il drago chiude ogni giro
         mostri: ['golem', 'arpia', 'orco', 'fantasma', 'pipistrello', 'drago'],
         forma: MURA_TRONO },
       { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
+        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🏹 🔮 💣 🏹 🔮 💣 — sei bestie diverse sul tracciato più corto
         mostri: ['ragno', 'golem', 'orco', 'arpia', 'fantasma', 'drago'],
         forma: MURA_TORRIONE },

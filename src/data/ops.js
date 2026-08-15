@@ -339,6 +339,15 @@ export const segnoDi = (tipo, sa) => TORRI[contoDi(tipo, sa)].segno
    che ha superato sei operazioni deve *vedersi* che è un'altra cosa, altrimenti
    il lavoro fatto resta un numeretto in un angolo.
 
+   ── i due rami ──
+   A metà scaletta ognuna può diventare due cose diverse (`rami`). Qui ci
+   sono i nomi, i colori e le descrizioni; i numeri — quanto danno, ogni
+   quanto, fin dove — stanno in `data/castello.js` insieme a tutto il
+   resto dell'equilibrio, perché la regola che li tiene onesti è una
+   sola: **i due rami valgono lo stesso**. Cambia la forma del danno,
+   non la quantità, e per questo il modello che tara le tappe può
+   continuare a ignorarli.
+
    La chiave è **l'operazione**, non la torre: `sub` vuol dire «la torre che
    si compra facendo sottrazioni». Quale torre sia lo dice `aspetto`, e i
    due non coincidono per un motivo preciso.
@@ -357,22 +366,52 @@ export const segnoDi = (tipo, sa) => TORRI[contoDi(tipo, sa)].segno
 export const TORRI = {
   add: { nome: 'Arciere',  aspetto: 'arciere', emoji: '🏹', segno: '+', colore: '#38c172',
          stadi: ['🏹', '🎯', '🦅'],
-         raggio: 92,  danno: 11, ricarica: 0.62, area: 0,  descr: 'colpi rapidi su un nemico' },
+         raggio: 92,  danno: 11, ricarica: 0.62, area: 0,  descr: 'colpi rapidi su un nemico',
+         rami: {
+           cecchino: { nome: 'Cecchino', segno: '🎯', colore: '#1f7a4a',
+                       descr: 'vede più lontano e colpisce forte, ma piano' },
+           raffica:  { nome: 'Raffica',  segno: '🌪', colore: '#7ecb56',
+                       descr: 'due frecce per volta, su due nemici' },
+         } },
   sub: { nome: 'Magica',   aspetto: 'magica',  emoji: '🔮', segno: '−', colore: '#a06bff',
          stadi: ['🔮', '✨', '🧙'],
-         raggio: 104, danno: 24, ricarica: 1.5,  area: 46, descr: 'onda magica che colpisce a zona' },
+         raggio: 104, danno: 24, ricarica: 1.5,  area: 46, descr: 'onda magica che colpisce a zona',
+         rami: {
+           veleno: { nome: 'Veleno', segno: '☠', colore: '#61b53a',
+                     descr: 'colpisce piano ma il male continua da solo' },
+           catena: { nome: 'Catena', segno: '⚡', colore: '#c48bff',
+                     descr: 'il colpo rimbalza sui nemici vicini' },
+         } },
   mul: { nome: 'Ghiaccio', aspetto: 'ghiaccio', emoji: '❄️', segno: '×', colore: '#4aa3ff',
          stadi: ['❄️', '🧊', '⛄'], gela: true,
          /* quanto frena e per quanto lo dice `geloDi()` in data/castello.js,
             perché dipende dal livello: qui resterebbe un numero morto */
          raggio: 86,  danno: 0,  ricarica: 0.5,  area: 0,
-         descr: 'non fa danno: congela i nemici vicini' },
+         descr: 'non fa danno: congela i nemici vicini',
+         rami: {
+           bufera: { nome: 'Bufera', segno: '🌬', colore: '#7fc6ff',
+                     descr: 'gela molto più largo, ma frena di meno' },
+           brina:  { nome: 'Brina',  segno: '💎', colore: '#2b7fd4',
+                     descr: 'frena di più, e chi è gelato prende più danno' },
+         } },
   div: { nome: 'Bombe',    aspetto: 'bombe',   emoji: '💣', segno: ':', colore: '#ff7a3d',
          stadi: ['💣', '🧨', '🚀'],
-         raggio: 132, danno: 44, ricarica: 2.3,  area: 62, descr: 'colpo lento e devastante' },
+         raggio: 132, danno: 44, ricarica: 2.3,  area: 62, descr: 'colpo lento e devastante',
+         rami: {
+           mortaio: { nome: 'Mortaio', segno: '🎇', colore: '#d1521c',
+                      descr: 'arriva lontanissimo, e quando arriva pesa' },
+           napalm:  { nome: 'Napalm',  segno: '🔥', colore: '#ffab3d',
+                      descr: 'scoppia più largo e lascia tutti a bruciare' },
+         } },
 }
 
 /* tre stadi lungo i dieci gradini: 1-3 la torre com'è nata, 4-6 cresciuta,
    7-10 al massimo di quello che può diventare */
 export const stadioDi = lv => (lv <= 3 ? 0 : lv <= 6 ? 1 : 2)
 export const emojiTorre = (tipo, lv = 1) => TORRI[tipo].stadi[stadioDi(lv)]
+
+/* i due mestieri fra cui una torre può scegliere, in forma di elenco:
+   la scheda li mostra così, e chi non ne ha (nessuno, per ora) ne mostra
+   zero senza doverlo sapere */
+export const ramiDi = tipo => Object.entries(TORRI[tipo].rami || {})
+  .map(([id, r]) => ({ id, ...r }))

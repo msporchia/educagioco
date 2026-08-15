@@ -98,6 +98,7 @@ const op = ref(null)
 const bersaglio = ref(null)        // torre da potenziare; null = torre nuova
 const prezzo = ref(0)              // energia che l'operazione in corso costerà
 const dove = ref(null)             // su che piazzola nascerà
+const strada = ref(null)           // e che ramo prenderà, se è il gradino del bivio
 
 const massimo = computed(() => tappa.value.cap)
 const costoNuova = computed(() => cassa.costoNuova(hud.torri))
@@ -166,18 +167,27 @@ function scegliTorre(t) {
   apriOperazione(t, null, costoNuova.value)
 }
 
-/* toccare una torre già in campo apre il calcolo che la fa salire di livello */
-function potenzia(torre) {
+/* toccare una torre già in campo apre il calcolo che la fa salire di
+   livello — e se è il gradino del bivio, `ramo` dice anche che cosa
+   diventerà. La scelta non costa un calcolo in più: è quello che il
+   calcolo compra. */
+function potenzia(torre, ramo = null) {
   if (fase.value !== 'gioco' || scelta.value || !torre) return
   if (!cassa.potenziabile(torre)) { avvisa('Già al massimo'); return }
   const costo = costoSalita(torre)
   if (hud.energia < costo) { avvisa(`Servono ${costo} ⚡`); suono.no(); return }
   dove.value = null
+  strada.value = ramo
   apriOperazione(torre.tipo, torre, costo)
 }
 const potenziaIndice = i => potenzia(motore().torri[i])
 /* dalla scheda: la torre di cui si sta guardando la scheda */
-const salgo = () => potenzia(foglio.value && foglio.value.torre)
+const salgo = ramo => potenzia(foglio.value && foglio.value.torre, ramo)
+/* i due mestieri, quando è il momento di sceglierli */
+const rami = computed(() => {
+  const f = foglio.value
+  return f && f.che === 'torre' ? cassa.rami(f.torre) : []
+})
 
 /* dalla scheda: «spostala». Il foglio si toglie di mezzo e il campo
    torna a essere tutto quello che c'è — trascinare è un gesto, non un
@@ -194,7 +204,7 @@ function operazioneFinita({ errori, ms }) {
   // il conto: il prezzo pattuito più una penale per ogni errore. Si paga in
   // energia, non in vite: sbagliare rallenta la difesa, non la fa crollare.
   const penale = errori * CFG.malusErrore
-  const conto = { prezzo: prezzo.value, penale, posto: dove.value }
+  const conto = { prezzo: prezzo.value, penale, posto: dove.value, ramo: strada.value }
   let testo
   if (torre) { motore().potenzia(torre, conto); testo = `${TORRI[t].nome} livello ${torre.lv}!` }
   else { motore().costruisci(t, conto); testo = `${TORRI[t].nome} costruita` }
@@ -205,7 +215,7 @@ function operazioneFinita({ errori, ms }) {
 
 function annulla() {
   scelta.value = null; op.value = null; bersaglio.value = null
-  prezzo.value = 0; dove.value = null
+  prezzo.value = 0; dove.value = null; strada.value = null
 }
 
 /* dal conto si torna a quello che l'ha aperto, non allo schermo vuoto:
@@ -390,13 +400,14 @@ onMounted(() => {
 
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
-                     :energia="hud.energia" :divisioni="divisioni"
+                     :energia="hud.energia" :divisioni="divisioni" :rami="rami"
                      @potenzia="salgo" @sposta="sposta" />
 
         <template v-else-if="foglio && foglio.che === 'conto' && op">
           <div class="intestazione">
             <span class="ritratto">
-              <RitrattoTorre :tipo="scelta" :lv="bersaglio ? bersaglio.lv + 1 : 1" :unita="52" />
+              <RitrattoTorre :tipo="scelta" :lv="bersaglio ? bersaglio.lv + 1 : 1"
+                             :ramo="strada || (bersaglio && bersaglio.ramo)" :unita="52" />
             </span>
             <b>{{ TORRI[scelta].nome }}</b>
             <span class="grado">{{ bersaglio ? 'livello ' + bersaglio.lv + ' → ' + (bersaglio.lv + 1)

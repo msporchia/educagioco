@@ -20,8 +20,8 @@
      deboli**: la torre che si compra con una moltiplicazione è anche il
      modo per far ripassare quello che sta scivolando via.
    ═══════════════════════════════════════════════════════════════════ */
-import { GENERATORI, contoDi, gradoDi, segnoDi } from '../../data/ops.js'
-import { costoNuovaTorre, costoSalita } from '../../data/castello.js'
+import { GENERATORI, contoDi, gradoDi, segnoDi, ramiDi } from '../../data/ops.js'
+import { costoNuovaTorre, costoSalita, RAMI_DA } from '../../data/castello.js'
 import { item, divisioniAccese, contiPermessi } from '../../store/profile.js'
 import { weight } from '../../store/srs.js'
 
@@ -48,6 +48,18 @@ export class Cassa {
   costoSalita(torre) { return costoSalita(torre.lv) }
 
   potenziabile(torre) { return torre.lv < this.tetto }
+
+  /* ── il bivio ──
+     I due mestieri fra cui scegliere, e solo nel momento giusto: la
+     tappa deve offrirli, la torre deve stare per arrivare al gradino
+     del bivio, e non deve averne già preso uno. Fuori da lì l'elenco è
+     vuoto e la scheda mostra il solito tasto — che è come dire che il
+     bivio non esiste, senza doverlo scrivere due volte. */
+  rami(torre) {
+    if (!torre || torre.ramo || !this.tappa || !this.tappa.rami) return []
+    if (!this.potenziabile(torre)) return []
+    return this.gradino(torre) === RAMI_DA ? ramiDi(torre.tipo) : []
+  }
   /* che gradino chiede: una torre nuova il primo, una già in campo il suo più uno */
   gradino(torre) { return torre ? Math.min(this.tetto, torre.lv + 1) : 1 }
 

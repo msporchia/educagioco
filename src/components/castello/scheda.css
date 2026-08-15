@@ -3,8 +3,8 @@
 .chi { display:flex; align-items:center; gap:11px; width:100%; max-width:440px;
        background:var(--carta); border-radius:16px; padding:9px 12px;
        box-shadow:0 3px 0 #dde3ea }
-.chi .figura { width:62px; height:60px; flex:none }
-.chi .figura canvas { width:62px; height:60px }
+.chi .figura { width:54px; height:52px; flex:none }
+.chi .figura canvas { width:54px; height:52px }
 .chi .dati { display:flex; flex-direction:column; gap:3px; min-width:0 }
 .chi b { font-size:16px; line-height:1.1 }
 .chi .descr { font-size:11.5px; color:var(--tenue); line-height:1.25 }
@@ -26,10 +26,10 @@
         flex-direction:column; align-items:center; gap:2px; text-align:center;
         box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px var(--c) }
 .ramo:active { transform:translateY(2px); box-shadow:0 2px 0 #dde3ea, inset 0 0 0 2px var(--c) }
-.ramo .figura { width:100%; height:56px; display:flex; align-items:center; justify-content:center }
-.ramo .figura canvas { width:60px; height:56px }
+.ramo .figura { width:100%; height:48px; display:flex; align-items:center; justify-content:center }
+.ramo .figura canvas { width:54px; height:48px }
 .ramo b { font-size:13px; color:var(--viola-scuro) }
-.ramo .descr { font-size:10.5px; color:var(--tenue); line-height:1.2; min-height:25px }
+.ramo .descr { font-size:10.5px; color:var(--tenue); line-height:1.2; min-height:24px }
 .ramo i { font-style:normal; font-size:11.5px; font-weight:800; color:#8a6b00 }
 .ramo i em, .sale em { font-style:normal; color:inherit }
 .ramo.cara { opacity:.62 }

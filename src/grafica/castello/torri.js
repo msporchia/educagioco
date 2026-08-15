@@ -162,7 +162,24 @@ function targhe(p, x, y, lv, potenziabile, posso) {
   p.testo('+', x - 13 * S, y + 8.5 * S, '#fff', 11 * S)
 }
 
-export function torre(p, { x, y, tipo, lv, potenziabile, posso }) {
+/* ── lo stendardo del ramo ──
+   Una torre che ha scelto il suo mestiere lo dice con una bandiera. Non
+   è un vezzo: da metà scaletta in poi due torri dello stesso tipo fanno
+   cose diverse, e su un campo pieno bisogna riconoscerle senza aprire
+   nessuna scheda. Il colore è quello del ramo, il segno è il suo, e
+   sventola perché una bandiera ferma sembra un cartello. */
+function stendardo(p, x, cima, tx, s, ramo, tipo) {
+  const R = (TORRI[tipo].rami || {})[ramo]
+  if (!R) return
+  const px = x - tx - 1.5 * s, base = cima - 1 * s, alt = 13 * s
+  p.linea([{ x: px, y: base }, { x: px, y: base - alt }], '#7b6a55', 1.4 * s)
+  const onda = Math.sin((p.tempo || 0) * 3.1) * 1.6 * s
+  p.figura([[px, base - alt], [px - 9 * s, base - alt + 2.6 * s + onda],
+            [px, base - alt + 6 * s]], R.colore)
+  p.testo(R.segno, px - 4 * s, base - alt + 3 * s, '#ffffffdd', 5.6 * s)
+}
+
+export function torre(p, { x, y, tipo, lv, ramo, potenziabile, posso }) {
   const stadio = STADIO(lv), s = p.S * 0.92, tinta = TINTA[tipo]
   const aspetto = TORRI[tipo].aspetto
   /* La taglia fa un salto vero a ogni stadio: una torre al massimo è alta
@@ -173,5 +190,6 @@ export function torre(p, { x, y, tipo, lv, potenziabile, posso }) {
   const { cima, tx } = fusto(p, x, y, larg, alt, tinta, stadio)
   merli(p, x, cima, tx, 3 + stadio, s, stadio, tinta)
   p.in(x, cima - 3.6 * s, q => CIME[aspetto](q, s, stadio, tinta, p.tempo))
+  if (ramo) stendardo(p, x, cima, tx, s, ramo, tipo)
   targhe(p, x, y, lv, potenziabile, posso)
 }
