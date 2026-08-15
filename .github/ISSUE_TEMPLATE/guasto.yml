@@ -1,0 +1,39 @@
+name: Qualcosa non funziona
+description: Un tasto che non risponde, una schermata che non arriva, il gioco che si chiude da solo
+labels: ["guasto"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Non serve essere tecnici: bastano le prime due righe. Il resto aiuta, ma se non lo sai, lascialo vuoto.
+
+  - type: textarea
+    id: cosa
+    attributes:
+      label: Cosa è successo
+      description: E cosa ti aspettavi che succedesse invece.
+      placeholder: Ho aperto il gioco delle pozioni e lo schermo è rimasto nero.
+    validations:
+      required: true
+
+  - type: input
+    id: gioco
+    attributes:
+      label: In quale gioco
+      placeholder: Le pozioni, il castello, il generale, la bancarella…
+
+  - type: input
+    id: dispositivo
+    attributes:
+      label: Su che telefono o computer
+      placeholder: iPhone con Safari / Android con Chrome / un PC
+
+  - type: textarea
+    id: guasto
+    attributes:
+      label: Il guasto registrato dal gioco
+      description: >
+        Nella pagina dei grandi — l'ingranaggio in home, poi il codice a quattro
+        cifre — c'è l'elenco dei guasti che il gioco si è annotato da solo.
+        Se ce n'è uno, incollalo qui: vale più di qualunque descrizione.
+      render: text

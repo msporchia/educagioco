@@ -262,6 +262,22 @@ Quindi la parte interessante non è la singola riga: sono le decisioni. I
 vincoli (un file solo, tutto offline), le meccaniche, il modello di
 apprendimento, l'equilibrio misurato con un simulatore invece che a occhio.
 
+## Se qualcosa non va
+
+Se il gioco fa una cosa strana — un tasto che non risponde, una schermata che
+resta nera — c'è [un modulo](https://tally.so/r/D4OO1q) che non chiede di
+registrarsi da nessuna parte. Dentro il gioco si arriva allo stesso modulo
+dalla pagina dei grandi, e da lì arriva già compilato con la versione e
+l'ultimo inciampo: è la strada buona, perché quei due dati sono esattamente
+quelli che nessuno saprebbe scrivere a mano.
+
+Chi su GitHub c'è già può
+[aprire una segnalazione](https://github.com/msporchia/educagioco/issues/new/choose),
+che è lo stesso lavoro fatto alla luce del sole.
+
+Per il resto — un'idea, una domanda, o del lavoro — sto su
+[LinkedIn](https://www.linkedin.com/in/marcosporchia).
+
 ## Licenza
 
 MIT — vedi [LICENSE](LICENSE). I giochi sono miei, ma se servono a un altro

@@ -1,0 +1,19 @@
+name: Un'idea, una domanda
+description: Un gioco che manca, una parola sbagliata, una cosa che tuo figlio farebbe diversamente
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Dimmi
+      placeholder: >
+        Mio figlio ha cinque anni e il castello è troppo difficile; le pozioni
+        invece le rifà dieci volte di fila.
+    validations:
+      required: true
+
+  - type: input
+    id: eta
+    attributes:
+      label: Che età ha chi gioca
+      description: Se la domanda riguarda un bambino in particolare. Nessun nome, serve solo l'età.

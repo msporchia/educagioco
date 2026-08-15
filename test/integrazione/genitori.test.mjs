@@ -447,6 +447,22 @@ await digita('0000')
 await digita('0000')
 await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 5000 })
 
+/* ── 9. il modo di dirlo ──
+   Il tasto per segnalare sta fuori dalla sezione dei guasti, e qui si
+   prova proprio quello: siamo su un profilo che non ha mai rotto niente,
+   e deve esserci lo stesso. Metà delle cose che non vanno — un livello
+   troppo difficile, una parola sbagliata — non lancia nessun errore, e
+   un canale che si apre solo dopo un errore mancherebbe quei casi lì.
+   Della versione nell'indirizzo si controlla che ci sia e che sia piena:
+   è il dato che nessun genitore saprebbe scrivere a mano, ed è tutto il
+   motivo per cui il link si costruisce invece di essere una costante. */
+const segnala = '.carta[data-azione="segnala"]'
+controlla('si può segnalare anche senza nessun guasto in archivio',
+  await page.isVisible(segnala))
+const dove = await page.getAttribute(segnala, 'href')
+controlla('e il tasto porta al modulo', dove.startsWith('https://tally.so/r/'))
+controlla('con la versione già dentro', /[?&]versione=[^&]+/.test(dove))
+
 /* ── 10. chi gioca: aggiungere, rinominare, eliminare ──
    I tre gesti che prima non esistevano — i giocatori erano due scritti
    nel codice. Si provano dallo schermo e non dallo store, perché quello

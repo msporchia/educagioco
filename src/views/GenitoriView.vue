@@ -100,6 +100,25 @@ async function scordaGuasti () {
 /* la riparazione ricarica la pagina da sé: non c'è niente da dire dopo */
 const riparaApp = () => ripara()
 
+/* ── segnalare ──
+   Un modulo fuori dal gioco, e non un indirizzo di posta: su un telefono
+   senza client configurato un `mailto:` è l'ennesimo tasto che non fa
+   niente, ed è precisamente il guasto che questa pagina esiste per non
+   avere. Ci va dentro quello che chi scrive non saprebbe dire — la
+   versione, e l'ultimo inciampo se ce n'è uno — così che una segnalazione
+   utile costi una frase invece di una traduzione.
+
+   La pila non entra nell'indirizzo: sarebbe lunga il triplo del limite
+   che i browser reggono in fila. Per quella c'è «Copia» qui sopra. */
+const SEGNALA = 'https://tally.so/r/D4OO1q'
+
+const linkSegnala = computed(() => {
+  const q = new URLSearchParams({ versione: __VERSIONE__.id })
+  const ultimo = incidenti.value[incidenti.value.length - 1]
+  if (ultimo) q.set('guasto', `${ultimo.dove} · ${ultimo.testo}`.slice(0, 300))
+  return `${SEGNALA}?${q}`
+})
+
 const pallini = computed(() => [0, 1, 2, 3].map(i => i < cifre.value.length))
 const titoloCambio = computed(() => modo.value === 'ripeti' ? 'Ripeti il codice nuovo' : 'Il codice nuovo')
 
@@ -680,6 +699,27 @@ async function azzera() {
         </div>
       </template>
 
+      <!-- ── DIRMELO ──
+           Questa sta fuori dal `v-if` di sopra, e il motivo è tutto qui:
+           i guasti che il gioco si annota sono quelli che lanciano un
+           errore, e la metà delle cose che non vanno non ne lancia
+           nessuno — un livello troppo difficile, una parola sbagliata,
+           un tasto che risponde ma fa la cosa storta. Se il modo di
+           dirmelo comparisse solo quando c'è già un errore in archivio,
+           mancherebbe esattamente quando serve di più. -->
+      <h2>Dirmi che qualcosa non va</h2>
+
+      <div class="carte">
+        <a class="carta segnala" data-azione="segnala" :href="linkSegnala"
+           target="_blank" rel="noopener">
+          <span class="ico">✉️</span>
+          <b>Segnala un problema</b>
+          <i v-if="incidenti.length">Si apre un modulo che ha già dentro la versione
+            e l'ultimo inciampo: non resta da scrivere niente di tecnico</i>
+          <i v-else>Si apre un modulo, con già dentro la versione del gioco</i>
+        </a>
+      </div>
+
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
     </div>
 
@@ -815,6 +855,11 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
 .lista-guasti small { font-size:10.5px; color:var(--tenue); opacity:.8 }
 .carta.guasti .riga { grid-column:1/3; justify-content:flex-start; margin-top:9px }
 .carta.guasti .bottone { font-size:14px; padding:9px 15px; box-shadow:0 4px 0 #d4dce6 }
+
+/* l'unica carta che è un link e non un tasto: da sola prenderebbe il blu
+   e la sottolineatura del browser, e in mezzo alle altre si leggerebbe
+   come una cosa d'altro tipo */
+.carta.segnala { text-decoration:none; color:inherit }
 
 /* Cancellare non deve somigliare alle altre due: si vede da lontano che è
    quella che fa danni. */
