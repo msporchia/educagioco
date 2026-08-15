@@ -14,6 +14,24 @@ Ogni tappa è una discesa. Si entra in una stanza, e la stanza può essere un
 mostro, un forziere, una trappola, un mercante. Davanti a una sfida il gioco
 **fa una domanda**: rispondendo giusto si passa, sbagliando si perde qualcosa.
 
+## Chi ti aspetta si vede
+
+I mostri sono **disegnati**, non sono emoji: respirano, sbiancano quando li
+colpisci e si ribaltano quando cadono. Non è una decorazione — è
+un'informazione, ed è quella che si legge per prima.
+
+Un mostro grosso **è grosso a schermo**, il capo che chiude un piano lo è
+ancora di più e ha un alone attorno, il padrone di casa riempie la
+schermata. Quando erano tutti larghi uguale, un capo con la vita tripla e
+nessuna via di fuga si presentava con lo stesso ingombro del topo della
+prima stanza: la difficoltà stava tutta nei numeri, che si leggono dopo e
+più lentamente.
+
+Chi ci abita cambia con la tappa, e cambia in fila: nella cantina si comincia
+con ragni, topi e vermoni e si finisce con lo zombi impolverato; nel covo si
+arriva al drago. Le **cose** invece restano emoji — uno scrigno, un fuoco da
+campo, un mercante non sono qualcuno.
+
 ## Perché un bambino continua a rispondere
 
 Questa è la parte che fa funzionare il gioco, e vale la pena dirla chiara:
