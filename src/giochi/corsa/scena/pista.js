@@ -32,18 +32,27 @@
                  quaranta metri**, che è tutto il tempo che si ha per
                  decidere.
 
-   Con questi tre numeri la strada (più la banchina) copre più della metà
-   della vista, e i tre cancelli arrivano larghi quanto un dito ciascuno.
+   Misurato sull'area davvero dipinta, su un telefono da 390×732: il
+   prototipo arrivava al **44%** della vista, questi numeri la portano al
+   **57%**, e i tre cancelli arrivano larghi un dito ciascuno. Oltre non
+   si va allargando ancora la corsia — a `LARGHEZZA 0.42` i cancelli
+   laterali cominciano a uscire dallo schermo, e una scelta che non si
+   vede tutta non è una scelta.
    ═══════════════════════════════════════════════════════════════════ */
 import { ORDINI } from '../dati/ordini.js'
 import { veste as vestito } from '../dati/vesti.js'
 
-const ORIZZONTE = 0.14      // dove finisce il cielo, in altezze di schermo
+const ORIZZONTE = 0.12      // dove finisce il cielo, in altezze di schermo
 const PIEDI = 0.95          // dove tocca terra quello che ti sta addosso
-const LARGHEZZA = 0.38      // quanto è larga una corsia, in larghezze di schermo
-const LARGA_MAX = 240       // ...ma su un tablet non oltre questo
+/* Larghezza della corsia e larghezza della strada sono **due numeri
+   diversi**, e tenerli separati serve: la strada deve uscire dai bordi
+   dello schermo, ma la corsia di destra non deve arrivarci — se no la
+   truppa schierata ci finisce sopra e l'ultima fila resta tagliata. Il
+   prodotto dei due è quello che decide quanta vista prende l'asfalto. */
+const LARGHEZZA = 0.335     // quanto è larga una corsia, in larghezze di schermo
+const LARGA_MAX = 215       // ...ma su un tablet non oltre questo
 const STRETTA = 0.055       // quanto in fretta si stringe con la distanza
-const BORDO = 1.55          // dove finisce l'asfalto, in corsie
+const BORDO = 1.76          // dove finisce l'asfalto, in corsie
 const BANCHINA = 1.15       // e dove finisce la terra battuta, in bordi
 const FONDO = 420           // fin dove si disegna la strada: oltre è foschia
 
@@ -318,7 +327,15 @@ export class Pista {
      ricca, sono confusione. */
   cancelli(c) {
     const { ctx, H } = this
-    const alfa = Math.min(1, Math.max(0, (44 - c.z) / 14)) * (c.attivo ? 1 : 0.2)
+    /* Tre fattori, e il terzo è quello che si scopre solo giocando: un
+       cancello alto un terzo di schermo, nell'istante in cui gli si passa
+       dentro, **copre la truppa** — cioè l'unica cosa che il bambino vuole
+       guardare proprio in quel momento, per vedere quanto è cresciuta. Si
+       dissolve negli ultimi due metri, che è anche quello che fa sembrare
+       di attraversarlo invece di sbatterci contro. */
+    const alfa = Math.min(1, Math.max(0, (44 - c.z) / 14))
+                 * (c.attivo ? 1 : 0.22)
+                 * Math.min(1, Math.max(0, (c.z + 1) / 3))
     for (let i = 0; i < 3; i++) {
       const op = c.ops[i]
       const p = this.punto(i - 1, c.z)
@@ -389,12 +406,19 @@ export class Pista {
   /* Il traguardo: una fascia a scacchi larga tutta la strada. Non è
      decorazione — è l'unica cosa che dice «ci sei quasi», e quando
      compare all'orizzonte cambia come si sceglie l'ultimo cancello. */
+  /* Il traguardo è **un arco**, non una riga per terra: una fascia a
+     scacchi dipinta sull'asfalto, vista di scorcio, è alta tre pixel e
+     non la vede nessuno. Un arco si legge da settanta metri, e sapere
+     che manca poco cambia come si sceglie l'ultimo cancello — che è
+     tutta la ragione per cui sta lì. */
   traguardo(c) {
     const { ctx } = this
-    const p = this.punto(0, c.z), q = this.punto(0, Math.max(c.z - 3, -0.9))
+    const p = this.punto(0, c.z), q = this.punto(0, Math.max(c.z - 2.5, -0.9))
     const larg = this.larg * BORDO
-    ctx.globalAlpha = Math.min(1, Math.max(0, (60 - c.z) / 20))
-    const passi = 10
+    ctx.globalAlpha = Math.min(1, Math.max(0, (70 - c.z) / 24))
+
+    // la fascia a terra, che dice esattamente dove finisce
+    const passi = 12
     for (let i = 0; i < passi; i++) {
       const a = -larg + (2 * larg * i) / passi, b = -larg + (2 * larg * (i + 1)) / passi
       ctx.fillStyle = i % 2 ? '#1b1b1b' : '#fdfdfd'
@@ -403,9 +427,26 @@ export class Pista {
       ctx.lineTo(this.W / 2 + b * q.s, q.y); ctx.lineTo(this.W / 2 + a * q.s, q.y)
       ctx.closePath(); ctx.fill()
     }
-    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
-    ctx.font = `${Math.max(14, 70 * p.s)}px system-ui, sans-serif`
-    ctx.fillText('🏁', p.x, p.y - Math.max(10, 40 * p.s))
+
+    // i due pali e lo striscione fra loro
+    const alto = this.H * 0.34 * p.s
+    const spesso = Math.max(2, this.larg * 0.06 * p.s)
+    const sx = this.W / 2 - larg * p.s, dx = this.W / 2 + larg * p.s
+    ctx.fillStyle = '#c8462f'
+    ctx.fillRect(sx - spesso / 2, p.y - alto, spesso, alto)
+    ctx.fillRect(dx - spesso / 2, p.y - alto, spesso, alto)
+    const hs = Math.max(6, alto * 0.2)
+    ctx.fillStyle = '#fdfdfd'
+    ctx.fillRect(sx, p.y - alto, dx - sx, hs)
+    ctx.fillStyle = '#1b1b1b'
+    const celle = 10, cw = (dx - sx) / celle
+    for (let i = 0; i < celle; i++)
+      for (let r = 0; r < 2; r++)
+        if ((i + r) % 2) ctx.fillRect(sx + i * cw, p.y - alto + r * hs / 2, cw, hs / 2)
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.font = `${Math.max(12, 56 * p.s)}px system-ui, sans-serif`
+    ctx.fillText('🏁', this.W / 2, p.y - alto - Math.max(8, 30 * p.s))
     ctx.globalAlpha = 1
   }
 
@@ -467,10 +508,30 @@ export class Pista {
     const d = Math.min(this.W * 0.19, 86)
     const fila = s.soldati
     const righe = Math.max(1, Math.ceil(fila.length / 5))
-    const caselle = fila.map((_, i) => ({ riga: Math.floor(i / 5), col: i % 5 }))
+    /* Si costruisce la griglia **intera** e poi si prendono le caselle più
+       centrali, invece di riempirla da sinistra: con tre soldati soli, il
+       riempimento in ordine li metteva tutti nella colonna di bordo e la
+       truppa correva mezza fuori dalla corsia. Le caselle si ordinano per
+       distanza dal centro dello schieramento — i gialli in mezzo,
+       circondati, i verdi sui bordi — che è come si guarda una formazione
+       ed è infatti dove l'occhio li cerca. */
     const mezzo = (righe - 1) / 2
     const distanza = c => Math.abs(c.col - 2) * 1.15 + Math.abs(c.riga - mezzo)
-    caselle.sort((a, b) => distanza(a) - distanza(b))
+    const griglia = []
+    for (let r = 0; r < righe; r++)
+      for (let col = 0; col < 5; col++) griglia.push({ riga: r, col })
+    griglia.sort((a, b) => distanza(a) - distanza(b))
+    const caselle = griglia.slice(0, fila.length)
+    /* Ogni riga si centra sulle colonne che ha davvero, non sulla colonna
+       di mezzo della griglia: con quattro soldati la fila occupa le
+       colonne 0..3, e centrandola sulla 2 lo schieramento uscirebbe di
+       sbieco — visibile subito nella corsia di destra, dove l'ultimo
+       soldato finiva mezzo fuori dallo schermo. */
+    const centro = []
+    for (const c of caselle) {
+      const r = centro[c.riga] || (centro[c.riga] = { min: c.col, max: c.col })
+      r.min = Math.min(r.min, c.col); r.max = Math.max(r.max, c.col)
+    }
 
     // si disegna dal fondo in avanti, o chi sta dietro finisce sopra chi
     // gli sta davanti e la formazione si sfalda
@@ -478,7 +539,8 @@ export class Pista {
       .map((g, i) => ({ ...caselle[i], g, i }))
       .sort((a, b) => b.riga - a.riga)
       .forEach(({ riga, col, g, i }) => {
-        const lato = (col - 2) * 0.26 + Math.sin(i * 2.1) * 0.03
+        const mezzoRiga = (centro[riga].min + centro[riga].max) / 2
+        const lato = (col - mezzoRiga) * 0.18 + Math.sin(i * 2.1) * 0.025
         const q = this.punto(s.corsia + lato, 0.2 + riga * 0.5)
         this.soldato(q.x, q.y + Math.sin(s.dist * 3.4 + i) * 3,
                      d * 0.62 * q.s / p.s * (1 + g * 0.15), g)
@@ -487,9 +549,9 @@ export class Pista {
     // la polvere sotto i piedi
     for (let i = 0; i < 2; i++) {
       const t = ((s.dist * 1.6 + i * 0.5) % 1)
-      ctx.globalAlpha = (1 - t) * 0.3
+      ctx.globalAlpha = (1 - t) * 0.18
       ctx.fillStyle = '#fff3d8'
-      ctx.beginPath(); ctx.arc(p.x - t * 30 * (i ? 1 : -1), p.y + 4, 6 + t * 18, 0, 7); ctx.fill()
+      ctx.beginPath(); ctx.arc(p.x - t * 30 * (i ? 1 : -1), p.y + 4, 5 + t * 14, 0, 7); ctx.fill()
     }
     ctx.globalAlpha = 1
 
@@ -501,10 +563,10 @@ export class Pista {
     ctx.font = `900 ${Math.max(14, d * 0.34)}px system-ui, sans-serif`
     const largo = ctx.measureText(testo).width + d * 0.34
     ctx.fillStyle = '#00000088'
-    ctx.beginPath(); ctx.roundRect(t.x - largo / 2, t.y - d * 1.8, largo, d * 0.44, d * 0.22); ctx.fill()
+    ctx.beginPath(); ctx.roundRect(t.x - largo / 2, t.y - d * 1.24, largo, d * 0.44, d * 0.22); ctx.fill()
     ctx.fillStyle = '#ffffff'
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(testo, t.x, t.y - d * 1.58)
+    ctx.fillText(testo, t.x, t.y - d * 1.02)
   }
 
   /* Un soldatino: corpo, testa, elmetto del suo colore e un'arma che

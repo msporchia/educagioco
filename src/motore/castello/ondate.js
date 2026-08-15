@@ -41,17 +41,34 @@ export class Ondate {
   vitaDi(o) { return vitaNemico(this.tappa, o) }
   velocitaDi(o) { return velocitaNemico(this.tappa, o) }
 
+  /* ── da che ingresso arriva l'ondata `o` ──
+     Con una strada sola non c'è niente da decidere. Con due, si
+     alternano: la prima da una parte, la seconda dall'altra, e ogni
+     terza **da tutte e due insieme** (`-1`, che il campo legge come
+     «alternali uno per uno»).
+
+     Deterministico, come tutto il resto delle ondate, perché deve poter
+     essere annunciato tre ondate prima: sapere che fra due giri arrivano
+     da sotto è quello che rende il trascinare una torre una mossa invece
+     che una carezza. */
+  viaDi(o, quante = 1) {
+    if (quante < 2) return 0
+    if (o % 3 === 0) return -1
+    return Math.floor((o - 1 - Math.floor((o - 1) / 3)) % quante)
+  }
+
   /* ── il preavviso ──
      Le ondate che arrivano dopo la `dopo`-esima, al massimo `quante`.
      Ognuna sa fra quanto arriva, chi la compone, quanti sono, quanta
      vita ha ciascuno e a quale torre è debole: tutto quello che serve
      per decidere cosa costruire *prima* che serva. */
-  prossime(dopo, quante = 3) {
+  prossime(dopo, quante = 3, vie = 1) {
     const out = []
     for (let i = 1; i <= quante; i++) {
       const o = dopo + i
       if (this.campagna && o > this.quante) break
       out.push({ onda: o, fra: i, quanti: this.quantiDi(o), vita: Math.round(this.vitaDi(o)),
+                 via: this.viaDi(o, vie), vie,
                  ...this.bestiaDi(o) })
     }
     return out

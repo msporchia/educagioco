@@ -82,7 +82,7 @@ function avvia(quale, s) {
 }
 
 const dipingiFondale = () => campo.dipingiFondale(
-  disegnaCampo({ via: motore.via, postazioni: motore.postazioni,
+  disegnaCampo({ via: motore.via, vie: motore.percorso.vie, postazioni: motore.postazioni,
                  ambiente: tappa && tappa.ambiente, seme }))
 
 /* Della misura dello schermo il gioco tiene solo quello che gli serve

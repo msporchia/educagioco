@@ -10,12 +10,50 @@ torri, e per costruire una torre bisogna fare il conto.
 
 ## Come è fatto
 
-Quindici tappe in tre campagne (il bosco, il sottosuolo, la montagna). Ogni
+Quindici tappe in tre campagne (il bosco, il sottosuolo, le mura). Ogni
 tappa ha il suo scenario, i suoi mostri e la sua scaletta di operazioni.
 
 Il ciclo è: arriva l'ondata → serve una torre → **compare l'operazione in
 colonna** → si scrive il risultato cifra per cifra, coi riporti → la torre si
 costruisce. Chi sbaglia paga una penale in energia, non perde la partita.
+
+## Si compra toccando il campo
+
+Il campo si prende tutto lo schermo e non c'è nessun banco di bottoni sotto:
+**si tocca una piazzola vuota** e un foglio sale a chiedere che torre
+costruirci, **si tocca una torre** e sale la sua scheda — falla salire di
+livello, oppure spostala (gratis: è tattica, non un acquisto). Il conto da
+fare sta dentro lo stesso foglio.
+
+Dove si può comprare si vede sul campo: le piazzole respirano quando
+l'energia basta per una torre nuova, e le torri hanno un bollino verde
+quando basta per farle salire. Mentre si calcola **il campo non si ferma** —
+un minimo di fretta ci va — ma si rimpicciolisce per restare visibile sopra
+il foglio. Con due dita si sposta e si ingrandisce la mappa, e un doppio
+tocco la rimette tutta in quadro.
+
+## A metà scaletta una torre sceglie che fare
+
+Dal sottosuolo in poi, al quarto gradino, il tasto «potenzia» lascia il posto
+a **due carte**: l'arciere diventa cecchino (vede lontano, colpisce forte) o
+raffica (due frecce per volta); la magica diventa veleno (colpisce piano ma
+il male continua) o catena (il colpo rimbalza sui vicini); il ghiaccio
+diventa bufera (gela larghissimo) o brina (frena di più, e chi è gelato
+prende più danno); le bombe diventano mortaio (arriva lontanissimo) o napalm
+(scoppia largo e lascia tutti a bruciare).
+
+La scelta **non costa un calcolo in più**: è quello che il calcolo del
+gradino compra, e si presenta dopo aver deciso di salire. E i due rami
+valgono lo stesso: cambia la forma del danno, non la quantità — nessuno dei
+due è la scelta sbagliata.
+
+## Due porte da difendere
+
+Due tappe — *Le fogne* e *Il torrione* — più la partita libera hanno **due
+ingressi**: due strade che scendono da parti diverse e arrivano allo stesso
+castello. Le ondate si alternano fra le due bocche, e ogni terza arriva da
+tutte e due insieme; il nastro in cima dice da dove, tre ondate prima, così
+si fa in tempo a spostare una torre dalla parte giusta.
 
 ## Quali operazioni escono, e quanto crescono
 

@@ -15,12 +15,22 @@
    alle bombe» vuol dire «comincia adesso a mettere da parte per le
    divisioni».
 
-   Sta nel banco e non sul campo apposta: sopra non c'è spazio da
-   rubare, e il posto dove si guarda mentre si decide cosa comprare è
-   quello dove ci sono i bottoni per comprare.
+   Sta in cima al campo, e solo fra un'ondata e l'altra: durante la
+   battaglia quel posto è della scheda del mostro che si ha davanti, e
+   le due cose non servono mai insieme.
+
+   Dove gli ingressi sono due, ogni pastiglia dice anche **da che
+   parte** arriva quell'ondata. È l'informazione che rende il
+   trascinamento di una torre una mossa invece che una carezza: «fra due
+   giri scendono da destra» vuol dire «spostala adesso».
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from '../../data/ops.js'
 import RitrattoMostro from './RitrattoMostro.vue'
+
+/* da che ingresso arriva l'ondata, dove gli ingressi sono più d'uno.
+   Non è un dettaglio di colore: è quello che dice se conviene spostare
+   una torre adesso, e si legge tre ondate prima. */
+const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 
 defineProps({
   /* [{ onda, fra, id, nome, quanti, vola, debole }] — le dà il motore */
@@ -41,7 +51,8 @@ defineProps({
       </span>
       <span class="dati">
         <b>{{ p.nome }}</b>
-        <i>🌊{{ p.onda }} · ×{{ p.quanti }}</i>
+        <i>🌊{{ p.onda }} · ×{{ p.quanti }}<template v-if="p.lato"> ·
+          <em :class="p.lato">{{ FRECCE[p.lato] }}</em></template></i>
       </span>
     </div>
   </div>

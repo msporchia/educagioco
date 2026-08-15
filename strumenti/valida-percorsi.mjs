@@ -71,7 +71,7 @@
                   regola del gioco — due ondate di fila non devono
                   chiedere la stessa torre.
    ═══════════════════════════════════════════════════════════════════ */
-import { smussa, tracciato } from '../src/grafica/geometria.js'
+import { Percorso } from '../src/motore/castello/percorso.js'
 import { CAMPAGNE, RACCONTO } from '../src/data/campagne-castello.js'
 import { MOSTRI, torreDebole } from '../src/data/mostri.js'
 /* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
@@ -99,6 +99,14 @@ const PIAZZOLE_FITTE = 22       // fra due postazioni, nei due di margine
 const VICINO = 80               // sotto questo cammino due punti sono lo stesso tratto
 const LONTANO = 200             // oltre questo cammino sono due corsie
 const RAGGIO = 92               // il raggio dell'arciere di livello 1
+/* Quanta parte finale di una strada è «confluenza»: lì due ingressi si
+   avvicinano per forza, perché la porta del castello è una sola, e
+   pretendere che stiano larghi vorrebbe dire pretendere due castelli.
+   Un quinto è quanto basta a farle arrivare insieme senza che diventino
+   una corsia sola per mezza mappa — che è il modo noto di rendere finta
+   una mappa a due ingressi: se si uniscono presto, si difende solo il
+   tratto comune e i due ingressi non li guarda più nessuno. */
+const CONFLUENZA = 0.2
 
 /* ── le fasce per campagna: lunghezza in unità, presidio in raggi ──
    Non c'è più un «vale per il telefono»: il mondo è uno solo, e queste
@@ -155,25 +163,22 @@ const MISURE = [{ nome: 'campo', W: MONDO.W, H: MONDO.H }]
 /* la scala non si calcola più: la dichiara il mondo */
 const scalaDi = () => MONDO.S
 
-/* ── la copia fedele di `costruisciPercorso` in motore/battaglia.js ──
-   Non si importa perché quella funzione vive dentro una chiusura, e
-   riscriverla qui è il male minore: sono nove righe, tenute uguali
-   apposta. Se un giorno divergono, questo strumento smette di dire la
-   verità — ed è la prima cosa da guardare se i conti non tornano. */
-function campoDi(forma, W, H, S, quante) {
-  const via = tracciato(smussa(forma.map(([x, y]) => ({ x: x * W, y: y * H }))))
-  const postazioni = []
-  const passo = via.lunghezza / (quante + 1)
-  for (let i = 1; i <= quante; i++) {
-    const p = via.puntoA(passo * i)
-    const n = via.normaleA(passo * i)
-    const off = 34 * S * (i % 2 ? 1 : -1)
-    const m = 22 * S
-    postazioni.push({ x: Math.max(m, Math.min(W - m, p.x + n.x * off)),
-                      y: Math.max(m, Math.min(H - m, p.y + n.y * off)) })
-  }
-  postazioni.reverse()
-  return { via, postazioni }
+/* ── il campo, chiesto al motore ──
+   Prima queste nove righe erano una copia fedele della geometria di
+   `motore/battaglia.js`, tenuta uguale a mano. Non lo sono più: da
+   quando le piazzole stanno in una classe esportata (`Percorso`) si
+   importa quella, e la copia — che nel frattempo era **divergita**,
+   perché occupava ancora le postazioni partendo dal castello mentre il
+   gioco le occupa dall'ingresso — non c'è più. Questo strumento
+   controlla il campo su cui si gioca davvero, e non c'è più niente da
+   tenere allineato.
+
+   `forme` può essere una spezzata sola o un elenco: le tappe a due
+   ingressi hanno due strade, e il `Percorso` le spartisce le piazzole
+   da sé. */
+function campoDi(forme, W, H, S, quante) {
+  const p = new Percorso(forme, quante, { W, H, S })
+  return { via: p.via, vie: p.vie, postazioni: p.postazioni }
 }
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
@@ -181,17 +186,36 @@ const dove = (p, M) => p ? `(${(p.x / M.W).toFixed(2)}, ${(p.y / M.H).toFixed(2)
 
 /* quanto si sfiorano due parti del tracciato, distinguendo il gomito
    (poco cammino in mezzo) dalla corsia parallela (molto cammino) */
-function ravvicinamenti(via, S) {
+function ravvicinamenti(vie, S) {
   const passo = 4 * S
-  const camp = via.campiona(passo)
   let gomito = Infinity, corridoio = Infinity, dg = null, dc = null
-  for (let i = 0; i < camp.length; i++)
-    for (let k = i + 1; k < camp.length; k++) {
-      const cammino = (k - i) * passo / S
-      if (cammino < VICINO) continue
-      const d = dist(camp[i], camp[k]) / S
-      if (cammino < LONTANO) { if (d < gomito) { gomito = d; dg = camp[i] } }
-      else if (d < corridoio) { corridoio = d; dc = camp[i] }
+  for (const via of vie) {
+    const camp = via.campiona(passo)
+    for (let i = 0; i < camp.length; i++)
+      for (let k = i + 1; k < camp.length; k++) {
+        const cammino = (k - i) * passo / S
+        if (cammino < VICINO) continue
+        const d = dist(camp[i], camp[k]) / S
+        if (cammino < LONTANO) { if (d < gomito) { gomito = d; dg = camp[i] } }
+        else if (d < corridoio) { corridoio = d; dc = camp[i] }
+      }
+  }
+  /* ── e fra due strade diverse ──
+     Due ingressi vogliono dire due corsie che vivono in parallelo, e
+     valgono le stesse distanze di due corsie della stessa strada. Con
+     una differenza: **in fondo si toccano per forza**, perché la porta
+     del castello è una sola. L'ultimo pezzo di ciascuna è quindi fuori
+     dal conto — lì convergere è il disegno, non un difetto. */
+  for (let a = 0; a < vie.length; a++)
+    for (let b = a + 1; b < vie.length; b++) {
+      const ca = vie[a].campiona(passo), cb = vie[b].campiona(passo)
+      const fineA = Math.floor(ca.length * (1 - CONFLUENZA))
+      const fineB = Math.floor(cb.length * (1 - CONFLUENZA))
+      for (let i = 0; i < fineA; i++)
+        for (let k = 0; k < fineB; k++) {
+          const d = dist(ca[i], cb[k]) / S
+          if (d < corridoio) { corridoio = d; dc = ca[i] }
+        }
     }
   return { gomito, corridoio, dg, dc }
 }
@@ -206,10 +230,10 @@ function ravvicinamenti(via, S) {
    anse che sono il motivo per cui quel bosco perdona. Si controlla
    quello che il gioco fa, non quello che potrebbe fare in un mondo
    parallelo. */
-function piazzoleStrette(forma, W, H, S, fino = 8) {
+function piazzoleStrette(forme, W, H, S, fino = 8) {
   let larga = Infinity, fitta = Infinity, quante = 0
   for (let q = 3; q <= fino + 2; q++) {
-    const { postazioni } = campoDi(forma, W, H, S, q)
+    const { postazioni } = campoDi(forme, W, H, S, q)
     for (let i = 0; i < postazioni.length; i++)
       for (let k = i + 1; k < postazioni.length; k++) {
         const d = dist(postazioni[i], postazioni[k]) / S
@@ -223,15 +247,25 @@ function piazzoleStrette(forma, W, H, S, fino = 8) {
 /* Il presidio. Si misura con sei postazioni — il numero di mezzo fra
    quelli che una tappa può avere — così le quindici mappe si
    confrontano fra loro con lo stesso metro. */
-function presidioDi(forma, W, H, S, quante = 6) {
-  const { via, postazioni } = campoDi(forma, W, H, S, quante)
-  const passo = 3 * S
-  const camp = via.campiona(passo)
-  const R = RAGGIO * S
-  let totale = 0
-  for (const t of postazioni)
-    for (const c of camp) if (dist(c, t) <= R) totale += passo
-  return totale / postazioni.length / R
+function presidioDi(forme, W, H, S, quante = 6) {
+  /* Con due ingressi si misura **strada per strada**, come se ognuna
+     fosse una tappa a sé: sei postazioni sulla sua, e quanto ne
+     presidiano. Se no il numero verrebbe fuori più alto solo perché le
+     strade sono corte — e il presidio non è «quanto è comoda la mappa»,
+     è «quanta strada tiene una torre», che deve restare confrontabile
+     fra una tappa a un ingresso e una a due. */
+  const strade = Array.isArray(forme[0][0]) ? forme : [forme]
+  const presidi = strade.map(f => {
+    const { via, postazioni } = campoDi(f, W, H, S, quante)
+    const passo = 3 * S
+    const camp = via.campiona(passo)
+    const R = RAGGIO * S
+    let totale = 0
+    for (const t of postazioni)
+      for (const c of camp) if (dist(c, t) <= R) totale += passo
+    return totale / postazioni.length / R
+  })
+  return presidi.reduce((s, p) => s + p, 0) / presidi.length
 }
 
 /* La tappa vista con le postazioni che ha davvero. Torna il presidio e
@@ -240,10 +274,15 @@ function presidioDi(forma, W, H, S, quante = 6) {
    piazzola. Il raggio è quello dell'arciere: è la torre che si compra
    per prima e quella con cui si copre, non il ghiaccio a 86 né le
    bombe a 132. */
-function conPochePostazioni(forma, W, H, S, quante) {
-  const { via, postazioni } = campoDi(forma, W, H, S, quante)
+function conPochePostazioni(forme, W, H, S, quante) {
+  const { vie, postazioni } = campoDi(forme, W, H, S, quante)
   const passo = 3 * S
-  const camp = via.campiona(passo)
+  /* con due strade il buco si cerca su tutte e due, ma una per volta:
+     la fine di una e l'inizio dell'altra non sono un tratto continuo */
+  const camp = vie.flatMap(v => v.campiona(passo))
+  const confini = []
+  let acc = 0
+  for (const v of vie) { acc += v.campiona(passo).length; confini.push(acc) }
   const R = RAGGIO * S
   const visto = camp.map(c => postazioni.some(t => dist(c, t) <= R))
   const primo = visto.indexOf(true), ultimo = visto.lastIndexOf(true)
@@ -252,7 +291,7 @@ function conPochePostazioni(forma, W, H, S, quante) {
     for (const c of camp) if (dist(c, t) <= R) totale += passo
   let buco = 0, peggiore = 0, punto = null
   for (let i = primo; i <= ultimo; i++) {
-    if (visto[i]) { buco = 0; continue }
+    if (visto[i] || confini.includes(i)) { buco = 0; continue }
     buco += passo
     if (buco > peggiore) { peggiore = buco; punto = camp[i] }
   }
@@ -262,23 +301,45 @@ function conPochePostazioni(forma, W, H, S, quante) {
 /* ═══════════ la geometria di una tappa ═══════════ */
 function esaminaForma(t) {
   const guasti = [], avvisi = []
-  const f = t.forma
+  /* una strada o due: una tappa a due ingressi dichiara `forme`, e da
+     qui in giù cambia solo il plurale */
+  const forme = t.forme || [t.forma]
+  const f = forme[0]
 
-  if (!f || f.length < 4) guasti.push(`solo ${f ? f.length : 0} punti: non è un percorso`)
-  for (const [i, [x, y]] of f.entries())
-    if (x < X0 - 1e-9 || x > X1 + 1e-9 || y < Y0 - 1e-9 || y > Y1 + 1e-9)
-      guasti.push(`punto ${i} (${x}, ${y}) fuori dal riquadro [${X0}–${X1}] × [${Y0}–${Y1}]`)
-  if (f[0][1] > INGRESSO) guasti.push(`non entra dal bordo di sopra (y = ${f[0][1]})`)
-  if (f[f.length - 1][1] < USCITA) guasti.push(`non arriva in fondo (y = ${f[f.length - 1][1]})`)
+  forme.forEach((g, k) => {
+    const chi = forme.length > 1 ? `strada ${k + 1}: ` : ''
+    if (!g || g.length < 4) guasti.push(`${chi}solo ${g ? g.length : 0} punti: non è un percorso`)
+    for (const [i, [x, y]] of g.entries())
+      if (x < X0 - 1e-9 || x > X1 + 1e-9 || y < Y0 - 1e-9 || y > Y1 + 1e-9)
+        guasti.push(`${chi}punto ${i} (${x}, ${y}) fuori dal riquadro [${X0}–${X1}] × [${Y0}–${Y1}]`)
+    if (g[0][1] > INGRESSO) guasti.push(`${chi}non entra dal bordo di sopra (y = ${g[0][1]})`)
+    if (g[g.length - 1][1] < USCITA) guasti.push(`${chi}non arriva in fondo (y = ${g[g.length - 1][1]})`)
+  })
+  /* e tutte devono finire nello stesso punto: il castello è uno solo, e
+     due strade che arrivano in due posti diversi sono due partite */
+  if (forme.length > 1) {
+    const porta = forme[0][forme[0].length - 1]
+    for (const g of forme.slice(1)) {
+      const suo = g[g.length - 1]
+      if (Math.hypot(suo[0] - porta[0], suo[1] - porta[1]) > 0.02)
+        guasti.push(`due strade e due porte: ${JSON.stringify(suo)} invece di ${JSON.stringify(porta)}`)
+    }
+  }
 
   const misure = []
   for (const M of MISURE) {
     const S = scalaDi(M.W, M.H)
-    const { via } = campoDi(f, M.W, M.H, S, 6)
-    const r = ravvicinamenti(via, S)
-    const p = piazzoleStrette(f, M.W, M.H, S, postiVeri(t))
-    const presidio = presidioDi(f, M.W, M.H, S)
-    const lung = via.lunghezza / S
+    const { vie } = campoDi(forme, M.W, M.H, S, 6)
+    const r = ravvicinamenti(vie, S)
+    const p = piazzoleStrette(forme, M.W, M.H, S, postiVeri(t))
+    const presidio = presidioDi(forme, M.W, M.H, S)
+    /* la lunghezza si guarda **strada per strada**, non sommata: un
+       mostro ne percorre una sola, ed è su quella che si misura quanto
+       tempo la difesa ha per fermarlo. Due ingressi non fanno una tappa
+       lunga il doppio — fanno due tappe corte da difendere insieme, che
+       è un'altra cosa e si paga in piazzole (vedi `postiDi`). */
+    const lunghe = vie.map(v => v.lunghezza / S)
+    const lung = Math.max(...lunghe)
     const fascia = FASCE[t.campagna]
 
     if (r.gomito < GOMITO)
@@ -293,9 +354,12 @@ function esaminaForma(t) {
     if (p.fitta < PIAZZOLE_FITTE)
       guasti.push(`${M.nome}: due piazzole a ${p.fitta.toFixed(0)}u ` +
                   `(minimo ${PIAZZOLE_FITTE}) con qualche postazione in più`)
-    if (lung < fascia.lung[0] || lung > fascia.lung[1])
-      guasti.push(`${M.nome}: lunga ${lung.toFixed(0)}u, fuori dalla fascia ` +
-                  `${fascia.lung[0]}–${fascia.lung[1]} della campagna`)
+    lunghe.forEach((l, k) => {
+      if (l < fascia.lung[0] || l > fascia.lung[1])
+        guasti.push(`${M.nome}: ${vie.length > 1 ? `strada ${k + 1} ` : ''}lunga ` +
+                    `${l.toFixed(0)}u, fuori dalla fascia ` +
+                    `${fascia.lung[0]}–${fascia.lung[1]} della campagna`)
+    })
     if (presidio < fascia.presidio[0] || presidio > fascia.presidio[1])
       guasti.push(`${M.nome}: presidio ${presidio.toFixed(2)}, fuori dalla fascia ` +
                   `${fascia.presidio[0]}–${fascia.presidio[1]} della campagna`)
@@ -305,7 +369,7 @@ function esaminaForma(t) {
 
     /* e la stessa mappa con le postazioni che avrà davvero */
     const q = postiVeri(t)
-    const poche = conPochePostazioni(f, M.W, M.H, S, q)
+    const poche = conPochePostazioni(forme, M.W, M.H, S, q)
     if (poche.presidio < PRESIDIO_POCHI)
       guasti.push(`${M.nome}: con le sue ${q} postazioni il presidio scende a ` +
                   `${poche.presidio.toFixed(2)}, sotto ${PRESIDIO_POCHI}`)
@@ -316,7 +380,7 @@ function esaminaForma(t) {
 
     /* e il caso più magro, che non fa fallire ma si dice */
     if (q > MAGRO) {
-      const v = conPochePostazioni(f, M.W, M.H, S, MAGRO)
+      const v = conPochePostazioni(forme, M.W, M.H, S, MAGRO)
       if (v.buco > BUCO_INTERNO)
         avvisi.push(`${M.nome}: se scendesse a ${MAGRO} postazioni resterebbero ` +
                     `${v.buco.toFixed(0)}u scoperti attorno a ${dove(v.punto, M)}`)
@@ -325,7 +389,7 @@ function esaminaForma(t) {
                     `sarebbe ${v.presidio.toFixed(2)}`)
     }
 
-    misure.push({ ...M, S, lung, ...r, ...p, presidio, poche, posti: q })
+    misure.push({ ...M, S, lung, ...r, ...p, presidio, poche, posti: q, vie: vie.length })
   }
   return { guasti, avvisi, misure }
 }

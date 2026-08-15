@@ -176,10 +176,17 @@ const SOTTO_MINIERA = [
   [0.28, 0.04], [0.26, 0.18], [0.72, 0.24], [0.74, 0.40], [0.28, 0.48],
   [0.26, 0.64], [0.68, 0.72], [0.66, 0.95]]
 
-// le fogne: due salti di quota dentro il collettore
+/* ── le fogne: la prima tappa con due ingressi ──
+   Due collettori che scendono e sboccano nella stessa vasca. Da qui in
+   avanti qualche tappa ne ha due: strade diverse, un castello solo, e
+   una difesa che va divisa. Le due si avvicinano solo in fondo, dove
+   la porta è una — se si unissero prima si difenderebbe il tratto
+   comune e i due ingressi non li guarderebbe più nessuno. */
 const SOTTO_FOGNE = [
-  [0.62, 0.04], [0.66, 0.20], [0.26, 0.30], [0.22, 0.46], [0.62, 0.56],
-  [0.66, 0.72], [0.34, 0.82], [0.38, 0.95]]
+  [[0.22, 0.04], [0.13, 0.16], [0.32, 0.26], [0.14, 0.38], [0.32, 0.50], [0.16, 0.62],
+   [0.30, 0.76], [0.50, 0.95]],
+  [[0.74, 0.04], [0.83, 0.16], [0.64, 0.26], [0.82, 0.38], [0.64, 0.50], [0.80, 0.62],
+   [0.66, 0.76], [0.50, 0.95]]]
 
 // la cripta: una scala regolare che scende di loculo in loculo, tutta
 // ad angoli retti — l'unica mappa che si potrebbe disegnare col righello
@@ -215,10 +222,12 @@ const MURA_CORRIDOIO = [
 const MURA_TRONO = [
   [0.34, 0.04], [0.38, 0.34], [0.72, 0.50], [0.64, 0.78], [0.44, 0.95]]
 
-// il torrione: la rampa finale. Il tracciato più corto e più esposto
-// del gioco — dall'ingresso alla porta ci sono quattro segmenti.
+// il torrione: la rampa e la scala di servizio, tutte e due alla porta
+// in cima. I due tracciati più esposti del gioco, l'uno di fronte
+// all'altro: qui non c'è più niente da imparare, solo da difendere.
 const MURA_TORRIONE = [
-  [0.44, 0.04], [0.72, 0.24], [0.62, 0.52], [0.30, 0.66], [0.40, 0.95]]
+  [[0.24, 0.04], [0.34, 0.22], [0.16, 0.40], [0.32, 0.58], [0.22, 0.76], [0.48, 0.95]],
+  [[0.76, 0.04], [0.66, 0.24], [0.84, 0.42], [0.68, 0.60], [0.78, 0.78], [0.48, 0.95]]]
 
 /* ═══════════════ LE TAPPE ═══════════════
 
@@ -277,7 +286,7 @@ export const CAMPAGNE = [
       { nome: 'Le fogne', emoji: '🕸️', ambiente: 'fogne', calcoli: 13, cap: 7,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣
-        mostri: ['slime', 'ragno', 'orco'], forma: SOTTO_FOGNE },
+        mostri: ['slime', 'ragno', 'orco'], forme: SOTTO_FOGNE },
       { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣 🔮 🏹 💣
@@ -319,7 +328,7 @@ export const CAMPAGNE = [
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🏹 🔮 💣 🏹 🔮 💣 — sei bestie diverse sul tracciato più corto
         mostri: ['ragno', 'golem', 'orco', 'arpia', 'fantasma', 'drago'],
-        forma: MURA_TORRIONE },
+        forme: MURA_TORRIONE },
     ],
   },
 ]

@@ -70,8 +70,12 @@ export const terrenoDi = nome => TERRENI[nome] || TERRENI['bosco-chiaro']
 /* Il fondale intero. Torna la funzione che `tela.dipingiFondale` vuole:
    il gioco dice *dov'è* la strada e *dove* sono le piazzole, non come
    si dipingono. */
-export function campo({ via, postazioni, seme = 1, ambiente }) {
+export function campo({ via, vie, postazioni, seme = 1, ambiente }) {
   const A = terrenoDi(ambiente)
+  /* una strada o due: da qui in giù cambia solo quante volte si ripete
+     lo stesso mestiere. Le tappe a due ingressi ne hanno due che non si
+     fondono mai — arrivano alla stessa porta da parti diverse. */
+  const strade = vie && vie.length ? vie : [via]
   const T = A.terreno
   return p => {
     const { W, H, S } = p
@@ -87,7 +91,7 @@ export function campo({ via, postazioni, seme = 1, ambiente }) {
     /* la distanza dalla strada, campionata una volta sola: la chiedono
        i dettagli minuti (per non fiorire in mezzo al passaggio) e la
        roba sparsa (per non piantare un albero sulla via) */
-    const lungoStrada = via.campiona(8)
+    const lungoStrada = strade.flatMap(v => v.campiona(8))
     const vicino = (x, y) => {
       let m = Infinity
       for (const c of lungoStrada) {
@@ -97,9 +101,9 @@ export function campo({ via, postazioni, seme = 1, ambiente }) {
       return Math.sqrt(m)
     }
 
-    const scena = { caso, vicino, lato, reg, via, postazioni }
+    const scena = { caso, vicino, lato, reg, via, vie: strade, postazioni }
     T.fondo(p, A, scena)
-    T.strada(p, A, scena)
+    for (const v of strade) T.strada(p, A, { ...scena, via: v })
     T.minuti(p, A, scena)
     T.sparso(p, A, scena)
     for (const q of postazioni) T.piazzola(p, q.x, q.y, A, caso)

@@ -150,8 +150,11 @@ committate: non è ricostruibile da git.
   Gira uguale nel gioco e in Node, ed è l'unico motivo per cui il
   bilanciamento si può misurare invece di provarlo a occhio.
 - **`src/grafica/`** — `tela.js` (canvas, sfondo in cache, ordinamento per
-  profondità), `geometria.js` (tracciati: è l'unico posto dove gioco e
-  disegno devono essere d'accordo su dove passa la strada), `castello.js`
+  profondità, e una **telecamera**: un mondo può dichiarare le sue misure
+  e la sua scala, e la tela lo incornicia dove c'è posto — è così che il
+  castello resta lo stesso su ogni schermo), `geometria.js` (tracciati: è
+  l'unico posto dove gioco e disegno devono essere d'accordo su dove
+  passa la strada), `castello.js`
   (i pittori, nella tabella `PITTORI`), `spazio.js` (il cielo degli
   asteroidi: nave, pianeta, sassi, raggi — riceve `danno: 0.5`, non sa
   che esistano le vite).
@@ -221,6 +224,16 @@ committate: non è ricostruibile da git.
   tappa dichiara quante operazioni costa (`calcoli`) e fin dove arriva la
   scaletta (`cap`); il resto lo deriva `data/castello.js`. Chi ritocca
   l'equilibrio cambia prezzi o entrate e rilancia `npm run tara`.
+- **Nel castello si compra toccando il campo.** Non c'è un banco di
+  bottoni: una piazzola vuota chiede che torre costruirci, una torre già
+  in piedi apre la sua scheda, e il conto sale dal basso nello stesso
+  foglio. Il campo **non si ferma** mentre si calcola — la telecamera si
+  stringe di quanto il foglio copre, e la battaglia resta visibile.
+- **I due rami di una torre valgono lo stesso.** A metà scaletta una
+  torre sceglie un mestiere (`RAMI` in `data/castello.js`): cambia la
+  *forma* del danno, mai la quantità. È la condizione perché il modello
+  che tara le tappe possa ignorarli, e `unita/rami-castello` la conta
+  ramo per ramo.
 - **I nomi dei bambini non stanno nel codice.** Il roster è un dato
   (`state.giocatori`), la migrazione enumera le chiavi `profilo:*` invece di
   cercare un nome. Se una modifica sembra chiedere una stringa col nome di un

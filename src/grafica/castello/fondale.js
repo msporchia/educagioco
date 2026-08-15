@@ -118,12 +118,15 @@ function piazzola(p, x, y, caso) {
 
 /* Il fondale intero. Torna la funzione che `tela.dipingiFondale` vuole:
    il gioco dice *dov'è* la strada, non come si dipinge. */
-export function campo({ via, postazioni, seme = 1 }) {
+export function campo({ via, vie, postazioni, seme = 1 }) {
+  /* una strada o due: dal fondale in giù cambia solo quante volte si
+     ripete lo stesso mestiere */
+  const strade = vie && vie.length ? vie : [via]
   return p => {
     const { W, H, S, ctx } = p
     const caso = seminato(seme * 7919 + 13)
     // distanza dalla strada, per non piantare alberi in mezzo al passaggio
-    const lungoStrada = via.campiona(8)
+    const lungoStrada = strade.flatMap(v => v.campiona(8))
     const vicino = (x, y) => {
       let m = Infinity
       for (const c of lungoStrada) {
@@ -133,7 +136,7 @@ export function campo({ via, postazioni, seme = 1 }) {
       return Math.sqrt(m)
     }
     prato(p, vicino, caso)
-    strada(p, via, caso)
+    for (const v of strade) strada(p, v, caso)
     // il bosco, dipinto dall'alto in basso perché chi sta davanti copra
     const roba = []
     for (let i = 0; i < 46; i++) {

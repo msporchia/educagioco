@@ -54,6 +54,17 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
     : inMano ? { x: inMano.x, y: inMano.y, r: inMano.raggio(S), tipo: inMano.tipo } : null
   if (anteprima) roba.push({ che: 'raggio', strato: -1, ...anteprima })
 
+  /* le bocche da cui scendono, quando sono più d'una: quella da cui sta
+     per arrivare l'ondata è accesa, l'altra no */
+  if (motore.percorso.quanteVie > 1) {
+    const bocca = motore.bocca
+    motore.percorso.vie.forEach((v, k) => {
+      const q = v.puntoA(0)
+      roba.push({ che: 'ingresso', strato: -1, x: q.x, y: q.y - 16 * S,
+                  acceso: bocca === k || bocca < 0 })
+    })
+  }
+
   for (const s of motore.schizzi)
     roba.push({ che: 'schizzo', strato: -1, x: s.x, y: s.y, r: s.r,
                 vita: s.vita, tipo: s.tipo, gelo: s.gelo })

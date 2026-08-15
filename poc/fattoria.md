@@ -110,15 +110,50 @@ Due cose sono state decise provandolo, e valgono anche per `fattoria.html`:
   c'è da avere e a che punto sono», invece di un negozio da una parte e una
   cassapanca dall'altra, che sono la stessa domanda fatta due volte.
 
-- **Prima ci va, poi si decide.** Toccare una cosa non apre più il
-  pannello: ci manda la bambina, e il pannello si apre quando è arrivata.
-  Non è un vezzo — se il pannello si apre da lontano, lei in scena è un
-  disegno che si muove e basta; è il doverci arrivare che la rende quella
-  che fa le cose. E si vede meglio anche di cosa si sta parlando, perché
-  lei ci sta accanto.
 - **Quello che tieni in mano non resta anche per terra.** Sembra ovvio
   scritto, ma la prima versione disegnava tutte e due le copie e non si
   capiva quale si stesse spostando.
+- **Prendere una cosa sono tre momenti, e si vedono tutti e tre.** *Premi*
+  — un anello si riempie sotto il dito, e finché non è pieno non è successo
+  niente: si lascia e via. *Preso* — l'anello si chiude, l'oggetto si
+  schiarisce e prende un contorno tratteggiato, e da lì è **selezionato**
+  anche da fermo. *Tiri* — l'oggetto non segue il dito a caso, **salta di
+  cella in cella**, e sotto gli si accende il riquadro di dove finirà,
+  verde se ci sta e rosso se no. L'ultimo pezzo non è vezzo: posare alla
+  cieca fa sbagliare, e sbagliare qui costa una moneta. Si preme altrove e
+  torna tutto com'era.
+- **Girare non è ruotare i pixel, è cambiare tessera.** La pixel art
+  ruotata si sfarina. Una staccionata si gira perché nel set esiste *la
+  stessa staccionata in piedi*, ed è quella che si mette al suo posto —
+  quindi la staccionata è **una voce sola che si gira**, non due voci
+  diverse nel catalogo. Dove il set non ha la variante, il tasto non
+  compare: meglio niente che un tasto che fa una cosa storta.
+- **Gli attrezzi stanno appesi all'oggetto**, non in un pannello che copre
+  lo schermo: girare una staccionata vuol dire vederla girare, e con un
+  pannello davanti non la vedi. Spariscono mentre la stai tirando, che è
+  quando sono lontani dal dito e non servono.
+- **Provata e buttata: «prima ci va, poi si decide».** Per un giro toccare
+  una cosa non apriva il pannello — ci mandava la bambina, e il pannello
+  arrivava quando lei era arrivata. Sulla carta reggeva; in mano **distrae
+  e basta**, perché fra il tocco e la risposta ci si mette dell'attesa che
+  non serve a niente. È scritto qui perché l'idea è di quelle che tornano.
+- **Lo zoom è a numeri interi.** Da 1 a 5, col pizzico o la rotella. Non
+  per pigrizia: a scala 2,3 la pixel art fa dei pixel larghi due e altri
+  tre, e da vicino si vede. Meglio saltare fra misure nette che scivolare
+  fra misure sbagliate. Due dettagli che costano un giro di prove se non
+  si sanno: si stringe **attorno al punto che stai guardando**, non attorno
+  all'angolo della mappa; e la rotella deve fare **passi interi**, perché
+  `2 × 1,18` arrotondato fa ancora 2 e non si muoverebbe mai niente.
+  Quando lo zoom si allarga al punto che il mondo ci sta tutto, la vista
+  lo **centra** invece di incollarlo in alto a sinistra.
+- **Watson si accudisce.** Toccandolo si apre il suo stato: pancia, pelo,
+  voglia di giocare. Tre bisogni che calano con le **ore vere** — se il
+  gioco resta chiuso una settimana, al ritorno ha fame, ed è giusto così —
+  e tre gesti che li riempiono. Ma il fondo è **0,15, non zero**: Watson
+  non sta mai male. Questo posto è il premio per gli esercizi fatti
+  altrove, e un cane che ti fa sentire in colpa se non apri l'app lo
+  trasformerebbe nell'ennesimo compito. La nuvoletta sopra la testa è un
+  invito, non un rimprovero.
 
 **Gli animali il set non ce li ha, e li generiamo.** In tutti e otto i file
 di ArMM1998 non c'è **nessun animale**, nemmeno uno — `NPC_test.png`

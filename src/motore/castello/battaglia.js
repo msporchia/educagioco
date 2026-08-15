@@ -48,7 +48,7 @@ export class Battaglia {
     this.caso = caso
     this.misure = misure
 
-    this.percorso = new Percorso(tappa.forma, tappa.posti, misure)
+    this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure)
     this.ondate = new Ondate(tappa)
     this.tabellone = new Tabellone(stato)
 
@@ -59,6 +59,7 @@ export class Battaglia {
 
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
+    this.usciti = 0                    // quanti sono entrati: serve ad alternare gli ingressi
     this.ondaChiusa = true; this.ondataPulita = true
     this.finito = null                 // 'vinta' | 'persa' quando la partita è chiusa
     this.bestia = this.ondate.bestiaDi(1)
@@ -75,6 +76,7 @@ export class Battaglia {
     this.tabellone.azzera(this.tappa.partenza)
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
+    this.usciti = 0
     this.ondaChiusa = true; this.ondataPulita = true
     this.finito = null
     this.bestia = this.ondate.bestiaDi(1)
@@ -116,15 +118,33 @@ export class Battaglia {
      campo è pulito). È deterministico, quindi si può dire in anticipo:
      è l'informazione che rende la scelta della torre una decisione. */
   prossime(quante = PREAVVISO) {
-    return this.ondate.prossime(this.tabellone.onda, quante)
+    const vie = this.percorso.quanteVie
+    const attese = this.ondate.prossime(this.tabellone.onda, quante, vie)
+    if (vie < 2) return attese
+    /* da che parte entrano, detto in parole che si guardano: la strada
+       non ha un nome, ma ha un ingresso, e quell'ingresso sta a destra
+       o a sinistra dell'altro. È l'informazione che rende il trascinare
+       una torre una mossa invece che una carezza. */
+    const inizi = this.percorso.vie.map(v => v.inizio.x)
+    const piuAsinistra = Math.min(...inizi)
+    const lato = k => (inizi[k] <= piuAsinistra ? 'sinistra' : 'destra')
+    return attese.map(p => ({ ...p, lato: p.via < 0 ? 'ambo' : lato(p.via) }))
   }
 
   /* i nemici escono dall'ingresso sfalsati di poco, così un'ondata non
      è una fila di gemelli: è l'unico punto in cui serve il caso */
   generaNemico() {
     const o = this.tabellone.onda
+    /* da che ingresso entra: lo decide l'ondata, e quando l'ondata
+       arriva da tutte e due le parti i mostri si alternano uno per uno
+       — così le due file partono insieme invece che una dopo l'altra */
+    const vie = this.percorso.quanteVie
+    const scelta = this.ondate.viaDi(o, vie)
+    const via = scelta < 0 ? this.usciti % vie : scelta
+    this.usciti++
     this.nemici.push(new Nemico({
       d: -this.caso() * 30,
+      via,
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,
       bestia: this.bestia.id, vola: !!this.bestia.vola, debole: this.bestia.debole,
@@ -312,11 +332,23 @@ export class Battaglia {
   }
 
   /* ── quello che si legge da fuori ── */
+  /* Da che bocca sta scendendo la roba: quella dell'ondata in corso se
+     ce n'è una, se no quella che arriverà. `-1` vuol dire tutte e due.
+     Serve al campo per accendere la freccia giusta — e la differenza
+     conta: mentre i mostri scendono da sinistra, indicare la bocca
+     della prossima ondata sarebbe una bugia con le migliori
+     intenzioni. */
+  get bocca() {
+    const vie = this.percorso.quanteVie
+    if (vie < 2) return 0
+    const inCorso = this.daGenerare > 0 || this.nemici.length > 0
+    return this.ondate.viaDi(this.tabellone.onda + (inCorso ? 0 : 1), vie)
+  }
   get via() { return this.percorso }
   /* la strada su cui cammina *questo* nemico. Con una strada sola è
-     sempre quella; serve a chi disegna e a chi spara per non doversi
-     accorgere di quando le strade diventeranno più d'una. */
-  viaDi(_nemico) { return this.percorso }
+     sempre quella, e chi disegna o chi spara non deve accorgersi di
+     quando le strade sono due. */
+  viaDi(nemico) { return this.percorso.viaN(nemico ? nemico.via : 0) }
   get postazioni() { return this.percorso.postazioni }
   /* quanti ne devono ancora uscire dall'ingresso: con questo e i nemici
      in campo si sa se il campo è pulito anche prima della prima torre */

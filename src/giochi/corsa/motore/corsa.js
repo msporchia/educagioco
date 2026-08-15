@@ -432,7 +432,7 @@ export class Partita {
       const z = e.z - this.dist
       if (z < -1.2 || z > ORIZZONTE) continue
       if (e.tipo === 'cancelli') {
-        cose.push({ che: 'cancelli', z, ops: e.ops.map(o => ({
+        cose.push({ che: 'cancelli', z, passato: e.fatto, ops: e.ops.map(o => ({
           testo: o.seg, oro: !!o.libro, buono: cancelloBuono(o),
         })) })
       } else if (e.tipo === 'nemici') {
@@ -444,10 +444,16 @@ export class Partita {
         cose.push({ che: e.tipo, z, corsia: e.corsia, quanti: e.quanti })
       }
     }
-    /* il cancello su cui si sta decidendo è **uno solo**: quello dopo si
+    /* Il cancello su cui si sta decidendo è **uno solo**: quello dopo si
        intravede appena, perché sei numeri in fila non sono una decisione
-       più ricca, sono confusione */
-    const attivo = cose.filter(c => c.che === 'cancelli' && c.z > -1).sort((a, b) => a.z - b.z)[0]
+       più ricca, sono confusione.
+
+       È il primo **non ancora attraversato**, non il più vicino: quello
+       appena passato resta in scena un metro o due mentre sfila via, e
+       finché ci restava teneva il proprio turno — così la scelta dopo
+       compariva sbiadita proprio nell'istante in cui bisognava leggerla. */
+    const attivo = cose.filter(c => c.che === 'cancelli' && !c.passato)
+      .sort((a, b) => a.z - b.z)[0]
     if (attivo) attivo.attivo = true
 
     return {

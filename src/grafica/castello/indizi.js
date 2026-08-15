@@ -38,3 +38,18 @@ export function piazzolaViva(p, { x, y, scelta, viva = false }) {
 export function raggio(p, { x, y, r, tipo }) {
   p.cerchio(x, y, r, (tipo && TINTA[tipo] ? TINTA[tipo].chiaro : '#ffffff') + '20')
 }
+
+/* ── da dove entrano ──
+   Dove le strade sono due, il bordo alto ha due bocche e bisogna vederle
+   senza doverle cercare: una freccia che punta dentro, e sotto la
+   strada che comincia. Con una strada sola non si disegna niente — la
+   bocca è una, e indicarla sarebbe rumore. */
+export function ingresso(p, { x, y, acceso }) {
+  const S = p.S, w = 11 * S, h = 13 * S
+  p.figura([[x, y + h], [x - w, y], [x + w, y]], acceso ? '#e0554d' : '#ffffff88')
+  p.ctx.strokeStyle = acceso ? '#a83b34' : '#5d6b7a66'
+  p.ctx.lineWidth = 1.6 * S
+  p.ctx.beginPath()
+  p.ctx.moveTo(x, y + h); p.ctx.lineTo(x - w, y); p.ctx.lineTo(x + w, y); p.ctx.closePath()
+  p.ctx.stroke()
+}

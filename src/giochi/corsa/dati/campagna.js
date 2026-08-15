@@ -69,11 +69,11 @@ export const TETTI = ORDINI.map((_, i) => CAMBIO ** (i + 1) - 1)
 
 export const SCALINI = [
   { chiave: 'sentieri', nome: 'I sentieri', icona: '🌿',
-    dritta: 'Cancelli semplici, e si impara che il più grosso non vince sempre.' },
+    dritta: 'I cancelli sono facili: si impara a leggerli.' },
   { chiave: 'vialunga', nome: 'La via lunga', icona: '🌉',
-    dritta: 'Arrivano le scelte doppie («÷5 +80») e il primo boss.' },
+    dritta: 'Scelte doppie, e arriva il primo boss.' },
   { chiave: 'cima', nome: 'Verso la cima', icona: '⛰️',
-    dritta: 'Tutto insieme: qui la truppa va tenuta grossa, non salvata.' },
+    dritta: 'Tutto insieme: la truppa va tenuta grossa.' },
 ]
 
 export const CAMPAGNA = [
@@ -81,43 +81,43 @@ export const CAMPAGNA = [
   { chiave: 'sentiero', nome: 'Il sentiero', veste: 'prato', scalino: 'sentieri',
     metri: 170, passo: 3.0, punta: 3.8, spinta: 0.012, fraCancelli: 21, fraScontri: 3,
     tetto: 24, truppa: 5, libri: 0.30, studio: 0.10, mira: 0.55, coni: 1, premio: 3,
-    racconto: 'Solo verdi e rossi. Guarda i numeri, non le crocette.' },
+    racconto: 'Solo verdi e rossi: guarda i numeri, non i colori.' },
   { chiave: 'campi', nome: 'I campi gialli', veste: 'grano', scalino: 'sentieri',
     metri: 210, passo: 3.1, punta: 3.9, spinta: 0.012, fraCancelli: 20, fraScontri: 3,
     tetto: 24, truppa: 5, libri: 0.32, studio: 0.18, mira: 0.60, coni: 1, premio: 3,
-    racconto: 'Cinque verdi fanno un rosso: guardali cambiare mentre corri.' },
+    racconto: 'Cinque verdi fanno un rosso. Guardali cambiare.' },
   { chiave: 'bosco', nome: 'Il bosco', veste: 'bosco', scalino: 'sentieri',
     metri: 250, passo: 3.2, punta: 4.0, spinta: 0.013, fraCancelli: 20, fraScontri: 3,
     tetto: 124, truppa: 8, libri: 0.34, studio: 0.28, mira: 0.62, coni: 2, premio: 4,
-    racconto: 'Arriva il blu, e con lui il cancello d\'oro col libro.' },
+    racconto: "Arriva il blu, e il cancello d'oro col libro." },
 
   /* ── scalino 2: la scelta si complica ── */
   { chiave: 'ponte', nome: 'Il ponte lungo', veste: 'fiume', scalino: 'vialunga',
     metri: 290, passo: 3.3, punta: 4.1, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
     tetto: 124, truppa: 8, libri: 0.34, studio: 0.38, mira: 0.66, coni: 2, premio: 5,
-    racconto: 'Adesso un cancello fa due cose: «÷5 +80» si legge in ordine.' },
+    racconto: 'Un cancello fa due cose: «÷5 +80» si legge in ordine.' },
   { chiave: 'dune', nome: 'Le dune', veste: 'deserto', scalino: 'vialunga',
     metri: 330, passo: 3.4, punta: 4.2, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
     tetto: 124, truppa: 10, libri: 0.36, studio: 0.48, mira: 0.70, coni: 2, premio: 5,
-    racconto: 'Il primo boss ha il doppio di vita, e davanti a lui si rallenta.' },
+    racconto: 'Il primo boss: davanti a lui si rallenta.' },
   { chiave: 'notte', nome: 'La notte', veste: 'notte', scalino: 'vialunga',
     metri: 370, passo: 3.5, punta: 4.3, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 10, libri: 0.36, studio: 0.58, mira: 0.72, coni: 3, premio: 6,
-    racconto: 'Arriva il giallo: da qui la truppa piena sta a 624.' },
+    racconto: 'Arriva il giallo: la truppa piena sta a 624.' },
 
   /* ── scalino 3: tenere la truppa grossa ── */
   { chiave: 'valico', nome: 'Il valico', veste: 'neve', scalino: 'cima',
     metri: 410, passo: 3.6, punta: 4.35, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 12, libri: 0.38, studio: 0.68, mira: 0.75, coni: 3, premio: 7,
-    racconto: 'Un mostro ogni tre cancelli: uno sbagliato si sente subito.' },
+    racconto: 'Un mostro ogni tre cancelli. Non sbagliarne.' },
   { chiave: 'bruciata', nome: 'La terra che brucia', veste: 'lava', scalino: 'cima',
     metri: 450, passo: 3.7, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 12, libri: 0.38, studio: 0.78, mira: 0.78, coni: 3, premio: 8,
-    racconto: 'Qui non basta sceglierne bene uno: bisogna non sbagliarne.' },
+    racconto: 'Qui non basta sceglierne bene uno.' },
   { chiave: 'cima', nome: 'La cima', veste: 'cima', scalino: 'cima',
     metri: 490, passo: 3.8, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 14, libri: 0.40, studio: 0.88, mira: 0.80, coni: 3, premio: 10,
-    racconto: 'Quasi cinquecento metri e due boss. Con la truppa piena si passa.' },
+    racconto: 'Quasi cinquecento metri e due boss.' },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length

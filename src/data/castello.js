@@ -132,7 +132,7 @@ export const CFG = {
    che c'era, e la prossima taratura sarà fatta per un campo che non
    esiste più. */
 export const GEOMETRIA = {
-  v: 3,                  // ↑ di uno a ogni modifica di `piazzole()`
+  v: 5,                  // ↑ di uno a ogni modifica di `piazzole()`
   dallIngresso: true,    // le piazzole si occupano da dove entrano i mostri
   scostamento: 34,       // quanto stanno staccate dal ciglio della strada
   margine: 22,           // e quanto restano lontane dal bordo del campo
@@ -500,9 +500,18 @@ export function partenzaDi(tappa) {
    costruzione, senza il vecchio margine: le piazzole vuote e i gradini
    che restano costano sempre più di quello che resta in tasca. */
 export const PIAZZOLE = { bosco: 4, sotterraneo: 6, mura: 8 }
+/* Quante piazzole in più per ogni ingresso oltre il primo. Non è un
+   regalo: con due strade la difesa va divisa in due, e le stesse sei
+   piazzole vorrebbero dire tre torri per strada — cioè metà difesa su
+   una tappa che non è più corta. Tre è quanto basta perché la scelta
+   resti «dove metto la prossima» invece di «quale delle due porte
+   lascio aperta». */
+export const PIAZZOLE_PER_INGRESSO = 3
+export const ingressiDi = t => (t.forme || [t.forma || []]).length
 export function postiDi(tappa) {
   const minimo = Math.max(3, pianoDi(tappa).torri.length + 1, (tappa.torri || []).length)
-  return Math.max(minimo, PIAZZOLE[tappa.campagna] || 0)
+  return Math.max(minimo, PIAZZOLE[tappa.campagna] || 0) +
+         (ingressiDi(tappa) - 1) * PIAZZOLE_PER_INGRESSO
 }
 
 /* comprare tutto: occupare ogni posto e portare ogni torre in cima. Serve
@@ -582,9 +591,18 @@ export const MARGINE = 1.35
 /* Il margine dell'ondata `o`: quante volte il danno che si riesce a mettere
    in campo copre la vita dei nemici che arrivano. Sotto 1 la tappa è persa
    per forza, e non per come si gioca — è il numero da tenere d'occhio. */
-export function margineDi({ cap, posti, partenza, durezza, torri }, o) {
+export function margineDi(tappa, o) {
+  const { cap, posti, partenza, durezza, torri } = tappa
   const { potenza } = difesaCon(energiaAll(o, partenza), { cap, posti, torri })
-  const danno = potenza * durataOnda(o) * RESA
+  /* ── e quanta di quella potenza lavora davvero ──
+     Con due ingressi le torri stanno su due strade e l'ondata ne
+     percorre una: contro di lei combatte metà difesa. Il modello non
+     lo sapeva, e per le tre tappe a due bocche prometteva una difesa
+     doppia di quella vera — le vite tarate venivano fuori troppo alte
+     e la «fatica» della campagna smetteva di crescere. Le piazzole in
+     più (`PIAZZOLE_PER_INGRESSO`) servono proprio a ripagare questa
+     divisione, non a regalare difesa. */
+  const danno = potenza / ingressiDi(tappa) * durataOnda(o) * RESA
   return danno / (nemiciDiOnda(o) * vitaDiOnda(o, durezza))
 }
 
@@ -604,8 +622,10 @@ export function durezzaDi(tappa) {
 /* Quanto è dura *davvero* una tappa: i nemici misurati sulla difesa che quella
    tappa mette a disposizione. È questo che deve crescere lungo la campagna, non
    la robustezza dei nemici in sé — una tappa di soli arcieri e una piena di
-   ghiaccio non si confrontano con lo stesso metro. */
-export const faticaDi = t => t.durezza / resaTipi(t.torri)
+   ghiaccio non si confrontano con lo stesso metro, e nemmeno una a un ingresso
+   e una a due: là la stessa durezza si paga il doppio, perché contro ogni
+   ondata combatte metà difesa. */
+export const faticaDi = t => t.durezza * ingressiDi(t) / resaTipi(t.torri)
 
 /* Quante operazioni chiede una tappa a chi la gioca fino in fondo: una per
    ogni torre costruita e una per ogni gradino salito. È il numero che deve
@@ -664,7 +684,7 @@ export const TAPPE = RACCONTO.map((t, i) => {
    taratura invece di andare avanti con numeri di ieri. */
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA,
+    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
                        !!t.debolezze, !!t.rami, t.forma]),
@@ -683,9 +703,12 @@ export const firmaTaratura = () => FIRMA
    punto. Il modello dice dove cede (test unita/castello lo stampa). */
 export const LIBERA = {
   nome: 'Partita libera', emoji: '♾️', ondate: Infinity, posti: 14, cap: 10,
-  torri: ['add', 'sub', 'mul', 'div'], forma: RACCONTO[3].forma,
-  /* la forma è quella del folto, e il terreno va detto: senza, si
-     dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
+  torri: ['add', 'sub', 'mul', 'div'], forme: RACCONTO[14].forme,
+  /* le strade sono quelle del torrione — **due ingressi**, perché la
+     partita libera è la modalità di chi sa già tutto e l'ultima cosa
+     che il gioco ha da insegnare è difendere due fronti. Il terreno va
+     detto lo stesso: senza, si dipingerebbe il bosco di mezzogiorno
+     sopra il tracciato sbagliato */
   ambiente: 'bosco-fitto',
   debolezze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
   mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js

@@ -26,7 +26,7 @@
 import { TAPPE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
          costoNuovaTorre, costoSalita, forzaDi, partenzaDi, resaTipi, dpsDi,
          tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
-         energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda,
+         energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, ingressiDi,
          firmaEquilibrio, firmaTaratura }
   from '../../src/data/castello.js'
 import { CAMPAGNE } from '../../src/data/campagne-castello.js'
@@ -189,8 +189,16 @@ for (const [i, t] of TAPPE.entries()) {
    prima per arrivare più in alto: è il respiro che rende un capitolo
    nuovo un inizio e non solo un altro gradino. Quindi la fatica si
    controlla dentro l'arco, e fra archi si confrontano le cime. */
+/* ── e una correzione, per le tappe a due ingressi ──
+   Là la stessa vita costa il doppio: le torri stanno su due strade e
+   contro ogni ondata ne lavora metà, quindi la taratura abbassa le vite
+   apposta. Senza dividere per gli ingressi, una tappa a due bocche
+   sembrerebbe **più facile** di quella prima solo perché i suoi mostri
+   hanno meno vita — e la scala della campagna direbbe il falso. È lo
+   stesso motivo per cui la vita nuda non si confronta mai fra tappe con
+   torri diverse. */
 const faticaVera = t => t.vite.reduce((s, v, k) => s + v * nemiciDiOnda(k + 1), 0) /
-                        energiaAll(t.ondate + 1, t.partenza)
+                        energiaAll(t.ondate + 1, t.partenza) * ingressiDi(t)
 const perCampagna = CAMPAGNE.map(c => c.tappe.map(t => TAPPE.find(x => x.nome === t.nome)))
 for (const [k, arco] of perCampagna.entries()) {
   const fatiche = arco.map(faticaVera)

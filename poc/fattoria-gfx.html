@@ -45,13 +45,19 @@
   .maniglia b{font-size:15px}
   .maniglia .freccia{margin-left:auto;transition:transform .22s ease}
   .scaffale.aperto .maniglia .freccia{transform:rotate(180deg)}
-  .schede{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto}
+  .schede{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto;touch-action:pan-x}
   .scheda{flex:0 0 auto;padding:5px 12px;border-radius:14px;font-size:13px;
     background:#0d160f;border:2px solid #2b4430;cursor:pointer}
   .scheda.viva{background:#3d5c42;border-color:#6f9b6f}
-  .roba{display:flex;gap:8px;padding:0 10px 12px;overflow-x:auto;min-height:96px}
+  .roba{display:flex;gap:8px;padding:0 10px 12px;overflow-x:auto;min-height:96px;touch-action:pan-x}
+  /* `touch-action:none` sulla carta e non sul contenitore: senza, il
+     browser legge il trascinamento come uno scorrimento della lista e
+     **annulla il puntatore** a meta' gesto — la roba non si riusciva a
+     tirare fuori. Cosi' invece il dito che parte da una carta e' nostro,
+     e la lista si scorre lo stesso partendo da uno spazio vuoto. */
   .voce{flex:0 0 auto;width:76px;border-radius:12px;background:#0d160fcc;
-    border:2px solid #2b4430;padding:5px 3px 4px;text-align:center;cursor:grab}
+    border:2px solid #2b4430;padding:5px 3px 4px;text-align:center;cursor:grab;
+    touch-action:none}
   .voce.cara{opacity:.42}
   .voce canvas{display:block;margin:0 auto;image-rendering:pixelated}
   .voce .nome{font-size:10px;line-height:1.15;margin-top:2px;opacity:.85}
@@ -73,11 +79,21 @@
   .bot.piano{background:#2b4430}
   .bot:disabled{opacity:.4;cursor:default}
   .griglia{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;
-    max-height:44vh;overflow-y:auto}
+    max-height:44vh;overflow-y:auto;touch-action:pan-y}
   .griglia .voce{cursor:pointer}
+  .bisogni{display:grid;gap:7px;margin:2px 0 14px}
+  .bisogno{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;font-size:13px}
+  /* non si chiama `.barra`: quella e' gia' la barra in cima, e chiamarle
+     uguale faceva finire il livello dei bisogni a tutto schermo */
+  .livello{height:9px;border-radius:6px;background:#0d160f;border:1px solid #2b4430;overflow:hidden}
+  .livello i{display:block;height:100%;border-radius:6px;transition:width .35s ease}
+  .bisogno em{font-style:normal;opacity:.6;font-size:11px;min-width:34px;text-align:right}
 
-  #fantasma{position:absolute;z-index:8;pointer-events:none;display:none;
-    image-rendering:pixelated;filter:drop-shadow(0 3px 3px #0006)}
+  #attrezzi{position:absolute;z-index:6;display:none;gap:6px;
+    background:#0d160fe6;border:2px solid #6f9b6f;border-radius:14px;padding:5px}
+  #attrezzi button{width:38px;height:38px;border:none;border-radius:9px;
+    background:#3d5c42;color:#f4efe2;font-size:18px;cursor:pointer}
+  #attrezzi button:active{transform:scale(.92)}
   .avviso{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:7;
     background:#0d160fdd;border:2px solid #3d5c42;border-radius:14px;padding:8px 14px;
     font-size:13px;opacity:0;transition:opacity .25s ease;pointer-events:none;max-width:80vw;text-align:center}
@@ -102,7 +118,7 @@
   <div class="roba" id="roba"></div>
 </div>
 
-<img id="fantasma">
+<div id="attrezzi"></div>
 <div class="avviso" id="avviso"></div>
 <div class="velo" id="velo"><div class="foglio" id="foglio"></div></div>
 
@@ -115,18 +131,35 @@ const foglio = document.getElementById('foglio');
 const velo = document.getElementById('velo');
 const tela = document.getElementById('tela');
 const ctx = tela.getContext('2d');
-const fantasma = document.getElementById('fantasma');
 const atlante = new Image();
 
 // ---------------------------------------------------------------- misure
 const T = 16;                       // la tessera di partenza
-const SCALA = 2;                    // quanto la ingrandiamo
-const CELLA = T * SCALA;            // 32 px sullo schermo
 const CELLE = 6;                    // celle per piazzola
-const LATO = CELLA * CELLE;
-const PIAZZOLE = 7, MONDO = LATO * PIAZZOLE;
+const PIAZZOLE = 7;
 const PRIMA = 2, ULTIMA = 4;        // le piazzole di partenza
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+// Lo zoom e' un numero intero e basta: la pixel art a scala 2,3 fa dei
+// pixel larghi due e altri tre, e da vicino si vede. Meglio saltare fra
+// misure nette che scivolare fra misure sbagliate.
+const SCALA_MIN = 1, SCALA_MAX = 5;
+let SCALA = 2;
+let CELLA, LATO, MONDO;
+function misure() { CELLA = T * SCALA; LATO = CELLA * CELLE; MONDO = LATO * PIAZZOLE; }
+misure();
+
+// Si stringe **attorno a un punto**, non attorno all'angolo in alto a
+// sinistra: quello che stavi guardando resta dove lo stavi guardando.
+function zoomA(voluta, ancoraX, ancoraY) {
+  const nuova = Math.max(SCALA_MIN, Math.min(SCALA_MAX, Math.round(voluta)));
+  if (nuova === SCALA) return;
+  const prima = { x: (ancoraX + S.vista.x) / CELLA, y: (ancoraY + S.vista.y) / CELLA };
+  SCALA = nuova; misure();
+  S.vista.x = prima.x * CELLA - ancoraX;
+  S.vista.y = prima.y * CELLA - ancoraY;
+  limita();
+}
 
 // ---------------------------------------------------------------- il catalogo
 // piede = quante celle occupa per terra. Lo sprite puo' essere piu' alto:
@@ -151,8 +184,10 @@ const CATEGORIE = [
     V('ninfee',   'ninfee',      'Ninfee',       6, [2, 1], { sotto: true }),
   ]},
   { chiave: 'recinti', nome: '🚧 Recinti', voci: [
-    V('staccio',  'staccionata', 'Staccionata',  6, [2, 1]),
-    V('palo',     'palo',        'Palo',         3, [1, 1]),
+    V('staccio',  'staccionata', 'Staccionata',  6, [2, 1], { giri: [
+      { pezzo: 'staccionata', piede: [2, 1] },   // sdraiata
+      { pezzo: 'palo',        piede: [1, 2] },   // in piedi
+    ]}),
     V('cancello', 'cancello',    'Cancello',    12, [2, 1]),
     V('ringhiera','ringhiera',   'Ringhiera',    9, [3, 1]),
   ]},
@@ -213,7 +248,7 @@ function caso(x, y, sale) {
 function mondoNuovo() {
   const s = { piazzole: {}, cose: [], ostacoli: {}, magazzino: {},
               monete: 260, prossimo: 1, vista: { x: 0, y: 0 },
-              visto: false };
+              bestie: {}, visto: false };
   for (let px = PRIMA; px <= ULTIMA; px++)
     for (let py = PRIMA; py <= ULTIMA; py++) s.piazzole[ch(px, py)] = 1;
 
@@ -234,14 +269,14 @@ function mondoNuovo() {
 
   // due cose gia' in mezzo, perche' aprire su un prato vuoto non dice niente
   const c0 = PRIMA * CELLE;
-  const metti = (id, dx, dy) => s.cose.push(
-    { i: s.prossimo++, id, x: c0 + dx, y: c0 + dy });
+  const metti = (id, dx, dy, g) => s.cose.push(
+    { i: s.prossimo++, id, g: g || 0, x: c0 + dx, y: c0 + dy });
   metti('casetta', 7, 4);
   metti('orto', 4, 9);
   metti('staccio', 4, 8);
   metti('staccio', 6, 8);
   metti('staccio', 8, 8);
-  metti('palo', 10, 8);
+  metti('staccio', 10, 8, 1);   // la stessa staccionata, in piedi
   metti('fiori0', 11, 6);
   metti('fiori1', 3, 12);
   metti('panchina', 8, 11);
@@ -280,8 +315,8 @@ function prezzoPiazzola() {
 const cellaMia = (cx, cy) => mia((cx / CELLE) | 0, (cy / CELLE) | 0);
 
 function ingombro(cosa) {
-  const v = PER_ID[cosa.id];
-  return { x: cosa.x, y: cosa.y, w: v.piede[0], h: v.piede[1] };
+  const p = piedeDi(cosa, PER_ID[cosa.id]);
+  return { x: cosa.x, y: cosa.y, w: p[0], h: p[1] };
 }
 function libera(cx, cy, w, h, salta) {
   for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) {
@@ -290,7 +325,7 @@ function libera(cx, cy, w, h, salta) {
     if (S.ostacoli[ch(x, y)]) return false;
   }
   for (const c of S.cose) {
-    if (c === salta) continue;
+    if (c === salta || !PER_ID[c.id]) continue;
     const g = ingombro(c);
     if (cx < g.x + g.w && cx + w > g.x && cy < g.y + g.h && cy + h > g.y) return false;
   }
@@ -379,9 +414,9 @@ function cartelli() {
       const cx = x + LATO / 2, cy = y + LATO / 2;
       const pc = PEZZI['cartello'];
       posaLibera('cartello', cx - pc[2] * SCALA / 2, cy - pc[3] * SCALA + 14);
-      ctx.font = '700 15px system-ui,sans-serif';
+      ctx.font = `700 ${9 + SCALA * 3}px system-ui,sans-serif`;
       ctx.fillStyle = posso ? '#3a2a12' : '#7a2a2a';
-      ctx.fillText('🪙' + p, cx, cy + 4);
+      ctx.fillText(String(p), cx, cy + 2 + SCALA);
     }
   ctx.textAlign = 'left';
 }
@@ -405,26 +440,33 @@ const attori = [];
 let bambina = null;   // quella che segue il dito; gli altri girano da soli
 
 class Attore {
+  // x e y stanno in **celle**, non in pixel: così lo zoom non li tocca, e
+  // non c'è niente da riscalare quando cambia
   constructor(nome, cx, cy, opz = {}) {
     this.nome = nome;
-    this.x = (cx + .5) * CELLA;
-    this.y = (cy + .5) * CELLA;
+    this.x = cx + .5;
+    this.y = cy + .5;
     this.verso = 'giu';
     this.passo = 0;
     this.meta = null;
-    this.velocita = opz.velocita || 108;
-    this.vaga = opz.vaga || 0;        // ogni quanti secondi si sposta da sé
+    this.velocita = opz.velocita || 3.4;   // celle al secondo
+    this.vaga = opz.vaga || 0;             // ogni quanti secondi si sposta da sé
     this.attesa = 1 + Math.random() * 3;
+    this.cura = opz.cura || null;          // se ha dei bisogni, si può accudire
+    this.chi = opz.chi || nome;
     attori.push(this);
   }
 
-  get cella() { return { x: (this.x / CELLA) | 0, y: (this.y / CELLA) | 0 }; }
+  get cella() { return { x: this.x | 0, y: this.y | 0 }; }
 
-  vaiA(cx, cy) { this.meta = { x: (cx + .5) * CELLA, y: (cy + .5) * CELLA }; }
+  vaiA(cx, cy) { this.meta = { x: cx + .5, y: cy + .5 }; }
 
-  // quanto dista, in celle, da un punto: serve per sapere se è «arrivata»
-  distanzaDa(cx, cy) {
-    return Math.hypot(this.x - (cx + .5) * CELLA, this.y - (cy + .5) * CELLA) / CELLA;
+  // il rettangolo che occupa a schermo: serve per sapere se l'hai toccato
+  get riquadro() {
+    const p = PEZZI[`${this.nome}_giu0`];
+    const w = (p ? p[2] : 16) * SCALA, h = (p ? p[3] : 32) * SCALA;
+    return { x: this.x * CELLA - S.vista.x - w / 2,
+             y: this.y * CELLA - S.vista.y - h + CELLA / 2, w, h };
   }
 
   muovi(dt) {
@@ -445,7 +487,7 @@ class Attore {
     }
     const dx = this.meta.x - this.x, dy = this.meta.y - this.y;
     const d = Math.hypot(dx, dy);
-    if (d < 3) { this.meta = null; return; }
+    if (d < .1) { this.meta = null; return; }
     const v = this.velocita * dt;
     this.x += dx / d * Math.min(v, d);
     this.y += dy / d * Math.min(v, d);
@@ -459,9 +501,8 @@ class Attore {
     const specchio = this.verso === 'sinistra';
     const p = PEZZI[`${this.nome}_${specchio ? 'lato' : this.verso}${fr}`];
     if (!p) return;
-    const w = p[2] * SCALA, h = p[3] * SCALA;
-    const x = Math.round(this.x - S.vista.x - w / 2);
-    const y = Math.round(this.y - S.vista.y - h + CELLA / 2);
+    const r = this.riquadro;
+    const x = Math.round(r.x), y = Math.round(r.y), w = p[2] * SCALA, h = p[3] * SCALA;
     if (specchio) {
       ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1);
       ctx.drawImage(atlante, p[0], p[1], p[2], p[3], 0, 0, w, h);
@@ -469,7 +510,121 @@ class Attore {
     } else {
       ctx.drawImage(atlante, p[0], p[1], p[2], p[3], x, y, w, h);
     }
+    if (this === scelto) {
+      ctx.save();
+      ctx.setLineDash([5, 4]); ctx.lineDashOffset = -orologio * 12;
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.85)';
+      ctx.strokeRect(x + 1, y + h / 3, w - 2, h * 2 / 3 - 1);
+      ctx.restore();
+      statistiche(this, x + w / 2, y + h / 3, w);
+    } else if (this.cura && bisognoUrgente(this)) {
+      fumetto(x + w / 2, y - 4);
+    }
   }
+}
+
+// chi si può accudire ha una nuvoletta quando gli manca qualcosa: è un
+// invito, non un rimprovero — non succede niente se la ignori
+function fumetto(x, y) {
+  const s = 2 + Math.sin(orologio * 4) * 1.2;
+  ctx.font = `${Math.round(11 + SCALA * 2)}px system-ui,sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('💭', x, y - s);
+  ctx.textAlign = 'left';
+}
+
+function attoreSotto(sx, sy) {
+  for (let i = attori.length - 1; i >= 0; i--) {
+    const r = attori[i].riquadro;
+    if (sx >= r.x - 4 && sx <= r.x + r.w + 4 && sy >= r.y && sy <= r.y + r.h + 4)
+      return attori[i];
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------- accudire
+// Tre bisogni che calano piano, e tre gesti che li riempiono. Calano con le
+// **ore vere**, non coi fotogrammi: se il gioco resta chiuso una settimana,
+// al ritorno Watson ha fame, e questo e' giusto. Quello che invece non
+// succede mai e' che stia male: il fondo e' 0,15, non zero. Questo posto e'
+// il premio per gli esercizi fatti altrove — un cane che ti fa sentire in
+// colpa se non apri l'app lo trasformerebbe in un altro compito.
+const BISOGNI = {
+  pancia: { nome: 'Pancia',  icona: '🍖', ore: 14, colore: '#e0a33c' },
+  pelo:   { nome: 'Pelo',    icona: '🪮', ore: 30, colore: '#7fb4e0' },
+  gioco:  { nome: 'Voglia di giocare', icona: '🎾', ore: 20, colore: '#8fcf6f' },
+};
+const GESTI = [
+  { chiave: 'pancia', tasto: '🍖 Dagli da mangiare', quanto: .45, prezzo: 2 },
+  { chiave: 'pelo',   tasto: '🪮 Spazzolalo',        quanto: .5,  prezzo: 0 },
+  { chiave: 'gioco',  tasto: '🎾 Gioca con lui',     quanto: .55, prezzo: 0 },
+];
+const FONDO = .15;
+
+function statoBestia(chiave) {
+  if (!S.bestie) S.bestie = {};
+  let b = S.bestie[chiave];
+  if (!b) b = S.bestie[chiave] = { pancia: .8, pelo: .9, gioco: .7, quando: Date.now() };
+  const ore = Math.max(0, (Date.now() - (b.quando || Date.now())) / 3600000);
+  if (ore > 0.02) {
+    for (const k in BISOGNI)
+      b[k] = Math.max(FONDO, Math.min(1, (b[k] ?? .8) - ore / BISOGNI[k].ore));
+    b.quando = Date.now();
+  }
+  return b;
+}
+function bisognoUrgente(a) {
+  const b = statoBestia(a.cura);
+  return Object.keys(BISOGNI).some(k => b[k] < .35);
+}
+const umore = b => Object.keys(BISOGNI).reduce((s, k) => s + b[k], 0) / 3;
+
+function comeSta(b) {
+  const u = umore(b);
+  if (u > .78) return 'Sta benissimo. Scodinzola appena ti vede.';
+  if (u > .55) return 'Sta bene.';
+  if (b.pancia < .35) return 'Ha fame. Ti guarda e poi guarda la ciotola.';
+  if (b.gioco < .35) return 'Si annoia. Ti ha portato la pallina due volte.';
+  if (b.pelo < .35) return 'Ha il pelo tutto arruffato — è un bobtail, succede.';
+  return 'Potrebbe stare meglio.';
+}
+
+// Watson si accudisce come si sposta una panchina: si tiene premuto, e
+// quello che si può fare compare **addosso a lui** — i gesti sotto, le sue
+// barrette sopra la testa. Un pannello a schermo intero lo coprirebbe, e la
+// cosa che vuoi guardare mentre gli dai da mangiare è lui.
+function gesto(a, g) {
+  const b = statoBestia(a.cura);
+  if (b[g.chiave] > .93) { avvisa(`${a.chi} non ne ha bisogno adesso.`); return; }
+  if (g.prezzo && !paga(g.prezzo)) return;
+  b[g.chiave] = Math.min(1, b[g.chiave] + g.quanto);
+  b.quando = Date.now();
+  salva();
+  // la bambina lo raggiunge: si accudisce stando lì, non da lontano
+  const c = a.cella;
+  bambina.vaiA(c.x + 1, c.y);
+  if (g.chiave === 'gioco') { a.attesa = .1; a.velocita = 4.6; }
+  avvisa(comeSta(b));
+}
+
+// le barrette sopra la testa, disegnate nel mondo: seguono la bestia anche
+// mentre cammina, che è quello che fa mentre la guardi
+function statistiche(a, x, y, larg) {
+  const b = statoBestia(a.cura);
+  const w = Math.max(46, larg * 1.8), h = 5, passo = h + 3;
+  const x0 = Math.round(x - w / 2);
+  let y0 = Math.round(y - Object.keys(BISOGNI).length * passo - 8);
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,20,12,.72)';
+  ctx.fillRect(x0 - 4, y0 - 4, w + 8, Object.keys(BISOGNI).length * passo + 6);
+  for (const k in BISOGNI) {
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.fillRect(x0, y0, w, h);
+    ctx.fillStyle = BISOGNI[k].colore;
+    ctx.fillRect(x0, y0, Math.round(w * b[k]), h);
+    y0 += passo;
+  }
+  ctx.restore();
 }
 
 let orologio = 0;
@@ -488,28 +643,96 @@ function disegna() {
   for (const c of S.cose) {
     if (preso && preso.da === c) continue;   // e' in mano, non per terra
     const v = PER_ID[c.id]; if (!v) continue;
-    let nome = v.pezzo;
+    let nome = pezzoDi(c, v);
+    const piede = piedeDi(c, v);
     if (v.anima) nome = v.anima[((orologio * 4) | 0) % v.anima.length];
-    scena.push({ nome, x: c.x, y: c.y, piede: v.piede,
-                 fondo: v.sotto ? -1 : c.y + v.piede[1] });
+    scena.push({ nome, x: c.x, y: c.y, piede, cosa: c,
+                 fondo: v.sotto ? -1 : c.y + piede[1] });
   }
-  for (const a of attori) scena.push({ attore: a, fondo: a.y / CELLA + 1 });
+  for (const a of attori) scena.push({ attore: a, fondo: a.y + 1 });
   scena.sort((a, b) => a.fondo - b.fondo);
 
   for (const e of scena) {
     if (e.attore) { e.attore.disegna(); continue; }
     posa(e.nome, e.x, e.y, e.piede);
+    if (e.cosa && e.cosa === scelto) schiarisci(e.nome, e.x, e.y, e.piede);
   }
 
+  disegnaAtterraggio();
   disegnaNebbia();
   cartelli();
+  disegnaAnello();
+}
+
+// Un oggetto selezionato si schiarisce e prende un contorno. Due segnali e
+// non uno perche' da soli non bastano: il contorno si perde sull'erba
+// chiara, e la schiaritura si perde sugli sprite gia' chiari.
+function schiarisci(nome, cx, cy, piede) {
+  const p = PEZZI[nome]; if (!p) return;
+  const battito = .16 + .12 * (1 + Math.sin(orologio * 5)) / 2;
+  const larg = p[2] * SCALA;
+  const x = cx * CELLA - S.vista.x + (piede[0] * CELLA - larg) / 2;
+  const y = (cy + piede[1]) * CELLA - S.vista.y - p[3] * SCALA;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = battito;
+  ctx.drawImage(atlante, p[0], p[1], p[2], p[3],
+    Math.round(x), Math.round(y), larg, p[3] * SCALA);
+  ctx.restore();
+  ctx.save();
+  ctx.setLineDash([5, 4]);
+  ctx.lineDashOffset = -orologio * 12;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255,255,255,.85)';
+  ctx.strokeRect(cx * CELLA - S.vista.x + 1, cy * CELLA - S.vista.y + 1,
+    piede[0] * CELLA - 2, piede[1] * CELLA - 2);
+  ctx.restore();
+}
+
+// Dove finirebbe se lasci adesso. Il riquadro dice se ci sta, lo sprite in
+// trasparenza dice come verrebbe — insieme tolgono la domanda «dove va?».
+function disegnaAtterraggio() {
+  if (!preso || preso.cx === null) return;
+  const { v, da, cx, cy, ok } = preso;
+  const piede = piedeDi(da, v);
+  const x = cx * CELLA - S.vista.x, y = cy * CELLA - S.vista.y;
+  ctx.save();
+  ctx.fillStyle = ok ? 'rgba(140,220,120,.28)' : 'rgba(220,110,110,.32)';
+  ctx.fillRect(x, y, piede[0] * CELLA, piede[1] * CELLA);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = ok ? 'rgba(180,255,160,.9)' : 'rgba(255,150,150,.9)';
+  ctx.strokeRect(x + 1, y + 1, piede[0] * CELLA - 2, piede[1] * CELLA - 2);
+  ctx.restore();
+  posa(pezzoDi(da, v), cx, cy, piede, ok ? .85 : .45);
+}
+
+// L'anello che si riempie mentre tieni premuto: finche' non e' pieno non e'
+// successo niente, e lasciando adesso non hai mosso nulla.
+function disegnaAnello() {
+  if (!anello) return;
+  const q = Math.min(1, (performance.now() - anello.t0) / ATTESA);
+  const r = 20;
+  ctx.save();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(0,0,0,.35)';
+  ctx.beginPath(); ctx.arc(anello.x, anello.y, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,224,138,.95)';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(anello.x, anello.y, r, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------- la vista
 function limita() {
   const w = tela.width / DPR, h = tela.height / DPR;
-  S.vista.x = Math.round(Math.max(Math.min(0, w - MONDO), Math.min(S.vista.x, MONDO - w)));
-  S.vista.y = Math.round(Math.max(Math.min(0, h - MONDO), Math.min(S.vista.y, MONDO - h)));
+  // se il mondo ci sta tutto — e succede appena si allarga lo zoom — non si
+  // incolla in alto a sinistra lasciando il nero sotto: si mette in mezzo
+  S.vista.x = Math.round(MONDO <= w ? (MONDO - w) / 2
+    : Math.max(0, Math.min(S.vista.x, MONDO - w)));
+  S.vista.y = Math.round(MONDO <= h ? (MONDO - h) / 2
+    : Math.max(0, Math.min(S.vista.y, MONDO - h)));
 }
 function vaiACasa() {
   const c = ((PRIMA + ULTIMA + 1) / 2) * LATO;
@@ -614,36 +837,50 @@ function riempiScaffale() {
   for (const v of cat.voci) robaEl.appendChild(cartaVoce(v));
 }
 
-// ---------------------------------------------------------------- trascinare
-let preso = null;      // { v, da }  da = la cosa che stiamo spostando, o null
+// ---------------------------------------------------------------- prendere
+// Tre momenti distinti, e ognuno si vede:
+//   1. PREMI  — un anello si riempie sotto il dito. Dice «sto per prenderlo»,
+//      e finché non è pieno non è successo niente: si può lasciare e via.
+//   2. PRESO  — l'anello si chiude, l'oggetto si schiarisce e prende un
+//      contorno. Da qui è selezionato: si può tirare, o girare, o mettere via.
+//   3. TIRI   — l'oggetto non segue il dito a caso: **salta di cella in
+//      cella**, e sotto gli si accende il riquadro di dove finirà, verde se
+//      ci sta e rosso se no. Il punto non è farlo carino: è che a posare
+//      alla cieca si sbaglia, e sbagliare qui costa una moneta.
+const ATTESA = 420;                 // ms di pressione per prenderlo
+
+let preso = null;      // { v, da, cx, cy, ok } quello che si sta tirando
+let scelto = null;     // la cosa selezionata, che resta tale anche da ferma
 let giu = null;        // il dito premuto
-let lungo = null;      // il timer dell'anellino
+let lungo = null;      // il timer dell'anello
+let anello = null;     // { x, y, t0 } l'anello che si riempie
 let scorrendo = false;
 
+const larghezzaDi = v => PEZZI[v.pezzo] ? PEZZI[v.pezzo][2] : 16;
+
 function prendi(v, da) {
-  inArrivo = null;
-  preso = { v, da };
-  const p = PEZZI[v.pezzo];
-  const c = provino(v.pezzo, 999);
-  fantasma.src = c.toDataURL();
-  fantasma.style.width = p[2] * SCALA + 'px';
-  fantasma.style.display = 'block';
+  preso = { v, da, cx: null, cy: null, ok: false };
+  scelto = da || null;
   scaffale.classList.remove('aperto');
 }
+
+// dove finirebbe: la cella sotto il dito, con il piede centrato sopra
 function muoviPreso(sx, sy) {
   if (!preso) return;
-  fantasma.style.left = (sx - parseInt(fantasma.style.width) / 2) + 'px';
-  fantasma.style.top = (sy - parseInt(fantasma.style.width)) + 'px';
-}
-function posaPreso(sx, sy) {
-  if (!preso) return;
   const { v, da } = preso;
-  preso = null; fantasma.style.display = 'none';
+  const piede = piedeDi(da, v);
   const c = cellaDa(sx, sy);
-  const cx = c.x - ((v.piede[0] - 1) / 2 | 0), cy = c.y;
-  if (!libera(cx, cy, v.piede[0], v.piede[1], da)) {
-    avvisa('Lì non ci sta.'); return;
-  }
+  preso.cx = c.x - ((piede[0] - 1) / 2 | 0);
+  preso.cy = c.y;
+  preso.ok = libera(preso.cx, preso.cy, piede[0], piede[1], da);
+}
+
+function posaPreso() {
+  if (!preso) return;
+  const { v, da, cx, cy, ok } = preso;
+  preso = null;
+  if (cx === null) return;
+  if (!ok) { avvisa('Lì non ci sta.'); return; }
   if (da) {
     if (da.x === cx && da.y === cy) return;      // rimettere dov'era e' gratis
     if (!paga(1)) return;
@@ -652,13 +889,51 @@ function posaPreso(sx, sy) {
     const inMagazzino = (S.magazzino[v.id] || 0) > 0;
     if (inMagazzino) { S.magazzino[v.id]--; if (!S.magazzino[v.id]) delete S.magazzino[v.id]; }
     else if (!paga(v.prezzo)) return;
-    S.cose.push({ i: S.prossimo++, id: v.id, x: cx, y: cy });
+    const nuova = { i: S.prossimo++, id: v.id, x: cx, y: cy };
+    S.cose.push(nuova);
+    scelto = nuova;
+  }
+  salva();
+}
+
+// ---------------------------------------------------------------- girare
+// «Girare» non è ruotare dei pixel: la pixel art ruotata si sfarina. È
+// **cambiare tessera**, e si può solo dove il set ce l'ha davvero — una
+// staccionata orizzontale e la stessa in piedi. Dove non c'è, il tasto non
+// compare: meglio niente che un tasto che fa una cosa storta.
+// Tutte reggono una voce sconosciuta senza esplodere: un salvataggio di
+// ieri può contenere un id che oggi non c'è più — è successo alla prima
+// prova, con il `palo` diventato una staccionata girata.
+const versoDi = c => (c && c.g) || 0;
+function giriDi(v) { return (v && v.giri) || null; }
+function piedeDi(cosa, v) {
+  if (!v) return [1, 1];
+  const g = giriDi(v);
+  return g ? g[versoDi(cosa) % g.length].piede : v.piede;
+}
+function pezzoDi(cosa, v) {
+  if (!v) return null;
+  const g = giriDi(v);
+  return g ? g[versoDi(cosa) % g.length].pezzo : v.pezzo;
+}
+
+function gira(cosa) {
+  const v = PER_ID[cosa.id], g = giriDi(v);
+  if (!g) return;
+  const dopo = (versoDi(cosa) + 1) % g.length;
+  const p = g[dopo].piede;
+  const prima = cosa.g;
+  cosa.g = dopo;
+  if (!libera(cosa.x, cosa.y, p[0], p[1], cosa)) {
+    cosa.g = prima;
+    avvisa('Girato non ci sta: fagli spazio.');
+    return;
   }
   salva();
 }
 
 // ---------------------------------------------------------------- i pannelli
-const chiudi = () => { inArrivo = null; velo.classList.remove('c-e'); };
+const chiudi = () => velo.classList.remove('c-e');
 function apri(html) { foglio.innerHTML = html; velo.classList.add('c-e'); }
 function tasto(sel, fn) { const b = foglio.querySelector(sel); if (b) b.addEventListener('click', fn); }
 velo.addEventListener('click', e => { if (e.target === velo) chiudi(); });
@@ -695,21 +970,62 @@ function pannelloOstacolo(o) {
   });
 }
 
-function pannelloCosa(cosa) {
-  const v = PER_ID[cosa.id];
-  apri(`<h2>${v.nome}</h2>
-    <p>Tienilo premuto per spostarlo (costa una monetina). Oppure rimettilo
-       fra la tua roba: non si perde e non si rimborsa, di là ci resta.</p>
-    <div class="fila">
-      <button class="bot piano" data-no>Va bene così</button>
-      <button class="bot" data-via>Mettilo via</button>
-    </div>`);
-  tasto('[data-no]', chiudi);
-  tasto('[data-via]', () => {
-    S.cose = S.cose.filter(c => c !== cosa);
-    S.magazzino[cosa.id] = (S.magazzino[cosa.id] || 0) + 1;
-    chiudi(); salva();
-  });
+// Gli attrezzi della cosa selezionata: stanno **appesi all'oggetto**, non in
+// un pannello che copre lo schermo. Girare una staccionata vuol dire vederla
+// girare, e con un pannello davanti non la vedi.
+const attrezziEl = document.getElementById('attrezzi');
+let scelPrec = null;
+
+function aggiornaAttrezzi() {
+  if (!scelto || preso) {
+    if (attrezziEl.style.display !== 'none') attrezziEl.style.display = 'none';
+    if (!scelto) scelPrec = null;
+    return;
+  }
+  const bestia = scelto instanceof Attore;
+  if (scelto !== scelPrec) {
+    scelPrec = scelto;
+    if (bestia) {
+      attrezziEl.innerHTML = GESTI.map(g =>
+        `<button data-g="${g.chiave}" title="${g.tasto}">${g.tasto.split(' ')[0]}</button>`
+      ).join('') + '<button data-fine title="ho finito">✓</button>';
+      for (const g of GESTI)
+        attrezziEl.querySelector(`[data-g="${g.chiave}"]`)
+          .addEventListener('click', () => gesto(scelto, g));
+    } else {
+      const v = PER_ID[scelto.id];
+      attrezziEl.innerHTML =
+        (giriDi(v) ? '<button data-gira title="giralo">↻</button>' : '') +
+        '<button data-via title="mettilo via">📦</button>' +
+        '<button data-fine title="ho finito">✓</button>';
+      attrezziEl.querySelector('[data-gira]')?.addEventListener('click',
+        () => gira(scelto));
+      attrezziEl.querySelector('[data-via]').addEventListener('click', () => {
+        S.cose = S.cose.filter(c => c !== scelto);
+        S.magazzino[scelto.id] = (S.magazzino[scelto.id] || 0) + 1;
+        scelto = null; salva();
+      });
+    }
+    attrezziEl.querySelector('[data-fine]').addEventListener('click',
+      () => { scelto = null; });
+    attrezziEl.style.display = 'flex';
+  }
+  // seguono quello che è selezionato: se si muove, si muovono
+  let x, y;
+  if (bestia) {
+    const r = scelto.riquadro;
+    x = r.x + r.w / 2; y = r.y + r.h;
+  } else {
+    const piede = piedeDi(scelto, PER_ID[scelto.id]);
+    x = (scelto.x + piede[0] / 2) * CELLA - S.vista.x;
+    y = scelto.y * CELLA - S.vista.y;
+  }
+  const w = attrezziEl.offsetWidth || 120;
+  attrezziEl.style.left =
+    Math.round(Math.max(8, Math.min(innerWidth - w - 8, x - w / 2))) + 'px';
+  attrezziEl.style.top = Math.round(bestia
+    ? Math.min(innerHeight - 110, y + 6)
+    : Math.max(58, y - 58 - CELLA)) + 'px';
 }
 
 // Il magazzino non e' l'elenco di quello che possiedi: e' l'elenco di tutto,
@@ -806,15 +1122,30 @@ tela.addEventListener('pointerdown', e => {
   const p = pos(e);
   giu = { x: p.x, y: p.y, x0: p.x, y0: p.y, t: performance.now(), mosso: false };
   scorrendo = false;
+  const bestia = attoreSotto(p.x, p.y);
+  if (bestia && bestia.cura) {
+    if (bestia === scelto) return;
+    anello = { x: p.x, y: p.y, t0: performance.now() };
+    lungo = setTimeout(() => { lungo = null; anello = null; scelto = bestia; }, ATTESA);
+    return;
+  }
+
   const c = cellaDa(p.x, p.y);
   const cosa = cosaSotto(c.x, c.y);
-  if (cosa && cellaMia(c.x, c.y)) {
-    lungo = setTimeout(() => {
-      lungo = null;
-      prendi(PER_ID[cosa.id], cosa);
-      muoviPreso(p.x, p.y);
-    }, 320);
+  if (!cosa || !cellaMia(c.x, c.y)) return;
+
+  if (cosa === scelto) {
+    // già selezionato: non si aspetta due volte, si tira e basta
+    prendi(PER_ID[cosa.id], cosa);
+    muoviPreso(p.x, p.y);
+    return;
   }
+  anello = { x: p.x, y: p.y, t0: performance.now() };
+  lungo = setTimeout(() => {
+    lungo = null; anello = null;
+    prendi(PER_ID[cosa.id], cosa);
+    muoviPreso(giu ? giu.x : p.x, giu ? giu.y : p.y);
+  }, ATTESA);
 });
 
 addEventListener('pointermove', e => {
@@ -831,8 +1162,9 @@ addEventListener('pointermove', e => {
   const dx = p.x - giu.x, dy = p.y - giu.y;
   if (Math.abs(p.x - giu.x0) + Math.abs(p.y - giu.y0) > 10) {
     giu.mosso = true; scorrendo = true;
-    if (lungo) { clearTimeout(lungo); lungo = null; }
+    if (lungo) { clearTimeout(lungo); lungo = null; anello = null; }
   }
+  if (anello) { anello.x = p.x; anello.y = p.y; }
   if (scorrendo) { S.vista.x -= Math.round(dx); S.vista.y -= Math.round(dy); limita(); }
   giu.x = p.x; giu.y = p.y;
 });
@@ -845,37 +1177,43 @@ function finita(e) {
 addEventListener('pointercancel', e => {
   finita(e);
   if (lungo) { clearTimeout(lungo); lungo = null; }
-  preso = null; fantasma.style.display = 'none'; giu = null;
+  anello = null; preso = null; giu = null;
 });
 
 addEventListener('pointerup', e => {
   const eraPizzico = !!pizzico;
   finita(e);
   if (lungo) { clearTimeout(lungo); lungo = null; }
+  anello = null;
   const p = pos(e);
-  if (preso) { posaPreso(p.x, p.y); giu = null; return; }
+  if (preso) { posaPreso(); giu = null; return; }
   if (eraPizzico || !giu) { giu = null; return; }
   const veloce = performance.now() - giu.t < 400;
   const fermo = !giu.mosso;
   giu = null;
   if (!fermo || !veloce) return;
 
-  const c = cellaDa(p.x, p.y);
   const bestia = attoreSotto(p.x, p.y);
-  if (bestia && bestia.cura) { pannelloBestia(bestia); return; }
+  if (bestia && bestia.cura) { scelto = bestia; return; }
+  const c = cellaDa(p.x, p.y);
+  const cosa = cosaSotto(c.x, c.y);
+  if (scelto && cosa !== scelto) scelto = null;   // premi altrove e torna com'era
+  if (cosa) return;                               // un tocco secco non seleziona:
+                                                  // per prenderlo si tiene premuto
   const px = (c.x / CELLE) | 0, py = (c.y / CELLE) | 0;
   if (comprabile(px, py)) { pannelloPiazzola(px, py); return; }
   const o = ostacoloSotto(c.x, c.y);
   if (o) { pannelloOstacolo(o); return; }
-  const cosa = cosaSotto(c.x, c.y);
-  if (cosa) { pannelloCosa(cosa); return; }
   if (cellaMia(c.x, c.y)) bambina.vaiA(c.x, c.y);
 });
 
-// col mouse non si pizzica: la rotella fa lo stesso mestiere
+// Col mouse non si pizzica: la rotella fa lo stesso mestiere, ma a **passi
+// interi**. Moltiplicare per 1,18 non funzionerebbe: 2 x 1,18 arrotondato fa
+// ancora 2, e la rotella non muoverebbe mai niente. Il pizzico invece puo'
+// moltiplicare, perche' parte sempre dalla scala di quando l'hai iniziato.
 tela.addEventListener('wheel', e => {
   e.preventDefault();
-  zoomA(SCALA * (e.deltaY < 0 ? 1.18 : 1 / 1.18), e.clientX, e.clientY);
+  zoomA(SCALA + (e.deltaY < 0 ? 1 : -1), e.clientX, e.clientY);
 }, { passive: false });
 
 // trascinare dallo scaffale
@@ -887,6 +1225,7 @@ robaEl.addEventListener('pointerdown', e => {
     return;
   }
   e.preventDefault();
+  scelto = null;
   prendi(v, null);
   muoviPreso(e.clientX, e.clientY);
 });
@@ -925,10 +1264,10 @@ function giro(ora) {
   const dt = Math.min(0.05, (ora - ultimo) / 1000 || 0);
   ultimo = ora; orologio += dt;
   for (const a of attori) a.muovi(dt);
-  controllaArrivo();
   if (avvisoFra > 0) { avvisoFra -= dt; if (avvisoFra <= 0) avvisoEl.classList.remove('c-e'); }
   if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra(); }
   disegna();
+  aggiornaAttrezzi();
   requestAnimationFrame(giro);
 }
 
@@ -938,12 +1277,13 @@ atlante.onload = () => {
   if (!S.vista || (!S.vista.x && !S.vista.y)) vaiACasa();
   limita();
   const c0 = PRIMA * CELLE;
-  bambina = new Attore('bambina', c0 + 7, c0 + 9);
-  new Attore('bobtail', c0 + 9, c0 + 10, { velocita: 74, vaga: 2.4 });
+  bambina = new Attore('bambina', c0 + 7, c0 + 9, { velocita: 3.6 });
+  new Attore('bobtail', c0 + 9, c0 + 10,
+    { velocita: 2.4, vaga: 2.4, cura: 'bobtail', chi: 'Watson' });
   aggiornaBorsa();
   riempiScaffale();
   requestAnimationFrame(giro);
-  setTimeout(() => avvisa('Tocca il prato: la bambina ci va. Il bosco intorno si compra.'), 500);
+  setTimeout(() => avvisa('Tieni premuto su una cosa per prenderla. Due dita per lo zoom, e Watson si accudisce.'), 500);
 };
 atlante.src = ATLANTE;
 addEventListener('beforeunload', salvaOra);
