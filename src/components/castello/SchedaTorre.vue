@@ -3,15 +3,16 @@
    LA SCHEDA DI UNA TORRE
 
    Il foglio che sale quando si tocca una torre già in campo. Dice tre
-   cose e ne offre due: chi è, a che punto è della sua scaletta, cosa
-   sa fare; e poi si può farla salire o spostarla.
+   cose e ne offre una: chi è, a che punto è della sua scaletta, cosa sa
+   fare — e poi la si fa salire.
 
-   ── perché lo spostamento sta qui ──
+   ── lo spostamento si dice, non si comanda ──
    Trascinare una torre da una piazzola all'altra si è sempre potuto, e
-   non costa niente: è tattica, non un acquisto. Ma chi non sa che si
-   può trascinare non lo scopre mai — un gesto senza un bottone è un
-   gesto per chi c'era quando è stato scritto. Il tasto non toglie il
-   trascinamento: lo racconta.
+   non costa niente: è tattica, non un acquisto. Per un momento c'è
+   stato anche un tasto «spostala», che chiudeva il foglio e aspettava
+   il dito: due modi per la stessa cosa, e nessuno dei due chiaro. Un
+   gesto si racconta, non si trasforma in un bottone — resta una riga
+   che dice come si fa, per chi non l'ha ancora scoperto.
 
    ── il bivio ──
    Quando la torre arriva al gradino in cui si specializza, al posto del
@@ -33,7 +34,7 @@ const props = defineProps({
   /* i due mestieri fra cui scegliere, quando è il momento: [{ id, nome, descr }] */
   rami: { type: Array, default: () => [] },
 })
-defineEmits(['potenzia', 'sposta'])
+defineEmits(['potenzia'])
 
 const modello = computed(() => TORRI[props.torre.tipo])
 const massimo = computed(() => props.torre.lv >= props.cap)
@@ -81,9 +82,7 @@ const gradini = computed(() => Array.from({ length: props.cap }, (_, i) => i + 1
   </button>
   <div v-else class="dritta finita">Questa torre è al massimo della sua scaletta</div>
 
-  <button class="bottone chiaro stretto" data-azione="sposta" @click="$emit('sposta')">
-    ✋ Spostala · gratis
-  </button>
+  <div class="trascina">✋ Trascinala sul campo per cambiarle posto — non costa niente</div>
 </template>
 
 <style scoped src="./scheda.css"></style>

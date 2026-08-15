@@ -189,14 +189,6 @@ const rami = computed(() => {
   return f && f.che === 'torre' ? cassa.rami(f.torre) : []
 })
 
-/* dalla scheda: «spostala». Il foglio si toglie di mezzo e il campo
-   torna a essere tutto quello che c'è — trascinare è un gesto, non un
-   comando, e va fatto sul campo. */
-function sposta() {
-  foglio.value = null
-  avvisa('Trascina la torre su una piazzola libera')
-}
-
 function operazioneFinita({ errori, ms }) {
   const t = scelta.value, torre = bersaglio.value
   answer(cassa.chiave(t), { correct: errori === 0, ms })
@@ -401,7 +393,7 @@ onMounted(() => {
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
                      :energia="hud.energia" :divisioni="divisioni" :rami="rami"
-                     @potenzia="salgo" @sposta="sposta" />
+                     @potenzia="salgo" />
 
         <template v-else-if="foglio && foglio.che === 'conto' && op">
           <div class="intestazione">

@@ -18,6 +18,7 @@ prototipo non ce ne sono. Vedi `fattoria.md`.
 """
 import base64
 import json
+import subprocess
 import re
 import sys
 from pathlib import Path
@@ -27,60 +28,31 @@ from PIL import Image
 T = 16
 QUI = Path(__file__).parent
 
-# nome: (colonna, riga, larghezza, altezza) in tessere, su Overworld.png
-PEZZI = {
-    # Il prato. Scelte misurandole: nessuna trasparenza, tutte sullo stesso
-    # verde di fondo (#35a541). Mescolate non fanno quadrati più chiari, che
-    # è quello che tradisce la ripetizione e fa sembrare il prato una tabella.
-    'erba0': (15, 30, 1, 1), 'erba1': (18, 30, 1, 1),
-    'erba2': (18, 29, 1, 1), 'erba3': (17, 29, 1, 1),
-    # gli ostacoli del selvatico
-    'albero': (5, 16, 2, 2),
-    'siepe': (0, 16, 2, 1),
-    'ceppo': (1, 0, 1, 1),
-    'sasso': (7, 5, 1, 1),
-    'sassi': (6, 5, 1, 1),
-    'tronco': (3, 5, 3, 1),
-    'cartello': (6, 6, 2, 3),
-    # acqua
-    'stagno': (2, 6, 3, 3),
-    'ninfea': (2, 0, 1, 1),
-    'ninfee': (4, 0, 2, 1),
-    'fontana0': (22, 9, 3, 3),
-    'fontana1': (25, 9, 3, 3),
-    'fontana2': (28, 9, 3, 3),
-    # costruzioni
-    'casa': (7, 0, 4, 5),
-    'fienile': (12, 0, 4, 5),
-    'casetta': (13, 5, 2, 3),
-    'pozzo': (33, 5, 2, 2),
-    # recinti
-    'staccionata': (0, 19, 2, 1),
-    'palo': (0, 17, 1, 2),
-    'cancello': (3, 17, 2, 2),
-    'ringhiera': (27, 8, 3, 1),
-    # arredo
-    'panchina': (28, 4, 3, 2),
-    'panchina2': (28, 6, 3, 2),
-    'tavolo': (35, 2, 1, 1),
-    'bancone': (36, 2, 1, 1),
-    'cassa': (31, 0, 1, 2),
-    'barile': (33, 0, 1, 2),
-    'barile2': (34, 0, 1, 2),
-    'sacco': (32, 0, 1, 1),
-    'colonna': (36, 0, 1, 3),
-    # piante e decorazioni
-    'vaso_fiore': (35, 0, 1, 1),
-    'vaso_pianta': (32, 1, 1, 2),
-    'vaso_azzurro': (33, 2, 1, 1),
-    'fiori0': (0, 8, 1, 1), 'fiori1': (1, 8, 1, 1), 'fiori2': (3, 11, 1, 1),
-    'radura': (0, 6, 2, 3),
-    'orto': (0, 34, 2, 2),
-    'cassetta0': (26, 20, 1, 2),
-    'cassetta1': (27, 20, 1, 2),
-    'cassetta2': (28, 20, 1, 2),
-    'cassetta3': (29, 20, 1, 2),
-}
+
+# ── il dizionario delle tessere non sta qui ──────────────────────────
+# Sta in `src/giochi/fattoria/dati/tessere.js`, ed è l'unico posto dove
+# stanno delle coordinate. Lo si legge da lì invece di tenerne una copia:
+# due copie di una tabella vogliono dire, prima o poi, due tabelle diverse
+# — e quel guasto si presenta come uno sprite sbagliato a schermo, che è
+# il modo peggiore di scoprirlo. Aggiungere una tessera è una riga di là.
+TESSERE_JS = Path(__file__).parent.parent / 'src/giochi/fattoria/dati/tessere.js'
+
+
+def leggi_tessere():
+    """Il dizionario, letto dal file che lo possiede. Lo estrae Node: è
+    già una dipendenza del repo, e un parser fatto a mano su del
+    JavaScript commentato è un guasto che aspetta."""
+    fuori = subprocess.run(
+        ['node', '-e',
+         "import(process.argv[1]).then(m => console.log(JSON.stringify(m.TESSERE)))",
+         str(TESSERE_JS.resolve())],
+        capture_output=True, text=True)
+    if fuori.returncode:
+        raise SystemExit(f'non riesco a leggere {TESSERE_JS.name}:\n{fuori.stderr.strip()}')
+    return {n: tuple(v) for n, v in json.loads(fuori.stdout).items()}
+
+
+PEZZI = leggi_tessere()
 
 # il personaggio: tre versi per quattro fotogrammi, in celle 16x32.
 # Le bande si trovano misurando character.png: y = 0, 32, 64, passo 32.
