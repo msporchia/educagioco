@@ -25,9 +25,9 @@ import { createPicker, activeSet, overdue, weight, SRS } from '../store/srs.js'
 import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi,
          calcoliTabellina } from '../data/tabelline.js'
 import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
-         distrattoriDi } from '../data/calcolo.js'
+         distrattoriDi, appartiene } from '../data/calcolo.js'
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
-         tabellineSalde, prereqDeboli } from '../store/calcolo.js'
+         tabellineSalde, prereqDeboli, sottoPool } from '../store/calcolo.js'
 import { suono } from '../audio.js'
 import { dipingiFondale, disegnaPianeta, disegnaNave, disegnaAsteroide,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
@@ -131,6 +131,9 @@ let domanda = reactive({ a: 7, b: 8, ris: 56, difficile: false, peso: 1,
                          testo: '7 × 8 = ?', chiave: chiaveCalcolo(7, 8) })
 let esercizio = null               // l'istanza del calcolo a mente, per i falsi
 let chieste = 0, apertoIl = 0
+/* la domanda in corso è un assaggio della tappa che viene dopo: si gioca
+   come le altre, ma non si segna sul motore (vedi `chiaveDalDopo`) */
+let anticipo = false
 /* tre risposte giuste di fila sullo stesso calcolo bastano per oggi: va a
    riposo e al suo posto entra qualcosa che ancora non si sa */
 const picker = createPicker({ getItem: k => item(k), useTime: true, pausaDopo: 3 })
@@ -278,6 +281,58 @@ function distrattori(a, b, n) {
   return out
 }
 
+/* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
+   Un boss che chiede una domanda come tutte le altre non è un boss: è una
+   domanda con la musica. Quello che lo rende un avversario è che **arriva
+   da dove non sei ancora stato** — al pianeta del 6 il boss porta un
+   calcolo del 7, nella campagna a mente porta un concetto della stazione
+   che viene dopo. Batterlo è un assaggio del futuro, e perderlo non è una
+   sconfitta: è roba che non hai ancora imparato.
+
+   Per questo l'anticipo NON si segna sul motore, né come giusta né come
+   sbagliata (vedi `colpisci`): misurare qualcosa che non è stato ancora
+   insegnato non dice niente di vero, e un errore lì marchierebbe come
+   «debole» un calcolo mai visto. Le vite e i punti invece contano: il
+   rischio è quello che rende il boss un boss.
+
+   Restano fuori solo i posti dove un «dopo» non c'è: il Sole, l'ultima
+   stazione, il volo libero. Lì il boss torna a essere quello di prima, la
+   domanda più in bilico.
+
+   Nel calcolo a mente l'assaggio arriva anche se il grafo non ha ancora
+   aperto la stazione seguente, e non è una svista: la taglia di un
+   concetto mai visto è zero, quindi quello che scende è la sua versione
+   più piccola — 8+5, non 27+38 — e una domanda ogni otto, che non si
+   segna e che lascia lo scudo, è un'occhiata oltre la porta, non il muro
+   che il grafo esiste per evitare. */
+function chiaveDalDopo() {
+  const t = prossima.value
+  if (!t) return null
+  if (mente.value) {
+    if (!t.nuovi.length) return null
+    // `poolDi` sceglie da sé da dove cominciare dentro la stazione; qui si
+    // tiene solo quello che la stazione dopo viene a insegnare
+    const p = poolDi(t, state.profile.items, Date.now(), 6).filter(k => eNuovo(t, k))
+    // e fra quelle, se si può, una che la stazione di adesso non toccava
+    // già: i concetti a fatti si accavallano — 4+5 è un quasi-doppio, ma è
+    // anche una somma entro il dieci, e da lì non si vede nessun futuro
+    const suoi = tappa.value.concetti
+    const fuori = p.filter(k => !suoi.some(id => appartiene(id, k)))
+    const scelta = fuori.length ? fuori : p
+    return scelta.length ? scelta[Math.floor(Math.random() * scelta.length)] : null
+  }
+  if (!t.nuova) return null
+  // quelli che le tabelline in gioco non coprono già: il boss del pianeta
+  // del 6 deve portare 7×7, non 7×2 che si fa da tre pianeti
+  const gia = new Set(chiaviPossibili())
+  const suoi = calcoliTabellina(t.nuova)
+  const fuori = suoi.filter(k => !gia.has(k))
+  // fra i tre più abbordabili, e a sorte: sempre lo stesso calcolo
+  // diventerebbe la faccia del boss invece di un assaggio
+  const scelta = (fuori.length ? fuori : suoi).sort((x, y) => stima(x) - stima(y)).slice(0, 3)
+  return scelta.length ? scelta[Math.floor(Math.random() * scelta.length)] : null
+}
+
 /* il boss non chiede una domanda a caso: chiede quella che il motore vuole
    vedere di più, cioè la più in bilico fra quelle sveglie */
 function piuInBilico(p) {
@@ -287,12 +342,18 @@ function piuInBilico(p) {
     .reduce((x, y) => weight(item(y), now, { useTime: true }) > weight(item(x), now, { useTime: true }) ? y : x)
 }
 
-function preparaTabellina(k) {
+function preparaTabellina(k, davanti = null) {
   let [lo, hi] = daChiave(k)
-  // sceglie un verso compatibile con le tabelline in gioco
+  // sceglie un verso compatibile con le tabelline in gioco. `davanti` lo
+  // forza: il boss che anticipa il pianeta del 7 deve leggersi «7 × 8»,
+  // altrimenti l'assaggio non si vede nemmeno
   const versi = []
-  if (tabelle.value.includes(lo)) versi.push([lo, hi])
-  if (tabelle.value.includes(hi) && hi !== lo) versi.push([hi, lo])
+  if (davanti === hi && hi !== lo) versi.push([hi, lo])
+  else if (davanti === lo) versi.push([lo, hi])
+  else {
+    if (tabelle.value.includes(lo)) versi.push([lo, hi])
+    if (tabelle.value.includes(hi) && hi !== lo) versi.push([hi, lo])
+  }
   const [a, b] = versi.length ? versi[Math.floor(Math.random() * versi.length)] : [lo, hi]
   esercizio = null
   domanda.chiave = k; domanda.a = a; domanda.b = b; domanda.ris = a * b
@@ -310,12 +371,32 @@ function preparaMente(k) {
   domanda.difficile = e.peso >= 2
 }
 
+/* Quale delle due parti del pool parla in questa domanda. Il pool dice
+   cosa c'è, questa dice ogni quanto: senza, il ripasso — che pesa di più
+   perché lo si sa peggio — si prendeva la partita e la tabellina del
+   pianeta usciva quando capitava. Vedi `store/calcolo.js`. */
+function scegli(p) {
+  return picker.pick(campagna.value ? sottoPool(p, eDellaTappa) : p)
+}
+
 function nuovaDomanda(boss) {
   const p = mente.value ? poolMente() : poolAttivo()
-  const k = boss ? piuInBilico(p) : picker.pick(p)
-  if (mente.value) preparaMente(k); else preparaTabellina(k)
+  const futura = boss ? chiaveDalDopo() : null
+  const k = futura || (boss ? piuInBilico(p) : scegli(p))
+  anticipo = !!futura
+  if (mente.value) preparaMente(k)
+  else preparaTabellina(k, futura ? prossima.value.nuova : null)
   apertoIl = performance.now()
   return k
+}
+
+/* il grido del boss dice da dove arriva: «BOSS!» e basta lo faceva
+   sembrare un asteroide più grosso, non un pezzo del pianeta dopo */
+function gridoBoss() {
+  const t = prossima.value
+  if (!anticipo || !t) return '☄️ BOSS!'
+  return mente.value ? `☄️ BOSS: ${t.nome.toUpperCase()}!`
+                     : `☄️ BOSS DAL PIANETA DEL ${t.nuova}!`
 }
 
 function ondata() {
@@ -355,7 +436,7 @@ function ondata() {
       }),
     })
   })
-  if (boss) mostraCartello('☄️ BOSS!', '#ff6b6b')
+  if (boss) mostraCartello(gridoBoss(), '#ff6b6b')
 }
 
 /* ---------- interazione ---------- */
@@ -373,14 +454,16 @@ function tocca(e) {
 const centrato = () => campagna.value &&
   hud.giuste >= tappa.value.bersaglio && hud.mirate >= tappa.value.mirate
 
-/* una risposta è «mirata» quando è su quello che la tappa è venuta a
-   insegnare: la tabellina del pianeta, o i concetti nuovi della stazione */
-function eMirata(k) {
+/* quello che la tappa è venuta a insegnare: la tabellina del pianeta, o i
+   concetti nuovi della stazione. Serve due volte — per dosare la miscela
+   della partita e per contare le risposte «mirate» del bersaglio — ed è
+   la stessa domanda, quindi è una funzione sola */
+function eDellaTappa(k) {
   if (!campagna.value) return false
   if (mente.value) return eNuovo(tappa.value, k)
-  return !!tappa.value.nuova &&
-         (domanda.a === tappa.value.nuova || domanda.b === tappa.value.nuova)
+  return !!tappa.value.nuova && daChiave(k).includes(tappa.value.nuova)
 }
+const eMirata = k => eDellaTappa(k)
 
 /* ---------- il colpo ----------
    Il cannone punta il sasso toccato e spara sul posto: nessuna attesa
@@ -449,9 +532,12 @@ function colpisci(a) {
   const k = domanda.chiave
   const ms = performance.now() - apertoIl
   const mirata = eMirata(k)
+  // l'assaggio del pianeta dopo non si segna: né la giusta, che sarebbe
+  // mezza fortuna su una cosa mai vista, né la sbagliata, che marchierebbe
+  // come debole un calcolo che nessuno ha ancora insegnato
+  const segnalo = !anticipo
   if (a.ok) {
-    answer(k, { correct: true, ms })
-    picker.afterAnswer(k, true)
+    if (segnalo) { answer(k, { correct: true, ms }); picker.afterAnswer(k, true) }
     hud.giuste++; hud.serie++
     if (mirata) hud.mirate++
     // il filotto si registra mentre cresce: chiudere la partita a metà non
@@ -482,8 +568,7 @@ function colpisci(a) {
     if (centrato()) return tappaSuperata()
     ondata()
   } else {
-    answer(k, { correct: false, ms })
-    picker.afterAnswer(k, false)
+    if (segnalo) { answer(k, { correct: false, ms }); picker.afterAnswer(k, false) }
     a.morto = true; hud.serie = 0; hud.sbagliate++
     spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
@@ -870,6 +955,9 @@ onMounted(() => {
                     iniziaLibero: () => inizia(-1),
                     // la seconda campagna: stazioni del calcolo a mente
                     modo, STAZIONI, progressoMente, iniziaStazione,
+                    // la tappa dopo: è da lì che arriva il boss, e un test
+                    // deve poterlo dire senza rifare i conti a mano
+                    prossima, anticipo: () => anticipo,
                     iniziaVoloMente: () => iniziaStazione(-1) }
   ctx = tela.value.getContext('2d')
   ridimensiona()

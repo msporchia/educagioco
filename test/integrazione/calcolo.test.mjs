@@ -15,7 +15,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CONCETTI, STAZIONI } from '../../src/data/calcolo.js'
+import { CONCETTI, STAZIONI, concettoDiChiave } from '../../src/data/calcolo.js'
+import { eNuovo } from '../../src/store/calcolo.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -54,7 +55,8 @@ const partita = await page.evaluate(async () => {
   const m = window.__mate
   const viste = [], ondate = []
   for (let i = 0; i < 300 && m.fase.value === 'gioco'; i++) {
-    viste.push({ testo: m.domanda.testo, ris: m.domanda.ris, chiave: m.domanda.chiave })
+    viste.push({ testo: m.domanda.testo, ris: m.domanda.ris, chiave: m.domanda.chiave,
+                 anticipo: m.anticipo() })
     const vivi = m.asteroidi().filter(x => !x.morto)
     ondate.push({ quanti: vivi.length, giusti: vivi.filter(x => x.ok).length,
                   valori: vivi.map(x => x.v) })
@@ -65,7 +67,8 @@ const partita = await page.evaluate(async () => {
   }
   return { viste, ondate, fase: m.fase.value, giuste: m.hud.giuste, mirate: m.hud.mirate,
            bersaglio: m.tappa.value.bersaglio, tappa: m.progressoMente.value.tappa,
-           modo: m.modo.value }
+           modo: m.modo.value, dopo: m.prossima.value?.nuovi || [],
+           suoi: m.tappa.value.concetti }
 })
 
 uguale('si sta giocando la campagna del calcolo a mente', partita.modo, 'mente')
@@ -82,9 +85,26 @@ uguale('e nessun bersaglio ripetuto', doppioni.length, 0)
 const magre = partita.ondate.filter(o => o.quanti < 3)
 uguale('gli asteroidi non scendono mai sotto tre', magre.length, 0)
 
+/* ═══════════ L'ASSAGGIO DELLA STAZIONE DOPO ═══════════
+   Il boss è la sola domanda che può stare fuori da quello che la stazione
+   ha presentato, ed è quello che lo rende un boss. Arriva ogni otto
+   domande, quindi in una partita corta può non farsi vedere: quello che
+   qui si pretende è che, quando arriva, venga davvero dalla stazione dopo
+   e non sia roba che si stava già chiedendo. */
+const assaggi = partita.viste.filter(v => v.anticipo)
+/* «viene dalla stazione dopo» si chiede a `eNuovo`, non a
+   `concettoDiChiave`: i concetti a fatti si accavallano, e 4+5 è un
+   quasi-doppio **anche se** la prima cosa che se lo prende è la somma
+   entro il dieci. Il boss è onesto lo stesso, e il test deve saperlo. */
+controlla('l\'assaggio, quando arriva, viene dalla stazione dopo',
+          assaggi.every(v => eNuovo({ nuovi: partita.dopo }, v.chiave)),
+          assaggi.map(v => `${v.testo} (${concettoDiChiave(v.chiave)})`).join(', '))
+nota(assaggi.length ? `il boss ha portato: ${assaggi.map(v => v.testo).join(' · ')}`
+                    : 'la stazione dopo non è ancora aperta: nessun assaggio')
+
 /* le domande sono quelle della stazione: somme e sottrazioni entro il dieci,
    più gli amici del dieci. Niente moltiplicazioni, niente numeri grandi. */
-const fuori = partita.viste.filter(v => v.ris > 20 || /[×:]/.test(v.testo))
+const fuori = partita.viste.filter(v => !v.anticipo && (v.ris > 20 || /[×:]/.test(v.testo)))
 uguale('non esce niente che la stazione non abbia presentato', fuori.length, 0,)
 controlla('non esce niente che la stazione non abbia presentato', !fuori.length,
           fuori.length ? fuori[0].testo : '')

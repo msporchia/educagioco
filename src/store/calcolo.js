@@ -207,6 +207,28 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
   return pool.length ? pool : chiaviDei(stazione.concetti)
 }
 
+/* ═══════════ LA MISCELA DI UNA PARTITA ═══════════
+   Il pool dice COSA può uscire, questa dice OGNI QUANTO. Sono due cose
+   diverse e le confondevamo: un pool per metà fatto di ripasso non dà
+   metà domande di ripasso, ne dà molte di più, perché il picker pesca
+   pesato e quello che si sa male pesa tanto. Il risultato era una tappa
+   del 6 in cui il 6 si vedeva ogni tanto, in mezzo a un ripasso continuo
+   di tutto il resto — un ripasso *giusto*, ma non è quella la tappa.
+
+   Sette domande su dieci parlano della tappa; le altre tre sono il
+   ripasso, che serve e non deve sparire. Si sceglie prima da quale delle
+   due parti pescare, e solo dopo si lascia decidere al motore chi, dentro
+   quella parte, ha più bisogno di uscire. */
+export const QUOTA_TAPPA = 0.7
+
+export function sottoPool(pool, eSuo, sorte = Math.random, quota = QUOTA_TAPPA) {
+  const suoi = pool.filter(eSuo)
+  const resto = pool.filter(k => !eSuo(k))
+  // se una delle due parti è vuota non c'è niente da dosare: chi c'è, c'è
+  if (!suoi.length || !resto.length) return pool
+  return sorte() < quota ? suoi : resto
+}
+
 /* una risposta «mirata» è quella sui concetti nuovi della stazione: è la
    seconda barra del bersaglio, come le tabelline del pianeta */
 export const eNuovo = (stazione, chiave) =>

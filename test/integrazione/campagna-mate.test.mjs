@@ -80,9 +80,9 @@ const partita = await page.evaluate(async () => {
   let doppio = false
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
   for (let i = 0; i < 200 && m.fase.value === 'gioco'; i++) {
-    viste.push([m.domanda.a, m.domanda.b])
     const giusto = m.asteroidi().find(x => x.ok && !x.morto)
     if (!giusto) break
+    viste.push([m.domanda.a, m.domanda.b, !!giusto.boss])
     m.colpisci(giusto)
     doppio = doppio || m.nave.doppio
     await new Promise(r => setTimeout(r, 15))
@@ -97,15 +97,28 @@ controlla('senza chiedere più centri del bersaglio',
           partita.giuste >= partita.bersaglio && partita.giuste <= partita.bersaglio + 4,
           `${partita.giuste} centri per un bersaglio di ${partita.bersaglio}`)
 
-/* la tabellina del pianeta deve essere la maggioranza di quello che esce:
-   è tutta la differenza fra una tappa e una partita qualsiasi */
+/* La tabellina del pianeta è la maggioranza larga di quello che esce: la
+   miscela è dichiarata (`QUOTA_TAPPA`, sette su dieci) e le altre tre sono
+   ripasso. Qui si guarda una partita sola, quindi la forbice è larga —
+   la quota esatta la misura `unita/calcolo`, che ne tira quattromila. */
 const suoi = partita.viste.filter(([a, b]) => a === 2 || b === 2).length
 const quota = suoi / partita.viste.length
-dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 50, 95)
+dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 55, 95)
 nota(`${suoi} domande su ${partita.viste.length} erano della tabellina del 2`)
 
+/* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
+   È la sola domanda che può stare fuori dalle tabelline aperte, ed è il
+   motivo per cui è un boss e non un asteroide più grosso: al pianeta del 2
+   porta un calcolo del 10, che è la tappa dopo. Un assaggio, non un muro. */
+const boss = partita.viste.filter(([, , b]) => b)
 const fuori = partita.viste.filter(([a, b]) => ![1, 2].includes(a) && ![1, 2].includes(b))
-uguale('e non esce nessuna tabellina non ancora aperta', fuori.length, 0)
+controlla('il boss arriva almeno una volta nella tappa', boss.length >= 1)
+controlla('e porta la tabellina del pianeta dopo',
+          boss.every(([a, b]) => a === 10 || b === 10),
+          boss.map(([a, b]) => `${a}×${b}`).join(', '))
+controlla('fuori dalle tabelline aperte non esce nient\'altro che il boss',
+          fuori.every(([, , b]) => b),
+          fuori.filter(([, , b]) => !b).map(([a, b]) => `${a}×${b}`).join(', '))
 
 await scatto(page, 'campagna-mate-vinta')
 
@@ -120,8 +133,16 @@ const profilo = await leggiProfilo(page)
 const risposte = Object.entries(profilo.items || {})
   .filter(([k]) => k.startsWith('math:'))
   .reduce((n, [, it]) => n + (it.ok || 0) + (it.err || 0), 0)
+/* Una risposta per colpo, meno gli assaggi del pianeta dopo: quelli si
+   giocano — vite e punti veri — ma non si segnano, perché misurare una
+   cosa che nessuno ha ancora insegnato non dice niente di vero, e un
+   errore lì marchierebbe come debole un calcolo mai visto. */
 uguale('e in archivio c\'è una risposta per colpo, non una per esplosione',
-       risposte, partita.viste.length)
+       risposte, partita.viste.length - boss.length)
+const chiuse = Object.keys(profilo.items || {})
+  .filter(k => k.startsWith('math:'))
+  .filter(k => k.slice(5).split('x').map(Number).every(n => ![1, 2].includes(n)))
+controlla('e il boss non lascia niente in archivio', chiuse.length === 0, chiuse.join(', '))
 
 /* ---------- 3. il progresso resta dopo aver chiuso ---------- */
 await page.reload()

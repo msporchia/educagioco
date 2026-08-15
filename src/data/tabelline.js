@@ -59,10 +59,11 @@ const PIANETI = [
    deve stare dentro la tappa nuova, non in un menu a parte.
 
    `bersaglio` sono le risposte giuste che servono per superarla, `mirate`
-   quante di quelle devono essere sulla tabellina nuova. La seconda è meno
-   della metà della prima apposta: il pool propone la tabellina nuova circa
-   una volta su due, e un bersaglio più alto trasformerebbe la tappa in
-   un'attesa. */
+   quante di quelle devono essere sulla tabellina nuova. La seconda è poco
+   più della metà della prima: la tappa chiede la sua tabellina sette volte
+   su dieci (`QUOTA_TAPPA` in `store/calcolo.js`), e il resto sono errori e
+   ripasso. Chiedere quanto la quota promette, e non di più, è quello che
+   tiene la tappa una serata invece che un'attesa. */
 export const CAMPAGNA = PIANETI.map((p, i) => ({
   i,
   nome: p.nome,
@@ -71,7 +72,7 @@ export const CAMPAGNA = PIANETI.map((p, i) => ({
   nuova: p.n,
   tabelle: [1, ...PIANETI.slice(0, i + 1).map(x => x.n)].sort((a, b) => a - b),
   bersaglio: 15 + i * 2,
-  mirate: Math.round((15 + i * 2) * 0.45),
+  mirate: Math.round((15 + i * 2) * 0.55),
 }))
 
 /* L'ultima tappa non porta niente di nuovo: mescola tutto quello che c'è

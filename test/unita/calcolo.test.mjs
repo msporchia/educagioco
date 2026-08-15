@@ -24,7 +24,8 @@ import { CONCETTI, CONCETTI_PER_ID, STAZIONI, VOLO_A_MENTE, TUTTI_I_FATTI,
          chiaveConcetto, fattoDaChiave, esercizioDi, distrattoriDi }
   from '../../src/data/calcolo.js'
 import { SALDO, forzaDi, saldo, aperto, frontiera, tagliaDi, poolDi, eNuovo,
-         tabellineSalde, prereqDeboli, concettiSaldi, stellaDi, allineaCalcolo }
+         tabellineSalde, prereqDeboli, concettiSaldi, stellaDi, allineaCalcolo,
+         sottoPool, QUOTA_TAPPA }
   from '../../src/store/calcolo.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -377,6 +378,30 @@ function profiloCon(ids, quando = ORA) {
             STAZIONI.every(s => stellaDi(s, esperto, ORA)))
   controlla('mentre a profilo nuovo nessuna ce l\'ha',
             STAZIONI.every(s => !stellaDi(s, {}, ORA)))
+}
+
+/* ═══════════ la miscela: ogni quanto parla la tappa ═══════════
+   Il pool dice cosa può uscire, `sottoPool` dice ogni quanto. È la
+   differenza fra «nel pool c'è anche il 6» e «la partita parla del 6»:
+   dentro un pool misto il picker pesca pesato, e il ripasso — che si sa
+   peggio, quindi pesa di più — si prendeva la partita. */
+{
+  const suo = k => k.startsWith('nuovo:')
+  const pool = ['nuovo:a', 'nuovo:b', 'vecchio:a', 'vecchio:b', 'vecchio:c', 'vecchio:d']
+  let dalla = 0
+  const N = 4000
+  for (let i = 0; i < N; i++) if (sottoPool(pool, suo, Math.random).every(suo)) dalla++
+  dentro('sette domande su dieci parlano della tappa', dalla / N, QUOTA_TAPPA - 0.03, QUOTA_TAPPA + 0.03)
+
+  // e chi sceglie il ripasso non pesca mai fra i nuovi, e viceversa
+  const parti = new Set(Array.from({ length: 200 }, () => sottoPool(pool, suo).map(String).join('|')))
+  controlla('le due parti non si mescolano', parti.size === 2, [...parti].join(' / '))
+
+  // una tappa senza ripasso (la prima) resta giocabile: si pesca da tutto
+  uguale('senza ripasso non c\'è niente da dosare',
+         sottoPool(['nuovo:a'], suo, () => 0.99).length, 1)
+  uguale('e senza niente di nuovo nemmeno',
+         sottoPool(['vecchio:a', 'vecchio:b'], suo, () => 0.01).length, 2)
 }
 
 /* la taglia sale con la forza, non con la tappa */
