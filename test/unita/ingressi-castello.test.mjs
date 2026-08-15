@@ -50,10 +50,15 @@ for (const t of doppie) {
   controlla(`${t.nome}: arrivano tutte allo stesso castello`,
             fini.every(f => Math.hypot(f.x - fini[0].x, f.y - fini[0].y) < 20))
 
-  /* ma le bocche sono distinte, e distanti */
+  /* Le bocche o sono distinte e distanti, o sono **la stessa**: l'anello
+     delle Isole parte da un ingresso solo e si sdoppia dopo. Quello che
+     non va bene è la via di mezzo — due bocche a un palmo l'una
+     dall'altra, che a schermo si leggono come una sbavata. */
   const inizi = p.vie.map(v => v.inizio.x).sort((a, b) => a - b)
-  controlla(`${t.nome}: e partono da bocche diverse`,
-            inizi.every((x, i) => i === 0 || x - inizi[i - 1] > MONDO.W * 0.2))
+  controlla(`${t.nome}: le bocche sono distanti o sono la stessa`,
+            inizi.every((x, i) => i === 0 ||
+                                  x - inizi[i - 1] > MONDO.W * 0.2 ||
+                                  x - inizi[i - 1] < 2))
 
   /* le piazzole: spartite, alternate, e mai una sopra l'altra */
   const perVia = p.vie.map((_, k) => p.postazioni.filter(q => q.via === k).length)

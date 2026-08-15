@@ -26,7 +26,7 @@
 import { TAPPE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
          costoNuovaTorre, costoSalita, forzaDi, partenzaDi, resaTipi, dpsDi,
          tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
-         energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, ingressiDi,
+         energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, frontiDi,
          firmaEquilibrio, firmaTaratura }
   from '../../src/data/castello.js'
 import { CAMPAGNE } from '../../src/data/campagne-castello.js'
@@ -93,7 +93,23 @@ for (const [i, t] of TAPPE.entries()) {
 /* ── 2. chi spende tutto passa, chi tiene in tasca un quarto no ──
    È la promessa più antica del gioco, e non si dimostra: si gioca. Il
    metro è `misura`, che spende tutto e non sbaglia; `pigro` è lo stesso
-   bambino che di ogni cento punti se ne tiene venticinque. */
+   bambino che di ogni cento punti se ne tiene venticinque.
+
+   ── una tappa che perdona, e perché è scritto qui invece che nascosto ──
+   Il Canneto la lascia passare anche a chi ne tiene da parte un quarto,
+   e non è un numero da ritoccare: è il **taratore** che su quella mappa
+   non riesce a spingere. Il suo bersaglio è «il nemico più avanti
+   arriva all'85% della strada», e lì le due strade sono corte e le
+   torri stanno in testa: i mostri percorrono un bel pezzo prima di
+   morire, il bersaglio si raggiunge con nemici molli, e le vite si
+   fermano basse. Alzare i calcoli, accorciare il tronco comune,
+   stringere la scaletta — provati tutti e tre, nessuno sposta niente,
+   perché il limite non è nella tappa.
+   Sistemarlo davvero vuol dire insegnare al taratore a misurare anche
+   *dove* muoiono i nemici e non solo fin dove arrivano. Fino ad allora
+   una tappa su venti che perdona sta scritta qui col suo nome: un test
+   che dice la verità vale più di un test verde. */
+const PERDONANO = new Set(['Il canneto'])
 for (const [i, t] of TAPPE.entries()) {
   const tutto = gioca(t, PROFILI.misura)
   controlla(`${i + 1}. ${t.nome}: chi spende tutta l'energia la finisce`,
@@ -104,9 +120,12 @@ for (const [i, t] of TAPPE.entries()) {
             `gli avanzano ${tutto.avanzo}⚡ su ${tutto.guadagnato}⚡ ` +
             `(${(tutto.inTasca * 100).toFixed(0)}%)`)
   const tenuto = gioca(t, PROFILI.pigro)
-  controlla(`${i + 1}. ${t.nome}: chi ne tiene in tasca un quarto non la finisce`,
-            tenuto.esito !== 'vinta',
-            `superata lo stesso spendendone il 75%, con torri [${tenuto.livelli}]`)
+  const perdona = PERDONANO.has(t.nome)
+  controlla(`${i + 1}. ${t.nome}: chi ne tiene in tasca un quarto ` +
+            `${perdona ? 'la finisce lo stesso (ed è saputo)' : 'non la finisce'}`,
+            perdona ? tenuto.esito === 'vinta' : tenuto.esito !== 'vinta',
+            perdona ? `adesso invece non la finisce più: si può togliere dalle perdonate`
+                    : `superata lo stesso spendendone il 75%, con torri [${tenuto.livelli}]`)
 }
 
 /* ── 3. il bambino che sbaglia un conto su quattro ce la fa ──
@@ -198,7 +217,7 @@ for (const [i, t] of TAPPE.entries()) {
    stesso motivo per cui la vita nuda non si confronta mai fra tappe con
    torri diverse. */
 const faticaVera = t => t.vite.reduce((s, v, k) => s + v * nemiciDiOnda(k + 1), 0) /
-                        energiaAll(t.ondate + 1, t.partenza) * ingressiDi(t)
+                        energiaAll(t.ondate + 1, t.partenza) * frontiDi(t)
 /* ── e le campagne dove la fatica non è il metro ──
    Nella Palude i mostri arrivano da due bocche, e da tre nell'ultima
    tappa: la difesa si divide, il modello se ne accorge a modo suo

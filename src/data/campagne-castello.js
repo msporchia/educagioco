@@ -21,7 +21,7 @@
      Bosco         6 · 7 · 8 · 10 · 12
      Sotterraneo   9 · 11 · 13 · 16 · 19
      Mura         14 · 18 · 22 · 26 · 30
-     Palude       12 · 15 · 18 · 21 · 24
+     Palude       12 · 14 · 18 · 21 · 24
 
    Alla fine delle Mura il gioco ha finito le operazioni da insegnare, e
    trenta calcoli sono già un pomeriggio: continuare a salire vorrebbe
@@ -246,48 +246,67 @@ const MURA_TORRIONE = [
    crescere è quello che si deve capire: da dove arrivano, quanti fronti
    ci sono, quale torre dove.
 
-   Tutte e cinque hanno **due ingressi**, e sono le mappe più corte del
-   gioco: una strada corta con due bocche costa più attenzione di una
-   lunga con una.
+   E ognuna ha una **forma diversa**, che è il punto:
 
-   Tre bocche sono state provate e rimandate, ed è giusto sapere
-   perché: con tre strade servono tre torri prima di cominciare a
-   salire, e il gioco non ha nessun modo di dirlo. Chi apre come ha
-   sempre aperto — due torri, poi si sale — lascia una bocca senza
-   nessuno davanti e perde alla terza ondata senza capire di cosa. Non
-   è un problema di numeri: è che manca il pezzo che lo insegna. */
+     il guado     una Y: due bracci, un tronco corto
+     il canneto   un'immissione: una strada lunga, un canale che entra
+     le isole     un anello: una bocca sola che si sdoppia e si richiude
+     il pantano   due strade che si allontanano e non si toccano mai
+     la foce      una clessidra: due bocche, un nodo, due rami, una porta
 
-// il guado: due canali che scendono paralleli e sboccano insieme
+   Le strade si possono fondere perché il `Percorso` non chiede che
+   restino separate — chiede solo che ognuna sappia dov'è il suo
+   ingresso e dove il castello. Due forme che finiscono negli stessi
+   punti *sono* una Y; due che cominciano dagli stessi punti sono un
+   anello. Quello che il validatore non lascia passare è la via di
+   mezzo: un tratto lungo in cui due strade stanno a venti o trenta
+   unità, che a schermo si legge come una strada sola sbavata e in
+   gioco sono due che nessuna torre copre insieme. */
+
+// il guado: due bracci che si fondono a due terzi di strada. È la Y
+// più semplice del gioco, e la prima volta che due file di mostri
+// diventano una sola: sul tronco si difende una volta per tutti, ma il
+// tronco è corto e prima ci sono due strade da guardare.
+const PALUDE_TRONCO = [[0.36, 0.66], [0.46, 0.80], [0.50, 0.95]]
 const PALUDE_GUADO = [
-  [[0.22, 0.04], [0.16, 0.22], [0.36, 0.36], [0.18, 0.54], [0.34, 0.72], [0.50, 0.95]],
-  [[0.74, 0.04], [0.80, 0.22], [0.60, 0.36], [0.78, 0.54], [0.62, 0.72], [0.50, 0.95]]]
+  [[0.14, 0.04], [0.08, 0.28], [0.18, 0.52], ...PALUDE_TRONCO],
+  [[0.84, 0.04], [0.92, 0.28], [0.82, 0.52], [0.62, 0.62], ...PALUDE_TRONCO]]
 
-// il canneto: uno stretto e lungo, uno largo e corto — non sono uguali,
-// e la difesa non si può dividere a metà
+// il canneto: una strada lunga che serpeggia e un canale che le si
+// immette contro, ma **in fondo**: fino a lì sono due strade da
+// guardare, e il tratto in cui bastano gli stessi occhi è corto.
+const PALUDE_SBOCCO = [[0.44, 0.86], [0.50, 0.95]]
 const PALUDE_CANNETO = [
-  [[0.18, 0.04], [0.14, 0.20], [0.34, 0.32], [0.16, 0.48], [0.32, 0.64], [0.24, 0.80],
-   [0.48, 0.95]],
-  [[0.70, 0.04], [0.78, 0.24], [0.62, 0.42], [0.80, 0.60], [0.66, 0.78], [0.48, 0.95]]]
+  [[0.18, 0.04], [0.12, 0.22], [0.30, 0.36], [0.14, 0.54], [0.28, 0.72], ...PALUDE_SBOCCO],
+  [[0.86, 0.04], [0.90, 0.28], [0.80, 0.54], [0.68, 0.74], ...PALUDE_SBOCCO]]
 
-// le isole: due sentieri che si sfiorano a metà strada. Lì una torre
-// sola guarda tutti e due, ed è l'unico posto della campagna dove
-// succede
+// le isole: una bocca sola, e la strada si sdoppia attorno all'isola
+// per richiudersi in fondo. Un anello vero: i mostri di un'ondata si
+// dividono da soli, e la torre in mezzo all'isola guarda tutte e due.
+const ISOLE_TESTA = [[0.50, 0.04], [0.50, 0.14]]
+const ISOLE_CODA = [[0.50, 0.78], [0.50, 0.95]]
 const PALUDE_ISOLE = [
-  [[0.24, 0.04], [0.18, 0.24], [0.38, 0.40], [0.20, 0.58], [0.36, 0.76], [0.50, 0.95]],
-  [[0.72, 0.04], [0.78, 0.26], [0.58, 0.42], [0.76, 0.58], [0.62, 0.78], [0.50, 0.95]]]
+  [...ISOLE_TESTA, [0.14, 0.22], [0.10, 0.48], [0.30, 0.70], ...ISOLE_CODA],
+  [...ISOLE_TESTA, [0.86, 0.22], [0.90, 0.48], [0.70, 0.70], ...ISOLE_CODA]]
 
-// il pantano: due strade che si allontanano invece di avvicinarsi, e
-// si ritrovano solo davanti alla porta. Qui una torre non guarda mai
-// dall'altra parte.
+// il pantano: due strade che si allontanano invece di avvicinarsi, e si
+// ritrovano solo davanti alla porta. Qui una torre non guarda mai
+// dall'altra parte, ed è l'opposto esatto dell'anello di prima.
 const PALUDE_PANTANO = [
   [[0.16, 0.04], [0.10, 0.24], [0.26, 0.44], [0.10, 0.64], [0.26, 0.82], [0.50, 0.95]],
   [[0.84, 0.04], [0.90, 0.24], [0.74, 0.44], [0.90, 0.64], [0.74, 0.82], [0.50, 0.95]]]
 
-// la foce: due canali che arrivano alla stessa porta, e l'ultimo tratto
-// è cortissimo. Non c'è più tempo per rimediare a niente.
+// la foce: una clessidra. Due bocche che si fondono in un nodo a metà
+// campo, e dal nodo due rami che si riaprono e si richiudono davanti
+// alla porta. Il nodo è il posto d'oro — lì passano tutti — ma è uno
+// solo, e quello che gli scappa poi si divide di nuovo.
+const FOCE_NODO = [[0.50, 0.56]]
+const FOCE_PORTA = [[0.50, 0.95]]
 const PALUDE_FOCE = [
-  [[0.12, 0.04], [0.18, 0.24], [0.30, 0.44], [0.14, 0.64], [0.32, 0.84], [0.50, 0.95]],
-  [[0.88, 0.04], [0.82, 0.24], [0.70, 0.44], [0.86, 0.64], [0.68, 0.84], [0.50, 0.95]]]
+  [[0.14, 0.04], [0.08, 0.26], [0.26, 0.42], ...FOCE_NODO,
+   [0.28, 0.70], [0.38, 0.86], ...FOCE_PORTA],
+  [[0.86, 0.04], [0.92, 0.26], [0.74, 0.42], ...FOCE_NODO,
+   [0.72, 0.70], [0.62, 0.86], ...FOCE_PORTA]]
 
 /* ═══════════════ LE TAPPE ═══════════════
 
@@ -402,15 +421,15 @@ export const CAMPAGNE = [
       { nome: 'Il guado', emoji: '💧', ambiente: 'palude-alba', calcoli: 12, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 🏹 💣
-        mostri: ['blatta', 'lupo', 'verme'], forme: PALUDE_GUADO },
-      { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 15, cap: 9,
+        mostri: ['blatta', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_GUADO },
+      { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 14, cap: 8,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 💣 🏹 🔮
-        mostri: ['rovo', 'corvo', 'troll'], forme: PALUDE_CANNETO },
+        mostri: ['rovo', 'corvo', 'troll'], fronti: 1.9, forme: PALUDE_CANNETO },
       { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 💣 🔮 🏹 🔮
-        mostri: ['verme', 'blatta', 'corvo', 'troll'], forme: PALUDE_ISOLE },
+        mostri: ['verme', 'blatta', 'corvo', 'troll'], fronti: 1.5, forme: PALUDE_ISOLE },
       { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 🔮 💣 🏹 🔮 💣 🏹 — tre bocche, e il giro delle tre torri
@@ -418,7 +437,7 @@ export const CAMPAGNE = [
       { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
         torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
         // 💣 🔮 🏹 🔮 💣 🏹 — e il drago chiude, come nelle Mura
-        mostri: ['drago', 'blatta', 'lupo', 'troll', 'verme', 'corvo'], forme: PALUDE_FOCE },
+        mostri: ['drago', 'blatta', 'lupo', 'troll', 'verme', 'corvo'], fronti: 1.6, forme: PALUDE_FOCE },
     ],
   },
 ]

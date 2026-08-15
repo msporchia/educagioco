@@ -141,7 +141,7 @@ export const CFG = {
    che c'era, e la prossima taratura sarà fatta per un campo che non
    esiste più. */
 export const GEOMETRIA = {
-  v: 5,                  // ↑ di uno a ogni modifica di `piazzole()`
+  v: 6,                  // ↑ di uno a ogni modifica di `piazzole()`
   dallIngresso: true,    // le piazzole si occupano da dove entrano i mostri
   scostamento: 34,       // quanto stanno staccate dal ciglio della strada
   margine: 22,           // e quanto restano lontane dal bordo del campo
@@ -535,6 +535,20 @@ export const PIAZZOLE = { bosco: 4, sotterraneo: 6, mura: 8, palude: 5 }
    lascio aperta». */
 export const PIAZZOLE_PER_INGRESSO = 3
 export const ingressiDi = t => (t.forme || [t.forma || []]).length
+/* ── quante difese separate chiede davvero ──
+   Non è la stessa cosa del numero di bocche. Due strade che restano
+   separate fino alla porta (il pantano, le fogne) chiedono due difese:
+   quello che sta di qua non spara di là, e contro ogni ondata lavora
+   metà campo. Due strade che si **fondono** — una Y, un anello, un
+   canale che si immette — ne chiedono meno: sul tronco comune una torre
+   sola lavora per tutti, e più il tronco è lungo più la difesa torna a
+   essere una.
+   Lo dichiara la tappa (`fronti`) perché è una proprietà del disegno
+   che i numeri non sanno leggersi da soli, e chi disegna una mappa sa
+   benissimo se le sue strade si incontrano. Senza, vale il numero di
+   bocche — che è il caso peggiore, ed è il verso giusto in cui
+   sbagliare. */
+export const frontiDi = t => t.fronti || ingressiDi(t)
 export function postiDi(tappa) {
   const minimo = Math.max(3, pianoDi(tappa).torri.length + 1, (tappa.torri || []).length)
   return Math.max(minimo, PIAZZOLE[tappa.campagna] || 0) +
@@ -626,13 +640,14 @@ export function margineDi(tappa, o) {
   const { potenza } = difesaCon(energiaAll(o, partenza), tappa)
   /* ── e quanta di quella potenza lavora davvero ──
      Con due ingressi le torri stanno su due strade e l'ondata ne
-     percorre una: contro di lei combatte metà difesa. Il modello non
-     lo sapeva, e per le tre tappe a due bocche prometteva una difesa
-     doppia di quella vera — le vite tarate venivano fuori troppo alte
+     percorre una: contro di lei combatte metà difesa — meno di metà se
+     le strade si fondono, e per questo il numero da usare è `frontiDi`
+     e non le bocche. Il modello non lo sapeva, e per le tappe a due
+     bocche prometteva una difesa doppia di quella vera — le vite tarate venivano fuori troppo alte
      e la «fatica» della campagna smetteva di crescere. Le piazzole in
      più (`PIAZZOLE_PER_INGRESSO`) servono proprio a ripagare questa
      divisione, non a regalare difesa. */
-  const danno = potenza / ingressiDi(tappa) * durataOnda(o) * RESA
+  const danno = potenza / frontiDi(tappa) * durataOnda(o) * RESA
   return danno / (nemiciDiOnda(o) * vitaDiOnda(o, durezza))
 }
 
@@ -655,7 +670,7 @@ export function durezzaDi(tappa) {
    ghiaccio non si confrontano con lo stesso metro, e nemmeno una a un ingresso
    e una a due: là la stessa durezza si paga il doppio, perché contro ogni
    ondata combatte metà difesa. */
-export const faticaDi = t => t.durezza * ingressiDi(t) / resaTipi(t.torri)
+export const faticaDi = t => t.durezza * frontiDi(t) / resaTipi(t.torri)
 
 /* Quante operazioni chiede una tappa a chi la gioca fino in fondo: una per
    ogni torre costruita e una per ogni gradino salito. È il numero che deve

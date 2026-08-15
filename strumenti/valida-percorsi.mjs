@@ -107,6 +107,29 @@ const RAGGIO = 92               // il raggio dell'arciere di livello 1
    una mappa a due ingressi: se si uniscono presto, si difende solo il
    tratto comune e i due ingressi non li guarda più nessuno. */
 const CONFLUENZA = 0.2
+/* Sotto questa distanza due strade **sono la stessa strada**: è una Y
+   che si chiude, un anello che si richiude, un canale che si immette.
+   È il caso che prima non esisteva — c'erano solo strade separate — e
+   che rendeva tutte le mappe a più ingressi due canali paralleli. */
+const FUSE = 9
+/* e quanto può durare il tratto in cui sono fuse: oltre la metà, una
+   mappa a due bocche si difende tutta dopo l'incrocio, e i due ingressi
+   diventano un disegno senza conseguenze */
+const COMUNE = 0.5
+/* ── la via di mezzo ──
+   Due strade che si separano passano per forza da venti, trenta,
+   quaranta unità: è la forcella, e dura un attimo. Quello che non deve
+   esistere è un **tratto lungo** in cui stanno a quella distanza — a
+   schermo si legge come una strada sola sbavata, e in gioco sono due
+   che nessuna torre riesce a coprire insieme. Quindi non si guarda la
+   distanza minima: si guarda per quanta strada si sta in mezzo.
+
+   Diciotto per cento perché una forcella costa il suo, e una mappa può
+   averne due: la clessidra della Foce si fonde a metà campo e si
+   riapre subito dopo, e ogni passaggio si porta dietro il suo tratto di
+   avvicinamento. Sopra questa quota non è più una forcella — è un
+   corridoio doppio. */
+const IN_MEZZO = 0.18
 
 /* ── le fasce per campagna: lunghezza in unità, presidio in raggi ──
    Non c'è più un «vale per il telefono»: il mondo è uno solo, e queste
@@ -196,6 +219,8 @@ const dove = (p, M) => p ? `(${(p.x / M.W).toFixed(2)}, ${(p.y / M.H).toFixed(2)
 function ravvicinamenti(vie, S) {
   const passo = 4 * S
   let gomito = Infinity, corridoio = Infinity, dg = null, dc = null
+  let comune = 0                  // quanta parte di strada due vie fanno insieme
+  let inMezzo = 0                 // e quanta ne fanno né insieme né larghe
   for (const via of vie) {
     const camp = via.campiona(passo)
     for (let i = 0; i < camp.length; i++)
@@ -218,13 +243,17 @@ function ravvicinamenti(vie, S) {
       const ca = vie[a].campiona(passo), cb = vie[b].campiona(passo)
       const fineA = Math.floor(ca.length * (1 - CONFLUENZA))
       const fineB = Math.floor(cb.length * (1 - CONFLUENZA))
-      for (let i = 0; i < fineA; i++)
-        for (let k = 0; k < fineB; k++) {
-          const d = dist(ca[i], cb[k]) / S
-          if (d < corridoio) { corridoio = d; dc = ca[i] }
-        }
+      let fusi = 0, mezzo = 0
+      for (let i = 0; i < fineA; i++) {
+        let vicino = Infinity
+        for (let k = 0; k < fineB; k++) vicino = Math.min(vicino, dist(ca[i], cb[k]) / S)
+        if (vicino <= FUSE) { fusi++; continue }    // qui sono la stessa strada
+        if (vicino < CORRIDOIO) { mezzo++; if (vicino < corridoio) { corridoio = vicino; dc = ca[i] } }
+      }
+      comune = Math.max(comune, fusi / ca.length)
+      inMezzo = Math.max(inMezzo, mezzo / ca.length)
     }
-  return { gomito, corridoio, dg, dc }
+  return { gomito, corridoio, dg, dc, comune, inMezzo }
 }
 
 /* Le due postazioni più vicine, dalle tre di magra fino a quante ne
@@ -352,9 +381,14 @@ function esaminaForma(t) {
     if (r.gomito < GOMITO)
       guasti.push(`${M.nome}: tornante a spillo, ${r.gomito.toFixed(0)}u ` +
                   `(minimo ${GOMITO}) attorno a ${dove(r.dg, M)}`)
-    if (r.corridoio < CORRIDOIO)
-      guasti.push(`${M.nome}: due corsie a ${r.corridoio.toFixed(0)}u ` +
-                  `(minimo ${CORRIDOIO}) attorno a ${dove(r.dc, M)}`)
+    if (r.inMezzo > IN_MEZZO)
+      guasti.push(`${M.nome}: due strade restano nella via di mezzo per il ` +
+                  `${(r.inMezzo * 100).toFixed(0)}% (massimo ${IN_MEZZO * 100}%): ` +
+                  `né larghe ${CORRIDOIO}u né la stessa strada, attorno a ${dove(r.dc, M)}`)
+    if (r.comune > COMUNE)
+      guasti.push(`${M.nome}: le strade stanno insieme per il ` +
+                  `${(r.comune * 100).toFixed(0)}% (massimo ${COMUNE * 100}%): ` +
+                  `gli ingressi non contano più`)
     if (p.larga < PIAZZOLE)
       guasti.push(`${M.nome}: due piazzole a ${p.larga.toFixed(0)}u ` +
                   `(minimo ${PIAZZOLE}) con ${p.quante} postazioni`)

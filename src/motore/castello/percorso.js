@@ -114,9 +114,15 @@ export class Percorso {
     const perVia = this.vie.map((via, k) => {
       const posti = []
       const passo = via.lunghezza / (quote[k] + 1)
+      /* le strade dispongono le loro a passi sfalsati a due a due: dove
+         si fondono — una Y, un anello che si richiude — le piazzole
+         cadrebbero esattamente una sull'altra e ne resterebbe metà.
+         metà. */
+      const sfalso = this.vie.length > 1 ? (k / this.vie.length) * 0.34 : 0
       for (let i = 1; i <= quote[k]; i++) {
-        const p = via.puntoA(passo * i)
-        const n = via.normaleA(passo * i)
+        const d = passo * (i + sfalso)
+        const p = via.puntoA(d)
+        const n = via.normaleA(d)
         const off = GEOMETRIA.scostamento * S * (i % 2 ? 1 : -1)
         const m = GEOMETRIA.margine * S
         posti.push({ x: Math.max(m, Math.min(W - m, p.x + n.x * off)),
