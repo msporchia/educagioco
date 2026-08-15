@@ -1,21 +1,61 @@
 /* IL GUSCIO DEL CASTELLO
-   Solo quello che tiene insieme i pezzi: lo sfondo, il banco che scorre
-   e l'intestazione dell'operazione in corso. Il campo ha il suo foglio
-   (`components/castello/campo.css`), il banco il suo, e così via. */
+   Solo quello che tiene insieme i pezzi: lo sfondo, l'arena in cui sta
+   il campo, la striscia sotto e l'intestazione dell'operazione in corso.
+   Il campo ha il suo foglio (`components/castello/campo.css`), il foglio
+   che sale il suo, e così via. */
 .td { background:linear-gradient(180deg,#eaf7e6,#e9e4ff) }
 
-.banco { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center;
-         justify-content:safe center; gap:8px; padding:10px 12px calc(12px + env(safe-area-inset-bottom));
-         overflow-y:auto }
+/* L'arena è tutto quello che non è la barra. Serve `relative` perché il
+   foglio che sale, il velo e gli avvisi si appoggiano qui: prima si
+   appoggiavano al campo, ed erano costretti dentro la sua altezza. */
+.arena { flex:1; min-height:0; position:relative;
+         display:flex; flex-direction:column; align-items:center }
+
+/* Il campo si prende tutta l'arena **mentre si gioca**. Fuori dalla
+   partita — la mappa delle tappe, la fine — resta un'anteprima in alto,
+   e sotto c'è da leggere e da scegliere: lì il campo non è il gioco, è
+   il ritratto di dove si andrà.
+   Il selettore arriva fino alla radice del componente del campo, che è
+   l'unico elemento suo che porta anche lo scope di questa schermata. */
+.arena > .campo { position:relative; flex:none; width:100%;
+                  height:min(34vh, 280px); max-width:520px }
+.arena.gioca > .campo { position:absolute; inset:0; height:auto; max-width:none }
+
+/* Il preavviso sta in cima al campo e il tasto dell'ondata in fondo,
+   tutti e due in sovrimpressione: il campo è tutto lo schermo, e
+   quello che gli sta attorno gli galleggia sopra invece di rubargli
+   altezza. Compaiono solo fra un'ondata e l'altra, che è l'unico
+   momento in cui servono — durante la battaglia lassù c'è la scheda
+   del mostro. */
+.preavviso-alto { position:absolute; left:0; right:0; top:0; z-index:2;
+                  padding:6px 8px; display:flex; justify-content:center;
+                  pointer-events:none }
+/* in sovrimpressione il cartellino «in arrivo» sparisce: le pastiglie
+   dicono già 🌊1 ×7, e la scritta di taglio non ci sta in altezza */
+.preavviso-alto :deep(.titolo) { display:none }
+
+.onda { position:absolute; left:50%; transform:translateX(-50%); z-index:3;
+        bottom:calc(16px + env(safe-area-inset-bottom));
+        white-space:nowrap; font-size:14.5px; padding:11px 22px }
+.onda:active { transform:translateX(-50%) translateY(3px) }
+
+.banco { flex:1; min-height:0; width:100%; display:flex; flex-direction:column;
+         align-items:center; justify-content:safe center; gap:8px;
+         padding:10px 12px calc(12px + env(safe-area-inset-bottom)); overflow-y:auto }
+
+/* l'attesa fra un'ondata e l'altra si può saltare; il bottone resta al suo
+   posto anche quando non serve, così sotto il campo non balla niente */
+.bottone.stretto { font-size:14px; padding:10px 20px; min-height:0 }
+.onda.svelto { background:linear-gradient(180deg,#ffd76a,#ffb42e) }
+.invisibile { visibility:hidden }
 
 /* l'intestazione dell'operazione: che torre si sta comprando, a che
    gradino della scaletta, e quanto costa */
 .intestazione { display:flex; align-items:center; gap:7px; flex-wrap:wrap; justify-content:center }
-.intestazione .em { font-size:20px }
+.intestazione .ritratto { width:40px; height:38px; flex:none }
+.intestazione .ritratto canvas { width:40px; height:38px }
 .intestazione b { color:var(--viola-scuro) }
 .intestazione .grado { font-size:11.5px; font-weight:900; color:#5b3fa8; background:#e9e0ff;
                        border-radius:999px; padding:3px 9px }
 .intestazione .prezzo { font-size:12px; font-weight:900; color:#8a6b00; background:#ffe9a8;
                         border-radius:999px; padding:3px 9px }
-.intestazione .indietro { width:30px; height:30px; font-size:20px; line-height:1;
-                          padding:0; font-weight:900 }

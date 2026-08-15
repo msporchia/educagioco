@@ -1,0 +1,25 @@
+/* IL FOGLIO — sale dal basso, copre quel che serve e niente di più.
+
+   Il velo è tenue apposta: sotto c'è una battaglia che continua, e
+   coprirla sarebbe togliere l'unica ragione per cui il campo non si
+   ferma mentre si calcola. */
+.velina { position:absolute; inset:0; z-index:4; background:#0b132420;
+          backdrop-filter:blur(1px); transition:opacity .18s ease }
+.velina.via { opacity:0; pointer-events:none }
+
+.foglio { position:absolute; left:0; right:0; bottom:0; z-index:5;
+          display:flex; flex-direction:column; align-items:center; gap:9px;
+          padding:7px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+          background:linear-gradient(180deg,#fffdf8,#f3f1ff);
+          border-radius:22px 22px 0 0; box-shadow:0 -8px 26px #2a334422;
+          transition:transform .22s cubic-bezier(.2,.9,.3,1.1) }
+.foglio.via { transform:translateY(105%) }
+
+/* la presa di sopra: dice «questa roba si tira giù» senza scriverlo */
+.maniglia { width:42px; height:4px; border-radius:999px; background:#d3d8e4; flex:none }
+
+.cima { display:flex; align-items:center; gap:8px; width:100%; max-width:440px }
+.cima b { flex:1; text-align:center; font-size:14.5px; color:var(--viola-scuro) }
+/* i due tondi stanno ai lati e pesano uguale, così il titolo resta in mezzo */
+.cima .tondo { width:32px; height:32px; font-size:16px }
+.cima .chiudi { color:var(--tenue) }

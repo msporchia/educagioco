@@ -31,17 +31,20 @@
      node strumenti/simula-castello.mjs 6                # solo la sesta
      node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, CFG, costoNuovaTorre, costoSalita } from '../src/data/castello.js'
+import { TAPPE, LIBERA, CFG, MONDO, costoNuovaTorre, costoSalita } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
 import { torreDebole } from '../src/data/mostri.js'
 
 /* ── il campo su cui si tara ──
    Le misure contano davvero: un campo più largo è una strada più lunga,
-   quindi più secondi sotto tiro. Si tara sul telefono in verticale,
-   perché è lì che i bambini giocano — l'app è installata e il manifest
-   dice `portrait`. La formula della scala è quella di `grafica/tela.js`:
-   se cambia lì, cambia qui. */
-export const TELEFONO = misureDi(390, 420)
+   quindi più secondi sotto tiro. Adesso però ce n'è **una sola**, ed è
+   dichiarata: `MONDO` in `data/castello.js`. Prima si tarava sul
+   telefono in verticale sperando che sul computer non cambiasse troppo;
+   oggi non c'è niente da sperare, perché il mondo è lo stesso ovunque e
+   quello che cambia da uno schermo all'altro è solo l'inquadratura.
+   La formula della scala è quella di `grafica/tela.js`: se cambia lì,
+   cambia qui. */
+export const TELEFONO = { ...MONDO }
 export function misureDi(W, H, unita = 420) {
   return { W, H, S: Math.max(0.62, Math.min(1.5, Math.min(W, H) / unita)) }
 }

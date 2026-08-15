@@ -548,8 +548,16 @@ function generaPezzoSquadra() {
        corsa **rallenta** invece di fermarsi — si affronta correndo piano,
        non si legge una schermata. Il tempo in più è tempo di fuoco, che è
        l'unica cosa che serve. */
+    /* Il boss vale di più, ma **mai più di quanto la truppa possa
+       diventare**: con il moltiplicatore secco uscivano boss da 1108
+       contro un tetto di 624, cioè scontri persi in partenza qualunque
+       cosa avessi scelto. Un nemico che non si può battere non è
+       difficile, è rotto — e lo prendeva in faccia proprio chi stava
+       giocando meglio di tutti. */
     const boss = ++S.scontri % 4 === 0
-    const quanti = boss ? Math.round(base * 2.6) : base
+    const quanti = Math.max(2, Math.min(
+      boss ? Math.round(base * 2.2) : base,
+      Math.round(max * .9)))
     S.cose.push({ tipo: 'nemici', z: S.prossima, quanti, vita: quanti, boss, fatto: false })
     S.prossima += boss ? 26 : 18
     return

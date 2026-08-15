@@ -1,0 +1,42 @@
+/* LA SCHEDA DI UNA TORRE — chi è, a che punto è, e le due cose che
+   ci si possono fare. */
+.chi { display:flex; align-items:center; gap:11px; width:100%; max-width:440px;
+       background:var(--carta); border-radius:16px; padding:9px 12px;
+       box-shadow:0 3px 0 #dde3ea }
+.chi .figura { width:62px; height:60px; flex:none }
+.chi .figura canvas { width:62px; height:60px }
+.chi .dati { display:flex; flex-direction:column; gap:3px; min-width:0 }
+.chi b { font-size:16px; line-height:1.1 }
+.chi .descr { font-size:11.5px; color:var(--tenue); line-height:1.25 }
+
+/* la scaletta: un pallino per gradino, pieni quelli fatti. Il livello
+   scritto in cifre non dice quanta strada resta; questi sì. */
+.scaletta { display:flex; align-items:center; gap:3px; flex-wrap:wrap }
+.pip { width:7px; height:7px; border-radius:50%; background:#d9dfe9; flex:none }
+.pip.pieno { background:var(--verde) }
+.scaletta em { font-style:normal; font-size:11px; font-weight:800;
+               color:var(--tenue); margin-left:4px }
+
+.dritta { font-size:12.5px; color:var(--tenue); font-weight:700; text-align:center }
+.dritta.finita { padding:6px 0 }
+
+/* il bivio */
+.rami { display:grid; grid-template-columns:1fr 1fr; gap:9px; width:100%; max-width:440px }
+.ramo { background:var(--carta); border-radius:16px; padding:8px; display:flex;
+        flex-direction:column; align-items:center; gap:2px; text-align:center;
+        box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px var(--c) }
+.ramo:active { transform:translateY(2px); box-shadow:0 2px 0 #dde3ea, inset 0 0 0 2px var(--c) }
+.ramo .figura { width:100%; height:56px; display:flex; align-items:center; justify-content:center }
+.ramo .figura canvas { width:60px; height:56px }
+.ramo b { font-size:13px; color:var(--viola-scuro) }
+.ramo .descr { font-size:10.5px; color:var(--tenue); line-height:1.2; min-height:25px }
+.ramo i { font-style:normal; font-size:11.5px; font-weight:800; color:#8a6b00 }
+.ramo i em, .sale em { font-style:normal; color:inherit }
+.ramo.cara { opacity:.62 }
+
+/* i due tasti in fondo: salire costa, spostare no */
+.bottone.stretto { font-size:15px; padding:11px 22px; min-height:0;
+                   display:flex; align-items:center; gap:9px }
+.bottone.stretto .prezzo { font-size:13px; font-weight:900; background:#ffffff55;
+                           border-radius:999px; padding:2px 9px }
+.bottone.stretto.cara { opacity:.6 }

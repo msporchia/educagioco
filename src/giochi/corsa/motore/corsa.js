@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LA CORSA — le regole, senza schermo
+
+   Non c'è un pixel qui dentro. Gira uguale nel browser e in Node, ed è
+   l'unico motivo per cui l'equilibrio di questo gioco si può *misurare*
+   (vedi `banco.js`, il giocatore finto) invece di provarlo a occhio.
+
+   ── COSA SUCCEDE ─────────────────────────────────────────────────
+   Si corre da soli su tre corsie e si sceglie solo **dove**. Ogni tanto
+   arriva un cancello: tre operatori, uno per corsia, che fanno alla
+   truppa quello che c'è scritto. Ogni tre cancelli arriva un mostro, e
+   la truppa **gli spara addosso mentre ci si avvicina**: il numero è la
+   potenza di fuoco. Quello che al mostro resta di vita quando lo si
+   raggiunge, te lo porta via addosso. Se la truppa arriva a zero si
+   perde e si ricomincia la tappa — senza sconfitta, scegliere bene il
+   cancello non varrebbe niente.
+
+   ── LE TRE COSE CHE NON SI TOCCANO ───────────────────────────────
+   1. **Il danno si conta per metro percorso, non per secondo.** Se no
+      correre più forte vorrebbe dire sparare di meno, e uno scontro si
+      deciderebbe su com'è andata la corsa prima invece che sui numeri.
+   2. **Il mostro si dimensiona su dove la truppa *sarà*.** I cancelli in
+      volo sono già tutti generati, quindi il caso peggiore e il migliore
+      si calcolano davvero. La vita sta poco sopra il caso peggiore: chi
+      sceglie male una volta ci arriva col fiato corto, chi sbaglia due
+      volte di fila muore — ed è una morte che si capisce.
+   3. **Il cancello col libro ferma tutto.** I conti si fanno da fermi:
+      leggere un esercizio mentre si corre non è calcolare, è tirare a
+      indovinare. La partita non avanza di un istante finché la domanda
+      è lì.
+   ═══════════════════════════════════════════════════════════════════ */
+import { TETTO, figure, scomponi } from '../dati/ordini.js'
+import { generaCancelli, resaPrevista, cancelloBuono, tondo } from './cancelli.js'
+
+/* Fin dove si vede la pista. Non è una scelta di disegno: è **quanto
+   tempo hai per decidere**. A quattro metri al secondo, quarantasei
+   metri sono undici secondi di preavviso su ogni cancello. */
+export const ORIZZONTE = 46
+
+/* Da quanto lontano la truppa comincia a sparare. Un branco grande
+   esattamente quanto il mostro lo stende giusto sul filo dell'impatto:
+   sopra si vince con margine, sotto si prendono le legnate. */
+export const INGAGGIO = 16
+
+const RISPOSTA = 0.035        // quanto picchia il mostro mentre è vivo
+const FRENO_BOSS = 0.45       // davanti al boss si rallenta, non ci si ferma
+
+export class Regole {
+  constructor(t) {
+    this.chiave = t.chiave
+    this.nome = t.nome
+    this.veste = t.veste
+    this.metri = t.metri
+    this.passo = t.passo
+    this.punta = t.punta
+    this.spinta = t.spinta
+    this.fraCancelli = t.fraCancelli
+    this.fraScontri = t.fraScontri
+    this.truppa = t.truppa
+    this.libri = t.libri
+    this.studio = t.studio
+    this.soglia = t.soglia
+    this.coni = t.coni
+    this.premio = t.premio
+  }
+
+  get infinita() { return !Number.isFinite(this.metri) }
+}
+
+export class Partita {
+  constructor(regole, { rnd = Math.random } = {}) {
+    this.regole = regole
+    this.rnd = rnd
+
+    this.dist = 0
+    this.v = regole.passo
+    this.corsia = 0            // dove vuoi essere
+    this.corsiaX = 0           // dove sei davvero: l'interpolazione fa lo scarto
+    this.truppa = regole.truppa
+    this.cose = []
+    this.prossima = 24         // il primo cancello arriva dopo un respiro
+    this.colpi = []
+    this.scossa = 0
+
+    this.daScontro = 0
+    this.scontri = 0
+    this.dannoSubito = 0
+    this.daColpo = 0
+
+    this.vinti = 0             // scontri chiusi prima dell'impatto
+    this.persi = 0             // mostri arrivati addosso ancora in piedi
+    this.cancelli = 0          // cancelli attraversati
+    this.meglio = 0            // quante volte hai preso il migliore dei tre
+    this.libriProvati = 0
+    this.libriGiusti = 0
+    this.eccesso = 0           // i soldati oltre il tetto, che non entrano in terra
+    this.causa = ''
+
+    this.offerta = null        // il cancello d'oro appena attraversato
+    this.esito = null
+    this.eventi = []
+
+    if (!regole.infinita) this.cose.push({ tipo: 'traguardo', z: regole.metri, fatto: false })
+    this.generaAvanti()
+  }
+
+  /* ═══════════ com'è messa ═══════════ */
+  get finita() { return this.esito !== null }
+  get vinta() { return this.esito === 'vinta' }
+  get inPausa() { return this.offerta !== null }
+  get restano() { return this.regole.infinita ? Infinity : Math.max(0, this.regole.metri - this.dist) }
+
+  /* ⭐ arrivare · ⭐⭐ senza perdere uno scontro · ⭐⭐⭐ e con la truppa
+     oltre la soglia. La seconda premia quello che il gioco insegna: un
+     mostro si abbatte prima dell'impatto solo se i cancelli sono stati
+     scelti bene. */
+  get stelle() {
+    if (!this.vinta) return 0
+    let s = 1
+    if (this.persi === 0) s++
+    if (this.truppa >= this.regole.soglia) s++
+    return s
+  }
+
+  get monete() {
+    if (this.regole.infinita) return Math.min(20, Math.floor(this.dist / 60))
+    return this.vinta ? this.regole.premio * this.stelle : 0
+  }
+
+  segnala(che) { if (this.eventi.length < 60) this.eventi.push(che) }
+  svuotaEventi() { const e = this.eventi; this.eventi = []; return e }
+
+  /* ═══════════ il dito ═══════════ */
+  vai(delta) {
+    const n = Math.max(-1, Math.min(1, this.corsia + delta))
+    if (n === this.corsia) return false
+    this.corsia = n
+    this.segnala('cambio')
+    return true
+  }
+
+  punta(corsia) { return this.vai(Math.max(-1, Math.min(1, corsia)) - this.corsia) }
+
+  /* ═══════════ il giro ═══════════ */
+  avanza(dt) {
+    if (this.finita || this.inPausa) return
+
+    /* Davanti a un boss si rallenta e lo si affronta: non ci si ferma.
+       Fermarsi spezza la corsa e trasforma uno scontro in una schermata;
+       il rallentamento invece è **tempo di fuoco in più**, che è l'unica
+       cosa che serve contro qualcosa che ha il triplo della vita. */
+    const capo = this.cose.find(c => c.tipo === 'nemici' && c.boss && !c.fatto &&
+                                     c.z - this.dist < 18 && c.vita > 0)
+    const freno = capo ? FRENO_BOSS : 1
+
+    const metri = this.v * freno * dt
+    this.dist += metri
+    this.v = Math.min(this.regole.punta, this.v + dt * this.regole.spinta)
+    this.corsiaX += (this.corsia - this.corsiaX) * Math.min(1, dt * 12)
+    this.scossa = Math.max(0, this.scossa - dt * 45)
+
+    this.generaAvanti()
+    this.sparatoria(metri)
+
+    for (const e of this.cose) {
+      if (e.fatto || e.z - this.dist > 0.5) continue
+      e.fatto = true
+      this.attraversa(e)
+      if (this.finita || this.inPausa) return
+    }
+    this.cose = this.cose.filter(e => e.z - this.dist > -3)
+
+    for (const c of this.colpi) { c.z += 42 * dt; c.meta -= metri }
+    this.colpi = this.colpi.filter(c => c.z < c.meta)
+
+    if (this.truppa <= 0) {
+      if (!this.causa) this.causa = 'la truppa è finita'
+      this.finisci('persa')
+    }
+  }
+
+  finisci(esito) {
+    if (this.finita) return
+    this.esito = esito
+    this.segnala(esito === 'vinta' ? 'vittoria' : 'fine')
+  }
+
+  /* ═══════════ la pista che si genera da sé ═══════════
+     Sempre una quarantina di metri più avanti dello sguardo, e mai oltre
+     il traguardo: un cancello sul filo dell'arrivo è una scelta che non
+     si fa in tempo a fare. */
+  generaAvanti() {
+    const r = this.regole
+    const fine = r.infinita ? Infinity : r.metri - r.fraCancelli * 0.5
+    let giri = 0
+    while (this.prossima < this.dist + ORIZZONTE && this.prossima < fine && giri++ < 40)
+      this.generaPezzo()
+  }
+
+  /* Con quanti soldati si arriverà fin lì, nel caso peggiore e nel
+     migliore: i cancelli in volo sono già tutti generati, quindi il conto
+     è esatto e non una stima. Il tetto vale anche qui — senza, il mostro
+     veniva dimensionato su una truppa che il tetto poi tagliava, e
+     arrivava cinque volte troppo grosso proprio contro chi stava giocando
+     meglio di tutti. */
+  previsione() {
+    let min = this.truppa, max = this.truppa
+    for (const c of this.cose) {
+      if (c.tipo !== 'cancelli' || c.fatto) continue
+      const v = c.ops.flatMap(o => [resaPrevista(o)(min), resaPrevista(o)(max)])
+      min = Math.min(...v, TETTO)
+      max = Math.min(Math.max(...v), TETTO)
+    }
+    return { min: Math.max(1, min), max: Math.max(1, max) }
+  }
+
+  generaPezzo() {
+    const r = this.regole
+    const { min, max } = this.previsione()
+
+    if (this.daScontro >= r.fraScontri) {
+      this.daScontro = 0
+      /* Ogni tanto una banda di mostri. È lei che tiene i numeri in una
+         fascia dove il conto si fa ancora a mente: senza qualcosa che
+         consuma, la truppa arriva a novecento e «×3» smette di essere una
+         domanda. Quanti ne servono sta fra il peggio e il meglio — ma **in
+         proporzione**, non a metà strada: qui si moltiplica, e fra 1 e 135
+         la metà aritmetica è praticamente il massimo. */
+      const base = Math.max(2, Math.round(min * Math.pow(max / Math.max(1, min), 0.45)))
+      /* Ogni quarto scontro è un boss: vale di più, ma **mai più di quanto
+         la truppa possa diventare**. Un nemico che non si può battere non
+         è difficile, è rotto — e lo prenderebbe in faccia proprio chi ha
+         scelto meglio di tutti. */
+      const boss = ++this.scontri % 4 === 0
+      const quanti = Math.max(2, Math.min(boss ? Math.round(base * 2.2) : base,
+                                          Math.round(max * 0.9)))
+      this.cose.push({ tipo: 'nemici', z: this.prossima, quanti, vita: quanti, boss, fatto: false })
+      this.prossima += r.fraCancelli * (boss ? 2 : 1.45)
+      return
+    }
+
+    this.daScontro++
+    const mezzo = Math.round((min + max) / 2)
+    this.cose.push({
+      tipo: 'cancelli', z: this.prossima, fatto: false,
+      ops: generaCancelli(mezzo, { rnd: this.rnd, libri: r.libri }),
+    })
+
+    /* fra un cancello e l'altro le mani devono fare qualcosa: un cono da
+       scansare e una cassa da prendere. Niente da leggere — è il riposo
+       fra due conti, e serve tanto quanto i conti. */
+    for (let i = 0; i < r.coni; i++)
+      this.cose.push({ tipo: 'cono', z: this.prossima + this.fra(4, r.fraCancelli - 3),
+                       corsia: this.fra(-1, 1), fatto: false })
+    if (this.rnd() < 0.65)
+      this.cose.push({ tipo: 'cassa', z: this.prossima + this.fra(5, r.fraCancelli - 3),
+                       corsia: this.fra(-1, 1), quanti: Math.max(1, tondo(mezzo, 0.06)), fatto: false })
+
+    this.prossima += r.fraCancelli
+  }
+
+  fra(a, b) { return a + Math.floor(this.rnd() * (b - a + 1)) }
+
+  /* ═══════════ cosa succede quando ci passi sopra ═══════════ */
+  attraversa(e) {
+    const qui = Math.round(this.corsiaX)
+
+    if (e.tipo === 'traguardo') return this.finisci('vinta')
+
+    if (e.tipo === 'cancelli') {
+      const op = e.ops[qui + 1]
+      this.cancelli++
+      /* il cancello col libro ferma tutto: si risponde da fermi, e
+         sbagliare non toglie niente */
+      if (op.libro) {
+        this.libriProvati++
+        this.offerta = { seg: op.seg, f: op.f, prima: this.truppa }
+        this.segnala('libro')
+        return
+      }
+      const prima = this.truppa
+      this.applica(op.f(this.truppa))
+      if (this.truppa > prima) this.segnala('meglio')
+      else this.segnala('peggio')
+      /* il migliore che c'era: non si dice, si conta — serve alla stella
+         e a far vedere quanto si è lasciato per strada */
+      if (this.truppa === Math.max(...e.ops.map(o => o.f(prima)))) this.meglio++
+      e.reso = this.truppa - prima
+      return
+    }
+
+    if (e.tipo === 'nemici') {
+      /* Il conto è già stato fatto durante l'avvicinamento: la truppa ha
+         sparato per tutto il tragitto. Qui si tira solo la riga. */
+      if (e.vita <= 0) {
+        this.vinti++
+        this.segnala('abbattuto')
+        return
+      }
+      const persi = Math.min(this.truppa, Math.ceil(e.vita))
+      /* chi ti ha steso, e con quanta vita gli era rimasta: è la prima
+         cosa che si vuole sapere davanti a una schermata di sconfitta */
+      this.causa = `${e.boss ? 'un boss' : 'un mostro'} da ${e.quanti}, ancora in piedi con ${Math.ceil(e.vita)}`
+      this.persi++
+      this.truppa -= persi
+      this.scossa = 20
+      this.segnala('colpito')
+      return
+    }
+
+    if (e.tipo === 'cassa') {
+      if (e.corsia !== qui) return
+      this.applica(this.truppa + e.quanti)
+      this.segnala('cassa')
+      return
+    }
+
+    if (e.tipo === 'cono') {
+      if (e.corsia !== qui) return
+      this.truppa = Math.max(0, this.truppa - 1)
+      this.scossa = 14
+      this.segnala('cono')
+      if (this.truppa <= 0) this.causa = 'un cono, con un soldato solo rimasto'
+    }
+  }
+
+  /* Il tetto della truppa. Senza, chi sceglie bene arriva a un milione in
+     un minuto e mezzo e «×3» non è più una domanda di matematica, è una
+     scritta. Quelli in più non spariscono: si contano a parte, e il
+     cartello di fine li dice. */
+  applica(n) {
+    const v = Math.max(0, Math.floor(n))
+    if (v > TETTO) { this.eccesso += v - TETTO; this.truppa = TETTO }
+    else this.truppa = v
+  }
+
+  /* ═══════════ la sparatoria ═══════════
+     La truppa spara da sola per tutto l'avvicinamento, e **il numero è la
+     potenza di fuoco**: è questo che dà un senso ai soldati raccolti.
+     Finché il mostro è in piedi spara anche lui — chi ci mette di più a
+     stenderlo ne perde di più, ed è per questo che la truppa non cresce
+     all'infinito. */
+  sparatoria(metri) {
+    if (metri <= 0) return
+    const bersaglio = this.cose.find(e => e.tipo === 'nemici' && !e.fatto &&
+                                          e.z - this.dist <= INGAGGIO && e.z - this.dist > 0)
+    if (!bersaglio || bersaglio.vita <= 0) return
+
+    bersaglio.vita -= this.truppa * metri / INGAGGIO
+    this.dannoSubito += Math.max(0, bersaglio.vita) * metri * RISPOSTA
+    if (this.dannoSubito >= 1) {
+      /* Durante l'avvicinamento si perdono soldati ma non si muore: resta
+         sempre l'ultimo. Si muore **all'impatto**, se il mostro è ancora
+         in piedi — così la sconfitta ha una causa che si vede invece di
+         essere un'emorragia che ti spegne mentre guardavi il cancello
+         dopo. */
+      const persi = Math.min(this.truppa - 1, Math.floor(this.dannoSubito))
+      if (persi > 0) { this.dannoSubito -= persi; this.truppa -= persi }
+    }
+    if (bersaglio.vita <= 0) {
+      bersaglio.vita = 0
+      this.dannoSubito = 0
+      this.segnala('caduto')
+    }
+
+    this.daColpo += metri
+    if (this.daColpo > 0.55) {
+      this.daColpo = 0
+      this.colpi.push({ z: 0.5, corsia: this.corsiaX + (this.rnd() - 0.5) * 0.5,
+                        meta: bersaglio.z - this.dist })
+      this.segnala('sparo')
+    }
+  }
+
+  /* ═══════════ il cancello d'oro ═══════════
+     Si risponde da fermi. Chi ci prende moltiplica la truppa, chi sbaglia
+     resta com'era: **sbagliare non toglie niente**, si è perso solo il
+     tempo di provarci — ed è tutta la differenza fra un'offerta e un
+     pedaggio. */
+  rispondi(giusto) {
+    const o = this.offerta
+    if (!o) return null
+    this.offerta = null
+    if (giusto) {
+      this.libriGiusti++
+      this.applica(o.f(o.prima))
+      this.segnala('meglio')
+    } else {
+      this.segnala('peggio')
+    }
+    return { giusto, prima: o.prima, dopo: this.truppa }
+  }
+
+  /* ═══════════ quello che si vede ═══════════
+     Fatti già decisi, mai regole: chi disegna riceve «questo cancello è
+     d'oro» e non sa cosa sia un esercizio; riceve i gradi dei soldati e
+     non sa cosa sia il raggruppamento. */
+  scena() {
+    const cose = []
+    for (const e of this.cose) {
+      const z = e.z - this.dist
+      if (z < -1.2 || z > ORIZZONTE) continue
+      if (e.tipo === 'cancelli') {
+        cose.push({ che: 'cancelli', z, ops: e.ops.map(o => ({
+          testo: o.seg, oro: !!o.libro, buono: cancelloBuono(o),
+        })) })
+      } else if (e.tipo === 'nemici') {
+        cose.push({ che: 'nemici', z, quanti: e.quanti, boss: e.boss,
+                    quota: Math.max(0, e.vita) / e.quanti, resta: Math.ceil(Math.max(0, e.vita)) })
+      } else if (e.tipo === 'traguardo') {
+        cose.push({ che: 'traguardo', z })
+      } else {
+        cose.push({ che: e.tipo, z, corsia: e.corsia, quanti: e.quanti })
+      }
+    }
+    /* il cancello su cui si sta decidendo è **uno solo**: quello dopo si
+       intravede appena, perché sei numeri in fila non sono una decisione
+       più ricca, sono confusione */
+    const attivo = cose.filter(c => c.che === 'cancelli' && c.z > -1).sort((a, b) => a.z - b.z)[0]
+    if (attivo) attivo.attivo = true
+
+    return {
+      dist: this.dist, corsia: this.corsiaX, scossa: this.scossa,
+      truppa: this.truppa, soldati: figure(this.truppa),
+      cose: cose.sort((a, b) => b.z - a.z),
+      colpi: this.colpi.map(c => ({ z: c.z, corsia: c.corsia })),
+    }
+  }
+
+  get cruscotto() {
+    const avanti = this.cose.filter(c => c.tipo === 'nemici' && !c.fatto)
+      .sort((a, b) => a.z - b.z)[0]
+    return {
+      truppa: this.truppa,
+      gruppi: scomponi(this.truppa),
+      metri: Math.floor(this.dist),
+      restano: Math.max(0, Math.ceil(this.restano)),
+      infinita: this.regole.infinita,
+      quota: this.regole.infinita ? 0 : Math.min(1, this.dist / this.regole.metri),
+      vinti: this.vinti,
+      /* l'avviso arriva presto apposta: sapere che fra poco c'è un mostro
+         da quaranta è quello che rende la scelta del cancello una
+         decisione invece di un riflesso */
+      mostro: avanti && avanti.z - this.dist < 44
+        ? { quanti: avanti.quanti, boss: avanti.boss, fra: Math.ceil(avanti.z - this.dist) }
+        : null,
+    }
+  }
+}

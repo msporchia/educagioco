@@ -1,0 +1,223 @@
+#!/usr/bin/env python3
+"""Rifà l'atlante di `fattoria-gfx.html` dal set CC0 di ArMM1998.
+
+    python3 poc/atlante-gfx.py ~/scaricati/gfx      # la cartella gfx/ dello zip
+    python3 poc/atlante-gfx.py ~/scaricati/gfx --provini
+
+Il prototipo è un HTML unico: l'atlante ci vive dentro, in base64, su una
+riga sola. Questo script ritaglia dal set solo le tessere che servono, le
+impacchetta, e **riscrive quella riga sul posto** — il resto del file non
+lo tocca, quindi si può continuare a modificarlo a mano.
+
+La sorgente non è versionata apposta: si scarica da
+https://opengameart.org/content/zelda-like-tilesets-and-sprites
+(CC0 1.0, ArMM1998). Serve `pillow`.
+
+Il set è tutto quello che c'è: **animali non ne ha**, e infatti nel
+prototipo non ce ne sono. Vedi `fattoria.md`.
+"""
+import base64
+import json
+import re
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+T = 16
+QUI = Path(__file__).parent
+
+# nome: (colonna, riga, larghezza, altezza) in tessere, su Overworld.png
+PEZZI = {
+    # Il prato. Scelte misurandole: nessuna trasparenza, tutte sullo stesso
+    # verde di fondo (#35a541). Mescolate non fanno quadrati più chiari, che
+    # è quello che tradisce la ripetizione e fa sembrare il prato una tabella.
+    'erba0': (15, 30, 1, 1), 'erba1': (18, 30, 1, 1),
+    'erba2': (18, 29, 1, 1), 'erba3': (17, 29, 1, 1),
+    # gli ostacoli del selvatico
+    'albero': (5, 16, 2, 2),
+    'siepe': (0, 16, 2, 1),
+    'ceppo': (1, 0, 1, 1),
+    'sasso': (7, 5, 1, 1),
+    'sassi': (6, 5, 1, 1),
+    'tronco': (3, 5, 3, 1),
+    'cartello': (6, 6, 2, 3),
+    # acqua
+    'stagno': (2, 6, 3, 3),
+    'ninfea': (2, 0, 1, 1),
+    'ninfee': (4, 0, 2, 1),
+    'fontana0': (22, 9, 3, 3),
+    'fontana1': (25, 9, 3, 3),
+    'fontana2': (28, 9, 3, 3),
+    # costruzioni
+    'casa': (7, 0, 4, 5),
+    'fienile': (12, 0, 4, 5),
+    'casetta': (13, 5, 2, 3),
+    'pozzo': (33, 5, 2, 2),
+    # recinti
+    'staccionata': (0, 19, 2, 1),
+    'palo': (0, 17, 1, 2),
+    'cancello': (3, 17, 2, 2),
+    'ringhiera': (27, 8, 3, 1),
+    # arredo
+    'panchina': (28, 4, 3, 2),
+    'panchina2': (28, 6, 3, 2),
+    'tavolo': (35, 2, 1, 1),
+    'bancone': (36, 2, 1, 1),
+    'cassa': (31, 0, 1, 2),
+    'barile': (33, 0, 1, 2),
+    'barile2': (34, 0, 1, 2),
+    'sacco': (32, 0, 1, 1),
+    'colonna': (36, 0, 1, 3),
+    # piante e decorazioni
+    'vaso_fiore': (35, 0, 1, 1),
+    'vaso_pianta': (32, 1, 1, 2),
+    'vaso_azzurro': (33, 2, 1, 1),
+    'fiori0': (0, 8, 1, 1), 'fiori1': (1, 8, 1, 1), 'fiori2': (3, 11, 1, 1),
+    'radura': (0, 6, 2, 3),
+    'orto': (0, 34, 2, 2),
+    'cassetta0': (26, 20, 1, 2),
+    'cassetta1': (27, 20, 1, 2),
+    'cassetta2': (28, 20, 1, 2),
+    'cassetta3': (29, 20, 1, 2),
+}
+
+# il personaggio: tre versi per quattro fotogrammi, in celle 16x32.
+# Le bande si trovano misurando character.png: y = 0, 32, 64, passo 32.
+VERSI = {'giu': 0, 'lato': 32, 'su': 64}
+
+# La bambina non è disegnata da zero: è quello stesso sprite ridipinto.
+# Tiene scheletro, tempi e tavolozza dell'originale — sono quelli a farla
+# stare nello stile, non la mano di chi la ritocca.
+CAPO_S = (67, 46, 39, 255)      # capelli, ombra
+CAPO_C = (106, 72, 52, 255)     # capelli, luce
+TUNICA = {(196, 60, 60, 255): (86, 148, 74, 255),
+          (136, 46, 46, 255): (54, 102, 52, 255),
+          (104, 28, 28, 255): (36, 72, 40, 255)}
+
+
+def bambina(cella):
+    im = cella.copy()
+    px = im.load()
+    alto = next((y for y in range(im.height) for x in range(im.width)
+                 if px[x, y] in (CAPO_S, CAPO_C)), 0)
+
+    def metti(x, y, c):
+        if 0 <= x < im.width and 0 <= y < im.height:
+            px[x, y] = c
+
+    for y in range(im.height):
+        for x in range(im.width):
+            if px[x, y] in TUNICA:
+                px[x, y] = TUNICA[px[x, y]]
+    # i capelli scendono ai due lati del viso: a 16 px di larghezza sono le
+    # uniche due colonne libere, ed è per questo che un'arma in mano non ci sta
+    for i, y in enumerate(range(alto + 6, alto + 14)):
+        metti(0, y, CAPO_S)
+        metti(1, y, CAPO_C if i < 6 else CAPO_S)
+        metti(15, y, CAPO_S)
+        metti(14, y, CAPO_C if i < 6 else CAPO_S)
+    metti(1, alto + 14, CAPO_S)
+    metti(14, alto + 14, CAPO_S)
+    return im
+
+
+def taglia_attore(foglio, nome, ritagli, filtro=None):
+    """Un attore è sempre lo stesso formato: 16×32, quattro fotogrammi per
+    riga, bande a passo 32. Vale per la bambina come per il cane, ed è per
+    questo che il gioco ne sa disegnare uno senza sapere chi è."""
+    for verso, y0 in VERSI.items():
+        for fr in range(4):
+            p = foglio.crop((fr * T, y0, fr * T + T, y0 + 32))
+            ritagli[f'{nome}_{verso}{fr}'] = filtro(p) if filtro else p
+
+
+def costruisci(gfx):
+    over = Image.open(gfx / 'Overworld.png').convert('RGBA')
+    char = Image.open(gfx / 'character.png').convert('RGBA')
+
+    ritagli = {n: over.crop((c * T, r * T, (c + w) * T, (r + h) * T))
+               for n, (c, r, w, h) in PEZZI.items()}
+    taglia_attore(char, 'bimbo', ritagli)
+    taglia_attore(char, 'bambina', ritagli, bambina)
+
+    # tutti gli altri attori arrivano da `poc/attori/`, uno per file. Chi ne
+    # aggiunge uno non tocca questo script: ci mette il png e rilancia.
+    cartella = QUI / 'attori'
+    if cartella.is_dir():
+        for f in sorted(cartella.glob('*.png')):
+            taglia_attore(Image.open(f).convert('RGBA'), f.stem, ritagli)
+            print(f'  attore: {f.stem}')
+
+    LARG = 16 * T
+    x = y = riga = 0
+    mappa, dove = {}, {}
+    for nome, im in sorted(ritagli.items(), key=lambda kv: -kv[1].height):
+        if x + im.width > LARG:
+            x, y, riga = 0, y + riga, 0
+        dove[nome] = (x, y, im)
+        mappa[nome] = [x, y, im.width, im.height]
+        x += im.width
+        riga = max(riga, im.height)
+
+    atlante = Image.new('RGBA', (LARG, y + riga), (0, 0, 0, 0))
+    for nome, (px, py, im) in dove.items():
+        atlante.paste(im, (px, py))
+    return atlante, mappa, ritagli
+
+
+def provini(ritagli, dove):
+    """Un foglio con ogni pezzo e il suo nome: le coordinate si sbagliano, e
+    il modo più rapido di accorgersene è guardarle tutte insieme."""
+    from PIL import ImageDraw
+    COL, PASSO = 8, 96
+    righe = (len(ritagli) + COL - 1) // COL
+    f = Image.new('RGBA', (COL * PASSO, righe * PASSO), (250, 250, 250, 255))
+    d = ImageDraw.Draw(f)
+    for i, nome in enumerate(sorted(ritagli)):
+        im = ritagli[nome]
+        z = min(4, max(1, 72 // max(im.width, im.height)))
+        g = im.resize((im.width * z, im.height * z), Image.NEAREST)
+        cx = (i % COL) * PASSO + (PASSO - g.width) // 2
+        cy = (i // COL) * PASSO + 12 + (PASSO - 16 - g.height) // 2
+        f.alpha_composite(g, (max(0, cx), max(12, cy)))
+        d.text(((i % COL) * PASSO + 3, (i // COL) * PASSO + 2), nome, fill=(0, 0, 0))
+    f.save(dove)
+    print('provini in', dove)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        return 1
+    gfx = Path(sys.argv[1]).expanduser()
+    if not (gfx / 'Overworld.png').exists():
+        print(f'in {gfx} non c\'è Overworld.png — passa la cartella gfx/ dello zip')
+        return 1
+
+    atlante, mappa, ritagli = costruisci(gfx)
+    png = QUI / '.atlante-gfx.png'
+    atlante.save(png)
+    b64 = base64.b64encode(png.read_bytes()).decode()
+    png.unlink()
+
+    pagina = QUI / 'fattoria-gfx.html'
+    testo = pagina.read_text()
+    testo = re.sub(r"(const ATLANTE = 'data:image/png;base64,)[^']*'",
+                   lambda m: m.group(1) + b64 + "'", testo, count=1)
+    testo = re.sub(r'(const PEZZI = ).*?;\n',
+                   lambda m: m.group(1) + json.dumps(mappa, separators=(',', ':'),
+                                                     sort_keys=True) + ';\n',
+                   testo, count=1, flags=re.S)
+    pagina.write_text(testo)
+
+    print(f'atlante {atlante.width}x{atlante.height}, '
+          f'{len(b64) * 3 // 4 // 1024} KB di PNG, {len(mappa)} pezzi '
+          f'→ {pagina.name} ({len(testo) // 1024} KB)')
+    if '--provini' in sys.argv:
+        provini(ritagli, QUI / 'scatti' / 'atlante-gfx.png')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

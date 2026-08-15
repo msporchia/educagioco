@@ -132,11 +132,51 @@ export const CFG = {
    che c'era, e la prossima taratura sarà fatta per un campo che non
    esiste più. */
 export const GEOMETRIA = {
-  v: 2,                  // ↑ di uno a ogni modifica di `piazzole()`
+  v: 3,                  // ↑ di uno a ogni modifica di `piazzole()`
   dallIngresso: true,    // le piazzole si occupano da dove entrano i mostri
   scostamento: 34,       // quanto stanno staccate dal ciglio della strada
   margine: 22,           // e quanto restano lontane dal bordo del campo
 }
+
+/* ═══════════ quanto è grande il campo ═══════════
+
+   Un numero solo, uguale su ogni schermo, ed è una promessa: **la
+   battaglia è la stessa sul telefono e sul computer**.
+
+   Prima non lo era. Il campo prendeva le misure dal riquadro che si
+   trovava — 390×420 su un telefono, 520×420 su un monitor — e i
+   percorsi, che sono in coordinate 0–1, ci si stiravano dentro. Ma il
+   raggio di una torre non si stira: è in unità. Su un campo più largo
+   la stessa strada diventava più lunga a parità di raggio, i mostri
+   passavano nei buchi, e l'unico rimedio era tappare la larghezza a
+   520px con un `max-width` — un cerotto che si portava dietro la sua
+   riga di commento e il suo `npm run simula` a dimostrarlo.
+
+   Adesso il mondo è questo, sempre, e a piegarsi è lo schermo: la
+   telecamera in `grafica/tela.js` lo incornicia dove c'è posto. Su un
+   telefono ci sta giusto, su un computer resta un margine ai lati, e
+   in tutti e due i casi le torri battono la stessa strada.
+
+   Verticale, perché il gioco è verticale: i mostri entrano dall'alto e
+   scendono verso il castello, che sta in basso — vicino al pollice,
+   dove si difende.
+
+   ── perché la scala è dichiarata, e perché vale 1,3 ──
+   `S` dice quanti pixel del mondo vale un'unità di disegno, ed è la
+   misura in cui sono scritti i raggi delle torri, le piazzole e le
+   velocità. Prima usciva da una formula (`min(W,H)/420`) e cambiava con
+   lo schermo; adesso è un numero, perché **è equilibrio**: un campo
+   grande con torri che vedono poco è un campo dove i mostri passano.
+
+   1,3 non è scelto a occhio. Il campo di prima misurava 390×420 pixel
+   con S=0,93, cioè **419×451 unità**; questo ne misura 420×760 con
+   S=1,3, cioè **323×585 unità**. Stessa area — 189.000 unità quadre in
+   tutti e due i casi — in una forma diversa: più stretto e più alto. È
+   la stessa quantità di gioco, girata in verticale, ed è per questo che
+   le fasce del validatore (`strumenti/valida-percorsi.mjs`) sono
+   rimaste quelle di prima: le strade misurano ancora fra i 600 e i 1000
+   unità, e una torre ne presidia ancora due raggi scarsi. */
+export const MONDO = { W: 420, H: 760, S: 1.3 }
 
 /* ── come cresce una torre quando sale di livello ──
 
@@ -558,7 +598,7 @@ export const TAPPE = RACCONTO.map((t, i) => {
    taratura invece di andare avanti con numeri di ieri. */
 export function firmaEquilibrio() {
   const roba = JSON.stringify([
-    CFG, CRESCITA, GEOMETRIA, VALE_IL_GELO,
+    CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri, !!t.debolezze, t.forma]),
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una

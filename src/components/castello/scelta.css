@@ -1,0 +1,35 @@
+/* LE CARTE DELLE TORRI — due per riga, e la torre è disegnata, non
+   scritta: quello che compri è quello che poi vedi sul prato. */
+.carte { display:grid; grid-template-columns:1fr 1fr; gap:9px;
+         width:100%; max-width:440px }
+
+.carta-torre { position:relative; background:var(--carta); border-radius:16px;
+               padding:8px 8px 9px; display:flex; flex-direction:column;
+               align-items:center; gap:1px; text-align:center;
+               box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px var(--c) }
+.carta-torre:active { transform:translateY(2px);
+                      box-shadow:0 2px 0 #dde3ea, inset 0 0 0 2px var(--c) }
+.carta-torre .figura { width:100%; height:52px; display:flex;
+                       align-items:center; justify-content:center }
+.carta-torre .figura canvas { width:56px; height:52px }
+.carta-torre b { font-size:13px; color:var(--viola-scuro); line-height:1.15 }
+.carta-torre .descr { font-size:10.5px; color:var(--tenue); line-height:1.2;
+                      min-height:25px; padding:0 2px }
+.carta-torre i { font-style:normal; font-size:11.5px; font-weight:800; color:#8a6b00 }
+.carta-torre i em { font-style:normal; font-size:14px; color:var(--c) }
+
+.carta-torre.bloccata { opacity:.4; box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px #d8cee6 }
+.carta-torre.bloccata:active { transform:none }
+.carta-torre.bloccata i { color:var(--tenue); font-weight:700 }
+.carta-torre .chiuso { font-size:30px; opacity:.6 }
+/* costa troppo, ma il tasto resta vivo: toccarlo dice quanto manca */
+.carta-torre.cara { opacity:.62 }
+.carta-torre.cara i { color:#b4603f }
+
+/* la torre che fa doppio danno a chi sta arrivando: è l'unica cosa in
+   tutta la schermata che ha il diritto di gridare */
+.carta-torre.forte { box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2.5px var(--c),
+                     0 0 0 3px #ffc93c88 }
+.doppio { position:absolute; top:-7px; right:-5px; background:linear-gradient(180deg,#ffd76a,#ff9f1c);
+          color:#5a3200; font-size:11.5px; font-weight:900; border-radius:999px;
+          padding:2px 7px; box-shadow:0 2px 6px #b4603f44 }

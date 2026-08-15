@@ -1,13 +1,15 @@
 /* IL CAMPO
-   Ha una larghezza massima, e non è una scelta estetica: la strada è
-   disegnata in proporzione al riquadro, ma il raggio delle torri no. Su
-   un monitor largo la stessa strada diventa tre volte più lunga e i
-   mostri passano nei buchi fra una torre e l'altra — la simulazione
-   (`npm run simula`) dice che oltre i 520px l'ultima tappa non si
-   finisce più nemmeno spendendo tutto. Sotto quella misura la battaglia
-   è la stessa sul telefono e sul computer. */
-.campo { position:relative; height:min(52vh, 420px); min-height:240px; flex:none;
-         overflow:hidden; width:100%; max-width:520px; margin:0 auto }
+   Si prende tutta l'arena, e non ha più una larghezza massima.
+
+   Il `max-width: 520px` di prima non era estetica: la strada è
+   disegnata in proporzione al riquadro, ma il raggio delle torri no,
+   quindi su un monitor largo la stessa strada diventava più lunga a
+   parità di gittata e i mostri passavano nei buchi — la simulazione
+   diceva che oltre i 520px l'ultima tappa non si finiva più. Adesso il
+   mondo è dichiarato una volta per tutte (`MONDO` in
+   `data/castello.js`) e la telecamera lo incornicia: il riquadro può
+   essere grande quanto vuole, la battaglia dentro è la stessa. */
+.campo { position:absolute; inset:0; overflow:hidden }
 
 /* `touch-action:none` è ciò che rende possibile il trascinamento sul telefono:
    senza, al primo movimento del dito il browser decide che è uno scorrimento,
@@ -16,7 +18,7 @@
 canvas { display:block; width:100%; height:100%; touch-action:none;
          -webkit-user-select:none; user-select:none }
 
-.annuncio { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;
+.annuncio { position:absolute; left:0; right:0; top:30%; text-align:center; pointer-events:none;
             font-size:clamp(20px,6vw,34px); font-weight:900; color:#222a38;
             text-shadow:0 2px 0 #fff, 0 0 18px #fff;
             animation:apparire 1.6s ease-out forwards }

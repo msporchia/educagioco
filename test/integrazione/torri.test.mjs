@@ -424,7 +424,11 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
       cv.addEventListener('pointerdown', () => window.__conta.down++)
       cv.addEventListener('pointermove', () => window.__conta.move++)
       cv.addEventListener('pointerup', () => window.__conta.up++)
-      return { torre: { x: t.x, y: t.y }, meta: liberi[0],
+      /* il dito si posa sui pixel dello schermo, non sulle unità del
+         campo: da quando c'è una telecamera fra i due, la conversione
+         va chiesta al gioco invece di darla per scontata */
+      return { torre: T.versoLoSchermo(t.x, t.y), meta: T.versoLoSchermo(liberi[0].x, liberi[0].y),
+               dove: { x: liberi[0].x, y: liberi[0].y },
                touchAction: getComputedStyle(cv).touchAction }
     })
     const box = await (await page.$('canvas')).boundingBox()
@@ -446,17 +450,24 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
     const conta = await page.evaluate(() => window.__conta)
     return { touchAction: posto.touchAction, livelloIntatto: dove.lv,
              tocchiArrivati: conta.down > 0 && conta.move > 0,
-             atterrata: Math.hypot(dove.x - posto.meta.x, dove.y - posto.meta.y) < 3 }
+             atterrata: Math.hypot(dove.x - posto.dove.x, dove.y - posto.dove.y) < 3 }
   })()
 
-  // il campo non deve mai debordare
-  const layout = await page.evaluate(() => {
+  /* Niente deve debordare. Il banco dei bottoni non c'è più: adesso si
+     guardano il campo, che si prende tutta l'arena, e il foglio che sale
+     — quando è aperto, perché chiuso sta apposta sotto il bordo. */
+  const layout = await page.evaluate(async () => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td
     const c = document.querySelector('canvas').getBoundingClientRect()
-    const banco = document.querySelector('.banco').getBoundingClientRect()
-    const tast = document.querySelector('.tastiera')?.getBoundingClientRect()
+    T.apriPiazzola(T.liberi()[0])
+    await attesa(320)
+    const f = document.querySelector('.foglio').getBoundingClientRect()
+    const carte = document.querySelector('.carte').getBoundingClientRect()
+    T.chiudi()
     return { campoDentro: c.bottom <= innerHeight + 1,
-             bancoDentro: banco.bottom <= innerHeight + 1,
-             tastieraDentro: tast ? tast.bottom <= innerHeight + 1 : 'assente' }
+             foglioDentro: f.bottom <= innerHeight + 1,
+             carteDentro: carte.bottom <= innerHeight + 1 && carte.top >= 0 }
   })
 
   console.log(nome, JSON.stringify({ campagna, attesaOndata, veloce, potenziamento, gioco,

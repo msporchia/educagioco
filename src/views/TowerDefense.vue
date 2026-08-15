@@ -2,10 +2,16 @@
 /* ═══════════════════════════════════════════════════════════════════
    TOWER DEFENSE — il guscio.
 
-   Sopra i nemici avanzano lungo il percorso; sotto si sceglie che torre
-   costruire e si risolve l'operazione corrispondente. La torre nasce
-   quando l'operazione è finita, sempre al livello 1: per farla salire si
-   tocca sul campo e si risolve il gradino successivo della scaletta.
+   Il campo si prende lo schermo. Non c'è più un banco di bottoni sotto:
+   si compra **toccando il campo**, che è il posto dove si sta già
+   guardando. Una piazzola vuota chiede che torre costruirci, una torre
+   già in piedi apre la sua scheda — e in tutti e due i casi il conto da
+   fare sale dal basso, dentro lo stesso foglio.
+
+   Il campo non si ferma mentre si calcola: un minimo di fretta ci va.
+   Per questo il foglio non copre tutto — la telecamera (`grafica/tela.js`)
+   si stringe di quanto il foglio occupa, e la battaglia resta sotto gli
+   occhi, più piccola.
 
    L'energia ⚡ la lasciano i nemici fermati, e serve sia a costruire sia
    a potenziare — ma potenziare costa molto meno e rende molto di più,
@@ -17,11 +23,11 @@
 
    ── cosa è rimasto qui dentro ──
    Poco, e apposta. Questo file tiene **la fase** (mappa, gioco, fine) e
-   fa da centralino fra i pezzi:
+   **cosa sta guardando il dito**, e fa da centralino fra i pezzi:
 
      motore/castello/          le regole, che girano anche senza schermo
      grafica/castello/         i pittori
-     components/castello/      campo, banco, mappa, gettoni, fine
+     components/castello/      campo, foglio, scelta, scheda, mappa, fine
      views/castello/cassa.js   che operazione compra una torre
      views/castello/scena.js   dal motore alla lista di cose in scena
      views/castello/trascino.js la regola del dito sul campo
@@ -30,16 +36,20 @@
    chiedere un'operazione in colonna prima di pagare — sono l'unica
    ragione per cui questo file esiste.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { state, answer, level, addCoins, tdProgresso, tdCompleta,
-         segna, segnaBest, contiPermessi, tuttoAperto } from '../store/profile.js'
-import { TORRI, emojiTorre } from '../data/ops.js'
+         segna, segnaBest, divisioniAccese, tuttoAperto } from '../store/profile.js'
+import { TORRI } from '../data/ops.js'
 import { CFG, TAPPE, LIBERA, premioTappa } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
 import GettoniCampo from '../components/castello/GettoniCampo.vue'
 import CampoDiBattaglia from '../components/castello/CampoDiBattaglia.vue'
-import BancoTorri from '../components/castello/BancoTorri.vue'
+import NastroOndate from '../components/castello/NastroOndate.vue'
+import Foglio from '../components/castello/Foglio.vue'
+import SceltaTorre from '../components/castello/SceltaTorre.vue'
+import SchedaTorre from '../components/castello/SchedaTorre.vue'
+import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
 import MappaTappe from '../components/castello/MappaTappe.vue'
 import FineTappa from '../components/castello/FineTappa.vue'
 import { Cassa } from './castello/cassa.js'
@@ -50,9 +60,9 @@ defineEmits(['vai'])
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 /* il tabellone: il motore ci scrive dentro e lo schermo si aggiorna da sé */
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
-/* quello che il campo fa sapere al banco: si riempie a ogni fotogramma */
+/* quello che il campo fa sapere alla schermata: si riempie a ogni fotogramma */
 const vista = reactive({ inAttesa: false, pronti: false, restaAttesa: 0, bestia: null,
-                         inCampo: 0, vitaOnda: 0, daPotenziare: false, torri: [], prossime: [] })
+                         inCampo: 0, vitaOnda: 0, prossime: [] })
 const messaggio = reactive({ testo: '', n: 0 })
 const premio = ref(0)
 
@@ -63,10 +73,22 @@ const progresso = computed(() => tdProgresso())
 const tappaIdx = ref(0)            // -1 = partita libera
 const tappa = computed(() => (tappaIdx.value < 0 ? LIBERA : TAPPE[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
-const sa = computed(() => contiPermessi())
+const divisioni = computed(() => divisioniAccese())
 /* la partita libera si apre vincendo l'ultima tappa — o subito, se i
    genitori hanno acceso «tutto aperto» */
 const libera = computed(() => progresso.value.libera || tuttoAperto())
+
+/* ── il foglio ──
+   Una cosa sola alla volta, e sa sempre *di che cosa* si sta parlando:
+
+     { che: 'costruisci', piazzola }   una piazzola vuota, che torre?
+     { che: 'torre', torre }           una torre in campo, e che ci faccio
+     { che: 'conto', … }               il calcolo che paga la decisione
+
+   Il terzo non nasce mai da solo: ci si arriva dal primo o dal secondo,
+   e si porta dietro dove va a finire la torre. */
+const foglio = ref(null)
+const coperto = ref(0)             // quanti pixel il foglio sta occupando
 
 /* ── l'acquisto ──
    Il prezzo lo si paga in energia, ma prima si paga in calcolo: la
@@ -75,25 +97,72 @@ const scelta = ref(null)           // tipo di torre in costruzione
 const op = ref(null)
 const bersaglio = ref(null)        // torre da potenziare; null = torre nuova
 const prezzo = ref(0)              // energia che l'operazione in corso costerà
+const dove = ref(null)             // su che piazzola nascerà
 
 const massimo = computed(() => tappa.value.cap)
 const costoNuova = computed(() => cassa.costoNuova(hud.torri))
 const costoSalita = torre => cassa.costoSalita(torre)
 const postiFiniti = computed(() => hud.torri >= tappa.value.posti)
 const livelloOp = (t, torre) => cassa.gradino(torre)
+const motore = () => campo.value?.motore()
+const S = () => campo.value?.misure()?.S || 1
+
+/* ── cosa sta guardando il dito ──
+   La passa al campo, che la traduce in un alone e in un cerchio di
+   raggio d'azione. È l'unica cosa che la schermata dice al campo su
+   cosa disegnare, e resta un dato: nessuno qui tocca un pixel. */
+const mira = computed(() => {
+  const f = foglio.value
+  if (!f || fase.value !== 'gioco') return null
+  const m = motore()
+  if (!m) return null
+  if (f.torre) return { torre: f.torre, x: f.torre.x, y: f.torre.y,
+                        tipo: f.torre.tipo, raggio: f.torre.raggio(S()) }
+  const p = m.postazioni[f.piazzola]
+  if (!p) return null
+  return { piazzola: f.piazzola, x: p.x, y: p.y, tipo: f.tipo || null,
+           raggio: f.tipo ? TORRI[f.tipo].raggio * S() : 0 }
+})
+
+/* la torre che fa doppio danno a chi sta per arrivare: il preavviso,
+   letto nel momento in cui si sceglie che cosa costruire */
+const debole = computed(() => (vista.prossime[0] && vista.prossime[0].debole) || null)
+
+/* ── aprire e chiudere ── */
+function apriPiazzola(i) {
+  if (fase.value !== 'gioco' || op.value) return
+  foglio.value = { che: 'costruisci', piazzola: i }
+}
+
+function apriTorre(torre) {
+  if (fase.value !== 'gioco' || op.value || !torre) return
+  foglio.value = { che: 'torre', torre }
+}
+
+function chiudi() {
+  foglio.value = null
+  annulla()
+}
 
 function apriOperazione(t, torre, costo) {
   scelta.value = t
   bersaglio.value = torre || null
   prezzo.value = costo
   op.value = cassa.operazione(t, torre)
+  foglio.value = { che: 'conto', torre, piazzola: dove.value, tipo: t }
 }
 
+/* ── costruire ──
+   La piazzola è quella che si è toccata; chi arriva da fuori senza
+   averne toccata una (i test, e chi gioca di fretta) prende la prima
+   libera, che è l'ordine di sempre. */
 function scegliTorre(t) {
   if (fase.value !== 'gioco' || scelta.value) return
   if (!tappa.value.torri.includes(t)) return
   if (postiFiniti.value) { avvisa('Posti finiti: potenzia una torre'); suono.no(); return }
   if (hud.energia < costoNuova.value) { avvisa(`Servono ${costoNuova.value} ⚡`); suono.no(); return }
+  const f = foglio.value
+  dove.value = f && f.piazzola != null ? f.piazzola : (motore()?.liberi()[0] ?? null)
   apriOperazione(t, null, costoNuova.value)
 }
 
@@ -103,9 +172,20 @@ function potenzia(torre) {
   if (!cassa.potenziabile(torre)) { avvisa('Già al massimo'); return }
   const costo = costoSalita(torre)
   if (hud.energia < costo) { avvisa(`Servono ${costo} ⚡`); suono.no(); return }
+  dove.value = null
   apriOperazione(torre.tipo, torre, costo)
 }
 const potenziaIndice = i => potenzia(motore().torri[i])
+/* dalla scheda: la torre di cui si sta guardando la scheda */
+const salgo = () => potenzia(foglio.value && foglio.value.torre)
+
+/* dalla scheda: «spostala». Il foglio si toglie di mezzo e il campo
+   torna a essere tutto quello che c'è — trascinare è un gesto, non un
+   comando, e va fatto sul campo. */
+function sposta() {
+  foglio.value = null
+  avvisa('Trascina la torre su una piazzola libera')
+}
 
 function operazioneFinita({ errori, ms }) {
   const t = scelta.value, torre = bersaglio.value
@@ -114,17 +194,28 @@ function operazioneFinita({ errori, ms }) {
   // il conto: il prezzo pattuito più una penale per ogni errore. Si paga in
   // energia, non in vite: sbagliare rallenta la difesa, non la fa crollare.
   const penale = errori * CFG.malusErrore
-  const conto = { prezzo: prezzo.value, penale }
+  const conto = { prezzo: prezzo.value, penale, posto: dove.value }
   let testo
   if (torre) { motore().potenzia(torre, conto); testo = `${TORRI[t].nome} livello ${torre.lv}!` }
   else { motore().costruisci(t, conto); testo = `${TORRI[t].nome} costruita` }
   if (penale) { testo += ` · −${penale} ⚡`; suono.no() }
   avvisa(testo)
-  annulla()
+  chiudi()
 }
 
 function annulla() {
-  scelta.value = null; op.value = null; bersaglio.value = null; prezzo.value = 0
+  scelta.value = null; op.value = null; bersaglio.value = null
+  prezzo.value = 0; dove.value = null
+}
+
+/* dal conto si torna a quello che l'ha aperto, non allo schermo vuoto:
+   chi ha sbagliato torre vuole sceglierne un'altra, non ricominciare */
+function indietro() {
+  const f = foglio.value
+  const torre = bersaglio.value, piazzola = f ? f.piazzola : null
+  annulla()
+  foglio.value = torre ? { che: 'torre', torre }
+                       : piazzola != null ? { che: 'costruisci', piazzola } : null
 }
 
 /* ── il campo ──
@@ -132,7 +223,6 @@ function annulla() {
    sul campo: mostri, torri, colpi ed energia sono affare del motore, che
    gira anche senza uno schermo — ed è per questo che il bilanciamento si
    può simulare invece di provarlo a occhio. */
-const motore = () => campo.value?.motore()
 
 const eventi = {
   avvisa: t => avvisa(t),
@@ -159,14 +249,21 @@ function cambiaVelocita() {
 function chiamaOnda() { motore()?.chiamaOnda() }
 function avvisa(t) { messaggio.testo = t; messaggio.n++ }
 
+/* Il campo cambia misura quando si entra e si esce dalla partita —
+   anteprima in alto fuori, schermo intero dentro — e nessun `resize`
+   glielo dice. Da quando il mondo è dichiarato una volta per tutte,
+   rimisurare a partita in corso non sposta più niente sul campo: cambia
+   solo quanto lo si vede grande. */
+watch(fase, () => nextTick(() => campo.value?.ridimensiona()))
+
 /* ── le fasi ── */
 function inizia(i = tappaIdx.value) {
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
-  annulla()
+  chiudi()
   campo.value.avvia(tappa.value, i + 1)
   fase.value = 'gioco'
-  avvisa('Costruisci la prima torre')
+  avvisa('Tocca una piazzola per costruire')
 }
 
 function finita(esito) {
@@ -194,11 +291,13 @@ const prossima = computed(() => (campagna.value ? TAPPE[tappaIdx.value + 1] || n
 
 function finePartita() {
   fase.value = 'fine'
+  chiudi()
   suono.fine()
 }
 
 function allaMappa() {
   fase.value = 'mappa'
+  chiudi()
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
   campo.value.apparecchia(tappa.value, tappaIdx.value + 1)
 }
@@ -213,11 +312,15 @@ onMounted(() => {
                   nemici: () => motore().nemici, torri: () => motore().torri,
                   colpi: () => motore().colpi, livelloOp,
                   TAPPE, tappaIdx, postazioni: () => motore().postazioni,
-                  velocita, cambiaVelocita, chiamaOnda, potenzia, bersaglio,
+                  velocita, cambiaVelocita, chiamaOnda, potenzia, potenziaIndice, bersaglio,
                   inAttesa: computed(() => vista.inAttesa),
                   pronti: computed(() => vista.pronti),
                   prossime: () => vista.prossime,
-                  massimo, costoNuova, costoSalita, CFG, sa,
+                  massimo, costoNuova, costoSalita, CFG, divisioni,
+                  // il foglio: aprirlo da fuori è come toccare il campo
+                  foglio, apriPiazzola, apriTorre, chiudi,
+                  liberi: () => motore().liberi(),
+                  versoLoSchermo: (x, y) => campo.value.versoLoSchermo(x, y),
                   // -1 è la partita libera: tutte le torri, nessun traguardo
                   iniziaLibera: () => inizia(-1),
                   // aggancio per i test: apre un'operazione a un livello preciso
@@ -234,46 +337,75 @@ onMounted(() => {
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
 
-    <!-- ════════ SOPRA: il campo ════════
-         Il campo si ferma anche quando c'è il cartello di un traguardo
-         davanti (`state.festa`): quel velo copre tutto per tre secondi, e
-         un premio non deve costare un cuore a chi non vede più i mostri. -->
-    <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
-                      :attivo="fase === 'gioco' && !state.festa.length" :calcolando="!!scelta"
-                      :velocita="velocita" :messaggio="messaggio"
-                      @esito="finita" @potenzia="potenzia" />
+    <!-- ════════ L'ARENA ════════
+         Il campo, quello che gli sta intorno, e il foglio che ci sale
+         sopra. Il campo si ferma anche quando c'è il cartello di un
+         traguardo davanti (`state.festa`): quel velo copre tutto per tre
+         secondi, e un premio non deve costare un cuore a chi non vede
+         più i mostri. -->
+    <div class="arena" :class="{ gioca: fase === 'gioco' }">
+      <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
+                        :attivo="fase === 'gioco' && !state.festa.length" :calcolando="!!scelta"
+                        :velocita="velocita" :messaggio="messaggio"
+                        :mira="mira" :coperto="coperto"
+                        @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
-    <!-- ════════ SOTTO: le operazioni ════════ -->
-    <div class="banco">
-      <!-- scelta della torre -->
-      <BancoTorri v-if="fase === 'gioco' && !scelta" :tappa="tappa" :hud="hud" :vista="vista"
-                  :costo-nuova="costoNuova" :posti-finiti="postiFiniti" :sa="sa"
-                  @scegli="scegliTorre" @potenzia="potenziaIndice" @onda="chiamaOnda" />
-
-      <!-- operazione in corso -->
-      <template v-else-if="fase === 'gioco' && op">
-        <div class="intestazione">
-          <button class="tondo indietro" @click="annulla" title="cambia torre">‹</button>
-          <span class="em">{{ emojiTorre(scelta, bersaglio ? bersaglio.lv + 1 : 1) }}</span>
-          <b>{{ TORRI[scelta].nome }}</b>
-          <span class="grado">{{ bersaglio ? 'livello ' + bersaglio.lv + ' → ' + (bersaglio.lv + 1)
-                                           : 'nuova, livello 1' }}</span>
-          <span class="prezzo">{{ prezzo }} ⚡</span>
-        </div>
-        <ColumnOp :op="op" @fatto="operazioneFinita" />
+      <!-- Sopra il campo, e solo fra un'ondata e l'altra: chi sta
+           arrivando, e il tasto che lo fa arrivare. Durante la
+           battaglia lasciano il posto alla scheda del mostro che è in
+           campo — le due cose non servono mai insieme, e su un telefono
+           lo spazio in alto è uno solo. -->
+      <template v-if="fase === 'gioco' && vista.inAttesa">
+        <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime" /></div>
+        <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
+                @click="chiamaOnda">
+          {{ hud.onda ? 'Manda l\'ondata' : 'Comincia la battaglia' }} ▶<template
+            v-if="vista.pronti"> · +{{ CFG.bonusPronti }} ⚡</template><template
+            v-else-if="vista.restaAttesa <= 9"> · fra {{ vista.restaAttesa }}</template>
+        </button>
       </template>
 
-      <!-- mappa della campagna -->
-      <MappaTappe v-else-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
-                  :libera="libera" @gioca="inizia" @libera="inizia(-1)"
-                  @indietro="$emit('vai','home')" />
+      <!-- mappa della campagna · vinta · trionfo · sconfitta -->
+      <div v-else class="banco">
+        <MappaTappe v-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
+                    :libera="libera" @gioca="inizia" @libera="inizia(-1)"
+                    @indietro="$emit('vai','home')" />
+        <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
+                   :premio="premio" :quante="TAPPE.length" :campagna="campagna"
+                   :divisioni="divisioni"
+                   @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1)"
+                   @riprova="inizia()" />
+      </div>
 
-      <!-- vinta · trionfo · sconfitta -->
-      <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
-                 :premio="premio" :quante="TAPPE.length" :campagna="campagna"
-                 :sa="sa"
-                 @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1)"
-                 @riprova="inizia()" />
+      <!-- ════════ IL FOGLIO ════════
+           Quello che sale dal basso: la scelta della torre, la scheda di
+           quella che c'è già, e il conto che paga l'una o l'altra. -->
+      <Foglio v-if="fase === 'gioco'" :aperto="!!foglio"
+              :titolo="foglio && foglio.che === 'costruisci' ? 'Che torre costruisci qui?' : ''"
+              :indietro="!!(foglio && foglio.che === 'conto')"
+              @chiudi="chiudi" @indietro="indietro" @altezza="coperto = $event">
+        <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
+                     :tappa="tappa" :energia="hud.energia" :costo="costoNuova"
+                     :divisioni="divisioni" :debole="debole" @scegli="scegliTorre" />
+
+        <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
+                     :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
+                     :energia="hud.energia" :divisioni="divisioni"
+                     @potenzia="salgo" @sposta="sposta" />
+
+        <template v-else-if="foglio && foglio.che === 'conto' && op">
+          <div class="intestazione">
+            <span class="ritratto">
+              <RitrattoTorre :tipo="scelta" :lv="bersaglio ? bersaglio.lv + 1 : 1" :unita="52" />
+            </span>
+            <b>{{ TORRI[scelta].nome }}</b>
+            <span class="grado">{{ bersaglio ? 'livello ' + bersaglio.lv + ' → ' + (bersaglio.lv + 1)
+                                             : 'nuova, livello 1' }}</span>
+            <span class="prezzo">{{ prezzo }} ⚡</span>
+          </div>
+          <ColumnOp :op="op" @fatto="operazioneFinita" />
+        </template>
+      </Foglio>
     </div>
   </div>
 </template>

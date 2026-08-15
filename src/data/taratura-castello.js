@@ -8,25 +8,25 @@
    La `FIRMA` è l'impronta dei numeri da cui è stata ricavata: se prezzi,
    torri o tappe cambiano, il test se ne accorge e chiede di rifarla. */
 export const VITE = {
-  "bosco/Il sentiero": [46, 54, 54, 68],
-  "bosco/Il guado": [84, 104, 104, 152, 152],
-  "bosco/La radura": [130, 156, 156, 193, 207],
-  "bosco/Il folto": [84, 103, 140, 168, 187, 239, 239],
-  "bosco/La radice": [103, 103, 103, 145, 145, 145, 246, 428],
-  "sotterraneo/La grotta": [129, 139, 139, 191, 194, 194],
-  "sotterraneo/La miniera": [91, 158, 192, 192, 203, 203, 203],
-  "sotterraneo/Le fogne": [58, 58, 58, 127, 127, 141, 216, 216, 216],
-  "sotterraneo/La cripta": [115, 115, 115, 169, 169, 170, 247, 247, 247, 557],
-  "sotterraneo/La gola": [77, 118, 118, 118, 154, 154, 154, 280, 280, 280, 382, 382],
-  "mura/Il cortile": [89, 89, 135, 135, 135, 213, 213, 232, 347],
-  "mura/Il camminamento": [81, 90, 90, 115, 115, 115, 171, 171, 171, 298, 298, 298],
-  "mura/Il corridoio": [49, 49, 49, 95, 97, 97, 153, 162, 162, 220, 225, 225, 324, 867],
-  "mura/La sala del trono": [98, 98, 98, 140, 140, 140, 178, 178, 178, 301, 301, 301, 460, 460, 652],
-  "mura/Il torrione": [88, 88, 88, 109, 109, 109, 173, 173, 173, 279, 292, 292, 418, 583, 583, 733, 1303],
-  "Partita libera": [98, 98, 126, 170, 170, 182, 205, 307, 307, 307, 363, 363, 506, 506, 789, 789, 975, 1080, 1353, 2744],
+  "bosco/Il sentiero": [53, 59, 59, 68],
+  "bosco/Il guado": [99, 110, 116, 149, 149],
+  "bosco/La radura": [153, 159, 159, 188, 221],
+  "bosco/Il folto": [92, 113, 137, 156, 200, 239, 239],
+  "bosco/La radice": [112, 112, 113, 145, 145, 145, 267, 428],
+  "sotterraneo/La grotta": [84, 84, 87, 131, 136, 136],
+  "sotterraneo/La miniera": [62, 120, 128, 128, 154, 154, 154],
+  "sotterraneo/Le fogne": [64, 64, 64, 141, 141, 141, 218, 218, 218],
+  "sotterraneo/La cripta": [87, 87, 87, 169, 169, 170, 247, 247, 247, 592],
+  "sotterraneo/La gola": [63, 118, 118, 118, 134, 134, 134, 278, 278, 278, 382, 382],
+  "mura/Il cortile": [98, 98, 135, 135, 135, 179, 179, 179, 295],
+  "mura/Il camminamento": [80, 80, 80, 115, 115, 115, 171, 171, 171, 266, 266, 266],
+  "mura/Il corridoio": [54, 54, 54, 95, 97, 97, 153, 160, 160, 201, 201, 201, 310, 834],
+  "mura/La sala del trono": [96, 96, 96, 159, 159, 159, 205, 205, 205, 301, 301, 301, 460, 460, 605],
+  "mura/Il torrione": [78, 78, 78, 109, 109, 109, 190, 218, 218, 279, 292, 292, 395, 530, 628, 733, 1303],
+  "Partita libera": [106, 108, 126, 152, 187, 193, 246, 365, 365, 365, 375, 375, 508, 508, 962, 962, 1069, 1351, 1390, 2839],
 }
 /* di quanto cresce la vita nella partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = 1.41
-export const FIRMA = "6eea6e47"
+export const OLTRE = 1.36
+export const FIRMA = "6ed10e9"
 export const BERSAGLIO = [0.6, 0.85]

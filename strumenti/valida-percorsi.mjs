@@ -9,9 +9,10 @@
    la fa diventare quello che diventa in gioco — la smussa con lo
    stesso Chaikin del motore, ci dispone le postazioni con la stessa
    formula di `motore/battaglia.js` — e poi controlla le cose che a
-   occhio non si vedono. Due volte, alle misure vere del riquadro:
-   quelle del telefono (390×420) e quelle del computer (520×420, il
-   massimo che `.campo` concede).
+   occhio non si vedono. Una volta sola, sulle misure del mondo
+   (`MONDO` in `data/castello.js`): prima erano due, telefono e
+   computer, perché il campo si stirava dentro il riquadro che
+   trovava; adesso il mondo è dichiarato e a piegarsi è lo schermo.
 
    Le distanze sono in **unità di disegno** (`S`), la stessa misura in
    cui sono scritti i raggi delle torri e le piazzole: in pixel non
@@ -20,7 +21,7 @@
    ── che cosa guarda ──
 
      margini      il tracciato sta dentro il riquadro giocabile, entra
-                  da sinistra ed esce a destra;
+                  dal bordo di sopra ed esce in fondo;
 
      gomito       quanto si avvicinano due parti del tracciato che
                   distano fino a 200 unità **di cammino**: è una curva
@@ -34,11 +35,11 @@
                   (quanto sta fuori una postazione) + 15 (la sua
                   piazzola) + 17 (mezza strada) = 66, tenuto a 62;
 
-     piazzole     la distanza fra le due postazioni più vicine, **per
-                  ogni numero di postazioni** fra 3 e 12 — quante ne
-                  metterà davvero la tappa lo decide `data/castello.js`
-                  e qui non lo si sa. Da 3 a 8 è la fascia che le
-                  quindici tappe useranno per davvero;
+     piazzole     la distanza fra le due postazioni più vicine, da tre
+                  fino a **quante ne avrà davvero questa tappa** —
+                  glielo si chiede a `data/castello.js` — più due di
+                  margine per il giorno in cui l'economia ne aprisse
+                  qualcuna in più;
 
      presidio     quanta strada tiene sotto tiro una postazione,
                   misurata in raggi d'arciere. Su un tracciato diritto
@@ -78,35 +79,40 @@ import { MOSTRI, torreDebole } from '../src/data/mostri.js'
    scrive — perché senza quel numero questo strumento controllerebbe
    una mappa che non esiste: gli stessi tracciati con otto torri e con
    tre non sono la stessa difesa. */
-import { postiDi } from '../src/data/castello.js'
+import { postiDi, MONDO } from '../src/data/castello.js'
 
-/* ── i margini del campo ── */
-const X0 = 0.03, X1 = 0.97, Y0 = 0.25, Y1 = 0.92
-const INGRESSO = 0.035          // il primo punto sta sul bordo sinistro
-const USCITA = 0.90             // l'ultimo arriva davvero a destra
+/* ── i margini del campo ──
+   Il campo è verticale: i mostri entrano dal bordo **alto** e scendono
+   fino al castello, che sta in basso. Prima entravano da sinistra e
+   uscivano a destra, perché il riquadro era quasi quadrato e schiacciato
+   fra la barra e il banco dei bottoni; il banco non c'è più, il campo si
+   prende lo schermo, e lo schermo di un telefono è alto. */
+const X0 = 0.05, X1 = 0.95, Y0 = 0.04, Y1 = 0.95
+const INGRESSO = 0.05           // il primo punto sta sul bordo di sopra
+const USCITA = 0.90             // l'ultimo arriva davvero in fondo
 
 /* ── le distanze minime, in unità di disegno ── */
 const GOMITO = 52               // dentro una curva che rientra
 const CORRIDOIO = 62            // fra due corsie diverse
 const PIAZZOLE = 40             // fra due postazioni, da 3 a 8
-const PIAZZOLE_FITTE = 22       // fra due postazioni, da 9 a 12
+const PIAZZOLE_FITTE = 22       // fra due postazioni, nei due di margine
 const VICINO = 80               // sotto questo cammino due punti sono lo stesso tratto
 const LONTANO = 200             // oltre questo cammino sono due corsie
 const RAGGIO = 92               // il raggio dell'arciere di livello 1
 
 /* ── le fasce per campagna: lunghezza in unità, presidio in raggi ──
-   Valgono per il **telefono**, che è il campo vero: il manifest impone
-   il verticale e `.campo` arriva a 520px solo su uno schermo largo.
-   Sul computer lo stesso tracciato si allunga in orizzontale e il
-   presidio cala — è noto, ed è il motivo per cui il riquadro è tappato
-   a 520px (vedi il commento sul `.campo` in TowerDefense.vue). Là si
-   controlla solo che non peggiori oltre un pavimento. */
+   Non c'è più un «vale per il telefono»: il mondo è uno solo, e queste
+   fasce valgono lì. **Sono le stesse di prima del campo verticale**, e
+   non è una svista: il mondo nuovo ha la stessa area in unità di quello
+   vecchio (vedi `MONDO` in `data/castello.js`), solo girata. Una strada
+   misura ancora fra i 400 e i 1000 unità e una torre ne presidia ancora
+   due raggi scarsi — quello che è cambiato è la forma, non la quantità
+   di gioco. */
 const FASCE = {
   bosco:       { lung: [780, 1000], presidio: [2.15, 2.70] },
   sotterraneo: { lung: [520, 950],  presidio: [1.95, 2.40] },
   mura:        { lung: [420, 800],  presidio: [1.80, 2.20] },
 }
-const LARGO = 1.2               // quanto può allungarsi su uno schermo largo
 const PRESIDIO_MINIMO = 1.85    // il pavimento, ovunque: sotto è un tiro al bersaglio
 
 /* ── le postazioni che ci sono davvero ──
@@ -140,14 +146,14 @@ const BUCO_INTERNO = 60
    perdona più del sotterraneo, che perdona più delle mura */
 const SCALINO = 0.12
 
-/* le due misure vere del riquadro (`.campo` in TowerDefense.vue:
-   height min(52vh,420px), width min(100%,520px)) */
-const MISURE = [
-  { nome: 'telefono', W: 390, H: 420 },
-  { nome: 'computer', W: 520, H: 420 },
-]
-/* la stessa scala di `grafica/tela.js` */
-const scalaDi = (W, H) => Math.max(0.62, Math.min(1.5, Math.min(W, H) / 420))
+/* La misura del campo, e adesso è **una sola**: il mondo è dichiarato
+   in `data/castello.js` e non si piega più allo schermo — è la
+   telecamera a incorniciarlo. Prima qui ce n'erano due, telefono e
+   computer, e metà dei controlli esisteva per dire quanto peggiorava
+   la seconda. */
+const MISURE = [{ nome: 'campo', W: MONDO.W, H: MONDO.H }]
+/* la scala non si calcola più: la dichiara il mondo */
+const scalaDi = () => MONDO.S
 
 /* ── la copia fedele di `costruisciPercorso` in motore/battaglia.js ──
    Non si importa perché quella funzione vive dentro una chiusura, e
@@ -190,16 +196,24 @@ function ravvicinamenti(via, S) {
   return { gomito, corridoio, dg, dc }
 }
 
-/* le due postazioni più vicine, nella fascia di postazioni che conta e
-   in quella che conterebbe se un giorno l'economia ne chiedesse tante */
-function piazzoleStrette(forma, W, H, S) {
+/* Le due postazioni più vicine, dalle tre di magra fino a quante ne
+   avrà davvero questa tappa (`fino`), più due di margine per il giorno
+   in cui l'economia ne chiedesse qualcuna in più.
+
+   Prima si provava sempre fino a dodici, ed era una domanda senza
+   risposta: una mappa del bosco con dodici piazzole non esiste — ne ha
+   quattro — e pretendere che le regga tutte vuol dire raddrizzare le
+   anse che sono il motivo per cui quel bosco perdona. Si controlla
+   quello che il gioco fa, non quello che potrebbe fare in un mondo
+   parallelo. */
+function piazzoleStrette(forma, W, H, S, fino = 8) {
   let larga = Infinity, fitta = Infinity, quante = 0
-  for (let q = 3; q <= 12; q++) {
+  for (let q = 3; q <= fino + 2; q++) {
     const { postazioni } = campoDi(forma, W, H, S, q)
     for (let i = 0; i < postazioni.length; i++)
       for (let k = i + 1; k < postazioni.length; k++) {
         const d = dist(postazioni[i], postazioni[k]) / S
-        if (q <= 8) { if (d < larga) { larga = d; quante = q } }
+        if (q <= fino) { if (d < larga) { larga = d; quante = q } }
         else if (d < fitta) fitta = d
       }
   }
@@ -254,15 +268,15 @@ function esaminaForma(t) {
   for (const [i, [x, y]] of f.entries())
     if (x < X0 - 1e-9 || x > X1 + 1e-9 || y < Y0 - 1e-9 || y > Y1 + 1e-9)
       guasti.push(`punto ${i} (${x}, ${y}) fuori dal riquadro [${X0}–${X1}] × [${Y0}–${Y1}]`)
-  if (f[0][0] > INGRESSO) guasti.push(`non entra dal bordo sinistro (x = ${f[0][0]})`)
-  if (f[f.length - 1][0] < USCITA) guasti.push(`non arriva a destra (x = ${f[f.length - 1][0]})`)
+  if (f[0][1] > INGRESSO) guasti.push(`non entra dal bordo di sopra (y = ${f[0][1]})`)
+  if (f[f.length - 1][1] < USCITA) guasti.push(`non arriva in fondo (y = ${f[f.length - 1][1]})`)
 
   const misure = []
   for (const M of MISURE) {
     const S = scalaDi(M.W, M.H)
     const { via } = campoDi(f, M.W, M.H, S, 6)
     const r = ravvicinamenti(via, S)
-    const p = piazzoleStrette(f, M.W, M.H, S)
+    const p = piazzoleStrette(f, M.W, M.H, S, postiVeri(t))
     const presidio = presidioDi(f, M.W, M.H, S)
     const lung = via.lunghezza / S
     const fascia = FASCE[t.campagna]
@@ -278,14 +292,12 @@ function esaminaForma(t) {
                   `(minimo ${PIAZZOLE}) con ${p.quante} postazioni`)
     if (p.fitta < PIAZZOLE_FITTE)
       guasti.push(`${M.nome}: due piazzole a ${p.fitta.toFixed(0)}u ` +
-                  `(minimo ${PIAZZOLE_FITTE}) fra 9 e 12 postazioni`)
-    const stretto = M.nome === 'telefono'
-    const tetto = stretto ? fascia.lung[1] : fascia.lung[1] * LARGO
-    if (lung < fascia.lung[0] || lung > tetto)
+                  `(minimo ${PIAZZOLE_FITTE}) con qualche postazione in più`)
+    if (lung < fascia.lung[0] || lung > fascia.lung[1])
       guasti.push(`${M.nome}: lunga ${lung.toFixed(0)}u, fuori dalla fascia ` +
-                  `${fascia.lung[0]}–${tetto.toFixed(0)} della campagna`)
-    if (stretto && (presidio < fascia.presidio[0] || presidio > fascia.presidio[1]))
-      guasti.push(`telefono: presidio ${presidio.toFixed(2)}, fuori dalla fascia ` +
+                  `${fascia.lung[0]}–${fascia.lung[1]} della campagna`)
+    if (presidio < fascia.presidio[0] || presidio > fascia.presidio[1])
+      guasti.push(`${M.nome}: presidio ${presidio.toFixed(2)}, fuori dalla fascia ` +
                   `${fascia.presidio[0]}–${fascia.presidio[1]} della campagna`)
     if (presidio < PRESIDIO_MINIMO)
       guasti.push(`${M.nome}: presidio ${presidio.toFixed(2)}, sotto il pavimento ` +
@@ -361,26 +373,26 @@ for (const c of CAMPAGNE) {
     const { guasti, avvisi, misure } = esaminaForma(t)
     const tutti = [...guasti, ...esaminaMostri(t)]
     for (const a of avvisi) avvertimenti.push(`${t.nome}: ${a}`)
-    const [m, d] = misure
+    const [m] = misure
     presidi.push(m.presidio)
     console.log(`    ${tutti.length ? '✗' : ' '} ${(t.nome + ' ' + t.emoji).padEnd(21)}` +
-      `${m.lung.toFixed(0).padStart(4)}/${d.lung.toFixed(0).padStart(4)} ` +
-      `${m.presidio.toFixed(2)}/${d.presidio.toFixed(2)} ` +
-      `${m.gomito.toFixed(0).padStart(4)}/${d.gomito.toFixed(0).padStart(3)} ` +
-      `${m.corridoio.toFixed(0).padStart(4)}/${d.corridoio.toFixed(0).padStart(3)} ` +
-      `${m.larga.toFixed(0).padStart(5)}/${d.larga.toFixed(0).padStart(3)} ` +
-      `${m.fitta.toFixed(0).padStart(3)}/${d.fitta.toFixed(0).padStart(3)}  ` +
-      `${m.posti}: ${m.poche.presidio.toFixed(2)}/${d.poche.presidio.toFixed(2)} ` +
-      `buco ${m.poche.buco.toFixed(0).padStart(2)}/${d.poche.buco.toFixed(0).padStart(2)}u`)
+      `${m.lung.toFixed(0).padStart(5)} ` +
+      `${m.presidio.toFixed(2).padStart(7)} ` +
+      `${m.gomito.toFixed(0).padStart(7)} ` +
+      `${m.corridoio.toFixed(0).padStart(6)} ` +
+      `${m.larga.toFixed(0).padStart(8)} ` +
+      `${m.fitta.toFixed(0).padStart(4)}  ` +
+      `${m.posti}: ${m.poche.presidio.toFixed(2)} ` +
+      `buco ${m.poche.buco.toFixed(0).padStart(3)}u`)
     if (tutti.length) { rotti++; for (const g of tutti) console.log(`        ✗ ${g}`) }
   }
   medie[c.id] = presidi.reduce((s, v) => s + v, 0) / presidi.length
 }
 
 console.log('\n      ' + '─'.repeat(88))
-console.log('      (telefono 390×420 / computer 520×420 · distanze in unità di disegno)')
+console.log(`      (campo ${MONDO.W}×${MONDO.H} · distanze in unità di disegno)`)
 console.log(`      minimi: gomito ${GOMITO}u · corsie ${CORRIDOIO}u · ` +
-            `piazzole ${PIAZZOLE}u (3-8) e ${PIAZZOLE_FITTE}u (9-12)`)
+            `piazzole ${PIAZZOLE}u (fino alle sue) e ${PIAZZOLE_FITTE}u (due in più)`)
 console.log(`      con le postazioni vere della tappa: presidio almeno ${PRESIDIO_POCHI} · ` +
             `buco interno al massimo ${BUCO_INTERNO}u`)
 

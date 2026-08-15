@@ -55,23 +55,26 @@
 
    Una `forma` è una spezzata in coordinate 0–1 sul riquadro del campo.
    `motore/battaglia.js` la smussa (Chaikin, `grafica/geometria.js`) e
-   ci dispone le postazioni ai lati, alternate, **partendo dal
-   castello**: ogni torre nuova allunga la difesa verso l'ingresso.
+   ci dispone le postazioni ai lati, alternate, **partendo
+   dall'ingresso**: ogni torre nuova allunga la difesa verso il
+   castello.
 
    ── il riquadro vero ──
-   Il campo non è verticale, anche se il gioco lo è: `.campo` in
-   `TowerDefense.vue` è alto `min(52vh, 420px)` e largo al massimo
-   520px. Su un telefono sono circa 390×420, sul computer 520×420 —
-   cioè un riquadro **quasi quadrato, semmai largo**. Le mappe si
-   disegnano per quella forma lì, non per una colonna.
+   Il campo è **verticale**, come il gioco: `MONDO` in
+   `data/castello.js` dice 420×760, uguale su ogni schermo. Non è più il
+   riquadro quasi quadrato di prima (390×420 sul telefono, 520×420 sul
+   computer, e le mappe che si stiravano fra i due): il banco dei
+   bottoni non c'è più, il campo si prende tutta la schermata, e quello
+   che cambia da un telefono a un monitor è solo quanto lo si vede
+   grande.
 
    ── i margini, e perché ──
-     x ∈ [0.03, 0.97]   una strada che tocca il bordo sembra tagliata
-     y ∈ [0.25, 0.92]   in alto a destra c'è la scheda del mostro, e il
-                        castello in fondo al percorso è alto una
+     x ∈ [0.05, 0.95]   una strada che tocca il bordo sembra tagliata
+     y ∈ [0.04, 0.95]   il castello in fondo al percorso è alto una
                         cinquantina di unità sopra il suo piede
-   Il percorso entra sempre dal bordo sinistro ed esce a destra: da lì
-   arrivano i nemici, lì c'è il castello da difendere.
+   Il percorso entra sempre dal bordo **di sopra** ed esce **in fondo**:
+   da lì scendono i nemici, e in fondo — vicino al pollice, dove si
+   difende — c'è il castello.
 
    ── quanto due tratti possono avvicinarsi ──
    Una postazione sta a 34 unità dal centro della strada e la sua
@@ -84,7 +87,7 @@
    sono due corsie diverse (minimo 62).
 
    ── la difficoltà che sta nella mappa ──
-   Il raggio di una torre va da 86 a 132 unità: su un campo largo 400
+   Il raggio di una torre va da 86 a 132 unità: su un campo largo 420
    una torre ne vede un bel pezzo. Quello che conta non è la lunghezza
    in sé ma **quanta strada ogni torre tiene sotto tiro** — un
    tracciato che si ripiega si fa battere due o tre volte dalla stessa
@@ -92,47 +95,60 @@
    `presidio` (strada per postazione, misurata in raggi d'arciere), e
    scende di campagna in campagna:
 
-     Bosco        ~2,38     sentieri che si ripiegano: perdonano
-     Sotterraneo  ~2,14     cunicoli: qualche gomito, meno regali
-     Mura         ~1,97     rettifili: una torre, un tratto, e basta
+     Bosco        ~2,4     serpentine che si ripiegano: perdonano
+     Sotterraneo  ~2,1     cunicoli: qualche gomito, meno regali
+     Mura         ~1,9     rettifili: una torre, un tratto, e basta
 
-   La lunghezza segue: nel Bosco stanno tutti fra 820 e 950 unità,
-   nelle Mura si scende fino a 474 — dall'ingresso alla porta del
-   torrione ci sono quattro segmenti, ed è l'ultima tappa apposta. */
+   È il numero che regge la difficoltà, e **non è cambiato** con il
+   campo nuovo: le strade sono più lunghe — un riquadro 420×760 ha più
+   posto di uno 390×420 — ma quanto si ripiegano su sé stesse è la
+   stessa promessa di prima.
+
+   Il verso, invece, è cambiato tutto: si scende. Le corsie sono
+   orizzontali e stanno una sotto l'altra, e la distanza fra due corsie
+   è la manopola del presidio — settanta-novanta unità e una torre in
+   mezzo ne batte due, oltre centocinquanta ne batte una sola. */
 
 /* ── BOSCO: sentieri che si perdono nel verde ──
-   Curve larghe, diagonali, niente spigoli. */
+   Serpentine larghe, diagonali, niente spigoli. Le anse stanno vicine:
+   qui una torre lavora due volte, ed è il regalo che il bosco fa a chi
+   sta imparando. */
 
-// il sentiero: sale e scende fra i tronchi tre volte. È il tracciato
-// più ripiegato del gioco insieme al folto, ed è la prima tappa: chi
-// comincia ha bisogno di tempo, non di sconti sui nemici.
+// il sentiero: quattro anse che attraversano il bosco da parte a
+// parte, una sotto l'altra e vicine. È la prima tappa: chi comincia ha
+// bisogno di tempo, non di sconti sui nemici — e con le corsie così
+// strette ogni torre lavora due volte.
 const BOSCO_SENTIERO = [
-  [0.03, 0.28], [0.24, 0.26], [0.32, 0.50], [0.22, 0.74], [0.42, 0.88],
-  [0.58, 0.72], [0.52, 0.48], [0.62, 0.30], [0.80, 0.36], [0.86, 0.62], [0.97, 0.82]]
+  [0.36, 0.04], [0.30, 0.13], [0.72, 0.19], [0.76, 0.28], [0.30, 0.34],
+  [0.26, 0.43], [0.70, 0.49], [0.74, 0.60], [0.34, 0.68], [0.30, 0.82],
+  [0.54, 0.95]]
 
-// il guado: si scende alla riva, si costeggia l'acqua, si risale
-// sull'altra sponda e si esce in alto
+// il guado: si scende alla riva, si costeggia l'acqua da una sponda
+// all'altra e si torna giù
 const BOSCO_GUADO = [
-  [0.03, 0.28], [0.26, 0.28], [0.34, 0.52], [0.22, 0.76], [0.46, 0.90],
-  [0.68, 0.80], [0.60, 0.54], [0.74, 0.36], [0.90, 0.46], [0.97, 0.70]]
+  [0.30, 0.04], [0.26, 0.14], [0.66, 0.20], [0.70, 0.30], [0.28, 0.37],
+  [0.24, 0.48], [0.68, 0.55], [0.72, 0.66], [0.36, 0.73], [0.40, 0.86],
+  [0.62, 0.95]]
 
 // la radura: il sentiero gira **attorno** alla radura e poi se ne va.
 // L'anello è il regalo del bosco: una torre in mezzo batte due tratti.
 const BOSCO_RADURA = [
-  [0.03, 0.32], [0.24, 0.28], [0.46, 0.32], [0.54, 0.50], [0.42, 0.64],
-  [0.24, 0.62], [0.16, 0.80], [0.40, 0.90], [0.64, 0.84], [0.72, 0.64],
-  [0.88, 0.54], [0.97, 0.70]]
+  [0.46, 0.04], [0.26, 0.11], [0.22, 0.22], [0.54, 0.28], [0.76, 0.22],
+  [0.80, 0.34], [0.44, 0.40], [0.24, 0.48], [0.28, 0.60], [0.66, 0.66],
+  [0.62, 0.80], [0.44, 0.95]]
 
-// il folto: quattro denti stretti fra i tronchi, su e giù senza respiro
+// il folto: cinque denti stretti fra i tronchi, avanti e indietro
+// senza respiro. Il tracciato più ripiegato del gioco.
 const BOSCO_FOLTO = [
-  [0.03, 0.30], [0.20, 0.28], [0.28, 0.52], [0.20, 0.76], [0.40, 0.88],
-  [0.54, 0.70], [0.48, 0.46], [0.62, 0.32], [0.78, 0.42], [0.82, 0.66], [0.97, 0.78]]
+  [0.38, 0.04], [0.30, 0.12], [0.74, 0.18], [0.78, 0.28], [0.28, 0.35],
+  [0.22, 0.45], [0.66, 0.51], [0.70, 0.61], [0.26, 0.68], [0.30, 0.81],
+  [0.58, 0.88], [0.52, 0.95]]
 
-// la radice: due grandi tornanti attorno alla radice affiorata, e via.
-// Il bosco si apre: da qui i tracciati cominciano ad accorciarsi.
+// la radice: tre tornanti attorno alla radice affiorata, e via. Il
+// bosco si apre: da qui i tracciati cominciano ad accorciarsi.
 const BOSCO_RADICE = [
-  [0.03, 0.34], [0.30, 0.30], [0.44, 0.50], [0.22, 0.70], [0.48, 0.90],
-  [0.74, 0.78], [0.62, 0.54], [0.84, 0.42], [0.97, 0.62]]
+  [0.32, 0.04], [0.26, 0.16], [0.70, 0.23], [0.74, 0.34], [0.30, 0.41],
+  [0.26, 0.54], [0.68, 0.61], [0.64, 0.76], [0.36, 0.84], [0.44, 0.95]]
 
 /* ── SOTTERRANEO: cunicoli ──
    Gomiti netti e rettifili: sotto terra le gallerie le ha scavate
@@ -140,56 +156,57 @@ const BOSCO_RADICE = [
 
 // la grotta: la caverna più larga di tutte, con il pilastro in mezzo
 const SOTTO_GROTTA = [
-  [0.03, 0.30], [0.26, 0.30], [0.46, 0.42], [0.40, 0.66], [0.18, 0.74],
-  [0.36, 0.90], [0.60, 0.86], [0.72, 0.66], [0.64, 0.44], [0.82, 0.36], [0.97, 0.48]]
+  [0.34, 0.04], [0.28, 0.16], [0.70, 0.24], [0.74, 0.38], [0.30, 0.46],
+  [0.26, 0.60], [0.68, 0.68], [0.60, 0.82], [0.40, 0.95]]
 
 // la miniera: gallerie a squadra, una sotto l'altra
 const SOTTO_MINIERA = [
-  [0.03, 0.30], [0.34, 0.30], [0.36, 0.56], [0.14, 0.62], [0.18, 0.84],
-  [0.52, 0.86], [0.56, 0.62], [0.97, 0.66]]
+  [0.28, 0.04], [0.26, 0.18], [0.72, 0.24], [0.74, 0.40], [0.28, 0.48],
+  [0.26, 0.64], [0.68, 0.72], [0.66, 0.95]]
 
 // le fogne: due salti di quota dentro il collettore
 const SOTTO_FOGNE = [
-  [0.03, 0.30], [0.24, 0.30], [0.28, 0.54], [0.48, 0.60], [0.44, 0.84],
-  [0.70, 0.88], [0.78, 0.64], [0.97, 0.56]]
+  [0.62, 0.04], [0.66, 0.20], [0.26, 0.30], [0.22, 0.46], [0.62, 0.56],
+  [0.66, 0.72], [0.34, 0.82], [0.38, 0.95]]
 
 // la cripta: una scala regolare che scende di loculo in loculo, tutta
 // ad angoli retti — l'unica mappa che si potrebbe disegnare col righello
 const SOTTO_CRIPTA = [
-  [0.03, 0.28], [0.26, 0.28], [0.28, 0.48], [0.50, 0.48], [0.52, 0.68],
-  [0.74, 0.68], [0.76, 0.88], [0.97, 0.88]]
+  [0.22, 0.04], [0.22, 0.24], [0.66, 0.24], [0.66, 0.46], [0.26, 0.46],
+  [0.26, 0.68], [0.70, 0.68], [0.70, 0.86], [0.48, 0.95]]
 
-// la gola: stretta e quasi diritta, due gomiti e sei fuori
+// la gola: stretta e quasi diritta, tre gomiti e sei fuori
 const SOTTO_GOLA = [
-  [0.03, 0.32], [0.28, 0.38], [0.36, 0.62], [0.60, 0.70], [0.72, 0.52],
-  [0.88, 0.62], [0.97, 0.82]]
+  [0.36, 0.04], [0.30, 0.16], [0.68, 0.24], [0.72, 0.40], [0.32, 0.50],
+  [0.28, 0.66], [0.62, 0.76], [0.54, 0.95]]
 
 /* ── MURA: dentro il castello ──
    Rettifili e angoli retti, e soprattutto **corti**: qui i nemici
    arrivano addosso, e una torre batte un tratto solo. */
 
-// il cortile: si gira attorno al pozzo e si sale al camminamento
+// il cortile: si gira attorno al pozzo e si scende alla porta
 const MURA_CORTILE = [
-  [0.03, 0.30], [0.30, 0.30], [0.34, 0.58], [0.14, 0.66], [0.22, 0.86],
-  [0.58, 0.88], [0.62, 0.62], [0.97, 0.62]]
+  [0.30, 0.04], [0.32, 0.26], [0.74, 0.36], [0.70, 0.62], [0.30, 0.72],
+  [0.36, 0.95]]
 
 // il camminamento: la ronda sopra le mura, un lungo rettifilo e giù
 const MURA_CAMMINAMENTO = [
-  [0.03, 0.30], [0.56, 0.28], [0.68, 0.54], [0.38, 0.72], [0.54, 0.90], [0.97, 0.88]]
+  [0.24, 0.04], [0.28, 0.30], [0.76, 0.42], [0.72, 0.68], [0.44, 0.95]]
 
 // il corridoio: un dritto, un gomito, un dritto
 const MURA_CORRIDOIO = [
-  [0.03, 0.34], [0.40, 0.32], [0.54, 0.58], [0.34, 0.80], [0.64, 0.90], [0.97, 0.80]]
+  [0.70, 0.04], [0.64, 0.26], [0.24, 0.38], [0.28, 0.60], [0.66, 0.72],
+  [0.56, 0.95]]
 
 // la sala del trono: si entra, si taglia la sala in diagonale, si esce
 // dal fondo. Nessun tornante: chi sbaglia a comprare lo vede subito.
 const MURA_TRONO = [
-  [0.03, 0.36], [0.32, 0.34], [0.40, 0.66], [0.70, 0.74], [0.80, 0.46], [0.97, 0.44]]
+  [0.34, 0.04], [0.38, 0.34], [0.72, 0.50], [0.64, 0.78], [0.44, 0.95]]
 
 // il torrione: la rampa finale. Il tracciato più corto e più esposto
 // del gioco — dall'ingresso alla porta ci sono quattro segmenti.
 const MURA_TORRIONE = [
-  [0.03, 0.34], [0.36, 0.40], [0.52, 0.66], [0.78, 0.72], [0.97, 0.56]]
+  [0.44, 0.04], [0.72, 0.24], [0.62, 0.52], [0.30, 0.66], [0.40, 0.95]]
 
 /* ═══════════════ LE TAPPE ═══════════════
 

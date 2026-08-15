@@ -136,12 +136,19 @@ export class Battaglia {
      appena finita, con la penale degli errori): qui si paga e si mette
      in campo. Tenere il conto in un posto solo è ciò che permette al
      simulatore di spendere come spende un bambino. */
-  costruisci(tipo, { prezzo = 0, penale = 0 } = {}) {
+  /* Dove nasce una torre: dove l'ha messa il dito, se il dito l'ha
+     detto. Chi non lo dice — il simulatore, il taratore, i test —
+     prende l'ordine di sempre, dall'ingresso verso il castello: è la
+     partita su cui ogni tappa è tarata, e deve restare quella anche
+     adesso che a schermo si può scegliere. */
+  costruisci(tipo, { prezzo = 0, penale = 0, posto = null } = {}) {
     this.tabellone.paga(prezzo + penale)
     this.pausa = 0                     // ha appena fatto qualcosa: l'attesa riparte
     const posti = this.percorso.postazioni
-    const posto = posti[this.torri.length % posti.length]
-    const torre = new Torre({ x: posto.x, y: posto.y, tipo })
+    const scelto = posto != null && this.libera(posto) ? posto
+                                                       : this.liberi()[0] ?? 0
+    const dove = posti[scelto]
+    const torre = new Torre({ x: dove.x, y: dove.y, tipo })
     this.torri.push(torre)
     this.tabellone.torreNuova()
     this.segna('torri')
@@ -154,6 +161,25 @@ export class Battaglia {
     this.pausa = 0
     torre.sale()
     return torre
+  }
+
+  /* ── chi occupa cosa ──
+     Una piazzola è presa se ci sta sopra una torre. Il confronto è sulla
+     posizione e non su un indice perché le torri si spostano col dito, e
+     l'unica verità su dove stanno è dove stanno. `salvo` serve a chi si è
+     già preso una torre in mano: la piazzola da cui l'ha sollevata è
+     libera, se no non potrebbe rimettercela. */
+  libera(i, salvo = null) {
+    const p = this.percorso.postazioni[i]
+    if (!p) return false
+    return !this.torri.some(t => t !== salvo && Math.hypot(t.x - p.x, t.y - p.y) < 2)
+  }
+  liberi(salvo = null) {
+    return this.percorso.postazioni.map((_, i) => i).filter(i => this.libera(i, salvo))
+  }
+  /* la piazzola su cui sta questa torre, se ci sta */
+  postoDi(torre) {
+    return this.percorso.postazioni.findIndex(p => Math.hypot(torre.x - p.x, torre.y - p.y) < 2)
   }
 
   /* ═══════════ un passo di gioco ═══════════
@@ -273,6 +299,10 @@ export class Battaglia {
 
   /* ── quello che si legge da fuori ── */
   get via() { return this.percorso }
+  /* la strada su cui cammina *questo* nemico. Con una strada sola è
+     sempre quella; serve a chi disegna e a chi spara per non doversi
+     accorgere di quando le strade diventeranno più d'una. */
+  viaDi(_nemico) { return this.percorso }
   get postazioni() { return this.percorso.postazioni }
   /* quanti ne devono ancora uscire dall'ingresso: con questo e i nemici
      in campo si sa se il campo è pulito anche prima della prima torre */

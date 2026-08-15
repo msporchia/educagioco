@@ -11,39 +11,63 @@
    ordina da sola per profondità), 1 in volo.
 
    L'unica regola di gioco che passa di qui è la più piccola possibile:
-   se una torre può ancora salire e se l'energia basta. Sono due
-   booleani già decisi — in `grafica/` non entrano prezzi.
+   se una torre può ancora salire, se una piazzola è libera, e se
+   l'energia basta. Sono booleani già decisi — in `grafica/` non entrano
+   prezzi.
+
+   ── quando si accendono le piazzole ──
+   Da quando il banco non c'è più, il campo è l'unico posto dove si
+   compra: se le piazzole restassero spente come prima, chi gioca non
+   avrebbe nessun modo di sapere che lì si può costruire. Si accendono
+   quando l'energia basta per una torre nuova — cioè quando toccarle
+   serve a qualcosa — e restano spente quando non basta. È la stessa
+   promessa che il bollino verde fa già sulle torri: acceso vuol dire
+   «adesso puoi».
    ═══════════════════════════════════════════════════════════════════ */
 import { costoSalita } from '../../data/castello.js'
 
-export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0, occupato = false }) {
+export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
+                                  occupato = false, costoNuova = Infinity, mira = null }) {
   const roba = []
   if (!motore) return roba
 
-  /* Piazzole e raggio d'azione si accendono soltanto mentre si sposta
-     una torre: è l'unico momento in cui uno si sta chiedendo «dove ci
-     sta?» e «fin dove arriva?». Sempre accesi erano aloni colorati che
-     sporcavano il prato senza dire niente di nuovo. */
-  if (trascino && trascino.mosso) {
-    for (const p of motore.postazioni) {
-      if (motore.torri.some(t => t !== trascino.torre && Math.hypot(t.x - p.x, t.y - p.y) < 2)) continue
-      roba.push({ che: 'piazzola', strato: -1, x: p.x, y: p.y, scelta: trascino.posto === p })
-    }
-    const t = trascino.torre
-    roba.push({ che: 'raggio', strato: -1, x: t.x, y: t.y, tipo: t.tipo, r: t.raggio(S) })
-  }
+  /* La piazzola che il dito sta guardando: quella sotto il foglio
+     aperto, o quella dove sta per cadere la torre trascinata. */
+  const inMano = trascino && trascino.mosso ? trascino.torre : null
+  const mirata = mira && mira.piazzola != null ? mira.piazzola : -1
+  const posso = energia >= costoNuova && !occupato
+
+  motore.postazioni.forEach((p, i) => {
+    if (!motore.libera(i, inMano)) return
+    const scelta = inMano ? trascino.posto === i : i === mirata
+    // spenta: c'è la piazzola sul fondale, ma niente che inviti a toccarla
+    if (!scelta && !posso && !inMano) return
+    roba.push({ che: 'piazzola', strato: -1, x: p.x, y: p.y, scelta, viva: !inMano && !scelta })
+  })
+
+  /* Il raggio d'azione si vede in tre momenti, e sono tutti e tre lo
+     stesso momento: quando uno si sta chiedendo «fin dove arriva?».
+     Mentre sposta una torre, mentre guarda la scheda di una torre,
+     mentre sceglie che cosa costruire su una piazzola. */
+  const anteprima = mira && mira.raggio
+    ? { x: mira.x, y: mira.y, r: mira.raggio, tipo: mira.tipo }
+    : inMano ? { x: inMano.x, y: inMano.y, r: inMano.raggio(S), tipo: inMano.tipo } : null
+  if (anteprima) roba.push({ che: 'raggio', strato: -1, ...anteprima })
 
   for (const s of motore.schizzi)
     roba.push({ che: 'schizzo', strato: -1, x: s.x, y: s.y, r: s.r,
                 vita: s.vita, tipo: s.tipo, gelo: s.gelo })
 
   for (const t of motore.torri)
-    roba.push({ che: 'torre', x: t.x, y: t.y, tipo: t.tipo, lv: t.lv,
+    roba.push({ che: 'torre', x: t.x, y: t.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo,
                 potenziabile: t.lv < tetto && !occupato,
-                posso: energia >= costoSalita(t.lv) })
+                posso: energia >= costoSalita(t.lv),
+                /* la torre di cui è aperta la scheda si stacca dal campo:
+                   è quella di cui si sta parlando */
+                alone: !!(mira && mira.torre === t) })
 
   for (const n of motore.nemici) {
-    const p = motore.via.puntoA(n.d)
+    const p = motore.viaDi(n).puntoA(n.d)
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
                 debole: n.debole, vita: n.quota, gelo: n.gelo })
   }
