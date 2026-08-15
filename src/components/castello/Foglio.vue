@@ -8,49 +8,30 @@
    solo quando c'è qualcosa da decidere — che torre costruire qui, cosa
    fare di questa torre, e il conto da fare per pagarla.
 
-   Due cose che il foglio fa e che non si vedono:
+   Si appoggia sopra il campo e basta. Per un po' ha fatto di più — la
+   telecamera si stringeva di quanto il foglio copriva, così mentre si
+   calcolava si continuava a vedere tutta la battaglia — ed era una
+   cattiva idea: l'inquadratura che entra e esce a ogni tocco stanca
+   l'occhio, e ricalcolare la scala di un canvas a ogni fotogramma
+   stanca il telefono. Il campo continua a girare sotto, chi vuole
+   guardarlo chiude il foglio.
 
-   · **dice quanto è alto**. Il campo non si ferma mentre si calcola —
-     un minimo di fretta ci vuole — quindi il campo deve restare
-     visibile: la telecamera rimpicciolisce di quanto il foglio copre,
-     e per farlo deve saperlo. Da qui esce quel numero.
-   · **non ruba il tocco a tutto lo schermo**. Il velo sopra il campo
-     chiude il foglio, ma è solo un velo: sotto si continua a vedere
-     la battaglia, che è metà del motivo per cui questa roba esiste.
+   Quello che il foglio fa e non si vede: **non ruba il tocco a tutto lo
+   schermo**. Il velo sopra il campo chiude il foglio, ma è solo un
+   velo — sotto la battaglia si vede ancora.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
-
-const props = defineProps({
+defineProps({
   aperto: { type: Boolean, default: false },
   /* il titolino in cima, e se si può tornare indietro invece di chiudere */
   titolo: { type: String, default: '' },
   indietro: { type: Boolean, default: false },
 })
-const emit = defineEmits(['chiudi', 'indietro', 'altezza'])
-
-const pannello = ref(null)
-let osserva = null
-
-/* quanto copre: zero quando è chiuso, la sua altezza quando è aperto */
-function misura() {
-  const h = props.aperto && pannello.value ? pannello.value.getBoundingClientRect().height : 0
-  emit('altezza', Math.round(h))
-}
-
-onMounted(() => {
-  if (window.ResizeObserver) {
-    osserva = new ResizeObserver(misura)
-    if (pannello.value) osserva.observe(pannello.value)
-  }
-  misura()
-})
-onUnmounted(() => osserva?.disconnect())
-watch(() => props.aperto, () => nextTick(misura))
+defineEmits(['chiudi', 'indietro'])
 </script>
 
 <template>
   <div class="velina" :class="{ via: !aperto }" @pointerdown.self="$emit('chiudi')"></div>
-  <div ref="pannello" class="foglio" :class="{ via: !aperto }">
+  <div class="foglio" :class="{ via: !aperto }">
     <div class="maniglia"></div>
     <div v-if="titolo || indietro" class="cima">
       <button v-if="indietro" class="tondo" aria-label="indietro" @click="$emit('indietro')">‹</button>

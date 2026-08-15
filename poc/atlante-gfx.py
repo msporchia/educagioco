@@ -186,6 +186,48 @@ def provini(ritagli, dove):
     print('provini in', dove)
 
 
+MODULO = """/* GENERATO da poc/atlante-gfx.py — non si scrive a mano.
+
+   L'atlante è ritagliato dal set CC0 di ArMM1998 (Zelda-like tilesets and
+   sprites, https://opengameart.org/content/zelda-like-tilesets-and-sprites)
+   più gli attori che stanno in `poc/attori/`. Il PNG intero pesa {kb} KB:
+   sta qui dentro in base64 perché il build deve restare un file solo.
+
+   PEZZI: nome → [x, y, larghezza, altezza] dentro l'atlante. */
+export const ATLANTE = 'data:image/png;base64,{b64}'
+
+export const PEZZI = {mappa}
+
+/* Un attore è 16×32, quattro fotogrammi per ognuno dei tre versi. Le pose
+   di lato guardano a DESTRA: la sinistra è la stessa specchiata, e non
+   esiste nell'atlante — esiste nella testa di chi disegna. */
+export const VERSI = ['giu', 'lato', 'su']
+export const FOTOGRAMMI = 4
+export const pezzoAttore = (chi, verso, fr) => PEZZI[`${{chi}}_${{verso}}${{fr}}`] || null
+
+/* Gli attori che l'atlante contiene davvero, ricavati dai pezzi invece che
+   scritti a mano: aggiungerne uno è mettere un png in `poc/attori/`. */
+export const ATTORI = [...new Set(Object.keys(PEZZI)
+  .map(n => /^(.+)_giu0$/.exec(n)).filter(Boolean).map(m => m[1]))].sort()
+"""
+
+
+def scrivi_modulo(b64, mappa):
+    """Lo stesso atlante, nella forma che serve al gioco vero.
+
+    Due bersagli e un comando solo apposta: due comandi da ricordare
+    vogliono dire, prima o poi, un atlante e una tabella che non
+    combaciano più — e quel guasto si presenta come uno sprite sbagliato
+    a schermo, che è il modo peggiore di scoprirlo."""
+    dove = QUI.parent / 'src' / 'giochi' / 'fattoria' / 'dati' / 'atlante.js'
+    if not dove.parent.is_dir():
+        return
+    dove.write_text(MODULO.format(
+        kb=len(b64) * 3 // 4 // 1024, b64=b64,
+        mappa=json.dumps(mappa, separators=(',', ':'), sort_keys=True)))
+    print(f'  → {dove.relative_to(QUI.parent)}')
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -210,6 +252,7 @@ def main():
                                                      sort_keys=True) + ';\n',
                    testo, count=1, flags=re.S)
     pagina.write_text(testo)
+    scrivi_modulo(b64, mappa)
 
     print(f'atlante {atlante.width}x{atlante.height}, '
           f'{len(b64) * 3 // 4 // 1024} KB di PNG, {len(mappa)} pezzi '

@@ -17,7 +17,7 @@
    (chi arriva, cosa si può potenziare, se l'ondata può partire);
    l'esito, quando la partita si chiude; e il tocco su una torre.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
 import { PITTORI } from '../../grafica/castello.js'
 /* il fondale lo dipinge il terreno della tappa, non un prato solo: le
@@ -41,9 +41,6 @@ const props = defineProps({
      e il raggio da mostrare. Entra da fuori perché è la schermata a
      saperlo, non il campo. */
   mira: { type: Object, default: null },
-  /* quanti pixel del campo sta coprendo il foglio: la telecamera si
-     stringe di conseguenza, e chi calcola continua a vedere tutto */
-  coperto: { type: Number, default: 0 },
 })
 const emit = defineEmits(['esito', 'potenzia', 'piazzola'])
 
@@ -222,17 +219,6 @@ onMounted(() => {
 })
 onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('resize', ridimensiona) })
 
-/* Il foglio è salito o sceso: la telecamera si stringe o si riapre.
-   Quello che arriva è **quanto è alto il foglio**, non quanto copre il
-   campo: fra i due c'è lo spazio che sta sotto al canvas, e quando è
-   abbastanza — su un telefono alto lo è quasi sempre — il foglio non
-   copre niente e la telecamera non si muove. */
-function quantoCopre(altezzaFoglio) {
-  if (!tela.value) return 0
-  const sotto = window.innerHeight - tela.value.getBoundingClientRect().bottom
-  return Math.max(0, altezzaFoglio - sotto)
-}
-watch(() => props.coperto, h => campo?.inquadra(quantoCopre(h)))
 
 defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,
                misure: () => campo?.misure,

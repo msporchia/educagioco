@@ -131,7 +131,27 @@ Due cose sono state decise provandolo, e valgono anche per `fattoria.html`:
 - **Gli attrezzi stanno appesi all'oggetto**, non in un pannello che copre
   lo schermo: girare una staccionata vuol dire vederla girare, e con un
   pannello davanti non la vedi. Spariscono mentre la stai tirando, che è
-  quando sono lontani dal dito e non servono.
+  quando sono lontani dal dito e non servono. **Vale anche per Watson**: si
+  tiene premuto, e i gesti compaiono sotto di lui mentre le sue barrette
+  compaiono sopra la testa. Il pannello a schermo intero che c'era prima lo
+  copriva, e la cosa che vuoi guardare mentre gli dai da mangiare è lui.
+- **Un tocco fermo è un tocco, quanto lungo sia.** C'era un limite di
+  400 ms oltre il quale la pressione veniva buttata via. Sembrava
+  innocuo, e invece si mangiava proprio le pressioni di chi aveva capito
+  come si gioca: imparato che «si tiene premuto per prendere», il dito ci
+  mette apposta più tempo — e comprare un pezzo di bosco smetteva di
+  funzionare. Adesso conta solo che il dito non si sia mosso.
+- **Chi ha il menù aperto sta fermo.** Watson smetteva di essere accudito e
+  cominciava a essere rincorso.
+- **`touch-action` va messo sulla carta, non sul contenitore.** Trascinare
+  una cosa fuori dall'inventario non funzionava **solo col dito**: il
+  browser leggeva il gesto come uno scorrimento della lista e **annullava
+  il puntatore** a metà strada — un `pointercancel` che col mouse non
+  arriva mai, quindi a provarlo da desktop sembrava tutto a posto. La cura
+  è `touch-action: none` sulle carte: il dito che parte da una carta è
+  nostro, e la lista si scorre lo stesso partendo da uno spazio vuoto.
+  Vale la pena ricordarlo perché è la classe di guasti che si scopre solo
+  provando davvero sul telefono.
 - **Provata e buttata: «prima ci va, poi si decide».** Per un giro toccare
   una cosa non apriva il pannello — ci mandava la bambina, e il pannello
   arrivava quando lei era arrivata. Sulla carta reggeva; in mano **distrae

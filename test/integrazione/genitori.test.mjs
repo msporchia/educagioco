@@ -205,10 +205,14 @@ controlla('il castello torna in home', await inHome('.carta.td'))
    e non è nemmeno qui fra le carte da accendere. */
 if (IN_PROVA.length) {
   const primo = IN_PROVA[0]
+  /* La carta si cerca **dal manifesto**, non da una classe scritta a mano:
+     questo blocco è rimasto fermo finché nessun gioco era in prova, e si è
+     risvegliato con il selettore di un gioco che nel frattempo era stato
+     promosso. Un test che nomina un gioco per esteso scade da solo. */
   const suaCarta = '.carta.gioco[data-gioco="' + primo.chiave + '"]'
   /* qui siamo in home, dove l'ultimo controllo ci ha lasciati */
   controlla('col cancello chiuso, un gioco in prova non è in home',
-            !(await page.isVisible('.carta.gen')))
+            !(await page.isVisible(suaCarta)))
 
   await vaiAiGenitori()
   await digita('0000')
@@ -223,7 +227,7 @@ if (IN_PROVA.length) {
   controlla('e la carta dice che è roba a metà',
             (await page.locator('.carta.gioco.prova').first().innerText()).toLowerCase()
               .includes('in prova'))
-  controlla('adesso in home c\'è', await inHome('.carta.gen'))
+  controlla('adesso in home c\'è', await inHome(suaCarta))
 
   /* dietro il cancello resta l'interruttore di sempre: un gioco in prova
      si spegne e si riaccende come tutti gli altri */
@@ -232,7 +236,7 @@ if (IN_PROVA.length) {
   await page.click(suaCarta)
   await page.waitForTimeout(200)
   controlla('e dietro il cancello vale l\'interruttore di sempre',
-            !(await inHome('.carta.gen')))
+            !(await inHome(suaCarta)))
 
   /* e il cancello si richiude: quello che si accende si deve poter
      rispegnere, e da chiuso non conta più cosa c'è dietro */
@@ -242,7 +246,7 @@ if (IN_PROVA.length) {
   await page.waitForTimeout(150)
   await page.click('.carta[data-flag="sperimentali"]')
   await page.waitForTimeout(200)
-  controlla('richiuso il cancello, sparisce di nuovo', !(await inHome('.carta.gen')))
+  controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
 }
 
 /* ── 7c. cosa sa il bambino ──

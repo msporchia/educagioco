@@ -105,13 +105,16 @@ export function creaTela(canvas, pittori,
 
   /* La telecamera. `ora` è dove sta, `mira` dov'è diretta: fra le due
      c'è un avvicinamento morbido, perché una vista che salta è una
-     vista che disorienta. `coperto` sono i pixel di canvas che qualcosa
-     d'altro sta nascondendo dal basso — il foglio di un'operazione —
-     e la telecamera se ne accorge da sé rimpicciolendo: mentre si
-     calcola si continua a vedere tutto il campo, solo più piccolo. */
+     vista che disorienta.
+
+     Per un po' si stringeva da sé quando qualcosa copriva il campo dal
+     basso — il foglio di un'operazione — così mentre si calcolava si
+     vedeva tutta la battaglia. Non si fa più: un'inquadratura che entra
+     e esce a ogni tocco stanca l'occhio, e ricalcolare la scala di un
+     canvas grande a ogni fotogramma stanca il telefono. Adesso il mondo
+     sta fermo dov'è, e chi lo copre lo copre. */
   const ora = { k: 1, x: 0, y: 0 }
   const mira = { k: 1, x: 0, y: 0 }
-  let coperto = 0
   /* lo zoom di chi guarda, sopra a quello della telecamera: due dita
      sul campo. Uno non toglie l'altro — la mappa resta incorniciata,
      e questo la ingrandisce dentro la cornice. */
@@ -141,17 +144,16 @@ export function creaTela(canvas, pittori,
     S = mondo && mondo.S ? mondo.S
                          : Math.max(minimo, Math.min(massimo, Math.min(W, H) / unita))
     fondale = null                        // cambiata la misura, lo sfondo va rifatto
-    inquadra(coperto, true)
+    inquadra(true)
     return { W, H, S }
   }
 
   /* ── dove cade il mondo dentro il canvas ──
-     Tutto intero nella parte che si vede, centrato. `subito` salta
-     l'avvicinamento morbido: serve quando cambia la misura dello
-     schermo, dove non c'è niente da accompagnare. */
-  function inquadra(px = coperto, subito = false) {
-    coperto = Math.max(0, px)
-    const visibile = Math.max(60, Hc - coperto)
+     Tutto intero, centrato. `subito` salta l'avvicinamento morbido:
+     serve quando cambia la misura dello schermo, dove non c'è niente da
+     accompagnare — mentre il pizzico delle dita va accompagnato. */
+  function inquadra(subito = false) {
+    const visibile = Hc
     const base = Math.min(Wc / W, visibile / H)
     mira.k = base * zoom
     // lo scostamento è quello che centra il mondo nella fascia libera, più
@@ -296,6 +298,6 @@ export function creaTela(canvas, pittori,
     get misure() { return { W, H, S } },
     /* quanto del canvas sta occupando il mondo adesso: serve a chi deve
        mettere qualcosa *accanto* al campo senza coprirlo */
-    get vista() { return { ...ora, Wc, Hc, coperto } },
+    get vista() { return { ...ora, Wc, Hc } },
   }
 }

@@ -8,10 +8,11 @@
    già in piedi apre la sua scheda — e in tutti e due i casi il conto da
    fare sale dal basso, dentro lo stesso foglio.
 
-   Il campo non si ferma mentre si calcola: un minimo di fretta ci va.
-   Per questo il foglio non copre tutto — la telecamera (`grafica/tela.js`)
-   si stringe di quanto il foglio occupa, e la battaglia resta sotto gli
-   occhi, più piccola.
+   Il campo non si ferma mentre si calcola: un minimo di fretta ci va. Il
+   foglio però si appoggia sopra e basta, senza rimpicciolire niente —
+   un'inquadratura che entra e esce a ogni tocco stanca l'occhio e il
+   telefono, e per guardare la battaglia c'è già il gesto giusto:
+   chiudere il foglio.
 
    L'energia ⚡ la lasciano i nemici fermati, e serve sia a costruire sia
    a potenziare — ma potenziare costa molto meno e rende molto di più,
@@ -88,7 +89,6 @@ const libera = computed(() => progresso.value.libera || tuttoAperto())
    Il terzo non nasce mai da solo: ci si arriva dal primo o dal secondo,
    e si porta dietro dove va a finire la torre. */
 const foglio = ref(null)
-const coperto = ref(0)             // quanti pixel il foglio sta occupando
 
 /* ── l'acquisto ──
    Il prezzo lo si paga in energia, ma prima si paga in calcolo: la
@@ -357,7 +357,7 @@ onMounted(() => {
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
                         :attivo="fase === 'gioco' && !state.festa.length" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
-                        :mira="mira" :coperto="coperto"
+                        :mira="mira"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
       <!-- Sopra il campo, e solo fra un'ondata e l'altra: chi sta
@@ -393,7 +393,7 @@ onMounted(() => {
       <Foglio v-if="fase === 'gioco'" :aperto="!!foglio"
               :titolo="foglio && foglio.che === 'costruisci' ? 'Che torre costruisci qui?' : ''"
               :indietro="!!(foglio && foglio.che === 'conto')"
-              @chiudi="chiudi" @indietro="indietro" @altezza="coperto = $event">
+              @chiudi="chiudi" @indietro="indietro">
         <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
                      :tappa="tappa" :energia="hud.energia" :costo="costoNuova"
                      :divisioni="divisioni" :debole="debole" @scegli="scegliTorre" />

@@ -470,6 +470,7 @@ class Attore {
   }
 
   muovi(dt) {
+    if (this === scelto) { this.meta = null; return; }   // ti sto guardando
     if (!this.meta) {
       if (!this.vaga) return;
       this.attesa -= dt;
@@ -514,9 +515,9 @@ class Attore {
       ctx.save();
       ctx.setLineDash([5, 4]); ctx.lineDashOffset = -orologio * 12;
       ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.85)';
-      ctx.strokeRect(x + 1, y + h / 3, w - 2, h * 2 / 3 - 1);
+      ctx.strokeRect(x + 1, y + h * .38, w - 2, h * .62 - 1);
       ctx.restore();
-      statistiche(this, x + w / 2, y + h / 3, w);
+      statistiche(this, x + w / 2, y + h * .38, w);
     } else if (this.cura && bisognoUrgente(this)) {
       fumetto(x + w / 2, y - 4);
     }
@@ -1188,10 +1189,9 @@ addEventListener('pointerup', e => {
   const p = pos(e);
   if (preso) { posaPreso(); giu = null; return; }
   if (eraPizzico || !giu) { giu = null; return; }
-  const veloce = performance.now() - giu.t < 400;
   const fermo = !giu.mosso;
   giu = null;
-  if (!fermo || !veloce) return;
+  if (!fermo) return;
 
   const bestia = attoreSotto(p.x, p.y);
   if (bestia && bestia.cura) { scelto = bestia; return; }
