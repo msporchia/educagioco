@@ -19,8 +19,6 @@
 
 export const T = 16                    // la tessera dell'atlante, in pixel
 export const CELLE = 6                 // celle per lato di una piazzola
-export const PIAZZOLE = 7              // piazzole per lato del mondo
-export const CELLE_MONDO = CELLE * PIAZZOLE
 
 export const SCALA_MIN = 1
 export const SCALA_MAX = 5
@@ -33,6 +31,80 @@ export const SCALA_INIZIALE = 2
 export const PRIMA = 2
 export const ULTIMA = 4
 export const PIAZZOLE_INIZIALI = (ULTIMA - PRIMA + 1) ** 2
+
+/* ── QUANTO È GRANDE IL MONDO: NON UN NUMERO, UNA REGOLA ───────────
+   C'era `PIAZZOLE = 7`, e voleva dire due cose insieme: «quanto si può
+   comprare» e «dove finisce la mappa». Chi comprava tutto arrivava al
+   bordo e lì il gioco smetteva di crescere, senza dirlo.
+
+   La regola nuova non è un numero e non è un mondo infinito: **attorno
+   alla terra posseduta ci devono sempre essere almeno due piazzole da
+   comprare**, su ogni lato. Comprandone una il margine si assottiglia,
+   e il mondo si allarga di quel tanto che serve a rifarlo. Così non si
+   arriva mai al bordo e non si paga il prezzo di un mondo senza fine:
+   il bosco esiste solo dove qualcuno può vederlo.
+
+   Il mondo **non si stringe mai**, nemmeno se il margine avanzasse:
+   il bosco già generato sta in archivio cella per cella, e restringere
+   vorrebbe dire buttarlo via e ritrovarselo diverso al giro dopo.
+
+   Le coordinate **non si spostano**: crescendo verso l'alto o verso
+   sinistra le piazzole prendono numeri negativi invece di far scalare
+   tutte le altre. È la condizione perché il bosco — che si ricava dalle
+   coordinate — resti dov'era: rinumerare vorrebbe dire spostare tutti
+   gli alberi che il bambino ha già visto. Per questo qui si divide con
+   `Math.floor` e mai con `| 0`, che verso lo zero tronca invece di
+   arrotondare per difetto e sbaglia di una piazzola in tutto il
+   quadrante negativo. */
+export const MARGINE = 2
+
+/* Il mondo di una fattoria appena nata: le tre piazzole di partenza più
+   il margine. Fa 7×7, cioè esattamente il mondo fisso di prima — la
+   regola nuova non sposta niente a chi comincia oggi. */
+export const LIMITI_NUOVI = {
+  x0: PRIMA - MARGINE, y0: PRIMA - MARGINE,
+  x1: ULTIMA + MARGINE, y1: ULTIMA + MARGINE,
+}
+
+/* Quello che un salvataggio di ieri aveva senza scriverlo: il mondo era
+   7×7 da 0 a 6, e il bosco era stato generato tutto lì dentro. Serve a
+   sapere **fin dove il bosco esiste già** in una fattoria vecchia, per
+   generare solo quello che manca invece di ridisegnarne uno nuovo
+   sopra: sono numeri di storia, non si toccano se PRIMA o MARGINE
+   cambiano. */
+export const LIMITI_VECCHI = { x0: 0, y0: 0, x1: 6, y1: 6 }
+
+/* In quale piazzola cade una cella. Una riga sola perché la sbagliavano
+   in due posti diversi appena le coordinate diventavano negative. */
+export const piazzolaDi = cella => Math.floor(cella / CELLE)
+
+/* Il mondo che tiene dentro queste piazzole col margine giusto, senza
+   mai stringere quello che c'era già (`base`). */
+export function limitiPer(chiavi, base = null) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const k of chiavi) {
+    const [x, y] = String(k).split(',').map(Number)
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue
+    x0 = Math.min(x0, x); y0 = Math.min(y0, y)
+    x1 = Math.max(x1, x); y1 = Math.max(y1, y)
+  }
+  const l = Number.isFinite(x0)
+    ? { x0: x0 - MARGINE, y0: y0 - MARGINE, x1: x1 + MARGINE, y1: y1 + MARGINE }
+    : { ...LIMITI_NUOVI }
+  if (!base) return l
+  return { x0: Math.min(l.x0, base.x0), y0: Math.min(l.y0, base.y0),
+           x1: Math.max(l.x1, base.x1), y1: Math.max(l.y1, base.y1) }
+}
+
+/* Le celle di un mondo, con la fine **esclusa** come in ogni ciclo che
+   le percorre. */
+export function celleDi(l) {
+  return { cx0: l.x0 * CELLE, cy0: l.y0 * CELLE,
+           cx1: (l.x1 + 1) * CELLE, cy1: (l.y1 + 1) * CELLE }
+}
+
+export const dentroI = (l, px, py) =>
+  px >= l.x0 && px <= l.x1 && py >= l.y0 && py <= l.y1
 
 /* ── i prezzi ──────────────────────────────────────────────────────
    Il pezzo di terra rincara a ogni acquisto, e il rincaro è quello che
@@ -75,8 +147,15 @@ export const chiave = (x, y) => x + ',' + y
 
 export function guastiDelMondo() {
   const g = []
-  if (PRIMA < 0 || ULTIMA >= PIAZZOLE) g.push('le piazzole iniziali stanno fuori dal mondo')
   if (PRIMA > ULTIMA) g.push('PRIMA viene dopo ULTIMA')
+  if (MARGINE < 1) g.push('senza margine si arriva subito al bordo del mondo')
+  /* il mondo di partenza deve tenere dentro le piazzole di partenza col
+     loro margine: se no si nasce già col bordo addosso */
+  const l0 = limitiPer([chiave(PRIMA, PRIMA), chiave(ULTIMA, ULTIMA)])
+  if (l0.x0 !== LIMITI_NUOVI.x0 || l0.x1 !== LIMITI_NUOVI.x1)
+    g.push('LIMITI_NUOVI non è il mondo che la regola del margine darebbe')
+  if (!dentroI(LIMITI_NUOVI, PRIMA - 1, PRIMA - 1) || !dentroI(LIMITI_NUOVI, ULTIMA + 1, ULTIMA + 1))
+    g.push('le piazzole iniziali non hanno margine attorno')
   if (SCALA_INIZIALE < SCALA_MIN || SCALA_INIZIALE > SCALA_MAX)
     g.push('la scala iniziale sta fuori dai limiti dello zoom')
   if (RINCARO <= 1) g.push('senza rincaro la mappa si compra tutta in un pomeriggio')

@@ -5,8 +5,8 @@
    Quattro cose che i test unitari non possono dire, perché riguardano il
    gioco vero e non il catalogo:
 
-     · negli asteroidi ci sono due campagne, e quella del calcolo a mente
-       è aperta dalla prima partita — 3+4 non aspetta le tabelline
+     · negli asteroidi c'è una scaletta sola, e comincia proprio dai
+       conti a mente — 3+4 non aspetta le tabelline
      · dentro una stazione le domande sono davvero i suoi concetti, e
        ogni ondata ha uno e un solo asteroide giusto
      · il bersaglio chiude la stazione, paga, e resta chiusa anche dopo
@@ -17,31 +17,38 @@ import { apriBrowser, apriGioco, azzera, scatto, TELEFONO } from '../aiuto/brows
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CONCETTI, STAZIONI, concettoDiChiave } from '../../src/data/calcolo.js'
 import { eNuovo } from '../../src/store/calcolo.js'
+import { SCALETTA } from '../../src/data/asteroidi.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
 await azzera(page)
 
-/* ---------- 1. le due campagne stanno nella stessa mappa ---------- */
+/* ---------- 1. una mappa sola, coi due mestieri mescolati ---------- */
 await page.getByText('Asteroidi', { exact: true }).click()
-await page.waitForSelector('.pianeti', { timeout: 5000 })
-const pianeti = await page.evaluate(() => document.querySelectorAll('.pianeta').length)
-uguale('la mappa si apre sui pianeti, che restano dieci', pianeti, 10)
-
-// le due campagne stanno in due schede: dieci pianeti da scorrere prima di
-// arrivare alle stazioni sarebbero un muro su un telefono
-await page.getByRole('button', { name: /A mente/ }).click()
-await page.waitForSelector('.stazioni', { timeout: 5000 })
+await page.waitForSelector('.scaletta', { timeout: 5000 })
 
 const mappa = await page.evaluate(() => ({
+  // l'ordine è quello del DOM, cioè quello della fila
+  fila: [...document.querySelectorAll('.pianeta, .stazione')]
+    .map(b => ({ mente: b.classList.contains('stazione'), chiusa: b.disabled })),
   stazioni: [...document.querySelectorAll('.stazione')]
     .map(b => ({ testo: b.innerText, chiusa: b.disabled })),
+  schede: !!document.querySelector('.campagna .schede'),
   volo: !![...document.querySelectorAll('.bottone')].find(b => /Volo a mente/.test(b.textContent)),
   testo: document.body.innerText,
 }))
 uguale('c\'è un bottone per ogni stazione', mappa.stazioni.length, STAZIONI.length)
-controlla('la prima stazione è aperta a chi comincia adesso', !mappa.stazioni[0].chiusa)
-uguale('e le altre no', mappa.stazioni.filter(s => !s.chiusa).length, 1)
+uguale('e uno per ogni pianeta', mappa.fila.filter(v => !v.mente).length, 10)
+controlla('le due linguette non ci sono più: è una fila sola', !mappa.schede)
+/* la fila comincia dai conti a mente: 3+4 viene prima di qualunque
+   tabellina, ed è la prima giunzione dell'ordine (vedi `data/asteroidi.js`) */
+controlla('la scaletta comincia da una tappa a mente', mappa.fila[0].mente)
+controlla('la prima tappa è aperta a chi comincia adesso', !mappa.fila[0].chiusa)
+/* due sole tappe aperte in tutta la fila, una per mestiere: è quello che
+   si vede quando i contatori restano due — e che permette a chi era
+   avanti coi pianeti di non perdere niente */
+uguale('e le aperte sono due, una per mestiere',
+       mappa.fila.filter(v => !v.chiusa).length, 2)
 controlla('si vede di che calcoli si tratta', /3\+4/.test(mappa.testo), mappa.stazioni[0].testo)
 controlla('il volo a mente è ancora chiuso', !mappa.volo)
 
@@ -157,14 +164,12 @@ controlla('dopo due errori sullo stesso trucco, il trucco si dice', trucco.arriv
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
 const home = await page.evaluate(() => document.body.innerText)
-controlla('la home dice a che stazione si è arrivati',
-          new RegExp(`stazione 2 di ${STAZIONI.length}`).test(home),
-          home.split('\n').find(r => /stazione/i.test(r)) || 'nessuna riga sulle stazioni')
+controlla('la home conta le tappe della fila unica',
+          new RegExp(`1 tappa su ${SCALETTA.length}`).test(home),
+          home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
 await page.getByText('Asteroidi', { exact: true }).click()
-await page.waitForSelector('.pianeti', { timeout: 5000 })
-await page.getByRole('button', { name: /A mente/ }).click()
-await page.waitForSelector('.stazioni', { timeout: 5000 })
+await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.stazione')].filter(b => !b.disabled).length)
 uguale('dopo la ricarica sono aperte due stazioni', dopo, 2)

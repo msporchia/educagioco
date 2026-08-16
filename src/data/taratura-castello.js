@@ -9,29 +9,29 @@
    torri o tappe cambiano, il test se ne accorge e chiede di rifarla. */
 export const VITE = {
   "bosco/Il sentiero": [53, 59, 59, 68],
-  "bosco/Il guado": [99, 110, 116, 149, 149],
-  "bosco/La radura": [153, 159, 159, 188, 221],
-  "bosco/Il folto": [92, 113, 137, 156, 200, 239, 239],
-  "bosco/La radice": [112, 112, 113, 145, 145, 145, 267, 428],
-  "sotterraneo/La grotta": [84, 84, 87, 131, 136, 136],
-  "sotterraneo/La miniera": [62, 120, 128, 128, 154, 154, 154],
-  "sotterraneo/Le fogne": [30, 30, 51, 90, 90, 90, 130, 130, 161],
-  "sotterraneo/La cripta": [87, 87, 87, 169, 169, 170, 247, 247, 247, 592],
-  "sotterraneo/La gola": [63, 118, 118, 118, 134, 134, 134, 278, 278, 278, 382, 382],
-  "mura/Il cortile": [98, 98, 135, 135, 135, 179, 179, 179, 295],
-  "mura/Il camminamento": [80, 80, 80, 115, 115, 115, 171, 171, 171, 266, 266, 266],
-  "mura/Il corridoio": [54, 54, 54, 95, 97, 97, 153, 160, 160, 201, 201, 201, 310, 834],
-  "mura/La sala del trono": [96, 96, 96, 159, 159, 159, 205, 205, 205, 301, 301, 301, 460, 460, 605],
-  "mura/Il torrione": [46, 46, 46, 46, 46, 46, 130, 130, 130, 228, 228, 228, 228, 228, 228, 371, 371],
+  "bosco/Il guado": [34, 34, 47, 62, 113],
+  "bosco/La radura": [72, 72, 82, 82, 168],
+  "bosco/Il folto": [47, 47, 47, 47, 81, 81, 196],
+  "bosco/La radice": [51, 51, 80, 80, 80, 145, 162, 241],
+  "sotterraneo/La grotta": [42, 42, 70, 70, 70, 136],
+  "sotterraneo/La miniera": [60, 60, 60, 90, 90, 90, 154],
+  "sotterraneo/Le fogne": [20, 20, 20, 20, 20, 75, 75, 122, 150],
+  "sotterraneo/La cripta": [60, 60, 60, 60, 104, 104, 104, 185, 247, 331],
+  "sotterraneo/La gola": [49, 49, 68, 69, 69, 103, 103, 103, 150, 156, 156, 337],
+  "mura/Il cortile": [61, 61, 61, 61, 95, 95, 95, 120, 256],
+  "mura/Il camminamento": [40, 40, 41, 69, 69, 69, 107, 107, 113, 172, 172, 266],
+  "mura/Il corridoio": [28, 28, 47, 47, 47, 77, 77, 82, 118, 118, 124, 179, 179, 481],
+  "mura/La sala del trono": [57, 57, 57, 57, 92, 92, 92, 115, 132, 132, 184, 190, 190, 244, 605],
+  "mura/Il torrione": [26, 26, 26, 26, 26, 26, 26, 26, 78, 78, 78, 117, 117, 117, 186, 186, 186],
   "palude/Il guado": [31, 31, 32, 41, 41, 41, 41, 177],
-  "palude/Il canneto": [29, 29, 29, 29, 49, 49, 49, 152, 152],
-  "palude/Le isole": [49, 73, 86, 87, 87, 122, 165, 165, 165, 312, 312, 390],
-  "palude/Il pantano": [39, 42, 42, 42, 45, 45, 45, 64, 64, 64, 94, 94, 94],
-  "palude/La foce": [39, 44, 44, 44, 44, 44, 44, 63, 63, 63, 92, 92, 92, 743],
-  "Partita libera": [106, 108, 126, 152, 187, 193, 246, 365, 365, 365, 375, 375, 508, 508, 962, 962, 1069, 1351, 1390, 2839],
+  "palude/Il canneto": [29, 29, 29, 29, 43, 43, 46, 143, 143],
+  "palude/Le isole": [42, 42, 42, 42, 46, 46, 70, 70, 135, 135, 266, 266],
+  "palude/Il pantano": [14, 14, 14, 31, 31, 31, 45, 46, 46, 64, 70, 70, 94],
+  "palude/La foce": [14, 14, 14, 36, 36, 36, 44, 51, 51, 63, 69, 69, 92, 371],
+  "Partita libera": [43, 43, 60, 60, 79, 79, 115, 115, 138, 142, 142, 176, 176, 316, 316, 756, 915, 1110, 1233, 1624],
 }
 /* di quanto cresce la vita nella partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = 1.36
-export const FIRMA = "7ceb997f"
+export const OLTRE = 1.45
+export const FIRMA = "7d1974d"
 export const BERSAGLIO = [0.6, 0.85]

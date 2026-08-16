@@ -5,10 +5,17 @@
    Il menu non chiede più "quali tabelline vuoi allenare?": è una domanda
    a cui un bambino non sa rispondere, e la risposta sbagliata rovina la
    partita (spuntando tutto ogni tabellina esce un decimo delle volte).
-   Al suo posto c'è una fila di dieci pianeti: ognuno porta una tabellina
-   nuova, si porta dietro le precedenti come ripasso, e si supera con un
-   bersaglio di partita. La scelta a mano resta, ma dopo: nel volo libero,
-   che si apre a campagna finita.
+   Al suo posto c'è una fila di tappe: chi porta una tabellina nuova
+   (i pianeti), chi un trucco da fare a mente (le stazioni), tutte nella
+   stessa scaletta ordinata per difficoltà vera — l'ordine, e il perché
+   di ogni giunzione, stanno in `data/asteroidi.js`. Ognuna si porta
+   dietro le precedenti come ripasso e si supera con un bersaglio di
+   partita. Nemmeno il volo libero chiede più cosa allenare: lì sceglie
+   il motore, quello che si ricorda meno.
+
+   QUALE calcolo esce non si decide qui dentro: sta in
+   `store/tabelline.js`, che gira anche senza schermo e si prova giocando
+   una tappa intera in un test di unità. Qui restano gli asteroidi.
 
    Due cose diverse, tenute separate apposta:
      · superare il pianeta → il bersaglio di stasera, dà monete
@@ -20,14 +27,17 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins, countMastered,
          segna, segnaBest, mateProgresso, mateCompleta, tabellineIntere,
-         calcProgresso, calcCompleta, tappaAperta } from '../store/profile.js'
-import { createPicker, activeSet, overdue, weight, SRS } from '../store/srs.js'
-import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi,
-         calcoliTabellina } from '../data/tabelline.js'
+         calcProgresso, calcCompleta, tappaAperta, varianteAccesa } from '../store/profile.js'
+import { createPicker } from '../store/srs.js'
+import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
 import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
          distrattoriDi, appartiene } from '../data/calcolo.js'
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
-         tabellineSalde, prereqDeboli, sottoPool } from '../store/calcolo.js'
+         creaMiscela } from '../store/calcolo.js'
+import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
+         insiemeDi, chiaviDelle } from '../store/tabelline.js'
+import { CAPITOLI, CHIAVE_MENTE, scaletta, superata, dopoDi,
+         progressiDa } from '../data/asteroidi.js'
 import { suono } from '../audio.js'
 import { dipingiFondale, disegnaPianeta, disegnaNave, disegnaAsteroide,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
@@ -39,36 +49,65 @@ import Barra from '../components/Barra.vue'
 const emit = defineEmits(['vai'])
 
 const CFG = {
-  vite: 3, viteMax: 5, cadutaSec: 10, minCaduta: 3.2, perLivello: 0.10,
-  base: 3, maxAsteroidi: 6, ogniLivelli: 3, salitaOgni: 5,
+  vite: 3, viteMax: 5, cadutaSec: 10,
+  // il sasso con la risposta giusta è in scena entro tre secondi: oltre,
+  // il bambino non è lento, sta aspettando (vedi `ondata`)
+  rispostaEntro: 3,
+  base: 3, maxAsteroidi: 6, ogniLivelli: 2, salitaOgni: 5,
   puntiOk: 10, puntiNo: -5, bossOgni: 8, bossLento: 1.45, difficileLento: 1.25,
+  msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
   bossPunti: 40, serieVita: 10, perMoneta: 10,
 }
 
 /* ---------- elementi: chiave normalizzata, 6×8 e 8×6 sono lo stesso fatto ---------- */
-const chiave = chiaveCalcolo
 const daChiave = fattoriDi
 
-const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | tavola | libero
+const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | tavola
 
-/* ═══════════ due campagne, un cielo solo ═══════════
-   I pianeti chiedono tabelline, le stazioni calcolo a mente. Sono due
-   strade parallele e non una dopo l'altra: 3+4 viene prima delle
-   tabelline, 4×23 viene dopo, e chi non sa ancora niente deve poter
-   cominciare da tutte e due. Il resto del gioco — asteroidi, vite, boss,
-   monete — non sa quale delle due sta servendo. */
+/* ═══════════ una scaletta sola ═══════════
+   I pianeti chiedono tabelline, le stazioni calcolo a mente: sono due
+   facce della stessa moneta e stanno in una fila sola, ordinata per
+   difficoltà vera. L'ordine — e il perché di ogni giunzione — sta in
+   `data/asteroidi.js`; qui si sa solo che una voce ha un `tipo` e un
+   indice dentro la sua campagna. Il resto del gioco — asteroidi, vite,
+   boss, monete — non sa nemmeno quello.
+
+   I DUE CONTATORI RESTANO DUE (`mate.tappa`, `calc.tappa`), ed è la
+   ragione per cui nessuno perde niente fondendo le liste: una voce è
+   superata se il progresso della SUA campagna la copriva. Un contatore
+   solo regalerebbe le stazioni a chi è avanti coi pianeti e
+   richiuderebbe i pianeti a chi è avanti con le stazioni. */
 const modo = ref('tabelline')      // tabelline | mente
 const mente = computed(() => modo.value === 'mente')
 
 const progresso = computed(() => mateProgresso())
 const progressoMente = computed(() => calcProgresso())
+/* i grandi possono spegnere il calcolo a mente: le voci a mente
+   spariscono dalla fila e i pianeti si richiudono senza buchi */
+const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
+const prog = computed(() => progressiDa(progresso.value, progressoMente.value))
+const fila = computed(() => scaletta(menteAccesa.value))
+/* i capitoli, ognuno con le sue voci: su un telefono ventidue righe di
+   fila sono un muro, tre o quattro per volta sono una lista */
+const capitoli = computed(() => CAPITOLI
+  .map((c, i) => ({ ...c, voci: fila.value.filter(v => v.cap === i) }))
+  .filter(c => c.voci.length))
+
 const tappaIdx = ref(0)            // -1 = volo libero / volo a mente
 const tappa = computed(() =>
   mente.value ? (tappaIdx.value < 0 ? VOLO_A_MENTE : STAZIONI[tappaIdx.value])
               : (tappaIdx.value < 0 ? VOLO_LIBERO : CAMPAGNA[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
-const sbloccata = i => tappaAperta(i, progresso.value.tappa)
-const sbloccataStazione = i => tappaAperta(i, progressoMente.value.tappa)
+/* aperta col lucchetto di sempre, ma letto sul contatore della campagna
+   a cui la voce appartiene */
+const apertaVoce = v => tappaAperta(v.i, prog.value[v.tipo])
+const fattaVoce = v => superata(v, prog.value)
+/* dove si sta adesso, e cosa viene dopo NELLA FILA: dopo un pianeta può
+   toccare a una stazione, ed è tutto il senso di averle mescolate */
+const voceOra = computed(() => campagna.value
+  ? { tipo: mente.value ? 'mente' : 'pianeta', i: tappaIdx.value } : null)
+const dopo = computed(() => voceOra.value
+  ? dopoDi(voceOra.value, prog.value, menteAccesa.value, apertaVoce) : null)
 /* le stelle non stanno nel profilo né qui né là: si rileggono dal motore,
    così una strategia lasciata lì per un mese perde la sua e torna a farsi
    vedere. `state.profile.items` è reattivo, quindi la mappa si aggiorna
@@ -76,18 +115,28 @@ const sbloccataStazione = i => tappaAperta(i, progressoMente.value.tappa)
 const stellaMente = S => stellaStazione(S, state.profile.items)
 const stelleMente = computed(() => STAZIONI.filter(stellaMente).length)
 /* la tappa dopo, in qualunque delle due campagne si stia giocando */
-const prossima = computed(() =>
-  (mente.value ? STAZIONI : CAMPAGNA)[tappaIdx.value + 1] || null)
+/* Il volo libero (tappa -1) non ha nessun «dopo»: prima `-1 + 1` faceva
+   zero e il boss del volo libero anticipava il PRIMO pianeta, cioè il
+   più facile di tutti. Un assaggio che guarda all'indietro. */
+const prossima = computed(() => campagna.value
+  ? (mente.value ? STAZIONI : CAMPAGNA)[tappaIdx.value + 1] || null : null)
 
 /* le stelle non stanno nel profilo: si rileggono dal motore ogni volta,
    così una tabellina lasciata lì per un mese perde la sua e si rivede */
 const intere = computed(() => new Set(tabellineIntere()))
 const stellaDi = T => (T.nuova ? intere.value.has(T.nuova) : intere.value.size === 10)
+/* la stella di una voce, qualunque delle due sia: la mappa è una sola e
+   non deve sapere quale delle due campagne sta stampando */
+const stellaVoce = v => (v.tipo === 'mente' ? stellaMente(v.T) : stellaDi(v.T))
+/* la riga sotto il nome: cosa porta questa tappa */
+const cheChiede = v => (v.tipo === 'mente'
+  ? v.T.esempio
+  : v.T.nuova ? 'la tabellina del ' + v.T.nuova : 'tutte le tabelline')
 
-/* nel volo libero — e solo lì — le tabelline si scelgono a mano */
-const sel = reactive(new Set(state.profile.settings.tables))
+/* le tabelline in gioco: quelle della tappa, e nel volo libero tutte e
+   dieci — non si spuntano più a mano da nessuna parte */
 const tabelle = computed(() =>
-  campagna.value ? tappa.value.tabelle : [...sel].sort((a, b) => a - b))
+  !mente.value && campagna.value ? tappa.value.tabelle : VOLO_LIBERO.tabelle)
 
 const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1, serie: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
@@ -131,6 +180,13 @@ let domanda = reactive({ a: 7, b: 8, ris: 56, difficile: false, peso: 1,
                          testo: '7 × 8 = ?', chiave: chiaveCalcolo(7, 8) })
 let esercizio = null               // l'istanza del calcolo a mente, per i falsi
 let chieste = 0, apertoIl = 0
+/* QUANDO IL CRONOMETRO PARTE DAVVERO. Non dal momento della domanda: da
+   quando il sasso con la risposta giusta è in scena e si può toccare.
+   Contando dalla domanda, il tempo che il bambino passa ad aspettare che
+   il sasso arrivi finisce nell'SRS come esitazione — e l'SRS di quel
+   numero si serve per decidere cosa è difficile e quando ripassarlo. Si
+   stava programmando il ripasso sulla velocità di caduta dei sassi. */
+let prontaIl = 0
 /* la domanda in corso è un assaggio della tappa che viene dopo: si gioca
    come le altre, ma non si segna sul motore (vedi `chiaveDalDopo`) */
 let anticipo = false
@@ -138,116 +194,19 @@ let anticipo = false
    riposo e al suo posto entra qualcosa che ancora non si sa */
 const picker = createPicker({ getItem: k => item(k), useTime: true, pausaDopo: 3 })
 
-/* ---------- coppie disponibili con le tabelline in gioco ---------- */
-function coppie() {
-  const out = []
-  for (const a of tabelle.value) for (let b = 1; b <= 10; b++) out.push([a, b])
-  return out
-}
-const chiaviPossibili = () => [...new Set(coppie().map(([a, b]) => chiave(a, b)))]
+/* ---------- cosa può uscire ----------
+   Il lavoro vero lo fanno `store/tabelline.js` e `store/calcolo.js`: qui
+   si dice solo quanto grande deve essere l'insieme in lavorazione, e chi
+   è andato a riposo lascia il posto libero. */
+const chiaviPossibili = () => chiaviDelle(tabelle.value)
 
-/* ═══════════ QUANTO È DIFFICILE UN CALCOLO ═══════════
-   Decide l'ordine con cui i calcoli entrano nell'insieme in lavorazione:
-   prima i facili, dopo i difficili. Due strati, e il secondo vince.
-
-   1. LA STIMA, che serve solo finché di questo bambino non si sa niente.
-      La fatica non sta nella taglia del prodotto ma in quanti dei due
-      fattori vanno saputi a memoria: 8×2 è facile e 8×7 no, benché 8 ci
-      sia in tutti e due. Per questo 2×9 sta molto prima di 4×7.
-   2. LA MISURA: il tempo medio di risposta di QUESTO bambino. Appena c'è
-      abbastanza materiale prende il posto della stima, perché difficile
-      è quello che risulta difficile a lui, non quello che ci aspettiamo.
-
-   Non c'è nessun bonus per i quadrati né sconti per il 9: 9×9 e 7×8 sono
-   fatti da sapere come gli altri, e se poi uno dei due è facile per il
-   bambino lo dirà il cronometro. */
-
-/* 1 e 10 non sono fatti da imparare: sono regole. 2, 3 e 5 si contano a
-   mente in un attimo. Il resto va saputo, ed è lì che sta la fatica. */
-const durezza = n => (n === 1 || n === 10) ? 0
-                   : (n === 2 || n === 3 || n === 5) ? 1 : 2
-
-const IN_FONDO = 9        // ×1 e ×10 si introducono per ultimi
-const banale = k => { const [lo, hi] = daChiave(k); return lo === 1 || hi === 10 }
-
-function stima(k) {
-  if (banale(k)) return IN_FONDO
-  const [lo, hi] = daChiave(k)
-  // quanti dei due vanno saputi a memoria: è la classe. Dentro la classe
-  // ordina la taglia, che sposta poco perché conta molto meno.
-  return durezza(lo) + durezza(hi) + (lo * hi) / 200
-}
-
-/* Il tempo medio riportato sulla stessa scala della stima: un secondo
-   vale come il calcolo più facile, quattro come il più difficile.
-   Comprende anche il colpire l'asteroide, ma quel costo è uguale per
-   tutti i calcoli e quindi non sposta l'ordine. */
-const daTempo = ms => 1.2 + (ms / 1000) * 0.8
-
-function ordine(k) {
-  const it = state.profile.items[k]              // letto e non creato
-  const s = stima(k)
-  if (!it || !it.t || it.seen < 3) return s      // non si sa ancora niente
-
-  // I banali non sono su questa scala: stanno in fondo per principio, e
-  // il cronometro può solo tirarli fuori di lì. Uno che risponde 7×10 in
-  // quattro secondi ha un buco vero; se invece va spedito resta in fondo,
-  // e non deve risalire solo perché la media con la sentinella lo alza.
-  if (banale(k)) return it.t > SRS.slowMs ? daTempo(it.t) : IN_FONDO
-
-  const fiducia = Math.min(1, (it.seen - 2) / 6) // piena dopo otto incontri
-  return s * (1 - fiducia) + daTempo(it.t) * fiducia
-}
-
-/* quanti calcoli tenere in lavorazione: chi ha dieci tabelline in gioco
-   deve vederle tutte, non le due più facili */
-const insieme = () => Math.max(10, Math.min(16, Math.round(tabelle.value.length * 1.5)))
-
-/* a quali tabelline *in gioco* appartiene un calcolo: 6×7 vale sia per la 6
-   sia per la 7, e l'insieme attivo gira a turno fra queste per non
-   riempirsi solo di 1× e ×10, che sono le più facili di tutte */
-function tabellineDi(k) {
-  const [lo, hi] = daChiave(k)
-  const g = []
-  if (tabelle.value.includes(lo)) g.push(lo)
-  if (hi !== lo && tabelle.value.includes(hi)) g.push(hi)
-  return g.length ? g : [lo]
-}
-
-/* Il pool di una tappa è per più di metà la tabellina nuova, il resto è
-   ripasso delle precedenti. Senza questa sproporzione la tabellina del
-   pianeta uscirebbe una volta su sei e la tappa diventerebbe un'attesa;
-   con tutto il pool sulla nuova, invece, le vecchie si dimenticherebbero
-   una dopo l'altra. */
 function poolAttivo() {
-  const now = Date.now()
-  const tutte = chiaviPossibili()
-  // chi è andato a riposo lascia il posto libero: l'insieme si allarga di altrettanto
-  const quanti = insieme() + picker.riposati
-  const scaduti = lista => lista
-    .sort((x, y) => overdue(item(y), now) - overdue(item(x), now)).slice(0, 4)
-
-  if (campagna.value && tappa.value.nuova) {
-    const n = tappa.value.nuova
-    const sue = calcoliTabellina(n)
-    const altre = tutte.filter(k => !sue.includes(k))
-    const A = activeSet(sue, k => item(k), ordine, now, Math.max(6, Math.round(quanti * 0.6)))
-    const B = activeSet(altre, k => item(k), ordine, now, Math.max(4, quanti - 6), tabellineDi)
-    let p = [...new Set([...A.learning, ...B.learning, ...scaduti([...A.due, ...B.due])])]
-    // tappa già padroneggiata e rigiocata: la tabellina del pianeta resta
-    // comunque il cuore della tappa, altrimenti sparirebbe proprio la sua
-    if (!A.learning.length) p = [...new Set([...sue, ...p])]
-    return p.length ? p : tutte
-  }
-
-  const { learning, due } = activeSet(tutte, k => item(k), ordine, now, quanti, tabellineDi)
-  const p = [...new Set([...learning, ...scaduti(due)])]
-  return p.length ? p : tutte
+  const quanti = insiemeDi(tabelle.value) + picker.riposati
+  return campagna.value
+    ? poolTappa(tappa.value, state.profile.items, Date.now(), quanti)
+    : poolLibero(state.profile.items, Date.now(), quanti, progresso.value.tappa)
 }
 
-/* ---------- il pool delle stazioni ----------
-   Il lavoro vero lo fa `store/calcolo.js`: qui si dice solo quanto grande
-   deve essere l'insieme in lavorazione. */
 function poolMente() {
   return poolDi(tappa.value, state.profile.items, Date.now(), 12 + picker.riposati)
 }
@@ -256,12 +215,20 @@ function poolMente() {
    `peso` è quanto costa il calcolo: 3+4 può arrivare fra sei bersagli,
    497+298 ne vuole tre e il doppio del tempo. Senza questo la scelta
    multipla su un calcolo lungo diventa una lotteria: il tempo finisce
-   prima che il conto sia fatto. */
+   prima che il conto sia fatto.
+
+   SALENDO DI LIVELLO IL CIELO SI INFITTISCE, NON ACCELERA. Prima ogni
+   livello tagliava un decimo del tempo di caduta, e a quel punto la
+   domanda non era più «quanto fa 7×8» ma «quanto sei svelto di mano»:
+   un bambino che il conto lo sa ma lo fa in cinque secondi veniva
+   segnato come uno che non lo sa. Un sasso in più, invece, è una
+   risposta sbagliata in più da scartare — cioè esattamente il lavoro
+   che vogliamo far fare. Il tempo di caduta resta quello, e lo allungano
+   solo il peso del calcolo, il boss e l'ultima vita. */
 function difficolta(lv, peso = 1) {
-  const t = CFG.cadutaSec / Math.pow(1 + CFG.perLivello, lv - 1)
   const quanti = Math.min(CFG.maxAsteroidi,
                           CFG.base + Math.floor((lv - 1) / CFG.ogniLivelli))
-  return { caduta: Math.max(CFG.minCaduta, t) * (1 + (peso - 1) * 0.45),
+  return { caduta: CFG.cadutaSec * (1 + (peso - 1) * 0.45),
            quanti: Math.max(3, quanti - (peso - 1)) }
 }
 
@@ -295,9 +262,15 @@ function distrattori(a, b, n) {
    «debole» un calcolo mai visto. Le vite e i punti invece contano: il
    rischio è quello che rende il boss un boss.
 
-   Restano fuori solo i posti dove un «dopo» non c'è: il Sole, l'ultima
-   stazione, il volo libero. Lì il boss torna a essere quello di prima, la
-   domanda più in bilico.
+   Dove un «dopo» non c'è — il Sole, l'ultimo pianeta, il volo libero —
+   il boss chiede la casella più tosta fra quelle che ancora non reggono
+   (nel calcolo a mente non serve: là i numeri crescono da soli con la
+   taglia, e il boss è una domanda normale con la musica).
+   Prima chiedeva la «più in bilico», cioè quella col peso più alto: ed
+   è così che è uscito un boss che chiedeva 1×1, perché il peso premia
+   chi non si è mai visto e le caselle mai viste sono proprio quelle che
+   nessuna tappa si degna di chiedere. Il ripiego pescava con precisione
+   il contrario di quello che serviva.
 
    Nel calcolo a mente l'assaggio arriva anche se il grafo non ha ancora
    aperto la stazione seguente, e non è una svista: la taglia di un
@@ -307,8 +280,10 @@ function distrattori(a, b, n) {
    che il grafo esiste per evitare. */
 function chiaveDalDopo() {
   const t = prossima.value
-  if (!t) return null
-  if (mente.value) {
+  // `domanda.chiave` è quella appena chiesta: nemmeno il boss la ripete
+  if (!mente.value) return chiaveDelBoss(tabellineInGioco(), t, state.profile.items,
+                                         Date.now(), Math.random, domanda.chiave)
+  if (t) {
     if (!t.nuovi.length) return null
     // `poolDi` sceglie da sé da dove cominciare dentro la stazione; qui si
     // tiene solo quello che la stazione dopo viene a insegnare
@@ -321,26 +296,13 @@ function chiaveDalDopo() {
     const scelta = fuori.length ? fuori : p
     return scelta.length ? scelta[Math.floor(Math.random() * scelta.length)] : null
   }
-  if (!t.nuova) return null
-  // quelli che le tabelline in gioco non coprono già: il boss del pianeta
-  // del 6 deve portare 7×7, non 7×2 che si fa da tre pianeti
-  const gia = new Set(chiaviPossibili())
-  const suoi = calcoliTabellina(t.nuova)
-  const fuori = suoi.filter(k => !gia.has(k))
-  // fra i tre più abbordabili, e a sorte: sempre lo stesso calcolo
-  // diventerebbe la faccia del boss invece di un assaggio
-  const scelta = (fuori.length ? fuori : suoi).sort((x, y) => stima(x) - stima(y)).slice(0, 3)
-  return scelta.length ? scelta[Math.floor(Math.random() * scelta.length)] : null
+  return null                      // ultima stazione o volo a mente
 }
 
-/* il boss non chiede una domanda a caso: chiede quella che il motore vuole
-   vedere di più, cioè la più in bilico fra quelle sveglie */
-function piuInBilico(p) {
-  const now = Date.now()
-  const sveglie = p.filter(x => !picker.aRiposo(x))
-  return (sveglie.length ? sveglie : p)
-    .reduce((x, y) => weight(item(y), now, { useTime: true }) > weight(item(x), now, { useTime: true }) ? y : x)
-}
+/* la tappa vista da `store/tabelline.js`: le tabelline in gioco e la
+   nuova, che nel volo libero non c'è */
+const tabellineInGioco = () => ({ tabelle: tabelle.value,
+                                  nuova: campagna.value ? tappa.value.nuova : null })
 
 function preparaTabellina(k, davanti = null) {
   let [lo, hi] = daChiave(k)
@@ -374,16 +336,26 @@ function preparaMente(k) {
 /* Quale delle due parti del pool parla in questa domanda. Il pool dice
    cosa c'è, questa dice ogni quanto: senza, il ripasso — che pesa di più
    perché lo si sa peggio — si prendeva la partita e la tabellina del
-   pianeta usciva quando capitava. Vedi `store/calcolo.js`. */
+   pianeta usciva quando capitava. La miscela ha memoria, quindi il tetto
+   di domande fuori tappa vale su ogni tratto di partita e non solo «in
+   media». Vedi `store/calcolo.js`. */
+const miscela = creaMiscela()
 function scegli(p) {
-  return picker.pick(campagna.value ? sottoPool(p, eDellaTappa) : p)
+  return picker.pick(campagna.value
+    ? miscela.parte(p, eDellaTappa, domanda.chiave) : p)
 }
 
 function nuovaDomanda(boss) {
   const p = mente.value ? poolMente() : poolAttivo()
   const futura = boss ? chiaveDalDopo() : null
-  const k = futura || (boss ? piuInBilico(p) : scegli(p))
+  const k = futura || scegli(p)
   anticipo = !!futura
+  // il boss non passa dal picker: la memoria corta va avvisata a mano, se
+  // no la domanda dopo può essere la stessa del boss
+  if (futura) picker.annota(k)
+  // il boss arriva dalla tappa dopo: conta come una domanda fuori tappa,
+  // se no la quota promessa è più alta di quella che si misura
+  miscela.segna(eDellaTappa(k))
   if (mente.value) preparaMente(k)
   else preparaTabellina(k, futura ? prossima.value.nuova : null)
   apertoIl = performance.now()
@@ -420,7 +392,32 @@ function ondata() {
     const ok = v === domanda.ris
     const base = Math.min(W, H) * 0.095 * (boss ? 1.22 : 1) + (String(v).length - 1) * 6 * S
     const r = Math.max(24, Math.min(base, colonna * 0.46, boss ? 84 : 68))
-    const off = Math.random() * H * (boss ? 0.18 : 0.30)
+    /* LO SFALSAMENTO È PER I SASSI SBAGLIATI. Nascere tutti sulla stessa
+       riga fa una fila di sasso, non una covata: per questo ognuno parte
+       un po' più su. Ma quello con la RISPOSTA GIUSTA non può nascere in
+       fondo alla covata, se no la domanda è già a schermo da cinque
+       secondi mentre l'unica cosa da toccare deve ancora affacciarsi: il
+       bambino sembra lento e sta solo aspettando.
+
+       IL CONTO SI FA SU «È IN SCENA», NON SU «È NATO», ed è la differenza
+       che mancava: un sasso nasce sopra il bordo, tutto fuori, e il tempo
+       che ci mette a scendere finché non lo si vede per intero — due
+       raggi buoni, mezzo secondo — è tempo in cui il bambino aspetta come
+       aspetterebbe con lo sfalsamento. Tagliare il solo sfalsamento
+       lasciava fuori dal conto proprio quel pezzo. Quindi: dalla domanda
+       al momento in cui il sasso giusto è tutto dentro lo schermo passano
+       al massimo `CFG.rispostaEntro` secondi, e da lì parte il cronometro
+       (`prontaIl`), perché prima di allora non c'era niente da fare.
+
+       Quando nemmeno partire attaccati al bordo basta — un boss grosso su
+       uno schermo piccolo, con l'ultima vita che rallenta tutto — il
+       sasso giusto nasce già affacciato invece di accelerare: la regola
+       è che si infittisce, non si corre (vedi `difficolta`). */
+    const inScena = 2 * r                   // da y = -r-off a centro in y = r
+    const sfalsa = Math.random() * H * (boss ? 0.18 : 0.30)
+    const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))
+                   : sfalsa
+    if (ok) prontaIl = apertoIl + ((inScena + off) / vel) * 1000
     const m = r * (boss ? 1.18 : 1.02)
     const x = colonna * i + colonna / 2 + (Math.random() - 0.5) * Math.max(0, colonna - 2 * r - 6)
     asteroidi.push({
@@ -461,7 +458,7 @@ const centrato = () => campagna.value &&
 function eDellaTappa(k) {
   if (!campagna.value) return false
   if (mente.value) return eNuovo(tappa.value, k)
-  return !!tappa.value.nuova && daChiave(k).includes(tappa.value.nuova)
+  return dellaTabellina(tappa.value.nuova, k)
 }
 const eMirata = k => eDellaTappa(k)
 
@@ -530,7 +527,12 @@ function accendi(quale, prefisso = '') {
 
 function colpisci(a) {
   const k = domanda.chiave
-  const ms = performance.now() - apertoIl
+  /* dal momento in cui la risposta era raggiungibile, non da quello in
+     cui è comparsa la domanda. Chi tocca il sasso mentre si affaccia
+     ancora dà un tempo negativo: lì non si sa quanto è stato veloce, si
+     sa solo che è stato velocissimo, e `record` con 0 lascia stare il
+     cronometro invece di scrivere un numero inventato */
+  const ms = Math.max(0, performance.now() - prontaIl)
   const mirata = eMirata(k)
   // l'assaggio del pianeta dopo non si segna: né la giusta, che sarebbe
   // mezza fortuna su una cosa mai vista, né la sbagliata, che marchierebbe
@@ -708,8 +710,9 @@ function aggiorna(dt) {
   }
   if (caduto) {
     const k = domanda.chiave
-    answer(k, { correct: false, ms: 9000 })
-    picker.afterAnswer(k, false)
+    // l'assaggio del pianeta dopo non si segna nemmeno quando cade: vale
+    // qui la stessa ragione che vale in `colpisci`
+    if (!anticipo) { answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false) }
     hud.sbagliate++
     // il sasso arriva sul pianeta: l'atmosfera si accende di rosso lì
     // dove ha colpito, ed è per questo che quella riga in fondo conta
@@ -825,11 +828,7 @@ function ciclo(ts) {
 
 /* ---------- partite ---------- */
 function inizia(i = tappaIdx.value) {
-  // volo libero senza tabelline: niente da giocare (il volo a mente invece
-  // ha sempre di che chiedere, i concetti aperti li sceglie il gestore)
-  if (!mente.value && i < 0 && !sel.size) return
   tappaIdx.value = i
-  if (!mente.value && i < 0) state.profile.settings.tables = [...sel].sort((a, b) => a - b)
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
   hud.livello = 1; hud.serie = 0
   particelle = []; anelli = []; frammenti = []; raggi = []
@@ -839,7 +838,7 @@ function inizia(i = tappaIdx.value) {
   nave.lv = 1; nave.scudo = 0; nave.doppio = false
   nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
   sincronizzaNave()
-  picker.reset()
+  picker.reset(); miscela.azzera()
   sbagli.clear(); dritta.value = ''
   segna('partiteMath')
   fase.value = 'gioco'
@@ -848,6 +847,9 @@ function inizia(i = tappaIdx.value) {
 
 const iniziaPianeta = i => { modo.value = 'tabelline'; inizia(i) }
 const iniziaStazione = i => { modo.value = 'mente'; inizia(i) }
+/* dalla mappa si tocca una voce e basta: che sia un pianeta o una
+   stazione lo dice il dato, non chi tocca */
+const iniziaVoce = v => (v.tipo === 'mente' ? iniziaStazione(v.i) : iniziaPianeta(v.i))
 
 /* com'è andata: serve sia a chi finisce le vite sia a chi supera il pianeta.
    Il «da ripassare» dice il calcolo quando è un fatto (7 × 8, 13 − 7) e il
@@ -893,7 +895,11 @@ function tappaSuperata() {
   suono.livello(); suono.moneta()
 }
 
-function prossimoPianeta() {
+/* «avanti» segue la FILA, non la campagna: dopo il pianeta del 10 tocca
+   a una stazione, ed è tutto il motivo per cui le due liste sono state
+   fuse. Dove la fila finisce si resta dove si è. */
+function prossimaTappa() {
+  if (dopo.value) return iniziaVoce(dopo.value)
   const quante = mente.value ? STAZIONI.length : CAMPAGNA.length
   inizia(Math.min(quante - 1, tappaIdx.value + 1))
 }
@@ -909,8 +915,6 @@ function allaMappa() {
   fase.value = 'mappa'
   asteroidi = []
   dritta.value = ''
-  // si torna sulla campagna da cui si veniva, non sempre sui pianeti
-  mappaSu.value = mente.value ? 'stazioni' : 'pianeti'
   tappaIdx.value = mente.value
     ? Math.min(STAZIONI.length - 1, progressoMente.value.tappa)
     : Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
@@ -919,23 +923,15 @@ function allaMappa() {
 /* "Cosa so" si apre da due posti — la mappa e la fine partita — e il tasto
    della barra riporta a quello da cui si è arrivati, non sempre alla mappa:
    chi la guarda a fine partita vuole tornare al suo "riprova" */
-/* quale delle due campagne si sta guardando nella mappa */
-const mappaSu = ref('pianeti')
-
 const tornaDa = ref('mappa')
 /* la tavola ha due facce, una per campagna, e si apre su quella da cui si
    arriva: chi ha appena fatto conti a mente vuole vedere i suoi trucchi */
 const tavolaSu = ref('tabelline')
 function apriTavola() {
   tornaDa.value = fase.value
-  tavolaSu.value = modo.value
+  // col calcolo a mente spento c'è una faccia sola, e si apre su quella
+  tavolaSu.value = menteAccesa.value ? modo.value : 'tabelline'
   fase.value = 'tavola'
-}
-
-function scegliTabella(n) { sel.has(n) ? sel.delete(n) : sel.add(n) }
-function tutte() {
-  const on = sel.size < 10
-  sel.clear(); if (on) for (let i = 1; i <= 10; i++) sel.add(i)
 }
 
 const cuori = computed(() => '♥'.repeat(Math.max(0, hud.vite)) +
@@ -949,10 +945,12 @@ onMounted(() => {
   tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
   // aggancio per i test automatici: permette di colpire l'asteroide giusto
   // senza dover indovinare dove il numero e' disegnato sul canvas
-  window.__mate = { hud, domanda, colpisci, inizia, sel, CAMPAGNA, tappaIdx, tappa,
+  window.__mate = { hud, domanda, colpisci, inizia, CAMPAGNA, tappaIdx, tappa,
                     asteroidi: () => asteroidi, fase, finale, progresso, nave,
                     // -1 è il volo libero: tabelline a scelta, nessun bersaglio
                     iniziaLibero: () => inizia(-1),
+                    // la fila mescolata, e cosa viene dopo dentro la fila
+                    fila, dopo, menteAccesa,
                     // la seconda campagna: stazioni del calcolo a mente
                     modo, STAZIONI, progressoMente, iniziaStazione,
                     // la tappa dopo: è da lì che arriva il boss, e un test
@@ -1016,76 +1014,52 @@ onUnmounted(() => {
     <div v-if="fase === 'mappa'" class="schermo campagna">
       <Barra titolo="Asteroidi" monete @indietro="$emit('vai','home')">
         <div class="gettone">⭐ <b>{{ intere.size }}/10</b></div>
-        <div class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
+        <div v-if="menteAccesa" class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
       </Barra>
       <div class="centro elenco">
         <h1>Asteroidi</h1>
-        <!-- due campagne, due schede: dieci pianeti da scorrere prima di
-             arrivare alle stazioni sarebbero un muro su un telefono -->
-        <div class="schede">
-          <button :class="{ on: mappaSu === 'pianeti' }"
-                  @click="mappaSu = 'pianeti'">🪐 Pianeti</button>
-          <button :class="{ on: mappaSu === 'stazioni' }"
-                  @click="mappaSu = 'stazioni'">🛰️ A mente</button>
-        </div>
-
-        <!-- ─── i pianeti: le tabelline ─── -->
-        <template v-if="mappaSu === 'pianeti'">
-        <div class="capitolo">🪐 I pianeti · le tabelline</div>
-        <p class="testo">Ogni pianeta è una tabellina nuova: colpisci gli asteroidi con il
-          risultato giusto. La ⭐ arriva quando sai tutte e dieci le caselle, anche
+        <!-- UNA FILA SOLA, ordinata per difficoltà vera: le tabelline e i
+             conti a mente sono la stessa aritmetica e stavano dietro due
+             linguette, cioè dietro la domanda «cosa preferisci?». L'ordine
+             e il perché di ogni giunzione stanno in `data/asteroidi.js`.
+             I capitoli sono lì per il telefono: ventidue righe di fila
+             sono un muro, tre o quattro alla volta sono una lista. -->
+        <p class="testo">Una tappa per volta: chi porta una tabellina nuova, chi un trucco
+          da fare a mente. La ⭐ arriva quando quella cosa ti resta in mano anche
           domani.</p>
-        <div class="pianeti">
-          <button v-for="(T, i) in CAMPAGNA" :key="i" class="pianeta"
-                  :class="{ fatto: i < progresso.tappa, chiuso: !sbloccata(i),
-                            ora: i === progresso.tappa }"
-                  :disabled="!sbloccata(i)" @click="iniziaPianeta(i)">
-            <span class="em">{{ sbloccata(i) ? T.emoji : '🔒' }}</span>
-            <b>{{ i + 1 }}. {{ T.nome }}</b>
-            <i>{{ T.nuova ? 'la tabellina del ' + T.nuova : 'tutte le tabelline' }} ·
-               {{ T.bersaglio }} centri</i>
-            <span class="stato">
-              <em v-if="stellaDi(T)" title="tabellina imparata">⭐</em>
-              <em v-else-if="i < progresso.tappa" class="spunta">✔</em>
-            </span>
-          </button>
-        </div>
-        <div class="riga">
-          <button v-if="progresso.libera" class="bottone" @click="fase = 'libero'">Volo libero ♾️</button>
-        </div>
-        <p v-if="!progresso.libera" class="mini">Il volo libero — tutte le tabelline, senza
-          bersaglio — si apre quando la campagna è finita.</p>
+
+        <template v-for="(c, ci) in capitoli" :key="'c' + ci">
+          <div class="capitolo">{{ c.emoji }} {{ c.titolo }}</div>
+          <p class="mini che">{{ c.che }}</p>
+          <div class="scaletta">
+            <button v-for="v in c.voci" :key="v.tipo + v.i"
+                    :class="[v.tipo === 'mente' ? 'stazione' : 'pianeta',
+                             { fatto: fattaVoce(v), chiuso: !apertaVoce(v),
+                               ora: apertaVoce(v) && !fattaVoce(v) }]"
+                    :disabled="!apertaVoce(v)" @click="iniziaVoce(v)">
+              <span class="em">{{ apertaVoce(v) ? v.T.emoji : '🔒' }}</span>
+              <b>{{ v.n }}. {{ v.T.nome }}</b>
+              <i>{{ cheChiede(v) }} · {{ v.T.bersaglio }} centri</i>
+              <span class="stato">
+                <em v-if="stellaVoce(v)" title="imparata">⭐</em>
+                <em v-else-if="fattaVoce(v)" class="spunta">✔</em>
+              </span>
+            </button>
+          </div>
         </template>
 
-        <!-- ─── le stazioni: il calcolo a mente ───
-             Sono una campagna a parte e non il seguito dei pianeti: 3+4 viene
-             prima delle tabelline, 4×23 viene dopo. Si può cominciare da qui. -->
-        <template v-else>
-        <div class="capitolo">🛰️ Le stazioni · i conti a mente</div>
-        <p class="testo">Qui non c'è niente da scrivere: si fa a mente e si colpisce il
-          risultato. Ogni stazione porta un trucco nuovo, e i numeri crescono da soli
-          man mano che il trucco diventa tuo.</p>
-        <div class="stazioni">
-          <button v-for="(S, i) in STAZIONI" :key="'s' + i" class="stazione"
-                  :class="{ fatto: i < progressoMente.tappa, chiuso: !sbloccataStazione(i),
-                            ora: i === progressoMente.tappa }"
-                  :disabled="!sbloccataStazione(i)" @click="iniziaStazione(i)">
-            <span class="em">{{ sbloccataStazione(i) ? S.emoji : '🔒' }}</span>
-            <b>{{ i + 1 }}. {{ S.nome }}</b>
-            <i>{{ S.esempio }} · {{ S.bersaglio }} centri</i>
-            <span class="stato">
-              <em v-if="stellaMente(S)" title="stazione imparata">⭐</em>
-              <em v-else-if="i < progressoMente.tappa" class="spunta">✔</em>
-            </span>
-          </button>
-        </div>
+        <!-- i due voli infiniti: si aprono quando la loro campagna è
+             finita, e restano due perché sono due mestieri diversi —
+             tutte le tabelline da una parte, tutti i trucchi dall'altra -->
         <div class="riga">
-          <button v-if="progressoMente.libera" class="bottone"
+          <!-- si vola e basta: quali tabelline lo decide il motore, pescando
+               quello che si ricorda meno (`poolLibero`) -->
+          <button v-if="progresso.libera" class="bottone" @click="iniziaPianeta(-1)">Volo libero ♾️</button>
+          <button v-if="menteAccesa && progressoMente.libera" class="bottone"
                   @click="iniziaStazione(-1)">Volo a mente ♾️</button>
         </div>
-        <p v-if="!progressoMente.libera" class="mini">Il volo a mente — tutti i trucchi
-          insieme, con i numeri che continuano a crescere — si apre alla fine.</p>
-        </template>
+        <p v-if="!progresso.libera" class="mini">Il volo libero — tutte le tabelline, senza
+          bersaglio — si apre quando i pianeti sono finiti.</p>
 
         <!-- l'astronave: si guadagna giocando, quindi va detto una volta
              che esiste. Altrimenti il primo cannone doppio arriva come un
@@ -1108,22 +1082,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- volo libero: qui, e solo qui, le tabelline si scelgono a mano -->
-    <div v-if="fase === 'libero'" class="velo">
-      <h1 class="chiaro">Volo <span>libero</span></h1>
-      <p class="testo chiaro">Nessun bersaglio: si vola finché ci sono vite.
-        Quali tabelline vuoi allenare?</p>
-      <div class="tabelle">
-        <button v-for="n in 10" :key="n" class="tb" :class="{ on: sel.has(n) }"
-                @click="scegliTabella(n)">{{ n }}</button>
-      </div>
-      <div class="riga">
-        <button class="bottone chiaro" @click="tutte">Tutte</button>
-        <button class="bottone" :disabled="!sel.size" @click="iniziaPianeta(-1)">Vola ▶</button>
-      </div>
-      <button class="link chiaro" @click="fase = 'mappa'">‹ torna alla mappa</button>
-    </div>
-
     <!-- cosa so: una pagina di progressi, non un velo sopra la partita —
          stessa veste della mappa, e si esce dal tasto della barra -->
     <div v-if="fase === 'tavola'" class="schermo campagna">
@@ -1131,7 +1089,11 @@ onUnmounted(() => {
         <div class="gettone">⭐ <b>{{ intere.size }}/10</b></div>
       </Barra>
       <div class="centro elenco">
-        <div class="schede">
+        <!-- le due facce restano due anche adesso che la mappa è una
+             fila sola: qui non si sceglie una tappa, si guarda cosa si sa
+             — e una tavola pitagorica e un elenco di strategie non stanno
+             nella stessa pagina -->
+        <div v-if="menteAccesa" class="schede">
           <button :class="{ on: tavolaSu === 'tabelline' }"
                   @click="tavolaSu = 'tabelline'">✖️ Tabelline</button>
           <button :class="{ on: tavolaSu === 'mente' }"
@@ -1162,11 +1124,14 @@ onUnmounted(() => {
         <p v-else-if="tappa.nuova" class="testo chiaro">⭐ La tabellina del {{ tappa.nuova }}
           la sai per intero!</p>
       </template>
-      <p v-if="prossima" class="dritta">Ora tocca a
-        {{ prossima.emoji }} {{ prossima.nome }}. {{ prossima.dritta }}</p>
+      <!-- «adesso tocca a» segue la FILA e non la campagna: dopo un
+           pianeta può toccare a una stazione, ed è per questo che le due
+           liste sono state fuse -->
+      <p v-if="dopo" class="dritta">Ora tocca a
+        {{ dopo.T.emoji }} {{ dopo.T.nome }}. {{ dopo.T.dritta }}</p>
       <div class="riga">
-        <button class="bottone" @click="prossimoPianeta">
-          {{ mente ? 'Stazione successiva ▶' : 'Pianeta successivo ▶' }}</button>
+        <button v-if="dopo" class="bottone" @click="prossimaTappa">
+          {{ dopo.T.emoji }} {{ dopo.T.nome }} ▶</button>
         <button class="bottone chiaro" @click="allaMappa">Mappa</button>
       </div>
     </div>
@@ -1184,7 +1149,7 @@ onUnmounted(() => {
       <div v-else class="dato">⭐ Tabelline imparate: <span>{{ intere.size }}/10</span></div>
       <div class="riga">
         <button v-if="mente" class="bottone" @click="iniziaStazione(-1)">Volo a mente ♾️</button>
-        <button v-else class="bottone" @click="fase = 'libero'">Volo libero ♾️</button>
+        <button v-else class="bottone" @click="iniziaPianeta(-1)">Volo libero ♾️</button>
         <button class="bottone chiaro" @click="allaMappa">Mappa</button>
       </div>
     </div>
@@ -1279,10 +1244,6 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
         align-items:center; justify-content:center; gap:16px; padding:22px; text-align:center }
 .chiaro { color:#fff }
 h1.chiaro span { color:#7fe3ff }
-.tabelle { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:340px; width:100% }
-.tb { padding:12px 0; border-radius:12px; border:2px solid #ffffff2a; background:#ffffff10;
-      color:#fff; font-size:18px; font-weight:800 }
-.tb.on { background:#2f7bff; border-color:#7fe3ff; box-shadow:0 0 14px #2f7bff88 }
 .dato { font-size:clamp(17px,4.6vw,24px); font-weight:800 }
 .dato span { color:#ffd94a }
 .dritta { font-size:14px; font-weight:700; color:#cbd5ff; max-width:34ch; line-height:1.45 }
@@ -1295,7 +1256,8 @@ h1.chiaro span { color:#7fe3ff }
             z-index:5 }
 .campagna .elenco { justify-content:flex-start; gap:12px; padding-bottom:26px }
 .campagna h1 { margin-bottom:2px }
-.pianeti, .stazioni { display:flex; flex-direction:column; gap:9px; width:100%; max-width:400px }
+/* la fila: pianeti e stazioni nello stesso elenco, spezzato in capitoli */
+.scaletta { display:flex; flex-direction:column; gap:9px; width:100%; max-width:400px }
 /* Le stazioni si vestono come i pianeti: sono la stessa cosa — una tappa
    con un bersaglio — e due grafiche direbbero che sono due giochi. */
 .pianeta, .stazione {
@@ -1339,8 +1301,17 @@ h1.chiaro span { color:#7fe3ff }
 .schede button.on { background:var(--carta); color:var(--viola-scuro);
                     box-shadow:0 3px 0 #c9d8f5, 0 0 0 2px var(--viola) }
 
-/* il titolino che separa le due campagne nella stessa pagina */
+/* il titolino di un capitolo della fila. Sta a sinistra e non al centro
+   perché deve leggersi come l'inizio di un blocco, non come un titolo:
+   quello che segue è la lista, e l'occhio deve scendere. */
 .capitolo { align-self:flex-start; margin:10px 0 -4px; font-size:13px; font-weight:900;
             letter-spacing:.6px; text-transform:uppercase; color:var(--viola-scuro);
             opacity:.75 }
+.capitolo + .che { align-self:flex-start; max-width:400px; margin:0 0 2px;
+                   text-align:left; line-height:1.35 }
+
+/* Una fila di ventidue tappe non entra in uno schermo, e non deve:
+   `.elenco` scorre già, e i capitoli le danno dei punti dove fermarsi.
+   Quello che non cambia è che una stazione e un pianeta si vestono
+   uguale — vedi sopra: due grafiche direbbero che sono due giochi. */
 </style>

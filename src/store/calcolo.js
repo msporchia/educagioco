@@ -215,11 +215,11 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
    del 6 in cui il 6 si vedeva ogni tanto, in mezzo a un ripasso continuo
    di tutto il resto — un ripasso *giusto*, ma non è quella la tappa.
 
-   Sette domande su dieci parlano della tappa; le altre tre sono il
+   Otto domande su dieci parlano della tappa; le altre due sono il
    ripasso, che serve e non deve sparire. Si sceglie prima da quale delle
    due parti pescare, e solo dopo si lascia decidere al motore chi, dentro
    quella parte, ha più bisogno di uscire. */
-export const QUOTA_TAPPA = 0.7
+export const QUOTA_TAPPA = 0.8
 
 export function sottoPool(pool, eSuo, sorte = Math.random, quota = QUOTA_TAPPA) {
   const suoi = pool.filter(eSuo)
@@ -227,6 +227,52 @@ export function sottoPool(pool, eSuo, sorte = Math.random, quota = QUOTA_TAPPA) 
   // se una delle due parti è vuota non c'è niente da dosare: chi c'è, c'è
   if (!suoi.length || !resto.length) return pool
   return sorte() < quota ? suoi : resto
+}
+
+/* ═══════════ LA QUOTA HA MEMORIA ═══════════
+   `sottoPool` da solo è una monetina lanciata a ogni domanda, e una
+   monetina non promette niente su nessun tratto della partita: al pianeta
+   del 10 sono uscite sei domande di fila che non erano la tabellina del
+   10. Il pool ci aveva la sua parte di colpa (`store/tabelline.js`), ma
+   il resto è tutto qui: «otto su dieci in media» non vuol dire otto su
+   dieci *adesso*, e in una partita da trenta domande una fila del genere
+   capita a un bambino su trenta — che passa un minuto intero a giocare
+   un pianeta diverso da quello che ha scelto.
+
+   La miscela tiene la memoria corta di quello che è uscito e, quando la
+   finestra ha già speso tutto il suo ripasso, obbliga la tappa a parlare.
+   Il caso resta — la partita non diventa un ciclo prevedibile — ma il
+   tetto è duro: mai più di `fuoriMax` domande fuori tappa ogni
+   `finestra`, quindi mai due di fila.
+
+   Il BOSS conta come una domanda fuori tappa, perché lo è: arriva dalla
+   tappa dopo. Prima non lo contava nessuno e la quota promessa era una
+   frazione più bassa di quella misurata. */
+export const FINESTRA = 5
+
+export function creaMiscela(quota = QUOTA_TAPPA, finestra = FINESTRA) {
+  const fuoriMax = Math.max(1, finestra - Math.ceil(finestra * quota))
+  let ultime = []          // true = era della tappa
+
+  return {
+    /* da quale parte del pool si pesca adesso. `precedente` è la domanda
+       appena fatta: una parte con una chiave sola, e per giunta quella,
+       costringerebbe a ripetere la stessa domanda — si passa all'altra */
+    parte(pool, eSuo, precedente = null, sorte = Math.random) {
+      const gia = ultime.filter(x => !x).length
+      const scelta = sottoPool(pool, eSuo, gia >= fuoriMax ? () => 0 : sorte, quota)
+      if (scelta.length !== 1 || scelta[0] !== precedente) return scelta
+      const altra = pool.filter(k => !scelta.includes(k))
+      return altra.length ? altra : pool
+    },
+    /* cosa è poi uscito davvero, boss compreso */
+    segna(dellaTappa) {
+      ultime.push(!!dellaTappa)
+      if (ultime.length > finestra) ultime.shift()
+    },
+    azzera() { ultime = [] },
+    get fuoriMax() { return fuoriMax },
+  }
 }
 
 /* una risposta «mirata» è quella sui concetti nuovi della stazione: è la

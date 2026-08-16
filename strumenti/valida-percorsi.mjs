@@ -64,16 +64,21 @@
                   un quarto di strada libero all'ingresso e uno
                   all'uscita, su qualunque mappa;
 
-     debolezze    dove sono accese, ogni mostro deve essere debole a
-                  una torre che la tappa mette a disposizione, e in un
-                  elenco devono comparire almeno due debolezze diverse.
-                  In più — ed è una richiesta di questo file, non una
-                  regola del gioco — due ondate di fila non devono
-                  chiedere la stessa torre.
+     resistenze   dove sono accese, ogni mostro deve resistere a una
+                  torre che la tappa mette a disposizione — dire «regge
+                  le bombe» dove le bombe sono chiuse non è un
+                  avvertimento, è rumore — e la tappa deve offrirne
+                  almeno **due** che sparano, se no la resistenza
+                  toglie l'unica difesa che c'è invece di indirizzarla.
+                  In un elenco devono comparire almeno due resistenze
+                  diverse. In più — ed è una richiesta di questo file,
+                  non una regola del gioco — due ondate di fila non
+                  devono chiudere la stessa torre.
    ═══════════════════════════════════════════════════════════════════ */
 import { Percorso } from '../src/motore/castello/percorso.js'
 import { CAMPAGNE, RACCONTO } from '../src/data/campagne-castello.js'
-import { MOSTRI, torreDebole } from '../src/data/mostri.js'
+import { MOSTRI, torreResistente } from '../src/data/mostri.js'
+import { TORRI } from '../src/data/ops.js'
 /* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
    in un altro file e in un altro cantiere. La si legge — non la si
    scrive — perché senza quel numero questo strumento controllerebbe
@@ -435,29 +440,36 @@ function esaminaForma(t) {
   return { guasti, avvisi, misure }
 }
 
-/* ═══════════ chi arriva, e a che cosa è debole ═══════════ */
+/* ═══════════ chi arriva, e a che cosa resiste ═══════════ */
 function esaminaMostri(t) {
   const guasti = []
   if (!t.mostri || !t.mostri.length) return ['nessun mostro']
   for (const m of t.mostri) if (!MOSTRI[m]) guasti.push(`mostro sconosciuto: ${m}`)
-  if (!t.debolezze) {
+  if (!t.resistenze) {
     if (t.torri.length > 1)
-      guasti.push(`ha ${t.torri.length} torri ma le debolezze spente: la scelta non conta`)
+      guasti.push(`ha ${t.torri.length} torri ma le resistenze spente: la scelta non conta`)
     return guasti
   }
-  const deboli = t.mostri.map(m => torreDebole(m))
-  for (const [i, d] of deboli.entries()) {
-    if (!d) { guasti.push(`${t.mostri[i]} non ha una debolezza`); continue }
+  /* Con una torre che spara sola, «resiste a quella» vuol dire «questa
+     ondata non la fermi»: non è un'informazione, è un muro. */
+  const sparano = t.torri.filter(k => TORRI[k].danno)
+  if (sparano.length < 2)
+    guasti.push(`ha ${sparano.length} torre che spara e le resistenze accese: ` +
+                'non resta niente da costruire al posto di quella')
+  const regge = t.mostri.map(m => torreResistente(m))
+  for (const [i, d] of regge.entries()) {
+    if (!d) { guasti.push(`${t.mostri[i]} non dichiara a cosa resiste`); continue }
     if (!t.torri.includes(d))
-      guasti.push(`${t.mostri[i]} è debole a «${d}», che questa tappa non mette a disposizione`)
+      guasti.push(`${t.mostri[i]} resiste a «${d}», che questa tappa non mette a ` +
+                  'disposizione: è un avvertimento su una torre che non si può comprare')
   }
-  if (new Set(deboli).size < 2)
-    guasti.push('una sola debolezza in tutto l\'elenco: la risposta è sempre la stessa')
-  if (deboli.length > 1)
-    for (const [i, d] of deboli.entries())
-      if (d && d === deboli[(i + 1) % deboli.length])
-        guasti.push(`${t.mostri[i]} e ${t.mostri[(i + 1) % deboli.length]} ` +
-                    `chiedono la stessa torre in due ondate di fila (${d})`)
+  if (new Set(regge).size < 2)
+    guasti.push('una sola resistenza in tutto l\'elenco: basta non comprare mai quella torre')
+  if (regge.length > 1)
+    for (const [i, d] of regge.entries())
+      if (d && d === regge[(i + 1) % regge.length])
+        guasti.push(`${t.mostri[i]} e ${t.mostri[(i + 1) % regge.length]} ` +
+                    `chiudono la stessa torre in due ondate di fila (${d})`)
   return guasti
 }
 
@@ -474,7 +486,7 @@ for (const c of CAMPAGNE) {
   console.log(`\n      ${c.emoji} ${c.nome.toUpperCase()}`)
   const presidi = []
   for (const tappa of c.tappe) {
-    const t = { ...tappa, campagna: c.id, debolezze: !!tappa.debolezze }
+    const t = { ...tappa, campagna: c.id, resistenze: !!tappa.resistenze }
     const { guasti, avvisi, misure } = esaminaForma(t)
     const tutti = [...guasti, ...esaminaMostri(t)]
     for (const a of avvisi) avvertimenti.push(`${t.nome}: ${a}`)

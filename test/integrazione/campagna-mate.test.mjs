@@ -10,6 +10,7 @@
        anche dopo aver richiuso il gioco
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
+import { SCALETTA } from '../../src/data/asteroidi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -18,7 +19,7 @@ await azzera(page)
 
 /* ---------- 1. si entra e c'è la mappa ---------- */
 await page.getByText('Asteroidi', { exact: true }).click()
-await page.waitForSelector('.pianeti', { timeout: 5000 })
+await page.waitForSelector('.scaletta', { timeout: 5000 })
 
 const testo = await page.evaluate(() => document.body.innerText)
 controlla('la mappa dei pianeti sostituisce la scelta delle tabelline',
@@ -76,20 +77,34 @@ dentro('e non resta addosso all\'asteroide giusto',
 const partita = await page.evaluate(async () => {
   const m = window.__mate
   const bersaglio = m.tappa.value.bersaglio
-  const viste = []
+  const viste = [], ritardi = []
   let doppio = false
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
   for (let i = 0; i < 200 && m.fase.value === 'gioco'; i++) {
     const giusto = m.asteroidi().find(x => x.ok && !x.morto)
     if (!giusto) break
     viste.push([m.domanda.a, m.domanda.b, !!giusto.boss])
+    /* fra quanto il sasso con la risposta giusta sarà in scena: nasce
+       sopra il bordo (y negativa) e ci mette (r + quanto sta sopra) / vy.
+       Si legge adesso perché la covata è appena nata. */
+    ritardi.push((giusto.r - giusto.y) / giusto.vy)
     m.colpisci(giusto)
     doppio = doppio || m.nave.doppio
     await new Promise(r => setTimeout(r, 15))
   }
-  return { viste, bersaglio, fase: m.fase.value, giuste: m.hud.giuste, doppio,
+  return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, doppio,
            mirate: m.hud.mirate, tappa: m.progresso.value.tappa }
 })
+
+/* LA RISPOSTA NON SI FA ASPETTARE. Gli asteroidi nascono sfalsati — se no
+   sono una fila e non una covata — ma quello con la risposta giusta non
+   può nascere in fondo alla covata: la domanda sarebbe a schermo da
+   cinque secondi mentre l'unica cosa da toccare deve ancora affacciarsi,
+   e il bambino che aspetta risulterebbe lento anche nell'SRS. */
+dentro('la risposta giusta è in scena entro tre secondi dalla domanda',
+       Math.round(Math.max(...partita.ritardi) * 10) / 10, 0, 3.2)
+nota(`il sasso giusto entra dopo ${Math.min(...partita.ritardi).toFixed(1)}–` +
+     `${Math.max(...partita.ritardi).toFixed(1)} s`)
 
 uguale('il bersaglio chiude la tappa', partita.fase, 'vinta')
 uguale('e la tappa risulta superata', partita.tappa, 1)
@@ -98,12 +113,13 @@ controlla('senza chiedere più centri del bersaglio',
           `${partita.giuste} centri per un bersaglio di ${partita.bersaglio}`)
 
 /* La tabellina del pianeta è la maggioranza larga di quello che esce: la
-   miscela è dichiarata (`QUOTA_TAPPA`, sette su dieci) e le altre tre sono
-   ripasso. Qui si guarda una partita sola, quindi la forbice è larga —
-   la quota esatta la misura `unita/calcolo`, che ne tira quattromila. */
+   miscela è dichiarata (`QUOTA_TAPPA`, otto su dieci) e il resto è
+   ripasso. Qui si guarda una partita sola, quindi la forbice è larga — la
+   quota esatta, e il fatto che non ci siano mai sei domande di fila fuori
+   tabellina, li misura `unita/asteroidi` giocando le tappe per davvero. */
 const suoi = partita.viste.filter(([a, b]) => a === 2 || b === 2).length
 const quota = suoi / partita.viste.length
-dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 55, 95)
+dentro('la tabellina nuova è la maggior parte delle domande', Math.round(quota * 100), 65, 100)
 nota(`${suoi} domande su ${partita.viste.length} erano della tabellina del 2`)
 
 /* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
@@ -148,11 +164,17 @@ controlla('e il boss non lascia niente in archivio', chiuse.length === 0, chiuse
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
 const home = await page.evaluate(() => document.body.innerText)
-controlla('la home dice a che pianeta si è arrivati', /pianeta 2 di 10/.test(home),
-          home.split('\n').find(r => /pianeta/i.test(r)) || 'nessuna riga sui pianeti')
+/* La home conta le tappe della FILA, che è una sola: quante ne sono
+   state fatte e da dove si riprende. Qui è stato superato un pianeta e
+   nessuna stazione, quindi «1 tappa» — e «ora» indica la prima della
+   fila, che è a mente: è giusto che lo dica, quella è la più facile di
+   tutte ed è ancora lì. */
+controlla('la home conta le tappe della fila unica',
+          new RegExp(`1 tappa su ${SCALETTA.length}`).test(home),
+          home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
 await page.getByText('Asteroidi', { exact: true }).click()
-await page.waitForSelector('.pianeti', { timeout: 5000 })
+await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].filter(b => !b.disabled).length)
 uguale('dopo la ricarica sono aperti due pianeti', dopo, 2)
@@ -176,8 +198,9 @@ controlla('non è un velo sopra la partita', !tavola.velo)
 await scatto(page, 'campagna-mate-cosa-so')
 
 await page.locator('.barra-app button[aria-label="indietro"]').click()
-await page.waitForSelector('.pianeti', { timeout: 5000 })
-controlla('e il tasto riporta alla mappa', await page.locator('.pianeti').isVisible())
+await page.waitForSelector('.scaletta', { timeout: 5000 })
+// `.scaletta` è un blocco per capitolo: la mappa è tornata se c'è il primo
+controlla('e il tasto riporta alla mappa', await page.locator('.scaletta').first().isVisible())
 
 /* ---------- 5. niente errori per strada ---------- */
 uguale('nessun errore in console', errori.length, 0)

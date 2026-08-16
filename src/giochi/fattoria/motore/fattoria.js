@@ -16,9 +16,19 @@
 
    ── COSA C'È DENTRO ───────────────────────────────────────────────
      piazzole   quali pezzi di terra sono tuoi           `"3,4" → 1`
+     limiti     fin dove arriva il mondo    `{ x0, y0, x1, y1 }`
      cose       quello che hai messo giù     `{ i, id, g, x, y }`
      ostacoli   quello che il bosco aveva già     `"14,9" → 'albero'`
      magazzino  quello che hai comprato e non è in mappa   `id → n`
+     bestie     le tue, coi bisogni e **dove stanno**  `{ chi, nome, x, y, … }`
+
+   ── IL MONDO NON È UNA COSTANTE ───────────────────────────────────
+   Non c'è più un `PIAZZOLE = 7`: `limiti` dice fin dove arriva la
+   mappa e cresce da sé (`allarga()`) per lasciare sempre due piazzole
+   comprabili attorno alla terra posseduta. Le coordinate non si
+   rinumerano mai — verso l'alto e verso sinistra diventano negative —
+   perché il bosco si ricava dalle coordinate, e rinumerare vorrebbe
+   dire spostare gli alberi che il bambino ha già visto.
 
    Le posizioni sono in **celle**, mai in pixel: lo zoom cambia mentre
    si gioca, e un mondo misurato in pixel andrebbe riscalato ogni volta.
@@ -38,13 +48,14 @@
    rimborsa, ma non sparisce. È la regola su cui un bambino conta.
    ═══════════════════════════════════════════════════════════════════ */
 import {
-  CELLE, PIAZZOLE, CELLE_MONDO, PRIMA, ULTIMA, COSTO_SPOSTARE,
-  DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
+  CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
+  limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
 import { PER_ID, PARTENZA, piedeDi } from '../dati/catalogo.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
-import { CHIAVI as BISOGNI_CHIAVI, nuovo as bisogniNuovi, scendi } from '../dati/bisogni.js'
+import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
+import { famigliaDi } from '../dati/animali.js'
 import { primaLibera } from '../../../motore/passi.js'
 
 /* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
@@ -81,11 +92,32 @@ export class Fattoria {
     for (let px = PRIMA; px <= ULTIMA; px++)
       for (let py = PRIMA; py <= ULTIMA; py++) this.piazzole[chiave(px, py)] = 1
 
-    /* Il bosco non si tira a caso: si ricava dalle coordinate, così la
-       stessa fattoria riaperta domani ha gli stessi alberi negli stessi
-       posti — e un test può dire «lì c'è un masso» e restare vero. */
-    for (let cx = 0; cx < CELLE_MONDO; cx++)
-      for (let cy = 0; cy < CELLE_MONDO; cy++) {
+    this.limiti = limitiPer(Object.keys(this.piazzole))
+    this.semina(this.limiti)
+
+    const c0 = PRIMA * CELLE
+    for (const p of PARTENZA)
+      this.cose.push({ i: this.prossimo++, id: p.id, g: p.g || 0,
+                       x: c0 + p.dx, y: c0 + p.dy })
+    return this
+  }
+
+  /* ═══════════ il bosco ═══════════
+     Non si tira a caso: si ricava dalle coordinate, così la stessa
+     fattoria riaperta domani ha gli stessi alberi negli stessi posti —
+     e un test può dire «lì c'è un masso» e restare vero.
+
+     Si semina **solo dove non è già stato seminato** (`gia`, il mondo di
+     prima): un albero sgomberato è un albero che non deve ricrescere, e
+     rigenerare una zona vecchia lo farebbe tornare. Per lo stesso motivo
+     l'ordine di scorrimento resta quello di sempre — cx fuori, cy dentro
+     — perché la regola «niente pezzi grossi a metà» guarda chi è già
+     stato messo giù nella stessa riga. */
+  semina(zona, gia = null) {
+    const { cx0, cy0, cx1, cy1 } = celleDi(zona)
+    for (let cx = cx0; cx < cx1; cx++)
+      for (let cy = cy0; cy < cy1; cy++) {
+        if (gia && dentroI(gia, piazzolaDi(cx), piazzolaDi(cy))) continue
         if (this.cellaMia(cx, cy)) continue
         if (caso(cx, cy, 1) > DENSITA_BOSCO) continue
         const t = TIPI[((caso(cx, cy, 2) * 977) | 0) % TIPI.length]
@@ -95,17 +127,25 @@ export class Fattoria {
         for (let i = 0; i < larg; i++) if (this.ostacoli[chiave(cx + i, cy)]) libero = false
         if (libero) this.ostacoli[chiave(cx, cy)] = t
       }
+  }
 
-    const c0 = PRIMA * CELLE
-    for (const p of PARTENZA)
-      this.cose.push({ i: this.prossimo++, id: p.id, g: p.g || 0,
-                       x: c0 + p.dx, y: c0 + p.dy })
-    return this
+  /* Il mondo tiene il passo con la terra comprata: due piazzole di
+     margine su ogni lato, sempre. Si chiama dopo ogni acquisto e
+     all'apertura di un salvataggio — è l'unico posto che fa crescere la
+     mappa, e semina il bosco solo sulla striscia appena comparsa. */
+  allarga() {
+    const prima = this.limiti
+    const dopo = limitiPer(Object.keys(this.piazzole), prima)
+    if (dopo.x0 === prima.x0 && dopo.y0 === prima.y0 &&
+        dopo.x1 === prima.x1 && dopo.y1 === prima.y1) return false
+    this.limiti = dopo
+    this.semina(dopo, prima)
+    return true
   }
 
   serializza() {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
-             magazzino: this.magazzino, terreno: this.terreno,
+             magazzino: this.magazzino, terreno: this.terreno, limiti: this.limiti,
              bestie: this.bestie, prossimo: this.prossimo }
   }
 
@@ -141,7 +181,16 @@ export class Fattoria {
       .map(c => ({ i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }))
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
                              ...this.cose.map(c => (c.i || 0) + 1))
-    if (!Object.keys(this.piazzole).length) this.nuova()
+    if (!Object.keys(this.piazzole).length) return this.nuova()
+    /* Una fattoria salvata quando il mondo era 7×7 fisso non ha
+       `limiti`, e il suo bosco arriva fin dove arrivava quel mondo: si
+       riparte da lì e si semina solo la terra nuova. Dare per scontato
+       un mondo più piccolo di quello vero farebbe ricrescere il bosco
+       dove era stato sgomberato. */
+    const l = d && d.limiti
+    this.limiti = l && ['x0', 'y0', 'x1', 'y1'].every(k => Number.isFinite(l[k]))
+      ? { x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 } : { ...LIMITI_VECCHI }
+    this.allarga()
     return this
   }
 
@@ -149,14 +198,13 @@ export class Fattoria {
   mia(px, py) { return !!this.piazzole[chiave(px, py)] }
 
   cellaMia(cx, cy) {
-    if (cx < 0 || cy < 0 || cx >= CELLE_MONDO || cy >= CELLE_MONDO) return false
-    return this.mia((cx / CELLE) | 0, (cy / CELLE) | 0)
+    return this.mia(piazzolaDi(cx), piazzolaDi(cy))
   }
 
   /* Si compra solo quello che tocca casa: la fattoria cresce da sé, non
      a macchia di leopardo con dei buchi in mezzo. */
   comprabile(px, py) {
-    if (px < 0 || py < 0 || px >= PIAZZOLE || py >= PIAZZOLE || this.mia(px, py)) return false
+    if (!dentroI(this.limiti, px, py) || this.mia(px, py)) return false
     return this.mia(px - 1, py) || this.mia(px + 1, py) ||
            this.mia(px, py - 1) || this.mia(px, py + 1)
   }
@@ -170,7 +218,11 @@ export class Fattoria {
     if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
     this.borsa.paga(costo)
     this.piazzole[chiave(px, py)] = 1
-    return { ok: true, costo }
+    /* Comprato il bordo, il margine si è assottigliato: il mondo cresce
+       subito, così il pezzo appena preso ha già altra terra intorno da
+       desiderare. */
+    const cresciuto = this.allarga()
+    return { ok: true, costo, cresciuto }
   }
 
   /* ═══════════ l'acqua si dipinge ═══════════
@@ -356,22 +408,71 @@ export class Fattoria {
   }
 
   /* ═══════════ le bestie ═══════════
-     Una bestia non è un oggetto: non si posa, non si sposta, non si
-     mette via. Si compra, e da lì gira per il prato per conto suo. Una
-     per tipo — due beagle identici sono due disegni uguali, non due
+     Una bestia si prende e si sposta come un oggetto — questa è la
+     scelta nuova, e ribalta quella di prima («una bestia non si posa,
+     non si sposta»). Il perché sta in `dati/animali.js`: siccome non
+     attraversa la staccionata, spostarla **è** il modo di metterla nel
+     recinto, e non serve inventare un recinto che chiude.
+
+     Da lì viene la cosa che si scorda: **dove sta una bestia si salva**
+     (`x`, `y`, in celle). Se rinascesse in mezzo al prato a ogni
+     apertura, quello che la bambina aveva chiuso nel recinto se ne
+     sarebbe uscito da solo durante la notte.
+
+     Una per tipo — due beagle identici sono due disegni uguali, non due
      cani. */
   hoLaBestia(chi) { return this.bestie.some(b => b.chi === chi) }
 
   laBestia(chi) { return this.bestie.find(b => b.chi === chi) || null }
 
-  compraBestia(chi, prezzo, nome = '') {
+  compraBestia(chi, prezzo, nome = '', dove = null) {
     if (this.hoLaBestia(chi)) return { ok: false, motivo: 'gia-tua' }
     if (this.borsa.quante() < prezzo) return { ok: false, motivo: 'poche-monete', costo: prezzo }
     this.borsa.paga(prezzo)
+    const casa = this.cellaLibera(dove ? dove.x : PRIMA * CELLE + 8,
+                                  dove ? dove.y : PRIMA * CELLE + 10)
     const bestia = { chi, nome: String(nome || '').slice(0, 16).trim(),
-                     ...bisogniNuovi() }
+                     x: casa.x, y: casa.y, ...bisogniNuovi() }
     this.bestie.push(bestia)
     return { ok: true, costo: prezzo, bestia }
+  }
+
+  /* Prenderla e posarla dove si vuole. **Non costa**, e questa è
+     l'eccezione a `COSTO_SPOSTARE`: una panchina resta dove la metti,
+     una bestia dopo un minuto è già da un'altra parte per conto suo —
+     farsi pagare per uno spostamento che l'animale disfa da sé sarebbe
+     una presa in giro. */
+  spostaBestia(chi, cx, cy) {
+    const b = this.laBestia(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (!this.calpestabile(cx, cy)) return { ok: false, motivo: 'non-ci-sta' }
+    b.x = cx; b.y = cy
+    return { ok: true, costo: 0, bestia: b }
+  }
+
+  /* Dove va messa in scena all'apertura: dove l'avevamo lasciata, e se
+     quel posto non c'è più (una casa costruita sopra, l'acqua dipinta)
+     la cella buona più vicina — sparire non è un'opzione. */
+  dovEra(chi) {
+    const b = this.laBestia(chi)
+    const c0 = PRIMA * CELLE
+    if (!b) return this.cellaLibera(c0 + 8, c0 + 10)
+    if (typeof b.x !== 'number' || typeof b.y !== 'number') {
+      const dove = this.cellaLibera(c0 + 8, c0 + 10)
+      b.x = dove.x; b.y = dove.y
+      return dove
+    }
+    return this.cellaLibera(b.x, b.y)
+  }
+
+  /* Chi guarda le bestie camminare annota ogni tanto dove sono
+     arrivate: è quello che rende «l'ho chiuso nel recinto» una cosa che
+     resta anche a gioco chiuso. */
+  annota(chi, cx, cy) {
+    const b = this.laBestia(chi)
+    if (!b) return false
+    b.x = cx | 0; b.y = cy | 0
+    return true
   }
 
   /* Come sta, adesso. Il calo si applica **leggendo**: chi guarda fa
@@ -386,10 +487,16 @@ export class Fattoria {
   }
 
   /* Dare da mangiare costa, ed è il motivo per cui una bestia è un
-     impegno e non una spesa una volta sola. */
+     impegno e non una spesa una volta sola.
+
+     E il cibo dev'essere **il suo**: un pappagallo la bistecca non la
+     tocca. Il rifiuto viene prima del pagamento — chi sbaglia ciotola
+     non perde monete, perde solo il gesto: è una cosa da imparare, non
+     una trappola. */
   nutri(chi, cibo) {
     const b = this.stato(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
+    if (!gradisce(cibo, famigliaDi(chi))) return { ok: false, motivo: 'non-gli-piace' }
     if (b.pancia > 0.93) return { ok: false, motivo: 'non-ha-fame' }
     if (this.borsa.quante() < cibo.prezzo)
       return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
@@ -399,16 +506,19 @@ export class Fattoria {
     return { ok: true, costo: cibo.prezzo }
   }
 
-  /* Spazzolare e giocare non costano: sono le due cose che un bambino
-     può sempre fare, e chi è a zero monete deve poter comunque
-     accarezzare il suo cane. */
+  /* Spazzolare resta gratis; giocare costa una monetina (il perché, e la
+     conseguenza da tenere d'occhio, stanno in `dati/bisogni.js`). Il
+     prezzo è del gesto, non di questo metodo: qui si legge e basta. */
   coccola(chi, gesto) {
     const b = this.stato(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     if (b[gesto.bisogno] > 0.93) return { ok: false, motivo: 'non-serve' }
+    const costo = gesto.prezzo || 0
+    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+    if (costo) this.borsa.paga(costo)
     b[gesto.bisogno] = Math.min(1, b[gesto.bisogno] + gesto.quanto)
     b.quando = Date.now()
-    return { ok: true, costo: 0 }
+    return { ok: true, costo }
   }
 
   /* Rinominare è gratis e si può fare sempre: un nome scelto a otto anni
@@ -432,8 +542,10 @@ export class Fattoria {
     return { ok: true, id: cosa.id }
   }
 
-  /* Comprarne uno senza metterlo giù: dal pannello della roba si compra
-     e resta da parte, che è come si fa la spesa. */
+  /* Comprarne uno senza metterlo giù. Dal baule non ci passa più
+     nessuno — lì premere è già posare, e si paga posando — ma resta
+     perché comprare e piazzare sono due cose diverse e il magazzino
+     esiste lo stesso: chi mette via una panchina la ritrova qui. */
   compra(id) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }

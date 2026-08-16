@@ -1,17 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL LESSICO SPAGNOLO — ogni voce è [spagnolo, italiano, emoji, categoria].
+   IL LESSICO SPAGNOLO — ogni voce è [spagnolo, italiano, emoji,
+   categoria, famiglia?] — quinto campo facoltativo, vedi `words.js`.
 
-   Stessa forma di `words.js` e stesse categorie: le emoji sono quelle
-   dell'inglese, voce per voce, perché sono già state scelte una volta
-   senza doppioni e cambiarle vorrebbe solo dire rifare quel lavoro.
-   Valgono le due regole di là:
+   Stessa forma di `words.js` e stesse categorie: le emoji (e le
+   famiglie) sono quelle dell'inglese, voce per voce, perché sono già
+   state scelte una volta senza doppioni e cambiarle vorrebbe solo dire
+   rifare quel lavoro. Valgono le tre regole di là:
 
    1. NESSUNA EMOJI RIPETUTA e nessuna parola ripetuta. I distrattori
       figurati escono dalla stessa categoria: due voci con la stessa
       emoji darebbero una domanda con due risposte giuste.
-   2. L'EMOJI È FACOLTATIVA (`''`): una voce senza emoji semplicemente
-      non esce nelle domande figurate, e va benissimo per aggettivi,
-      preposizioni e parole di servizio.
+   2. L'EMOJI È FACOLTATIVA (`''`): resta vuota quando non esiste
+      un'icona che sia davvero la cosa — non solo quella che le
+      assomiglia di più — e va benissimo per i concetti astratti, gli
+      aggettivi, le preposizioni e le parole di servizio.
+   3. DUE EMOJI CONFONDIBILI NON ESCONO MAI NELLA STESSA DOMANDA: chi le
+      confonde dichiara la stessa famiglia dell'inglese nel quinto campo.
 
    ── Quale spagnolo ──
    Quello che si parla in casa: dove il boliviano e lo spagnolo di Spagna
@@ -88,8 +92,8 @@ export const PAROLE_ES = [
   ['escoba','scopa','🧹','h'],['jabón','sapone','🧼','h'],['vela','candela','🕯️','h'],
   ['cuadro','quadro','🖼️','h'],['planta','pianta','🪴','h'],['canasta','cesto','🧺','h'],
   ['tenedor','forchetta','🍴','h'],['cuchara','cucchiaio','🥄','h'],['plato','piatto','🍽️','h'],
-  ['taza','tazza','🫖','h'],['botella','bottiglia','🍾','h'],['inodoro','gabinetto','🚽','h'],
-  ['escalera','scale','🪜','h'],['frazada','coperta','🛌','h'],['almohada','cuscino','','h'],
+  ['taza','tazza','','h'],['botella','bottiglia','','h'],['inodoro','gabinetto','🚽','h'],
+  ['escalera','scale','','h'],['frazada','coperta','','h'],['almohada','cuscino','','h'],
   ['mesa','tavolo','','h'],['cocina','cucina','','h'],['dormitorio','camera','','h'],
   ['baño','bagno','','h'],['garaje','garage','','h'],['techo','tetto','','h'],
   ['pared','muro','','h'],['piso','pavimento','','h'],
@@ -99,8 +103,8 @@ export const PAROLE_ES = [
   ['papel','foglio','📄','s'],['crayón','pastello','🖍️','s'],['pinturas','colori','🎨','s'],
   ['cuaderno','quaderno','📓','s'],['computadora','computer','💻','s'],['celular','telefono','📱','s'],
   ['carta','lettera','✉️','s'],['caja','scatola','📦','s'],['campana','campanella','🔔','s'],
-  ['mapa','mappa','🗺️','s'],['pegamento','colla','🩹','s'],['borrador','gomma','🧽','s'],
-  ['pizarra','lavagna','📋','s'],['pupitre','banco','','s'],['examen','verifica','📝','s'],
+  ['mapa','mappa','🗺️','s'],['pegamento','colla','','s'],['borrador','gomma','','s'],
+  ['pizarra','lavagna','','s'],['pupitre','banco','','s'],['examen','verifica','📝','s'],
   ['tarea','compiti','','s'],['lección','lezione','','s'],['palabra','parola','','s'],
   ['pregunta','domanda','❓','s'],['respuesta','risposta','','s'],['cuento','storia','📖','s'],
   ['canción','canzone','🎵','s'],
@@ -117,7 +121,7 @@ export const PAROLE_ES = [
   ['oreja','orecchio','👂','b'],['nariz','naso','👃','b'],['boca','bocca','👄','b'],
   ['diente','dente','🦷','b'],['lengua','lingua','👅','b'],['cerebro','cervello','🧠','b'],
   ['hueso','osso','🦴','b'],['pierna','gamba','🦵','b'],['corazón','cuore','❤️','b'],
-  ['brazo','braccio','','b'],['dedo','dito','👆','b'],['pelo','capelli','💇','b'],
+  ['brazo','braccio','','b'],['dedo','dito','👆','b'],['pelo','capelli','','b'],
   ['cara','faccia','😐','b'],['cabeza','testa','','b'],['espalda','schiena','','b'],
   ['cuello','collo','','b'],['rodilla','ginocchio','','b'],['hombro','spalla','','b'],
   ['barriga','pancia','','b'],
@@ -137,7 +141,7 @@ export const PAROLE_ES = [
   ['zapato','scarpa','👟','p'],['bota','stivale','🥾','p'],['sombrero','cappello','🎩','p'],
   ['gorra','berretto','🧢','p'],['calcetín','calzino','🧦','p'],['guante','guanto','🧤','p'],
   ['bufanda','sciarpa','🧣','p'],['abrigo','cappotto','🧥','p'],['lentes','occhiali','👓','p'],
-  ['falda','gonna','👚','p'],['suéter','maglione','🩳','p'],['pijama','pigiama','🩲','p'],
+  ['falda','gonna','','p'],['suéter','maglione','','p'],['pijama','pigiama','','p'],
   ['paraguas','ombrello','☂️','p'],['anillo','anello','💍','p'],['bolso','borsa','👜','p'],
   ['bolsillo','tasca','','p'],['botón','bottone','','p'],
   // ---- sport, musica, giochi ----
@@ -146,16 +150,16 @@ export const PAROLE_ES = [
   ['guitarra','chitarra','🎸','g'],['tambor','tamburo','🥁','g'],['piano','pianoforte','🎹','g'],
   ['trompeta','tromba','🎺','g'],['violín','violino','🎻','g'],['medalla','medaglia','🏅','g'],
   ['juego','gioco','🎮','g'],['rompecabezas','puzzle','🧩','g'],['cometa','aquilone','🪁','g'],
-  ['muñeca','bambola','🪆','g'],['peluche','orsacchiotto','🧸','g'],['dado','dado','🎲','g'],
+  ['muñeca','bambola','','g'],['peluche','orsacchiotto','🧸','g'],['dado','dado','🎲','g'],
   ['cartas','carte','🃏','g'],['carrera','gara','🏁','g'],['equipo','squadra','','g'],
   ['música','musica','🎶','g'],
   // ---- persone e famiglia ----
   ['mamá','mamma','👩','k'],['papá','papà','👨','k'],['hermana','sorella','👧','k'],
   ['hermano','fratello','👦','k'],['bebé','bambino piccolo','👶','k'],['abuela','nonna','👵','k'],
-  ['abuelo','nonno','👴','k'],['maestra','maestra','🧑‍🏫','k'],['doctor','dottore','🧑‍⚕️','k'],
-  ['agricultor','contadino','🧑‍🌾','k'],['cocinero','cuoco','🧑‍🍳','k'],['policía','poliziotto','👮','k'],
-  ['bombero','pompiere','🧑‍🚒','k'],['rey','re','🤴','k'],['reina','regina','👸','k'],
-  ['piloto','pilota','🧑‍✈️','k'],['enfermera','infermiera','💉','k'],['cantante','cantante','🎤','k'],
+  ['abuelo','nonno','👴','k'],['maestra','maestra','🧑‍🏫','k','mestieri'],['doctor','dottore','🧑‍⚕️','k','mestieri'],
+  ['agricultor','contadino','🧑‍🌾','k','mestieri'],['cocinero','cuoco','🧑‍🍳','k','mestieri'],['policía','poliziotto','👮','k'],
+  ['bombero','pompiere','🧑‍🚒','k','mestieri'],['rey','re','🤴','k'],['reina','regina','👸','k'],
+  ['piloto','pilota','🧑‍✈️','k','mestieri'],['enfermera','infermiera','','k'],['cantante','cantante','🎤','k'],
   ['amigo','amico','🤝','k'],['familia','famiglia','🏡','k'],['hombre','uomo','','k'],
   ['mujer','donna','','k'],['chico','maschio','','k'],['chica','femmina','','k'],
   ['niño','bambino','','k'],['gente','gente','','k'],['nombre','nome','','k'],
@@ -166,8 +170,8 @@ export const PAROLE_ES = [
   ['domingo','domenica','','d'],['hoy','oggi','','d'],['mañana','domani','','d'],
   ['ayer','ieri','','d'],['la mañana','mattina','🌅','d'],['la tarde','pomeriggio','','d'],
   ['el atardecer','sera','🌆','d'],['la noche','notte','🌃','d'],['el día','giorno','','d'],
-  ['semana','settimana','📅','d'],['mes','mese','🗓️','d'],['año','anno','','d'],
-  ['hora','ora','⌛','d'],['minuto','minuto','⏱️','d'],['tiempo','tempo','⏳','d'],
+  ['semana','settimana','','d'],['mes','mese','','d'],['año','anno','','d'],
+  ['hora','ora','','d'],['minuto','minuto','','d'],['tiempo','tempo','','d'],
   ['primavera','primavera','','d'],['verano','estate','','d'],['otoño','autunno','🍂','d'],
   ['invierno','inverno','⛄','d'],['cumpleaños','compleanno','🎂','d'],['Navidad','Natale','🎄','d'],
   ['vacaciones','vacanza','🎉','d'],['fin de semana','fine settimana','','d'],['temprano','presto','','d'],
@@ -187,16 +191,16 @@ export const PAROLE_ES = [
   ['grande','grande','','j'],['pequeño','piccolo','','j'],['alto','alto','','j'],
   ['bajo','basso, corto','','j'],['largo','lungo','','j'],['nuevo','nuovo','','j'],
   ['viejo','vecchio','','j'],['joven','giovane','','j'],['bueno','buono','','j'],
-  ['malo','cattivo','','j'],['feliz','felice','😀','j'],['triste','triste','😢','j'],
-  ['enojado','arrabbiato','😠','j'],['caliente','caldo','🥵','j'],['frío','freddo','🥶','j'],
+  ['malo','cattivo','','j'],['feliz','felice','😀','j','facce'],['triste','triste','😢','j','facce'],
+  ['enojado','arrabbiato','😠','j','facce'],['caliente','caldo','🥵','j','facce'],['frío','freddo','🥶','j','facce'],
   ['rápido','veloce','','j'],['lento','lento','','j'],['fácil','facile','','j'],
   ['difícil','difficile','','j'],['limpio','pulito','','j'],['sucio','sporco','','j'],
-  ['bonito','bello','','j'],['gracioso','divertente','😂','j'],['fuerte','forte','💪','j'],
-  ['cansado','stanco','😪','j'],['hambriento','affamato','','j'],['sediento','assetato','','j'],
-  ['lleno','pieno','','j'],['vacío','vuoto','','j'],['callado','silenzioso','🤫','j'],
+  ['bonito','bello','','j'],['gracioso','divertente','😂','j','facce'],['fuerte','forte','💪','j'],
+  ['cansado','stanco','😪','j','facce'],['hambriento','affamato','','j'],['sediento','assetato','','j'],
+  ['lleno','pieno','','j'],['vacío','vuoto','','j'],['callado','silenzioso','🤫','j','facce'],
   ['ruidoso','rumoroso','','j'],['suave','morbido','','j'],['duro','duro','','j'],
-  ['mojado','bagnato','','j'],['seco','asciutto','','j'],['asustado','spaventato','😨','j'],
-  ['enfermo','malato','🤒','j'],['listo','pronto','','j'],['amable','gentile','','j'],
+  ['mojado','bagnato','','j'],['seco','asciutto','','j'],['asustado','spaventato','😨','j','facce'],
+  ['enfermo','malato','🤒','j','facce'],['listo','pronto','','j'],['amable','gentile','','j'],
   ['valiente','coraggioso','','j'],['dulce','dolce','','j'],['correcto','giusto','','j'],
   ['equivocado','sbagliato','','j'],['igual','uguale','','j'],['diferente','diverso','','j'],
   // ---- parole che tengono insieme le frasi ----

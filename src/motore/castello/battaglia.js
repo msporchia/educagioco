@@ -147,7 +147,7 @@ export class Battaglia {
       via,
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,
-      bestia: this.bestia.id, vola: !!this.bestia.vola, debole: this.bestia.debole,
+      bestia: this.bestia.id, vola: !!this.bestia.vola, resiste: this.bestia.resiste,
     }))
   }
 

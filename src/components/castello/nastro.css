@@ -22,9 +22,18 @@
 /* da che parte scendono, dove gli ingressi sono due */
 .dati em { font-style:normal; font-size:11px; font-weight:900; color:var(--viola-scuro) }
 .dati em.ambo { color:#b4603f }
-/* il punto debole: l'emoji della torre che gli fa il doppio, su un
-   pallino del suo colore, appiccicato al mostro. È l'unica cosa del
-   nastro che deve saltare all'occhio. */
+/* la resistenza: l'emoji della torre che quel mostro regge, appiccicata
+   al mostro, **spenta e sbarrata**. Il colore della torre qui non ci
+   va: colorare vuol dire indicare, e questo è il segno opposto — non
+   comprare quella. Grigia più la barra è la grammatica del divieto che
+   un bambino legge già per strada, e resta leggibile anche a chi i
+   colori li distingue male. */
 .punto { position:absolute; right:-6px; bottom:-5px; font-size:10px; line-height:1;
-         background:color-mix(in srgb, var(--c) 20%, #fff); border-radius:999px;
-         padding:1.5px 2px; box-shadow:0 0 0 1.5px var(--c) }
+         background:#eceaf0; border-radius:999px;
+         padding:1.5px 2px; box-shadow:0 0 0 1.5px #a89fb8;
+         filter:grayscale(1); opacity:.85 }
+/* la barra di traverso, disegnata sopra l'emoji */
+.punto::after { content:''; position:absolute; inset:0; border-radius:999px;
+                background:linear-gradient(to bottom left, transparent calc(50% - 1px),
+                           #d0405a calc(50% - 1px), #d0405a calc(50% + 1px),
+                           transparent calc(50% + 1px)) }

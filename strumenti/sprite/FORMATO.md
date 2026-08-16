@@ -59,6 +59,15 @@ basta: l'attrezzo non cambia.
   quadrupede sul foglio guarda a sinistra invece che a destra (la
   convenzione di sotto per `_lato`) — si dichiara così invece di rigirare
   il PNG sorgente, che deve restare quello che ha dato il generatore.
+- **`ritagli`** — il nome di un file JSON accanto al foglio, con i pezzi
+  dichiarati **in pixel** (`{"nome": [x, y, largo, alto]}`) invece che
+  in celle. È l'alternativa a `sprite`, per i fogli che una griglia non
+  ce l'hanno: 0x72 mette i muri a 16×16, le porte a 32×32, i personaggi
+  a 16×28 e la moneta a 6×7 in mezzo, e dichiararli in celle vorrebbe
+  dire una `cella` diversa per ogni riga. Si punta a un file esterno
+  invece di copiarlo qui dentro perché quel file di solito **esiste
+  già** — 0x72 distribuisce `tile_list_v1.7` dentro il proprio zip — e
+  di coordinate deve restarne una copia sola.
 - **`tipo`** — solo per i fogli che contengono un attore (uno sprite con
   nomi `_giu`/`_lato`/`_su`): `"persona"` o `"bestia"`. Non si ricava dal
   nome — un cane si può chiamare come si vuole — e serve a distinguere chi
@@ -69,6 +78,41 @@ basta: l'attrezzo non cambia.
   Chi lo legge è `atlante.py`, che ne scrive due elenchi nel modulo
   generato — `PERSONE` e `BESTIE` — un attore senza `tipo` dichiarato resta
   fuori da entrambi e lo script lo segnala in console.
+
+## Per quale gioco è questo foglio
+
+Non lo dice il foglietto: lo dice **la cartella**. Un `atlante.json`
+accanto alle sorgenti apre un bersaglio, e vale per tutto quello che ha
+sotto finché una cartella più interna non ne dichiara un altro.
+
+```json
+{
+  "nome": "sotterraneo",
+  "modulo": "src/giochi/sotterraneo/dati/atlante.js",
+  "tessera": 16,
+  "poc": "poc/sotterraneo-gfx.html"
+}
+```
+
+Una cartella può anche dichiarare `"attrezzo": "terreni"`: vuol dire che
+quei fogli li ritaglia un altro script (`strumenti/sprite/terreni.py`,
+per dire, che scolla la strada dal terreno e misura gli attacchi delle
+tessere), e `atlante.py` la salta invece di provarci. Dichiararlo è
+meglio che dedurlo dal fatto che non esce niente — e comunque un
+bersaglio da cui non esce nessun pezzo viene saltato, non scritto vuoto:
+un modulo vuoto che sovrascrive quello buono si scopre a schermo.
+
+`modulo` è il file generato (non si scrive a mano), `tessera` quanto vale
+una cella di terreno in pixel dello sprite — finisce nel modulo come
+`TESSERA`, così non resta un 16 scritto a mano da qualche parte a dire il
+contrario — e `poc`, facoltativo, è il prototipo che vuole lo stesso PNG
+dentro di sé fra i due marcatori: un `poc/` non può importare un modulo,
+e se il suo atlante invecchia quello che ci si prova non dice più niente
+sul gioco.
+
+Ogni bersaglio impacchetta **solo i propri fogli**. Un atlante unico si
+porterebbe le tessere del dungeon dentro la fattoria, cioè peso che non
+si disegna mai, e il build deve restare un file solo.
 
 ## Un file, N sprite — e le animazioni
 

@@ -1,18 +1,36 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL LESSICO — ogni voce è [inglese, italiano, emoji, categoria].
+   IL LESSICO — ogni voce è [inglese, italiano, emoji, categoria,
+   famiglia?]. La famiglia è un quinto campo facoltativo: chi legge le
+   prime quattro posizioni (e sono in tanti — vedi sotto) non si accorge
+   nemmeno che c'è.
 
-   Due regole da rispettare quando si aggiunge roba:
+   Tre regole da rispettare quando si aggiunge roba:
 
    1. NESSUNA EMOJI RIPETUTA e nessuna parola ripetuta. I distrattori
       figurati escono dalla stessa categoria: due voci con la stessa
       emoji darebbero una domanda con due risposte giuste.
 
-   2. L'EMOJI È FACOLTATIVA (`''`). Serviva quando l'unico modo di
-      giocare era "parola → figura"; ora che si gioca anche
-      inglese→italiano, italiano→inglese e in ascolto, si possono
-      insegnare parole che nessuna emoji illustra — aggettivi, tempo,
-      preposizioni, parole di servizio. Una voce senza emoji
-      semplicemente non esce nelle domande figurate.
+   2. L'EMOJI È FACOLTATIVA (`''`), e lo resta di default: se non esiste
+      un'icona perfettamente aderente — la cosa, non «quale ci assomiglia
+      di più» — non si mette. Vale per i concetti astratti (tempo, ora,
+      mese, settimana...), per gli stati d'animo dove l'emoji dice
+      un'altra sfumatura, e per gli oggetti che l'emoji semplicemente non
+      è (una teiera non è una tazza, una scala a pioli non sono le
+      scale). Serviva quando l'unico modo di giocare era "parola →
+      figura"; ora che si gioca anche inglese→italiano, italiano→inglese
+      e in ascolto, si possono insegnare parole che nessuna emoji
+      illustra — aggettivi, tempo, preposizioni, parole di servizio. Una
+      voce senza emoji semplicemente non esce nelle domande figurate.
+
+   3. DUE EMOJI CONFONDIBILI NON ESCONO MAI NELLA STESSA DOMANDA. Quando
+      una voce può essere scambiata per un'altra a colpo d'occhio (le
+      facce delle emozioni, le sagome dei mestieri con lo stesso omino
+      🧑) dichiara la sua FAMIGLIA nel quinto campo — una stringa a
+      piacere, tipo 'facce' o 'mestieri' — e chi pesca i distrattori
+      figurati (`domande.js`) non ne prende due della stessa famiglia
+      nella stessa domanda. Si dichiara solo dove serve, non su tutte le
+      voci: `test/unita/lessico-icone.test.mjs` la fa rispettare
+      costruendo davvero le domande.
 
    Le categorie con almeno sei emoji reggono le domande figurate; quelle
    senza (aggettivi, grammatica) danno comunque ottimi distrattori
@@ -80,8 +98,8 @@ export const WORDS = [
   ['broom','scopa','🧹','h'],['soap','sapone','🧼','h'],['candle','candela','🕯️','h'],
   ['picture','quadro','🖼️','h'],['plant','pianta','🪴','h'],['basket','cesto','🧺','h'],
   ['fork','forchetta','🍴','h'],['spoon','cucchiaio','🥄','h'],['plate','piatto','🍽️','h'],
-  ['cup','tazza','🫖','h'],['bottle','bottiglia','🍾','h'],['toilet','gabinetto','🚽','h'],
-  ['stairs','scale','🪜','h'],['blanket','coperta','🛌','h'],['pillow','cuscino','','h'],
+  ['cup','tazza','','h'],['bottle','bottiglia','','h'],['toilet','gabinetto','🚽','h'],
+  ['stairs','scale','','h'],['blanket','coperta','','h'],['pillow','cuscino','','h'],
   ['table','tavolo','','h'],['kitchen','cucina','','h'],['bedroom','camera','','h'],
   ['bathroom','bagno','','h'],['garage','garage','','h'],['roof','tetto','','h'],
   ['wall','muro','','h'],['floor','pavimento','','h'],
@@ -91,8 +109,8 @@ export const WORDS = [
   ['paper','foglio','📄','s'],['crayon','pastello','🖍️','s'],['paint','colori','🎨','s'],
   ['notebook','quaderno','📓','s'],['computer','computer','💻','s'],['phone','telefono','📱','s'],
   ['letter','lettera','✉️','s'],['box','scatola','📦','s'],['bell','campanella','🔔','s'],
-  ['map','mappa','🗺️','s'],['glue','colla','🩹','s'],['rubber','gomma','🧽','s'],
-  ['blackboard','lavagna','📋','s'],['desk','banco','','s'],['test','verifica','📝','s'],
+  ['map','mappa','🗺️','s'],['glue','colla','','s'],['rubber','gomma','','s'],
+  ['blackboard','lavagna','','s'],['desk','banco','','s'],['test','verifica','📝','s'],
   ['homework','compiti','','s'],['lesson','lezione','','s'],['word','parola','','s'],
   ['question','domanda','❓','s'],['answer','risposta','','s'],['story','storia','📖','s'],
   ['song','canzone','🎵','s'],
@@ -109,7 +127,7 @@ export const WORDS = [
   ['ear','orecchio','👂','b'],['nose','naso','👃','b'],['mouth','bocca','👄','b'],
   ['tooth','dente','🦷','b'],['tongue','lingua','👅','b'],['brain','cervello','🧠','b'],
   ['bone','osso','🦴','b'],['leg','gamba','🦵','b'],['heart','cuore','❤️','b'],
-  ['arm','braccio','','b'],['finger','dito','👆','b'],['hair','capelli','💇','b'],
+  ['arm','braccio','','b'],['finger','dito','👆','b'],['hair','capelli','','b'],
   ['face','faccia','😐','b'],['head','testa','','b'],['back','schiena','','b'],
   ['neck','collo','','b'],['knee','ginocchio','','b'],['shoulder','spalla','','b'],
   ['stomach','pancia','','b'],
@@ -129,7 +147,7 @@ export const WORDS = [
   ['shoe','scarpa','👟','p'],['boot','stivale','🥾','p'],['hat','cappello','🎩','p'],
   ['cap','berretto','🧢','p'],['sock','calzino','🧦','p'],['glove','guanto','🧤','p'],
   ['scarf','sciarpa','🧣','p'],['coat','cappotto','🧥','p'],['glasses','occhiali','👓','p'],
-  ['skirt','gonna','👚','p'],['jumper','maglione','🩳','p'],['pyjamas','pigiama','🩲','p'],
+  ['skirt','gonna','','p'],['jumper','maglione','','p'],['pyjamas','pigiama','','p'],
   ['umbrella','ombrello','☂️','p'],['ring','anello','💍','p'],['bag','borsa','👜','p'],
   ['pocket','tasca','','p'],['button','bottone','','p'],
   // ---- sport, musica, giochi ----
@@ -138,16 +156,16 @@ export const WORDS = [
   ['guitar','chitarra','🎸','g'],['drum','tamburo','🥁','g'],['piano','pianoforte','🎹','g'],
   ['trumpet','tromba','🎺','g'],['violin','violino','🎻','g'],['medal','medaglia','🏅','g'],
   ['game','gioco','🎮','g'],['puzzle','puzzle','🧩','g'],['kite','aquilone','🪁','g'],
-  ['doll','bambola','🪆','g'],['teddy bear','orsacchiotto','🧸','g'],['dice','dado','🎲','g'],
+  ['doll','bambola','','g'],['teddy bear','orsacchiotto','🧸','g'],['dice','dado','🎲','g'],
   ['cards','carte','🃏','g'],['race','gara','🏁','g'],['team','squadra','','g'],
   ['music','musica','🎶','g'],
   // ---- persone e famiglia ----
   ['mother','mamma','👩','k'],['father','papà','👨','k'],['sister','sorella','👧','k'],
   ['brother','fratello','👦','k'],['baby','bambino piccolo','👶','k'],['grandmother','nonna','👵','k'],
-  ['grandfather','nonno','👴','k'],['teacher','maestra','🧑‍🏫','k'],['doctor','dottore','🧑‍⚕️','k'],
-  ['farmer','contadino','🧑‍🌾','k'],['cook','cuoco','🧑‍🍳','k'],['police officer','poliziotto','👮','k'],
-  ['firefighter','pompiere','🧑‍🚒','k'],['king','re','🤴','k'],['queen','regina','👸','k'],
-  ['pilot','pilota','🧑‍✈️','k'],['nurse','infermiera','💉','k'],['singer','cantante','🎤','k'],
+  ['grandfather','nonno','👴','k'],['teacher','maestra','🧑‍🏫','k','mestieri'],['doctor','dottore','🧑‍⚕️','k','mestieri'],
+  ['farmer','contadino','🧑‍🌾','k','mestieri'],['cook','cuoco','🧑‍🍳','k','mestieri'],['police officer','poliziotto','👮','k'],
+  ['firefighter','pompiere','🧑‍🚒','k','mestieri'],['king','re','🤴','k'],['queen','regina','👸','k'],
+  ['pilot','pilota','🧑‍✈️','k','mestieri'],['nurse','infermiera','','k'],['singer','cantante','🎤','k'],
   ['friend','amico','🤝','k'],['family','famiglia','🏡','k'],['man','uomo','','k'],
   ['woman','donna','','k'],['boy','maschio','','k'],['girl','femmina','','k'],
   ['child','bambino','','k'],['people','gente','','k'],['name','nome','','k'],
@@ -158,8 +176,8 @@ export const WORDS = [
   ['Sunday','domenica','','d'],['today','oggi','','d'],['tomorrow','domani','','d'],
   ['yesterday','ieri','','d'],['morning','mattina','🌅','d'],['afternoon','pomeriggio','','d'],
   ['evening','sera','🌆','d'],['night','notte','🌃','d'],['day','giorno','','d'],
-  ['week','settimana','📅','d'],['month','mese','🗓️','d'],['year','anno','','d'],
-  ['hour','ora','⌛','d'],['minute','minuto','⏱️','d'],['time','tempo','⏳','d'],
+  ['week','settimana','','d'],['month','mese','','d'],['year','anno','','d'],
+  ['hour','ora','','d'],['minute','minuto','','d'],['time','tempo','','d'],
   ['spring','primavera','','d'],['summer','estate','','d'],['autumn','autunno','🍂','d'],
   ['winter','inverno','⛄','d'],['birthday','compleanno','🎂','d'],['Christmas','Natale','🎄','d'],
   ['holiday','vacanza','🎉','d'],['weekend','fine settimana','','d'],['early','presto','','d'],
@@ -179,16 +197,16 @@ export const WORDS = [
   ['big','grande','','j'],['small','piccolo','','j'],['tall','alto','','j'],
   ['short','basso, corto','','j'],['long','lungo','','j'],['new','nuovo','','j'],
   ['old','vecchio','','j'],['young','giovane','','j'],['good','buono','','j'],
-  ['bad','cattivo','','j'],['happy','felice','😀','j'],['sad','triste','😢','j'],
-  ['angry','arrabbiato','😠','j'],['hot','caldo','🥵','j'],['cold','freddo','🥶','j'],
+  ['bad','cattivo','','j'],['happy','felice','😀','j','facce'],['sad','triste','😢','j','facce'],
+  ['angry','arrabbiato','😠','j','facce'],['hot','caldo','🥵','j','facce'],['cold','freddo','🥶','j','facce'],
   ['fast','veloce','','j'],['slow','lento','','j'],['easy','facile','','j'],
   ['difficult','difficile','','j'],['clean','pulito','','j'],['dirty','sporco','','j'],
-  ['beautiful','bello','','j'],['funny','divertente','😂','j'],['strong','forte','💪','j'],
-  ['tired','stanco','😪','j'],['hungry','affamato','','j'],['thirsty','assetato','','j'],
-  ['full','pieno','','j'],['empty','vuoto','','j'],['quiet','silenzioso','🤫','j'],
+  ['beautiful','bello','','j'],['funny','divertente','😂','j','facce'],['strong','forte','💪','j'],
+  ['tired','stanco','😪','j','facce'],['hungry','affamato','','j'],['thirsty','assetato','','j'],
+  ['full','pieno','','j'],['empty','vuoto','','j'],['quiet','silenzioso','🤫','j','facce'],
   ['loud','rumoroso','','j'],['soft','morbido','','j'],['hard','duro','','j'],
-  ['wet','bagnato','','j'],['dry','asciutto','','j'],['scared','spaventato','😨','j'],
-  ['sick','malato','🤒','j'],['ready','pronto','','j'],['kind','gentile','','j'],
+  ['wet','bagnato','','j'],['dry','asciutto','','j'],['scared','spaventato','😨','j','facce'],
+  ['sick','malato','🤒','j','facce'],['ready','pronto','','j'],['kind','gentile','','j'],
   ['brave','coraggioso','','j'],['sweet','dolce','','j'],['right','giusto','','j'],
   ['wrong','sbagliato','','j'],['same','uguale','','j'],['different','diverso','','j'],
   // ---- parole che tengono insieme le frasi ----

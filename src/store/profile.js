@@ -84,8 +84,15 @@ const blank = () => ({
      legge è `tappaAperta()`, qui sotto, e i giochi passano da lì: la
      regola sta in un posto solo perché quando stava in cinque il flag si
      è scollato senza che nessuno se ne accorgesse. */
+  /* `varianti` è la terza forma di interruttore, e non è nessuna delle
+     altre due: non spegne un gioco (la carta resta in home) e non spegne
+     un pezzo di scuola (`sa` dice cosa il bambino ha fatto in classe,
+     non che tipo di esercizio preferisce). Spegne un MODO di giocare
+     dentro un gioco — oggi ce n'è uno solo, il calcolo a mente negli
+     asteroidi (`asteroidi:mente`). Elenco di eccezioni come `giochi`:
+     chi non dichiara niente ce l'ha acceso. */
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
-              giochi: {}, sa: {}, tuttoAperto: false },
+              giochi: {}, sa: {}, varianti: {}, tuttoAperto: false },
   /* contatori che salgono e non scendono mai: sono la memoria di quanto
      si è giocato, e i traguardi si misurano quasi tutti qui sopra */
   /* i contatori dello spagnolo hanno un nome loro (`es`, `verbiEs`,
@@ -606,6 +613,24 @@ export function accendiGioco(chiave, si) {
 /* quanti ne restano accesi: se sono zero la home lo dice invece di
    mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
+
+/* ── le varianti: un MODO di giocare dentro un gioco ──
+   Non è l'interruttore di un gioco (la carta resta in home) e non è
+   quello di un sapere: `data/saperi.js` dichiara cosa un bambino ha
+   fatto a scuola, e «preferisco solo le tabelline» non è la stessa cosa
+   — spegnere una variante non toglie nessuna domanda agli altri giochi.
+   Elenco di eccezioni come i giochi, per bambino: chi non dichiara
+   niente ce l'ha accesa, quindi una variante nuova nasce accesa anche
+   per chi ha il profilo di ieri. */
+export const varianteAccesa = chiave =>
+  (state.profile.settings.varianti || {})[chiave] !== false
+export function accendiVariante(chiave, si) {
+  const s = state.profile.settings
+  if (!s.varianti) s.varianti = {}
+  if (si) delete s.varianti[chiave]   // acceso è l'assenza: niente voci inutili nel salvataggio
+  else s.varianti[chiave] = false
+  persist()
+}
 
 /* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
    che è il comportamento di sempre. Acceso, tutte le tappe di tutti i

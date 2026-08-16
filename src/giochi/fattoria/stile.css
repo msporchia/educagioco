@@ -128,6 +128,10 @@
 .fa-cibo span { font-size: 10px; opacity: .8 }
 .fa-cibo em { font-style: normal; font-size: 11px; font-weight: 700; color: #ffd98a }
 .fa-cibo:disabled { opacity: .35; cursor: default }
+/* Il suo cibo si vede da lontano, quello che rifiuta si vede che è
+   spento: la differenza dev'essere di colpo d'occhio, non da leggere. */
+.fa-cibo.suo { border-color: #9fd3a8 }
+.fa-cibo.altrui em { color: #d59a9a }
 
 .fa-minuto { display: block; margin: 10px auto 0; padding: 4px 10px; border: none;
   background: none; color: #8fa691; font: inherit; font-size: 12px;

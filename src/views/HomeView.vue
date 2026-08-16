@@ -4,9 +4,9 @@ import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, calcProgresso, engProgresso, espProgresso, mercatoProgresso,
          labProgresso, tabellineIntere, genProgresso,
-         giocoAcceso, quantiGiochiAccesi } from '../store/profile.js'
-import { CAMPAGNA } from '../data/tabelline.js'
-import { STAZIONI } from '../data/calcolo.js'
+         giocoAcceso, quantiGiochiAccesi, varianteAccesa } from '../store/profile.js'
+import { CHIAVE_MENTE, scaletta, posizioneOra, progressiDa,
+         superata } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { SCALE, TAPPE as TAPPE_POZ } from '../data/pozioni.js'
@@ -42,10 +42,24 @@ const tappaEs = computed(() => espProgresso())
    astratto: "pianeta 4 di 10" dice al bambino cosa lo aspetta stasera */
 const pianeta = computed(() => mateProgresso())
 const stelleMate = computed(() => tabellineIntere().length)
-/* negli asteroidi ci sono due campagne: i pianeti (tabelline) e le
-   stazioni (calcolo a mente). La carta dice quella a cui si è più
-   indietro, che è quella dove c'è da fare. */
+/* Negli asteroidi le tabelline e i conti a mente sono una scaletta sola
+   (`data/asteroidi.js`): la carta dice a che punto della fila si è, che
+   è la cosa che il bambino ritrova aprendo il gioco. Il numero cambia se
+   i grandi hanno spento il calcolo a mente, e deve: la fila che si vede
+   è più corta. */
 const stazione = computed(() => calcProgresso())
+const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
+const filaMate = computed(() => scaletta(menteAccesa.value))
+const progMate = computed(() => progressiDa(pianeta.value, stazione.value))
+const doveMate = computed(() => posizioneOra(progMate.value, menteAccesa.value))
+/* Quante ne sono state fatte e qual è la prima che manca sono DUE numeri
+   diversi, e vanno detti tutti e due: chi arriva da prima della fusione
+   può avere cinque pianeti e nessuna stazione, e allora «quante ne hai
+   fatte» dice sette mentre «da dove si riprende» indica la prima tappa
+   della fila. Dire solo il secondo farebbe sembrare che i progressi
+   siano spariti. */
+const fatteMate = computed(() =>
+  filaMate.value.filter(v => superata(v, progMate.value)).length)
 
 /* il laboratorio ha le sue tappe, e a campagna finita il laboratorio libero */
 const QUANTE_MISURE = SCALE.length
@@ -132,11 +146,11 @@ const gruppi = computed(() => AREE
    ancora aperto», e la carta dice comunque cosa insegna. */
 const dove = computed(() => {
   const q = (n, tot) => `${Math.min(n + 1, tot)} di ${tot}`
-  const staz = `stazione ${q(stazione.value.tappa, STAZIONI.length)}`
   return {
-    mate: pianeta.value.libera
-      ? `volo libero ♾️ · ${staz}`
-      : `pianeta ${q(pianeta.value.tappa, CAMPAGNA.length)} · ${staz}`,
+    mate: doveMate.value >= filaMate.value.length
+      ? `volo libero ♾️ · ⭐ ${stelleMate.value}/10 tabelline`
+      : `${fatteMate.value} tapp${fatteMate.value === 1 ? 'a' : 'e'} ` +
+        `su ${filaMate.value.length} · ora ${filaMate.value[doveMate.value].T.nome}`,
     inglese: tappaEn.value.libera
       ? `gioco libero ♾️ · 🎯 ${imparateEn.value} sicure`
       : `tappa ${q(tappaEn.value.tappa, TAPPE_EN.length)} · 🎯 ${imparateEn.value} sicure`,

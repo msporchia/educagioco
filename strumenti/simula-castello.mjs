@@ -35,7 +35,7 @@ import { TAPPE, LIBERA, CFG, MONDO, primeQuante,
          costoNuovaTorre, costoSalita } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
 import { TORRI } from '../src/data/ops.js'
-import { torreDebole } from '../src/data/mostri.js'
+import { torreResistente } from '../src/data/mostri.js'
 
 /* ── il campo su cui si tara ──
    Le misure contano davvero: un campo più largo è una strada più lunga,
@@ -83,8 +83,8 @@ const LIMITE = 3600           // un'ora di gioco simulato: oltre, è uno stallo
      svelto    se chiama l'ondata subito e si prende il bonus fretta
      traOndate se compra soltanto a campo pulito, prima di chiamare
                l'ondata, invece che anche mentre i mostri camminano
-     debolezze se guarda la scheda del mostro e costruisce la torre che
-               gli fa doppio danno
+     resistenze se legge il preavviso ed **evita** di costruire la torre
+               a cui l'ondata in arrivo resiste
 */
 export const PROFILI = {
   /* Il metro su cui si tarano le tappe: spende tutto, non sbaglia un
@@ -113,22 +113,30 @@ export const PROFILI = {
      torri di livello 1. Deve arrivare meno lontano dell'altro */
   largo:       { quota: 1.00, strategia: 'costruisci', tOp: 10, sbaglia: 0,  svelto: true },
   /* Chi legge il preavviso: uguale al metro in tutto, ma quando
-     costruisce sceglie la torre a cui l'ondata **in arrivo** è debole,
-     e le fa il doppio del danno.
+     costruisce **scarta** la torre a cui l'ondata in arrivo resiste,
+     perché quella lì gli farebbe un terzo del danno.
      Non è su di lui che si tara, ed è una decisione, non una
-     dimenticanza: se le tappe fossero misurate su chi sfrutta le
-     debolezze, leggere il nastro delle ondate future diventerebbe
-     obbligatorio e chi non ci è ancora arrivato si troverebbe la tappa
-     ingiocabile. Tarando sul metro, il preavviso resta quello che deve
-     essere — un vantaggio per chi impara a leggerlo. Questo profilo
-     serve a **misurare quanto vale** quel vantaggio, non a fissarlo. */
+     dimenticanza: se le tappe fossero misurate su chi legge il nastro,
+     leggerlo diventerebbe obbligatorio e chi non ci è ancora arrivato
+     si troverebbe la tappa ingiocabile. Tarando sul metro, il preavviso
+     resta quello che deve essere — un vantaggio per chi impara a
+     leggerlo. Questo profilo serve a **misurare quanto vale** quel
+     vantaggio, non a fissarlo.
+
+     Col doppio danno il vantaggio era grosso e istantaneo; con la
+     resistenza è più piccolo e più duraturo, e va detto perché è la
+     conseguenza principale del cambio: una torre resta in campo per
+     tutta la tappa mentre le ondate girano, quindi «costruisci quella
+     che serve adesso» non paga più come pagava. Quello che paga è non
+     ammucchiare tutto su un tipo solo — e a quello il metro arriva già
+     da sé, costruendo a giro. */
   previdente:  { quota: 1.00, strategia: 'potenzia', tOp: 10, sbaglia: 0, svelto: false,
-                 traOndate: true, debolezze: true },
+                 traOndate: true, resistenze: true },
 }
 
 export function gioca(tappa, opzioni = {}) {
   const { quota = 1, strategia = 'potenzia', tOp = 10, sbaglia = 0, svelto = true,
-          traOndate = false, debolezze = false, misure = TELEFONO, s = 7, finoA = tappa.ondate,
+          traOndate = false, resistenze = false, misure = TELEFONO, s = 7, finoA = tappa.ondate,
           da = null, istantanee = null } = opzioni
   const caso = seme(s)
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
@@ -154,15 +162,16 @@ export function gioca(tappa, opzioni = {}) {
      tutto, la sua quota — il resto se lo tiene in tasca */
   const disponibile = () => (stato.energia + speso) * quota - speso
 
-  /* a quale torre è debole l'ondata **in arrivo** — non quella in corso:
-     si compra a campo pulito, fra un'ondata e l'altra, e la torre che
-     serve è quella per chi deve ancora arrivare. È l'informazione che il
-     nastro del preavviso mette sotto gli occhi del bambino. */
-  function deboleInArrivo() {
-    if (!debolezze) return null
+  /* a quale torre resiste l'ondata **in arrivo** — non quella in corso:
+     si compra a campo pulito, fra un'ondata e l'altra, e la torre da
+     non comprare è quella per chi deve ancora arrivare. È
+     l'informazione che il nastro del preavviso mette sotto gli occhi
+     del bambino. */
+  function reggeInArrivo() {
+    if (!resistenze) return null
     const inArrivo = motore.prossime ? motore.prossime(1)[0] : null
-    const debole = inArrivo ? inArrivo.debole : torreDebole(motore.bestia.id)
-    return debole && tappa.torri.includes(debole) ? debole : null
+    const regge = inArrivo ? inArrivo.resiste : torreResistente(motore.bestia.id)
+    return regge && tappa.torri.includes(regge) ? regge : null
   }
 
   /* cosa comprerebbe adesso, se potesse */
@@ -170,11 +179,15 @@ export function gioca(tappa, opzioni = {}) {
     const torri = motore.torri
     const nuova = { che: 'nuova', costo: costoNuovaTorre(torri.length) }
     /* Si sale sempre la torre più bassa, anche chi legge il preavviso:
-       inseguire la debolezza col potenziamento è stato misurato ed è
+       inseguire la resistenza col potenziamento è stato misurato ed è
        una mossa peggiore — un gradino alto costa di più, e a fine tappa
        ci si ritrova con meno livelli in tutto di chi ha tenuto le torri
        pari. Il preavviso paga su *cosa costruire*, non su cosa alzare. */
     const bassa = torri.filter(x => x.lv < tappa.cap).sort((a, b) => a.lv - b.lv)[0]
+    /* nota: «la torre più bassa» resta la regola anche adesso che il
+       preavviso dice cosa *non* comprare. Alzare per scappare da una
+       resistenza sarebbe peggio che prima: la resistenza dura un'ondata,
+       il gradino pagato resta per tutta la tappa. */
     const salita = bassa ? { che: 'salita', torre: bassa, costo: costoSalita(bassa.lv) } : null
     const cistanno = torri.length < tappa.posti
     if (torri.length < primeQuante(tappa) && cistanno) return nuova
@@ -187,9 +200,9 @@ export function gioca(tappa, opzioni = {}) {
   /* Che torre costruire: a giro fra quelle che la tappa dà, così il campo
      finisce per avere una torre di ogni mestiere — compreso il ghiaccio,
      che non fa danno ma vale come tempo in più per sparare. Chi legge il
-     preavviso anticipa il tipo che gli serve, ma solo se non ce l'ha già:
-     riempire il campo del tipo dell'ondata in arrivo vorrebbe dire
-     restare senza gelo, e il gelo vale più del doppio danno.
+     preavviso toglie dal giro la torre a cui l'ondata in arrivo resiste:
+     è la stessa mossa di prima vista al rovescio, e costa meno — non
+     bisogna volere un tipo preciso, basta scartarne uno.
 
      ── ma le prime no ──
      Le prime torri — una per ingresso — devono **sparare**. A giro,
@@ -198,14 +211,26 @@ export function gioca(tappa, opzioni = {}) {
      intera al castello. Non è una stranezza del simulatore, è una
      verità del gioco che il modello deve conoscere: il gelo è tempo in
      più *per chi spara*, e su una strada dove non spara nessuno il
-     tempo in più non serve a niente. */
+     tempo in più non serve a niente.
+
+     ── e il gelo resta al suo posto nel giro ──
+     Si è provato a spostarlo in fondo, per far arrivare prima in campo
+     il terzo tipo che spara: con le resistenze sembrava la mossa
+     ovvia, perché chi ha due soli tipi di danno ne perde uno intero
+     sulle ondate che lo chiudono. Misurato, è peggio: la taratura ha
+     dovuto allargare cinque tappe invece di due, e la partita libera
+     è scesa al 55% del limite. Il gelo vale davvero quanto il modello
+     dice che vale, e toglierlo dalle prime tre torri costa più di
+     quanto renda il terzo cannone. Resta com'era. */
   const spara = k => !!TORRI[k].danno
   function tipoNuovo() {
     const apertura = motore.torri.length < primeQuante(tappa)
-    const scelte = apertura ? tappa.torri.filter(spara) : tappa.torri
-    const giusta = deboleInArrivo()
-    if (giusta && (!apertura || spara(giusta)) &&
-        !motore.torri.some(t => t.tipo === giusta)) return giusta
+    const tutte = apertura ? tappa.torri.filter(spara) : tappa.torri
+    /* La torre che l'ondata in arrivo regge esce dal giro — ma solo se
+       resta qualcos'altro da costruire: scartare l'unica cosa
+       disponibile non è previdenza, è restare senza difesa. */
+    const regge = reggeInArrivo()
+    const scelte = regge && tutte.some(k => k !== regge) ? tutte.filter(k => k !== regge) : tutte
     return scelte[motore.torri.length % scelte.length]
   }
 

@@ -26,10 +26,14 @@
 .carta-torre.cara { opacity:.62 }
 .carta-torre.cara i { color:#b4603f }
 
-/* la torre che fa doppio danno a chi sta arrivando: è l'unica cosa in
-   tutta la schermata che ha il diritto di gridare */
-.carta-torre.forte { box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2.5px var(--c),
-                     0 0 0 3px #ffc93c88 }
-.doppio { position:absolute; top:-7px; right:-5px; background:linear-gradient(180deg,#ffd76a,#ff9f1c);
-          color:#5a3200; font-size:11.5px; font-weight:900; border-radius:999px;
-          padding:2px 7px; box-shadow:0 2px 6px #b4603f44 }
+/* la torre che chi sta arrivando regge: si spegne invece di gridare.
+   Il segno è al negativo — «non questa» — e un segno al negativo che
+   luccica si legge come un consiglio, cioè come il suo contrario. La
+   carta resta però toccabile e a piena leggibilità: avverte, non
+   vieta. */
+.carta-torre.fiacca { box-shadow:0 4px 0 #dde3ea, inset 0 0 0 2px #bdb4cc;
+                      background:#f4f2f7 }
+.carta-torre.fiacca .figura { filter:grayscale(.8); opacity:.72 }
+.terzo { position:absolute; top:-7px; right:-5px; background:#5b5468;
+          color:#fff; font-size:11.5px; font-weight:900; border-radius:999px;
+          padding:2px 8px; box-shadow:0 2px 6px #2a214044 }

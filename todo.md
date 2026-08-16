@@ -3,53 +3,17 @@
 Stato al **16 agosto 2026**. Si gioca da `dist/index.html`, e i test sono **89**
 (73 di unità, 16 nel browser), tutti verdi.
 
-Due fronti aperti, e non si toccano: **i quiz** (le domande che tutti i giochi
-pescano) e **il generale**, che è il grosso di questo file. Il 16 agosto sono
-caduti in un giro solo: la coda dei quiz (arrivati gli **Indizi**), le tre voci
-di attrito del Generale (`posa`, `attacca` sulle cose, l'*oppure*), tutta la
-grafica che mancava, la mappa che non si trascinava mentre si mira, e la
-camminata della fattoria. Quello che resta del Generale è quasi tutto **di là
-dai livelli spenti**: riscriverli è il giro dopo.
+**Qui dentro c'è solo quello che manca.** Quello che è stato fatto lo racconta
+`git log`, che è il posto giusto per raccontarlo: una voce chiusa esce da questo
+file, se no in tre giorni non si distingue più il lavoro dal diario.
 
 ---
 
 ## I quiz
 
-### Arrivati adesso
-
-- **🧩 Logica** — cinque classi sulla differenza fra quello che segue di sicuro
-  e quello che non si può sapere: tutti/nessuno, i confronti in fila, **la
-  regola girata** («tutti i grufoli hanno le ali, Bibo ha le ali, è un
-  grufolo?» → non si può sapere), se… allora nelle quattro combinazioni, le
-  catene. Creature inventate apposta: con «tutti i cani abbaiano» il bambino
-  risponde con quello che sa dei cani, e avrebbe ragione.
-- **➡️ Sequenze** — «cosa viene dopo» e «chi non c'entra», dai due prototipi
-  `poc/indovinelli.html` e `poc/la-regola.html`. Portata anche la ricetta che
-  rende l'intrusa **una sola**: il rumore 2+2, i fermi 4+0, e solo la regola
-  3+1 — poi contato, non sperato.
-- **🔗 Analogie** — «A sta a B come C sta a ?», di cose (🧥→🐑) e di figure
-  (una diventa due). Le coppie dichiarano le risposte **anche difendibili**
-  (il pinguino vive sul ghiaccio ma nuota) e quelle non finiscono fra i falsi.
-- **📐 Geometria, grado 6: i cubetti.** I solidi sono sei e i loro conti si
-  imparano a memoria: sopra ci sono le costruzioni da contare coi cubetti
-  nascosti, quanti ne mancano per riempire la scatola, e **quale ritaglio
-  piegato fa un cubo** — dove quali si chiudono non sta scritto da nessuna
-  parte, si piega davvero (verificato contro il fatto noto: gli sviluppi del
-  cubo sono 11).
-- **📅 Calendario** — via «quando comincia la primavera», che era memoria di
-  date; al suo posto la stagione di un mese intero e il giro delle stagioni,
-  e le date da indovinare stanno lontane dal cambio di stagione.
-
-### Da portare, in ordine
-
-Niente: la coda è vuota. **🔍 Indizi** è arrivato il 16 agosto 2026
-(`src/quiz/moduli/indizi.js`), con le due famiglie del prototipo — `indizi:forme`
-sulle figure di `quiz/grafica/pittori/figure.js` e `indizi:cose` sugli oggetti
-del mondo — su cinque gradi che le alternano, come fa `sequenze`. La garanzia
-che **nessun indizio sia inutile** non è un controllo a posteriori: `gruppiMinimi`
-prova a forza bruta ogni sottoinsieme e accetta solo quello che isola una
-candidata sola *e* che, tolto un indizio qualunque, torna ambiguo. Provato su
-2000 domande rigiocate (`test/unita/indizi.test.mjs`, 7731 controlli).
+La coda è vuota: tutti i moduli previsti sono in `src/quiz/moduli/`. Quello che
+resta da fare sui quiz sta più sotto, nel quaderno del 16 agosto (**i problemi a
+parole**, che è un modulo nuovo).
 
 ### Deciso di NON portare, e perché
 
@@ -66,40 +30,9 @@ candidata sola *e* che, tolto un indizio qualunque, torna ambiguo. Provato su
 
 ---
 
-## Il generale — da dove si riparte
+## Il vocabolario del Generale: una cosa sola
 
-Le **26 mappe su 26** ci sono tutte, e `unita/livelli` le gioca davvero su tre
-scene ciascuna: 1428 controlli, zero guasti. Ogni capitolo ha una soluzione
-stretta — dove ogni ordine dev'essere necessario, misura *derivata* da quando
-il par è sparito — e almeno una `fragile` che deve **cadere** su una scena: se
-vince sempre non dimostra niente.
-
-L'**editor degli ordini** è quello nuovo (il posto vuoto è il tasto, la riga è
-l'editor, niente cassetta fissa) e il megafile è spezzato in otto pezzi, con
-`generale/piano.js` senza Vue né schermo — provato da `unita/piano-generale` in
-zero secondi invece che con Chrome.
-
-Non c'è altro da annotare qui sotto: quello che segue è **solo quello che
-manca**.
-
----
-
-## Il vocabolario: chiuso, ma non come era scritto qui
-
-`aspetta finché [cond]` **non si è fatto**, e la strada presa è migliore: invece
-di un verbo solo con un dizionario di condizioni, il motore adesso distingue
-**da cosa si ascolta**. `aspetta` guarda il MONDO e aspetta che cambi (un
-attimo, una porta), e funziona solo su quello che l'unità vede da dov'è;
-`quando senti` riceve un MESSAGGIO, e funziona a distanza proprio perché non
-stai guardando. È la regola dell'onniscienza vista dall'altro lato: quello che
-vedi lo puoi aspettare, quello che non vedi te lo deve dire qualcuno.
-
-Fatto anche: **i segnali li dichiara il livello** (`segnali: ['ora','aiuto',…]`,
-e `ilSegnale()` cade su un default per i nomi nuovi). Il convertitore non serve
-più: i livelli parlano già la lingua di adesso.
-
-Resta una cosa sola di questa sezione: **`sa` è una lista di permessi, non di
-divieti**. Oggi un'unità che non elenca `suona` è muta per omissione, e nei
+**`sa` è una lista di permessi, e dovrebbe essere di divieti.** Oggi un'unità che non elenca `suona` è muta per omissione, e nei
 livelli si vede (`sa: ['vai']`, `sa: ['vai','prendi','apri']`). Parlare non è un
 talento come scassinare una serratura: la lista dovrebbe dire chi **non** può.
 
@@ -135,10 +68,7 @@ hanno dovuto piegarsi. Qui sotto per tema, con quante campagne l'hanno colpito.
 sono stati separati proprio per questo, e alcune di queste righe potrebbero
 essere già cadute. Va riprovato su un capitolo vero prima di cancellarle.
 
-### B. Le cose: posare, passare, rompere — **3 campagne**
-- **Non si può posare** (fondi). La lanterna, che è **il filo di tutta la
-  storia**, nei capitoli 5 e 6 *non esiste come oggetto*: è Tilde. Il bambino
-  non la vede, non la tocca, non la può nominare.
+### B. Le cose: passare, rompere — **3 campagne**
 - **Non si può passare una cosa a un compagno** (fondi, torre). L'obiettivo
   dichiarato del primo capitolo della torre — «la chiave in mano a Marta» — è
   **inesprimibile**, mimato con due posizioni.
@@ -149,27 +79,7 @@ essere già cadute. Va riprovato su un capitolo vero prima di cancellarle.
   falene chiedono `non vedi [Tilde]` invece di `non vedi [la lanterna]` — il
   piano leggibile dice una cosa diversa dal racconto.
 
-→ **`posa [x]` è fatto** — anzi c'era già: motore, vocabolario, `Oggetto`,
-formato delle mappe e `fai.posa` erano tutti a posto, e mancava solo un test
-che lo giocasse (`unita/generale/posa`, che lo prova sul passamano, sulle mani
-piene e sulla lanterna lasciata a terra). La riga qui sopra che lo dava per
-«dichiarato nel formato ma non nel motore» era vecchia. Restano le altre
-quattro voci di questa sezione.
-
 ### C. Attaccare — **3 campagne**
-- ~~**`attacca` non prende le cose**~~ **fatto**: una cosa a cui il livello
-  scrive addosso una `resistenza` si rompe, e quello che le succede lo sa lei
-  (`Elemento.incassa`). Rotta, non si raccoglie e non si preme più; la domanda
-  `rotto:` è la controparte, e sfasciare fa fracasso. Un verbo si offre solo a
-  chi lo capisce, quindi `attacca` non compare dove non c'è niente da rompere.
-- ~~**`attacca [fazione]` non si indirizza**~~ **fatto**: l'ordine porta un
-  `quale` — `vicino` (il valore normale), `lontano`, `debole`, `forte`
-  (`motore/generale/scelte.js`). È un criterio e non un nome, sta sul tronco
-  comune (vale anche per `vai`), e la scelta si **pianta**: se ricalcolasse a
-  ogni passo, superato il primo bersaglio il «più lontano» diventerebbe lui.
-  Lì sotto c'era anche un difetto vecchio: la preda era pinnata per il colpo e
-  non per il passo, e due nemici equidistanti facevano oscillare chi li
-  inseguiva finché la scena non scadeva.
 - Chi insegue alla stessa velocità non prende mai nessuno (sale).
 - **`senza: ['attacca']` non si può dichiarare** (torre): la prova `senza`
   toglie ordini che *nominano* una cosa, non che usano un verbo. La regola che
@@ -189,17 +99,7 @@ piano che non è il loro. «Dorme» non esiste: la vista è sempre accesa,
 mimata con `vista: 1`.
 
 ### F. Obiettivi e sconfitta — **3 campagne**
-~~`obiettivo` e `sconfitta` sono liste in **AND**: manca l'*oppure*~~ —
-**fatto**, e non come un campo in più: l'*oppure* è **una domanda che ne
-contiene altre**, `{ cond: 'oppure', fra: [...] }` (con il suo gemello
-`entrambe`, che serve a annidare). Così vale ovunque valga una domanda — la
-guardia di un ciclo, i rami di un bivio, «aspetta che» — e non solo in fondo
-al livello; il «non» che c'era già lo rovescia in «né … né …». Non mente su
-quello che un personaggio non può sapere: risponde quando la risposta è decisa
-comunque, e altrimenti ripropaga il dubbio. Nel formato delle mappe è la barra
-(`finche: 'vedi:eroe|segnale:rosso'`).
-
-Resta di questa sezione: `grida` non distingue chi ha visto.
+`grida` non distingue chi ha visto.
 
 ### G. Le scene non toccano il piano — **4 campagne**
 Le varianti spostano cose e unità, ma non possono cambiare **gli ordini del
@@ -219,94 +119,41 @@ non si disegna a occhio.**
 
 ## Difetti visti guardando i livelli veri
 
-Aperti quattro finali di storia col dito, sono saltati fuori tre problemi che
-nessun test prende:
+Restano due cose, e **stanno tutte e due di là dai livelli spenti**
+(`src/data/livelli/todo/`, formato vecchio, mai provati da nessuno): si toccano
+quando quei capitoli si riaccendono, non prima.
 
-1. **La dritta è diventata la soluzione.** Su `torre-5` sono **dieci righe** che
-   occupano un terzo dello schermo e dicono esattamente cosa fare: «mandaci Cric
-   e Nilo prima, uno davanti a ciascuna. Marta va di sopra… Pero per ultimo».
-   Non è un indizio, è la risposta — e gli aiuti a pagamento (⭐) diventano
-   inutili. Il campo `dritta` va accorciato a una riga in tutti i capitoli
-   nuovi, e quello che c'è adesso va spostato in `aiuti`.
-   → **Misurato il 16 agosto 2026: resta vero solo nelle storie spente**
-   (`src/data/livelli/todo/`, formato vecchio, mai provate da nessuno). Nei
-   livelli vivi la dritta più lunga è di 108 caratteri
-   (`parole/3-due-lavori`), cioè una riga: quando quei capitoli si
-   riaccenderanno la dritta va riscritta comunque, ma non è debito di oggi.
-2. **Le figure non corrispondono ai nomi.** Marta la sarta è disegnata come un
-   mago, Cric il topo come un mostriciattolo, le falene come goblin. È lo stesso
-   difetto già trovato giocando con mio figlio (Bibi disegnata come un lupo, Orso
-   come un cavaliere): a un bambino che deve distinguere quattro dei suoi a
-   colpo d'occhio, la figura è metà del gioco.
-   → **Mezzo risolto il 16 agosto 2026**: le figure che mancavano adesso ci sono
-   (`falena`, `topo`, e i personaggi che si possono variare in taglia, spalle,
-   tinta ed elmo, così una fila di guardie non è più una fila di fotocopie).
-   Quello che manca è **nominarle nei livelli**, e quei livelli sono spenti.
-3. ~~**I par: metà allineati.**~~ **Caduto**: il 15 agosto 2026 il par è
-   sparito da tutto il gioco vivo (la seconda stella la dà `daSolo()`), quindi
-   non ci sono più due numeri per la stessa cosa. Il 16 agosto è stato tolto
-   anche il residuo in `storie-generale.js`, dove il file dichiarava in testa
-   che il par non c'era più e poi lo pretendeva lo stesso.
+1. **Le dritte lunghe.** Su `torre-5` la dritta è di dieci righe e dice
+   esattamente cosa fare: non è un indizio, è la risposta — e gli aiuti a
+   pagamento (⭐) diventano inutili. Va accorciata a una riga, e quello che dice
+   adesso va spostato in `aiuti`. Nei livelli vivi la dritta più lunga è di 108
+   caratteri, quindi il debito è tutto lì.
+2. **Le figure non nominate.** I pittori che mancavano adesso ci sono (`falena`,
+   `topo`, i personaggi variabili in taglia, spalle, tinta ed elmo), ma nei
+   livelli spenti Marta la sarta è ancora dichiarata come un mago e le falene
+   come goblin. A un bambino che deve distinguere quattro dei suoi a colpo
+   d'occhio, la figura è metà del gioco.
 
 ---
 
 ## Cosa resta, in ordine
 
-1. ~~**Le tre voci di attrito che costano meno e rendono di più**~~ — **fatte
-   nel motore e nel formato** (vedi B, C, F qui sopra), con tre test che le
-   giocano: `unita/generale/posa`, `unita/generale/rompere`,
-   `unita/generale/oppure`. **Quello che resta** è il giro dopo, ed è di là:
-   - **riscrivere i capitoli** con i verbi nuovi — la lanterna dei Fondi che
-     si posa, il tamburo del nido che si sfonda, l'obiettivo «o l'uno o
-     l'altro» che adesso si scrive;
-   - **quattro righe in `src/data/livelli/scrivi.js`**, che è l'unico posto
-     rimasto fuori: `resistenza` fra le `OPZIONI` di un oggetto e di un
-     congegno, `quale` fra quelle di un ordine, e le due scorciatoie
-     `se.rotto(x)` e `se.oppure(...)`/`se.entrambe(...)`. Senza, un livello
-     scrive il dato per esteso (funziona: i test lo fanno) ma
-     `controllaOpzioni` rifiuta `resistenza` scritto in una fabbrica;
-   - **l'interfaccia**: `quale` non è ancora componibile a schermo, e la
-     domanda `rotto` compare in elenco solo dove c'è qualcosa di rompibile.
-2. ~~Le dritte da accorciare e i par da allineare.~~ **Fatto quel che c'era da
-   fare** (16 agosto 2026): il par era già uscito dal gioco, e in
-   `storie-generale.js` ne restava solo la coda — un `premioCapitolo()` che
-   leggeva `c.par` e tornava `NaN`, e un controllo che gridava «par storto» su
-   tutti e ventisei i capitoli. Tolti. Sotto ci stava nascosto un guasto vero
-   (`bibi/bombo` dichiarava il concetto `sincronizzazione`, che nella scala non
-   esiste): corretto in `attesa`. Il motivo per cui nessuno se n'era accorto è
-   che **`verificaStorie()` non lo chiamava nessuno** — adesso lo chiama
-   `test/unita/storie.test.mjs`, che gira a ogni `npm test`. Le dritte lunghe
-   restano solo nelle storie spente: vedi qui sopra.
-3. **`sa` da girare in lista di divieti**, così `suona` non va dichiarato ogni
+1. **I capitoli da riscrivere coi verbi nuovi** — la lanterna dei Fondi che si
+   posa, il tamburo del nido che si sfonda, l'obiettivo «o l'uno o l'altro» che
+   adesso si scrive. Il motore e il formato ci sono già; sono i livelli a
+   parlare ancora la lingua di prima.
+2. **Quattro righe in `src/data/livelli/scrivi.js`**, l'unico posto rimasto
+   fuori: `resistenza` fra le `OPZIONI` di un oggetto e di un congegno, `quale`
+   fra quelle di un ordine, e le due scorciatoie `se.rotto(x)` e
+   `se.oppure(...)`/`se.entrambe(...)`. Senza, un livello scrive il dato per
+   esteso (funziona: i test lo fanno) ma `controllaOpzioni` rifiuta
+   `resistenza` scritto in una fabbrica.
+3. **L'interfaccia dei verbi nuovi**: `quale` non è ancora componibile a
+   schermo, e la domanda `rotto` compare in elenco solo dove c'è qualcosa di
+   rompibile.
+4. **`sa` da girare in lista di divieti**, così `suona` non va dichiarato ogni
    volta (vedi la sezione sul vocabolario).
-4. ~~**La grafica**~~ — **fatta il 16 agosto 2026**, tutta la lista.
-   `personaggi/falena.js` (una `bestia()` dove `sw` muove le ali invece delle
-   zampe), `personaggi/topo.js` (per Cric, che era un mostriciattolo),
-   `oggetti/tamburo.js` (non più ripiegato su `campana`: se `suona` trema e
-   manda archi di suono). I **personaggi parametrizzati** stanno in `corpo.js`
-   e sono quattro varianti opzionali — `taglia`, `spalle`, `tinta`, `elmo` —
-   tutte «1 = di serie» quando non si dichiarano: chi non chiede niente vede
-   esattamente quello che vedeva prima. E c'è una posa d'attacco vera
-   (`stato: 'attacca'`, un braccio solo che va e viene, contro `'lancia'` dove
-   si alzano tutte e due), che funziona su qualunque personaggio con un'arma
-   senza toccare il suo file. Il gatto come arredo non chiedeva codice: ha già
-   `stato: 'seduto'`, ed è chi mette in scena a scriverlo.
-   Si guardano con `node tmp/vetrina-nuova.mjs`.
-   **Resta da fare l'aggancio**: i pittori nuovi esistono, ma nessun livello li
-   nomina ancora — è nelle storie spente che Marta la sarta è un mago e le
-   falene sono goblin (difetto 2 qui sopra), e i livelli si toccano quando si
-   riaccendono.
-5. ~~**La mappa che non si trascina mentre si sceglie un bersaglio.**~~ **Fatto**
-   (16 agosto 2026, `views/generale/CampoLivello.vue`). `ditoMuovi` usciva
-   subito quando `mirando` era vero: la mappa restava ferma e su 30×18 un
-   bersaglio fuori campo non si poteva indicare in nessun modo. Adesso il dito
-   fa una cosa sola per volta — sotto la soglia mira, sopra trascina (e allora
-   l'evidenziazione si spegne e al rilascio non parte nessun ordine). In mira
-   la soglia è più larga, 16 invece di 9, perché mirare col dito trema; e dove
-   non c'è niente da scorrere il tocco resta buono comunque, cioè si comporta
-   come prima. **Da provare col dito**: è un gesto, e i gesti si giudicano
-   toccandoli.
-6. **Da tarare giocando, non a tavolino**: `VOLTE_STATUE` (la nona tappa del
+5. **Da tarare giocando, non a tavolino**: `VOLTE_STATUE` (la nona tappa del
    dungeon, parametrica: provarla a 8, 12 e 22), e il livello finale intrecciato
    con tre o quattro unità e segnali che si incatenano, che non è mai riuscito.
 
@@ -330,11 +177,8 @@ nessun test prende:
 
 ## Le storie di «Prima e dopo» sono fatte di emoji, e non dovrebbero
 
-Il 15 agosto 2026 sono state riviste tutte e 44 le storie del gioco: undici
-avevano una fila che non stava in piedi (il burro fra il latte e il formaggio,
-la cassetta degli attrezzi dopo il martello, l'uovo di gallina davanti al
-bruco). Sistemate. Ma il lavoro per sistemarle ha reso evidente **la vera
-causa**, che non è stata sistemata affatto.
+**Deciso il 16 agosto: si disegnano.** Il come sta in fondo, nel quaderno; qui
+resta il perché, che è la parte che non va persa.
 
 Una storia, oggi, è una fila di emoji. Il che vuol dire che la storia non si
 sceglie: si cerca. Si parte da cosa il set di emoji mette a disposizione e si
@@ -367,87 +211,64 @@ ribaltato una volta.
 
 ---
 
-## Il sotterraneo, e lo spazio dove si cammina
+## Il sotterraneo
 
-Il prototipo è fatto e regge: `poc/sotterraneo.html` (a rettangoli) e
-`poc/sotterraneo-gfx.html` (con gli sprite di **0x72 DungeonTileset II**, CC-0,
-10 KB di atlante dentro il file). Lo stato del lavoro, le decisioni prese e i
-numeri misurati stanno in [`poc/sotterraneo.md`](poc/sotterraneo.md), che è il
-posto da leggere prima di ripartire — qui c'è solo cosa manca.
+**È un gioco vero**, in `src/giochi/sotterraneo/`, dietro «i giochi in
+prova». Sei discese, le domande vere dai moduli di quiz, l'avanzamento in
+`campagne.js`, i traguardi nel manifesto; `unita/sotterraneo` gioca le sei
+tappe col giocatore finto e conta le domande, `integrazione/sotterraneo` lo
+tocca col dito. La pagina per chi arriva da fuori è
+[`docs/sotterraneo.md`](docs/sotterraneo.md); i due prototipi restano in
+`poc/` e sono ancora il posto dove provare un'idea prima di metterla nel
+gioco.
 
-**Fatto e già in `src/`**: `src/grafica/tessere.js` sa scegliere le bordature a
-**otto vicini** (l'angolo interno concavo, che a quattro vicini non si
-distingue da una parete dritta), e `src/motore/passi.js` è il concetto di
-**spazio percorribile** che due giochi stavano scrivendo ognuno per conto suo —
-`percorso`, `raggiungibili`, `accanto`, `primaLibera`, `passiFra`. La regola è
-che lo spazio arriva da fuori: si passa `buona(x, y)` e il motore non sa perché
-una cella sia buona. Provati in `unita/tessere` e `unita/passi`.
+Il porting ha agganciato per la prima volta i due motori che stavano lì
+senza nessuno che li usasse — `grafica/atlante.js` (posare uno sprite: il
+piede, lo specchio, i bordi netti) e `grafica/tessere.js` (quale pezzo va in
+una cella) — più `motore/passi.js` per lo spazio percorribile. Da quel giro
+è nato anche `viaVerso()` in `passi.js`: `accanto()` sceglie la cella più
+comoda in linea d'aria, che non è sempre una a cui si arriva, e il gioco
+diceva «di là non si passa» a tocchi perfettamente possibili.
 
-### 1. Pubblicare il sotterraneo come gioco in prova
+### Cosa manca ancora
 
-Va portato in `src/giochi/sotterraneo/` con la convenzione
-(`src/giochi/CONVENZIONE.md`): `dati/` con le sue `guasti…()`, `motore/`
-(livello + corsa + banco, sopra `passi.js`), `scena/tela.js`, `viste/`,
-`Gioco.vue`, `stile.css`; registrazione in `indice.js` e `schermate.js`,
-avanzamento via `campagne.js`, traguardi nel manifesto, `sperimentale: true`.
-Più `test/unita/sotterraneo.test.mjs` che **giochi le tappe davvero** col
-giocatore finto, e `docs/sotterraneo.md`.
+- **Da guardare in mano a un bambino**, che è l'unica prova che conta per
+  questi tre numeri: quanto sono più lenti i mostri (3,1 celle al secondo
+  contro 5,4) e i tre secondi di calma dopo una fuga — decidono se una
+  stanza fa paura o fa arrabbiare; e quante stanze per piano (si comincia da
+  quattro e si arriva a sedici).
+- **Il suono**, che qui dentro c'è appena: un colpo, un passo, una moneta.
+  Nel prototipo non c'era per niente e nel gioco è arrivato il minimo.
+- **Le armature stonano.** 0x72 equipaggia solo le mani: panciotto, corazza
+  e manto restano emoji in mezzo a uno schermo disegnato a mano. O si trova
+  un set che le ha, o si disegnano, o si toglie la casella «addosso» e la
+  difesa passa da qualcos'altro.
+- **Cosa resta fra una discesa e l'altra.** Per ora niente, ed è scritto
+  perché in `dati/campagna.js`: dentro una discesa l'equipaggiamento scende
+  con te, fra una e l'altra si riparte nudi. Se un giorno lo si vuole
+  persistente, serve un'economia — dove si ripara, cosa si rivende — e
+  quella è un altro gioco.
 
-Due cose da non dimenticare, perché sono quelle che si scordano:
+---
 
-- **Le domande vere.** Adesso il prototipo ha un banchetto finto di conti
-  dentro il file. Nel gioco vanno prese da `domandaPerGioco({ difficolta,
-  evita })` di `src/quiz/scelta.js` col componente `Domanda.vue`, come fa il
-  dungeon: la difficoltà da 0 a 1 la portano la profondità del piano e il
-  rincaro della stanza, e i saperi spenti in *Genitori → cosa sa* vanno
-  rispettati — si degrada, non si sbarra.
-- **La barra della vita sopra il personaggio**, non nella fascia in cima: in
-  `scena/tela.js`, dove già si disegnano le barrette dei mostri feriti.
+## Da guardare col dito, dopo una build
 
-Quello che il prototipo **non** risponde, e che va deciso prima di pubblicare:
-cosa resta fra una discesa e l'altra. Se l'equipaggiamento persiste, la
-campagna diventa un'altra cosa e va pensata l'economia; se non resta, serve un
-motivo diverso per riaprire il gioco domani.
+Cose fatte e provate dai test, che però **nessuno ha ancora giocato**: sono
+gesti e comportamenti, e i gesti si giudicano toccandoli.
 
-### 2. ~~La fattoria: chi cammina non attraversa le case~~ — **fatto il 16 agosto 2026**
-
-`motore/camminata.js` (nuovo) è il `Camminatore` sopra `percorso()` e `accanto()`
-di `passi.js`: si cammina cella per cella lungo la strada, e se sulla meta non si
-può stare ci si **accosta** invece di restare fermi. Nel motore c'è un
-`calpestabile(cx, cy)` solo, con l'ingombro preso da `piedeDi()`, e `libera()` e
-`cellaLibera()` sono riscritte sopra di lui. `Attore` in `scena/tela.js` non
-cammina più: legge un corpo come dato, e la scena torna a disegnare e basta.
-`unita/fattoria` conta 85 controlli, fra cui la staccionata girata che blocca
-`[1,2]` e non `[2,1]` e il cane che aggira una casa senza metterci mai il piede
-dentro. Resta da guardare **col dito** dopo una build: il comportamento vero non
-l'ha ancora visto nessuno.
-
-Il testo di prima, per memoria:
-
-Oggi `Attore.muovi()` in `scena/tela.js` conosce solo `dentroMio` — dentro la
-terra comprata — quindi Watson passa dentro case, fontane e staccionate. Il
-catalogo però **dichiara già tutto quello che serve**: `piede` è l'ingombro
-vero (e cambia col verso: `piedeDi()` risolve i giri, staccionata sdraiata
-`[2,1]` contro palo in piedi `[1,2]`), e `sotto: true` distingue ciò che è
-*terreno* — orto, fiori, radura — da ciò che è oggetto. Quella riga, che oggi
-serve solo all'ordine di disegno, è già la risposta: **si cammina su quello che
-sta sotto, non su quello che sta sopra**.
-
-- **Un solo `calpestabile(cx, cy)`** nel motore, che mette insieme le quattro
-  cose che oggi stanno in quattro posti: è terra mia, non è acqua dipinta, non
-  c'è un ostacolo (ceppo, masso, tronco col suo piede), non c'è un oggetto
-  solido — cioè senza `sotto: true` — con l'ingombro preso da `piedeDi(cosa)` e
-  non da `v.piede`, o una staccionata girata bloccherebbe le celle sbagliate.
-  Poi `libera()` e `cellaLibera()` si riscrivono sopra quello invece di
-  rifare ognuna il proprio conto.
-- **Gli attori camminano con `passi.js`**: `percorso()` per aggirare invece di
-  andare in linea retta, `primaLibera()` per non piazzare un animale sopra una
-  fontana. E il vagabondaggio esce da `scena/tela.js`, dove è **una regola
-  dentro il disegno**: va nel motore, e la scena torna a disegnare e basta.
-- **I test** (`unita/fattoria`): un cane non entra in casa, una staccionata
-  girata blocca le celle giuste, l'acqua ferma chi cammina, una meta
-  irraggiungibile non fa camminare nessuno dentro i muri. È il genere di guasto
-  che si vede solo a schermo, e tardi.
+- **La camminata della fattoria** — il cane che aggira la casa invece di
+  attraversarla, e chi si accosta quando sulla meta non si può stare.
+- **La mappa del Generale che si trascina mentre si mira** — sotto la soglia
+  mira, sopra trascina; in mira la soglia è più larga (16 invece di 9) perché
+  mirare col dito trema.
+- **Il sotterraneo tutto intero** — è nuovo e non l'ha ancora giocato
+  nessuno: il tocco che manda a camminare, il dito tenuto premuto che fa
+  inseguire, il pizzico dello zoom, e soprattutto i mostri che vengono
+  addosso (vedi sopra, i tre numeri).
+- **Il castello con le resistenze** — un terzo di danno contro la famiglia
+  sbagliata è misurato sul modello, ma «si sente o no» lo dice solo giocarlo.
+- **Gli asteroidi col cielo più fitto** — la caduta è fissa a 10 secondi e a
+  salire di livello arrivano più sassi invece che più veloci.
 
 ---
 
@@ -458,3 +279,125 @@ disegnato come una chiave, Bombo che non faceva la guardia, i segnali che non si
 potevano cambiare, `vai a` con 211 celle in elenco. Nessun test li avrebbe
 presi — e le tre cose trovate stamattina guardando quattro schermate lo
 confermano.
+
+E infatti tutto quello che segue viene da lì.
+
+---
+
+# Il quaderno del 16 agosto
+
+Appunti presi **giocando**, ordinati per gioco e con dentro il perché. Quello
+che è stato chiuso il 16 agosto è uscito da qui: resta il perché delle regole
+nuove, dove serve a chi arriva dopo.
+
+## Le icone: la regola c'è, il cassetto no
+
+La regola applicata è che **se non esiste un'icona perfettamente aderente non
+si mette un'icona, si mette il testo** — perché il vocabolario delle emoji è
+chiuso, e per «mese» non ci si chiedeva come si rappresenta un mese, ci si
+chiedeva quale emoji ci assomigliasse di più. Insieme: due icone della stessa
+**famiglia visiva** non compaiono mai nella stessa domanda.
+
+**Quello che manca è il cassetto dei concetti disegnati** col pittore che già
+abbiamo, insieme a *Prima e dopo*. Non 481 disegni — solo quello che l'emoji
+non sa dire: tempo, ora, minuto, settimana, mese, anno, le facce, i verbi.
+Finché non c'è, quelle parole restano senza figura.
+
+Da riguardare se a schermo danno fastidio: le metafore convenzionali lasciate
+apposta (`famiglia` 🏡, `amico` 🤝, `cantante` 🎤, `parco` 🎠, `gara` 🏁,
+`gioco` 🎮). Non sono sbagliate, sono figurate.
+
+## Prima e dopo: le emoji non reggono, e si disegna
+
+Le storie fatte di emoji sono una forzatura — stesso difetto delle icone, in
+grande: si sceglie il passo che l'emoji sa dire invece di quello che la storia
+chiede. Si passa al **pittore**: meno storie, ma vere, disegnate. È lo stesso
+cassetto di concetti di cui sopra, e conviene pagarlo una volta per due giochi.
+
+## Gli asteroidi
+
+**La banda va via.** Il blocco `.bersaglio` sotto la barra è una seconda barra
+che dice quello che la prima dovrebbe già dire. Sparisce, e l'avanzamento sale
+nella `Barra`. Per far posto si sacrificano **i punti** e **il livello**: i
+punti si leggono a fine partita, il livello si legge dallo scafo. E anche **le
+vite** lasciano il gettone dei cuori e diventano **lo stato dello scafo** —
+la nave ammaccata *è* l'informazione, e non serve dirla due volte.
+
+**Il pianeta in basso va via.** Non fa niente, e una cosa in scena che non fa
+niente in un gioco per bambini è una domanda senza risposta.
+
+**I potenziamenti diventano gettoni che tieni tu.** Scudo e cannone doppio non
+si capiscono e non aiutano abbastanza. Al loro posto due poteri che si
+**guadagnano giocando** — un filotto vale un gettone, anche a metà tappa, non
+solo alla fine — e che **compaiono a destra con la loro icona**, in attesa che
+sia tu a premerli:
+
+- **il gelo** ❄️ — rallenta tutto per una decina di secondi;
+- **l'aiuto** — cancella una risposta sbagliata.
+
+Sono riutilizzabili, si accumulano, e soprattutto sono una *scelta*: il momento
+in cui li spendi è tuo.
+
+**Pianeti e stazioni diventano una campagna sola** — è il pezzo grosso. Tabelline e calcolo a mente sono due facce della stessa moneta
+e oggi viaggiano su due mappe separate: si fondono in **una scaletta ordinata
+per difficoltà vera**. Chi vuole solo le tabelline spegne il calcolo a mente
+dalla pagina dei grandi. Oltre a semplificare, allarga di molto il ventaglio
+delle domande possibili.
+
+## Le code lasciate dai lavori del 16 agosto
+
+Piccole, e nessuna urgente — ma sono decisioni sospese, non dimenticanze.
+
+- **Il castello: leggere il nastro paga meno di prima.** Col danno doppio,
+  sapere in anticipo dava un vantaggio immediato; con la resistenza il
+  vantaggio è non ammucchiare tutto su un tipo solo, che è una lezione e non
+  una mossa. Se si vuole che il preavviso renda *anche* subito serve un'altra
+  leva — per esempio spostare una torre gratis fra un'ondata e l'altra.
+- **Il Torrione resta a scalini larghi** (26 per otto ondate, poi 78, 117,
+  186): viene dallo spianamento cumulativo, che con un malus costa più che con
+  un bonus. La versione a un passo solo dava curve più vive ma rompeva la
+  promessa «i nemici non si ammorbidiscono mai andando avanti».
+- **Gli asteroidi cadono in 10 secondi fissi a ogni livello**: è la
+  conseguenza voluta di «più fitti, non più veloci», ed è un cambio di
+  sensazione grosso.
+- **`settings.tables` è rimasto nel profilo e non lo legge più nessuno**: si
+  toglie quando si tocca `store/profile.js`.
+- **La quota 0,8 vale anche per le stazioni a mente**, che nessuno ha ancora
+  giocato con quel numero.
+- **Nella fattoria spostare una bestia è gratis** (posare un oggetto no):
+  farsi pagare uno spostamento che l'animale disfa da sé camminando sarebbe
+  una beffa. Se lo si vuole a pagamento è una riga.
+- **Il bosco è salvato cella per cella**, quindi il salvataggio cresce col
+  mondo (~400 voci dopo sei acquisti). Regge; se un giorno si comprano decine
+  di piazzole conviene generarlo al volo e salvare solo gli sgomberi.
+- **I sei cibi vanno a capo 5+1** sul telefono: leggibile, un filo irregolare.
+
+*Ritirato:* lo spawn casuale di animali in fattoria. Non sta insieme al fatto
+che gli animali restano dove li metti.
+
+## I problemi a parole — un modulo di quiz nuovo
+
+Oggi nessun gioco fa fare problemi, e sono l'esercizio in cui la matematica
+smette di essere una tabellina. Si risponde **scegliendo fra quattro numeri**,
+come tutti gli altri quiz: chiedere di scrivere vorrebbe dire un'interfaccia
+tutta sua. La scala dei gradi:
+
+1. solo somme («ho due banane, me ne danno tre»);
+2. le sottrazioni («ne presto una»);
+3. moltiplicazioni e divisioni — e qui **si rispettano i saperi spenti**: se un
+   bambino non le ha fatte, quel gruppo di domande non esce;
+4. due operazioni per arrivare al risultato;
+5. tre operazioni;
+6. i **dati inutili** nel testo, che è la cosa che davvero si impara: capire
+   cosa serve e cosa no.
+
+## Il giro che manca
+
+Quattro lavori, e i primi due si contendono lo stesso file:
+
+1. **La barra e i gettoni degli asteroidi** — via la banda e il pianeta, le
+   vite sullo scafo, il gelo e l'aiuto a gettone.
+2. **La fusione di pianeti e stazioni** in una scaletta per difficoltà vera.
+3. **Il cassetto dei concetti disegnati**, che serve alle icone del lessico e
+   a *Prima e dopo* insieme.
+4. **I problemi a parole.**

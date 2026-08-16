@@ -41,6 +41,7 @@ src/
   data/shop.js       30 oggetti della cameretta
   data/ops.js        operazioni in colonna: riporti, prestiti, divisione
   data/tabelline.js  i dieci pianeti della campagna delle tabelline
+  data/asteroidi.js  la scaletta unica: pianeti e stazioni in una fila sola
   data/pets.js       i ventinove amici, le diete, i bisogni e cosa li sazia
   data/capsule.js    le sei serie di accessori della macchina delle sorprese
   components/ColumnOp.vue   tastierino e caselle, cifra per cifra
@@ -323,8 +324,33 @@ giuste. I numeri e le ragioni stanno in `src/data/potenziamenti.js`; il
 disegno — nave, pianeta, sassi, raggi — in `src/grafica/spazio.js`, che di
 vite e di punti non sa niente e riceve solo fatti già decisi (`danno: 0.5`).
 
-Dentro gli asteroidi ci sono **due campagne**, in due schede: i pianeti — le
-tabelline — e le stazioni, che sono il calcolo a mente.
+### Una scaletta sola
+Dentro gli asteroidi ci sono due specie di tappe — i pianeti, che sono le
+tabelline, e le stazioni, che sono il calcolo a mente — e stanno in **una
+fila sola**, ordinata per difficoltà vera. Erano due liste dietro due
+linguette, cioè dietro la domanda «preferisci le tabelline o i conti a
+mente?», che è un'altra di quelle a cui un bambino non sa rispondere.
+
+L'ordine non è alternato a turno: le due liste sono state fuse una volta,
+e il perché di ogni giunzione è scritto in testa a `src/data/asteroidi.js`.
+I tre criteri, in ordine di autorità, sono i **vincoli misurati** (il grafo
+dei prerequisiti, e le tabelline che un concetto moltiplicativo dichiara di
+volere), **quanti pezzi si tengono a mente** (il `peso` di un concetto, la
+`durezza` di una tabellina) e infine **il ritmo**, che alterna i due
+mestieri a pari difficoltà. `unita/asteroidi` cammina la fila con un finto
+bambino e controlla le due facce dell'ordine sbagliato: nessuna tappa
+arriva prima di quello che le serve, nessuna arriva quando è già saputa.
+
+**I contatori restano due** (`mate.tappa`, `calc.tappa`), ed è la ragione
+per cui la fusione non ha fatto perdere niente a nessuno: una voce è
+superata se il progresso della *sua* campagna la copriva. Da lì viene anche
+il fatto che in mezzo alla fila possano esserci due tappe aperte invece di
+una, una per mestiere — è il prezzo, giusto, di non aver tolto niente.
+
+I genitori possono **spegnere il calcolo a mente** per un bambino
+(`settings.varianti['asteroidi:mente']`, elenco di eccezioni come i giochi):
+le tappe a mente spariscono dalla fila, i pianeti si richiudono in ordine e
+i progressi restano dove sono.
 
 ### Il calcolo a mente: le stazioni
 Le tabelline sono 55 fatti: si contano, si imparano, finiscono. Poi restava

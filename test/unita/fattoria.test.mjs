@@ -8,10 +8,13 @@
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { Camminatore } from '../../src/giochi/fattoria/motore/camminata.js'
 import {
-  guastiDelMondo, PIAZZOLE, PIAZZOLE_INIZIALI, PRIMA, COSTO_SPOSTARE, chiave,
+  guastiDelMondo, MARGINE, PIAZZOLE_INIZIALI, PRIMA, COSTO_SPOSTARE, chiave,
+  LIMITI_VECCHI,
 } from '../../src/giochi/fattoria/dati/mondo.js'
 import { guastiDelCatalogo } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria/dati/ostacoli.js'
+import { guastiDeiBisogni, CIBI, COCCOLE, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { guastiDegliAnimali, famigliaDi, IN_VENDITA } from '../../src/giochi/fattoria/dati/animali.js'
 import manifesto from '../../src/giochi/fattoria/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -35,6 +38,19 @@ const guastiO = guastiDegliOstacoli()
 controlla('gli ostacoli non hanno guasti', guastiO.length === 0, guastiO.join(' · '))
 const guastiAlbo0 = guastiDellAlbo([manifesto])
 controlla('il blocco albo del manifesto non ha guasti', guastiAlbo0.length === 0, guastiAlbo0.join(' · '))
+const guastiB = guastiDeiBisogni()
+controlla('i bisogni non hanno guasti', guastiB.length === 0, guastiB.join(' · '))
+const guastiA = guastiDegliAnimali()
+controlla('gli animali non hanno guasti', guastiA.length === 0, guastiA.join(' · '))
+
+/* Il primo pezzo di terra comprabile, cercato nel mondo di adesso: il
+   mondo non è più una costante, quindi non si può scrivere un numero. */
+function primaComprabile(f) {
+  for (let x = f.limiti.x0; x <= f.limiti.x1; x++)
+    for (let y = f.limiti.y0; y <= f.limiti.y1; y++)
+      if (f.comprabile(x, y)) return [x, y]
+  return null
+}
 
 /* ══════════ 2. il calcolo è giusto ══════════ */
 
@@ -44,11 +60,7 @@ controlla('il blocco albo del manifesto non ha guasti', guastiAlbo0.length === 0
   const prezzi = []
   for (let i = 0; i < 6; i++) {
     prezzi.push(f.prezzoDellaProssima)
-    let cella = null
-    for (let x = 0; x < PIAZZOLE && !cella; x++)
-      for (let y = 0; y < PIAZZOLE && !cella; y++)
-        if (f.comprabile(x, y)) cella = [x, y]
-    f.compraPiazzola(...cella)
+    f.compraPiazzola(...primaComprabile(f))
   }
   nota('i primi sei prezzi della terra:', prezzi.join(', '))
   controlla('il prezzo della terra sale a ogni acquisto',
@@ -159,12 +171,6 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
   const b = borsaTracciata(300)
   const f = new Fattoria({ borsa: b })
 
-  const primaComprabile = () => {
-    for (let x = 0; x < PIAZZOLE; x++)
-      for (let y = 0; y < PIAZZOLE; y++)
-        if (f.comprabile(x, y)) return [x, y]
-    return null
-  }
   const primoSgomberabile = () => {
     for (const k in f.ostacoli) {
       const [x, y] = k.split(',').map(Number)
@@ -177,7 +183,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
   while (azione) {
     azione = false
     if (b.saldo() >= f.prezzoDellaProssima) {
-      const cella = primaComprabile()
+      const cella = primaComprabile(f)
       if (cella) { f.compraPiazzola(...cella); acquisti++; azione = true }
     }
     const ost = primoSgomberabile()
@@ -388,6 +394,187 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
             f.calpestabile(dove.x, dove.y), `${dove.x},${dove.y}`)
 }
 
-nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, su ${PIAZZOLE * PIAZZOLE} in tutto il mondo`)
+/* ══════════ 6. il mondo si allarga da sé ══════════
+   Non è un mondo infinito e non è un mondo di sette piazzole: la regola
+   è che di lato ci siano sempre almeno due pezzi da comprare. Si vede
+   solo giocando fino al bordo — cioè mai, a mano. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+
+  /* Quante piazzole comprabili ci sono oltre ogni lato della terra
+     posseduta: il margine di cui parla la regola. */
+  const margini = () => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (const k of Object.keys(f.piazzole)) {
+      const [x, y] = k.split(',').map(Number)
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y)
+      x1 = Math.max(x1, x); y1 = Math.max(y1, y)
+    }
+    return [x0 - f.limiti.x0, y0 - f.limiti.y0, f.limiti.x1 - x1, f.limiti.y1 - y1]
+  }
+
+  uguale('appena nata, il mondo è quello di sempre: 7×7',
+         `${f.limiti.x1 - f.limiti.x0 + 1}×${f.limiti.y1 - f.limiti.y0 + 1}`, '7×7')
+
+  const bosco0 = { ...f.ostacoli }
+  let cresciute = 0
+  for (let i = 0; i < 40; i++) {
+    const cella = primaComprabile(f)
+    controlla(`al giro ${i} c'è ancora terra da comprare`, !!cella)
+    if (!cella) break
+    if (f.compraPiazzola(...cella).cresciuto) cresciute++
+    const m = margini()
+    controlla(`dopo ${i + 1} acquisti il margine resta di almeno ${MARGINE} per lato`,
+              m.every(n => n >= MARGINE), `margini: ${m.join(', ')}`)
+  }
+  nota(`comprando 40 pezzi il mondo è cresciuto ${cresciute} volte, ` +
+       `fino a ${f.limiti.x1 - f.limiti.x0 + 1} piazzole per lato`)
+  controlla('comprando verso un lato il mondo è cresciuto davvero', cresciute > 0)
+
+  /* Il bosco già visto non si sposta: crescere semina solo la terra
+     nuova. Se rigenerasse tutto, un albero sgomberato ricrescerebbe e
+     gli altri cambierebbero posto sotto gli occhi. */
+  const spostati = Object.keys(bosco0).filter(k => f.ostacoli[k] !== bosco0[k])
+  uguale('crescendo, nessun albero di prima ha cambiato posto o tipo', spostati.length, 0)
+  controlla('e nella terra nuova il bosco c\'è', Object.keys(f.ostacoli).length > Object.keys(bosco0).length)
+
+  /* Le coordinate non si rinumerano: crescendo verso l'alto e verso
+     sinistra si va sotto zero, ed è la condizione perché il bosco resti
+     dov'era. */
+  controlla('il mondo cresce anche nel quadrante negativo',
+            f.limiti.x0 < 0 || f.limiti.y0 < 0, JSON.stringify(f.limiti))
+  const negativa = Object.keys(f.piazzole).map(k => k.split(',').map(Number))
+    .find(([x, y]) => x < 0 || y < 0)
+  if (negativa) {
+    const [px, py] = negativa
+    controlla('una piazzola dalle coordinate negative è terra tua a tutti gli effetti',
+              f.cellaMia(px * 6 + 1, py * 6 + 1), `piazzola ${px},${py}`)
+    uguale('e la cella accanto, oltre il bordo, non lo è',
+           f.cellaMia((f.limiti.x0 - 1) * 6, py * 6), false)
+  }
+}
+
+/* Una fattoria salvata quando il mondo era 7×7 fisso si rilegge, cresce
+   e **non si ritrova il bosco ricresciuto** dove era stato sgomberato.
+   È il salvataggio di un bambino che ha già giocato: se si rompe qui, si
+   rompe una sera dopo aver pubblicato. */
+{
+  const vecchia = new Fattoria({ borsa: borsaInfinita() })
+  const dato = vecchia.serializza()
+  delete dato.limiti                     // com'era prima che i limiti esistessero
+
+  /* si sgombera un pezzo di bosco, e da lì in poi non deve tornare */
+  const sgomberato = Object.keys(dato.ostacoli)[0]
+  delete dato.ostacoli[sgomberato]
+
+  const f = new Fattoria({ borsa: borsaInfinita(), dato })
+  uguale('un salvataggio senza limiti riparte dal mondo di allora',
+         JSON.stringify(f.limiti), JSON.stringify(LIMITI_VECCHI))
+  uguale('e il bosco sgomberato non è ricresciuto', f.ostacoli[sgomberato], undefined)
+  uguale('la terra è quella di prima', Object.keys(f.piazzole).length,
+         Object.keys(vecchia.piazzole).length)
+
+  /* comprando, cresce come una fattoria nuova */
+  const prima = { ...f.limiti }
+  for (let i = 0; i < 4; i++) f.compraPiazzola(...primaComprabile(f))
+  controlla('e da lì in poi il mondo cresce come per tutti',
+            f.limiti.x1 > prima.x1 || f.limiti.x0 < prima.x0 ||
+            f.limiti.y1 > prima.y1 || f.limiti.y0 < prima.y0)
+  uguale('il pezzo sgomberato resta sgomberato anche dopo che il mondo è cresciuto',
+         f.ostacoli[sgomberato], undefined)
+}
+
+/* ══════════ 7. le bestie si spostano, e restano dove le metti ══════════
+   È la cosa che si scorda: senza salvare dove sta, quello che la bambina
+   aveva chiuso nel recinto se ne esce da solo durante la notte. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  const chi = 'cane-beagle'
+  const r = f.compraBestia(chi, 90, 'Birba', { x: 14, y: 14 })
+  controlla('il cane si compra', r.ok)
+  uguale('e nasce dove gli è stato detto', `${r.bestia.x},${r.bestia.y}`, '14,14')
+
+  const s = f.spostaBestia(chi, 20, 20)
+  controlla('spostarlo riesce', s.ok)
+  uguale('e non costa niente: una bestia si sposta da sé, farla pagare sarebbe una beffa',
+         s.costo, 0)
+  uguale('adesso sta lì', `${f.laBestia(chi).x},${f.laBestia(chi).y}`, '20,20')
+
+  controlla('dentro una casa non ci si posa', f.posa('casa', 24, 24).ok)
+  uguale('e infatti spostarlo dentro la casa non riesce', f.spostaBestia(chi, 25, 24).ok, false)
+  uguale('ed è rimasto dov\'era', `${f.laBestia(chi).x},${f.laBestia(chi).y}`, '20,20')
+
+  /* riaprendo, il cane è dove l'avevamo lasciato */
+  const f2 = new Fattoria({ dato: f.serializza() })
+  uguale('salvata e riaperta, la bestia è ancora al suo posto',
+         JSON.stringify(f2.dovEra(chi)), JSON.stringify({ x: 20, y: 20 }))
+
+  /* una bestia salvata prima che si potesse spostare non ha coordinate:
+     ne prende una buona invece di sparire */
+  const antica = new Fattoria({ dato: { ...f.serializza(), bestie: [{ chi, nome: 'Birba' }] } })
+  const dove = antica.dovEra(chi)
+  controlla('una bestia salvata senza posizione ne trova una dove si può stare',
+            antica.calpestabile(dove.x, dove.y), JSON.stringify(dove))
+}
+
+/* ══════════ 8. ogni bestia ha i suoi cibi ══════════
+   Il tipo di bestia conta: il cibo sbagliato si rifiuta e **non si
+   paga**. Un bambino che sbaglia ciotola impara una cosa, non perde
+   sedici monete. */
+{
+  const b = borsaTracciata(200)
+  const f = new Fattoria({ borsa: b })
+  f.compraBestia('pappagallo', 120, 'Coco')
+  const saldo = b.saldo()
+
+  const suoi = cibiPer('pappagallo')
+  const altrui = CIBI.filter(c => !c.per.includes('pappagallo'))
+  controlla('il pappagallo ha almeno due cibi suoi', suoi.length >= 2)
+
+  const no = f.nutri('pappagallo', altrui[0])
+  uguale(`il pappagallo rifiuta «${altrui[0].nome}»`, no.ok, false)
+  uguale('e dice perché', no.motivo, 'non-gli-piace')
+  uguale('e non ha pagato niente', b.saldo(), saldo)
+
+  const primaPancia = f.stato('pappagallo').pancia
+  const si = f.nutri('pappagallo', suoi[0])
+  controlla(`e mangia «${suoi[0].nome}»`, si.ok)
+  uguale('pagandolo', b.saldo(), saldo - suoi[0].prezzo)
+  controlla('e la pancia sale', f.stato('pappagallo').pancia > primaPancia)
+
+  /* Nessuna bestia in vendita deve restare senza ciotola: una tabella
+     dimenticata a schermo sembra un guasto del gioco. */
+  for (const a of IN_VENDITA)
+    controlla(`${a.nome} ha dei cibi suoi`, cibiPer(famigliaDi(a.chi)).length >= 2)
+}
+
+/* Giocare costa una monetina, spazzolare no: chi è a zero deve poter
+   comunque toccare il suo cane. */
+{
+  const gioca = COCCOLE.find(c => c.id === 'gioca')
+  const spazzola = COCCOLE.find(c => c.id === 'spazzola')
+  uguale('giocare costa una monetina', gioca.prezzo, 1)
+  uguale('spazzolare resta gratis', spazzola.prezzo, 0)
+
+  const b = borsaTracciata(1)
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  f.compraBestia('cane-beagle', 90, 'Birba')
+  f.stato('cane-beagle').gioco = 0.2
+  f.stato('cane-beagle').pelo = 0.2
+  f.borsa = b
+
+  const primo = f.coccola('cane-beagle', gioca)
+  controlla('con una moneta in tasca si gioca', primo.ok)
+  uguale('e la moneta se n\'è andata', b.saldo(), 0)
+
+  f.stato('cane-beagle').gioco = 0.2
+  const secondo = f.coccola('cane-beagle', gioca)
+  uguale('a zero monete non si gioca più', secondo.ok, false)
+  uguale('e dice perché', secondo.motivo, 'poche-monete')
+  controlla('ma spazzolarlo si può lo stesso', f.coccola('cane-beagle', spazzola).ok)
+}
+
+nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +
+     `e il mondo tiene ${MARGINE} piazzole di margine per lato`)
 
 riassunto('la fattoria')

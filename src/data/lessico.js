@@ -11,14 +11,17 @@
    spagnolo.
 
    Ogni voce ha sempre gli stessi campi, qualunque cosa sia:
-     chiave  quella del motore di apprendimento
-     lingua  'en' | 'es' — decide fra quali compagne pescare i falsi
-     genere  'parola' | 'verbo' | 'frase'
-     str     la parola nella lingua straniera
-     it      l'italiano
-     emoji   '' se non ce l'ha
-     cat     categoria, per pescare distrattori affini
-     frase   solo per le frasi: la voce intera del file delle frasi
+     chiave   quella del motore di apprendimento
+     lingua   'en' | 'es' — decide fra quali compagne pescare i falsi
+     genere   'parola' | 'verbo' | 'frase'
+     str      la parola nella lingua straniera
+     it       l'italiano
+     emoji    '' se non ce l'ha
+     cat      categoria, per pescare distrattori affini
+     famiglia '' di norma: la dichiara solo chi rischia di essere confusa
+              a colpo d'occhio con un'altra emoji (vedi `words.js`).
+              `domande.js` non ne pesca due della stessa in una domanda.
+     frase    solo per le frasi: la voce intera del file delle frasi
    ═══════════════════════════════════════════════════════════════════ */
 import { WORDS } from './words.js'
 import { VERBI } from './verbi.js'
@@ -56,13 +59,15 @@ function aggiungi(v) {
    verbo va confuso con un altro verbo, non con un animale. */
 function registra(lingua, { parole, verbi, frasi }) {
   const pre = PREFISSI[lingua]
-  for (const [str, it, emoji, cat] of parole)
-    aggiungi({ chiave: pre.parola + str, lingua, genere: 'parola', str, it, emoji, cat })
+  for (const [str, it, emoji, cat, famiglia] of parole)
+    aggiungi({ chiave: pre.parola + str, lingua, genere: 'parola', str, it, emoji, cat,
+               famiglia: famiglia || '' })
   for (const [str, it, emoji] of verbi)
-    aggiungi({ chiave: pre.verbo + str, lingua, genere: 'verbo', str, it, emoji, cat: 'v' })
+    aggiungi({ chiave: pre.verbo + str, lingua, genere: 'verbo', str, it, emoji, cat: 'v',
+               famiglia: '' })
   for (const f of frasi)
     aggiungi({ chiave: pre.frase + f.id, lingua, genere: 'frase',
-               str: f[lingua], it: f.it, emoji: '', cat: f.tema, frase: f })
+               str: f[lingua], it: f.it, emoji: '', cat: f.tema, famiglia: '', frase: f })
 }
 
 registra('en', { parole: WORDS, verbi: VERBI, frasi: FRASI })

@@ -1,15 +1,23 @@
 # Il banco degli sprite
 
-Da qui esce l'atlante della fattoria: **un PNG solo, in base64, dentro
-[`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js)**
-— che è **generato** e non si scrive a mano — e dentro
-`poc/fattoria-gfx.html`. Due bersagli e un comando solo apposta: due
-comandi da ricordare vogliono dire, prima o poi, un atlante e una tabella
-che non combaciano più, e quel guasto si presenta come uno sprite
-sbagliato a schermo.
+Da qui escono gli atlanti dei giochi: **un PNG solo, in base64, dentro un
+modulo generato** che non si scrive a mano.
+
+| bersaglio | dove finisce | e anche |
+|---|---|---|
+| `fattoria` | [`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js) | — |
+| `sotterraneo` | [`src/giochi/sotterraneo/dati/atlante.js`](../../src/giochi/sotterraneo/dati/atlante.js) | `poc/sotterraneo-gfx.html` |
+
+Per quale gioco sia un foglio **lo dice il foglio**, nel suo foglietto
+(`"bersaglio": "sotterraneo"`), come già dichiara la propria geometria.
+Un attrezzo solo e un comando solo apposta: due script che leggono la
+stessa cartella finiscono, prima o poi, con un atlante e una tabella che
+non combaciano più — e quel guasto si presenta come uno sprite sbagliato
+a schermo, cioè tardi.
 
 ```bash
-python3 strumenti/sprite/atlante.py              # rifà tutto
+python3 strumenti/sprite/atlante.py              # rifà tutti i bersagli
+python3 strumenti/sprite/atlante.py sotterraneo  # solo quello
 python3 strumenti/sprite/atlante.py --provini    # ...e un foglio da guardare
 python3 strumenti/sprite/attori.py <file> gatto  # porta dentro un animale nuovo
 ```
@@ -80,6 +88,14 @@ che non si rigenera da un clone è un atlante che prima o poi si rompe**.
   Attenzione: il CC0 è dichiarato **sulla pagina**, dentro lo zip non c'è
   nessun `License.txt` — questa cartella è la prova di provenienza, e per
   quello ci sta anche lo zip pristino accanto alla cartella estratta.
+- `sorgenti/0x72/` — *16×16 DungeonTileset II* di **0x72**, CC-0,
+  <https://0x72.itch.io/dungeontileset-ii>: è l'atlante del sotterraneo.
+  Le coordinate stanno in `pezzi.json`, che incrocia il `tile_list_v1.7`
+  distribuito dall'autore dentro lo zip; le carte di provenienza (da
+  quale mirror, con quale sha256, e l'HTML della pagina itch salvato il
+  giorno del download) stanno in `PROVENIENZA.txt`. Il ragionamento per
+  esteso — cosa contiene, e soprattutto **cosa non contiene** — è in
+  [`poc/SPRITE.md`](../../poc/SPRITE.md).
 - `sorgenti/bobtail-generato.jpeg` e `sorgenti/arciera-generata.jpeg` —
   generati con Gemini nel formato di `character.png`, che è quello che i
   generatori di immagini restituiscono se glielo si fa vedere. Il

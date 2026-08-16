@@ -128,7 +128,7 @@ await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await page.click('.carta.mate')
 // non più un menu di spunte: la campagna dei pianeti, e si parte dal primo aperto
-await page.waitForSelector('.pianeti')
+await page.waitForSelector('.scaletta')
 const mate = await page.evaluate(async () => {
   document.querySelector('.pianeta:not([disabled])').click()
   await new Promise(r => setTimeout(r, 200))

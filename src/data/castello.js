@@ -499,10 +499,10 @@ export function partenzaDi(tappa) {
 
    Il minimo è quello che serve: le piazzole che il piano occupa più una
    di respiro, e mai meno delle torri che la tappa mette a disposizione.
-   La seconda condizione non è estetica — quasi ogni ondata arriva con un
-   punto debole dichiarato in anticipo, e poter mettere in campo la torre
-   giusta è la scelta che il gioco chiede. Se le piazzole fossero meno dei
-   tipi, quella scelta sarebbe finta.
+   La seconda condizione non è estetica — quasi ogni ondata arriva con una
+   resistenza dichiarata in anticipo, e poter tenere in campo una torre
+   che quell'ondata non chiude è la scelta che il gioco chiede. Se le
+   piazzole fossero meno dei tipi, quella scelta sarebbe finta.
 
    Sopra al minimo c'è una **quota per campagna**, e cresce: quattro nel
    Bosco, sei nel Sotterraneo, otto nelle Mura. È la lezione del gioco
@@ -732,7 +732,7 @@ export function firmaEquilibrio() {
     CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
-                       !!t.debolezze, !!t.rami, t.forma]),
+                       !!t.resistenze, !!t.rami, t.forma]),
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una
     // tappa tarata su mostri più lenti non è la stessa tappa
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
@@ -759,7 +759,7 @@ export const LIBERA = {
      La forma è quella del folto, e il terreno va detto: senza, si
      dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
   ambiente: 'bosco-fitto',
-  debolezze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
+  resistenze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
   mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js
   partenza: partenzaDi({ cap: 4 }), durezza: 1, attesa: 30,
   /* le prime venti ondate sono tarate come una tappa; dopo, la vita

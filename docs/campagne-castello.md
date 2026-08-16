@@ -18,7 +18,7 @@ node strumenti/valida-percorsi.mjs
 
 ## 1 · Le tre campagne
 
-| | racconto | torri | debolezze | calcoli |
+| | racconto | torri | resistenze | calcoli |
 |---|---|---|---|---|
 | 🌲 **Bosco** | la scuola: si impara a costruire e a potenziare | entrano una alla volta, `add` → `sub` → `mul` → `div` | dalla seconda tappa | 6 · 7 · 8 · 10 · 12 |
 | 🕯️ **Sotterraneo** | tutte e quattro aperte: non si sblocca più niente, si sceglie | tutte | sì | 9 · 11 · 13 · 16 · 19 |
@@ -30,23 +30,23 @@ o un gradino salito.
 
 ### Le quindici tappe, una riga a testa
 
-| # | tappa | terreno | percorso | mostri (debolezza a giro) |
+| # | tappa | terreno | percorso | mostri (la torre che ciascuno **chiude**, a giro) |
 |---|---|---|---|---|
-| 1 | Il sentiero 🌱 | `bosco-chiaro` | tre risvolte fra i tronchi, il tracciato più ripiegato del gioco | slime · goblin — *l'unica tappa senza debolezze* |
+| 1 | Il sentiero 🌱 | `bosco-chiaro` | tre risvolte fra i tronchi, il tracciato più ripiegato del gioco | slime · goblin — *l'unica tappa senza resistenze* |
 | 2 | Il guado 💧 | `bosco-guado` | si scende alla riva, si costeggia l'acqua, si risale | 🏹 goblin · 🔮 slime |
 | 3 | La radura 🍀 | `bosco-radura` | il sentiero gira **attorno** alla radura: una torre in mezzo batte due tratti | 🏹 ragno · 🔮 slime · 🏹 pipistrello · 🔮 golem |
 | 4 | Il folto 🌳 | `bosco-fitto` | quattro denti stretti, su e giù senza respiro | 🏹 pipistrello · 🔮 golem · 🏹 goblin · 🔮 fantasma |
-| 5 | La radice 🪵 | `bosco-notte` | due grandi tornanti; il bosco si apre e i tracciati cominciano ad accorciarsi | 🏹 ragno · 🔮 fantasma · 💣 scheletro · 🏹 goblin · 🔮 golem · 💣 orco |
+| 5 | La radice 🪵 | `bosco-notte` | due grandi tornanti; il bosco si apre e i tracciati cominciano ad accorciarsi | 🏹 ragno · 🔮 fantasma · 💣 scheletro · 🏹 orco · 🔮 golem · 💣 arpia |
 | 6 | La grotta 🕳️ | `grotta` | la caverna più larga, con il pilastro in mezzo | 🏹 pipistrello · 🔮 golem · 💣 scheletro |
 | 7 | La miniera ⛏️ | `miniera` | gallerie a squadra, una sotto l'altra | 💣 scheletro · 🏹 goblin · 🔮 golem |
-| 8 | Le fogne 🕸️ | `fogne` | due salti di quota dentro il collettore | 🔮 slime · 🏹 ragno · 💣 orco |
-| 9 | La cripta ⚰️ | `cripta` | una scala regolare di loculo in loculo, tutta ad angoli retti | 🔮 fantasma · 🏹 arpia · 💣 scheletro · 🔮 golem · 🏹 pipistrello · 💣 orco |
-| 10 | La gola ⛰️ | `gola` | stretta e quasi diritta, due gomiti e sei fuori | 💣 orco · 🔮 golem · 🏹 arpia · 💣 scheletro · 🔮 fantasma · 🏹 ragno |
-| 11 | Il cortile 🚪 | `cortile` | si gira attorno al pozzo e si sale al camminamento | 🔮 golem · 💣 orco · 🏹 arpia |
-| 12 | Il camminamento 🧱 | `camminamento` | la ronda sopra le mura, un lungo rettifilo e giù | 🏹 arpia · 🔮 fantasma · 💣 scheletro — due su tre volano |
-| 13 | Il corridoio 🗝️ | `corridoio` | un dritto, un gomito, un dritto | 🏹 pipistrello · 🔮 slime · 💣 scheletro · 🏹 arpia · 🔮 fantasma · 💣 orco |
-| 14 | La sala del trono 👑 | `trono` | si taglia la sala in diagonale; nessun tornante | 🔮 golem · 🏹 arpia · 💣 orco · 🔮 fantasma · 🏹 pipistrello · 💣 drago |
-| 15 | Il torrione 🏰 | `bastione` | la rampa finale: quattro segmenti dall'ingresso alla porta | 🏹 ragno · 🔮 golem · 💣 orco · 🏹 arpia · 🔮 fantasma · 💣 drago |
+| 8 | Le fogne 🕸️ | `fogne` | due salti di quota dentro il collettore | 🔮 slime · 💣 verme · 🔮 blatta · 🏹 ragno |
+| 9 | La cripta ⚰️ | `cripta` | una scala regolare di loculo in loculo, tutta ad angoli retti | 🔮 fantasma · 🏹 pipistrello · 💣 scheletro · 🔮 golem · 🏹 orco · 💣 arpia |
+| 10 | La gola ⛰️ | `gola` | stretta e quasi diritta, due gomiti e sei fuori | 💣 scheletro · 🔮 golem · 🏹 orco · 💣 arpia · 🔮 fantasma · 🏹 ragno |
+| 11 | Il cortile 🚪 | `cortile` | si gira attorno al pozzo e si sale al camminamento | 🔮 golem · 🏹 orco · 💣 arpia |
+| 12 | Il camminamento 🧱 | `camminamento` | la ronda sopra le mura, un lungo rettifilo e giù | 💣 arpia · 🏹 pipistrello · 🔮 fantasma — volano tutti e tre |
+| 13 | Il corridoio 🗝️ | `corridoio` | un dritto, un gomito, un dritto | 🏹 pipistrello · 🔮 slime · 💣 scheletro · 🏹 orco · 🔮 fantasma · 💣 arpia |
+| 14 | La sala del trono 👑 | `trono` | si taglia la sala in diagonale; nessun tornante | 🔮 golem · 🏹 orco · 💣 arpia · 🔮 fantasma · 🏹 pipistrello · 💣 drago |
+| 15 | Il torrione 🏰 | `bastione` | la rampa finale: quattro segmenti dall'ingresso alla porta | 🏹 ragno · 🔮 golem · 💣 arpia · 🏹 orco · 🔮 fantasma · 💣 drago |
 
 ---
 
@@ -162,24 +162,37 @@ Le due cose che il validatore ha trovato e che a occhio non si vedono:
   disegnate una sopra l'altra. Le quindici di oggi stanno sopra le 47 unità
   nella fascia di postazioni che il gioco usa davvero.
 
-### Le debolezze
+### Le resistenze
+
+Ogni mostro dichiara **a che cosa resiste**: una torre che gli fa **un terzo**
+del danno. Prima dichiarava una debolezza — una torre che gli faceva il doppio —
+e il nastro annunciava «il Golem, debole alle bombe»: letta da un bambino, quella
+frase dice il contrario di quello che vuol dire, e comunque l'informazione che
+cambia la mossa è quale torre **non** serve.
 
 Sono accese in quattordici tappe su quindici. Resta fuori solo la prima, che ha
-una torre sola: con una torre sola la debolezza non è una scelta, è
-un'etichetta. Due regole, verificate dal validatore:
+una torre sola che spara: lì una resistenza non sarebbe una scelta ma una
+condanna. Due regole, verificate dal validatore:
 
-1. ogni mostro dell'elenco è debole a una torre **che quella tappa mette a
-   disposizione** — altrimenti la scheda indicherebbe un bottone chiuso;
-2. in un elenco compaiono almeno due debolezze diverse.
+1. ogni mostro dell'elenco resiste a una torre **che quella tappa mette a
+   disposizione** — altrimenti avvertirebbe di un bottone chiuso, cioè di niente;
+2. in un elenco compaiono almeno due resistenze diverse.
 
-Gli elenchi fanno di più: girano i tre bersagli (🏹 arciere, 🔮 magica,
-💣 bombe) in modo che **due ondate di fila non chiedano mai la stessa torre**.
-Chi tiene una torre sola altissima si trova scoperto un'ondata su tre. Il
-ghiaccio non compare fra le debolezze: non fa danno, e il doppio di zero è zero.
+Dentro la tappa la resistenza non parla né all'inizio né alla fine: comincia
+dopo tante ondate quante sono le bocche d'ingresso — finché c'è una torre per
+strada, spegnerne una lascia quella strada scoperta e non c'è nessun'altra mossa
+da fare — e l'ultima ondata arriva senza, perché lì tutto quello che si è
+costruito deve valere per intero.
 
-Nel Bosco 2-4 le torri sono ancora due o tre, quindi lì gli elenchi alternano
-solo arciere e magica; orco, scheletro e drago — che sono deboli alle bombe —
-entrano da *La radice* in poi, che è la tappa in cui si comprano le bombe.
+Gli elenchi girano i tre bersagli (🏹 arciere, 🔮 magica, 💣 bombe) in modo che
+**due ondate di fila non chiudano mai la stessa torre**. Chi tiene una torre
+sola altissima si trova con un terzo della difesa un'ondata su tre. Il ghiaccio
+non compare fra le resistenze: non fa danno, e un terzo di zero è zero.
+
+Nel Bosco 2-4 le torri che sparano sono ancora due, quindi lì gli elenchi
+alternano solo arciere e magica; scheletro, arpia e drago — che reggono le
+bombe — entrano da *La radice* in poi, che è la tappa in cui si comprano le
+bombe.
 
 ---
 

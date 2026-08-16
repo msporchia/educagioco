@@ -664,7 +664,7 @@ export const STAZIONI = TAPPE.map((t, i) => ({
      `14 + i*2` l'ultima ne avrebbe chieste trentasei — una partita intera
      senza sbagliare. Poche cose per tappa vogliono un bersaglio corto. */
   bersaglio: Math.round(13 + i * 1.2),
-  /* poco più della metà: la tappa chiede i suoi concetti sette volte su
+  /* poco più della metà: la tappa chiede i suoi concetti otto volte su
      dieci (`QUOTA_TAPPA` in `store/calcolo.js`), il resto sono errori e
      ripasso. Chiedere quanto la quota promette, e non di più, è quello che
      tiene la tappa una serata invece che un'attesa */

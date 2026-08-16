@@ -26,6 +26,16 @@
    scambiando destra e sinistra. Una riga di codice al posto di un
    disegno che non c'è.
 
+   ── quando un sì/no non basta: gli attacchi ──
+   Tutto quanto sopra risponde «questo lato è collegato oppure no», e
+   basta finché le tessere portano la strada nello stesso punto del
+   bordo. Un foglio disegnato per davvero non è così: c'è la curva che
+   esce in alto a destra e quella che esce in mezzo, e con un sì/no sono
+   la stessa cosa — accostate, la strada si spezza. La seconda metà del
+   file (`pose`, `componiPercorso`) tratta il bordo come un'etichetta —
+   dove passa, non se passa — che è quello che il mestiere chiama *Wang
+   tiles*, e sceglie le tessere come si risolve un sudoku.
+
    ── il dungeon, l'angolo che `fettaDi` non vede ──
    `fettaDi` guarda solo i quattro vicini in croce e riduce tutto a
    nove fette: basta per una pozza, ma non per un dungeon a stanze, che
@@ -42,6 +52,8 @@
    chiavi confrontabili */
 export const VERSI = { N: [0, -1], S: [0, 1], O: [-1, 0], E: [1, 0] }
 const ORDINE = ['N', 'S', 'O', 'E']
+/* il lato con cui si guarda un vicino: il mio N è il suo S */
+const CONTRO = { N: 'S', S: 'N', O: 'E', E: 'O' }
 
 /* la chiave, sempre nello stesso ordine */
 export const chiave = versi => ORDINE.filter(v => versi.includes(v)).join('')
@@ -203,6 +215,159 @@ export function fettaEquivalente(k8) {
 export function pezzoPerOtto(tavola, k8) {
   if (tavola[k8]) return { nome: tavola[k8], specchia: false }
   return pezzoPer(tavola, fettaEquivalente(k8))
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLI ATTACCHI — quando «di qua passa la strada» non basta
+
+   Tutto quello che sta sopra risponde sì o no: questo lato è collegato
+   oppure no. Basta finché tutte le tessere portano la strada nello
+   stesso punto del bordo — nel mezzo. Ma un foglio disegnato da una
+   mano sola non è fatto così: c'è la tessera che esce in alto **a
+   destra**, quella che taglia in diagonale, quella che entra larga e
+   esce stretta. Con un sì/no sono tutte «collegata a nord», e messe
+   una sopra l'altra la strada si spezza.
+
+   L'attacco dice **dove**: `·` nessuno, `c` in mezzo, `sx` verso
+   sinistra, `dx` verso destra. Due tessere si toccano se il lato che si
+   guardano racconta la stessa cosa — il N di quella sotto contro il S
+   di quella sopra.
+
+   È il modello delle *Wang tiles* (un'etichetta per lato invece di un
+   colore solo), e il modo di risolverlo è quello del *Wave Function
+   Collapse*: ogni cella tiene l'elenco delle tessere ancora possibili,
+   si sceglie sempre la cella che ne ha meno, e se un ramo si chiude si
+   torna indietro. Non c'è niente di magico: è un sudoku dove i numeri
+   sono pezzi di strada.
+
+   ── i lati si leggono sempre nello stesso verso ──
+   N e S da sinistra a destra, O ed E dall'alto in basso. È la
+   convenzione che fa combaciare i confronti senza rigirare niente, ed è
+   anche il motivo per cui `giraSocket` inverte due lati su quattro: un
+   bordo che era a sinistra, dopo un quarto di giro, si legge in alto.
+   ═══════════════════════════════════════════════════════════════════ */
+
+export const NESSUN_ATTACCO = '·'
+
+/* l'attacco visto dall'altra parte: chi era a destra si ritrova a
+   sinistra. Serve a girare e a specchiare, non a confrontare — due
+   tessere affiancate guardano lo stesso bordo dallo stesso verso. */
+const ribalta = a => (a === 'sx' ? 'dx' : a === 'dx' ? 'sx' : a)
+
+/* un quarto di giro in senso orario */
+export const giraSocket = s => ({ N: s.O, S: ribalta(s.E), O: ribalta(s.S), E: s.N })
+
+/* lo specchio fra destra e sinistra */
+export const specchiaSocket = s =>
+  ({ N: ribalta(s.N), S: ribalta(s.S), O: s.E, E: s.O })
+
+/* ── le otto pose di una tessera ──
+   Quattro giri per due versi. Un foglio non disegna mai tutte le curve:
+   ne disegna una e le altre tre sono la stessa girata, e la pixel art
+   regge i novanta gradi esatti senza sfrangiarsi (non regge i
+   quarantacinque, ed è il motivo per cui qui i giri sono quattro).
+
+   Le pose che si presentano identiche su tutti e quattro i lati sono la
+   stessa cosa e restano una sola: un incrocio girato è un incrocio. */
+export function pose(nome, socket) {
+  const fuori = []
+  const viste = new Set()
+  for (const specchia of [false, true]) {
+    let s = specchia ? specchiaSocket(socket) : socket
+    for (let gira = 0; gira < 4; gira++) {
+      const k = ORDINE.map(v => s[v]).join('|')
+      if (!viste.has(k)) {
+        viste.add(k)
+        fuori.push({ nome, gira, specchia, socket: s })
+      }
+      s = giraSocket(s)
+    }
+  }
+  return fuori
+}
+
+/* la chiave dei lati aperti di una posa: serve a scegliere in fretta
+   solo le pose che hanno la forma giusta */
+export const latiDi = s => chiave(ORDINE.filter(v => s[v] !== NESSUN_ATTACCO))
+
+/* ── comporre un percorso ──
+   `celle` è la fila ordinata di caselle che la strada attraversa;
+   `catalogo` è una lista di pose (quelle che escono da `pose()`).
+
+   Due vincoli, e sono di natura diversa:
+     · **la forma** — una cella deve aprirsi verso la casella prima e
+       verso quella dopo, e verso nessun'altra. Lo dice il percorso, non
+       la tessera, e restringe il campo prima ancora di cominciare.
+     · **l'attacco** — due caselle vicine devono raccontare lo stesso
+       bordo. E una casella di strada che confina con l'erba deve avere
+       quel lato chiuso, se no la strada sborda nel prato.
+
+   `dentro(x, y)` dice se una casella sta nel campo: fuori dal campo non
+   si vincola niente, ed è così che la strada può entrare da sopra e
+   uscire in fondo senza che il bordo la chiuda.
+
+   Torna `null` se non si chiude — e un `null` va fatto vedere, non
+   nascosto: vuol dire che al foglio manca un pezzo, ed è una cosa da
+   sapere, non da coprire con una tessera qualsiasi. */
+export function componiPercorso(celle, catalogo, opz = {}) {
+  const { capi = {}, dentro = () => true, seme = 0 } = opz
+  const inVia = new Set(celle.map(([x, y]) => `${x},${y}`))
+  const scelte = new Map()
+
+  /* il campo di scelta di ogni casella: solo le pose che si aprono
+     esattamente dove serve */
+  const dominio = celle.map(([x, y], i) => {
+    const voluti = versiLungo(celle, i, capi)
+    const buone = catalogo.filter(p => latiDi(p.socket) === voluti)
+    return { x, y, k: `${x},${y}`, voluti, buone }
+  })
+  const vuoto = dominio.find(d => !d.buone.length)
+  if (vuoto) return null
+
+  const combacia = (d, p) => {
+    for (const v of ORDINE) {
+      const [dx, dy] = VERSI[v]
+      const nx = d.x + dx, ny = d.y + dy
+      const chi = scelte.get(`${nx},${ny}`)
+      if (chi) {
+        if (p.socket[v] !== chi.socket[CONTRO[v]]) return false
+      } else if (!dentro(nx, ny)) {
+        continue                       // fuori dal campo: nessun vincolo
+      } else if (!inVia.has(`${nx},${ny}`)) {
+        if (p.socket[v] !== NESSUN_ATTACCO) return false   // di là c'è il prato
+      }
+    }
+    return true
+  }
+
+  function passo() {
+    const resto = dominio.filter(d => !scelte.has(d.k))
+    if (!resto.length) return true
+    /* sempre la casella con meno possibilità: è quella che fa fallire
+       prima il ramo sbagliato, e un ramo che fallisce presto costa poco */
+    let scelta = null, cand = null
+    for (const d of resto) {
+      const c = d.buone.filter(p => combacia(d, p))
+      if (!cand || c.length < cand.length) { scelta = d; cand = c }
+      if (!c.length) break
+    }
+    /* l'ordine è casuale ma non cambia mai: stesso campo, stessa strada.
+       Una strada che si ridisegna diversa a ogni giro si legge come un
+       guasto anche quando è bella. */
+    const ordinate = cand
+      .map((p, i) => [caso(scelta.x, scelta.y, seme + i), p])
+      .sort((a, b) => a[0] - b[0])
+      .map(([, p]) => p)
+    for (const p of ordinate) {
+      scelte.set(scelta.k, p)
+      if (passo()) return true
+      scelte.delete(scelta.k)
+    }
+    return false
+  }
+
+  if (!passo()) return null
+  return celle.map(([x, y]) => scelte.get(`${x},${y}`))
 }
 
 /* ── il caso che non cambia ──

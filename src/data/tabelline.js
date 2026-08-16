@@ -60,10 +60,11 @@ const PIANETI = [
 
    `bersaglio` sono le risposte giuste che servono per superarla, `mirate`
    quante di quelle devono essere sulla tabellina nuova. La seconda è poco
-   più della metà della prima: la tappa chiede la sua tabellina sette volte
-   su dieci (`QUOTA_TAPPA` in `store/calcolo.js`), e il resto sono errori e
-   ripasso. Chiedere quanto la quota promette, e non di più, è quello che
-   tiene la tappa una serata invece che un'attesa. */
+   più della metà della prima: la tappa chiede la sua tabellina otto volte
+   su dieci (`QUOTA_TAPPA` in `store/calcolo.js`), meno la domanda del
+   boss che arriva dalla tappa dopo, e il resto sono errori e ripasso.
+   Chiedere quanto la quota promette, e non di più, è quello che tiene la
+   tappa una serata invece che un'attesa. */
 export const CAMPAGNA = PIANETI.map((p, i) => ({
   i,
   nome: p.nome,
@@ -72,7 +73,7 @@ export const CAMPAGNA = PIANETI.map((p, i) => ({
   nuova: p.n,
   tabelle: [1, ...PIANETI.slice(0, i + 1).map(x => x.n)].sort((a, b) => a - b),
   bersaglio: 15 + i * 2,
-  mirate: Math.round((15 + i * 2) * 0.55),
+  mirate: Math.round((15 + i * 2) * 0.6),
 }))
 
 /* L'ultima tappa non porta niente di nuovo: mescola tutto quello che c'è
@@ -89,8 +90,11 @@ CAMPAGNA.push({
   mirate: 0,
 })
 
-/* il volo libero: si apre a campagna finita, non finisce mai, e lì —
-   solo lì — si torna a poter scegliere le tabelline a mano */
+/* Il volo libero: si apre a campagna finita e non finisce mai. Le dieci
+   tabelline ci sono tutte, ma non si spuntano a mano — nemmeno qui: la
+   domanda «quali vuoi allenare?» resta una domanda a cui un bambino non
+   sa rispondere anche dopo aver finito la campagna. Sceglie il motore,
+   quello che si ricorda meno (`poolLibero` in `store/tabelline.js`). */
 export const VOLO_LIBERO = {
   i: -1, nome: 'Volo libero', emoji: '♾️', dritta: '',
   nuova: null, tabelle: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],

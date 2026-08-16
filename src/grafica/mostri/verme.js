@@ -1,4 +1,4 @@
-/* Il verme — Sotterraneo, debole alle bombe.
+/* Il verme — Sotterraneo, resiste alle bombe (tutto molle: l'urto se lo mangia).
    Tre anelli separati da una riga scura, che si assottigliano verso
    il basso, e una bocca rotonda piena di dentini: l'unica sagoma
    segmentata del gruppo, invece del solito busto tondo. Rosa-terra,

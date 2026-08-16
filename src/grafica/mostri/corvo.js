@@ -1,4 +1,4 @@
-/* Il corvo — Bosco, vola, debole all'arciere.
+/* Il corvo — Bosco, vola, resiste alle frecce (vira a ogni battito).
    Ali piumate strette contro il corpo, becco corto: una sagoma da
    uccello, non da pipistrello — niente dita, niente membrana. Nero
    quasi puro: sul prato chiaro è il mostro più netto di tutti. */

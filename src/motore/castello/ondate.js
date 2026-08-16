@@ -9,8 +9,8 @@
    ── il preavviso ──
    Ed è tutto il punto. Chi arriva è deterministico — `mostroDiOnda`
    dipende solo dal numero dell'ondata — quindi «fra tre ondate arriva
-   il Golem, debole alle bombe» si può dire *adesso*, mentre il campo è
-   pulito e si stanno facendo i conti per comprare. Prima la debolezza
+   il Golem, che regge la magia» si può dire *adesso*, mentre il campo è
+   pulito e si stanno facendo i conti per comprare. Prima la resistenza
    si scopriva quando l'ondata era già partita, cioè quando non serviva
    più a niente: era un dettaglio, non una decisione.
 
@@ -18,7 +18,7 @@
    solo motivo per cui il motore espone il futuro invece del presente.
    ═══════════════════════════════════════════════════════════════════ */
 import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico } from '../../data/castello.js'
-import { MOSTRI, mostroDiOnda, mostroLibero, torreDebole } from '../../data/mostri.js'
+import { MOSTRI, mostroDiOnda, mostroLibero, torreResistente } from '../../data/mostri.js'
 
 export class Ondate {
   constructor(tappa) { this.tappa = tappa }
@@ -30,10 +30,45 @@ export class Ondate {
 
   /* Chi arriva in questa ondata: un tipo solo, così la scheda in alto a
      destra parla di lui e scegliere la torre è una domanda con una
-     risposta. La debolezza c'è solo dove la tappa la prevede. */
+     risposta. La resistenza c'è solo dove la tappa la prevede, e
+     nemmeno lì in tutte le ondate.
+
+     ── da quando una tappa dice a cosa si resiste ──
+     Non dalla prima ondata, e per la stessa ragione per cui la prima
+     tappa non ha resistenze del tutto: finché in campo c'è **una torre
+     per strada**, «resiste a quella» non è una scelta, è un muro —
+     quella strada resta scoperta e non c'è nessun'altra mossa da fare.
+     Il gioco apre la tappa con una torre per ingresso, e ogni ondata
+     ne fa comprare grosso modo un'altra: quindi le resistenze
+     cominciano dopo tante ondate quante sono le bocche — dalla seconda
+     dove la strada è una, dalla terza dove sono due.
+     Misurato, non temuto. Senza, il Corridoio si perdeva alla prima
+     ondata anche spendendo tutto (il pipistrello che la apre regge
+     proprio le frecce, cioè la torre che si compra per prima); e il
+     Torrione, che di bocche ne ha due, usciva dalla taratura con i
+     primi nemici da dieci punti vita, perché l'ondata 2 spegneva
+     l'unica torre che guardava la seconda strada.
+
+     ── e nemmeno l'ultima ──
+     L'ondata che chiude una tappa arriva con tutto, e tutto quello che
+     si è costruito vale per intero: è il momento in cui il campo che
+     si è messo insieme si vede per quello che è, senza che il gioco ne
+     spenga un pezzo. Non è solo gusto — è quello che rende le tappe
+     confrontabili fra loro. La taratura non lascia mai un'ondata più
+     dura di quella dopo, quindi l'**ultima** fissa il tetto di tutta
+     la tappa: se lì capita un mostro che chiude la torre più forte del
+     campo, l'intera tappa si abbassa dietro di lui, e due tappe
+     gemelle finiscono con vite diverse per il caso di quale bestia sia
+     toccata in fondo alla fila. Con l'ultima libera, il tetto torna a
+     misurare la tappa e non la sua coincidenza. */
+  /* quante bocche ha la tappa: è `forme` che le dichiara, e chi ne ha
+     una sola scrive `forma` al singolare */
+  get daQuandoResistono() { return this.tappa.forme?.length || 1 }
+
   bestiaDi(o) {
     const id = this.tappa.mostri ? mostroDiOnda(this.tappa.mostri, o) : mostroLibero(o)
-    return { id, ...MOSTRI[id], debole: this.tappa.debolezze ? torreDebole(id) : null }
+    const dice = this.tappa.resistenze && o > this.daQuandoResistono && !this.ultima(o)
+    return { id, ...MOSTRI[id], resiste: dice ? torreResistente(id) : null }
   }
 
   quantiDi(o) { return nemiciDiOnda(o) }
@@ -70,7 +105,7 @@ export class Ondate {
   /* ── il preavviso ──
      Le ondate che arrivano dopo la `dopo`-esima, al massimo `quante`.
      Ognuna sa fra quanto arriva, chi la compone, quanti sono, quanta
-     vita ha ciascuno e a quale torre è debole: tutto quello che serve
+     vita ha ciascuno e a quale torre resiste: tutto quello che serve
      per decidere cosa costruire *prima* che serva. */
   prossime(dopo, quante = 3, vie = 1) {
     const out = []

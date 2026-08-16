@@ -83,7 +83,7 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
   for (const n of motore.nemici) {
     const p = motore.viaDi(n).puntoA(n.d)
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
-                debole: n.debole, vita: n.quota, gelo: n.gelo })
+                resiste: n.resiste, vita: n.quota, gelo: n.gelo })
   }
 
   const via = motore.via

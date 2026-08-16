@@ -7,7 +7,7 @@
    cantiere non tocca `grafica/castello/`, che altri agenti stanno
    modificando in parallelo (vedi `docs/castello-riassetto.md`).
 
-   Chi sono — nome, debolezza, se volano — sta in `data/mostri.js`,
+   Chi sono — nome, resistenza, se volano — sta in `data/mostri.js`,
    indicizzato con lo stesso `id`. Qui c'è solo come si disegnano.
 
      Bosco         lupo, corvo (vola), rovo

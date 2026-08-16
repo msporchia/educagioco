@@ -1,0 +1,7 @@
+{
+  "__": "Il castello a tessere: un atlante suo, letto da strumenti/sprite/terreni.py. Sta a parte da quello della fattoria perché non condivide un solo pezzo con lei, e il build deve restare un file solo — chi carica il tower defense non deve tirarsi dietro i cani.",
+  "nome": "castello",
+  "modulo": "src/giochi/castello/dati/atlante.js",
+  "tessera": 36,
+  "attrezzo": "terreni"
+}

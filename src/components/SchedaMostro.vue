@@ -4,12 +4,13 @@
 
    Un riquadro in alto a destra sul campo: il mostro dell'ondata
    ingrandito, quanti ne restano da fermare, quanta vita ha ciascuno e
-   — se ce l'ha — a quale torre è debole.
+   — se ce l'ha — a quale torre **resiste**.
 
-   Serve a rendere la debolezza una cosa che si *legge*, non che si
-   indovina: sul campo il mostro è alto quindici pixel e il pallino del
-   punto debole è un puntino. Qui è grande, fermo e con scritto sotto
-   cosa gli fa male.
+   Serve a rendere la resistenza una cosa che si *legge*, non che si
+   indovina: sul campo il mostro è alto quindici pixel e il segno della
+   resistenza è un puntino. Qui è grande, fermo, e c'è posto per
+   scriverlo a parole — «resiste a 🏹 Arciere» — che è l'unico punto
+   dello schermo dove la frase sta per intero.
 
    Il ritratto non è un'immagine: è lo stesso pittore che disegna i
    mostri sul campo, chiamato su una tela piccola. Un mostro nuovo si
@@ -21,7 +22,7 @@ import { PITTORI } from '../grafica/castello.js'
 import { TORRI } from '../data/ops.js'
 
 const props = defineProps({
-  bestia: { type: Object, required: true },   // { id, nome, vola, debole }
+  bestia: { type: Object, required: true },   // { id, nome, vola, resiste }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
 })
@@ -54,8 +55,8 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
       <b>{{ bestia.nome }}</b>
       <i v-if="bestia.vola">vola</i>
       <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
-      <span v-if="bestia.debole" class="debole" :style="{ '--c': TORRI[bestia.debole].colore }">
-        {{ TORRI[bestia.debole].emoji }} {{ TORRI[bestia.debole].nome }}
+      <span v-if="bestia.resiste" class="resiste">
+        resiste a {{ TORRI[bestia.resiste].emoji }} ⅓
       </span>
     </div>
   </div>
@@ -71,8 +72,10 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
 .dati b { font-size:11px; color:var(--viola-scuro) }
 .dati i { font-style:normal; font-size:9px; font-weight:800; color:#4aa3ff }
 .riga { font-size:9.5px; font-weight:800; color:var(--tenue) }
-.debole { font-size:9px; font-weight:800; color:var(--c);
-          background:color-mix(in srgb, var(--c) 14%, #fff); border-radius:999px;
-          padding:1px 6px; margin-top:2px; white-space:nowrap; overflow:hidden;
-          text-overflow:ellipsis }
+/* neutra, non del colore della torre: qui si sta dicendo «non quella»,
+   e il colore di una torre su questo schermo vuol dire «quella» */
+.resiste { font-size:9px; font-weight:800; color:#5b5468;
+           background:#eceaf0; border-radius:999px;
+           padding:1px 6px; margin-top:2px; white-space:nowrap; overflow:hidden;
+           text-overflow:ellipsis }
 </style>

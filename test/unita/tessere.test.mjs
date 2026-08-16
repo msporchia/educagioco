@@ -22,7 +22,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { chiave, riflessa, collegamenti, versiLungo, pezzoPer, fettaDi,
          bordoOtto, angoliInterni, fettaEquivalente, pezzoPerOtto,
-         caso, variante } from '../../src/grafica/tessere.js'
+         caso, variante, NESSUN_ATTACCO, giraSocket, specchiaSocket, pose,
+         latiDi, componiPercorso } from '../../src/grafica/tessere.js'
 import { controlla, uguale, nota, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. la chiave è sempre nello stesso ordine ══════════ */
@@ -251,6 +252,91 @@ import { controlla, uguale, nota, stessaLista, riassunto } from '../aiuto/verifi
   // esatto, senza passare dalla riduzione
   const CON_DIAGONALI = { 'bordo-n': 'muro-n', 'no': 'muro-angolo-interno-no' }
   uguale('un set con i concavi non degrada', pezzoPerOtto(CON_DIAGONALI, 'no').nome, 'muro-angolo-interno-no')
+}
+
+/* ══════════ 9. gli attacchi: dove passa la strada, non solo se passa ══════════ */
+{
+  const V = NESSUN_ATTACCO
+  // un incrocio con la strada in mezzo su tutti e quattro i lati
+  const CROCE = { N: 'c', S: 'c', O: 'c', E: 'c' }
+  // una curva che entra da nord in mezzo ed esce a est in mezzo
+  const CURVA = { N: 'c', S: V, O: V, E: 'c' }
+  // e una che esce a est ma verso il basso: stessa forma, altro attacco
+  const CURVA_BASSA = { N: 'c', S: V, O: V, E: 'dx' }
+
+  uguale('una curva girata di un quarto entra da est ed esce a sud',
+         latiDi(giraSocket(CURVA)), 'SE')
+  uguale('girare quattro volte torna al punto di partenza',
+         JSON.stringify(giraSocket(giraSocket(giraSocket(giraSocket(CURVA))))),
+         JSON.stringify(CURVA))
+  uguale('lo specchio scambia i lati', latiDi(specchiaSocket(CURVA)), 'NO')
+  uguale('e ribalta anche l\'attacco, non solo il lato',
+         specchiaSocket({ N: 'sx', S: V, O: V, E: V }).N, 'dx')
+
+  // un incrocio è lo stesso incrocio comunque lo giri: una posa sola
+  uguale('le pose di un incrocio simmetrico sono una', pose('croce', CROCE).length, 1)
+  uguale('quelle di una curva sono quattro', pose('curva', CURVA).length, 4)
+  // quella asimmetrica non si sovrappone mai a sé stessa: otto pose
+  uguale('e di una curva storta sono otto', pose('storta', CURVA_BASSA).length, 8)
+
+  /* ── comporre ──
+     Un percorso che scende dritto: servono tre pezzi verticali, e la
+     tessera esiste. */
+  const DRITTO = pose('dritto', { N: 'c', S: 'c', O: V, E: V })
+  const CURVE = pose('curva', CURVA)
+  const CATALOGO = [...DRITTO, ...CURVE]
+  const CAMPO = { dentro: (x, y) => x >= 0 && x < 3 && y >= 0 && y < 3,
+                  capi: { parte: 'N', arriva: 'S' } }
+  const scesa = componiPercorso([[1, 0], [1, 1], [1, 2]], CATALOGO, CAMPO)
+  controlla('una discesa dritta si compone', !!scesa)
+  uguale('e usa tre volte il pezzo dritto', scesa.map(p => p.nome).join(' '),
+         'dritto dritto dritto')
+
+  // una svolta: dritto, curva, dritto — la curva la sceglie lui, girata
+  // nel verso giusto
+  const svolta = componiPercorso([[1, 0], [1, 1], [2, 1]], CATALOGO,
+                                 { ...CAMPO, capi: { parte: 'N', arriva: 'E' } })
+  controlla('una svolta si compone', !!svolta)
+  uguale('e in mezzo ci mette una curva', svolta[1].nome, 'curva')
+
+  /* ── quello che non si può comporre va detto ──
+     Senza il pezzo dritto non c'è modo di scendere, e la risposta giusta
+     è `null`: un buco nel foglio si scopre qui, non a schermo. */
+  uguale('senza il pezzo giusto non si inventa niente',
+         componiPercorso([[1, 0], [1, 1], [1, 2]], CURVE, CAMPO), null)
+
+  /* ── gli attacchi devono combaciare davvero ──
+     Due pezzi verticali che portano la strada in due punti diversi del
+     bordo non si possono impilare, anche se tutti e due sono «aperti a
+     nord e a sud». È il caso che il modello a sì/no sbagliava in
+     silenzio. */
+  const STORTO = pose('storto', { N: 'sx', S: 'dx', O: V, E: V })
+  uguale('due attacchi diversi non si impilano',
+         componiPercorso([[1, 0], [1, 1]], STORTO, CAMPO), null)
+  // ma lo stesso pezzo specchiato sì: sx contro sx
+  const DRITTI_STORTI = [...STORTO, ...pose('dritto', { N: 'sx', S: 'sx', O: V, E: V })]
+  controlla('mentre due attacchi uguali sì',
+            !!componiPercorso([[1, 0], [1, 1], [1, 2]], DRITTI_STORTI, CAMPO))
+
+  /* ── il prato chiude i lati ──
+     Una strada che finisce in mezzo al campo non può continuare
+     nell'erba: l'ultima cella vuole un pezzo con un lato solo. */
+  const TESTA = pose('testa', { N: 'c', S: V, O: V, E: V })
+  const finita = componiPercorso([[1, 0], [1, 1]], [...DRITTO, ...CURVE, ...TESTA],
+                                 { dentro: CAMPO.dentro, capi: { parte: 'N' } })
+  controlla('una strada che finisce nel campo si chiude', !!finita)
+  uguale('e l\'ultimo pezzo è una testa morta', finita[1].nome, 'testa')
+
+  /* ── stesso campo, stessa strada ──
+     Due composizioni della stessa mappa devono venire identiche: una
+     strada che si ridisegna diversa a ogni giro si legge come un guasto
+     anche quando è bella. */
+  const via = [[1, 0], [1, 1], [2, 1], [2, 2]]
+  const largo = { dentro: (x, y) => x >= 0 && x < 4 && y >= 0 && y < 4,
+                  capi: { parte: 'N', arriva: 'S' } }
+  uguale('la composizione non cambia da un giro all\'altro',
+         JSON.stringify(componiPercorso(via, CATALOGO, largo)),
+         JSON.stringify(componiPercorso(via, CATALOGO, largo)))
 }
 
 riassunto('quale tessera va qui')

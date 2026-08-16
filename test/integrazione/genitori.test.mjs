@@ -249,6 +249,62 @@ if (IN_PROVA.length) {
   controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
 }
 
+/* ── 7b-bis. il calcolo a mente dentro gli asteroidi ──
+   Il terzo tipo di interruttore, e la differenza conta: non spegne un
+   gioco (la carta degli asteroidi resta in home) e non spegne un pezzo
+   di scuola. Spegne un MODO di giocare — le tappe a mente spariscono
+   dalla fila e i pianeti si richiudono in ordine — e i progressi
+   restano dove sono. Chi vuole solo le tabelline passa da qui. */
+{
+  const contaMappa = async () => {
+    await page.click('button[aria-label="indietro"]')
+    await page.waitForSelector('.carte', { timeout: 5000 })
+    await page.getByText('Asteroidi', { exact: true }).click()
+    await page.waitForSelector('.scaletta', { timeout: 5000 })
+    const conto = await page.evaluate(() => ({
+      pianeti: document.querySelectorAll('.pianeta').length,
+      stazioni: document.querySelectorAll('.stazione').length,
+      numeri: [...document.querySelectorAll('.pianeta b')].map(b => parseInt(b.textContent, 10)),
+    }))
+    await page.click('button[aria-label="indietro"]')
+    await page.waitForSelector('.carte', { timeout: 5000 })
+    return conto
+  }
+
+  await vaiAiGenitori()
+  await digita('0000')
+  await page.waitForSelector('.carta[data-flag="mente"]', { timeout: 5000 })
+  controlla('di partenza il calcolo a mente è acceso',
+            !(await page.evaluate(() =>
+              document.querySelector('.carta[data-flag="mente"]').className.includes('spento'))))
+
+  const intera = await contaMappa()
+  uguale('a fila intera ci sono tutti i pianeti', intera.pianeti, 10)
+  controlla('e anche le stazioni', intera.stazioni > 0)
+
+  await vaiAiGenitori()
+  await digita('0000')
+  await page.click('.carta[data-flag="mente"]')
+  await page.waitForTimeout(200)
+  const corta = await contaMappa()
+  uguale('spento, le tappe a mente spariscono dalla mappa', corta.stazioni, 0)
+  uguale('e i pianeti restano tutti', corta.pianeti, 10)
+  /* «senza buchi» è la parte che si vedrebbe solo dal telefono: se la
+     numerazione restasse quella della fila intera, i pianeti sarebbero
+     il 3, il 4, il 6… cioè numerati sui vuoti di quello che non c'è */
+  controlla('numerati da uno in fila, senza buchi',
+            corta.numeri.every((n, i) => n === i + 1), corta.numeri.join(', '))
+  controlla('e la carta degli asteroidi è ancora in home',
+            await page.isVisible('.carta.mate'))
+
+  await vaiAiGenitori()
+  await digita('0000')
+  await page.click('.carta[data-flag="mente"]')      // rimesso com'era
+  await page.waitForTimeout(200)
+  const tornata = await contaMappa()
+  uguale('riacceso, le tappe a mente tornano', tornata.stazioni, intera.stazioni)
+}
+
 /* ── 7c. cosa sa il bambino ──
    La seconda scheda. Spegnere un macrogruppo non si vede in home come
    una carta che sparisce: si vede nelle domande che il bambino riceve,

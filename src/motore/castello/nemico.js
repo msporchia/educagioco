@@ -7,23 +7,24 @@
    non sa chi l'ha colpito, non sa quando la partita finisce: quello è
    affare della battaglia.
 
-   Il punto debole è la sola regola che porta addosso: la torre giusta
-   gli fa il doppio. È la ragione per cui conviene tenere in campo torri
-   diverse invece di una sola altissima — e quindi per cui si finisce
-   col fare tutte e quattro le operazioni.
+   La resistenza è la sola regola che porta addosso: la torre a cui
+   resiste gli fa un terzo del danno. È la ragione per cui conviene
+   tenere in campo torri diverse invece di una sola altissima — con una
+   sola, l'ondata che le resiste passa quasi intera — e quindi per cui
+   si finisce col fare tutte e quattro le operazioni.
    ═══════════════════════════════════════════════════════════════════ */
-import { DOPPIO } from '../../data/mostri.js'
+import { RESISTENZA } from '../../data/mostri.js'
 
 /* di quanto rallenta un gelo che non dice quanto frena */
 const FRENO_BASE = 0.45
 
 export class Nemico {
-  constructor({ d = 0, vita, vel, bestia, vola = false, debole = null, via = 0 }) {
+  constructor({ d = 0, vita, vel, bestia, vola = false, resiste = null, via = 0 }) {
     this.d = d                       // quanti metri di strada ha già fatto
     this.via = via                   // e su quale delle strade li ha fatti
     this.vita = vita; this.vitaMax = vita
     this.vel = vel
-    this.bestia = bestia; this.vola = vola; this.debole = debole
+    this.bestia = bestia; this.vola = vola; this.resiste = resiste
     this.gelo = 0; this.freno = 0; this.fragile = 1
     this.male = 0; this.perQuanto = 0   // il veleno: quanto al secondo, e per quanto
     this.arrivato = false
@@ -64,12 +65,15 @@ export class Nemico {
     this.perQuanto = Math.max(this.perQuanto, durata)
   }
 
-  /* torna `true` se questo colpo l'ha finito. Chi è gelato dalla brina
-     è più fragile: il moltiplicatore si somma al doppio del punto
-     debole, ed è il solo modo in cui il ghiaccio partecipa al danno. */
+  /* Torna `true` se questo colpo l'ha finito. Chi è gelato dalla brina
+     è più fragile, ed è il solo modo in cui il ghiaccio partecipa al
+     danno: la fragilità **moltiplica anche il colpo smorzato**, quindi
+     gelare un mostro rende meno inutile la torre a cui resiste — ed è
+     giusto così, perché il gelo è l'unica torre che non si può mai
+     sbagliare a comprare. */
   ferisci(danno, tipo) {
-    const forte = this.debole && this.debole === tipo ? DOPPIO : 1
-    this.vita -= danno * forte * (this.fragile || 1)
+    const smorza = this.resiste && this.resiste === tipo ? RESISTENZA : 1
+    this.vita -= danno * smorza * (this.fragile || 1)
     return this.vita <= 0
   }
 

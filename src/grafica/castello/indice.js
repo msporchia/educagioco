@@ -9,7 +9,7 @@
      fondale.js   prato, strada, bosco, piazzole — quello che non cambia
      fortezza.js  il castello da difendere
      torri.js     fusto, corona, targhe          (le cime in `cime.js`)
-     mostro.js    il mostro in scena: ombra, volo, vita, debolezza
+     mostro.js    il mostro in scena: ombra, volo, vita, resistenza
      corpi-mostri.js  i corpi delle dieci bestie (isolati apposta)
      colpi.js     proiettili ed esplosioni
      indizi.js    le piazzole libere e il raggio, mentre si trascina

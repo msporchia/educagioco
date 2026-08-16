@@ -14,13 +14,29 @@
    pubblica, il travaso dalla cameretta è a senso unico e non c'è niente
    da riportare indietro.
 
-   ── UNA BESTIA NON È UN OGGETTO ───────────────────────────────────
-   Non sta nel catalogo con le panchine: non si posa, non si sposta, non
-   si mette via. Si compra e da quel momento **gira per il prato per
-   conto suo**. Per questo ha una tabella sua e non una categoria in
-   `catalogo.js`.
+   ── UNA BESTIA SI SPOSTA COME UN OGGETTO ──────────────────────────
+   *Questa riga ribalta quella di prima*, che diceva «una bestia non si
+   posa, non si sposta, non si mette via»: si compra e basta, poi gira
+   per il prato per conto suo. Provato col dito, non reggeva — un
+   recinto costruito con tanta pazienza restava vuoto, perché non c'era
+   nessun modo di metterci dentro il cane.
+
+   Adesso si prende e si posa come una panchina. Siccome una bestia non
+   attraversa la staccionata, **spostarla è il modo di metterla nel
+   recinto**: non serve inventare un recinto che si chiude, basta il
+   gesto che c'era già. Resta vero il resto — una bestia non si mette
+   via in magazzino e non sta nel catalogo con le panchine, perché
+   quello che si compra qui non è un oggetto ma un impegno (i bisogni,
+   in `bisogni.js`).
+
+   La conseguenza che si scorda: **dove sta una bestia va salvata**
+   (`x`, `y` nel record della bestia, vedi `motore/fattoria.js`). Se
+   rinascessero in mezzo al prato a ogni apertura, quello che la bambina
+   aveva chiuso nel recinto se ne sarebbe uscito da solo durante la
+   notte, e la colpa sembrerebbe del recinto.
    ═══════════════════════════════════════════════════════════════════ */
 import { BESTIE } from './atlante.js'
+import { cibiPer } from './bisogni.js'
 
 /* nome dello sprite → come si presenta e quanto costa. I prezzi sono
    alti rispetto agli oggetti apposta: una bestia è la cosa che si
@@ -60,11 +76,14 @@ export const NOMI = {
 }
 
 /* La famiglia si ricava dal nome dello sprite — `cane-beagle` è un cane
-   — e chi non ne ha una prende i nomi di tutti: meglio dieci nomi un po'
-   generici che una casella vuota. */
+   — ed è la stessa chiave con cui `bisogni.js` dice chi mangia cosa: si
+   scrive una volta qui e non si tiene allineato nessun elenco. */
+export const famigliaDi = chi => String(chi).split('-')[0]
+
+/* Chi non ha una famiglia sua prende i nomi di tutti: meglio dieci nomi
+   un po' generici che una casella vuota. */
 export function nomiPer(chi) {
-  const famiglia = String(chi).split('-')[0]
-  return NOMI[famiglia] || [...new Set(Object.values(NOMI).flat())]
+  return NOMI[famigliaDi(chi)] || [...new Set(Object.values(NOMI).flat())]
 }
 
 export const siDisegna = chi => BESTIE.includes(chi)
@@ -78,6 +97,11 @@ export function guastiDegliAnimali() {
     /* non è un guasto: è il promemoria che una riga sta aspettando lo
        sprite, e senza questo non se ne accorgerebbe nessuno */
     if (!BESTIE.includes(chi)) g.push(`nota: ${chi} è dichiarato e non ancora disegnabile`)
+    /* Una bestia senza cibi suoi è una bestia che non si può nutrire:
+       la ciotola sarebbe piena di roba che rifiuta, e sembrerebbe un
+       guasto del gioco invece di una tabella dimenticata. */
+    if (cibiPer(famigliaDi(chi)).length < 2)
+      g.push(`${chi}: la famiglia «${famigliaDi(chi)}» ha meno di due cibi suoi`)
   }
   if (!IN_VENDITA.length) g.push('nessuna bestia in vendita: il negozio sarebbe vuoto')
   return g

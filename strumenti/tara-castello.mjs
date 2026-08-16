@@ -152,12 +152,25 @@ function taraTappa(tappa, a) {
 /* ── la curva non torna mai indietro ──
    Il limite misurato ondata per ondata fa i gradini: la difesa cresce a
    scatti — un potenziamento comprato, una torre in più — e il mostro
-   dell'ondata cambia, con la sua debolezza. Ne uscivano ondate più
+   dell'ondata cambia, con la sua resistenza. Ne uscivano ondate più
    molli di quella prima, che a chi gioca sembrano un errore.
 
    Si spiana **verso il basso**, tirando ogni ondata al livello della
    più mite che la segue: al rialzo si andrebbe sopra il limite trovato,
-   cioè si chiederebbe una difesa che a quel punto non si può avere. */
+   cioè si chiederebbe una difesa che a quel punto non si può avere.
+
+   ── e da quando le resistenze tolgono danno, costa di più ──
+   Con le debolezze i salti del limite andavano tutti all'insù (la
+   torre giusta faceva il doppio), quindi il minimo della coda era un
+   numero ragionevole. Con le resistenze vanno all'ingiù, e un'ondata
+   sfortunata che capiti in fondo si porta dietro tutte quelle prima.
+   Si è provato a spianare **di un passo solo** invece che sulla coda
+   intera: le curve escono molto più vive, ma smettono di salire — e
+   che i nemici non si ammorbidiscano mai andando avanti è una
+   promessa che `unita/castello` conta, non un'opinione. Quindi resta
+   cumulativa, e il prezzo si paga a monte: le resistenze cominciano
+   quando in campo c'è più di una torre per strada (`Ondate.bestiaDi`),
+   che è dove nascevano gli avvallamenti peggiori. */
 function spiana(vite) {
   const out = vite.slice()
   for (let i = out.length - 2; i >= 0; i--) out[i] = Math.min(out[i], out[i + 1])

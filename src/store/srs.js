@@ -154,7 +154,16 @@ export function createPicker({ getItem, useTime = false, pausaDopo = 0 } = {}) {
 
   function reset() { recent = []; queue = []; round = 0; serie.clear(); riposo.clear() }
 
-  return { pick, afterAnswer, reset,
+  /* Una domanda scelta FUORI dal picker — il boss degli asteroidi, che
+     viene dalla tappa dopo — deve comunque entrare nella memoria corta.
+     Senza, il picker non sa che è appena passata e la domanda successiva
+     può essere la stessa, due volte di fila. */
+  function annota(id) {
+    recent.push(id)
+    if (recent.length > SRS.minGap) recent.shift()
+  }
+
+  return { pick, afterAnswer, reset, annota,
            get round() { return round },
            // quanti elementi sono usciti di scena: chi chiama il picker può
            // allargare di altrettanto l'insieme attivo e far entrare cose nuove

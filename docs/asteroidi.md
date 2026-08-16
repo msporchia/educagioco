@@ -9,16 +9,25 @@ si colpisce quello giusto prima che arrivi in fondo.
 
 ## Come è fatto
 
-Ci sono **due campagne dentro la stessa mappa**, in due schede:
+C'è **una scaletta sola**, spezzata in capitoli, con due specie di tappe
+mescolate:
 
 - **I pianeti** sono le tabelline, dalla ×2 in su.
 - **Le stazioni** sono il calcolo a mente: somme con il riporto,
   sottrazioni con il prestito, i doppi, il complemento a 10, le
   moltiplicazioni per 10…
 
-Non sono una il seguito dell'altra — 3+4 viene prima delle tabelline e 4×23
-viene dopo — quindi **la prima stazione è aperta dal primo giorno**, anche
-per chi non ha ancora fatto nessuna tabellina.
+L'ordine **non è alternato a turno**: le due liste sono state fuse una volta
+guardando cosa chiede davvero ogni tappa, e il perché di ogni giunzione è
+scritto in testa a [`src/data/asteroidi.js`](../src/data/asteroidi.js). In
+due parole: si comincia dai conti entro il dieci (la tabellina del 2 sono i
+doppi, e senza 7+7 non c'è nessun 2×7), le decine tonde arrivano dopo la
+tabellina del 10, e **moltiplicare e dividere a mente vengono dopo tutte le
+tabelline** — 56:8 è la tabellina dell'8 girata.
+
+In mezzo alla fila possono esserci **due tappe aperte invece di una**, una
+per specie: i due progressi restano contati separatamente, ed è la ragione
+per cui fondendo le liste nessuno ha perso niente.
 
 ## L'astronave
 
@@ -67,6 +76,25 @@ Il gioco tiene aperto solo un **gruppetto di fatti per volta**, non tutte le
 tabelline insieme: finché quelli non si consolidano non ne entrano altri.
 Per questo all'inizio le domande sembrano poche e ripetitive — è voluto.
 
+Dentro un pianeta, però, comanda la tappa: **otto domande su dieci sono la
+tabellina di quel pianeta**, e non è una media — non capita mai di trovarsi
+due domande di fila che parlano d'altro. Le altre sono il ripasso di quelle
+di prima, che serve e non deve sparire. E la stessa identica domanda non
+esce mai due volte di seguito.
+
+Il **boss**, ogni otto domande, è l'unico che sta fuori: arriva dal pianeta
+*successivo*. È un assaggio di quello che non si è ancora fatto — perderlo
+non toglie niente al motore, perché una cosa mai insegnata non si misura.
+
+Salendo di livello **il cielo si infittisce, non accelera**: arrivano più
+sassi sbagliati da scartare, ma il tempo per fare il conto resta quello. E
+il sasso con la risposta giusta entra sempre entro tre secondi dalla
+domanda: aspettare non è saper rispondere piano.
+
+Nel **volo libero**, che si apre a campagna finita, non si sceglie più
+niente a mano: pesca da sé quello che si ricorda meno, e a chi ricorda tutto
+ripropone gli ultimi pianeti giocati.
+
 ### Il calcolo a mente ha una regola in più
 
 Le stazioni hanno un **grafo di prerequisiti**: il complemento a 10 viene
@@ -90,7 +118,11 @@ del saperlo: rispondere piano conta, non solo rispondere giusto.
 
 ## Note per i genitori
 
-- Se le tabelline sono ancora troppo, si può giocare solo alle stazioni:
-  stanno nella seconda scheda e non richiedono nessuna tabellina.
+- Se le tabelline sono ancora troppo, la fila comincia proprio dai conti
+  a mente: 3+4 non aspetta nessuna tabellina.
+- Al contrario, **chi vuole solo le tabelline spegne il calcolo a mente**
+  (*Genitori → giochi → dentro gli asteroidi*): le tappe a mente
+  spariscono dalla fila e i pianeti si richiudono in ordine, senza buchi.
+  I progressi a mente restano dove sono e riaccendendo tornano.
 - Le divisioni si possono spegnere dai settaggi (*Genitori → cosa sa*).
-- Il numero di pianeti e stazioni fatti si vede nella carta in home.
+- A che punto della fila si è arrivati si vede nella carta in home.

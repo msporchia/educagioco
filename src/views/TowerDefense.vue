@@ -135,9 +135,9 @@ const mira = computed(() => {
            raggio: f.tipo ? TORRI[f.tipo].raggio * S() : 0 }
 })
 
-/* la torre che fa doppio danno a chi sta per arrivare: il preavviso,
-   letto nel momento in cui si sceglie che cosa costruire */
-const debole = computed(() => (vista.prossime[0] && vista.prossime[0].debole) || null)
+/* la torre che chi sta per arrivare regge: il preavviso, letto nel
+   momento in cui si sceglie che cosa costruire */
+const resiste = computed(() => (vista.prossime[0] && vista.prossime[0].resiste) || null)
 
 /* ── aprire e chiudere ── */
 function apriPiazzola(i) {
@@ -428,7 +428,7 @@ onMounted(() => {
               @chiudi="chiudi" @indietro="indietro">
         <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
                      :tappa="tappa" :energia="hud.energia" :costo="costoNuova"
-                     :divisioni="divisioni" :debole="debole" @scegli="scegliTorre" />
+                     :divisioni="divisioni" :resiste="resiste" @scegli="scegliTorre" />
 
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"

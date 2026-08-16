@@ -15,6 +15,7 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
          sapereAcceso, accendiSapere, saperiSpenti, saperiCheMancano,
          giocoAcceso, accendiGioco, quantiGiochiAccesi,
+         varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
          aspettoDi, scegliAspetto } from '../store/profile.js'
@@ -27,6 +28,7 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
+import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
 import { PARTENZE } from '../data/partenze.js'
 import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
 import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
@@ -478,6 +480,24 @@ function cambiaProva() {
     ? `I giochi in prova compaiono nella home di ${chi.value}. Sono a metà: aspettati che cambino.`
     : `I giochi in prova spariscono dalla home di ${chi.value}.` }
 }
+/* ── il calcolo a mente negli asteroidi ──
+   Negli asteroidi le tabelline e i conti a mente stanno in una scaletta
+   sola. Chi vuole solo le tabelline spegne qui: le tappe a mente
+   spariscono dalla fila e i pianeti si richiudono in ordine, senza
+   buchi. Non è un sapere spento (`data/saperi.js` dice cosa il bambino
+   ha fatto a scuola, non che esercizi preferisce) e non è un gioco
+   spento: la carta degli asteroidi resta in home. I progressi restano
+   dove sono, e riaccendendo la fila torna intera. */
+const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
+const quantiPianeti = SCALETTA.filter(v => v.tipo === 'pianeta').length
+function cambiaMente() {
+  accendiVariante(CHIAVE_MENTE, !menteAccesa.value)
+  esito.value = { ok: true, testo: menteAccesa.value
+    ? `Negli asteroidi ${chi.value} trova tutte e ${SCALETTA.length} le tappe.`
+    : `Negli asteroidi restano i ${quantiPianeti} pianeti delle tabelline. ` +
+      'I progressi a mente non si perdono: riaccendendo tornano dov\'erano.' }
+}
+
 function cambiaGioco(g) {
   /* la carta bloccata da un sapere non si accende da qui: si accende
      dall'altra scheda, ed è l'unica cosa utile da dire */
@@ -643,6 +663,26 @@ async function azzera() {
       </div>
       <p v-if="!accesi" class="avviso">Sono spenti tutti: nella home di
         {{ chi }} non resta nessun gioco.</p>
+
+      <!-- ── dentro un gioco ──
+           Non spegne una carta e non spegne un pezzo di scuola: spegne un
+           MODO di giocare. Oggi ce n'è uno solo, e sta qui perché è qui
+           che si viene a togliere di mezzo quello che adesso non serve. -->
+      <h2>Dentro gli asteroidi</h2>
+      <p class="mini">Negli asteroidi le tabelline e i conti a mente sono una scaletta
+        sola, ordinata dal più facile al più difficile.</p>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
+                data-flag="mente" @click="cambiaMente">
+          <span class="ico">🧠</span>
+          <b>Anche i conti a mente</b>
+          <i>{{ menteAccesa
+                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
+                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
 
       <!-- ── i giochi in prova ──
            Il cancello, e dietro il cancello quello che c'è. Spento, i

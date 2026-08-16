@@ -75,7 +75,7 @@
    `disegnaAtterraggio`.
    ═══════════════════════════════════════════════════════════════════ */
 import {
-  T, CELLE, PIAZZOLE, CELLE_MONDO, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, caso,
+  T, CELLE, LIMITI_NUOVI, celleDi, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, caso,
 } from '../dati/mondo.js'
 import { ATLANTE, PEZZI, pezzoAttore } from '../dati/atlante.js'
 import { PER_ID, piedeDi, pezzoDi } from '../dati/catalogo.js'
@@ -222,6 +222,13 @@ export class Tela {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.vista = { x: 0, y: 0 }
+    /* Fin dove arriva il mondo, in piazzole (`{ x0, y0, x1, y1 }`,
+       estremi compresi). **Non è una costante**: la mappa cresce
+       comprando terra, e chi guida il gioco rimette questo campo
+       dall'unico posto che lo sa (`fattoria.limiti`). Un mondo che
+       cresce e una telecamera ferma darebbero un muro invisibile
+       esattamente dove è appena comparso del prato nuovo. */
+    this.mondo = { ...LIMITI_NUOVI }
     this.scala = SCALA_INIZIALE
     this.dpr = 1
     this.L = 0
@@ -240,7 +247,17 @@ export class Tela {
   /* ── misure ── */
   get cellaPx() { return T * this.scala }
   get latoPx() { return this.cellaPx * CELLE }
-  get mondoPx() { return this.latoPx * PIAZZOLE }
+
+  /* Il mondo in pixel schermo: dove comincia e quanto è largo. Non
+     comincia da zero — crescendo verso l'alto e verso sinistra le
+     piazzole prendono numeri negativi, così il bosco già visto non si
+     sposta di un pixel (vedi `dati/mondo.js`). */
+  get riquadroMondo() {
+    const lato = this.latoPx
+    return { x: this.mondo.x0 * lato, y: this.mondo.y0 * lato,
+             w: (this.mondo.x1 - this.mondo.x0 + 1) * lato,
+             h: (this.mondo.y1 - this.mondo.y0 + 1) * lato }
+  }
 
   /* Si misura dal **genitore**, mai da sé. Misurandosi da sé la tela
      entra in un giro senza fondo: leggo la mia larghezza, ci scrivo
@@ -288,16 +305,23 @@ export class Tela {
      allarga lo zoom, o su un tablet — non si incolla in alto a
      sinistra lasciando nero sotto e a destra: si mette in mezzo. */
   limita() {
-    const w = this.L, h = this.A, M = this.mondoPx
-    this.vista.x = Math.round(M <= w ? (M - w) / 2 : Math.max(0, Math.min(this.vista.x, M - w)))
-    this.vista.y = Math.round(M <= h ? (M - h) / 2 : Math.max(0, Math.min(this.vista.y, M - h)))
+    const r = this.riquadroMondo
+    this.vista.x = Math.round(r.w <= this.L
+      ? r.x + (r.w - this.L) / 2
+      : Math.max(r.x, Math.min(this.vista.x, r.x + r.w - this.L)))
+    this.vista.y = Math.round(r.h <= this.A
+      ? r.y + (r.h - this.A) / 2
+      : Math.max(r.y, Math.min(this.vista.y, r.y + r.h - this.A)))
   }
 
-  /* La cella del mondo sotto un punto dello schermo. */
+  /* La cella del mondo sotto un punto dello schermo. `Math.floor` e non
+     `| 0`: nel quadrante negativo — che adesso esiste, perché il mondo
+     cresce anche verso l'alto e verso sinistra — troncare verso lo zero
+     sbaglia di una cella, e si tocca un albero prendendone un altro. */
   cellaDa(sx, sy) {
     return {
-      x: ((sx + this.vista.x) / this.cellaPx) | 0,
-      y: ((sy + this.vista.y) / this.cellaPx) | 0,
+      x: Math.floor((sx + this.vista.x) / this.cellaPx),
+      y: Math.floor((sy + this.vista.y) / this.cellaPx),
     }
   }
 
@@ -407,10 +431,11 @@ export class Tela {
      posti diversi vorrebbe dire tenerle d'accordo a mano. */
   celleVisibili() {
     const cellaPx = this.cellaPx
-    const c0x = Math.max(0, ((this.vista.x / cellaPx) | 0) - 1)
-    const c0y = Math.max(0, ((this.vista.y / cellaPx) | 0) - 1)
-    const c1x = Math.min(CELLE_MONDO, c0x + ((this.L / cellaPx) | 0) + 3)
-    const c1y = Math.min(CELLE_MONDO, c0y + ((this.A / cellaPx) | 0) + 3)
+    const m = celleDi(this.mondo)
+    const c0x = Math.max(m.cx0, Math.floor(this.vista.x / cellaPx) - 1)
+    const c0y = Math.max(m.cy0, Math.floor(this.vista.y / cellaPx) - 1)
+    const c1x = Math.min(m.cx1, c0x + ((this.L / cellaPx) | 0) + 3)
+    const c1y = Math.min(m.cy1, c0y + ((this.A / cellaPx) | 0) + 3)
     return { c0x, c0y, c1x, c1y }
   }
 
@@ -454,8 +479,8 @@ export class Tela {
      non tutto il bosco» senza scriverlo. */
   disegnaNebbia(fattoria) {
     const ctx = this.ctx, lato = this.latoPx
-    for (let px = 0; px < PIAZZOLE; px++)
-      for (let py = 0; py < PIAZZOLE; py++) {
+    for (let px = this.mondo.x0; px <= this.mondo.x1; px++)
+      for (let py = this.mondo.y0; py <= this.mondo.y1; py++) {
         if (fattoria.mia(px, py)) continue
         const x = px * lato - this.vista.x, y = py * lato - this.vista.y
         if (x > this.L || y > this.A || x + lato < 0 || y + lato < 0) continue
@@ -473,8 +498,8 @@ export class Tela {
     const posso = fattoria.borsa.quante() >= prezzo
     ctx.textAlign = 'center'
     ctx.lineJoin = 'round'
-    for (let px = 0; px < PIAZZOLE; px++)
-      for (let py = 0; py < PIAZZOLE; py++) {
+    for (let px = this.mondo.x0; px <= this.mondo.x1; px++)
+      for (let py = this.mondo.y0; py <= this.mondo.y1; py++) {
         if (!fattoria.comprabile(px, py)) continue
         const x = px * lato - this.vista.x, y = py * lato - this.vista.y
         if (x > this.L || y > this.A || x + lato < 0 || y + lato < 0) continue
@@ -532,11 +557,20 @@ export class Tela {
 
   /* Dove finirebbe se si lascia adesso. Il riquadro dice se ci sta, lo
      sprite in trasparenza dice come verrebbe — insieme tolgono la
-     domanda «dove va?» a chi sta trascinando. */
+     domanda «dove va?» a chi sta trascinando.
+
+     `preso` porta l'ingombro **già deciso** (`piede`) e il nome della
+     tessera (`pezzo`), come tutto il resto del quadro: qui non si
+     ricava niente. Prima si leggeva un campo `v` che chi chiamava non
+     riempiva, e il conto finiva sempre su un quadratino 1×1 senza
+     sprite — l'anteprima diceva il posto sbagliato proprio a chi non
+     l'aveva ancora imparato. Vale per un oggetto, per una bestia e per
+     quello che si sta solo comprando: sono tutti un piede e una
+     figura. */
   disegnaAtterraggio(preso) {
     if (!preso || preso.cx == null) return
-    const { v, da, cx, cy, ok } = preso
-    const piede = piedeDi(da, v)
+    const { cx, cy, ok } = preso
+    const piede = preso.piede || [1, 1]
     const ctx = this.ctx
     const x = cx * this.cellaPx - this.vista.x, y = cy * this.cellaPx - this.vista.y
     ctx.save()
@@ -546,7 +580,7 @@ export class Tela {
     ctx.strokeStyle = ok ? 'rgba(180,255,160,.9)' : 'rgba(255,150,150,.9)'
     ctx.strokeRect(x + 1, y + 1, piede[0] * this.cellaPx - 2, piede[1] * this.cellaPx - 2)
     ctx.restore()
-    this.posa(pezzoDi(da, v), cx, cy, piede, ok ? .85 : .45)
+    if (preso.pezzo) this.posa(preso.pezzo, cx, cy, piede, ok ? .85 : .45)
   }
 
   /* Dove finirebbe la materia se si lasciasse il pennello adesso:
@@ -587,16 +621,24 @@ export class Tela {
      pieno non è successo niente, e lasciando adesso non si è mosso
      nulla. `anello.q` (0..1) arriva già calcolato da chi tiene la
      pressione — questa classe non sa quanto dura un tocco lungo, sa
-     solo disegnare una frazione. */
+     solo disegnare una frazione.
+
+     `anello.pronto` dice che l'attesa è finita e la cosa è
+     **agganciata**: da lì il cerchio non è più un'attesa che si riempie
+     ma un invito a tirare, e lo dice cambiando tinta (il verde di «si
+     può», lo stesso dell'anteprima di posa) e allargandosi di un paio
+     di pixel. Non è grafica nuova: sono lo stesso cerchio e lo stesso
+     verde che il gioco usa già, e dicono «adesso trascina» invece di
+     «adesso te l'ho preso» — che è la differenza fra i due gesti. */
   disegnaAnello(anello) {
     if (!anello) return
-    const ctx = this.ctx, r = 20
-    const q = Math.max(0, Math.min(1, anello.q))
+    const ctx = this.ctx, r = anello.pronto ? 23 : 20
+    const q = anello.pronto ? 1 : Math.max(0, Math.min(1, anello.q))
     ctx.save()
     ctx.lineWidth = 4
     ctx.strokeStyle = 'rgba(0,0,0,.35)'
     ctx.beginPath(); ctx.arc(anello.x, anello.y, r, 0, Math.PI * 2); ctx.stroke()
-    ctx.strokeStyle = 'rgba(255,224,138,.95)'
+    ctx.strokeStyle = anello.pronto ? 'rgba(180,255,160,.9)' : 'rgba(255,224,138,.95)'
     ctx.lineCap = 'round'
     ctx.beginPath()
     ctx.arc(anello.x, anello.y, r, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2)

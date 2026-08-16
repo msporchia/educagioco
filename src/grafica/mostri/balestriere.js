@@ -1,4 +1,4 @@
-/* Il balestriere — Mura, debole alle bombe.
+/* Il balestriere — Mura, resiste alle bombe (al fischio si butta dietro il pavese).
    Il cappuccio in ombra e la balestra che sporge di lato: l'unico
    mostro con un'arma in mano, gli altri colpiscono col corpo. Cuoio
    bruno, lontano dal grigio metallico del corazziere anche se

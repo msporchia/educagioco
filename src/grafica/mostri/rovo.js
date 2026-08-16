@@ -1,4 +1,4 @@
-/* Il rovo — Bosco, debole alle bombe.
+/* Il rovo — Bosco, resiste alle bombe (lo scoppio lo sfoltisce e basta).
    Una palla di rami spinosi, non un animale: niente occhi tondi,
    solo due bracce che covano dentro il groviglio. È il primo mostro
    vegetale del castello, e deve leggersi diverso da tutti gli altri

@@ -1,5 +1,15 @@
 # Il sotterraneo — stato del lavoro
 
+> **Il gioco esiste.** Da agosto 2026 sta in `src/giochi/sotterraneo/`,
+> dietro «i giochi in prova», con le domande vere dei moduli di quiz e sei
+> discese — la pagina è [`docs/sotterraneo.md`](../docs/sotterraneo.md), e
+> quello che manca ancora sta in [`todo.md`](../todo.md). Questi due
+> prototipi **restano**: sono il posto dove provare un'idea prima di
+> metterla nel gioco, e l'atlante ce lo tiene allineato `atlante.py`, che
+> scrive lo stesso PNG qui dentro e nel modulo del gioco. Le decisioni qui
+> sotto sono quelle che il gioco ha ereditato; dove il gioco ha deciso
+> diverso, è segnato.
+
 *Aggiornato il 15 agosto 2026. Il prototipo è [`sotterraneo.html`](sotterraneo.html),
 si apre col doppio click. Questo file dice cos'è, cosa è stato deciso e
 cosa manca — così chi lo riprende in mano fra due settimane non deve
@@ -137,35 +147,36 @@ leggendo la tabella dei mostri: si vedeva solo contando. La difesa dei
 mostri è la manopola velenosa (con attacco 3 e difesa 2 il colpo scende
 a 1, e le ossa vanno divise per uno).
 
-## Cosa manca
+## Cosa mancava, e cosa ne è stato
 
-1. **Le domande vere.** Adesso c'è un banchetto finto di conti dentro il
-   file. Nel gioco vero arrivano dai moduli di `src/quiz/`, che
-   consegnano una domanda data una difficoltà da 0 a 1 e non sanno chi
-   gliel'ha chiesta — l'aggancio è una riga, ed è già isolato in
-   `Gioco.durezza()`.
-2. **La telecamera non si stringe quando sale un pannello.** Nel
-   castello lo fa (il campo resta visibile mentre si calcola); qui il
-   mercante finisce sotto il foglio. Si vede negli scatti.
-3. **Le due manopole dell'inseguimento vanno guardate in mano a un
-   bambino**: quanto sono più lenti (adesso 3,1 contro 5,4) e i tre
-   secondi di calma dopo la fuga. Sono i numeri che decidono se una
-   stanza fa paura o fa arrabbiare. Da provare anche: se un mostro
-   debba svegliarsi pure in corridoio quando gli si passa addosso —
-   adesso no, e il corridoio è completamente sicuro.
-4. **Sedici stanze sono forse troppe per una seduta.** Il numero è alto
-   apposta («una mappa molto più vasta»), ma è il primo da tarare
-   guardando un bambino che gioca: se il piano non si finisce mai, la
-   scala smette di essere un traguardo.
-5. **Cosa resta fra una discesa e l'altra.** Adesso: niente, si
-   ricomincia. È la domanda grossa che questo prototipo non risponde —
-   se l'equipaggiamento resta, la campagna diventa un'altra cosa e va
-   pensata l'economia; se non resta, ci vuole un motivo diverso per
-   riaprire il gioco domani.
+1. **Le domande vere.** ✅ *Nel gioco*: arrivano da `domandaPerGioco()`, e
+   il motore dice soltanto quanto devono essere difficili. Qui nel
+   prototipo resta il banchetto finto di conti, ed è giusto così: serve a
+   provare il ritmo senza tirarsi dietro mezzo repo.
+2. **La telecamera non si stringe quando sale un pannello.** ✅ *Nel
+   gioco*: col foglio aperto la telecamera **alza l'eroe** di un quarto
+   di schermo, che costa una riga e risolve la stessa cosa che il
+   castello risolve stringendo il campo.
+3. **Le due manopole dell'inseguimento** — quanto sono più lenti (3,1
+   contro 5,4) e i tre secondi di calma dopo la fuga. **Ancora da
+   guardare in mano a un bambino**: sono i numeri che decidono se una
+   stanza fa paura o fa arrabbiare. Da provare anche se un mostro debba
+   svegliarsi pure in corridoio — adesso no, e il corridoio è
+   completamente sicuro.
+4. **Sedici stanze sono forse troppe per una seduta.** ✅ *Nel gioco* è
+   diventata una manopola della campagna (`giri`, i tagli del BSP): si
+   comincia da quattro stanze e si arriva a sedici solo al labirinto.
+   Quanto sia giusta la scala, lo dirà un bambino che gioca.
+5. **Cosa resta fra una discesa e l'altra.** ✅ *Deciso*: niente. Dentro
+   una discesa l'equipaggiamento scende con te di piano in piano — è
+   l'arco che dà senso a cercare una spada — e fra una discesa e l'altra
+   si riparte nudi; quello che resta è la campagna. Il perché per esteso
+   sta in testa a `src/giochi/sotterraneo/dati/campagna.js`.
 6. **Gli sprite: fatti**, e stanno in un secondo file affiancato —
    [`sotterraneo-gfx.html`](sotterraneo-gfx.html), come `fattoria.html`
    e `fattoria-gfx.html`. Cosa si è imparato montandoli sta più sotto.
-7. **Il suono**, che qui non c'è per niente.
+7. **Il suono**, che qui non c'è per niente. Nel gioco c'è il minimo — un
+   colpo, un passo, una moneta — e resta la cosa più indietro di tutte.
 
 ## La versione con gli sprite
 

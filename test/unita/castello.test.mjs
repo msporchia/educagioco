@@ -32,6 +32,9 @@ import { TAPPE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
 import { CAMPAGNE } from '../../src/data/campagne-castello.js'
 import { migraCastello, TD_VERSIONE } from '../../src/store/profile.js'
 import { TORRI } from '../../src/data/ops.js'
+import { RESISTENZA } from '../../src/data/mostri.js'
+import { Ondate } from '../../src/motore/castello/ondate.js'
+import { Nemico } from '../../src/motore/castello/nemico.js'
 import { gioca, PROFILI } from '../../strumenti/simula-castello.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -178,6 +181,52 @@ for (const [i, t] of TAPPE.entries()) {
   controlla(`${i + 1}. ${t.nome}: il bonus della fretta vale al massimo un acquisto`,
             acquisti - t.calcoli <= 1,
             `chi si prende sempre il bonus arriva a ${acquisti} acquisti invece di ${t.calcoli}`)
+}
+
+/* ── 5b. le resistenze: quando parlano, e quanto pesano ──
+
+   Un mostro dichiara a che cosa **resiste** — la torre che gli fa un
+   terzo del danno — e la tappa lo annuncia tre ondate prima. Ma non in
+   tutte le ondate, e le due eccezioni non sono gusto: senza, la
+   taratura si sfascia in modi già misurati e scritti in
+   `motore/castello/ondate.js`.
+
+     · **all'inizio no**, per tante ondate quante sono le bocche: finché
+       in campo c'è una torre per strada, spegnerne una lascia quella
+       strada scoperta e non c'è nessun'altra mossa da fare;
+     · **all'ultima no**: la taratura non lascia mai un'ondata più dura
+       di quella dopo, quindi l'ultima fissa il tetto di tutta la tappa
+       — e il tetto deve misurare la tappa, non quale bestia sia
+       capitata in fondo alla fila.
+
+   Fra le due, la resistenza c'è sempre: se un'ondata di mezzo non la
+   portasse, il preavviso direbbe una cosa e il campo un'altra. */
+const bocche = t => (t.forme?.length || 1)
+for (const [i, t] of TAPPE.entries()) {
+  const onde = Array.from({ length: t.ondate }, (_, k) => new Ondate(t).bestiaDi(k + 1))
+  const mute = onde.map((b, k) => (b.resiste ? null : k + 1)).filter(Boolean)
+  const attese = [...Array.from({ length: bocche(t) }, (_, k) => k + 1), t.ondate]
+  controlla(`${i + 1}. ${t.nome}: parlano di resistenza tutte le ondate tranne l'apertura e l'ultima`,
+            t.resistenze ? mute.join() === [...new Set(attese)].join() : mute.length === t.ondate,
+            t.resistenze ? `mute: ${mute.join(' ')} · attese: ${[...new Set(attese)].join(' ')}`
+                         : 'la tappa non ha resistenze ma qualche ondata ne dichiara una')
+  if (!t.resistenze) continue
+  controlla(`${i + 1}. ${t.nome}: nessuna ondata chiude una torre che la tappa non dà`,
+            onde.every(b => !b.resiste || t.torri.includes(b.resiste)),
+            onde.filter(b => b.resiste && !t.torri.includes(b.resiste))
+                .map(b => `${b.nome}→${b.resiste}`).join(' '))
+}
+/* e quanto pesa: un terzo, contato sul nemico e non sulla tabella */
+{
+  const colpo = (resiste, tipo) => {
+    const n = new Nemico({ vita: 300, vel: 0, bestia: 'slime', resiste })
+    n.ferisci(90, tipo)
+    return 300 - n.vita
+  }
+  uguale('la torre a cui si resiste fa un terzo del danno', Math.round(colpo('sub', 'sub')), 30)
+  uguale('tutte le altre lo fanno intero', colpo('sub', 'add'), 90)
+  controlla('e non esiste una torre che ne faccia di più: il premio non c\'è più',
+            RESISTENZA < 1 && colpo(null, 'sub') === 90)
 }
 
 /* ── 6. potenziare deve rendere più che allargarsi ──

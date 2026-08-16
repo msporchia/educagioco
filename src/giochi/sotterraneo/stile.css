@@ -1,0 +1,209 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL SOTTERRANEO — L'ASPETTO
+
+   Un file solo, e ogni classe comincia per `sot-`. Non è pignoleria: lo
+   stile globale ha già `.carta`, `.riga`, `.tondo`, e due fogli che si
+   contendono lo stesso nome si rompono a distanza di mesi, quando
+   nessuno si ricorda più perché.
+
+   È tutto buio apposta, e la barra in cima è `scura` per lo stesso
+   motivo: una fascia bianca sopra una caverna è una finestra aperta di
+   notte.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sot {
+  --sot-fondo: #0b0d16;
+  --sot-carta: #141826;
+  --sot-inchiostro: #e8edf7;
+  --sot-tenue: #93a0bd;
+  --sot-oro: #ffd23f;
+  --sot-rosso: #e0644f;
+  --sot-bordo: #ffffff1e;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 560px; margin: 0 auto;
+  position: relative;
+  color: var(--sot-inchiostro);
+  background: radial-gradient(120% 80% at 50% 0%, #171b2c, var(--sot-fondo) 70%);
+}
+
+/* Il font di testo va PRIMA di quelli delle emoji: Noto Color Emoji ha
+   dentro anche le cifre, e senza questa precedenza un «💎 18» esce con
+   le cifre larghe il doppio del resto. */
+.sot .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji",
+                        "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la fascia in cima ═══════════ */
+.sot-io {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 8px; border: 0; border-radius: 12px;
+  background: #ffffff12; color: #e8edf7; font: inherit;
+}
+.sot-polso {
+  position: relative; display: inline-block; width: 62px; height: 15px;
+  border-radius: 999px; background: #00000055; overflow: hidden;
+}
+.sot-polso i { position: absolute; inset: 0 auto 0 0; background: var(--sot-polso, #4fce7c) }
+.sot-polso b {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: #06111e; text-shadow: 0 0 3px #ffffff88;
+}
+.sot-n { display: inline-flex; align-items: center; gap: 2px; font-size: 13px }
+.sot-n b { font-size: 13px }
+
+/* ═══════════ la scelta delle discese ═══════════ */
+.sot-tappe { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px 24px; display: grid; gap: 10px }
+.sot-invito { margin: 2px 2px 6px; color: var(--sot-tenue); font-size: 13.5px; line-height: 1.5 }
+.sot-invito b { color: var(--sot-inchiostro); font-weight: 650 }
+
+.sot-tappa {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px 14px; text-align: left; color: inherit; font: inherit;
+  background: var(--sot-carta); border: 1px solid var(--sot-bordo); border-radius: 18px;
+}
+.sot-tappa:active { transform: scale(.99) }
+.sot-tappa.sot-chiusa { opacity: .45 }
+.sot-tappa.sot-adesso { border-color: var(--sot-oro); box-shadow: 0 0 0 1px #ffd23f44 }
+.sot-faccia { font-size: 30px }
+.sot-tappa .sot-testo { flex: 1; min-width: 0; display: grid }
+.sot-tappa .sot-testo b { font-size: 16px }
+.sot-tappa .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
+.sot-conto { font-size: 13px; color: var(--sot-oro); white-space: nowrap }
+
+/* ═══════════ il campo ═══════════ */
+.sot-campo { flex: 1; min-height: 0; position: relative }
+/* Il canvas è **ancorato**, non semplicemente al 100%: la Tela si misura
+   dal genitore e gli scrive addosso un `height` in pixel, e un canvas nel
+   flusso con un'altezza sua dimensiona il genitore da cui si sta
+   misurando. Il giro si ferma dove capita — il campo resta alto la metà
+   dello schermo per sempre, senza che niente sembri rotto. */
+.sot-tela { position: absolute; inset: 0; display: block; touch-action: none }
+.sot-piede {
+  position: absolute; left: 0; right: 0; bottom: 8px; margin: 0;
+  text-align: center; font-size: 12.5px; color: #7f8db0; pointer-events: none;
+}
+.sot-avviso {
+  position: absolute; left: 0; right: 0; top: 42%; margin: 0;
+  text-align: center; font-size: 16px; font-weight: 700; pointer-events: none;
+  text-shadow: 0 2px 8px #000;
+}
+.sot-avviso::first-line { line-height: 1.4 }
+
+/* ═══════════ il foglio che sale dal basso ═══════════ */
+.sot-foglio {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 10;
+  padding: 14px 14px max(16px, env(safe-area-inset-bottom));
+  background: var(--sot-carta); border-radius: 22px 22px 0 0;
+  box-shadow: 0 -12px 40px #000a; animation: sot-sale .16s ease-out;
+  /* in `dvh` e non in percentuale: la percentuale si risolve sull'altezza
+     del contenitore, che in una colonna flex è «auto» e quindi non la
+     limita affatto — il foglio cresceva sotto il bordo dello schermo e le
+     risposte finivano dove nessuno le poteva toccare */
+  max-height: 82dvh; overflow-y: auto;
+}
+@keyframes sot-sale { from { transform: translateY(28px); opacity: 0 } }
+.sot-foglio h2 { margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px }
+.sot-foglio > p { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px }
+
+.sot-grosso {
+  display: block; width: 100%; margin-top: 9px; padding: 14px;
+  font: inherit; font-size: 16px; font-weight: 700; color: #101422;
+  background: var(--sot-oro); border: 0; border-radius: 16px;
+}
+.sot-chiaro { background: #ffffff16; color: inherit }
+
+/* ═══════════ chi hai davanti ═══════════ */
+.sot-nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 6px }
+.sot-nemico .sot-faccia { font-size: 40px }
+.sot-nemico .sot-faccia.sot-colpito { animation: sot-scossa .22s }
+@keyframes sot-scossa {
+  25% { transform: translateX(-4px) rotate(-4deg) }
+  75% { transform: translateX(4px) rotate(4deg) }
+}
+.sot-dati { flex: 1; min-width: 0 }
+.sot-vita { height: 6px; border-radius: 999px; background: #ffffff18; overflow: hidden; margin: 4px 0 }
+.sot-vita i { display: block; height: 100%; background: linear-gradient(90deg, #e0644f, #ff9b7a) }
+.sot-ossa { display: flex; gap: 10px; font-size: 12.5px; color: var(--sot-tenue) }
+.sot-costo { font-size: 13px; color: #ffd9a0; margin-top: 3px }
+
+/* ═══════════ la domanda dentro il foglio ═══════════
+   `quiz/Domanda.vue` arriva col suo velo a `position: absolute; inset: 0`,
+   che serve a coprire la schermata di chi la apre a tutto schermo. Qui non
+   c'è niente da coprire — il sotterraneo sta **sopra**, e vederlo mentre si
+   risponde è metà del punto — quindi il velo diventa l'ultimo pezzo del
+   foglio, alto quanto la carta e non un dito di più. Senza questa riga il
+   velo si stende sul foglio e la carta gli esce da sotto: le risposte
+   finiscono fuori dallo schermo, e non è un difetto che si veda leggendo.
+
+   `--qz-h` dice alla carta quanto schermo ha davvero: sta in un pannello
+   alto quattro quinti scarsi, e senza questa riga i disegni si
+   misurerebbero sull'intero telefono. */
+.sot-domanda { margin-top: 8px; position: relative; display: flex;
+               max-height: 62dvh; overflow-y: auto }
+.sot .sot-domanda .qz-velo { --qz-h: .62vh;
+                             position: relative; inset: auto; padding: 0; width: 100%;
+                             background: none; backdrop-filter: none;
+                             align-items: flex-end }
+.sot .sot-domanda .qz-carta { max-width: none; padding: 12px 12px 10px;
+                              border-radius: 18px }
+.sot .sot-domanda .qz-esito { margin-top: 8px; min-height: 18px }
+
+/* i titoli si ricolorano: lo stile globale li fa viola scuro, che su una
+   caverna nera non si legge */
+.sot h2, .sot h3 { color: var(--sot-inchiostro) }
+
+/* ═══════════ lo zaino e il mercante ═══════════ */
+.sot-riepilogo { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13px }
+.sot-caselle { display: flex; gap: 9px; margin-bottom: 12px }
+.sot-casella {
+  flex: 1; padding: 10px; text-align: center; border-radius: 14px;
+  background: #ffffff0d; border: 1px dashed var(--sot-bordo);
+}
+.sot-casella .em { font-size: 26px; display: block }
+.sot-casella b { display: block; font-size: 12px; margin-top: 2px }
+.sot-casella i { display: block; font-size: 11px; color: var(--sot-tenue); font-style: normal }
+
+.sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
+.sot-tasca {
+  padding: 12px 6px; text-align: center; border-radius: 14px; color: inherit;
+  background: #ffffff10; border: 1px solid #ffffff14; font: inherit; font-size: 11px;
+}
+.sot-tasca .em { font-size: 26px; display: block }
+.sot-tasca.sot-vuota { opacity: .35 }
+
+.sot-merce {
+  display: flex; align-items: center; gap: 11px; width: 100%; margin-bottom: 8px;
+  padding: 10px 12px; text-align: left; color: inherit; font: inherit;
+  background: #ffffff10; border: 1px solid #ffffff14; border-radius: 14px;
+}
+.sot-merce .em { font-size: 24px }
+.sot-merce .sot-testo { flex: 1; min-width: 0; display: grid }
+.sot-merce .sot-testo b { font-size: 14px }
+.sot-merce .sot-testo i { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
+.sot-merce.sot-caro { opacity: .45 }
+.sot-prezzo { color: var(--sot-oro); font-size: 13px; white-space: nowrap }
+.sot-vuoto { color: var(--sot-tenue); font-size: 13.5px; padding: 6px 0 }
+
+/* ═══════════ com'è finita ═══════════ */
+.sot-velo {
+  position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;
+  padding: 16px; background: #05060ac9;
+}
+.sot-fine {
+  width: 100%; max-width: 380px; padding: 20px 18px;
+  background: var(--sot-carta); border: 1px solid var(--sot-bordo); border-radius: 22px;
+  text-align: center;
+}
+.sot-fine .sot-em { font-size: 44px }
+.sot-fine h2 { margin: 6px 0 4px; font-size: 21px }
+.sot-oro { color: var(--sot-oro) }
+.sot-rosso { color: var(--sot-rosso) }
+.sot-racconto { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px }
+.sot-stelle { font-size: 22px; margin-bottom: 8px }
+.sot-fatti { display: flex; justify-content: center; gap: 16px; margin: 10px 0 4px }
+.sot-fatti div { display: grid }
+.sot-fatti b { font-size: 20px }
+.sot-fatti small { font-size: 12px; color: var(--sot-tenue) }
+.sot-fatti span { font-size: 11px; color: var(--sot-tenue) }
+.sot-coda { margin: 8px 0 0; font-size: 13px }

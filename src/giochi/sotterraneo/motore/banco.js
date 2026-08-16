@@ -1,0 +1,270 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL BANCO DI PROVA — un giocatore finto che scende davvero
+
+   Gioca una discesa intera senza schermo: cammina, apre le porte, batte
+   il guardiano, scende. Serve a due cose che a occhio non si vedono:
+
+   1. **che una tappa si vinca.** Non «che il codice non esploda»: che un
+      bambino che risponde bene otto volte su dieci arrivi in fondo. Se
+      una tappa la vince solo la fortuna, si vede qui e non dal muso
+      lungo di chi ci ha provato.
+   2. **quanto costa un piano, in domande.** È il numero che decide se il
+      gioco è un gioco o un compito, e nel prototipo il primo giro era da
+      buttare — ventiquattro risposte di fila contro un solo guardiano al
+      primo piano. Quel difetto non si vedeva leggendo la tabella dei
+      mostri: si vedeva solo contando.
+
+   ── DUE MODI DI GIOCARE, E LA FORBICE FRA I DUE ───────────────────
+   `minimo` fa solo quello che non si può evitare: la chiave e la scala.
+   `tutto` tocca ogni cosa che vale — porte, forzieri, mostri per strada.
+   La distanza fra i due numeri **è il gioco**: cinque domande per
+   scendere, sessanta per non lasciare niente indietro, e in mezzo c'è
+   tutto quello che si sceglie. Se i due numeri si avvicinano, vuol dire
+   che non si sceglie più niente.
+
+   Il caso arriva da fuori (`rnd`) e il seme è dichiarato: una discesa si
+   deve poter rifare identica, o il test racconta ogni volta una storia
+   diversa.
+   ═══════════════════════════════════════════════════════════════════ */
+import { Corsa } from './corsa.js'
+import { COSE } from '../dati/cose.js'
+import { seminato } from './livello.js'
+import { viaVerso, percorso } from '../../../motore/passi.js'
+
+const DT = 1 / 30
+const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
+const TETTO_GIRI = 12000        // azioni in una discesa, prima di dire che non finisce
+
+/* Va su una cella, un passo alla volta, e si ferma appena qualcosa si
+   apre: è quello che fa anche un bambino, che smette di camminare quando
+   gli compare un foglio davanti. Torna `true` se ci è arrivato. */
+function cammina(corsa, meta) {
+  corsa.vaiVerso(meta, false)
+  if (!corsa.strada && !corsa.foglio)
+    return Math.floor(corsa.eroe.x) === meta.x && Math.floor(corsa.eroe.y) === meta.y
+  for (let i = 0; i < TETTO_PASSI; i++) {
+    corsa.passo(DT)
+    if (corsa.foglio) return true
+    if (!corsa.strada) return true
+  }
+  return false
+}
+
+/* ── raggiungere una cosa, non una cella ──
+   In due tempi, e non è pignoleria: **quello che non si vede non si
+   tocca**. Un guardiano dall'altra parte del piano non è ancora
+   illuminato, quindi un tocco su di lui non lo prende nemmeno di mira; e
+   la sua cella è bloccata, quindi come cella non è una meta. Ci si
+   avvicina, e da lì lo si tocca — che è esattamente quello che fa chi
+   gioca. */
+function raggiungi(corsa, r) {
+  const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
+  const sopra = ['scala', 'mercante', 'fonte'].includes(r.che)
+  const via = viaVerso(corsa.buona(), r, da, { sopra })
+  if (!via) return false
+  if (!cammina(corsa, via.dove)) return false
+  if (corsa.foglio) return true
+  corsa.vaiVerso({ x: r.x, y: r.y }, true)
+  for (let i = 0; i < TETTO_PASSI && !corsa.foglio && corsa.strada; i++) corsa.passo(DT)
+  /* «arrivato» non basta: conta che sia **successo qualcosa**. Un
+     forziere in un angolo con un mostro davanti si raggiunge e non si
+     apre — la cella da cui toccarlo è occupata — e chi si accontenta di
+     esserci arrivato ci torna sopra all'infinito. Il giro esterno lo
+     vedeva come una discesa che non finisce mai, senza una riga che
+     dicesse perché. */
+  return !!corsa.foglio
+}
+
+/* ── togliersi di mezzo quello che sbarra ──
+   Non tutto quello che serve è raggiungibile subito: un mostro che dorme
+   in un corridoio stretto e una porta chiusa sono muri, finché non si
+   paga quello che chiedono. Il controllo della generazione garantisce
+   che **la scala** si raggiunga senza aprire niente, non che ci si
+   arrivi senza incontrare nessuno — e infatti incontrare qualcuno è il
+   gioco. Qui si fa quello che farebbe un bambino: si sbriga l'ostacolo
+   più vicino e si riprova.
+
+   Si sbriga **solo chi sta davvero in mezzo**, e per saperlo si ricalcola
+   la strada fingendo che il sotterraneo sia vuoto: il primo ostacolo che
+   ci cade sopra è quello da pagare. Prendere invece «il più vicino» —
+   che è la prima cosa che viene in mente — fa combattere mezzo piano per
+   arrivare a una porta che era libera, e il conto delle domande esce
+   doppio senza che niente sembri sbagliato.
+
+   `provati` conta i tentativi per oggetto: una porta a cui si sbaglia
+   resta chiusa, e senza un tetto si girerebbe intorno alla stessa
+   serratura per sempre. */
+function sblocca(corsa, meta, provati) {
+  const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
+  const sgombro = percorso((x, y) => corsa.livello.calpestabile(x, y), da, meta)
+  if (!sgombro) return false
+  for (const c of sgombro) {
+    const r = corsa.livello.robe.find(v => v.x === c.x && v.y === c.y && !v.morto && !v.presa &&
+      (v.che === 'mostro' || (v.che === 'porta' && !v.aperta)))
+    if (!r || (provati.get(r) || 0) >= 3) continue
+    provati.set(r, (provati.get(r) || 0) + 1)
+    if (raggiungi(corsa, r)) return true
+  }
+  return false
+}
+
+/* ── mettersi addosso quello che si è trovato ──
+   Senza questa riga il banco gioca **tutta la campagna a mani nude**, e
+   il numero che ne esce non è il costo del gioco: è il costo di giocarlo
+   male. Con attacco 3 il gigante dell'ultimo piano costa quattordici
+   risposte di fila, con l'ascia quattro — ed è tutta la ragione per cui
+   si va a cercare una spada. Un bambino la spada se la mette; il
+   giocatore finto deve fare almeno quello, o misura un gioco che nessuno
+   gioca. */
+function equipaggia(corsa) {
+  const meglio = (k, addosso, campo) => {
+    const mio = addosso ? (COSE[addosso][campo] || 0) : 0
+    return (COSE[k][campo] || 0) > mio
+  }
+  for (let i = corsa.zaino.length - 1; i >= 0; i--) {
+    const k = corsa.zaino[i]
+    const c = COSE[k]
+    if (c.dove === 'mano' && meglio(k, corsa.mano, 'att')) { corsa.usa(i); continue }
+    if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
+    /* la pozione si beve quando serve, non appena si trova: berla piena
+       è buttarla, ed è un errore che un bambino non fa due volte */
+    if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)
+  }
+}
+
+/* Le cose che si possono toccare, dalla più vicina: il giocatore finto
+   non gira a caso, va a colpo sicuro — quello che si vuole misurare è il
+   costo, non la sua bravura a orientarsi. */
+function robeInteressanti(corsa, quali) {
+  const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
+  return corsa.livello.robe
+    .filter(r => quali.includes(r.che) && !r.morto && !r.presa &&
+                 !(r.che === 'porta' && r.aperta) && !(r.che === 'forziere' && r.aperto))
+    .map(r => ({ r, d: Math.abs(r.x - da.x) + Math.abs(r.y - da.y) }))
+    .sort((a, b) => a.d - b.d)
+    .map(v => v.r)
+}
+
+/* Risponde a quello che c'è aperto, e dice se ha risposto a una domanda.
+   `bravura` è la probabilità di azzeccarla: 1 è un adulto attento, 0.75
+   un bambino nel suo pomeriggio normale. */
+function sbriga(corsa, bravura, sorte) {
+  const f = corsa.foglio
+  if (!f) return false
+  switch (f.che) {
+    case 'scontro':
+    case 'porta':
+    case 'forziere':
+    case 'fonte':
+      corsa.rispondi(sorte() < bravura)
+      return true
+    case 'svenuto':
+      corsa.riprendi()
+      return false
+    case 'mercante':
+      corsa.chiudi()
+      return false
+    case 'chiusa':
+      corsa.chiudi()
+      return false
+    case 'scala':
+      corsa.scendi()
+      return false
+    default:
+      corsa.chiudi()
+      return false
+  }
+}
+
+/* ── una discesa intera ──
+   `come` è `'minimo'` (chiave e scala, il pavimento sotto a tutto) o
+   `'tutto'` (ogni cosa che vale). */
+export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null } = {}) {
+  const sorte = rnd || seminato(seme * 31 + 17)
+  const corsa = new Corsa(tappa, { seme, rnd: sorte })
+  let giri = 0
+  const persi = []
+  const provati = new Map()
+
+  while (!corsa.finita && giri++ < TETTO_GIRI) {
+    /* prima si sbriga quello che si ha davanti: finché un foglio è
+       aperto non si cammina */
+    if (corsa.foglio) { sbriga(corsa, bravura, sorte); continue }
+    equipaggia(corsa)
+
+    /* la roba facoltativa, se si sta giocando tutto */
+    if (come === 'tutto') {
+      const roba = robeInteressanti(corsa, ['porta', 'forziere', 'fonte', 'mostro'])
+        .filter(r => !persi.includes(r))
+      if (roba.length) {
+        const meta = roba[0]
+        if (!raggiungi(corsa, meta) && !sblocca(corsa, { x: meta.x, y: meta.y }, provati))
+          persi.push(meta)
+        continue
+      }
+    }
+
+    /* la chiave: senza, la scala non si apre */
+    if (!corsa.chiaveDelPiano) {
+      const chi = corsa.livello.robe.find(r => r.che === 'mostro' && r.chiave && !r.morto)
+      if (!chi) return { corsa, esito: corsa.esito, guasto: 'nessuno porta la chiave' }
+      if (!raggiungi(corsa, chi) && !sblocca(corsa, { x: chi.x, y: chi.y }, provati))
+        return { corsa, esito: corsa.esito, guasto: 'al guardiano non si arriva' }
+      continue
+    }
+
+    const scala = corsa.livello.robe.find(r => r.che === 'scala')
+    if (!raggiungi(corsa, scala) && !sblocca(corsa, { x: scala.x, y: scala.y }, provati))
+      return { corsa, esito: corsa.esito, guasto: 'alla scala non si arriva' }
+  }
+
+  return {
+    corsa,
+    esito: corsa.esito,
+    guasto: corsa.finita ? null : 'la discesa non finisce mai',
+  }
+}
+
+/* Quante domande costa un piano, nei due modi. È la misura che va
+   guardata quando si tocca l'equilibrio: se il minimo cresce, scendere
+   diventa un compito; se la forbice si stringe, non si sceglie più. */
+export function costoDi(tappa, { seme = 7, bravura = 1 } = {}) {
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo' })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto' })
+  return {
+    minimo: minimo.esito.domande,
+    tutto: tutto.esito.domande,
+    vinte: [minimo.esito.vinta, tutto.esito.vinta],
+    guasti: [minimo.guasto, tutto.guasto].filter(Boolean),
+  }
+}
+
+/* Quante volte si vince, su N discese diverse. Una tappa che si vince
+   sei volte su dieci non è difficile: è una lotteria. */
+export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8 } = {}) {
+  let vinte = 0
+  const guasti = []
+  for (let i = 0; i < quante; i++) {
+    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo' })
+    if (g.esito.vinta) vinte++
+    if (g.guasto) guasti.push(`seme ${100 + i * 37}: ${g.guasto}`)
+  }
+  return { vinte, quante, guasti }
+}
+
+/* Quanti piani si generano sani. Il prototipo ne provava seicento e ne
+   trovava zero storti: è il controllo che tiene onesta la generazione
+   quando si cambiano le misure di una tappa. */
+export function pianiSani(tappa, quanti = 60) {
+  const storti = []
+  for (let i = 0; i < quanti; i++) {
+    const c = new Corsa(tappa, { seme: 1 + i * 613, rnd: seminato(i + 1) })
+    for (let p = 0; p < tappa.piani; p++) {
+      const g = c.livello.guasti()
+      if (g.length) storti.push(`seme ${1 + i * 613} piano ${p}: ${g.join(', ')}`)
+      if (p < tappa.piani - 1) { c.piano++; c.nuovoPiano() }
+    }
+  }
+  return storti
+}
+

@@ -2,18 +2,27 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL PREAVVISO — chi sta per arrivare, prima che serva.
 
-   Il difetto che chiude: le debolezze dei mostri esistevano, ma si
+   Il difetto che chiude: le resistenze dei mostri esistevano, ma si
    scoprivano quando l'ondata era già partita. A quel punto costruire la
-   torre giusta non serve più, e la debolezza smette di essere una
+   torre giusta non serve più, e la resistenza smette di essere una
    decisione: diventa un dettaglio che si legge dopo. La scelta della
    torre — che è il cuore del gioco, perché decide anche *quale
    operazione* si farà — si prendeva a caso.
 
    Qui le prossime tre ondate si vedono mentre si sta ancora
-   scegliendo: chi arriva, quanti sono, e con l'emoji della torre che
-   gli fa il doppio del danno. «Fra due ondate arriva il Golem, debole
-   alle bombe» vuol dire «comincia adesso a mettere da parte per le
-   divisioni».
+   scegliendo: chi arriva, quanti sono, e l'emoji della torre che quel
+   mostro **regge**, sbarrata. «Fra due ondate arriva il Golem, e la
+   magia non lo scalfisce» vuol dire «per questo giro le
+   moltiplicazioni lasciale stare».
+
+   ── perché sbarrata, e non colorata ──
+   Prima qui c'era il pallino della torre che faceva il doppio: un
+   segno che diceva «questa». Adesso dice «non questa», e i due segni
+   non possono somigliarsi, se no il nastro insegna l'opposto di
+   quello che dice — che è esattamente il difetto da cui questo giro è
+   partito. Quindi la pastiglia è spenta, grigia, con la barra sopra:
+   la stessa grammatica del divieto che un bambino conosce già dalla
+   strada.
 
    Sta in cima al campo, e solo fra un'ondata e l'altra: durante la
    battaglia quel posto è della scheda del mostro che si ha davanti, e
@@ -33,7 +42,7 @@ import RitrattoMostro from './RitrattoMostro.vue'
 const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 
 defineProps({
-  /* [{ onda, fra, id, nome, quanti, vola, debole }] — le dà il motore */
+  /* [{ onda, fra, id, nome, quanti, vola, resiste }] — le dà il motore */
   prossime: { type: Array, default: () => [] },
 })
 </script>
@@ -44,10 +53,11 @@ defineProps({
     <div v-for="p in prossime" :key="p.onda" class="avviso" :class="{ subito: p.fra === 1 }">
       <span class="faccia">
         <RitrattoMostro :bestia="p.id" />
-        <!-- il punto debole sta *addosso* al mostro, non di fianco: è quello
+        <!-- la resistenza sta *addosso* al mostro, non di fianco: è quella
              che si deve leggere insieme alla faccia, non dopo -->
-        <span v-if="p.debole" class="punto" :style="{ '--c': TORRI[p.debole].colore }"
-              :title="'debole a ' + TORRI[p.debole].nome">{{ TORRI[p.debole].emoji }}</span>
+        <span v-if="p.resiste" class="punto"
+              :title="'resiste a ' + TORRI[p.resiste].nome + ': gli fa un terzo del danno'"
+              >{{ TORRI[p.resiste].emoji }}</span>
       </span>
       <span class="dati">
         <b>{{ p.nome }}</b>

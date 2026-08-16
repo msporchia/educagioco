@@ -1,4 +1,4 @@
-/* La blatta — Sotterraneo, debole alla magica.
+/* La blatta — Sotterraneo, resiste alla magia (non ha una mente da incantare).
    Un guscio ovale e lucido con una riga in mezzo, antenne e zampe
    ridotte a segni: un insetto, non un ragno — il guscio è quasi
    tutta la sagoma, le zampe si vedono a stento. Rosso-bruno, per

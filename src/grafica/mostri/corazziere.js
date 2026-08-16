@@ -1,4 +1,4 @@
-/* Il corazziere — Mura, debole alla magica.
+/* Il corazziere — Mura, resiste alle frecce (armatura di piastre).
    Metallo e basta: nessun occhio da vedere, solo la fessura scura
    della visiera a croce. La sagoma è squadrata, non tonda come le
    bestie — è il primo mostro umano del castello, e deve leggersi

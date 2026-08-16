@@ -51,24 +51,26 @@
    terra l'ha capito, e allora il gioco può cominciare a chiedergli
    *come* vuole salire.
 
-   ── le debolezze, e perché quasi dappertutto ──
-   Ogni mostro ha un tipo di torre che gli fa doppio danno
+   ── le resistenze, e perché quasi dappertutto ──
+   Ogni mostro ha un tipo di torre che gli fa **un terzo** del danno
    (`data/mostri.js`). Accenderlo in una tappa sola lo rendeva un
    dettaglio; qui è acceso **da Bosco 2 in poi**, cioè in quattordici
    tappe su quindici. Fuori resta solo la primissima, che ha una torre
-   sola: con una torre sola la debolezza non è una scelta, è
-   un'etichetta.
+   sola che spara: lì una resistenza non sarebbe una scelta ma una
+   condanna, perché non c'è nient'altro da costruire.
    Due regole tengono la cosa onesta, e `strumenti/valida-percorsi.mjs`
    le verifica:
-     · ogni mostro dell'elenco è debole a una torre che **quella tappa
-       mette a disposizione** — se no la scheda indica un bottone
-       chiuso;
-     · in un elenco compaiono almeno **due** debolezze diverse — se
-       fossero tutte uguali la risposta sarebbe sempre la stessa.
+     · ogni mostro dell'elenco resiste a una torre che **quella tappa
+       mette a disposizione** — se no il nastro avverte di un bottone
+       chiuso, cioè di niente;
+     · in un elenco compaiono almeno **due** resistenze diverse — se
+       fossero tutte uguali basterebbe non comprare mai quella torre e
+       la scelta sparirebbe.
    Le file qui sotto fanno di più: girano i tre bersagli in ordine, in
-   modo che due ondate di fila non chiedano mai la stessa torre. Il
-   ghiaccio non compare mai fra le debolezze — non fa danno, e il
-   doppio di zero è zero.
+   modo che due ondate di fila non chiudano mai la stessa torre — e chi
+   ha costruito bene per l'ondata di adesso deve rimettersi a pensare
+   per la prossima. Il ghiaccio non compare mai fra le resistenze: non
+   fa danno, e un terzo di zero è zero.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════ I PERCORSI ═══════════════
@@ -315,8 +317,9 @@ const PALUDE_FOCE = [
    tappa, perché il viaggio si veda anche dove il terreno è lo stesso.
 
    `mostri` è la fila da cui `mostroDiOnda` pesca, un tipo per ondata,
-   a giro. Il commento accanto a ogni fila è la sequenza dei punti
-   deboli: 🏹 arciere, 🔮 magica, 💣 bombe. */
+   a giro. Il commento accanto a ogni fila è la sequenza delle torri
+   **che quell'ondata chiude** — quella che le fa un terzo del danno,
+   cioè quella da non comprare adesso: 🏹 arciere, 🔮 magica, 💣 bombe. */
 export const CAMPAGNE = [
   {
     id: 'bosco', nome: 'Il bosco', emoji: '🌲',
@@ -326,25 +329,31 @@ export const CAMPAGNE = [
     tappe: [
       { nome: 'Il sentiero', emoji: '🌱', ambiente: 'bosco-chiaro', calcoli: 6, cap: 3,
         torri: ['add'],
-        // l'unica tappa senza debolezze: con una torre sola non sarebbe una scelta
+        // l'unica tappa senza resistenze: con una torre sola sarebbe una condanna
         mostri: ['slime', 'goblin'], forma: BOSCO_SENTIERO },
       { nome: 'Il guado', emoji: '💧', ambiente: 'bosco-guado', calcoli: 7, cap: 4,
-        torri: ['add', 'sub'], debolezze: true,
-        // 🏹 🔮 — due mostri, due torri: la debolezza al suo minimo leggibile
+        torri: ['add', 'sub'], resistenze: true,
+        /* 🏹 🔮 — due mostri, due torri: la resistenza al suo minimo
+           leggibile. Il goblin ferma le frecce e lo slime la magia,
+           quindi ogni ondata lascia aperta esattamente l'altra. */
         mostri: ['goblin', 'slime'], forma: BOSCO_GUADO },
       { nome: 'La radura', emoji: '🍀', ambiente: 'bosco-radura', calcoli: 8, cap: 5,
-        torri: ['add', 'sub'], debolezze: true,
+        torri: ['add', 'sub'], resistenze: true,
         // 🏹 🔮 🏹 🔮
         mostri: ['ragno', 'slime', 'pipistrello', 'golem'], forma: BOSCO_RADURA },
       { nome: 'Il folto', emoji: '🌳', ambiente: 'bosco-fitto', calcoli: 10, cap: 6,
-        torri: ['add', 'sub', 'mul'], debolezze: true,
-        // 🏹 🔮 🏹 🔮 — entra il ghiaccio, che di debolezze non ne ha
+        torri: ['add', 'sub', 'mul'], resistenze: true,
+        // 🏹 🔮 🏹 🔮 — entra il ghiaccio, che nessuno riesce a chiudere
         mostri: ['pipistrello', 'golem', 'goblin', 'fantasma'], forma: BOSCO_FOLTO },
       { nome: 'La radice', emoji: '🪵', ambiente: 'bosco-notte', calcoli: 12, cap: 7,
         // niente rami: il bosco insegna a salire, non ancora a scegliere
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true,
-        // 🏹 🔮 💣 🏹 🔮 💣 — arrivano le bombe, e con loro orco e scheletro
-        mostri: ['ragno', 'fantasma', 'scheletro', 'goblin', 'golem', 'orco'],
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true,
+        /* 🏹 🔮 💣 🏹 🔮 💣 — arrivano le bombe, e con loro i primi due
+           che le reggono: lo scheletro (dentro non c'è niente da far
+           scoppiare) e l'arpia, che vola troppo in fretta per un colpo
+           lento. L'orco invece entra qui come muro di cuoio: le frecce
+           le ferma, tutto il resto no. */
+        mostri: ['ragno', 'fantasma', 'scheletro', 'orco', 'golem', 'arpia'],
         forma: BOSCO_RADICE },
     ],
   },
@@ -355,26 +364,34 @@ export const CAMPAGNE = [
        raddrizzano tappa dopo tappa. */
     tappe: [
       { nome: 'La grotta', emoji: '🕳️', ambiente: 'grotta', calcoli: 9, cap: 5,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🏹 🔮 💣
         mostri: ['pipistrello', 'golem', 'scheletro'], forma: SOTTO_GROTTA },
       { nome: 'La miniera', emoji: '⛏️', ambiente: 'miniera', calcoli: 11, cap: 6,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 💣 🏹 🔮
         mostri: ['scheletro', 'goblin', 'golem'], forma: SOTTO_MINIERA },
       { nome: 'Le fogne', emoji: '🕸️', ambiente: 'fogne', calcoli: 13, cap: 7,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
-        // 🔮 🏹 💣
-        mostri: ['slime', 'ragno', 'orco'], forme: SOTTO_FOGNE },
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
+        /* 🔮 💣 🔮 🏹 — l'unica fila che non gira i tre bersagli in
+           parti uguali, e non è una svista. Le fogne hanno nove
+           piazzole, le più larghe di manica del Sotterraneo, e con due
+           bocche le prime due ondate non portano resistenze: con un
+           giro pari la tappa usciva dalla taratura più dura della
+           Cripta e della Gola che vengono dopo. Chiudendo la magica
+           due volte su quattro invece di una su tre, la scala della
+           campagna torna a salire. Il verme e la blatta ci stanno di
+           casa, che è l'altra metà della ragione. */
+        mostri: ['slime', 'verme', 'blatta', 'ragno'], forme: SOTTO_FOGNE },
       { nome: 'La cripta', emoji: '⚰️', ambiente: 'cripta', calcoli: 16, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🔮 🏹 💣 🔮 🏹 💣
-        mostri: ['fantasma', 'arpia', 'scheletro', 'golem', 'pipistrello', 'orco'],
+        mostri: ['fantasma', 'pipistrello', 'scheletro', 'golem', 'orco', 'arpia'],
         forma: SOTTO_CRIPTA },
       { nome: 'La gola', emoji: '⛰️', ambiente: 'gola', calcoli: 19, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 💣 🔮 🏹 💣 🔮 🏹
-        mostri: ['orco', 'golem', 'arpia', 'scheletro', 'fantasma', 'ragno'],
+        mostri: ['scheletro', 'golem', 'orco', 'arpia', 'fantasma', 'ragno'],
         forma: SOTTO_GOLA },
     ],
   },
@@ -386,27 +403,27 @@ export const CAMPAGNE = [
        ultime due chiamano il drago. */
     tappe: [
       { nome: 'Il cortile', emoji: '🚪', ambiente: 'cortile', calcoli: 14, cap: 7,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
-        // 🔮 💣 🏹
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
+        // 🔮 🏹 💣
         mostri: ['golem', 'orco', 'arpia'], forma: MURA_CORTILE },
       { nome: 'Il camminamento', emoji: '🧱', ambiente: 'camminamento', calcoli: 18, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
-        // 🏹 🔮 💣 — e due su tre volano, che sopra le mura è il posto giusto
-        mostri: ['arpia', 'fantasma', 'scheletro'], forma: MURA_CAMMINAMENTO },
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
+        // 💣 🏹 🔮 — e volano tutti e tre, che sopra le mura è il posto giusto
+        mostri: ['arpia', 'pipistrello', 'fantasma'], forma: MURA_CAMMINAMENTO },
       { nome: 'Il corridoio', emoji: '🗝️', ambiente: 'corridoio', calcoli: 22, cap: 9,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🏹 🔮 💣 🏹 🔮 💣
-        mostri: ['pipistrello', 'slime', 'scheletro', 'arpia', 'fantasma', 'orco'],
+        mostri: ['pipistrello', 'slime', 'scheletro', 'orco', 'fantasma', 'arpia'],
         forma: MURA_CORRIDOIO },
       { nome: 'La sala del trono', emoji: '👑', ambiente: 'trono', calcoli: 26, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🔮 🏹 💣 🔮 🏹 💣 — il drago chiude ogni giro
-        mostri: ['golem', 'arpia', 'orco', 'fantasma', 'pipistrello', 'drago'],
+        mostri: ['golem', 'orco', 'arpia', 'fantasma', 'pipistrello', 'drago'],
         forma: MURA_TRONO },
       { nome: 'Il torrione', emoji: '🏰', ambiente: 'bastione', calcoli: 30, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🏹 🔮 💣 🏹 🔮 💣 — sei bestie diverse sul tracciato più corto
-        mostri: ['ragno', 'golem', 'orco', 'arpia', 'fantasma', 'drago'],
+        mostri: ['ragno', 'golem', 'arpia', 'orco', 'fantasma', 'drago'],
         forme: MURA_TORRIONE },
     ],
   },
@@ -419,23 +436,23 @@ export const CAMPAGNE = [
        le torri, tutti i rami, e le bestie che nella palude ci vivono. */
     tappe: [
       { nome: 'Il guado', emoji: '💧', ambiente: 'palude-alba', calcoli: 12, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🔮 🏹 💣
         mostri: ['blatta', 'lupo', 'verme'], fronti: 1.5, forme: PALUDE_GUADO },
       { nome: 'Il canneto', emoji: '🌾', ambiente: 'palude-verde', calcoli: 14, cap: 8,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 💣 🏹 🔮
         mostri: ['rovo', 'corvo', 'troll'], fronti: 1.9, forme: PALUDE_CANNETO },
       { nome: 'Le isole', emoji: '🏝️', ambiente: 'palude-stagno', calcoli: 18, cap: 9,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 💣 🔮 🏹 🔮
         mostri: ['verme', 'blatta', 'corvo', 'troll'], fronti: 1.5, forme: PALUDE_ISOLE },
       { nome: 'Il pantano', emoji: '🪵', ambiente: 'palude-marcio', calcoli: 21, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 🔮 💣 🏹 🔮 💣 🏹 — tre bocche, e il giro delle tre torri
         mostri: ['troll', 'rovo', 'lupo', 'blatta', 'verme', 'corvo'], forme: PALUDE_PANTANO },
       { nome: 'La foce', emoji: '🌊', ambiente: 'palude-torce', calcoli: 24, cap: 10,
-        torri: ['add', 'sub', 'mul', 'div'], debolezze: true, rami: true,
+        torri: ['add', 'sub', 'mul', 'div'], resistenze: true, rami: true,
         // 💣 🔮 🏹 🔮 💣 🏹 — e il drago chiude, come nelle Mura
         mostri: ['drago', 'blatta', 'lupo', 'troll', 'verme', 'corvo'], fronti: 1.6, forme: PALUDE_FOCE },
     ],
@@ -446,7 +463,7 @@ export const CAMPAGNE = [
    che il profilo salva, e i confini di campagna servono solo a
    raccontarla sulla mappa */
 export const RACCONTO = CAMPAGNE.flatMap(c =>
-  c.tappe.map(t => ({ ...t, campagna: c.id, debolezze: !!t.debolezze })))
+  c.tappe.map(t => ({ ...t, campagna: c.id, resistenze: !!t.resistenze })))
 
 /* a che campagna appartiene la tappa numero `i` */
 export const campagnaDi = i => RACCONTO[i] && RACCONTO[i].campagna

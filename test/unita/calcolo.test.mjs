@@ -25,7 +25,7 @@ import { CONCETTI, CONCETTI_PER_ID, STAZIONI, VOLO_A_MENTE, TUTTI_I_FATTI,
   from '../../src/data/calcolo.js'
 import { SALDO, forzaDi, saldo, aperto, frontiera, tagliaDi, poolDi, eNuovo,
          tabellineSalde, prereqDeboli, concettiSaldi, stellaDi, allineaCalcolo,
-         sottoPool, QUOTA_TAPPA }
+         sottoPool, QUOTA_TAPPA, creaMiscela }
   from '../../src/store/calcolo.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -391,11 +391,30 @@ function profiloCon(ids, quando = ORA) {
   let dalla = 0
   const N = 4000
   for (let i = 0; i < N; i++) if (sottoPool(pool, suo, Math.random).every(suo)) dalla++
-  dentro('sette domande su dieci parlano della tappa', dalla / N, QUOTA_TAPPA - 0.03, QUOTA_TAPPA + 0.03)
+  dentro('otto domande su dieci parlano della tappa', dalla / N, QUOTA_TAPPA - 0.03, QUOTA_TAPPA + 0.03)
 
   // e chi sceglie il ripasso non pesca mai fra i nuovi, e viceversa
   const parti = new Set(Array.from({ length: 200 }, () => sottoPool(pool, suo).map(String).join('|')))
   controlla('le due parti non si mescolano', parti.size === 2, [...parti].join(' / '))
+
+  /* la stessa quota, ma con memoria: `creaMiscela` non promette «otto su
+     dieci in media» — promette che in nessuna finestra di cinque domande
+     ce ne sono più di `fuoriMax` fuori tappa. È la differenza fra una
+     quota dichiarata e una quota che si può contare, e senza c'erano
+     partite con sei domande di fila che non parlavano della tappa. */
+  {
+    const m = creaMiscela()
+    let fuori = 0, filaMax = 0, fila = 0
+    for (let i = 0; i < 4000; i++) {
+      const parte = m.parte(pool, suo)
+      const k = parte[Math.floor(Math.random() * parte.length)]
+      m.segna(suo(k))
+      if (suo(k)) fila = 0
+      else { fuori++; fila++; filaMax = Math.max(filaMax, fila) }
+    }
+    dentro('con memoria la quota resta quella', 1 - fuori / 4000, QUOTA_TAPPA - 0.02, 1)
+    uguale('e il ripasso non fa mai due domande di fila', filaMax, m.fuoriMax)
+  }
 
   // una tappa senza ripasso (la prima) resta giocabile: si pesca da tutto
   uguale('senza ripasso non c\'è niente da dosare',

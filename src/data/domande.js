@@ -31,23 +31,44 @@
    calendario, e nessuno si trova a tradurre dall'italiano una parola
    che ha visto una volta sola.
    ═══════════════════════════════════════════════════════════════════ */
-import { compagne } from './lessico.js'
+import { compagne, tutteDi } from './lessico.js'
 
 const mescola = a => a.slice().sort(() => Math.random() - 0.5)
 
 /* prende `quante` voci diverse dalla giusta, senza doppioni di ciò che
-   si vedrà scritto: due opzioni identiche sarebbero due risposte giuste */
-function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set()) {
+   si vedrà scritto: due opzioni identiche sarebbero due risposte giuste.
+
+   `conFamiglia`, quando è vero, tiene anche conto della FAMIGLIA VISIVA
+   (`v.famiglia`, vedi `lessico.js`): due emoji che si confondono a colpo
+   d'occhio (le facce delle emozioni, gli omini dei mestieri) non escono
+   mai insieme nella stessa domanda. Il bersaglio conta come già vista —
+   la sua famiglia è la prima cosa da evitare. Vale solo per i tipi
+   figurati: le opzioni testuali non hanno questo problema.
+
+   Se la famiglia del bersaglio occupa quasi tutta la sua categoria (gli
+   aggettivi delle facce sono dieci undicesimi delle emoji di «com'è
+   fatto») le compagne vicine non bastano più a riempire la domanda: si
+   allarga a tutta la lingua, come fa già `compagne()` per le categorie
+   piccole — qui il motivo non è la categoria piccola, è la famiglia
+   grande, ma il rimedio è lo stesso. */
+function distrattori(v, quante, mostra, ammessa = () => true, viste = new Set(), conFamiglia = false) {
   viste.add(mostra(v))
-  const fonte = mescola(compagne(v, quante + 2))
+  const famiglie = new Set(conFamiglia && v.famiglia ? [v.famiglia] : [])
   const out = []
-  for (const c of fonte) {
-    if (out.length >= quante) break
-    if (c.chiave === v.chiave || !ammessa(c)) continue
-    const testo = mostra(c)
-    if (!testo || viste.has(testo)) continue
-    viste.add(testo); out.push(c)
+  const prova = fonte => {
+    for (const c of fonte) {
+      if (out.length >= quante) return
+      if (c.chiave === v.chiave || !ammessa(c)) continue
+      if (conFamiglia && c.famiglia && famiglie.has(c.famiglia)) continue
+      const testo = mostra(c)
+      if (!testo || viste.has(testo)) continue
+      viste.add(testo); out.push(c)
+      if (conFamiglia && c.famiglia) famiglie.add(c.famiglia)
+    }
   }
+  prova(mescola(compagne(v, quante + 2)))
+  if (out.length < quante)
+    prova(mescola(tutteDi(v.lingua).filter(x => x.genere === v.genere)))
   return out
 }
 
@@ -82,7 +103,8 @@ export const TIPI = {
       return {
         domanda: { testo: v.str },
         opzioni: mescola([opzEmoji(v, true),
-                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji).map(x => opzEmoji(x))]),
+                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true)
+                            .map(x => opzEmoji(x))]),
       }
     },
   },
@@ -99,7 +121,8 @@ export const TIPI = {
       return {
         domanda: { ascolta: v.str, svela: v.str },
         opzioni: mescola([opzEmoji(v, true),
-                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji).map(x => opzEmoji(x))]),
+                          ...distrattori(v, 5, x => x.emoji, x => !!x.emoji, new Set(), true)
+                            .map(x => opzEmoji(x))]),
       }
     },
   },

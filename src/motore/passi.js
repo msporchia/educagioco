@@ -135,6 +135,37 @@ export function accanto(buona, meta, da, { sopra = false } = {}) {
   return meglio ? { x: meglio.x, y: meglio.y } : null
 }
 
+/* ── accanto, E raggiungibile ──
+   `accanto` risponde a «dove mi fermo», e sceglie la vicina più comoda
+   **per chi arriva**: la più vicina in linea d'aria. Non è sempre la
+   stessa cosa che «dove riesco ad arrivare» — un mostro fermo in un
+   corridoio ha due lati, e quello più vicino a me può essere proprio
+   quello di là. Chiedere la strada verso quello, trovarla chiusa e
+   concludere «di là non si passa» è il guasto che ne segue: il gioco
+   dice di no a un tocco che era perfettamente possibile, e chi tocca non
+   ha modo di sapere che bastava girarci intorno.
+
+   Qui si provano tutte le vicine buone, dalla più comoda, e si torna la
+   prima **a cui una strada c'è davvero**, con la strada già calcolata —
+   così chi chiama non la ricalcola. `sopra` dice se vale anche stare
+   sulla cella stessa: su una scala ci si sale, su un mostro no.
+
+   Costa fino a cinque ricerche invece di una, e succede solo quando si
+   tocca qualcosa: su griglie di qualche migliaio di celle non si sente. */
+export function viaVerso(buona, meta, da, { sopra = false, tetto = TETTO } = {}) {
+  const scelte = (sopra ? [[0, 0]] : []).concat(PASSI)
+    .map(([dx, dy]) => ({ x: meta.x + dx, y: meta.y + dy }))
+    .filter(p => buona(p.x, p.y))
+    .sort((a, b) => (Math.abs(a.x - da.x) + Math.abs(a.y - da.y)) -
+                    (Math.abs(b.x - da.x) + Math.abs(b.y - da.y)))
+  for (const p of scelte) {
+    if (p.x === da.x && p.y === da.y) return { dove: p, strada: [] }
+    const strada = percorso(buona, da, p, { tetto })
+    if (strada) return { dove: p, strada }
+  }
+  return null
+}
+
 /* ── la cella libera più vicina ──
    Per posare qualcosa quando il posto chiesto è occupato: un animale
    comprato quando la stalla è piena di roba, un oggetto lasciato cadere

@@ -1,4 +1,4 @@
-/* Il troll — Sotterraneo, debole alla magica.
+/* Il troll — Sotterraneo, resiste alla magia (testa dura come il resto).
    Alto e allampanato, orecchie grandi e un naso enorme e chiaro: il
    contrario dell'orco, che è largo e basso con le zanne in vista.
    Grigio-salvia, per non confondersi col verde acceso dell'orco e

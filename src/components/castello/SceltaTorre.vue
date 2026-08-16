@@ -7,11 +7,16 @@
    suo raggio d'azione: si sceglie sapendo *dove* finisce la torre, che
    prima non si sapeva — la metteva il gioco, in fila, senza dirlo.
 
-   Il ×2 sulla carta è il preavviso che diventa una risposta: se fra poco
-   arriva un Golem e il Golem è debole alla magica, la carta della magica
-   se lo porta scritto addosso. Il nastro delle ondate dice chi arriva,
-   qui c'è cosa farci — ed è lo stesso dato, letto nel momento in cui
-   serve invece che tre righe più su.
+   Il ⅓ sulla carta è il preavviso che diventa una risposta: se fra poco
+   arriva un Golem e il Golem regge la magia, la carta della magica se
+   lo porta scritto addosso — «qui ne fai un terzo». Il nastro delle
+   ondate dice chi arriva, qui c'è cosa farci — ed è lo stesso dato,
+   letto nel momento in cui serve invece che tre righe più su.
+
+   La carta segnata **non si disabilita**, e non è una svista: comprarla
+   resta legittimo — una torre vive tutta la tappa e le ondate girano,
+   quindi quella che oggi non morde domani è la migliore che hai. Il
+   segno avverte, non decide al posto di chi gioca.
 
    Le carte care non si spengono: toccarle dice quanto manca. Un bottone
    morto non insegna niente.
@@ -24,8 +29,8 @@ const props = defineProps({
   energia: { type: Number, default: 0 },
   costo: { type: Number, default: 0 },
   divisioni: { type: Boolean, default: true },
-  /* il tipo di torre che fa doppio danno a chi sta per arrivare */
-  debole: { type: String, default: null },
+  /* il tipo di torre a cui chi sta per arrivare resiste */
+  resiste: { type: String, default: null },
 })
 defineEmits(['scegli'])
 
@@ -37,9 +42,9 @@ const cara = k => disponibile(k) && props.energia < props.costo
 <template>
   <div class="carte">
     <button v-for="(T, k) in TORRI" :key="k" class="carta-torre" :style="{ '--c': T.colore }"
-            :class="{ bloccata: !disponibile(k), cara: cara(k), forte: debole === k }"
+            :class="{ bloccata: !disponibile(k), cara: cara(k), fiacca: resiste === k }"
             :disabled="!disponibile(k)" :data-torre="k" @click="$emit('scegli', k)">
-      <span v-if="debole === k && disponibile(k)" class="doppio">×2</span>
+      <span v-if="resiste === k && disponibile(k)" class="terzo">⅓</span>
       <span class="figura">
         <RitrattoTorre v-if="disponibile(k)" :tipo="k" :lv="1" />
         <span v-else class="chiuso">🔒</span>

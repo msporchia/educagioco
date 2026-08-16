@@ -5,7 +5,7 @@
    cattiveria. Sono disegnate a mano e non emoji perché le emoji cambiano
    faccia da telefono a telefono e non stanno insieme al resto del campo.
 
-   Chi sono — nome, debolezza, se volano — sta in `data/mostri.js`,
+   Chi sono — nome, resistenza, se volano — sta in `data/mostri.js`,
    indicizzato con lo stesso `id`. Qui c'è solo come si disegnano.
 
    ── la firma, che è un contratto ──

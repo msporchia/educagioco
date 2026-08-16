@@ -1,0 +1,10 @@
+{
+  "__": "Il foglietto di 0x72 (vedi ../../FORMATO.md). Le coordinate non stanno qui: stanno in pezzi.json, che incrocia il tile_list_v1.7 dell'autore ed è l'unica copia che ne esiste. Per quale gioco sia questo foglio lo dice atlante.json, accanto.",
+  "scala": 1,
+  "fondo": "trasparente",
+  "cella": [
+    16,
+    16
+  ],
+  "ritagli": "pezzi.json"
+}

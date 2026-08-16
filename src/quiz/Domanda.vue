@@ -39,7 +39,7 @@
    la tiene in fondo su tre quarti d'altezza, dichiara `--qz-h: .72vh` —
    e i disegni rimpiccioliscono di conseguenza.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
@@ -61,9 +61,26 @@ const props = defineProps({
   gioco: { type: String, default: '' },
 })
 const emit = defineEmits(['risposto'])
+let cieca = 0
 
 const scelto = ref(-1)
 const partenza = ref(0)
+/* ── la finestra cieca ──
+   Una domanda appena comparsa **non si lascia toccare** per un pelo di
+   tempo. Non è pignoleria: i giochi che incatenano domande — il
+   sotterraneo, il Dungeon, la Corsa, Survivors — la fanno comparire
+   *nello stesso punto dello schermo* dove c'era quella di prima, e un
+   tocco partito un attimo prima (o il click che il dito si lascia
+   dietro, che arriva dopo il `touchend`) atterra sulla risposta nuova e
+   la dà a caso. Da fuori si legge «ha premuto anche quella sotto, e me
+   l'ha data sbagliata», ed è successo davvero.
+   Trecento millisecondi: meno di quanto ci mette chiunque a leggere una
+   domanda nuova, più di quanto ci mette un fantasma ad arrivare. */
+const CIECA = 320
+const pronta = ref(false)
+/* Quanto manca alla prossima, per non lasciare l'attesa muta (vedi
+   `scegli`): 0 = non si sta aspettando niente. */
+const attesa = ref(0)
 const tele = ref([])          // i canvas delle risposte disegnate
 const teloSoggetto = ref(null)
 
@@ -87,17 +104,26 @@ function classe(i) {
 }
 
 function scegli(i) {
-  if (scelto.value >= 0) return
+  if (scelto.value >= 0 || !pronta.value) return
   scelto.value = i
   const giusto = i === props.domanda.giusta
-  const attesa = giusto ? Math.min(props.respiro, 700)
+  /* Sbagliando si resta fermi più a lungo, perché c'è da leggere il
+     perché. Ma un'attesa che non si vede è **indistinguibile da un gioco
+     bloccato** — a un bambino col telefono in mano, due secondi di
+     schermata ferma sono un tasto che non funziona, e infatti tocca di
+     nuovo, e quel tocco finisce sulla domanda dopo. Per questo l'attesa
+     si vede: la riga sotto la carta si riempie, e quando è piena si va
+     avanti. È la stessa regola di «un errore non resta muto», applicata
+     al tempo che passa. */
+  const quanto = giusto ? Math.min(props.respiro, 700)
     : props.respiro + (esito.value ? 900 : 0)
+  attesa.value = quanto
   setTimeout(() => emit('risposto', {
     giusto,
     indice: i,
     chiave: props.domanda.chiave,
     tempo: (performance.now() - partenza.value) / 1000,
-  }), attesa)
+  }), quanto)
 }
 
 /* Quello che si sa di questa domanda **adesso**: il tempo scorre e
@@ -119,6 +145,7 @@ const daGiudicare = () => ({
    largo, e un riquadro dipinto a misura sbagliata resta sgranato. */
 onMounted(async () => {
   partenza.value = performance.now()
+  cieca = setTimeout(() => { pronta.value = true }, CIECA)
   await nextTick()
   if (props.domanda.soggetto?.scena && teloSoggetto.value)
     dipingi(teloSoggetto.value, props.pittori, props.domanda.soggetto.scena)
@@ -126,6 +153,8 @@ onMounted(async () => {
     if (r.scena && tele.value[i]) dipingi(tele.value[i], props.pittori, r.scena)
   })
 })
+
+onUnmounted(() => clearTimeout(cieca))
 </script>
 
 <template>
@@ -154,6 +183,13 @@ onMounted(async () => {
           <canvas v-if="r.scena" :ref="el => (tele[i] = el)" class="qz-telo" />
           <template v-else>{{ r.testo ?? r.emoji }}</template>
         </button>
+      </div>
+
+      <!-- l'attesa che si vede: comincia quando si è risposto e finisce
+           quando arriva la prossima. Senza, quei due secondi sono un
+           gioco fermo. -->
+      <div v-if="attesa" class="qz-avanti">
+        <i :style="{ animationDuration: attesa + 'ms' }"></i>
       </div>
 
       <div class="qz-esito">
@@ -193,6 +229,13 @@ onMounted(async () => {
   border: 1px solid rgba(255, 255, 255, .13);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
 }
+.qz-avanti { height: 3px; border-radius: 999px; background: #ffffff14;
+             overflow: hidden; margin-top: 8px }
+.qz-avanti i { display: block; height: 100%; width: 0;
+               background: linear-gradient(90deg, #ffd58a, #ffb43f);
+               animation: qz-riempi linear forwards }
+@keyframes qz-riempi { to { width: 100% } }
+
 .qz-testa {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase;

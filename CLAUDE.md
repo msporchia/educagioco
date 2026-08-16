@@ -121,6 +121,19 @@ C'è anche `pubblica.sh` per un server di casa, che **non è versionato**
 (insieme a `pubblico/`): è roba di casa e non riguarda chi clona il repo.
 Legge l'indirizzo da `.nas`, ignorato da git.
 
+**È anche il modo di provare col dito.** Certe cose si vedono solo da un
+telefono vero — un tocco non è un click, e nessun test di integrazione lo
+sostituisce — e `./pubblica.sh` mette il file sul server di casa in una
+decina di secondi, raggiungibile dal telefono senza passare da GitHub
+Pages: si chiede quando c'è da guardare una schermata, non solo quando si
+rilascia. Due avvertenze. La prima è che **la copia di casa è una sola**:
+non c'è un canale di anteprima separato, quindi quello che si pubblica è
+quello che trovano i bambini — va bene per una prova, non per lasciarci
+una versione a metà. La seconda è che **è tutto lo stesso origin** (il
+nome `.lan` è un redirect a quello del tailnet, non un secondo indirizzo):
+profili, cache e service worker sono gli stessi del sito che si usa in
+casa, quindi una prova che tocca l'archivio tocca i salvataggi veri.
+
 Il numero di versione lo genera il build. Il `+` in coda al commit
 (`922257a+`) vuol dire che il build è stato fatto con modifiche non
 committate: non è ricostruibile da git.
@@ -169,14 +182,18 @@ committate: non è ricostruibile da git.
   emoji le disegna il telefono, quindi hanno lo stile di Apple in mezzo
   a uno schermo disegnato a mano, non si tingono dell'ambiente e non
   tremano quando le colpisci.
-  Poi ci sono due file **predisposti e non ancora agganciati a niente**,
-  che servono a disegnare con degli sprite invece che coi poligoni:
-  `atlante.js` (un foglio di figure e come si posano: il piede, lo
-  specchio, la scala intera) e `tessere.js` (*quale* tessera va in una
-  cella, ricavata dai vicini — strade, pozze, recinti; niente canvas,
-  gira in Node e si prova in `unita/tessere`). Un mondo a tessere chiede
-  alla tela `passoIntero: true`, se no gli sprite si sfrangiano. Il
-  prototipo che li giustifica è `poc/castello-gfx.html`.
+  Poi i due file che servono a disegnare **con degli sprite invece che
+  coi poligoni**: `atlante.js` (un foglio di figure e come si posano: il
+  piede, lo specchio, la scala intera) e `tessere.js` (*quale* tessera va
+  in una cella, ricavata dai vicini — strade, pozze, recinti; niente
+  canvas, gira in Node e si prova in `unita/tessere`). Li usa
+  `giochi/sotterraneo/scena/tela.js`, che è il calco da guardare: la
+  scala sta **nella trasformazione del contesto** (`dpr × scala`, una
+  volta per fotogramma) e da lì in poi tutto è in pixel dello sprite —
+  chi la moltiplica riga per riga prima o poi la moltiplica due volte, ed
+  è invisibile a figura piccola. Un mondo a tessere vuole ingrandimenti
+  interi, se no gli sprite si sfrangiano. I fogli li ritaglia
+  `strumenti/sprite/atlante.py`, un bersaglio per gioco.
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`
@@ -294,7 +311,7 @@ committate: non è ricostruibile da git.
 
 ### Cosa possono spegnere i genitori
 
-Tre interruttori diversi, e la differenza conta:
+Quattro interruttori diversi, e la differenza conta:
 
 1. **Un gioco** (`settings.giochi`) — sparisce la carta in home, i progressi
    restano. Per bambino, come elenco di **eccezioni** (`{ torri: false }`),
@@ -306,6 +323,14 @@ Tre interruttori diversi, e la differenza conta:
    invece di sbarrare.
 3. **I giochi in prova** (`settings.sperimentali`) — un flag solo per tutti
    quelli taggati `sperimentale: true`, che senza non esistono affatto.
+4. **Un modo di giocare, dentro un gioco** (`settings.varianti`,
+   `varianteAccesa`/`accendiVariante`) — non è un gioco e non è un pezzo di
+   scuola: è metà di un gioco che si può togliere senza togliere il gioco. Il
+   primo è `asteroidi:mente`, che leva le tappe di calcolo a mente dalla fila
+   degli asteroidi e lascia solo le tabelline; i pianeti si rinumerano senza
+   buchi, i progressi restano dove sono e la carta in home non si muove.
+   Stessa forma degli altri due: **eccezioni per bambino**, così una variante
+   nuova nasce accesa per chi ha il profilo di ieri.
 
 Nei test i bersagli sono `.carta.gioco[data-gioco="…"]`,
 `.carta[data-flag="…"]`, `.carta[data-azione="…"]`.

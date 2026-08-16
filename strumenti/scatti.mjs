@@ -131,11 +131,13 @@ const PIN = [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
 const RICETTE = [
   { file: 'home', dove: '', attesa: '.carte' },
 
-  { file: 'asteroidi-mappa', dove: 'mate', attesa: '.pianeti' },
-  { file: 'asteroidi-gioco', dove: 'mate', attesa: '.pianeti',
+  { file: 'asteroidi-mappa', dove: 'mate', attesa: '.scaletta' },
+  { file: 'asteroidi-gioco', dove: 'mate', attesa: '.scaletta',
     passi: [['.pianeta:not(.chiuso)', 7500]] },
-  { file: 'asteroidi-stazioni', dove: 'mate', attesa: '.schede',
-    passi: [['.schede button:nth-child(2)', 800]] },
+  /* la fila è una sola: la seconda foto è la stessa mappa più in basso,
+     dove si vede che pianeti e stazioni si alternano */
+  { file: 'asteroidi-stazioni', dove: 'mate', attesa: '.scaletta',
+    passi: [['.stazione:not(.chiuso)', 7500]] },
 
   { file: 'inglese-mappa', dove: 'inglese', attesa: '.mappa' },
   { file: 'inglese-gioco', dove: 'inglese', attesa: '.mappa',
@@ -169,6 +171,12 @@ const RICETTE = [
   { file: 'survivors-mappa', dove: 'survivors', attesa: '.sv-mappa' },
   { file: 'survivors-gioco', dove: 'survivors', attesa: '.sv-mappa',
     passi: [['.sv-tappa.sv-adesso, .sv-tappa', 2200]] },
+
+  { file: 'sotterraneo-mappa', dove: 'sotterraneo', attesa: '.sot-tappe' },
+  /* il campo dopo un paio di secondi: appena entrati la luce è ancora
+     tutta addosso all'eroe, e lo scatto racconterebbe una stanza sola */
+  { file: 'sotterraneo-gioco', dove: 'sotterraneo', attesa: '.sot-tappe',
+    passi: [['.sot-tappa:not([disabled])', 2200]] },
 
   { file: 'corsa-mappa', dove: 'corsa', attesa: '.co-mappa' },
   /* La corsa si fotografa **dopo qualche secondo**: al primo istante i

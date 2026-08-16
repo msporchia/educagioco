@@ -1,8 +1,24 @@
 #!/usr/bin/env python3
-"""Rifà l'atlante della fattoria dai fogli in `sorgenti/`.
+"""Rifà gli atlanti dei giochi dai fogli in `sorgenti/`.
 
     python3 strumenti/sprite/atlante.py
+    python3 strumenti/sprite/atlante.py sotterraneo   # solo quel bersaglio
     python3 strumenti/sprite/atlante.py --provini     # e un foglio da guardare
+
+── UN GENERATORE, PIÙ BERSAGLI ──────────────────────────────────────
+Gli atlanti sono più di uno — la fattoria, il sotterraneo — e ognuno
+prende solo i fogli che gli servono: impacchettare tutto insieme
+vorrebbe dire portarsi le tessere del dungeon dentro la fattoria, cioè
+pagare in peso quello che non si disegna mai. **Per chi sia un foglio lo
+dice la cartella in cui sta**: un `atlante.json` accanto alle sorgenti
+dice nome, dove scrivere il modulo e quanto vale una tessera, e vale per
+tutto quello che ha sotto. Un bersaglio nuovo è una cartella e dieci
+righe di JSON — nessun elenco cablato qui dentro da tenere allineato.
+
+Restano **un attrezzo solo e un comando solo**: due script che leggono
+la stessa cartella finiscono, prima o poi, con un atlante e una tabella
+che non combaciano più — e quel guasto si presenta come uno sprite
+sbagliato a schermo, cioè tardi.
 
 ── OGNI SORGENTE PORTA LA SUA GEOMETRIA ─────────────────────────────
 Accanto a `pappagallo.png` sta `pappagallo.json`, che dice com'è fatto
@@ -37,6 +53,13 @@ REPO = Path(__file__).resolve().parents[2]
 SORGENTI = QUI / 'sorgenti'
 LARGO = 256                       # larghezza dell'atlante, in pixel
 
+# I marcatori fra cui vive l'atlante dentro un prototipo. Un `poc/` è un
+# file solo apribile col doppio click, quindi non può importare un
+# modulo: l'atlante gli si innesta fra queste due righe, e tutto il resto
+# del file resta quello scritto a mano.
+APRE = '/* ═══ ATLANTE GENERATO — non si scrive a mano ═══ */'
+CHIUDE = '/* ═══ fine dell\'atlante generato ═══ */'
+
 MODULO = """/* GENERATO da strumenti/sprite/atlante.py — non si scrive a mano.
 
    Ritagliato dai fogli in `strumenti/sprite/sorgenti/`, ognuno col suo
@@ -49,6 +72,12 @@ MODULO = """/* GENERATO da strumenti/sprite/atlante.py — non si scrive a mano.
    PERSONE e BESTIE: chi è un attore controllabile e chi è un animale, vedi
    sotto. */
 export const ATLANTE = 'data:image/png;base64,{b64}'
+
+/* Quanto vale una cella di terreno, in pixel dello sprite. È una misura
+   del **foglio**, non del gioco: la dichiara `atlante.json` accanto alle
+   sorgenti e la si rilegge da qui, così cambiando set non resta un 16
+   scritto a mano da qualche parte a dire il contrario. */
+export const TESSERA = {tessera}
 
 export const PEZZI = {mappa}
 
@@ -136,6 +165,36 @@ def foglietti():
     return fuori
 
 
+def bersagli():
+    """Un atlante per cartella: `atlante.json` dice dove scrivere il
+    modulo e quanto vale una tessera. Un foglio appartiene al bersaglio
+    della cartella in cui sta, o della prima cartella sopra di lui che
+    ne dichiari uno — così la fattoria, che tiene le sue sorgenti sparse
+    in `sorgenti/` e in due sottocartelle, continua a bastarne uno solo.
+
+    Due giochi non possono condividere un atlante: uno che carica
+    duecento tessere di terreno per disegnare un cane si porta dietro
+    un PNG che non gli serve, e il build deve restare un file solo."""
+    fuori = {}
+    for g in sorted(SORGENTI.rglob('atlante.json')):
+        fuori[g.parent] = json.loads(g.read_text())
+    if not fuori:
+        raise SystemExit(f'nessun atlante.json sotto {SORGENTI}')
+    return fuori
+
+
+def di_chi(f, posti):
+    """Il bersaglio di un foglio: la cartella dichiarata più vicina,
+    risalendo."""
+    p = f.parent
+    while True:
+        if p in posti:
+            return p
+        if p == SORGENTI:
+            return None
+        p = p.parent
+
+
 def alla_misura_vera(im, fg):
     """Il foglio riportato alla sua misura in pixel veri. Non si indovina:
     il foglietto dice quante celle è largo, e il resto è una divisione."""
@@ -178,7 +237,38 @@ def pulisci(im, fg):
     return im
 
 
+def ritagli_px(im, fg, provenienza, ritagli):
+    """I ritagli dichiarati **in pixel**, presi da un file accanto al
+    foglio (`"ritagli": "pezzi.json"`, `{nome: [x, y, largo, alto]}`).
+
+    Serve per i fogli che una griglia non ce l'hanno: 0x72 mette i muri
+    a 16×16, le porte a 32×32, i personaggi a 16×28 e la moneta a 6×7 a
+    coordinate che non sono multiple di niente. Dichiararli in celle
+    vorrebbe dire una `cella` diversa per ogni riga, cioè scrivere le
+    coordinate due volte. E quel file di solito **esiste già**, scritto
+    dall'autore del set: si punta a quello invece di copiarlo, così di
+    coordinate ne resta una copia sola."""
+    tabella = json.loads((Path(fg['_file']).parent / fg['ritagli']).read_text())
+    for nome, r in sorted(tabella.items()):
+        if nome.startswith('__'):            # note per chi legge, non pezzi
+            continue
+        x, y, w, h = r
+        if x < 0 or y < 0 or x + w > im.width or y + h > im.height:
+            print(f'  ! {nome} cade fuori dal foglio ({x},{y} {w}×{h})')
+            continue
+        pezzo = im.crop((x, y, x + w, y + h))
+        # un ritaglio tutto trasparente non è mai voluto: sono coordinate
+        # sbagliate, e a schermo si presenta come un buco senza errori
+        if not pezzo.getbbox():
+            print(f'  ! {nome} è tutto trasparente: coordinate sbagliate?')
+            continue
+        ritagli[nome] = pezzo
+        provenienza[nome] = provenienza.get(nome) or Path(fg['_file']).name
+
+
 def ritagli_di(im, fg, provenienza, ritagli):
+    if fg.get('ritagli'):
+        return ritagli_px(im, fg, provenienza, ritagli)
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):            # note per chi legge, non sprite
@@ -211,7 +301,11 @@ def ritagli_di(im, fg, provenienza, ritagli):
 def impacchetta(ritagli):
     x = y = riga = 0
     mappa, dove = {}, {}
-    for nome, im in sorted(ritagli.items(), key=lambda kv: -kv[1].height):
+    # per altezza decrescente, e a parità per nome: senza il secondo
+    # criterio due giri dello stesso attrezzo impacchettano diverso, e un
+    # file generato che cambia da solo non si distingue da uno che cambia
+    # perché è cambiato qualcosa
+    for nome, im in sorted(ritagli.items(), key=lambda kv: (-kv[1].height, kv[0])):
         if x + im.width > LARGO:
             x, y, riga = 0, y + riga, 0
         dove[nome] = (x, y, im)
@@ -244,12 +338,24 @@ def provini(ritagli, dove):
     print('  provini in', dove.relative_to(REPO))
 
 
-def main():
-    fogli = foglietti()
-    if not fogli:
-        print(f'nessun foglio con foglietto in {SORGENTI}')
-        return 1
+def innesta(dove, blocco):
+    """Rimette il blocco generato fra i due marcatori di un prototipo. Se
+    i marcatori non ci sono lo dice, invece di appiccicare roba in fondo
+    al file: un atlante finito fuori dallo `<script>` non dà nessun
+    errore — semplicemente non fa niente, ed è mezz'ora persa a capire
+    perché è tutto nero."""
+    testo = dove.read_text()
+    if APRE not in testo or CHIUDE not in testo:
+        raise SystemExit(f'in {dove.name} mancano i marcatori:\n  {APRE}\n  {CHIUDE}')
+    dove.write_text(re.sub(re.escape(APRE) + '.*?' + re.escape(CHIUDE),
+                           lambda _: blocco, testo, flags=re.S))
 
+
+def costruisci(bers, fogli, con_provini):
+    """Un atlante, dai fogli di quella cartella. `bers` è il suo
+    `atlante.json`: nome, dove scrivere il modulo, quanto vale una
+    tessera, e il prototipo da tenere allineato se ce n'è uno."""
+    bersaglio = bers['nome']
     # Il `tipo` (persona/bestia) è dichiarato una volta per foglio, non per
     # sprite: un foglio intero è o l'uno o l'altro, e ridirlo sprite per
     # sprite sarebbe solo rumore da tenere allineato. Si tiene per NOME DEL
@@ -258,15 +364,15 @@ def main():
     TIPI_VALIDI = ('persona', 'bestia')
     tipo_di_file = {}
     ritagli, provenienza = {}, {}
+    print(f'{bersaglio}:')
     for f, fg in fogli:
-        fg['_file'] = str(f)
         t = fg.get('tipo')
         if t is not None and t not in TIPI_VALIDI:
             print(f'  ! {f.name}: tipo "{t}" sconosciuto, atteso persona o bestia')
             t = None
         tipo_di_file[f.name] = t
         utili = [n for n in (fg.get('sprite') or {}) if not n.startswith('__')]
-        if not utili:
+        if not utili and not fg.get('ritagli'):
             print(f'  {f.name}: foglietto senza sprite, da calibrare — saltato')
             continue
         im = pulisci(alla_misura_vera(Image.open(f).convert('RGBA'), fg), fg)
@@ -301,25 +407,90 @@ def main():
         print(f'  ! senza "tipo" nel foglietto sorgente, fuori da PERSONE e BESTIE: '
               f'{", ".join(senza_tipo)}')
 
+    # Un bersaglio senza un pezzo non è un atlante vuoto, è un bersaglio
+    # che questo attrezzo non sa leggere: si dice e si passa oltre invece
+    # di scrivere un modulo con dentro niente. Capita quando i fogli di
+    # una cartella li ritaglia un altro attrezzo (`"attrezzo"` nel suo
+    # `atlante.json`, qui sotto) o quando un foglietto è ancora da
+    # calibrare — e un modulo vuoto che sovrascrive quello buono è il
+    # genere di guasto che si scopre a schermo.
+    if not ritagli:
+        print('  nessun pezzo: saltato')
+        return
+
     atlante, mappa = impacchetta(ritagli)
     png = QUI / '.atlante.png'
-    atlante.save(png)
+    atlante.save(png, optimize=True)
     b64 = base64.b64encode(png.read_bytes()).decode()
     png.unlink()
+    kb = len(b64) * 3 // 4 // 1024
 
-    dest = REPO / 'src/giochi/fattoria/dati/atlante.js'
+    dest = REPO / bers['modulo']
+    dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(MODULO.format(
-        kb=len(b64) * 3 // 4 // 1024, b64=b64,
+        kb=kb, b64=b64, tessera=bers.get('tessera', 32),
         mappa=json.dumps(mappa, separators=(',', ':'), sort_keys=True),
         provenienza=json.dumps(provenienza, separators=(',', ':'), sort_keys=True),
         persone=json.dumps(persone, separators=(',', ':')),
         bestie=json.dumps(bestie, separators=(',', ':'))))
 
-    print(f'atlante {atlante.width}×{atlante.height}, '
-          f'{len(b64) * 3 // 4 // 1024} KB di PNG, {len(mappa)} pezzi '
-          f'→ {dest.relative_to(REPO)}')
-    if '--provini' in sys.argv:
-        provini(ritagli, REPO / 'poc/scatti/atlante.png')
+    print(f'  atlante {atlante.width}×{atlante.height}, {kb} KB di PNG, '
+          f'{len(mappa)} pezzi → {dest.relative_to(REPO)}')
+
+    # lo stesso atlante dentro il prototipo, se ne ha uno: il poc e il
+    # gioco devono disegnare con gli stessi pixel, o quello che si prova
+    # su uno non dice niente sull'altro
+    poc = REPO / bers['poc'] if bers.get('poc') else None
+    if poc and poc.exists():
+        innesta(poc, f'{APRE}\n'
+                     f"const ATLANTE = 'data:image/png;base64,{b64}'\n"
+                     f'const PEZZI = {json.dumps(mappa, separators=(",", ":"), sort_keys=True)}\n'
+                     f'{CHIUDE}')
+        print(f'  e dentro {poc.relative_to(REPO)}')
+
+    if con_provini:
+        provini(ritagli, REPO / f'poc/scatti/atlante-{bersaglio}.png')
+
+
+def main():
+    fogli = foglietti()
+    if not fogli:
+        print(f'nessun foglio con foglietto in {SORGENTI}')
+        return 1
+    posti = bersagli()
+    nomi = {b['nome']: p for p, b in posti.items()}
+
+    voluti = [a for a in sys.argv[1:] if not a.startswith('--')]
+    for a in voluti:
+        if a not in nomi:
+            raise SystemExit(f'bersaglio "{a}" sconosciuto: {", ".join(sorted(nomi))}')
+
+    # ogni foglio alla cartella che lo rivendica, risalendo
+    suoi = {p: [] for p in posti}
+    for f, fg in fogli:
+        fg['_file'] = str(f)
+        p = di_chi(f, posti)
+        if p is None:
+            print(f'  ! {f.name}: nessun atlante.json sopra di lui, saltato')
+            continue
+        suoi[p].append((f, fg))
+
+    for p, bers in sorted(posti.items()):
+        if voluti and bers['nome'] not in voluti:
+            continue
+        # Una cartella può dichiarare che la ritaglia **un altro
+        # attrezzo** (`"attrezzo": "terreni"`): il castello scolla la
+        # strada dal terreno e misura gli attacchi di ogni tessera, due
+        # cose che qui dentro sarebbero un ramo morto per tutti gli
+        # altri. Dichiararlo è meglio che dedurlo dal fatto che non esce
+        # niente: chi legge sa dove andare a guardare.
+        if bers.get('attrezzo'):
+            print(f'{bers["nome"]}: lo ritaglia {bers["attrezzo"]}.py, saltato')
+            continue
+        if not suoi[p]:
+            print(f'{bers["nome"]}: nessun foglio, saltato')
+            continue
+        costruisci(bers, suoi[p], '--provini' in sys.argv)
     return 0
 
 

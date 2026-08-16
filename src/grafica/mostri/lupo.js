@@ -1,4 +1,4 @@
-/* Il lupo — Bosco, debole all'arciere.
+/* Il lupo — Bosco, resiste alle frecce (corre a zig-zag).
    Orecchie a punta e muso allungato: la sagoma di un cane che caccia
    in branco, non di un mostro tondo. Grigio-blu, senza pelo dipinto
    a ciocche — a distanza di telefono si perderebbe. */

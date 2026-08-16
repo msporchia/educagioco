@@ -20,6 +20,9 @@ const TAU = Math.PI * 2
    dentro `materia.js` e mezzo cassetto del castello: qui serve solo
    mescolare due tinte. */
 const canale = (c, i) => parseInt(c.slice(i, i + 2), 16)
+/* da 0–1 alle due cifre di trasparenza in coda a un colore: si scrive
+   `'#9fd8ff' + esa(0.4)` invece di aprire un `rgba()` a mano */
+const esa = q => Math.round(Math.max(0, Math.min(1, q)) * 255).toString(16).padStart(2, '0')
 function mescola(a, b, q) {
   return '#' + [1, 3, 5].map(i =>
     Math.round(canale(a, i) + (canale(b, i) - canale(a, i)) * q)
@@ -71,48 +74,13 @@ export function dipingiFondale(W, H, sorte = Math.random) {
   return cv
 }
 
-/* ═══════════════ IL PIANETA DA DIFENDERE ═══════════════
-   Prima qui c'era una riga tratteggiata: la soglia oltre la quale
-   l'asteroide è caduto. Funzionava, ma non diceva *perché* fosse una
-   sconfitta. Un pianeta con un'atmosfera che si accende quando prende
-   una botta lo dice senza una parola. */
-
-export function disegnaPianeta(ctx, { W, suolo, t, botta = 0, colore = '#2f7bff' }) {
-  const R = W * 1.9                      // curvatura appena accennata
-  const cx = W / 2, cy = suolo + R
-
-  // l'atmosfera: un alone che sale dall'orizzonte e si spegne in alto
-  const alt = W * 0.30
-  const a = ctx.createLinearGradient(0, suolo - alt, 0, suolo + 6)
-  const forza = 0.16 + Math.max(0, botta) * 0.5
-  const tinta = botta > 0 ? mescola(colore, '#ff6b6b', Math.min(1, botta * 1.6)) : colore
-  a.addColorStop(0, tinta + '00')
-  a.addColorStop(1, tinta + Math.round(forza * 255).toString(16).padStart(2, '0'))
-  ctx.fillStyle = a
-  ctx.beginPath(); ctx.arc(cx, cy, R + alt, Math.PI * 1.15, Math.PI * 1.85); ctx.fill()
-
-  // la crosta: scura, con un filo di luce sul bordo. Il pianeta è di
-  // notte — la luce arriva dalle stelle, non da un sole che non c'è.
-  const g = ctx.createLinearGradient(0, suolo, 0, suolo + W * 0.5)
-  g.addColorStop(0, mescola('#123055', tinta, 0.25)); g.addColorStop(1, '#050a18')
-  ctx.fillStyle = g
-  ctx.beginPath(); ctx.arc(cx, cy, R, Math.PI * 1.15, Math.PI * 1.85); ctx.closePath(); ctx.fill()
-
-  ctx.strokeStyle = tinta + 'cc'; ctx.lineWidth = 2 + botta * 6
-  ctx.beginPath(); ctx.arc(cx, cy, R, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke()
-
-  // le luci delle città sull'orizzonte: si accendono e si spengono piano
-  ctx.save(); ctx.globalAlpha = 0.55
-  for (let i = 0; i < 22; i++) {
-    const q = (i + 0.5) / 22
-    const x = q * W
-    const dy = R - Math.sqrt(Math.max(0, R * R - (x - cx) * (x - cx)))
-    ctx.globalAlpha = 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(t * 1.4 + i * 2.1))
-    ctx.fillStyle = i % 3 ? '#ffd94a' : '#7fe3ff'
-    ctx.fillRect(x - 1, suolo + dy + 3, 2, 2)
-  }
-  ctx.restore()
-}
+/* IL PIANETA IN BASSO NON C'È PIÙ. Era un bel disegno che non faceva
+   niente: non si difendeva, non si perdeva, non cambiava mai. In un
+   gioco per bambini una cosa in scena che non fa niente è una domanda
+   senza risposta — e per giunta diceva una bugia, perché il sasso che
+   arrivava in fondo colpiva lui e la botta la prendeva la nave. Adesso
+   il fondo dello schermo è l'altezza della nave, e il sasso che passa
+   la colpisce: si vede quello che succede. */
 
 /* ═══════════════ L'ASTRONAVE ═══════════════
    Tre scafi, uno per livello raggiunto nella partita, e sotto lo stesso
@@ -120,13 +88,31 @@ export function disegnaPianeta(ctx, { W, suolo, t, botta = 0, colore = '#2f7bff'
    il bambino deve riconoscere che è diventata *la sua* nave più grossa,
    non che gliene hanno data un'altra.
 
-   Il danno è un numero solo, da 0 a 1, e passa per tre soglie visibili
-   da lontano: ammaccature, uno squarcio nell'ala, il vetro crepato con
-   la luce rossa d'emergenza. È l'unico indicatore che si legge mentre si
-   sta guardando gli asteroidi, che è quando serve.
+   IL DANNO È L'UNICO POSTO DOVE SI LEGGONO LE VITE. Il gettone dei
+   cuori nella fascia in alto non c'è più — diceva una seconda volta
+   quello che la nave dice già, e la fascia serviva ad altro. Quindi
+   questo disegno non è più un contorno: è il cruscotto.
+
+   Per questo il danno si legge **a gradini e non a sfumatura**. Un
+   numero continuo fa una nave un po' più sporca a ogni botta, e «un po'
+   più sporca» con l'occhio non si conta; tre stati che non si
+   assomigliano si contano da lontano e di sfuggita, che è come li si
+   guarda mentre si sta fissando il cielo:
+
+     0  intatta      bianca, vetro azzurro, fiamme regolari
+     1  ammaccata    scafo bruciacchiato, un'ala squarciata, fumo
+     2  in fiamme    luce rossa che lampeggia, vetro rotto, motore a
+                     singhiozzo, scintille
+
+   Chi chiama passa `danno` da 0 a 1 e non sa niente di vite: la
+   traduzione la fa il gioco. `statoScafo` è esportata perché il fumo lo
+   soffia il gioco (sono particelle, non disegno) e i gradini devono
+   restare scritti in un posto solo.
 
    Il muso guarda in su; `mira` è l'angolo del cannone, in radianti,
    con -π/2 dritto verso l'alto. */
+
+export const statoScafo = d => (d < 0.34 ? 0 : d < 0.67 ? 1 : 2)
 
 const SCAFO = [[0, -1.18], [0.30, -0.42], [0.36, 0.34], [0.24, 0.74],
                [-0.24, 0.74], [-0.36, 0.34], [-0.30, -0.42]]
@@ -151,20 +137,21 @@ const PROPULSORI = { 1: [[0, 0.78, 0.20]], 2: [[-0.20, 0.76, 0.17], [0.20, 0.76,
 
 export function disegnaNave(ctx, n) {
   const R = n.r, lv = Math.max(1, Math.min(3, n.lv || 1))
-  const d = Math.max(0, Math.min(1, n.danno || 0))
+  const st = statoScafo(Math.max(0, Math.min(1, n.danno || 0)))
+  const d = st / 2                       // 0, 0.5, 1: i gradini, non la sfumatura
   const t = n.t || 0
   // lo scafo si sporca e si annerisce: il colore fa metà del lavoro,
   // prima ancora che si vedano le ammaccature
-  const chiaro = mescola('#e8eefc', '#5a4a44', d * 0.55)
-  const scuro = mescola('#7d8aa6', '#2a1f1c', d * 0.6)
-  const accento = mescola('#2f7bff', '#7a3a20', d * 0.5)
+  const chiaro = mescola('#e8eefc', '#5a4a44', d * 0.75)
+  const scuro = mescola('#7d8aa6', '#2a1f1c', d * 0.8)
+  const accento = mescola('#2f7bff', '#7a3a20', d * 0.7)
 
   ctx.save()
   ctx.translate(n.x, n.y)
 
   // luce d'emergenza: sta *dietro* la nave, se no la ridipinge di rosso
   // e lo squarcio nell'ala smette di vedersi
-  if (d > 0.6) {
+  if (st === 2) {
     const l = 0.35 + 0.65 * Math.abs(Math.sin(t * 5))
     const rg = ctx.createRadialGradient(0, 0, R * 0.7, 0, 0, R * 2.1)
     rg.addColorStop(0, `rgba(255,60,60,${0.34 * l})`); rg.addColorStop(1, 'rgba(255,60,60,0)')
@@ -179,7 +166,7 @@ export function disegnaNave(ctx, n) {
   for (const [px, py, pr] of PROPULSORI[lv]) {
     const x = px * R, y = py * R, w = pr * R
     // il motore rotto va a singhiozzo: la fiamma sinistra sparisce e torna
-    const lung = w * (3.4 * sp) * (d > 0.6 && ((px < 0) === (Math.sin(t * 9) > 0)) ? 0.35 : 1)
+    const lung = w * (3.4 * sp) * (st === 2 && ((px < 0) === (Math.sin(t * 9) > 0)) ? 0.35 : 1)
     const alone = ctx.createRadialGradient(x, y + lung * 0.3, 0, x, y + lung * 0.3, lung * 1.1)
     alone.addColorStop(0, '#7fe3ff55'); alone.addColorStop(1, '#7fe3ff00')
     ctx.fillStyle = alone
@@ -198,8 +185,11 @@ export function disegnaNave(ctx, n) {
   // le ali
   for (const [i, a] of ali(lv).entries()) {
     for (const verso of [1, -1]) {
-      // uno squarcio: l'ala sinistra si accorcia quando il danno cresce
-      const rovinata = d > 0.5 && verso < 0 && i === 0
+      /* uno squarcio: l'ala sinistra si accorcia già alla prima botta.
+         È il gradino che si vede da più lontano di tutti — la
+         silhouette cambia — ed è quello che deve dire «me ne resta una
+         sola» senza far contare niente a nessuno. */
+      const rovinata = st >= 1 && verso < 0 && i === 0
       const p = rovinata ? a.map(([x, y]) => [x * 0.62, y]) : a
       traccia(ctx, p.map(([x, y]) => [x * verso, y]), R)
       const g = ctx.createLinearGradient(0, -R * 0.4, 0, R * 0.8)
@@ -221,10 +211,10 @@ export function disegnaNave(ctx, n) {
 
   // ammaccature: macchie scure sempre negli stessi punti, così la nave
   // non «brulica» da un fotogramma all'altro
-  if (d > 0.25) {
+  if (st >= 1) {
     ctx.fillStyle = '#00000055'
     const macchie = [[0.16, 0.10, 0.16], [-0.18, 0.38, 0.12], [0.06, -0.55, 0.10]]
-    macchie.slice(0, d > 0.6 ? 3 : d > 0.4 ? 2 : 1).forEach(([x, y, r]) => {
+    macchie.slice(0, st === 2 ? 3 : 2).forEach(([x, y, r]) => {
       ctx.beginPath(); ctx.arc(x * R, y * R, r * R, 0, TAU); ctx.fill()
     })
   }
@@ -233,11 +223,11 @@ export function disegnaNave(ctx, n) {
   const cy = -R * 0.42
   ctx.beginPath(); ctx.ellipse(0, cy, R * 0.21, R * 0.30, 0, 0, TAU)
   const cg = ctx.createLinearGradient(0, cy - R * 0.3, 0, cy + R * 0.3)
-  cg.addColorStop(0, d > 0.75 ? '#ffb3b3' : '#dffaff')
-  cg.addColorStop(1, d > 0.75 ? '#7a1f1f' : '#2f7bff')
+  cg.addColorStop(0, st === 2 ? '#ffb3b3' : '#dffaff')
+  cg.addColorStop(1, st === 2 ? '#7a1f1f' : '#2f7bff')
   ctx.fillStyle = cg; ctx.fill()
   ctx.lineWidth = Math.max(1, R * 0.045); ctx.strokeStyle = chiaro; ctx.stroke()
-  if (d > 0.75) {   // il vetro crepato
+  if (st === 2) {   // il vetro crepato
     ctx.strokeStyle = '#ffffffcc'; ctx.lineWidth = Math.max(1, R * 0.03)
     ctx.beginPath()
     ctx.moveTo(-R * 0.18, cy - R * 0.1); ctx.lineTo(R * 0.04, cy + R * 0.02)
@@ -258,18 +248,16 @@ export function disegnaNave(ctx, n) {
   ctx.fillStyle = tg; ctx.fill()
   ctx.lineWidth = Math.max(1, R * 0.045); ctx.strokeStyle = accento; ctx.stroke()
   ctx.rotate((n.mira ?? -Math.PI / 2) + Math.PI / 2)
-  const canne = n.doppio ? [-R * 0.19, R * 0.19] : [0]
-  for (const dx of canne) {
-    // il fusto, con una fascia più scura sotto: senza, a schermo piccolo
-    // il cannone sembra un'antenna appiccicata al muso
-    ctx.fillStyle = mescola('#b9c6dd', '#5a4a44', d * 0.5)
-    ctx.fillRect(dx - R * 0.13, -R * 0.50, R * 0.26, R * 0.50)
-    ctx.fillStyle = n.doppio ? '#ffd94a' : mescola('#8f9fbb', '#5a4a44', d * 0.5)
-    ctx.fillRect(dx - R * 0.10, -R * 0.95, R * 0.20, R * 0.50)
-    // la bocca: gialla di suo, arancione quando è il cannone doppio
-    ctx.fillStyle = n.doppio ? '#ff9d1c' : '#ffd94a'
-    ctx.fillRect(dx - R * 0.14, -R * 1.03, R * 0.28, R * 0.15)
-  }
+  // il fusto, con una fascia più scura sotto: senza, a schermo piccolo
+  // il cannone sembra un'antenna appiccicata al muso
+  ctx.fillStyle = mescola('#b9c6dd', '#5a4a44', d * 0.7)
+  ctx.fillRect(-R * 0.13, -R * 0.50, R * 0.26, R * 0.50)
+  ctx.fillStyle = mescola('#8f9fbb', '#5a4a44', d * 0.7)
+  ctx.fillRect(-R * 0.10, -R * 0.95, R * 0.20, R * 0.50)
+  // la bocca. Diventa azzurra col gelo acceso: il potere si spende dalla
+  // tasca in basso, ma a sparare è la nave, e deve vedersi che è la sua
+  ctx.fillStyle = n.gelo > 0 ? '#9fd8ff' : '#ffd94a'
+  ctx.fillRect(-R * 0.14, -R * 1.03, R * 0.28, R * 0.15)
   ctx.restore()
 
   // la botta appena presa: la nave sbianca per un attimo
@@ -283,10 +271,11 @@ export function disegnaNave(ctx, n) {
     ctx.fillStyle = `rgba(140,255,180,${Math.min(0.8, n.riparata)})`; ctx.fill()
   }
 
-  /* lo scudo: un esagono, non un cerchio. Un cerchio attorno a una nave
-     è un alone e si confonde con la luce dei motori; un esagono è
-     evidentemente un oggetto, e si vede che c'è o non c'è. */
-  if (n.scudo > 0) {
+  /* il gelo acceso: una brina esagonale attorno alla nave. Un cerchio si
+     confonderebbe con la luce dei motori; un esagono è evidentemente un
+     oggetto, e si vede che c'è o non c'è. */
+  if (n.gelo > 0) {
+    const q = Math.min(1, n.gelo)
     const k = 1 + Math.sin(t * 3) * 0.04
     const rr = R * 1.75 * k
     ctx.beginPath()
@@ -297,9 +286,9 @@ export function disegnaNave(ctx, n) {
     }
     ctx.closePath()
     const sg = ctx.createRadialGradient(0, 0, rr * 0.55, 0, 0, rr)
-    sg.addColorStop(0, '#7fe3ff00'); sg.addColorStop(1, '#7fe3ff33')
+    sg.addColorStop(0, '#9fd8ff00'); sg.addColorStop(1, '#9fd8ff' + esa(0.22 * q))
     ctx.fillStyle = sg; ctx.fill()
-    ctx.strokeStyle = '#7fe3ffcc'; ctx.lineWidth = Math.max(2, R * 0.07); ctx.stroke()
+    ctx.strokeStyle = '#dff6ff' + esa(0.8 * q); ctx.lineWidth = Math.max(2, R * 0.07); ctx.stroke()
   }
   ctx.restore()
 }
@@ -326,7 +315,12 @@ export function disegnaAsteroide(ctx, a, S, t) {
      parte che si scalda è quella di sotto. Un cono di fumo sopra la
      testa — che è quello che viene da disegnare per primo — su fondo blu
      legge come un'ombra sporca, e mette il calore dalla parte sbagliata. */
-  const caldo = a.boss ? '#ff6b6b' : '#ff9d1c'
+  /* col gelo acceso l'attrito diventa azzurro: il sasso non sta più
+     bruciando, sta scendendo piano dentro il ghiaccio. `a.gelo` è un
+     fatto già deciso da 0 a 1, e questo modulo non sa che esista un
+     gettone da premere. */
+  const brina = Math.max(0, Math.min(1, a.gelo || 0))
+  const caldo = brina > 0 ? '#9fd8ff' : a.boss ? '#ff6b6b' : '#ff9d1c'
   const bg = ctx.createRadialGradient(0, R * 0.55, R * 0.2, 0, R * 0.55, R * 1.25)
   bg.addColorStop(0, caldo + (a.boss ? '77' : '55')); bg.addColorStop(1, caldo + '00')
   ctx.fillStyle = bg

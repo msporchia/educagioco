@@ -6,21 +6,53 @@
    nuove in `grafica/mostri/` — due cantieri paralleli, non ancora
    ricuciti insieme — entrambi indicizzati per lo stesso `id`.
 
-   Ogni mostro ha una **debolezza**: un tipo di torre che gli fa doppio
-   danno. È il motivo per cui non ci si può difendere con una torre
-   sola potenziata all'infinito — che era la strategia migliore e anche
-   la più noiosa, perché faceva ripetere sempre la stessa operazione.
-   Le debolezze girano tutte e tre le torri che fanno danno, quindi
-   arrivare in fondo vuol dire aver fatto addizioni, moltiplicazioni e
-   divisioni. Il ghiaccio non compare: non fa danno, e una debolezza al
-   gelo non vorrebbe dire niente.
+   ── si dice a cosa RESISTE, non a cosa cede ──
+   Prima ogni mostro dichiarava una **debolezza**: una torre che gli
+   faceva doppio danno, e il nastro annunciava «il Golem, debole alle
+   bombe». Un bambino che legge quella frase capisce il contrario di
+   quello che vuol dire — «debole» accanto a un nome suona come «è lui
+   quello debole» — e comunque l'informazione che cambia la mossa non è
+   a cosa cede: è **a cosa resiste**, perché è quella che dice *cosa non
+   costruire*. Adesso ogni mostro dichiara `resiste`, e il nastro dice
+   «il Golem regge la magia».
 
-   Non tutti ce l'hanno, e non fin da subito. Nella primissima tappa,
-   quella con una sola torre, indicare un punto debole non servirebbe
-   a niente: con un solo tipo da comprare non è una scelta, è
-   un'etichetta. Da lì in poi — quattordici tappe su quindici, più la
-   partita libera — le debolezze sono accese: il bambino le vede
-   prima che l'ondata arrivi, e la torre giusta si sceglie in
+   Non è lo stesso dato scritto al contrario. Prima la torre nominata
+   era quella da comprare, adesso è quella da evitare, e le due cose non
+   si somigliano: contro «debole alle bombe» c'era una risposta sola,
+   contro «resiste alla magia» ce ne sono due, e la scelta fra quelle
+   due resta di chi gioca. Perciò la torre nominata è stata **ridecisa
+   mostro per mostro** — un orco che *resiste* alle bombe non vuol dire
+   niente, quello stesso orco che ferma le frecce nel cuoio sì — e le
+   ragioni stanno scritte accanto a ciascuno.
+
+   ── quanto pesa ──
+   Vedi `RESISTENZA` più sotto: **un terzo** del danno, non uno
+   sconticino.
+
+   ── tre famiglie, e si indovinano ──
+   Le ragioni non sono diciotto ragioni diverse: sono tre regole, e un
+   bambino che le ha capite indovina la resistenza di un mostro che non
+   ha mai visto.
+
+     🏹 **la freccia** è un colpo piccolo e mirato: la ferma chi è
+        coperto (cuoio, corazza, carapace) e la manca chi è troppo
+        piccolo o troppo svelto;
+     🔮 **la magia** cerca una mente o un incantesimo su cui fare presa:
+        non la trova in chi una mente non ce l'ha, e non morde chi di
+        magia è già fatto;
+     💣 **la bomba** è un colpo solo, lento e a scoppio: o ti manca
+        perché voli, o ti trova morbido e l'urto se lo mangia, o dentro
+        non trova niente da far scoppiare.
+
+   Il ghiaccio non compare: non fa danno, e resistere a zero non vuol
+   dire niente.
+
+   Non tutti la portano accesa, e non fin da subito. Nella primissima
+   tappa, quella con una sola torre che spara, dire a cosa resiste
+   sarebbe una condanna e non una scelta: non c'è nient'altro da
+   costruire. Da lì in poi — quattordici tappe su quindici, più la
+   partita libera — le resistenze sono accese: il bambino le vede
+   **prima** che l'ondata arrivi, e la torre giusta si sceglie in
    anticipo invece di scoprirla a battaglia già iniziata.
 
    `vola` non cambia le regole — nessuno passa sopra le torri — ma
@@ -29,49 +61,102 @@
    d'occhio, che è tutto quello che chiediamo a un nemico.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* La debolezza si scrive con il nome della **torre**, non con quello
+/* La resistenza si scrive con il nome della **torre**, non con quello
    dell'operazione: quale conto compri quella torre può cambiare — è già
-   successo — e un mostro «debole alle divisioni» diventerebbe di colpo
-   debole a un'altra torre senza che nessuno se ne accorga. Il ghiaccio
-   non compare mai: non fa danno, e il doppio di zero è zero. */
+   successo — e un mostro «che regge le divisioni» diventerebbe di colpo
+   resistente a un'altra torre senza che nessuno se ne accorga. Il
+   ghiaccio non compare mai: non fa danno, e un terzo di zero è zero. */
 import { TORRI } from './ops.js'
 
 export const MOSTRI = {
-  slime:      { nome: 'Slime',      debole: 'magica' },
-  goblin:     { nome: 'Goblin',     debole: 'arciere' },
-  pipistrello:{ nome: 'Pipistrello', vola: true, debole: 'arciere' },
-  fantasma:   { nome: 'Fantasma',   vola: true, debole: 'magica' },
-  ragno:      { nome: 'Ragno',      debole: 'arciere' },
-  orco:       { nome: 'Orco',       debole: 'bombe' },
-  scheletro:  { nome: 'Scheletro',  debole: 'bombe' },
-  golem:      { nome: 'Golem',      debole: 'magica' },
-  arpia:      { nome: 'Arpia',      vola: true, debole: 'arciere' },
-  drago:      { nome: 'Drago',      vola: true, debole: 'bombe' },
+  // 🔮 gelatina senza mente e senza forma: l'incantesimo non trova su cosa fare presa
+  slime:      { nome: 'Slime',      resiste: 'magica' },
+  // 🏹 lo scudo di legno rattoppato è tutto quello che ha, e per le frecce basta
+  goblin:     { nome: 'Goblin',     resiste: 'arciere' },
+  // 🏹 sfarfalla a scatti: una freccia mirata arriva dov'era un attimo fa
+  pipistrello:{ nome: 'Pipistrello', vola: true, resiste: 'arciere' },
+  // 🔮 è fatto di magia: la magia gli passa attraverso come lui attraversa i muri
+  fantasma:   { nome: 'Fantasma',   vola: true, resiste: 'magica' },
+  // 🏹 carapace e otto zampe: la freccia rimbalza o ci passa in mezzo
+  ragno:      { nome: 'Ragno',      resiste: 'arciere' },
+  /* 🏹 cuoio e grasso: la freccia si pianta e lui nemmeno se ne accorge.
+     Era «debole alle bombe», ed è uno dei due che girando la frase
+     diventavano assurdi: un bestione lento è **il** bersaglio di una
+     bomba, mica quello che la regge. */
+  orco:       { nome: 'Orco',       resiste: 'arciere' },
+  // 💣 ossa e basta: dentro non c'è niente da far scoppiare
+  scheletro:  { nome: 'Scheletro',  resiste: 'bombe' },
+  // 🔮 pietra animata da un incantesimo: un altro incantesimo non la disfa
+  golem:      { nome: 'Golem',      resiste: 'magica' },
+  // 💣 vola alta e vira: la bomba è lenta e le scoppia sotto
+  arpia:      { nome: 'Arpia',      vola: true, resiste: 'bombe' },
+  // 💣 due ali e mezza tonnellata: si alza sopra lo scoppio
+  drago:      { nome: 'Drago',      vola: true, resiste: 'bombe' },
 
   /* le otto bestie nuove, una per ciascuno dei tre terreni: bosco,
      sotterraneo, mura. Il disegno sta in `grafica/mostri/`. */
-  lupo:        { nome: 'Lupo',        debole: 'arciere' },
-  corvo:       { nome: 'Corvo',       vola: true, debole: 'arciere' },
-  rovo:        { nome: 'Rovo',        debole: 'bombe' },
-  verme:       { nome: 'Verme',       debole: 'bombe' },
-  blatta:      { nome: 'Blatta',      debole: 'magica' },
-  troll:       { nome: 'Troll',       debole: 'magica' },
-  corazziere:  { nome: 'Corazziere',  debole: 'magica' },
-  balestriere: { nome: 'Balestriere', debole: 'bombe' },
+  // 🏹 corre a zig-zag: la freccia va dov'era, non dov'è
+  lupo:        { nome: 'Lupo',        resiste: 'arciere' },
+  // 🏹 vola stretto fra i canneti e cambia direzione a ogni battito
+  corvo:       { nome: 'Corvo',       resiste: 'arciere' },
+  // 💣 un groviglio di spine: lo scoppio lo sfoltisce e lui si richiude
+  rovo:        { nome: 'Rovo',        resiste: 'bombe' },
+  // 💣 tutto molle, senza un osso: l'urto se lo mangia
+  verme:       { nome: 'Verme',       resiste: 'bombe' },
+  // 🔮 una blatta non ha una mente da incantare: ha solo fame
+  blatta:      { nome: 'Blatta',      resiste: 'magica' },
+  // 🔮 testa dura come il resto: la magia gli rimbalza addosso
+  troll:       { nome: 'Troll',       resiste: 'magica' },
+  /* 🏹 armatura di piastre: le frecce le sente come sassolini.
+     È l'altro che girando la frase diventava assurdo — era «debole alla
+     magica», che come debolezza è giusta (l'acciaio non ripara dagli
+     incantesimi) ma come resistenza dice l'opposto di quello che si
+     vede addosso. */
+  corazziere:  { nome: 'Corazziere',  resiste: 'arciere' },
+  // 💣 l'unico che sa cos'è un'artiglieria: al fischio si butta dietro il pavese
+  balestriere: { nome: 'Balestriere', resiste: 'bombe' },
 }
 
 export const ELENCO = Object.keys(MOSTRI)
 
 /* da «magica» alla torre che in questo momento si compra con la
    sottrazione: è l'unico punto in cui i due mondi si toccano */
-export const torreDebole = id => {
-  const aspetto = MOSTRI[id]?.debole
+export const torreResistente = id => {
+  const aspetto = MOSTRI[id]?.resiste
   return aspetto ? Object.keys(TORRI).find(k => TORRI[k].aspetto === aspetto) : null
 }
 
-/* quanto vale colpire il punto debole: il doppio, che è un numero che
-   un bambino vede senza doverlo misurare */
-export const DOPPIO = 2
+/* ── quanto vale la resistenza ──
+   **Un terzo** del danno: quella torre lì ci mette tre volte tanto.
+
+   Il numero è scelto perché si senta e perché regga il conto, e i due
+   estremi si sono provati tutti e due con `npm run tara`, che non
+   opina — gioca le venti tappe migliaia di volte e dice quali stanno
+   ancora in piedi.
+
+   **A metà non si sente abbastanza.** Un mostro che moriva in quattro
+   frecce ne chiede otto: a schermo è lo stesso mostro che muore, un
+   attimo più in là. Dire una cosa che non si vede è peggio che non
+   dirla, perché insegna a non fidarsi del nastro.
+
+   **A un quarto si sente troppo, e si rompe.** Non per il bambino
+   bravo — per la geometria. Dove gli ingressi sono due si mette una
+   torre per strada, e se l'ondata regge *quella* torre lì, quella
+   strada resta di fatto sguarnita: la taratura misurava ondate che
+   reggevano un decimo di quelle vicine, e lo spianamento verso il
+   basso trascinava tutta la tappa al livello della peggiore. Il
+   Torrione ne usciva con nemici da 8 punti vita su diciassette ondate.
+   Un quarto non punisce la torre sbagliata, cancella la strada.
+
+   **A un terzo torna tutto.** Il mostro chiede dodici frecce invece di
+   quattro — gli si vede attraversare mezzo campo mentre la torre
+   sbagliata gli spara addosso, che è esattamente il fatto che il
+   preavviso serviva a evitare — e la taratura è più sana di com'era
+   prima del cambio: due tappe da allargare invece di quattro, e
+   nessuna sotto l'80% del suo limite.
+
+   E un terzo è una frazione che qui si sta imparando a scrivere. */
+export const RESISTENZA = 1 / 3
 
 /* Il branco di un'ondata. Un tipo solo per ondata: così la scheda in
    alto a destra parla di *questa* ondata e la scelta della torre è una
