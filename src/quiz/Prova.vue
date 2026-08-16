@@ -20,6 +20,25 @@
    le stesse domande, nella stessa messa in scena del gioco vero, che è
    più di quanto una palestra a parte potesse promettere.
 
+   TRE MODI DI GUARDARE, e sono tre domande diverse che si fa chi entra:
+
+     `chiave`      — «cosa perdo se spengo questa voce?». È quello di
+                     sempre, e arriva dalla scheda «Cosa sa».
+     `sorgente`    — «com'è fatta *questa* domanda?». Una classe precisa
+                     del catalogo: modulo, grado e tipologia decisi, e
+                     «Un'altra» resta lì dentro.
+     `giro`        — «fammele vedere tutte». Una lista di classi che si
+                     scorre in ordine, col contatore: in venti tocchi le
+                     hai viste tutte, e nessuna può nascondersi.
+     `difficolta`  — «cosa becca un bambino a questa difficoltà?». Qui
+                     non si scorre niente: si pesca come pesca un gioco,
+                     campana e spenti compresi, e ogni domanda può
+                     arrivare da un modulo diverso.
+
+   I primi tre mostrano quello che **esiste**, l'ultimo quello che
+   **capita**: sono due cose diverse e la seconda non si può dedurre
+   dalla prima, che è il motivo per cui ci sono tutti e due i tasti.
+
    NON DECIDE NIENTE. Riceve una chiave, mostra le sue domande, e quando
    si chiude non ha toccato né il profilo né i progressi: l'interruttore
    sta sulla carta di fuori, ed è giusto che stia lì. Provare e spegnere
@@ -34,13 +53,22 @@
 import { ref, computed, onMounted } from 'vue'
 import Domanda from './Domanda.vue'
 import { esempioDi } from './saperi.js'
+import { esempioDa } from './nucleo/esempi.js'
+import { sorteQualunque } from './nucleo/sorte.js'
+import { pescaComeUnGioco } from './catalogo.js'
 
 const props = defineProps({
   /* la voce da provare: un gruppo (`misure`) o una tipologia
      (`orto:apostrofo`). Per chi genera sono la stessa cosa. */
-  chiave: { type: String, required: true },
+  chiave: { type: String, default: '' },
   /* come si chiama, con le parole della carta da cui si è arrivati */
   nome: { type: String, default: '' },
+  /* una classe precisa del catalogo: `{ modulo, grado, tipo, nome }` */
+  sorgente: { type: Object, default: null },
+  /* una lista di classi da scorrere in ordine (righe del catalogo) */
+  giro: { type: Array, default: null },
+  /* oppure la difficoltà a cui pescare, come farebbe un gioco */
+  difficolta: { type: Number, default: null },
 })
 defineEmits(['chiudi'])
 
@@ -59,14 +87,54 @@ const risposto = ref(false)
 const dove = computed(() => {
   const e = esempio.value
   if (!e) return ''
-  const coda = e.dice && e.dice !== props.nome ? ` · ${e.dice}` : ''
-  return `${e.titolo} · grado ${e.grado}${coda}`
+  const pezzi = []
+  /* il modulo si tace se il nome della voce lo dice già: dal catalogo si
+     arriva con «📝 Problemi» scritto in grande, e ripeterlo sotto
+     («📝 Problemi · 📝 Problemi · grado 1») è la riga che fa sembrare
+     rotto un pannello che funziona */
+  if (!props.nome.includes(e.titolo)) pezzi.push(e.titolo)
+  pezzi.push(`grado ${e.grado}`)
+  if (e.dice && e.dice !== props.nome) pezzi.push(e.dice)
+  return pezzi.join(' · ')
 })
 
+/* dove si è arrivati dentro un giro. Parte da -1 perché il primo
+   `unAltra()` — quello del montaggio — deve mostrare la prima, non la
+   seconda. */
+const passo = ref(-1)
+const quante = computed(() => props.giro?.length || 0)
+const nelGiro = computed(() => quante.value > 0)
+
+/* il contatore che si legge in cima: senza, scorrere una lista di
+   trentasette classi è indistinguibile dal pescarle a caso — che è
+   esattamente il difetto da cui nasce tutto questo pannello */
+const dovePosizione = computed(() =>
+  nelGiro.value ? `${passo.value + 1} di ${quante.value}` : '')
+
+function pesca() {
+  if (nelGiro.value) {
+    passo.value = (passo.value + 1) % quante.value
+    const c = props.giro[passo.value]
+    return esempioDa(c.sorgente, sorteQualunque())
+  }
+  if (props.sorgente) return esempioDa(props.sorgente, sorteQualunque())
+  if (props.difficolta !== null) return pescaComeUnGioco(props.difficolta)
+  return esempioDi(props.chiave)
+}
+
 function unAltra() {
-  esempio.value = esempioDi(props.chiave)
+  esempio.value = pesca()
   risposto.value = false
   giro.value++
+}
+
+/* tornare indietro serve solo dentro un giro, e serve davvero: si scorre
+   per giudicare, e la domanda che si vuole riguardare è quasi sempre
+   quella appena passata. */
+function indietro() {
+  if (!nelGiro.value) return
+  passo.value = (passo.value - 2 + quante.value * 2) % quante.value
+  unAltra()
 }
 
 onMounted(unAltra)
@@ -81,6 +149,9 @@ onMounted(unAltra)
              capire che la stessa voce esce in posti diversi -->
         <i v-if="esempio">{{ dove }}</i>
       </div>
+      <!-- a che punto si è del giro: sta in cima e non nel piede perché
+           è quello che dice se si sta scorrendo o pescando a caso -->
+      <span v-if="nelGiro" class="prova-conta" data-conta>{{ dovePosizione }}</span>
       <button type="button" class="prova-x" aria-label="basta" @click="$emit('chiudi')">✕</button>
     </div>
 
@@ -98,8 +169,12 @@ onMounted(unAltra)
     </div>
 
     <div class="prova-piede">
+      <!-- dentro un giro si torna indietro: si scorre per giudicare, e
+           quella da riguardare è quasi sempre l'ultima passata -->
+      <button v-if="nelGiro" type="button" class="prova-indietro" aria-label="quella prima"
+              data-indietro @click="indietro">‹</button>
       <button type="button" class="prova-altra" @click="unAltra">
-        {{ risposto ? "Un'altra" : 'Cambiala' }}
+        {{ nelGiro ? 'La prossima ›' : (risposto ? "Un'altra" : 'Cambiala') }}
       </button>
       <button type="button" class="prova-fine" @click="$emit('chiudi')">Basta</button>
     </div>
@@ -128,6 +203,11 @@ onMounted(unAltra)
   border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);
   color: #e8edf7; font: inherit; font-size: 17px;
 }
+.prova-conta {
+  flex: none; align-self: center; font-size: 12px; font-weight: 700;
+  color: #cbd5ea; background: rgba(255,255,255,.08);
+  border-radius: 999px; padding: 5px 10px; white-space: nowrap;
+}
 
 /* il palco: `relative` perché il velo di `Domanda.vue` è `absolute` e
    si aggancia qui, non al telefono intero. `--qz-h` è l'altezza utile
@@ -146,5 +226,8 @@ onMounted(unAltra)
 }
 .prova-altra { background: rgba(255,255,255,.1); color: #e8edf7 }
 .prova-fine { background: #ffd58a; color: #23272f }
+/* stretto apposta: è la scorciatoia per riguardare quella di prima, non
+   uno dei due tasti veri */
+.prova-indietro { flex: 0 0 56px; background: rgba(255,255,255,.1); color: #e8edf7; font-size: 20px }
 .prova-piede button:active { transform: translateY(2px) }
 </style>
