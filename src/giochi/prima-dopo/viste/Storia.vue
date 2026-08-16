@@ -25,6 +25,7 @@
    `strumenti/incidi-voci.mjs` parla ancora solo inglese e spagnolo.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, watch, onUnmounted } from 'vue'
+import Passo from './Passo.vue'
 
 const props = defineProps({
   quesito: { type: Object, required: true },
@@ -73,7 +74,9 @@ onUnmounted(fermaLampo)
          e il tavolo salterebbe proprio nel momento in cui va guardato. -->
     <template v-if="fase === 'lampo'">
       <div class="pd-striscia">
-        <div v-for="(e, i) in filaGiusta" :key="i" class="pd-buca pd-piena pd-lampo em">{{ e }}</div>
+        <div v-for="(e, i) in filaGiusta" :key="i" class="pd-buca pd-piena pd-lampo em">
+          <Passo :passo="e" />
+        </div>
       </div>
       <div v-if="quesito.tipo !== 'intruso'" class="pd-pesca"></div>
     </template>
@@ -86,12 +89,14 @@ onUnmounted(fermaLampo)
                   :class="{ 'pd-piena': id !== null }" :disabled="id === null"
                   :aria-label="id !== null ? 'togli ' + quesito.sequenza[id] : 'posto ' + (i + 1)"
                   @click="$emit('tocca', id)">
-            {{ id !== null ? quesito.sequenza[id] : NUMERI[i] }}
+            <Passo :passo="id !== null ? quesito.sequenza[id] : null" :vuoto="NUMERI[i]" />
           </button>
         </div>
         <div class="pd-pesca">
           <button v-for="v in quesito.vignetteLibere" :key="v.id" class="pd-vignetta em"
-                  :aria-label="'vignetta ' + v.emoji" @click="$emit('tocca', v.id)">{{ v.emoji }}</button>
+                  :aria-label="'vignetta ' + v.emoji" @click="$emit('tocca', v.id)">
+            <Passo :passo="v.emoji" />
+          </button>
         </div>
       </template>
 
@@ -99,11 +104,15 @@ onUnmounted(fermaLampo)
       <template v-else-if="quesito.tipo === 'scegli'">
         <div class="pd-striscia">
           <div v-for="(e, i) in quesito.mostrati" :key="i" class="pd-buca em"
-               :class="{ 'pd-piena': e !== null }">{{ e ?? '❓' }}</div>
+               :class="{ 'pd-piena': e !== null }">
+            <Passo :passo="e" vuoto="❓" />
+          </div>
         </div>
         <div class="pd-pesca">
           <button v-for="o in quesito.opzioni" :key="o.emoji" class="pd-vignetta em"
-                  :aria-label="'scegli ' + o.emoji" @click="$emit('tocca', o.emoji)">{{ o.emoji }}</button>
+                  :aria-label="'scegli ' + o.emoji" @click="$emit('tocca', o.emoji)">
+            <Passo :passo="o.emoji" />
+          </button>
         </div>
       </template>
 
@@ -111,7 +120,9 @@ onUnmounted(fermaLampo)
       <template v-else-if="quesito.tipo === 'intruso'">
         <div class="pd-striscia pd-striscia-intrusa">
           <button v-for="v in quesito.vignette" :key="v.id" class="pd-buca pd-piena em"
-                  :aria-label="'vignetta ' + v.emoji" @click="$emit('tocca', v.id)">{{ v.emoji }}</button>
+                  :aria-label="'vignetta ' + v.emoji" @click="$emit('tocca', v.id)">
+            <Passo :passo="v.emoji" />
+          </button>
         </div>
       </template>
     </template>
