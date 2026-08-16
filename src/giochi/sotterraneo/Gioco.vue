@@ -188,9 +188,14 @@ function accendi() {
 /* Quanto schermo copre il foglio in questo momento, misurato sul foglio
    vero e non indovinato: la telecamera centra l'eroe in quello che resta.
    Una quota fissa non funziona — un foglio con dentro una domanda
-   disegnata è alto il doppio di uno con due righe di testo, e chi si sta
-   battendo finisce sotto il pannello proprio quando serve vederlo. Si
-   rilegge ogni sei fotogrammi: è una misura del DOM, non un conto. */
+   disegnata è alto il doppio di uno con due righe di testo, e la cosa
+   che si sta guardando finisce sotto il pannello proprio mentre serve.
+   Si rilegge ogni sei fotogrammi: è una misura del DOM, non un conto.
+
+   Lo scontro non è più fra questi: sta al centro (`.sot-velo`), non
+   porta la classe `.sot-foglio`, e quindi qui misura zero e la
+   telecamera resta ferma. È voluto — muovere la scena mentre comincia
+   una battaglia era la metà peggiore del problema. */
 let altoFoglio = 0, contaGiri = 0
 function misuraFoglio() {
   const f = document.querySelector('.sot-foglio')
@@ -209,10 +214,9 @@ function giro() {
     const c = corsa.value
     if (!c || c.finita) return
     c.passo(dt)
-    /* col foglio aperto la telecamera alza l'eroe: da quando i mostri
-       vengono addosso, lo scontro parte dove sei, e un eroe centrato
-       finisce sotto il pannello — si risponderebbe a domande su un mostro
-       che non si vede */
+    /* col foglio aperto la telecamera alza l'eroe, così la porta o il
+       forziere di cui si sta leggendo restano visibili sopra il
+       pannello (lo scontro no: quello sta al centro e non chiede spazio) */
     if ((contaGiri++ % 6) === 0) misuraFoglio()
     pittore.segui(c.livello, c.eroe.x, c.eroe.y, altoFoglio)
     pittore.mostra({ corsa: c, orologio })
@@ -482,18 +486,33 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <p v-if="avviso" class="sot-avviso">{{ avviso }}</p>
         </div>
 
-        <!-- ═══ i fogli che salgono dal basso ═══ -->
-        <Foglio v-if="foglio && foglio.che === 'scontro'" class="sot-alto">
-          <Scontro v-bind="nemico" :scosso="scosso" />
-          <div v-if="domanda" class="sot-domanda">
-            <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                     :origine="domanda" gioco="sotterraneo" :respiro="900"
-                     @risposto="risposto" />
+        <!-- ═══ lo scontro: al centro, non dal basso ═══
+             Gli altri fogli salgono dal basso e lasciano vedere il campo,
+             che è giusto: ci si sta decidendo se aprire una porta, e la
+             caverna intorno è metà della decisione. Una battaglia no. Un
+             mostro addosso arriva **mentre si cammina**, quindi il foglio
+             compariva in fondo allo schermo, dove chi stava guardando il
+             proprio eroe non lo vedeva affatto; e per non lasciarlo
+             sotto il pannello la telecamera si spostava — cioè la scena
+             si muoveva da sola nel momento peggiore. Al centro il mostro
+             è dove stanno già gli occhi e niente si sposta.
+
+             Non porta la classe `sot-foglio` apposta: `misuraFoglio()`
+             cerca quella, e non trovandola la telecamera smette da sé di
+             fare spazio a un pannello che spazio non ne chiede. -->
+        <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo">
+          <div class="sot-modale">
+            <Scontro v-bind="nemico" :scosso="scosso" />
+            <div v-if="domanda" class="sot-domanda">
+              <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
+                       :origine="domanda" gioco="sotterraneo" :respiro="900"
+                       @risposto="risposto" />
+            </div>
+            <button class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
+              <span class="em">🏃</span> scappo via
+            </button>
           </div>
-          <button class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
-            <span class="em">🏃</span> scappo via
-          </button>
-        </Foglio>
+        </div>
 
         <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa"
                 :dice="segno ? segno.em + ' ' + segno.dice : ''">
