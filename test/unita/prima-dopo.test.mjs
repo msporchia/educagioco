@@ -6,6 +6,9 @@
    ripropone sempre la stessa fila di storie.
    `node test/esegui.mjs prima-dopo` */
 import { STORIE, CATEGORIE, guastiDelleStorie } from '../../src/giochi/prima-dopo/dati/storie.js'
+import { SCENE, CHIAVI_SCENE, èScena, guastiDelleScene } from '../../src/giochi/prima-dopo/dati/scene.js'
+import { PITTORI } from '../../src/giochi/prima-dopo/scena/tela.js'
+import { LUOGHI } from '../../src/giochi/prima-dopo/scena/cose.js'
 import { VERBI, CHIAVI_VERBI, verbo as datiVerbo, guastiDeiVerbi } from '../../src/giochi/prima-dopo/dati/verbi.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna } from '../../src/giochi/prima-dopo/dati/campagna.js'
 import { generaQuesito } from '../../src/giochi/prima-dopo/motore/quesito.js'
@@ -17,7 +20,7 @@ import { misure, statoTraguardo } from '../../src/store/progressi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
-const guastiStorie = guastiDelleStorie()
+const guastiStorie = guastiDelleStorie(STORIE, SCENE)
 controlla('le storie non hanno guasti', guastiStorie.length === 0, guastiStorie.join(' · '))
 const guastiVerbi = guastiDeiVerbi()
 controlla('i verbi non hanno guasti', guastiVerbi.length === 0, guastiVerbi.join(' · '))
@@ -34,6 +37,40 @@ controlla('la campagna finisce mescolando tutti i verbi', CAMPAGNA.at(-1).verbo 
 controlla('nessuna tappa facile pesca dalle storie ambigue al contrario', CAMPAGNA
   .filter(t => t.scalino === 'facile')
   .every(t => storieIdonee(t, datiVerbo(t.verbo), STORIE).every(s => !s.ambiguaAlContrario)))
+
+/* ══════════ 1-bis. le storie disegnate ══════════
+   Quello che una vignetta *sembra* non lo dice nessun test — gli occhi
+   ce li mette `strumenti/banco/storie.html`. Qui si controlla il resto,
+   che è la parte che si rompe in silenzio: una scena nominata da una
+   storia e mai disegnata sarebbe un riquadro vuoto in partita, e un
+   `che` senza pittore una figura che non compare. */
+{
+  const guastiScene = guastiDelleScene(SCENE, LUOGHI, PITTORI)
+  controlla('le scene non hanno guasti', guastiScene.length === 0, guastiScene.join(' · '))
+
+  const disegnate = STORIE.filter(s => s.disegnata)
+  controlla('ci sono storie disegnate', disegnate.length >= 10, `sono ${disegnate.length}`)
+  /* con una sola storia disegnata in una categoria, i distrattori della
+     stessa famiglia non bastano e il quesito ripiega sulle emoji (è
+     dichiarato in `motore/quesito.js`, ma è un ripiego). Due per
+     categoria è il minimo perché una tappa monocategoria — la 1, la 2,
+     la 3 — possa fare una domanda tutta disegnata. */
+  for (const c of new Set(disegnate.map(s => s.categoria))) {
+    const quante = disegnate.filter(s => s.categoria === c).length
+    controlla(`la categoria "${c}" ha almeno due storie disegnate`, quante >= 2, `ne ha ${quante}`)
+  }
+  controlla('una storia disegnata lo è in tutti i suoi passi',
+            disegnate.every(s => s.passi.every(èScena)))
+  controlla('e nessuna storia a emoji nomina una scena',
+            STORIE.filter(s => !s.disegnata).every(s => s.passi.every(p => !èScena(p))))
+
+  /* una scena disegnata e mai usata è lavoro buttato, e soprattutto è
+     il segno che una storia è stata riscritta lasciandosi indietro un
+     pezzo */
+  const usate = new Set(STORIE.flatMap(s => s.passi))
+  const orfane = CHIAVI_SCENE.filter(c => !usate.has(c))
+  controlla('nessuna scena resta senza storia', orfane.length === 0, orfane.join(' · '))
+}
 
 /* ══════════ 2. il generatore: migliaia di quesiti ══════════ */
 {
@@ -107,8 +144,10 @@ controlla('nessuna tappa facile pesca dalle storie ambigue al contrario', CAMPAG
   controlla('e la buca torna vuota', q3.posate.every(x => x === null))
 }
 {
-  /* "manca": inizio e fine sono già lì, il buco è nel mezzo */
-  const storia = STORIE.find(s => s.chiave === 'mattina')
+  /* "manca": inizio e fine sono già lì, il buco è nel mezzo.
+     La storia è quella disegnata della mattina: il quesito è lo stesso
+     che una fila di emoji, ed è il punto — il motore non distingue. */
+  const storia = STORIE.find(s => s.chiave === 'la-mattina')
   const altre = storieIdonee(CAMPAGNA[3], datiVerbo('manca'), STORIE).filter(s => s !== storia)
   const q = generaQuesito(datiVerbo('manca'), storia, altre.length ? altre : STORIE, caso(4))
   uguale('si vede il primo passo', q.mostrati[0], storia.passi[0])
@@ -204,6 +243,38 @@ for (const [i, t] of CAMPAGNA.entries()) {
   uguale('e la campagna finita si vede', mFinito.finita(manifesto.chiave), 1)
   uguale('a mani vuote quelle misure valgono zero',
          mVuoto.tappeDi(manifesto.chiave) + mVuoto.stelleDi(manifesto.chiave) + mVuoto.finita(manifesto.chiave), 0)
+}
+
+/* ══════════ 7. disegni con disegni, emoji con emoji ══════════
+   Un distrattore di un'altra famiglia si riconosce per *come è fatto*
+   invece che per quello che racconta: in mezzo a tre vignette
+   disegnate, un'emoji è la risposta che salta all'occhio — e la
+   domanda smette di misurare quello che voleva misurare. */
+{
+  const rnd = caso(77)
+  let quesiti = 0, sporchi = 0
+  for (let giro = 0; giro < 400; giro++) {
+    for (const t of CAMPAGNA) {
+      const v = datiVerbo(t.verbo === 'mescolato' ? CHIAVI_VERBI[Math.floor(rnd() * 6)] : t.verbo)
+      const idonee = storieIdonee(t, v, STORIE)
+      const storia = idonee[Math.floor(rnd() * idonee.length)]
+      if (!storia) continue
+      const altre = idonee.filter(s => s.chiave !== storia.chiave)
+      /* si guarda solo dove una scelta c'era: se in quella tappa non
+         esiste nessun'altra storia della stessa famiglia, mescolare è
+         il male minore ed è dichiarato in `motore/quesito.js` */
+      if (!altre.some(s => !!s.disegnata === !!storia.disegnata)) continue
+      const q = generaQuesito(v, storia, altre, rnd)
+      const mostrati = q.tipo === 'scegli' ? q.opzioni.map(o => o.emoji)
+                     : q.tipo === 'intruso' ? q.vignette.map(x => x.emoji)
+                     : q.sequenza
+      quesiti++
+      if (mostrati.some(e => èScena(e) !== !!storia.disegnata)) sporchi++
+    }
+  }
+  controlla('nessun quesito mescola vignette disegnate ed emoji',
+            sporchi === 0, `${sporchi} sporchi su ${quesiti}`)
+  controlla('e i quesiti provati sono tanti', quesiti > 500, `sono ${quesiti}`)
 }
 
 riassunto('prima e dopo')

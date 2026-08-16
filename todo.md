@@ -1,7 +1,7 @@
 # Dove siamo e cosa manca
 
-Stato al **16 agosto 2026**. Si gioca da `dist/index.html`, e i test sono **89**
-(73 di unità, 16 nel browser), tutti verdi.
+Stato al **16 agosto 2026**. Si gioca da `dist/index.html`, e i test sono **96**
+(78 di unità, 18 nel browser), tutti verdi.
 
 **Qui dentro c'è solo quello che manca.** Quello che è stato fatto lo racconta
 `git log`, che è il posto giusto per raccontarlo: una voce chiusa esce da questo
@@ -11,9 +11,8 @@ file, se no in tre giorni non si distingue più il lavoro dal diario.
 
 ## I quiz
 
-La coda è vuota: tutti i moduli previsti sono in `src/quiz/moduli/`. Quello che
-resta da fare sui quiz sta più sotto, nel quaderno del 16 agosto (**i problemi a
-parole**, che è un modulo nuovo).
+La coda è vuota: tutti i moduli previsti sono in `src/quiz/moduli/`, i problemi
+a parole compresi.
 
 ### Deciso di NON portare, e perché
 
@@ -177,8 +176,11 @@ quando quei capitoli si riaccendono, non prima.
 
 ## Le storie di «Prima e dopo» sono fatte di emoji, e non dovrebbero
 
-**Deciso il 16 agosto: si disegnano.** Il come sta in fondo, nel quaderno; qui
-resta il perché, che è la parte che non va persa.
+**Deciso il 16 agosto: si disegnano — e lo stesso giorno sono dodici.** Il
+prototipo (tre storie) è stato guardato e approvato, e il cassetto si è
+allargato: **12 storie disegnate su 50, 42 scene, 8 luoghi, 38 cose, 3
+persone**. Cosa c'è e cosa manca sta in fondo a questa sezione; qui resta il
+perché, che è la parte che non va persa.
 
 Una storia, oggi, è una fila di emoji. Il che vuol dire che la storia non si
 sceglie: si cerca. Si parte da cosa il set di emoji mette a disposizione e si
@@ -208,6 +210,76 @@ Non è un lavoro da infilare in coda a una correzione: è il gioco rifatto nel
 suo pezzo più importante. Va guardato quando c'è tempo per guardarlo bene.
 Vedi anche il tetto della resa grafica, che per il castello è già stato
 ribaltato una volta.
+
+### Cosa c'è
+
+**Dodici storie disegnate**, distribuite in modo che ogni categoria che ne ha
+almeno una ne abbia **almeno due** — sotto quel numero i distrattori della
+stessa famiglia non bastano e il quesito ripiega sulle emoji (`unita/prima-dopo`
+lo controlla):
+
+- **causa-effetto (6)** — il ginocchio sbucciato · il vaso rotto e detto · dal
+  fango alla doccia · il gelato caduto · il litigio che finisce bene · esce
+  senza giacca.
+- **routine (2)** — la mattina (dalla sveglia alla scuola) · la sera (fino al
+  sonno).
+- **crescita (2)** — si pianta il seme · il gattino diventa grande.
+- **cucina (2)** — la torta di compleanno · la spremuta d'arancia.
+
+**Sei storie a emoji sono uscite**, tutte per lo stesso motivo: erano
+abitudini travestite da nessi, o file di oggetti che stanno insieme. `doccia`
+(🚿 🧴 👕 — il sapone non viene *dopo* la doccia, viene dentro), `mattina`,
+`sera`, `girasole` (che diceva la stessa cosa di `seme-albero` senza nessuno
+dentro), `torta-compleanno`. Le altre della stessa specie — `vestirsi`,
+`lavarsi-mani` — restano finché non si disegnano.
+
+Quello che ha guadagnato il gioco non è il numero: è che adesso ci sono storie
+**su persone**. Due bambini che si contendono un orsetto e finiscono per
+giocarci insieme è una fila di quattro vignette in cui l'unica cosa che cambia,
+fra la prima e l'ultima, sono le facce.
+
+I file: `dati/scene.js` (le schede, dato puro), `scena/persone.js` (bimba,
+bimbo, grande per `corpo.js`), `scena/cose.js` (quattro luoghi e le cose),
+`scena/tela.js` (il disegno e la telecamera), `viste/Passo.vue` (l'unico posto
+che sa che esistono due specie di vignetta). Il motore non se n'è accorto:
+`passi` resta un array di stringhe, e una stringa che è il nome di una scena si
+disegna invece di stamparsi.
+
+Due cose imparate disegnando, che valgono per il seguito:
+
+- **La faccia è tutta l'informazione, quindi va inquadrata stretta.** Il primo
+  giro metteva la figura intera in mezzo al paesaggio: a settanta pixel — la
+  larghezza vera di una vignetta su un telefono — la faccia era quattro pixel,
+  cioè si era buttata via proprio la cosa per cui si smetteva di usare le emoji.
+  Da lì `inquadra: { zoom, x, y }` nella scheda.
+- **I distrattori vanno tenuti nella stessa famiglia** (`disegnata: true`, e
+  `motore/quesito.js` filtra): un'emoji in mezzo a tre vignette disegnate si
+  riconosce per come è fatta invece che per quello che racconta.
+
+### Cosa manca
+
+- **Trentotto storie sono ancora a emoji**, e tre categorie non ne hanno
+  nemmeno una disegnata: **trasformazione**, **costruzione**, **viaggio**. Sono
+  anche le tre dove le forzature restano (🥣 per l'impasto del pane, 🏰 per il
+  castello di sabbia).
+- **Il cassetto sa disegnare quello che serviva a queste dodici**: otto luoghi
+  (prato, cortile, salotto, cameretta, cucina, bagno, orto, aula), tre persone e
+  trentotto cose. Un viaggio vuole un treno e una valigia, una costruzione vuole
+  mattoni e attrezzi: quelli non ci sono.
+- **Nessun test guarda i pixel**, come per tutto il resto: la prova è
+  `npm run storie`, che mette le strisce in fila per un occhio umano (e
+  `-- --host` per guardarle dal telefono, che è la taglia che conta). I
+  controlli a freddo — scene esistenti, storie disegnate per intero, nessuna
+  scena orfana, nessun quesito misto — sono in `unita/prima-dopo`.
+- **Non c'è un test di integrazione** per questo gioco, né prima né adesso.
+- **Le altre abitudini travestite da nessi** (`vestirsi`, `lavarsi-mani`) si
+  potano quando si disegnano, non prima, o il gioco si accorcia.
+- **Una terza regola imparata allargando il cassetto**: due vignette della
+  stessa storia devono cambiare **massa**, non dettaglio. Tre passi con lo
+  stesso bambino allo stesso tavolo (la spremuta) si distinguevano solo da un
+  bicchiere di otto pixel; è servito togliere il tavolo all'ultimo passo e
+  raddoppiare il bicchiere. Vale come criterio di composizione quanto
+  l'inquadratura stretta.
 
 ---
 
@@ -269,6 +341,21 @@ gesti e comportamenti, e i gesti si giudicano toccandoli.
   sbagliata è misurato sul modello, ma «si sente o no» lo dice solo giocarlo.
 - **Gli asteroidi col cielo più fitto** — la caduta è fissa a 10 secondi e a
   salire di livello arrivano più sassi invece che più veloci.
+- **Le domande che si incatenano** — la causa vera del «non va avanti» era
+  l'istanza di `Domanda.vue` riusata fra una domanda e l'altra, e adesso il
+  componente si azzera da sé. Restano da sentire col dito i 320 ms di
+  finestra cieca: sono la differenza fra un tocco fantasma ingoiato e un
+  tasto che sembra lento, e la misura giusta la dice solo un dito vero.
+  Riguarda sotterraneo, Dungeon, Corsa e Survivors insieme.
+- **Lo scontro del sotterraneo, adesso al centro** — era un foglio che
+  saliva dal basso mentre si camminava, cioè compariva dove non si stava
+  guardando, e per non lasciarlo sopra l'eroe la telecamera si spostava da
+  sola. Ora è una modale in mezzo allo schermo e la scena resta ferma.
+  **Non l'ho vista a schermo**: per fotografarla serve incontrare un
+  mostro, e pilotare l'esplorazione dall'esterno non ci è riuscito
+  (~400 tocchi in tre tentativi, mai un incontro). È la prima cosa da
+  guardare aprendo il gioco — e vale la pena guardare anche *quanto ci
+  mette* un incontro a capitare, perché quel dato lì è sospetto.
 
 ---
 
@@ -313,6 +400,13 @@ Le storie fatte di emoji sono una forzatura — stesso difetto delle icone, in
 grande: si sceglie il passo che l'emoji sa dire invece di quello che la storia
 chiede. Si passa al **pittore**: meno storie, ma vere, disegnate. È lo stesso
 cassetto di concetti di cui sopra, e conviene pagarlo una volta per due giochi.
+
+**Fatto il prototipo lo stesso giorno**: tre storie disegnate, il gioco intorno
+non ha dovuto cambiare. Il conto per esteso sta più sopra, in «Il prototipo:
+cosa c'è». Il cassetto però è ancora quello di *questo* gioco
+(`src/giochi/prima-dopo/scena/`): se le figure servono anche alle icone del
+lessico, il passo è spostare `scena/persone.js` in `grafica/personaggi/` — un
+import, non una riscrittura.
 
 ## Gli asteroidi
 
@@ -375,29 +469,14 @@ Piccole, e nessuna urgente — ma sono decisioni sospese, non dimenticanze.
 *Ritirato:* lo spawn casuale di animali in fattoria. Non sta insieme al fatto
 che gli animali restano dove li metti.
 
-## I problemi a parole — un modulo di quiz nuovo
-
-Oggi nessun gioco fa fare problemi, e sono l'esercizio in cui la matematica
-smette di essere una tabellina. Si risponde **scegliendo fra quattro numeri**,
-come tutti gli altri quiz: chiedere di scrivere vorrebbe dire un'interfaccia
-tutta sua. La scala dei gradi:
-
-1. solo somme («ho due banane, me ne danno tre»);
-2. le sottrazioni («ne presto una»);
-3. moltiplicazioni e divisioni — e qui **si rispettano i saperi spenti**: se un
-   bambino non le ha fatte, quel gruppo di domande non esce;
-4. due operazioni per arrivare al risultato;
-5. tre operazioni;
-6. i **dati inutili** nel testo, che è la cosa che davvero si impara: capire
-   cosa serve e cosa no.
-
 ## Il giro che manca
 
-Quattro lavori, e i primi due si contendono lo stesso file:
+Tre lavori, e i primi due si contendono lo stesso file:
 
 1. **La barra e i gettoni degli asteroidi** — via la banda e il pianeta, le
    vite sullo scafo, il gelo e l'aiuto a gettone.
 2. **La fusione di pianeti e stazioni** in una scaletta per difficoltà vera.
 3. **Il cassetto dei concetti disegnati**, che serve alle icone del lessico e
-   a *Prima e dopo* insieme.
-4. **I problemi a parole.**
+   a *Prima e dopo* insieme. — *cominciato*: il cassetto di «Prima e dopo» c'è
+   e regge tre storie; per il lessico va promosso a `src/grafica/` e allargato
+   ai concetti che l'emoji non sa dire (tempo, ora, mese, i verbi).
