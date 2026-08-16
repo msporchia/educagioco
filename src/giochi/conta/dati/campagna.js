@@ -12,6 +12,12 @@
    mondo — è per questo che una tappa giocata due volte non fa mai la
    stessa fila di domande.
 
+   `alterna` è l'eccezione alla regola «una tappa, un verbo»: gli altri
+   verbi che le danno il cambio, uno sì e uno no. Serve dove una domanda
+   sola, ripetuta, si consuma — l'inclusione di classe è il caso da cui è
+   nata, perché ha sempre la stessa risposta. Il mondo della tappa deve
+   reggere anche i verbi alternati, e `guastiDellaCampagna` lo controlla.
+
    `partite` è quante domande servono per portare a casa la tappa. Una
    domanda sbagliata **non fa perdere niente**: si conta insieme e si
    riprova la stessa domanda. La tappa non si perde mai — costa solo le
@@ -66,9 +72,17 @@ export const CAMPAGNA = [
   { chiave: 'tutti-insieme', nome: 'Tutti insieme',   mondo: 'mare', verbo: 'insieme',
     scalino: 'bosco', partite: 4, min: 2, max: 5, premio: 3,
     racconto: 'Due specie diverse, ma stanno tutte e due dentro «animali».' },
+  /* l'unica tappa a due verbi: l'inclusione si dà il cambio con «dove
+     ce n'è di più». Da sola, quattro volte di fila, la domanda si
+     svuota — la risposta è sempre «animali», e chi gioca lo impara come
+     si impara la posizione di un tasto. Messa accanto al confronto fra
+     due specie diverse, invece, ogni domanda va guardata: a volte i due
+     mucchi sono separati, a volte uno sta dentro l'altro, e distinguere
+     i due casi *è* il concetto. */
   { chiave: 'il-cerchio',   nome: 'Il cerchio grande', mondo: 'stagno', verbo: 'inclusione',
+    alterna: ['dipiu'],
     scalino: 'bosco', partite: 4, min: 2, max: 6, premio: 4,
-    racconto: 'Le une stanno dentro le altre: guarda il recinto grande.' },
+    racconto: 'A volte due mucchi diversi, a volte le une dentro le altre.' },
 
   /* ── scalino 4: al mercato, un'aggiunta e un'unione ── */
   { chiave: 'ne-arriva-una', nome: "Ne arriva un'altra", mondo: 'pollaio', verbo: 'piuUno',
@@ -117,11 +131,19 @@ export function guastiDellaCampagna(campagna = CAMPAGNA, mondi, verbi) {
       guasti.push(`${dove}: lo scalino "${t.scalino}" non esiste`)
 
     const m = mondi && mondi[t.mondo]
-    const v = verbi && verbi[t.verbo]
+    /* il verbo della tappa e quelli che le danno il cambio si controllano
+       allo stesso modo: un verbo alternato che il mondo non regge fa
+       schiantare la seconda domanda, non la prima — cioè a tappa già
+       cominciata, che è il momento peggiore per accorgersene */
+    for (const chiave of [t.verbo, ...(t.alterna || [])]) {
+      const v = verbi && verbi[chiave]
+      if (verbi && !v) guasti.push(`${dove}: il verbo "${chiave}" non esiste`)
+      if (m && v && !mondoBasta(m, v.richiede))
+        guasti.push(`${dove}: il mondo "${t.mondo}" non ha abbastanza specie per "${chiave}"`)
+    }
     if (mondi && !m) guasti.push(`${dove}: il mondo "${t.mondo}" non esiste`)
-    if (verbi && !v) guasti.push(`${dove}: il verbo "${t.verbo}" non esiste`)
-    if (m && v && !mondoBasta(m, v.richiede))
-      guasti.push(`${dove}: il mondo "${t.mondo}" non ha abbastanza specie per "${t.verbo}"`)
+    if ((t.alterna || []).includes(t.verbo))
+      guasti.push(`${dove}: "${t.verbo}" si alterna con sé stesso`)
   }
   /* gli scalini arrivano in fila e nessuno resta vuoto */
   const ordine = SCALINI.map(s => s.chiave)

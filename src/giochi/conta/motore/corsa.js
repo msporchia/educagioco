@@ -2,7 +2,8 @@
    UNA CORSA — la tappa come fila di domande
 
    Una tappa è `partite` domande da rispondere di seguito, con lo stesso
-   mondo e lo stesso verbo. Una risposta sbagliata **non fa perdere
+   mondo e lo stesso verbo — o due verbi che si danno il cambio, se la
+   tappa dichiara `alterna`. Una risposta sbagliata **non fa perdere
    niente e non fa avanzare**: resta la stessa domanda, si conta insieme
    e si riprova — è la vista (`Gioco.vue`) a decidere quando, dopo
    l'animazione del «conta insieme», far ripartire il tentativo.
@@ -36,7 +37,10 @@ export class Corsa {
     const giusta = Object.is(valore, this.domanda.rispostaGiusta)
     if (giusta) {
       this.indice++
-      if (!this.finita) this.domanda = generaDomanda(this.tappa, this.rnd)
+      /* la domanda che se ne va è l'unico contesto della prossima: le
+         dice che verbo e che specie sono appena passati, così la tappa
+         non ripete quattro volte la stessa domanda con lo stesso animale */
+      if (!this.finita) this.domanda = generaDomanda(this.tappa, this.rnd, this.domanda)
     } else {
       this.errori++
     }

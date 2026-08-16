@@ -25,13 +25,19 @@
    giusto, perché è l'unico che sa cosa dire.
    ═══════════════════════════════════════════════════════════════════ */
 
+/* «quanti» o «quante», «un altro» o «un'altra»: l'italiano concorda, e
+   la specie porta il suo genere apposta (vedi `mondi.js`). Una funzione
+   sola per tutte le consegne, così una specie nuova non può portarsi
+   dietro una frase storta in un angolo che nessuno rilegge. */
+const q = (specie, maschile, femminile) => (specie.genere === 'f' ? femminile : maschile)
+
 export const VERBI = {
   quanti: {
     chiave: 'quanti', nome: 'Quanti sono?', modo: 'cifre',
     richiede: { totale: 1 },
     consegna: ({ specie }) => ({
       icone: ['❓', specie.emoji],
-      frase: `Quante ${specie.tanti} ci sono?`,
+      frase: `${q(specie, 'Quanti', 'Quante')} ${specie.tanti} ci sono?`,
     }),
   },
 
@@ -62,7 +68,8 @@ export const VERBI = {
     richiede: { totale: 1 },
     consegna: ({ specie }) => ({
       icone: [specie.emoji, '🔀', '❓'],
-      frase: `Contali, poi si sparpagliano: quanti sono adesso?`,
+      frase: `${q(specie, 'Contali', 'Contale')}, poi si sparpagliano: ` +
+             `${q(specie, 'quanti', 'quante')} sono adesso?`,
     }),
   },
 
@@ -73,7 +80,7 @@ export const VERBI = {
     richiede: { animali: 1, cose: 1 },
     consegna: ({ specie }) => ({
       icone: ['❓', specie.emoji],
-      frase: `Quante ${specie.tanti} ci sono?`,
+      frase: `${q(specie, 'Quanti', 'Quante')} ${specie.tanti} ci sono?`,
     }),
   },
 
@@ -106,8 +113,8 @@ export const VERBI = {
     consegna: ({ specie, direzione }) => ({
       icone: [specie.emoji, direzione === 'arriva' ? '➕' : '➖', '❓'],
       frase: direzione === 'arriva'
-        ? `Ne arriva un'altra: quante sono adesso?`
-        : `Una scappa via: quante restano?`,
+        ? `Ne arriva ${q(specie, 'un altro', "un'altra")}: ${q(specie, 'quanti', 'quante')} sono adesso?`
+        : `${q(specie, 'Uno', 'Una')} scappa via: ${q(specie, 'quanti', 'quante')} restano?`,
     }),
   },
 
@@ -115,9 +122,12 @@ export const VERBI = {
   unisci: {
     chiave: 'unisci', nome: 'Quanti in tutto?', modo: 'cifre',
     richiede: { totale: 2 },
+    /* due specie insieme: «quante» solo se sono femminili tutte e due —
+       mescolando i generi l'italiano va al maschile */
     consegna: ({ specieA, specieB }) => ({
       icone: [specieA.emoji, '➕', specieB.emoji, '❓'],
-      frase: `${specieA.tanti} e ${specieB.tanti}: quanti sono in tutto?`,
+      frase: `${specieA.tanti} e ${specieB.tanti}: ` +
+             `${specieA.genere === 'f' && specieB.genere === 'f' ? 'quante' : 'quanti'} sono in tutto?`,
     }),
   },
 }

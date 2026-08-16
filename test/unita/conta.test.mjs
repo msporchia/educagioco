@@ -31,6 +31,32 @@ controlla('ogni tappa ha un mondo diverso dalla precedente',
 controlla('tutti e nove i verbi compaiono in campagna',
           new Set(CAMPAGNA.map(t => t.verbo)).size === Object.keys(VERBI).length)
 
+/* le consegne si scrivono in italiano: «Quanti alberi», non «Quante
+   alberi». Le legge un genitore ad alta voce, e un giorno le dirà la
+   voce incisa — una concordanza storta si sente. */
+{
+  let storte = 0, esempio = ''
+  const maschili = /\b(quante|contale|un'altra|una scappa)\b/i
+  const femminili = /\b(quanti|contali|un altro|uno scappa)\b/i
+  for (const m of Object.values(MONDI))
+    for (const s of m.specie) {
+      const frasi = [
+        VERBI.quanti.consegna({ specie: s }).frase,
+        VERBI.stessi.consegna({ specie: s }).frase,
+        VERBI.piuUno.consegna({ specie: s, direzione: 'arriva' }).frase,
+        VERBI.piuUno.consegna({ specie: s, direzione: 'scappa' }).frase,
+        VERBI.unisci.consegna({ specieA: s, specieB: s }).frase,
+      ]
+      for (const f of frasi)
+        if ((s.genere === 'm' ? maschili : femminili).test(f)) {
+          storte++
+          if (!esempio) esempio = `${s.chiave} (${s.genere}): «${f}»`
+        }
+    }
+  controlla('le consegne concordano col genere della specie', storte === 0,
+            `${storte} storte, la prima ${esempio}`)
+}
+
 const guastiAlbo0 = guastiDellAlbo([manifesto])
 controlla('il blocco albo del manifesto non ha guasti', guastiAlbo0.length === 0, guastiAlbo0.join(' · '))
 
@@ -49,8 +75,13 @@ function contaPerSpecie(gettoni) {
   let dipiuTotali = 0, dipiuUguali = 0
 
   for (const t of CAMPAGNA) {
+    /* concatenate come nel gioco — ogni domanda vede quella prima di sé:
+       è l'unico modo di generare anche i verbi alternati (vedi `alterna`
+       in `dati/campagna.js`), che a domanda isolata non escono mai */
+    let precedente = null
     for (let i = 0; i < 300; i++) {
-      const d = generaDomanda(t, rnd)
+      const d = generaDomanda(t, rnd, precedente)
+      precedente = d
       generate++
 
       if (d.opzioni) {
@@ -122,6 +153,62 @@ function contaPerSpecie(gettoni) {
   const fila1 = unaFila(caso(10)), fila2 = unaFila(caso(77))
   controlla('due partite della stessa tappa non si somigliano identiche',
             JSON.stringify(fila1) !== JSON.stringify(fila2))
+}
+
+/* ══════════ 2 bis. non ci si ripete ══════════
+   La lagnanza da cui nasce tutto questo: la tappa dell'inclusione
+   chiedeva quattro volte di fila «più rane o più animali?». Non era il
+   caso a essere sfortunato — lo stagno ha tre bestie e la tappa fa
+   quattro domande, quindi per il principio dei cassetti una specie *deve*
+   ripetersi. Adesso il motore si ricorda la domanda di prima. */
+function filaDiDomande(t, rnd, quante) {
+  const fila = []
+  let d = null
+  for (let i = 0; i < quante; i++) { d = generaDomanda(t, rnd, d); fila.push(d) }
+  return fila
+}
+
+{
+  let ripetute = 0, doveRipete = ''
+  for (const t of CAMPAGNA) {
+    const fila = filaDiDomande(t, caso(31), 200)
+    for (let i = 1; i < fila.length; i++) {
+      const prima = fila[i - 1].nominate, adesso = fila[i].nominate
+      if (!prima.length || !adesso.length) continue
+      if (JSON.stringify([...prima].sort()) === JSON.stringify([...adesso].sort())) {
+        ripetute++
+        if (!doveRipete) doveRipete = `${t.chiave}: ${adesso.join('+')}`
+      }
+    }
+  }
+  controlla('due domande di fila non nominano mai le stesse specie',
+            ripetute === 0, `${ripetute} ripetizioni, la prima in ${doveRipete}`)
+
+  /* e la tappa a due verbi li alterna davvero, invece di infilare
+     quattro inclusioni una dietro l'altra */
+  const cerchio = CAMPAGNA.find(t => (t.alterna || []).length)
+  controlla('c\'è una tappa che alterna due verbi', !!cerchio)
+  const verbi = filaDiDomande(cerchio, caso(42), 20).map(d => d.verbo)
+  controlla('la tappa dell\'inclusione non la chiede mai due volte di fila',
+            verbi.every((v, i) => i === 0 || v !== verbi[i - 1] || v !== cerchio.verbo),
+            verbi.join(' → '))
+  controlla('ma la chiede: è ancora la sua tappa', verbi.filter(v => v === cerchio.verbo).length >= 8,
+            verbi.join(' → '))
+  controlla('e l\'altro verbo compare davvero',
+            verbi.some(v => cerchio.alterna.includes(v)), verbi.join(' → '))
+
+  /* «animali» è sempre la risposta giusta: se stesse sempre nello stesso
+     posto, la tappa si vincerebbe premendo sempre lo stesso tasto */
+  let aSinistra = 0, quante = 0
+  const rnd = caso(7)
+  for (let i = 0; i < 300; i++) {
+    const d = generaDomanda(cerchio, rnd)
+    if (d.verbo !== 'inclusione') continue
+    quante++
+    if (d.opzioni[0].valore === 'insieme') aSinistra++
+  }
+  nota(`«animali» come primo tasto: ${aSinistra}/${quante}`)
+  dentro('il tasto giusto non è sempre lo stesso', aSinistra, quante * 0.35, quante * 0.65)
 }
 
 /* ══════════ 3. la corsa: una domanda sbagliata non avanza ══════════ */
