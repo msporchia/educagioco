@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le storie disegnate di «Prima e dopo»</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     Come `vetrina.html`, e per lo stesso motivo: **non si apre col
+     doppio click**. Servono i moduli veri di `src/`, e da `file://`
+     Chrome non li carica. Quindi:
+
+         npm run storie              e si apre da solo
+         npm run storie -- --host    e si guarda dal telefono
+
+     Il telefono conta più del computer, qui: la vignetta vera è larga
+     settanta pixel, e una faccia che si legge sul monitor può essere
+     una macchia sullo schermo dove ci gioca un bambino. Il cursore in
+     cima rimpicciolisce tutto fino a quella taglia lì.
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #10131a; --carta: #171b26; --riga: #262c3c;
+    --testo: #e6e9f2; --tenue: #8b93aa; --acceso: #ffcc55; --rosso: #ff7a7a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 26px 22px 70px; background: var(--fondo); color: var(--testo);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header, main, .comandi { max-width: 1180px; margin-left: auto; margin-right: auto; }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  header p { margin: 4px 0; color: var(--tenue); max-width: 78ch; font-size: 13px; }
+  header code, h3 code { background: #0009; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .comandi {
+    display: flex; gap: 14px; align-items: center; margin: 18px auto 22px;
+    padding: 10px 14px; background: var(--carta); border: 1px solid var(--riga);
+    border-radius: 8px; font-size: 12.5px; color: var(--tenue);
+  }
+  .comandi input[type=range] { width: 220px; }
+  main { display: flex; flex-direction: column; gap: 22px; }
+  .riquadro {
+    border: 1px solid var(--riga); border-radius: 8px; padding: 14px 16px 18px;
+    background: var(--carta);
+  }
+  .riquadro h2 { font-size: 15px; margin: 0 0 4px; color: var(--acceso); }
+  .riquadro > p { margin: 0 0 14px; color: var(--tenue); font-size: 12.5px; max-width: 78ch; }
+  .storia { margin: 0 0 18px; }
+  .storia h3 { font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+  .tenue { color: var(--tenue); font-weight: 400; }
+  .striscia { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+  .griglia { display: flex; gap: 12px; flex-wrap: wrap; }
+  figure { margin: 0; }
+  figure canvas { display: block; border-radius: 6px; background: #0b0e14; }
+  figure.emoji div {
+    display: grid; place-items: center; font-size: 42px; border-radius: 6px;
+    background: #0b0e14;
+  }
+  figcaption {
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--tenue); margin-top: 4px; max-width: 160px; word-break: break-word;
+  }
+  .guasti { margin: 0; padding-left: 20px; color: var(--rosso); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Le storie disegnate di «Prima e dopo»</h1>
+  <p>
+    Il prototipo del cassetto disegnato: tre storie che a emoji non si potevano raccontare.
+    Le schede stanno in <code>src/giochi/prima-dopo/dati/scene.js</code>, i pittori in
+    <code>scena/</code>, e sono gli stessi che disegnano in partita — se qui una faccia viene
+    storta, viene storta anche a un bambino.
+  </p>
+  <p>
+    Nessun test guarda i pixel: questa pagina non controlla, <strong>mostra</strong>.
+  </p>
+</header>
+
+<div class="comandi">
+  <label>taglia della vignetta <input id="taglia" type="range" min="48" max="170" value="96"></label>
+  <span id="quanto">96 px</span>
+  <span>— in partita, su un telefono, una striscia da quattro sta sui 70 px.</span>
+</div>
+
+<main id="tavola"></main>
+
+<script type="module">
+  import { avvia } from './storie.js'
+  avvia()
+</script>
+</body>
+</html>
