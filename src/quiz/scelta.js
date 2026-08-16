@@ -46,16 +46,21 @@
    posto che lo sa — i giochi continuano a chiedere «una domanda» e
    basta.
 
-   IL RIPASSO NON C'È ANCORA. Oggi la classe si tira a sorte fra quelle
-   ammesse; il giorno che le chiavi finiranno in `store/srs.js` sarà
-   questo file a chiedergli «di cosa ha bisogno questo bambino» — e i
-   giochi non se ne accorgeranno, che è esattamente il motivo per cui la
-   scelta sta qui e non dentro di loro.
+   IL RIPASSO PESA, MA POCO. Ogni domanda porta la chiave del concetto
+   che allena, e da quando le risposte finiscono in `store/srs.js`
+   (`quiz/memoria.js`) la pesca non è più cieca: quello che il bambino
+   sa meno esce una volta e mezzo, quello che sa bene la metà. La banda
+   è stretta apposta e il perché sta in `nucleo/bisogno.js` — qui la
+   domanda è il pedaggio di un gioco d'avventura, non la lezione, e una
+   partita di sola geometria a chi la geometria non la capisce sarebbe
+   una punizione. I giochi non se ne accorgono, che è esattamente il
+   motivo per cui la scelta sta qui e non dentro di loro.
    ═══════════════════════════════════════════════════════════════════ */
 
 import { MODULI, perId } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { classiDi, pescaClasse } from './nucleo/classi.js'
+import { ilBisogno } from './memoria.js'
 import { saperiSpenti } from '../store/profile.js'
 
 /* Le materie, nell'ordine in cui si presentano. Un gioco può restringere
@@ -79,9 +84,10 @@ export function gradoPer(modulo, difficolta = 0, spenti = []) {
    difficoltà. Il conto sta in `nucleo/classi.js`, che non importa
    niente e si può quindi provare senza browser: qui si applicano solo
    i filtri di chi chiede. */
-export function classiAmmesse({ materie, moduli, spenti = [], difficolta = 0 } = {}) {
+export function classiAmmesse({ materie, moduli, spenti = [], difficolta = 0,
+                                bisogno = null } = {}) {
   const buoni = moduliAmmessi({ materie, moduli, spenti })
-  const restano = classiDi(buoni, { spenti, difficolta })
+  const restano = classiDi(buoni, { spenti, difficolta, bisogno })
   /* SPENTO TUTTO non si resta senza domande. Finché c'era un modulo che
      non dichiarava niente — la logica, le sequenze — qualcosa restava
      sempre e questa riga non serviva; da quando ogni tipologia sta in un
@@ -89,7 +95,7 @@ export function classiAmmesse({ materie, moduli, spenti = [], difficolta = 0 } =
      un `null` al posto della classe. Un gioco senza domanda è rotto e
      una domanda che il bambino non sa fare no: si torna a pescare fra
      tutte, come già fa `moduliAmmessi` quando resta a mani vuote. */
-  return restano.length ? restano : classiDi(buoni, { difficolta })
+  return restano.length ? restano : classiDi(buoni, { difficolta, bisogno })
 }
 
 /* i moduli fra cui pescare, dati i filtri di chi chiede */
@@ -119,13 +125,13 @@ export function moduliAmmessi({ materie, moduli, spenti = [] } = {}) {
    sola, e con undici moduli non c'è ragione. */
 export function domandaPerGioco({
   difficolta = 0, materie, moduli, evita, sorte = sorteQualunque(),
-  spenti = saperiSpenti(),
+  spenti = saperiSpenti(), bisogno = ilBisogno(),
 } = {}) {
-  const tutte = classiAmmesse({ materie, moduli, spenti, difficolta })
+  const tutte = classiAmmesse({ materie, moduli, spenti, difficolta, bisogno })
   const senzaLUltimo = evita ? tutte.filter(c => c.modulo.id !== evita) : tutte
   const { modulo, grado } = pescaClasse(sorte, senzaLUltimo.length ? senzaLUltimo : tutte)
   return {
-    domanda: modulo.chiedi(grado, sorte, spenti),
+    domanda: modulo.chiedi(grado, sorte, spenti, bisogno),
     pittori: modulo.pittori,
     modulo: modulo.id,
     nome: modulo.nome,
@@ -138,17 +144,17 @@ export function domandaPerGioco({
 /* Comodità per chi una materia la vuole per forza (il dungeon che mette
    la stanza di matematica): stessa cosa, con l'id già deciso. */
 export function domandaDa(id, { difficolta = 0, sorte = sorteQualunque(),
-                                spenti = saperiSpenti() } = {}) {
+                                spenti = saperiSpenti(), bisogno = ilBisogno() } = {}) {
   const modulo = perId(id)
   /* anche il modulo chiesto per nome passa dai saperi: se non gli resta
      nessun grado, meglio la domanda di un altro che una muta */
   if (!modulo || !modulo.gradiLiberi(spenti).length)
-    return domandaPerGioco({ difficolta, sorte, spenti })
+    return domandaPerGioco({ difficolta, sorte, spenti, bisogno })
   /* il modulo è deciso, la classe no: dentro un modulo solo la banda
      conta ancora di più, se no si vedrebbe sempre lo stesso grado */
-  const { grado } = pescaClasse(sorte, classiAmmesse({ moduli: [id], spenti, difficolta }))
+  const { grado } = pescaClasse(sorte, classiAmmesse({ moduli: [id], spenti, difficolta, bisogno }))
   return {
-    domanda: modulo.chiedi(grado, sorte, spenti),
+    domanda: modulo.chiedi(grado, sorte, spenti, bisogno),
     pittori: modulo.pittori,
     modulo: modulo.id, nome: modulo.nome, icona: modulo.icona,
     materia: modulo.materia, grado,

@@ -9,11 +9,23 @@
      <Domanda :domanda="d.domanda" :pittori="d.pittori"
               :titolo="`${d.icona} ${d.nome}`" @risposto="incassa" />
 
-   Segue la convenzione dei giochi nuovi: **non tocca il profilo, non
-   chiama nessun motore, non sa cosa sia una moneta**. Riceve quello che
-   deve mostrare ed emette quello che è successo — `{ giusto, chiave,
-   tempo, indice }` — e chi l'ha chiamato decide se quello vale una carta
-   di potenziamento, una porta che si apre o niente.
+   Segue la convenzione dei giochi nuovi: **non chiama nessun motore e
+   non sa cosa sia una moneta**. Riceve quello che deve mostrare ed
+   emette quello che è successo — `{ giusto, chiave, tempo, indice }` —
+   e chi l'ha chiamato decide se quello vale una carta di
+   potenziamento, una porta che si apre o niente.
+
+   L'UNICA COSA CHE SCRIVE è il ripasso: la chiave del concetto e com'è
+   andata, in `quiz/memoria.js`. Sta qui e non nei giochi perché i
+   giochi la chiave non la guardano nemmeno — prendono `{ giusto }` e
+   basta — e perché quattro giochi che si ricordano di annotare sono
+   quattro posti dove dimenticarsene: infatti il `:key` della domanda
+   se l'erano ricordato in uno su cinque. Non è il profilo che si tocca
+   a mano (contatori, monete, livelli): è la stessa risposta che il
+   componente ha appena visto, scritta dove serve a farla tornare.
+   Chi non ha `origine` non annota — è una domanda mostrata fuori dal
+   giro normale — e la palestra dei genitori (`gioco: 'prova'`) non
+   annota mai: lì si guardano le domande, non si esercita nessuno.
 
    È il gemello Vue di `grafica/scheda.js`, che fa la stessa cosa in DOM
    puro per le palestre dei prototipi: là non c'è Vue e non ci deve
@@ -43,6 +55,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
+import { annota } from './memoria.js'
 
 const props = defineProps({
   domanda: { type: Object, required: true },
@@ -107,6 +120,13 @@ function scegli(i) {
   if (scelto.value >= 0 || !pronta.value) return
   scelto.value = i
   const giusto = i === props.domanda.giusta
+  const tempo = (performance.now() - partenza.value) / 1000
+  /* il ripasso si annota subito, non fra un secondo e mezzo: il gioco
+     che sta sotto può chiudere la domanda appena arriva l'evento, e
+     una risposta persa perché si è cambiato schermo è una risposta che
+     il bambino ha dato e che non conta */
+  if (props.origine && props.gioco !== 'prova')
+    annota({ chiave: props.domanda.chiave, giusto, tempo })
   /* Sbagliando si resta fermi più a lungo, perché c'è da leggere il
      perché. Ma un'attesa che non si vede è **indistinguibile da un gioco
      bloccato** — a un bambino col telefono in mano, due secondi di
@@ -122,7 +142,7 @@ function scegli(i) {
     giusto,
     indice: i,
     chiave: props.domanda.chiave,
-    tempo: (performance.now() - partenza.value) / 1000,
+    tempo,
   }), quanto)
 }
 

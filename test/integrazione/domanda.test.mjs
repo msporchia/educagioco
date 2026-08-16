@@ -33,7 +33,7 @@
    `node test/esegui.mjs domanda`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -93,6 +93,21 @@ const durata = await page.evaluate(() => {
 })
 controlla('e dura quanto l\'attesa vera', parseFloat(durata) > 0.2, durata)
 await scatto(page, 'domanda-attesa')
+
+/* ---------- 3b. la palestra dei grandi non conta come esercizio ----------
+   Da qui in poi ogni risposta finisce nel ripasso (`quiz/memoria.js`):
+   la chiave del concetto entra in `items` come per le tabelline, e il
+   giro dopo quella tipologia esce un po' più spesso. Tranne qui: la
+   domanda appena risposta è quella del banco di prova, dove un GENITORE
+   guarda che domande arrivano. Se contasse, chi apre la schermata e
+   scorre trenta esempi riscriverebbe il ripasso di suo figlio con le
+   proprie risposte — e per giunta sbagliandone apposta qualcuna, che è
+   il modo normale di guardare una domanda. */
+const CHIAVI_QUIZ = /^(ana|cal|coniug|geo|gram|gri|indizi|less|log|mis|num|ora|orto|prob|seq|sil):/
+const chiaviDiQuiz = async () => Object.keys((await leggiProfilo(page))?.items || {})
+  .filter(k => CHIAVI_QUIZ.test(k))
+uguale('rispondere dal banco dei grandi non tocca il ripasso',
+       (await chiaviDiQuiz()).length, 0)
 
 /* ---------- 4. DUE DOMANDE DI FILA ----------
    Questa è la parte che conta, ed è il guasto vero: nel banco di prova
@@ -198,6 +213,22 @@ for (let giro = 0; giro < 2; giro++) {
 controlla('due domande di fila si sono potute rispondere', risposteDate >= 2,
           `ne ho risposte ${risposteDate}`)
 await scatto(page, 'domanda-incatenata')
+
+/* ---------- 5. e stavolta il ripasso se le è segnate ----------
+   L'altra metà del controllo di sopra, ed è quella che dice se la
+   catena è davvero attaccata: dentro un gioco la chiave del concetto
+   deve arrivare in `items`, dove sta la storia delle tabelline e delle
+   parole inglesi. Si legge dall'archivio e non dallo schermo perché a
+   schermo il ripasso non si vede affatto — sposta la frequenza delle
+   domande di domani, non la partita di adesso.
+
+   Nessun gioco chiama `annota`: lo fa `quiz/Domanda.vue`, una volta per
+   tutti e cinque. È il motivo per cui questo controllo sta qui e non in
+   un test del sotterraneo. */
+const segnate = await chiaviDiQuiz()
+controlla('rispondere in partita scrive il ripasso', segnate.length > 0,
+          `nessuna chiave di quiz in items dopo ${risposteDate} risposte`)
+nota(`il ripasso si è segnato: ${segnate.join(', ') || 'niente'}`)
 
 uguale('nessun errore in console', errori.length, 0, errori.join('\n'))
 nota('la finestra cieca dura 320 ms: meno di quanto ci mette chiunque a '

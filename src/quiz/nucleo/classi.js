@@ -46,12 +46,24 @@ export const pesoDi = (grado, gradi, difficolta = 0) =>
 
 /* ── le classi giocabili, con il loro peso ──
    `spenti` sono i macrogruppi che i genitori hanno tolto: i gradi che
-   li davano per scontato non entrano proprio nell'elenco. */
-export function classiDi(moduli, { spenti = [], difficolta = 0 } = {}) {
+   li davano per scontato non entrano proprio nell'elenco.
+
+   `bisogno` è il ripasso: una funzione `chiave → fattore` (1 = neutro,
+   la banda vera è 0.5÷1.5 e sta in `nucleo/bisogno.js`). Qui entra
+   come *media* della classe — quanto in generale c'è da rivedere in
+   quel grado — e il resto del lavoro lo fa `Modulo.chiedi`, che pesa
+   la singola tipologia. Senza, tutto va come prima: è un parametro e
+   non un import proprio perché questo file non deve sapere che esista
+   un profilo. */
+export function classiDi(moduli, { spenti = [], difficolta = 0, bisogno = null } = {}) {
   const fuori = []
   for (const m of moduli)
     for (const g of m.gradiLiberi(spenti))
-      fuori.push({ modulo: m, grado: g, peso: pesoDi(g, m.gradi, difficolta) })
+      fuori.push({
+        modulo: m,
+        grado: g,
+        peso: pesoDi(g, m.gradi, difficolta) * m.bisognoMedio(g, spenti, bisogno),
+      })
   return fuori
 }
 

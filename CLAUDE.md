@@ -210,6 +210,15 @@ committate: non è ricostruibile da git.
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`
   e basta. Un modulo nuovo è **un file in `moduli/`** e niente altro — il
   registro lo raccoglie dalla cartella. Contratto in `src/quiz/LEGGIMI.md`.
+  Le risposte si segnano in `store/srs.js` sotto la chiave del **concetto**
+  (`memoria.js`), e la pesca ne tiene conto con una **banda stretta**: 1.5
+  quello che va male, 0.5 quello che è saputo, e basta — qui la domanda è il
+  pedaggio di un gioco d'avventura, non la lezione, e concentrare come fanno
+  gli asteroidi sarebbe una punizione (`nucleo/bisogno.js`). Il conto è a due
+  livelli e la classe usa la *media* dei suoi tipi: col fattore pieno due
+  volte il rapporto diventa il quadrato. Le chiavi finiscono nello stesso
+  cassetto di tabelline e parole inglesi, quindi **un prefisso nuovo si
+  sceglie guardando `store/progressi.js`**.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio

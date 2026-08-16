@@ -189,6 +189,32 @@ export class Modulo {
     throw new Error(`il modulo ${this.id} non sa generare domande`)
   }
 
+  /* ── il ripasso, che è metà qui e metà in `classi.js` ──
+     `bisogno` è una funzione `chiave → fattore` (1 = neutro): quanto
+     spesso questa tipologia va rivista, dato quello che il bambino ha
+     già risposto. Il modulo non sa da dove venga — la calcola
+     `nucleo/bisogno.js` leggendo `store/srs.js` — e senza di lei tutto
+     resta com'era.
+
+     Il bisogno MEDIO di un grado serve a chi sceglie la classe: una
+     classe piena di roba che il bambino non sa deve uscire più spesso
+     di una che sa a memoria. È la media pesata coi pesi delle
+     tipologie, e non è un dettaglio: è la media *giusta*, quella che
+     fa comporre i due livelli senza raddoppiare. Scegliendo la classe
+     con la media e la tipologia dentro con il proprio fattore diviso
+     quella media, la probabilità finale di una tipologia risulta
+     esattamente proporzionale al suo fattore — la media si semplifica.
+     Con due fattori pieni invece il rapporto fra estremi sarebbe il
+     quadrato (nove a uno invece di tre a uno), e la banda stretta
+     scelta apposta non varrebbe più niente. */
+  bisognoMedio(grado, spenti = [], bisogno = null) {
+    if (!bisogno || !this.tipi.length) return 1
+    const qui = this.tipiLiberi(grado, spenti)
+    const tot = qui.reduce((s, t) => s + t.peso, 0)
+    if (!(tot > 0)) return 1
+    return qui.reduce((s, t) => s + t.peso * bisogno(t.chiave), 0) / tot
+  }
+
   /* Comodità per chi lo usa: tiene il grado dentro i binari, così un
      gioco può chiedere «grado 9» a un modulo che ne ha 5 senza doverlo
      sapere. `spenti` serve a scegliere il tipo: il grado è già stato
@@ -196,10 +222,13 @@ export class Modulo {
      Se non resta niente di acceso si tira lo stesso — chi ha scelto il
      grado doveva guardare `gradiLiberi`, e una domanda in più è meno
      peggio di una schermata di gioco vuota. */
-  chiedi(grado, sorte, spenti = []) {
+  chiedi(grado, sorte, spenti = [], bisogno = null) {
     const g = Math.max(1, Math.min(this.gradi, Math.round(grado || 1)))
     if (!this.tipi.length) return this.genera(g, sorte)
-    const scelto = pescaClasse(sorte, this.tipiLiberi(g, spenti)) || pescaClasse(sorte, this.tipiDi(g))
+    let liberi = this.tipiLiberi(g, spenti)
+    if (bisogno && liberi.length)
+      liberi = liberi.map(t => ({ ...t, peso: t.peso * bisogno(t.chiave) }))
+    const scelto = pescaClasse(sorte, liberi) || pescaClasse(sorte, this.tipiDi(g))
     return this.genera(g, sorte, scelto?.chiave || null)
   }
 }

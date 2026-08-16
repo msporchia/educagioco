@@ -98,10 +98,31 @@ esercizio: serve solo a guardare.
 È il modo giusto di decidere cosa spegnere — in trenta secondi si capisce se
 una tipologia è alla portata, molto meglio che ragionandoci sopra.
 
-## Nota per i genitori
+## Quello che va male torna più spesso (ma non troppo)
 
-I giochi che usano queste domande **non tengono conto di cosa il bambino ha
-già imparato**: la classe si tira a sorte fra quelle ammesse. È diverso da
-[Asteroidi](asteroidi.md) e dalle [lingue](lingue.md), dove ogni singola cosa
-ha la sua storia e torna quando serve. Le fondamenta ci sono — ogni domanda
-ha già la sua chiave — ma il collegamento non è ancora scritto.
+Ogni risposta si segna. Non la domanda — il **concetto** che c'era dietro:
+non «lavagna», ma «il gruppo *gn*». Da lì in poi la pesca smette di essere
+cieca:
+
+- una tipologia che va male esce **una volta e mezza** più spesso;
+- una che il bambino ha già dimostrato di sapere, **la metà**;
+- tutte le altre restano dov'erano.
+
+Con una decina di cose in ballo vuol dire passare dal 10% al 15% e al 5%: uno
+scarto che si sente giocando, tre a uno fra gli estremi. Ed è tutto lì di
+proposito. In [Asteroidi](asteroidi.md) e nelle [lingue](lingue.md) lo studio
+*è* il gioco, quindi quello che sai smette proprio di uscire; qui la domanda è
+il pedaggio dentro un gioco d'avventura, e un bambino che non capisce la
+geometria non deve trovarsi una partita di sola geometria — sarebbe una
+punizione per essere andato male, dentro il gioco che ha scelto per divertirsi.
+Nel caso peggiore — una materia intera sbagliata e tutto il resto saputo —
+quella materia arriva a circa un quinto delle domande, non a metà.
+
+Le cose mai incontrate non sono né urgenti né rimandate: valgono come tutte le
+altre, e lo scarto nasce giocando. Quello che si è saputo e poi lasciato lì per
+mesi torna invece in cima da solo.
+
+Non c'è niente da accendere e niente da spegnere: non toglie domande e non ne
+aggiunge, sposta soltanto la frequenza dentro quelle che il bambino già vedeva.
+E le domande guardate da *Genitori* → **▶ prova una domanda** non contano: lì
+si guarda, e le risposte di un adulto non entrano nel ripasso di suo figlio.

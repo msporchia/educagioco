@@ -47,9 +47,12 @@ e nessun posto dove dimenticarsi un modulo.
 Le tre cose che fanno la differenza fra un modulo e un quiz qualunque:
 
 1. **La chiave è il concetto, non l'istanza.** `orto:gn` sta su tutte le
-   domande sul gruppo *gn*, non su «lavagna». È l'unica cosa che un
-   giorno permetterà al motore di ripasso di seguire *cosa non sa* un
-   bambino invece di *quali domande ha visto*.
+   domande sul gruppo *gn*, non su «lavagna». È quello che permette al
+   ripasso di seguire *cosa non sa* un bambino invece di *quali domande
+   ha visto* — vedi «Il ripasso» più sotto. Un prefisso nuovo si sceglie
+   guardando quelli già presi in `store/progressi.js`: le chiavi
+   finiscono tutte nello stesso cassetto, e `verbo:` era già dei verbi
+   inglesi.
 2. **I falsi sono gli errori veri.** *ho andato*, la lancetta scambiata,
    il perimetro contato come area. Un distrattore preso a caso si scarta
    a occhio, e la domanda si risolve per esclusione invece che sapendola.
@@ -119,10 +122,10 @@ e non sa di che materia fosse la domanda.
 
 È fatto così perché un modulo nuovo deve comparire **in tutti i giochi**
 la sera in cui lo scrivi, senza aprirne nessuno: il registro lo raccoglie
-dalla cartella, `scelta.js` lo pesca. E perché il giorno che le chiavi
-finiranno in `store/srs.js`, a cambiare sarà solo `scelta.js` — «di cosa
-ha bisogno questo bambino» invece di «uno a caso» — e i giochi non se ne
-accorgeranno.
+dalla cartella, `scelta.js` lo pesca. E infatti quando le chiavi sono
+finite in `store/srs.js` è cambiato solo `scelta.js` — «di cosa ha
+bisogno questo bambino» invece di «una a caso» — e nessuno dei cinque
+giochi se n'è accorto.
 
 Fuori da Vue (le palestre dei prototipi) c'è il gemello imperativo:
 
@@ -159,6 +162,30 @@ Quel file non importa niente e gira in Node, perché la distribuzione va
 ogni fascia e controlla che si vedano tutti i moduli, che nessuna classe
 si prenda più di un quinto dei tiri, e che una carta facile non
 consegni una domanda da carta tosta.
+
+## Il ripasso: quello che va male torna più spesso
+
+Ogni risposta si annota (`memoria.js` → `store/profile.js`) sotto la
+chiave del concetto, e la pesca la rilegge: una tipologia che va male
+esce **1.5 volte**, una saputa **0.5**, le altre restano dov'erano.
+Nient'altro: niente «imparato», niente uscita dal giro, nessuna materia
+nuova in `progressi.js`. Il perché della banda stretta sta in testa a
+`nucleo/bisogno.js`, e in due righe è questo: negli asteroidi il gioco
+*è* lo studio e concentrarsi su quello che non sai è il punto; qui la
+domanda è il pedaggio di un gioco d'avventura, e una partita di sola
+geometria a chi la geometria non la capisce è una punizione.
+
+Il conto è a due livelli — la classe (modulo, grado) e la tipologia
+dentro — e vanno composti con attenzione: la classe usa la **media** dei
+bisogni dei suoi tipi, il tipo il proprio, e il prodotto torna lineare.
+Il fattore pieno tutte e due le volte darebbe nove a uno invece di tre,
+e la banda scelta non varrebbe più niente. `unita/quiz-ripasso` conta
+esattamente quello.
+
+Chi non tocca il profilo (`nucleo/`, che gira in Node) riceve il bisogno
+come **funzione passata a mano**, e senza si comporta come prima: è il
+motivo per cui il banco di prova e il pannello dei genitori pescano
+neutri senza doverlo chiedere.
 
 ## Le tipologie: dire quali domande so fare
 
