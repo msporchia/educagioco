@@ -37,13 +37,14 @@ export default {
   come: 'domande',
   tappe: QUANTE_TAPPE,
 
-  /* Dietro «i giochi in prova» finché non l'ha giocato nessuno. Le due
-     manopole che decidono se una stanza fa paura o fa arrabbiare — di
-     quanto i mostri sono più lenti, e i tre secondi di calma dopo una
-     fuga — sono tarate a occhio sul prototipo e vanno guardate in mano a
-     un bambino; e il suono, qui dentro, non c'è quasi. Un gioco a metà
-     che si può aprire è peggio di un gioco che non c'è. */
-  sperimentale: true,
+  /* ── ESCE DALLA PROVA ──
+     Stava dietro «i giochi in prova» perché non l'aveva giocato nessuno,
+     e le due manopole che decidono se una stanza fa paura o fa
+     arrabbiare — di quanto i mostri sono più lenti, e i tre secondi di
+     calma dopo una fuga — sono tarate a occhio. Restano tarate a occhio:
+     quello che cambia è che adesso qualcuno ci gioca, che è l'unico modo
+     per sapere se quei numeri sono giusti. Un gioco chiuso in un cancello
+     non riceve mai la sola prova che conta. */
   /* chiara anche se il gioco è notturno: in home il testo è blu scuro
      per tutti, e una carta color caverna lo renderebbe illeggibile */
   tinta: '#dfe4f2',
