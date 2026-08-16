@@ -381,6 +381,14 @@ const materie = MATERIE_SAPERI.map(m => ({
 }))
 const spenti = computed(() => saperiSpenti().length)
 const acceso = chiave => sapereAcceso(chiave)
+/* Una carta spenta dice cosa si perde — tranne le poche che nascono
+   spente (`difetto: false`), dove non si è perso niente: lì non c'è
+   niente da rimpiangere, c'è da sapere quando accenderle. Il
+   congiuntivo spento non è una domanda tolta, è una cosa che a scuola
+   non hanno ancora fatto. */
+const rigaSapere = s => (acceso(s.chiave) ? s.che
+  : s.difetto === false ? `da accendere quando l'ha fatto a scuola: ${s.che}`
+    : s.spegne)
 function cambiaSapere(s) {
   accendiSapere(s.chiave, !sapereAcceso(s.chiave))
   esito.value = { ok: true, testo: sapereAcceso(s.chiave)
@@ -613,7 +621,7 @@ async function azzera() {
                       @click="cambiaSapere(s)">
                 <span class="ico">{{ s.ico }}</span>
                 <b>{{ s.nome }}</b>
-                <i>{{ acceso(s.chiave) ? s.che : s.spegne }}</i>
+                <i>{{ rigaSapere(s) }}</i>
                 <small v-if="acceso(s.chiave)">per esempio {{ s.esempio }}</small>
                 <span class="leva"><span class="pallina"></span></span>
               </button>
@@ -670,7 +678,10 @@ async function azzera() {
           </div>
         </template>
 
-        <p class="mini">{{ spenti ? spenti + ' spenti: quelle domande non arrivano più.'
+        <!-- «non arrivano», non «non arrivano più»: da quando qualche
+             sapere nasce spento, questo conto parte da un numero anche
+             per chi non ha mai toccato niente. -->
+        <p class="mini">{{ spenti ? spenti + ' spenti: quelle domande non arrivano.'
                                   : 'Nessuno spento: arrivano domande di tutto.' }}</p>
       </template>
 

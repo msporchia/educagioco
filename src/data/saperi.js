@@ -52,12 +52,33 @@
    (`settings.sa = { misure: false }`), come per i giochi in home: un
    sapere nuovo nasce acceso anche per chi ha il profilo di ieri, e non
    serve nessuna migrazione.
+
+   TRANNE QUELLI CHE NASCONO SPENTI (`difetto: false`). La regola di
+   sopra vale finché un sapere è roba che a scuola si fa presto e per
+   tutti: chi non l'ha fatto lo spegne, e nel frattempo qualche domanda
+   muta è il prezzo. Non vale per i pezzi che si fanno **dopo** — il
+   congiuntivo, il condizionale, il passato remoto — dove i bambini che
+   non li hanno mai visti sono la maggioranza e quelli che li hanno
+   visti l'eccezione. Lì l'assenza va letta al contrario, se no
+   aggiungere il congiuntivo vuol dire mandarlo d'ufficio a tutti quelli
+   che hanno il profilo di ieri, e un genitore che non apre mai questa
+   schermata non ha modo di saperlo.
+
+   È l'unico posto dove il difetto si dichiara: `store/profile.js` lo
+   legge da qui, e chi accende o spegne continua a salvare **solo quello
+   che si scosta dal difetto** — la voce nel profilo resta l'eccezione,
+   cambia solo da cosa. `spegne` è comunque scritto dal lato dello
+   spegnere, anche per questi: è cosa si perde, e vale uguale che sia il
+   punto di partenza o una scelta.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* `che` è cosa vuol dire saperlo, `esempio` è una domanda vera che
    sparisce, `spegne` è cosa cambia nel gioco. Sono tre righe e non una
    perché il genitore che spegne deve poter prevedere l'effetto: senza
-   l'esempio si spegne a naso, e a naso si spegne troppo. */
+   l'esempio si spegne a naso, e a naso si spegne troppo.
+
+   `difetto: false` è la quarta riga, e ce l'hanno in pochi: nasce
+   spento, e resta spento finché un genitore non dice di sì. */
 export const SAPERI = [
   /* ── matematica ── */
   {
@@ -211,9 +232,37 @@ export const SAPERI = [
   },
   {
     chiave: 'tempi-verbali', nome: 'I tempi dei verbi', ico: '🗣️', materia: 'italiano',
-    che: 'passato prossimo, imperfetto e futuro — non solo il presente',
+    che: 'passato prossimo, imperfetto e futuro — non solo il presente, e riconoscere quale dei tre vuole la frase',
     esempio: '«ieri io ___ (andare) al mare»',
     spegne: 'le domande sui tempi diversi dal presente',
+  },
+  {
+    chiave: 'passato-remoto', nome: 'Il passato remoto', ico: '📜', materia: 'italiano',
+    che: 'il tempo delle fiabe e dei racconti: «andò», «mangiammo», «io cossi ma noi cocemmo»',
+    esempio: '«qual è il passato remoto di "cuocere" con "io"?»',
+    spegne: 'le domande sul passato remoto',
+    difetto: false,
+  },
+  {
+    chiave: 'trapassato', nome: 'Il trapassato prossimo', ico: '⏪', materia: 'italiano',
+    che: 'il passato di prima di un altro passato: «quando arrivai, lui era già uscito»',
+    esempio: '«qual è il trapassato prossimo di "mangiare" con "noi"?»',
+    spegne: 'le domande sul trapassato prossimo',
+    difetto: false,
+  },
+  {
+    chiave: 'condizionale', nome: 'Il condizionale', ico: '🎀', materia: 'italiano',
+    che: 'quello che si farebbe: «vorrei», «mangerei», «sarebbe bello»',
+    esempio: '«se potessi, io ___ (andare) al mare»',
+    spegne: 'le domande sul condizionale',
+    difetto: false,
+  },
+  {
+    chiave: 'congiuntivo', nome: 'Il congiuntivo', ico: '🌙', materia: 'italiano',
+    che: 'il modo del dubbio e del desiderio: «penso che tu abbia ragione», «se io fossi»',
+    esempio: '«penso che loro ___ (essere) contenti»',
+    spegne: 'le domande sul congiuntivo',
+    difetto: false,
   },
   {
     chiave: 'accenti', nome: 'Accenti e apostrofi', ico: '´', materia: 'italiano',

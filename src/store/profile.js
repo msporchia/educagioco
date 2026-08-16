@@ -14,6 +14,7 @@ import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
          curato } from '../data/pets.js'
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
+import { SAPERI } from '../data/saperi.js'
 import { eccezioniDi } from '../data/partenze.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
@@ -71,7 +72,9 @@ const blank = () => ({
      domanda muta: si può solo indovinare. Chi lo legge sono i moduli di
      quiz (`quiz/scelta.js`, che degrada al grado più facile invece di
      sparire) e il castello per le divisioni. Elenco di eccezioni come
-     `giochi`: un sapere nuovo nasce acceso per tutti.
+     `giochi`: un sapere nuovo nasce acceso per tutti, salvo i pochi che
+     il catalogo dichiara `difetto: false` — quelli nascono spenti e la
+     voce salvata è il `true` di chi li ha accesi.
      `divisioni: true/false` è la forma vecchia dello stesso flag, prima
      che i macrogruppi esistessero: si legge ancora in `selectPlayer`
      per non riaccendere le divisioni a chi le aveva spente. */
@@ -523,12 +526,25 @@ function apriGiornata(now = Date.now()) {
    genitori li spengano, per bambino come tutto il resto di `settings`.
    Spegnere non toglie un gioco e non tocca nessun progresso: toglie le
    domande che senza quel pezzo di scuola non si possono ragionare. */
-export const sapereAcceso = chiave => (state.profile.settings.sa || {})[chiave] !== false
+/* Il difetto lo dichiara il catalogo (`difetto: false` in
+   `data/saperi.js`), non questo file: quasi tutti i saperi nascono
+   accesi, i pezzi che a scuola si fanno dopo — congiuntivo,
+   condizionale, passato remoto — nascono spenti. Quello che si salva
+   nel profilo resta **solo l'eccezione**, come per i giochi in home:
+   cambia da cosa. Le tipologie dei moduli (`orto:apostrofo`) non stanno
+   nel catalogo e non hanno difetto: sono accese, come sempre. */
+const SPENTI_DI_PARTENZA = new Set(SAPERI.filter(s => s.difetto === false).map(s => s.chiave))
+const difettoDi = chiave => !SPENTI_DI_PARTENZA.has(chiave)
+
+export const sapereAcceso = chiave => {
+  const scelto = (state.profile.settings.sa || {})[chiave]
+  return scelto === undefined ? difettoDi(chiave) : scelto !== false
+}
 export function accendiSapere(chiave, si) {
   const s = state.profile.settings
   if (!s.sa) s.sa = {}
-  if (si) delete s.sa[chiave]      // acceso è l'assenza: niente voci inutili nel salvataggio
-  else s.sa[chiave] = false
+  if (si === difettoDi(chiave)) delete s.sa[chiave]   // il difetto non si scrive
+  else s.sa[chiave] = si
   persist()
 }
 /* quelli spenti, che è la forma in cui li vuole chi fa le domande:
@@ -543,9 +559,14 @@ export function accendiSapere(chiave, si) {
    dentro lo store — e per chi fa le domande sono comunque la stessa
    cosa: una chiave da evitare. Una chiave rimasta nel salvataggio di
    una tipologia che non esiste più non fa danno: non la chiede
-   nessuno. */
+   nessuno.
+
+   Ai nomi salvati si aggiungono quelli che nascono spenti: nel profilo
+   non c'è scritto niente proprio perché sono al loro difetto, e chi fa
+   le domande deve saperli evitare lo stesso. */
 export const saperiSpenti = () =>
-  Object.keys(state.profile.settings.sa || {}).filter(c => !sapereAcceso(c))
+  [...new Set([...Object.keys(state.profile.settings.sa || {}), ...SPENTI_DI_PARTENZA])]
+    .filter(c => !sapereAcceso(c))
 
 /* Le divisioni sono un sapere come gli altri; questi due nomi restano
    perché il castello li chiama così da sempre e dire `sapereAcceso
@@ -568,10 +589,30 @@ export const contiPermessi = () => ({
    sarebbe il caso peggiore, perché il gioco tornerebbe a chiedere
    proprio quello che il bambino non sa fare. Si legge una volta e poi
    il vecchio flag sparisce dal profilo. */
+/* Le tipologie della coniugazione si chiamavano `verbo:futuro`, che è
+   il prefisso dei verbi inglesi in `items`: dal giorno che il ripasso
+   dei quiz scrive lì dentro sarebbero due materie nello stesso
+   cassetto, e si chiamano `coniug:` (vedi `quiz/moduli/coniugazione.js`).
+   Chi aveva spento una di quelle voci se la deve ritrovare spenta:
+   perdere un'eccezione qui vuol dire ricominciare a chiedere proprio
+   quello che il genitore aveva tolto. */
+const CONIUGAZIONE_VECCHIE = new Set([
+  'presente-regolare', 'presente-isc', 'presente-irregolare', 'ausiliare',
+  'participio', 'participio-irregolare', 'imperfetto', 'futuro',
+  'tempo-giusto', 'riconosci-tempo', 'remoto', 'condizionale', 'congiuntivo',
+])
+
 function migraSaperi(s) {
   if (!s.sa || typeof s.sa !== 'object') s.sa = {}
   if (s.divisioni === false && s.sa.divisioni === undefined) s.sa.divisioni = false
   delete s.divisioni
+  for (const k of Object.keys(s.sa)) {
+    if (!k.startsWith('verbo:')) continue
+    const coda = k.slice('verbo:'.length)
+    if (!CONIUGAZIONE_VECCHIE.has(coda)) continue
+    if (s.sa[`coniug:${coda}`] === undefined) s.sa[`coniug:${coda}`] = s.sa[k]
+    delete s.sa[k]
+  }
 }
 
 /* ── i giochi in prova ──

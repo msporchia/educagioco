@@ -14,8 +14,10 @@
 import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          rinominaGiocatore, eliminaGiocatore,
          esportaTutto, importaTutto, persist,
-         aspettoDi, scegliAspetto } from '../../src/store/profile.js'
+         aspettoDi, scegliAspetto,
+         sapereAcceso, accendiSapere, saperiSpenti } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
+import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -227,6 +229,47 @@ const secondo = PERSONE[PERSONE.length - 1]
 const id5 = await creaGiocatore('Bibi', false, null, secondo)
 const salvato = await load('profilo:' + id5)
 uguale('l\'aspetto scelto alla creazione arriva sul profilo salvato', salvato.aspetto, secondo)
+
+/* ── i saperi che nascono spenti ──
+   Quasi tutti i macrogruppi sono accesi finché qualcuno non li spegne,
+   e la voce nel profilo esiste solo per le eccezioni. I pochi che
+   `data/saperi.js` dichiara `difetto: false` — congiuntivo,
+   condizionale, passato remoto, trapassato: roba che a scuola arriva
+   dopo — girano al contrario, e la parte che conta è che il salvataggio
+   resti fatto di eccezioni anche per loro. Se il difetto finisse scritto
+   nel profilo, cambiarlo un domani non toccherebbe nessuno di quelli
+   già creati. */
+await pulisci()
+await init()
+await creaGiocatore('Nuovo')
+const NASCONO_SPENTI = SAPERI.filter(s => s.difetto === false).map(s => s.chiave)
+
+controlla('ce n\'è almeno uno che nasce spento', NASCONO_SPENTI.length > 0)
+controlla('un profilo appena creato non li ha accesi',
+  NASCONO_SPENTI.every(c => !sapereAcceso(c)))
+controlla('e chi fa le domande se li ritrova fra quelli da evitare',
+  NASCONO_SPENTI.every(c => saperiSpenti().includes(c)))
+uguale('senza che nel profilo sia scritto niente',
+  NASCONO_SPENTI.filter(c => state.profile.settings.sa?.[c] !== undefined).length, 0)
+
+const tardivo = NASCONO_SPENTI[0]
+accendiSapere(tardivo, true)
+controlla('acceso a mano, resta acceso', sapereAcceso(tardivo))
+uguale('e stavolta il profilo lo scrive, perché è l\'eccezione',
+  state.profile.settings.sa[tardivo], true)
+controlla('e non è più fra quelli da evitare', !saperiSpenti().includes(tardivo))
+
+accendiSapere(tardivo, false)
+controlla('rispento, torna al suo difetto', !sapereAcceso(tardivo))
+uguale('e la voce sparisce dal salvataggio', state.profile.settings.sa[tardivo], undefined)
+
+/* l'altra metà della regola non si muove: chi nasce acceso si comporta
+   come sempre, e il `false` è la sua unica eccezione */
+uguale('un sapere normale nasce acceso', sapereAcceso('presente'), true)
+accendiSapere('presente', false)
+uguale('spegnerlo scrive false', state.profile.settings.sa.presente, false)
+accendiSapere('presente', true)
+uguale('riaccenderlo toglie la voce', state.profile.settings.sa.presente, undefined)
 
 nota('l\'archivio qui è quello in memoria: fuori dal browser è il ripiego previsto')
 riassunto('Chi gioca: roster, migrazione, salvataggio')
