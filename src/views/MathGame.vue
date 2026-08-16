@@ -39,9 +39,10 @@ import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
 import { CAPITOLI, CHIAVE_MENTE, scaletta, superata, dopoDi,
          progressiDa } from '../data/asteroidi.js'
 import { suono } from '../audio.js'
-import { dipingiFondale, disegnaPianeta, disegnaNave, disegnaAsteroide,
+import { dipingiFondale, disegnaNave, disegnaAsteroide,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
-import { POTENZIAMENTI, DOPPIO, EMERGENZA, premioDaSerie } from '../data/potenziamenti.js'
+import { POTENZIAMENTI, TASCA_MAX, EMERGENZA, premioDaSerie,
+         gettoneDopo } from '../data/potenziamenti.js'
 import MappaTabelline from '../components/MappaTabelline.vue'
 import MappaConcetti from '../components/MappaConcetti.vue'
 import Barra from '../components/Barra.vue'
@@ -147,18 +148,21 @@ const tela = ref(null)
 let ctx = null, W = 0, H = 0, S = 1, suolo = 0, altezzaDomanda = 0
 let asteroidi = [], particelle = [], anelli = [], stelle = [], frammenti = [], raggi = []
 let scossa = 0, lampo = 0, pulsa = 0, raf = 0, ultimo = 0
-let fondale = null, pianetaBotta = 0, fumo = 0
+let fondale = null, fumo = 0
 
 /* ═══════════ L'ASTRONAVE ═══════════
    È l'unico personaggio del gioco, e fa due mestieri: spara quando si
    colpisce, e **dice a che punto è la partita senza numeri**. Le vite
-   sono ancora nella fascia in alto, ma quello è il posto dove non si sta
-   guardando: chi gioca guarda il cielo, e la nave sta appena sotto.
+   non stanno più nella fascia in alto: i cuoricini erano nel posto dove
+   nessuno guarda — chi gioca guarda il cielo, e la nave sta appena
+   sotto, dentro lo stesso sguardo. Adesso una vita in meno è un'ala
+   squarciata, e l'ultima è una nave in fiamme che fuma.
    Il campo `danno` è tutto quello che il disegno sa dello stato — la
-   traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto. */
+   traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto, e i
+   tre gradini in cui si legge stanno in `grafica/spazio.js`. */
 const nave = reactive({
   x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
-  scudo: 0, doppio: false, botta: 0, riparata: 0, t: 0,
+  gelo: 0, botta: 0, riparata: 0, t: 0,
 })
 /* a una vita sola la nave è un rottame che lampeggia, a tre è nuova:
    `CFG.vite` è il riferimento, così le vite di scorta guadagnate col
@@ -276,7 +280,7 @@ function distrattori(a, b, n) {
    aperto la stazione seguente, e non è una svista: la taglia di un
    concetto mai visto è zero, quindi quello che scende è la sua versione
    più piccola — 8+5, non 27+38 — e una domanda ogni otto, che non si
-   segna e che lascia lo scudo, è un'occhiata oltre la porta, non il muro
+   segna e che lascia un gelo, è un'occhiata oltre la porta, non il muro
    che il grafo esiste per evitare. */
 function chiaveDalDopo() {
   const t = prossima.value
@@ -359,6 +363,11 @@ function nuovaDomanda(boss) {
   if (mente.value) preparaMente(k)
   else preparaTabellina(k, futura ? prossima.value.nuova : null)
   apertoIl = performance.now()
+  /* IL GHIACCIO SI SCIOGLIE QUI. Una domanda nuova nasce sempre col
+     cielo alla sua velocità: il gelo si compra per la domanda che si ha
+     davanti, e chi non se lo ricorda se lo trova speso — non lo trova
+     regalato per due domande in più. */
+  gelo = false; gelato.value = false; nave.gelo = 0
   return k
 }
 
@@ -494,18 +503,21 @@ function rompi(a, colore) {
   anello(a.x, a.y, colore, a.r * (a.boss ? 7 : 3))
 }
 
-/* i due sassi sbagliati più vicini se ne vanno con l'onda del cannone
-   doppio. Non tutti: la domanda dopo deve trovare un cielo, non un vuoto */
-function spazza(centro) {
-  const vicini = asteroidi
-    .filter(x => !x.morto && x !== centro)
-    .sort((p, q) => (p.x - centro.x) ** 2 - (q.x - centro.x) ** 2)
-    .slice(0, DOPPIO.spazza)
-  for (const v of vicini) {
-    v.morto = true
-    spara(v, '#ffd94a'); rompi(v, '#ffd94a')
-  }
-}
+/* ═══════════ I GETTONI ═══════════
+   Si guadagnano col filotto — anche a metà tappa — e restano in tasca
+   finché non li si preme. Il perché stia in tasca invece di accendersi
+   da solo è scritto in testa a `data/potenziamenti.js`: in due parole,
+   perché il momento in cui spenderlo lo sceglie il bambino.
+
+   IL GELO VALE PER LA DOMANDA IN CORSO E BASTA. Non è un conto alla
+   rovescia: si accende premendo e si spegne quando la domanda è
+   finita, comunque sia finita — colpita giusta, colpita sbagliata o
+   caduta. Il perché sta in `data/potenziamenti.js`, ed è anche la
+   ragione per cui `congelata` non serve più: la domanda col ghiaccio è
+   *questa*, quindi il flag è il gelo stesso. */
+const tasca = reactive({ gelo: 0, mirino: 0 })
+const gelato = ref(false)
+let gelo = false
 
 /* ---------- i premi del filotto ----------
    Le soglie stanno in `data/potenziamenti.js`, non qui: sono un dato di
@@ -513,16 +525,63 @@ function spazza(centro) {
 function premia(serie) {
   const p = premioDaSerie(serie, CFG.serieVita)
   if (p === 'vita') dammiVita('🔥 ' + serie + ' DI FILA!')
-  else if (p === 'doppio') accendi('doppio', '🔥 ' + serie + ' DI FILA!  ')
+  else if (p === 'gettone') prendiGettone(prossimoGettone(), '🔥 ' + serie + ' DI FILA!  ')
 }
 
-function accendi(quale, prefisso = '') {
+/* Quale gettone tocca. L'alternanza sta in `data/potenziamenti.js` e
+   guarda l'ultimo uscito, non la serie: da qualunque parte arrivi il
+   premio — filotto o boss — il prossimo è l'altro. Qui si aggiunge la
+   sola cosa che il dato non può sapere, cioè cosa c'è già in tasca: se
+   di quello che tocca la tasca è piena, tocca all'altro. Un turno non
+   va sprecato per un magazzino pieno. */
+let ultimoGettone = null
+function prossimoGettone() {
+  const tocca = gettoneDopo(ultimoGettone)
+  const altro = gettoneDopo(tocca)
+  return tasca[tocca] < TASCA_MAX ? tocca : altro
+}
+
+/* La tasca è piccola (`TASCA_MAX`) e quando è piena il gettone non si
+   prende: si dice, invece di sparire in silenzio. Un premio che non
+   arriva senza che nessuno lo spieghi è peggio di nessun premio. */
+function prendiGettone(quale, prefisso = '') {
   const P = POTENZIAMENTI[quale]
-  if (quale === 'doppio') nave.doppio = true
-  if (quale === 'scudo') nave.scudo = 1
-  mostraCartello(prefisso + P.grido, P.colore)
+  const pieno = tasca[quale] >= TASCA_MAX
+  if (!pieno) { tasca[quale]++; ultimoGettone = quale }
+  mostraCartello(prefisso + (pieno ? P.emoji + ' TASCA PIENA!' : P.grido), P.colore)
   suono.compra()
   anello(nave.x, nave.y, P.colore, nave.r * 9)
+}
+
+/* ❄️ il gelo: il cielo al rallentatore **finché questa domanda non è
+   finita**. Non si ripreme mentre è acceso: butterebbe via un gettone
+   per niente, e a un bambino sembrerebbe che non abbia funzionato. */
+function usaGelo() {
+  if (fase.value !== 'gioco' || !tasca.gelo || gelo) return
+  tasca.gelo--
+  gelo = true; gelato.value = true
+  nave.gelo = 1
+  mostraCartello(POTENZIAMENTI.gelo.grido, POTENZIAMENTI.gelo.colore)
+  anello(nave.x, nave.y, '#9fd8ff', Math.max(W, H))
+  suono.compra()
+}
+
+/* 🎯 il mirino: se ne va **una risposta sbagliata a caso**, non la più
+   vicina alla giusta e non quella che sta per cadere — sceglierla
+   sarebbe un consiglio, e un consiglio farebbe il conto al posto suo.
+   Il sasso muore e basta: nessun `answer()`, perché nessuno ha risposto
+   niente, e in archivio non deve restare traccia di un'esplosione. */
+function usaMirino() {
+  if (fase.value !== 'gioco' || !tasca.mirino) return
+  const vittime = asteroidi.filter(a => !a.morto && !a.ok)
+  // in cielo è rimasta solo la risposta giusta: non c'è niente da
+  // togliere, e il gettone resta in tasca invece di bruciarsi
+  if (!vittime.length) return mostraCartello('🎯 niente da togliere', '#8cff9d')
+  const v = vittime[Math.floor(Math.random() * vittime.length)]
+  tasca.mirino--
+  v.morto = true
+  spara(v, '#8cff9d'); rompi(v, '#8cff9d')
+  suono.ok()
 }
 
 function colpisci(a) {
@@ -538,28 +597,31 @@ function colpisci(a) {
   // mezza fortuna su una cosa mai vista, né la sbagliata, che marchierebbe
   // come debole un calcolo che nessuno ha ancora insegnato
   const segnalo = !anticipo
+  /* col gelo acceso il tempo non si segna: il sasso scendeva al
+     rallentatore, e quello che si misurerebbe è la velocità del
+     ghiaccio, non quella della testa */
+  const nota = { correct: a.ok }
+  if (!gelo) nota.ms = ms
   if (a.ok) {
-    if (segnalo) { answer(k, { correct: true, ms }); picker.afterAnswer(k, true) }
+    if (segnalo) { answer(k, nota); picker.afterAnswer(k, true) }
     hud.giuste++; hud.serie++
     if (mirata) hud.mirate++
     // il filotto si registra mentre cresce: chiudere la partita a metà non
     // deve buttare via il record
     segnaBest('serieMath', hud.serie)
-    const moltiplica = nave.doppio ? DOPPIO.punti : 1
     if (a.boss) {
       spara(a, '#ffd94a'); rompi(a, '#ffd94a')
       esplodi(a.x, a.y, '#ff6b6b', 30); scossa = 14; lampo = 0.5
-      hud.punti += CFG.bossPunti * moltiplica; suono.boss()
+      hud.punti += CFG.bossPunti; suono.boss()
       dammiVita('☄️ BOSS ABBATTUTO!')
-      // il boss lascia lo scudo: è la ricompensa che permette di
-      // rischiare una risposta invece di guardare cadere il sasso
-      if (!nave.scudo) accendi('scudo')
+      // il boss paga un gettone come il filotto, e prende lo stesso
+      // turno: dava sempre il gelo, e il mirino non si vedeva mai
+      prendiGettone(prossimoGettone())
     } else {
       spara(a); rompi(a, '#7fe3ff')
-      hud.punti += CFG.puntiOk * moltiplica; suono.ok()
+      hud.punti += CFG.puntiOk; suono.ok()
       premia(hud.serie)
     }
-    if (nave.doppio) spazza(a)
     if (hud.giuste % CFG.perMoneta === 0) {
       addCoins(level.value); mostraCartello('+' + level.value + ' 🪙', '#ffd94a'); suono.moneta()
     }
@@ -570,14 +632,16 @@ function colpisci(a) {
     if (centrato()) return tappaSuperata()
     ondata()
   } else {
-    if (segnalo) { answer(k, { correct: false, ms }); picker.afterAnswer(k, false) }
+    if (segnalo) { answer(k, nota); picker.afterAnswer(k, false) }
     a.morto = true; hud.serie = 0; hud.sbagliate++
     spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
     hud.punti = Math.max(0, hud.punti + CFG.puntiNo)
-    // il cannone doppio si perde sbagliando: è la regola che lo rende
-    // qualcosa da difendere invece di un regalo che scade da solo
-    if (nave.doppio) { nave.doppio = false; mostraCartello('🔫 cannone perso', '#ff9d1c') }
+    /* i gettoni in tasca NON si perdono sbagliando. Il cannone doppio sì,
+       e sembrava una bella regola — «qualcosa da difendere» — ma era una
+       seconda punizione sopra a quella che c'è già: hai sbagliato, hai
+       perso una vita, e in più ti si spegne il premio. Un gettone
+       guadagnato resta guadagnato: si perde solo spendendolo. */
     if (mente.value) suggerisci(k)
     perdiVita()
   }
@@ -608,17 +672,12 @@ function dammiVita(perche) {
   } else mostraCartello(perche, '#ffd94a')
 }
 
-/* Lo scudo si mette davanti alla botta, e lo si vede: l'esagono va in
-   frantumi e la vita resta. Senza il lampo e il cartello sarebbe un
-   errore che «non è successo niente», cioè la cosa più confusa di tutte. */
+/* Una vita in meno non si dice con un numero: la nave si sbianca per un
+   attimo, e da lì in poi resta più malconcia di prima — un'ala rotta,
+   poi le fiamme. È tutto quello che c'è, e basta perché sta dentro lo
+   stesso sguardo con cui si guardano i sassi. */
 function perdiVita() {
   hud.serie = 0
-  if (nave.scudo > 0) {
-    nave.scudo = 0
-    esplodi(nave.x, nave.y, '#7fe3ff', 26); anello(nave.x, nave.y, '#7fe3ff', nave.r * 7)
-    mostraCartello('🛡️ SCUDO PARATO!', '#7fe3ff'); suono.vita(); scossa = 8
-    return
-  }
   nave.botta = 1
   if (--hud.vite <= 0) { sincronizzaNave(); return finePartita() }
   sincronizzaNave()
@@ -703,9 +762,13 @@ function miraARiposo(dt) {
 
 function aggiorna(dt) {
   let caduto = null
+  /* il gelo rallenta il cielo qui e solo qui: la velocità con cui il
+     sasso è nato (`a.vy`) resta quella, se no un gettone speso a metà
+     caduta lascerebbe metà covata veloce e metà lenta */
+  const rall = gelo ? POTENZIAMENTI.gelo.lento : 1
   for (const a of asteroidi) {
     if (a.morto) continue
-    a.y += a.vy * dt; a.rot += a.vr * dt
+    a.y += a.vy * rall * dt; a.rot += a.vr * dt
     if (a.y - a.r > suolo) { a.morto = true; if (a.ok) caduto = a }
   }
   if (caduto) {
@@ -714,11 +777,11 @@ function aggiorna(dt) {
     // qui la stessa ragione che vale in `colpisci`
     if (!anticipo) { answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false) }
     hud.sbagliate++
-    // il sasso arriva sul pianeta: l'atmosfera si accende di rosso lì
-    // dove ha colpito, ed è per questo che quella riga in fondo conta
+    // il sasso arriva in fondo, all'altezza della nave: la botta la
+    // prende lei (`perdiVita`), e qui resta solo lo scoppio là dove ha
+    // colpito — il pianeta che si accendeva di rosso non c'è più
     esplodi(caduto.x, suolo, '#ff9d1c', 34)
     anello(caduto.x, suolo, '#ff9d1c', W * 0.5)
-    pianetaBotta = 1
     suono.boom(); scossa = 16
     perdiVita()
     if (fase.value === 'gioco') ondata()
@@ -751,7 +814,6 @@ function effetti(dt) {
   anelli = anelli.filter(g => g.vita > 0)
   if (scossa > 0) scossa -= dt * 40
   if (lampo > 0) lampo -= dt * 1.6
-  if (pianetaBotta > 0) pianetaBotta -= dt * 1.1
   if (nave.botta > 0) nave.botta -= dt * 2.2
   if (nave.riparata > 0) nave.riparata -= dt * 1.6
   if (nave.spinta > 0) nave.spinta -= dt * 2.5
@@ -789,12 +851,16 @@ function disegna(dt) {
   }
   ctx.globalAlpha = 1
 
-  disegnaPianeta(ctx, { W, suolo, t: pulsa, botta: pianetaBotta })
-
   nave.t = pulsa
   disegnaNave(ctx, nave)
 
-  if (fase.value === 'gioco') for (const a of asteroidi) if (!a.morto) disegnaAsteroide(ctx, a, S, pulsa)
+  // `gelo` sull'asteroide è un fatto già deciso da 0 a 1, come `boss`:
+  // `grafica/spazio.js` gli tinge l'attrito di azzurro e non sa che
+  // esista un gettone da premere
+  if (fase.value === 'gioco') {
+    const brina = gelo ? 1 : 0
+    for (const a of asteroidi) if (!a.morto) { a.gelo = brina; disegnaAsteroide(ctx, a, S, pulsa) }
+  }
   for (const f of frammenti) disegnaFrammento(ctx, f)
 
   for (const gg of anelli) {
@@ -832,11 +898,14 @@ function inizia(i = tappaIdx.value) {
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
   hud.livello = 1; hud.serie = 0
   particelle = []; anelli = []; frammenti = []; raggi = []
-  scossa = 0; lampo = 0; pianetaBotta = 0; chieste = 0
-  // la nave torna nuova a ogni partita: i potenziamenti sono il premio di
-  // questa partita e non un salvataggio (`data/potenziamenti.js`)
-  nave.lv = 1; nave.scudo = 0; nave.doppio = false
+  scossa = 0; lampo = 0; chieste = 0
+  // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
+  // sono il premio di *questa* partita e non un salvataggio — il perché
+  // sta in `data/potenziamenti.js`
+  nave.lv = 1; nave.gelo = 0
   nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
+  tasca.gelo = 0; tasca.mirino = 0
+  gelo = false; gelato.value = false; ultimoGettone = null
   sincronizzaNave()
   picker.reset(); miscela.azzera()
   sbagli.clear(); dritta.value = ''
@@ -934,12 +1003,8 @@ function apriTavola() {
   fase.value = 'tavola'
 }
 
-const cuori = computed(() => '♥'.repeat(Math.max(0, hud.vite)) +
-                            '♡'.repeat(Math.max(0, CFG.vite - hud.vite)))
-/* c'è almeno un potenziamento acceso: la fascia in alto si stringe per
-   fargli posto invece di andare a capo */
-const potenziata = computed(() => !!nave.scudo || nave.doppio)
 const quota = (n, tot) => Math.min(100, Math.round((n / tot) * 100)) + '%'
+const finoA = (n, max) => Math.min(n, max)
 
 onMounted(() => {
   tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
@@ -956,6 +1021,10 @@ onMounted(() => {
                     // la tappa dopo: è da lì che arriva il boss, e un test
                     // deve poterlo dire senza rifare i conti a mano
                     prossima, anticipo: () => anticipo,
+                    // i gettoni: quanti ce n'è e cosa fanno se li premi.
+                    // `gelo` è una funzione perché i secondi che restano
+                    // vivono fuori da Vue (cambiano a ogni fotogramma)
+                    tasca, usaGelo, usaMirino, gelo: () => gelo,
                     iniziaVoloMente: () => iniziaStazione(-1) }
   ctx = tela.value.getContext('2d')
   ridimensiona()
@@ -972,35 +1041,61 @@ onUnmounted(() => {
   <div class="schermo spazio">
     <canvas ref="tela" @pointerdown="tocca"></canvas>
 
-    <Barra v-if="fase === 'gioco'" :titolo="mente ? 'A mente' : 'Asteroidi'" scura
-           @indietro="allaMappa">
-      <!-- Su un telefono stretto i gettoni stanno in cinque, non in
-           sette: quando c'è un potenziamento acceso quello vince, e il
-           filotto e il livello si leggono lo stesso dalla nave — il
-           cannone doppio *è* il filotto, lo scafo grosso *è* il livello. -->
-      <div class="gettone">{{ cuori }}</div>
-      <div v-if="hud.serie >= 3 && !potenziata" class="gettone">🔥{{ hud.serie }}</div>
-      <div v-if="nave.scudo" class="gettone potenz scudo">🛡️</div>
-      <div v-if="nave.doppio" class="gettone potenz doppio">🔫×2</div>
-      <div class="gettone">{{ hud.punti }} p</div>
-      <div v-if="!potenziata" class="gettone">Liv. {{ hud.livello }}</div>
-    </Barra>
-
-    <!-- quanto manca a superare il pianeta: si vede sempre, come le ondate del castello -->
-    <div v-if="fase === 'gioco' && campagna" class="bersaglio">
-      <div class="barra">
+    <!-- ════════ LA FASCIA IN CIMA, CHE ADESSO È UNA SOLA ════════
+         C'erano due cose sovrapposte: la barra dei gettoni e, sotto, una
+         banda con l'avanzamento della tappa. Due strisce che rubavano un
+         quinto del cielo per dire cinque numeri, di cui tre già scritti
+         sulla nave: le vite (lo scafo ammaccato), il livello (lo scafo
+         più grosso) e il filotto. Restano **le due cose che la nave non
+         può dire**: quanto manca alla fine della tappa, e quanto manca
+         sulla tabellina nuova. In campagna il titolo si toglie di mezzo
+         — chi sta giocando sa dov'è — e l'avanzamento prende quel posto. -->
+    <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : (mente ? 'A mente' : 'Volo libero')"
+           scura @indietro="allaMappa">
+      <div v-if="campagna" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
         <span>{{ tappa.emoji }} {{ hud.giuste }}/{{ tappa.bersaglio }}</span>
       </div>
-      <div v-if="tappa.mirate" class="barra mirata">
-        <i :style="{ width: quota(hud.mirate, tappa.mirate) }"></i>
-        <span v-if="mente">{{ tappa.nome }} · {{ hud.mirate }}/{{ tappa.mirate }}</span>
-        <span v-else>×{{ tappa.nuova }} · {{ hud.mirate }}/{{ tappa.mirate }}</span>
+      <!-- i centri «mirati»: quelli sulla cosa che la tappa è venuta a
+           insegnare. Non è una seconda barra, è un gettone: si guarda
+           una volta ogni tanto, non di continuo -->
+      <div v-if="campagna && tappa.mirate" class="gettone mira"
+           :class="{ fatto: hud.mirate >= tappa.mirate }">
+        {{ mente ? '🧠' : '×' + tappa.nuova }}
+        {{ finoA(hud.mirate, tappa.mirate) }}/{{ tappa.mirate }}
       </div>
+      <!-- nel volo libero non c'è nessun bersaglio: lì l'unico riscontro
+           sono i punti, e senza non resterebbe niente -->
+      <div v-if="!campagna" class="gettone">{{ hud.punti }} p</div>
+      <!-- il filotto si vede da cinque in su, che è dove comincia a
+           valere qualcosa: sotto è rumore che ruba larghezza alla barra -->
+      <div v-if="hud.serie >= 5" class="gettone serie">🔥{{ hud.serie }}</div>
+    </Barra>
+
+    <!-- il cielo gelato: un alone azzurro tutto attorno. Serve a dire che
+         il rallentamento è una cosa che hai *fatto tu*, non il gioco che
+         si è impuntato -->
+    <div v-if="fase === 'gioco' && gelato" class="brina"></div>
+
+    <!-- ════════ LA TASCA ════════
+         In basso a destra, sopra la fascia della domanda, dove il pollice
+         arriva senza coprire il cielo. Un gettone compare solo quando ce
+         l'hai: una fila di icone spente sarebbe una promessa che nessuno
+         ha spiegato. -->
+    <div v-if="fase === 'gioco' && (tasca.gelo || tasca.mirino)" class="tasca">
+      <button v-if="tasca.gelo" class="tocco gelo" :class="{ speso: gelato }"
+              :aria-label="'gelo'" @click="usaGelo">
+        <span>❄️</span><i v-if="tasca.gelo > 1">{{ tasca.gelo }}</i>
+      </button>
+      <button v-if="tasca.mirino" class="tocco mirino" :aria-label="'mirino'" @click="usaMirino">
+        <span>🎯</span><i v-if="tasca.mirino > 1">{{ tasca.mirino }}</i>
+      </button>
     </div>
 
-    <!-- il trucco: esce alla seconda volta che lo stesso concetto va storto -->
-    <div v-if="fase === 'gioco' && dritta" class="trucco">💡 {{ dritta }}</div>
+    <!-- il trucco: esce alla seconda volta che lo stesso concetto va storto.
+         Si stringe quando in tasca c'è qualcosa, se no ci finisce sotto -->
+    <div v-if="fase === 'gioco' && dritta" class="trucco"
+         :class="{ stretto: tasca.gelo || tasca.mirino }">💡 {{ dritta }}</div>
 
     <div v-if="fase === 'gioco'" class="domanda">
       <b :class="{ lunga: domanda.testo.length > 13 }">{{ domanda.testo }}</b>
@@ -1061,14 +1156,17 @@ onUnmounted(() => {
         <p v-if="!progresso.libera" class="mini">Il volo libero — tutte le tabelline, senza
           bersaglio — si apre quando i pianeti sono finiti.</p>
 
-        <!-- l'astronave: si guadagna giocando, quindi va detto una volta
-             che esiste. Altrimenti il primo cannone doppio arriva come un
-             lampo giallo che nessuno ha capito. -->
+        <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
+             detto una volta che esistono. Altrimenti il primo ❄️ che
+             compare in basso è un'icona che nessuno ha capito. -->
         <div class="hangar">
           <div class="capitolo">🚀 La tua astronave</div>
-          <p class="testo">Si potenzia da sola mentre giochi, e a fine partita torna
-            com'era. Più risposte giuste di fila, più diventa forte — e se prendi
-            botte si vede: ammaccata, poi con l'ala rotta e la luce rossa.</p>
+          <p class="testo">Le vite sono la nave: intatta, poi ammaccata con l'ala rotta,
+            poi in fiamme. Se cresce di livello diventa più grossa. A fine partita torna
+            com'era.</p>
+          <p class="testo">Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
+            Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
+            vuoi — e sbagliando non si perde.</p>
           <div v-for="(P, id) in POTENZIAMENTI" :key="id" class="potere">
             <span class="em">{{ P.emoji }}</span>
             <b>{{ P.nome }}</b>
@@ -1180,38 +1278,54 @@ onUnmounted(() => {
 <style scoped>
 .spazio { background:#05081a; color:#fff }
 canvas { position:absolute; inset:0; touch-action:manipulation }
-.hud { position:absolute; top:0; left:0; right:0; padding:10px 12px 26px; display:flex;
-       align-items:center; gap:10px; font-weight:800; font-size:clamp(14px,3.5vw,20px);
-       pointer-events:none; background:linear-gradient(180deg,#05081af2 40%,#05081a00);
-       text-shadow:0 2px 8px #000 }
-.hud .sp { flex:1 }
-.cuori { letter-spacing:2px; font-size:1.15em }
-.serie { color:#ff9d1c }
-.monete { color:#ffd94a }
-.punti { color:#fff; opacity:.85 }
-.liv { color:#7fe3ff }
 .tondo.scuro { pointer-events:auto; background:#ffffff18; color:#fff; box-shadow:none }
 
-/* i potenziamenti accesi: pulsano appena, quel tanto che basta a farsi
-   notare in mezzo agli altri gettoni senza rubare l'occhio al cielo */
-.gettone.potenz { font-weight:900; animation:pulsa-potenz 1.6s ease-in-out infinite }
-.gettone.potenz.scudo { background:#7fe3ff33 !important; color:#dff6ff !important;
-                        box-shadow:0 0 0 1.5px #7fe3ff88 }
-.gettone.potenz.doppio { background:#ffd94a33 !important; color:#fff3c4 !important;
-                         box-shadow:0 0 0 1.5px #ffd94a88 }
-@keyframes pulsa-potenz { 50% { transform:scale(1.08) } }
+/* ---- l'avanzamento della tappa, dentro la fascia ----
+   Prende tutto lo spazio che avanza fra il tasto indietro e i gettoni:
+   è l'unica cosa lì dentro che sta meglio larga, perché il colpo
+   d'occhio è «quanto ne manca», non il numero. */
+.avanza { position:relative; flex:1; min-width:70px; height:20px; border-radius:999px;
+          background:#ffffff1a; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff22 }
+.avanza i { display:block; height:100%; border-radius:999px; transition:width .35s;
+            background:linear-gradient(90deg,#2f7bff,#7fe3ff) }
+.avanza span { position:absolute; inset:0; display:flex; align-items:center;
+               justify-content:center; font-size:12px; font-weight:900; letter-spacing:.4px;
+               color:#fff; text-shadow:0 1px 3px #000c }
+/* i centri mirati: gialli come la tabellina nuova, verdi quando è fatta */
+.gettone.mira { background:#ffd94a2b !important; color:#ffe9a3 !important;
+                box-shadow:0 0 0 1.5px #ffd94a66; white-space:nowrap }
+.gettone.mira.fatto { background:#8cff9d2b !important; color:#c9ffd4 !important;
+                      box-shadow:0 0 0 1.5px #8cff9d66 }
+.gettone.serie { background:#ff9d1c2b !important; color:#ffd8a3 !important }
 
-/* ---- il bersaglio del pianeta, sotto la fascia ---- */
-.bersaglio { position:absolute; top:clamp(44px,11vw,54px); left:12px; right:12px;
-             display:flex; flex-direction:column; gap:4px; pointer-events:none }
-.barra { position:relative; height:17px; border-radius:999px; background:#ffffff1a;
-         overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff22 }
-.barra i { display:block; height:100%; border-radius:999px; transition:width .35s;
-           background:linear-gradient(90deg,#2f7bff,#7fe3ff) }
-.barra span { position:absolute; inset:0; display:flex; align-items:center;
-              justify-content:center; font-size:11px; font-weight:900; letter-spacing:.4px;
-              text-shadow:0 1px 3px #000c }
-.barra.mirata i { background:linear-gradient(90deg,#c98a00,#ffd94a) }
+/* ---- la tasca: i gettoni guadagnati, in basso a destra ----
+   Tondi grossi (il pollice, non il puntatore) e con l'ombra sotto come
+   tutti i bottoni veri del gioco. Il numerino compare solo dal secondo
+   in poi: «❄️ 1» si legge come una cosa da capire, «❄️» come una cosa
+   da premere. */
+.tasca { position:absolute; right:10px; bottom:calc(17vh + 12px); z-index:6;
+         display:flex; flex-direction:column; gap:9px }
+.tocco { position:relative; width:60px; height:60px; border:0; border-radius:50%;
+         display:flex; align-items:center; justify-content:center;
+         font-size:29px; line-height:1; background:#141c2ae8; color:#fff;
+         animation:arriva-gettone .4s cubic-bezier(.2,1.4,.4,1) }
+.tocco:active { transform:translateY(3px); box-shadow:none !important }
+.tocco i { position:absolute; right:-2px; bottom:-2px; width:23px; height:23px;
+           border-radius:50%; display:flex; align-items:center; justify-content:center;
+           font-style:normal; font-size:13px; font-weight:900; color:#0b1130;
+           background:#fff; box-shadow:0 2px 5px #0009 }
+.tocco.gelo { box-shadow:0 4px 0 #26506b, 0 0 0 2px #9fd8ff88, 0 0 22px #9fd8ff44 }
+.tocco.mirino { box-shadow:0 4px 0 #2b5a33, 0 0 0 2px #8cff9d88, 0 0 22px #8cff9d44 }
+/* il gelo già acceso non si può ripremere: si spegne invece di far finta */
+.tocco.gelo.speso { opacity:.4; box-shadow:0 4px 0 #26506b }
+@keyframes arriva-gettone { from { opacity:0; transform:scale(.3) translateY(30px) } }
+
+/* la brina attorno allo schermo, mentre il gelo è acceso */
+.brina { position:absolute; inset:0; pointer-events:none; z-index:3;
+         box-shadow:inset 0 0 clamp(50px,17vw,130px) #9fd8ff5c,
+                    inset 0 0 0 4px #bfe8ff99;
+         animation:respira-brina 2.6s ease-in-out infinite }
+@keyframes respira-brina { 50% { opacity:.55 } }
 
 .domanda { position:absolute; left:0; right:0; bottom:0; height:17vh; min-height:96px;
            display:flex; align-items:center; justify-content:center; pointer-events:none;
@@ -1230,6 +1344,7 @@ canvas { position:absolute; inset:0; touch-action:manipulation }
           border:1px solid #7fe3ff55; color:#dbe7ff; font-size:14px; font-weight:700;
           line-height:1.4; text-align:center; pointer-events:none; z-index:4;
           animation:apparire-trucco .35s ease }
+.trucco.stretto { right:80px }
 @keyframes apparire-trucco { from { opacity:0; transform:translateY(8px) } }
 
 .cartello { position:absolute; left:0; right:0; top:38%; text-align:center; pointer-events:none;

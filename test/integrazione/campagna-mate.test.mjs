@@ -78,22 +78,40 @@ const partita = await page.evaluate(async () => {
   const m = window.__mate
   const bersaglio = m.tappa.value.bersaglio
   const viste = [], ritardi = []
-  let doppio = false
+  let gettoni = 0, tolti = 0
+  const tipi = new Set()
   // si risponde sempre giusto: interessa dove porta il bersaglio, non la bravura
   for (let i = 0; i < 200 && m.fase.value === 'gioco'; i++) {
     const giusto = m.asteroidi().find(x => x.ok && !x.morto)
     if (!giusto) break
+    /* IL MIRINO, UNA VOLTA, A METÀ COVATA. Si mette in tasca a mano
+       invece di aspettare i quindici di fila che lo pagano: il bersaglio
+       di questa tappa è più corto, quindi giocando non arriverebbe mai —
+       e quello che c'è da provare non è la soglia (la conta
+       `unita/asteroidi`) ma il fatto che un sasso sparito così **non
+       lasci niente in archivio**, che è invisibile giocando. */
+    if (i === 3) {
+      m.tasca.mirino = 1
+      const prima = m.asteroidi().filter(x => !x.morto).length
+      m.usaMirino()
+      tolti = prima - m.asteroidi().filter(x => !x.morto).length
+    }
     viste.push([m.domanda.a, m.domanda.b, !!giusto.boss])
     /* fra quanto il sasso con la risposta giusta sarà in scena: nasce
        sopra il bordo (y negativa) e ci mette (r + quanto sta sopra) / vy.
        Si legge adesso perché la covata è appena nata. */
     ritardi.push((giusto.r - giusto.y) / giusto.vy)
     m.colpisci(giusto)
-    doppio = doppio || m.nave.doppio
+    // i gettoni arrivano col filotto e dal boss, e restano in tasca: qui
+    // non si spendono più, quindi il massimo osservato dice se sono
+    // arrivati, e `tipi` **quali** — che è la cosa che si era rotta
+    gettoni = Math.max(gettoni, m.tasca.gelo + m.tasca.mirino)
+    if (m.tasca.gelo) tipi.add('gelo')
+    if (m.tasca.mirino) tipi.add('mirino')
     await new Promise(r => setTimeout(r, 15))
   }
-  return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, doppio,
-           mirate: m.hud.mirate, tappa: m.progresso.value.tappa }
+  return { viste, bersaglio, ritardi, fase: m.fase.value, giuste: m.hud.giuste, gettoni, tolti,
+           tipi: [...tipi], mirate: m.hud.mirate, tappa: m.progresso.value.tappa }
 })
 
 /* LA RISPOSTA NON SI FA ASPETTARE. Gli asteroidi nascono sfalsati — se no
@@ -138,13 +156,23 @@ controlla('fuori dalle tabelline aperte non esce nient\'altro che il boss',
 
 await scatto(page, 'campagna-mate-vinta')
 
-/* ---------- 2b. il cannone doppio non risponde al posto del bambino ----------
-   Il potenziamento porta via anche i sassi sbagliati vicini: è l'unico
-   punto del gioco dove qualcosa succede a un asteroide che nessuno ha
-   toccato, ed è invisibile giocando. Se quelle esplosioni finissero nel
-   motore come risposte, il bambino risulterebbe più bravo o più scarso
-   di quello che è, e le domande di domani sarebbero sbagliate. */
-controlla('il cannone doppio si accende durante la tappa', partita.doppio)
+/* ---------- 2b. i gettoni non rispondono al posto del bambino ----------
+   Il mirino porta via un sasso sbagliato: è l'unico punto del gioco dove
+   qualcosa succede a un asteroide che nessuno ha toccato, ed è
+   invisibile giocando. Se quell'esplosione finisse nel motore come una
+   risposta, il bambino risulterebbe più bravo o più scarso di quello che
+   è, e le domande di domani sarebbero sbagliate. */
+controlla('i gettoni arrivano già durante la tappa, non alla fine',
+          partita.gettoni > 0, `in tasca al massimo ${partita.gettoni}`)
+/* E ARRIVANO TUTTI E DUE. Questo controllo nasce da un difetto che si
+   vedeva solo giocando: i poteri erano due e in partita usciva sempre e
+   solo il gelo, perché l'alternanza era calcolata sul filotto (cinque il
+   gelo, quindici il mirino) e una tappa si chiude prima dei quindici.
+   Contare cosa esce in una tappa vera è l'unico modo di accorgersene —
+   la funzione pura, da sola, alternava benissimo. */
+uguale('e in una tappa si vedono tutti e due i poteri, non sempre lo stesso',
+       partita.tipi.sort().join(' '), 'gelo mirino')
+uguale('e il mirino toglie un sasso sbagliato, uno solo', partita.tolti, 1)
 const profilo = await leggiProfilo(page)
 const risposte = Object.entries(profilo.items || {})
   .filter(([k]) => k.startsWith('math:'))

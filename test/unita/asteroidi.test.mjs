@@ -32,6 +32,8 @@ import { createPicker, record, newItem, strength } from '../../src/store/srs.js'
 import { state, init, selectPlayer, mateProgresso, calcProgresso,
          varianteAccesa, accendiVariante } from '../../src/store/profile.js'
 import { save, remove, chiavi, flush } from '../../src/store/storage.js'
+import { premioDaSerie, gettoneDopo, POTENZIAMENTI, TASCA_MAX }
+  from '../../src/data/potenziamenti.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const ORA = Date.now()
@@ -492,6 +494,57 @@ const PROFILI = T => ({
             dopoQuinto ? dopoQuinto.T.nome : 'nessuna')
 
   for (const k of await chiavi('')) await remove(k)
+}
+
+/* ═══════════ I GETTONI DEL FILOTTO ═══════════
+   Quanto spesso arriva un premio, e quale, è un dato di equilibrio: se
+   arriva troppo di rado non esiste, se arriva sempre uguale metà del
+   gioco non si vede mai. Sono due funzioni pure, quindi si contano
+   invece di giocarle a occhio — e si conta su una partita lunga, perché
+   il difetto che si vuole prendere («esce sempre il gelo») si vede solo
+   sulla fila. */
+{
+  const filotto = Array.from({ length: 40 }, (_, i) => i + 1)
+  const premi = filotto.map(s => premioDaSerie(s, 10))
+  uguale('una vita ogni dieci di fila', premi.filter(p => p === 'vita').length, 4)
+  uguale('e un gettone alle altre cinquine', premi.filter(p => p === 'gettone').length, 4)
+  uguale('il primo premio arriva a cinque, non a fine tappa',
+         filotto.find(s => premi[s - 1]), 5)
+
+  /* L'ALTERNANZA GUARDA L'ULTIMO USCITO, NON LA SERIE, e questo test è
+     nato da un difetto che si vedeva solo giocando: sulla carta i
+     poteri erano due, in partita usciva sempre e solo il gelo. La
+     ragione era aritmetica — l'alternanza era calcolata sulla serie (5
+     il gelo, 15 il mirino), ma una tappa si chiude sui quindici centri,
+     quindi il secondo gettone toccava solo a chi non sbagliava mai.
+     Qui si conta una partita finta e si guarda **cosa esce davvero**. */
+  const uscite = []
+  let ultimo = null
+  for (const q of ['filotto', 'boss', 'filotto', 'boss', 'filotto', 'boss']) {
+    ultimo = gettoneDopo(ultimo)
+    uscite.push(ultimo)
+  }
+  uguale('i due gettoni si alternano, da qualunque parte arrivino',
+         uscite.join(' '), 'gelo mirino gelo mirino gelo mirino')
+  controlla('e sono quelli dichiarati',
+            uscite.every(g => POTENZIAMENTI[g]), [...new Set(uscite)].join(', '))
+  uguale('si comincia dal gelo', gettoneDopo(null), 'gelo')
+
+  /* La tasca è piccola apposta: con un tetto alto un filotto lungo
+     diventa un magazzino, e la fine della tappa si gioca a gettoni
+     invece che a conti. Tre è il numero, e chi lo cambia deve saperlo. */
+  dentro('la tasca resta piccola', TASCA_MAX, 2, 4)
+  /* Il gelo dà tempo, non risposte: se rallentasse troppo la tappa si
+     finirebbe premendo un tasto, e il numero smetterebbe di essere una
+     domanda. Meno della metà, e non di più. */
+  dentro('il gelo dimezza la caduta, non la annulla', POTENZIAMENTI.gelo.lento, 0.3, 0.6)
+  /* E vale per **una domanda**, non per un tot di secondi: una durata a
+     tempo sconfina sulle due domande dopo, che il gettone non ha
+     pagato, e porta via anche la loro misura del tempo nell'SRS. Se
+     qualcuno rimette un `durata` qui dentro, questo controllo lo dice. */
+  controlla('e dura una domanda, non un cronometro',
+            POTENZIAMENTI.gelo.durata === undefined, 'è tornata una durata a tempo')
+  nota(`gelo a ${POTENZIAMENTI.gelo.lento}× per una domanda, tasca da ${TASCA_MAX}`)
 }
 
 riassunto('Asteroidi: quali domande escono, e in che ordine')
