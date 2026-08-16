@@ -1,7 +1,8 @@
 {
-  "__": "Il castello a tessere: un atlante suo, letto da strumenti/sprite/terreni.py. Sta a parte da quello della fattoria perché non condivide un solo pezzo con lei, e il build deve restare un file solo — chi carica il tower defense non deve tirarsi dietro i cani.",
+  "__": "Il castello a tessere: un atlante suo, letto da strumenti/sprite/terreni.py. Sta a parte da quello della fattoria perché non condivide un solo pezzo con lei, e il build deve restare un file solo — chi carica il tower defense non deve tirarsi dietro i cani. `tessera` è quanto grande si ritaglia una casella: 64 è la misura vera dei ritagli sul foglio, e più giù si butterebbe via disegno per niente. `referenze` è il file da cui si legge quali materiali il gioco nomina davvero — quello che nessuno nomina non si genera.",
   "nome": "castello",
   "modulo": "src/giochi/castello/dati/atlante.js",
-  "tessera": 36,
-  "attrezzo": "terreni"
+  "tessera": 64,
+  "attrezzo": "terreni",
+  "referenze": "src/giochi/castello/dati/mondo.js"
 }

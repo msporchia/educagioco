@@ -306,18 +306,27 @@ export const latiDi = s => chiave(ORDINE.filter(v => s[v] !== NESSUN_ATTACCO))
    si vincola niente, ed è così che la strada può entrare da sopra e
    uscire in fondo senza che il bordo la chiuda.
 
+   ── una fila, o una rete ──
+   Di regola le caselle sono una **fila ordinata** e da lì si ricava da
+   sé dove ogni tessera deve aprirsi. Ma una tappa a due ingressi non è
+   una fila: due strade che sboccano nella stessa porta si incontrano, e
+   nella casella dove si incontrano i lati aperti sono tre. Per quel caso
+   `opz.versi(x, y)` risponde al posto della fila — chi lo passa ha già
+   messo insieme le due strade e sa che lì c'è una biforcazione — e
+   `celle` torna a essere solo l'elenco delle caselle da riempire.
+
    Torna `null` se non si chiude — e un `null` va fatto vedere, non
    nascosto: vuol dire che al foglio manca un pezzo, ed è una cosa da
    sapere, non da coprire con una tessera qualsiasi. */
 export function componiPercorso(celle, catalogo, opz = {}) {
-  const { capi = {}, dentro = () => true, seme = 0 } = opz
+  const { capi = {}, dentro = () => true, seme = 0, versi = null } = opz
   const inVia = new Set(celle.map(([x, y]) => `${x},${y}`))
   const scelte = new Map()
 
   /* il campo di scelta di ogni casella: solo le pose che si aprono
      esattamente dove serve */
   const dominio = celle.map(([x, y], i) => {
-    const voluti = versiLungo(celle, i, capi)
+    const voluti = versi ? versi(x, y) : versiLungo(celle, i, capi)
     const buone = catalogo.filter(p => latiDi(p.socket) === voluti)
     return { x, y, k: `${x},${y}`, voluti, buone }
   })

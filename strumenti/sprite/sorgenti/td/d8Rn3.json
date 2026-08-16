@@ -1,17 +1,9 @@
 {
-  "__": "Il foglio dei terreni: otto file di strade, una per ambiente, e in fondo la fila dei terreni pieni. Colonne e righe sono ELENCATE e non dedotte da un passo: qui le colonne stanno fra 54 e 68 px e le righe fra 73 e 84, perché il foglio è disegnato a mano libera, e un passo medio all'ultima colonna sbaglia di un sesto di tessera. Le misure vengono da `python3 strumenti/sprite/misura.py sorgenti/td/d8Rn3.png --tabella`.",
+  "__": "Il foglio dei terreni: otto file di strade, una per ambiente, e in fondo (fila 8) la fila dei terreni pieni. La griglia NON si scrive più qui: la misura `terreni.py` dall'alfa a ogni giro, fila per fila. Su questo foglio le tessere vanno da 54 a 75 px di larghezza e non stanno su una griglia — un elenco solo di colonne buono per tutte e otto le file ritagliava pezzi di due tessere insieme, e si vedeva a schermo invece che qui. Gli attacchi si misurano col centro contro gli angoli, e la forma di una colonna la detta la fila col contrasto migliore: sulla pietra e sulla lava la strada è della stessa materia del fondo e una lettura lì è inventata.",
   "foglio": "d8Rn3.png",
-  "orlo": 3,
-  "soglia": 60,
-  "frangia": 3,
-
-  "griglia": {
-    "colonne": [[16, 65], [88, 66], [161, 65], [233, 64], [305, 63], [376, 63],
-                [445, 65], [517, 64], [589, 68], [664, 67], [739, 67], [813, 61],
-                [881, 54], [942, 58], [1008, 68], [1083, 66]],
-    "righe": [[15, 73], [95, 76], [175, 81], [260, 84],
-              [345, 76], [428, 77], [511, 77], [595, 76]]
-  },
+  "minima": 30,
+  "orlo": 5,
+  "minimo": 2,
   "file": {
     "0": "bosco",
     "1": "bosco",
@@ -22,23 +14,25 @@
     "6": "palude",
     "7": "sterpaglia"
   },
-
   "prati": {
-    "__": "I terreni pieni stanno tutti in una riga, uno accanto all'altro: qui la mappatura è per colonna. Un ambiente ne prende più d'uno, così il prato non è una mattonella ripetuta.",
-    "colonne": [[13, 66], [84, 67], [156, 68], [229, 66], [299, 68], [372, 66],
-                [443, 66], [514, 66], [585, 67], [657, 66], [728, 68], [801, 65],
-                [872, 66], [943, 67], [1014, 67], [1086, 67]],
-    "righe": [[691, 72]],
-    "orlo": 3,
-    "terreni_": "0-3 erbe, 4-5 sabbia, 7 neve, 8-9 acqua, 10 lava, 11 ciottoli, 12-13 palude, 14-15 terra",
+    "__": "I terreni pieni stanno tutti in una fila, uno accanto all'altro: qui la mappatura è per colonna. Un ambiente ne prende più d'uno, così il prato non è una mattonella ripetuta. 0-3 erbe, 4-5 sabbia, 6 vuota (nel foglio non c'è niente), 7 neve (bucata, non regge da fondo), 8-9 acqua, 10 lava, 11 ciottoli, 12-13 palude, 14-15 terra. La neve prende la 9, che è ghiaccio: il bianco del foglio è quasi tutto trasparente e da fondo lascerebbe vedere il nero.",
+    "fila": 8,
     "terreni": {
-      "0": "bosco", "1": "bosco", "2": "bosco",
+      "0": "bosco",
+      "1": "bosco",
+      "2": "bosco",
       "3": "sterpaglia",
-      "4": "sabbia", "5": "sabbia",
-      "7": "neve",
+      "4": "sabbia",
+      "5": "sabbia",
       "10": "lava",
       "11": "pietra",
-      "12": "palude", "13": "palude"
+      "12": "palude",
+      "13": "palude",
+      "14": "sterpaglia",
+      "15": "pietra",
+      "9": "neve"
     }
-  }
+  },
+  "fidato": 40,
+  "pulizie": 2
 }

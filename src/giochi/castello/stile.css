@@ -1,0 +1,34 @@
+/* Il castello a tessere. Poca roba apposta: è una schermata da guardare,
+   e tutto quello che non è il campo deve stare fuori dai piedi. */
+.castello-sprite {
+  display: flex; flex-direction: column; height: 100%;
+  background: #12150f; color: #e6e9dd;
+}
+
+.castello-sprite .scelta {
+  display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center;
+  padding: 6px 8px; flex: none;
+}
+.castello-sprite .arco { display: flex; align-items: center; gap: 2px }
+.castello-sprite .arco .emoji { font-size: 15px; opacity: .7; margin-right: 2px }
+
+.castello-sprite .tappa {
+  border: 0; background: #ffffff14; color: inherit; border-radius: 8px;
+  font-size: 16px; line-height: 1; padding: 5px 6px; cursor: pointer;
+}
+.castello-sprite .tappa.scelta { background: #ffd23f; }
+
+/* Il campo si prende tutto quello che resta. Il canvas è grande quanto
+   il mondo, non quanto lo schermo: a farcelo stare dentro senza stirarlo
+   ci pensa `object-fit: contain`, che è il compositore del browser — e
+   lo fa una volta sola sull'immagine finita, invece di far ricalcolare
+   una scala a ogni fotogramma a chi disegna. */
+.castello-sprite .campo { flex: 1; min-height: 0; position: relative; display: flex }
+.castello-sprite .campo canvas {
+  display: block; width: 100%; height: 100%; object-fit: contain;
+}
+
+.castello-sprite .nota {
+  flex: none; margin: 0; padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+  font-size: 12px; opacity: .85; text-align: center;
+}
