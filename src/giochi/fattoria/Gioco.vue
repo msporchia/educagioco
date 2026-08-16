@@ -29,6 +29,7 @@ import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profil
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
+import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { PER_ID, puoGirare } from './dati/catalogo.js'
 import { animale, siDisegna } from './dati/animali.js'
@@ -75,6 +76,11 @@ const borsa = {
   paga: n => { addCoins(-n); return true },
 }
 
+/* Lo spazio in cui si cammina, come lo chiede `motore/camminata.js`:
+   una funzione che dice se su quella cella ci si può stare. Il conto è
+   tutto nel motore (`Fattoria.calpestabile`) — qui si passa e basta. */
+const dovePasso = (x, y) => mondo.calpestabile(x, y)
+
 function salva() { salvaFra = 1.2 }
 function salvaOra() {
   salvaFra = 0
@@ -96,7 +102,7 @@ onMounted(() => {
      sbagliare per metà dei bambini. */
   const c0 = PRIMA * CELLE
   const casa = mondo.cellaLibera(c0 + 7, c0 + 9)
-  bambino = new Attore(aspettoDi(), casa.x, casa.y, { velocita: 3.6 })
+  bambino = new Attore(aspettoDi(), new Camminatore(casa.x, casa.y, { velocita: 3.6 }))
   attori = [bambino]
 
   metti_in_scena_le_bestie()
@@ -123,8 +129,8 @@ function metti_in_scena_le_bestie() {
   for (const b of mondo.bestie) {
     if (!siDisegna(b.chi) || attori.some(a => a.nome === b.chi)) continue
     const dove = mondo.cellaLibera(c0 + 8, c0 + 10)
-    attori.push(new Attore(b.chi, dove.x, dove.y,
-      { velocita: 2.4, vaga: 2.4, chi: b.nome || nomeDi(b.chi) }))
+    attori.push(new Attore(b.chi, new Camminatore(dove.x, dove.y, { velocita: 2.4, vaga: 2.4 }),
+      { chi: b.nome || nomeDi(b.chi) }))
   }
 }
 
@@ -142,8 +148,7 @@ function passo(ora) {
   const dt = Math.min(0.05, (ora - ultimo) / 1000 || 0)
   ultimo = ora
   orologio += dt
-  const dentro = (x, y) => mondo.cellaMia(x, y) && !mondo.eAcqua(x, y)
-  for (const a of attori) { if (a !== scelto.value) a.muovi(dt, dentro) }
+  for (const a of attori) { if (a !== scelto.value) a.corpo.muovi(dt, dovePasso) }
   if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra() }
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
@@ -154,6 +159,17 @@ function passo(ora) {
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
 let pizzico = null, giu = null, lungo = null, anello = null, preso = null, scorrendo = false
+
+/* Da quanto in là comincia lo scorrimento — cioè quando il tocco smette
+   di essere un tocco. Un mouse sta fermo dove lo lasci; un dito no: si
+   appoggia largo, e mentre preme il punto che il telefono chiama «il
+   dito» si sposta di qualche pixel da solo. Con la stessa misura per
+   tutti e due, sul computer andava sempre e sul telefono si perdevano
+   i tocchi — quelli di chi preme con più forza, cioè i bambini.
+   Sedici pixel restano sotto quello che Android e iOS considerano
+   ancora fermo, quindi non si ruba niente allo scorrimento. */
+const SCARTO_DITO = 16
+const SCARTO_MOUSE = 6
 
 /* Le coordinate del dito arrivano in pagina, ma la tela comincia sotto
    la barra: senza togliere l'origine si tocca una cella e se ne prende
@@ -237,7 +253,8 @@ function muovi(e) {
   if (preso) return muoviPreso(p)
   if (!giu) return
   const dx = p.x - giu.x, dy = p.y - giu.y
-  if (Math.abs(p.x - giu.x0) + Math.abs(p.y - giu.y0) > 10) {
+  const scarto = e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO
+  if (Math.abs(p.x - giu.x0) + Math.abs(p.y - giu.y0) > scarto) {
     giu.mosso = true
     if (!pennello.value) scorrendo = true
     if (lungo) { clearTimeout(lungo); lungo = null; anello = null }
@@ -250,7 +267,33 @@ function muovi(e) {
   if (anello) { anello.x = p.x; anello.y = p.y }
 }
 
+/* ── IL FANTASMA DEL TOCCO ──────────────────────────────────────────
+   Alzato il dito, il browser manda **anche** un `click`, e lo manda a
+   chi si trova sotto il dito *in quel momento* — non a chi c'era quando
+   il dito si è appoggiato. Se il tocco ha appena aperto un pannello, il
+   bersaglio è il velo comparso un istante prima, che si chiude da sé
+   (`@click.self`): il pannello lampeggia e sparisce, e il tasto sembra
+   non aver fatto niente.
+
+   Col mouse non succede: lì il bersaglio del click è deciso alla
+   pressione, ed è il canvas. È tutta la differenza fra «sul computer
+   va» e «sul telefono no» — e il «qualche volta sì» era il dito che
+   capitava dove compare il foglio, dove il click finisce sul foglio
+   invece che sul velo e il pannello resta aperto.
+
+   Il rimedio è ingoiare quel click, uno solo e per poco: nessun click
+   che nasce da un dito appoggiato sul CAMPO serve a qualcuno, perché
+   qui si gioca coi puntatori. I click veri — sui tasti, sui fogli —
+   nascono da un dito appoggiato su quelli, e non passano di qui. */
+function zittisciIlFantasma() {
+  const smetti = () => removeEventListener('click', zitto, true)
+  const zitto = ev => { ev.stopPropagation(); ev.preventDefault(); smetti() }
+  addEventListener('click', zitto, true)
+  setTimeout(smetti, 350)
+}
+
 function lascia(e) {
+  if (e.pointerType !== 'mouse') zittisciIlFantasma()
   const eraPizzico = !!pizzico
   dita.delete(e.pointerId)
   if (dita.size < 2) pizzico = null
@@ -280,7 +323,10 @@ function lascia(e) {
   if (bestia) {
     scelto.value = bestia
     apriBestia(bestia.nome)
-    bestia.vaiA(bambino.cella.x, bambino.cella.y + 1)
+    /* Accanto al bambino, non addosso: se lì non si può stare — c'è
+       una panchina, è acqua — ci pensa `vaiA` ad accostarsi il più
+       vicino possibile invece di lasciare la bestia ferma. */
+    bestia.corpo.vaiA(bambino.corpo.cella.x, bambino.corpo.cella.y + 1, dovePasso)
     return
   }
 
@@ -296,7 +342,7 @@ function lascia(e) {
 
   const o = mondo.ostacoloSotto(c.x, c.y)
   if (o) { pannello.value = { tipo: 'ostacolo', o }; return }
-  if (mondo.cellaMia(c.x, c.y)) bambino.vaiA(c.x, c.y)
+  if (mondo.cellaMia(c.x, c.y)) bambino.corpo.vaiA(c.x, c.y, dovePasso)
 }
 
 /* Chi c'è sotto il dito. Si guarda il rettangolo davvero disegnato, non
@@ -306,7 +352,7 @@ function attoreSotto(sx, sy) {
   for (let i = attori.length - 1; i >= 0; i--) {
     const a = attori[i]
     if (a === bambino) continue
-    const p2 = pezzoAttore(a.nome, a.verso === 'sinistra' ? 'lato' : a.verso, 0)
+    const p2 = pezzoAttore(a.nome, a.corpo.verso === 'sinistra' ? 'lato' : a.corpo.verso, 0)
     const r = a.riquadro(scena.cellaPx, scena.vista, p2)
     if (sx >= r.x - 4 && sx <= r.x + r.w + 4 && sy >= r.y && sy <= r.y + r.h + 4) return a
   }

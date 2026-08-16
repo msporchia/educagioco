@@ -222,6 +222,22 @@ committate: non è ricostruibile da git.
   Aggiungere una figura è aggiungere una riga a `PITTORI`, non un `ctx.arc`
   dentro il gioco. Al contrario, in `grafica/` non entrano energia e prezzi:
   solo fatti già decisi (`potenziabile: true`).
+- **Il dito si lascia dietro un click, e quel click va ingoiato.** Chi apre
+  un pannello dal `pointerup` di un canvas deve sapere che subito dopo
+  arriva anche un `click`, mandato a chi sta sotto il dito **in quel
+  momento**: cioè al velo appena comparso, che si chiude da sé
+  (`@click.self`) — o peggio a un tasto del foglio, che si preme da solo.
+  Col mouse non succede, perché lì il bersaglio si decide alla pressione:
+  è il motivo per cui questi guasti si vedono solo dal telefono, e solo
+  qualche volta. Il rimedio sta in `giochi/fattoria/Gioco.vue`
+  (`zittisciIlFantasma`), e la prova che serve è un tocco vero —
+  `Input.dispatchTouchEvent` via CDP, come in `integrazione/fattoria`: un
+  `page.click()` non porta nessun fantasma e non vede niente.
+- **Un dito non sta fermo come un mouse.** La soglia oltre cui un tocco
+  diventa uno scorrimento va misurata sul dito (~16 px), non sul
+  puntatore: sotto quella misura Android e iOS considerano il dito ancora
+  fermo, e un gioco più severo del telefono butta via i tocchi di chi
+  preme forte — cioè dei bambini.
 - **I giochi non toccano i contatori a mano**: usano `segna()` e
   `segnaBest()` di `store/profile.js`.
 - **Un errore non resta muto.** Vue scrive in console e lascia la
