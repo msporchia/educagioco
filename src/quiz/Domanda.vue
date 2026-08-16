@@ -39,7 +39,7 @@
    la tiene in fondo su tre quarti d'altezza, dichiara `--qz-h: .72vh` —
    e i disegni rimpiccioliscono di conseguenza.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
@@ -141,9 +141,35 @@ const daGiudicare = () => ({
   tempo: partenza.value ? (performance.now() - partenza.value) / 1000 : 0,
 })
 
-/* I disegni si fanno dopo il layout: prima il canvas non sa quanto è
-   largo, e un riquadro dipinto a misura sbagliata resta sgranato. */
-onMounted(async () => {
+/* ══════════ UNA DOMANDA NUOVA AZZERA TUTTO ══════════
+   Questa è la riga che teneva bloccati i giochi, ed è il motivo per cui
+   il difetto sembrava un problema di tocchi.
+
+   Chi incatena domande — il sotterraneo, il Dungeon, la Corsa,
+   Survivors — passa dalla domanda A alla B **senza mai spegnere il
+   `v-if` in mezzo**: succede tutto dentro lo stesso giro di
+   aggiornamento, quindi Vue non vede nessun momento in cui la domanda
+   non c'è, non smonta niente e **riusa questa stessa istanza**. Con lei
+   restano `scelto`, l'esito e i disegni di prima. Da fuori si vede
+   esattamente quello che è stato riferito: la domanda nuova compare con
+   un tasto **già colorato** — quello nello stesso posto di quello
+   premuto un attimo prima, e di solito è «sbagliata» — e poi non va più
+   avanti, perché `scegli()` trova una scelta già fatta ed esce senza
+   dire niente. Il gioco è fermo per sempre, e senza nessun errore.
+
+   Si azzera qui dentro e non con un `:key` in chi lo monta: la `key` va
+   ricordata in ogni gioco, e il quinto gioco che nascerà se la
+   dimenticherà come se l'erano dimenticata in quattro su cinque. Il
+   contratto sta nel componente.
+
+   I disegni si rifanno per lo stesso motivo, e dopo il layout: prima il
+   canvas non sa quanto è largo, e un riquadro dipinto a misura
+   sbagliata resta sgranato. */
+async function inizia() {
+  clearTimeout(cieca)
+  scelto.value = -1
+  attesa.value = 0
+  pronta.value = false
   partenza.value = performance.now()
   cieca = setTimeout(() => { pronta.value = true }, CIECA)
   await nextTick()
@@ -152,7 +178,13 @@ onMounted(async () => {
   risposte.value.forEach((r, i) => {
     if (r.scena && tele.value[i]) dipingi(tele.value[i], props.pittori, r.scena)
   })
-})
+}
+
+onMounted(inizia)
+/* Sull'oggetto, non sulla chiave: due domande di fila possono avere la
+   stessa `chiave` (la stessa tabellina chiesta due volte) e restare due
+   domande diverse a cui si deve poter rispondere due volte. */
+watch(() => props.domanda, inizia)
 
 onUnmounted(() => clearTimeout(cieca))
 </script>

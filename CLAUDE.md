@@ -192,7 +192,18 @@ committate: non è ricostruibile da git.
   volta per fotogramma) e da lì in poi tutto è in pixel dello sprite —
   chi la moltiplica riga per riga prima o poi la moltiplica due volte, ed
   è invisibile a figura piccola. Un mondo a tessere vuole ingrandimenti
-  interi, se no gli sprite si sfrangiano. I fogli li ritaglia
+  interi, se no gli sprite si sfrangiano — e quando il campo è più largo
+  dello schermo e la scala intera taglierebbe la mappa, quello che si
+  tiene intero è **la cella in pixel dello schermo**, non la scala
+  (`giochi/castello/scena/tela.js`).
+  Un sì/no per lato non basta a una strada: la seconda metà di
+  `tessere.js` tratta il bordo come un'**etichetta** — dove passa, non se
+  passa (`·`, `c`, `sx`, `dx`) — che è quello che il mestiere chiama
+  *Wang tiles*, e `componiPercorso` sceglie le tessere come si risolve un
+  sudoku. Gli attacchi non si dichiarano: li **misura** dal foglio
+  `strumenti/sprite/terreni.py`, che è il fratello di `atlante.py` per i
+  mondi a griglia (quello ritaglia figure, questo tessere) e misura anche
+  la griglia, dall'alfa, a ogni giro. I fogli li ritaglia
   `strumenti/sprite/atlante.py`, un bersaglio per gioco.
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
@@ -250,6 +261,28 @@ committate: non è ricostruibile da git.
   (`zittisciIlFantasma`), e la prova che serve è un tocco vero —
   `Input.dispatchTouchEvent` via CDP, come in `integrazione/fattoria`: un
   `page.click()` non porta nessun fantasma e non vede niente.
+- **Un `v-if` che non si spegne mai non rimonta niente.** È il guasto più
+  costoso trovato finora, e da fuori non somigliava affatto a quello che
+  era. Chi incatena schermate uguali — `quiz/Domanda.vue`, una sola per
+  sotterraneo, Dungeon, Corsa e Survivors — passa dalla domanda A alla B
+  **dentro lo stesso giro di aggiornamento**: Vue non vede nessun momento
+  in cui la condizione è falsa, non smonta e **riusa l'istanza**, che si
+  porta dietro lo stato di prima. A schermo: la domanda nuova nasce con un
+  tasto già colorato (quello dove il dito ha appena premuto) e poi il
+  gioco **non va più avanti**, perché una scelta risulta già fatta. Nessun
+  errore, da nessuna parte. Il rimedio sta **dentro il componente** (un
+  `watch` sulla prop che rimette tutto a zero), non in un `:key` a carico
+  di chi lo monta: la key va ricordata ogni volta, e infatti se l'erano
+  ricordata in uno su cinque. Test: `integrazione/domanda`, che incatena
+  due domande vere nel Dungeon.
+- **Una schermata appena comparsa non si lascia toccare subito**, e
+  **l'attesa si vede.** Le due metà del contorno dello stesso guasto: dopo
+  uno sbaglio si resta fermi un paio di secondi per leggere il perché, e
+  due secondi muti sono indistinguibili da un tasto rotto — quindi il dito
+  torna a premere; quel tocco (o il click che si lascia dietro) atterra
+  sulla schermata dopo, che compare nello stesso punto. Perciò 320 ms di
+  finestra cieca al montaggio, e una riga che si riempie per dire quanto
+  manca.
 - **Un dito non sta fermo come un mouse.** La soglia oltre cui un tocco
   diventa uno scorrimento va misurata sul dito (~16 px), non sul
   puntatore: sotto quella misura Android e iOS considerano il dito ancora
