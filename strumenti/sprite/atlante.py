@@ -257,6 +257,46 @@ def trasforma_di(nome, fg):
     return d.get('giri'), d.get('specchia', True)
 
 
+def cancella_in(pezzo, rettangoli, nome):
+    """Buca il ritaglio dove dentro c'è roba che non c'entra.
+
+    ── perché sta qui e non nel PNG sorgente ──
+    Questi fogli li disegna un generatore che la griglia non la capisce
+    fino in fondo: un albero sconfina nella casella accanto, sotto una
+    casa sull'albero resta un pezzo di nuvola, due edifici diversi
+    finiscono affiancati come se fossero i fotogrammi di uno solo. Verrebbe
+    voglia di aprire il PNG e cancellare.
+
+    Non si fa, e la ragione è scritta in `STANDARD.md`: **la sorgente è la
+    verità**, sta in `sorgenti/`, non si modifica e non si butta, e tutto
+    si rigenera da lì. Un PNG ritoccato a mano è un PNG che non si sa più
+    da dove viene: sparisce la prova di cosa avesse dato il generatore, e
+    il giorno che arriva un foglio migliore non si sa più cosa gli era
+    stato fatto sopra.
+
+    Quindi si dichiara. `"cancella": [[x, y, largo, alto], …]`, in
+    coordinate **dentro il ritaglio**, e il pezzo esce con quei rettangoli
+    trasparenti. È dato, sta accanto al foglio che descrive, si rilegge, e
+    buttare via tutto il generato e rifarlo dà lo stesso risultato al
+    pixel. Non è una regola nel generatore — quelle cercano di essere
+    furbe su tutti i fogli e sbagliano — è una **correzione a questo
+    foglio qui**, ed è esattamente dove un difetto di questo foglio qui
+    deve stare."""
+    if not rettangoli:
+        return pezzo
+    fuori = pezzo.copy()
+    px = fuori.load()
+    for r in rettangoli:
+        if len(r) != 4:
+            print(f'  ! {nome}: "cancella" vuole [x, y, largo, alto], ho {r}')
+            continue
+        x, y, w, h = r
+        for a in range(max(0, x), min(fuori.width, x + w)):
+            for b in range(max(0, y), min(fuori.height, y + h)):
+                px[a, b] = (0, 0, 0, 0)
+    return fuori
+
+
 def famiglia_di(nome, fg):
     """Di che famiglia è un pezzo — se il foglio lo dice.
 
@@ -277,7 +317,7 @@ def famiglia_di(nome, fg):
     return fg.get('famiglia') or 'oggetto'
 
 
-def ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma):
+def ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
     """I ritagli dichiarati **in pixel**, presi da un file accanto al
     foglio (`"ritagli": "pezzi.json"`, `{nome: [x, y, largo, alto]}`).
 
@@ -308,9 +348,9 @@ def ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma):
         trasforma[nome] = trasforma_di(nome, fg)
 
 
-def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma):
+def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
     if fg.get('ritagli'):
-        return ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma)
+        return ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):            # note per chi legge, non sprite
@@ -336,11 +376,23 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma):
             # dato il generatore.
             if d.get('specchia'):
                 pezzo = ImageOps.mirror(pezzo)
+            pezzo = cancella_in(pezzo, d.get('cancella'), chi)
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
             famiglie[chi] = d.get('famiglia') or famiglia_di(chi, fg)
             trasforma[chi] = (d.get('giri'), d.get('specchia', True)) \
                 if 'giri' in d or 'specchia' in d else trasforma_di(chi, fg)
+            # `anima` si dichiara col nome della COSA, non del fotogramma:
+            # nel foglietto sta scritto `fontana`, non `fontana0`. Chi non
+            # è dichiarato resta `None` e non `False`, se no il ripiego
+            # della famiglia non si applica più — e gli attori, che
+            # camminano sempre, smetterebbero di camminare.
+            dichiarato = d.get('anima')
+            stelo = re.sub(r'[-_]?\d+$', '', nome)
+            if dichiarato is None and stelo in (fg.get('anima') or []):
+                dichiarato = True
+            if dichiarato is not None:
+                anima[chi] = dichiarato
 
 
 def impacchetta(ritagli):
@@ -396,7 +448,7 @@ def innesta(dove, blocco):
                            lambda _: blocco, testo, flags=re.S))
 
 
-def catalogo_di(ritagli, famiglie, trasforma, provenienza):
+def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima):
     """L'elenco delle cose, dai nomi dei ritagli.
 
     ── perché qui si legge una convenzione, e perché una volta sola ──
@@ -428,6 +480,7 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza):
 
     def metti(nome, **q):
         giri, specchia = trasforma.get(nome, (None, True))
+        q.setdefault('anima', anima.get(nome))
         q.setdefault('famiglia', famiglie.get(nome, 'oggetto'))
         # da quale foglio arriva: è l'unica cosa che fa vedere quando in
         # un atlante ci sono due set che si sovrappongono invece di uno
@@ -491,6 +544,7 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza):
         if len(v['pose']) > 1:
             v['famiglia'] = 'attore'
             v['giri'] = 1
+            v['anima'] = True
     return cat
 
 
@@ -506,7 +560,7 @@ def costruisci(bers, fogli, con_provini):
     # e vanno cercate per provenienza, sotto.
     TIPI_VALIDI = ('persona', 'bestia')
     tipo_di_file = {}
-    ritagli, provenienza, famiglie, trasforma = {}, {}, {}, {}
+    ritagli, provenienza, famiglie, trasforma, anima = {}, {}, {}, {}, {}
     print(f'{bersaglio}:')
     for f, fg in fogli:
         t = fg.get('tipo')
@@ -515,12 +569,17 @@ def costruisci(bers, fogli, con_provini):
             t = None
         tipo_di_file[f.name] = t
         utili = [n for n in (fg.get('sprite') or {}) if not n.startswith('__')]
+        for campo in ('famiglie', 'trasforma'):
+            for prefisso in (fg.get(campo) or {}):
+                if not any(n.startswith(prefisso) for n in utili):
+                    print(f'  ! {f.name}: "{campo}" dichiara "{prefisso}", '
+                          f'che non è il principio del nome di nessuno sprite')
         if not utili and not fg.get('ritagli'):
             print(f'  {f.name}: foglietto senza sprite, da calibrare — saltato')
             continue
         im = pulisci(alla_misura_vera(Image.open(f).convert('RGBA'), fg), fg)
         prima = len(ritagli)
-        ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma)
+        ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         print(f'  {f.name}: {len(ritagli) - prima} pezzi')
 
     # Le copie: uno sprite che è un altro sprite ridipinto. La bambina è
@@ -537,6 +596,8 @@ def costruisci(bers, fogli, con_provini):
                 provenienza[chi] = provenienza[nome]
                 famiglie[chi] = famiglie.get(nome, 'oggetto')
                 trasforma[chi] = trasforma.get(nome, (None, True))
+                if nome in anima:
+                    anima[chi] = anima[nome]
 
     # Chi è un attore si ricava dai nomi (`_giu0`), come farà poi il JS;
     # di che TIPO è, invece, non lo dice il nome — lo dice da quale file è
@@ -566,7 +627,7 @@ def costruisci(bers, fogli, con_provini):
     atlante, mappa = impacchetta(ritagli)
     dest = REPO / bers['modulo']
     kb, b64 = scrivi(dest, attrezzo='atlante.py', atlante=atlante, pezzi=mappa,
-                voci=catalogo_di(ritagli, famiglie, trasforma, provenienza).elenco(mappa),
+                voci=catalogo_di(ritagli, famiglie, trasforma, provenienza, anima).elenco(mappa),
                 tessera=bers.get('tessera', 32),
                 extra_doc=EXTRA_DOC, coda=CODA.format(
                     provenienza=breve(provenienza),

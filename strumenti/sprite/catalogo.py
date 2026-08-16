@@ -89,6 +89,25 @@ FAMIGLIE = ('attore', 'oggetto', 'tessera', 'fondo', 'figura')
 # soltanto **se si può**.
 GIRI = {'tessera': 4, 'fondo': 4, 'attore': 1, 'oggetto': 1, 'figura': 1}
 
+# ── fotogrammi o varianti? ───────────────────────────────────────────
+# Più pezzi sotto lo stesso nome vogliono dire due cose opposte, e i
+# nomi non le distinguono. `fontana0..2` sono **fotogrammi**: la stessa
+# fontana in tre momenti, e vanno fatti scorrere. `arbusto0..25` sono
+# **varianti**: ventisei cespugli diversi, e farli scorrere fa
+# lampeggiare un cespuglio che si trasforma in un altro venticinque
+# volte al secondo.
+#
+# Su questi fogli le varianti sono la stragrande maggioranza — dei
+# quarantadue gruppi della fattoria, le animazioni vere sono meno di
+# dieci — quindi il ripiego è **variante**, e l'animazione si dichiara.
+# È anche il verso giusto in cui sbagliare: un'animazione dichiarata per
+# sbaglio si vede subito e dà fastidio, una che manca lascia una cosa
+# ferma e nessuno se ne accorge finché non la si guarda apposta.
+#
+# Chi disegna sceglie di conseguenza: i fotogrammi si scorrono
+# sull'orologio, le varianti si pescano dal posto (`variante()` in
+# `grafica/tessere.js`) così un cespuglio resta lo stesso cespuglio.
+
 
 class Catalogo:
     """Si riempie mentre si ritaglia, e alla fine sa dire cosa c'è.
@@ -101,7 +120,7 @@ class Catalogo:
         self.voci = {}
 
     def aggiungi(self, pezzo, *, famiglia, chi=None, posa='fermo', giri=None,
-                 specchia=True, **extra):
+                 specchia=True, anima=None, **extra):
         """`pezzo` è il nome dentro l'atlante, `chi` è la cosa a cui
         appartiene (di default è il pezzo stesso: una cosa sola, un
         fotogramma solo). I fotogrammi si accodano nell'ordine in cui
@@ -117,6 +136,9 @@ class Catalogo:
             'id': chi, 'famiglia': famiglia, 'pose': {},
             'giri': GIRI[famiglia] if giri is None else giri,
             'specchia': specchia,
+            # un attore cammina, e quello è sempre un'animazione; per tutto
+            # il resto vedi la nota qui sotto
+            'anima': famiglia == 'attore' if anima is None else anima,
         })
         v['pose'].setdefault(posa, []).append(pezzo)
         v.update({k: q for k, q in extra.items() if q is not None})

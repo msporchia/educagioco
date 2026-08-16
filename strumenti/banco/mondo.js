@@ -54,6 +54,21 @@ const S = {
 }
 
 const CELLE_X = 16, CELLE_Y = 12
+
+/* ── scorrere o scegliere ──
+   Più pezzi sotto lo stesso nome sono due cose opposte, e la voce lo
+   dice (`anima`). I **fotogrammi** di una fontana si scorrono
+   sull'orologio; le **varianti** — ventisei cespugli diversi — no: si
+   pesca sempre la stessa, dal posto in cui sta, se no il campo
+   lampeggia e ogni cespuglio si trasforma nel successivo venticinque
+   volte al secondo. Era quello che faceva questa pagina, ed è il motivo
+   per cui il difetto si è visto qui prima che in partita. */
+function fotogrammaDi(p, t) {
+  const quanti = (p.voce.pose[p.posa] || []).length || 1
+  if (quanti < 2) return 0
+  if (p.voce.anima) return Math.floor(t * 6) % quanti
+  return Math.abs(Math.round(p.x * 7 + p.y * 13)) % quanti
+}
 const $ = s => document.querySelector(s)
 
 /* ═══════════ il campo ═══════════ */
@@ -95,11 +110,8 @@ function ridisegna(t = 0) {
 
   /* chi sta più in basso si disegna dopo: è l'unica regola che fa
      sembrare un mondo dall'alto un posto invece che un collage */
-  for (const p of [...S.posate].sort((a, b) => a.y - b.y)) {
-    const fotogrammi = (p.voce.pose[p.posa] || []).length || 1
-    const fr = Math.floor(t * 6) % fotogrammi
-    S.mondo.disegna(ctx, { ...p, fotogramma: fr })
-  }
+  for (const p of [...S.posate].sort((a, b) => a.y - b.y))
+    S.mondo.disegna(ctx, { ...p, fotogramma: fotogrammaDi(p, t) })
 }
 
 /* ═══════════ il pannello delle voci ═══════════
@@ -114,9 +126,12 @@ function riquadroVoce(voce) {
   const testa = document.createElement('div')
   testa.className = 'testa'
   const pose = Object.keys(voce.pose)
+  const quanti = Math.max(...pose.map(p => voce.pose[p].length))
   testa.innerHTML = `<b>${voce.id}</b><span>${voce.famiglia}` +
     (voce.giri > 1 ? ` · gira ×${voce.giri}` : '') +
-    (voce.materia ? ' · ' + voce.materia : '') + '</span>'
+    (voce.materia ? ' · ' + voce.materia : '') +
+    (quanti > 1 ? (voce.anima ? ` · ${quanti} fotogrammi` : ` · ${quanti} varianti`) : '') +
+    '</span>'
   if (voce.da) {
     const d = document.createElement('div')
     d.className = 'da'

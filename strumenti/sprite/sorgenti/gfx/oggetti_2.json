@@ -1,2062 +1,2067 @@
 {
- "__": "Oggetti da giardino generati (fontane, pozzi, mulini decorativi, arredi, animaletti, vegetazione). Il fondo è già trasparente nel PNG (canale alfa vero: composto su magenta non lascia aloni) quindi niente da togliere. «foglio» + «cella»: [1,1] fanno ridimensionare tutto il foglio di un fattore 3 prima di ritagliare (lo stesso meccanismo di character.json e dei cane-*.json — «foglio» dice quant'è grande DOPO, alla_misura_vera fa un resize BOX): il PNG arrivava tre volte più grande del resto della fattoria (una panchina a 131px contro i 48px di quella vecchia), e senza restringerlo qui ogni pezzo nuovo avrebbe fatto sembrare tutto il resto in miniatura. Le coordinate sotto sono già divise per 3, quindi in pixel del foglio ridotto, non di quello originale — e «cella»: [1,1] fa sì che «da» valga pixel invece che celle: il foglio non ha una griglia, gli oggetti sono disposti a mano, non su una tabella. «fontana», «cartello», «staccionata» e «barile2» esistono già in Overworld.json: qui si chiamano fontana_grande, insegna, recinto e barile_legno per non sovrascriverli in silenzio con uno stile molto più grande e diverso. Esclusi apposta due indici della numerazione di lavoro (misura.py/figure()): 108, una macchia troppo sfocata per dire cosa sia, e 116, un pulcino e un uccellino talmente vicini che il rettangolo li porta dentro tutti e due mescolati. albero_verde (102) e' ristretto a mano di 26px: la bbox automatica arrivava a mordere un angolo della panchina_legno (120) accanto.",
- "scala": 3,
- "fondo": "trasparente",
- "foglio": [
-  512,
-  341
- ],
- "cella": [
-  1,
-  1
- ],
- "famiglie": {
-  "mulino_giardino": "figura",
-  "pozzo": "figura",
-  "casetta_uccelli": "figura",
-  "arco_rose": "figura",
-  "gazebo": "figura",
-  "lampione": "figura",
-  "insegna": "figura",
-  "altalena": "figura",
-  "pergola_bianca": "figura",
-  "pergola_fiorita": "figura",
-  "palo_rampicante": "figura",
-  "spaventapasseri": "figura",
-  "albero_rosa": "figura",
-  "melo": "figura",
-  "albero_verde": "figura",
-  "topiaria": "figura",
-  "dehors_rosa": "figura",
-  "dehors_azzurro": "figura"
- },
- "trasforma": {
-  "recinto": {
-   "giri": 2
-  },
-  "ponte": {
-   "giri": 2
-  },
-  "sasso": {
-   "giri": 4
-  },
-  "ninfea": {
-   "giri": 4
-  },
-  "ceppo": {
-   "giri": 4
-  }
- },
- "sprite": {
-  "albero_rosa": {
-   "da": [
-    382,
-    185
-   ],
-   "cella": [
-    32,
-    48
-   ]
-  },
-  "albero_verde": {
-   "da": [
-    317,
-    187
-   ],
-   "cella": [
-    33,
-    45
-   ]
-  },
-  "altalena": {
-   "da": [
-    107,
-    74
-   ],
-   "cella": [
-    38,
-    42
-   ]
-  },
-  "alveare": {
-   "da": [
-    86,
-    255
-   ],
-   "cella": [
-    21,
-    29
-   ]
-  },
-  "amaca": {
-   "da": [
-    198,
-    57
-   ],
-   "cella": [
-    58,
-    38
-   ]
-  },
-  "arbusto0": {
-   "da": [
-    219,
-    216
-   ],
-   "cella": [
-    13,
-    13
-   ]
-  },
-  "arbusto10": {
-   "da": [
-    325,
-    271
-   ],
-   "cella": [
-    37,
-    27
-   ]
-  },
-  "arbusto11": {
-   "da": [
-    293,
-    281
-   ],
-   "cella": [
-    27,
-    18
-   ]
-  },
-  "arbusto12": {
-   "da": [
-    365,
-    283
-   ],
-   "cella": [
-    35,
-    15
-   ]
-  },
-  "arbusto13": {
-   "da": [
-    405,
-    284
-   ],
-   "cella": [
-    14,
-    11
-   ]
-  },
-  "arbusto14": {
-   "da": [
-    421,
-    281
-   ],
-   "cella": [
-    39,
-    18
-   ]
-  },
-  "arbusto15": {
-   "da": [
-    312,
-    300
-   ],
-   "cella": [
-    17,
-    17
-   ]
-  },
-  "arbusto16": {
-   "da": [
-    335,
-    301
-   ],
-   "cella": [
-    17,
-    19
-   ]
-  },
-  "arbusto17": {
-   "da": [
-    418,
-    302
-   ],
-   "cella": [
-    14,
-    11
-   ]
-  },
-  "arbusto18": {
-   "da": [
-    472,
-    304
-   ],
-   "cella": [
-    16,
-    14
-   ]
-  },
-  "arbusto19": {
-   "da": [
-    491,
-    306
-   ],
-   "cella": [
-    16,
-    15
-   ]
-  },
-  "arbusto2": {
-   "da": [
-    350,
-    236
-   ],
-   "cella": [
-    18,
-    15
-   ]
-  },
-  "arbusto20": {
-   "da": [
-    398,
-    312
-   ],
-   "cella": [
-    16,
-    13
-   ]
-  },
-  "arbusto21": {
-   "da": [
-    312,
-    318
-   ],
-   "cella": [
-    21,
-    18
-   ]
-  },
-  "arbusto22": {
-   "da": [
-    380,
-    317
-   ],
-   "cella": [
-    15,
-    19
-   ]
-  },
-  "arbusto23": {
-   "da": [
-    148,
-    325
-   ],
-   "cella": [
-    17,
-    12
-   ]
-  },
-  "arbusto24": {
-   "da": [
-    276,
-    325
-   ],
-   "cella": [
-    30,
-    12
-   ]
-  },
-  "arbusto25": {
-   "da": [
-    466,
-    320
-   ],
-   "cella": [
-    24,
-    17
-   ]
-  },
-  "arbusto26": {
-   "da": [
-    492,
-    323
-   ],
-   "cella": [
-    16,
-    15
-   ]
-  },
-  "arbusto3": {
-   "da": [
-    373,
-    236
-   ],
-   "cella": [
-    28,
-    22
-   ]
-  },
-  "arbusto4": {
-   "da": [
-    407,
-    238
-   ],
-   "cella": [
-    21,
-    23
-   ]
-  },
-  "arbusto5": {
-   "da": [
-    335,
-    253
-   ],
-   "cella": [
-    16,
-    15
-   ]
-  },
-  "arbusto6": {
-   "da": [
-    307,
-    259
-   ],
-   "cella": [
-    20,
-    20
-   ]
-  },
-  "arbusto7": {
-   "da": [
-    355,
-    254
-   ],
-   "cella": [
-    16,
-    20
-   ]
-  },
-  "arbusto8": {
-   "da": [
-    376,
-    265
-   ],
-   "cella": [
-    24,
-    16
-   ]
-  },
-  "arbusto9": {
-   "da": [
-    402,
-    265
-   ],
-   "cella": [
-    19,
-    16
-   ]
-  },
-  "arco_rose": {
-   "da": [
-    145,
-    54
-   ],
-   "cella": [
-    49,
-    50
-   ]
-  },
-  "balla_fieno_quadrata0": {
-   "da": [
-    461,
-    60
-   ],
-   "cella": [
-    20,
-    17
-   ]
-  },
-  "balla_fieno_quadrata1": {
-   "da": [
-    481,
-    91
-   ],
-   "cella": [
-    27,
-    22
-   ]
-  },
-  "balla_fieno_tonda": {
-   "da": [
-    451,
-    78
-   ],
-   "cella": [
-    27,
-    23
-   ]
-  },
-  "balle_fieno_gruppo": {
-   "da": [
-    193,
-    277
-   ],
-   "cella": [
-    42,
-    26
-   ]
-  },
-  "barile_frutta": {
-   "da": [
-    487,
-    63
-   ],
-   "cella": [
-    21,
-    24
-   ]
-  },
-  "barile_legno0": {
-   "da": [
-    441,
-    54
-   ],
-   "cella": [
-    15,
-    23
-   ]
-  },
-  "barile_legno1": {
-   "da": [
-    158,
-    275
-   ],
-   "cella": [
-    13,
-    19
-   ]
-  },
-  "barile_legno2": {
-   "da": [
-    176,
-    276
-   ],
-   "cella": [
-    15,
-    20
-   ]
-  },
-  "barile_legno3": {
-   "da": [
-    169,
-    256
-   ],
-   "cella": [
-    12,
-    17
-   ]
-  },
-  "barile_mele": {
-   "da": [
-    489,
-    38
-   ],
-   "cella": [
-    18,
-    23
-   ]
-  },
-  "bici_fiori": {
-   "da": [
-    374,
-    147
-   ],
-   "cella": [
-    49,
-    35
-   ]
-  },
-  "boccio_rosa": {
-   "da": [
-    99,
-    316
-   ],
-   "cella": [
-    11,
-    12
-   ]
-  },
-  "campanelle_vento": {
-   "da": [
-    198,
-    150
-   ],
-   "cella": [
-    11,
-    31
-   ]
-  },
-  "cane_cucciolo0": {
-   "da": [
-    56,
-    174
-   ],
-   "cella": [
-    22,
-    19
-   ]
-  },
-  "cane_cucciolo1": {
-   "da": [
-    14,
-    189
-   ],
-   "cella": [
-    23,
-    19
-   ]
-  },
-  "canna_palude0": {
-   "da": [
-    195,
-    199
-   ],
-   "cella": [
-    20,
-    31
-   ]
-  },
-  "canna_palude1": {
-   "da": [
-    170,
-    203
-   ],
-   "cella": [
-    21,
-    26
-   ]
-  },
-  "carretto_fiori0": {
-   "da": [
-    357,
+  "__": "Oggetti da giardino generati (fontane, pozzi, mulini decorativi, arredi, animaletti, vegetazione). Il fondo è già trasparente nel PNG (canale alfa vero: composto su magenta non lascia aloni) quindi niente da togliere. «foglio» + «cella»: [1,1] fanno ridimensionare tutto il foglio di un fattore 3 prima di ritagliare (lo stesso meccanismo di character.json e dei cane-*.json — «foglio» dice quant'è grande DOPO, alla_misura_vera fa un resize BOX): il PNG arrivava tre volte più grande del resto della fattoria (una panchina a 131px contro i 48px di quella vecchia), e senza restringerlo qui ogni pezzo nuovo avrebbe fatto sembrare tutto il resto in miniatura. Le coordinate sotto sono già divise per 3, quindi in pixel del foglio ridotto, non di quello originale — e «cella»: [1,1] fa sì che «da» valga pixel invece che celle: il foglio non ha una griglia, gli oggetti sono disposti a mano, non su una tabella. «fontana», «cartello», «staccionata» e «barile2» esistono già in Overworld.json: qui si chiamano fontana_grande, insegna, recinto e barile_legno per non sovrascriverli in silenzio con uno stile molto più grande e diverso. Esclusi apposta due indici della numerazione di lavoro (misura.py/figure()): 108, una macchia troppo sfocata per dire cosa sia, e 116, un pulcino e un uccellino talmente vicini che il rettangolo li porta dentro tutti e due mescolati. albero_verde (102) e' ristretto a mano di 26px: la bbox automatica arrivava a mordere un angolo della panchina_legno (120) accanto.",
+  "scala": 3,
+  "fondo": "trasparente",
+  "foglio": [
+    512,
+    341
+  ],
+  "cella": [
+    1,
     1
-   ],
-   "cella": [
-    53,
-    41
-   ]
-  },
-  "carretto_fiori1": {
-   "da": [
-    227,
-    296
-   ],
-   "cella": [
-    42,
-    41
-   ]
-  },
-  "carretto_frutta": {
-   "da": [
-    4,
-    294
-   ],
-   "cella": [
-    53,
-    42
-   ]
-  },
-  "carriola_fiori": {
-   "da": [
-    415,
-    7
-   ],
-   "cella": [
-    42,
-    27
-   ]
-  },
-  "casetta_uccelli0": {
-   "da": [
-    317,
-    52
-   ],
-   "cella": [
-    25,
-    52
-   ]
-  },
-  "casetta_uccelli1": {
-   "da": [
-    233,
-    151
-   ],
-   "cella": [
-    16,
-    44
-   ]
-  },
-  "cassa_grande0": {
-   "da": [
-    139,
-    256
-   ],
-   "cella": [
-    25,
-    17
-   ]
-  },
-  "cassa_grande1": {
-   "da": [
-    141,
-    297
-   ],
-   "cella": [
-    29,
-    26
-   ]
-  },
-  "cassa_mele": {
-   "da": [
-    400,
-    59
-   ],
-   "cella": [
-    17,
-    19
-   ]
-  },
-  "cassetta_fiori0": {
-   "da": [
-    457,
-    35
-   ],
-   "cella": [
-    26,
-    22
-   ]
-  },
-  "cassetta_fiori1": {
-   "da": [
-    113,
-    254
-   ],
-   "cella": [
-    20,
-    28
-   ]
-  },
-  "cassetta_fragole": {
-   "da": [
-    277,
-    300
-   ],
-   "cella": [
-    32,
-    24
-   ]
-  },
-  "cassetta_posta0": {
-   "da": [
-    383,
-    106
-   ],
-   "cella": [
-    15,
-    36
-   ]
-  },
-  "cassetta_posta1": {
-   "da": [
-    404,
-    106
-   ],
-   "cella": [
-    15,
-    38
-   ]
-  },
-  "cassetta_raccolto": {
-   "da": [
-    239,
-    276
-   ],
-   "cella": [
-    25,
-    17
-   ]
-  },
-  "ceppo0": {
-   "da": [
-    168,
-    233
-   ],
-   "cella": [
-    19,
-    18
-   ]
-  },
-  "cesta_fiori_grande": {
-   "da": [
-    233,
-    200
-   ],
-   "cella": [
-    32,
-    22
-   ]
-  },
-  "cesta_picnic": {
-   "da": [
-    449,
-    120
-   ],
-   "cella": [
-    59,
-    29
-   ]
-  },
-  "cesta_pomodori": {
-   "da": [
-    401,
-    82
-   ],
-   "cella": [
-    20,
-    21
-   ]
-  },
-  "cesta_verdure": {
-   "da": [
-    425,
-    106
-   ],
-   "cella": [
-    28,
-    18
-   ]
-  },
-  "cesto_agrumi": {
-   "da": [
-    114,
-    315
-   ],
-   "cella": [
-    24,
-    17
-   ]
-  },
-  "cesto_fiori_misti0": {
-   "da": [
-    383,
-    44
-   ],
-   "cella": [
-    16,
-    21
-   ]
-  },
-  "cesto_mele": {
-   "da": [
-    424,
-    127
-   ],
-   "cella": [
-    21,
-    21
-   ]
-  },
-  "ciondolo_fiore": {
-   "da": [
-    213,
-    145
-   ],
-   "cella": [
-    14,
-    30
-   ]
-  },
-  "ciotola0": {
-   "da": [
-    63,
-    325
-   ],
-   "cella": [
-    14,
-    9
-   ]
-  },
-  "ciotola1": {
-   "da": [
-    82,
-    325
-   ],
-   "cella": [
-    14,
-    9
-   ]
-  },
-  "coccinella0": {
-   "da": [
-    215,
-    183
-   ],
-   "cella": [
-    10,
-    11
-   ]
-  },
-  "coccinella1": {
-   "da": [
-    183,
-    193
-   ],
-   "cella": [
-    9,
-    10
-   ]
-  },
-  "coniglio0": {
-   "da": [
-    81,
-    170
-   ],
-   "cella": [
-    20,
-    25
-   ]
-  },
-  "coniglio1": {
-   "da": [
-    109,
-    172
-   ],
-   "cella": [
-    24,
-    19
-   ]
-  },
-  "coniglio2": {
-   "da": [
-    41,
-    192
-   ],
-   "cella": [
-    22,
-    20
-   ]
-  },
-  "crostatina": {
-   "da": [
-    489,
-    173
-   ],
-   "cella": [
-    19,
-    13
-   ]
-  },
-  "cuccia0": {
-   "da": [
-    3,
-    251
-   ],
-   "cella": [
-    39,
-    40
-   ]
-  },
-  "cuccia1": {
-   "da": [
-    44,
-    257
-   ],
-   "cella": [
-    38,
-    42
-   ]
-  },
-  "dehors_azzurro": {
-   "da": [
-    62,
-    114
-   ],
-   "cella": [
-    46,
-    56
-   ]
-  },
-  "dehors_rosa": {
-   "da": [
-    7,
-    110
-   ],
-   "cella": [
-    52,
-    57
-   ]
-  },
-  "farfalla0": {
-   "da": [
-    185,
-    172
-   ],
-   "cella": [
-    10,
-    12
-   ]
-  },
-  "farfalla1": {
-   "da": [
-    172,
-    184
-   ],
-   "cella": [
-    11,
-    11
-   ]
-  },
-  "farfalla2": {
-   "da": [
-    196,
-    185
-   ],
-   "cella": [
-    11,
-    12
-   ]
-  },
-  "farfalle0": {
-   "da": [
-    167,
-    165
-   ],
-   "cella": [
-    14,
-    14
-   ]
-  },
-  "farfalle1": {
-   "da": [
-    145,
-    168
-   ],
-   "cella": [
-    12,
-    12
-   ]
-  },
-  "festone_bandierine": {
-   "da": [
-    207,
-    128
-   ],
-   "cella": [
-    50,
-    15
-   ]
-  },
-  "filo_lucine": {
-   "da": [
-    271,
-    99
-   ],
-   "cella": [
-    53,
-    38
-   ]
-  },
-  "fiorellino0": {
-   "da": [
-    159,
-    177
-   ],
-   "cella": [
-    10,
-    9
-   ]
-  },
-  "fiorellino1": {
-   "da": [
-    161,
-    192
-   ],
-   "cella": [
-    9,
-    9
-   ]
-  },
-  "fioriera_box0": {
-   "da": [
-    158,
-    77
-   ],
-   "cella": [
-    25,
-    23
-   ]
-  },
-  "fioriera_box1": {
-   "da": [
-    288,
-    174
-   ],
-   "cella": [
-    31,
-    23
-   ]
-  },
-  "fioriera_mista": {
-   "da": [
-    129,
-    224
-   ],
-   "cella": [
-    32,
-    27
-   ]
-  },
-  "fontana_grande0": {
-   "da": [
-    4,
-    4
-   ],
-   "cella": [
-    30,
-    33
-   ]
-  },
-  "fontana_grande1": {
-   "da": [
-    37,
-    3
-   ],
-   "cella": [
-    30,
-    34
-   ]
-  },
-  "fontana_grande2": {
-   "da": [
-    71,
-    3
-   ],
-   "cella": [
-    30,
-    34
-   ]
-  },
-  "fontana_grande3": {
-   "da": [
-    104,
-    3
-   ],
-   "cella": [
-    30,
-    34
-   ]
-  },
-  "fungo0": {
-   "da": [
-    188,
-    256
-   ],
-   "cella": [
-    19,
-    17
-   ]
-  },
-  "fungo1": {
-   "da": [
-    209,
-    255
-   ],
-   "cella": [
-    19,
-    20
-   ]
-  },
-  "fungo2": {
-   "da": [
-    229,
-    262
-   ],
-   "cella": [
-    14,
-    14
-   ]
-  },
-  "gatto0": {
-   "da": [
-    3,
-    172
-   ],
-   "cella": [
-    22,
-    18
-   ]
-  },
-  "gatto1": {
-   "da": [
-    31,
-    171
-   ],
-   "cella": [
-    23,
-    16
-   ]
-  },
-  "gazebo": {
-   "da": [
-    148,
-    104
-   ],
-   "cella": [
-    45,
-    56
-   ]
-  },
-  "insegna": {
-   "da": [
-    382,
-    68
-   ],
-   "cella": [
-    17,
-    35
-   ]
-  },
-  "laghetto0": {
-   "da": [
-    4,
-    42
-   ],
-   "cella": [
-    31,
-    27
-   ]
-  },
-  "laghetto1": {
-   "da": [
-    37,
-    42
-   ],
-   "cella": [
-    30,
-    27
-   ]
-  },
-  "laghetto2": {
-   "da": [
-    71,
-    42
-   ],
-   "cella": [
-    30,
-    27
-   ]
-  },
-  "laghetto3": {
-   "da": [
-    104,
-    42
-   ],
-   "cella": [
-    31,
-    26
-   ]
-  },
-  "lampione0": {
-   "da": [
-    267,
-    51
-   ],
-   "cella": [
-    17,
-    45
-   ]
-  },
-  "lampione1": {
-   "da": [
-    290,
-    53
-   ],
-   "cella": [
-    21,
-    52
-   ]
-  },
-  "lampione_cesto": {
-   "da": [
-    331,
-    103
-   ],
-   "cella": [
-    46,
-    42
-   ]
-  },
-  "lanterna_muro": {
-   "da": [
-    249,
-    97
-   ],
-   "cella": [
-    19,
-    40
-   ]
-  },
-  "latte": {
-   "da": [
-    497,
-    152
-   ],
-   "cella": [
-    10,
-    18
-   ]
-  },
-  "marmellata0": {
-   "da": [
-    432,
-    152
-   ],
-   "cella": [
-    11,
-    12
-   ]
-  },
-  "marmellata1": {
-   "da": [
-    448,
-    153
-   ],
-   "cella": [
-    12,
-    15
-   ]
-  },
-  "melo": {
-   "da": [
-    416,
-    185
-   ],
-   "cella": [
-    37,
-    49
-   ]
-  },
-  "moncone_ascia": {
-   "da": [
-    194,
-    302
-   ],
-   "cella": [
-    27,
-    25
-   ]
-  },
-  "mulino_giardino0": {
-   "da": [
-    140,
-    3
-   ],
-   "cella": [
-    32,
-    50
-   ]
-  },
-  "mulino_giardino1": {
-   "da": [
-    179,
-    4
-   ],
-   "cella": [
-    29,
-    49
-   ]
-  },
-  "mulino_giardino2": {
-   "da": [
-    214,
-    4
-   ],
-   "cella": [
-    32,
-    49
-   ]
-  },
-  "mulino_vento_giocattolo0": {
-   "da": [
-    105,
-    284
-   ],
-   "cella": [
-    20,
-    30
-   ]
-  },
-  "mulino_vento_giocattolo1": {
-   "da": [
-    88,
-    287
-   ],
-   "cella": [
-    15,
-    32
-   ]
-  },
-  "mulino_vento_giocattolo2": {
-   "da": [
-    124,
-    292
-   ],
-   "cella": [
-    10,
-    21
-   ]
-  },
-  "ninfea_grande0": {
-   "da": [
-    447,
-    299
-   ],
-   "cella": [
-    22,
-    16
-   ]
-  },
-  "ninfea_grande1": {
-   "da": [
-    432,
-    306
-   ],
-   "cella": [
-    12,
-    8
-   ]
-  },
-  "ninfea_grande2": {
-   "da": [
-    415,
-    317
-   ],
-   "cella": [
-    14,
-    13
-   ]
-  },
-  "ninfea_grande3": {
-   "da": [
-    432,
-    316
-   ],
-   "cella": [
-    30,
-    16
-   ]
-  },
-  "pagliaio0": {
-   "da": [
-    425,
-    84
-   ],
-   "cella": [
-    23,
-    18
-   ]
-  },
-  "pagliaio1": {
-   "da": [
-    170,
-    324
-   ],
-   "cella": [
-    26,
-    14
-   ]
-  },
-  "palloncini": {
-   "da": [
-    284,
-    133
-   ],
-   "cella": [
-    33,
-    39
-   ]
-  },
-  "palo_rampicante": {
-   "da": [
-    348,
-    141
-   ],
-   "cella": [
-    15,
-    46
-   ]
-  },
-  "palude_fiorita": {
-   "da": [
-    397,
-    298
-   ],
-   "cella": [
-    19,
-    13
-   ]
-  },
-  "panchina_bianca": {
-   "da": [
-    59,
-    71
-   ],
-   "cella": [
-    44,
-    42
-   ]
-  },
-  "panchina_cuore": {
-   "da": [
-    4,
-    76
-   ],
-   "cella": [
-    50,
-    33
-   ]
-  },
-  "panchina_legno": {
-   "da": [
-    351,
-    216
-   ],
-   "cella": [
-    27,
-    18
-   ]
-  },
-  "pane": {
-   "da": [
-    464,
-    152
-   ],
-   "cella": [
-    19,
-    16
-   ]
-  },
-  "panino": {
-   "da": [
-    473,
-    173
-   ],
-   "cella": [
-    13,
-    12
-   ]
-  },
-  "pergola_bianca": {
-   "da": [
-    253,
-    140
-   ],
-   "cella": [
-    32,
-    57
-   ]
-  },
-  "pergola_fiorita": {
-   "da": [
-    456,
-    188
-   ],
-   "cella": [
-    29,
-    46
-   ]
-  },
-  "ponte": {
-   "da": [
-    429,
-    238
-   ],
-   "cella": [
-    75,
-    44
-   ]
-  },
-  "pozzo_giardino0": {
-   "da": [
-    251,
-    5
-   ],
-   "cella": [
-    29,
-    45
-   ]
-  },
-  "pozzo_giardino1": {
-   "da": [
-    287,
-    4
-   ],
-   "cella": [
-    27,
-    45
-   ]
-  },
-  "pozzo_giardino2": {
-   "da": [
-    321,
-    5
-   ],
-   "cella": [
-    28,
-    44
-   ]
-  },
-  "pulcino0": {
-   "da": [
-    136,
-    182
-   ],
-   "cella": [
-    15,
-    16
-   ]
-  },
-  "pulcino1": {
-   "da": [
-    107,
-    196
-   ],
-   "cella": [
-    10,
-    16
-   ]
-  },
-  "pulcino2": {
-   "da": [
-    117,
-    194
-   ],
-   "cella": [
-    11,
-    13
-   ]
-  },
-  "pulcino3": {
-   "da": [
-    96,
-    200
-   ],
-   "cella": [
-    11,
-    13
-   ]
-  },
-  "recinto": {
-   "da": [
-    340,
-    75
-   ],
-   "cella": [
-    36,
-    25
-   ]
-  },
-  "roccia_muschiosa": {
-   "da": [
-    456,
-    105
-   ],
-   "cella": [
-    16,
-    13
-   ]
-  },
-  "sacco_iuta": {
-   "da": [
-    173,
-    300
-   ],
-   "cella": [
-    17,
-    21
-   ]
-  },
-  "sasso_fiorito0": {
-   "da": [
-    362,
-    186
-   ],
-   "cella": [
-    16,
-    23
-   ]
-  },
-  "sasso_fiorito1": {
-   "da": [
-    490,
-    216
-   ],
-   "cella": [
-    18,
-    22
-   ]
-  },
-  "sasso_fiorito2": {
-   "da": [
-    230,
-    228
-   ],
-   "cella": [
-    39,
-    26
-   ]
-  },
-  "sasso_fiorito3": {
-   "da": [
-    195,
-    234
-   ],
-   "cella": [
-    29,
-    19
-   ]
-  },
-  "sasso_fiorito4": {
-   "da": [
-    275,
-    234
-   ],
-   "cella": [
-    21,
-    19
-   ]
-  },
-  "sasso_fiorito5": {
-   "da": [
-    466,
-    280
-   ],
-   "cella": [
-    19,
-    20
-   ]
-  },
-  "sasso_fiorito6": {
-   "da": [
-    487,
-    283
-   ],
-   "cella": [
-    19,
-    20
-   ]
-  },
-  "sasso_fiorito7": {
-   "da": [
-    379,
-    301
-   ],
-   "cella": [
-    16,
-    16
-   ]
-  },
-  "sasso_fiorito8": {
-   "da": [
-    337,
-    319
-   ],
-   "cella": [
-    15,
-    18
-   ]
-  },
-  "sasso_giardino0": {
-   "da": [
-    248,
-    259
-   ],
-   "cella": [
-    16,
-    13
-   ]
-  },
-  "sasso_giardino1": {
-   "da": [
-    266,
-    258
-   ],
-   "cella": [
-    16,
-    23
-   ]
-  },
-  "sasso_giardino2": {
-   "da": [
-    281,
-    257
-   ],
-   "cella": [
-    21,
-    21
-   ]
-  },
-  "sasso_giardino3": {
-   "da": [
-    267,
-    283
-   ],
-   "cella": [
-    19,
-    14
-   ]
-  },
-  "sasso_giardino4": {
-   "da": [
-    355,
-    301
-   ],
-   "cella": [
-    20,
-    14
-   ]
-  },
-  "sasso_giardino5": {
-   "da": [
-    355,
-    317
-   ],
-   "cella": [
-    21,
-    9
-   ]
-  },
-  "sasso_giardino6": {
-   "da": [
-    356,
-    328
-   ],
-   "cella": [
-    19,
-    10
-   ]
-  },
-  "sasso_giardino7": {
-   "da": [
-    400,
-    327
-   ],
-   "cella": [
-    16,
-    10
-   ]
-  },
-  "sasso_giardino8": {
-   "da": [
-    425,
-    329
-   ],
-   "cella": [
-    13,
-    9
-   ]
-  },
-  "sasso_giardino9": {
-   "da": [
-    304,
-    236
-   ],
-   "cella": [
-    36,
-    18
-   ]
-  },
-  "sdraio": {
-   "da": [
-    114,
-    122
-   ],
-   "cella": [
-    29,
-    30
-   ]
-  },
-  "sedia0": {
-   "da": [
-    3,
-    142
-   ],
-   "cella": [
-    15,
-    25
-   ]
-  },
-  "sedia1": {
-   "da": [
-    97,
-    147
-   ],
-   "cella": [
-    15,
-    24
-   ]
-  },
-  "spaventapasseri": {
-   "da": [
-    315,
-    140
-   ],
-   "cella": [
-    34,
-    46
-   ]
-  },
-  "specchio_giardino": {
-   "da": [
-    197,
-    119
-   ],
-   "cella": [
-    9,
-    28
-   ]
-  },
-  "tartarughe": {
-   "da": [
-    128,
-    204
-   ],
-   "cella": [
-    37,
-    17
-   ]
-  },
-  "tavolino_bevande": {
-   "da": [
-    129,
-    150
-   ],
-   "cella": [
-    18,
-    22
-   ]
-  },
-  "topiaria": {
-   "da": [
-    269,
-    201
-   ],
-   "cella": [
-    46,
-    40
-   ]
-  },
-  "torta0": {
-   "da": [
-    429,
-    168
-   ],
-   "cella": [
-    19,
-    14
-   ]
-  },
-  "torta1": {
-   "da": [
-    454,
-    169
-   ],
-   "cella": [
-    15,
-    12
-   ]
-  },
-  "tronco_corto": {
-   "da": [
-    217,
-    327
-   ],
-   "cella": [
-    17,
-    10
-   ]
-  },
-  "tronco_verticale": {
-   "da": [
-    138,
-    276
-   ],
-   "cella": [
-    15,
-    19
-   ]
-  },
-  "uccellino_verde": {
-   "da": [
-    67,
-    204
-   ],
-   "cella": [
-    13,
-    13
-   ]
-  },
-  "vasca_uccelli": {
-   "da": [
-    207,
-    96
-   ],
-   "cella": [
-    15,
-    26
-   ]
-  },
-  "vasetto_legno": {
-   "da": [
-    485,
-    159
-   ],
-   "cella": [
-    11,
-    11
-   ]
-  },
-  "vaso_azalea0": {
-   "da": [
-    491,
-    190
-   ],
-   "cella": [
-    18,
-    22
-   ]
-  },
-  "vaso_azalea1": {
-   "da": [
-    60,
-    300
-   ],
-   "cella": [
-    24,
-    23
-   ]
-  },
-  "vaso_fiori_rosa": {
-   "da": [
-    98,
-    218
-   ],
-   "cella": [
-    25,
-    33
-   ]
-  },
-  "vaso_girasoli0": {
-   "da": [
-    461,
-    2
-   ],
-   "cella": [
-    23,
-    30
-   ]
-  },
-  "vaso_girasoli1": {
-   "da": [
-    486,
-    3
-   ],
-   "cella": [
-    22,
-    30
-   ]
-  },
-  "vaso_girasoli2": {
-   "da": [
-    352,
-    43
-   ],
-   "cella": [
-    25,
-    28
-   ]
-  },
-  "vaso_girasoli_cuore": {
-   "da": [
-    420,
-    58
-   ],
-   "cella": [
-    17,
-    20
-   ]
-  },
-  "vaso_lavanda": {
-   "da": [
-    70,
-    226
-   ],
-   "cella": [
-    22,
-    31
-   ]
-  },
-  "vaso_margherite": {
-   "da": [
-    427,
-    36
-   ],
-   "cella": [
-    19,
-    19
-   ]
-  },
-  "vaso_ortensie_blu": {
-   "da": [
-    35,
-    217
-   ],
-   "cella": [
-    27,
-    35
-   ]
-  },
-  "vaso_ortensie_rosa": {
-   "da": [
-    3,
-    212
-   ],
-   "cella": [
-    25,
-    34
-   ]
-  },
-  "vaso_piedistallo": {
-   "da": [
-    224,
-    100
-   ],
-   "cella": [
-    17,
-    30
-   ]
-  },
-  "vaso_tulipani": {
-   "da": [
-    405,
-    36
-   ],
-   "cella": [
-    17,
-    21
-   ]
-  }
- }
+  ],
+  "famiglie": {
+    "mulino_giardino": "figura",
+    "pozzo": "figura",
+    "casetta_uccelli": "figura",
+    "arco_rose": "figura",
+    "gazebo": "figura",
+    "lampione": "figura",
+    "insegna": "figura",
+    "altalena": "figura",
+    "pergola_bianca": "figura",
+    "pergola_fiorita": "figura",
+    "palo_rampicante": "figura",
+    "spaventapasseri": "figura",
+    "albero_rosa": "figura",
+    "melo": "figura",
+    "albero_verde": "figura",
+    "topiaria": "figura",
+    "dehors_rosa": "figura",
+    "dehors_azzurro": "figura"
+  },
+  "trasforma": {
+    "recinto": {
+      "giri": 2
+    },
+    "ponte": {
+      "giri": 2
+    },
+    "sasso": {
+      "giri": 4
+    },
+    "ninfea": {
+      "giri": 4
+    },
+    "ceppo": {
+      "giri": 4
+    }
+  },
+  "sprite": {
+    "albero_rosa": {
+      "da": [
+        382,
+        185
+      ],
+      "cella": [
+        32,
+        48
+      ]
+    },
+    "albero_verde": {
+      "da": [
+        317,
+        187
+      ],
+      "cella": [
+        33,
+        45
+      ]
+    },
+    "altalena": {
+      "da": [
+        107,
+        74
+      ],
+      "cella": [
+        38,
+        42
+      ]
+    },
+    "alveare": {
+      "da": [
+        86,
+        255
+      ],
+      "cella": [
+        21,
+        29
+      ]
+    },
+    "amaca": {
+      "da": [
+        198,
+        57
+      ],
+      "cella": [
+        58,
+        38
+      ]
+    },
+    "arbusto0": {
+      "da": [
+        219,
+        216
+      ],
+      "cella": [
+        13,
+        13
+      ]
+    },
+    "arbusto10": {
+      "da": [
+        325,
+        271
+      ],
+      "cella": [
+        37,
+        27
+      ]
+    },
+    "arbusto11": {
+      "da": [
+        293,
+        281
+      ],
+      "cella": [
+        27,
+        18
+      ]
+    },
+    "arbusto12": {
+      "da": [
+        365,
+        283
+      ],
+      "cella": [
+        35,
+        15
+      ]
+    },
+    "arbusto13": {
+      "da": [
+        405,
+        284
+      ],
+      "cella": [
+        14,
+        11
+      ]
+    },
+    "arbusto14": {
+      "da": [
+        421,
+        281
+      ],
+      "cella": [
+        39,
+        18
+      ]
+    },
+    "arbusto15": {
+      "da": [
+        312,
+        300
+      ],
+      "cella": [
+        17,
+        17
+      ]
+    },
+    "arbusto16": {
+      "da": [
+        335,
+        301
+      ],
+      "cella": [
+        17,
+        19
+      ]
+    },
+    "arbusto17": {
+      "da": [
+        418,
+        302
+      ],
+      "cella": [
+        14,
+        11
+      ]
+    },
+    "arbusto18": {
+      "da": [
+        472,
+        304
+      ],
+      "cella": [
+        16,
+        14
+      ]
+    },
+    "arbusto19": {
+      "da": [
+        491,
+        306
+      ],
+      "cella": [
+        16,
+        15
+      ]
+    },
+    "arbusto2": {
+      "da": [
+        350,
+        236
+      ],
+      "cella": [
+        18,
+        15
+      ]
+    },
+    "arbusto20": {
+      "da": [
+        398,
+        312
+      ],
+      "cella": [
+        16,
+        13
+      ]
+    },
+    "arbusto21": {
+      "da": [
+        312,
+        318
+      ],
+      "cella": [
+        21,
+        18
+      ]
+    },
+    "arbusto22": {
+      "da": [
+        380,
+        317
+      ],
+      "cella": [
+        15,
+        19
+      ]
+    },
+    "arbusto23": {
+      "da": [
+        148,
+        325
+      ],
+      "cella": [
+        17,
+        12
+      ]
+    },
+    "arbusto24": {
+      "da": [
+        276,
+        325
+      ],
+      "cella": [
+        30,
+        12
+      ]
+    },
+    "arbusto25": {
+      "da": [
+        466,
+        320
+      ],
+      "cella": [
+        24,
+        17
+      ]
+    },
+    "arbusto26": {
+      "da": [
+        492,
+        323
+      ],
+      "cella": [
+        16,
+        15
+      ]
+    },
+    "arbusto3": {
+      "da": [
+        373,
+        236
+      ],
+      "cella": [
+        28,
+        22
+      ]
+    },
+    "arbusto4": {
+      "da": [
+        407,
+        238
+      ],
+      "cella": [
+        21,
+        23
+      ]
+    },
+    "arbusto5": {
+      "da": [
+        335,
+        253
+      ],
+      "cella": [
+        16,
+        15
+      ]
+    },
+    "arbusto6": {
+      "da": [
+        307,
+        259
+      ],
+      "cella": [
+        20,
+        20
+      ]
+    },
+    "arbusto7": {
+      "da": [
+        355,
+        254
+      ],
+      "cella": [
+        16,
+        20
+      ]
+    },
+    "arbusto8": {
+      "da": [
+        376,
+        265
+      ],
+      "cella": [
+        24,
+        16
+      ]
+    },
+    "arbusto9": {
+      "da": [
+        402,
+        265
+      ],
+      "cella": [
+        19,
+        16
+      ]
+    },
+    "arco_rose": {
+      "da": [
+        145,
+        54
+      ],
+      "cella": [
+        49,
+        50
+      ]
+    },
+    "balla_fieno_quadrata0": {
+      "da": [
+        461,
+        60
+      ],
+      "cella": [
+        20,
+        17
+      ]
+    },
+    "balla_fieno_quadrata1": {
+      "da": [
+        481,
+        91
+      ],
+      "cella": [
+        27,
+        22
+      ]
+    },
+    "balla_fieno_tonda": {
+      "da": [
+        451,
+        78
+      ],
+      "cella": [
+        27,
+        23
+      ]
+    },
+    "balle_fieno_gruppo": {
+      "da": [
+        193,
+        277
+      ],
+      "cella": [
+        42,
+        26
+      ]
+    },
+    "barile_frutta": {
+      "da": [
+        487,
+        63
+      ],
+      "cella": [
+        21,
+        24
+      ]
+    },
+    "barile_legno0": {
+      "da": [
+        441,
+        54
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "barile_legno1": {
+      "da": [
+        158,
+        275
+      ],
+      "cella": [
+        13,
+        19
+      ]
+    },
+    "barile_legno2": {
+      "da": [
+        176,
+        276
+      ],
+      "cella": [
+        15,
+        20
+      ]
+    },
+    "barile_legno3": {
+      "da": [
+        169,
+        256
+      ],
+      "cella": [
+        12,
+        17
+      ]
+    },
+    "barile_mele": {
+      "da": [
+        489,
+        38
+      ],
+      "cella": [
+        18,
+        23
+      ]
+    },
+    "bici_fiori": {
+      "da": [
+        374,
+        147
+      ],
+      "cella": [
+        49,
+        35
+      ]
+    },
+    "boccio_rosa": {
+      "da": [
+        99,
+        316
+      ],
+      "cella": [
+        11,
+        12
+      ]
+    },
+    "campanelle_vento": {
+      "da": [
+        198,
+        150
+      ],
+      "cella": [
+        11,
+        31
+      ]
+    },
+    "cane_cucciolo0": {
+      "da": [
+        56,
+        174
+      ],
+      "cella": [
+        22,
+        19
+      ]
+    },
+    "cane_cucciolo1": {
+      "da": [
+        14,
+        189
+      ],
+      "cella": [
+        23,
+        19
+      ]
+    },
+    "canna_palude0": {
+      "da": [
+        195,
+        199
+      ],
+      "cella": [
+        20,
+        31
+      ]
+    },
+    "canna_palude1": {
+      "da": [
+        170,
+        203
+      ],
+      "cella": [
+        21,
+        26
+      ]
+    },
+    "carretto_fiori0": {
+      "da": [
+        357,
+        1
+      ],
+      "cella": [
+        53,
+        41
+      ]
+    },
+    "carretto_fiori1": {
+      "da": [
+        227,
+        296
+      ],
+      "cella": [
+        42,
+        41
+      ]
+    },
+    "carretto_frutta": {
+      "da": [
+        4,
+        294
+      ],
+      "cella": [
+        53,
+        42
+      ]
+    },
+    "carriola_fiori": {
+      "da": [
+        415,
+        7
+      ],
+      "cella": [
+        42,
+        27
+      ]
+    },
+    "cassa_grande0": {
+      "da": [
+        139,
+        256
+      ],
+      "cella": [
+        25,
+        17
+      ]
+    },
+    "cassa_grande1": {
+      "da": [
+        141,
+        297
+      ],
+      "cella": [
+        29,
+        26
+      ]
+    },
+    "cassa_mele": {
+      "da": [
+        400,
+        59
+      ],
+      "cella": [
+        17,
+        19
+      ]
+    },
+    "cassetta_fiori0": {
+      "da": [
+        457,
+        35
+      ],
+      "cella": [
+        26,
+        22
+      ]
+    },
+    "cassetta_fiori1": {
+      "da": [
+        113,
+        254
+      ],
+      "cella": [
+        20,
+        28
+      ]
+    },
+    "cassetta_fragole": {
+      "da": [
+        277,
+        300
+      ],
+      "cella": [
+        32,
+        24
+      ]
+    },
+    "cassetta_posta0": {
+      "da": [
+        383,
+        106
+      ],
+      "cella": [
+        15,
+        36
+      ]
+    },
+    "cassetta_posta1": {
+      "da": [
+        404,
+        106
+      ],
+      "cella": [
+        15,
+        38
+      ]
+    },
+    "cassetta_raccolto": {
+      "da": [
+        239,
+        276
+      ],
+      "cella": [
+        25,
+        17
+      ]
+    },
+    "ceppo0": {
+      "da": [
+        168,
+        233
+      ],
+      "cella": [
+        19,
+        18
+      ]
+    },
+    "cesta_fiori_grande": {
+      "da": [
+        233,
+        200
+      ],
+      "cella": [
+        32,
+        22
+      ]
+    },
+    "cesta_picnic": {
+      "da": [
+        449,
+        120
+      ],
+      "cella": [
+        59,
+        29
+      ]
+    },
+    "cesta_pomodori": {
+      "da": [
+        401,
+        82
+      ],
+      "cella": [
+        20,
+        21
+      ]
+    },
+    "cesta_verdure": {
+      "da": [
+        425,
+        106
+      ],
+      "cella": [
+        28,
+        18
+      ]
+    },
+    "cesto_agrumi": {
+      "da": [
+        114,
+        315
+      ],
+      "cella": [
+        24,
+        17
+      ]
+    },
+    "cesto_fiori_misti0": {
+      "da": [
+        383,
+        44
+      ],
+      "cella": [
+        16,
+        21
+      ]
+    },
+    "cesto_mele": {
+      "da": [
+        424,
+        127
+      ],
+      "cella": [
+        21,
+        21
+      ]
+    },
+    "ciondolo_fiore": {
+      "da": [
+        213,
+        145
+      ],
+      "cella": [
+        14,
+        30
+      ]
+    },
+    "ciotola0": {
+      "da": [
+        63,
+        325
+      ],
+      "cella": [
+        14,
+        9
+      ]
+    },
+    "ciotola1": {
+      "da": [
+        82,
+        325
+      ],
+      "cella": [
+        14,
+        9
+      ]
+    },
+    "coccinella0": {
+      "da": [
+        215,
+        183
+      ],
+      "cella": [
+        10,
+        11
+      ]
+    },
+    "coccinella1": {
+      "da": [
+        183,
+        193
+      ],
+      "cella": [
+        9,
+        10
+      ]
+    },
+    "coniglio0": {
+      "da": [
+        81,
+        170
+      ],
+      "cella": [
+        20,
+        25
+      ]
+    },
+    "coniglio1": {
+      "da": [
+        109,
+        172
+      ],
+      "cella": [
+        24,
+        19
+      ]
+    },
+    "coniglio2": {
+      "da": [
+        41,
+        192
+      ],
+      "cella": [
+        22,
+        20
+      ]
+    },
+    "crostatina": {
+      "da": [
+        489,
+        173
+      ],
+      "cella": [
+        19,
+        13
+      ]
+    },
+    "cuccia0": {
+      "da": [
+        3,
+        251
+      ],
+      "cella": [
+        39,
+        40
+      ]
+    },
+    "cuccia1": {
+      "da": [
+        44,
+        257
+      ],
+      "cella": [
+        38,
+        42
+      ]
+    },
+    "dehors_azzurro": {
+      "da": [
+        62,
+        114
+      ],
+      "cella": [
+        46,
+        56
+      ]
+    },
+    "dehors_rosa": {
+      "da": [
+        7,
+        110
+      ],
+      "cella": [
+        52,
+        57
+      ]
+    },
+    "farfalla0": {
+      "da": [
+        185,
+        172
+      ],
+      "cella": [
+        10,
+        12
+      ]
+    },
+    "farfalla1": {
+      "da": [
+        172,
+        184
+      ],
+      "cella": [
+        11,
+        11
+      ]
+    },
+    "farfalla2": {
+      "da": [
+        196,
+        185
+      ],
+      "cella": [
+        11,
+        12
+      ]
+    },
+    "farfalle0": {
+      "da": [
+        167,
+        165
+      ],
+      "cella": [
+        14,
+        14
+      ]
+    },
+    "farfalle1": {
+      "da": [
+        145,
+        168
+      ],
+      "cella": [
+        12,
+        12
+      ]
+    },
+    "festone_bandierine": {
+      "da": [
+        207,
+        128
+      ],
+      "cella": [
+        50,
+        15
+      ]
+    },
+    "filo_lucine": {
+      "da": [
+        271,
+        99
+      ],
+      "cella": [
+        53,
+        38
+      ]
+    },
+    "fiorellino0": {
+      "da": [
+        159,
+        177
+      ],
+      "cella": [
+        10,
+        9
+      ]
+    },
+    "fiorellino1": {
+      "da": [
+        161,
+        192
+      ],
+      "cella": [
+        9,
+        9
+      ]
+    },
+    "fioriera_box0": {
+      "da": [
+        158,
+        77
+      ],
+      "cella": [
+        25,
+        23
+      ]
+    },
+    "fioriera_box1": {
+      "da": [
+        288,
+        174
+      ],
+      "cella": [
+        31,
+        23
+      ]
+    },
+    "fioriera_mista": {
+      "da": [
+        129,
+        224
+      ],
+      "cella": [
+        32,
+        27
+      ]
+    },
+    "fontana_grande0": {
+      "da": [
+        4,
+        4
+      ],
+      "cella": [
+        30,
+        33
+      ]
+    },
+    "fontana_grande1": {
+      "da": [
+        37,
+        3
+      ],
+      "cella": [
+        30,
+        34
+      ]
+    },
+    "fontana_grande2": {
+      "da": [
+        71,
+        3
+      ],
+      "cella": [
+        30,
+        34
+      ]
+    },
+    "fontana_grande3": {
+      "da": [
+        104,
+        3
+      ],
+      "cella": [
+        30,
+        34
+      ]
+    },
+    "fungo0": {
+      "da": [
+        188,
+        256
+      ],
+      "cella": [
+        19,
+        17
+      ]
+    },
+    "fungo1": {
+      "da": [
+        209,
+        255
+      ],
+      "cella": [
+        19,
+        20
+      ]
+    },
+    "fungo2": {
+      "da": [
+        229,
+        262
+      ],
+      "cella": [
+        14,
+        14
+      ]
+    },
+    "gatto0": {
+      "da": [
+        3,
+        172
+      ],
+      "cella": [
+        22,
+        18
+      ]
+    },
+    "gatto1": {
+      "da": [
+        31,
+        171
+      ],
+      "cella": [
+        23,
+        16
+      ]
+    },
+    "gazebo": {
+      "da": [
+        148,
+        104
+      ],
+      "cella": [
+        45,
+        56
+      ]
+    },
+    "insegna": {
+      "da": [
+        382,
+        68
+      ],
+      "cella": [
+        17,
+        35
+      ]
+    },
+    "laghetto0": {
+      "da": [
+        4,
+        42
+      ],
+      "cella": [
+        31,
+        27
+      ]
+    },
+    "laghetto1": {
+      "da": [
+        37,
+        42
+      ],
+      "cella": [
+        30,
+        27
+      ]
+    },
+    "laghetto2": {
+      "da": [
+        71,
+        42
+      ],
+      "cella": [
+        30,
+        27
+      ]
+    },
+    "laghetto3": {
+      "da": [
+        104,
+        42
+      ],
+      "cella": [
+        31,
+        26
+      ]
+    },
+    "lampione0": {
+      "da": [
+        267,
+        51
+      ],
+      "cella": [
+        17,
+        45
+      ]
+    },
+    "lampione1": {
+      "da": [
+        290,
+        53
+      ],
+      "cella": [
+        21,
+        52
+      ]
+    },
+    "lampione_cesto": {
+      "da": [
+        331,
+        103
+      ],
+      "cella": [
+        46,
+        42
+      ]
+    },
+    "lanterna_muro": {
+      "da": [
+        249,
+        97
+      ],
+      "cella": [
+        19,
+        40
+      ]
+    },
+    "latte": {
+      "da": [
+        497,
+        152
+      ],
+      "cella": [
+        10,
+        18
+      ]
+    },
+    "marmellata0": {
+      "da": [
+        432,
+        152
+      ],
+      "cella": [
+        11,
+        12
+      ]
+    },
+    "marmellata1": {
+      "da": [
+        448,
+        153
+      ],
+      "cella": [
+        12,
+        15
+      ]
+    },
+    "melo": {
+      "da": [
+        416,
+        185
+      ],
+      "cella": [
+        37,
+        49
+      ]
+    },
+    "moncone_ascia": {
+      "da": [
+        194,
+        302
+      ],
+      "cella": [
+        27,
+        25
+      ]
+    },
+    "mulino_giardino0": {
+      "da": [
+        140,
+        3
+      ],
+      "cella": [
+        32,
+        50
+      ]
+    },
+    "mulino_giardino1": {
+      "da": [
+        179,
+        4
+      ],
+      "cella": [
+        29,
+        49
+      ]
+    },
+    "mulino_giardino2": {
+      "da": [
+        214,
+        4
+      ],
+      "cella": [
+        32,
+        49
+      ]
+    },
+    "mulino_vento_giocattolo0": {
+      "da": [
+        105,
+        284
+      ],
+      "cella": [
+        20,
+        30
+      ]
+    },
+    "mulino_vento_giocattolo1": {
+      "da": [
+        88,
+        287
+      ],
+      "cella": [
+        15,
+        32
+      ]
+    },
+    "mulino_vento_giocattolo2": {
+      "da": [
+        124,
+        292
+      ],
+      "cella": [
+        10,
+        21
+      ]
+    },
+    "ninfea_grande0": {
+      "da": [
+        447,
+        299
+      ],
+      "cella": [
+        22,
+        16
+      ]
+    },
+    "ninfea_grande1": {
+      "da": [
+        432,
+        306
+      ],
+      "cella": [
+        12,
+        8
+      ]
+    },
+    "ninfea_grande2": {
+      "da": [
+        415,
+        317
+      ],
+      "cella": [
+        14,
+        13
+      ]
+    },
+    "ninfea_grande3": {
+      "da": [
+        432,
+        316
+      ],
+      "cella": [
+        30,
+        16
+      ]
+    },
+    "pagliaio0": {
+      "da": [
+        425,
+        84
+      ],
+      "cella": [
+        23,
+        18
+      ]
+    },
+    "pagliaio1": {
+      "da": [
+        170,
+        324
+      ],
+      "cella": [
+        26,
+        14
+      ]
+    },
+    "palloncini": {
+      "da": [
+        284,
+        133
+      ],
+      "cella": [
+        33,
+        39
+      ]
+    },
+    "palo_rampicante": {
+      "da": [
+        348,
+        141
+      ],
+      "cella": [
+        15,
+        46
+      ]
+    },
+    "palude_fiorita": {
+      "da": [
+        397,
+        298
+      ],
+      "cella": [
+        19,
+        13
+      ]
+    },
+    "panchina_bianca": {
+      "da": [
+        59,
+        71
+      ],
+      "cella": [
+        44,
+        42
+      ]
+    },
+    "panchina_cuore": {
+      "da": [
+        4,
+        76
+      ],
+      "cella": [
+        50,
+        33
+      ]
+    },
+    "panchina_legno": {
+      "da": [
+        351,
+        216
+      ],
+      "cella": [
+        27,
+        18
+      ]
+    },
+    "pane": {
+      "da": [
+        464,
+        152
+      ],
+      "cella": [
+        19,
+        16
+      ]
+    },
+    "panino": {
+      "da": [
+        473,
+        173
+      ],
+      "cella": [
+        13,
+        12
+      ]
+    },
+    "pergola_bianca": {
+      "da": [
+        253,
+        140
+      ],
+      "cella": [
+        32,
+        57
+      ]
+    },
+    "pergola_fiorita": {
+      "da": [
+        456,
+        188
+      ],
+      "cella": [
+        29,
+        46
+      ]
+    },
+    "ponte": {
+      "da": [
+        429,
+        238
+      ],
+      "cella": [
+        75,
+        44
+      ]
+    },
+    "pozzo_giardino0": {
+      "da": [
+        251,
+        5
+      ],
+      "cella": [
+        29,
+        45
+      ]
+    },
+    "pozzo_giardino1": {
+      "da": [
+        287,
+        4
+      ],
+      "cella": [
+        27,
+        45
+      ]
+    },
+    "pozzo_giardino2": {
+      "da": [
+        321,
+        5
+      ],
+      "cella": [
+        28,
+        44
+      ]
+    },
+    "pulcino0": {
+      "da": [
+        136,
+        182
+      ],
+      "cella": [
+        15,
+        16
+      ]
+    },
+    "pulcino1": {
+      "da": [
+        107,
+        196
+      ],
+      "cella": [
+        10,
+        16
+      ]
+    },
+    "pulcino2": {
+      "da": [
+        117,
+        194
+      ],
+      "cella": [
+        11,
+        13
+      ]
+    },
+    "pulcino3": {
+      "da": [
+        96,
+        200
+      ],
+      "cella": [
+        11,
+        13
+      ]
+    },
+    "recinto": {
+      "da": [
+        340,
+        75
+      ],
+      "cella": [
+        36,
+        25
+      ]
+    },
+    "roccia_muschiosa": {
+      "da": [
+        456,
+        105
+      ],
+      "cella": [
+        16,
+        13
+      ]
+    },
+    "sacco_iuta": {
+      "da": [
+        173,
+        300
+      ],
+      "cella": [
+        17,
+        21
+      ]
+    },
+    "sasso_fiorito0": {
+      "da": [
+        362,
+        186
+      ],
+      "cella": [
+        16,
+        23
+      ]
+    },
+    "sasso_fiorito1": {
+      "da": [
+        490,
+        216
+      ],
+      "cella": [
+        18,
+        22
+      ]
+    },
+    "sasso_fiorito2": {
+      "da": [
+        230,
+        228
+      ],
+      "cella": [
+        39,
+        26
+      ]
+    },
+    "sasso_fiorito3": {
+      "da": [
+        195,
+        234
+      ],
+      "cella": [
+        29,
+        19
+      ]
+    },
+    "sasso_fiorito4": {
+      "da": [
+        275,
+        234
+      ],
+      "cella": [
+        21,
+        19
+      ]
+    },
+    "sasso_fiorito5": {
+      "da": [
+        466,
+        280
+      ],
+      "cella": [
+        19,
+        20
+      ]
+    },
+    "sasso_fiorito6": {
+      "da": [
+        487,
+        283
+      ],
+      "cella": [
+        19,
+        20
+      ]
+    },
+    "sasso_fiorito7": {
+      "da": [
+        379,
+        301
+      ],
+      "cella": [
+        16,
+        16
+      ]
+    },
+    "sasso_fiorito8": {
+      "da": [
+        337,
+        319
+      ],
+      "cella": [
+        15,
+        18
+      ]
+    },
+    "sasso_giardino0": {
+      "da": [
+        248,
+        259
+      ],
+      "cella": [
+        16,
+        13
+      ]
+    },
+    "sasso_giardino1": {
+      "da": [
+        266,
+        258
+      ],
+      "cella": [
+        16,
+        23
+      ]
+    },
+    "sasso_giardino2": {
+      "da": [
+        281,
+        257
+      ],
+      "cella": [
+        21,
+        21
+      ]
+    },
+    "sasso_giardino3": {
+      "da": [
+        267,
+        283
+      ],
+      "cella": [
+        19,
+        14
+      ]
+    },
+    "sasso_giardino4": {
+      "da": [
+        355,
+        301
+      ],
+      "cella": [
+        20,
+        14
+      ]
+    },
+    "sasso_giardino5": {
+      "da": [
+        355,
+        317
+      ],
+      "cella": [
+        21,
+        9
+      ]
+    },
+    "sasso_giardino6": {
+      "da": [
+        356,
+        328
+      ],
+      "cella": [
+        19,
+        10
+      ]
+    },
+    "sasso_giardino7": {
+      "da": [
+        400,
+        327
+      ],
+      "cella": [
+        16,
+        10
+      ]
+    },
+    "sasso_giardino8": {
+      "da": [
+        425,
+        329
+      ],
+      "cella": [
+        13,
+        9
+      ]
+    },
+    "sasso_giardino9": {
+      "da": [
+        304,
+        236
+      ],
+      "cella": [
+        36,
+        18
+      ]
+    },
+    "sdraio": {
+      "da": [
+        114,
+        122
+      ],
+      "cella": [
+        29,
+        30
+      ]
+    },
+    "sedia0": {
+      "da": [
+        3,
+        142
+      ],
+      "cella": [
+        15,
+        25
+      ]
+    },
+    "sedia1": {
+      "da": [
+        97,
+        147
+      ],
+      "cella": [
+        15,
+        24
+      ]
+    },
+    "spaventapasseri": {
+      "da": [
+        315,
+        140
+      ],
+      "cella": [
+        34,
+        46
+      ]
+    },
+    "specchio_giardino": {
+      "da": [
+        197,
+        119
+      ],
+      "cella": [
+        9,
+        28
+      ]
+    },
+    "tartarughe": {
+      "da": [
+        128,
+        204
+      ],
+      "cella": [
+        37,
+        17
+      ]
+    },
+    "tavolino_bevande": {
+      "da": [
+        129,
+        150
+      ],
+      "cella": [
+        18,
+        22
+      ]
+    },
+    "topiaria": {
+      "da": [
+        269,
+        201
+      ],
+      "cella": [
+        46,
+        40
+      ]
+    },
+    "torta0": {
+      "da": [
+        429,
+        168
+      ],
+      "cella": [
+        19,
+        14
+      ]
+    },
+    "torta1": {
+      "da": [
+        454,
+        169
+      ],
+      "cella": [
+        15,
+        12
+      ]
+    },
+    "tronco_corto": {
+      "da": [
+        217,
+        327
+      ],
+      "cella": [
+        17,
+        10
+      ]
+    },
+    "tronco_verticale": {
+      "da": [
+        138,
+        276
+      ],
+      "cella": [
+        15,
+        19
+      ]
+    },
+    "uccellino_verde": {
+      "da": [
+        67,
+        204
+      ],
+      "cella": [
+        13,
+        13
+      ]
+    },
+    "vasca_uccelli": {
+      "da": [
+        207,
+        96
+      ],
+      "cella": [
+        15,
+        26
+      ]
+    },
+    "vasetto_legno": {
+      "da": [
+        485,
+        159
+      ],
+      "cella": [
+        11,
+        11
+      ]
+    },
+    "vaso_azalea0": {
+      "da": [
+        491,
+        190
+      ],
+      "cella": [
+        18,
+        22
+      ]
+    },
+    "vaso_azalea1": {
+      "da": [
+        60,
+        300
+      ],
+      "cella": [
+        24,
+        23
+      ]
+    },
+    "vaso_fiori_rosa": {
+      "da": [
+        98,
+        218
+      ],
+      "cella": [
+        25,
+        33
+      ]
+    },
+    "vaso_girasoli0": {
+      "da": [
+        461,
+        2
+      ],
+      "cella": [
+        23,
+        30
+      ]
+    },
+    "vaso_girasoli1": {
+      "da": [
+        486,
+        3
+      ],
+      "cella": [
+        22,
+        30
+      ]
+    },
+    "vaso_girasoli2": {
+      "da": [
+        352,
+        43
+      ],
+      "cella": [
+        25,
+        28
+      ]
+    },
+    "vaso_girasoli_cuore": {
+      "da": [
+        420,
+        58
+      ],
+      "cella": [
+        17,
+        20
+      ]
+    },
+    "vaso_lavanda": {
+      "da": [
+        70,
+        226
+      ],
+      "cella": [
+        22,
+        31
+      ]
+    },
+    "vaso_margherite": {
+      "da": [
+        427,
+        36
+      ],
+      "cella": [
+        19,
+        19
+      ]
+    },
+    "vaso_ortensie_blu": {
+      "da": [
+        35,
+        217
+      ],
+      "cella": [
+        27,
+        35
+      ]
+    },
+    "vaso_ortensie_rosa": {
+      "da": [
+        3,
+        212
+      ],
+      "cella": [
+        25,
+        34
+      ]
+    },
+    "vaso_piedistallo": {
+      "da": [
+        224,
+        100
+      ],
+      "cella": [
+        17,
+        30
+      ]
+    },
+    "vaso_tulipani": {
+      "da": [
+        405,
+        36
+      ],
+      "cella": [
+        17,
+        21
+      ]
+    },
+    "casetta_uccelli_tetto_verde": {
+      "da": [
+        317,
+        52
+      ],
+      "cella": [
+        25,
+        52
+      ]
+    },
+    "casetta_uccelli_tetto_rosso": {
+      "da": [
+        233,
+        151
+      ],
+      "cella": [
+        16,
+        44
+      ]
+    }
+  },
+  "anima": [
+    "fontana_grande",
+    "mulino_giardino",
+    "mulino_vento_giocattolo"
+  ]
 }

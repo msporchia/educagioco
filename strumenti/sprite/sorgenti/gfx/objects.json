@@ -1,14 +1,52 @@
 {
-  "foglio": [33, 20],
-  "cella": [16, 16],
+  "foglio": [
+    33,
+    20
+  ],
+  "cella": [
+    16,
+    16
+  ],
   "scala": 1,
   "fondo": "trasparente",
   "__nota": "Foglio dello stesso set ArMM1998 di Overworld.png (vedi LEGGIMI.md), non ancora calibrato prima d'ora. Qui dentro ci sono anche libri, calderoni e forzieri che su Overworld.png non ci sono: solo quelli sono stati ritagliati, il resto del foglio (cuori, monete, fuochi, sassi, effetti) resta di fuori perche' non richiesto. I forzieri APERTI (circa colonna 0-2, riga 1-2) non sono su questa griglia: partono a meta' tessera e non sono stati ritagliati puliti.",
   "sprite": {
-    "cassa_tesoro": { "da": [0, 0] },
-    "cassa_tesoro_grande": { "da": [9, 0], "cella": [32, 16] },
-    "calderone0": { "da": [13, 0] },
-    "calderone1": { "da": [14, 0] },
-    "libro": { "da": [15, 0] }
-  }
+    "cassa_tesoro": {
+      "da": [
+        0,
+        0
+      ]
+    },
+    "cassa_tesoro_grande": {
+      "da": [
+        9,
+        0
+      ],
+      "cella": [
+        32,
+        16
+      ]
+    },
+    "calderone0": {
+      "da": [
+        13,
+        0
+      ]
+    },
+    "calderone1": {
+      "da": [
+        14,
+        0
+      ]
+    },
+    "libro": {
+      "da": [
+        15,
+        0
+      ]
+    }
+  },
+  "anima": [
+    "calderone"
+  ]
 }

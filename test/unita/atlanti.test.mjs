@@ -52,6 +52,7 @@ for (const [nome, A] of ATLANTI) {
     if (!v.pose || !Object.keys(v.pose).length) male.push(`${v.id}: senza pose`)
     if (!Number.isFinite(v.giri) || v.giri < 1 || v.giri > 4) male.push(`${v.id}: giri ${v.giri}`)
     if (typeof v.specchia !== 'boolean') male.push(`${v.id}: specchia non è un sì/no`)
+    if (typeof v.anima !== 'boolean') male.push(`${v.id}: anima non è un sì/no`)
     for (const [posa, fotogrammi] of Object.entries(v.pose || {})) {
       if (!Array.isArray(fotogrammi) || !fotogrammi.length) male.push(`${v.id}/${posa}: vuota`)
       /* una voce che punta a un pezzo che non c'è è un buco a schermo:
@@ -127,5 +128,23 @@ const attacchiStorti = conAttacchi.filter(v =>
 uguale('e ogni lato dice una delle quattro cose', attacchiStorti.length, 0)
 controlla('una tessera si può girare', conAttacchi.every(v => v.giri === 4),
           'girare permuta gli attacchi, ed è quello che fa bastare una curva per quattro gomiti')
+
+/* ═══════════ 5. fotogrammi o varianti ═══════════ */
+nota('quello che scorre e quello che si sceglie')
+
+/* Più pezzi sotto un nome sono due cose opposte, e confonderle si vede:
+   ventisei cespugli fatti scorrere lampeggiano. Chi cammina scorre
+   sempre; per tutto il resto scorre solo quello che è dichiarato, e il
+   ripiego è «sono alternative» perché su questi fogli le alternative
+   sono la stragrande maggioranza. */
+for (const [nome, A] of ATLANTI) {
+  const fermi = A.vociDi('attore').filter(v => !v.anima)
+  uguale(`${nome}: chi cammina è sempre animato`, fermi.length, 0, fermi.map(v => v.id).join(' '))
+  const gruppi = A.VOCI.filter(v => Object.values(v.pose).flat().length > 1)
+  const animati = gruppi.filter(v => v.anima && v.famiglia !== 'attore')
+  controlla(`${nome}: le animazioni dichiarate sono poche (${animati.length} su ${gruppi.length} gruppi)`,
+            animati.length <= gruppi.length / 2,
+            'se quasi tutti i gruppi risultano animati, il ripiego si è ribaltato e il campo lampeggia')
+}
 
 riassunto('il patto degli atlanti')
