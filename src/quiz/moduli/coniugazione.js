@@ -63,6 +63,19 @@
    «cocemmo»). Al remoto NON si usa la frase col buco: «Molti anni fa
    noi ___» accetta onestamente anche l'imperfetto, quindi si chiede
    sempre in forma diretta.
+
+   IN CIMA CI SONO ANCHE I MODI E I TEMPI CHE ARRIVANO DOPO —
+   condizionale (presente e passato), congiuntivo (presente e
+   imperfetto), imperativo, e i composti fatti con l'ausiliare a un
+   tempo diverso: trapassato prossimo, futuro anteriore, trapassato
+   remoto. Ognuno ha il suo interruttore in `data/saperi.js`, e tutti
+   **nascono spenti**: un bambino che il congiuntivo non l'ha mai
+   sentito nominare non deve incontrarlo perché noi l'abbiamo scritto.
+   I quattro composti sono una domanda sola scritta una volta
+   (`composto`), perché sono davvero la stessa cosa quattro volte: il
+   participio non si muove e il tempo lo dà l'ausiliare — ed è per
+   questo che i loro falsi cambiano SOLO l'ausiliare, mettendo in fila
+   «avevo mangiato», «avrò mangiato» e «ho mangiato».
    ═══════════════════════════════════════════════════════════════════ */
 
 import { Modulo } from '../nucleo/modulo.js'
@@ -348,6 +361,97 @@ const CONG_IMPF_IRR = [
   { infinito: 'stare', forme: ['stessi', 'stessi', 'stesse', 'stessimo', 'steste', 'stessero'] },
 ]
 
+/* ── l'imperativo ──
+   Tre persone e non sei: un ordine si dà a te (parla!), a noi
+   (parliamo!) o a voi (parlate!), e le forme di cortesia («parli
+   pure») sono congiuntivo travestito — roba da grandi, fuori di qui.
+
+   La difficoltà vera è UNA e sta tutta nella seconda persona dei verbi
+   in -are, dove imperativo e indicativo si scambiano la vocale:
+   «parla!» comanda, «parli» racconta. Negli altri due gruppi le due
+   forme coincidono («prendi» vale per tutte e due), e allora la
+   domanda si sposta sulla persona giusta dell'ordine.
+
+   E poi c'è il negativo, che è la regola che sorprende: alla seconda
+   persona vuole l'infinito. «Non correre!», mai «non corri!». */
+const IMPERATIVO_END = {
+  are: ['a', 'iamo', 'ate'],
+  ere: ['i', 'iamo', 'ete'],
+  ire: ['i', 'iamo', 'ite'],
+  ireIsc: ['isci', 'iamo', 'ite'],
+}
+const IMPERATIVO_IRR = [
+  { infinito: 'essere', forme: ['sii', 'siamo', 'siate'] },
+  { infinito: 'avere', forme: ['abbi', 'abbiamo', 'abbiate'] },
+  { infinito: 'sapere', forme: ['sappi', 'sappiamo', 'sappiate'] },
+  { infinito: 'venire', forme: ['vieni', 'veniamo', 'venite'] },
+  { infinito: 'tenere', forme: ['tieni', 'teniamo', 'tenete'] },
+  { infinito: 'uscire', forme: ['esci', 'usciamo', 'uscite'] },
+  { infinito: 'andare', forme: ["va'", 'andiamo', 'andate'] },
+  { infinito: 'fare', forme: ["fa'", 'facciamo', 'fate'] },
+  { infinito: 'dare', forme: ["da'", 'diamo', 'date'] },
+  { infinito: 'stare', forme: ["sta'", 'stiamo', 'state'] },
+  { infinito: 'dire', forme: ["di'", 'diciamo', 'dite'] },
+]
+/* Questi cinque la seconda persona ce l'hanno buona in due modi —
+   «va'» e «vai», «fa'» e «fai» — e una domanda a scelta multipla con
+   due risposte giuste non è una domanda: a loro si chiedono solo il
+   noi e il voi. Nemmeno il negativo, che alla seconda persona
+   passerebbe di lì. */
+const IMPERATIVO_DUE_FORME = ['andare', 'fare', 'dare', 'stare', 'dire']
+const PRONOMI_IMP = ['tu', 'noi', 'voi']
+/* dov'è la stessa persona nella tabella dei sei */
+const POSTO_IMP = [1, 3, 4]
+/* chi si sta comandando, che è quello che fissa la persona: senza,
+   «___ (parlare) piano!» si risponde giusto in tre modi */
+const VOCATIVO = {
+  tu: ['Marta', 'Luca', 'Nina', 'Bruno'],
+  noi: ['Dai', 'Su', 'Forza'],
+  voi: ['Bambini', 'Ragazzi', 'Bambine'],
+}
+
+function imperativoDi(infinito) {
+  const irr = tabellaDi(IMPERATIVO_IRR, infinito)
+  if (irr) return irr
+  const fin = infinito.slice(-3)
+  return IMPERATIVO_END[ISC.has(infinito) ? 'ireIsc' : fin].map(f => radiceDi(infinito) + f)
+}
+
+/* ── i tempi composti ──
+   Due parole, e il tempo lo dà la prima: «ho mangiato» è passato
+   prossimo, «avevo mangiato» trapassato, «avrò mangiato» futuro
+   anteriore, «ebbi mangiato» trapassato remoto, «avrei mangiato»
+   condizionale passato. Il participio non si muove mai.
+
+   Per questo i falsi si costruiscono cambiando SOLO l'ausiliare: chi
+   sbaglia un tempo composto sbaglia lì, e un falso che tocca il
+   participio starebbe chiedendo un'altra cosa. Ha anche il pregio di
+   non passare mai dalla regola: «avere» è coniugato a mano in ognuno
+   dei suoi tempi, e non c'è nessun «berò» in agguato.
+
+   Solo verbi con «avere»: quelli con «essere» porterebbero dentro
+   l'accordo del participio («eravamo andati»), che è un'altra lezione
+   e ce l'ha già `ausiliareFrase`.
+
+   La tabella di «avere» tempo per tempo sta più sotto (`AUSILIARE`),
+   dove ci sono già le forme da cui la si ricava. */
+/* com'è messo l'ausiliare, detto a un bambino */
+const COME_AUSILIARE = {
+  trapassato: "all'imperfetto",
+  'futuro-anteriore': 'al futuro',
+  'trapassato-remoto': 'al passato remoto',
+  'condizionale-passato': 'al condizionale',
+}
+/* gli altri due composti che gli si confondono, in ordine: il primo è
+   quello che si sbaglia davvero */
+const COMPOSTO_FALSI = {
+  trapassato: ['prossimo', 'futuro-anteriore'],
+  'futuro-anteriore': ['prossimo', 'trapassato'],
+  'trapassato-remoto': ['trapassato', 'prossimo'],
+  'condizionale-passato': ['futuro-anteriore', 'trapassato'],
+}
+const VERBI_COMPOSTI = PARTICIPI.filter(p => p.ausiliare === 'avere')
+
 /* verbi «sicuri» per la coniugazione regolare a imperfetto e futuro:
    niente -ciare/-giare/-care/-gare, che al futuro cambiano ortografia
    (mangerò, non mangerò... anzi «giocherò» con la h) — una cosa in
@@ -413,10 +517,22 @@ const IRR_COMPLETI = ['essere', 'avere', 'andare', 'fare', 'dire', 'venire', 'st
   'potere', 'volere', 'sapere', 'vedere', 'uscire']
 const VERBI_TEMPI = [...ARE_SICURI, ...ERE_SICURI, ...IRE_SICURI, ...IRR_COMPLETI]
 
-/* «avere» coniugato serve tutte le volte che si compone un tempo:
-   passato prossimo («ho mangiato») e trapassato («avevo mangiato»). */
+/* «avere» coniugato in ognuno dei suoi tempi: è la prima parola di
+   tutti i tempi composti, e quindi quella che dice di che tempo si
+   tratta. Scritta qui una volta e presa dalle tabelle vere, mai dalla
+   regola — «avere» è irregolare quasi dappertutto. */
 const AVERE_PRESENTE = formeDi('avere', 'presente')
 const AVERE_IMPERFETTO = formeDi('avere', 'imperfetto')
+const AUSILIARE = {
+  prossimo: AVERE_PRESENTE,
+  trapassato: AVERE_IMPERFETTO,
+  'futuro-anteriore': formeDi('avere', 'futuro'),
+  'trapassato-remoto': formeDi('avere', 'remoto'),
+  'condizionale-passato': formeDi('avere', 'condizionale'),
+}
+
+/* «potere» e «volere» un imperativo non ce l'hanno affatto */
+const VERBI_IMPERATIVO = VERBI_TEMPI.filter(v => v !== 'potere' && v !== 'volere')
 
 /* al passato remoto i regolari sono -are e -ire: i -ere hanno due
    forme buone e stanno solo nella tabella degli irregolari */
@@ -462,9 +578,13 @@ const NOME_TEMPO = {
   prossimo: 'il passato prossimo',
   trapassato: 'il trapassato prossimo',
   remoto: 'il passato remoto',
+  'futuro-anteriore': 'il futuro anteriore',
+  'trapassato-remoto': 'il trapassato remoto',
   condizionale: 'il condizionale',
+  'condizionale-passato': 'il condizionale passato',
   congiuntivo: 'il congiuntivo',
   'congiuntivo-imperfetto': 'il congiuntivo imperfetto',
+  imperativo: "l'imperativo",
 }
 const ETICHETTA = {
   presente: 'presente',
@@ -483,6 +603,9 @@ const SPIEGA = {
   prossimo: 'quello che si è fatto da poco',
   trapassato: "quello che si era già fatto prima d'allora",
   remoto: 'quello che si fece tanto tempo fa',
+  'futuro-anteriore': 'quello che si sarà già fatto a un certo punto',
+  'trapassato-remoto': 'quello che si ebbe già fatto, in un racconto',
+  'condizionale-passato': 'quello che si sarebbe fatto e non si è fatto',
 }
 
 /* ── il *quando* della frase, che è quello che sceglie il tempo ──
@@ -540,9 +663,19 @@ const TIPI = [
      e tutti e quattro spenti finché un genitore non dice di sì
      (`difetto: false` in `data/saperi.js`) */
   { chiave: 'coniug:passato-remoto', nome: 'Il passato remoto (andò, cossi, mangiammo)', sa: 'passato-remoto', gradi: { 6: 0.2 } },
-  { chiave: 'coniug:trapassato', nome: 'Il trapassato prossimo (avevo mangiato)', sa: 'trapassato', gradi: { 6: 0.1 } },
-  { chiave: 'coniug:condizionale', nome: 'Il condizionale (vorrei, mangerei)', sa: 'condizionale', gradi: { 6: 0.1 } },
-  { chiave: 'coniug:congiuntivo', nome: 'Il congiuntivo (che io sia, se io fossi)', sa: 'congiuntivo', gradi: { 6: 0.1 } },
+  { chiave: 'coniug:composti', nome: 'Trapassato prossimo e futuro anteriore (avevo/avrò mangiato)', sa: 'tempi-composti', gradi: { 6: 0.12 } },
+  /* il trapassato remoto è l'unico tipo che ne chiede DUE, di saperi:
+     è un tempo composto, ma la prima parola è al passato remoto («ebbi
+     mangiato»), e chiederlo a chi il passato remoto non l'ha fatto
+     sarebbe muto lo stesso. Un tipo si spegne se gli manca uno
+     qualsiasi dei suoi (`Modulo.tipoSpento`). */
+  { chiave: 'coniug:trapassato-remoto', nome: 'Il trapassato remoto (ebbi mangiato)', sa: ['tempi-composti', 'passato-remoto'], gradi: { 6: 0.06 } },
+  { chiave: 'coniug:condizionale', nome: 'Il condizionale (vorrei, avrei voluto)', sa: 'condizionale', gradi: { 6: 0.12 } },
+  { chiave: 'coniug:congiuntivo', nome: 'Il congiuntivo (che io sia, se io fossi)', sa: 'congiuntivo', gradi: { 6: 0.12 } },
+  /* l'imperativo si sente parlare molto prima di sapere come si
+     chiama, e non ha bisogno di nessun altro tempo per stare in piedi:
+     è l'unico dei tardivi che si affaccia anche al grado 5 */
+  { chiave: 'coniug:imperativo', nome: "L'imperativo (parla!, andiamo!, non correre!)", sa: 'imperativo', gradi: { 5: 0.15, 6: 0.1 } },
 ]
 
 /* due forme diverse da quella giusta, prese da `lista` (le altre
@@ -625,9 +758,12 @@ class Coniugazione extends Modulo {
       case 'coniug:tempo-giusto': return this.tempoGiusto(sorte)
       case 'coniug:riconosci-tempo': return this.riconosciTempo(sorte)
       case 'coniug:passato-remoto': return this.passatoRemoto(sorte)
-      case 'coniug:trapassato': return this.trapassato(sorte)
+      case 'coniug:composti': return this.composto(sorte,
+        sorte.forse(0.55) ? 'trapassato' : 'futuro-anteriore', 'coniug:composti')
+      case 'coniug:trapassato-remoto': return this.composto(sorte, 'trapassato-remoto', tipo)
       case 'coniug:condizionale': return this.condizionale(sorte)
-      case 'coniug:congiuntivo': return this.congiuntivo(sorte, grado)
+      case 'coniug:congiuntivo': return this.congiuntivo(sorte)
+      case 'coniug:imperativo': return this.imperativo(sorte)
       default: return this.presenteRegolare(sorte, false)
     }
   }
@@ -921,29 +1057,89 @@ class Coniugazione extends Modulo {
     })
   }
 
-  /* ── grado 6: il trapassato prossimo ──
-     Un passato che sta prima di un altro passato, e si costruisce con
-     l'ausiliare all'imperfetto: «avevo mangiato». Solo verbi con
-     «avere», per la stessa ragione di `riconosciTempo`. Il falso che
-     conta è il passato prossimo — la differenza fra «ho mangiato» e
-     «avevo mangiato» è tutta lì. */
-  trapassato(sorte) {
-    const v = sorte.uno(PARTICIPI.filter(p => p.ausiliare === 'avere'))
+  /* ── grado 6: i tempi composti ──
+     Trapassato prossimo, futuro anteriore, trapassato remoto e
+     condizionale passato sono la stessa domanda quattro volte: il
+     participio sta fermo e a cambiare è solo l'ausiliare, che è
+     esattamente la cosa da imparare. Perciò un metodo solo, e il tempo
+     arriva da fuori.
+
+     I due falsi sono gli altri composti che gli si confondono, più la
+     persona sbagliata: tre forme che differiscono per la prima parola
+     e basta, così l'occhio è costretto a guardare proprio lì. In forma
+     diretta, perché una frase che regge il trapassato regge quasi
+     sempre anche il passato prossimo. */
+  composto(sorte, quale, chiave) {
+    const v = sorte.uno(VERBI_COMPOSTI)
     const idx = sorte.fra(0, 5)
     const altra = sorte.uno([0, 1, 2, 3, 4, 5].filter(i => i !== idx))
-    const formaGiusta = `${AVERE_IMPERFETTO[idx]} ${v.participio}`
+    const con = (tempo, persona = idx) => `${AUSILIARE[tempo][persona]} ${v.participio}`
+    const formaGiusta = con(quale)
 
-    const aiuto = `il trapassato prossimo si fa con «avere» all'imperfetto: ${AVERE_IMPERFETTO[idx]} ${v.participio}`
+    const aiuto = `${cap(NOME_TEMPO[quale])} si fa con «avere» ${COME_AUSILIARE[quale]}: ` +
+      `${PRONOMI[idx]} ${formaGiusta}`
     const falsi = raccogli(formaGiusta, [
-      [`${AVERE_PRESENTE[idx]} ${v.participio}`,
-        `«${AVERE_PRESENTE[idx]} ${v.participio}» è il passato prossimo: quello che si è fatto da poco`],
-      [`${AVERE_IMPERFETTO[altra]} ${v.participio}`, `con «${PRONOMI[idx]}» ci vuole «${AVERE_IMPERFETTO[idx]}»`],
+      ...COMPOSTO_FALSI[quale].map(t => [con(t), `«${con(t)}» è ${NOME_TEMPO[t]}: ${SPIEGA[t]}`]),
+      [con(quale, altra), `con «${PRONOMI[idx]}» ci vuole «${AUSILIARE[quale][idx]}»`],
     ])
 
     return domandaPersona({
       sorte, pronome: PRONOMI[idx], infinito: v.infinito, formaGiusta, falsi,
-      chiave: 'coniug:trapassato', aiuto,
-      nomeTempo: 'il trapassato prossimo', soloDiretta: true,
+      chiave, aiuto, nomeTempo: NOME_TEMPO[quale], soloDiretta: true,
+    })
+  }
+
+  /* ── grado 5-6: l'imperativo ──
+     L'unico che non si chiede né col buco neutro né in forma diretta,
+     ma con un ordine vero e qualcuno a cui darlo: «Marta, ___
+     (parlare) più piano!». Il vocativo non è colore — è quello che
+     fissa la persona, e senza la stessa frase avrebbe tre risposte
+     buone. */
+  imperativo(sorte) {
+    const infinito = sorte.uno(VERBI_IMPERATIVO)
+    const forme = imperativoDi(infinito)
+    const dueForme = IMPERATIVO_DUE_FORME.includes(infinito)
+    /* il negativo vive solo alla seconda persona, che è l'unica dove
+       cambia forma: «non correre!» invece di «non corri!». Con noi e
+       voi si direbbe «non corriamo», e non ci sarebbe niente da
+       imparare. */
+    const negativo = !dueForme && sorte.forse(0.3)
+    const i = negativo ? 0 : (dueForme ? sorte.uno([1, 2]) : sorte.fra(0, 2))
+    const chi = PRONOMI_IMP[i]
+    const formaGiusta = negativo ? infinito : forme[i]
+    const indicativo = formeDi(infinito, 'presente')[POSTO_IMP[i]]
+
+    const aiuto = negativo
+      ? `dopo «non» ci vuole l'infinito: non ${infinito}!`
+      : `l'imperativo di «${infinito}» fa: ${PRONOMI_IMP.map((p, n) => `${p} ${forme[n]}`).join(', ')}`
+    const falsi = raccogli(formaGiusta, negativo
+      ? [
+        [forme[0], `«${forme[0]}!» è l'ordine senza «non»: con «non» ci vuole «${infinito}»`],
+        [indicativo, `«${indicativo}» racconta quello che fa, non comanda`],
+        /* per i verbi in -ere e -ire i due qui sopra sono la stessa
+           parola («metti» comanda e racconta), e senza un terzo la
+           domanda resterebbe con due risposte in tutto */
+        [formeDi(infinito, 'presente')[2], 'questo racconta quello che fa qualcun altro'],
+      ]
+      : [
+        /* per i verbi in -are questo è IL falso: «parli» è quello che
+           il bambino scrive, ed è la forma dell'indicativo. Negli altri
+           due gruppi coincide con la risposta giusta e si scarta da sé,
+           che è il modo giusto di dire «lì non c'è niente da
+           sbagliare». */
+        [indicativo, `«${indicativo}» racconta quello che fa; per comandare ci vuole «${formaGiusta}»`],
+        ...PRONOMI_IMP.map((p, n) => [forme[n], `«${forme[n]}!» è l'ordine per «${p}»`]),
+      ])
+
+    return domanda({
+      testo: negativo
+        ? `${sorte.uno(VOCATIVO.tu)}, non ___ (${infinito})!`
+        : `${sorte.uno(VOCATIVO[chi])}, ___ (${infinito})!`,
+      buona: testo(formaGiusta),
+      falsi,
+      chiave: 'coniug:imperativo',
+      aiuto,
+      sorte,
     })
   }
 
@@ -952,8 +1148,13 @@ class Coniugazione extends Modulo {
      questo che il falso giusto da mettergli accanto è proprio il
      futuro: chi non li distingue scrive «domani mangerei». In forma
      diretta, perché ogni inciso che regge il condizionale («con più
-     tempo…») regge onestamente anche il futuro. */
+     tempo…») regge onestamente anche il futuro.
+
+     Ogni tanto esce il passato («avrei mangiato»), che è un composto
+     come gli altri e passa di là: stessa chiave, perché per un
+     genitore che accende «il condizionale» sono la stessa cosa. */
   condizionale(sorte) {
+    if (sorte.forse(0.35)) return this.composto(sorte, 'condizionale-passato', 'coniug:condizionale')
     const infinito = sorte.uno(VERBI_TEMPI)
     const idx = sorte.fra(0, 5)
     const forme = formeDi(infinito, 'condizionale')
