@@ -16,7 +16,14 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 export const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
-export const COSTRUITO = resolve(RADICE, 'dist/index.html')
+/* Di regola si prova `dist/index.html`, che è quello che esce dal build.
+   `DIST=…` lo sposta altrove, ed è la stessa ragione di `CHROME=`: la
+   copia in `dist/` è anche quella che finisce sul server di casa, dove
+   ci gioca un bambino, quindi capita di dover provare una build fatta da
+   un'altra parte senza sovrascrivergliela sotto le mani. */
+export const COSTRUITO = process.env.DIST
+  ? resolve(process.env.DIST)
+  : resolve(RADICE, 'dist/index.html')
 export const GIOCO = 'file://' + COSTRUITO
 export const SCATTI = resolve(RADICE, 'test/scatti')
 
