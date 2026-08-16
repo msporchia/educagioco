@@ -48,8 +48,23 @@ function mescolaSenzaOrdine(lista, rnd) {
    emoji che compare nella storia in corso, ovunque essa stia. */
 function distrattori(storia, pool, quanti, rnd) {
   const evita = new Set(storia.passi)
-  const candidati = [...new Set(pool.flatMap(s => s.passi).filter(e => !evita.has(e)))]
-  return mescola(candidati, rnd).slice(0, quanti)
+  const prendi = liste => [...new Set(liste.flatMap(s => s.passi).filter(e => !evita.has(e)))]
+
+  /* ── E DELLA STESSA FAMIGLIA ──
+     Da quando esistono le storie disegnate (`disegnata: true`) un
+     distrattore va cercato prima fra le storie fatte come quella in
+     corso. Non è un vezzo estetico: in una fila di tre vignette
+     disegnate, un'emoji si riconosce **per come è fatta** invece che
+     per quello che racconta, e la domanda smette di essere «cosa viene
+     dopo» per diventare «quale non è un disegno». Se non ce ne sono
+     abbastanza si completa con quello che c'è — una domanda un po'
+     meno pulita è meglio di una domanda che non si può fare. */
+  const stessaFamiglia = pool.filter(s => !!s.disegnata === !!storia.disegnata)
+  const scelti = mescola(prendi(stessaFamiglia), rnd).slice(0, quanti)
+  if (scelti.length >= quanti) return scelti
+
+  const resto = mescola(prendi(pool).filter(e => !scelti.includes(e)), rnd)
+  return scelti.concat(resto.slice(0, quanti - scelti.length))
 }
 
 export class QuesitoOrdina {

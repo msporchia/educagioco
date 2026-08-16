@@ -1,10 +1,29 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE STORIE — il contenuto vero di questo gioco
 
-   Ogni storia è una fila di emoji: il seme, il germoglio, l'albero.
+   Ogni storia è una fila di passi, e un passo è **una stringa**: o
+   un'emoji (🌰 🌱 🌳) o il nome di una scena disegnata
+   (`dati/scene.js`). Il motore non guarda mai dentro, quindi non
+   distingue le due specie: lo fa solo `viste/Passo.vue`, quando è il
+   momento di metterle a schermo.
+
    Niente frasi da leggere — quelle stanno in `nome`, e sono per i
    grandi (compaiono piccole, e servono a non fare due volte la stessa
    storia). Un bambino di quattro anni gioca guardando i disegni.
+
+   ── LE STORIE DISEGNATE (`disegnata: true`) ──
+   Sono quelle che le emoji non sapevano raccontare, e sono nate da un
+   difetto preciso: con un inventario chiuso non si sceglie il passo che
+   la storia chiede, si sceglie quello che l'inventario ha. Il costo non
+   erano i passi zoppi ma **quello che restava fuori** — un bambino che
+   si fa male, uno che rompe qualcosa e lo dice, due che litigano e
+   fanno pace. Tutte cose in cui l'informazione sta in una faccia, e una
+   faccia le emoji ce l'hanno solo su una testa gialla staccata dal
+   corpo.
+   Il campo serve anche al motore: `motore/quesito.js` tiene i
+   distrattori nella stessa famiglia, o in una fila di tre vignette
+   disegnate l'emoji si riconoscerebbe per *come è fatta* invece che per
+   quello che racconta.
 
    `categoria` decide dove una storia può capitare: la campagna
    (`dati/campagna.js`) chiede categorie, non storie una per una, così
@@ -70,8 +89,17 @@ export const STORIE = [
     passi: ['👶', '🧒', '👨'] },
   { chiave: 'bimba-nonna', nome: 'La bambina diventa nonna', categoria: 'crescita',
     passi: ['👧', '👩', '👵'] },
-  { chiave: 'girasole', nome: 'Il girasole cresce', categoria: 'crescita',
-    passi: ['🌱', '🌿', '🌻'] },
+  /* il girasole a emoji (🌱 🌿 🌻) diceva la stessa cosa di `seme-albero`
+     con altre tre figure, e nessuna delle due aveva dentro qualcuno: la
+     pianta cresceva **da sola**. Adesso c'è una bambina che semina e
+     annaffia, e il terzo passo smette di essere «poi diventa grande» per
+     diventare «è cresciuto perché l'ha annaffiato». */
+  { chiave: 'si-pianta-il-seme', nome: 'Si pianta il seme', categoria: 'crescita',
+    disegnata: true,
+    passi: ['si-semina', 'si-annaffia', 'il-germoglio', 'il-girasole'] },
+  { chiave: 'il-gattino', nome: 'Il gattino diventa grande', categoria: 'crescita',
+    disegnata: true,
+    passi: ['il-gattino', 'il-gatto-mezzo', 'il-gatto-grande'] },
 
   /* ── trasformazione ── */
   /* c'era «l'uva, la bottiglia, il vino»: la bottiglia non è uno stadio
@@ -107,10 +135,19 @@ export const STORIE = [
     passi: ['🌳', '📄', '📚'] },
 
   /* ── routine ── */
-  { chiave: 'mattina', nome: 'La mattina prima di uscire', categoria: 'routine',
-    passi: ['⏰', '🥣', '🎒', '🏫'] },
-  { chiave: 'sera', nome: 'La sera prima di dormire', categoria: 'routine',
-    passi: ['🛁', '🪥', '🛏️', '😴'] },
+  /* «la mattina» e «la sera» erano due file di oggetti che stanno
+     insieme (⏰ 🥣 🎒 🏫 e 🛁 🪥 🛏️ 😴): il verso lo dava l'abitudine di
+     casa, non un nesso — chi metteva il bagnetto dopo i denti aveva
+     ragionato bene e prendeva un errore. Disegnate ci sta dentro
+     qualcuno, e il verso torna a essere una cosa che *succede*: si
+     sbadiglia prima di andare a letto, non dopo. Stanno più in basso,
+     fra le disegnate. */
+  { chiave: 'la-mattina', nome: 'La mattina, dalla sveglia alla scuola', categoria: 'routine',
+    disegnata: true,
+    passi: ['si-sveglia', 'la-colazione', 'si-prende-lo-zaino', 'a-scuola'] },
+  { chiave: 'la-sera', nome: 'La sera, fino al sonno', categoria: 'routine',
+    disegnata: true,
+    passi: ['la-cena', 'sbadiglia', 'la-favola', 'si-dorme'] },
   /* calze, pantaloni, maglietta, giacca: fra i pantaloni e la maglietta
      non c'è nessun prima e nessun dopo — chi si infila prima la
      maglietta ha ragionato bene e prendeva un errore. Restano i due
@@ -124,10 +161,16 @@ export const STORIE = [
      quando si è aperto il libro. Adesso apre lei, e si finisce dormendo. */
   { chiave: 'favola-buonanotte', nome: 'La favola della buonanotte', categoria: 'routine',
     passi: ['🌙', '📖', '😴'] },
-  /* la carta igienica non c'entra niente con la doccia: era finita lì
-     perché sta in bagno */
-  { chiave: 'doccia', nome: 'La doccia, e poi ci si riveste', categoria: 'routine',
-    passi: ['🚿', '🧴', '👕'] },
+  /* qui c'era «la doccia, e poi ci si riveste» (🚿 🧴 👕). È la storia
+     che ha fatto cadere tutto il resto: il sapone non viene *dopo* la
+     doccia, viene dentro; e la maglietta alla fine è una convenzione,
+     non una conseguenza. Chi la indovinava non aveva ragionato, si era
+     ricordato come si fa a casa sua — cioè una banale abitudine
+     travestita da nesso temporale. Non è stata riscritta a emoji:
+     rifarla ha voluto dire disegnarla, e sta più sotto, in
+     causa-effetto, dove le è sempre appartenuta (`dal-fango-alla-doccia`).
+     Il primo passo è il bambino sporco, ed è il motivo per cui la
+     doccia succede. */
   { chiave: 'pranzo', nome: 'Il pranzo, dal piatto al lavandino', categoria: 'routine',
     passi: ['🍽️', '🍝', '🍎', '🧽'] },
 
@@ -144,6 +187,44 @@ export const STORIE = [
     passi: ['🎈', '📌', '💥'] },
   { chiave: 'pupazzo-si-scioglie', nome: 'Il pupazzo di neve si scioglie', categoria: 'causa-effetto',
     passi: ['⛄', '☀️', '💧'] },
+
+  /* ── causa-effetto, disegnate ──
+     Le tre storie che le emoji non sapevano raccontare: una che si fa
+     male, uno che rompe qualcosa e lo dice, uno che si sporca e per
+     questo si lava. Il set delle emoji ha 🏺 e ha 🩹, ma non ha «lo
+     dice», perché non è una cosa — è una faccia davanti a un'altra
+     faccia. I passi non sono caratteri: sono i nomi delle schede in
+     `dati/scene.js`, e chi disegna sta in `scena/`.
+
+     `disegnata: true` non serve a disegnare (a quello basta che il
+     passo sia il nome di una scena): serve al motore, che con quel
+     campo tiene i distrattori nella stessa famiglia — una vignetta
+     disegnata in mezzo a tre emoji si riconosce per **come è fatta**
+     invece che per quello che racconta, e la domanda diventa un gioco
+     di trova-l'intruso grafico. */
+  { chiave: 'ginocchio', nome: 'Il ginocchio sbucciato', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['corre-nel-prato', 'inciampa', 'ginocchio-sbucciato', 'il-cerotto'] },
+  { chiave: 'vaso', nome: 'Il vaso rotto, e detto', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['palla-in-casa', 'vaso-rotto', 'lo-dice', 'si-raccoglie'] },
+  { chiave: 'dal-fango-alla-doccia', nome: 'Dal fango alla doccia', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['gioca-nel-fango', 'sotto-la-doccia', 'pulito-e-asciutto'] },
+  /* il terzo passo non è «arriva un gelato nuovo» — quella sarebbe una
+     storia sul gelato — ma qualcuno che divide il suo. */
+  { chiave: 'gelato-caduto', nome: 'Il gelato caduto', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['col-gelato', 'il-gelato-cade', 'si-divide'] },
+  /* il primo e l'ultimo passo hanno in scena le stesse tre cose — due
+     bambini e un orsetto — e a distinguerli sono soltanto le facce. È la
+     storia che con le emoji non si poteva nemmeno cominciare. */
+  { chiave: 'litigio', nome: 'Il litigio che finisce bene', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['si-litiga', 'uno-piange', 'lo-presta', 'si-gioca-insieme'] },
+  { chiave: 'senza-giacca', nome: 'Esce senza giacca', categoria: 'causa-effetto',
+    disegnata: true,
+    passi: ['esce-senza-giacca', 'trema-dal-freddo', 'con-la-giacca'] },
 
   /* ── costruzione ── */
   /* la gru e il martello erano due modi di dire «si lavora», messi uno
@@ -172,12 +253,16 @@ export const STORIE = [
   /* ── cucina ── */
   { chiave: 'patatine', nome: 'Le patatine fritte', categoria: 'cucina',
     passi: ['🥔', '🔪', '🍳', '🍟'] },
-  /* il cupcake non è la torta a metà strada, è un'altra torta più
-     piccola. Adesso: il cioccolato, la ciotola, il forno, la torta —
-     e non l'uovo, che avrebbe fatto cominciare due storie di cucina
-     nello stesso modo (🥚 🔥 …) con due finali buoni tutti e due. */
-  { chiave: 'torta-compleanno', nome: 'La torta di compleanno', categoria: 'cucina',
-    passi: ['🍫', '🥣', '🔥', '🎂'] },
+  /* la torta di compleanno era 🍫 🥣 🔥 🎂, e reggeva; disegnata però
+     guadagna la cosa che le emoji non hanno mai: qualcuno che la fa. Le
+     candeline accese alla fine dicono «è il tuo compleanno» meglio di
+     quanto lo dicesse la faccia della torta. */
+  { chiave: 'la-torta', nome: 'La torta di compleanno', categoria: 'cucina',
+    disegnata: true,
+    passi: ['si-impasta', 'nel-forno', 'la-torta-pronta'] },
+  { chiave: 'la-spremuta', nome: "La spremuta d'arancia", categoria: 'cucina',
+    disegnata: true,
+    passi: ['le-arance', 'si-spreme', 'il-bicchiere-pieno'] },
   { chiave: 'uovo-fritto', nome: "L'uovo fritto", categoria: 'cucina',
     passi: ['🥚', '🔥', '🍳'] },
   /* era il caffè, coi chicchi resi da 🫘 — che su mezzo mondo è un
@@ -218,7 +303,11 @@ export const STORIE = [
    sempre le stesse due o tre storie. */
 export const MINIMO_PER_CATEGORIA = 4
 
-export function guastiDelleStorie(storie = STORIE) {
+/* `scene` è facoltativo: senza, si controlla solo la forma delle storie;
+   con, si controlla anche che una storia disegnata nomini scene che
+   esistono davvero — un passo scritto male non si vedrebbe come un
+   errore, si vedrebbe come una vignetta vuota. */
+export function guastiDelleStorie(storie = STORIE, scene = null) {
   const guasti = []
   const chiaviViste = new Set()
   const sequenzeViste = new Map()
@@ -251,6 +340,18 @@ export function guastiDelleStorie(storie = STORIE) {
     else sequenzeViste.set(fila, s.chiave)
 
     const passi = Array.isArray(s.passi) ? s.passi : []
+
+    /* una storia è disegnata tutta o niente: mezza fila di vignette e
+       mezza di emoji sarebbe la peggiore delle due, perché il bambino
+       vedrebbe una differenza che non vuol dire niente */
+    if (scene) for (const passo of passi) {
+      const disegnato = Object.prototype.hasOwnProperty.call(scene, passo)
+      if (s.disegnata && !disegnato)
+        guasti.push(`${dove}: il passo "${passo}" non è una scena che esiste`)
+      if (!s.disegnata && disegnato)
+        guasti.push(`${dove}: usa la scena "${passo}" ma non si dichiara disegnata`)
+    }
+
     if (passi.length >= 3) {
       const inizio = JSON.stringify(passi.slice(0, 2))
       if (iniziViste.has(inizio))
