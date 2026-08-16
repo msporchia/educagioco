@@ -822,8 +822,21 @@ function cambiaZoom (verso) {
   ridipingiStanza()
   zoomOra.value = zoom
 }
-/* ── la mappa si trascina; il tocco resta il tocco (soglia 9px) ── */
+/* ── la mappa si trascina; il tocco resta il tocco (soglia 9px) ──
+   **Anche mentre si sceglie un bersaglio.** Prima no: `mirando` usciva
+   subito e la mappa restava ferma, quindi su una mappa 30×18 un
+   bersaglio fuori campo non si poteva indicare in nessun modo — il
+   verbo si apriva e non si chiudeva più. Adesso il dito fa una cosa
+   sola per volta: sotto la soglia sta mirando, sopra sta trascinando, e
+   allora l'evidenziazione si spegne e al rilascio non parte nessun
+   ordine. Mirare col dito trema, quindi in mira la soglia è più larga
+   (16 invece di 9); e dove non c'è niente da scorrere — la mappa ci sta
+   tutta — il tocco resta buono comunque lontano si sia mosso, che è
+   esattamente come si comportava prima. */
+const SOGLIA_MIRA = 16
 let giu = null
+const soglia = () => (props.mirando ? SOGLIA_MIRA : 9)
+const puoScorrere = () => grande.value || zoomOra.value > 1
 const cellaDi = e => {
   const r = telaEl.value.getBoundingClientRect()
   return { x: Math.floor((cam.x + e.clientX - r.left) / lato),
@@ -843,8 +856,11 @@ function ditoMuovi (e) {
   if (!giu) return
   const dx = e.clientX - giu.x, dy = e.clientY - giu.y
   giu.mosso = Math.max(giu.mosso, Math.abs(dx) + Math.abs(dy))
-  if (props.mirando) { sottoIlDito.value = cellaDi(e); return }
-  if (giu.mosso < 9) return
+  if (giu.mosso < soglia() || (props.mirando && !puoScorrere())) {
+    if (props.mirando) sottoIlDito.value = cellaDi(e)
+    return
+  }
+  sottoIlDito.value = null                   // da qui in poi si trascina, non si mira
   cam.x = giu.cx - dx; cam.y = giu.cy - dy
   limita(); rifaiFondale()
 }
@@ -856,7 +872,7 @@ function ditoSu (e) {
      peggiore che questo campo possa fare. */
   if (pizzico) { if (dita.size < 2) chiudiPizzico(); giu = null; return }
   if (!giu) return
-  if (giu.mosso < 9 || props.mirando) emit('tocca', cellaDi(e))
+  if (giu.mosso < soglia() || (props.mirando && !puoScorrere())) emit('tocca', cellaDi(e))
   sottoIlDito.value = null
   giu = null
 }

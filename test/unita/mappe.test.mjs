@@ -204,6 +204,53 @@ rotto('l\'unica soluzione è segnata fragile',
 rotto('«fragile» non è né sì né no',
       l => { l.soluzioni[0].fragile = 'quasi' }, 'fragile')
 
+/* ── IL SABOTAGGIO, «QUALE» E L'OPPURE ──
+   Le tre cose che il motore ha imparato e che questo formato deve dire
+   nello stesso modo: si attaccano anche le cose (ma solo quelle
+   rompibili), un ordine può dire quale di un gruppo, e una condizione
+   può essere un «oppure» scritto con la barra. */
+
+rotto('si attacca una cosa che non si rompe',
+      l => { l.mappa[4] = MAPPE.sostituisci(l.mappa[4], 3, 'k')
+             l.cassetta.push('attacca')
+             l.soluzioni[0].ordini.unshift({ chi: 'eroe', fai: 'attacca', bersaglio: 'chiave' }) },
+      'non si rompe')
+
+rotto('un «quale» che nessuno sa cosa voglia dire',
+      l => { l.ordini[0] = { chi: 'guardia', fai: 'attacca', bersaglio: 'eroe', quale: 'quellobello' } },
+      'quale')
+
+rotto('un «quale» appiccicato a una cosa sola',
+      l => { l.ordini[0] = { chi: 'guardia', fai: 'vai', bersaglio: 'tesoro', quale: 'lontano' } },
+      'una cosa sola')
+
+rotto('un oppure con niente da una parte',
+      l => { l.ordini[0].finche = 'vedi:eroe|' }, 'barra')
+
+rotto('un oppure con una metà scritta a caso',
+      l => { l.ordini[0].finche = 'vedi:eroe|quando mi va' }, 'condizione')
+
+{
+  const liv = copia(BUONO)
+  /* il tamburo al posto della chiave, e lo si sfonda: è il capitolo che
+     prima si poteva solo raccontare come «portalo via» */
+  liv.mappa[1] = MAPPE.sostituisci(liv.mappa[1], 3, 'd')
+  liv.cassetta.push('attacca')
+  liv.ordini[0].finche = 'vedi:eroe|rotto:tamburo'
+  liv.ordini.push({ chi: 'guardia', quando: 'rotto:tamburo',
+                    fai: 'attacca', bersaglio: 'eroe', quale: 'vicino' })
+  liv.soluzioni[0].ordini.unshift({ chi: 'eroe', fai: 'attacca', bersaglio: 'tamburo' })
+  liv.par = liv.soluzioni[0].ordini.length
+  const esito = validaTutto(liv)
+  controlla('un tamburo sfondato, un «quale» e un oppure passano insieme',
+            esito.ok, esito.errori.join(' ⏐ '))
+  uguale('il tamburo è la cosa rompibile della legenda',
+         Object.entries(MAPPE.LEGENDA).filter(([, v]) => v.rompibile).map(([k]) => k).join(','), 'd')
+  controlla('e i criteri del «quale» sono quelli del motore',
+            ['vicino', 'lontano', 'debole', 'forte'].every(k => MAPPE.QUALI[k]),
+            Object.keys(MAPPE.QUALI).join(','))
+}
+
 /* Una soluzione fragile è quella che vince la base e cade su una
    variante: è il pezzo che dimostra che le tre scene servono. Accanto a
    una buona ci può stare eccome — ed essendo il piano corto, il par

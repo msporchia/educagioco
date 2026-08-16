@@ -82,6 +82,7 @@ export class Porta extends Elemento {
   }
 
   azzera () {
+    super.azzera()
     this.aperta = this.iniziale
     this.hafattoRumore = false          // si ricomincia da capo, silenzio compreso
     this.spinte = {}
@@ -89,9 +90,16 @@ export class Porta extends Elemento {
 
   chiedi (q) {
     if (q === 'aperta') return this.aperta
-    return null
+    return super.chiedi(q)
   }
 
+  /* ── E QUI NON SI ATTACCA ──
+     Una porta ha già il suo modo di cedere alle botte, ed è `forza`:
+     `apri` senza chiave conta le spallate e la sfonda. Un secondo verbo
+     per la stessa cosa sarebbe un sinonimo, e i sinonimi insegnano che
+     il linguaggio è arbitrario. Perciò `accetta` NON chiama `super`:
+     `attacca` non si offre su una porta nemmeno se il livello le
+     scrivesse addosso una `resistenza`. */
   accetta (cmd) { return cmd === 'apri' || cmd === 'chiudi' }
 
   /* `ctx` è il `Contesto` di chi ha camminato fin qui (`ctx.mondo` per

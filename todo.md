@@ -1,10 +1,15 @@
 # Dove siamo e cosa manca
 
-Stato all'**8 agosto 2026**. Si gioca da `dist/index.html`, e i test sono **37**
-(22 di unità, 15 nel browser).
+Stato al **16 agosto 2026**. Si gioca da `dist/index.html`, e i test sono **89**
+(73 di unità, 16 nel browser), tutti verdi.
 
 Due fronti aperti, e non si toccano: **i quiz** (le domande che tutti i giochi
-pescano) e **il generale**, che è il grosso di questo file.
+pescano) e **il generale**, che è il grosso di questo file. Il 16 agosto sono
+caduti in un giro solo: la coda dei quiz (arrivati gli **Indizi**), le tre voci
+di attrito del Generale (`posa`, `attacca` sulle cose, l'*oppure*), tutta la
+grafica che mancava, la mappa che non si trascinava mentre si mira, e la
+camminata della fattoria. Quello che resta del Generale è quasi tutto **di là
+dai livelli spenti**: riscriverli è il giro dopo.
 
 ---
 
@@ -37,13 +42,14 @@ pescano) e **il generale**, che è il grosso di questo file.
 
 ### Da portare, in ordine
 
-1. **Indizi** — le due famiglie rimaste in `poc/indovinelli.html`, che sono la
-   stessa macchina su due mondi: la **deduzione** («non è rossa · è grande ·
-   non ce n'è una sola» → ne resta una) e l'**indovinello** («sono giallo ·
-   cresco sull'albero · la scimmia mi adora»). Riusano gli attributi e i
-   pittori già in casa (`grafica/pittori/figure.js`), quindi costano poco. Del
-   prototipo va portata soprattutto la forza bruta che garantisce che **nessun
-   indizio sia inutile**: l'indizio decorativo è quello che fa perdere fiducia.
+Niente: la coda è vuota. **🔍 Indizi** è arrivato il 16 agosto 2026
+(`src/quiz/moduli/indizi.js`), con le due famiglie del prototipo — `indizi:forme`
+sulle figure di `quiz/grafica/pittori/figure.js` e `indizi:cose` sugli oggetti
+del mondo — su cinque gradi che le alternano, come fa `sequenze`. La garanzia
+che **nessun indizio sia inutile** non è un controllo a posteriori: `gruppiMinimi`
+prova a forza bruta ogni sottoinsieme e accetta solo quello che isola una
+candidata sola *e* che, tolto un indizio qualunque, torna ambiguo. Provato su
+2000 domande rigiocate (`test/unita/indizi.test.mjs`, 7731 controlli).
 
 ### Deciso di NON portare, e perché
 
@@ -63,9 +69,10 @@ pescano) e **il generale**, che è il grosso di questo file.
 ## Il generale — da dove si riparte
 
 Le **26 mappe su 26** ci sono tutte, e `unita/livelli` le gioca davvero su tre
-scene ciascuna: 2203 controlli, zero guasti su 40 livelli. Ogni capitolo ha una
-soluzione elegante dentro il par e almeno una `fragile` che deve **cadere** su
-una scena — se vince sempre non dimostra niente.
+scene ciascuna: 1428 controlli, zero guasti. Ogni capitolo ha una soluzione
+stretta — dove ogni ordine dev'essere necessario, misura *derivata* da quando
+il par è sparito — e almeno una `fragile` che deve **cadere** su una scena: se
+vince sempre non dimostra niente.
 
 L'**editor degli ordini** è quello nuovo (il posto vuoto è il tasto, la riga è
 l'editor, niente cassetta fissa) e il megafile è spezzato in otto pezzi, con
@@ -142,16 +149,27 @@ essere già cadute. Va riprovato su un capitolo vero prima di cancellarle.
   falene chiedono `non vedi [Tilde]` invece di `non vedi [la lanterna]` — il
   piano leggibile dice una cosa diversa dal racconto.
 
-→ `posa [x]` è il gemello esatto di `prendi`, costo basso, e rimette in piedi
-un filo narrativo intero.
+→ **`posa [x]` è fatto** — anzi c'era già: motore, vocabolario, `Oggetto`,
+formato delle mappe e `fai.posa` erano tutti a posto, e mancava solo un test
+che lo giocasse (`unita/generale/posa`, che lo prova sul passamano, sulle mani
+piene e sulla lanterna lasciata a terra). La riga qui sopra che lo dava per
+«dichiarato nel formato ma non nel motore» era vecchia. Restano le altre
+quattro voci di questa sezione.
 
 ### C. Attaccare — **3 campagne**
-- **`attacca` non prende le cose** (nido): il *sabotaggio* non è esprimibile.
-  Il capitolo della scala è diventato una **corsa** — cioè la forma d'obiettivo
-  che queste storie avevano deciso di non usare mai.
-- **`attacca [fazione]` non si indirizza** (torre, sale): la guardia sceglie il
-  più vicino. È costato **cinque rifacimenti** di torre-5, e un gruppo nemico
-  diviso in due posti non è ripulibile da nessun piano scrivibile.
+- ~~**`attacca` non prende le cose**~~ **fatto**: una cosa a cui il livello
+  scrive addosso una `resistenza` si rompe, e quello che le succede lo sa lei
+  (`Elemento.incassa`). Rotta, non si raccoglie e non si preme più; la domanda
+  `rotto:` è la controparte, e sfasciare fa fracasso. Un verbo si offre solo a
+  chi lo capisce, quindi `attacca` non compare dove non c'è niente da rompere.
+- ~~**`attacca [fazione]` non si indirizza**~~ **fatto**: l'ordine porta un
+  `quale` — `vicino` (il valore normale), `lontano`, `debole`, `forte`
+  (`motore/generale/scelte.js`). È un criterio e non un nome, sta sul tronco
+  comune (vale anche per `vai`), e la scelta si **pianta**: se ricalcolasse a
+  ogni passo, superato il primo bersaglio il «più lontano» diventerebbe lui.
+  Lì sotto c'era anche un difetto vecchio: la preda era pinnata per il colpo e
+  non per il passo, e due nemici equidistanti facevano oscillare chi li
+  inseguiva finché la scena non scadeva.
 - Chi insegue alla stessa velocità non prende mai nessuno (sale).
 - **`senza: ['attacca']` non si può dichiarare** (torre): la prova `senza`
   toglie ordini che *nominano* una cosa, non che usano un verbo. La regola che
@@ -171,9 +189,17 @@ piano che non è il loro. «Dorme» non esiste: la vista è sempre accesa,
 mimata con `vista: 1`.
 
 ### F. Obiettivi e sconfitta — **3 campagne**
-`obiettivo` e `sconfitta` sono liste in **AND**: manca l'*oppure*. Da qui una
-«lastra» che esiste per ragioni di sintassi, e un capitolo dove chi prende il
-ladro non vince e non perde. `grida` non distingue chi ha visto.
+~~`obiettivo` e `sconfitta` sono liste in **AND**: manca l'*oppure*~~ —
+**fatto**, e non come un campo in più: l'*oppure* è **una domanda che ne
+contiene altre**, `{ cond: 'oppure', fra: [...] }` (con il suo gemello
+`entrambe`, che serve a annidare). Così vale ovunque valga una domanda — la
+guardia di un ciclo, i rami di un bivio, «aspetta che» — e non solo in fondo
+al livello; il «non» che c'era già lo rovescia in «né … né …». Non mente su
+quello che un personaggio non può sapere: risponde quando la risposta è decisa
+comunque, e altrimenti ripropaga il dubbio. Nel formato delle mappe è la barra
+(`finche: 'vedi:eroe|segnale:rosso'`).
+
+Resta di questa sezione: `grida` non distingue chi ha visto.
 
 ### G. Le scene non toccano il piano — **4 campagne**
 Le varianti spostano cose e unità, ma non possono cambiare **gli ordini del
@@ -202,37 +228,84 @@ nessun test prende:
    Non è un indizio, è la risposta — e gli aiuti a pagamento (⭐) diventano
    inutili. Il campo `dritta` va accorciato a una riga in tutti i capitoli
    nuovi, e quello che c'è adesso va spostato in `aiuti`.
+   → **Misurato il 16 agosto 2026: resta vero solo nelle storie spente**
+   (`src/data/livelli/todo/`, formato vecchio, mai provate da nessuno). Nei
+   livelli vivi la dritta più lunga è di 108 caratteri
+   (`parole/3-due-lavori`), cioè una riga: quando quei capitoli si
+   riaccenderanno la dritta va riscritta comunque, ma non è debito di oggi.
 2. **Le figure non corrispondono ai nomi.** Marta la sarta è disegnata come un
    mago, Cric il topo come un mostriciattolo, le falene come goblin. È lo stesso
    difetto già trovato giocando con mio figlio (Bibi disegnata come un lupo, Orso
    come un cavaliere): a un bambino che deve distinguere quattro dei suoi a
    colpo d'occhio, la figura è metà del gioco.
-3. **I par: metà allineati.** Nei livelli sono quelli misurati (torre-1 = 4,
-   torre-4 = 7, torre-5 = 12, sale-2 = 11, sale-5 = 8) e `unita/livelli` è
-   verde. In `storie-generale.js` sono rimasti quelli scritti a occhio — il
-   capitolo della sbarra dice 6, il livello ne misura 11. Due numeri per la
-   stessa cosa, e quello che il bambino legge è il primo.
+   → **Mezzo risolto il 16 agosto 2026**: le figure che mancavano adesso ci sono
+   (`falena`, `topo`, e i personaggi che si possono variare in taglia, spalle,
+   tinta ed elmo, così una fila di guardie non è più una fila di fotocopie).
+   Quello che manca è **nominarle nei livelli**, e quei livelli sono spenti.
+3. ~~**I par: metà allineati.**~~ **Caduto**: il 15 agosto 2026 il par è
+   sparito da tutto il gioco vivo (la seconda stella la dà `daSolo()`), quindi
+   non ci sono più due numeri per la stessa cosa. Il 16 agosto è stato tolto
+   anche il residuo in `storie-generale.js`, dove il file dichiarava in testa
+   che il par non c'era più e poi lo pretendeva lo stesso.
 
 ---
 
 ## Cosa resta, in ordine
 
-1. **Le tre voci di attrito che costano meno e rendono di più**: `posa [x]`,
-   `attacca` sulle cose, l'*oppure* in `obiettivo`/`sconfitta`. Tre verbi o
-   quasi, e rimettono in piedi tre capitoli che oggi raccontano una cosa e ne
-   fanno un'altra.
-2. **Le dritte da accorciare e i par da allineare in `storie-generale.js`.** La
-   dritta di torre-5 è ancora la soluzione scritta per esteso (450 caratteri,
-   un terzo di schermo), e i par di lì sono ancora quelli a occhio.
+1. ~~**Le tre voci di attrito che costano meno e rendono di più**~~ — **fatte
+   nel motore e nel formato** (vedi B, C, F qui sopra), con tre test che le
+   giocano: `unita/generale/posa`, `unita/generale/rompere`,
+   `unita/generale/oppure`. **Quello che resta** è il giro dopo, ed è di là:
+   - **riscrivere i capitoli** con i verbi nuovi — la lanterna dei Fondi che
+     si posa, il tamburo del nido che si sfonda, l'obiettivo «o l'uno o
+     l'altro» che adesso si scrive;
+   - **quattro righe in `src/data/livelli/scrivi.js`**, che è l'unico posto
+     rimasto fuori: `resistenza` fra le `OPZIONI` di un oggetto e di un
+     congegno, `quale` fra quelle di un ordine, e le due scorciatoie
+     `se.rotto(x)` e `se.oppure(...)`/`se.entrambe(...)`. Senza, un livello
+     scrive il dato per esteso (funziona: i test lo fanno) ma
+     `controllaOpzioni` rifiuta `resistenza` scritto in una fabbrica;
+   - **l'interfaccia**: `quale` non è ancora componibile a schermo, e la
+     domanda `rotto` compare in elenco solo dove c'è qualcosa di rompibile.
+2. ~~Le dritte da accorciare e i par da allineare.~~ **Fatto quel che c'era da
+   fare** (16 agosto 2026): il par era già uscito dal gioco, e in
+   `storie-generale.js` ne restava solo la coda — un `premioCapitolo()` che
+   leggeva `c.par` e tornava `NaN`, e un controllo che gridava «par storto» su
+   tutti e ventisei i capitoli. Tolti. Sotto ci stava nascosto un guasto vero
+   (`bibi/bombo` dichiarava il concetto `sincronizzazione`, che nella scala non
+   esiste): corretto in `attesa`. Il motivo per cui nessuno se n'era accorto è
+   che **`verificaStorie()` non lo chiamava nessuno** — adesso lo chiama
+   `test/unita/storie.test.mjs`, che gira a ogni `npm test`. Le dritte lunghe
+   restano solo nelle storie spente: vedi qui sopra.
 3. **`sa` da girare in lista di divieti**, così `suona` non va dichiarato ogni
    volta (vedi la sezione sul vocabolario).
-4. **La grafica**, con la lista ormai completa: un pittore `falena`, un
-   `tamburo` (oggi ripiegato su `campana`), i personaggi parametrizzati
-   (altezza, spalle, tinta, elmo) perché una fila di guardie non sia fotocopie,
-   i gatti come dettaglio d'ambiente, una posa d'attacco vera. È lavoro
-   parallelo: non tocca niente di quello che sta sopra.
-5. **La mappa che non si trascina mentre si sceglie un bersaglio.** Su 30×18, se
-   il bersaglio è fuori campo non ci si arriva. Difetto vecchio, ancora lì.
+4. ~~**La grafica**~~ — **fatta il 16 agosto 2026**, tutta la lista.
+   `personaggi/falena.js` (una `bestia()` dove `sw` muove le ali invece delle
+   zampe), `personaggi/topo.js` (per Cric, che era un mostriciattolo),
+   `oggetti/tamburo.js` (non più ripiegato su `campana`: se `suona` trema e
+   manda archi di suono). I **personaggi parametrizzati** stanno in `corpo.js`
+   e sono quattro varianti opzionali — `taglia`, `spalle`, `tinta`, `elmo` —
+   tutte «1 = di serie» quando non si dichiarano: chi non chiede niente vede
+   esattamente quello che vedeva prima. E c'è una posa d'attacco vera
+   (`stato: 'attacca'`, un braccio solo che va e viene, contro `'lancia'` dove
+   si alzano tutte e due), che funziona su qualunque personaggio con un'arma
+   senza toccare il suo file. Il gatto come arredo non chiedeva codice: ha già
+   `stato: 'seduto'`, ed è chi mette in scena a scriverlo.
+   Si guardano con `node tmp/vetrina-nuova.mjs`.
+   **Resta da fare l'aggancio**: i pittori nuovi esistono, ma nessun livello li
+   nomina ancora — è nelle storie spente che Marta la sarta è un mago e le
+   falene sono goblin (difetto 2 qui sopra), e i livelli si toccano quando si
+   riaccendono.
+5. ~~**La mappa che non si trascina mentre si sceglie un bersaglio.**~~ **Fatto**
+   (16 agosto 2026, `views/generale/CampoLivello.vue`). `ditoMuovi` usciva
+   subito quando `mirando` era vero: la mappa restava ferma e su 30×18 un
+   bersaglio fuori campo non si poteva indicare in nessun modo. Adesso il dito
+   fa una cosa sola per volta — sotto la soglia mira, sopra trascina (e allora
+   l'evidenziazione si spegne e al rilascio non parte nessun ordine). In mira
+   la soglia è più larga, 16 invece di 9, perché mirare col dito trema; e dove
+   non c'è niente da scorrere il tocco resta buono comunque, cioè si comporta
+   come prima. **Da provare col dito**: è un gesto, e i gesti si giudicano
+   toccandoli.
 6. **Da tarare giocando, non a tavolino**: `VOLTE_STATUE` (la nona tappa del
    dungeon, parametrica: provarla a 8, 12 e 22), e il livello finale intrecciato
    con tre o quattro unità e segnali che si incatenano, che non è mai riuscito.
@@ -248,11 +321,10 @@ nessun test prende:
 - **Il grafo delle storie**: `richiede: [fatti]`, rami **a diamante** che
   divergono e riconvergono, non ad albero, se no il contenuto esplode.
 - **PvP**: due autori umani. L'astrazione `fazioni.*.autore` non lo preclude.
-- **`scappa`** e **`posa`** esistono nel formato delle mappe
-  (`strumenti/mappe/nucleo.js`) ma **non nel motore** — controllato: i verbi
-  sono `vai · prendi · apri · attacca · aspetta · aspetta di vedere · suona ·
-  quando senti · pattuglia`. O si aggiungono o si tolgono dalla tabella.
-  (`posa` è ormai il punto 1 qui sopra.)
+- **`scappa`** esiste nel formato delle mappe (`strumenti/mappe/nucleo.js`) ma
+  **non nel motore**: o si aggiunge o si toglie dalla tabella. (`posa` era
+  nella stessa riga, ed era un falso allarme: c'è in tutti e due, e adesso ha
+  anche il suo test.)
 
 ---
 
@@ -337,7 +409,20 @@ cosa resta fra una discesa e l'altra. Se l'equipaggiamento persiste, la
 campagna diventa un'altra cosa e va pensata l'economia; se non resta, serve un
 motivo diverso per riaprire il gioco domani.
 
-### 2. La fattoria: chi cammina non attraversa le case
+### 2. ~~La fattoria: chi cammina non attraversa le case~~ — **fatto il 16 agosto 2026**
+
+`motore/camminata.js` (nuovo) è il `Camminatore` sopra `percorso()` e `accanto()`
+di `passi.js`: si cammina cella per cella lungo la strada, e se sulla meta non si
+può stare ci si **accosta** invece di restare fermi. Nel motore c'è un
+`calpestabile(cx, cy)` solo, con l'ingombro preso da `piedeDi()`, e `libera()` e
+`cellaLibera()` sono riscritte sopra di lui. `Attore` in `scena/tela.js` non
+cammina più: legge un corpo come dato, e la scena torna a disegnare e basta.
+`unita/fattoria` conta 85 controlli, fra cui la staccionata girata che blocca
+`[1,2]` e non `[2,1]` e il cane che aggira una casa senza metterci mai il piede
+dentro. Resta da guardare **col dito** dopo una build: il comportamento vero non
+l'ha ancora visto nessuno.
+
+Il testo di prima, per memoria:
 
 Oggi `Attore.muovi()` in `scena/tela.js` conosce solo `dentroMio` — dentro la
 terra comprata — quindi Watson passa dentro case, fontane e staccionate. Il

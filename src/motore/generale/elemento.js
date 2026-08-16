@@ -88,6 +88,8 @@
    leggendo un difetto del registro, non di questo file — dipende da
    `Contesto.consegna`, che è fuori dai file che questa tappa tocca.
    ═══════════════════════════════════════════════════════════════════ */
+import { Esito } from './azioni/esiti.js'
+
 export class Elemento {
   constructor (id, d) {
     this.id = id
@@ -97,7 +99,19 @@ export class Elemento {
        a disposizione delle sottoclassi che vogliono leggerci altro
        senza che la classe base debba conoscerne i nomi */
     this.d = d
+    /* ── QUANTO REGGE PRIMA DI ROMPERSI ──
+       Quanti punti di danno ci vogliono per sfasciarla. Zero — cioè chi
+       non lo dichiara — vuol dire «non si rompe», ed è il caso normale:
+       una chiave non è un bersaglio. Il livello lo scrive addosso alla
+       cosa (`resistenza: 3`), come `forza` su una porta. */
+    this.resistenza = d.resistenza || 0
+    this.colpi = 0
+    this.rotto = false
   }
+
+  /* ci si può menare? Lo decide il livello, e da qui discende sia
+     l'offerta in cassetta sia la risposta di `incassa` */
+  get rompibile () { return this.resistenza > 0 }
 
   /* 'porta' | 'oggetto' | 'posto' — da qui discendono i verbi che
      accettano questa cosa (VERBI[v].accetta.includes(tipo)) */
@@ -108,8 +122,12 @@ export class Elemento {
   get em () { return '❓' }
 
   /* quali comandi questo elemento capisce, a prescindere da chi lo
-     manda: serve a chi assembla la cassetta prima ancora di provare */
-  accetta (cmd) { return false }
+     manda: serve a chi assembla la cassetta prima ancora di provare.
+     Una cosa capisce «attacca» solo se il livello l'ha dichiarata
+     rompibile — se no `attacca` comparirebbe in cassetta in ogni
+     livello che ha una chiave per terra. Chi ne aggiunge di suoi
+     scrive `super.accetta(cmd) || cmd === '…'`. */
+  accetta (cmd) { return cmd === 'attacca' && this.rompibile }
 
   /* un comando da un'unità già a portata (o `null`, per un congegno che
      ne aziona un altro da lontano: vedi il CONTRATTO qui sopra e
@@ -118,11 +136,41 @@ export class Elemento {
          penso: 'quello che l'unità pensa' (prima persona),
          siVede: 'quello che si vede da fuori' (facoltativo) }
      `null` vuol dire «questo comando non mi riguarda»: chi chiama
-     decide cosa farne (di solito è già filtrato da `accetta`). */
-  ricevi (cmd, chi, ctx) { return null }
+     decide cosa farne (di solito è già filtrato da `accetta`).
 
-  /* quello che una condizione può chiedergli (`{cond:'aperta', …}`) */
-  chiedi (q) { return null }
+     Qui dentro c'è **il sabotaggio**, e sta nella classe base apposta:
+     rompere non è una cosa che sa fare un oggetto e non un congegno —
+     è una cosa che si può fare a qualunque cosa il livello dichiari
+     rompibile. Chi riscrive `ricevi` comincia con
+     `const colpo = super.ricevi(cmd, chi, ctx); if (colpo) return colpo`
+     e si ritrova il verbo funzionante senza scrivere una riga. */
+  ricevi (cmd, chi, ctx) { return cmd === 'attacca' ? this.incassa(chi, ctx) : null }
+
+  /* ── LE MENA ──
+     Il conto è in punti di danno, non in colpi: chi ha in mano la spada
+     sfonda il tamburo in metà tempo, esattamente come fa contro un'unità
+     (`Unita.subisci`). E sfasciare qualcosa **fa fracasso**: è la
+     stessa regola delle spallate a un portone (`elementi/porta.js`), ed
+     è quello che rende il sabotaggio una mossa che si paga — chi lo
+     sente accorre. */
+  incassa (chi, ctx) {
+    const N = this.nomeIn(ctx.mondo)
+    if (!this.rompibile)
+      return { esito: Esito.finito(), riuscito: false, penso: `${N} non si rompe` }
+    if (this.rotto) return { esito: Esito.finitoSubito() }
+    this.colpi += (chi && chi.danno) || 1
+    if (this.colpi < this.resistenza)
+      return { esito: Esito.inCorso(), penso: `sto rompendo ${N}`, siVede: `mena su ${N}` }
+    this.rotto = true
+    ctx.mondo.eventi.push('rotto')
+    ctx.mondo.faiRumore(chi, 'fracasso')
+    return { esito: Esito.finito(), penso: `${N} è rotto`, siVede: `sfascia ${N}` }
+  }
+
+  /* quello che una condizione può chiedergli (`{cond:'aperta', …}`).
+     `rotto` vale per tutti, e per questo sta qui: chi ne aggiunge di
+     suoi chiude con `return super.chiedi(q)`. */
+  chiedi (q) { return q === 'rotto' ? this.rotto : null }
 
   /* dov'è ADESSO: la porta sta ferma, un oggetto preso segue chi lo
      tiene. `mondo` è facoltativo e serve solo a chi ne ha bisogno. */
@@ -152,8 +200,9 @@ export class Elemento {
   /* rigiocare la scena: ognuno si rimette com'era. Sostituisce il
      rimettere-a-mano che faceva `avvia()`, riga per riga: un elemento
      nuovo non può dimenticarsi di azzerarsi, perché il metodo sta
-     accanto al suo stato */
-  azzera () {}
+     accanto al suo stato. Le botte prese le rimette a posto la classe
+     base: chi lo riscrive comincia con `super.azzera()`. */
+  azzera () { this.colpi = 0; this.rotto = false }
 
   /* il nome che si legge: quello che il livello ha dichiarato per
      questo id (`livello.nomi`), o l'id stesso */

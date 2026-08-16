@@ -68,13 +68,21 @@ export const VERBI = {
      «vai alla chiave» segue la chiave dovunque sia. */
   vai:       { et: '🚶', cl: 'moto', nome: 'vai a', grado: 1,
                accetta: ['posto', 'oggetto', 'porta', 'unita', 'fazione', 'cella'] },
-  prendi:    { et: '🎒', cl: 'azione', nome: 'prendi', grado: 2, accetta: ['oggetto'] },
+  /* `comando: true` — QUESTO VERBO SI CONSEGNA A UNA COSA.
+     Cioè: quando ci si arriva, non si fa niente da soli — le si dice
+     una parola (`Contesto.consegna`) e lei risponde. Serve a una regola
+     sola, e sta qui perché è del vocabolario: **un comando si offre in
+     cassetta solo a chi lo capisce** (`Mondo.nomi`, che lo chiede alla
+     cosa con `accetta`). Senza, `attacca` comparirebbe in ogni livello
+     che ha una chiave per terra, perché una chiave è un oggetto e
+     `attacca` accetta gli oggetti. */
+  prendi:    { et: '🎒', cl: 'azione', nome: 'prendi', grado: 2, comando: true, accetta: ['oggetto'] },
   /* ── E IL SUO GEMELLO ──
      Senza `posa` una cosa presa è una cosa tolta dal mondo, e passarla
      a qualcun altro non si può scrivere. Con lui l'oggetto torna a
      essere un posto: lo lasci dove sei, e chi passa di lì lo trova. */
-  posa:      { et: '🫳', cl: 'azione', nome: 'posa', grado: 2, accetta: ['oggetto'] },
-  apri:      { et: '🔓', cl: 'azione', nome: 'apri', grado: 2, accetta: ['porta'] },
+  posa:      { et: '🫳', cl: 'azione', nome: 'posa', grado: 2, comando: true, accetta: ['oggetto'] },
+  apri:      { et: '🔓', cl: 'azione', nome: 'apri', grado: 2, comando: true, accetta: ['porta'] },
   /* ── CHIUDERSI DIETRO UNA PORTA ──
      Il gemello di `apri`, e non è una simmetria per bellezza: una porta
      chiusa **taglia la vista** (di qua e di là: si vede a distanza di
@@ -86,14 +94,14 @@ export const VERBI = {
      Da qui viene anche il tempo: dietro una porta chiusa aspettare non
      costa niente, e il rischio si concentra tutto nell'istante in cui
      riapri. */
-  chiudi:    { et: '🔒', cl: 'azione', nome: 'chiudi', grado: 2, accetta: ['porta'] },
+  chiudi:    { et: '🔒', cl: 'azione', nome: 'chiudi', grado: 2, comando: true, accetta: ['porta'] },
   /* ── UN VERBO SOLO PER OGNI CONGEGNO ──
      Una leva e un totem non si dicono in due modi diversi (`tira`,
      `gira`, `accendi` sono stati scartati apposta, §10 del piano):
      `premi` basta per tutti e due, e cosa succede quando arrivi a
      zero — o a `tacche` — lo decide il congegno che lo riceve, non
      questo verbo. Come `apri` e `prendi`, ci si arriva camminando. */
-  premi:     { et: '👆', cl: 'azione', nome: 'premi', grado: 2, accetta: ['congegno'] },
+  premi:     { et: '👆', cl: 'azione', nome: 'premi', grado: 2, comando: true, accetta: ['congegno'] },
   /* `elenco: true` — QUESTO BERSAGLIO NON SI INDICA COL DITO.
      Indicare un nemico sulla mappa vuol dire «quell'orco lì, quello in
      quel punto», e non è quello che si sta scrivendo: un piano si firma
@@ -101,9 +109,25 @@ export const VERBI = {
      che si vuole dire è «un orco», cioè la classe — ed è anche la
      stessa cosa che dice la guardia: «smetti quando vedi un orco».
      Perciò il bersaglio si sceglie da un elenco di nomi, dove «gli
-     orchi» è una voce come le altre. */
-  attacca:   { et: '⚔️', cl: 'azione', nome: 'attacca', grado: 2,
-               accetta: ['unita', 'fazione'], elenco: true },
+     orchi» è una voce come le altre.
+
+     ── E SI ATTACCANO ANCHE LE COSE ──
+     Il tamburo, la scala, la leva del ponte: il SABOTAGGIO. Prima non
+     era esprimibile e i capitoli che ci si reggevano diventavano altro
+     («rompilo» finiva scritto «portalo via»). Non tutte le cose si
+     rompono — solo quelle a cui il livello scrive addosso una
+     `resistenza` — e chi non la dichiara non compare nemmeno in
+     elenco: se ne occupa `comando: true` qui sopra.
+
+     ── E SI PUÒ DIRE QUALE ──
+     Su una schiera l'ordine può portare un `quale` (`scelte.js`):
+     `il più vicino` (il valore normale), `il più lontano`, `quello
+     messo peggio`, `quello più in forze`. Non è un nome, è un
+     criterio — «quello laggiù» invecchia con la mappa, «il più
+     lontano» no — ed è quello che rende ripulibile un gruppo diviso
+     in due posti. */
+  attacca:   { et: '⚔️', cl: 'azione', nome: 'attacca', grado: 2, comando: true,
+               accetta: ['unita', 'fazione', 'oggetto', 'congegno'], elenco: true },
   /* NESSUNA UNITÀ È ONNISCIENTE. Prima `aspetta [l'orco]` voleva dire
      «finché non è fuori combattimento», e lo sapeva anche da tre stanze
      più in là senza aver visto niente: era un fatto globale travestito
@@ -257,11 +281,26 @@ export const CONDIZIONI = {
      nel totem — è la stessa `c.complemento` degli ordini, con un
      parametro in più, come `qui` ha `chi` */
   almeno:  { nome: 'è almeno a', em: '🗿' },
+  /* «il tamburo è rotto»: lo stato di una cosa che si può sfasciare, e
+     l'unico modo di dire a un livello che il sabotaggio è riuscito */
+  rotto:   { nome: 'è rotto', em: '💥' },
+  /* ── LE DUE CHE NE CONTENGONO ALTRE ──
+     Non hanno un complemento: hanno un `fra`, cioè una lista di
+     domande. Non si offrono nella cassetta del bambino — le scrive
+     l'autore del livello, ed è lì che servivano (`vince`/`perde` erano
+     liste in AND e basta) — ma valgono ovunque valga una domanda: la
+     guardia di un ciclo, il bivio, «aspetta che». */
+  oppure:   { nome: 'una di queste', em: '🔀' },
+  entrambe: { nome: 'tutte queste', em: '🔗' },
 }
 
-/* la chiave con cui due domande si riconoscono uguali */
-export const chiaveCond = c => c
-  ? [c.cond, c.complemento || '', c.chi || '', c.non ? '!' : ''].join('|') : ''
+/* la chiave con cui due domande si riconoscono uguali. Una domanda che
+   ne contiene altre si riconosce dalle sue: se no due `oppure` diversi
+   sarebbero la stessa domanda. */
+export const chiaveCond = c => !c ? ''
+  : [c.cond, c.complemento || '', c.chi || '',
+     Array.isArray(c.fra) ? c.fra.map(chiaveCond).join('+') : '',
+     c.non ? '!' : ''].join('|')
 
 /* ── CHI SA COSA ──
    Il filtro ha due dimensioni: verbo × tipo (nelle tabelle qui sopra) e

@@ -29,20 +29,26 @@ export class Totem extends Elemento {
     this.mandato = false
   }
 
-  azzera () { this.n = 0; this.mandato = false }
+  azzera () { super.azzera(); this.n = 0; this.mandato = false }
 
   /* la condizione `almeno:` legge qui: quante tacche sono accese ADESSO
      — il confronto col numero che il piano chiede lo fa la condizione,
      non il totem, che non sa quale soglia gli sta chiedendo qualcuno */
   chiedi (q) {
     if (q === 'almeno') return this.n
-    return null
+    return super.chiedi(q)
   }
 
-  accetta (cmd) { return cmd === 'premi' }
+  accetta (cmd) { return super.accetta(cmd) || cmd === 'premi' }
 
   ricevi (cmd, chi, ctx) {
+    const colpo = super.ricevi(cmd, chi, ctx)
+    if (colpo) return colpo
     if (cmd !== 'premi') return null
+    /* sfasciato, il conto non sale più: chi vuole fermare un totem a due
+       tacche dalla fine adesso ha un modo di dirlo */
+    if (this.rotto) return { esito: Esito.finito(), riuscito: false,
+                             penso: `${this.nomeIn(ctx.mondo)} è rotto: non conta più` }
     if (this.mandato) return { esito: Esito.finitoSubito() }
     const N = this.nomeIn(ctx.mondo)
     this.n++
@@ -62,7 +68,8 @@ export class Totem extends Elemento {
      altro. `alone: true`: si nomina in un ordine, non è arredo dipinto
      sul fondale */
   faccia () {
-    return [{ che: 'totem', x: this.x, y: this.y, tacche: this.tacche, accese: this.n, alone: true }]
+    return [{ che: 'totem', x: this.x, y: this.y, tacche: this.tacche, accese: this.n,
+              rotto: this.rotto, alone: true }]
   }
 
   nomeCollegato (mondo, id) { return ((mondo.livello.nomi || {})[id]) || id }

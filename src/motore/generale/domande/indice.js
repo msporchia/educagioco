@@ -22,10 +22,18 @@ import { Sentito } from './sentito.js'
 import { Qui } from './qui.js'
 import { Sempre } from './sempre.js'
 import { Passati } from './passati.js'
+import { Rotto } from './rotto.js'
+import { Oppure, Entrambe } from './insieme.js'
 
 export const DOMANDE = {
   vedi: Vedi, vivo: Vivo, hai: Ha, aperta: Aperta,
   premuto: Premuto, almeno: Almeno, segnale: Sentito, qui: Qui, sempre: Sempre,
+  /* lo stato di una cosa che si è sfasciata: la controparte di
+     `attacca` sulle cose */
+  rotto: Rotto,
+  /* le due che ne contengono altre — l'*oppure* che mancava a `vince` e
+     `perde`, e il suo gemello, che serve a annidare */
+  oppure: Oppure, entrambe: Entrambe,
   /* l'unica che non guarda il mondo ma sé stessa: conta i battiti, ed è
      quello che rende scrivibile «aspetta un po'» senza un verbo nuovo */
   passati: Passati,
@@ -40,11 +48,18 @@ export function domandaDa (c) {
   if (c instanceof Object && typeof c.valuta === 'function') return c   // già compilata
   const Classe = DOMANDE[c.cond]
   if (!Classe) return null
-  const d = Classe.compila ? Classe.compila(c) : new Classe(c.complemento)
+  /* a chi ne contiene altre si passa QUESTA funzione, come si passa
+     `compilaFila` a un'azione contenitore (`azioni/indice.js`): così
+     `insieme.js` non importa questo file, che importa lui */
+  const d = Classe.compila ? Classe.compila(c, domandaDa) : new Classe(c.complemento)
   return c.non ? new Negata(d) : d
 }
 
 /* una lista di domande — le condizioni di vittoria e di sconfitta di un
-   livello — che vale solo se ci sono tutte */
+   livello — che vale solo se ci sono tutte. La lista resta una **e**, e
+   deve restarlo: l'*oppure* non è una seconda regola di lettura della
+   lista, è una domanda che se ne sta dentro
+   (`{ cond: 'oppure', fra: [...] }`, in `insieme.js`) — così vale anche
+   nella guardia di un ciclo e nel bivio, dove una lista non c'è. */
 export const tutteVere = (domande, mondo) =>
   !!(domande && domande.length) && domande.every(d => d.valuta(mondo, null))

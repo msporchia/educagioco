@@ -35,20 +35,36 @@ import { Azione } from './azione.js'
 import { Esito } from './esiti.js'
 import { VERBI, saFare, nonRiesce } from '../vocabolario.js'
 import { verso, VERSO } from '../mappa.js'
+import { SCELTE, eScelta } from '../scelte.js'
 
 export class Ordine extends Azione {
-  constructor (via, bersaglio) { super(via); this.bersaglio = bersaglio }
-  static compila (dato, via) { return new this(via, dato.complemento) }
+  /* ── E QUANDO IL BERSAGLIO È UNA SCHIERA, QUALE DI LORO ──
+     `quale` è facoltativo e vale solo per le fazioni: è il criterio con
+     cui si sceglie uno del gruppo (`scelte.js`). Sta sul tronco comune
+     e non dentro `Attacca` perché non è affare di un verbo — «vai dagli
+     orchi, il più lontano» è la stessa domanda di «attaccali». */
+  constructor (via, bersaglio, quale) {
+    super(via)
+    this.bersaglio = bersaglio
+    this.quale = quale || null
+    /* chi della schiera si è già scelto: vedi `mira` qui sotto */
+    this.scelto = null
+  }
+  static compila (dato, via) { return new this(via, dato.complemento, dato.quale) }
+
+  azzera () { super.azzera(); this.scelto = null }
 
   esegui (contesto) {
     const { mondo, chi } = contesto
-    const cosa = mondo.laCosa(this.bersaglio, chi)
-    if (!cosa) return this.nonVa(contesto, this.bersaglio
+    const cosa0 = mondo.laCosa(this.bersaglio, chi)
+    if (!cosa0) return this.nonVa(contesto, this.bersaglio
       ? `«${this.bersaglio}»? qui non c'è niente che si chiami così`
       : 'questo ordine non dice su cosa')
 
-    const guaio = this.perchePosso(contesto, cosa)
+    const guaio = this.perchePosso(contesto, cosa0)
     if (guaio) return this.nonVa(contesto, guaio)
+
+    const cosa = this.mira(contesto, cosa0)
 
     /* ── QUELLO CHE NON GLI RIESCE, LO DICE QUANDO CI È ARRIVATO ──
        Non è `sa`: quel verbo è in cassetta, l'ordine si scrive, e la
@@ -66,6 +82,31 @@ export class Ordine extends Azione {
   /* la parte che è davvero di ogni verbo, con la cosa già a portata */
   fa (contesto, cosa) { return this.nonVa(contesto, `non so cosa fare con ${cosa.nome}`) }
 
+  /* ── UNA SCHIERA CON UN CRITERIO SI RISOLVE UNA VOLTA SOLA ──
+     «il più lontano» è un criterio che si sposta insieme a chi guarda:
+     appena hai superato quello che avevi vicino, il più lontano diventa
+     lui, e si torna indietro — avanti e indietro finché la scena non
+     scade. Provato, e succede al primo pareggio.
+     Perciò appena il criterio ha scelto qualcuno, l'ordine si tiene
+     QUELLO e da lì in poi punta a lui come se il piano l'avesse
+     nominato: torna a decidere solo se cade. Chi non scrive `quale` non
+     passa di qui, e continua a inseguire la schiera come ha sempre
+     fatto — «vai dagli orchi» vuol dire davvero «vai da quello che ti
+     capita più a tiro». */
+  mira (contesto, cosa) {
+    if (!this.quale || cosa.tipo !== 'fazione') return cosa
+    const { mondo, chi } = contesto
+    if (this.scelto) {
+      const gia = mondo.perId[this.scelto]
+      if (gia && gia.eInPiedi()) return mondo.cose[this.scelto] || cosa
+      this.scelto = null
+    }
+    const uno = mondo.dove(chi, cosa, this.quale)
+    if (!uno) return cosa
+    this.scelto = uno.id
+    return mondo.cose[uno.id] || cosa
+  }
+
   /* ── I TRE CONTROLLI CHE VALGONO PER TUTTI ──
      Sono la rete sotto: la cassetta e il validatore li hanno già fatti,
      e servono a un livello scritto a mano che sbaglia. Restituisce il
@@ -75,6 +116,9 @@ export class Ordine extends Azione {
     if (!verbo) return `«${this.parola}»? non so cosa voglia dire`
     if (!verbo.accetta.includes(cosa.tipo)) return `${cosa.nome} non si può ${verbo.nome}`
     if (!saFare(contesto.chi, this.parola)) return `non è il mio mestiere: non so ${verbo.nome}`
+    if (!eScelta(this.quale))
+      return `«${this.quale}»? non so quale scegliere — ` +
+             Object.values(SCELTE).map(s => s.nome).join(', ')
     return ''
   }
 
@@ -85,7 +129,7 @@ export class Ordine extends Azione {
      `Attacca`. */
   aPortata (contesto, cosa) {
     const { mondo, chi } = contesto
-    const dove = mondo.dovePensiCheSia(chi, cosa)
+    const dove = mondo.dovePensiCheSia(chi, cosa, this.quale)
     if (!dove) return false
     return raggioDiPresa(cosa).arriva(mondo, chi, dove.posto)
   }
@@ -96,7 +140,7 @@ export class Ordine extends Azione {
      c'è nessuno, la strada è chiusa. */
   avvicinati (contesto, cosa, scusa) {
     const { mondo, chi } = contesto
-    const dove = mondo.dovePensiCheSia(chi, cosa)
+    const dove = mondo.dovePensiCheSia(chi, cosa, this.quale)
     if (!dove) return this.nonVa(contesto, `${cosa.nome}? non so dov'è`, 'si guarda intorno')
     /* il ricordo era vecchio: sono arrivato dove l'avevo visto e non
        c'è più nessuno */

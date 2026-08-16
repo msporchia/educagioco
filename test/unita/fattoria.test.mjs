@@ -6,6 +6,7 @@
    incoerente, e i traguardi scattano solo a chi ha davvero giocato.
    `node test/esegui.mjs fattoria --niente-build` */
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
+import { Camminatore } from '../../src/giochi/fattoria/motore/camminata.js'
 import {
   guastiDelMondo, PIAZZOLE, PIAZZOLE_INIZIALI, PRIMA, COSTO_SPOSTARE, chiave,
 } from '../../src/giochi/fattoria/dati/mondo.js'
@@ -261,6 +262,130 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
             presi.filter(s => !s.finito).map(s => `${s.id} fermo a ${s.valore}`).join(' · '))
   controlla('e il gioco vale esperienza', manifesto.albo.xp(mPieno) > 0)
   controlla('e risulta provato', manifesto.albo.provato(mPieno) === true)
+}
+
+/* ══════════ 5. chi cammina non attraversa le case ══════════
+   È il genere di guasto che si vede solo a schermo, e tardi: il cane
+   che passa dentro il muro non fa niente di sbagliato secondo nessun
+   conto, semplicemente non lo si controllava. Qui si controlla la
+   cella (`calpestabile`) e la passeggiata vera (`Camminatore`), che
+   sono le due metà della stessa cosa.
+
+   Le celle 12..29 sono quelle delle piazzole di partenza, e lì dentro
+   il bosco non nasce: quello che c'è in mezzo ce lo mette il test. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  controlla('la casa di prova si posa', f.posa('casa', 14, 14).ok)   // piede [5,2]
+
+  let dentro = 0
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++)
+    if (f.calpestabile(14 + i, 14 + j)) dentro++
+  uguale('nessuna cella della casa è calpestabile', dentro, 0)
+  controlla('il prato intorno sì', f.calpestabile(13, 14) && f.calpestabile(16, 16))
+
+  /* Quello che il catalogo dichiara `sotto` è terreno, non oggetto: ci
+     si cammina sopra, e non ci si posa sopra un'altra cosa. */
+  controlla('l\'orto di prova si posa', f.posa('orto', 20, 20).ok)
+  controlla('sull\'orto ci si cammina', f.calpestabile(20, 20))
+  uguale('ma non ci si posa sopra dell\'altro', f.libera(20, 20, 1, 1), false)
+
+  /* L'acqua non è un oggetto e ferma lo stesso. */
+  controlla('l\'acqua si dipinge', f.dipingiAcqua(24, 24).ok)
+  uguale('sull\'acqua non si cammina', f.calpestabile(24, 24), false)
+  controlla('un ostacolo del bosco ferma anche lui',
+            (f.ostacoli[chiave(26, 26)] = 'sasso') && !f.calpestabile(26, 26))
+}
+
+/* Una staccionata girata blocca ALTRE celle: l'ingombro va chiesto a
+   `piedeDi()`, che sa di che verso è, e non alla voce del catalogo —
+   che dice sempre [2,1]. Sbagliando, il cane passa attraverso il palo
+   e si ferma su un pezzo di prato che sembra vuoto. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  const s = f.posa('staccio', 15, 15).cosa
+  controlla('sdraiata occupa le due celle in fila',
+            !f.calpestabile(15, 15) && !f.calpestabile(16, 15))
+  controlla('e non quella sotto', f.calpestabile(15, 16))
+
+  controlla('si gira', f.gira(s).ok)
+  controlla('in piedi occupa le due celle in colonna',
+            !f.calpestabile(15, 15) && !f.calpestabile(15, 16))
+  controlla('e non più quella accanto', f.calpestabile(16, 15))
+}
+
+/* Il cane con una casa in mezzo alla strada: la aggira, e non c'entra
+   mai — prima ci passava dritto attraverso, perché la meta era una
+   riga tirata in linea d'aria. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  controlla('la casa di traverso si posa', f.posa('casa', 14, 16).ok)   // 14..18 × 16..17
+  const buona = (x, y) => f.calpestabile(x, y)
+  const cane = new Camminatore(16, 14, { velocita: 3.4 })
+
+  controlla('la strada dall\'altra parte della casa c\'è', cane.vaiA(16, 19, buona))
+  let dentro = 0, giri = 0
+  while (cane.cammina && giri++ < 400) {
+    cane.muovi(0.05, buona)
+    const c = cane.cella
+    if (!buona(c.x, c.y)) dentro++
+  }
+  uguale('non ha mai messo il piede dentro la casa', dentro, 0)
+  uguale('ed è arrivato dall\'altra parte',
+         JSON.stringify(cane.cella), JSON.stringify({ x: 16, y: 19 }))
+}
+
+/* Una meta dove non si arriva non fa camminare nessuno dentro i muri:
+   si resta fermi. Lo stagno è chiuso, quindi non c'è nemmeno una cella
+   accanto a cui accostarsi. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  for (let x = 20; x <= 22; x++) for (let y = 20; y <= 22; y++) f.dipingiAcqua(x, y)
+  const buona = (x, y) => f.calpestabile(x, y)
+  const cane = new Camminatore(15, 15, {})
+  const partenza = JSON.stringify(cane.cella)
+
+  uguale('una meta chiusa nell\'acqua non si accetta', cane.vaiA(21, 21, buona), false)
+  for (let i = 0; i < 40; i++) cane.muovi(0.1, buona)
+  uguale('e chi cammina resta dov\'era', JSON.stringify(cane.cella), partenza)
+
+  /* Sul bordo dello stagno invece ci si accosta: chiedere di andare
+     sull'acqua non deve sembrare un tocco andato perso. */
+  const bordo = new Camminatore(15, 20, {})
+  controlla('la riva si raggiunge accostandosi', bordo.vaiA(20, 20, buona))
+  for (let i = 0; i < 200 && bordo.cammina; i++) bordo.muovi(0.05, buona)
+  controlla('e si finisce su una cella dove si può stare',
+            buona(bordo.cella.x, bordo.cella.y))
+}
+
+/* Chi vaga per il prato per conto suo si sceglie le mete da sé: la
+   regola stava dentro il disegno e conosceva solo «è terra mia». */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  f.posa('casa', 13, 13); f.posa('casa', 13, 17); f.posa('fontana', 20, 15)
+  const buona = (x, y) => f.calpestabile(x, y)
+  /* il caso arriva da fuori: una passeggiata si rifà identica */
+  let seme = 12345
+  const sorte = () => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme / 2147483648 }
+  const cane = new Camminatore(19, 19, { velocita: 2.4, vaga: 0.4, sorte })
+
+  let male = 0, camminati = 0
+  for (let i = 0; i < 600; i++) {
+    cane.muovi(0.05, buona)
+    if (cane.cammina) camminati++
+    const c = cane.cella
+    if (!buona(c.x, c.y)) male++
+  }
+  uguale('chi vaga da sé non finisce mai dentro una casa', male, 0)
+  controlla('e vaga davvero, non resta fermo', camminati > 50, `passi: ${camminati}`)
+}
+
+/* Non si fa comparire un animale sopra una fontana. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  controlla('la fontana di prova si posa', f.posa('fontana', 15, 15).ok)   // [3,2]
+  const dove = f.cellaLibera(16, 15)
+  controlla('chi nasce lì nasce su una cella dove si può stare',
+            f.calpestabile(dove.x, dove.y), `${dove.x},${dove.y}`)
 }
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, su ${PIAZZOLE * PIAZZOLE} in tutto il mondo`)

@@ -23,6 +23,15 @@
    Le posizioni sono in **celle**, mai in pixel: lo zoom cambia mentre
    si gioca, e un mondo misurato in pixel andrebbe riscalato ogni volta.
 
+   ── DOVE SI PUÒ METTERE IL PIEDE ──────────────────────────────────
+   `calpestabile(cx, cy)` è **la sola risposta** alla domanda «qui ci si
+   può stare?», e ci passano tutti: chi cammina (`motore/camminata.js`,
+   che la riceve da fuori e non sa cosa sia una casa), chi fa comparire
+   un animale (`cellaLibera`) e chi posa una cosa (`libera`, che è la
+   stessa domanda con un piede più largo). Erano quattro conti in
+   quattro posti, e quello dentro al disegno ne conosceva solo un
+   quarto: per questo il cane attraversava le case.
+
    ── PERCHÉ NON SI PERDE MAI NIENTE ────────────────────────────────
    Non c'è nessun metodo che distrugge. Quello che rimetti via va in
    magazzino e da lì si ripiazza gratis quante volte vuoi; non ti
@@ -36,6 +45,15 @@ import { PER_ID, PARTENZA, piedeDi } from '../dati/catalogo.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { CHIAVI as BISOGNI_CHIAVI, nuovo as bisogniNuovi, scendi } from '../dati/bisogni.js'
+import { primaLibera } from '../../../motore/passi.js'
+
+/* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
+   copre una cella guardando **poche caselle indietro** invece di
+   scorrere tutto il bosco: `calpestabile` lo chiede una volta per
+   cella, e cercare una strada lo chiede qualche migliaio di volte di
+   fila. */
+const PIEDE_MASSIMO = Object.values(OSTACOLI).reduce(
+  (m, o) => [Math.max(m[0], o.piede[0]), Math.max(m[1], o.piede[1])], [1, 1])
 
 /* Una borsa che non paga mai: serve a far girare la fattoria in un test
    che dell'economia non gliene importa niente. */
@@ -206,8 +224,13 @@ export class Fattoria {
     return { x: cosa.x, y: cosa.y, w: p[0], h: p[1] }
   }
 
-  cosaSotto(cx, cy) {
+  /* `salta` è quello che si sta spostando: sé stesso non è un ostacolo
+     per sé stesso, e va saltato **qui** — se lo si riconoscesse dopo,
+     una staccionata girata che copre la cella di un'altra cosa
+     nasconderebbe quell'altra cosa e la lascerebbe sovrapporre. */
+  cosaSotto(cx, cy, salta = null) {
     for (let i = this.cose.length - 1; i >= 0; i--) {
+      if (this.cose[i] === salta) continue
       const g = this.ingombro(this.cose[i])
       if (cx >= g.x && cx < g.x + g.w && cy >= g.y && cy < g.y + g.h) return this.cose[i]
     }
@@ -215,37 +238,51 @@ export class Fattoria {
   }
 
   ostacoloSotto(cx, cy) {
-    for (const k in this.ostacoli) {
-      const o = OSTACOLI[this.ostacoli[k]]
-      if (!o) continue
-      const [ox, oy] = k.split(',').map(Number)
-      const [ow, oh] = o.piede
-      if (cx >= ox && cx < ox + ow && cy >= oy && cy < oy + oh)
-        return { k, x: ox, y: oy, tipo: this.ostacoli[k], ...OSTACOLI[this.ostacoli[k]] }
-    }
+    for (let dx = 0; dx < PIEDE_MASSIMO[0]; dx++)
+      for (let dy = 0; dy < PIEDE_MASSIMO[1]; dy++) {
+        const x = cx - dx, y = cy - dy
+        const k = chiave(x, y)
+        const tipo = this.ostacoli[k]
+        const o = OSTACOLI[tipo]
+        if (!o || dx >= o.piede[0] || dy >= o.piede[1]) continue
+        return { k, x, y, tipo, ...o }
+      }
     return null
   }
 
+  /* ═══════════ una cella sola, e le due domande che le si fanno ═══════════
+     «Ci si posa qualcosa?» e «ci si cammina?» sono lo stesso conto —
+     è terra mia, non è acqua, non c'è bosco, non c'è già qualcosa —
+     tranne per un punto solo: quello che il catalogo dichiara `sotto`
+     (un orto, dei fiori, una radura) è **terreno, non oggetto**. Ci si
+     cammina sopra e non ci si posa sopra, ed è la stessa riga che
+     decide l'ordine di disegno.
+
+     L'ingombro di quello che c'è si chiede a `ingombro()`, che passa da
+     `piedeDi()`: una staccionata girata occupa [1,2] e non [2,1], e
+     leggere `v.piede` bloccherebbe le celle sbagliate. */
+  cellaBuona(cx, cy, { salta = null, camminando = false } = {}) {
+    if (!this.cellaMia(cx, cy)) return false
+    if (!siPassa(this.materiaDi(cx, cy))) return false      // in acqua non si posa e non si passa
+    if (this.ostacoloSotto(cx, cy)) return false
+    const c = this.cosaSotto(cx, cy, salta)
+    if (!c) return true
+    const v = PER_ID[c.id]
+    if (!v) return true              // un id che non c'è più non blocca niente
+    return camminando && !!v.sotto
+  }
+
+  /* Dove si può mettere il piede. Una domanda sola, e prima erano
+     quattro conti sparsi in quattro posti — di cui uno, quello dentro
+     al disegno, ne conosceva solo il primo: per questo il cane
+     attraversava le case. */
+  calpestabile(cx, cy) { return this.cellaBuona(cx, cy, { camminando: true }) }
+
   /* Una cosa ci sta se il suo piede cade tutto su terra tua, e non
-     inciampa in niente. `salta` è quello che si sta spostando: sé stesso
-     non è un ostacolo per sé stesso. */
+     inciampa in niente. */
   libera(cx, cy, w, h, salta = null) {
-    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) {
-      if (!this.cellaMia(cx + i, cy + j)) return false
-      if (!siPassa(this.materiaDi(cx + i, cy + j))) return false   // in acqua non si posa
-    }
-    for (const c of this.cose) {
-      if (c === salta || !PER_ID[c.id]) continue
-      const g = this.ingombro(c)
-      if (cx < g.x + g.w && cx + w > g.x && cy < g.y + g.h && cy + h > g.y) return false
-    }
-    for (const k in this.ostacoli) {
-      const o = OSTACOLI[this.ostacoli[k]]
-      if (!o) continue
-      const [ox, oy] = k.split(',').map(Number)
-      const [ow, oh] = o.piede
-      if (cx < ox + ow && cx + w > ox && cy < oy + oh && cy + h > oy) return false
-    }
+    for (let i = 0; i < w; i++) for (let j = 0; j < h; j++)
+      if (!this.cellaBuona(cx + i, cy + j, { salta })) return false
     return true
   }
 
@@ -414,17 +451,17 @@ export class Fattoria {
     return new Set([...this.cose.map(c => c.id), ...Object.keys(this.magazzino)]).size
   }
 
-  /* Una cella libera e tua, buona per far comparire qualcuno che
-     cammina. Cerca a spirale dal punto chiesto invece di tirare a caso:
-     un cane che nasce nel bosco è un cane che non si trova più. */
+  /* Una cella dove si può stare, buona per far comparire qualcuno che
+     cammina. Cerca a cerchi dal punto chiesto invece di tirare a caso —
+     un cane che nasce nel bosco è un cane che non si trova più — e la
+     ricerca è quella di tutti (`primaLibera` di `motore/passi.js`):
+     l'unica cosa che cambia da un gioco all'altro è cosa vuol dire
+     «libera», e qui vuol dire calpestabile.
+
+     Se non trova niente torna il punto chiesto: chi ci nasce sopra
+     saprà uscirne camminando, e sparire non è un'opzione. */
   cellaLibera(cx, cy, raggio = 6) {
-    for (let r = 0; r <= raggio; r++)
-      for (let dx = -r; dx <= r; dx++)
-        for (let dy = -r; dy <= r; dy++) {
-          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue
-          const x = cx + dx, y = cy + dy
-          if (this.cellaMia(x, y) && this.libera(x, y, 1, 1)) return { x, y }
-        }
-    return { x: cx, y: cy }
+    return primaLibera((x, y) => this.calpestabile(x, y), { x: cx, y: cy }, raggio)
+           || { x: cx, y: cy }
   }
 }

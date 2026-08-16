@@ -50,6 +50,10 @@
    oggetti) vanno sempre per prime, sotto a tutto il resto.
 
    ── COSA NON C'È ────────────────────────────────────────────────────
+   **Camminare.** Dove va un cane e quali celle può attraversare sono
+   regole di gioco, e stanno in `motore/camminata.js`: qui si legge la
+   posizione che ne esce, come si legge tutto il resto del quadro.
+
    `vaiACasa()` (centrare la vista sul primo pezzo di terra) non è qui:
    userebbe PRIMA/ULTIMA di dati/mondo.js per una scelta che è di chi
    avvia il gioco, non del disegno — la Tela espone `vista` e `limita()`
@@ -101,22 +105,24 @@ const COLORE_MATERIA = {
    le pose di lato guardano a DESTRA: la sinistra è la stessa
    specchiata via `ctx.scale(-1,1)`, e non esiste come tessera propria.
 
+   ── QUESTA CLASSE NON CAMMINA: DISEGNA ────────────────────────────
+   Dove sta e dove va lo sa il `corpo`, che arriva da fuori
+   (`motore/camminata.js`) e di cui qui si leggono quattro fatti già
+   decisi — `x`, `y` in celle, `verso`, `passo` (la fase
+   dell'animazione) e `cammina` — come si legge `fattoria` più sotto:
+   senza mai importare `motore/`, e senza distinguere un'istanza vera
+   da un oggetto finto della stessa forma. Il vagabondaggio era qui, ed
+   era una regola di gioco dentro il disegno: da qui conosceva solo «è
+   terra mia», e infatti si camminava attraverso le case.
+
    L'attore vive in **celle**, non in pixel: lo zoom cambia mentre si
    gioca, e in cella non c'è niente da riscalare. La conversione in
-   pixel schermo la fa `disegna()` all'ultimo momento, non il
-   costruttore: così lo stesso Attore si disegna uguale a qualunque
-   zoom, e può nascere prima ancora che una Tela esista. */
+   pixel schermo la fa `disegna()` all'ultimo momento, così lo stesso
+   Attore si disegna uguale a qualunque zoom. */
 export class Attore {
-  constructor(nome, cx, cy, opz = {}) {
+  constructor(nome, corpo, opz = {}) {
     this.nome = nome
-    this.x = cx + 0.5
-    this.y = cy + 0.5
-    this.verso = 'giu'
-    this.passo = 0
-    this.meta = null
-    this.velocita = opz.velocita || 3.4     // celle al secondo
-    this.vaga = opz.vaga || 0               // ogni quanti secondi si sposta da sé
-    this.attesa = 1 + Math.random() * 3
+    this.corpo = corpo
     this.chi = opz.chi || nome
     /* Facoltativo, e non riempito da questa classe: `[{ colore,
        valore }]`, valore 0..1. Se c'è, si disegnano le barrette sopra
@@ -124,40 +130,6 @@ export class Attore {
        quando uno dei valori scende sotto la soglia — vedi il commento
        in testa al file su cosa manca ancora. */
     this.bisogni = opz.bisogni || null
-  }
-
-  get cella() { return { x: this.x | 0, y: this.y | 0 } }
-
-  vaiA(cx, cy) { this.meta = { x: cx + 0.5, y: cy + 0.5 } }
-
-  /* `dentroMio(x,y)` dice se una cella è terra sua: senza, l'attore
-     non saprebbe dove è lecito vagare da sé e potrebbe finire nel
-     bosco — un cane che sparisce lì dentro è un cane che non si trova
-     più. Chi lo chiama passa `fattoria.cellaMia.bind(fattoria)` o
-     equivalente: questa classe non importa `motore/`. */
-  muovi(dt, dentroMio) {
-    if (!this.meta) {
-      if (!this.vaga) return
-      this.attesa -= dt
-      if (this.attesa > 0) return
-      this.attesa = this.vaga * (0.6 + Math.random())
-      const c = this.cella
-      for (let prova = 0; prova < 12; prova++) {
-        const x = c.x + ((Math.random() * 9) | 0) - 4
-        const y = c.y + ((Math.random() * 9) | 0) - 4
-        if (!dentroMio || dentroMio(x, y)) { this.vaiA(x, y); break }
-      }
-      return
-    }
-    const dx = this.meta.x - this.x, dy = this.meta.y - this.y
-    const d = Math.hypot(dx, dy)
-    if (d < 0.1) { this.meta = null; return }
-    const v = this.velocita * dt
-    this.x += dx / d * Math.min(v, d)
-    this.y += dy / d * Math.min(v, d)
-    this.passo += dt
-    if (Math.abs(dx) > Math.abs(dy)) this.verso = dx > 0 ? 'lato' : 'sinistra'
-    else this.verso = dy > 0 ? 'giu' : 'su'
   }
 
   /* Il rettangolo che occupa a schermo, per chi deve sapere se lo si è
@@ -176,17 +148,17 @@ export class Attore {
     const scala = cellaPx / T
     const w = (p ? p[2] : T) * scala, h = (p ? p[3] : T * 2) * scala
     return {
-      x: this.x * cellaPx - vista.x - w / 2,
-      y: this.y * cellaPx - vista.y - h + cellaPx / 2,
+      x: this.corpo.x * cellaPx - vista.x - w / 2,
+      y: this.corpo.y * cellaPx - vista.y - h + cellaPx / 2,
       w, h,
     }
   }
 
   disegna(ctx, immagine, cellaPx, vista, orologio, evidenziato) {
     const scala = cellaPx / T
-    const fr = this.meta ? 1 + (((this.passo * 6) | 0) % 3) : 0
-    const specchio = this.verso === 'sinistra'
-    const p = pezzoAttore(this.nome, specchio ? 'lato' : this.verso, fr)
+    const fr = this.corpo.cammina ? 1 + (((this.corpo.passo * 6) | 0) % 3) : 0
+    const specchio = this.corpo.verso === 'sinistra'
+    const p = pezzoAttore(this.nome, specchio ? 'lato' : this.corpo.verso, fr)
     if (!p) return
     const r = this.riquadro(cellaPx, vista, p)
     const x = Math.round(r.x), y = Math.round(r.y), w = p[2] * scala, h = p[3] * scala
@@ -388,7 +360,7 @@ export class Tela {
       if (v.anima) nome = v.anima[((quadro.orologio * 4) | 0) % v.anima.length]
       scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, fondo: v.sotto ? -1 : c.y + piede[1] })
     }
-    for (const a of quadro.attori || []) scena.push({ attore: a, fondo: a.y + 1 })
+    for (const a of quadro.attori || []) scena.push({ attore: a, fondo: a.corpo.y + 1 })
     scena.sort((a, b) => a.fondo - b.fondo)
 
     for (const e of scena) {

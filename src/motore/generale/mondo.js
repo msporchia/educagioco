@@ -25,7 +25,7 @@
    in dodici verbi che avevano imparato dove si guarda.
    ═══════════════════════════════════════════════════════════════════ */
 import { allestisci } from './allestimento.js'
-import { mappaDi } from './mappa.js'
+import { scegliFra } from './scelte.js'
 import { VERBI, saFare, nonRiesce } from './vocabolario.js'
 import { Rumore } from './messaggi/rumore.js'
 import { Voce } from './messaggi/voce.js'
@@ -170,8 +170,12 @@ export class Mondo {
 
   /* dov'è una cosa ADESSO. Per una cosa del campo lo dice lei — la porta
      sta ferma, un oggetto preso segue chi lo tiene; restano qui i due
-     casi che riguardano il campo intero. */
-  dove (chi, cosa) {
+     casi che riguardano il campo intero.
+
+     `quale` è il criterio con cui si sceglie DENTRO una schiera
+     (`scelte.js`): senza, il più vicino, che è quello che si è sempre
+     fatto. Chi non nomina una fazione non se ne accorge nemmeno. */
+  dove (chi, cosa, quale) {
     if (!cosa) return null
     if (typeof cosa.dove === 'function') return cosa.dove(this)
     if (cosa.tipo === 'cella') return { x: cosa.x, y: cosa.y }
@@ -179,13 +183,8 @@ export class Mondo {
       const u = this.perId[cosa.id]
       return u && u.eInPiedi() ? u : null
     }
-    if (cosa.tipo === 'fazione') {
-      const schiera = this.vivi().filter(z => z.fazione === cosa.id && z !== chi)
-      if (!schiera.length) return null
-      const passi = mappaDi(this, chi)
-      schiera.sort((p, q) => passi[p.y * this.w + p.x] - passi[q.y * this.w + q.x])
-      return schiera[0]
-    }
+    if (cosa.tipo === 'fazione')
+      return scegliFra(this, chi, this.vivi().filter(z => z.fazione === cosa.id && z !== chi), quale)
     return null
   }
 
@@ -194,8 +193,8 @@ export class Mondo {
      una che si muove solo se la vedi, e se non la vedi hai al massimo un
      RICORDO. Da qui viene che non si va da chi non si è mai incrociato,
      ed è il motivo per cui una ronda serve davvero. */
-  dovePensiCheSia (chi, cosa) {
-    const adesso = this.dove(chi, cosa)
+  dovePensiCheSia (chi, cosa, quale) {
+    const adesso = this.dove(chi, cosa, quale)
     if (!adesso || !adesso.id || !this.perId[adesso.id])
       return adesso ? { posto: adesso } : null
     if (chi.vede(this, adesso)) { chi.ricorda(adesso); return { posto: adesso } }
@@ -272,10 +271,23 @@ export class Mondo {
     return azioni.length ? [...new Set([...suoi, ...azioni])] : suoi
   }
 
+  /* ── UN COMANDO SI OFFRE SOLO A CHI LO CAPISCE ──
+     Il tipo non basta più. `attacca` accetta gli oggetti, ma un oggetto
+     si attacca solo se il livello l'ha dichiarato rompibile: senza
+     questa riga il verbo comparirebbe in cassetta in ogni livello che
+     ha una chiave per terra, e il bambino avrebbe una voce in più da
+     escludere prima di trovare quella giusta.
+     Vale per i verbi che si CONSEGNANO (`comando: true` nel
+     vocabolario), e la risposta la dà la cosa (`Elemento.accetta`) —
+     non una seconda tabella da tenere allineata a mano. */
   nomi (verbo) {
     const V = VERBI[verbo]
     if (!V) return []
-    return this.nominabili().filter(k => V.accetta.includes(this.cose[k].tipo))
+    return this.nominabili().filter(k => {
+      const c = this.cose[k]
+      if (!V.accetta.includes(c.tipo)) return false
+      return !V.comando || typeof c.accetta !== 'function' || c.accetta(verbo)
+    })
   }
 
   complementi (verbo) {

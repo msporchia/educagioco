@@ -35,7 +35,7 @@ export class Oggetto extends Elemento {
     this.sigillo = null
   }
 
-  azzera () { this.preso = null }
+  azzera () { super.azzera(); this.preso = null }
 
   dove (mondo) {
     if (!this.preso) return this
@@ -43,9 +43,13 @@ export class Oggetto extends Elemento {
     return chi && chi.eInPiedi() ? chi : null
   }
 
-  accetta (cmd) { return cmd === 'prendi' || cmd === 'posa' }
+  accetta (cmd) { return super.accetta(cmd) || cmd === 'prendi' || cmd === 'posa' }
 
   ricevi (cmd, chi, ctx) {
+    /* le botte le incassa la classe base: rompere non è un mestiere
+       dell'oggetto, è una cosa che si fa a qualunque cosa rompibile */
+    const colpo = super.ricevi(cmd, chi, ctx)
+    if (colpo) return colpo
     /* ── LASCIARLO DOVE SEI ──
        Non è «buttarlo via»: è metterlo in un posto. L'oggetto prende le
        coordinate di chi lo posa, e da quel momento è una cosa del campo
@@ -63,6 +67,12 @@ export class Oggetto extends Elemento {
     }
     if (cmd !== 'prendi') return null
     const N = this.nomeIn(ctx.mondo)
+    /* ── QUELLO CHE È ROTTO NON SI RACCOGLIE ──
+       È il senso stesso del sabotaggio: il tamburo sfondato non si
+       porta via e non suona più. Rifiuto, non guasto — chi ci prova
+       resta in piedi e la sua fila prosegue. */
+    if (this.rotto) return { esito: Esito.finito(), riuscito: false,
+                             penso: `${N} è rotto: non serve più a niente` }
     if (this.preso === chi.id) return { esito: Esito.finitoSubito() }
     /* rifiuto, non riuscita: chi ci prova resta in piedi e la fila va
        avanti, ma il registro non deve scrivere in verde una presa che
@@ -133,10 +143,14 @@ export class Oggetto extends Elemento {
      arredo dipinto sul fondale */
   faccia () {
     if (this.preso) return []
-    return [{ che: this.pittore || this.id, x: this.x, y: this.y, sigillo: this.sigillo, alone: true }]
+    return [{ che: this.pittore || this.id, x: this.x, y: this.y, sigillo: this.sigillo,
+              rotto: this.rotto, alone: true }]
   }
 
   scheda () {
-    return this.preso ? ['ce l\'ho'] : ['è qui, per terra']
+    if (this.rotto) return ['è rotto']
+    const righe = this.preso ? ['ce l\'ho'] : ['è qui, per terra']
+    if (this.rompibile) righe.push(`si può rompere: ${this.resistenza} di danno`)
+    return righe
   }
 }

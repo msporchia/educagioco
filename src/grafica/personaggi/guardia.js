@@ -44,9 +44,45 @@ export const GUARDIA = {
     if (dir === 'dx') spallaccio(1 * s, 1)
     else { spallaccio(-w * 0.95 * s, -1); spallaccio(w * 0.95 * s, 1) }
   },
-  testa(q, s, C, dir, stato) {
+  testa(q, s, C, dir, stato, cosa) {
     const b = C.bordo, sp = 0.85 * s, R = 4.9 * s
     q.rett(-2.2 * s, 1.4 * s, 4.4 * s, 2.6 * s, C.pelleS)
+    /* ── SENZA ELMO ──
+       `{ che: 'guardia', elmo: false }` la spoglia: niente ferro,
+       niente corna, resta la faccia verde della stessa razza
+       dell'orco — orecchie a punta invece delle corna, e la stessa
+       coppia di zanne. Serve a raccontare «l'hanno disarmata»,
+       «è un prigioniero», senza inventare un personaggio nuovo solo
+       per quello. */
+    if (cosa && cosa.elmo === false) {
+      for (const v of (dir === 'dx' ? [-1] : [-1, 1]))
+        poligono(q, [[v * R * 0.68, -0.8 * s], [v * R * 1.55, -R * 0.66], [v * R * 0.88, 1 * s]],
+                 C.pelleS, b, sp * 0.8)
+      if (dir === 'dx') {
+        tondo(q, 0, 0, R * 0.9, R * 0.86, C.pelle, b, sp)
+        tondo(q, R * 0.7, 1 * s, R * 0.5, R * 0.4, C.pelle, b, sp * 0.8)
+        poligono(q, [[R * 0.62, 1.6 * s], [R * 0.9, 1.6 * s], [R * 0.8, 0.3 * s]], C.zanne, b, sp * 0.6)
+        if (stato === 'ko') occhi(q, s, -0.9, -0.5, 0.65, stato)
+        else {
+          tondo(q, R * 0.4, -0.5 * s, 0.75 * s, 0.85 * s, '#ffd24a')
+          tondo(q, R * 0.5, -0.4 * s, 0.36 * s, 0.44 * s, '#20182e')
+        }
+      } else if (dir === 'su') {
+        tondo(q, 0, 0, R * 0.92, R * 0.9, C.pelleS, b, sp)
+      } else {
+        tondo(q, 0, 0, R * 0.92, R * 0.9, C.pelle, b, sp)
+        if (stato === 'ko') occhi(q, s, 1.7, -0.4, 0.75, stato)
+        else for (const v of [-1, 1]) {
+          tondo(q, v * 1.7 * s, -0.4 * s, 0.7 * s, 0.8 * s, '#ffd24a')
+          tondo(q, v * 1.7 * s + 0.14 * s, -0.32 * s, 0.32 * s, 0.4 * s, '#20182e')
+        }
+        poligono(q, [[-0.8 * s, 0.6 * s], [0.8 * s, 0.6 * s], [0, 2.2 * s]], C.pelleS)
+        for (const v of [-1, 1])
+          poligono(q, [[v * 1.3 * s, 2.4 * s], [v * 2.1 * s, 2.1 * s], [v * 1.7 * s, 1 * s]],
+                   C.zanne, b, sp * 0.6)
+      }
+      return
+    }
     /* le corna: grosse alla base e affusolate in punta, curve all'insù.
        A punte sottili sembravano antenne, ed è la cosa che si vede per
        prima di questo personaggio */

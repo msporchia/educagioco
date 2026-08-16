@@ -53,6 +53,9 @@ export {
 /* la cassetta: quali verbi si offrono, qui e a chi */
 export { verbiDi, verbiPer, nonSa } from './generale/cassetta.js'
 
+/* e quale di loro, quando il bersaglio è una schiera */
+export { SCELTE, QUALI, scegliFra } from './generale/scelte.js'
+
 /* le domande che si possono fare */
 export { condizioniDi, condCompone, valutabile } from './generale/domande/quali.js'
 export { domandaDa } from './generale/domande/indice.js'

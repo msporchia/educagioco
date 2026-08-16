@@ -28,17 +28,19 @@ import { CAPITANO } from './capitano.js'
 import { GOBLIN } from './goblin.js'
 import { SCHELETRO } from './scheletro.js'
 import { LUPO } from './lupo.js'
+import { FALENA } from './falena.js'
 import { GATTO, MANTI as MANTI_GATTO } from './gatto.js'
 import { ORSO, MANTI as MANTI_ORSO } from './orso.js'
 import { PAPERA, MANTI as MANTI_PAPERA } from './papera.js'
+import { TOPO } from './topo.js'
 
 /* gli eroi prima, i mostri poi, gli animali per ultimi: è l'ordine in
    cui compaiono nella vetrina, e non conta per nient'altro */
 export const PERSONE = {
   cavaliere: CAVALIERE, ladra: LADRA, elfo: ELFO, principessa: PRINCIPESSA, mago: MAGO,
   orco: ORCO, guardia: GUARDIA, capitano: CAPITANO,
-  goblin: GOBLIN, scheletro: SCHELETRO, lupo: LUPO,
-  gatto: GATTO, orso: ORSO, papera: PAPERA,
+  goblin: GOBLIN, scheletro: SCHELETRO, lupo: LUPO, falena: FALENA,
+  gatto: GATTO, orso: ORSO, papera: PAPERA, topo: TOPO,
 }
 
 export const PERSONAGGI = Object.keys(PERSONE)

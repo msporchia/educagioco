@@ -34,17 +34,23 @@ export class Leva extends Elemento {
     this.premuta = false
   }
 
-  azzera () { this.premuta = false }
+  azzera () { super.azzera(); this.premuta = false }
 
   chiedi (q) {
     if (q === 'premuto') return this.premuta
-    return null
+    return super.chiedi(q)
   }
 
-  accetta (cmd) { return cmd === 'premi' }
+  accetta (cmd) { return super.accetta(cmd) || cmd === 'premi' }
 
   ricevi (cmd, chi, ctx) {
+    const colpo = super.ricevi(cmd, chi, ctx)
+    if (colpo) return colpo
     if (cmd !== 'premi') return null
+    /* una leva sfasciata non comanda più niente: è il sabotaggio visto
+       dalla parte di chi voleva usarla */
+    if (this.rotto) return { esito: Esito.finito(), riuscito: false,
+                             penso: `${this.nomeIn(ctx.mondo)} è rotta: non si muove più` }
     if (this.premuta) return { esito: Esito.finitoSubito() }
     this.premuta = true
     const N = this.nomeIn(ctx.mondo)
@@ -62,7 +68,8 @@ export class Leva extends Elemento {
      si nomina in un ordine, non arredo dipinto sul fondale (§8.4 bis
      del piano, «l'alone sui toccabili») */
   faccia () {
-    return [{ che: 'leva', x: this.x, y: this.y, premuta: this.premuta, alone: true }]
+    return [{ che: 'leva', x: this.x, y: this.y, premuta: this.premuta,
+              rotto: this.rotto, alone: true }]
   }
 
   /* come `Porta.nomeChiave`: traduce un id collegato nel nome che il

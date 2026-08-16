@@ -70,6 +70,11 @@ const LEGENDA = {
   'k': { che: 'cosa', nome: 'chiave',        prendibile: true, emoji: '🔑' },
   'T': { che: 'cosa', nome: 'tesoro',        prendibile: true, emoji: '💎' },
   'z': { che: 'cosa', nome: 'zaino',         prendibile: true, emoji: '🎒' },
+  /* e una che si rompe: `rompibile` è quello che rende scrivibile il
+     SABOTAGGIO — «attacca il tamburo» invece di «portalo via», che è
+     un'altra storia. Le altre tre non si rompono, e il validatore lo
+     dice a chi ci prova. */
+  'd': { che: 'cosa', nome: 'tamburo',       prendibile: true, rompibile: true, emoji: '🥁' },
 
   /* congegni — si aprono, si azionano */
   'P': { che: 'congegno', nome: 'portone',   solido: true, apribile: true, emoji: '🚪' },
@@ -103,8 +108,26 @@ const VERBI = {
                che: 'lancia il segnale: chi lo aspetta si mette in moto' },
   aspetta:   { bersaglio: 'vietato', vuoleFinche: true,
                che: 'sta fermo dov\'è finché la condizione non diventa vera' },
-  attacca:   { bersaglio: 'serve',  ammessi: ['unità'],
+  /* ── E SI ATTACCANO ANCHE LE COSE ──
+     Il sabotaggio: il tamburo sfondato, la leva buttata giù. Vale solo
+     su quello che la legenda dichiara `rompibile` — «attacca la chiave»
+     resta un errore, con scritto perché.
+     `quale` (facoltativo) dice CHI, quando il bersaglio è una schiera:
+     senza, il più vicino, che è quello che si è sempre fatto. */
+  attacca:   { bersaglio: 'serve',  ammessi: ['unità', 'cosa', 'congegno'], vuoleRompibile: true,
                che: 'gli va addosso finché lo vede — chi non sa combattere non ce l\'ha' },
+}
+
+/* ── QUALE DI LORO ──
+   Non un nome, un CRITERIO: «quello laggiù» invecchia con la mappa,
+   «il più lontano» no, e un piano deve reggere tre scene diverse.
+   Nel motore stanno in `src/motore/generale/scelte.js`, e queste due
+   tabelle si guardano in faccia come già fanno i verbi. */
+const QUALI = {
+  vicino:  'il più vicino (è il valore normale)',
+  lontano: 'il più lontano',
+  debole:  'quello messo peggio',
+  forte:   'quello più in forze',
 }
 
 /* Le condizioni si scrivono `verbo:bersaglio` — `vedi:ladra`,
@@ -117,6 +140,7 @@ const CONDIZIONI = {
   hai:      { ammessi: ['cosa'],   che: 'ce l\'ha addosso' },
   aperto:   { ammessi: ['congegno'], che: 'quel congegno è aperto' },
   preso:    { ammessi: ['cosa'],   che: 'qualcuno l\'ha raccolta' },
+  rotto:    { ammessi: ['cosa', 'congegno'], che: 'è stata sfasciata' },
   arrivato: { ammessi: ['zona', 'traguardo', 'cosa', 'congegno'], che: 'ci è arrivato' },
   segnale:  { ammessi: ['segnale'], che: 'quel segnale è stato lanciato' },
   subito:   { solo: true, che: 'è vera da subito (è il valore normale di `quando`)' },
@@ -184,7 +208,7 @@ const DA_CAMPAGNA = {
 const ORDINE_CHIAVI = ['id', 'nome', 'fragile', 'racconto', 'idea', 'mappa', 'calco', 'zone', 'ronde',
                        'fazioni', 'segnali', 'ordini', 'cassetta', 'par', 'dritta',
                        'varianti', 'soluzioni',
-                       'chi', 'quando', 'fai', 'bersaglio', 'finche']
+                       'chi', 'quando', 'fai', 'bersaglio', 'quale', 'finche']
 
 /* ═══════════ 2. LEGGERE LA GRIGLIA ═══════════ */
 
@@ -508,6 +532,30 @@ function valida(liv, opzioni) {
       else if (verbo.ammessi && !verbo.ammessi.includes(b.tipo))
         err(`${posto}: «${ord.fai} ${ord.bersaglio}» non ha senso — ${ord.bersaglio} è ${unA(b.tipo)}, ` +
             `e «${ord.fai}» vuole ${verbo.ammessi.join(' o ')}`)
+      /* ── E CHE SIA UNA COSA CHE SI ROMPE ──
+         `attacca` prende anche le cose, ma solo quelle che la legenda
+         dichiara `rompibile`: «attacca la chiave» è un ordine che non
+         succede, e senza questa riga passerebbe in silenzio. */
+      else if (verbo.vuoleRompibile && (b.tipo === 'cosa' || b.tipo === 'congegno') &&
+               !(voce(b.ch) || {}).rompibile)
+        err(`${posto}: «${ord.fai} ${ord.bersaglio}» non ha senso — ${ord.bersaglio} non si rompe. ` +
+            'Si rompe solo quello che la legenda dichiara «rompibile»')
+    }
+    /* ── QUALE DI LORO ──
+       Vale solo dove c'è un gruppo da cui scegliere, e solo con i nomi
+       che il motore conosce: uno inventato lì per lì farebbe scegliere
+       il più vicino in silenzio, cioè un ordine che dice una cosa e ne
+       fa un'altra. */
+    if (ord.quale !== undefined) {
+      if (!QUALI[ord.quale])
+        err(`${posto}: «quale: ${ord.quale}» non si sa cosa voglia dire. ` +
+            `Quelli che ci sono: ${Object.keys(QUALI).join(', ')}`)
+      else {
+        const b = tabella.get(ord.bersaglio)
+        if (b && b.tipo !== 'unità')
+          err(`${posto}: «quale» dice chi scegliere in un gruppo, e «${ord.bersaglio}» ` +
+              `è ${unA(b.tipo)}: lì c'è già una cosa sola`)
+      }
     }
     /* le condizioni */
     if (verbo.vuoleFinche && !ord.finche)
@@ -516,7 +564,27 @@ function valida(liv, opzioni) {
       if (ord[campo]) controllaCondizione(ord[campo], `${posto} · ${campo === 'finche' ? 'finché' : 'quando'}`)
   }
 
+  /* ── L'OPPURE ──
+     Una condizione è una domanda con risposta sì o no, e finora erano
+     tutte in fila per «e»: mancava la disgiunzione, e da lì venivano
+     ordini che non finivano mai perché la sola uscita scritta non era
+     quella vera. Si scrive con la barra, che è come si legge:
+
+         finche: 'vedi:eroe|segnale:rosso'
+
+     Le due parti si scrivono uguali a prima e si controllano una per
+     una, quindi non c'è una seconda grammatica da imparare: c'è una
+     barra. (Nel motore è la domanda `oppure`,
+     `src/motore/generale/domande/insieme.js`.) */
   const controllaCondizione = (testo, posto) => {
+    const pezzi = String(testo).split('|')
+    if (pezzi.length > 1) {
+      if (pezzi.some(p => !p.trim()))
+        err(`${posto}: «${testo}» ha una barra con niente da una parte — ` +
+            'si scrive «questa|quella»')
+      pezzi.filter(p => p.trim()).forEach(p => controllaCondizione(p.trim(), posto))
+      return
+    }
     const [capo, resto] = String(testo).split(':')
     const c = CONDIZIONI[capo]
     if (!c) {
@@ -819,7 +887,7 @@ const sostituisci = (riga, x, ch) => riga.slice(0, x) + ch + riga.slice(x + 1)
 
 /* ═══════════ 8. quello che esce ═══════════ */
 globalThis.MAPPE = {
-  LEGENDA, VERBI, CONDIZIONI, SEGNALI, AUTORI, DA_CAMPAGNA,
+  LEGENDA, VERBI, QUALI, CONDIZIONI, SEGNALI, AUTORI, DA_CAMPAGNA,
   valida, validaTutto, versioni, fondi,
   leggi, scrivi, stampa, vuoto, sostituisci,
   voce, solido, segni, unita, bersagli, larghezza, cella, nomeZona,

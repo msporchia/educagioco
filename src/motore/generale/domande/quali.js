@@ -36,6 +36,11 @@ export function condizioniDi (mondo, io) {
     if (x.tipo === 'unita' || x.tipo === 'fazione') due({ cond: 'vedi', complemento: k })
     else if (x.tipo === 'oggetto') due({ cond: 'hai', complemento: k })
     else if (x.tipo === 'segnale') due({ cond: 'segnale', complemento: k })
+    /* e per quello che si può sfasciare, se il sabotaggio è riuscito.
+       Non è un `else`: una cosa rompibile è quasi sempre anche un
+       oggetto che si può avere addosso, e sono due domande diverse.
+       Chi non dichiara una `resistenza` non offre niente in più. */
+    if (x.rompibile) due({ cond: 'rotto', complemento: k })
   }
   return out
 }

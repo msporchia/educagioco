@@ -12,8 +12,8 @@
      DA PRENDERE   ondeggiano e mandano scintille (`raccolta`): chiave,
                    gemma, moneta, mappa, pergamena, pozione, libro,
                    bacchetta, scudo, elmo, stivali, pane, corda,
-                   secchio, martello, piccone, campana, corno, lanterna,
-                   torcia da mano
+                   secchio, martello, piccone, campana, tamburo, corno,
+                   lanterna, torcia da mano
      DA USARE      hanno uno stato che il gioco muove: leva, pulsante,
                    ruota, argano, botola, ponte levatoio, forziere,
                    braciere, altare, fontana, campanello — e **le
@@ -49,6 +49,7 @@ import { secchio } from './secchio.js'
 import { martello } from './martello.js'
 import { piccone } from './piccone.js'
 import { campana } from './campana.js'
+import { tamburo } from './tamburo.js'
 import { corno } from './corno.js'
 import { lanterna } from './lanterna.js'
 import { torciaMano } from './torcia-mano.js'
@@ -108,7 +109,7 @@ export const PITTORI_OGGETTI = {
   chiave, gemma, moneta, mappa, pergamena, pozione, libro, bacchetta,
   scudo, elmo, stivali, pane, corda, secchio, martello, piccone, pugnale, spada,
   corona, spazzola, tavolo, cesta, cuccia,
-  campana, corno, lanterna, torciaMano,
+  campana, tamburo, corno, lanterna, torciaMano,
   // da usare
   leva, totem, pulsante, ruota, argano, catena, botola,
   porta, portone, cancello, saracinesca, arco, pietraPorta,

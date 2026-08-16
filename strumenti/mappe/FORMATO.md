@@ -53,6 +53,7 @@ Le coordinate sono `x` da sinistra (0 è il muro di sinistra) e `y` dall'alto
 | `k` | cosa | chiave | si prende |
 | `T` | cosa | tesoro | si prende |
 | `z` | cosa | zaino | si prende |
+| `d` | cosa | tamburo | si prende **e si rompe** (`attacca`) |
 | `P` | congegno | portone | chiude il passo finché non si apre |
 | `L` | congegno | leva | si aziona |
 | `A` | congegno | campana | si aziona |
@@ -177,6 +178,7 @@ finisce. Si scrive sempre così:
 | `chi` | a chi è firmato: un nome di unità (`guardia`), una singola (`guardia#2`), o una fazione intera (`banditi`) |
 | `fai` | il verbo, dalla tabella qui sotto |
 | `bersaglio` | il complemento: un nome della mappa, una zona, una ronda, un segnale |
+| `quale` | facoltativo: **chi**, quando il bersaglio è un gruppo (vedi sotto) |
 | `quando` | la condizione che lo fa **partire**. Se manca, parte subito |
 | `finche` | la condizione che lo fa **finire**. Se manca, finisce quando è compiuto |
 
@@ -193,11 +195,58 @@ finisce. Si scrive sempre così:
 | `scappa` | zona, traguardo | ci corre via |
 | `chiama` | segnale | lancia il segnale: chi lo aspetta si mette in moto |
 | `aspetta` | — | sta fermo; **vuole `finche`**, se no è un'unità che non riparte |
+| `attacca` | unità, cosa, congegno | gli va addosso finché lo vede — chi non sa combattere non ce l'ha |
 
 Il validatore sa quale bersaglio ha senso per quale verbo: «pattuglia il
 tesoro» viene rifiutato con scritto perché. E sa anche **chi** può eseguire
 cosa: «il cane non sa apri» è un errore come gli altri, con l'elenco di quello
 che il cane sa fare.
+
+#### Attaccare una cosa, cioè il sabotaggio
+
+`attacca` non prende solo le unità: prende anche **le cose che si rompono**.
+Serve a raccontare quello che prima non si poteva dire — il tamburo sfondato,
+la leva buttata giù — e che finiva scritto come «portalo via», che è un'altra
+storia.
+
+```js
+{ chi: 'eroe', fai: 'attacca', bersaglio: 'tamburo' }
+```
+
+Si rompe **solo** quello che la legenda dichiara `rompibile` (oggi: il
+tamburo). «Attacca la chiave» è un errore con scritto perché, e per la stessa
+ragione il verbo non compare in cassetta dove non c'è niente da rompere: una
+voce in più nel foglio è una cosa in più da escludere prima di trovare quella
+giusta. Sfasciare qualcosa **fa fracasso**, come le spallate a un portone: chi
+lo sente accorre, e il sabotaggio è una mossa che si paga.
+
+Quando è rotta, una cosa non serve più: il tamburo non si raccoglie, la leva
+non si preme, e la condizione `rotto:` diventa vera.
+
+#### `quale`: chi, quando il bersaglio è un gruppo
+
+«Attacca gli orchi» nomina una classe, non un orco — è il modo giusto di
+scrivere un piano che si firma prima della battaglia. Ma finché il gruppo si
+risolveva sempre nel più vicino, non c'era modo di dire *chi*: due unità
+mandate sullo stesso nemico, e un gruppo diviso in due posti che nessun piano
+riusciva a ripulire.
+
+```js
+{ chi: 'soldato', fai: 'attacca', bersaglio: 'orco', quale: 'lontano' }
+```
+
+| `quale` | vuol dire |
+|---|---|
+| `vicino` | il più vicino — è il valore normale, quello di prima |
+| `lontano` | il più lontano |
+| `debole` | quello messo peggio |
+| `forte` | quello più in forze |
+
+Non è un nome, è un **criterio**: «quello laggiù» invecchia con la mappa, «il
+più lontano» no — e un piano deve reggere tre scene diverse. Scelto qualcuno,
+l'ordine se lo tiene finché sta in piedi: se ricalcolasse a ogni passo,
+superato il primo bersaglio il «più lontano» diventerebbe lui e si tornerebbe
+indietro all'infinito.
 
 ### Le condizioni
 
@@ -212,11 +261,27 @@ perché sono sempre una domanda con risposta sì o no.
 | `preso:<cosa>` | qualcuno l'ha raccolta |
 | `arrivato:<zona\|traguardo\|cosa>` | ci è arrivato |
 | `segnale:<segnale>` | quel segnale è stato lanciato |
+| `rotto:<cosa\|congegno>` | è stata sfasciata |
 | `subito` | (da sola) vera da subito: è il valore normale di `quando` |
 | `mai` | (da sola) non diventa mai vera |
 
 I segnali che ci sono sempre sono `rosso`, `verde` e `blu` — gli allarmi. Un
 livello può dichiararne altri: `segnali: ['ritirata']`.
+
+#### L'*oppure*: la barra
+
+Due condizioni separate da `|` fanno una domanda sola, vera quando **una
+qualsiasi delle due** è vera:
+
+```js
+{ chi: 'guardia', fai: 'pattuglia', bersaglio: 'corridoio',
+  finche: 'vedi:eroe|segnale:rosso' },
+```
+
+Le due metà si scrivono uguali a prima e si controllano una per una: non c'è
+una seconda grammatica da imparare, c'è una barra. Serviva perché un ordine con
+una sola uscita scritta — quando quelle vere erano due — è un ordine che non
+finisce mai, e nel gioco si vede come un'unità piantata lì.
 
 ### La cassetta
 
@@ -365,7 +430,10 @@ Errori (il livello non si può giocare):
 - un ordine cita un bersaglio che non c'è, o del genere sbagliato per quel
   verbo, o è firmato a un'unità che non esiste;
 - il livello comanda le unità del giocatore, o la soluzione comanda i nemici;
-- una condizione è scritta male o cita il genere sbagliato;
+- una condizione è scritta male o cita il genere sbagliato — anche una sola
+  metà di un *oppure*, e anche una barra con niente da una parte;
+- si attacca una cosa che non è dichiarata `rompibile`;
+- un `quale` è inventato, o è appiccicato a un bersaglio che è una cosa sola;
 - la cassetta è vuota, o contiene verbi che non esistono, o la soluzione usa un
   verbo che non è in cassetta;
 - il par non è un intero maggiore di zero, o la soluzione è più lunga del par;

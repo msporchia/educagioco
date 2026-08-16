@@ -46,8 +46,29 @@
 
    Chi aggiunge un personaggio scrive un file in `personaggi/` e una
    riga nel suo `indice.js`. Qui dentro non si tocca niente.
+
+   ── le varianti: perché una fila di guardie non sia fotocopie ──
+   Quattro campi che una scena può scrivere dentro `cosa`, tutti letti
+   qui e tutti facoltativi — chi non li scrive vede esattamente quello
+   che vedeva prima:
+
+     taglia   moltiplica quella della scheda (1 = di serie)
+     spalle   moltiplica quella della scheda, e allarga solo
+              l'attacco delle braccia — un cavaliere `spalle: 1.3`
+              resta alto uguale ma tiene le braccia più larghe
+     tinta    un colore mescolato nella tavolozza (come fa lo stato,
+              ma scelto da chi mette in scena: due squadre della stessa
+              guardia, un cavaliere di fazione diversa)
+     elmo     un booleano che solo chi ce l'ha legge — oggi la guardia:
+              `{ che: 'guardia', elmo: false }` la spoglia dell'elmo
+
+   Non è un personaggio diverso: è la stessa scheda, letta con un
+   parametro in più. `stato: 'attacca'` è la quinta variante, ma non
+   sta in `cosa`: è uno stato come 'lancia', e come 'lancia' lo
+   riconosce chi ha un'arma in mano — un fendente con la mano che tiene
+   l'arma, non le due braccia alzate insieme dell'incantesimo.
    ═══════════════════════════════════════════════════════════════════ */
-import { capsula, tondo, mescola } from './comune.js'
+import { capsula, tondo, mescola, tinge } from './comune.js'
 import { tavolozzaStato, pensiero, botta } from './segni.js'
 /* per disegnare in mano quello che uno ha raccolto. Nessun ciclo: gli
    oggetti non sanno che esistono le persone, e non le disegnano mai. */
@@ -178,7 +199,7 @@ function arti(q, s, C, dir, sw, cfg) {
    tronco, e torna dove sono finite le mani perché l'arma le segua.
    `alza` da 0 a 1 è la posa di chi tira un incantesimo: il braccio si
    solleva sopra la spalla, e la mano — cioè l'arma — lo segue. */
-function braccia(q, s, C, dir, sw, cfg, alza = 0) {
+function braccia(q, s, C, dir, sw, cfg, alza = 0, colpo = 0) {
   const lat = dir === 'dx' || dir === 'sx'
   const bordo = C.bordo, sp = 0.7 * s
   const mManica = (cfg.materie && cfg.materie.manica) || null
@@ -208,6 +229,17 @@ function braccia(q, s, C, dir, sw, cfg, alza = 0) {
       mani.sx = { x: bx, y: -5.8 * s + bob }
       return mani
     }
+    if (colpo > 0) {
+      /* il fendente di profilo: il braccio davanti parte alzato
+         dietro la spalla e scende in avanti — l'arma, che sta sulla
+         mano, lo segue e traccia lo stesso arco. Il braccio dietro non
+         si muove: è quello che distingue un colpo da un incantesimo,
+         dove alzano le braccia insieme */
+      const ang = (dir === 'dx' ? 1 : -1) * (-1.3 + colpo * 2.1)
+      mani.dx = alzato(2 * s, -11 * s + bob, ang, C.manica, C.pelle)
+      mani.sx = { x: bx, y: -5.8 * s + bob }
+      return mani
+    }
     capsula(q, fx, -9 * s + bob, 1.4 * s * g, 3 * s, 1.3 * s * g, C.manica, bordo, sp, mManica)
     tondo(q, fx, -5.8 * s + bob, 1.6 * s * g, 1.6 * s * g, C.pelle, bordo, sp)
     mani.dx = { x: fx, y: -5.8 * s + bob }
@@ -217,6 +249,14 @@ function braccia(q, s, C, dir, sw, cfg, alza = 0) {
       const m = alzato(v * (sp2 + 0.4) * s, -12 * s + bob, v * 0.55 * alza, C.manica, C.pelle)
       mani[v > 0 ? 'dx' : 'sx'] = m
     }
+  } else if (colpo > 0) {
+    // di fronte o di spalle: solo la destra colpisce, la sinistra
+    // resta al fianco — un braccio solo, non due
+    mani.dx = alzato((sp2 + 0.4) * s, -12 * s + bob, -0.9 + colpo * 1.8, C.manica, C.pelle)
+    const x = -(sp2 + 1.3) * s
+    capsula(q, x, -9 * s + bob, 1.4 * s * g, 3 * s, 1.3 * s * g, C.manicaS, bordo, sp, mManica)
+    tondo(q, x, -5.9 * s + bob, 1.6 * s * g, 1.6 * s * g, C.pelleS, bordo, sp)
+    mani.sx = { x, y: -5.9 * s + bob }
   } else {
     for (const v of [-1, 1]) {
       const ondeggia = v * sw * 1.1 * s
@@ -232,17 +272,26 @@ function braccia(q, s, C, dir, sw, cfg, alza = 0) {
 
 /* Il personaggio intero. */
 export function persona(p, cosa, S, cfg) {
-  const s = S * (cfg.taglia || 1)
+  // le varianti: vedi la nota in testa al file. `1` è sempre «di serie»
+  const s = S * (cfg.taglia || 1) * (cosa.taglia || 1)
   const { x, y, dir = 'giu', passo = 0 } = cosa
   const stato = cosa.stato === 'sconfitto' ? 'ko' : (cosa.stato || 'normale')
   const t = p.tempo || 0
-  const sw = stato === 'lancia' ? 0 : dondolio(passo, cosa.frazione)
+  const sw = (stato === 'lancia' || stato === 'attacca') ? 0 : dondolio(passo, cosa.frazione)
 
-  const { C, velo, giro, scarto } = tavolozzaStato(p, cfg.col, stato, t, x, y, s)
+  // `tinta` sposta la tavolozza prima che lo stato la sposti di nuovo:
+  // una guardia tinta di blu resta blu anche quando lampeggia di rosso
+  const palBase = cosa.tinta ? tinge(cfg.col, cosa.tinta, 0.4) : cfg.col
+  const { C, velo, giro, scarto } = tavolozzaStato(p, palBase, stato, t, x, y, s)
   const respiro = stato === 'attesa' ? Math.sin(t * 2.2) * 0.5 * s : 0
   // chi lancia si carica: le braccia salgono e restano su, con un
   // fremito lento — fermo del tutto sembrava una statua
   const alza = stato === 'lancia' ? 0.85 + 0.15 * Math.sin(t * 5) : 0
+  // chi colpisce: il braccio dell'arma va e viene, un pendolo — un
+  // dente di sega scattava indietro di colpo, un triangolo nel tempo no
+  const colpo = stato === 'attacca' ? Math.abs(((t * 0.8) % 1) * 2 - 1) : 0
+
+  const cfgV = (cosa.spalle && cosa.spalle !== 1) ? { ...cfg, spalle: (cfg.spalle || 0) * cosa.spalle } : cfg
 
   // l'ombra resta per terra anche quando il personaggio è steso
   ombra(p, x, y, s, 6)
@@ -254,10 +303,10 @@ export function persona(p, cosa, S, cfg) {
     if (dir === 'sx') q.ctx.scale(-1, 1)
     q.ctx.translate(0, respiro)
     const d = dir === 'sx' ? 'dx' : dir
-    if (cfg.dietro) cfg.dietro(q, s, C, d, sw, cfg, stato)
-    arti(q, s, C, d, sw, cfg)
-    cfg.tronco(q, s, C, d, sw, cfg, stato)
-    const mani = braccia(q, s, C, d, sw, cfg, alza)
+    if (cfg.dietro) cfg.dietro(q, s, C, d, sw, cfgV, stato)
+    arti(q, s, C, d, sw, cfgV)
+    cfg.tronco(q, s, C, d, sw, cfgV, stato)
+    const mani = braccia(q, s, C, d, sw, cfgV, alza, colpo)
     /* ── QUELLO CHE HA IN MANO SI VEDE ──
        `cfg.arma` è quello che quel personaggio impugna *sempre*: fa
        parte di com'è fatto, come il mantello. `cosa.mano` invece è
@@ -276,8 +325,10 @@ export function persona(p, cosa, S, cfg) {
     }
     // di profilo la testa sta un dito più avanti del busto: è il segno
     // che dice «sta guardando di là» prima ancora della faccia
+    // `cosa` in coda: solo chi ha una variante di testa la legge (oggi
+    // la guardia, per `elmo`) — chi non la dichiara non se ne accorge
     q.in(d === 'dx' ? 0.9 * s : 0, (-15.4 - Math.abs(sw) * 0.7) * s,
-         r => cfg.testa(r, s, C, d, stato))
+         r => cfg.testa(r, s, C, d, stato, cosa))
     if (alza && cfg.incanto) cfg.incanto(q, s, C, d, mani, t)
   }
 
@@ -303,13 +354,16 @@ export function persona(p, cosa, S, cfg) {
          0  zampe
    ═══════════════════════════════════════════════════════════════════ */
 export function bestia(p, cosa, S, cfg) {
-  const s = S * (cfg.taglia || 1)
+  // le stesse due varianti di `persona()`: `taglia` e `tinta`, vedi la
+  // nota in testa al file. `spalle` ed `elmo` non hanno senso qui
+  const s = S * (cfg.taglia || 1) * (cosa.taglia || 1)
   const { x, y, dir = 'giu', passo = 0 } = cosa
   const stato = cosa.stato === 'sconfitto' ? 'ko' : (cosa.stato || 'normale')
   const t = p.tempo || 0
   const sw = dondolio(passo, cosa.frazione)
 
-  const { C, velo, giro, scarto } = tavolozzaStato(p, cfg.col, stato, t, x, y, s)
+  const palBase = cosa.tinta ? tinge(cfg.col, cosa.tinta, 0.4) : cfg.col
+  const { C, velo, giro, scarto } = tavolozzaStato(p, palBase, stato, t, x, y, s)
   const respiro = stato === 'attesa' ? Math.sin(t * 2.4) * 0.4 * s : 0
 
   ombra(p, x, y, s, 6.5)

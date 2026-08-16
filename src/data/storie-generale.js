@@ -395,7 +395,7 @@ const BIBI = [
     storia: 'Bombo fa la guardia. Per l\'osso lascia il suo posto.',
     forma: 'passaggio',
     obiettivo: 'Rosa e Bibi dall\'altra parte del cortile, e Bombo occupato con l\'osso.',
-    concetto: 'sincronizzazione',
+    concetto: 'attesa',
     dritta: 'L\'osso va portato alla cuccia, e finché Bombo è di guardia non si passa. Qui non conta solo cosa si fa: conta quando, e chi aspetta chi.',
     nuovo: ['aspetta'], attori: ['rosa', 'bibi'], nemico: 'Bombo, il cane del vicino',
     eredita: [
@@ -860,10 +860,6 @@ export const quantiCapitoli = id => STORIA[id]?.capitoli.length ?? 0
    deve poter essere la prima per chi ha sei anni. */
 export const capitoloAperto = (id, n, superati = 0) => n <= superati
 
-/* Le monete con lo stesso metro del resto del Generale: il par per le
-   tre scene, una moneta ogni quindici ordini. */
-export const premioCapitolo = c => Math.max(1, Math.round(c.par * 3 / 15))
-
 /* ═══════════ ATTREZZI PER CHI LAVORA A QUESTI DATI ═══════════ */
 
 /* I capitoli che aspettano una mappa: oggi tutti e ventisei. */
@@ -881,7 +877,7 @@ export const conteggioForme = () => {
 /* Le cose che a occhio si sbagliano. Deve tornare una lista vuota.
      1. nessun capitolo porta un ordine che non esiste, e in ogni
         capitolo che ne porta uno c'è chi lo sa eseguire;
-     2. par intero positivo, tre scene, forma e concetto veri;
+     2. tre scene, forma e concetto veri;
      3. dentro una storia i concetti non tornano indietro (salvo la
         sintesi, che sta in fondo per definizione);
      4. **due capitoli di fila non hanno la stessa forma d'obiettivo** —
@@ -913,7 +909,6 @@ export function verificaStorie () {
       for (const a of c.attori || [])
         if (!UNITA[a]) guai.push(`${dove}: «${a}» non è nessuno`)
 
-      if (!Number.isInteger(c.par) || c.par < 1) guai.push(`${dove}: par storto`)
       if (c.varianti?.length !== 3) guai.push(`${dove}: non ha tre scene`)
       if (!FORMA[c.forma]) guai.push(`${dove}: forma sconosciuta «${c.forma}»`)
       if (!c.obiettivo) guai.push(`${dove}: non dice quando è vinta`)
