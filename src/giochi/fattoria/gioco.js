@@ -36,12 +36,18 @@ export default {
   come: 'fare',
   tappe: 0,
 
-  /* Dietro «i giochi in prova» finché non è finita. Senza questo flag la
-     carta comparirebbe in home a tutti — e il gioco oggi è incompleto:
-     manca il pittore del terreno, mancano gli animali da accudire, e
-     l'equilibrio dei prezzi non l'ha ancora provato nessun bambino. Un
-     gioco a metà che si può aprire è peggio di un gioco che non c'è. */
-  sperimentale: true,
+  /* ── NON È PIÙ IN PROVA, ED È UNA DECISIONE DI PRODOTTO ──
+     Stava dietro «i giochi in prova» perché incompleta. Adesso esce allo
+     scoperto non perché sia finita, ma perché **prende il posto della
+     cameretta**: il money pit dev'essere uno solo — un bambino che può
+     spendere le monete in due posti non sceglie, si dimentica dell'altro
+     — e fra i due questo è quello che si può far crescere. La cameretta
+     passa dall'altra parte del cancello (`views/HomeView.vue`), e i suoi
+     salvataggi restano dove sono: nascondere una carta non è cancellare
+     niente.
+     Quello che manca — gli animali da accudire, i prezzi che nessun
+     bambino ha ancora provato — resta da fare con la carta accesa, che è
+     l'unico modo per cui qualcuno se ne accorga. */
   tinta: '#f4ecc8',
 
   /* La riga sotto il nome, in home. `av` è il record di

@@ -4,7 +4,8 @@ import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, calcProgresso, engProgresso, espProgresso, mercatoProgresso,
          labProgresso, tabellineIntere, genProgresso,
-         giocoAcceso, quantiGiochiAccesi, varianteAccesa } from '../store/profile.js'
+         giocoAcceso, quantiGiochiAccesi, varianteAccesa,
+         sperimentaliAccesi } from '../store/profile.js'
 import { CHIAVE_MENTE, scaletta, posizioneOra, progressiDa,
          superata } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
@@ -248,17 +249,40 @@ function aChePunto (chiave) {
         <!-- ═══ quello che non è una materia ═══
              La cameretta non insegna niente e non sta in nessun gruppo:
              è il posto delle monete e degli animali, e il commento in
-             `data/giochi.js` lo dice da sempre. Il lucchetto le sta
-             accanto perché sono le due carte che non sono giochi. -->
-        <h2 class="area">🏡 A casa</h2>
-        <button class="carta room" @click="$emit('vai','cameretta')">
-          <span class="ico">🛏️</span>
-          <b>La cameretta</b>
-          <i v-if="!animali">cani, gatti, pappagalli e un draghetto ti aspettano</i>
-          <i v-else-if="richiesta" class="fame">{{ richiesta }}</i>
-          <i v-else>{{ animali }} {{ animali > 1 ? 'animali' : 'animale' }} ·
-            {{ oggetti }} {{ oggetti === 1 ? 'oggetto' : 'oggetti' }} sugli scaffali</i>
-        </button>
+             `data/giochi.js` lo dice da sempre.
+
+             ── ADESSO STA DIETRO «I GIOCHI IN PROVA» ──
+             Non perché sia rotta, ma perché **il money pit dev'essere
+             uno solo**: la fattoria fa la stessa cosa e si può far
+             crescere, e un bambino che può spendere le monete in due
+             posti non sceglie fra i due — si dimentica di quello meno
+             vivo. Passa dietro lo stesso cancello dei giochi non finiti,
+             che è il posto giusto per una cosa che si sta togliendo ma
+             non si vuole ancora buttare: **niente viene cancellato**,
+             `pets`, `casa`, `accessori` e `owned` restano nel profilo, e
+             riaccendendo il flag la cameretta torna com'era.
+
+             Il cancello lo legge qui e non `giocoAcceso()` perché la
+             cameretta non è un gioco e non sta in `data/giochi.js`:
+             registrarcela per poi nasconderla la farebbe comparire fra
+             le carte da accendere una per una, che è l'opposto di quello
+             che si sta facendo.
+
+             Col titolo sopra vale la regola dei gruppi vuoti: se la
+             cameretta non c'è, «A casa» non si disegna — un titolo su una
+             fila vuota promette qualcosa che non c'è, e il lucchetto sta
+             benissimo da solo in fondo. -->
+        <template v-if="sperimentaliAccesi()">
+          <h2 class="area">🏡 A casa</h2>
+          <button class="carta room" @click="$emit('vai','cameretta')">
+            <span class="ico">🛏️</span>
+            <b>La cameretta</b>
+            <i v-if="!animali">cani, gatti, pappagalli e un draghetto ti aspettano</i>
+            <i v-else-if="richiesta" class="fame">{{ richiesta }}</i>
+            <i v-else>{{ animali }} {{ animali > 1 ? 'animali' : 'animale' }} ·
+              {{ oggetti }} {{ oggetti === 1 ? 'oggetto' : 'oggetti' }} sugli scaffali</i>
+          </button>
+        </template>
 
         <!-- Era la scritta «genitori» in fondo, in grigio e in minuscolo:
              si trovava solo sapendo già che c'era. Il codice a quattro

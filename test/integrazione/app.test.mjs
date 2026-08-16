@@ -1,4 +1,4 @@
-import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, scatto, GIOCATORE, ALTRO } from '../aiuto/browser.mjs'
 
 const browser = await apriBrowser()
 const errors = []
@@ -82,6 +82,15 @@ const dopoInglese = await page.evaluate(giuste => ({
 // uguale in ogni schermata
 await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
+/* La cameretta sta dietro «i giochi in prova» da quando il money pit è
+   la fattoria (`views/HomeView.vue`): senza il flag la sua carta non c'è.
+   Si accende **qui** e non all'apertura per una ragione che è costata un
+   test rosso: `semina()` scrive anche il roster, e a pagina appena aperta
+   l'elenco dei giocatori sta ancora solo in localStorage — seminare
+   troppo presto lo riscrive in IndexedDB con il solo `GIOCATORE`, e il
+   secondo bambino sparisce. Più avanti l'app l'ha già salvato da sé, e la
+   semina lo trova e lo lascia in pace. */
+await semina(page, { settings: { sperimentali: true } })
 // la cameretta è una stanza disegnata: al negozio ci si va dalla porta,
 // e quello che si compra si ritrova da solo sulle mensole
 await page.click('.carta.room')

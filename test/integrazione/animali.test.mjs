@@ -51,7 +51,7 @@
    questo file — che oggi non è più il prezzo di ogni `npm test`, vedi
    `test/README.md`.
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { uguale, controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* la scheda di un animale è alta: per arrivare in fondo senza scorrere di
@@ -62,6 +62,12 @@ const ALTA = { width: 430, height: 1500 }
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: ALTA })
 await azzera(page)
+/* La cameretta è passata dietro «i giochi in prova»: il money pit adesso
+   è la fattoria, e la stanza resta raggiungibile solo col flag acceso
+   (`views/HomeView.vue`). Tutto quello che questo file prova — gli
+   animali, la fame, il negozio — è ancora lì e funziona: è la carta in
+   home che non c'è più per un bambino qualsiasi. */
+await semina(page, { settings: { sperimentali: true } })
 await page.goto((await page.url()).split('#')[0] + '#monete=3000')
 await page.waitForSelector('.carte', { timeout: 10000 })
 await attendi(page, 400)

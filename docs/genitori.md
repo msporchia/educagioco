@@ -124,7 +124,12 @@ ancora scelto renderebbe l'app impossibile da aprire.
 
 - **Giochi in prova** — un unico interruttore che rivela i giochi che sto
   ancora scrivendo. Spento (com'è di partenza) quei giochi **non esistono**
-  per chi gioca.
+  per chi gioca. Dietro lo stesso interruttore c'è anche **la cameretta**,
+  che non è un gioco a metà ma una cosa che si sta togliendo: il posto dove
+  si spendono le monete adesso è la fattoria, e averne due voleva dire che
+  nessuno dei due si riempiva. Accendendolo la cameretta torna esattamente
+  com'era — animali, oggetti e scaffali sono ancora nel profilo, non è stato
+  cancellato niente.
 - **Apri tutte le tappe** — toglie i lucchetti a tutte le campagne di tutti
   i giochi. Serve per far provare a un fratello più grande un gioco appena
   cominciato, o per guardare com'è fatta una tappa avanti.
