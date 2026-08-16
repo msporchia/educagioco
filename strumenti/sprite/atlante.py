@@ -46,6 +46,8 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
+from catalogo import Catalogo, VERSI, breve, scrivi
+
 from attori import allaga, fondi_di, sfrangia
 
 QUI = Path(__file__).parent
@@ -60,57 +62,42 @@ LARGO = 256                       # larghezza dell'atlante, in pixel
 APRE = '/* ═══ ATLANTE GENERATO — non si scrive a mano ═══ */'
 CHIUDE = '/* ═══ fine dell\'atlante generato ═══ */'
 
-MODULO = """/* GENERATO da strumenti/sprite/atlante.py — non si scrive a mano.
+EXTRA_DOC = """
+   ── e quello che ha di suo un atlante di figure ──
+   DA         nome → da quale foglio arriva, per ritrovarlo.
+   PERSONE    chi PILOTA: un bambino sceglie con che personaggio vedersi
+   BESTIE     e chi no. Non si ricava dal nome (un cane si può chiamare
+              in mille modi): viene dal `tipo` dichiarato nel foglietto
+              della sorgente (FORMATO.md).
+"""
 
-   Ritagliato dai fogli in `strumenti/sprite/sorgenti/`, ognuno col suo
-   foglietto `.json` che ne descrive la geometria (vedi FORMATO.md).
-   Il PNG intero pesa {kb} KB: sta qui in base64 perché il build deve
-   restare un file solo.
-
-   PEZZI: nome → [x, y, larghezza, altezza] dentro l'atlante.
-   DA: nome → da quale foglio arriva, per ritrovarlo.
-   PERSONE e BESTIE: chi è un attore controllabile e chi è un animale, vedi
-   sotto. */
-export const ATLANTE = 'data:image/png;base64,{b64}'
-
-/* Quanto vale una cella di terreno, in pixel dello sprite. È una misura
-   del **foglio**, non del gioco: la dichiara `atlante.json` accanto alle
-   sorgenti e la si rilegge da qui, così cambiando set non resta un 16
-   scritto a mano da qualche parte a dire il contrario. */
-export const TESSERA = {tessera}
-
-export const PEZZI = {mappa}
-
+CODA = """
 export const DA = {provenienza}
 
-/* Un attore è chiunque cammini: tre versi — giù, di lato, su — per N
-   fotogrammi. Le pose di lato guardano a DESTRA: la sinistra è la stessa
-   specchiata, e non esiste nell'atlante. Chi è un attore si ricava dai
-   pezzi, non da un elenco a mano. */
-export const VERSI = ['giu', 'lato', 'su']
-export const pezzoAttore = (chi, verso, fr) => PEZZI[`${{chi}}_${{verso}}${{fr}}`] || null
-
-export const ATTORI = [...new Set(Object.keys(PEZZI)
-  .map(n => /^(.+)_giu0$/.exec(n)).filter(Boolean).map(m => m[1]))].sort()
-
-/* PERSONE e BESTIE: la stessa distinzione di ATTORI, ma per chi PILOTA e
-   chi no — un bambino sceglie con che personaggio vedersi in mappa, non
-   con che cane. Non si ricava dal nome (un cane si può chiamare in mille
-   modi): viene dal `tipo` dichiarato nel foglietto della sorgente
-   (FORMATO.md), e lo scrive `atlante.py` una volta per tutte qui sotto —
-   niente elenco da tenere allineato a mano quando arriva un personaggio
-   nuovo. */
 export const PERSONE = {persone}
 
 export const BESTIE = {bestie}
 
-/* Quanti fotogrammi ha davvero un verso: i fogli non ne hanno tutti
-   quattro, e contarli qui evita di disegnare un buco. */
-export function fotogrammi(chi, verso = 'giu') {{
-  let n = 0
-  while (PEZZI[`${{chi}}_${{verso}}${{n}}`]) n++
-  return n
-}}
+/* Un attore cammina in tre versi — giù, di lato, su — per N fotogrammi.
+   Le pose di lato guardano a DESTRA: la sinistra è la stessa specchiata,
+   e nell'atlante non c'è. Chi è un attore lo dice `VOCI`, non un'altra
+   espressione regolare: prima ce n'era una qui e una nel gioco, e in due
+   atlanti su tre non trovava niente perché quei fogli nominano i
+   fotogrammi in un altro modo.
+
+   ⚠ `pezzoAttore` torna **le coordinate** — `[x, y, largo, alto]` — e
+   `fotogrammi` torna **quanti sono**, un numero. Sono i due contratti
+   che questo atlante ha sempre avuto e che `fattoria/scena/tela.js`
+   passa dritti a `drawImage`. Cambiarli in nomi e in elenchi è già
+   costato una fattoria senza più nessuno dentro: `drawImage` con un
+   argomento non finito, per specifica, torna senza disegnare **e senza
+   lanciare**, quindi il guasto è muto e non lo prende nessuna console.
+   Chi vuole i nomi usa `pezziDi`, che si chiama diverso apposta.
+   `unita/atlanti` tiene fermi tutti e due. */
+export const VERSI = ['giu', 'lato', 'su']
+export const ATTORI = vociDi('attore').map(v => v.id)
+export const pezzoAttore = (chi, verso, fr) => PEZZI[pezziDi(chi, verso)[fr]] || null
+export const fotogrammi = (chi, verso = 'giu') => pezziDi(chi, verso).length
 """
 
 
@@ -237,7 +224,60 @@ def pulisci(im, fg):
     return im
 
 
-def ritagli_px(im, fg, provenienza, ritagli):
+def trasforma_di(nome, fg):
+    """Quali permutazioni regge un pezzo — **dichiarate dal foglio**.
+
+    È la cosa che la famiglia non sa dire. Una fontana e una palizzata
+    sono tutte e due «oggetti», ma la fontana girata di novanta gradi
+    finisce all'aria — ha una faccia, e la faccia va davanti — mentre
+    una palizzata orizzontale è una palizzata legittima. La differenza
+    non sta nel tipo: sta nel disegno, e chi il disegno l'ha guardato è
+    chi scrive il foglietto.
+
+    Si dichiara per prefisso, come le famiglie:
+
+        "trasforma": {
+          "suolo":     {"giri": 4},
+          "palizzata": {"giri": 2},
+          "fontana":   {"giri": 1, "specchia": false}
+        }
+
+    `giri` è quanti quarti di giro danno un pezzo ancora giusto: 4 per
+    quello che è visto a piombo dall'alto, 2 per quello che ha un asse
+    (una palizzata, un tronco steso), 1 per quello che ha una faccia.
+
+    Senza dichiarazione vale il ripiego della famiglia, che è prudente:
+    gira solo quello che è terreno. Un pezzo girato per sbaglio si vede
+    subito; uno che si poteva girare e non si è girato costa solo un
+    disegno in più nel foglio."""
+    for prefisso, che in (fg.get('trasforma') or {}).items():
+        if nome.startswith(prefisso):
+            return che.get('giri'), che.get('specchia', True)
+    d = fg.get('trasforma_ripiego') or {}
+    return d.get('giri'), d.get('specchia', True)
+
+
+def famiglia_di(nome, fg):
+    """Di che famiglia è un pezzo — se il foglio lo dice.
+
+    Un foglio come 0x72 dichiara i suoi ritagli in un file dell'autore
+    (`pezzi.json`), che di famiglie non parla: lì dentro un muro e una
+    pozione sono due righe uguali. Il foglietto può allora dichiararlo
+    **per prefisso** (`"famiglie": {"muro": "tessera", "suolo": "tessera"}`),
+    che è poco e sta nel posto giusto: chi ha scritto il foglietto quel
+    foglio l'ha guardato.
+
+    Senza dichiarazione tutto è `oggetto`, che è il verso giusto in cui
+    sbagliare: un oggetto si appoggia col piede, e una tessera posata
+    così sta al suo posto lo stesso — mentre una figura alta trattata da
+    tessera si troverebbe tagliata a metà."""
+    for prefisso, che in (fg.get('famiglie') or {}).items():
+        if nome.startswith(prefisso):
+            return che
+    return fg.get('famiglia') or 'oggetto'
+
+
+def ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma):
     """I ritagli dichiarati **in pixel**, presi da un file accanto al
     foglio (`"ritagli": "pezzi.json"`, `{nome: [x, y, largo, alto]}`).
 
@@ -264,11 +304,13 @@ def ritagli_px(im, fg, provenienza, ritagli):
             continue
         ritagli[nome] = pezzo
         provenienza[nome] = provenienza.get(nome) or Path(fg['_file']).name
+        famiglie[nome] = famiglia_di(nome, fg)
+        trasforma[nome] = trasforma_di(nome, fg)
 
 
-def ritagli_di(im, fg, provenienza, ritagli):
+def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma):
     if fg.get('ritagli'):
-        return ritagli_px(im, fg, provenienza, ritagli)
+        return ritagli_px(im, fg, provenienza, ritagli, famiglie, trasforma)
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):            # note per chi legge, non sprite
@@ -296,6 +338,9 @@ def ritagli_di(im, fg, provenienza, ritagli):
                 pezzo = ImageOps.mirror(pezzo)
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
+            famiglie[chi] = d.get('famiglia') or famiglia_di(chi, fg)
+            trasforma[chi] = (d.get('giri'), d.get('specchia', True)) \
+                if 'giri' in d or 'specchia' in d else trasforma_di(chi, fg)
 
 
 def impacchetta(ritagli):
@@ -351,6 +396,104 @@ def innesta(dove, blocco):
                            lambda _: blocco, testo, flags=re.S))
 
 
+def catalogo_di(ritagli, famiglie, trasforma, provenienza):
+    """L'elenco delle cose, dai nomi dei ritagli.
+
+    ── perché qui si legge una convenzione, e perché una volta sola ──
+    Il raggruppamento giusto sarebbe **dichiarato** dal foglietto: la
+    fontana ha tre fotogrammi, punto. Oggi non è così — `objects.json`
+    dichiara `calderone0` e `calderone1` come due sprite distinti, e
+    l'unica cosa che dice che sono la stessa cosa è il numero in fondo
+    al nome. Quindi la convenzione va letta.
+
+    Che si legga non è il problema: il problema era che la leggevano
+    tutti, ognuno a modo suo e in un posto diverso. Da qui in poi la si
+    legge **in questa funzione e in nessun altro posto**, e quello che
+    esce è un dato. Il giorno che i foglietti dichiareranno i gruppi —
+    è il passo previsto quando si riordineranno le sorgenti — questa
+    funzione si accorcia e nessuno di quelli che leggono se ne accorge.
+
+    Due regole, in quest'ordine:
+      · `chi_verso<n>` è un attore: `bambina_giu0` sta nella voce
+        «bambina», posa «giu», fotogramma 0. È la convenzione di
+        FORMATO.md, ed è dichiarata, non indovinata.
+      · `roba<n>` è una cosa animata **se esiste anche `roba<m>`**:
+        `calderone0` più `calderone1` fanno un calderone di due
+        fotogrammi. Il numero da solo non basta — `barile2` è un
+        secondo barile, non il terzo fotogramma di «barile», e infatti
+        `barile` esiste ma `barile0` e `barile1` no."""
+    cat = Catalogo()
+    fatti = set()
+    versi = '|'.join(VERSI)
+
+    def metti(nome, **q):
+        giri, specchia = trasforma.get(nome, (None, True))
+        q.setdefault('famiglia', famiglie.get(nome, 'oggetto'))
+        # da quale foglio arriva: è l'unica cosa che fa vedere quando in
+        # un atlante ci sono due set che si sovrappongono invece di uno
+        # arricchito, e senza sta scritta solo in `DA`, che è una mappa
+        # per pezzo — di là non si legge guardando le cose
+        return cat.aggiungi(nome, giri=giri, specchia=specchia,
+                            da=provenienza.get(nome), **q)
+
+    for nome in sorted(ritagli):
+        m = re.match(rf'^(.+)_({versi})(\d+)$', nome)
+        if not m:
+            continue
+        metti(nome, chi=m.group(1), posa=m.group(2), famiglia='attore')
+        fatti.add(nome)
+
+    # `eroe-corsa-0`: tre pezzi, e il pezzo di mezzo è la posa. È la
+    # convenzione del sotterraneo, dove un attore si chiama
+    # `chi-posa-fotogramma` invece che `chi_versofotogramma`. Tre pezzi
+    # vuol dire che la posa è **dichiarata**, quindi basta questo — non
+    # serve che ci siano dei fratelli. Non c'è un elenco di pose scritto
+    # qui: si spacca dove il nome si spacca, e va bene per `corsa`,
+    # `fermo`, `colpito` e per quelle che verranno.
+    for nome in sorted(ritagli):
+        if nome in fatti:
+            continue
+        m = re.match(r'^(.+)-([a-z]+)-(\d+)$', nome)
+        if not m:
+            continue
+        metti(nome, chi=m.group(1), posa=m.group(2))
+        fatti.add(nome)
+
+    # i gruppi numerati: qui i fratelli servono eccome. `barile2` è un
+    # secondo barile, non il terzo fotogramma di «barile», e infatti
+    # `barile` esiste ma `barile0` e `barile1` no — un numero in fondo
+    # al nome, da solo, non dichiara niente.
+    gruppi = {}
+    for nome in ritagli:
+        if nome in fatti:
+            continue
+        m = re.match(r'^(.+?)[-_]?(\d+)$', nome)
+        if m:
+            gruppi.setdefault(m.group(1), []).append((int(m.group(2)), nome))
+
+    for stelo, elenco in sorted(gruppi.items()):
+        if len(elenco) < 2:
+            continue
+        for _, nome in sorted(elenco):
+            metti(nome, chi=stelo)
+            fatti.add(nome)
+
+    for nome in sorted(ritagli):
+        if nome not in fatti:
+            metti(nome)
+
+    # Chi ha più di una posa **cammina**, e allora è un attore: la
+    # famiglia non gliela sa dire il foglio (0x72 dichiara i suoi
+    # ritagli in un file dell'autore, che di pose non parla), ma il
+    # numero di pose sì. Un attore posato come un oggetto starebbe
+    # fermo per sempre.
+    for v in cat.voci.values():
+        if len(v['pose']) > 1:
+            v['famiglia'] = 'attore'
+            v['giri'] = 1
+    return cat
+
+
 def costruisci(bers, fogli, con_provini):
     """Un atlante, dai fogli di quella cartella. `bers` è il suo
     `atlante.json`: nome, dove scrivere il modulo, quanto vale una
@@ -363,7 +506,7 @@ def costruisci(bers, fogli, con_provini):
     # e vanno cercate per provenienza, sotto.
     TIPI_VALIDI = ('persona', 'bestia')
     tipo_di_file = {}
-    ritagli, provenienza = {}, {}
+    ritagli, provenienza, famiglie, trasforma = {}, {}, {}, {}
     print(f'{bersaglio}:')
     for f, fg in fogli:
         t = fg.get('tipo')
@@ -377,7 +520,7 @@ def costruisci(bers, fogli, con_provini):
             continue
         im = pulisci(alla_misura_vera(Image.open(f).convert('RGBA'), fg), fg)
         prima = len(ritagli)
-        ritagli_di(im, fg, provenienza, ritagli)
+        ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma)
         print(f'  {f.name}: {len(ritagli) - prima} pezzi')
 
     # Le copie: uno sprite che è un altro sprite ridipinto. La bambina è
@@ -392,6 +535,8 @@ def costruisci(bers, fogli, con_provini):
                 chi = nuovo + nome[len(d['da']):]
                 ritagli[chi] = filtro(ritagli[nome]) if filtro else ritagli[nome].copy()
                 provenienza[chi] = provenienza[nome]
+                famiglie[chi] = famiglie.get(nome, 'oggetto')
+                trasforma[chi] = trasforma.get(nome, (None, True))
 
     # Chi è un attore si ricava dai nomi (`_giu0`), come farà poi il JS;
     # di che TIPO è, invece, non lo dice il nome — lo dice da quale file è
@@ -419,20 +564,13 @@ def costruisci(bers, fogli, con_provini):
         return
 
     atlante, mappa = impacchetta(ritagli)
-    png = QUI / '.atlante.png'
-    atlante.save(png, optimize=True)
-    b64 = base64.b64encode(png.read_bytes()).decode()
-    png.unlink()
-    kb = len(b64) * 3 // 4 // 1024
-
     dest = REPO / bers['modulo']
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(MODULO.format(
-        kb=kb, b64=b64, tessera=bers.get('tessera', 32),
-        mappa=json.dumps(mappa, separators=(',', ':'), sort_keys=True),
-        provenienza=json.dumps(provenienza, separators=(',', ':'), sort_keys=True),
-        persone=json.dumps(persone, separators=(',', ':')),
-        bestie=json.dumps(bestie, separators=(',', ':'))))
+    kb, b64 = scrivi(dest, attrezzo='atlante.py', atlante=atlante, pezzi=mappa,
+                voci=catalogo_di(ritagli, famiglie, trasforma, provenienza).elenco(mappa),
+                tessera=bers.get('tessera', 32),
+                extra_doc=EXTRA_DOC, coda=CODA.format(
+                    provenienza=breve(provenienza),
+                    persone=breve(persone), bestie=breve(bestie)))
 
     print(f'  atlante {atlante.width}×{atlante.height}, {kb} KB di PNG, '
           f'{len(mappa)} pezzi → {dest.relative_to(REPO)}')

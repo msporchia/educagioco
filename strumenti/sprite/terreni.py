@@ -34,13 +34,14 @@ Le tre cose che fa, e nessuna delle tre la fa `atlante.py`:
 Serve `pillow`. Il foglietto sta accanto al foglio, vedi FORMATO.md e la
 sezione «una griglia di tessere» in fondo.
 """
-import base64
 import json
 import re
 import sys
 from pathlib import Path
 
 from PIL import Image
+
+from catalogo import Catalogo, breve, scrivi
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
@@ -49,38 +50,24 @@ LARGO = 512                       # larghezza dell'atlante, in pixel
 NIENTE = '·'                     # il lato che la strada non attraversa
 MISURA = 36                       # a che misura si legge la forma di una tessera
 
-MODULO = """/* GENERATO da strumenti/sprite/terreni.py — non si scrive a mano.
+EXTRA_DOC = """
+   ── e quello che ha di suo un mondo a tessere ──
+   ATTACCHI   nome → dove la strada tocca ogni lato: `·` da nessuna
+              parte, `c` in mezzo, `sx`/`dx` di lato. Due tessere si
+              accostano se il lato che si guardano dice la stessa cosa —
+              il N di quella sotto contro il S di quella sopra. Chi le
+              sceglie è `componiPercorso` in `grafica/tessere.js`.
+   AMBIENTI   materia → le sue strade e i suoi fondi.
+   FIGURE     quello che non è terreno: torri, castello, bocche.
+"""
 
-   Ritagliato dai fogli in `strumenti/sprite/sorgenti/td/`, ognuno col suo
-   foglietto `.json`. Il PNG intero pesa {kb} KB: sta qui in base64 perché
-   il build deve restare un file solo.
-
-   PEZZI      nome → [x, y, largo, alto] dentro l'atlante
-   ATTACCHI   nome → dove la strada tocca ogni lato: `·` da nessuna parte,
-              `c` in mezzo, `sx`/`dx` di lato. Due tessere si accostano se
-              il lato che si guardano dice la stessa cosa — il N di quella
-              sotto contro il S di quella sopra. Chi le sceglie è
-              `componiPercorso` in `grafica/tessere.js`.
-   AMBIENTI   nome → le strade e i prati di quel posto. Le strade sono
-              **scollate**: portano la strada e la frangia del ciglio, e
-              vanno posate SOPRA un prato, non al posto suo.
-   FIGURE     quello che non è terreno: torri, castello, bocche. */
-export const TESSERA = {tessera}
-
-export const ATLANTE = 'data:image/png;base64,{b64}'
-
-export const PEZZI = {mappa}
-
+CODA = """
 export const ATTACCHI = {attacchi}
 
 export const AMBIENTI = {ambienti}
 
 export const FIGURE = {figure}
 
-/* Il catalogo di un ambiente, pronto per il risolutore: ogni tessera
-   nelle sue pose (quattro giri per due versi, senza i doppioni). Sta qui
-   e non nel gioco perché è una funzione dei dati, non una scelta di
-   nessuno. */
 export const nomiDi = ambiente => (AMBIENTI[ambiente] || {{}}).strade || []
 export const pratiDi = ambiente => (AMBIENTI[ambiente] || {{}}).prati || []
 """
@@ -287,7 +274,7 @@ def taglia(im, box, tessera, orlo=0):
                     y + h - orlo)).resize((tessera, tessera), Image.BOX)
 
 
-def tessere_di(im, griglia, fg, ritagli, att, ambienti, tessera):
+def tessere_di(im, griglia, fg, ritagli, att, ambienti, tessera, cat):
     """Un foglio a griglia: ogni fila è un ambiente, ogni casella una
     tessera.
 
@@ -334,10 +321,11 @@ def tessere_di(im, griglia, fg, ritagli, att, ambienti, tessera):
         ritagli[nome] = t
         att[nome] = a
         ambienti.setdefault(chi, {'strade': [], 'prati': []})['strade'].append(nome)
+        cat.aggiungi(nome, famiglia='tessera', materia=chi, attacchi=a, da=fg['foglio'])
     return persi
 
 
-def prati_di(im, griglia, fg, ritagli, ambienti, tessera):
+def prati_di(im, griglia, fg, ritagli, ambienti, tessera, cat):
     """I terreni pieni: quelli non si scollano da niente, sono il fondo.
 
     Qui la mappatura è **per colonna** e non per fila, perché su questi
@@ -371,9 +359,10 @@ def prati_di(im, griglia, fg, ritagli, ambienti, tessera):
         nome = f'{chi}-prato-{col}'
         ritagli[nome] = t
         ambienti.setdefault(chi, {'strade': [], 'prati': []})['prati'].append(nome)
+        cat.aggiungi(nome, famiglia='fondo', materia=chi, da=fg['foglio'])
 
 
-def figure_di(im, fg, ritagli, figure, scala):
+def figure_di(im, fg, ritagli, figure, scala, cat):
     """Quello che non è terreno: torri, castello, bocche. Qui il nome
     conta eccome — il gioco chiede «l'arciere di secondo stadio» — e
     infatti si dichiara, uno per uno, invece di misurarlo."""
@@ -389,6 +378,7 @@ def figure_di(im, fg, ritagli, figure, scala):
             t = t.resize((max(1, round(w * scala)), max(1, round(h * scala))), Image.BOX)
         ritagli[nome] = t
         figure.append(nome)
+        cat.aggiungi(nome, famiglia='figura', da=fg['foglio'])
 
 
 def impacchetta(ritagli):
@@ -468,6 +458,7 @@ def main():
     tessera = conf.get('tessera', 36)
     voluti = nominati_dal_gioco(conf['referenze']) if conf.get('referenze') else None
     ritagli, att, ambienti, figure = {}, {}, {}, []
+    cat = Catalogo()
 
     for f in sorted(SORGENTI.glob('*.json')):
         if f.name == 'atlante.json':
@@ -482,13 +473,13 @@ def main():
             print(f'    griglia: {len(griglia)} file di '
                   f'{", ".join(str(len(r[2])) for r in griglia)} caselle')
         if fg.get('file'):
-            persi = tessere_di(im, griglia, fg, ritagli, att, ambienti, tessera)
+            persi = tessere_di(im, griglia, fg, ritagli, att, ambienti, tessera, cat)
             if persi:
                 print(f'    {len(persi)} senza strada, lasciate fuori: {", ".join(persi)}')
         if fg.get('prati'):
-            prati_di(im, griglia, fg, ritagli, ambienti, tessera)
+            prati_di(im, griglia, fg, ritagli, ambienti, tessera, cat)
         if fg.get('figure'):
-            figure_di(im, fg, ritagli, figure, fg.get('scala', 1))
+            figure_di(im, fg, ritagli, figure, fg.get('scala', 1), cat)
         print(f'  {fg["foglio"]}: {len(ritagli) - prima} pezzi')
 
     if not ritagli:
@@ -507,18 +498,12 @@ def main():
                   f'{", ".join(fuori)}')
 
     atlante, mappa = impacchetta(ritagli)
-    png = QUI / '.terreni.png'
-    atlante.save(png, optimize=True)
-    b64 = base64.b64encode(png.read_bytes()).decode()
-    png.unlink()
-    kb = len(b64) * 3 // 4 // 1024
-
     dest = REPO / conf['modulo']
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    breve = lambda o: json.dumps(o, separators=(',', ':'), sort_keys=True)
-    dest.write_text(MODULO.format(
-        kb=kb, b64=b64, tessera=tessera, mappa=breve(mappa), attacchi=breve(att),
-        ambienti=breve(ambienti), figure=breve(sorted(figure))))
+    kb, _ = scrivi(dest, attrezzo='terreni.py', atlante=atlante, pezzi=mappa,
+                voci=cat.elenco(mappa), tessera=tessera,
+                extra_doc=EXTRA_DOC, coda=CODA.format(
+                    attacchi=breve(att), ambienti=breve(ambienti),
+                    figure=breve(sorted(figure))))
 
     print(f'atlante {atlante.width}×{atlante.height}, {kb} KB di PNG, {len(mappa)} pezzi '
           f'({len(att)} tessere, {len(figure)} figure) → {dest.relative_to(REPO)}')

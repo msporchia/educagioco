@@ -1,7 +1,6 @@
 {
-  "__": "Il sotterraneo ha un atlante suo: 0x72 è un set di dungeon e nella fattoria non ci disegna niente. Il prototipo tiene lo stesso PNG dentro di sé, fra i due marcatori — o quello che si prova sul poc non dice niente sul gioco.",
+  "__": "Il sotterraneo ha un atlante suo: 0x72 è un set di dungeon e nella fattoria non ci disegna niente. Niente `poc`: il prototipo che si portava dietro una copia dell'atlante è stato tolto, e quello che serviva a fare — guardare gli sprite accostati — lo fa `strumenti/banco/mondo.html` per tutti i mondi insieme, senza copie da tenere allineate.",
   "nome": "sotterraneo",
   "modulo": "src/giochi/sotterraneo/dati/atlante.js",
-  "tessera": 16,
-  "poc": "poc/sotterraneo-gfx.html"
+  "tessera": 16
 }

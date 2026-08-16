@@ -78,6 +78,71 @@ basta: l'attrezzo non cambia.
   Chi lo legge è `atlante.py`, che ne scrive due elenchi nel modulo
   generato — `PERSONE` e `BESTIE` — un attore senza `tipo` dichiarato resta
   fuori da entrambi e lo script lo segnala in console.
+- **`famiglie`** — di che famiglia è un pezzo, **per prefisso**:
+  `{"muro": "tessera", "suolo": "tessera"}` dice che ogni nome che comincia
+  per `muro` o per `suolo` è di quella famiglia. Le famiglie ammesse sono
+  in `strumenti/sprite/catalogo.py` (`FAMIGLIE`): `attore`, `oggetto`,
+  `tessera`, `fondo`, `figura` — dicono **come si posa** un pezzo (un
+  oggetto si appoggia col piede, una figura sborda in alto, una tessera
+  riempie la sua casella). Si può anche scrivere `"famiglia"` — al
+  singolare — per **tutto il foglio**: un foglio di edifici è tutto
+  `figura` e ridirlo prefisso per prefisso sarebbe solo rumore. Senza
+  niente dichiarato, ogni pezzo è `oggetto`, che è il verso giusto in cui
+  sbagliare (FORMATO.md di `catalogo.py` spiega perché).
+- **`trasforma`** — quali permutazioni regge un pezzo, **per prefisso**
+  come `famiglie`:
+
+  ```json
+  "trasforma": {
+    "sasso":      { "giri": 4 },
+    "recinto":    { "giri": 2 },
+    "fontana":    { "giri": 1, "specchia": false }
+  }
+  ```
+
+  `giri` è quanti quarti di giro danno ancora un pezzo giusto — e non lo
+  dice la famiglia, lo dice il disegno: **4** per quello visto a piombo
+  dall'alto (una pozza, un pavimento, un sasso: ogni quarto di giro è
+  ancora giusto); **2** per quello che ha un asse ma non una faccia (una
+  staccionata, un tronco steso, un ponte: girato di 180° è ancora giusto,
+  di 90° cadrebbe di lato); **1** per quello con una faccia, che gira
+  «per davvero» solo restando fermo (una fontana, un mulino, una casetta,
+  una panchina). Il commento in cima a `catalogo.py` (sezione `GIRI`)
+  ragiona per esteso sul perché. Senza dichiarazione vale il ripiego
+  della famiglia (`GIRI` in `catalogo.py`: `tessera`/`fondo` 4,
+  `oggetto`/`figura`/`attore` 1), che è già prudente — un pezzo girato
+  per sbaglio si vede subito, uno che si poteva girare e non si è girato
+  costa solo un disegno in più. `specchia` (di default `true`) dice se
+  oltre a girare si può anche rovesciare.
+  Girare e specchiare si fa **a schermo**, mai nell'atlante: otto copie
+  di ogni pezzo costerebbero otto volte il peso per un conto che un
+  `ctx.rotate`/`ctx.scale` fa gratis.
+
+### Un foglio senza griglia, senza un file di `ritagli` a parte
+
+`ritagli` punta a un file esterno perché di solito **esiste già** —
+0x72 lo distribuisce dentro il proprio zip. Quando le coordinate le si
+scrive da zero (un foglio di oggetti disegnati a mano, senza passo
+costante, e senza un file dell'autore da cui pescarle) non serve un
+secondo file: basta dichiarare `"cella": [1, 1]` e scrivere `da` e
+`cella` **in pixel veri** dentro ogni riga di `sprite`, come se fossero
+celle da 1 px:
+
+```json
+{
+  "cella": [1, 1],
+  "sprite": {
+    "fontana_grande0": { "da": [11, 12], "cella": [91, 99] }
+  }
+}
+```
+
+Con una cella larga 1 px, moltiplicare `da` per `cella` (quello che fa
+`atlante.py` per ogni sprite) non cambia niente: il numero scritto è
+il pixel vero. È la stessa strada che uno userebbe con `ritagli`, senza
+il file a parte — giusto quando quel file non esiste già da nessuna
+parte. `strumenti/sprite/misura.py --figure` (o `--celle`, se il foglio
+ha almeno dei separatori) misura i rettangoli da incollare qui.
 
 ## Per quale gioco è questo foglio
 
@@ -90,7 +155,6 @@ sotto finché una cartella più interna non ne dichiara un altro.
   "nome": "sotterraneo",
   "modulo": "src/giochi/sotterraneo/dati/atlante.js",
   "tessera": 16,
-  "poc": "poc/sotterraneo-gfx.html"
 }
 ```
 

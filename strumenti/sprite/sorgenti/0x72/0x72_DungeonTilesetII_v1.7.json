@@ -6,5 +6,36 @@
     16,
     16
   ],
-  "ritagli": "pezzi.json"
+  "ritagli": "pezzi.json",
+  "famiglie": {
+    "suolo": "fondo",
+    "muro": "tessera",
+    "pilastro": "tessera",
+    "grata": "tessera",
+    "buco": "tessera"
+  },
+  "trasforma": {
+    "suolo": {
+      "giri": 4
+    },
+    "buco": {
+      "giri": 4
+    },
+    "grata": {
+      "giri": 4
+    },
+    "muro": {
+      "giri": 1
+    },
+    "pilastro": {
+      "giri": 1
+    },
+    "porta": {
+      "giri": 1
+    },
+    "scala": {
+      "giri": 1,
+      "specchia": false
+    }
+  }
 }

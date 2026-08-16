@@ -117,7 +117,7 @@ Con un foglio di tessere vero: **0x72, «16×16 DungeonTileset II», CC-0**.
 L'atlante ritagliato su misura pesa 10 KB per 106 pezzi, incorporato in
 base64 — il build resta un file solo. Lo monta `strumenti/sprite/atlante.py`
 (vedi il suo `FORMATO.md`), che genera lo stesso PNG anche dentro il
-prototipo `poc/sotterraneo-gfx.html`: se i due si scollassero, quello che si
+banco `strumenti/banco/mondo.html`, che legge lo stesso modulo: se i due si scollassero, quello che si
 prova sul prototipo non direbbe più niente sul gioco.
 
 Quello che il foglio **non ha** resta emoji: la fontana, il mercante, e le

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il banco dei mondi</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     IL BANCO DEI MONDI — una pagina per tutti gli sprite
+
+     NON si apre col doppio click, come `catalogo.html` e `vetrina.html`
+     e per lo stesso motivo: importa i moduli veri dei giochi, e da
+     `file://` Chrome non carica i moduli. Passa da Vite:
+
+         npm run mondo               e si apre da solo
+         npm run mondo -- --host     e si apre anche dal telefono
+
+     Non c'è niente di finto: gli atlanti sono quelli che il gioco
+     spedisce, e il risolutore delle strade è lo stesso che compone il
+     campo del castello. Se una cosa qui non si vede, non si vede
+     nemmeno in gioco.
+     ═══════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a;
+    --testo: #e2e5e0; --tenue: #98a09c; --acceso: #7fe0c0;
+  }
+  * { box-sizing: border-box }
+  body {
+    margin: 0; background: var(--fondo); color: var(--testo);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid; grid-template-rows: auto 1fr; height: 100vh;
+  }
+  header { padding: 12px 16px; border-bottom: 1px solid var(--riga) }
+  h1 { font-size: 17px; margin: 0 0 8px; letter-spacing: -.01em }
+  .comandi { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 13px }
+  .comandi label { color: var(--tenue); display: flex; gap: 6px; align-items: center }
+  select, button {
+    background: #10131a; color: var(--testo); border: 1px solid var(--riga);
+    border-radius: 3px; padding: 4px 9px; font: inherit; cursor: pointer;
+  }
+  button:disabled { opacity: .35; cursor: default }
+  #avviso { color: var(--acceso); font-size: 12px; min-height: 1.2em; margin-top: 6px }
+
+  main { display: grid; grid-template-columns: 340px 1fr; min-height: 0 }
+  #voci { overflow: auto; border-right: 1px solid var(--riga); padding: 10px 12px 60px }
+  #voci h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--tenue); margin: 16px 0 6px; position: sticky; top: 0;
+    background: var(--fondo); padding: 4px 0;
+  }
+  .voce {
+    background: var(--carta); border: 1px solid var(--riga); border-radius: 4px;
+    padding: 7px 9px; margin-bottom: 6px; cursor: pointer;
+  }
+  .voce.scelta { border-color: var(--acceso) }
+  .voce .testa { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap }
+  .voce .testa b { font-size: 13px; font-weight: 600 }
+  .voce .testa span { color: var(--tenue); font-size: 11px }
+  /* da quale foglio arriva: piccolo, ma sempre lì. È l'etichetta che fa
+     vedere quando in un atlante ci sono due set invece di uno. */
+  .voce .da { flex-basis: 100%; color: #6f7a86; font-size: 10px; margin-top: 1px }
+  input[type=search] {
+    background: #10131a; color: var(--testo); border: 1px solid var(--riga);
+    border-radius: 3px; padding: 4px 8px; font: inherit;
+  }
+  .voce .riga { display: flex; align-items: flex-end; gap: 4px; margin-top: 5px }
+  .voce .posa { color: var(--tenue); font-size: 10px; width: 34px; flex: none }
+  /* il primo grande, gli altri piccoli: si guarda la cosa, e i pezzi
+     restano lì per chi deve controllarli */
+  canvas.provino { image-rendering: pixelated; border-radius: 2px }
+  canvas.provino.piccolo { opacity: .75 }
+
+  #campo-casa { overflow: auto; padding: 16px; display: flex; align-items: flex-start }
+  #campo { image-rendering: pixelated; border: 1px solid var(--riga) }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Il banco dei mondi</h1>
+    <div class="comandi">
+      <label>mondo <select id="mondo"></select></label>
+      <label>cerca <input id="cerca" type="search" placeholder="nome…" size="10"></label>
+      <label>foglio <select id="da"></select></label>
+      <label>raggruppa <select id="raggruppa">
+        <option value="famiglia">per famiglia</option>
+        <option value="da">per foglio</option>
+      </select></label>
+      <span id="quante" style="color:var(--tenue)"></span>
+      <label>zoom <input id="zoom" type="range" min="0.5" max="6" step="0.5" value="3"><span id="zoom-e">3×</span></label>
+      <label><input id="griglia" type="checkbox" checked> griglia</label>
+      <span>scelta: <b id="scelta">niente</b></span>
+      <button id="gira" title="R">gira 90°</button>
+      <button id="specchia" title="F">specchia</button>
+      <button id="svuota">svuota</button>
+      <button id="prato">stendi il prato</button>
+      <span style="width:1px;height:20px;background:var(--riga)"></span>
+      <button id="prova-accostate">tutto accostato</button>
+      <button id="prova-camminata">chi cammina</button>
+      <button id="confronta">confronta i fogli</button>
+      <label>strada <select id="materia"></select></label>
+      <button id="prova-strada">componi</button>
+    </div>
+    <p id="avviso"></p>
+  </header>
+  <main>
+    <div id="voci"></div>
+    <div id="campo-casa"><canvas id="campo"></canvas></div>
+  </main>
+  <script type="module">
+    import { avvia } from './mondo.js'
+    avvia()
+  </script>
+</body>
+</html>

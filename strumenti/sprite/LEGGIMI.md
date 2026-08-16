@@ -3,10 +3,17 @@
 Da qui escono gli atlanti dei giochi: **un PNG solo, in base64, dentro un
 modulo generato** che non si scrive a mano.
 
-| bersaglio | dove finisce | e anche |
+| bersaglio | attrezzo | dove finisce |
 |---|---|---|
-| `fattoria` | [`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js) | — |
-| `sotterraneo` | [`src/giochi/sotterraneo/dati/atlante.js`](../../src/giochi/sotterraneo/dati/atlante.js) | `poc/sotterraneo-gfx.html` |
+| `fattoria` | `atlante.py` | [`src/giochi/fattoria/dati/atlante.js`](../../src/giochi/fattoria/dati/atlante.js) |
+| `sotterraneo` | `atlante.py` | [`src/giochi/sotterraneo/dati/atlante.js`](../../src/giochi/sotterraneo/dati/atlante.js) |
+| `castello` | `terreni.py` | [`src/giochi/castello/dati/atlante.js`](../../src/giochi/castello/dati/atlante.js) |
+
+**Due attrezzi, un formato solo.** `atlante.py` ritaglia figure — una figura
+la si dichiara e si prende, il nome conta — mentre `terreni.py` ritaglia
+mondi a griglia, dove di una tessera bisogna anche sapere *come si attacca
+alle vicine*, e quello non si dichiara: si misura. Quello che scrivono è lo
+stesso modulo, perché la testa la scrive `catalogo.py` per tutti e due.
 
 Per quale gioco sia un foglio **lo dice il foglio**, nel suo foglietto
 (`"bersaglio": "sotterraneo"`), come già dichiara la propria geometria.
@@ -28,8 +35,8 @@ Serve `pillow`. Il generatore legge le coordinate passando da `node`, che
 ## Guardare quello che c'è
 
 ```bash
-python3 -m http.server 8000        # dalla radice del repo
-# http://localhost:8000/strumenti/sprite/anteprima.html
+npm run mondo                      # il banco dei mondi, e si apre da solo
+npm run mondo -- --host            # e si apre anche dal telefono
 ```
 
 Va bene **un server qualsiasi** — quello sopra parte in un secondo e non
@@ -38,7 +45,7 @@ sé quando tocchi un file. Col doppio click invece no: Chrome non lascia
 importare dei moduli da `file://`, ed è lo stesso motivo per cui
 `poc/eroi.html` vuole un server.
 
-`anteprima.html` **non ha un elenco dentro**: importa i moduli veri — atlante,
+`strumenti/banco/mondo.html` **non ha un elenco dentro**: importa i moduli veri — atlante,
 tessere, catalogo, ostacoli — e disegna quello che ci trova. Aggiungere uno
 sprite e rilanciare `atlante.py` basta perché compaia lì, e non c'è niente da
 aggiornare a mano che possa restare indietro.

@@ -12,6 +12,7 @@
     "tara": "node strumenti/tara-castello.mjs",
     "mappe": "node strumenti/mappe/valida.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
+    "mondo": "vite --open /strumenti/banco/mondo.html",
     "storie": "vite --open /strumenti/banco/storie.html",
     "percorsi": "node strumenti/valida-percorsi.mjs",
     "pubblica": "./pubblica.sh",
