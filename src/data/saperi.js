@@ -102,6 +102,17 @@ export const SAPERI = [
     esempio: '«84 : 4»',
     spegne: 'le divisioni in colonna del castello — la torre Bombe chiede moltiplicazioni più difficili',
   },
+  /* I problemi non sono un'operazione in più: sono il passo prima, e si
+     spengono da soli perché sono l'unica domanda di matematica che
+     bisogna saper LEGGERE. A un bambino che ancora decifra le parole
+     una storia con dentro un conto non è difficile — è muta, e quello
+     che si misura non è più la matematica. */
+  {
+    chiave: 'problemi', nome: 'I problemi scritti', ico: '📝', materia: 'matematica',
+    che: 'leggere una storia con dei numeri dentro e capire da solo che conto chiede',
+    esempio: '«Nina ha 4 mele e poi ne raccoglie ancora 3: quante mele ha adesso?»',
+    spegne: 'tutti i problemi a parole; i conti restano, chiesti come conti',
+  },
 
   /* ── spazio ── */
   {

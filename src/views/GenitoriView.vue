@@ -34,6 +34,7 @@ import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
 import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
 import Barra from '../components/Barra.vue'
 import Prova from '../quiz/Prova.vue'
+import Catalogo from '../quiz/Catalogo.vue'
 
 defineEmits(['vai'])
 
@@ -411,6 +412,12 @@ function cambiaSotto(gruppo, t) {
    dentro qualcuno ha già messo mano */
 const spenteIn = s => s.sotto.filter(t => !sapereAcceso(t.chiave)).length
 
+/* la tinta di una difficoltà: verde quello che si impara per primo,
+   rosso l'ultimo. Tre colori e non una sfumatura continua, perché
+   servono a **raggruppare con l'occhio** mentre si scorre — e tre sono
+   anche le fasce con cui i giochi pescano (`quiz/nucleo/catalogo.js`). */
+const tintaDif = d => (d < 0.34 ? '#38c172' : d < 0.67 ? '#ffb020' : '#b23a5a')
+
 /* ── provare una voce prima di decidere ──
    Le tre righe scritte sulla carta dicono cosa sparisce; questo lo fa
    vedere. La domanda che si apre è quella vera, generata dallo stesso
@@ -424,8 +431,17 @@ const spenteIn = s => s.sotto.filter(t => !sapereAcceso(t.chiave)).length
    `siPuoProvare` è falso dove quel sapere le domande non le fa: le
    divisioni vivono nel castello e non passano da nessun modulo di quiz.
    Là il tasto non compare, invece di aprire un pannello vuoto. */
-const prova = ref(null)          // { chiave, nome } | null
+const prova = ref(null)          // { chiave, nome } | { sorgente|giro|difficolta, nome } | null
 const apriProva = (chiave, nome) => { prova.value = { chiave, nome } }
+
+/* ── e dal catalogo ──
+   La terza scheda apre lo stesso pannello, ma sa dirgli molto di più:
+   una classe precisa, il giro di un blocco, o una difficoltà a cui
+   pescare come pescherebbe un gioco. Il pannello è uno solo apposta —
+   la messa in scena della domanda dev'essere la stessa da qualunque
+   parte si arrivi, se no si finisce a guardare due cose diverse
+   credendo di guardarne una. */
+const apriDalCatalogo = voce => { prova.value = voce }
 
 /* Tutte le tappe aperte da subito. L'interruttore c'è e la scelta si
    salva nel profilo; i giochi però non lo leggono ancora, quindi per ora
@@ -572,13 +588,21 @@ async function azzera() {
                 @click="scheda = 'giochi'">Giochi</button>
         <button :class="{ ora: scheda === 'sa' }" data-scheda="sa"
                 @click="scheda = 'sa'">Cosa sa</button>
+        <button :class="{ ora: scheda === 'domande' }" data-scheda="domande"
+                @click="scheda = 'domande'">Le domande</button>
       </div>
 
+      <!-- ══════════ scheda: tutte le domande ══════════ -->
+      <Catalogo v-if="scheda === 'domande'" :chi="chi" @prova="apriDalCatalogo" />
+
       <!-- ══════════ scheda: cosa sa il bambino ══════════ -->
-      <template v-if="scheda === 'sa'">
+      <template v-else-if="scheda === 'sa'">
         <p class="mini">Quello che {{ chi }} a scuola non ha ancora fatto si spegne
           qui: le domande che lo davano per scontato spariscono, e al loro posto ne
-          arrivano di più facili. Nessun gioco si chiude e nessun progresso si perde.</p>
+          arrivano di più facili. Nessun gioco si chiude e nessun progresso si perde.
+          Aprendo un gruppo si vedono le sue domande una per una, col numero della
+          <b>difficoltà</b>: <b>0</b> è la prima cosa che si impara, <b>100</b> l'ultima.
+          Per l'elenco completo c'è la scheda «Le domande».</p>
 
         <template v-for="m in materie" :key="m.nome">
           <h3 class="materia">{{ m.nome }}</h3>
@@ -607,15 +631,31 @@ async function azzera() {
                 <!-- il dettaglio: solo se il gruppo ha sottovoci ed è acceso -->
                 <button v-if="s.sotto.length && acceso(s.chiave)" class="dettaglio-tasto"
                         :data-dettaglio="s.chiave" @click="apriDettaglio(s.chiave)">
-                  {{ dettaglio === s.chiave ? 'chiudi il dettaglio ▴' : 'nel dettaglio ▾' }}
-                  <em v-if="spenteIn(s)">{{ spenteIn(s) }} di {{ s.sotto.length }} spente</em>
+                  {{ dettaglio === s.chiave
+                      ? 'chiudi l\'elenco ▴'
+                      : `vedi le ${s.sotto.length} domande ▾` }}
+                  <em v-if="spenteIn(s)">{{ spenteIn(s) }} spente</em>
                 </button>
               </div>
               <div v-if="s.sotto.length && acceso(s.chiave) && dettaglio === s.chiave" class="dettaglio">
                 <div v-for="t in s.sotto" :key="t.chiave" class="voce-riga">
                   <button class="voce" :class="{ spento: !acceso(t.chiave) }"
                           :data-sapere="t.chiave" @click="cambiaSotto(s, t)">
-                    <span>{{ t.nome }}</span>
+                    <span class="voce-chi">
+                      <b>{{ t.nome }}</b>
+                      <!-- da dove a dove sta sulla manopola dei giochi, e
+                           in che gradi esce: è quello che permette di
+                           giudicarla invece di vederla capitare. Il
+                           pallino è la stessa scala a tre colori del
+                           catalogo, e sta sulla riga di sotto perché in
+                           una riga stretta il nome viene prima. -->
+                      <i>
+                        <em class="pallino" :style="{ background: tintaDif((t.da + t.a) / 2) }"></em>
+                        {{ t.icona }} {{ t.modulo }} · grado {{ t.gradi.join(', ') }} ·
+                        difficoltà {{ Math.round(t.da * 100) }}<template
+                          v-if="t.a !== t.da">–{{ Math.round(t.a * 100) }}</template>
+                      </i>
+                    </span>
                     <span class="leva"><span class="pallina"></span></span>
                   </button>
                   <!-- una tipologia una domanda ce l'ha sempre: il `v-if`
@@ -999,7 +1039,9 @@ async function azzera() {
     <!-- il pannello di prova copre tutto: si è entrati per guardare una
          cosa sola. Sta fuori dalle schede perché non è di nessuna delle
          due: è un modo di leggere una voce, non un'impostazione. -->
-    <Prova v-if="prova" :chiave="prova.chiave" :nome="prova.nome" @chiudi="prova = null" />
+    <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
+           :sorgente="prova.sorgente || null" :giro="prova.giro || null"
+           :difficolta="prova.difficolta ?? null" @chiudi="prova = null" />
   </div>
 </template>
 
@@ -1017,8 +1059,10 @@ async function azzera() {
 
 /* le due linguette: quella aperta è piena, l'altra è solo scritta —
    non c'è modo di sbagliarsi su dove si è */
-.schede { display:flex; gap:8px; width:100%; max-width:400px; margin:-4px 0 2px }
-.schede button { flex:1; padding:11px 8px; border-radius:14px; font-size:15px; font-weight:800;
+/* tre schede stanno larghe uguali su un telefono da 390: il testo
+   scende di un punto, il resto non cambia */
+.schede { display:flex; gap:6px; width:100%; max-width:400px; margin:-4px 0 2px }
+.schede button { flex:1; padding:11px 6px; border-radius:14px; font-size:14px; font-weight:800;
                  color:var(--tenue); background:#ffffff88 }
 .schede button.ora { background:var(--viola); color:#fff; box-shadow:0 4px 0 #00000018 }
 .schede button:active { transform:translateY(2px) }
@@ -1056,16 +1100,39 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
    Sta sotto la sua carta e non è una carta a sua volta: deve leggersi
    come «dentro questo», non come «un'altra cosa allo stesso livello».
    Da qui il rientro, lo sfondo più tenue e la leva più piccola. */
-.dettaglio-tasto { align-self:flex-start; margin:-6px 0 0 14px; padding:4px 8px;
-                   font-size:12px; font-weight:700; color:var(--tenue); background:none;
+/* Erano due scrittine da 12px senza sfondo, e una scrittina non si legge
+   come un tasto: la si scavalca, e l'elenco delle domande di un gruppo
+   restava una cosa che nessuno apriva. Adesso sono tasti veri — alti
+   quanto un dito, con il loro fondo — e dicono **quante** domande ci
+   sono dentro, che è la ragione per aprirli. */
+.dettaglio-tasto { align-self:flex-start; margin:-6px 0 0 14px; padding:8px 14px;
+                   min-height:40px; border-radius:999px;
+                   font-size:13px; font-weight:750; color:var(--viola-scuro);
+                   background:#8593a81f;
                    display:flex; align-items:center; gap:8px }
 .dettaglio-tasto em { font-style:normal; font-size:11px; font-weight:700; color:#b23a5a;
                       background:#b23a5a1a; border-radius:999px; padding:2px 7px }
 .dettaglio { display:flex; flex-direction:column; gap:1px; margin:-4px 0 4px 14px;
              border-radius:14px; overflow:hidden; background:#8593a81a }
-.dettaglio .voce { display:flex; align-items:center; justify-content:space-between; gap:12px;
-                   width:100%; padding:10px 14px; text-align:left; background:var(--carta);
+.dettaglio .voce { display:flex; align-items:center; justify-content:space-between; gap:10px;
+                   width:100%; padding:9px 12px; text-align:left; background:var(--carta);
                    font-size:13.5px; font-weight:700; color:var(--viola-scuro) }
+.dettaglio .voce-chi { flex:1; min-width:0 }
+.dettaglio .voce-chi b { display:block; font-size:13.5px; font-weight:750 }
+.dettaglio .voce-chi i { display:block; font-style:normal; font-size:11px; color:var(--tenue);
+                         font-weight:600 }
+/* ── la difficoltà di una voce ──
+   Un numero e un pallino, sulla riga di sotto insieme al modulo. La
+   prima versione era una barretta a segmento in fondo alla riga, e due
+   cose non tornavano: rubava al nome la metà della larghezza (su un
+   telefono i nomi lunghi andavano a capo tre volte), e a difficoltà 100
+   il segmento partiva dal bordo destro e spariva sotto l'`overflow`.
+   Il pallino colorato dice la stessa cosa in dodici pixel, e il numero
+   dice il resto — un intervallo dove la tipologia esce a più gradi,
+   perché una media non corrisponde a nessuna domanda vera. */
+.dettaglio .voce-chi i .pallino { display:inline-block; width:8px; height:8px;
+                                  border-radius:50%; margin-right:2px; vertical-align:-1px }
+.dettaglio .voce.spento .voce-chi i .pallino { opacity:.45 }
 .dettaglio .voce:active { transform:translateY(1px) }
 .dettaglio .voce.spento { color:var(--tenue) }
 .dettaglio .voce .leva { flex:none; width:38px; height:22px; border-radius:999px;
@@ -1086,8 +1153,8 @@ h3.materia { margin:10px 0 -2px; font-size:13px; font-weight:900; letter-spacing
                  margin:-6px 0 0 14px }
 /* dentro la riga il rientro ce l'ha già il contenitore */
 .azioni-sapere .dettaglio-tasto { margin:0 }
-.prova-tasto { padding:4px 9px; font-size:12px; font-weight:700; color:var(--viola);
-               background:#7c5cff14; border-radius:999px }
+.prova-tasto { padding:8px 14px; min-height:40px; font-size:13px; font-weight:750;
+               color:var(--viola); background:#7c5cff1f; border-radius:999px }
 .prova-tasto:active { transform:translateY(1px) }
 /* nel dettaglio la riga è stretta: resta il solo triangolino, e il
    nome della voce lo dice l'`aria-label` a chi legge con le orecchie.

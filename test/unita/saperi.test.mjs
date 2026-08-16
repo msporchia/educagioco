@@ -350,13 +350,21 @@ for (const s of SAPERI) {
   controlla(`${s.chiave}: l'esempio viene da un modulo che lo cita`,
             citati.has(s.chiave) || senzaEsempio.includes(s.chiave))
 }
-/* Due gruppi non passano da nessun modulo di quiz, e sono le due
-   operazioni che vivono nel castello: chi le chiede è la cassa, che
-   scende di scalino invece di far sparire una domanda. Sono elencati
-   qui uno per uno apposta — se domani un terzo gruppo smettesse di
-   avere domande sarebbe un interruttore finto, e va visto subito. */
-uguale('i soli gruppi senza domande di quiz sono le due operazioni del castello',
-       senzaEsempio.join(','), 'moltiplicazioni,divisioni')
+/* Adesso ogni gruppo sa mostrare una domanda vera, e le ultime due ad
+   arrivare sono state le operazioni del castello: finché le
+   moltiplicazioni e le divisioni le chiedeva solo la cassa — che
+   scende di scalino invece di far sparire una domanda — nessun modulo
+   di quiz le nominava, e il loro tasto «prova» non poteva aprire
+   niente. Gliele hanno portate i problemi a parole («in ogni scatola
+   ce ne sono 6, le scatole sono 4»), che è anche il posto giusto: lì
+   la moltiplicazione va prima riconosciuta e poi fatta.
+
+   L'atteso resta scritto come una lista e non come un «sono zero»
+   apposta: se domani un gruppo smettesse di avere domande, il guasto
+   deve dire QUALE, perché un interruttore che non toglie niente è
+   peggio che non averlo. */
+uguale('nessun gruppo di sapere è rimasto senza domande da far vedere',
+       senzaEsempio.join(','), '')
 nota(`esempi: ${TIPI.length} tipologie e ${SAPERI.length - senzaEsempio.length} gruppi su ${SAPERI.length} sanno mostrarsi`)
 
 riassunto('i macrogruppi di sapere')

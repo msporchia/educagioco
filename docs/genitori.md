@@ -47,7 +47,34 @@ l'effetto prima di toccare l'interruttore.
 
 **I gruppi si aprono in dettaglio.** «Accenti e apostrofi» sono cinque
 tipologie diverse: si può spegnere tutto il gruppo, o solo l'accento tonico
-lasciando l'apostrofo. Il dettaglio sta chiuso finché non lo si chiede.
+lasciando l'apostrofo. Il dettaglio sta chiuso finché non lo si chiede, e
+ogni voce dice da quale modulo arriva, a che grado esce e **quanto è
+difficile** — 0 la prima cosa che si impara, 100 l'ultima.
+
+## Vedere tutte le domande che esistono
+
+La terza scheda, **Le domande**, e serve a una cosa che prima non si poteva
+fare: **giudicarle**. Il tasto «prova» apre una domanda vera, ma una alla
+volta e a caso — per farsi un'idea di una tipologia bisognava insistere
+finché non ricapitava, senza mai sapere quante ce n'erano né a che
+difficoltà stessero.
+
+Qui ci sono tutte, un blocco per modulo dentro la sua materia, ognuna con la
+sua difficoltà di fianco. È lo stesso numero con cui i giochi pescano, quindi
+due materie diverse si possono confrontare: un modulo da quattro gradi e uno
+da sei stanno sulla stessa scala.
+
+Due modi di provarle, e sono due domande diverse:
+
+- **come le vede il bambino** — si pesca a quella difficoltà come farebbe un
+  gioco vero, con la stessa frequenza e gli stessi saperi spenti. Risponde a
+  «cosa gli capita davvero», che dall'elenco non si deduce;
+- **scorrile tutte** — il giro dell'elenco, una per una, col contatore («7 di
+  37») e il tasto per tornare indietro. Risponde a «le ho viste tutte?».
+
+Guardare non spegne niente: gli interruttori restano nella scheda «Cosa sa».
+Le domande spente si vedono lo stesso, sbiadite — un elenco che nasconde
+quello che è spento non fa più vedere *che* è spento.
 
 Quando si spegne qualcosa i giochi **degradano invece di sbarrare**: il
 castello senza divisioni chiede moltiplicazioni più difficili, un modulo di

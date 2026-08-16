@@ -409,14 +409,17 @@ await page.waitForTimeout(200)
 await page.click('.schede button[data-scheda="sa"]')
 await page.waitForSelector('.carta[data-sapere="accenti"]', { timeout: 5000 })
 
-/* due gruppi non hanno domande di quiz, e sono le due operazioni che
-   vivono nel castello: lì non sparisce una domanda, scende un'operazione */
-controlla('ogni gruppo che fa domande ha il tasto per provarle',
-  (await page.locator('.prova-tasto[data-prova]').count()) >= SAPERI.length - 2)
-uguale('tranne le divisioni, che le domande le fa il castello',
-  await page.locator('.prova-tasto[data-prova="divisioni"]').count(), 0)
-uguale('e le moltiplicazioni, per lo stesso motivo',
-  await page.locator('.prova-tasto[data-prova="moltiplicazioni"]').count(), 0)
+/* Adesso ogni gruppo ha il suo tasto, le due operazioni comprese: fino
+   a ieri moltiplicazioni e divisioni le chiedeva solo il castello — e
+   lì non sparisce una domanda, scende un'operazione — quindi il loro
+   tasto non poteva aprire niente. Gliele hanno portate i problemi a
+   parole, dove la moltiplicazione va prima riconosciuta dentro una
+   storia e poi fatta. */
+uguale('ogni gruppo che fa domande ha il tasto per provarle',
+  await page.locator('.prova-tasto[data-prova]').count(), SAPERI.length)
+controlla('le due operazioni del castello adesso ce l\'hanno anche loro',
+  (await page.locator('.prova-tasto[data-prova="divisioni"]').count()) === 1 &&
+  (await page.locator('.prova-tasto[data-prova="moltiplicazioni"]').count()) === 1)
 
 /* il dettaglio: chiuso di suo, si apre e mostra le sue voci */
 uguale('il dettaglio sta chiuso finché non lo si chiede',
@@ -437,7 +440,13 @@ controlla('e dice da che modulo arriva e a che grado',
   /grado \d/.test(await page.locator('.prova-chi').innerText()))
 await scatto(page, 'genitori-prova')
 
-/* si risponde: l'esito arriva, e poi si può chiederne un'altra */
+/* si risponde: l'esito arriva, e poi si può chiederne un'altra.
+   L'attesa non è un contorno: una domanda appena comparsa non si lascia
+   toccare per 320 ms (`quiz/Domanda.vue`, la finestra cieca che evita
+   di rispondere col tocco di quella prima). Senza, il click cade dentro
+   la finestra, viene ingoiato, e il test racconta che rispondere non
+   fa niente. */
+await page.waitForTimeout(400)
 await page.click('.prova-velo .qz-tasto')
 await page.waitForTimeout(1800)
 controlla('rispondere dice com\'è andata',
