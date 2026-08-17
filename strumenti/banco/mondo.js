@@ -15,26 +15,40 @@
    standardizzazione degli atlanti: prima ogni foglio nominava i pezzi a
    modo suo e chi voleva mostrarli doveva conoscere tre convenzioni.
 
-   ── cosa ci si fa ──
-   · si guarda **la cosa, non il pezzo**: la fontana è una voce sola,
-     grande in mezzo, coi suoi tre fotogrammi piccoli di fianco. Chi
-     cammina si muove nel riquadro.
-   · si **posa roba sulla mappa**: si tocca una voce, si tocca il campo.
-     Quello che si può girare si gira (`R`), quello che si può
-     specchiare si specchia (`F`) — e la manopola compare **solo** dove
-     ha senso, perché è la voce a dire quanto regge.
-   · si **compone una strada** col risolutore vero, se quel mondo ha
-     tessere con gli attacchi misurati.
-   · si tira lo **zoom**, che è la domanda vera: uno sprite che tiene a
-     ingrandimento intero può sfrangiarsi a 1,4, e non si scopre
-     guardandolo da solo su fondo neutro.
+   ── i quattro attrezzi ──
+   Sono quattro perché sono quattro le domande diverse che si fanno a un
+   foglio di sprite, e ognuna vuole un gesto diverso:
+
+     posa       si tocca una voce e si tocca il campo. Quello che si può
+                girare si gira (`R`), quello che si può specchiare si
+                specchia (`F`) — e la manopola compare **solo** dove ha
+                senso, perché è la voce a dire quanto regge.
+     pennello   si trascina, e l'erba si stende. Un fondo non si posa un
+                pezzo per volta: si dipinge una zona, e le varianti le
+                sceglie il posto (`fotogrammaDi`) invece del dito.
+     strada     si traccia il cammino col dito e il **risolutore vero**
+                sceglie le tessere. È il verso giusto: una strada non è
+                una sequenza di pezzi da scegliere a mano, è un percorso
+                — i gomiti, gli innesti e i doppioni li deve trovare chi
+                sa leggere gli attacchi, che è `componiPercorso`.
+     guida      si sceglie qualcuno già posato e gli si dice dove
+                andare. Serve perché **le pose stanno insieme solo in
+                movimento**: un attore fermo mostra tre fotogrammi in
+                fila, e da lì non si vede se il piede tocca terra nello
+                stesso punto girandosi.
 
    ── le prove automatiche ──
    Tre scene che si costruiscono da sole, perché sono quelle in cui i
    difetti si vedono e che nessuno ha voglia di rifare a mano ogni
    volta: **tutto accostato** (i bordi litigano solo se si toccano),
-   **una strada che gira** (i giunti), **tutti quelli che camminano** in
-   fila (i tempi e il piede).
+   **una serpentina** (i giunti, tutti e quattro i gomiti), **tutti
+   quelli che camminano** in fila (i tempi e il piede).
+
+   ── e l'altra metà ──
+   `ritagli.js` è la stessa pagina dall'altra parte del tubo: il foglio
+   sorgente prima che diventi atlante. Si carica solo quando la si
+   chiede, perché tira dentro tutti i PNG delle sorgenti e chi vuole
+   solo guardare la fattoria non ha motivo di aspettarli.
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDI, apri, netto } from './mondi.js'
 
@@ -46,14 +60,21 @@ const S = {
   gira: 0,
   specchia: false,
   griglia: true,
-  posate: [],           // { voce, posa, x, y, gira, specchia }
-  fondo: new Map(),     // "cx,cy" → voce di famiglia fondo
+  attrezzo: 'posa',     // posa | pennello | tracciato | guida
+  raggio: 0,            // quanto è largo il pennello, in caselle attorno
+  posate: [],           // { voce, posa, x, y, gira, specchia, meta? }
+  fondo: new Map(),     // "cx,cy" → { voce, gira, specchia }
+  tracciato: [],        // le celle toccate col dito, in ordine
+  guidato: null,        // chi sta aspettando che gli si dica dove andare
+  trascina: false,
+  ultimo: null,         // dov'era il dito al movimento prima
   cerca: '',            // filtro sul nome
   da: '',               // filtro sulla provenienza
   raggruppa: 'famiglia',// famiglia | da
 }
 
 const CELLE_X = 16, CELLE_Y = 12
+const $ = s => document.querySelector(s)
 
 /* ── scorrere o scegliere ──
    Più pezzi sotto lo stesso nome sono due cose opposte, e la voce lo
@@ -66,10 +87,13 @@ const CELLE_X = 16, CELLE_Y = 12
 function fotogrammaDi(p, t) {
   const quanti = (p.voce.pose[p.posa] || []).length || 1
   if (quanti < 2) return 0
+  /* chi ha finito di camminare si ferma sul primo piede: un attore che
+     continua a muovere le gambe da fermo è la cosa che fa sembrare
+     sbagliati dei fotogrammi giusti */
+  if (p.fermo) return 0
   if (p.voce.anima) return Math.floor(t * 6) % quanti
   return Math.abs(Math.round(p.x * 7 + p.y * 13)) % quanti
 }
-const $ = s => document.querySelector(s)
 
 /* ═══════════ il campo ═══════════ */
 const tela = $('#campo')
@@ -80,8 +104,9 @@ function misureCampo() {
   return { T, L: CELLE_X * T, A: CELLE_Y * T }
 }
 
-function ridisegna(t = 0) {
+function ridisegna(t, dt) {
   if (!S.mondo) return
+  cammina(dt)
   const { T, L, A } = misureCampo()
   const z = S.zoom
   tela.width = Math.round(L * z)
@@ -92,9 +117,11 @@ function ridisegna(t = 0) {
   ctx.setTransform(z, 0, 0, z, 0, 0)
   netto(ctx)
 
-  for (const [k, voce] of S.fondo) {
+  for (const [k, f] of S.fondo) {
     const [cx, cy] = k.split(',').map(Number)
-    S.mondo.disegna(ctx, { voce, x: (cx + 0.5) * T, y: (cy + 0.5) * T })
+    const q = { voce: f.voce, gira: f.gira, specchia: f.specchia,
+                x: (cx + 0.5) * T, y: (cy + 0.5) * T }
+    S.mondo.disegna(ctx, { ...q, posa: 'fermo', fotogramma: fotogrammaDi({ ...q, posa: 'fermo' }, t) })
   }
 
   if (S.griglia) {
@@ -108,10 +135,72 @@ function ridisegna(t = 0) {
     }
   }
 
+  /* il cammino che si sta tracciando: si vede mentre lo si disegna, se
+     no si sta scrivendo a occhi chiusi e il risultato arriva alla fine */
+  if (S.tracciato.length) {
+    ctx.fillStyle = 'rgba(127,224,192,.28)'
+    for (const [cx, cy] of S.tracciato) ctx.fillRect(cx * T, cy * T, T, T)
+  }
+
   /* chi sta più in basso si disegna dopo: è l'unica regola che fa
      sembrare un mondo dall'alto un posto invece che un collage */
   for (const p of [...S.posate].sort((a, b) => a.y - b.y))
     S.mondo.disegna(ctx, { ...p, fotogramma: fotogrammaDi(p, t) })
+
+  if (S.guidato) {
+    ctx.strokeStyle = '#7fe0c0'
+    ctx.lineWidth = 2 / z
+    ctx.beginPath()
+    ctx.arc(S.guidato.x, S.guidato.y, T * 0.45, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+}
+
+/* ═══════════ chi cammina ═══════════
+   Muove chi ha una meta, e mentre lo muove **sceglie la posa dal
+   verso**. È la parte che un elenco di fotogrammi in fila non sa
+   mostrare: se `lato` guarda dalla parte sbagliata, o se il piede di
+   `su` cade due pixel più in basso di quello di `giu`, si vede solo
+   qui, quando la figura si gira mentre cammina. */
+function cammina(dt) {
+  if (!dt) return
+  const T = S.mondo.tessera
+  for (const p of S.posate) {
+    if (!p.meta) continue
+    const dx = p.meta[0] - p.x, dy = p.meta[1] - p.y
+    const d = Math.hypot(dx, dy)
+    const v = T * 2.4                       // due caselle e mezzo al secondo
+    if (d <= v * dt) {
+      p.x = p.meta[0]; p.y = p.meta[1]; p.meta = null; p.fermo = true
+      const ferma = Object.keys(p.voce.pose).find(n => n === 'fermo' || n === 'giu')
+      if (ferma) p.posa = ferma
+      continue
+    }
+    p.x += dx / d * v * dt
+    p.y += dy / d * v * dt
+    const scelta = posaVerso(p.voce, dx, dy)
+    p.posa = scelta.posa
+    p.specchia = scelta.specchia
+    p.fermo = false
+  }
+}
+
+/* La convenzione dei versi è quella di `FORMATO.md`: `giu`, `lato`,
+   `su`, e `lato` guarda **sempre** a destra — la sinistra la fa lo
+   specchio a schermo, non un secondo disegno nel foglio. Chi non ha i
+   tre versi (il sotterraneo dichiara `fermo` e `corsa`) si arrangia con
+   quello che ha: qui non c'è un elenco di pose scritto a mano, si
+   guarda cosa la voce dichiara. */
+function posaVerso(voce, dx, dy) {
+  const pose = Object.keys(voce.pose)
+  const ha = n => pose.includes(n)
+  const dilato = { posa: 'lato', specchia: dx < 0 }
+  if (Math.abs(dx) > Math.abs(dy) && ha('lato')) return dilato
+  if (dy < 0 && ha('su')) return { posa: 'su', specchia: false }
+  if (dy > 0 && ha('giu')) return { posa: 'giu', specchia: false }
+  if (ha('lato')) return dilato
+  const corre = pose.find(n => n === 'corsa' || n === 'cammina') || pose[0]
+  return { posa: corre, specchia: voce.specchia && dx < 0 }
 }
 
 /* ═══════════ il pannello delle voci ═══════════
@@ -221,7 +310,7 @@ function costruisciPannello() {
 }
 
 function aggiornaScelta() {
-  for (const el of document.querySelectorAll('.voce'))
+  for (const el of document.querySelectorAll('#voci .voce'))
     el.classList.toggle('scelta', el.dataset.voce === (S.scelta && S.scelta.id))
   const v = S.scelta
   $('#scelta').textContent = v
@@ -231,35 +320,175 @@ function aggiornaScelta() {
   $('#specchia').disabled = !v || !v.specchia
 }
 
-/* ═══════════ posare ═══════════ */
-tela.addEventListener('pointerdown', e => {
-  if (!S.scelta) return
+/* ═══════════ il dito sul campo ═══════════ */
+function dovePunta(e) {
   const r = tela.getBoundingClientRect()
+  return [(e.clientX - r.left) / S.zoom, (e.clientY - r.top) / S.zoom]
+}
+const inCella = (x, y) => [Math.floor(x / S.mondo.tessera), Math.floor(y / S.mondo.tessera)]
+const dentroIlCampo = (cx, cy) => cx >= 0 && cx < CELLE_X && cy >= 0 && cy < CELLE_Y
+
+/* i punti da a a b, uno ogni `passo`: b compreso */
+function tratto([ax, ay], [bx, by], passo) {
+  const d = Math.hypot(bx - ax, by - ay)
+  const quanti = Math.max(1, Math.ceil(d / passo))
+  return Array.from({ length: quanti }, (_, i) =>
+    [ax + (bx - ax) * (i + 1) / quanti, ay + (by - ay) * (i + 1) / quanti])
+}
+
+tela.addEventListener('pointerdown', e => {
+  if (!S.mondo || e.button === 2) return
+  S.trascina = true
+  S.ultimo = null
+  tela.setPointerCapture(e.pointerId)
+  usaAttrezzo(...dovePunta(e), true)
+})
+tela.addEventListener('pointermove', e => { if (S.trascina) usaAttrezzo(...dovePunta(e), false) })
+const molla = () => {
+  if (!S.trascina) return
+  S.trascina = false
+  if (S.attrezzo === 'tracciato') componiTracciato()
+}
+tela.addEventListener('pointerup', molla)
+tela.addEventListener('pointercancel', molla)
+
+/* ── il dito va più veloce degli eventi ──
+   Un `pointermove` arriva ogni tanti pixel, non ogni pixel: un tratto
+   svelto salta caselle, e il pennello lascia un prato coi buchi mentre
+   il tracciato si spezza. Quindi non si guarda **dove è arrivato** il
+   dito, si guarda **da dove a dove è passato** e si riempie in mezzo.
+   È un difetto che col mouse lento non si vede mai e col dito si vede
+   sempre. */
+function usaAttrezzo(x, y, primo) {
   const T = S.mondo.tessera
-  const x = (e.clientX - r.left) / S.zoom
-  const y = (e.clientY - r.top) / S.zoom
-  if (S.scelta.famiglia === 'fondo') {
-    const k = `${Math.floor(x / T)},${Math.floor(y / T)}`
-    S.fondo.set(k, S.scelta)
-  } else if (S.scelta.famiglia === 'tessera') {
+  const [cx, cy] = inCella(x, y)
+
+  if (S.attrezzo === 'pennello') {
+    const passi = tratto(S.ultimo || [x, y], [x, y], T / 2)
+    S.ultimo = [x, y]
+    for (const [a, b] of passi) if (dentroIlCampo(...inCella(a, b))) dipingi(...inCella(a, b))
+    return
+  }
+
+  if (S.attrezzo === 'tracciato') {
+    if (!dentroIlCampo(cx, cy)) return
+    /* a passi ortogonali, uno per volta: una diagonale non è un pezzo di
+       strada, e un salto in mezzo lo si chiude a squadra invece di
+       buttarlo via — chi traccia sta indicando un cammino, non
+       digitando delle coordinate */
+    let ultimo = S.tracciato[S.tracciato.length - 1]
+    while (!ultimo || ultimo[0] !== cx || ultimo[1] !== cy) {
+      if (!ultimo) { S.tracciato.push([cx, cy]); break }
+      const [ax, ay] = ultimo
+      const p = ax !== cx ? [ax + Math.sign(cx - ax), ay] : [ax, ay + Math.sign(cy - ay)]
+      if (S.tracciato.some(([q, w]) => q === p[0] && w === p[1])) return
+      S.tracciato.push(p)
+      ultimo = p
+    }
+    return
+  }
+
+  if (!dentroIlCampo(cx, cy)) return
+
+  if (S.attrezzo === 'guida') {
+    if (!primo) return
+    if (S.guidato) { S.guidato.meta = [x, y]; S.guidato = null; return avviso('in cammino') }
+    const chi = [...S.posate].reverse().find(p =>
+      p.voce.famiglia === 'attore' && Math.abs(p.x - x) < T && Math.abs(p.y - y) < T)
+    if (!chi) return avviso('tocca prima qualcuno che cammina, poi dove deve andare')
+    S.guidato = chi
+    return avviso(`${chi.voce.id}: adesso tocca dove deve andare`)
+  }
+
+  if (!primo || !S.scelta) return
+  if (S.scelta.famiglia === 'fondo') return dipingi(cx, cy)
+  if (S.scelta.famiglia === 'tessera')
     /* una tessera cade nella sua casella: posarla a mezzo pixel è il
        modo più veloce di credere che il foglio abbia un difetto */
     S.posate.push({ voce: S.scelta, posa: S.posa, gira: S.gira, specchia: S.specchia,
-                    x: (Math.floor(x / T) + 0.5) * T, y: (Math.floor(y / T) + 0.5) * T })
-  } else {
+                    x: (cx + 0.5) * T, y: (cy + 0.5) * T })
+  else
     S.posate.push({ voce: S.scelta, posa: S.posa, gira: S.gira, specchia: S.specchia, x, y })
-  }
-})
+}
 
 tela.addEventListener('contextmenu', e => {
   e.preventDefault()
-  const r = tela.getBoundingClientRect()
-  const x = (e.clientX - r.left) / S.zoom, y = (e.clientY - r.top) / S.zoom
+  const [x, y] = dovePunta(e)
   const T = S.mondo.tessera
   const i = S.posate.findLastIndex(p => Math.abs(p.x - x) < T && Math.abs(p.y - y) < T)
   if (i >= 0) S.posate.splice(i, 1)
-  else S.fondo.delete(`${Math.floor(x / T)},${Math.floor(y / T)}`)
+  else S.fondo.delete(inCella(x, y).join(','))
 })
+
+/* ── il pennello ──
+   Un fondo non si posa un pezzo per volta. La domanda che si fa a
+   ventisei erbe diverse è «come sta questa zona», non «quale metto in
+   questa casella»: quindi si trascina, e **la variante la sceglie il
+   posto** — la stessa regola che vale in partita (`fotogrammaDi`), così
+   quello che si vede qui è quello che si vedrà lì. */
+function dipingi(cx, cy) {
+  const v = S.scelta && (S.scelta.famiglia === 'fondo' || S.scelta.famiglia === 'tessera')
+    ? S.scelta
+    : S.mondo.voci.find(q => q.famiglia === 'fondo')
+  if (!v) return avviso('questo mondo non ha un fondo da stendere')
+  const r = Math.floor(S.raggio || 0)
+  for (let a = cx - r; a <= cx + r; a++)
+    for (let b = cy - r; b <= cy + r; b++)
+      if (dentroIlCampo(a, b)) S.fondo.set(`${a},${b}`, { voce: v, gira: S.gira, specchia: S.specchia })
+}
+
+/* ── il tracciato ──
+   Il gesto è «dove passa la strada», non «quale tessera qui»: le
+   tessere le sceglie `componiPercorso`, che legge gli attacchi e sa che
+   una curva girata di novanta gradi è un altro gomito. È lo stesso
+   risolutore che compone il campo del castello, quindi se una strada
+   qui non chiude non chiude nemmeno lì — ed è il modo di scoprire che
+   manca un pezzo al catalogo **prima** di trovarci un buco in partita. */
+function componiTracciato() {
+  const celle = S.tracciato
+  S.tracciato = []
+  if (celle.length < 2) return
+  if (!S.mondo.strade) return avviso('questo mondo non ha tessere con gli attacchi misurati')
+  const T = S.mondo.tessera
+  const materia = $('#materia').value || S.mondo.strade.materie[0]
+  const catalogo = S.mondo.strade.catalogoDi(materia)
+
+  /* i capi si aprono verso il bordo solo se il tracciato ci arriva
+     davvero: una strada che finisce in mezzo al campo è un vicolo
+     cieco, e dichiararle un'uscita che non ha vuol dire chiedere al
+     risolutore un pezzo che non esiste */
+  const verso = ([ax, ay], [bx, by]) => bx > ax ? 'E' : bx < ax ? 'O' : by > ay ? 'S' : 'N'
+  const opposto = { N: 'S', S: 'N', E: 'O', O: 'E' }
+  const capi = {}
+  const [px, py] = celle[0], [ux, uy] = celle[celle.length - 1]
+  const alBordo = (cx, cy) => cx === 0 || cy === 0 || cx === CELLE_X - 1 || cy === CELLE_Y - 1
+  if (alBordo(px, py)) capi.parte = opposto[verso(celle[0], celle[1])]
+  if (alBordo(ux, uy)) capi.arriva = verso(celle[celle.length - 2], celle[celle.length - 1])
+
+  /* `dentro` è il **campo**, non la strada: una casella dentro il campo
+     e fuori dalla strada è prato, e quel lato va chiuso. Passargli la
+     strada vorrebbe dire togliere ogni vincolo al bordo, e la strada
+     sborderebbe nell'erba senza che niente risulti sbagliato. */
+  const scelte = S.mondo.strade.componi(celle, catalogo, { dentro: dentroIlCampo, capi })
+  if (!scelte)
+    return avviso(`«${materia}»: il catalogo non chiude questa strada — ` +
+      (capi.parte && capi.arriva ? 'manca un pezzo'
+        : 'un capo non arriva al bordo, e un vicolo cieco vuole una tessera che di solito non c\'è'))
+
+  celle.forEach(([cx, cy], i) => {
+    const p = scelte[i]
+    if (!p) return
+    const voce = S.mondo.voci.find(v => v.pose.fermo && v.pose.fermo[0] === p.nome)
+    if (!voce) return
+    /* la strada sostituisce quello che c'era in quella casella: due
+       tessere sovrapposte si vedono come una sola sbagliata */
+    S.posate = S.posate.filter(q =>
+      q.voce.famiglia !== 'tessera' || inCella(q.x, q.y).join(',') !== `${cx},${cy}`)
+    S.posate.push({ voce, posa: 'fermo', gira: p.gira, specchia: p.specchia,
+                    x: (cx + 0.5) * T, y: (cy + 0.5) * T })
+  })
+  avviso(`«${materia}»: ${celle.length} celle composte — girare permuta gli attacchi, non solo i pixel`)
+}
 
 /* ═══════════ le prove che si fanno da sole ═══════════ */
 function provaAccostate() {
@@ -287,20 +516,18 @@ function provaCamminata() {
                      x: (2 + k * 3) * T, y: (1.5 + i * 1.6) * T })
     })
   })
-  avviso(`${attori.length} che camminano, tutte le pose: si guardano i tempi e il piede`)
+  avviso(`${attori.length} che camminano, tutte le pose — con l'attrezzo «guida» si mandano in giro`)
 }
 
 function provaStrada() {
   svuota()
   if (!S.mondo.strade) return avviso('questo mondo non ha tessere con gli attacchi misurati')
-  const T = S.mondo.tessera
   const materia = $('#materia').value || S.mondo.strade.materie[0]
-  const catalogo = S.mondo.strade.catalogoDi(materia)
   const fondi = S.mondo.strade.fondiDi(materia)
-
   for (let x = 0; x < CELLE_X; x++)
     for (let y = 0; y < CELLE_Y; y++)
-      if (fondi.length) S.fondo.set(`${x},${y}`, fondi[(x * 7 + y * 3) % fondi.length])
+      if (fondi.length)
+        S.fondo.set(`${x},${y}`, { voce: fondi[(x * 7 + y * 3) % fondi.length], gira: 0, specchia: false })
 
   /* una serpentina: scende, gira, riscende. È la forma in cui un giunto
      sbagliato si vede subito, perché ci sono tutti e quattro i gomiti */
@@ -315,22 +542,11 @@ function provaStrada() {
     }
     y++
   }
-  const dentro = (a, b) => a >= 0 && a < CELLE_X && b >= 0 && b < CELLE_Y
-  const scelte = S.mondo.strade.componi(celle, catalogo,
-    { dentro, capi: { parte: 'N', arriva: 'S' } })
-  if (!scelte) return avviso(`«${materia}»: il catalogo non chiude questa strada — manca un pezzo`)
-
-  celle.forEach(([cx, cy], i) => {
-    const p = scelte[i]
-    if (!p) return
-    const voce = S.mondo.voci.find(v => v.pose.fermo && v.pose.fermo[0] === p.nome)
-    if (voce) S.posate.push({ voce, posa: 'fermo', gira: p.gira, specchia: p.specchia,
-                             x: (cx + 0.5) * T, y: (cy + 0.5) * T })
-  })
-  avviso(`«${materia}»: strada composta, ${celle.length} celle — girare permuta gli attacchi, non solo i pixel`)
+  S.tracciato = celle
+  componiTracciato()
 }
 
-function svuota() { S.posate = []; S.fondo.clear() }
+function svuota() { S.posate = []; S.fondo.clear(); S.tracciato = []; S.guidato = null }
 
 /* ── il prato sotto ──
    Uno sprite si giudica **sul fondo su cui starà**, non sul nero: sul
@@ -343,7 +559,7 @@ function stendiFondo() {
   if (!fondi.length) return avviso('questo mondo non ha un fondo da stendere')
   for (let x = 0; x < CELLE_X; x++)
     for (let y = 0; y < CELLE_Y; y++)
-      S.fondo.set(`${x},${y}`, fondi[(x * 5 + y * 3) % fondi.length])
+      S.fondo.set(`${x},${y}`, { voce: fondi[(x * 5 + y * 3) % fondi.length], gira: 0, specchia: false })
   avviso(`prato steso con ${fondi.length} fondi: adesso i pezzi si guardano su qualcosa`)
 }
 
@@ -378,6 +594,29 @@ function confronta() {
 }
 function avviso(t) { $('#avviso').textContent = t }
 
+/* ═══════════ le due metà della pagina ═══════════ */
+let ritagliAvviati = null
+async function vaiA(parte) {
+  for (const b of document.querySelectorAll('#modi button'))
+    b.classList.toggle('acceso', b.dataset.parte === parte)
+  const mondo = parte === 'mondo'
+  $('#barra-mondo').style.display = mondo ? '' : 'none'
+  $('#avviso').style.display = mondo ? '' : 'none'
+  $('#scena-mondo').style.display = mondo ? '' : 'none'
+  $('#barra-ritagli').style.display = mondo ? 'none' : ''
+  $('#ritagli-avviso').style.display = mondo ? 'none' : ''
+  $('#scena-ritagli').style.display = mondo ? 'none' : ''
+  if (mondo) return
+  /* si carica alla prima richiesta: `ritagli.js` tira dentro tutti i PNG
+     delle sorgenti, e chi voleva solo guardare la fattoria non ha
+     motivo di aspettarli */
+  if (!ritagliAvviati) {
+    const m = await import('./ritagli.js')
+    ritagliAvviati = m
+    await m.avviaRitagli()
+  } else ritagliAvviati.rinfrescaRitagli()
+}
+
 /* ═══════════ l'avvio ═══════════ */
 async function scegliMondo(id) {
   S.mondo = await apri(id)
@@ -406,11 +645,26 @@ async function scegliMondo(id) {
   avviso(`${S.mondo.voci.length} voci · tessera ${S.mondo.tessera} px`)
 }
 
+function scegliAttrezzo(quale) {
+  S.attrezzo = quale
+  S.tracciato = []
+  S.guidato = null
+  for (const b of document.querySelectorAll('#attrezzi button'))
+    b.classList.toggle('acceso', b.dataset.attrezzo === quale)
+  avviso({
+    posa: 'tocca una voce a sinistra, poi il campo. Tasto destro toglie.',
+    pennello: 'trascina per stendere il fondo scelto — la variante la sceglie il posto, non il dito',
+    tracciato: 'traccia col dito dove passa la strada: le tessere le sceglie il risolutore vero',
+    guida: 'tocca qualcuno che cammina, poi dove deve andare — le pose si giudicano in movimento',
+  }[quale])
+}
+
 export async function avvia() {
   $('#mondo').innerHTML = MONDI.map(m => `<option value="${m.id}">${m.nome}</option>`).join('')
   $('#mondo').addEventListener('change', e => scegliMondo(e.target.value))
   $('#zoom').addEventListener('input', e => { S.zoom = +e.target.value; $('#zoom-e').textContent = S.zoom + '×' })
   $('#griglia').addEventListener('change', e => { S.griglia = e.target.checked })
+  $('#raggio').addEventListener('change', e => { S.raggio = +e.target.value })
   $('#gira').addEventListener('click', () => { S.gira = (S.gira + 1) % 4; aggiornaScelta() })
   $('#specchia').addEventListener('click', () => { S.specchia = !S.specchia; aggiornaScelta() })
   $('#svuota').addEventListener('click', () => { svuota(); avviso('campo vuoto') })
@@ -422,12 +676,26 @@ export async function avvia() {
   $('#prova-accostate').addEventListener('click', provaAccostate)
   $('#prova-camminata').addEventListener('click', provaCamminata)
   $('#prova-strada').addEventListener('click', provaStrada)
+  for (const b of document.querySelectorAll('#attrezzi button'))
+    b.addEventListener('click', () => scegliAttrezzo(b.dataset.attrezzo))
+  for (const b of document.querySelectorAll('#modi button'))
+    b.addEventListener('click', () => vaiA(b.dataset.parte))
   addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return
     if (e.key === 'r' || e.key === 'R') { if (S.scelta && S.scelta.giri > 1) { S.gira = (S.gira + 1) % 4; aggiornaScelta() } }
     if (e.key === 'f' || e.key === 'F') { if (S.scelta && S.scelta.specchia) { S.specchia = !S.specchia; aggiornaScelta() } }
+    const attrezzi = { 1: 'posa', 2: 'pennello', 3: 'tracciato', 4: 'guida' }
+    if (attrezzi[e.key]) scegliAttrezzo(attrezzi[e.key])
   })
 
   await scegliMondo(MONDI[0].id)
-  const passo = t => { ridisegna(t / 1000); requestAnimationFrame(passo) }
+  let prima = 0
+  const passo = ms => {
+    const t = ms / 1000
+    const dt = prima ? Math.min(0.05, t - prima) : 0
+    prima = t
+    if ($('#scena-mondo').style.display !== 'none') ridisegna(t, dt)
+    requestAnimationFrame(passo)
+  }
   requestAnimationFrame(passo)
 }

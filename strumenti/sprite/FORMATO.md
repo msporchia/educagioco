@@ -144,6 +144,36 @@ il file a parte — giusto quando quel file non esiste già da nessuna
 parte. `strumenti/sprite/misura.py --figure` (o `--celle`, se il foglio
 ha almeno dei separatori) misura i rettangoli da incollare qui.
 
+## Correggere un ritaglio storto
+
+I fogli disegnati da un modello la griglia non la capiscono fino in fondo,
+e i difetti sono sempre gli stessi quattro. Tutti e quattro si correggono
+**qui**, mai nel PNG: `STANDARD.md` dice che la sorgente è la verità — non
+si modifica e non si butta — e un PNG ritoccato a mano è un PNG di cui non
+si sa più cosa gli è stato fatto sopra, che il giorno che arriva un foglio
+migliore rimette in gioco una correzione che nessuno ricorda.
+
+| il difetto | la correzione | cosa costa |
+|---|---|---|
+| il rettangolo taglia, o prende troppo | `da` e `cella` | quattro numeri |
+| due disegni diversi sotto un nome solo (e il gioco li fa lampeggiare, credendoli fotogrammi) | due nomi invece di uno | una riga in più |
+| dentro il ritaglio giusto resta roba che non c'entra | `cancella` | un rettangolo |
+
+```json
+"casa_albero": { "da": [271, 126], "cella": [59, 67], "cancella": [[0, 63, 6, 4]] }
+```
+
+`cancella` è un elenco di `[x, y, largo, alto]` in coordinate **dentro il
+ritaglio**, e quei rettangoli escono trasparenti. Vale per tutti i
+fotogrammi dello sprite. Non è una regola nel generatore — quelle cercano
+di essere furbe su tutti i fogli e sbagliano — è **una correzione a questo
+foglio qui**, e sta accanto al foglio che descrive.
+
+I quattro numeri non si contano a mano: si guardano. `npm run mondo`, metà
+**«i ritagli»**, disegna i rettangoli sopra il foglio e li lascia
+trascinare; da lì si buca, si rinomina, si sdoppia un gruppo che era due
+cose, e si riscrive il foglietto. Poi si rilancia `atlante.py`.
+
 ## Per quale gioco è questo foglio
 
 Non lo dice il foglietto: lo dice **la cartella**. Un `atlante.json`

@@ -45,23 +45,57 @@ sé quando tocchi un file. Col doppio click invece no: Chrome non lascia
 importare dei moduli da `file://`, ed è lo stesso motivo per cui
 `poc/eroi.html` vuole un server.
 
-`strumenti/banco/mondo.html` **non ha un elenco dentro**: importa i moduli veri — atlante,
-tessere, catalogo, ostacoli — e disegna quello che ci trova. Aggiungere uno
-sprite e rilanciare `atlante.py` basta perché compaia lì, e non c'è niente da
-aggiornare a mano che possa restare indietro.
+`strumenti/banco/mondo.html` **non ha un elenco dentro**: importa i moduli
+veri e disegna quello che ci trova. Aggiungere uno sprite e rilanciare
+`atlante.py` basta perché compaia lì, e non c'è niente da aggiornare a mano
+che possa restare indietro.
 
-In cima c'è il **campo di prova**: tocchi una carta e la cosa compare
-sull'erba vera; da lì la trascini, o tocchi il prato e l'attore ci va
-camminando. Uno sprite fermo su un fondo a scacchi non dice se funziona —
-un cane si giudica mentre cammina, un oggetto appoggiato accanto a un
-altro.
+La pagina ha **due metà**, che sono le due estremità dello stesso tubo.
 
-Sotto, mostra ogni attore nei tre versi più lo specchio, con la camminata in moto;
-ogni voce del catalogo col suo codice, il prezzo, il piede e **le varianti
-una accanto all'altra**; ogni ostacolo col conto costo/resa; e tutte le
-tessere dichiarate, segnando quelle che non usa più nessuno. In cima elenca
-i guasti che i dati trovano da soli. È il posto dove si dice «questo non va
-bene» avendo davanti il codice da citare.
+### «il mondo» — quello che esce
+
+Il campo di prova, con l'atlante che il gioco spedisce davvero. A sinistra
+le **voci**: una voce è *una cosa* — la fontana coi suoi tre fotogrammi di
+fianco, la bambina coi suoi tre versi — non un pezzo dell'atlante. Uno
+sprite fermo su un fondo a scacchi non dice se funziona: un cane si giudica
+mentre cammina, un oggetto appoggiato accanto a un altro.
+
+Quattro attrezzi, perché sono quattro le domande diverse:
+
+| | il gesto | la domanda a cui risponde |
+|---|---|---|
+| **posa** | tocca la voce, tocca il campo | il piede cade dove deve? sborda sopra chi gli passa davanti? |
+| **pennello** | si trascina | come sta **una zona** d'erba — le varianti le sceglie il posto, come in partita |
+| **strada** | si traccia il cammino | i gomiti e gli innesti li sceglie `componiPercorso`, **il risolutore vero**: se qui non chiude, non chiude nemmeno in gioco |
+| **guida** | tocca chi cammina, poi dove va | le pose stanno insieme solo **in movimento** — `lato` che guarda dalla parte giusta, il piede che non salta girandosi |
+
+Più tre scene che si costruiscono da sole — *tutto accostato*, *la
+serpentina*, *chi cammina* — e **confronta i fogli**, che mette in fila
+quello che il filtro mostra, alla scala vera, una riga per provenienza: è la
+domanda «questi due pezzi vengono dallo stesso set?», che è quella che
+scopre uno stile che non combacia prima di trovarselo in un prato.
+
+### «i ritagli» — quello che entra
+
+Il foglio sorgente col suo foglietto, e i quattro numeri di ogni ritaglio
+disegnati sopra. Serve perché i fogli generati da un modello hanno sempre
+gli stessi quattro difetti: il rettangolo **taglia**, il rettangolo **prende
+troppo**, due disegni diversi finiscono in **un gruppo solo** (e il gioco li
+fa lampeggiare uno nell'altro credendoli fotogrammi), dentro il ritaglio
+giusto resta **della roba che non c'entra**.
+
+Si trascina il rettangolo, si tirano le maniglie, si buca col modo *buca*,
+si rinomina, si **sdoppia** un gruppo che era due cose. Poi «salva il
+foglietto» lo riscrive, e si rilancia `atlante.py`. C'è anche una spia che
+di solito non si pensa ad accendere — **quello che nessuno prende**: i pixel
+del foglio fuori da ogni rettangolo, tinti. Non risponde a «questo ritaglio
+è storto», risponde a «quanta roba non ho mai ritagliato».
+
+Il PNG **non si tocca mai**: vedi `STANDARD.md`. Le correzioni sono dato nel
+foglietto, e buttare via tutto il generato e rifarlo dà lo stesso risultato
+al pixel. I fogli del castello compaiono nell'elenco spenti, perché lì i
+ritagli non sono dichiarati: `terreni.py` li **misura** dall'alfa, e non c'è
+nessun rettangolo da spostare.
 
 ## Aggiungere roba
 

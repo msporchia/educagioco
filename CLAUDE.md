@@ -48,6 +48,7 @@ npm run simula         # gioca il tower defense senza browser
 npm run tara           # rimisura la vita dei nemici e riscrive i dati
 npm run mappe          # valida i livelli del Generale
 npm run quiz:banco     # prova tutti i moduli di quiz senza browser
+npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
 npm run scatti         # rifà le immagini di docs/img/
 node strumenti/icone.mjs   # rigenera i PNG delle icone da public/icona.svg
 ```
@@ -223,6 +224,14 @@ committate: non è ricostruibile da git.
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio
   click. `campagne.js` è **generato** da `estrai-campagne.mjs`.
+- **`strumenti/banco/`** — il banco degli sprite (`npm run mondo`), una
+  pagina sola con due metà: **il mondo** guarda l'atlante generato — si
+  posa, si stende il fondo col pennello, si traccia una strada che compone
+  **il risolutore vero**, si manda a spasso chi cammina — e **i ritagli**
+  guarda il foglio sorgente, coi rettangoli del foglietto addosso da
+  trascinare. Il PNG non si tocca mai: le correzioni sono dato nel
+  foglietto (`strumenti/sprite/FORMATO.md`), e chi salva è un plugin di
+  Vite `apply: 'serve'` che nel build non esiste.
 - **`src/incidenti.js`** — la rete di sicurezza: un errore, ovunque
   scatti, finisce in archivio sotto `incidenti` (fuori dai profili, come
   il codice dei genitori) e mette a schermo un cartello in DOM puro —

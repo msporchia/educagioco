@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { salvaFoglietto } from './strumenti/banco/salva-foglietto.js'
 
 // Numero di versione: serve a rispondere alla domanda "il telefono ha preso
 // l'aggiornamento?" senza doverlo indovinare.
@@ -174,7 +175,10 @@ function iconaInline () {
 // Lo script inline resta un modulo ES, che da file:// viene eseguito
 // regolarmente (a differenza di un modulo caricato da src esterno).
 export default defineConfig({
-  plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker()],
+  // `salvaFoglietto` è `apply: 'serve'`: sta qui per il banco dei mondi
+  // (`npm run mondo`) e nel build non ci arriva. Vedi il file per i paletti.
+  plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker(),
+            salvaFoglietto()],
   define: { __VERSIONE__: JSON.stringify(VERSIONE) },
   build: { target: 'es2020', assetsInlineLimit: 100000000, cssCodeSplit: false,
            reportCompressedSize: false, chunkSizeWarningLimit: 100000 },

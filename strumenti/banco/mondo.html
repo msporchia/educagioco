@@ -18,6 +18,14 @@
      spedisce, e il risolutore delle strade è lo stesso che compone il
      campo del castello. Se una cosa qui non si vede, non si vede
      nemmeno in gioco.
+
+     ── due metà, e una sola pagina ──
+     «il mondo» guarda quello che ESCE: l'atlante generato, come i pezzi
+     stanno insieme, le strade che si compongono. «i ritagli» guarda
+     quello che ENTRA: il foglio sorgente e i quattro numeri del suo
+     foglietto. Sono le due estremità dello stesso tubo, e tenerle nella
+     stessa pagina è quello che permette di correggere un ritaglio e
+     andare a vedere subito com'è venuto.
      ═══════════════════════════════════════════════════════════════ -->
 <style>
   :root {
@@ -30,20 +38,27 @@
     font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
     display: grid; grid-template-rows: auto 1fr; height: 100vh;
   }
-  header { padding: 12px 16px; border-bottom: 1px solid var(--riga) }
-  h1 { font-size: 17px; margin: 0 0 8px; letter-spacing: -.01em }
-  .comandi { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 13px }
+  header { padding: 10px 16px; border-bottom: 1px solid var(--riga) }
+  h1 { font-size: 17px; margin: 0; letter-spacing: -.01em; display: inline-block; margin-right: 14px }
+  .comandi { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 13px; margin-top: 8px }
   .comandi label { color: var(--tenue); display: flex; gap: 6px; align-items: center }
-  select, button {
+  select, button, input[type=search], input[type=text], input[type=number] {
     background: #10131a; color: var(--testo); border: 1px solid var(--riga);
-    border-radius: 3px; padding: 4px 9px; font: inherit; cursor: pointer;
+    border-radius: 3px; padding: 4px 9px; font: inherit;
   }
+  select, button { cursor: pointer }
   button:disabled { opacity: .35; cursor: default }
-  #avviso { color: var(--acceso); font-size: 12px; min-height: 1.2em; margin-top: 6px }
+  button.acceso { border-color: var(--acceso); color: var(--acceso) }
+  .divisorio { width: 1px; height: 20px; background: var(--riga) }
+  #avviso, #ritagli-avviso { color: var(--acceso); font-size: 12px; min-height: 1.2em; margin: 6px 0 0 }
+  .tenue { color: var(--tenue) }
 
-  main { display: grid; grid-template-columns: 340px 1fr; min-height: 0 }
-  #voci { overflow: auto; border-right: 1px solid var(--riga); padding: 10px 12px 60px }
-  #voci h2 {
+  main { display: grid; min-height: 0 }
+  #scena-mondo { grid-template-columns: 340px 1fr }
+  #scena-ritagli { grid-template-columns: 260px 1fr 270px }
+  .colonna { overflow: auto; border-right: 1px solid var(--riga); padding: 10px 12px 60px }
+  .colonna.destra { border-right: none; border-left: 1px solid var(--riga) }
+  .colonna h2 {
     font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
     color: var(--tenue); margin: 16px 0 6px; position: sticky; top: 0;
     background: var(--fondo); padding: 4px 0;
@@ -59,11 +74,7 @@
   /* da quale foglio arriva: piccolo, ma sempre lì. È l'etichetta che fa
      vedere quando in un atlante ci sono due set invece di uno. */
   .voce .da { flex-basis: 100%; color: #6f7a86; font-size: 10px; margin-top: 1px }
-  input[type=search] {
-    background: #10131a; color: var(--testo); border: 1px solid var(--riga);
-    border-radius: 3px; padding: 4px 8px; font: inherit;
-  }
-  .voce .riga { display: flex; align-items: flex-end; gap: 4px; margin-top: 5px }
+  .voce .riga { display: flex; align-items: flex-end; gap: 4px; margin-top: 5px; flex-wrap: wrap }
   .voce .posa { color: var(--tenue); font-size: 10px; width: 34px; flex: none }
   /* il primo grande, gli altri piccoli: si guarda la cosa, e i pezzi
      restano lì per chi deve controllarli */
@@ -72,12 +83,36 @@
 
   #campo-casa { overflow: auto; padding: 16px; display: flex; align-items: flex-start }
   #campo { image-rendering: pixelated; border: 1px solid var(--riga) }
+
+  /* ── i ritagli ── */
+  #foglio-casa { position: relative; overflow: hidden }
+  #foglio { display: block; width: 100%; height: 100%; cursor: crosshair }
+  .campo { display: block; margin-bottom: 8px }
+  .campo input { width: 100%; margin-top: 3px }
+  .numeri { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px }
+  .numeri label { display: block; font-size: 11px; color: var(--tenue) }
+  .numeri input { width: 100%; margin-top: 2px }
+  #r-anteprima { display: flex; gap: 5px; flex-wrap: wrap; margin: 10px 0; align-items: flex-end }
+  #r-anteprima canvas { background: #10131a; border: 1px solid var(--riga); border-radius: 3px }
+  #r-cancella h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+                   color: var(--tenue); margin: 12px 0 4px }
+  .canc { display: flex; justify-content: space-between; align-items: center; gap: 6px;
+          background: var(--carta); border-radius: 3px; padding: 2px 4px 2px 7px; margin-bottom: 3px }
+  .canc code { font-size: 11px; color: #ff9a9a }
+  .canc button { padding: 0 6px; line-height: 1.4 }
+  .bottoni { display: flex; flex-direction: column; gap: 6px; margin-top: 14px }
 </style>
 </head>
 <body>
   <header>
     <h1>Il banco dei mondi</h1>
-    <div class="comandi">
+    <span id="modi">
+      <button data-parte="mondo" class="acceso">il mondo</button>
+      <button data-parte="ritagli">i ritagli</button>
+    </span>
+
+    <!-- ═══ il mondo: quello che esce ═══ -->
+    <div class="comandi" id="barra-mondo">
       <label>mondo <select id="mondo"></select></label>
       <label>cerca <input id="cerca" type="search" placeholder="nome…" size="10"></label>
       <label>foglio <select id="da"></select></label>
@@ -85,27 +120,64 @@
         <option value="famiglia">per famiglia</option>
         <option value="da">per foglio</option>
       </select></label>
-      <span id="quante" style="color:var(--tenue)"></span>
+      <span id="quante" class="tenue"></span>
       <label>zoom <input id="zoom" type="range" min="0.5" max="6" step="0.5" value="3"><span id="zoom-e">3×</span></label>
       <label><input id="griglia" type="checkbox" checked> griglia</label>
+      <span class="divisorio"></span>
+      <span id="attrezzi">
+        <button data-attrezzo="posa" class="acceso" title="1">posa</button>
+        <button data-attrezzo="pennello" title="2">pennello</button>
+        <button data-attrezzo="tracciato" title="3">strada</button>
+        <button data-attrezzo="guida" title="4">guida</button>
+      </span>
+      <label>pennello <select id="raggio">
+        <option value="0">1 casella</option>
+        <option value="1">3×3</option>
+        <option value="2">5×5</option>
+      </select></label>
       <span>scelta: <b id="scelta">niente</b></span>
       <button id="gira" title="R">gira 90°</button>
       <button id="specchia" title="F">specchia</button>
       <button id="svuota">svuota</button>
+      <span class="divisorio"></span>
       <button id="prato">stendi il prato</button>
-      <span style="width:1px;height:20px;background:var(--riga)"></span>
       <button id="prova-accostate">tutto accostato</button>
       <button id="prova-camminata">chi cammina</button>
       <button id="confronta">confronta i fogli</button>
       <label>strada <select id="materia"></select></label>
-      <button id="prova-strada">componi</button>
+      <button id="prova-strada">serpentina</button>
     </div>
     <p id="avviso"></p>
+
+    <!-- ═══ i ritagli: quello che entra ═══ -->
+    <div class="comandi" id="barra-ritagli" style="display:none">
+      <label>foglio <select id="ritagli-foglio"></select></label>
+      <label>cerca <input id="ritagli-cerca" type="search" placeholder="nome…" size="10"></label>
+      <span id="ritagli-quante" class="tenue"></span>
+      <span class="divisorio"></span>
+      <span id="ritagli-modo">
+        <button data-modo="ritaglio" class="acceso">sposta il ritaglio</button>
+        <button data-modo="cancella">buca</button>
+      </span>
+      <label><input id="ritagli-scoperti" type="checkbox"> quello che nessuno prende</label>
+      <span class="divisorio"></span>
+      <button id="r-salva" disabled>salva il foglietto</button>
+      <span class="tenue">rotella per lo zoom · spazio o tasto di mezzo per spostare · frecce di un passo</span>
+    </div>
+    <p id="ritagli-avviso" style="display:none"></p>
   </header>
-  <main>
-    <div id="voci"></div>
+
+  <main id="scena-mondo">
+    <div class="colonna" id="voci"></div>
     <div id="campo-casa"><canvas id="campo"></canvas></div>
   </main>
+
+  <main id="scena-ritagli" style="display:none">
+    <div class="colonna" id="ritagli-voci"></div>
+    <div id="foglio-casa"><canvas id="foglio"></canvas></div>
+    <div class="colonna destra" id="ritagli-dettaglio"></div>
+  </main>
+
   <script type="module">
     import { avvia } from './mondo.js'
     avvia()
