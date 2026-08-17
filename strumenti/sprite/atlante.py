@@ -568,7 +568,16 @@ def costruisci(bers, fogli, con_provini):
             print(f'  ! {f.name}: tipo "{t}" sconosciuto, atteso persona o bestia')
             t = None
         tipo_di_file[f.name] = t
+        # I nomi che questo foglio produce davvero. Un foglio che punta a
+        # una tabella dell'autore (`"ritagli": "pezzi.json"`) i suoi nomi
+        # ce li ha lì e non in `sprite`: leggerli dal posto sbagliato
+        # vuol dire un elenco vuoto, e allora **ogni** prefisso risulta
+        # morto — il controllo qui sotto gridava al lupo su tutti e
+        # dodici quelli del sotterraneo, che erano giusti.
         utili = [n for n in (fg.get('sprite') or {}) if not n.startswith('__')]
+        if fg.get('ritagli'):
+            tabella = json.loads((Path(fg['_file']).parent / fg['ritagli']).read_text())
+            utili = [n for n in tabella if not n.startswith('__')]
         for campo in ('famiglie', 'trasforma'):
             for prefisso in (fg.get(campo) or {}):
                 if not any(n.startswith(prefisso) for n in utili):
