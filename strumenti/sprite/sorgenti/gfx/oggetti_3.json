@@ -1,256 +1,34 @@
 {
-  "__": "Edifici e strutture del podere, generati: fienili, silo, serra, mulini, pollaio, stalla, torretta, forni, mercatini, gazebo, cuccia grande. Fondo già trasparente (niente da togliere). «foglio» + «cella»: [1,1] restringono tutto il foglio di un fattore 4 prima di ritagliare (stesso meccanismo di oggetti_2.json e di character.json: «foglio» dice la misura dopo il resize BOX di alla_misura_vera) — qui il foglio arrivava ancora più fuori scala di oggetti_2.json: un fienile misurato a mano è 310px contro gli 80px della «casa» più grande che c'era già. Le coordinate sotto sono già divise per 4. «cella»: [1,1] fa sì che «da» sia già in pixel del foglio ridotto — il foglio non ha una griglia, gli edifici sono disposti a mano. Tutto il foglio è la stessa famiglia («figura»: sono strutture più grandi di una casella, che si appoggiano e sbordano in alto), e nessuno gira: hanno tutti una facciata sola, quindi «trasforma» non serve — il ripiego della famiglia (giri: 1) è già quello giusto. Unica correzione a mano, fatta sulle coordinate originali prima di dividere: il rettangolo di forno_pizza include anche lo sbuffo di fumo del camino, che nel foglio è staccato dal tetto per una riga di pixel trasparenti e altrimenti sarebbe rimasto fuori. Attenzione ai nomi che finiscono con un numero: `atlante.py` li raggruppa come fotogrammi di una cosa sola. `casetta_grande0` e `casetta_grande1` erano due case diverse, e affiancate diventavano un'animazione che le faceva lampeggiare una nell'altra. Se due pezzi sono due cose, si chiamano con due nomi.",
+  "__": "Edifici e strutture del podere, generati: fienili, silo, serra, mulini, pollaio, stalla, torretta, forni, mercatini, gazebo, cuccia grande. Fondo già trasparente (niente da togliere). «foglio» + «cella»: [1,1] restringono tutto il foglio di un fattore 4 prima di ritagliare (stesso meccanismo di oggetti_2.json e di character.json: «foglio» dice la misura dopo il resize BOX di alla_misura_vera) — qui il foglio arrivava ancora più fuori scala di oggetti_2.json: un fienile misurato a mano è 310px contro gli 80px della «casa» più grande che c'era già. Le coordinate sotto sono già divise per 4. «cella»: [1,1] fa sì che «da» sia già in pixel del foglio ridotto — il foglio non ha una griglia, gli edifici sono disposti a mano. Tutto il foglio è la stessa famiglia («figura»: sono strutture più grandi di una casella, che si appoggiano e sbordano in alto), e nessuno gira: hanno tutti una facciata sola, quindi «trasforma» non serve — il ripiego della famiglia (giri: 1) è già quello giusto. Unica correzione a mano, fatta sulle coordinate originali prima di dividere: il rettangolo di forno_pizza include anche lo sbuffo di fumo del camino, che nel foglio è staccato dal tetto per una riga di pixel trasparenti e altrimenti sarebbe rimasto fuori. Attenzione ai nomi che finiscono con un numero: `atlante.py` li raggruppa come fotogrammi di una cosa sola. `casetta_grande0` e `casetta_grande1` erano due case diverse, e affiancate diventavano un'animazione che le faceva lampeggiare una nell'altra. Se due pezzi sono due cose, si chiamano con due nomi. Sotto casa_albero restava uno sbuffo di fumo del camino accanto: e' il «cancella» in fondo, in coordinate dentro il ritaglio.",
   "scala": 4,
   "fondo": "trasparente",
-  "foglio": [
-    384,
-    256
-  ],
-  "cella": [
-    1,
-    1
-  ],
+  "foglio": [384, 256],
+  "cella": [1, 1],
   "famiglia": "figura",
   "sprite": {
-    "altalena_pergola": {
-      "da": [
-        172,
-        198
-      ],
-      "cella": [
-        48,
-        46
-      ]
-    },
-    "apiario": {
-      "da": [
-        10,
-        202
-      ],
-      "cella": [
-        37,
-        39
-      ]
-    },
-    "carretto_mercato": {
-      "da": [
-        326,
-        84
-      ],
-      "cella": [
-        41,
-        40
-      ]
-    },
-    "casa_albero": {
-      "da": [
-        271,
-        126
-      ],
-      "cella": [
-        59,
-        67
-      ]
-    },
-    "cuccia_grande": {
-      "da": [
-        58,
-        208
-      ],
-      "cella": [
-        36,
-        34
-      ]
-    },
-    "fienile0": {
-      "da": [
-        134,
-        8
-      ],
-      "cella": [
-        78,
-        54
-      ]
-    },
-    "fienile_rosso": {
-      "da": [
-        189,
-        128
-      ],
-      "cella": [
-        75,
-        58
-      ]
-    },
-    "forno_legna": {
-      "da": [
-        120,
-        70
-      ],
-      "cella": [
-        50,
-        53
-      ]
-    },
-    "forno_pizza": {
-      "da": [
-        233,
-        189
-      ],
-      "cella": [
-        56,
-        55
-      ]
-    },
-    "gazebo_cena": {
-      "da": [
-        308,
-        192
-      ],
-      "cella": [
-        65,
-        55
-      ]
-    },
-    "mercato": {
-      "da": [
-        261,
-        79
-      ],
-      "cella": [
-        53,
-        42
-      ]
-    },
-    "mulino_acqua": {
-      "da": [
-        184,
-        69
-      ],
-      "cella": [
-        68,
-        55
-      ]
-    },
-    "mulino_vento": {
-      "da": [
-        8,
-        122
-      ],
-      "cella": [
-        44,
-        70
-      ]
-    },
-    "pollaio": {
-      "da": [
-        63,
-        80
-      ],
-      "cella": [
-        44,
-        39
-      ]
-    },
-    "pozzo_coperto": {
-      "da": [
-        340,
-        142
-      ],
-      "cella": [
-        37,
-        46
-      ]
-    },
-    "serra": {
-      "da": [
-        309,
-        13
-      ],
-      "cella": [
-        58,
-        52
-      ]
-    },
-    "silo_bianco": {
-      "da": [
-        224,
-        8
-      ],
-      "cella": [
-        27,
-        55
-      ]
-    },
-    "silo_rosso": {
-      "da": [
-        264,
-        8
-      ],
-      "cella": [
-        32,
-        58
-      ]
-    },
-    "stalla": {
-      "da": [
-        117,
-        135
-      ],
-      "cella": [
-        58,
-        50
-      ]
-    },
-    "torre_rotonda": {
-      "da": [
-        68,
-        126
-      ],
-      "cella": [
-        34,
-        66
-      ]
-    },
-    "casetta_tetto_lungo": {
-      "da": [
-        7,
-        14
-      ],
-      "cella": [
-        45,
-        50
-      ]
-    },
-    "casetta_con_veranda": {
-      "da": [
-        63,
-        14
-      ],
-      "cella": [
-        58,
-        49
-      ]
-    },
-    "tettoia_fieno": {
-      "da": [
-        9,
-        78
-      ],
-      "cella": [
-        41,
-        38
-      ]
-    },
-    "fienile_tetto_blu": {
-      "da": [
-        111,
-        200
-      ],
-      "cella": [
-        53,
-        46
-      ]
-    }
+    "altalena_pergola": {"da": [172, 198], "cella": [48, 46]},
+    "apiario": {"da": [10, 202], "cella": [37, 39]},
+    "carretto_mercato": {"da": [326, 84], "cella": [41, 40]},
+    "casa_albero": {"da": [271, 126], "cella": [59, 67], "cancella": [[0, 63, 6, 4]]},
+    "cuccia_grande": {"da": [58, 208], "cella": [36, 34]},
+    "fienile0": {"da": [134, 8], "cella": [78, 54]},
+    "fienile_rosso": {"da": [189, 128], "cella": [75, 58]},
+    "forno_legna": {"da": [120, 70], "cella": [50, 53]},
+    "forno_pizza": {"da": [233, 189], "cella": [56, 55]},
+    "gazebo_cena": {"da": [308, 192], "cella": [65, 55]},
+    "mercato": {"da": [261, 79], "cella": [53, 42]},
+    "mulino_acqua": {"da": [184, 69], "cella": [68, 55]},
+    "mulino_vento": {"da": [8, 122], "cella": [44, 70]},
+    "pollaio": {"da": [63, 80], "cella": [44, 39]},
+    "pozzo_coperto": {"da": [340, 142], "cella": [37, 46]},
+    "serra": {"da": [309, 13], "cella": [58, 52]},
+    "silo_bianco": {"da": [224, 8], "cella": [27, 55]},
+    "silo_rosso": {"da": [264, 8], "cella": [32, 58]},
+    "stalla": {"da": [117, 135], "cella": [58, 50]},
+    "torre_rotonda": {"da": [68, 126], "cella": [34, 66]},
+    "casetta_tetto_lungo": {"da": [7, 14], "cella": [45, 50]},
+    "casetta_con_veranda": {"da": [63, 14], "cella": [58, 49]},
+    "tettoia_fieno": {"da": [9, 78], "cella": [41, 38]},
+    "fienile_tetto_blu": {"da": [111, 200], "cella": [53, 46]}
   }
 }
