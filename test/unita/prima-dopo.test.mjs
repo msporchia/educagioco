@@ -11,7 +11,8 @@ import { PITTORI } from '../../src/giochi/prima-dopo/scena/tela.js'
 import { LUOGHI } from '../../src/giochi/prima-dopo/scena/cose.js'
 import { VERBI, CHIAVI_VERBI, verbo as datiVerbo, guastiDeiVerbi } from '../../src/giochi/prima-dopo/dati/verbi.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna } from '../../src/giochi/prima-dopo/dati/campagna.js'
-import { generaQuesito } from '../../src/giochi/prima-dopo/motore/quesito.js'
+import { generaQuesito, spiegazione } from '../../src/giochi/prima-dopo/motore/quesito.js'
+import { DIDASCALIE, didascalia, ordinale, guastiDelleDidascalie } from '../../src/giochi/prima-dopo/dati/didascalie.js'
 import { storieIdonee } from '../../src/giochi/prima-dopo/motore/corsa.js'
 import { gioca, storieProposte, caso } from '../../src/giochi/prima-dopo/motore/banco.js'
 import manifesto from '../../src/giochi/prima-dopo/gioco.js'
@@ -22,6 +23,9 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 /* ══════════ 1. i dati stanno in piedi ══════════ */
 const guastiStorie = guastiDelleStorie(STORIE, SCENE)
 controlla('le storie non hanno guasti', guastiStorie.length === 0, guastiStorie.join(' · '))
+const guastiDid = guastiDelleDidascalie(STORIE)
+controlla('ogni passo ha la sua didascalia, e nessuna avanza',
+          guastiDid.length === 0, guastiDid.join(' · '))
 const guastiVerbi = guastiDeiVerbi()
 controlla('i verbi non hanno guasti', guastiVerbi.length === 0, guastiVerbi.join(' · '))
 const guastiCam = guastiDellaCampagna(CAMPAGNA, STORIE, VERBI)
@@ -144,16 +148,72 @@ controlla('nessuna tappa facile pesca dalle storie ambigue al contrario', CAMPAG
   controlla('e la buca torna vuota', q3.posate.every(x => x === null))
 }
 {
-  /* "manca": inizio e fine sono già lì, il buco è nel mezzo.
-     La storia è quella disegnata della mattina: il quesito è lo stesso
-     che una fila di emoji, ed è il punto — il motore non distingue. */
+  /* "manca": tre passi di fila della storia, quello in mezzo tolto.
+     La storia è quella disegnata della mattina — quattro passi, quindi
+     la finestra può cominciare dal primo o dal secondo: il quesito è lo
+     stesso che una fila di emoji, ed è il punto — il motore non
+     distingue. */
   const storia = STORIE.find(s => s.chiave === 'la-mattina')
   const altre = storieIdonee(CAMPAGNA[3], datiVerbo('manca'), STORIE).filter(s => s !== storia)
   const q = generaQuesito(datiVerbo('manca'), storia, altre.length ? altre : STORIE, caso(4))
-  uguale('si vede il primo passo', q.mostrati[0], storia.passi[0])
-  uguale('si vede l\'ultimo passo', q.mostrati[2], storia.passi[storia.passi.length - 1])
   controlla('il buco è nel mezzo', q.mostrati[1] === null)
+  const da = storia.passi.indexOf(q.mostrati[0])
+  controlla('quello che si vede sono tre passi di fila della storia',
+            da >= 0 && storia.passi[da + 1] === q.corretta && storia.passi[da + 2] === q.mostrati[2],
+            `mostrati ${JSON.stringify(q.mostrati)}, giusta "${q.corretta}"`)
   controlla('tre opzioni, di cui una giusta', q.opzioni.length === 3 && q.opzioni.filter(o => o.giusta).length === 1)
+}
+
+/* ══════════ 3-bis. la spiegazione dopo un errore ══════════
+   Quello che si fa vedere quando si è sbagliato è **una fila vera e di
+   fila della storia**, sempre: è l'unica cosa che il bambino ha davanti
+   nel momento in cui sta imparando, e una fila di comodo lì gli
+   insegnerebbe una storia che non esiste. Si controlla su tutta la
+   campagna, sbagliando apposta. */
+{
+  const rnd = caso(4242)
+  let provate = 0
+  let filaFinta = 0          // una fila che nella storia non c'è, o non di fila
+  let senzaParole = 0        // un passo della spiegazione senza didascalia
+  let titoloMuto = 0
+
+  for (const t of CAMPAGNA) {
+    for (let i = 0; i < 120; i++) {
+      const v = t.verbo === 'mescolato'
+        ? datiVerbo(CHIAVI_VERBI[Math.floor(rnd() * CHIAVI_VERBI.length)])
+        : datiVerbo(t.verbo)
+      const idonee = storieIdonee(t, v, STORIE)
+      if (!idonee.length) continue
+      const storia = idonee[Math.floor(rnd() * idonee.length)]
+      const q = generaQuesito(v, storia, idonee.filter(s => s !== storia), rnd)
+
+      /* si sbaglia apposta: la prima cosa che non è quella giusta */
+      if (q.tipo === 'ordina') q.sequenza.map((_, id) => id).reverse().forEach(id => q.tocca(id))
+      else if (q.tipo === 'scegli') q.tocca(q.opzioni.find(o => !o.giusta).emoji)
+      else q.tocca(q.vignette.find(x => !x.intruso).id)
+      if (q.esito !== 'sbagliata') continue
+
+      const sp = spiegazione(q)
+      provate++
+      if (!sp.titolo) titoloMuto++
+      const da = storia.passi.indexOf(sp.passi[0])
+      if (da < 0 || !sp.passi.every((p, k) => storia.passi[da + k] === p)) filaFinta++
+      for (const p of sp.passi) if (!didascalia(p)) senzaParole++
+      if (sp.scelta && !didascalia(sp.scelta)) senzaParole++
+      if (sp.intruso && !didascalia(sp.intruso)) senzaParole++
+    }
+  }
+
+  controlla('spiegate centinaia di risposte sbagliate', provate >= 500, `solo ${provate}`)
+  controlla('la spiegazione fa sempre vedere passi veri e di fila della storia',
+            filaFinta === 0, `${filaFinta} volte su ${provate}`)
+  controlla('e ogni passo spiegato ha la sua parola', senzaParole === 0, `${senzaParole} muti`)
+  controlla('la spiegazione dice sempre di che storia si tratta', titoloMuto === 0)
+  uguale('la fila si legge «prima, poi, infine»',
+         [0, 1, 2].map(i => ordinale(i, 3)).join(' '), 'Prima Poi Infine')
+  uguale('e con quattro passi il «poi» si ripete',
+         [0, 1, 2, 3].map(i => ordinale(i, 4)).join(' '), 'Prima Poi Poi Infine')
+  nota(`didascalie: ${Object.keys(DIDASCALIE).length} passi con la loro parola`)
 }
 
 /* ══════════ 4. le dieci tappe si vincono davvero ══════════ */

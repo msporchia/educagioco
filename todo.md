@@ -256,6 +256,29 @@ Due cose imparate disegnando, che valgono per il seguito:
   `motore/quesito.js` filtra): un'emoji in mezzo a tre vignette disegnate si
   riconosce per come è fatta invece che per quello che racconta.
 
+**Il 18 agosto la resa e l'errore sono stati rifatti**, guardando il gioco su
+un telefono. Tre cose, tutte figlie della stessa: un disegno con dentro una
+faccia non è un'emoji, e non sta in un francobollo.
+
+- **La vignetta non ha più una misura fissa** (era 76-92 px): la ricava da
+  quante ne stanno in fila (`--pd-riga`) e da quante righe ci sono a schermo
+  (`--pd-file`). Tre in fila su un telefono fanno 115 px invece di 78; e
+  quando sono quattro **non si mettono in fila, si mettono in quadrato** —
+  158 px l'una, quasi quattro volte l'area, e il verso del tempo lo dicono i
+  numeri nelle buche. Nell'intruso, che sotto non ha niente da pescare, si
+  arriva a 176.
+- **Il lampo da 700 ms è diventato una spiegazione** (`viste/Spiegazione.vue`):
+  la storia intera, un passo per riga, in grande, con sotto **cos'è** — le
+  didascalie stanno in `dati/didascalie.js`, una per passo (141), e lette di
+  fila fanno una frase: «prima il seme, poi si annaffia, infine il girasole».
+  Si va avanti col tasto, o da soli dopo sette secondi con la barra che si
+  svuota. Settecento millisecondi non bastavano a *guardare* tre disegni,
+  figurarsi a capire perché quello che si era messo non andava.
+- **«Manca» faceva vedere una fila che nella storia non esiste**: il primo
+  passo, l'ultimo, e in mezzo il buco di un passo qualunque — in una storia da
+  quattro, la fila 1-2-4. Non si vedeva finché la risposta non veniva spiegata;
+  adesso la finestra dei tre è contigua.
+
 ### Cosa manca
 
 - **Trentotto storie sono ancora a emoji**, e tre categorie non ne hanno
@@ -271,7 +294,11 @@ Due cose imparate disegnando, che valgono per il seguito:
   `-- --host` per guardarle dal telefono, che è la taglia che conta). I
   controlli a freddo — scene esistenti, storie disegnate per intero, nessuna
   scena orfana, nessun quesito misto — sono in `unita/prima-dopo`.
-- **Non c'è un test di integrazione** per questo gioco, né prima né adesso.
+- ~~**Non c'è un test di integrazione** per questo gioco.~~ Adesso c'è
+  (`integrazione/prima-dopo`): misura le vignette sul vetro di un telefono da
+  390 px — è l'unico modo di accorgersi che sono tornate francobolli — e
+  sbaglia apposta per guardare la spiegazione e verificare che dopo il «ho
+  capito» il gioco vada avanti davvero.
 - **Le altre abitudini travestite da nessi** (`vestirsi`, `lavarsi-mani`) si
   potano quando si disegnano, non prima, o il gioco si accorcia.
 - **Una terza regola imparata allargando il cassetto**: due vignette della

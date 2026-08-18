@@ -111,11 +111,19 @@ export class QuesitoScelta {
 
     /* cosa si vede: sempre tre posizioni, una delle quali è un buco.
        Le storie più lunghe non mostrano tutti i loro passi: bastano tre
-       tappe per chiedere «cosa viene dopo/prima/nel mezzo». */
+       tappe per chiedere «cosa viene dopo/prima/nel mezzo».
+
+       La finestra dei tre è **contigua**, sempre: prima si mostrava il
+       primo passo, l'ultimo, e in mezzo il buco di un passo qualunque —
+       che in una storia da quattro vuol dire una fila che nella storia
+       non esiste (il primo, il secondo, il quarto). Il bambino non
+       poteva accorgersene, perché il terzo non glielo faceva vedere
+       nessuno; ma la spiegazione dopo un errore sì, e una spiegazione
+       che mostra una fila inventata insegna la cosa sbagliata. */
     if (this.verbo === 'manca') {
-      const meta = 1 + Math.floor(rnd() * (passi.length - 2))   // un indice in mezzo
-      this.corretta = passi[meta]
-      this.mostrati = [passi[0], null, passi[passi.length - 1]]
+      const da = Math.floor(rnd() * (passi.length - 2))         // la finestra [da, da+2]
+      this.corretta = passi[da + 1]
+      this.mostrati = [passi[da], null, passi[da + 2]]
     } else if (this.verbo === 'dopo') {
       this.corretta = passi[2]
       this.mostrati = [passi[0], passi[1], null]
@@ -167,6 +175,51 @@ export class QuesitoIntruso {
     this.esito = vignetta?.intruso ? 'giusta' : 'sbagliata'
     return this.esito
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LA SPIEGAZIONE — cosa far vedere quando si è sbagliato
+
+   Sta qui e non nella vista perché è una **regola**, non un disegno:
+   qual è la fila vera, dove stava la domanda, cosa ha risposto il
+   bambino. Nella vista ci finiva in una `computed` che sapeva i nomi
+   dei tre tipi di quesito — cioè la stessa cosa scritta nel posto dove
+   non si può provare senza aprire un browser.
+
+   Quello che torna è sempre **una fila vera e contigua della storia**,
+   mai una fila di comodo: è l'unica cosa che il bambino ha davanti nel
+   momento in cui sta imparando, e se lì gli si fa vedere una sequenza
+   che nella storia non esiste, tanto valeva non spiegare niente.
+
+     titolo    il nome della storia, per chi legge ad alta voce
+     passi     la fila giusta, in ordine
+     esatti    per «ordina»: quali posizioni erano al posto giusto
+     buco      per «manca/dopo/prima»: l'indice di quello che si chiedeva
+     scelta    il passo sbagliato che è stato toccato, se ce n'è uno
+     intruso   per «intruso»: la vignetta che non c'entrava
+   ═══════════════════════════════════════════════════════════════════ */
+export function spiegazione(q) {
+  const base = { titolo: q.storia.nome, passi: [], esatti: null, buco: null,
+                 scelta: null, intruso: null }
+
+  if (q.tipo === 'ordina') return { ...base,
+    passi: q.sequenza,
+    esatti: q.posate.map((id, i) => id === i) }
+
+  if (q.tipo === 'intruso') {
+    const sbagliata = q.vignette.find(v => v.id === q.scelta)
+    return { ...base,
+      passi: q.storia.passi.slice(0, q.vignette.length),
+      intruso: q.vignette.find(v => v.intruso)?.emoji ?? null,
+      /* quello che ha toccato è un passo vero della storia: si segna
+         nella fila, invece di rimostrarlo a parte */
+      scelta: sbagliata && !sbagliata.intruso ? sbagliata.emoji : null }
+  }
+
+  return { ...base,
+    passi: q.mostrati.map(e => e ?? q.corretta),
+    buco: q.mostrati.indexOf(null),
+    scelta: q.scelta && q.scelta !== q.corretta ? q.scelta : null }
 }
 
 /* La sola porta d'ingresso: chi chiama non deve sapere quale delle tre
