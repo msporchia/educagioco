@@ -194,6 +194,20 @@ export const SAPERI = [
   },
 
   /* ── italiano ── */
+  /* Il primo pezzo di scuola in assoluto, e l'unico che si spegne
+     guardando in basso invece che in alto: non «non l'ha ancora
+     fatto», ma «l'ha già fatto, e chiedergli con che lettera comincia
+     una mela lo prenderebbe in giro». A tenerlo fuori dalla strada dei
+     grandi basta di norma la fascia delle domande (`data/partenze.js`),
+     che a chi è in terza non fa nemmeno vedere quel pezzo di scala:
+     questo interruttore serve al caso opposto, il bambino che a sei
+     anni legge già bene. */
+  {
+    chiave: 'lettura', nome: 'Leggere le parole', ico: '🔤', materia: 'italiano',
+    che: 'riconoscere le lettere e leggere una parola corta fino in fondo, invece di indovinarla dalla prima',
+    esempio: '«con che lettera comincia 🐝?»',
+    spegne: 'le domande sulle lettere e sulle parole da leggere, quelle di chi comincia adesso',
+  },
   {
     chiave: 'suoni-difficili', nome: 'I suoni difficili', ico: '✏️', materia: 'italiano',
     che: 'le parole che si scrivono diverse da come si sentono: gn, gl, sc, le doppie, cqu',
@@ -319,6 +333,27 @@ export const SAPERI = [
     che: 'vedere il ritmo di una fila e dire cosa viene dopo, o chi non c\'entra',
     esempio: '«rosso, blu, rosso, blu, …?»',
     spegne: 'le sequenze da continuare e le figure intruse',
+  },
+
+  /* ── scienze ──
+     I due pezzi si spengono per ragioni diverse, ed è il motivo per cui
+     sono due. Gli ambienti del mondo sono roba di seconda e terza: chi
+     non li ha fatti non sa cosa sia una savana, e la domanda gli arriva
+     muta. L'adattamento invece è il gradino sopra — non *dove* vive un
+     animale ma *come si capisce* guardandolo — e si può togliere
+     lasciando le domande sui posti, che è quello che serve a un bambino
+     che gli ambienti li sta imparando adesso. */
+  {
+    chiave: 'ambienti', nome: 'Gli ambienti del mondo', ico: '🌍', materia: 'scienze',
+    che: 'savana, deserto, giungla, ghiacci: che posti sono e quali animali ci vivono',
+    esempio: '«dove vive il pinguino?»',
+    spegne: 'le domande su dove vivono gli animali; restano quelle sui posti di casa',
+  },
+  {
+    chiave: 'adattamento', nome: 'Com\'è fatto un animale', ico: '🐾', materia: 'scienze',
+    che: 'che il corpo di un animale dice dove vive: il pelo bianco il gelo, le zampe palmate l\'acqua',
+    esempio: '«un animale ha il pelo bianco e il grasso sotto la pelle: dove vive?»',
+    spegne: 'le domande in cui il posto si ricava dall\'indizio; restano quelle su chi vive dove',
   },
 ]
 

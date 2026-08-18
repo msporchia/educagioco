@@ -13,6 +13,7 @@
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
     "mondo": "vite --open /strumenti/banco/mondo.html",
     "storie": "vite --open /strumenti/banco/storie.html",
+    "ambienti": "vite --open /strumenti/banco/ambienti.html",
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I paesaggi delle domande sugli animali</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     Come `storie.html`, e per lo stesso motivo: **non si apre col
+     doppio click**, servono i moduli veri di `src/`.
+
+         npm run ambienti              e si apre da solo
+         npm run ambienti -- --host    e si guarda dal telefono
+
+     Qui il telefono conta più del computer, perché il riquadro vero di
+     una risposta è largo 52 pixel sullo schermo dove gioca un bambino:
+     un paesaggio che si legge sul monitor può essere una macchia.
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #10131a; --carta: #171b26; --riga: #262c3c;
+    --testo: #e6e9f2; --tenue: #8b93aa; --acceso: #ffcc55;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 26px 22px 70px; background: var(--fondo); color: var(--testo);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header, main, .comandi { max-width: 1180px; margin-left: auto; margin-right: auto; }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  header p { margin: 4px 0; color: var(--tenue); max-width: 78ch; font-size: 13px; }
+  header code, p code { background: #0009; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .comandi {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    margin: 18px auto 22px; padding: 10px 14px;
+    background: var(--carta); border: 1px solid var(--riga);
+    border-radius: 8px; font-size: 12.5px; color: var(--tenue);
+  }
+  .comandi input[type=range] { width: 200px; }
+  button.azione {
+    padding: 7px 13px; border-radius: 7px; cursor: pointer;
+    background: #232a3a; border: 1px solid var(--riga);
+    color: var(--testo); font: inherit; font-size: 12.5px;
+  }
+  button.azione:hover { border-color: var(--acceso); }
+  main { display: flex; flex-direction: column; gap: 22px; }
+  .riquadro {
+    border: 1px solid var(--riga); border-radius: 8px; padding: 14px 16px 18px;
+    background: var(--carta);
+  }
+  .riquadro h2 { font-size: 15px; margin: 0 0 4px; color: var(--acceso); }
+  .riquadro > p { margin: 0 0 14px; color: var(--tenue); font-size: 12.5px; max-width: 78ch; }
+  .griglia { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  figure { margin: 0; text-align: center; }
+  figure canvas { display: block; border-radius: 10px; background: #0b0e14; }
+  figcaption { font-size: 12px; font-weight: 650; color: var(--testo); margin-top: 4px; }
+  /* i quattro tasti come stanno in una domanda vera: due colonne, il
+     fondo della carta del quiz, la stessa misura massima */
+  .domanda {
+    max-width: 430px; padding: 14px 16px 16px; border-radius: 20px;
+    background: linear-gradient(180deg, #223055 0%, #141c33 100%);
+    border: 1px solid rgba(255,255,255,.13);
+  }
+  .domanda .consegna { font-size: 18px; font-weight: 650; margin-bottom: 12px; }
+  .domanda .soggetto {
+    display: flex; align-items: center; justify-content: center; font-size: 52px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px; padding: 8px; margin-bottom: 14px;
+  }
+  .domanda .tasti { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .domanda .tasto {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 9px 8px; border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.075);
+  }
+  .domanda .tasto canvas { width: 100%; max-width: 118px; border-radius: 10px; }
+  .domanda .tasto span { font-size: 14px; font-weight: 650; }
+</style>
+</head>
+<body>
+<header>
+  <h1>I paesaggi delle domande sugli animali</h1>
+  <p>
+    Dieci posti dipinti col codice — <code>src/quiz/grafica/pittori/ambienti.js</code> — per
+    la domanda «dove vive?». Gli animali restano emoji: qui c'è solo il posto.
+  </p>
+  <p>
+    Nessun test guarda i pixel: questa pagina non controlla, <strong>mostra</strong>.
+    La domanda da farle è una sola — <em>a 52 pixel, quali due si somigliano?</em>
+  </p>
+</header>
+
+<div class="comandi">
+  <label>taglia del riquadro <input id="taglia" type="range" min="40" max="160" value="118"></label>
+  <span id="quanto">118 px</span>
+  <span>— in partita un tasto sta fra 52 e 118 px.</span>
+  <button class="azione" id="mescola">rimescola i quattro</button>
+  <button class="azione" id="prova">prova una domanda vera</button>
+</div>
+
+<main id="tavola"></main>
+
+<script type="module">
+  import { avvia } from './ambienti.js'
+  avvia()
+</script>
+</body>
+</html>

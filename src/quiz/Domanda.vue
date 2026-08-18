@@ -115,6 +115,18 @@ let avanti = null
 let salta = null
 const tele = ref([])          // i canvas delle risposte disegnate
 const teloSoggetto = ref(null)
+/* ── LA LENTE ──
+   Il disegno del soggetto sta in un riquadro largo al massimo 148 px:
+   basta per un orologio, non per una griglia 6×6 con dentro le
+   lettere, i numeri e un'emoji per casella — lì una cella è venti
+   pixel, e «qual è la casella del cane» diventa una domanda sulla
+   vista invece che sulle coordinate. Toccando il disegno si apre
+   grande quanto lo schermo, e si chiude toccando ovunque.
+   Solo il soggetto: sui tasti delle risposte il tocco È la risposta, e
+   un tastino per ingrandire dentro un tasto che risponde è il modo di
+   far dare una risposta a caso a chi voleva solo guardare meglio. */
+const ingrandito = ref(false)
+const teloZoom = ref(null)
 
 const risposte = computed(() => props.domanda.risposte || [])
 const lunghe = computed(() => risposte.value.some(r => (r.testo || '').length > 13))
@@ -185,6 +197,16 @@ function scegli(i) {
 function saltaAttesa() {
   if (props.saltabile && salta) salta()
 }
+
+/* La lente si apre solo a domanda pronta: nei primi millisecondi il
+   tocco che arriva è il fantasma di quello di prima (vedi `CIECA`), e
+   una lente che si spalanca da sola nasconde la domanda appena
+   comparsa. */
+async function ingrandisci() {
+  if (!pronta.value || !props.domanda.soggetto?.scena) return
+  ingrandito.value = true
+  await nextTick()
+  if (teloZoom.value) dipingi(teloZoom.value, props.pittori, props.domanda.soggetto.scena)
 }
 
 /* Quello che si sa di questa domanda **adesso**: il tempo scorre e
@@ -230,7 +252,11 @@ async function inizia() {
   clearTimeout(cieca)
   scelto.value = -1
   attesa.value = 0
+  clearTimeout(avanti)
+  avanti = null
+  salta = null
   pronta.value = false
+  ingrandito.value = false
   partenza.value = performance.now()
   cieca = setTimeout(() => { pronta.value = true }, CIECA)
   await nextTick()
@@ -252,9 +278,6 @@ onUnmounted(() => clearTimeout(cieca))
 
 <template>
   <div class="qz-velo">
-  clearTimeout(avanti)
-  avanti = null
-  salta = null
     <div class="qz-carta">
       <!-- la riga in cima porta due cose che non c'entrano fra loro: di
            che materia è la domanda, e i tre tasti per giudicarla. I
@@ -266,18 +289,29 @@ onUnmounted(() => clearTimeout(cieca))
       </div>
       <div class="qz-consegna">{{ domanda.testo }}</div>
 
-      <div v-if="domanda.soggetto" class="qz-soggetto">
-        <canvas v-if="domanda.soggetto.scena" ref="teloSoggetto" class="qz-telo-grande" />
+      <div v-if="domanda.soggetto" class="qz-soggetto" :class="{ nominato: domanda.soggetto.nome }">
+        <!-- il disegno si tocca e si guarda grande: la lente in un
+             angolo è lì per dire che si può, perché un canvas non
+             sembra un tasto -->
+        <button v-if="domanda.soggetto.scena" type="button" class="qz-guarda"
+                aria-label="ingrandisci il disegno" @click="ingrandisci">
+          <canvas ref="teloSoggetto" class="qz-telo-grande" />
+          <span class="qz-lente" aria-hidden="true">🔍</span>
+        </button>
         <span v-else-if="domanda.soggetto.emoji" class="qz-emoji">{{ domanda.soggetto.emoji }}</span>
         <span v-else>{{ domanda.soggetto.testo }}</span>
+        <span v-if="domanda.soggetto.nome" class="qz-nome grande">{{ domanda.soggetto.nome }}</span>
       </div>
 
       <div class="qz-risposte" :class="colonne">
         <button v-for="(r, i) in risposte" :key="i" type="button"
-                class="qz-tasto" :class="[classe(i), { emoji: r.emoji !== undefined }]"
+                class="qz-tasto"
+                :class="[classe(i), { emoji: r.emoji !== undefined, nominata: r.nome !== undefined }]"
                 @click="scegli(i)">
           <canvas v-if="r.scena" :ref="el => (tele[i] = el)" class="qz-telo" />
-          <template v-else>{{ r.testo ?? r.emoji }}</template>
+          <span v-else-if="r.emoji !== undefined">{{ r.emoji }}</span>
+          <template v-else>{{ r.testo }}</template>
+          <span v-if="r.nome" class="qz-nome">{{ r.nome }}</span>
         </button>
       </div>
 
@@ -295,6 +329,19 @@ onUnmounted(() => clearTimeout(cieca))
           <template v-else><span class="male">Era questa.</span> {{ esito }}</template>
         </template>
       </div>
+    </div>
+
+    <!-- Il disegno grande. Sta dentro il velo della domanda, non dentro
+         la carta: così prende tutto lo spazio che il gioco ha concesso
+         alla domanda, e si chiude con un tocco qualunque — sul disegno,
+         sulla consegna, sul nero intorno. Chiudere sul `click` e non sul
+         `pointerup` non è un dettaglio: col secondo il dito si lascia
+         dietro un click che atterrerebbe sul tasto rimasto sotto, e la
+         risposta partirebbe da sola. -->
+    <div v-if="ingrandito" class="qz-zoom" @click="ingrandito = false">
+      <canvas ref="teloZoom" class="qz-telo-zoom" />
+      <div class="qz-zoom-testo">{{ domanda.testo }}</div>
+      <button type="button" class="qz-zoom-x" aria-label="chiudi">✕</button>
     </div>
   </div>
 </template>
@@ -331,6 +378,10 @@ onUnmounted(() => clearTimeout(cieca))
 .qz-avanti i { display: block; height: 100%; width: 0;
                background: linear-gradient(90deg, #ffd58a, #ffb43f);
                animation: qz-riempi linear forwards }
+/* mentre si guarda, la barra si può toccare per non aspettare: un filo
+   più alta, così il dito la prende */
+.qz-avanti.saltabile { height: 7px; padding: 2px 0; background-clip: content-box;
+                       cursor: pointer }
 @keyframes qz-riempi { to { width: 100% } }
 
 .qz-testa {
@@ -355,7 +406,24 @@ onUnmounted(() => clearTimeout(cieca))
   border: 1px solid rgba(255, 255, 255, .08);
   font-size: clamp(22px, 6vw, 30px); font-weight: 750; text-align: center;
 }
-.qz-emoji { font-size: clamp(30px, 8vw, 40px); }
+/* Il soggetto è **la cosa da guardare**, e per i mazzi dove la figura È
+   la domanda — «con che lettera comincia 🐝» — quaranta pixel sono
+   pochi: a sei anni si guarda l'immagine, non la si sbircia. Grande
+   quanto il riquadro concede, che è la stessa regola del disegno. */
+.qz-emoji { font-size: clamp(38px, 11vw, 56px); }
+.qz-guarda {
+  position: relative; display: block; padding: 0; border: 0; cursor: zoom-in;
+  background: none; color: inherit; font: inherit; line-height: 0;
+}
+.qz-guarda:active { transform: scale(.97); }
+.qz-lente {
+  position: absolute; right: -6px; bottom: -6px;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
+  background: #223055; border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
 .qz-telo-grande {
   width: clamp(76px, calc(17 * var(--qz-h)), 148px);
   height: auto; aspect-ratio: 1;
@@ -378,13 +446,24 @@ onUnmounted(() => clearTimeout(cieca))
 }
 .qz-tasto.emoji { font-size: clamp(28px, 7.5vw, 40px); }
 .qz-telo {
-/* mentre si guarda, la barra si può toccare per non aspettare: un filo
-   più alta, così il dito la prende */
-.qz-avanti.saltabile { height: 7px; padding: 2px 0; background-clip: content-box;
-                       cursor: pointer }
   width: 100%; max-width: clamp(52px, calc(13.5 * var(--qz-h)), 118px);
   aspect-ratio: 1; height: auto;
 }
+/* LA PAROLA SOTTO LA FIGURA. Un disegno di savana si riconosce molto
+   prima di saperlo chiamare, e il nome è lì per la seconda metà: il
+   tasto diventa una colonna, figura sopra e parola sotto.
+
+   Il corpo del carattere si dichiara qui e non si eredita, apposta: un
+   tasto a emoji ne porta addosso quaranta pixel, e il nome uscirebbe
+   grande quanto l'icona — cioè sembrerebbe la risposta invece della
+   sua didascalia. */
+.qz-tasto.nominata { flex-direction: column; gap: clamp(2px, calc(.6 * var(--qz-h)), 5px); }
+.qz-soggetto.nominato { flex-direction: column; gap: clamp(3px, calc(.8 * var(--qz-h)), 7px); }
+.qz-nome {
+  font-size: clamp(11px, 3.2vw, 14px); font-weight: 650; line-height: 1.2;
+  text-align: center; opacity: .93;
+}
+.qz-nome.grande { font-size: clamp(13px, 3.8vw, 16px); }
 .qz-tasto:active { transform: scale(.97); background: rgba(255, 255, 255, .13); }
 .qz-tasto.giusta { background: rgba(78, 214, 128, .24); border-color: #4ed680; }
 .qz-tasto.sbagliata { background: rgba(255, 105, 105, .2); border-color: #ff6969; }
@@ -393,6 +472,44 @@ onUnmounted(() => clearTimeout(cieca))
   margin-top: clamp(7px, calc(1.4 * var(--qz-h)), 14px);
   min-height: 20px; font-size: clamp(13px, 3.8vw, 15px);
   line-height: 1.4; color: #b9c6e6;
+}
+.qz-zoom {
+  /* `fixed` e non `absolute`: il velo scorre quando la carta è più alta
+     dello schermo, e un absolute scorrerebbe con lui — la lente si
+     aprirebbe sopra la testa di chi ha scrollato in fondo. Fissa resta
+     dov'è; e resta comunque dentro il riquadro del gioco, perché il
+     velo ha un `backdrop-filter` addosso e quello basta a farne il
+     riferimento di quel che sta dentro. */
+  position: fixed; inset: 0; z-index: 50; cursor: zoom-out;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(6px, calc(1.5 * var(--qz-h)), 14px);
+  padding: clamp(8px, calc(2 * var(--qz-h)), 18px);
+  background: rgba(6, 9, 18, .96);
+  animation: qz-entra .14s ease;
+  /* così `cqh` qui sotto misura QUESTO riquadro e non la finestra */
+  container-type: size;
+}
+/* Quadrato, e grande quanto il lato corto concede. Due righe e non una:
+   la prima misura l'altezza con `--qz-h`, che è quanto il gioco dichiara
+   di aver concesso alla domanda; la seconda misura il riquadro vero
+   (`cqh`) e vince dove il browser la capisce. Serve tutte e due perché
+   `--qz-h` è una dichiarazione e può non combaciare: un disegno più alto
+   del riquadro esce sotto, e quello che si perde è metà griglia. */
+.qz-telo-zoom {
+  width: min(100%, calc(78 * var(--qz-h)));
+  width: min(100%, 78cqh);
+  height: auto; aspect-ratio: 1;
+}
+.qz-zoom-testo {
+  max-width: 430px; text-align: center; white-space: pre-line;
+  font-size: clamp(13px, 3.8vw, 16px); line-height: 1.35; color: #b9c6e6;
+}
+.qz-zoom-x {
+  position: absolute; top: 8px; right: 10px;
+  width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .08); color: #eaf0ff;
+  font: inherit; font-size: 18px; line-height: 1;
 }
 .qz-esito .bene { color: #7ee6a4; font-weight: 700; }
 .qz-esito .male { color: #ffb0b0; font-weight: 700; }

@@ -97,6 +97,12 @@ const STILE = `
   aspect-ratio: 1; height: auto;
 }
 .quiz-tasto:active { transform: scale(.97); background: rgba(255,255,255,.13); }
+/* figura sopra, parola sotto: il corpo del carattere è dichiarato e non
+   ereditato, se no su un tasto a emoji il nome uscirebbe di quaranta
+   pixel — grande quanto la risposta invece che la sua didascalia */
+.quiz-tasto.nominata, .quiz-soggetto.nominata { flex-direction: column; gap: 4px; }
+.quiz-nome { font-size: clamp(11px, 3.2vw, 14px); font-weight: 650; line-height: 1.2; opacity: .93; }
+.quiz-soggetto .quiz-nome { font-size: clamp(13px, 3.8vw, 16px); }
 .quiz-tasto.giusta { background: rgba(78, 214, 128, .24); border-color: #4ed680; }
 .quiz-tasto.sbagliata { background: rgba(255, 105, 105, .2); border-color: #ff6969; }
 .quiz-tasto.spenta { opacity: .38; }
@@ -115,14 +121,30 @@ function stile() {
   document.head.appendChild(s)
 }
 
-/* Il contenuto di un tasto (o del soggetto): testo, emoji o disegno. */
+/* Il contenuto di un tasto (o del soggetto): testo, emoji o disegno —
+   e sotto, se c'è, il nome della figura. Il gemello Vue è `Domanda.vue`
+   e le due rese devono restare la stessa cosa: una domanda che qui esce
+   senza la parola sotto è una domanda che a un bambino insegna
+   un'immagine e non un vocabolo. */
 function riempi(el, cosa, pittori) {
-  if (cosa.emoji !== undefined) { el.classList.add('emoji'); el.textContent = cosa.emoji; return }
-  if (cosa.testo !== undefined) { el.textContent = cosa.testo; return }
-  const cv = document.createElement('canvas')
-  el.appendChild(cv)
-  /* il canvas prende la misura dal riquadro solo dopo il layout */
-  requestAnimationFrame(() => dipingi(cv, pittori, cosa.scena))
+  if (cosa.emoji !== undefined) {
+    el.classList.add('emoji')
+    el.appendChild(document.createTextNode(cosa.emoji))
+  } else if (cosa.testo !== undefined) {
+    el.appendChild(document.createTextNode(cosa.testo))
+  } else {
+    const cv = document.createElement('canvas')
+    el.appendChild(cv)
+    /* il canvas prende la misura dal riquadro solo dopo il layout */
+    requestAnimationFrame(() => dipingi(cv, pittori, cosa.scena))
+  }
+  if (cosa.nome) {
+    el.classList.add('nominata')
+    const n = document.createElement('span')
+    n.className = 'quiz-nome'
+    n.textContent = cosa.nome
+    el.appendChild(n)
+  }
 }
 
 /* ── mostra una domanda già generata ──

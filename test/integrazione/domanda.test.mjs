@@ -109,6 +109,51 @@ const chiaviDiQuiz = async () => Object.keys((await leggiProfilo(page))?.items |
 uguale('rispondere dal banco dei grandi non tocca il ripasso',
        (await chiaviDiQuiz()).length, 0)
 
+/* ---------- 3c. IL DISEGNO SI GUARDA GRANDE ----------
+   Riferito da chi ci giocava: «ogni tanto è difficile leggere bene
+   l'immagine di una domanda, quelle tipo E5». Sono le coordinate della
+   griglia: sei colonne e sei righe dentro un riquadro largo al massimo
+   148 pixel fanno celle da venti pixel, con dentro una lettera, un
+   numero e un'emoji — e la domanda smette di essere sulle coordinate e
+   diventa sulla vista. Il disegno del soggetto si tocca e si apre
+   grande quanto il velo; si chiude toccando ovunque.
+   Si va a prendere proprio quella domanda dal catalogo, per classe,
+   invece di sperare che la pesca ne dia una disegnata. */
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+await page.click('[data-scheda="domande"]')
+await page.click('[data-modulo="griglia"]')
+await page.click('[data-prova-classe="griglia:1:gri:coordinate"]')
+await page.waitForSelector('.qz-guarda', { timeout: 5000 })
+controlla('il disegno della domanda si può toccare', await page.locator('.qz-guarda').count() === 1)
+
+const piccolo = (await page.locator('.qz-telo-grande').boundingBox()).width
+await attendi(page, 400)              // la finestra cieca vale anche per la lente
+await page.click('.qz-guarda')
+await page.waitForSelector('.qz-zoom', { timeout: 2000 })
+await attendi(page, 200)              // la dissolvenza, per non fotografarla a metà
+const grande = (await page.locator('.qz-telo-zoom').boundingBox()).width
+nota(`il disegno passa da ${Math.round(piccolo)} px a ${Math.round(grande)}`)
+controlla('toccandolo si guarda molto più grande', grande > piccolo * 1.8,
+          `${Math.round(piccolo)} px → ${Math.round(grande)} px`)
+/* un canvas ridipinto a misura sbagliata resta sgranato: qui si
+   controlla che i pixel veri siano quelli della lente, non quelli del
+   riquadro piccolo stirati */
+const pixel = await page.evaluate(() => {
+  const c = document.querySelector('.qz-telo-zoom')
+  return c ? c.width / (window.devicePixelRatio || 1) : 0
+})
+controlla('ed è ridipinto, non stirato', Math.abs(pixel - grande) < 2,
+          `${Math.round(pixel)} px dipinti su ${Math.round(grande)} di riquadro`)
+await scatto(page, 'domanda-lente')
+
+await page.click('.qz-zoom')
+await page.waitForSelector('.qz-zoom', { state: 'detached', timeout: 2000 })
+uguale('e si chiude toccando', await page.locator('.qz-zoom').count(), 0)
+/* la lente copre le risposte: chiudendola non se ne deve essere data
+   nessuna — è il fantasma del tocco, la stessa storia dei punti 1 e 2 */
+uguale('senza rispondere per sbaglio', await risposto(), 0)
+
 /* ---------- 4. DUE DOMANDE DI FILA ----------
    Questa è la parte che conta, ed è il guasto vero: nel banco di prova
    ogni domanda è un montaggio nuovo, ma **in un gioco no**. Chi
