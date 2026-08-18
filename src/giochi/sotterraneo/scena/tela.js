@@ -61,6 +61,27 @@ export class Tela {
     this._raf = 0
   }
 
+  /* ── la tela può cambiare sotto i piedi ──
+     Fra una discesa e l'altra si torna alla mappa delle tappe, e il
+     `v-if` del coordinatore smonta il campo: il canvas che si ritrova la
+     discesa dopo è **un altro elemento**. Un pittore che si tiene il
+     primo continua a dipingere benissimo — su una tela staccata dal DOM,
+     cioè su niente: a schermo resta nero, e non c'è nessun errore da
+     nessuna parte, perché non è successo niente di sbagliato. Si è visto
+     giocando la seconda discesa, non leggendo.
+
+     Si riaggancia invece di rifare il pittore da capo perché così il
+     foglio degli sprite resta caricato (niente primo fotogramma senza
+     figure) e lo zoom scelto col pizzico resta quello che si era
+     scelto. */
+  attacca(canvas) {
+    if (this.canvas === canvas) return false
+    this.canvas = canvas
+    this.ctx = canvas.getContext('2d')
+    this.L = 0; this.A = 0; this.dpr = 1        // così `misura()` rifà tutto
+    return true
+  }
+
   /* quanto è largo lo schermo, in pixel di sprite */
   get largoMondo() { return this.L / this.scala }
   get altoMondo() { return this.A / this.scala }

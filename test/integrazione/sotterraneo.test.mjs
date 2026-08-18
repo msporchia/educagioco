@@ -101,6 +101,28 @@ await attendi(page, 400)
 controlla('dal campo si torna al cartello di fine o alle discese',
           await page.locator('.sot-fine, .sot-tappe').count() > 0)
 
+/* ---------- 6. la seconda discesa si vede come la prima ----------
+   Tornando alle discese il `v-if` smonta il campo, quindi la discesa
+   dopo trova **un altro canvas**: un pittore rimasto agganciato al primo
+   continuava a dipingere su una tela staccata dal DOM. Niente errori,
+   niente di rotto in nessun altro controllo — solo lo schermo nero, e
+   solo dalla seconda in poi. Per questo il conto dei pixel si rifà
+   invece di darlo per buono al primo giro. */
+if (await page.locator('.sot-fine').count())
+  await page.locator('[data-fine="esci"], [data-fine="ancora"]').first().click()
+await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+await page.locator('.sot-tappa[data-tappa="0"]').click()
+await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await attendi(page, 600)
+const ancora = await page.evaluate(() => {
+  const c = document.querySelector('.sot-tela')
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
+  let n = 0
+  for (let i = 0; i < d.length; i += 160) if (d[i] > 24 || d[i + 1] > 24) n++
+  return n
+})
+controlla('anche la seconda discesa si vede', ancora > 200, `${ancora} campioni accesi`)
+
 uguale('nessun errore in console', errori.join(' · '), '')
 nota('il tocco che apre un foglio dal campo lo prova unita/sotterraneo')
 

@@ -174,7 +174,11 @@ function avvia(i) {
 
 function accendi() {
   if (!tela.value || !corsa.value) return
+  /* il canvas di prima è stato smontato tornando alle discese: il
+     pittore va riagganciato a quello nuovo, o dipinge su una tela che
+     non è più a schermo */
   if (!pittore) pittore = new Tela(tela.value)
+  else pittore.attacca(tela.value)
   pittore.misura()
   pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
   pittore.avvia()
