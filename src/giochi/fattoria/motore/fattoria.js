@@ -20,7 +20,21 @@
      cose       quello che hai messo giù     `{ i, id, g, x, y }`
      ostacoli   quello che il bosco aveva già     `"14,9" → 'albero'`
      magazzino  quello che hai comprato e non è in mappa   `id → n`
+     granaio    il raccolto: grano, mais, mangime  `prodotto → n`
      bestie     le tue, coi bisogni e **dove stanno**  `{ chi, nome, x, y, … }`
+
+   ── IL RACCOLTO NON È IL MAGAZZINO ────────────────────────────────
+   Sono due cassetti diversi e restano diversi. Nel `magazzino` stanno le
+   **cose** che hai comprato e messo via — una panchina, un barile — e da
+   lì tornano in mappa identiche. Nel `granaio` sta la **roba** che si
+   consuma: tre grani diventano due mangimi, e il mangime finisce in una
+   ciotola. Metterli insieme vorrebbe dire una panchina con una
+   scadenza e un grano che si può ripiazzare sul prato.
+
+   Il granaio ha un tetto (`capienza`, in `dati/coltivazioni.js`) e ogni
+   silo in mappa lo alza. Quello che non ci sta **non si raccoglie**: il
+   campo resta pronto, e questo non è un intoppo ma il modo in cui il
+   gioco chiede un silo senza scriverlo.
 
    ── IL MONDO NON È UNA COSTANTE ───────────────────────────────────
    Non c'è più un `PIAZZOLE = 7`: `limiti` dice fin dove arriva la
@@ -51,7 +65,12 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi } from '../dati/catalogo.js'
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, macchinaDi,
+         statiDi } from '../dati/catalogo.js'
+import {
+  PER_COLTURA, PER_RICETTA, PRODOTTI, capienza, quantoCresciuto, stadioDi,
+  minutiCheMancano,
+} from '../dati/coltivazioni.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
@@ -85,6 +104,7 @@ export class Fattoria {
     this.cose = []
     this.ostacoli = {}
     this.magazzino = {}
+    this.granaio = {}
     this.terreno = {}
     this.bestie = []
     this.prossimo = 1
@@ -145,8 +165,8 @@ export class Fattoria {
 
   serializza() {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
-             magazzino: this.magazzino, terreno: this.terreno, limiti: this.limiti,
-             bestie: this.bestie, prossimo: this.prossimo }
+             magazzino: this.magazzino, granaio: this.granaio, terreno: this.terreno,
+             limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
 
   /* Regge un salvataggio di ieri senza pretendere una migrazione: quello
@@ -177,8 +197,30 @@ export class Fattoria {
        un salvataggio di ieri si rilegge senza chiedere una migrazione. */
     this.terreno = (d && d.terreno) ||
       Object.fromEntries(Object.keys((d && d.acqua) || {}).map(k => [k, 'acqua']))
+    /* Il granaio tiene solo prodotti che esistono ancora, e quantità
+       sane: una coltura tolta dalla tabella non deve lasciare in
+       archivio una voce che nessuno sa più disegnare né spendere. */
+    this.granaio = Object.fromEntries(
+      Object.entries((d && d.granaio) || {})
+        .filter(([k, n]) => PRODOTTI[k] && n > 0)
+        .map(([k, n]) => [k, Math.floor(n)]))
+    /* Quello che un campo o una macchina ha per le mani viaggia **dentro
+       la cosa** (`coltura`/`seminato`, `lavoro`), e va rimesso qui: la
+       riga qui sotto ricopia campo per campo, e chi ne aggiunge uno senza
+       nominarlo lo perde a ogni riapertura senza che niente sembri rotto.
+       Una coltura o una ricetta che oggi non c'è più si scorda — il campo
+       torna vuoto invece di restare seminato di niente per sempre. */
     this.cose = ((d && d.cose) || []).filter(c => c && PER_ID[c.id])
-      .map(c => ({ i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }))
+      .map(c => {
+        const cosa = { i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }
+        if (c.coltura && PER_COLTURA[c.coltura] && c.seminato > 0) {
+          cosa.coltura = c.coltura
+          cosa.seminato = c.seminato
+        }
+        if (c.lavoro && PER_RICETTA[c.lavoro.ricetta] && c.lavoro.da > 0)
+          cosa.lavoro = { ricetta: c.lavoro.ricetta, da: c.lavoro.da }
+        return cosa
+      })
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
                              ...this.cose.map(c => (c.i || 0) + 1))
     if (!Object.keys(this.piazzole).length) return this.nuova()
@@ -498,12 +540,22 @@ export class Fattoria {
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     if (!gradisce(cibo, famigliaDi(chi))) return { ok: false, motivo: 'non-gli-piace' }
     if (b.pancia > 0.93) return { ok: false, motivo: 'non-ha-fame' }
-    if (this.borsa.quante() < cibo.prezzo)
-      return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
-    this.borsa.paga(cibo.prezzo)
+    /* Un cibo si paga in monete **o** si scala dal granaio: il mangime
+       del mulino è già stato pagato coltivandolo (vedi `dati/bisogni.js`).
+       Il controllo viene prima di toccare qualunque cosa, come per il
+       cibo sbagliato: chi non ha mangime non perde il gesto e non perde
+       niente. */
+    if (cibo.da) {
+      if (!this.quantoHo(cibo.da)) return { ok: false, motivo: 'manca-roba', prodotto: cibo.da }
+      this.togli(cibo.da, 1)
+    } else {
+      if (this.borsa.quante() < cibo.prezzo)
+        return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
+      this.borsa.paga(cibo.prezzo)
+    }
     b.pancia = Math.min(1, b.pancia + cibo.quanto)
     b.quando = Date.now()
-    return { ok: true, costo: cibo.prezzo }
+    return { ok: true, costo: cibo.prezzo || 0, prodotto: cibo.da || null }
   }
 
   /* Spazzolare resta gratis; giocare costa una monetina (il perché, e la
@@ -513,12 +565,22 @@ export class Fattoria {
     const b = this.stato(chi)
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     if (b[gesto.bisogno] > 0.93) return { ok: false, motivo: 'non-serve' }
-    const costo = gesto.prezzo || 0
-    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
-    if (costo) this.borsa.paga(costo)
+    /* Una coccola si paga in monete **o** con la roba del granaio, come
+       un cibo (`nutri`): la copertina è di lana, e la lana è già stata
+       pagata tenendo delle pecore. Il controllo viene prima di toccare
+       qualunque cosa, sempre per lo stesso motivo — chi non ce l'ha non
+       perde niente, perde solo il gesto. */
+    if (gesto.da) {
+      if (!this.quantoHo(gesto.da)) return { ok: false, motivo: 'manca-roba', prodotto: gesto.da }
+      this.togli(gesto.da, 1)
+    } else {
+      const costo = gesto.prezzo || 0
+      if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+      if (costo) this.borsa.paga(costo)
+    }
     b[gesto.bisogno] = Math.min(1, b[gesto.bisogno] + gesto.quanto)
     b.quando = Date.now()
-    return { ok: true, costo }
+    return { ok: true, costo: gesto.prezzo || 0, prodotto: gesto.da || null }
   }
 
   /* Rinominare è gratis e si può fare sempre: un nome scelto a otto anni
@@ -531,12 +593,244 @@ export class Fattoria {
     return { ok: true, nome: b.nome }
   }
 
+  /* ═══════════ il granaio ═══════════
+     Il raccolto, che non è il magazzino (il perché sta in testa al
+     file). Tre righe di conto e un tetto: quello che non ci sta non si
+     raccoglie, e il campo resta pronto ad aspettare un silo. */
+  quantoHo(prodotto) { return this.granaio[prodotto] || 0 }
+
+  get quantiSilos() { return this.cose.filter(eSilo).length }
+
+  get capienzaDelGranaio() { return capienza(this.quantiSilos) }
+
+  /* Quanto ancora ci sta di questo prodotto. Il tetto è **per
+     prodotto** e non complessivo: un granaio pieno di grano che
+     impedisce di ritirare il mangime sarebbe un blocco che nessun
+     bambino saprebbe sciogliere — dovrebbe capire da sé che il rimedio è
+     macinare, e non c'è niente a schermo che lo dica. */
+  quantoCiSta(prodotto) {
+    return Math.max(0, this.capienzaDelGranaio - this.quantoHo(prodotto))
+  }
+
+  /* Mette via quello che ci sta e **torna quanto ne è rimasto fuori**.
+     Chi chiama decide cosa dirne: un raccolto che non ci sta non si
+     raccoglie affatto (vedi `raccogli`), perché mezzo campo raccolto è
+     uno stato che non si sa disegnare. */
+  metti(prodotto, n) {
+    if (!PRODOTTI[prodotto] || !(n > 0)) return n | 0
+    const ci = Math.min(n, this.quantoCiSta(prodotto))
+    if (ci > 0) this.granaio[prodotto] = this.quantoHo(prodotto) + ci
+    return n - ci
+  }
+
+  togli(prodotto, n) {
+    if (this.quantoHo(prodotto) < n) return false
+    this.granaio[prodotto] -= n
+    if (this.granaio[prodotto] <= 0) delete this.granaio[prodotto]
+    return true
+  }
+
+  /* ═══════════ i campi ═══════════
+     Un campo è una `cosa` come le altre, con due campi in più quando è
+     seminato: `coltura` (cos'è) e `seminato` (quando). Il tempo si
+     **legge**, non si aggiorna: `quantoCresciuto` fa il conto dall'ora
+     vera, quindi il gioco chiuso per una notte fa crescere il grano
+     esattamente come restare a guardarlo, e non c'è nessun orologio da
+     tenere in vita.
+
+     **Niente marcisce**: a crescita finita il campo resta pronto per
+     sempre. La spiegazione lunga sta in `dati/coltivazioni.js` — in due
+     parole, questo posto è il premio per gli esercizi fatti altrove, e
+     un raccolto che scade lo trasformerebbe in un dovere. */
+  statoCampo(cosa, ora = Date.now()) {
+    if (!eCampo(cosa)) return null
+    const c = PER_COLTURA[cosa.coltura]
+    if (!c || !cosa.seminato) return { vuoto: true, coltura: null, quanto: 0, pronto: false }
+    const quanto = quantoCresciuto(cosa.seminato, c.minuti, ora)
+    return {
+      vuoto: false, coltura: c, quanto, pronto: quanto >= 1,
+      manca: minutiCheMancano(cosa.seminato, c.minuti, ora),
+      stadio: stadioDi(c, quanto),
+    }
+  }
+
+  /* `seminaCampo` e non `semina`: `semina()` è già il bosco che nasce
+     dalle coordinate, ed è un'altra cosa per un altro scopo. Due metodi
+     con lo stesso nome qui dentro vorrebbero dire che il secondo
+     cancella il primo, e il bosco smetterebbe di nascere senza che
+     nessun test parli di alberi. */
+  seminaCampo(cosa, colturaId, ora = Date.now()) {
+    const s = this.statoCampo(cosa)
+    if (!s) return { ok: false, motivo: 'non-e-un-campo' }
+    if (!s.vuoto) return { ok: false, motivo: 'gia-seminato' }
+    const c = PER_COLTURA[colturaId]
+    if (!c) return { ok: false, motivo: 'non-esiste' }
+    if (this.borsa.quante() < c.semina)
+      return { ok: false, motivo: 'poche-monete', costo: c.semina }
+    if (c.semina) this.borsa.paga(c.semina)
+    cosa.coltura = c.id
+    cosa.seminato = ora
+    return { ok: true, costo: c.semina, coltura: c }
+  }
+
+  /* Raccogliere costa, e chi è a zero monete **non perde niente**: il
+     campo resta pronto e aspetta il primo esercizio fatto. È la stessa
+     idea della spazzola gratis in `dati/bisogni.js` — non si resta mai
+     chiusi fuori da quello che è già proprio.
+
+     Il granaio pieno si comporta allo stesso modo, e per lo stesso
+     motivo: non si raccoglie, non si paga, il grano resta nel campo. */
+  raccogli(cosa, ora = Date.now()) {
+    const s = this.statoCampo(cosa, ora)
+    if (!s) return { ok: false, motivo: 'non-e-un-campo' }
+    if (s.vuoto) return { ok: false, motivo: 'niente-da-raccogliere' }
+    if (!s.pronto) return { ok: false, motivo: 'non-e-pronto', manca: s.manca }
+    const c = s.coltura
+    if (this.quantoCiSta(c.da) < c.resa)
+      return { ok: false, motivo: 'granaio-pieno', prodotto: c.da, quanto: c.resa }
+    if (this.borsa.quante() < c.raccolta)
+      return { ok: false, motivo: 'poche-monete', costo: c.raccolta }
+    if (c.raccolta) this.borsa.paga(c.raccolta)
+    this.metti(c.da, c.resa)
+    delete cosa.coltura
+    delete cosa.seminato
+    return { ok: true, costo: c.raccolta, prodotto: c.da, quanto: c.resa }
+  }
+
+  /* ═══════════ le macchine ═══════════
+     Stesso orologio dei campi, mestiere diverso: prende roba dal granaio
+     e dopo un po' ne rende un'altra. `lavoro` è `{ ricetta, da }` e sta
+     dentro la cosa, così un mulino spostato si porta dietro quello che
+     stava macinando.
+
+     La roba si prende **al momento di avviare**, non a lavoro finito: se
+     no si potrebbe far partire dieci volte lo stesso mulino con lo stesso
+     grano, e il granaio sarebbe una promessa invece di una scorta. */
+  statoMacchina(cosa, ora = Date.now()) {
+    const quale = macchinaDi(cosa)
+    if (!quale) return null
+    const l = cosa.lavoro
+    const r = l && PER_RICETTA[l.ricetta]
+    if (!r) return { macchina: quale, ferma: true, ricetta: null, quanto: 0, pronto: false }
+    const quanto = quantoCresciuto(l.da, r.minuti, ora)
+    return {
+      macchina: quale, ferma: false, ricetta: r, quanto, pronto: quanto >= 1,
+      manca: minutiCheMancano(l.da, r.minuti, ora),
+    }
+  }
+
+  /* Cosa manca per fare questa ricetta, e quanto. Serve a chi mostra il
+     pannello: un tasto spento senza il perché è un tasto rotto, e il
+     perché qui è sempre un numero («ti serve un grano in più»). */
+  cheMancaPer(ricettaId) {
+    const r = PER_RICETTA[ricettaId]
+    if (!r) return null
+    const manca = []
+    for (const [k, n] of Object.entries(r.prende))
+      if (this.quantoHo(k) < n) manca.push({ prodotto: k, quanti: n - this.quantoHo(k) })
+    return { manca, monete: Math.max(0, r.costo - this.borsa.quante()) }
+  }
+
+  avvia(cosa, ricettaId, ora = Date.now()) {
+    const s = this.statoMacchina(cosa, ora)
+    if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
+    if (!s.ferma) return { ok: false, motivo: 'sta-lavorando' }
+    const r = PER_RICETTA[ricettaId]
+    if (!r || r.dove !== s.macchina) return { ok: false, motivo: 'non-esiste' }
+    const che = this.cheMancaPer(ricettaId)
+    if (che.manca.length) return { ok: false, motivo: 'manca-roba', manca: che.manca }
+    if (this.borsa.quante() < r.costo)
+      return { ok: false, motivo: 'poche-monete', costo: r.costo }
+    /* Prima la roba, poi le monete, poi si parte: se una delle due
+       mancasse a metà si resterebbe con il granaio scucito e niente in
+       macchina. I controlli qui sopra lo escludono, e l'ordine è la
+       cintura di sicurezza. */
+    for (const [k, n] of Object.entries(r.prende)) this.togli(k, n)
+    if (r.costo) this.borsa.paga(r.costo)
+    cosa.lavoro = { ricetta: r.id, da: ora }
+    return { ok: true, costo: r.costo, ricetta: r }
+  }
+
+  /* Ritirare è gratis: si è già pagato avviando. E come il campo, quello
+     che è pronto **aspetta** — una macchina finita non butta via niente
+     se nessuno passa a prenderlo. */
+  ritira(cosa, ora = Date.now()) {
+    const s = this.statoMacchina(cosa, ora)
+    if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
+    if (s.ferma) return { ok: false, motivo: 'non-sta-lavorando' }
+    if (!s.pronto) return { ok: false, motivo: 'non-e-pronto', manca: s.manca }
+    const r = s.ricetta
+    if (this.quantoCiSta(r.da) < r.resa)
+      return { ok: false, motivo: 'granaio-pieno', prodotto: r.da, quanto: r.resa }
+    this.metti(r.da, r.resa)
+    delete cosa.lavoro
+    return { ok: true, costo: 0, prodotto: r.da, quanto: r.resa }
+  }
+
+  /* ═══════════ quello che la scena deve sapere ═══════════
+     Chi disegna non conosce il grano e non deve conoscerlo: chiede
+     **cosa si vede sopra questa cosa, adesso**, e riceve un nome di
+     tessera e un fumetto da mettere in testa quando c'è qualcosa da
+     fare. È la stessa divisione dei prezzi — la tela legge
+     `prezzoDellaProssima` e non sa come si rincara.
+
+     `sopra` si ripete su ogni cella del piede: quattro germogli su un
+     campo 2×2 sono un campo che cresce, uno solo in mezzo è un ciuffo. */
+  aspettoDellaCosa(cosa, ora = Date.now()) {
+    const c = this.statoCampo(cosa, ora)
+    if (c) {
+      if (c.vuoto) return null
+      /* `alto`: uno stadio non è più una tesserina sull'aiuola, è il
+         campo intero, e il mais maturo è due volte più alto del suo
+         piede. Chi disegna deve saperlo, perché una cosa alta va
+         ordinata come un oggetto — chi le passa dietro ci finisce
+         dietro — mentre l'aiuola sotto resta terreno. */
+      return { sopra: c.stadio, alto: true, fumetto: c.pronto ? '🧺' : null }
+    }
+    const m = this.statoMacchina(cosa, ora)
+    if (!m) return null
+    /* Una macchina coi ritratti — cioè un recinto — non si mette
+       qualcosa *sopra*: **cambia disegno**. È l'unico modo di far dire a
+       una cosa in che stato è senza aprirla, e quello che si legge da
+       lontano è la faccia dell'animale, non un'icona che gli galleggia
+       in testa. Il fumetto resta solo per il pronto, che è l'unico stato
+       in cui c'è da fare qualcosa. */
+    const stati = statiDi(cosa)
+    if (stati) return { invece: stati[this.posaDelRecinto(m)],
+                        fumetto: m.pronto ? '🧺' : null }
+    if (!m.ferma) return { sopra: null, fumetto: m.pronto ? '🧺' : '⏳' }
+    return null
+  }
+
+  /* Quale dei sei ritratti, dato lo stato della macchina. Le soglie
+     stanno qui e non nel catalogo perché sono una lettura
+     dell'orologio, e il catalogo l'orologio non ce l'ha; i nomi degli
+     stati invece stanno là, insieme ai pezzi che esistono davvero.
+
+     Ferma vuol dire **ha fame**, non «è tranquilla»: un recinto che non
+     sta lavorando è un recinto che aspetta da mangiare, ed è esattamente
+     quello che si vuole far vedere. Il `calmo` resta il ritratto del
+     baule, dove non c'è nessuno stato da raccontare. */
+  posaDelRecinto(m) {
+    if (m.ferma) return 'fame'
+    if (m.pronto) return 'pronto'
+    if (m.quanto < 0.34) return 'mangia'
+    if (m.quanto < 0.7) return 'felice'
+    return 'dorme'
+  }
+
   /* ═══════════ il magazzino ═══════════ */
   quantiNe(id) { return this.magazzino[id] || 0 }
 
   mettiVia(cosa) {
     const i = this.cose.indexOf(cosa)
     if (i < 0) return { ok: false, motivo: 'non-in-mappa' }
+    /* Un campo seminato e una macchina al lavoro non si mettono via: nel
+       baule non c'è posto per un grano a metà crescita, e metterli via
+       vorrebbe dire buttare quello che si sta aspettando. Niente si
+       perde — nemmeno per distrazione — quindi si dice no e si aspetta. */
+    if (cosa.coltura) return { ok: false, motivo: 'campo-seminato' }
+    if (cosa.lavoro) return { ok: false, motivo: 'sta-lavorando' }
     this.cose.splice(i, 1)
     this.magazzino[cosa.id] = this.quantiNe(cosa.id) + 1
     return { ok: true, id: cosa.id }

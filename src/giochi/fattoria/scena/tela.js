@@ -376,13 +376,40 @@ export class Tela {
       if (!o) continue
       scena.push({ nome: o.pezzo, x, y, piede: o.piede, fondo: y + o.piede[1] })
     }
+    /* I fumetti si mettono da parte e si disegnano alla fine, sopra
+       tutto: un campo è terreno (`fondo: -1`, disegnato per primo) e il
+       suo cestino finirebbe dietro la prima casa vicina. Un avviso
+       coperto è un avviso che non c'è. */
+    const fumetti = []
     for (const c of fattoria.cose) {
       if (quadro.preso && quadro.preso.da === c) continue   // è in mano, non per terra
       const v = PER_ID[c.id]; if (!v) continue
       let nome = pezzoDi(c, v)
       const piede = piedeDi(c, v)
       if (v.anima) nome = v.anima[((quadro.orologio * 4) | 0) % v.anima.length]
-      scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, fondo: v.sotto ? -1 : c.y + piede[1] })
+      /* Cosa c'è sopra questa cosa adesso — un germoglio, un mucchio di
+         grano pronto — lo dice il mondo, non questa classe: qui si
+         disegna il nome che arriva, come per le tessere del terreno.
+         Un mondo che non sa rispondere (un finto oggetto in un test) non
+         rompe niente: si salta. */
+      const a = fattoria.aspettoDellaCosa ? fattoria.aspettoDellaCosa(c) : null
+      /* `invece`: certe cose non si vestono, **cambiano faccia**. Un
+         recinto ha sei disegni e quello giusto dipende da che ora è, che
+         è una cosa che sa il mondo e non questa classe — qui si legge il
+         nome che arriva, come per tutto il resto. */
+      if (a && a.invece) nome = a.invece
+      scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, sopra: a,
+                   fondo: v.sotto ? -1 : c.y + piede[1] })
+      /* Una coltura alta non è terreno. L'aiuola sotto sì — ci si
+         cammina sopra, e sta a `fondo: -1` col resto del terreno — ma il
+         mais che ci cresce è alto il doppio del suo piede, e disegnato
+         insieme all'aiuola finirebbe **sotto i piedi** di chiunque passi
+         di lì. Va quindi in scena per conto suo, ordinato dov'è ordinato
+         un oggetto: chi passa davanti al campo copre il grano, chi passa
+         dietro ci sparisce dentro. */
+      if (a && a.sopra && a.alto)
+        scena.push({ nome: a.sopra, x: c.x, y: c.y, piede, fondo: c.y + piede[1] })
+      if (a && a.fumetto) fumetti.push({ x: c.x, y: c.y, piede, testo: a.fumetto })
     }
     for (const a of quadro.attori || []) scena.push({ attore: a, fondo: a.corpo.y + 1 })
     scena.sort((a, b) => a.fondo - b.fondo)
@@ -394,6 +421,10 @@ export class Tela {
         continue
       }
       this.posa(e.nome, e.x, e.y, e.piede)
+      /* quello che cresce si disegna qui solo se è basso: se è alto ha
+         una riga sua in scena, ed è già passato o deve ancora passare */
+      if (e.sopra && e.sopra.sopra && !e.sopra.alto)
+        this.posa(e.sopra.sopra, e.x, e.y, e.piede)
       if (e.cosa && e.cosa === quadro.scelto)
         this.schiarisci(e.nome, e.x, e.y, e.piede, quadro.orologio)
     }
@@ -402,7 +433,30 @@ export class Tela {
     this.disegnaPennello(quadro.pennello)
     this.disegnaNebbia(fattoria)
     this.cartelli(fattoria, quadro.orologio)
+    for (const f of fumetti) this.fumetto(f, quadro.orologio)
     this.disegnaAnello(quadro.anello)
+  }
+
+  /* «Qui c'è qualcosa da fare», sopra un campo maturo o una macchina che
+     ha finito. Stessa idea del 💭 sopra una bestia che ha fame
+     (`Attore.fumetto`): un invito che si vede da lontano, senza aprire
+     niente e senza rimproverare nessuno. Galleggia piano, perché una
+     cosa che si muove appena si trova con la coda dell'occhio mentre si
+     sta guardando altro — che è esattamente quando serve. */
+  fumetto(f, orologio) {
+    const ctx = this.ctx
+    const su = Math.sin(orologio * 3 + f.x * .7) * 2
+    const x = (f.x + f.piede[0] / 2) * this.cellaPx - this.vista.x
+    const y = f.y * this.cellaPx - this.vista.y - 6 + su
+    if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) return
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.font = `${Math.round(13 + this.scala * 3)}px system-ui,sans-serif`
+    ctx.shadowColor = 'rgba(0,0,0,.55)'
+    ctx.shadowBlur = 4
+    ctx.fillText(f.testo, x, y)
+    ctx.restore()
+    ctx.textAlign = 'left'
   }
 
   pezzo(nome, sx, sy, alfa) {

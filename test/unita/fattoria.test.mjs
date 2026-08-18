@@ -258,7 +258,8 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   /* un bambino che ha comprato tanta terra, sgombrato tanto bosco e
      sistemato tante cose, ben oltre l'ultima soglia di ogni traguardo */
   const pieno = {
-    totals: { fattoriaTerre: 40, fattoriaSgomberi: 60, fattoriaPosati: 130 },
+    totals: { fattoriaTerre: 40, fattoriaSgomberi: 60, fattoriaPosati: 130,
+              fattoriaRaccolti: 50, fattoriaRitiri: 20 },
     best: { fattoriaVarieta: 40 },
     items: {}, campagne: {},
   }

@@ -72,6 +72,10 @@ export default {
                          chi si sposta, quello è già suo
        fattoriaVarieta   (primato) quanti tipi diversi si sono posseduti
                          insieme, fra mappa e magazzino — `tipiPosseduti`
+       fattoriaRaccolti  campi raccolti, in tutto. Non si conta la
+                         semina: chi semina raccoglie, e sarebbe lo
+                         stesso numero contato due volte
+       fattoriaRitiri    volte che si è ritirato qualcosa dal mulino
 
      Non c'è un contatore per gli animali: nel catalogo di oggi
      (`dati/catalogo.js`) non ce ne sono — solo terreno, recinti, case e
@@ -84,9 +88,13 @@ export default {
        bonus grosso da campagna finita — qui non ce n'è una — quindi
        un'azione vale un punto, non trenta. */
     xp: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
-             + Math.floor(m.tot('fattoriaPosati') / 2) + m.best('fattoriaVarieta'),
+             + Math.floor(m.tot('fattoriaPosati') / 2) + m.best('fattoriaVarieta')
+             /* un raccolto vale mezzo punto: è il gesto che si ripete più
+                di tutti, e a punto pieno la fattoria diventerebbe il modo
+                più svelto di salire di livello senza fare un esercizio */
+             + Math.floor(m.tot('fattoriaRaccolti') / 2) + m.tot('fattoriaRitiri'),
     provato: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
-                  + m.tot('fattoriaPosati') > 0,
+                  + m.tot('fattoriaPosati') + m.tot('fattoriaRaccolti') > 0,
 
     traguardi: [
       { id: 'fattoria-terre', emoji: '🌱', nome: 'Il prato cresce',
@@ -103,6 +111,13 @@ export default {
       { id: 'fattoria-varieta', emoji: '🎨', nome: 'Un po\' di tutto',
         come: n => `Colleziona ${n} cose diverse`,
         soglie: [8, 20, 32], valore: m => m.best('fattoriaVarieta') },
+      /* Le soglie sono basse perché un raccolto costa **tempo vero**: il
+         grano ci mette dieci minuti, e chiederne cento vorrebbe dire
+         chiedere sedici ore di attesa, cioè un traguardo che si prende
+         per anzianità e non per aver giocato. */
+      { id: 'fattoria-raccolti', emoji: '🌾', nome: 'Buon raccolto',
+        come: n => `Raccogli ${n} campi`,
+        soglie: [3, 12, 40], valore: m => m.tot('fattoriaRaccolti') },
     ],
   },
 }

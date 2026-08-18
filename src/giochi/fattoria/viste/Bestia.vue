@@ -31,12 +31,35 @@ const props = defineProps({
   nome: { type: String, default: '' },
   stato: { type: Object, required: true },     // { pancia, pelo, gioco }
   monete: { type: Number, default: 0 },
+  granaio: { type: Object, default: () => ({}) },  // per i cibi che si producono
 })
 const emit = defineEmits(['nutri', 'coccola', 'rinomina', 'chiudi'])
 
 const pieno = k => (props.stato[k] ?? 0) > 0.93
-const suoi = computed(() => cibiPer(famigliaDi(props.chi)))
+/* Nella riga «gli piace…» stanno solo i cibi **suoi**: il mangime del
+   mulino va bene per tutti, e infilarlo lì allungherebbe la frase senza
+   dire niente su questa bestia — che è l'unica cosa che quella riga
+   serve a dire. */
+const suoi = computed(() => cibiPer(famigliaDi(props.chi)).filter(c => !c.da))
 const gliPiace = cibo => gradisce(cibo, famigliaDi(props.chi))
+
+/* Un cibo si paga in monete **o** si scala dal granaio (`dati/bisogni.js`),
+   e la ciotola mostra la cosa giusta per ognuno dei due: un prezzo per
+   quello che si compra, la scorta per quello che si è prodotto. Mostrare
+   «🪙0» sul mangime lo farebbe sembrare gratis, che è la metà della
+   verità — è costato un campo e un quarto d'ora. */
+const quantiNe = prodotto => props.granaio[prodotto] || 0
+const quanti = cibo => (cibo.da ? quantiNe(cibo.da) : 0)
+const puoDarlo = cibo => gliPiace(cibo) && !pieno('pancia') &&
+  (cibo.da ? quanti(cibo) > 0 : cibo.prezzo <= props.monete)
+
+/* Una coccola si paga come un cibo — monete **o** roba del granaio — e
+   la copertina di lana è la prima delle seconde. Un tasto spento perché
+   non hai lana non deve somigliare a uno spento perché il pelo è già a
+   posto: il primo mostra `×0`, il secondo mostra il suo prezzo di
+   sempre e si riaccende da solo col tempo. */
+const puoFarla = g => !pieno(g.bisogno) &&
+  (g.da ? quantiNe(g.da) > 0 : (g.prezzo || 0) <= props.monete)
 </script>
 
 <template>
@@ -60,21 +83,25 @@ const gliPiace = cibo => gradisce(cibo, famigliaDi(props.chi))
     <div class="fa-nomi">
       <button v-for="c in CIBI" :key="c.id"
               :class="['fa-cibo', { suo: gliPiace(c), altrui: !gliPiace(c) }]"
-              :disabled="!gliPiace(c) || pieno('pancia') || c.prezzo > monete"
+              :disabled="!puoDarlo(c)"
               @click="emit('nutri', c)">
         <b>{{ c.emoji }}</b>
         <span>{{ c.nome }}</span>
-        <em>{{ gliPiace(c) ? '🪙' + c.prezzo : 'no' }}</em>
+        <em v-if="!gliPiace(c)">no</em>
+        <em v-else-if="c.da">×{{ quanti(c) }}</em>
+        <em v-else>🪙{{ c.prezzo }}</em>
       </button>
     </div>
 
-    <!-- giocare costa una monetina, spazzolare no: il prezzo si vede
-         prima di premere, come sulla ciotola -->
+    <!-- giocare costa una monetina, spazzolare no, la copertina costa
+         lana: il prezzo si vede prima di premere, come sulla ciotola, e
+         di ognuno si mostra la sua moneta — quella vera o la scorta -->
     <div class="fa-fila" style="margin-bottom:12px">
       <button v-for="g in COCCOLE" :key="g.id" class="fa-bot"
-              :disabled="pieno(g.bisogno) || g.prezzo > monete"
+              :disabled="!puoFarla(g)"
               @click="emit('coccola', g)">
-        {{ g.emoji }} {{ g.nome }}{{ g.prezzo ? ` · 🪙${g.prezzo}` : '' }}</button>
+        {{ g.emoji }} {{ g.nome }}<template v-if="g.da"> · ×{{ quantiNe(g.da) }}</template
+        ><template v-else-if="g.prezzo"> · 🪙{{ g.prezzo }}</template></button>
     </div>
 
     <div class="fa-fila">

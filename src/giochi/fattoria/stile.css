@@ -64,19 +64,60 @@
 .fa-bot.piano { background: #2b4430 }
 .fa-bot:disabled { opacity: .4; cursor: default }
 
-/* ── la roba ─────────────────────────────────────────────────────── */
-/* Vanno **a capo**, non in una fila che scorre. Con lo scorrimento
-   orizzontale le categorie oltre la terza finivano fuori dal foglio e
-   non si sapeva nemmeno che ci fossero: una fila che scorre di lato non
-   dice quanto è lunga. A capo si vedono tutte in un colpo. */
-.fa-schede { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 8px;
-  justify-content: center }
-.fa-scheda { flex: 0 0 auto; padding: 5px 10px; border-radius: 14px; font-size: 13px;
-  background: #0d160f; border: 2px solid #2b4430; color: inherit; cursor: pointer }
-.fa-scheda.viva { background: #3d5c42; border-color: #6f9b6f }
+/* ── il baule ────────────────────────────────────────────────────── */
+/* È una modale come le altre ma più larga: dentro ci sta uno scaffale di
+   duecento cose, e a 360 px ne entrano tre per riga. La larghezza è
+   l'unica cosa che si porta via da `.fa-foglio` — bordo, fondo e ombra
+   restano quelli di tutti gli altri pannelli, se no diventa un'altra
+   schermata invece dello stesso foglio più grande. */
+.fa-baule { width: min(520px, 96vw); padding: 12px 12px 10px }
+/* Il granaio è più stretto del baule ma più largo di un foglio normale:
+   undici prodotti a tre per riga fanno quattro righe che scorrono, a
+   quattro ne fanno tre che si vedono tutte. */
+.fa-granaio { width: min(430px, 94vw); padding: 14px 12px 12px }
 
-.fa-griglia { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-  margin-bottom: 12px; max-height: 46vh; overflow-y: auto; touch-action: pan-y }
+/* Le linguette sono una **griglia a colonne uguali**, non una fila di
+   pillole centrate. Due difetti diversi, e il secondo è quello che si
+   sentiva senza saperlo dire.
+
+   Il primo, vecchio: con lo scorrimento orizzontale le categorie oltre
+   la terza finivano fuori dal foglio e non si sapeva nemmeno che ci
+   fossero — una fila che scorre di lato non dice quanto è lunga. Va a
+   capo da allora, e resta così.
+
+   Il secondo: andando a capo *centrate*, ogni riga era larga quanto le
+   parole che ci capitavano, e le undici pillole formavano tre righe di
+   lunghezze diverse, ognuna sfalsata rispetto a quella sopra. Nessuna
+   era storta presa da sola; insieme erano un mucchio. A colonne uguali
+   diventano una tastiera — si contano con l'occhio, e il dito impara
+   dove sta una cosa invece di rileggerla ogni volta. */
+.fa-schede { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px }
+.fa-scheda { display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px 4px; border-radius: 11px; font-size: 11px; line-height: 1;
+  background: #0d160f; border: 1px solid #2b4430; color: #b9cfb7; cursor: pointer;
+  /* i nomi lunghi non allargano la cella né vanno a capo: la griglia
+     resta di colonne uguali, che è tutto il punto */
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis }
+.fa-scheda b { font-size: 14px; line-height: 1 }
+.fa-scheda.viva { background: #3d5c42; border-color: #9fd3a8; color: #fff }
+.fa-scheda:active { transform: scale(.95) }
+
+/* La riga che dice cosa c'è sotto: piccola e spenta, perché si legge una
+   volta e poi si guardano le figure.
+
+   Il selettore è doppio apposta. `.fa-foglio p` vale (0,1,1) e batterebbe
+   una classe sola, quindi margine e corpo tornerebbero quelli dei
+   paragrafi normali senza che niente sembri rotto: si vede solo che il
+   pannello è più spaziato del disegno. È lo stesso motivo per cui il file
+   comincia dicendo di non scrivere regole sugli elementi. */
+.fa-baule .fa-dice { margin: 7px 2px 8px; font-size: 12px; line-height: 1.3;
+  color: #a8bfa8; text-align: center; opacity: 1 }
+.fa-baule .fa-dice b { color: #d8e4d6 }
+
+.fa-scaffale { display: grid; gap: 8px; margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  max-height: 52vh; overflow-y: auto; overscroll-behavior: contain;
+  touch-action: pan-y; padding: 2px }
 
 /* `touch-action: none` sulla CARTA e non sul contenitore. Senza, il
    browser legge il trascinamento come uno scorrimento della lista e
@@ -84,15 +125,55 @@
    fuori, e solo col dito — col mouse sembrava tutto a posto. Così invece
    il dito che parte da una carta è nostro, e la lista si scorre lo stesso
    partendo da uno spazio vuoto. */
-.fa-voce { flex: 0 0 auto; width: 76px; border-radius: 12px; background: #0d160fcc;
-  border: 2px solid #2b4430; padding: 5px 3px 4px; text-align: center;
-  cursor: grab; touch-action: none; display: flex; flex-direction: column; gap: 2px }
+.fa-voce { position: relative; border-radius: 12px; background: #0d160fcc;
+  border: 2px solid #2b4430; padding: 4px 3px 5px; text-align: center;
+  cursor: grab; touch-action: none; display: flex; flex-direction: column;
+  align-items: center; gap: 2px }
+.fa-voce:active { transform: scale(.95) }
 .fa-voce.tua { border-color: #6f9b6f; background: #1b3220cc }
-.fa-voce.cara { opacity: .42 }
+/* Non si spegne più del necessario: quello che costa troppo si deve
+   comunque poter guardare — è la cosa per cui si torna a fare esercizi. */
+.fa-voce.cara { opacity: .62 }
 .fa-voce.presa { border-color: #6f9b6f; opacity: .55 }
-.fa-nome { font-size: 10px; line-height: 1.15; opacity: .85 }
+/* Le cose che **lavorano** (il campo, le macchine, il silo) hanno un
+   filo d'oro: sono le uniche che, oltre a starsene lì, si toccano e
+   fanno qualcosa, e a scaffale non c'era modo di distinguerle da un
+   mobile. */
+.fa-voce.lavora { border-color: #8a7333 }
+.fa-voce.lavora.tua { border-color: #c9a227 }
+
+/* Il ripiano: la figura ci sta sopra invece di galleggiare in un
+   rettangolo vuoto. Il tondo sfumato in basso è l'ombra che nella scena
+   vera ce l'hanno tutti, e serve a far leggere «questa cosa poggia» — a
+   costo zero, perché non è un'immagine ma un gradiente. */
+.fa-ripiano { position: relative; display: grid; place-items: end center;
+  width: 100%; height: 54px; border-radius: 9px;
+  background: radial-gradient(60% 34% at 50% 92%, #2e4a33 0%, #2e4a3300 70%),
+              linear-gradient(#12200f00, #12200f88) }
+/* Un ripiano più alto per chi è alto e stretto: uno sprite 16×32 in un
+   riquadro da 54 si può ingrandire solo di ×1 (di mezzo pixel la pixel
+   art si sfrangia), e resta grande la metà di tutto il resto. */
+.fa-ripiano.alto { height: 68px }
+
+.fa-nome { font-size: 10px; line-height: 1.15; color: #d8e4d6;
+  /* due righe sempre, anche quando il nome ne occupa una: così i prezzi
+     di una fila sono tutti sulla stessa altezza. Senza, «Casa» e «Casa
+     sull'albero» sfalsano la riga di sotto, e una griglia di prezzi che
+     ballano si legge peggio di una un po' più alta. */
+  min-height: 2.3em; display: flex; align-items: center }
 .fa-prezzo { font-size: 11px; font-weight: 700; color: #ffd98a }
 .fa-prezzo.tuo { color: #a7dba7 }
+/* Quanto manca, e non un tasto spento senza perché: è la regola di tutto
+   il resto del gioco, e qui quel numero è quello che rimanda a fare
+   esercizi. Piccolo, perché è una risposta e non un rimprovero. */
+.fa-prezzo.manca { font-size: 9.5px; font-weight: 600; color: #c9a98a }
+
+/* La strisciolina sotto un prodotto del granaio: quanto ce n'è rispetto
+   a quanto ce ne sta. Il tetto è un numero che si legge tardi, quando il
+   campo non si raccoglie; così si vede prima. */
+.fa-quanto { display: block; width: 80%; height: 4px; border-radius: 3px;
+  background: #0d160f; border: 1px solid #2b4430; overflow: hidden }
+.fa-quanto i { display: block; height: 100%; background: #6f9b6f }
 
 .fa-provino { display: block; margin: 0 auto; image-rendering: pixelated }
 
@@ -132,6 +213,16 @@
    spento: la differenza dev'essere di colpo d'occhio, non da leggere. */
 .fa-cibo.suo { border-color: #9fd3a8 }
 .fa-cibo.altrui em { color: #d59a9a }
+
+/* ── i campi e il granaio ────────────────────────────────────────── */
+/* La riga che spiega, sotto quella che dice. Più piccola e più spenta di
+   proposito: se avesse lo stesso peso del resto, un bambino leggerebbe
+   prima la spiegazione del prezzo che il prezzo. */
+.fa-piccolo { font-size: 12px; color: #8fa691; line-height: 1.4; margin: 6px 0 0 }
+/* Un prodotto del granaio è un'emoji grande al posto del provino: non c'è
+   una tessera dell'atlante per il grano sciolto — quella disegna il campo,
+   non il sacco — e un riquadro vuoto sarebbe peggio di un'emoji. */
+.fa-frutto { font-size: 26px; line-height: 1.1 }
 
 .fa-minuto { display: block; margin: 10px auto 0; padding: 4px 10px; border: none;
   background: none; color: #8fa691; font: inherit; font-size: 12px;

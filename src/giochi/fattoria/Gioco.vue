@@ -25,14 +25,18 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, aspettoDi,
+         varianteAccesa } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
-import { PER_ID, piedeDi, pezzoDi, puoGirare } from './dati/catalogo.js'
+import { PER_ID, piedeDi, pezzoDi, puoGirare, eCampo, eSilo, macchinaDi,
+         statiDi } from './dati/catalogo.js'
 import { animale, siDisegna } from './dati/animali.js'
+import { BISOGNI, CHIAVI } from './dati/bisogni.js'
+import { PRODOTTI, ricetteDi, CHIAVE_VARIANTE } from './dati/coltivazioni.js'
 import { pezzoAttore } from './dati/atlante.js'
 import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 
@@ -40,6 +44,9 @@ import Roba from './viste/Roba.vue'
 import Attrezzi from './viste/Attrezzi.vue'
 import Battesimo from './viste/Battesimo.vue'
 import Bestia from './viste/Bestia.vue'
+import Campo from './viste/Campo.vue'
+import Granaio from './viste/Granaio.vue'
+import Macchina from './viste/Macchina.vue'
 import Provino from './viste/Provino.vue'
 import './stile.css'
 
@@ -56,6 +63,10 @@ const ATTESA = 420
 /* ═══════════ lo stato ═══════════ */
 const tela = ref(null)
 const monete = computed(() => state.profile.coins || 0)
+/* Metà di questo posto si può spegnere dalla pagina dei grandi, ed è una
+   variante e non un gioco: la carta della fattoria resta in home. Spenta,
+   un campo torna il disegno che era — vedi `dati/coltivazioni.js`. */
+const coltivazione = computed(() => varianteAccesa(CHIAVE_VARIANTE))
 const avviso = ref('')
 const pannello = ref(null)          // 'roba' | { tipo: 'piazzola'|'ostacolo', … }
 const scelto = shallowRef(null)     // la cosa o l'attore selezionato
@@ -71,7 +82,7 @@ let mondo = null                    // la Fattoria (motore)
 let scena = null                    // la Tela (disegno)
 let attori = []
 let bambino = null
-let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0
+let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0
 
 /* La borsa che il motore usa: il salvadanaio vero. `paga(-n)` incassa —
    sgombrare il bosco rende, ed è l'unico modo di guadagnare qui dentro. */
@@ -151,7 +162,28 @@ function metti_in_scena_le_bestie() {
        manca perché «l'ho messo nel recinto» resti vero domani. */
     const dove = mondo.dovEra(b.chi)
     attori.push(new Attore(b.chi, new Camminatore(dove.x, dove.y, { velocita: 2.4, vaga: 2.4 }),
-      { chi: b.nome || nomeDi(b.chi) }))
+      { chi: b.nome || nomeDi(b.chi), bisogni: [] }))
+  }
+  aggiornaIBisogni()
+}
+
+/* ── LE BARRETTE SOPRA LA TESTA, CHE C'ERANO E NON SI VEDEVANO ──────
+   `Attore` sa disegnare le barrette dei bisogni e il 💭 di chi ha fame
+   da quando esistono i bisogni (`scena/tela.js`), ma `bisogni` è un
+   campo facoltativo e **nessuno lo riempiva**: il codice c'era, girava,
+   e non mostrava niente. Da fuori è indistinguibile da una cosa mai
+   fatta — un cane che ha fame e non lo dice, e te ne accorgi solo se lo
+   apri.
+
+   Si aggiorna ogni tanto e non a ogni fotogramma: un bisogno cala nel
+   giro delle ore, e rifare il conto sessanta volte al secondo sarebbe
+   sessanta volte lo stesso numero. */
+function aggiornaIBisogni() {
+  for (const a of attori) {
+    if (a === bambino) continue
+    const b = mondo.stato(a.nome)
+    if (!b) continue
+    a.bisogni = CHIAVI.map(k => ({ colore: BISOGNI[k].colore, valore: b[k] ?? 1 }))
   }
 }
 
@@ -191,6 +223,8 @@ function passo(ora) {
   orologio += dt
   for (const a of attori) { if (a !== scelto.value) a.corpo.muovi(dt, dovePasso) }
   if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra() }
+  bisogniFra -= dt
+  if (bisogniFra <= 0) { bisogniFra = 3; aggiornaIBisogni() }
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
     orologio, pennello: anteprimaPennello(),
@@ -505,7 +539,16 @@ function lascia(e) {
      il tastino «mettila via». Adesso i due gesti sono separati: tocchi
      per scegliere, tieni premuto per spostare. */
   const cosa = mondo.cosaSotto(c.x, c.y)
-  if (cosa && mondo.cellaMia(c.x, c.y)) { scelto.value = cosa; return }
+  if (cosa && mondo.cellaMia(c.x, c.y)) {
+    scelto.value = cosa
+    /* Un campo e un mulino si toccano come si tocca un cane: il tocco
+       apre la loro scheda, e da lì si semina o si macina. Gli attrezzi
+       («giralo», «mettilo via») restano dietro al foglio e tornano
+       quando lo si chiude — sono la cosa che si fa una volta, non quella
+       che si fa ogni volta. */
+    apriLavoro(cosa)
+    return
+  }
   if (scelto.value) { scelto.value = null; return }
 
   const o = mondo.ostacoloSotto(c.x, c.y)
@@ -661,10 +704,130 @@ function attrezzo(chiave) {
     else salva()
   }
   if (chiave === 'via') {
-    mondo.mettiVia(s)
+    /* Adesso può dire no: un campo seminato e un mulino al lavoro non si
+       mettono via, perché nel baule non c'è posto per un grano a metà
+       crescita. Prima non c'era niente da rifiutare e il valore di
+       ritorno si buttava — ora buttarlo vorrebbe dire un tasto che non fa
+       niente senza spiegare perché. */
+    const r = mondo.mettiVia(s)
+    if (!r.ok) return avvisa(r.motivo === 'campo-seminato'
+      ? 'Nel campo c\'è qualcosa che sta crescendo: raccoglilo prima.'
+      : 'Il mulino sta lavorando: ritira quello che ha fatto, prima.')
     scelto.value = null
     salva()
   }
+}
+
+/* ═══════════ i campi e le macchine ═══════════
+   Il tocco su una cosa che *lavora* apre la sua scheda. Chi non lavora —
+   una panchina, una casa — non apre niente e resta solo selezionato, come
+   ha sempre fatto.
+
+   A variante spenta non si apre niente: un campo torna il disegno che
+   era, e questa è l'unica riga che se ne accorge. */
+function apriLavoro(cosa) {
+  if (!coltivazione.value) return
+  if (eCampo(cosa)) return apriCampo(cosa)
+  if (macchinaDi(cosa)) return apriMacchina(cosa)
+  /* Il silo non lavora — non trasforma niente — ma **contiene**: è la
+     cosa che tiene il raccolto, e toccarla è il modo di guardarci
+     dentro. Era una linguetta del baule, in mezzo alle cose da
+     comprare; il perché del cambio sta in `viste/Granaio.vue`. */
+  if (eSilo(cosa)) return apriGranaio()
+}
+
+function apriGranaio() {
+  pannello.value = { tipo: 'granaio', granaio: mondo.granaio,
+                     capienza: mondo.capienzaDelGranaio,
+                     silos: mondo.quantiSilos }
+}
+
+/* Lo stato si rilegge **a ogni apertura** e non si tiene da parte: è un
+   conto sull'orologio vero (`statoCampo`), e uno tenuto in mano da ieri
+   direbbe che manca ancora mezz'ora a un grano già pronto. */
+function apriCampo(cosa) {
+  const stato = mondo.statoCampo(cosa)
+  if (!stato) return
+  pannello.value = { tipo: 'campo', cosa, stato,
+                     ciSta: stato.coltura ? mondo.quantoCiSta(stato.coltura.da) : 99 }
+}
+
+function semina(coltura) {
+  const { cosa } = pannello.value
+  const r = mondo.seminaCampo(cosa, coltura.id)
+  if (!r.ok) return avvisa(r.motivo === 'poche-monete'
+    ? `Ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} 🪙${r.costo - monete.value} in più.`
+    : 'Qui c\'è già qualcosa.')
+  /* Non si conta la semina: chi semina raccoglie, e due contatori per lo
+     stesso giro darebbero due numeri che dicono la stessa cosa e si
+     scostano solo per i campi ancora in crescita. */
+  pannello.value = null
+  avvisa(`${coltura.emoji} Seminato. Torna fra ${coltura.minuti} minuti.`)
+  salva()
+}
+
+function raccogli() {
+  const { cosa } = pannello.value
+  const r = mondo.raccogli(cosa)
+  if (!r.ok) return avvisa(
+    r.motivo === 'poche-monete' ? `Ti servono 🪙${r.costo - monete.value} in più: il campo ti aspetta.`
+    : r.motivo === 'granaio-pieno' ? 'Il granaio è pieno: serve un silo.'
+    : `Non è ancora pronto: manca ${r.manca} min.`)
+  segna('fattoriaRaccolti')
+  pannello.value = null
+  avvisa(`${PRODOTTI[r.prodotto].emoji} +${r.quanto} nel granaio!` + seNonHaiSilos())
+  salva()
+}
+
+/* Il granaio si guarda toccando un silo (`viste/Granaio.vue`), quindi chi
+   non ne ha uno **non ha ancora nessun modo di vederlo** — e non deve
+   scoprirlo il giorno che un campo non si raccoglie perché è pieno. Si
+   dice qui: nel momento esatto in cui è appena entrata della roba, che è
+   quando la domanda «dove è finita?» viene da sola. Una riga in coda
+   all'avviso e non un cartello suo: un cartello in più a ogni raccolto
+   diventa una cosa da chiudere, non da leggere. */
+function seNonHaiSilos() {
+  return mondo.quantiSilos ? '' : ' Metti un silo per vedere cosa hai.'
+}
+
+/* Le ricette arrivano al pannello **già con quello che manca**: il conto
+   è del motore (`cheMancaPer`), e il foglio lo mostra. Un tasto spento
+   senza il perché è un tasto rotto. */
+function apriMacchina(cosa) {
+  const stato = mondo.statoMacchina(cosa)
+  if (!stato) return
+  pannello.value = {
+    tipo: 'macchina', cosa, stato,
+    /* Il nome viene dal catalogo e non dal pannello: le macchine adesso
+       sono sette, e un foglio che dice «Il mulino» sopra un pollaio è la
+       cosa che fa smettere di fidarsi di quello che c'è scritto. */
+    nome: (PER_ID[cosa.id] || {}).nome || 'La macchina',
+    bestie: !!statiDi(cosa),
+    ricette: ricetteDi(stato.macchina)
+      .map(ricetta => ({ ricetta, ...mondo.cheMancaPer(ricetta.id) })),
+    ciSta: stato.ricetta ? mondo.quantoCiSta(stato.ricetta.da) : 99,
+  }
+}
+
+function avvia(ricetta) {
+  const { cosa } = pannello.value
+  const r = mondo.avvia(cosa, ricetta.id)
+  if (!r.ok) return avvisa(r.motivo === 'poche-monete'
+    ? `Ti servono 🪙${r.costo - monete.value} in più.` : 'Non c\'è abbastanza roba.')
+  pannello.value = null
+  avvisa(`${ricetta.emoji} Il mulino è partito: ${ricetta.minuti} minuti.`)
+  salva()
+}
+
+function ritira() {
+  const { cosa } = pannello.value
+  const r = mondo.ritira(cosa)
+  if (!r.ok) return avvisa(r.motivo === 'granaio-pieno'
+    ? 'Il granaio è pieno: serve un silo.' : `Manca ancora ${r.manca} min.`)
+  segna('fattoriaRitiri')
+  pannello.value = null
+  avvisa(`${PRODOTTI[r.prodotto].emoji} +${r.quanto} nel granaio!` + seNonHaiSilos())
+  salva()
 }
 
 /* ═══════════ i pannelli ═══════════ */
@@ -721,6 +884,10 @@ function nutri(cibo) {
   if (!r.ok) return avvisa(
     r.motivo === 'non-gli-piace' ? `${nome} non mangia ${cibo.nome.toLowerCase()}.`
     : r.motivo === 'non-ha-fame' ? 'Ha la pancia piena.'
+    /* Il mangime non si compra: manca la roba, non le monete, e dirgli
+       «ti servono 0 monete» sarebbe la risposta giusta alla domanda
+       sbagliata. */
+    : r.motivo === 'manca-roba' ? `Non hai ${cibo.nome.toLowerCase()}: passa dal mulino.`
     : `Ti servono ${r.costo - monete.value} monete in più.`)
   salva(); apriBestia(chi)
 }
@@ -728,8 +895,13 @@ function nutri(cibo) {
 function coccola(gesto) {
   const chi = pannello.value.chi
   const r = mondo.coccola(chi, gesto)
-  if (!r.ok) return avvisa(r.motivo === 'poche-monete'
-    ? `Ti serve ${r.costo} moneta: falla giocare dopo qualche esercizio.`
+  if (!r.ok) return avvisa(
+    r.motivo === 'poche-monete'
+      ? `Ti serve ${r.costo} moneta: falla giocare dopo qualche esercizio.`
+    /* La copertina si paga in lana, non in monete: manca la roba, e
+       dirgli «ti servono 0 monete» sarebbe la risposta giusta alla
+       domanda sbagliata. Stessa forma del mangime in `nutri`. */
+    : r.motivo === 'manca-roba' ? 'Non hai lana: tieni delle pecore, o dei conigli.'
     : 'Non ne ha bisogno adesso.')
   salva(); apriBestia(chi)
 }
@@ -787,16 +959,32 @@ function tiraVoce({ voce, x, y }) {
     <div v-if="pannello" class="fa-velo" @click.self="pannello = null">
       <Roba v-if="pannello === 'roba'" class="fa-foglio"
             :monete="monete" :magazzino="mondo.magazzino" :bestie="mondo.bestie"
+            :granaio="mondo.granaio" :capienza="mondo.capienzaDelGranaio"
+            :coltivazione="coltivazione"
             @tira="tiraVoce" @tira-bestia="prendiUnaBestia"
             @chiudi="pannello = null" />
 
       <Bestia v-else-if="pannello.tipo === 'bestia'"
               :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
-              :stato="pannello.stato" :monete="monete"
+              :stato="pannello.stato" :monete="monete" :granaio="mondo.granaio"
               @nutri="nutri" @coccola="coccola"
               @rinomina="pannello = { tipo: 'battesimo', chi: pannello.chi,
                                       che: pannello.che, nome: pannello.nome, prezzo: 0 }"
               @chiudi="pannello = null" />
+
+      <Campo v-else-if="pannello.tipo === 'campo'"
+             :stato="pannello.stato" :monete="monete" :ci-sta="pannello.ciSta"
+             @semina="semina" @raccogli="raccogli" @chiudi="pannello = null" />
+
+      <Granaio v-else-if="pannello.tipo === 'granaio'"
+               :granaio="pannello.granaio" :capienza="pannello.capienza"
+               :silos="pannello.silos" @chiudi="pannello = null" />
+
+      <Macchina v-else-if="pannello.tipo === 'macchina'"
+                :stato="pannello.stato" :ricette="pannello.ricette"
+                :nome="pannello.nome" :bestie="pannello.bestie"
+                :ci-sta="pannello.ciSta"
+                @avvia="avvia" @ritira="ritira" @chiudi="pannello = null" />
 
       <Battesimo v-else-if="pannello.tipo === 'battesimo'"
                  :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome || ''"
