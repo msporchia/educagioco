@@ -116,7 +116,20 @@
   #r-anteprima { margin: 6px 0 4px }
   #r-anteprima canvas { image-rendering: pixelated; border: 1px solid var(--riga); border-radius: 3px }
   #r-anteprima canvas.vivo { display: block; margin: 0 auto 6px }
-  #r-anteprima .fila { display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-end }
+  #r-anteprima .fila { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end }
+  /* un fotogramma con le sue manopole: ‹ › lo spostano nell'ordine, ×
+     lo toglie dal gruppo. Compaiono solo dove l'ordine è un dato che si
+     può cambiare, cioè su una cosa dichiarata. */
+  #r-anteprima .foto { display: flex; flex-direction: column; gap: 2px; align-items: center; cursor: pointer }
+  #r-anteprima .foto.qui canvas { outline: 1px solid var(--acceso) }
+  #r-anteprima .manopole { display: flex; gap: 1px }
+  #r-anteprima .manopole button {
+    padding: 0 4px; font-size: 10px; line-height: 1.4; background: #10131a;
+    color: var(--tenue); border: 1px solid var(--riga); border-radius: 2px; cursor: pointer;
+  }
+  .cosa-nome { display: flex; gap: 6px; align-items: flex-end; margin-top: 8px }
+  .cosa-nome .campo { flex: 1; margin: 0 }
+  .voce.cosa .riga { justify-content: center }
   #r-cancella h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
                    color: var(--tenue); margin: 12px 0 4px }
   .canc { display: flex; justify-content: space-between; align-items: center; gap: 6px;
@@ -176,6 +189,10 @@
     <div class="comandi" id="barra-ritagli" style="display:none">
       <label>foglio <select id="ritagli-foglio"></select></label>
       <label>cerca <input id="ritagli-cerca" type="search" placeholder="nome…" size="10"></label>
+      <span id="ritagli-vista">
+        <button data-vista="pezzi" class="acceso">i pezzi</button>
+        <button data-vista="cose">le cose</button>
+      </span>
       <span id="ritagli-quante" class="tenue"></span>
       <span class="divisorio"></span>
       <span id="ritagli-modo">

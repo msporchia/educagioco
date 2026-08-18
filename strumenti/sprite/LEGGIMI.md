@@ -96,9 +96,15 @@ allarga fin dove comincia il vicino, e il vicino bisogna vederlo.
 | frecce (shift = la misura) | un passo per volta, quando il trascinamento è arrivato vicino |
 | **buca** + trascini | un `cancella`: tutto il resto del foglio si spegne, perché si può bucare solo dentro il ritaglio scelto |
 | **ritaglio nuovo** + trascini | prendi qualcosa che nessuno ritagliava |
-| il **+** su due o più voci, poi **unisci** | `bandiera0`, `bandiera1`, `bandiera_asta` diventano una cosa sola, **nell'ordine in cui le hai segnate** |
+| il **+** su due o più voci, poi **unisci** | `bandiera0`, `bandiera1`, `bandiera_asta` diventano una cosa sola, **nell'ordine in cui le hai segnate** — e **nessun pezzo si rinomina**: il gruppo si dichiara (`cose` in `FORMATO.md`) |
+| ‹ › × sui fotogrammi di un gruppo dichiarato | ne cambi l'ordine, o ne togli uno — e il riquadro grande gira mentre lo fai |
 | **sdoppia** | il contrario: un gruppo che erano due cose diverse |
 | i quattro menù di *com'è fatto* | famiglia, giri, specchia, e se i pezzi **scorrono** o **sono alternative** — ognuno può tornare a «come il prefisso» |
+
+L'interruttore **«i pezzi» / «le cose»** cambia cosa mostra la colonna: le
+righe del foglietto, oppure **le cose come le vedrà il gioco**, già
+raggruppate, una carta per cosa e l'anteprima che gira. La seconda è quella
+da guardare quando la domanda è «è venuto giusto?».
 
 In cima al pannello c'è **come uscirà**: la cosa intera — non la riga del
 foglietto — coi buchi già tolti, riportata alla sua `misura`, e **in

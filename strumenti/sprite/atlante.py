@@ -297,6 +297,43 @@ def cancella_in(pezzo, rettangoli, nome):
     return fuori
 
 
+def alla_misura(pezzo, misura, nome):
+    """Il ritaglio riportato alla misura voluta.
+
+    ── perché non basta la scala del foglio ──
+    `scala` (e `foglio`) rimpiccioliscono **tutto il foglio dello stesso
+    fattore**, e va bene finché il foglio è una tabella: se un pezzo lì
+    dentro è grande il doppio di un altro, è perché è il doppio.
+
+    Certi fogli generati non sono così. Quello dei campi disegna la
+    stessa aiuola otto volte — è la *stessa* aiuola, il grano che ci
+    cresce sopra è l'unica cosa che cambia — e la disegna larga 140 px
+    al primo stadio e 108 all'ultimo. Ridotti tutti dello stesso
+    fattore, il campo a schermo **si restringe mentre matura**: un
+    difetto che nessun controllo trova, perché ogni singolo ritaglio è
+    giusto, e che a occhio si presenta come un campo che respira.
+
+    Quindi il foglietto può dire, per singolo sprite, *quanto deve
+    venire* — `"misura": [34, 28]` — e questa è la riga che rende otto
+    aiuole diverse una sola aiuola. Le due misure sono indipendenti: se
+    il foglio ha allungato una cosa più che allargata, si rimette in
+    proporzione qui invece di tagliarla storta.
+
+    Si passa da `RGBa` (alfa premoltiplicato) e non da `RGBA`: senza,
+    la media di un pixel opaco con un vicino trasparente — che è nero,
+    `(0,0,0,0)` — sporca l'orlo di ogni sagoma di una riga scura. È il
+    difetto che si vede solo dopo, quando lo sprite è già in mappa."""
+    if not misura:
+        return pezzo
+    if len(misura) != 2 or not all(n >= 1 for n in misura):
+        print(f'  ! {nome}: "misura" vuole [largo, alto], ho {misura}')
+        return pezzo
+    w, h = misura
+    if (pezzo.width, pezzo.height) == (w, h):
+        return pezzo
+    return pezzo.convert('RGBa').resize((w, h), Image.BOX).convert('RGBA')
+
+
 def famiglia_di(nome, fg):
     """Di che famiglia è un pezzo — se il foglio lo dice.
 
@@ -377,6 +414,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             if d.get('specchia'):
                 pezzo = ImageOps.mirror(pezzo)
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
+            pezzo = alla_misura(pezzo, d.get('misura'), chi)
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
             famiglie[chi] = d.get('famiglia') or famiglia_di(chi, fg)
@@ -448,7 +486,41 @@ def innesta(dove, blocco):
                            lambda _: blocco, testo, flags=re.S))
 
 
-def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima):
+def cose_di(fg, cose, nome_foglio):
+    """I gruppi **dichiarati** dal foglietto, normalizzati.
+
+    Due forme, perché il caso corto è la stragrande maggioranza:
+
+        "cose": {
+          "bandiera": ["bandiera_alta", "bandiera_mezza", "bandiera_asta"],
+          "fabbro":   { "pose": {"giu": [...], "lato": [...]},
+                        "famiglia": "attore" }
+        }
+
+    L'elenco è **l'ordine dei fotogrammi**, ed è tutto il punto: col nome
+    l'ordine è nascosto dentro un numero, e infilarne uno in mezzo
+    obbliga a rinumerare tutti quelli dopo. Qui si sposta una riga.
+
+    `famiglia`, `giri`, `specchia` e `anima` si dichiarano **sulla
+    cosa**, che è dove hanno senso: una fontana ha una faccia, non ce
+    l'hanno i suoi tre fotogrammi uno per uno."""
+    for chi, che in (fg.get('cose') or {}).items():
+        if chi.startswith('__'):
+            continue
+        if isinstance(che, list):
+            che = {'pezzi': che}
+        pose = che.get('pose') or {'fermo': che.get('pezzi') or []}
+        if not any(pose.values()):
+            print(f'  ! {nome_foglio}: "cose" → "{chi}" non elenca nessun pezzo')
+            continue
+        if chi in cose:
+            print(f'  ! "cose": "{chi}" dichiarata due volte (anche in {nome_foglio})')
+        cose[chi] = {'pose': pose, 'famiglia': che.get('famiglia'),
+                     'giri': che.get('giri'), 'specchia': che.get('specchia'),
+                     'anima': che.get('anima')}
+
+
+def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
     """L'elenco delle cose, dai nomi dei ritagli.
 
     ── perché qui si legge una convenzione, e perché una volta sola ──
@@ -480,14 +552,51 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima):
 
     def metti(nome, **q):
         giri, specchia = trasforma.get(nome, (None, True))
+        # `setdefault` e non un argomento fisso: un gruppo dichiarato
+        # (`cose`) può dire la sua famiglia e i suoi giri, e allora deve
+        # vincere sul ripiego per pezzo — che è per pezzo, mentre la
+        # famiglia è una proprietà della COSA
+        q.setdefault('giri', giri)
+        q.setdefault('specchia', specchia)
         q.setdefault('anima', anima.get(nome))
         q.setdefault('famiglia', famiglie.get(nome, 'oggetto'))
         # da quale foglio arriva: è l'unica cosa che fa vedere quando in
         # un atlante ci sono due set che si sovrappongono invece di uno
         # arricchito, e senza sta scritta solo in `DA`, che è una mappa
         # per pezzo — di là non si legge guardando le cose
-        return cat.aggiungi(nome, giri=giri, specchia=specchia,
-                            da=provenienza.get(nome), **q)
+        return cat.aggiungi(nome, da=provenienza.get(nome), **q)
+
+    # ── prima di tutto, i gruppi DICHIARATI ──────────────────────────
+    # Questo è il passo che il commento qui sopra prometteva. Un
+    # foglietto può scrivere:
+    #
+    #     "cose": { "bandiera": ["bandiera_alta", "mezza", "asta"] }
+    #
+    # e allora quei tre pezzi sono i fotogrammi di «bandiera», in
+    # quell'ordine, **senza che nessuno debba rinominarli**. È la
+    # differenza che conta: col nome, unire due pezzi vuol dire
+    # ribattezzarli — e il nome di un pezzo è la chiave dentro `PEZZI`,
+    # che certi giochi scrivono a mano (`sotterraneo/dati/tessere.js`
+    # nomina `suolo-0` e `muro-basso-centro`). Rinominare per raggruppare
+    # può quindi far sparire un pezzo dal gioco, e sparisce in silenzio:
+    # `foglio.pezzo` non trova niente e non disegna, senza lanciare.
+    #
+    # Le tre regole sui nomi restano sotto, per tutto quello che nessuno
+    # ha dichiarato: i fogli che le usano già sono a posto così, e non
+    # c'è niente da migrare.
+    for chi, dichiarata in sorted(cose.items()):
+        for posa, pezzi in dichiarata['pose'].items():
+            for nome in pezzi:
+                if nome not in ritagli:
+                    print(f'  ! "cose": {chi}/{posa} nomina "{nome}", che non è un ritaglio')
+                    continue
+                if nome in fatti:
+                    print(f'  ! "cose": "{nome}" è dichiarato in più di una cosa')
+                    continue
+                q = {k: dichiarata[k] for k in ('famiglia', 'giri', 'specchia', 'anima')
+                     if dichiarata.get(k) is not None}
+                metti(nome, chi=chi, posa=posa, **q)
+                fatti.add(nome)
 
     for nome in sorted(ritagli):
         m = re.match(rf'^(.+)_({versi})(\d+)$', nome)
@@ -541,6 +650,11 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima):
     # numero di pose sì. Un attore posato come un oggetto starebbe
     # fermo per sempre.
     for v in cat.voci.values():
+        # ...a meno che il foglio non l'abbia detto lui: una cosa
+        # dichiarata con la sua famiglia sa già cos'è, e indovinarle
+        # sopra vorrebbe dire che dichiararla non serve a niente
+        if (cose.get(v['id']) or {}).get('famiglia'):
+            continue
         if len(v['pose']) > 1:
             v['famiglia'] = 'attore'
             v['giri'] = 1
@@ -561,6 +675,7 @@ def costruisci(bers, fogli, con_provini):
     TIPI_VALIDI = ('persona', 'bestia')
     tipo_di_file = {}
     ritagli, provenienza, famiglie, trasforma, anima = {}, {}, {}, {}, {}
+    cose = {}                     # i gruppi dichiarati dai foglietti
     print(f'{bersaglio}:')
     for f, fg in fogli:
         t = fg.get('tipo')
@@ -589,6 +704,7 @@ def costruisci(bers, fogli, con_provini):
         im = pulisci(alla_misura_vera(Image.open(f).convert('RGBA'), fg), fg)
         prima = len(ritagli)
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
+        cose_di(fg, cose, f.name)
         print(f'  {f.name}: {len(ritagli) - prima} pezzi')
 
     # Le copie: uno sprite che è un altro sprite ridipinto. La bambina è
@@ -636,7 +752,8 @@ def costruisci(bers, fogli, con_provini):
     atlante, mappa = impacchetta(ritagli)
     dest = REPO / bers['modulo']
     kb, b64 = scrivi(dest, attrezzo='atlante.py', atlante=atlante, pezzi=mappa,
-                voci=catalogo_di(ritagli, famiglie, trasforma, provenienza, anima).elenco(mappa),
+                voci=catalogo_di(ritagli, famiglie, trasforma, provenienza,
+                                 anima, cose).elenco(mappa),
                 tessera=bers.get('tessera', 32),
                 extra_doc=EXTRA_DOC, coda=CODA.format(
                     provenienza=breve(provenienza),

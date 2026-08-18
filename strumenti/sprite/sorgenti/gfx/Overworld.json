@@ -1,956 +1,108 @@
 {
-  "foglio": [
-    40,
-    36
-  ],
-  "cella": [
-    16,
-    16
-  ],
+  "foglio": [40, 36],
+  "cella": [16, 16],
   "scala": 1,
   "fondo": "trasparente",
   "sprite": {
-    "erba0": {
-      "da": [
-        15,
-        30
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "erba1": {
-      "da": [
-        18,
-        30
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "erba2": {
-      "da": [
-        18,
-        29
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "erba3": {
-      "da": [
-        17,
-        29
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "albero": {
-      "da": [
-        5,
-        16
-      ],
-      "cella": [
-        32,
-        32
-      ]
-    },
-    "siepe": {
-      "da": [
-        0,
-        16
-      ],
-      "cella": [
-        32,
-        16
-      ]
-    },
-    "ceppo": {
-      "da": [
-        1,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "sasso": {
-      "da": [
-        7,
-        5
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "sassi": {
-      "da": [
-        6,
-        5
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "tronco": {
-      "da": [
-        3,
-        5
-      ],
-      "cella": [
-        48,
-        16
-      ]
-    },
-    "cartello": {
-      "da": [
-        6,
-        6
-      ],
-      "cella": [
-        32,
-        48
-      ]
-    },
-    "stagno": {
-      "da": [
-        2,
-        6
-      ],
-      "cella": [
-        48,
-        48
-      ]
-    },
-    "stagno_angolo_no": {
-      "da": [
-        2,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_bordo_n": {
-      "da": [
-        3,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_angolo_ne": {
-      "da": [
-        4,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_bordo_o": {
-      "da": [
-        2,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_centro": {
-      "da": [
-        3,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_bordo_e": {
-      "da": [
-        4,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_angolo_so": {
-      "da": [
-        2,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_bordo_s": {
-      "da": [
-        3,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_angolo_se": {
-      "da": [
-        4,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "ninfea": {
-      "da": [
-        2,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "ninfee": {
-      "da": [
-        4,
-        0
-      ],
-      "cella": [
-        32,
-        16
-      ]
-    },
-    "fontana0": {
-      "da": [
-        22,
-        9
-      ],
-      "cella": [
-        48,
-        48
-      ]
-    },
-    "fontana1": {
-      "da": [
-        25,
-        9
-      ],
-      "cella": [
-        48,
-        48
-      ]
-    },
-    "fontana2": {
-      "da": [
-        28,
-        9
-      ],
-      "cella": [
-        48,
-        48
-      ]
-    },
-    "casa": {
-      "da": [
-        6,
-        0
-      ],
-      "cella": [
-        80,
-        80
-      ]
-    },
-    "casa_retro": {
-      "da": [
-        11,
-        0
-      ],
-      "cella": [
-        80,
-        80
-      ]
-    },
-    "casetta": {
-      "da": [
-        13,
-        5
-      ],
-      "cella": [
-        32,
-        48
-      ]
-    },
-    "pozzo": {
-      "da": [
-        33,
-        5
-      ],
-      "cella": [
-        32,
-        32
-      ]
-    },
-    "staccionata": {
-      "da": [
-        0,
-        19
-      ],
-      "cella": [
-        32,
-        16
-      ]
-    },
-    "palo": {
-      "da": [
-        0,
-        17
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "cancello": {
-      "da": [
-        2,
-        17
-      ],
-      "cella": [
-        32,
-        32
-      ]
-    },
-    "recinto_giunto": {
-      "da": [
-        4,
-        17
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "ringhiera": {
-      "da": [
-        27,
-        8
-      ],
-      "cella": [
-        48,
-        16
-      ]
-    },
-    "panchina": {
-      "da": [
-        28,
-        4
-      ],
-      "cella": [
-        48,
-        32
-      ]
-    },
-    "panchina2": {
-      "da": [
-        28,
-        6
-      ],
-      "cella": [
-        48,
-        32
-      ]
-    },
-    "tavolo": {
-      "da": [
-        35,
-        2
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "bancone": {
-      "da": [
-        36,
-        2
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "cassa": {
-      "da": [
-        31,
-        0
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "barile": {
-      "da": [
-        33,
-        0
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "barile2": {
-      "da": [
-        34,
-        0
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "sacco": {
-      "da": [
-        32,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "colonna": {
-      "da": [
-        36,
-        0
-      ],
-      "cella": [
-        16,
-        48
-      ]
-    },
-    "vaso_fiore": {
-      "da": [
-        35,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "vaso_pianta": {
-      "da": [
-        32,
-        1
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "vaso_azzurro": {
-      "da": [
-        33,
-        2
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "fiori0": {
-      "da": [
-        0,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "fiori1": {
-      "da": [
-        1,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "fiori2": {
-      "da": [
-        3,
-        11
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "radura": {
-      "da": [
-        0,
-        6
-      ],
-      "cella": [
-        32,
-        48
-      ]
-    },
-    "orto": {
-      "da": [
-        0,
-        34
-      ],
-      "cella": [
-        32,
-        32
-      ]
-    },
-    "cassetta0": {
-      "da": [
-        26,
-        20
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "cassetta1": {
-      "da": [
-        27,
-        20
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "cassetta2": {
-      "da": [
-        28,
-        20
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "cassetta3": {
-      "da": [
-        29,
-        20
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
+    "erba0": {"da": [15, 30], "cella": [16, 16]},
+    "erba1": {"da": [18, 30], "cella": [16, 16]},
+    "erba2": {"da": [18, 29], "cella": [16, 16]},
+    "erba3": {"da": [17, 29], "cella": [16, 16]},
+    "albero": {"da": [5, 16], "cella": [32, 32]},
+    "siepe": {"da": [0, 16], "cella": [32, 16]},
+    "ceppo": {"da": [1, 0], "cella": [16, 16]},
+    "sasso": {"da": [7, 5], "cella": [16, 16]},
+    "sassi": {"da": [6, 5], "cella": [16, 16]},
+    "tronco": {"da": [3, 5], "cella": [48, 16]},
+    "cartello": {"da": [6, 6], "cella": [32, 48]},
+    "stagno": {"da": [2, 6], "cella": [48, 48]},
+    "stagno_angolo_no": {"da": [2, 6], "cella": [16, 16]},
+    "stagno_bordo_n": {"da": [3, 6], "cella": [16, 16]},
+    "stagno_angolo_ne": {"da": [4, 6], "cella": [16, 16]},
+    "stagno_bordo_o": {"da": [2, 7], "cella": [16, 16]},
+    "stagno_centro": {"da": [3, 7], "cella": [16, 16]},
+    "stagno_bordo_e": {"da": [4, 7], "cella": [16, 16]},
+    "stagno_angolo_so": {"da": [2, 8], "cella": [16, 16]},
+    "stagno_bordo_s": {"da": [3, 8], "cella": [16, 16]},
+    "stagno_angolo_se": {"da": [4, 8], "cella": [16, 16]},
+    "ninfea": {"da": [2, 0], "cella": [16, 16]},
+    "ninfee": {"da": [4, 0], "cella": [32, 16]},
+    "fontana0": {"da": [22, 9], "cella": [48, 48]},
+    "fontana1": {"da": [25, 9], "cella": [48, 48]},
+    "fontana2": {"da": [28, 9], "cella": [48, 48]},
+    "casa": {"da": [6, 0], "cella": [80, 80]},
+    "casa_retro": {"da": [11, 0], "cella": [80, 80]},
+    "casetta": {"da": [13, 5], "cella": [32, 48]},
+    "pozzo": {"da": [33, 5], "cella": [32, 32]},
+    "staccionata": {"da": [0, 19], "cella": [32, 16]},
+    "palo": {"da": [0, 17], "cella": [16, 32]},
+    "cancello": {"da": [2, 17], "cella": [32, 32]},
+    "recinto_giunto": {"da": [4, 17], "cella": [16, 32]},
+    "ringhiera": {"da": [27, 8], "cella": [48, 16]},
+    "panchina": {"da": [28, 4], "cella": [48, 32]},
+    "panchina2": {"da": [28, 6], "cella": [48, 32]},
+    "tavolo": {"da": [35, 2], "cella": [16, 16]},
+    "bancone": {"da": [36, 2], "cella": [16, 16]},
+    "cassa": {"da": [31, 0], "cella": [16, 32]},
+    "barile": {"da": [33, 0], "cella": [16, 32]},
+    "barile2": {"da": [34, 0], "cella": [16, 32]},
+    "sacco": {"da": [32, 0], "cella": [16, 16]},
+    "colonna": {"da": [36, 0], "cella": [16, 48]},
+    "vaso_fiore": {"da": [35, 0], "cella": [16, 16]},
+    "vaso_pianta": {"da": [32, 1], "cella": [16, 32]},
+    "vaso_azzurro": {"da": [33, 2], "cella": [16, 16]},
+    "fiori0": {"da": [0, 8], "cella": [16, 16]},
+    "fiori1": {"da": [1, 8], "cella": [16, 16]},
+    "fiori2": {"da": [3, 11], "cella": [16, 16]},
+    "radura": {"da": [0, 6], "cella": [32, 48]},
+    "orto": {"da": [0, 34], "cella": [32, 32]},
+    "cassetta0": {"da": [26, 20], "cella": [16, 32]},
+    "cassetta1": {"da": [27, 20], "cella": [16, 32]},
+    "cassetta2": {"da": [28, 20], "cella": [16, 32]},
+    "cassetta3": {"da": [29, 20], "cella": [16, 32]},
     "__nota_estrazione": "Da qui in giu': roba nuova trovata guardando il foglio a zone (vedi la risposta finale per l'elenco per famiglia). La cernita di cosa mettere in vendita la fa l'utente dopo, terreni.js/catalogo.js non sono stati toccati.",
-    "mare0": {
-      "da": [
-        16,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "mare1": {
-      "da": [
-        17,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "mare2": {
-      "da": [
-        18,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "mare3": {
-      "da": [
-        19,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_no": {
-      "da": [
-        15,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_n": {
-      "da": [
-        16,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_ne": {
-      "da": [
-        17,
-        6
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_o": {
-      "da": [
-        15,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_centro": {
-      "da": [
-        16,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_e": {
-      "da": [
-        17,
-        7
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_so": {
-      "da": [
-        15,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_s": {
-      "da": [
-        16,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "laghetto_se": {
-      "da": [
-        17,
-        8
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_interno_no": {
-      "da": [
-        15,
-        9
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_interno_ne": {
-      "da": [
-        16,
-        9
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_interno_so": {
-      "da": [
-        15,
-        10
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "stagno_interno_se": {
-      "da": [
-        16,
-        10
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "erba4": {
-      "da": [
-        3,
-        16
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "erba5": {
-      "da": [
-        14,
-        29
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "bandiera_stemma": {
-      "da": [
-        5,
-        27
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "bandiera0": {
-      "da": [
-        4,
-        29
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "bandiera1": {
-      "da": [
-        6,
-        29
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "bandiera_asta": {
-      "da": [
-        3,
-        29
-      ],
-      "cella": [
-        16,
-        48
-      ]
-    },
-    "teschio": {
-      "da": [
-        28,
-        2
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "ossa": {
-      "da": [
-        29,
-        2
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "ossa_mucchio": {
-      "da": [
-        27,
-        1
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "recinto_incrociato": {
-      "da": [
-        2,
-        17
-      ],
-      "cella": [
-        32,
-        32
-      ]
-    },
-    "recinto_incrociato_giunto": {
-      "da": [
-        4,
-        17
-      ],
-      "cella": [
-        16,
-        32
-      ]
-    },
-    "recinto_asse": {
-      "da": [
-        26,
-        4
-      ],
-      "cella": [
-        16,
-        64
-      ]
-    },
-    "siepe_tonda": {
-      "da": [
-        0,
-        16
-      ],
-      "cella": [
-        32,
-        16
-      ]
-    },
-    "cespuglio": {
-      "da": [
-        5,
-        16
-      ],
-      "cella": [
-        48,
-        32
-      ]
-    },
-    "pianta_germoglio": {
-      "da": [
-        35,
-        0
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "pianta_vaso2": {
-      "da": [
-        35,
-        1
-      ],
-      "cella": [
-        16,
-        16
-      ]
-    },
-    "fioriera": {
-      "da": [
-        34,
-        2
-      ],
-      "cella": [
-        32,
-        16
-      ]
-    },
-    "torrione_rotondo": {
-      "da": [
-        0,
-        21
-      ],
-      "cella": [
-        48,
-        48
-      ]
-    },
-    "torrione_porta": {
-      "da": [
-        25,
-        22
-      ],
-      "cella": [
-        80,
-        112
-      ]
-    },
-    "tetto_conico": {
-      "da": [
-        3,
-        22
-      ],
-      "cella": [
-        48,
-        32
-      ]
-    }
+    "mare0": {"da": [16, 0], "cella": [16, 16]},
+    "mare1": {"da": [17, 0], "cella": [16, 16]},
+    "mare2": {"da": [18, 0], "cella": [16, 16]},
+    "mare3": {"da": [19, 0], "cella": [16, 16]},
+    "laghetto_no": {"da": [15, 6], "cella": [16, 16]},
+    "laghetto_n": {"da": [16, 6], "cella": [16, 16]},
+    "laghetto_ne": {"da": [17, 6], "cella": [16, 16]},
+    "laghetto_o": {"da": [15, 7], "cella": [16, 16]},
+    "laghetto_centro": {"da": [16, 7], "cella": [16, 16]},
+    "laghetto_e": {"da": [17, 7], "cella": [16, 16]},
+    "laghetto_so": {"da": [15, 8], "cella": [16, 16]},
+    "laghetto_s": {"da": [16, 8], "cella": [16, 16]},
+    "laghetto_se": {"da": [17, 8], "cella": [16, 16]},
+    "stagno_interno_no": {"da": [15, 9], "cella": [16, 16]},
+    "stagno_interno_ne": {"da": [16, 9], "cella": [16, 16]},
+    "stagno_interno_so": {"da": [15, 10], "cella": [16, 16]},
+    "stagno_interno_se": {"da": [16, 10], "cella": [16, 16]},
+    "erba4": {"da": [3, 16], "cella": [16, 16]},
+    "erba5": {"da": [14, 29], "cella": [16, 16]},
+    "bandiera_stemma": {"da": [5, 27], "cella": [16, 32]},
+    "bandiera0": {"da": [3, 29], "cella": [34, 32]},
+    "bandiera1": {"da": [5, 29], "cella": [32, 32]},
+    "bandiera_asta": {"da": [7, 29], "cella": [36, 33]},
+    "teschio": {"da": [28, 2], "cella": [16, 16]},
+    "ossa": {"da": [29, 2], "cella": [16, 16]},
+    "ossa_mucchio": {"da": [27, 1], "cella": [16, 16]},
+    "recinto_incrociato": {"da": [2, 17], "cella": [32, 32]},
+    "recinto_incrociato_giunto": {"da": [4, 17], "cella": [16, 32]},
+    "recinto_asse": {"da": [26, 4], "cella": [16, 64]},
+    "siepe_tonda": {"da": [0, 16], "cella": [32, 16]},
+    "__cespuglio": "TOLTO. Il ritaglio (da [5,16], cella [48,32]) prendeva l'albero tondo — che è già «albero», alle stesse identiche coordinate — più una casella di fogliame accanto, e a provino si vedeva un albero con un rettangolo verde appiccicato a destra. Non è un ritaglio da correggere: un cespuglio, in questo foglio, non c'è. Quello che sembra fogliame sono tessere di terreno fatte per affiancarsi, e ritagliarne una da sola dà un quadrato con gli spigoli. I cespugli veri stanno in oggetti_2 (arbusto*), ed è di lì che pesca il catalogo.",
+    "pianta_germoglio": {"da": [35, 0], "cella": [16, 16]},
+    "pianta_vaso2": {"da": [35, 1], "cella": [16, 16]},
+    "fioriera": {"da": [34, 2], "cella": [32, 16]},
+    "torrione_rotondo": {"da": [0, 21], "cella": [48, 48]},
+    "torrione_porta": {"da": [25, 22], "cella": [80, 112]},
+    "tetto_conico": {"da": [3, 22], "cella": [48, 32]}
   },
-  "famiglie": {
-    "erba": "fondo"
+  "famiglie": {"erba": "fondo"},
+  "trasforma": {"erba": {"giri": 4}},
+  "cose": {
+    "bandiera": {"pezzi": ["bandiera0", "bandiera1", "bandiera_asta"], "anima": true}
   },
-  "trasforma": {
-    "erba": {
-      "giri": 4
-    }
-  },
-  "anima": [
-    "fontana"
-  ]
+  "anima": ["fontana"]
 }

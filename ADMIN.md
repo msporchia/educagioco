@@ -132,7 +132,8 @@ vicinato conta, perché un rettangolo si allarga fin dove comincia il vicino.
 | frecce (con shift: la misura) | un passo per volta |
 | **buca** + trascini | un `cancella`: il resto del foglio si spegne, perché si può bucare solo dentro il ritaglio scelto |
 | **ritaglio nuovo** + trascini | prendi qualcosa che nessuno ritagliava |
-| il **+** su due o più voci, poi **unisci** | le fa diventare una cosa sola, **nell'ordine in cui le hai segnate** |
+| il **+** su due o più voci, poi **unisci** | le fa diventare una cosa sola, **nell'ordine in cui le hai segnate**, senza rinominare nessun pezzo |
+| l'interruttore **i pezzi / le cose** | le righe del foglietto, oppure le cose come le vedrà il gioco — una carta per cosa, e l'anteprima gira |
 | **sdoppia** | il contrario: un gruppo che erano due cose diverse |
 | i menù di *com'è fatto* | famiglia, giri, specchia, e se i pezzi **scorrono** o **sono alternative** |
 

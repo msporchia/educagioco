@@ -117,6 +117,42 @@ basta: l'attrezzo non cambia.
   Girare e specchiare si fa **a schermo**, mai nell'atlante: otto copie
   di ogni pezzo costerebbero otto volte il peso per un conto che un
   `ctx.rotate`/`ctx.scale` fa gratis.
+- **`cose`** — quali pezzi sono **la stessa cosa**, e in che ordine.
+
+  ```json
+  "cose": {
+    "bandiera": {"pezzi": ["bandiera0", "bandiera1", "bandiera_asta"], "anima": true},
+    "fabbro":   {"pose": {"giu": ["fabbro_a", "fabbro_b"], "lato": […]}, "famiglia": "attore"}
+  }
+  ```
+
+  Senza `cose`, il raggruppamento lo indovina `catalogo_di` **dal nome**:
+  `fontana0` e `fontana1` sono i fotogrammi di «fontana» perché finiscono
+  con un numero e hanno un fratello. Funziona, e resta il ripiego per i
+  fogli che già lo usano — ma ha tre difetti, e sono i tre motivi per cui
+  esiste questo campo:
+
+  1. **Unire obbliga a rinominare, e rinominare rompe in silenzio.** Il
+     nome di un pezzo è la chiave dentro `PEZZI`, e certi giochi la
+     scrivono a mano (`sotterraneo/dati/tessere.js` cita `suolo-0` e
+     `muro-basso-centro`; il catalogo della fattoria cita duecento pezzi
+     uno per uno). Ribattezzare un pezzo per raggrupparlo lo fa sparire
+     da lì, e sparisce senza errori: `drawImage` con un argomento non
+     finito torna senza disegnare **e senza lanciare**.
+  2. **L'ordine sta dentro un numero.** Infilare un fotogramma in mezzo
+     vuol dire rinumerare tutti quelli dopo; qui si sposta una riga.
+  3. **Il nome fa due lavori** — identificare e raggruppare — e quando
+     litigano vince la convenzione: `bandiera_asta` è il terzo fotogramma
+     della bandiera che sventola, e nessuna espressione regolare lo saprà
+     mai.
+
+  `famiglia`, `giri`, `specchia` e `anima` si dichiarano **sulla cosa**,
+  che è dove hanno senso: una fontana ha una faccia, non ce l'hanno i suoi
+  tre fotogrammi uno per uno. La forma corta `"bandiera": ["a", "b"]` vale
+  come `{"pezzi": ["a", "b"]}`.
+
+  Si compone col dito da `npm run mondo` → «i ritagli»: si segnano i pezzi
+  col `+`, si preme **unisci**, e l'ordine è quello in cui li hai segnati.
 
 ### Un foglio senza griglia, senza un file di `ritagli` a parte
 
@@ -157,7 +193,9 @@ migliore rimette in gioco una correzione che nessuno ricorda.
 |---|---|---|
 | il rettangolo taglia, o prende troppo | `da` e `cella` | quattro numeri |
 | due disegni diversi sotto un nome solo (e il gioco li fa lampeggiare, credendoli fotogrammi) | due nomi invece di uno | una riga in più |
+| una cosa sola spezzata in più nomi (e il gioco te la vende due volte) | `cose` | una riga, e nessun pezzo si rinomina |
 | dentro il ritaglio giusto resta roba che non c'entra | `cancella` | un rettangolo |
+| la stessa cosa è disegnata a misure diverse (e a schermo cambia taglia da sé) | `misura` | due numeri |
 
 ```json
 "casa_albero": { "da": [271, 126], "cella": [59, 67], "cancella": [[0, 63, 6, 4]] }
@@ -168,6 +206,27 @@ ritaglio**, e quei rettangoli escono trasparenti. Vale per tutti i
 fotogrammi dello sprite. Non è una regola nel generatore — quelle cercano
 di essere furbe su tutti i fogli e sbagliano — è **una correzione a questo
 foglio qui**, e sta accanto al foglio che descrive.
+
+```json
+"campo_grano3": { "da": [614, 439], "cella": [125, 110], "misura": [34, 27] }
+```
+
+`misura` dice **quanto deve venire** quel ritaglio, in pixel veri. Serve
+quando il foglio disegna *la stessa cosa* a misure diverse: quello dei
+campi disegna la stessa aiuola otto volte, larga 140 px al primo stadio e
+108 all'ultimo, e ridotta tutta dello stesso fattore il campo a schermo
+**si restringe mentre matura**. Ogni singolo ritaglio è giusto — non c'è
+niente da correggere in `da` e `cella` — ed è per questo che il difetto
+non lo trova nessun controllo: si vede solo a occhio, come un campo che
+respira. Le due misure sono indipendenti, così una cosa allungata più che
+allargata si rimette in proporzione invece di uscire storta. Vale per
+tutti i fotogrammi dello sprite, e i numeri li stampa lo stesso attrezzo
+che misura i rettangoli.
+
+`scala` e `foglio` restano la strada normale — riducono tutto il foglio
+dello stesso fattore, che è quello che si vuole quando il foglio è una
+tabella onesta. `misura` è per il pezzo che dal fattore comune esce
+sbagliato.
 
 I quattro numeri non si contano a mano: si guardano. `npm run mondo`, metà
 **«i ritagli»**, disegna i rettangoli sopra il foglio e li lascia

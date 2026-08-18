@@ -55,6 +55,7 @@ const R = {
   fogli: [],          // { chiave, nome, testo, immagine }
   aperto: null,       // { chiave, fg, testo, img, vera, cw, ch }
   scelto: null,       // il nome della voce in fg.sprite
+  vista: 'pezzi',     // pezzi | cose — cosa mostra la colonna di sinistra
   segnati: [],        // quelle spuntate per essere unite, **in ordine**
   cerca: '',
   zoom: 2,
@@ -243,6 +244,23 @@ const stelo = n => n.replace(/[-_]?\d+$/, '')
    al secondo posto. */
 function laCosa(nome) {
   const tutte = voci()
+  /* ── prima quello che il foglio DICHIARA ──
+     `"cose": { "bandiera": ["bandiera0", "bandiera1", "bandiera_asta"] }`.
+     Vince sulle regole dei nomi, perché è l'unica delle due che qualcuno
+     ha guardato: `bandiera_asta` è il terzo fotogramma della bandiera
+     che sventola, e nessuna espressione regolare lo saprà mai. */
+  for (const [chi, che] of Object.entries(R.aperto.fg.cose || {})) {
+    if (chi.startsWith('__')) continue
+    const pose = Array.isArray(che) ? { fermo: che } : (che.pose || { fermo: che.pezzi || [] })
+    for (const [posa, elenco] of Object.entries(pose)) {
+      if (!elenco.includes(nome)) continue
+      const pezzi = []
+      for (const n of elenco)
+        for (const r of rettangoli(n)) pezzi.push({ nome: n, r })
+      return { chi, posa, pezzi, dichiarata: true,
+               anima: Array.isArray(che) ? false : che.anima === true }
+    }
+  }
   const chiDi = n => {
     let m = n.match(/^(.+)_(giu|lato|su)(\d+)$/)
     if (m) return { chi: m[1], posa: m[2], n: +m[3] }
@@ -266,7 +284,22 @@ function laCosa(nome) {
     for (const r of rettangoli(n)) pezzi.push({ nome: n, r, ordine: q.n })
   }
   pezzi.sort((a, b) => a.ordine - b.ordine)
-  return { chi: mio.chi, posa: mio.posa, pezzi }
+  return { chi: mio.chi, posa: mio.posa, pezzi, dichiarata: false,
+           anima: comeAnima(nome).animaVera }
+}
+
+/* tutte le cose del foglio, una volta sola per cosa: è quello che
+   l'elenco mostra quando si guarda «le cose» invece che «i pezzi» */
+function tutteLeCose() {
+  const viste = new Set()
+  const fuori = []
+  for (const n of voci()) {
+    if (viste.has(n)) continue
+    const c = laCosa(n)
+    for (const p of c.pezzi) viste.add(p.nome)
+    fuori.push(c)
+  }
+  return fuori
 }
 
 function comeAnima(nome) {
@@ -282,6 +315,16 @@ function comeAnima(nome) {
 function metteAnima(nome, valore) {
   const { fg } = R.aperto
   const d = fg.sprite[nome]
+  /* se la cosa è dichiarata, l'animazione è una sua proprietà e si
+     scrive lì: è tutto il senso di aver dichiarato il gruppo */
+  const c = laCosa(nome)
+  if (c.dichiarata) {
+    const che = fg.cose[c.chi]
+    if (Array.isArray(che)) fg.cose[c.chi] = { pezzi: che }
+    if (valore === true) fg.cose[c.chi].anima = true
+    else delete fg.cose[c.chi].anima
+    return
+  }
   const { gruppo } = comeAnima(nome)
   if (gruppo) {
     const lista = fg.anima || []
@@ -439,6 +482,49 @@ function tutteToccate() {
 
 /* ═══════════ l'elenco ═══════════ */
 function costruisciElenco() {
+  _vivi = _vivi.filter(v => v.cv.isConnected)
+  return R.vista === 'cose' ? elencoDelleCose() : elencoDeiPezzi()
+}
+
+/* ── le cose ──
+   La stessa roba raggruppata come la vedrà il gioco: una carta per
+   cosa, con l'anteprima che **gira**. È la risposta a «come faccio a
+   vedere il risultato»: il risultato è la carta. Prima bisognava
+   sceglierne una per volta e guardare il pannello a destra, cioè
+   controllare duecento cose una alla volta. */
+function elencoDelleCose() {
+  const dove = $('#ritagli-voci')
+  dove.innerHTML = ''
+  const q = R.cerca.trim().toLowerCase()
+  const tutte = tutteLeCose()
+  const viste = tutte.filter(c => !q || c.chi.toLowerCase().includes(q) ||
+                                  c.pezzi.some(p => p.nome.toLowerCase().includes(q)))
+  for (const c of viste) {
+    const box = document.createElement('div')
+    box.className = 'voce cosa' +
+      (c.pezzi.some(p => p.nome === R.scelto) ? ' scelta' : '') +
+      (c.pezzi.some(p => toccata(p.nome)) ? ' toccata' : '')
+    box.dataset.voce = c.pezzi[0].nome
+    const testa = document.createElement('div')
+    testa.className = 'testa'
+    testa.innerHTML = `<b>${c.chi}</b><span>` +
+      (c.pezzi.length > 1
+        ? `${c.pezzi.length} pezzi · ${c.anima ? 'scorrono' : 'alternative'}`
+        : 'un pezzo') +
+      `${c.dichiarata ? ' · dichiarata' : ''}</span>`
+    box.appendChild(testa)
+    const riga = document.createElement('div')
+    riga.className = 'riga'
+    telaViva(riga, c, 64)
+    box.appendChild(riga)
+    box.addEventListener('click', () => scegli(c.pezzi[0].nome))
+    dove.appendChild(box)
+  }
+  $('#ritagli-quante').textContent = viste.length === tutte.length
+    ? `${viste.length} cose` : `${viste.length} di ${tutte.length} cose`
+}
+
+function elencoDeiPezzi() {
   const dove = $('#ritagli-voci')
   dove.innerHTML = ''
   const q = R.cerca.trim().toLowerCase()
@@ -543,25 +629,32 @@ function provino(r, nome, z) {
    Non serve rigenerare niente: qui si legge il foglio sorgente e si
    applicano le stesse regole del generatore. `atlante.py` va rilanciato
    perché lo veda **il gioco**, non perché lo veda questa pagina. */
-let _vivo = null
+let _vivi = []
+let _batte = false
 
-function anteprimaViva(dove) {
-  const cosa = laCosa(R.scelto)
-  const { animaVera } = comeAnima(R.scelto)
+/* Una tela che mostra **una cosa** come uscirà. Ce ne può essere più
+   d'una a schermo — l'elenco «le cose» ne mette una per carta — quindi
+   il ciclo è uno solo per tutte, e ridisegna soltanto quelle che
+   scorrono davvero. Le altre si fermano al primo fotogramma e non
+   costano più niente: in un foglio da duecento voci le animazioni vere
+   sono tre, e farle girare tutte vorrebbe dire duecento `drawImage` a
+   fotogramma per guardarne tre. */
+function telaViva(dove, cosa, alto = 180) {
   const misure = cosa.pezzi.map(p => misuraUscita(p.nome, p.r))
   const W = Math.max(...misure.map(m => m[0])), H = Math.max(...misure.map(m => m[1]))
-  const zz = Math.max(1, Math.min(8, Math.floor(180 / Math.max(W, H))))
+  const zz = Math.max(1, Math.min(8, Math.floor(alto / Math.max(W, H))))
   const cv = document.createElement('canvas')
   cv.className = 'vivo'
   cv.width = W * zz; cv.height = H * zz
   dove.appendChild(cv)
-  _vivo = { cv, zz, W, H, cosa, anima: animaVera && cosa.pezzi.length > 1 }
-  battito()
+  const v = { cv, zz, cosa, anima: cosa.anima && cosa.pezzi.length > 1 }
+  _vivi.push(v)
+  disegnaViva(v, 0)
+  if (v.anima && !_batte) { _batte = true; requestAnimationFrame(battito) }
+  return cv
 }
 
-function battito(t = 0) {
-  const v = _vivo
-  if (!v || !v.cv.isConnected) return
+function disegnaViva(v, t) {
   const i = v.anima ? Math.floor(t / 1000 * 6) % v.cosa.pezzi.length : 0
   const p = v.cosa.pezzi[i]
   const c = v.cv.getContext('2d')
@@ -579,7 +672,14 @@ function battito(t = 0) {
      no sembra che rimbalzi */
   pezzoSu(c, p.nome, p.r, (v.cv.width - ow * v.zz) / 2, v.cv.height - oh * v.zz,
           v.zz, { rosso: false })
-  if (v.anima) requestAnimationFrame(battito)
+}
+
+function battito(t) {
+  _vivi = _vivi.filter(v => v.cv.isConnected)
+  const vive = _vivi.filter(v => v.anima)
+  for (const v of vive) disegnaViva(v, t)
+  if (vive.length) requestAnimationFrame(battito)
+  else _batte = false
 }
 
 function scegli(nome) {
@@ -698,19 +798,52 @@ function dettaglio() {
   $('#r-spiega').innerHTML = cosa.pezzi.length < 2
     ? `diventerà <b>${cosa.chi}</b>, un pezzo solo`
     : `diventerà <b>${cosa.chi}</b> con ${cosa.pezzi.length} pezzi, che ` +
-      (animaVera ? '<b>scorrono</b> sull\'orologio' : 'sono <b>alternative</b>: si sceglie dal posto') +
-      (cosa.pezzi.some(p => p.nome !== R.scelto)
-        ? `<br>presi da ${[...new Set(cosa.pezzi.map(p => p.nome))].join(', ')}` : '')
+      (cosa.anima ? '<b>scorrono</b> sull\'orologio' : 'sono <b>alternative</b>: si sceglie dal posto') +
+      (cosa.dichiarata ? ' — <b>gruppo dichiarato</b>' : ' — raggruppati dal nome')
 
-  /* prima com'è, poi com'era: il grande è quello che conta — è la cosa
-     come la vedrà il gioco — e i piccoli restano per controllare i
-     singoli fotogrammi, coi buchi segnati in rosso */
+  /* prima com'è, poi da cosa è fatta: il grande è quello che conta — è
+     la cosa come la vedrà il gioco — e sotto i fotogrammi in ordine,
+     che per un gruppo dichiarato si possono anche spostare */
   const ant = $('#r-anteprima')
-  anteprimaViva(ant)
+  telaViva(ant, cosa)
   const fila = document.createElement('div')
   fila.className = 'fila'
-  for (const p of cosa.pezzi) fila.appendChild(provino(p.r, p.nome, 3))
+  cosa.pezzi.forEach((p, i) => {
+    const box = document.createElement('div')
+    box.className = 'foto' + (p.nome === R.scelto ? ' qui' : '')
+    box.appendChild(provino(p.r, p.nome, 3))
+    box.title = p.nome
+    box.addEventListener('click', () => { if (p.nome !== R.scelto) scegli(p.nome) })
+    if (cosa.dichiarata && modificabile() && cosa.pezzi.length > 1) {
+      const barra = document.createElement('div')
+      barra.className = 'manopole'
+      for (const [segno, che] of [['‹', -1], ['›', 1], ['×', 0]]) {
+        const b = document.createElement('button')
+        b.textContent = segno
+        b.title = che ? 'spostalo' : 'toglilo dal gruppo'
+        b.addEventListener('click', e => {
+          e.stopPropagation()
+          che ? spostaPezzo(cosa.chi, i, che) : togliPezzo(cosa.chi, i)
+        })
+        barra.appendChild(b)
+      }
+      box.appendChild(barra)
+    }
+    fila.appendChild(box)
+  })
   ant.appendChild(fila)
+
+  if (cosa.dichiarata && modificabile()) {
+    const riga = document.createElement('div')
+    riga.className = 'cosa-nome'
+    riga.innerHTML = '<label class="campo">nome della cosa ' +
+      `<input id="r-cosa" value="${cosa.chi}"></label>`
+    const b = document.createElement('button')
+    b.textContent = 'sciogli il gruppo'
+    b.addEventListener('click', sciogli)
+    riga.appendChild(b)
+    ant.appendChild(riga)
+  }
 
   const canc = $('#r-cancella')
   const elenco = d.cancella || []
@@ -785,6 +918,8 @@ function dettaglio() {
   $('#r-misy').addEventListener('change', leggiMisura)
 
   $('#r-nome').addEventListener('change', e => rinomina(R.scelto, e.target.value.trim()))
+  if ($('#r-cosa'))
+    $('#r-cosa').addEventListener('change', e => rinominaCosa(cosa.chi, e.target.value.trim()))
   $('#r-unisci').addEventListener('click', unisci)
   $('#r-sdoppia').addEventListener('click', sdoppia)
   $('#r-butta').addEventListener('click', () => {
@@ -908,46 +1043,83 @@ function creaRitaglio(x, y, w, h) {
    è dire *quali* sono la stessa cosa, e battere un nome mentre lo si
    dice è un secondo lavoro che si può fare con calma. */
 function unisci() {
-  const s = R.aperto.fg.sprite
-  const quali = R.segnati.filter(n => s[n])
+  const { fg } = R.aperto
+  const quali = R.segnati.filter(n => fg.sprite[n])
   if (quali.length < 2) return dillo('segnane almeno due col +')
-  const { cw, ch } = R.aperto
 
-  const pezzi = []
+  /* i pezzi entrano nell'ordine in cui sono stati segnati, e uno che
+     era già dentro una cosa si porta dietro tutti i suoi fratelli:
+     unire due gruppi è un gesto solo, non «prima sciogli e poi» */
+  const elenco = []
   for (const n of quali) {
-    const d = s[n]
-    for (const [x, y, w, h] of rettangoli(n)) {
-      const q = { da: [Math.round(x / cw), Math.round(y / ch)] }
-      if (w !== cw || h !== ch) q.cella = [w, h]
-      if (d.cancella) q.cancella = d.cancella.map(r => [...r])
-      for (const k of ['famiglia', 'giri', 'specchia'])
-        if (d[k] !== undefined) q[k] = d[k]
-      pezzi.push(q)
-    }
+    const c = laCosa(n)
+    for (const p of c.pezzi) if (!elenco.includes(p.nome)) elenco.push(p.nome)
   }
 
-  let base = stelo(quali[0]) || quali[0]
-  const libero = n => !s[n] || quali.includes(n)
-  if (pezzi.some((_, i) => !libero(`${base}${i}`))) base += '_unito'
-  if (pezzi.some((_, i) => !libero(`${base}${i}`)))
-    return dillo(`«${base}0» esiste già: rinomina prima quello`)
-
-  /* si ricostruisce l'oggetto in un colpo: i nuovi pezzi al posto del
-     primo segnato, e gli altri segnati saltati. Farlo in due passate —
-     prima inserire, poi cancellare — vorrebbe dire che un nome nuovo
-     uguale a un segnato vecchio si pesta i piedi da solo. */
-  const fuori = {}
-  for (const k of Object.keys(s)) {
-    if (k === quali[0]) pezzi.forEach((q, i) => { fuori[`${base}${i}`] = q })
-    else if (!quali.includes(k)) fuori[k] = s[k]
+  const cose = fg.cose || {}
+  let chi = stelo(quali[0]) || quali[0]
+  if (cose[chi] && !quali.some(n => laCosa(n).chi === chi)) chi += '_unita'
+  /* le cose vecchie che restano vuote se ne vanno: un gruppo dichiarato
+     e senza pezzi è una riga che il generatore segnalerebbe a ogni giro */
+  for (const n of quali) {
+    const c = laCosa(n)
+    if (c.dichiarata && c.chi !== chi) delete cose[c.chi]
   }
-  R.aperto.fg.sprite = fuori
+  cose[chi] = { pezzi: elenco }
+  fg.cose = cose
 
   R.segnati = []
-  R.scelto = `${base}0`
+  R.scelto = elenco[0]
   cambiato()
-  dillo(`${quali.length} voci unite in «${base}», ${pezzi.length} pezzi in fila — ` +
-        'adesso decidi se scorrono o sono alternative, e dagli il nome giusto')
+  dillo(`«${chi}»: ${elenco.length} pezzi in fila (${elenco.join(', ')}). ` +
+        'Nessun nome di pezzo è cambiato: adesso scegli se scorrono, e dalle il nome giusto.')
+}
+
+/* ── e il contrario ──
+   Sciogliere una cosa dichiarata rimette in gioco le regole sui nomi:
+   di solito è quello che si vuole quando la si è composta sbagliata. */
+function sciogli() {
+  const c = laCosa(R.scelto)
+  if (!c.dichiarata) return
+  delete R.aperto.fg.cose[c.chi]
+  if (!Object.keys(R.aperto.fg.cose).length) delete R.aperto.fg.cose
+  cambiato()
+  dillo(`«${c.chi}» sciolta: i suoi pezzi tornano a raggrupparsi dal nome`)
+}
+
+/* rinominare una cosa dichiarata **non tocca nessun pezzo**, ed è tutto
+   il punto: il nome di una cosa è per chi guarda, quello di un pezzo è
+   una chiave dentro `PEZZI` che qualche gioco scrive a mano */
+function rinominaCosa(vecchio, nuovo) {
+  const cose = R.aperto.fg.cose || {}
+  if (!nuovo || nuovo === vecchio || !cose[vecchio]) return
+  if (cose[nuovo]) return dillo(`«${nuovo}» esiste già`)
+  const fuori = {}
+  for (const k of Object.keys(cose)) fuori[k === vecchio ? nuovo : k] = cose[k]
+  R.aperto.fg.cose = fuori
+  cambiato()
+  dillo(`la cosa «${vecchio}» adesso si chiama «${nuovo}» — i pezzi non si sono mossi`)
+}
+
+/* spostare un fotogramma dentro la cosa: l'ordine è il dato, e si
+   sistema guardando il riquadro che gira mentre lo si sposta */
+function spostaPezzo(chi, da, verso) {
+  const che = R.aperto.fg.cose[chi]
+  const elenco = Array.isArray(che) ? che : (che.pezzi || [])
+  const a = da + verso
+  if (a < 0 || a >= elenco.length) return
+  ;[elenco[da], elenco[a]] = [elenco[a], elenco[da]]
+  cambiato()
+}
+
+function togliPezzo(chi, i) {
+  const che = R.aperto.fg.cose[chi]
+  const elenco = Array.isArray(che) ? che : (che.pezzi || [])
+  const fuori = elenco.splice(i, 1)[0]
+  if (elenco.length < 2) { delete R.aperto.fg.cose[chi]; dillo(`«${chi}» resta con un pezzo solo: sciolta`) }
+  else dillo(`«${fuori}» tolto da «${chi}»`)
+  if (R.aperto.fg.cose && !Object.keys(R.aperto.fg.cose).length) delete R.aperto.fg.cose
+  cambiato()
 }
 
 function cambiato() {
@@ -1232,6 +1404,16 @@ export function avviaRitagli() {
   $('#ritagli-scoperti').addEventListener('change', e => { R.scoperti = e.target.checked; ridisegna() })
   for (const b of document.querySelectorAll('#ritagli-modo button'))
     b.addEventListener('click', () => { R.modo = b.dataset.modo; accendiModo() })
+  for (const b of document.querySelectorAll('#ritagli-vista button'))
+    b.addEventListener('click', () => {
+      R.vista = b.dataset.vista
+      for (const q of document.querySelectorAll('#ritagli-vista button'))
+        q.classList.toggle('acceso', q.dataset.vista === R.vista)
+      costruisciElenco()
+      dillo(R.vista === 'cose'
+        ? 'le cose come le vedrà il gioco, già raggruppate e in movimento'
+        : 'i pezzi uno per uno, come sono scritti nel foglietto')
+    })
   $('#ritagli-tutto').addEventListener('click', tuttoIlFoglio)
   $('#r-salva').addEventListener('click', salva)
   addEventListener('keydown', e => {
