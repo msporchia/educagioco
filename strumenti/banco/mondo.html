@@ -75,6 +75,22 @@
      vedere quando in un atlante ci sono due set invece di uno. */
   .voce .da { flex-basis: 100%; color: #6f7a86; font-size: 10px; margin-top: 1px }
   .voce .riga { display: flex; align-items: flex-end; gap: 4px; margin-top: 5px; flex-wrap: wrap }
+  /* i due tastini sulla testa di una carta: ✎ porta al ritaglio, + segna
+     per unire. Piccoli e sempre presenti — comparire al passaggio del
+     mouse vuol dire che dal telefono non compaiono mai. */
+  .voce .testa button {
+    flex: none; padding: 0 6px; line-height: 1.5; font-size: 11px;
+    background: #10131a; border: 1px solid var(--riga); border-radius: 3px;
+    color: var(--tenue); cursor: pointer;
+  }
+  .voce .testa button.acceso { border-color: var(--acceso); color: var(--acceso) }
+  #ritagli-dettaglio h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--tenue); margin: 14px 0 5px;
+  }
+  .numeri.flag { grid-template-columns: 1fr }
+  .numeri .due { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+  #ritagli-dettaglio .numeri select { width: 100%; margin-top: 2px }
   .voce .posa { color: var(--tenue); font-size: 10px; width: 34px; flex: none }
   /* il primo grande, gli altri piccoli: si guarda la cosa, e i pezzi
      restano lì per chi deve controllarli */
@@ -158,7 +174,9 @@
       <span id="ritagli-modo">
         <button data-modo="ritaglio" class="acceso">sposta il ritaglio</button>
         <button data-modo="cancella">buca</button>
+        <button data-modo="nuovo">ritaglio nuovo</button>
       </span>
+      <button id="ritagli-tutto">tutto il foglio</button>
       <label><input id="ritagli-scoperti" type="checkbox"> quello che nessuno prende</label>
       <span class="divisorio"></span>
       <button id="r-salva" disabled>salva il foglietto</button>

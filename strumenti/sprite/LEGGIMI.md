@@ -84,12 +84,30 @@ troppo**, due disegni diversi finiscono in **un gruppo solo** (e il gioco li
 fa lampeggiare uno nell'altro credendoli fotogrammi), dentro il ritaglio
 giusto resta **della roba che non c'entra**.
 
-Si trascina il rettangolo, si tirano le maniglie, si buca col modo *buca*,
-si rinomina, si **sdoppia** un gruppo che era due cose. Poi «salva il
-foglietto» lo riscrive, e si rilancia `atlante.py`. C'è anche una spia che
-di solito non si pensa ad accendere — **quello che nessuno prende**: i pixel
-del foglio fuori da ogni rettangolo, tinti. Non risponde a «questo ritaglio
-è storto», risponde a «quanta roba non ho mai ritagliato».
+Scegliere una voce **ci va sopra e ingrandisce**, col vicinato attorno: a
+foglio intero un ritaglio da 52×57 px sta in mezzo centimetro, e nessuna
+mano ci tira dentro un buco. Il vicinato serve perché un rettangolo si
+allarga fin dove comincia il vicino, e il vicino bisogna vederlo.
+
+| gesto | cosa fa |
+|---|---|
+| trascini dentro il rettangolo | lo sposti |
+| tiri uno degli 8 angoli | lo stringi da quel lato |
+| frecce (shift = la misura) | un passo per volta, quando il trascinamento è arrivato vicino |
+| **buca** + trascini | un `cancella`: tutto il resto del foglio si spegne, perché si può bucare solo dentro il ritaglio scelto |
+| **ritaglio nuovo** + trascini | prendi qualcosa che nessuno ritagliava |
+| il **+** su due o più voci, poi **unisci** | `bandiera0`, `bandiera1`, `bandiera_asta` diventano una cosa sola, **nell'ordine in cui le hai segnate** |
+| **sdoppia** | il contrario: un gruppo che erano due cose diverse |
+| i quattro menù di *com'è fatto* | famiglia, giri, specchia, e se i pezzi **scorrono** o **sono alternative** — ognuno può tornare a «come il prefisso» |
+
+Poi «salva il foglietto» lo riscrive, e si rilancia `atlante.py`. C'è anche
+una spia che di solito non si pensa ad accendere — **quello che nessuno
+prende**: i pixel del foglio fuori da ogni rettangolo, tinti. Non risponde a
+«questo ritaglio è storto», risponde a «quanta roba non ho mai ritagliato».
+
+Dall'altra metà si arriva qui col tastino **✎** su ogni voce: si vede sul
+prato che un pezzo è storto, e da lì si va dritti al suo rettangolo senza
+doversi ricordare in quale dei tredici fogli stia.
 
 Il PNG **non si tocca mai**: vedi `STANDARD.md`. Le correzioni sono dato nel
 foglietto, e buttare via tutto il generato e rifarlo dà lo stesso risultato

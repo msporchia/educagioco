@@ -221,7 +221,22 @@ function riquadroVoce(voce) {
     (voce.materia ? ' · ' + voce.materia : '') +
     (quanti > 1 ? (voce.anima ? ` · ${quanti} fotogrammi` : ` · ${quanti} varianti`) : '') +
     '</span>'
+  /* ── la scorciatoia ──
+     Qui si vede che un pezzo è storto; il rettangolo che lo taglia sta
+     nell'altra metà. Senza questo tastino bisognerebbe ricordarsi in
+     quale dei tredici fogli sta quella cosa lì — e la voce lo sa già
+     (`da`), quindi tanto vale che lo dica lei. */
   if (voce.da) {
+    const vai = document.createElement('button')
+    vai.textContent = '✎'
+    vai.title = `correggi il ritaglio in ${voce.da}`
+    vai.addEventListener('click', async e => {
+      e.stopPropagation()
+      await vaiA('ritagli')
+      const pezzo = (Object.values(voce.pose)[0] || [])[0]
+      if (pezzo) ritagliAvviati.apriSu(voce.da, pezzo)
+    })
+    testa.appendChild(vai)
     const d = document.createElement('div')
     d.className = 'da'
     d.textContent = voce.da
