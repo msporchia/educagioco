@@ -9,7 +9,11 @@ leggilo prima di toccare `src/store/srs.js` o il bilanciamento. Il taglio per
 chi arriva da fuori è nel [`README.md`](README.md), con una pagina per gioco
 in `docs/`. Il banco di lavoro — ogni comando, cosa riscrive, i banchi di
 prova, come si pubblica e cosa si guarda quando qualcosa va storto — sta in
-[`ADMIN.md`](ADMIN.md).
+[`ADMIN.md`](ADMIN.md). **Quanto deve costare una cosa e quanto deve rendere
+un gioco** sta in [`CALIBRAZIONE.md`](CALIBRAZIONE.md): una moneta vale dieci
+secondi di esercizio, e da lì si ricavano prezzi, premi e curve di rincaro —
+si legge prima di scrivere un prezzo nuovo, un premio di tappa o un
+potenziamento che rincara.
 
 ## Comandi
 
