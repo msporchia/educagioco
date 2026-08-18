@@ -121,7 +121,7 @@
     "farfalle0": {"da": [167, 165], "cella": [14, 14]},
     "farfalle1": {"da": [145, 168], "cella": [12, 12]},
     "festone_bandierine": {"da": [207, 128], "cella": [50, 15]},
-    "filo_lucine": {"da": [271, 99], "cella": [53, 38]},
+    "filo_lucine": {"da": [271, 99], "cella": [53, 38], "cancella": [[12, 33, 30, 6], [26, 0, 14, 7], [52, 0, 1, 4]]},
     "fiorellino0": {"da": [159, 177], "cella": [10, 9]},
     "fiorellino1": {"da": [161, 192], "cella": [9, 9]},
     "fioriera_box0": {"da": [158, 77], "cella": [25, 23]},
@@ -144,7 +144,7 @@
     "laghetto3": {"da": [104, 42], "cella": [31, 26]},
     "lampione0": {"da": [267, 51], "cella": [17, 45]},
     "lampione1": {"da": [290, 53], "cella": [21, 52]},
-    "lampione_cesto": {"da": [331, 103], "cella": [46, 42]},
+    "lampione_cesto": {"da": [331, 103], "cella": [46, 42], "cancella": [[0, 34, 35, 9]]},
     "lanterna_muro": {"da": [249, 97], "cella": [19, 40]},
     "latte": {"da": [497, 152], "cella": [10, 18]},
     "marmellata0": {"da": [432, 152], "cella": [11, 12]},
@@ -231,7 +231,7 @@
     "vaso_ortensie_rosa": {"da": [3, 212], "cella": [25, 34]},
     "vaso_piedistallo": {"da": [224, 100], "cella": [17, 30]},
     "vaso_tulipani": {"da": [405, 36], "cella": [17, 21]},
-    "casetta_uccelli_tetto_verde": {"da": [317, 52], "cella": [25, 52]},
+    "casetta_uccelli_tetto_verde": {"da": [317, 52], "cella": [25, 52], "cancella": [[22, 22, 3, 27], [0, 50, 5, 2]]},
     "casetta_uccelli_tetto_rosso": {"da": [233, 151], "cella": [16, 44]}
   },
   "anima": ["fontana_grande", "mulino_giardino", "mulino_vento_giocattolo"]

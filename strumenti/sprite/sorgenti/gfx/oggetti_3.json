@@ -9,7 +9,7 @@
     "altalena_pergola": {"da": [172, 198], "cella": [48, 46]},
     "apiario": {"da": [10, 202], "cella": [37, 39]},
     "carretto_mercato": {"da": [326, 84], "cella": [41, 40]},
-    "casa_albero": {"da": [271, 126], "cella": [59, 67], "cancella": [[0, 63, 6, 4]]},
+    "casa_albero": {"da": [271, 125], "cella": [59, 67], "cancella": [[0, 63, 6, 4], [5, 64, 4, 3]]},
     "cuccia_grande": {"da": [58, 208], "cella": [36, 34]},
     "fienile0": {"da": [134, 8], "cella": [78, 54]},
     "fienile_rosso": {"da": [189, 128], "cella": [75, 58]},
