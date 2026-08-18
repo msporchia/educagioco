@@ -1,0 +1,559 @@
+<title>Il foglio dei campi</title>
+<style>
+  /* La palette non è inventata: sono i colori che il gioco usa già in
+     src/giochi/fattoria/stile.css e dati/bisogni.js — il verde dei
+     pannelli, il dorato della pancia, il verde chiaro del "suo cibo". */
+  :root {
+    --fondo:      #f5f8f3;
+    --carta:      #ffffff;
+    --inchiostro: #16241a;
+    --spento:     #5d6f60;
+    --riga:       #d3e0d2;
+    --grano:      #b3762a;
+    --grano-viva: #e0a33c;
+    --foglia:     #3f7a4c;
+    --ombra:      0 1px 2px rgba(22,36,26,.06), 0 8px 24px -12px rgba(22,36,26,.18);
+    --griglia:    rgba(22,36,26,.10);
+
+    --sc: clamp(1rem, .82rem + .5vw, 1.0625rem);
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fondo:      #0d160f;
+      --carta:      #14211703;
+      --carta:      #142117;
+      --inchiostro: #e8efe6;
+      --spento:     #8fa691;
+      --riga:       #2b4430;
+      --grano:      #ffd98a;
+      --grano-viva: #e0a33c;
+      --foglia:     #9fd3a8;
+      --ombra:      0 1px 0 rgba(255,255,255,.03), 0 12px 30px -18px #000;
+      --griglia:    rgba(232,239,230,.13);
+    }
+  }
+  :root[data-theme="dark"] {
+    --fondo:      #0d160f;
+    --carta:      #142117;
+    --inchiostro: #e8efe6;
+    --spento:     #8fa691;
+    --riga:       #2b4430;
+    --grano:      #ffd98a;
+    --grano-viva: #e0a33c;
+    --foglia:     #9fd3a8;
+    --ombra:      0 1px 0 rgba(255,255,255,.03), 0 12px 30px -18px #000;
+    --griglia:    rgba(232,239,230,.13);
+  }
+
+  * { box-sizing: border-box }
+  body {
+    margin: 0; background: var(--fondo); color: var(--inchiostro);
+    font: var(--sc)/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  img { image-rendering: pixelated }
+  code {
+    font: 500 .86em/1.4 var(--mono);
+    background: color-mix(in srgb, var(--foglia) 12%, transparent);
+    color: var(--foglia);
+    padding: .12em .4em; border-radius: 4px; white-space: nowrap;
+  }
+  a { color: var(--grano) }
+
+  .foglio { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem 5rem }
+
+  /* ── testata ── */
+  header.testa {
+    padding: 3.5rem 0 2rem; border-bottom: 2px solid var(--riga);
+    margin-bottom: 2.5rem;
+  }
+  .occhiello {
+    font: 600 .72rem/1 var(--sans); letter-spacing: .16em;
+    text-transform: uppercase; color: var(--spento); margin: 0 0 1rem;
+  }
+  h1 {
+    font: 400 clamp(2.1rem, 1.4rem + 3vw, 3.4rem)/1.05 var(--serif);
+    margin: 0 0 .9rem; text-wrap: balance; letter-spacing: -.015em;
+  }
+  .sottotitolo {
+    font-size: 1.12em; color: var(--spento); margin: 0; max-width: 46ch;
+  }
+  .conto {
+    display: flex; flex-wrap: wrap; gap: 0 2.5rem; margin-top: 2rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--riga);
+  }
+  .conto div { display: flex; flex-direction: column }
+  .conto dt, .conto .et {
+    font: 600 .7rem/1 var(--sans); letter-spacing: .12em;
+    text-transform: uppercase; color: var(--spento); margin-bottom: .35rem;
+  }
+  .conto .n {
+    font: 400 1.8rem/1 var(--serif); font-variant-numeric: tabular-nums;
+    color: var(--grano);
+  }
+
+  h2 {
+    font: 400 1.75rem/1.2 var(--serif); margin: 3.5rem 0 .5rem;
+    text-wrap: balance;
+  }
+  h2 .num {
+    font: 600 .7rem/1 var(--sans); letter-spacing: .12em; color: var(--grano-viva);
+    display: block; margin-bottom: .6rem; text-transform: uppercase;
+  }
+  h2 + p.intro { color: var(--spento); max-width: 60ch; margin: 0 0 2rem }
+
+  /* ── il quadro: una cella 16×16 da riempire ── */
+  .quadro {
+    width: 84px; height: 84px; flex: none; border-radius: 3px;
+    border: 1.5px dashed var(--riga);
+    background-image:
+      linear-gradient(var(--griglia) 1px, transparent 1px),
+      linear-gradient(90deg, var(--griglia) 1px, transparent 1px);
+    background-size: 21px 21px;
+  }
+  .quadro.fum { width: 64px; height: 64px; background-size: 16px 16px }
+
+  /* ── una coltura ── */
+  .coltura {
+    background: var(--carta); border: 1px solid var(--riga);
+    border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem;
+    box-shadow: var(--ombra);
+  }
+  .coltura > header {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: .75rem 1rem;
+    padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--riga);
+  }
+  .coltura h3 {
+    font: 400 1.45rem/1 var(--serif); margin: 0;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .em { font-size: 1.15em; filter: saturate(.9) }
+  .tag {
+    font: 600 .66rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+    padding: .35em .6em; border-radius: 100px; border: 1px solid;
+  }
+  .t-inuso { color: var(--foglia); border-color: color-mix(in srgb, var(--foglia) 45%, transparent) }
+  .t-serve { color: var(--grano); border-color: color-mix(in srgb, var(--grano) 45%, transparent);
+             background: color-mix(in srgb, var(--grano) 10%, transparent) }
+  .t-varietà { color: var(--spento); border-color: var(--riga) }
+  .numeri { display: flex; gap: 1.5rem; margin: 0 0 0 auto }
+  .numeri div { display: flex; flex-direction: column }
+  .numeri dt {
+    font: 600 .64rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--spento); margin-bottom: .25rem;
+  }
+  .numeri dd {
+    margin: 0; font: 500 .9rem/1.2 var(--mono); font-variant-numeric: tabular-nums;
+  }
+  .serve { margin: 0 0 1.5rem; max-width: 62ch }
+  .serve b { color: var(--grano) }
+
+  .crescita {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;
+    position: relative;
+  }
+  .cella { display: flex; flex-direction: column; gap: .7rem }
+  .cella-t { font-size: .875rem; line-height: 1.5; color: var(--spento) }
+  .cella-t b {
+    display: block; color: var(--inchiostro); font-weight: 600;
+    font-size: .95rem; margin-bottom: .15rem;
+  }
+
+  .oggi {
+    display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem;
+    padding: .75rem 1rem; border-radius: 8px;
+    background: color-mix(in srgb, var(--foglia) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--foglia) 22%, transparent);
+    font-size: .84rem; color: var(--spento);
+  }
+  .oggi b { display: block; color: var(--foglia); font-size: .78rem;
+            letter-spacing: .08em; text-transform: uppercase }
+  .oggi code { margin: .15rem .4rem .15rem 0; display: inline-block }
+  .nomi { font-size: .8rem; color: var(--spento); margin: 1.25rem 0 0 }
+
+  /* ── i fumetti ── */
+  .fumetto {
+    display: flex; gap: 1.25rem; align-items: flex-start;
+    padding: 1.25rem 0; border-bottom: 1px solid var(--riga);
+  }
+  .fumetto:last-of-type { border-bottom: 0 }
+  .fumetto h4 {
+    font: 600 1rem/1.3 var(--sans); margin: 0 0 .2rem;
+    display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap;
+  }
+  .dove {
+    font: 500 .74rem/1 var(--mono); color: var(--spento);
+    margin: 0 0 .6rem; letter-spacing: .01em;
+  }
+  .fumetto p:last-child { margin-bottom: 0 }
+  .fumetto p { margin: 0 0 .5rem; font-size: .92rem; max-width: 58ch }
+  .rif { display: flex; align-items: center; gap: .6rem; margin-top: .6rem;
+         font-size: .78rem; color: var(--spento) }
+  .camp { display: block }
+  .camp.min { max-height: 34px; width: auto }
+
+  /* ── nota ── */
+  .nota {
+    border-left: 3px solid var(--grano-viva); padding: .1rem 0 .1rem 1.25rem;
+    margin: 2rem 0; color: var(--spento); max-width: 62ch;
+  }
+  .nota b { color: var(--inchiostro) }
+
+  /* ── stile di riferimento ── */
+  .stile {
+    display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;
+    padding: 1.5rem; background: var(--carta); border: 1px solid var(--riga);
+    border-radius: 10px; margin: 1.5rem 0;
+  }
+  .stile figure { margin: 0; display: flex; flex-direction: column; gap: .5rem;
+                  align-items: center }
+  .stile figcaption { font: 500 .7rem/1 var(--mono); color: var(--spento) }
+
+  /* ── consegna ── */
+  pre {
+    background: var(--carta); border: 1px solid var(--riga); border-radius: 8px;
+    padding: 1rem 1.15rem; overflow-x: auto; font: .8rem/1.6 var(--mono);
+    color: var(--inchiostro);
+  }
+  pre .k { color: var(--foglia) }
+  pre .v { color: var(--grano) }
+  pre .c { color: var(--spento); font-style: italic }
+  ol.passi { padding-left: 0; list-style: none; counter-reset: p; max-width: 62ch }
+  ol.passi li {
+    counter-increment: p; position: relative; padding-left: 2.4rem;
+    margin-bottom: 1rem;
+  }
+  ol.passi li::before {
+    content: counter(p); position: absolute; left: 0; top: .05em;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: grid; place-items: center;
+    font: 600 .78rem/1 var(--mono); color: var(--grano);
+    border: 1.5px solid color-mix(in srgb, var(--grano) 40%, transparent);
+  }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 1rem 0 }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--riga) }
+  th { font: 600 .68rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+       color: var(--spento) }
+  td:first-child { font-family: var(--mono); font-size: .84rem; white-space: nowrap }
+  .avvolgi { overflow-x: auto }
+
+  footer {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 2px solid var(--riga);
+    font-size: .84rem; color: var(--spento);
+  }
+  .manca { color: var(--spento); font-size: .8rem; font-style: italic }
+
+  @media (max-width: 620px) {
+    .crescita { grid-template-columns: 1fr; gap: 1rem }
+    .cella { flex-direction: row; align-items: flex-start; gap: 1rem }
+    .quadro { width: 64px; height: 64px; background-size: 16px 16px }
+    .numeri { margin: 0; width: 100% }
+    .fumetto { flex-direction: column }
+  }
+</style>
+
+<div class="foglio">
+
+<header class="testa">
+  <p class="occhiello">Educagioco · la fattoria · da disegnare</p>
+  <h1>Il foglio dei campi</h1>
+  <p class="sottotitolo">Sei colture coi loro stadi di crescita, e sei icone
+     per dire senza parole che c'è qualcosa da fare. Tutto a sedici pixel per
+     sedici.</p>
+  <div class="conto">
+    <div><span class="et">tessere in tutto</span><span class="n">25</span></div>
+    <div><span class="et">misura</span><span class="n">16×16</span></div>
+    <div><span class="et">servono davvero</span><span class="n">17</span></div>
+    <div><span class="et">di contorno</span><span class="n">8</span></div>
+  </div>
+</header>
+
+<p class="nota"><b>Perché a 16×16.</b> È la misura della tessera di tutto il
+   gioco (<code>T = 16</code> in <code>dati/mondo.js</code>), e a schermo si
+   ingrandisce di due, tre o cinque volte a numeri interi — mai a metà, se no
+   la pixel art fa pixel larghi due e altri tre e da vicino si vede. Chi
+   disegna può lavorare grande: basta che sia <b>un multiplo esatto</b> — 64×64
+   per cella va benissimo, e lo riduciamo noi.</p>
+
+<h2><span class="num">Parte prima</span>I campi che crescono</h2>
+<p class="intro">Un campo è una zolla 2×2 celle, e ogni cella mostra la stessa
+   tessera ripetuta: quattro ciuffi di grano fanno un campo di grano, uno solo
+   in mezzo fa un ciuffo d'erba. Perciò <b>ogni tessera dev'essere una zolla
+   che sta bene accanto a sé stessa</b> — con un po' di margine trasparente sui
+   bordi, così non si vedono le cuciture — e non un disegno centrato che va
+   guardato da solo.</p>
+
+<div class="stile">
+  <figure><img class="camp" src="data:image/png;base64,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" alt="la terra arata di oggi" width="96" height="96"><figcaption>orto — la terra</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAAn0lEQVR42u3RAQ0AMAjAsHNPF3Cx6AQZJKSTsMbLX0djXQsAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAA21CzcAtrvcNdAAAAAAElFTkSuQmCC" alt="il prato" width="48" height="48"><figcaption>erba0 — il prato</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAABr0lEQVR42u3bu0oDQRiG4U20SCMIKRQFCYiFpLEWMXegaCHegneghZWFtyIWnnoLQaxtREECQYioGAjYBAS1sJ0tJmyyOTxvOQwz2bz7/3zMsEkCAAAwjhRG9cHeOve/MfNnSyu5/BdF72C+EEAAASBgfJkc1bSz/9TOZJ1epyMVoAURAAIIQE44C+pT2lEBWhAIIAAESEHdUT1cC6aan7lw2Cm+hh/t4ei2oAJAAAEggAAM/1lQWjoatLSjAggAAQSAACnon4Pdzagbq4vaZ/gNSjnz2XguR/2e45NLN2JaEAggAARIQX1IO/OVqeD8ZuMrOH611AqOV68nguOLC9NJFvv2Oh2pAC2IABBAAHJi4L4RS0spe9/h8WRdBYAAAkAAAeiC3G7EdlZrUTdiaWc7adRf2lHzT+9u3IhpQSCAABAwTgzcWVBs2oldJzYdqQAtCAQQAAKkoGypNz96mo7S0k7avpWZ5a3QeOP98VwFaEEggAAQMILkdiOWljrKpeSsl/u2Osl2FutklY5UgBZEAAggAOOWgmLTUV44C9KCQAABIAAAAAAAAAAYcv4A6c5WK/cBcvYAAAAASUVORK5CYII=" alt="il germoglio di ripiego" width="48" height="48"><figcaption>pianta_germoglio</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,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" alt="fungo" width="57" height="51"><figcaption>fungo0</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA2CAYAAACbZ/oUAAACY0lEQVR42u2av2sTYRjH7/KjaS0hrSatSdNIq5EioRIRa6lkUaGCxaVxsQ4iguAf4CAYJydHnbprcdAOVVR0EB2UUAMloDUSm9okTUisaS7Nz7v4D3wWx8PnGT/ve+/lcw987+W9qLFYzKJA/Uok+olvVTZmiHtdjbPEO42dQeK9qvKS+Pdc3wbxgxNTSeLFYtFQ/qEsyn9WIizCImzusuXzeSsNlBu568T3D+y7iSnqGzpAfGrMbiM+3FudJ54stDPEl56/fUTcHwguEe8P6HXpsAiLsAibvtRwaGySBi5HnE+IHwk6R4jfXdxViVd+6/gWuDdv6RKfCKRwb7zyyZ4n/jHtvk086Dr0WjoswiIswubfSx92d6ZpYD1ddhO/NGfF1A35a5jSq4YXH+r95Z+Yxg+utnGdC5E+D/G1Te0c7qWHlHfSYREWYRE2f0pHTtsXaMDRbPUQj91JY4oWWgryrR+beOMbczrODx3tYhNefagh1/SB88SX3689lg6LsAiLsPlTuqSpf2gg+7WOD+PK7B6mq8+NBxhKKssnG6ODHZz/Oa7i+v5h5icC7S/Ed6rOonRYhEVYhM2f0vHEHp4/XzvTPEU87Gvjfz+2yyqmsVaxYLp6J3l+cp15ptTdJZ5Idd8QPzkynpUOi7AIi7D5U3rc48KvbA9Xms/wiln7RcLlgoHpndq24zLTMzry4HEFN9lPF5VvxBsdS5y4Q9N06bAIi7AIm77UaDSKXwOP9WQwdVczuTBxq9K8RbxrGE7iPTZbjXirXsW3hts7+oJ41WEt4e8vegzpsAiLsAibvv4CqFOtc5pvXjUAAAAASUVORK5CYII=" alt="fiorellino" width="30" height="27"><figcaption>fiorellino0</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,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" alt="cespuglio" width="144" height="96"><figcaption>cespuglio</figcaption></figure>
+  <figure><img class="camp" src="data:image/png;base64,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" alt="melo" width="111" height="147"><figcaption>melo</figcaption></figure>
+</div>
+<p class="intro" style="margin-top:-.5rem"><b>Questo è lo stile da tenere</b>, e
+   sono i pezzi veri del gioco, ingranditi tre volte. Vengono dal set
+   <i>Zelda-like tilesets</i> di ArMM1998 (CC0): contorni scuri ma non neri,
+   poche tinte per oggetto, ombra portata appena accennata, niente antialiasing.
+   Il campione più utile è <code>orto</code>: è la terra su cui tutto il resto
+   va appoggiato.</p>
+
+
+    <article class="coltura" id="grano">
+      <header>
+        <h3><span class="em">🌾</span>Grano</h3>
+        <span class="tag t-inuso">in uso</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>10 min</dd></div>
+          <div><dt>rende</dt><dd>3 grano</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> Il mangime, che va bene per tutti gli animali. È la catena che c'è già.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Fili sottili verde chiaro, dritti, radi. Si deve capire che è appena nato.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Steli più alti e più fitti, ancora verdi, senza spiga.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>Spighe dorate piegate dal peso. È lo stadio che si vede da lontano: dev'essere il più caldo di tutti.</div></div></div>
+      <div class="oggi"><img class="camp" src="data:image/png;base64,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" alt="pagliaio0" width="69" height="54"><div><b>C'è già</b><code>pagliaio0</code>oggi il maturo è un mucchio di fieno preso in prestito</div></div>
+      <p class="nomi">I nomi delle tessere: <code>campo_grano0</code> ·
+         <code>campo_grano1</code> · <code>campo_grano2</code></p>
+    </article>
+    <article class="coltura" id="mais">
+      <header>
+        <h3><span class="em">🌽</span>Mais</h3>
+        <span class="tag t-inuso">in uso</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>18 min</dd></div>
+          <div><dt>rende</dt><dd>5 mais</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> Il pastone, la pappa buona che riempie il 70% di pancia.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Due o tre foglie larghe che escono a ventaglio dalla terra.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Fusto verde con le foglie lunghe, ancora senza pannocchia.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>Pannocchie gialle che spuntano dal fusto. Alto: può sbordare un po' sopra la cella.</div></div></div>
+      <div class="oggi"><img class="camp" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAACACAYAAAC7gW9qAAACHUlEQVR42u2avUoDURBGb0Q7bULERJQE0TYgglgkqO+QykoQLHwA8RHEB7AQBCt9DBWEgCCCNgGbqCAp7LTX1p2FDMOdNT97TrfZzSZ7mPnuT1IIguO9nZ8wxhydXxb+Hk+EnIOAvAuY1C4o16ZH+gF73W8qAAEIiMgAydbBZ7LHHj8Sxxcns7Zx+WrK9X4bzQoVgAAEOGaA7PnUPGF1PnG8e9i/h2XPW+8nz8vM6LTJAAQgwDMDZI9pPShZbj6L68tR99MyI4QnsRZYogIQgICIDOi06317TOvJhjh/1+4ljlupHjau942ZQQUgAAFx+wHWcVter/W8dn/t89KZxZ4gAhDgmQGxmeCdKcwDaAEEDDYDrD0o1wKNjDOGCkAAAnwz4Oa0JF4pmd5fCnUxd9f2I0LU51EBCEBAXAYszBVH+gH5jxAtgABbBnTfv8QrbyP9gOnnoQIQgADP/QCN2/vXqPdvrlepAAQgYIgyQPa01qPyvDYu1xZnMv0+ayvb+1QAAhDgNw/Qxvlqpeja49r9qQAEIOB/M0DrQWvPy3lCbI9TAQhAQLYZ4D2uW9f/2tqCCkAAAnwzwNqjsue1cd26vrdmEBWAAAQMdj/AurbwnjdQAQhAgG8GZP3bXew4TwUgAAFxGRC73qYCEICAoaagXSB/T6cCEICAfGXAuGXEw8v1GRWAAAQAAAAAAAAAAAAAAAAAAAAAAEBO+AWAFZWK8z6ABgAAAABJRU5ErkJggg==" alt="cassetta3" width="48" height="96"><div><b>C'è già</b><code>cassetta3</code>oggi il maturo è una cassetta di mais</div></div>
+      <p class="nomi">I nomi delle tessere: <code>campo_mais0</code> ·
+         <code>campo_mais1</code> · <code>campo_mais2</code></p>
+    </article>
+    <article class="coltura" id="carota">
+      <header>
+        <h3><span class="em">🥕</span>Carota</h3>
+        <span class="tag t-serve">serve</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>6 min</dd></div>
+          <div><dt>rende</dt><dd>4 carote</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> Il coniglio, che la mangia diretta senza passare dal mulino. È la catena corta: si semina, si raccoglie, si dà. Tre tocchi e si è capito il gioco.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Ciuffetti di foglie frastagliate, piccoli e verde scuro.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Il ciuffo è folto e pieno, e non si vede ancora niente di arancione.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>La cima arancione che spunta dalla terra sotto il ciuffo. Deve leggersi «è pronta» a colpo d'occhio.</div></div></div>
+      
+      <p class="nomi">I nomi delle tessere: <code>campo_carota0</code> ·
+         <code>campo_carota1</code> · <code>campo_carota2</code></p>
+    </article>
+    <article class="coltura" id="fieno">
+      <header>
+        <h3><span class="em">🌱</span>Erba medica</h3>
+        <span class="tag t-serve">serve</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>8 min</dd></div>
+          <div><dt>rende</dt><dd>6 erba</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> La mucca, quando arriverà. È il foraggio: cresce in fretta, rende tanto, non si mangia in nessun'altra catena.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Erbetta bassa e uniforme, appena più scura del prato attorno — ma si deve distinguere dal prato.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Un prato folto, verde pieno.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>Erba alta con qualche fiorellino viola. Da qui esce la balla di fieno, che nell'atlante c'è già.</div></div></div>
+      <div class="oggi"><img class="camp" src="data:image/png;base64,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" alt="balla_fieno_tonda" width="81" height="69"><div><b>C'è già</b><code>balla_fieno_tonda</code>la balla di fieno esiste già: serve solo il campo da cui esce</div></div>
+      <p class="nomi">I nomi delle tessere: <code>campo_fieno0</code> ·
+         <code>campo_fieno1</code> · <code>campo_fieno2</code></p>
+    </article>
+    <article class="coltura" id="pomodoro">
+      <header>
+        <h3><span class="em">🍅</span>Pomodoro</h3>
+        <span class="tag t-varietà">varietà</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>12 min</dd></div>
+          <div><dt>rende</dt><dd>4 pomodori</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> Niente, ancora. È lì per il colore: sei campi seminati tutti di giallo e verde sono un campo solo ripetuto sei volte.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Due foglioline tonde su un gambo.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Cespuglio verde con un tutore di legno, senza frutti.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>Pomodori rossi appesi. Il rosso è il colore che manca a tutte le altre colture.</div></div></div>
+      <div class="oggi"><img class="camp" src="data:image/png;base64,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" alt="cesta_verdure" width="84" height="54"><div><b>C'è già</b><code>cesta_verdure</code>il ripiego che c'è oggi</div></div>
+      <p class="nomi">I nomi delle tessere: <code>campo_pomodoro0</code> ·
+         <code>campo_pomodoro1</code> · <code>campo_pomodoro2</code></p>
+    </article>
+    <article class="coltura" id="zucca">
+      <header>
+        <h3><span class="em">🎃</span>Zucca</h3>
+        <span class="tag t-varietà">varietà</span>
+        <dl class="numeri">
+          <div><dt>cresce in</dt><dd>40 min</dd></div>
+          <div><dt>rende</dt><dd>2 zucche</dd></div>
+          <div><dt>tessere</dt><dd>3</dd></div>
+        </dl>
+      </header>
+      <p class="serve"><b>A cosa serve.</b> Niente, ancora. È la coltura lenta: quella che si semina sapendo che si torna domani.</p>
+      <div class="crescita"><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Germoglio</b>Una fogliolina larga e cuoriforme.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>A metà</b>Tralci che strisciano per terra con le foglie grandi, e un fiore giallo.</div></div><div class="cella"><div class="quadro" aria-hidden="true"></div><div class="cella-t"><b>Maturo</b>Una zucca arancione grossa per cella. È l'unica coltura dove un solo frutto riempie la casella.</div></div></div>
+      
+      <p class="nomi">I nomi delle tessere: <code>campo_zucca0</code> ·
+         <code>campo_zucca1</code> · <code>campo_zucca2</code></p>
+    </article>
+
+<p class="nota"><b>Una richiesta in più, se costa poco.</b> Dello stadio maturo
+   fanne <b>due o tre varianti</b> per coltura (<code>campo_grano2</code>,
+   <code>campo_grano2b</code>…). Un campo grande ripete la stessa tessera su
+   nove celle, e nove spighe identiche in griglia si vedono come una tappezzeria.
+   Il gioco sa già scegliere una variante per cella in modo stabile — lo fa già
+   col prato, che ha quattro erbe diverse.</p>
+
+<h2><span class="num">Parte seconda</span>Le icone che chiamano</h2>
+<p class="intro">Sì, servono — ed è la cosa che manca di più. Oggi sopra una
+   bestia che ha fame galleggia un <b>💭</b> e sopra un campo pronto un
+   <b>🧺</b>: sono emoji, cioè le disegna il telefono. Hanno lo stile di Apple
+   in mezzo a uno schermo disegnato a mano, non si tingono dell'ambiente, e
+   dicono tutte la stessa cosa generica.</p>
+
+<p class="intro" style="margin-top:-1rem">Ognuna è <b>una tessera sola già
+   completa</b>: la nuvoletta con dentro il suo simbolo. Non componiamo niente a
+   schermo — una nuvoletta e un'icona da incastrarci dentro vorrebbe dire
+   allineare due disegni al pixel, e sarebbe storto sul telefono di qualcuno.</p>
+
+<p class="nota"><b>Devono leggersi su due fondi</b>: il verde del prato e il
+   marrone della terra arata. Quindi la nuvoletta va chiara e piena — panna, non
+   bianca — con un contorno scuro che regge su tutti e due. Galleggiano sopra la
+   testa di chi le riguarda e ondeggiano piano.</p>
+
+
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Ha fame <code>bolla_fame</code></h4>
+        <p class="dove">sopra un animale · oggi: 💭 generico</p>
+        <p>Una ciotola vuota, vista di tre quarti. Vale per il cane, il gatto e il pappagallo: è il bisogno, non il cibo — un osso sopra un pappagallo direbbe la cosa sbagliata.</p>
+        <div class="rif"><img class="camp min" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAAA2CAYAAABZV76QAAADC0lEQVR42u2bS2sTURiGZ6a5NElDmxgp9qZUe8FSrVaEFqUVrEXoQqQRVy5cuhChCzdK/oD6A7ooLhRXLosrQZRisY0WCqVgWms1phesSTqTTDKX+AeeLhQXI3xn+czhy+SZ7/CemWFURVFUBUYymdSIrxdiXcSLqv8BcTfacpJ468BAO3HbKNUT1xTHJV51XORW2SwS31pamCWeiKgviQ912G+JT09P23yeMv7pEKEiVISKUBl/P9SDpPZcvncWr0DvueeY8s2n24gX1r/7iBsFA3cXqlGo4Zn6gsoBHFO+vrEB6/R0NznEw6qlE89/mHtIfHLAfCodKktehIpQUSBCvZ3yIyMpTOEly5gh3j81lST+/skLTG239BN5oL0XT6hbNZFfOHUc+aaLp6+8Ws5i+mslA9P/yPlB5NFfKzl8FpH5OCwdKktehIpQUSBCPT18G3r6BB0od16/Qtx2+BpM3B5HvvUujdy//Q3T//7NYUxbPRjHOhklgvPntzHklUNdzcgj8TDy1U9GI/HK140h6VBZ8iJUhIoCEertlLdD8at4Dx4/GiGezmmYqt0dnZjaM4/xNb6SLbhYZyFvY501vsVXdnUb6/SNR7HO8mIW52eW1vgH/E1+wnuR1mvSobLkRagIFQUi1NspX6mPX8QjiRbEjmVhSkY0B/nsahXrzOUDmMK7FU7/z1kTuVXk+I8HOP3bQzx/33b4//rrsOncWOKSdKgseREqQkWBCPV2ymv67iIecPUxTD2tAQvFbAN5eieAfM/iFDYs3hW4Fqew6/KuwNTLyAM+3o3UDseQa/m8w37MtHSoLHkRKkJFgQj19FAHJ1L4QvpLLvMIU7Vv9AbxurauEPHQsR68aFX+gE/xNQT5Hn8lx/fyJqe8Virii/lA6QfOd/Z2ysTDa29wFxSt1e5Kh8qSF6EiVBSIUG+n/IFHUimUnXj2+gymbaWM37+H+sduES+7da1Yp2zgwwK3qgT/5A/4FQu/lw8XN/FLQMfcnyc+OnhnXjpUlrwIlSFCReh/OX4DCE/7tayPXHwAAAAASUVORK5CYII=" alt="ciotola0" width="42" height="27"><span>vicino come stile: <code>ciotola0</code></span></div>
+      </div>
+    </article>
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Si annoia <code>bolla_gioco</code></h4>
+        <p class="dove">sopra un animale · oggi: 💭 generico</p>
+        <p>Una pallina. Tonda e a due colori, come le palline da cane: dev'essere riconoscibile a sedici pixel, quindi niente dettagli.</p>
+        
+      </div>
+    </article>
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Pelo arruffato <code>bolla_pelo</code></h4>
+        <p class="dove">sopra un animale · oggi: 💭 generico</p>
+        <p>Una spazzola vista di lato, col manico in basso a destra. È il bisogno che si riempie gratis, e nessuno lo scopre se non glielo si dice.</p>
+        
+      </div>
+    </article>
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Raccolto pronto <code>bolla_pronto</code></h4>
+        <p class="dove">sopra un campo · oggi: 🧺 emoji</p>
+        <p>Un cesto di vimini vuoto, visto di tre quarti. È l'invito più importante di tutti: è quello che fa attraversare il prato.</p>
+        <div class="rif"><img class="camp min" src="data:image/png;base64,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" alt="cassetta_raccolto" width="75" height="51"><span>vicino come stile: <code>cassetta_raccolto</code></span></div>
+      </div>
+    </article>
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Sta lavorando <code>bolla_lavora</code></h4>
+        <p class="dove">sopra il mulino · oggi: ⏳ emoji</p>
+        <p>Una clessidra con la sabbia in mezzo. Deve leggersi come «aspetta», non come «fai qualcosa»: più spenta delle altre.</p>
+        
+      </div>
+    </article>
+    <article class="fumetto">
+      <div class="quadro fum" aria-hidden="true"></div>
+      <div>
+        <h4>Granaio pieno <code>bolla_pieno</code></h4>
+        <p class="dove">sopra un campo · oggi: niente</p>
+        <p>Un sacco con la bocca legata e stracolmo. Facoltativa: serve solo se un giorno un bambino si troverà davanti il campo che non si raccoglie e non capirà perché.</p>
+        <div class="rif"><img class="camp min" src="data:image/png;base64,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" alt="sacco_iuta" width="51" height="63"><span>vicino come stile: <code>sacco_iuta</code></span></div>
+      </div>
+    </article>
+
+<h2><span class="num">Parte terza</span>Come si consegna</h2>
+<p class="intro">Il PNG che arriva non si tocca mai più: entra in
+   <code>strumenti/sprite/sorgenti/</code> e da lì si rigenera tutto. Le
+   correzioni — un ritaglio storto, un nome sbagliato — sono dato in un
+   foglietto accanto, mai pixel modificati a mano.</p>
+
+<ol class="passi">
+  <li><b>Un foglio unico</b>, PNG con lo sfondo trasparente. Se non si può,
+      va bene un fondo tutto di un colore piatto e diverso da tutto il resto —
+      lo togliamo noi allagando dai bordi (mai per colore: un cesto panna su
+      fondo bianco si bucherebbe).</li>
+  <li><b>Le tessere in griglia regolare</b>, tutte della stessa misura, senza
+      spazi fra una e l'altra. Una coltura per riga, i tre stadi in ordine da
+      sinistra a destra: è l'ordine in cui il gioco le mostra, e vederlo sul
+      foglio è già mezza verifica.</li>
+  <li><b>Le icone su una riga a parte</b>, nello stesso ordine dell'elenco qui
+      sopra.</li>
+  <li><b>Nessun testo, nessun numero, nessuna cornice</b> sul foglio. Tutto
+      quello che c'è dentro un rettangolo finisce nel gioco.</li>
+</ol>
+
+<p>Poi il foglietto <code>campi.json</code>, accanto al PNG. Questo è già
+   pronto: se la griglia è quella descritta sopra, si copia com'è.</p>
+
+<div class="avvolgi"><pre><span class="c">// strumenti/sprite/sorgenti/campi.json</span>
+{
+  <span class="k">"bersaglio"</span>: <span class="v">"fattoria"</span>,
+  <span class="k">"scala"</span>: <span class="v">4</span>,           <span class="c">// se ogni cella sul foglio è 64×64</span>
+  <span class="k">"fondo"</span>: <span class="v">"trasparente"</span>,
+  <span class="k">"cella"</span>: [<span class="v">16</span>, <span class="v">16</span>],
+  <span class="k">"famiglia"</span>: <span class="v">"tessera"</span>,
+  <span class="k">"sprite"</span>: {
+    <span class="k">"campo_arato"</span>:   { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">0</span>] },
+    <span class="k">"campo_grano"</span>:   { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">1</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"campo_mais"</span>:    { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">2</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"campo_carota"</span>:  { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">3</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"campo_fieno"</span>:   { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">4</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"campo_pomodoro"</span>:{ <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">5</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"campo_zucca"</span>:   { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">6</span>], <span class="k">"quanti"</span>: <span class="v">3</span> },
+    <span class="k">"bolla"</span>:         { <span class="k">"da"</span>: [<span class="v">0</span>, <span class="v">7</span>], <span class="k">"quanti"</span>: <span class="v">6</span> }
+  }
+}</pre></div>
+
+<p>E poi, da qui, due comandi:</p>
+<div class="avvolgi"><pre>python3 strumenti/sprite/atlante.py fattoria   <span class="c"># ritaglia e rigenera</span>
+npm run mondo                                 <span class="c"># e si guardano, ingranditi</span></pre></div>
+
+<p class="nota"><b>Il banco è la prova vera.</b> <code>npm run mondo</code> apre
+   una pagina dove le tessere si posano su un prato finto e si guardano
+   affiancate, alla scala giusta, accanto a quelle vecchie. Uno sprite fermo su
+   un fondo a scacchi non dice se funziona: un campo si giudica quando ne
+   metti quattro celle vicine e ci passa davanti un cane.</p>
+
+<h2><span class="num">In coda</span>Cosa cambia nel codice</h2>
+<p class="intro">Niente di strutturale: gli stadi sono nomi di tessera in una
+   tabella, e il gioco già sa disegnarli. Arrivato il foglio, si cambia una riga
+   per coltura.</p>
+
+<div class="avvolgi"><table>
+  <thead><tr><th>file</th><th>cosa cambia</th></tr></thead>
+  <tbody>
+    <tr><td>dati/coltivazioni.js</td><td>i nomi delle tessere in <code>stadi</code>, e le due colture nuove</td></tr>
+    <tr><td>dati/catalogo.js</td><td>il campo passa da <code>orto</code> a <code>campo_arato</code></td></tr>
+    <tr><td>scena/tela.js</td><td>il fumetto disegna una tessera invece di un'emoji</td></tr>
+    <tr><td>motore/fattoria.js</td><td>niente</td></tr>
+  </tbody>
+</table></div>
+
+<footer>
+  <p><b>Il foglio dei campi</b> · commissione per la fattoria di Educagioco ·
+     18 agosto 2026. I campioni in questa pagina sono i pezzi veri dell'atlante
+     del gioco, ingranditi tre volte. Il ragionamento sulla catena di
+     produzione — perché coltivare conviene della metà e perché niente marcisce
+     mai — sta in <code>docs/fattoria.md</code>.</p>
+</footer>
+
+</div>
