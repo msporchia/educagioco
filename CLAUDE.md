@@ -445,3 +445,22 @@ bambino. Si rimette dall'indirizzo con `#pin=1234`, dove stanno già i cheat
 delle monete (`#monete=500`) e del livello della fattoria (`#fattoria=9`, che
 alza e non fa mai scendere: serve a guardare col telefono una cosa che
 arriverebbe dopo tremila monete spese).
+
+**La porta non si nasconde, si rende noiosa.** In home è un tasto piatto
+nel piede — «⚙︎ Impostazioni · giochi visibili, chi gioca, salvataggio dei
+progressi» — e non più una carta col lucchetto in mezzo ai giochi: un
+lucchetto fra undici giochi non dice «chiuso», dice «qui c'è un tesoro»,
+e «per i grandi» è una proibizione, cioè pubblicità. Nasconderla del tutto
+era già stato provato e non funziona al contrario: chi non sa che c'è non
+la trova. **E sbagliare il codice costa un'attesa** — tre secondi, poi
+dieci, poi trenta, col tastierino spento e una barretta che si riempie
+(`segnaSbaglio`/`attesa` in `store/pin.js`). Il conto sta nel modulo e non
+in un `ref` della schermata, se no uscire e rientrare lo azzererebbe. Il
+punto non era che i bambini entrassero — non è mai successo — ma che
+provarci fosse gratis e desse una reazione a ogni tiro: era un minigioco
+«indovina il codice», e la reazione era il premio. **Il tastierino dice
+di chi è la schermata e dove si torna**: «le cambia un grande, col codice
+di casa» sotto il titolo — detto a chi ha girato la maniglia sbagliata,
+non come divieto — e sotto i tasti un «← Torna ai giochi» largo quanto il
+tastierino, perché una freccia in cima non è una cosa da fare: se l'unica
+uscita è quella, provare i numeri resta il gioco più vicino.

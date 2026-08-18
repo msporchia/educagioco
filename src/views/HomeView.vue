@@ -244,7 +244,7 @@ function aChePunto (chiave) {
         <!-- se i genitori li hanno spenti tutti, la home lo dice: senza,
              sarebbe una schermata rotta invece di una scelta -->
         <p v-if="nessunGioco" class="mini vuoto">I giochi sono spenti.
-          Si riaccendono da <b>Per i grandi</b>, qui sotto.</p>
+          Si riaccendono da <b>Impostazioni</b>, qui sotto.</p>
 
         <!-- ═══ quello che non è una materia ═══
              La cameretta non insegna niente e non sta in nessun gruppo:
@@ -284,17 +284,6 @@ function aChePunto (chiave) {
           </button>
         </template>
 
-        <!-- Era la scritta «genitori» in fondo, in grigio e in minuscolo:
-             si trovava solo sapendo già che c'era. Il codice a quattro
-             cifre è la porta, non l'essere nascosti — e una porta che
-             non si vede la cerca soltanto chi sa già di doverla cercare.
-             Il nome dice cosa c'è dentro, perché «genitori» diceva a chi
-             è rivolta la pagina e non cosa ci si fa. -->
-        <button class="carta grandi" data-azione="grandi" @click="$emit('vai','genitori')">
-          <span class="ico">🔒</span>
-          <b>Per i grandi</b>
-          <i>quali giochi si vedono, chi gioca, i progressi e il codice</i>
-        </button>
       </div>
 
       <div v-if="state.regalo.n" :key="state.regalo.k" class="regalo">
@@ -305,10 +294,32 @@ function aChePunto (chiave) {
         Questa anteprima non può salvare nulla. Scarica il file e aprilo dal telefono
         o dal computer perché monete e progressi restino.
       </p>
-      <!-- nel piede resta la sola versione: la strada per i grandi adesso
-           è una carta come le altre, qui sopra. Questa riga serve a
-           rispondere «il telefono ha preso l'aggiornamento?» guardando
-           lo schermo, e non è una cosa da toccare. -->
+      <!-- ══ la porta dei grandi ══
+           Ha già cambiato posto due volte, e tutte e due per lo stesso
+           motivo letto al contrario. Prima era una scritta grigia in
+           minuscolo, e non la trovava chi non sapeva già che c'era;
+           allora è diventata una carta come i giochi, col lucchetto —
+           e i bambini hanno cominciato a provarci, perché un lucchetto
+           in mezzo a undici giochi non dice «chiuso», dice «qui c'è un
+           tesoro». Il divieto («per i grandi») è pubblicità, e la
+           griglia dei giochi la faceva leggere come il dodicesimo.
+
+           Adesso è un tasto vero, largo quanto le carte e leggibile —
+           chi la cerca la trova al primo colpo — ma piatto, grigio, nel
+           piede insieme alla versione, con un nome da modulo da
+           compilare: quello che promette è di poter cambiare le
+           impostazioni, che è precisamente la cosa che c'è dentro e non
+           interessa a nessun bambino. Chi ci prova lo stesso trova
+           l'attesa del gradino (`store/pin.js`).
+
+           `data-azione="grandi"` resta com'era: è il bersaglio di tre
+           test di integrazione, e non è cambiato dove porta. -->
+      <button class="impostazioni" data-azione="grandi" @click="$emit('vai','genitori')">
+        <b>⚙︎ Impostazioni</b>
+        <i>giochi visibili, chi gioca, salvataggio dei progressi</i>
+      </button>
+      <!-- la versione serve a rispondere «il telefono ha preso
+           l'aggiornamento?» guardando lo schermo, e non è da toccare. -->
       <p class="piede">
         <span class="versione">aggiornato il {{ versione.etichetta
           }}<span v-if="versione.commit"> · {{ versione.commit }}</span></span>
@@ -346,9 +357,6 @@ function aChePunto (chiave) {
 .carta.banco{ background:linear-gradient(120deg,#fff0dc,#fffffff0) }
 .carta.gen  { background:linear-gradient(120deg,#e4f0e8,#fffffff0) }
 .carta.room { background:linear-gradient(120deg,#ffeede,#fff6e0 45%,#fffffff0) }
-/* grigio, e l'unica carta che non è colorata: in mezzo a undici carte a
-   pastello quella dei grandi si deve vedere senza chiamare */
-.carta.grandi { background:linear-gradient(120deg,#eceff4,#fffffff0) }
 
 /* ── il titolo di un gruppo ──
    Non è una carta e non si tocca: sta fuori dal riquadro, in piccolo e
@@ -400,6 +408,18 @@ function aChePunto (chiave) {
                     100%{opacity:0;transform:translate(-50%,-120px) scale(.85)} }
 /* Deve potersi leggere se la si cerca, e sparire se non la si cerca:
    e' roba da grandi, i bambini non ci devono nemmeno inciampare. */
+/* Un tasto pieno — si tocca col dito e si legge senza occhiali — ma
+   senza niente di quello che rende invitanti le carte: nessuna ombra
+   che sporge, nessuna tinta, nessuna emoji grande. È scritto, non
+   illustrato: sotto le carte a pastello si legge come il piede della
+   pagina, e questo è il punto. */
+.impostazioni { display:block; width:100%; max-width:400px; margin-top:18px;
+                padding:11px 16px; border-radius:14px; text-align:left;
+                background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
+.impostazioni:active { background:#ffffffaa }
+.impostazioni b { display:block; font-size:14px; font-weight:800; color:var(--tenue) }
+.impostazioni i { font-style:normal; font-size:11.5px; color:var(--tenue); opacity:.75 }
+
 .piede { display:flex; align-items:baseline; justify-content:center; gap:9px;
          flex-wrap:wrap; margin-top:10px }
 .versione { font-size:11px; opacity:.42; letter-spacing:.3px }

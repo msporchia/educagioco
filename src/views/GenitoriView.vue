@@ -10,7 +10,7 @@
    dentro — quando i bambini imparano a leggerlo da sopra la spalla — e
    vive in `store/pin.js`, fuori dai profili.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
          saperiCheMancano,
@@ -23,7 +23,8 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
-import { leggiPin, scriviPin, PIN_INIZIALE } from '../store/pin.js'
+import { leggiPin, scriviPin, PIN_INIZIALE,
+         segnaSbaglio, azzeraSbagli, attesa } from '../store/pin.js'
 import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
@@ -88,6 +89,13 @@ const incidenti = ref([])
 const giudizi = ref([])
 
 onMounted(async () => {
+  /* uscire e rientrare non azzera l'attesa: se ne era rimasta, si
+     riprende da dove stava invece di ricominciare dal tastierino vivo */
+  guardaLOrologio()
+  if (conto.value.resta) {
+    haSbagliato.value = true
+    if (!battito) battito = setInterval(guardaLOrologio, 100)
+  }
   pin.value = await leggiPin()
   incidenti.value = await leggiIncidenti()
   giudizi.value = await leggiGiudizi()
@@ -223,14 +231,44 @@ const pallini = computed(() => [0, 1, 2, 3].map(i => i < cifre.value.length))
 const titoloCambio = computed(() => modo.value === 'ripeti' ? 'Ripeti il codice nuovo' : 'Il codice nuovo')
 
 function premi(n) {
+  if (fermo.value) return          // durante l'attesa il tastierino non risponde
   if (cifre.value.length >= 4) return
   sbagliato.value = false
   cifre.value += n
   if (cifre.value.length < 4) return
   if (modo.value) return quattroDelCambio()
-  if (cifre.value === pin.value) { dentro.value = true; cifre.value = '' }
-  else { sbagliato.value = true; cifre.value = '' }
+  if (cifre.value === pin.value) { dentro.value = true; cifre.value = ''; azzeraSbagli() }
+  else { cifre.value = ''; fermati() }
 }
+
+/* ── l'attesa dopo un codice sbagliato ──
+   Quanto dura lo decide `store/pin.js`, che tiene il conto degli sbagli
+   anche se si esce e si rientra; qui si tiene solo il battito che fa
+   scendere il numero e riempire la barretta. Senza barretta sarebbero
+   trenta secondi di tastierino che non fa niente, cioè esattamente il
+   guasto che si sta cercando di non avere. */
+const conto = ref({ resta: 0, quanto: 0 })
+const haSbagliato = ref(false)
+let battito = null
+const fermo = computed(() => conto.value.resta > 0)
+const mancano = computed(() => Math.ceil(conto.value.resta / 1000))
+const riempita = computed(() => conto.value.quanto
+  ? Math.min(100, 100 - conto.value.resta / conto.value.quanto * 100) : 0)
+
+function guardaLOrologio() {
+  conto.value = attesa()
+  if (conto.value.resta) return
+  clearInterval(battito); battito = null
+}
+
+function fermati() {
+  haSbagliato.value = true
+  segnaSbaglio()
+  guardaLOrologio()
+  if (!battito) battito = setInterval(guardaLOrologio, 100)
+}
+
+onUnmounted(() => clearInterval(battito))
 
 function cancella() { cifre.value = cifre.value.slice(0, -1); sbagliato.value = false }
 
@@ -311,9 +349,43 @@ const rinominando = ref('')
 const eliminando = ref('')
 const aggiungendo = ref(false)
 const nomeInCorso = ref('')
+/* ── rimettere la fascia a chi c'è già ──
+   La partenza si sceglie quando un bambino si aggiunge, ed è il momento
+   giusto; il guaio è che capita una volta sola. Chi ha installato il
+   gioco prima che la domanda esistesse — o chi l'ha passata di fretta —
+   si ritrova un profilo con tutto acceso, e l'unica strada erano trenta
+   tocchi qui sotto, uno per gioco e uno per sapere.
+
+   Sta nella carta di chi sta giocando adesso, come l'aspetto e per lo
+   stesso motivo: scrive nel profilo in memoria, e quello di un altro
+   fratello in memoria non c'è. Riscrive giochi e saperi in blocco,
+   quindi si conferma — è l'unico interruttore di questa schermata che
+   cancella scelte fatte a mano. */
+const rifasciando = ref(false)
+const fasciaScelta = ref('')
 
 function chiudiTutto() {
   rinominando.value = ''; eliminando.value = ''; aggiungendo.value = false; nomeInCorso.value = ''
+  rifasciando.value = false; fasciaScelta.value = ''
+}
+function apriRifascia() { chiudiTutto(); rifasciando.value = true }
+/* Per che età il gioco sta scegliendo le domande adesso, detto con il
+   nome di una partenza quando ce n'è una che combacia: «6,5» non vuol
+   dire niente a nessuno, «Prima o seconda» sì. */
+const etaOra = computed(() => {
+  const anni = etaDelBambino()
+  const p = PARTENZE.find(x => x.anni === anni)
+  return p ? `${p.nome} (${p.eta})` : `${anni} anni`
+})
+function rimettiFascia() {
+  const p = PARTENZE.find(x => x.chiave === fasciaScelta.value)
+  if (!p) return
+  const { giochi, sa } = applicaPartenza(p.chiave)
+  esito.value = { ok: true, testo: `${chi.value} riparte da «${p.nome}»: `
+    + (giochi ? `${giochi} giochi spenti in home` : 'tutti i giochi accesi')
+    + ' e ' + (sa ? `${sa} pezzi di scuola tolti dalle domande` : 'nessun pezzo di scuola tolto')
+    + '. I progressi sono rimasti tutti dov\'erano.' }
+  chiudiTutto()
 }
 function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.value = g.nome }
 /* nessuna preselezionata: la partenza è una domanda vera, e una risposta
@@ -491,24 +563,56 @@ async function azzera() {
 
 <template>
   <div class="schermo">
-    <Barra titolo="Genitori" :audio="false" @indietro="$emit('vai','home')" />
+    <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
 
-    <!-- ── il gradino ── -->
+    <!-- ── il gradino ──
+         Il titolo era «Solo per i grandi» e il codice sbagliato si
+         annunciava in rosso: messe insieme, le due cose facevano di
+         questa schermata un minigioco — c'è un segreto, e provare a
+         indovinarlo dà una reazione a ogni tiro. Adesso dice cosa c'è
+         dentro con la voce di un modulo da compilare, e sbagliare non
+         risponde: aspetta (`store/pin.js`).
+
+         Restava però una schermata che, a un bambino capitato qui, non
+         diceva né di chi è né dove si torna: solo un tastierino e una
+         freccia in cima. Adesso lo dice prima di tutto — «le cambia un
+         grande», detto come si dice a chi ha girato la maniglia
+         sbagliata, non come un divieto, che è pubblicità — e sotto il
+         tastierino c'è la via d'uscita, larga uguale. -->
     <div v-if="!dentro" class="centro">
-      <h2>Solo per i grandi</h2>
-      <p class="testo">Qui si salvano, si rimettono e si cancellano i progressi.</p>
+      <h2>Impostazioni</h2>
+      <p class="testo">Quali giochi si vedono, chi gioca, il salvataggio dei progressi.
+        <b>Le cambia un grande</b>, col codice di casa.</p>
 
       <div class="pallini">
         <span v-for="(pieno, i) in pallini" :key="i" :class="{ pieno }"></span>
       </div>
-      <p v-if="sbagliato" class="avviso">Codice sbagliato</p>
-
-      <div class="tastierino">
-        <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" class="tasto" @click="premi(String(n))">{{ n }}</button>
-        <span></span>
-        <button class="tasto" @click="premi('0')">0</button>
-        <button class="tasto canc" @click="cancella">⌫</button>
+      <!-- Dopo il primo sbaglio questo blocco non se ne va più: a
+           tempo scaduto la barretta e il conto restano al loro posto,
+           spenti. Sparendo si porterebbero dietro ottanta pixel, il
+           tastierino salterebbe in su nell'istante esatto in cui torna
+           a rispondere, e chi aveva il dito pronto premerebbe un altro
+           numero. -->
+      <div v-if="haSbagliato" class="fermo">
+        <span class="barretta" :class="{ muta: !fermo }"><i :style="{ width: riempita + '%' }"></i></span>
+        <small :class="{ muta: !fermo }">fra {{ mancano }} second{{ mancano === 1 ? 'o' : 'i' }} si riprova</small>
       </div>
+
+      <div class="tastierino" :class="{ spento: fermo }">
+        <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" class="tasto"
+                :disabled="fermo" @click="premi(String(n))">{{ n }}</button>
+        <span></span>
+        <button class="tasto" :disabled="fermo" @click="premi('0')">0</button>
+        <button class="tasto canc" :disabled="fermo" @click="cancella">⌫</button>
+      </div>
+
+      <!-- La via d'uscita, larga come il tastierino e sotto di esso: chi
+           è arrivato qui senza il codice deve avere davanti una cosa da
+           fare che non sia provare i numeri. La freccia della barra non
+           basta — è piccola, sta in cima e vale per ogni schermata,
+           quindi non dice «hai sbagliato porta, torna a giocare». -->
+      <button class="bottone chiaro esci" data-azione="torna-ai-giochi"
+              @click="$emit('vai','home')">← Torna ai giochi</button>
     </div>
 
     <!-- ── il codice nuovo: stesso tastierino, due giri ── -->
@@ -708,6 +812,36 @@ async function azzera() {
                           data-azione="rifascia-conferma" @click="rimettiFascia">Rimetti così</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </template>
+
+        <div v-if="aggiungendo" class="carta aperta" data-azione="nuovo-nome">
+          <b>Come si chiama?</b>
+          <form class="riga campo" @submit.prevent="salvaNome">
+            <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
+                   autocomplete="off" autocapitalize="words" spellcheck="false"
+                   placeholder="il nome" aria-label="il nome">
+          </form>
+
+          <!-- ── da dove parte ──
+               Chiedere qui e non dopo è il punto: spegnere a mano dodici
+               giochi e tre saperi si può fare da sempre, ma va fatto
+               PRIMA che il bambino apra il gioco la prima volta — cioè
+               nel momento in cui uno ha meno voglia di configurare. Tre
+               tocchi al posto di trenta, e niente che resti appiccicato
+               al profilo: da domani si tocca tutto a mano come prima. -->
+          <div class="partenze">
+            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
+                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
+                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
+              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
+              <i>{{ p.che }}</i>
+            </button>
+          </div>
+
+          <p class="mini">Con che faccia si vede in mappa</p>
+          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
                          @scegli="aspettoScelto = $event" />
 
           <div class="riga">
@@ -812,36 +946,6 @@ async function azzera() {
             <b>Ultimi inciampi</b>
             <i>Da leggere se il gioco si è chiuso o un tasto non rispondeva</i>
             <ul class="lista-guasti">
-            </div>
-          </div>
-        </template>
-
-        <div v-if="aggiungendo" class="carta aperta" data-azione="nuovo-nome">
-          <b>Come si chiama?</b>
-          <form class="riga campo" @submit.prevent="salvaNome">
-            <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
-                   autocomplete="off" autocapitalize="words" spellcheck="false"
-                   placeholder="il nome" aria-label="il nome">
-          </form>
-
-          <!-- ── da dove parte ──
-               Chiedere qui e non dopo è il punto: spegnere a mano dodici
-               giochi e tre saperi si può fare da sempre, ma va fatto
-               PRIMA che il bambino apra il gioco la prima volta — cioè
-               nel momento in cui uno ha meno voglia di configurare. Tre
-               tocchi al posto di trenta, e niente che resti appiccicato
-               al profilo: da domani si tocca tutto a mano come prima. -->
-          <div class="partenze">
-            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
-                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
-                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
-              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
-              <i>{{ p.che }}</i>
-            </button>
-          </div>
-
-          <p class="mini">Con che faccia si vede in mappa</p>
-          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
               <li v-for="(g, i) in incidenti.slice().reverse()" :key="i">
                 <b>{{ quando(g.quando) }}</b>
                 <span>{{ g.testo }}</span>
@@ -958,6 +1062,28 @@ async function azzera() {
          font-size:23px; font-weight:800; box-shadow:0 4px 0 #d4dce6 }
 .tasto:active { transform:translateY(2px); box-shadow:0 2px 0 #d4dce6 }
 .tasto.canc { font-size:19px; color:var(--tenue) }
+/* durante l'attesa il tastierino resta dov'è, spento: toglierlo di
+   mezzo farebbe pensare a una schermata rotta, e chi guarda deve
+   vedere che i tasti ci sono e che adesso non rispondono */
+.tastierino.spento { opacity:.45 }
+.tastierino.spento .tasto { box-shadow:0 4px 0 #d4dce6 }
+
+/* niente rosso e niente punto esclamativo: è una porta chiusa, non un
+   errore. La barretta è l'unica cosa che si muove — due secondi muti
+   sono indistinguibili da un tasto rotto. */
+.fermo { display:flex; flex-direction:column; align-items:center; gap:7px;
+         width:100%; max-width:260px; margin:2px 0 }
+.fermo small { font-size:12px; color:var(--tenue); opacity:.8 }
+.fermo .barretta { display:block; width:100%; height:7px; border-radius:999px;
+                   background:#ffffffcc; box-shadow:inset 0 0 0 1px #d4dce6; overflow:hidden }
+.fermo .barretta i { display:block; height:100%; border-radius:999px;
+                     background:var(--tenue); opacity:.55; transition:width .1s linear }
+/* a tempo scaduto restano lì, invisibili: tengono il posto e basta */
+.fermo .muta { visibility:hidden }
+
+/* larga quanto il tastierino e subito sotto: è il tasto più grande della
+   schermata, così la cosa ovvia da fare qui è andarsene */
+.esci { width:100%; max-width:260px; margin-top:4px; font-size:16px; padding:13px 18px }
 
 /* le due linguette: quella aperta è piena, l'altra è solo scritta —
    non c'è modo di sbagliarsi su dove si è */
@@ -1113,6 +1239,30 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
    «terza» e «quarta» sta tutta nella riga sotto, e chi sceglie senza
    leggerla sceglie a caso. Per questo la scritta piccola c'è sempre,
    anche sulla scelta non selezionata. */
+.carta.sapere.quanto { display:flex; flex-direction:column; gap:5px; align-items:flex-start;
+                       text-align:left; cursor:default }
+.carta.sapere.quanto.spento { opacity:.62 }
+.carta.sapere.quanto > em { font-style:normal; font-size:11px; color:var(--tenue) }
+.livelli { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px }
+.livello { padding:7px 12px; min-height:36px; border:none; border-radius:999px;
+           font-family:inherit; font-size:12.5px; font-weight:750; cursor:pointer;
+           color:var(--viola-scuro); background:#eceff4 }
+.livello.on { color:#fff; background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
+.livello.freccia { background:#eef2ff; color:var(--viola) }
+.livello:disabled { opacity:.4 }
+.livello.spegni.on { background:linear-gradient(180deg,#b23a5a,#8d2a45) }
+/* il consiglio si vede che è un'altra cosa dal resto della carta: non
+   è una descrizione, è un fatto misurato più un tasto */
+.carta.sapere.quanto > em.consiglio { color:var(--viola-scuro); font-weight:650 }
+.fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:800;
+       color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
+.livello:active { transform:translateY(1px) }
+
+.rifascia { display:flex; flex-direction:column; gap:9px; align-items:center;
+            width:100%; padding:11px; border-radius:14px; background:#f7f8fb }
+.rifascia > b { font-size:15px }
+.rifascia > i { font-style:normal; font-size:11.5px; line-height:1.4; color:var(--tenue);
+                text-align:center; max-width:36ch }
 .partenze { display:flex; flex-direction:column; gap:7px; width:100% }
 .partenza { display:flex; flex-direction:column; gap:2px; width:100%; text-align:left;
             padding:10px 13px; border-radius:14px; background:#fff;
@@ -1165,27 +1315,3 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .campo .nome:focus { outline:3px solid var(--viola); outline-offset:1px }
 .campo .bottone { font-size:15px; padding:11px 17px }
 </style>
-.carta.sapere.quanto { display:flex; flex-direction:column; gap:5px; align-items:flex-start;
-                       text-align:left; cursor:default }
-.carta.sapere.quanto.spento { opacity:.62 }
-.carta.sapere.quanto > em { font-style:normal; font-size:11px; color:var(--tenue) }
-.livelli { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px }
-.livello { padding:7px 12px; min-height:36px; border:none; border-radius:999px;
-           font-family:inherit; font-size:12.5px; font-weight:750; cursor:pointer;
-           color:var(--viola-scuro); background:#eceff4 }
-.livello.on { color:#fff; background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
-.livello.freccia { background:#eef2ff; color:var(--viola) }
-.livello:disabled { opacity:.4 }
-.livello.spegni.on { background:linear-gradient(180deg,#b23a5a,#8d2a45) }
-/* il consiglio si vede che è un'altra cosa dal resto della carta: non
-   è una descrizione, è un fatto misurato più un tasto */
-.carta.sapere.quanto > em.consiglio { color:var(--viola-scuro); font-weight:650 }
-.fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:800;
-       color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
-.livello:active { transform:translateY(1px) }
-
-.rifascia { display:flex; flex-direction:column; gap:9px; align-items:center;
-            width:100%; padding:11px; border-radius:14px; background:#f7f8fb }
-.rifascia > b { font-size:15px }
-.rifascia > i { font-style:normal; font-size:11.5px; line-height:1.4; color:var(--tenue);
-                text-align:center; max-width:36ch }

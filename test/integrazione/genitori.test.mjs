@@ -35,7 +35,7 @@ await semina(page, { coins: 777, totals: { math: 42, en: 0, verbi: 0, frasi: 0, 
   campagne: { dungeon: { tappa: 2, libera: false, stelle: {}, cfg: {} } } })
 
 const vaiAiGenitori = async () => {
-  await page.click('.carta[data-azione="grandi"]')
+  await page.click('[data-azione="grandi"]')
   await page.waitForSelector('.tastierino', { timeout: 5000 })
 }
 const digita = async pin => { for (const c of pin) await page.click(`.tasto >> text="${c}"`) }
@@ -45,12 +45,37 @@ await vaiAiGenitori()
 controlla('la home non mostra più "azzera i dati"',
   !(await page.evaluate(() => document.body.innerText.includes('azzera i dati'))))
 
+/* Chi arriva qui senza codice deve leggere di chi è la schermata e avere
+   davanti una cosa da fare che non sia provare i numeri: se l'unica
+   uscita è la freccia in cima, il tastierino resta il gioco più vicino. */
+controlla('il tastierino dice che è roba da grandi',
+  await page.evaluate(() => document.body.innerText.includes('Le cambia un grande')))
+controlla('e c\'è un tasto per tornare ai giochi',
+  await page.isVisible('[data-azione="torna-ai-giochi"]'))
+await page.click('[data-azione="torna-ai-giochi"]')
+await page.waitForTimeout(200)
+controlla('che riporta davvero alla home',
+  !(await page.isVisible('.tastierino')))
+await vaiAiGenitori()
+
 await digita('1234')
 await page.waitForTimeout(150)
 controlla('un PIN sbagliato non apre', await page.isVisible('.tastierino'))
-controlla('lo dice invece di restare muto', await page.isVisible('.avviso'))
+controlla('lo dice invece di restare muto', await page.isVisible('.fermo'))
 
-/* ── 2. il PIN giusto apre ── */
+/* Sbagliare costa un'attesa, ed è tutto il punto: finché non è passata
+   il tastierino non risponde, così provare i codici a raffica smette di
+   essere il minigioco che era. Quanto duri lo decide `store/pin.js`. */
+controlla('e il tastierino resta spento finché non passa',
+  await page.isDisabled('.tasto >> text="1"'))
+await page.click('.tasto >> text="1"', { force: true, timeout: 2000 }).catch(() => {})
+controlla('un tasto premuto durante l\'attesa non conta',
+  await page.evaluate(() => document.querySelectorAll('.pallini .pieno').length === 0))
+
+/* ── 2. il PIN giusto apre, passata l'attesa ── */
+/* il blocco dell'attesa non sparisce — tiene il posto, spento — quindi
+   quello che dice che è passata è la barretta che si zittisce */
+await page.waitForSelector('.fermo .barretta.muta', { state: 'attached', timeout: 15000 })
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
 const dentro = await page.evaluate(() => document.body.innerText)
@@ -638,14 +663,6 @@ uguale('e resta spento anche riaprendo il gioco',
 await page.click('button[aria-label="suono"]')   // rimesso com'era
 await page.waitForTimeout(500)
 
-rmSync(salvataggio, { force: true })
-rmSync(finto, { force: true })
-
-uguale('nessun errore in console', errori.length, 0)
-if (errori.length) errori.forEach(e => nota(e))
-
-await browser.close()
-riassunto('la schermata dei genitori')
 /* ── 12. rimettere la fascia a chi c'è già ──
    La partenza si sceglie quando un bambino si aggiunge, ma la creazione
    capita una volta sola: chi ha installato il gioco prima che la domanda
@@ -685,3 +702,11 @@ controlla('e in home restano solo i giochi per i piccoli',
    cancella niente. */
 uguale('i progressi non si sono mossi', (await leggiProfilo(page)).coins, monetePrima)
 
+rmSync(salvataggio, { force: true })
+rmSync(finto, { force: true })
+
+uguale('nessun errore in console', errori.length, 0)
+if (errori.length) errori.forEach(e => nota(e))
+
+await browser.close()
+riassunto('la schermata dei genitori')

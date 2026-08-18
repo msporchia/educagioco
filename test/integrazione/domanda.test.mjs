@@ -41,7 +41,7 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 
 /* ---------- si arriva a una domanda vera ---------- */
-await page.click('.carta[data-azione="grandi"]')
+await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('.carte', { timeout: 5000 })
