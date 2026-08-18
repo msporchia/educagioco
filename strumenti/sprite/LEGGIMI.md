@@ -100,6 +100,14 @@ allarga fin dove comincia il vicino, e il vicino bisogna vederlo.
 | **sdoppia** | il contrario: un gruppo che erano due cose diverse |
 | i quattro menù di *com'è fatto* | famiglia, giri, specchia, e se i pezzi **scorrono** o **sono alternative** — ognuno può tornare a «come il prefisso» |
 
+In cima al pannello c'è **come uscirà**: la cosa intera — non la riga del
+foglietto — coi buchi già tolti, riportata alla sua `misura`, e **in
+movimento** se i pezzi scorrono. È l'unico modo di rispondere a «l'ho unita
+giusta, va nel verso giusto?»: nessuno lo sa dire guardando tre disegni
+fermi. Non serve rigenerare niente, qui si legge il foglio sorgente
+applicando le stesse regole del generatore — `atlante.py` va rilanciato
+perché lo veda **il gioco**, non perché lo veda questa pagina.
+
 Poi «salva il foglietto» lo riscrive, e si rilancia `atlante.py`. C'è anche
 una spia che di solito non si pensa ad accendere — **quello che nessuno
 prende**: i pixel del foglio fuori da ogni rettangolo, tinti. Non risponde a

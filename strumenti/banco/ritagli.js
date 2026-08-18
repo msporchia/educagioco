@@ -219,6 +219,51 @@ function comeFinisce(nome) {
    che è l'ordine con cui `catalogo.py` li incontra. */
 const stelo = n => n.replace(/[-_]?\d+$/, '')
 
+/* ── la cosa, non la riga ──
+   Una riga del foglietto **non è una cosa**: `bandiera0`, `bandiera1` e
+   `bandiera2` sono tre righe e una bandiera sola. Chi le mette insieme
+   è `catalogo_di` in `atlante.py`, quando genera — e finché non si
+   genera nessuno lo sa. Ma è proprio quello che si vuole giudicare
+   mentre si corregge: «adesso è un'animazione sola, e va nel verso
+   giusto?».
+
+   Quindi la regola si legge anche qui. È lo stesso doppione di
+   `rettangoli()`, e per la stessa ragione: è l'unico punto in cui
+   questa pagina deve essere d'accordo col generatore. Se cambia là,
+   cambia qui — e sono tre righe di espressioni regolari, non un
+   meccanismo.
+
+   L'ordine è quello del numero, non quello alfabetico: `pezzo10` viene
+   dopo `pezzo9`, e ordinare per stringa metterebbe il decimo fotogramma
+   al secondo posto. */
+function laCosa(nome) {
+  const tutte = voci()
+  const chiDi = n => {
+    let m = n.match(/^(.+)_(giu|lato|su)(\d+)$/)
+    if (m) return { chi: m[1], posa: m[2], n: +m[3] }
+    m = n.match(/^(.+)-([a-z]+)-(\d+)$/)
+    if (m) return { chi: m[1], posa: m[2], n: +m[3] }
+    m = n.match(/^(.+?)[-_]?(\d+)$/)
+    if (m) {
+      /* il numero da solo non basta: `barile2` è un secondo barile, non
+         il terzo fotogramma di «barile» — e infatti `barile0` non
+         esiste. Ci vogliono almeno due fratelli. */
+      const fratelli = tutte.filter(q => (q.match(/^(.+?)[-_]?(\d+)$/) || [])[1] === m[1])
+      if (fratelli.length >= 2) return { chi: m[1], posa: 'fermo', n: +m[2] }
+    }
+    return { chi: n, posa: 'fermo', n: 0 }
+  }
+  const mio = chiDi(nome)
+  const pezzi = []
+  for (const n of tutte) {
+    const q = chiDi(n)
+    if (q.chi !== mio.chi || q.posa !== mio.posa) continue
+    for (const r of rettangoli(n)) pezzi.push({ nome: n, r, ordine: q.n })
+  }
+  pezzi.sort((a, b) => a.ordine - b.ordine)
+  return { chi: mio.chi, posa: mio.posa, pezzi }
+}
+
 function comeAnima(nome) {
   const { fg } = R.aperto
   const d = fg.sprite[nome] || {}
@@ -413,27 +458,106 @@ function costruisciElenco() {
     ? `${viste.length} voci` : `${viste.length} di ${voci().length}`
 }
 
-function provino([x, y, w, h], nome, z) {
+/* quanto viene fuori davvero un pezzo: `misura` se è dichiarata, se no
+   il rettangolo com'è */
+function misuraUscita(nome, [, , w, h]) {
+  const m = (R.aperto.fg.sprite[nome] || {}).misura
+  return m && m.length === 2 ? m : [w, h]
+}
+
+/* Il pezzo **come uscirà dal generatore**, non com'è sul foglio: coi
+   buchi tolti e riportato alla sua misura. Un'anteprima che ignorasse
+   le correzioni farebbe sembrare giusto proprio il caso che si sta
+   correggendo, che è il modo più elegante di essere inutile.
+
+   I buchi qui si disegnano **in rosso** invece che trasparenti: sul
+   foglio si sta lavorando, e vedere *dove* si è bucato conta più che
+   vedere il risultato pulito. Nel vivo qui sotto, invece, si buca sul
+   serio — lì la domanda è «com'è venuta». */
+function pezzoSu(c, nome, [x, y, w, h], dx, dy, zz, { rosso = true } = {}) {
   const d = R.aperto.fg.sprite[nome] || {}
-  /* il provino mostra il pezzo **come uscirà**, non com'è sul foglio:
-     con `misura` dichiarata il ritaglio viene ridotto a quella, ed è
-     tutto il senso di quel campo — un provino che ignorasse la misura
-     farebbe sembrare giusto proprio il caso che si sta correggendo */
-  const [ow, oh] = d.misura && d.misura.length === 2 ? d.misura : [w, h]
+  const [ow, oh] = misuraUscita(nome, [x, y, w, h])
+  const buchi = d.cancella || []
+  const kx = ow / w, ky = oh / h
+
+  if (!buchi.length || rosso) {
+    c.imageSmoothingEnabled = ow !== w || oh !== h
+    c.drawImage(R.aperto.img, x, y, w, h, dx, dy, ow * zz, oh * zz)
+    c.fillStyle = 'rgba(255,90,90,.55)'
+    for (const r of buchi)
+      c.fillRect(dx + r[0] * zz * kx, dy + r[1] * zz * ky, r[2] * zz * kx, r[3] * zz * ky)
+    return [ow * zz, oh * zz]
+  }
+  /* per bucare davvero si passa da una tela di servizio: `cancella` è
+     in coordinate del ritaglio, e ritagliare-bucare-ingrandire in
+     quest'ordine è l'unico che dà quello che darà `atlante.py` */
+  const t = document.createElement('canvas')
+  t.width = w; t.height = h
+  const q = t.getContext('2d')
+  q.drawImage(R.aperto.img, x, y, w, h, 0, 0, w, h)
+  for (const r of buchi) q.clearRect(r[0], r[1], r[2], r[3])
+  c.imageSmoothingEnabled = ow !== w || oh !== h
+  c.drawImage(t, 0, 0, w, h, dx, dy, ow * zz, oh * zz)
+  return [ow * zz, oh * zz]
+}
+
+function provino(r, nome, z) {
+  const [ow, oh] = misuraUscita(nome, r)
   const cv = document.createElement('canvas')
   cv.className = 'provino'
   const zz = Math.min(z, Math.max(1, Math.floor(120 / Math.max(ow, oh))))
   cv.width = Math.max(8, ow * zz); cv.height = Math.max(8, oh * zz)
-  const c = cv.getContext('2d')
-  c.imageSmoothingEnabled = ow !== w || oh !== h
-  c.drawImage(R.aperto.img, x, y, w, h, 0, 0, ow * zz, oh * zz)
-  /* i cancella si vedono anche qui, e in rosso: il provino deve dire
-     com'è il pezzo **dopo** la correzione, se no si corregge alla cieca */
-  c.fillStyle = 'rgba(255,90,90,.55)'
-  for (const r of d.cancella || [])
-    c.fillRect(r[0] * zz * ow / w, r[1] * zz * oh / h, r[2] * zz * ow / w, r[3] * zz * oh / h)
-  cv.title = `${nome} · ${x},${y} ${w}×${h}` + (ow !== w ? ` → ${ow}×${oh}` : '')
+  pezzoSu(cv.getContext('2d'), nome, r, 0, 0, zz)
+  cv.title = `${nome} · ${r[0]},${r[1]} ${r[2]}×${r[3]}` + (ow !== r[2] ? ` → ${ow}×${oh}` : '')
   return cv
+}
+
+/* ═══════════ come uscirà, dal vivo ═══════════
+   La domanda che il pannello non sapeva rispondere: «l'ho unita giusta?
+   va nel verso giusto?». Un elenco di fotogrammi fermi non lo dice —
+   un'animazione si giudica **mentre gira**, e nessuno sa dire guardando
+   tre disegni fermi se il terzo viene prima o dopo.
+
+   Non serve rigenerare niente: qui si legge il foglio sorgente e si
+   applicano le stesse regole del generatore. `atlante.py` va rilanciato
+   perché lo veda **il gioco**, non perché lo veda questa pagina. */
+let _vivo = null
+
+function anteprimaViva(dove) {
+  const cosa = laCosa(R.scelto)
+  const { animaVera } = comeAnima(R.scelto)
+  const misure = cosa.pezzi.map(p => misuraUscita(p.nome, p.r))
+  const W = Math.max(...misure.map(m => m[0])), H = Math.max(...misure.map(m => m[1]))
+  const zz = Math.max(1, Math.min(8, Math.floor(180 / Math.max(W, H))))
+  const cv = document.createElement('canvas')
+  cv.className = 'vivo'
+  cv.width = W * zz; cv.height = H * zz
+  dove.appendChild(cv)
+  _vivo = { cv, zz, W, H, cosa, anima: animaVera && cosa.pezzi.length > 1 }
+  battito()
+}
+
+function battito(t = 0) {
+  const v = _vivo
+  if (!v || !v.cv.isConnected) return
+  const i = v.anima ? Math.floor(t / 1000 * 6) % v.cosa.pezzi.length : 0
+  const p = v.cosa.pezzi[i]
+  const c = v.cv.getContext('2d')
+  c.setTransform(1, 0, 0, 1, 0, 0)
+  /* la scacchiera anche qui: un pezzo con un alone di scontorno e uno
+     pulito, sul nero, sono identici */
+  const q = 8
+  c.fillStyle = '#1a1e26'; c.fillRect(0, 0, v.cv.width, v.cv.height)
+  c.fillStyle = '#20252e'
+  for (let y = 0; y < v.cv.height; y += q)
+    for (let x = ((y / q) % 2) * q; x < v.cv.width; x += q * 2) c.fillRect(x, y, q, q)
+  const [ow, oh] = misuraUscita(p.nome, p.r)
+  /* i fotogrammi si centrano **in basso**: una cosa che cambia altezza
+     fra un fotogramma e l'altro deve restare appoggiata per terra, se
+     no sembra che rimbalzi */
+  pezzoSu(c, p.nome, p.r, (v.cv.width - ow * v.zz) / 2, v.cv.height - oh * v.zz,
+          v.zz, { rosso: false })
+  if (v.anima) requestAnimationFrame(battito)
 }
 
 function scegli(nome) {
@@ -501,6 +625,10 @@ function dettaglio() {
     </div>
     ${R.aperto.cw > 1 ? `<p class="tenue">«da» è in celle da ${R.aperto.cw}×${R.aperto.ch} px</p>` : ''}
 
+    <h3>come uscirà</h3>
+    <div id="r-anteprima"></div>
+    <p class="tenue" id="r-spiega"></p>
+
     <h3>com'è fatto</h3>
     <div class="numeri flag">
       <label>famiglia <select id="r-famiglia"${bloc}>
@@ -529,9 +657,6 @@ function dettaglio() {
         <option value="no"${anima === false ? ' selected' : ''}>sono alternative — si sceglie dal posto</option>
       </select></label>
     </div>
-    <p class="tenue" id="r-spiega"></p>
-
-    <div id="r-anteprima"></div>
     <div id="r-cancella"></div>
     <div class="bottoni">
       <button id="r-unisci"${R.segnati.length > 1 && modificabile() ? '' : ' disabled'}>${
@@ -547,16 +672,23 @@ function dettaglio() {
      `catalogo_di` — un numero in fondo al nome raggruppa **solo se ci
      sono almeno due fratelli** — ed è quella che spiega perché
      `barile2` resta un secondo barile e non il terzo fotogramma. */
-  const fratelli = stelo(R.scelto) === R.scelto ? []
-    : voci().filter(n => stelo(n) === stelo(R.scelto) && stelo(n) !== n)
-  const quantiPezzi = fratelli.length >= 2 ? fratelli.length : rr.length
-  $('#r-spiega').innerHTML = quantiPezzi < 2
-    ? 'un pezzo solo'
-    : `diventerà <b>${fratelli.length >= 2 ? stelo(R.scelto) : R.scelto}</b> con ${quantiPezzi} pezzi, che ` +
-      (animaVera ? '<b>scorrono</b> sull\'orologio' : 'sono <b>alternative</b>: si sceglie dal posto')
+  const cosa = laCosa(R.scelto)
+  $('#r-spiega').innerHTML = cosa.pezzi.length < 2
+    ? `diventerà <b>${cosa.chi}</b>, un pezzo solo`
+    : `diventerà <b>${cosa.chi}</b> con ${cosa.pezzi.length} pezzi, che ` +
+      (animaVera ? '<b>scorrono</b> sull\'orologio' : 'sono <b>alternative</b>: si sceglie dal posto') +
+      (cosa.pezzi.some(p => p.nome !== R.scelto)
+        ? `<br>presi da ${[...new Set(cosa.pezzi.map(p => p.nome))].join(', ')}` : '')
 
+  /* prima com'è, poi com'era: il grande è quello che conta — è la cosa
+     come la vedrà il gioco — e i piccoli restano per controllare i
+     singoli fotogrammi, coi buchi segnati in rosso */
   const ant = $('#r-anteprima')
-  for (const r of rr) ant.appendChild(provino(r, R.scelto, 4))
+  anteprimaViva(ant)
+  const fila = document.createElement('div')
+  fila.className = 'fila'
+  for (const p of cosa.pezzi) fila.appendChild(provino(p.r, p.nome, 3))
+  ant.appendChild(fila)
 
   const canc = $('#r-cancella')
   const elenco = d.cancella || []

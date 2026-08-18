@@ -108,8 +108,10 @@
   .numeri { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px }
   .numeri label { display: block; font-size: 11px; color: var(--tenue) }
   .numeri input { width: 100%; margin-top: 2px }
-  #r-anteprima { display: flex; gap: 5px; flex-wrap: wrap; margin: 10px 0; align-items: flex-end }
-  #r-anteprima canvas { background: #10131a; border: 1px solid var(--riga); border-radius: 3px }
+  #r-anteprima { margin: 6px 0 4px }
+  #r-anteprima canvas { image-rendering: pixelated; border: 1px solid var(--riga); border-radius: 3px }
+  #r-anteprima canvas.vivo { display: block; margin: 0 auto 6px }
+  #r-anteprima .fila { display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-end }
   #r-cancella h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
                    color: var(--tenue); margin: 12px 0 4px }
   .canc { display: flex; justify-content: space-between; align-items: center; gap: 6px;
