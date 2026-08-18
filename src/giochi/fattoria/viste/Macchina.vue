@@ -42,6 +42,12 @@ const props = defineProps({
      `{ ricetta, manca: [{ prodotto, quanti }], monete }` */
   ricette: { type: Array, default: () => [] },
   ciSta: { type: Number, default: 99 },
+  /* dove finisce quello che esce di qui: come si chiama, se c'è, e
+     quanto costa. Un «metti un silo» che non dice quale manda a
+     comprare quello sbagliato, e sono 120 monete. */
+  silo: { type: String, default: 'silo' },
+  senzaSilo: { type: Boolean, default: false },
+  prezzoSilo: { type: Number, default: 0 },
 })
 const emit = defineEmits(['avvia', 'ritira', 'chiudi'])
 
@@ -104,9 +110,13 @@ const puo = v => !v.manca.length && !v.monete
       <p><b>{{ r.emoji }} È pronto!</b> Ci sono
          {{ r.resa }} {{ prodotto(r.da).nome.toLowerCase() }} da portare via.
          Ritirare non costa niente.</p>
-      <p v-if="pieno" class="fa-piccolo">Il granaio è pieno di
-         {{ prodotto(r.da).nome.toLowerCase() }}: dai da mangiare a qualcuno
-         o metti un silo. Non si butta via niente.</p>
+      <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
+         <b>{{ silo.toLowerCase() }}</b> (🪙{{ prezzoSilo }}): senza, non c'è
+         dove metterlo. Non si butta via niente.</p>
+      <p v-else-if="pieno" class="fa-piccolo">Nel {{ silo.toLowerCase() }}
+         non c'è posto per {{ r.resa }} {{ prodotto(r.da).emoji }}: dai da
+         mangiare a qualcuno, o toccalo e ingrandiscilo. Non si butta via
+         niente.</p>
     </template>
 
     <div class="fa-fila">

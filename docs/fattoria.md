@@ -64,8 +64,14 @@ rosso se qualcuno ritocca un prezzo di troppo.
 
 Il freno vero non è il prezzo: è **il tempo e quanti campi hai**. E
 l'attrezzatura si paga prima, in monete grosse — campo 🪙22, mulino 🪙150,
-silo 🪙120, e i recinti dai 🪙95 ai 🪙260 — cioè la catena *dà un motivo per
-spendere*, non è il modo di smettere.
+silos 🪙120 l'uno, e i recinti dai 🪙95 ai 🪙260 — cioè la catena *dà un motivo
+per spendere*, non è il modo di smettere.
+
+**E il campo rincara a ogni copia** (🪙22, 32, 46, 67, 97…), come il pezzo di
+terra: è la cosa che moltiplica tutto il resto — più campi vuol dire più
+raccolto per volta — e a prezzo fisso l'unica strategia sarebbe comprare
+campi finché c'è terra. Il rincaro conta quelli in mappa **e** quelli nel
+baule, se no metterli via e ricomprarli sarebbe il modo di non pagarlo.
 
 ### I recinti (dal 18 agosto 2026)
 
@@ -104,36 +110,182 @@ Da lì viene tutto il resto:
 
 - a **zero monete** non si raccoglie, ma il campo resta pronto e aspetta il
   primo esercizio fatto — non si perde niente;
-- col **granaio pieno** non si raccoglie e non si paga: il grano resta nel
-  campo, e il gioco chiede un silo senza scriverlo;
+- col **silo pieno** non si raccoglie e non si paga: il grano resta nel
+  campo, e il gioco chiede di ingrandire il silo senza scriverlo;
 - quello che sta crescendo **non si mette via**, perché nel baule non c'è
   posto per un grano a metà.
 
-### Il granaio, e perché sta dentro il silo
+### I due silos (dal 18 agosto 2026)
 
-Trenta di ogni cosa, e ogni silo posato ne aggiunge trenta. Il tetto c'è
-**da subito** e non è una limitazione arrivata dopo: illimitato oggi e
-limitato domani sarebbe una regressione — «prima ci stava tutto» — e il silo
-che si compra dev'essere un miglioramento, non il rimedio a una punizione.
+**Il magazzino è piccolo, condiviso, e si ingrandisce pagando.** Un silo
+appena costruito tiene **6 cose in tutto** (sei e non quattro: il mais rende
+5, e con quattro posti il primo ingrandimento non era un miglioramento ma lo
+sblocco di una cosa che sembrava rotta); ogni ingrandimento ne aggiunge 2, e
+costa 🪙40, poi 130, 185, 220, 250 — cioè `40 + 130·ln(1+n)`, arrotondato a
+cinque.
 
-Le scorte **si guardano toccando un silo**, non da una linguetta del baule.
+**La curva è logaritmica, e la prima versione era esponenziale.** Raddoppiava
+il passo (20, 30, 50, 90, 170, 330…), e per arrivare a 28 posti chiedeva
+quarantamila monete: **centoundici ore** di esercizi. L'errore di
+ragionamento è che una curva esponenziale presume che chi paga diventi più
+ricco a ogni passo, e qui non succede — le monete si guadagnano sempre allo
+stesso ritmo, quindi lo sforzo riparte da zero ogni volta. Adesso il salto
+vero è il secondo (da 7 minuti a mezz'ora di esercizi), poi ogni
+ingrandimento costa più o meno un'ora e non di più, e 28 posti costano 7 ore
+in tutto. Il metro — una moneta sono dieci secondi di esercizio — sta in
+[`CALIBRAZIONE.md`](../CALIBRAZIONE.md).
+
+C'era un granaio solo, con trenta posti **per ogni prodotto** e un silo che
+ne aggiungeva altri trenta a testa. Tre cose non funzionavano, e sono
+esattamente le tre che sono cambiate:
+
+- **il tetto era per prodotto.** «Di ogni cosa ce ne stanno 90» è una frase
+  vera che nessuno sa trasformare in *quanto ci sta adesso*. Ora il tetto è
+  del silo: un numero solo, che si guarda mentre si raccoglie.
+- **il tetto non mordeva.** Novanta grani non li fa nessuno, quindi comprare
+  un secondo silo non cambiava niente che si potesse vedere. Un limite che
+  non si tocca mai è una riga di spiegazione, non un limite.
+- **il secondo silo era un doppione.** Adesso il silo è una struttura sola e
+  si potenzia, come in Hay Day: niente da capire su cosa faccia la seconda
+  copia, perché non se ne mette una seconda.
+
+E i silos sono **due, diversi, e servono tutti e due**:
+
+```
+   🌾 silo del raccolto 🪙120   grano, mais, carote, zucche, fieno, mangime, pastone
+   🥛 silo della stalla 🪙120   uova, latte, tartufi, lana
+```
+
+Non è simmetria per bellezza: è quello che rende il pollaio una spesa che ne
+trascina un'altra, ed è anche il modo in cui un silo pieno non blocca
+l'altro — se il raccolto è colmo, le uova entrano lo stesso. (Era la
+preoccupazione che teneva il tetto per prodotto: qui è risolta dividendo,
+non alzando il numero.)
+
+**Senza il silo non c'è capienza affatto** — zero, non poca: quello che
+raccogli non ha dove finire, quindi non si raccoglie, non si paga, e il campo
+resta pronto ad aspettare. La scheda di un campo vuoto lo dice **prima di
+seminare**, che è l'unico momento utile per dirlo: scoprirlo a raccolto
+pronto vuol dire aver aspettato dieci minuti veri per niente.
+
+Le scorte **si guardano toccando il silo**, non da una linguetta del baule.
 Era una linguetta, ed era comodo: ma finiva in mezzo alle cose da *comprare*,
 ed era l'unica che si guardava e basta. Peggio, faceva sembrare il raccolto
 una schermata del gioco invece del contenuto di una cosa che hai costruito.
-Adesso è lo stesso gesto di tutto il resto — tocca una cosa tua e vedi cosa
-ci si può fare — con una conseguenza voluta: **senza silo il granaio non si
-guarda**. Perché non diventi una scoperta tardiva, chi non ne ha uno se lo
-sente dire nel momento in cui la domanda gli viene da sola, cioè quando
-raccoglie («🌾 +3 nel granaio! Metti un silo per vedere cosa hai»).
+Dentro, **premere una roba dice chi la usa**: «🌾 Grano — 3 nel mulino (5 min)
+→ 2 🥣 mangime · 3 nel pollaio (12 min) → 2 🥚 uova». È l'unica cosa utile che
+una riga di scaffale possa dire, ed è il modo in cui la catena si scopre da
+dentro invece che per tentativi. Al suo posto c'era una frase sotto lo
+scaffale — «non si vende, serve alle macchine e alle ciotole» — vera per ogni
+riga e quindi muta su ciascuna. Dal silo comunque **non esce niente con le
+dita**: si guarda e si ingrandisce, e basta.
 
-### Si può spegnere
+Una nota di taratura: nessuna coltura deve rendere più di quanto tenga un
+silo appena costruito, se no chiede un ingrandimento prima di poter essere
+raccolta la prima volta. Oggi il massimo è il mais con 5 contro 6 posti, e
+`unita/coltivazioni` scrive una nota a ogni giro se qualcuno sfora.
 
-I campi sono **una variante** (`fattoria:coltivazione`), spegnibile dalla
-[pagina dei genitori](genitori.md) e per bambino. Non è un gioco spento (la
-carta resta in home) e non è un pezzo di scuola: è metà di un posto. Spenta,
-i campi, il mulino e i recinti già costruiti restano in mappa come disegno,
-il granaio non si svuota, e la pappa torna a comprarsi a monete.
+### I livelli della fattoria (dal 18 agosto 2026)
 
+**L'esperienza sono le monete spese qui dentro.** Non i raccolti, non i
+minuti, non le partite: la fattoria è il money pit, quindi il livello premia
+esattamente il gesto che tiene in piedi tutto il resto. Non si può fare in
+fretta (le monete arrivano solo dagli esercizi, quindi il livello è tempo di
+studio riletto) e non scende mai — nemmeno mettendo via quello che si è
+comprato.
+
+Serve a un problema concreto: il baule vendeva **duecento cose dal primo
+minuto**, in undici linguette. Per un bambino che apre la fattoria la prima
+volta non è ricchezza, è una lista da cui non si sa cosa scegliere, dove il
+campo che fa partire tutta la catena sta in mezzo a novanta cespugli.
+
+**Sessantacinque livelli, e ognuno dà poco.** Due o tre decorazioni per
+volta, mai di più — è la regola che rende lungo il gioco, ed è possibile
+proprio perché il catalogo è grande. Le decorazioni stanno in una fila sola
+ordinata **per prezzo**: il vaso da quattro monete arriva al secondo livello,
+la casa sull'albero dopo mesi, e le linguette del baule si aprono da sé via
+via che arriva la loro prima voce. Nessun elenco da scrivere a mano: una voce
+nuova si infila dove la mette il suo prezzo.
+
+Quello che **lavora** non segue quella fila — lì il momento è una decisione
+di gioco:
+
+```
+   1   🪙0        il campo, il silo del raccolto, il grano
+   2   🪙210      il primo amico (il bobtail)
+   3   🪙430      il mulino
+   4   🪙670      il silo della stalla
+   5   🪙930      la conigliera, e le carote che mangia
+   8   🪙1790     il pollaio
+  10   🪙2450     il mais, cioè il pastone
+  12   🪙3170     l'ovile, e l'erba medica
+  18   🪙5710     la stalla
+  26   🪙10000    il porcile, e le zucche
+  42   🪙21650    il pappagallo
+  65   🪙45570    l'ultima cosa del catalogo (~127 ore di esercizi)
+```
+
+**Ogni coltura arriva con la bocca che la mangia.** Il primo campo ha una
+scelta sola — a quattro anni cinque bottoni sono un elenco da leggere, uno è
+una cosa da fare — e le altre arrivano quando serve: le carote con la
+conigliera, che mangia solo quelle; il mais quando il mulino gira da un pezzo;
+l'erba medica con l'ovile (prima il fieno, poi le pecore); le zucche col
+porcile. Una coltura che arriva prima di quello che la consuma è roba che
+riempie il silo senza servire a niente, cioè il modo di far sembrare rotto un
+gioco che funziona.
+
+Le soglie sono **una formula e non una tabella** (`8·(n-1)² + 200·(n-1)`),
+così i livelli non finiscono mai: chi ha giocato per mesi deve avere ancora un
+gradino davanti. E il passo minimo — 🪙200 — è **più alto di tutta
+l'attrezzatura di partenza**: campo e silo insieme costano 🪙142, e con un
+passo piccolo bastavano loro a far scattare tre livelli di fila. Si comprava
+il silo e si sbloccava mezzo baule senza aver ancora raccolto niente. Adesso
+il livello 2 chiede l'attrezzatura, un secondo campo e qualche giro di semina
+e raccolto: **il tempo di capire come gira**, che è la cosa che il primo
+livello deve comprare. In tempo di esercizi: il livello 2 è mezz'ora, il 10 sei
+ore, l'ultimo centoventisette, spalmate su mesi
+([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)).
+
+**Il baule ha due metà.** 🌾 *La fattoria* è quello che fa qualcosa — campi,
+macchine, silos, recinti, bestie — e 🌸 *Il bello* è quello che sta lì e
+basta. Sono i due modi diversi di spendere che questo posto ha: uno allarga la
+catena, l'altro fa sembrare casa. Senza la divisione, la carriola fiorita sta
+in mezzo al pollaio e chi cerca il mulino passa in rassegna il vivaio. La
+seconda metà non compare finché non arriva la prima decorazione: una linguetta
+che si apre su niente è un tasto rotto.
+
+**Quello che non è ancora arrivato non sta nel baule, sta nella pagina dei
+livelli.** La differenza conta: una voce spenta dentro un negozio è un tasto
+rotto — chi la vede prova a premerla e non succede niente — mentre la stessa
+voce sotto «al livello 4 arriva» è una cosa da desiderare. La pagina si apre
+dal gettone ⭐ in alto, accanto al baule, e mostra a che punto sei, cosa arriva
+al prossimo e i dodici livelli successivi. Quando si sale, lo stesso foglio si
+apre da sé: un livello che arriva in silenzio non lo nota nessuno.
+
+**Quello che produce rincara a ogni copia** (`cresce` nel catalogo): due
+conigliere fanno il doppio della lana e il quinto campo vale quanto il primo,
+quindi a prezzo fisso l'unica strategia sarebbe riempire il prato di recinti
+uguali. Il rincaro è **lineare** — campo 🪙22, 35, 48, 62, 75 — e non
+geometrico: era 1,45× a copia, cioè la stessa curva esponenziale bocciata
+sugli ingrandimenti del silo. I silos invece sono `unico`: due dello stesso
+tipo non conterrebbero niente di più, quindi il secondo non si vende affatto.
+
+La regola sta nel motore e non nella schermata: `posa()`, `compra()`,
+`seminaCampo()` e `compraBestia()` rifiutano quello che non è ancora arrivato
+(`motivo: 'non-sbloccato'`) o il doppione di un silo (`'ne-hai-gia'`).
+
+Per guardare col telefono una cosa del livello 40 senza spendere davvero
+quindicimila monete c'è **`#fattoria=40`** nell'indirizzo, il fratello di
+`#monete=`: alza e basta, non fa mai scendere.
+
+### Non si può più spegnere
+
+C'era **una variante** (`fattoria:coltivazione`) che toglieva i campi dalla
+pagina dei genitori, lasciando la fattoria come posto da arredare. Non c'è
+più: da quando la fattoria è la catena — campi, silos, macchine, recinti,
+livelli — spegnerla non lasciava un posto più semplice, lasciava un prato con
+dei mobili. Chi non vuole la fattoria spegne **il gioco**, come per tutti gli
+altri (`settings.giochi`, [pagina dei genitori](genitori.md)).
 ## Come si tocca
 
 Un solo gesto per tutto, ed è il motivo per cui non c'è niente da imparare:
@@ -186,10 +338,16 @@ che le due sezioni qui sopra esistono. Restano:
    viene in mente di accostarli. L'acqua vera si dipinge (`dipingi` nel
    motore, `dati/terreni.js`) e il pennello resta spento finché il pittore
    non sa raccordare due materie diverse.
-4. **Altri modi di spendere.** Silos in più, un campo che matura più in
-   fretta, un granaio più capiente: il money pit vive sull'attrezzatura, ed è
-   lì che vanno le monete grosse.
-5. **Le azioni sui campi, rifinite.** Oggi sono la stessa scheda dei cani, e
+4. **Altri modi di spendere.** Un campo che matura più in fretta, un
+   annaffiatoio, una seconda macchina: il money pit vive sull'attrezzatura,
+   ed è lì che vanno le monete grosse. (Ingrandire i silos c'è già, ed è la
+   spesa che la produzione stessa fa desiderare.)
+5. **Sbloccare le cose a scaletta.** Oggi il baule vende tutto dal primo
+   minuto. Legare una coltura o un recinto a qualcosa che si è già fatto —
+   «le galline vogliono il pollaio», «il mais vuole il mulino» — darebbe un
+   ordine a quello che oggi è un catalogo piatto, e insegnerebbe la catena
+   invece di lasciarla scoprire.
+6. **Le azioni sui campi, rifinite.** Oggi sono la stessa scheda dei cani, e
    va bene così; se un giorno i campi diventano molti, raccoglierli uno per
    uno diventerà noioso prima di diventare comodo.
 
@@ -197,13 +355,15 @@ che le due sezioni qui sopra esistono. Restano:
 
 | dove | cosa |
 |:--|:--|
-| `dati/coltivazioni.js` | colture, ricette, tempi, granaio — e il perché dei numeri |
+| `dati/coltivazioni.js` | colture, ricette, tempi, silos — e il perché dei numeri |
+| `dati/livelli.js` | le soglie del livello, e cosa arriva quando |
+| `viste/Livelli.vue` | la pagina dei livelli, e la festa quando si sale |
 | `dati/catalogo.js` | cosa si compra; `campo`, `macchina`, `silo` dicono chi lavora, `stati` chi si legge da lontano |
 | `dati/bisogni.js` | i cibi: chi si compra a monete e chi si scala dal granaio |
 | `motore/fattoria.js` | tutte le regole, senza schermo — gira anche in Node |
 | `scena/tela.js` | il disegno, che non sa cosa sia il grano |
 | `viste/Campo.vue` `viste/Macchina.vue` | le due schede che si toccano — la seconda vale per il mulino e per tutti i recinti |
-| `viste/Granaio.vue` | le scorte, e perché stanno dietro a un silo |
+| `viste/Granaio.vue` | cosa c'è in un silo, quanti posti restano, e il tasto per ingrandirlo |
 | `viste/Roba.vue` `viste/Provino.vue` | il baule: lo scaffale, e la figura che ci sta dentro in scala |
 | `sorgenti/gfx/campi.json` `animali.json` | i due fogli, e il perché di ogni ritaglio |
 | `test/unita/coltivazioni.test.mjs` | si coltiva per davvero, spostando l'orologio |

@@ -20,7 +20,7 @@
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { PER_ID, statiDi } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
-import { RICETTE, PER_RICETTA, MINUTO } from '../../src/giochi/fattoria/dati/coltivazioni.js'
+import { RICETTE, PER_RICETTA, MINUTO, SILI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { COCCOLE } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -30,6 +30,21 @@ const fra = minuti => T0 + minuti * MINUTO
 const borsaTracciata = iniziale => {
   let n = iniziale
   return { quante: () => n, paga: c => { n -= c; return true }, saldo: () => n }
+}
+
+/* Una fattoria coi due silos già in piedi e già larghi. Senza, la roba
+   non entra e non esce — la capienza di un silo che non c'è è zero — e
+   ogni prova qui sotto morirebbe sulla stessa riga per un motivo che
+   coi recinti non c'entra niente. I silos hanno il loro test, in
+   `unita/coltivazioni`. */
+function conSilos(f, larghi = 4) {
+  /* e **cresciuta**: i recinti si sbloccano coi livelli
+     (`dati/livelli.js`), e qui si provano i recinti */
+  f.speso = 100000
+  f.cose.push({ i: 990, id: SILI.terra.cosa, g: 0, x: 30, y: 30 },
+              { i: 991, id: SILI.stalla.cosa, g: 0, x: 33, y: 30 })
+  f.silos = { terra: larghi, stalla: larghi }
+  return f
 }
 
 const RECINTI = Object.values(PER_ID).filter(v => v.stati)
@@ -67,7 +82,7 @@ nota(`${RECINTI.length} recinti: ${RECINTI.map(v => v.nome.toLowerCase()).join('
    in un millisecondo una cosa che in gioco dura un quarto d'ora. */
 {
   const b = borsaTracciata(1000)
-  const f = new Fattoria({ borsa: b })
+  const f = conSilos(new Fattoria({ borsa: b }))
   const pollaio = { i: 900, id: 'pollaio', g: 0, x: 14, y: 14 }
   f.cose.push(pollaio)
 
@@ -116,7 +131,7 @@ nota(`${RECINTI.length} recinti: ${RECINTI.map(v => v.nome.toLowerCase()).join('
 for (const v of RECINTI) {
   const r = RICETTE.find(x => x.dove === v.macchina)
   const b = borsaTracciata(1000)
-  const f = new Fattoria({ borsa: b })
+  const f = conSilos(new Fattoria({ borsa: b }))
   const cosa = { i: 1, id: v.id, g: 0, x: 14, y: 14 }
   f.cose.push(cosa)
   for (const [k, n] of Object.entries(r.prende)) f.metti(k, n)
@@ -146,7 +161,7 @@ for (const v of RECINTI) {
   uguale('e non costa monete', copertina.prezzo, 0)
 
   const b = borsaTracciata(1000)
-  const f = new Fattoria({ borsa: b })
+  const f = conSilos(new Fattoria({ borsa: b }))
   f.compraBestia('cane-beagle', 90, 'Birba')
   f.stato('cane-beagle').pelo = 0.2
   const saldo = b.saldo()
@@ -169,7 +184,7 @@ for (const v of RECINTI) {
    non c'è posto per una mucca a metà mungitura, e metterlo via vorrebbe
    dire buttare quello che si sta aspettando. */
 {
-  const f = new Fattoria({ borsa: borsaTracciata(1000) })
+  const f = conSilos(new Fattoria({ borsa: borsaTracciata(1000) }))
   const cosa = { i: 1, id: 'pollaio', g: 0, x: 14, y: 14 }
   f.cose.push(cosa)
   controlla('fermo si mette via', f.mettiVia(cosa).ok)

@@ -65,16 +65,17 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, macchinaDi,
-         statiDi } from '../dati/catalogo.js'
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi,
+         statiDi, prezzoDellaVoce } from '../dati/catalogo.js'
 import {
-  PER_COLTURA, PER_RICETTA, PRODOTTI, capienza, quantoCresciuto, stadioDi,
-  minutiCheMancano,
+  PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, capienza, costoIngrandimento,
+  siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano,
 } from '../dati/coltivazioni.js'
+import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
-import { famigliaDi } from '../dati/animali.js'
+import { ANIMALI, famigliaDi } from '../dati/animali.js'
 import { primaLibera } from '../../../motore/passi.js'
 
 /* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
@@ -105,6 +106,16 @@ export class Fattoria {
     this.ostacoli = {}
     this.magazzino = {}
     this.granaio = {}
+    /* Quante volte è stato ingrandito ciascun silo. Tutte le famiglie
+       ci sono da subito, a zero: un serializza/deserializza deve dare
+       la stessa fattoria, e un oggetto che nasce vuoto e si rilegge
+       pieno di zeri non è la stessa fattoria. */
+    this.silos = Object.fromEntries(Object.keys(SILI).map(fam => [fam, 0]))
+    /* Quanto si è speso qui dentro, in tutto e da sempre: è
+       l'esperienza della fattoria (`dati/livelli.js`), e non scende
+       mai. Non si azzera nemmeno mettendo via le cose — quello che hai
+       imparato a fare non si disimpara. */
+    this.speso = 0
     this.terreno = {}
     this.bestie = []
     this.prossimo = 1
@@ -165,7 +176,9 @@ export class Fattoria {
 
   serializza() {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
-             magazzino: this.magazzino, granaio: this.granaio, terreno: this.terreno,
+             magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
+             speso: this.speso,
+             terreno: this.terreno,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
 
@@ -223,6 +236,27 @@ export class Fattoria {
       })
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
                              ...this.cose.map(c => (c.i || 0) + 1))
+    /* Quanto è stato ingrandito ciascun silo. Va letto **dopo** le
+       cose, perché un salvataggio di ieri non ce l'ha e si ricava da
+       quelle: allora i silos si sommavano, e chi ne aveva messi tre
+       aveva pagato 360 monete per della capienza. Quella spesa non si
+       butta — vale un ingrandimento a testa oltre il primo, che è il
+       silo stesso. Non è la regola di oggi (oggi si paga 20, non 120):
+       è il cambio di una valuta che non esiste più. */
+    /* Una fattoria di ieri non ha `speso` e ha già delle cose in mappa:
+       si stima da quelle, al prezzo di listino. Meglio di zero — chi ha
+       già mezza fattoria non deve ritrovarsi al livello 1 con tutto
+       richiuso — e non è un regalo, perché quelle monete le ha spese
+       davvero. */
+    this.speso = Number.isFinite(d && d.speso) && d.speso > 0 ? Math.floor(d.speso)
+      : this.stimaLoSpeso()
+    this.silos = {}
+    for (const fam of Object.keys(SILI)) {
+      const salvato = d && d.silos && d.silos[fam]
+      this.silos[fam] = Number.isFinite(salvato) && salvato > 0 ? Math.floor(salvato)
+        : d && d.silos ? 0
+        : Math.max(0, this.cose.filter(c => siloDi(c) === fam).length - 1)
+    }
     if (!Object.keys(this.piazzole).length) return this.nuova()
     /* Una fattoria salvata quando il mondo era 7×7 fisso non ha
        `limiti`, e il suo bosco arriva fin dove arrivava quel mondo: si
@@ -234,6 +268,55 @@ export class Fattoria {
       ? { x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 } : { ...LIMITI_VECCHI }
     this.allarga()
     return this
+  }
+
+  /* ═══════════ il livello della fattoria ═══════════
+     L'esperienza sono **le monete spese qui dentro** — il perché sta in
+     `dati/livelli.js`. Ci passano tutti i pagamenti, ed è il motivo per
+     cui in questo file non si chiama più `this.borsa.paga()` da nessuna
+     parte: uno solo dimenticato sarebbe un livello che cresce piano
+     senza che nessuno capisca perché. */
+  spendi(n) {
+    /* `paga(-n)` incassa (sgombrare il bosco rendeva, in una vecchia
+       versione): un'entrata non è esperienza. */
+    if (n > 0) this.speso = (this.speso || 0) + n
+    return this.borsa.paga(n)
+  }
+
+  get livello() { return livelloPer(this.speso) }
+
+  /* Tutto quello che la pagina dei livelli deve sapere, in un colpo:
+     livello, nome, quanto manca al prossimo. */
+  get avanzamento() { return avanzamento(this.speso) }
+
+  /* Una fattoria salvata prima che i livelli esistessero: quanto avrà
+     speso, guardando quello che ha in mappa e in magazzino.
+
+     E **non meno di quanto serve a tenersi quello che ha già**: chi
+     aveva un pollaio dev'essere almeno al livello del pollaio, se no il
+     giorno dell'aggiornamento se lo ritrova in mappa e non nel baule —
+     cioè una cosa che ha comprato e non può più ricomprare. La somma
+     dei prezzi da sola non basta, perché i prezzi di listino sono più
+     bassi di quello che si è speso davvero (rincari, semine, cibo). */
+  stimaLoSpeso() {
+    let n = 0
+    for (const c of this.cose) n += (PER_ID[c.id] || {}).prezzo || 0
+    for (const [id, q] of Object.entries(this.magazzino))
+      n += ((PER_ID[id] || {}).prezzo || 0) * q
+    const serve = Math.max(1,
+      ...this.cose.map(c => livelloDellaVoce(PER_ID[c.id])),
+      ...Object.keys(this.magazzino).map(id => livelloDellaVoce(PER_ID[id])),
+      ...this.bestie.map(b => (ANIMALI[b.chi] || {}).liv || 1))
+    return Math.max(n, sogliaDi(serve))
+  }
+
+  /* Se una cosa è già arrivata. Il baule mostra solo lo sbloccato, ma
+     la regola sta **qui**: una schermata che filtra è una comodità, un
+     motore che accetta tutto è un buco — e questo motore lo usa anche
+     chi scrive un test. */
+  sbloccata(id) {
+    const v = PER_ID[id]
+    return !!v && livelloDellaVoce(v) <= this.livello
   }
 
   /* ═══════════ il terreno ═══════════ */
@@ -258,7 +341,7 @@ export class Fattoria {
     if (!this.comprabile(px, py)) return { ok: false, motivo: 'non-si-tocca' }
     const costo = this.prezzoDellaProssima
     if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
-    this.borsa.paga(costo)
+    this.spendi(costo)
     this.piazzole[chiave(px, py)] = 1
     /* Comprato il bordo, il margine si è assottigliato: il mondo cresce
        subito, così il pezzo appena preso ha già altra terra intorno da
@@ -294,7 +377,7 @@ export class Fattoria {
     if (!this.libera(cx, cy, 1, 1)) return { ok: false, motivo: 'occupata' }
     const costo = prezzoDi(materia)
     if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
-    if (costo) this.borsa.paga(costo)
+    if (costo) this.spendi(costo)
     if (materia === BASE) delete this.terreno[chiave(cx, cy)]
     else this.terreno[chiave(cx, cy)] = materia
     return { ok: true, costo, materia }
@@ -389,7 +472,7 @@ export class Fattoria {
     const o = this.ostacoloSotto(cx, cy)
     if (!o) return { ok: false, motivo: 'niente-da-sgombrare' }
     if (this.borsa.quante() < o.costo) return { ok: false, motivo: 'poche-monete', costo: o.costo }
-    this.borsa.paga(o.costo)
+    this.spendi(o.costo)
     delete this.ostacoli[o.k]
     return { ok: true, costo: o.costo, tipo: o.tipo }
   }
@@ -401,6 +484,18 @@ export class Fattoria {
   posa(id, cx, cy, { sposta = null, g = null } = {}) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }
+    /* Quello che il livello non ha ancora aperto non si posa — nemmeno
+       se è già in magazzino, che è il caso di chi ha messo via una cosa
+       comprata prima. Spostare invece resta libero: una cosa già in
+       mappa è tua, e il livello non torna mai indietro. */
+    if (!sposta && !this.sbloccata(id))
+      return { ok: false, motivo: 'non-sbloccato', liv: livelloDellaVoce(v) }
+    /* Di un silo ce n'è **uno solo per tipo**: la capienza è del tipo e
+       si compra ingrandendo, quindi il secondo non conterrebbe niente
+       di più. Il baule non lo rivende, e qui si dice di no anche a chi
+       ne avesse uno in magazzino da prima. */
+    if (!sposta && v.unico && this.quanteNeHo(id) > 0)
+      return { ok: false, motivo: 'ne-hai-gia' }
     const finto = { id, g: g === null ? (sposta ? sposta.g : 0) : g }
     const [w, h] = piedeDi(finto, v)
     if (!this.libera(cx, cy, w, h, sposta)) return { ok: false, motivo: 'non-ci-sta' }
@@ -411,7 +506,7 @@ export class Fattoria {
       if (sposta.x === cx && sposta.y === cy) return { ok: true, costo: 0, cosa: sposta }
       if (this.borsa.quante() < COSTO_SPOSTARE)
         return { ok: false, motivo: 'poche-monete', costo: COSTO_SPOSTARE }
-      this.borsa.paga(COSTO_SPOSTARE)
+      this.spendi(COSTO_SPOSTARE)
       sposta.x = cx; sposta.y = cy
       return { ok: true, costo: COSTO_SPOSTARE, cosa: sposta }
     }
@@ -423,12 +518,13 @@ export class Fattoria {
       this.cose.push(cosa)
       return { ok: true, costo: 0, dalMagazzino: true, cosa }
     }
-    if (this.borsa.quante() < v.prezzo)
-      return { ok: false, motivo: 'poche-monete', costo: v.prezzo }
-    this.borsa.paga(v.prezzo)
+    const prezzo = this.quantoCosta(id)
+    if (this.borsa.quante() < prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: prezzo }
+    this.spendi(prezzo)
     const cosa = { i: this.prossimo++, id, g: finto.g, x: cx, y: cy }
     this.cose.push(cosa)
-    return { ok: true, costo: v.prezzo, cosa }
+    return { ok: true, costo: prezzo, cosa }
   }
 
   /* ═══════════ girare ═══════════
@@ -469,8 +565,11 @@ export class Fattoria {
 
   compraBestia(chi, prezzo, nome = '', dove = null) {
     if (this.hoLaBestia(chi)) return { ok: false, motivo: 'gia-tua' }
+    const a = ANIMALI[chi]
+    if (a && (a.liv || 1) > this.livello)
+      return { ok: false, motivo: 'non-sbloccato', liv: a.liv }
     if (this.borsa.quante() < prezzo) return { ok: false, motivo: 'poche-monete', costo: prezzo }
-    this.borsa.paga(prezzo)
+    this.spendi(prezzo)
     const casa = this.cellaLibera(dove ? dove.x : PRIMA * CELLE + 8,
                                   dove ? dove.y : PRIMA * CELLE + 10)
     const bestia = { chi, nome: String(nome || '').slice(0, 16).trim(),
@@ -551,7 +650,7 @@ export class Fattoria {
     } else {
       if (this.borsa.quante() < cibo.prezzo)
         return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
-      this.borsa.paga(cibo.prezzo)
+      this.spendi(cibo.prezzo)
     }
     b.pancia = Math.min(1, b.pancia + cibo.quanto)
     b.quando = Date.now()
@@ -576,7 +675,7 @@ export class Fattoria {
     } else {
       const costo = gesto.prezzo || 0
       if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
-      if (costo) this.borsa.paga(costo)
+      if (costo) this.spendi(costo)
     }
     b[gesto.bisogno] = Math.min(1, b[gesto.bisogno] + gesto.quanto)
     b.quando = Date.now()
@@ -593,23 +692,82 @@ export class Fattoria {
     return { ok: true, nome: b.nome }
   }
 
-  /* ═══════════ il granaio ═══════════
+  /* ═══════════ i due silos ═══════════
      Il raccolto, che non è il magazzino (il perché sta in testa al
-     file). Tre righe di conto e un tetto: quello che non ci sta non si
-     raccoglie, e il campo resta pronto ad aspettare un silo. */
+     file). Sta in **due silos separati** — la terra da una parte, le
+     bestie dall'altra — e ognuno è piccolo, condiviso e si ingrandisce
+     pagando: il ragionamento per esteso sta in `dati/coltivazioni.js`.
+
+     Quello che non ci sta non si raccoglie, e il campo resta pronto ad
+     aspettare. Che è il modo in cui il gioco chiede di ingrandire il
+     silo senza scriverlo da nessuna parte. */
   quantoHo(prodotto) { return this.granaio[prodotto] || 0 }
 
-  get quantiSilos() { return this.cose.filter(eSilo).length }
+  /* Il silo di quella famiglia, se è stato costruito. Costruito vuol
+     dire **in mappa**: uno in magazzino è una cosa comprata e non
+     ancora messa giù, e finché non è giù non contiene niente. */
+  siloIn(famiglia) { return this.cose.find(c => siloDi(c) === famiglia) || null }
 
-  get capienzaDelGranaio() { return capienza(this.quantiSilos) }
+  eCostruito(famiglia) { return !!this.siloIn(famiglia) }
 
-  /* Quanto ancora ci sta di questo prodotto. Il tetto è **per
-     prodotto** e non complessivo: un granaio pieno di grano che
-     impedisce di ritirare il mangime sarebbe un blocco che nessun
-     bambino saprebbe sciogliere — dovrebbe capire da sé che il rimedio è
-     macinare, e non c'è niente a schermo che lo dica. */
+  livelloDelSilo(famiglia) {
+    return SILI[famiglia] ? Math.max(0, (this.silos || {})[famiglia] | 0) : 0
+  }
+
+  /* Zero se il silo non c'è, e zero è diverso da piccolo: senza silo
+     quella roba non ha proprio dove finire, e chi chiama lo dice con
+     parole diverse (`silo-manca` contro `non-ci-sta`). */
+  capienzaDi(famiglia) {
+    return this.eCostruito(famiglia) ? capienza(this.livelloDelSilo(famiglia)) : 0
+  }
+
+  /* Quanta roba c'è dentro **in tutto**: il tetto è del silo, non del
+     singolo prodotto. Era per prodotto, ed era la cosa che non si
+     capiva — «di ogni cosa ce ne stanno 90» non si trasforma in un
+     numero che si guarda mentre si raccoglie. */
+  quantoHoNelSilo(famiglia) {
+    return Object.entries(this.granaio)
+      .reduce((n, [k, q]) => n + (siloDelProdotto(k) === famiglia ? q : 0), 0)
+  }
+
+  /* Quanto ancora ci sta di questo prodotto: quello che avanza nel suo
+     silo. Due silos separati vogliono dire che uno pieno non ferma
+     l'altro — il raccolto colmo non impedisce di ritirare le uova — che
+     è la stessa preoccupazione di prima risolta dividendo invece che
+     alzando il tetto. */
   quantoCiSta(prodotto) {
-    return Math.max(0, this.capienzaDelGranaio - this.quantoHo(prodotto))
+    const fam = siloDelProdotto(prodotto)
+    if (!fam) return 0
+    return Math.max(0, this.capienzaDi(fam) - this.quantoHoNelSilo(fam))
+  }
+
+  /* Perché non ci sta: il silo non c'è, o è pieno. Chi mostra i
+     cartelli ha bisogno di saperlo — «costruisci il silo» e
+     «ingrandiscilo» sono due cose da fare diverse, e un cartello che
+     dice quella sbagliata è peggio di nessun cartello. */
+  perchePieno(prodotto) {
+    const fam = siloDelProdotto(prodotto)
+    return { famiglia: fam, motivo: this.eCostruito(fam) ? 'silo-pieno' : 'silo-manca' }
+  }
+
+  /* Quanto costa il prossimo ingrandimento di questo silo. */
+  costoDellIngrandimento(famiglia) {
+    return costoIngrandimento(this.livelloDelSilo(famiglia))
+  }
+
+  /* Ingrandire: due posti in più, e il prossimo costa di più. Non c'è
+     nessun tetto agli ingrandimenti — a fermare è il prezzo, che
+     raddoppia il passo ogni volta, e un tetto in più sarebbe un secondo
+     no da spiegare. */
+  ingrandisci(famiglia) {
+    if (!SILI[famiglia]) return { ok: false, motivo: 'non-esiste' }
+    if (!this.eCostruito(famiglia)) return { ok: false, motivo: 'silo-manca' }
+    const costo = this.costoDellIngrandimento(famiglia)
+    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+    this.spendi(costo)
+    this.silos[famiglia] = this.livelloDelSilo(famiglia) + 1
+    return { ok: true, costo, capienza: this.capienzaDi(famiglia),
+             livello: this.silos[famiglia] }
   }
 
   /* Mette via quello che ci sta e **torna quanto ne è rimasto fuori**.
@@ -665,9 +823,11 @@ export class Fattoria {
     if (!s.vuoto) return { ok: false, motivo: 'gia-seminato' }
     const c = PER_COLTURA[colturaId]
     if (!c) return { ok: false, motivo: 'non-esiste' }
+    if ((c.liv || 1) > this.livello)
+      return { ok: false, motivo: 'non-sbloccato', liv: c.liv }
     if (this.borsa.quante() < c.semina)
       return { ok: false, motivo: 'poche-monete', costo: c.semina }
-    if (c.semina) this.borsa.paga(c.semina)
+    if (c.semina) this.spendi(c.semina)
     cosa.coltura = c.id
     cosa.seminato = ora
     return { ok: true, costo: c.semina, coltura: c }
@@ -678,8 +838,9 @@ export class Fattoria {
      idea della spazzola gratis in `dati/bisogni.js` — non si resta mai
      chiusi fuori da quello che è già proprio.
 
-     Il granaio pieno si comporta allo stesso modo, e per lo stesso
-     motivo: non si raccoglie, non si paga, il grano resta nel campo. */
+     Il silo pieno — o non ancora costruito — si comporta allo stesso
+     modo, e per lo stesso motivo: non si raccoglie, non si paga, il
+     grano resta nel campo. */
   raccogli(cosa, ora = Date.now()) {
     const s = this.statoCampo(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-un-campo' }
@@ -687,10 +848,10 @@ export class Fattoria {
     if (!s.pronto) return { ok: false, motivo: 'non-e-pronto', manca: s.manca }
     const c = s.coltura
     if (this.quantoCiSta(c.da) < c.resa)
-      return { ok: false, motivo: 'granaio-pieno', prodotto: c.da, quanto: c.resa }
+      return { ok: false, ...this.perchePieno(c.da), prodotto: c.da, quanto: c.resa }
     if (this.borsa.quante() < c.raccolta)
       return { ok: false, motivo: 'poche-monete', costo: c.raccolta }
-    if (c.raccolta) this.borsa.paga(c.raccolta)
+    if (c.raccolta) this.spendi(c.raccolta)
     this.metti(c.da, c.resa)
     delete cosa.coltura
     delete cosa.seminato
@@ -746,7 +907,7 @@ export class Fattoria {
        macchina. I controlli qui sopra lo escludono, e l'ordine è la
        cintura di sicurezza. */
     for (const [k, n] of Object.entries(r.prende)) this.togli(k, n)
-    if (r.costo) this.borsa.paga(r.costo)
+    if (r.costo) this.spendi(r.costo)
     cosa.lavoro = { ricetta: r.id, da: ora }
     return { ok: true, costo: r.costo, ricetta: r }
   }
@@ -761,7 +922,7 @@ export class Fattoria {
     if (!s.pronto) return { ok: false, motivo: 'non-e-pronto', manca: s.manca }
     const r = s.ricetta
     if (this.quantoCiSta(r.da) < r.resa)
-      return { ok: false, motivo: 'granaio-pieno', prodotto: r.da, quanto: r.resa }
+      return { ok: false, ...this.perchePieno(r.da), prodotto: r.da, quanto: r.resa }
     this.metti(r.da, r.resa)
     delete cosa.lavoro
     return { ok: true, costo: 0, prodotto: r.da, quanto: r.resa }
@@ -822,6 +983,25 @@ export class Fattoria {
   /* ═══════════ il magazzino ═══════════ */
   quantiNe(id) { return this.magazzino[id] || 0 }
 
+  /* Quante ne ho **in tutto**: in mappa e nel baule. È il numero da cui
+     dipende il prezzo della prossima (`quantoCosta`), e conta tutte e
+     due le parti apposta — se contasse solo la mappa, mettere via un
+     campo e ricomprarlo sarebbe il modo di pagarlo sempre 22. */
+  quanteNeHo(id) {
+    return this.quantiNe(id) + this.cose.reduce((n, c) => n + (c.id === id ? 1 : 0), 0)
+  }
+
+  /* Quanto costa **adesso** questa cosa. Quasi tutte costano sempre
+     uguale; il campo rincara a ogni copia (`cresce` in
+     `dati/catalogo.js`), come fa il pezzo di terra. Ci passano tutti e
+     due i modi di comprare — posando e dal baule — perché due conti
+     diversi per lo stesso prezzo sono due conti che prima o poi si
+     scostano, e chi guarda il baule vedrebbe un numero e ne pagherebbe
+     un altro. */
+  quantoCosta(id) {
+    return prezzoDellaVoce(PER_ID[id], this.quanteNeHo(id))
+  }
+
   mettiVia(cosa) {
     const i = this.cose.indexOf(cosa)
     if (i < 0) return { ok: false, motivo: 'non-in-mappa' }
@@ -843,11 +1023,15 @@ export class Fattoria {
   compra(id) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }
-    if (this.borsa.quante() < v.prezzo)
-      return { ok: false, motivo: 'poche-monete', costo: v.prezzo }
-    this.borsa.paga(v.prezzo)
+    if (!this.sbloccata(id))
+      return { ok: false, motivo: 'non-sbloccato', liv: livelloDellaVoce(v) }
+    if (v.unico && this.quanteNeHo(id) > 0) return { ok: false, motivo: 'ne-hai-gia' }
+    const prezzo = this.quantoCosta(id)
+    if (this.borsa.quante() < prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: prezzo }
+    this.spendi(prezzo)
     this.magazzino[id] = this.quantiNe(id) + 1
-    return { ok: true, costo: v.prezzo }
+    return { ok: true, costo: prezzo }
   }
 
   /* ═══════════ per chi guarda da fuori ═══════════ */

@@ -72,6 +72,58 @@ async function chiudi() {
   }
 }
 
+/* ---------- 1b. i livelli: cosa c'è, e cosa non c'è ancora ----------
+   Una fattoria appena nata è al livello 1, e il baule mostra una fetta
+   del catalogo: è tutto il senso dei livelli (`dati/livelli.js`), e il
+   modo di accorgersi che si sono spenti è che qui ricompare tutto. */
+{
+  const gettone = page.locator('.fa-liv')
+  controlla('in alto c\'è il gettone del livello', await gettone.count() === 1)
+  uguale('e una fattoria nuova è al livello 1',
+         (await gettone.innerText()).replace(/\D/g, ''), '1')
+
+  await page.locator('.fa-tondo').click()
+  await page.waitForSelector('.fa-voce', { timeout: 3000 })
+  uguale('al livello 1 il baule non vende ancora le case',
+         await page.locator('.fa-scheda', { hasText: 'Case' }).count(), 0)
+  uguale('né gli animali', await page.locator('.fa-scheda', { hasText: 'Animali' }).count(), 0)
+  controlla('ma i campi ci sono',
+            await page.locator('.fa-scheda', { hasText: 'Campi' }).count() === 1)
+  /* La metà delle decorazioni non c'è proprio finché non arriva la
+     prima: una linguetta che si apre su niente è un tasto rotto. */
+  uguale('e la metà del bello non c\'è ancora',
+         await page.locator('.fa-zona').count(), 0)
+  const quante = await page.locator('.fa-voce').count()
+  controlla(`al primo livello lo scaffale ha poche cose (${quante})`, quante <= 4)
+  await chiudi()
+
+  await gettone.click()
+  await attendi(page, 300)
+  const foglioLiv = await page.evaluate(
+    () => (document.querySelector('.fa-livelli') || {}).innerText || '')
+  controlla('il gettone apre la pagina dei livelli', /livello 1/i.test(foglioLiv),
+            foglioLiv.replace(/\n+/g, ' · ').slice(0, 120))
+  controlla('che dice cosa arriva al livello dopo', /al livello 2 arriva/i.test(foglioLiv))
+  controlla('e nomina il mulino, che è quello che arriva', /mulino/i.test(foglioLiv))
+  await scatto(page, 'fattoria-livelli')
+  await chiudi()
+}
+
+/* ---------- 1c. da qui in poi si gioca da grandi ----------
+   Il resto del file compra case, panchine e animali, che arrivano ai
+   livelli alti: si usa il cheat dell'indirizzo (`#fattoria=10`, il
+   fratello di `#monete=`) invece di spendere tremila monete a colpi di
+   dito. Il cheat si legge quando il gioco nasce, quindi si esce e si
+   rientra. */
+await page.evaluate(() => { location.hash = 'fattoria=65' })
+await page.reload()
+await page.waitForSelector('.carta.gioco[data-gioco="fattoria"]', { timeout: 5000 })
+await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+await page.waitForSelector('.fa-tela', { timeout: 5000 })
+await attendi(page, 600)
+controlla('col cheat la fattoria è cresciuta',
+          Number((await page.locator('.fa-liv').innerText()).replace(/\D/g, '')) >= 60)
+
 /* ---------- 2. dove sta un pezzo di terra da comprare ----------
    Non si calcola: si cerca. La vista dipende da quanto è grande lo
    schermo, e un numero scritto a mano qui dentro sarebbe vero su un
@@ -185,6 +237,11 @@ await chiudi()
 {
   await page.locator('.fa-tondo').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
+  /* Il baule ha due metà (`viste/Roba.vue`): «La fattoria» è quella che
+     si apre, e le case stanno nell'altra. */
+  controlla('il baule ha le due metà', await page.locator('.fa-zona').count() === 2)
+  await page.locator('.fa-zona', { hasText: 'Il bello' }).click()
+  await attendi(page, 200)
   await page.locator('.fa-scheda', { hasText: 'Case' }).click()
   await attendi(page, 200)
   const b = await page.locator('.fa-voce', { hasText: 'Casetta' }).first().boundingBox()
@@ -202,12 +259,46 @@ await chiudi()
   await scatto(page, 'fattoria-posa')
 }
 
+/* ---------- 7b. una cosa unica, posata, esce dal baule ----------
+   I due silos sono `unico`: il secondo non si può posare, e il motore
+   risponde «ne-hai-gia». Ma un tasto che si preme e non fa niente è un
+   tasto rotto — chi lo vede riprova, e la risposta non arriva mai.
+   Quindi la voce sparisce dallo scaffale, come sparisce quello che il
+   livello non ha ancora aperto. Solo se è in mappa: uno comprato e non
+   ancora messo giù deve restare prendibile, o non uscirebbe più dal
+   baule. */
+{
+  const apriIlBaule = async () => {
+    await page.locator('.fa-tondo').click()
+    await page.waitForSelector('.fa-voce', { timeout: 3000 })
+    await page.locator('.fa-zona', { hasText: 'La fattoria' }).click()
+    await attendi(page, 200)
+    await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
+    await attendi(page, 200)
+  }
+  const quantiSili = () => page.locator('.fa-voce', { hasText: 'Silo del raccolto' }).count()
+
+  await apriIlBaule()
+  uguale('il silo del raccolto è nel baule finché non ce l\'hai', await quantiSili(), 1)
+  const b = await page.locator('.fa-voce', { hasText: 'Silo del raccolto' }).first().boundingBox()
+  await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
+  await dito(mezzo.x + 80, mezzo.y + 60)
+  await attendi(page, 400)
+
+  await apriIlBaule()
+  uguale('e una volta posato non lo propone più', await quantiSili(), 0)
+  await scatto(page, 'fattoria-silo-posato')
+  await chiudi()
+}
+
 /* ---------- 8. una bestia si sceglie dove farla arrivare ----------
    E dove sta si salva: se rinascesse in mezzo al prato, quello che la
    bambina aveva chiuso nel recinto se ne sarebbe uscito da solo. */
 {
   await page.locator('.fa-tondo').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
+  await page.locator('.fa-zona', { hasText: 'La fattoria' }).click()
+  await attendi(page, 200)
   await page.locator('.fa-scheda', { hasText: 'Animali' }).click()
   await attendi(page, 200)
   const b = await page.locator('.fa-voce').first().boundingBox()
@@ -226,10 +317,14 @@ await chiudi()
      scheda e insieme la **seleziona**, e una bestia selezionata sta
      ferma: da qui in poi non scappa più, e la prova che segue non
      dipende da dove è andata. */
+  /* Il bersaglio è `.fa-blocco`, i tre riquadri per bisogno: la scheda
+     era tre barrette in cima (`.fa-bisogni`) e i tasti sparsi sotto, e
+     adesso ogni bisogno è un blocco con dentro quello che lo riempie
+     (`viste/Bestia.vue`). */
   let dove = null
   for (const dy of [-8, 0, -20, -32]) {
     await dito(mezzo.x + 40, mezzo.y - 40 + dy)
-    if (await page.locator('.fa-bisogni').count()) { dove = { x: mezzo.x + 40, y: mezzo.y - 40 + dy } }
+    if (await page.locator('.fa-blocco').count()) { dove = { x: mezzo.x + 40, y: mezzo.y - 40 + dy } }
     await chiudi()
     if (dove) break
   }
@@ -238,7 +333,34 @@ await chiudi()
     await dito(dove.x, dove.y, 0, 900)    // la stessa pressione, ma lunga e ferma
     await attendi(page, 250)
     controlla('e tenendola premuta ferma si apre la scheda lo stesso, non il trascinamento',
-              await page.locator('.fa-bisogni').count() > 0)
+              await page.locator('.fa-blocco').count() > 0)
+    uguale('e i blocchi sono tre, uno per bisogno',
+           await page.locator('.fa-blocco').count(), 3)
+    await scatto(page, 'fattoria-bestia')
+
+    /* Un cibo che non hai dice **come si fa**, e solo lì dentro offre di
+       comprarne uno adesso. Quel tasto è già caduto una volta: azzerava
+       lo stato prima di leggere il cibo (`viste/Bestia.vue`), passava un
+       `null` a chi nutre e mandava a schermo il cartello di guasto — che
+       da fuori è «premo e non succede niente». */
+    const senza = page.locator('.fa-cibo', { hasText: 'Mangime' }).first()
+    if (await senza.count()) {
+      await senza.click()
+      await attendi(page, 250)
+      controlla('un cibo che non hai dice come si fa',
+                await page.locator('.fa-usi').count() > 0)
+      const offerta = page.locator('.fa-cibo.dentro')
+      if (await offerta.count()) {
+        const prima = await page.evaluate(
+          () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+        await offerta.click()
+        await attendi(page, 350)
+        const dopo = await page.evaluate(
+          () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+        controlla('e «oppure comprane uno adesso» lo compra davvero', dopo < prima,
+                  `${prima} → ${dopo}`)
+      }
+    }
     await chiudi()
   }
 

@@ -49,6 +49,14 @@ async function esci() {
   await page.waitForSelector('.carte', { timeout: 5000 })
   await attendi(page, 400)
 }
+/* La fattoria apre le cose a poco a poco (`dati/livelli.js`): il mulino
+   arriva al 2, il pollaio al 4, la stalla al 7. Qui si prova la
+   coltivazione, non gli sblocchi — che hanno il loro file
+   (`unita/livelli-fattoria`) — quindi si entra da grandi col cheat
+   dell'indirizzo, il fratello di `#monete=`. Serve anche a un'altra
+   cosa: senza, a metà prova si salirebbe di livello e il foglio della
+   festa comparirebbe sopra quello che il test sta guardando. */
+await page.evaluate(() => { location.hash = 'fattoria=65' })
 await entra()
 
 /* Il dito vero, come in `integrazione/fattoria`: un `page.click()` non
@@ -118,6 +126,29 @@ await attendi(page, 500)
 const dopoIlCampo = await monete()
 controlla('il campo si compra posandolo', dopoIlCampo < primaDelCampo)
 nota(`campo pagato ${primaDelCampo - dopoIlCampo} monete`)
+
+/* ---------- 1b. e il silo del raccolto, che adesso serve davvero ----------
+   *Ribalta l'ordine di prima*, che comprava il silo dopo aver raccolto
+   («raccolgo, non so dove è finito, metto un silo»). Adesso senza silo
+   il raccolto **non si raccoglie**: la capienza di un silo che non c'è
+   è zero, non piccola, e il campo resta pronto ad aspettare. Quindi si
+   compra prima, che è anche l'ordine in cui il gioco lo chiede — la
+   scheda del campo vuoto lo dice prima di seminare. */
+/* Posare chiude il baule — premere è già mettere giù — quindi per la
+   cosa dopo lo si riapre. */
+await page.locator('.fa-tondo').click()
+await page.waitForSelector('.fa-voce', { timeout: 3000 })
+await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
+await attendi(page, 250)
+const vSilo = await page.locator('.fa-voce', { hasText: 'Silo' }).first().boundingBox()
+await dito(Math.round(vSilo.x + vSilo.width / 2), Math.round(vSilo.y + vSilo.height / 2))
+/* lontano dal campo e da dove finirà il recinto, che è largo quattro
+   celle: due cose che si sovrappongono non si posano, e il test
+   fallirebbe dicendo una cosa che non c'entra */
+const doveSilo = { x: mezzo.x + 130, y: mezzo.y + 110 }
+await dito(doveSilo.x, doveSilo.y)
+await attendi(page, 500)
+controlla('il silo si compra posandolo', await monete() < dopoIlCampo)
 await chiudi()
 
 /* ---------- 2. toccarlo apre la sua scheda ----------
@@ -193,34 +224,50 @@ await tasto.click()
 await attendi(page, 600)
 uguale('raccolto, il foglio si chiude', await page.locator('.fa-velo').count(), 0)
 
-/* ---------- 6b. il granaio si guarda toccando un silo ----------
+/* ---------- 6b. il silo si guarda toccandolo, e si ingrandisce ----------
    Il gesto è quello di tutto il resto — tocca una cosa tua e vedi cosa
-   ci si può fare — e la conseguenza voluta è che **senza silo il granaio
-   non si guarda**. Qui si compra il silo apposta, perché il giro che
-   conta è: raccolgo, non so dove è finito, metto un silo, lo tocco. */
-await page.locator('.fa-tondo').click()
-await page.waitForSelector('.fa-voce', { timeout: 3000 })
-await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
-await attendi(page, 250)
-const vSilo = await page.locator('.fa-voce', { hasText: 'Silo' }).first().boundingBox()
-await dito(Math.round(vSilo.x + vSilo.width / 2), Math.round(vSilo.y + vSilo.height / 2))
-/* lontano dal campo e da dove finirà il recinto, che è largo
-   quattro celle: due cose che si sovrappongono non si posano, e il
-   test fallirebbe dicendo una cosa che non c'entra */
-const doveSilo = { x: mezzo.x + 130, y: mezzo.y + 110 }
-await dito(doveSilo.x, doveSilo.y)
-await attendi(page, 500)
-
+   ci si può fare. Dentro c'è la roba, quanti posti restano, e il tasto
+   che è la sola cosa da fare qui: ingrandirlo. */
 await dito(doveSilo.x, doveSilo.y)
 await attendi(page, 450)
-uguale('toccando il silo si apre il granaio', await titolo(), 'Il granaio')
+uguale('toccando il silo si apre il suo foglio', await titolo(), 'Silo del raccolto')
 const granaio = await page.evaluate(
   () => (document.querySelector('.fa-granaio') || {}).innerText || '')
 controlla('e il grano è lì dentro', /Grano[\s\S]*×\s*\d/.test(granaio),
           granaio.replace(/\n+/g, ' · ').slice(0, 160))
-controlla('e dice quanti silos hai e quanto aggiungono',
-          /silo/i.test(granaio) && /\d/.test(granaio))
+controlla('e dice quanti posti sono occupati su quanti',
+          /\d+ di \d+ posti/.test(granaio),
+          granaio.replace(/\n+/g, ' · ').slice(0, 160))
 await scatto(page, 'campi-granaio')
+
+/* Premere una roba dice **chi la usa**: è la sola cosa utile che una
+   riga di scaffale possa dire, e l'unico motivo per cui è premibile. Il
+   grano ha due usi veri (mulino e pollaio), quindi si controlla che ne
+   compaia almeno uno col nome della macchina. */
+await page.locator('.fa-voce', { hasText: 'Grano' }).first().click()
+await attendi(page, 250)
+const usi = await page.evaluate(
+  () => (document.querySelector('.fa-usi') || {}).innerText || '')
+controlla('premendo il grano si legge chi lo usa', /mulino|pollaio/i.test(usi),
+          usi.replace(/\n+/g, ' · ').slice(0, 140))
+await scatto(page, 'campi-granaio-usi')
+
+/* Ingrandire: il foglio non si chiude e i posti diventano di più. Che
+   il foglio resti aperto è una scelta — chi ne vuole altri due è già
+   lì — quindi si controlla, se no la prossima riscrittura lo chiude e
+   nessuno se ne accorge. */
+const postiPrima = Number((granaio.match(/\d+ di (\d+) posti/) || [])[1])
+const primaDiIngrandire = await monete()
+await page.locator('.fa-foglio button', { hasText: 'Ingrandisci' }).click()
+await attendi(page, 450)
+const dopoIngrandito = await page.evaluate(
+  () => (document.querySelector('.fa-granaio') || {}).innerText || '')
+const postiDopo = Number((dopoIngrandito.match(/\d+ di (\d+) posti/) || [])[1])
+controlla('ingrandire il silo aggiunge posti', postiDopo > postiPrima,
+          `${postiPrima} → ${postiDopo}`)
+controlla('e si paga', await monete() < primaDiIngrandire)
+nota(`silo ingrandito: ${postiPrima} → ${postiDopo} posti, ` +
+     `${primaDiIngrandire - await monete()} monete`)
 await chiudi()
 
 /* ---------- 7. il recinto: la seconda macchina ----------

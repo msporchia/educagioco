@@ -72,38 +72,32 @@ import { PEZZI } from './atlante.js'
    in minuti veri, che è l'unità in cui si ragiona tarandoli. */
 export const MINUTO = 60000
 
-/* ── L'INTERRUTTORE DEI GENITORI ──────────────────────────────────
-   La coltivazione è **una variante** (`store/profile.js`): non è un
-   gioco — la carta della fattoria resta in home — e non è un pezzo di
-   scuola. È metà di un posto, che si può togliere senza togliere il
-   posto. Spenta: i campi e il mulino già costruiti restano in mappa come
-   disegno, il granaio non si svuota, e la pappa si compra a monete come
-   si è sempre fatto.
-
-   La chiave sta qui e non in `Gioco.vue` perché la legge anche la pagina
-   dei grandi, e un componente Vue non è un posto da cui importare una
-   costante: il calco è `CHIAVE_MENTE` in `data/asteroidi.js`. */
-export const CHIAVE_VARIANTE = 'fattoria:coltivazione'
-
 /* ── quello che finisce in granaio ────────────────────────────────
    `nome` ed `emoji` sono per chi guarda; `cibo` (facoltativo) dice che
    quella roba, oltre a stare in granaio, si può mettere nella ciotola —
-   il legame vero sta in `bisogni.js`, che la pesca da qui. */
+   il legame vero sta in `bisogni.js`, che la pesca da qui.
+
+   `silo` dice **in quale dei due** va a finire, e non è un dettaglio:
+   sono due magazzini separati, con due tetti separati, e uno pieno non
+   ferma l'altro. Quello che viene dalla terra (compreso ciò che il
+   mulino ne ricava) sta nel silo del raccolto; quello che danno le
+   bestie sta nel silo della stalla. Il perché sta più giù, dove si
+   dichiarano i due silos. */
 export const PRODOTTI = {
   /* dai campi */
-  grano:   { nome: 'Grano',   emoji: '🌾' },
-  mais:    { nome: 'Mais',    emoji: '🌽' },
-  carote:  { nome: 'Carote',  emoji: '🥕' },
-  zucche:  { nome: 'Zucche',  emoji: '🎃' },
-  fieno:   { nome: 'Fieno',   emoji: '🌿' },
+  grano:   { nome: 'Grano',   emoji: '🌾', silo: 'terra' },
+  mais:    { nome: 'Mais',    emoji: '🌽', silo: 'terra' },
+  carote:  { nome: 'Carote',  emoji: '🥕', silo: 'terra' },
+  zucche:  { nome: 'Zucche',  emoji: '🎃', silo: 'terra' },
+  fieno:   { nome: 'Fieno',   emoji: '🌿', silo: 'terra' },
   /* dal mulino */
-  mangime: { nome: 'Mangime', emoji: '🥣' },
-  pastone: { nome: 'Pastone', emoji: '🍲' },
+  mangime: { nome: 'Mangime', emoji: '🥣', silo: 'terra' },
+  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'terra' },
   /* dai recinti */
-  uova:    { nome: 'Uova',    emoji: '🥚' },
-  latte:   { nome: 'Latte',   emoji: '🥛' },
-  tartufi: { nome: 'Tartufi', emoji: '🍄' },
-  lana:    { nome: 'Lana',    emoji: '🧶' },
+  uova:    { nome: 'Uova',    emoji: '🥚', silo: 'stalla' },
+  latte:   { nome: 'Latte',   emoji: '🥛', silo: 'stalla' },
+  tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla' },
+  lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -129,34 +123,48 @@ const CRESCE = coltura => Array.from({ length: 7 }, (_, i) => `campo_${coltura}$
    quanti prodotti escono da un campo. Il rapporto fra le tre cose è
    tutta l'economia: vedi `unita/coltivazioni`, che rifiuta una coltura
    che costa più del cibo che sostituisce. */
+/* `liv` è il livello della fattoria a cui la coltura si sblocca
+   (`dati/livelli.js`), e **ognuna arriva con la bocca che la mangia**:
+
+     grano   1   e al 3 c'è il mulino che ne fa mangime
+     carote  5   insieme alla conigliera, che mangia solo quelle
+     mais   10   per il pastone, quando il mulino gira da un pezzo
+     erba   12   insieme all'ovile: prima il fieno, poi le pecore
+     zucche 26   insieme al porcile, l'unico che le vuole
+
+   Il primo campo ha **una scelta sola**, e non è una limitazione: a
+   quattro anni cinque bottoni sono un elenco da leggere, uno è una cosa
+   da fare. Una coltura che arriva prima di quello che la consuma
+   sarebbe roba che riempie il silo senza servire a niente — che è il
+   modo di far sembrare rotto un gioco che funziona. */
 export const COLTURE = [
   /* L'erba medica è la più veloce e la meno cara, e non è cibo per
      nessuno: serve ai recinti, che è il modo di dire «prima il fieno,
      poi gli animali» senza scriverlo da nessuna parte. */
   {
-    id: 'erba', nome: 'Erba medica', emoji: '🌿',
+    id: 'erba', liv: 12, nome: 'Erba medica', emoji: '🌿',
     semina: 1, raccolta: 1, minuti: 8, resa: 4, da: 'fieno',
     stadi: CRESCE('erba'),
   },
   {
-    id: 'grano', nome: 'Grano', emoji: '🌾',
+    id: 'grano', liv: 1, nome: 'Grano', emoji: '🌾',
     semina: 2, raccolta: 2, minuti: 10, resa: 3, da: 'grano',
     stadi: CRESCE('grano'),
   },
   {
-    id: 'carote', nome: 'Carote', emoji: '🥕',
+    id: 'carote', liv: 5, nome: 'Carote', emoji: '🥕',
     semina: 3, raccolta: 2, minuti: 12, resa: 3, da: 'carote',
     stadi: CRESCE('carote'),
   },
   {
-    id: 'mais', nome: 'Mais', emoji: '🌽',
+    id: 'mais', liv: 10, nome: 'Mais', emoji: '🌽',
     semina: 2, raccolta: 2, minuti: 18, resa: 5, da: 'mais',
     stadi: CRESCE('mais'),
   },
   /* La più lenta e la più cara, e l'unica che i maiali cercano: è la
      coltura che si semina quando si ha già tutto il resto. */
   {
-    id: 'zucche', nome: 'Zucche', emoji: '🎃',
+    id: 'zucche', liv: 26, nome: 'Zucche', emoji: '🎃',
     semina: 4, raccolta: 3, minuti: 25, resa: 2, da: 'zucche',
     stadi: CRESCE('zucche'),
   },
@@ -227,19 +235,114 @@ export const PER_RICETTA = Object.fromEntries(RICETTE.map(r => [r.id, r]))
 
 export const ricetteDi = dove => RICETTE.filter(r => r.dove === dove)
 
-/* ── il granaio ───────────────────────────────────────────────────
-   Un tetto **da subito**, e generoso. Illimitato adesso e limitato
-   dopo sarebbe una regressione — «prima ci stava tutto» — e il silo che
-   si compra dev'essere un miglioramento, non il rimedio a una
-   punizione arrivata a metà partita. Ogni silo posato in mappa alza il
-   tetto: è il modo di spendere monete che la produzione stessa fa
-   desiderare. */
-export const GRANAIO = 30
-export const GRANAIO_PER_SILO = 30
+/* ── i due silos ──────────────────────────────────────────────────
+   *Ribalta la scelta di prima.* C'era un granaio solo, con un tetto
+   generoso (trenta) **per ogni prodotto** e un silo che ne aggiungeva
+   altri trenta a testa: si comprava un secondo silo e non cambiava
+   niente che si potesse vedere, perché quel tetto non lo toccava
+   nessuno. Un numero grande che non morde non è un limite, è una riga
+   di spiegazione in fondo a un foglio.
 
-/* Quanto ci sta di ogni prodotto, con i silos che si hanno. Il conto
-   sta qui e non nel motore perché è un numero, non una regola. */
-export const capienza = silos => GRANAIO + GRANAIO_PER_SILO * Math.max(0, silos | 0)
+   Adesso il magazzino è **piccolo, condiviso e si ingrandisce
+   pagando**, come in Hay Day, e sono tre decisioni diverse:
+
+     · **piccolo** — quattro posti, e ci si arriva subito. Serve a non
+       far diventare questo posto una contabilità: chi gioca deve avere
+       poca roba in mano e spenderla, non tenere scorte.
+     · **condiviso** — i quattro posti sono di *tutto quello che sta in
+       quel silo*, non di ogni prodotto. Era la cosa che non si capiva:
+       «di ogni cosa ce ne stanno 90» è una frase che nessuno sa
+       trasformare in «adesso quanto ci sta».
+     · **si ingrandisce** — il silo è una struttura sola e si potenzia
+       (+2 posti a colpo), e il prezzo raddoppia il passo ogni volta:
+       20, 30, 50, 90, 170. I primi due sono un pomeriggio, il quinto è
+       una decisione.
+
+   E i silos sono **due, diversi, e servono entrambi**: il rosso tiene
+   quello che viene dalla terra, il bianco quello che danno le bestie.
+   Non è simmetria per bellezza — è quello che rende il pollaio una
+   spesa che ne trascina un'altra, e che tiene la catena leggibile: se
+   il raccolto è pieno, le uova entrano lo stesso.
+
+   Chi non ha costruito il silo **non ha capienza affatto**: capienza
+   zero, non capienza piccola. Un raccolto senza posto dove finire non
+   si raccoglie, e il campo resta pronto ad aspettare (`motore/`). */
+export const SILI = {
+  terra:  { cosa: 'silo',        nome: 'Silo del raccolto', emoji: '🌾' },
+  stalla: { cosa: 'silo_bianco', nome: 'Silo della stalla',  emoji: '🥛' },
+}
+
+/* Quanti prodotti tiene un silo appena costruito, e quanti se ne
+   aggiungono a ogni ingrandimento.
+
+   LA MISURA È IL CAMPO, NON IL PRODOTTO. Prima erano sei, e sei è la
+   resa di **due campi di grano**: chi ne aveva tre trovava il silo
+   pieno prima di aver finito il giro dei suoi campi, e il primo gesto
+   che imparava era che non si può raccogliere. Un magazzino che sta
+   dietro a meno di quello che il prato produce non è un freno, è un
+   inciampo — e il freno vero di questa fattoria sono le monete su ogni
+   gesto e il tempo di crescita, non il posto dove mettere la roba.
+
+   Dodici regge **quattro campi di grano** (resa 3), o due di mais
+   (resa 5) col resto per il mangime che il mulino rimanda dentro allo
+   stesso silo. E gli ingrandimenti vanno a quattro e non a due: a due,
+   pagare 🪙130 — mezz'ora di esercizi — per mezzo campo in più era una
+   spesa che non si sentiva. Quattro è un campo intero, che è l'unità
+   con cui chi gioca conta davvero. */
+export const SILO_BASE = 12
+export const SILO_PIU = 4
+
+/* Quanto ci sta, con gli ingrandimenti fatti. `livello` è quante volte
+   è stato ingrandito: zero è appena costruito. */
+export const capienza = livello => SILO_BASE + SILO_PIU * Math.max(0, livello | 0)
+
+/* Quanto costa il prossimo ingrandimento: 40, 130, 185, 220, 250, 275…
+   — che in tempo di gioco (vedi `CALIBRAZIONE.md`: una moneta sono dieci
+   secondi di esercizi) vuol dire 7 minuti il primo, poi mezz'ora, poi
+   sempre intorno all'ora.
+
+   *Ribalta la scelta di prima*, che raddoppiava il passo (20, 30, 50,
+   90, 170, 330…). Sembrava prudente — «semi-esponenziale, non un ×2
+   secco» — ed era la stessa cosa: per arrivare a 28 posti chiedeva
+   quarantamila monete, cioè **centoundici ore** di esercizi. Il difetto
+   di ragionamento è che una curva esponenziale presume che chi paga
+   diventi più ricco a ogni passo, e qui non succede: le monete si
+   guadagnano sempre allo stesso ritmo, quindi **lo sforzo riparte da
+   zero ogni volta**.
+
+   Logaritmica, invece, dice la cosa giusta: il salto vero è il secondo
+   (da 7 minuti a mezz'ora), poi ogni ingrandimento costa più o meno la
+   stessa fatica — un'ora — e non arriva mai a costare una settimana.
+   Arrotondato a cinque perché un prezzo è una cosa che si legge. */
+export const costoIngrandimento = livello =>
+  Math.round((40 + 130 * Math.log(1 + Math.max(0, livello | 0))) / 5) * 5
+
+/* In quale silo va a finire un prodotto. Sconosciuto vuol dire nessun
+   silo: non ci sta da nessuna parte, che è come si comporta un prodotto
+   tolto dalla tabella. */
+export const siloDelProdotto = prodotto => (PRODOTTI[prodotto] || {}).silo || null
+
+/* ── COME SI FA UNA ROBA ──────────────────────────────────────────
+   Il contrario di `serveA()` (in `dati/bisogni.js`): là si chiede a
+   cosa serve quello che hai, qui **come si ottiene quello che non
+   hai**. Serve alla ciotola: un tasto spento perché il mangime è finito
+   deve poter dire «3 🌾 nel mulino», se no chi gioca sa solo che non
+   può, e la catena resta una cosa da indovinare.
+
+   Torna righe di dato, non frasi: il nome della macchina lo sa il
+   catalogo, che importa da qui. */
+export function comeSiFa(prodotto) {
+  const modi = []
+  for (const c of COLTURE)
+    if (c.da === prodotto)
+      modi.push({ che: 'coltura', id: c.id, emoji: c.emoji, nome: c.nome,
+                  minuti: c.minuti, resa: c.resa })
+  for (const r of RICETTE)
+    if (r.da === prodotto)
+      modi.push({ che: 'ricetta', dove: r.dove, prende: r.prende,
+                  minuti: r.minuti, resa: r.resa, emoji: r.emoji, nome: r.nome })
+  return modi
+}
 
 /* ── leggere l'orologio ───────────────────────────────────────────
    Quanto è cresciuto qualcosa che è cominciato a `da` e vuole `minuti`.
@@ -309,7 +412,17 @@ export function guastiDelleColture() {
     if (!Object.keys(r.prende || {}).length)
       g.push(`${r.id}: non prende niente — sarebbe una fonte di roba dal nulla`)
   }
-  if (!(GRANAIO > 0)) g.push('un granaio da zero non tiene niente')
-  if (!(GRANAIO_PER_SILO > 0)) g.push('un silo che non aggiunge niente non si compra')
+  /* Un prodotto senza silo non si potrebbe raccogliere: `quantoCiSta`
+     risponderebbe zero per sempre, e a schermo sarebbe un raccolto che
+     non entra da nessuna parte senza che niente dica perché. */
+  for (const [id, pr] of Object.entries(PRODOTTI))
+    if (!SILI[pr.silo]) g.push(`${id}: sta in un silo che non esiste («${pr.silo}»)`)
+  if (!(SILO_BASE > 0)) g.push('un silo da zero non tiene niente')
+  if (!(SILO_PIU > 0)) g.push('un ingrandimento che non aggiunge niente non si paga')
+  /* Il prezzo deve **salire**: uno che scende farebbe convenire
+     aspettare, che è il contrario di quello che deve fare. */
+  for (let l = 0; l < 6; l++)
+    if (!(costoIngrandimento(l + 1) > costoIngrandimento(l)))
+      g.push(`l'ingrandimento numero ${l + 2} non costa più del precedente`)
   return g
 }

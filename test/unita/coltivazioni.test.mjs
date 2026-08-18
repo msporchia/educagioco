@@ -16,11 +16,11 @@
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
   guastiDelleColture, COLTURE, RICETTE, PRODOTTI, PER_COLTURA, PER_RICETTA,
-  GRANAIO, GRANAIO_PER_SILO, MINUTO, capienza, quantoCresciuto, stadioDi,
-  minutiCheMancano, CHIAVE_VARIANTE,
+  SILI, SILO_BASE, SILO_PIU, MINUTO, capienza, costoIngrandimento,
+  quantoCresciuto, stadioDi, minutiCheMancano,
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { CIBI, COCCOLE, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
-import { PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
+import { CIBI, COCCOLE, cibiPer, serveA } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene il conto: qui l'economia È l'oggetto della prova,
@@ -34,17 +34,30 @@ function borsaTracciata(iniziale) {
 const T0 = 1770000000000            // un'ora qualunque, fissa: niente Date.now()
 const fra = minuti => T0 + minuti * MINUTO
 
-/* Una fattoria con un campo e un mulino già in mappa, senza passare dai
-   gesti: qui si provano le regole della coltivazione, non quelle della
-   posa (che hanno il loro file). */
-function conCampoEMulino(monete = 1000) {
+/* Una fattoria con un campo, un mulino e **i due silos** già in mappa,
+   senza passare dai gesti: qui si provano le regole della coltivazione,
+   non quelle della posa (che hanno il loro file).
+
+   I silos ci sono e sono già larghi (`silos`, cioè quante volte sono
+   stati ingranditi) perché senza non si raccoglie niente e ogni prova
+   qui sotto morirebbe sulla stessa riga. Il silo piccolo, e quello che
+   manca del tutto, si provano apposta al punto 5. */
+function conCampoEMulino(monete = 1000, ingranditi = 3) {
   const b = borsaTracciata(monete)
   const f = new Fattoria({ borsa: b })
   const c0 = 14
   const campo = { i: 900, id: 'orto', g: 0, x: c0, y: c0 }
   const mulino = { i: 901, id: 'mulino', g: 0, x: c0, y: c0 + 3 }
-  f.cose.push(campo, mulino)
-  return { f, b, campo, mulino }
+  const silo = { i: 902, id: SILI.terra.cosa, g: 0, x: c0 + 4, y: c0 }
+  const bianco = { i: 903, id: SILI.stalla.cosa, g: 0, x: c0 + 6, y: c0 }
+  f.cose.push(campo, mulino, silo, bianco)
+  f.silos = { terra: ingranditi, stalla: ingranditi }
+  /* Fattoria **cresciuta**: il livello apre le cose a poco a poco
+     (`dati/livelli.js`) e qui si provano le regole della coltivazione,
+     non gli sblocchi — che hanno il loro file (`unita/livelli-fattoria`).
+     Senza questa riga il mulino non si posa e il mais non si semina. */
+  f.speso = 100000
+  return { f, b, campo, mulino, silo, bianco }
 }
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
@@ -53,8 +66,6 @@ controlla('le colture non hanno guasti', guasti.length === 0, guasti.join(' · '
 
 controlla('c\'è almeno una coltura', COLTURE.length > 0)
 controlla('c\'è almeno una ricetta', RICETTE.length > 0)
-uguale('la variante ha la chiave col nome del gioco davanti',
-       CHIAVE_VARIANTE.startsWith('fattoria:'), true)
 
 /* Il campo del catalogo è quello che si semina, e deve essere
    calpestabile: un campo che blocca il cane è un mobile, non un campo. */
@@ -152,34 +163,117 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 }
 
 {
-  /* Granaio pieno: stessa cosa. Non si raccoglie **e non si paga**, il
+  /* Silo pieno: stessa cosa. Non si raccoglie **e non si paga**, il
      campo aspetta. Mezzo campo raccolto non esiste. */
   const { f, b, campo } = conCampoEMulino()
-  f.granaio.grano = f.capienzaDelGranaio
+  f.granaio.grano = f.capienzaDi('terra')
   f.seminaCampo(campo, 'grano', T0)
   const dopo = fra(PER_COLTURA.grano.minuti)
   const saldo = b.saldo()
   const no = f.raccogli(campo, dopo)
-  uguale('col granaio pieno non si raccoglie', no.ok, false)
-  uguale('e dice perché', no.motivo, 'granaio-pieno')
+  uguale('col silo pieno non si raccoglie', no.ok, false)
+  uguale('e dice perché', no.motivo, 'silo-pieno')
+  uguale('e quale silo', no.famiglia, 'terra')
   uguale('senza pagare niente', b.saldo(), saldo)
   uguale('e il campo resta pronto', f.statoCampo(campo, dopo).pronto, true)
-  uguale('il granaio non è andato oltre il tetto',
-         f.quantoHo('grano'), f.capienzaDelGranaio)
+  uguale('il silo non è andato oltre il tetto',
+         f.quantoHo('grano'), f.capienzaDi('terra'))
 }
 
-/* ══════════ 5. il granaio e i silos ══════════ */
 {
-  const { f } = conCampoEMulino()
-  uguale('il granaio parte dal tetto base', f.capienzaDelGranaio, GRANAIO)
-  uguale('un tetto è per prodotto, non complessivo', capienza(0), GRANAIO)
-  f.cose.push({ i: 950, id: 'silo', g: 0, x: 30, y: 30 })
-  uguale('un silo allarga il granaio', f.capienzaDelGranaio, GRANAIO + GRANAIO_PER_SILO)
-  const fuori = f.metti('grano', f.capienzaDelGranaio + 7)
-  uguale('quello che non ci sta torna indietro invece di sparire', fuori, 7)
-  uguale('e dentro c\'è esattamente il tetto', f.quantoHo('grano'), f.capienzaDelGranaio)
-  uguale('togliere più di quello che c\'è non si può',
-         f.togli('mais', 1), false)
+  /* E senza silo **è un'altra cosa da fare**, quindi è un altro motivo:
+     costruirlo, non ingrandirlo. Dirlo storto manda a spendere 120
+     monete per la cosa sbagliata. */
+  const { f, campo, silo } = conCampoEMulino()
+  f.cose.splice(f.cose.indexOf(silo), 1)
+  f.seminaCampo(campo, 'grano', T0)
+  const no = f.raccogli(campo, fra(PER_COLTURA.grano.minuti))
+  uguale('senza il silo del raccolto non si raccoglie', no.ok, false)
+  uguale('e il motivo è che il silo manca', no.motivo, 'silo-manca')
+  uguale('la capienza senza silo è zero, non piccola', f.capienzaDi('terra'), 0)
+  uguale('ma il silo della stalla è ancora suo e funziona',
+         f.quantoCiSta('uova') > 0, true)
+}
+
+/* ══════════ 5. I DUE SILOS ══════════
+   Piccoli, condivisi, separati e si ingrandiscono pagando. Sono quattro
+   decisioni di prodotto, e ognuna qui sotto ha la sua riga: il perché
+   sta in `dati/coltivazioni.js`. */
+{
+  const { f } = conCampoEMulino(1000, 0)
+  uguale('un silo appena costruito tiene poco', f.capienzaDi('terra'), SILO_BASE)
+  uguale('e il conto è quello del dato', capienza(0), SILO_BASE)
+
+  /* **Condiviso**: il tetto è del silo, non del singolo prodotto. Era
+     per prodotto, ed era la cosa che non si capiva. */
+  f.metti('grano', 3)
+  uguale('tre grani riempiono tre posti', f.quantoHoNelSilo('terra'), 3)
+  uguale('e del mais ce ne sta quello che avanza',
+         f.quantoCiSta('mais'), SILO_BASE - 3)
+  const fuori = f.metti('mais', SILO_BASE + 1)
+  uguale('quello che non ci sta torna indietro invece di sparire', fuori, 4)
+  uguale('e il silo è esattamente pieno', f.quantoHoNelSilo('terra'), SILO_BASE)
+
+  /* **Separati**: il raccolto colmo non ferma le uova. È il motivo per
+     cui i silos sono due e non uno grande. */
+  uguale('col raccolto pieno le uova entrano lo stesso',
+         f.quantoCiSta('uova'), SILO_BASE)
+
+  /* **Si ingrandisce**, e il prossimo costa di più. */
+  const primo = f.costoDellIngrandimento('terra')
+  uguale('il primo ingrandimento costa quello che dice il dato',
+         primo, costoIngrandimento(0))
+  const su = f.ingrandisci('terra')
+  controlla('si ingrandisce', su.ok)
+  uguale(`e ci stanno ${SILO_PIU} cose in più`, f.capienzaDi('terra'), SILO_BASE + SILO_PIU)
+  controlla('il prossimo costa di più', f.costoDellIngrandimento('terra') > primo)
+  uguale('e non ha toccato l\'altro silo', f.capienzaDi('stalla'), SILO_BASE)
+
+  uguale('togliere più di quello che c\'è non si può', f.togli('zucche', 1), false)
+}
+
+{
+  /* A monete finite non si ingrandisce, e non si perde niente. */
+  const { f } = conCampoEMulino(3, 0)
+  const no = f.ingrandisci('terra')
+  uguale('a corto di monete non si ingrandisce', no.ok, false)
+  uguale('e dice che sono le monete', no.motivo, 'poche-monete')
+  uguale('il silo è rimasto com\'era', f.capienzaDi('terra'), SILO_BASE)
+}
+
+{
+  /* Un silo che non c'è non si ingrandisce: si costruisce. */
+  const { f, silo } = conCampoEMulino(1000, 0)
+  f.cose.splice(f.cose.indexOf(silo), 1)
+  uguale('un silo non costruito non si ingrandisce',
+         f.ingrandisci('terra').motivo, 'silo-manca')
+}
+
+{
+  /* **Ogni roba dice chi la usa**, perché è l'unica cosa che una riga di
+     scaffale può dire di utile — e perché una roba che non serve a
+     niente occuperebbe per sempre uno dei quattro posti di un silo. */
+  for (const id of Object.keys(PRODOTTI)) {
+    const usi = serveA(id)
+    controlla(`«${id}»: premendolo si legge chi lo usa`, usi.length > 0)
+    for (const u of usi)
+      controlla(`«${id}» → ${u.che} «${u.nome}»: ha un nome e una faccia`,
+                !!u.nome && !!u.emoji)
+    /* Una ricetta deve dire **in quale macchina**: «3 grani» senza il
+       mulino è un'informazione che non si può usare. */
+    for (const u of usi.filter(u => u.che === 'ricetta'))
+      controlla(`«${id}» → ${u.nome}: dice in che macchina`, !!laMacchina(u.dove))
+  }
+}
+
+{
+  /* Ogni prodotto sta in un silo che esiste: uno senza casa non si
+     raccoglierebbe mai, e nessuno lo direbbe. */
+  for (const [id, pr] of Object.entries(PRODOTTI))
+    controlla(`«${id}» ha un silo dove stare`, !!SILI[pr.silo])
+  controlla('e tutti e due i silos hanno qualcosa dentro',
+            Object.keys(SILI).every(fam =>
+              Object.values(PRODOTTI).some(pr => pr.silo === fam)))
 }
 
 /* ══════════ 6. il mulino ══════════ */
@@ -388,7 +482,17 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 }
 
 nota(`${COLTURE.length} colture, ${RICETTE.length} ricette, ` +
-     `${Object.keys(PRODOTTI).length} prodotti · granaio da ${GRANAIO} ` +
-     `(+${GRANAIO_PER_SILO} per silo)`)
+     `${Object.keys(PRODOTTI).length} prodotti · silos da ${SILO_BASE} ` +
+     `(+${SILO_PIU} a 🪙${[0, 1, 2, 3].map(costoIngrandimento).join(', 🪙')}…)`)
+
+/* Una coltura che rende più di quanto tenga un silo appena costruito
+   non si raccoglie finché non lo si ingrandisce. Non è un guasto — il
+   cartello lo dice, e il campo aspetta — ma è una cosa da sapere
+   quando si tocca una resa, quindi si scrive invece di scoprirla
+   giocando. */
+for (const c of COLTURE)
+  if (c.resa > SILO_BASE)
+    nota(`${c.emoji} ${c.nome}: rende ${c.resa}, e un silo nuovo ne tiene ` +
+         `${SILO_BASE} — va ingrandito prima di raccoglierlo`)
 
 riassunto('i campi della fattoria')

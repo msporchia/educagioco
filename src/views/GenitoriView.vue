@@ -30,7 +30,6 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
-import { CHIAVE_VARIANTE as CHIAVE_COLTIVA } from '../giochi/fattoria/dati/coltivazioni.js'
 import { PARTENZE } from '../data/partenze.js'
 import { sapereDi } from '../data/saperi.js'
 import Barra from '../components/Barra.vue'
@@ -349,43 +348,9 @@ async function salvaNome() {
       await rinominaGiocatore(rinominando.value, nome)
       esito.value = { ok: true, testo: `Adesso si chiama ${nome}. I progressi di ${prima === nome ? 'prima' : prima} sono rimasti tutti dov'erano.` }
     }
-/* ── rimettere la fascia a chi c'è già ──
-   La partenza si sceglie quando un bambino si aggiunge, ed è il momento
-   giusto; il guaio è che capita una volta sola. Chi ha installato il
-   gioco prima che la domanda esistesse — o chi l'ha passata di fretta —
-   si ritrova un profilo con tutto acceso, e l'unica strada erano trenta
-   tocchi qui sotto, uno per gioco e uno per sapere.
-
-   Sta nella carta di chi sta giocando adesso, come l'aspetto e per lo
-   stesso motivo: scrive nel profilo in memoria, e quello di un altro
-   fratello in memoria non c'è. Riscrive giochi e saperi in blocco,
-   quindi si conferma — è l'unico interruttore di questa schermata che
-   cancella scelte fatte a mano. */
-const rifasciando = ref(false)
-const fasciaScelta = ref('')
     chiudiTutto()
   } catch (e) {
     esito.value = { ok: false, testo: e.message }
-  rifasciando.value = false; fasciaScelta.value = ''
-}
-function apriRifascia() { chiudiTutto(); rifasciando.value = true }
-/* Per che età il gioco sta scegliendo le domande adesso, detto con il
-   nome di una partenza quando ce n'è una che combacia: «6,5» non vuol
-   dire niente a nessuno, «Prima o seconda» sì. */
-const etaOra = computed(() => {
-  const anni = etaDelBambino()
-  const p = PARTENZE.find(x => x.anni === anni)
-  return p ? `${p.nome} (${p.eta})` : `${anni} anni`
-})
-function rimettiFascia() {
-  const p = PARTENZE.find(x => x.chiave === fasciaScelta.value)
-  if (!p) return
-  const { giochi, sa } = applicaPartenza(p.chiave)
-  esito.value = { ok: true, testo: `${chi.value} riparte da «${p.nome}»: `
-    + (giochi ? `${giochi} giochi spenti in home` : 'tutti i giochi accesi')
-    + ' e ' + (sa ? `${sa} pezzi di scuola tolti dalle domande` : 'nessun pezzo di scuola tolto')
-    + '. I progressi sono rimasti tutti dov\'erano.' }
-  chiudiTutto()
   }
 }
 
@@ -499,22 +464,6 @@ function cambiaMente() {
     ? `Negli asteroidi ${chi.value} trova tutte e ${SCALETTA.length} le tappe.`
     : `Negli asteroidi restano i ${quantiPianeti} pianeti delle tabelline. ` +
       'I progressi a mente non si perdono: riaccendendo tornano dov\'erano.' }
-}
-
-/* ── i campi nella fattoria ──
-   Stessa forma della variante degli asteroidi, e per la stessa ragione:
-   non è un gioco spento (la carta della fattoria resta in home) e non è
-   un sapere spento. È metà di un posto. Spegnendola non si cancella e
-   non si rimborsa niente: quello che è già stato costruito resta lì, il
-   granaio non si svuota, e la pappa torna a comprarsi a monete. */
-const coltivaAccesa = computed(() => varianteAccesa(CHIAVE_COLTIVA))
-function cambiaColtiva() {
-  accendiVariante(CHIAVE_COLTIVA, !coltivaAccesa.value)
-  esito.value = { ok: true, testo: coltivaAccesa.value
-    ? `Nella fattoria ${chi.value} può seminare i campi, macinare al mulino ` +
-      'e tenere gli animali nei recinti.'
-    : 'I campi restano dove sono ma non si seminano più, e la pappa si compra ' +
-      'a monete. Riaccendendo si riparte da dov\'era.' }
 }
 
 function cambiaGioco(g) {
@@ -646,29 +595,6 @@ async function azzera() {
         </button>
       </div>
 
-      <!-- ── dentro la fattoria ──
-           La coltivazione è metà della fattoria e si può togliere senza
-           togliere la fattoria: chi la spegne compra la pappa a monete
-           come si è sempre fatto. Quello che è già stato costruito resta
-           in mappa — non si cancella niente e non si rimborsa niente. -->
-      <h2>Dentro la fattoria</h2>
-      <p class="mini">Nella fattoria si possono seminare campi, aspettare che crescano
-        (col tempo vero, anche a gioco chiuso) e trasformare il raccolto — al mulino,
-        o dandolo agli animali dei recinti — per farne da mangiare per il cane e per
-        il gatto di casa.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !coltivaAccesa }"
-                data-flag="coltivazione" @click="cambiaColtiva">
-          <span class="ico">🌾</span>
-          <b>Campi da coltivare</b>
-          <i>{{ coltivaAccesa
-                ? 'Campi, mulino, recinti e granaio: la pappa si produce invece di comprarla'
-                : 'Spenti: la pappa si compra a monete, e i campi già fatti restano lì' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-
       <!-- ── i giochi in prova ──
            Il cancello, e dietro il cancello quello che c'è. Spento, i
            giochi a metà non esistono per chi gioca: non sono in home e
@@ -751,36 +677,6 @@ async function azzera() {
               <p class="mini">Con che faccia si vede in mappa</p>
               <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
                              @scegli="cambiaAspetto" />
-            </div>
-          </div>
-        </template>
-
-        <div v-if="aggiungendo" class="carta aperta" data-azione="nuovo-nome">
-          <b>Come si chiama?</b>
-          <form class="riga campo" @submit.prevent="salvaNome">
-            <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
-                   autocomplete="off" autocapitalize="words" spellcheck="false"
-                   placeholder="il nome" aria-label="il nome">
-          </form>
-
-          <!-- ── da dove parte ──
-               Chiedere qui e non dopo è il punto: spegnere a mano dodici
-               giochi e tre saperi si può fare da sempre, ma va fatto
-               PRIMA che il bambino apra il gioco la prima volta — cioè
-               nel momento in cui uno ha meno voglia di configurare. Tre
-               tocchi al posto di trenta, e niente che resti appiccicato
-               al profilo: da domani si tocca tutto a mano come prima. -->
-          <div class="partenze">
-            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
-                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
-                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
-              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
-              <i>{{ p.che }}</i>
-            </button>
-          </div>
-
-          <p class="mini">Con che faccia si vede in mappa</p>
-          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
 
               <!-- ── rimetti la fascia ──
                    La stessa domanda che si fa quando un bambino si
@@ -916,6 +812,36 @@ async function azzera() {
             <b>Ultimi inciampi</b>
             <i>Da leggere se il gioco si è chiuso o un tasto non rispondeva</i>
             <ul class="lista-guasti">
+            </div>
+          </div>
+        </template>
+
+        <div v-if="aggiungendo" class="carta aperta" data-azione="nuovo-nome">
+          <b>Come si chiama?</b>
+          <form class="riga campo" @submit.prevent="salvaNome">
+            <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
+                   autocomplete="off" autocapitalize="words" spellcheck="false"
+                   placeholder="il nome" aria-label="il nome">
+          </form>
+
+          <!-- ── da dove parte ──
+               Chiedere qui e non dopo è il punto: spegnere a mano dodici
+               giochi e tre saperi si può fare da sempre, ma va fatto
+               PRIMA che il bambino apra il gioco la prima volta — cioè
+               nel momento in cui uno ha meno voglia di configurare. Tre
+               tocchi al posto di trenta, e niente che resti appiccicato
+               al profilo: da domani si tocca tutto a mano come prima. -->
+          <div class="partenze">
+            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
+                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
+                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
+              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
+              <i>{{ p.che }}</i>
+            </button>
+          </div>
+
+          <p class="mini">Con che faccia si vede in mappa</p>
+          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
               <li v-for="(g, i) in incidenti.slice().reverse()" :key="i">
                 <b>{{ quando(g.quando) }}</b>
                 <span>{{ g.testo }}</span>

@@ -130,6 +130,22 @@
   cursor: grab; touch-action: none; display: flex; flex-direction: column;
   align-items: center; gap: 2px }
 .fa-voce:active { transform: scale(.95) }
+/* La roba dentro un silo: **si preme e dice chi la usa**, non si posa.
+   Quindi la mano del baule (`cursor: grab`) non ci sta — da lì non esce
+   niente con le dita — ma un dito sì, perché qualcosa succede: quello
+   che aveva prima era il peggio dei due, la faccia di una cosa da
+   trascinare e nessuna reazione. Aperta, resta accesa: è l'unico modo
+   di sapere di quale riga parla il riquadro qui sotto. */
+.fa-voce.guarda { cursor: pointer; font: inherit; color: inherit }
+.fa-voce.guarda.viva { border-color: #ffd98a; background: #26361f }
+
+/* Chi usa quello che si è appena premuto. Sta **sotto lo scaffale** e
+   non dentro la riga: dentro farebbe crescere una cella e ballare tutta
+   la griglia, e la riga che cerchi ti scapperebbe da sotto il dito. */
+.fa-usi { border: 2px solid #3d5c42; border-radius: 12px; background: #0d160fcc;
+  padding: 8px 10px; margin: 8px 0 2px; text-align: left }
+.fa-usi b { display: block; font-size: 14px; color: #ffd98a; margin-bottom: 3px }
+.fa-usi p { margin: 2px 0; font-size: 12.5px; color: #d8e4d6; line-height: 1.35 }
 .fa-voce.tua { border-color: #6f9b6f; background: #1b3220cc }
 /* Non si spegne più del necessario: quello che costa troppo si deve
    comunque poter guardare — è la cosa per cui si torna a fare esercizi. */
@@ -168,12 +184,20 @@
    esercizi. Piccolo, perché è una risposta e non un rimprovero. */
 .fa-prezzo.manca { font-size: 9.5px; font-weight: 600; color: #c9a98a }
 
-/* La strisciolina sotto un prodotto del granaio: quanto ce n'è rispetto
-   a quanto ce ne sta. Il tetto è un numero che si legge tardi, quando il
-   campo non si raccoglie; così si vede prima. */
+/* La strisciolina del silo: quanta roba c'è rispetto a quanta ce ne
+   sta. Il tetto è un numero che si legge tardi, quando il campo non si
+   raccoglie; così si vede prima. Era sotto **ogni prodotto**, quando il
+   tetto era per prodotto: adesso è una sola, larga, in cima al foglio,
+   perché uno solo è il tetto. */
 .fa-quanto { display: block; width: 80%; height: 4px; border-radius: 3px;
   background: #0d160f; border: 1px solid #2b4430; overflow: hidden }
 .fa-quanto i { display: block; height: 100%; background: #6f9b6f }
+.fa-quanto.largo { width: 100%; height: 8px; border-radius: 5px; margin: 2px 0 10px }
+/* Quanti posti sono occupati. Grosso come una risposta, non come una
+   nota a piè di pagina: è la domanda per cui si apre il silo. */
+.fa-posti { font-size: 15px; color: #d8e4d6; margin: 2px 0 4px }
+.fa-posti b { font-size: 19px; color: #ffd98a }
+.fa-posti span { color: #d59a9a; font-size: 13px }
 
 .fa-provino { display: block; margin: 0 auto; image-rendering: pixelated }
 
@@ -187,6 +211,80 @@
   font-size: 15px; text-align: center; background: #0d160f; color: #f4efe2;
   border: 2px solid #2b4430; margin-bottom: 12px }
 .fa-scrivi::placeholder { color: #7d947f }
+
+/* Le due metà del baule: la scelta grossa, sopra le linguette. Sono
+   due tasti larghi e non due linguette in più perché la domanda «sto
+   costruendo o sto abbellendo?» viene prima di «in quale scaffale». */
+.fa-zone { display: flex; gap: 8px; margin: 0 0 8px }
+.fa-zona { flex: 1; padding: 7px 6px 6px; border-radius: 12px; cursor: pointer;
+  border: 2px solid #2b4430; background: #0d160fcc; color: #b9c9b6;
+  font: inherit; font-size: 12.5px; font-weight: 700 }
+.fa-zona b { font-size: 15px; margin-right: 4px }
+.fa-zona.viva { border-color: #9fd3a8; background: #1b3220; color: #f4efe2 }
+
+/* ── la pagina dei livelli ───────────────────────────────────────── */
+.fa-livelli { width: min(430px, 94vw) }
+.fa-titolone { font-size: 17px; color: #ffd98a; font-weight: 700; margin: 0 0 8px }
+/* Quello che arriva: una riga per cosa, con la sua faccia. Non una
+   griglia di riquadri — è roba che si legge, non che si preme. */
+.fa-arriva { list-style: none; padding: 0; margin: 4px 0 10px; text-align: left }
+.fa-arriva li { display: flex; gap: 8px; align-items: center; padding: 3px 6px;
+  font-size: 13.5px; color: #e8efe6 }
+/* Il disegno vero della cosa che arriva: alto quanto una riga e mai di
+   più — è un'anteprima, non uno scaffale. Il `margin: 0` toglie
+   l'`auto` che il provino si porta dietro dalle carte del baule: in una
+   riga flex quel margine lo centra nello spazio libero, e i nomi
+   finiscono ognuno a un'altezza diversa dal bordo. */
+.fa-arriva canvas { flex: 0 0 auto; margin: 0; image-rendering: pixelated }
+/* «nel baule», «da seminare»: la parola che dice di che cosa si tratta,
+   spenta e a destra, perché è la spiegazione e non il nome. */
+.fa-arriva i { font-style: normal; font-size: 11px; color: #8fa691; margin-left: auto }
+/* La scaletta intera: si scorre, perché vedere che la strada continua
+   è metà del motivo per cui si guarda questa pagina. */
+.fa-scala { max-height: 190px; overflow-y: auto; border: 2px solid #2b4430;
+  border-radius: 12px; background: #0d160f66; padding: 4px }
+.fa-passo { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px;
+  align-items: center; padding: 4px 6px; font-size: 12.5px; color: #8fa691 }
+.fa-passo b { color: #6f9b6f }
+.fa-passo em { font-style: normal; font-size: 11.5px }
+.fa-passo.fatto { color: #d8e4d6 }
+.fa-passo.fatto b, .fa-passo.fatto em { color: #9fd3a8 }
+.fa-passo.ora { background: #26361f; border-radius: 8px }
+.fa-passo.ora b, .fa-passo.ora em { color: #ffd98a }
+
+/* Il gettone del livello, in alto accanto al baule: un numero e un
+   filo che si riempie. Piccolo apposta — la fattoria è il gioco, non la
+   sua barra di avanzamento — ma sempre lì, perché la domanda «e
+   adesso?» viene guardando il prato, non aprendo un menù. */
+.fa-liv { display: flex; align-items: center; gap: 6px; padding: 5px 10px 4px;
+  border-radius: 16px; background: #14261a; border: 2px solid #3d5c42;
+  color: #e8efe6; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer }
+.fa-liv i { display: block; width: 34px; height: 5px; border-radius: 3px;
+  background: #0d160f; overflow: hidden }
+.fa-liv i u { display: block; height: 100%; background: #ffd98a }
+
+/* ── come sta una bestia: tre blocchi, uno per bisogno ───────────── */
+/* Un blocco tiene insieme **la barra e quello che la muove**: erano tre
+   barrette in cima e i tasti sparsi sotto, e nessuno poteva sapere quale
+   tasto muovesse quale barretta. */
+.fa-blocco { border: 2px solid #2b4430; border-radius: 14px; background: #0d160f66;
+  padding: 8px 9px 9px; margin: 8px 0 }
+.fa-testa { display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
+  align-items: center; margin-bottom: 6px }
+.fa-testa b { font-size: 13.5px; color: #e8efe6; white-space: nowrap }
+.fa-testa em { font-style: normal; font-size: 11px; color: #8fa691; min-width: 42px;
+  text-align: right }
+/* I gesti di un bisogno: due o tre di solito, sette nella pancia piena
+   di roba prodotta — quindi vanno a capo invece di stringersi. */
+.fa-gesti { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center }
+.fa-cibo.viva { border-color: #ffd98a }
+/* L'offerta «oppure comprane uno adesso», dentro il riquadro di quello
+   che non hai: una riga larga, non un quadratino in fila con gli altri,
+   perché è una seconda scelta e non una delle prime. */
+.fa-cibo.dentro { flex-direction: row; gap: 8px; width: 100%; margin-top: 6px;
+  justify-content: flex-start }
+.fa-cibo.dentro span { font-size: 12px; opacity: .9 }
+.fa-cibo.dentro em { margin-left: auto }
 
 /* ── come sta una bestia ─────────────────────────────────────────── */
 .fa-bisogni { display: grid; gap: 7px; margin: 4px 0 12px }

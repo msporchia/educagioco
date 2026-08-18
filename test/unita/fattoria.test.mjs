@@ -29,6 +29,18 @@ function borsaTracciata(iniziale) {
            regala: c => { n += c } }
 }
 
+/* Una fattoria **cresciuta**: il livello apre le cose a poco a poco
+   (`dati/livelli.js`), e quasi tutto quello che si prova qui — posare
+   una panchina, spostare una casetta — arriva dal livello 9 in su. Gli
+   sblocchi hanno il loro file (`unita/livelli-fattoria`): qui si
+   provano posa, prezzi e magazzino, e una fattoria appena nata li
+   rifiuterebbe tutti dicendo una cosa vera che non c'entra. */
+const cresciuta = (opzioni = {}) => {
+  const f = new Fattoria(opzioni)
+  f.speso = 100000
+  return f
+}
+
 /* ══════════ 1. i dati stanno in piedi ══════════ */
 const guastiM = guastiDelMondo()
 controlla('il mondo non ha guasti', guastiM.length === 0, guastiM.join(' · '))
@@ -56,7 +68,7 @@ function primaComprabile(f) {
 
 /* il pezzo di terra rincara a ogni acquisto */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const prezzi = []
   for (let i = 0; i < 6; i++) {
     prezzi.push(f.prezzoDellaProssima)
@@ -73,7 +85,7 @@ function primaComprabile(f) {
    monete che abbiamo tolto apposta. Si vedrebbe solo giocando. */
 for (const [id, o] of Object.entries(OSTACOLI)) {
   const b = borsaTracciata(1000)
-  const f = new Fattoria({ borsa: b })
+  const f = cresciuta({ borsa: b })
   f.ostacoli = { [chiave(13, 13)]: id }         // un solo ostacolo di prova, dentro casa
   const r = f.sgombra(13, 13)
   controlla(`sgombrare "${id}" riesce`, r.ok)
@@ -84,7 +96,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 
 /* non si compra una piazzola che non tocca casa */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const r = f.compraPiazzola(0, 0)               // angolo lontano dal quadrato di partenza
   uguale('un pezzo di terra staccato da casa non si compra', r.ok, false)
   uguale('e dice perché', r.motivo, 'non-si-tocca')
@@ -92,7 +104,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 
 /* non si posa una cosa dove non ci sta: né fuori dal terreno... */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const fuori = f.posa('albero', 0, 0)
   uguale('non si posa fuori dal terreno posseduto', fuori.ok, false)
   uguale('e dice perché', fuori.motivo, 'non-ci-sta')
@@ -111,7 +123,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 /* rimettere una cosa dov'era è gratis, spostarla altrove costa */
 {
   const b = borsaTracciata(50)
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const dove = f.cellaLibera(14, 14)
   const panchina = f.posa('panchina', dove.x, dove.y).cosa
   f.borsa = b                       // si paga solo da qui in poi
@@ -132,7 +144,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 /* quello che si mette via torna in magazzino e da lì si ripiazza gratis */
 {
   const b = borsaTracciata(50)
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const q = f.cellaLibera(14, 14)
   const barile = f.posa('barile', q.x, q.y).cosa
   f.borsa = b                       // si paga solo da qui in poi
@@ -153,7 +165,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 
 /* girare una cosa che non ci starebbe girata la lascia com'era */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const s0 = f.cellaLibera(14, 14)
   const staccio = f.posa('staccio', s0.x, s0.y).cosa
   const primaG = staccio.g || 0
@@ -169,7 +181,7 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 /* ══════════ 3. si gioca davvero ══════════ */
 {
   const b = borsaTracciata(300)
-  const f = new Fattoria({ borsa: b })
+  const f = cresciuta({ borsa: b })
 
   const primoSgomberabile = () => {
     for (const k in f.ostacoli) {
@@ -281,7 +293,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    Le celle 12..29 sono quelle delle piazzole di partenza, e lì dentro
    il bosco non nasce: quello che c'è in mezzo ce lo mette il test. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   controlla('la casa di prova si posa', f.posa('casa', 14, 14).ok)   // piede [5,2]
 
   let dentro = 0
@@ -308,7 +320,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    che dice sempre [2,1]. Sbagliando, il cane passa attraverso il palo
    e si ferma su un pezzo di prato che sembra vuoto. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const s = f.posa('staccio', 15, 15).cosa
   controlla('sdraiata occupa le due celle in fila',
             !f.calpestabile(15, 15) && !f.calpestabile(16, 15))
@@ -324,7 +336,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    mai — prima ci passava dritto attraverso, perché la meta era una
    riga tirata in linea d'aria. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   controlla('la casa di traverso si posa', f.posa('casa', 14, 16).ok)   // 14..18 × 16..17
   const buona = (x, y) => f.calpestabile(x, y)
   const cane = new Camminatore(16, 14, { velocita: 3.4 })
@@ -345,7 +357,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    si resta fermi. Lo stagno è chiuso, quindi non c'è nemmeno una cella
    accanto a cui accostarsi. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   for (let x = 20; x <= 22; x++) for (let y = 20; y <= 22; y++) f.dipingiAcqua(x, y)
   const buona = (x, y) => f.calpestabile(x, y)
   const cane = new Camminatore(15, 15, {})
@@ -367,7 +379,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
 /* Chi vaga per il prato per conto suo si sceglie le mete da sé: la
    regola stava dentro il disegno e conosceva solo «è terra mia». */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   f.posa('casa', 13, 13); f.posa('casa', 13, 17); f.posa('fontana', 20, 15)
   const buona = (x, y) => f.calpestabile(x, y)
   /* il caso arriva da fuori: una passeggiata si rifà identica */
@@ -388,7 +400,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
 
 /* Non si fa comparire un animale sopra una fontana. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   controlla('la fontana di prova si posa', f.posa('fontana', 15, 15).ok)   // [3,2]
   const dove = f.cellaLibera(16, 15)
   controlla('chi nasce lì nasce su una cella dove si può stare',
@@ -400,7 +412,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    è che di lato ci siano sempre almeno due pezzi da comprare. Si vede
    solo giocando fino al bordo — cioè mai, a mano. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
 
   /* Quante piazzole comprabili ci sono oltre ogni lato della terra
      posseduta: il margine di cui parla la regola. */
@@ -460,7 +472,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    È il salvataggio di un bambino che ha già giocato: se si rompe qui, si
    rompe una sera dopo aver pubblicato. */
 {
-  const vecchia = new Fattoria({ borsa: borsaInfinita() })
+  const vecchia = cresciuta({ borsa: borsaInfinita() })
   const dato = vecchia.serializza()
   delete dato.limiti                     // com'era prima che i limiti esistessero
 
@@ -468,7 +480,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   const sgomberato = Object.keys(dato.ostacoli)[0]
   delete dato.ostacoli[sgomberato]
 
-  const f = new Fattoria({ borsa: borsaInfinita(), dato })
+  const f = cresciuta({ borsa: borsaInfinita(), dato })
   uguale('un salvataggio senza limiti riparte dal mondo di allora',
          JSON.stringify(f.limiti), JSON.stringify(LIMITI_VECCHI))
   uguale('e il bosco sgomberato non è ricresciuto', f.ostacoli[sgomberato], undefined)
@@ -489,7 +501,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    È la cosa che si scorda: senza salvare dove sta, quello che la bambina
    aveva chiuso nel recinto se ne esce da solo durante la notte. */
 {
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   const chi = 'cane-beagle'
   const r = f.compraBestia(chi, 90, 'Birba', { x: 14, y: 14 })
   controlla('il cane si compra', r.ok)
@@ -524,7 +536,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    sedici monete. */
 {
   const b = borsaTracciata(200)
-  const f = new Fattoria({ borsa: b })
+  const f = cresciuta({ borsa: b })
   f.compraBestia('pappagallo', 120, 'Coco')
   const saldo = b.saldo()
 
@@ -549,16 +561,22 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
     controlla(`${a.nome} ha dei cibi suoi`, cibiPer(famigliaDi(a.chi)).length >= 2)
 }
 
-/* Giocare costa una monetina, spazzolare no: chi è a zero deve poter
-   comunque toccare il suo cane. */
+/* **Ogni gesto costa una monetina**, e nessuno è gratis. *Ribalta la
+   regola di prima* («spazzolare resta gratis, chi è a zero deve poter
+   comunque toccare il suo cane»): un gesto gratis in mezzo a gesti che
+   costano non si legge come un regalo, si legge come quello che si
+   preme sempre. La conseguenza è accettata e sta scritta in
+   `dati/bisogni.js`: a zero monete col proprio animale non si fa
+   niente, e si fa un esercizio. */
 {
   const gioca = COCCOLE.find(c => c.id === 'gioca')
   const spazzola = COCCOLE.find(c => c.id === 'spazzola')
   uguale('giocare costa una monetina', gioca.prezzo, 1)
-  uguale('spazzolare resta gratis', spazzola.prezzo, 0)
+  uguale('e spazzolare pure', spazzola.prezzo, 1)
+  controlla('nessuna coccola è gratis', COCCOLE.every(c => c.da || c.prezzo > 0))
 
   const b = borsaTracciata(1)
-  const f = new Fattoria({ borsa: borsaInfinita() })
+  const f = cresciuta({ borsa: borsaInfinita() })
   f.compraBestia('cane-beagle', 90, 'Birba')
   f.stato('cane-beagle').gioco = 0.2
   f.stato('cane-beagle').pelo = 0.2
@@ -572,7 +590,11 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   const secondo = f.coccola('cane-beagle', gioca)
   uguale('a zero monete non si gioca più', secondo.ok, false)
   uguale('e dice perché', secondo.motivo, 'poche-monete')
-  controlla('ma spazzolarlo si può lo stesso', f.coccola('cane-beagle', spazzola).ok)
+  uguale('e nemmeno spazzolarlo', f.coccola('cane-beagle', spazzola).ok, false)
+  /* Ma non si perde niente e non si rompe niente: la bestia sta al
+     fondo (0,15) e aspetta il primo esercizio fatto. */
+  controlla('la bestia sta comunque sopra il fondo',
+            f.stato('cane-beagle').pelo >= 0.15)
 }
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +

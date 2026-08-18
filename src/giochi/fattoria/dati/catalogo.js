@@ -75,7 +75,7 @@
    davvero li sa il catalogo, non il motore.
    ═══════════════════════════════════════════════════════════════════ */
 import { PEZZI, TESSERA } from './atlante.js'
-import { ricetteDi } from './coltivazioni.js'
+import { ricetteDi, SILI } from './coltivazioni.js'
 
 /* Il piede che si ricava dal disegno, e il ragionamento sta in testa al
    file. Chi non ci si ritrova scrive `piede` nella sua riga e vince lui:
@@ -90,6 +90,71 @@ export function piedeDalDisegno(pezzo) {
 const V = (id, pezzo, nome, prezzo, extra) =>
   ({ id, pezzo, nome, prezzo, piede: piedeDalDisegno(pezzo), ...extra })
 
+/* ── `zona` E `apri` — DOVE STA E QUANDO ARRIVA ───────────────────
+   Ogni linguetta dice due cose in più di sé.
+
+   **`zona`** è la metà del baule in cui vive: `lavoro` (i campi, le
+   macchine, i silos, i recinti degli animali — le cose che *fanno*
+   qualcosa) o `bello` (tutto il resto: alberi, fiori, panchine, case).
+   Sono duecento voci, e senza questa divisione la carriola sta in mezzo
+   al pollaio: chi cerca il mulino deve passare in rassegna il vivaio.
+
+   Quando arriva una decorazione **non si dichiara**: tutte quelle
+   della zona `bello` stanno in una fila sola, ordinata per prezzo, e ne
+   escono due o tre per livello (`dati/livelli.js`). Sono quasi
+   duecento, ed è la ricchezza che rende lungo il gioco — a secchiate
+   diventano una lista, a gocce sono la ragione per cui si torna.
+
+   **`liv`** sulla singola riga vince su tutto, e ce l'hanno solo le
+   poche che *lavorano*: mulino, silos, i cinque recinti. Lì il momento
+   in cui arrivano è una decisione di gioco, non un conto sui prezzi.
+
+   ── `cresce` E `unico` — LE COPIE ─────────────────────────────────
+   Quello che **produce** rincara a ogni copia (`cresce`), perché due
+   conigliere fanno il doppio della lana e il campo numero cinque vale
+   quanto il primo: a prezzo fisso l'unica strategia sarebbe riempire il
+   prato di recinti uguali. Il conto sta in `prezzoDellaVoce`, ed è
+   lineare — mai esponenziale (`CALIBRAZIONE.md`).
+
+   I silos invece sono **`unico`**: due silos dello stesso tipo non
+   contengono niente di più (la capienza è del *tipo*, e si compra
+   ingrandendo), quindi il secondo non si vende affatto. Un oggetto che
+   si può comprare due volte e la seconda non fa niente è peggio di uno
+   che non si può comprare.
+
+── `cresce` — QUELLO CHE RINCARA A OGNI COPIA ───────────────────
+   Un pezzo di terra rincara già (`prezzoPiazzola` in `dati/mondo.js`),
+   e per lo stesso motivo deve rincarare **il campo**: è la cosa che
+   moltiplica tutto il resto — più campi vuol dire più raccolto per
+   volta — e a prezzo fisso il decimo campo costa come il primo mentre
+   vale molto di più. Senza rincaro l'unica strategia è comprare campi
+   finché c'è terra, e il gioco finisce lì.
+
+   Il rincaro è più dolce di quello della terra (1,38 lì contro 1,45
+   qui, ma la terra parte da 45 e il campo da 22): i primi due o tre
+   restano una spesa da pomeriggio, il sesto è una decisione. Chi non
+   dichiara `cresce` costa sempre uguale — una panchina è una panchina,
+   e ce ne stanno dieci senza che nessuna valga meno. */
+export const RINCARO = 0.6
+
+/* Quanto costa la prossima copia di una cosa, avendone già `quante`.
+   Vale sia per quelle in mappa sia per quelle nel baule: sono la stessa
+   cosa comprata, e uno che mette via i campi per ricomprarli a prezzo
+   di listino avrebbe trovato il modo di non pagare il rincaro.
+
+   Il rincaro è **lineare** (`base · (1 + n · cresce)`), non geometrico:
+   22, 35, 48, 61, 74… La prima versione moltiplicava per 1,45 a ogni
+   copia, ed era la stessa curva esponenziale bocciata sugli
+   ingrandimenti del silo — il decimo campo sarebbe costato 🪙770, due
+   ore di esercizi, mentre vale quanto il primo. Il metro sta in
+   `CALIBRAZIONE.md`: le monete si guadagnano sempre allo stesso ritmo,
+   quindi lo sforzo per una copia in più deve crescere piano. */
+export function prezzoDellaVoce(v, quante = 0) {
+  if (!v) return 0
+  if (!v.cresce || !(quante > 0)) return v.prezzo
+  return Math.round(v.prezzo * (1 + quante * v.cresce))
+}
+
 /* I sei ritratti di un recinto, dal nome della specie. Si scrive così e
    non sei volte a mano per lo stesso motivo per cui gli stadi di una
    coltura si scrivono con una funzione: sei nomi ricopiati cinque volte
@@ -100,7 +165,7 @@ const RECINTO = specie => Object.fromEntries(
     .map(q => [q, `recinto_${specie}_${q}`]))
 
 export const CATEGORIE = [
-  { chiave: 'verde', nome: 'Verde', icona: '🌳', voci: [
+  { chiave: 'verde', zona: 'bello', nome: 'Verde', icona: '🌳', voci: [
     V('albero',        'albero',            'Albero',            18),
     V('albero_verde',  'albero_verde',      'Albero grande',     28),
     V('albero_rosa',   'albero_rosa',       'Albero rosa',       28),
@@ -130,7 +195,7 @@ export const CATEGORIE = [
     V('roccia',        'roccia_muschiosa',  'Roccia',             6),
   ] },
 
-  { chiave: 'fiori', nome: 'Fiori', icona: '🌸', voci: [
+  { chiave: 'fiori', zona: 'bello', nome: 'Fiori', icona: '🌸', voci: [
     V('fiori0',        'fiori0',            'Fiorellini',         4, { sotto: true }),
     V('fiori1',        'fiori1',            'Fiori bianchi',      4, { sotto: true }),
     V('fiori2',        'fiori2',            'Fioritura',          5, { sotto: true }),
@@ -181,12 +246,12 @@ export const CATEGORIE = [
      Le aiuole nude e i cartelli non coltivano niente: sono arredo che
      viene dallo stesso foglio, e servono a far sembrare un orto anche
      il pezzo di terra che non è un campo. */
-  { chiave: 'campi', nome: 'Campi', icona: '🌾', voci: [
+  { chiave: 'campi', zona: 'lavoro', nome: 'Campi', icona: '🌾', voci: [
     V('orto',          'campo_vuoto',       'Campo',             22,
-      { sotto: true, campo: true, piede: [2, 2] }),
-    V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino' }),
-    V('silo',          'silo_rosso',        'Silo',             120, { silo: true }),
-    V('silo_bianco',   'silo_bianco',       'Silo bianco',      120, { silo: true }),
+      { sotto: true, campo: true, piede: [2, 2], cresce: RINCARO }),
+    V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 3, cresce: RINCARO }),
+    V('silo',          'silo_rosso',        'Silo del raccolto', 120, { silo: 'terra', unico: true }),
+    V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
   ] },
 
   /* ── IL CORTILE ───────────────────────────────────────────────────
@@ -200,17 +265,17 @@ export const CATEGORIE = [
      e ne occupa **tre** di profondità, non due. È l'unico posto della
      fattoria dove si cammina *dentro* qualcosa, e due celle
      lascerebbero l'ultima fila di staccionata calpestabile. */
-  { chiave: 'cortile', nome: 'Cortile', icona: '🐄', voci: [
+  { chiave: 'cortile', zona: 'lavoro', nome: 'Cortile', icona: '🐄', voci: [
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
-      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3] }),
+      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO }),
     V('pollaio',       'recinto_galline_calmo', 'Pollaio',      130,
-      { macchina: 'pollaio', stati: RECINTO('galline'), piede: [4, 3] }),
+      { macchina: 'pollaio', stati: RECINTO('galline'), piede: [4, 3], liv: 8, cresce: RINCARO }),
     V('ovile',         'recinto_pecore_calmo',  'Ovile',        190,
-      { macchina: 'ovile', stati: RECINTO('pecore'), piede: [4, 3] }),
+      { macchina: 'ovile', stati: RECINTO('pecore'), piede: [4, 3], liv: 12, cresce: RINCARO }),
     V('stalla',        'recinto_mucche_calmo',  'Stalla',       220,
-      { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3] }),
+      { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3], liv: 18, cresce: RINCARO }),
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
-      { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3] }),
+      { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 26, cresce: RINCARO }),
   ] },
 
   /* ── LE BESTIOLINE ────────────────────────────────────────────────
@@ -220,7 +285,7 @@ export const CATEGORIE = [
      della catena e dev'essere leggibile in un colpo — cinque recinti,
      tutti che fanno qualcosa. Un gattino di ceramica in mezzo a cinque
      macchine è la cosa che fa toccare quello sbagliato. */
-  { chiave: 'bestiole', nome: 'Bestioline', icona: '🐰', voci: [
+  { chiave: 'bestiole', zona: 'bello', nome: 'Bestioline', icona: '🐰', voci: [
     V('cuccia',        'cuccia0',           'Cuccia',            20),
     V('cuccia_grande', 'cuccia_grande',     'Cuccia grande',     28),
     V('casetta_uccelli', 'casetta_uccelli_tetto_rosso', 'Nido rosso',        14),
@@ -246,7 +311,7 @@ export const CATEGORIE = [
      si dipinge (`dipingi` nel motore, `dati/terreni.js`) e si raccorda
      da sé; questi sono laghetti da giardino, larghi due celle, che a
      nessuno viene in mente di accostare. */
-  { chiave: 'acqua', nome: 'Acqua', icona: '💧', voci: [
+  { chiave: 'acqua', zona: 'bello', nome: 'Acqua', icona: '💧', voci: [
     /* la fontana è animata: i fotogrammi girano da soli */
     V('fontana',       'fontana0',          'Fontana',           60,
       { anima: ['fontana0', 'fontana1', 'fontana2'] }),
@@ -265,7 +330,7 @@ export const CATEGORIE = [
     V('ponte',         'ponte',             'Ponte',             30),
   ] },
 
-  { chiave: 'recinti', nome: 'Recinti', icona: '🚧', voci: [
+  { chiave: 'recinti', zona: 'bello', nome: 'Recinti', icona: '🚧', voci: [
     V('staccio',       'staccionata',       'Staccionata',        6, { giri: [
       { pezzo: 'staccionata', piede: [2, 1] },     // sdraiata
       { pezzo: 'palo',        piede: [1, 2] },     // in piedi
@@ -318,7 +383,7 @@ export const CATEGORIE = [
     V('stendardo',     'bandiera_stemma',   'Stendardo',         10),
   ] },
 
-  { chiave: 'case', nome: 'Case', icona: '🏚️', voci: [
+  { chiave: 'case', zona: 'bello', nome: 'Case', icona: '🏚️', voci: [
     /* una voce sola che si gira: davanti c'è la porta, dietro il muro
        cieco. Erano due voci di catalogo, ed era la stessa casa. */
     V('casa',          'casa',              'Casa',             120, { giri: [
@@ -348,7 +413,7 @@ export const CATEGORIE = [
     V('lanterna',      'lanterna_muro',     'Lanterna',          10),
   ] },
 
-  { chiave: 'arredo', nome: 'Arredo', icona: '🪑', voci: [
+  { chiave: 'arredo', zona: 'bello', nome: 'Arredo', icona: '🪑', voci: [
     V('panchina',      'panchina',          'Panchina',          14),
     V('panchina2',     'panchina2',         'Panchina 2',        14),
     V('panchina_legno', 'panchina_legno',   'Panchina di legno', 12),
@@ -387,7 +452,7 @@ export const CATEGORIE = [
   /* Si chiamava «Banco», che diceva dov'era finita la roba e non cos'è.
      Qui sta quello che **viene dai campi** e si mette in giro: cassette,
      ceste, balle di fieno, e lo spaventapasseri che le guarda. */
-  { chiave: 'raccolto', nome: 'Raccolto', icona: '🥕', voci: [
+  { chiave: 'raccolto', zona: 'bello', nome: 'Raccolto', icona: '🥕', voci: [
     V('spaventapasseri', 'spaventapasseri', 'Spaventapasseri',   24),
     V('balla_tonda',   'balla_fieno_tonda', 'Balla di fieno',     7),
     V('balla_quadra',  'balla_fieno_quadrata0', 'Balla quadrata', 7),
@@ -443,12 +508,24 @@ export function pezzoDi(cosa, v = PER_ID[cosa && cosa.id]) {
 
 export const puoGirare = v => !!(v && v.giri && v.giri.length > 1)
 
+/* La voce che *è* quella macchina («mulino», «pollaio»): serve a chi
+   deve nominarla — «3 🌾 nel mulino» — partendo da una ricetta, che la
+   macchina la conosce per mestiere e non per id. Oggi i due coincidono,
+   ma coincidono per caso, e chi un giorno vendesse due mulini diversi
+   scoprirebbe la differenza da un nome sbagliato in un foglio. */
+export const laMacchina = quale => CATALOGO.find(v => v.macchina === quale) || null
+
 /* Le quattro domande che si fanno a una cosa in mappa per sapere se,
    oltre a stare lì, **lavora**. Si chiedono all'id perché chi le chiede
    ha in mano una `cosa` del salvataggio, non una voce di catalogo. */
 export const eCampo = cosa => !!(cosa && (PER_ID[cosa.id] || {}).campo)
 export const macchinaDi = cosa => (PER_ID[cosa && cosa.id] || {}).macchina || null
-export const eSilo = cosa => !!(cosa && (PER_ID[cosa.id] || {}).silo)
+/* Il silo dice **quale** dei due è (`'terra'`, `'stalla'`): è la
+   stessa parola che i prodotti si scrivono addosso in
+   `dati/coltivazioni.js`, ed è tutto il legame che c'è fra una cosa in
+   mappa e la roba che ci sta dentro. */
+export const siloDi = cosa => (PER_ID[cosa && cosa.id] || {}).silo || null
+export const eSilo = cosa => !!siloDi(cosa)
 export const statiDi = cosa => (PER_ID[cosa && cosa.id] || {}).stati || null
 
 /* ── SI PARTE DA ZERO ─────────────────────────────────────────────
@@ -516,5 +593,16 @@ export function guastiDelCatalogo() {
     g.push('la categoria «animali» è già una linguetta del baule')
   for (const p of PARTENZA)
     if (!PER_ID[p.id]) g.push(`la fattoria di partenza cita «${p.id}», che non è in catalogo`)
+  /* I due silos si citano a vicenda — la voce dice in che famiglia è, e
+     la famiglia dice qual è la sua voce — e un legame storto vorrebbe
+     dire roba che non entra in nessun silo, o un silo che si costruisce
+     e non serve a niente. Nessuno dei due si vede provando a occhio. */
+  for (const [fam, si] of Object.entries(SILI)) {
+    const v = PER_ID[si.cosa]
+    if (!v) g.push(`il silo «${fam}» cita «${si.cosa}», che non è in catalogo`)
+    else if (v.silo !== fam) g.push(`${si.cosa}: dice di essere il silo «${v.silo}», non «${fam}»`)
+  }
+  for (const v of CATALOGO)
+    if (v.silo && !SILI[v.silo]) g.push(`${v.id}: è il silo «${v.silo}», che non esiste`)
   return g
 }

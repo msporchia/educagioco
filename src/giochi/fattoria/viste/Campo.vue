@@ -23,16 +23,26 @@
    `monete`, manda fuori `semina` e `raccogli`. Chi paga è `Gioco.vue`.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
-import { COLTURE, PRODOTTI } from '../dati/coltivazioni.js'
+import { PRODOTTI } from '../dati/coltivazioni.js'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.statoCampo()` */
   stato: { type: Object, required: true },
   monete: { type: Number, default: 0 },
-  /* quanto ci sta ancora in granaio del prodotto che questo campo dà:
-     zero vuol dire che raccogliere non si può, e il pannello lo dice
-     invece di mostrare un tasto spento senza perché */
+  /* quanto ci sta ancora nel silo del raccolto: zero vuol dire che
+     raccogliere non si può, e il pannello lo dice invece di mostrare un
+     tasto spento senza perché */
   ciSta: { type: Number, default: 99 },
+  /* il silo del raccolto non è ancora stato costruito. Si dice **prima
+     di seminare**, non a raccolto pronto: scoprire che non c'è dove
+     metterlo dopo aver aspettato dieci minuti veri è la cosa che fa
+     smettere di seminare. */
+  senzaSilo: { type: Boolean, default: false },
+  prezzoSilo: { type: Number, default: 0 },
+  /* Quelle che il livello della fattoria ha già aperto
+     (`dati/livelli.js`): al primo campo sono due, e crescono con la
+     fattoria. Le porta chi apre il foglio — qui non si decide niente. */
+  colture: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['semina', 'raccogli', 'chiudi'])
 
@@ -51,16 +61,19 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
       <p>Scegli cosa seminare. Ci vuole del tempo vero: puoi chiudere il
          gioco e tornare quando è cresciuto.</p>
       <div class="fa-nomi">
-        <button v-for="k in COLTURE" :key="k.id" class="fa-cibo suo"
+        <button v-for="k in colture" :key="k.id" class="fa-cibo suo"
                 :disabled="k.semina > monete" @click="emit('semina', k)">
           <b>{{ k.emoji }}</b>
           <span>{{ k.nome }}</span>
           <em>🪙{{ k.semina }} · {{ k.minuti }} min</em>
         </button>
       </div>
-      <p class="fa-piccolo">Poi si raccoglie, e quello che viene fuori
-         finisce nel granaio: con il mulino diventa pappa per i tuoi
-         animali. <b>Il granaio si guarda toccando un silo.</b></p>
+      <p v-if="senzaSilo" class="fa-piccolo">Ti servirà anche il <b>silo
+         del raccolto</b> (🪙{{ prezzoSilo }}): è lì che finisce quello
+         che raccogli, e senza non c'è dove metterlo.</p>
+      <p v-else class="fa-piccolo">Poi si raccoglie, e quello che viene
+         fuori finisce nel silo del raccolto: con il mulino diventa pappa
+         per i tuoi animali. <b>Il silo si guarda toccandolo.</b></p>
     </template>
 
     <!-- ── sta crescendo ── -->
@@ -85,9 +98,12 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
       <p><b>{{ c.emoji }} È pronto!</b> Ne viene
          {{ c.resa }} {{ prodotto(c.da).emoji }}
          {{ prodotto(c.da).nome.toLowerCase() }}.</p>
-      <p v-if="pieno" class="fa-piccolo">Il granaio è pieno di
-         {{ prodotto(c.da).nome.toLowerCase() }}: usane un po' o metti un
-         silo. Il campo ti aspetta.</p>
+      <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
+         <b>silo del raccolto</b> (🪙{{ prezzoSilo }}): senza, non c'è dove
+         metterlo. Il campo ti aspetta.</p>
+      <p v-else-if="pieno" class="fa-piccolo">Nel silo del raccolto non
+         c'è posto per {{ c.resa }} {{ prodotto(c.da).emoji }}: usa
+         qualcosa, o toccalo e ingrandiscilo. Il campo ti aspetta.</p>
       <p v-else-if="c.raccolta > monete" class="fa-piccolo">Ti
          {{ c.raccolta - monete === 1 ? 'serve' : 'servono' }}
          <b>🪙{{ c.raccolta - monete }}</b> in più per raccoglierlo. Resta

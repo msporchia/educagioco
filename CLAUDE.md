@@ -441,5 +441,7 @@ e `grandi: true`, le due estremità: nessun elenco da mantenere a mano.
 
 `store/pin.js`: quattro cifre, di partenza `0000`. Sta nell'archivio accanto
 a `ultimo-giocatore` e **non dentro i profili** — è di casa, non di un
-bambino. Si rimette dall'indirizzo con `#pin=1234`, dove sta già il cheat
-delle monete (`#monete=500`).
+bambino. Si rimette dall'indirizzo con `#pin=1234`, dove stanno già i cheat
+delle monete (`#monete=500`) e del livello della fattoria (`#fattoria=9`, che
+alza e non fa mai scendere: serve a guardare col telefono una cosa che
+arriverebbe dopo tremila monete spese).

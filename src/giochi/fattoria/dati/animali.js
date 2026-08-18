@@ -38,16 +38,17 @@
 import { BESTIE } from './atlante.js'
 import { cibiPer } from './bisogni.js'
 
-/* nome dello sprite → come si presenta e quanto costa. I prezzi sono
+/* nome dello sprite → come si presenta, quanto costa e a che livello
+   della fattoria arriva (`dati/livelli.js`). I prezzi sono
    alti rispetto agli oggetti apposta: una bestia è la cosa che si
    desidera per giorni, non quella che si compra per riempire un angolo. */
 export const ANIMALI = {
-  'cane-bobtail': { nome: 'Bobtail', emoji: '🐕', prezzo: 90 },
-  'cane-beagle':  { nome: 'Beagle',  emoji: '🐶', prezzo: 90 },
-  'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75 },
-  'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75 },
-  'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75 },
-  'pappagallo':   { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120 },
+  'cane-bobtail': { nome: 'Bobtail', emoji: '🐕', prezzo: 90, liv: 2 },
+  'cane-beagle':  { nome: 'Beagle',  emoji: '🐶', prezzo: 90, liv: 13 },
+  'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75, liv: 7 },
+  'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75, liv: 20 },
+  'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75, liv: 30 },
+  'pappagallo':   { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120, liv: 42 },
 }
 
 /* Quelli che si possono davvero comprare oggi: dichiarati **e**
