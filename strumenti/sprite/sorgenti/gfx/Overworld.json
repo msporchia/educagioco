@@ -81,9 +81,10 @@
     "erba4": {"da": [3, 16], "cella": [16, 16]},
     "erba5": {"da": [14, 29], "cella": [16, 16]},
     "bandiera_stemma": {"da": [5, 27], "cella": [16, 32]},
-    "bandiera0": {"da": [3, 29], "cella": [34, 32]},
+    "bandiera0": {"da": [3, 29], "cella": [32, 32]},
     "bandiera1": {"da": [5, 29], "cella": [32, 32]},
-    "bandiera_asta": {"da": [7, 29], "cella": [36, 33]},
+    "bandiera_asta": {"da": [7, 29], "cella": [32, 32]},
+    "bandiera_tesa": {"da": [9, 29], "cella": [32, 32]},
     "teschio": {"da": [28, 2], "cella": [16, 16]},
     "ossa": {"da": [29, 2], "cella": [16, 16]},
     "ossa_mucchio": {"da": [27, 1], "cella": [16, 16]},
@@ -102,7 +103,8 @@
   "famiglie": {"erba": "fondo"},
   "trasforma": {"erba": {"giri": 4}},
   "cose": {
-    "bandiera": {"pezzi": ["bandiera0", "bandiera1", "bandiera_asta"], "anima": true}
+    "bandiera": {"pezzi": ["bandiera0", "bandiera1", "bandiera_asta", "bandiera_tesa"], "anima": true}
   },
+  "__bandiera": "I quattro fotogrammi della bandiera sono blocchi di 2\u00d72 celle a passo 32 px, coi pali a x=54, 86, 118, 150. I primi tre erano dichiarati larghi 34, 32 e 36 px: sbordavano nel vicino (di l\u00e0 veniva la scheggia grigia in fondo a bandiera_asta) e soprattutto, siccome chi disegna centra lo sprite, farli girare non sventolava il drappo — spostava il palo di due pixel avanti e indietro. Adesso sono tutti 32\u00d732 col palo nella stessa colonna. Il quarto (bandiera_tesa) non lo ritagliava nessuno. «bandiera_asta» non \u00e8 un'asta: \u00e8 il terzo fotogramma, e il nome resta finch\u00e9 vale la pena rinominarlo — a raggrupparli ci pensa «cose», non il nome.",
   "anima": ["fontana"]
 }
