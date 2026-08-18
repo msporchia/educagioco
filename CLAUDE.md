@@ -7,7 +7,9 @@ file HTML** apribile con doppio click, offline, senza server.
 regole di gioco e i numeri esatti stanno in [`LEGGIMI.md`](LEGGIMI.md) —
 leggilo prima di toccare `src/store/srs.js` o il bilanciamento. Il taglio per
 chi arriva da fuori è nel [`README.md`](README.md), con una pagina per gioco
-in `docs/`.
+in `docs/`. Il banco di lavoro — ogni comando, cosa riscrive, i banchi di
+prova, come si pubblica e cosa si guarda quando qualcosa va storto — sta in
+[`ADMIN.md`](ADMIN.md).
 
 ## Comandi
 
