@@ -33,6 +33,31 @@ export function salvaFoglietto () {
   return {
     name: 'salva-foglietto',
     apply: 'serve',
+
+    /* ── e non ricaricare la pagina per un file che ho scritto io ──
+       I foglietti entrano nel banco come moduli (`import.meta.glob`
+       con `?raw`), quindi scriverne uno fa scattare l'aggiornamento a
+       caldo di Vite: nessun modulo lo accetta, e la difesa di Vite è
+       ricaricare tutta la pagina.
+
+       Il risultato era il peggiore possibile: premi «salva», il file
+       viene scritto **giusto**, e la pagina riparte da capo — altro
+       foglio, niente selezione, zoom perso. Da fuori si legge «il
+       salvataggio mi ha buttato via tutto», che è esattamente il
+       contrario di quello che è successo, ed è il genere di malinteso
+       che fa smettere di usare un attrezzo.
+
+       Qui si dice a Vite di lasciar perdere: nessun modulo da
+       aggiornare. Chi ha scritto quel file è la pagina stessa, che il
+       contenuto nuovo ce l'ha già in mano. Il prezzo è che un foglietto
+       cambiato **da fuori** — a mano, o da un altro attrezzo — il banco
+       non lo vede finché non lo si ricarica. È il verso giusto in cui
+       sbagliare: la pagina non si muove da sola mentre ci lavori. */
+    handleHotUpdate ({ file }) {
+      const dentro = resolve(process.cwd(), RADICE)
+      if (file.endsWith('.json') && !relative(dentro, file).startsWith('..')) return []
+    },
+
     configureServer (server) {
       server.middlewares.use('/__foglietto', (req, res) => {
         if (req.method !== 'POST') { res.statusCode = 405; return res.end('solo POST') }

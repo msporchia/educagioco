@@ -68,6 +68,11 @@
     padding: 7px 9px; margin-bottom: 6px; cursor: pointer;
   }
   .voce.scelta { border-color: var(--acceso) }
+  /* toccata da quando si è aperto il foglio: una riga gialla a sinistra,
+     come un margine annotato. Sopravvive al salvataggio giusto il tempo
+     di sparire — dopo, quello che è scritto sul disco è quello che si
+     vede, e non c'è più niente da segnalare. */
+  .voce.toccata { border-left: 3px solid #ffd24a }
   .voce .testa { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap }
   .voce .testa b { font-size: 13px; font-weight: 600 }
   .voce .testa span { color: var(--tenue); font-size: 11px }

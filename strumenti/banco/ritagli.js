@@ -109,7 +109,12 @@ async function apriFoglio(chiave) {
   c.imageSmoothingQuality = 'high'
   c.drawImage(grezza, 0, 0, vera[0], vera[1])
 
-  R.aperto = { chiave: f.chiave, nome: f.nome, fg, testo: f.testo, img: tela, vera, cw, ch }
+  /* `originale` è com'era il foglietto quando l'abbiamo aperto: serve a
+     dire **cosa ho toccato**, che è la domanda vera di chi corregge
+     venti ritagli di fila. Senza, l'elenco è identico prima e dopo, e
+     l'unica prova di aver fatto qualcosa è ricordarselo. */
+  R.aperto = { chiave: f.chiave, nome: f.nome, fg, testo: f.testo,
+               originale: JSON.parse(f.testo), img: tela, vera, cw, ch }
   R.scelto = null
   R.segnati = []
   R.sporco = false
@@ -415,6 +420,23 @@ function scoperti() {
   return (_scoperti = fuori)
 }
 
+/* ── cosa è cambiato da quando l'ho aperto ──
+   Confronto secco fra l'oggetto di adesso e quello di partenza. Non è
+   un diff raffinato e non deve esserlo: la domanda è «questa l'ho
+   toccata?», e la risposta è sì o no. */
+const scritto = v => JSON.stringify(v === undefined ? null : v)
+function toccata(nome) {
+  const a = (R.aperto.originale.sprite || {})[nome]
+  return scritto(a) !== scritto(R.aperto.fg.sprite[nome])
+}
+function tutteToccate() {
+  const prima = Object.keys(R.aperto.originale.sprite || {})
+  const dopo = voci()
+  return [...new Set([...prima, ...dopo])]
+    .filter(n => !n.startsWith('__'))
+    .filter(n => toccata(n))
+}
+
 /* ═══════════ l'elenco ═══════════ */
 function costruisciElenco() {
   const dove = $('#ritagli-voci')
@@ -423,7 +445,7 @@ function costruisciElenco() {
   const viste = voci().filter(n => !q || n.toLowerCase().includes(q))
   for (const nome of viste) {
     const box = document.createElement('div')
-    box.className = 'voce' + (nome === R.scelto ? ' scelta' : '')
+    box.className = 'voce' + (nome === R.scelto ? ' scelta' : '') + (toccata(nome) ? ' toccata' : '')
     box.dataset.voce = nome
     const rr = rettangoli(nome)
     const [, , w, h] = rr[0]
@@ -1116,6 +1138,7 @@ function scriviJson(v, ind = '') {
 
 async function salva() {
   const testo = scriviJson(R.aperto.fg) + '\n'
+  const cambiate = tutteToccate()
   try {
     const r = await fetch('/__foglietto', {
       method: 'POST',
@@ -1124,8 +1147,21 @@ async function salva() {
     if (!r.ok) throw new Error(await r.text())
     R.sporco = false
     R.aperto.testo = testo
+    /* il testo di partenza si aggiorna **anche nell'elenco dei fogli**:
+       è da lì che `apriFoglio` rilegge, e senza, uscire da questo
+       foglio e rientrarci farebbe ricomparire la versione di prima come
+       se il salvataggio non fosse mai avvenuto */
+    const f = R.fogli.find(x => x.chiave === R.aperto.chiave)
+    if (f) f.testo = testo
+    R.aperto.originale = JSON.parse(testo)
     $('#r-salva').disabled = true
-    dillo(`${R.aperto.nome} scritto — adesso «python3 strumenti/sprite/atlante.py» per rigenerare`)
+    costruisciElenco()
+    dettaglio()
+    dillo(cambiate.length
+      ? `${R.aperto.nome}: ${cambiate.length === 1 ? 'scritta una voce' : `scritte ${cambiate.length} voci`}` +
+        ` — ${cambiate.slice(0, 6).join(', ')}${cambiate.length > 6 ? '…' : ''}. ` +
+        'Adesso «python3 strumenti/sprite/atlante.py» perché lo veda il gioco.'
+      : `${R.aperto.nome} riscritto, ma non era cambiato niente`)
   } catch (e) {
     dillo(`non l'ho potuto scrivere (${e.message}) — te lo metto negli appunti`)
     navigator.clipboard.writeText(testo).catch(() => {})
