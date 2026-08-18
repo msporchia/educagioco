@@ -29,6 +29,7 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
+import { CHIAVE_VARIANTE as CHIAVE_COLTIVA } from '../giochi/fattoria/dati/coltivazioni.js'
 import { PARTENZE } from '../data/partenze.js'
 import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
 import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
@@ -522,6 +523,22 @@ function cambiaMente() {
       'I progressi a mente non si perdono: riaccendendo tornano dov\'erano.' }
 }
 
+/* ── i campi nella fattoria ──
+   Stessa forma della variante degli asteroidi, e per la stessa ragione:
+   non è un gioco spento (la carta della fattoria resta in home) e non è
+   un sapere spento. È metà di un posto. Spegnendola non si cancella e
+   non si rimborsa niente: quello che è già stato costruito resta lì, il
+   granaio non si svuota, e la pappa torna a comprarsi a monete. */
+const coltivaAccesa = computed(() => varianteAccesa(CHIAVE_COLTIVA))
+function cambiaColtiva() {
+  accendiVariante(CHIAVE_COLTIVA, !coltivaAccesa.value)
+  esito.value = { ok: true, testo: coltivaAccesa.value
+    ? `Nella fattoria ${chi.value} può seminare i campi, macinare al mulino ` +
+      'e tenere gli animali nei recinti.'
+    : 'I campi restano dove sono ma non si seminano più, e la pappa si compra ' +
+      'a monete. Riaccendendo si riparte da dov\'era.' }
+}
+
 function cambiaGioco(g) {
   /* la carta bloccata da un sapere non si accende da qui: si accende
      dall'altra scheda, ed è l'unica cosa utile da dire */
@@ -717,8 +734,8 @@ async function azzera() {
 
       <!-- ── dentro un gioco ──
            Non spegne una carta e non spegne un pezzo di scuola: spegne un
-           MODO di giocare. Oggi ce n'è uno solo, e sta qui perché è qui
-           che si viene a togliere di mezzo quello che adesso non serve. -->
+           MODO di giocare. Sono qui perché è qui che si viene a togliere
+           di mezzo quello che adesso non serve. -->
       <h2>Dentro gli asteroidi</h2>
       <p class="mini">Negli asteroidi le tabelline e i conti a mente sono una scaletta
         sola, ordinata dal più facile al più difficile.</p>
@@ -731,6 +748,29 @@ async function azzera() {
           <i>{{ menteAccesa
                 ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
                 : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
+
+      <!-- ── dentro la fattoria ──
+           La coltivazione è metà della fattoria e si può togliere senza
+           togliere la fattoria: chi la spegne compra la pappa a monete
+           come si è sempre fatto. Quello che è già stato costruito resta
+           in mappa — non si cancella niente e non si rimborsa niente. -->
+      <h2>Dentro la fattoria</h2>
+      <p class="mini">Nella fattoria si possono seminare campi, aspettare che crescano
+        (col tempo vero, anche a gioco chiuso) e trasformare il raccolto — al mulino,
+        o dandolo agli animali dei recinti — per farne da mangiare per il cane e per
+        il gatto di casa.</p>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !coltivaAccesa }"
+                data-flag="coltivazione" @click="cambiaColtiva">
+          <span class="ico">🌾</span>
+          <b>Campi da coltivare</b>
+          <i>{{ coltivaAccesa
+                ? 'Campi, mulino, recinti e granaio: la pappa si produce invece di comprarla'
+                : 'Spenti: la pappa si compra a monete, e i campi già fatti restano lì' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
       </div>
