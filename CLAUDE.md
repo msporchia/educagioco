@@ -425,6 +425,18 @@ Quattro interruttori diversi, e la differenza conta:
 Nei test i bersagli sono `.carta.gioco[data-gioco="…"]`,
 `.carta[data-flag="…"]`, `.carta[data-azione="…"]`.
 
+### Da dove parte un bambino
+
+`data/partenze.js`: quattro fasce (non va a scuola · prima o seconda ·
+terza · quarta o quinta) che alla creazione scrivono in un colpo solo le
+tre cose che dipendono dall'età — quali giochi si vedono, cosa si dà per
+scontato, fin dove pescano le domande. Si chiede **al primo avvio**
+(`components/Benvenuto.vue`, secondo passo) e quando si aggiunge un
+fratello; su un profilo che c'è già si rimette dalla carta di chi gioca
+(`applicaPartenza`), che **riscrive** giochi e saperi e per questo si
+conferma. Quali giochi tenere lo dicono i manifesti con `piccoli: true`
+e `grandi: true`, le due estremità: nessun elenco da mantenere a mano.
+
 ### Il codice dei genitori
 
 `store/pin.js`: quattro cifre, di partenza `0000`. Sta nell'archivio accanto

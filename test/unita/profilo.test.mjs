@@ -15,7 +15,9 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          rinominaGiocatore, eliminaGiocatore,
          esportaTutto, importaTutto, persist,
          aspettoDi, scegliAspetto,
-         sapereAcceso, accendiSapere, saperiSpenti } from '../../src/store/profile.js'
+         sapereAcceso, accendiSapere, saperiSpenti,
+         applicaPartenza, etaDelBambino, ETA_DIFETTO, scegliEta,
+         ritoccoSapere, ritocca, giocoAcceso } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
@@ -270,6 +272,62 @@ accendiSapere('presente', false)
 uguale('spegnerlo scrive false', state.profile.settings.sa.presente, false)
 accendiSapere('presente', true)
 uguale('riaccenderlo toglie la voce', state.profile.settings.sa.presente, undefined)
+
+/* ── da dove parte, e fin dove pescano le domande ──
+   Una partenza scrive tre cose in una volta: quali giochi si vedono,
+   cosa si dà per scontato, e **la fascia delle domande** — l'arco di
+   manopola che compete a quel bambino (`quiz/nucleo/classi.js`). La
+   terza è quella che si vede meno di tutte: se non arrivasse, un
+   bambino di sei anni si troverebbe le domande di quarta senza che
+   niente sembri rotto, e nessun controllo di forma se ne accorgerebbe.
+
+   E il contrario, che conta uguale: chi il profilo ce l'aveva già non
+   deve trovarsi la fascia addosso. Il difetto è la scala di scuola, cioè
+   quello che il gioco faceva prima che la fascia esistesse. */
+await pulisci()
+await init()
+await creaGiocatore('SenzaScelta')
+uguale('un profilo senza partenza è trattato come quelli di ieri',
+  etaDelBambino(), ETA_DIFETTO)
+uguale('e non si scrive niente nel salvataggio', state.profile.settings.eta, undefined)
+
+await pulisci()
+await init()
+await creaGiocatore('Piccola', true, 'prima')
+uguale('chi parte da «prima o seconda» ha sei anni e mezzo', etaDelBambino(), 6.5)
+controlla('e il castello non ce l\'ha in home', !giocoAcceso('torri'))
+controlla('ma il dungeon sì: le domande adesso sanno farsi piccole',
+  giocoAcceso('dungeon'))
+controlla('e le moltiplicazioni restano fuori dalle domande',
+  saperiSpenti().includes('moltiplicazioni'))
+
+/* un anno dopo: si rimette la fascia senza toccare i progressi */
+state.profile.coins = 123
+accendiSapere('divisioni', false)
+applicaPartenza('quarta')
+uguale('rimessa la fascia, gli anni salgono', etaDelBambino(), 9.5)
+controlla('il castello ricompare', giocoAcceso('torri'))
+controlla('e le scelte fatte a mano sui saperi si riscrivono',
+  sapereAcceso('divisioni'))
+uguale('le monete non si toccano', state.profile.coins, 123)
+
+/* ── il ritocco ──
+   L'interruttore dei saperi aveva due posizioni, e il «no» è una
+   risposta grossa. Il ritocco è quella piccola: un gradino su o giù —
+   mezzo anno di scuola — su una taratura che abbiamo sbagliato noi. */
+uguale('di partenza nessun gruppo è ritoccato', ritoccoSapere('problemi'), 0)
+ritocca('problemi', -1)
+uguale('ritoccato, si ricorda', ritoccoSapere('problemi'), -1)
+uguale('e si scrive nel profilo', state.profile.settings.ritocchi.problemi, -1)
+uguale('non si va oltre tre gradini', ritocca('problemi', 9), 3)
+ritocca('problemi', 0)
+uguale('a zero torna al difetto', ritoccoSapere('problemi'), 0)
+uguale('e la voce sparisce', state.profile.settings.ritocchi.problemi, undefined)
+
+scegliEta(7)
+uguale('l\'età si cambia a mano', etaDelBambino(), 7)
+scegliEta(99)
+uguale('e un numero assurdo non entra', etaDelBambino(), 7)
 
 nota('l\'archivio qui è quello in memoria: fuori dal browser è il ripiego previsto')
 riassunto('Chi gioca: roster, migrazione, salvataggio')

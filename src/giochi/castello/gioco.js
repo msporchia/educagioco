@@ -34,6 +34,9 @@ export default {
   come: 'strategia',
   tappe: RACCONTO.length,
   tinta: '#e3ead6',
+  /* per la scala di `data/giochi.js`: è il campo del tower defense, che
+     si paga in operazioni in colonna */
+  grandi: true,
 
   /* Dietro «i giochi in prova», e non è una precauzione: qui dentro non
      c'è ancora niente da giocare. */

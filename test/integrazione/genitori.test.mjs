@@ -470,8 +470,8 @@ await page.fill('.carta[data-azione="nuovo-nome"] .nome', 'Federica')
    scriverlo, e qui si prova che lo sia davvero. */
 controlla('col solo nome il tasto non si può ancora premere',
   await page.locator('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)').isDisabled())
-uguale('le partenze offerte sono tre',
-  await page.locator('.partenza').count(), 3)
+uguale('le partenze offerte sono quattro',
+  await page.locator('.partenza').count(), 4)
 await page.click('.partenza[data-partenza="terza"]')
 await page.waitForTimeout(150)
 controlla('scelta la partenza, il tasto si accende',
@@ -646,3 +646,42 @@ if (errori.length) errori.forEach(e => nota(e))
 
 await browser.close()
 riassunto('la schermata dei genitori')
+/* ── 12. rimettere la fascia a chi c'è già ──
+   La partenza si sceglie quando un bambino si aggiunge, ma la creazione
+   capita una volta sola: chi ha installato il gioco prima che la domanda
+   esistesse si ritrova tutto acceso, e a mano sono trenta tocchi. Da qui
+   si riscrive in blocco.
+
+   Sta in fondo apposta: riscrive giochi e saperi, quindi lo stato che
+   lascia non deve arrivare a nessun altro punto del test. */
+await page.click('button[aria-label="indietro"]')   // il punto 11 finisce nell'albo
+await page.waitForSelector('.carte', { timeout: 5000 })
+await vaiAiGenitori()
+await digita('0000')
+await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
+controlla('la carta di chi gioca offre di rimettere la fascia',
+  await page.isVisible('button[data-azione="rifascia"]'))
+await page.click('button[data-azione="rifascia"]')
+await page.waitForSelector('.rifascia', { timeout: 5000 })
+uguale('anche qui le fasce sono quattro', await page.locator('[data-rifascia]').count(), 4)
+controlla('e non si conferma senza averne scelta una',
+  await page.locator('button[data-azione="rifascia-conferma"]').isDisabled())
+
+const monetePrima = (await leggiProfilo(page)).coins
+await page.click('[data-rifascia="piccoli"]')
+await page.waitForTimeout(150)
+await page.click('button[data-azione="rifascia-conferma"]')
+await page.waitForTimeout(600)
+controlla('rimessa la fascia lo dice invece di restare muta',
+  await page.evaluate(() => document.body.innerText.includes('riparte da')))
+
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('.carte', { timeout: 5000 })
+const dopoFascia = await page.evaluate(() =>
+  [...document.querySelectorAll('.carta.gioco[data-gioco]')].map(c => c.dataset.gioco))
+controlla('e in home restano solo i giochi per i piccoli',
+  dopoFascia.includes('conta') && !dopoFascia.includes('torri'), dopoFascia.join(','))
+/* Quello che non deve succedere: una fascia decide cosa si vede, non
+   cancella niente. */
+uguale('i progressi non si sono mossi', (await leggiProfilo(page)).coins, monetePrima)
+

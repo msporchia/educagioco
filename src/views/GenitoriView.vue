@@ -14,7 +14,8 @@ import { ref, computed, onMounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
          saperiCheMancano,
-         giocoAcceso, accendiGioco, quantiGiochiAccesi,
+         giocoAcceso, accendiGioco, quantiGiochiAccesi, applicaPartenza,
+         etaDelBambino,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
@@ -348,9 +349,43 @@ async function salvaNome() {
       await rinominaGiocatore(rinominando.value, nome)
       esito.value = { ok: true, testo: `Adesso si chiama ${nome}. I progressi di ${prima === nome ? 'prima' : prima} sono rimasti tutti dov'erano.` }
     }
+/* ── rimettere la fascia a chi c'è già ──
+   La partenza si sceglie quando un bambino si aggiunge, ed è il momento
+   giusto; il guaio è che capita una volta sola. Chi ha installato il
+   gioco prima che la domanda esistesse — o chi l'ha passata di fretta —
+   si ritrova un profilo con tutto acceso, e l'unica strada erano trenta
+   tocchi qui sotto, uno per gioco e uno per sapere.
+
+   Sta nella carta di chi sta giocando adesso, come l'aspetto e per lo
+   stesso motivo: scrive nel profilo in memoria, e quello di un altro
+   fratello in memoria non c'è. Riscrive giochi e saperi in blocco,
+   quindi si conferma — è l'unico interruttore di questa schermata che
+   cancella scelte fatte a mano. */
+const rifasciando = ref(false)
+const fasciaScelta = ref('')
     chiudiTutto()
   } catch (e) {
     esito.value = { ok: false, testo: e.message }
+  rifasciando.value = false; fasciaScelta.value = ''
+}
+function apriRifascia() { chiudiTutto(); rifasciando.value = true }
+/* Per che età il gioco sta scegliendo le domande adesso, detto con il
+   nome di una partenza quando ce n'è una che combacia: «6,5» non vuol
+   dire niente a nessuno, «Prima o seconda» sì. */
+const etaOra = computed(() => {
+  const anni = etaDelBambino()
+  const p = PARTENZE.find(x => x.anni === anni)
+  return p ? `${p.nome} (${p.eta})` : `${anni} anni`
+})
+function rimettiFascia() {
+  const p = PARTENZE.find(x => x.chiave === fasciaScelta.value)
+  if (!p) return
+  const { giochi, sa } = applicaPartenza(p.chiave)
+  esito.value = { ok: true, testo: `${chi.value} riparte da «${p.nome}»: `
+    + (giochi ? `${giochi} giochi spenti in home` : 'tutti i giochi accesi')
+    + ' e ' + (sa ? `${sa} pezzi di scuola tolti dalle domande` : 'nessun pezzo di scuola tolto')
+    + '. I progressi sono rimasti tutti dov\'erano.' }
+  chiudiTutto()
   }
 }
 
@@ -746,6 +781,37 @@ async function azzera() {
 
           <p class="mini">Con che faccia si vede in mappa</p>
           <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
+
+              <!-- ── rimetti la fascia ──
+                   La stessa domanda che si fa quando un bambino si
+                   aggiunge, per chi c'era già: un anno passa, o il
+                   profilo è nato prima che la domanda esistesse. -->
+              <template v-if="!rifasciando">
+                <p class="mini">Le domande arrivano come a «{{ etaOra }}».
+                  Se è cresciuto, o se è partito con tutto acceso</p>
+                <button class="bottone chiaro" data-azione="rifascia"
+                        @click="apriRifascia">Rimetti giochi e domande</button>
+              </template>
+              <div v-else class="rifascia">
+                <b>Da dove riparte {{ g.nome }}?</b>
+                <div class="partenze">
+                  <button v-for="p in PARTENZE" :key="p.chiave" type="button"
+                          class="partenza" :class="{ on: fasciaScelta === p.chiave }"
+                          :data-rifascia="p.chiave" @click="fasciaScelta = p.chiave">
+                    <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
+                    <i>{{ p.che }}</i>
+                  </button>
+                </div>
+                <i>Riscrive quali giochi si vedono e quali domande arrivano,
+                  comprese le scelte fatte a mano qui sotto. Monete, animali,
+                  campagne e traguardi non si toccano.</i>
+                <div class="riga">
+                  <button class="bottone chiaro" type="button"
+                          @click="chiudiTutto">Lascia stare</button>
+                  <button class="bottone" type="button" :disabled="!fasciaScelta"
+                          data-azione="rifascia-conferma" @click="rimettiFascia">Rimetti così</button>
+                </div>
+              </div>
                          @scegli="aspettoScelto = $event" />
 
           <div class="riga">
@@ -1192,3 +1258,8 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
        color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
 .livello:active { transform:translateY(1px) }
 
+.rifascia { display:flex; flex-direction:column; gap:9px; align-items:center;
+            width:100%; padding:11px; border-radius:14px; background:#f7f8fb }
+.rifascia > b { font-size:15px }
+.rifascia > i { font-style:normal; font-size:11.5px; line-height:1.4; color:var(--tenue);
+                text-align:center; max-width:36ch }

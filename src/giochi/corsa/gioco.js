@@ -39,6 +39,9 @@ export default {
   come: 'riflessi',
   tappe: QUANTE_TAPPE,
   sperimentale: true,
+  /* per la scala di `data/giochi.js`: i cancelli sono conti a mente, e
+     a un ritmo che a sei anni non si tiene */
+  grandi: true,
   tinta: '#ffe8cf',
 
   /* La riga che la home mostra sotto il nome. La scrive il gioco perché è

@@ -82,8 +82,36 @@ uguale('il tasto è spento finché non si scrive niente',
 
 await nuovo.fill('.nome', 'Pippo')
 await nuovo.click('.via')
+
+/* ── il secondo passo: da dove parte ──
+   Non è una domanda per il bambino ma per il grande che gli sta
+   installando il gioco, ed è quella che prima non si faceva a nessuno:
+   il primo profilo nasceva con tutto acceso, divisioni in colonna
+   comprese, anche a cinque anni. Si controlla che non si possa saltare —
+   il tasto è spento finché non si sceglie — e soprattutto che la scelta
+   MORDA: una partenza che non spegne niente è indistinguibile da nessuna
+   partenza, e non se ne accorgerebbe nessuno fino al primo bambino
+   davanti alla carta sbagliata. */
+await nuovo.waitForSelector('.partenza', { timeout: 8000 })
+controlla('poi chiede da dove parte', await nuovo.isVisible('.partenze'))
+uguale('e il tasto è spento finché non si sceglie', await nuovo.isDisabled('.via'), true)
+await nuovo.click('.partenza[data-partenza="prima"]')
+uguale('scelta la fascia si può entrare', await nuovo.isDisabled('.via'), false)
+await nuovo.click('.via')
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 controlla('scritto il nome si entra nel gioco', await nuovo.isVisible('.carte'))
+
+/* La prova che la fascia ha morso davvero: il castello chiede operazioni
+   in colonna e si dichiara `grandi`, quindi a chi entra in prima non deve
+   comparire; il gioco per i piccoli sì. Se un giorno le eccezioni non
+   arrivassero più al profilo — è successo, ed è invisibile — qui si
+   vedrebbero tutte e due le carte. */
+const carteNuovo = await nuovo.evaluate(() =>
+  [...document.querySelectorAll('.carta.gioco[data-gioco]')].map(c => c.dataset.gioco))
+controlla('la fascia scelta spegne i giochi da grandi',
+  !carteNuovo.includes('torri'), carteNuovo.join(','))
+controlla('e lascia quelli per i piccoli',
+  carteNuovo.includes('conta'), carteNuovo.join(','))
 controlla('e l\'onboarding non torna più', !(await nuovo.isVisible('.benvenuto')))
 controlla('con un giocatore solo non c\'è niente da scegliere',
   !(await nuovo.isVisible('.gioc')))

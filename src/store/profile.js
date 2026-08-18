@@ -286,8 +286,9 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
      divisioni in colonna. */
   const fresco = blank()
   if (partenza) {
-    const { giochi, sa } = eccezioniDi(partenza)
+    const { giochi, sa, eta } = eccezioniDi(partenza)
     fresco.settings = { ...fresco.settings, giochi, sa }
+    if (eta) fresco.settings.eta = eta
   }
   // un nome che PERSONE non ha (mai dovrebbe capitare, da un tasto che
   // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere
@@ -655,6 +656,37 @@ export function accendiGioco(chiave, si) {
 /* quanti ne restano accesi: se sono zero la home lo dice invece di
    mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
+
+/* ── rimettere una partenza a chi c'è già ──
+   Le partenze (`data/partenze.js`) nascono per il momento della
+   creazione, e lì restano il gesto giusto. Ma la creazione capita una
+   volta sola, e chi ha già premuto «Si gioca!» senza scegliere niente —
+   tutti quelli che hanno installato prima che la domanda esistesse — non
+   aveva nessuna strada che non fossero trenta tocchi a mano. Da qui si
+   riparte: si sceglie una fascia e le eccezioni si riscrivono in blocco.
+
+   **Sovrascrive**, non somma: quello che il genitore aveva acceso o
+   spento a mano su giochi e saperi torna a com'è nella fascia scelta —
+   comprese le singole tipologie di quiz («orto:apostrofo»), che vivono
+   nella stessa mappa. È il motivo per cui la schermata lo fa
+   confermare, e per cui questa funzione non si chiama «aggiorna».
+
+   Quello che NON tocca è tutto il resto: monete, animali, campagne,
+   traguardi, la memoria di cosa il bambino sa — e nemmeno gli altri
+   settaggi (il suono, i giochi in prova, le varianti, i lucchetti). Una
+   fascia decide cosa si vede e cosa si chiede, non cancella niente. */
+export function applicaPartenza(chiave) {
+  const { giochi, sa, eta } = eccezioniDi(chiave)
+  const s = state.profile.settings
+  s.giochi = giochi
+  s.sa = sa
+  /* i ritocchi fatti a mano se ne vanno con il resto: sono correzioni
+     sopra l'età, e rimettere la fascia vuol dire ripartire da quella */
+  delete s.ritocchi
+  if (eta) s.eta = eta
+  persist()
+  return { giochi: Object.keys(giochi).length, sa: Object.keys(sa).length }
+}
 
 /* ── quanti anni ha ──
    Il numero da cui dipende **quali domande arrivano**: ogni classe di

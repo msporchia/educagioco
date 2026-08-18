@@ -24,6 +24,33 @@
    momento è un gioco come gli altri: acceso per tutti, spegnibile uno
    per uno come tutti.
 
+   ── LE DUE ESTREMITÀ: `piccoli` E `grandi` ───────────────────────
+   Due dichiarazioni, e nessuna delle due è un interruttore: servono
+   alle partenze (`data/partenze.js`) per accendere il set giusto a un
+   bambino appena arrivato, senza che nessuno debba tenere a mano
+   l'elenco di cosa va bene a che età.
+
+   `piccoli: true` è la fascia dei quattro-sei anni: consegna iconica,
+   niente da leggere, non si può perdere. `grandi: true` è l'altra
+   punta — **dà per scontato che il bambino legga da solo, o la
+   matematica delle classi alte**: le tabelline, le operazioni in
+   colonna, l'euro e il resto, una lingua straniera scritta, le domande
+   di quiz che oggi partono dalla terza.
+
+   Chi non dichiara né l'uno né l'altro sta in mezzo, ed è la
+   maggioranza silenziosa che nessuna partenza spegne tranne quella dei
+   piccolissimi.
+
+   È già successo una volta, ed è il modo giusto di usarla: il Dungeon,
+   Survivors e il sotterraneo hanno portato `grandi` finché le domande
+   che aprono le porte partivano tutte dalla terza. Non era il gioco a
+   essere troppo grande — schivare un mostro e scegliere una strada si
+   sa fare a sei anni — era il pedaggio. Quando il mazzo dei piccoli è
+   arrivato (`quiz/moduli/lettere.js`, e la fascia in
+   `store/profile.js`) quelle tre righe sono sparite, e i tre giochi
+   sono ricomparsi in home a chi entra in prima **senza toccare una
+   riga dei giochi**.
+
    ── QUELLO CHE UN GIOCO DÀ PER SCONTATO ──────────────────────────
    `serve: ['conversioni']` sono i macrogruppi di `data/saperi.js`
    senza i quali quel gioco non è difficile: è impossibile. Il
@@ -41,20 +68,21 @@ import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
 export const GIOCHI = [
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
-    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande' },
+    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande', grandi: true },
   { chiave: 'inglese',    ico: '🌐', nome: 'English',
-    che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande' },
+    che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
-    che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande' },
+    che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
-    che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia' },
+    che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
+    grandi: true },
   { chiave: 'pozioni',    ico: '⚗️', nome: 'Il laboratorio delle pozioni',
     che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
-    area: 'numeri', come: 'fare' },
+    area: 'numeri', come: 'fare', grandi: true },
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
-    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare' },
+    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare', grandi: true },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
-    che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia' },
+    che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia', grandi: true },
   /* I giochi scritti con la convenzione nuova (`src/giochi/`) si
      aggiungono da soli: il loro manifesto dice già chiave, nome e icona,
      e ripeterli qui vorrebbe dire tenerli allineati a mano. Il registro è
@@ -62,6 +90,7 @@ export const GIOCHI = [
      store, e non si chiude nessun anello di import. */
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
+                              grandi: !!g.grandi,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [] })),
 ]

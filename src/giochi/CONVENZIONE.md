@@ -50,7 +50,20 @@ voler dire mettere le mani in cinque file dell'applicazione.
 `test/unita/aree.test.mjs` diventa rosso se uno dei due manca o cita una
 chiave che non esiste. Facoltativi: `tinta` (lo sfondo della carta, che i
 giochi nuovi portano con sé perché non hanno una riga di CSS dedicata) e
-`piccoli: true`, che mette l'etichetta per la fascia dei quattro-sei anni.
+le **due estremità della scala**, `piccoli: true` e `grandi: true`.
+
+`piccoli` mette l'etichetta per la fascia dei quattro-sei anni: consegna
+iconica, niente da leggere, non si può perdere. `grandi` dice il
+contrario — questo gioco dà per scontato che il bambino legga da solo, o
+la matematica delle classi alte. Chi non dichiara né l'uno né l'altro sta
+in mezzo, ed è il caso normale.
+
+Non sono interruttori: le legge `src/data/partenze.js`, che al momento in
+cui un bambino si aggiunge accende il set giusto senza che nessuno debba
+tenere a mano un elenco di cosa va bene a che età. Sbagliarle non dà
+errore da nessuna parte — si vede solo il giorno che un bambino di sei
+anni si trova in home un gioco che non sa aprire, o non trova quello che
+saprebbe giocare.
 
 ### `dati/` — il dato
 
