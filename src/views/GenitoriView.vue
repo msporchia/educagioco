@@ -13,7 +13,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
-         sapereAcceso, accendiSapere, saperiSpenti, saperiCheMancano,
+         saperiCheMancano,
          giocoAcceso, accendiGioco, quantiGiochiAccesi,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
@@ -31,8 +31,7 @@ import { GIOCHI } from '../data/giochi.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
 import { CHIAVE_VARIANTE as CHIAVE_COLTIVA } from '../giochi/fattoria/dati/coltivazioni.js'
 import { PARTENZE } from '../data/partenze.js'
-import { MATERIE_SAPERI, saperiDiMateria, sapereDi } from '../data/saperi.js'
-import { sottoDi, siPuoProvare } from '../quiz/saperi.js'
+import { sapereDi } from '../data/saperi.js'
 import Barra from '../components/Barra.vue'
 import Prova from '../quiz/Prova.vue'
 import Catalogo from '../quiz/Catalogo.vue'
@@ -365,82 +364,26 @@ async function eliminaOra(g) {
   chiudiTutto()
 }
 
-/* ── cosa sa il bambino ──
-   La seconda scheda. Un macrogruppo spento toglie le domande che lo
-   davano per scontato — le conversioni a chi non ha ancora visto i
-   litri — e i giochi degradano invece di sbarrare, come il castello che
-   senza divisioni chiede moltiplicazioni più difficili. Non spegne
-   giochi e non tocca progressi: è scritto sulla scheda, perché la paura
-   di perdere qualcosa è l'unica ragione per cui un genitore non tocca
-   un interruttore che gli servirebbe. */
-/* Le sottovoci arrivano dai moduli di quiz (`quiz/saperi.js`) e si
-   contano una volta sola: sono dato fermo, non cambiano mentre uno
-   guarda la schermata. */
-const materie = MATERIE_SAPERI.map(m => ({
-  nome: m,
-  saperi: saperiDiMateria(m).map(s => ({ ...s, sotto: sottoDi(s.chiave) })),
-}))
-const spenti = computed(() => saperiSpenti().length)
-const acceso = chiave => sapereAcceso(chiave)
-/* Una carta spenta dice cosa si perde — tranne le poche che nascono
-   spente (`difetto: false`), dove non si è perso niente: lì non c'è
-   niente da rimpiangere, c'è da sapere quando accenderle. Il
-   congiuntivo spento non è una domanda tolta, è una cosa che a scuola
-   non hanno ancora fatto. */
-const rigaSapere = s => (acceso(s.chiave) ? s.che
-  : s.difetto === false ? `da accendere quando l'ha fatto a scuola: ${s.che}`
-    : s.spegne)
-function cambiaSapere(s) {
-  accendiSapere(s.chiave, !sapereAcceso(s.chiave))
-  esito.value = { ok: true, testo: sapereAcceso(s.chiave)
-    ? `${s.nome}: ${chi.value} le domande le vede di nuovo.`
-    : `${s.nome} spento per ${chi.value}: ${s.spegne}.` }
-}
-
-/* ── il dettaglio di un gruppo ──
-   Un gruppo è grosso — «accenti e apostrofi» sono cinque domande
-   diverse — e a volte il bambino ne ha fatta una parte: l'apostrofo sì,
-   l'accento tonico no. Il dettaglio serve a quello, e sta chiuso finché
-   non lo si chiede: la scheda deve restare leggibile per chi vuole solo
-   spegnere un gruppo intero, che è il gesto normale.
-
-   Sta chiuso anche quando il gruppo è spento, e allora non si apre
-   proprio: sotto un gruppo spento sono già spente tutte, e mostrare
-   sette interruttori che non fanno niente è il modo migliore per far
-   credere di aver acceso qualcosa. */
-const dettaglio = ref('')
-const apriDettaglio = chiave => { dettaglio.value = dettaglio.value === chiave ? '' : chiave }
-function cambiaSotto(gruppo, t) {
-  accendiSapere(t.chiave, !sapereAcceso(t.chiave))
-  esito.value = { ok: true, testo: sapereAcceso(t.chiave)
-    ? `${t.nome}: le domande tornano.`
-    : `${t.nome}: niente più domande di questo. Il resto di «${gruppo.nome}» resta acceso.` }
-}
-/* quante ne ha spente dentro un gruppo: è l'unica cosa che si vede da
-   fuori quando il dettaglio è chiuso, e senza non si saprebbe che lì
-   dentro qualcuno ha già messo mano */
-const spenteIn = s => s.sotto.filter(t => !sapereAcceso(t.chiave)).length
-
-/* la tinta di una difficoltà: verde quello che si impara per primo,
-   rosso l'ultimo. Tre colori e non una sfumatura continua, perché
-   servono a **raggruppare con l'occhio** mentre si scorre — e tre sono
-   anche le fasce con cui i giochi pescano (`quiz/nucleo/catalogo.js`). */
-const tintaDif = d => (d < 0.34 ? '#38c172' : d < 0.67 ? '#ffb020' : '#b23a5a')
-
-/* ── provare una voce prima di decidere ──
-   Le tre righe scritte sulla carta dicono cosa sparisce; questo lo fa
+/* ── provare una domanda prima di decidere ──
+   La scheda «Le domande» dice cosa esiste e a chi arriva; questo lo fa
    vedere. La domanda che si apre è quella vera, generata dallo stesso
    modulo che la darebbe al bambino: nessuno la scrive a mano e quindi
    nessuno se la dimentica aggiornata (`quiz/nucleo/esempi.js`).
 
-   Provare NON spegne: si guarda, si chiude, e l'interruttore è ancora
-   dove stava. Sono due gesti diversi e restano due tasti diversi —
-   toccare la carta commuta, toccare «prova una domanda» mostra.
+   Provare non cambia niente: si guarda, si chiude, e la taratura è
+   ancora dove stava.
 
-   `siPuoProvare` è falso dove quel sapere le domande non le fa: le
-   divisioni vivono nel castello e non passano da nessun modulo di quiz.
-   Là il tasto non compare, invece di aprire un pannello vuoto. */
-const prova = ref(null)          // { chiave, nome } | { sorgente|giro|difficolta, nome } | null
+   ── DUE SCHEDE DIVENTATE UNA ──
+   Qui c'era anche «Cosa sa»: una carta per macrogruppo di scuola, con
+   l'interruttore e le sottovoci. Mostrava **le stesse cose** della
+   scheda delle domande dette in un altro modo — gli stessi gruppi, le
+   stesse tipologie, gli stessi ritocchi — e due elenchi della stessa
+   cosa sono due posti dove guardare e uno dove sbagliarsi. È rimasta
+   quella per difficoltà, dove ogni riga porta con sé il ✕ che spegne
+   il suo gruppo: spegnere un pezzo di scuola si fa da lì, e vale come
+   prima anche per i giochi che leggono i saperi (il castello e le
+   divisioni, il laboratorio e le conversioni). */
+const prova = ref(null)          // { chiave, nome } | { sorgente|giro|eta, nome } | null
 const apriProva = (chiave, nome) => { prova.value = { chiave, nome } }
 
 /* ── e dal catalogo ──
@@ -541,10 +484,10 @@ function cambiaColtiva() {
 
 function cambiaGioco(g) {
   /* la carta bloccata da un sapere non si accende da qui: si accende
-     dall'altra scheda, ed è l'unica cosa utile da dire */
+     dall'altra scheda (il ✕ di una riga), ed è l'unica cosa utile da dire */
   if (g.manca) {
     esito.value = { ok: false, testo:
-      `${g.nome} è fatto tutto di quello: finché «${g.manca}» è spento in «Cosa sa», ` +
+      `${g.nome} è fatto tutto di quello: finché «${g.manca}» è spento fra le domande, ` +
       `${chi.value} non lo trova in home.` }
     return
   }
@@ -611,96 +554,12 @@ async function azzera() {
       <div class="schede">
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
                 @click="scheda = 'giochi'">Giochi</button>
-        <button :class="{ ora: scheda === 'sa' }" data-scheda="sa"
-                @click="scheda = 'sa'">Cosa sa</button>
         <button :class="{ ora: scheda === 'domande' }" data-scheda="domande"
                 @click="scheda = 'domande'">Le domande</button>
       </div>
 
       <!-- ══════════ scheda: tutte le domande ══════════ -->
       <Catalogo v-if="scheda === 'domande'" :chi="chi" @prova="apriDalCatalogo" />
-
-      <!-- ══════════ scheda: cosa sa il bambino ══════════ -->
-      <template v-else-if="scheda === 'sa'">
-        <p class="mini">Quello che {{ chi }} a scuola non ha ancora fatto si spegne
-          qui: le domande che lo davano per scontato spariscono, e al loro posto ne
-          arrivano di più facili. Nessun gioco si chiude e nessun progresso si perde.
-          Aprendo un gruppo si vedono le sue domande una per una, col numero della
-          <b>difficoltà</b>: <b>0</b> è la prima cosa che si impara, <b>100</b> l'ultima.
-          Per l'elenco completo c'è la scheda «Le domande».</p>
-
-        <template v-for="m in materie" :key="m.nome">
-          <h3 class="materia">{{ m.nome }}</h3>
-          <div class="carte">
-            <template v-for="s in m.saperi" :key="s.chiave">
-              <button class="carta interruttore sapere"
-                      :class="{ spento: !acceso(s.chiave) }" :data-sapere="s.chiave"
-                      @click="cambiaSapere(s)">
-                <span class="ico">{{ s.ico }}</span>
-                <b>{{ s.nome }}</b>
-                <i>{{ rigaSapere(s) }}</i>
-                <small v-if="acceso(s.chiave)">per esempio {{ s.esempio }}</small>
-                <span class="leva"><span class="pallina"></span></span>
-              </button>
-
-              <!-- sotto la carta: guardare e approfondire, i due gesti
-                   che non spengono niente. Stanno fuori dalla carta
-                   perché la carta è già un tasto, e un tasto dentro un
-                   tasto non si può fare. -->
-              <div v-if="siPuoProvare(s.chiave) || (s.sotto.length && acceso(s.chiave))"
-                   class="azioni-sapere">
-                <button v-if="siPuoProvare(s.chiave)" class="prova-tasto"
-                        :data-prova="s.chiave" @click="apriProva(s.chiave, s.nome)">
-                  ▶ prova una domanda
-                </button>
-                <!-- il dettaglio: solo se il gruppo ha sottovoci ed è acceso -->
-                <button v-if="s.sotto.length && acceso(s.chiave)" class="dettaglio-tasto"
-                        :data-dettaglio="s.chiave" @click="apriDettaglio(s.chiave)">
-                  {{ dettaglio === s.chiave
-                      ? 'chiudi l\'elenco ▴'
-                      : `vedi le ${s.sotto.length} domande ▾` }}
-                  <em v-if="spenteIn(s)">{{ spenteIn(s) }} spente</em>
-                </button>
-              </div>
-              <div v-if="s.sotto.length && acceso(s.chiave) && dettaglio === s.chiave" class="dettaglio">
-                <div v-for="t in s.sotto" :key="t.chiave" class="voce-riga">
-                  <button class="voce" :class="{ spento: !acceso(t.chiave) }"
-                          :data-sapere="t.chiave" @click="cambiaSotto(s, t)">
-                    <span class="voce-chi">
-                      <b>{{ t.nome }}</b>
-                      <!-- da dove a dove sta sulla manopola dei giochi, e
-                           in che gradi esce: è quello che permette di
-                           giudicarla invece di vederla capitare. Il
-                           pallino è la stessa scala a tre colori del
-                           catalogo, e sta sulla riga di sotto perché in
-                           una riga stretta il nome viene prima. -->
-                      <i>
-                        <em class="pallino" :style="{ background: tintaDif((t.da + t.a) / 2) }"></em>
-                        {{ t.icona }} {{ t.modulo }} · grado {{ t.gradi.join(', ') }} ·
-                        difficoltà {{ Math.round(t.da * 100) }}<template
-                          v-if="t.a !== t.da">–{{ Math.round(t.a * 100) }}</template>
-                      </i>
-                    </span>
-                    <span class="leva"><span class="pallina"></span></span>
-                  </button>
-                  <!-- una tipologia una domanda ce l'ha sempre: il `v-if`
-                       è per il giorno che qualcuno ne dichiarasse una
-                       che non esce da nessun grado -->
-                  <button v-if="siPuoProvare(t.chiave)" class="prova-tasto solo-segno"
-                          :data-prova="t.chiave" :aria-label="'prova ' + t.nome"
-                          @click="apriProva(t.chiave, t.nome)">▶</button>
-                </div>
-              </div>
-            </template>
-          </div>
-        </template>
-
-        <!-- «non arrivano», non «non arrivano più»: da quando qualche
-             sapere nasce spento, questo conto parte da un numero anche
-             per chi non ha mai toccato niente. -->
-        <p class="mini">{{ spenti ? spenti + ' spenti: quelle domande non arrivano.'
-                                  : 'Nessuno spento: arrivano domande di tutto.' }}</p>
-      </template>
 
       <!-- ══════════ scheda: i giochi ══════════ -->
       <template v-else>
@@ -724,7 +583,7 @@ async function azzera() {
                 @click="cambiaGioco(g)">
           <span class="ico">{{ g.ico }}</span>
           <b>{{ g.nome }}</b>
-          <i v-if="g.manca">è tutto «{{ g.manca }}», che hai spento in «Cosa sa»</i>
+          <i v-if="g.manca">è tutto «{{ g.manca }}», che hai spento fra le domande</i>
           <i v-else>{{ g.che }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
@@ -1092,7 +951,7 @@ async function azzera() {
          due: è un modo di leggere una voce, non un'impostazione. -->
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
            :sorgente="prova.sorgente || null" :giro="prova.giro || null"
-           :difficolta="prova.difficolta ?? null" @chiudi="prova = null" />
+           :eta="prova.eta ?? null" @chiudi="prova = null" />
   </div>
 </template>
 
@@ -1314,3 +1173,22 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .campo .nome:focus { outline:3px solid var(--viola); outline-offset:1px }
 .campo .bottone { font-size:15px; padding:11px 17px }
 </style>
+.carta.sapere.quanto { display:flex; flex-direction:column; gap:5px; align-items:flex-start;
+                       text-align:left; cursor:default }
+.carta.sapere.quanto.spento { opacity:.62 }
+.carta.sapere.quanto > em { font-style:normal; font-size:11px; color:var(--tenue) }
+.livelli { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px }
+.livello { padding:7px 12px; min-height:36px; border:none; border-radius:999px;
+           font-family:inherit; font-size:12.5px; font-weight:750; cursor:pointer;
+           color:var(--viola-scuro); background:#eceff4 }
+.livello.on { color:#fff; background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
+.livello.freccia { background:#eef2ff; color:var(--viola) }
+.livello:disabled { opacity:.4 }
+.livello.spegni.on { background:linear-gradient(180deg,#b23a5a,#8d2a45) }
+/* il consiglio si vede che è un'altra cosa dal resto della carta: non
+   è una descrizione, è un fatto misurato più un tasto */
+.carta.sapere.quanto > em.consiglio { color:var(--viola-scuro); font-weight:650 }
+.fai { border:none; background:none; font-family:inherit; font-size:11px; font-weight:800;
+       color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
+.livello:active { transform:translateY(1px) }
+

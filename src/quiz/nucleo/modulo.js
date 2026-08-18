@@ -75,7 +75,32 @@
    ancora per chi non li ha ancora dichiarati.
    ═══════════════════════════════════════════════════════════════════ */
 
-import { pescaClasse } from './classi.js'
+import { pescaClasse, adatta, LIVELLO_MAX, livelloDegliAnni } from './classi.js'
+
+/* ── QUANTO È COMPLICATO UN GRADO ──
+   Ogni grado dichiara un numero da 0 a 100 sulla scala comune di
+   `nucleo/classi.js`. Il perché sta lì; in due righe è questo: derivare
+   la difficoltà dalla posizione nella scaletta metteva i grado-1 di
+   tutti i moduli nello stesso punto, e «come si chiama questa figura»
+   non è «Nina ha 4 mele e ne raccoglie 3».
+
+   Chi non dichiara niente ricade su una scaletta stesa fra i sei e gli
+   undici anni. È un ripiego onesto e visibile — un modulo nuovo
+   funziona subito — ma resta un'ipotesi: `test/unita/catalogo` elenca
+   chi non si è pronunciato, perché quel numero è la sola cosa che
+   decide se una domanda arriva a un bambino o no. */
+const RIPIEGO = [livelloDegliAnni(6), livelloDegliAnni(11)]
+
+/* un livello per grado, col ripiego per chi tace */
+function perGradoLivello(livelli, gradi) {
+  return Array.from({ length: gradi }, (_, i) => {
+    const v = livelli?.[i]
+    if (Number.isFinite(v)) return Math.min(LIVELLO_MAX, Math.max(0, v))
+    return Math.round(gradi > 1
+      ? RIPIEGO[0] + (RIPIEGO[1] - RIPIEGO[0]) * (i / (gradi - 1))
+      : RIPIEGO[0])
+  })
+}
 
 /* i saperi in forma normale: un array lungo quanto la scaletta, ogni
    voce un elenco (spesso vuoto) di chiavi. Si accetta una stringa sola
@@ -105,9 +130,29 @@ function saperiDaiTipi(tipi, gradi) {
   })
 }
 
+/* ── IL RITOCCO DI UN GRANDE ──
+   I livelli che dichiariamo sono nostri, e ogni tanto sono sbagliati:
+   per *questo* bambino le tabelline sono avanti di un anno e i verbi
+   indietro di sei mesi, e nessuno lo sa meglio di chi gli sta seduto
+   accanto. Il ritocco è quello: **un gradino su o giù** su un gruppo o
+   su una singola tipologia, non un blocco da scegliere fra tre.
+
+   Un gradino è mezzo anno di scuola (`PASSO`), e più di tre non se ne
+   fanno: oltre un anno e mezzo di scarto non si sta più ritoccando una
+   taratura, si sta dicendo un'altra cosa — e quell'altra cosa è
+   spegnere il gruppo, che si fa con un tasto suo.
+
+   Il verso è quello che si dice a parole: **«per lui è facile» alza**
+   (arrivano domande più toste e spariscono quelle sotto), «per lui è
+   difficile» abbassa. Nel dato è un numero con segno, che è l'unica
+   forma che si somma senza doverci pensare. */
+export const PASSO = 6
+export const RITOCCO_MAX = 3
+export const gradini = n => Math.max(-RITOCCO_MAX, Math.min(RITOCCO_MAX, Math.round(n || 0)))
+
 export class Modulo {
   constructor({ id, nome, icona, materia, chiaro, scaletta,
-                saperi = null, tipi = null, pittori = {} }) {
+                saperi = null, tipi = null, pittori = {}, livelli = null }) {
     this.id = id                  // 'ortografia' — anche il prefisso delle chiavi
     this.nome = nome              // 'Ortografia' — quello che si legge
     this.icona = icona            // un'emoji sola
@@ -119,6 +164,10 @@ export class Modulo {
       ? saperiDaiTipi(this.tipi, scaletta.length)
       : perGrado(saperi, scaletta.length)
     this.pittori = pittori        // { nomeScena: (pennello, scena) => … }
+    /* quanto è complicato ogni grado, da 0 a 100: uno per riga di
+       scaletta. Chi tace ricade sul ripiego, e si vede. */
+    this.livelli = perGradoLivello(livelli, scaletta.length)
+    this.livelloDichiarato = Array.isArray(livelli) && livelli.length > 0
   }
 
   get gradi() { return this.scaletta.length }
@@ -148,23 +197,90 @@ export class Modulo {
     return spenti.includes(tipo.chiave) || tipo.sa.some(s => spenti.includes(s))
   }
 
-  tipiLiberi(grado, spenti = []) {
-    const qui = this.tipiDi(grado)
-    return spenti.length ? qui.filter(t => !this.tipoSpento(t, spenti)) : qui
+  /* ── quanto è complicata una tipologia ──
+     Come il suo grado, a meno che non l'abbia dichiarato per sé: nei
+     gradi che ne mescolano due — «le doppie» e «cqu» insieme — capita
+     che una delle due stia un gradino più in là, e allora lo dice. */
+  livelloDelTipo(tipo, grado) {
+    return Number.isFinite(tipo.livello) ? tipo.livello : this.livelli[grado - 1]
+  }
+
+  /* ── il livello di un grado ──
+     La media di quello che ancora si può chiedere lì dentro: se un
+     genitore ha spento la metà difficile di un grado, quel grado si
+     abbassa davvero invece di continuare a dichiararsi com'era. */
+  livelloDi(grado, spenti = [], regole = null) {
+    return this.mediaDei(grado, spenti, regole, t => this.livelloDelTipo(t, grado))
+  }
+
+  /* ── il livello COME LO VEDE QUESTO BAMBINO ──
+     Lo stesso numero, meno il ritocco che un grande ha messo su quel
+     gruppo: «per lui questo è facile» vuol dire che per lui quella roba
+     sta più in basso, e da lì viene tutto il resto — entra nel mazzo
+     roba che prima era troppo su, ed esce quando il gioco chiede poco.
+     Il livello vero non si tocca: quello è del catalogo, e non cambia
+     da un bambino all'altro. */
+  livelloVistoDelTipo(tipo, grado, regole = null) {
+    return this.livelloDelTipo(tipo, grado) - this.ritoccoDelTipo(tipo, regole?.ritocchi)
+  }
+
+  livelloVisto(grado, spenti = [], regole = null) {
+    return this.mediaDei(grado, spenti, regole, t => this.livelloVistoDelTipo(t, grado, regole))
+  }
+
+  /* la media pesata di quello che in quel grado si può ancora chiedere;
+     arrotondata a un decimale perché una media di dieci noni si presenta
+     come 95.00000000001 in ogni elenco che la mostra */
+  mediaDei(grado, spenti, regole, quanto) {
+    const qui = this.tipiLiberi(grado, spenti, regole)
+    if (!qui.length) return this.livelli[grado - 1]
+    const tot = qui.reduce((s, t) => s + t.peso, 0)
+    if (!(tot > 0)) return this.livelli[grado - 1]
+    return Math.round(qui.reduce((s, t) => s + t.peso * quanto(t), 0) / tot * 10) / 10
+  }
+
+  /* ── quanto in su, dentro questo modulo, va una chiave ──
+     Serve ai tre livelli che i genitori possono scegliere al posto di
+     spegnere (`facile`, `medio`, `tutto`): il taglio è **relativo a
+     quello che quella chiave offre qui dentro**, e non una soglia
+     d'età fissa. Altrimenti «facile» su un gruppo che comincia a nove
+     anni — le conversioni — non lascerebbe niente, e un interruttore
+     che a volte svuota tutto è peggio di non averlo. */
+  /* Il ritocco che tocca a questa tipologia: la somma di quelli scritti
+     sulla tipologia stessa e sui gruppi che se la portano dietro. Si
+     sommano invece di scegliere il più forte perché sono affermazioni
+     diverse — «l'ortografia gli viene bene» e «le doppie in particolare
+     gli vengono bene» dicono due cose, e insieme ne dicono una terza. */
+  ritoccoDelTipo(tipo, ritocchi) {
+    if (!ritocchi) return 0
+    let somma = 0
+    for (const chiave of [tipo.chiave, ...tipo.sa]) somma += ritocchi[chiave] || 0
+    return gradini(somma) * PASSO
+  }
+
+  tipiLiberi(grado, spenti = [], regole = null) {
+    let qui = this.tipiDi(grado)
+    if (spenti.length) qui = qui.filter(t => !this.tipoSpento(t, spenti))
+    if (!regole) return qui
+    /* si guarda il livello **visto da questo bambino**: il ritocco di un
+       grande abbassa o alza la classe, e da lì viene sia chi entra sia
+       quanto pesa */
+    return qui.filter(t => adatta(this.livelloVistoDelTipo(t, grado, regole), regole.finestra))
   }
 
   /* questo grado si può ancora chiedere? */
-  puo(grado, spenti = []) {
-    if (this.tipi.length) return this.tipiLiberi(grado, spenti).length > 0
-    return !this.serve(grado).some(s => spenti.includes(s))
+  puo(grado, spenti = [], regole = null) {
+    if (this.tipi.length) return this.tipiLiberi(grado, spenti, regole).length > 0
+    if (this.serve(grado).some(s => spenti.includes(s))) return false
+    return !regole || adatta(this.livelli[grado - 1], regole.finestra)
   }
 
   /* i gradi che restano, dal più facile al più difficile. Vuoto vuol
      dire che il modulo intero non ha più niente da chiedere — e allora
      sparisce dall'estrazione invece di consegnare domande mute. */
-  gradiLiberi(spenti = []) {
+  gradiLiberi(spenti = [], regole = null) {
     const out = []
-    for (let g = 1; g <= this.gradi; g++) if (this.puo(g, spenti)) out.push(g)
+    for (let g = 1; g <= this.gradi; g++) if (this.puo(g, spenti, regole)) out.push(g)
     return out
   }
 
@@ -175,8 +291,8 @@ export class Modulo {
      sotto non c'è più niente si guarda sopra. `null` se non resta
      niente. È la stessa scelta del castello che con le divisioni spente
      chiede moltiplicazioni invece di saltare la torre. */
-  gradoVicino(grado, spenti = []) {
-    const liberi = this.gradiLiberi(spenti)
+  gradoVicino(grado, spenti = [], regole = null) {
+    const liberi = this.gradiLiberi(spenti, regole)
     if (!liberi.length) return null
     const sotto = liberi.filter(g => g <= grado)
     return sotto.length ? sotto[sotto.length - 1] : liberi[0]
@@ -207,9 +323,9 @@ export class Modulo {
      Con due fattori pieni invece il rapporto fra estremi sarebbe il
      quadrato (nove a uno invece di tre a uno), e la banda stretta
      scelta apposta non varrebbe più niente. */
-  bisognoMedio(grado, spenti = [], bisogno = null) {
+  bisognoMedio(grado, spenti = [], bisogno = null, regole = null) {
     if (!bisogno || !this.tipi.length) return 1
-    const qui = this.tipiLiberi(grado, spenti)
+    const qui = this.tipiLiberi(grado, spenti, regole)
     const tot = qui.reduce((s, t) => s + t.peso, 0)
     if (!(tot > 0)) return 1
     return qui.reduce((s, t) => s + t.peso * bisogno(t.chiave), 0) / tot
@@ -222,10 +338,10 @@ export class Modulo {
      Se non resta niente di acceso si tira lo stesso — chi ha scelto il
      grado doveva guardare `gradiLiberi`, e una domanda in più è meno
      peggio di una schermata di gioco vuota. */
-  chiedi(grado, sorte, spenti = [], bisogno = null) {
+  chiedi(grado, sorte, spenti = [], bisogno = null, regole = null) {
     const g = Math.max(1, Math.min(this.gradi, Math.round(grado || 1)))
     if (!this.tipi.length) return this.genera(g, sorte)
-    let liberi = this.tipiLiberi(g, spenti)
+    let liberi = this.tipiLiberi(g, spenti, regole)
     if (bisogno && liberi.length)
       liberi = liberi.map(t => ({ ...t, peso: t.peso * bisogno(t.chiave) }))
     const scelto = pescaClasse(sorte, liberi) || pescaClasse(sorte, this.tipiDi(g))

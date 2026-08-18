@@ -392,7 +392,7 @@ const TIPI = [
   { chiave: 'gram:parti-del-discorso', nome: 'Che parte del discorso è', sa: 'analisi', gradi: { 3: 1 } },
   { chiave: 'gram:concordanza', nome: 'Il nome e il suo aggettivo', sa: 'flessione', gradi: { 4: 1 } },
   { chiave: 'gram:soggetto-predicato', nome: 'Soggetto e predicato', sa: 'analisi', gradi: { 5: 0.75 } },
-  { chiave: 'gram:nome-proprio', nome: 'Nomi propri e nomi comuni', sa: 'analisi', gradi: { 5: 0.25 } },
+  { chiave: 'gram:nome-proprio', livello: 38, nome: 'Nomi propri e nomi comuni', sa: 'analisi', gradi: { 5: 0.25 } },
 ]
 
 class Grammatica extends Modulo {
@@ -404,6 +404,13 @@ class Grammatica extends Modulo {
       materia: 'italiano',
       chiaro: 'riconoscere nomi, verbi, articoli e aggettivi, e le regole di genere, numero e concordanza',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 29, 56, 63, 69],
       /* plurali, generi, articoli e concordanza li sa chi parla
          italiano — «il cane è bello» si sente. Dare il NOME alla parte
          del discorso, o dire qual è il soggetto, è analisi

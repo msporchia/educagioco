@@ -108,6 +108,13 @@ class Orologio extends Modulo {
       materia: 'tempo',
       chiaro: 'leggere le lancette e contare quanto manca',
       scaletta: SCALETTA.map(s => s.dice),
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 38, 44, 56, 75],
       /* le lancette o si sanno leggere o no: non c'è un grado facile
          che si salvi, nemmeno le ore intere */
       tipi: TIPI,

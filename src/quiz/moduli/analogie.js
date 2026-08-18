@@ -112,6 +112,13 @@ class Analogie extends Modulo {
         'le figure: una cosa sola che cambia',
         'le figure: due cose che cambiano insieme',
       ],
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 38, 44, 56],
       /* le prime due classi chiedono cose del mondo che un bambino di
          sei anni sa già (cosa mangia il cane, da dove viene il latte):
          non è roba di scuola. Il gruppo serve a isolare le analogie,

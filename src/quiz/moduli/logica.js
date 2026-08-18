@@ -221,6 +221,13 @@ class Logica extends Modulo {
       materia: 'logica',
       chiaro: 'ragionare su quello che è scritto: cosa viene di sicuro e cosa non si può sapere',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 29, 56, 63, 75],
       /* i gruppi qui non sono pezzi di programma scolastico — non c'è
          una lezione da aver fatto per rispondere — ma tipi di
          ragionamento che si possono isolare */

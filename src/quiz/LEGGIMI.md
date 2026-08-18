@@ -20,7 +20,12 @@ Tre file per capire tutto, in quest'ordine:
 
 - `nucleo/domanda.js` — la forma di una domanda: consegna, soggetto
   facoltativo, da 2 a 6 risposte, l'indice di quella buona, la chiave del
-  concetto. Le risposte sono testo, emoji o una scena disegnata.
+  concetto. Le risposte sono testo, emoji o una scena disegnata, e una
+  figura può portare **il suo nome sotto** (`conNome`) — ma solo quando
+  figura e parola dicono la stessa cosa e la domanda ne chiede un'altra:
+  in una domanda di lingua straniera la stessa aggiunta regala la
+  risposta, e nessun controllo automatico se ne accorge. Il perché per
+  esteso sta in testa a quel file.
 - `nucleo/modulo.js` — la classe base. Un modulo è
   `genera(grado, sorte, tipo)` e basta: nessuno stato, nessuna memoria,
   nessun punteggio. Le tipologie che sa fare le dichiara (`tipi`), e
@@ -133,6 +138,29 @@ Fuori da Vue (le palestre dei prototipi) c'è il gemello imperativo:
 const esito = await chiedi(ortografia, { grado: 3 })   // grafica/scheda.js
 ```
 
+### Il disegno si guarda grande
+
+Nella carta il disegno del soggetto sta in un riquadro largo al massimo
+148 pixel, e per un orologio basta. Per una griglia a sei colonne no: una
+casella viene venti pixel, con dentro una lettera, un numero e un'emoji,
+e «cosa c'è nella casella E5» smette di essere una domanda sulle
+coordinate per diventarne una sulla vista. **Toccando il disegno si apre
+grande quanto il riquadro concede** (`.qz-zoom`), e si chiude toccando
+ovunque.
+
+Due dettagli che sembrano piccoli e non lo sono. Il primo: si ingrandisce
+**solo il soggetto**, mai i disegni delle risposte — lì il tocco *è* la
+risposta, e un tastino per guardare meglio dentro un tasto che risponde è
+il modo di far rispondere a caso chi voleva solo vedere. Il secondo: la
+lente si chiude sul `click` e non sul `pointerup`, se no il dito si
+lascia dietro un click che atterra sul tasto rimasto sotto e la risposta
+parte da sola — è lo stesso fantasma della finestra cieca, che infatti
+vale anche per l'apertura della lente.
+
+Il gemello imperativo (`grafica/scheda.js`, le palestre dei prototipi)
+non ce l'ha: lì a guardare le domande è un grande, davanti a uno schermo
+grande.
+
 ## Si pesca una classe, non un modulo
 
 Una **classe di domande** è la coppia (modulo, grado): «il perimetro»,
@@ -162,6 +190,97 @@ Quel file non importa niente e gira in Node, perché la distribuzione va
 ogni fascia e controlla che si vedano tutti i moduli, che nessuna classe
 si prenda più di un quinto dei tiri, e che una carta facile non
 consegni una domanda da carta tosta.
+
+## Quanto è complicata, e a chi arriva
+
+Per un pezzo il primo grado di *qualunque* modulo stava a 0 e l'ultimo a
+1. Va bene finché tutti i mazzi sono per lo stesso bambino, e smette di
+funzionare appena si guarda cosa c'è dentro quei grado-1: «come si
+chiama questa figura» (prima elementare), «che ora segna» (seconda),
+«Nina ha 4 mele e ne raccoglie 3» (che vuole leggere in scioltezza).
+
+Adesso ci sono due cose, e stanno in due posti diversi:
+
+- **il livello, sulla domanda**: un numero da 0 a 100 per ogni grado,
+  sulla stessa scala per tutte le materie. Zero è il primo giorno di
+  materna, cento la fine della primaria: dodici punti e mezzo per anno.
+- **due larghezze, sul bambino**: la sua età (`settings.eta`) decide
+  chi è **ammesso** — tre anni e mezzo sotto, due sopra: fuori di lì
+  c'è solo la presa in giro e il muro — e dove **mira** la manopola, che
+  è molto più stretto (un anno indietro, un anno e mezzo avanti). Per un
+  pezzo erano lo stesso numero, e il risultato era che a nove anni le
+  ore intere dell'orologio sparivano del tutto invece di diventare rare.
+
+```js
+scaletta: ['una storia sola: quello che arriva si somma', …],
+livelli: [38, 44, 56, 63, 75, 81],          // uno per grado
+tipi: [
+  { chiave: 'cal:giorni-mese', livello: 38, … },   // se sta fuori dal suo grado
+],
+```
+
+Il «fin quando una domanda è utile» **non si dichiara**: lo decide la
+finestra. È la differenza che conta rispetto al giro precedente, dove
+ogni classe portava una coppia di età `[da, a]`: `a` era arbitraria —
+nessuno sa davvero dire da che anno una domanda diventa banale — e gli
+anni interi sono grossi, dentro la prima elementare ci stanno due passi
+diversi che finivano sullo stesso gradino.
+
+Chi pesca (`nucleo/classi.js`) fa due conti separati:
+
+1. **chi entra** (`adatta`): dentro la finestra, taglio netto. Sotto c'è
+   la presa in giro — i pallini da contare a un bambino di dieci anni,
+   come premio di una carta tosta — sopra il muro, e nessuna delle due
+   si aggiusta uscendo di rado.
+2. **quanto pesa** (`pesoDi`): la manopola del gioco diventa un punto
+   dentro quella finestra (`bersaglio`: fondo con la carta debole, cima
+   con quella tosta), e ogni classe pesa quanto gli è vicina. La
+   gradualità resta tutta, ma dentro il mazzo che gli compete.
+
+C'è anche `quantoPesa(livello, finestra)`, che dice quanto una domanda è
+dura **per chi la riceve** (0 = fondo della sua finestra, 1 = cima): un
+gioco che volesse pagare di più una domanda tosta ha già il numero
+pronto, senza sapere niente di età.
+
+### Quando decide un grande
+
+I livelli che dichiariamo sono **un punto di partenza**, non una
+sentenza: su centosessantadue righe qualcuna è tarata male di sicuro, e
+non c'è modo di accorgersene guardandola. Nella scheda «Cosa sa» ogni
+gruppo ha, oltre al tasto per spegnerlo, due frecce — **‹ gli è
+difficile** e **gli è facile ›** — che spostano la finestra *per quella
+chiave soltanto*, mezzo anno di scuola per gradino e non oltre tre
+(`settings.ritocchi`, `PASSO` in `nucleo/modulo.js`). I ritocchi di una
+tipologia e dei gruppi che se la portano dietro si sommano: sono
+affermazioni diverse.
+
+E il conto lo tiene già il bambino, giocando. `quiz/consiglio.js` legge
+le risposte annotate in `store/srs.js` e, quando una chiave ha almeno
+otto tiri con meno di metà giuste — o più di nove su dieci — lo scrive
+nella carta insieme al tasto per correggere: *«ne ha sbagliate 7 su 10 —
+abbassale di mezzo anno»*. **Consiglia e non ritocca da sé**, ed è una
+scelta: un gioco che si ritara da solo sembra intelligente finché non
+sbaglia, e un pomeriggio storto o un fratello che ha giocato al posto
+suo gli insegnerebbero la cosa sbagliata senza che nessuno possa
+vederlo.
+
+### L'ampiezza della finestra, misurata
+
+Sedici punti sotto e venti sopra — quasi tre anni — non è un numero
+scelto a occhio: contando le classi che entrano, sotto i due anni di
+apertura il mazzo scende a una ventina di classi e diventa ripetitivo,
+sopra i quattro entra roba di due classi scolastiche di distanza. Agli
+estremi però la stessa ampiezza non basta, e non per colpa del bambino:
+il mazzo finisce (sotto i cinque anni e sopra gli undici c'è poco). Per
+questo la finestra **si allarga solo quando serve** — mezzo anno per
+volta, finché non ci sono almeno venti classi, mai oltre un anno e mezzo
+(`CLASSI_MINIME` e `ALLARGO`). Chi sta in mezzo alla primaria non se ne
+accorge mai.
+
+Un gioco non se n'è accorto di niente: continua a chiedere «una domanda
+facile» o «una tosta» senza sapere chi ha in mano il telefono. È lo
+stesso patto dei saperi spenti — chi sa del profilo è `scelta.js`, e
+nessun altro.
 
 ## Il ripasso: quello che va male torna più spesso
 

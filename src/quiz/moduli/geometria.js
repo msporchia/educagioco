@@ -326,9 +326,9 @@ const figureDi = quadri => FIGURE.filter(f => (f.lati === 4) === !!quadri)
    per questo stanno in un gruppo loro invece che coi solidi. */
 const TIPI = [
   { chiave: 'geo:figure', nome: 'Le figure e i loro nomi', sa: 'figure', gradi: { 1: 0.56 } },
-  { chiave: 'geo:quadrilateri', nome: 'I quadrilateri (quadrato, rombo, trapezio)', sa: 'figure', gradi: { 1: 0.44 } },
+  { chiave: 'geo:quadrilateri', livello: 38, nome: 'I quadrilateri (quadrato, rombo, trapezio)', sa: 'figure', gradi: { 1: 0.44 } },
   { chiave: 'geo:lati', nome: 'Contare lati e vertici', sa: 'figure', gradi: { 2: 0.5 } },
-  { chiave: 'geo:angoli', nome: 'Gli angoli: retto, acuto, ottuso', sa: 'figure', gradi: { 2: 0.5 } },
+  { chiave: 'geo:angoli', livello: 56, nome: 'Gli angoli: retto, acuto, ottuso', sa: 'figure', gradi: { 2: 0.5 } },
   { chiave: 'geo:simmetria', nome: 'La metà che manca', sa: 'simmetria', gradi: { 3: 0.74 } },
   { chiave: 'geo:piega', nome: 'Dove si piega', sa: 'simmetria', gradi: { 3: 0.26 } },
   { chiave: 'geo:rotazione', nome: 'Girare una figura di un quarto', sa: 'spazio-mente', gradi: { 4: 0.69 } },
@@ -356,6 +356,13 @@ class Geometria extends Modulo {
         'i solidi e le viste dall\'alto',
         'i cubetti: contarli anche dove non si vedono',
       ],
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [20, 25, 29, 38, 56, 75],
       /* i cubetti non chiedono la lezione sui solidi: si contano e
          basta, e un bambino che non ha mai sentito la parola «cubo»
          vede benissimo che dietro ce n'è uno che non si vede. Per

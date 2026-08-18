@@ -30,16 +30,16 @@
 import { MODULI } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { sorgentiDi, esempioDi as esempioFra } from './nucleo/esempi.js'
-import { postoDelGrado } from './nucleo/classi.js'
+
 
 /* le tipologie che un gruppo si porta dietro, nell'ordine in cui i
    moduli le dichiarano — che è l'ordine della scaletta, cioè dal facile
    al difficile. `dove` è il modulo che la fa: non si mostra, ma serve a
    capire chi ha dichiarato cosa quando qualcosa non torna.
 
-   Ognuna porta anche **la sua difficoltà**, che è la cosa che mancava
-   per poterle giudicare: i gradi in cui esce, e il posto che occupano
-   sulla manopola 0..1 dei giochi (`nucleo/classi.js`). Una tipologia che
+   Ognuna porta anche **l'età a cui serve**, che è la cosa che mancava
+   per poterla giudicare: i gradi in cui esce, e da che età a che età
+   quelle domande hanno senso (`nucleo/classi.js`). Una tipologia che
    esce a più gradi ha un intervallo e non un numero — «le ore intere»
    stanno al grado 1 e ricompaiono al 4 — e dirlo con due numeri è
    l'unico modo onesto: uno solo sarebbe una media che non corrisponde a
@@ -50,13 +50,13 @@ export function sottoDi(gruppo) {
     for (const t of m.tipi)
       if (t.sa.includes(gruppo)) {
         const gradi = Object.keys(t.gradi).map(Number).filter(g => t.gradi[g] > 0).sort((a, b) => a - b)
-        const posti = gradi.map(g => postoDelGrado(g, m.gradi))
+        const livelli = gradi.map(g => m.livelloDelTipo(t, g))
         fuori.push({
           chiave: t.chiave, nome: t.nome, dove: m.id,
           icona: m.icona, modulo: m.nome,
           gradi,
-          da: posti.length ? Math.min(...posti) : 0,
-          a: posti.length ? Math.max(...posti) : 0,
+          da: livelli.length ? Math.min(...livelli) : 0,
+          a: livelli.length ? Math.max(...livelli) : 0,
         })
       }
   return fuori

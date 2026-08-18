@@ -68,7 +68,7 @@ const TIPI = [
   { chiave: 'num:posiziona', nome: 'Mettere un numero al suo posto', sa: 'numeri', gradi: { 2: 0.38, 4: 0.26 } },
   { chiave: 'num:ordine', nome: 'Prima, dopo, in mezzo e in ordine', sa: 'numeri', gradi: { 3: 1 } },
   { chiave: 'num:vicino', nome: 'Il numero più vicino', sa: 'numeri', gradi: { 4: 0.22 } },
-  { chiave: 'num:indovinello', nome: 'Indovina il numero', sa: 'numeri', gradi: { 4: 0.2, 5: 0.2, 6: 0.25 } },
+  { chiave: 'num:indovinello', livello: 56, nome: 'Indovina il numero', sa: 'numeri', gradi: { 4: 0.2, 5: 0.2, 6: 0.25 } },
   { chiave: 'num:decine', nome: 'Le decine', sa: 'decine', gradi: { 5: 0.4 } },
   { chiave: 'num:cifre', nome: 'Quanto vale ogni cifra', sa: 'decine', gradi: { 5: 0.4 } },
   { chiave: 'num:stima', nome: 'Circa quanto fa', sa: 'stima', gradi: { 6: 0.25 } },
@@ -145,6 +145,13 @@ class SensoDelNumero extends Modulo {
       materia: 'matematica',
       chiaro: 'sentire quanto vale un numero: a colpo d\'occhio, sulla linea, a occhio e croce',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [0, 12, 25, 38, 56, 75],
       tipi: TIPI,
       pittori: PITTORI_NUMERO,
     })

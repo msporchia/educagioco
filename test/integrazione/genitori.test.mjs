@@ -305,177 +305,87 @@ if (IN_PROVA.length) {
   uguale('riacceso, le tappe a mente tornano', tornata.stazioni, intera.stazioni)
 }
 
-/* ── 7c. cosa sa il bambino ──
-   La seconda scheda. Spegnere un macrogruppo non si vede in home come
-   una carta che sparisce: si vede nelle domande che il bambino riceve,
-   che da qui non si possono guardare. Quello che si prova qui è la
-   catena fino al profilo — l'interruttore resta giù, la scelta è
-   scritta, e sopravvive a un riavvio — più la migrazione, che è la
-   parte che può fare danno: chi le divisioni le aveva spente non se le
-   deve ritrovare accese. Che poi le domande spente non arrivino
-   davvero lo prova `unita/saperi`, giocandone quattrocento. */
+/* ── 7c. spegnere un pezzo di scuola, dalla scheda delle domande ──
+   «Cosa sa» non c'è più: era la stessa roba della scheda «Le domande»
+   detta in un altro modo, e due elenchi della stessa cosa sono due
+   posti dove guardare e uno dove sbagliarsi. Il ✕ di una riga fa
+   quello che faceva l'interruttore di quella scheda — spegne **il
+   gruppo di scuola**, non la singola tipologia — e la differenza non è
+   un dettaglio: i saperi li leggono anche i giochi, e il laboratorio
+   delle pozioni senza le conversioni non ha più niente da chiedere.
+
+   Quello che si prova qui è la catena intera fino al profilo, perché è
+   quella che può fare danno: quello che si tocca deve essere scritto,
+   deve sopravvivere a un riavvio, e deve arrivare fino alla home. */
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.schede', { timeout: 5000 })
-controlla('si entra dalla scheda dei giochi', await page.isVisible('.carta.gioco'))
+controlla('le schede sono due, non tre',
+  (await page.locator('.schede button').count()) === 2)
+controlla('e «Cosa sa» non c\'è più',
+  (await page.locator('.schede button[data-scheda="sa"]').count()) === 0)
 
-await page.click('.schede button[data-scheda="sa"]')
-await page.waitForSelector('.carta[data-sapere="misure"]', { timeout: 5000 })
-uguale('c\'è una carta per macrogruppo',
-       await page.locator('.carta.sapere').count(), SAPERI.length)
-controlla('e i giochi non sono più a schermo: sono due elenchi diversi',
-          !(await page.isVisible('.carta.gioco')))
-controlla('la carta dice anche che domanda sparisce',
-          (await page.locator('.carta[data-sapere="misure"]').innerText()).includes('per esempio'))
-await scatto(page, 'genitori-sa')
+await page.click('.schede button[data-scheda="domande"]')
+await page.waitForSelector('.blocco .riga', { timeout: 5000 })
+await scatto(page, 'genitori-domande')
 
-await page.click('.carta[data-sapere="misure"]')
-await page.waitForTimeout(200)
-controlla('spegnere lo dice invece di restare muto',
-  (await page.evaluate(() => document.body.innerText)).includes('spento per'))
-controlla('l\'interruttore resta giù',
-  await page.isVisible('.carta[data-sapere="misure"].spento'))
+/* si cerca la riga di una conversione: è quella che porta via il
+   laboratorio, e quindi l'unica che si vede anche dalla home */
+const rigaMis = await page.evaluate(() => {
+  const r = [...document.querySelectorAll('.riga')]
+    .find(x => x.querySelector('[data-spegni]')?.getAttribute('aria-label')?.includes('conversioni'))
+  return r ? r.dataset.classe : null
+})
+controlla('c\'è una riga che spegne le conversioni', !!rigaMis, String(rigaMis))
+await page.click(`[data-spegni="${rigaMis}"]`)
+await page.waitForTimeout(700)
 
-await page.waitForTimeout(700)   // il salvataggio è a scatto ritardato
 const dopoSpento = await leggiProfilo(page)
-uguale('la scelta finisce nel profilo', dopoSpento.settings.sa.misure, false)
-uguale('e solo quella: acceso resta l\'assenza',
+uguale('spegnere finisce nel profilo', dopoSpento.settings.sa.conversioni, false)
+uguale('e solo quello: acceso resta l\'assenza',
        Object.keys(dopoSpento.settings.sa).length, 1)
+controlla('le sue domande finiscono nel blocco delle spente',
+  (await page.locator('.blocco.spenta .riga').count()) === 0 ||
+  await page.isVisible('[data-apri="spenta"]'))
 
-/* il degrado che si vede: il laboratorio delle pozioni è fatto tutto
-   di conversioni, e senza quelle non è difficile, è da indovinare.
-   Quindi sparisce dalla home, e nella scheda dei giochi la sua carta
-   resta lì con scritto perché — invece di sparire senza motivo. */
+/* il degrado che si vede: il laboratorio delle pozioni è fatto tutto di
+   conversioni, e senza quelle non è difficile, è da indovinare. Quindi
+   sparisce dalla home, e nella scheda dei giochi la sua carta resta lì
+   con scritto perché — invece di sparire senza motivo. */
 controlla('il laboratorio delle pozioni sparisce dalla home',
           !(await inHome('.carta.poz')))
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carta.gioco[data-gioco="pozioni"]', { timeout: 5000 })
 controlla('e la sua carta dice perché',
-  (await page.locator('.carta.gioco[data-gioco="pozioni"]').innerText()).includes('Cosa sa'))
-await page.click('.carta.gioco[data-gioco="pozioni"]')
-await page.waitForTimeout(200)
-controlla('e da lì non si riaccende: si accende dall\'altra scheda',
-  (await page.evaluate(() => document.body.innerText)).includes('è fatto tutto di quello'))
+  (await page.locator('.carta.gioco[data-gioco="pozioni"]').innerText()).includes('spento'))
 
-await page.reload()
-await page.waitForSelector('.carte', { timeout: 8000 })
-await vaiAiGenitori()
-await digita('0000')
-await page.click('.schede button[data-scheda="sa"]')
-await page.waitForSelector('.carta[data-sapere="misure"]', { timeout: 5000 })
-controlla('la scelta resta dopo un riavvio',
-  await page.isVisible('.carta[data-sapere="misure"].spento'))
-await page.click('.carta[data-sapere="misure"]')          // rimesso com'era
-await page.waitForTimeout(200)
-controlla('e riacceso il macrogruppo il gioco torna in home', await inHome('.carta.poz'))
-await vaiAiGenitori()
-await digita('0000')
-await page.click('.schede button[data-scheda="sa"]')
-await page.waitForSelector('.carta[data-sapere="misure"]', { timeout: 5000 })
+/* riacceso, torna tutto */
+await page.click('.schede button[data-scheda="domande"]')
+await page.waitForSelector('.blocco', { timeout: 5000 })
+await page.click('[data-apri="spenta"]')
+await page.waitForTimeout(300)
+controlla('le spente si ritrovano, in fondo',
+  (await page.locator('.blocco.spenta .riga').count()) > 0)
+await page.locator('.blocco.spenta [data-riaccendi]').first().click()
+await page.waitForTimeout(700)
+uguale('riaccendere toglie la voce dal profilo',
+       (await leggiProfilo(page)).settings.sa?.conversioni, undefined)
+controlla('e il gioco torna in home', await inHome('.carta.poz'))
 
-/* la migrazione: il profilo di ieri aveva `settings.divisioni: false` e
-   non sapeva cosa fossero i macrogruppi. Le divisioni devono restare
-   spente — riaccenderle vorrebbe dire rimettere nel castello proprio i
-   calcoli che quel bambino non sa fare. */
+/* ── 7d. la migrazione del flag vecchio ──
+   Il profilo di ieri aveva `settings.divisioni: false` e non sapeva
+   cosa fossero i macrogruppi. Le divisioni devono restare spente:
+   riaccenderle vorrebbe dire rimettere nel castello proprio i calcoli
+   che quel bambino non sa fare. */
 const vecchio = await leggiProfilo(page)
 await semina(page, { settings: { ...vecchio.settings, sa: {}, divisioni: false } })
-await vaiAiGenitori()
-await digita('0000')
-await page.click('.schede button[data-scheda="sa"]')
-await page.waitForSelector('.carta[data-sapere="divisioni"]', { timeout: 5000 })
-controlla('il vecchio flag delle divisioni diventa il macrogruppo spento',
-  await page.isVisible('.carta[data-sapere="divisioni"].spento'))
+await page.reload()
+await page.waitForSelector('.carte', { timeout: 8000 })
 await page.waitForTimeout(700)
 const migrato = await leggiProfilo(page)
-uguale('e nel profilo è scritto nella forma nuova', migrato.settings.sa.divisioni, false)
-uguale('il flag vecchio sparisce', migrato.settings.divisioni, undefined)
-
-await page.click('.carta[data-sapere="divisioni"]')       // rimesso com'era
-await page.waitForTimeout(200)
-
-/* ── 7d. il dettaglio di un gruppo, e la domanda fatta vedere ──
-   Due cose che senza browser non si possono provare, perché sono
-   gesti: aprire il dettaglio di un gruppo e spegnerne una voce sola, e
-   il tasto che apre una domanda VERA di quella voce.
-
-   Il pannello di prova è la risposta a un problema pratico: le tre
-   righe sulla carta dicono cosa sparisce, ma un genitore che non ha
-   presente cos'è «l'accento tonico» spegne a naso. Quello che conta
-   qui è che la domanda arrivi davvero (non un pannello vuoto), che sia
-   della voce da cui si è partiti, e soprattutto che **guardare non
-   spenga**: se provare una domanda la togliesse, sarebbe la trappola
-   peggiore della schermata. */
-await page.click('.schede button[data-scheda="sa"]')
-await page.waitForSelector('.carta[data-sapere="accenti"]', { timeout: 5000 })
-
-/* Adesso ogni gruppo ha il suo tasto, le due operazioni comprese: fino
-   a ieri moltiplicazioni e divisioni le chiedeva solo il castello — e
-   lì non sparisce una domanda, scende un'operazione — quindi il loro
-   tasto non poteva aprire niente. Gliele hanno portate i problemi a
-   parole, dove la moltiplicazione va prima riconosciuta dentro una
-   storia e poi fatta. */
-uguale('ogni gruppo che fa domande ha il tasto per provarle',
-  await page.locator('.prova-tasto[data-prova]').count(), SAPERI.length)
-controlla('le due operazioni del castello adesso ce l\'hanno anche loro',
-  (await page.locator('.prova-tasto[data-prova="divisioni"]').count()) === 1 &&
-  (await page.locator('.prova-tasto[data-prova="moltiplicazioni"]').count()) === 1)
-
-/* il dettaglio: chiuso di suo, si apre e mostra le sue voci */
-uguale('il dettaglio sta chiuso finché non lo si chiede',
-       await page.locator('.dettaglio .voce').count(), 0)
-await page.click('button[data-dettaglio="accenti"]')
-await page.waitForSelector('.dettaglio .voce', { timeout: 5000 })
-const voci = await page.locator('.dettaglio .voce').count()
-controlla('«accenti e apostrofi» si apre in più voci', voci >= 4)
-uguale('e ognuna si può provare', await page.locator('.dettaglio .prova-tasto').count(), voci)
-
-/* si prova una voce sola */
-const laVoce = await page.locator('.dettaglio .voce').first().getAttribute('data-sapere')
-await page.locator('.dettaglio .prova-tasto').first().click()
-await page.waitForSelector('.prova-velo .qz-consegna', { timeout: 5000 })
-controlla('si apre una domanda vera, con le sue risposte',
-  (await page.locator('.prova-velo .qz-tasto').count()) >= 2)
-controlla('e dice da che modulo arriva e a che grado',
-  /grado \d/.test(await page.locator('.prova-chi').innerText()))
-await scatto(page, 'genitori-prova')
-
-/* si risponde: l'esito arriva, e poi si può chiederne un'altra.
-   L'attesa non è un contorno: una domanda appena comparsa non si lascia
-   toccare per 320 ms (`quiz/Domanda.vue`, la finestra cieca che evita
-   di rispondere col tocco di quella prima). Senza, il click cade dentro
-   la finestra, viene ingoiato, e il test racconta che rispondere non
-   fa niente. */
-await page.waitForTimeout(400)
-await page.click('.prova-velo .qz-tasto')
-await page.waitForTimeout(1800)
-controlla('rispondere dice com\'è andata',
-  (await page.locator('.prova-velo .qz-esito').innerText()).trim().length > 0)
-uguale('e il tasto diventa quello per la prossima',
-  (await page.locator('.prova-altra').innerText()).trim(), "Un'altra")
-
-await page.click('.prova-fine')
-await page.waitForTimeout(250)
-uguale('«basta» chiude il pannello', await page.locator('.prova-velo').count(), 0)
-controlla('e si torna dove si era, col dettaglio ancora aperto',
-  await page.isVisible('.dettaglio .voce'))
-controlla('guardare una domanda non l\'ha spenta',
-  !(await page.isVisible(`.voce[data-sapere="${laVoce}"].spento`)))
-
-/* spegnere UNA voce: nel profilo va la chiave della tipologia, e il
-   gruppo che se la porta dietro resta acceso */
-await page.click(`.voce[data-sapere="${laVoce}"]`)
-await page.waitForTimeout(800)
-const conVoce = await leggiProfilo(page)
-uguale('spenta una voce sola, nel profilo va la sua chiave', conVoce.settings.sa[laVoce], false)
-uguale('e il gruppo resta acceso', conVoce.settings.sa.accenti, undefined)
-controlla('la carta del gruppo lo dice, senza aprire il dettaglio',
-  (await page.locator('button[data-dettaglio="accenti"]').innerText()).includes('spent'))
-await page.click(`.voce[data-sapere="${laVoce}"]`)        // rimesso com'era
-await page.waitForTimeout(200)
-
-await page.click('button[aria-label="indietro"]')
-await page.waitForSelector('.carte', { timeout: 5000 })
+uguale('il vecchio flag diventa il macrogruppo spento', migrato.settings.sa.divisioni, false)
+uguale('e il flag vecchio sparisce', migrato.settings.divisioni, undefined)
 
 /* ── 8. il codice si cambia ──
    Se non si potesse, resterebbe 0000 per sempre: il primo bambino che lo
@@ -667,9 +577,9 @@ uguale('spento non c\'è niente da mandare',
 await page.click('.carta[data-flag="giudizi"]')
 await page.waitForTimeout(200)
 
-await page.click('button[data-scheda="sa"]')
-await page.waitForSelector('.prova-tasto', { timeout: 5000 })
-await page.locator('.prova-tasto').first().click()
+await page.click('button[data-scheda="domande"]')
+await page.waitForSelector('.blocco .riga', { timeout: 5000 })
+await page.locator('.blocco.medie [data-prova-classe]').first().click()
 await page.waitForSelector('.prova-velo', { timeout: 5000 })
 controlla('sopra la domanda compaiono i tre tasti',
   await page.isVisible('[data-che="giudizio"]'))

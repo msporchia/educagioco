@@ -28,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { Sorte } from '../../src/quiz/nucleo/sorte.js'
-import { classiDi, postoDelGrado } from '../../src/quiz/nucleo/classi.js'
+import { classiDi, LIVELLO_MIN, LIVELLO_MAX } from '../../src/quiz/nucleo/classi.js'
 import { esempioDa } from '../../src/quiz/nucleo/esempi.js'
 import { catalogoDi, giroDellaFascia, contaGiudizi, fasciaDi, FASCE }
   from '../../src/quiz/nucleo/catalogo.js'
@@ -103,24 +103,42 @@ const righe = cat.flatMap(m => m.classi)
             sbagliate.slice(0, 3).join(' · '))
 }
 
-/* ══════════ 3. la difficoltà è quella vera, e le fasce coprono tutto ══════════ */
+/* ══════════ 3. il livello è dichiarato, e le fasce coprono tutto ══════════ */
 {
-  const storte = righe.filter(r => r.difficolta !== postoDelGrado(r.grado, r.gradi))
-  controlla('la difficoltà è quella con cui pescano i giochi', storte.length === 0,
-            storte.slice(0, 3).map(r => r.chiave).join(' '))
-  controlla('e sta sempre fra 0 e 1',
-            righe.every(r => r.difficolta >= 0 && r.difficolta <= 1))
+  /* Il numero più importante del catalogo: quanto è complicata una
+     domanda, da 0 a 100, sulla stessa scala di tutte le altre materie.
+     Non è derivato dalla posizione in scaletta — lo era, e metteva i
+     grado-1 di sedici moduli nello stesso punto — quindi qui si
+     controlla che ci sia, che stia in piedi, e che il modulo lo
+     dichiari invece di ricadere sul ripiego. */
+  const storte = righe.filter(r => !Number.isFinite(r.livello) ||
+                                   r.livello < LIVELLO_MIN || r.livello > LIVELLO_MAX)
+  uguale('ogni riga dice quanto è complicata', storte.map(r => r.chiave).join(' ') || '—', '—')
+  controlla('e lo dice anche in anni, che è la lingua dei genitori',
+            righe.every(r => r.anni >= 4 && r.anni <= 12))
 
-  /* il primo grado di ogni modulo è 0, l'ultimo è 1: è quello che
-     permette di confrontare un modulo da quattro gradi con uno da sei */
-  const primi = righe.filter(r => r.grado === 1)
-  const ultimi = righe.filter(r => r.grado === r.gradi)
-  controlla('il primo grado di ogni modulo sta a 0', primi.every(r => r.difficolta === 0))
-  controlla('e l\'ultimo a 1', ultimi.every(r => r.difficolta === 1))
+  const muti = cat.filter(m => !m.livelloDichiarato).map(m => m.id)
+  uguale('nessun modulo si affida al ripiego', muti.join(',') || '—', '—')
+
+  /* Dentro un modulo la scaletta non deve scendere: un grado più avanti
+     non può essere più facile del precedente, quello vorrebbe dire che
+     la scaletta è in ordine sbagliato. Le tipologie che dichiarano un
+     livello loro sono l'eccezione prevista e restano fuori dal conto. */
+  const inversioni = []
+  for (const m of cat) {
+    const perGrado = new Map()
+    for (const c of m.classi) if (!c.suo)
+      perGrado.set(c.grado, Math.min(perGrado.get(c.grado) ?? 999, c.livello))
+    const gradi = [...perGrado.keys()].sort((a, b) => a - b)
+    for (let i = 1; i < gradi.length; i++)
+      if (perGrado.get(gradi[i]) < perGrado.get(gradi[i - 1]))
+        inversioni.push(`${m.id} g${gradi[i - 1]}→g${gradi[i]}`)
+  }
+  uguale('la scaletta di un modulo non torna indietro', inversioni.join(' ') || '—', '—')
 
   uguale('ogni riga cade in una fascia', righe.filter(r => !r.fascia).length, 0)
-  const senzaBuchi = righe.every(r => fasciaDi(r.difficolta).chiave === r.fascia)
-  controlla('e la fascia è quella del suo numero', senzaBuchi)
+  const senzaBuchi = righe.every(r => fasciaDi(r.livello).chiave === r.fascia)
+  controlla('e la fascia è quella del suo livello', senzaBuchi)
 
   for (const f of FASCE) {
     const giro = giroDellaFascia(moduli, f.chiave)
@@ -129,9 +147,9 @@ const righe = cat.flatMap(m => m.classi)
               giro.every(c => c.fascia === f.chiave))
     /* ordinate dal più facile al più difficile: è il modo in cui si
        scorrono, e senza ordine il giro sembra casuale come prima */
-    const ordinate = giro.every((c, i) => i === 0 || giro[i - 1].difficolta <= c.difficolta)
-    controlla(`e «${f.nome}» è in ordine di difficoltà`, ordinate)
-    nota(`${f.nome}: ${giro.length} classi, da ${giro[0]?.difficolta.toFixed(2)} a ${giro.at(-1)?.difficolta.toFixed(2)}`)
+    const ordinate = giro.every((c, i) => i === 0 || giro[i - 1].livello <= c.livello)
+    controlla(`e «${f.nome}» è in ordine di livello`, ordinate)
+    nota(`${f.nome}: ${giro.length} classi, da ${giro[0]?.livello} a ${giro.at(-1)?.livello}`)
   }
 }
 

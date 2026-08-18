@@ -219,6 +219,13 @@ class Griglia extends Modulo {
       materia: 'spazio',
       chiaro: 'trovare le caselle, seguire i percorsi, contare area e perimetro a quadretti',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 29, 33, 56, 63, 75, 81],
       /* i primi tre gradi si giocano guardando: caselle, direzioni,
          percorsi. Gli ultimi quattro chiamano per nome due cose che si
          fanno a scuola — area e perimetro — e senza quei nomi la

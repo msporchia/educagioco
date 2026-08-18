@@ -54,6 +54,7 @@ npm run simula         # gioca il tower defense senza browser
 npm run tara           # rimisura la vita dei nemici e riscrive i dati
 npm run mappe          # valida i livelli del Generale
 npm run quiz:banco     # prova tutti i moduli di quiz senza browser
+npm run quiz:eta       # chi vede cosa: la calibrazione per età, e i buchi
 npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
 npm run scatti         # rifà le immagini di docs/img/
 node strumenti/icone.mjs   # rigenera i PNG delle icone da public/icona.svg
@@ -226,6 +227,38 @@ committate: non è ricostruibile da git.
   volte il rapporto diventa il quadrato. Le chiavi finiscono nello stesso
   cassetto di tabelline e parole inglesi, quindi **un prefisso nuovo si
   sceglie guardando `store/progressi.js`**.
+  **La difficoltà è un numero da 0 a 100, uno solo, dichiarato.** Ogni
+  grado di ogni modulo dice `livelli: [12, 25, …]` — quanto è
+  complicato, sulla stessa scala di tutte le materie (0 = materna,
+  100 = fine primaria, 12,5 punti per anno di scuola). **L'età non sta
+  sulla domanda, sta sul bambino**: `settings.eta` (la scrive la
+  partenza) e da lì **due larghezze diverse**, che è la cosa che si
+  sbaglia più facilmente — l'**ammissione** è larga (tre anni e mezzo
+  sotto, due sopra: si toglie solo la presa in giro e il muro), la
+  **mira** è stretta (un anno indietro, un anno e mezzo avanti) ed è
+  dove pesca la manopola. Con una larghezza sola a nove anni sparivano
+  le ore intere dell'orologio, che devono solo diventare rare. Taglio netto in tutte e due le direzioni: niente
+  domande di quarta a chi fa la prima, e niente «con che lettera
+  comincia 🐝» come premio di una carta tosta a un bambino di dieci
+  anni. La manopola 0..1 dei giochi diventa un punto dentro quella
+  finestra: fondo = carta debole, cima = carta tosta. Derivare la
+  difficoltà dalla posizione in scaletta è **il modello vecchio**:
+  metteva i grado-1 di sedici moduli nello stesso punto. L'elenco delle
+  classi sta in `docs/livelli-delle-domande.md`, che è **generato**
+  (`npm run quiz:livelli`) e non si scrive a mano.
+  **La schermata dei grandi ha due schede, non tre**: «Giochi» e «Le
+  domande». Quest'ultima elenca tutte le classi **in fila rispetto al
+  bambino** — cinque blocchi (troppo facili · facili · nel segno ·
+  difficili · troppo difficili), le due estreme chiuse ma contate — con
+  l'età in cima che sposta il gruppo e, su ogni riga, ▼▲ per ritoccarla
+  di mezzo anno (`settings.ritocchi`, max tre gradini), ▶ per provarla e
+  ✕ per **spegnere il suo gruppo di scuola** (non la riga: i saperi li
+  leggono anche i giochi, il castello guarda `divisioni`). «Cosa sa» non
+  c'è più: mostrava le stesse cose in un altro modo. Il bambino l'ha già
+  detto giocando: `quiz/consiglio.js` legge `store/srs.js` e, quando una
+  chiave ha almeno otto tiri con meno di metà giuste (o più di nove su
+  dieci), **lo scrive nella riga col tasto già pronto**. Consiglia, non
+  ritocca da sé: un pomeriggio storto insegnerebbe la cosa sbagliata.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio

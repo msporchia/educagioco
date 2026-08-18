@@ -161,7 +161,7 @@ const SCALETTA = [
 const TIPI = [
   { chiave: 'cal:giorni', nome: 'I giorni della settimana', sa: 'calendario', gradi: { 1: 1 } },
   { chiave: 'cal:mesi', nome: "L'ordine dei mesi", sa: 'calendario', gradi: { 2: 0.66 } },
-  { chiave: 'cal:giorni-mese', nome: 'Quanti giorni ha un mese', sa: 'calendario', gradi: { 2: 0.34 } },
+  { chiave: 'cal:giorni-mese', livello: 38, nome: 'Quanti giorni ha un mese', sa: 'calendario', gradi: { 2: 0.34 } },
   { chiave: 'cal:stagioni', nome: 'Le stagioni', sa: 'calendario', gradi: { 3: 0.74 } },
   { chiave: 'cal:feste', nome: "Le feste dell'anno", sa: 'calendario', gradi: { 3: 0.26 } },
   { chiave: 'cal:conta-giorni', nome: 'Contare i giorni fra due date', sa: 'date', gradi: { 4: 1 } },
@@ -177,6 +177,13 @@ class Calendario extends Modulo {
       materia: 'tempo',
       chiaro: "i giorni, i mesi, le stagioni, e quanto tempo passa fra due date",
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [20, 25, 29, 56, 63],
       /* giorni, mesi e stagioni si imparano vivendo; contare i giorni
          fra due date è un conto che a scuola si fa (o non si è fatto) */
       tipi: TIPI,

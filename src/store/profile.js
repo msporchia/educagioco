@@ -16,6 +16,7 @@ import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
 import { eccezioniDi } from '../data/partenze.js'
+import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
 import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
@@ -654,6 +655,78 @@ export function accendiGioco(chiave, si) {
 /* quanti ne restano accesi: se sono zero la home lo dice invece di
    mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
+
+/* ── quanti anni ha ──
+   Il numero da cui dipende **quali domande arrivano**: ogni classe di
+   domande dichiara a che età serve (`quiz/nucleo/classi.js`), e chi
+   pesca confronta le due cose. Non è un dato anagrafico e non si mostra
+   a nessun bambino: è la sola cosa che distingue «troppo difficile» da
+   «troppo facile», e per questo sta nei settaggi e non nel roster.
+
+   Lo scrive la partenza scelta alla creazione (`data/partenze.js`).
+   Chi non l'ha — i profili nati prima che questa domanda esistesse —
+   viene trattato come un bambino di quarta, che è dove stava di fatto
+   la scaletta prima: nessuno si vede arrivare domande più facili di
+   quelle di ieri senza che un grande l'abbia deciso. */
+export const ETA_DIFETTO = 9
+export const etaDelBambino = () => {
+  const e = Number(state.profile.settings.eta)
+  return Number.isFinite(e) && e >= 3 && e <= 14 ? e : ETA_DIFETTO
+}
+export function scegliEta(anni) {
+  const e = Number(anni)
+  if (!Number.isFinite(e) || e < 3 || e > 14) return
+  state.profile.settings.eta = e
+  persist()
+}
+
+/* ── il ritocco: «per lui questo è facile» ──
+   L'interruttore dei saperi era un sì/no, e il no è una risposta
+   grossa: «i problemi scritti no» tiene fuori anche quelli da una riga
+   che il bambino saprebbe fare. Ma non bastano nemmeno tre blocchi da
+   scegliere: quello che un grande vuole dire quasi sempre è **una tacca
+   più su o una più giù** rispetto a come l'abbiamo tarata noi.
+
+   Un gradino è mezzo anno di scuola (`PASSO` in `quiz/nucleo/modulo.js`)
+   e se ne fanno al massimo tre per parte: oltre un anno e mezzo non si
+   sta più ritoccando una taratura, si sta dicendo un'altra cosa — e
+   quell'altra cosa è spegnere il gruppo, che ha il suo tasto.
+
+   La chiave è un gruppo di `data/saperi.js` o una singola tipologia di
+   quiz: per chi fa le domande sono la stessa cosa. Chi non ritocca
+   niente non ha nessuna voce nel profilo, che è il caso normale. */
+export const ritoccoSapere = chiave => (state.profile.settings.ritocchi || {})[chiave] || 0
+/* quanti ne sono stati fatti, e come si torna indietro tutti insieme.
+   Serve perché i ritocchi sono tanti piccoli gesti e nessuno si ricorda
+   quali ha fatto: senza un modo di rimetterli a posto, la prima volta
+   che uno smanetta si ritrova una taratura sua che non sa più
+   ricostruire. L'età no: quella si vede scritta in cima e si sposta
+   col dito, quindi non c'è niente da ricordare. */
+export const quantiRitocchi = () => Object.keys(state.profile.settings.ritocchi || {}).length
+export function azzeraRitocchi() {
+  const quanti = quantiRitocchi()
+  delete state.profile.settings.ritocchi
+  persist()
+  return quanti
+}
+export function ritocca(chiave, gradini) {
+  const s = state.profile.settings
+  if (!s.ritocchi) s.ritocchi = {}
+  const n = Math.max(-3, Math.min(3, Math.round(gradini || 0)))
+  if (!n) delete s.ritocchi[chiave]        // zero non si scrive: è il difetto
+  else s.ritocchi[chiave] = n
+  persist()
+  return n
+}
+
+/* Tutto quello che dipende dal bambino e non dal modulo, nella forma in
+   cui lo vuole `quiz/nucleo/classi.js`. Un oggetto solo perché è una
+   cosa sola: «chi sta giocando». */
+export const regoleDomande = () => ({
+  eta: etaDelBambino(),
+  finestra: finestraDi(etaDelBambino()),
+  ritocchi: { ...(state.profile.settings.ritocchi || {}) },
+})
 
 /* ── le varianti: un MODO di giocare dentro un gioco ──
    Non è l'interruttore di un gioco (la carta resta in home) e non è

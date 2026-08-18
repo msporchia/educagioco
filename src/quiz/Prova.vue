@@ -30,7 +30,7 @@
      `giro`        — «fammele vedere tutte». Una lista di classi che si
                      scorre in ordine, col contatore: in venti tocchi le
                      hai viste tutte, e nessuna può nascondersi.
-     `difficolta`  — «cosa becca un bambino a questa difficoltà?». Qui
+     `eta`  — «cosa becca un bambino di quest'età?». Qui
                      non si scorre niente: si pesca come pesca un gioco,
                      campana e spenti compresi, e ogni domanda può
                      arrivare da un modulo diverso.
@@ -68,7 +68,9 @@ const props = defineProps({
   /* una lista di classi da scorrere in ordine (righe del catalogo) */
   giro: { type: Array, default: null },
   /* oppure la difficoltà a cui pescare, come farebbe un gioco */
-  difficolta: { type: Number, default: null },
+  /* «cosa becca un bambino di quest'età?»: si pesca come pescherebbe un
+     gioco, tagliando per età come in partita */
+  eta: { type: Number, default: null },
 })
 defineEmits(['chiudi'])
 
@@ -118,7 +120,7 @@ function pesca() {
     return esempioDa(c.sorgente, sorteQualunque())
   }
   if (props.sorgente) return esempioDa(props.sorgente, sorteQualunque())
-  if (props.difficolta !== null) return pescaComeUnGioco(props.difficolta)
+  if (props.eta !== null) return pescaComeUnGioco(props.eta)
   return esempioDi(props.chiave)
 }
 
@@ -161,7 +163,8 @@ onMounted(unAltra)
            l'altra, ed è lì che si vede che una è fuori misura -->
       <Domanda v-if="esempio" :key="giro" :domanda="esempio.domanda" :pittori="esempio.pittori"
                :origine="esempio" gioco="prova"
-               :respiro="600" @risposto="risposto = true" />
+               :respiro="600" saltabile
+               @risposto="unAltra" />
       <!-- non dovrebbe succedere: il tasto per arrivare qui compare
            solo dove `siPuoProvare` è vero. Se succede lo dice, invece
            di lasciare un rettangolo nero. -->

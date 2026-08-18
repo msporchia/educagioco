@@ -153,7 +153,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
        esempi diventa illeggibile */
     for (const e of r.esempi || [])
       console.log(`   ‹${e.grado}› ${e.d.testo.replace(/\s*\n\s*/g, ' ')}  →  ` +
-        e.d.risposte.map((x, i) => (i === e.d.giusta ? '[' : '') + (x.testo ?? x.emoji ?? '🖼') + (i === e.d.giusta ? ']' : '')).join('  '))
+        e.d.risposte.map((x, i) => {
+          /* il nome sotto la figura è metà della risposta: senza, una
+             domanda a quattro disegni si legge «🖼 🖼 🖼 🖼» e non si
+             può giudicare da qui */
+          const corpo = (x.testo ?? x.emoji ?? '🖼') + (x.nome ? ' ' + x.nome : '')
+          return i === e.d.giusta ? `[${corpo}]` : corpo
+        }).join('  '))
   }
   console.log('')
   process.exit(guasti ? 1 : 0)

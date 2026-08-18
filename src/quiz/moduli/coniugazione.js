@@ -646,7 +646,7 @@ const SCALETTA = [
    condiviso da tutto il repo: si sceglie guardando gli altri. */
 const TIPI = [
   { chiave: 'coniug:presente-regolare', nome: 'Il presente dei verbi regolari', sa: 'presente', gradi: { 1: 0.75 } },
-  { chiave: 'coniug:presente-isc', nome: 'I verbi in -isc (finire, capire)', sa: 'presente', gradi: { 1: 0.25 } },
+  { chiave: 'coniug:presente-isc', livello: 56, nome: 'I verbi in -isc (finire, capire)', sa: 'presente', gradi: { 1: 0.25 } },
   { chiave: 'coniug:presente-irregolare', nome: 'Il presente dei verbi irregolari', sa: 'presente', gradi: { 2: 1 } },
   { chiave: 'coniug:ausiliare', nome: 'Essere o avere nel passato prossimo', sa: 'tempi-verbali', gradi: { 3: 0.5, 5: 0.2, 6: 0.1 } },
   { chiave: 'coniug:participio', nome: 'Il participio passato regolare', sa: 'tempi-verbali', gradi: { 3: 0.25 } },
@@ -735,6 +735,13 @@ class Coniugazione extends Modulo {
       materia: 'italiano',
       chiaro: 'coniugare i verbi italiani: presente, passato, imperfetto e futuro',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [38, 44, 56, 63, 75, 95],
       /* il presente lo usa chi parla; passato prossimo, imperfetto e
          futuro sono i tempi che si studiano, e chi non li ha ancora
          visti resta al presente invece di restare fuori */

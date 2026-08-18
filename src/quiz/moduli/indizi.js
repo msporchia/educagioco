@@ -420,6 +420,13 @@ class Indizi extends Modulo {
       materia: 'logica',
       chiaro: 'restringere il campo con quello che è vero e quello che non lo è, finché non resta una sola risposta',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [12, 25, 38, 56, 75],
       tipi: TIPI,
       pittori: PITTORI_FIGURE,
     })

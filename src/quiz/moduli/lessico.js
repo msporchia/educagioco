@@ -244,7 +244,7 @@ const TIPI = [
   { chiave: 'less:intruso', nome: "L'intruso", sa: 'lessico', gradi: { 2: 1 } },
   { chiave: 'less:sinonimo', nome: 'I sinonimi', sa: 'lessico', gradi: { 3: 1 } },
   { chiave: 'less:frase', nome: 'La parola giusta nella frase', sa: 'lessico', gradi: { 4: 1 } },
-  { chiave: 'less:parola-difficile', nome: 'Le parole difficili', sa: 'lessico', gradi: { 5: 0.5 } },
+  { chiave: 'less:parola-difficile', livello: 95, nome: 'Le parole difficili', sa: 'lessico', gradi: { 5: 0.5 } },
   { chiave: 'less:modo-di-dire', nome: 'I modi di dire', sa: 'lessico', gradi: { 5: 0.5 } },
 ]
 
@@ -257,6 +257,13 @@ class Lessico extends Modulo {
       materia: 'italiano',
       chiaro: 'contrari, sinonimi, categorie e modi di dire',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 29, 56, 63, 75],
       tipi: TIPI,
     })
   }

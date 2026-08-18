@@ -14,13 +14,15 @@
    c'è già, ordinato per come lo incontrerebbe un bambino.
 
    LA DIFFICOLTÀ È QUELLA VERA, e non un'etichetta scritta a mano da
-   qualche parte: è `postoDelGrado(grado, gradi)`, cioè lo stesso 0..1
-   con cui i giochi pescano. Il primo grado di un modulo è 0, l'ultimo è
-   1, gli altri in mezzo — e siccome i moduli hanno numeri di gradi
-   diversi (quattro l'orologio, sei i problemi), è l'unico modo di
-   confrontare due domande di materie diverse. Se un giorno la scaletta
-   di un modulo si allunga, la difficoltà delle sue classi si sposta da
-   sé: non c'è un secondo posto da aggiornare.
+   qualche parte: è `postoDelGrado(grado, gradi, scala)`, cioè lo stesso
+   0..1 con cui i giochi pescano. La scaletta di un modulo si stende
+   dentro l'arco che il modulo dichiara — da un quarto in su per la roba
+   di scuola, più in basso per chi comincia adesso — e siccome i moduli
+   hanno numeri di gradi diversi (quattro l'orologio, sei i problemi), è
+   l'unico modo di confrontare due domande di materie diverse. Se un
+   giorno la scaletta di un modulo si allunga, o il suo arco si sposta,
+   la difficoltà delle sue classi si muove da sé: non c'è un secondo
+   posto da aggiornare.
 
    UNA TIPOLOGIA COMPARE PIÙ VOLTE se esce a più gradi, ed è giusto così:
    «le ore intere» al grado 1 e al grado 4 sono la stessa tipologia ma
@@ -32,20 +34,27 @@
    moduli lo mette chi chiama (`quiz/catalogo.js` sotto Vite).
    ═══════════════════════════════════════════════════════════════════ */
 
-import { postoDelGrado, pesoDi } from './classi.js'
+import { pesoDi, bersaglio, finestraDi, anniDelLivello } from './classi.js'
 
-/* Le tre fasce, che sono poi le tre carte di Survivors (0.15 · 0.50 ·
-   0.85). Servono a due cose diverse e conviene tenerle a mente tutte e
-   due: a **dividere l'elenco** in tre blocchi leggibili, e a **pescare**
-   come pescherebbe un gioco di quella difficoltà. La prima è una
-   sistemazione, la seconda è il gioco vero. */
+/* Le fasce, che adesso sono **età** e non gradini astratti. Servono a
+   due cose diverse e conviene tenerle a mente tutte e due: a
+   **dividere l'elenco** in blocchi leggibili, e a **pescare** come
+   pescherebbe un gioco per un bambino di quell'età. La prima è una
+   sistemazione, la seconda è il gioco vero — ed è la domanda che un
+   genitore si fa davvero: *cosa becca il mio, che ha otto anni?*
+
+   `eta` è il bambino tipo della fascia, `fino` dove finisce il blocco
+   nell'elenco (esclusa, come tutte le età qui dentro). */
 export const FASCE = [
-  { chiave: 'facili', nome: 'Facili', difficolta: 0.15, fino: 0.34 },
-  { chiave: 'medie', nome: 'Medie', difficolta: 0.50, fino: 0.67 },
-  { chiave: 'toste', nome: 'Toste', difficolta: 0.85, fino: 1.01 },
+  { chiave: 'piccoli', nome: 'Prima della scuola', eta: 5, fino: 25 },
+  { chiave: 'facili', nome: 'Prima e seconda', eta: 6.5, fino: 50 },
+  { chiave: 'medie', nome: 'Terza e quarta', eta: 8.5, fino: 75 },
+  { chiave: 'toste', nome: 'Quinta e oltre', eta: 10.5, fino: 101 },
 ]
 
-export const fasciaDi = difficolta => FASCE.find(f => difficolta < f.fino) || FASCE[FASCE.length - 1]
+/* la fascia di un livello: `fino` è il livello dove il blocco finisce,
+   sulla stessa scala 0..100 delle domande */
+export const fasciaDi = livello => FASCE.find(f => livello < f.fino) || FASCE[FASCE.length - 1]
 
 /* ── le classi di un modulo ──
    Una riga per (grado, tipologia). I moduli che le tipologie non le
@@ -88,10 +97,19 @@ const ripete = (a, b) => {
 }
 
 function voce(modulo, grado, { tipo, nome, sa, peso, scaletta }) {
-  const difficolta = postoDelGrado(grado, modulo.gradi)
+  /* il livello della tipologia se se l'è dichiarato, se no quello del
+     suo grado: è il numero che decide se questa domanda arriva a un
+     bambino o no, ed è il motivo per cui questa riga esiste */
+  const t = modulo.tipi.find(x => x.chiave === tipo)
+  const livello = t ? modulo.livelloDelTipo(t, grado) : modulo.livelli[grado - 1]
   return {
     /* per rigenerarla: la stessa forma delle sorgenti di `esempi.js` */
     sorgente: { modulo, grado, tipo, nome },
+    livello,
+    /* la stessa cosa detta in anni, che è la lingua della schermata dei
+       grandi: nessun genitore giudica un «54», tutti giudicano «otto
+       anni e mezzo» */
+    anni: Math.round(anniDelLivello(livello) * 10) / 10,
     /* per mostrarla */
     chiave: `${modulo.id}:${grado}:${tipo || 'grado'}`,
     modulo: modulo.id,
@@ -108,11 +126,12 @@ function voce(modulo, grado, { tipo, nome, sa, peso, scaletta }) {
        che la descrive — basta che una contenga l'altra */
     scaletta: scaletta && !ripete(scaletta, nome) ? scaletta : '',
     sa: [...sa],
+    /* l'ha dichiarato lei, o è quello del suo grado? */
+    suo: !!(t && Number.isFinite(t.livello)),
     /* quanto spesso esce **dentro** il suo grado, quando il grado è
        toccato a lei: 1 se è l'unica, meno se se lo divide */
     peso,
-    difficolta,
-    fascia: fasciaDi(difficolta).chiave,
+    fascia: fasciaDi(livello).chiave,
   }
 }
 
@@ -129,8 +148,8 @@ export function catalogoDi(moduli, { spenti = [], giudizi = [] } = {}) {
     const classi = classiDelModulo(m).map(c => ({
       ...c,
       spenta: c.sa.some(s => spenti.includes(s)) || (c.tipo ? spenti.includes(c.tipo) : false),
-      /* cosa ne è stato detto giocando: vale più di qualunque numero
-         che le abbiamo assegnato noi (vedi `contaGiudizi`) */
+      /* cosa ne è stato detto giocando: vale più di qualunque età che
+         le abbiamo assegnato noi (vedi `contaGiudizi`) */
       detti: detti.get(c.tipo) || null,
     }))
     return {
@@ -141,13 +160,13 @@ export function catalogoDi(moduli, { spenti = [], giudizi = [] } = {}) {
       chiaro: m.chiaro,
       gradi: m.gradi,
       classi,
-      /* da dove a dove arriva questo modulo: due numeri che sulla
-         testata dicono a colpo d'occhio se è un modulo per piccoli o
-         uno che arriva in alto. Sono sempre 0 e 1 finché un modulo ha
-         tutti i suoi gradi, e diventano interessanti quando qualcosa è
-         spento. */
-      da: classi.length ? Math.min(...classi.map(c => c.difficolta)) : 0,
-      a: classi.length ? Math.max(...classi.map(c => c.difficolta)) : 0,
+      /* da che età a che età arriva questo modulo: due numeri che sulla
+         testata dicono a colpo d'occhio se è roba da prima elementare o
+         da quinta, e che si stringono quando un genitore spegne
+         qualcosa. */
+      da: classi.length ? Math.min(...classi.map(c => c.livello)) : 0,
+      a: classi.length ? Math.max(...classi.map(c => c.livello)) : 0,
+      livelloDichiarato: !!m.livelloDichiarato,
       spente: classi.filter(c => c.spenta).length,
     }
   })
@@ -191,11 +210,12 @@ export function giroDellaFascia(moduli, fascia, { spenti = [] } = {}) {
   return catalogoDi(moduli, { spenti })
     .flatMap(m => m.classi)
     .filter(c => c.fascia === fascia && !c.spenta)
-    .sort((x, y) => x.difficolta - y.difficolta || x.modulo.localeCompare(y.modulo))
+    .sort((x, y) => x.livello - y.livello || x.modulo.localeCompare(y.modulo))
 }
 
-/* quanto pesa una classe se un gioco chiede quella difficoltà: serve
-   solo a raccontarlo nel pannello («a questa difficoltà esce una volta
-   su venti»), e il conto è quello di `classi.js` — non una copia. */
-export const quantoEsce = (classe, difficolta) =>
-  pesoDi(classe.grado, classe.gradi, difficolta)
+/* quanto pesa una classe per un bambino di quell'età, con la manopola a
+   metà: serve solo a raccontarlo nel pannello («a otto anni esce una
+   volta su venti»), e il conto è quello di `classi.js` — non una
+   copia. */
+export const quantoEsce = (classe, eta, difficolta = 0.5) =>
+  pesoDi(classe.livello, bersaglio(difficolta, finestraDi(eta)))

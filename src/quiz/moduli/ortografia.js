@@ -242,7 +242,7 @@ const TIPI = [
   { chiave: 'orto:doppie', nome: 'Le doppie', sa: 'suoni-difficili', gradi: { 3: 0.5, 4: 0.33 } },
   { chiave: 'orto:cqu', nome: 'Acqua e la sua famiglia (cqu, qu, cu)', sa: 'suoni-difficili', gradi: { 4: 0.34 } },
   { chiave: 'orto:ce-cie', nome: 'cia, ce e cie', sa: 'suoni-difficili', gradi: { 4: 0.33 } },
-  { chiave: 'orto:acca', nome: 'La lettera h (ho, hai, ha, hanno)', sa: 'accenti', gradi: { 5: 0.3 } },
+  { chiave: 'orto:acca', livello: 38, nome: 'La lettera h (ho, hai, ha, hanno)', sa: 'accenti', gradi: { 5: 0.3 } },
   { chiave: 'orto:accento-cambia', nome: "L'accento che cambia il significato (è, sì, là)", sa: 'accenti', gradi: { 5: 0.3 } },
   { chiave: 'orto:accento', nome: "Quando ci vuole l'accento", sa: 'accenti', gradi: { 5: 0.2 } },
   { chiave: 'orto:apostrofo', nome: "L'apostrofo", sa: 'accenti', gradi: { 5: 0.2 } },
@@ -257,6 +257,13 @@ class Ortografia extends Modulo {
       materia: 'italiano',
       chiaro: 'le parole che si scrivono diverse da come si sentono',
       scaletta: SCALETTA,
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [38, 44, 50, 56, 63],
       tipi: TIPI,
     })
   }

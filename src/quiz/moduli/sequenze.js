@@ -85,6 +85,13 @@ class Sequenze extends Modulo {
         'chi non c\'entra: quante sono e quanto sono grandi',
         'cosa viene dopo: le figure che girano e crescono',
       ],
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [12, 20, 29, 42, 56],
       /* non c'è una lezione da aver fatto, si guarda: il gruppo serve a
          isolare le sequenze, non a coprire una lacuna */
       tipi: TIPI,

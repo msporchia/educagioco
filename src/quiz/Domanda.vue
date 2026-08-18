@@ -72,6 +72,20 @@ const props = defineProps({
      che non li passa mostra la domanda come sempre. */
   origine: { type: Object, default: null },
   gioco: { type: String, default: '' },
+  /* ── l'attesa si può accorciare toccandola ──
+     L'attesa dopo una risposta resta **quella del gioco**, barra
+     compresa: si vede l'esito, si vede quanto manca, e quando la barra
+     è piena si prosegue da soli. Cambiarla nel pannello vorrebbe dire
+     guardare una messa in scena diversa da quella che riceve il
+     bambino, che è esattamente quello che il pannello esiste per
+     evitare.
+
+     Questo aggiunge una cosa sola: chi guarda venti domande di fila può
+     **toccare la barra** per andare avanti subito, invece di aspettare
+     ogni volta. Nei giochi no, e non è una dimenticanza: lì il tocco
+     che arriverebbe subito dopo una risposta è quasi sempre il fantasma
+     di quello che ha appena risposto, e salterebbe l'esito da solo. */
+  saltabile: { type: Boolean, default: false },
 })
 const emit = defineEmits(['risposto'])
 let cieca = 0
@@ -94,6 +108,11 @@ const pronta = ref(false)
 /* Quanto manca alla prossima, per non lasciare l'attesa muta (vedi
    `scegli`): 0 = non si sta aspettando niente. */
 const attesa = ref(0)
+/* il timer della prossima domanda e il modo di anticiparlo: non sono
+   `ref` perché non si disegnano, e un `ref` che nessuno guarda è solo
+   una cosa in più che può restare indietro */
+let avanti = null
+let salta = null
 const tele = ref([])          // i canvas delle risposte disegnate
 const teloSoggetto = ref(null)
 
@@ -138,12 +157,34 @@ function scegli(i) {
   const quanto = giusto ? Math.min(props.respiro, 700)
     : props.respiro + (esito.value ? 900 : 0)
   attesa.value = quanto
-  setTimeout(() => emit('risposto', {
+  const vaiAvanti = () => emit('risposto', {
     giusto,
     indice: i,
     chiave: props.domanda.chiave,
     tempo,
-  }), quanto)
+  })
+  /* tenuto da parte per chi salta: `clearTimeout` senza questo
+     manderebbe l'evento due volte, e il pannello scorrerebbe di due
+     domande a ogni tocco */
+  avanti = setTimeout(() => { avanti = null; vaiAvanti() }, quanto)
+  salta = () => {
+    if (!avanti) return
+    clearTimeout(avanti)
+    avanti = null
+    vaiAvanti()
+  }
+}
+
+/* il tocco che salta l'attesa: vale solo dopo aver risposto, e solo se
+   chi ci ha messo la domanda l'ha chiesto */
+/* Toccare la barra **accorcia l'attesa**, non aggiunge un evento: chi
+   sta sotto riceve `risposto` come sempre, solo prima. Un secondo
+   evento sembrava più espressivo e faceva avanzare di due domande per
+   volta, perché il pannello ascoltava tutti e due — un difetto che si
+   vede solo contando, e infatti l'ha trovato il contatore del giro. */
+function saltaAttesa() {
+  if (props.saltabile && salta) salta()
+}
 }
 
 /* Quello che si sa di questa domanda **adesso**: il tempo scorre e
@@ -211,6 +252,9 @@ onUnmounted(() => clearTimeout(cieca))
 
 <template>
   <div class="qz-velo">
+  clearTimeout(avanti)
+  avanti = null
+  salta = null
     <div class="qz-carta">
       <!-- la riga in cima porta due cose che non c'entrano fra loro: di
            che materia è la domanda, e i tre tasti per giudicarla. I
@@ -240,7 +284,8 @@ onUnmounted(() => clearTimeout(cieca))
       <!-- l'attesa che si vede: comincia quando si è risposto e finisce
            quando arriva la prossima. Senza, quei due secondi sono un
            gioco fermo. -->
-      <div v-if="attesa" class="qz-avanti">
+      <div v-if="attesa" class="qz-avanti" :class="{ saltabile }"
+           @click="saltaAttesa">
         <i :style="{ animationDuration: attesa + 'ms' }"></i>
       </div>
 
@@ -333,6 +378,10 @@ onUnmounted(() => clearTimeout(cieca))
 }
 .qz-tasto.emoji { font-size: clamp(28px, 7.5vw, 40px); }
 .qz-telo {
+/* mentre si guarda, la barra si può toccare per non aspettare: un filo
+   più alta, così il dito la prende */
+.qz-avanti.saltabile { height: 7px; padding: 2px 0; background-clip: content-box;
+                       cursor: pointer }
   width: 100%; max-width: clamp(52px, calc(13.5 * var(--qz-h)), 118px);
   aspect-ratio: 1; height: auto;
 }

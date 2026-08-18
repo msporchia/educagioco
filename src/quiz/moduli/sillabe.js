@@ -259,6 +259,13 @@ class Sillabe extends Modulo {
         'la sillaba che manca',
         'l\'accento tonico: dove batte la voce',
       ],
+      /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
+         sola per tutte le materie, e serve a confrontare questa riga
+         con quelle di tutti gli altri moduli. Zero è il primo giorno
+         di materna, cento la fine della primaria: dodici punti e mezzo
+         per anno di scuola. Non dice a chi arriva — quello lo decide
+         la finestra dell'età di chi gioca (`nucleo/classi.js`). */
+      livelli: [25, 38, 44, 50, 75],
       /* contare le sillabe e sentire le rime si fa a orecchio; l'accento
          tonico sta con gli accenti scritti, perché è la stessa lezione */
       tipi: TIPI,
