@@ -50,8 +50,15 @@ export async function apriBrowser() {
 /* Apre il gioco e restituisce la pagina insieme all'elenco degli errori,
    che continua a riempirsi da solo mentre il test va avanti. */
 export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attesa = '.carte',
-                                           giocatori = [GIOCATORE] } = {}) {
-  const page = await browser.newPage({ viewport, deviceScaleFactor: 2, hasTouch: true })
+                                           giocatori = [GIOCATORE], userAgent,
+                                           spiegazioni = false } = {}) {
+  /* `userAgent` serve a una cosa sola, ma non c'è altro modo di provarla:
+     alcune schermate cambiano a seconda del telefono che si ha in mano —
+     il nastro «installalo» compare su Android e iPhone e non sul
+     computer, e i passi da seguire sono diversi. Senza, il banco è sempre
+     un computer e quella roba non la vede nessun test. */
+  const page = await browser.newPage({ viewport, deviceScaleFactor: 2, hasTouch: true,
+                                       ...(userAgent ? { userAgent } : {}) })
   const errori = []
   page.on('pageerror', e => errori.push('errore JS: ' + e.message))
   page.on('console', m => m.type() === 'error' && errori.push('console: ' + m.text()))
@@ -78,6 +85,19 @@ export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attes
       } catch (e) { /* senza localStorage il test lo dirà da solo */ }
     }, [giocatori, giocatori[0]])
   }
+  /* ── LE SPIEGAZIONI CHE COMPAIONO DA SOLE ──
+     Dentro una partita ci sono righe che si presentano la prima volta e
+     poi mai più (i primi passi del tower defense). Per un bambino sono
+     giuste; per un test sono rumore, perché la stessa prima volta la
+     rigioca a ogni giro. Quindi il banco parte come se le avesse già
+     viste tutte; `spiegazioni: true` le rimette, ed è quello che fa il
+     test che le prova (`integrazione/guide`). */
+  if (!spiegazioni) {
+    await page.addInitScript(() => {
+      try { localStorage.setItem('guide-viste', '1') } catch (e) { /* niente */ }
+    })
+  }
+
   await page.goto(GIOCO + (hash ? '#' + hash : ''))
   if (attesa) await page.waitForSelector(attesa, { timeout: 10000 })
   return { page, errori }

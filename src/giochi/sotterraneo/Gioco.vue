@@ -600,7 +600,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" :monete="!corsa" scura @indietro="indietro">
+    <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiutoAperto = $event" :monete="!corsa" scura @indietro="indietro">
       <button v-if="corsa && eroe" class="sot-io" data-azione="zaino"
               aria-label="lo zaino" @click="zainoAperto = true">
         <span class="sot-polso" :style="{ '--sot-polso': eroe.polso }">
