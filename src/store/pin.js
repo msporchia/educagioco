@@ -35,6 +35,42 @@ export async function leggiPin() {
   return pinValido(p) ? String(p) : PIN_INIZIALE
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   IL CODICE DIMENTICATO
+   Il grande che sceglie un codice e non se lo ricorda è chiuso fuori dai
+   progressi di casa, e non c'è nessuno a cui chiederlo: niente server,
+   niente indirizzo di posta, e chi ha scaricato il gioco non lo conosce
+   nessuno. La strada che c'era — `#pin=1234` nella barra dell'indirizzo
+   — resta ma non conta: dall'app installata sul telefono la barra
+   dell'indirizzo non esiste, e va detto che sono pochi i grandi che
+   saprebbero usarla comunque.
+
+   Quindi una domanda: un fatto che si impara dopo le elementari, con
+   una risposta di quattro cifre — così si riusa il tastierino che c'è
+   già, sbagliare costa la stessa attesa di un codice sbagliato, e non
+   c'è niente di nuovo da imparare per nessuno.
+
+   NON È SICUREZZA, e non prova a esserlo: la risposta sta su internet, e
+   un bambino che ci arriva la trova. È una scelta — meglio un genitore
+   autonomo che una porta blindata su una stanza dove, da quando c'è
+   `store/cestino.js`, non si perde più niente per sempre. Se un bambino
+   ci entra, lo scopre il grande dalla posta di `guide/novita.js` e se la
+   vede in famiglia.
+   ═══════════════════════════════════════════════════════════════════ */
+export const DOMANDA = {
+  testo: 'In che anno è nata l\'Italia unita?',
+  risposta: '1861'
+}
+
+export const rispostaGiusta = r => String(r ?? '') === DOMANDA.risposta
+
+/* Rimette il codice di partenza. Non entra da sé: chi la chiama è la
+   schermata, che subito dopo chiede di sceglierne uno nuovo — lasciare
+   una casa con `0000` è come non averlo mai avuto. */
+export async function azzeraPin() {
+  return scriviPin(PIN_INIZIALE)
+}
+
 export async function scriviPin(nuovo) {
   if (!pinValido(nuovo)) throw new Error('Il codice sono quattro cifre.')
   save(CHIAVE, String(nuovo))
