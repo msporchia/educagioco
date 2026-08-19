@@ -27,10 +27,9 @@
    — peggio che non averlo.
 
    DUE LIVELLI. Un gruppo è grosso — «accenti e apostrofi» — e le
-   tipologie che ci stanno dentro sono quattro: l'accento, l'apostrofo,
-   la lettera h, l'accento tonico. Il genitore che
-   spegne il gruppo le toglie tutte; quello che apre il dettaglio ne
-   toglie una sola. Le sottovoci NON stanno in questo file — sono le
+   tipologie che ci stanno dentro sono tre: l'accento, l'apostrofo, la
+   lettera h. Il genitore che spegne il gruppo le toglie tutte; quello
+   che apre il dettaglio ne toglie una sola. Le sottovoci NON stanno in questo file — sono le
    `tipi` dei moduli, e chi le raccoglie per la schermata dei genitori è
    `src/quiz/saperi.js`. Il motivo è sempre quello: chi fa la domanda
    dichiara, il catalogo dà solo i nomi grossi. Se le sottovoci stessero
@@ -218,7 +217,7 @@ export const SAPERI = [
     chiave: 'sillabe', nome: 'Sillabe e rime', ico: '🎵', materia: 'italiano',
     che: 'spezzare una parola nei pezzi che si dicono in un colpo, e sentire quando due parole finiscono uguale',
     esempio: '«quante sillabe ha "farfalla"?»',
-    spegne: 'le domande su sillabe e rime; resta l\'accento tonico, che è un altro gruppo',
+    spegne: 'le domande su sillabe e rime',
   },
   {
     chiave: 'lessico', nome: 'Il significato delle parole', ico: '💭', materia: 'italiano',
@@ -287,9 +286,9 @@ export const SAPERI = [
   },
   {
     chiave: 'accenti', nome: 'Accenti e apostrofi', ico: '´', materia: 'italiano',
-    che: 'quando ci vuole l\'accento o l\'apostrofo, e dove batte la voce in una parola',
+    che: 'quando ci vuole l\'accento o l\'apostrofo, e quando la parola cambia senso',
     esempio: '«"papa" o "papà"?»',
-    spegne: 'le domande su accenti, apostrofi, la lettera h e l\'accento tonico',
+    spegne: 'le domande su accenti, apostrofi e la lettera h',
   },
 
   /* ── ragionamento ──

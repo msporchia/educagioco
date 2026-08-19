@@ -45,8 +45,8 @@ Ogni voce dice tre cose: **cosa vuol dire saperlo**, **un esempio di domanda
 vera che sparisce**, e **cosa cambia nel gioco**. Serve a poter prevedere
 l'effetto prima di toccare l'interruttore.
 
-**I gruppi si aprono in dettaglio.** «Accenti e apostrofi» sono cinque
-tipologie diverse: si può spegnere tutto il gruppo, o solo l'accento tonico
+**I gruppi si aprono in dettaglio.** «Accenti e apostrofi» sono quattro
+tipologie diverse: si può spegnere tutto il gruppo, o solo la lettera h
 lasciando l'apostrofo. Il dettaglio sta chiuso finché non lo si chiede, e
 ogni voce dice da quale modulo arriva, a che grado esce e **quanto è
 difficile** — 0 la prima cosa che si impara, 100 l'ultima.

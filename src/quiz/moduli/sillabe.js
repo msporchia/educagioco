@@ -11,24 +11,24 @@
    per cui «pal-la» letta come «pa-lla» o «montagna» letta come
    «mon-tag-na» sono errori veri, non lettere a caso.
 
-   CINQUE GRADI, dal contare al sentire dove batte la voce:
+   QUATTRO GRADI, tutti d'orecchio:
      1. quante sillabe ha la parola (facile, con l'emoji sotto gli occhi)
      2. come si divide (la doppia spezzata in mezzo, il digramma unito)
      3. le rime (e il suo rovescio: chi non fa rima)
      4. la sillaba che manca in un buco
-     5. l'accento tonico: la stessa parola con l'accento disegnato in tre
-        punti diversi, si sceglie quello vero. Non è scrittura reale (di
-        solito quell'accento non si segna): è solo il modo di farlo
-        *sentire*.
 
-   I NOMI NON SI CHIEDONO. «Tronca, piana, sdrucciola» è nomenclatura:
-   la parola giusta non si ricava da niente, si ricorda — e chiederla
-   sulle parole con l'accento già scritto era anche peggio, perché la
-   risposta era sempre «tronca» e bastava impararsi quella. Qui si
-   chiede solo la cosa che c'è sotto, e quella si sente: dove batte la
-   voce. Per lo stesso motivo le parole con l'accento scritto (città,
-   perché, lunedì) non stanno in questo file: lì il segno risponde da
-   sé, e sono materia di `ortografia`.
+   CE N'ERA UN QUINTO, l'accento tonico: la stessa parola con l'accento
+   disegnato in tre punti diversi, e si sceglieva quello vero. È stato
+   tolto, e il motivo vale la pena scriverlo perché non è di taratura:
+   a quella domanda si risponde **dicendo la parola a voce alta**, e un
+   bambino che gioca in silenzio — cioè quasi sempre — non ha modo di
+   ragionarci e tira a indovinare. Le domande di nomenclatura sopra
+   («tronca, piana, sdrucciola») erano già state tolte per una ragione
+   parente: la risposta non si ricava, si ricorda.
+
+   Le parole con l'accento scritto (città, perché, lunedì) non stanno in
+   questo file: lì il segno risponde da sé, e sono materia di
+   `ortografia`.
    ═══════════════════════════════════════════════════════════════════ */
 
 import { Modulo } from '../nucleo/modulo.js'
@@ -137,41 +137,10 @@ const RIME = [
   ] },
 ]
 
-/* ── l'accento tonico: parola, sillabe, indice della sillaba forte ──
-   Solo parole SENZA accento scritto. Su «città» o «lunedì» la domanda
-   si risolverebbe guardando il segno invece di ascoltare la parola, e
-   non insegnerebbe niente. */
-const ACCENTO = [
-  ['cane', ['ca', 'ne'], 0], ['pane', ['pa', 'ne'], 0],
-  ['gatto', ['gat', 'to'], 0], ['cavallo', ['ca', 'val', 'lo'], 1],
-  ['bambino', ['bam', 'bi', 'no'], 1], ['sorella', ['so', 'rel', 'la'], 1],
-  ['ombrello', ['om', 'brel', 'lo'], 1], ['farfalla', ['far', 'fal', 'la'], 1],
-  ['formica', ['for', 'mi', 'ca'], 1], ['gelato', ['ge', 'la', 'to'], 1],
-  ['pomodoro', ['po', 'mo', 'do', 'ro'], 2], ['giardino', ['giar', 'di', 'no'], 1],
-  ['coniglio', ['co', 'ni', 'glio'], 1], ['elefante', ['e', 'le', 'fan', 'te'], 2],
-
-  ['tavolo', ['ta', 'vo', 'lo'], 0], ['musica', ['mu', 'si', 'ca'], 0],
-  ['pettine', ['pet', 'ti', 'ne'], 0], ['macchina', ['mac', 'chi', 'na'], 0],
-  ['medico', ['me', 'di', 'co'], 0], ['sabato', ['sa', 'ba', 'to'], 0],
-  ['domenica', ['do', 'me', 'ni', 'ca'], 1], ['ultimo', ['ul', 'ti', 'mo'], 0],
-  ['numero', ['nu', 'me', 'ro'], 0], ['angolo', ['an', 'go', 'lo'], 0],
-  ['ottimo', ['ot', 'ti', 'mo'], 0], ['semplice', ['sem', 'pli', 'ce'], 0],
-  ['pratico', ['pra', 'ti', 'co'], 0], ['rapido', ['ra', 'pi', 'do'], 0],
-  ['simpatico', ['sim', 'pa', 'ti', 'co'], 1],
-]
-
-/* l'aiuto si dice contando le sillabe dalla fine, non col nome che ha
-   quella famiglia di parole: «penultima» è una cosa che si può andare
-   a guardare, «piana» è una parola da ricordare e basta */
-const aiutoAccento = (sill, idx) => sill.length - 1 - idx === 1
-  ? 'quasi sempre la voce batte sulla penultima sillaba: prova a dirla forte'
-  : 'qui la voce batte più indietro del solito: sulla terzultima sillaba'
-
 /* ── le frasi, per non chiedere sempre con le stesse parole ── */
 const FRASI_QUANTE = ['Quante sillabe ha questa parola?', 'In quante sillabe si divide?', 'Conta le sillabe: quante sono?']
 const FRASI_DIVIDI = ['Come si divide in sillabe', 'Qual è la sillabazione giusta di', 'Qual è la divisione giusta di']
 const FRASI_MANCA = ['Che sillaba manca?', 'Qual è la sillaba che manca?', 'Con che cosa si completa?']
-const FRASI_ACCENTO = ['Dove cade l\'accento?', 'Dove batte la voce?', 'Su quale sillaba batte l\'accento?']
 const FRASI_RIMA = ['Quale parola fa rima con', 'Che cosa fa rima con', 'Trova la parola che fa rima con']
 const FRASI_INTRUSO = ['Quale di queste NON fa rima con', 'Chi non fa rima con', 'Qual è l\'intruso: chi non fa rima con']
 
@@ -219,29 +188,21 @@ function sillabeSbagliate(sillabeGiuste, sorte, quante) {
   return [...trovati].slice(0, quante)
 }
 
-/* la parola con l'accento disegnato su una sua sillaba */
-function accentua(sillabe, idx) {
-  return sillabe.map((s, i) => (i === idx ? conAccento(s) : s)).join('-')
-}
-function conAccento(s) {
-  const forte = { a: 'à', e: 'è', i: 'ì', o: 'ò', u: 'ù' }
-  for (let i = s.length - 1; i >= 0; i--) {
-    if (forte[s[i]]) return s.slice(0, i) + forte[s[i]] + s.slice(i + 1)
-  }
-  return s
-}
+/* Le tipologie: contare le sillabe e sentire le rime, che è orecchio
+   puro e sta tutto nel suo gruppo.
 
-/* Le tipologie. Contare le sillabe e sentire le rime è orecchio puro e
-   sta nel suo gruppo; l'accento tonico invece è la stessa lezione degli
-   accenti scritti — dove batte la voce — e sta con quelli, così chi
-   spegne «accenti e apostrofi» non si ritrova a dover spegnere anche le
-   rime per far sparire l'accento. */
+   Ce n'era una sesta, **l'accento tonico** — «dove batte la voce», la
+   stessa parola con l'accento disegnato in tre punti — e stava col
+   gruppo degli accenti scritti invece che con le sillabe, perché è la
+   stessa lezione. È stata tolta: la domanda si può rispondere solo
+   dicendo la parola a voce alta, e un bambino che gioca in silenzio la
+   tira a indovinare. Non è una lacuna di taratura, è una domanda che
+   sullo schermo non funziona. */
 const TIPI = [
   { chiave: 'sil:quante', nome: 'Quante sillabe ha la parola', sa: 'sillabe', gradi: { 1: 1 } },
   { chiave: 'sil:dividi', nome: 'Dividere in sillabe', sa: 'sillabe', gradi: { 2: 1 } },
   { chiave: 'sil:rima', nome: 'Le rime', sa: 'sillabe', gradi: { 3: 1 } },
   { chiave: 'sil:manca', nome: 'La sillaba che manca', sa: 'sillabe', gradi: { 4: 1 } },
-  { chiave: 'sil:accento-tonico', nome: 'Dove batte la voce', sa: 'accenti', gradi: { 5: 1 } },
 ]
 
 class Sillabe extends Modulo {
@@ -257,7 +218,6 @@ class Sillabe extends Modulo {
         'come si divide in sillabe',
         'le rime',
         'la sillaba che manca',
-        'l\'accento tonico: dove batte la voce',
       ],
       /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
          sola per tutte le materie, e serve a confrontare questa riga
@@ -265,9 +225,7 @@ class Sillabe extends Modulo {
          di materna, cento la fine della primaria: dodici punti e mezzo
          per anno di scuola. Non dice a chi arriva — quello lo decide
          la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 38, 44, 50, 75],
-      /* contare le sillabe e sentire le rime si fa a orecchio; l'accento
-         tonico sta con gli accenti scritti, perché è la stessa lezione */
+      livelli: [25, 38, 44, 50],
       tipi: TIPI,
     })
   }
@@ -277,7 +235,6 @@ class Sillabe extends Modulo {
       case 'sil:dividi': return this.dividi(sorte)
       case 'sil:rima': return this.rima(sorte)
       case 'sil:manca': return this.manca(sorte)
-      case 'sil:accento-tonico': return this.doveBatte(sorte)
       default: return this.quante(sorte)
     }
   }
@@ -364,23 +321,6 @@ class Sillabe extends Modulo {
     })
   }
 
-  /* grado 5: l'accento tonico. La parola non porta nessun segno, e le
-     tre risposte sono la stessa parola con l'accento disegnato in tre
-     punti: l'unico modo di sceglierla è dirla. */
-  doveBatte(sorte) {
-    const [parola, sill, idx] = sorte.uno(ACCENTO)
-    const altre = sill.map((_, i) => i).filter(i => i !== idx)
-    const scelte = sorte.alcuni(altre, Math.min(2, altre.length))
-    return domanda({
-      testo: sorte.uno(FRASI_ACCENTO),
-      soggetto: testo(parola),
-      buona: testo(accentua(sill, idx)),
-      falsi: scelte.map(i => testo(accentua(sill, i), 'l\'accento non cade lì')),
-      chiave: 'sil:accento-tonico',
-      aiuto: aiutoAccento(sill, idx),
-      sorte,
-    })
-  }
 }
 
 export default new Sillabe()

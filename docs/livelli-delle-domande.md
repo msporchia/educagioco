@@ -17,7 +17,6 @@ diverso da quello del suo grado.
 
 - 🔢 **Senso del numero** g1 — Chi è di più, chi è di meno
 - 🔢 **Senso del numero** g1 — Il colpo d'occhio: quanti sono
-- ➡️ **Sequenze** g1 — Il ritmo che si ripete
 
 ## 12  ·  circa 5 anni
 
@@ -26,12 +25,13 @@ diverso da quello del suo grado.
 - 🅰️ **Le prime lettere** g1 — Con che lettera comincia
 - 🔢 **Senso del numero** g2 — Leggere la linea dei numeri
 - 🔢 **Senso del numero** g2 — Mettere un numero al suo posto
-- ➡️ **Sequenze** g2 — Chi non c'entra
+- ➡️ **Sequenze** g1 — Il ritmo che si ripete
 
 ## 20  ·  circa 5.6 anni
 
 - 📅 **Calendario** g1 — I giorni della settimana
 - 📐 **Geometria** g1 — Le figure e i loro nomi
+- ➡️ **Sequenze** g2 — Chi non c'entra
 
 ## 25  ·  circa 6 anni
 
@@ -50,7 +50,6 @@ diverso da quello del suo grado.
 - 🧩 **Logica** g1 — La regola applicata dritta
 - 🕰️ **Orologio** g1 — Le ore intere
 - 🔢 **Senso del numero** g3 — Prima, dopo, in mezzo e in ordine
-- ➡️ **Sequenze** g3 — Il ritmo che si ripete
 - ✂️ **Sillabe** g1 — Quante sillabe ha la parola
 
 ## 29  ·  circa 6.3 anni
@@ -66,6 +65,7 @@ diverso da quello del suo grado.
 - 🅰️ **Le prime lettere** g3 — Leggere la parola, non solo la prima lettera
 - 📖 **Lessico** g2 — L'intruso
 - 🧩 **Logica** g2 — Chi è più alto di chi
+- ➡️ **Sequenze** g3 — Il ritmo che si ripete
 
 ## 33  ·  circa 6.6 anni
 
@@ -95,8 +95,11 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g4 — Il numero più vicino
 - 🔢 **Senso del numero** g4 — Leggere la linea dei numeri
 - 🔢 **Senso del numero** g4 — Mettere un numero al suo posto
-- ➡️ **Sequenze** g4 — Chi non c'entra
 - ✂️ **Sillabe** g2 — Dividere in sillabe
+
+## 42  ·  circa 7.4 anni
+
+- ➡️ **Sequenze** g4 — Chi non c'entra
 
 ## 44  ·  circa 7.5 anni
 
@@ -206,7 +209,6 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g6 — Arrotondare
 - 🔢 **Senso del numero** g6 — Circa quanto fa
 - 🔢 **Senso del numero** g6 — L'ordine di grandezza, e cosa è impossibile
-- ✂️ **Sillabe** g5 — Dove batte la voce
 
 ## 81  ·  circa 10.5 anni
 
@@ -230,4 +232,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 170 classi su 18 moduli.
+Totale: 169 classi su 18 moduli.

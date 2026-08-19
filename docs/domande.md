@@ -80,7 +80,7 @@ grado più facile invece di sparire**: nessuna partita si blocca, nessuna
 tappa diventa impossibile.
 
 Si può spegnere un gruppo intero («accenti e apostrofi») o una sola tipologia
-dentro il gruppo (solo l'accento tonico, lasciando l'apostrofo).
+dentro il gruppo (solo la lettera h, lasciando l'apostrofo).
 
 ## Il modo più veloce: provarle
 
