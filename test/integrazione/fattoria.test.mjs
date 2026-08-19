@@ -511,13 +511,40 @@ await chiudi()
 {
   const casetta = { x: mezzo.x, y: mezzo.y + 60 }      // posata al punto 7
 
+  /* ── E IL CANE CHE PASSA DI LÌ ──
+     Al punto 8 si è comprato un beagle, e un beagle non sta fermo: gira
+     per il prato anche fra una prova e l'altra, e prima o poi passa
+     sopra la casetta. Quando capita il tocco prende **lui** — il
+     bersaglio si decide quando il dito si appoggia, e sotto il dito
+     c'era il cane — e si apre la sua scheda, che col suo velo si mangia
+     anche i tocchi della prova dopo. Da fuori si vedeva un
+     trascinamento rotto una volta su tre, e non era rotto niente: era
+     un cane che passava.
+
+     Non è una prova sulle bestie: qui si guarda il confine fra il tocco
+     e il trascinamento su una **cosa posata**, quindi una prova che
+     inciampa nel cane non è fallita, è da rifare. Si ritenta con lo
+     stesso giro del punto 8 — si chiude quello che si è aperto, gli si
+     dà il tempo di allontanarsi, si riprova — e solo dopo sei tentativi
+     si dichiara il guasto. */
+  const senzaIlCane = async prova => {
+    for (let i = 0; i < 6; i++) {
+      if (await prova()) return true
+      await chiudi()
+      await attendi(page, 900)
+    }
+    return false
+  }
+
   /* fermo: un tocco lungo quanto si vuole resta un tocco */
   const primaDiTenerePremuto = await page.evaluate(
     () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
-  await dito(casetta.x, casetta.y, 0, 900)
-  await attendi(page, 250)
   controlla('tenendo premuto fermo su una cosa compaiono i suoi attrezzi',
-            await page.locator('.fa-attrezzi').count() > 0)
+            await senzaIlCane(async () => {
+              await dito(casetta.x, casetta.y, 0, 900)
+              await attendi(page, 250)
+              return await page.locator('.fa-attrezzi').count() > 0
+            }))
   uguale('e non è costato niente, perché non si è spostato niente',
          await page.evaluate(
            () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])),
@@ -561,10 +588,13 @@ await chiudi()
      cioè la spostava di una cella e si prendeva la monetina, senza che
      nessuno avesse chiesto niente. Fermo vuol dire fermo: la cosa resta
      dov'è e si aprono le sue opzioni. */
-  await dito(casetta.x + 32, casetta.y, 0, 900)       // una cella a destra, alla scala di partenza
-  await attendi(page, 250)
   controlla('tenendo premuto sull\'altra cella della stessa cosa, gli attrezzi lo stesso',
-            await page.locator('.fa-attrezzi').count() > 0)
+            await senzaIlCane(async () => {
+              // una cella a destra, alla scala di partenza
+              await dito(casetta.x + 32, casetta.y, 0, 900)
+              await attendi(page, 250)
+              return await page.locator('.fa-attrezzi').count() > 0
+            }))
   uguale('e nemmeno lì si è spostato niente, né si è pagato niente',
          await page.evaluate(
            () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])),
@@ -575,13 +605,22 @@ await chiudi()
      è trascinato davvero. */
   const primaDiSpostare = await page.evaluate(
     () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
-  await giu(casetta.x, casetta.y)
-  await attendi(page, 700)                            // l'attesa: adesso è agganciata
-  for (let i = 1; i <= 4; i++) await trascina(casetta.x + i * 14, casetta.y - i * 6)
-  await su()
-  await attendi(page, 500)
-  const dopoAverSpostato = await page.evaluate(
-    () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+  let dopoAverSpostato = primaDiSpostare
+  /* Anche qui il cane: se è lui quello sotto il dito si trascina lui, e
+     spostare una bestia è gratis — la monetina non si spende e la prova
+     direbbe «non l'ha spostata» di una casetta che nessuno ha toccato.
+     Un tentativo andato a vuoto per giunta il cane lo porta via, quindi
+     il giro dopo la strada è più libera di prima. */
+  await senzaIlCane(async () => {
+    await giu(casetta.x, casetta.y)
+    await attendi(page, 700)                          // l'attesa: adesso è agganciata
+    for (let i = 1; i <= 4; i++) await trascina(casetta.x + i * 14, casetta.y - i * 6)
+    await su()
+    await attendi(page, 500)
+    dopoAverSpostato = await page.evaluate(
+      () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+    return dopoAverSpostato < primaDiSpostare
+  })
   controlla('la stessa pressione, ma col dito che parte, la sposta',
             dopoAverSpostato < primaDiSpostare, `${primaDiSpostare} → ${dopoAverSpostato}`)
 

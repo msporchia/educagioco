@@ -189,11 +189,16 @@ uguale('senza rispondere per sbaglio', await risposto(), 0)
    misurerebbe la fortuna, e infatti la prima stesura di questo test era
    ballerina.
 
-   Il seme è fissato (`#seme=49`): con quello il primo goblin sta otto
-   celle a est della stanza di partenza, in linea quasi retta, e ci si
-   arriva camminando sempre nella stessa direzione. Il seme si legge
-   quando parte la discesa, quindi si scrive nell'indirizzo un attimo
-   prima di toccare la tappa. */
+   Il seme è fissato (`#seme=96`): con quello il primo goblin sta sette
+   celle a est della stanza di partenza, in linea retta, e fra i due non
+   c'è nessuna porta né niente da raccogliere. Conta perché da
+   aa2f628 «Si chiude la stanza, non il battente» una porta non si
+   aggira più camminando intorno — tutti i varchi di una stanza sono
+   chiusi e portano allo stesso gruppo, quindi o la si apre rispondendo
+   alla sua domanda, o di là non si passa. Un seme che mettesse una
+   porta sulla strada del test la lascerebbe chiusa per sempre, perché
+   qui si cammina e basta. Il seme si legge quando parte la discesa,
+   quindi si scrive nell'indirizzo un attimo prima di toccare la tappa. */
 await page.click('.prova-x')                    // si chiude il banco di prova
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 await page.click('button[aria-label="indietro"]')
@@ -211,7 +216,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
 await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 5000 })
 await page.click('.sot-eroe[data-eroe="cavaliere"]')
 await page.waitForSelector('.sot-velo', { state: 'hidden', timeout: 5000 })
-await page.evaluate(() => { location.hash = 'seme=49' })
+await page.evaluate(() => { location.hash = 'seme=96' })
 await page.click('.sot-tappa[data-tappa="0"]')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
@@ -223,9 +228,14 @@ const versoEst = async () => {
   await attendi(page, 45)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
-/* Lungo la strada c'è una porta chiusa, che apre il suo foglio e ferma
-   la camminata: col foglio aperto il campo non risponde più ai tocchi,
-   quindi va chiuso o non si arriva da nessuna parte. */
+/* Col seme scelto la strada fino al goblin è vuota — nessuna porta,
+   niente da raccogliere — quindi il foglio non dovrebbe mai comparire.
+   Il ramo che lo chiude resta come rete di sicurezza: se cambiasse la
+   generazione della stanza (o un domani si cambiasse seme) e spuntasse
+   comunque un foglio, meglio chiuderlo e proseguire che restare fermi a
+   toccare un campo che, foglio aperto, non risponde più ai tocchi — col
+   rischio, questo sì noto da aa2f628, che sia proprio una porta e quindi
+   non si riesca comunque ad aggirarla. */
 let inBattaglia = false
 for (let i = 0; i < 24 && !inBattaglia; i++) {
   await versoEst()

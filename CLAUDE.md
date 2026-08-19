@@ -385,7 +385,9 @@ committate: non è ricostruibile da git.
   `watch` sulla prop che rimette tutto a zero), non in un `:key` a carico
   di chi lo monta: la key va ricordata ogni volta, e infatti se l'erano
   ricordata in uno su cinque. Test: `integrazione/domanda`, che incatena
-  due domande vere nel Dungeon.
+  due domande vere **nel sotterraneo** — dove la catena non dipende
+  dall'azzeccare: si risponda bene o male, lo scontro va avanti e la
+  domanda dopo arriva nella stessa istanza.
 - **Una schermata appena comparsa non si lascia toccare subito**, e
   **l'attesa si vede.** Le due metà del contorno dello stesso guasto: dopo
   uno sbaglio si resta fermi un paio di secondi per leggere il perché, e
