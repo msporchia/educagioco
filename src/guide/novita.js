@@ -42,7 +42,18 @@
                «tuo figlio» invece di «gli utenti»: se non riguarda
                nessuno, il pallino non si accende affatto.
    ═══════════════════════════════════════════════════════════════════ */
-export const NOTE = [
+/* ── L'ELENCO È VUOTO, ED È LO STATO NORMALE ──
+   Fra una notizia e l'altra qui non c'è niente da dire, e va bene così:
+   ne escono tre o quattro l'anno. Con l'elenco vuoto il pallino non si
+   accende, il nastro in home non compare e la posta resta zitta — il
+   meccanismo è tutto in piedi (`store/posta.js`, `guide/Nastri.vue`,
+   la scheda dei grandi) e aspetta la prossima.
+
+   Le due note qui sotto sono state scritte per provare il giro e sono
+   arrivate a destinazione: restano commentate perché **gli id non si
+   riusano mai**, nemmeno ritirando una nota. La prossima è la 3, se no
+   chi le ha già lette se le ritrova davanti.
+
   {
     id: 1,
     quando: '2026-08-19',
@@ -62,9 +73,16 @@ export const NOTE = [
          + 'rimetterla. Ne tiene le ultime tre. Resta comunque una buona idea salvare '
          + 'su file ogni tanto: le copie stanno sullo stesso telefono.'
   }
+*/
+export const NOTE = [
 ]
 
-/* L'ultimo id esistente: chi installa il gioco oggi parte da qui e non
-   dalla prima nota — nessuno deve ricevere in faccia la storia del
-   progetto al primo avvio. */
-export const ULTIMA = NOTE.reduce((m, n) => Math.max(m, n.id), 0)
+/* L'ultimo id **bruciato**: chi installa il gioco oggi parte da qui e
+   non dalla prima nota — nessuno deve ricevere in faccia la storia del
+   progetto al primo avvio.
+
+   Il conto parte da 2 e non da zero perché due note sono state scritte
+   e ritirate: si contano lo stesso, se no la prossima riprenderebbe un
+   id già letto e chi l'ha letto se la ritroverebbe davanti. */
+const RITIRATE = 2
+export const ULTIMA = NOTE.reduce((m, n) => Math.max(m, n.id), RITIRATE)

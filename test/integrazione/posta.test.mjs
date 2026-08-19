@@ -49,20 +49,40 @@ await dimenticaLaPosta()
 
 const digita = async cifre => { for (const c of cifre) await page.click(`.tasto >> text="${c}"`) }
 
+/* ── QUANDO NON C'È NIENTE DA DIRE ──
+   L'elenco delle note è vuoto per la maggior parte dell'anno (`guide/
+   novita.js`: ne escono tre o quattro), e senza note il nastro in home
+   non compare — giustamente, perché il richiamo nasce da loro. Il resto
+   del filo si prova lo stesso: l'altro modo di accendere la posta è un
+   **avviso**, e l'avviso lo genera proprio il codice rimesso a 0000, che
+   è il pezzo di mezzo di questo test. Si entra dal tasto dei grandi
+   invece che dal nastro, e le due righe che parlano di una nota si
+   tacciono da sé quando la nota non c'è. */
+const CON_NOTE = NOTE.length > 0
+if (!CON_NOTE) nota('nessuna nota in `guide/novita.js`: il nastro non ha di che accendersi, '
+                    + 'si prova il resto passando dall\'avviso')
+
 /* ── 1. il richiamo, in home ──
    Fuori dal codice non si può distinguere un grande da un bambino,
    quindi qui fuori c'è solo il segnale: un nastro che chiede di
    chiamare un grande e un pallino sul tasto delle impostazioni. */
-controlla('in home c\'è il nastro per un grande', await page.isVisible('[data-nastro="posta"]'))
-controlla('e il tasto delle impostazioni ha il pallino',
-          await page.isVisible('[data-posta-pallino]'))
-controlla('il nastro non si può chiudere: nessuna ✕ addosso',
-  await page.evaluate(() =>
-    !document.querySelector('[data-nastro="posta"]').querySelector('.chiudi')))
+if (CON_NOTE) {
+  controlla('in home c\'è il nastro per un grande', await page.isVisible('[data-nastro="posta"]'))
+  controlla('e il tasto delle impostazioni ha il pallino',
+            await page.isVisible('[data-posta-pallino]'))
+  controlla('il nastro non si può chiudere: nessuna ✕ addosso',
+    await page.evaluate(() =>
+      !document.querySelector('[data-nastro="posta"]').querySelector('.chiudi')))
+} else {
+  controlla('senza note in home non c\'è nessun nastro',
+            !(await page.isVisible('[data-nastro="posta"]')))
+  controlla('e nessun pallino sul tasto dei grandi',
+            !(await page.isVisible('[data-posta-pallino]')))
+}
 await scatto(page, 'posta-home')
 
 /* ── 2. il bambino chiama un grande ── */
-await page.click('[data-nastro="posta"]')
+await page.click(CON_NOTE ? '[data-nastro="posta"]' : '[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 controlla('il nastro porta al codice, non al contenuto',
   !(await page.isVisible('[data-posta]')))
@@ -104,8 +124,9 @@ await digita('2468')
 await page.waitForSelector('[data-posta]', { timeout: 5000 })
 
 /* ── 4. la posta ── */
-controlla('dentro c\'è quello che c\'era da dire',
-  await page.evaluate(t => document.body.innerText.includes(t), NOTE[0].titolo))
+if (CON_NOTE)
+  controlla('dentro c\'è quello che c\'era da dire',
+    await page.evaluate(t => document.body.innerText.includes(t), NOTE[0].titolo))
 controlla('e l\'avviso che il codice è stato rimesso',
   await page.evaluate(() => document.body.innerText.includes('era stato dimenticato')))
 await scatto(page, 'posta-dentro')
