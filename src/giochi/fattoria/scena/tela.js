@@ -78,9 +78,24 @@ import {
   T, CELLE, LIMITI_NUOVI, celleDi, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, caso,
 } from '../dati/mondo.js'
 import { ATLANTE, PEZZI, pezzoAttore } from '../dati/atlante.js'
-import { PER_ID, piedeDi, pezzoDi } from '../dati/catalogo.js'
+import { PER_ID, assettoDi } from '../dati/catalogo.js'
 import { OSTACOLI } from '../dati/ostacoli.js'
 import { tesseraDi } from './bordi.js'
+
+/* Un rettangolo con gli angoli tondi, in `arcTo` e non in `roundRect`:
+   la seconda è recente, e su un telefono che non ce l'ha un `beginPath`
+   senza tracciato disegna **niente**, in silenzio — che è il modo in cui
+   in questa cartella spariscono le cose. */
+function tondo(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2)
+  c.beginPath()
+  c.moveTo(x + r, y)
+  c.arcTo(x + w, y, x + w, y + h, r)
+  c.arcTo(x + w, y + h, x, y + h, r)
+  c.arcTo(x, y + h, x, y, r)
+  c.arcTo(x, y, x + w, y, r)
+  c.closePath()
+}
 
 /* Il prato è quasi tutto una tessera piatta: le varianti spuntano di
    rado, se no da lontano si vede il motivo che si ripete e sembra un
@@ -325,6 +340,19 @@ export class Tela {
     }
   }
 
+  /* La strada opposta: il centro di una cella, in pixel di schermo.
+     Serve a chi una cella la sa già — il baule aperto tenendo premuto
+     si ricorda **dove** — e deve rimettere in mano qualcosa lì sopra
+     senza rifare al contrario il conto della telecamera. Torna il
+     centro e non l'angolo, perché chi lo riceve ci cerca dentro una
+     cella e sul bordo il pixel di confine cade in quella accanto. */
+  puntoDellaCella(cx, cy) {
+    return {
+      x: (cx + .5) * this.cellaPx - this.vista.x,
+      y: (cy + .5) * this.cellaPx - this.vista.y,
+    }
+  }
+
   /* ── il giro ──
      `mostra()` deposita l'ultimo quadro; `avvia()` fa ripartire un
      giro a `requestAnimationFrame` che ridipinge quel quadro a ogni
@@ -384,8 +412,15 @@ export class Tela {
     for (const c of fattoria.cose) {
       if (quadro.preso && quadro.preso.da === c) continue   // è in mano, non per terra
       const v = PER_ID[c.id]; if (!v) continue
-      let nome = pezzoDi(c, v)
-      const piede = piedeDi(c, v)
+      /* Come è messa questa cosa — che pezzo, quanta terra da girata,
+         quanti quarti di giro, se rovesciata — si chiede una volta sola
+         a `assettoDi()`. Il verso viaggia poi accanto al nome fino al
+         `drawImage`: il pezzo che si disegna può cambiare per strada
+         (un fotogramma dell'animazione, la faccia di un recinto che ha
+         fame) ma il verso in cui sta la cosa non cambia con lui. */
+      const verso = assettoDi(c, v)
+      let nome = verso.pezzo
+      const piede = verso.piede
       if (v.anima) nome = v.anima[((quadro.orologio * 4) | 0) % v.anima.length]
       /* Cosa c'è sopra questa cosa adesso — un germoglio, un mucchio di
          grano pronto — lo dice il mondo, non questa classe: qui si
@@ -398,7 +433,7 @@ export class Tela {
          è una cosa che sa il mondo e non questa classe — qui si legge il
          nome che arriva, come per tutto il resto. */
       if (a && a.invece) nome = a.invece
-      scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, sopra: a,
+      scena.push({ nome, x: c.x, y: c.y, piede, cosa: c, sopra: a, verso,
                    fondo: v.sotto ? -1 : c.y + piede[1] })
       /* Una coltura alta non è terreno. L'aiuola sotto sì — ci si
          cammina sopra, e sta a `fondo: -1` col resto del terreno — ma il
@@ -408,8 +443,19 @@ export class Tela {
          un oggetto: chi passa davanti al campo copre il grano, chi passa
          dietro ci sparisce dentro. */
       if (a && a.sopra && a.alto)
-        scena.push({ nome: a.sopra, x: c.x, y: c.y, piede, fondo: c.y + piede[1] })
+        scena.push({ nome: a.sopra, x: c.x, y: c.y, piede, verso, fondo: c.y + piede[1] })
       if (a && a.fumetto) fumetti.push({ x: c.x, y: c.y, piede, testo: a.fumetto })
+      /* «ho fame, e voglio *questo*»: un fumetto con dentro una faccia
+         già decisa dal mondo (`{ pezzo, testo }`). Sta nella stessa
+         fila degli altri fumetti perché va disegnato insieme a loro,
+         sopra tutto il resto: uno che finisse dentro l'ordinamento per
+         profondità sparirebbe dietro l'albero della cella dopo. */
+      if (a && a.vuole) fumetti.push({ x: c.x, y: c.y, piede, vuole: a.vuole })
+      /* «sto facendo questo»: stesso fumetto, con la clessidra
+         nell'angolo. La clessidra da sola era tutto quello che una
+         macchina al lavoro sapeva dire, e con quattro ricette non
+         basta più. */
+      if (a && a.fa) fumetti.push({ x: c.x, y: c.y, piede, vuole: a.fa, attesa: true })
     }
     for (const a of quadro.attori || []) scena.push({ attore: a, fondo: a.corpo.y + 1 })
     scena.sort((a, b) => a.fondo - b.fondo)
@@ -420,20 +466,22 @@ export class Tela {
           e.attore === quadro.scelto)
         continue
       }
-      this.posa(e.nome, e.x, e.y, e.piede)
+      this.posa(e.nome, e.x, e.y, e.piede, null, e.verso)
       /* quello che cresce si disegna qui solo se è basso: se è alto ha
          una riga sua in scena, ed è già passato o deve ancora passare */
       if (e.sopra && e.sopra.sopra && !e.sopra.alto)
-        this.posa(e.sopra.sopra, e.x, e.y, e.piede)
+        this.posa(e.sopra.sopra, e.x, e.y, e.piede, null, e.verso)
       if (e.cosa && e.cosa === quadro.scelto)
-        this.schiarisci(e.nome, e.x, e.y, e.piede, quadro.orologio)
+        this.schiarisci(e.nome, e.x, e.y, e.piede, quadro.orologio, e.verso)
     }
 
     this.disegnaAtterraggio(quadro.preso)
     this.disegnaPennello(quadro.pennello)
     this.disegnaNebbia(fattoria)
     this.cartelli(fattoria, quadro.orologio)
-    for (const f of fumetti) this.fumetto(f, quadro.orologio)
+    for (const f of fumetti)
+      if (f.vuole) this.chiede(f, quadro.orologio)
+      else this.fumetto(f, quadro.orologio)
     this.disegnaAnello(quadro.anello)
   }
 
@@ -459,24 +507,170 @@ export class Tela {
     ctx.textAlign = 'left'
   }
 
-  pezzo(nome, sx, sy, alfa) {
+  /* ── COSA VUOLE QUELLA BESTIA ─────────────────────────────────────
+     Un fumetto vero, disegnato qui e non dipinto dentro lo sprite, con
+     dentro la merce che quel recinto sta aspettando.
+
+     *Ribalta la scelta di prima*, che era un disegno per specie col
+     fumetto già dentro. Tre motivi, e il primo li contiene tutti:
+     **un fumetto dipinto non può dire il vero**, perché cosa mangia un
+     recinto sta nelle ricette e le ricette cambiano — mucche e pecore
+     vogliono la stessa cosa e il foglio mostrava due disegni diversi.
+     Poi la misura: dentro un recinto largo settanta pixel il fumetto
+     dipinto ne è dieci, e a dieci pixel una carota e una zucca sono la
+     stessa macchia. Qui invece il fumetto è **in pixel di schermo**,
+     come il 🧺 e come i prezzi dei cartelli: cresce con lo zoom e resta
+     leggibile anche col campo tutto aperto.
+
+     La faccia dentro arriva già scelta (`aspettoDellaCosa`): un pezzo
+     dell'atlante se quella merce un disegno ce l'ha, un'emoji se non
+     ce l'ha ancora. Questa classe non sa cosa sia il foraggio, e non
+     deve saperlo. */
+  chiede(f, orologio) {
+    const ctx = this.ctx
+    const su = Math.sin(orologio * 3 + f.x * .7) * 2
+    const lato = Math.round(16 + this.scala * 9)
+    const cx = (f.x + f.piede[0] / 2) * this.cellaPx - this.vista.x
+    /* la punta sta sopra il bordo alto della cosa, come il 🧺 */
+    const punta = f.y * this.cellaPx - this.vista.y - 2 + su
+    if (cx < -lato * 2 || punta < -lato * 3 ||
+        cx > this.L + lato * 2 || punta > this.A + lato * 2) return
+    const x = Math.round(cx - lato / 2), y = Math.round(punta - lato - lato * .34)
+
+    ctx.save()
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 2
+    ctx.strokeStyle = '#2a1c12'
+    ctx.fillStyle = '#faf6ec'
+    ctx.shadowColor = 'rgba(0,0,0,.4)'
+    ctx.shadowBlur = 5
+    ctx.shadowOffsetY = 2
+    /* la codina prima del corpo: le due bollicine devono restare
+       *sotto* il bordo del fumetto, se no si vede la riga scura del
+       corpo passargli attraverso */
+    const r1 = Math.max(2.5, lato * .1), r2 = Math.max(1.5, lato * .06)
+    for (const [dy, r] of [[lato * .34, r1], [lato * .1, r2]]) {
+      ctx.beginPath()
+      ctx.arc(cx - lato * .18, punta - dy, r, 0, 7)
+      ctx.fill(); ctx.stroke()
+    }
+    tondo(ctx, x, y, lato, lato, Math.round(lato * .3))
+    ctx.fill(); ctx.stroke()
+    ctx.restore()
+
+    /* dentro: il disegno se c'è, se no l'emoji. L'ombra si spegne — un
+       pezzo con l'ombra addosso dentro un fumetto bianco si legge come
+       sporco. */
+    const dentro = Math.round(lato * .78)
+    const p = f.vuole.pezzo && PEZZI[f.vuole.pezzo]
+    ctx.save()
+    if (p) {
+      const z = Math.min(dentro / p[2], dentro / p[3])
+      const w = Math.round(p[2] * z), h = Math.round(p[3] * z)
+      ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3],
+        Math.round(cx - w / 2), Math.round(y + (lato - h) / 2), w, h)
+    } else {
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `${dentro}px system-ui,sans-serif`
+      ctx.fillText(f.vuole.testo, cx, y + lato / 2 + 1)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+    }
+    /* La clessidra nell'angolo distingue «sto facendo questo» da «voglio
+       questo»: è lo stesso fumetto con la stessa faccia dentro, e senza
+       un segno di differenza un mulino che macina si leggerebbe come un
+       mulino che chiede. */
+    if (f.attesa) {
+      ctx.save()
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `${Math.round(lato * .38)}px system-ui,sans-serif`
+      ctx.fillText('⏳', x + lato - lato * .16, y + lato * .16)
+      ctx.restore()
+    }
+    ctx.restore()
+  }
+
+  /* Il disegno crudo, all'angolo in alto a sinistra del riquadro che il
+     pezzo occupa **da girato**. `verso` è l'aspetto che rende
+     `assettoDi()` — `{ giro, specchio }` — e nella stragrande
+     maggioranza delle chiamate non c'è affatto: il prato, i bordi
+     dell'acqua e i cartelli sono migliaia di tessere per fotogramma, e
+     per loro resta la strada corta di prima, un `drawImage` secco senza
+     `save`/`restore`.
+
+     Girare non costa una copia nell'atlante e non vuole nessuna cache:
+     la pixel art regge i novanta gradi esatti senza sfrangiarsi (non
+     regge i quarantacinque), quindi è un `rotate` attorno al centro e
+     via. Otto copie di ogni pezzo sarebbero otto volte il peso di un
+     file che il telefono scarica, per un conto che la scheda video fa
+     gratis.
+
+     **Lo specchio si applica dentro al giro**, cioè nel sistema di
+     riferimento dello sprite. Rovesciare-e-poi-girare e
+     girare-e-poi-rovesciare non danno la stessa cosa, e quella giusta è
+     la prima: è «questa casa qui, con la porta dall'altra parte», che
+     è quello che uno intende premendo ⇄. */
+  pezzo(nome, sx, sy, alfa, verso) {
     const p = PEZZI[nome]; if (!p) return
     const ctx = this.ctx
+    const w = p[2] * this.scala, h = p[3] * this.scala
+    const giro = (verso && verso.giro) || 0
+    const specchio = !!(verso && verso.specchio)
     if (alfa != null) ctx.globalAlpha = alfa
-    ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3],
-      Math.round(sx), Math.round(sy), p[2] * this.scala, p[3] * this.scala)
+    if (!giro && !specchio) {
+      ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3],
+        Math.round(sx), Math.round(sy), w, h)
+    } else {
+      /* il centro del riquadro **girato**: a un quarto e a tre quarti
+         larghezza e altezza si scambiano, e il centro con loro */
+      ctx.save()
+      ctx.translate(Math.round(sx) + (giro % 2 ? h : w) / 2,
+                    Math.round(sy) + (giro % 2 ? w : h) / 2)
+      if (giro) ctx.rotate(giro * Math.PI / 2)
+      if (specchio) ctx.scale(-1, 1)
+      ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3], -w / 2, -h / 2, w, h)
+      ctx.restore()
+    }
     if (alfa != null) ctx.globalAlpha = 1
   }
 
   /* Uno sprite si appoggia col FONDO sul fondo del suo piede: è quello
      che permette a una casa alta cinque tessere di stare su un piede
-     di due, col tetto che sporge sopra invece di schiacciarsi dentro. */
-  posa(nome, cx, cy, piede, alfa) {
-    const p = PEZZI[nome]; if (!p) return
-    const larg = p[2] * this.scala
-    const x = cx * this.cellaPx - this.vista.x + (piede[0] * this.cellaPx - larg) / 2
-    const y = (cy + piede[1]) * this.cellaPx - this.vista.y - p[3] * this.scala
-    this.pezzo(nome, x, y, alfa)
+     di due, col tetto che sporge sopra invece di schiacciarsi dentro.
+
+     **Dove finisce davvero** lo dice `riquadroPosa`, e non è un lusso:
+     un silo è alto tre volte il suo piede, quindi il posto in cui si
+     *vede* e il posto in cui *appoggia* sono due rettangoli diversi.
+     Chi deve sapere cos'ha sotto il dito vuole il primo, e rifare il
+     conto a mano da un'altra parte vuol dire tenerlo d'accordo con
+     questo per sempre. */
+  riquadroPosa(nome, cx, cy, piede, verso) {
+    const p = PEZZI[nome]; if (!p) return null
+    /* Da girato lo sprite scambia le sue misure, e il riquadro con lui.
+       Lo scambio va fatto **qui** e non al momento del `drawImage`,
+       perché questo conto non serve solo a disegnare: serve anche a
+       sapere cos'ha sotto il dito (`cosaDisegnataSotto` in Gioco.vue).
+       Farlo in un posto solo scosterebbe il bersaglio dal disegno di
+       novanta gradi senza che niente sembri rotto.
+
+       Lo specchio invece non lo tocca: stessi pixel, stesso rettangolo,
+       solo al contrario. È la differenza per cui il verso è una cosa
+       che il motore deve controllare e lo specchio no. */
+    const giro = (verso && verso.giro) || 0
+    const w = (giro % 2 ? p[3] : p[2]) * this.scala
+    const h = (giro % 2 ? p[2] : p[3]) * this.scala
+    return {
+      x: cx * this.cellaPx - this.vista.x + (piede[0] * this.cellaPx - w) / 2,
+      y: (cy + piede[1]) * this.cellaPx - this.vista.y - h,
+      w, h,
+    }
+  }
+
+  posa(nome, cx, cy, piede, alfa, verso) {
+    const r = this.riquadroPosa(nome, cx, cy, piede, verso); if (!r) return
+    this.pezzo(nome, r.x, r.y, alfa, verso)
   }
 
   /* Le celle di mondo visibili in questo momento, con un margine di una
@@ -585,19 +779,22 @@ export class Tela {
 
   /* Un oggetto selezionato si schiarisce E prende un contorno: da soli
      non basterebbero — il contorno si perde sull'erba chiara, la
-     schiaritura si perde sugli sprite già chiari. */
-  schiarisci(nome, cx, cy, piede, orologio) {
-    const p = PEZZI[nome]; if (!p) return
+     schiaritura si perde sugli sprite già chiari.
+
+     La schiaritura **passa da `posa()`**, e non ricopia il conto. Ce
+     l'aveva copiato, ed è il posto esatto in cui un pezzo girato
+     avrebbe mostrato il difetto: la cosa girata e il suo alone dritto,
+     sfalsati di novanta gradi, con la selezione che sembra staccata
+     dall'oggetto. Il contorno invece resta sul **piede** — quello è già
+     girato da `assettoDi()`, e un rettangolo di celle non ha bisogno di
+     ruotare per essere quello giusto. */
+  schiarisci(nome, cx, cy, piede, orologio, verso) {
+    if (!PEZZI[nome]) return
     const ctx = this.ctx
     const battito = .16 + .12 * (1 + Math.sin(orologio * 5)) / 2
-    const larg = p[2] * this.scala
-    const x = cx * this.cellaPx - this.vista.x + (piede[0] * this.cellaPx - larg) / 2
-    const y = (cy + piede[1]) * this.cellaPx - this.vista.y - p[3] * this.scala
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = battito
-    ctx.drawImage(this.immagine, p[0], p[1], p[2], p[3],
-      Math.round(x), Math.round(y), larg, p[3] * this.scala)
+    this.posa(nome, cx, cy, piede, battito, verso)
     ctx.restore()
     ctx.save()
     ctx.setLineDash([5, 4])
@@ -634,7 +831,7 @@ export class Tela {
     ctx.strokeStyle = ok ? 'rgba(180,255,160,.9)' : 'rgba(255,150,150,.9)'
     ctx.strokeRect(x + 1, y + 1, piede[0] * this.cellaPx - 2, piede[1] * this.cellaPx - 2)
     ctx.restore()
-    if (preso.pezzo) this.posa(preso.pezzo, cx, cy, piede, ok ? .85 : .45)
+    if (preso.pezzo) this.posa(preso.pezzo, cx, cy, piede, ok ? .85 : .45, preso.verso)
   }
 
   /* Dove finirebbe la materia se si lasciasse il pennello adesso:
@@ -686,6 +883,10 @@ export class Tela {
      «adesso te l'ho preso» — che è la differenza fra i due gesti. */
   disegnaAnello(anello) {
     if (!anello) return
+    /* Frazione nulla o negativa: l'attesa è cominciata ma non si mostra
+       ancora, e un cerchio vuoto disegnato sotto ogni tocco direbbe
+       «devi tenere premuto» anche dove non è vero. */
+    if (!anello.pronto && anello.q <= 0) return
     const ctx = this.ctx, r = anello.pronto ? 23 : 20
     const q = anello.pronto ? 1 : Math.max(0, Math.min(1, anello.q))
     ctx.save()

@@ -33,13 +33,74 @@
    occupano, non quanto disegno c'è — e infatti sono le due che il piede
    se lo dichiarano.
 
-   ── `giri` — GIRARE NON È RUOTARE ─────────────────────────────────
-   La pixel art ruotata si sfarina. Una staccionata si gira perché nel
-   set esiste *la stessa staccionata in piedi*, ed è quella tessera che
-   si mette al posto dell'altra. Quindi la staccionata è **una voce sola
-   che si gira**, non due voci diverse. Dove il set non ha la variante,
-   `giri` non c'è e il gioco non offre il tasto: meglio niente che un
-   tasto che fa una cosa storta.
+   ── GIRARE E ROVESCIARE: TRE COSE, NON UNA ────────────────────────
+   «Perché non posso girare questa casa di novanta gradi?» ha tre
+   risposte diverse a seconda di com'è disegnato il pezzo, e finché non
+   stanno scritte si riscoprono ogni volta.
+
+     · **`vedute`** — il set ha *davvero* il pezzo nell'altro verso, e
+       girare vuol dire cambiare disegno. La staccionata sdraiata e il
+       palo in piedi sono due tessere; la casa vista davanti e la casa
+       vista di dietro sono due tessere. Quindi la staccionata è **una
+       voce sola che si gira**, non due voci diverse — e il pezzo che si
+       mette al posto dell'altro porta con sé il proprio piede, perché
+       [2,1] sdraiato diventa [1,2] in piedi.
+
+     · **il quarto di giro** — `ctx.rotate` a schermo, e non costa
+       niente: la pixel art regge i novanta gradi esatti senza
+       sfrangiarsi (non regge i quarantacinque). Vale per quello che è
+       disegnato **a piombo dall'alto** — un'aiuola, una pozza, un
+       sasso, una siepe — dove ogni quarto di giro dà un pezzo
+       altrettanto vero. Non vale per quello che ha una **faccia**: una
+       casa girata di novanta gradi non gira, cade, e la sua ombra punta
+       in su mentre quella di tutto il resto punta in giù.
+
+     · **lo specchio** — `ctx.scale(-1, 1)`, e non tocca né il sopra né
+       la direzione della luce finché la luce viene dall'alto. Lo regge
+       quasi tutto, ed è quello che risolve il fastidio vero: la porta
+       del fienile dal lato sbagliato, la carriola che punta di là,
+       due casette identiche affiancate che si vede che sono la stessa.
+
+   ── E NON SI DECIDONO QUI ─────────────────────────────────────────
+   Le ultime due **non si scrivono in questa tabella**: le sa il foglio
+   da cui il pezzo è stato ritagliato, e chi il foglio l'ha guardato è
+   chi ha scritto il suo foglietto `.json`
+   (`strumenti/sprite/FORMATO.md`, campo `trasforma`). Da lì
+   `atlante.py` le porta dentro `VOCI` del modulo generato — `giri` (1,
+   2 o 4) e `specchia` — e qui si leggono, pezzo per pezzo. Duecento
+   righe di catalogo che ridicono a mano quello che sta già nel
+   foglietto sono duecento righe da tenere d'accordo per sempre, e la
+   prima che scivola dà un pezzo rovesciato che nessun controllo trova.
+
+   Una riga può comunque scrivere `quarti` o `specchio` e vincere lei:
+   è il ripiego che sbaglia, non la legge — stesso patto di `piede`.
+
+   ── IL MEZZO GIRO, E PERCHÉ QUASI MAI ─────────────────────────────
+   Girare non è un numero solo, sono **due domande indipendenti**, e
+   l'atlante le dichiara separate perché una sola non basta a dirle:
+   *si corica?* (`giri`) e *il sopra può diventare il sotto?*
+   (`ribalta`). La siepe è il pezzo che ha costretto a separarle: per il
+   ritto è ancora una siepe — ed è l'unico modo di chiudere un cortile
+   con un foglio che la disegna solo sdraiata — ma **a gambe per aria
+   no**, perché ha un filo d'ombra sotto e a mezzo giro ce l'ha in cima.
+   Con un numero solo si doveva scegliere fra perdere il verso utile e
+   regalare quello capovolto, e a schermo si vedeva la seconda.
+
+   Su questi fogli il mezzo giro è quasi sempre sbagliato, e non per
+   caso: **niente qui è disegnato dallo zenit vero**. Un sasso ha l'erba
+   ai piedi, un cespuglio l'ombra sotto, il laghetto il bordo di pietra
+   col riflesso in cima. Il quarto di giro sposta quell'ombra di lato e
+   l'occhio lo accetta; il mezzo la porta sopra, e non c'è verso di
+   guardarlo. Restano ribaltabili le pochissime cose che non poggiano su
+   niente — una ninfea, una coccinella, una pozza d'acqua.
+
+   `giri: 2` («l'asse sì, la faccia no»: una staccionata, un tronco
+   steso) è mezzo giro **e basta**, e nella fattoria non si offre per un
+   motivo diverso ancora: su un pezzo simmetrico non si distingue dallo
+   specchio, che c'è già ed è più giusto. Sarebbe un ↻ che si preme e
+   non cambia niente, cioè un tasto rotto — peggio di un tasto che non
+   c'è. Quindi qui il ↻ o cambia disegno (`vedute`) o corica, e per
+   tutto il resto non compare.
 
    ── `sotto` — CHI STA PER TERRA ───────────────────────────────────
    Un orto, un'aiuola, dei fiori sono *terreno*, non oggetti: vanno
@@ -74,7 +135,7 @@
    motivo per cui l'elenco sta nel catalogo è che i pezzi che esistono
    davvero li sa il catalogo, non il motore.
    ═══════════════════════════════════════════════════════════════════ */
-import { PEZZI, TESSERA } from './atlante.js'
+import { PEZZI, TESSERA, VOCI } from './atlante.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
 
 /* Il piede che si ricava dal disegno, e il ragionamento sta in testa al
@@ -155,14 +216,34 @@ export function prezzoDellaVoce(v, quante = 0) {
   return Math.round(v.prezzo * (1 + quante * v.cresce))
 }
 
-/* I sei ritratti di un recinto, dal nome della specie. Si scrive così e
-   non sei volte a mano per lo stesso motivo per cui gli stadi di una
+/* I ritratti di un recinto, dal nome della specie. Si scrive così e non
+   sei volte a mano per lo stesso motivo per cui gli stadi di una
    coltura si scrivono con una funzione: sei nomi ricopiati cinque volte
    sono trenta occasioni di sbagliarne uno, e uno sbagliato è un recinto
-   che sparisce in un certo momento della giornata e in nessun altro. */
+   che sparisce in un certo momento della giornata e in nessun altro.
+
+   ── E «FAME» È DI NUOVO IL RITRATTO CALMO ─────────────────────────
+   *Ribalta la scelta di prima*, che era un disegno apposta: lo stesso
+   recinto **col fumetto dipinto dentro**, uno per specie. Aveva tre
+   difetti, e il primo li spiega tutti — **quel fumetto non può dire il
+   vero**. Cosa mangia un recinto sta nelle ricette, e le ricette
+   cambiano: il giorno che le mucche e le pecore hanno cominciato a
+   volere tutte e due il foraggio, il foglio continuava a mostrare un
+   mucchietto arancione all'una e un ciuffo verde all'altre. Poi era
+   **minuscolo**: a schermo un recinto è largo settanta pixel, quindi
+   dentro il fumetto ce ne stanno dieci per dieci, che non bastano a
+   distinguere una carota da una zucca. E infine i cinque disegni si
+   portavano dietro un rimasuglio del generatore — una macchia colorata
+   appesa alla staccionata — che non era niente.
+
+   Adesso il fumetto lo disegna la scena, grande quanto serve, e ci
+   mette **la merce che quel recinto sta aspettando davvero**
+   (`Fattoria.cosaVuole`). Il ritratto di chi ha fame torna a essere
+   quello calmo: la faccia dell'animale in quei cinque disegni era la
+   stessa. */
 const RECINTO = specie => Object.fromEntries(
   ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto']
-    .map(q => [q, `recinto_${specie}_${q}`]))
+    .map(q => [q, `recinto_${specie}_${q === 'fame' ? 'calmo' : q}`]))
 
 export const CATEGORIE = [
   { chiave: 'verde', zona: 'bello', nome: 'Verde', icona: '🌳', voci: [
@@ -232,7 +313,18 @@ export const CATEGORIE = [
     V('fiore_appeso',  'ciondolo_fiore',    'Fiore appeso',       7),
   ] },
 
-  /* ── I CAMPI ──────────────────────────────────────────────────────
+  /* ── IL LAVORO: TUTTO QUELLO CHE PRODUCE, IN UNA LINGUETTA SOLA ──
+     *Ribalta la divisione di prima*, che erano due — «Campi» (campo,
+     mulino, silos, carretto) e «Cortile» (fienile e i cinque recinti).
+     Erano due linguette da quattro e da sei voci, dentro una metà del
+     baule che ne aveva solo quelle: cioè **due tasti per scegliere fra
+     dieci cose**, quando dieci cose ci stanno tutte in uno scaffale.
+     E il confine fra le due era una distinzione da adulti — la terra da
+     una parte, gli animali dall'altra — mentre per chi gioca sono la
+     stessa cosa: le unità che *fanno* qualcosa, tutte in fila nella
+     catena. Adesso la linguetta è una e non si mostra nemmeno: una sola
+     non è una scelta (`viste/Roba.vue`).
+
      L'orto era in mezzo ai fiori ed era **solo un disegno**: due celle
      di terra mossa che non facevano niente. È lo stesso id e lo stesso
      prezzo — chi ne aveva già uno se lo ritrova coltivabile, senza
@@ -245,27 +337,63 @@ export const CATEGORIE = [
 
      Le aiuole nude e i cartelli non coltivano niente: sono arredo che
      viene dallo stesso foglio, e servono a far sembrare un orto anche
-     il pezzo di terra che non è un campo. */
-  { chiave: 'campi', zona: 'lavoro', nome: 'Campi', icona: '🌾', voci: [
+     il pezzo di terra che non è un campo — e stanno di là, fra le
+     decorazioni. */
+  { chiave: 'campi', zona: 'lavoro', nome: 'Il lavoro', icona: '🌾', voci: [
     V('orto',          'campo_vuoto',       'Campo',             22,
       { sotto: true, campo: true, piede: [2, 2], cresce: RINCARO }),
     V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 3, cresce: RINCARO }),
     V('silo',          'silo_rosso',        'Silo del raccolto', 120, { silo: 'terra', unico: true }),
-    V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
-  ] },
+    /* ── IL CARRETTO DEL VICINO ──────────────────────────────────
+       Era una decorazione fra le case, e adesso lavora: **è lo stesso
+       id e lo stesso prezzo**, come fu per l'orto qui sopra, quindi chi
+       se l'era comprato per bellezza se lo ritrova utile e non c'è
+       niente da migrare.
 
-  /* ── IL CORTILE ───────────────────────────────────────────────────
-     Cinque recinti, e non sono arredo: sono macchine (`stati` in testa
-     al file, le ricette in `dati/coltivazioni.js`). Costano molto più di
-     tutto il resto perché sono la fine della catena — prima il campo,
-     poi il fieno, poi la stalla — e perché quello che rendono non si
-     compra da nessuna parte.
+       Costa poco e arriva presto apposta. Non è una macchina che fa
+       guadagnare: è la **valvola** di chi ha il silo tappato di una
+       cosa sola, e una valvola che si può permettere solo chi sta bene
+       non serve a niente. Cosa fa e perché perde sta in
+       `motore/vicino.js`. */
+    V('carretto_mercato', 'carretto_mercato', 'Carretto del vicino', 32,
+      { vicino: true, liv: 2, unico: true }),
+    /* Al 3 e non al 4, **insieme al mulino**: da quando il mangime è
+       roba da animali finisce qui dentro, e un mulino che macina un
+       livello prima che esista il posto dove mettere quello che fa
+       sarebbe un tasto che non si può premere. */
+    V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 3, unico: true }),
 
-     Il piede è scritto e non ricavato: un recinto è largo quattro celle
-     e ne occupa **tre** di profondità, non due. È l'unico posto della
-     fattoria dove si cammina *dentro* qualcosa, e due celle
-     lascerebbero l'ultima fila di staccionata calpestabile. */
-  { chiave: 'cortile', zona: 'lavoro', nome: 'Cortile', icona: '🐄', voci: [
+
+    /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
+       Il fienile e cinque recinti, e non sono arredo: sono macchine
+       (`stati` in testa al file, le ricette in `dati/coltivazioni.js`).
+       Costano molto più di tutto il resto perché sono la fine della
+       catena — prima il campo, poi il mangime, poi la stalla — e perché
+       quello che rendono non si compra da nessuna parte.
+
+       Stanno **in fila dopo i campi e non in una linguetta a parte**:
+       sono i passi successivi della stessa catena, e messi in due
+       scaffali diversi quella fila non si vede.
+
+       Il piede dei recinti è scritto e non ricavato: sono larghi quattro
+       celle e ne occupano **tre** di profondità, non due. È l'unico
+       posto della fattoria dove si cammina *dentro* qualcosa, e due
+       celle lascerebbero l'ultima fila di staccionata calpestabile. */
+
+    /* ── IL FIENILE ──────────────────────────────────────────────
+       **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
+       stesso prezzo — la terza volta che succede qui dentro, dopo
+       l'orto e il carretto del vicino, e per la stessa ragione. Chi se
+       l'era comprato per bellezza se lo ritrova utile, e non c'è
+       niente da migrare in nessun salvataggio.
+
+       Il mulino fa la ciotola di casa, il fienile fa il mangime del
+       recinto: due macchine e due mestieri, e per questo non sono una
+       sola con sette tasti. Arriva **prima del primo recinto** (livello
+       4 contro 5), che è l'ordine in cui si legge la catena — prima la
+       mangiatoia, poi chi mangia. */
+    V('fienile',       'fienile0',          'Fienile',         150,
+      { macchina: 'fienile', liv: 4, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
       { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO }),
     V('pollaio',       'recinto_galline_calmo', 'Pollaio',      130,
@@ -277,6 +405,7 @@ export const CATEGORIE = [
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
       { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 26, cresce: RINCARO }),
   ] },
+
 
   /* ── LE BESTIOLINE ────────────────────────────────────────────────
      Quello che sta *attorno* agli animali e non lavora: la cuccia, i
@@ -331,7 +460,7 @@ export const CATEGORIE = [
   ] },
 
   { chiave: 'recinti', zona: 'bello', nome: 'Recinti', icona: '🚧', voci: [
-    V('staccio',       'staccionata',       'Staccionata',        6, { giri: [
+    V('staccio',       'staccionata',       'Staccionata',        6, { vedute: [
       { pezzo: 'staccionata', piede: [2, 1] },     // sdraiata
       { pezzo: 'palo',        piede: [1, 2] },     // in piedi
     ] }),
@@ -386,7 +515,7 @@ export const CATEGORIE = [
   { chiave: 'case', zona: 'bello', nome: 'Case', icona: '🏚️', voci: [
     /* una voce sola che si gira: davanti c'è la porta, dietro il muro
        cieco. Erano due voci di catalogo, ed era la stessa casa. */
-    V('casa',          'casa',              'Casa',             120, { giri: [
+    V('casa',          'casa',              'Casa',             120, { vedute: [
       { pezzo: 'casa',       piede: [5, 2] },     // il davanti, con la porta
       { pezzo: 'casa_retro', piede: [5, 2] },     // il dietro
     ] }),
@@ -394,7 +523,6 @@ export const CATEGORIE = [
     V('casetta_lunga', 'casetta_tetto_lungo', 'Casa lunga',        70),
     V('casa_veranda',  'casetta_con_veranda', 'Casa e veranda',    90),
     V('casa_albero',   'casa_albero',       'Casa sull\'albero', 110),
-    V('fienile',       'fienile0',          'Fienile',          150),
     V('fienile_rosso', 'fienile_rosso',     'Fienile rosso',    160),
     V('fienile_blu',   'fienile_tetto_blu', 'Fienile blu',      140),
     V('torretta',      'torre_rotonda',     'Torretta',         100),
@@ -403,7 +531,6 @@ export const CATEGORIE = [
     V('chiosco_rosa',  'dehors_rosa',       'Chiosco rosa',      80),
     V('chiosco_azzurro', 'dehors_azzurro',  'Chiosco azzurro',   80),
     V('mercato',       'mercato',           'Mercato',           40),
-    V('carretto_mercato', 'carretto_mercato', 'Carretto',          32),
     V('casotta',       'pollaio',           'Casotta',           60),
     V('serra',         'serra',             'Serra',             90),
     V('tettoia_fieno', 'tettoia_fieno',     'Tettoia',           45),
@@ -490,23 +617,108 @@ export const CATEGORIE = [
 export const CATALOGO = CATEGORIE.flatMap(c => c.voci)
 export const PER_ID = Object.fromEntries(CATALOGO.map(v => [v.id, v]))
 
-/* Le tre funzioni che reggono una voce sconosciuta senza esplodere. Un
+/* ── QUELLO CHE IL FOGLIO SA DI OGNI PEZZO ────────────────────────
+   `VOCI` elenca le *cose* dell'atlante, ognuna coi suoi fotogrammi;
+   qui serve la strada opposta — da un nome di pezzo alla voce che lo
+   contiene — perché il catalogo cita i pezzi (`'casa_retro'`,
+   `'recinto_maiali_fame'`) e non i loro gruppi. Si costruisce una
+   volta all'import: sono cinquecento nomi, e rifare la ricerca a ogni
+   fotogramma sarebbe una scansione lineare dentro il giro di disegno. */
+const VOCE_DEL_PEZZO = {}
+for (const v of VOCI)
+  for (const fotogrammi of Object.values(v.pose || {}))
+    for (const nome of fotogrammi) VOCE_DEL_PEZZO[nome] = v
+
+/* Un pezzo che l'atlante non conosce non gira e non si specchia: è il
+   verso giusto in cui sbagliare, perché una cosa girata per sbaglio si
+   vede e una che si poteva girare e non si è girata non fa danni. */
+const quartiDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).giri || 1
+const specchioDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).specchia !== false
+const ribaltaDelPezzo = nome => (VOCE_DEL_PEZZO[nome] || {}).ribalta !== false
+
+/* ── I GIRI CHE UNA COSA REGGE, IN ORDINE ─────────────────────────
+   Non un numero: **la lista dei quarti leciti**, perché quelli leciti
+   non sono sempre i primi N. Due domande indipendenti, e l'atlante le
+   dichiara separate perché una sola non basta a dirle:
+
+     · `giri`     — si corica? 4 = sì (è disegnato a piombo), 1 = no
+     · `ribalta`  — il sopra può diventare il sotto?
+
+   La siepe è il pezzo che ha costretto a separarle: `giri: 4` perché
+   per il ritto è ancora una siepe, `ribalta: false` perché ha un filo
+   d'ombra sotto e a mezzo giro ce l'ha in cima. Con un numero solo si
+   doveva scegliere fra perdere il verso utile e regalare quello a
+   gambe per aria, e a schermo si vedeva la seconda.
+
+   Il mezzo giro **da solo** (`giri: 2`, la staccionata, il tronco
+   steso) resta fuori per l'altro motivo, quello scritto in testa al
+   file: su un pezzo simmetrico non si distingue dallo specchio. */
+function giriPossibili(v) {
+  const q = v.quarti != null ? v.quarti : quartiDelPezzo(v.pezzo)
+  if (q !== 4) return [0]
+  const ribalta = v.ribalta != null ? v.ribalta : ribaltaDelPezzo(v.pezzo)
+  return ribalta ? [0, 1, 2, 3] : [0, 1]
+}
+
+/* Quanti versi ha una cosa, cioè quante volte il ↻ cambia qualcosa
+   prima di tornare al punto di partenza. Una voce con `vedute` vale
+   quante ne ha (girarla vuol dire cambiare disegno, e il quarto di
+   giro non si somma: darebbe due pose quasi identiche fra cui
+   scegliere); tutte le altre valgono quanti giri regge il disegno. */
+export function quantiVersi(v) {
+  if (!v) return 1
+  return v.vedute ? v.vedute.length : giriPossibili(v).length
+}
+
+export const puoGirare = v => quantiVersi(v) > 1
+export const puoSpecchiare = v =>
+  !!v && (v.specchio != null ? v.specchio : specchioDelPezzo(v.pezzo))
+
+/* Le funzioni che reggono una voce sconosciuta senza esplodere. Un
    salvataggio di ieri può contenere un id che oggi non c'è più — è già
    successo, con il `palo` diventato una staccionata girata — e il gioco
    deve continuare a disegnare tutto il resto. */
 export const versoDi = cosa => (cosa && cosa.g) || 0
 
-export function piedeDi(cosa, v = PER_ID[cosa && cosa.id]) {
-  if (!v) return [1, 1]
-  return v.giri ? v.giri[versoDi(cosa) % v.giri.length].piede : v.piede
+/* ── COM'È MESSA UNA COSA, TUTTO INSIEME ──────────────────────────
+   Quattro fatti che vanno sempre insieme e che nessuno deve ricavare
+   due volte: che pezzo mostrare, quanta terra occupa **da girata**, di
+   quanti quarti va ruotato il disegno e se va rovesciato. Chi disegna
+   li vuole tutti e quattro; chi calcola una collisione vuole solo il
+   piede; chi cerca cosa c'è sotto il dito vuole piede e giro. Averli
+   da una funzione sola è quello che tiene d'accordo per sempre il
+   posto dove una cosa *si vede* e il posto dove *sta*.
+
+   Nota la cosa che non è ovvia: **lo specchio non cambia l'ingombro**
+   — stessi pixel, stesso rettangolo, solo rovesciati — mentre il
+   quarto di giro dispari scambia larghezza e profondità. È il motivo
+   per cui il verso vive in `cosa.g` e lo specchio in `cosa.m`, invece
+   che tutti e due dentro un numero solo: sono due fatti di natura
+   diversa, e uno dei due il motore lo deve controllare. */
+export function assettoDi(cosa, v = PER_ID[cosa && cosa.id]) {
+  if (!v) return { pezzo: null, piede: [1, 1], giro: 0, specchio: false }
+  const specchio = puoSpecchiare(v) && !!(cosa && cosa.m)
+  if (v.vedute) {
+    const q = v.vedute[versoDi(cosa) % v.vedute.length]
+    return { pezzo: q.pezzo, piede: q.piede, giro: 0, specchio }
+  }
+  /* `g` è **quale verso**, non di quanti quarti: i quarti leciti
+     possono essere [0, 1] e non [0, 1, 2, 3], e passare il verso per
+     un modulo darebbe la siepe a gambe per aria appena il bambino
+     preme ↻ due volte. */
+  const possibili = giriPossibili(v)
+  const giro = possibili[versoDi(cosa) % possibili.length]
+  const [largo, profondo] = v.piede
+  return {
+    pezzo: v.pezzo,
+    piede: giro % 2 ? [profondo, largo] : [largo, profondo],
+    giro,
+    specchio,
+  }
 }
 
-export function pezzoDi(cosa, v = PER_ID[cosa && cosa.id]) {
-  if (!v) return null
-  return v.giri ? v.giri[versoDi(cosa) % v.giri.length].pezzo : v.pezzo
-}
-
-export const puoGirare = v => !!(v && v.giri && v.giri.length > 1)
+export const piedeDi = (cosa, v = PER_ID[cosa && cosa.id]) => assettoDi(cosa, v).piede
+export const pezzoDi = (cosa, v = PER_ID[cosa && cosa.id]) => assettoDi(cosa, v).pezzo
 
 /* La voce che *è* quella macchina («mulino», «pollaio»): serve a chi
    deve nominarla — «3 🌾 nel mulino» — partendo da una ricetta, che la
@@ -526,6 +738,11 @@ export const macchinaDi = cosa => (PER_ID[cosa && cosa.id] || {}).macchina || nu
    mappa e la roba che ci sta dentro. */
 export const siloDi = cosa => (PER_ID[cosa && cosa.id] || {}).silo || null
 export const eSilo = cosa => !!siloDi(cosa)
+
+/* Il carretto del vicino: non è una macchina (non trasforma e non ha un
+   orologio) e non è un silo (non contiene niente). È la terza cosa che
+   si tocca e apre un foglio, e si riconosce come le altre due. */
+export const eVicino = cosa => !!(PER_ID[cosa && cosa.id] || {}).vicino
 export const statiDi = cosa => (PER_ID[cosa && cosa.id] || {}).stati || null
 
 /* ── SI PARTE DA ZERO ─────────────────────────────────────────────
@@ -548,13 +765,26 @@ export function guastiDelCatalogo() {
       g.push(`${v.id}: piede impossibile`)
     for (const nome of v.anima || [])
       if (!PEZZI[nome]) g.push(`${v.id}: il fotogramma «${nome}» non è nell'atlante`)
-    for (const giro of v.giri || []) {
-      if (!PEZZI[giro.pezzo]) g.push(`${v.id}: il giro «${giro.pezzo}» non è nell'atlante`)
-      if (!Array.isArray(giro.piede) || giro.piede.length !== 2)
-        g.push(`${v.id}: un giro senza piede`)
+    for (const veduta of v.vedute || []) {
+      if (!PEZZI[veduta.pezzo]) g.push(`${v.id}: la veduta «${veduta.pezzo}» non è nell'atlante`)
+      if (!Array.isArray(veduta.piede) || veduta.piede.length !== 2)
+        g.push(`${v.id}: una veduta senza piede`)
     }
-    if (v.giri && v.giri.length < 2)
-      g.push(`${v.id}: un solo giro non è un giro — meglio niente tasto`)
+    if (v.vedute && v.vedute.length < 2)
+      g.push(`${v.id}: una veduta sola non è un giro — meglio niente tasto`)
+    /* Il campo che questa tabella non deve avere. `giri` era il nome
+       di `vedute` fino a ieri, e nell'atlante generato vuol dire
+       un'altra cosa (quanti quarti di giro regge il disegno): una voce
+       che se lo riscrive addosso non lancia niente, semplicemente
+       smette di girare — o gira dove non deve. */
+    if (v.giri != null)
+      g.push(`${v.id}: «giri» adesso si chiama «vedute» (e nell'atlante vuol dire altro)`)
+    /* Girare una cosa larga e sottile le scambia il piede, e se il
+       piede è dichiarato a mano si può dichiarare una profondità che
+       non esiste. Un quarto di giro con un piede storto mette una
+       staccionata dentro una casa senza che nessuno se ne accorga. */
+    if (puoGirare(v) && !v.vedute && (v.piede[0] < 1 || v.piede[1] < 1))
+      g.push(`${v.id}: gira, e il suo piede non regge lo scambio`)
     /* Un campo si calpesta: è terra lavorata, non un mobile. Senza
        `sotto` una bestia non potrebbe attraversarlo e il bambino
        vedrebbe il cane girargli attorno senza capire perché. */
@@ -588,9 +818,11 @@ export function guastiDelCatalogo() {
      bestie di casa — e una categoria di catalogo che si chiamasse così la
      coprirebbe: si aprirebbe il baule e al posto dei cani ci sarebbero
      delle panchine. (`granaio` era la seconda, e non lo è più: il
-     raccolto si guarda toccando un silo.) */
+     raccolto si guarda toccando un silo; e `animali` da linguetta è
+     diventata **una delle tre metà** in cima, ma la collisione è la
+     stessa.) */
   if (cat.has('animali'))
-    g.push('la categoria «animali» è già una linguetta del baule')
+    g.push('la categoria «animali» è già una metà del baule')
   for (const p of PARTENZA)
     if (!PER_ID[p.id]) g.push(`la fattoria di partenza cita «${p.id}», che non è in catalogo`)
   /* I due silos si citano a vicenda — la voce dice in che famiglia è, e

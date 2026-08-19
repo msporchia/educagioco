@@ -41,15 +41,23 @@
 /* ── gli attrezzi appesi all'oggetto ─────────────────────────────── */
 .fa-attrezzi { position: absolute; z-index: 6; display: flex; gap: 6px;
   background: #0d160fe6; border: 2px solid #6f9b6f; border-radius: 14px; padding: 5px }
-.fa-attrezzi button { width: 38px; height: 38px; border: none; border-radius: 9px;
-  background: #3d5c42; color: #f4efe2; font-size: 18px; cursor: pointer }
+/* 44 px e non 38: è la misura che Android e iOS chiedono per un tasto,
+   ed erano tasti piccoli premuti da dita piccole. Chi cambia questi
+   numeri cambi anche `larghezzaAttrezzi` in `Gioco.vue`, che li usa per
+   sapere quanto è larga la barretta e non farla uscire dallo schermo. */
+.fa-attrezzi button { width: 44px; height: 44px; border: none; border-radius: 11px;
+  background: #3d5c42; color: #f4efe2; font-size: 19px; cursor: pointer }
 .fa-attrezzi button:active { transform: scale(.92) }
 .fa-attrezzi button:disabled { opacity: .4 }
 
 /* ── i pannelli ──────────────────────────────────────────────────── */
 .fa-velo { position: absolute; inset: 0; z-index: 9; display: grid;
   place-items: center; background: #05100799; padding: 18px }
-.fa-foglio { width: min(360px, 92vw); background: #16261a; border: 2px solid #3d5c42;
+/* Il foglio si è allargato da 360 a 400: dentro non ci sono più delle
+   emoji ma le figure vere dell'atlante (`viste/Merce.vue`), e una
+   ricetta si legge come una freccia — quello che entra, quello che esce
+   — che a 360 px andava a capo nel mezzo. */
+.fa-foglio { width: min(400px, 94vw); background: #16261a; border: 2px solid #3d5c42;
   border-radius: 18px; padding: 16px 16px 14px; text-align: center;
   box-shadow: 0 18px 40px #0008 }
 /* il colore va detto: senza, il titolo eredita il blu dell'applicazione
@@ -63,6 +71,27 @@
 .fa-bot.forte { background: #c9a227; color: #1b2a1f }
 .fa-bot.piano { background: #2b4430 }
 .fa-bot:disabled { opacity: .4; cursor: default }
+.fa-bot.piccolo { padding: 7px 12px; font-size: 13px }
+
+/* ── il prossimo passo ───────────────────────────────────────────
+   La riga che dice cosa fare quando qualcosa non si può. Piccola e in
+   fondo: è una scorciatoia, non un errore — un riquadro grosso in
+   mezzo al foglio si legge come «hai sbagliato», e qui non ha
+   sbagliato nessuno. Il filo giallo a sinistra la lega al no che sta
+   sopra invece di farla sembrare un pezzo a parte. */
+/* Si chiamava `.fa-passo`, **e quel nome era già preso**: è la riga
+   della scaletta nella pagina dei livelli, più in basso in questo file,
+   ed è una griglia a tre colonne di cui la prima è larga 22 px. Vinceva
+   lei (stessa specificità, scritta dopo) e la frase del consiglio
+   finiva dentro quei 22 px, una parola per riga, accanto a un tasto
+   largo. Non lancia niente, non lo trova nessun controllo: si vede solo
+   guardando il foglio di una macchina a cui manca qualcosa. */
+.fa-consiglio { display: flex; align-items: center; gap: 10px; text-align: left;
+  margin: 8px 0 2px; padding: 8px 10px; border-radius: 12px;
+  background: #0d160fcc; border: 2px solid #3d5c42; border-left: 4px solid #c9a227 }
+.fa-consiglio p { margin: 0; flex: 1; font-size: 12.5px; line-height: 1.35;
+  color: #d8e4d6; opacity: 1 }
+.fa-consiglio .fa-bot { flex: none; white-space: nowrap }
 
 /* ── il baule ────────────────────────────────────────────────────── */
 /* È una modale come le altre ma più larga: dentro ci sta uno scaffale di
@@ -144,9 +173,15 @@
    la griglia, e la riga che cerchi ti scapperebbe da sotto il dito. */
 .fa-usi { border: 2px solid #3d5c42; border-radius: 12px; background: #0d160fcc;
   padding: 8px 10px; margin: 8px 0 2px; text-align: left }
-.fa-usi b { display: block; font-size: 14px; color: #ffd98a; margin-bottom: 3px }
+.fa-usi b { display: flex; align-items: center; gap: 7px; font-size: 14px;
+  color: #ffd98a; margin-bottom: 3px }
 .fa-usi p { margin: 2px 0; font-size: 12.5px; color: #d8e4d6; line-height: 1.35 }
 .fa-voce.tua { border-color: #6f9b6f; background: #1b3220cc }
+/* La voce su cui il baule si è aperto perché qualcuno ha detto «ti
+   serve questo». Batte le altre due tinte apposta: è l'unica cosa che
+   si sta cercando, e in uno scaffale di venti figure una cornice
+   normale non si trova. */
+.fa-voce.indicata { border-color: #ffd98a; box-shadow: 0 0 0 2px #ffd98a55 }
 /* Non si spegne più del necessario: quello che costa troppo si deve
    comunque poter guardare — è la cosa per cui si torna a fare esercizi. */
 .fa-voce.cara { opacity: .62 }
@@ -193,11 +228,37 @@
   background: #0d160f; border: 1px solid #2b4430; overflow: hidden }
 .fa-quanto i { display: block; height: 100%; background: #6f9b6f }
 .fa-quanto.largo { width: 100%; height: 8px; border-radius: 5px; margin: 2px 0 10px }
-/* Quanti posti sono occupati. Grosso come una risposta, non come una
+/* Quanto ci sta di ogni cosa. Grosso come una risposta, non come una
    nota a piè di pagina: è la domanda per cui si apre il silo. */
-.fa-posti { font-size: 15px; color: #d8e4d6; margin: 2px 0 4px }
+.fa-posti { font-size: 15px; color: #d8e4d6; margin: 2px 0 8px }
 .fa-posti b { font-size: 19px; color: #ffd98a }
 .fa-posti span { color: #d59a9a; font-size: 13px }
+
+/* ── gli scomparti del silo ──────────────────────────────────────
+   Una riga per merce: figura, nome, barretta, numeri. In riga e non in
+   griglia come lo scaffale del baule, perché qui non si sceglie fra
+   delle cose — si legge quanto ce n'è, e una colonna di barrette
+   allineate si confronta con l'occhio invece che leggendola. */
+.fa-scomparti { display: grid; gap: 5px; margin-bottom: 8px;
+  max-height: 46vh; overflow-y: auto; overscroll-behavior: contain }
+.fa-scomparto { display: grid; align-items: center; gap: 8px;
+  grid-template-columns: 34px 1fr 88px 46px;
+  padding: 5px 8px; border-radius: 11px; cursor: pointer; text-align: left;
+  background: #0d160fcc; border: 2px solid #2b4430; color: #d8e4d6; font: inherit }
+.fa-scomparto .fa-frutto { font-size: 22px; line-height: 1 }
+/* Vuoto non vuol dire spento: uno scomparto a zero è il posto dove
+   *potrebbe* andare qualcosa, cioè un invito. Si smorza la figura, non
+   la riga — spegnerla direbbe «questo non si può», che è il contrario. */
+.fa-scomparto.vuoto .fa-frutto { opacity: .45 }
+.fa-scomparto.colmo { border-color: #c9a227 }
+.fa-scomparto.viva { border-color: #9fd3a8; background: #1b3220cc }
+.fa-scomparto:active { transform: scale(.99) }
+.fa-etichetta { font-size: 12.5px; overflow: hidden; white-space: nowrap;
+  text-overflow: ellipsis }
+.fa-conto { font-size: 13px; text-align: right; color: #d8e4d6 }
+.fa-conto em { font-style: normal; font-size: 11px; color: #8fa691 }
+.fa-scomparto.colmo .fa-conto { color: #ffd98a }
+.fa-scomparto.colmo .fa-quanto i { background: #c9a227 }
 
 .fa-provino { display: block; margin: 0 auto; image-rendering: pixelated }
 
@@ -288,7 +349,7 @@
 
 /* ── come sta una bestia ─────────────────────────────────────────── */
 .fa-bisogni { display: grid; gap: 7px; margin: 4px 0 12px }
-.fa-bisogno { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px;
+.fa-bisogno { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px;
   align-items: center; font-size: 13px }
 /* non si chiama `.barra`: quella è già la barra in cima, e chiamarle
    uguale mandava il livello dei bisogni a tutto schermo */
@@ -317,10 +378,112 @@
    proposito: se avesse lo stesso peso del resto, un bambino leggerebbe
    prima la spiegazione del prezzo che il prezzo. */
 .fa-piccolo { font-size: 12px; color: #8fa691; line-height: 1.4; margin: 6px 0 0 }
-/* Un prodotto del granaio è un'emoji grande al posto del provino: non c'è
-   una tessera dell'atlante per il grano sciolto — quella disegna il campo,
-   non il sacco — e un riquadro vuoto sarebbe peggio di un'emoji. */
+/* «ti serve ancora 4 🥬 foraggio»: la figura vera in mezzo alla frase,
+   allineata alle parole. In riga e non a capo, perché è una frase e non
+   un elenco. */
+.fa-manca { display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 4px }
+.fa-manca b { display: inline-flex; align-items: center; gap: 3px;
+  color: #d8e4d6 }
+/* ── LA FACCIA DI UNA MERCE ──────────────────────────────────────
+   *Ribalta la scelta di prima*, che era «un'emoji grande al posto del
+   provino, perché una tessera per il grano sciolto non c'è». C'era: il
+   foglio degli oggetti ha le casse del raccolto, la balla di fieno, il
+   sacco, la bottiglia del latte — nessuno le aveva ancora nominate. Le
+   nomina `PRODOTTI` in `dati/coltivazioni.js`, le disegna
+   `viste/Merce.vue`, e l'emoji resta solo per le due merci che un
+   disegno non ce l'hanno ancora.
+
+   `.fa-frutto` resta perché la usa ancora chi scrive una merce dentro
+   una frase, dove un canvas in mezzo alle parole starebbe storto. */
 .fa-frutto { font-size: 26px; line-height: 1.1 }
+/* L'emoji quando il disegno manca: nello stesso riquadro quadrato del
+   provino, se no la riga dello scaffale salta di qualche pixel proprio
+   sulle due merci che già hanno la figura più povera. */
+.fa-merce-emoji { display: inline-flex; align-items: center;
+  justify-content: center; line-height: 1 }
+/* Il provino si centra da sé (`margin: 0 auto`), e dentro una riga
+   flessibile quel margine automatico si mangia lo spazio libero e
+   spinge via il testo accanto. Dentro una merce si spegne: qui a
+   centrare ci pensa chi la ospita. */
+.fa-merce { margin: 0 }
+
+/* ── UNA RICETTA È UNA FRECCIA ───────────────────────────────────
+   Quello che entra, la freccia, quello che esce — e il prodotto è
+   disegnato più grande di quello che lo compra, perché è quello che si
+   sta scegliendo. Sotto, il nome e il conto (monete e minuti).
+
+   Un tasto per riga e non tre in fila: le figure sono grandi apposta —
+   è il posto in cui si impara la catena — e in fila starebbero larghe
+   quanto le emoji di prima, cioè si tornerebbe al difetto da cui è nato
+   tutto questo. */
+/* Scorre, come lo scaffale del silo: il fienile a fattoria grande ha
+   quattro ricette, e quattro carte alte più il consiglio in fondo
+   spingono il tasto «Chiudi» sotto il bordo dello schermo — cioè un
+   foglio da cui non si esce più. */
+.fa-ricette { display: grid; gap: 7px; margin: 10px 0 8px;
+  max-height: 44vh; overflow-y: auto; overscroll-behavior: contain }
+.fa-ricetta { display: grid; gap: 2px; justify-items: center;
+  padding: 7px 10px 6px; border-radius: 13px; cursor: pointer;
+  background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; font: inherit }
+.fa-ricetta.suo { border-color: #9fd3a8 }
+.fa-ricetta:disabled { opacity: .45; cursor: default }
+.fa-ricetta .fa-titolo { font-size: 14px; font-weight: 600 }
+.fa-ricetta em { font-style: normal; font-size: 12px; font-weight: 700; color: #ffd98a }
+/* ── LE CASELLE DI UNA RICETTA ───────────────────────────────────
+   Una casella per pezzo che serve, accesa se quel pezzo ce l'hai.
+   *Ribalta il disegno di prima*, che era «3 → 2»: due numeri e una
+   freccia sono una **formula**, e una formula si legge — che è la cosa
+   che qui non si può dare per scontato. Quattro caselle di foraggio con
+   due accese non si leggono, si guardano, e il buco è quello che manca.
+
+   Quella vuota **non è spenta**: è un contorno tratteggiato con dentro
+   la figura in ombra. Spegnerla del tutto direbbe «questo non si può»,
+   e invece dice «questo ti manca», che è un invito a andarlo a
+   prendere. */
+.fa-caselle { display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 4px }
+.fa-casella { display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 9px;
+  background: #16261a; border: 2px solid #9fd3a8 }
+.fa-casella:not(.piena) { border-style: dashed; border-color: #3d5c42;
+  background: #0b120d }
+.fa-casella:not(.piena) .fa-merce { opacity: .28 }
+
+/* Quello che ne esce, **più piccolo di quello che entra**: davanti a una
+   macchina la domanda è «ce la faccio?», e la risposta sta nelle
+   caselle. Cosa ne esce lo dice il nome, e basta. */
+.fa-esce { display: flex; align-items: center; gap: 5px; margin-top: 2px }
+.fa-esce b { color: #8fa691; font-size: 15px }
+
+.fa-catena { display: flex; align-items: flex-end; justify-content: center; gap: 6px }
+/* Il numero sta **sotto** la figura e non addosso: appiccicato sopra
+   copriva proprio i pixel che distinguono una cassa dall'altra. */
+.fa-pezzetto { display: flex; flex-direction: column; align-items: center }
+.fa-pezzetto i { font-style: normal; font-size: 12px; font-weight: 700;
+  color: #d8e4d6; line-height: 1 }
+/* «ne hai 4»: quello che c'è in silo, sotto quello che la ricetta
+   chiede. Più piccolo e più spento del numero della ricetta, perché
+   sono due cose diverse — uno è la regola, l'altro è la dispensa — e
+   messi allo stesso peso si leggono come un unico numero storto. */
+.fa-pezzetto u, .fa-cibo u { display: block; text-decoration: none;
+  font-size: 10px; color: #8fa691; line-height: 1.3; white-space: nowrap }
+.fa-freccia { font-size: 17px; color: #8fa691; padding-bottom: 12px }
+
+/* «È pronto!» con addosso la figura di quello che è pronto: la riga più
+   importante del pannello, e l'unica in cui la merce si vede grande. */
+.fa-pronto { display: flex; align-items: center; gap: 10px; text-align: left }
+.fa-pronto b { color: #ffd98a }
+
+/* La carta di una coltura, col disegno invece dell'emoji: più larga,
+   perché dentro c'è una cassa di verdura e non un carattere. */
+.fa-cibo.grande { padding: 7px 12px 6px; min-width: 92px }
+/* Lo scomparto è colmo: **oro, non rosso**. È la stessa tinta con cui
+   il silo segna uno scomparto pieno, e vuol dire «guarda qui», non
+   «non si può» — seminarla si può benissimo, è il raccolto che poi non
+   entrerebbe. Il rosso in questo gioco è il colore di un rifiuto. */
+.fa-cibo.colma { border-color: #c9a227 }
+.fa-cibo.colma u { color: #ffd98a }
 
 .fa-minuto { display: block; margin: 10px auto 0; padding: 4px 10px; border: none;
   background: none; color: #8fa691; font: inherit; font-size: 12px;

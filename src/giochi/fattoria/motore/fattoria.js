@@ -31,10 +31,11 @@
    ciotola. Metterli insieme vorrebbe dire una panchina con una
    scadenza e un grano che si può ripiazzare sul prato.
 
-   Il granaio ha un tetto (`capienza`, in `dati/coltivazioni.js`) e ogni
-   silo in mappa lo alza. Quello che non ci sta **non si raccoglie**: il
-   campo resta pronto, e questo non è un intoppo ma il modo in cui il
-   gioco chiede un silo senza scriverlo.
+   Il granaio ha un tetto **per merce** (`postiPerMerce`, in
+   `dati/coltivazioni.js`): ogni prodotto ha il suo scomparto, e
+   ingrandire un silo li allarga tutti insieme. Quello che non ci sta
+   **non si raccoglie**: il campo resta pronto, e questo non è un
+   intoppo ma il modo in cui il gioco chiede un silo senza scriverlo.
 
    ── IL MONDO NON È UNA COSTANTE ───────────────────────────────────
    Non c'è più un `PIAZZOLE = 7`: `limiti` dice fin dove arriva la
@@ -66,10 +67,10 @@ import {
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
 import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi,
-         statiDi, prezzoDellaVoce } from '../dati/catalogo.js'
+         statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare } from '../dati/catalogo.js'
 import {
-  PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, capienza, costoIngrandimento,
-  siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano,
+  PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, ricetteDi, postiPerMerce, costoIngrandimento,
+  merciDi, siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano,
 } from '../dati/coltivazioni.js'
 import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
@@ -226,6 +227,10 @@ export class Fattoria {
     this.cose = ((d && d.cose) || []).filter(c => c && PER_ID[c.id])
       .map(c => {
         const cosa = { i: c.i, id: c.id, g: c.g || 0, x: c.x | 0, y: c.y | 0 }
+        /* Lo specchio si scrive solo quando c'è: un `m: 0` addosso a
+           ogni cosa sono duecento chiavi in più nel salvataggio di ogni
+           bambino per dire «no» duecento volte. */
+        if (c.m) cosa.m = 1
         if (c.coltura && PER_COLTURA[c.coltura] && c.seminato > 0) {
           cosa.coltura = c.coltura
           cosa.seminato = c.seminato
@@ -528,14 +533,24 @@ export class Fattoria {
   }
 
   /* ═══════════ girare ═══════════
-     Non ruota dei pixel — cambia tessera, e solo dove il set ha davvero
-     la variante. Se girato non ci sta, si torna com'era: meglio un
-     rifiuto che una staccionata dentro una casa. */
+     Un verso avanti, e i versi che una cosa ha li conta il catalogo
+     (`quantiVersi`): per la staccionata e la casa sono le vedute che il
+     foglio disegna davvero, per un'aiuola o un sasso sono i quattro
+     quarti di giro, che la pixel art regge esatti e che costano un
+     `ctx.rotate` a chi disegna. Da qui non si vede la differenza, ed è
+     il punto: qui si sa solo che i versi sono N e che passare al
+     prossimo può cambiare l'ingombro.
+
+     Perché **l'ingombro cambia**: un quarto di giro dispari scambia
+     larghezza e profondità, e una staccionata che gira passa da [2,1] a
+     [1,2]. Se girata non ci sta si torna com'era — meglio un rifiuto
+     che una staccionata dentro una casa. */
   gira(cosa) {
     const v = PER_ID[cosa.id]
-    if (!v || !v.giri || v.giri.length < 2) return { ok: false, motivo: 'non-si-gira' }
+    const versi = quantiVersi(v)
+    if (!v || versi < 2) return { ok: false, motivo: 'non-si-gira' }
     const prima = cosa.g || 0
-    const dopo = (prima + 1) % v.giri.length
+    const dopo = (prima + 1) % versi
     cosa.g = dopo
     const [w, h] = piedeDi(cosa, v)
     if (!this.libera(cosa.x, cosa.y, w, h, cosa)) {
@@ -543,6 +558,26 @@ export class Fattoria {
       return { ok: false, motivo: 'non-ci-sta' }
     }
     return { ok: true, verso: dopo }
+  }
+
+  /* ═══════════ rovesciare ═══════════
+     L'altra metà, e non è la stessa cosa girata: lo specchio non tocca
+     l'ingombro — stessi pixel, stesso rettangolo, solo al contrario —
+     quindi **non può mai fallire per posto**, e chi lo chiama non ha
+     niente da spiegare a nessuno. È anche il motivo per cui vive in un
+     campo suo (`cosa.m`) invece che dentro il verso: un numero solo per
+     due fatti di natura diversa avrebbe obbligato il motore a
+     ricontrollare la collisione anche quando non serve.
+
+     Lo reggono quasi tutti i pezzi. I pochi che no l'hanno detto nel
+     loro foglietto — i cartelli dei campi, che hanno una parola scritta
+     sopra e allo specchio non dicono più niente. */
+  specchia(cosa) {
+    const v = PER_ID[cosa.id]
+    if (!puoSpecchiare(v)) return { ok: false, motivo: 'non-si-specchia' }
+    if (cosa.m) delete cosa.m
+    else cosa.m = 1
+    return { ok: true, specchio: !!cosa.m }
   }
 
   /* ═══════════ le bestie ═══════════
@@ -714,40 +749,58 @@ export class Fattoria {
     return SILI[famiglia] ? Math.max(0, (this.silos || {})[famiglia] | 0) : 0
   }
 
-  /* Zero se il silo non c'è, e zero è diverso da piccolo: senza silo
-     quella roba non ha proprio dove finire, e chi chiama lo dice con
-     parole diverse (`silo-manca` contro `non-ci-sta`). */
+  /* Quanti pezzi di **una** merce ci stanno in questo silo. Zero se il
+     silo non c'è, e zero è diverso da piccolo: senza silo quella roba
+     non ha proprio dove finire, e chi chiama lo dice con parole diverse
+     (`silo-manca` contro `non-ci-sta`).
+
+     Il tetto è **dello scomparto**, non del silo intero: vedi
+     `dati/coltivazioni.js`, dove sta il perché del cambio. */
   capienzaDi(famiglia) {
-    return this.eCostruito(famiglia) ? capienza(this.livelloDelSilo(famiglia)) : 0
+    return this.eCostruito(famiglia) ? postiPerMerce(this.livelloDelSilo(famiglia)) : 0
   }
 
-  /* Quanta roba c'è dentro **in tutto**: il tetto è del silo, non del
-     singolo prodotto. Era per prodotto, ed era la cosa che non si
-     capiva — «di ogni cosa ce ne stanno 90» non si trasforma in un
-     numero che si guarda mentre si raccoglie. */
+  /* Quanta roba c'è dentro in tutto. Non serve più a decidere se ci
+     sta — quello lo dice lo scomparto — ma a **dirlo**: «11 cose nel
+     silo del raccolto» è la riga che si legge aprendolo. */
   quantoHoNelSilo(famiglia) {
     return Object.entries(this.granaio)
       .reduce((n, [k, q]) => n + (siloDelProdotto(k) === famiglia ? q : 0), 0)
   }
 
-  /* Quanto ancora ci sta di questo prodotto: quello che avanza nel suo
-     silo. Due silos separati vogliono dire che uno pieno non ferma
-     l'altro — il raccolto colmo non impedisce di ritirare le uova — che
-     è la stessa preoccupazione di prima risolta dividendo invece che
-     alzando il tetto. */
+  /* Quanto ancora ci sta di questo prodotto: quello che avanza **nel
+     suo scomparto**. Due cose che uno scomparto pieno non ferma: le
+     altre merci dello stesso silo, e l'altro silo. Il mais colmo non
+     impedisce più di raccogliere le carote, che era il modo in cui il
+     gioco si fermava senza che niente fosse andato storto. */
   quantoCiSta(prodotto) {
     const fam = siloDelProdotto(prodotto)
     if (!fam) return 0
-    return Math.max(0, this.capienzaDi(fam) - this.quantoHoNelSilo(fam))
+    return Math.max(0, this.capienzaDi(fam) - this.quantoHo(prodotto))
   }
 
-  /* Perché non ci sta: il silo non c'è, o è pieno. Chi mostra i
-     cartelli ha bisogno di saperlo — «costruisci il silo» e
+  /* Perché non ci sta: il silo non c'è, o **quello scomparto** è pieno.
+     Chi mostra i cartelli ha bisogno di saperlo — «costruisci il silo» e
      «ingrandiscilo» sono due cose da fare diverse, e un cartello che
-     dice quella sbagliata è peggio di nessun cartello. */
+     dice quella sbagliata è peggio di nessun cartello. Il motivo si
+     chiama ancora `silo-pieno` perché è quello che chi gioca vede: la
+     parola «scomparto» sta nel testo, non nel codice di chi decide. */
   perchePieno(prodotto) {
     const fam = siloDelProdotto(prodotto)
     return { famiglia: fam, motivo: this.eCostruito(fam) ? 'silo-pieno' : 'silo-manca' }
+  }
+
+  /* Cosa c'è in un silo, scomparto per scomparto: quello che serve a
+     disegnarlo. Ci sono **anche gli scomparti vuoti**, perché uno
+     scomparto vuoto non è un buco, è il posto dove potrebbe andare
+     qualcosa — cioè l'unico modo di far vedere che si può coltivare
+     altro senza dirlo con una frase. */
+  scomparti(famiglia) {
+    const posti = this.capienzaDi(famiglia)
+    return merciDi(famiglia).map(prodotto => ({
+      prodotto, posti, quanti: this.quantoHo(prodotto),
+      pieno: posti > 0 && this.quantoHo(prodotto) >= posti,
+    }))
   }
 
   /* Quanto costa il prossimo ingrandimento di questo silo. */
@@ -957,9 +1010,46 @@ export class Fattoria {
        in testa. Il fumetto resta solo per il pronto, che è l'unico stato
        in cui c'è da fare qualcosa. */
     const stati = statiDi(cosa)
-    if (stati) return { invece: stati[this.posaDelRecinto(m)],
-                        fumetto: m.pronto ? '🧺' : null }
-    if (!m.ferma) return { sopra: null, fumetto: m.pronto ? '🧺' : '⏳' }
+    if (stati) {
+      const posa = this.posaDelRecinto(m)
+      return {
+        invece: stati[posa],
+        fumetto: m.pronto ? '🧺' : null,
+        /* ── COSA VUOLE, QUANDO HA FAME ─────────────────────────
+           Il fumetto **non è più dipinto dentro lo sprite**, e il
+           motivo è che due bestie che vogliono la stessa cosa la
+           mostravano con due disegni diversi — la mucca e la pecora
+           vogliono tutte e due il foraggio, e nel foglio erano un
+           mucchietto arancione e un ciuffo verde. Dipinto, quel
+           fumetto non può dire il vero: cosa mangia un recinto sta
+           nelle ricette, e le ricette cambiano.
+
+           Adesso lo dice il motore, che è l'unico che legge insieme
+           l'orologio e la tabella, e lo disegna la scena grande
+           quanto serve per vedersi. Qui esce **il nome di un
+           prodotto**, non un disegno: chi disegna sa come si fa una
+           faccia, questo file no. */
+        vuole: posa === 'fame' ? this.cosaVuole(cosa) : null,
+      }
+    }
+    /* ── UNA MACCHINA AL LAVORO DICE **COSA** STA FACENDO ──────────
+       Era una clessidra, uguale per tutte, e andava bene finché le
+       macchine erano una sola con una ricetta sola. Il fienile ne fa
+       quattro e il mulino due: davanti a una clessidra bisogna aprire
+       il foglio per sapere cos'è partito, e aprirlo è esattamente la
+       cosa che il fumetto esiste per evitare.
+
+       Il pronto resta il 🧺: quello non dice cosa c'è dentro, dice
+       **che c'è da fare qualcosa**, ed è l'unico caso in cui serve un
+       gesto. Chi vuole sapere cosa apre. */
+    if (!m.ferma) {
+      if (m.pronto) return { sopra: null, fumetto: '🧺' }
+      const p = PRODOTTI[m.ricetta.da]
+      return { sopra: null,
+               fa: p ? { prodotto: m.ricetta.da, pezzo: p.pezzo || null, testo: p.emoji }
+                     : null,
+               fumetto: p ? null : '⏳' }
+    }
     return null
   }
 
@@ -978,6 +1068,30 @@ export class Fattoria {
     if (m.quanto < 0.34) return 'mangia'
     if (m.quanto < 0.7) return 'felice'
     return 'dorme'
+  }
+
+  /* Cosa gli si deve dare, cioè il primo ingrediente della prima
+     ricetta che quel recinto sa fare a questo livello. È «il primo» e
+     non «tutti» perché il fumetto è una cosa sola sopra la testa, e
+     perché oggi ogni recinto ha una ricetta con un ingrediente solo: il
+     giorno che ne avesse due, il fumetto direbbe il primo e la scheda
+     direbbe tutto — che è il verso giusto, non il contrario.
+
+     Il livello conta: una ricetta che il bambino non ha ancora aperto
+     manderebbe a cercare una roba che non esiste. */
+  cosaVuole(cosa) {
+    const quale = macchinaDi(cosa)
+    if (!quale) return null
+    const r = ricetteDi(quale, this.livello)[0]
+    if (!r) return null
+    const id = Object.keys(r.prende || {})[0]
+    const p = id && PRODOTTI[id]
+    if (!p) return null
+    /* Esce **una faccia già decisa**, non il nome di una merce: chi
+       disegna riceve un pezzo dell'atlante e un ripiego da scrivere,
+       come per gli stadi di un campo e per il 🧺 di quello che è pronto.
+       La scena non deve sapere cos'è il foraggio, e infatti non lo sa. */
+    return { prodotto: id, pezzo: p.pezzo || null, testo: p.emoji }
   }
 
   /* ═══════════ il magazzino ═══════════ */

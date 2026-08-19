@@ -64,6 +64,10 @@ const props = defineProps({
      conto è del motore (`quantoCosta`), qui si mostra e non si decide —
      la stessa divisione della ciotola e dei cartelli del bosco. */
   prezzi: { type: Object, default: () => ({}) },
+  /* L'id della voce su cui aprirsi, se il baule è stato aperto da un
+     consiglio («ti serve un campo»). Vuoto vuol dire: apriti dove ti
+     apri sempre. */
+  punta: { type: String, default: '' },
   /* Il livello della fattoria: quello che non è ancora arrivato **non
      sta qui**. Una voce spenta dentro un negozio è un tasto rotto — chi
      la vede prova a premerla e non succede niente — mentre la stessa
@@ -81,29 +85,39 @@ const props = defineProps({
 })
 const emit = defineEmits(['tira', 'tiraBestia', 'chiudi'])
 
-/* Gli animali stanno nella stessa modale ma in una linguetta a parte.
-   Si prendono come le altre cose — anche una bestia si posa dove vuoi
-   tu, ed è così che finisce dentro un recinto — ma passano da un'uscita
-   loro: prima di comparire chiedono un nome. */
-const BESTIARIO = { chiave: 'animali', nome: 'Animali', icona: '🐕', zona: 'lavoro' }
+/* Gli animali si prendono come le altre cose — anche una bestia si posa
+   dove vuoi tu, ed è così che finisce dentro un recinto — ma passano da
+   un'uscita loro: prima di comparire chiedono un nome. */
+const ANIMALI = 'animali'
 
-/* ── LE DUE METÀ DEL BAULE ────────────────────────────────────────
+/* ── LE TRE METÀ DEL BAULE ────────────────────────────────────────
    Duecento voci in undici linguette, e la carriola fiorita in mezzo al
-   pollaio: chi cerca il mulino passava in rassegna il vivaio. Adesso il
-   baule ha **due metà** e si sceglie prima quella:
+   pollaio: chi cerca il mulino passava in rassegna il vivaio. Adesso in
+   cima si sceglie **di cosa si sta parlando**, e le tre risposte sono
+   tre modi diversi di spendere:
 
      🌾 **La fattoria** — quello che *fa* qualcosa: campi, macchine,
-        silos, i recinti degli animali, e le bestie.
-     🌸 **Il bello** — quello che sta lì e basta: alberi, fiori,
+        silos, i recinti. Una linguetta sola, quindi non se ne mostra
+        nessuna.
+     🌸 **Decorazioni** — quello che sta lì e basta: alberi, fiori,
         panchine, laghetti, case.
+     🐕 **Animali** — le bestie di casa, che si comprano e chiedono un
+        nome.
 
-   Non è ordine per l'ordine. Sono i due modi diversi di spendere che
-   questo posto ha: uno allarga la catena, l'altro la fa sembrare casa.
-   Tenerli separati vuol dire che si sceglie *quale dei due* si sta
-   facendo, invece di trovarseli mescolati in una griglia. */
+   *Ribalta la divisione di prima*, che erano due metà con gli animali
+   dentro «la fattoria», come una linguetta accanto ai recinti. Due
+   difetti: le bestie non producono niente — stare nella metà di quello
+   che lavora era una bugia — e sotto «la fattoria» finivano tre
+   linguette (campi, cortile, animali) dove adesso ce n'è **una sola**,
+   cioè nessuna scelta da fare. Meno sottogruppi, e le unità
+   produttive tutte insieme.
+
+   Si chiamava «Il bello», che è vero ma non è una parola che un bambino
+   userebbe cercando una panchina. «Decorazioni» sì. */
 const ZONE = [
   { chiave: 'lavoro', nome: 'La fattoria', icona: '🌾' },
-  { chiave: 'bello', nome: 'Il bello', icona: '🌸' },
+  { chiave: 'bello', nome: 'Decorazioni', icona: '🌸' },
+  { chiave: ANIMALI, nome: 'Animali', icona: '🐕' },
 ]
 /* Il granaio **non è più una linguetta**, ed era: stava qui perché
    «cosa ho» è una domanda sola e il baule è il posto dove si va a farla.
@@ -118,8 +132,7 @@ const ZONE = [
 const DICE = {
   verde: 'Alberi, cespugli e sassi, ma dove vuoi tu.',
   fiori: 'Vasi e fioriere. I fiori piccoli si posano anche sull\'erba.',
-  campi: 'I due silos tengono la roba, e sono diversi: toccali per guardarci dentro.',
-  cortile: 'I recinti si toccano: dai da mangiare, e ti danno qualcosa.',
+  campi: 'La catena, in fila: il campo, i silos, il mulino, il fienile, i recinti.',
   bestiole: 'Cucce, nidi e bestioline. Stanno lì e basta, ma fanno compagnia.',
   raccolto: 'Cassette, ceste e balle di fieno: quello che viene dai campi.',
   acqua: 'Fontane, pozzi e laghetti. La fontana si muove da sola.',
@@ -128,18 +141,37 @@ const DICE = {
   arredo: 'Panchine, tavoli e lampioni, da sedersi e da guardare.',
 }
 
-const zona = ref('lavoro')
-const categoria = ref(CATEGORIE[0].chiave)
+/* ── APERTO SU UNA COSA PRECISA ───────────────────────────────────
+   `punta` è l'id di una voce, e arriva da chi ha appena detto «ti serve
+   un campo»: il baule si apre **dove quella cosa è**, metà giusta e
+   linguetta giusta, con la voce accesa. Senza, il consiglio finiva in un
+   baule di duecento cose aperto sulla prima linguetta, e trovare il
+   campo restava un compito — che è esattamente quello che il consiglio
+   doveva togliere di mezzo. */
+const laCategoriaDi = id => (CATEGORIE.find(c => c.voci.some(v => v.id === id)) || null)
+const suPunta = CATEGORIE.length ? laCategoriaDi(props.punta) : null
+
+const zona = ref(suPunta ? (suPunta.zona || 'bello') : 'lavoro')
+const categoria = ref(suPunta ? suPunta.chiave : CATEGORIE[0].chiave)
 /* La linguetta aperta dev'essere una di quelle che ci sono **in questa
    metà**: cambiando metà, o al primo livello dove ce n'è una sola, una
    `ref` che punta altrove mostrerebbe uno scaffale vuoto. */
 const scheda = computed(() =>
   schede.value.some(s => s.chiave === categoria.value)
     ? categoria.value : (schede.value[0] || {}).chiave)
-/* Una metà senza niente dentro non si mostra: al primo livello «il
-   bello» è vuoto, e una linguetta che si apre su niente è un tasto
-   rotto. */
-const zone = computed(() => ZONE.filter(z => schedeDi(z.chiave).length))
+/* Le bestie arrivate. Quelle che non lo sono non stanno qui per lo
+   stesso motivo delle cose: si guardano nella pagina dei livelli. Sta
+   **sopra** a chi la legge: `zone` la usa, e una `computed` dichiarata
+   dopo quella che la chiama è una zona morta che aspetta il giorno in
+   cui qualcuno legge `zone` durante il setup. */
+const inVendita = computed(() => IN_VENDITA.filter(a => (a.liv || 1) <= props.livello))
+
+/* Una metà senza niente dentro non si mostra: al primo livello le
+   decorazioni non ci sono ancora e gli animali nemmeno, e un tasto che
+   si apre su niente è un tasto rotto. Gli animali non hanno linguette,
+   quindi si guarda direttamente se ce n'è uno in vendita. */
+const zone = computed(() => ZONE.filter(z => z.chiave === ANIMALI
+  ? inVendita.value.length : schedeDi(z.chiave).length))
 const quantiNe = id => props.magazzino[id] || 0
 const eMia = chi => props.bestie.some(b => (b.chi || b) === chi)
 
@@ -154,16 +186,9 @@ const vociDi = chiave => {
     && !(v.unico && props.posati.includes(v.id) && !quantiNe(v.id)))
 }
 
-const schedeDi = quale => [
-  ...CATEGORIE.filter(c => (c.zona || 'bello') === quale && vociDi(c.chiave).length),
-  ...(quale === 'lavoro' && IN_VENDITA.some(a => (a.liv || 1) <= props.livello)
-      ? [BESTIARIO] : []),
-]
+const schedeDi = quale => quale === ANIMALI ? []
+  : CATEGORIE.filter(c => (c.zona || 'bello') === quale && vociDi(c.chiave).length)
 const schede = computed(() => schedeDi(zona.value))
-
-/* Le bestie arrivate. Quelle che non lo sono non stanno qui per lo
-   stesso motivo delle cose: si guardano nella pagina dei livelli. */
-const inVendita = computed(() => IN_VENDITA.filter(a => (a.liv || 1) <= props.livello))
 
 const costa = v => props.prezzi[v.id] ?? v.prezzo
 /* Quanto manca per potersela permettere: zero vuol dire che si può. È
@@ -197,14 +222,18 @@ function giuBestia(e, a) {
         <b>{{ z.icona }}</b> {{ z.nome }}</button>
     </nav>
 
-    <nav class="fa-schede">
+    <!-- Le linguette compaiono **solo se sono più di una**: sotto «la
+         fattoria» ce n'è una sola, e un tasto che non ha alternative
+         non è una scelta — è una riga di schermo che dice il nome di
+         quello che si sta già guardando. -->
+    <nav v-if="schede.length > 1" class="fa-schede">
       <button v-for="c in schede" :key="c.chiave"
               :class="['fa-scheda', { viva: c.chiave === scheda }]"
               @click="categoria = c.chiave">
         <b>{{ c.icona }}</b><span>{{ c.nome }}</span></button>
     </nav>
 
-    <p v-if="scheda === 'animali'" class="fa-dice">Premi un animale e
+    <p v-if="zona === 'animali'" class="fa-dice">Premi un animale e
        scegli <b>dove farlo arrivare</b>: poi gli dai un nome. Dentro un
        recinto ci resta.</p>
     <p v-else class="fa-dice">{{ DICE[scheda] || 'Premi una cosa e scegli dove metterla.' }}</p>
@@ -213,7 +242,7 @@ function giuBestia(e, a) {
          degli sprite: cercarci dentro una stringa non trovava mai
          niente, e un cane già comprato restava in vendita col suo
          prezzo. -->
-    <div v-if="scheda === 'animali'" class="fa-scaffale">
+    <div v-if="zona === 'animali'" class="fa-scaffale">
       <div v-for="a in inVendita" :key="a.chi"
            :class="['fa-voce', { presa: eMia(a.chi),
                                  cara: !eMia(a.chi) && a.prezzo > monete }]"
@@ -235,6 +264,7 @@ function giuBestia(e, a) {
       <div v-for="v in vociDi(scheda)" :key="v.id"
            :class="['fa-voce', { tua: quantiNe(v.id),
                                  cara: !quantiNe(v.id) && manca(v),
+                                 indicata: v.id === punta,
                                  lavora: v.campo || v.macchina || v.silo }]"
            @pointerdown="giu($event, v)">
         <span class="fa-ripiano"><Provino :pezzo="v.pezzo" :lato="54" /></span>

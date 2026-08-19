@@ -98,18 +98,20 @@ const mezzo = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.
    eccezione. */
 await page.locator('.fa-tondo').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-controlla('nel baule c\'è la scheda dei campi',
-          await page.locator('.fa-scheda', { hasText: 'Campi' }).count() === 1)
-/* Il granaio **non è più una linguetta**: si guarda toccando un silo
+/* Il baule si apre già su «la fattoria», e lì la linguetta è **una
+   sola** — campi, macchine, silos e recinti sono la stessa catena — e
+   quando è una sola non si mostra affatto: un tasto senza alternative
+   non è una scelta. */
+uguale('sotto «la fattoria» non ci sono linguette da scegliere',
+       await page.locator('.fa-scheda').count(), 0)
+/* Il granaio **non è mai stato rimesso lì**: si guarda toccando un silo
    (vedi `viste/Granaio.vue`). Il controllo è al negativo perché è il
-   modo in cui una linguetta rimessa lì per comodità si farebbe
-   riprendere — e con lei tornerebbe l'unica scheda del baule che si
-   guarda e basta. */
-uguale('e il granaio non è una linguetta del baule',
-       await page.locator('.fa-scheda', { hasText: 'Granaio' }).count(), 0)
+   modo in cui una linguetta rimessa per comodità si farebbe riprendere
+   — e con lei tornerebbe l'unica scheda del baule che si guarda e
+   basta. */
+uguale('e il granaio non è una metà del baule',
+       await page.locator('.fa-zona', { hasText: 'Granaio' }).count(), 0)
 
-await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
-await attendi(page, 250)
 for (const che of ['Campo', 'Mulino', 'Silo'])
   controlla(`fra i campi si vende «${che}»`,
             await page.locator('.fa-voce', { hasText: che }).count() > 0)
@@ -138,8 +140,6 @@ nota(`campo pagato ${primaDelCampo - dopoIlCampo} monete`)
    cosa dopo lo si riapre. */
 await page.locator('.fa-tondo').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
-await attendi(page, 250)
 const vSilo = await page.locator('.fa-voce', { hasText: 'Silo' }).first().boundingBox()
 await dito(Math.round(vSilo.x + vSilo.width / 2), Math.round(vSilo.y + vSilo.height / 2))
 /* lontano dal campo e da dove finirà il recinto, che è largo quattro
@@ -226,25 +226,38 @@ uguale('raccolto, il foglio si chiude', await page.locator('.fa-velo').count(), 
 
 /* ---------- 6b. il silo si guarda toccandolo, e si ingrandisce ----------
    Il gesto è quello di tutto il resto — tocca una cosa tua e vedi cosa
-   ci si può fare. Dentro c'è la roba, quanti posti restano, e il tasto
-   che è la sola cosa da fare qui: ingrandirlo. */
+   ci si può fare. Dentro c'è **uno scomparto per merce**, con la sua
+   barretta, e il tasto che è la sola cosa da fare qui: ingrandirli
+   tutti insieme. */
 await dito(doveSilo.x, doveSilo.y)
 await attendi(page, 450)
 uguale('toccando il silo si apre il suo foglio', await titolo(), 'Silo del raccolto')
 const granaio = await page.evaluate(
   () => (document.querySelector('.fa-granaio') || {}).innerText || '')
-controlla('e il grano è lì dentro', /Grano[\s\S]*×\s*\d/.test(granaio),
-          granaio.replace(/\n+/g, ' · ').slice(0, 160))
-controlla('e dice quanti posti sono occupati su quanti',
-          /\d+ di \d+ posti/.test(granaio),
-          granaio.replace(/\n+/g, ' · ').slice(0, 160))
+/* `innerText` rende il testo **come si vede**, e le etichette degli
+   scomparti sono in maiuscoletto: cercare «Grano» com'è scritto nel
+   dato fallisce su una schermata giusta. */
+controlla('e il grano è lì dentro, col suo conto', /grano[\s\S]*?\d+\/\d+/i.test(granaio),
+          granaio.replace(/\n+/g, ' · ').slice(0, 200))
+controlla('e dice quanto ci sta di ogni cosa',
+          /\d+ di ogni cosa/.test(granaio),
+          granaio.replace(/\n+/g, ' · ').slice(0, 200))
+
+/* Gli scomparti sono **cinque, uno per merce dei campi**, e ci sono
+   anche quelli vuoti: uno scomparto a zero è il posto dove potrebbe
+   andare qualcosa, cioè il modo di far scoprire che si può coltivare
+   altro. Se un giorno tornassero i posti condivisi, questa riga cade. */
+uguale('c\'è uno scomparto per ogni merce dei campi',
+       await page.locator('.fa-scomparto').count(), 5)
+controlla('e il mangime non è fra questi: sta con gli animali',
+          !/mangime/i.test(granaio), granaio.replace(/\n+/g, ' · ').slice(0, 200))
 await scatto(page, 'campi-granaio')
 
 /* Premere una roba dice **chi la usa**: è la sola cosa utile che una
-   riga di scaffale possa dire, e l'unico motivo per cui è premibile. Il
+   riga di magazzino possa dire, e l'unico motivo per cui è premibile. Il
    grano ha due usi veri (mulino e pollaio), quindi si controlla che ne
    compaia almeno uno col nome della macchina. */
-await page.locator('.fa-voce', { hasText: 'Grano' }).first().click()
+await page.locator('.fa-scomparto', { hasText: 'Grano' }).first().click()
 await attendi(page, 250)
 const usi = await page.evaluate(
   () => (document.querySelector('.fa-usi') || {}).innerText || '')
@@ -252,21 +265,22 @@ controlla('premendo il grano si legge chi lo usa', /mulino|pollaio/i.test(usi),
           usi.replace(/\n+/g, ' · ').slice(0, 140))
 await scatto(page, 'campi-granaio-usi')
 
-/* Ingrandire: il foglio non si chiude e i posti diventano di più. Che
-   il foglio resti aperto è una scelta — chi ne vuole altri due è già
-   lì — quindi si controlla, se no la prossima riscrittura lo chiude e
-   nessuno se ne accorge. */
-const postiPrima = Number((granaio.match(/\d+ di (\d+) posti/) || [])[1])
+/* Ingrandire: il foglio non si chiude e i posti diventano di più — in
+   **ogni** scomparto, che è la differenza fra questo magazzino e quello
+   di prima. Che il foglio resti aperto è una scelta (chi ne vuole altri
+   due è già lì), quindi si controlla: se no la prossima riscrittura lo
+   chiude e nessuno se ne accorge. */
+const postiPrima = Number((granaio.match(/(\d+) di ogni cosa/) || [])[1])
 const primaDiIngrandire = await monete()
 await page.locator('.fa-foglio button', { hasText: 'Ingrandisci' }).click()
 await attendi(page, 450)
 const dopoIngrandito = await page.evaluate(
   () => (document.querySelector('.fa-granaio') || {}).innerText || '')
-const postiDopo = Number((dopoIngrandito.match(/\d+ di (\d+) posti/) || [])[1])
-controlla('ingrandire il silo aggiunge posti', postiDopo > postiPrima,
+const postiDopo = Number((dopoIngrandito.match(/(\d+) di ogni cosa/) || [])[1])
+controlla('ingrandire il silo aggiunge posti a ogni scomparto', postiDopo > postiPrima,
           `${postiPrima} → ${postiDopo}`)
 controlla('e si paga', await monete() < primaDiIngrandire)
-nota(`silo ingrandito: ${postiPrima} → ${postiDopo} posti, ` +
+nota(`scomparti ingranditi: ${postiPrima} → ${postiDopo} posti a testa, ` +
      `${primaDiIngrandire - await monete()} monete`)
 await chiudi()
 
@@ -280,12 +294,15 @@ await chiudi()
    apra col suo nome e dica cosa gli manca. */
 await page.locator('.fa-tondo').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-controlla('nel baule c\'è la scheda del cortile',
-          await page.locator('.fa-scheda', { hasText: 'Cortile' }).count() === 1)
-await page.locator('.fa-scheda', { hasText: 'Cortile' }).click()
-await attendi(page, 250)
-for (const che of ['Conigliera', 'Pollaio', 'Stalla'])
-  controlla(`nel cortile si vende «${che}»`,
+/* I recinti stanno **nella stessa linguetta dei campi**: sono i passi
+   successivi della stessa catena, e in due scaffali diversi quella fila
+   non si vede. Sotto «la fattoria» la linguetta è una sola, e quando è
+   una sola non si mostra affatto — quindi qui non si clicca niente: il
+   baule si apre già lì. */
+controlla('sotto «la fattoria» non c\'è nessuna linguetta da scegliere',
+          await page.locator('.fa-scheda').count() === 0)
+for (const che of ['Campo', 'Fienile', 'Conigliera', 'Pollaio', 'Stalla'])
+  controlla(`la catena si vende tutta in fila: «${che}»`,
             await page.locator('.fa-voce', { hasText: che }).count() > 0)
 await scatto(page, 'campi-cortile')
 

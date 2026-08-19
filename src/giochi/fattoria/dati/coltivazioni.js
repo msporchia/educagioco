@@ -77,27 +77,70 @@ export const MINUTO = 60000
    quella roba, oltre a stare in granaio, si può mettere nella ciotola —
    il legame vero sta in `bisogni.js`, che la pesca da qui.
 
-   `silo` dice **in quale dei due** va a finire, e non è un dettaglio:
-   sono due magazzini separati, con due tetti separati, e uno pieno non
-   ferma l'altro. Quello che viene dalla terra (compreso ciò che il
-   mulino ne ricava) sta nel silo del raccolto; quello che danno le
-   bestie sta nel silo della stalla. Il perché sta più giù, dove si
-   dichiarano i due silos. */
+   `silo` dice **in quale dei due** va a finire, e non è un dettaglio.
+
+   *Ribalta la scelta di prima.* Il criterio era **da dove viene la
+   roba**: dalla terra nel silo del raccolto — compreso quello che il
+   mulino ne ricava — e dalle bestie nel silo della stalla. È un fatto
+   vero, ed è completamente invisibile a chi gioca: nessun bambino sa
+   che il mangime «viene dalla terra», lo sa che si dà alle galline.
+
+   Adesso il criterio è quello che si vede: **il rosso è dei campi, il
+   bianco è degli animali** — quello che mangiano e quello che danno.
+   Cinque merci di qua, nove di là.
+
+   E non è solo ordine. Il mulino prende 3 🌾 dal silo del raccolto e ci
+   mette 2 🥣 **nell'altro**: macinare libera tre posti invece di uno,
+   cioè diventa il modo di svuotare il silo che si tappa. Prima il
+   prodotto rientrava dov'era il grano e la valvola non esisteva: chi
+   riempiva il raccolto di mais restava fermo, perché l'unica uscita
+   restituiva quasi tutto lo spazio che aveva preso.
+
+   ── `pezzo` — LA FACCIA DI UNA MERCE ──────────────────────────────
+   Un'emoji la disegna il telefono, quindi in mezzo a uno schermo
+   dipinto a mano ha lo stile di Apple: è la stessa ragione per cui i
+   mostri del dungeon hanno smesso di essere emoji. Qui ogni roba del
+   granaio ha il suo **pezzo dell'atlante**, e l'emoji resta scritta
+   accanto come ripiego — la usa `viste/Merce.vue` quando un disegno
+   non c'è (oggi non capita mai) e la usano le frasi, dove un canvas in
+   mezzo alle parole starebbe storto.
+
+   Non è decorazione: la stessa faccia si vede in quattro posti che
+   devono dire la stessa cosa — nel fumetto sopra un recinto che ha
+   fame, sullo scaffale del silo, sui tasti delle ricette, sulla scheda
+   di un campo — e un'emoji piccola dentro un fumetto piccolo era
+   proprio il difetto da cui è nato tutto questo: due bestie che
+   vogliono la stessa cosa la mostravano con due disegni diversi, e
+   nessuno dei due si leggeva.
+
+   Nove delle quattordici facce erano **già nell'atlante e non le
+   nominava nessuno** (le casse del raccolto, la balla, la bottiglia
+   del latte). Le altre sei sono un foglio a parte, generato apposta:
+   `strumenti/sprite/sorgenti/oggetti.jpg`, sei oggetti su fondo
+   magenta — e il magenta è la ragione per cui si scontornano da soli. */
 export const PRODOTTI = {
-  /* dai campi */
-  grano:   { nome: 'Grano',   emoji: '🌾', silo: 'terra' },
-  mais:    { nome: 'Mais',    emoji: '🌽', silo: 'terra' },
-  carote:  { nome: 'Carote',  emoji: '🥕', silo: 'terra' },
-  zucche:  { nome: 'Zucche',  emoji: '🎃', silo: 'terra' },
-  fieno:   { nome: 'Fieno',   emoji: '🌿', silo: 'terra' },
-  /* dal mulino */
-  mangime: { nome: 'Mangime', emoji: '🥣', silo: 'terra' },
-  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'terra' },
-  /* dai recinti */
-  uova:    { nome: 'Uova',    emoji: '🥚', silo: 'stalla' },
-  latte:   { nome: 'Latte',   emoji: '🥛', silo: 'stalla' },
-  tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla' },
-  lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla' },
+  /* dai campi — il silo del raccolto */
+  grano:   { nome: 'Grano',   emoji: '🌾', silo: 'terra', pezzo: 'raccolto_grano' },
+  mais:    { nome: 'Mais',    emoji: '🌽', silo: 'terra', pezzo: 'raccolto_mais' },
+  carote:  { nome: 'Carote',  emoji: '🥕', silo: 'terra', pezzo: 'raccolto_carote' },
+  zucche:  { nome: 'Zucche',  emoji: '🎃', silo: 'terra', pezzo: 'raccolto_zucche' },
+  fieno:   { nome: 'Fieno',   emoji: '🌿', silo: 'terra', pezzo: 'raccolto_erba' },
+  /* il mangime delle bestie del cortile: esce dal fienile e non si
+     mangia in casa — è la riga di mezzo della catena */
+  becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', pezzo: 'merce_becchime' },
+  foraggio: { nome: 'Foraggio', emoji: '🥬', silo: 'stalla', pezzo: 'balla_fieno_tonda' },
+  zuppa:    { nome: 'Zuppa',    emoji: '🥘', silo: 'stalla', pezzo: 'merce_zuppa' },
+  /* quello che mangiano il cane e il gatto di casa: esce dal mulino */
+  mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', pezzo: 'merce_mangime' },
+  /* Il calderone e non la ciotola rosa dei gatti: in una fila di nove
+     scomparti di legno e iuta quella era l'unica cosa fucsia, e si
+     leggeva come un errore. Un pastone sta in una pentola. */
+  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', pezzo: 'calderone0' },
+  /* e quello che danno */
+  uova:    { nome: 'Uova',    emoji: '🥚', silo: 'stalla', pezzo: 'merce_uova' },
+  latte:   { nome: 'Latte',   emoji: '🥛', silo: 'stalla', pezzo: 'latte' },
+  tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla', pezzo: 'merce_tartufi' },
+  lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla', pezzo: 'merce_lana' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -178,6 +221,24 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    il mulino costa più di trenta pappe comprate, e si ripaga solo a chi
    coltiva per giorni.
 
+   ── `liv`: QUANDO UNA RICETTA COMPARE ─────────────────────────────
+   Il ripiego è il livello della sua macchina, ed è giusto per sei
+   ricette su sette. Il pastone no, e il perché è il difetto che questo
+   campo esiste per riparare: il mulino arriva al livello 3, il mais al
+   10. Per sette livelli — 🪙2000 di esercizi, cinque ore e mezza — il
+   mulino mostrava «Pastone: 4 🌽» a chi il mais non poteva nemmeno
+   seminarlo. Un tasto spento per cinque ore non è un obiettivo, è una
+   cosa rotta: chi lo preme non ottiene niente e nessuno gli dice che
+   deve aspettare metà del gioco.
+
+   Adesso una ricetta può dire **quando compare**, e la regola che la
+   tiene onesta la controlla `guastiDelleColture` in fondo: nessuna
+   ricetta può arrivare prima di quello che le serve. Effetto
+   collaterale voluto: il mulino appena comprato ha **una ricetta
+   sola**, che è la stessa scelta del primo campo con una coltura sola —
+   a quattro anni un bottone è una cosa da fare, cinque sono un elenco
+   da leggere.
+
    Costano anche monete (`costo`), poche: il gesto di far partire una
    macchina è un gesto come seminare.
 
@@ -194,46 +255,122 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    quale stato. Da lontano, senza aprire niente, si legge se c'è da fare
    qualcosa — che è lo stesso mestiere del 💭 sopra un cane affamato.
 
-   La catena, per intero: campo → granaio → recinto → granaio → ciotola.
+   ── E IN MEZZO C'È IL FIENILE ─────────────────────────────────────
+   *Ribalta la catena di prima*, che era **campo → recinto → prodotto**:
+   si raccoglieva il grano e lo si buttava dentro il pollaio così com'era.
+   Tre righe corte, e il difetto era proprio la lunghezza — dopo il primo
+   pomeriggio non c'era più niente da scoprire, e il posto dove si
+   bruciano le monete deve avere qualcosa che si allarga.
+
+   Adesso in mezzo c'è il **fienile**, che dal raccolto fa il *mangime*
+   delle bestie: **campo → fienile → recinto → prodotto**. È una macchina
+   come il mulino, non una meccanica nuova, ed è un edificio che c'era
+   già nel baule come decorazione — l'orto e il carretto del vicino sono
+   arrivati per la stessa strada, e chi se l'era comprato per bellezza se
+   lo ritrova utile senza che ci sia niente da migrare.
+
+   E i due mestieri restano separati, che è quello che rende leggibili
+   due macchine invece di una sola con sette tasti:
+
+     🌾 il mulino  → 🥣 mangime, 🍲 pastone   la ciotola di casa
+     🏚 il fienile → 🌰 becchime, 🥬 foraggio, 🥘 zuppa   il cortile
+
+   ── TRE MANGIMI, TRE BOCCHE ───────────────────────────────────────
+   Uno solo sarebbe stato più semplice da scrivere e avrebbe cancellato
+   la cosa che il gioco insegna: **ogni coltura ha la bocca che la
+   mangia**. Con un mangime unico si coltiva la coltura più conveniente e
+   basta; con tre, il grano resta la cosa delle galline e le zucche
+   restano la cosa dei maiali, e il fienile è solo il passaggio in mezzo.
+
+     🌾 grano  → 🌰 becchime → 🐔 galline           → 🥚 uova
+     🥕 carote → 🥬 foraggio → 🐰 conigli           → 🧶 lana
+     🌿 fieno  → 🥬 foraggio → 🐑 pecore · 🐄 mucche → 🧶 lana · 🥛 latte
+     🎃 zucche → 🥘 zuppa    → 🐖 maiali            → 🍄 tartufi
+     🌽 mais   → 🍲 pastone  (il mulino, per la ciotola)
+
+   Due strade per lo stesso foraggio non sono una svista: le carote
+   arrivano col primo recinto, il fieno sette livelli dopo ed è la metà
+   del prezzo — chi ha aspettato risparmia, come sempre qui dentro.
+
+   ── E ALLORA LE PECORE E I CONIGLI? ───────────────────────────────
+   Mangiano lo stesso foraggio e fanno la stessa lana, quindi l'ovile
+   dev'essere **più efficiente**, se no costa il doppio della conigliera
+   per fare la stessa cosa: 3 🥬 → 2 🧶 contro 2 🥬 → 1 🧶. Si paga prima
+   e si risparmia dopo, che è la forma di tutta l'attrezzatura di questo
+   gioco.
+
+   La catena, per intero:
+   campo → granaio → fienile → granaio → recinto → granaio → ciotola.
    Il verso resta uno solo, e non torna mai indietro in monete. */
 export const RICETTE = [
+  /* ── il mulino: la ciotola di casa ── */
   {
     id: 'mangime', nome: 'Mangime', emoji: '🥣', dove: 'mulino',
     prende: { grano: 3 }, costo: 2, minuti: 5, da: 'mangime', resa: 2,
   },
+  /* Col mais, non col mulino: è la ricetta per cui esiste `liv`. */
   {
-    id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino',
+    id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino', liv: 10,
     prende: { mais: 4 }, costo: 4, minuti: 8, da: 'pastone', resa: 1,
   },
+
+  /* ── il fienile: il mangime del cortile ──
+     Ogni ricetta arriva **col recinto che la mangia**, e non prima: un
+     sacco di becchime in granaio prima che esista una gallina è roba
+     che occupa uno scomparto e non serve a niente. */
+  {
+    id: 'foraggio_carote', nome: 'Foraggio di carote', emoji: '🥬',
+    dove: 'fienile', liv: 5,
+    prende: { carote: 3 }, costo: 1, minuti: 8, da: 'foraggio', resa: 2,
+  },
+  {
+    id: 'becchime', nome: 'Becchime', emoji: '🌰', dove: 'fienile', liv: 8,
+    prende: { grano: 3 }, costo: 1, minuti: 6, da: 'becchime', resa: 2,
+  },
+  {
+    id: 'foraggio', nome: 'Foraggio d\'erba', emoji: '🥬', dove: 'fienile', liv: 12,
+    prende: { fieno: 3 }, costo: 1, minuti: 8, da: 'foraggio', resa: 2,
+  },
+  {
+    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'fienile', liv: 26,
+    prende: { zucche: 2 }, costo: 1, minuti: 10, da: 'zuppa', resa: 2,
+  },
+
+  /* ── i recinti: il mangime diventa roba ── */
   {
     id: 'uova', nome: 'Uova', emoji: '🥚', dove: 'pollaio',
-    prende: { grano: 3 }, costo: 2, minuti: 12, da: 'uova', resa: 2,
+    prende: { becchime: 2 }, costo: 1, minuti: 12, da: 'uova', resa: 2,
   },
   {
     id: 'latte', nome: 'Latte', emoji: '🥛', dove: 'stalla',
-    prende: { fieno: 6 }, costo: 4, minuti: 20, da: 'latte', resa: 2,
+    prende: { foraggio: 4 }, costo: 2, minuti: 20, da: 'latte', resa: 2,
   },
   {
     id: 'lana', nome: 'Lana', emoji: '🧶', dove: 'ovile',
-    prende: { fieno: 2 }, costo: 2, minuti: 25, da: 'lana', resa: 1,
+    prende: { foraggio: 3 }, costo: 2, minuti: 25, da: 'lana', resa: 2,
   },
-  /* Due strade per la stessa lana, e non è una svista: la conigliera
-     costa un terzo dell'ovile e ci mette meno, ma mangia carote, che
-     sono la coltura di mezzo. Chi ha poche monete e tanta pazienza
-     arriva alla copertina lo stesso. */
+  /* La conigliera costa un terzo dell'ovile e ci mette meno, ma rende
+     meno lana per foraggio: chi ha poche monete e tanta pazienza arriva
+     alla copertina lo stesso. */
   {
     id: 'lana_angora', nome: 'Lana d\'angora', emoji: '🧶', dove: 'conigliera',
-    prende: { carote: 2 }, costo: 1, minuti: 18, da: 'lana', resa: 1,
+    prende: { foraggio: 2 }, costo: 1, minuti: 18, da: 'lana', resa: 1,
   },
   {
     id: 'tartufi', nome: 'Tartufi', emoji: '🍄', dove: 'porcile',
-    prende: { zucche: 2 }, costo: 3, minuti: 30, da: 'tartufi', resa: 1,
+    prende: { zuppa: 2 }, costo: 2, minuti: 30, da: 'tartufi', resa: 1,
   },
 ]
 
 export const PER_RICETTA = Object.fromEntries(RICETTE.map(r => [r.id, r]))
 
-export const ricetteDi = dove => RICETTE.filter(r => r.dove === dove)
+/* Le ricette di una macchina. `liv` è il livello della fattoria: chi
+   non lo passa le vuole tutte (i controlli, gli strumenti), chi gioca
+   passa il suo e vede solo quelle arrivate. Il ripiego di una ricetta
+   senza `liv` è il livello della sua macchina — se la macchina ce
+   l'hai, la ricetta c'è. */
+export const ricetteDi = (dove, liv = null) =>
+  RICETTE.filter(r => r.dove === dove && (liv === null || (r.liv || 1) <= liv))
 
 /* ── i due silos ──────────────────────────────────────────────────
    *Ribalta la scelta di prima.* C'era un granaio solo, con un tetto
@@ -272,29 +409,53 @@ export const SILI = {
   stalla: { cosa: 'silo_bianco', nome: 'Silo della stalla',  emoji: '🥛' },
 }
 
-/* Quanti prodotti tiene un silo appena costruito, e quanti se ne
-   aggiungono a ogni ingrandimento.
+/* ── UNO SCOMPARTO PER MERCE ──────────────────────────────────────
+   *Ribalta la scelta di prima*, e va detto perché: i posti condivisi
+   erano **la cosa giusta contro il difetto sbagliato**.
 
-   LA MISURA È IL CAMPO, NON IL PRODOTTO. Prima erano sei, e sei è la
-   resa di **due campi di grano**: chi ne aveva tre trovava il silo
-   pieno prima di aver finito il giro dei suoi campi, e il primo gesto
-   che imparava era che non si può raccogliere. Un magazzino che sta
-   dietro a meno di quello che il prato produce non è un freno, è un
-   inciampo — e il freno vero di questa fattoria sono le monete su ogni
-   gesto e il tempo di crescita, non il posto dove mettere la roba.
+   Il difetto di due versioni fa era un tetto di 30 (poi 90) **per
+   prodotto**: un numero che non mordeva mai, quindi comprare il secondo
+   silo non cambiava niente che si potesse vedere. La risposta fu
+   metterli in comune e farli pochi — dodici, condivisi — e come
+   risposta a *quel* difetto era esatta.
 
-   Dodici regge **quattro campi di grano** (resa 3), o due di mais
-   (resa 5) col resto per il mangime che il mulino rimanda dentro allo
-   stesso silo. E gli ingrandimenti vanno a quattro e non a due: a due,
-   pagare 🪙130 — mezz'ora di esercizi — per mezzo campo in più era una
-   spesa che non si sentiva. Quattro è un campo intero, che è l'unità
-   con cui chi gioca conta davvero. */
-export const SILO_BASE = 12
-export const SILO_PIU = 4
+   Ma dodici posti condivisi reggono **sette merci diverse**: due a
+   testa. E il conto non è teorico, è quello che è successo: 32 di mais
+   e 4 di carote in un silo da 36, e niente più raccoglibile. Un
+   bambino non alterna le colture, semina quella che gli piace — è la
+   cosa che fa e va bene che la faccia — e la conseguenza era che il
+   gioco si fermava senza che niente fosse andato storto.
 
-/* Quanto ci sta, con gli ingrandimenti fatti. `livello` è quante volte
-   è stato ingrandito: zero è appena costruito. */
-export const capienza = livello => SILO_BASE + SILO_PIU * Math.max(0, livello | 0)
+   Adesso ogni merce ha **il suo scomparto**, tutti della stessa
+   misura, e ingrandire il silo li ingrandisce tutti insieme. Il mais
+   non può più mangiarsi il posto delle carote: è impossibile per
+   costruzione, non improbabile.
+
+   E la domanda che i posti condivisi lasciavano senza risposta —
+   «quanto ci sta ancora?» — diventa una cosa che si guarda, perché
+   uno scomparto è una barretta con un numero sopra. Il tetto vecchio
+   era invisibile e grande; questo è visibile e piccolo, ed è tutta la
+   differenza fra i due.
+
+   OTTO, PERCHÉ DUE CAMPI SÌ E TRE NO. Un campo di mais rende 5, uno di
+   grano 3: con otto posti il secondo campo della stessa coltura ci sta
+   sempre, il terzo quasi mai. Che è il modo di dire «coltiva anche
+   altro» senza scriverlo da nessuna parte e senza vietare niente. */
+export const SCOMPARTO_BASE = 8
+export const SCOMPARTO_PIU = 2
+
+/* Quanti pezzi di **una** merce ci stanno, con gli ingrandimenti fatti.
+   `livello` è quante volte il silo è stato ingrandito: zero è appena
+   costruito. */
+export const postiPerMerce = livello =>
+  SCOMPARTO_BASE + SCOMPARTO_PIU * Math.max(0, livello | 0)
+
+/* Quali merci vanno in un silo, in ordine di tabella: è l'elenco degli
+   scomparti che quel silo ha, e serve a disegnarli tutti — anche quelli
+   vuoti, perché uno scomparto vuoto è il posto dove *potrebbe* andare
+   qualcosa, cioè un invito. */
+export const merciDi = famiglia =>
+  Object.keys(PRODOTTI).filter(k => PRODOTTI[k].silo === famiglia)
 
 /* Quanto costa il prossimo ingrandimento: 40, 130, 185, 220, 250, 275…
    — che in tempo di gioco (vedi `CALIBRAZIONE.md`: una moneta sono dieci
@@ -415,10 +576,28 @@ export function guastiDelleColture() {
   /* Un prodotto senza silo non si potrebbe raccogliere: `quantoCiSta`
      risponderebbe zero per sempre, e a schermo sarebbe un raccolto che
      non entra da nessuna parte senza che niente dica perché. */
-  for (const [id, pr] of Object.entries(PRODOTTI))
+  for (const [id, pr] of Object.entries(PRODOTTI)) {
     if (!SILI[pr.silo]) g.push(`${id}: sta in un silo che non esiste («${pr.silo}»)`)
-  if (!(SILO_BASE > 0)) g.push('un silo da zero non tiene niente')
-  if (!(SILO_PIU > 0)) g.push('un ingrandimento che non aggiunge niente non si paga')
+    /* Un pezzo che l'atlante non ha è **muto** come uno stadio storto:
+       `drawImage` torna senza disegnare e senza lanciare, e a schermo
+       resta un fumetto vuoto sopra una bestia che ha fame. Chi il
+       disegno non ce l'ha scrive solo l'emoji, che è il ripiego
+       dichiarato — quello che non si regge è un nome sbagliato. */
+    if (pr.pezzo && !PEZZI[pr.pezzo])
+      g.push(`${id}: il pezzo «${pr.pezzo}» non è nell'atlante`)
+  }
+  if (!(SCOMPARTO_BASE > 0)) g.push('uno scomparto da zero non tiene niente')
+  if (!(SCOMPARTO_PIU > 0)) g.push('un ingrandimento che non aggiunge niente non si paga')
+  /* Ogni silo deve avere almeno una merce, se no è un edificio che si
+     compra e resta vuoto per sempre. */
+  for (const fam of Object.keys(SILI))
+    if (!merciDi(fam).length) g.push(`il silo «${fam}» non tiene nessuna merce`)
+  /* Uno scomparto deve reggere **almeno un raccolto intero**: se la
+     resa di un campo non ci sta nemmeno a scomparto vuoto, quella
+     coltura non si può raccogliere mai e nessuno saprebbe dire perché. */
+  for (const c of COLTURE)
+    if (c.resa > SCOMPARTO_BASE)
+      g.push(`${c.id}: rende ${c.resa}, più di uno scomparto vuoto (${SCOMPARTO_BASE})`)
   /* Il prezzo deve **salire**: uno che scende farebbe convenire
      aspettare, che è il contrario di quello che deve fare. */
   for (let l = 0; l < 6; l++)

@@ -29,10 +29,13 @@ import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profil
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
+import { comeAvere, comeFarePosto } from './motore/consiglio.js'
+import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
+  from './motore/vicino.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
-import { CATALOGO, PER_ID, piedeDi, pezzoDi, puoGirare, eCampo, eSilo, siloDi,
-         macchinaDi, statiDi } from './dati/catalogo.js'
+import { CATALOGO, PER_ID, piedeDi, pezzoDi, assettoDi, puoGirare, puoSpecchiare,
+         eCampo, eSilo, eVicino, siloDi, macchinaDi, statiDi } from './dati/catalogo.js'
 import { animale, siDisegna } from './dati/animali.js'
 import { BISOGNI, CHIAVI } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
@@ -41,6 +44,7 @@ import { pezzoAttore } from './dati/atlante.js'
 import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 
 import Roba from './viste/Roba.vue'
+import Vicino from './viste/Vicino.vue'
 import Attrezzi from './viste/Attrezzi.vue'
 import Battesimo from './viste/Battesimo.vue'
 import Bestia from './viste/Bestia.vue'
@@ -61,6 +65,15 @@ const CHIAVE = 'fattoria'
    tu voglia toccare e comincia a credere che tu voglia spostare. */
 const ATTESA = 420
 
+/* Quanto l'anello resta invisibile prima di cominciare a riempirsi. Un
+   tocco normale dura un centinaio di millisecondi: senza questo ritardo
+   l'anello partiva **a ogni tocco**, anche su un campo che il tocco
+   secco apre da sé, e insegnava una regola falsa — «qui bisogna tenere
+   premuto». Chi tocca e stacca adesso non lo vede mai; chi indugia lo
+   vede comparire, ed è esattamente a chi sta indugiando che serve
+   sapere che tenendo premuto succede qualcosa. */
+const RITARDO_ANELLO = 180
+
 /* ═══════════ lo stato ═══════════ */
 const tela = ref(null)
 const monete = computed(() => state.profile.coins || 0)
@@ -74,6 +87,10 @@ const scelto = shallowRef(null)     // la cosa o l'attore selezionato
    disegnare pozze coi bordi sbagliati. La strada è pronta, il tasto
    arriva quando arriva il disegno. */
 const pennello = ref(false)
+/* La voce su cui aprire il baule, quando ad aprirlo è stato un
+   consiglio («ti serve un campo»). Si azzera chiudendo, se no il baule
+   aperto a mano il giorno dopo si riaprirebbe ancora lì sopra. */
+const punta = ref('')
 /* Quello che il gioco ha già mostrato: serve solo a capire quando il
    livello **sale**, che è l'unico momento in cui c'è qualcosa da dire.
    È un `ref` perché lo legge anche il gettone in alto, che deve
@@ -144,6 +161,16 @@ function annotaLeBestie() {
 }
 
 function avvisa(testo) { avviso.value = testo; setTimeout(() => { avviso.value = '' }, 2600) }
+
+/* Chiudere un foglio lascia il prato **pulito**: via il foglio e via la
+   selezione. Sono due cose sole ma vanno insieme, perché la selezione
+   non si vede finché il foglio è aperto e chi la lascia lì non se ne
+   accorge — poi il foglio si chiude e ricompaiono degli attrezzi che
+   nessuno ha chiesto. Vale anche per le bestie, che da selezionate
+   **stanno ferme** (vedi il giro di `muovi` sugli attori): una capra
+   che non riparte più dopo che le hai guardato la scheda sembra
+   incantata, e nessuno collega le due cose. */
+function chiudi() { pannello.value = null; scelto.value = null; punta.value = '' }
 
 /* ═══════════ nascere ═══════════ */
 onMounted(() => {
@@ -280,6 +307,12 @@ function passo(ora) {
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
 let pizzico = null, giu = null, lungo = null, anello = null, preso = null, scorrendo = false
+/* La cella su cui è stato aperto il baule, se è stato aperto tenendo
+   premuto sul prato. Vive **fuori** dal pannello perché il pannello si
+   chiude nell'istante in cui si preme una voce, e quella cella serve un
+   attimo dopo. Si azzera appena usata: il baule aperto dal tasto in alto
+   non ha nessun posto da ricordare. */
+let dovePosare = null
 /* ── L'AGGANCIO: PASSATA L'ATTESA, LA COSA NON È ANCORA IN MANO ────
    Prima il tempo decideva da solo: scaduti i 420 ms la cosa era presa, e
    al rilascio si poteva solo posarla — la scheda con «giralo» e «mettila
@@ -312,6 +345,13 @@ let aggancio = null
    e si perdeva più di quanto dicesse il numero scritto qui. */
 const SCARTO_DITO = 16
 const SCARTO_MOUSE = 6
+
+/* Quanto si perdona a un dito che ha sbagliato mira, e quanto grande
+   dev'essere come minimo un bersaglio. I 44 px sono la misura che
+   Android e iOS chiedono da anni per un tasto: alla scala più stretta
+   un campo ne misura 32 e un silo 16, cioè meno di un polpastrello. */
+const GRAZIA = 6
+const MINIMO_TOCCO = 44
 
 /* Le coordinate del dito arrivano in pagina, ma la tela comincia sotto
    la barra: senza togliere l'origine si tocca una cella e se ne prende
@@ -347,7 +387,7 @@ function premi(e) {
   if (dita.size > 2) return
 
   const p = dove(e)
-  giu = { ...p, x0: p.x, y0: p.y, mosso: false }
+  giu = { ...p, x0: p.x, y0: p.y, mosso: false, mira: null }
   scorrendo = false
   if (pennello.value) return dipingi(p)
 
@@ -356,18 +396,18 @@ function premi(e) {
      lasciato invece di trascinare. */
   if (preso) { preso.pronto = true; return muoviPreso(p) }
 
-  const c = scena.cellaDa(p.x, p.y)
+  /* Chi c'è sotto il dito lo decide `bersaglio()`, una volta sola e con
+     le stesse regole con cui lo deciderà il rilascio: se la pressione
+     aggancia una cosa e il tocco ne aprisse un'altra, il gioco
+     risponderebbe a due domande diverse allo stesso dito.
 
-  /* Le bestie prima di tutto: stanno **sopra** al prato e sopra alle
-     cose, e il loro bersaglio è quello che si vede. Tenerla premuta
-     l'aggancia — un cane si sposta come una panchina, ed è così che si
-     mette in un recinto — ma finché il dito non si muove è ancora un
-     tocco, e un tocco su una bestia apre la sua scheda. */
-  const bestia = attoreSotto(p.x, p.y)
-  if (bestia && mondo.hoLaBestia(bestia.nome))
-    return arma(p, { tipo: 'bestia', bestia: { chi: bestia.nome, attore: bestia } })
-
-  const cosa = mondo.cosaSotto(c.x, c.y)
+     Tenerla premuta **aggancia** — un cane si sposta come una panchina,
+     ed è così che si mette in un recinto — ma finché il dito non si
+     muove è ancora un tocco. */
+  const b = giu.mira = bersaglio(p)
+  if (b.bestia && mondo.hoLaBestia(b.bestia.nome))
+    return arma(p, { tipo: 'bestia', bestia: { chi: b.bestia.nome, attore: b.bestia } })
+  if (b.cosa) return arma(p, { tipo: 'cosa', voce: PER_ID[b.cosa.id], da: b.cosa })
 
   /* Tenere premuto sul prato vuoto apre il baule. È lo stesso gesto con
      cui si prende una cosa che c'è già — «tieni premuto dove vuoi agire»
@@ -376,11 +416,9 @@ function premi(e) {
      e non allo scadere del tempo: allo scadere del tempo comparirebbe
      sotto un dito ancora appoggiato, e chi nel frattempo ha deciso di
      spostare la vista si troverebbe un foglio in faccia. */
-  if (!cosa && mondo.cellaMia(c.x, c.y) && !mondo.ostacoloSotto(c.x, c.y))
-    return arma(p, { tipo: 'baule' })
-
-  if (!cosa || !mondo.cellaMia(c.x, c.y)) return
-  arma(p, { tipo: 'cosa', voce: PER_ID[cosa.id], da: cosa })
+  const c = scena.cellaDa(p.x, p.y)
+  if (mondo.cellaMia(c.x, c.y) && !mondo.ostacoloSotto(c.x, c.y))
+    return arma(p, { tipo: 'baule', cella: { x: c.x, y: c.y } })
 }
 
 /* L'anello che si riempie sotto il dito, e quello che vuol dire: finché
@@ -388,7 +426,7 @@ function premi(e) {
    **agganciata** — «adesso puoi trascinare» — e resta lì a dirlo finché
    il dito non si muove o non si stacca. */
 function arma(p, quale) {
-  anello = { x: p.x, y: p.y, q: 0, pronto: false }
+  anello = { x: p.x, y: p.y, q: -1, pronto: false }
   riempiAnello(performance.now())
   lungo = setTimeout(() => {
     lungo = null
@@ -397,10 +435,14 @@ function arma(p, quale) {
   }, ATTESA)
 }
 
+/* `q` sotto zero vuol dire «non disegnarlo ancora»: la scena non tocca
+   un anello con la frazione a zero o meno, quindi il ritardo è tutto
+   qui e la tela non deve sapere niente di quanto dura un tocco. */
 function riempiAnello(t0) {
   const cresci = () => {
     if (!anello) return
-    anello.q = Math.min(1, (performance.now() - t0) / ATTESA)
+    const t = performance.now() - t0 - RITARDO_ANELLO
+    anello.q = Math.min(1, t / (ATTESA - RITARDO_ANELLO))
     if (anello.q < 1) requestAnimationFrame(cresci)
   }
   requestAnimationFrame(cresci)
@@ -541,6 +583,18 @@ function lascia(e) {
      chi ha imparato che «si tiene premuto per prendere». */
   const fermo = !giu.mosso
   const agganciato = aggancio
+  /* ── IL BERSAGLIO SI DECIDE QUANDO IL DITO SI APPOGGIA ──────────
+     Non quando si stacca. Sembra la stessa cosa e non lo è: fra i due
+     momenti passa mezzo secondo, e in mezzo mezzo secondo **le bestie
+     camminano**. Chiedendo di nuovo al rilascio, la capra che stavi
+     toccando si era già spostata di due passi e il tocco apriva quello
+     che era rimasto lì sotto — o niente. Più il dito indugia, più è
+     probabile: cioè capita ai bambini e non a chi prova.
+
+     È la stessa regola che il browser applica al click col mouse — il
+     bersaglio è quello della pressione — e che invece col dito non
+     applica: il motivo per cui esiste `zittisciIlFantasma` qui sopra. */
+  const mira = giu.mira || { bestia: null, cosa: null }
   aggancio = null
   giu = null
   if (!fermo || pennello.value) return
@@ -553,9 +607,32 @@ function lascia(e) {
      seleziona e mostra i suoi attrezzi, una bestia apre la sua scheda. */
   if (agganciato && agganciato.tipo === 'baule') {
     scelto.value = null
+    /* **Il baule si porta dietro dove l'hai aperto.** Tenere premuto in
+       mezzo al prato vuol dire «voglio metterci qualcosa *qui*», e
+       farselo poi chiedere una seconda volta è chiedere due volte la
+       stessa cosa: si sceglie la panchina e la si posa dov'era il dito.
+       Se lì non ci sta — il pezzo è più largo di quanto c'è libero — si
+       torna al gesto di sempre e resta appesa al dito, che è il modo di
+       dire «scegli tu un altro posto» senza un cartello. */
+    dovePosare = agganciato.cella || null
     pannello.value = 'roba'
     return
   }
+
+  /* ── IL TOCCO LUNGO È LA CASSETTA DEGLI ATTREZZI ──────────────────
+     Fermo, senza trascinare: compaiono «giralo» e «mettilo via». È lo
+     stesso gesto con cui la si sposta, meno il trascinamento — «tieni
+     premuto per sistemare» — e vale per tutto quello che si posa, il
+     campo e il silo compresi.
+
+     Prima ci arrivava il **tocco secco**, e su una cosa che lavora era
+     un guaio: il tocco secco apriva il foglio *e* selezionava, quindi
+     chiudendo il foglio — o seminando, o raccogliendo — gli attrezzi
+     riemergevano da soli sopra la cosa appena lavorata, a proporre di
+     spostarla. Un menù che ricompare da solo dopo che hai finito è un
+     menù che devi chiudere due volte. Adesso i due gesti dicono due
+     cose diverse: **tocca per fare, tieni premuto per sistemare.** */
+  if (agganciato && agganciato.tipo === 'cosa') { scelto.value = agganciato.da; return }
 
   const c = scena.cellaDa(p.x, p.y)
   const px = piazzolaDi(c.x), py = piazzolaDi(c.y)
@@ -565,34 +642,28 @@ function lascia(e) {
      cella su cui poggiano, e sporgendo sul bosco accanto si mangiava il
      tocco: alcune piazzole diventavano incomprabili a seconda di dove si
      era fermato il cane, il che è il tipo di guasto che sembra un caso. */
-  if (mondo.comprabile(px, py)) { pannello.value = { tipo: 'piazzola', px, py }; return }
+  if (mondo.comprabile(px, py)) { scelto.value = null; pannello.value = { tipo: 'piazzola', px, py }; return }
 
-  const bestia = attoreSotto(p.x, p.y)
-  if (bestia) {
-    scelto.value = bestia
-    apriBestia(bestia.nome)
+  const b = mira
+  if (b.bestia) {
+    scelto.value = b.bestia
+    apriBestia(b.bestia.nome)
     /* Accanto al bambino, non addosso: se lì non si può stare — c'è
        una panchina, è acqua — ci pensa `vaiA` ad accostarsi il più
        vicino possibile invece di lasciare la bestia ferma. */
-    bestia.corpo.vaiA(bambino.corpo.cella.x, bambino.corpo.cella.y + 1, dovePasso)
+    b.bestia.corpo.vaiA(bambino.corpo.cella.x, bambino.corpo.cella.y + 1, dovePasso)
     return
   }
 
-  /* Un tocco secco su una cosa la **seleziona**: compaiono i suoi
-     attrezzi, e da lì la si gira o la si mette via. Prima non faceva
-     niente e per muoverla si teneva premuto — ma chi la teneva premuta
-     una seconda volta finiva dritto nel trascinamento, senza mai vedere
-     il tastino «mettila via». Adesso i due gesti sono separati: tocchi
-     per scegliere, tieni premuto per spostare. */
-  const cosa = mondo.cosaSotto(c.x, c.y)
-  if (cosa && mondo.cellaMia(c.x, c.y)) {
-    scelto.value = cosa
-    /* Un campo e un mulino si toccano come si tocca un cane: il tocco
-       apre la loro scheda, e da lì si semina o si macina. Gli attrezzi
-       («giralo», «mettilo via») restano dietro al foglio e tornano
-       quando lo si chiude — sono la cosa che si fa una volta, non quella
-       che si fa ogni volta. */
-    apriLavoro(cosa)
+  if (b.cosa) {
+    /* Il tocco secco fa **la cosa principale**: un campo si semina, un
+       mulino macina, un silo si guarda dentro — lo stesso gesto con cui
+       si tocca un cane, ed è il motivo per cui non c'è niente di nuovo
+       da imparare. Chi una cosa principale non ce l'ha — una panchina,
+       un albero, una casa — mostra i suoi attrezzi, che lì sono l'unica
+       cosa che ci si può fare. */
+    if (haFoglio(b.cosa)) { scelto.value = null; return apriLavoro(b.cosa) }
+    scelto.value = b.cosa
     return
   }
   if (scelto.value) { scelto.value = null; return }
@@ -602,16 +673,95 @@ function lascia(e) {
   if (mondo.cellaMia(c.x, c.y)) bambino.corpo.vaiA(c.x, c.y, dovePasso)
 }
 
-/* Chi c'è sotto il dito. Si guarda il rettangolo davvero disegnato, non
-   la cella: è l'unico modo perché toccare un cane grosso funzioni dove
-   il cane si vede, e non solo dove appoggia. */
-function attoreSotto(sx, sy) {
+/* ═══════════ CHI C'È SOTTO IL DITO ═══════════
+   Due giri, e una regola sola a tenerli insieme: **la grazia non ruba
+   mai un bersaglio esatto.**
+
+   Il primo giro chiede solo i bersagli esatti — la bestia dov'è
+   disegnata, la cosa sulla cella dove appoggia. Il secondo allarga: una
+   cosa si prende anche dove si *vede*, e una bestia con qualche pixel di
+   margine.
+
+   Il secondo giro serve perché uno sprite si appoggia col fondo sul suo
+   piede e tutto il resto sporge in su: il silo occupa due celle per una
+   ed è alto quasi quattro, quindi si vedeva grande e si toccava solo
+   nella striscia in basso — sopra quella striscia il dito finiva sul
+   prato dietro, e il bambino ci andava a camminare.
+
+   L'ordine è la parte che conta. Messo così, allargare non toglie niente
+   a nessuno: il prato dietro una casa è un bersaglio esatto e si tocca
+   ancora, e la pecora che passa sopra un campo non se lo mangia più —
+   prima lo faceva, perché il suo rettangolo veniva per primo e portava
+   già la sua grazia addosso. È lo stesso guasto che aveva reso certe
+   piazzole incomprabili a seconda di dove si fermava il cane, e lì era
+   stato tappato spostando una riga; qui la regola è scritta una volta. */
+function bersaglio(p) {
+  const c = scena.cellaDa(p.x, p.y)
+  const esatta = attoreSotto(p.x, p.y, 0)
+  if (esatta) return { bestia: esatta, cosa: null }
+  const sopra = mondo.cosaSotto(c.x, c.y)
+  if (sopra) return { bestia: null, cosa: mondo.cellaMia(c.x, c.y) ? sopra : null }
+  const vista = cosaDisegnataSotto(p.x, p.y)
+  if (vista) return { bestia: null, cosa: vista }
+  return { bestia: attoreSotto(p.x, p.y, GRAZIA), cosa: null }
+}
+
+/* Il secondo giro per le cose: il rettangolo **davvero disegnato**, che
+   la tela sa calcolare (`riquadroPosa`) perché è lo stesso conto con cui
+   lo posa. Vince chi ha il fondo più in basso, cioè chi si vede davanti:
+   fra il silo e l'albero che gli spunta dietro, il dito prende il silo.
+
+   Le cose che hanno un foglio — un campo, un silo, una macchina — non
+   scendono mai sotto `MINIMO_TOCCO`: sono quelle che si toccano dieci
+   volte a partita, e alla scala più stretta un campo misurava 32 px. */
+function cosaDisegnataSotto(sx, sy) {
+  let vinta = null, fondo = -Infinity
+  for (const cosa of mondo.cose) {
+    if (!mondo.cellaMia(cosa.x, cosa.y)) continue
+    const v = PER_ID[cosa.id]
+    if (!v) continue
+    /* `aspettoDi` rende pezzo, piede e verso insieme, ed è quello che
+       tiene il bersaglio del dito incollato al disegno anche su una
+       cosa girata: il piede è già scambiato, e il riquadro pure. */
+    const a = assettoDi(cosa, v)
+    const piede = a.piede
+    const r = scena.riquadroPosa(a.pezzo, cosa.x, cosa.y, piede, a)
+    if (!r) continue
+    const g = haFoglio(cosa) ? almeno(r, MINIMO_TOCCO) : r
+    if (sx < g.x || sx > g.x + g.w || sy < g.y || sy > g.y + g.h) continue
+    const giu = cosa.y + piede[1]
+    if (giu > fondo) { fondo = giu; vinta = cosa }
+  }
+  return vinta
+}
+
+/* Un rettangolo che non scende sotto una misura, allargato dal centro
+   così resta dov'è. */
+function almeno(r, lato) {
+  const w = Math.max(r.w, lato), h = Math.max(r.h, lato)
+  return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h }
+}
+
+/* Chi ha una scheda da aprire, e quindi qualcosa da *fare* al tocco: un
+   campo si semina, una macchina trasforma, un silo si guarda dentro. Una
+   panchina no, e infatti al tocco mostra i suoi attrezzi e basta. */
+function haFoglio(cosa) {
+  return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa)
+}
+
+/* Le bestie si guardano dal rettangolo davvero disegnato, non dalla
+   cella: è l'unico modo perché toccare un cane grosso funzioni dove il
+   cane si vede, e non solo dove appoggia. `grazia` è quanto si perdona
+   di lato e in basso — zero nel giro esatto, qualche pixel nel secondo.
+   Sopra la testa non si perdona niente: lì c'è già lo sprite. */
+function attoreSotto(sx, sy, grazia = GRAZIA) {
   for (let i = attori.length - 1; i >= 0; i--) {
     const a = attori[i]
     if (a === bambino) continue
     const p2 = pezzoAttore(a.nome, a.corpo.verso === 'sinistra' ? 'lato' : a.corpo.verso, 0)
     const r = a.riquadro(scena.cellaPx, scena.vista, p2)
-    if (sx >= r.x - 4 && sx <= r.x + r.w + 4 && sy >= r.y && sy <= r.y + r.h + 4) return a
+    if (sx >= r.x - grazia && sx <= r.x + r.w + grazia &&
+        sy >= r.y && sy <= r.y + r.h + grazia) return a
   }
   return null
 }
@@ -647,12 +797,33 @@ function rotella(e) {
 function prendi(voce, da, p, opz = {}) {
   const bestia = opz.bestia || null
   if (!voce && !bestia) return
+  const dove = dovePosare
+  dovePosare = null
   preso = { voce, da, bestia, cx: null, cy: null, ok: false,
             piede: [1, 1], pezzo: null, pronto: opz.pronto !== false,
             x0: p ? p.x : 0, y0: p ? p.y : 0 }
   scelto.value = bestia ? bestia.attore || null : (da || null)
   pannello.value = null
   if (p) muoviPreso(p)
+  /* Il baule era stato aperto tenendo premuto su una cella: quella
+     scelta è già stata fatta, e si posa lì. Solo se ci sta davvero —
+     `muoviSuCella` lo dice — se no la cosa resta appesa al dito come
+     sempre, e la si mette dove si vuole. */
+  if (dove && muoviSuCella(dove.x, dove.y) && preso.ok) return posaPreso()
+}
+
+/* Come `muoviPreso`, ma partendo da una **cella** invece che da un
+   punto sullo schermo: chi ha tenuto premuto sul prato una cella la
+   sapeva già, e ripassare per i pixel vorrebbe dire rifare al contrario
+   il conto che la telecamera ha appena fatto. Torna se il conto si è
+   potuto fare. */
+function muoviSuCella(cx, cy) {
+  if (!preso || !scena) return false
+  const centro = scena.puntoDellaCella
+    ? scena.puntoDellaCella(cx, cy) : null
+  if (!centro) return false
+  muoviPreso(centro)
+  return true
 }
 
 /* L'ingombro vero e la figura vera di quello che si ha in mano. Una
@@ -663,10 +834,15 @@ function muoviPreso(p) {
   if (!preso) return
   const { voce, da, bestia } = preso
   const finto = da || (voce ? { id: voce.id, g: 0 } : null)
-  const piede = bestia ? [1, 1] : piedeDi(finto, voce)
+  /* Anche l'anteprima si porta dietro il verso: chi sposta una cosa
+     girata la vede girata dove sta per lasciarla, se no il fantasma
+     dice il posto sbagliato proprio a chi sta decidendo dove metterla. */
+  const a = bestia ? null : assettoDi(finto, voce)
+  const piede = bestia ? [1, 1] : a.piede
   const c = scena.cellaDa(p.x, p.y)
   preso.piede = piede
-  preso.pezzo = bestia ? bestia.chi + '_giu0' : pezzoDi(finto, voce)
+  preso.verso = a
+  preso.pezzo = bestia ? bestia.chi + '_giu0' : a.pezzo
   preso.cx = c.x - ((piede[0] - 1) / 2 | 0)
   preso.cy = c.y
   preso.ok = bestia
@@ -687,7 +863,12 @@ function posaPreso() {
     return
   }
   if (!p.da) { segna('fattoriaPosati'); segnaBest('fattoriaVarieta', mondo.tipiPosseduti) }
-  if (r.cosa) scelto.value = r.cosa
+  /* Posata, e basta. Prima restava selezionata, quindi appena finito di
+     spostare una panchina ci si ritrovava addosso i tastini per
+     spostarla: la risposta alla domanda che si era appena finito di
+     fare. Chi la vuole girare tiene premuto, che è il gesto che ha
+     appena usato. */
+  scelto.value = null
   salva()
 }
 
@@ -727,17 +908,37 @@ const gestiDiScelto = computed(() => {
   const v = PER_ID[s.id]
   return [
     ...(puoGirare(v) ? [{ chiave: 'gira', icona: '↻', titolo: 'giralo' }] : []),
+    /* ⇄ compare su quasi tutto, perché quasi tutto si può rovesciare, e
+       ↻ su poco, perché girare di novanta gradi ha senso solo per quello
+       che è disegnato a piombo dall'alto. Chi non li regge non li vede:
+       un tasto che si preme e non fa niente è peggio di un tasto che
+       non c'è. */
+    ...(puoSpecchiare(v) ? [{ chiave: 'specchia', icona: '⇄', titolo: 'rovescialo' }] : []),
     { chiave: 'via', icona: '📦', titolo: 'mettilo via' },
   ]
 })
 
+/* Quanto è larga la barretta degli attrezzi, ricavata invece che
+   cablata. Erano 140 px scritti a mano, giusti finché i tasti sono tre;
+   il primo che ne aggiunge uno se la trova mezza fuori dallo schermo da
+   un lato, e non se ne accorge finché non tocca proprio un oggetto sul
+   bordo. Le misure sono quelle di `.fa-attrezzi` in `stile.css`: tasto
+   44 (il minimo di un polpastrello), 6 di stacco, 5 di margine, 2 di
+   bordo. */
+const larghezzaAttrezzi = quanti => 44 * quanti + 6 * (quanti - 1) + 14
+
+/* Gli attrezzi non stanno mai sotto un foglio aperto. Non è solo che
+   non si vedrebbero: chiudendo il foglio **ricomparirebbero**, ed è così
+   che il menù tornava da solo sopra il campo appena seminato. */
 const doveAttrezzi = computed(() => {
   const s = scelto.value
-  if (!s || !s.id || !scena || preso) return null
+  if (!s || !s.id || !scena || preso || pannello.value) return null
   const g = mondo.ingombro(s)
+  const larga = larghezzaAttrezzi(gestiDiScelto.value.length + 1)   // +1 è il ✓
   return {
-    x: Math.max(8, Math.min(scena.L - 140, (g.x + g.w / 2) * scena.cellaPx - scena.vista.x - 60)),
-    y: Math.max(8, g.y * scena.cellaPx - scena.vista.y - 54 - scena.cellaPx),
+    x: Math.max(8, Math.min(scena.L - larga - 8,
+                            (g.x + g.w / 2) * scena.cellaPx - scena.vista.x - larga / 2)),
+    y: Math.max(8, g.y * scena.cellaPx - scena.vista.y - 60 - scena.cellaPx),
   }
 })
 
@@ -749,6 +950,9 @@ function attrezzo(chiave) {
     if (!r.ok) avvisa('Girato non ci sta: fagli spazio.')
     else salva()
   }
+  /* Rovesciare non cambia l'ingombro, quindi non può mai mancare il
+     posto e non c'è niente da spiegare a nessuno: si fa e si salva. */
+  if (chiave === 'specchia' && mondo.specchia(s).ok) salva()
   if (chiave === 'via') {
     /* Adesso può dire no: un campo seminato e un mulino al lavoro non si
        mettono via, perché nel baule non c'è posto per un grano a metà
@@ -758,7 +962,8 @@ function attrezzo(chiave) {
     const r = mondo.mettiVia(s)
     if (!r.ok) return avvisa(r.motivo === 'campo-seminato'
       ? 'Nel campo c\'è qualcosa che sta crescendo: raccoglilo prima.'
-      : 'Il mulino sta lavorando: ritira quello che ha fatto, prima.')
+      : `${(PER_ID[s.id] || {}).nome || 'La macchina'} sta lavorando: ` +
+        'ritira quello che ha fatto, prima.')
     scelto.value = null
     salva()
   }
@@ -772,7 +977,7 @@ function attrezzo(chiave) {
    *C'era una variante* che spegneva la coltivazione dalla pagina dei
    grandi, e non c'è più: la fattoria **è** la coltivazione, e senza non
    resterebbe un posto più semplice ma un prato con dei mobili. */
-function apriLavoro(cosa) {
+function apriLavoro(cosa, con = '') {
   if (eCampo(cosa)) return apriCampo(cosa)
   if (macchinaDi(cosa)) return apriMacchina(cosa)
   /* Il silo non lavora — non trasforma niente — ma **contiene**: è la
@@ -780,14 +985,50 @@ function apriLavoro(cosa) {
      dentro. Era una linguetta del baule, in mezzo alle cose da
      comprare; il perché del cambio sta in `viste/Granaio.vue`. */
   if (eSilo(cosa)) return apriGranaio(siloDi(cosa))
+  /* `con` arriva solo da un consiglio, e solo il carretto lo usa: chi
+     ci è mandato perché un certo scomparto è pieno il primo passo
+     l'ha già fatto, e ripeterglielo è il compito che il consiglio
+     doveva togliere. */
+  if (eVicino(cosa)) return apriVicino(con)
+}
+
+/* Il carretto: due passi, e il secondo si ricalcola ogni volta invece di
+   tenerlo da parte. Cosa il vicino può offrire dipende da cosa c'è
+   ancora posto per ricevere, e il posto cambia dopo ogni scambio — un
+   elenco tenuto in mano da prima proporrebbe una merce che nel
+   frattempo è diventata colma, cioè cinque pezzi dati via per niente. */
+function apriVicino(scelto = '') {
+  pannello.value = {
+    tipo: 'vicino', scelto,
+    puoiDare: cosaPuoiDare(mondo),
+    offerte: scelto ? cosaOffre(mondo, scelto) : [],
+    colmi: scompartiColmi(mondo).length,
+  }
+}
+
+function alVicino(verso) {
+  const { scelto } = pannello.value
+  const r = scambia(mondo, scelto, verso)
+  if (!r.ok) return avvisa(r.motivo === 'poca-roba'
+    ? `Ne servono ${DAI} per darglieli.`
+    : 'Lì non ci starebbe più: prova con qualcos\'altro.')
+  const dato = `${r.quanti} ${PRODOTTI[r.dato].emoji}`
+  avvisa(r.verso
+    ? `${dato} → ${r.ricevuti} ${PRODOTTI[r.verso].emoji}. Il vicino ringrazia!`
+    : `${dato} al vicino. «Grazie!»`)
+  salva()
+  /* Si resta sul carretto, al primo passo: chi ne aveva trenta di una
+     cosa ne ha ancora venticinque, e chiudere il foglio vorrebbe dire
+     riaprirlo cinque volte. */
+  apriVicino('')
 }
 
 /* Si apre **quel** silo, non «il granaio»: sono due magazzini separati
    con due tetti separati, e toccare il silo bianco per vedere il grano
    sarebbe la stessa confusione di prima con un'altra faccia. */
 function apriGranaio(famiglia) {
-  pannello.value = { tipo: 'granaio', famiglia, granaio: mondo.granaio,
-                     capienza: mondo.capienzaDi(famiglia),
+  pannello.value = { tipo: 'granaio', famiglia,
+                     scomparti: mondo.scomparti(famiglia),
                      livello: mondo.livelloDelSilo(famiglia),
                      costo: mondo.costoDellIngrandimento(famiglia) }
 }
@@ -802,24 +1043,81 @@ function ingrandisci() {
     ? `Ti servono 🪙${r.costo - monete.value} in più.`
     : 'Questo silo non c\'è ancora.')
   apriGranaio(famiglia)
-  avvisa(`${SILI[famiglia].emoji} Più grande: adesso ci stanno ${r.capienza} cose.`)
+  avvisa(`${SILI[famiglia].emoji} Più grande: adesso ci stanno ${r.capienza} cose di ogni tipo.`)
+  salva()
+}
+
+/* ═══════════ IL PROSSIMO PASSO ═══════════
+   Le regole di cosa consigliare stanno nel motore (`motore/consiglio.js`)
+   e girano senza schermo; qui c'è solo il braccio che **esegue** quello
+   che il consiglio ha deciso. Quattro forme e non una di più: se ne
+   servisse una quinta, il posto dove aggiungerla è quel file, non
+   questo.
+
+   Il foglio da cui si è partiti si chiude sempre: il consiglio manda
+   da un'altra parte, e lasciare aperto quello di prima vorrebbe dire
+   due fogli sovrapposti — e un tasto «chiudi» che scopre una schermata
+   che non si stava guardando. */
+function faiIlPasso(azione) {
+  if (!azione) return chiudi()
+  chiudi()
+  if (azione.che === 'apri') {
+    /* Non basta aprirne il foglio: la cosa può stare fuori dallo
+       schermo, e chiudendo il foglio ci si ritroverebbe a guardare il
+       prato sbagliato senza sapere dove si è finiti. */
+    guarda(azione.cosa)
+    return apriLavoro(azione.cosa, azione.con)
+  }
+  if (azione.che === 'compra') { punta.value = azione.voce; pannello.value = 'roba'; return }
+  if (azione.che === 'ingrandisci') return ingrandisciIlSilo(azione.famiglia)
+}
+
+/* La telecamera si sposta su una cosa, se non si vede già: se si vede,
+   fermo. Un salto di mezzo schermo per centrare una cosa che era già
+   davanti agli occhi fa perdere il posto a chi guardava. */
+function guarda(cosa) {
+  if (!scena || !cosa) return
+  const g = mondo.ingombro(cosa)
+  const x = (g.x + g.w / 2) * scena.cellaPx, y = (g.y + g.h / 2) * scena.cellaPx
+  const dentro = x - scena.vista.x > 40 && x - scena.vista.x < scena.L - 40 &&
+                 y - scena.vista.y > 40 && y - scena.vista.y < scena.A - 40
+  if (dentro) return
+  scena.vista.x = Math.round(x - scena.L / 2)
+  scena.vista.y = Math.round(y - scena.A / 2)
+  scena.limita()
+}
+
+/* Ingrandire un silo **senza passare dal suo foglio**: è il tasto che
+   compare in fondo a un campo pronto che non ha dove scaricare. Chi lo
+   preme sta guardando il campo, non il silo, quindi non si apre il
+   granaio: si paga, si dice cos'è cambiato, e il campo si ritrova
+   raccoglibile. */
+function ingrandisciIlSilo(famiglia) {
+  const r = mondo.ingrandisci(famiglia)
+  if (!r.ok) return avvisa(r.motivo === 'poche-monete'
+    ? `Ti servono 🪙${r.costo - monete.value} in più.`
+    : 'Questo silo non c\'è ancora.')
+  avvisa(`${SILI[famiglia].emoji} Più grande: adesso ci stanno ${r.capienza} cose di ogni tipo.`)
   salva()
 }
 
 /* Quello che il gioco dice quando una roba non ha dove finire. Sono due
    cose da fare diverse — costruire il silo, o ingrandirlo — e un
-   cartello che dice quella sbagliata è peggio di nessun cartello. Il
-   caso del silo appena costruito e già troppo piccolo (il mais rende 5,
-   e i posti sono 4) passa da qui e si legge giusto: «non c'è posto per
-   5 🌽», che è vero anche a silo vuoto. */
+   cartello che dice quella sbagliata è peggio di nessun cartello.
+
+   Da quando ogni merce ha il suo scomparto, il pieno è **di quella
+   merce** e non del silo: dirlo per esteso («lo scomparto del mais è
+   pieno») è la differenza fra un bambino che guarda il silo e non
+   capisce cosa c'è di pieno, e uno che sa che le carote entrano
+   ancora. */
 function nonCiSta(r) {
   const si = SILI[r.famiglia] || SILI.terra
-  const pr = PRODOTTI[r.prodotto] || { emoji: '📦' }
+  const pr = PRODOTTI[r.prodotto] || { emoji: '📦', nome: 'roba' }
   if (r.motivo === 'silo-manca')
     return `${pr.emoji} non ha dove andare: ti serve il ${si.nome.toLowerCase()}` +
            ` (🪙${mondo.quantoCosta(si.cosa)}).`
-  return `Nel ${si.nome.toLowerCase()} non c'è posto per ${r.quanto} ${pr.emoji}:` +
-         ' toccalo e ingrandiscilo.'
+  return `Lo scomparto ${pr.emoji} è pieno (${mondo.capienzaDi(r.famiglia)}).` +
+         ' Le altre cose entrano ancora.'
 }
 
 /* Lo stato si rilegge **a ogni apertura** e non si tiene da parte: è un
@@ -832,13 +1130,27 @@ function apriCampo(cosa) {
                      /* solo quelle che il livello ha aperto: due al
                         primo campo, e due scelte a quattro anni sono
                         una scelta — cinque sono un elenco */
-                     colture: COLTURE.filter(c => (c.liv || 1) <= mondo.livello),
+                     /* Ognuna con **quanto ne hai già** e quanto ci sta
+                        ancora: seminare è una scelta fra cinque cose, e
+                        senza quel numero si sceglie a memoria — cioè si
+                        semina sempre la stessa e ci si accorge del silo
+                        tappato dieci minuti dopo, a raccolto pronto. */
+                     colture: COLTURE.filter(c => (c.liv || 1) <= mondo.livello)
+                       .map(c => ({ ...c, hai: mondo.quantoHo(c.da),
+                                    ciSta: mondo.quantoCiSta(c.da) })),
                      ciSta: stato.coltura ? mondo.quantoCiSta(stato.coltura.da) : 99,
                      /* si dice **prima di seminare** che servirà un posto
                         dove metterlo: scoprirlo a raccolto pronto vuol
                         dire aver aspettato dieci minuti per niente */
                      senzaSilo: !mondo.eCostruito('terra'),
-                     prezzoSilo: mondo.quantoCosta(SILI.terra.cosa) }
+                     prezzoSilo: mondo.quantoCosta(SILI.terra.cosa),
+                     /* Il passo si calcola **solo quando serve**: è una
+                        camminata sulla catena, e farla a ogni apertura
+                        di ogni campo sarebbe lavoro buttato nove volte
+                        su dieci. */
+                     passo: stato.coltura && stato.pronto &&
+                            mondo.quantoCiSta(stato.coltura.da) < stato.coltura.resa
+                       ? comeFarePosto(mondo, stato.coltura.da) : null }
 }
 
 function semina(coltura) {
@@ -850,7 +1162,7 @@ function semina(coltura) {
   /* Non si conta la semina: chi semina raccoglie, e due contatori per lo
      stesso giro darebbero due numeri che dicono la stessa cosa e si
      scostano solo per i campi ancora in crescita. */
-  pannello.value = null
+  chiudi()
   avvisa(`${coltura.emoji} Seminato. Torna fra ${coltura.minuti} minuti.`)
   salva()
 }
@@ -863,7 +1175,7 @@ function raccogli() {
     : r.motivo === 'silo-manca' || r.motivo === 'silo-pieno' ? nonCiSta(r)
     : `Non è ancora pronto: manca ${r.manca} min.`)
   segna('fattoriaRaccolti')
-  pannello.value = null
+  chiudi()
   avvisa(`${PRODOTTI[r.prodotto].emoji} +${r.quanto} nel silo!` + quantoNeResta(r))
   salva()
 }
@@ -895,14 +1207,38 @@ function apriMacchina(cosa) {
        cosa che fa smettere di fidarsi di quello che c'è scritto. */
     nome: (PER_ID[cosa.id] || {}).nome || 'La macchina',
     bestie: !!statiDi(cosa),
-    ricette: ricetteDi(stato.macchina)
-      .map(ricetta => ({ ricetta, ...mondo.cheMancaPer(ricetta.id) })),
+    /* Solo quelle che il livello ha aperto: il pastone vuole il mais,
+       che arriva sette livelli dopo il mulino, e mostrarlo prima era un
+       tasto spento per cinque ore di esercizi (`dati/coltivazioni.js`). */
+    ricette: ricetteDi(stato.macchina, mondo.livello).map(ricetta => {
+      const m = mondo.cheMancaPer(ricetta.id)
+      /* **Quanto ne hai già**, di quello che entra e di quello che esce.
+         È la domanda che si fa davanti a una macchina con quattro
+         ricette — non «posso?», a cui rispondono già il tasto spento e
+         il numero che manca, ma «mi serve?». Senza, si preme sempre la
+         prima. */
+      const hai = { [ricetta.da]: mondo.quantoHo(ricetta.da) }
+      for (const k of Object.keys(ricetta.prende)) hai[k] = mondo.quantoHo(k)
+      /* Dove andare a prendere la **prima** cosa che manca. Una sola e
+         non tutte: due consigli affiancati sono due tasti che portano
+         in due posti, e chi legge sceglie di non premere né l'uno né
+         l'altro. Fatta quella, alla riapertura il consiglio è il
+         prossimo — che è il modo in cui una catena si percorre. */
+      const primo = (m.manca || [])[0]
+      return { ricetta, ...m, hai,
+               passo: primo ? comeAvere(mondo, primo.prodotto) : null }
+    }),
     ciSta: stato.ricetta ? mondo.quantoCiSta(stato.ricetta.da) : 99,
     /* Quale silo tocca a quello che sta uscendo, e se c'è: il pollaio
        riempie quello della stalla, il mulino quello del raccolto, e
        «metti un silo» senza dire *quale* manderebbe a comprare quello
        sbagliato — che costa 120 monete. */
     ...(stato.ricetta ? nomeDelSilo(stato.ricetta.da) : {}),
+    /* E se quello che è pronto non ha dove finire, dove andarlo a
+       mettere: stessa domanda del campo maturo, stessa risposta. */
+    passo: stato.ricetta && stato.pronto &&
+           mondo.quantoCiSta(stato.ricetta.da) < stato.ricetta.resa
+      ? comeFarePosto(mondo, stato.ricetta.da) : null,
   }
 }
 
@@ -919,8 +1255,15 @@ function avvia(ricetta) {
   const r = mondo.avvia(cosa, ricetta.id)
   if (!r.ok) return avvisa(r.motivo === 'poche-monete'
     ? `Ti servono 🪙${r.costo - monete.value} in più.` : 'Non c\'è abbastanza roba.')
-  pannello.value = null
-  avvisa(`${ricetta.emoji} Il mulino è partito: ${ricetta.minuti} minuti.`)
+  chiudi()
+  /* Diceva «Il mulino è partito» anche sopra un pollaio — la stessa
+     bugia che il pannello aveva già smesso di dire. Il nome della
+     macchina però non si può infilare in questa frase: «la conigliera
+     è partito» è peggio del difetto che ripara, e le sette macchine
+     hanno tre generi fra loro. Quindi si dice **quello che sta
+     arrivando**, che è l'unica cosa che chi ha appena premuto non sa
+     già — la macchina ce l'ha sotto il dito. */
+  avvisa(`${ricetta.emoji} ${ricetta.nome} fra ${ricetta.minuti} minuti.`)
   salva()
 }
 
@@ -930,7 +1273,7 @@ function ritira() {
   if (!r.ok) return avvisa(r.motivo === 'silo-manca' || r.motivo === 'silo-pieno'
     ? nonCiSta(r) : `Manca ancora ${r.manca} min.`)
   segna('fattoriaRitiri')
-  pannello.value = null
+  chiudi()
   avvisa(`${PRODOTTI[r.prodotto].emoji} +${r.quanto} nel silo!` + quantoNeResta(r))
   salva()
 }
@@ -946,7 +1289,7 @@ function compraPiazzola() {
      al prossimo giro di disegno. */
   inquadraIlMondo()
   scena.limita()
-  pannello.value = null
+  chiudi()
   salva()
 }
 
@@ -955,7 +1298,7 @@ function sgombra() {
   const r = mondo.sgombra(o.x, o.y)
   if (!r.ok) return avvisa(`Ti servono ${r.costo - monete.value} monete in più.`)
   segna('fattoriaSgomberi')
-  pannello.value = null
+  chiudi()
   salva()
 }
 
@@ -1062,7 +1405,7 @@ function tiraVoce({ voce, x, y }) {
 
 <template>
   <div class="schermo">
-    <Barra titolo="La fattoria" monete @indietro="emit('vai', 'home')" />
+    <Barra titolo="La fattoria" guida="fattoria" monete @indietro="emit('vai', 'home')" />
 
     <div class="fa">
     <!-- `touchend` esiste solo per **non** far nascere il click fantasma
@@ -1089,12 +1432,13 @@ function tiraVoce({ voce, x, y }) {
     <Attrezzi v-if="doveAttrezzi" :x="doveAttrezzi.x" :y="doveAttrezzi.y"
               :gesti="gestiDiScelto" @fai="attrezzo" @fine="scelto = null" />
 
-    <div v-if="pannello" class="fa-velo" @click.self="pannello = null">
+    <div v-if="pannello" class="fa-velo" @click.self="chiudi()">
       <Roba v-if="pannello === 'roba'" class="fa-foglio"
             :monete="monete" :magazzino="mondo.magazzino" :bestie="mondo.bestie"
             :prezzi="prezziCorrenti()" :livello="livello" :posati="giaPosati()"
+            :punta="punta"
             @tira="tiraVoce" @tira-bestia="prendiUnaBestia"
-            @chiudi="pannello = null" />
+            @chiudi="chiudi()" />
 
       <Bestia v-else-if="pannello.tipo === 'bestia'"
               :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
@@ -1102,42 +1446,50 @@ function tiraVoce({ voce, x, y }) {
               @nutri="nutri" @coccola="coccola"
               @rinomina="pannello = { tipo: 'battesimo', chi: pannello.chi,
                                       che: pannello.che, nome: pannello.nome, prezzo: 0 }"
-              @chiudi="pannello = null" />
+              @chiudi="chiudi()" />
 
       <Campo v-else-if="pannello.tipo === 'campo'"
              :stato="pannello.stato" :monete="monete" :ci-sta="pannello.ciSta"
-             :colture="pannello.colture"
+             :colture="pannello.colture" :passo="pannello.passo"
              :senza-silo="pannello.senzaSilo" :prezzo-silo="pannello.prezzoSilo"
-             @semina="semina" @raccogli="raccogli" @chiudi="pannello = null" />
+             @semina="semina" @raccogli="raccogli" @passo="faiIlPasso"
+             @chiudi="chiudi()" />
 
       <Livelli v-else-if="pannello.tipo === 'livello'"
                :stato="avanza" :festa="pannello.festa"
-               @chiudi="pannello = null" />
+               @chiudi="chiudi()" />
+
+      <Vicino v-else-if="pannello.tipo === 'vicino'"
+              :puoi-dare="pannello.puoiDare" :offerte="pannello.offerte"
+              :colmi="pannello.colmi" :scelto="pannello.scelto"
+              @scegli="apriVicino" @scambia="alVicino" @regala="alVicino(null)"
+              @chiudi="chiudi()" />
 
       <Granaio v-else-if="pannello.tipo === 'granaio'"
-               :famiglia="pannello.famiglia" :granaio="pannello.granaio"
-               :capienza="pannello.capienza" :livello="pannello.livello"
+               :famiglia="pannello.famiglia"
+               :scomparti="pannello.scomparti" :livello="pannello.livello"
                :costo="pannello.costo" :monete="monete"
-               @ingrandisci="ingrandisci" @chiudi="pannello = null" />
+               @ingrandisci="ingrandisci" @chiudi="chiudi()" />
 
       <Macchina v-else-if="pannello.tipo === 'macchina'"
                 :stato="pannello.stato" :ricette="pannello.ricette"
                 :nome="pannello.nome" :bestie="pannello.bestie"
-                :ci-sta="pannello.ciSta" :silo="pannello.silo"
+                :ci-sta="pannello.ciSta" :silo="pannello.silo" :passo="pannello.passo"
                 :senza-silo="pannello.senzaSilo" :prezzo-silo="pannello.prezzoSilo"
-                @avvia="avvia" @ritira="ritira" @chiudi="pannello = null" />
+                @avvia="avvia" @ritira="ritira" @passo="faiIlPasso"
+                @chiudi="chiudi()" />
 
       <Battesimo v-else-if="pannello.tipo === 'battesimo'"
                  :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome || ''"
                  :prezzo="pannello.prezzo"
-                 @conferma="battezza" @chiudi="pannello = null" />
+                 @conferma="battezza" @chiudi="chiudi()" />
 
       <div v-else-if="pannello.tipo === 'piazzola'" class="fa-foglio">
         <h2>Un altro pezzo di terra</h2>
         <p>Costa <b>🪙{{ mondo.prezzoDellaProssima }}</b>. Ogni pezzo dopo
            costa un po' di più.</p>
         <div class="fa-fila">
-          <button class="fa-bot piano" @click="pannello = null">Lascia stare</button>
+          <button class="fa-bot piano" @click="chiudi()">Lascia stare</button>
           <button class="fa-bot forte" :disabled="monete < mondo.prezzoDellaProssima"
                   @click="compraPiazzola">Compra</button>
         </div>
@@ -1149,7 +1501,7 @@ function tiraVoce({ voce, x, y }) {
         <p>Toglierlo costa <b>🪙{{ pannello.o.costo }}</b>, e libera il posto
            per metterci quello che vuoi.</p>
         <div class="fa-fila">
-          <button class="fa-bot piano" @click="pannello = null">Lascia stare</button>
+          <button class="fa-bot piano" @click="chiudi()">Lascia stare</button>
           <button class="fa-bot forte" :disabled="monete < pannello.o.costo"
                   @click="sgombra">Sgombra</button>
         </div>

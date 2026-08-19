@@ -100,11 +100,15 @@ controlla('il ▶ di una riga apre proprio quella', titolo.includes(nomeRiga),
           `«${titolo}» invece di «${nomeRiga}»`)
 uguale('e non è un giro, quindi niente contatore', await page.locator('[data-conta]').count(), 0)
 
-/* si può rispondere, come nel gioco vero */
+/* si risponde come nel gioco: la barra si riempie e poi si prosegue da
+   soli, senza premere niente fra una domanda e l'altra */
 await page.click('.prova-velo .qz-tasto')
+await page.waitForSelector('.qz-avanti', { timeout: 3000 })
+controlla('rispondendo compare la stessa barra del gioco',
+  await page.isVisible('.qz-avanti.saltabile'))
 await page.waitForTimeout(1800)
-controlla('rispondere dice com\'è andata',
-  (await page.locator('.prova-velo .qz-esito').innerText()).trim().length > 0)
+controlla('e poi la domanda dopo arriva da sola',
+  (await page.locator('.prova-velo .qz-consegna').count()) === 1)
 /* ── e l'attesa qui si salta ──
    Nel gioco l'attesa dopo una risposta serve, e si vede apposta. Qui
    chi guarda è un grande che sta scorrendo venti domande per
@@ -144,18 +148,20 @@ uguale('dopo l\'ultima si torna alla prima',
        (await page.locator('[data-conta]').innerText()).trim(), `1 di ${quante}`)
 
 /* ── il giro veloce ──
-   Rispondere e toccare l'attesa vale come «la prossima»: chi sta
-   giudicando venti domande una dopo l'altra non deve aspettare un
-   secondo e mezzo per ognuna. Nel gioco l'attesa resta, e si vede. */
+   Rispondere fa avanzare da solo — la barra si riempie e si prosegue,
+   come nel gioco — e toccare la barra accorcia l'attesa. Sono le due
+   cose che rendono possibile scorrerne venti di fila, e il contatore le
+   conta: è così che si vede se una sola risposta ne facesse saltare
+   due. */
 await page.waitForTimeout(CIECA)     // la domanda è appena comparsa: finestra cieca
+const daDove = Number((await page.locator('[data-conta]').innerText()).trim().split(' ')[0])
 await page.click('.prova-velo .qz-tasto')
 await page.waitForSelector('.qz-avanti.saltabile', { timeout: 3000 })
-controlla('l\'attesa dice che si può saltare',
-  (await page.locator('.qz-avanti.saltabile em').innerText()).includes('prossima'))
 await page.click('.qz-avanti.saltabile')
 await page.waitForTimeout(300)
-uguale('e toccandola si va avanti senza aspettare',
-       (await page.locator('[data-conta]').innerText()).trim(), `2 di ${quante}`)
+uguale('toccando la barra si va avanti di UNA domanda',
+       (await page.locator('[data-conta]').innerText()).trim(),
+       `${(daDove % quante) + 1} di ${quante}`)
 await scatto(page, 'catalogo-giro')
 await page.click('.prova-fine')
 await page.waitForTimeout(250)

@@ -30,6 +30,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
+import Merce from './Merce.vue'
+import Passo from './Passo.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.statoMacchina()` */
@@ -38,8 +40,14 @@ const props = defineProps({
   /* se là dentro ci sono degli animali: cambia solo come si dicono le
      cose, mai cosa fanno i tasti */
   bestie: { type: Boolean, default: false },
-  /* le ricette di questa macchina, ognuna già con quello che le manca:
-     `{ ricetta, manca: [{ prodotto, quanti }], monete }` */
+  /* le ricette di questa macchina, ognuna già con quello che le manca
+     **e dove andarlo a prendere**:
+     `{ ricetta, manca: [{ prodotto, quanti }], monete, passo }` */
+  /* `{ ricetta, manca, monete, passo, hai }` — `hai` è quanto se ne ha
+     già, di quello che entra e di quello che esce. Non risponde a
+     «posso?» (a quello rispondono il tasto spento e il numero che
+     manca) ma a **«mi serve?»**, che è la domanda vera davanti a una
+     macchina con quattro ricette. */
   ricette: { type: Array, default: () => [] },
   ciSta: { type: Number, default: 99 },
   /* dove finisce quello che esce di qui: come si chiama, se c'è, e
@@ -48,14 +56,32 @@ const props = defineProps({
   silo: { type: String, default: 'silo' },
   senzaSilo: { type: Boolean, default: false },
   prezzoSilo: { type: Number, default: 0 },
+  /* Il prossimo passo quando quello che è pronto non ha dove andare */
+  passo: { type: Object, default: null },
 })
-const emit = defineEmits(['avvia', 'ritira', 'chiudi'])
+const emit = defineEmits(['avvia', 'ritira', 'chiudi', 'passo'])
 
 const r = computed(() => props.stato.ricetta)
 const pieno = computed(() => !props.stato.ferma && props.stato.pronto &&
                             props.ciSta < (r.value ? r.value.resa : 0))
 const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
 const puo = v => !v.manca.length && !v.monete
+
+/* ── LE CASELLE ───────────────────────────────────────────────────
+   *Ribalta il disegno di prima*, che era «3 → 2»: due numeri e una
+   freccia, cioè una formula. Una formula si legge, e leggere è
+   esattamente quello che qui non si può dare per scontato.
+
+   Adesso quello che serve è **una casella per pezzo**, e le caselle si
+   accendono per quante ne hai: quattro caselle di foraggio, due accese,
+   e non c'è niente da contare né da sottrarre — si vede il buco. È la
+   stessa cosa che fanno i cuori nei giochi, ed è il motivo per cui
+   funzionano a quattro anni.
+
+   Una ricetta con due ingredienti diversi mette i due gruppi in fila.
+   Oggi non ce n'è nessuna, ma il conto non lo sa e non deve saperlo. */
+const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
+  Array.from({ length: n }, (_, i) => ({ prodotto: k, i, piena: i < (v.hai[k] || 0) })))
 </script>
 
 <template>
@@ -64,37 +90,69 @@ const puo = v => !v.manca.length && !v.monete
 
     <!-- ── ferma: cosa faccio ── -->
     <template v-if="stato.ferma">
-      <p v-if="bestie">Hanno fame. Dai loro quello che hai raccolto, e
-         dopo un po' ti danno qualcosa in cambio.</p>
+      <p v-if="bestie">Hanno fame. Dai loro il mangime che hai
+         preparato, e dopo un po' ti danno qualcosa in cambio.</p>
       <p v-else>Metti dentro quello che hai raccolto e ne esce da
          mangiare per i tuoi animali.</p>
-      <div class="fa-nomi">
+      <!-- ── LA RICETTA SI LEGGE COME UNA FRECCIA ──
+           Quello che entra, quello che esce, e sotto il conto. Le figure
+           sono quelle vere dell'atlante e sono grandi il doppio delle
+           emoji di prima: un tasto di una macchina è il posto in cui si
+           impara la catena, e a dodici pixel il grano e il mais sono la
+           stessa macchia gialla. -->
+      <div class="fa-ricette">
         <button v-for="v in ricette" :key="v.ricetta.id"
-                :class="['fa-cibo', puo(v) ? 'suo' : 'altrui']"
+                :class="['fa-ricetta', puo(v) ? 'suo' : 'altrui']"
                 :disabled="!puo(v)" @click="emit('avvia', v.ricetta)">
-          <b>{{ v.ricetta.emoji }}</b>
-          <span>{{ v.ricetta.nome }} ×{{ v.ricetta.resa }}</span>
-          <em>{{ Object.entries(v.ricetta.prende)
-                   .map(([k, n]) => n + prodotto(k).emoji).join(' ') }}
-              {{ v.ricetta.costo ? ' · 🪙' + v.ricetta.costo : '' }}
-              · {{ v.ricetta.minuti }} min</em>
+          <span class="fa-caselle">
+            <span v-for="(q, i) in caselle(v)" :key="i"
+                  :class="['fa-casella', { piena: q.piena }]">
+              <Merce :merce="q.prodotto" :lato="26" />
+            </span>
+          </span>
+          <span class="fa-esce">
+            <b>→</b>
+            <Merce :merce="v.ricetta.da" :lato="26" />
+            <span class="fa-titolo">{{ v.ricetta.resa }} {{ v.ricetta.nome.toLowerCase() }}</span>
+          </span>
+          <em>ne hai {{ v.hai[v.ricetta.da] }}{{ v.ricetta.costo ? ' · 🪙' + v.ricetta.costo : ''
+                }} · {{ v.ricetta.minuti }} min</em>
         </button>
       </div>
-      <p v-for="v in ricette.filter(v => !puo(v))" :key="v.ricetta.id" class="fa-piccolo">
-        Per {{ v.ricetta.nome.toLowerCase() }} ti
-        {{ v.manca.length ? 'serve ancora' : 'servono' }}
-        <b>{{ [...v.manca.map(m => m.quanti + ' ' + prodotto(m.prodotto).emoji),
-               ...(v.monete ? ['🪙' + v.monete] : [])].join(' e ') }}</b>.
-      </p>
+      <!-- Quello che manca, e **dove andarlo a prendere**. Il consiglio
+           arriva già deciso dal motore (`motore/consiglio.js`) e risale
+           la catena da solo: se manca il grano e i campi sono tutti
+           occupati, il tasto propone di farne un altro invece di
+           lasciare fermi davanti a un elenco di ingredienti. -->
+      <!-- ── QUELLO CHE MANCA SI DICE COL SUO NOME E LA SUA FACCIA ──
+           Diceva «ti serve ancora 4 🥬» sotto un tasto che mostrava una
+           balla di fieno: la stessa merce, un'emoji sopra e un disegno
+           sotto, e a schermo sembravano due cose diverse — «non si
+           capisce cosa siano». L'emoji resta buona dove non c'è nessun
+           disegno accanto a contraddirla (i cartelli, i consigli); qui
+           accanto c'è, quindi si mette **quello vero**, e il nome
+           scritto per esteso perché una figura da venti pixel dentro
+           una frase si guarda ma non si legge. -->
+      <template v-for="v in ricette.filter(v => !puo(v))" :key="v.ricetta.id">
+        <p class="fa-piccolo fa-manca">
+          <span>Per {{ v.ricetta.nome.toLowerCase() }} ti
+            {{ v.manca.length + (v.monete ? 1 : 0) > 1 ? 'servono ancora' : 'serve ancora' }}</span>
+          <b v-for="m in v.manca" :key="m.prodotto">{{ m.quanti }}
+            <Merce :merce="m.prodotto" :lato="20" />
+            {{ prodotto(m.prodotto).nome.toLowerCase() }}</b>
+          <b v-if="v.monete">🪙{{ v.monete }}</b>
+        </p>
+        <Passo :passo="v.passo" @fai="a => emit('passo', a)" />
+      </template>
     </template>
 
     <!-- ── sta lavorando ── -->
     <template v-else-if="!stato.pronto">
-      <p>{{ r.emoji }} {{ bestie ? 'Ci stanno pensando' : 'Sta lavorando' }}. Finisce fra
+      <p>{{ bestie ? 'Ci stanno pensando' : 'Sta lavorando' }}. Finisce fra
          <b>{{ stato.manca }} {{ stato.manca === 1 ? 'minuto' : 'minuti' }}</b>.</p>
       <div class="fa-bisogni">
         <div class="fa-bisogno">
-          <span>{{ r.emoji }}</span>
+          <Merce :merce="r.da" :lato="26" />
           <span class="fa-livello">
             <i :style="{ width: Math.round(stato.quanto * 100) + '%', background: '#e0a33c' }"></i>
           </span>
@@ -107,16 +165,17 @@ const puo = v => !v.manca.length && !v.monete
 
     <!-- ── pronto ── -->
     <template v-else>
-      <p><b>{{ r.emoji }} È pronto!</b> Ci sono
+      <p class="fa-pronto"><Merce :merce="r.da" :lato="48" />
+         <b>È pronto!</b> Ci sono
          {{ r.resa }} {{ prodotto(r.da).nome.toLowerCase() }} da portare via.
          Ritirare non costa niente.</p>
       <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
          <b>{{ silo.toLowerCase() }}</b> (🪙{{ prezzoSilo }}): senza, non c'è
          dove metterlo. Non si butta via niente.</p>
-      <p v-else-if="pieno" class="fa-piccolo">Nel {{ silo.toLowerCase() }}
-         non c'è posto per {{ r.resa }} {{ prodotto(r.da).emoji }}: dai da
-         mangiare a qualcuno, o toccalo e ingrandiscilo. Non si butta via
-         niente.</p>
+      <template v-else-if="pieno">
+        <p class="fa-piccolo">Ti aspetta lì: non si butta via niente.</p>
+        <Passo :passo="passo" @fai="a => emit('passo', a)" />
+      </template>
     </template>
 
     <div class="fa-fila">

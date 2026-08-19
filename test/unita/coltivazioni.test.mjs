@@ -16,7 +16,7 @@
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
   guastiDelleColture, COLTURE, RICETTE, PRODOTTI, PER_COLTURA, PER_RICETTA,
-  SILI, SILO_BASE, SILO_PIU, MINUTO, capienza, costoIngrandimento,
+  SILI, SCOMPARTO_BASE, SCOMPARTO_PIU, MINUTO, postiPerMerce, merciDi, costoIngrandimento,
   quantoCresciuto, stadioDi, minutiCheMancano,
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { CIBI, COCCOLE, cibiPer, serveA } from '../../src/giochi/fattoria/dati/bisogni.js'
@@ -195,41 +195,80 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
          f.quantoCiSta('uova') > 0, true)
 }
 
-/* ══════════ 5. I DUE SILOS ══════════
-   Piccoli, condivisi, separati e si ingrandiscono pagando. Sono quattro
-   decisioni di prodotto, e ognuna qui sotto ha la sua riga: il perché
-   sta in `dati/coltivazioni.js`. */
+/* ══════════ 5. I DUE SILOS, E UNO SCOMPARTO PER MERCE ══════════
+   Piccoli, **separati per merce**, separati fra loro e si ingrandiscono
+   pagando. Il perché sta in `dati/coltivazioni.js`; qui c'è una riga
+   per ogni decisione. */
 {
   const { f } = conCampoEMulino(1000, 0)
-  uguale('un silo appena costruito tiene poco', f.capienzaDi('terra'), SILO_BASE)
-  uguale('e il conto è quello del dato', capienza(0), SILO_BASE)
+  uguale('uno scomparto appena costruito tiene poco',
+         f.capienzaDi('terra'), SCOMPARTO_BASE)
+  uguale('e il conto è quello del dato', postiPerMerce(0), SCOMPARTO_BASE)
 
-  /* **Condiviso**: il tetto è del silo, non del singolo prodotto. Era
-     per prodotto, ed era la cosa che non si capiva. */
+  /* **Per merce, non per silo.** È il cambio che conta: prima i posti
+     erano in comune, e un bambino che semina sempre la stessa cosa
+     riempiva il silo con quella e non poteva più raccogliere niente —
+     32 di mais e 4 di carote, con il gioco fermo e niente di rotto. */
   f.metti('grano', 3)
-  uguale('tre grani riempiono tre posti', f.quantoHoNelSilo('terra'), 3)
-  uguale('e del mais ce ne sta quello che avanza',
-         f.quantoCiSta('mais'), SILO_BASE - 3)
-  const fuori = f.metti('mais', SILO_BASE + 1)
-  uguale('quello che non ci sta torna indietro invece di sparire', fuori, 4)
-  uguale('e il silo è esattamente pieno', f.quantoHoNelSilo('terra'), SILO_BASE)
+  uguale('tre grani riempiono tre posti dello scomparto del grano',
+         f.quantoHo('grano'), 3)
+  uguale('e non tolgono niente al mais', f.quantoCiSta('mais'), SCOMPARTO_BASE)
+  const fuori = f.metti('grano', SCOMPARTO_BASE)
+  uguale('quello che non ci sta torna indietro invece di sparire', fuori, 3)
+  uguale('lo scomparto del grano è esattamente pieno',
+         f.quantoHo('grano'), SCOMPARTO_BASE)
+  uguale('e col grano colmo il mais entra lo stesso',
+         f.quantoCiSta('mais'), SCOMPARTO_BASE)
 
-  /* **Separati**: il raccolto colmo non ferma le uova. È il motivo per
-     cui i silos sono due e non uno grande. */
+  /* **Separati** anche fra silos: il raccolto colmo non ferma le uova. */
   uguale('col raccolto pieno le uova entrano lo stesso',
-         f.quantoCiSta('uova'), SILO_BASE)
+         f.quantoCiSta('uova'), SCOMPARTO_BASE)
 
-  /* **Si ingrandisce**, e il prossimo costa di più. */
+  /* Quello che serve a disegnarli: **anche gli scomparti vuoti**, perché
+     uno scomparto a zero è il posto dove potrebbe andare qualcosa. */
+  const sc = f.scomparti('terra')
+  uguale('gli scomparti sono uno per merce del silo', sc.length, merciDi('terra').length)
+  uguale('e ci sono anche quelli vuoti',
+         sc.filter(x => !x.quanti).length > 0, true)
+  uguale('quello del grano si dichiara colmo',
+         sc.find(x => x.prodotto === 'grano').pieno, true)
+
+  /* **Si ingrandisce**, e allarga tutti gli scomparti insieme. */
   const primo = f.costoDellIngrandimento('terra')
   uguale('il primo ingrandimento costa quello che dice il dato',
          primo, costoIngrandimento(0))
   const su = f.ingrandisci('terra')
   controlla('si ingrandisce', su.ok)
-  uguale(`e ci stanno ${SILO_PIU} cose in più`, f.capienzaDi('terra'), SILO_BASE + SILO_PIU)
+  uguale(`e in ogni scomparto ci stanno ${SCOMPARTO_PIU} cose in più`,
+         f.capienzaDi('terra'), SCOMPARTO_BASE + SCOMPARTO_PIU)
+  uguale('quindi nel grano, che era colmo, ci sta di nuovo qualcosa',
+         f.quantoCiSta('grano'), SCOMPARTO_PIU)
   controlla('il prossimo costa di più', f.costoDellIngrandimento('terra') > primo)
-  uguale('e non ha toccato l\'altro silo', f.capienzaDi('stalla'), SILO_BASE)
+  uguale('e non ha toccato l\'altro silo', f.capienzaDi('stalla'), SCOMPARTO_BASE)
 
   uguale('togliere più di quello che c\'è non si può', f.togli('zucche', 1), false)
+}
+
+/* ══════════ 5b. IL ROSSO È DEI CAMPI, IL BIANCO È DEGLI ANIMALI ══════════
+   Il criterio era **da dove viene la roba**, e il mangime «veniva dalla
+   terra». Vero e invisibile: un bambino sa che il mangime si dà alle
+   galline, non che nasce dal grano. Adesso il mangime e il pastone
+   stanno con gli animali, e la conseguenza è di gioco e non di ordine:
+   **macinare libera posto nel silo che si tappa.** */
+{
+  const { f, mulino } = conCampoEMulino(1000, 0)
+  uguale('nel silo del raccolto ci sono solo le cinque cose dei campi',
+         merciDi('terra').join(','), 'grano,mais,carote,zucche,fieno')
+  controlla('il mangime sta con gli animali', merciDi('stalla').includes('mangime'))
+  controlla('e il pastone pure', merciDi('stalla').includes('pastone'))
+
+  f.metti('grano', 3)
+  const prima = f.quantoHoNelSilo('terra')
+  f.avvia(mulino, 'mangime', T0)
+  f.ritira(mulino, fra(PER_RICETTA.mangime.minuti))
+  uguale('macinare svuota il silo del raccolto per intero',
+         f.quantoHoNelSilo('terra'), prima - 3)
+  uguale('e il mangime è finito di là', f.quantoHo('mangime'), PER_RICETTA.mangime.resa)
 }
 
 {
@@ -238,7 +277,7 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   const no = f.ingrandisci('terra')
   uguale('a corto di monete non si ingrandisce', no.ok, false)
   uguale('e dice che sono le monete', no.motivo, 'poche-monete')
-  uguale('il silo è rimasto com\'era', f.capienzaDi('terra'), SILO_BASE)
+  uguale('il silo è rimasto com\'era', f.capienzaDi('terra'), SCOMPARTO_BASE)
 }
 
 {
@@ -341,25 +380,57 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 
    Il vero freno non è questo rapporto: è il tempo, contato qui sotto. */
 {
-  /* Quanto costa in monete un'unità di prodotto coltivato: il giro del
-     campo diviso la resa, più quello che chiede la macchina. */
-  const costoDi = ricetta => {
+  /* Quanto costa in monete un'unità di roba, e quanti minuti ci vuole.
+
+     ── E SI RISALE LA CATENA ──
+     *Ribalta il conto di prima*, che cercava la coltura che fa quello
+     che una ricetta prende. Andava bene finché la catena era corta —
+     campo → recinto — e si è rotto il giorno che in mezzo è arrivato il
+     fienile: il pollaio non prende più grano, prende becchime, e il
+     becchime non lo coltiva nessuno. Il conto giusto è **ricorsivo**:
+     una roba costa il meno caro fra i modi di averla, e un modo può a
+     sua volta partire da una roba.
+
+     `giri` è il fondo della ricorsione: una tabella scritta male
+     potrebbe avere un anello (il pastone che serve al pastone), e un
+     test che si avvita non dà un guasto, non finisce. */
+  function costoRoba(prodotto, giri = 4) {
+    if (giri <= 0) return Infinity
+    let min = Infinity
+    for (const c of COLTURE)
+      if (c.da === prodotto) min = Math.min(min, (c.semina + c.raccolta) / c.resa)
+    for (const r of RICETTE)
+      if (r.da === prodotto) min = Math.min(min, costoDi(r, giri - 1))
+    return min
+  }
+  function minutiRoba(prodotto, giri = 4) {
+    if (giri <= 0) return Infinity
+    let min = Infinity
+    for (const c of COLTURE)
+      if (c.da === prodotto) min = Math.min(min, c.minuti / c.resa)
+    for (const r of RICETTE)
+      if (r.da === prodotto) min = Math.min(min, minutiDi(r, giri - 1))
+    return min
+  }
+  function costoDi(ricetta, giri = 4) {
     let monete = ricetta.costo
-    for (const [k, quanti] of Object.entries(ricetta.prende)) {
-      const c = COLTURE.find(c => c.da === k)
-      controlla(`«${k}» si può coltivare`, !!c)
-      monete += quanti * (c.semina + c.raccolta) / c.resa
-    }
+    for (const [k, quanti] of Object.entries(ricetta.prende))
+      monete += quanti * costoRoba(k, giri)
     return monete / ricetta.resa
   }
-  const minutiDi = ricetta => {
+  function minutiDi(ricetta, giri = 4) {
     let m = ricetta.minuti
-    for (const [k, quanti] of Object.entries(ricetta.prende)) {
-      const c = COLTURE.find(c => c.da === k)
-      m += quanti * c.minuti / c.resa
-    }
+    for (const [k, quanti] of Object.entries(ricetta.prende))
+      m += quanti * minutiRoba(k, giri)
     return m / ricetta.resa
   }
+
+  /* Ogni ingrediente dev'essere **ottenibile**: uno che non lo è
+     sarebbe un tasto che non si può premere, e il conto qui sotto
+     verrebbe infinito senza che nessuno lo dica. */
+  for (const r of RICETTE)
+    for (const k of Object.keys(r.prende))
+      controlla(`«${k}» si può avere`, Number.isFinite(costoRoba(k)))
 
   /* Quanto costa **una pancia intera** comprandola, al prezzo migliore
      che il negozio fa. È la tariffa con cui si paragona tutto: prima si
@@ -478,12 +549,27 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 
   f.metti('grano', 3)
   f.avvia(mulino, 'mangime', T0)
-  controlla('un mulino al lavoro lo dice', !!f.aspettoDellaCosa(mulino, fra(1)).fumetto)
+  /* *Ribalta il controllo di prima*, che chiedeva un `fumetto` qualsiasi
+     — ed era una clessidra uguale per tutte le macchine. Con quattro
+     ricette nel fienile e due nel mulino la clessidra non basta: davanti
+     a quella bisogna aprire il foglio per sapere cos'è partito, e aprire
+     il foglio è la cosa che il fumetto esiste per evitare. Adesso una
+     macchina al lavoro dice **la faccia di quello che sta facendo**. */
+  const alLavoro = f.aspettoDellaCosa(mulino, fra(1))
+  uguale('un mulino al lavoro dice cosa sta facendo',
+         (alLavoro.fa || {}).prodotto, 'mangime')
+  controlla('con una faccia da disegnare, non con delle parole',
+            !!(alLavoro.fa.pezzo || alLavoro.fa.testo))
+  const finito = f.aspettoDellaCosa(mulino, fra(99))
+  uguale('e quando ha finito chiede di essere svuotato', finito.fumetto, '🧺')
+  uguale('senza ripetere cosa ha fatto: lì la cosa da fare è una sola',
+         finito.fa, undefined)
 }
 
 nota(`${COLTURE.length} colture, ${RICETTE.length} ricette, ` +
-     `${Object.keys(PRODOTTI).length} prodotti · silos da ${SILO_BASE} ` +
-     `(+${SILO_PIU} a 🪙${[0, 1, 2, 3].map(costoIngrandimento).join(', 🪙')}…)`)
+     `${Object.keys(PRODOTTI).length} prodotti · scomparti da ${SCOMPARTO_BASE} ` +
+     `(+${SCOMPARTO_PIU} a 🪙${[0, 1, 2, 3].map(costoIngrandimento).join(', 🪙')}…)`)
+nota(`il raccolto tiene ${merciDi('terra').length} merci, la stalla ${merciDi('stalla').length}`)
 
 /* Una coltura che rende più di quanto tenga un silo appena costruito
    non si raccoglie finché non lo si ingrandisce. Non è un guasto — il
@@ -491,8 +577,8 @@ nota(`${COLTURE.length} colture, ${RICETTE.length} ricette, ` +
    quando si tocca una resa, quindi si scrive invece di scoprirla
    giocando. */
 for (const c of COLTURE)
-  if (c.resa > SILO_BASE)
-    nota(`${c.emoji} ${c.nome}: rende ${c.resa}, e un silo nuovo ne tiene ` +
-         `${SILO_BASE} — va ingrandito prima di raccoglierlo`)
+  if (c.resa > SCOMPARTO_BASE)
+    nota(`${c.emoji} ${c.nome}: rende ${c.resa}, e uno scomparto nuovo ne tiene ` +
+         `${SCOMPARTO_BASE} — va ingrandito prima di raccoglierlo`)
 
 riassunto('i campi della fattoria')

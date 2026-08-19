@@ -11,14 +11,24 @@ import {
   guastiDelMondo, MARGINE, PIAZZOLE_INIZIALI, PRIMA, COSTO_SPOSTARE, chiave,
   LIMITI_VECCHI,
 } from '../../src/giochi/fattoria/dati/mondo.js'
-import { guastiDelCatalogo } from '../../src/giochi/fattoria/dati/catalogo.js'
+import { guastiDelCatalogo, CATALOGO, PER_ID, piedeDi, assettoDi, quantiVersi,
+         puoGirare, puoSpecchiare } from '../../src/giochi/fattoria/dati/catalogo.js'
+import { VOCI } from '../../src/giochi/fattoria/dati/atlante.js'
+
+/* Se il disegno di questa voce regge il capovolgimento. Sta nel test e
+   non nel catalogo perché al gioco non serve saperlo — al gioco serve
+   solo la lista dei giri leciti, che è quello che il catalogo rende. */
+const ribaltabile = v => {
+  const voce = VOCI.find(x => Object.values(x.pose || {}).flat().includes(v.pezzo))
+  return v.ribalta != null ? v.ribalta : (voce || {}).ribalta !== false
+}
 import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria/dati/ostacoli.js'
 import { guastiDeiBisogni, CIBI, COCCOLE, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { guastiDegliAnimali, famigliaDi, IN_VENDITA } from '../../src/giochi/fattoria/dati/animali.js'
 import manifesto from '../../src/giochi/fattoria/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene davvero il conto, per provare che le monete si
    muovono come devono — `borsaInfinita()` del motore serve a isolare le
@@ -330,6 +340,99 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   controlla('in piedi occupa le due celle in colonna',
             !f.calpestabile(15, 15) && !f.calpestabile(15, 16))
   controlla('e non più quella accanto', f.calpestabile(16, 15))
+}
+
+/* ═══════════ girare per davvero, e rovesciare ═══════════
+   La staccionata qui sopra gira perché il foglio ha *due disegni*. Una
+   siepe no: il foglio ne ha uno solo, e girarla è un `ctx.rotate` a
+   schermo — lecito perché il suo foglietto dichiara che è disegnata a
+   piombo dall'alto (`trasforma` in `sorgenti/gfx/Overworld.json`, che
+   `atlante.py` porta dentro `VOCI`). Le due strade arrivano allo stesso
+   posto, e il motore non deve saperle distinguere: chiede quanti versi
+   ha una cosa e li fa scorrere. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const siepe = PER_ID.siepe
+  /* Due versi e non quattro, ed è la cosa che si sbaglia: una siepe si
+     corica ma **non si ribalta**. Ha un filo d'ombra sotto, e a mezzo
+     giro ce l'ha in cima — sta a gambe per aria. Uno stagno invece è
+     disegnato a piombo davvero e i quattro versi li regge tutti. */
+  uguale('la siepe si corica, quindi ha due versi', quantiVersi(siepe), 2)
+  uguale('uno stagno è piatto davvero, e ne ha quattro', quantiVersi(PER_ID.stagno), 4)
+  uguale('una casa ne ha due, e sono due disegni', quantiVersi(PER_ID.casa), 2)
+  uguale('un fienile non gira affatto', quantiVersi(PER_ID.fienile), 1)
+
+  const s = f.posa('siepe', 15, 15).cosa
+  stessaLista('sdraiata è larga due e profonda una', piedeDi(s), [2, 1])
+  controlla('gira', f.gira(s).ok)
+  stessaLista('un quarto di giro le scambia il piede', piedeDi(s), [1, 2])
+  controlla('e le celle che blocca lo seguono',
+            !f.calpestabile(15, 16) && f.calpestabile(16, 15))
+  controlla('gira ancora', f.gira(s).ok)
+  uguale('e al secondo giro torna sdraiata, senza passare per il capovolto', s.g, 0)
+  stessaLista('col piede di partenza', piedeDi(s), [2, 1])
+
+  /* Il controllo che vale per tutte: nessuna cosa del catalogo deve
+     poter arrivare a un mezzo giro se il suo disegno non lo regge. È il
+     difetto che nessun altro controllo trova, perché un pezzo capovolto
+     è formalmente ineccepibile — solo, è a testa in giù. */
+  const capovolte = []
+  for (const v of CATALOGO) {
+    if (v.vedute || !puoGirare(v)) continue
+    const suoi = []
+    for (let g = 0; g < quantiVersi(v); g++) suoi.push(assettoDi({ id: v.id, g }).giro)
+    if (!ribaltabile(v) && suoi.some(q => q === 2 || q === 3)) capovolte.push(v.id)
+    if (new Set(suoi).size !== suoi.length) capovolte.push(v.id + ' (verso doppio)')
+  }
+  controlla('nessuna cosa che non si ribalta arriva a mezzo giro',
+            capovolte.length === 0, capovolte.join(' · '))
+
+  /* Girato non ci sta: si dice di no e si resta com'era. Un rifiuto che
+     lascia la cosa girata a metà sarebbe peggio del rifiuto. */
+  const stretto = f.posa('siepe', 20, 20).cosa
+  f.posa('siepe', 20, 21)
+  uguale('la siepe sotto occupa la cella che servirebbe', f.gira(stretto).motivo, 'non-ci-sta')
+  uguale('e quella che non ha girato è rimasta com\'era', stretto.g, 0)
+}
+
+/* Lo specchio è l'altra metà, e non è la stessa cosa: non tocca
+   l'ingombro, quindi non può mai fallire per posto. È quello che
+   risolve il fastidio vero — la porta del fienile dal lato sbagliato —
+   e per questo lo regge quasi tutto quello che sta in catalogo. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const casa = f.posa('fienile', 15, 15).cosa
+  const prima = piedeDi(casa)
+
+  controlla('un fienile si rovescia anche se non gira', puoSpecchiare(PER_ID.fienile))
+  controlla('e il motore lo fa', f.specchia(casa).ok)
+  uguale('adesso è rovesciato', casa.m, 1)
+  stessaLista('ma occupa esattamente le stesse celle', piedeDi(casa), prima)
+  controlla('premere di nuovo lo rimette com\'era', f.specchia(casa).ok)
+  uguale('e non lascia in giro un campo a zero', casa.m, undefined)
+
+  /* L'eccezione, e vale la pena di averla: sul cartello c'è una parola
+     dipinta, e allo specchio la parola si legge al contrario. È l'unico
+     difetto della specchiatura che non si può guardare e perdonare. */
+  controlla('un cartello scritto non si specchia', !puoSpecchiare(PER_ID.cartello_grano))
+  const c = f.posa('cartello_grano', 18, 18).cosa
+  uguale('e il motore lo rifiuta', f.specchia(c).motivo, 'non-si-specchia')
+  uguale('senza scrivergli niente addosso', c.m, undefined)
+}
+
+/* Il verso e lo specchio devono sopravvivere a una chiusura del gioco:
+   una fattoria sistemata che si riapre tutta dritta è peggio di una che
+   non si poteva sistemare. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const s = f.posa('siepe', 15, 15).cosa
+  f.gira(s); f.specchia(s)
+  const dopo = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })
+  const rilette = dopo.cose.find(c => c.id === 'siepe')
+  uguale('il verso torna dal salvataggio', rilette.g, 1)
+  uguale('e lo specchio pure', rilette.m, 1)
+  const dritta = dopo.cose.find(c => c.id !== 'siepe')
+  if (dritta) uguale('chi non è rovesciato non si porta dietro un campo', dritta.m, undefined)
 }
 
 /* Il cane con una casa in mezzo alla strada: la aggira, e non c'entra

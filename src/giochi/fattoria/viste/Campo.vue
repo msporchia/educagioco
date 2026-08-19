@@ -24,6 +24,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
+import Merce from './Merce.vue'
+import Passo from './Passo.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.statoCampo()` */
@@ -43,8 +45,12 @@ const props = defineProps({
      (`dati/livelli.js`): al primo campo sono due, e crescono con la
      fattoria. Le porta chi apre il foglio — qui non si decide niente. */
   colture: { type: Array, default: () => [] },
+  /* Il prossimo passo quando il raccolto non ha dove andare
+     (`motore/consiglio.js`): o si usa quello che c'è, o si allarga il
+     silo. Arriva già deciso — qui non si sceglie, si mostra. */
+  passo: { type: Object, default: null },
 })
-const emit = defineEmits(['semina', 'raccogli', 'chiudi'])
+const emit = defineEmits(['semina', 'raccogli', 'chiudi', 'passo'])
 
 const c = computed(() => props.stato.coltura)
 const pieno = computed(() => !props.stato.vuoto && props.stato.pronto &&
@@ -60,11 +66,18 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
     <template v-if="stato.vuoto">
       <p>Scegli cosa seminare. Ci vuole del tempo vero: puoi chiudere il
          gioco e tornare quando è cresciuto.</p>
+      <!-- **Quanto ne hai già**, sotto ogni coltura. È l'informazione
+           che trasforma cinque bottoni in una scelta: senza, si semina
+           sempre la stessa cosa e si scopre il silo tappato dieci
+           minuti dopo, davanti a un raccolto che non entra. Uno
+           scomparto colmo lo dice qui, **prima** di seminare. -->
       <div class="fa-nomi">
-        <button v-for="k in colture" :key="k.id" class="fa-cibo suo"
+        <button v-for="k in colture" :key="k.id"
+                :class="['fa-cibo', 'grande', k.ciSta < k.resa ? 'colma' : 'suo']"
                 :disabled="k.semina > monete" @click="emit('semina', k)">
-          <b>{{ k.emoji }}</b>
+          <Merce :merce="k.da" :lato="44" />
           <span>{{ k.nome }}</span>
+          <u>{{ k.ciSta < k.resa ? 'pieno · ' + k.hai : 'ne hai ' + k.hai }}</u>
           <em>🪙{{ k.semina }} · {{ k.minuti }} min</em>
         </button>
       </div>
@@ -72,8 +85,9 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
          del raccolto</b> (🪙{{ prezzoSilo }}): è lì che finisce quello
          che raccogli, e senza non c'è dove metterlo.</p>
       <p v-else class="fa-piccolo">Poi si raccoglie, e quello che viene
-         fuori finisce nel silo del raccolto: con il mulino diventa pappa
-         per i tuoi animali. <b>Il silo si guarda toccandolo.</b></p>
+         fuori finisce nel silo del raccolto: al fienile diventa mangime
+         per le bestie del cortile, al mulino pappa per il cane e il
+         gatto. <b>Il silo si guarda toccandolo.</b></p>
     </template>
 
     <!-- ── sta crescendo ── -->
@@ -82,7 +96,7 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
          <b>{{ stato.manca }} {{ stato.manca === 1 ? 'minuto' : 'minuti' }}</b>.</p>
       <div class="fa-bisogni">
         <div class="fa-bisogno">
-          <span>{{ c.emoji }}</span>
+          <Merce :merce="c.da" :lato="26" />
           <span class="fa-livello">
             <i :style="{ width: Math.round(stato.quanto * 100) + '%', background: '#8fcf6f' }"></i>
           </span>
@@ -95,15 +109,18 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
 
     <!-- ── pronto ── -->
     <template v-else>
-      <p><b>{{ c.emoji }} È pronto!</b> Ne viene
-         {{ c.resa }} {{ prodotto(c.da).emoji }}
+      <p class="fa-pronto"><Merce :merce="c.da" :lato="48" />
+         <b>È pronto!</b> Ne
+         {{ c.resa === 1 ? 'viene' : 'vengono' }} {{ c.resa }}
          {{ prodotto(c.da).nome.toLowerCase() }}.</p>
-      <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
-         <b>silo del raccolto</b> (🪙{{ prezzoSilo }}): senza, non c'è dove
-         metterlo. Il campo ti aspetta.</p>
-      <p v-else-if="pieno" class="fa-piccolo">Nel silo del raccolto non
-         c'è posto per {{ c.resa }} {{ prodotto(c.da).emoji }}: usa
-         qualcosa, o toccalo e ingrandiscilo. Il campo ti aspetta.</p>
+      <!-- Non ci sta: il perché lo dice il consiglio, e porta il tasto.
+           Prima qui c'era «usa qualcosa, o toccalo e ingrandiscilo»,
+           che sono due compiti da fare da un'altra parte detti a un
+           bambino che sta guardando un campo maturo. -->
+      <template v-if="pieno">
+        <p class="fa-piccolo">Il campo ti aspetta: non si perde niente.</p>
+        <Passo :passo="passo" @fai="a => emit('passo', a)" />
+      </template>
       <p v-else-if="c.raccolta > monete" class="fa-piccolo">Ti
          {{ c.raccolta - monete === 1 ? 'serve' : 'servono' }}
          <b>🪙{{ c.raccolta - monete }}</b> in più per raccoglierlo. Resta

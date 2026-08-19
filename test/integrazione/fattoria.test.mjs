@@ -86,9 +86,12 @@ async function chiudi() {
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
   uguale('al livello 1 il baule non vende ancora le case',
          await page.locator('.fa-scheda', { hasText: 'Case' }).count(), 0)
-  uguale('né gli animali', await page.locator('.fa-scheda', { hasText: 'Animali' }).count(), 0)
-  controlla('ma i campi ci sono',
-            await page.locator('.fa-scheda', { hasText: 'Campi' }).count() === 1)
+  /* Gli animali sono **una delle tre metà** in cima, non una linguetta:
+     al livello 1 non ce n'è ancora nessuno in vendita, quindi quella
+     metà non compare affatto. */
+  uguale('né gli animali', await page.locator('.fa-zona', { hasText: 'Animali' }).count(), 0)
+  controlla('ma la catena c\'è',
+            await page.locator('.fa-voce', { hasText: 'Campo' }).count() > 0)
   /* La metà delle decorazioni non c'è proprio finché non arriva la
      prima: una linguetta che si apre su niente è un tasto rotto. */
   uguale('e la metà del bello non c\'è ancora',
@@ -237,10 +240,13 @@ await chiudi()
 {
   await page.locator('.fa-tondo').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
-  /* Il baule ha due metà (`viste/Roba.vue`): «La fattoria» è quella che
-     si apre, e le case stanno nell'altra. */
-  controlla('il baule ha le due metà', await page.locator('.fa-zona').count() === 2)
-  await page.locator('.fa-zona', { hasText: 'Il bello' }).click()
+  /* Il baule ha tre metà (`viste/Roba.vue`): «La fattoria» è quella che
+     si apre, le case stanno in «Decorazioni» e le bestie in «Animali».
+     Erano due, con gli animali dentro «la fattoria»: le bestie non
+     producono niente, e sotto «la fattoria» restava una linguetta
+     sola. */
+  controlla('il baule ha le tre metà', await page.locator('.fa-zona').count() === 3)
+  await page.locator('.fa-zona', { hasText: 'Decorazioni' }).click()
   await attendi(page, 200)
   await page.locator('.fa-scheda', { hasText: 'Case' }).click()
   await attendi(page, 200)
@@ -272,8 +278,9 @@ await chiudi()
     await page.locator('.fa-tondo').click()
     await page.waitForSelector('.fa-voce', { timeout: 3000 })
     await page.locator('.fa-zona', { hasText: 'La fattoria' }).click()
-    await attendi(page, 200)
-    await page.locator('.fa-scheda', { hasText: 'Campi' }).click()
+    /* Nessuna linguetta da premere: sotto «la fattoria» ce n'è una
+       sola — campi, macchine, silos e recinti sono la stessa catena — e
+       quando è una sola non si mostra affatto. */
     await attendi(page, 200)
   }
   const quantiSili = () => page.locator('.fa-voce', { hasText: 'Silo del raccolto' }).count()
@@ -289,6 +296,38 @@ await chiudi()
   uguale('e una volta posato non lo propone più', await quantiSili(), 0)
   await scatto(page, 'fattoria-silo-posato')
   await chiudi()
+
+  /* ── IL SILO SI TOCCA DOVE SI VEDE ──────────────────────────────
+     Uno sprite si appoggia col fondo sul suo piede e tutto il resto
+     sporge in su: il silo occupa due celle per una ed è alto quasi
+     quattro, quindi si vedeva grande e si toccava solo nella striscia in
+     basso — un quarto di quello che c'è a schermo. Sopra quella striscia
+     il dito cadeva sul prato dietro, e il bambino ci andava a camminare.
+
+     Settanta pixel sopra il punto in cui è stato posato sono
+     certamente fuori dal piede (una cella alla scala di partenza ne
+     misura 32) e certamente dentro il disegno (che ne è alto 116). */
+  await dito(mezzo.x + 80, mezzo.y + 60 - 70)
+  await attendi(page, 250)
+  uguale('il silo si tocca anche in alto, dove si vede e non dove appoggia',
+         await foglio(), 'Silo del raccolto')
+
+  /* E chiudendolo non resta niente addosso. Il tocco secco su una cosa
+     che ha una scheda apre **solo** quella: prima selezionava anche, e
+     gli attrezzi riemergevano da soli alla chiusura del foglio. */
+  await chiudi()
+  uguale('e chiuso il suo foglio non resta nessun menù appeso',
+         await page.locator('.fa-attrezzi').count(), 0)
+
+  /* Gli attrezzi ci sono ancora, ma li chiede il tocco lungo: è lo
+     stesso gesto con cui lo si sposta, meno il trascinamento. */
+  await dito(mezzo.x + 80, mezzo.y + 60 - 70, 0, 900)
+  await attendi(page, 250)
+  controlla('tenendolo premuto invece compaiono i suoi attrezzi',
+            await page.locator('.fa-attrezzi').count() > 0)
+  uguale('e il tocco lungo non apre nessun foglio', await page.locator('.fa-velo').count(), 0)
+  await dito(mezzo.x + 80, mezzo.y - 90)      // via, su un pezzo di prato
+  await attendi(page, 200)
 }
 
 /* ---------- 8. una bestia si sceglie dove farla arrivare ----------
@@ -297,9 +336,7 @@ await chiudi()
 {
   await page.locator('.fa-tondo').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
-  await page.locator('.fa-zona', { hasText: 'La fattoria' }).click()
-  await attendi(page, 200)
-  await page.locator('.fa-scheda', { hasText: 'Animali' }).click()
+  await page.locator('.fa-zona', { hasText: 'Animali' }).click()
   await attendi(page, 200)
   const b = await page.locator('.fa-voce').first().boundingBox()
   await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
@@ -312,28 +349,38 @@ await chiudi()
   await attendi(page, 250)
 
   /* Appena arrivata si sa **dove** è, ed è l'unico momento in cui lo si
-     sa: da lì in poi gira per il prato per conto suo. Quindi le due
-     prove del gesto sulle bestie si fanno adesso. Il primo tocco apre la
-     scheda e insieme la **seleziona**, e una bestia selezionata sta
-     ferma: da qui in poi non scappa più, e la prova che segue non
-     dipende da dove è andata. */
-  /* Il bersaglio è `.fa-blocco`, i tre riquadri per bisogno: la scheda
+     sa: da lì in poi gira per il prato per conto suo, e **anche fra una
+     prova e l'altra**. Chiudere la sua scheda la libera (`chiudi()` in
+     `Gioco.vue` lascia il prato pulito), quindi il punto trovato al
+     primo tocco non vale più al secondo: ogni prova si cerca il suo, con
+     lo stesso giro di tentativi. Prima il test si appoggiava al fatto
+     che una bestia guardata restasse selezionata — cioè **ferma per
+     sempre** — che era un difetto, non una comodità: una capra che non
+     riparte più dopo che le hai letto la scheda sembra incantata.
+
+     Il bersaglio è `.fa-blocco`, i tre riquadri per bisogno: la scheda
      era tre barrette in cima (`.fa-bisogni`) e i tasti sparsi sotto, e
      adesso ogni bisogno è un blocco con dentro quello che lo riempie
      (`viste/Bestia.vue`). */
-  let dove = null
-  for (const dy of [-8, 0, -20, -32]) {
-    await dito(mezzo.x + 40, mezzo.y - 40 + dy)
-    if (await page.locator('.fa-blocco').count()) { dove = { x: mezzo.x + 40, y: mezzo.y - 40 + dy } }
-    await chiudi()
-    if (dove) break
+  const cercaLaBestia = async tieni => {
+    for (const dy of [-8, 0, -20, -32]) {
+      await dito(mezzo.x + 40, mezzo.y - 40 + dy, 0, tieni)
+      if (await page.locator('.fa-blocco').count()) return { x: mezzo.x + 40, y: mezzo.y - 40 + dy }
+      await chiudi()
+    }
+    return null
   }
+  let dove = await cercaLaBestia(60)
   controlla('toccando la bestia si apre la sua scheda', !!dove)
+  await chiudi()
+  /* La stessa pressione, ma lunga e ferma: su una bestia il tocco lungo
+     apre la scheda come quello secco — è il **movimento** che apre il
+     trascinamento, non il tempo. (Su una cosa posata invece il tocco
+     lungo fa un'altra cosa: mostra i suoi attrezzi. Si prova più giù.) */
   if (dove) {
-    await dito(dove.x, dove.y, 0, 900)    // la stessa pressione, ma lunga e ferma
-    await attendi(page, 250)
+    dove = await cercaLaBestia(900)
     controlla('e tenendola premuta ferma si apre la scheda lo stesso, non il trascinamento',
-              await page.locator('.fa-blocco').count() > 0)
+              !!dove)
     uguale('e i blocchi sono tre, uno per bisogno',
            await page.locator('.fa-blocco').count(), 3)
     await scatto(page, 'fattoria-bestia')
@@ -394,6 +441,36 @@ await chiudi()
            () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])),
          primaDiTenerePremuto)
   await scatto(page, 'fattoria-attrezzi')
+
+  /* ── ↻ e ⇄: quello che c'è e quello che non c'è ──
+     Su una casetta il tasto che gira **non deve esserci**: una casa in
+     vista tre quarti girata di novanta gradi non gira, cade. Quello che
+     rovescia sì, perché quasi tutto si può rovesciare ed è il gesto che
+     serve davvero — la porta dall'altra parte. È la regola «meglio
+     niente che un tasto che fa una cosa storta», e da nessun'altra
+     parte si vede: un tasto in più nella barretta non è un errore che
+     lancia, è solo un tasto che si preme e non cambia niente.
+
+     Rovesciare non tocca l'ingombro, quindi non può costare e non può
+     spostare: le due monete contate qui sono la prova che il gesto è
+     gratis come dev'essere. */
+  uguale('su una casetta il tasto che gira non c\'è',
+         await page.locator('.fa-attrezzi button[title="giralo"]').count(), 0)
+  uguale('quello che rovescia invece sì',
+         await page.locator('.fa-attrezzi button[title="rovescialo"]').count(), 1)
+  await page.locator('.fa-attrezzi button[title="rovescialo"]').click()
+  await attendi(page, 200)
+  uguale('rovesciarla non costa niente',
+         await page.evaluate(
+           () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])),
+         primaDiTenerePremuto)
+  controlla('e disegnarla rovesciata non rompe niente',
+            !await page.evaluate(
+              () => document.body.innerText.includes('Qui si è rotto qualcosa')))
+  controlla('gli attrezzi restano aperti, si può rimetterla come prima',
+            await page.locator('.fa-attrezzi button[title="rovescialo"]').count() === 1)
+  await page.locator('.fa-attrezzi button[title="rovescialo"]').click()
+  await attendi(page, 200)
 
   /* La stessa prova **fuori dalla cella d'appoggio**, ed è quella che
      inchioda il guasto vecchio. La casetta occupa due celle: tenendo

@@ -39,7 +39,7 @@
    `roba(liv)` le raccoglie girando le tabelle vere.
    ═══════════════════════════════════════════════════════════════════ */
 import { CATEGORIE, CATALOGO } from './catalogo.js'
-import { COLTURE } from './coltivazioni.js'
+import { COLTURE, RICETTE } from './coltivazioni.js'
 import { ANIMALI } from './animali.js'
 
 /* ── LE SOGLIE ────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ export const NOMI = {
   1: 'Il primo campo',
   2: 'Il primo amico',
   3: 'Il mulino',
-  4: 'Il silo della stalla',
+  4: 'Il fienile',
   5: 'I conigli',
   8: 'Le galline',
   10: 'Il pastone',
@@ -252,5 +252,59 @@ export function guastiDeiLivelli() {
   if (!primo.some(v => v.campo)) g.push('al livello 1 non c\'è nessun campo: la catena non comincia')
   if (!primo.some(v => v.silo === 'terra')) g.push('al livello 1 non c\'è il silo del raccolto')
   if (!COLTURE.some(c => (c.liv || 1) === 1)) g.push('al livello 1 non c\'è niente da seminare')
+  g.push(...guastiDegliSblocchi())
+  return g
+}
+
+/* ── QUANDO SI PUÒ AVERE UNA ROBA ─────────────────────────────────
+   Il primo livello in cui un prodotto è **ottenibile davvero**: la
+   prima coltura che lo fa, o la prima ricetta — contando che una
+   ricetta vuole la sua macchina *e* i suoi ingredienti, e quindi arriva
+   quando arriva l'ultimo dei tre.
+
+   Serve a due cose diverse. A chi consiglia, per dire «arriva al
+   livello 10» invece di mandare a comprare qualcosa che non c'è. E al
+   controllo qui sotto, che è nato da un difetto vero. */
+export function livelloDelProdotto(prodotto, giri = 4) {
+  if (giri <= 0) return Infinity
+  let min = Infinity
+  for (const c of COLTURE) if (c.da === prodotto) min = Math.min(min, c.liv || 1)
+  for (const r of RICETTE) if (r.da === prodotto) min = Math.min(min, livelloDellaRicetta(r, giri))
+  return min
+}
+
+/* Quando una ricetta si può fare per davvero: il più tardo fra il suo
+   `liv`, il livello della macchina che la ospita, e quello di ogni
+   ingrediente. */
+export function livelloDellaRicetta(r, giri = 4) {
+  const macchina = CATALOGO.find(v => v.macchina === r.dove)
+  const ing = Object.keys(r.prende || {}).map(k => livelloDelProdotto(k, giri - 1))
+  return Math.max(r.liv || 1, macchina ? livelloDellaVoce(macchina) : 1,
+                  ...(ing.length ? ing : [1]))
+}
+
+/* ── UNA RICETTA NON COMPARE PRIMA DEI SUOI INGREDIENTI ───────────
+   Il difetto che questo controllo esiste per non far tornare: il
+   pastone si vedeva nel mulino dal livello 3, e il mais arrivava al 10.
+   Sette livelli — 🪙2000 di esercizi, più di cinque ore — con un tasto
+   spento in mezzo alle ricette vere, senza che niente dicesse che
+   bisognava aspettare metà del gioco.
+
+   Non è una regola di bellezza. Una ricetta impossibile è indistinguibile
+   da una rotta, e chi la preme e non ottiene niente smette di fidarsi
+   anche di quelle che funzionano. */
+export function guastiDegliSblocchi() {
+  const g = []
+  for (const r of RICETTE) {
+    const quando = r.liv || 1
+    for (const k of Object.keys(r.prende || {})) {
+      const serve = livelloDelProdotto(k)
+      const macchina = CATALOGO.find(v => v.macchina === r.dove)
+      const compare = Math.max(quando, macchina ? livelloDellaVoce(macchina) : 1)
+      if (serve > compare)
+        g.push(`${r.id}: compare al livello ${compare}, ma ${k} arriva al ${serve}` +
+               ` — sarebbe un tasto spento per ${serve - compare} livelli`)
+    }
+  }
   return g
 }
