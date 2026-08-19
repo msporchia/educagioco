@@ -46,8 +46,12 @@ await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('.carte', { timeout: 5000 })
 
-await page.click('[data-scheda="sa"]')          // «Cosa sa», dove stanno i saperi
-const prova = page.locator('[data-prova]').first()
+/* La scheda «Le domande» — era «Cosa sa», che mostrava le stesse cose in
+   un altro modo ed è sparita col riassetto della schermata dei grandi.
+   Il tasto ▶ per provare una classe adesso sta su ogni riga del catalogo
+   (`quiz/Catalogo.vue`), non più in fondo a un elenco di saperi. */
+await page.click('[data-scheda="domande"]')
+const prova = page.locator('[data-prova-classe]').first()
 controlla('dai grandi si può provare una domanda', await prova.count() === 1)
 await prova.click()
 await page.waitForSelector('.qz-tasto', { timeout: 5000 })
@@ -122,8 +126,21 @@ uguale('rispondere dal banco dei grandi non tocca il ripasso',
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 await page.click('[data-scheda="domande"]')
-await page.click('[data-modulo="griglia"]')
-await page.click('[data-prova-classe="griglia:1:gri:coordinate"]')
+/* Le classi stanno in cinque blocchi in fila rispetto al bambino, e le
+   due estreme nascono chiuse: quella che serve qui può essere dentro una
+   di quelle. Si aprono uno alla volta finché non compare, invece di
+   dare per scontato in quale fascia cada — l'età del profilo di prova
+   può cambiare, e con lei la fascia. */
+const BERSAGLIO = '[data-prova-classe="griglia:1:gri:coordinate"]'
+if (await page.locator(BERSAGLIO).count() === 0) {
+  for (const testa of await page.locator('[data-apri]').all()) {
+    await testa.click()
+    if (await page.locator(BERSAGLIO).count()) break
+  }
+}
+controlla('la classe della griglia si trova nel catalogo',
+          await page.locator(BERSAGLIO).count() === 1)
+await page.click(BERSAGLIO)
 await page.waitForSelector('.qz-guarda', { timeout: 5000 })
 controlla('il disegno della domanda si può toccare', await page.locator('.qz-guarda').count() === 1)
 
