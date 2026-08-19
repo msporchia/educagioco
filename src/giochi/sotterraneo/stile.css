@@ -41,7 +41,10 @@
   background: #ffffff12; color: #e8edf7; font: inherit;
 }
 .sot-polso {
-  position: relative; display: inline-block; width: 62px; height: 15px;
+  /* `flex: none`: dentro la fascia in cima il titolo di una discesa lunga
+     schiacciava la barra della vita fino a mangiarsi il numero — cioè
+     proprio il dato che si guarda mentre si combatte */
+  position: relative; display: inline-block; flex: none; width: 62px; height: 15px;
   border-radius: 999px; background: #00000055; overflow: hidden;
 }
 .sot-polso i { position: absolute; inset: 0 auto 0 0; background: var(--sot-polso, #4fce7c) }

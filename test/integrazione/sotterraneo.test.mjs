@@ -104,6 +104,8 @@ controlla('dopo un tocco l\'eroe si è mosso', mosso)
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('.sot-foglio', { timeout: 3000 })
 uguale('lo zaino ha sei tasche', await page.locator('.sot-tasca').count(), 6)
+uguale('e tre caselle addosso: mano, corpo, dito',
+       await page.locator('[data-casella]').count(), 3)
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
 uguale('e si richiude', await page.locator('.sot-foglio').count(), 0)
