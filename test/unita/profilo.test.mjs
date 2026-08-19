@@ -16,7 +16,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          esportaTutto, importaTutto, persist,
          aspettoDi, scegliAspetto,
          sapereAcceso, accendiSapere, saperiSpenti,
-         applicaPartenza, etaDelBambino, ETA_DIFETTO, scegliEta,
+         spostaLEta, etaDelBambino, ETA_DIFETTO, scegliEta,
          ritoccoSapere, ritocca, giocoAcceso } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
@@ -301,15 +301,37 @@ controlla('ma il dungeon sì: le domande adesso sanno farsi piccole',
 controlla('e le moltiplicazioni restano fuori dalle domande',
   saperiSpenti().includes('moltiplicazioni'))
 
-/* un anno dopo: si rimette la fascia senza toccare i progressi */
+/* ── SPOSTARE L'ETÀ ──
+   Una manopola sola, in anni, e la fascia è una conseguenza. Le due
+   cose da non sbagliare sono i due versi:
+
+     · **dentro la stessa fascia non si tocca niente.** È la promessa
+       che rende la manopola usabile: senza, ogni mezzo anno
+       cancellerebbe quello che un grande ha sistemato a mano, e
+       spostarla diventerebbe una cosa che non si fa.
+     · **cambiando fascia si riparte dai difetti**, ed è per questo che
+       la schermata lo fa confermare quando c'è qualcosa da perdere. */
 state.profile.coins = 123
 accendiSapere('divisioni', false)
-applicaPartenza('quarta')
-uguale('rimessa la fascia, gli anni salgono', etaDelBambino(), 9.5)
+
+const dentro = spostaLEta(7)
+uguale('mezzo anno dentro la stessa fascia sposta gli anni', etaDelBambino(), 7)
+controlla('e non riscrive niente', !dentro.riscrive)
+controlla('quello che era spento a mano resta spento', !sapereAcceso('divisioni'))
+
+const fuori = spostaLEta(9.5)
+uguale('cambiando fascia gli anni salgono', etaDelBambino(), 9.5)
+controlla('e stavolta riscrive', fuori.riscrive)
 controlla('il castello ricompare', giocoAcceso('torri'))
 controlla('e le scelte fatte a mano sui saperi si riscrivono',
   sapereAcceso('divisioni'))
 uguale('le monete non si toccano', state.profile.coins, 123)
+
+/* L'età fine non si riallinea a quella della fascia: 7,5 sta nella
+   fascia degli 8 e deve restare 7,5, se no la manopola si sposterebbe
+   da sola sotto il dito. */
+spostaLEta(7.5)
+uguale('la manopola resta dove l\'hanno messa', etaDelBambino(), 7.5)
 
 /* ── il ritocco ──
    L'interruttore dei saperi aveva due posizioni, e il «no» è una

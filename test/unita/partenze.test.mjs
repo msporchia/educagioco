@@ -25,6 +25,11 @@ for (const p of PARTENZE) {
   const ignoti = p.saperi.filter(s => !CHIAVI_SAPERI.includes(s))
   uguale(`${p.chiave}: cita solo saperi che esistono`, ignoti.join(',') || '—', '—')
   controlla(`${p.chiave}: ha un nome e una riga che spiega`, !!p.nome && !!p.che)
+  /* `come` è il nome che sta **dentro una frase** («come in prima o
+     seconda»). Senza, la manopola ci infilava `nome` e usciva «come in
+     non va ancora a scuola»: una frase compiuta annidata in un'altra. */
+  controlla(`${p.chiave}: sa dirsi dentro una frase`,
+    !!p.come && p.come[0] === p.come[0].toLowerCase(), p.come)
 }
 
 controlla('ci sono almeno due giochi per i piccoli da accendere',
@@ -41,12 +46,37 @@ controlla('e qualcuno sta in mezzo, senza dichiarare né l\'uno né l\'altro',
   CHIAVI_GIOCHI.some(k => !PICCOLI.includes(k) && !GRANDI.includes(k)))
 
 /* ── la partenza dei piccoli ── */
+const POSTI = GIOCHI.filter(g => g.posto).map(g => g.chiave)
 const piccoli = eccezioniDi('piccoli')
 const accesiPiccoli = CHIAVI_GIOCHI.filter(k => piccoli.giochi[k] !== false)
-uguale('«piccoli» lascia accesi esattamente i giochi per i piccoli',
-       accesiPiccoli.slice().sort().join(','), PICCOLI.slice().sort().join(','))
+/* I posti restano accesi insieme ai giochi per i piccoli, e non sono un
+   caso a parte per pigrizia: un posto non sta sulla scala della
+   difficoltà (la fattoria è il prato dove si spende, non una fila da
+   macinare), quindi non lo si giudica per età in nessuna delle due
+   direzioni. Dichiararlo `piccoli` sarebbe la scorciatoia che si rompe
+   dall'altro capo: comparirebbe a quattro anni e sparirebbe a nove. */
+uguale('«piccoli» lascia accesi i giochi per i piccoli e i posti',
+       accesiPiccoli.slice().sort().join(','),
+       [...new Set([...PICCOLI, ...POSTI])].sort().join(','))
+controlla('e i posti restano accesi in tutte e quattro le partenze',
+  PARTENZE.every(p => POSTI.every(k => eccezioniDi(p.chiave).giochi[k] === undefined)))
 uguale('e spegne le divisioni', piccoli.sa.divisioni, false)
 uguale('e le moltiplicazioni', piccoli.sa.moltiplicazioni, false)
+
+/* ── LE FASCE SONO ANNIDATE ──
+   Quello che una fascia spegne deve spegnerlo anche ogni fascia più
+   piccola. Detta così sembra ovvia; il difetto che ha reso necessario
+   scriverla non lo era: «piccoli» dava per scontati i problemi scritti,
+   i verbi al presente e i suoni difficili, che «prima o seconda»
+   toglieva — cioè a quattro anni il gioco supponeva più cose che a sei.
+   Nessun errore, nessun test rosso: solo domande fuori misura ai più
+   piccoli, che è il difetto che questa scala esiste per evitare. */
+for (let i = 1; i < PARTENZE.length; i++) {
+  const grande = PARTENZE[i], piccola = PARTENZE[i - 1]
+  const mancano = grande.saperi.filter(k => !piccola.saperi.includes(k))
+  uguale(`«${piccola.nome}» spegne tutto quello che spegne «${grande.nome}»`,
+         mancano.join(',') || '—', '—')
+}
 
 /* ── prima o seconda ──
    La fascia arrivata per ultima, e quella che si sbaglia più facilmente

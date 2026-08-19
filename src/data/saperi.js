@@ -299,7 +299,7 @@ export const SAPERI = [
      ragionamento e vederlo da solo, che è utile a chi prova il gioco
      tanto quanto a chi lo gioca. Nascono accesi come tutto il resto. */
   {
-    chiave: 'deduzione', nome: 'Cosa segue di sicuro', ico: '🧠', materia: 'ragionamento',
+    chiave: 'deduzione', nome: 'Dedurre da una regola', ico: '🧠', materia: 'ragionamento',
     che: 'tirare la conclusione da una regola: se vale per tutti, vale anche per lui',
     esempio: '«tutti i grufoli hanno le ali, Bibo è un grufolo: Bibo ha le ali?»',
     spegne: 'le deduzioni dirette, quelle negate e le catene di regole',
@@ -317,7 +317,7 @@ export const SAPERI = [
     spegne: 'le domande costruite su «tutti» e «nessuno»',
   },
   {
-    chiave: 'confronti', nome: 'Mettere in fila', ico: '📊', materia: 'ragionamento',
+    chiave: 'confronti', nome: 'Rimettere in ordine dagli indizi', ico: '📊', materia: 'ragionamento',
     che: 'ricostruire un ordine da confronti sparsi: se A è più alto di B e B di C, chi è il più basso',
     esempio: '«Ale è più alto di Bea, Bea più di Cip: chi è il più basso?»',
     spegne: 'le domande che chiedono di mettere in fila per confronti',

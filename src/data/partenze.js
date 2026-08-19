@@ -78,9 +78,14 @@ import { GIOCHI } from './giochi.js'
    (tabelline, problemi scritti, domande a tempo) c'era un salto di due
    anni e mezzo, e chi entra in prima ci cascava dentro — troppo grande
    per il primo, troppo piccolo per il secondo. */
+/* `nome` è come si legge su una carta, `come` è come si legge **dentro
+   una frase**: «come in prima o seconda». Sembrano la stessa cosa e non
+   lo sono — «Non va ancora a scuola» è una frase compiuta, e infilata
+   in un'altra viene fuori «come in non va ancora a scuola». */
 export const PARTENZE = [
   {
     chiave: 'piccoli',
+    come: 'prima della scuola',
     nome: 'Non va ancora a scuola',
     eta: '4-6 anni',
     che: 'Solo i giochi che non chiedono di saper leggere, e in cui non si può perdere.',
@@ -94,12 +99,46 @@ export const PARTENZE = [
        domande di quiz — ma vale per il giorno che se ne accende un
        altro: quello che qui è spento è quello che a scuola non ha
        ancora incontrato, non quello che «è difficile». */
+    /* Deve contenere **tutto** quello che spegne «prima o seconda», e
+       non è pignoleria: un elenco più corto vorrebbe dire che a quattro
+       anni il gioco dà per scontate delle cose che a sei non dà — i
+       problemi scritti, i suoni difficili, i verbi al presente. Il
+       difetto c'era, e non si vedeva finché la schermata diceva «a
+       scuola non l'ha ancora fatto»: girata al positivo («dà per
+       scontato che sappia») si legge alla prima occhiata. Il test
+       `unita/partenze` adesso lo tiene fermo. */
     saperi: ['moltiplicazioni', 'divisioni', 'misure', 'conversioni', 'decine',
-             'stima', 'orologio', 'date', 'area-perimetro', 'solidi',
-             'analisi', 'tempi-verbali', 'accenti'],
+             'stima', 'problemi', 'orologio', 'date', 'area-perimetro', 'solidi',
+             'spazio-mente', 'analisi', 'flessione', 'presente', 'tempi-verbali',
+             'accenti', 'suoni-difficili',
+             /* ── E QUESTI DIECI SONO ARRIVATI GUARDANDO L'ELENCO ──
+                Da quando la schermata dei grandi dice **al positivo**
+                cosa il gioco dà per scontato, la riga a quattro anni si
+                leggeva così: «legge le parole, sillabe e rime, la
+                simmetria, cosa segue di sicuro, le analogie». Nessuna
+                di quelle cose la sa un bambino di quattro anni, e la
+                fascia si chiama «non va ancora a scuola».
+
+                Non era un errore di battitura: l'elenco era stato
+                scritto pensando alla *matematica di scuola* — quello
+                che in prima non si è ancora fatto — e tutto il resto
+                era rimasto acceso per omissione. Al negativo («a
+                scuola non l'ha ancora fatto: le divisioni») non si
+                vedeva, perché quello che manca da un elenco non si
+                legge. Al positivo salta all'occhio alla prima
+                riga, ed è esattamente il mestiere per cui la
+                schermata è stata girata.
+
+                Restano accesi i sei che un bambino di quattro anni ha
+                davvero: contare, i nomi delle figure, i contrari, i
+                ritmi, e gli animali coi loro posti — roba che arriva
+                dai libri illustrati, non dalla scuola. */
+             'lettura', 'sillabe', 'griglia', 'calendario', 'simmetria',
+             'deduzione', 'incertezza', 'insiemi', 'confronti', 'analogie'],
   },
   {
     chiave: 'prima',
+    come: 'prima o seconda',
     nome: 'Prima o seconda',
     eta: '6-7 anni',
     che: 'Legge ancora a fatica: niente tabelline, niente misure, niente domande scritte lunghe.',
@@ -128,6 +167,7 @@ export const PARTENZE = [
   },
   {
     chiave: 'terza',
+    come: 'terza elementare',
     nome: 'Terza elementare',
     eta: '8 anni',
     che: 'Moltiplicazioni sì, divisioni no. Niente metri, litri e chili: quelli arrivano dopo.',
@@ -137,6 +177,7 @@ export const PARTENZE = [
   },
   {
     chiave: 'quarta',
+    come: 'quarta o quinta',
     nome: 'Quarta o quinta',
     eta: '9-10 anni',
     che: 'Tutto acceso, tranne i giochi per i più piccoli.',
@@ -147,6 +188,89 @@ export const PARTENZE = [
 ]
 
 export const partenza = chiave => PARTENZE.find(p => p.chiave === chiave) || null
+
+/* ── LA FASCIA DIVENTA UNA CONSEGUENZA DELL'ETÀ ──
+   Le quattro carte erano una scelta *accanto* all'età: si sceglieva una
+   fascia, e l'età usciva da lì. Erano due manopole per una cosa sola, e
+   in due schermate diverse — la carta del bambino ne aveva una per
+   parte, una che spostava solo `eta` e una che riscriveva tutto — senza
+   niente che le distinguesse a guardarle.
+
+   Adesso la manopola è una: **gli anni**, che sono l'unità vera di
+   tutto il sistema (12,5 punti per anno, la stessa scala di domande e
+   campagne). La fascia è la più vicina, e serve ancora a una cosa che
+   l'età da sola non sa fare: dire **quali giochi** mettere in casa e
+   **cosa dare per scontato** che a scuola non abbia ancora fatto.
+
+   Il pari va alla più piccola (`<` e non `<=`): fra due fasce
+   equidistanti si sbaglia per difetto, che è l'errore che si corregge
+   giocando invece che quello che sbarra. */
+export function partenzaPerEta (anni) {
+  const e = Number(anni)
+  if (!Number.isFinite(e)) return null
+  return PARTENZE.reduce((meglio, p) =>
+    Math.abs(p.anni - e) < Math.abs(meglio.anni - e) ? p : meglio, PARTENZE[0])
+}
+
+/* Le eccezioni che spetterebbero a un bambino di quell'età, senza
+   passare dal nome di una fascia: è quello che la manopola scrive
+   quando si sposta. */
+export const eccezioniPerEta = anni => {
+  const p = partenzaPerEta(anni)
+  return p ? { ...eccezioniDi(p.chiave), eta: Number(anni) } : { giochi: {}, sa: {}, eta: null }
+}
+
+/* due mappe di eccezioni dicono la stessa cosa se spengono le stesse
+   chiavi: l'ordine non conta e l'assenza vuol dire acceso */
+const spente = m => Object.keys(m || {}).filter(k => m[k] === false).sort().join(',')
+const stesseEccezioni = (a, b) =>
+  spente(a.giochi) === spente(b.giochi) && spente(a.sa) === spente(b.sa)
+
+/* ── COSA SUCCEDE SPOSTANDO LA MANOPOLA ──
+   Una manopola che riscrive le scelte fatte a mano senza dirlo è una
+   trappola; una che chiede conferma a ogni tacca è un questionario.
+   Qui si decide quale dei due casi è, e sono tre:
+
+     · **stessa fascia** — da 8 a 8,5 non cambia niente di quello che
+       una fascia decide (quali giochi, cosa si dà per scontato). Si
+       sposta l'età e basta: quello che il grande aveva toccato resta
+       esattamente dov'era. È il caso normale, ed è muto.
+     · **fascia diversa, ma il bambino stava sui difetti** — non c'è
+       niente di suo da perdere. Si riscrive e si va dritti.
+     · **fascia diversa, e il bambino era su misura** — qui e solo qui
+       si chiede, perché la risposta costa: sono trenta interruttori
+       che tornano al difetto.
+
+   Il confronto è con i difetti dell'età **da cui si parte**, non con
+   quelli dell'età dove si arriva: la domanda è «questo grande aveva
+   messo le mani?», non «le sue impostazioni somigliano a quelle
+   nuove?». */
+export function spostandoLEta ({ da, a, giochi = {}, sa = {}, ritocchi = {} }) {
+  const nuove = eccezioniPerEta(a)
+  const prima = partenzaPerEta(da)
+  const dopo = partenzaPerEta(a)
+  const stessaFascia = !!prima && !!dopo && prima.chiave === dopo.chiave
+  /* I ritocchi contano come «su misura», e non è un dettaglio: sono
+     correzioni sopra l'età («per lui l'orologio è più facile»), quindi
+     ripartire dai difetti li porta via. Se non entrassero in questo
+     conto sparirebbero in silenzio nell'unico caso in cui un grande
+     aveva toccato solo quelli. */
+  const suMisura = !!prima &&
+    (!stesseEccezioni({ giochi, sa }, eccezioniDi(prima.chiave)) ||
+     Object.keys(ritocchi || {}).length > 0)
+
+  return {
+    eta: Number(a),
+    /* dentro la stessa fascia i giochi e i saperi non si toccano: si
+       restituiscono quelli che c'erano, così chi salva non deve sapere
+       che esiste un caso in cui non deve scrivere */
+    giochi: stessaFascia ? giochi : nuove.giochi,
+    sa: stessaFascia ? sa : nuove.sa,
+    fascia: dopo,
+    riscrive: !stessaFascia,
+    chiede: !stessaFascia && suMisura,
+  }
+}
 
 /* Le eccezioni da scrivere nel profilo appena creato, nella forma che
    `settings` usa già: solo quello che va SPENTO, perché acceso è
@@ -159,8 +283,11 @@ export function eccezioniDi (chiave) {
 
   const giochi = {}
   for (const g of GIOCHI) {
-    const spegni = (p.soloPiccoli && !g.piccoli) || (p.nientePiccoli && g.piccoli)
-                || (p.nienteGrandi && g.grandi)
+    /* un posto non si giudica per età, in nessuna direzione: vedi
+       `posto` in `data/giochi.js` */
+    const spegni = !g.posto &&
+      ((p.soloPiccoli && !g.piccoli) || (p.nientePiccoli && g.piccoli) ||
+       (p.nienteGrandi && g.grandi))
     if (spegni) giochi[g.chiave] = false
   }
 

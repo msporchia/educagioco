@@ -15,10 +15,11 @@ import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
-import { eccezioniDi } from '../data/partenze.js'
+import { eccezioniDi, eccezioniPerEta, spostandoLEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
+import { cestina, voceCestinata } from './cestino.js'
 import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
          progressoArea, statoTraguardi, abilita, difficolta,
          tabellineIntereDi, allineaMate, allineaInglese,
@@ -272,7 +273,14 @@ async function idLibero() {
    posto al primo bisogno, col primo di `PERSONE`. Va applicato al
    profilo VUOTO come `partenza`, per lo stesso motivo: quando `entra` è
    falso il profilo non passa mai da `state.profile`, quindi
-   `scegliAspetto()` (che scrive lì) non lo raggiungerebbe. */
+   `scegliAspetto()` (che scrive lì) non lo raggiungerebbe.
+
+   `partenza` è **un numero di anni** da quando la manopola ha preso il
+   posto delle quattro carte: la fascia si ricava da lì
+   (`partenzaPerEta`) e l'età resta quella fine — 7 anni sta nella
+   fascia dei 6,5 e deve restare 7. La chiave di una fascia si accetta
+   ancora perché è quello che si scrive in un test quando l'età precisa
+   non interessa. */
 export async function creaGiocatore(nome, entra = true, partenza = null, aspetto = null) {
   const pulito = String(nome || '').trim().slice(0, 20)
   if (!pulito) throw new Error('Serve un nome')
@@ -285,8 +293,10 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
      esiste un istante in cui un bambino di quattro anni ha in home le
      divisioni in colonna. */
   const fresco = blank()
-  if (partenza) {
-    const { giochi, sa, eta } = eccezioniDi(partenza)
+  if (partenza != null && partenza !== '') {
+    const { giochi, sa, eta } = typeof partenza === 'number'
+      ? eccezioniPerEta(partenza)
+      : eccezioniDi(partenza)
     fresco.settings = { ...fresco.settings, giochi, sa }
     if (eta) fresco.settings.eta = eta
   }
@@ -296,9 +306,9 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
   if (aspetto && PERSONE.includes(aspetto)) fresco.aspetto = aspetto
   if (entra) {
     await selectPlayer(id)
-    if (partenza) state.profile.settings = fresco.settings
+    if (partenza != null && partenza !== '') state.profile.settings = fresco.settings
     if (fresco.aspetto) state.profile.aspetto = fresco.aspetto
-    if (partenza || fresco.aspetto) persist()
+    if ((partenza != null && partenza !== '') || fresco.aspetto) persist()
   }
   else save(KEY(id), fresco)      // il suo profilo esiste da subito
   /* Subito su disco, senza aspettare il salvataggio a scatto ritardato:
@@ -333,6 +343,11 @@ export function rinominaGiocatore(id, nome) {
 export async function eliminaGiocatore(id) {
   const i = state.giocatori.findIndex(g => g.id === id)
   if (i < 0) throw new Error('Questo giocatore non c\'è')
+  /* Il bambino che si elimina non è detto sia quello che sta giocando:
+     se è un altro, il profilo fresco è quello sull'archivio e
+     `cestina` se lo rilegge da solo. */
+  await cestina(id, state.giocatori[i].nome,
+                state.player === id ? state.profile : null, 'eliminato')
   state.giocatori.splice(i, 1)
   salvaRoster()
   await remove(KEY(id))
@@ -657,35 +672,45 @@ export function accendiGioco(chiave, si) {
    mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
 
-/* ── rimettere una partenza a chi c'è già ──
-   Le partenze (`data/partenze.js`) nascono per il momento della
-   creazione, e lì restano il gesto giusto. Ma la creazione capita una
-   volta sola, e chi ha già premuto «Si gioca!» senza scegliere niente —
-   tutti quelli che hanno installato prima che la domanda esistesse — non
-   aveva nessuna strada che non fossero trenta tocchi a mano. Da qui si
-   riparte: si sceglie una fascia e le eccezioni si riscrivono in blocco.
+/* ── SPOSTARE L'ETÀ, CHE ADESSO È L'UNICA MANOPOLA ──
+   Qui c'era `applicaPartenza`: si sceglieva una delle quattro fasce e
+   si riscrivevano giochi, saperi ed età in blocco. Serviva a chi era
+   nato prima che la domanda esistesse, ma era **la seconda manopola**
+   della stessa carta — dieci pixel sotto un `− 7,5 anni +` che
+   spostava solo l'età — e le due non si distinguevano guardandole,
+   mentre una delle due cancellava senza dirlo.
 
-   **Sovrascrive**, non somma: quello che il genitore aveva acceso o
-   spento a mano su giochi e saperi torna a com'è nella fascia scelta —
-   comprese le singole tipologie di quiz («orto:apostrofo»), che vivono
-   nella stessa mappa. È il motivo per cui la schermata lo fa
-   confermare, e per cui questa funzione non si chiama «aggiorna».
+   Adesso ce n'è una sola, in anni, e la fascia è una conseguenza. Cosa
+   succede spostandola lo decide `spostandoLEta` in `data/partenze.js`,
+   che è dato puro e si prova senza schermo; qui si scrive e basta. I
+   tre casi stanno lì, ma il patto vale la pena ripeterlo perché è
+   quello che rende la manopola usabile: **dentro la stessa fascia non
+   si tocca niente**. Da 8 a 8,5 si muove la mira delle domande, e tutto
+   quello che il grande aveva sistemato a mano resta dov'era.
 
-   Quello che NON tocca è tutto il resto: monete, animali, campagne,
-   traguardi, la memoria di cosa il bambino sa — e nemmeno gli altri
-   settaggi (il suono, i giochi in prova, le varianti, i lucchetti). Una
-   fascia decide cosa si vede e cosa si chiede, non cancella niente. */
-export function applicaPartenza(chiave) {
-  const { giochi, sa, eta } = eccezioniDi(chiave)
+   Quello che questa funzione non tocca è tutto il resto: monete,
+   animali, campagne, traguardi, la memoria di cosa il bambino sa — e
+   nemmeno gli altri settaggi (il suono, i giochi in prova, le
+   varianti). L'età decide cosa si vede e cosa si chiede, non cancella
+   niente di quello che è stato guadagnato. */
+export function spostaLEta (anni) {
   const s = state.profile.settings
-  s.giochi = giochi
-  s.sa = sa
-  /* i ritocchi fatti a mano se ne vanno con il resto: sono correzioni
-     sopra l'età, e rimettere la fascia vuol dire ripartire da quella */
-  delete s.ritocchi
-  if (eta) s.eta = eta
+  const mossa = spostandoLEta({ da: etaDelBambino(), a: anni,
+                                giochi: s.giochi || {}, sa: s.sa || {},
+                                ritocchi: s.ritocchi || {} })
+  if (!Number.isFinite(mossa.eta) || mossa.eta < 3 || mossa.eta > 14) return null
+  s.eta = mossa.eta
+  if (mossa.riscrive) {
+    s.giochi = mossa.giochi
+    s.sa = mossa.sa
+    /* i ritocchi se ne vanno col resto: sono correzioni sopra l'età, e
+       ripartire dai difetti vuol dire ripartire da quella. Che
+       spariscano non è mai una sorpresa — entrano nel conto di
+       `suMisura`, quindi la schermata l'ha già fatto confermare. */
+    delete s.ritocchi
+  }
   persist()
-  return { giochi: Object.keys(giochi).length, sa: Object.keys(sa).length }
+  return mossa
 }
 
 /* ── quanti anni ha ──
@@ -834,11 +859,43 @@ export function persist() {
 export const flushNow = flush
 
 export async function resetPlayer() {
+  /* La copia prima del rogo: vedi `store/cestino.js`. Si prende
+     `state.profile` e non quello su disco perché `persist()` scrive con
+     un ritardo, e quello che il grande sta cancellando è ciò che ha
+     davanti adesso. */
+  await cestina(state.player, nomeCorrente(), state.profile, 'cancellati')
   state.profile = blank()
   state.festa = []
   await remove(KEY(state.player))
   apriGiornata()
   persist()
+}
+
+/* Mettere da parte una copia senza cancellare niente: la chiama chi sta
+   per azzerare **una parte** dei progressi (una campagna sola) invece di
+   tutto, e quindi non passa da `resetPlayer`. */
+export async function cestinaOra(motivo = '') {
+  await cestina(state.player, nomeCorrente(), state.profile, motivo)
+}
+
+/* Rimettere una copia dal cestino. Ricostruisce anche il roster: la voce
+   può essere di un bambino eliminato, che nell'elenco non c'è più — e un
+   profilo senza nessuno che lo nomini sarebbe un salvataggio orfano, cioè
+   invisibile. Ritorna il nome, così la schermata può dire chi è tornato.
+
+   Non consuma la voce (vedi `store/cestino.js`): un ripristino sbagliato
+   dev'essere annullabile ripristinando quello giusto. */
+export async function ripristinaCestinato(quando) {
+  const voce = await voceCestinata(quando)
+  if (!voce) throw new Error('Questa copia non c\'è più')
+  save(KEY(voce.id), voce.profilo)
+  if (!state.giocatori.some(g => g.id === voce.id)) {
+    state.giocatori.push({ id: voce.id, nome: voce.nome })
+    salvaRoster()
+  }
+  await flush()
+  await selectPlayer(voce.id)
+  return voce.nome
 }
 
 /* ---------- salvataggio da portare via ----------
