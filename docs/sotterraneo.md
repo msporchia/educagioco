@@ -141,6 +141,31 @@ ricomincia la discesa. Una partita persa è un dispiacere; una partita
 ripresa con dei campi che non tornano è un gioco rotto in un modo che
 nessuno sa spiegare.
 
+## Quello che sta per terra si tocca
+
+Le gemme si prendono camminandoci sopra — sono il conto in tasca, non una
+scelta. **Tutto il resto va toccato**, e le sei tasche valgono qualcosa
+solo per questo: una spada che entra nello zaino mentre passavo di lì è una
+spada che non ho scelto.
+
+Toccare un'arma o un'armatura non la raccoglie: apre il **confronto**, che
+è l'unico posto del gioco dove un numero si legge prima di sceglierlo —
+«⚔️ +1 rispetto allo spadino» — e poi si decide se impugnarla, metterla
+nello zaino o lasciarla lì. Se le tasche sono piene si può impugnare lo
+stesso: quello che si aveva prende il posto per terra di quello che si è
+raccolto. Uno scambio, mai una perdita.
+
+Nello zaino, una tasca toccata **sceglie** e basta: sotto compaiono cosa fa
+quella cosa e due tasti larghi, «la bevo» e «la lascio per terra». Prima il
+tocco faceva subito l'unica cosa sensata, e con sei tasche piene non c'era
+nessun modo di liberarne una se non bere una pozione buona per fare posto.
+
+Un **forziere già aperto è scenografia**: non si tocca più, e da lì in poi è
+pavimento dipinto. Finché restava toccabile si mangiava il tocco destinato
+alla roba che ci stava sopra — roba che, per giunta, nasceva *sulla sua
+stessa cella*, dove il baule la copriva e dove l'eroe non arriva mai, perché
+a un forziere ci si ferma accanto.
+
 ## Chi scende, e cosa si porta
 
 Quattro eroi — cavaliere, elfa, mago, nano — e la differenza sta in **due

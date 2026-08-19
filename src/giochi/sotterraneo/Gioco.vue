@@ -194,6 +194,27 @@ const merce = computed(() => {
   }))
 })
 
+/* ── la cosa trovata, pronta da leggere ──
+   Il motore dice **quanto** cambia (`delta`), qui si dice come si legge:
+   il numero è tutto il punto del foglio, perché un bambino sceglie
+   un'arma dal disegno e il disegno non dice quanto fa male. */
+const trovata = computed(() => {
+  const f = foglio.value
+  if (!f || f.che !== 'trovata') return null
+  const c = COSE[f.cosa]
+  const segno = f.campo === 'att' ? '⚔️' : '🛡️'
+  const prima = f.addosso ? COSE[f.addosso].nome.toLowerCase()
+    : f.dove === 'mano' ? 'mani nude' : 'niente addosso'
+  return {
+    ...c, cosa: f.cosa,
+    verbo: f.dove === 'mano' ? 'la impugno' : 'me la metto',
+    confronto: f.delta === 0 ? `${segno} come ${prima}`
+      : `${segno} ${f.delta > 0 ? '+' : ''}${f.delta} rispetto a ${prima}`,
+    meglio: f.delta > 0,
+    pieno: corsa.value.zaino.length >= TASCHE,
+  }
+})
+
 const segno = computed(() => {
   const f = foglio.value
   return f && f.che === 'porta' ? SEGNI[f.chi.segno] : null
@@ -315,7 +336,10 @@ function giro() {
 let firma = ''
 function guarda(c) {
   const f = `${c.vita}|${c.gemme}|${c.foglio ? c.foglio.che : '-'}|${c.chiesta ? c.chiesta.id : 0}` +
-            `|${c.piano}|${c.zaino.length}|${c.mano}|${c.corpo}|${c.chiaveDelPiano}|${c.finita}`
+            `|${c.piano}|${c.zaino.length}|${c.mano}|${c.corpo}|${c.chiaveDelPiano}|${c.finita}` +
+            /* due cose trovate di fila hanno lo stesso `che`: senza la
+               cosa in chiaro il foglio resterebbe quello di prima */
+            `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}`
   if (f !== firma) { firma = f; tic.value++ }
   if (c.avvisi.length) {
     avviso.value = c.avvisi.shift()
@@ -375,11 +399,15 @@ function risolvi(giusto) {
 }
 
 /* ═══════════ i tasti dei fogli ═══════════ */
-function scappa() { corsa.value.scappa(); domanda.value = null; tic.value++; suoni.passo() }
+function scappa() { corsa.value.scappa(); domanda.value = null; tic.value++; suoni.passo(); salva() }
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
 function riprendi() { corsa.value.riprendi(); tic.value++ }
-function compra(k) { const e = corsa.value.compra(k); tic.value++; if (e?.che === 'comprato') suono.compra() }
-function usa(i) { corsa.value.usa(i); tic.value++; suono.ok() }
+function compra(k) { const e = corsa.value.compra(k); tic.value++; if (e?.che === 'comprato') suono.compra(); salva() }
+function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
+function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
+function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
+function impugna() { corsa.value.impugna(); domanda.value = null; tic.value++; suono.ok(); salva() }
+function inTasca() { corsa.value.inTasca(); tic.value++; suoni.bottino(); salva() }
 
 function scendi() {
   const e = corsa.value.scendi()
@@ -698,10 +726,36 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <button class="sot-grosso" data-azione="riprendi" @click="riprendi">riprovo</button>
         </Foglio>
 
+        <!-- ═══ una cosa per terra, toccata ═══
+             Solo per quello che si impugna o si indossa: una pozione va
+             in tasca senza chiedere niente, perché non c'è niente da
+             decidere. Qui invece si sceglie, e si sceglie **su un
+             numero** — vedi `trovata` qui sopra. -->
+        <Foglio v-else-if="foglio && foglio.che === 'trovata' && trovata"
+                :em="trovata.em" :titolo="trovata.nome" :dice="trovata.dice">
+          <p class="sot-cambio em" :class="{ 'sot-meglio': trovata.meglio }">
+            {{ trovata.confronto }}
+          </p>
+          <button class="sot-grosso" data-azione="impugna" @click="impugna">
+            {{ trovata.verbo }}
+          </button>
+          <button class="sot-grosso sot-chiaro" data-azione="in-tasca"
+                  :disabled="trovata.pieno" @click="inTasca">
+            <span class="em">🎒</span>
+            {{ trovata.pieno ? 'lo zaino è pieno' : 'nello zaino' }}
+          </button>
+          <button class="sot-grosso sot-chiaro" data-azione="lascio" @click="chiudiFoglio">
+            la lascio qui
+          </button>
+        </Foglio>
+
         <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino">
-          <Zaino v-bind="zaino" :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
+          <Zaino v-bind="zaino" :eroe="eroeScheda"
+                 :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
+                 :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                  :piano="eroe.piano" :piani="eroe.piani"
-                 @usa="usa" @chiudi="zainoAperto = false" />
+                 @usa="usa" @butta="butta" @riponi="riponi"
+                 @chiudi="zainoAperto = false" />
         </Foglio>
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />

@@ -301,10 +301,39 @@ export class Tela {
       return
     }
 
+    /* ── quello che sta per terra galleggia ──
+       Da quando la roba si raccoglie **toccandola** e non camminandoci
+       sopra, un oggetto fermo in mezzo al pavimento è indistinguibile da
+       una crepa disegnata: il respiro e l'alone caldo sono tutto quello
+       che dice «questo qui si prende». Sta nel disegno e non nelle
+       regole, come vuole la casa: la tela non sa cosa sia una spada. */
+    /* ── quello che arde ──
+       Un braciere acceso non è una figura ferma: **fa luce**, e la luce
+       trema. È tutta la differenza fra una stanza arredata e una stanza
+       con dentro delle icone. */
+    if (r.arde) {
+      const q = 0.22 + 0.07 * Math.sin(t * 6 + r.x * 1.7 + r.y)
+      const alone = ctx.createRadialGradient(px * T, py * T, T * 0.2, px * T, py * T, T * 2.2)
+      alone.addColorStop(0, `rgba(255,176,80,${q * alfa})`)
+      alone.addColorStop(1, 'rgba(255,176,80,0)')
+      ctx.fillStyle = alone
+      ctx.beginPath(); ctx.arc(px * T, py * T, T * 2.2, 0, 7); ctx.fill()
+    }
+
+    let su = 0
+    if (r.che === 'cosa') {
+      su = Math.sin(t * 2.6 + (r.x + r.y)) * 0.08
+      const q = 0.16 + 0.06 * Math.sin(t * 2.6 + (r.x + r.y))
+      ctx.fillStyle = `rgba(255,210,120,${q * alfa})`
+      ctx.beginPath()
+      ctx.ellipse(px * T, py * T + T * 0.34, T * 0.34, T * 0.13, 0, 0, 7)
+      ctx.fill()
+    }
+
     const quale = PEZZO_DI[r.che]
     const nome = r.che === 'cosa' ? (COSE[r.cosa] || {}).sprite : quale ? quale(r, t) : null
-    if (!nome || !this.posa(nome, px - 0.5, py - 0.5, { alfa }))
-      this.emoji(r.em, px, py, alfa)
+    if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
+      this.emoji(r.em, px, py + su, alfa)
 
     /* il segno sopra una porta chiusa: l'unica cosa con cui si sceglie
        dove andare, quindi si vede anche in un piano già girato */
@@ -428,10 +457,15 @@ export class Tela {
     }
     for (const r of liv.robe) {
       if (r.presa || r.morto || !corsa.visto[r.y * liv.largo + r.x]) continue
+      /* un baule già aperto sparisce dalla mappina: segnarlo vorrebbe
+         dire mandare qualcuno dall'altra parte del piano per niente.
+         La roba per terra invece **si segna**, perché adesso va toccata
+         e una spada dimenticata è una spada persa. */
       const colore = r.che === 'mostro' && r.chiave ? '#ffd23f'
         : r.che === 'porta' && !r.aperta ? '#c9a227'
         : r.che === 'scala' ? '#6fc6ff'
-        : r.che === 'forziere' ? '#ff9b3d' : null
+        : r.che === 'cosa' ? '#7ee08a'
+        : r.che === 'forziere' && !r.aperto ? '#ff9b3d' : null
       if (!colore) continue
       ctx.fillStyle = colore
       ctx.fillRect(x0 + r.x * p - 1, y0 + r.y * p - 1, p + 2, p + 2)

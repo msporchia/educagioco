@@ -38,6 +38,18 @@ const carta = page.locator('.carta.gioco[data-gioco="sotterraneo"]')
 controlla('la carta è in home coi giochi in prova accesi', await carta.count() === 1)
 await carta.click()
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+
+/* ---------- 1b. chi scende ----------
+   La prima volta la scelta si presenta da sé: entrare in un gioco di
+   ruolo senza sapere chi si è non ha senso, e un tasto «cambio eroe»
+   che nessuno preme mai sarebbe una porta che non si apre. */
+uguale('al primo ingresso si sceglie chi scende',
+       await page.locator('[data-eroe]').count(), 4)
+await page.locator('[data-eroe="cavaliere"]').click()
+await attendi(page, 300)
+uguale('scelto, la scelta sparisce', await page.locator('[data-eroe]').count(), 0)
+controlla('e la mappa dice con chi si scende',
+          (await page.locator('[data-azione="eroe"]').textContent()).includes('Cavaliere'))
 uguale('ci sono sei discese', await page.locator('.sot-tappa').count(), 6)
 controlla('solo la prima è aperta',
           await page.locator('.sot-tappa:not([disabled])').count() === 1)

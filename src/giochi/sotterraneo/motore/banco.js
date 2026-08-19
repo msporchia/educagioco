@@ -28,6 +28,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { Corsa } from './corsa.js'
 import { COSE } from '../dati/cose.js'
+import { TASCHE } from '../dati/mondo.js'
 import { seminato } from './livello.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
 
@@ -71,8 +72,11 @@ function raggiungi(corsa, r) {
      apre — la cella da cui toccarlo è occupata — e chi si accontenta di
      esserci arrivato ci torna sopra all'infinito. Il giro esterno lo
      vedeva come una discesa che non finisce mai, senza una riga che
-     dicesse perché. */
-  return !!corsa.foglio
+     dicesse perché.
+
+     Una pozione raccolta invece non apre niente: è successa lo stesso,
+     e si vede da `presa`. */
+  return !!corsa.foglio || !!r.presa
 }
 
 /* ── togliersi di mezzo quello che sbarra ──
@@ -138,6 +142,32 @@ function equipaggia(corsa) {
   }
 }
 
+/* ── quello che capita sotto i piedi ──
+   Da quando la roba non si raccoglie più camminandoci sopra ma
+   toccandola, un giocatore finto che non tocca niente gioca tutta la
+   campagna a mani nude — e il numero che ne esce non è il costo del
+   gioco, è il costo di giocarlo male. Qui si prende **solo quello che è
+   a due passi**: è l'equivalente onesto della vecchia raccolta al
+   passaggio, e non manda il banco a fare il giro del piano per una
+   pozione (quello lo fa il modo `tutto`, ed è un'altra misura).
+
+   `persi` tiene fuori quello che non si è riusciti a prendere, o si
+   riproverebbe all'infinito sulla stessa cosa irraggiungibile. */
+function raccogliVicino(corsa, persi) {
+  const da = { x: Math.floor(corsa.eroe.x), y: Math.floor(corsa.eroe.y) }
+  const vicina = corsa.livello.robe.find(r => r.che === 'cosa' && !r.presa &&
+    !persi.includes(r) && Math.abs(r.x - da.x) + Math.abs(r.y - da.y) <= 2)
+  if (!vicina) return false
+  raggiungi(corsa, vicina)
+  /* Presa o no, non ci si torna: un mostro che intercetta per strada
+     apre uno scontro, la cosa resta per terra, e chi riprova gira in
+     tondo pagando una battaglia a ogni giro. È il difetto che ha fatto
+     salire il costo «minimo» del pozzo da una decina di domande a
+     trentasette senza che niente sembrasse rotto. */
+  if (!vicina.presa) persi.push(vicina)
+  return true
+}
+
 /* Le cose che si possono toccare, dalla più vicina: il giocatore finto
    non gira a caso, va a colpo sicuro — quello che si vuole misurare è il
    costo, non la sua bravura a orientarsi. */
@@ -164,6 +194,15 @@ function sbriga(corsa, bravura, sorte) {
     case 'fonte':
       corsa.rispondi(sorte() < bravura)
       return true
+    /* una cosa da impugnare: se è meglio di quella che si ha se la
+       mette, se no in tasca, e se non c'è posto la lascia lì. È quello
+       che fa un bambino, ed è l'unico modo perché il banco misuri il
+       gioco che si gioca davvero invece di uno giocato a mani nude */
+    case 'trovata':
+      if (f.delta > 0) corsa.impugna()
+      else if (corsa.zaino.length < TASCHE) corsa.inTasca()
+      else corsa.chiudi()
+      return false
     case 'svenuto':
       corsa.riprendi()
       return false
@@ -202,10 +241,11 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
        aperto non si cammina */
     if (corsa.foglio) { sbriga(corsa, bravura, sorte); continue }
     equipaggia(corsa)
+    if (raccogliVicino(corsa, persi)) continue
 
     /* la roba facoltativa, se si sta giocando tutto */
     if (come === 'tutto') {
-      const roba = robeInteressanti(corsa, ['porta', 'forziere', 'fonte', 'mostro'])
+      const roba = robeInteressanti(corsa, ['porta', 'forziere', 'fonte', 'mostro', 'cosa'])
         .filter(r => !persi.includes(r))
       if (roba.length) {
         const meta = roba[0]

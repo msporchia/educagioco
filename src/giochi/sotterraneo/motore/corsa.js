@@ -208,24 +208,45 @@ export class Corsa {
      di poco. Guardando subito nel raggio, un mostro che passa di lì si
      prende il tocco destinato alla scala che gli sta accanto — e chi
      tocca si vede aprire una cosa che non aveva puntato, che è il modo
-     più rapido di far sembrare il gioco impreciso. */
+     più rapido di far sembrare il gioco impreciso.
+
+     ── UN FORZIERE VUOTO È SCENOGRAFIA ─────────────────────────────
+     Finché restava toccabile succedeva questo: il tocco sulla sua cella
+     prendeva **lui** invece della roba che ci stava sopra, e siccome a
+     un forziere ci si ferma *accanto* e non sopra, quella roba non si
+     raccoglieva mai. Un baule già aperto non ha più niente da dire: si
+     spegne, e da lì in poi è pavimento dipinto.
+
+     ── E LA ROBA PER TERRA SÌ ───────────────────────────────────────
+     Prima le cose si prendevano soltanto calpestandole, quindi una
+     spada dietro una cassa era una spada persa e un tocco su di lei non
+     faceva niente — che a schermo si legge come un gioco rotto. */
   toccabile(r) {
-    return !r.presa && !r.morto && this.luce.has(r.y * this.livello.largo + r.x) &&
-      ['mostro', 'porta', 'forziere', 'mercante', 'fonte', 'scala'].includes(r.che) &&
-      !(r.che === 'porta' && r.aperta)
+    if (r.presa || r.morto) return false
+    if (!this.luce.has(r.y * this.livello.largo + r.x)) return false
+    if (r.che === 'porta') return !r.aperta
+    if (r.che === 'forziere') return !r.aperto
+    return ['mostro', 'mercante', 'fonte', 'scala', 'cosa', 'gemme'].includes(r.che)
   }
 
+  /* Le gemme si prendono camminandoci sopra, quindi non c'è mai bisogno
+     di *mirarle*: restano toccabili per chi ci cade sopra col dito, ma
+     non rubano il tocco a un forziere che gli sta a fianco. */
   cosaC(c, largo = 1.2) {
     const dritto = this.livello.robe.find(r => r.x === c.x && r.y === c.y && this.toccabile(r))
     if (dritto) return dritto
     let vicina = null, quanto = 9
     for (const r of this.livello.robe) {
-      if (!this.toccabile(r)) continue
+      if (r.che === 'gemme' || !this.toccabile(r)) continue
       const d = Math.hypot(r.x - c.x, r.y - c.y)
       if (d <= largo && d < quanto) { quanto = d; vicina = r }
     }
     return vicina
   }
+
+  /* Su cosa ci si sale, e a cosa ci si ferma accanto. Le cose per terra
+     stanno fra le prime: raccoglierle vuol dire arrivarci sopra. */
+  sopra(che) { return ['scala', 'mercante', 'fonte', 'cosa', 'gemme'].includes(che) }
 
   /* `preciso` distingue il tocco dal trascinamento: tenendo premuto e
      muovendo il dito l'eroe insegue, e non deve aprire pannelli per ogni
@@ -243,7 +264,7 @@ export class Corsa {
        `viaVerso` prova i lati in ordine di comodità e torna il primo che
        ha una strada, insieme alla strada. */
     const via = mira
-      ? viaVerso(buona, mira, da, { sopra: ['scala', 'mercante', 'fonte'].includes(mira.che) })
+      ? viaVerso(buona, mira, da, { sopra: this.sopra(mira.che) })
       : (buona(c.x, c.y) ? { dove: c, strada: percorso(buona, da, c) } : null)
 
     /* un tocco che non porta da nessuna parte spegne il segno di dove si
@@ -344,28 +365,90 @@ export class Corsa {
     }
   }
 
-  /* Gemme e roba per terra si prendono camminandoci sopra: raccogliere
-     non è una decisione, e chiedere di confermarla la trasformerebbe in
-     una pratica da sbrigare. Lo zaino pieno è l'unica cosa che ferma la
-     mano. */
+  /* ── quello che si prende senza pensarci ──
+     Le gemme, e soltanto loro: sono il conto in tasca, non una scelta —
+     nessuno ha mai lasciato per terra una moneta perché lo zaino era
+     pieno. Tutto il resto **si tocca**: una spada che entra nello zaino
+     mentre passavo di lì è una spada che non ho scelto, e il senso di
+     sei tasche è che ogni cosa dentro ci sia entrata per volontà di
+     qualcuno. */
   raccogli() {
     const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
     for (const r of this.livello.robe) {
-      if (r.presa || r.x !== cx || r.y !== cy) continue
-      if (r.che === 'gemme') {
-        this.gemme += r.quante
-        r.presa = true
-        this.dillo(`💎 +${r.quante}`)
-      } else if (r.che === 'cosa') {
-        if (this.zaino.length >= TASCHE) {
-          if (!r.detto) { r.detto = true; this.dillo('🎒 lo zaino è pieno') }
-          continue
-        }
-        this.zaino.push(r.cosa)
-        r.presa = true
-        this.dillo(`${COSE[r.cosa].em} ${COSE[r.cosa].nome}`)
-      }
+      if (r.presa || r.morto || r.che !== 'gemme' || r.x !== cx || r.y !== cy) continue
+      const quante = Math.round(r.quante * (1 + this.addosso('gemme')))
+      this.gemme += quante
+      r.presa = true
+      this.dillo(`💎 +${quante}`)
     }
+  }
+
+  /* ── una cosa per terra, toccata ──
+     Quello che si beve o si accende va in tasca e via: nessuna domanda,
+     perché non c'è niente da decidere. Quello che si **impugna o si
+     indossa** apre invece un foglio, ed è l'unico posto del gioco dove
+     un numero si legge prima di sceglierlo: «questa ti dà due colpi in
+     più di quella che hai». Senza quel confronto un bambino sceglie
+     un'arma dal disegno, e il disegno non dice quanto fa male. */
+  trovata(r) {
+    const c = COSE[r.cosa]
+    if (!c) return
+    if (c.dove) { this.foglio = { che: 'trovata', chi: r, cosa: r.cosa, ...this.confronto(r.cosa) }; return }
+    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return }
+    this.zaino.push(r.cosa)
+    r.presa = true
+    this.dillo(`${c.em} ${c.nome}`)
+  }
+
+  /* Quanto vale una cosa **rispetto a quella che si ha già addosso**: il
+     motore lo sa perché è l'unico che sa cosa c'è in mano, e chi disegna
+     non deve sommare niente. */
+  confronto(k) {
+    const c = COSE[k]
+    if (!c || !c.dove) return null
+    const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' ? 'dif' : 'dono'
+    const addosso = this.casella(c.dove)
+    /* la guardia non è pignoleria: un salvataggio scritto quando le cose
+       si chiamavano in un altro modo arriva qui con una chiave che non
+       esiste più, e senza il `?.` il gioco si spegne su una schermata
+       nera invece di ignorare un oggetto */
+    const mio = addosso ? (COSE[addosso]?.[campo] || 0) : 0
+    return { dove: c.dove, campo, addosso, delta: (c[campo] || 0) - mio }
+  }
+
+  /* ── i tre modi di rispondere a una cosa trovata ──
+     Impugnare non passa dallo zaino: si prende e si mette, e quello che
+     si aveva **prende il posto per terra** di quello che si è raccolto
+     se le tasche sono piene. Uno scambio, non una perdita: una spada
+     lasciata cadere per prenderne un'altra è la cosa che fa arrabbiare
+     di più, e succede proprio quando lo zaino è pieno — cioè sempre
+     quando conta. */
+  impugna() {
+    const f = this.foglio
+    if (!f || f.che !== 'trovata') return null
+    const k = f.cosa, c = COSE[k], r = f.chi
+    const vecchio = this.casella(c.dove)
+    this.metti(c.dove, k)
+    r.presa = true
+    if (vecchio) {
+      if (this.zaino.length < TASCHE) this.zaino.push(vecchio)
+      else this.livello.robe.push({ che: 'cosa', cosa: vecchio, x: r.x, y: r.y,
+                                    em: COSE[vecchio].em })
+    }
+    this.dillo(`${c.em} ${c.nome}`)
+    this.chiudi()
+    return { che: 'addosso', cosa: k }
+  }
+
+  inTasca() {
+    const f = this.foglio
+    if (!f || f.che !== 'trovata') return null
+    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    this.zaino.push(f.cosa)
+    f.chi.presa = true
+    this.dillo(`${COSE[f.cosa].em} ${COSE[f.cosa].nome}`)
+    this.chiudi()
+    return { che: 'presa', cosa: f.cosa }
   }
 
   /* ═══════════ toccare una cosa ═══════════ */
@@ -373,13 +456,30 @@ export class Corsa {
     if (r.morto || r.presa || this.finita) return
     if (r.che === 'mostro') return this.scontro(r)
     if (r.che === 'porta') return this.apri('porta', r, RINCARO.porta)
-    if (r.che === 'forziere') {
-      if (r.aperto) return this.dillo('è già vuoto')
-      return this.apri('forziere', r, RINCARO.forziere)
-    }
+    /* un forziere già aperto non arriva nemmeno qui: `toccabile` lo ha
+       spento, e chi ci cammina sopra ci passa e basta */
+    if (r.che === 'forziere') return r.aperto ? undefined : this.apri('forziere', r, RINCARO.forziere)
     if (r.che === 'fonte') return this.apri('fonte', r, RINCARO.fonte)
     if (r.che === 'mercante') return this.mercante(r)
     if (r.che === 'scala') return this.allaScala()
+    if (r.che === 'cosa') return this.trovata(r)
+    if (r.che === 'gemme') return this.raccogli()
+  }
+
+  /* ── dove si posa quello che salta fuori ──
+     Mai **sopra** quello che l'ha lasciato: una spada in cima al baule
+     che l'ha data era invisibile (la disegnava il baule) e irraggiungibile
+     (al baule ci si ferma accanto). Si cerca la prima cella libera
+     davvero — calpestabile e senza niente sopra — e se non ce n'è nessuna
+     nel raggio si posa dov'era, che è comunque meglio che perderla. */
+  libera(x, y) {
+    return this.livello.calpestabile(x, y) && !this.livello.robeSu(x, y).length
+  }
+
+  posaRoba(roba, vicino) {
+    const dove = primaLibera((x, y) => this.libera(x, y), vicino, 3) || vicino
+    this.livello.robe.push({ ...roba, x: dove.x, y: dove.y })
+    return dove
   }
 
   /* Apre un foglio che chiede una domanda. La domanda vera la va a
@@ -452,9 +552,7 @@ export class Corsa {
     const possibili = scheda.lascia || []
     if (possibili.length && this.rnd() < 0.7) {
       const cosa = possibili[Math.floor(this.rnd() * possibili.length)]
-      const dove = primaLibera((x, y) => this.livello.calpestabile(x, y),
-                               { x: m.x + 1, y: m.y }, 2) || { x: m.x, y: m.y }
-      this.livello.robe.push({ che: 'cosa', cosa, x: dove.x, y: dove.y, em: COSE[cosa].em })
+      this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
     this.dillo(`${m.em} è caduto!`)
   }
@@ -516,11 +614,10 @@ export class Corsa {
       return { che: 'niente' }
     }
     this.tesori++
+    /* il bottino cade **davanti** al baule, mai dentro: vedi `posaRoba` */
     const cosa = NEI_FORZIERI[Math.floor(this.rnd() * NEI_FORZIERI.length)]
-    this.livello.robe.push({ che: 'cosa', cosa, x: f.x, y: f.y, em: COSE[cosa].em })
-    const sotto = primaLibera((x, y) => this.livello.calpestabile(x, y), { x: f.x, y: f.y + 1 }, 2)
-    if (sotto) this.livello.robe.push({ che: 'gemme', x: sotto.x, y: sotto.y, em: '💎',
-                                        quante: 6 + this.piano * 3 })
+    this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: f.x, y: f.y + 1 })
+    this.posaRoba({ che: 'gemme', em: '💎', quante: 6 + this.piano * 3 }, { x: f.x + 1, y: f.y + 1 })
     this.dillo('🎁 si apre!')
     this.chiudi()
     return { che: 'tesoro', cosa }
@@ -583,10 +680,16 @@ export class Corsa {
   }
 
   /* ═══════════ lo zaino ═══════════
-     Toccare una tasca fa la sola cosa sensata per quell'oggetto — si
-     indossa quello che si indossa, si beve quello che si beve — perché
-     un menù con «equipaggia / usa / butta» su ogni riga è tre volte la
-     stessa domanda. */
+     Una tasca toccata **apre le sue azioni** invece di eseguirne una:
+     `usa` fa la cosa sensata per quell'oggetto (si impugna quello che si
+     impugna, si beve quello che si beve), `butta` lo lascia per terra,
+     `riponi` toglie dalle mani quello che si ha addosso. Erano tre gesti
+     che prima non esistevano affatto — l'unico modo di liberare una
+     tasca era usare quello che c'era dentro, che con sei tasche e le
+     armature pesanti vuol dire buttare via una pozione per fare posto.
+
+     Il verbo lo sceglie chi disegna, dai dati (`dove`, `usa`): il motore
+     non scrive «bevo» da nessuna parte. */
   usa(i) {
     const k = this.zaino[i]
     if (!k) return null
@@ -626,6 +729,34 @@ export class Corsa {
       return { che: 'aperta' }
     }
     return null
+  }
+
+  /* ── lasciare per terra ──
+     Dove si è, non dove capita: la roba buttata resta **dove l'hai
+     lasciata**, e ci si può tornare. Se sotto i piedi c'è già qualcosa
+     si posa accanto, come tutto il resto (`posaRoba`). */
+  butta(i) {
+    const k = this.zaino[i]
+    if (!k) return null
+    this.zaino.splice(i, 1)
+    this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em },
+                  { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
+    this.dillo(`${COSE[k].em} per terra`)
+    return { che: 'buttata', cosa: k }
+  }
+
+  /* Togliersi di mano o di dosso quello che si porta, senza buttarlo. */
+  riponi(dove) {
+    const k = this.casella(dove)
+    if (!k) return null
+    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    this.metti(dove, null)
+    /* togliendosi l'amuleto il tetto scende: la vita lo segue, o
+       resterebbe un numero più alto del suo massimo */
+    this.vita = Math.min(this.vita, this.vitaMax)
+    this.zaino.push(k)
+    this.dillo(`${COSE[k].em} nello zaino`)
+    return { che: 'riposta', cosa: k }
   }
 
   /* ═══════════ la scala ═══════════

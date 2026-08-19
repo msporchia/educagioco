@@ -243,6 +243,87 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   }
 }
 
+/* ══════════ 5b. la roba per terra ══════════
+   Tre difetti trovati giocando, e tutti e tre dello stesso ceppo: **una
+   cosa per terra non si poteva prendere**. Il forziere aperto restava
+   toccabile e si mangiava il tocco destinato a quello che ci stava
+   sopra; quello che ci stava sopra ci stava davvero sopra, cioè sulla
+   sua stessa cella, dove il baule lo copriva e dove l'eroe non arriva
+   mai (a un forziere ci si ferma accanto); e le cose non erano
+   toccabili affatto — si prendevano solo calpestandole. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
+  const f = c.livello.robe.find(r => r.che === 'forziere')
+
+  /* prima di aprirlo si tocca; dopo è scenografia */
+  c.luce.add(f.y * c.livello.largo + f.x)
+  controlla('un forziere chiuso si tocca', c.toccabile(f))
+  c.foglio = { che: 'forziere', chi: f }
+  c.rispondi(true)
+  uguale('aperto, non si tocca più: è pavimento dipinto', c.toccabile(f), false)
+
+  const lasciata = c.livello.robe.filter(r => r.che === 'cosa').pop()
+  controlla('il forziere ha lasciato qualcosa', !!lasciata)
+  controlla('e non l\'ha lasciato sopra di sé',
+            !(lasciata.x === f.x && lasciata.y === f.y), `${lasciata.x},${lasciata.y}`)
+
+  /* la si tocca, e la si prende */
+  c.luce.add(lasciata.y * c.livello.largo + lasciata.x)
+  controlla('la roba per terra si tocca', c.toccabile(lasciata))
+  c.eroe = { x: lasciata.x + 0.5, y: lasciata.y + 0.5 }
+  c.zaino = []
+  c.mano = null
+  c.raccogli()
+  uguale('camminarci sopra non la raccoglie più', c.zaino.length, 0)
+  c.interagisci(lasciata)
+  const preso = c.zaino.length === 1 || (c.foglio && c.foglio.che === 'trovata')
+  controlla('toccarla sì', preso, c.foglio ? c.foglio.che : c.zaino.join())
+  c.chiudi()
+}
+
+/* quello che si impugna passa da un foglio che dice **quanto** cambia:
+   un bambino sceglie un'arma dal disegno, e il disegno non dice quanto
+   fa male */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 33, rnd: seminato(33) })
+  c.zaino = []
+  c.mano = 'spada-corta'
+  const dove = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
+  const spada = { che: 'cosa', cosa: 'spada', x: dove.x, y: dove.y, em: COSE.spada.em }
+  c.livello.robe.push(spada)
+
+  c.interagisci(spada)
+  uguale('toccare un\'arma apre il confronto', c.foglio.che, 'trovata')
+  uguale('e dice di quanto è meglio', c.foglio.delta, COSE.spada.att - COSE['spada-corta'].att)
+  c.impugna()
+  uguale('impugnandola finisce in mano', c.mano, 'spada')
+  controlla('e la corta torna nello zaino', c.zaino.includes('spada-corta'), c.zaino.join())
+  uguale('la spada non è più per terra', spada.presa, true)
+
+  /* con le tasche piene lo scambio non perde niente: il vecchio prende
+     il posto per terra del nuovo */
+  c.zaino = new Array(TASCHE).fill('pozione')
+  const ascia = { che: 'cosa', cosa: 'spadone', x: dove.x, y: dove.y, em: COSE.spadone.em }
+  c.livello.robe.push(ascia)
+  c.interagisci(ascia)
+  c.impugna()
+  uguale('con lo zaino pieno si impugna lo stesso', c.mano, 'spadone')
+  uguale('e le tasche non traboccano', c.zaino.length, TASCHE)
+  controlla('la spada di prima è per terra, non persa',
+            c.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'spada' && !r.presa))
+
+  /* buttare e riporre: i due gesti che prima non c'erano, e senza i
+     quali sei tasche piene si liberavano solo bevendo */
+  c.zaino = ['pozione']
+  c.butta(0)
+  uguale('buttata, la tasca è libera', c.zaino.length, 0)
+  controlla('e la pozione è per terra dove si era',
+            c.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'pozione' && !r.presa))
+  c.riponi('mano')
+  uguale('riposta, la mano è vuota', c.mano, null)
+  controlla('e lo spadone è nello zaino', c.zaino.includes('spadone'), c.zaino.join())
+}
+
 }
 
 /* un forziere sbagliato resta chiuso per sempre — è l'unica cosa che si
