@@ -83,20 +83,40 @@ uguale('il tasto è spento finché non si scrive niente',
 await nuovo.fill('.nome', 'Pippo')
 await nuovo.click('.via')
 
-/* ── il secondo passo: da dove parte ──
+/* ── il secondo passo: quanti anni ha ──
    Non è una domanda per il bambino ma per il grande che gli sta
    installando il gioco, ed è quella che prima non si faceva a nessuno:
    il primo profilo nasceva con tutto acceso, divisioni in colonna
    comprese, anche a cinque anni. Si controlla che non si possa saltare —
-   il tasto è spento finché non si sceglie — e soprattutto che la scelta
-   MORDA: una partenza che non spegne niente è indistinguibile da nessuna
-   partenza, e non se ne accorgerebbe nessuno fino al primo bambino
-   davanti alla carta sbagliata. */
-await nuovo.waitForSelector('.partenza', { timeout: 8000 })
-controlla('poi chiede da dove parte', await nuovo.isVisible('.partenze'))
-uguale('e il tasto è spento finché non si sceglie', await nuovo.isDisabled('.via'), true)
-await nuovo.click('.partenza[data-partenza="prima"]')
-uguale('scelta la fascia si può entrare', await nuovo.isDisabled('.via'), false)
+   la manopola nasce senza valore e il tasto è spento finché non si
+   muove — e soprattutto che la scelta MORDA: un'età che non spegne
+   niente è indistinguibile da nessuna scelta, e non se ne accorgerebbe
+   nessuno fino al primo bambino davanti alla carta sbagliata.
+
+   E che la manopola **dica cosa fa**: il riassunto compare solo dopo
+   averla mossa, ed è tutto il motivo per cui ha preso il posto delle
+   quattro carte. Un riassunto che non arriva è la manopola muta di
+   prima, senza che niente sembri rotto. */
+await nuovo.waitForSelector('[data-manopola]', { timeout: 8000 })
+controlla('poi chiede quanti anni ha', await nuovo.isVisible('[data-manopola]'))
+/* ── SI PARTE DA QUATTRO ANNI ──
+   Non da vuoto e non da un valore in mezzo: chi apre questa schermata
+   sta quasi sempre aggiungendo il più piccolo di casa. Premere «Si
+   gioca!» senza toccare niente sbaglia così **dalla parte giusta** —
+   la casa più piccola e la taratura più prudente — mentre un valore in
+   mezzo darebbe a un bambino di quattro anni la home di una terza. */
+uguale('la manopola nasce sui quattro anni',
+  await nuovo.evaluate(() => document.querySelector('[data-eta-ora]').textContent.trim()),
+  '4 anni')
+controlla('e il quadro di quell\'età si vede già',
+  await nuovo.isVisible('[data-manopola] .quadro'))
+uguale('più in giù non si va', await nuovo.isDisabled('[data-eta="giu"]'), true)
+
+/* Cinque tocchi per arrivare a 6,5, cioè «prima o seconda». */
+for (let i = 0; i < 5; i++) await nuovo.click('[data-eta="su"]')
+uguale('la manopola dice gli anni a parole',
+  await nuovo.evaluate(() => document.querySelector('[data-eta-ora]').textContent.trim()),
+  '6 anni e mezzo')
 await nuovo.click('.via')
 await nuovo.waitForSelector('.carte', { timeout: 8000 })
 controlla('scritto il nome si entra nel gioco', await nuovo.isVisible('.carte'))
@@ -108,7 +128,7 @@ controlla('scritto il nome si entra nel gioco', await nuovo.isVisible('.carte'))
    vedrebbero tutte e due le carte. */
 const carteNuovo = await nuovo.evaluate(() =>
   [...document.querySelectorAll('.carta.gioco[data-gioco]')].map(c => c.dataset.gioco))
-controlla('la fascia scelta spegne i giochi da grandi',
+controlla('l\'età scelta spegne i giochi da grandi',
   !carteNuovo.includes('torri'), carteNuovo.join(','))
 controlla('e lascia quelli per i piccoli',
   carteNuovo.includes('conta'), carteNuovo.join(','))

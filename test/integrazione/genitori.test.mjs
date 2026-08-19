@@ -94,7 +94,19 @@ controlla('ci sono tutte e tre le cose',
   dentro.includes('Salva su file') && dentro.includes('Rimetti da un file') && dentro.includes('Cancella'))
 await scatto(page, 'genitori')
 
-/* ── 3. il salvataggio contiene i progressi veri ── */
+/* ── 3. il salvataggio contiene i progressi veri ──
+   Le monete non si confrontano col numero seminato, e la differenza
+   costa un pomeriggio a chi non la sa: il seme porta due campagne a
+   mezza strada, e quelle **si meritano tre medaglie**, che alla prima
+   apertura vengono pagate (`store/progressi.js`, `PREMI`). Il profilo
+   che finisce nel file ha quindi 45 monete più di quelle seminate — o
+   non ce le ha ancora, se il salvataggio a scatto ritardato non è
+   ancora sceso, ed è così che questo controllo passava per tempismo
+   invece che per merito. Si legge quanto c'è davvero un attimo prima
+   di scaricare, e si confronta con quello. */
+const moneteVere = (await leggiProfilo(page)).coins
+controlla('il seme si è preso le medaglie che gli spettano', moneteVere >= 777,
+  `${moneteVere} monete`)
 const scaricato = page.waitForEvent('download', { timeout: 8000 })
 await page.click('.carta >> text="Salva su file"')
 const dl = await scaricato
@@ -108,7 +120,7 @@ controlla('il file si scarica', !!dl)
 uguale('si chiama come deve', /^giochi-progressi-\d{4}-\d{2}-\d{2}\.json$/.test(dl.suggestedFilename()), true)
 if (dati) {
   const mio = dati.profili?.[GIOCATORE]
-  uguale('dentro ci sono le monete vere', mio?.coins, 777)
+  uguale('dentro ci sono le monete vere', mio?.coins, moneteVere)
   uguale('e i conti dei giochi', mio?.totals?.math, 42)
   controlla('è marchiato come salvataggio dei giochi', dati.tipo === 'giochi-bambini')
   /* Le monete da sole non bastano a dire che il salvataggio è buono:
@@ -167,7 +179,7 @@ const monete2 = await page.evaluate(() => {
   const t = document.body.innerText.match(/🪙\s*(\d+)/)
   return t ? Number(t[1]) : null
 })
-uguale('le monete sono tornate quelle salvate', monete2, 777)
+uguale('le monete sono tornate quelle salvate', monete2, moneteVere)
 
 /* Un file qualsiasi non deve entrare: sovrascriverebbe i progressi con
    spazzatura, ed è irreversibile. */
@@ -219,7 +231,7 @@ const moneteDopoSpegnimento = await page.evaluate(() => {
   const t = document.body.innerText.match(/🪙\s*(\d+)/)
   return t ? Number(t[1]) : null
 })
-uguale('spegnere non tocca i progressi', moneteDopoSpegnimento, 777)
+uguale('spegnere non tocca i progressi', moneteDopoSpegnimento, moneteVere)
 
 /* e la scelta deve sopravvivere alla chiusura del gioco */
 await page.waitForTimeout(700)   // il salvataggio è a scatto ritardato
@@ -375,15 +387,68 @@ controlla('e «Cosa sa» non c\'è più',
 await page.click('.schede button[data-scheda="bambini"]')
 await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
-controlla('la carta di chi gioca mostra l\'età', await page.isVisible('[data-anni-ora]'))
-const anniPrima = (await page.locator('[data-anni-ora]').innerText()).trim()
-await page.click('[data-anni="su"]')
+controlla('la carta di chi gioca mostra l\'età', await page.isVisible('[data-eta-ora]'))
+controlla('e sotto c\'è il quadro di quell\'età, senza dover muovere niente',
+  await page.isVisible('[data-manopola] .quadro'))
+const anniPrima = (await page.locator('[data-eta-ora]').innerText()).trim()
+await page.click('[data-eta="su"]')
 await page.waitForTimeout(600)
 controlla('e si sposta di mezzo anno per volta',
-  (await page.locator('[data-anni-ora]').innerText()).trim() !== anniPrima,
-  `${anniPrima} → ${(await page.locator('[data-anni-ora]').innerText()).trim()}`)
+  (await page.locator('[data-eta-ora]').innerText()).trim() !== anniPrima,
+  `${anniPrima} → ${(await page.locator('[data-eta-ora]').innerText()).trim()}`)
 uguale('finendo nel profilo', typeof (await leggiProfilo(page)).settings.eta, 'number')
-await page.click('[data-anni="giu"]')      // rimesso com'era
+
+/* ── il quadro dice cosa succede a quell'età ──
+   È il motivo per cui la manopola ha preso il posto delle quattro
+   carte: sotto la tacca ci sono i giochi in casa, quello che si dà per
+   scontato e i quattro gruppi di domande, ognuno che si apre coi nomi
+   dentro. Senza, è la manopola muta di prima — e la cosa peggiore è
+   che non sembrerebbe rotta. */
+controlla('sotto la tacca c\'è l\'elenco dei giochi con lo stato addosso',
+  (await page.locator('[data-manopola] [data-apri="giochi"]').count()) > 0)
+controlla('e quello che si dà per scontato che sappia',
+  (await page.locator('[data-manopola] [data-apri="sa"]').count()) > 0)
+controlla('e i gruppi di domande',
+  (await page.locator('[data-manopola] [data-apri="medie"]').count()) > 0)
+
+/* Aprire un blocco mostra i nomi: è tutta la differenza fra «57
+   domande» e un elenco che si può giudicare. Al primo avvio nessuno sa
+   cosa siano dodici emoji in fila, e questo è il modo di scoprirlo
+   senza uscire dalla schermata. */
+await page.click('[data-manopola] [data-apri="giochi"]')
+await page.waitForSelector('[data-manopola] .elenco li', { timeout: 5000 })
+controlla('aperto, ogni gioco dice come si chiama e come sta messo',
+  await page.evaluate(() => {
+    const t = document.querySelector('[data-manopola] .elenco').innerText
+    return t.includes('La fattoria') && /c'è|arriva più avanti|già passato/.test(t)
+  }))
+await page.click('[data-manopola] [data-apri="giochi"]')
+await page.waitForTimeout(200)
+
+/* ── e ogni riga si può provare ──
+   Un nome non basta e non è colpa del nome: «le analogie fra figure»
+   non dice a un grande che aspetto abbia la domanda, e senza vederla
+   non può giudicare se sia roba da suo figlio. Il ▶ apre quella vera,
+   generata dallo stesso modulo che la darebbe in partita.
+
+   Il `.stop` sul tasto è la parte che si rompe in silenzio: il
+   riquadro intero si apre e si chiude al tocco, quindi senza fermarlo
+   il ▶ aprirebbe la domanda e nello stesso gesto richiuderebbe
+   l'elenco da cui è stata chiesta. */
+await page.click('[data-manopola] [data-apri="medie"]')
+await page.waitForSelector('[data-manopola] [data-apri="medie"] .prova', { timeout: 5000 })
+await page.locator('[data-manopola] [data-apri="medie"] .prova').first().click()
+await page.waitForSelector('.prova-velo', { timeout: 5000 })
+controlla('il ▶ di una riga apre la domanda vera',
+  await page.isVisible('.prova-velo'))
+controlla('e il gruppo da cui si è partiti è rimasto aperto',
+  (await page.locator('[data-manopola] [data-apri="medie"] .prova').count()) > 0)
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+await page.click('[data-manopola] [data-apri="medie"]')
+await page.waitForTimeout(200)
+
+await page.click('[data-eta="giu"]')      // rimesso com'era
 await page.waitForTimeout(600)
 
 await apriScheda('domande')
@@ -512,106 +577,138 @@ controlla('con la versione già dentro', /[?&]versione=[^&]+/.test(dove))
    I tre gesti che prima non esistevano — i giocatori erano due scritti
    nel codice. Si provano dallo schermo e non dallo store, perché quello
    che conta è che un genitore ci arrivi: un'API giusta dietro una
-   schermata che non la offre non serve a niente. */
+   schermata che non la offre non serve a niente.
+
+   ── LA SCHERMATA È DI CHI STA GIOCANDO ADESSO ──
+   Qui c'era il roster intero, con «Cambia nome» ed «Elimina» su ogni
+   riga: sei bottoni per tre bambini, in una schermata dove tutto il
+   resto (giochi, saperi, domande, età) parla di **uno solo** — e per
+   giunta metà di quei comandi funzionava solo per quello, perché il
+   profilo degli altri in memoria non c'è. Adesso la carta è una, gli
+   altri sono una riga di nomi, e si passa a loro dalla home. */
 await page.click('button[aria-label="indietro"]')   // il punto 9 finisce dentro i genitori
 await page.waitForSelector('.carte', { timeout: 5000 })
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('bambini')
 await page.waitForSelector('.carta[data-azione="aggiungi-giocatore"]', { timeout: 5000 })
-uguale('di partenza c\'è un giocatore solo',
+uguale('la carta è una sola: quella di chi gioca adesso',
   await page.locator('.carta.chi-gioca').count(), 1)
+uguale('e con un bambino solo non c\'è nessuna riga di altri',
+  await page.locator('[data-altri-giocatori]').count(), 0)
 
+/* ── aggiungere è lo stesso wizard del primo avvio ──
+   Erano due moduli diversi per la stessa domanda, e quello di qui era
+   la copia peggiore: il bambino nuovo nasceva e restava fermo, e per
+   farlo giocare bisognava uscire, tornare in home e sceglierlo mentre
+   lui guardava. Adesso è la stessa schermata, e finisce **entrando in
+   partita con lui**. */
 await page.click('.carta[data-azione="aggiungi-giocatore"]')
-await page.waitForSelector('.carta[data-azione="nuovo-nome"]', { timeout: 5000 })
-await page.fill('.carta[data-azione="nuovo-nome"] .nome', 'Federica')
+await page.waitForSelector('.benvenuto', { timeout: 5000 })
+controlla('si aggiunge dalla stessa schermata del primo avvio',
+  await page.isVisible('.benvenuto'))
+controlla('e si può lasciare stare',
+  await page.isVisible('[data-azione="lascia-stare"]'))
+uguale('col campo vuoto non si va avanti', await page.isDisabled('.via'), true)
 
-/* ── da dove parte ──
-   Col solo nome non si aggiunge: la partenza decide cosa il bambino si
-   troverà in home la prima volta, e una scelta preselezionata si preme
-   senza leggerla. Il tasto spento è il modo di chiederlo senza
-   scriverlo, e qui si prova che lo sia davvero. */
-controlla('col solo nome il tasto non si può ancora premere',
-  await page.locator('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)').isDisabled())
-uguale('le partenze offerte sono quattro',
-  await page.locator('.partenza').count(), 4)
-await page.click('.partenza[data-partenza="terza"]')
-await page.waitForTimeout(150)
-controlla('scelta la partenza, il tasto si accende',
-  !(await page.locator('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)').isDisabled()))
-await page.click('.carta[data-azione="nuovo-nome"] .bottone:not(.chiaro)')
-await page.waitForTimeout(500)
-uguale('aggiungerne uno lo mette nell\'elenco',
-  await page.locator('.carta.chi-gioca').count(), 2)
-/* Aggiungere non butta fuori chi sta giocando: la schermata resta
-   aperta, e non richiede di nuovo il codice. */
-controlla('e la schermata dei genitori resta aperta',
-  await page.isVisible('.carta[data-azione="aggiungi-giocatore"]'))
+await page.fill('.benvenuto .nome', 'Federica')
+await page.click('.benvenuto .via')
+await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+
+/* ── quanti anni ha ──
+   Col solo nome non si aggiunge: l'età decide cosa il bambino si
+   troverà in home la prima volta, e una risposta preselezionata si
+   preme senza leggerla. Il tasto spento è il modo di chiederlo senza
+   scriverlo. */
+/* La manopola nasce sui quattro anni: chi aggiunge un bambino sta
+   quasi sempre aggiungendo il più piccolo di casa, e da lì si sale
+   finché l'elenco di quello che si dà per scontato non comincia a dire
+   cose che non sa. Otto tocchi per arrivare a otto anni. */
+uguale('la manopola nasce sui quattro anni',
+  (await page.locator('[data-eta-ora]').innerText()).trim(), '4 anni')
+for (let i = 0; i < 8; i++) await page.click('[data-eta="su"]')
+await page.waitForTimeout(250)
+uguale('la manopola dice a che età si è fermata',
+  (await page.locator('[data-eta-ora]').innerText()).trim(), '8 anni')
+controlla('e il quadro dice cosa sta per succedere',
+  await page.isVisible('[data-manopola] .quadro'))
+
+await page.click('[data-azione="si-gioca"]')
+await page.waitForSelector('.carte', { timeout: 8000 })
+
+/* ── si esce giocando con lui ──
+   È il cambiamento che si nota di più: prima si tornava alle
+   impostazioni del bambino di prima. Adesso il gioco è suo. */
+controlla('finito il wizard si è in home', await page.isVisible('.carta.gioco'))
+uguale('e adesso la home lascia scegliere', await page.locator('.gioc').count(), 2)
 
 /* Il profilo nuovo è suo e parte da zero: se ereditasse le monete
    dell'altro, i due bambini starebbero giocando lo stesso profilo. */
-await page.click('button[aria-label="indietro"]')
-await page.waitForSelector('.carte', { timeout: 5000 })
-uguale('adesso la home lascia scegliere', await page.locator('.gioc').count(), 2)
-await page.click('.gioc:has-text("Federica")')
-await page.waitForTimeout(500)
 const moneteNuovo = await page.evaluate(() => {
   const t = document.body.innerText.match(/🪙\s*(\d+)/)
   return t ? Number(t[1]) : null
 })
-uguale('e chi entra la prima volta parte da zero, non con le monete dell\'altro',
+uguale('chi entra la prima volta parte da zero, non con le monete dell\'altro',
   moneteNuovo, 0)
 
-/* ── la partenza ha fatto qualcosa ──
+/* ── l'età ha fatto qualcosa ──
    Si guarda dalla home di Federica e non dallo store: quello che conta è
    che il bambino non veda quelle carte, non che una chiave sia scritta
-   da qualche parte. «Terza» toglie i giochi per i più piccoli e lascia
-   tutto il resto — se togliesse anche il castello sarebbe una partenza
-   che spegne troppo, e nessuno se ne accorgerebbe fino a che un bambino
-   non chiede dov'è finito. */
-controlla('a chi parte dalla terza i giochi per i piccoli non compaiono',
+   da qualche parte. Otto anni toglie i giochi per i più piccoli e
+   lascia tutto il resto — se togliesse anche il castello sarebbe una
+   partenza che spegne troppo, e nessuno se ne accorgerebbe fino a che
+   un bambino non chiede dov'è finito. */
+controlla('a chi comincia a otto anni i giochi per i piccoli non compaiono',
   !(await page.isVisible('.carta[data-gioco="conta"]')))
 controlla('e nemmeno il secondo dei due',
   !(await page.isVisible('.carta[data-gioco="prima-dopo"]')))
 controlla('ma il castello c\'è', await page.isVisible('.carta.td'))
 controlla('e gli asteroidi pure', await page.isVisible('.carta.mate'))
 
-// si torna sul primo: eliminare chi sta giocando è un altro caso, sotto
-await page.click(`.gioc:has-text("${GIOCATORE}")`)
-await page.waitForTimeout(500)
-
 /* Rinominare tocca l'etichetta e non i progressi: è tutto il senso di
-   avere un id separato dal nome. */
+   avere un id separato dal nome. Si fa su Federica, che è quella che
+   sta giocando adesso — l'unica che questa schermata offre. */
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
-const suaCarta = `.carta.chi-gioca:has-text("Federica")`
-await page.click(`${suaCarta} button[data-azione="rinomina"]`)
+controlla('la carta è di chi gioca, cioè Federica',
+  await page.isVisible('.carta.chi-gioca:has-text("Federica")'))
+controlla('e gli altri sono una riga di nomi',
+  await page.isVisible('[data-altri-giocatori]'))
+uguale('con dentro il fratello', 1,
+  await page.locator(`[data-altri-giocatori]:has-text("${GIOCATORE}")`).count())
+
+await page.click('.carta.chi-gioca button[data-azione="rinomina"]')
 await page.waitForSelector('.carta.aperta .nome', { timeout: 5000 })
 await page.fill('.carta.aperta .nome', 'Fede')
 await page.click('.carta.aperta button[type="submit"]')
 await page.waitForTimeout(500)
 controlla('il nome cambia', await page.isVisible('.carta.chi-gioca:has-text("Fede")'))
-uguale('e i giocatori restano due (non se n\'è creato un altro)',
-  await page.locator('.carta.chi-gioca').count(), 2)
+controlla('e non se n\'è creato un altro: gli altri restano uno',
+  await page.isVisible(`[data-altri-giocatori]:has-text("${GIOCATORE}")`))
+uguale('con una carta sola, che è di chi gioca',
+  await page.locator('.carta.chi-gioca').count(), 1)
 
 /* Eliminare chiede conferma: è l'unico gesto di questa schermata che
    butta via i progressi di qualcuno senza possibilità di tornare. */
-await page.click('.carta.chi-gioca:has-text("Fede") button[data-azione="elimina"]')
+await page.click('.carta.chi-gioca button[data-azione="elimina"]')
 await page.waitForSelector('.carta.pericolo.aperta', { timeout: 5000 })
 controlla('eliminare chiede conferma', await page.isVisible('text="Sì, elimina"'))
 await page.click('text="No, lascia stare"')
 await page.waitForTimeout(200)
-uguale('e si può tornare indietro', await page.locator('.carta.chi-gioca').count(), 2)
+controlla('e si può tornare indietro',
+  await page.isVisible('.carta.chi-gioca:has-text("Fede")'))
 
-await page.click('.carta.chi-gioca:has-text("Fede") button[data-azione="elimina"]')
+await page.click('.carta.chi-gioca button[data-azione="elimina"]')
 await page.click('text="Sì, elimina"')
-await page.waitForTimeout(600)
-uguale('confermando sparisce', await page.locator('.carta.chi-gioca').count(), 1)
-controlla('e la schermata resta aperta: non stava giocando lui',
-  await page.isVisible('.carta[data-azione="aggiungi-giocatore"]'))
-controlla('e con lui il suo salvataggio', !(await page.evaluate(() =>
+await page.waitForSelector('.carta.gioco', { timeout: 8000 })
+/* Si eliminava chi stava giocando: restare nelle impostazioni vorrebbe
+   dire il tastierino del codice davanti, su un profilo che non esiste
+   più. Si va in home, dove si sceglie chi gioca. */
+controlla('eliminato chi giocava si torna in home', await page.isVisible('.carta.gioco'))
+uguale('e resta un bambino solo', await page.locator('.gioc').count(), 0)
+controlla('e con lui è sparito il suo salvataggio', !(await page.evaluate(() =>
   new Promise(ok => {
     const r = indexedDB.open('giochi-bambini', 1)
     r.onsuccess = () => {
@@ -620,6 +717,11 @@ controlla('e con lui il suo salvataggio', !(await page.evaluate(() =>
       g.onsuccess = () => ok(g.result.some(k => String(k).startsWith('profilo:g')))
     }
   }))))
+
+await vaiAiGenitori()
+await digita('0000')
+await apriScheda('bambini')
+await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
 
 /* ── 10b. giudicare una domanda ──
    Il giro completo di quello che non lancia nessun errore: una domanda
@@ -703,11 +805,17 @@ uguale('e resta spento anche riaprendo il gioco',
 await page.click('button[aria-label="suono"]')   // rimesso com'era
 await page.waitForTimeout(500)
 
-/* ── 12. rimettere la fascia a chi c'è già ──
-   La partenza si sceglie quando un bambino si aggiunge, ma la creazione
-   capita una volta sola: chi ha installato il gioco prima che la domanda
-   esistesse si ritrova tutto acceso, e a mano sono trenta tocchi. Da qui
-   si riscrive in blocco.
+/* ── 12. la manopola che riscrive, e la conferma ──
+   Qui c'era «Rimetti giochi e domande»: quattro carte che riscrivevano
+   tutto in blocco, dieci pixel sotto un `− anni +` che spostava solo
+   l'età. Due manopole per la stessa cosa, indistinguibili a guardarle,
+   e una delle due cancellava le scelte fatte a mano senza dirlo.
+
+   Adesso la manopola è una e il tasto non c'è più: quello che faceva
+   succede spostandosi di fascia, ma **detto prima invece che dopo** e
+   solo quando c'è davvero qualcosa da riscrivere. I due casi si
+   provano tutti e due, perché sbagliare la condizione è invisibile —
+   chiedere sempre è un questionario, non chiedere mai è una trappola.
 
    Sta in fondo apposta: riscrive giochi e saperi, quindi lo stato che
    lascia non deve arrivare a nessun altro punto del test. */
@@ -716,22 +824,72 @@ await page.waitForSelector('.carte', { timeout: 5000 })
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('bambini')
-await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
-controlla('la carta di chi gioca offre di rimettere la fascia',
-  await page.isVisible('button[data-azione="rifascia"]'))
-await page.click('button[data-azione="rifascia"]')
-await page.waitForSelector('.rifascia', { timeout: 5000 })
-uguale('anche qui le fasce sono quattro', await page.locator('[data-rifascia]').count(), 4)
-controlla('e non si conferma senza averne scelta una',
-  await page.locator('button[data-azione="rifascia-conferma"]').isDisabled())
+await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 
+/* Prima si spegne un gioco a mano: è quello che rende questo bambino
+   «su misura», ed è quello che la conferma deve annunciare. */
+await apriScheda('giochi')
+await page.waitForSelector('.carta.gioco', { timeout: 5000 })
+await page.click('.carta.gioco[data-gioco="dungeon"]')
+await page.waitForTimeout(300)
+await apriScheda('bambini')
+await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+
+/* ── mezzo anno dentro la stessa fascia: muto ──
+   È la promessa che rende la manopola usabile. Se chiedesse conferma
+   anche qui, spostare l'età diventerebbe una cosa che non si fa. */
 const monetePrima = (await leggiProfilo(page)).coins
-await page.click('[data-rifascia="piccoli"]')
-await page.waitForTimeout(150)
-await page.click('button[data-azione="rifascia-conferma"]')
+const etaPrima = (await leggiProfilo(page)).settings.eta
+await page.click('[data-eta="su"]')
+await page.waitForTimeout(500)
+uguale('mezzo anno dentro la stessa fascia non chiede niente',
+  await page.locator('[data-conferma="eta"]').count(), 0)
+uguale('e si sposta davvero', (await leggiProfilo(page)).settings.eta, etaPrima + 0.5)
+controlla('col gioco spento a mano rimasto spento',
+  (await leggiProfilo(page)).settings.giochi.dungeon === false)
+await page.click('[data-eta="giu"]')          // rimesso com'era
+await page.waitForTimeout(400)
+
+/* ── la tacca che cambia fascia: chiede ──
+   Le scelte fatte a mano tornerebbero al difetto, e questo va detto
+   prima. Un tocco solo, e la conferma resta lì: finché è aperta la
+   manopola non si sposta, che è il motivo per cui esiste. */
+await page.click('[data-eta="giu"]')
+await page.waitForSelector('[data-conferma="eta"]', { timeout: 5000 })
+controlla('cambiando fascia con roba sistemata a mano si chiede prima',
+  await page.isVisible('[data-conferma="eta"]'))
+controlla('e si dice cosa si perde, non «sei sicuro?»',
+  await page.evaluate(() =>
+    document.querySelector('[data-conferma="eta"]').innerText.includes('giochi spenti a mano')))
+uguale('e finché non si risponde l\'età non si muove',
+  (await leggiProfilo(page)).settings.eta, etaPrima)
+
+/* «Lascia stare» non deve spostare niente: una conferma che ha già
+   fatto la cosa non è una conferma. */
+await page.click('[data-azione="eta-lascia"]')
+await page.waitForTimeout(400)
+controlla('lasciando stare, il gioco spento resta spento',
+  (await leggiProfilo(page)).settings.giochi.dungeon === false)
+uguale('e l\'età nemmeno', (await leggiProfilo(page)).settings.eta, etaPrima)
+
+await page.click('[data-eta="giu"]')
+await page.waitForSelector('[data-conferma="eta"]', { timeout: 5000 })
+await page.click('[data-azione="eta-conferma"]')
 await page.waitForTimeout(600)
-controlla('rimessa la fascia lo dice invece di restare muta',
-  await page.evaluate(() => document.body.innerText.includes('riparte da')))
+controlla('confermando lo dice invece di restare muta',
+  await page.evaluate(() => document.body.innerText.includes('è tarato su')))
+uguale('e stavolta si è mosso', (await leggiProfilo(page)).settings.eta, etaPrima - 0.5)
+controlla('con le scelte a mano ripartite dai difetti',
+  (await leggiProfilo(page)).settings.giochi.dungeon === undefined)
+
+/* Da qui in giù non c'è più niente di suo da perdere, quindi le fasce
+   si attraversano in silenzio: è l'altra metà della regola, e senza si
+   finirebbe a rispondere alla stessa domanda a ogni tacca. */
+for (let i = 0; i < 6; i++) { await page.click('[data-eta="giu"]'); await page.waitForTimeout(160) }
+await page.waitForTimeout(500)
+uguale('sui difetti si scende senza che chieda più niente',
+  await page.locator('[data-conferma="eta"]').count(), 0)
+uguale('fino in fondo', (await leggiProfilo(page)).settings.eta, etaPrima - 3.5)
 
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
@@ -739,8 +897,8 @@ const dopoFascia = await page.evaluate(() =>
   [...document.querySelectorAll('.carta.gioco[data-gioco]')].map(c => c.dataset.gioco))
 controlla('e in home restano solo i giochi per i piccoli',
   dopoFascia.includes('conta') && !dopoFascia.includes('torri'), dopoFascia.join(','))
-/* Quello che non deve succedere: una fascia decide cosa si vede, non
-   cancella niente. */
+/* Quello che non deve succedere: l'età decide cosa si vede, non
+   cancella niente di quello che è stato guadagnato. */
 uguale('i progressi non si sono mossi', (await leggiProfilo(page)).coins, monetePrima)
 
 rmSync(salvataggio, { force: true })
