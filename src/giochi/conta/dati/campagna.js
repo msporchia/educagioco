@@ -42,34 +42,43 @@ export const SCALINI = [
 export const CAMPAGNA = [
   /* ── scalino 1: nel prato, fino a cinque ── */
   { chiave: 'primo-gregge', nome: 'Il primo gregge', mondo: 'prato', verbo: 'quanti',
+    portata: 0, scuola: 'numeri',
     scalino: 'prato', partite: 4, min: 1, max: 5, premio: 1, disposizione: 'fila',
     racconto: 'Contali uno per uno: sono in fila apposta.' },
   { chiave: 'cortile',      nome: 'Il cortile',       mondo: 'pollaio', verbo: 'quanti',
+    portata: 2, scuola: 'numeri',
     scalino: 'prato', partite: 4, min: 1, max: 5, premio: 1, disposizione: 'sparsa',
     racconto: 'Adesso sono sparsi: contali lo stesso, uno alla volta.' },
   { chiave: 'la-cesta',     nome: 'La cesta',         mondo: 'stagno', verbo: 'porta',
+    portata: 4, scuola: 'numeri',
     scalino: 'prato', partite: 4, min: 1, max: 5, premio: 1,
     racconto: 'Toccane solo quante te ne chiedo, poi conferma.' },
 
   /* ── scalino 2: la fattoria, fino a dieci ── */
   { chiave: 'il-branco',    nome: 'Il branco',        mondo: 'bosco', verbo: 'quanti',
+    portata: 8, scuola: 'numeri',
     scalino: 'fattoria', partite: 5, min: 4, max: 10, premio: 2,
     racconto: 'Adesso sono di più: prenditi il tempo che ti serve.' },
   { chiave: 'la-consegna',  nome: 'La consegna',      mondo: 'mare', verbo: 'porta',
+    portata: 10, scuola: 'numeri',
     scalino: 'fattoria', partite: 5, min: 3, max: 10, premio: 2,
     racconto: 'Porta esattamente quelli che ti chiedo, non uno di più.' },
   { chiave: 'due-recinti',  nome: 'Due recinti',      mondo: 'prato', verbo: 'dipiu',
+    portata: 12, scuola: 'numeri',
     scalino: 'fattoria', partite: 4, min: 2, max: 8, premio: 2,
     racconto: 'Guarda bene: a volte sono proprio uguali.' },
   { chiave: 'lo-sparpaglio', nome: 'Lo sparpaglio',   mondo: 'pollaio', verbo: 'stessi',
+    portata: 14, scuola: 'numeri',
     scalino: 'fattoria', partite: 4, min: 5, max: 9, premio: 3,
     racconto: 'Si spargono per il cortile, ma sono sempre gli stessi.' },
 
   /* ── scalino 3: nel bosco, gli insiemi ── */
   { chiave: 'gli-intrusi',  nome: 'Gli intrusi',      mondo: 'bosco', verbo: 'quantiDi',
+    portata: 18, scuola: 'insiemi',
     scalino: 'bosco', partite: 5, min: 3, max: 8, premio: 3,
     racconto: 'Non tutto quello che vedi è un animale: conta solo i giusti.' },
   { chiave: 'tutti-insieme', nome: 'Tutti insieme',   mondo: 'mare', verbo: 'insieme',
+    portata: 20, scuola: 'insiemi',
     scalino: 'bosco', partite: 4, min: 2, max: 5, premio: 3,
     racconto: 'Due specie diverse, ma stanno tutte e due dentro «animali».' },
   /* l'unica tappa a due verbi: l'inclusione si dà il cambio con «dove
@@ -80,15 +89,18 @@ export const CAMPAGNA = [
      mucchi sono separati, a volte uno sta dentro l'altro, e distinguere
      i due casi *è* il concetto. */
   { chiave: 'il-cerchio',   nome: 'Il cerchio grande', mondo: 'stagno', verbo: 'inclusione',
+    portata: 22, scuola: 'insiemi',
     alterna: ['dipiu'],
     scalino: 'bosco', partite: 4, min: 2, max: 6, premio: 4,
     racconto: 'A volte due mucchi diversi, a volte le une dentro le altre.' },
 
   /* ── scalino 4: al mercato, un'aggiunta e un'unione ── */
   { chiave: 'ne-arriva-una', nome: "Ne arriva un'altra", mondo: 'pollaio', verbo: 'piuUno',
+    portata: 26, scuola: 'numeri',
     scalino: 'mercato', partite: 5, min: 2, max: 8, premio: 4,
     racconto: 'Guarda cosa succede, poi dimmi quante sono adesso.' },
   { chiave: 'il-banco',     nome: 'Il banco della frutta', mondo: 'mercato', verbo: 'unisci',
+    portata: 28, scuola: 'numeri',
     scalino: 'mercato', partite: 5, min: 2, max: 6, premio: 4,
     racconto: 'Due ceste diverse: quante cose ci sono, tutte insieme?' },
 ]

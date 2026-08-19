@@ -37,33 +37,45 @@
    quattro stanze, 4 ne fanno sedici — e la campagna comincia da quattro.
    ═══════════════════════════════════════════════════════════════════ */
 
+/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
+   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
+   non una dimenticanza: quello che questa campagna insegna non lo dà
+   nessuna scuola, quindi la sua testa non si taglia mai per età — le
+   prime tappe restano a disposizione anche di chi arriva grande, che
+   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
 export const CAMPAGNA = [
   { chiave: 'cantine', nome: 'Le cantine', icona: '🕯️',
+    portata: 25,
     dritta: 'due piani corti: si impara la strada',
     piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22],
     guardiano: 'scheletro', capo: 'scheletro', premio: 10 },
 
   { chiave: 'pozzo', nome: 'Il pozzo', icona: '🪣',
+    portata: 32,
     dritta: 'più stanze, e qualcuno che vende',
     piani: 3, misura: 34, giri: 3, dif: [0.12, 0.34],
     guardiano: 'scheletro', capo: 'orco', premio: 14 },
 
   { chiave: 'gallerie', nome: 'Le gallerie', icona: '🪨',
+    portata: 40,
     dritta: 'ci si picchia sul serio',
     piani: 3, misura: 40, giri: 3, dif: [0.22, 0.5],
     guardiano: 'orco', capo: 'orco', premio: 18 },
 
   { chiave: 'cisterna', nome: 'La cisterna', icona: '💧',
+    portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
     piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62],
     guardiano: 'orco', capo: 'gigante', premio: 22 },
 
   { chiave: 'labirinto', nome: 'Il labirinto', icona: '🌀',
+    portata: 56,
     dritta: 'sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
     guardiano: 'orco', capo: 'gigante', premio: 26 },
 
   { chiave: 'fondo', nome: 'Il fondo', icona: '🕳️',
+    portata: 64,
     dritta: 'stretto, profondo, e le domande non perdonano',
     /* stretto apposta: quattro piani da sedici stanze l'uno portavano la
        discesa oltre le novanta risposte obbligate, cioè fuori da una

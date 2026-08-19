@@ -76,45 +76,60 @@ export const SCALINI = [
     dritta: 'Tutto insieme: la truppa va tenuta grossa.' },
 ]
 
+/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
+   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
+   non una dimenticanza: quello che questa campagna insegna non lo dà
+   nessuna scuola, quindi la sua testa non si taglia mai per età — le
+   prime tappe restano a disposizione anche di chi arriva grande, che
+   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
 export const CAMPAGNA = [
   /* ── scalino 1: verdi e rossi, e si impara a scegliere ── */
   { chiave: 'sentiero', nome: 'Il sentiero', veste: 'prato', scalino: 'sentieri',
+    portata: 30,
     metri: 170, passo: 3.0, punta: 3.8, spinta: 0.012, fraCancelli: 21, fraScontri: 3,
     tetto: 24, truppa: 5, libri: 0.30, studio: 0.10, mira: 0.55, coni: 1, premio: 3,
     racconto: 'Solo verdi e rossi: guarda i numeri, non i colori.' },
   { chiave: 'campi', nome: 'I campi gialli', veste: 'grano', scalino: 'sentieri',
+    portata: 34,
     metri: 210, passo: 3.1, punta: 3.9, spinta: 0.012, fraCancelli: 20, fraScontri: 3,
     tetto: 24, truppa: 5, libri: 0.32, studio: 0.18, mira: 0.60, coni: 1, premio: 3,
     racconto: 'Cinque verdi fanno un rosso. Guardali cambiare.' },
   { chiave: 'bosco', nome: 'Il bosco', veste: 'bosco', scalino: 'sentieri',
+    portata: 38,
     metri: 250, passo: 3.2, punta: 4.0, spinta: 0.013, fraCancelli: 20, fraScontri: 3,
     tetto: 124, truppa: 8, libri: 0.34, studio: 0.28, mira: 0.62, coni: 2, premio: 4,
     racconto: "Arriva il blu, e il cancello d'oro col libro." },
 
   /* ── scalino 2: la scelta si complica ── */
   { chiave: 'ponte', nome: 'Il ponte lungo', veste: 'fiume', scalino: 'vialunga',
+    portata: 48,
     metri: 290, passo: 3.3, punta: 4.1, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
     tetto: 124, truppa: 8, libri: 0.34, studio: 0.38, mira: 0.66, coni: 2, premio: 5,
     racconto: 'Un cancello fa due cose: «÷5 +80» si legge in ordine.' },
   { chiave: 'dune', nome: 'Le dune', veste: 'deserto', scalino: 'vialunga',
+    portata: 52,
     metri: 330, passo: 3.4, punta: 4.2, spinta: 0.014, fraCancelli: 19, fraScontri: 3,
     tetto: 124, truppa: 10, libri: 0.36, studio: 0.48, mira: 0.70, coni: 2, premio: 5,
     racconto: 'Il primo boss: davanti a lui si rallenta.' },
   { chiave: 'notte', nome: 'La notte', veste: 'notte', scalino: 'vialunga',
+    portata: 56,
     metri: 370, passo: 3.5, punta: 4.3, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 10, libri: 0.36, studio: 0.58, mira: 0.72, coni: 3, premio: 6,
     racconto: 'Arriva il giallo: la truppa piena sta a 624.' },
 
   /* ── scalino 3: tenere la truppa grossa ── */
   { chiave: 'valico', nome: 'Il valico', veste: 'neve', scalino: 'cima',
+    portata: 66,
     metri: 410, passo: 3.6, punta: 4.35, spinta: 0.015, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 12, libri: 0.38, studio: 0.68, mira: 0.75, coni: 3, premio: 7,
     racconto: 'Un mostro ogni tre cancelli. Non sbagliarne.' },
   { chiave: 'bruciata', nome: 'La terra che brucia', veste: 'lava', scalino: 'cima',
+    portata: 70,
     metri: 450, passo: 3.7, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 12, libri: 0.38, studio: 0.78, mira: 0.78, coni: 3, premio: 8,
     racconto: 'Qui non basta sceglierne bene uno.' },
   { chiave: 'cima', nome: 'La cima', veste: 'cima', scalino: 'cima',
+    portata: 74,
     metri: 490, passo: 3.8, punta: 4.4, spinta: 0.016, fraCancelli: 18, fraScontri: 3,
     tetto: 624, truppa: 14, libri: 0.40, studio: 0.88, mira: 0.80, coni: 3, premio: 10,
     racconto: 'Quasi cinquecento metri e due boss.' },

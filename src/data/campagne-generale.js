@@ -585,16 +585,36 @@ function conCassetta(camp) {
   return { ...camp, tappe }
 }
 
+/* La portata di ogni tappa, steso lungo la rampa della sua campagna:
+   la prima tappa sta al fondo, l'ultima in cima, e in mezzo si sale
+   dritto. Si stende qui invece di scriverlo tappa per tappa perché le
+   tappe di un livello del Generale sono già dato puro con un formato
+   suo (`strumenti/mappe/FORMATO.md`), e aggiungerci un campo vorrebbe
+   dire toccare la specifica per un numero che si ricava. */
+const conLivello = camp => {
+  const [da, a] = camp.rampa || []
+  if (da == null) return camp
+  const n = Math.max(1, camp.tappe.length - 1)
+  return { ...camp,
+           tappe: camp.tappe.map((t, i) => ({ ...t, portata: Math.round(da + (a - da) * i / n) })) }
+}
+
 export const CAMPAGNE = [
   { id: 'dungeon', nome: 'Il dungeon', emoji: '🏚️',
     sottotitolo: 'Quattro avventurieri, una scala che scende e nessuno che li richiama',
     per: 'la campagna principale: l\'arco intero, dalla fila di ordini al drago',
-    richiede: null, cassetta: [], tappe: DUNGEON },
+    richiede: null, cassetta: [], tappe: DUNGEON,
+    /* la rampa sulla scala 0-100 di `data/portata.js`: dove sta la prima
+       tappa e dove arriva l'ultima. Niente `scuola` — scrivere una fila
+       di ordini e guardarla girare non è una materia che la scuola dia,
+       quindi la testa non si taglia mai: chi arriva a dieci anni deve
+       comunque imparare che «quello che non hai scritto non succede». */
+    rampa: [25, 45] },
 
   { id: 'nina', nome: 'Nina e il draghetto', emoji: '🐉',
     sottotitolo: 'Una bambina, un cane e una festa da preparare',
     per: 'chi ha sei anni: si comincia da qui, e non ci sono parole difficili',
-    richiede: null, cassetta: [], tappe: NINA },
+    richiede: null, cassetta: [], tappe: NINA, rampa: [22, 40] },
 
   { id: 'fortezza', nome: 'La fortezza degli orchi', emoji: '🏰',
     sottotitolo: 'Stavolta i tuoi sono quelli dentro, e gli altri hanno un piano',
@@ -602,8 +622,8 @@ export const CAMPAGNE = [
     richiede: 'dungeon',
     /* parte piena: chi arriva qui ha già la cassetta del dungeon in mano */
     cassetta: VOCABOLARIO.filter(o => o.id !== 'difendi').map(o => o.id),
-    tappe: FORTEZZA },
-].map(conCassetta)
+    tappe: FORTEZZA, rampa: [50, 68] },
+].map(conCassetta).map(conLivello)
 
 export const CAMPAGNA = Object.fromEntries(CAMPAGNE.map(c => [c.id, c]))
 export const campagnaDi = id => CAMPAGNA[id] ?? null

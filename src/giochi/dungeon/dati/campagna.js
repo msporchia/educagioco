@@ -66,26 +66,38 @@ export const SCALINI = [
    non si sente: il controllo dei dati la fa rispettare a tutte. */
 export const RAMPA_MINIMA = 0.2
 
+/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
+   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
+   non una dimenticanza: quello che questa campagna insegna non lo dà
+   nessuna scuola, quindi la sua testa non si taglia mai per età — le
+   prime tappe restano a disposizione anche di chi arriva grande, che
+   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
 export const CAMPAGNA = [
   /* ── scalino 1: le cantine ── */
   { chiave: 'cantina', nome: 'La cantina', ambiente: 'cantina', scalino: 'cantine',
+    portata: 18,
     file: 18, dif: [0, 0.25], premio: 3,
     racconto: 'Una botola in giardino, e sotto una scala che non finisce.' },
   { chiave: 'cripta', nome: 'La cripta', ambiente: 'cripta', scalino: 'cantine',
+    portata: 22,
     file: 21, dif: [0.05, 0.35], premio: 3,
     racconto: 'Ossa impilate con ordine. Qualcuna si muove.' },
   { chiave: 'grotta', nome: 'La grotta', ambiente: 'grotta', scalino: 'cantine',
+    portata: 26,
     file: 24, dif: [0.1, 0.45], premio: 4,
     racconto: 'Gocce, echi e un battito d\'ali sopra la testa.' },
 
   /* ── scalino 2: le gallerie ── */
   { chiave: 'fungaia', nome: 'La fungaia', ambiente: 'fungaia', scalino: 'gallerie',
+    portata: 38,
     file: 27, dif: [0.2, 0.55], premio: 5,
     racconto: 'Funghi alti come te, e qualcosa che striscia fra i gambi.' },
   { chiave: 'fogne', nome: 'Le fogne', ambiente: 'fogne', scalino: 'gallerie',
+    portata: 42,
     file: 30, dif: [0.25, 0.6], premio: 5,
     racconto: 'Acqua nera fino alle caviglie. Meglio non guardare cosa nuota.' },
   { chiave: 'fucina', nome: 'La fucina', ambiente: 'fucina', scalino: 'gallerie',
+    portata: 46,
     file: 33, dif: [0.3, 0.7], premio: 6,
     racconto: 'Fa caldo. Qualcuno, laggiù, batte il martello.' },
 
@@ -93,12 +105,15 @@ export const CAMPAGNA = [
      Qui una discesa non si fa più in una manciata di stanze: sono
      spedizioni, e l'equipaggiamento trovato per strada serve tutto. */
   { chiave: 'ghiacciaia', nome: 'La ghiacciaia', ambiente: 'ghiacciaia', scalino: 'fondo',
+    portata: 58,
     file: 36, dif: [0.35, 0.8], premio: 7,
     racconto: 'Il fiato si vede. Le pareti sono di ghiaccio vecchio.' },
   { chiave: 'tana', nome: 'La tana', ambiente: 'tana', scalino: 'fondo',
+    portata: 62,
     file: 39, dif: [0.4, 0.9], premio: 8,
     racconto: 'Ossa spolpate e un odore che non promette niente di buono.' },
   { chiave: 'covo', nome: 'Il covo del drago', ambiente: 'covo', scalino: 'fondo',
+    portata: 66,
     file: 42, dif: [0.45, 1], premio: 10,
     racconto: 'In fondo si vede una luce arancione. Non è una torcia.' },
 ]

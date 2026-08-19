@@ -462,8 +462,30 @@ export const CAMPAGNE = [
 /* la fila di tutte le tappe, nell'ordine in cui si giocano: è l'indice
    che il profilo salva, e i confini di campagna servono solo a
    raccontarla sulla mappa */
+/* ── DOVE STA UNA TAPPA SULLA SCALA DELL'ETÀ ──
+   Il livello 0-100 di `data/portata.js` non si dichiara a mano tappa per
+   tappa: **si ricava dal `cap`**, che è già la misura di quanto sale la
+   scaletta delle operazioni di quella tappa, e che era già lì per un
+   altro motivo. Derivarlo invece di inventarlo vuol dire che chi ritocca
+   l'equilibrio non deve ricordarsi di ritoccare anche un secondo numero
+   che dice la stessa cosa in un'altra lingua.
+
+   Gli estremi: `cap` 3 è la somma corta e sta a sette anni (37), `cap`
+   10 è la divisione in colonna e sta a dieci (75). In mezzo, dritto.
+
+   E NIENTE `scuola`, di proposito. Il castello si paga in operazioni,
+   quindi la tentazione di scrivere `scuola: 'divisioni'` è forte — ma
+   `scuola` serve solo a dire «questa tappa il bambino l'ha già passata,
+   nasce aperta», e qui aprire una tappa di mezzo non è un regalo: è
+   rompere l'economia. Le torri si comprano coi soldi guadagnati prima, e
+   chi comincia dalla nona tappa comincia senza niente. Quindi il taglio
+   agisce solo in alto: a sette anni la sala del trono è chiusa, e le
+   prime tappe restano da giocare a qualunque età. */
+const LIVELLO_CAP = cap => Math.round(37 + (cap - 3) * (75 - 37) / 7)
+
 export const RACCONTO = CAMPAGNE.flatMap(c =>
-  c.tappe.map(t => ({ ...t, campagna: c.id, resistenze: !!t.resistenze })))
+  c.tappe.map(t => ({ ...t, campagna: c.id, resistenze: !!t.resistenze,
+                      portata: LIVELLO_CAP(t.cap) })))
 
 /* a che campagna appartiene la tappa numero `i` */
 export const campagnaDi = i => RACCONTO[i] && RACCONTO[i].campagna

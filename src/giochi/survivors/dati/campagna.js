@@ -49,31 +49,43 @@ export const SCALINI = [
 const TUTTI = ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno',
                'spettro', 'cinghiale', 'roccia', 'colosso']
 
+/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
+   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
+   non una dimenticanza: quello che questa campagna insegna non lo dà
+   nessuna scuola, quindi la sua testa non si taglia mai per età — le
+   prime tappe restano a disposizione anche di chi arriva grande, che
+   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
 export const CAMPAGNA = [
   /* ── scalino 1: si impara a muoversi ── */
   { chiave: 'prato', nome: 'Il prato verde', scenario: 'prato', scalino: 'prati',
+    portata: 12,
     durata: 45, ritmo: 1.44, vigore: 1.15, fretta: 1.20, rincaro: 0,
     squadra: ['melma'], premio: 3,
     racconto: 'Melme lente e niente altro. Basta non farsi toccare.' },
   { chiave: 'radura', nome: 'La radura', scenario: 'bosco', scalino: 'prati',
+    portata: 15,
     durata: 60, ritmo: 1.30, vigore: 1.21, fretta: 0.95, rincaro: 0,
     squadra: ['melma', 'pipistrello'], premio: 3,
     racconto: 'I pipistrelli sono svelti, ma vanno giù con una freccia.' },
   { chiave: 'lucciole', nome: 'La notte delle lucciole', scenario: 'notte', scalino: 'prati',
+    portata: 18,
     durata: 75, ritmo: 1.30, vigore: 1.31, fretta: 0.97, rincaro: 0.03,
     squadra: ['melma', 'pipistrello', 'moscerino'], premio: 4,
     racconto: 'Al buio arrivano gli sciami. Non stare fermo.' },
 
   /* ── scalino 2: il bosco chiede qualcosa ── */
   { chiave: 'pantano', nome: 'Il pantano', scenario: 'palude', scalino: 'fitto',
+    portata: 30,
     durata: 90, ritmo: 1.24, vigore: 1.43, fretta: 0.99, rincaro: 0.05,
     squadra: ['melma', 'pipistrello', 'moscerino', 'fungo'], premio: 5,
     racconto: 'I funghi hanno la pelle dura: serve qualcosa che picchi.' },
   { chiave: 'grotta', nome: 'La grotta', scenario: 'grotta', scalino: 'fitto',
+    portata: 35,
     durata: 105, ritmo: 1.14, vigore: 1.70, fretta: 1.00, rincaro: 0.05,
     squadra: ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno', 'spettro'], premio: 6,
     racconto: 'I ragni ti raggiungono: scappare dritto non basta più.' },
   { chiave: 'dune', nome: 'Le dune', scenario: 'deserto', scalino: 'fitto',
+    portata: 40,
     durata: 125, ritmo: 1.04, vigore: 1.70, fretta: 1.01, rincaro: 0.08,
     squadra: ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno', 'spettro', 'cinghiale'],
     premio: 6,
@@ -81,14 +93,17 @@ export const CAMPAGNA = [
 
   /* ── scalino 3: tutti insieme ── */
   { chiave: 'ghiacciaio', nome: 'Il ghiacciaio', scenario: 'neve', scalino: 'lontano',
+    portata: 55,
     durata: 145, ritmo: 0.97, vigore: 1.82, fretta: 1.02, rincaro: 0.10,
     squadra: TUTTI, premio: 7, cuori: 4,
     racconto: 'Le rocce camminano piano ma non muoiono quasi mai.' },
   { chiave: 'fonda', nome: 'La palude fonda', scenario: 'palude', scalino: 'lontano',
+    portata: 60,
     durata: 165, ritmo: 0.90, vigore: 1.98, fretta: 1.03, rincaro: 0.12,
     squadra: TUTTI, premio: 8, cuori: 4,
     racconto: 'Qui non basta scappare: bisogna aver scelto bene le carte.' },
   { chiave: 'tana', nome: 'La tana', scenario: 'grotta', scalino: 'lontano',
+    portata: 65,
     durata: 185, ritmo: 0.85, vigore: 2.06, fretta: 1.04, rincaro: 0.15,
     squadra: TUTTI, premio: 10, cuori: 4,
     racconto: 'Quasi quattro minuti, e in fondo c\'è il colosso.' },

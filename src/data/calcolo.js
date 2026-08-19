@@ -627,33 +627,49 @@ export function esercizioDi(chiave, ctx = {}) {
    salita sola e non cinque cose diverse. */
 const TAPPE = [
   { emoji: '🚀', nome: 'Fino al dieci', esempio: '3+4 · 6+6 · 9−4',
+    portata: 25, scuola: 'numeri',
     nuovi: ['somma-10', 'doppi', 'meno-10'] },
   { emoji: '🛰️', nome: 'Oltre la decina', esempio: '8+5 · 7+8 · 13−7',
+    portata: 31, scuola: 'numeri',
     nuovi: ['somma-20', 'quasi-doppi', 'meno-20'] },
   { emoji: '🌑', nome: 'Amici e decine', esempio: '7+?=10 · 30+40 · 60+?=100',
+    portata: 37, scuola: 'decine',
     nuovi: ['amici-10', 'decine-somma', 'decine-meno', 'amici-100'] },
   { emoji: '🌒', nome: 'Due cifre e una', esempio: '12+6 · 18−6 · 34+20',
+    portata: 41, scuola: 'decine',
     nuovi: ['unita-in-piu', 'decine-in-piu'] },
   { emoji: '🌓', nome: 'Passa la decina', esempio: '26+7 · 43−7',
+    portata: 45, scuola: 'decine',
     nuovi: ['unita-riporto', 'unita-prestito'] },
   { emoji: '🌗', nome: 'Due cifre', esempio: '23+45 · 68−25',
+    portata: 48, scuola: 'decine',
     nuovi: ['due-somma', 'due-meno'] },
   { emoji: '☄️', nome: 'Riporti e prestiti', esempio: '27+38 · 52−27',
+    portata: 53, scuola: 'decine',
     nuovi: ['somma-riporto', 'meno-prestito'] },
   { emoji: '💫', nome: 'I quasi tondi', esempio: '47+29 · 63−29',
+    portata: 60, scuola: 'stima',
     nuovi: ['arrotonda-somma', 'arrotonda-meno'] },
   { emoji: '🌠', nome: 'Moltiplicare a mente', esempio: '4×30 · 4×23 · 14×5',
+    portata: 65, scuola: 'moltiplicazioni',
     nuovi: ['per-10', 'per-decine', 'spezza-prodotto', 'per-9', 'per-11', 'raddoppia-dimezza'] },
   { emoji: '🛸', nome: 'Dividere a mente', esempio: '56:8 · metà di 68 · 120:4',
+    portata: 69, scuola: 'divisioni',
     nuovi: ['divide-tabellina', 'meta', 'decine-divise', 'quante-volte'] },
   { emoji: '🌌', nome: 'Fino a mille', esempio: '350+200 · 650+?=1000 · 497+298',
+    portata: 73, scuola: 'decine',
     nuovi: ['centinaia-somma', 'centinaia-meno', 'amici-1000', 'tre-cifre-somma',
             'arrotonda-centinaia'] },
-  { emoji: '⭐', nome: 'La prova', esempio: 'tutto insieme', nuovi: [] },
+  { emoji: '⭐', nome: 'La prova', esempio: 'tutto insieme', nuovi: [],
+    portata: 78, scuola: 'decine' },
 ]
 
 export const STAZIONI = TAPPE.map((t, i) => ({
   i, emoji: t.emoji, nome: t.nome, nuovi: t.nuovi, esempio: t.esempio,
+  /* dove sta sulla scala 0-100 di `data/portata.js` e quale pezzo di
+     scuola dà per scontato: insieme dicono a chi questa tappa va
+     offerta e a chi invece è roba già passata */
+  portata: t.portata, scuola: t.scuola,
   /* tutto quello che si è visto fin qui: il pool di una stazione è i suoi
      concetti più il ripasso di quelli di prima */
   concetti: TAPPE.slice(0, i + 1).flatMap(x => x.nuovi),
@@ -673,6 +689,7 @@ export const STAZIONI = TAPPE.map((t, i) => ({
 
 export const VOLO_A_MENTE = {
   i: -1, emoji: '♾️', nome: 'Volo a mente', nuovi: [], esempio: 'tutto',
+  /* nessun livello: non è una tappa della fila, è quello che resta dopo */
   concetti: CONCETTI.map(c => c.id),
   dritta: 'Tutti i calcoli che sai fare, senza bersaglio e senza fine.',
   bersaglio: Infinity, mirate: 0,

@@ -30,37 +30,52 @@ export const SCALINI = [
     dritta: 'Sei disegni diversi: le prove sono sempre sei.' },
 ]
 
+/* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
+   e dice a chi va offerta. Qui NON c'è `scuola`, ed è una dichiarazione,
+   non una dimenticanza: quello che questa campagna insegna non lo dà
+   nessuna scuola, quindi la sua testa non si taglia mai per età — le
+   prime tappe restano a disposizione anche di chi arriva grande, che
+   altrimenti non imparerebbe mai come si gioca. Si taglia solo in alto. */
 export const CAMPAGNA = [
   /* ── scalino 1: facile, senza doppioni ── */
   { chiave: 'cuccioli',  nome: 'Il canile',        tema: 'animali',
+    portata: 12,
     scalino: 'facile',  difficolta: 'facile',  partite: 3,
     racconto: 'Tre cucce e tre cuccioli. Chi dorme dove?' },
   { chiave: 'fruttivendolo', nome: 'Il fruttivendolo', tema: 'frutta',
+    portata: 15,
     scalino: 'facile',  difficolta: 'facile',  partite: 3,
     racconto: 'La cassetta della frutta è chiusa a chiave.' },
   { chiave: 'orto',      nome: "L'orto",           tema: 'giardino',
+    portata: 18,
     scalino: 'facile',  difficolta: 'facile',  partite: 3,
     racconto: 'Il cancello dell\'orto si apre con tre fiori giusti.' },
 
   /* ── scalino 2: normale, i doppioni si accendono ── */
   { chiave: 'scogliera', nome: 'La scogliera',     tema: 'mare',
+    portata: 30,
     scalino: 'normale', difficolta: 'normale', partite: 3,
     racconto: 'Quattro caselle. E attenzione: un pesce può ripetersi.' },
   { chiave: 'pasticceria', nome: 'La pasticceria', tema: 'dolci',
+    portata: 34,
     scalino: 'normale', difficolta: 'normale', partite: 3,
     racconto: 'Due biscotti uguali nella stessa ricetta? Può capitare.' },
   { chiave: 'officina',  nome: "L'officina",       tema: 'veicoli',
+    portata: 38,
     scalino: 'normale', difficolta: 'normale', partite: 3,
     racconto: 'Il garage ha una serratura a quattro mezzi.' },
 
   /* ── scalino 3: tosto, un disegno in più ── */
   { chiave: 'palestra',  nome: 'La palestra',      tema: 'sport',
+    portata: 50,
     scalino: 'tosto',   difficolta: 'tosto',   partite: 3,
     racconto: 'Sei palloni per quattro caselle. Sempre sei prove.' },
   { chiave: 'teatro',    nome: 'Il teatro',        tema: 'faccine',
+    portata: 55,
     scalino: 'tosto',   difficolta: 'tosto',   partite: 3,
     racconto: 'Le maschere si somigliano tutte. Guardale bene.' },
   { chiave: 'astronave', nome: "L'astronave",      tema: 'spazio',
+    portata: 60,
     scalino: 'tosto',   difficolta: 'tosto',   partite: 3,
     racconto: 'Il portello si apre solo con il codice giusto.' },
 ]

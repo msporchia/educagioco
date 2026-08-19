@@ -53,6 +53,12 @@ export function creaCampagna(T, dati) {
     const bersaglio = 12 + i * 2
     return {
       i, nome: t.nome, emoji: t.emoji, dritta: t.dritta,
+      /* dove sta la tappa sulla scala 0-100 di `data/portata.js`: la
+         dichiarano i contenuti (`campagna-inglese.js`), qui passa e
+         basta. Senza questa riga il livello resterebbe nel dato di
+         partenza e la fila risulterebbe tutta alla portata di tutti —
+         in silenzio, che è il modo peggiore. */
+      portata: t.portata,
       nuove,
       chiavi: [...prima, ...nuove],        // cumulativa: il vecchio resta come ripasso
       tipi: T.slice(0, i + 1).flatMap(x => x.apre),

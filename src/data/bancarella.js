@@ -111,32 +111,40 @@ export const VESTITI = ['#e2725b', '#5b8ee2', '#67a95a', '#d9a441', '#9a6fbf',
 
    `copie` è quante unità in più può volere dello stesso prodotto — «due
    angurie» —, zero nella prima giornata. */
+/* `portata` è dove sta la giornata sulla scala 0-100 di
+   `data/portata.js`, e sta sulla GIORNATA e non sul singolo banco perché
+   è la giornata a dire quanto è difficile: il banchetto dà il resto con
+   le monete grosse, la fiera vuole le banconote e i centesimi. Il banco
+   cambia solo la merce.
+
+   `scuola: 'numeri'` — comporre un resto è aritmetica che la scuola dà,
+   quindi a chi l'ha già passata le prime giornate non si offrono più. */
 export const CAMPAGNE = [
-  { id: 'banchetto', nome: 'Il banchetto',       emoji: '🧺',
+  { portata: 37, scuola: 'numeri', id: 'banchetto', nome: 'Il banchetto',       emoji: '🧺',
     dritta: 'Il cliente chiede, tu prendi dalla cesta giusta. Poi la cassa dice quanto resto dare: tu lo componi.',
     tappe: ['frutta', 'forno', 'dolci'],
     passo: 10, articoli: [3, 3], tempo: [95, 90], pezzi: [1, 2], copie: 0,
     monete: [10, 20, 50, 100, 200, 500] },
 
-  { id: 'paese', nome: 'Il mercato del paese',   emoji: '⛺',
+  { portata: 44, scuola: 'numeri', id: 'paese', nome: 'Il mercato del paese',   emoji: '⛺',
     dritta: 'Qualcuno vuole due cose uguali, e il resto adesso vuole due o tre monete.',
     tappe: ['frutta', 'verdura', 'forno', 'frigo'],
     passo: 10, articoli: [3, 4], tempo: [90, 80], pezzi: [2, 3], copie: 1,
     monete: [10, 20, 50, 100, 200, 500] },
 
-  { id: 'grande', nome: 'Il mercato grande',     emoji: '🏪',
+  { portata: 50, scuola: 'numeri', id: 'grande', nome: 'Il mercato grande',     emoji: '🏪',
     dritta: 'Arrivano i 5 centesimi: certi resti adesso finiscono per 5 e la moneta piccola serve davvero.',
     tappe: ['verdura', 'frutta', 'forno', 'frigo', 'dolci'],
     passo: 5, articoli: [3, 4], tempo: [80, 70], pezzi: [2, 4], copie: 1,
     monete: [5, 10, 20, 50, 100, 200, 500] },
 
-  { id: 'coperto', nome: 'Il mercato coperto',   emoji: '🏬',
+  { portata: 57, scuola: 'numeri', id: 'coperto', nome: 'Il mercato coperto',   emoji: '🏬',
     dritta: 'I cartellini finiscono per 9: 0,89 €, 1,39 €. Nel cassetto arrivano 1c e 2c, e senza quelle non si chiude.',
     tappe: ['forno', 'frigo', 'dolci', 'frutta', 'verdura'],
     passo: 1, articoli: [4, 4], tempo: [75, 62], pezzi: [3, 5], copie: 2,
     monete: [1, 2, 5, 10, 20, 50, 100, 200, 500] },
 
-  { id: 'fiera', nome: 'La fiera',               emoji: '🎪',
+  { portata: 63, scuola: 'numeri', id: 'fiera', nome: 'La fiera',               emoji: '🎪',
     dritta: 'Spese grosse, banconote da 10 € e clienti di fretta: qui si vede il negoziante vero.',
     tappe: ['frigo', 'dolci', 'verdura', 'forno', 'frutta'],
     passo: 1, articoli: [4, 5], tempo: [70, 55], pezzi: [4, 6], copie: 2,
@@ -148,7 +156,7 @@ export const CAMPAGNE = [
      e premi ✓ — e lei risponde soltanto giusto o sbagliato. Per questo il
      tempo torna largo e il resto torna corto: la fatica si sposta tutta sul
      conto, e due conti da fare insieme sarebbero uno di troppo. */
-  { id: 'mente', nome: 'La cassa rotta',         emoji: '🧠',
+  { portata: 70, scuola: 'numeri', id: 'mente', nome: 'La cassa rotta',         emoji: '🧠',
     dritta: 'La cassa non calcola più: guarda la spesa, guarda con cosa paga, e il resto contalo tu. Metti le monete e premi ✓.',
     tappe: ['frutta', 'forno', 'verdura', 'frigo', 'dolci'],
     passo: 5, articoli: [3, 4], tempo: [95, 80], pezzi: [2, 4], copie: 1,
@@ -182,6 +190,12 @@ export function tappaDi(camp, n) {
            passo: camp.passo, articoli: camp.articoli, monete: camp.monete,
            pezzi: camp.pezzi, copie: camp.copie, mente: !!camp.mente }
 }
+
+/* la fila di tutte le tappe con addosso il livello della loro giornata:
+   è quello che `data/portata.js` si aspetta di ricevere */
+export const FILA = CAMPAGNE.flatMap(c =>
+  c.tappe.map((banco, n) => ({ banco, n, campagna: c.id,
+                               portata: c.portata, scuola: c.scuola })))
 
 export const quanteTappe = camp => (camp.libera ? Infinity : camp.tappe.length)
 

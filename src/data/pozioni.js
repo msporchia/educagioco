@@ -152,39 +152,54 @@ export function taratura(lv) {
 
 export const CUORI = 3, CUORI_MAX = 5
 
+/* `portata` sulla scala 0-100 di `data/portata.js`: il laboratorio è il
+   gioco che sta più in alto di tutti — mezzo litro in millilitri, due
+   etti in grammi — e comincia dove gli altri finiscono. `scuola:
+   'conversioni'` non ripete il `serve:` che il gioco ha già in
+   `data/giochi.js`: quello dice «senza conversioni non si può giocare»,
+   questo dice «a chi le conversioni le ha fatte da un pezzo, questa
+   tappa non serve più». */
 const RACCONTO = [
   { id: 'bilancia', nome: 'La bilancia', emoji: '⚖️',
+    portata: 62, scuola: 'conversioni',
     dritta: 'La ricetta parla di chili, la bilancia conta in grammi.',
     scale: ['kg-g'], passo: 50, ingredienti: 1, clienti: 5, esigenti: 0 },
 
   { id: 'peso', nome: 'Il peso giusto', emoji: '🧂',
+    portata: 64, scuola: 'conversioni',
     dritta: 'Arriva l\'ettogrammo: cento grammi, uno scalino solo sotto il chilo.',
     scale: ['kg-g', 'hg-g'], passo: 25, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'righello', nome: 'Il righello', emoji: '📏',
+    portata: 66, scuola: 'conversioni',
     dritta: 'Si taglia invece di pesare. Un metro sono cento centimetri.',
     scale: ['m-cm'], passo: 50, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'sarto', nome: 'Il metro da sarto', emoji: '🎗️',
+    portata: 69, scuola: 'conversioni',
     dritta: 'Roba corta, da millimetri: dieci in un centimetro.',
     scale: ['m-cm', 'cm-mm'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'caraffa', nome: 'La caraffa', emoji: '🫙',
+    portata: 72, scuola: 'conversioni',
     dritta: 'Si versa. Un litro sono mille millilitri, come il chilo coi grammi.',
     scale: ['l-ml'], passo: 25, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'boccette', nome: 'Le boccette', emoji: '🧪',
+    portata: 75, scuola: 'conversioni',
     dritta: 'Il centilitro sta in mezzo: cento in un litro, dieci millilitri l\'uno.',
     scale: ['l-ml', 'l-cl', 'cl-ml'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 2 },
 
   /* Il salto vero: due ingredienti della stessa pozione chiedono due
      attrezzi diversi, e la testa deve cambiare mestiere a metà ricetta. */
   { id: 'pesoemisura', nome: 'Peso e misura', emoji: '⚖️📏',
+    portata: 78, scuola: 'conversioni',
     dritta: 'Pesare e tagliare nella stessa pozione. Occhio a decimetri e millimetri.',
     scale: ['kg-g', 'hg-g', 'm-cm', 'm-mm', 'dm-cm'], passo: 10,
     ingredienti: 3, clienti: 6, esigenti: 2 },
 
   { id: 'calderone', nome: 'Il grande calderone', emoji: '🔮',
+    portata: 80, scuola: 'conversioni',
     dritta: 'Tutte e nove le conversioni, e i numeri con due decimali.',
     scale: SCALE.map(s => s.id), passo: 5, passoFine: 1,
     ingredienti: 3, clienti: 7, esigenti: 2 },
