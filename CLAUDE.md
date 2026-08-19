@@ -271,6 +271,50 @@ committate: non è ricostruibile da git.
   trascinare. Il PNG non si tocca mai: le correzioni sono dato nel
   foglietto (`strumenti/sprite/FORMATO.md`), e chi salva è un plugin di
   Vite `apply: 'serve'` che nel build non esiste.
+- **`src/guide/`** — quello che nessuno legge nel README, messo dentro
+  l'applicazione. `contenuti.js` è dato puro e ha due registri: `GUIDE`
+  (per i grandi: installare l'app, l'età, la difficoltà, i progressi) e
+  `AIUTI` (uno per gioco, dietro il `?` della barra). **«Come funziona»
+  sta fuori dal codice dei genitori**, ed è la regola da non rompere: la
+  prima guida spiega come si installa, e la legge chi ha appena ricevuto
+  il link da un'altra famiglia — dietro il tastierino la leggerebbe solo
+  chi non ne ha bisogno. Un gioco mette il suo `?` scrivendo
+  `guida="<chiave della schermata>"` sulla `Barra`; se in `AIUTI` non c'è
+  quella chiave il tasto non compare, perché un `?` che apre un foglio
+  vuoto è peggio di nessun `?`. Chi ha un orologio che gira ascolta
+  `@aiuto` e si ferma (il tower defense e la corsa lo fanno). Il grassetto
+  si scrive `**così**`: dentro un dato non ci va HTML.
+  **Il `?` non si apre mai da solo**, ed è stato provato il contrario: il
+  foglio che si presenta al primo ingresso di un gioco. Un velo che
+  compare all'apertura i bambini lo chiudono per riflesso senza leggerlo,
+  e in cambio si insegna proprio quello — che i cartelli si mandano via.
+  O si fa un tutorial dentro la partita, o si lascia il tasto e basta.
+  Il posto dove insegnare giocando è **la riga dei primi passi**
+  del tower defense (`.primi-passi`, `views/castello/td.css`): sta in
+  fondo al campo durante la prima partita in assoluto, non blocca niente,
+  non si può chiudere per sbaglio e dice il pezzo che dal campo non si
+  vede — che le torri si pagano coi conti. Sparisce quando la prima torre
+  è in piedi, e non torna (`settings.guideViste`, per bambino).
+  **Il banco di prova le salta** (`saltaLeSpiegazioni`, acceso da
+  `apriGioco`): un test rigioca la stessa «prima volta» a ogni giro — chi
+  vuole provarla chiede `apriGioco(browser, { spiegazioni: true })`.
+  **L'indirizzo pubblico non si legge da `location`** (`guide/aiuto.js`,
+  `__INDIRIZZO__` scritto dal build): in casa il gioco arriva dal server
+  di casa, e condividere quell'indirizzo manda a un'altra famiglia una
+  pagina che non esiste.
+- **`src/aggiornamento.js`** — «c'è una versione nuova». Il service
+  worker si aggiorna da sé, ma **la pagina già aperta resta quella di
+  prima**, e su un telefono installato può restare aperta per giorni:
+  qui si sorveglia (`reg.update()` ogni mezz'ora) e si accende un ref.
+  Due cose che non fa, ed è deliberato: **non ricarica da solo** (un
+  reload in mezzo a un'ondata butta via la partita) e **non si mostra
+  dentro un gioco** — il nastro vive solo in home, dove non c'è niente
+  da perdere. Il cartello sta in `guide/Nastri.vue` insieme a quello
+  dell'installazione: parlano tutti e due al grande e vivono nello
+  stesso posto. La regola dei tre `serveIlNastro` (non installata ·
+  telefono · non già rifiutato) è una funzione pura in `guide/aiuto.js`
+  perché altrimenti non si potrebbe provare senza un telefono in mano —
+  `apriGioco(browser, { userAgent })` è nato per questo.
 - **`src/incidenti.js`** — la rete di sicurezza: un errore, ovunque
   scatti, finisce in archivio sotto `incidenti` (fuori dai profili, come
   il codice dei genitori) e mette a schermo un cartello in DOM puro —

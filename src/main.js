@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { installa, riparaSeChiesto } from './incidenti.js'
 import { avviaGiudizi } from './store/giudizi.js'
+import { sorveglia } from './aggiornamento.js'
 import './style.css'
 
 /* `#ripara` prima di tutto: se si è qui per buttare via una copia
@@ -21,14 +22,9 @@ if (!riparaSeChiesto()) {
   app.mount('#app')
 }
 
-/* Il service worker: solo se i giochi arrivano da un sito.
-   Da `file://` non si registra e non si può — il browser lo vieta — ed è
-   giusto così: il file unico è già tutto lì dentro, non ha niente da
-   mettere in cache. Se la registrazione fallisce non si dice niente a
-   nessuno: vuol dire che si gioca senza offline, non che il gioco è
-   rotto, e un bambino non saprebbe cosa farsene dell'avviso. */
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* pazienza */ })
-  })
-}
+/* Il service worker: solo se i giochi arrivano da un sito, e da
+   `file://` non si registra affatto — il file unico è già tutto lì
+   dentro. Adesso non si limita a registrarlo: **sorveglia** anche se il
+   sito ne serve uno più nuovo, perché una pagina installata può restare
+   aperta per giorni e non se ne accorgerebbe mai (`aggiornamento.js`). */
+sorveglia()
