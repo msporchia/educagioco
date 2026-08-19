@@ -4,7 +4,7 @@
 
    `data/saperi.js` elenca i gruppi grossi («Accenti e apostrofi») e i
    moduli dichiarano le tipologie che ci stanno dentro (l'accento,
-   l'apostrofo, la lettera h, l'accento tonico). Le due parti non si
+   l'apostrofo, la lettera h). Le due parti non si
    conoscono apposta: un modulo nuovo porta le sue tipologie e compare
    nel dettaglio la sera stessa, senza che nessuno vada ad aggiornare un
    elenco a mano.
@@ -30,6 +30,12 @@
 import { MODULI } from './nucleo/registro.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { sorgentiDi, esempioDi as esempioFra } from './nucleo/esempi.js'
+import { finestraDi } from './nucleo/classi.js'
+
+/* l'età di chi guarda diventa le stesse regole che si passano in
+   partita: un solo posto dove si traduce, così il ▶ di un riquadro e la
+   domanda che arriva davvero non possono divergere */
+const regoleDi = eta => eta == null ? null : { eta, finestra: finestraDi(eta) }
 
 
 /* le tipologie che un gruppo si porta dietro, nell'ordine in cui i
@@ -70,5 +76,7 @@ export const TIPI = MODULI.flatMap(m => m.tipi.map(t => ({ ...t, dove: m.id })))
    `siPuoProvare` è quello che la schermata guarda per decidere se
    mostrare il tasto: `divisioni` non passa da nessun modulo (vive nel
    castello) e per quella carta il tasto non deve esserci. */
-export const siPuoProvare = chiave => sorgentiDi(MODULI, chiave).length > 0
-export const esempioDi = (chiave, sorte = sorteQualunque()) => esempioFra(MODULI, chiave, sorte)
+export const siPuoProvare = (chiave, eta = null) =>
+  sorgentiDi(MODULI, chiave, regoleDi(eta)).length > 0
+export const esempioDi = (chiave, sorte = sorteQualunque(), eta = null) =>
+  esempioFra(MODULI, chiave, sorte, regoleDi(eta))

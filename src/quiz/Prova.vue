@@ -120,8 +120,15 @@ function pesca() {
     return esempioDa(c.sorgente, sorteQualunque())
   }
   if (props.sorgente) return esempioDa(props.sorgente, sorteQualunque())
+  /* Una voce **e** un'età vogliono dire «di questo gruppo, quello che a
+     lui arriva»: il gruppo è largo — «i numeri e le quantità» va dal
+     colpo d'occhio ai numeri a tre cifre — e mostrare a un bambino di
+     quattro anni la domanda da otto e mezzo chiede al grande di
+     giudicare una cosa che non succederà. L'ordine conta: senza chiave
+     l'età vuol dire l'altro modo, «cosa becca in partita». */
+  if (props.chiave) return esempioDi(props.chiave, sorteQualunque(), props.eta)
   if (props.eta !== null) return pescaComeUnGioco(props.eta)
-  return esempioDi(props.chiave)
+  return null
 }
 
 function unAltra() {
@@ -168,7 +175,9 @@ onMounted(unAltra)
       <!-- non dovrebbe succedere: il tasto per arrivare qui compare
            solo dove `siPuoProvare` è vero. Se succede lo dice, invece
            di lasciare un rettangolo nero. -->
-      <p v-else class="prova-niente">Di questa voce non c'è nessuna domanda da mostrare.</p>
+      <p v-else class="prova-niente">{{ chiave && eta !== null
+        ? 'A quest\'età non gli arriva nessuna domanda di questo gruppo.'
+        : 'Di questa voce non c\'è nessuna domanda da mostrare.' }}</p>
     </div>
 
     <div class="prova-piede">

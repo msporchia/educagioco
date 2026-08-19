@@ -28,7 +28,12 @@
    quello che `unita/saperi` può controllare che **ogni** voce che un
    genitore vede sulla schermata sappia produrre la sua domanda. Un
    esempio che non esce è un interruttore che il genitore non capirà.
+
+   L'unico import è `adatta`, che è la riga con cui si decide chi entra
+   nel mazzo: rifarla qui vorrebbe dire due copie dello stesso taglio, e
+   due copie divergono senza che niente diventi rosso.
    ═══════════════════════════════════════════════════════════════════ */
+import { adatta } from './classi.js'
 
 /* ── dove nasce una domanda che dà per scontato `chiave` ──
    Una sorgente è la terna (modulo, grado, tipologia) — cioè tutto
@@ -39,16 +44,32 @@
    convivono: i moduli con i `tipi` dicono il sapere tipologia per
    tipologia, quelli senza (l'orologio, le misure, la griglia) lo dicono
    grado per grado. Chi chiede non deve sapere quale dei due sta
-   guardando. */
-export function sorgentiDi(moduli, chiave) {
+   guardando.
+
+   ── E L'ETÀ TAGLIA ANCHE QUI ──
+   `regole` è la stessa cosa che riceve chi pesca in partita
+   (`{ finestra, ritocchi }`), e senza è come prima: tutte le sorgenti.
+   Con, restano solo quelle che a quel bambino arriverebbero davvero — ed
+   è la correzione di un difetto che si vedeva solo dal riquadro dei
+   grandi. «I numeri e le quantità» dato per scontato a quattro anni
+   apriva *Indovina il numero*, che è dichiarata otto anni e mezzo: al
+   grande si chiedeva di giudicare se suo figlio sappia una cosa
+   facendogli vedere una domanda che a suo figlio non arriverà per altri
+   quattro anni. Il gruppo è largo — dal colpo d'occhio ai numeri a tre
+   cifre — e quello che di quel gruppo si dà per scontato **adesso** è
+   solo il suo fondo. */
+export function sorgentiDi(moduli, chiave, regole = null) {
   const fuori = []
+  const dentro = (m, g, t) => !regole?.finestra ||
+    adatta(t ? m.livelloVistoDelTipo(t, g, regole) : m.livelloVisto(g, [], regole),
+           regole.finestra)
   for (const m of moduli) {
     for (let g = 1; g <= m.gradi; g++) {
       if (m.tipi.length) {
         for (const t of m.tipiDi(g))
-          if (t.chiave === chiave || t.sa.includes(chiave))
+          if ((t.chiave === chiave || t.sa.includes(chiave)) && dentro(m, g, t))
             fuori.push({ modulo: m, grado: g, tipo: t.chiave, nome: t.nome })
-      } else if (m.serve(g).includes(chiave)) {
+      } else if (m.serve(g).includes(chiave) && dentro(m, g, null)) {
         /* senza tipi il sapere è di tutto il grado: la riga di scaletta
            è il nome più preciso che c'è */
         fuori.push({ modulo: m, grado: g, tipo: null, nome: m.scaletta[g - 1] })
@@ -81,8 +102,8 @@ export function esempioDa(sorgente, sorte) {
   }
 }
 
-export function esempioDi(moduli, chiave, sorte) {
-  const dove = sorgentiDi(moduli, chiave)
+export function esempioDi(moduli, chiave, sorte, regole = null) {
+  const dove = sorgentiDi(moduli, chiave, regole)
   if (!dove.length) return null
   return esempioDa(sorte.uno(dove), sorte)
 }

@@ -32,6 +32,7 @@ import { GIOCHI, serveA } from '../../src/data/giochi.js'
 import { Sorte } from '../../src/quiz/nucleo/sorte.js'
 import { classiDi, pescaClasse } from '../../src/quiz/nucleo/classi.js'
 import { sorgentiDi, esempioDa, esempioDi } from '../../src/quiz/nucleo/esempi.js'
+import { finestraDi } from '../../src/quiz/nucleo/classi.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CARTELLA = resolve(RADICE, 'src/quiz/moduli')
@@ -366,5 +367,51 @@ for (const s of SAPERI) {
 uguale('nessun gruppo di sapere è rimasto senza domande da far vedere',
        senzaEsempio.join(','), '')
 nota(`esempi: ${TIPI.length} tipologie e ${SAPERI.length - senzaEsempio.length} gruppi su ${SAPERI.length} sanno mostrarsi`)
+
+/* ── E IL ▶ MOSTRA UNA DOMANDA DI QUEL BAMBINO ──
+   Un gruppo di sapere è largo: «i numeri e le quantità» va dal colpo
+   d'occhio sui pallini (dichiarato quattro anni) ai numeri a tre cifre
+   (otto e mezzo). Il tasto di prova pescava fra tutte le sue sorgenti,
+   quindi al grande che stava decidendo l'età di un bambino di quattro
+   anni poteva uscire la domanda da otto e mezzo — gli si chiedeva di
+   giudicare se suo figlio sappia una cosa mostrandogli quello che a suo
+   figlio non arriverà per anni.
+
+   Con la finestra, restano le sorgenti che a quell'età arriverebbero
+   davvero. È la stessa `finestraDi` della partita: se qui si rifacesse
+   il conto, le due copie divergerebbero senza che niente diventi
+   rosso. */
+{
+  const livelloDi = s => s.tipo
+    ? s.modulo.livelloDelTipo(s.modulo.tipiDi(s.grado).find(t => t.chiave === s.tipo), s.grado)
+    : s.modulo.livelli[s.grado - 1]
+
+  for (const eta of [4, 6, 9]) {
+    const finestra = finestraDi(eta)
+    const fuori = []
+    for (const sap of SAPERI) {
+      for (const s of sorgentiDi(moduli, sap.chiave, { eta, finestra })) {
+        const l = livelloDi(s)
+        if (l < finestra[0] || l > finestra[1])
+          fuori.push(`${sap.chiave}: ${s.modulo.id} g${s.grado} a ${l}`)
+      }
+    }
+    uguale(`a ${eta} anni il ▶ non apre niente fuori dalla sua finestra`,
+           fuori.join(' · '), '')
+  }
+
+  /* e il taglio morde davvero: a quattro anni il gruppo dei numeri ha
+     meno sorgenti di quante ne abbia in tutto */
+  const tutte = sorgentiDi(moduli, 'numeri').length
+  const a4 = sorgentiDi(moduli, 'numeri', { eta: 4, finestra: finestraDi(4) }).length
+  controlla('a 4 anni «i numeri e le quantità» mostra solo il suo fondo',
+            a4 > 0 && a4 < tutte, `${a4} sorgenti su ${tutte}`)
+  nota(`«i numeri e le quantità»: ${tutte} sorgenti in tutto, ${a4} a quattro anni`)
+
+  /* Senza finestra non cambia niente per chi non la passa: la schermata
+     dei grandi che guarda il catalogo intero vuole vedere tutto. */
+  uguale('senza età si torna a vederle tutte',
+         sorgentiDi(moduli, 'numeri', null).length, tutte)
+}
 
 riassunto('i macrogruppi di sapere')
