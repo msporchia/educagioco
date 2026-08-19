@@ -437,6 +437,70 @@ fratello; su un profilo che c'è già si rimette dalla carta di chi gioca
 conferma. Quali giochi tenere lo dicono i manifesti con `piccoli: true`
 e `grandi: true`, le due estremità: nessun elenco da mantenere a mano.
 
+### Quanto è difficile una tappa, e a chi si offre
+
+**Le domande di quiz avevano una scala, le campagne no.** Un modulo di
+quiz dichiara `livelli:` (uno per grado) e da lì si sa a chi arriva; una
+campagna era una fila sola per tutti, e chi arrivava grande si macinava
+le prime tappe per delle sere. Il caso che ha fatto nascere questo:
+**a nove anni «2×2» non ha senso, a sei «7×8» nemmeno, a otto vanno bene
+tutti e due.**
+
+Adesso ogni tappa di ogni campagna porta **`portata`**, un numero sulla
+stessa scala 0–100 delle domande (0 = quattro anni, 100 = dodici, 12,5
+punti per anno). Il conto sta in `src/data/portata.js` e il ponte con i
+giochi in `src/data/portata-giochi.js`; `test/unita/portata` li tiene
+fermi.
+
+**Si chiama `portata` e non `livello` perché `livello` era già preso** —
+una tappa del Dungeon ce l'ha da sempre e vuol dire la potenza a cui si
+scende (`giochi/dungeon/motore/corsa.js`). Scriverci sopra un numero
+0–100 non dava nessun errore: rendeva solo i mostri imbattibili. Un nome
+nuovo si cerca **anche nei motori**, non solo nei dati.
+
+**La larghezza è la mira, non l'ammissione**, e non è la stessa scelta
+dei quiz. Di là il taglio netto è ammorbidito da `pesoDi` — una classe a
+tre anni dal bersaglio pesa il 2%, esiste ma capita di rado — e per
+questo l'ammissione può permettersi di essere larga. In una campagna
+quella campana non c'è: c'è una fila che si macina tutta, e non esiste
+un «2% delle volte». Con l'ammissione (a nove anni `[18,5–87,5]`) la
+tabellina del 2, che sta a 40, resterebbe dentro: il difetto di partenza,
+intatto.
+
+**Nessuna tappa esce mai dalla fila.** Cambia solo il cancello:
+`PASSATA` (sotto: nasce già aperta, «l'hai già passato» invece di «non
+ce l'hai»), `IN_PORTATA`, `AVANTI` (sopra: chiusa, e il cartello dice che
+arriva più avanti — non «campagna finita», che sarebbe una bugia). Non è
+gentilezza: `profile.campagne[<chiave>]` è **un indice**, e una fila che
+si accorcia in testa sposta l'avanzamento di tutti senza che scatti
+niente.
+
+**La testa si taglia solo a quello che la scuola ha già dato.** `2×2` a
+nove anni è tempo perso; `dog` a dieci anni no — nessuna scuola gliel'ha
+data e il gioco è l'unica fonte. Il confine è `scuola: '<chiave di
+data/saperi.js>'` sulla tappa: chi non lo dichiara non si taglia mai in
+testa. E siccome i saperi si spengono per bambino, **un sapere spento fa
+tornare la testa**: se un grande ha tolto le moltiplicazioni, quelle
+tappe servono di nuovo.
+
+**Un gioco cominciato non sparisce mai.** La portata decide *cosa si
+offre a chi arriva*, non cosa si toglie a chi c'è già: `giaProvato()` lo
+legge da `albo.provato`, che era già nei manifesti per il traguardo
+«Tuttofare». Un gioco che c'era e un giorno non c'è più è peggio di un
+gioco che non serve.
+
+**`piccoli`/`grandi` NON si derivano dalla portata**, ed è stato provato:
+sono due assi diversi. La portata dice *quanto è difficile*; `piccoli`
+dice *non chiede di leggere e non si può perdere*. Un bambino di cinque
+anni sta dentro la portata di Survivors — schivare si sa fare — ma
+Survivors si perde. I due meccanismi si affiancano: le partenze
+accendono alla creazione, la portata filtra in continuo, e non si
+contraddicono.
+
+Fuori dal giudizio restano i giochi **senza campagna** — la fattoria, la
+cameretta: sono posti, non scalette, e l'assenza vuol dire «non si
+giudica», non «si nasconde».
+
 ### Il codice dei genitori
 
 `store/pin.js`: quattro cifre, di partenza `0000`. Sta nell'archivio accanto
