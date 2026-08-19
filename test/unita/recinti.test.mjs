@@ -239,17 +239,26 @@ for (const v of RECINTI) {
   nota(`la catena: ${coltura.emoji} ${coltura.nome} → ${mezzo.emoji} ${mezzo.nome}` +
        ` → ${finale.emoji} ${finale.nome}`)
 
-  /* il campo, quante volte serve per riempire una macinata */
+  /* Si gira finché non c'è abbastanza mangime per il recinto, e i giri
+     **non si contano a mano**: da quando ogni passo rende una cosa sola
+     (`RESA`) il numero di raccolti per un uovo è una moltiplicazione
+     che cambia ogni volta che si ritocca una dose. Il test la fa, non
+     la sa. */
   let quando = T0
-  while (f.quantoHo(terra) < mezzo.prende[terra]) {
-    controlla('si semina', f.seminaCampo(campo, coltura.id, quando).ok)
-    quando += coltura.minuti * MINUTO + 1
-    controlla('e si raccoglie', f.raccogli(campo, quando).ok)
+  let giri = 0
+  while (f.quantoHo(mangime) < finale.prende[mangime]) {
+    while (f.quantoHo(terra) < mezzo.prende[terra]) {
+      controlla('si semina', f.seminaCampo(campo, coltura.id, quando).ok)
+      quando += coltura.minuti * MINUTO + 1
+      controlla('e si raccoglie', f.raccogli(campo, quando).ok)
+    }
+    controlla('il fienile parte', f.avvia(fienile, mezzo.id, quando).ok)
+    quando += mezzo.minuti * MINUTO + 1
+    controlla('e rende il mangime', f.ritira(fienile, quando).ok)
+    giri++
   }
-  controlla('il fienile parte', f.avvia(fienile, mezzo.id, quando).ok)
-  quando += mezzo.minuti * MINUTO + 1
-  controlla('e rende il mangime', f.ritira(fienile, quando).ok)
-  uguale(`e il mangime è in granaio`, f.quantoHo(mangime), mezzo.resa)
+  nota(`per ${finale.prende[mangime]} ${mangime} ci sono voluti ${giri} giri di fienile` +
+       ` e ${giri * mezzo.prende[terra]} raccolti di ${terra}`)
 
   /* la merce che il recinto aspetta è **quella**, e lo dice al fumetto */
   uguale('il recinto chiede proprio quello che il fienile ha fatto',

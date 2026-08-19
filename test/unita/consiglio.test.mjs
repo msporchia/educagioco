@@ -71,7 +71,7 @@ const posa = (f, id, x, y) => {
      come una seconda cosa. Il numero e il nome, invece, non possono
      contraddire nessun disegno. */
   controlla('e dice quanto grano manca, per nome',
-            /3 grano/.test(senzaCampi.testo), senzaCampi.testo)
+            /\d+ grano/.test(senzaCampi.testo), senzaCampi.testo)
 
   const campo = posa(f, 'orto', 14, 20)
   const conCampo = comeAvere(f, 'mangime', T0)

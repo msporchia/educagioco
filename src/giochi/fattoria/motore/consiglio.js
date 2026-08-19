@@ -77,6 +77,17 @@ const nomeDi = id => (PER_ID[id] || {}).nome || 'quella cosa'
    nessun disegno a contraddirla: le colture (la cassa di carote e la
    carota si somigliano) e le monete. */
 const merce = id => roba(id).nome.toLowerCase()
+
+/* ── LE RICETTE CHE ESISTONO **PER CHI GIOCA** ────────────────────
+   `RICETTE` è la tabella intera; quella che si può fare adesso è un
+   sottoinsieme, perché una ricetta compare col suo livello
+   (`dati/coltivazioni.js`, campo `liv`). Consigliarne una che il
+   bambino non ha ancora aperto manda a cercare un tasto che nel
+   pannello non c'è: «il grano è pieno, usalo nel fienile» detto a chi
+   nel fienile ha solo il foraggio di carote. È lo stesso conto che fa
+   il pannello di una macchina (`ricetteDi`), e va fatto qui per lo
+   stesso motivo. */
+const leRicette = f => RICETTE.filter(r => (r.liv || 1) <= f.livello)
 /* «nel mulino», ma «nell'ovile». L'apostrofo davanti alla vocale non è
    pignoleria da grammatici: queste frasi le legge ad alta voce un
    genitore a un bambino che sta imparando a leggere, e «nel ovile» è
@@ -163,7 +174,7 @@ export function comeAvere(f, prodotto, ora = Date.now(), giri = GIRI) {
      dall'ovile e dalla conigliera) si guardano tutte, e vince la prima
      che si può fare **davvero**: consigliare l'ovile a chi ha solo la
      conigliera manda a spendere il triplo per niente. */
-  const ricette = RICETTE.filter(r => r.da === prodotto)
+  const ricette = leRicette(f).filter(r => r.da === prodotto)
   let ripiego = null
   for (const r of ricette) {
     const dalla = dallaMacchina(f, r, ora, giri)
@@ -315,7 +326,7 @@ export function comeFarePosto(f, prodotto, ora = Date.now()) {
   }
 
   /* Chi consuma questa roba, e può farlo adesso. */
-  const usa = RICETTE.filter(r => (r.prende || {})[prodotto])
+  const usa = leRicette(f).filter(r => (r.prende || {})[prodotto])
   for (const r of usa) {
     if (f.quantoHo(prodotto) < r.prende[prodotto]) continue
     const { ferme } = leMacchine(f, r.dove, ora)

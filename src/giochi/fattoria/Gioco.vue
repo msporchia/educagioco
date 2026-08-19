@@ -170,7 +170,20 @@ function avvisa(testo) { avviso.value = testo; setTimeout(() => { avviso.value =
    **stanno ferme** (vedi il giro di `muovi` sugli attori): una capra
    che non riparte più dopo che le hai guardato la scheda sembra
    incantata, e nessuno collega le due cose. */
-function chiudi() { pannello.value = null; scelto.value = null; punta.value = '' }
+/* Chiudere azzera anche **dove** si stava per mettere qualcosa: quella
+   cella vale per il baule che si è appena aperto tenendoci premuto
+   sopra, e non un minuto dopo. Senza questa riga la prima cosa presa
+   dal baule aperto col tasto in alto finirebbe dove si era tenuto
+   premuto la volta prima — un posto che chi gioca non sta nemmeno
+   guardando. */
+function chiudi() {
+  pannello.value = null; scelto.value = null; punta.value = ''
+  dovePosare = null
+}
+
+/* Il baule dal tasto in alto: nessuna cella da ricordare, e quella di
+   prima si butta. Il posto lo si sceglie dopo, come si è sempre fatto. */
+function apriIlBaule() { dovePosare = null; pannello.value = 'roba' }
 
 /* ═══════════ nascere ═══════════ */
 onMounted(() => {
@@ -809,7 +822,28 @@ function prendi(voce, da, p, opz = {}) {
      scelta è già stata fatta, e si posa lì. Solo se ci sta davvero —
      `muoviSuCella` lo dice — se no la cosa resta appesa al dito come
      sempre, e la si mette dove si vuole. */
-  if (dove && muoviSuCella(dove.x, dove.y) && preso.ok) return posaPreso()
+  if (!dove || !muoviSuCella(dove.x, dove.y) || !preso.ok) return
+
+  /* ── E QUI IL DITO SI LASCIA DIETRO UN CLICK ──────────────────────
+     Il guasto è quello scritto in CLAUDE.md, preso in pieno: posare
+     subito può **far comparire un foglio esattamente sotto il dito** —
+     una bestia comprata chiede il nome — e un attimo dopo arriva il
+     click fantasma di quello stesso tocco. Va a finire sul velo appena
+     nato, che si chiude da sé (`@click.self`): il foglio sparisce e
+     l'animale non si compra più. Da fuori è «tocco l'animale, mi si
+     chiude la schermata e non riesco a metterlo».
+
+     Prima non capitava perché premere nel baule non apriva niente:
+     lasciava la cosa appesa al dito, e il fantasma cadeva sul prato
+     dove non fa niente. Col mouse non capita affatto, ed è il motivo
+     per cui questi guasti si vedono solo dal telefono.
+
+     `opz.clic` sono le coordinate **dello schermo** (non della tela):
+     `zittisciIlFantasma` confronta con `clientX/clientY`, e passargli
+     quelle della tela avrebbe ingoiato il click sbagliato — cioè
+     nessuno. */
+  if (opz.clic) zittisciIlFantasma(opz.clic.x, opz.clic.y)
+  posaPreso()
 }
 
 /* Come `muoviPreso`, ma partendo da una **cella** invece che da un
@@ -1313,7 +1347,7 @@ function prendiUnaBestia({ bestia, x, y }) {
   if (bestia.prezzo > monete.value)
     return avvisa(`Ti servono ${bestia.prezzo - monete.value} monete in più.`)
   prendi(null, null, { x: x - riquadro().left, y: y - riquadro().top },
-         { bestia: { chi: bestia.chi, compra: bestia }, pronto: false })
+         { bestia: { chi: bestia.chi, compra: bestia }, pronto: false, clic: { x, y } })
 }
 
 /* Toccare una bestia mostra **come sta**, non chiede il nome: il nome
@@ -1399,7 +1433,7 @@ function giaPosati() {
 function tiraVoce({ voce, x, y }) {
   pannello.value = null
   const r = riquadro()
-  prendi(voce, null, { x: x - r.left, y: y - r.top }, { pronto: false })
+  prendi(voce, null, { x: x - r.left, y: y - r.top }, { pronto: false, clic: { x, y } })
 }
 </script>
 
@@ -1424,7 +1458,7 @@ function tiraVoce({ voce, x, y }) {
         ⭐ {{ avanza.livello }}
         <i><u :style="{ width: Math.round(avanza.quanto * 100) + '%' }"></u></i>
       </button>
-      <button class="fa-tondo" title="il baule" @click="pannello = 'roba'">📦</button>
+      <button class="fa-tondo" title="il baule" @click="apriIlBaule">📦</button>
     </div>
 
     <p v-if="avviso" class="fa-avviso">{{ avviso }}</p>

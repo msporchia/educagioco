@@ -78,16 +78,17 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
           <Merce :merce="k.da" :lato="44" />
           <span>{{ k.nome }}</span>
           <u>{{ k.ciSta < k.resa ? 'pieno · ' + k.hai : 'ne hai ' + k.hai }}</u>
-          <em>🪙{{ k.semina }} · {{ k.minuti }} min</em>
+          <em>{{ k.minuti }} min</em>
         </button>
       </div>
       <p v-if="senzaSilo" class="fa-piccolo">Ti servirà anche il <b>silo
          del raccolto</b> (🪙{{ prezzoSilo }}): è lì che finisce quello
          che raccogli, e senza non c'è dove metterlo.</p>
-      <p v-else class="fa-piccolo">Poi si raccoglie, e quello che viene
-         fuori finisce nel silo del raccolto: al fienile diventa mangime
+      <p v-else class="fa-piccolo">Seminare è gratis: <b>si paga
+         raccogliendo</b>, una monetina. Un campo dà <b>una</b> cosa, e
+         quella finisce nel silo del raccolto: al fienile diventa mangime
          per le bestie del cortile, al mulino pappa per il cane e il
-         gatto. <b>Il silo si guarda toccandolo.</b></p>
+         gatto.</p>
     </template>
 
     <!-- ── sta crescendo ── -->

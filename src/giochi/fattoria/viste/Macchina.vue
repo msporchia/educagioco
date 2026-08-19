@@ -93,7 +93,16 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
       <p v-if="bestie">Hanno fame. Dai loro il mangime che hai
          preparato, e dopo un po' ti danno qualcosa in cambio.</p>
       <p v-else>Metti dentro quello che hai raccolto e ne esce da
-         mangiare per i tuoi animali.</p>
+         mangiare per i tuoi animali. <b>Scegli cosa preparare.</b></p>
+      <!-- Nessuna ricetta: non dev'essere mai possibile — una macchina
+           che arriva prima del suo primo lavoro è un tasto rotto che si
+           è pagato, e `guastiDegliSblocchi` lo rifiuta — ma se succede
+           il foglio lo **dice**, invece di restare muto sotto una frase
+           che promette qualcosa. Il vuoto senza spiegazione è la cosa
+           che fa credere che il gioco sia rotto. -->
+      <p v-if="!ricette.length" class="fa-piccolo">Qui per adesso non c'è
+         niente da preparare: le ricette arrivano coi livelli della
+         fattoria.</p>
       <!-- ── LA RICETTA SI LEGGE COME UNA FRECCIA ──
            Quello che entra, quello che esce, e sotto il conto. Le figure
            sono quelle vere dell'atlante e sono grandi il doppio delle
@@ -165,10 +174,13 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
 
     <!-- ── pronto ── -->
     <template v-else>
+      <!-- Cosa sia lo dice la figura, quindi la frase non lo ripete:
+           «c'è 1 uovo» e «c'è 1 lana» vogliono due articoli diversi, e
+           una frase che si compone da sola sbaglia il genere di
+           qualcosa. -->
       <p class="fa-pronto"><Merce :merce="r.da" :lato="48" />
-         <b>È pronto!</b> Ci sono
-         {{ r.resa }} {{ prodotto(r.da).nome.toLowerCase() }} da portare via.
-         Ritirare non costa niente.</p>
+         <b>È pronto!</b> Puoi portarlo via, e ritirare non costa
+         niente.</p>
       <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
          <b>{{ silo.toLowerCase() }}</b> (🪙{{ prezzoSilo }}): senza, non c'è
          dove metterlo. Non si butta via niente.</p>

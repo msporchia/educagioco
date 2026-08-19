@@ -121,13 +121,24 @@ for (let l = 1; l <= ULTIMO; l++)
   controlla('il campo si posa', r.ok)
   uguale('e quello che è costato è esperienza', f.speso, r.costo)
 
-  /* Seminare, raccogliere, sgomberare: ogni moneta che esce di qui
+  /* Raccogliere, sgomberare, avviare: ogni moneta che esce di qui
      dentro conta. È il motivo per cui nel motore non si chiama più
-     `borsa.paga()` da nessuna parte. */
+     `borsa.paga()` da nessuna parte.
+
+     Si guarda **il raccolto** e non la semina: da quando un campo dà una
+     cosa sola, seminare è gratis e si paga raccogliendo — se no un
+     grano costerebbe due monete e la catena verrebbe più cara che
+     comprare (`dati/coltivazioni.js`). */
   const campo = r.cosa
+  /* Senza silo la capienza è **zero**, quindi non si raccoglie e non si
+     paga: è la regola dei campi, e qui serve solo a poter arrivare al
+     gesto che si vuole misurare. */
+  const dovesilo = f.cellaLibera(20, 20)
+  f.posa('silo', dovesilo.x, dovesilo.y)
   const prima = f.speso
   f.seminaCampo(campo, 'grano', 1000)
-  controlla('anche la semina conta', f.speso > prima)
+  controlla('si raccoglie', f.raccogli(campo, 1000 + 99 * 60000).ok)
+  controlla('e anche il raccolto conta', f.speso > prima)
 
   /* E non si scende: mettere via quello che hai comprato non
      disimpara niente. */

@@ -164,11 +164,16 @@ controlla('e dice che ci vuole del tempo vero',
           /tempo vero/i.test(await testoFoglio()))
 
 /* ---------- 3. si semina ---------- */
+/* **Seminare è gratis, si paga raccogliendo.** Da quando un campo dà una
+   cosa sola, farsi pagare due volte per un pezzo solo lo renderebbe più
+   caro che comprarlo (`dati/coltivazioni.js`). Il controllo è al
+   negativo apposta: è la riga che si farebbe rimettere per distrazione
+   la prossima volta che si ritocca un prezzo. */
 const primaDiSeminare = await monete()
 await page.locator('.fa-cibo', { hasText: 'Grano' }).first().click()
 await attendi(page, 500)
 uguale('seminato, il foglio si chiude', await page.locator('.fa-velo').count(), 0)
-controlla('e la semina si paga', await monete() < primaDiSeminare)
+uguale('e seminare non costa niente', await monete(), primaDiSeminare)
 
 await dito(dove.x, dove.y)
 await attendi(page, 400)

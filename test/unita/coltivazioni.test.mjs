@@ -262,12 +262,15 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   controlla('il mangime sta con gli animali', merciDi('stalla').includes('mangime'))
   controlla('e il pastone pure', merciDi('stalla').includes('pastone'))
 
-  f.metti('grano', 3)
+  /* Quanto ne prende **lo dice la ricetta**: scritto a mano, questo
+     controllo diventa rosso il giorno che il mangime cambia dose, per
+     una ragione che coi due silos non c'entra niente. */
+  f.metti('grano', PER_RICETTA.mangime.prende.grano)
   const prima = f.quantoHoNelSilo('terra')
   f.avvia(mulino, 'mangime', T0)
   f.ritira(mulino, fra(PER_RICETTA.mangime.minuti))
   uguale('macinare svuota il silo del raccolto per intero',
-         f.quantoHoNelSilo('terra'), prima - 3)
+         f.quantoHoNelSilo('terra'), prima - PER_RICETTA.mangime.prende.grano)
   uguale('e il mangime è finito di là', f.quantoHo('mangime'), PER_RICETTA.mangime.resa)
 }
 
@@ -486,7 +489,7 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 {
   const { f, campo, mulino } = conCampoEMulino()
   f.seminaCampo(campo, 'mais', T0)
-  f.metti('grano', 3)
+  f.metti('grano', PER_RICETTA.mangime.prende.grano)
   f.avvia(mulino, 'mangime', T0)
 
   const g = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })

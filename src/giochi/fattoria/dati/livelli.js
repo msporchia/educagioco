@@ -158,8 +158,7 @@ export const NOMI = {
   1: 'Il primo campo',
   2: 'Il primo amico',
   3: 'Il mulino',
-  4: 'Il fienile',
-  5: 'I conigli',
+  5: 'Il fienile e i conigli',
   8: 'Le galline',
   10: 'Il pastone',
   12: 'Le pecore',
@@ -295,6 +294,28 @@ export function livelloDellaRicetta(r, giri = 4) {
    anche di quelle che funzionano. */
 export function guastiDegliSblocchi() {
   const g = []
+  /* ── E UNA MACCHINA NON ARRIVA PRIMA DEL SUO PRIMO LAVORO ────────
+     Il difetto gemello, e trovato allo stesso modo — giocando. Il
+     fienile si comprava al livello 4 e la sua prima ricetta arrivava al
+     5: per un livello intero era una macchina da 150 monete che, aperta,
+     diceva «metti dentro quello che hai raccolto» e sotto non aveva
+     niente. Il controllo qui sopra non lo vedeva, perché guarda le
+     ricette una per una e quella ricetta era in regola: è **la
+     macchina** a essere in anticipo.
+
+     La domanda giusta è quindi la simmetrica: esiste almeno una ricetta
+     che si possa fare il giorno stesso in cui la macchina compare? */
+  for (const v of CATALOGO) {
+    if (!v.macchina) continue
+    const sue = RICETTE.filter(r => r.dove === v.macchina)
+    if (!sue.length) continue          // lo dice già il catalogo
+    const quando = livelloDellaVoce(v)
+    const prima = Math.min(...sue.map(r => livelloDellaRicetta(r)))
+    if (prima > quando)
+      g.push(`${v.id}: si compra al livello ${quando} e la sua prima ricetta ` +
+             `arriva al ${prima} — sarebbe una macchina vuota per ` +
+             `${prima - quando} livell${prima - quando === 1 ? 'o' : 'i'}`)
+  }
   for (const r of RICETTE) {
     const quando = r.liv || 1
     for (const k of Object.keys(r.prende || {})) {

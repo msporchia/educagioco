@@ -181,34 +181,34 @@ const CRESCE = coltura => Array.from({ length: 7 }, (_, i) => `campo_${coltura}$
    sarebbe roba che riempie il silo senza servire a niente — che è il
    modo di far sembrare rotto un gioco che funziona. */
 export const COLTURE = [
-  /* L'erba medica è la più veloce e la meno cara, e non è cibo per
-     nessuno: serve ai recinti, che è il modo di dire «prima il fieno,
-     poi gli animali» senza scriverlo da nessuna parte. */
+  /* L'erba medica è la più veloce, e non è cibo per nessuno: serve al
+     fienile, che è il modo di dire «prima il fieno, poi gli animali»
+     senza scriverlo da nessuna parte. */
   {
     id: 'erba', liv: 12, nome: 'Erba medica', emoji: '🌿',
-    semina: 1, raccolta: 1, minuti: 8, resa: 4, da: 'fieno',
+    semina: 0, raccolta: 1, minuti: 4, resa: 1, da: 'fieno',
     stadi: CRESCE('erba'),
   },
   {
     id: 'grano', liv: 1, nome: 'Grano', emoji: '🌾',
-    semina: 2, raccolta: 2, minuti: 10, resa: 3, da: 'grano',
+    semina: 0, raccolta: 1, minuti: 5, resa: 1, da: 'grano',
     stadi: CRESCE('grano'),
   },
   {
     id: 'carote', liv: 5, nome: 'Carote', emoji: '🥕',
-    semina: 3, raccolta: 2, minuti: 12, resa: 3, da: 'carote',
+    semina: 0, raccolta: 1, minuti: 6, resa: 1, da: 'carote',
     stadi: CRESCE('carote'),
   },
   {
     id: 'mais', liv: 10, nome: 'Mais', emoji: '🌽',
-    semina: 2, raccolta: 2, minuti: 18, resa: 5, da: 'mais',
+    semina: 0, raccolta: 2, minuti: 8, resa: 1, da: 'mais',
     stadi: CRESCE('mais'),
   },
   /* La più lenta e la più cara, e l'unica che i maiali cercano: è la
      coltura che si semina quando si ha già tutto il resto. */
   {
     id: 'zucche', liv: 26, nome: 'Zucche', emoji: '🎃',
-    semina: 4, raccolta: 3, minuti: 25, resa: 2, da: 'zucche',
+    semina: 0, raccolta: 2, minuti: 10, resa: 1, da: 'zucche',
     stadi: CRESCE('zucche'),
   },
 ]
@@ -306,12 +306,12 @@ export const RICETTE = [
   /* ── il mulino: la ciotola di casa ── */
   {
     id: 'mangime', nome: 'Mangime', emoji: '🥣', dove: 'mulino',
-    prende: { grano: 3 }, costo: 2, minuti: 5, da: 'mangime', resa: 2,
+    prende: { grano: 2 }, costo: 1, minuti: 4, da: 'mangime', resa: 1,
   },
   /* Col mais, non col mulino: è la ricetta per cui esiste `liv`. */
   {
     id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino', liv: 10,
-    prende: { mais: 4 }, costo: 4, minuti: 8, da: 'pastone', resa: 1,
+    prende: { mais: 3 }, costo: 1, minuti: 6, da: 'pastone', resa: 1,
   },
 
   /* ── il fienile: il mangime del cortile ──
@@ -321,44 +321,45 @@ export const RICETTE = [
   {
     id: 'foraggio_carote', nome: 'Foraggio di carote', emoji: '🥬',
     dove: 'fienile', liv: 5,
-    prende: { carote: 3 }, costo: 1, minuti: 8, da: 'foraggio', resa: 2,
+    prende: { carote: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
     id: 'becchime', nome: 'Becchime', emoji: '🌰', dove: 'fienile', liv: 8,
-    prende: { grano: 3 }, costo: 1, minuti: 6, da: 'becchime', resa: 2,
+    prende: { grano: 2 }, costo: 0, minuti: 4, da: 'becchime', resa: 1,
   },
   {
     id: 'foraggio', nome: 'Foraggio d\'erba', emoji: '🥬', dove: 'fienile', liv: 12,
-    prende: { fieno: 3 }, costo: 1, minuti: 8, da: 'foraggio', resa: 2,
+    prende: { fieno: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
     id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'fienile', liv: 26,
-    prende: { zucche: 2 }, costo: 1, minuti: 10, da: 'zuppa', resa: 2,
+    prende: { zucche: 2 }, costo: 0, minuti: 6, da: 'zuppa', resa: 1,
   },
 
   /* ── i recinti: il mangime diventa roba ── */
   {
-    id: 'uova', nome: 'Uova', emoji: '🥚', dove: 'pollaio',
-    prende: { becchime: 2 }, costo: 1, minuti: 12, da: 'uova', resa: 2,
+    id: 'uova', nome: 'Uovo', emoji: '🥚', dove: 'pollaio',
+    prende: { becchime: 2 }, costo: 1, minuti: 8, da: 'uova', resa: 1,
   },
   {
     id: 'latte', nome: 'Latte', emoji: '🥛', dove: 'stalla',
-    prende: { foraggio: 4 }, costo: 2, minuti: 20, da: 'latte', resa: 2,
+    prende: { foraggio: 2 }, costo: 1, minuti: 10, da: 'latte', resa: 1,
   },
+  /* **L'ovile ne chiede uno solo**, ed è tutta la sua ragione di
+     esistere: conigli e pecore fanno la stessa lana, quindi quello che
+     costa il doppio deve chiedere la metà. Si paga prima e si risparmia
+     dopo, come tutta l'attrezzatura di questo gioco. */
   {
     id: 'lana', nome: 'Lana', emoji: '🧶', dove: 'ovile',
-    prende: { foraggio: 3 }, costo: 2, minuti: 25, da: 'lana', resa: 2,
+    prende: { foraggio: 1 }, costo: 1, minuti: 8, da: 'lana', resa: 1,
   },
-  /* La conigliera costa un terzo dell'ovile e ci mette meno, ma rende
-     meno lana per foraggio: chi ha poche monete e tanta pazienza arriva
-     alla copertina lo stesso. */
   {
     id: 'lana_angora', nome: 'Lana d\'angora', emoji: '🧶', dove: 'conigliera',
-    prende: { foraggio: 2 }, costo: 1, minuti: 18, da: 'lana', resa: 1,
+    prende: { foraggio: 2 }, costo: 1, minuti: 14, da: 'lana', resa: 1,
   },
   {
-    id: 'tartufi', nome: 'Tartufi', emoji: '🍄', dove: 'porcile',
-    prende: { zuppa: 2 }, costo: 2, minuti: 30, da: 'tartufi', resa: 1,
+    id: 'tartufi', nome: 'Tartufo', emoji: '🍄', dove: 'porcile',
+    prende: { zuppa: 2 }, costo: 1, minuti: 20, da: 'tartufi', resa: 1,
   },
 ]
 
@@ -437,10 +438,15 @@ export const SILI = {
    era invisibile e grande; questo è visibile e piccolo, ed è tutta la
    differenza fra i due.
 
-   OTTO, PERCHÉ DUE CAMPI SÌ E TRE NO. Un campo di mais rende 5, uno di
-   grano 3: con otto posti il secondo campo della stessa coltura ci sta
-   sempre, il terzo quasi mai. Che è il modo di dire «coltiva anche
-   altro» senza scriverlo da nessuna parte e senza vietare niente. */
+   OTTO, CIOÈ QUATTRO GIRI DI RICETTA. *Ribalta la ragione di prima*,
+   che era «due campi della stessa coltura ci stanno e tre no» — vera
+   finché un campo rendeva da due a cinque, e senza senso da quando ne
+   rende **uno** (vedi `RESA`). Otto adesso vuol dire otto raccolti, e
+   una ricetta ne chiede due: si può accumulare per quattro giri prima
+   di dover usare qualcosa. Abbastanza per non star lì a contare, poco
+   abbastanza perché chi semina sempre e non trasforma mai si trovi lo
+   scomparto colmo — che è il momento in cui il gioco insegna il resto
+   della catena. */
 export const SCOMPARTO_BASE = 8
 export const SCOMPARTO_PIU = 2
 
@@ -538,8 +544,33 @@ export function minutiCheMancano(da, minuti, ora = Date.now()) {
   return Math.max(1, Math.ceil((1 - q) * minuti))
 }
 
+/* ── N → 1, MAI 1 → N E MAI N → M ─────────────────────────────────
+   La regola che tiene contabile tutta la catena, e non è una scelta di
+   bilanciamento: è **quanto costa capire**. Un campo dà una cosa, tre
+   grani danno un mangime, due mangimi danno un uovo. Da lì la domanda
+   «quanti me ne servono» ha una risposta che si conta sulle dita: se te
+   ne chiedo tre, riempi tre campi.
+
+   Con `resa` diversa da uno quel conto si spezza: da «due grani fanno
+   tre mangimi» a «quanti campi devo seminare per due uova» ci sono due
+   divisioni con un resto, e non le fa nessuno — si semina a caso e si
+   torna a guardare. Peggio, il numero grande fa credere di essere
+   ricchi: un campo che rende cinque mais sembra tanto finché non si
+   scopre che al pastone ne servono quattro.
+
+   Quindi la resa è **sempre 1**, e a fare la differenza fra le ricette
+   restano quanto prendono, quanto costano e quanto ci mettono — tre
+   leve che si leggono tutte guardando il tasto. */
+export const RESA = 1
+
 export function guastiDelleColture() {
   const g = []
+  for (const c of COLTURE)
+    if (c.resa !== RESA)
+      g.push(`${c.id}: rende ${c.resa} e non ${RESA} — un campo dà una cosa sola`)
+  for (const r of RICETTE)
+    if (r.resa !== RESA)
+      g.push(`${r.id}: rende ${r.resa} e non ${RESA} — N → 1, mai N → M`)
   const visti = new Set()
   for (const c of COLTURE) {
     if (visti.has(c.id)) g.push(`coltura doppia: ${c.id}`)

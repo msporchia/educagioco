@@ -389,11 +389,18 @@ export const CATEGORIE = [
 
        Il mulino fa la ciotola di casa, il fienile fa il mangime del
        recinto: due macchine e due mestieri, e per questo non sono una
-       sola con sette tasti. Arriva **prima del primo recinto** (livello
-       4 contro 5), che è l'ordine in cui si legge la catena — prima la
-       mangiatoia, poi chi mangia. */
+       sola con sette tasti.
+
+       Arriva **al 5, insieme al primo recinto e alla prima coltura che
+       ci va dentro**. Era al 4 — «prima la mangiatoia, poi chi mangia»,
+       che come racconto è giusto — e per un livello intero era una
+       macchina che si comprava e **non sapeva fare niente**: la sua
+       prima ricetta vuole le carote, che arrivano al 5. Aprendola c'era
+       la frase «metti dentro quello che hai raccolto» e sotto il
+       vuoto. Una macchina senza ricette è un tasto rotto che costa 150
+       monete, e adesso lo dice `guastiDegliSblocchi`. */
     V('fienile',       'fienile0',          'Fienile',         150,
-      { macchina: 'fienile', liv: 4, cresce: RINCARO }),
+      { macchina: 'fienile', liv: 5, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
       { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO }),
     V('pollaio',       'recinto_galline_calmo', 'Pollaio',      130,

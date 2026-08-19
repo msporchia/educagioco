@@ -265,6 +265,88 @@ await chiudi()
   await scatto(page, 'fattoria-posa')
 }
 
+/* ---------- 7a. il baule si porta dietro dove l'hai aperto ----------
+   Tenere premuto in mezzo al prato vuol dire «voglio metterci qualcosa
+   **qui**»: quella scelta è già stata fatta, e farsela chiedere di nuovo
+   col tocco dopo è chiedere due volte la stessa cosa. Adesso si sceglie
+   e si posa lì.
+
+   Il modo di vederlo da fuori è **il momento in cui si paga**: aprendo
+   il baule dal tasto in alto le monete calano al secondo tocco (quello
+   che posa), aprendolo tenendo premuto calano subito. */
+{
+  const dove = { x: mezzo.x - 60, y: mezzo.y + 130 }
+  await dito(dove.x, dove.y, 0, 700)          // il tocco lungo: apre il baule
+  await attendi(page, 400)
+  controlla('tenendo premuto sul prato si apre il baule',
+            await page.locator('.fa-voce').count() > 0)
+  await page.locator('.fa-zona', { hasText: 'Decorazioni' }).click()
+  await attendi(page, 200)
+  await page.locator('.fa-scheda', { hasText: 'Verde' }).click()
+  await attendi(page, 200)
+  /* `scrollIntoViewIfNeeded` non è pignoleria: lo scaffale scorre, e il
+     riquadro di una voce fuori dalla vista cade **sotto lo schermo** —
+     il tocco arriva alla pagina e non alla carta, e il test fallisce
+     dicendo una cosa che col baule non c'entra. */
+  const voce = page.locator('.fa-voce', { hasText: 'Sasso' }).first()
+  await voce.scrollIntoViewIfNeeded()
+  const b = await voce.boundingBox()
+  const prima = await page.evaluate(
+    () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+  await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))
+  await attendi(page, 400)
+  const dopo = await page.evaluate(
+    () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+  controlla('e la cosa scelta si posa lì, senza un secondo tocco',
+            dopo < prima, `${prima} → ${dopo}`)
+  uguale('il baule si è chiuso da sé', await page.locator('.fa-velo').count(), 0)
+  /* E la cella non resta appiccicata: il baule aperto dal tasto in alto
+     non ha nessun posto da ricordare, e la cosa dopo va dove la si
+     mette. Senza questa riga la prima cosa presa dal tasto finirebbe
+     dove si era tenuto premuto la volta prima — un posto che chi gioca
+     non sta nemmeno guardando. */
+  await page.locator('.fa-tondo').click()
+  await page.waitForSelector('.fa-voce', { timeout: 3000 })
+  await page.locator('.fa-zona', { hasText: 'Decorazioni' }).click()
+  await attendi(page, 200)
+  await page.locator('.fa-scheda', { hasText: 'Verde' }).click()
+  await attendi(page, 200)
+  const voce2 = page.locator('.fa-voce', { hasText: 'Sasso' }).first()
+  await voce2.scrollIntoViewIfNeeded()
+  const b2 = await voce2.boundingBox()
+  const prima2 = await page.evaluate(
+    () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+  await dito(Math.round(b2.x + b2.width / 2), Math.round(b2.y + b2.height / 2))
+  await attendi(page, 300)
+  const dopo2 = await page.evaluate(
+    () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+  uguale('dal tasto in alto invece resta appesa al dito, come sempre',
+         dopo2, prima2)
+  await dito(dove.x + 70, dove.y)
+  await attendi(page, 300)
+
+  /* ── E UNA BESTIA POSATA COSÌ CHIEDE IL NOME, E RESTA LÌ A CHIEDERLO ──
+     Il caso che si è rotto per primo, ed è la trappola scritta in
+     CLAUDE.md: posare subito fa comparire un foglio **sotto il dito** —
+     una bestia comprata chiede come si chiama — e il click fantasma di
+     quello stesso tocco cade sul velo appena nato, che si chiude da sé.
+     Da fuori: «tocco l'animale, mi si chiude la schermata e non riesco a
+     metterlo». Il rimedio è `zittisciIlFantasma`, e quello che si può
+     guardare da qui è che il foglio **ci sia ancora** un attimo dopo. */
+  await dito(dove.x, dove.y + 40, 0, 700)
+  await attendi(page, 400)
+  await page.locator('.fa-zona', { hasText: 'Animali' }).click()
+  await attendi(page, 250)
+  const bestia = page.locator('.fa-voce').first()
+  await bestia.scrollIntoViewIfNeeded()
+  const bb = await bestia.boundingBox()
+  await dito(Math.round(bb.x + bb.width / 2), Math.round(bb.y + bb.height / 2))
+  await attendi(page, 900)          // il fantasma arriva dentro questo mezzo secondo
+  controlla('una bestia posata subito chiede il nome, e il foglio resta',
+            (await foglio()).includes('chiami'), await foglio())
+  await chiudi()
+}
+
 /* ---------- 7b. una cosa unica, posata, esce dal baule ----------
    I due silos sono `unico`: il secondo non si può posare, e il motore
    risponde «ne-hai-gia». Ma un tasto che si preme e non fa niente è un
