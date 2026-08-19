@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { init, state } from './store/profile.js'
+import { initPosta } from './store/posta.js'
+import { controlla } from './aggiornamento.js'
 import HomeView from './views/HomeView.vue'
 import CamerettaView from './views/CamerettaView.vue'
 import LinguaGame from './views/LinguaGame.vue'
@@ -64,11 +66,44 @@ function dallIndirizzo() {
 
 onMounted(async () => {
   await init()
+  /* dopo `init()` e non prima: la prima volta la posta decide guardando
+     se in casa c'è già un profilo, e deve guardare l'archivio vero
+     (`store/posta.js`) */
+  await initPosta()
   dallIndirizzo()
   if (typeof window !== 'undefined') window.addEventListener('hashchange', dallIndirizzo)
   pronto.value = true
+
+  /* ── cambiare bambino riporta in home ──
+     `state.player` cambia in tre modi: la fila dei nomi in home (che è
+     già in home), un bambino appena aggiunto dalle impostazioni, e un
+     profilo eliminato. Negli ultimi due si resterebbe fermi dov'eravamo
+     — cioè nelle impostazioni — che però `:key` rimonta da capo:
+     davanti c'è di nuovo il tastierino del codice, subito dopo aver
+     risposto a tre domande. E in generale una schermata aperta su un
+     bambino non vale per il bambino dopo: i progressi che mostra sono
+     di un altro.
+
+     **Si accende qui e non in cima al file**, e la differenza non è di
+     stile: `init()` sceglie il primo giocatore, quindi un `watch`
+     dichiarato fuori scatterebbe anche a quella prima scelta — dopo
+     `dallIndirizzo()`, perché i job si smaltiscono a fine microtask — e
+     rimanderebbe in home chiunque sia entrato da `#sotterraneo`. Vale
+     per i test che aprono una schermata dall'indirizzo e per il cheat
+     che apre un gioco senza carta in home. */
+  watch(() => state.player, () => { vista.value = 'home' })
 })
 function vai(v) { vista.value = v }
+
+/* ── tornare in home va a vedere se c'è una versione nuova ──
+   Il controllo automatico dorme quando l'app è in secondo piano
+   (`src/aggiornamento.js`), e su un telefono l'app è in secondo piano
+   quasi sempre. Uscire da un gioco è il momento buono: la partita è
+   finita, il nastro può comparire senza far perdere niente a nessuno, e
+   la richiesta è di due kilobyte con un freno da cinque minuti. */
+watch(vista, v => { if (v === 'home') controlla() })
+
+
 </script>
 
 <template>

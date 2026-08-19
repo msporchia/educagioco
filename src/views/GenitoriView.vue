@@ -12,18 +12,20 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
-         creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
+         rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          saperiCheMancano,
-         giocoAcceso, accendiGioco, quantiGiochiAccesi, applicaPartenza,
-         etaDelBambino, scegliEta,
+         giocoAcceso, accendiGioco, quantiGiochiAccesi, spostaLEta,
+         etaDelBambino,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
          aspettoDi, scegliAspetto } from '../store/profile.js'
-import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
+import { leggiCestino } from '../store/cestino.js'
+import { laPosta, segnaLetta, avvisa } from '../store/posta.js'
+import { inGrassetto } from '../guide/aiuto.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
-import { leggiPin, scriviPin, PIN_INIZIALE,
+import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta,
          segnaSbaglio, azzeraSbagli, attesa } from '../store/pin.js'
 import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '../incidenti.js'
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
@@ -32,14 +34,16 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata } from '../guide/aiuto.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
-import { PARTENZE } from '../data/partenze.js'
+import { spostandoLEta, partenzaPerEta } from '../data/partenze.js'
 import { sapereDi } from '../data/saperi.js'
 import Barra from '../components/Barra.vue'
+import ManopolaEta from '../components/ManopolaEta.vue'
+import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import Catalogo from '../quiz/Catalogo.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 
-defineEmits(['vai'])
+const emit = defineEmits(['vai'])
 
 /* Il nome di chi sta giocando. Da quando esiste il roster `state.player`
    è un id e non un nome: scritto a schermo direbbe «Impostazioni di g2»
@@ -64,10 +68,34 @@ const confermaFattoria = ref(false)
 
 /* Ricomincia la fattoria e basta. Passa da `campagne.js` come tutti i
    giochi nuovi: qui non si sa nemmeno com'è fatta dentro. */
-function azzeraFattoria() {
+async function azzeraFattoria() {
+  await cestinaOra('fattoria')
   azzeraCampagna('fattoria')
   confermaFattoria.value = false
   esito.value = { ok: true, testo: 'La fattoria di ' + chi.value + ' riparte da zero.' }
+  cestino.value = await leggiCestino()
+}
+
+/* ── il cestino ──
+   Quello che si è cancellato di recente, e il tasto per rimetterlo. La
+   sezione esiste solo se c'è qualcosa dentro: una riga «il cestino è
+   vuoto» è una riga da leggere ogni volta per non sapere niente, come
+   quella dei guasti. Perché ci sia un cestino, vedi
+   `store/cestino.js`. */
+const cestino = ref([])
+const rimettendo = ref(null)     // la voce in attesa di conferma
+
+/* ── la posta ──
+   Le note che un grande deve leggere (`guide/novita.js`) e gli avvisi
+   che il gioco si è scritto da solo. Stanno in cima a questa schermata e
+   non in una scheda a parte: chi entra per un altro motivo le trova
+   sulla strada, chi entra apposta non deve cercarle. */
+const posta = ref({ note: [], avvisi: [] })
+const cePosta = computed(() => posta.value.note.length + posta.value.avvisi.length > 0)
+
+async function hoLetto() {
+  await segnaLetta()
+  posta.value = await laPosta()
 }
 const file = ref(null)
 /* il cambio del codice: 'nuovo' mentre lo si sceglie, 'ripeti' mentre lo
@@ -75,6 +103,10 @@ const file = ref(null)
    sbagliato di un dito chiude fuori i grandi e basta. */
 const modo = ref('')
 const nuovo = ref('')
+/* il codice dimenticato: la domanda al posto delle quattro cifre, stesso
+   tastierino e stessa attesa (`store/pin.js`) */
+const recupero = ref(false)
+
 /* le due schede: quello che si vede ('giochi') e quello che si sa
    ('sa'). Erano una colonna sola e i macrogruppi l'avrebbero fatta
    lunga il doppio, con due cose diverse mescolate: quali giochi
@@ -101,6 +133,8 @@ onMounted(async () => {
   pin.value = await leggiPin()
   incidenti.value = await leggiIncidenti()
   giudizi.value = await leggiGiudizi()
+  cestino.value = await leggiCestino()
+  posta.value = await laPosta()
 })
 
 /* l'ora e basta se è di oggi, altrimenti anche il giorno: «alle 17:42»
@@ -238,6 +272,7 @@ function premi(n) {
   sbagliato.value = false
   cifre.value += n
   if (cifre.value.length < 4) return
+  if (recupero.value) return quattroDelRecupero()
   if (modo.value) return quattroDelCambio()
   if (cifre.value === pin.value) { dentro.value = true; cifre.value = ''; azzeraSbagli() }
   else { cifre.value = ''; fermati() }
@@ -273,6 +308,41 @@ function fermati() {
 onUnmounted(() => clearInterval(battito))
 
 function cancella() { cifre.value = cifre.value.slice(0, -1); sbagliato.value = false }
+
+/* ---------- il codice dimenticato ----------
+   Perché sia una domanda di cultura generale e non qualcosa di più
+   serio sta scritto in `store/pin.js`. Qui conta solo che sbagliare
+   costi *la stessa attesa* di un codice sbagliato: la risposta è un
+   anno, cioè poche centinaia di possibilità, e senza il freno di
+   `segnaSbaglio` si tirerebbero tutte in un pomeriggio. */
+function apriRecupero() { recupero.value = true; cifre.value = ''; sbagliato.value = false }
+function lasciaIlRecupero() { recupero.value = false; cifre.value = ''; sbagliato.value = false }
+
+async function quattroDelRecupero() {
+  if (!rispostaGiusta(cifre.value)) { cifre.value = ''; fermati(); return }
+  cifre.value = ''
+  recupero.value = false
+  pin.value = await azzeraPin()
+  azzeraSbagli()
+  /* Lo scrive nella posta: se a rispondere non è stato il grande di
+     casa, questo è l'unico modo che ha di scoprirlo — e la risposta a
+     una domanda di cultura generale è alla portata di chiunque la
+     cerchi (`store/pin.js`). Senza traccia scritta, un codice tornato a
+     0000 sembra una stranezza dell'applicazione. */
+  await avvisa('Il codice era stato dimenticato ed è stato rimesso a ' + PIN_INIZIALE
+    + '. Se non sei stato tu, l\'ha fatto qualcuno che ha risposto alla domanda.')
+  /* e si rilegge la posta: questa schermata la carica al montaggio, e
+     qui dentro il montaggio è già passato — senza, l'avviso appena
+     scritto si vedrebbe solo alla visita dopo, che è quanto dire mai */
+  posta.value = await laPosta()
+  dentro.value = true
+  /* si entra e si sceglie subito quello nuovo: una casa lasciata a 0000
+     è una casa senza codice, e chi è appena rientrato non ci ripensa da
+     solo domani */
+  cambiaCodice()
+  esito.value = { ok: true,
+    testo: 'Il codice è tornato a ' + PIN_INIZIALE + '. Scegline uno nuovo adesso.' }
+}
 
 /* ---------- cambiare il codice ---------- */
 function cambiaCodice() { modo.value = 'nuovo'; nuovo.value = ''; cifre.value = ''; esito.value = null }
@@ -394,106 +464,123 @@ const daInstallare = !installata() && piattaforma() !== 'computer'
    un nome nuovo. Mai due aperti insieme. */
 const rinominando = ref('')
 const eliminando = ref('')
+/* Il modulo del bambino nuovo non sta più qui: è la stessa schermata
+   del primo avvio (`components/Benvenuto.vue`), aperta a tutto schermo.
+   Qui resta solo l'interruttore che la apre. */
 const aggiungendo = ref(false)
 const nomeInCorso = ref('')
-/* ── rimettere la fascia a chi c'è già ──
-   La partenza si sceglie quando un bambino si aggiunge, ed è il momento
-   giusto; il guaio è che capita una volta sola. Chi ha installato il
-   gioco prima che la domanda esistesse — o chi l'ha passata di fretta —
-   si ritrova un profilo con tutto acceso, e l'unica strada erano trenta
-   tocchi qui sotto, uno per gioco e uno per sapere.
-
-   Sta nella carta di chi sta giocando adesso, come l'aspetto e per lo
-   stesso motivo: scrive nel profilo in memoria, e quello di un altro
-   fratello in memoria non c'è. Riscrive giochi e saperi in blocco,
-   quindi si conferma — è l'unico interruttore di questa schermata che
-   cancella scelte fatte a mano. */
-const rifasciando = ref(false)
-const fasciaScelta = ref('')
 
 function chiudiTutto() {
-  rinominando.value = ''; eliminando.value = ''; aggiungendo.value = false; nomeInCorso.value = ''
-  rifasciando.value = false; fasciaScelta.value = ''
-}
-function apriRifascia() { chiudiTutto(); rifasciando.value = true }
-/* Per che età il gioco sta scegliendo le domande adesso, detto con il
-   nome di una partenza quando ce n'è una che combacia: «6,5» non vuol
-   dire niente a nessuno, «Prima o seconda» sì. */
-/* ── l'età, nella riga del bambino ──
-   È il numero da cui dipende tutto quello che i giochi gli chiedono, e
-   fino a ieri si poteva vedere solo aprendo la scheda delle domande. Ma
-   «quanti anni ha» uno se lo chiede guardando l'elenco dei bambini, non
-   un catalogo di quiz: sta qui, si sposta di mezzo anno per volta, e
-   l'effetto si guarda di là. */
-const giroEta = ref(0)
-const anniOra = computed(() => (giroEta.value, etaDelBambino()))
-function cambiaAnni(passo) {
-  const nuova = Math.round((anniOra.value + passo) * 2) / 2
-  if (nuova < 4 || nuova > 12) return
-  scegliEta(nuova)
-  giroEta.value++
-  esito.value = { ok: true, testo: `${chi.value} ha ${String(nuova).replace('.', ',')} anni: `
-    + 'le domande si spostano di conseguenza. Quali, si vede nella scheda «Domande».' }
+  rinominando.value = ''; eliminando.value = ''; nomeInCorso.value = ''
+  confermaEta.value = null
 }
 
-const etaOra = computed(() => {
-  const anni = etaDelBambino()
-  const p = PARTENZE.find(x => x.anni === anni)
-  return p ? `${p.nome} (${p.eta})` : `${anni} anni`
+/* ── QUANTI ANNI HA, CHE È L'UNICA MANOPOLA ──
+   Qui c'erano due manopole per la stessa cosa: un `− 7,5 anni +` che
+   spostava solo l'età, e dieci pixel più sotto un «Rimetti giochi e
+   domande» che apriva le quattro fasce e riscriveva **tutto** — giochi,
+   saperi, ritocchi — senza che niente, a guardarle, dicesse quale
+   fosse quale.
+
+   Adesso ce n'è una (`components/ManopolaEta.vue`) e dice cosa fa
+   mentre la si muove. Il conto dei tre casi sta in `data/partenze.js`
+   e non qui, perché è **lo stesso** che poi scrive: se la schermata se
+   lo rifacesse per conto suo, il riassunto direbbe una cosa e il
+   salvataggio ne farebbe un'altra.
+
+     · dentro la stessa fascia — si sposta l'età e basta, muta
+     · fascia diversa, ma nessuna scelta fatta a mano — si va dritti
+     · fascia diversa, e c'era roba sistemata a mano — si chiede
+
+   Il terzo caso è il motivo per cui il tasto «Rimetti» non serve più:
+   quello che faceva succede qui, ma solo quando c'è davvero qualcosa
+   da riscrivere, e detto prima invece che dopo. */
+const giroEta = ref(0)
+const anniOra = computed(() => (giroEta.value, etaDelBambino()))
+const settaggi = computed(() => (giroEta.value, state.profile.settings || {}))
+const confermaEta = ref(null)   // { a, mossa } | null
+
+function scegliAnni(anni) {
+  const s = state.profile.settings || {}
+  const mossa = spostandoLEta({ da: anniOra.value, a: anni,
+                                giochi: s.giochi || {}, sa: s.sa || {},
+                                ritocchi: s.ritocchi || {} })
+  if (mossa.chiede) { confermaEta.value = { a: anni, mossa }; return }
+  applicaAnni(anni)
+}
+
+function applicaAnni(anni) {
+  const mossa = spostaLEta(anni)
+  confermaEta.value = null
+  giroEta.value++
+  if (!mossa) return
+  esito.value = { ok: true, testo: `${chi.value} è tarato su ${inLettere(anni)}. `
+    + (mossa.riscrive
+      ? 'Giochi e domande sono ripartiti dai valori di quell\'età.'
+      : 'Le domande si spostano di conseguenza; i giochi restano come li avevi messi.') }
+}
+
+const inLettere = a => a % 1 ? `${Math.floor(a)} anni e mezzo` : `${a} anni`
+
+/* Quanti interruttori tornerebbero al difetto: è il numero che rende la
+   conferma una domanda vera invece di un «sei sicuro?». */
+const quantoSiPerde = computed(() => {
+  if (!confermaEta.value) return ''
+  const s = state.profile.settings || {}
+  const spente = m => Object.keys(m || {}).filter(k => m[k] === false).length
+  const pezzi = []
+  if (spente(s.giochi)) pezzi.push(`${spente(s.giochi)} giochi spenti a mano`)
+  if (spente(s.sa)) pezzi.push(`${spente(s.sa)} pezzi di scuola`)
+  const r = Object.keys(s.ritocchi || {}).length
+  if (r) pezzi.push(`${r} domande ritoccate`)
+  return pezzi.join(', ')
 })
-function rimettiFascia() {
-  const p = PARTENZE.find(x => x.chiave === fasciaScelta.value)
-  if (!p) return
-  const { giochi, sa } = applicaPartenza(p.chiave)
-  esito.value = { ok: true, testo: `${chi.value} riparte da «${p.nome}»: `
-    + (giochi ? `${giochi} giochi spenti in home` : 'tutti i giochi accesi')
-    + ' e ' + (sa ? `${sa} pezzi di scuola tolti dalle domande` : 'nessun pezzo di scuola tolto')
-    + '. I progressi sono rimasti tutti dov\'erano.' }
-  chiudiTutto()
-}
+
 function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.value = g.nome }
-/* nessuna preselezionata: la partenza è una domanda vera, e una risposta
-   già data si preme senza leggerla — con l'effetto che un bambino di
-   quattro anni si ritroverebbe la home di un quinta elementare perché
-   nessuno ha guardato. Il tasto «Aggiungi» resta spento finché non si
-   sceglie, che è il modo di chiederlo senza scriverlo. */
-const partenzaScelta = ref('')
-/* Un valore c'è sempre — a differenza della partenza, che si chiede
-   apposta vuota: qui non è una domanda che cambia cosa il bambino vede,
-   e un tasto spento finché non si sceglie sarebbe attrito senza motivo.
-   Il primo di `PERSONE` è la stessa ricaduta di `aspettoDi()`. */
-const aspettoScelto = ref(PERSONE[0])
-function apriAggiungi() {
-  chiudiTutto(); partenzaScelta.value = ''; aspettoScelto.value = PERSONE[0]; aggiungendo.value = true
-}
 function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
+
+/* ── il bambino nuovo: la stessa schermata del primo avvio ──
+   Qui c'era un modulo suo — nome, faccia, quattro carte — che era la
+   copia peggiore di `components/Benvenuto.vue`: stessa domanda, altro
+   disegno, e un tasto «Aggiungi» che si comportava diversamente. Il
+   bambino nuovo nasceva e restava fermo; per farlo giocare bisognava
+   uscire, tornare in home e sceglierlo, mentre lui guardava.
+
+   Adesso si apre il wizard vero, a tutto schermo, e finisce **entrando
+   in partita con lui**: è il motivo per cui si sta aggiungendo un
+   bambino. Il codice dei genitori è già stato chiesto per arrivare fin
+   qui, quindi non si chiede una seconda volta. */
+function apriAggiungi() { chiudiTutto(); aggiungendo.value = true }
+function fattoIlBambino() {
+  aggiungendo.value = false
+  /* `state.player` è cambiato, quindi `App.vue` rimonta questa
+     schermata da capo e il codice torna a essere chiesto: si va in home
+     invece di lasciare un tastierino davanti a chi ha appena finito. */
+  emit('vai', 'home')
+}
 
 async function salvaNome() {
   const nome = nomeInCorso.value.trim()
   if (!nome) return
   try {
-    if (aggiungendo.value) {
-      /* senza entrarci: cambiare giocatore da qui ricarica la schermata
-         e rimanderebbe al codice chi sta ancora sistemando le cose */
-      await creaGiocatore(nome, false, partenzaScelta.value, aspettoScelto.value)
-      const p = PARTENZE.find(p => p.chiave === partenzaScelta.value)
-      esito.value = { ok: true, testo: `${nome} adesso può giocare: lo trova in home, dove si sceglie chi gioca.`
-        + (p ? ` È partito da «${p.nome}» — quello che vede si cambia qui sotto.` : '') }
-    } else {
-      const prima = nomeCorrente()
-      await rinominaGiocatore(rinominando.value, nome)
-      esito.value = { ok: true, testo: `Adesso si chiama ${nome}. I progressi di ${prima === nome ? 'prima' : prima} sono rimasti tutti dov'erano.` }
-    }
+    const prima = nomeCorrente()
+    await rinominaGiocatore(rinominando.value, nome)
+    esito.value = { ok: true, testo: `Adesso si chiama ${nome}. I progressi di ${prima === nome ? 'prima' : prima} sono rimasti tutti dov'erano.` }
     chiudiTutto()
   } catch (e) {
     esito.value = { ok: false, testo: e.message }
   }
 }
 
+/* Da qui si elimina solo chi sta giocando adesso — è l'unico che ha una
+   carta — quindi `eliminaGiocatore` sposta sempre `state.player` su
+   qualcun altro (o su nessuno, se era l'ultimo). Restare fermi vorrebbe
+   dire una schermata rimontata col tastierino davanti: si va in home,
+   che è dove si sceglie chi gioca ed è la cosa da fare subito dopo. Ci
+   pensa il `watch` di `App.vue`, che vale per ogni cambio di bambino. */
 async function eliminaOra(g) {
   try {
     await eliminaGiocatore(g.id)
-    esito.value = { ok: true, testo: `${g.nome} non c'è più, e con lui i suoi progressi.` }
   } catch (e) {
     esito.value = { ok: false, testo: e.message }
   }
@@ -621,12 +708,36 @@ async function azzera() {
   await resetPlayer()
   confermaAzzera.value = false
   confermaFattoria.value = false
-  esito.value = { ok: true, testo: 'I progressi di ' + chi.value + ' sono stati cancellati.' }
+  esito.value = { ok: true, testo: 'I progressi di ' + chi.value
+    + ' sono stati cancellati. Se non era quello che volevi, qui sotto c\'è ancora la copia.' }
+  cestino.value = await leggiCestino()
+}
+
+async function rimetti(v) {
+  try {
+    const nome = await ripristinaCestinato(v.quando)
+    esito.value = { ok: true, testo: 'I progressi di ' + nome + ' sono tornati come erano '
+      + quando(v.quando) + '.' }
+  } catch (e) {
+    esito.value = { ok: false, testo: e.message }
+  }
+  rimettendo.value = null
+  cestino.value = await leggiCestino()
 }
 </script>
 
 <template>
-  <div class="schermo">
+  <!-- ── il bambino nuovo prende tutto lo schermo ──
+       È la stessa schermata del primo avvio, e prende tutto lo schermo
+       per lo stesso motivo per cui lo prende lì: chi la sta compilando
+       sta rispondendo a tre domande di fila su un bambino che ancora
+       non c'è, e avere dietro l'elenco delle impostazioni di un altro
+       bambino è solo rumore. Non serve la barra: la via d'uscita ce
+       l'ha dentro. -->
+  <Benvenuto v-if="aggiungendo" :primo="false"
+             @fatto="fattoIlBambino" @lasciaStare="aggiungendo = false" />
+
+  <div v-else class="schermo">
     <Barra titolo="Impostazioni" :audio="false" @indietro="$emit('vai','home')" />
 
     <!-- ── il gradino ──
@@ -643,7 +754,38 @@ async function azzera() {
          grande», detto come si dice a chi ha girato la maniglia
          sbagliata, non come un divieto, che è pubblicità — e sotto il
          tastierino c'è la via d'uscita, larga uguale. -->
-    <div v-if="!dentro" class="centro">
+    <!-- ── il codice dimenticato ──
+         Stesso tastierino, stessi quattro pallini, stessa attesa dopo uno
+         sbaglio: al posto del codice si risponde a una domanda che si
+         impara dopo le elementari. Non è una barriera — la risposta sta
+         su internet — è la sola strada che un grande poco pratico
+         percorre da solo, dal telefono, dentro l'app installata. Il
+         ragionamento intero sta in `store/pin.js`. -->
+    <div v-if="!dentro && recupero" class="centro">
+      <h2>Il codice dimenticato</h2>
+      <p class="testo">Rispondi e il codice torna a <b>{{ PIN_INIZIALE }}</b>, così puoi
+        sceglierne uno nuovo. I progressi non si toccano.</p>
+      <p class="domanda">{{ DOMANDA.testo }}</p>
+
+      <div class="pallini">
+        <span v-for="(pieno, i) in pallini" :key="i" :class="{ pieno }"></span>
+      </div>
+      <div v-if="haSbagliato" class="fermo">
+        <span class="barretta" :class="{ muta: !fermo }"><i :style="{ width: riempita + '%' }"></i></span>
+        <small :class="{ muta: !fermo }">fra {{ mancano }} second{{ mancano === 1 ? 'o' : 'i' }} si riprova</small>
+      </div>
+
+      <div class="tastierino" :class="{ spento: fermo }">
+        <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" class="tasto"
+                :disabled="fermo" @click="premi(String(n))">{{ n }}</button>
+        <span></span>
+        <button class="tasto" :disabled="fermo" @click="premi('0')">0</button>
+        <button class="tasto canc" :disabled="fermo" @click="cancella">⌫</button>
+      </div>
+      <button class="link" data-azione="lascia-recupero" @click="lasciaIlRecupero">lascia stare</button>
+    </div>
+
+    <div v-else-if="!dentro" class="centro">
       <h2>Impostazioni</h2>
       <p class="testo">Quali giochi si vedono, chi gioca, il salvataggio dei progressi.
         <b>Le cambia un grande</b>, col codice di casa.</p>
@@ -677,6 +819,11 @@ async function azzera() {
            quindi non dice «hai sbagliato porta, torna a giocare». -->
       <button class="bottone chiaro esci" data-azione="torna-ai-giochi"
               @click="$emit('vai','home')">← Torna ai giochi</button>
+
+      <!-- Piccolo e ultimo, sotto la via d'uscita: chi il codice ce l'ha
+           non deve nemmeno vederlo, e chi l'ha perso lo cerca. -->
+      <button class="link" data-azione="codice-dimenticato" @click="apriRecupero">
+        Non ricordi il codice?</button>
     </div>
 
     <!-- ── il codice nuovo: stesso tastierino, due giri ── -->
@@ -703,6 +850,37 @@ async function azzera() {
     <div v-else class="centro">
       <h2>Impostazioni di {{ chi }}</h2>
 
+      <!-- ══ LA POSTA ══
+           Quello che un grande deve sapere e che non ha nessun modo di
+           venire a sapere: non c'è un server, non c'è un indirizzo di
+           posta, e la famiglia che ha ricevuto il gioco da un'altra
+           famiglia non la conosce nessuno. Sta in cima e non in una
+           scheda sua: chi è entrato per un altro motivo la trova sulla
+           strada. Perché una nota si scriva, vedi `guide/novita.js`. -->
+      <div v-if="cePosta" class="posta" data-posta>
+        <h2>C'è una cosa da dirti</h2>
+
+        <div v-for="a in posta.avvisi" :key="a.quando" class="nota avviso">
+          <b>Su questo telefono</b>
+          <p>{{ a.testo }}</p>
+          <small>{{ quando(a.quando) }}</small>
+        </div>
+
+        <div v-for="n in posta.note" :key="n.id" class="nota">
+          <b>{{ n.titolo }}</b>
+          <p v-html="inGrassetto(n.testo)"></p>
+          <small>{{ n.quando }}</small>
+          <button v-if="n.azione" class="bottone chiaro" data-azione="posta-vai"
+                  @click="scheda = n.azione.scheda">{{ n.azione.testo }}</button>
+        </div>
+
+        <!-- L'unica uscita, e per questo non c'è nessuna ✕ in giro: il
+             nastro in home che manda qui non si può chiudere, così un
+             bambino non può consumare l'ack per riflesso. Chi preme
+             questo ha il codice, quindi è un grande. -->
+        <button class="bottone" data-azione="ho-letto" @click="hoLetto">Ho letto</button>
+      </div>
+
       <!-- ── TRE SCHEDE ──
            Una per domanda che un grande si fa: *chi gioca su questo
            telefono*, *cosa gli chiedono i giochi*, *cosa vede in home*.
@@ -723,23 +901,26 @@ async function azzera() {
 
       <!-- ══════════ scheda: i bambini ══════════ -->
       <template v-if="scheda === 'bambini'">
-      <!-- ══ quello che il bambino ha già detto giocando ══
-           Sta in cima e non nella scheda delle domande, ed è tutto il
-           punto: le manopole c'erano già e non le toccava nessuno,
-           perché nessuno va a cercare un problema che non sa di avere.
-           Qui il verso si gira — il gioco dice cosa ha notato, il grande
-           decide (`quiz/ComeVa.vue`). -->
-      <ComeVa @tutte="scheda = 'giochi'" />
-
       <h2>Chi gioca</h2>
-      <p class="mini">Un bambino per riga, coi suoi progressi separati. Qui si cambiano il
-        nome, la faccia e <b>quanti anni ha</b> — il numero da cui dipendono le domande
-        che riceve.</p>
+      <!-- ── UNA CARTA SOLA, E UN ELENCO ──
+           Qui c'era il roster intero: tre bambini, ognuno con «Cambia
+           nome» ed «Elimina» addosso, e sotto quello che stava giocando
+           anche l'età, la faccia e un tasto che riscriveva tutto. Sei
+           bottoni per tre righe, in una schermata dove tutto il resto
+           parla di un bambino solo — e per giunta metà di quei comandi
+           funzionava solo per uno dei tre, perché il profilo degli altri
+           in memoria non c'è.
+
+           Adesso è come il resto della schermata: **parla di chi sta
+           giocando adesso**. Gli altri sono una riga di nomi, e si
+           passa a loro da dove si è sempre fatto, cioè la home — che è
+           anche l'unico posto dove un bambino può farlo da sé. -->
+      <p class="mini">Queste impostazioni sono di <b>{{ chi }}</b>, che sta giocando adesso.
+        Ogni bambino ha le sue e i suoi progressi.</p>
 
       <div class="carte">
-        <template v-for="g in state.giocatori" :key="g.id">
-          <!-- in rinomina: il campo prende il posto della riga, così non
-               si può cambiare il nome di uno guardando quello di un altro -->
+        <template v-for="g in state.giocatori.filter(x => x.id === state.player)" :key="g.id">
+          <!-- in rinomina il campo prende il posto della carta -->
           <div v-if="rinominando === g.id" class="carta aperta" :data-giocatore="g.id">
             <b>Come si chiama?</b>
             <form class="riga campo" @submit.prevent="salvaNome">
@@ -762,118 +943,85 @@ async function azzera() {
           </div>
 
           <div v-else class="carta chi-gioca" :data-giocatore="g.id">
-            <span class="ico">{{ g.id === state.player ? '🎮' : '🙂' }}</span>
+            <span class="ico">🎮</span>
             <b>{{ g.nome }}</b>
-            <!-- chi gioca si cambia dalla home, non da qui: cambiarlo
-                 ricarica la schermata e richiederebbe il codice -->
-            <i v-if="g.id === state.player">sta giocando adesso</i>
-            <i v-else>i suoi progressi sono separati</i>
-            <div class="riga">
-              <button class="bottone chiaro" data-azione="rinomina"
-                      @click="apriRinomina(g)">Cambia nome</button>
-              <button class="bottone chiaro" data-azione="elimina"
-                      @click="apriElimina(g)">Elimina</button>
-            </div>
-            <!-- solo per chi sta giocando adesso: il profilo di un altro
-                 fratello non è in memoria, vedi il commento sopra
-                 `aspettoAttuale` -->
-            <div v-if="g.id === state.player" class="aspetto-sezione">
-              <!-- ── quanti anni ha ──
-                   Il numero che decide quali domande gli arrivano, messo
-                   dove uno lo cerca: nella riga del bambino. -->
-              <p class="mini">Quanti anni ha — decide le domande che riceve</p>
-              <div class="anni-riga">
-                <button type="button" class="anni-tasto" data-anni="giu"
-                        :disabled="anniOra <= 4" aria-label="mezzo anno in meno"
-                        @click="cambiaAnni(-0.5)">−</button>
-                <b data-anni-ora>{{ String(anniOra).replace('.', ',') }} anni</b>
-                <button type="button" class="anni-tasto" data-anni="su"
-                        :disabled="anniOra >= 12" aria-label="mezzo anno in più"
-                        @click="cambiaAnni(0.5)">+</button>
+            <i>sta giocando adesso</i>
+
+            <div class="aspetto-sezione">
+              <!-- ── la manopola ──
+                   Una sola, e dice cosa fa mentre la si muove. Il tasto
+                   «Rimetti giochi e domande» che stava qui sotto non
+                   c'è più: faceva la stessa cosa in un secondo modo, e
+                   cancellava le scelte fatte a mano senza annunciarlo.
+                   Adesso lo annuncia, e solo quando c'è davvero
+                   qualcosa da cancellare. -->
+              <p class="mini">Quanti anni ha — è la taratura, non un'anagrafe:
+                decide i giochi in casa e la difficoltà delle domande</p>
+              <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
+                           :sa="settaggi.sa || {}" :sperimentali="inProva"
+                           @scegli="scegliAnni" @prova="prova = $event" />
+
+              <!-- la conferma: si vede solo quando spostarsi cancella
+                   davvero qualcosa che qualcuno ha messo a mano -->
+              <div v-if="confermaEta" class="carta pericolo aperta" data-conferma="eta">
+                <b>Si riparte dai valori di {{ inLettere(confermaEta.a) }}?</b>
+                <i>{{ chi }} ha delle impostazioni tue: {{ quantoSiPerde }}.
+                  Spostarsi a {{ inLettere(confermaEta.a) }} cambia fascia, e quelle
+                  tornano come sono di partenza a quell'età. Monete, animali, campagne
+                  e traguardi non si toccano.</i>
+                <div class="riga">
+                  <button class="bottone chiaro" type="button" data-azione="eta-lascia"
+                          @click="confermaEta = null">Lascia stare</button>
+                  <button class="bottone" type="button" data-azione="eta-conferma"
+                          @click="applicaAnni(confermaEta.a)">Sì, procedi</button>
+                </div>
               </div>
 
               <p class="mini">Con che faccia si vede in mappa</p>
               <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
                              @scegli="cambiaAspetto" />
 
-              <!-- ── rimetti la fascia ──
-                   La stessa domanda che si fa quando un bambino si
-                   aggiunge, per chi c'era già: un anno passa, o il
-                   profilo è nato prima che la domanda esistesse. -->
-              <template v-if="!rifasciando">
-                <p class="mini">Le domande arrivano come a «{{ etaOra }}».
-                  Se è cresciuto, o se è partito con tutto acceso</p>
-                <button class="bottone chiaro" data-azione="rifascia"
-                        @click="apriRifascia">Rimetti giochi e domande</button>
-              </template>
-              <div v-else class="rifascia">
-                <b>Da dove riparte {{ g.nome }}?</b>
-                <div class="partenze">
-                  <button v-for="p in PARTENZE" :key="p.chiave" type="button"
-                          class="partenza" :class="{ on: fasciaScelta === p.chiave }"
-                          :data-rifascia="p.chiave" @click="fasciaScelta = p.chiave">
-                    <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
-                    <i>{{ p.che }}</i>
-                  </button>
-                </div>
-                <i>Riscrive quali giochi si vedono e quali domande arrivano,
-                  comprese le scelte fatte a mano qui sotto. Monete, animali,
-                  campagne e traguardi non si toccano.</i>
-                <div class="riga">
-                  <button class="bottone chiaro" type="button"
-                          @click="chiudiTutto">Lascia stare</button>
-                  <button class="bottone" type="button" :disabled="!fasciaScelta"
-                          data-azione="rifascia-conferma" @click="rimettiFascia">Rimetti così</button>
-                </div>
+              <div class="riga">
+                <button class="bottone chiaro" data-azione="rinomina"
+                        @click="apriRinomina(g)">Cambia nome</button>
+                <button class="bottone chiaro" data-azione="elimina"
+                        @click="apriElimina(g)">Elimina</button>
               </div>
             </div>
           </div>
         </template>
 
-        <div v-if="aggiungendo" class="carta aperta" data-azione="nuovo-nome">
-          <b>Come si chiama?</b>
-          <form class="riga campo" @submit.prevent="salvaNome">
-            <input v-model="nomeInCorso" class="nome" type="text" maxlength="20"
-                   autocomplete="off" autocapitalize="words" spellcheck="false"
-                   placeholder="il nome" aria-label="il nome">
-          </form>
-
-          <!-- ── da dove parte ──
-               Chiedere qui e non dopo è il punto: spegnere a mano dodici
-               giochi e tre saperi si può fare da sempre, ma va fatto
-               PRIMA che il bambino apra il gioco la prima volta — cioè
-               nel momento in cui uno ha meno voglia di configurare. Tre
-               tocchi al posto di trenta, e niente che resti appiccicato
-               al profilo: da domani si tocca tutto a mano come prima. -->
-          <div class="partenze">
-            <button v-for="p in PARTENZE" :key="p.chiave" type="button"
-                    class="partenza" :class="{ on: partenzaScelta === p.chiave }"
-                    :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
-              <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
-              <i>{{ p.che }}</i>
-              <small>domande tarate su {{ String(p.anni).replace('.', ',') }} anni,
-                poi si sposta</small>
-            </button>
-          </div>
-
-          <p class="mini">Con che faccia si vede in mappa</p>
-          <SceltaAspetto :scelto="aspettoScelto" data-scelta="aspetto"
-                         @scegli="aspettoScelto = $event" />
-
-          <div class="riga">
-            <button class="bottone chiaro" type="button" @click="chiudiTutto">Lascia stare</button>
-            <button class="bottone" type="button" :disabled="!nomeInCorso.trim() || !partenzaScelta"
-                    @click="salvaNome">Aggiungi</button>
-          </div>
-          <i>Parte da zero, con i suoi progressi separati da quelli degli altri.
-            Quello che si accende adesso si cambia quando si vuole, da qui.</i>
+        <!-- ── gli altri ──
+             Nomi e basta: cambiarne uno vuol dire prima passare a lui,
+             e si passa dalla home. Sono due tocchi in più su un gesto
+             che si fa una volta l'anno, e in cambio nessuno modifica
+             per sbaglio il bambino sbagliato — che è il guasto che
+             questa riga di nomi rende impossibile. -->
+        <div v-if="state.giocatori.length > 1" class="carta altri" data-altri-giocatori>
+          <span class="ico">🙂</span>
+          <b>Giocano anche {{ state.giocatori.filter(g => g.id !== state.player)
+                                  .map(g => g.nome).join(', ') }}</b>
+          <i>Per cambiare le loro, passa a loro dalla home — è lo stesso posto
+             dove si sceglie chi gioca.</i>
         </div>
-        <button v-else class="carta" data-azione="aggiungi-giocatore" @click="apriAggiungi">
+
+        <button class="carta" data-azione="aggiungi-giocatore" @click="apriAggiungi">
           <span class="ico">➕</span>
-          <b>Aggiungi un giocatore</b>
-          <i>Un altro bambino, con progressi tutti suoi</i>
+          <b>Aggiungi un bambino</b>
+          <i>Nome, faccia ed età: poi tocca a lui giocare</i>
         </button>
       </div>
+
+      <!-- ══ quello che il bambino ha già detto giocando ══
+           Non nella scheda delle domande, ed è tutto il punto: le
+           manopole c'erano già e non le toccava nessuno, perché nessuno
+           va a cercare un problema che non sa di avere. Qui il verso si
+           gira — il gioco dice cosa ha notato, il grande decide
+           (`quiz/ComeVa.vue`). Sotto «Chi gioca» e non sopra: la prima
+           domanda di chi entra è *di chi sono queste impostazioni*, e un
+           riquadro che parla di un bambino prima di aver detto quale è
+           una risposta a una domanda non fatta. -->
+      <ComeVa @tutte="scheda = 'giochi'" />
 
       <h2>Progressi</h2>
       <p class="mini">Monete, animali, campagne e traguardi: si salvano su un file, si
@@ -906,12 +1054,12 @@ async function azzera() {
         <button v-if="!confermaAzzera" class="carta pericolo" @click="confermaAzzera = true">
           <span class="ico">🗑️</span>
           <b>Cancella i progressi di {{ chi }}</b>
-          <i>Riparte da zero, non si torna indietro</i>
+          <i>Riparte da zero. Una copia resta qui sotto per un po'</i>
         </button>
         <div v-else class="carta pericolo aperta">
           <b>Cancellare i progressi di {{ chi }}?</b>
-          <i>Monete, animali, traguardi: tutto perso. Se non l'hai ancora
-             fatto, salva prima su file.</i>
+          <i>Monete, animali, traguardi: riparte tutto da zero. Ne resta una
+             copia qui sotto, ma per essere tranquillo salva su file.</i>
           <div class="riga">
             <button class="bottone chiaro" @click="confermaAzzera = false">No, lascia stare</button>
             <button class="bottone rosso" @click="azzera">Sì, cancella</button>
@@ -944,6 +1092,37 @@ async function azzera() {
           </div>
         </template>
       </div>
+
+      <!-- ══ il cestino ══
+           «Non si torna indietro» sulla carta rossa qui sopra non è più
+           vero, ed è deliberato: chi cancella per sbaglio i progressi di
+           un bambino è quasi sempre un grande stanco, non un bambino
+           entrato di nascosto. Compare solo se c'è qualcosa dentro. -->
+      <template v-if="cestino.length">
+        <h2>Cancellati di recente</h2>
+        <p class="mini">Le ultime copie messe da parte prima di cancellare. Rimetterne una
+          sostituisce i progressi di adesso di quel bambino, e non consuma la copia.</p>
+
+        <div class="carte">
+          <template v-for="v in cestino" :key="v.quando">
+            <button v-if="rimettendo?.quando !== v.quando" class="carta"
+                    data-azione="rimetti-cestino" @click="rimettendo = v">
+              <span class="ico">♻️</span>
+              <b>Rimetti i progressi di {{ v.nome }}</b>
+              <i>Com'erano {{ quando(v.quando) }}</i>
+            </button>
+            <div v-else class="carta pericolo aperta">
+              <b>Rimettere i progressi di {{ v.nome }} di {{ quando(v.quando) }}?</b>
+              <i>Quelli che {{ v.nome }} ha adesso vengono sostituiti da quella copia.</i>
+              <div class="riga">
+                <button class="bottone chiaro" @click="rimettendo = null">No, lascia stare</button>
+                <button class="bottone rosso" data-azione="conferma-rimetti"
+                        @click="rimetti(v)">Sì, rimetti</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
 
       <!-- ══ passarlo ad altri ══
            Sta qui dentro perché è roba da grandi, ma la stessa cosa c'è
@@ -978,8 +1157,8 @@ async function azzera() {
         <button class="carta" data-azione="cambia-codice" @click="cambiaCodice">
           <span class="ico">🔑</span>
           <b>Cambia il codice</b>
-          <i v-if="pin === PIN_INIZIALE">È ancora {{ PIN_INIZIALE }}: cambialo appena
-            qualcuno te lo legge da sopra la spalla</i>
+          <i v-if="pin === PIN_INIZIALE">È ancora {{ PIN_INIZIALE }}, cioè come non
+            averlo. Se lo dimentichi si recupera dal tastierino</i>
           <i v-else>Quattro cifre nuove, chieste due volte</i>
         </button>
       </div>
@@ -1021,9 +1200,9 @@ async function azzera() {
           <button class="carta" data-azione="ripara" @click="riparaApp">
             <span class="ico">♻️</span>
             <b>Riscarica il gioco</b>
-            <i>Butta la copia tenuta da parte e riprende l'applicazione da capo.
-              I progressi non si toccano — quelli stanno da un'altra parte, e li
-              porta via solo il tasto rosso qui sopra</i>
+            <i>Se fa cose strane o sembra fermo a una versione vecchia: lo riscarica
+              da internet e riparte pulito. Ci vuole qualche secondo e la connessione.
+              <b>I progressi restano dove sono</b></i>
           </button>
         </div>
       </template>
@@ -1206,6 +1385,24 @@ async function azzera() {
 .pallini span { width:15px; height:15px; border-radius:50%; background:#ffffffcc;
                 box-shadow:inset 0 0 0 2px #d4dce6; transition:.12s }
 .pallini span.pieno { background:var(--viola); box-shadow:none; transform:scale(1.1) }
+
+/* ── la posta ──
+   Un blocco, non una carta: si legge, non si tocca. Il colore è quello
+   dei nastri di casa e non un rosso d'allarme — non è mai urgente, e
+   una cosa che grida ogni volta smette di essere letta. */
+.posta { width:100%; max-width:400px; margin:0 0 16px; text-align:left }
+.posta h2 { margin:0 0 8px }
+.nota { background:#eef4ff; border:2px solid #cfe0f8; border-radius:14px;
+        padding:11px 13px; margin-bottom:9px }
+.nota.avviso { background:#fff2ee; border-color:#f6cdbe }
+.nota b { display:block; font-size:14.5px; margin-bottom:4px }
+.nota p { margin:0; font-size:13px; line-height:1.45 }
+.nota small { display:block; margin-top:6px; font-size:11px; opacity:.6 }
+.nota .bottone { margin-top:9px }
+
+/* la domanda del codice dimenticato: più grande del testo intorno perché
+   è la cosa a cui si sta rispondendo, e non un'istruzione */
+.domanda { font-size:16px; font-weight:700; margin:2px 0 12px; text-align:center; max-width:300px }
 
 .tastierino { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; width:100%; max-width:260px }
 .tasto { height:58px; border-radius:16px; background:#ffffffdd; color:var(--viola-scuro);
@@ -1408,23 +1605,6 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
        color:var(--viola); text-decoration:underline; padding:2px 0; cursor:pointer }
 .livello:active { transform:translateY(1px) }
 
-.rifascia { display:flex; flex-direction:column; gap:9px; align-items:center;
-            width:100%; padding:11px; border-radius:14px; background:#f7f8fb }
-.rifascia > b { font-size:15px }
-.rifascia > i { font-style:normal; font-size:11.5px; line-height:1.4; color:var(--tenue);
-                text-align:center; max-width:36ch }
-.partenze { display:flex; flex-direction:column; gap:7px; width:100% }
-.partenza { display:flex; flex-direction:column; gap:2px; width:100%; text-align:left;
-            padding:10px 13px; border-radius:14px; background:#fff;
-            box-shadow:inset 0 0 0 2px #e3e8ef; transition:.14s }
-.partenza b { display:flex; align-items:baseline; gap:7px; font-size:14.5px; font-weight:800;
-              color:var(--viola-scuro) }
-.partenza b em { font-style:normal; font-size:11px; font-weight:700; color:var(--tenue) }
-.partenza i { font-style:normal; font-size:11.5px; line-height:1.35; color:var(--tenue) }
-.partenza small { font-size:10.5px; font-weight:750; color:var(--viola) }
-.partenza.on { background:#f4f1ff; box-shadow:inset 0 0 0 2px var(--viola) }
-.partenza.on b { color:var(--viola) }
-.partenza:active { transform:translateY(1px) }
 
 /* Cancellare non deve somigliare alle altre due: si vede da lontano che è
    quella che fa danni. */
@@ -1453,13 +1633,6 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .carta.chi-gioca .aspetto-sezione { grid-column:1/3; margin-top:9px;
   padding-top:9px; border-top:1px solid #8593a822 }
 .carta.chi-gioca .aspetto-sezione .mini { text-align:left; margin:0 0 7px }
-.anni-riga { display:flex; align-items:center; gap:10px; margin:0 0 11px }
-.anni-riga b { font-size:17px; font-weight:850; color:var(--viola-scuro); min-width:78px }
-.anni-tasto { width:38px; height:38px; border:none; border-radius:50%; cursor:pointer;
-              font-size:19px; font-weight:800; font-family:inherit; color:#fff;
-              background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
-.anni-tasto:disabled { opacity:.35 }
-.anni-tasto:active { transform:translateY(1px) }
 /* la carta aperta a scrivere un nome: stessa forma di quella che chiede
    conferma prima di cancellare, senza il rosso */
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
