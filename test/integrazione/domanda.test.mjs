@@ -202,6 +202,15 @@ await semina(page, { coins: 300, settings: { sperimentali: true } })
 await page.waitForSelector('.carta.gioco[data-gioco="sotterraneo"]', { timeout: 5000 })
 await page.click('.carta.gioco[data-gioco="sotterraneo"]')
 await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+/* ── prima si sceglie chi scende ──
+   Alla prima apertura il sotterraneo mette davanti i quattro eroi
+   (`viste/Eroi.vue`), e il velo si mangia il tocco sulla tappa. Il
+   velo è arrivato dopo questo test, e per un pomeriggio l'ha lasciato
+   rosso senza che nessuno se ne accorgesse: la CI le prove col browser
+   non le lancia. */
+await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 5000 })
+await page.click('.sot-eroe[data-eroe="cavaliere"]')
+await page.waitForSelector('.sot-velo', { state: 'hidden', timeout: 5000 })
 await page.evaluate(() => { location.hash = 'seme=49' })
 await page.click('.sot-tappa[data-tappa="0"]')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
