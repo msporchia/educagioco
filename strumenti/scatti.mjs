@@ -175,6 +175,28 @@ async function costruisciEChiama (page) {
   await page.waitForTimeout(500)
 }
 
+/* ── la manopola dell'età ──
+   Si fotografa **dal primo avvio**, non dalle impostazioni: lì è la
+   schermata intera invece di un riquadro in mezzo a venti carte, ed è
+   anche il momento in cui la si incontra davvero. Vuole un archivio
+   vuoto (`vuoto: true`), se no si entra col profilo di prova già fatto
+   e l'onboarding non parte. */
+async function manopolaEta (page) {
+  await page.fill('input.nome', 'Anna')
+  await page.click('button.via')
+  await page.waitForSelector('.manopola-posto', { timeout: 6000 })
+  /* la manopola nasce sui quattro anni: otto passi da mezzo anno la
+     portano a otto, che è l'età in cui la casa è più piena e il quadro
+     sotto ha più da dire */
+  for (let i = 0; i < 8; i++) {
+    await page.click('button[aria-label="mezzo anno in più"]')
+    await page.waitForTimeout(100)
+  }
+  await page.evaluate(() => document.querySelector('.manopola-posto')
+    ?.scrollIntoView({ block: 'start' }))
+  await page.waitForTimeout(500)
+}
+
 /* le quattro cifre del codice, che di partenza è 0000 */
 const PIN = [['.tasto >> text="0"', 120], ['.tasto >> text="0"', 120],
              ['.tasto >> text="0"', 120], ['.tasto >> text="0"', 900]]
@@ -239,6 +261,24 @@ const RICETTE = [
   { file: 'corsa-gioco', dove: 'corsa', attesa: '.co-mappa',
     passi: [['.co-tappa.co-adesso, .co-tappa', 4200]] },
 
+  /* ── i due dei piccoli ──
+     Si fotografano **dentro una tappa**, non alla mappa: quello che
+     hanno da far vedere è che si gioca senza leggere niente — icone in
+     cima, roba grossa da toccare sotto — e una mappa di tappe è la
+     stessa fila di tutti gli altri giochi. */
+  { file: 'conta-mappa', dove: 'conta', attesa: '.ct-tappe' },
+  /* La tappa scelta non è la prima: «Il primo gregge» mette in campo
+     fino a cinque cose e sceglie la specie da sé, e capita che siano
+     tre sassi in mezzo a un prato vuoto. «Gli intrusi» ne mette di più
+     e mostra la cosa che vale la pena guardare — che non tutto quello
+     che si vede va contato. */
+  { file: 'conta-gioco', dove: 'conta', attesa: '.ct-tappe',
+    passi: [['.ct-tappa[data-tappa="7"]', 1600]] },
+
+  { file: 'prima-dopo-mappa', dove: 'prima', attesa: '.pd-tappe' },
+  { file: 'prima-dopo-gioco', dove: 'prima', attesa: '.pd-tappe',
+    passi: [['.pd-tappa:not([disabled])', 1600]] },
+
   { file: 'codice-mappa', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe' },
   { file: 'codice-gioco', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe',
     passi: [['.tappa:not(.chiusa), .cs-tappa', 3000]] },
@@ -262,6 +302,7 @@ const RICETTE = [
   { file: 'cameretta-animale', dove: 'cameretta', attesa: '.stanza, .posto',
     passi: [['.posto:not(.libero)', 1200]] },
   { file: 'albo', dove: 'albo', attesa: '.testata' },
+  { file: 'eta', dove: '', vuoto: true, attesa: '.benvenuto', passi: [manopolaEta] },
   { file: 'genitori', dove: 'genitori', attesa: '.tastierino', passi: [...PIN] },
   { file: 'genitori-giochi', dove: 'genitori', attesa: '.tastierino',
     passi: [...PIN, ['.schede button[data-scheda="sa"]', 800]] },
@@ -299,8 +340,9 @@ let storte = 0
 for (const r of scelte) {
   const page = await browser.newPage({ viewport: TELEFONO, deviceScaleFactor: 2, hasTouch: true })
   /* il roster va scritto prima che parta l'app, come nei test: senza,
-     si apre l'onboarding e si fotografa quello dieci volte */
-  await page.addInitScript(p => {
+     si apre l'onboarding e si fotografa quello dieci volte. `vuoto`
+     è l'eccezione: è proprio l'onboarding la cosa da fotografare. */
+  if (!r.vuoto) await page.addInitScript(p => {
     try {
       localStorage.setItem('giocatori', JSON.stringify([{ id: 'g1', nome: 'Anna' }]))
       localStorage.setItem('ultimo-giocatore', JSON.stringify('g1'))

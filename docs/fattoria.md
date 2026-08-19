@@ -40,22 +40,55 @@ settimo della crescita un campo seminato era identico a uno vuoto, e non si
 capiva se seminare avesse funzionato.
 
 ```
-   🌿 erba medica  ──🪙1,  8 min──▶  4 fieno   ─┐
-   🌾 grano        ──🪙2, 10 min──▶  3 grano   ─┤
-   🥕 carote       ──🪙3, 12 min──▶  3 carote  ─┼──▶  mulino  ──▶ 🥣 🍲
-   🌽 mais         ──🪙2, 18 min──▶  5 mais    ─┤
-   🎃 zucche       ──🪙4, 25 min──▶  2 zucche  ─┴──▶  fienile ──▶ 🌰 🥬 🥘
-                                                        │
-                                                     recinti ──▶ 🥚 🥛 🍄 🧶
+   🌿 erba medica  ── 4 min ──▶  1 fieno   ─┐
+   🌾 grano        ── 5 min ──▶  1 grano   ─┤
+   🥕 carote       ── 6 min ──▶  1 carota  ─┼──▶  mulino  ──▶ 🥣 🍲
+   🌽 mais         ── 8 min ──▶  1 mais    ─┤
+   🎃 zucche       ──10 min ──▶  1 zucca   ─┴──▶  fienile ──▶ 🌰 🥬 🥘
+                                                    │
+                                                 recinti ──▶ 🥚 🥛 🍄 🧶
 ```
+
+### N → 1, e mai il contrario (dal 19 agosto 2026)
+
+**Un campo dà una cosa. Due grani danno un becchime. Due becchimi danno un
+uovo.** È la regola che tiene contabile tutta la catena, e non è
+bilanciamento: è *quanto costa capire*. Da lì la domanda «quanti me ne
+servono» ha una risposta che si conta sulle dita — se te ne chiedo tre,
+riempi tre campi.
+
+Prima un campo rendeva da 2 a 5, e una ricetta ne faceva 1 o 2. Con quei
+numeri il conto si spezza: da «tre grani fanno due mangimi» a «quanti campi
+semino per due uova» ci sono due divisioni con un resto, e non le fa nessuno
+— si semina a caso e si torna a guardare. Peggio, il numero grande fa credere
+di essere ricchi: un campo che rende cinque mais sembra tanto finché non si
+scopre che al pastone ne servono quattro.
+
+A fare la differenza fra una ricetta e l'altra restano **quanto prende,
+quanto costa e quanto ci mette**: tre leve che si leggono tutte guardando il
+tasto. `guastiDelleColture` rifiuta qualunque `resa` diversa da uno.
+
+Due conseguenze che si vedono:
+
+- **Seminare è gratis, si paga raccogliendo.** Un raccolto adesso è *una*
+  cosa: farsi pagare due volte per un pezzo solo lo renderebbe più caro che
+  comprarlo, e la catena si ribalterebbe. Resta viva la regola che conta —
+  chi è a zero monete non perde il raccolto, il campo lo aspetta.
+- **L'ovile chiede un foraggio solo**, la conigliera due. Fanno la stessa
+  lana, quindi quello che costa il doppio deve chiedere la metà: con le rese
+  a uno non si può più differenziare col «rende due invece di uno».
 
 | | prodotto | comprato | riempie |
 |:--|--:|--:|--:|
-| 🥣 Mangime | 🪙3 e ~8 min | 🪙5 subito | 30% di pancia |
-| 🥚 Uovo | 🪙3 e ~14 min | 🪙7,5 subito | 45% di pancia |
-| 🥛 Latte | 🪙3,5 e ~24 min | 🪙9 subito | 55% di pancia |
-| 🍲 Pastone | 🪙7 e ~22 min | 🪙12 subito | 70% di pancia |
-| 🍄 Tartufo | 🪙10 e ~65 min | 🪙15 subito | 90% di pancia |
+| 🥣 Mangime | 🪙3 e ~14 min | 🪙5 subito | 30% di pancia |
+| 🥚 Uovo | 🪙5 e ~36 min | 🪙7,5 subito | 45% di pancia |
+| 🥛 Latte | 🪙5 e ~36 min | 🪙9 subito | 55% di pancia |
+| 🍲 Pastone | 🪙7 e ~30 min | 🪙12 subito | 70% di pancia |
+| 🍄 Tartufo | 🪙9 e ~72 min | 🪙15 subito | 90% di pancia |
+
+I minuti sono quelli di **un campo solo che gira**: chi ne ha tre li divide
+per tre, ed è il motivo per cui il secondo campo è la spesa che cambia di più
+la giornata.
 
 **Coltivare conviene della metà, non dell'ottanta per cento.** È il numero su
 cui sta in piedi tutto: se coltivare costasse un quinto, dopo tre giorni
@@ -89,11 +122,11 @@ dell'animale, ed è la ragione per cui un bambino attraversa la fattoria e sa
 già dove deve andare.
 
 ```
-   🐰 conigliera 🪙95   2 🥬 ──18 min──▶ 1 🧶 lana
-   🐔 pollaio    🪙130  2 🌰 ──12 min──▶ 2 🥚 uova
-   🐑 ovile      🪙190  3 🥬 ──25 min──▶ 2 🧶 lana
-   🐄 stalla     🪙220  4 🥬 ──20 min──▶ 2 🥛 latte
-   🐖 porcile    🪙260  2 🥘 ──30 min──▶ 1 🍄 tartufi
+   🐰 conigliera 🪙95   2 🥬 ──14 min──▶ 1 🧶 lana
+   🐔 pollaio    🪙130  2 🌰 ── 8 min──▶ 1 🥚 uovo
+   🐑 ovile      🪙190  1 🥬 ── 8 min──▶ 1 🧶 lana
+   🐄 stalla     🪙220  2 🥬 ──10 min──▶ 1 🥛 latte
+   🐖 porcile    🪙260  2 🥘 ──20 min──▶ 1 🍄 tartufo
 ```
 
 La **lana** è l'unica cosa della catena che non si mangia: paga una coccola,
@@ -102,10 +135,10 @@ le monete. Serve a che oltre alla ciotola ci sia qualcos'altro da desiderare
 — e a dare un mestiere alle pecore.
 
 Conigli e pecore mangiano lo stesso foraggio e fanno la stessa lana, quindi
-**l'ovile dev'essere più efficiente**: 3 🥬 → 2 🧶 contro 2 🥬 → 1 🧶. Se no
-costerebbe il doppio della conigliera per fare la stessa cosa, che è il modo
-di rendere inutile la seconda metà di un catalogo. Si paga prima e si
-risparmia dopo, come tutta l'attrezzatura di questo gioco.
+**l'ovile dev'essere più efficiente**: gliene basta *uno* dove alla
+conigliera ne servono due. Se no costerebbe il doppio per fare la stessa
+cosa, che è il modo di rendere inutile la seconda metà di un catalogo. Si
+paga prima e si risparmia dopo, come tutta l'attrezzatura di questo gioco.
 
 ### Il fienile, e il mangime (dal 19 agosto 2026)
 
@@ -140,11 +173,12 @@ conveniente e basta; con tre, il grano resta la cosa delle galline e le
 zucche restano la cosa dei maiali, e il fienile è solo il passaggio in mezzo.
 
 ```
-   🌾 grano  ──3──▶ 🌰 becchime ──2──▶ 🐔 galline            ──▶ 🥚 uova
-   🥕 carote ──3──▶ 🥬 foraggio ──2──▶ 🐰 conigli            ──▶ 🧶 lana
-   🌿 fieno  ──3──▶ 🥬 foraggio ──3──▶ 🐑 pecore · 🐄 mucche  ──▶ 🧶 🥛
-   🎃 zucche ──2──▶ 🥘 zuppa    ──2──▶ 🐖 maiali             ──▶ 🍄 tartufi
-   🌽 mais   ─────▶ 🍲 pastone (al mulino, per la ciotola)
+   🌾 grano  ──2──▶ 🌰 becchime ──2──▶ 🐔 galline            ──▶ 🥚 uovo
+   🥕 carote ──2──▶ 🥬 foraggio ──2──▶ 🐰 conigli            ──▶ 🧶 lana
+   🌿 fieno  ──2──▶ 🥬 foraggio ──1──▶ 🐑 pecore             ──▶ 🧶 lana
+                                ──2──▶ 🐄 mucche             ──▶ 🥛 latte
+   🎃 zucche ──2──▶ 🥘 zuppa    ──2──▶ 🐖 maiali             ──▶ 🍄 tartufo
+   🌽 mais   ──3──▶ 🍲 pastone (al mulino, per la ciotola)
 ```
 
 Due strade per lo stesso foraggio non sono una svista: le carote arrivano col
@@ -313,9 +347,13 @@ la stessa scelta del primo campo con una coltura sola.
 insieme**, e costa 🪙40, poi 130, 185, 220, 250 — cioè `40 + 130·ln(1+n)`,
 arrotondato a cinque.
 
-Otto perché **due campi della stessa coltura ci stanno e tre no**: uno di
-mais rende 5, uno di grano 3. È il modo di dire «coltiva anche altro» senza
-scriverlo da nessuna parte e senza vietare niente.
+Otto perché sono **quattro giri di ricetta**: una ne chiede due, quindi si
+può accumulare quattro volte prima di dover trasformare qualcosa. Abbastanza
+per non stare a contare, poco abbastanza perché chi semina sempre e non
+trasforma mai si trovi lo scomparto colmo — che è il momento in cui il gioco
+insegna il resto della catena. (Era «due campi ci stanno e tre no», vero
+finché un campo rendeva da due a cinque: da quando ne rende **uno** quel
+conto non vuol dire più niente.)
 
 #### Perché non sono più posti in comune
 
@@ -441,8 +479,7 @@ di gioco:
    1   🪙0        il campo, il silo del raccolto, il grano
    2   🪙210      il primo amico (il bobtail)
    3   🪙430      il mulino, e il silo della stalla
-   4   🪙670      il fienile
-   5   🪙930      la conigliera, le carote, e il foraggio che ne esce
+   5   🪙930      il fienile, la conigliera, le carote e il foraggio
    8   🪙1790     il pollaio
   10   🪙2450     il mais, cioè il pastone
   12   🪙3170     l'ovile, e l'erba medica
@@ -458,8 +495,16 @@ scelta sola — a quattro anni cinque bottoni sono un elenco da leggere, uno è
 una cosa da fare — e le altre arrivano quando serve: le carote con la
 conigliera e il foraggio che ne esce; il mais quando il mulino gira da un
 pezzo; l'erba medica con l'ovile (prima il fieno, poi le pecore); le zucche
-col porcile e la zuppa. Il fienile sta **prima del primo recinto**, che è
-l'ordine in cui si legge la catena: prima la mangiatoia, poi chi mangia. Una coltura che arriva prima di quello che la consuma è roba che
+col porcile e la zuppa.
+
+Il fienile arriva **con la prima coltura che ci va dentro e con la prima
+bocca che la mangia**, tutti e tre al livello 5. Stava al 4 — «prima la
+mangiatoia, poi chi mangia», che come racconto è più bello — e per un livello
+intero era una macchina da 🪙150 che, aperta, diceva «metti dentro quello che
+hai raccolto» e sotto non aveva niente: la sua prima ricetta vuole le carote,
+che arrivavano al 5. Adesso `guastiDegliSblocchi` rifiuta **una macchina che
+arriva prima del suo primo lavoro**, che è il gemello del controllo sulle
+ricette in anticipo — e si era rotto proprio dove l'altro non guardava. Una coltura che arriva prima di quello che la consuma è roba che
 riempie il silo senza servire a niente, cioè il modo di far sembrare rotto un
 gioco che funziona.
 
@@ -523,6 +568,15 @@ apre la sua scheda, toccare un campo apre la sua. Tenere premuto e trascinare
 sposta; tenere premuto sul prato apre il baule *dove* si vuole mettere
 qualcosa.
 
+**Il baule tenuto premuto si ricorda dove.** Tenere premuto in mezzo al
+prato vuol dire «voglio metterci qualcosa *qui*»: la scelta del posto è già
+stata fatta, e farsela chiedere di nuovo col tocco dopo è chiedere due volte
+la stessa cosa. Quindi si sceglie la panchina e **si posa lì**. Se lì non ci
+sta — il pezzo è più largo dello spazio libero — si torna al gesto di sempre
+e resta appesa al dito, che è il modo di dire «scegline un altro» senza un
+cartello. Aperto dal tasto in alto, invece, il baule non ha nessun posto da
+ricordare: si posa col tocco dopo, come si è sempre fatto.
+
 Sopra un campo pronto e sopra una macchina che ha finito galleggia un 🧺, e
 sopra una bestia che ha bisogno di qualcosa un 💭: si vedono da lontano,
 senza aprire niente. Un recinto non ha bisogno nemmeno di quello — cambia
@@ -584,13 +638,71 @@ porta dentro il modulo generato. Il catalogo della fattoria lo legge e
 basta: duecento righe che ridicono a mano quello che sta già nel
 foglietto sarebbero duecento righe da tenere d'accordo per sempre.
 
+### Quello che si guarda prima di scegliere (dal 19 agosto 2026)
+
+Cinque correzioni nate tutte dalla stessa mezz'ora giocata col telefono in
+mano, e tutte dalla stessa domanda: **davanti a una scelta, quello che serve
+per farla dev'essere a schermo.**
+
+**Le ricette sono caselle, non formule.** Erano «3 → 2»: due numeri e una
+freccia. Una formula si legge, e leggere è la cosa che qui non si può dare
+per scontato. Adesso quello che serve è **una casella per pezzo**, accesa se
+quel pezzo ce l'hai — quattro caselle di foraggio, due accese — e non c'è
+niente da contare né da sottrarre: si vede il buco. Quella vuota non è
+spenta, è tratteggiata con dentro la figura in ombra: «questo ti manca» e non
+«questo non si può».
+
+**«Ne hai N», ovunque si scelga.** Sotto ogni coltura del campo e sotto ogni
+ricetta di una macchina. Non risponde a *posso?* — a quello rispondono il
+tasto spento e il numero che manca — ma a **mi serve?**, che è la domanda
+vera davanti a cinque semi o a quattro ricette. Senza, si semina sempre la
+stessa cosa e si scopre il silo tappato dieci minuti dopo, davanti a un
+raccolto che non entra: per questo uno scomparto colmo lo dice **prima** di
+seminare, e in oro.
+
+**Una macchina al lavoro dice cosa sta facendo.** Era una clessidra, uguale
+per tutte, e andava bene finché la macchina era una con una ricetta sola. Il
+fienile ne fa quattro: davanti a una clessidra bisogna aprire il foglio per
+sapere cos'è partito, e aprirlo è esattamente quello che un fumetto esiste
+per evitare. Adesso nel fumetto c'è la faccia della merce, con la clessidra
+nell'angolo — che è quello che distingue «sto facendo questo» da «voglio
+questo» di un recinto affamato.
+
+**Il nome, dove c'è un disegno accanto.** «Ti serve ancora 4 🥬» sotto un
+tasto che mostra una balla di fieno sono due cose diverse per chi guarda. Da
+quando ogni merce ha la sua figura, l'emoji che le sta scritta accanto è un
+ripiego, e in qualche caso non le somiglia affatto: dove le due si vedono
+insieme — le schede delle macchine, il silo, i consigli — si scrive **il
+nome**. L'emoji resta dove non c'è niente a contraddirla.
+
+**Il carretto del vicino non dice più di no.** Le merci che si potevano dare
+erano segnate con la classe del cibo che una bestia *rifiuta*, cioè in rosso:
+un tasto che funziona benissimo si leggeva come «non hai i requisiti». Adesso
+sono neutre, e quella con lo scomparto colmo è in oro — la stessa tinta con
+cui il silo segna un pieno. E chi ci arriva da un consiglio («lo scomparto
+del mais è pieno, danne cinque al vicino») lo trova **già aperto sul mais**:
+il primo dei due passi l'aveva già fatto, e richiederglielo è il compito che
+il consiglio doveva togliere.
+
 ### Il baule
 
-Duecento cose da comprare, in undici linguette a griglia — colonne uguali,
-come una tastiera, invece di pillole centrate che facevano tre righe di
-lunghezze diverse. **Quello che lavora sta separato da quello che arreda**:
-in «Campi» ci sono quattro cose e sono le quattro che fanno qualcosa (campo,
-mulino, due silos), in «Cortile» il fienile e i cinque recinti, e basta. Ci erano finiti
+Duecento cose da comprare, a griglia — colonne uguali, come una tastiera,
+invece di pillole centrate che facevano tre righe di lunghezze diverse.
+
+**In cima si sceglie di cosa si sta parlando**, e le risposte sono tre: 🌾 *La
+fattoria* (quello che fa qualcosa), 🌸 *Decorazioni* (quello che sta lì e
+basta), 🐕 *Animali* (le bestie di casa). Erano due, con gli animali dentro
+«la fattoria» come una linguetta accanto ai recinti, e la seconda si chiamava
+«Il bello» — vero, ma non una parola che un bambino userebbe cercando una
+panchina.
+
+Sotto «la fattoria» **la linguetta è una sola**, e quando è una sola non si
+mostra affatto: campo, mulino, silos, fienile e recinti sono i passi della
+stessa catena, e messi in due scaffali («Campi» e «Cortile») quella fila non
+si vedeva — mentre due tasti per scegliere fra dieci cose sono due tasti di
+troppo. Il confine fra i due era una distinzione da adulti, la terra di qua e
+gli animali di là; per chi gioca sono la stessa cosa, le unità che
+*producono*. Ci erano finiti
 in mezzo nove *finti campi* — aiuole a solchi, zolle, terra smossa — che si
 posavano, si toccavano e non facevano niente: sono stati tolti, per la stessa
 ragione per cui a suo tempo era stato tolto lo stagno disegnato. Le figure sono grandi, stanno
