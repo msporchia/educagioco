@@ -1335,6 +1335,7 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
               color:var(--viola-scuro) }
 .partenza b em { font-style:normal; font-size:11px; font-weight:700; color:var(--tenue) }
 .partenza i { font-style:normal; font-size:11.5px; line-height:1.35; color:var(--tenue) }
+.partenza small { font-size:10.5px; font-weight:750; color:var(--viola) }
 .partenza.on { background:#f4f1ff; box-shadow:inset 0 0 0 2px var(--viola) }
 .partenza.on b { color:var(--viola) }
 .partenza:active { transform:translateY(1px) }
@@ -1366,6 +1367,13 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 .carta.chi-gioca .aspetto-sezione { grid-column:1/3; margin-top:9px;
   padding-top:9px; border-top:1px solid #8593a822 }
 .carta.chi-gioca .aspetto-sezione .mini { text-align:left; margin:0 0 7px }
+.anni-riga { display:flex; align-items:center; gap:10px; margin:0 0 11px }
+.anni-riga b { font-size:17px; font-weight:850; color:var(--viola-scuro); min-width:78px }
+.anni-tasto { width:38px; height:38px; border:none; border-radius:50%; cursor:pointer;
+              font-size:19px; font-weight:800; font-family:inherit; color:#fff;
+              background:linear-gradient(180deg,var(--viola),var(--viola-scuro)) }
+.anni-tasto:disabled { opacity:.35 }
+.anni-tasto:active { transform:translateY(1px) }
 /* la carta aperta a scrivere un nome: stessa forma di quella che chiede
    conferma prima di cancellare, senza il rosso */
 .carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
