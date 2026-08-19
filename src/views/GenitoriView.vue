@@ -30,6 +30,7 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
+import { INDIRIZZO, condividi, piattaforma, installata } from '../guide/aiuto.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
 import { PARTENZE } from '../data/partenze.js'
 import { sapereDi } from '../data/saperi.js'
@@ -330,6 +331,51 @@ async function importa(ev) {
   }
   ev.target.value = ''   // stesso file due volte di fila deve poter funzionare
 }
+
+/* ── PASSARE IL GIOCO A UN'ALTRA FAMIGLIA ──
+   Si condivide **l'indirizzo secco**, senza messaggio addosso: chi lo
+   manda scrive di suo quello che ha da dire, e un testo preconfezionato
+   in fondo a una chat suona come una catena di sant'Antonio.
+
+   L'indirizzo lo scrive il build e non lo si legge da `location`: qui in
+   casa il gioco arriva dal server di casa, e quell'indirizzo per un'altra
+   famiglia non esiste. Vedi `guide/aiuto.js`. */
+async function passaIlGioco () {
+  esito.value = null
+  const r = await condividi({ url: INDIRIZZO, titolo: 'Educagioco' })
+  if (r.come === 'copiato') esito.value = { ok: true, testo: 'Indirizzo copiato: incollalo dove vuoi.' }
+  else if (r.come === 'niente') esito.value = { ok: false, testo: INDIRIZZO }
+}
+
+/* Il salvataggio mandato dal foglio del telefono invece che scaricato.
+   Su un telefono «scarica» finisce in una cartella che poi va ritrovata;
+   di qui va dove serve — a se stessi in chat, nel cloud, sull'altro
+   telefono — che è l'unico motivo per cui uno esporta i progressi.
+   La carta compare solo dove la condivisione di file c'è davvero. */
+const puoMandareFile = (() => {
+  try { return !!navigator.canShare?.({ files: [new File(['{}'], 'p.json', { type: 'application/json' })] }) }
+  catch { return false }
+})()
+
+async function mandaSalvataggio () {
+  esito.value = null
+  try {
+    const dati = await esportaTutto()
+    const oggi = new Date().toISOString().slice(0, 10)
+    const f = new File([JSON.stringify(dati, null, 2)], `giochi-progressi-${oggi}.json`,
+                       { type: 'application/json' })
+    const r = await condividi({ file: f, titolo: 'Progressi Educagioco' })
+    if (r.come === 'niente') esporta()      // niente foglio: resta il download di sempre
+    else if (r.come === 'condiviso') esito.value = { ok: true,
+      testo: 'Mandato. Dentro ci sono i nomi dei bambini e cosa hanno giocato: tienilo dove terresti le foto.' }
+  } catch (e) {
+    esito.value = { ok: false, testo: 'Non sono riuscito a mandarlo: ' + e.message }
+  }
+}
+
+/* Serve solo a decidere se vale la pena dire «installalo»: chi ci gioca
+   già dall'icona non ha bisogno di sentirselo ripetere. */
+const daInstallare = !installata() && piattaforma() !== 'computer'
 
 /* ── chi gioca ──
    Aggiungere, rinominare, eliminare. Sta dietro il PIN e non in home
@@ -837,6 +883,16 @@ async function azzera() {
           <i>Scarica tutto: {{ chiGioca }}</i>
         </button>
 
+        <!-- Solo dove il foglio di condivisione esiste (i telefoni): sul
+             computer «scarica» è già la cosa giusta, e una carta in più
+             sarebbe solo un'altra decisione da prendere. -->
+        <button v-if="puoMandareFile" class="carta" data-azione="manda-salvataggio"
+                @click="mandaSalvataggio">
+          <span class="ico">📤</span>
+          <b>Mandalo dove vuoi</b>
+          <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
+        </button>
+
         <button class="carta" @click="file.click()">
           <span class="ico">📂</span>
           <b>Rimetti da un file</b>
@@ -886,7 +942,34 @@ async function azzera() {
         </template>
       </div>
 
+      <!-- ══ passarlo ad altri ══
+           Sta qui dentro perché è roba da grandi, ma la stessa cosa c'è
+           anche in «Come funziona», che è fuori dal codice: chi riceve il
+           gioco da un'altra famiglia non ha motivo di conoscere il PIN, e
+           il primo bisogno di un genitore nuovo è installarlo. -->
+      <h2>Passa il gioco</h2>
+      <p class="mini">Non c'è un negozio da cui scaricarlo: si passa l'indirizzo, e chi lo
+        riceve se lo aggiunge alla schermata del telefono. È gratis e non chiede niente
+        a nessuno.</p>
+
+      <div class="carte">
+        <button class="carta" data-azione="condividi-gioco" @click="passaIlGioco">
+          <span class="ico">🔗</span>
+          <b>Condividi il gioco</b>
+          <i>{{ INDIRIZZO.replace(/^https?:\/\//, '') }}</i>
+        </button>
+
+        <button class="carta" data-azione="vai-guide" @click="$emit('vai','guide')">
+          <span class="ico">📖</span>
+          <b>Come funziona</b>
+          <i v-if="daInstallare">Installarlo sul telefono, l'età, le domande, i progressi</i>
+          <i v-else>L'età, la difficoltà delle domande, dove stanno i progressi</i>
+        </button>
+      </div>
+
       <h2>Codice</h2>
+      <p class="mini">Le quattro cifre che aprono questa schermata. Stanno sul telefono,
+        non dentro un bambino: valgono per tutti quelli che giocano qui.</p>
 
       <div class="carte">
         <button class="carta" data-azione="cambia-codice" @click="cambiaCodice">
