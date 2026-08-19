@@ -177,23 +177,124 @@
 .sot h2, .sot h3 { color: var(--sot-inchiostro) }
 
 /* ═══════════ lo zaino e il mercante ═══════════ */
-.sot-riepilogo { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13px }
-.sot-caselle { display: flex; gap: 9px; margin-bottom: 12px }
-.sot-casella {
-  flex: 1; padding: 10px; text-align: center; border-radius: 14px;
-  background: #ffffff0d; border: 1px dashed var(--sot-bordo);
+/* ═══════════ lo zaino ═══════════
+   Le caselle stanno **intorno alla figura**, non in fila: la mano a
+   destra, l'armatura a sinistra, l'anello sotto, e in mezzo chi le
+   porta. È la differenza fra un elenco di oggetti e un personaggio
+   equipaggiato — guardando la figura si vede come si è messi senza
+   leggere una riga. */
+.sot-riepilogo {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 12px; font-size: 13.5px; color: var(--sot-inchiostro);
 }
-.sot-casella .em { font-size: 26px; display: block }
-.sot-casella b { display: block; font-size: 12px; margin-top: 2px }
-.sot-casella i { display: block; font-size: 11px; color: var(--sot-tenue); font-style: normal }
+.sot-riepilogo .sot-polso { width: 74px; height: 16px }
+
+.sot-corredo {
+  display: grid; gap: 8px; margin-bottom: 14px; align-items: center;
+  grid-template-columns: 1fr minmax(96px, 1.2fr) 1fr;
+  grid-template-areas:
+    "corpo chi mano"
+    ".     dito .";
+  padding: 12px 8px 10px;
+  border-radius: 20px;
+  background: radial-gradient(90% 70% at 50% 0%, #1d2236, var(--sot-carta) 75%);
+  border: 1px solid var(--sot-bordo);
+}
+.sot-slot-mano { grid-area: mano }
+.sot-slot-corpo { grid-area: corpo }
+.sot-slot-dito { grid-area: dito; justify-self: center; min-width: 96px }
+.sot-figura { grid-area: chi; position: relative; display: grid; place-items: center; min-height: 118px }
+
+/* una casella incisa nel fondo, non un bottone appoggiato sopra */
+.sot-slot {
+  display: grid; justify-items: center; gap: 4px; padding: 8px 6px 6px;
+  color: inherit; font: inherit; border-radius: 14px;
+  background: #05070c99; border: 1px solid #ffffff22;
+  box-shadow: inset 0 2px 8px #0009;
+}
+.sot-slot i { font-style: normal; font-size: 10.5px; color: var(--sot-tenue); line-height: 1.15 }
+.sot-slot.sot-vuota i { opacity: .75 }
+.sot-dentro { display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden }
+.sot-dentro .em { font-size: 24px }
+.sot-slot.sot-vuota .sot-dentro { opacity: .35 }
+
+/* il ritratto: pixel art, quindi mai sfocata.
+   `display: block` sul figlio non è cosmetica: un `transform` **non si
+   applica a un elemento inline**, e senza quella riga la figura c'era
+   nel DOM, misurava giusto, e non si vedeva — a differenza delle
+   caselle, dove il contenitore è una griglia e il figlio viene
+   blockificato da sola. Un difetto che non dà nessun errore e si scopre
+   solo guardando lo schermo. */
+.sot-ritratto { display: block; overflow: hidden; image-rendering: pixelated }
+.sot-ritratto > i, .sot-dentro > i, .sot-impugnata > i { display: block }
+.sot-ritratto .em { font-size: 40px }
+.sot-impugnata { position: absolute; right: 12%; bottom: 24%; overflow: hidden }
 
 .sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
 .sot-tasca {
-  padding: 12px 6px; text-align: center; border-radius: 14px; color: inherit;
-  background: #ffffff10; border: 1px solid #ffffff14; font: inherit; font-size: 11px;
+  display: grid; justify-items: center; gap: 3px; padding: 9px 4px 7px;
+  border-radius: 14px; color: inherit; font: inherit;
+  background: #05070c88; border: 1px solid #ffffff18;
+  box-shadow: inset 0 2px 8px #0007;
 }
-.sot-tasca .em { font-size: 26px; display: block }
-.sot-tasca.sot-vuota { opacity: .35 }
+.sot-tasca em { font-style: normal; font-size: 10.5px; line-height: 1.1; text-align: center }
+.sot-tasca.sot-vuota { opacity: .4 }
+.sot-tasca.sot-vuota .sot-dentro .em { opacity: .5 }
+
+/* ── chi scende, e come si cambia ── */
+.sot-chi {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
+  color: inherit; font: inherit; text-align: left;
+  background: var(--sot-carta); border: 1px solid var(--sot-bordo); border-radius: 16px;
+}
+.sot-chi .sot-testo { flex: 1; min-width: 0; display: grid }
+.sot-chi .sot-testo b { font-size: 15px }
+.sot-chi .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
+.sot-chi .sot-cambia {
+  font-size: 12px; color: var(--sot-oro); border: 1px solid #ffd23f55;
+  border-radius: 999px; padding: 4px 10px;
+}
+
+.sot-eroe {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 8px;
+  padding: 10px 12px; color: inherit; font: inherit; text-align: left;
+  background: #ffffff0d; border: 1px solid var(--sot-bordo); border-radius: 16px;
+}
+.sot-eroe.sot-scelto { border-color: var(--sot-oro); background: #ffd23f14 }
+.sot-eroe .sot-testo { flex: 1; min-width: 0; display: grid; gap: 2px }
+.sot-eroe .sot-testo b { font-size: 15px }
+.sot-eroe .sot-testo > i { font-style: normal; font-size: 12px; color: var(--sot-tenue); line-height: 1.35 }
+/* le barrette: davanti a «❤️ 24 · ⚔️ 3» un bambino di sei anni non sa
+   dire chi è più forte, davanti a due barre lunghe diverse sì */
+.sot-barre { display: flex; align-items: center; gap: 8px; margin-top: 3px }
+.sot-barra {
+  position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px;
+  padding: 2px 6px; font-size: 12px; border-radius: 999px; background: #ffffff10; overflow: hidden;
+}
+.sot-barra::before {
+  content: ''; position: absolute; inset: 0 auto 0 0; width: calc(var(--q) * 100%);
+  background: #ffffff14;
+}
+.sot-barra > * { position: relative }
+.sot-cuore::before { background: linear-gradient(90deg, #e0644f66, #ff9b7a55) }
+.sot-braccio::before { background: linear-gradient(90deg, #ffd23f55, #ffe98a44) }
+.sot-scudo { font-size: 12px; color: var(--sot-tenue) }
+
+/* ── quello che si è scelto, e cosa se ne può fare ──
+   La cornice d'oro dice «sto parlando di questa qui»: senza, i due tasti
+   larghi qui sotto sembrano riferirsi all'ultima cosa toccata, che con
+   sei tasche uguali è indistinguibile dalla penultima. */
+.sot-tasca.sot-scelto, .sot-casella.sot-scelto {
+  border: 2px solid var(--sot-oro); background: #ffd23f1c; opacity: 1;
+}
+.sot-azioni { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sot-bordo) }
+.sot-dice { margin: 0; font-size: 13.5px }
+.sot-dice .em { font-size: 20px; vertical-align: -3px }
+/* il numero su cui si sceglie: in verde solo quando conviene davvero,
+   perché un colore uguale per ogni caso non dice niente */
+.sot-cambio { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--sot-tenue) }
+.sot-cambio.sot-meglio { color: #4fce7c }
+.sot-grosso[disabled] { opacity: .4 }
 
 .sot-merce {
   display: flex; align-items: center; gap: 11px; width: 100%; margin-bottom: 8px;

@@ -22,27 +22,30 @@
    armature, che infatti non ci sono (vedi `cose.js`).
    ═══════════════════════════════════════════════════════════════════ */
 import { EROE } from './mondo.js'
+import { ARMI_DI } from './cose.js'
 
 export const MOSTRI = {
   goblin: {
     em: '👺', sprite: 'goblin', nome: 'Un goblin',
     ossa: 4, att: 2, dif: 0, gemme: 2,
-    lascia: ['pozione'],
+    lascia: ['pozione-piccola'],
   },
   scheletro: {
     em: '💀', sprite: 'scheletro', nome: 'Uno scheletro',
     ossa: 8, att: 3, dif: 1, gemme: 5,
-    lascia: ['spadino', 'panciotto', 'pozione'],
+    /* le armi si chiedono per **gradino**: una famiglia nuova entra nel
+       bottino senza che nessuno debba ricordarsi di aggiungerla qui */
+    lascia: [...ARMI_DI(1), 'panciotto', 'pozione-piccola'],
   },
   orco: {
     em: '👹', sprite: 'orco', nome: 'Un orco',
     ossa: 12, att: 4, dif: 1, gemme: 8,
-    lascia: ['spada', 'corazza', 'pozione'],
+    lascia: [...ARMI_DI(2), 'corazza', 'pozione'],
   },
   gigante: {
     em: '🗿', sprite: 'mostro-grosso', nome: 'Il gigante',
     ossa: 17, att: 5, dif: 1, gemme: 12, capo: true,
-    lascia: ['ascia', 'manto', 'corazza'],
+    lascia: [...ARMI_DI(3), 'manto', 'amuleto-rosso'],
   },
 }
 

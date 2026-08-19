@@ -41,6 +41,7 @@ import {
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { eroeDi, DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, IN_VENDITA, NEI_FORZIERI } from '../dati/cose.js'
 import { durezzaDi, guardianoDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
@@ -53,18 +54,24 @@ import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.2 }
 
 export class Corsa {
-  constructor(tappa, { seme = null, rnd = Math.random } = {}) {
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA } = {}) {
     this.tappa = tappa
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
     this.piano = 0
 
-    this.vitaMax = EROE.vita
-    this.vita = EROE.vita
+    /* Chi scende. La scheda dice vita, braccio e difesa di partenza, e
+       tutto il resto del motore non sa che esistano quattro eroi: somma
+       quello che trova qui. */
+    this.chiEro = eroe
+    this.io = eroeDi(eroe)
+    this.vitaBase = this.io.vita
+    this.vita = this.io.vita
     this.gemme = 0
     this.zaino = []
     this.mano = null
     this.corpo = null
+    this.dito = null
     this.torcia = false
 
     this.foglio = null          // cosa è aperto adesso, o niente
@@ -89,9 +96,32 @@ export class Corsa {
   /* ── com'è messo l'eroe ──
      L'unico posto dove si sommano: chi vuole sapere quanto picchia
      chiede qui, e non va a guardare dentro le tasche. */
-  get att() { return EROE.att + (this.mano ? (COSE[this.mano].att || 0) : 0) }
-  get dif() { return EROE.dif + (this.corpo ? (COSE[this.corpo].dif || 0) : 0) }
+  get att() { return this.io.att + this.addosso('att') }
+  get dif() { return this.io.dif + this.addosso('dif') }
+  /* La vita massima **non è un campo**: cresce coi piani (`vitaBase`) e
+     con quello che si porta al dito. Tenerla come numero voleva dire
+     ricordarsi di alzarla e abbassarla ogni volta che l'amuleto entra o
+     esce, cioè dimenticarsene una volta su due. */
+  get vitaMax() { return this.vitaBase + this.addosso('vita') }
   get quantiPiani() { return this.tappa.piani }
+
+  /* Quanto danno, in tutto, le tre caselle addosso. Un posto solo: chi
+     vuole sapere quanto picchia chiede qui, e non va a guardare dentro
+     le tasche. */
+  addosso(campo) {
+    let n = 0
+    for (const k of [this.mano, this.corpo, this.dito])
+      if (k && COSE[k]) n += COSE[k][campo] || 0
+    return n
+  }
+
+  /* Dov'è la casella di una cosa, e cosa c'è dentro adesso. */
+  casella(dove) { return dove === 'mano' ? this.mano : dove === 'corpo' ? this.corpo : this.dito }
+  metti(dove, k) {
+    if (dove === 'mano') this.mano = k
+    else if (dove === 'corpo') this.corpo = k
+    else this.dito = k
+  }
 
   colpo(m) { return Math.max(1, this.att - m.dif) }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
@@ -139,7 +169,7 @@ export class Corsa {
       this.luce.add(y * L + x)
       this.visto[y * L + x] = 1
     }
-    const raggio = this.torcia ? RAGGIO_TORCIA : RAGGIO
+    const raggio = (this.torcia ? RAGGIO_TORCIA : RAGGIO) + this.addosso('luce')
     const r = Math.ceil(raggio) + 1
     for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++)
       if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
@@ -565,8 +595,8 @@ export class Corsa {
       /* quello che si aveva addosso torna nello zaino: non sparisce,
          perché una spada lasciata cadere per prenderne un'altra è la cosa
          che fa arrabbiare di più */
-      const vecchio = c.dove === 'mano' ? this.mano : this.corpo
-      if (c.dove === 'mano') this.mano = k; else this.corpo = k
+      const vecchio = this.casella(c.dove)
+      this.metti(c.dove, k)
       this.zaino.splice(i, 1)
       if (vecchio) this.zaino.push(vecchio)
       this.dillo(`${c.em} ${c.nome}`)
@@ -624,7 +654,7 @@ export class Corsa {
       return { che: 'finita' }
     }
     this.piano++
-    this.vitaMax += VITA_PER_PIANO
+    this.vitaBase += VITA_PER_PIANO
     this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
     this.nuovoPiano()
     this.chiudi()

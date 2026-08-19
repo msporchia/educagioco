@@ -111,17 +111,75 @@ ripara, cosa si rivende, come si evita che l'ultima discesa sia una
 passeggiata per chi ha l'ascia), e quella economia è un altro gioco. Se un
 giorno la si vorrà, si cambia in `dati/campagna.js`.
 
+## Chi scende, e cosa si porta
+
+Quattro eroi — cavaliere, elfa, mago, nano — e la differenza sta in **due
+numeri soli**: quanto reggi e quanto fai male. Niente tratti nascosti,
+niente abilità da ricordare: sono le due colonne che compaiono nella
+scelta, e un bambino di sette anni le confronta da solo.
+
+| | vita | braccio | com'è |
+|---|---|---|---|
+| 🛡️ Cavaliere | 24 | 3 | tiene botta |
+| 🧝 Elfa | 20 | 4 | colpisce più forte, regge meno |
+| 🧙 Mago | 16 | 5 | i mostri cadono in metà risposte, ma ogni sbaglio fa malissimo |
+| 🧔 Nano | 26 | 3 (difesa 2) | sbagliare gli fa quasi il solletico |
+
+Il costo di un mostro è le sue ossa diviso il tuo braccio, quindi
+l'attacco è la manopola **velenosa**: la stessa campagna costa 13–33
+domande al cavaliere e 8–21 al mago, che però sviene molto più spesso.
+Nessuno scende sotto braccio 3 — con 2 l'orco costerebbe dodici risposte
+di fila, che non è difficile: è lungo. I numeri li misura il banco
+(`unita/sotterraneo` gioca la campagna con tutti e quattro), non l'occhio.
+
+Si sceglie **una volta e resta**, dalla mappa delle discese: chiederlo
+prima di ogni discesa sarebbero due tocchi in più ogni volta, e la
+risposta sarebbe la stessa di ieri.
+
+Addosso ci sono **tre caselle**: la mano, il corpo, il dito. Le armi sono
+quattro famiglie in tre gradini — spade, asce, archi, bacchette — e a
+parità di gradino **valgono lo stesso**: è la regola dei due rami di una
+torre nel castello, cambia la forma e mai la quantità, perché altrimenti
+ci sarebbe una famiglia giusta e tre da evitare. Al dito ci va l'unica
+cosa che non picchia: vedere più lontano, tornare su con più gemme,
+reggere un colpo in più. Ce n'è uno solo, quindi si sceglie.
+
+Nello zaino le caselle stanno **intorno alla figura** di chi le porta,
+con in pugno l'arma vera: guardando si vede come si è messi, senza
+leggere una riga.
+
 ## Come è disegnato
 
-Con un foglio di tessere vero: **0x72, «16×16 DungeonTileset II», CC-0**.
-L'atlante ritagliato su misura pesa 10 KB per 106 pezzi, incorporato in
-base64 — il build resta un file solo. Lo monta `strumenti/sprite/atlante.py`
+Con due fogli: **0x72, «16×16 DungeonTileset II», CC-0** per il mondo, i
+mostri e i quattro eroi, e un foglio di oggetti per quello che si
+raccoglie — armi, pozioni, gioielli, e l'arredo delle stanze. L'atlante
+ritagliato su misura pesa 34 KB per 162 pezzi, incorporato in base64 —
+il build resta un file solo.
+
+Il foglio degli oggetti arriva **senza canale alfa e a tripla
+grandezza**: il fondo nero lo toglie `atlante.py` allagando dai bordi
+(`"fondo": "auto"`), e la scala è dichiarata `3` — misurata per
+proporzione contro le armi 0x72 che già c'erano, non indovinata (una
+spada ridotta deve stare fra i 13 e i 37 px del set, e 1254 diviso 3 fa
+418 esatto). Una scala sbagliata non dà nessun errore: dà un'arma alta
+il doppio dell'eroe.
+
+**L'arma si posa accanto al pugno**, staccata, e respira col passo: è
+quello che permette a dodici armi di andare bene per quattro
+personaggi senza disegnarne quarantotto.
+
+Le stanze hanno un po' d'arredo — barili, casse, ossa, uno stendardo
+appeso, un braciere che arde e fa luce. Non si tocca, non blocca, non
+vale niente: serve solo a far sembrare che qui sotto ci abbia vissuto
+qualcuno. Un sotterraneo di stanze vuote e mostri si legge come un
+diagramma, e un diagramma non fa venire voglia di girare l'angolo. Lo monta `strumenti/sprite/atlante.py`
 (vedi il suo `FORMATO.md`), che genera lo stesso PNG anche dentro il
 banco `strumenti/banco/mondo.html`, che legge lo stesso modulo: se i due si scollassero, quello che si
 prova sul prototipo non direbbe più niente sul gioco.
 
-Quello che il foglio **non ha** resta emoji: la fontana, il mercante, e le
-tre armature — 0x72 equipaggia solo le mani. Si vede che stonano, ed è il
+Quello che i fogli **non hanno** resta emoji: la fontana, il mercante, e
+le tre armature — in nessuno dei due c'è un'armatura, uno scudo o un
+elmo, si equipaggiano solo le mani. Si vede che stonano, ed è il
 tipo di buco che va guardato *prima* di innamorarsi di un set.
 
 ## Da guardare in mano a un bambino

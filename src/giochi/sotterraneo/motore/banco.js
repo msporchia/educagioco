@@ -126,6 +126,12 @@ function equipaggia(corsa) {
     const c = COSE[k]
     if (c.dove === 'mano' && meglio(k, corsa.mano, 'att')) { corsa.usa(i); continue }
     if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
+    /* al dito ci va la prima cosa che capita: i gioielli non si
+       confrontano su un numero solo — vedere più lontano e reggere un
+       colpo in più non stanno sulla stessa scala — e un giocatore finto
+       che ne scegliesse uno «meglio» misurerebbe una preferenza
+       inventata qui invece che una regola del gioco */
+    if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
     /* la pozione si beve quando serve, non appena si trova: berla piena
        è buttarla, ed è un errore che un bambino non fa due volte */
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)
@@ -228,9 +234,9 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
 /* Quante domande costa un piano, nei due modi. È la misura che va
    guardata quando si tocca l'equilibrio: se il minimo cresce, scendere
    diventa un compito; se la forbice si stringe, non si sceglie più. */
-export function costoDi(tappa, { seme = 7, bravura = 1 } = {}) {
-  const minimo = gioca(tappa, { seme, bravura, come: 'minimo' })
-  const tutto = gioca(tappa, { seme, bravura, come: 'tutto' })
+export function costoDi(tappa, { seme = 7, bravura = 1, eroe = undefined } = {}) {
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', eroe })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', eroe })
   return {
     minimo: minimo.esito.domande,
     tutto: tutto.esito.domande,
@@ -241,11 +247,11 @@ export function costoDi(tappa, { seme = 7, bravura = 1 } = {}) {
 
 /* Quante volte si vince, su N discese diverse. Una tappa che si vince
    sei volte su dieci non è difficile: è una lotteria. */
-export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8 } = {}) {
+export function quanteVolteSiVince(tappa, { quante = 8, bravura = 0.8, eroe = undefined } = {}) {
   let vinte = 0
   const guasti = []
   for (let i = 0; i < quante; i++) {
-    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo' })
+    const g = gioca(tappa, { seme: 100 + i * 37, bravura, come: 'minimo', eroe })
     if (g.esito.vinta) vinte++
     if (g.guasto) guasti.push(`seme ${100 + i * 37}: ${g.guasto}`)
   }

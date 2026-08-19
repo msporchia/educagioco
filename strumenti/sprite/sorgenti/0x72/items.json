@@ -1,0 +1,46 @@
+{
+  "__": "Il foglietto di items.png (vedi ../../FORMATO.md). Il foglio arriva senza canale alfa (RGB puro, fondo nero uniforme al 100%) e senza una tabella di coordinate propria dell'autore: le figure sono disposte a mano, non su una griglia a passo fisso. \"fondo\": \"auto\" fa fare ad atlante.py la stessa allagatura dai bordi gia' usata per gli altri fogli senza alfa. La SCALA: non e' pixel art ingrandita a blocchi (nessun blocco di colore costante misurabile - verificato su piu' figure con tre metodi indipendenti: istogramma dei passi fra i cambi di colore, larghezza della sfumatura ai bordi delle sagome, autocorrelazione del residuo passa-alto; tutti e tre danno una distribuzione continua senza nessun picco, cioe' ombreggiatura dipinta a piena risoluzione, non un upscale nearest-neighbor). La riduzione a \"scala\": 3 (\"foglio\": [418, 418], che e' 1254/3 esatto) non recupera quindi una griglia nascosta: e' stata scelta per proporzione, confrontando le armi ridotte con quelle gia' in pezzi.json (weapon_regular_sword 10x21, l'eroe 16x28) - a scala 3 le armi vengono alte 18-22px, nello stesso ordine di grandezza del set 0x72 (13-37px); a scala 2 sfiorano o superano l'altezza dell'eroe, a scala 4 (che fra l'altro non divide 1254 in un intero) diventano piu' piccole del set esistente. Il foglio e' stato ridotto ai soli 29 pezzi che il gioco usa (armi, pozioni, gioielli, chiave, torcia, arredo): le coordinate \"da\"/\"cella\" sono gia' in pixel dell'immagine ridotta (raw/3, arrotondato), perche' con \"cella\": [1, 1] e \"foglio\" dichiarato e' li' che atlante.py le legge (ridimensiona prima tutto il foglio alla misura di \"foglio\", poi ritaglia). Nessun copricapo e nessuno scudo nel foglio: l'unica cosa vagamente da testa e' \"maschera-0\", che pero' e' una maschera-rilievo murata (stesso stile di decorazione-0/1 e statua-0, non un oggetto indossabile) - lo slot dell'inventario per elmo/scudo resta un'emoji. \"colori\": 0 perche' su questo foglio (29 pezzi minuscoli sparsi su una tela 418x418 quasi tutta fondo) la tavolozza a 12 colori di ripiego si mangiava il budget sul fondo e sulle sue sfumature, e agli oggetti restava un'unica tinta sbagliata (un barile viola tutto uguale, non marrone) - vedi il paragrafo su \"colori\" qui sopra. Per quale gioco sia questo foglio lo dice atlante.json, accanto.",
+  "scala": 3,
+  "foglio": [418, 418],
+  "fondo": "auto",
+  "colori": 0,
+  "cella": [1, 1],
+  "sprite": {
+    "spada-corta": { "da": [15, 15], "cella": [6, 19] },
+    "spada": { "da": [78, 45], "cella": [9, 19] },
+    "spadone": { "da": [60, 43], "cella": [11, 22] },
+
+    "accetta": { "da": [124, 16], "cella": [8, 18] },
+    "ascia": { "da": [93, 15], "cella": [8, 19] },
+    "bipenne": { "da": [81, 107], "cella": [10, 19] },
+
+    "arco-corto": { "da": [111, 75], "cella": [6, 19] },
+    "arco-lungo": { "da": [139, 76], "cella": [8, 18] },
+    "balestra": { "da": [116, 105], "cella": [15, 19] },
+
+    "verga": { "da": [137, 17], "cella": [6, 20] },
+    "bastone-magico": { "da": [75, 15], "cella": [9, 19] },
+    "scettro": { "da": [170, 46], "cella": [7, 21] },
+
+    "pozione-piccola": { "da": [15, 136], "cella": [9, 14] },
+    "pozione": { "da": [227, 37], "cella": [10, 15] },
+    "pozione-grande": { "da": [266, 37], "cella": [11, 15] },
+
+    "anello-ambra": { "da": [117, 135], "cella": [11, 17] },
+    "anello-verde": { "da": [158, 135], "cella": [11, 17] },
+    "amuleto-rosso": { "da": [205, 108], "cella": [12, 15] },
+    "medaglione": { "da": [208, 153], "cella": [10, 9] },
+
+    "chiave-oro": { "da": [284, 83], "cella": [9, 15] },
+    "torcia": { "da": [209, 175], "cella": [9, 15] },
+
+    "braciere": { "da": [303, 151], "cella": [12, 11] },
+    "candelabro": { "da": [385, 202], "cella": [13, 11] },
+    "lanterna": { "da": [289, 175], "cella": [11, 16] },
+    "stendardo": { "da": [357, 257], "cella": [18, 25] },
+    "barile": { "da": [231, 331], "cella": [18, 20] },
+    "cassa": { "da": [207, 296], "cella": [17, 22] },
+    "ossa": { "da": [265, 152], "cella": [12, 10] },
+    "teschio-scena": { "da": [385, 110], "cella": [12, 11] }
+  }
+}

@@ -22,6 +22,8 @@
    semplice e giusto che uno ricco e storto.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { EROI } from './eroi.js'
+
 /* Il pavimento: otto varianti tutte di pietra crepata, nessuna a tinta
    piatta. `suolo-0` ripetuto è il modo di dire «le altre spuntano di
    rado»: a varianti equiprobabili il pavimento si legge come un motivo
@@ -60,6 +62,9 @@ export const CORONA = 'muro-alto-centro'
    funzioni come una fonte, e di mercanti non ne ha affatto. */
 export const PEZZO_DI = {
   scala: () => 'scala-giu',
+  /* l'arredo porta il suo pezzo addosso: è dato deciso quando il piano
+     è nato (`motore/livello.js`), e qui non si sceglie niente */
+  arredo: r => r.pezzo,
   forziere: r => (r.aperto ? 'forziere-aperto' : 'forziere-chiuso'),
   porta: r => (r.aperta ? 'porta-aperta' : 'porta-chiusa'),
   gemme: (r, t) => `moneta-${((t * 8) | 0) % 4}`,
@@ -90,7 +95,9 @@ export function guastiDelleTessere(nomi = null) {
   for (const k of Object.keys(FACCE))
     if (!CIME[k]) g.push(`la faccia ${k} non ha il suo coronamento`)
   if (nomi) {
-    for (const chi of ['eroe', 'goblin', 'scheletro', 'orco', 'mostro-grosso'])
+    /* i quattro eroi si chiedono alla loro tabella: aggiungerne uno non
+       deve voler dire ricordarsi di scriverlo anche qui */
+    for (const chi of [...EROI.map(e => e.sprite), 'goblin', 'scheletro', 'orco', 'mostro-grosso'])
       for (const posa of ['fermo', 'corsa'])
         for (let i = 0; i < 4; i++) chiedi(pezzoAndante(chi, posa, i), `${chi} ${posa}`)
   }

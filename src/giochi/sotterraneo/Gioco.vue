@@ -28,17 +28,20 @@ import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } fr
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa } from '../campagne.js'
+import { progresso, aperta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
+         scelta, ricorda } from '../campagne.js'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella } from './dati/campagna.js'
 import { COSE, SEGNI } from './dati/cose.js'
+import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { Tela } from './scena/tela.js'
 
 import Campagna from './viste/Campagna.vue'
+import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
@@ -77,6 +80,22 @@ let orologio = 0
 let ultimoAvviso = 0
 
 const avanza = progresso(CHIAVE)
+
+/* ═══════════ chi scende ═══════════
+   Si sceglie una volta e resta (`cfg.eroe`, che è il posto delle scelte
+   del bambino — le impostazioni dei grandi stanno altrove). La prima
+   volta la scelta si presenta da sé: entrare in un gioco di ruolo senza
+   sapere chi si è non ha senso, e un tasto «cambio eroe» che nessuno ha
+   mai premuto sarebbe una porta che non si apre mai. */
+const chiEro = ref(scelta(CHIAVE, 'eroe', null))
+const eroeScheda = computed(() => eroeDi(chiEro.value || DI_PARTENZA))
+const scegliEroe = ref(!chiEro.value)
+
+function scegli(k) {
+  chiEro.value = ricorda(CHIAVE, 'eroe', k)
+  scegliEroe.value = false
+  suono.ok()
+}
 
 /* ═══════════ la mappa delle tappe ═══════════ */
 const tappe = computed(() => CAMPAGNA.map((t, i) => ({
@@ -123,7 +142,7 @@ const zaino = computed(() => {
   if (!c) return null
   const voce = k => (k ? { chiave: k, ...COSE[k] } : null)
   return {
-    mano: voce(c.mano), corpo: voce(c.corpo),
+    mano: voce(c.mano), corpo: voce(c.corpo), dito: voce(c.dito),
     tasche: Array.from({ length: TASCHE }, (_, i) => voce(c.zaino[i])),
   }
 })
@@ -162,12 +181,30 @@ function semeDallIndirizzo() {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
+/* `#sotterraneo=roba` scende già equipaggiato: serve a **guardare una
+   schermata** — lo zaino pieno, l'arma in pugno, le tre caselle addosso
+   — senza doversi prima giocare mezza discesa. Sta accanto agli altri
+   cheat di casa (`#monete=500`, `#fattoria=9`), e come quelli non è
+   nascosto: un bambino che lo scopre si è guadagnato il diritto di
+   usarlo. */
+function corredoDaProva(c) {
+  if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'roba') return
+  c.mano = 'spada'
+  c.corpo = 'corazza'
+  c.dito = 'anello-ambra'
+  c.zaino = ['pozione-grande', 'pozione', 'torcia', 'chiave', 'spadone', 'medaglione']
+  c.gemme += 120
+  c.aggiornaLuce()
+}
+
 function avvia(i) {
+  scorda()
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
   zainoAperto.value = false
-  corsa.value = new Corsa(CAMPAGNA[i], { seme: semeDallIndirizzo() })
+  corsa.value = new Corsa(CAMPAGNA[i], { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA })
+  corredoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
@@ -470,7 +507,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
     </Barra>
 
     <div class="sot">
-      <Campagna v-if="!corsa" :tappe="tappe" @gioca="avvia" />
+      <template v-if="!corsa">
+        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda"
+                  @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
+                  @eroe="scegliEroe = true" />
+        <Eroi v-if="scegliEroe" :eroi="EROI" :scelto="chiEro || ''" :primo="!chiEro"
+              @scegli="scegli" @chiudi="scegliEroe = false" />
+      </template>
 
       <template v-else>
         <div class="sot-campo">

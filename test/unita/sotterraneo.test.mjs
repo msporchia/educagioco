@@ -11,7 +11,8 @@ import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { guastiDelMondo, EROE, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
-import { guastiDelleCose, COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { guastiDelleCose, COSE, ARMI_DI } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { EROI, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { guastiDelleTessere } from '../../src/giochi/sotterraneo/dati/tessere.js'
 import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -26,7 +27,8 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 for (const [cosa, guasti] of [
   ['il mondo', guastiDelMondo()],
   ['i mostri', guastiDeiMostri()],
-  ['le cose', guastiDelleCose()],
+  ['le cose', guastiDelleCose(Object.keys(PEZZI))],
+  ['gli eroi', guastiDegliEroi()],
   ['la campagna', guastiDellaCampagna()],
   ['il blocco albo del manifesto', guastiDellAlbo([manifesto])],
 ]) controlla(`${cosa}: nessun guasto`, guasti.length === 0, guasti.join(' · '))
@@ -46,7 +48,7 @@ uguale('la tessera dell\'atlante è quella del gioco', TESSERA, 16)
   const orco = MOSTRI.orco
   uguale('a mani nude l\'orco costa 6 risposte', colpiPer(orco, EROE.att), 6)
   uguale('con la spada ne costa 3', colpiPer(orco, EROE.att + COSE.spada.att), 3)
-  uguale('con l\'ascia ne costa 3', colpiPer(orco, EROE.att + COSE.ascia.att), 3)
+  uguale('con lo spadone ne costa 3', colpiPer(orco, EROE.att + COSE.spadone.att), 3)
   /* il colpo non scende mai a zero, o un mostro diventerebbe immortale */
   uguale('anche con attacco 0 si toglie qualcosa', colpiPer({ ossa: 4, dif: 9 }, 0), 4)
 }
@@ -116,6 +118,36 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
          `tutto ${String(c.tutto).padStart(3)} · ${t.piani} piani`)
 }
 
+/* ══════════ 4b. i quattro eroi ══════════
+   La scelta cambia i conti — fra braccio 3 e braccio 5 il gigante passa
+   da nove risposte a cinque — quindi va misurata, non stimata. Le due
+   cose che non devono succedere: che con qualcuno la discesa diventi
+   **lunga** invece che difficile, e che qualcuno non arrivi in fondo. */
+{
+  const righe = []
+  for (const e of EROI) {
+    const costi = CAMPAGNA.map(t => costoDi(t, { eroe: e.chiave }).minimo)
+    const peggio = Math.max(...costi)
+    controlla(`${e.chiave}: nessuna discesa esce dalla seduta`, peggio <= 85,
+              `la peggiore costa ${peggio} domande`)
+    const v = quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave })
+    controlla(`${e.chiave}: la cisterna si vince rispondendo bene 8 volte su 10`,
+              v.vinte === v.quante, `${v.vinte}/${v.quante} ${v.guasti.slice(0, 1).join('')}`)
+    righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
+               `domande per discesa: ${costi.join(' · ')}`)
+  }
+  nota('chi scende, e quanto gli costa:')
+  for (const r of righe) nota(r)
+
+  /* le quattro famiglie d'arma valgono lo stesso: se una fosse più
+     forte, le altre tre sarebbero una trappola per chi sceglie male */
+  for (const grado of [1, 2, 3]) {
+    const forze = ARMI_DI(grado).map(k => COSE[k].att)
+    uguale(`gradino ${grado}: tutte le famiglie picchiano uguale`,
+           new Set(forze).size, 1, ARMI_DI(grado).join())
+  }
+}
+
 /* chi risponde a caso non arriva in fondo come chi risponde bene: se
    arrivasse uguale, rispondere non servirebbe a niente */
 {
@@ -163,13 +195,54 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   /* quello che si aveva in mano torna nello zaino, non sparisce: una
      spada lasciata cadere per prenderne un'altra è la cosa che fa
      arrabbiare di più */
-  c.zaino = ['spadino', 'spada']
+  c.zaino = ['spada-corta', 'spada']
   c.mano = null
   c.usa(0)
-  uguale('lo spadino va in mano', c.mano, 'spadino')
+  uguale('la spada corta va in mano', c.mano, 'spada-corta')
   c.usa(c.zaino.indexOf('spada'))
-  uguale('la spada lo sostituisce', c.mano, 'spada')
-  controlla('e lo spadino torna nello zaino', c.zaino.includes('spadino'), c.zaino.join())
+  uguale('la spada la sostituisce', c.mano, 'spada')
+  controlla('e la corta torna nello zaino', c.zaino.includes('spada-corta'), c.zaino.join())
+
+  /* la terza casella: al dito ci va una cosa che non picchia, e il
+     conto di quanto si regge la segue in tutte e due i versi */
+  c.zaino = ['amuleto-rosso']
+  const tetto = c.vitaMax
+  c.usa(0)
+  uguale('l\'amuleto va al dito', c.dito, 'amuleto-rosso')
+  uguale('e alza il tetto della vita', c.vitaMax, tetto + COSE['amuleto-rosso'].vita)
+  c.vita = c.vitaMax
+  c.riponi('dito')
+  uguale('togliendolo il tetto torna giù', c.vitaMax, tetto)
+  controlla('e la vita non resta sopra il suo massimo', c.vita <= c.vitaMax, `${c.vita}/${c.vitaMax}`)
+}
+
+/* ══════════ 5a. l'arredo ══════════
+   Non fa niente, e deve continuare a non fare niente: se un barile
+   diventasse toccabile sarebbe un tocco sprecato, se stesse davanti a
+   una porta sarebbe una stanza chiusa da una cassa. E il nome del suo
+   pezzo è scritto a mano, quindi va controllato contro l'atlante: uno
+   sprite che non c'è non dà nessun errore, disegna l'emoji e via. */
+{
+  const l = new Livello({ seme: 2024, piano: 1, largo: 40, alto: 40, giri: 3 })
+  const arredo = l.robe.filter(r => r.che === 'arredo')
+  controlla('le stanze sono arredate', arredo.length >= l.stanze.length, `${arredo.length} pezzi`)
+  const nomi = Object.keys(PEZZI)
+  const orfani = arredo.filter(r => !nomi.includes(r.pezzo)).map(r => r.pezzo)
+  uguale('e ogni pezzo esiste nell\'atlante', [...new Set(orfani)].join(), '')
+  controlla('nessun arredo davanti a una porta',
+            arredo.every(r => !l.porteVicine(r.x, r.y)))
+  controlla('e nessuno sopra qualcos\'altro',
+            arredo.every(r => l.robeSu(r.x, r.y).length === 1))
+
+  const c = new Corsa(CAMPAGNA[0], { seme: 71, rnd: seminato(71) })
+  const q = c.livello.robe.find(r => r.che === 'arredo')
+  if (q) {
+    c.luce.add(q.y * c.livello.largo + q.x)
+    uguale('un barile non si tocca: è scenografia', c.toccabile(q), false)
+    uguale('e non sbarra la strada', c.bloccata(q.x, q.y), false)
+  }
+}
+
 }
 
 /* un forziere sbagliato resta chiuso per sempre — è l'unica cosa che si

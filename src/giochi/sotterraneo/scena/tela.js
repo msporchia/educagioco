@@ -352,10 +352,16 @@ export class Tela {
     ctx.fillStyle = 'rgba(0,0,0,.4)'
     ctx.beginPath(); ctx.ellipse(sx, sy + T * 0.38, T * 0.28, T * 0.1, 0, 0, 7); ctx.fill()
 
-    if (!this.posa(pezzoAndante('eroe', cammina ? 'corsa' : 'fermo', fr),
-                   corsa.eroe.x - 0.5, corsa.eroe.y - 0.5,
-                   { specchia: corsa.guarda === 'sx' }))
-      this.emoji('🧝', corsa.eroe.x, corsa.eroe.y, 1)
+    /* chi si è scelto: la scheda porta il nome della sua famiglia di
+       pezzi (`cavaliere`, `elfa`, `mago`, `nano`) e da qui in poi non
+       cambia niente altro */
+    const chi = (corsa.io && corsa.io.sprite) || 'cavaliere'
+    const specchia = corsa.guarda === 'sx'
+    if (!this.posa(pezzoAndante(chi, cammina ? 'corsa' : 'fermo', fr),
+                   corsa.eroe.x - 0.5, corsa.eroe.y - 0.5, { specchia }))
+      this.emoji(corsa.io ? corsa.io.em : '🧝', corsa.eroe.x, corsa.eroe.y, 1)
+
+    this.arma(corsa, sx, sy, specchia, t, cammina)
 
     /* La vita **sopra la testa**, non solo nella fascia in cima: mentre
        si combatte gli occhi stanno sul campo, e un numero in cima allo
@@ -364,6 +370,27 @@ export class Tela {
        piena è una barra che non si guarda più. */
     if (corsa.vita < corsa.vitaMax)
       this.barretta(corsa.eroe.x, corsa.eroe.y - 1.15, corsa.vita / corsa.vitaMax, 1)
+  }
+
+  /* ── l'arma che si porta ──
+     Non c'è nessun fotogramma dell'eroe che impugni qualcosa: 0x72
+     disegna le armi **staccate**, ed è quello che permette a un foglio
+     di dodici armi di andare bene per quattro personaggi senza
+     disegnarne quarantotto. Si posa quindi accanto al pugno, punta in
+     su, e respira col passo — che è il modo in cui i giochi di questa
+     famiglia le hanno sempre mostrate.
+
+     Il verso lo decide `specchia`, come per chi la porta: un'arma che
+     resta a destra mentre l'eroe guarda a sinistra sembra portata da
+     qualcun altro. */
+  arma(corsa, sx, sy, specchia, t, cammina) {
+    const k = corsa.mano
+    if (!k) return
+    const nome = (COSE[k] || {}).sprite
+    if (!nome) return
+    const su = Math.sin(t * (cammina ? 9 : 3)) * (cammina ? 0.9 : 0.5)
+    const lato = specchia ? -1 : 1
+    this.foglio.posa(this.ctx, nome, sx + lato * T * 0.42, sy + T * 0.42 + su, { specchia })
   }
 
   bersaglio(b, t) {

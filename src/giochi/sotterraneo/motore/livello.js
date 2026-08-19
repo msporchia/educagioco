@@ -268,7 +268,62 @@ export class Livello {
         this.robe.push({ che: 'gemme', x, y, em: '💎', quante: 2 + Math.floor(this.rnd() * 5) })
     }
 
+    this.arredaLeStanze()
     this.chiudiPorte()
+  }
+
+  /* ── l'arredo ──
+     Roba che non fa niente: barili, ossa, un braciere acceso. Non si
+     tocca, non blocca, non vale gemme — **serve solo a far sembrare che
+     qui sotto ci abbia vissuto qualcuno**. Un sotterraneo di stanze
+     vuote e mostri si legge come un diagramma, e un diagramma non fa
+     venire voglia di girare l'angolo.
+
+     Sta **contro le pareti**, non in mezzo: al centro ci si cammina, e
+     una cassa in mezzo al passaggio che si attraversa come se non ci
+     fosse è peggio di nessuna cassa. Il braciere porta la sua luce, ed
+     è l'unica cosa d'arredo che cambi qualcosa di quello che si vede. */
+  arredaLeStanze() {
+    /* Tre generi, e la differenza è **dove possono stare**: quello che
+       si appende va contro la parete di fondo (uno stendardo in mezzo al
+       pavimento non è arredo, è un errore che si vede subito), quello
+       che si posa sta lungo un bordo qualunque, e il fuoco è l'unico che
+       cambia quello che si vede. Uno solo acceso per stanza: due
+       bracieri nella stessa cantina illuminano tutto, e il buio è metà
+       del gioco. */
+    const APPESO = ['stendardo', 'candelabro']
+    const POSATO = ['barile', 'cassa', 'ossa', 'teschio-scena']
+    const FUOCO = ['braciere', 'lanterna']
+    const pesca = quali => quali[Math.floor(this.rnd() * quali.length)]
+
+    for (const s of this.stanze) {
+      const quanti = 1 + Math.floor(this.rnd() * 3)
+      let acceso = false
+      for (let i = 0; i < quanti; i++) {
+        const appeso = this.rnd() < 0.35
+        const fuoco = !appeso && !acceso && this.rnd() < 0.4
+        /* appeso: sulla fila in alto, contro la parete che si vede di
+           faccia. Posato: su un bordo qualunque della stanza. */
+        const x = appeso || this.rnd() < 0.6
+          ? s.x + Math.floor(this.rnd() * s.w)
+          : (this.rnd() < 0.5 ? s.x : s.x + s.w - 1)
+        const y = appeso ? s.y
+          : (this.rnd() < 0.5 ? s.y : s.y + s.h - 1)
+        if (!this.calpestabile(x, y) || this.robeSu(x, y).length) continue
+        if (this.porteVicine(x, y)) continue
+        if (fuoco) acceso = true
+        this.robe.push({ che: 'arredo', x, y, em: fuoco ? '🔥' : appeso ? '🎌' : '📦',
+                         pezzo: pesca(fuoco ? FUOCO : appeso ? APPESO : POSATO),
+                         arde: fuoco })
+      }
+    }
+  }
+
+  /* Una porta chiede di poterci passare davanti: l'arredo si tiene a
+     distanza, o si finisce col chiudere una stanza con una cassa. */
+  porteVicine(x, y) {
+    return this.stanze.some(s => s.porte.some(p =>
+      Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1))
   }
 
   /* Le ossa crescono col piano: lo stesso scheletro, più giù, costa più
