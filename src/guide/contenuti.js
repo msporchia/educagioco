@@ -87,7 +87,7 @@ export const GUIDE = [
       { titolo: 'Le cose che restano di casa', righe: [
         'Il **codice dei genitori** è uno solo per tutti.',
         'Il **salvataggio** li porta via tutti insieme, in un file solo.',
-        'Cancellare un bambino cancella i suoi progressi, e non si torna indietro.',
+        'Cancellare un bambino cancella i suoi progressi, ma per un po\' ne resta una copia da rimettere.',
       ] },
     ],
   },
@@ -178,6 +178,11 @@ export const GUIDE = [
         'Tienilo dove tieni le foto, o mandalo a te stesso.',
         'Sul telefono nuovo: Impostazioni → «Rimetti da un file».',
       ] },
+      { titolo: 'Se cancelli per sbaglio', righe: [
+        'Prima di cancellare i progressi di un bambino, il gioco ne mette da parte una copia: la trovi in fondo a **Impostazioni → Progressi**, e ne tiene le ultime tre.',
+        'Vale anche per un bambino eliminato: rimetterlo lo riporta anche nell\'elenco di chi gioca.',
+        'Le copie stanno sullo stesso telefono: se lo perdi, perdi anche quelle. Il file salvato no.',
+      ] },
       'Il file contiene i nomi dei bambini e cosa hanno giocato. È roba tua: non mandarlo in giro più di quanto serve.',
     ],
   },
@@ -190,13 +195,16 @@ export const GUIDE = [
     blocchi: [
       { titolo: 'Nell\'ordine', passi: [
         'Chiudi il gioco e riaprilo: la maggior parte delle volte basta.',
-        'Impostazioni → «Riscarica il gioco»: butta la copia tenuta da parte e riprende da capo. **I progressi non si toccano.**',
+        'Impostazioni → «Riscarica il gioco»: lo riscarica da internet e riparte pulito. Ci vuole la connessione, e **i progressi restano dove sono.**',
         'Se ancora non va, segnalalo: Impostazioni → «Dimmelo».',
       ] },
       { titolo: 'Il numero in fondo alla home', righe: [
         'È la versione. Serve a sapere se il telefono ha preso l\'aggiornamento: se due telefoni mostrano numeri diversi, uno dei due è indietro e basta riaprirlo.',
       ] },
-      'Il tasto rosso «cancella tutto» è l\'unico che porta via i progressi, e chiede conferma. Nessun altro li tocca.',
+      { titolo: 'Se hai dimenticato il codice', righe: [
+        'Sul tastierino, in fondo, c\'è **«Non ricordi il codice?»**: si risponde a una domanda e il codice torna a 0000, così puoi sceglierne uno nuovo. **I progressi non si toccano.**',
+      ] },
+      'Il tasto rosso «cancella tutto» è l\'unico che porta via i progressi, chiede conferma, e per un po\' ne resta comunque una copia da rimettere. Nessun altro li tocca.',
     ],
   },
 ]

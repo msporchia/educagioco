@@ -19,6 +19,18 @@ export const INDIRIZZO = typeof __INDIRIZZO__ !== 'undefined'
 /* Che telefono ho in mano. Serve a una cosa sola — far vedere i passi
    giusti per installare — quindi tre risposte e basta. iPadOS recente si
    dichiara Mac: lo si riconosce dal fatto che ha il dito. */
+/* ── il grassetto dei dati ──
+   Le guide, gli aiuti e le note di `novita.js` sono dato puro, e dentro
+   un dato non ci va HTML: chi li scrive non deve poter mettere un tag e
+   chi li legge non deve fidarsi. Si scappa il testo e si riconosce solo
+   `**questa**` coppia di asterischi. Sta qui e non dentro un componente
+   perché lo usano in due (`guide/Blocchi.vue` e la posta dei grandi in
+   `views/GenitoriView.vue`), e due copie della stessa regola di scrittura
+   diventano due modi di scrivere. */
+export const inGrassetto = t => String(t)
+  .replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+
 export function piattaforma () {
   if (typeof navigator === 'undefined') return 'computer'
   const ua = navigator.userAgent || ''

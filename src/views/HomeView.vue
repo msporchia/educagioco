@@ -6,6 +6,7 @@ import { state, selectPlayer, level, countMastered,
          labProgresso, tabellineIntere, genProgresso,
          giocoAcceso, quantiGiochiAccesi, varianteAccesa,
          sperimentaliAccesi } from '../store/profile.js'
+import { daLeggere } from '../store/posta.js'
 import { CHIAVE_MENTE, scaletta, posizioneOra, progressiDa,
          superata } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
@@ -259,7 +260,14 @@ function aChePunto (chiave) {
                   :style="g.tinta ? { background: `linear-gradient(120deg,${g.tinta},#fffffff0)` } : null"
                   @click="$emit('vai', g.chiave)">
             <span class="ico">{{ g.ico }}</span>
-            <b>{{ g.nome }}<em v-if="g.piccoli" class="tag">piccoli</em></b>
+            <!-- Qui c'era un'etichetta «piccoli» sulle carte che lo
+                 dichiarano nel manifesto. È sparita perché la leggeva la
+                 persona sbagliata: a cinque anni non si legge, a sette
+                 dice «questo non è per te» — cioè scoraggia proprio chi
+                 la carta ce l'ha davanti. `piccoli` continua a fare il
+                 suo mestiere alla partenza (`data/partenze.js`), che è
+                 dove serve, e non ha nessun motivo di vedersi. -->
+            <b>{{ g.nome }}</b>
             <i>{{ g.che }}</i>
             <small class="modo">{{ MODI[g.come].emoji }} {{ MODI[g.come].nome
               }}<template v-if="aChePunto(g.chiave)"> · {{ aChePunto(g.chiave) }}</template></small>
@@ -340,8 +348,18 @@ function aChePunto (chiave) {
            `data-azione="grandi"` resta com'era: è il bersaglio di tre
            test di integrazione, e non è cambiato dove porta. -->
       <button class="impostazioni" data-azione="grandi" @click="$emit('vai','genitori')">
+        <!-- ══ il pallino della posta ══
+             Fuori dal codice non si può distinguere un grande da un
+             bambino, quindi qui fuori sta **solo il segnale che esiste
+             qualcosa**, mai il contenuto: un pallino non si chiude, non
+             dice niente, e sopravvive al bambino che ci sbatte sopra —
+             preme, trova il tastierino, non entra, e il pallino è ancora
+             lì. Si spegne solo con «Ho letto», dentro
+             (`store/posta.js`). -->
+        <span v-if="daLeggere" class="pallino-posta" data-posta-pallino></span>
         <b>⚙︎ Impostazioni</b>
-        <i>giochi visibili, difficoltà delle domande, chi gioca, salvataggio</i>
+        <i v-if="daLeggere">c'è un messaggio per te, e le solite cose da grandi</i>
+        <i v-else>giochi visibili, difficoltà delle domande, chi gioca, salvataggio</i>
       </button>
       <!-- ══ le guide ══
            Accanto alle impostazioni ma **fuori dal codice**, e la
@@ -408,12 +426,6 @@ function aChePunto (chiave) {
 .carta.tre { grid-template-rows:auto auto auto }
 .carta.tre .ico { grid-row:1/4 }
 .modo { font-size:11.5px; color:var(--tenue); opacity:.9; line-height:1.3 }
-/* i giochi che si aprono a quattro anni: un'etichetta e non un gruppo a
-   parte, perché stanno benissimo dove sono — un bambino di sei anni che
-   apre «Conta gli animali» non sta sbagliando schermata */
-.tag { margin-left:7px; font-style:normal; font-size:10px; font-weight:900;
-       letter-spacing:.4px; text-transform:uppercase; color:#2f6b3f;
-       background:#dff0d8; border-radius:7px; padding:2px 6px; vertical-align:middle }
 /* la fascia: livello, quanto manca al prossimo, monete e medaglie */
 .fascia { display:flex; align-items:center; gap:11px; width:100%; max-width:400px;
           padding:9px 14px; border-radius:18px; text-align:left;
@@ -450,6 +462,13 @@ function aChePunto (chiave) {
    che sporge, nessuna tinta, nessuna emoji grande. È scritto, non
    illustrato: sotto le carte a pastello si legge come il piede della
    pagina, e questo è il punto. */
+/* il pallino: piccolo, in alto a destra del tasto, colorato quanto basta
+   a farsi notare da un occhio adulto che passa. Non lampeggia — non è
+   mai urgente. */
+.impostazioni { position:relative }
+.pallino-posta { position:absolute; top:9px; right:10px; width:9px; height:9px;
+                 border-radius:50%; background:#e2564a }
+
 .impostazioni { display:block; width:100%; max-width:400px; margin-top:18px;
                 padding:11px 16px; border-radius:14px; text-align:left;
                 background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }

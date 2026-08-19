@@ -13,7 +13,7 @@
    riconosce solo quella coppia di asterischi.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
-import { piattaforma, installata } from './aiuto.js'
+import { piattaforma, installata, inGrassetto } from './aiuto.js'
 
 const props = defineProps({
   blocchi: { type: Array, default: () => [] },
@@ -31,9 +31,7 @@ const visibili = computed(() => props.blocchi.filter(b => {
   return se === dove
 }))
 
-const testo = t => String(t)
-  .replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
-  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+const testo = inGrassetto
 </script>
 
 <template>

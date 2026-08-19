@@ -1,6 +1,6 @@
 <script setup>
 /* ═══════════════════════════════════════════════════════════════════
-   I DUE NASTRI DELLA HOME
+   I TRE NASTRI DELLA HOME
 
    Stanno insieme perché sono la stessa cosa detta a due momenti diversi:
    «questo gioco puoi tenertelo» e «quello che tieni è vecchio». Tutti e
@@ -14,6 +14,7 @@ import { ref, computed, onMounted } from 'vue'
 import { piattaforma, installata, serveIlNastro } from './aiuto.js'
 import { daAprire } from './stato.js'
 import { versioneNuova, aggiornaOra } from '../aggiornamento.js'
+import { daLeggere } from '../store/posta.js'
 import { load, save, flush } from '../store/storage.js'
 
 const emit = defineEmits(['vai'])
@@ -46,10 +47,37 @@ function spiegami () {
   daAprire.value = 'installare'
   emit('vai', 'guide')
 }
+
+/* ── il messaggio per un grande ──
+   Questo è l'unico dei tre che parla **al bambino**, e non per sbaglio:
+   il bambino è l'unico che guarda questa schermata tutti i giorni, e un
+   grande in queste pagine non ci entra mai da solo. Gli si chiede di
+   fare il corriere.
+
+   E non ha la ✕. Non è una dimenticanza: la ✕ è l'ack, e la premerebbe
+   il bambino per riflesso — l'informazione sarebbe consumata senza che
+   nessuno l'abbia letta. Con un tasto solo non c'è niente da chiudere
+   e quindi niente da proteggere: l'unica uscita è «Ho letto» dentro le
+   impostazioni, che vuole il codice. Il ragionamento intero sta in
+   `guide/novita.js`. */
+function chiamaUnGrande () { emit('vai', 'genitori') }
 </script>
 
 <template>
-  <div v-if="mostraInstalla || versioneNuova" class="nastri">
+  <div v-if="mostraInstalla || versioneNuova || daLeggere" class="nastri">
+    <!-- ══ c'è una cosa da dire a un grande ══
+         Primo dei tre: è il solo che chieda di fare qualcosa a qualcun
+         altro. Sottile e tenue come gli altri — non è mai urgente, e
+         niente lampeggia: è un post-it sul frigo, e resta finché
+         qualcuno non lo stacca. -->
+    <button v-if="daLeggere" class="nastro posta" data-nastro="posta"
+            data-azione="nastro-posta" @click="chiamaUnGrande">
+      <span class="dentro">
+        <b>📩 C'è un messaggio per la mamma o il papà</b>
+        <i>Chiamali: si apre col loro codice</i>
+      </span>
+    </button>
+
     <!-- ══ tienitelo ══ -->
     <div v-if="mostraInstalla" class="nastro installa" data-nastro="installa">
       <button class="dentro" data-azione="nastro-installa" @click="spiegami">
@@ -77,6 +105,9 @@ function spiegami () {
 .nastri { display:flex; flex-direction:column; gap:7px; width:100%; max-width:400px }
 .nastro { display:flex; align-items:center; gap:6px; padding:9px 10px;
           border-radius:14px; text-align:left }
+/* il nastro della posta è tutto un tasto, e non ha la ✕: vedi sopra */
+.nastro.posta { width:100%; background:#eef4ff; border:2px solid #cfe0f8; cursor:pointer }
+.nastro.posta .dentro { display:flex; flex-direction:column; gap:2px; min-width:0 }
 .nastro .dentro { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;
                   background:none; text-align:left; padding:0 }
 .nastro b { font-size:13.5px; font-weight:800 }
