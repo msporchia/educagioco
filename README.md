@@ -2,11 +2,14 @@
 
 ### 🎲 **[Si gioca qui → msporchia.github.io/educagioco](https://msporchia.github.io/educagioco/)**
 
-Giochi educativi per bambini delle elementari: inglese, spagnolo, matematica
-in colonna, calcolo a mente, un tower defense che si paga facendo le
-operazioni, un mercato dove si dà il resto, un laboratorio di pozioni, un
-dungeon a carte, una corsa dove i cancelli sono operazioni, un gioco di
-programmazione a ordini.
+Giochi educativi per bambini **dai quattro ai dieci anni**: inglese,
+spagnolo, matematica in colonna, calcolo a mente, un tower defense che si
+paga facendo le operazioni, un mercato dove si dà il resto, un laboratorio di
+pozioni, un dungeon a carte, un gioco di programmazione a ordini — e, per chi
+non legge ancora, contare gli animali e rimettere in fila una storia.
+
+**Quello che un bambino trova in home dipende da quanti anni ha**, e lo dice
+un grande la prima volta che lo apre: [come funziona](#-quanti-anni-ha-e-cosa-cambia).
 
 **Gira interamente sul dispositivo: nessun server, nessun account, nessuna
 pubblicità, e funziona senza internet.**
@@ -52,7 +55,7 @@ pubblicità, e funziona senza internet.**
 > ### Dove finiscono i progressi
 >
 > **Tutto resta nel dispositivo su cui si gioca.** Monete, parole imparate,
-> tappe superate, animali della cameretta: stanno nella memoria del browser
+> tappe superate, animali della fattoria: stanno nella memoria del browser
 > (IndexedDB), sul telefono o sul computer di chi gioca.
 >
 > **Non c'è nessun server e non viene inviato niente a nessuno.** Non esiste
@@ -76,27 +79,78 @@ facendo a scuola e per dargli qualcosa di più costruttivo da aprire quando
 chiedono il telefono. È cresciuto guardandoli giocare: quello che funzionava
 restava, il resto lo buttavo.
 
-Due conseguenze da sapere prima di darlo a un bambino:
-
-- **È tarato su di loro**, e su quello che stavano facendo a scuola in quel
-  momento. Per un bambino più piccolo certe cose sono impossibili, per uno
-  più grande sono noiose. Quello che non va bene [si spegne](docs/genitori.md).
-- **Alcuni giochi sono in prova** e restano nascosti finché non si accende
-  l'interruttore apposta nei settaggi.
+Una cosa da sapere prima di darlo a un bambino: **è tarato sulla scuola
+italiana**, e su quello che i miei figli stavano facendo in quel momento. Il
+resto — che a un bambino di cinque anni non arrivi roba di quarta, e a uno di
+dieci non arrivino le cose dei piccoli — se lo aggiusta da sé a partire da
+quanti anni ha, e quello che resta storto [si spegne](docs/genitori.md).
 
 Se serve a un altro bambino, è tutto qui e si prende liberamente.
+
+---
+
+## 🎚️ Quanti anni ha, e cosa cambia
+
+**La prima volta che si apre, l'app chiede come si chiama il bambino e quanti
+anni ha.** Non è un'anagrafe — nessuno chiede una data di nascita e il numero
+non si vede da nessuna parte mentre si gioca: è **la taratura**, ed è il
+numero da cui dipende tutto il resto.
+
+<img src="docs/img/eta.png" width="230" align="right">
+
+Decide tre cose, e le decide in continuo:
+
+- **quali giochi trova in home.** La bancarella non compare prima dei sei
+  anni, il laboratorio delle pozioni prima dei sette e mezzo; «Conta gli
+  animali» smette di essere offerto proprio lì, e «Prima e dopo» a otto.
+  Nessun elenco scritto a mano: ogni tappa di ogni gioco dichiara quanto è
+  difficile, e la carta compare quando qualcuna di quelle tappe cade alla
+  portata di chi guarda.
+- **cosa si dà per scontato che a scuola abbia già fatto.** A cinque anni le
+  divisioni non esistono, a dieci sì — e quello che la scuola non ha ancora
+  dato non compare nelle domande.
+- **quanto sono difficili le domande.** A nove anni «2×2» è tempo perso, a sei
+  «7×8» è un muro, a otto vanno bene tutte e due: è esattamente la differenza
+  che l'età fa.
+
+Sotto sta **una scala sola, da 0 a 100** — zero il primo giorno di materna,
+cento la fine della primaria, dodici punti e mezzo per anno — e ci stanno
+sopra tutte le materie insieme: una tabellina, una parola inglese, l'orologio
+a lancette, una tappa del castello. L'età diventa una finestra su quella
+scala, e i giochi pescano lì dentro.
+
+**Quello che è cominciato non sparisce mai.** L'età decide cosa *si offre a
+chi arriva*, non cosa si toglie a chi c'è già: un gioco aperto anche una volta
+sola resta in home per sempre. E dentro una campagna non sparisce nessuna
+tappa — quelle sotto la sua età nascono già aperte («l'hai già passato»),
+quelle sopra dicono che arrivano più avanti.
+
+**La manopola si sposta di mezzo anno per volta, e sotto dice cosa fa**:
+quanti giochi restano in casa e quali, cosa si dà per scontato, come si
+spartiscono le domande fra facili, nel segno e difficili. Non c'è niente da
+immaginare: si muove una tacca e si guarda cambiare l'elenco. Spostarla di
+poco non tocca quello che un grande ha già sistemato a mano; quando cambia
+fascia di scuola lo dice **prima**, con scritto cosa si sta per perdere.
+Monete, animali, campagne e traguardi non si toccano in nessun caso.
 
 ---
 
 ## 👨‍👩‍👧 Se qualcosa non va bene per tuo figlio, si spegne
 
 C'è una schermata per i genitori, dietro un codice di quattro cifre —
-**all'inizio è `0000`**, e si cambia da lì dentro.
+**all'inizio è `0000`**, e la prima volta che si entra l'app invita a
+sceglierne uno vero. Se poi lo si dimentica c'è **«Non ricordi il codice?»**,
+che lo rimette a zero rispondendo a una domanda di cultura generale: non è
+sicurezza, è un gradino contro il tocco distratto, e il gioco arriva a
+famiglie con cui non ho nessun altro canale.
 
 <img src="docs/img/genitori.png" width="260" align="right">
 
-Da lì si può:
+Tre schede, una per domanda che un grande si fa — *chi gioca su questo
+telefono*, *cosa gli chiedono i giochi*, *cosa vede in home*. Da lì si può:
 
+- **Spostare l'età.** È la manopola di sopra: si muove di mezzo anno per
+  volta e sotto dice cosa cambia, gioco per gioco e materia per materia.
 - **Spegnere un gioco intero.** Se uno non piace, o è troppo difficile, o
   fa perdere tempo: sparisce dalla home e basta. I progressi restano dove
   sono, e riaccendendolo si ritrovano.
@@ -106,6 +160,13 @@ Da lì si può:
   non escono più**. Non è una difficoltà in meno, è una domanda muta in
   meno — un bambino che non ha ancora visto i litri non può ragionare su
   «quanti centilitri sono due litri», può solo tirare a indovinare.
+- **Ritoccare una materia sola.** Se una cosa gli è difficile o gli è ormai
+  facile si sposta di mezzo anno per volta senza toccare il resto — e quando
+  ha già risposto abbastanza volte, **è la schermata a consigliarlo**: legge
+  come sta andando e lo scrive sulla riga, col tasto già pronto.
+- **Guardare e provare le domande.** Tutte quelle che esistono, con la loro
+  difficoltà di fianco e un ▶ che ne apre una vera: si giudica prima di
+  decidere, invece di aspettare che ricapiti giocando.
 - **Salvare e rimettere i progressi**, come detto sopra.
 - **Gestire chi gioca**: aggiungere un bambino, cambiargli nome,
   eliminarlo. Ognuno ha i suoi progressi, separati.
@@ -114,6 +175,12 @@ Se qualcosa è ancora troppo difficile, in fondo c'è anche l'interruttore che
 apre tutte le tappe: a volte serve per far vedere a un fratello più grande
 un gioco che il piccolo ha appena cominciato.
 
+**E cancellare non è più per sempre.** Prima di azzerare i progressi di un
+bambino, di eliminarlo o di ricominciare una campagna, l'app ne mette da
+parte una copia — le ultime tre — e in fondo a *Progressi* c'è il tasto per
+rimetterla. Chi cancella per sbaglio non è il bambino entrato di nascosto: è
+il grande stanco che tocca la carta rossa alle undici di sera.
+
 **[→ Come funzionano i settaggi, per esteso](docs/genitori.md)**
 
 ---
@@ -121,7 +188,10 @@ un gioco che il piccolo ha appena cominciato.
 ## 🎮 I giochi
 
 Ogni riquadro porta a una pagina con più immagini e la spiegazione di **quali
-domande escono e come cambia la difficoltà**.
+domande escono e come cambia la difficoltà**. Sono grosso modo in ordine di età —
+i primi danno per scontato che il bambino legga da solo, **gli ultimi due
+no** — e nessuno li trova tutti insieme in home: quali arrivano lo decide
+l'età.
 
 | | |
 |:--|:--|
@@ -133,17 +203,17 @@ domande escono e come cambia la difficoltà**.
 | [<img src="docs/img/codice-gioco.png" width="200">](docs/codice-segreto.md) | ### [🔐 Codice Segreto](docs/codice-segreto.md)<br>Deduzione pura, tipo Mastermind: si indovina la combinazione leggendo i pallini. Niente conti, solo ragionamento.<br>*→ [le nove tappe](docs/codice-segreto.md)* |
 | [<img src="docs/img/dungeon-gioco.png" width="200">](docs/dungeon.md) | ### [⚔️ Il Dungeon](docs/dungeon.md)<br>Si scende di stanza in stanza, e ogni risposta giusta porta **bottino: armi, armature, oggetti** con cui equipaggiarsi per scendere ancora più a fondo. È quello che tiene incollati a una fila di domande — che sono di tutte le materie, non solo matematica, e **si fanno più difficili man mano che si scende**.<br>*→ [come cresce la difficoltà](docs/dungeon.md)* |
 | [<img src="docs/img/survivors-gioco.png" width="200">](docs/survivors.md) | ### [🏹 Survivors](docs/survivors.md)<br>Sopravvivenza a ondate. **Ogni potenziamento ha un prezzo in difficoltà**: la carta più forte si paga con la domanda più tosta. Scegliere è il gioco.<br>*→ [il prezzo delle carte](docs/survivors.md)* |
-| [<img src="docs/img/sotterraneo-gioco.png" width="200">](docs/sotterraneo.md) | ### [🗺️ Il sotterraneo](docs/sotterraneo.md) *(in prova)*<br>Un posto che si gira col dito, non un menù: si cammina fra stanze e corridoi al buio, e **ogni cosa che vale ha un prezzo — il prezzo è rispondere**. Una porta chiusa costa una domanda facile, un forziere una sola e tosta (sbagliandola resta chiuso per sempre), un mostro una per colpo. La scala che scende è chiusa e la chiave ce l'ha un guardiano: è l'unica cosa che non si può aggirare, tutto il resto si sceglie.<br>*→ [dove spendere le risposte](docs/sotterraneo.md)* |
-| [<img src="docs/img/corsa-gioco.png" width="200">](docs/corsa.md) | ### [🏃 La corsa dei numeri](docs/corsa.md) *(in prova)*<br>Un runner a tre corsie dove i cancelli sono operazioni: `×3`, `+18`, `÷2`. La truppa che ti corre dietro **è il numero scritto per terra** — cinque verdi fanno un rosso — e sceglierne bene uno si vede subito, perché è lei a sparare ai mostri. Il cancello d'oro vale `×5` ma bisogna fermarsi a fare un esercizio: dichiarato prima, mai obbligatorio, e sbagliarlo non toglie niente.<br>*→ [il raggruppamento e le tre stelle](docs/corsa.md)* |
-| [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md) *(in prova)*<br>Si dà una fila di ordini a una squadretta e si guarda cosa succede: sequenze, condizioni, cicli, e **segnali fra personaggi diversi** che non partono insieme. È programmazione asincrona travestita da gioco.<br>*→ [i concetti, uno per uno](docs/generale.md)* |
+| [<img src="docs/img/sotterraneo-gioco.png" width="200">](docs/sotterraneo.md) | ### [🗺️ Il sotterraneo](docs/sotterraneo.md)<br>Un posto che si gira col dito, non un menù: si cammina fra stanze e corridoi al buio, e **ogni cosa che vale ha un prezzo — il prezzo è rispondere**. Una porta chiusa costa una domanda facile, un forziere una sola e tosta (sbagliandola resta chiuso per sempre), un mostro una per colpo. La scala che scende è chiusa e la chiave ce l'ha un guardiano: è l'unica cosa che non si può aggirare, tutto il resto si sceglie.<br>*→ [dove spendere le risposte](docs/sotterraneo.md)* |
+| [<img src="docs/img/generale-gioco.png" width="200">](docs/generale.md) | ### [🎖️ Il Generale](docs/generale.md)<br>Si dà una fila di ordini a una squadretta e si guarda cosa succede: sequenze, condizioni, cicli, e **segnali fra personaggi diversi** che non partono insieme. È programmazione asincrona travestita da gioco.<br>*→ [i concetti, uno per uno](docs/generale.md)* |
 | [<img src="docs/img/fattoria-gioco.png" width="200">](docs/fattoria.md) | ### [🚜 La fattoria](docs/fattoria.md)<br>Dove finiscono le monete guadagnate negli altri giochi: terra da comprare, duecento cose da posare, animali da accudire, e **cinque campi da seminare** che crescono col tempo vero — anche a gioco chiuso, e niente marcisce mai. Il raccolto diventa **mangime** al fienile e da lì passa ai **recinti**, che si vede da lontano se hanno fame — sopra la testa gli galleggia proprio quello che aspettano: ne tornano uova, latte, tartufi e lana. Costa la metà di quello che si compra, e un quarto d'ora di attesa. Non ci sono domande — è il motivo per cui si torna.<br>*→ [la catena, i numeri e cosa manca](docs/fattoria.md)* |
-| [<img src="docs/img/cameretta-animale.png" width="200">](docs/cameretta.md) | ### [🛏️ La cameretta](docs/cameretta.md) *(in prova)*<br>Il money pit di prima, che la fattoria ha sostituito: animali da accudire, mobili, e una macchinetta delle sorprese da cui **non esce mai un doppione**. Sta dietro «giochi in prova» perché il posto dove spendere le monete dev'essere uno — chi ne ha due si dimentica dell'altro. I salvataggi sono ancora lì.<br>*→ [animali, negozio e sorprese](docs/cameretta.md)* |
+| [<img src="docs/img/conta-gioco.png" width="200">](docs/conta.md) | ### [🐑 Conta gli animali](docs/conta.md)<br>**Per i quattro-sei anni**, e non c'è niente da leggere: la consegna è fatta di icone. Si conta quello che si vede — in fila, sparpagliato, in mezzo agli intrusi — e più avanti si arriva alla cosa che a quell'età non è affatto ovvia: **cinque pecore sparpagliate sono sempre cinque**.<br>*→ [i nove modi di chiedere «quanti?»](docs/conta.md)* |
+| [<img src="docs/img/prima-dopo-gioco.png" width="200">](docs/prima-dopo.md) | ### [⏭️ Prima e dopo](docs/prima-dopo.md)<br>**Per i quattro-sei anni.** Il seme, il germoglio, l'albero: si rimette in fila una storia, e poi si indovina il pezzo che non si vede. Cinquanta storie, e la regola che le tiene in piedi è severa — **fra due vignette ci dev'essere un prima e un dopo veri**, se no chi ragiona bene prende un no.<br>*→ [i sei modi, e le storie disegnate](docs/prima-dopo.md)* |
 
 **[❓ Le domande di tutte le materie](docs/domande.md)** — il Dungeon,
-Survivors e il cancello d'oro della Corsa non hanno un contenuto proprio:
-pescano da un magazzino comune di italiano, matematica, spazio, tempo e
-logica. Cosa c'è dentro, come si fa più
-difficile, e come si spegne quello che tuo figlio non ha ancora fatto.
+Survivors e il sotterraneo non hanno un contenuto proprio: pescano da un
+magazzino comune di italiano, matematica, spazio, tempo e logica, dove ogni
+classe di domande dichiara **a che età serve**. Cosa c'è dentro, come si fa
+più difficile, e come si spegne quello che tuo figlio non ha ancora fatto.
 
 ---
 
@@ -160,6 +230,9 @@ Da qui viene il comportamento che si nota giocando: le cose incerte tornano
 spesso, quelle sicure spariscono per settimane e poi rispuntano per un
 controllo. Chi risponde giusto due volte di fila su una stessa cosa non se la
 ritrova più per il resto della partita — è tempo tolto a quello che non sa.
+
+Sono due meccanismi diversi e non si pestano i piedi: **l'età dice cosa può
+arrivare**, la forza dice **quando torna** quello che è già arrivato.
 
 I dettagli, se interessano, stanno in [`LEGGIMI.md`](LEGGIMI.md).
 
@@ -222,6 +295,8 @@ npm run simula     # gioca il tower defense senza browser: quanto è duro davver
 npm run tara       # ritrova la vita dei nemici ondata per ondata e riscrive i dati
 npm run mappe      # controlla i livelli del Generale
 npm run quiz:banco # prova i moduli di quiz senza browser: forma, varietà, doppioni
+npm run quiz:eta   # chi vede cosa: la calibrazione per età, e i buchi che restano
+npm run mondo      # il banco degli sprite: guardarli, e correggere i ritagli
 npm run scatti     # rifà le immagini di questa documentazione
 node strumenti/icone.mjs       # rigenera i PNG delle icone da public/icona.svg
 ```

@@ -25,7 +25,7 @@ al grande e toglierlo al piccolo.
 
 ## Se una *domanda* non va bene
 
-Questa è la parte che uso di più, ed è la seconda scheda.
+Questa è la parte che uso di più, ed è la scheda **Domande**.
 
 L'elenco non è di giochi ma di **pezzi di scuola**: i numeri, le decine, la
 stima, le misure, le conversioni, le divisioni, area e perimetro, i solidi,
@@ -53,8 +53,8 @@ difficile** — 0 la prima cosa che si impara, 100 l'ultima.
 
 ## Vedere tutte le domande che esistono
 
-La terza scheda, **Le domande**, e serve a una cosa che prima non si poteva
-fare: **giudicarle**. Il tasto «prova» apre una domanda vera, ma una alla
+La stessa scheda serve anche a una cosa che prima non si poteva fare:
+**giudicare le domande**. Il tasto «prova» apre una domanda vera, ma una alla
 volta e a caso — per farsi un'idea di una tipologia bisognava insistere
 finché non ricapitava, senza mai sapere quante ce n'erano né a che
 difficoltà stessero.
@@ -72,7 +72,8 @@ Due modi di provarle, e sono due domande diverse:
 - **scorrile tutte** — il giro dell'elenco, una per una, col contatore («7 di
   37») e il tasto per tornare indietro. Risponde a «le ho viste tutte?».
 
-Guardare non spegne niente: gli interruttori restano nella scheda «Cosa sa».
+Guardare non spegne niente: si spegne col ✕ sulla riga, che toglie il suo
+gruppo di scuola.
 Le domande spente si vedono lo stesso, sbiadite — un elenco che nasconde
 quello che è spento non fa più vedere *che* è spento.
 
@@ -108,13 +109,55 @@ fra telefono e computer.
 
 ## Chi gioca
 
-Aggiungere un bambino, cambiargli nome, eliminarlo. Ognuno ha i suoi
-progressi, completamente separati: il fratello che gioca dopo non trova le
-monete dell'altro.
+La schermata parla di **chi sta giocando adesso** — come tutto il resto:
+i giochi, i saperi, le domande e l'età sono suoi e di nessun altro. Quindi
+qui c'è la sua carta e basta; gli altri bambini sono una riga di nomi, e si
+passa a loro dalla home, che è dove si è sempre fatto.
 
-Aggiungere qualcuno **non ti butta fuori** da chi sta giocando adesso: il
-bambino nuovo compare in home, dove si sceglie con chi giocare. Cambiare
-nome tocca solo l'etichetta — i progressi non si spostano di un byte.
+Ognuno ha i suoi progressi, completamente separati: il fratello che gioca
+dopo non trova le monete dell'altro. Cambiare nome tocca solo l'etichetta —
+i progressi non si spostano di un byte.
+
+**Aggiungere un bambino** apre la stessa schermata del primo avvio: nome,
+faccia, e quanti anni ha. Alla fine tocca a lui giocare — si aggiunge
+qualcuno perché vuole giocare adesso, non per lasciarlo in una lista.
+
+### Quanti anni ha
+
+È **la taratura, non un'anagrafe**: nessuno chiede una data di nascita, e il
+numero non si vede da nessuna parte mentre si gioca. Decide due cose, e le
+decide tutte e due in continuo:
+
+- **quali giochi trova in home** — la bancarella non compare prima dei sei
+  anni, il laboratorio delle pozioni prima dei sette e mezzo, e i due giochi
+  dei piccoli («Conta gli animali», «Prima e dopo») smettono di essere
+  offerti fra i sette e mezzo e gli otto;
+- **quanto sono difficili le domande** — ogni classe di domande dichiara a
+  che età serve, e da lì si pesca.
+
+La manopola si sposta di mezzo anno per volta, e **sotto dice cosa fa**. Sei
+riquadri, tutti uguali: si toccano in qualunque punto e si aprono.
+
+- **In casa** — tutti i giochi, con scritto di fianco a ognuno *c'è*,
+  *l'ha già passato*, *arriva più avanti* o *l'hai spento tu*.
+- **Dà per scontato che sappia** — le cose su cui le domande poggiano. È
+  l'elenco da leggere: appena ci trovi dentro qualcosa che tuo figlio non sa,
+  sei salito troppo.
+- **Le domande**, in quattro gruppi — *le sa fare ma le ripassa*, *sta
+  studiando queste*, *difficili ma fattibili*, *non gliele chiediamo più*.
+
+Ogni riga ha un **▶**: apre la domanda vera, quella che il gioco gli darebbe.
+Un titolo come «le analogie fra figure» non dice che aspetto abbia la
+domanda, e senza vederla non si può giudicare. Provarla non cambia niente e
+non lascia traccia.
+
+Non c'è niente da immaginare: si muove una tacca e si guarda cosa si sposta.
+
+Muoverla dentro la stessa fascia di scuola non tocca nient'altro: quello che
+hai spento o ritoccato a mano resta dov'è. Quando invece la tacca cambia
+fascia, giochi e saperi ripartono da come sono di partenza a quell'età — e se
+avevi sistemato qualcosa a mano te lo dice **prima**, con scritto cosa stai
+per perdere. Monete, animali, campagne e traguardi non si toccano mai.
 
 Alla primissima apertura, quando non c'è ancora nessuno, l'app chiede
 direttamente *«come ti chiami?»* senza codice: chiedere un PIN che nessuno ha

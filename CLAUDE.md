@@ -479,17 +479,103 @@ Quattro interruttori diversi, e la differenza conta:
 Nei test i bersagli sono `.carta.gioco[data-gioco="…"]`,
 `.carta[data-flag="…"]`, `.carta[data-azione="…"]`.
 
-### Da dove parte un bambino
+### Da dove parte un bambino, e la manopola dell'età
 
-`data/partenze.js`: quattro fasce (non va a scuola · prima o seconda ·
-terza · quarta o quinta) che alla creazione scrivono in un colpo solo le
-tre cose che dipendono dall'età — quali giochi si vedono, cosa si dà per
-scontato, fin dove pescano le domande. Si chiede **al primo avvio**
-(`components/Benvenuto.vue`, secondo passo) e quando si aggiunge un
-fratello; su un profilo che c'è già si rimette dalla carta di chi gioca
-(`applicaPartenza`), che **riscrive** giochi e saperi e per questo si
-conferma. Quali giochi tenere lo dicono i manifesti con `piccoli: true`
-e `grandi: true`, le due estremità: nessun elenco da mantenere a mano.
+**Una manopola sola, in anni** (`components/ManopolaEta.vue`). Gli anni
+sono l'unità vera di tutto il sistema — 12,5 punti per anno, la stessa
+scala di `portata` e dei `livelli:` delle domande — e da lì dipendono
+tre cose: quali giochi si vedono, cosa si dà per scontato, fin dove
+pescano le domande. Le quattro fasce di `data/partenze.js` (non va a
+scuola · prima o seconda · terza · quarta o quinta) restano, ma sono
+**una conseguenza**: `partenzaPerEta` prende la più vicina.
+
+Ce n'erano due, ed è il difetto da non rifare. Sulla stessa carta
+stavano un `− 7,5 anni +` che spostava solo l'età e, dieci pixel sotto,
+un «Rimetti giochi e domande» che apriva le quattro carte e riscriveva
+tutto — giochi, saperi, ritocchi — senza che niente, a guardarle,
+dicesse quale fosse quale. Il difetto vero però era un altro, e le
+carte lo nascondevano: **la tacca non diceva cosa fa.** «Terza
+elementare» dice a chi è rivolta la scelta, mai cosa cambia
+facendola, e l'effetto si vedeva solo uscendo e guardando altrove.
+
+Adesso sotto la manopola c'è **il quadro di quell'età**
+(`data/quadro.js`, puro, `test/unita/quadro`): **sei blocchi, tutti
+della stessa forma** — titolo, quanti sono, cosa vuol dire, l'assaggio
+— che si aprono toccandoli in qualunque punto e mostrano i nomi.
+
+  1. **In casa** — tutti i giochi, ognuno col suo stato: *c'è* ·
+     *l'ha già passato* · *arriva più avanti* · *l'hai spento tu*.
+  2. **Dà per scontato che sappia** — i saperi accesi, i più recenti
+     per primi.
+  3–6. **Le domande**, in quattro gruppi: *le sa fare ma le ripassa* ·
+     *sta studiando queste* · *difficili ma fattibili* · *non gliele
+     chiediamo più*.
+
+Ogni riga degli ultimi cinque ha un **▶ che apre la domanda vera**
+(`quiz/Prova.vue`, lo stesso pannello della scheda delle domande): il
+nome di una classe non dice che aspetto abbia la domanda, e senza
+vederla un grande non può giudicare se sia roba da suo figlio.
+
+**Non c'è nessuna riga che dice cosa è cambiato**, ed era la prima cosa
+che si era scritta. «＋ arriva La bancarella» raccontava il movimento a
+chi stava già guardando la manopola muoversi, da fermo non diceva
+niente, e metteva in fila due modi di dire la stessa cosa — «arriva la
+bancarella» sopra un elenco in cui la bancarella era già lì con scritto
+«c'è». I blocchi descrivono **come stanno le cose**, e il movimento si
+vede perché si muovono loro.
+
+Il quadro non decide niente: chiama le stesse funzioni che chiamano i
+giochi (`giocoDaOffrire`, `doveCadeCon`), perché un riassunto che
+diverge dal gioco è peggio di nessun riassunto.
+
+**Il verso positivo non è gentilezza, è l'unico che funziona.** Il
+blocco diceva «a scuola non l'ha ancora fatto», e per leggerlo un
+grande doveva ricostruire per differenza le altre trenta cose, che non
+erano scritte da nessuna parte. Girato in «dà per scontato che sappia»
+si scorre e ci si ferma appena si legge dentro qualcosa che il bambino
+non sa — ed è così che si è scoperto che la partenza dei quattro anni
+dava per scontato *leggere le parole*, *la simmetria* e *le analogie*:
+l'elenco era stato scritto pensando alla matematica di scuola, e tutto
+il resto era rimasto acceso per omissione.
+
+I tre casi dello spostamento stanno in `spostandoLEta`, che è **la
+stessa funzione** che poi scrive (`spostaLEta` in `store/profile.js`):
+
+- **stessa fascia** — si sposta l'età e basta, muto. È la promessa che
+  rende la manopola usabile: quello che un grande ha sistemato a mano
+  resta dov'era.
+- **fascia diversa, ma era sui difetti** — si riscrive e si va dritti.
+- **fascia diversa, e c'era roba a mano** — si chiede, dicendo *cosa* si
+  perde (giochi spenti, saperi tolti, domande ritoccate).
+
+Si chiede **al primo avvio e ogni volta che si aggiunge un bambino**:
+`components/Benvenuto.vue` è un wizard solo per tutti e due i casi, e
+finisce **entrando in partita col bambino nuovo**. La manopola nasce sui
+**quattro anni**, in fondo alla scala: chi aggiunge un bambino aggiunge
+quasi sempre il più piccolo di casa, e da lì si sale finché l'elenco di
+quello che si dà per scontato non comincia a dire cose che non sa. La
+cautela di prima — nessun valore, tasto spento finché non si muove —
+non serve più, perché premere senza leggere adesso sbaglia **dalla
+parte giusta**: si consegna la casa più piccola e la taratura più
+prudente. Con un valore in mezzo no, e quello era il difetto di
+partenza.
+
+Quali giochi tenere lo dicono i manifesti, e sono **tre** dichiarazioni:
+`piccoli: true` e `grandi: true` sono le due estremità della scala,
+`posto: true` è chi sulla scala non ci sta affatto (la fattoria: un
+prato dove si spende, non una fila da macinare) e non si spegne mai per
+età, in nessuna delle due direzioni. Nessun elenco da mantenere a mano.
+
+**La portata non sostituisce `piccoli`, ed è misurato.** Verrebbe da
+pensare che un grado di difficoltà 0–100 basti a decidere chi vede
+cosa; non basta, perché `restaQualcosa` chiede se esiste *una* tappa
+nella mira (±1/1,5 anni) e una campagna lunga ne ha sempre una. Senza i
+flag, a cinque anni comparirebbero English, Spagnolo, gli Asteroidi, il
+Dungeon e Survivors. Il motivo è che sono **due assi**: la portata dice
+quanto è difficile il contenuto, `piccoli` dice *non chiede di leggere
+e non si può perdere* — e «dog» è contenuto facile che a cinque anni
+non si sa leggere. Nell'altro verso invece la portata basta quasi
+sempre: sopra i sette anni «Conta gli animali» sparisce da sé.
 
 ### Quanto è difficile una tappa, e a chi si offre
 
@@ -553,7 +639,12 @@ contraddicono.
 
 Fuori dal giudizio restano i giochi **senza campagna** — la fattoria, la
 cameretta: sono posti, non scalette, e l'assenza vuol dire «non si
-giudica», non «si nasconde».
+giudica», non «si nasconde». La stessa cosa va detta **anche alle
+partenze**, che ragionano per bandierine e non per portata: `posto:
+true` nel manifesto (vedi sopra), se no il prato sparirebbe a un
+bambino di quattro anni per il solo fatto di non essersi dichiarato
+`piccoli` — e dichiararsi `piccoli` lo farebbe sparire a quello di
+nove.
 
 ### Il codice dei genitori
 
@@ -582,3 +673,81 @@ di casa» sotto il titolo — detto a chi ha girato la maniglia sbagliata,
 non come divieto — e sotto i tasti un «← Torna ai giochi» largo quanto il
 tastierino, perché una freccia in cima non è una cosa da fare: se l'unica
 uscita è quella, provare i numeri resta il gioco più vicino.
+
+**Il codice si sceglie, e si può dimenticare.** Due aggiunte che stanno
+in piedi solo insieme. La prima: al primo ingresso, se il codice è
+ancora `0000`, un riquadro in cima invita a sceglierne uno — rimandabile,
+e ricompare la volta dopo. `0000` è come non avere codice, e la riga
+«cambialo» stava dentro la carta *Cambia il codice*, cioè la leggeva chi
+era già venuto per cambiarlo. La seconda: sul tastierino un
+**«Non ricordi il codice?»** che, rispondendo a una domanda di cultura
+generale (`DOMANDA` in `store/pin.js`, quattro cifre — così è lo stesso
+tastierino e la stessa attesa), rimette `0000` e fa scegliere subito
+quello nuovo.
+
+**Non è sicurezza, ed è una scelta fatta a occhi aperti.** La risposta
+sta su internet e un bambino che ci arriva la trova. Tutte le
+alternative sono peggio, e sono state pesate: `#pin=1234` vuole la barra
+dell'indirizzo, che dentro l'app installata non esiste e che pochi
+grandi userebbero; un codice lungo scritto altrove è il codice vero
+scritto più in grande, e a leggerlo arriva prima il bambino; un canale
+umano vuole qualcuno nel giro, e questo gioco arriva a famiglie che non
+conosce nessuno; un'attesa di ventiquattro ore non ferma chi ci tiene
+davvero. **Quello che regge il colpo non è la porta, è il cestino**: se
+entrare non distrugge più niente, il recupero può permettersi di essere
+facile. Chi entra senza titolo lascia comunque una traccia scritta — il
+codice rimesso a `0000` diventa un avviso nella posta dei grandi — e da
+lì è una faccenda di famiglia, non di software.
+
+### Il cestino, e la posta dei grandi
+
+Due cose nate insieme, per lo stesso motivo: **questo gioco lo si regala
+a delle famiglie, e dopo non c'è più nessun canale** — niente server,
+niente indirizzo di posta, e chi lo riceve da un'altra famiglia non lo
+conosce nessuno.
+
+**`store/cestino.js` — cancellare non è più per sempre.** Prima di
+azzerare i progressi di un bambino, di eliminarlo o di ricominciare una
+campagna, se ne mette da parte una copia (le ultime tre), e in fondo a
+*Progressi* c'è il tasto per rimetterla. Sta **fuori dai profili** come
+il codice: dentro morirebbe con quello che si sta cancellando. Chi
+cancella per sbaglio non è il bambino entrato di nascosto, è il grande
+stanco che tocca la carta rossa alle undici di sera — e `resetPlayer` era
+l'unico danno irreversibile dell'applicazione. Rimettere **non consuma la
+copia**: un ripristino sbagliato si annulla ripristinando quello giusto.
+`ripristinaCestinato` rifà anche il roster, se no un profilo che nessuno
+nomina è un salvataggio invisibile.
+
+**`guide/novita.js` + `store/posta.js` — dire a un grande che è cambiato
+qualcosa.** Il contenuto è dato puro; la regola che tiene corto l'elenco
+è **una nota si scrive solo se il genitore potrebbe voler fare
+qualcosa** — se non finisce con un tasto che porta da qualche parte, o
+non riguarda i salvataggi, non è una nota. Uno sprite nuovo non lo è.
+
+Tre cose non ovvie:
+
+- **L'ack è un id, non una versione.** Si pubblica venti volte e
+  diciannove non hanno niente da dire: legare il richiamo alla versione
+  lo accenderebbe sempre, e un pallino sempre acceso non lo guarda più
+  nessuno. Ricordando l'ultimo id letto, chi salta tre versioni trova le
+  tre note che si è perso. Gli id non si riusano mai, nemmeno ritirando
+  una nota. Al primo avvio, **se in casa non c'è nemmeno un profilo** è
+  un'installazione nuova e si parte dall'ultima: nessuno riceve la storia
+  del progetto in faccia.
+- **Fuori dal codice va solo il segnale, mai il contenuto.** Fuori non si
+  può distinguere un grande da un bambino, e un cartello con la ✕ lo
+  chiude il bambino per riflesso — chiudere *è* l'ack, quindi
+  l'informazione sparirebbe senza che nessuno lo sappia. Perciò un
+  pallino sul tasto ⚙︎ (non si chiude, non dice niente, sopravvive al
+  bambino che ci sbatte sopra) e un nastro in home **senza ✕**: l'unica
+  uscita è «Ho letto» dentro, che vuole il codice.
+- **Il nastro parla al bambino**, ed è l'unico dei tre che lo faccia: è
+  lui che guarda la home tutti i giorni, un grande lì non entra mai da
+  solo. «C'è un messaggio per la mamma o il papà — chiamali»: gli si
+  chiede di fare il corriere.
+
+`riguarda: { etaDa, etaA }` mostra una nota solo se in casa c'è un
+bambino di quell'età — serve a poter dire «tuo figlio» invece di «gli
+utenti». Senza nessuna età conosciuta la nota si mostra lo stesso: non
+sapere non è un motivo per nascondere. La scelta è pura (`scegli`) e
+provata a parte: le note cambiano, la regola no.
