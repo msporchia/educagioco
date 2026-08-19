@@ -20,6 +20,7 @@ import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi } from '../giochi/campagne.js'
 import { GIOCHI } from '../data/giochi.js'
+import { giocoDaVedere } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 
 defineEmits(['vai'])
@@ -110,7 +111,24 @@ const oggetti = computed(() => state.profile.owned.length)
    resta raggiungibile dall'indirizzo (`#torri`): il frammento è roba da
    grandi e da test, non una strada che un bambino trova per caso.
    Cameretta e albo non si spengono: sono le monete e i progressi. */
-const acceso = chiave => giocoAcceso(chiave)
+/* ── e poi c'è l'età ──
+   Un gioco acceso non è ancora un gioco da mettere in home: se ogni
+   tappa della sua campagna sta fuori dalla portata di questo bambino,
+   quella carta non ha niente da offrirgli — le pecore da contare a dieci
+   anni, le conversioni a sei. Il conto sta in `data/portata-giochi.js` e
+   guarda le tappe vere, non un'etichetta sul manifesto.
+
+   Due cose che questo NON è. **Non è l'interruttore dei genitori messo
+   giù**: `settings.giochi` resta com'era, e riaccendere l'età non è una
+   cosa che si fa da qui. E **non toglie niente a chi ha già cominciato**:
+   un gioco aperto anche una volta sola resta in home per sempre, perché
+   un gioco che c'era e un giorno non c'è più è peggio di un gioco che
+   non serve — i progressi restano, ma il bambino vede solo che è
+   sparito, e non c'è modo di spiegarglielo dentro il gioco.
+
+   Resta raggiungibile dall'indirizzo (`#pozioni`), come tutto quello che
+   la home non mostra: è la strada dei grandi e dei test. */
+const acceso = chiave => giocoAcceso(chiave) && giocoDaVedere(chiave)
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 
 /* ═══════════ le carte, che adesso si costruiscono da sole ═══════════
@@ -316,7 +334,19 @@ function aChePunto (chiave) {
            test di integrazione, e non è cambiato dove porta. -->
       <button class="impostazioni" data-azione="grandi" @click="$emit('vai','genitori')">
         <b>⚙︎ Impostazioni</b>
-        <i>giochi visibili, chi gioca, salvataggio dei progressi</i>
+        <i>giochi visibili, difficoltà delle domande, chi gioca, salvataggio</i>
+      </button>
+      <!-- ══ le guide ══
+           Accanto alle impostazioni ma **fuori dal codice**, e la
+           differenza è tutta nel primo genitore che apre il link
+           ricevuto da un altro: deve poter leggere come si installa
+           senza sapere che il codice di partenza è 0000. Qui dentro si
+           legge soltanto, non c'è niente da chiudere a chiave.
+           Piatto e grigio come l'altro: non è un gioco, e in mezzo alle
+           carte a colori nessun bambino lo tocca due volte. -->
+      <button class="impostazioni guide" data-azione="guide" @click="$emit('vai','guide')">
+        <b>? Come funziona</b>
+        <i>installarlo sul telefono, l'età, le domande, i progressi</i>
       </button>
       <!-- la versione serve a rispondere «il telefono ha preso
            l'aggiornamento?» guardando lo schermo, e non è da toccare. -->
@@ -417,6 +447,7 @@ function aChePunto (chiave) {
                 padding:11px 16px; border-radius:14px; text-align:left;
                 background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
 .impostazioni:active { background:#ffffffaa }
+.impostazioni.guide { margin-top:8px }
 .impostazioni b { display:block; font-size:14px; font-weight:800; color:var(--tenue) }
 .impostazioni i { font-style:normal; font-size:11.5px; color:var(--tenue); opacity:.75 }
 
