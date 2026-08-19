@@ -34,7 +34,8 @@
    moduli lo mette chi chiama (`quiz/catalogo.js` sotto Vite).
    ═══════════════════════════════════════════════════════════════════ */
 
-import { pesoDi, bersaglio, finestraDi, anniDelLivello } from './classi.js'
+import { pesoDi, bersaglio, finestraDi, anniDelLivello,
+         livelloDegliAnni, MIRA_SOTTO } from './classi.js'
 
 /* Le fasce, che adesso sono **età** e non gradini astratti. Servono a
    due cose diverse e conviene tenerle a mente tutte e due: a
@@ -55,6 +56,56 @@ export const FASCE = [
 /* la fascia di un livello: `fino` è il livello dove il blocco finisce,
    sulla stessa scala 0..100 delle domande */
 export const fasciaDi = livello => FASCE.find(f => livello < f.fino) || FASCE[FASCE.length - 1]
+
+/* ── DOVE CADE UNA DOMANDA RISPETTO A UN BAMBINO ──
+   Le `FASCE` qui sopra sono assolute: dicono in che anno di scuola sta
+   una domanda, e valgono uguali per tutti. Queste altre cinque sono
+   **relative a chi gioca**, ed è la sola cosa che un grande guarda
+   davvero aprendo la schermata: *a mio figlio cosa arriva, e cosa gli
+   state togliendo?*
+
+     [troppo facili] [facili] [nel segno] [difficili] [troppo difficili]
+
+   I due estremi sono le domande **escluse** — fuori dall'ammissione di
+   `finestraDi` — e si mostrano lo stesso: un elenco che nasconde quello
+   che ha tolto non fa vedere *che* l'ha tolto, ed è esattamente la cosa
+   che un genitore deve poter smentire.
+
+   Stava dentro `quiz/catalogo.js`, che è il ponte con la schermata.
+   Adesso sta qui perché lo chiedono in due — l'elenco delle domande e
+   il quadro di un'età (`data/quadro.js`) — e due copie degli stessi
+   confini sono due tarature che prima o poi divergono, senza che niente
+   diventi rosso. */
+export const FASCE_ETA = [
+  { chiave: 'sotto', nome: 'Troppo facili', che: 'tolte: le indovinerebbe senza pensarci' },
+  { chiave: 'facili', nome: 'Facili', che: 'roba che sa già fare: esce quando il gioco chiede poco' },
+  { chiave: 'medie', nome: 'Nel segno', che: 'la sua misura: sono quelle che vede più spesso' },
+  { chiave: 'toste', nome: 'Difficili', che: 'un passo avanti: escono quando il gioco chiede molto' },
+  { chiave: 'sopra', nome: 'Troppo difficili', che: 'tolte: non ha ancora di che ragionarle' },
+]
+
+/* Il blocco di mezzo è **stretto**: da un anno sotto a mezzo anno
+   sopra. Non è la mira della pesca (quella arriva a un anno e mezzo
+   sopra): è quello che serve a un occhio umano, cioè tre blocchi di
+   dimensione paragonabile. Con il confine alto sulla mira il blocco
+   centrale si mangiava tre quarti delle righe, e un elenco dove tutto
+   sta nello stesso posto non è un elenco. */
+const SEGNO_SOPRA = 6
+
+/* Si chiede il classificatore una volta e lo si usa su tutte le righe:
+   la finestra dipende dall'età e non dalla riga, e ricalcolarla
+   duecento volte per disegnare un elenco è lavoro buttato. */
+export function doveCadeCon (eta) {
+  const qui = livelloDegliAnni(eta)
+  const finestra = finestraDi(eta)
+  if (!finestra) return () => 'medie'
+  const [giu, su] = finestra
+  return livello =>
+    livello < giu ? 'sotto'
+      : livello > su ? 'sopra'
+        : livello < qui - MIRA_SOTTO ? 'facili'
+          : livello > qui + SEGNO_SOPRA ? 'toste' : 'medie'
+}
 
 /* ── le classi di un modulo ──
    Una riga per (grado, tipologia). I moduli che le tipologie non le

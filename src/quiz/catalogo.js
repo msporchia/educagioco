@@ -13,10 +13,10 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import { MODULI } from './nucleo/registro.js'
-import { catalogoDi, giroDellaFascia, FASCE, fasciaDi, quantoEsce } from './nucleo/catalogo.js'
+import { catalogoDi, giroDellaFascia, FASCE, fasciaDi, quantoEsce,
+         FASCE_ETA, doveCadeCon } from './nucleo/catalogo.js'
 import { classiAmmesse } from './scelta.js'
-import { pescaClasse, finestraDi, livelloDegliAnni,
-         MIRA_SOTTO, MIRA_SOPRA } from './nucleo/classi.js'
+import { pescaClasse, finestraDi } from './nucleo/classi.js'
 import { esempioDa } from './nucleo/esempi.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { saperiSpenti, regoleDomande, etaDelBambino, ritoccoSapere,
@@ -34,45 +34,34 @@ export { FASCE, fasciaDi, quantoEsce }
 export const catalogo = ({ giudizi = [] } = {}) =>
   catalogoDi(MODULI, { spenti: saperiSpenti(), giudizi })
 
+/* ── le classi nude ──
+   Tutte le righe, senza niente addosso del profilo: nessuno spento,
+   nessun giudizio, nessun ritocco. Le vuole `data/quadro.js`, che è il
+   riassunto della manopola dei grandi e gli spenti se li applica da sé
+   — anzi *deve* applicarseli da sé, perché il suo mestiere è mostrare
+   cosa succederebbe con impostazioni diverse da quelle di adesso. */
+export const classiNude = () => catalogoDi(MODULI, {}).flatMap(m => m.classi)
+
 /* ── LE CINQUE FASCE, VISTE DA QUESTO BAMBINO ──
    Il catalogo per modulo dice *cosa esiste*; questo dice **dove cade
    ognuna rispetto a chi gioca**, che è l'unica domanda che un grande si
    fa davvero quando guarda una taratura: cosa gli arriva spesso, cosa
    ogni tanto, e cosa gli abbiamo tolto.
 
-   I confini non sono inventati qui: sono quelli veri di
-   `nucleo/classi.js` — l'ammissione (larga: si toglie solo la presa in
-   giro e il muro) e la mira (stretta: dove pesca la manopola). Le due
-   fasce estreme sono quelle **escluse**, e si mostrano lo stesso: un
-   elenco che nasconde quello che ha tolto non fa vedere *che* l'ha
-   tolto, ed è esattamente la cosa che un genitore deve poter smentire.
+   I confini non li decide questo file: stanno in `nucleo/catalogo.js`
+   (`FASCE_ETA`, `doveCadeCon`), perché li chiede anche il quadro di
+   un'età — e due copie degli stessi confini divergono senza che niente
+   diventi rosso. Qui si aggiunge quello che il nucleo non può sapere:
+   cosa il genitore ha spento, cosa ha ritoccato, cosa è stato detto
+   giocando.
 
    Il livello di ogni riga è quello **visto**: il ritocco di un grande è
    già dentro, se no la riga resterebbe dov'era mentre le domande si
    spostano. */
-export const FASCE_ETA = [
-  { chiave: 'sotto', nome: 'Troppo facili', che: 'tolte: le indovinerebbe senza pensarci' },
-  { chiave: 'facili', nome: 'Facili', che: 'roba che sa già fare: esce quando il gioco chiede poco' },
-  { chiave: 'medie', nome: 'Nel segno', che: 'la sua misura: sono quelle che vede più spesso' },
-  { chiave: 'toste', nome: 'Difficili', che: 'un passo avanti: escono quando il gioco chiede molto' },
-  { chiave: 'sopra', nome: 'Troppo difficili', che: 'tolte: non ha ancora di che ragionarle' },
-]
+export { FASCE_ETA }
 
 export function fasceDelBambino({ eta = etaDelBambino(), giudizi = [] } = {}) {
-  const qui = livelloDegliAnni(eta)
-  const [giu, su] = finestraDi(eta)
-  /* Il blocco di mezzo è **stretto**: da un anno sotto a mezzo anno
-     sopra. Non è la mira della pesca (quella arriva a un anno e mezzo
-     sopra): è quello che serve a un occhio umano, cioè tre blocchi di
-     dimensione paragonabile. Con il confine alto sulla mira il blocco
-     centrale si mangiava tre quarti delle righe, e un elenco dove tutto
-     sta nello stesso posto non è un elenco. */
-  const SEGNO_SOPRA = 6
-  const dove = livello =>
-    livello < giu ? 'sotto'
-      : livello > su ? 'sopra'
-        : livello < qui - MIRA_SOTTO ? 'facili'
-          : livello > qui + SEGNO_SOPRA ? 'toste' : 'medie'
+  const dove = doveCadeCon(eta)
 
   /* Il gruppo che il ✕ spegnerebbe: **il più specifico** fra quelli che
      la riga dichiara. Una conversione di pesi sta sotto «Metri, litri e
