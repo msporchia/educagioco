@@ -63,6 +63,16 @@
    sono ricomparsi in home a chi entra in prima **senza toccare una
    riga dei giochi**.
 
+   ── E `quiz`, CHE DICE DA DOVE VIENE IL PEDAGGIO ─────────────────
+   `quiz: true` vuol dire che le domande di questo gioco escono dai
+   moduli di `src/quiz/`, cioè dal mazzo che l'età taglia. Non è «fa
+   domande»: Conta gli animali ne fa, ma sono sue e vivono dentro il
+   gioco. Serve al quadro di un'età (`data/quadro.js`) per non elencare
+   a un genitore quattro blocchi di domande quando in casa non c'è
+   nessun gioco che le peschi — che è quello che succedeva da quattro a
+   cinque anni e mezzo, dove i giochi accesi sono tre e nessuno passa
+   di lì.
+
    ── QUELLO CHE UN GIOCO DÀ PER SCONTATO ──────────────────────────
    `serve: ['conversioni']` sono i macrogruppi di `data/saperi.js`
    senza i quali quel gioco non è difficile: è impossibile. Il
@@ -79,8 +89,16 @@
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
 export const GIOCHI = [
+  /* Senza `grandi`, ed è la stessa correzione già fatta per il Dungeon e
+     per Survivors: il flag lo teneva spento fino a otto anni, mentre la
+     sua prima tappa è tarata su **sei** (`arcoDelGioco` sulle tappe di
+     `data/portata-giochi.js` dà 6,0–10,2). Non è il gioco a essere da
+     grandi — schivare un sasso rispondendo «3 + 2» si sa fare in prima,
+     con le dita — erano le tabelline in cima alla campagna, e a quelle
+     ci pensa la portata, che non offre una tappa fuori mira. Con due
+     dichiarazioni che dicono cose diverse vinceva la più grossolana. */
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
-    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande', grandi: true },
+    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande' },
   { chiave: 'inglese',    ico: '🌐', nome: 'English',
     che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
@@ -108,7 +126,7 @@ export const GIOCHI = [
      store, e non si chiude nessun anello di import. */
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
-                              grandi: !!g.grandi, posto: !!g.posto,
+                              grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [] })),
 ]

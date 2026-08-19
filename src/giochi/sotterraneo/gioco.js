@@ -35,6 +35,14 @@ export default {
   che: 'un posto da girare, dove tutto ha un prezzo',
   area: 'avventure',
   come: 'domande',
+  /* ── LE DOMANDE QUI SONO QUELLE DEI MODULI DI QUIZ ──
+     Non «questo gioco fa domande» — le fa anche Conta gli animali, ma
+     sono sue — bensì **il pedaggio passa da `src/quiz/`**, cioè dal
+     mazzo che l'età del bambino taglia. Lo chiede il quadro di un'età
+     (`data/quadro.js`): se in casa non c'è nessun gioco che dichiara
+     questa riga, i quattro blocchi delle domande descrivono un mazzo
+     che nessuno pescherà, e vanno detti per quello che sono. */
+  quiz: true,
   tappe: QUANTE_TAPPE,
 
   /* ── ESCE DALLA PROVA ──
