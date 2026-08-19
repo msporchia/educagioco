@@ -38,6 +38,7 @@ import { COSE, SEGNI } from './dati/cose.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
+import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Tela } from './scena/tela.js'
 
 import Campagna from './viste/Campagna.vue'
@@ -95,6 +96,44 @@ function scegli(k) {
   chiEro.value = ricorda(CHIAVE, 'eroe', k)
   scegliEroe.value = false
   suono.ok()
+}
+
+/* ═══════════ la discesa lasciata a metà ═══════════
+   Una discesa dura più di una seduta, e prima chiudere il gioco voleva
+   dire buttarla. Adesso si scrive dove si era (`motore/sosta.js`) e la
+   mappa la offre in cima. Il ref serve solo a farla comparire e sparire:
+   la verità sta in archivio. */
+const ripresa = ref(dice(sosta(CHIAVE), CAMPAGNA))
+let ultimoSalvato = 0
+
+function salva({ subito = false } = {}) {
+  const c = corsa.value
+  if (!c || c.finita || tappaIdx.value < 0) return
+  ultimoSalvato = orologio
+  salvaSosta(CHIAVE, scrivi(c, tappaIdx.value), { subito })
+}
+
+function scorda() {
+  buttaSosta(CHIAVE)
+  ripresa.value = null
+}
+
+/* Riprendere non è ricominciare: il piano si **rifà dal seme** e sopra
+   ci si rimette quello che era successo. Se il salvataggio non si legge
+   più — una versione vecchia, un dato storto — si comincia la tappa da
+   capo invece di lasciare un tasto che non fa niente. */
+function riprendiDiscesa() {
+  const dato = sosta(CHIAVE)
+  const c = dato ? leggi(dato, CAMPAGNA[dato.tappa]) : null
+  if (!c) { scorda(); return }
+  tappaIdx.value = dato.tappa
+  fine.value = null
+  domanda.value = null
+  zainoAperto.value = false
+  corsa.value = c
+  ripresa.value = null
+  suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
+  nextTick(() => accendi())
 }
 
 /* ═══════════ la mappa delle tappe ═══════════ */
@@ -259,6 +298,10 @@ function giro() {
        forziere di cui si sta leggendo restano visibili sopra il
        pannello (lo scontro no: quello sta al centro e non chiede spazio) */
     if ((contaGiri++ % 6) === 0) misuraFoglio()
+    /* ogni tanto, e non a ogni fotogramma: una discesa salvata sono un
+       paio di chilobyte, e chi cammina per un minuto senza toccare
+       niente non deve ritrovarsi indietro di un minuto */
+    if (orologio - ultimoSalvato > 8) salva()
     pittore.segui(c.livello, c.eroe.x, c.eroe.y, altoFoglio)
     pittore.mostra({ corsa: c, orologio })
     guarda(c)
@@ -316,6 +359,7 @@ function risolvi(giusto) {
   if (!c) return
   const esito = c.rispondi(giusto)
   tic.value++
+  salva()
   if (!esito) return
   scosso.value++
   switch (esito.che) {
@@ -342,6 +386,7 @@ function scendi() {
   tic.value++
   if (e?.che === 'finita') return chiudi()
   suono.livello()
+  salva()          // un piano nuovo è il momento in cui si perde di più
 }
 
 /* ═══════════ com'è finita ═══════════ */
@@ -349,6 +394,7 @@ function chiudi() {
   const c = corsa.value
   if (!c) return
   if (!c.finita) c.risali()
+  scorda()          // finita o risalita, non c'è più niente da riprendere
   const e = c.esito
   const stelle = stelleDella(e)
 
@@ -387,16 +433,24 @@ function allaMappa() {
   corsa.value = null
 }
 
+/* ── tornare su ──
+   Uscire a metà **non chiude più la discesa**: si scrive dove si era e
+   la mappa la offre in cima. Prima usciva un cartello che raccontava
+   com'era andata e la partita finiva lì, che con tre piani da fare vuol
+   dire buttare via venti minuti ogni volta che suonano alla porta.
+
+   Si salva **sempre**, anche a mani vuote e dopo due passi. La regola
+   con l'eccezione — «solo se hai fatto abbastanza» — sembrava più
+   pulita e non lo è: quello che si perde in una discesa appena
+   cominciata non sono le gemme, è **la mappa già girata**, e girare al
+   buio è metà del gioco. Meglio una carta in più in cima che due minuti
+   di corridoi da rifare. */
 function indietro() {
   if (!corsa.value && !fine.value) return emit('vai', 'home')
-  /* Chi esce senza aver fatto niente non si merita un cartello che gli
-     dice che è tornato su a mani vuote: si era solo affacciato. Il
-     cartello serve a raccontare com'è andata, e se non è andata niente
-     non c'è niente da raccontare. */
-  if (corsa.value && !fine.value && !corsa.value.finita) {
-    const e = corsa.value.esito
-    if (!e.domande && !e.piani) return allaMappa()
-    return chiudi()
+  const c = corsa.value
+  if (c && !c.finita && !fine.value) {
+    salva({ subito: true })
+    ripresa.value = dice(sosta(CHIAVE), CAMPAGNA)
   }
   allaMappa()
 }
@@ -481,9 +535,24 @@ function rotella(e) {
 
 function nienteClickDalCampo(e) { if (e.cancelable) e.preventDefault() }
 
-onMounted(() => { addEventListener('resize', ridimensiona) })
+/* ── il telefono che si mette in tasca ──
+   Su un telefono l'app non si chiude: sparisce. `visibilitychange` è
+   l'ultimo momento in cui si può ancora scrivere, e `flushNow` serve
+   perché il salvataggio pigro potrebbe non scattare mai. */
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
+}
+
+onMounted(() => {
+  addEventListener('resize', ridimensiona)
+  addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+})
 onUnmounted(() => {
+  salva({ subito: true })
   removeEventListener('resize', ridimensiona)
+  removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
   cancelAnimationFrame(raf)
   if (pittore) pittore.ferma()
 })

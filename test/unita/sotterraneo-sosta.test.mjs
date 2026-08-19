@@ -1,0 +1,139 @@
+/* La discesa lasciata a metà: si scrive, si rilegge, e **si finisce**.
+   Una discesa dura venti minuti e tre piani, e prima chiudere il gioco
+   voleva dire buttarla via. Qui si prova la cosa che conta davvero —
+   non che il salvataggio «esista», ma che una partita ripresa sia la
+   stessa partita e arrivi in fondo.
+   `node test/esegui.mjs sosta --niente-build` */
+import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
+import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE }
+  from '../../src/giochi/sotterraneo/motore/sosta.js'
+import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+
+/* ══════════ 1. la mappa vista, compressa ══════════
+   Duemilaseicento zeri e uno scritti tali e quali sono venti chilobyte
+   di JSON per niente: si contano le lunghezze dei tratti. */
+{
+  const visto = new Uint8Array(50)
+  for (let i = 10; i < 22; i++) visto[i] = 1
+  visto[40] = 1
+  const s = stringaDi(visto)
+  uguale('e si rilegge identica', vistoDa(s, 50).join(), visto.join())
+  controlla('e sta in poche cifre', s.length < 20, s)
+
+  const tutta = new Uint8Array(2704)
+  uguale('una mappa mai vista è un numero solo', stringaDi(tutta), '2704')
+}
+
+/* ══════════ 2. quello che si è fatto non si perde ══════════ */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 314, rnd: seminato(314) })
+  /* si gioca un pezzo per davvero: si cammina, si apre un forziere, si
+     batte qualcuno, si mette qualcosa in mano */
+  const f = c.livello.robe.find(r => r.che === 'forziere')
+  c.foglio = { che: 'forziere', chi: f }
+  c.rispondi(true)
+  const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
+  c.foglio = { che: 'scontro', chi: m }
+  for (let i = 0; i < 30 && !m.morto; i++) { c.rispondi(true); if (!c.foglio) break }
+  c.zaino.push('pozione')
+  c.mano = 'spada'
+  c.gemme = 77
+  c.vita = 13
+  for (let i = 0; i < 40; i++) c.passo(1 / 30)
+
+  const dato = scrivi(c, 1)
+  const b = leggi(dato, CAMPAGNA[1])
+  controlla('il salvataggio si rilegge', !!b)
+
+  const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.mano, x.corpo,
+                      x.zaino.join(), x.chiaveDelPiano, x.torcia,
+                      Math.floor(x.eroe.x), Math.floor(x.eroe.y),
+                      x.domande, x.mostriBattuti, x.tesori, x.stanzeViste].join('|')
+  uguale('e la discesa è la stessa', firma(b), firma(c))
+  uguale('il piano è quello di prima, rifatto dal seme',
+         b.livello.celle.join(), c.livello.celle.join())
+  uguale('la mappa esplorata è quella', b.visto.join(), c.visto.join())
+  uguale('e le cose stanno dove stavano', b.livello.robe.length, c.livello.robe.length)
+  controlla('il forziere aperto è ancora aperto',
+            b.livello.robe.some(r => r.che === 'forziere' && r.aperto))
+  controlla('e chi era caduto è ancora caduto',
+            b.livello.robe.filter(r => r.che === 'mostro' && r.morto).length ===
+            c.livello.robe.filter(r => r.che === 'mostro' && r.morto).length)
+
+  nota(`un salvataggio pesa ${JSON.stringify(dato).length} byte con ${dato.robe.length} cose in giro`)
+}
+
+/* ══════════ 3. i mostri tornano al loro posto ══════════
+   Riaprire il gioco con l'orco addosso e un colpo già partito è il modo
+   più rapido di far pentire qualcuno di aver ripreso. */
+{
+  const c = new Corsa(CAMPAGNA[2], { seme: 8, rnd: seminato(8) })
+  const m = c.livello.robe.find(r => r.che === 'mostro')
+  m.fx = m.x + 6.5; m.fy = m.y + 0.5
+  m.casa = { x: m.x, y: m.y }
+  m.sveglio = true
+  m.calmo = 0
+  const casa = { x: m.x, y: m.y }
+
+  const b = leggi(scrivi(c, 2), CAMPAGNA[2])
+  const stesso = b.livello.robe.find(r => r.che === 'mostro')
+  uguale('chi inseguiva si ritrova a casa sua', `${stesso.x},${stesso.y}`, `${casa.x},${casa.y}`)
+  uguale('e non è più sveglio', !!stesso.sveglio, false)
+}
+
+/* ══════════ 4. una discesa ripresa si finisce ══════════
+   È la prova vera: non che il dato torni indietro, ma che la partita
+   arrivi in fondo dopo essere stata interrotta. */
+{
+  const t = CAMPAGNA[2]
+  const c = new Corsa(t, { seme: 101, rnd: seminato(101) })
+  /* mezza discesa vera, poi si chiude l'applicazione di colpo */
+  const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
+  controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
+
+  const dopo = new Corsa(t, { seme: 202, rnd: seminato(202) })
+  const salvato = scrivi(dopo, 2)
+  for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
+  const ripresa = leggi(salvato, t)
+  const finita = gioca(t, { seme: 202, bravura: 1, come: 'minimo', da: ripresa })
+  controlla('una discesa ripresa arriva in fondo', finita.esito.vinta,
+            finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani`)
+}
+
+/* ══════════ 5. quello che non si sa leggere si butta ══════════
+   Una partita persa è un dispiacere; una partita ripresa a metà con dei
+   campi che non tornano è un gioco rotto in un modo che nessuno sa
+   spiegare. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 5, rnd: seminato(5) })
+  const dato = scrivi(c, 0)
+  uguale('un salvataggio di ieri non si legge', leggi({ ...dato, v: VERSIONE - 1 }, CAMPAGNA[0]), null)
+  uguale('e nemmeno un dato storto', leggi({ v: VERSIONE, robe: null }, CAMPAGNA[0]), null)
+  uguale('niente salvataggio, niente ripresa', leggi(null, CAMPAGNA[0]), null)
+
+  /* una discesa finita non si salva: non c'è più niente da riprendere */
+  c.finita = true
+  uguale('una discesa finita non lascia soste', scrivi(c, 0), null)
+
+  const riga = dice(dato, CAMPAGNA)
+  uguale('la carta dice da che tappa si riprende', riga.nome, CAMPAGNA[0].nome)
+  uguale('e a che piano si era', riga.piano, 1)
+}
+
+/* le cose per terra sopravvivono alla chiusura: sono l'unica cosa che
+   non si rigenera dal seme, e quindi l'unica che si può perdere */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 61, rnd: seminato(61) })
+  c.zaino = ['ascia']   // gradino 2 della famiglia delle asce
+  c.butta(0)
+  const b = leggi(scrivi(c, 0), CAMPAGNA[0])
+  controlla('l\'ascia lasciata per terra è ancora lì',
+            b.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
+  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 2)
+}
+
+riassunto('la discesa lasciata a metà')

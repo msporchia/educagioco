@@ -111,6 +111,36 @@ ripara, cosa si rivende, come si evita che l'ultima discesa sia una
 passeggiata per chi ha l'ascia), e quella economia è un altro gioco. Se un
 giorno la si vorrà, si cambia in `dati/campagna.js`.
 
+## Una discesa si può lasciare a metà
+
+Tre o quattro piani, quaranta domande, venti minuti buoni: una discesa dura
+più di quello che un bambino ha davanti prima di cena. Prima, uscire voleva
+dire buttarla via.
+
+Adesso **si esce e si riprende**. Uscendo si scrive dove si era, e la mappa
+delle discese lo offre in cima: «piano 2 di 3 · ❤️ 14 · 💎 37 — torno giù da
+dove ero». Il piano non si salva, si **rifà dal seme**: sono le celle a
+essere una funzione del numero. Quello che si salva è ciò che è *successo*
+— chi è caduto, cosa si è aperto, cosa sta per terra, quanta mappa hai
+girato — perché lì di mezzo c'è il caso, e il caso non si riavvolge. Un
+salvataggio pesa un paio di chilobyte (`motore/sosta.js`).
+
+Due scelte dentro questa:
+
+- **Riprendendo, i mostri sono tornati al loro posto.** Riaprire il gioco
+  con l'orco addosso e un colpo già partito è il modo più rapido di far
+  pentire qualcuno di aver ripreso. È la stessa regola del risveglio dopo
+  uno svenimento.
+- **Si salva sempre**, anche dopo due passi e a mani vuote. La regola con
+  l'eccezione — «solo se hai fatto abbastanza» — sembrava più pulita e non
+  lo è: quello che si perde in una discesa appena cominciata non sono le
+  gemme, è **la mappa già girata**, e girare al buio è metà del gioco.
+
+Se il formato del salvataggio cambia, quello di ieri **non si legge**: si
+ricomincia la discesa. Una partita persa è un dispiacere; una partita
+ripresa con dei campi che non tornano è un gioco rotto in un modo che
+nessuno sa spiegare.
+
 ## Chi scende, e cosa si porta
 
 Quattro eroi — cavaliere, elfa, mago, nano — e la differenza sta in **due

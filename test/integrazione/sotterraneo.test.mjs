@@ -32,6 +32,7 @@ await azzera(page)
 
 await semina(page, { coins: 300, settings: { sperimentali: true } })
 
+
 /* ---------- 1. la carta, e le sei discese ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="sotterraneo"]')
 controlla('la carta è in home coi giochi in prova accesi', await carta.count() === 1)
@@ -95,11 +96,17 @@ await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
 uguale('e si richiude', await page.locator('.sot-foglio').count(), 0)
 
-/* ---------- 5. si torna indietro ---------- */
+/* ---------- 5. si esce a metà, e la discesa resta lì ----------
+   La cosa che rende giocabile una discesa da venti minuti: si chiude e
+   si riprende. Il giro si prova **dall'archivio vero** — si esce, si
+   torna alla mappa, si riprende — perché il salvataggio passa dal
+   profilo e il test unitario quel pezzo non lo tocca. */
 await page.locator('button[aria-label="indietro"]').click()
-await attendi(page, 400)
-controlla('dal campo si torna al cartello di fine o alle discese',
-          await page.locator('.sot-fine, .sot-tappe').count() > 0)
+await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+controlla('uscendo a metà la discesa resta in sospeso',
+          await page.locator('[data-ripresa]').count() === 1)
+controlla('e la carta dice a che piano si era',
+          (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('piano 1'))
 
 /* ---------- 6. la seconda discesa si vede come la prima ----------
    Tornando alle discese il `v-if` smonta il campo, quindi la discesa
@@ -108,10 +115,7 @@ controlla('dal campo si torna al cartello di fine o alle discese',
    niente di rotto in nessun altro controllo — solo lo schermo nero, e
    solo dalla seconda in poi. Per questo il conto dei pixel si rifà
    invece di darlo per buono al primo giro. */
-if (await page.locator('.sot-fine').count())
-  await page.locator('[data-fine="esci"], [data-fine="ancora"]').first().click()
-await page.waitForSelector('.sot-tappe', { timeout: 5000 })
-await page.locator('.sot-tappa[data-tappa="0"]').click()
+await page.locator('[data-azione="riprendi"]').click()
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 600)
 const ancora = await page.evaluate(() => {
@@ -121,7 +125,18 @@ const ancora = await page.evaluate(() => {
   for (let i = 0; i < d.length; i += 160) if (d[i] > 24 || d[i + 1] > 24) n++
   return n
 })
-controlla('anche la seconda discesa si vede', ancora > 200, `${ancora} campioni accesi`)
+controlla('anche la discesa ripresa si vede', ancora > 200, `${ancora} campioni accesi`)
+
+/* ---------- 7. e si può anche lasciar perdere ---------- */
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+await page.locator('[data-azione="scorda"]').click()
+await attendi(page, 300)
+uguale('lasciata perdere, la carta sparisce', await page.locator('[data-ripresa]').count(), 0)
+await page.locator('.sot-tappa[data-tappa="0"]').click()
+await page.waitForSelector('.sot-tela', { timeout: 5000 })
+controlla('e si ricomincia senza che nessuno chieda niente',
+          await page.locator('.sot-velo').count() === 0)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 nota('il tocco che apre un foglio dal campo lo prova unita/sotterraneo')

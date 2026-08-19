@@ -87,7 +87,7 @@ function comincia() {
     <button v-for="t in tappe" :key="t.indice"
             class="sot-tappa" :class="{ 'sot-chiusa': !t.aperta, 'sot-adesso': t.adesso }"
             :data-tappa="t.indice" :disabled="!t.aperta"
-            @click="$emit('gioca', t.indice)">
+            @click="tocca(t, !!ripresa)">
       <span class="sot-faccia em">{{ t.aperta ? t.icona : '🔒' }}</span>
       <span class="sot-testo">
         <b>{{ t.nome }}</b>
@@ -97,5 +97,24 @@ function comincia() {
         {{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.piani} 🪜` }}
       </span>
     </button>
+
+    <!-- ═══ «ne cominci un'altra?» ═══
+         Detto prima, mai dopo: quello che si perde non torna. -->
+    <div v-if="chiede" class="sot-velo" @click.self="chiede = null">
+      <div class="sot-modale">
+        <h2><span class="em">⚠️</span> Hai una discesa a metà</h2>
+        <p>
+          Se cominci <b>{{ chiede.nome }}</b> perdi quella che avevi lasciato
+          in sospeso, con tutto quello che avevi trovato.
+        </p>
+        <button class="sot-grosso" data-azione="riprendi-invece"
+                @click="chiede = null; $emit('riprendi')">
+          no, torno a quella di prima
+        </button>
+        <button class="sot-grosso sot-chiaro" data-azione="comincia" @click="comincia">
+          va bene, comincio {{ chiede.nome.toLowerCase() }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>

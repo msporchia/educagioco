@@ -94,6 +94,36 @@ export function azzeraCampagna(chiave) {
   return true
 }
 
+/* ═══════════ una partita lasciata a metà ═══════════
+   Certi giochi durano più di una seduta — una discesa del sotterraneo è
+   venti minuti e quaranta domande — e chiuderli voleva dire buttarli
+   via. La sosta è **quello che serve a rimettere in piedi la partita di
+   ieri sera**, e sta accanto all'avanzamento perché è dello stesso
+   genere: roba di questo bambino su questo gioco.
+
+   Il formato lo decide il gioco e questo file non lo guarda mai: qui si
+   tiene un oggetto e basta. Chi lo scrive ci mette dentro la sua
+   versione e butta quello che non sa più leggere (`motore/sosta.js` nel
+   sotterraneo).
+
+   Una sosta per gioco, non una per tappa: due discese a metà in due
+   posti diversi sono una cosa che nessun bambino ha in testa, e
+   sceglierne una diventerebbe una schermata in più. */
+export const sosta = chiave => progresso(chiave).sosta || null
+
+export function salvaSosta(chiave, dato, { subito = false } = {}) {
+  const c = progresso(chiave)
+  if (!dato) delete c.sosta
+  else c.sosta = dato
+  persist()
+  /* Alla chiusura non basta il salvataggio pigro: la pagina può sparire
+     prima che scatti, ed è **proprio il caso** per cui la sosta esiste. */
+  if (subito) flushNow()
+  return dato
+}
+
+export const buttaSosta = chiave => salvaSosta(chiave, null, { subito: true })
+
 export const haGiocato = chiave => {
   const c = state.profile.campagne
   return !!(c && c[chiave])

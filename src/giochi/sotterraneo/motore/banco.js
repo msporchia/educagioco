@@ -185,9 +185,14 @@ function sbriga(corsa, bravura, sorte) {
 /* ── una discesa intera ──
    `come` è `'minimo'` (chiave e scala, il pavimento sotto a tutto) o
    `'tutto'` (ogni cosa che vale). */
-export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null } = {}) {
+/* `da` è una discesa **già cominciata**: serve a provare che una partita
+   ripresa a metà si finisce davvero, che è l'unica prova seria che il
+   salvataggio non ha perso niente per strada. */
+export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
+                              eroe = undefined } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
-  const corsa = new Corsa(tappa, { seme, rnd: sorte })
+  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe })
+  if (da) da.rnd = sorte
   let giri = 0
   const persi = []
   const provati = new Map()
