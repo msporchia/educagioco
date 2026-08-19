@@ -1,0 +1,19 @@
+{
+  "__": "Le sei merci del granaio che un disegno non ce l'avevano. Cinque erano ripieghi presi da altri fogli — il fungo rosso al posto del tartufo, il calderone vuoto al posto della zuppa, la ciotola dell'acqua al posto del mangime — e due, l'uovo e la lana, erano **emoji**: liscie in mezzo alla pixel art, e dentro il fumetto di un recinto grandi venti pixel. Chi le usa è `dati/coltivazioni.js` (campo `pezzo` su `PRODOTTI`) e chi le disegna `viste/Merce.vue`.\n\nLe merci sono le uniche cose della fattoria che si vedono **solo dentro un riquadro**: nel fumetto sopra un recinto che ha fame, sullo scaffale di un silo, sui tasti di una ricetta. Non si posano in mappa e non si girano mai, quindi «giri: 1» e niente specchio — un pezzo che non ha un verso non ne guadagna uno.\n\n«fondo»: auto perché è un JPEG con un fondo magenta piatto, e il magenta non compare in nessun oggetto: è la richiesta fatta a chi l'ha generato, apposta perché lo scontorno fosse una riga e non un ritocco a mano. Il JPEG lascia un alone attorno alle sagome, e ci pensano «allaga» e «sfrangia».\n\n«ombra»: true perché il generatore, a cui era stato chiesto di non farlo, ha disegnato **una macchia d'ombra sotto ogni oggetto** — che non è il colore del fondo ma il fondo scurito, quindi l'allagamento normale ci si ferma davanti e resta un filo rosa lungo la base. A un nono della misura quel filo è un pixel intero. Si toglie guardando la tinta invece della distanza (`allaga_ombra` in `attori.py`), e si può fare **solo** perché di magenta in questi sei oggetti non ce n'è.\n\n«colori»: 0, cioè **niente quantizzazione**, come il foglio dei campi. Ridurre i colori serve ai fogli dove il ricampionamento di un JPEG ne lascia migliaia di sfumature inutili, e la tavolozza si costruisce sull'immagine intera **fondo compreso**: qui il fondo è due terzi del foglio ed è magenta acceso, quindi si mangiava quasi tutta la tavolozza e alle uova bianche restavano i rosa. Sei oggetti piccoli non pesano: meglio i colori veri.\n\n«cella»: [1, 1] fa sì che «da» e «cella» valgano pixel: gli oggetti sono disposti a mano su una riga, senza passo costante. I rettangoli li ha misurati lo scontorno del magenta, macchia per macchia, e stanno larghi tre pixel per non tagliare l'orlo sfumato del JPEG.\n\n«misura» riporta tutto alla scala del resto del gioco dividendo per nove, che è il fattore che mette il nido delle uova largo quanto una cassa del raccolto (28 px). Le sei proporzioni fra loro sono quelle del foglio: erano già giuste, ed è quello che si era chiesto.",
+  "fondo": "auto",
+  "ombra": true,
+  "colori": 0,
+  "cella": [1, 1],
+  "famiglia": "oggetto",
+  "trasforma": {
+    "merce": {"giri": 1, "specchia": false}
+  },
+  "sprite": {
+    "merce_uova": {"da": [39, 226], "cella": [262, 206], "misura": [29, 23]},
+    "merce_lana": {"da": [326, 225], "cella": [181, 205], "misura": [20, 23]},
+    "merce_becchime": {"da": [561, 211], "cella": [215, 220], "misura": [24, 24]},
+    "merce_zuppa": {"da": [821, 213], "cella": [224, 226], "misura": [25, 25]},
+    "merce_tartufi": {"da": [1067, 255], "cella": [234, 182], "misura": [26, 20]},
+    "merce_mangime": {"da": [1328, 247], "cella": [196, 178], "misura": [22, 20]}
+  }
+}

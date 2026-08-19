@@ -200,6 +200,78 @@ def allaga(px, fondi, tolleranza=26, largo=None, alto=None):
     return via
 
 
+def allaga_ombra(px, fondi, largo=None, alto=None, tinta=0.055, sat=0.34):
+    """Toglie **l'ombra che il fondo si porta dietro**, e solo quella.
+
+    ── il difetto, per esteso ──
+    Un generatore a cui si chiede «gli oggetti su un fondo piatto» quasi
+    sempre disegna anche **una macchia d'ombra sotto ogni oggetto**: non è
+    il colore del fondo, è il colore del fondo scurito, quindi
+    `allaga` — che confronta i canali uno per uno — ci si ferma davanti e
+    lascia un anello. Su un fondo grigio non si nota; su un fondo acceso
+    diventa un filo rosa sotto ogni sagoma, e a un nono della misura
+    quel filo è **un pixel intero** dello sprite finito.
+
+    Alzare la tolleranza di `allaga` non lo risolve: l'ombra più scura e
+    il fondo del disegno più chiaro distano uguale dal colore del fondo —
+    misurato così, un'ombra magenta e un fianco di lana in penombra sono
+    la stessa cosa. Quello che li separa non è **quanto** è lontano il
+    colore, è **di che tinta** è: l'ombra resta magenta, la lana resta
+    bruna. Quindi qui si guarda la tinta, e la saturazione per non
+    toccare i grigi e i bianchi, che di tinta non ne hanno una.
+
+    Resta un allagamento **dai bordi**, come l'altro e per lo stesso
+    motivo: così dentro una sagoma non si entra mai, nemmeno se qualcosa
+    lì dentro fosse della tinta giusta.
+
+    Si chiede nel foglietto (`"ombra": true`) e di suo è spenta, perché
+    vale a una condizione che è il foglio a garantire: **quella tinta non
+    deve comparire in nessun oggetto**. È il motivo per cui a chi genera
+    un foglio si chiede un fondo magenta e non un fondo verde."""
+    largo = largo or FOGLIO_W
+    alto = alto or FOGLIO_H
+    tinte = [tinta_di(f) for f in fondi]
+    visti = bytearray(largo * alto)
+    coda = [(x, y) for x in range(largo) for y in (0, alto - 1)]
+    coda += [(x, y) for y in range(alto) for x in (0, largo - 1)]
+    via = 0
+    while coda:
+        x, y = coda.pop()
+        if x < 0 or y < 0 or x >= largo or y >= alto:
+            continue
+        i = y * largo + x
+        if visti[i]:
+            continue
+        visti[i] = 1
+        c = px[x, y]
+        if c[3]:
+            t, s = tinta_di(c)
+            if s < sat or all(abs((t - f[0] + .5) % 1 - .5) > tinta for f in tinte):
+                continue
+            px[x, y] = (0, 0, 0, 0)
+            via += 1
+        coda += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    return via
+
+
+def tinta_di(c):
+    """Tinta (0..1, in giri) e saturazione di un colore. Scritta a mano e
+    non con `colorsys`: si chiama una volta per pixel su fogli da un
+    milione di pixel, e la conversione di libreria costa il triplo."""
+    r, g, b = c[0], c[1], c[2]
+    mx, mn = max(r, g, b), min(r, g, b)
+    if mx == mn:
+        return 0.0, 0.0
+    d = mx - mn
+    if mx == r:
+        t = ((g - b) / d) % 6
+    elif mx == g:
+        t = (b - r) / d + 2
+    else:
+        t = (r - g) / d + 4
+    return t / 6, d / mx
+
+
 def sfrangia(px, fondi, largo=None, alto=None, giri=2):
     """Toglie la frangia. Il JPEG lascia intorno a ogni sagoma un contorno
     di pixel color-fondo che l'allagamento non raggiunge — in mappa sono

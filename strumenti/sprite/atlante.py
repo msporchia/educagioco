@@ -48,7 +48,7 @@ from PIL import Image, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
-from attori import allaga, fondi_di, sfrangia
+from attori import allaga, allaga_ombra, fondi_di, sfrangia
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
@@ -207,6 +207,13 @@ def pulisci(im, fg):
     largo, alto = im.size
     allaga(px, fondi, 26, largo, alto)
     allaga(px, fondi, 40, largo, alto)
+    # E l'ombra che il fondo si porta dietro, se il foglietto la dichiara:
+    # è il fondo **scurito**, quindi per colore dista quanto un fianco in
+    # penombra e l'allagamento normale ci si ferma davanti. Spenta di suo,
+    # perché vale solo se quella tinta non compare in nessun oggetto —
+    # vedi `allaga_ombra`.
+    if fg.get('ombra'):
+        allaga_ombra(px, fondi, largo, alto)
     sfrangia(px, fondi, largo, alto)
 
     # Meno colori. Il ricampionamento di un JPEG ne lascia migliaia e la
@@ -246,15 +253,23 @@ def trasforma_di(nome, fg):
     quello che è visto a piombo dall'alto, 2 per quello che ha un asse
     (una palizzata, un tronco steso), 1 per quello che ha una faccia.
 
+    `ribalta` è la domanda che `giri` da solo non sa fare, e per questo
+    esiste: **il sopra può diventare il sotto?** Una siepe regge il
+    quarto di giro — per il ritto è ancora una siepe — ma non il mezzo,
+    perché ha un filo d'ombra sotto e ribaltata ce l'ha in cima. Con un
+    numero solo quel caso non si dice: 4 vuol dire tutti e quattro i
+    quarti, e il mezzo giro ci sta dentro. Il ripiego è `true`, che è il
+    verso in cui sbagliare per i pezzi visti davvero a piombo.
+
     Senza dichiarazione vale il ripiego della famiglia, che è prudente:
     gira solo quello che è terreno. Un pezzo girato per sbaglio si vede
     subito; uno che si poteva girare e non si è girato costa solo un
     disegno in più nel foglio."""
     for prefisso, che in (fg.get('trasforma') or {}).items():
         if nome.startswith(prefisso):
-            return che.get('giri'), che.get('specchia', True)
+            return che.get('giri'), che.get('specchia', True), che.get('ribalta', True)
     d = fg.get('trasforma_ripiego') or {}
-    return d.get('giri'), d.get('specchia', True)
+    return d.get('giri'), d.get('specchia', True), d.get('ribalta', True)
 
 
 def cancella_in(pezzo, rettangoli, nome):
@@ -418,8 +433,10 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name
             famiglie[chi] = d.get('famiglia') or famiglia_di(chi, fg)
-            trasforma[chi] = (d.get('giri'), d.get('specchia', True)) \
-                if 'giri' in d or 'specchia' in d else trasforma_di(chi, fg)
+            trasforma[chi] = (d.get('giri'), d.get('specchia', True),
+                              d.get('ribalta', True)) \
+                if 'giri' in d or 'specchia' in d or 'ribalta' in d \
+                else trasforma_di(chi, fg)
             # `anima` si dichiara col nome della COSA, non del fotogramma:
             # nel foglietto sta scritto `fontana`, non `fontana0`. Chi non
             # è dichiarato resta `None` e non `False`, se no il ripiego
@@ -501,8 +518,8 @@ def cose_di(fg, cose, nome_foglio):
     l'ordine è nascosto dentro un numero, e infilarne uno in mezzo
     obbliga a rinumerare tutti quelli dopo. Qui si sposta una riga.
 
-    `famiglia`, `giri`, `specchia` e `anima` si dichiarano **sulla
-    cosa**, che è dove hanno senso: una fontana ha una faccia, non ce
+    `famiglia`, `giri`, `specchia`, `ribalta` e `anima` si dichiarano
+    **sulla cosa**, che è dove hanno senso: una fontana ha una faccia, non ce
     l'hanno i suoi tre fotogrammi uno per uno."""
     for chi, che in (fg.get('cose') or {}).items():
         if chi.startswith('__'):
@@ -517,7 +534,7 @@ def cose_di(fg, cose, nome_foglio):
             print(f'  ! "cose": "{chi}" dichiarata due volte (anche in {nome_foglio})')
         cose[chi] = {'pose': pose, 'famiglia': che.get('famiglia'),
                      'giri': che.get('giri'), 'specchia': che.get('specchia'),
-                     'anima': che.get('anima')}
+                     'ribalta': che.get('ribalta'), 'anima': che.get('anima')}
 
 
 def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
@@ -551,13 +568,14 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
     versi = '|'.join(VERSI)
 
     def metti(nome, **q):
-        giri, specchia = trasforma.get(nome, (None, True))
+        giri, specchia, ribalta = trasforma.get(nome, (None, True, True))
         # `setdefault` e non un argomento fisso: un gruppo dichiarato
         # (`cose`) può dire la sua famiglia e i suoi giri, e allora deve
         # vincere sul ripiego per pezzo — che è per pezzo, mentre la
         # famiglia è una proprietà della COSA
         q.setdefault('giri', giri)
         q.setdefault('specchia', specchia)
+        q.setdefault('ribalta', ribalta)
         q.setdefault('anima', anima.get(nome))
         q.setdefault('famiglia', famiglie.get(nome, 'oggetto'))
         # da quale foglio arriva: è l'unica cosa che fa vedere quando in
@@ -593,7 +611,8 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
                 if nome in fatti:
                     print(f'  ! "cose": "{nome}" è dichiarato in più di una cosa')
                     continue
-                q = {k: dichiarata[k] for k in ('famiglia', 'giri', 'specchia', 'anima')
+                q = {k: dichiarata[k]
+                     for k in ('famiglia', 'giri', 'specchia', 'ribalta', 'anima')
                      if dichiarata.get(k) is not None}
                 metti(nome, chi=chi, posa=posa, **q)
                 fatti.add(nome)
@@ -658,6 +677,7 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
         if len(v['pose']) > 1:
             v['famiglia'] = 'attore'
             v['giri'] = 1
+            v['ribalta'] = False
             v['anima'] = True
     return cat
 

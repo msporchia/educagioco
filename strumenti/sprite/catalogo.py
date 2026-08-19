@@ -89,6 +89,39 @@ FAMIGLIE = ('attore', 'oggetto', 'tessera', 'fondo', 'figura')
 # soltanto **se si può**.
 GIRI = {'tessera': 4, 'fondo': 4, 'attore': 1, 'oggetto': 1, 'figura': 1}
 
+# ── e la domanda che `giri` da solo non sa fare ──────────────────────
+# `giri` conta i quarti di giro leciti **a passo costante**: 1 vuol dire
+# solo il dritto, 2 vuol dire dritto e mezzo giro, 4 vuol dire tutti e
+# quattro. Sono tre casi su quattro, e il quarto manca.
+#
+# Il caso che manca è la siepe. Una siepe si può mettere per il lungo o
+# per il ritto — di quarto è ancora una siepe, ed è l'unico modo di
+# chiudere un cortile con un foglio che la disegna sdraiata e basta — ma
+# **ribaltata no**: ha un filo d'ombra sotto, e a mezzo giro ce l'ha in
+# cima. Sta a gambe per aria. Con `giri` da solo bisogna scegliere fra
+# perdere il verso utile (1) e regalare quello sbagliato (4).
+#
+# Sono due libertà indipendenti, ed è per questo che vogliono due campi:
+#   · **si corica?**  il pezzo può stare per il ritto invece che per il
+#     lungo → è quello che conta `giri`
+#   · **si ribalta?** il sopra può diventare il sotto → è `ribalta`
+#
+# Combinandoli vengono tutti e quattro i casi, e l'insieme dei giri
+# leciti è questo:
+#
+#     giri 1              → {0°}
+#     giri 2, ribalta     → {0°, 180°}
+#     giri 2, no ribalta  → {0°}
+#     giri 4, ribalta     → {0°, 90°, 180°, 270°}
+#     giri 4, no ribalta  → {0°, 90°}      ← la siepe
+#
+# Il ripiego è `True`, e non per pigrizia: chi è disegnato davvero a
+# piombo dall'alto — una pozza, un pavimento, del pietrisco — un sopra
+# non ce l'ha, quindi ribaltarlo non vuol dire niente e non fa danni.
+# Chi invece un'ombra ce l'ha lo dichiara, e lo dichiara guardandolo:
+# è il tipo di difetto che nessun controllo automatico trova, perché il
+# pezzo ribaltato è formalmente ineccepibile — solo, è capovolto.
+
 # ── fotogrammi o varianti? ───────────────────────────────────────────
 # Più pezzi sotto lo stesso nome vogliono dire due cose opposte, e i
 # nomi non le distinguono. `fontana0..2` sono **fotogrammi**: la stessa
@@ -120,7 +153,7 @@ class Catalogo:
         self.voci = {}
 
     def aggiungi(self, pezzo, *, famiglia, chi=None, posa='fermo', giri=None,
-                 specchia=True, anima=None, **extra):
+                 specchia=True, ribalta=True, anima=None, **extra):
         """`pezzo` è il nome dentro l'atlante, `chi` è la cosa a cui
         appartiene (di default è il pezzo stesso: una cosa sola, un
         fotogramma solo). I fotogrammi si accodano nell'ordine in cui
@@ -136,6 +169,7 @@ class Catalogo:
             'id': chi, 'famiglia': famiglia, 'pose': {},
             'giri': GIRI[famiglia] if giri is None else giri,
             'specchia': specchia,
+            'ribalta': ribalta,
             # un attore cammina, e quello è sempre un'animazione; per tutto
             # il resto vedi la nota qui sotto
             'anima': famiglia == 'attore' if anima is None else anima,
@@ -198,11 +232,19 @@ TESTA = """/* GENERATO da strumenti/sprite/{attrezzo} — non si scrive a mano.
             ed è quello che permette a `strumenti/banco/mondo.html` di
             mostrare qualunque atlante senza sapere di che gioco è.
 
-            Ogni voce dice anche **quanto si può girare** (`giri`: 4 se
-            è disegnata a piombo dall'alto, 1 se ha una faccia e girarla
-            la farebbe cadere) e se si può specchiare. Girare si gira a
-            schermo, non nell'atlante: otto copie di ogni pezzo
-            costerebbero otto volte il peso e non aggiungerebbero niente.
+            Ogni voce dice anche **come la si può rigirare**, con tre
+            campi che sono tre domande diverse:
+              `giri`     quanti quarti di giro reggono — 4 se è
+                         disegnata a piombo dall'alto, 1 se ha una
+                         faccia e girarla la farebbe cadere
+              `ribalta`  se il sopra può diventare il sotto. Una siepe
+                         ha `giri: 4` e `ribalta: false`: per il ritto è
+                         ancora una siepe, a gambe per aria no — e con
+                         `giri` da solo quel caso non si sa dire
+              `specchia` se si può rovesciare destra-sinistra
+            Girare si gira a schermo, non nell'atlante: otto copie di
+            ogni pezzo costerebbero otto volte il peso e non
+            aggiungerebbero niente.
 {extra}*/
 export const ATLANTE = 'data:image/png;base64,{b64}'
 

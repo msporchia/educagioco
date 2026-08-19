@@ -42,6 +42,32 @@ basta: l'attrezzo non cambia.
   colore esplicito `[255, 255, 255]`. Dichiararlo evita il caso peggiore:
   un cane bianco a cui si aprono buchi nella schiena perché il bianco della
   carta e il bianco del cane sono lo stesso colore.
+- **`ombra`** — `true` toglie anche **l'ombra che il fondo si porta
+  dietro**. Un generatore a cui si chiede «gli oggetti su un fondo
+  piatto» quasi sempre disegna una macchia d'ombra sotto ognuno: non è
+  il colore del fondo, è il fondo **scurito**, quindi l'allagamento
+  normale — che confronta i canali uno per uno — ci si ferma davanti e
+  lascia un anello. Su un fondo grigio non si vede; su un fondo acceso
+  diventa un filo rosa sotto ogni sagoma, e ridotto di nove volte quel
+  filo è **un pixel intero** dello sprite finito.
+
+  Alzare la tolleranza non lo risolve: l'ombra più scura e il fianco in
+  penombra di un oggetto distano uguale dal colore del fondo. Quello che
+  li separa è **la tinta** — l'ombra resta magenta, la lana resta bruna —
+  e infatti questo allagamento guarda quella (più la saturazione, per
+  non toccare bianchi e grigi, che una tinta non ce l'hanno).
+
+  È spento di suo perché vale a una condizione che è **il foglio** a
+  garantire: quella tinta non deve comparire in nessun oggetto. È il
+  motivo per cui a chi genera un foglio si chiede un fondo magenta e non
+  un fondo verde.
+- **`colori`** — quanti colori tenere (12 di ripiego, `0` per non
+  ridurli affatto). Serve ai JPEG, che di sfumature ne lasciano migliaia
+  dove la pixel art ne vuole una decina. **La tavolozza si costruisce
+  sull'immagine intera, fondo compreso**: su un foglio dove il fondo è
+  due terzi della superficie ed è di una tinta accesa, il fondo si mangia
+  quasi tutta la tavolozza e agli oggetti restano i suoi rosa. Lì si
+  scrive `0` (`gfx/campi.json`, `oggetti.json`).
 - **`cella`** — la misura di un fotogramma, in pixel **veri** (dopo aver
   diviso per la scala). Si può ridichiarare per singolo sprite: di lato un
   quadrupede è lungo il doppio, e questa è la riga che lo dice invece di
@@ -114,6 +140,41 @@ basta: l'attrezzo non cambia.
   per sbaglio si vede subito, uno che si poteva girare e non si è girato
   costa solo un disegno in più. `specchia` (di default `true`) dice se
   oltre a girare si può anche rovesciare.
+
+  **`ribalta`** (di default `true`) è la domanda che `giri` da solo non
+  sa fare: *il sopra può diventare il sotto?* Il caso è la siepe. Per il
+  ritto è ancora una siepe — ed è l'unico modo di chiudere un cortile con
+  un foglio che la disegna solo sdraiata — ma **a gambe per aria no**: ha
+  un filo d'ombra sotto, e a mezzo giro ce l'ha in cima. Con un numero
+  solo bisognerebbe scegliere fra perdere il verso utile (`giri: 1`) e
+  regalare quello sbagliato (`giri: 4`, che il mezzo giro se lo porta
+  dentro). Sono due libertà indipendenti — *si corica?* e *si ribalta?* —
+  e i giri leciti vengono dalla combinazione:
+
+  | | `ribalta: true` | `ribalta: false` |
+  |---|---|---|
+  | `giri: 1` | 0° | 0° |
+  | `giri: 2` | 0°, 180° | 0° |
+  | `giri: 4` | 0°, 90°, 180°, 270° | 0°, 90° ← *la siepe* |
+
+  ⚠ **`giri: 2` non vuol dire «si corica».** Il numero conta i quarti
+  leciti *a passo costante*, quindi 2 sono il dritto e il **mezzo** giro:
+  è il tronco steso, che a testa in giù è ancora un tronco steso ma di
+  quarto starebbe in piedi. Coricarsi è `giri: 4` — e se poi capovolto
+  non va, `ribalta: false`. La riga da scrivere per «lo voglio anche
+  lungo l'altro asse, ma mai a gambe per aria» è quindi
+  `{"giri": 4, "ribalta": false}`, non `{"giri": 2, ...}`: quest'ultima,
+  con `ribalta: false`, si riduce al solo dritto e non fa niente — una
+  dichiarazione che sembra dire qualcosa e non dice nulla. Il nome del
+  campo tira dalla parte sbagliata (2 si legge «due versi») e questa
+  riga sta qui perché ci si è già inciampato.
+
+  Il ripiego `true` non è pigrizia: chi è disegnato davvero a piombo — una
+  pozza, del pietrisco, una ninfea — un sopra non ce l'ha, e ribaltarlo non
+  vuol dire niente. Chi invece un'ombra ce l'ha lo dichiara, **e lo
+  dichiara guardandolo**: è il difetto che nessun controllo automatico
+  trova, perché il pezzo ribaltato è formalmente ineccepibile — solo, è
+  capovolto.
   Girare e specchiare si fa **a schermo**, mai nell'atlante: otto copie
   di ogni pezzo costerebbero otto volte il peso per un conto che un
   `ctx.rotate`/`ctx.scale` fa gratis.

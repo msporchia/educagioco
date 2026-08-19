@@ -4,6 +4,12 @@
   "colori": 0,
   "cella": [1, 1],
   "famiglia": "oggetto",
+  "__trasforma": "«campo» sta a 1, e la prima risposta era 4. Vale la pena scrivere perché è cambiata, perché è il caso che insegna a cosa serve guardare invece di ragionare.\n\nUn'aiuola vuota è terra vista a piombo: i solchi vanno per il lungo, girati di un quarto vanno per il largo, ed è un campo altrettanto vero — «campo_vuoto», da solo, gira benissimo. Ma i sette stadi di ogni coltura non sono terra: sono terra **con sopra una pianta**, e la pianta è disegnata in piedi. Girato di un quarto, il grano si corica. E siccome il bordo dell'aiuola è dipinto dentro lo stesso ritaglio dello stadio, non c'è modo di girare il letto e lasciare in piedi quello che ci cresce: sono un disegno solo.\n\nRestava la strada di far girare solo l'aiuola vuota. Non regge nemmeno quella: il campo si gira da vuoto, si semina, e lo stadio che compare copre l'aiuola girata — cioè il campo torna dritto da sé nel momento in cui lo si usa. Un verso che si perde appena serve è peggio di un verso che non c'è mai stato.\n\nIl «raccolto» è una cassetta in vista tre quarti: ha una faccia, e girata cade di lato.\n\nI cinque «cartello» sono l'altro caso, e riguarda lo specchio: hanno una parola dipinta sopra («Carote», «Grano», «Erba medica»), e rovesciata si legge al contrario. Un cartello allo specchio non è un cartello storto, è un cartello che non dice più niente — l'unico difetto della specchiatura che non si può guardare e perdonare, ed è il motivo per cui «specchia»: false esiste nel formato.",
+  "trasforma": {
+    "campo": {"giri": 1},
+    "cartello": {"giri": 1, "specchia": false},
+    "raccolto": {"giri": 1}
+  },
   "sprite": {
     "campo_vuoto": {"da": [27, 35], "cella": [175, 163], "misura": [33, 27]},
     "campo_carote0": {"da": [344, 595], "cella": [135, 107], "misura": [33, 27]},

@@ -24,12 +24,25 @@
     "dehors_rosa": "figura",
     "dehors_azzurro": "figura"
   },
+  "__trasforma": "Foglio d'arredo: quasi tutto ha una faccia e non gira, e il ripiego della famiglia (giri 1) è già quello giusto — qui si scrivono solo le eccezioni. Sono di due tipi. Quello che sta **per terra** e si guarda dall'alto: una pozza, un sasso, una ninfea, un cespuglio tondo, una coccinella, una farfalla. Quello che ha **un asse**: un ponte, una staccionata a stecche, un tronco steso. E poi il tronco messo in piedi, che è l'eccezione dell'eccezione e va dichiarato PRIMA di «tronco», se no il prefisso se lo mangia e lo fa rotolare.\n\nTre righe stanno qui a dire «no» esplicitamente, e non è ridondanza: sono tre pezzi che uno *classificherebbe* come visti dall'alto e che guardati non lo sono. Il «ceppo» di questo foglio è un ceppo in vista tre quarti, con la faccia del taglio in cima: girato di un quarto diventa un barile coricato. La «ciotola» è una scodella con l'imboccatura ovale che guarda in su, e girata sta in piedi sul bordo. Il «pagliaio» è una cupola con la luce da sopra, e a mezzo giro risulta illuminato da sotto. Tutti e tre erano stati dichiarati 4 su ragionamento e corretti guardandoli: è la ragione per cui questo campo si compila col foglio davanti agli occhi e non a memoria.\n\nStessa trappola di Overworld con «fiori»: qui i vasi si chiamano «vaso_*» e le cassette «fioriera_*», quindi «fiorellino» — il fiorellino singolo per terra — si dichiara per intero e non come prefisso corto, che pescherebbe anche loro.\n\n«ribalta»: false su quasi tutti i giri di quattro, e su questo foglio è la regola e non l'eccezione. È un foglio ad alto dettaglio, e ogni pezzo — anche il più piatto — è appoggiato su qualcosa: un sasso ha l'erba ai piedi, un cespuglio ha l'ombra sotto, il laghetto ha il bordo di pietra col riflesso in cima. Di quarto reggono, perché l'occhio accetta un'ombra spostata di lato; a mezzo giro l'erba finisce sopra il sasso e non c'è verso di guardarlo. Restano ribaltabili solo la ninfea, la coccinella e la farfalla, che sono davvero viste da sopra e non poggiano su niente.",
   "trasforma": {
     "recinto": {"giri": 2},
     "ponte": {"giri": 2},
-    "sasso": {"giri": 4},
+    "tronco_verticale": {"giri": 1},
+    "tronco": {"giri": 2},
+    "sasso": {"giri": 4, "ribalta": false},
+    "roccia_muschiosa": {"giri": 4, "ribalta": false},
     "ninfea": {"giri": 4},
-    "ceppo": {"giri": 4}
+    "ceppo": {"giri": 1},
+    "laghetto": {"giri": 4, "ribalta": false},
+    "palude_fiorita": {"giri": 4, "ribalta": false},
+    "arbusto": {"giri": 4, "ribalta": false},
+    "boccio_rosa": {"giri": 4, "ribalta": false},
+    "fiorellino": {"giri": 4, "ribalta": false},
+    "coccinella": {"giri": 4},
+    "farfall": {"giri": 4},
+    "pagliaio": {"giri": 1},
+    "ciotola": {"giri": 1}
   },
   "sprite": {
     "albero_rosa": {"da": [382, 185], "cella": [32, 48]},

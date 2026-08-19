@@ -101,7 +101,26 @@
     "tetto_conico": {"da": [3, 22], "cella": [48, 32]}
   },
   "famiglie": {"erba": "fondo"},
-  "trasforma": {"erba": {"giri": 4}},
+  "__trasforma": "Questo foglio ha dentro tutte e due le vedute, ed è per questo che vale la pena dichiararle una per una. Quello che è **terra** — l'erba, l'orto, la radura, l'acqua, le ninfee, i sassi sparsi, le ossa — è disegnato a piombo dall'alto e ogni quarto di giro è ancora giusto: gira di quattro. La siepe è il caso che ha fatto nascere «ribalta», e la sua riga si legge tutta insieme: `giri: 4` perché per il ritto è ancora una siepe — che è poi l'unico modo di chiudere un cortile con un foglio che la disegna solo sdraiata — e `ribalta: false` perché a gambe per aria no. Ha un filo d'ombra sotto, e a mezzo giro ce l'ha in cima. Stessa cosa per la radura, i sassi sparsi e il ceppo: si coricano, non si capovolgono. Chi invece è disegnato a piombo davvero — l'erba, l'orto, l'acqua, le ninfee, le ossa, i fiorellini — un sopra non ce l'ha, e ribaltarlo non vuol dire niente. Quello che ha invece **un asse e una faccia insieme** — una staccionata coi pali piantati, un tronco steso, una ringhiera — girato di mezzo giro è ancora sé stesso e di un quarto cadrebbe: gira di due. Tutto il resto ha una facciata (la casa, la fontana, la panchina, il pozzo, il cancello) e non gira affatto, che è già il ripiego della famiglia.\n\nDue trappole del prefisso, ed è il motivo per cui l'ordine di queste righe conta: «fioriera» va dichiarata PRIMA di «fiori», se no la cassetta dei fiori in vista tre quarti eredita il giro di quattro dei fiorellini per terra e si rovescia; «sasso» (il masso con l'erba ai piedi, che ha una linea di terra) non è «sassi» (il pietrisco sparso), e i due prefissi non si toccano solo perché sono scritti tutti e due.\n\nI bordi dell'acqua — laghetto_n, stagno_angolo_se e compagnia — cadono sotto «laghetto» e «stagno» e prendono giri 4, ed è vero: girare un bordo nord di un quarto dà un bordo est. Non li gira nessuno (li sceglie `scena/bordi.js` guardando i vicini, per nome) ma dichiarare il falso per pigrizia è come non dichiarare.",
+  "trasforma": {
+    "erba": {"giri": 4},
+    "orto": {"giri": 4},
+    "radura": {"giri": 4, "ribalta": false},
+    "mare": {"giri": 4},
+    "laghetto": {"giri": 4},
+    "stagno": {"giri": 4},
+    "ninfe": {"giri": 4},
+    "ossa": {"giri": 4},
+    "sassi": {"giri": 4, "ribalta": false},
+    "siepe": {"giri": 4, "ribalta": false},
+    "ceppo": {"giri": 4, "ribalta": false},
+    "fioriera": {"giri": 1},
+    "fiori": {"giri": 4},
+    "staccionata": {"giri": 2},
+    "ringhiera": {"giri": 2},
+    "tronco": {"giri": 2},
+    "recinto": {"giri": 2}
+  },
   "cose": {
     "bandiera": {"pezzi": ["bandiera0", "bandiera1", "bandiera2", "bandiera_tesa"], "anima": true}
   },
