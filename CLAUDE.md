@@ -45,6 +45,15 @@ un guasto che vive solo dentro `test/integrazione/` lo scopre chi l'ha
 lanciato a mano, non la pipeline: un motivo in più per chiederlo quando si
 tocca lo schermo, non solo quando si scrive la logica sotto.
 
+**La cadenza, detta in due righe.** Le unità girano a ogni commit — costano
+secondi, e non c'è nessun motivo di risparmiarle. **Il browser gira prima
+del push, non prima di ogni commit**: cinque minuti e mezzo moltiplicati per
+i commit di un pomeriggio sono un'ora buttata, e non comprano niente, perché
+quello che finisce sui telefoni è la **punta** e non i passaggi intermedi. È
+la stessa regola dei commit a blocchi applicata alle prove: un commit
+raggruppa un concetto e può anche non stare in piedi da solo, la coerenza si
+verifica dove si pubblica.
+
 Strumenti che si usano di rado:
 
 ```bash
@@ -57,7 +66,7 @@ npm run quiz:banco     # prova tutti i moduli di quiz senza browser
 npm run quiz:eta       # chi vede cosa: la calibrazione per età, e i buchi
 npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
 npm run scatti         # rifà le immagini di docs/img/
-node strumenti/icone.mjs   # rigenera i PNG delle icone da public/icona.svg
+node strumenti/icone.mjs   # i PNG delle icone e l'anteprima del link, da public/icona.svg
 ```
 
 `npm run voci` è incrementale (cache in `.voci-cache/`) ma vuole rete e
