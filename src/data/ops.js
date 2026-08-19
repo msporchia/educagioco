@@ -12,6 +12,36 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 export const cifre = n => String(n).split('').reverse().map(Number)
+
+/* ═══════════ IL RIPORTO, DETTO AD ALTA VOCE ═══════════
+   «Se viene 12 non si scrive 12» è il malinteso che ferma i bambini la
+   prima volta, e da fuori non somiglia a un errore di calcolo: la somma
+   l'hanno fatta giusta, è la *procedura* che non conoscono ancora — e la
+   dritta «il riporto tienilo a mente» la dà per scontata.
+
+   Questa funzione ricostruisce il conto di una colonna, riporto entrante
+   compreso, così `components/ColumnOp.vue` può mostrarlo a chi ha appena
+   sbagliato. Sta qui e non lì dentro perché è aritmetica e basta, e
+   l'aritmetica si prova senza aprire un browser (`unita/ops`).
+
+   Solo l'addizione, ed è un limite voluto: è lì che nasce il malinteso, e
+   sono le uniche colonne ricostruibili con certezza da quello che sta
+   scritto sopra — nella sottrazione i prestiti si leggerebbero al
+   contrario, nella moltiplicazione la colonna non è la somma delle cifre
+   che ha sopra. */
+export function spiegaColonnaAdd (numeri, i) {
+  const parti = numeri.map(n => cifre(n)[i] || 0)
+  let riporto = 0
+  for (let c = 0; c < i; c++) {
+    const s = numeri.reduce((t, n) => t + (cifre(n)[c] || 0), 0) + riporto
+    riporto = Math.floor(s / 10)
+  }
+  const tot = parti.reduce((t, d) => t + d, 0) + riporto
+  const conto = parti.join(' + ') + (riporto ? ` + ${riporto} di riporto` : '')
+  return tot <= 9
+    ? `${conto} fa ${tot}`
+    : `${conto} fa ${tot}: scrivi ${tot % 10}, e ${Math.floor(tot / 10)} lo tieni per la colonna accanto`
+}
 const casuale = (min, max) => min + Math.floor(Math.random() * (max - min + 1))
 
 /* le cifre di un numero diventano i passi da scrivere, da destra a sinistra */

@@ -3,7 +3,7 @@
    i riporti si tengono a mente. Nella moltiplicazione a due cifre invece i
    prodotti parziali sono passaggi veri e vanno scritti tutti e due. */
 import { ref, computed, watch } from 'vue'
-import { cifre } from '../data/ops.js'
+import { cifre, spiegaColonnaAdd } from '../data/ops.js'
 import { suono } from '../audio.js'
 
 const props = defineProps({ op: { type: Object, required: true } })
@@ -14,12 +14,16 @@ const scritte = ref({})          // 'ris0' | 'p1 2' | 'quo1' -> cifra
 const errori = ref(0)
 const sbagliata = ref('')
 const rivelata = ref('')
+/* la casella su cui si è appena sbagliato: da lì in poi la dritta spiega
+   il conto invece di ripetere la regola (vedi `spiegaColonnaAdd` in `data/ops.js`) */
+const spiegata = ref('')
 let erroriCasella = 0
 let inizio = performance.now()
 
 watch(() => props.op, () => {
   passo.value = 0; scritte.value = {}; errori.value = 0
   sbagliata.value = ''; rivelata.value = ''; erroriCasella = 0
+  spiegata.value = ''
   inizio = performance.now()
 }, { immediate: true })
 
@@ -64,11 +68,15 @@ function scrivi(d) {
   if (d === p.atteso) {
     scritte.value[k] = d
     sbagliata.value = ''; rivelata.value = ''; erroriCasella = 0
+    spiegata.value = ''
     suono.nota(720, 720, 0.07, 'triangle', 0.09)
     avanza()
   } else {
     errori.value++; erroriCasella++
     sbagliata.value = k
+    /* da qui in poi, su QUESTA casella, la dritta non dice più «tieni il
+       riporto a mente»: fa vedere il conto. Vedi `spiegaColonnaAdd`. */
+    spiegata.value = k
     suono.no()
     setTimeout(() => { if (sbagliata.value === k) sbagliata.value = '' }, 420)
     // dopo due tentativi si mostra la cifra e si va avanti: il gioco non deve incastrarsi
@@ -92,6 +100,8 @@ const suggerimento = computed(() => {
   if (p.k === 'quo') return 'quante volte ci sta?'
   if (p.k === 'res') return 'e adesso il resto'
   if (props.op.doppia) return 'ora somma le due righe'
+  if (spiegata.value === chiaveDi(p) && p.k === 'ris' && props.op.tipo === 'add')
+    return spiegaColonnaAdd(righe.value, p.col)
   return 'cifra del risultato — il riporto tienilo a mente'
 })
 </script>

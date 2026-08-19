@@ -29,6 +29,7 @@ import { SALDO, forzaDi, saldo, aperto, frontiera, tagliaDi, poolDi, eNuovo,
   from '../../src/store/calcolo.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { spiegaColonnaAdd } from '../../src/data/ops.js'
 
 const ORA = Date.now()
 const CAMPIONI = 200
@@ -439,6 +440,38 @@ function profiloCon(ids, quando = ORA) {
   const nuovo = { items: {} }
   allineaCalcolo(nuovo, ORA)
   uguale('e chi comincia adesso parte dalla prima', nuovo.calc.tappa, 0)
+}
+
+/* ═══════════ LA COLONNA SPIEGATA A CHI HA SBAGLIATO ═══════════
+   «Se viene 12 non si scrive 12» è il malinteso che ferma i bambini la
+   prima volta. La dritta lo dice solo a chi ha appena sbagliato quella
+   casella, e quello che dice dev'essere **vero**: il riporto entrante
+   ricostruito male darebbe una spiegazione che non torna, che è peggio
+   di nessuna spiegazione — a quel punto il bambino ha ragione lui. */
+{
+  uguale('la colonna che riporta lo dice, e dice cosa scrivere',
+    spiegaColonnaAdd([27, 45], 0),
+    '7 + 5 fa 12: scrivi 2, e 1 lo tieni per la colonna accanto')
+
+  /* il riporto entrante non si vede da nessuna parte sullo schermo: se
+     questa riga lo dimenticasse, la spiegazione direbbe «2 + 4 fa 6»
+     mentre la casella aspetta un 7 */
+  uguale('e la colonna dopo tiene conto del riporto che arriva',
+    spiegaColonnaAdd([27, 45], 1), '2 + 4 + 1 di riporto fa 7')
+
+  uguale('una colonna che non riporta si limita a fare il conto',
+    spiegaColonnaAdd([21, 34], 0), '1 + 4 fa 5')
+
+  /* tre addendi esistono davvero (le tappe alte del castello): la
+     spiegazione non deve fermarsi a due, e il riporto può valere 2 */
+  uguale('con più di due addendi il riporto può essere maggiore di uno',
+    spiegaColonnaAdd([9, 8, 7], 0),
+    '9 + 8 + 7 fa 24: scrivi 4, e 2 lo tieni per la colonna accanto')
+
+  /* le colonne in cui un numero è finito: `cifre(n)[i]` è `undefined`, e
+     senza lo zero la riga direbbe «undefined + 3» */
+  uguale('un addendo più corto conta zero, e non «undefined»',
+    spiegaColonnaAdd([5, 143], 1), '0 + 4 fa 4')
 }
 
 riassunto('calcolo a mente')
