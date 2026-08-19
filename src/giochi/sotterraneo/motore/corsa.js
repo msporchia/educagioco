@@ -18,7 +18,9 @@
 
      🚪 una porta chiusa   una domanda facile — sbagliando si riprova
      🎁 un forziere        una domanda sola, tosta: se sbagli resta chiuso
-     👹 un mostro          una domanda per colpo, finché non cade
+     👹 un mostro          una domanda per colpo, finché non cade — e
+                           lui picchia comunque: un graffio se rispondi
+                           bene, il colpo intero se sbagli
      ⛲ una fonte          una domanda, e ti ridà vita
      🏪 un mercante        niente domande: qui si spende quello che hanno fruttato
 
@@ -126,6 +128,21 @@ export class Corsa {
   colpo(m) { return Math.max(1, this.att - m.dif) }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
   danno(m) { return Math.max(1, m.att - this.dif) }
+
+  /* ── quello che passa comunque ──
+     Un mostro **picchia sempre**: rispondendo bene si para il colpo e ne
+     resta un graffio, sbagliando arriva tutto. Prima chi rispondeva bene
+     usciva da una battaglia senza un livido, e allora le pozioni non
+     servivano a niente: si accumulavano in fondo allo zaino, e con loro
+     spariva il motivo di cercare una fonte, di comprare dal mercante, di
+     scegliere se scappare.
+
+     Il graffio è metà del colpo pieno, quindi **il conto vero è la
+     lunghezza della battaglia**: chi ha l'arma buona fa fuori il gigante
+     in quattro risposte e ne esce con otto graffi, chi va a mani nude ne
+     prende il doppio. È lo stesso motivo per cui si va a cercare una
+     spada, detto in vita invece che in domande. */
+  graffio(m) { return Math.max(1, Math.floor(this.danno(m) / 2)) }
 
   /* La difficoltà della domanda: la porta il piano, e ogni cosa ha il
      suo rincaro. Un posto solo, come vuole la campagna. */
@@ -525,8 +542,12 @@ export class Corsa {
     }
     m.ossa -= this.colpo(m)
     if (m.ossa > 0) {
+      /* il mostro è ancora in piedi, quindi restituisce: chi è caduto no */
+      const male = this.graffio(m)
+      this.ferisci(male)
+      if (this.vita <= 0) { this.svieni(); return { che: 'svenuto' } }
       this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
-      return { che: 'colpo', restano: this.colpiPer(m) }
+      return { che: 'colpo', restano: this.colpiPer(m), male }
     }
     this.cade(m)
     this.chiudi()

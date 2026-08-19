@@ -166,6 +166,25 @@ alla roba che ci stava sopra — roba che, per giunta, nasceva *sulla sua
 stessa cella*, dove il baule la copriva e dove l'eroe non arriva mai, perché
 a un forziere ci si ferma accanto.
 
+## Un mostro picchia sempre
+
+Rispondendo bene si para il colpo e ne resta **un graffio** — metà del
+danno pieno; sbagliando arriva tutto. Prima chi rispondeva bene usciva da
+una battaglia senza un livido, e le pozioni si accumulavano in fondo allo
+zaino senza che nessuno le bevesse mai: con loro spariva il motivo di
+cercare una fonte, di spendere dal mercante, di decidere se scappare.
+
+Il conto vero diventa quindi **la lunghezza della battaglia**: chi ha
+l'arma buona fa fuori il gigante in quattro risposte e ne esce con otto
+graffi, chi va a mani nude ne prende il doppio. È lo stesso motivo per
+cui si va a cercare una spada, detto in vita invece che in domande. E si
+dice **prima** di rispondere — «ti graffia 2 · se sbagli 4» sta scritto
+sotto il mostro — perché è con quei due numeri che si decide se restare.
+
+Il banco lo misura, e il risultato è quello che si voleva: chi corre
+dritto alla scala sviene una o due volte per discesa, chi gira e
+raccoglie quasi mai. La fretta si paga, l'esplorazione ripaga.
+
 ## Le porte chiudono la stanza, non il varco
 
 Una stanza ha due o tre aperture. Prima se ne chiudeva **una sola**, per

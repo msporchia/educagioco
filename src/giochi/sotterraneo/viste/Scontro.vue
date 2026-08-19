@@ -15,11 +15,19 @@ defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, att, dif, chiave }
   colpo: { type: Number, required: true },
   restano: { type: Number, required: true },
+  graffio: { type: Number, required: true },  // quello che passa anche rispondendo bene
+  male: { type: Number, required: true },     // e quello che arriva sbagliando
+  vita: { type: Number, required: true },
+  vitaMax: { type: Number, required: true },
   scosso: { type: Number, default: 0 },
 })
 </script>
 
 <template>
+  <!-- Anche rispondendo bene qualcosa passa: il conto sta **davanti**,
+       prima di rispondere, perché è quello che fa decidere se restare o
+       scappare. Dirlo dopo sarebbe raccontare una brutta sorpresa. -->
+  <div class="sot-scontro">
   <div class="sot-nemico" :key="scosso">
     <div class="sot-faccia em" :class="{ 'sot-colpito': scosso }">{{ mostro.em }}</div>
     <div class="sot-dati">
@@ -37,5 +45,16 @@ defineProps({
         <b>{{ restano }}</b> {{ restano === 1 ? 'risposta' : 'risposte' }}
       </div>
     </div>
+  </div>
+  <div class="sot-io-vita">
+    <span class="sot-polso" :style="{ '--sot-polso': vita / vitaMax > 0.6 ? '#4fce7c'
+                                      : vita / vitaMax > 0.3 ? '#f0b429' : '#e0432f' }">
+      <i :style="{ width: Math.max(0, vita / vitaMax) * 100 + '%' }"></i>
+      <b>{{ vita }}</b>
+    </span>
+    <span class="sot-botte em">
+      ti graffia <b>{{ graffio }}</b> · se sbagli <b>{{ male }}</b>
+    </span>
+  </div>
   </div>
 </template>

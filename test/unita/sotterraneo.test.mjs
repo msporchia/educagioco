@@ -324,6 +324,41 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   controlla('e lo spadone è nello zaino', c.zaino.includes('spadone'), c.zaino.join())
 }
 
+/* ══════════ 5c. i mostri picchiano sempre ══════════
+   Rispondendo bene si para il colpo e ne resta un graffio; sbagliando
+   arriva tutto. Prima chi rispondeva bene usciva da una battaglia senza
+   un livido, e le pozioni si accumulavano in fondo allo zaino senza che
+   nessuno le bevesse mai. */
+{
+  const c = new Corsa(CAMPAGNA[2], { seme: 44, rnd: seminato(44) })
+  const m = c.livello.robe.find(r => r.che === 'mostro' && r.ossa > c.colpo(r) * 2)
+  c.vita = c.vitaMax
+  c.foglio = { che: 'scontro', chi: m }
+  const graffio = c.graffio(m)
+  const esito = c.rispondi(true)
+  uguale('rispondendo bene si colpisce', esito.che, 'colpo')
+  uguale('e qualcosa passa lo stesso', c.vitaMax - c.vita, graffio)
+  controlla('ma meno che sbagliando', graffio < c.danno(m), `${graffio} contro ${c.danno(m)}`)
+  controlla('e mai zero: un mostro addosso si sente sempre', graffio >= 1)
+
+  /* chi cade non restituisce: il colpo che lo abbatte è l'ultimo */
+  m.ossa = 1
+  const vitaPrima = c.vita
+  const fine = c.rispondi(true)
+  uguale('l\'ultimo colpo lo abbatte', fine.che, 'caduto')
+  uguale('e chi è caduto non graffia più', c.vita, vitaPrima)
+
+  /* e il graffio può far svenire: è quello che rende una fuga una
+     decisione invece che una comodità */
+  const c2 = new Corsa(CAMPAGNA[2], { seme: 45, rnd: seminato(45) })
+  const m2 = c2.livello.robe.find(r => r.che === 'mostro')
+  m2.ossa = 999
+  c2.vita = 1
+  c2.foglio = { che: 'scontro', chi: m2 }
+  uguale('con un filo di vita anche una risposta giusta stende',
+         c2.rispondi(true).che, 'svenuto')
+}
+
 /* ══════════ 5d. le porte chiudono la stanza, non il varco ══════════
    Il difetto trovato giocando: una stanza ha due o tre varchi, ne veniva
    chiuso uno solo, e il segno 💀 sopra la porta prometteva una guardia

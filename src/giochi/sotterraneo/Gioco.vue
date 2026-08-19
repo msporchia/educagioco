@@ -172,7 +172,14 @@ const nemico = computed(() => {
   const f = foglio.value
   if (!f || f.che !== 'scontro') return null
   const c = corsa.value
-  return { mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi) }
+  return {
+    mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
+    /* quello che passa comunque, e quello che arriva sbagliando: si dice
+       **prima** di rispondere, perché è con quei due numeri che si
+       decide se restare o scappare */
+    graffio: c.graffio(f.chi), male: c.danno(f.chi),
+    vita: c.vita, vitaMax: c.vitaMax,
+  }
 })
 
 const zaino = computed(() => {
@@ -387,7 +394,7 @@ function risolvi(giusto) {
   if (!esito) return
   scosso.value++
   switch (esito.che) {
-    case 'colpo': suoni.colpo(); break
+    case 'colpo': suoni.colpo(); if (esito.male) setTimeout(() => suoni.ahia(), 180); break
     case 'caduto': suoni.colpo(); setTimeout(() => suoni.bottino(), 260); break
     case 'ferito': suoni.ahia(); break
     case 'svenuto': suono.fine(); break
