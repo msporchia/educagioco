@@ -21,6 +21,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins, mastered, segna,
          linguaProgresso, linguaCompleta, tappaAperta } from '../store/profile.js'
+import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker, activeSet, overdue, strength, SRS } from '../store/srs.js'
 import { linguaDi } from '../data/lingue.js'
 import { voceDi } from '../data/lessico.js'
@@ -46,7 +47,10 @@ const progresso = computed(() => linguaProgresso(L.campo))
 const tappaIdx = ref(0)            // -1 = gioco libero
 const tappa = computed(() => L.tappaDi(tappaIdx.value))
 const campagna = computed(() => tappaIdx.value >= 0)
-const sbloccata = i => tappaAperta(i, progresso.value.tappa)
+/* Il lucchetto guarda anche l'età: le tappe che questo bambino ha già
+   passato nascono aperte, quelle troppo avanti restano chiuse
+   (`data/portata.js`, il campo `portata` su ogni tappa). */
+const sbloccata = i => apertaQui(L.tappaDi(i), i, progresso.value.tappa)
 
 /* le chiavi nuove della tappa, in un Set: serve a ogni risposta per
    sapere se contava come "mirata", e `includes` su settanta chiavi a

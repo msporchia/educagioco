@@ -22,6 +22,7 @@
    si cambia qui, e nessun gioco se ne accorge.
    ═══════════════════════════════════════════════════════════════════ */
 import { state, persist, flushNow, tappaAperta } from '../store/profile.js'
+import { tappaApertaQui } from '../data/portata-giochi.js'
 
 const VUOTA = () => ({ tappa: 0, libera: false, stelle: {}, cfg: {} })
 
@@ -43,7 +44,12 @@ export function progresso(chiave) {
    genitori hanno tolto i lucchetti a tutto (`tuttoAperto`). La regola sta
    in `profile.js` e passa da lì apposta: quando stava in cinque posti si
    è scollata senza che nessuno se ne accorgesse. */
-export const aperta = (chiave, indice) => tappaAperta(indice, progresso(chiave).tappa)
+/* E da quando ogni tappa dice la sua `portata`, il lucchetto guarda
+   anche l'età: quello che il bambino ha già passato nasce aperto, quello
+   che gli sta troppo avanti resta chiuso. Passa da qui e non dai singoli
+   giochi per la stessa ragione di sempre — sette copie della stessa riga
+   si scollano. */
+export const aperta = (chiave, indice) => tappaApertaQui(chiave, indice, progresso(chiave).tappa)
 
 export const stelleDi = (chiave, indice) => progresso(chiave).stelle[indice] || 0
 

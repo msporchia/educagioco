@@ -18,6 +18,17 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 import { CONCETTI, STAZIONI, concettoDiChiave } from '../../src/data/calcolo.js'
 import { eNuovo } from '../../src/store/calcolo.js'
 import { SCALETTA } from '../../src/data/asteroidi.js'
+import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
+import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
+import { ETA_DIFETTO } from '../../src/store/profile.js'
+
+/* Quante voci della fila nascono aperte. Erano due — una per mestiere,
+   con i due contatori a zero — e adesso a quelle si aggiungono tutte
+   quelle che a questa età sono **roba già passata**: `portata` sulla
+   tappa, il conto in `data/portata.js`. Si calcola invece di cablarlo,
+   così se i livelli si spostano il test si sposta con loro. */
+const giaSapute = fila => fila.filter(t => statoDellaTappa(t, { eta: ETA_DIFETTO }) === PASSATA).length
+const APERTE_ALL_INIZIO = 2 + giaSapute(STAZIONI.slice(1)) + giaSapute(PIANETI.slice(1))
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -47,8 +58,8 @@ controlla('la prima tappa è aperta a chi comincia adesso', !mappa.fila[0].chius
 /* due sole tappe aperte in tutta la fila, una per mestiere: è quello che
    si vede quando i contatori restano due — e che permette a chi era
    avanti coi pianeti di non perdere niente */
-uguale('e le aperte sono due, una per mestiere',
-       mappa.fila.filter(v => !v.chiusa).length, 2)
+uguale('le aperte sono una per mestiere, più quelle già sapute per età',
+       mappa.fila.filter(v => !v.chiusa).length, APERTE_ALL_INIZIO)
 controlla('si vede di che calcoli si tratta', /3\+4/.test(mappa.testo), mappa.stazioni[0].testo)
 controlla('il volo a mente è ancora chiuso', !mappa.volo)
 
@@ -172,7 +183,10 @@ await page.getByText('Asteroidi', { exact: true }).click()
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.stazione')].filter(b => !b.disabled).length)
-uguale('dopo la ricarica sono aperte due stazioni', dopo, 2)
+/* Le stazioni sole, non la fila intera: una per il contatore a zero più
+   quelle che a nove anni sono già passate. */
+uguale('dopo la ricarica sono aperte le stazioni giuste',
+       dopo, 2 + giaSapute(STAZIONI.slice(2)))
 
 /* ---------- 5. «Cosa so» ha la faccia dei trucchi ---------- */
 await page.getByRole('button', { name: /Cosa so/ }).click()

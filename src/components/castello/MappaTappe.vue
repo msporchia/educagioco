@@ -26,6 +26,7 @@ import { computed } from 'vue'
 import { TORRI } from '../../data/ops.js'
 import { CAMPAGNE } from '../../data/campagne-castello.js'
 import { tappaAperta } from '../../store/profile.js'
+import { apertaQui } from '../../data/portata-giochi.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -37,7 +38,10 @@ defineEmits(['gioca', 'libera', 'indietro'])
 /* il lucchetto lo toglie anche l'interruttore dei genitori
    (`settings.tuttoAperto`): con quindici tappe, provare il gioco senza
    quel flag vorrebbe dire giocarsele tutte in fila */
-const aperta = i => tappaAperta(i, props.fatte)
+/* Il lucchetto guarda anche l'età: le tappe che questo bambino ha già
+   passato nascono aperte, quelle troppo avanti restano chiuse
+   (`data/portata.js`, il campo `portata` su ogni tappa). */
+const aperta = i => apertaQui(props.tappe[i], i, props.fatte)
 
 /* Le tappe arrivano già in fila, con dentro la loro campagna: qui si
    rimettono in archi senza perdere l'indice globale, che è quello che

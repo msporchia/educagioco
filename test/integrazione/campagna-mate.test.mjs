@@ -10,6 +10,9 @@
        anche dopo aver richiuso il gioco
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
+import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
+import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
+import { ETA_DIFETTO } from '../../src/store/profile.js'
 import { SCALETTA } from '../../src/data/asteroidi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -30,7 +33,14 @@ controlla('e il volo libero è ancora chiuso', !/Volo libero ♾️/.test(testo)
 const pianeti = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].map(b => ({ testo: b.innerText, chiuso: b.disabled })))
 uguale('dieci pianeti in fila', pianeti.length, 10)
-uguale('solo il primo è aperto', pianeti.filter(p => !p.chiuso).length, 1)
+/* Non più «solo il primo»: a profilo appena azzerato il progresso è
+   zero, quindi il lucchetto ne aprirebbe uno solo — ma quelli che questo
+   bambino ha già passato per età nascono aperti lo stesso. Vedi il conto
+   uguale più sotto, dopo la ricarica. */
+const primiAperti = PIANETI
+  .filter((p, i) => i === 0 || statoDellaTappa(p, { eta: ETA_DIFETTO }) === PASSATA).length
+uguale('è aperto il primo, più quelli che a quell\'età sono già roba saputa',
+       pianeti.filter(p => !p.chiuso).length, primiAperti)
 
 await scatto(page, 'campagna-mate-mappa')
 
@@ -205,7 +215,19 @@ await page.getByText('Asteroidi', { exact: true }).click()
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].filter(b => !b.disabled).length)
-uguale('dopo la ricarica sono aperti due pianeti', dopo, 2)
+/* Quanti pianeti devono risultare aperti non è più un numero fisso: da
+   quando ogni tappa dice la sua `portata`, quelle che il bambino ha già
+   passato per età **nascono aperte** — a nove anni non si ricomincia
+   dalla tabellina del 2 per arrivare al 7. Il profilo di prova non
+   dichiara un'età, quindi vale `ETA_DIFETTO`, e l'atteso si calcola con
+   la stessa regola invece di cablarlo: se un giorno i livelli delle
+   tabelline si spostano, questo test si sposta con loro e continua a
+   controllare quello che deve — che il progresso non si è perso e che il
+   lucchetto e l'età si sommano invece di scavalcarsi. */
+const apertiAttesi = PIANETI
+  .filter((p, i) => i <= 1 || statoDellaTappa(p, { eta: ETA_DIFETTO }) === PASSATA).length
+uguale('dopo la ricarica sono aperti i pianeti già passati, più il prossimo',
+       dopo, apertiAttesi)
 
 /* ---------- 4. "Cosa so" è una schermata come le altre ---------- */
 await page.getByRole('button', { name: /Cosa so/ }).click()

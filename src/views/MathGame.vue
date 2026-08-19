@@ -28,6 +28,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins, countMastered,
          segna, segnaBest, mateProgresso, mateCompleta, tabellineIntere,
          calcProgresso, calcCompleta, tappaAperta, varianteAccesa } from '../store/profile.js'
+import { tappaApertaQui } from '../data/portata-giochi.js'
 import { createPicker } from '../store/srs.js'
 import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
 import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
@@ -101,7 +102,16 @@ const tappa = computed(() =>
 const campagna = computed(() => tappaIdx.value >= 0)
 /* aperta col lucchetto di sempre, ma letto sul contatore della campagna
    a cui la voce appartiene */
-const apertaVoce = v => tappaAperta(v.i, prog.value[v.tipo])
+/* Il lucchetto adesso guarda anche l'età: quello che il bambino ha già
+   passato nasce aperto (a nove anni non si ricomincia dalla tabellina
+   del 2 per arrivare al 7), e quello che gli sta troppo avanti resta
+   chiuso. Il conto sta in `data/portata-giochi.js`, che legge la
+   `portata` dichiarata su ogni tappa in `data/tabelline.js` e
+   `data/calcolo.js`. I due contatori restano due — `mate.tappa` per i
+   pianeti, `calc.tappa` per le stazioni — perché la fila è una sola ma
+   le campagne sotto sono ancora due. */
+const apertaVoce = v => tappaApertaQui(v.tipo === 'pianeta' ? 'mate-pianeti' : 'mate-mente',
+                                       v.i, prog.value[v.tipo])
 const fattaVoce = v => superata(v, prog.value)
 /* dove si sta adesso, e cosa viene dopo NELLA FILA: dopo un pianeta può
    toccare a una stazione, ed è tutto il senso di averle mescolate */
@@ -1051,7 +1061,7 @@ onUnmounted(() => {
          sulla tabellina nuova. In campagna il titolo si toglie di mezzo
          — chi sta giocando sa dov'è — e l'avanzamento prende quel posto. -->
     <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : (mente ? 'A mente' : 'Volo libero')"
-           scura @indietro="allaMappa">
+           guida="mate" scura @indietro="allaMappa">
       <div v-if="campagna" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
         <span>{{ tappa.emoji }} {{ hud.giuste }}/{{ tappa.bersaglio }}</span>
@@ -1107,7 +1117,7 @@ onUnmounted(() => {
 
     <!-- ════════ la mappa della campagna: qui il gioco parla la lingua degli altri ════════ -->
     <div v-if="fase === 'mappa'" class="schermo campagna">
-      <Barra titolo="Asteroidi" monete @indietro="$emit('vai','home')">
+      <Barra titolo="Asteroidi" guida="mate" monete @indietro="$emit('vai','home')">
         <div class="gettone">⭐ <b>{{ intere.size }}/10</b></div>
         <div v-if="menteAccesa" class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
       </Barra>

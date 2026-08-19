@@ -16,6 +16,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, answer, level, addCoins, segna, segnaBest, strengthOf,
          difficoltaOra, labProgresso, labCompleta, tappaAperta } from '../store/profile.js'
+import { apertaQui } from '../data/portata-giochi.js'
 import { generaRicetta, taratura, scomponi, mescola, laboratorioLibero, premioTappa,
          ATTREZZI, vaBene, SCALINI, TAPPE, CUORI, CUORI_MAX } from '../data/pozioni.js'
 import { suono } from '../audio.js'
@@ -38,7 +39,10 @@ const hud = reactive({ cuori: CUORI, pozioni: 0, perfette: 0, serie: 0 })
 const progresso = computed(() => labProgresso())
 const tappaIdx = ref(0)                     // -1 = laboratorio libero
 const campagna = computed(() => tappaIdx.value >= 0)
-const sbloccata = i => tappaAperta(i, progresso.value.tappa)
+/* Il lucchetto guarda anche l'età: le tappe che questo bambino ha già
+   passato nascono aperte, quelle troppo avanti restano chiuse
+   (`data/portata.js`, il campo `portata` su ogni tappa). */
+const sbloccata = i => apertaQui(TAPPE[i], i, progresso.value.tappa)
 const nCliente = ref(0)                     // quale cliente della tappa
 const premio = ref(0)
 /* ---------- il calderone ---------- */
@@ -394,7 +398,7 @@ onUnmounted(() => cancelAnimationFrame(raf))
          un telefono stretto lo slot in mezzo si accorcia finché i cuori non
          restano fuori — che è l'unica cosa che non può mancare. Le pozioni
          perfette si contano nella schermata finale. -->
-    <Barra titolo="Pozioni" scura :monete="fase !== 'gioco'"
+    <Barra titolo="Pozioni" guida="pozioni" scura :monete="fase !== 'gioco'"
            @indietro="fase === 'gioco' ? allaMappa() : $emit('vai','home')">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
