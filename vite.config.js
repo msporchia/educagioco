@@ -38,6 +38,15 @@ function versione () {
 
 const VERSIONE = versione()
 
+// L'INDIRIZZO PUBBLICO, e non `location.href`.
+//
+// Serve al tasto «condividi» e all'anteprima del link nelle chat. Va
+// scritto qui perche' non si puo' ricavare da dove gira: in casa il gioco
+// arriva dal server di casa (un nome `.lan` che per un'altra famiglia non
+// esiste) e dal file unico arriva da `file://`. Condividere quello che si
+// ha sotto il naso vuol dire mandare un link che non si apre.
+const INDIRIZZO = process.env.INDIRIZZO || 'https://msporchia.github.io/educagioco/'
+
 // Accanto all'HTML esce anche versione.json: e' il modo di chiedere al NAS
 // cosa sta servendo davvero (`curl <indirizzo>/versione.json`) senza aprire il
 // browser, e lo usa pubblica.sh per confermare che il deploy sia arrivato.
@@ -166,7 +175,10 @@ function iconaInline () {
         .replace(/\s+/g, ' ')
         .trim()
       const dato = 'data:image/svg+xml,' + encodeURIComponent(svg)
-      return html.replace('%ICONA%', dato)
+      // %INDIRIZZO% serve ai meta dell'anteprima: WhatsApp e i messaggi
+      // vogliono un URL assoluto per l'immagine — un `data:` non lo
+      // scaricano, e un percorso relativo non sanno da dove prenderlo.
+      return html.replace('%ICONA%', dato).replaceAll('%INDIRIZZO%', INDIRIZZO)
     },
   }
 }
@@ -179,7 +191,7 @@ export default defineConfig({
   // (`npm run mondo`) e nel build non ci arriva. Vedi il file per i paletti.
   plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
-  define: { __VERSIONE__: JSON.stringify(VERSIONE) },
+  define: { __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
   build: { target: 'es2020', assetsInlineLimit: 100000000, cssCodeSplit: false,
            reportCompressedSize: false, chunkSizeWarningLimit: 100000 },
 })

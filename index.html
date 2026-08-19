@@ -17,6 +17,22 @@
 <!-- iOS il manifest non lo legge: l'icona della schermata iniziale la
      prende da qui, e questo è un file vero servito accanto alla pagina. -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- ══ L'ANTEPRIMA QUANDO IL LINK FINISCE IN UNA CHAT ══
+     È la prima cosa che vede un genitore a cui il gioco viene passato: un
+     link nudo su WhatsApp non dice niente e non lo apre nessuno. L'immagine
+     dev'essere un **URL assoluto** — l'indirizzo lo scrive il build
+     (`%INDIRIZZO%` in vite.config.js), perché la pagina non può sapere da
+     sola dove sta pubblicata. Aperto da file:// questi meta non danno
+     fastidio a nessuno: li legge solo chi spacchetta il link. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Educagioco">
+<meta property="og:description" content="Giochi per imparare: tabelline, lettura, inglese e spagnolo. Gratis, senza pubblicità, senza registrarsi — e funziona anche senza internet.">
+<meta property="og:image" content="%INDIRIZZO%anteprima.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="%INDIRIZZO%">
+<meta name="description" content="Giochi per imparare: tabelline, lettura, inglese e spagnolo. Gratis, senza pubblicità, senza registrarsi.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#4f6bd0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">

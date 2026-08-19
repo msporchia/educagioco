@@ -87,5 +87,45 @@ for (const { file, lato, margine } of FORMATI) {
   console.log(`  ${file.padEnd(22)} ${lato}×${lato}${margine ? '  (ritagliabile)' : ''}`)
 }
 
+/* ══ L'ANTEPRIMA DEL LINK ══
+   Quando l'indirizzo finisce in una chat, WhatsApp e i messaggi mostrano
+   il riquadro di `og:image`. L'icona quadrata lì viene stretta e piccola:
+   il formato che quei riquadri si aspettano è 1200×630, largo. È la prima
+   cosa che vede un genitore a cui il gioco viene passato da un altro, e
+   costa un file — quindi si genera qui, dalla stessa icona, invece di
+   essere disegnato a mano da qualche parte.
+
+   Non entra nel build (è `public/`, e il singolo HTML non lo inlinea):
+   sta accanto alla pagina, che è l'unico posto da cui un servizio
+   esterno può andarselo a prendere. */
+const ANTEPRIMA = { file: 'anteprima.png', largo: 1200, alto: 630 }
+{
+  const { file, largo, alto } = ANTEPRIMA
+  const page = await browser.newPage({ viewport: { width: largo, height: alto },
+                                       deviceScaleFactor: 1 })
+  await page.setContent(`<!doctype html><meta charset="utf-8">
+    <style>
+      html,body { margin:0; width:${largo}px; height:${alto}px; overflow:hidden;
+                  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+                  background:linear-gradient(180deg,#fff7ec,#eef4ef 52%,#e3ecf3) }
+      .riga { height:100%; display:flex; align-items:center; justify-content:center; gap:56px }
+      svg { display:block; width:260px; height:260px; filter:drop-shadow(0 12px 24px #8593a840) }
+      .dice h1 { margin:0; font-size:76px; font-weight:900; color:#37509f; letter-spacing:-1px }
+      .dice p { margin:16px 0 0; font-size:32px; line-height:1.4; color:#6e7788;
+                white-space:nowrap }
+      .dice b { color:#37509f }
+    </style>
+    <div class="riga">
+      ${svg}
+      <div class="dice">
+        <h1>Educagioco</h1>
+        <p>Giochi per imparare<br><b>gratis, senza pubblicità</b></p>
+      </div>
+    </div>`)
+  await page.screenshot({ path: resolve(RADICE, 'public', file) })
+  await page.close()
+  console.log(`  ${file.padEnd(22)} ${largo}×${alto}  (anteprima del link)`)
+}
+
 await browser.close()
 console.log('\nfatto: i PNG stanno in public/ e finiscono accanto al build.')
