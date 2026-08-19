@@ -29,6 +29,37 @@ export const versioneNuova = ref(false)
    quello che qui non succede. */
 const OGNI = 30 * 60 * 1000
 
+/* ── IL CONTROLLO A RICHIESTA ──
+   Il timo qui sopra ha un difetto che non si vede dal codice: **i timer
+   di una pagina in secondo piano sono congelati**, su iOS come su
+   Android. Una PWA installata sta in background quasi sempre — la si
+   riprende dallo switcher, non la si riapre — quindi quel mezz'ora
+   scatta solo per chi sta giocando da mezz'ora di fila, che è il momento
+   peggiore per dirgli di ricaricare.
+
+   I due momenti giusti sono **quando l'app torna in primo piano** e
+   **quando si torna in home**: nel primo il gioco non è ancora
+   cominciato, nel secondo è appena finito, e in tutti e due non c'è
+   niente da perdere ricaricando.
+
+   Costa una richiesta per `sw.js`, che è un paio di kilobyte e quasi
+   sempre torna «non è cambiato». Il conto grosso — il gioco intero da
+   riscaricare — si paga solo quando c'è davvero una versione nuova, ed
+   è il prezzo dell'aggiornamento, non del controllo. Il freno serve
+   comunque: in home si torna dieci volte in un pomeriggio, e dieci
+   richieste al minuto non dicono niente più di una. */
+const NON_PRIMA_DI = 5 * 60 * 1000
+let registrazione = null
+let ultimoControllo = 0
+
+export function controlla (ora = Date.now()) {
+  if (!registrazione || versioneNuova.value) return false
+  if (ora - ultimoControllo < NON_PRIMA_DI) return false
+  ultimoControllo = ora
+  registrazione.update().catch(() => {})
+  return true
+}
+
 export function sorveglia () {
   /* Da `file://` il browser vieta i service worker, ed è giusto così: il
      file unico è già tutto lì dentro. Se la registrazione fallisce non si
@@ -38,7 +69,15 @@ export function sorveglia () {
 
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
+      registrazione = reg
+      ultimoControllo = Date.now()          // appena registrato è già fresco
       setInterval(() => reg.update().catch(() => {}), OGNI)
+
+      /* il ritorno in primo piano: è qui che un telefono scopre di essere
+         indietro, e l'unico momento in cui nessuno sta giocando */
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) controlla()
+      })
 
       reg.addEventListener('updatefound', () => {
         const nuovo = reg.installing
