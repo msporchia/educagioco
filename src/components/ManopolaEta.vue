@@ -41,6 +41,8 @@
    grandi lo scrive nel profilo (e, se serve, lo fa confermare prima).
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed } from 'vue'
+import Blocco from './quadro/Blocco.vue'
+import Riga from './quadro/Riga.vue'
 import { quadroDi } from '../data/quadro.js'
 import { partenzaPerEta } from '../data/partenze.js'
 import { classiNude } from '../quiz/catalogo.js'
@@ -80,8 +82,22 @@ const emit = defineEmits(['scegli', 'prova'])
    `.stop` non è pignoleria: il riquadro intero si apre e si chiude al
    tocco, quindi senza fermarlo il ▶ aprirebbe la domanda e nello
    stesso gesto richiuderebbe l'elenco da cui è stata chiesta. */
-const provaClasse = r => emit('prova', { sorgente: r.sorgente, nome: r.nome })
-const provaSapere = x => emit('prova', { chiave: x.chiave, nome: x.nome })
+/* L'età viaggia con l'evento, e non è un di più: una classe è una
+   domanda sola e si mostra com'è, ma un **gruppo di sapere** è largo —
+   dal colpo d'occhio sui pallini ai numeri a tre cifre — e senza sapere
+   di chi stiamo parlando il pannello pescherebbe in tutto il gruppo. A
+   quattro anni usciva una domanda dichiarata otto e mezzo, cioè si
+   chiedeva a un grande di giudicare se suo figlio sappia una cosa
+   mostrandogli quello che a suo figlio non arriverà per anni. */
+const provaClasse = r => emit('prova', { sorgente: r.sorgente, nome: r.nome, eta: props.anni })
+/* Il ▶ di un pezzo di scuola non pesca in tutto il gruppo: scorre **le
+   sue domande di questa fascia**, che sono quelle che la riga sta
+   dichiarando. È lo stesso `giro` della scheda delle domande — una
+   lista di classi col contatore — e non un secondo modo di mostrare le
+   stesse cose. Se pescasse nel gruppo intero, il ▶ della riga «sta
+   imparando» aprirebbe anche quelle toste, e il riquadro direbbe una
+   cosa mentre il tasto ne apre un'altra. */
+const provaSapere = s => emit('prova', { giro: s.classi, nome: s.nome, eta: props.anni })
 
 const MIN = 4
 const MAX = 12
@@ -130,26 +146,25 @@ function muovi (passo) {
 const inLettere = a => a == null ? '—'
   : (a % 1 ? `${Math.floor(a)} anni e mezzo` : `${a} ann${a === 1 ? 'o' : 'i'}`)
 
+/* l'età di una domanda, arrotondata al mezzo anno: il catalogo la dà a
+   un decimale («7,4 anni») e nessun genitore giudica un decimale */
+const etaDella = a => inLettere(Math.round((a || 0) * 2) / 2)
+
 const etichetta = computed(() => inLettere(props.anni))
 const fascia = computed(() => partenzaPerEta(props.anni))
 
-/* Solo i primi, e quanti ne restano: un riassunto che elenca trenta
-   voci non è più un riassunto. Il resto si apre col dito, e per i
-   giochi è la cosa che serve di più al primo avvio — dodici emoji in
-   fila non le sa leggere nessuno che non conosca già i giochi. */
+/* ── L'ASSAGGIO DI UN BLOCCO CHIUSO ──
+   Tre pezzi di scuola e quanti ne restano: un riassunto che elenca
+   trenta voci non è più un riassunto. Sono i **gruppi** e non le
+   classi, che è la stessa unità che si trova aprendo — prima l'assaggio
+   mostrava i nomi delle domande e dentro c'era dell'altro, e due
+   elenchi diversi sotto lo stesso titolo fanno credere di aver
+   sbagliato a premere. */
 const TRE = 3
-const primi = (elenco, quanti = TRE) => elenco.slice(0, quanti)
-const restanti = (elenco, quanti = TRE) => Math.max(0, elenco.length - quanti)
-
-/* L'assaggio di un gruppo chiuso: tre righe di **materie diverse**.
-   Prendendo le prime tre e basta uscivano tre tempi verbali di fila —
-   vero, perché l'elenco è ordinato per difficoltà e l'italiano sta in
-   cima, ma racconta una materia sola invece di far vedere di cosa è
-   fatto il gruppo. Aperto l'ordine resta quello vero. */
-const vetrina = righe => {
-  const visti = new Set()
-  const fuori = righe.filter(r => !visti.has(r.modulo) && visti.add(r.modulo))
-  return (fuori.length >= TRE ? fuori : righe).slice(0, TRE)
+const assaggioDi = g => {
+  const nomi = g.saperi.slice(0, TRE).map(s => giu(s.nome))
+  const restanti = g.saperi.length - nomi.length
+  return nomi.join(' · ') + (restanti > 0 ? ` · e altri ${restanti}` : '')
 }
 
 /* Un solo aperto per volta non serve: sono blocchi corti e chi apre
@@ -176,13 +191,13 @@ const apri = k => { aperti.value = eAperto(k)
      didascalica  Le sa già, ma ripassa · Sta studiando queste ·
                   Difficili ma fattibili · Troppo facili, tolte */
 const GRUPPI = {
-  facili: { nome: 'Le sa fare, ma le ripassa',
-            che: 'escono quando il gioco chiede poco' },
-  medie: { nome: 'Sta studiando queste',
+  facili: { nome: 'Queste le sa fare',
+            che: 'roba che sa già: esce quando il gioco chiede poco' },
+  medie: { nome: 'Sta imparando queste',
            che: 'la sua misura: sono quelle che vede più spesso' },
-  toste: { nome: 'Difficili ma fattibili',
+  toste: { nome: 'Difficili, ma ce la può fare',
            che: 'un gradino sopra, quando il gioco chiede molto' },
-  sotto: { nome: 'Non gliele chiediamo più',
+  sotto: { nome: 'Superfluo chiedergliele',
            che: 'per lui sono ovvie: le indovinerebbe senza pensarci' },
 }
 
@@ -201,6 +216,22 @@ const STATI = {
 const stato = g => STATI[g.stato] || STATI.qui
 const quantiQui = computed(() =>
   quadro.value ? quadro.value.giochi.filter(g => g.stato === 'qui').length : 0)
+
+/* «Survivors, il Dungeon e il sotterraneo»: la virgola fino al
+   penultimo e la «e» in fondo, come si parla */
+const ARTICOLI = ['il', 'lo', 'la', 'i', 'gli', 'le', "l'"]
+/* «con Survivors, il Dungeon e il sotterraneo»: dentro una frase
+   l'articolo va minuscolo, il nome proprio no — abbassare tutto darebbe
+   «survivors», tenere tutto darebbe «Il Dungeon» in mezzo a una riga */
+const inFrase = nome => {
+  const [prima, ...resto] = String(nome || '').split(' ')
+  return ARTICOLI.includes(prima.toLowerCase()) && resto.length
+    ? [prima.toLowerCase(), ...resto].join(' ') : nome
+}
+const elencoDi = nomi => {
+  const x = (nomi || []).map(inFrase)
+  return x.length < 2 ? (x[0] || '') : `${x.slice(0, -1).join(', ')} e ${x[x.length - 1]}`
+}
 
 /* minuscolo perché finisce dentro una frase e non a capo di una riga:
    «le divisioni», non «Le divisioni» */
@@ -230,96 +261,89 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
     <p v-if="!quadro" class="invito">Sposta la manopola per vedere cosa cambia.</p>
 
     <div v-else class="quadro">
-      <!-- ══ SEI BLOCCHI, UNA FORMA SOLA ══
+      <!-- ══ CINQUE BLOCCHI, UNA FORMA SOLA ══
            Titolo · quanti sono · cosa vuol dire · l'assaggio, e si apre
-           toccandolo in qualunque punto. Erano due forme diverse — i
-           giochi e quello che si dà per scontato da una parte, i gruppi
-           di domande dall'altra, con un sottotitolo solo su questi
-           ultimi — e due forme fanno sembrare due cose diverse quello
-           che è lo stesso gesto ripetuto sei volte.
-
-           Si tocca **tutto il riquadro** e non la parolina «quali»:
-           quella è larga due centimetri su un telefono, e chi prova a
-           premere il titolo — cioè chiunque — non ottiene niente e
-           conclude che non si apre. -->
+           toccandolo in qualunque punto. La forma sta in
+           `quadro/Blocco.vue` e la riga in `quadro/Riga.vue`: erano
+           scritte a mano una per blocco, ed è così che due di loro
+           erano finite diverse dalle altre senza che nessuno l'avesse
+           deciso. -->
 
       <!-- i giochi, tutti, con lo stato addosso: chi c'è, chi il
            bambino ha già passato, cosa arriva più avanti -->
-      <div class="voce apribile" :class="{ aperta: eAperto('giochi') }"
-           data-apri="giochi" role="button" tabindex="0"
-           @click="apri('giochi')" @keydown.enter="apri('giochi')">
-        <span class="tit">
-          <span>In casa</span>
-          <b>{{ quantiQui }} su {{ quadro.giochi.length }}</b>
-          <em>{{ eAperto('giochi') ? '▴' : '▾' }}</em>
-        </span>
-        <i class="spiega">i giochi che trova in home a quest'età</i>
-
-        <span v-if="!eAperto('giochi')" class="chip-riga">
-          <span v-for="g in quadro.giochi" :key="g.chiave" class="chip"
-                :class="g.stato" :title="`${g.nome} — ${stato(g).testo}`">{{ g.ico }}</span>
-        </span>
-        <ul v-else class="elenco">
-          <li v-for="g in quadro.giochi" :key="g.chiave" :class="g.stato">
-            <span class="ico">{{ g.ico }}</span>
-            <span class="testo"><b>{{ g.nome }}</b><i>{{ g.che }}</i></span>
-            <em :class="stato(g).cls">{{ stato(g).testo }}</em>
-          </li>
+      <Blocco data-apri="giochi" titolo="In casa"
+              :conta="`${quantiQui} su ${quadro.giochi.length}`"
+              spiega="i giochi che trova in home a quest'età"
+              :aperto="eAperto('giochi')" @apri="apri('giochi')">
+        <template #chiuso>
+          <span class="chip-riga">
+            <span v-for="g in quadro.giochi" :key="g.chiave" class="chip"
+                  :class="g.stato" :title="`${g.nome} — ${stato(g).testo}`">{{ g.ico }}</span>
+          </span>
+        </template>
+        <ul class="elenco">
+          <Riga v-for="g in quadro.giochi" :key="g.chiave"
+                :ico="g.ico" :nome="g.nome" :sotto="g.che" :stato="stato(g)" />
         </ul>
-      </div>
+      </Blocco>
 
-      <!-- quello che si dà per scontato, al positivo: si scorre, e
-           appena ci si legge dentro una cosa che il bambino non sa, si
-           è saliti troppo. Detto al negativo bisognava ricostruire per
-           differenza le altre trenta, che non erano scritte da nessuna
-           parte — ed è così che per un pezzo il gioco ha dato per
-           scontato che a quattro anni si sapesse leggere. -->
-      <div class="voce apribile" :class="{ aperta: eAperto('sa') }"
-           data-apri="sa" role="button" tabindex="0"
-           @click="apri('sa')" @keydown.enter="apri('sa')">
-        <span class="tit">
-          <span>Dà per scontato che sappia</span>
-          <b>{{ quadro.sa.length }}</b>
-          <em>{{ eAperto('sa') ? '▴' : '▾' }}</em>
-        </span>
-        <i class="spiega">le domande partono da qui: se ci leggi qualcosa che non sa, sei salito troppo</i>
-        <b v-if="!eAperto('sa')" class="frase">{{
-          primi(quadro.sa).map(x => giu(x.nome)).join(' · ')
-        }}<template v-if="restanti(quadro.sa)"> · e altre {{ restanti(quadro.sa) }}</template></b>
-        <ul v-else class="elenco fitta">
-          <li v-for="x in quadro.sa" :key="x.chiave">
-            <span class="testo"><b>{{ x.nome }}</b></span>
-            <button type="button" class="prova" :data-prova="x.chiave"
-                    :aria-label="'prova ' + x.nome"
-                    @click.stop="provaSapere(x)">▶</button>
-          </li>
-        </ul>
-      </div>
+      <!-- ══ QUANDO LE DOMANDE NON LE CHIEDE NESSUNO ══
+           Da quattro a cinque anni e mezzo in casa ci sono tre giochi e
+           nessuno pesca dai moduli di quiz: i blocchi elencavano undici
+           classi coi nomi e col tastino per provarle, e un grande le
+           leggeva come «ecco cosa gli chiederemo». Non gliele avremmo
+           chieste mai. Una riga sola al posto di quattro elenchi, e dice
+           anche da quando cambia — che è l'unica cosa utile lì: cosa si
+           guadagna salendo ancora. -->
+      <Blocco v-if="!quadro.domande.chiedono" data-domande="nessuna"
+              titolo="Le domande" conta="nessuna" :apribile="false"
+              spiega="a quest'età nessun gioco gliele chiede: quelli che ha in casa hanno le loro"
+              :assaggio="quadro.domande.da
+                ? `Arrivano a ${inLettere(quadro.domande.da)}, con ${elencoDi(quadro.domande.quali)}`
+                : ''" />
 
-      <!-- e le domande, negli stessi quattro gruppi di sempre -->
-      <div v-for="g in quadro.gruppi.filter(x => x.righe.length)" :key="g.chiave"
-           class="voce apribile" :class="{ aperta: eAperto(g.chiave) }"
-           :data-apri="g.chiave" role="button" tabindex="0"
-           @click="apri(g.chiave)" @keydown.enter="apri(g.chiave)">
-        <span class="tit">
-          <span>{{ GRUPPI[g.chiave].nome }}</span>
-          <b>{{ g.righe.length }}</b>
-          <em>{{ eAperto(g.chiave) ? '▴' : '▾' }}</em>
-        </span>
-        <i class="spiega">{{ GRUPPI[g.chiave].che }}</i>
-        <b v-if="!eAperto(g.chiave)" class="frase">{{
-          vetrina(g.righe).map(r => giu(r.nome)).join(' · ')
-        }}<template v-if="restanti(g.righe)"> · e altre {{ restanti(g.righe) }}</template></b>
-        <ul v-else class="elenco fitta">
-          <li v-for="r in g.righe" :key="r.chiave">
-            <span class="ico">{{ r.icona }}</span>
-            <span class="testo"><b>{{ r.nome }}</b><i>{{ r.modulo }}</i></span>
-            <button type="button" class="prova" :data-prova="r.chiave"
-                    :aria-label="'prova ' + r.nome"
-                    @click.stop="provaClasse(r)">▶</button>
-          </li>
+      <!-- ══ E LE DOMANDE, NELLA SCALA CHE ESISTE GIÀ ══
+           Quattro blocchi, e sono quattro livelli di padronanza rispetto
+           a **questo** bambino: le sa fare · sta imparando · difficili
+           ma ce la può fare · non gliele chiediamo più. Il quinto —
+           impossibili — non si mostra, perché non gli arrivano.
+
+           Dentro, i **pezzi di scuola**, e sotto ognuno le sue domande
+           di quella fascia. Lo stesso pezzo può stare in due blocchi, ed
+           è il punto: le figure piane sono roba che sta imparando per
+           due domande e roba tosta per una terza. Prima c'era un blocco
+           a parte, «dà per scontato che sappia», fatto di gruppi mentre
+           questi erano fatti di classi: due unità di misura per la
+           stessa roba, e nessuna delle due diceva l'altra. -->
+      <Blocco v-for="g in (quadro.domande.chiedono ? quadro.gruppi.filter(x => x.quante) : [])"
+              :key="g.chiave" :data-apri="g.chiave"
+              :titolo="GRUPPI[g.chiave].nome" :conta="String(g.quante)"
+              :spiega="GRUPPI[g.chiave].che"
+              :assaggio="assaggioDi(g)"
+              :aperto="eAperto(g.chiave)" @apri="apri(g.chiave)">
+        <ul class="elenco">
+          <template v-for="s in g.saperi" :key="s.chiave">
+            <!-- il pezzo di scuola, col suo ▶: scorre le sue domande di
+                 questa fascia e nient'altro. Si apre a sua volta, perché
+                 a otto anni un blocco solo ha cinquantasette domande in
+                 venti pezzi di scuola — mostrarle tutte insieme non è un
+                 elenco, è un muro. -->
+            <Riga :ico="s.ico" :nome="s.nome" :chiave="s.chiave"
+                  :sotto="s.quante === 1 ? '1 domanda' : `${s.quante} domande`"
+                  prova apribile :aperto="eAperto(`${g.chiave}:${s.chiave}`)"
+                  @prova="provaSapere(s)" @apri="apri(`${g.chiave}:${s.chiave}`)" />
+            <!-- sotto una domanda va **a che età serve**, non il nome del
+                 modulo: dentro il suo pezzo di scuola il modulo lo
+                 ripete quasi sempre («Coniugazione» sotto «I verbi al
+                 presente»), mentre gli anni sono la sola cosa che un
+                 grande può giudicare guardandola -->
+            <Riga v-for="(r, i) in (eAperto(`${g.chiave}:${s.chiave}`) ? s.classi : [])"
+                  :key="r.chiave" dentro :ultima="i === s.classi.length - 1"
+                  :nome="r.nome" :sotto="etaDella(r.anni)" :chiave="r.chiave"
+                  prova @prova="provaClasse(r)" />
+          </template>
         </ul>
-      </div>
+      </Blocco>
     </div>
   </div>
 </template>
@@ -341,31 +365,6 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
 .invito { margin:0; text-align:center; font-size:13px; color:#7a7a8a }
 
 .quadro { display:flex; flex-direction:column; gap:8px; text-align:left }
-.voce { display:flex; flex-direction:column; gap:3px; background:#fff; border-radius:14px;
-        padding:9px 12px; box-shadow:0 2px 8px #0000000d }
-/* La testata di un blocco: nome · quanti · la freccina. Uguale per
-   tutti e sei — erano due forme diverse, e due forme fanno sembrare due
-   cose diverse quello che è lo stesso gesto ripetuto. */
-.tit { display:flex; align-items:baseline; gap:7px;
-       font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#8a8a99;
-       font-weight:800 }
-.tit > span:first-child { flex:1 }
-.tit > b { font-size:13px; font-weight:800; color:var(--viola-scuro);
-           text-transform:none; letter-spacing:0 }
-.tit > em { font-style:normal; font-size:13px; font-weight:800; color:var(--viola) }
-.voce b { font-size:14px; font-weight:700 }
-
-.frase { font-size:13.5px; font-weight:650; line-height:1.4 }
-.spiega { font-style:normal; font-size:11px; color:#9a9aa8; line-height:1.3; margin:-1px 0 3px }
-
-/* Si tocca tutto il riquadro, non la parolina in fondo alla riga:
-   quella è larga due centimetri su un telefono, e chi prova a premere
-   il titolo — cioè chiunque — non otterrebbe niente e concluderebbe
-   che non si apre. */
-.voce.apribile { cursor:pointer; -webkit-tap-highlight-color:transparent }
-.voce.apribile:active { transform:scale(.995) }
-.voce.apribile.aperta { box-shadow:0 2px 10px #0000001a, inset 0 0 0 2px #f0eaff }
-
 .chip-riga { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px }
 .chip { font-size:17px; line-height:1.1 }
 /* chi non c'è resta nella fila, sbiadito: una fila che mostra solo gli
@@ -375,32 +374,4 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
 
 .elenco { list-style:none; margin:5px 0 0; padding:0; display:flex;
           flex-direction:column; gap:5px }
-.elenco li { display:flex; align-items:center; gap:8px }
-.elenco li .ico { font-size:18px; line-height:1; width:22px; text-align:center }
-.elenco li .testo { flex:1; display:flex; flex-direction:column; gap:0 }
-.elenco li .testo b { font-size:13px; font-weight:750 }
-.elenco li .testo i { font-style:normal; font-size:11px; color:#8a8a99; line-height:1.3 }
-.elenco li em { font-style:normal; font-size:10.5px; font-weight:800; white-space:nowrap;
-                padding:2px 7px; border-radius:8px }
-.elenco li em.si { color:#2f6b3f; background:#dff0d8 }
-.elenco li em.giu { color:#7a6a2f; background:#f3eed6 }
-.elenco li em.su { color:#5b3fa8; background:#eee7ff }
-.elenco li em.off { color:#8a4a4a; background:#f5e3e3 }
-.elenco li.passato .testo b, .elenco li.avanti .testo b,
-.elenco li.spento .testo b { color:#7a7a8a }
-.elenco.fitta li .testo b { font-weight:650 }
-/* Il ▶ di una riga: piccolo ma con un bersaglio vero sotto — 34 px è
-   il minimo che un dito prende senza mirare. */
-.prova { border:none; background:#f0eaff; color:var(--viola); cursor:pointer;
-         font-family:inherit; font-size:11px; line-height:1;
-         width:34px; height:34px; border-radius:11px; flex:none }
-.prova:active { transform:translateY(1px) }
-
-/* La differenza sta FUORI dai riquadri e non dentro: è quello che è
-   appena successo, non parte del quadro — e appiccicata sotto la voce
-   che riguarda si legge come una didascalia invece che come una riga
-   in più da confrontare. */
-.delta { margin:-4px 0 2px; padding:0 12px; font-size:12.5px; line-height:1.35 }
-.delta.piu { color:#2f6b3f }
-.delta.meno { color:#8a4a2f }
 </style>

@@ -501,22 +501,68 @@ elementare» dice a chi è rivolta la scelta, mai cosa cambia
 facendola, e l'effetto si vedeva solo uscendo e guardando altrove.
 
 Adesso sotto la manopola c'è **il quadro di quell'età**
-(`data/quadro.js`, puro, `test/unita/quadro`): **sei blocchi, tutti
-della stessa forma** — titolo, quanti sono, cosa vuol dire, l'assaggio
-— che si aprono toccandoli in qualunque punto e mostrano i nomi.
+(`data/quadro.js`, puro, `test/unita/quadro`): **blocchi tutti della
+stessa forma** — titolo, quanti sono, cosa vuol dire, l'assaggio — che
+si aprono toccandoli in qualunque punto. Un blocco vuoto non si mostra,
+e sotto i sei anni i quattro delle domande diventano una riga sola.
 
   1. **In casa** — tutti i giochi, ognuno col suo stato: *c'è* ·
      *l'ha già passato* · *arriva più avanti* · *l'hai spento tu*.
-  2. **Dà per scontato che sappia** — i saperi accesi, i più recenti
-     per primi.
-  3–6. **Le domande**, in quattro gruppi: *le sa fare ma le ripassa* ·
-     *sta studiando queste* · *difficili ma fattibili* · *non gliele
-     chiediamo più*.
+  2–5. **Le domande**, nei quattro livelli di padronanza rispetto a
+     *questo* bambino: *queste le sa fare* · *sta imparando queste* ·
+     *difficili, ma ce la può fare* · *superfluo chiedergliele*. Il
+     quinto — impossibili — non si mostra, perché non gli arrivano.
 
-Ogni riga degli ultimi cinque ha un **▶ che apre la domanda vera**
-(`quiz/Prova.vue`, lo stesso pannello della scheda delle domande): il
-nome di una classe non dice che aspetto abbia la domanda, e senza
-vederla un grande non può giudicare se sia roba da suo figlio.
+**Dentro un blocco ci sono i pezzi di scuola, e sotto ognuno le sue
+domande di quella fascia.** Lo stesso pezzo può stare in due blocchi, ed
+è il punto: le figure piane sono roba che sa già fare per due domande e
+roba tosta per una terza. C'era un sesto blocco, «dà per scontato che
+sappia», fatto di **gruppi** mentre gli altri erano fatti di **classi**:
+due unità di misura per la stessa roba, e nessuna delle due diceva
+l'altra — guardando «Le figure piane» fra le cose date per scontate non
+si sapeva se volesse dire i nomi delle figure o gli angoli ottusi, e
+guardando «Contare lati e vertici» fra quelle che sta imparando non si
+sapeva che pezzo di scuola fosse. Adesso l'unità è una sola, e la scala
+pure: **quella che esiste già** (`FASCE_ETA` in `quiz/nucleo/catalogo.js`),
+non una seconda inventata per l'occasione.
+
+**Tutto si apre a due livelli**, e serve: a otto anni «sta imparando»
+sono cinquantasette domande in venti pezzi di scuola, e mostrarle tutte
+insieme non è un elenco, è un muro. Aperto il blocco si vedono i pezzi;
+aperto un pezzo, le sue domande, ognuna **con l'età a cui serve** — che
+è la sola cosa che un grande può giudicare guardandola, mentre il nome
+del modulo ripeteva quasi sempre quello del pezzo.
+
+**Il ▶ c'è su tutte e due le righe e non pesca mai fuori.** Su una
+domanda apre quella; su un pezzo di scuola **scorre le sue domande di
+quella fascia** (`giro` di `quiz/Prova.vue`) e nient'altro — se pescasse
+nel gruppo intero, il ▶ della riga «sta imparando» aprirebbe anche le
+toste, e il riquadro direbbe una cosa mentre il tasto ne apre un'altra.
+Succedeva: a quattro anni «i numeri e le quantità» apriva una domanda
+dichiarata otto anni e mezzo.
+
+**La forma sta in due componenti** (`components/quadro/Blocco.vue` e
+`Riga.vue`) e non più in cinque copie scritte a mano dentro
+`ManopolaEta.vue`: era così che due blocchi erano finiti diversi dagli
+altri senza che nessuno l'avesse deciso — uno con l'icona e l'altro no,
+uno col sottotitolo e l'altro no.
+
+**Il gruppo di una domanda è il più specifico che dichiara**, con la
+stessa regola della scheda delle domande (`quiz/catalogo.js`): una
+conversione di pesi sta sotto «Metri, litri e chili» e sotto «Le
+conversioni», e quello che il grande ha in mente è quasi sempre il più
+stretto, cioè quello che tiene meno domande.
+
+**E se in casa non c'è nessun gioco che le chieda, le domande non si
+elencano affatto.** Da quattro a cinque anni e mezzo i giochi accesi
+sono tre — Conta gli animali, Prima e dopo, la fattoria — e nessuno
+pesca dai moduli di quiz: i quattro blocchi elencavano lo stesso undici
+classi col tastino per provarle, e un grande le leggeva come «ecco cosa
+gli chiederemo». Al loro posto una riga sola, che dice anche da quando
+cambia («arrivano a 6 anni, con Survivors, il Dungeon e il
+sotterraneo»). Chi le chiede lo dichiara nel manifesto con `quiz: true`
+— non «fa domande», che le fa anche Conta gli animali, ma **passa da
+`src/quiz/`**.
 
 **Non c'è nessuna riga che dice cosa è cambiato**, ed era la prima cosa
 che si era scritta. «＋ arriva La bancarella» raccontava il movimento a

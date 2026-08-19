@@ -112,8 +112,42 @@ controlla('e il quadro di quell\'età si vede già',
   await nuovo.isVisible('[data-manopola] .quadro'))
 uguale('più in giù non si va', await nuovo.isDisabled('[data-eta="giu"]'), true)
 
-/* Cinque tocchi per arrivare a 6,5, cioè «prima o seconda». */
-for (let i = 0; i < 5; i++) await nuovo.click('[data-eta="su"]')
+/* ── IL ▶ DI UN PEZZO DI SCUOLA RESTA NEL SUO FILONE ──
+   Un blocco si apre sui pezzi di scuola, un pezzo sulle sue domande, e
+   il ▶ del pezzo le scorre **tutte e sole quelle** — il contatore «1 di
+   4» è la prova che si sta scorrendo un giro e non pescando a caso.
+
+   Serve un test di browser perché il difetto che ripara non si vedeva
+   da nessun'altra parte: `Benvenuto.vue` non inoltrava `giro` a
+   `Prova.vue`, e il pannello ripiegava sul modo «pesca come in
+   partita». Nessun errore, nessuna riga in console: si partiva da «i
+   numeri e le quantità» e la domanda dopo era di logica. Un ripiego che
+   funziona è il modo più caro di rompersi. */
+for (let i = 0; i < 8; i++) await nuovo.click('[data-eta="su"]')
+await nuovo.click('[data-apri="medie"]')
+await nuovo.waitForSelector('[data-prova]', { timeout: 5000 })
+const pezzo = await nuovo.evaluate(() =>
+  document.querySelector('[data-apri="medie"] [data-prova]')?.dataset.prova)
+controlla('un blocco di domande si apre sui pezzi di scuola', !!pezzo, String(pezzo))
+await nuovo.click(`[data-prova="${pezzo}"]`)
+await nuovo.waitForSelector('.prova-palco', { timeout: 5000 })
+const conta = await nuovo.evaluate(() =>
+  document.querySelector('[data-conta]')?.textContent.trim() || '')
+controlla('il ▶ di un pezzo scorre le sue domande, col contatore',
+          /^\d+ di \d+$/.test(conta), conta || 'nessun contatore: sta pescando a caso')
+/* e scorrendo si resta dentro: il modulo in testa non cambia */
+const dove = async () => (await nuovo.evaluate(() =>
+  document.querySelector('.prova-testa')?.innerText || '')).split('\n')[1] || ''
+const primo = (await dove()).split('·')[0]
+await nuovo.click('.prova-altra')
+await nuovo.waitForTimeout(300)
+uguale('e la domanda dopo è dello stesso filone',
+       (await dove()).split('·')[0], primo)
+await nuovo.click('.prova-x')
+await nuovo.waitForTimeout(200)
+
+/* Si torna a 6,5, cioè «prima o seconda». */
+for (let i = 0; i < 3; i++) await nuovo.click('[data-eta="giu"]')
 uguale('la manopola dice gli anni a parole',
   await nuovo.evaluate(() => document.querySelector('[data-eta-ora]').textContent.trim()),
   '6 anni e mezzo')

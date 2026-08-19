@@ -606,8 +606,7 @@ async function eliminaOra(g) {
    il suo gruppo: spegnere un pezzo di scuola si fa da lì, e vale come
    prima anche per i giochi che leggono i saperi (il castello e le
    divisioni, il laboratorio e le conversioni). */
-const prova = ref(null)          // { chiave, nome } | { sorgente|giro|eta, nome } | null
-const apriProva = (chiave, nome) => { prova.value = { chiave, nome } }
+const prova = ref(null)          // { chiave, nome, eta } | { sorgente|giro|eta, nome } | null
 
 /* ── e dal catalogo ──
    La terza scheda apre lo stesso pannello, ma sa dirgli molto di più:

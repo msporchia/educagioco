@@ -406,9 +406,7 @@ uguale('finendo nel profilo', typeof (await leggiProfilo(page)).settings.eta, 'n
    che non sembrerebbe rotta. */
 controlla('sotto la tacca c\'è l\'elenco dei giochi con lo stato addosso',
   (await page.locator('[data-manopola] [data-apri="giochi"]').count()) > 0)
-controlla('e quello che si dà per scontato che sappia',
-  (await page.locator('[data-manopola] [data-apri="sa"]').count()) > 0)
-controlla('e i gruppi di domande',
+controlla('e i quattro livelli di padronanza',
   (await page.locator('[data-manopola] [data-apri="medie"]').count()) > 0)
 
 /* Aprire un blocco mostra i nomi: è tutta la differenza fra «57
@@ -435,12 +433,31 @@ await page.waitForTimeout(200)
    riquadro intero si apre e si chiude al tocco, quindi senza fermarlo
    il ▶ aprirebbe la domanda e nello stesso gesto richiuderebbe
    l'elenco da cui è stata chiesta. */
+/* ── DUE LIVELLI, E LO STESSO PEZZO IN PIÙ BLOCCHI ──
+   Un blocco si apre sui **pezzi di scuola**, un pezzo sulle sue
+   domande. C'era un blocco a parte fatto di gruppi mentre gli altri
+   erano fatti di classi: due unità di misura per la stessa roba, e
+   nessuna delle due diceva l'altra. */
 await page.click('[data-manopola] [data-apri="medie"]')
 await page.waitForSelector('[data-manopola] [data-apri="medie"] .prova', { timeout: 5000 })
+const quanteRighe = () =>
+  page.locator('[data-manopola] [data-apri="medie"] .elenco li').count()
+const soloPezzi = await quanteRighe()
+await page.locator('[data-manopola] [data-apri="medie"] .elenco li').first().click()
+await page.waitForTimeout(300)
+controlla('un pezzo di scuola si apre sulle sue domande',
+  (await quanteRighe()) > soloPezzi, `${soloPezzi} → ${await quanteRighe()}`)
+controlla('e le domande stanno rientrate sotto di lui',
+  (await page.locator('[data-manopola] [data-apri="medie"] .elenco li.dentro').count()) > 0)
 await page.locator('[data-manopola] [data-apri="medie"] .prova').first().click()
 await page.waitForSelector('.prova-velo', { timeout: 5000 })
 controlla('il ▶ di una riga apre la domanda vera',
   await page.isVisible('.prova-velo'))
+/* il ▶ di un pezzo di scuola non pesca nel gruppo intero: scorre le sue
+   domande **di quella fascia**, e il contatore è la prova che lo fa */
+controlla('e il ▶ di un pezzo di scuola scorre solo le sue',
+  /^\d+ di \d+$/.test((await page.locator('[data-conta]').innerText().catch(() => '')).trim()),
+  (await page.locator('[data-conta]').innerText().catch(() => 'nessun contatore')).trim())
 controlla('e il gruppo da cui si è partiti è rimasto aperto',
   (await page.locator('[data-manopola] [data-apri="medie"] .prova').count()) > 0)
 await page.click('.prova-x')

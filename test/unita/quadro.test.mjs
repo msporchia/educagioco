@@ -29,15 +29,19 @@ import { PARTENZE, partenzaPerEta, eccezioniPerEta, eccezioniDi } from '../../sr
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { giocoDaOffrire } from '../../src/data/portata.js'
 import { GIOCHI } from '../../src/data/giochi.js'
+import { SAPERI } from '../../src/data/saperi.js'
+import { sorgentiDi } from '../../src/quiz/nucleo/esempi.js'
+import { finestraDi } from '../../src/quiz/nucleo/classi.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const CARTELLA = resolve(RADICE, 'src/quiz/moduli')
 
 const classi = []
+const moduli = []
 if (existsSync(CARTELLA))
   for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
     const mod = (await import(pathToFileURL(resolve(CARTELLA, f)).href)).default
-    if (mod) classi.push(...classiDelModulo(mod))
+    if (mod) { moduli.push(mod); classi.push(...classiDelModulo(mod)) }
   }
 controlla('le classi di domande si caricano dalla cartella', classi.length > 20,
           `${classi.length} classi`)
@@ -304,5 +308,130 @@ for (const eta of [6, 8, 10]) {
             d.cambiati.some(g => g.stato === 'passato'))
   nota(`da 6 a 9 anni: ${d.cambiati.map(g => `${g.nome} ${g.prima}→${g.stato}`).join(' · ')}`)
 }
+
+/* ── LE DOMANDE CHE NESSUNO CHIEDE ──
+   Il guasto peggiore di un riassunto non è sbagliare un numero: è
+   descrivere una cosa che non succede. Da quattro a cinque anni e mezzo
+   in casa ci sono tre giochi — Conta gli animali, Prima e dopo, la
+   fattoria — e nessuno pesca dai moduli di quiz: i quattro blocchi
+   elencavano lo stesso undici classi col tastino per provarle. Qui si
+   prova che il quadro lo dica, e che lo dica **guardando i giochi**
+   invece di una soglia scritta a mano. */
+{
+  for (const eta of [4, 4.5, 5, 5.5]) {
+    const q = quadroDi({ eta, ...eccezioniPerEta(eta) }, { classi })
+    uguale(`a ${eta} anni nessun gioco in casa chiede le domande`,
+           q.domande.chiedono, false)
+    uguale('e si sa da quando arriveranno', q.domande.da, 6)
+    controlla('con i nomi di chi le porterà', q.domande.quali.length > 0,
+              q.domande.quali.join(', '))
+  }
+  const sei = quadroDi({ eta: 6, ...eccezioniPerEta(6) }, { classi })
+  uguale('a 6 anni invece qualcuno le chiede', sei.domande.chiedono, true)
+  controlla('e sono i giochi che pescano da src/quiz/',
+            sei.domande.quali.length >= 3, sei.domande.quali.join(', '))
+  /* La riga che dice che il conto guarda i giochi e non un numero: chi
+     è in casa a quell'età deve dichiarare `quiz`, e almeno uno di quei
+     giochi deve essere davvero fra le carte accese. */
+  const accesi = new Set(sei.giochi.filter(g => g.stato === 'qui').map(g => g.nome))
+  controlla('e sono carte davvero in home',
+            sei.domande.quali.every(n => accesi.has(n)))
+}
+
+/* ── UN GRUPPO DI SAPERE CHE A QUELL'ETÀ NON TOCCA NIENTE ──
+   Acceso vuol dire «le sue domande non sono state tolte», non «gli
+   arrivano tutte»: a tagliare è l'età, fino alla singola tipologia. Un
+   gruppo che a quest'età non ha nemmeno una domanda dentro la finestra
+   non si sta dando per scontato — e a quattro anni «com'è fatto un
+   animale», la cui unica domanda è dichiarata otto anni, compariva
+   fra le cose date per scontate. */
+{
+  const q4 = quadroDi({ eta: 4, ...eccezioniPerEta(4) }, { classi })
+  const nomi4 = q4.sa.map(x => x.chiave)
+  controlla('a 4 anni non si dà per scontato «com\'è fatto un animale»',
+            !nomi4.includes('adattamento'), nomi4.join(' · '))
+  controlla('ma i numeri e le quantità sì, che le domande ce le hanno',
+            nomi4.includes('numeri'))
+
+  /* ── E SI TAGLIA SOLO IL TETTO ──
+     Il verso in basso è l'errore da non fare: a undici anni «leggere le
+     parole» sta sotto la finestra — quelle domande non gliele chiediamo
+     più — e toglierla dall'elenco direbbe l'opposto della verità. Sotto
+     la finestra un sapere è dato per scontato più che mai. */
+  const q11 = quadroDi({ eta: 11, sa: {} }, { classi })
+  controlla('a 11 anni «leggere le parole» resta fra le cose date per scontate',
+            q11.sa.some(x => x.chiave === 'lettura'), q11.sa.map(x => x.chiave).join(' · '))
+  uguale('e a quell\'età non si toglie proprio niente',
+         q11.sa.length, SAPERI.filter(x => x.difetto !== false).length)
+
+  /* E crescendo se ne aggiungono, non se ne tolgono: la finestra sale. */
+  const q8 = quadroDi({ eta: 8, sa: {} }, { classi })
+  controlla('a 8 anni si dà per scontato più che a 4',
+            q8.sa.length > quadroDi({ eta: 4, sa: {} }, { classi }).sa.length,
+            `${quadroDi({ eta: 4, sa: {} }, { classi }).sa.length} → ${q8.sa.length}`)
+
+  /* Ogni riga porta con sé come si disegna: icona e materia sono quello
+     che mancava perché il blocco avesse la stessa forma degli altri. */
+  controlla('ogni sapere elencato sa dire la sua icona e la sua materia',
+            q8.sa.every(x => x.ico && x.materia))
+
+  /* ── LO STESSO PEZZO DI SCUOLA IN DUE BLOCCHI ──
+     È il punto di tutta la forma: un gruppo non ha *un* livello, ha le
+     sue domande sparse su più fasce — le figure piane sono roba che sa
+     già fare per due domande e roba tosta per una terza. Prima esisteva
+     un blocco a parte, «dà per scontato che sappia», fatto di gruppi
+     mentre gli altri erano fatti di classi: due unità di misura per la
+     stessa roba, e nessuna delle due diceva l'altra.
+
+     Se questo controllo diventasse rosso senza che nessuno l'abbia
+     voluto, vorrebbe dire che il raggruppamento ha ricominciato a
+     tenere ogni gruppo in un blocco solo — cioè che è tornato a
+     mentire. */
+  const doveSta = chiave => q8.gruppi
+    .filter(g => g.saperi.some(s => s.chiave === chiave)).map(g => g.chiave)
+  const sparsi = SAPERI.map(s => s.chiave).filter(k => doveSta(k).length > 1)
+  controlla('a 8 anni almeno un pezzo di scuola sta in due blocchi',
+            sparsi.length > 0, sparsi.map(k => `${k}: ${doveSta(k).join('+')}`).join(' · '))
+
+  /* ── E NESSUNA DOMANDA SI PERDE PER STRADA ──
+     Raggruppare è il momento in cui si perde roba senza accorgersene:
+     una classe che non trova il suo gruppo sparisce dall'elenco e il
+     conteggio in cima resta quello di prima, quindi il blocco dice 57 e
+     ne mostra 55. Il conto dei pezzi deve fare il conto del blocco. */
+  const buchi = []
+  for (const eta of [6, 8, 10]) {
+    const q = quadroDi({ eta, ...eccezioniPerEta(eta) }, { classi })
+    for (const g of q.gruppi) {
+      const dentro = g.saperi.reduce((n, s) => n + s.quante, 0)
+      if (dentro !== g.quante) buchi.push(`${eta}a ${g.chiave}: ${dentro} di ${g.quante}`)
+      /* e ogni classi elencata sotto un pezzo di scuola è una di quelle
+         del blocco, non una pescata da un'altra fascia */
+      const sue = new Set(g.righe.map(r => r.chiave))
+      for (const s of g.saperi)
+        for (const c of s.classi)
+          if (!sue.has(c.chiave)) buchi.push(`${eta}a ${g.chiave}/${s.chiave}: ${c.chiave} è di un'altra fascia`)
+    }
+  }
+  uguale('ogni domanda finisce sotto un pezzo di scuola, e nel blocco giusto',
+         buchi.join(' · '), '')
+
+  /* Il gruppo di una domanda è **il più specifico** che dichiara, come
+     nella scheda delle domande: una conversione di pesi sta sotto
+     «Metri, litri e chili» e sotto «Le conversioni», e quello che il
+     grande ha in mente è il più stretto. */
+  {
+    const q = quadroDi({ eta: 10, ...eccezioniPerEta(10) }, { classi })
+    const doppie = q.gruppi.flatMap(g => g.saperi.flatMap(s =>
+      s.classi.filter(c => (c.sa || []).length > 1).map(c => ({ s: s.chiave, c }))))
+    const larghe = doppie.filter(({ s, c }) => {
+      const quante = k => classi.filter(x => (x.sa || []).includes(k)).length
+      return c.sa.some(k => quante(k) < quante(s))
+    })
+    uguale('una domanda finisce sotto il gruppo più stretto che dichiara',
+           larghe.map(({ s, c }) => `${c.nome} → ${s}`).join(' · '), '')
+    nota(`domande che dichiarano più di un gruppo: ${doppie.length}`)
+  }
+}
+
 
 riassunto('il quadro di un\'età')

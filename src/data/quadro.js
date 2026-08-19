@@ -46,6 +46,7 @@ import { giocoDaOffrire, arcoDelGioco } from './portata.js'
 import { SAPERI, sapereDi } from './saperi.js'
 import { PARTENZE, eccezioniPerEta } from './partenze.js'
 import { FASCE_ETA, doveCadeCon } from '../quiz/nucleo/catalogo.js'
+import { finestraDi } from '../quiz/nucleo/classi.js'
 
 /* le chiavi spente in una mappa di eccezioni: `{ torri: false }` vuol
    dire spento, l'assenza vuol dire acceso (è il patto di `settings`) */
@@ -146,11 +147,51 @@ const DA_QUANDO = new Map(SAPERI.map(s => {
   return [s.chiave, p ? p.anni : Infinity]
 }))
 
-export function saperiDiUnEta (sa = {}) {
+/* ── E QUELLO CHE A QUEST'ETÀ NON SI DÀ PER SCONTATO ANCORA NIENTE ──
+   Un gruppo di sapere è largo: «i numeri e le quantità» va dal colpo
+   d'occhio sui pallini ai numeri a tre cifre, «le figure piane» dai
+   nomi di quadrato e cerchio agli angoli ottusi. Acceso vuol dire che
+   le sue domande non sono state tolte — non che arrivino tutte, perché
+   a tagliare è l'età, e taglia fino alla singola tipologia
+   (`Modulo.tipiLiberi`).
+
+   Perciò un gruppo che a quest'età non ha **nemmeno una** domanda
+   dentro la finestra non si dà per scontato: si sta solo tenendo acceso
+   un interruttore che non tocca niente. Elencarlo è la cosa che a
+   quattro anni faceva dubitare — «com'è fatto un animale» compariva fra
+   le cose date per scontate, e la sua unica domanda è dichiarata otto
+   anni.
+
+   Chi non ha domande affatto resta, ed è deliberato: un gruppo che vive
+   solo dentro un gioco — le divisioni del castello — non deve sparire,
+   perché è l'unica riga che spiega perché quel gioco chiede quello che
+   chiede. Il taglio è per «ne ha, ma non ancora qui», non per «non
+   ne ha».
+
+   ── E SI TAGLIA SOLO IL TETTO ──
+   Il fondo della finestra non c'entra, ed è il verso che si sbaglia
+   scrivendolo: a undici anni «leggere le parole» sta sotto — quelle
+   domande non gliele chiediamo più perché le indovinerebbe senza
+   pensarci — e togliere quel gruppo dall'elenco direbbe l'opposto della
+   verità. Sotto la finestra un sapere è dato per scontato **più** che
+   mai; è sopra che non lo è ancora. */
+export function saperiDiUnEta (sa = {}, { classi = [], eta = null } = {}) {
   const spenti = new Set(spente(sa))
+  const finestra = finestraDi(eta)
+  /* quali gruppi cita ogni classe, e quali di quelle citazioni non sono
+     oltre il tetto: la differenza fra i due insiemi è il taglio */
+  const citati = new Set()
+  const vivi = new Set()
+  for (const c of classi)
+    for (const chiave of (c.sa || [])) {
+      citati.add(chiave)
+      if (!finestra || c.livello <= finestra[1]) vivi.add(chiave)
+    }
   return SAPERI
     .filter(s => !spenti.has(s.chiave) && s.difetto !== false)
-    .map(s => ({ chiave: s.chiave, nome: s.nome, da: DA_QUANDO.get(s.chiave) ?? 0 }))
+    .filter(s => !citati.has(s.chiave) || vivi.has(s.chiave))
+    .map(s => ({ chiave: s.chiave, nome: s.nome, ico: s.ico, materia: s.materia,
+                 da: DA_QUANDO.get(s.chiave) ?? 0 }))
     .sort((a, b) => b.da - a.da)
 }
 
@@ -159,6 +200,45 @@ export function saperiDiUnEta (sa = {}) {
    modulo, concatenate). Senza, la metà delle domande resta vuota e il
    resto funziona lo stesso: è il caso di Node, dove il registro non
    esiste, ed è meglio di un errore. */
+/* ── CHI, IN CASA, PESCA DAVVERO DAI MODULI DI QUIZ ──
+   Il difetto che questa funzione ripara è il più costoso che un
+   riassunto possa avere: **dire una cosa che non succede**. Da quattro
+   a cinque anni e mezzo in casa ci sono Conta gli animali, Prima e dopo
+   e la fattoria — e nessuno dei tre passa da `src/quiz/`. I quattro
+   blocchi delle domande elencavano lo stesso undici classi, con nomi,
+   livelli e tastini per provarle: un genitore le leggeva come «ecco
+   cosa gli chiederemo», e non gliele avremmo chieste mai.
+
+   Il primo gioco che le pesca arriva a sei anni, tutto insieme
+   (Survivors, il Dungeon, il sotterraneo). Dirlo è utile — è la
+   risposta a «cosa si guadagna salendo ancora» — dirlo mentendo no.
+
+   Il conto di *quando* guarda i difetti di ogni età, non le eccezioni
+   di questo bambino: è la stessa promessa che fa già `giochiDiUnEta`
+   con `provato: false`, cioè «cosa si offrirebbe a chi arriva a
+   quell'età». Un grande che ha spento il Dungeon a mano lo vede scritto
+   nel blocco dei giochi, dove è la verità sua. */
+const PASSO_ETA = 0.5
+const MAX_ETA = 12
+
+export function domandeDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false } = {}) {
+  const chiedono = elenco => elenco
+    .filter(g => g.stato === QUI && GIOCHI.some(x => x.chiave === g.chiave && x.quiz))
+  const qui = chiedono(giochiDiUnEta({ eta, giochi, sa, sperimentali }))
+  if (qui.length) return { chiedono: true, quali: qui.map(g => g.nome), da: null }
+
+  /* nessuno: da che età ne arriverebbe uno. Mezzo anno per volta, come
+     si muove la manopola — un'età che la manopola non può fermarsi a
+     dire non serve a niente. */
+  for (let e = (Number(eta) || 0) + PASSO_ETA; e <= MAX_ETA; e += PASSO_ETA) {
+    const suoi = eccezioniPerEta(e)
+    const trovati = chiedono(giochiDiUnEta({ eta: e, giochi: suoi.giochi, sa: suoi.sa,
+                                             sperimentali }))
+    if (trovati.length) return { chiedono: false, quali: trovati.map(g => g.nome), da: e }
+  }
+  return { chiedono: false, quali: [], da: null }
+}
+
 export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = {},
                           { classi = [] } = {}) {
   const spenti = spente(sa)
@@ -170,6 +250,9 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
     modulo: c.nomeModulo,
     icona: c.icona,
     livello: c.livello,
+    /* la stessa cosa in anni: è la lingua in cui un grande giudica —
+       nessuno guarda un «54», tutti guardano «otto anni e mezzo» */
+    anni: c.anni,
     /* tutto quello che serve a **rigenerare** quella domanda, nella
        forma che vuole `quiz/nucleo/esempi.js`: è il motivo per cui una
        riga di questo elenco si può provare col dito senza che chi la
@@ -177,6 +260,10 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
        dica tutto non funziona — «le analogie fra figure» a un grande non
        dice nemmeno che aspetto ha la domanda. */
     sorgente: c.sorgente,
+    /* i pezzi di scuola che questa domanda dà per scontati: è la chiave
+       con cui si raggruppa, e senza qui il quadro non saprebbe dire di
+       che materia è una classe */
+    sa: c.sa || [],
     /* una classe spenta non cade in nessuna fascia: è tolta prima, e
        metterla fra le «troppo facili» direbbe una cosa falsa */
     dove: (c.sa || []).some(s => spenti.includes(s)) || spenti.includes(c.tipo)
@@ -224,21 +311,77 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
     return [chiave, righe]
   })
   const gruppo = chiave => (gruppi.find(([k]) => k === chiave) || [, []])[1]
+
+  /* ── E DENTRO OGNI BLOCCO, I PEZZI DI SCUOLA ──
+     Le quattro fasce erano elenchi di classi, e accanto c'era un quinto
+     blocco — «dà per scontato che sappia» — fatto di gruppi di sapere.
+     Due unità di misura per la stessa roba, e nessuna delle due diceva
+     l'altra: guardando «Le figure piane» fra le cose date per scontate
+     non si sapeva se volesse dire i nomi delle figure o gli angoli
+     ottusi, e guardando «Contare lati e vertici» fra quelle che sta
+     imparando non si sapeva che pezzo di scuola fosse.
+
+     Adesso l'unità è una sola. Ogni blocco raccoglie **i gruppi**, e
+     dentro un gruppo le sue classi di quella fascia — quindi lo stesso
+     gruppo può stare in due blocchi, ed è il punto: le figure piane
+     sono roba che sta imparando per due domande e roba tosta per una
+     terza. Il ▶ su un gruppo scorre quelle lì e nient'altro.
+
+     IL GRUPPO DI UNA CLASSE È IL PIÙ SPECIFICO che dichiara, con la
+     stessa regola della scheda delle domande (`quiz/catalogo.js`): una
+     conversione di pesi sta sotto «Metri, litri e chili» e sotto «Le
+     conversioni», e quello che il grande ha in mente è quasi sempre il
+     più stretto, cioè quello che tiene meno domande. */
+  const quanteHa = {}
+  for (const c of classi) for (const k of (c.sa || [])) quanteHa[k] = (quanteHa[k] || 0) + 1
+  const gruppoDi = sa => (sa || []).slice()
+    .sort((x, y) => (quanteHa[x] || 0) - (quanteHa[y] || 0))[0] || null
+
+  const perSapere = righe => {
+    const dentro = new Map()
+    for (const r of righe) {
+      const chiave = gruppoDi(r.sa) || 'altro'
+      if (!dentro.has(chiave)) dentro.set(chiave, [])
+      dentro.get(chiave).push(r)
+    }
+    return [...dentro.entries()]
+      .map(([chiave, classi]) => {
+        const s = sapereDi(chiave)
+        return {
+          chiave,
+          nome: s?.nome || chiave,
+          ico: s?.ico || '•',
+          quante: classi.length,
+          /* il livello più alto che il gruppo tocca in questa fascia:
+             serve a metterlo in fila con gli altri, e a dire quale pezzo
+             di quel gruppo si sta guardando */
+          livello: Math.max(...classi.map(c => c.livello)),
+          classi,
+        }
+      })
+      /* i più impegnativi per primi, come le classi dentro il gruppo */
+      .sort((a, b) => b.livello - a.livello)
+  }
   return {
     anni: eta,
     /* l'elenco intero, ognuno col suo stato: chi mostra decide se
        aprirlo o riassumerlo, ma il dato è sempre tutto */
     giochi: giochiDiUnEta({ eta, giochi, sa, sperimentali }),
     /* quello che il gioco dà per scontato, i più recenti per primi */
-    sa: saperiDiUnEta(sa),
+    sa: saperiDiUnEta(sa, { classi, eta }),
+    /* chi gliele chiede, queste domande — e se in casa non c'è nessuno,
+       da che età ne arriva uno */
+    domande: domandeDiUnEta({ eta, giochi, sa, sperimentali }),
     /* L'ordine è quello in cui si leggono: dal già saputo al non
        ancora, e in fondo quello che non gli si chiede più. Le «troppo
        difficili» non ci sono: sono fuori dalla sua portata e non gli
        arrivano, e un elenco di roba che non vedrà non aiuta a
        decidere niente — quello che serve sapere, cioè che salendo
        arriverebbero, lo dice già la manopola salendo. */
-    gruppi: ['facili', 'medie', 'toste', 'sotto'].map(chiave =>
-      ({ chiave, righe: gruppo(chiave) })),
+    gruppi: ['facili', 'medie', 'toste', 'sotto'].map(chiave => {
+      const righe = gruppo(chiave)
+      return { chiave, righe, saperi: perSapere(righe), quante: righe.length }
+    }),
     /* ── IL CENSIMENTO GREZZO ──
        Non è quello che si mostra, e i numeri **non combaciano** con la
        lunghezza dei gruppi: qui ogni classe si conta una volta, lì i

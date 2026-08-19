@@ -163,8 +163,20 @@ async function entra() {
          abbia. Qui serve anche di più che di là, perché chi è al primo
          avvio non ha ancora visto **nessuna** domanda del gioco, e sta
          decidendo su un elenco di titoli. Provare non scrive niente. -->
+    <!-- l'età va passata anche qui: un gruppo di sapere è largo, e senza
+         il ▶ su «i numeri e le quantità» pescherebbe fra tutte le sue
+         domande — a quattro anni si finiva su una dichiarata otto e
+         mezzo (`quiz/nucleo/esempi.js`) -->
+    <!-- `giro` va inoltrato come gli altri tre, e la sua assenza non
+         dava nessun errore: il ▶ di un pezzo di scuola manda la lista
+         delle sue domande, qui andava persa, e `Prova` ripiegava sul
+         modo «pesca come in partita» — si partiva da «i numeri e le
+         quantità» e la domanda dopo era di logica. Un ripiego che
+         funziona è il modo più caro di rompersi. -->
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
-           :sorgente="prova.sorgente || null" @chiudi="prova = null" />
+           :sorgente="prova.sorgente || null" :giro="prova.giro || null"
+           :eta="prova.eta ?? null"
+           @chiudi="prova = null" />
   </div>
 </template>
 
