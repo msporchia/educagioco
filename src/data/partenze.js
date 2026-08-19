@@ -59,7 +59,15 @@ import { GIOCHI } from './giochi.js'
 
    È un numero solo (`anni`, da non confondere con `eta`, che è
    l'etichetta che si legge sulla carta) e sta in mezzo alla fascia:
-   «prima o seconda» è 6,5. Non è un dato anagrafico — nessuno chiede la data di nascita —
+   «prima o seconda» è 6,5.
+
+   LE QUATTRO CARTE SONO UNA SCORCIATOIA, NON UNA GABBIA. Da quando
+   l'età è un numero che si sposta di mezzo anno per volta, scegliere
+   fra quattro gruppi serve solo a non far cominciare nessuno da un
+   modulo vuoto: dal giorno dopo si tocca il numero e basta, dalla carta
+   del bambino nella schermata dei grandi. Le carte lo dicono, perché un
+   genitore che crede di aver scelto una categoria non va più a
+   cercarla. Non è un dato anagrafico — nessuno chiede la data di nascita —
    è la taratura delle domande, e da lì in poi si sposta a mano. */
 
 /* Quattro e non sei: le partenze servono a far partire, non a

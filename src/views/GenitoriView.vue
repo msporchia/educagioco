@@ -15,7 +15,7 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          creaGiocatore, rinominaGiocatore, eliminaGiocatore, selectPlayer,
          saperiCheMancano,
          giocoAcceso, accendiGioco, quantiGiochiAccesi, applicaPartenza,
-         etaDelBambino,
+         etaDelBambino, scegliEta,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
@@ -77,7 +77,7 @@ const nuovo = ref('')
    ('sa'). Erano una colonna sola e i macrogruppi l'avrebbero fatta
    lunga il doppio, con due cose diverse mescolate: quali giochi
    compaiono, e quali domande hanno senso per questo bambino. */
-const scheda = ref('giochi')
+const scheda = ref('bambini')
 
 /* i guasti registrati da `incidenti.js`: si leggono una volta all'entrata
    e non si stanno a guardare in diretta — chi apre questa pagina lo fa
@@ -372,6 +372,23 @@ function apriRifascia() { chiudiTutto(); rifasciando.value = true }
 /* Per che età il gioco sta scegliendo le domande adesso, detto con il
    nome di una partenza quando ce n'è una che combacia: «6,5» non vuol
    dire niente a nessuno, «Prima o seconda» sì. */
+/* ── l'età, nella riga del bambino ──
+   È il numero da cui dipende tutto quello che i giochi gli chiedono, e
+   fino a ieri si poteva vedere solo aprendo la scheda delle domande. Ma
+   «quanti anni ha» uno se lo chiede guardando l'elenco dei bambini, non
+   un catalogo di quiz: sta qui, si sposta di mezzo anno per volta, e
+   l'effetto si guarda di là. */
+const giroEta = ref(0)
+const anniOra = computed(() => (giroEta.value, etaDelBambino()))
+function cambiaAnni(passo) {
+  const nuova = Math.round((anniOra.value + passo) * 2) / 2
+  if (nuova < 4 || nuova > 12) return
+  scegliEta(nuova)
+  giroEta.value++
+  esito.value = { ok: true, testo: `${chi.value} ha ${String(nuova).replace('.', ',')} anni: `
+    + 'le domande si spostano di conseguenza. Quali, si vede nella scheda «Domande».' }
+}
+
 const etaOra = computed(() => {
   const anni = etaDelBambino()
   const p = PARTENZE.find(x => x.anni === anni)
@@ -639,102 +656,36 @@ async function azzera() {
     <div v-else class="centro">
       <h2>Impostazioni di {{ chi }}</h2>
 
+      <!-- ── TRE SCHEDE ──
+           Una per domanda che un grande si fa: *chi gioca su questo
+           telefono*, *cosa gli chiedono i giochi*, *cosa vede in home*.
+           Erano due, e la terza è nata togliendo «Cosa sa» — che
+           mostrava le stesse cose delle domande dette in un altro modo —
+           e tirando fuori i bambini da sotto i giochi, dov'erano finiti
+           per abitudine. Ogni sezione dice in una riga cosa fa: sono
+           gesti che si fanno una volta ogni tanto, e nessuno si ricorda
+           cosa faceva quello di fianco. -->
       <div class="schede">
+        <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini"
+                @click="scheda = 'bambini'">Bambini</button>
+        <button :class="{ ora: scheda === 'domande' }" data-scheda="domande"
+                @click="scheda = 'domande'">Domande</button>
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
                 @click="scheda = 'giochi'">Giochi</button>
-        <button :class="{ ora: scheda === 'domande' }" data-scheda="domande"
-                @click="scheda = 'domande'">Le domande</button>
       </div>
 
-      <!-- ══════════ scheda: tutte le domande ══════════ -->
-      <Catalogo v-if="scheda === 'domande'" :chi="chi" @prova="apriDalCatalogo" />
+      <!-- ══════════ scheda: i bambini ══════════ -->
+      <template v-if="scheda === 'bambini'">
+      <!-- ══ quello che il bambino ha già detto giocando ══
+           Sta in cima e non nella scheda delle domande, ed è tutto il
+           punto: le manopole c'erano già e non le toccava nessuno,
+           perché nessuno va a cercare un problema che non sa di avere.
+           Qui il verso si gira — il gioco dice cosa ha notato, il grande
 
-      <!-- ══════════ scheda: i giochi ══════════ -->
-      <template v-else>
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !aperto }"
-                data-flag="tuttoAperto" @click="cambiaAperto">
-          <span class="ico">🔓</span>
-          <b>Sblocca tutti i livelli</b>
-          <i>{{ aperto ? 'Segnato — nessun gioco lo legge ancora: per ora non cambia niente'
-                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-
-      <h2>Giochi in home</h2>
-      <p class="mini">Spegnere non cancella niente: i progressi restano al loro posto.</p>
-
-      <div class="carte">
-        <button v-for="g in giochi" :key="g.chiave" class="carta interruttore gioco"
-                :class="{ spento: !g.acceso, bloccato: !!g.manca }" :data-gioco="g.chiave"
-                @click="cambiaGioco(g)">
-          <span class="ico">{{ g.ico }}</span>
-          <b>{{ g.nome }}</b>
-          <i v-if="g.manca">è tutto «{{ g.manca }}», che hai spento fra le domande</i>
-          <i v-else>{{ g.che }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-      <p v-if="!accesi" class="avviso">Sono spenti tutti: nella home di
-        {{ chi }} non resta nessun gioco.</p>
-
-      <!-- ── dentro un gioco ──
-           Non spegne una carta e non spegne un pezzo di scuola: spegne un
-           MODO di giocare. Sono qui perché è qui che si viene a togliere
-           di mezzo quello che adesso non serve. -->
-      <h2>Dentro gli asteroidi</h2>
-      <p class="mini">Negli asteroidi le tabelline e i conti a mente sono una scaletta
-        sola, ordinata dal più facile al più difficile.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
-                data-flag="mente" @click="cambiaMente">
-          <span class="ico">🧠</span>
-          <b>Anche i conti a mente</b>
-          <i>{{ menteAccesa
-                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
-                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-
-      <!-- ── i giochi in prova ──
-           Il cancello, e dietro il cancello quello che c'è. Spento, i
-           giochi a metà non esistono per chi gioca: non sono in home e
-           non sono nemmeno qui, perché non c'è niente da accendere. -->
-      <h2>Giochi in prova</h2>
-      <p class="mini">Roba che sto ancora scrivendo: si vede a metà e può cambiare da un
-        giorno all'altro. Acceso, {{ chi }} li trova in home insieme agli altri.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !inProva }"
-                data-flag="sperimentali" @click="cambiaProva">
-          <span class="ico">🧪</span>
-          <b>Mostra i giochi in prova</b>
-          <i>{{ inProva ? (sperimentali.length === 1
-                            ? '1 gioco in prova, e ' + chi.value + ' lo vede'
-                            : sperimentali.length + ' giochi in prova, e ' + chi.value + ' li vede')
-                        : 'Nascosti: in home non compaiono' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
-        <button v-for="g in sperimentali" :key="g.chiave" class="carta interruttore gioco prova"
-                :class="{ spento: !g.acceso }" :data-gioco="g.chiave"
-                @click="cambiaGioco(g)">
-          <span class="ico">{{ g.ico }}</span>
-          <b>{{ g.nome }} <small>in prova</small></b>
-          <i>{{ g.che }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-      </template>
-
-      <!-- chi gioca, il salvataggio e il codice non stanno in nessuna
-           delle due schede: sono le cose che si vengono a fare qui di
-           corsa, e nasconderle dietro una linguetta vorrebbe dire
-           cercarle -->
       <h2>Chi gioca</h2>
+      <p class="mini">Un bambino per riga, coi suoi progressi separati. Qui si cambiano il
+        nome, la faccia e <b>quanti anni ha</b> — il numero da cui dipendono le domande
+        che riceve.</p>
 
       <div class="carte">
         <template v-for="g in state.giocatori" :key="g.id">
@@ -778,6 +729,20 @@ async function azzera() {
                  fratello non è in memoria, vedi il commento sopra
                  `aspettoAttuale` -->
             <div v-if="g.id === state.player" class="aspetto-sezione">
+              <!-- ── quanti anni ha ──
+                   Il numero che decide quali domande gli arrivano, messo
+                   dove uno lo cerca: nella riga del bambino. -->
+              <p class="mini">Quanti anni ha — decide le domande che riceve</p>
+              <div class="anni-riga">
+                <button type="button" class="anni-tasto" data-anni="giu"
+                        :disabled="anniOra <= 4" aria-label="mezzo anno in meno"
+                        @click="cambiaAnni(-0.5)">−</button>
+                <b data-anni-ora>{{ String(anniOra).replace('.', ',') }} anni</b>
+                <button type="button" class="anni-tasto" data-anni="su"
+                        :disabled="anniOra >= 12" aria-label="mezzo anno in più"
+                        @click="cambiaAnni(0.5)">+</button>
+              </div>
+
               <p class="mini">Con che faccia si vede in mappa</p>
               <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
                              @scegli="cambiaAspetto" />
@@ -837,6 +802,8 @@ async function azzera() {
                     :data-partenza="p.chiave" @click="partenzaScelta = p.chiave">
               <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
               <i>{{ p.che }}</i>
+              <small>domande tarate su {{ String(p.anni).replace('.', ',') }} anni,
+                poi si sposta</small>
             </button>
           </div>
 
@@ -860,6 +827,8 @@ async function azzera() {
       </div>
 
       <h2>Progressi</h2>
+      <p class="mini">Monete, animali, campagne e traguardi: si salvano su un file, si
+        rimettono da un file, o si cancellano per ricominciare da zero.</p>
 
       <div class="carte">
         <button class="carta" @click="esporta">
@@ -939,6 +908,8 @@ async function azzera() {
            leggere ogni volta per non sapere niente. -->
       <template v-if="incidenti.length">
         <h2>Se qualcosa si è rotto</h2>
+        <p class="mini">Gli errori che il gioco si è annotato da solo, con l'ora e la
+          versione: servono a capire cos'è successo su un telefono che non è il tuo.</p>
 
         <div class="carte">
           <div class="carta guasti" data-azione="guasti">
@@ -980,6 +951,8 @@ async function azzera() {
            dirmelo comparisse solo quando c'è già un errore in archivio,
            mancherebbe esattamente quando serve di più. -->
       <h2>Dirmi che qualcosa non va</h2>
+      <p class="mini">Un livello impossibile, una parola sbagliata, un tasto che risponde e
+        fa la cosa storta: le cose che nessun errore in archivio racconta.</p>
 
       <div class="carte">
         <a class="carta segnala" data-azione="segnala" :href="linkSegnala"
@@ -991,6 +964,11 @@ async function azzera() {
           <i v-else>Si apre un modulo, con già dentro la versione del gioco</i>
         </a>
       </div>
+      </template>
+
+      <!-- ══════════ scheda: le domande ══════════ -->
+      <template v-else-if="scheda === 'domande'">
+        <Catalogo :chi="chi" @prova="apriDalCatalogo" />
 
       <!-- ── GIUDICARE LE DOMANDE ──
            L'altra metà di quello che non va, e quella che nessun errore
@@ -1002,6 +980,9 @@ async function azzera() {
            il resto (modulo, grado, tipologia, tempo, esito) se lo
            annota il gioco da solo. -->
       <h2>Le domande dei quiz</h2>
+      <p class="mini">Acceso, sopra ogni domanda compaiono tre tastini per dire com'era:
+        😴 troppo facile, 😰 troppo difficile, 🐛 storta. Serve a correggere le tarature
+        sbagliate, ed esce di qui col modulo di segnalazione.</p>
 
       <div class="carte">
         <button class="carta interruttore" :class="{ spento: !giudiziAccesi }"
@@ -1038,6 +1019,89 @@ async function azzera() {
           </div>
         </div>
       </div>
+      </template>
+
+      <!-- ══════════ scheda: i giochi ══════════ -->
+      <template v-else>
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !aperto }"
+                data-flag="tuttoAperto" @click="cambiaAperto">
+          <span class="ico">🔓</span>
+          <b>Sblocca tutti i livelli</b>
+          <i>{{ aperto ? 'Segnato — nessun gioco lo legge ancora: per ora non cambia niente'
+                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
+
+      <h2>Giochi in home</h2>
+      <p class="mini">Quali carte {{ chi }} si trova in home. Spegnere non cancella niente:
+        i progressi restano al loro posto e riaccendendo si ritrovano tutti.</p>
+
+      <div class="carte">
+        <button v-for="g in giochi" :key="g.chiave" class="carta interruttore gioco"
+                :class="{ spento: !g.acceso, bloccato: !!g.manca }" :data-gioco="g.chiave"
+                @click="cambiaGioco(g)">
+          <span class="ico">{{ g.ico }}</span>
+          <b>{{ g.nome }}</b>
+          <i v-if="g.manca">è tutto «{{ g.manca }}», che hai spento fra le domande</i>
+          <i v-else>{{ g.che }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
+      <p v-if="!accesi" class="avviso">Sono spenti tutti: nella home di
+        {{ chi }} non resta nessun gioco.</p>
+
+      <!-- ── dentro un gioco ──
+           Non spegne una carta e non spegne un pezzo di scuola: spegne un
+           MODO di giocare. Sono qui perché è qui che si viene a togliere
+           di mezzo quello che adesso non serve. -->
+      <h2>Dentro gli asteroidi</h2>
+      <p class="mini">Negli asteroidi le tabelline e i conti a mente sono una scaletta
+        sola, ordinata dal più facile al più difficile.</p>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
+                data-flag="mente" @click="cambiaMente">
+          <span class="ico">🧠</span>
+          <b>Anche i conti a mente</b>
+          <i>{{ menteAccesa
+                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
+                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
+
+      <!-- ── i giochi in prova ──
+           Il cancello, e dietro il cancello quello che c'è. Spento, i
+           giochi a metà non esistono per chi gioca: non sono in home e
+           non sono nemmeno qui, perché non c'è niente da accendere. -->
+      <h2>Giochi in prova</h2>
+      <p class="mini">Roba che sto ancora scrivendo: si vede a metà e può cambiare da un
+        giorno all'altro. Acceso, {{ chi }} li trova in home insieme agli altri.</p>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !inProva }"
+                data-flag="sperimentali" @click="cambiaProva">
+          <span class="ico">🧪</span>
+          <b>Mostra i giochi in prova</b>
+          <i>{{ inProva ? (sperimentali.length === 1
+                            ? '1 gioco in prova, e ' + chi.value + ' lo vede'
+                            : sperimentali.length + ' giochi in prova, e ' + chi.value + ' li vede')
+                        : 'Nascosti: in home non compaiono' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <button v-for="g in sperimentali" :key="g.chiave" class="carta interruttore gioco prova"
+                :class="{ spento: !g.acceso }" :data-gioco="g.chiave"
+                @click="cambiaGioco(g)">
+          <span class="ico">{{ g.ico }}</span>
+          <b>{{ g.nome }} <small>in prova</small></b>
+          <i>{{ g.che }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
+      </template>
 
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
     </div>

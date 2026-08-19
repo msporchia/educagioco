@@ -39,6 +39,16 @@ const vaiAiGenitori = async () => {
   await page.waitForSelector('.tastierino', { timeout: 5000 })
 }
 const digita = async pin => { for (const c of pin) await page.click(`.tasto >> text="${c}"`) }
+/* Le schede sono tre — bambini, domande, giochi — e si entra da
+   «bambini»: chi arriva qui di corsa viene quasi sempre per un bambino.
+   Il test dice ogni volta dove vuole andare, invece di dare per scontata
+   quella aperta: è la differenza fra un test che si rompe quando si
+   cambia il difetto e uno che si rompe quando si rompe qualcosa. */
+const apriScheda = async nome => {
+  await page.waitForSelector(`.schede button[data-scheda="${nome}"]`, { timeout: 5000 })
+  await page.click(`.schede button[data-scheda="${nome}"]`)
+  await page.waitForTimeout(150)
+}
 
 /* ── 1. il gradino tiene ── */
 await vaiAiGenitori()
@@ -183,6 +193,7 @@ controlla('di partenza il castello è in home', await inHome('.carta.td'))
 
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('giochi')
 await page.waitForSelector('.carta.gioco', { timeout: 5000 })
 /* quanti sono lo dice l'elenco, non un numero scritto qui: un gioco nuovo
    deve far comparire il suo interruttore, non diventare rosso questo test.
@@ -218,6 +229,7 @@ controlla('la scelta resta dopo un riavvio', !(await page.isVisible('.carta.td')
 
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('giochi')
 await page.waitForSelector('.carta.gioco', { timeout: 5000 })
 await page.click('.carta.gioco[data-gioco="torri"]')
 await page.waitForTimeout(150)
@@ -241,6 +253,7 @@ if (IN_PROVA.length) {
 
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
   uguale('e non c\'è nemmeno il suo interruttore',
          await page.locator('.carta.gioco.prova').count(), 0)
@@ -258,6 +271,7 @@ if (IN_PROVA.length) {
      si spegne e si riaccende come tutti gli altri */
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.click(suaCarta)
   await page.waitForTimeout(200)
   controlla('e dietro il cancello vale l\'interruttore di sempre',
@@ -267,6 +281,7 @@ if (IN_PROVA.length) {
      rispegnere, e da chiuso non conta più cosa c'è dietro */
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.click(suaCarta)                        // riacceso il singolo
   await page.waitForTimeout(150)
   await page.click('.carta[data-flag="sperimentali"]')
@@ -298,6 +313,7 @@ if (IN_PROVA.length) {
 
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.waitForSelector('.carta[data-flag="mente"]', { timeout: 5000 })
   controlla('di partenza il calcolo a mente è acceso',
             !(await page.evaluate(() =>
@@ -309,6 +325,7 @@ if (IN_PROVA.length) {
 
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.click('.carta[data-flag="mente"]')
   await page.waitForTimeout(200)
   const corta = await contaMappa()
@@ -324,6 +341,7 @@ if (IN_PROVA.length) {
 
   await vaiAiGenitori()
   await digita('0000')
+  await apriScheda('giochi')
   await page.click('.carta[data-flag="mente"]')      // rimesso com'era
   await page.waitForTimeout(200)
   const tornata = await contaMappa()
@@ -345,12 +363,30 @@ if (IN_PROVA.length) {
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.schede', { timeout: 5000 })
-controlla('le schede sono due, non tre',
-  (await page.locator('.schede button').count()) === 2)
+controlla('le schede sono tre: bambini, domande, giochi',
+  (await page.locator('.schede button').count()) === 3)
 controlla('e «Cosa sa» non c\'è più',
   (await page.locator('.schede button[data-scheda="sa"]').count()) === 0)
 
-await page.click('.schede button[data-scheda="domande"]')
+/* ── l'età sta dove uno la cerca ──
+   È il numero da cui dipende tutto quello che il gioco chiede, e stava
+   solo in fondo alla scheda delle domande. Adesso è nella riga del
+   bambino, dove uno guarda quando pensa «quanti anni ha». */
+await page.click('.schede button[data-scheda="bambini"]')
+await apriScheda('bambini')
+await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
+controlla('la carta di chi gioca mostra l\'età', await page.isVisible('[data-anni-ora]'))
+const anniPrima = (await page.locator('[data-anni-ora]').innerText()).trim()
+await page.click('[data-anni="su"]')
+await page.waitForTimeout(600)
+controlla('e si sposta di mezzo anno per volta',
+  (await page.locator('[data-anni-ora]').innerText()).trim() !== anniPrima,
+  `${anniPrima} → ${(await page.locator('[data-anni-ora]').innerText()).trim()}`)
+uguale('finendo nel profilo', typeof (await leggiProfilo(page)).settings.eta, 'number')
+await page.click('[data-anni="giu"]')      // rimesso com'era
+await page.waitForTimeout(600)
+
+await apriScheda('domande')
 await page.waitForSelector('.blocco .riga', { timeout: 5000 })
 await scatto(page, 'genitori-domande')
 
@@ -381,12 +417,13 @@ controlla('il laboratorio delle pozioni sparisce dalla home',
           !(await inHome('.carta.poz')))
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('giochi')
 await page.waitForSelector('.carta.gioco[data-gioco="pozioni"]', { timeout: 5000 })
 controlla('e la sua carta dice perché',
   (await page.locator('.carta.gioco[data-gioco="pozioni"]').innerText()).includes('spento'))
 
 /* riacceso, torna tutto */
-await page.click('.schede button[data-scheda="domande"]')
+await apriScheda('domande')
 await page.waitForSelector('.blocco', { timeout: 5000 })
 await page.click('[data-apri="spenta"]')
 await page.waitForTimeout(300)
@@ -480,6 +517,7 @@ await page.click('button[aria-label="indietro"]')   // il punto 9 finisce dentro
 await page.waitForSelector('.carte', { timeout: 5000 })
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('bambini')
 await page.waitForSelector('.carta[data-azione="aggiungi-giocatore"]', { timeout: 5000 })
 uguale('di partenza c\'è un giocatore solo',
   await page.locator('.carta.chi-gioca').count(), 1)
@@ -546,6 +584,7 @@ await page.waitForTimeout(500)
    avere un id separato dal nome. */
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
 const suaCarta = `.carta.chi-gioca:has-text("Federica")`
 await page.click(`${suaCarta} button[data-azione="rinomina"]`)
@@ -593,6 +632,7 @@ controlla('e con lui il suo salvataggio', !(await page.evaluate(() =>
    dai profili, come il codice dei genitori, e devono sopravvivere a un
    riavvio e a un cambio di bambino. Se finissero in `settings` questo
    controllo li perderebbe. */
+await apriScheda('domande')       // i giudizi stanno con le domande, non coi giochi
 controlla('l\'interruttore dei giudizi c\'è', await page.isVisible('.carta[data-flag="giudizi"]'))
 controlla('e parte spento',
   await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento')))
@@ -602,7 +642,6 @@ uguale('spento non c\'è niente da mandare',
 await page.click('.carta[data-flag="giudizi"]')
 await page.waitForTimeout(200)
 
-await page.click('button[data-scheda="domande"]')
 await page.waitForSelector('.blocco .riga', { timeout: 5000 })
 await page.locator('.blocco.medie [data-prova-classe]').first().click()
 await page.waitForSelector('.prova-velo', { timeout: 5000 })
@@ -620,6 +659,7 @@ await page.reload()
 await page.waitForSelector('.carte', { timeout: 8000 })
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('domande')
 await page.waitForSelector('.carta[data-flag="giudizi"]', { timeout: 5000 })
 controlla('l\'interruttore è rimasto acceso dopo il riavvio',
   !(await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento'))))
@@ -675,6 +715,7 @@ await page.click('button[aria-label="indietro"]')   // il punto 11 finisce nell'
 await page.waitForSelector('.carte', { timeout: 5000 })
 await vaiAiGenitori()
 await digita('0000')
+await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
 controlla('la carta di chi gioca offre di rimettere la fascia',
   await page.isVisible('button[data-azione="rifascia"]'))

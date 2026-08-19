@@ -246,8 +246,9 @@ committate: non è ricostruibile da git.
   metteva i grado-1 di sedici moduli nello stesso punto. L'elenco delle
   classi sta in `docs/livelli-delle-domande.md`, che è **generato**
   (`npm run quiz:livelli`) e non si scrive a mano.
-  **La schermata dei grandi ha due schede, non tre**: «Giochi» e «Le
-  domande». Quest'ultima elenca tutte le classi **in fila rispetto al
+  **La schermata dei grandi ha tre schede**: «Bambini» (chi gioca, con
+  **quanti anni ha** — il numero che decide le domande — più progressi,
+  codice, guasti), «Domande» e «Giochi». Quest'ultima elenca tutte le classi **in fila rispetto al
   bambino** — cinque blocchi (troppo facili · facili · nel segno ·
   difficili · troppo difficili), le due estreme chiuse ma contate — con
   l'età in cima che sposta il gruppo e, su ogni riga, ▼▲ per ritoccarla

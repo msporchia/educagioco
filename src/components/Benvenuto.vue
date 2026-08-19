@@ -88,8 +88,9 @@ async function entra() {
     <div v-else class="centro fasce">
       <span class="em">🎒</span>
       <h1>{{ pulito }}<br><span>a che punto è?</span></h1>
-      <p class="mini alto">Serve solo a decidere quali giochi mettere in casa sua,
-        e quali domande evitare. Si cambia quando si vuole.</p>
+      <p class="mini alto">Da qui si decide quali giochi mettergli in casa e a che età
+        tarare le domande. Non è una gabbia: l'età si sposta poi di mezzo anno per volta,
+        dalle impostazioni.</p>
 
       <div class="partenze">
         <button v-for="p in PARTENZE" :key="p.chiave" type="button"
@@ -97,6 +98,7 @@ async function entra() {
                 :data-partenza="p.chiave" @click="partenza = p.chiave">
           <b>{{ p.nome }}<em>{{ p.eta }}</em></b>
           <i>{{ p.che }}</i>
+          <small>le domande partono da {{ String(p.anni).replace('.', ',') }} anni</small>
         </button>
       </div>
 
@@ -143,6 +145,7 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
               color:var(--viola-scuro) }
 .partenza b em { font-style:normal; font-size:11px; font-weight:700; color:var(--tenue) }
 .partenza i { font-style:normal; font-size:12px; line-height:1.35; color:var(--tenue) }
+.partenza small { font-size:11px; font-weight:750; color:var(--viola) }
 .partenza.on { background:#f4f1ff; box-shadow:inset 0 0 0 3px var(--viola) }
 .partenza.on b { color:var(--viola) }
 .partenza:active { transform:translateY(1px) }

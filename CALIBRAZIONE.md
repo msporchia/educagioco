@@ -54,7 +54,7 @@ la scala.
 | un gesto | 10–40 s | 🪙1–4 | seminare, raccogliere, avviare il mulino, una crocchetta |
 | una cosetta | 1–5 min | 🪙6–30 | un cespuglio, una panchina, un cibo buono |
 | una cosa vera | 5–25 min | 🪙30–150 | un campo (22), un pezzo di terra (45), un silo (120) |
-| una struttura | 25–60 min | 🪙150–360 | il mulino (150), i recinti (95–260), un animale (75–120) |
+| una struttura | 25–60 min | 🪙150–360 | il mulino e il fienile (150), i recinti (95–260), un animale (75–120) |
 | una spesa lunga | 1–2 ore | 🪙360–720 | gli ingrandimenti alti, la terra dopo il decimo pezzo |
 
 Sopra le due ore non ci va **niente**. Un bambino gioca venti o trenta minuti
