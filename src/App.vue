@@ -11,6 +11,7 @@ import BancarellaGame from './views/BancarellaGame.vue'
 import GeneraleGame from './views/GeneraleGame.vue'
 import AlboView from './views/AlboView.vue'
 import GenitoriView from './views/GenitoriView.vue'
+import Guide from './guide/Guide.vue'
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import { SCHERMATE } from './giochi/schermate.js'
@@ -29,6 +30,10 @@ const viste = { home: HomeView, cameretta: CamerettaView, animali: CamerettaView
                 pozioni: PozioniGame, bancarella: BancarellaGame,
                 generale: GeneraleGame,
                 albo: AlboView, genitori: GenitoriView,
+                /* «Come funziona»: sta fuori dal codice dei genitori
+                   apposta — la prima guida è come si installa, e la
+                   legge chi ha appena ricevuto il link (`guide/Guide.vue`) */
+                guide: Guide,
                 /* i giochi scritti con la convenzione nuova (`src/giochi/`)
                    si registrano da soli: una riga in `schermate.js` e sono
                    raggiungibili da qui e dall'indirizzo, senza toccare

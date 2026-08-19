@@ -726,7 +726,7 @@ async function ridimensiona () {
 
 <template>
   <div class="schermo generale">
-    <Barra :titolo="fase === 'gioco' ? liv.nome : titolo" @indietro="torna">
+    <Barra :titolo="fase === 'gioco' ? liv.nome : titolo" guida="generale" @indietro="torna">
       <template v-if="fase === 'gioco'">
         <!-- ── E IL NUMERO DELLA PROVA NON C'È PIÙ ──
              Diceva a che punto della fila si è, cioè una cosa che si

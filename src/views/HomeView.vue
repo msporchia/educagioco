@@ -22,6 +22,7 @@ import { progresso as progressoDi } from '../giochi/campagne.js'
 import { GIOCHI } from '../data/giochi.js'
 import { giocoDaVedere } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
+import Nastri from '../guide/Nastri.vue'
 
 defineEmits(['vai'])
 
@@ -211,6 +212,12 @@ function aChePunto (chiave) {
            telefono, e quella riga rubava il posto ai giochi. Chi sta
            giocando si legge dalla fila qui sotto quando i giocatori sono
            più di uno, e nell'albo. -->
+
+      <!-- ══ i due nastri ══
+           «Installalo» e «c'è una versione nuova»: parlano tutti e due al
+           grande e stanno tutti e due **solo qui**, che è l'unico posto
+           dove ricaricare non costa una partita (`guide/Nastri.vue`). -->
+      <Nastri @vai="v => $emit('vai', v)" />
 
       <!-- con un giocatore solo non c'è niente da scegliere: la fila
            sparisce invece di mostrare un bottone sempre premuto -->

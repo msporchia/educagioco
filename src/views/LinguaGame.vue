@@ -308,7 +308,7 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
   <div class="schermo">
     <!-- ═══════════ la mappa delle tappe ═══════════ -->
     <template v-if="fase === 'mappa'">
-      <Barra :titolo="L.titolo" monete @indietro="$emit('vai','home')">
+      <Barra :titolo="L.titolo" guida="lingua" monete @indietro="$emit('vai','home')">
         <div class="gettone">⭐ <b>{{ level }}</b></div>
       </Barra>
 
@@ -342,7 +342,7 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
 
     <!-- ═══════════ il gioco ═══════════ -->
     <template v-else-if="fase === 'gioco'">
-      <Barra :titolo="L.titolo" @indietro="allaMappa()">
+      <Barra :titolo="L.titolo" guida="lingua" @indietro="allaMappa()">
         <div class="gettone">✅ <b>{{ hud.giuste }}</b></div>
         <div class="avanz"><i :style="{ width: avanzamento + '%' }"></i></div>
       </Barra>

@@ -104,7 +104,7 @@ onUnmounted(() => clearInterval(battito))
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" monete @indietro="indietro" />
+    <Barra :titolo="titolo" guida="cameretta" monete @indietro="indietro" />
 
     <!-- ═══════════ LA STANZA ═══════════ -->
     <div v-if="sez === 'stanza'" class="dentro">

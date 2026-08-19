@@ -14,16 +14,42 @@
    servono) chiudono a destra. Niente sparisce mai al restringersi dello
    schermo: si stringe solo la parte in mezzo.
    ═══════════════════════════════════════════════════════════════════ */
+import { ref, computed } from 'vue'
 import { state, accendiSuono } from '../store/profile.js'
 import { suono } from '../audio.js'
+import { aiutoDi } from '../guide/contenuti.js'
+import VeloAiuto from '../guide/VeloAiuto.vue'
 
-defineProps({
+const props = defineProps({
   titolo: { type: String, default: '' },
   monete: { type: Boolean, default: false },   // in battaglia contano altre valute
   audio: { type: Boolean, default: true },
   scura: { type: Boolean, default: false },    // per i fondi notturni, tipo lo spazio
+  /* ── IL `?` ──
+     La chiave della schermata (`torri`, `fattoria`, …). Se in
+     `guide/contenuti.js` non c'è niente sotto quel nome il tasto non
+     compare affatto: un `?` che apre un foglio vuoto è peggio di
+     nessun `?`. Chi ha un orologio che gira ascolti `@aiuto`, che dice
+     quando il foglio si apre e quando si chiude. */
+  guida: { type: String, default: '' },
 })
-defineEmits(['indietro'])
+const emit = defineEmits(['indietro', 'aiuto'])
+
+const aiuto = computed(() => aiutoDi(props.guida))
+const apertoAiuto = ref(false)
+function mostraAiuto (v) { apertoAiuto.value = v; emit('aiuto', v) }
+
+/* ── PERCHÉ NON SI APRE DA SOLA ──
+   Era stato provato: al primo ingresso il foglio si presentava da sé,
+   una volta per gioco. Non regge al banco di prova vero, che sono i
+   bambini — **un velo che compare all'apertura lo chiudono senza
+   leggerlo**, per riflesso, e per giunta insegna proprio quello: che i
+   cartelli si mandano via. Una spiegazione letta a forza vale zero, e in
+   cambio si è addestrato il dito a saltare qualunque cosa compaia.
+   Quindi il `?` resta un tasto, e si apre quando lo si tocca. Il posto
+   dove insegnare *giocando* non è un velo prima della partita: è una
+   riga dentro la partita, come i primi passi del tower defense
+   (`views/TowerDefense.vue`). */
 </script>
 
 <template>
@@ -31,6 +57,10 @@ defineEmits(['indietro'])
     <button class="tondo torna" aria-label="indietro" @click="$emit('indietro')">←</button>
     <b v-if="titolo" class="dove">{{ titolo }}</b>
     <div class="mezzo"><slot /></div>
+    <!-- prima dell'audio e mai al posto di «indietro»: la mano di un
+         bambino torna sempre nello stesso angolo -->
+    <button v-if="aiuto" class="tondo" aria-label="aiuto" data-azione="aiuto"
+            @click="mostraAiuto(true)">?</button>
     <div v-if="monete" class="gettone">🪙 <b>{{ state.profile.coins }}</b></div>
     <!-- passa dallo store e non da `suono.muta()`: così la scelta si
          salva nel profilo di chi sta giocando invece di sparire -->
@@ -39,6 +69,7 @@ defineEmits(['indietro'])
       {{ suono.acceso.value ? '🔊' : '🔇' }}
     </button>
   </header>
+  <VeloAiuto v-if="apertoAiuto && aiuto" :aiuto="aiuto" @chiudi="mostraAiuto(false)" />
 </template>
 
 <style scoped>
@@ -52,6 +83,9 @@ defineEmits(['indietro'])
 .mezzo { flex:1; min-width:0; display:flex; align-items:center; gap:6px;
          justify-content:flex-end; overflow:hidden }
 .barra-app .tondo { flex:none }
+/* il `?` non deve competere col tasto per tornare indietro: stessa forma
+   degli altri tondi chiari, nessun colore che chiami */
+.barra-app .tondo[aria-label="aiuto"] { font-weight:900; color:var(--viola-scuro) }
 /* Il tasto per tornare indietro è il solo che un bambino deve trovare senza
    cercarlo: pieno, colorato, con l'ombra sotto come i bottoni veri, e una
    freccia intera invece di un accento. Gli altri restano chiari. */

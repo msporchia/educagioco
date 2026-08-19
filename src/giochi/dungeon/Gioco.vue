@@ -422,7 +422,7 @@ function indietro() {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" :monete="!corsa" scura @indietro="indietro">
+    <Barra :titolo="titolo" guida="dungeon" :monete="!corsa" scura @indietro="indietro">
       <!-- Un bottone solo, non cinque gettoni: i numeri che servono a
            decidere, e toccandoli si apre la scheda con l'equipaggiamento.
            Le emoji degli oggetti stavano qui e spingevano fuori il

@@ -236,7 +236,7 @@ function chiudiSpiegazione() {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" monete @indietro="indietro">
+    <Barra :titolo="titolo" guida="codice" monete @indietro="indietro">
       <button class="tondo" aria-label="come si gioca" @click="spiega = true">?</button>
     </Barra>
 

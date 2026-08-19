@@ -68,6 +68,8 @@ const FERMO_PX = 16
 
 const tela = ref(null)
 const corsa = shallowRef(null)
+/* aperto il foglio del `?`, il tempo del sotterraneo si ferma */
+const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)
 const domanda = ref(null)
 const fine = ref(null)
@@ -320,7 +322,9 @@ function giro() {
     prima = ora
     orologio += dt
     const c = corsa.value
-    if (!c || c.finita) return
+    /* col foglio del `?` davanti il sotterraneo sta fermo: il velo copre
+       lo schermo, e quello che si muove sotto non lo vede nessuno */
+    if (!c || c.finita || aiutoAperto.value) return
     c.passo(dt)
     /* col foglio aperto la telecamera alza l'eroe, così la porta o il
        forziere di cui si sta leggendo restano visibili sopra il

@@ -49,6 +49,9 @@ const RESPIRO = 700          // quanto si guarda la pista prima del cartello
 
 /* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | pista
+/* col foglio del `?` aperto la pista sta ferma: si legge come si gioca
+   senza perdere la gara mentre si legge */
+const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)            // -1 = corsa infinita
 const partita = shallowRef(null)    // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
@@ -150,11 +153,12 @@ function reagisci(eventi) {
    davanti (`state.festa`, che `App.vue` mostra a schermo intero per tre
    secondi buoni): il velo copre la pista, e quando il bambino torna a
    vederla ha un mostro addosso. Un traguardo che si paga con la partita è
-   un traguardo che si impara a temere. */
+   un traguardo che si impara a temere. Vale uguale per il foglio del `?`,
+   che copre lo schermo nello stesso modo. */
 function passo(dt) {
   const p = partita.value
   if (!p) return
-  const fermo = p.finita || p.inPausa || state.festa.length
+  const fermo = p.finita || p.inPausa || state.festa.length || aiutoAperto.value
   if (!fermo) p.avanza(dt)
   if (p.eventi.length) reagisci(p.svuotaEventi())
 
@@ -333,7 +337,7 @@ onUnmounted(() => {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" monete :scura="vista === 'pista' && vestito.buio" @indietro="indietro" />
+    <Barra :titolo="titolo" guida="corsa" @aiuto="aiutoAperto = $event" monete :scura="vista === 'pista' && vestito.buio" @indietro="indietro" />
 
     <div class="co" :style="{ '--co-accento': vestito.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libera="statoLibera"

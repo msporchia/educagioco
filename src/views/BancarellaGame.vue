@@ -336,7 +336,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
     <!-- in partita le monete se ne vanno dalla barra: qui si maneggiano euro,
          due salvadanai in cima sarebbero solo confusione, e lo spazio serve
          ai cuori — vedi la stessa scelta nel laboratorio -->
-    <Barra titolo="Bancarella" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
+    <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone">🧾 <b>{{ hud.serviti }}</b></div>

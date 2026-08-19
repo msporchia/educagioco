@@ -44,6 +44,9 @@ const RESPIRO = 500          // quanto si guarda il campo prima del cartello
 
 /* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')            // mappa | campo
+/* col foglio del `?` aperto il campo sta fermo: leggere come si gioca
+   non deve costare la partita che si sta giocando */
+const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)              // -1 = gioco libero
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
@@ -139,7 +142,7 @@ function suona(eventi) {
 function passo(dt) {
   const p = partita.value
   if (!p) return
-  if (!p.finita && !p.inPausa && !state.festa.length) p.avanza(dt)
+  if (!p.finita && !p.inPausa && !state.festa.length && !aiutoAperto.value) p.avanza(dt)
   if (p.eventi.length) suona(p.svuotaEventi())
 
   if (p.inPausa && !offerta.value && !domanda.value) {
@@ -369,7 +372,7 @@ onUnmounted(() => {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" monete :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
+    <Barra :titolo="titolo" guida="survivors" @aiuto="aiutoAperto = $event" monete :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
 
     <div class="sv" :style="{ '--sv-accento': veste.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"

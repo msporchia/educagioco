@@ -778,6 +778,30 @@ export function accendiVariante(chiave, si) {
   persist()
 }
 
+/* ── QUELLO CHE UN BAMBINO HA GIÀ VISTO UNA VOLTA ──
+   Serve alle spiegazioni che compaiono **dentro la partita** e devono
+   comparire una volta sola: oggi la riga dei primi passi del tower
+   defense (`views/TowerDefense.vue`), che sta in fondo al campo finché
+   la prima torre non è in piedi.
+
+   Non serve più ad aprire da solo il foglio del `?`: quello è stato
+   provato e tolto — un velo all'apertura i bambini lo chiudono per
+   riflesso, e insegna a chiudere i veli.
+
+   Sta nelle impostazioni del bambino e non nell'archivio di casa: un
+   fratello che apre il gioco per la prima volta deve rivederla anche se
+   l'altro l'ha già superata. Come le varianti, si scrive solo quello che
+   è successo — chi non ha una voce non l'ha mai vista. */
+export const guidaGiaVista = chiave =>
+  (state.profile.settings.guideViste || {})[chiave] === true
+export function segnaGuidaVista(chiave) {
+  const s = state.profile.settings
+  if (!s.guideViste) s.guideViste = {}
+  if (s.guideViste[chiave]) return
+  s.guideViste[chiave] = true
+  persist()
+}
+
 /* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
    che è il comportamento di sempre. Acceso, tutte le tappe di tutti i
    giochi si aprono subito. */

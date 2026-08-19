@@ -79,7 +79,7 @@ watch(campo, ridisegna)
 
 <template>
   <div class="castello-sprite">
-    <Barra titolo="Il castello a tessere" @indietro="emit('vai', 'home')" />
+    <Barra titolo="Il castello a tessere" guida="castello" @indietro="emit('vai', 'home')" />
 
     <div class="scelta">
       <div v-for="a in archi" :key="a.id" class="arco">

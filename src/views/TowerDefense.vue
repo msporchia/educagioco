@@ -39,7 +39,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { state, answer, level, addCoins, tdProgresso, tdCompleta,
-         segna, segnaBest, divisioniAccese, tuttoAperto } from '../store/profile.js'
+         segna, segnaBest, divisioniAccese, tuttoAperto,
+         guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
+import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { TORRI } from '../data/ops.js'
 import { CFG, TAPPE, LIBERA, premioTappa } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
@@ -59,6 +61,11 @@ import { suono } from '../audio.js'
 defineEmits(['vai'])
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
+/* Il foglio del `?` copre il campo, e un campo che cammina sotto un
+   foglio è una vita persa mentre si legge come si gioca: finché è aperto
+   la battaglia sta ferma, come fa già col cartello di un traguardo. */
+const aiutoAperto = ref(false)
+
 /* il tabellone: il motore ci scrive dentro e lo schermo si aggiorna da sé */
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
 /* quello che il campo fa sapere alla schermata: si riempie a ogni fotogramma */
@@ -98,6 +105,52 @@ const sposto = ref(null)
    Il prezzo lo si paga in energia, ma prima si paga in calcolo: la
    `Cassa` dice quale operazione, il motore mette in campo. */
 const scelta = ref(null)           // tipo di torre in costruzione
+
+/* ── I PRIMI PASSI ──
+   Il foglio «come si gioca» si apre da solo al primo ingresso e dice le
+   regole, ma le regole lette prima di aver visto il campo si dimenticano
+   in tre secondi. Quello che manca è la riga che sta lì **mentre** si
+   guarda il campo e dice la sola cosa da fare adesso.
+
+   Non è un tutorial che prende per mano: non blocca niente, non ferma il
+   campo, non impedisce nessun tocco. È una riga in fondo — dove sta già
+   «Tocca dove spostarla» — che dura finché la prima torre non è in
+   piedi, e poi se ne va per sempre.
+
+   La memoria sta nel profilo del bambino (`guideViste`), quindi un
+   fratello che apre il gioco per la prima volta la rivede, e chi ha già
+   giocato non se la ritrova mai più. */
+const PRIMI_PASSI = 'torri:primi-passi'
+const primiPassi = ref(false)
+const passoFatto = ref(false)
+
+function accendiPrimiPassi () {
+  if (saltaLeSpiegazioni() || guidaGiaVista(PRIMI_PASSI)) return
+  primiPassi.value = true
+  passoFatto.value = false
+}
+
+/* La riga cambia una volta sola: prima dice cosa toccare, poi — messa su
+   la prima torre — dice la cosa che dal campo non si vede, cioè che i
+   soldi per la seconda escono dai conti. Poi sparisce da sé. */
+const dritta = computed(() => {
+  if (!primiPassi.value || fase.value !== 'gioco') return ''
+  /* il campo ha già il suo annuncio «tocca una piazzola», che però dura
+     un secondo e mezzo: questa riga non lo ripete, dice il pezzo che da
+     sola una piazzola non spiega — che la torre si paga con un conto */
+  if (hud.torri === 0) return 'Tocca una piazzola: il conto che esce paga la torre'
+  return 'Le torri sparano da sole · i soldi per la prossima escono dai conti'
+})
+
+watch(() => hud.torri, n => {
+  if (!primiPassi.value || !n || passoFatto.value) return
+  passoFatto.value = true
+  segnaGuidaVista(PRIMI_PASSI)
+  /* la seconda riga resta il tempo di leggerla, e non un secondo di più:
+     da lì in avanti il campo parla da sé */
+  setTimeout(() => { primiPassi.value = false }, 6000)
+})
+
 const op = ref(null)
 const bersaglio = ref(null)        // torre da potenziare; null = torre nuova
 const prezzo = ref(0)              // energia che l'operazione in corso costerà
@@ -295,6 +348,7 @@ watch(fase, () => nextTick(() => campo.value?.ridimensiona()))
 
 /* ── le fasi ── */
 function inizia(i = tappaIdx.value) {
+  accendiPrimiPassi()
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
   chiudi()
@@ -369,7 +423,7 @@ onMounted(() => {
   <div class="schermo td">
     <!-- la barra è quella di tutte le schermate: si torna indietro sempre
          allo stesso modo, e il gioco ci appende i suoi indicatori -->
-    <Barra titolo="Castello" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
+    <Barra titolo="Castello" guida="torri" @aiuto="aiutoAperto = $event" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
@@ -382,7 +436,7 @@ onMounted(() => {
          più i mostri. -->
     <div class="arena" :class="{ gioca: fase === 'gioco' }">
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
-                        :attivo="fase === 'gioco' && !state.festa.length" :calcolando="!!scelta"
+                        :attivo="fase === 'gioco' && !state.festa.length && !aiutoAperto" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
                         :mira="mira"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
@@ -394,6 +448,10 @@ onMounted(() => {
            lo spazio in alto è uno solo. -->
       <!-- mentre si cerca dove posare una torre, il fondo dice cosa sta
            succedendo e come tirarsene fuori -->
+      <!-- la prima partita in assoluto: una riga che dice la sola cosa da
+           fare adesso. Non blocca niente e se ne va da sé (`dritta`). -->
+      <div v-if="dritta" class="primi-passi">{{ dritta }}</div>
+
       <button v-if="fase === 'gioco' && sposto" class="bottone chiaro stretto onda"
               @click="sposto = null">Tocca dove spostarla · annulla</button>
 

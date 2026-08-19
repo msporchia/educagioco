@@ -110,7 +110,7 @@ function indietro() {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" monete @indietro="indietro" />
+    <Barra :titolo="titolo" guida="conta" monete @indietro="indietro" />
 
     <div class="ct" :style="{ '--ct-accento': accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" @gioca="avviaTappa" />
