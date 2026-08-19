@@ -50,6 +50,23 @@ export default {
      l'unico modo per cui qualcuno se ne accorga. */
   tinta: '#f4ecc8',
 
+  /* ── UN POSTO NON SI NASCONDE MAI ──
+     `piccoli` e `grandi` sono le due estremità di una scala, e la
+     fattoria non sta su nessuna delle due: non è difficile né facile,
+     è il prato dove si spende. Dichiararla `piccoli` sarebbe la
+     scorciatoia sbagliata — quel flag la farebbe comparire ai bambini
+     di quattro anni e **sparire a quelli di nove**, perché le partenze
+     dalla terza in su spengono proprio i giochi per i piccolissimi.
+
+     Quindi non è un'estremità: è un `posto`, e un posto non si giudica
+     per età. È la stessa cosa che `data/portata.js` dice già dei
+     giochi senza campagna — «sono posti, non scalette, e l'assenza
+     vuol dire *non si giudica*, non *si nasconde*» — detta dove serve
+     anche alle partenze. Un grande può sempre spegnerla a mano come
+     tutte le altre carte: quello che questo evita è che gliela
+     spegniamo noi. */
+  posto: true,
+
   /* La riga sotto il nome, in home. `av` è il record di
      `src/giochi/campagne.js` — qui senza `tappa`/`stelle`, che per un
      gioco senza tappe non vogliono dire niente: quello che conta è

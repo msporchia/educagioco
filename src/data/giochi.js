@@ -41,6 +41,18 @@
    maggioranza silenziosa che nessuna partenza spegne tranne quella dei
    piccolissimi.
 
+   ── E POI C'È `posto`, CHE NON STA SULLA SCALA ───────────────────
+   La fattoria non è né facile né difficile: è il prato dove si spende
+   quello che si guadagna altrove. Non ha una campagna, non si vince,
+   non si perde — e `data/portata.js` lo dice già per conto suo, che i
+   giochi senza scaletta «sono posti, non scalette», quindi non li
+   giudica. `posto: true` dice la stessa cosa **alle partenze**, che
+   invece ragionano per bandierine: senza, il prato sparirebbe a un
+   bambino di quattro anni per il solo fatto di non essersi dichiarato
+   `piccoli` — e dichiararsi `piccoli` lo farebbe sparire a quello di
+   nove. Un grande può sempre spegnerlo a mano: qui si evita solo che
+   lo spegniamo noi.
+
    È già successo una volta, ed è il modo giusto di usarla: il Dungeon,
    Survivors e il sotterraneo hanno portato `grandi` finché le domande
    che aprono le porte partivano tutte dalla terza. Non era il gioco a
@@ -79,8 +91,14 @@ export const GIOCHI = [
   { chiave: 'pozioni',    ico: '⚗️', nome: 'Il laboratorio delle pozioni',
     che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
     area: 'numeri', come: 'fare', grandi: true },
+  /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
+     giornata è tarata su 7 anni (`portata: 37` in `data/bancarella.js`),
+     cioè seconda elementare — e contare le monete e dare il resto non
+     chiede di saper leggere niente. Il flag la spegneva a tutta la
+     partenza «prima o seconda», compresi i sette anni a cui il gioco
+     dice di rivolgersi. */
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
-    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare', grandi: true },
+    che: 'euro, centesimi e resto', area: 'numeri', come: 'fare' },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',
     che: 'sequenze, cicli ed eventi', area: 'logica', come: 'strategia', grandi: true },
   /* I giochi scritti con la convenzione nuova (`src/giochi/`) si
@@ -90,7 +108,7 @@ export const GIOCHI = [
      store, e non si chiude nessun anello di import. */
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
-                              grandi: !!g.grandi,
+                              grandi: !!g.grandi, posto: !!g.posto,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [] })),
 ]
