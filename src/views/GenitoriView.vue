@@ -37,6 +37,7 @@ import { sapereDi } from '../data/saperi.js'
 import Barra from '../components/Barra.vue'
 import Prova from '../quiz/Prova.vue'
 import Catalogo from '../quiz/Catalogo.vue'
+import ComeVa from '../quiz/ComeVa.vue'
 
 defineEmits(['vai'])
 
@@ -727,6 +728,8 @@ async function azzera() {
            punto: le manopole c'erano già e non le toccava nessuno,
            perché nessuno va a cercare un problema che non sa di avere.
            Qui il verso si gira — il gioco dice cosa ha notato, il grande
+           decide (`quiz/ComeVa.vue`). -->
+      <ComeVa @tutte="scheda = 'giochi'" />
 
       <h2>Chi gioca</h2>
       <p class="mini">Un bambino per riga, coi suoi progressi separati. Qui si cambiano il
