@@ -324,6 +324,44 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   controlla('e lo spadone è nello zaino', c.zaino.includes('spadone'), c.zaino.join())
 }
 
+/* ══════════ 5d. le porte chiudono la stanza, non il varco ══════════
+   Il difetto trovato giocando: una stanza ha due o tre varchi, ne veniva
+   chiuso uno solo, e il segno 💀 sopra la porta prometteva una guardia
+   che si scavalcava passando dall'altra parte. Dove due corridoi
+   paralleli si affiancano il varco è **largo due celle** e ci si passava
+   letteralmente accanto al battente. */
+{
+  let sbarrate = 0, storte = 0, tagliati = 0
+  for (let i = 0; i < 40; i++) {
+    const l = new Livello({ seme: 300 + i * 97, piano: i % 3, largo: 34, alto: 34, giri: 3 })
+    const porte = l.robe.filter(r => r.che === 'porta')
+    /* ogni stanza sbarrata deve avere **tutti** i suoi varchi chiusi */
+    for (const g of new Set(porte.map(r => r.gruppo))) {
+      const stanza = l.stanze[g]
+      const chiuse = porte.filter(r => r.gruppo === g).length
+      sbarrate++
+      if (chiuse < stanza.porte.length) storte++
+    }
+    if (l.serveUnaPorta) tagliati++
+  }
+  controlla('ogni stanza sbarrata ha tutti i varchi chiusi', storte === 0,
+            `${storte} su ${sbarrate}`)
+  /* e nessuna sbarra la strada: quello che vale sta in fondo a un ramo,
+     non in mezzo al cammino, o il premio diventa un casello */
+  uguale('nessun piano obbliga ad aprire una porta per arrivare alla scala', tagliati, 0)
+
+  /* rispondere apre la stanza, non il battente: se ne restasse chiuso
+     uno si pagherebbe due volte per entrare dove si è già pagato */
+  const l = new Livello({ seme: 812, piano: 0, largo: 30, alto: 30, giri: 2 })
+  const c = new Corsa(CAMPAGNA[0], { seme: 1, rnd: seminato(1) })
+  c.livello = l
+  const gruppo = l.robe.filter(r => r.che === 'porta' && r.gruppo === l.robe.find(x => x.che === 'porta').gruppo)
+  if (gruppo.length > 1) {
+    c.foglio = { che: 'porta', chi: gruppo[0] }
+    c.rispondi(true)
+    controlla('aprendone una si apre tutta la stanza', gruppo.every(r => r.aperta),
+              gruppo.map(r => `${r.x},${r.y}:${r.aperta}`).join(' '))
+  }
 }
 
 /* un forziere sbagliato resta chiuso per sempre — è l'unica cosa che si

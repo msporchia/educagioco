@@ -166,6 +166,26 @@ alla roba che ci stava sopra — roba che, per giunta, nasceva *sulla sua
 stessa cella*, dove il baule la copriva e dove l'eroe non arriva mai, perché
 a un forziere ci si ferma accanto.
 
+## Le porte chiudono la stanza, non il varco
+
+Una stanza ha due o tre aperture. Prima se ne chiudeva **una sola**, per
+non far pagare due volte lo stesso posto: il ragionamento era giusto e la
+cura sbagliata, perché il segno 💀 sopra la porta prometteva una guardia
+che si scavalcava passando dall'altra parte. Peggio ancora dove due
+corridoi paralleli si affiancano — capita — e lì il varco è largo due
+celle: la porta ne copriva una, e si passava letteralmente accanto al
+battente.
+
+Adesso si chiudono **tutti** i varchi di una stanza, e rispondere ne apre
+una e con lei tutte le altre: il pedaggio resta uno solo. Perché questo
+non trasformi il premio in un casello, le stanze che valgono qualcosa —
+mercante, fonte, forzieri — si pescano **fra le foglie**, quelle con un
+solo collegamento, dove non si passa per andare altrove; e prima di
+sbarrarne una si cammina fino alla scala per controllare che ci si arrivi
+lo stesso. Se non ci si arriva, quella stanza resta aperta e senza segno:
+meglio una stanza che si visita gratis di una promessa che è in realtà un
+obbligo.
+
 ## Chi scende, e cosa si porta
 
 Quattro eroi — cavaliere, elfa, mago, nano — e la differenza sta in **due

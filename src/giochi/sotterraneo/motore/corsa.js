@@ -590,9 +590,14 @@ export class Corsa {
      partita a scacchi. Quello che si perde per sempre è il forziere. */
   rispostaPorta(p, giusto) {
     if (giusto) {
-      p.aperta = true
-      p.presa = true
-      this.dillo('🚪 la porta si apre')
+      /* si apre la **stanza**, non il battente: le porte dello stesso
+         gruppo sono i varchi dello stesso posto, e lasciarne chiuso uno
+         vorrebbe dire far pagare due volte per entrare dove si è già
+         pagato (o, peggio, far girare intorno per trovare quello aperto) */
+      const insieme = this.livello.robe.filter(r => r.che === 'porta' && !r.aperta &&
+        (p.gruppo != null ? r.gruppo === p.gruppo : r === p))
+      for (const r of insieme) { r.aperta = true; r.presa = true }
+      this.dillo(insieme.length > 1 ? '🚪 la stanza si apre' : '🚪 la porta si apre')
       this.chiudi()
       return { che: 'aperta' }
     }

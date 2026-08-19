@@ -19,10 +19,20 @@
    banco di prova, che gioca seicento piani e conta le domande.
 
    ── IL CONTROLLO È UNA CAMMINATA, NON UN'OCCHIATA ─────────────────
-   `guasti()` cammina davvero dall'ingresso trattando **le porte chiuse
-   come muri** — perché una porta si apre rispondendo, e a una domanda si
-   può sbagliare. Se anche così si arriva alla scala, il piano è sempre
-   finibile. Chi genera riprova finché non torna pulito.
+   `guasti()` cammina davvero dall'ingresso fino alla scala. Le porte
+   chiuse **non sono muri**: si aprono rispondendo, e sbagliando si
+   riprova quante volte si vuole — è il forziere l'unica cosa che si
+   perde per sempre. Quello che si controlla è che la strada esista.
+
+   Prima si camminava trattandole come muri, ed era giusto finché di
+   ogni stanza se ne chiudeva una sola: allora la porta era un pedaggio
+   *facoltativo* e la scala doveva restare libera. Da quando si chiude
+   la stanza intera (vedi `chiudiPorte`) quel controllo bocciava piani
+   perfettamente giocabili — dove alla scala si arriva passando per la
+   fonte, e per entrare nella fonte c'è da rispondere a una domanda
+   facile. Il piano dice comunque **quanto costa arrivarci**
+   (`serveUnaPorta`), perché è la differenza fra una discesa e l'altra e
+   il banco la conta.
 
    Non c'è niente di grafico qui dentro: gira in Node, e infatti è lì che
    si prova.
@@ -188,9 +198,28 @@ export class Livello {
     this.robe.push({ che: 'scala', x: uscita.cx, y: uscita.cy, em: '🕳️',
                      nome: 'La scala che scende' })
 
+    /* ── quello che vale sta in fondo a un ramo ──
+       Le stanze che portano un premio — il mercante, la fonte, i
+       forzieri — si pescano **fra le foglie**: quelle con un solo
+       collegamento, dove non si passa per andare altrove. È la
+       condizione perché la loro porta chiusa possa chiudere davvero
+       (vedi `chiudiPorte`): questo generatore fa passare i corridoi per
+       il centro delle stanze, quindi una stanza di mezzo è un pezzo di
+       strada, e sbarrarla vorrebbe dire mettere un pedaggio sulla via
+       della scala. Le foglie no: chi non le vuole, gira al largo.
+
+       Se le foglie finiscono si ripiega su una stanza qualunque — un
+       piano senza mercante è peggio di un mercante in mezzo alla
+       strada — e a quel punto è `chiudiPorte` a non chiuderla. */
+    const foglia = s => s.vicine.length <= 1
     const libere = st.filter(s => !s.ruolo)
-    const pesca = () => libere.length
-      ? libere.splice(Math.floor(this.rnd() * libere.length), 1)[0] : null
+    const pesca = () => {
+      if (!libere.length) return null
+      const fra = libere.some(foglia) ? libere.filter(foglia) : libere
+      const scelta = fra[Math.floor(this.rnd() * fra.length)]
+      libere.splice(libere.indexOf(scelta), 1)
+      return scelta
+    }
 
     const mercante = pesca()
     if (mercante) {
@@ -342,10 +371,28 @@ export class Livello {
      Non tutte le porte si chiudono: solo quelle che danno su qualcosa
      che vale. Una porta chiusa su una stanza vuota è una bugia, e le
      bugie qui costano care — il segno sopra la porta è l'unica cosa con
-     cui si sceglie. Se ne chiude **una sola** per stanza: chiuderle
-     tutte vorrebbe dire pagare due volte per lo stesso posto a chi gira
-     in tondo. */
+     cui si sceglie.
+
+     ── SI CHIUDE LA STANZA, NON LA PORTA ──────────────────────────
+     Prima se ne chiudeva **una sola** per stanza, per non far pagare
+     due volte lo stesso posto a chi gira in tondo. Il ragionamento era
+     giusto e la cura sbagliata: una stanza ha due, tre varchi, e con uno
+     solo chiuso il segno 💀 sopra la porta prometteva una guardia che si
+     scavalcava passando dall'altra parte. Peggio ancora dove due
+     corridoi paralleli si affiancano — capita, e lì il varco è **largo
+     due celle**: la porta ne copriva una e si passava letteralmente
+     accanto al battente.
+
+     Adesso si chiudono tutte le porte della stanza, e portano lo stesso
+     `gruppo`: **rispondere ne apre una e con lei tutte le altre**
+     (`Corsa.rispostaPorta`). Il pedaggio resta uno solo — la
+     preoccupazione di prima era giusta — ma non si aggira più.
+
+     Una cella, una porta: i bordi di due stanze vicine possono toccarsi,
+     e due porte sovrapposte sulla stessa cella si aprirebbero una alla
+     volta. */
   chiudiPorte() {
+    const messe = new Map()
     for (const s of this.stanze) {
       if (!s.ruolo || s.ruolo === 'ingresso' || !s.porte.length) continue
       const segno = s.ruolo === 'tesoro'
@@ -353,10 +400,50 @@ export class Livello {
         : s.ruolo === 'mercante' ? 'mercante'
         : s.ruolo === 'fonte' ? 'fonte' : null
       if (!segno) continue
-      const p = s.porte[Math.floor(this.rnd() * s.porte.length)]
-      this.robe.push({ che: 'porta', x: p.x, y: p.y, em: '🚪', nome: 'Una porta chiusa',
-                       segno, aperta: false })
+      /* ── e non si sbarra mai la strada ──
+         Chiudere tutti i varchi di una stanza che sta **in mezzo** al
+         cammino vuol dire mettere un pedaggio obbligatorio davanti alla
+         scala, e trasformare il premio in un casello. Qui si prova
+         prima: se chiudendola alla scala non si arriva più, la stanza
+         resta aperta e senza segno. Meglio una stanza che si visita
+         gratis di una promessa che è in realtà un obbligo. */
+      if (this.taglierebbeLaStrada(s, messe)) continue
+      for (const p of s.porte) {
+        const k = p.x + ',' + p.y
+        if (messe.has(k)) continue
+        const porta = { che: 'porta', x: p.x, y: p.y, em: '🚪', nome: 'Una porta chiusa',
+                        segno, aperta: false, gruppo: s.id }
+        messe.set(k, porta)
+        this.robe.push(porta)
+      }
     }
+    /* Un varco largo due celle è **un** portone, non due porte: quella di
+       sinistra lo disegna intero (lo sprite del set è largo due celle
+       apposta) e quella di destra sta sotto e non si disegna. Senza
+       questo, due battenti si sovrappongono a metà e sembrano storti —
+       che è come lo si nota, prima ancora di accorgersi che si passa in
+       mezzo. */
+    for (const [k, porta] of messe) {
+      const destra = messe.get((porta.x + 1) + ',' + porta.y)
+      if (destra && destra.gruppo === porta.gruppo && !porta.coperta) {
+        porta.doppia = true
+        destra.coperta = true
+      }
+    }
+  }
+
+  /* Si arriva ancora alla scala se si chiudono anche i varchi di questa
+     stanza? Si cammina davvero, contando come muri le porte già chiuse
+     più quelle che si sta per chiudere. */
+  taglierebbeLaStrada(s, gia) {
+    const scala = this.robe.find(r => r.che === 'scala')
+    const partenza = this.stanze[0]
+    if (!scala || !partenza) return false
+    const mura = new Set([...gia.keys(), ...s.porte.map(p => p.x + ',' + p.y)])
+    const visti = raggiungibili(
+      (x, y) => this.calpestabile(x, y) && !mura.has(x + ',' + y),
+      { x: partenza.cx, y: partenza.cy })
+    return !visti.has(scala.x + ',' + scala.y)
   }
 
   dentroStanza(r, s) { return r.x >= s.x && r.y >= s.y && r.x < s.x + s.w && r.y < s.y + s.h }
@@ -371,17 +458,21 @@ export class Livello {
     const g = []
     const partenza = this.stanze[0]
     if (!partenza) return ['nessuna stanza']
+    const da = { x: partenza.cx, y: partenza.cy }
     const chiuse = new Set(this.robe.filter(r => r.che === 'porta').map(r => r.x + ',' + r.y))
-    /* si cammina come si camminerà davvero, e le porte chiuse valgono
-       muri: una porta si apre rispondendo, e a una domanda si sbaglia */
-    const visti = raggiungibili(
-      (x, y) => this.calpestabile(x, y) && !chiuse.has(x + ',' + y),
-      { x: partenza.cx, y: partenza.cy })
+    /* si cammina come si camminerà davvero: le porte si aprono
+       rispondendo, quindi si attraversano */
+    const visti = raggiungibili((x, y) => this.calpestabile(x, y), da)
+    /* e si guarda anche **senza** aprirle: non è un guasto, è quanto
+       costa arrivare in fondo su questo piano qui */
+    const senzaAprire = raggiungibili(
+      (x, y) => this.calpestabile(x, y) && !chiuse.has(x + ',' + y), da)
 
     const scala = this.robe.find(r => r.che === 'scala')
     if (!scala) g.push('non c\'è nessuna scala che scende')
     else if (!visti.has(scala.x + ',' + scala.y))
-      g.push('alla scala non si arriva senza aprire una porta chiusa')
+      g.push('alla scala non si arriva affatto')
+    this.serveUnaPorta = !!scala && !senzaAprire.has(scala.x + ',' + scala.y)
     if (this.stanze.length < this.stanzeMin)
       g.push(`solo ${this.stanze.length} stanze: il piano si gira in un minuto`)
     if (!this.robe.some(r => r.che === 'mostro' && r.chiave))
