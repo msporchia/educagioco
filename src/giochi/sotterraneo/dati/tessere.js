@@ -68,6 +68,9 @@ export const PEZZO_DI = {
   forziere: r => (r.aperto ? 'forziere-aperto' : 'forziere-chiuso'),
   porta: r => (r.aperta ? 'porta-aperta' : 'porta-chiusa'),
   gemme: (r, t) => `moneta-${((t * 8) | 0) % 4}`,
+  /* la curiosità porta il suo pezzo addosso, come l'arredo: quale sia
+     lo ha deciso il piano quando è nato */
+  curiosita: r => r.pezzo,
   fonte: () => null,
   mercante: () => null,
 }

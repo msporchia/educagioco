@@ -38,6 +38,7 @@
    si prova.
    ═══════════════════════════════════════════════════════════════════ */
 import { ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
+import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, BRANCO } from '../dati/mostri.js'
 import { raggiungibili } from '../../../motore/passi.js'
 
@@ -297,8 +298,34 @@ export class Livello {
         this.robe.push({ che: 'gemme', x, y, em: '💎', quante: 2 + Math.floor(this.rnd() * 5) })
     }
 
+    this.spargiLeCuriosita(st)
     this.arredaLeStanze()
     this.chiudiPorte()
+  }
+
+  /* ── le curiosità ──
+     Una o due per piano, e mai nella stanza d'ingresso: sono la cosa
+     che si tocca **dopo** aver capito dove si è. Non bloccano, non
+     valgono una chiave, e si possono saltare tutte senza perdere
+     niente — è proprio quello che le rende una scelta invece di un
+     pedaggio. */
+  spargiLeCuriosita(st) {
+    const buone = st.filter(s => s.ruolo !== 'ingresso')
+    const quante = 1 + (this.rnd() < 0.55 ? 1 : 0)
+    for (let n = 0; n < quante; n++) {
+      const s = buone[Math.floor(this.rnd() * buone.length)]
+      if (!s) return
+      for (let giro = 0; giro < 12; giro++) {
+        const x = s.x + Math.floor(this.rnd() * s.w)
+        const y = s.y + Math.floor(this.rnd() * s.h)
+        if (!this.calpestabile(x, y) || this.robeSu(x, y).length) continue
+        if (this.porteVicine(x, y)) continue
+        const c = CURIOSITA[Math.floor(this.rnd() * CURIOSITA.length)]
+        this.robe.push({ che: 'curiosita', tipo: c.tipo, x, y, em: c.em,
+                         nome: c.nome, pezzo: c.pezzo })
+        break
+      }
+    }
   }
 
   /* ── l'arredo ──
