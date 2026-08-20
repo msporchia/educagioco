@@ -33,6 +33,11 @@ const etichetta = computed(() => {
   const a = azione.value
   if (!a) return ''
   if (a.che === 'compra') return 'Apri il baule'
+  /* Il premio non è ancora nel baule: il tasto porta dov'è, cioè nella
+     pagina dei livelli, e lo dice — «apri il baule» su una cosa che nel
+     baule non c'è è la promessa che fa smettere di fidarsi del tasto
+     dopo. */
+  if (a.che === 'premio') return 'Vai al premio'
   if (a.che === 'ingrandisci') return `Ingrandisci · 🪙${a.prezzo}`
   return 'Portami lì'
 })

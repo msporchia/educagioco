@@ -34,12 +34,13 @@ import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
-import { CATALOGO, PER_ID, piedeDi, pezzoDi, assettoDi, puoGirare, puoSpecchiare,
-         eCampo, eSilo, eVicino, siloDi, macchinaDi, statiDi } from './dati/catalogo.js'
-import { animale, siDisegna } from './dati/animali.js'
+import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
+         puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, siloDi, macchinaDi,
+         statiDi } from './dati/catalogo.js'
+import { animale, siDisegna, IN_VENDITA } from './dati/animali.js'
 import { BISOGNI, CHIAVI } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
-import { sogliaDi } from './dati/livelli.js'
+import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
 import { pezzoAttore } from './dati/atlante.js'
 import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 
@@ -97,6 +98,35 @@ const punta = ref('')
    ridisegnarsi quando il numero cambia. */
 const livello = ref(1)
 const avanza = ref(null)
+/* I premi arrivati e non ancora presi. Sta qui e non dentro il foglio
+   dei livelli perché **si vede da fuori**: è il pallino sul gettone in
+   alto, cioè l'unica cosa che dice che c'è qualcosa da andare a
+   prendere mentre si sta guardando il prato. */
+const daPrendere = ref([])
+/* Le chiavi di tutti i premi presi: le leggono il baule (mostra solo
+   quelle) e la pagina dei livelli (segna i quadratini già presi). È un
+   `ref` e non una lettura diretta del motore perché il motore non è
+   reattivo: chi lo cambia lo dice, con `annotaIPremi`. */
+const presi = ref([])
+
+/* Le metà del baule che hanno qualcosa dentro, per i tondi in alto.
+   Al primo livello è una sola — non ci sono ancora né decorazioni né
+   bestie — e un tondo che apre uno scaffale vuoto sarebbe un tasto
+   rotto. */
+const zoneDelBaule = computed(() => {
+  const p = new Set(presi.value)
+  return ZONE.filter(z => z.chiave === ANIMALI_ZONA
+    ? IN_VENDITA.some(a => p.has(chiaveDi('bestia', a.chi)))
+    : CATALOGO.some(v => zonaDi(v.id) === z.chiave && p.has(chiaveDi('cosa', v.id))))
+})
+
+/* Quello che è aperto e quello che aspetta, riletti dal motore. Si
+   chiama dopo ogni cosa che li muove: una spesa (che può far salire il
+   livello) e un premio preso. */
+function annotaIPremi() {
+  daPrendere.value = mondo.daReclamare()
+  presi.value = Object.keys(mondo.reclamati)
+}
 
 let mondo = null                    // la Fattoria (motore)
 let scena = null                    // la Tela (disegno)
@@ -122,23 +152,50 @@ function salva() {
 }
 
 /* Il livello sale spendendo, e le spese passano tutte da un `salva()`:
-   guardarlo qui vuol dire non doverselo ricordare in quindici posti —
-   e un livello che arriva in silenzio non lo nota nessuno. Il foglio si
-   apre da sé, perché quello che è appena arrivato va detto **quando**
-   arriva: dopo, nel baule, non sembra una conquista ma una cosa che
-   c'è sempre stata. */
+   guardarlo qui vuol dire non doverselo ricordare in quindici posti.
+
+   ── E QUI NON SI APRE PIÙ NIENTE DA SÉ ────────────────────────────
+   *Ribalta la scelta di prima*, che era «un livello che arriva in
+   silenzio non lo nota nessuno» e quindi apriva il foglio della festa
+   nel momento esatto della salita. Vero il problema, sbagliato il
+   rimedio: il livello sale **spendendo**, cioè sempre in mezzo a un
+   acquisto — il dito era in viaggio dal baule al prato e trovava un
+   velo. Si spezzava proprio il gesto che il gioco vuole.
+
+   Adesso il livello si annuncia in due modi che non fermano niente: la
+   riga d'avviso che passa da sola, e **il pallino sul gettone**, che
+   resta lì finché i premi non sono stati presi. Quello che è arrivato
+   non si mostra più: si va a prenderlo (`viste/Livelli.vue`). */
 function guardaIlLivello() {
   if (!mondo) return
   avanza.value = mondo.avanzamento
+  annotaIPremi()
   const ora = avanza.value.livello
   if (ora <= livello.value) { livello.value = ora; return }
   livello.value = ora
-  pannello.value = { tipo: 'livello', festa: true }
+  const quanti = daPrendere.value.length
+  avvisa(`⭐ Livello ${ora}! ` + (quanti
+    ? `${quanti === 1 ? 'C\'è un premio' : `Ci sono ${quanti} premi`} da prendere: ` +
+      'premi la ⭐ in alto.'
+    : 'La fattoria cresce.'))
 }
 
 function apriLivelli() {
   avanza.value = mondo.avanzamento
-  pannello.value = { tipo: 'livello', festa: false }
+  annotaIPremi()
+  pannello.value = { tipo: 'livello' }
+}
+
+/* Prendere un premio: si apre nel baule, non si regala. Il foglio resta
+   aperto — chi ne ha tre da prendere li prende uno dopo l'altro senza
+   che niente si muova sotto le dita — e il quadratino cambia stato al
+   suo posto. */
+function reclama(chiave) {
+  if (!mondo) return
+  const r = mondo.reclama(chiave)
+  if (!r.ok) return
+  annotaIPremi()
+  salvaOra()
 }
 function salvaOra() {
   salvaFra = 0
@@ -182,8 +239,24 @@ function chiudi() {
 }
 
 /* Il baule dal tasto in alto: nessuna cella da ricordare, e quella di
-   prima si butta. Il posto lo si sceglie dopo, come si è sempre fatto. */
-function apriIlBaule() { dovePosare = null; pannello.value = 'roba' }
+   prima si butta. Il posto lo si sceglie dopo, come si è sempre fatto.
+
+   ── TRE TASTI E NON UNO ───────────────────────────────────────────
+   In alto c'erano un 📦 e basta, e dentro il baule si sceglieva subito
+   fra le sue tre metà: due gesti per dire una cosa sola, e il primo non
+   diceva niente — un pacco chiuso non fa venire in mente né una
+   panchina né un cane. Adesso le tre metà stanno **fuori**, una per
+   tasto (`ZONE` in `dati/catalogo.js`, le stesse che il baule mostra
+   dentro), e chi vuole un albero preme l'albero.
+
+   Si mostrano solo quelle che hanno qualcosa dentro: al primo livello
+   non ci sono né decorazioni né bestie, e un tasto che si apre su uno
+   scaffale vuoto è un tasto rotto — la stessa regola che vale dentro
+   il baule. */
+function apriIlBaule(zona = 'lavoro') {
+  dovePosare = null
+  pannello.value = { tipo: 'roba', zona }
+}
 
 /* ═══════════ nascere ═══════════ */
 onMounted(() => {
@@ -200,7 +273,16 @@ onMounted(() => {
   const cheat = /(?:^#?|&)fattoria=(\d{1,2})(?=&|$)/i.exec(location.hash || '')
   if (cheat) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
-    mondo.speso = Math.max(mondo.speso, sogliaDi(parseInt(cheat[1], 10)))
+    const meta = parseInt(cheat[1], 10)
+    mondo.speso = Math.max(mondo.speso, sogliaDi(meta))
+    /* I premi dei livelli **già passati** si prendono da sé: il cheat
+       serve a guardare col telefono una cosa che arriverebbe dopo mesi,
+       e farsi premere sessanta quadratini prima di vederla non è quello
+       che si sta provando. Quelli del livello a cui si arriva restano
+       da prendere, come per chi ci è arrivato spendendo — se no il
+       cheat non permetterebbe di guardare proprio la cosa per cui
+       questa pagina esiste. */
+    for (const p of mondo.daReclamare()) if (p.liv < meta) mondo.reclama(p.chiave)
     salvaOra()
   }
   /* Il livello di adesso si prende **prima** di qualunque spesa: se no
@@ -208,6 +290,7 @@ onMounted(() => {
      festa si aprirebbe da solo appena entrati. */
   livello.value = mondo.livello
   avanza.value = mondo.avanzamento
+  annotaIPremi()
 
   scena = new Tela(tela.value)
   scena.scala = SCALA_INIZIALE
@@ -628,7 +711,7 @@ function lascia(e) {
        torna al gesto di sempre e resta appesa al dito, che è il modo di
        dire «scegli tu un altro posto» senza un cartello. */
     dovePosare = agganciato.cella || null
-    pannello.value = 'roba'
+    pannello.value = { tipo: 'roba', zona: 'lavoro' }
     return
   }
 
@@ -1063,6 +1146,12 @@ function alVicino(verso) {
 function apriGranaio(famiglia) {
   pannello.value = { tipo: 'granaio', famiglia,
                      scomparti: mondo.scomparti(famiglia),
+                     /* la capienza si passa a parte: gli scomparti sono
+                        solo quelli **aperti** (il silo non racconta il
+                        futuro, vedi `Fattoria.merciAperte`), e quando
+                        non ce n'è ancora nessuno il foglio direbbe
+                        «0 di ogni cosa» leggendola dal primo */
+                     posti: mondo.capienzaDi(famiglia),
                      livello: mondo.livelloDelSilo(famiglia),
                      costo: mondo.costoDellIngrandimento(famiglia) }
 }
@@ -1102,7 +1191,14 @@ function faiIlPasso(azione) {
     guarda(azione.cosa)
     return apriLavoro(azione.cosa, azione.con)
   }
-  if (azione.che === 'compra') { punta.value = azione.voce; pannello.value = 'roba'; return }
+  /* Arrivata ma non ancora presa: il baule non ce l'ha, il premio sì. */
+  if (azione.che === 'premio') return apriLivelli()
+  if (azione.che === 'compra') {
+    punta.value = azione.voce
+    /* la zona la decide `punta`: il baule si apre dov'è quella cosa */
+    pannello.value = { tipo: 'roba', zona: '' }
+    return
+  }
   if (azione.che === 'ingrandisci') return ingrandisciIlSilo(azione.famiglia)
 }
 
@@ -1169,7 +1265,7 @@ function apriCampo(cosa) {
                         senza quel numero si sceglie a memoria — cioè si
                         semina sempre la stessa e ci si accorge del silo
                         tappato dieci minuti dopo, a raccolto pronto. */
-                     colture: COLTURE.filter(c => (c.liv || 1) <= mondo.livello)
+                     colture: COLTURE.filter(c => mondo.colturaAperta(c.id))
                        .map(c => ({ ...c, hai: mondo.quantoHo(c.da),
                                     ciSta: mondo.quantoCiSta(c.da) })),
                      ciSta: stato.coltura ? mondo.quantoCiSta(stato.coltura.da) : 99,
@@ -1452,13 +1548,23 @@ function tiraVoce({ voce, x, y }) {
 
     <div class="fa-tasti">
       <!-- il livello sta in alto e si vede sempre: la domanda «e
-           adesso?» viene guardando il prato, non aprendo un menù -->
-      <button v-if="avanza" class="fa-liv" title="i livelli della fattoria"
+           adesso?» viene guardando il prato, non aprendo un menù. Col
+           pallino addosso dice anche che c'è qualcosa da venire a
+           prendere, ed è l'unico posto in cui lo dice: non si apre più
+           niente da sé (vedi `guardaIlLivello`). -->
+      <button v-if="avanza" class="fa-liv" :class="{ dono: daPrendere.length }"
+              data-livelli title="i livelli della fattoria"
               @click="apriLivelli">
         ⭐ {{ avanza.livello }}
         <i><u :style="{ width: Math.round(avanza.quanto * 100) + '%' }"></u></i>
+        <b v-if="daPrendere.length" class="fa-bollo">{{ daPrendere.length }}</b>
       </button>
-      <button class="fa-tondo" title="il baule" @click="apriIlBaule">📦</button>
+      <!-- Le tre metà del baule, una per tasto: un 📦 chiuso non fa
+           venire in mente né una panchina né un cane. Ci sono solo
+           quelle che hanno qualcosa dentro. -->
+      <button v-for="z in zoneDelBaule" :key="z.chiave" class="fa-tondo"
+              :data-baule="z.chiave" :title="z.nome"
+              @click="apriIlBaule(z.chiave)">{{ z.icona }}</button>
     </div>
 
     <p v-if="avviso" class="fa-avviso">{{ avviso }}</p>
@@ -1467,10 +1573,10 @@ function tiraVoce({ voce, x, y }) {
               :gesti="gestiDiScelto" @fai="attrezzo" @fine="scelto = null" />
 
     <div v-if="pannello" class="fa-velo" @click.self="chiudi()">
-      <Roba v-if="pannello === 'roba'" class="fa-foglio"
+      <Roba v-if="pannello.tipo === 'roba'" class="fa-foglio"
             :monete="monete" :magazzino="mondo.magazzino" :bestie="mondo.bestie"
-            :prezzi="prezziCorrenti()" :livello="livello" :posati="giaPosati()"
-            :punta="punta"
+            :prezzi="prezziCorrenti()" :presi="presi" :posati="giaPosati()"
+            :punta="punta" :zona-iniziale="pannello.zona"
             @tira="tiraVoce" @tira-bestia="prendiUnaBestia"
             @chiudi="chiudi()" />
 
@@ -1490,8 +1596,8 @@ function tiraVoce({ voce, x, y }) {
              @chiudi="chiudi()" />
 
       <Livelli v-else-if="pannello.tipo === 'livello'"
-               :stato="avanza" :festa="pannello.festa"
-               @chiudi="chiudi()" />
+               :stato="avanza" :presi="presi"
+               @reclama="reclama" @chiudi="chiudi()" />
 
       <Vicino v-else-if="pannello.tipo === 'vicino'"
               :puoi-dare="pannello.puoiDare" :offerte="pannello.offerte"
@@ -1502,6 +1608,7 @@ function tiraVoce({ voce, x, y }) {
       <Granaio v-else-if="pannello.tipo === 'granaio'"
                :famiglia="pannello.famiglia"
                :scomparti="pannello.scomparti" :livello="pannello.livello"
+               :posti="pannello.posti"
                :costo="pannello.costo" :monete="monete"
                @ingrandisci="ingrandisci" @chiudi="chiudi()" />
 

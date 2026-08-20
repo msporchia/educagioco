@@ -35,6 +35,9 @@ function fattoria(liv = 30, monete = 9000) {
   const borsa = { quante: () => m, paga: n => { m -= n; return true } }
   const f = new Fattoria({ borsa })
   f.speso = sogliaDi(liv)
+  /* e coi premi di quei livelli già presi: qui si prova chi consiglia,
+     non il gesto di andare a prendere quello che è arrivato */
+  f.reclamaTutto()
   return { f, saldo: () => m }
 }
 
@@ -266,6 +269,30 @@ const posa = (f, id, x, y) => {
   uguale('al livello 3 il mulino ha una ricetta sola',
          ricetteDi('mulino', 3).length, 1)
   controlla('e al 10 sono due', ricetteDi('mulino', 10).length === 2)
+}
+
+/* ══════════ 6b. QUELLO CHE È ARRIVATO E NON È STATO PRESO ══════════
+   Da quando i premi di un livello si vanno a prendere a mano, fra «non
+   è ancora arrivato» e «vallo a comprare» c'è un terzo caso: è
+   arrivato, nessuno l'ha preso, e quindi nel baule non c'è. Mandare lì
+   sarebbe di nuovo un tasto rotto — quello che i livelli esistono per
+   non avere. */
+{
+  const { f } = fattoria(30)
+  /* `fattoria()` prende tutti i premi: qui si rimette indietro il solo
+     silo del raccolto, che è la prima cosa a cui il grano risale — senza
+     un posto dove metterlo non si raccoglie niente. */
+  delete f.reclamati['cosa:silo']
+  const p = comeAvere(f, 'grano', T0)
+  uguale('non manda al baule una cosa che nel baule non c\'è',
+         (p.azione || {}).che, 'premio')
+  uguale('e manda dove quella cosa sta davvero',
+         (p.azione || {}).voce, 'silo')
+  controlla('dicendolo', /premi/i.test(p.testo), p.testo)
+
+  f.reclamati['cosa:silo'] = 1
+  uguale('preso il premio, torna a mandare al baule',
+         (comeAvere(f, 'grano', T0).azione || {}).che, 'compra')
 }
 
 /* ══════════ 7. IL CARRETTO DEL VICINO ══════════

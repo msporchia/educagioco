@@ -209,6 +209,79 @@ export function roba(livello) {
 export const vuoto = r => !r.schede.length && !r.cose.length &&
   !r.colture.length && !r.animali.length
 
+/* ═══════════ I PREMI, E IL FATTO CHE SI RECLAMANO ═══════════
+   Quello che arriva a un livello non arriva più **da solo**. Prima sì:
+   si comprava una panchina, la spesa faceva scattare il livello, e in
+   mezzo al gesto di comprare si apriva un foglio di festa che diceva
+   cos'era arrivato. Due difetti, e il secondo è il vero.
+
+   Il primo è che **spezzava l'acquisto**: il dito era in viaggio fra il
+   baule e il prato, e trovava un velo. Il secondo è che quello che
+   arrivava non lo prendeva nessuno — compariva. Un premio che compare è
+   una riga di elenco; un premio che si preme è una cosa che ci si va a
+   prendere, e la differenza è tutta lì.
+
+   Adesso il livello **apre** i premi, e ognuno si prende premendolo
+   nella pagina dei livelli (`viste/Livelli.vue`). Finché non è preso non
+   sta nel baule: è la stessa regola di prima — quello che non è ancora
+   arrivato non si mostra dentro un negozio — con un gesto in mezzo.
+
+   **Reclamare non regala niente**, e va detto perché la parola promette
+   più di quello che dà: apre la voce nel baule, dove si compra con le
+   monete come sempre. La fattoria è il posto dove si spende quello che
+   si è guadagnato altrove (`CALIBRAZIONE.md`), e un livello che
+   regalasse la roba toglierebbe di mezzo proprio il gesto che tiene in
+   piedi tutto il resto.
+
+   La chiave è **il tipo più l'id**, e non l'id da solo: una coltura e
+   una voce di catalogo possono chiamarsi uguale, e due premi con la
+   stessa chiave sarebbero uno solo preso due volte. */
+export const chiaveDi = (tipo, id) => `${tipo}:${id}`
+
+/* I premi di un livello, già pronti da mostrare: la figura vera del
+   pezzo (non un'emoji: il perché sta in `viste/Livelli.vue`), il nome, e
+   *che cosa* è — «raccolto» e «carote» da soli sono due parole che
+   sembrano la stessa cosa, mentre «uno scaffale nuovo» e «da seminare»
+   si distinguono da lontano.
+
+   Le linguette del baule **non sono premi**: si aprono da sé quando
+   arriva la loro prima voce (`livelloDellaScheda`), e un quadratino da
+   premere che apre uno scaffale vuoto non è un premio, è un passaggio
+   in più. */
+function componi(livello) {
+  const l = Math.max(1, livello | 0)
+  const r = roba(l)
+  return [
+    ...r.cose.map(c => ({
+      chiave: chiaveDi('cosa', c.id), tipo: 'cosa', id: c.id, liv: l,
+      nome: c.nome, pezzo: c.pezzo, prezzo: c.prezzo, zona: zonaDi(c.id),
+      che: zonaDi(c.id) === 'lavoro' ? 'da costruire' : 'da mettere',
+    })),
+    ...r.colture.map(c => ({
+      chiave: chiaveDi('coltura', c.id), tipo: 'coltura', id: c.id, liv: l,
+      nome: c.nome, pezzo: c.stadi[c.stadi.length - 1], largo: true,
+      che: 'da seminare',
+    })),
+    ...r.animali.map(a => ({
+      chiave: chiaveDi('bestia', a.chi), tipo: 'bestia', id: a.chi, liv: l,
+      nome: a.nome, pezzo: a.chi + '_giu0', prezzo: a.prezzo, che: 'un amico',
+    })),
+  ]
+}
+
+/* Si compone una volta sola: la pagina dei livelli li chiede a ogni
+   ridisegno, e girare tutto il catalogo per ogni livello a ogni
+   fotogramma è lavoro buttato. */
+const PER_LIVELLO = Array.from({ length: ULTIMO + 1 }, (_, l) => l ? componi(l) : [])
+export const premiDi = livello => PER_LIVELLO[Math.max(1, livello | 0)] || []
+
+const PREMI = PER_LIVELLO.flat()
+const PREMIO_PER_CHIAVE = Object.fromEntries(PREMI.map(p => [p.chiave, p]))
+/* Una chiave che nessun premio dichiara **non esiste**: è così che un
+   salvataggio che nomina una cosa tolta dal catalogo non si porta
+   dietro un premio fantasma per sempre. */
+export const premioDi = chiave => PREMIO_PER_CHIAVE[chiave] || null
+
 export function guastiDeiLivelli() {
   const g = []
   for (let l = 2; l <= ULTIMO + 2; l++)
@@ -251,6 +324,21 @@ export function guastiDeiLivelli() {
   if (!primo.some(v => v.campo)) g.push('al livello 1 non c\'è nessun campo: la catena non comincia')
   if (!primo.some(v => v.silo === 'terra')) g.push('al livello 1 non c\'è il silo del raccolto')
   if (!COLTURE.some(c => (c.liv || 1) === 1)) g.push('al livello 1 non c\'è niente da seminare')
+  /* ── E OGNI PREMIO DEVE POTERSI MOSTRARE ────────────────────────
+     Un quadratino si preme guardando la figura, non leggendo il nome:
+     un premio senza pezzo sarebbe un riquadro vuoto da premere. E due
+     premi con la stessa chiave sarebbero **un premio solo**, preso due
+     volte: quello che si prende è la chiave, non la riga. */
+  {
+    const viste = new Set()
+    for (let l = 1; l <= ULTIMO; l++)
+      for (const p of premiDi(l)) {
+        if (!p.pezzo) g.push(`il premio ${p.chiave} non ha una figura da mostrare`)
+        if (!p.nome) g.push(`il premio ${p.chiave} non ha un nome`)
+        if (viste.has(p.chiave)) g.push(`il premio ${p.chiave} c'è due volte`)
+        viste.add(p.chiave)
+      }
+  }
   g.push(...guastiDegliSblocchi())
   return g
 }

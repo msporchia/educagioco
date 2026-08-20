@@ -66,13 +66,15 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi,
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi, laMacchina,
          statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare } from '../dati/catalogo.js'
 import {
-  PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, ricetteDi, postiPerMerce, costoIngrandimento,
+  PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, COLTURE, RICETTE,
+  ricetteDi, postiPerMerce, costoIngrandimento,
   merciDi, siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano,
 } from '../dati/coltivazioni.js'
-import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi } from '../dati/livelli.js'
+import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi, ULTIMO,
+         premiDi, premioDi, chiaveDi } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
@@ -117,6 +119,11 @@ export class Fattoria {
        mai. Non si azzera nemmeno mettendo via le cose — quello che hai
        imparato a fare non si disimpara. */
     this.speso = 0
+    /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
+       fattoria appena nata deve avere in mano il campo, il silo e un
+       seme, e chiedere di reclamarli prima ancora di aver visto il prato
+       vorrebbe dire aprire il gioco su un baule vuoto. */
+    this.reclamati = {}
     this.terreno = {}
     this.bestie = []
     this.prossimo = 1
@@ -131,6 +138,7 @@ export class Fattoria {
     for (const p of PARTENZA)
       this.cose.push({ i: this.prossimo++, id: p.id, g: p.g || 0,
                        x: c0 + p.dx, y: c0 + p.dy })
+    for (const p of premiDi(1)) this.reclamati[p.chiave] = 1
     return this
   }
 
@@ -178,7 +186,7 @@ export class Fattoria {
   serializza() {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
-             speso: this.speso,
+             speso: this.speso, reclamati: this.reclamati,
              terreno: this.terreno,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
@@ -255,6 +263,28 @@ export class Fattoria {
        davvero. */
     this.speso = Number.isFinite(d && d.speso) && d.speso > 0 ? Math.floor(d.speso)
       : this.stimaLoSpeso()
+    /* ── I PREMI PRESI ──────────────────────────────────────────────
+       Una fattoria salvata prima che i premi si reclamassero non ce li
+       ha, e i suoi livelli sono già passati: si considerano **presi
+       tutti**. Senza, chi è al livello venti riaprirebbe il gioco con
+       il baule svuotato e sessanta quadratini da premere — cioè con la
+       sua roba tolta e restituita a rate.
+
+       Una chiave che nessun premio dichiara si butta: un id sparito dal
+       catalogo non deve lasciare in archivio un premio fantasma. */
+    this.reclamati = {}
+    if (d && d.reclamati && typeof d.reclamati === 'object') {
+      for (const k of Object.keys(d.reclamati)) if (premioDi(k)) this.reclamati[k] = 1
+    } else this.reclamaTutto()
+    /* E quello che è **già in mano** conta come preso comunque, in ogni
+       caso: una panchina in mappa che risultasse non reclamata sarebbe
+       una cosa comprata che, messa via, non si può più tirare fuori. */
+    for (const c of this.cose) {
+      this.reclamati[chiaveDi('cosa', c.id)] = 1
+      if (c.coltura) this.reclamati[chiaveDi('coltura', c.coltura)] = 1
+    }
+    for (const id of Object.keys(this.magazzino)) this.reclamati[chiaveDi('cosa', id)] = 1
+    for (const b of this.bestie) this.reclamati[chiaveDi('bestia', b.chi)] = 1
     this.silos = {}
     for (const fam of Object.keys(SILI)) {
       const salvato = d && d.silos && d.silos[fam]
@@ -315,14 +345,59 @@ export class Fattoria {
     return Math.max(n, sogliaDi(serve))
   }
 
-  /* Se una cosa è già arrivata. Il baule mostra solo lo sbloccato, ma
-     la regola sta **qui**: una schermata che filtra è una comodità, un
-     motore che accetta tutto è un buco — e questo motore lo usa anche
-     chi scrive un test. */
+  /* ═══════════ i premi, e il gesto di prenderli ═══════════
+     Salire di livello **apre** dei premi; averli vuol dire averli
+     presi. Il perché sta in `dati/livelli.js`: un premio che compare da
+     solo è una riga di elenco, uno che si preme è una cosa che ci si va
+     a prendere — e soprattutto non si presenta in mezzo a un acquisto.
+
+     Il livello resta il cancello di prima: si può reclamare solo quello
+     che il livello ha già aperto. Il reclamo è il secondo giro di
+     chiave, non il primo. */
+  reclamato(chiave) { return !!this.reclamati[chiave] }
+
+  /* Quello che è arrivato e nessuno ha ancora preso. È il numero che il
+     gettone in alto porta addosso, quindi si chiede spesso: si ferma
+     all'ultimo livello che porta roba, se no un cheat al livello 300
+     girerebbe trecento volte a vuoto. */
+  daReclamare() {
+    const fuori = []
+    const fin = Math.min(this.livello, ULTIMO)
+    for (let l = 1; l <= fin; l++)
+      for (const p of premiDi(l)) if (!this.reclamati[p.chiave]) fuori.push(p)
+    return fuori
+  }
+
+  reclama(chiave) {
+    const p = premioDi(chiave)
+    if (!p) return { ok: false, motivo: 'non-esiste' }
+    if (p.liv > this.livello) return { ok: false, motivo: 'non-arrivato', liv: p.liv }
+    if (this.reclamati[chiave]) return { ok: false, motivo: 'gia-preso' }
+    this.reclamati[chiave] = 1
+    return { ok: true, premio: p }
+  }
+
+  /* Tutto quello che c'è da prendere, preso. Non è una scorciatoia per
+     chi gioca: la usa la migrazione di un salvataggio di ieri, il cheat
+     dell'indirizzo, e chi scrive un test che dei quadratini non deve
+     sapere niente. */
+  reclamaTutto() {
+    for (const p of this.daReclamare()) this.reclamati[p.chiave] = 1
+    return this
+  }
+
+  /* Se una cosa è già arrivata **ed è stata presa**. Il baule mostra
+     solo questo, ma la regola sta **qui**: una schermata che filtra è
+     una comodità, un motore che accetta tutto è un buco — e questo
+     motore lo usa anche chi scrive un test. */
   sbloccata(id) {
     const v = PER_ID[id]
-    return !!v && livelloDellaVoce(v) <= this.livello
+    return !!v && this.reclamato(chiaveDi('cosa', id))
   }
+
+  /* Le stesse due domande per le altre due specie di premio. */
+  colturaAperta(id) { return this.reclamato(chiaveDi('coltura', id)) }
+  bestiaAperta(chi) { return this.reclamato(chiaveDi('bestia', chi)) }
 
   /* ═══════════ il terreno ═══════════ */
   mia(px, py) { return !!this.piazzole[chiave(px, py)] }
@@ -601,7 +676,7 @@ export class Fattoria {
   compraBestia(chi, prezzo, nome = '', dove = null) {
     if (this.hoLaBestia(chi)) return { ok: false, motivo: 'gia-tua' }
     const a = ANIMALI[chi]
-    if (a && (a.liv || 1) > this.livello)
+    if (a && !this.bestiaAperta(chi))
       return { ok: false, motivo: 'non-sbloccato', liv: a.liv }
     if (this.borsa.quante() < prezzo) return { ok: false, motivo: 'poche-monete', costo: prezzo }
     this.spendi(prezzo)
@@ -795,9 +870,47 @@ export class Fattoria {
      scomparto vuoto non è un buco, è il posto dove potrebbe andare
      qualcosa — cioè l'unico modo di far vedere che si può coltivare
      altro senza dirlo con una frase. */
+  /* ── IL SILO NON RACCONTA IL FUTURO ──────────────────────────────
+     Gli scomparti erano **tutti**, anche quelli di roba che sarebbe
+     arrivata dopo mesi: la barretta vuota doveva dire «qui potrebbe
+     andare qualcosa», e diceva invece tutta la scaletta del gioco in
+     anticipo — al primo silo si leggevano latte, uova e lana insieme al
+     grano. Una sorpresa che si racconta da sé non è più una sorpresa, e
+     un magazzino non è il posto dove si annuncia il futuro: quello è la
+     pagina dei livelli, dove è **un premio** e non una riga di elenco.
+
+     Resta il senso di prima per quello che è **già aperto**: una
+     coltura che si può seminare oggi ha il suo scomparto anche se non
+     l'hai mai raccolta, ed è così che si scopre che si può coltivare
+     altro. E quello di cui si ha ancora della roba resta comunque
+     visibile, se no una merce tolta dal catalogo diventerebbe roba
+     invisibile che occupa posto. */
+  merciAperte(famiglia) {
+    return merciDi(famiglia).filter(
+      p => this.quantoHo(p) > 0 || this.ottenibile(p))
+  }
+
+  /* Se una merce si può avere **adesso**: la dà una coltura già presa,
+     o una ricetta che si può fare — cioè che è arrivata, la cui
+     macchina è aperta, e i cui ingredienti sono a loro volta
+     ottenibili. `giri` ferma una catena che si mordesse la coda. */
+  ottenibile(prodotto, giri = 4) {
+    if (giri <= 0) return false
+    for (const c of COLTURE)
+      if (c.da === prodotto && this.colturaAperta(c.id)) return true
+    for (const r of RICETTE) {
+      if (r.da !== prodotto) continue
+      if ((r.liv || 1) > this.livello) continue
+      const m = laMacchina(r.dove)
+      if (m && !this.sbloccata(m.id)) continue
+      if (Object.keys(r.prende || {}).every(k => this.ottenibile(k, giri - 1))) return true
+    }
+    return false
+  }
+
   scomparti(famiglia) {
     const posti = this.capienzaDi(famiglia)
-    return merciDi(famiglia).map(prodotto => ({
+    return this.merciAperte(famiglia).map(prodotto => ({
       prodotto, posti, quanti: this.quantoHo(prodotto),
       pieno: posti > 0 && this.quantoHo(prodotto) >= posti,
     }))
@@ -876,7 +989,7 @@ export class Fattoria {
     if (!s.vuoto) return { ok: false, motivo: 'gia-seminato' }
     const c = PER_COLTURA[colturaId]
     if (!c) return { ok: false, motivo: 'non-esiste' }
-    if ((c.liv || 1) > this.livello)
+    if (!this.colturaAperta(c.id))
       return { ok: false, motivo: 'non-sbloccato', liv: c.liv }
     if (this.borsa.quante() < c.semina)
       return { ok: false, motivo: 'poche-monete', costo: c.semina }

@@ -13,7 +13,7 @@
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
   guastiDeiLivelli, ULTIMO, DECORI_PER_LIVELLO, livelloPer, sogliaDi, avanzamento,
-  roba, vuoto, livelloDellaVoce, livelloDellaScheda, zonaDi,
+  roba, vuoto, livelloDellaVoce, livelloDellaScheda, zonaDi, premiDi,
 } from '../../src/giochi/fattoria/dati/livelli.js'
 import { CATALOGO, CATEGORIE, PER_ID, prezzoDellaVoce }
   from '../../src/giochi/fattoria/dati/catalogo.js'
@@ -169,9 +169,15 @@ for (let l = 1; l <= ULTIMO; l++)
   const bestia = f.compraBestia('pappagallo', 120, 'Coco')
   uguale('e nemmeno una bestia', bestia.ok, false)
 
-  /* Cresciuta, tutto si apre: il livello non chiude niente per sempre. */
+  /* Cresciuta, tutto si apre: il livello non chiude niente per sempre.
+     Ma **aprire non è avere**: il livello dà il diritto di prendere un
+     premio, e finché non lo si prende (sezione 8) il mulino non sta nel
+     baule. È la stessa riga di prima con un gesto in mezzo. */
   f.speso = 100000
-  controlla('da grande il mulino si posa',
+  uguale('salito di livello il mulino è arrivato, ma non è ancora preso',
+         f.posa('mulino', dove.x + 6, dove.y + 6).ok, false)
+  f.reclamaTutto()
+  controlla('preso il premio, da grande il mulino si posa',
             f.posa('mulino', dove.x + 6, dove.y + 6).ok)
 }
 
@@ -195,6 +201,7 @@ for (let l = 1; l <= ULTIMO; l++)
 
   const f = new Fattoria({ borsa: borsaInfinita() })
   f.speso = 100000
+  f.reclamaTutto()
   const dove = f.cellaLibera(14, 14)
   controlla('il primo silo si posa', f.posa('silo', dove.x, dove.y).ok)
   const bis = f.posa('silo', dove.x + 6, dove.y)
@@ -211,15 +218,23 @@ for (let l = 1; l <= ULTIMO; l++)
 {
   const f = new Fattoria({ borsa: borsaInfinita() })
   f.speso = 100000
+  f.reclamaTutto()
   const dove = f.cellaLibera(14, 14)
   f.posa('mulino', dove.x, dove.y)
   f.posa('pollaio', dove.x + 8, dove.y)
 
   const dato = JSON.parse(JSON.stringify(f.serializza()))
   delete dato.speso
+  /* E nemmeno i premi presi, che sono ancora più recenti: una fattoria
+     di ieri li ha tutti aperti e nessuno segnato. Ritrovarsi il baule
+     svuotato e sessanta quadratini da premere sarebbe la propria roba
+     tolta e restituita a rate. */
+  delete dato.reclamati
   const g = new Fattoria({ dato })
   controlla('la spesa si stima da quello che c\'è in mappa', g.speso > 0)
   controlla('e il mulino resta sbloccato', g.sbloccata('mulino'))
+  uguale('e non c\'è niente da reclamare: era già tutto suo',
+         g.daReclamare().length, 0)
 }
 
 /* ══════════ 7. l'avanzamento è quello che la pagina mostra ══════════ */
@@ -231,6 +246,72 @@ for (let l = 1; l <= ULTIMO; l++)
   const b = avanzamento((sogliaDi(2) + sogliaDi(3)) / 2)
   controlla('a metà strada la barra è a metà', Math.abs(b.quanto - 0.5) < 0.01)
   controlla('ogni livello ha un nome', a.nome && a.nome.length > 2)
+}
+
+/* ══════════ 8. i premi si vanno a prendere ══════════
+   Salire di livello **apre** dei premi; averli vuol dire averli presi,
+   premendoli nella pagina dei livelli. Le tre cose che questo blocco
+   difende, e sono decisioni di prodotto:
+     1. **niente arriva da solo** — perché il livello sale sempre in
+        mezzo a un acquisto, e quello che compariva da sé spezzava il
+        gesto invece di premiarlo;
+     2. **il livello 1 è già preso** — una fattoria appena nata deve
+        avere in mano campo, silo e un seme, non tre quadratini;
+     3. **prendere non regala** — apre la voce nel baule, dove si paga
+        come sempre: la fattoria è il posto dove si spende. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  uguale('appena nata non ha niente da prendere', f.daReclamare().length, 0)
+  controlla('perché il livello 1 è già suo', f.sbloccata('orto'))
+
+  f.speso = sogliaDi(3)
+  const aspetta = f.daReclamare()
+  controlla('salita di due livelli, ha dei premi che aspettano', aspetta.length > 0)
+  controlla('e sono tutti di livelli già raggiunti',
+            aspetta.every(p => p.liv <= f.livello))
+  controlla('il mulino è fra quelli', aspetta.some(p => p.chiave === 'cosa:mulino'))
+  controlla('ma non sta ancora nel baule', !f.sbloccata('mulino'))
+
+  const preso = f.reclama('cosa:mulino')
+  controlla('si prende', preso.ok)
+  controlla('e da lì è nel baule', f.sbloccata('mulino'))
+  uguale('preso una volta non si riprende', f.reclama('cosa:mulino').ok, false)
+  uguale('e prenderlo non ha regalato niente',
+         f.quantiNe('mulino'), 0)
+
+  /* Un premio di là da venire non si prende scrivendone la chiave: la
+     regola sta nel motore, come tutte le altre. */
+  const avanti = premiDi(ULTIMO)[0]
+  uguale('un premio che non è ancora arrivato non si prende',
+         f.reclama(avanti.chiave).ok, false)
+  uguale('e una chiave che non esiste nemmeno',
+         f.reclama('cosa:non-esiste').ok, false)
+
+  /* Quello che si è preso resta preso attraverso un salvataggio: è
+     l'unica cosa nuova che il profilo si porta dietro. */
+  const g = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })
+  controlla('il premio preso sopravvive al salvataggio', g.sbloccata('mulino'))
+  uguale('e gli altri restano da prendere',
+         g.daReclamare().length, aspetta.length - 1)
+}
+
+/* ══════════ 8b. il silo non racconta il futuro ══════════
+   Gli scomparti erano tutte le merci del silo, e al primo raccolto di
+   grano si leggevano già latte, uova, lana e tartufi: il magazzino
+   diceva in anticipo tutta la scaletta del gioco. */
+{
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  const dentro = f.scomparti('terra').map(s => s.prodotto)
+  uguale('al primo livello nel silo c\'è solo quello che si semina',
+         dentro.join(','), 'grano')
+  controlla('e il silo della stalla non anticipa niente',
+            f.scomparti('stalla').length === 0)
+
+  f.speso = 100000
+  f.reclamaTutto()
+  controlla('da grande ci sono tutte', f.scomparti('terra').length > 3)
+  controlla('e anche quelle degli animali', f.scomparti('stalla').length > 3)
+  nota(`silo della terra: da ${dentro.length} a ${f.scomparti('terra').length} scomparti`)
 }
 
 nota(`${ULTIMO} livelli · dal livello 2 (🪙${sogliaDi(2)}) al ${ULTIMO} ` +

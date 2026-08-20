@@ -55,8 +55,12 @@ function conCampoEMulino(monete = 1000, ingranditi = 3) {
   /* Fattoria **cresciuta**: il livello apre le cose a poco a poco
      (`dati/livelli.js`) e qui si provano le regole della coltivazione,
      non gli sblocchi — che hanno il loro file (`unita/livelli-fattoria`).
-     Senza questa riga il mulino non si posa e il mais non si semina. */
+     Senza questa riga il mulino non si posa e il mais non si semina.
+     E i premi si prendono tutti: alzare la spesa **apre** i premi di
+     quei livelli, prenderli è un altro gesto (`Fattoria.reclama`) e qui
+     non si prova quello. */
   f.speso = 100000
+  f.reclamaTutto()
   return { f, b, campo, mulino, silo, bianco }
 }
 

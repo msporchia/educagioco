@@ -520,21 +520,67 @@ livello deve comprare. In tempo di esercizi: il livello 2 è mezz'ora, il 10 sei
 ore, l'ultimo centoventisette, spalmate su mesi
 ([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)).
 
-**Il baule ha due metà.** 🌾 *La fattoria* è quello che fa qualcosa — campi,
-macchine, silos, recinti, bestie — e 🌸 *Il bello* è quello che sta lì e
-basta. Sono i due modi diversi di spendere che questo posto ha: uno allarga la
-catena, l'altro fa sembrare casa. Senza la divisione, la carriola fiorita sta
-in mezzo al pollaio e chi cerca il mulino passa in rassegna il vivaio. La
-seconda metà non compare finché non arriva la prima decorazione: una linguetta
-che si apre su niente è un tasto rotto.
+**Il baule ha tre metà, e stanno in alto.** 🌾 *La fattoria* è quello che fa
+qualcosa — campi, macchine, silos, recinti — 🌸 *Decorazioni* è quello che sta
+lì e basta, 🐕 *Animali* sono le bestie di casa. Sono i modi diversi di
+spendere che questo posto ha: uno allarga la catena, gli altri fanno sembrare
+casa. Senza la divisione, la carriola fiorita sta in mezzo al pollaio e chi
+cerca il mulino passa in rassegna il vivaio.
+
+I tre tasti sono **fuori dal baule**, tondi accanto al gettone del livello, e
+aprono il baule già dalla parte giusta. C'era un 📦 solo e la scelta si faceva
+dentro: due gesti per dire una cosa sola, e il primo non diceva niente — un
+pacco chiuso non fa venire in mente né una panchina né un cane. Compaiono
+solo le metà che hanno qualcosa dentro: al primo livello c'è solo 🌾, e un
+tasto che si apre su uno scaffale vuoto è un tasto rotto.
 
 **Quello che non è ancora arrivato non sta nel baule, sta nella pagina dei
 livelli.** La differenza conta: una voce spenta dentro un negozio è un tasto
 rotto — chi la vede prova a premerla e non succede niente — mentre la stessa
-voce sotto «al livello 4 arriva» è una cosa da desiderare. La pagina si apre
-dal gettone ⭐ in alto, accanto al baule, e mostra a che punto sei, cosa arriva
-al prossimo e i dodici livelli successivi. Quando si sale, lo stesso foglio si
-apre da sé: un livello che arriva in silenzio non lo nota nessuno.
+voce sotto «al livello 4 arriva» è una cosa da desiderare.
+
+### I premi si vanno a prendere (dal 20 agosto 2026)
+
+**Quello che arriva a un livello non arriva più da solo.** Il livello lo
+*apre*; per averlo bisogna premerlo, nella pagina dei livelli, e da quel
+momento sta nel baule. Prenderlo **non regala niente**: apre la voce, che poi
+si compra con le monete come tutto il resto — la fattoria resta il posto dove
+si spende.
+
+Due difetti insieme, e il secondo è il vero. Il livello sale **spendendo**,
+cioè sempre in mezzo a un acquisto: il foglio della festa si apriva quando il
+dito era in viaggio dal baule al prato, e **spezzava il gesto** che il gioco
+vuole. E quello che arrivava non lo prendeva nessuno — compariva. Un premio
+che compare è una riga di elenco; uno che si preme è una cosa che ci si va a
+prendere.
+
+Adesso salire di livello non apre niente: passa una riga d'avviso, e il
+gettone ⭐ si accende con **un pallino che dice quanti premi aspettano**. È
+l'unica cosa che lo dice mentre si guarda il prato, e resta lì finché non
+sono stati presi tutti.
+
+La pagina mostra **due livelli e non tredici**: quello di adesso, a
+quadratini — i presi col segno di spunta, quelli da prendere accesi e che
+pulsano — e quello dopo, gli stessi quadratini in grigio col lucchetto, con
+quanto manca da spendere. Sotto c'era la scaletta intera, tredici righe che
+scorrevano «per far vedere che la strada continua»: erano righe di testo con
+dentro nomi di cose mai viste, e in mezzo ci finiva anche l'unica riga su cui
+si poteva fare qualcosa.
+
+Chi arriva da una fattoria di ieri **non trova niente da prendere**: quello
+che il suo livello aveva già aperto risulta preso. Il contrario sarebbe la
+propria roba tolta e restituita a rate. E il consiglio in fondo ai fogli sa
+distinguere i tre casi: «arriva al livello 10», «ti aspetta nei premi» (col
+tasto che porta lì) e «🪙120» col tasto che apre il baule.
+
+**Il silo non racconta più il futuro.** Gli scomparti erano tutte le merci
+della sua famiglia, e al primo raccolto di grano si leggevano già latte,
+uova, lana e tartufi: il magazzino diceva in anticipo tutta la scaletta del
+gioco. Adesso ci sono solo le merci **ottenibili adesso** — una coltura già
+presa, o una ricetta che si può davvero fare — più quelle di cui si ha
+ancora della roba. Resta il senso di prima per lo scomparto vuoto di una
+coltura già aperta: è il posto dove potrebbe andare qualcosa, ed è così che
+si scopre che si può coltivare altro.
 
 **Quello che produce rincara a ogni copia** (`cresce` nel catalogo): due
 conigliere fanno il doppio della lana e il quinto campo vale quanto il primo,
@@ -550,7 +596,10 @@ La regola sta nel motore e non nella schermata: `posa()`, `compra()`,
 
 Per guardare col telefono una cosa del livello 40 senza spendere davvero
 quindicimila monete c'è **`#fattoria=40`** nell'indirizzo, il fratello di
-`#monete=`: alza e basta, non fa mai scendere.
+`#monete=`: alza e basta, non fa mai scendere. I premi dei livelli passati se
+li prende da sé — sessanta quadratini da premere non sono quello che si sta
+andando a guardare — e lascia da prendere quelli **del livello a cui porta**,
+cioè la situazione esatta di chi ci è arrivato spendendo.
 
 ### Non si può più spegnere
 
@@ -689,12 +738,13 @@ il consiglio doveva togliere.
 Duecento cose da comprare, a griglia — colonne uguali, come una tastiera,
 invece di pillole centrate che facevano tre righe di lunghezze diverse.
 
-**In cima si sceglie di cosa si sta parlando**, e le risposte sono tre: 🌾 *La
-fattoria* (quello che fa qualcosa), 🌸 *Decorazioni* (quello che sta lì e
-basta), 🐕 *Animali* (le bestie di casa). Erano due, con gli animali dentro
-«la fattoria» come una linguetta accanto ai recinti, e la seconda si chiamava
-«Il bello» — vero, ma non una parola che un bambino userebbe cercando una
-panchina.
+**Di cosa si sta parlando si sceglie prima di entrare**, e le risposte sono
+tre: 🌾 *La fattoria* (quello che fa qualcosa), 🌸 *Decorazioni* (quello che
+sta lì e basta), 🐕 *Animali* (le bestie di casa). Sono i tre tondi in alto a
+destra, e in cima al baule restano come linguette per cambiare metà senza
+uscire. Erano due, con gli animali dentro «la fattoria» come una linguetta
+accanto ai recinti, e la seconda si chiamava «Il bello» — vero, ma non una
+parola che un bambino userebbe cercando una panchina.
 
 Sotto «la fattoria» **la linguetta è una sola**, e quando è una sola non si
 mostra affatto: campo, mulino, silos, fienile e recinti sono i passi della

@@ -40,8 +40,11 @@ const borsaTracciata = iniziale => {
    `unita/coltivazioni`. */
 function conSilos(f, larghi = 4) {
   /* e **cresciuta**: i recinti si sbloccano coi livelli
-     (`dati/livelli.js`), e qui si provano i recinti */
+     (`dati/livelli.js`), e qui si provano i recinti. I premi di quei
+     livelli si prendono tutti in un colpo: aprire e prendere sono due
+     gesti diversi, e quello che si prova qui viene dopo tutti e due. */
   f.speso = 100000
+  f.reclamaTutto()
   f.cose.push({ i: 990, id: SILI.terra.cosa, g: 0, x: 30, y: 30 },
               { i: 991, id: SILI.stalla.cosa, g: 0, x: 33, y: 30 })
   f.silos = { terra: larghi, stalla: larghi }

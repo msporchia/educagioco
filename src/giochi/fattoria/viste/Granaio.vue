@@ -26,8 +26,16 @@
    Le barrette **vuote si vedono lo stesso**, ed è metà del mestiere di
    questa schermata: uno scomparto a zero non è un buco, è il posto
    dove potrebbe andare qualcosa. È il modo di far scoprire che si può
-   coltivare altro senza dirlo con una frase — e di far scoprire che le
-   uova vanno di là.
+   coltivare altro senza dirlo con una frase.
+
+   Ma vale **solo per quello che è già aperto**. Prima c'erano tutte le
+   merci del silo, e al primo raccolto di grano si leggevano già latte,
+   uova, lana e tartufi: il magazzino raccontava tutta la scaletta del
+   gioco in anticipo. Quello che deve ancora arrivare si guarda dov'è un
+   premio — la pagina dei livelli — e non dove sarebbe una riga vuota in
+   un elenco. Il filtro sta nel motore (`Fattoria.merciAperte`): una
+   schermata che sceglie cosa mostrare è una comodità, la regola sta
+   dove sta il resto delle regole.
 
    ── PREMERE UNA ROBA DICE CHI LA USA ──────────────────────────────
    Dal silo non esce niente con le dita: non si posa e non si vende. Ma
@@ -49,8 +57,14 @@ const props = defineProps({
   /* 'terra' o 'stalla': il perché di due silos sta in `coltivazioni.js` */
   famiglia: { type: String, default: 'terra' },
   /* `[{ prodotto, posti, quanti, pieno }]`, uno per merce, già contati
-     dal motore (`Fattoria.scomparti`) — anche quelli vuoti */
+     dal motore (`Fattoria.scomparti`) — anche quelli vuoti, ma **solo
+     quelli aperti**: vedi qui sotto */
   scomparti: { type: Array, default: () => [] },
+  /* Quanto ci sta in uno scomparto. Arriva a parte e non si legge dal
+     primo della lista, perché la lista può essere vuota: un silo
+     comprato prima di avere qualcosa da metterci dentro esiste, e
+     direbbe «0 di ogni cosa» — cioè che è rotto. */
+  posti: { type: Number, default: 0 },
   /* quante volte è già stato ingrandito, e quanto costa la prossima */
   livello: { type: Number, default: 0 },
   costo: { type: Number, default: 0 },
@@ -61,7 +75,6 @@ defineEmits(['ingrandisci', 'chiudi'])
 const silo = computed(() => SILI[props.famiglia] || SILI.terra)
 const roba = id => PRODOTTI[id] || { nome: id, emoji: '📦' }
 const manca = computed(() => Math.max(0, props.costo - props.monete))
-const posti = computed(() => (props.scomparti[0] || {}).posti || 0)
 
 /* Quanti scomparti sono colmi: è l'unica cosa che va detta in cima,
    perché è l'unica che chiede di fare qualcosa. Se non ce n'è nessuno
@@ -113,9 +126,16 @@ const dice = u => {
         : `${pieni.length} scomparti sono al completo` }}</span>
     </p>
 
+    <!-- Un silo comprato prima di avere di che riempirlo: capita col
+         silo della stalla, che si può costruire prima delle bestie. Si
+         dice cosa manca, invece di mostrare un riquadro vuoto. -->
+    <p v-if="!scomparti.length" class="fa-piccolo">Qui dentro non c'è
+       ancora niente da mettere: ci arriverà la roba degli animali.</p>
+
     <!-- ── gli scomparti ──
          Uno per riga, barretta e numeri: è la risposta alla domanda per
          cui si apre un magazzino, e si legge senza contare niente. -->
+
     <div class="fa-scomparti">
       <button v-for="s in scomparti" :key="s.prodotto" type="button"
               :class="['fa-scomparto', { colmo: s.pieno, vuoto: !s.quanti,

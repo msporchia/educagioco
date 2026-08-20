@@ -1,134 +1,140 @@
 <script setup>
 /* ═══════════════════════════════════════════════════════════════════
-   LA PAGINA DEI LIVELLI — DOVE SONO, E COSA ARRIVA DOPO
+   LA PAGINA DEI LIVELLI — I PREMI, E DOVE SI VA A PRENDERLI
 
-   Sta **in alto**, sempre visibile: è il gettone col numero accanto al
-   baule, e si preme quando ci si chiede «e adesso?». Dentro ci sono tre
-   cose, in quest'ordine:
+   Sta **in alto**, sempre visibile: è il gettone col numero accanto ai
+   tondi del baule, e si preme quando ci si chiede «e adesso?». Dentro
+   ci sono due blocchi soli, e sono due domande:
 
-     1. **a che punto sono** — la barra e quanto manca da spendere;
-     2. **cosa arriva al prossimo livello** — l'anteprima, che è il
-        motivo per cui questa pagina esiste. Quello che non c'è ancora
-        non sta nel baule (una voce spenta dentro un negozio è un tasto
-        rotto): sta qui, dove si legge come una cosa da desiderare;
-     3. **la scaletta intera**, per vedere che la strada continua.
+     1. **cosa è arrivato** — i premi di questo livello, a quadratini.
+        Quelli non ancora presi si premono, ed è tutto il punto di
+        questa schermata;
+     2. **cosa arriva al prossimo** — gli stessi quadratini, spenti, con
+        quanto manca da spendere. È il motivo per cui si torna.
+
+   ── PERCHÉ SI PRENDONO A MANO ─────────────────────────────────────
+   Prima arrivavano da soli: la spesa faceva scattare il livello e
+   questo stesso foglio si apriva **in festa**, nel mezzo dell'acquisto.
+   Due difetti. Spezzava il gesto — il dito era in viaggio dal baule al
+   prato e trovava un velo — e quello che arrivava non lo prendeva
+   nessuno: compariva. Un premio che compare è una riga di elenco; uno
+   che si preme è una cosa che ci si va a prendere.
+
+   Adesso il livello **apre** i premi, il gettone in alto si accende col
+   loro numero, e si vengono a prendere qui quando si vuole. Prenderli
+   non regala niente: apre la voce nel baule, dove si compra con le
+   monete come sempre (`dati/livelli.js`).
+
+   ── SOLO DUE LIVELLI, E NON DODICI ────────────────────────────────
+   C'era sotto la scaletta intera, tredici righe che scorrevano, «per
+   vedere che la strada continua». Non serviva a niente: sono righe di
+   testo con dentro dei nomi di cose che non si sono mai viste, e in
+   mezzo ci finiva anche l'unica riga su cui si poteva fare qualcosa.
+   Quello che continua si vede lo stesso, perché il blocco del prossimo
+   livello c'è sempre — e quanti ne restano lo dice una riga sola.
 
    Non sa niente del profilo né del motore: riceve l'avanzamento già
-   fatto e la roba di ogni livello.
-
-   ── E QUANDO SI SALE ──────────────────────────────────────────────
-   Lo stesso foglio si apre da sé, in **festa**: un livello che arriva
-   in silenzio non lo nota nessuno, e quello che è appena arrivato
-   bisogna dirlo nel momento in cui è arrivato — dopo, nel baule, non
-   sembra una conquista ma una cosa che c'è sempre stata.
+   fatto, i premi e quali sono stati presi.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
-import { ULTIMO, nomeDi, sogliaDi, roba, vuoto, zonaDi } from '../dati/livelli.js'
+import { ULTIMO, premiDi } from '../dati/livelli.js'
 import Provino from './Provino.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.avanzamento` */
   stato: { type: Object, required: true },
-  /* se è appena salito: il foglio si presenta come un premio */
-  festa: { type: Boolean, default: false },
+  /* le chiavi dei premi già presi */
+  presi: { type: Array, default: () => [] },
 })
-defineEmits(['chiudi'])
+defineEmits(['reclama', 'chiudi'])
 
 const dopo = computed(() => props.stato.livello + 1)
-/* Cosa arriva a un livello, in una riga sola di roba da leggere: le
-   linguette per nome, le cose che lavorano per nome, le colture e le
-   bestie. Sotto, non i novanta cespugli di una linguetta. */
-/* ── SI MOSTRA LA COSA VERA, NON UN'ICONA ─────────────────────────
-   Ogni riga porta **il disegno del pezzo** che arriverà davvero, lo
-   stesso che si vedrà nel baule e in mappa (`Provino.vue`). C'era
-   un'emoji al suo posto — 🔨 per le costruzioni, la faccia della
-   linguetta per le decorazioni — ed era fuorviante due volte: prometteva
-   una cosa che poi non somigliava a niente di quello che arrivava, e
-   dieci righe con lo stesso martello dicevano che stanno arrivando dieci
-   cose uguali. Un'anteprima serve a **riconoscere** quello che sta per
-   arrivare, quindi va mostrato.
+const presi = computed(() => new Set(props.presi))
+const preso = p => presi.value.has(p.chiave)
 
-   Le colture si mostrano **mature** (l'ultimo stadio del campo, non i
-   semi appena buttati) e le bestie di fronte, come nel baule.
-
-   Ognuna dice anche *che cosa è*: «raccolto» e «carote» da soli sono due
-   parole che sembrano la stessa cosa, mentre «uno scaffale nuovo» e «da
-   seminare» si distinguono da lontano. */
-const dice = liv => {
-  const r = roba(liv)
-  if (vuoto(r)) return []
-  return [
-    /* una linguetta si mostra con la prima cosa che ci si trova dentro:
-       un cartello «Fiori» senza un fiore non dice quali fiori */
-    ...r.schede.map(s => ({ pezzo: (s.voci[0] || {}).pezzo, che: 'nel baule',
-                            nome: s.nome.toLowerCase() })),
-    ...r.cose.map(c => ({ pezzo: c.pezzo, nome: c.nome.toLowerCase(),
-                          che: zonaDi(c.id) === 'lavoro' ? 'da costruire' : 'da mettere' })),
-    ...r.colture.map(c => ({ pezzo: c.stadi[c.stadi.length - 1], che: 'da seminare',
-                             nome: c.nome.toLowerCase(), largo: true })),
-    ...r.animali.map(a => ({ pezzo: a.chi + '_giu0', che: 'un amico',
-                             nome: a.nome.toLowerCase() })),
-  ]
-}
-/* La strada, ma solo un pezzo: i livelli sono sessantacinque, e una
-   lista lunga così non si legge — si scorre e basta. Si mostrano quello
-   di adesso, uno indietro per vedere da dove si viene, e dodici avanti,
-   che è quanto basta a far vedere che la strada continua. */
-const scaletta = computed(() => {
-  const da = Math.max(1, props.stato.livello - 1)
-  const a = Math.min(ULTIMO, da + 12)
-  return Array.from({ length: a - da + 1 }, (_, i) => da + i).map(liv => ({
-    liv, nome: nomeDi(liv), soglia: sogliaDi(liv), cose: dice(liv),
-  }))
+/* ── QUELLO CHE È ARRIVATO ────────────────────────────────────────
+   I premi di questo livello, **più gli arretrati**: chi salta due
+   livelli con una spesa sola, o chi non è passato di qui per una
+   settimana, ha roba aperta a un livello più vecchio, e quella non può
+   restare in un blocco che non si mostra più. Prima i da prendere, che
+   sono la ragione per cui questa pagina è aperta. */
+const adesso = computed(() => {
+  const liv = props.stato.livello
+  const miei = premiDi(liv)
+  const arretrati = []
+  for (let l = 1; l < liv; l++)
+    for (const p of premiDi(l)) if (!preso(p)) arretrati.push(p)
+  return [...arretrati, ...miei].sort((a, b) => (preso(a) ? 1 : 0) - (preso(b) ? 1 : 0))
 })
+const daPrendere = computed(() => adesso.value.filter(p => !preso(p)))
+const prossimi = computed(() => premiDi(dopo.value))
+/* Quanti gradini restano da qui in fondo al catalogo. Oltre si continua
+   a salire, ma non arriva più niente di nuovo: si dice invece di
+   promettere. */
+const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
 </script>
 
 <template>
   <div class="fa-foglio fa-livelli">
-    <h2 v-if="festa">⭐ Livello {{ stato.livello }}!</h2>
-    <h2 v-else>La fattoria · livello {{ stato.livello }}</h2>
-    <p class="fa-titolone">{{ stato.nome }}</p>
+    <h2>⭐ Livello {{ stato.livello }} · {{ stato.nome }}</h2>
 
-    <template v-if="festa">
-      <p>Hai speso 🪙{{ stato.speso }} qui dentro. È arrivato:</p>
-      <ul class="fa-arriva">
-        <li v-for="(c, i) in dice(stato.livello)" :key="i">
-          <Provino v-if="c.pezzo" :pezzo="c.pezzo" :lato="c.largo ? 40 : 32" />
-          {{ c.nome }} <i>{{ c.che }}</i></li>
-      </ul>
-    </template>
+    <!-- ── quello che è arrivato ──
+         Il titolo cambia mestiere: con dei premi da prendere è un
+         invito e dice quanti sono, senza è il riepilogo di cosa ha
+         portato questo livello. -->
+    <span class="fa-etichetta" :class="{ dono: daPrendere.length }">
+      {{ daPrendere.length
+         ? (daPrendere.length === 1 ? '🎁 un premio da prendere'
+                                    : `🎁 ${daPrendere.length} premi da prendere`)
+         : `al livello ${stato.livello} è arrivato` }}</span>
 
-    <template v-else>
-      <p class="fa-posti">
-        <b>🪙{{ stato.speso }}</b> spesi ·
-        ne mancano <b>🪙{{ stato.manca }}</b> al livello {{ dopo }}</p>
-      <div class="fa-quanto largo"><i :style="{ width: Math.round(stato.quanto * 100) + '%' }"></i></div>
+    <div v-if="adesso.length" class="fa-premi">
+      <button v-for="p in adesso" :key="p.chiave" type="button"
+              :data-premio="p.chiave"
+              :class="['fa-premio', preso(p) ? 'preso' : 'da']"
+              :disabled="preso(p)"
+              @click="$emit('reclama', p.chiave)">
+        <span class="fa-ripiano" :class="{ alto: p.tipo === 'bestia' }">
+          <Provino :pezzo="p.pezzo" :lato="p.tipo === 'bestia' ? 64 : 48" /></span>
+        <span class="fa-nome">{{ p.nome }}</span>
+        <span v-if="preso(p)" class="fa-stato">✓ {{ p.che }}</span>
+        <span v-else class="fa-stato prendi">prendi</span>
+      </button>
+    </div>
+    <p v-else class="fa-piccolo">A questo livello è arrivata altra terra da riempire.</p>
 
-      <span class="fa-etichetta">al livello {{ dopo }} arriva</span>
-      <ul class="fa-arriva">
-        <li v-for="(c, i) in dice(dopo)" :key="i">
-          <Provino v-if="c.pezzo" :pezzo="c.pezzo" :lato="c.largo ? 40 : 32" />
-          {{ c.nome }} <i>{{ c.che }}</i></li>
-        <li v-if="!dice(dopo).length">altra terra da riempire</li>
-      </ul>
+    <p v-if="daPrendere.length" class="fa-piccolo">Premi un premio per
+       aprirlo: da quel momento lo trovi nel baule, e lo compri quando
+       hai le monete.</p>
 
-      <span class="fa-etichetta">la strada · {{ ULTIMO }} livelli in tutto</span>
-      <div class="fa-scala">
-        <div v-for="s in scaletta" :key="s.liv"
-             :class="['fa-passo', { fatto: s.liv <= stato.livello, ora: s.liv === stato.livello }]">
-          <b>{{ s.liv }}</b>
-          <span>{{ s.nome }}</span>
-          <em>{{ s.liv <= stato.livello ? '✓' : '🪙' + s.soglia }}</em>
-        </div>
+    <!-- ── quello che arriva ──
+         Spento e in grigio: non è un negozio, è una vetrina. Il numero
+         che conta è quanto manca da **spendere qui dentro**. -->
+    <span class="fa-etichetta">al livello {{ dopo }} arriva</span>
+    <p class="fa-posti">
+      <b>🪙{{ stato.speso }}</b> spesi ·
+      ne mancano <b>🪙{{ stato.manca }}</b></p>
+    <div class="fa-quanto largo"><i :style="{ width: Math.round(stato.quanto * 100) + '%' }"></i></div>
+
+    <div v-if="prossimi.length" class="fa-premi">
+      <div v-for="p in prossimi" :key="p.chiave" class="fa-premio chiuso">
+        <span class="fa-ripiano" :class="{ alto: p.tipo === 'bestia' }">
+          <Provino :pezzo="p.pezzo" :lato="p.tipo === 'bestia' ? 64 : 48" /></span>
+        <span class="fa-nome">{{ p.nome }}</span>
+        <span class="fa-stato">🔒 livello {{ dopo }}</span>
       </div>
-    </template>
+    </div>
+    <p v-else class="fa-piccolo">Al livello {{ dopo }} arriva altra terra da riempire.</p>
 
     <p class="fa-piccolo">Il livello sale spendendo monete <b>qui</b>: ogni
-       campo, ogni seme, ogni carota data a un coniglio. Non scende mai.</p>
+       campo, ogni seme, ogni carota data a un coniglio. Non scende mai.
+       <template v-if="restano > 0">Di gradini con qualcosa di nuovo
+         ne restano <b>{{ restano }}</b>.</template>
+       <template v-else>Da qui in poi si continua a salire, ma il baule
+         è già tutto aperto.</template></p>
 
     <div class="fa-fila">
-      <button class="fa-bot forte" @click="$emit('chiudi')">
-        {{ festa ? 'Bene!' : 'Chiudi' }}</button>
+      <button class="fa-bot forte" @click="$emit('chiudi')">Chiudi</button>
     </div>
   </div>
 </template>

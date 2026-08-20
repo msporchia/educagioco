@@ -45,10 +45,14 @@ function borsaTracciata(iniziale) {
    sblocchi hanno il loro file (`unita/livelli-fattoria`): qui si
    provano posa, prezzi e magazzino, e una fattoria appena nata li
    rifiuterebbe tutti dicendo una cosa vera che non c'entra. */
+/* E coi premi **già presi**: da quando i premi di un livello si vanno
+   a prendere a mano (`dati/livelli.js`), alzare la spesa apre soltanto
+   il diritto di prenderli. Chi qui prova a posare una panchina della
+   panchina non deve sapere niente. */
 const cresciuta = (opzioni = {}) => {
   const f = new Fattoria(opzioni)
   f.speso = 100000
-  return f
+  return f.reclamaTutto()
 }
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */

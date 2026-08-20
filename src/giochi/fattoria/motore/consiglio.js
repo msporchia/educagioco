@@ -40,6 +40,9 @@
      { che: 'apri',  cosa, con }         apre il foglio di quella cosa,
                                          già sulla merce `con` se l'ha
      { che: 'compra', voce, prezzo }     apre il baule su quella voce
+     { che: 'premio', voce }             apre la pagina dei livelli:
+                                         quella cosa è arrivata e
+                                         aspetta di essere presa
      { che: 'ingrandisci', famiglia }    allarga quel silo
      null                                c'è solo da aspettare
 
@@ -48,7 +51,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { COLTURE, RICETTE, PRODOTTI, SILI } from '../dati/coltivazioni.js'
 import { PER_ID, eCampo, macchinaDi } from '../dati/catalogo.js'
-import { livelloDelProdotto } from '../dati/livelli.js'
+import { livelloDelProdotto, livelloDellaVoce } from '../dati/livelli.js'
 import { carrettoIn, DAI } from './vicino.js'
 
 /* Quanto in là si risale prima di arrendersi. Quattro passi coprono la
@@ -143,17 +146,27 @@ const voceCampo = () => Object.values(PER_ID).find(v => v.campo) || null
 
    Un tasto che manda a comprare una cosa che il livello non ha ancora
    aperto sarebbe un tasto rotto: allora niente azione e si dice **a che
-   livello arriva**, che è una cosa da desiderare invece che un no. */
+   livello arriva**, che è una cosa da desiderare invece che un no.
+
+   E c'è un terzo caso in mezzo ai due, da quando i premi si vanno a
+   prendere a mano (`dati/livelli.js`): la cosa **è arrivata** ma nessuno
+   l'ha ancora presa, quindi nel baule non c'è. Mandare lì sarebbe di
+   nuovo un tasto rotto — e la cosa da fare è a due passi, dietro il
+   gettone del livello — quindi si manda dove sta il premio. */
 function acquisto(f, voce) {
   if (!voce) return null
-  const liv = voce.liv || 1
+  const liv = livelloDellaVoce(voce)
   if (liv > f.livello) return { voce, arriva: liv, prezzo: null, azione: null }
+  if (!f.sbloccata(voce.id))
+    return { voce, arriva: null, premio: true, prezzo: null,
+             azione: { che: 'premio', voce: voce.id } }
   const prezzo = f.quantoCosta(voce.id)
   return { voce, arriva: null, prezzo,
            azione: { che: 'compra', voce: voce.id, prezzo } }
 }
 
-const costa = a => a.arriva ? `arriva al livello ${a.arriva}` : `🪙${a.prezzo}`
+const costa = a => a.arriva ? `arriva al livello ${a.arriva}`
+  : a.premio ? 'ti aspetta nei premi' : `🪙${a.prezzo}`
 
 /* ── COME SI HA UNA COSA ──────────────────────────────────────────
    La domanda che tutto il resto gira a questo file. `quanti` serve solo

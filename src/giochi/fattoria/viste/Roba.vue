@@ -50,8 +50,8 @@
    `magazzino` e manda fuori `tira`. Chi paga è `Gioco.vue`.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, ref } from 'vue'
-import { CATEGORIE } from '../dati/catalogo.js'
-import { livelloDellaVoce } from '../dati/livelli.js'
+import { CATEGORIE, ZONE, ANIMALI_ZONA } from '../dati/catalogo.js'
+import { chiaveDi } from '../dati/livelli.js'
 import { IN_VENDITA } from '../dati/animali.js'
 import Provino from './Provino.vue'
 
@@ -68,13 +68,21 @@ const props = defineProps({
      consiglio («ti serve un campo»). Vuoto vuol dire: apriti dove ti
      apri sempre. */
   punta: { type: String, default: '' },
-  /* Il livello della fattoria: quello che non è ancora arrivato **non
-     sta qui**. Una voce spenta dentro un negozio è un tasto rotto — chi
-     la vede prova a premerla e non succede niente — mentre la stessa
-     voce dentro la pagina dei livelli, con scritto «al livello 4», è
-     una cosa da desiderare. Il perché per esteso sta in
-     `dati/livelli.js`. */
-  livello: { type: Number, default: 99 },
+  /* Le chiavi dei premi **presi** (`cosa:orto`, `bestia:cane-bobtail`):
+     quello che non è ancora arrivato — o è arrivato e nessuno è andato
+     a prenderlo — **non sta qui**. Una voce spenta dentro un negozio è
+     un tasto rotto — chi la vede prova a premerla e non succede niente
+     — mentre la stessa voce dentro la pagina dei livelli, con scritto
+     «al livello 4», è una cosa da desiderare. Il perché per esteso sta
+     in `dati/livelli.js`.
+
+     Era il numero del livello, e filtrava da sé; adesso il conto lo fa
+     il motore, che è l'unico a sapere cosa è stato preso. */
+  presi: { type: Array, default: () => [] },
+  /* Da che metà aprirsi: la sceglie chi ha premuto il tondo in alto.
+     Vuoto vuol dire «decidi tu», ed è quello che serve quando ad aprire
+     è stato un consiglio, che sa la voce e non la metà. */
+  zonaIniziale: { type: String, default: '' },
   /* Gli id delle cose **uniche già in mappa** — i due silos. Un secondo
      silo dello stesso tipo non si può posare (il motore risponde
      «ne-hai-gia»), e una voce che non si può prendere è un tasto rotto:
@@ -88,37 +96,17 @@ const emit = defineEmits(['tira', 'tiraBestia', 'chiudi'])
 /* Gli animali si prendono come le altre cose — anche una bestia si posa
    dove vuoi tu, ed è così che finisce dentro un recinto — ma passano da
    un'uscita loro: prima di comparire chiedono un nome. */
-const ANIMALI = 'animali'
+const ANIMALI = ANIMALI_ZONA
 
-/* ── LE TRE METÀ DEL BAULE ────────────────────────────────────────
-   Duecento voci in undici linguette, e la carriola fiorita in mezzo al
-   pollaio: chi cerca il mulino passava in rassegna il vivaio. Adesso in
-   cima si sceglie **di cosa si sta parlando**, e le tre risposte sono
-   tre modi diversi di spendere:
+/* Quello che è stato preso, in un insieme: `vociDi` gira duecento voci
+   a ogni cambio di linguetta, e cercarle una per una dentro un array
+   sarebbe un conto quadratico per niente. */
+const presi = computed(() => new Set(props.presi))
+const preso = (tipo, id) => presi.value.has(chiaveDi(tipo, id))
 
-     🌾 **La fattoria** — quello che *fa* qualcosa: campi, macchine,
-        silos, i recinti. Una linguetta sola, quindi non se ne mostra
-        nessuna.
-     🌸 **Decorazioni** — quello che sta lì e basta: alberi, fiori,
-        panchine, laghetti, case.
-     🐕 **Animali** — le bestie di casa, che si comprano e chiedono un
-        nome.
-
-   *Ribalta la divisione di prima*, che erano due metà con gli animali
-   dentro «la fattoria», come una linguetta accanto ai recinti. Due
-   difetti: le bestie non producono niente — stare nella metà di quello
-   che lavora era una bugia — e sotto «la fattoria» finivano tre
-   linguette (campi, cortile, animali) dove adesso ce n'è **una sola**,
-   cioè nessuna scelta da fare. Meno sottogruppi, e le unità
-   produttive tutte insieme.
-
-   Si chiamava «Il bello», che è vero ma non è una parola che un bambino
-   userebbe cercando una panchina. «Decorazioni» sì. */
-const ZONE = [
-  { chiave: 'lavoro', nome: 'La fattoria', icona: '🌾' },
-  { chiave: 'bello', nome: 'Decorazioni', icona: '🌸' },
-  { chiave: ANIMALI, nome: 'Animali', icona: '🐕' },
-]
+/* Le tre metà stanno in `dati/catalogo.js` (`ZONE`): le usa anche
+   `Gioco.vue`, per i tre tondi in alto che aprono il baule già dalla
+   parte giusta. */
 /* Il granaio **non è più una linguetta**, ed era: stava qui perché
    «cosa ho» è una domanda sola e il baule è il posto dove si va a farla.
    Sbagliato per due motivi. Finiva in mezzo alle cose da **comprare**,
@@ -151,7 +139,7 @@ const DICE = {
 const laCategoriaDi = id => (CATEGORIE.find(c => c.voci.some(v => v.id === id)) || null)
 const suPunta = CATEGORIE.length ? laCategoriaDi(props.punta) : null
 
-const zona = ref(suPunta ? (suPunta.zona || 'bello') : 'lavoro')
+const zona = ref(suPunta ? (suPunta.zona || 'bello') : (props.zonaIniziale || 'lavoro'))
 const categoria = ref(suPunta ? suPunta.chiave : CATEGORIE[0].chiave)
 /* La linguetta aperta dev'essere una di quelle che ci sono **in questa
    metà**: cambiando metà, o al primo livello dove ce n'è una sola, una
@@ -164,7 +152,7 @@ const scheda = computed(() =>
    **sopra** a chi la legge: `zone` la usa, e una `computed` dichiarata
    dopo quella che la chiama è una zona morta che aspetta il giorno in
    cui qualcuno legge `zone` durante il setup. */
-const inVendita = computed(() => IN_VENDITA.filter(a => (a.liv || 1) <= props.livello))
+const inVendita = computed(() => IN_VENDITA.filter(a => preso('bestia', a.chi)))
 
 /* Una metà senza niente dentro non si mostra: al primo livello le
    decorazioni non ci sono ancora e gli animali nemmeno, e un tasto che
@@ -182,7 +170,7 @@ const eMia = chi => props.bestie.some(b => (b.chi || b) === chi)
 const vociDi = chiave => {
   const c = CATEGORIE.find(c => c.chiave === chiave)
   if (!c) return []
-  return c.voci.filter(v => livelloDellaVoce(v) <= props.livello
+  return c.voci.filter(v => preso('cosa', v.id)
     && !(v.unico && props.posati.includes(v.id) && !quantiNe(v.id)))
 }
 

@@ -621,6 +621,35 @@ export const CATEGORIE = [
   ] },
 ]
 
+/* ── LE TRE METÀ DEL BAULE ────────────────────────────────────────
+   Duecento voci in undici linguette, e la carriola fiorita in mezzo al
+   pollaio: chi cerca il mulino passava in rassegna il vivaio. Le
+   linguette si raggruppano in tre metà, che sono tre modi diversi di
+   spendere:
+
+     🌾 **La fattoria** — quello che *fa* qualcosa: campi, macchine,
+        silos, i recinti.
+     🌸 **Decorazioni** — quello che sta lì e basta: alberi, fiori,
+        panchine, laghetti, case.
+     🐕 **Animali** — le bestie di casa, che si comprano e chiedono un
+        nome. Non hanno linguette e non stanno in `CATEGORIE`: è
+        l'unica delle tre che non si ricava da qui sotto.
+
+   Stanno **in questo file e non nel baule** perché non sono più solo
+   una fila di tasti dentro un foglio: sono anche i tre tondi in alto a
+   destra, che aprono il baule già dalla parte giusta
+   (`Gioco.vue`). Due elenchi scritti a mano in due posti sarebbero due
+   elenchi che si scostano.
+
+   Si chiamava «Il bello», che è vero ma non è una parola che un bambino
+   userebbe cercando una panchina. «Decorazioni» sì. */
+export const ANIMALI_ZONA = 'animali'
+export const ZONE = [
+  { chiave: 'lavoro', nome: 'La fattoria', icona: '🌾' },
+  { chiave: 'bello', nome: 'Decorazioni', icona: '🌸' },
+  { chiave: ANIMALI_ZONA, nome: 'Animali', icona: '🐕' },
+]
+
 export const CATALOGO = CATEGORIE.flatMap(c => c.voci)
 export const PER_ID = Object.fromEntries(CATALOGO.map(v => [v.id, v]))
 

@@ -82,7 +82,7 @@ async function chiudi() {
   uguale('e una fattoria nuova è al livello 1',
          (await gettone.innerText()).replace(/\D/g, ''), '1')
 
-  await page.locator('.fa-tondo').click()
+  await page.locator('[data-baule="lavoro"]').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
   uguale('al livello 1 il baule non vende ancora le case',
          await page.locator('.fa-scheda', { hasText: 'Case' }).count(), 0)
@@ -107,7 +107,17 @@ async function chiudi() {
   controlla('il gettone apre la pagina dei livelli', /livello 1/i.test(foglioLiv),
             foglioLiv.replace(/\n+/g, ' · ').slice(0, 120))
   controlla('che dice cosa arriva al livello dopo', /al livello 2 arriva/i.test(foglioLiv))
-  controlla('e nomina il mulino, che è quello che arriva', /mulino/i.test(foglioLiv))
+  /* I premi sono quadratini, e i due livelli si distinguono: quelli di
+     adesso sono presi (il livello 1 è d'ufficio), quelli del prossimo
+     si guardano e non si toccano. */
+  uguale('i premi del livello 1 sono già presi',
+         await page.locator('.fa-premio.da').count(), 0)
+  controlla('e ci sono quelli del livello 1, col segno di preso',
+            await page.locator('.fa-premio.preso').count() >= 3)
+  controlla('quelli del livello dopo si vedono, spenti',
+            await page.locator('.fa-premio.chiuso').count() > 0)
+  uguale('e il gettone non ha nessun pallino da reclamare',
+         await page.locator('.fa-bollo').count(), 0)
   await scatto(page, 'fattoria-livelli')
   await chiudi()
 }
@@ -118,7 +128,7 @@ async function chiudi() {
    fratello di `#monete=`) invece di spendere tremila monete a colpi di
    dito. Il cheat si legge quando il gioco nasce, quindi si esce e si
    rientra. */
-await page.evaluate(() => { location.hash = 'fattoria=65' })
+await page.evaluate(() => { location.hash = 'fattoria=64' })
 await page.reload()
 await page.waitForSelector('.carta.gioco[data-gioco="fattoria"]', { timeout: 5000 })
 await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
@@ -126,6 +136,38 @@ await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 600)
 controlla('col cheat la fattoria è cresciuta',
           Number((await page.locator('.fa-liv').innerText()).replace(/\D/g, '')) >= 60)
+
+/* ---------- 1d. un premio si va a prendere ----------
+   Da quando il livello non regala più niente da solo — il foglio della
+   festa spezzava l'acquisto in mezzo al gesto — quello che arriva
+   aspetta dietro il gettone, col suo pallino, e si prende premendolo.
+   Il cheat lascia da prendere i premi del livello a cui porta, che è
+   esattamente la situazione di chi ci è appena arrivato spendendo. */
+{
+  const bollo = page.locator('.fa-bollo')
+  controlla('arrivati al livello nuovo, il gettone porta il pallino',
+            await bollo.count() === 1)
+  const quanti = Number(await bollo.innerText())
+  controlla('e dice quanti premi aspettano', quanti > 0, `${quanti}`)
+
+  await page.locator('[data-livelli]').click()
+  await attendi(page, 300)
+  const daPrendere = page.locator('.fa-premio.da')
+  uguale('la pagina dei livelli li mostra tutti',
+         await daPrendere.count(), quanti)
+  const quale = await daPrendere.first().getAttribute('data-premio')
+  await daPrendere.first().click()
+  await attendi(page, 300)
+  uguale('preso, il quadratino non è più da prendere',
+         await page.locator(`[data-premio="${quale}"].da`).count(), 0)
+  uguale('e diventa uno di quelli presi',
+         await page.locator(`[data-premio="${quale}"].preso`).count(), 1)
+  uguale('sul gettone ne resta uno di meno',
+         await page.locator('.fa-bollo').count() ? Number(await bollo.innerText()) : 0,
+         quanti - 1)
+  await scatto(page, 'fattoria-premi')
+  await chiudi()
+}
 
 /* ---------- 2. dove sta un pezzo di terra da comprare ----------
    Non si calcola: si cerca. La vista dipende da quanto è grande lo
@@ -196,7 +238,7 @@ await chiudi()
   for (let i = 1; i <= 6; i++) await trascina(mezzo.x - i * 12, mezzo.y - i * 6)
   await su()
   await attendi(page, 60)                 // dentro i 350 ms del rimedio vecchio
-  await page.locator('.fa-tondo').click()
+  await page.locator('[data-baule="lavoro"]').click()
   await attendi(page, 250)
   controlla('subito dopo aver trascinato la mappa, il tasto del baule risponde',
             await page.locator('.fa-voce').count() > 0)
@@ -238,7 +280,7 @@ await chiudi()
    l'anteprima resta appesa al dito; il tocco dopo la posa. Chi non ce
    l'ha la compra posandola, e paga quando ha già visto dove va. */
 {
-  await page.locator('.fa-tondo').click()
+  await page.locator('[data-baule="lavoro"]').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
   /* Il baule ha tre metà (`viste/Roba.vue`): «La fattoria» è quella che
      si apre, le case stanno in «Decorazioni» e le bestie in «Animali».
@@ -305,9 +347,8 @@ await chiudi()
      mette. Senza questa riga la prima cosa presa dal tasto finirebbe
      dove si era tenuto premuto la volta prima — un posto che chi gioca
      non sta nemmeno guardando. */
-  await page.locator('.fa-tondo').click()
+  await page.locator('[data-baule="bello"]').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
-  await page.locator('.fa-zona', { hasText: 'Decorazioni' }).click()
   await attendi(page, 200)
   await page.locator('.fa-scheda', { hasText: 'Verde' }).click()
   await attendi(page, 200)
@@ -357,7 +398,7 @@ await chiudi()
    baule. */
 {
   const apriIlBaule = async () => {
-    await page.locator('.fa-tondo').click()
+    await page.locator('[data-baule="lavoro"]').click()
     await page.waitForSelector('.fa-voce', { timeout: 3000 })
     await page.locator('.fa-zona', { hasText: 'La fattoria' }).click()
     /* Nessuna linguetta da premere: sotto «la fattoria» ce n'è una
@@ -416,9 +457,12 @@ await chiudi()
    E dove sta si salva: se rinascesse in mezzo al prato, quello che la
    bambina aveva chiuso nel recinto se ne sarebbe uscito da solo. */
 {
-  await page.locator('.fa-tondo').click()
+  /* Dal **suo** tondo: le tre metà del baule stanno in alto, una per
+     tasto, e quello degli animali apre il baule già sulle bestie. */
+  await page.locator('[data-baule="animali"]').click()
   await page.waitForSelector('.fa-voce', { timeout: 3000 })
-  await page.locator('.fa-zona', { hasText: 'Animali' }).click()
+  uguale('il tondo degli animali apre il baule sulle bestie',
+         await page.locator('.fa-zona.viva').innerText(), '🐕 Animali')
   await attendi(page, 200)
   const b = await page.locator('.fa-voce').first().boundingBox()
   await dito(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2))

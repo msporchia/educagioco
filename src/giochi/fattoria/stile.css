@@ -79,13 +79,16 @@
    mezzo al foglio si legge come «hai sbagliato», e qui non ha
    sbagliato nessuno. Il filo giallo a sinistra la lega al no che sta
    sopra invece di farla sembrare un pezzo a parte. */
-/* Si chiamava `.fa-passo`, **e quel nome era già preso**: è la riga
-   della scaletta nella pagina dei livelli, più in basso in questo file,
-   ed è una griglia a tre colonne di cui la prima è larga 22 px. Vinceva
-   lei (stessa specificità, scritta dopo) e la frase del consiglio
-   finiva dentro quei 22 px, una parola per riga, accanto a un tasto
-   largo. Non lancia niente, non lo trova nessun controllo: si vede solo
-   guardando il foglio di una macchina a cui manca qualcosa. */
+/* Si chiamava `.fa-passo`, **e quel nome era già preso**: era la riga
+   della scaletta nella pagina dei livelli, una griglia a tre colonne di
+   cui la prima larga 22 px. Vinceva lei (stessa specificità, scritta
+   dopo) e la frase del consiglio finiva dentro quei 22 px, una parola
+   per riga, accanto a un tasto largo. Non lanciava niente e non lo
+   trovava nessun controllo: si vedeva solo guardando il foglio di una
+   macchina a cui manca qualcosa. La scaletta non c'è più — la pagina
+   dei livelli mostra due livelli a quadratini — ma il nome resta
+   questo: il difetto lo riporterebbe indietro chi lo rinominasse
+   «passo» pensando che adesso è libero. */
 .fa-consiglio { display: flex; align-items: center; gap: 10px; text-align: left;
   margin: 8px 0 2px; padding: 8px 10px; border-radius: 12px;
   background: #0d160fcc; border: 2px solid #3d5c42; border-left: 4px solid #c9a227 }
@@ -283,35 +286,56 @@
 .fa-zona b { font-size: 15px; margin-right: 4px }
 .fa-zona.viva { border-color: #9fd3a8; background: #1b3220; color: #f4efe2 }
 
-/* ── la pagina dei livelli ───────────────────────────────────────── */
-.fa-livelli { width: min(430px, 94vw) }
-.fa-titolone { font-size: 17px; color: #ffd98a; font-weight: 700; margin: 0 0 8px }
-/* Quello che arriva: una riga per cosa, con la sua faccia. Non una
-   griglia di riquadri — è roba che si legge, non che si preme. */
-.fa-arriva { list-style: none; padding: 0; margin: 4px 0 10px; text-align: left }
-.fa-arriva li { display: flex; gap: 8px; align-items: center; padding: 3px 6px;
-  font-size: 13.5px; color: #e8efe6 }
-/* Il disegno vero della cosa che arriva: alto quanto una riga e mai di
-   più — è un'anteprima, non uno scaffale. Il `margin: 0` toglie
-   l'`auto` che il provino si porta dietro dalle carte del baule: in una
-   riga flex quel margine lo centra nello spazio libero, e i nomi
-   finiscono ognuno a un'altezza diversa dal bordo. */
-.fa-arriva canvas { flex: 0 0 auto; margin: 0; image-rendering: pixelated }
-/* «nel baule», «da seminare»: la parola che dice di che cosa si tratta,
-   spenta e a destra, perché è la spiegazione e non il nome. */
-.fa-arriva i { font-style: normal; font-size: 11px; color: #8fa691; margin-left: auto }
-/* La scaletta intera: si scorre, perché vedere che la strada continua
-   è metà del motivo per cui si guarda questa pagina. */
-.fa-scala { max-height: 190px; overflow-y: auto; border: 2px solid #2b4430;
-  border-radius: 12px; background: #0d160f66; padding: 4px }
-.fa-passo { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px;
-  align-items: center; padding: 4px 6px; font-size: 12.5px; color: #8fa691 }
-.fa-passo b { color: #6f9b6f }
-.fa-passo em { font-style: normal; font-size: 11.5px }
-.fa-passo.fatto { color: #d8e4d6 }
-.fa-passo.fatto b, .fa-passo.fatto em { color: #9fd3a8 }
-.fa-passo.ora { background: #26361f; border-radius: 8px }
-.fa-passo.ora b, .fa-passo.ora em { color: #ffd98a }
+/* ── la pagina dei livelli ───────────────────────────────────────
+   Più larga delle altre modali, come il baule e per lo stesso motivo:
+   dentro non c'è un elenco da leggere ma una **griglia di cose da
+   premere**, e a 430 px ne entravano due per riga. Alta quanto lo
+   schermo, mai di più: al primo livello ci sono cinque quadratini, al
+   quarantesimo ce ne sono otto e la riga che spiega — e un foglio che
+   sborda in basso nasconde proprio il tasto per chiudere. */
+.fa-livelli { width: min(560px, 96vw); max-height: 100%;
+  overflow-y: auto; overscroll-behavior: contain }
+
+/* I premi, a quadratini. Sono **tasti** e non righe di elenco: quello
+   che è arrivato si va a prendere premendolo, ed è tutta la differenza
+   fra una notizia e un premio (`viste/Livelli.vue`). Stessa griglia
+   dello scaffale del baule, così quello che qui si prende e di là si
+   compra ha la stessa faccia nei due posti. */
+.fa-premi { display: grid; gap: 8px; margin: 4px 0 10px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)) }
+.fa-premio { display: grid; gap: 2px; justify-items: center; padding: 6px 4px 5px;
+  border-radius: 12px; border: 2px solid #2b4430; background: #0d160fcc;
+  color: #e8efe6; font: inherit; text-align: center }
+.fa-premio canvas { image-rendering: pixelated; margin: 0 }
+.fa-premio .fa-nome { font-size: 11.5px; line-height: 1.15;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden }
+.fa-premio .fa-stato { font-size: 10px; color: #8fa691 }
+
+/* Da prendere: acceso, e **si muove**. È l'unica cosa premibile del
+   foglio, e un quadratino fermo in mezzo ad altri quadratini fermi non
+   dice di essere un tasto — soprattutto a chi non legge ancora. */
+.fa-premio.da { cursor: pointer; border-color: #ffd98a; background: #2c2412;
+  animation: fa-dono 1.6s ease-in-out infinite }
+.fa-premio.da .fa-stato.prendi { color: #ffd98a; font-weight: 700; font-size: 11px }
+.fa-premio.da:active { transform: scale(.95); animation: none }
+/* Preso: resta lì, spento e senza smanie, con scritto dov'è finito.
+   Non sparisce, perché «cosa mi ha portato questo livello» è la
+   domanda per cui si riapre questa pagina il giorno dopo. */
+.fa-premio.preso { opacity: .8 }
+/* Il prossimo livello: si guarda e non si tocca. Il grigio fa il
+   lavoro che farebbe un lucchetto da solo — dice «non ancora» senza
+   dire «rotto» — e il lucchetto lo conferma con le parole. */
+.fa-premio.chiuso { opacity: .5; filter: grayscale(1) }
+
+@keyframes fa-dono {
+  0%, 100% { box-shadow: 0 0 0 0 #ffd98a00 }
+  50% { box-shadow: 0 0 0 4px #ffd98a2e }
+}
+
+/* L'etichetta dei premi da prendere si accende come loro: è la riga che
+   dice quanti sono. */
+.fa-etichetta.dono { color: #ffd98a }
 
 /* Il gettone del livello, in alto accanto al baule: un numero e un
    filo che si riempie. Piccolo apposta — la fattoria è il gioco, non la
@@ -319,10 +343,27 @@
    adesso?» viene guardando il prato, non aprendo un menù. */
 .fa-liv { display: flex; align-items: center; gap: 6px; padding: 5px 10px 4px;
   border-radius: 16px; background: #14261a; border: 2px solid #3d5c42;
-  color: #e8efe6; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer }
+  color: #e8efe6; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  position: relative }
 .fa-liv i { display: block; width: 34px; height: 5px; border-radius: 3px;
   background: #0d160f; overflow: hidden }
 .fa-liv i u { display: block; height: 100%; background: #ffd98a }
+/* ── e il pallino dei premi da prendere ──
+   L'unica cosa che dice, mentre si guarda il prato, che c'è qualcosa da
+   venire a prendere: da quando il foglio dei livelli non si apre più da
+   sé (`Gioco.vue`, `guardaIlLivello`), questo pallino **è** l'annuncio.
+   Perciò non è un puntino ma un numero, e il gettone intero si accende
+   sotto: un pallino piccolo su un tasto piccolo, in un angolo, non lo
+   guarda nessuno. */
+.fa-liv.dono { border-color: #ffd98a; background: #33290f }
+.fa-bollo { position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px;
+  padding: 0 4px; border-radius: 9px; background: #ffd98a; color: #1b2a1f;
+  font-size: 11px; line-height: 18px; text-align: center;
+  animation: fa-bollo 1.8s ease-in-out infinite }
+@keyframes fa-bollo {
+  0%, 100% { transform: scale(1) }
+  50% { transform: scale(1.16) }
+}
 
 /* ── come sta una bestia: tre blocchi, uno per bisogno ───────────── */
 /* Un blocco tiene insieme **la barra e quello che la muove**: erano tre
