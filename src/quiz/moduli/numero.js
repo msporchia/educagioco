@@ -28,14 +28,30 @@
    preso a caso si scarterebbe a occhio, e la domanda si risolverebbe
    senza guardare niente.
 
-   GLI INDOVINELLI SONO L'ECCEZIONE, e sono l'unico posto dove qui si
-   fa un conto. «Penso a un numero, lo raddoppio e tolgo 6: viene 18»
-   non chiede di calcolare in avanti — quello lo fa già il castello —
-   ma di **disfare** una catena partendo dalla fine, e disfarla in
-   ordine inverso. È ancora senso del numero: chi ce l'ha capisce
-   subito che il numero di partenza è più piccolo di 18, chi non ce
-   l'ha prova a caso. La catena si allunga col grado: un passo al 4,
-   due al 5, anche tre al 6.
+   I CONTI IN FILA SONO L'ECCEZIONE, e sono l'unico posto dove qui si
+   fa un conto. Sono due, e la differenza fra i due è tutta la
+   progressione:
+
+     · **in avanti** — «parto da 6, aggiungo 10, ne prendo la metà e
+       aggiungo 5: dove arrivo?». Un conto solo, nell'ordine in cui è
+       scritto; la fatica è tenere a mente il numero di mezzo. Comincia
+       **in piccolo e presto** (grado 3, sei anni e mezzo): due passi,
+       nessuna divisione e niente sopra il venti — «parto da 4, lo
+       raddoppio e aggiungo 5» è la stessa cosa che si fa a nove anni
+       con numeri che a sei si tengono a mente;
+     · **all'indietro** — la stessa catena raccontata dalla fine:
+       «viene 17, da che numero sono partito?». Qui non basta girare
+       le operazioni, perché con quattro risposte davanti la strada
+       breve è **rifare il viaggio per ognuna delle quattro**. Quattro
+       catene invece di una: la stessa domanda girata costa il triplo.
+
+   È ancora senso del numero: chi ce l'ha capisce subito che il numero
+   di partenza è più piccolo di 18, chi non ce l'ha prova a caso.
+   L'andata arriva prima e si allunga (due passi, poi tre), il ritorno
+   dopo e resta corto (un passo, poi due). **Tre passi da disfare non
+   esistono più**: era la domanda più cara del modulo, la sbagliavano
+   anche i grandi, e si dichiarava otto anni e mezzo come il passo
+   singolo — cioè arrivava a bambini di sette anni e mezzo.
 
    IL DISEGNO NON È UN ORNAMENTO. La linea dei numeri *è* la domanda:
    in tre gradi su sei si sceglie fra quattro disegni, non fra quattro
@@ -51,10 +67,10 @@ import { PITTORI_NUMERO } from '../grafica/pittori/numero.js'
 const SCALETTA = [
   'il colpo d\'occhio: quanti sono, senza contarli',
   'la linea dei numeri fino a 20',
-  'prima, dopo, in mezzo e in ordine',
-  'la linea fino a 100, il numero più vicino e i primi indovinelli',
-  'le decine, il valore delle cifre e gli indovinelli a due passi',
-  'la stima, cosa è impossibile, e gli indovinelli da disfare',
+  'prima, dopo, in mezzo, e i primi conti in fila',
+  'la linea fino a 100, il numero più vicino e i conti in fila',
+  'le decine, il valore delle cifre e i primi indovinelli da disfare',
+  'la stima, cosa è impossibile, e gli indovinelli a due passi',
 ]
 
 /* Le tipologie. Tre gruppi: quello che si fa contando e confrontando,
@@ -66,9 +82,30 @@ const TIPI = [
   { chiave: 'num:confronto', nome: 'Chi è di più, chi è di meno', sa: 'numeri', gradi: { 1: 0.42 } },
   { chiave: 'num:linea', nome: 'Leggere la linea dei numeri', sa: 'numeri', gradi: { 2: 0.62, 4: 0.32 } },
   { chiave: 'num:posiziona', nome: 'Mettere un numero al suo posto', sa: 'numeri', gradi: { 2: 0.38, 4: 0.26 } },
-  { chiave: 'num:ordine', nome: 'Prima, dopo, in mezzo e in ordine', sa: 'numeri', gradi: { 3: 1 } },
+  { chiave: 'num:ordine', nome: 'Prima, dopo, in mezzo e in ordine', sa: 'numeri', gradi: { 3: 0.75 } },
   { chiave: 'num:vicino', nome: 'Il numero più vicino', sa: 'numeri', gradi: { 4: 0.22 } },
-  { chiave: 'num:indovinello', livello: 56, nome: 'Indovina il numero', sa: 'numeri', gradi: { 4: 0.2, 5: 0.2, 6: 0.25 } },
+  /* ── i conti in fila, e gli indovinelli: due mestieri, non uno ──
+     Erano la stessa tipologia, e la stessa fatica dichiarata (56, otto
+     anni e mezzo) dal passo singolo alla catena da tre. Sono due cose
+     diverse: fare i conti **in avanti** è calcolo mentale in sequenza —
+     si parte da un numero e si arriva da qualche parte, un conto solo —
+     mentre **disfarli** vuol dire tenere in testa la catena al
+     contrario, e per giunta con quattro risposte davanti la si può
+     risolvere solo rifacendo il viaggio per ognuna delle quattro.
+     Quattro catene invece di una: ecco perché la stessa domanda girata
+     costa il triplo. Adesso l'andata viene prima e l'andata a ritroso
+     dopo, con un livello per grado invece di uno solo per tutti.
+
+     E l'andata scende **sotto** il suo primo grado, perché quello che
+     la rendeva roba da otto anni non era la fila di conti: erano le
+     divisioni e i numeri grossi da attraversare. Tolti quelli restano
+     due passi dentro il venti, che a sei anni e mezzo sono un
+     esercizio onesto — e l'unico posto del modulo dove un numero si
+     tiene a mente mentre se ne fa un altro. */
+  { chiave: 'num:catena', nome: 'Fare i conti in fila', sa: 'numeri',
+    livello: { 3: 30, 4: 44, 5: 52, 6: 60 }, gradi: { 3: 0.25, 4: 0.12, 5: 0.1, 6: 0.12 } },
+  { chiave: 'num:indovinello', nome: 'Indovina il numero di partenza', sa: 'numeri',
+    livello: { 4: 50, 5: 62, 6: 75 }, gradi: { 4: 0.08, 5: 0.1, 6: 0.13 } },
   { chiave: 'num:decine', nome: 'Le decine', sa: 'decine', gradi: { 5: 0.4 } },
   { chiave: 'num:cifre', nome: 'Quanto vale ogni cifra', sa: 'decine', gradi: { 5: 0.4 } },
   { chiave: 'num:stima', nome: 'Circa quanto fa', sa: 'stima', gradi: { 6: 0.25 } },
@@ -135,6 +172,7 @@ const inFila = dette => dette.length < 2 ? dette.join('')
   : `${dette.slice(0, -1).join(', ')} e ${dette[dette.length - 1]}`
 
 const FRASI_INDOVINELLO = ['A che numero avevo pensato?', 'Qual era il numero?', 'Da che numero sono partito?']
+const FRASI_CATENA = ['Dove arrivo?', 'Quanto viene?', 'Che numero mi ritrovo?']
 
 class SensoDelNumero extends Modulo {
   constructor() {
@@ -172,6 +210,7 @@ class SensoDelNumero extends Modulo {
         return q < 0.34 ? this.inMezzo(sorte) : q < 0.67 ? this.subito(sorte) : this.ordine(sorte)
       }
       case 'num:vicino': return this.vicino(sorte)
+      case 'num:catena': return this.catenaAvanti(grado, sorte)
       case 'num:indovinello': return this.indovinello(grado, sorte)
       case 'num:decine': return sorte.forse(0.6) ? this.mucchiDiDieci(sorte) : this.quanteDecine(sorte)
       case 'num:cifre': return sorte.forse(0.5) ? this.cifra(sorte) : this.scomponi(sorte)
@@ -658,12 +697,78 @@ class SensoDelNumero extends Modulo {
     })
   }
 
-  /* ── gradi 4, 5 e 6: gli indovinelli ────────────────────────────────
-     L'unico posto del modulo dove si fa un conto, e si fa al contrario:
-     la domanda racconta il viaggio di andata e chiede da dove è
-     partito. La catena si allunga col grado — un passo, due, tre — che
-     è il modo più onesto di renderla più difficile: non numeri più
-     grossi, ma un passo in più da disfare. */
+  /* ── gradi 4, 5 e 6: i conti in fila, e gli indovinelli ─────────────
+     L'unico posto del modulo dove si fa un conto, e ci sono due modi di
+     farlo che sembrano lo stesso e non lo sono.
+
+     ── L'ANDATA È UN CONTO SOLO, IL RITORNO NE VALE QUATTRO ────────
+     «Parto da 6, aggiungo 10, ne prendo la metà e aggiungo 5: dove
+     arrivo?» si risolve **una volta**, in avanti, nell'ordine in cui è
+     scritto: è calcolo mentale in sequenza, e la fatica è tenere a
+     mente il numero di mezzo. La stessa catena girata — «viene 17, da
+     che numero sono partito?» — chiede di disfarla dal fondo, il che è
+     già un'altra cosa; ma soprattutto, con quattro risposte davanti,
+     invita a fare il viaggio **per ognuna delle quattro**. Quattro
+     catene invece di una, ed è per questo che la stessa domanda girata
+     costa il triplo, non il doppio.
+
+     Perciò l'andata viene prima (`num:catena`) e il ritorno dopo
+     (`num:indovinello`), e la catena da tre passi da disfare non
+     esiste più: era la domanda più cara del modulo, e si dichiarava
+     otto anni e mezzo come il passo singolo. Adesso il ritorno arriva a
+     un passo, poi a due, e i tre passi restano solo in andata. */
+
+  /* ── in avanti: si parte da un numero e si arriva da qualche parte ──
+     Il grado 3 è la stessa domanda in piccolo: due passi, **mai una
+     divisione** e niente che superi il venti, cioè la linea dei numeri
+     che a quel grado si sa già leggere. Sette volte su dieci uno dei
+     due passi è il raddoppio (il moltiplicare che a sei anni si fa a
+     mente), le altre sono un aggiungi e un togli. */
+  catenaAvanti(grado, sorte) {
+    const piccola = grado <= 3
+    const quanti = grado >= 6 ? 3 : grado >= 5 ? sorte.uno([2, 2, 3]) : 2
+    const { n, passi, risultato } = this.catenaDi(
+      quanti, piccola ? 8 : grado >= 6 ? 25 : grado >= 5 ? 20 : 12, sorte,
+      piccola
+        ? { cima: 20, salto: 6, molti: sorte.forse(0.7) ? [RADDOPPIA] : [] }
+        : { cima: 60, soloDoppi: quanti >= 3 })
+
+    /* i modi veri di sbagliare una catena in avanti: fermarsi prima
+       della fine, invertire due passi (che con un moltiplicare in mezzo
+       cambia tutto), e scambiare il moltiplicare con l'aggiungere */
+    let v = n
+    const tappe = passi.map(p => { v = p.va(v); return v })
+    const fermato = tappe[tappe.length - 2]
+    const primoSolo = tappe[0]
+    /* gli ultimi due invertiti: con un moltiplicare in mezzo il
+       risultato cambia, ed è l'errore di chi legge la catena a salti
+       invece che in fila. Se viene un mezzo numero `pescaFalsi` lo
+       scarta da sé — una risposta con la virgola qui non esiste. */
+    const girati = passi.length >= 2
+      ? [...passi.slice(0, -2), passi[passi.length - 1], passi[passi.length - 2]]
+      : null
+    const scambiati = girati ? girati.reduce((x, p) => p.va(x), n) : NaN
+
+    const falsi = pescaFalsi([
+      F(fermato, 'quello è dove sei arrivato un passo prima della fine'),
+      F(scambiati, 'l\'ordine conta: i passi vanno fatti come sono scritti'),
+      F(primoSolo, 'quello è dopo il primo passo soltanto'),
+      F(risultato + 1, 'ricontrolla l\'ultimo passo: manca uno'),
+      F(risultato - 1, 'ricontrolla l\'ultimo passo: uno di troppo'),
+    ], 3, { escludi: [risultato], dentro: x => Number.isInteger(x) && x > 0 && x < 500 })
+
+    let w = n
+    const strada = passi.map(p => { w = p.va(w); return `${p.dice} → ${w}` })
+
+    return domanda({
+      testo: `Parto da ${n}, ${inFila(passi.map(p => p.dice))}. ${sorte.uno(FRASI_CATENA)}`,
+      buona: testo(risultato),
+      falsi: falsi.map(f => testo(f.v, f.perche)),
+      chiave: 'num:catena',
+      aiuto: `un passo alla volta, senza saltare: ${strada.join(', ')}`,
+      sorte,
+    })
+  }
 
   indovinello(grado, sorte) {
     /* al grado 4 metà delle volte la forma corta, quella che si può
@@ -671,8 +776,13 @@ class SensoDelNumero extends Modulo {
        che deve cascare dentro una fascia */
     if (grado <= 4 && sorte.forse(0.5)) return this.fascia(sorte)
 
-    const quanti = grado >= 6 ? sorte.uno([2, 3, 3]) : grado >= 5 ? 2 : 1
-    const c = this.catenaDi(quanti, grado >= 6 ? 30 : grado >= 5 ? 25 : 20, sorte)
+    /* mai tre: da disfare, tre passi sono la domanda più cara di tutto
+       il modulo — e la si sbagliava anche da grandi */
+    const quanti = grado >= 6 ? 2 : grado >= 5 ? sorte.uno([1, 1, 2]) : 1
+    /* la stessa cima dell'andata: quello che si attraversa in avanti si
+       deve poter disfare all'indietro, e «69 diviso 3» non è un passo
+       indietro, è un secondo esercizio dentro il primo */
+    const c = this.catenaDi(quanti, grado >= 6 ? 30 : grado >= 5 ? 25 : 20, sorte, { cima: 60 })
     const { n, passi, risultato } = c
 
     const ultimo = passi[passi.length - 1]
@@ -712,24 +822,43 @@ class SensoDelNumero extends Modulo {
      tetto. Si tira e si ritira invece di ragionarci sopra, perché le
      combinazioni sono poche e il primo tiro buono arriva quasi sempre;
      il ripiego in fondo è una catena che non può non funzionare. */
-  catenaDi(quanti, tetto, sorte) {
+  catenaDi(quanti, tetto, sorte, { cima = 300, soloDoppi = false, salto = 12, molti = null } = {}) {
+    /* `molti` è l'elenco dei moltiplicare ammessi: una lista vuota vuol
+       dire una catena di sole somme, e allora i due passi vanno in
+       versi opposti — «aggiungo 4 e aggiungo 3» un bambino li somma
+       fra loro, e la fila si accorcia da sé. */
+    const soloSomme = molti !== null && molti.length === 0
+    const add = () => (sorte.forse(0.5) ? AGGIUNGI(sorte.fra(2, salto)) : TOGLI(sorte.fra(2, salto)))
     for (let giro = 0; giro < 60; giro++) {
-      const molt = sorte.uno([RADDOPPIA, RADDOPPIA, TRIPLICA, META])
-      const add = () => (sorte.forse(0.5) ? AGGIUNGI(sorte.fra(2, 12)) : TOGLI(sorte.fra(2, 12)))
-      const passi = quanti === 1 ? [molt]
-        : quanti === 2 ? (sorte.forse(0.55) ? [molt, add()] : [add(), molt])
-          : [add(), molt, add()]
+      const molt = molti
+        ? sorte.uno(molti)
+        : soloDoppi
+          ? sorte.uno([RADDOPPIA, RADDOPPIA, META])
+          : sorte.uno([RADDOPPIA, RADDOPPIA, TRIPLICA, META])
+      const opposti = sorte.mescola([AGGIUNGI(sorte.fra(2, salto)), TOGLI(sorte.fra(2, salto))])
+      const passi = soloSomme ? opposti
+        : quanti === 1 ? [molt]
+          : quanti === 2 ? (sorte.forse(0.55) ? [molt, add()] : [add(), molt])
+            : [add(), molt, add()]
       const n = sorte.fra(3, tetto)
       let v = n
       let buona = true
       for (const p of passi) {
         v = p.va(v)
-        if (!Number.isInteger(v) || v < 2 || v > 300) { buona = false; break }
+        /* `cima` è il numero più grosso che si può attraversare **per
+           strada**, non solo alla fine: «27 per 3» a mente non è un
+           passo, è un compito, e in mezzo a una catena da tre fa
+           perdere il filo a chiunque */
+        if (!Number.isInteger(v) || v < 2 || v > cima) { buona = false; break }
       }
       if (buona && v !== n) return { n, passi, risultato: v }
     }
-    const passi = [RADDOPPIA, TOGLI(6)]
-    return { n: 12, passi, risultato: 18 }
+    /* il ripiego rispetta i vincoli di chi ha chiesto: una catena da
+       ripiego che sfora la cima sarebbe un guasto invisibile, perché
+       arriva solo quando i sessanta tiri sono andati tutti male */
+    const passi = soloSomme ? [AGGIUNGI(3), TOGLI(1)] : [AGGIUNGI(3), RADDOPPIA]
+    const n = 4
+    return { n, passi, risultato: passi.reduce((v, p) => p.va(v), n) }
   }
 
   /* «quale di questi ha il doppio fra 50 e 60?» — la fascia è larga
