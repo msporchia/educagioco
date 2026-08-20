@@ -335,10 +335,24 @@ export const AIUTI = {
         '🚪 **una porta chiusa** — una domanda facile: se sbagli si riprova.',
         '🎁 **un forziere** — una domanda sola, tosta: se sbagli resta chiuso.',
         '⛲ **una fonte** — una domanda, e ti ridà vita.',
+        '👹 **un mostro** — una domanda a colpo, finché uno dei due cade.',
+      ] },
+      { titolo: 'Le armi', righe: [
+        'Un\'arma migliore di quella che hai **te la metti da sola** appena la tocchi, e la riga che compare dice quanto ci guadagni: «⚔️ +2».',
+        'Le armi leggere — spade corte, accette, pugnali — si portano **due alla volta**, una per mano; la mano debole colpisce la metà. Due leggere valgono una pesante.',
+        'Quelle grosse (spadoni, asce, archi, bastoni) vogliono **tutte e due le mani**: nello zaino lo vedi dall\'ombra nella casella di sinistra.',
+        'Un\'arma non fa più danno a ogni colpo: fa **cadere prima** chi hai davanti, e siccome il mostro ti graffia a ogni scambio, chi cade prima ti costa meno vita.',
+      ] },
+      { titolo: 'Le pozioni', righe: [
+        'Si bevono dallo zaino, quando vuoi tu: la 🧪 boccetta ridà 6 punti, la pozione 10, la 🍷 ampolla 18. Non scadono e non si sprecano — bevute a vita piena, la parte che avanza è persa.',
+        'Il mostro ti prende qualcosa **anche quando rispondi giusto** (un graffio, metà del colpo), e per questo le pozioni servono: senza, una discesa lunga finisce con uno svenimento.',
+        'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: dal mercante puoi vendere a metà prezzo quello che non usi.',
+        '🔦 **La torcia non si accende**: basta prenderla, e da lì in avanti vedi più lontano. Non occupa nemmeno una tasca.',
       ] },
       { titolo: 'Consigli', righe: [
         'Non serve aprire tutto: alla scala si arriva anche saltando qualcosa.',
         'Se la vita è quasi finita, la fonte vale più di un forziere.',
+        'Le gemme si prendono camminandoci sopra: quello che luccica intorno a una cosa vuol dire che quella cosa si tocca.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le domande sono di tutte le materie, tarate sull\'età del bambino: matematica, italiano, le lingue, quello che è acceso nelle impostazioni.',

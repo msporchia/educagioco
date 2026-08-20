@@ -148,12 +148,23 @@ scelta. **Tutto il resto va toccato**, e le sei tasche valgono qualcosa
 solo per questo: una spada che entra nello zaino mentre passavo di lì è una
 spada che non ho scelto.
 
-Toccare un'arma o un'armatura non la raccoglie: apre il **confronto**, che
-è l'unico posto del gioco dove un numero si legge prima di sceglierlo —
-«⚔️ +1 rispetto allo spadino» — e poi si decide se impugnarla, metterla
-nello zaino o lasciarla lì. Se le tasche sono piene si può impugnare lo
-stesso: quello che si aveva prende il posto per terra di quello che si è
-raccolto. Uno scambio, mai una perdita.
+Toccare un'arma o un'armatura **migliore di quella che si ha** la mette
+addosso da sé, e la riga che compare dice quanto si è guadagnato: «Spada
+⚔️ +2». Prima si apriva un foglio col confronto, e la ragione era buona —
+è il solo numero che dice quanto vale un'arma — ma chiedeva *una
+decisione che non è una decisione*: davanti a un'arma migliore di quella
+in pugno non esiste un secondo tasto sensato. Erano tre tocchi per un sì
+scontato, chiesti mentre si gira per una stanza.
+
+Quello che è peggio o uguale finisce in tasca, e lo si confronta con
+calma nello zaino, che è il posto dove si sceglie davvero. Vale anche
+per quello che si **compra**: chi ha appena speso venti gemme per una
+corazza migliore non sta scegliendo se metterla. Quello che si
+aveva addosso **non si perde mai**: torna nello zaino, o prende il posto
+per terra di quello che si è raccolto se le tasche sono piene. Uno
+scambio, mai una perdita. I gioielli restano fuori dall'automatismo
+quando il dito è già occupato: fra due anelli non c'è un «più forte»,
+c'è un modo di giocare diverso, e quella è una scelta vera.
 
 Nello zaino, una tasca toccata **sceglie** e basta: sotto compaiono cosa fa
 quella cosa e due tasti larghi, «la bevo» e «la lascio per terra». Prima il
@@ -181,9 +192,95 @@ cui si va a cercare una spada, detto in vita invece che in domande. E si
 dice **prima** di rispondere — «ti graffia 2 · se sbagli 4» sta scritto
 sotto il mostro — perché è con quei due numeri che si decide se restare.
 
+E si **racconta dopo**, con due numeri: «⚔️ gli hai tolto 8 · ti ha
+graffiato 3». Il graffio c'era da sempre, ma non si vedeva — la propria
+barra calava e partiva un rumore di botta, che per giunta era *lo stesso
+suono dell'errore*: chi aveva appena risposto giusto ne concludeva di
+aver sbagliato. Adesso il graffio ha un suono suo, sordo e breve, e una
+riga che dice com'è andato lo scambio.
+
 Il banco lo misura, e il risultato è quello che si voleva: chi corre
 dritto alla scala sviene una o due volte per discesa, chi gira e
 raccoglie quasi mai. La fretta si paga, l'esplorazione ripaga.
+
+## La torcia non si accende: si ha
+
+Era una cosa da usare: la raccoglievi, occupava una tasca, e poi
+bisognava aprire lo zaino e premere «l'accendo». Ma quella non è una
+scelta — non esiste il momento in cui uno preferisce restare al buio —
+ed era per giunta l'unico modo di scoprire che la torcia serviva a
+qualcosa. Adesso si accende **appena la prendi**, e non entra nemmeno
+nello zaino: una tasca in meno spesa per una cosa che non si può
+sbagliare. Averla accesa conta come averla, quindi il mercante non te ne
+offre una seconda.
+
+## Due mani, e chi ne occupa due
+
+Le armi leggere — spade corte, accette, il pugnale — **si portano due
+alla volta**, una per mano; quelle grosse (spadoni, asce, archi,
+bastoni) vogliono tutte e due le mani e dichiarano `mani: 2` in
+[`dati/cose.js`](../src/giochi/sotterraneo/dati/cose.js).
+
+La mano debole colpisce **la metà, arrotondata per eccesso**, ed è il
+numero che tiene in piedi tutte e due le strade: due armi di secondo
+gradino valgono un terzo gradino, quindi lo spadone non diventa mai una
+scelta sbagliata e portarne due non è la sola cosa sensata da fare. I
+tratti invece valgono pieni anche a sinistra — la luce di una lama che
+brucia illumina uguale in qualunque mano, perché è una copia sola
+dell'oggetto.
+
+Nel corredo la casella di sinistra, quando in pugno c'è un'arma a due
+mani, **non è vuota: porta la stessa arma in ombra e girata**. Lasciarla
+vuota diceva il contrario di quello che succede — che ci si poteva
+mettere qualcosa — e non c'era modo di scoprire perché non funzionava.
+Nel campo, chi ne porta due le porta una per lato; un'arma a due mani
+si posa invece **in mezzo, davanti al corpo**, che è come si tiene
+un'asta. La prima idea era posarne una copia sbiadita anche dall'altro
+lato, come fa il corredo con l'ombra nella casella: a schermo si vedono
+due armi, non una tenuta in due — l'ombra funziona in un elenco di
+caselle, dove il posto vuoto ha un significato, non addosso a una
+figura.
+
+Dove finisce un'arma raccolta lo decide `postoDellArma`, che prova le
+sistemazioni possibili e tiene la migliore: col pugno pieno di un'arma
+leggera, una seconda leggera vale più nella sinistra che al posto di
+quella che c'è. Un'arma a due mani sfratta la sinistra, e quello che
+c'era **torna in tasca**, o per terra se le tasche sono piene.
+
+Gli scudi non ci sono: né 0x72 né il foglio degli oggetti disegnano uno
+scudo o un'armatura, ed è lo stesso buco per cui panciotto, corazza e
+manto restano emoji. Quando ci sarà un foglio che li disegna, la casella
+per tenerli c'è già.
+
+## Il banco del mercante: si compra, e adesso si vende
+
+È l'unica stanza senza domande: qui si **spende** quello che le domande
+hanno fruttato, ed è la ragione per cui un gioco in cui ogni cosa costa
+un esercizio non diventa un compito. Ogni riga dice cosa fa l'oggetto,
+non solo come si chiama — «Sbagliare fa meno male» è un motivo per
+comprare, «Corazza 💎18» è un listino — e quello che non ci si può
+permettere resta visibile e spento: sapere cosa c'era è il motivo per
+tornare.
+
+Sotto il banco ci sono **le proprie tasche**, a metà prezzo. Non è un
+modo di fare gemme (comprare e rivendere perde metà del valore), ma è la
+risposta a due cose che succedevano di continuo: sei tasche piene, con
+l'unico modo di liberarne una che era buttare per terra quello che c'era
+dentro; e la spada di ieri che restava in fondo allo zaino per sempre,
+adesso che se ne ha una migliore.
+
+Il catalogo è lungo trenta voci, e il mercante ne tiene cinque per volta:
+con tre, pescate a caso, capitava di continuo un banco in cui non c'era
+niente che servisse — e un mercante da cui non si compra mai è una stanza
+attraversata.
+
+Fra quelle trenta ce ne sono **tre che hanno un nome proprio** — la spada
+fiammeggiante, l'ascia del ladro, il pugnale vampiro. Non rompono la
+regola delle quattro famiglie (a parità di gradino valgono tutte lo
+stesso): stanno *fuori* dalla scala, e quello che le distingue non è
+quanto fanno male ma un tratto che di solito sta al dito — fanno luce,
+fruttano di più, tengono in piedi. Nessuna batte lo spadone sul suo
+terreno, o la scala non servirebbe più a niente.
 
 ## Le porte chiudono la stanza, non il varco
 
