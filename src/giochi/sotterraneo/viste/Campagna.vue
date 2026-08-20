@@ -21,7 +21,7 @@ import { pezzoAndante } from '../dati/tessere.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, nome, icona, dritta, piani, aperta, adesso, stelle }]
-  ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme }
+  ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme, chi }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe'])
@@ -73,7 +73,10 @@ function comincia() {
       <p class="sot-dove">
         <span class="em">{{ ripresa.icona }}</span>
         <b>{{ ripresa.nome }}</b>
-        <i>piano {{ ripresa.piano }} di {{ ripresa.piani }} ·
+        <!-- con chi si riprende: si può cambiare eroe dalla mappa
+             mentre una discesa è in sospeso, e chi è sceso è sceso —
+             dirlo qui evita la sorpresa di ritrovarsi un altro in mano -->
+        <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano }} di {{ ripresa.piani }} ·
            ❤️ {{ ripresa.vita }} · 💎 {{ ripresa.gemme }}</i>
       </p>
       <button class="sot-grosso" data-azione="riprendi" @click="$emit('riprendi')">

@@ -153,7 +153,16 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   vecchio.eroe = { x: c.eroe.x, y: c.eroe.y }
   const b = leggi(vecchio, CAMPAGNA[1])
   controlla('un salvataggio della 2 si riprende lo stesso', !!b)
-  uguale('col cavaliere, e detto', b && b.chiEro, 'cavaliere')
+  uguale('e senza un nome scritto tocca al cavaliere', b && b.chiEro, 'cavaliere')
+
+  /* ...a meno che chi chiama non sappia chi gioca in questa casa. È il
+     caso vero: la discesa l'aveva cominciata l'elfa, il salvataggio
+     vecchio non se n'è accorto, e il campo mostrava un cavaliere mentre
+     l'inventario mostrava l'elfa — due fonti per la stessa cosa. */
+  const conRipiego = leggi(vecchio, CAMPAGNA[1], 'elfa')
+  uguale('col ripiego di casa si riprende da chi gioca', conRipiego.chiEro, 'elfa')
+  uguale('e la carta non inventa un nome che non ha',
+         dice(vecchio, CAMPAGNA).eroe, null)
   uguale('e dalla cella giusta', b && `${Math.floor(b.eroe.x)},${Math.floor(b.eroe.y)}`,
          `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`)
 }

@@ -126,6 +126,10 @@ controlla('uscendo a metà la discesa resta in sospeso',
           await page.locator('[data-ripresa]').count() === 1)
 controlla('e la carta dice a che piano si era',
           (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('piano 1'))
+/* e **con chi**: si può cambiare eroe dalla mappa mentre una discesa è
+   in sospeso, e chi è sceso è sceso */
+controlla('e con chi si torna giù',
+          (await page.locator('.sot-ripresa .sot-dove').textContent()).includes('Cavaliere'))
 
 /* ---------- 6. la seconda discesa si vede come la prima ----------
    Tornando alle discese il `v-if` smonta il campo, quindi la discesa

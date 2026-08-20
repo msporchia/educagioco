@@ -101,7 +101,23 @@ const avanza = progresso(CHIAVE)
    sapere chi si è non ha senso, e un tasto «cambio eroe» che nessuno ha
    mai premuto sarebbe una porta che non si apre mai. */
 const chiEro = ref(scelta(CHIAVE, 'eroe', null))
-const eroeScheda = computed(() => eroeDi(chiEro.value || DI_PARTENZA))
+/* ── chi si sta guardando ──
+   Due fonti per la stessa cosa, e divergevano: il campo disegna **chi
+   sta scendendo** (`corsa.io`), lo zaino leggeva **chi è scelto nel
+   profilo**. Basta riprendere una discesa cominciata con un altro eroe
+   — o riprendere un salvataggio vecchio, che il nome di chi scendeva
+   non ce l'ha — per vedere un cavaliere sul campo e un'elfa
+   nell'inventario, nello stesso istante.
+
+   Durante una discesa comanda la discesa: chi è sceso è sceso, e
+   cambiare idea a metà scala non si può. Fuori — sulla mappa delle
+   tappe — comanda la scelta, perché lì si decide chi scenderà. */
+const eroeScheda = computed(() => {
+  tic.value
+  const c = corsa.value
+  if (c && c.io) return c.io
+  return eroeDi(chiEro.value || DI_PARTENZA)
+})
 const scegliEroe = ref(!chiEro.value)
 
 function scegli(k) {
@@ -115,7 +131,9 @@ function scegli(k) {
    dire buttarla. Adesso si scrive dove si era (`motore/sosta.js`) e la
    mappa la offre in cima. Il ref serve solo a farla comparire e sparire:
    la verità sta in archivio. */
-const ripresa = ref(dice(sosta(CHIAVE), CAMPAGNA))
+/* la carta «riprendi» dice anche **con chi**: il nome, non la chiave */
+const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '' } : null)
+const ripresa = ref(conNome(dice(sosta(CHIAVE), CAMPAGNA)))
 let ultimoSalvato = 0
 
 function salva({ subito = false } = {}) {
@@ -136,7 +154,10 @@ function scorda() {
    capo invece di lasciare un tasto che non fa niente. */
 function riprendiDiscesa() {
   const dato = sosta(CHIAVE)
-  const c = dato ? leggi(dato, CAMPAGNA[dato.tappa]) : null
+  /* un salvataggio vecchio non sa chi stava scendendo — era il difetto
+     dei due campi `eroe` — e in quel caso vale la scelta di casa invece
+     del cavaliere di sistema: è quasi sempre la stessa persona */
+  const c = dato ? leggi(dato, CAMPAGNA[dato.tappa], chiEro.value || DI_PARTENZA) : null
   if (!c) { scorda(); return }
   tappaIdx.value = dato.tappa
   fine.value = null
@@ -547,7 +568,7 @@ function indietro() {
   const c = corsa.value
   if (c && !c.finita && !fine.value) {
     salva({ subito: true })
-    ripresa.value = dice(sosta(CHIAVE), CAMPAGNA)
+    ripresa.value = conNome(dice(sosta(CHIAVE), CAMPAGNA))
   }
   allaMappa()
 }

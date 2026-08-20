@@ -142,13 +142,16 @@ function pulisci(r) {
    Torna una `Corsa` pronta a giocare, o `null` se il salvataggio non si
    può leggere: chi chiama in quel caso comincia una discesa nuova, e
    non deve saperne il perché. */
-export function leggi(dato, tappa) {
+export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
   if (!dato || !LEGGIBILI.includes(dato.v) || !dato.robe) return null
   try {
     /* Nella 2 `eroe` portava la cella, non il nome: quello che arriva
        qui è un oggetto, e `eroeDi` di un oggetto torna il primo della
-       lista. Si dichiara invece di lasciarlo capitare. */
-    const chiEro = typeof dato.eroe === 'string' ? dato.eroe : DI_PARTENZA
+       lista. Si dichiara invece di lasciarlo capitare — e al posto del
+       cavaliere di sistema si usa il `ripiego` che passa chi chiama,
+       cioè l'eroe scelto in casa: è quasi sempre la stessa persona che
+       aveva cominciato la discesa. */
+    const chiEro = typeof dato.eroe === 'string' ? dato.eroe : ripiego
     const dove = dato.dove || (typeof dato.eroe === 'object' ? dato.eroe : null)
     if (!dove) return null
     const corsa = new Corsa(tappa, { seme: dato.seme, eroe: chiEro })
@@ -206,7 +209,7 @@ export function dice(dato, campagna) {
     icona: t.icona,
     piano: (dato.piano || 0) + 1,
     piani: t.piani,
-    eroe: typeof dato.eroe === 'string' ? dato.eroe : DI_PARTENZA,
+    eroe: typeof dato.eroe === 'string' ? dato.eroe : null,
     vita: dato.vita,
     gemme: dato.gemme,
   }
