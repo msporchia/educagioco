@@ -9,7 +9,8 @@
                        colore: 'viola', asse: null|'sinistra'|'destra'|'centro' }
      { che: 'angolo',  gradi: 90, ruota: 1.2, colore: 'giallo' }
      { che: 'solido',  tipo: 'cubo', colore: 'azzurro' }
-     { che: 'costruzione', cubi: [[0,0,0],[1,0,0],[0,0,1]], colore: 'viola' }
+     { che: 'costruzione', cubi: [[0,0,0],[1,0,0],[0,0,1]], colore: 'viola',
+                       scatola: 0 | 2 | 3 }
 
    QUI NON SI DECIDE NIENTE. Il pittore non sa quale sia la risposta
    giusta, non sa che grado di difficoltà sta servendo e non ruota né
@@ -274,7 +275,8 @@ export function solido(p, { tipo = 'cubo', colore = 'azzurro' }) {
 }
 
 /* ── i cubetti impilati ──
-     { che: 'costruzione', cubi: [[x, y, z], …], colore: 'viola' }
+     { che: 'costruzione', cubi: [[x, y, z], …], colore: 'viola',
+       scatola: 0 }
 
    x va in basso a destra, y in basso a sinistra, z in su: è
    l'assonometria dei mattoncini, quella in cui un cubetto si vede con
@@ -286,15 +288,20 @@ export function solido(p, { tipo = 'cubo', colore = 'azzurro' }) {
    ricava dall'ingombro vero della costruzione, non da un numero fisso:
    una torre di quattro e un tappeto di nove devono riempire lo stesso
    riquadro, se no la grandezza del disegno racconta la risposta prima
-   che il bambino conti. */
-export function costruzione(p, { cubi = [], colore = 'azzurro' }) {
-  if (!cubi.length) return
+   che il bambino conti — e quando c'è la scatola l'ingombro è LEI, se
+   no due costruzioni nella stessa scatola verrebbero grandi diverse. */
+export function costruzione(p, { cubi = [], colore = 'azzurro', scatola = 0 }) {
+  if (!cubi.length && !scatola) return
   const t = tinta(colore)
   const px = (x, y, z) => [(x - y) * 1, (x + y) * 0.54 - z * 1.16]
 
-  /* l'ingombro: gli otto vertici di ogni cubetto, in unità */
-  const punti = cubi.flatMap(([x, y, z]) =>
-    [0, 1].flatMap(dx => [0, 1].flatMap(dy => [0, 1].map(dz => px(x + dx, y + dy, z + dz)))))
+  /* l'ingombro: gli otto vertici di ogni cubetto, in unità — o quelli
+     della scatola, se c'è: dentro una scatola l'ingombro è la scatola,
+     e la costruzione ci sta dentro per costruzione */
+  const punti = scatola
+    ? [0, scatola].flatMap(x => [0, scatola].flatMap(y => [0, scatola].map(z => px(x, y, z))))
+    : cubi.flatMap(([x, y, z]) =>
+      [0, 1].flatMap(dx => [0, 1].flatMap(dy => [0, 1].map(dz => px(x + dx, y + dy, z + dz)))))
   const xs = punti.map(q => q[0]), ys = punti.map(q => q[1])
   const x1 = Math.min(...xs), x2 = Math.max(...xs), y1 = Math.min(...ys), y2 = Math.max(...ys)
   const k = Math.min(88 / (x2 - x1), 88 / (y2 - y1))
@@ -304,12 +311,66 @@ export function costruzione(p, { cubi = [], colore = 'azzurro' }) {
   }
 
   p.ctx.lineJoin = 'round'
+  let davanti = null            // i tre spigoli della scatola che stanno davanti a tutto
+
+  /* ── la scatola, quando c'è ──
+     `scatola: 2` vuol dire «una scatola 2×2×2, e i cubetti stanno lì
+     dentro». Si disegna perché una scatola che sta solo nel testo non
+     si può contare: quello che MANCA è fatto di posti vuoti, e un
+     posto vuoto o si vede o non c'è. Le tre facce di fondo — il
+     pavimento e le due pareti dietro — sono a caselle, così i posti
+     liberi si contano guardando invece che immaginando. I tre spigoli
+     davanti si disegnano due volte — pieni qui sotto, e smorzati dopo
+     i cubetti (`davanti`) — perché stanno davvero davanti a tutto: se
+     restassero solo qui, una costruzione che arriva al bordo li
+     coprirebbe, e la scatola sparirebbe proprio quando è quasi piena. */
+  if (scatola) {
+    const L = scatola
+    /* il vetro è azzurrino e mai bianco: l'orlo dei cubetti è quasi
+       bianco (`tinte.js`), e due bianchi vicini si leggono come la
+       stessa cosa — lo spigolo della scatola diventerebbe il lato di
+       un cubetto che non c'è */
+    const filo = 'rgba(188, 205, 242, .38)'
+    const orlo = 'rgba(188, 205, 242, .78)'
+    const tratto = (a, q, col = filo, sp = 1) => p.linea([{ x: a[0], y: a[1] }, { x: q[0], y: q[1] }], col, sp)
+    faccia(p, [su(0, 0, 0), su(L, 0, 0), su(L, L, 0), su(0, L, 0)], 'rgba(255, 255, 255, .16)', null)
+    faccia(p, [su(0, 0, 0), su(0, L, 0), su(0, L, L), su(0, 0, L)], 'rgba(255, 255, 255, .07)', null)
+    faccia(p, [su(0, 0, 0), su(L, 0, 0), su(L, 0, L), su(0, 0, L)], 'rgba(255, 255, 255, .11)', null)
+    for (let i = 0; i <= L; i++) {
+      tratto(su(i, 0, 0), su(i, L, 0))    // il pavimento, per un verso
+      tratto(su(0, i, 0), su(L, i, 0))    // e per l'altro
+      tratto(su(0, i, 0), su(0, i, L))    // la parete di sinistra, in su
+      tratto(su(0, 0, i), su(0, L, i))    // e di traverso
+      tratto(su(i, 0, 0), su(i, 0, L))    // la parete di destra, in su
+      tratto(su(0, 0, i), su(L, 0, i))    // e di traverso
+    }
+    /* il bordo della scatola: è quello che la fa leggere come una
+       scatola invece che come un reticolo */
+    tratto(su(0, 0, L), su(L, 0, L), orlo, 1.6)
+    tratto(su(0, 0, L), su(0, L, L), orlo, 1.6)
+    tratto(su(0, L, 0), su(0, L, L), orlo, 1.6)
+    tratto(su(L, 0, 0), su(L, 0, L), orlo, 1.6)
+    davanti = () => {
+      tratto(su(L, L, 0), su(L, L, L), orlo, 1.6)   // lo spigolo davanti
+      tratto(su(L, 0, L), su(L, L, L), orlo, 1.6)   // e i due bordi in cima
+      tratto(su(0, L, L), su(L, L, L), orlo, 1.6)
+    }
+    davanti()
+  }
+
   for (const [x, y, z] of cubi.slice().sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]))) {
     const v = (dx, dy, dz) => su(x + dx, y + dy, z + dz)
     faccia(p, [v(0, 1, 0), v(1, 1, 0), v(1, 1, 1), v(0, 1, 1)], t.scuro, t.orlo, 1.2)  // fianco sinistro
     faccia(p, [v(1, 0, 0), v(1, 1, 0), v(1, 1, 1), v(1, 0, 1)], t.base, t.orlo, 1.2)   // fianco destro
     faccia(p, [v(0, 0, 1), v(1, 0, 1), v(1, 1, 1), v(0, 1, 1)], t.luce, t.orlo, 1.2)   // il coperchio
   }
+
+  /* gli spigoli davanti si ripassano SOPRA i cubetti, smorzati: un
+     cubetto che arriva al bordo frontale cancellava la scatola proprio
+     quando è quasi piena — cioè quando la domanda è più difficile.
+     Smorzati e non pieni perché è vetro: se tagliassero i cubetti con
+     lo stesso tratto del bordo sembrerebbero un cubetto in più. */
+  if (davanti) p.velo(0.42, davanti)
 }
 
 export const PITTORI_GEOMETRIA = { figura, griglia, angolo, solido, costruzione }

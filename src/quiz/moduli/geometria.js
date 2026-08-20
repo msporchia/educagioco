@@ -814,7 +814,17 @@ class Geometria extends Modulo {
 
   /* quanti ne mancano per riempire la scatola: lo stesso conto di
      prima più una sottrazione, ed è il primo posto dove si tocca il
-     volume senza chiamarlo così */
+     volume senza chiamarlo così.
+
+     LA SCATOLA SI DISEGNA, e non è un abbellimento. Prima stava solo
+     nel testo — «questi cubetti stanno in una scatola 2×2×2» — e
+     quella riga chiede tre cose in fila a un bambino di dieci anni:
+     leggere una notazione che a scuola non ha ancora visto, capire
+     che quel 2×2×2 è un contenitore intorno ai cubetti disegnati, e
+     immaginarne il posto — mentre il disegno, che si scala da sé
+     sull'ingombro, la stessa scatola la faceva sembrare ogni volta
+     di una grandezza diversa. Quello che manca è fatto di POSTI
+     VUOTI, e un posto vuoto o si vede o non c'è. */
   mancanoCubetti(sorte) {
     const b = sorte.uno([2, 2, 3])
     /* la costruzione sta DENTRO la scatola, quindi il tetto è `b`; e
@@ -840,12 +850,12 @@ class Geometria extends Modulo {
     for (const n of attorno(giusto, sorte))
       metti(n, 'conta prima quanti ce ne sono, poi togli quel numero da quelli della scatola piena')
     return domanda({
-      testo: `Questi cubetti stanno in una scatola ${b}×${b}×${b}. Quanti ne mancano per riempirla?`,
-      soggetto: scena({ che: 'costruzione', cubi, colore: sorte.uno(COLORI) }),
+      testo: 'Quanti cubetti mancano per riempire la scatola?',
+      soggetto: scena({ che: 'costruzione', cubi, colore: sorte.uno(COLORI), scatola: b }),
       buona: testo(giusto),
       falsi: falsi.slice(0, 3),
       chiave: 'geo:cubetti',
-      aiuto: `una scatola ${b}×${b}×${b} tiene ${scatola} cubetti: conta quelli che ci sono e togli`,
+      aiuto: `la scatola piena ne tiene ${scatola}: conta quelli che ci sono già e togli`,
       sorte,
     })
   }
