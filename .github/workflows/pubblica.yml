@@ -47,7 +47,7 @@ jobs:
           id=$(node -p "require('./dist/versione.json').id")
           echo "costruita la versione $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -62,7 +62,7 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # Il controllo che chiude il giro: si chiede al sito cosa sta
       # servendo e lo si confronta con quello che è appena stato
