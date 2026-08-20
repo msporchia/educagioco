@@ -92,11 +92,16 @@ async function chiudi() {
 const box = await page.locator('.fa-tela').boundingBox()
 const mezzo = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) }
 
+/* Il baule adesso ha **tre tasti**, uno per metà — la fattoria, le
+   decorazioni, gli animali — e quello che serve qui è sempre il primo:
+   campi, silos e recinti stanno tutti sotto «la fattoria». Prima ce
+   n'era uno solo e bastava la classe. */
+
 /* ---------- 1. il campo si compra dal baule ----------
    Premere una voce del baule **è** cominciare a posarla, e il tocco dopo
    la posa: è lo stesso gesto di ogni altra cosa, e il campo non fa
    eccezione. */
-await page.locator('.fa-tondo').click()
+await page.locator('[data-baule="lavoro"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
 /* Il baule si apre già su «la fattoria», e lì la linguetta è **una
    sola** — campi, macchine, silos e recinti sono la stessa catena — e
@@ -138,7 +143,7 @@ nota(`campo pagato ${primaDelCampo - dopoIlCampo} monete`)
    scheda del campo vuoto lo dice prima di seminare. */
 /* Posare chiude il baule — premere è già mettere giù — quindi per la
    cosa dopo lo si riapre. */
-await page.locator('.fa-tondo').click()
+await page.locator('[data-baule="lavoro"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
 const vSilo = await page.locator('.fa-voce', { hasText: 'Silo' }).first().boundingBox()
 await dito(Math.round(vSilo.x + vSilo.width / 2), Math.round(vSilo.y + vSilo.height / 2))
@@ -297,7 +302,7 @@ await chiudi()
    non finito torna senza disegnare e senza lanciare), quindi da qui si
    guarda l'unica cosa che si può guardare da fuori: che il pannello si
    apra col suo nome e dica cosa gli manca. */
-await page.locator('.fa-tondo').click()
+await page.locator('[data-baule="lavoro"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
 /* I recinti stanno **nella stessa linguetta dei campi**: sono i passi
    successivi della stessa catena, e in due scaffali diversi quella fila
