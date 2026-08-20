@@ -111,8 +111,14 @@ dentro('chi non la sa esce una volta e mezza', su, 1.45, 1.5)
 dentro('chi la sa esce la metà', giu, 0.5, 0.52)
 /* poco meno di tre e non tre esatti: alzare una tipologia alza anche il
    totale su cui si normalizza, quindi ognuna guadagna un filo meno di
-   quanto dice il suo fattore. È il conto giusto, non un errore */
-dentro('e fra i due estremi ci sono tre volte, non nove', su / giu, 2.85, 3.0)
+   quanto dice il suo fattore. È il conto giusto, non un errore — e di
+   quanto sia «un filo» dipende da quanto pesa la tipologia che si sta
+   muovendo: stringendo la banda della campana (`BANDA` in
+   `nucleo/classi.js`, da 19 a 11) la più frequente si è presa una fetta
+   più grossa, e il rapporto è sceso da 2.86 a 2.84. Il margine di sotto
+   tiene conto di questo: quello che deve restare vero è che siano tre e
+   non nove, non il terzo decimale. */
+dentro('e fra i due estremi ci sono tre volte, non nove', su / giu, 2.8, 3.0)
 
 /* ── il doppio conto, guardato in faccia ──
    Se il fattore entrasse pieno tutte e due le volte, una tipologia che

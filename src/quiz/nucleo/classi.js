@@ -105,16 +105,24 @@ export const anniDelLivello = livello => ANNI_MIN + livello / PUNTI_PER_ANNO
      cose che sa già fare: servono, e sono quelle che escono quando il
      gioco chiede poco.
 
-   · LA MIRA è stretta: un anno indietro con la carta debole, un anno e
-     mezzo avanti con quella tosta. È il punto intorno a cui pesca la
-     manopola, e non c'entra con chi è ammesso: una classe a tre anni di
-     distanza dal bersaglio pesa il due per cento — c'è, e capita ogni
-     tanto. Che è esattamente quello che deve succedere alle ore intere
-     di un bambino di nove anni. */
+   · LA MIRA va da un anno indietro con la carta debole fino al tetto
+     dell'ammissione con quella tosta. È il punto intorno a cui pesca la
+     manopola, e non c'entra con chi è ammesso: una classe a due anni e
+     mezzo di distanza dal bersaglio pesa il due per cento — c'è, e
+     capita ogni tanto. Che è esattamente quello che deve succedere alle
+     ore intere di un bambino di nove anni.
+
+     Sopra la mira arrivava a +19, sei punti sotto il tetto: mezzo anno
+     di scala che nessuna manopola raggiungeva mai, nemmeno a fondo
+     corsa davanti al capo dell'ultima tappa. Adesso arriva a +25, cioè
+     dove finisce il mazzo. Sotto resta a −12, e non è simmetria
+     mancata: abbassarla renderebbe *più facile* la prima tappa di una
+     campagna, che è il verso sbagliato — quello che mancava era la
+     cima, non il fondo. */
 export const TAGLIO_SOTTO = 44
 export const TAGLIO_SOPRA = 25
 export const MIRA_SOTTO = 12
-export const MIRA_SOPRA = 19
+export const MIRA_SOPRA = 25
 
 export const finestraDi = eta => {
   if (eta == null) return null
@@ -122,12 +130,52 @@ export const finestraDi = eta => {
   return [qui - TAGLIO_SOTTO, qui + TAGLIO_SOPRA]
 }
 
-/* Quanto è larga la campana intorno al bersaglio: un anno e mezzo circa.
-   A quella distanza il peso è già sceso a un terzo, a tre anni è
-   trascurabile. Più stretta si tornerebbe a un binario — una classe
-   sola per ogni giro di manopola; più larga, la manopola non si
-   sentirebbe più. */
-export const BANDA = 19
+/* ── QUANTO È SFOCATO IL TIRO ──
+   La banda è la larghezza della campana intorno al bersaglio: a quella
+   distanza il peso è già sceso a un terzo, al doppio è trascurabile.
+
+   Era 19 — un anno e mezzo — e la mira ne correva 37 in tutto: la rosa
+   era larga quanto metà del poligono, quindi ovunque puntasse la
+   manopola ci finiva dentro mezzo mazzo. Misurato su una porta della
+   terza tappa del sotterraneo, a un bambino di otto anni: il 41% delle
+   domande stava sotto gli otto anni e il 10% sotto i sei e mezzo, e due
+   domande di fila distavano in media 1,1 anni — mentre due tappe
+   adiacenti ne distavano 0,25. Il rumore batteva il segnale quattro a
+   uno, ed è tutto qui il «un po' facile, un po' difficile, a caso» che
+   si sentiva giocando.
+
+   A 11 la campana è larga poco meno di un anno: la manopola si sente,
+   la gradualità resta. Più stretta di così si tornerebbe a un binario —
+   una classe sola per ogni giro di manopola, cioè la stessa domanda
+   ogni volta. */
+export const BANDA = 11
+
+/* ── E QUANDO IL MAZZO FINISCE, LA BANDA SI ALLARGA ──
+   Stringere la campana ha un prezzo che si paga solo agli estremi della
+   scala, dove le classi scarseggiano: a dieci anni, sopra i dieci, il
+   catalogo intero ne ha tredici, e con la banda ferma a 11 **una sola
+   classe si prendeva il 54% dei tiri** davanti al capo dell'ultima
+   tappa. Che è ripetitività, cioè l'altro modo di rovinare la stessa
+   cosa — e il difetto è del catalogo, non del bambino: quelle domande
+   lì non le abbiamo ancora scritte.
+
+   Il rimedio è un degrado felice, a tentativi: si guarda quante classi
+   contano davvero intorno al bersaglio; se sono poche si allarga la
+   banda di un po' e si riprova, finché non ce ne sono abbastanza o
+   finché la campana non è tornata larga come prima. Chi sta in mezzo
+   alla primaria non se ne accorge mai — lì la banda resta 11 e il primo
+   tentativo è già buono.
+
+   «Quante contano davvero» non è «quante ce ne sono»: una classe con
+   peso un millesimo c'è e non esce mai. Si conta col numero effettivo
+   (l'inverso della somma dei quadrati dei pesi), che dà 14 quando
+   quattordici classi se la giocano alla pari e scende verso 1 man mano
+   che una sola se le mangia tutte. È la stessa misura che il test
+   `unita/quiz-pesi` guarda dall'altro lato quando pretende che nessuna
+   classe superi un quinto dei tiri. */
+export const VARIETA_MINIMA = 14
+export const ALLARGO_BANDA = 3
+export const BANDA_MASSIMA = 25
 
 const dentro01 = x => Math.min(1, Math.max(0, x || 0))
 
@@ -152,8 +200,28 @@ const PELO = 1e-9
 export const adatta = (livello, finestra) =>
   !finestra || (livello >= finestra[0] - PELO && livello <= finestra[1] + PELO)
 
-export const pesoDi = (livello, target) =>
-  Math.exp(-((Math.abs(livello - target) / BANDA) ** 2))
+export const pesoDi = (livello, target, banda = BANDA) =>
+  Math.exp(-((Math.abs(livello - target) / banda) ** 2))
+
+/* quante classi se la giocano davvero, dati i loro pesi: il numero
+   effettivo. Uno solo vuol dire che una classe si prende tutto. */
+export const quanteContano = pesi => {
+  const tot = pesi.reduce((s, p) => s + p, 0)
+  if (!(tot > 0)) return 0
+  return 1 / pesi.reduce((s, p) => s + (p / tot) ** 2, 0)
+}
+
+/* La banda da usare per questo tiro: quella di sempre, allargata a
+   tentativi finché il mazzo intorno al bersaglio non è abbastanza
+   vario. `livelli` sono quelli delle classi ammesse, già visti con gli
+   occhi di questo bambino. */
+export const bandaPer = (livelli, target) => {
+  let banda = BANDA
+  while (banda < BANDA_MASSIMA &&
+         quanteContano(livelli.map(l => pesoDi(l, target, banda))) < VARIETA_MINIMA)
+    banda += ALLARGO_BANDA
+  return Math.min(banda, BANDA_MASSIMA)
+}
 
 /* quanto è complicata **per chi la riceve**: zero al fondo della sua
    finestra, uno in cima. È il numero che un gioco potrebbe usare per
@@ -187,11 +255,6 @@ export const postoDi = livello => dentro01(livello / LIVELLO_MAX)
    non deve sapere che esista un profilo. */
 export function classiDi(moduli, { spenti = [], difficolta = 0, bisogno = null,
                                    regole = null } = {}) {
-  /* La finestra si calcola qui, una volta sola, e si passa già fatta
-     ai moduli: chi chiama può dare l'età o la finestra, e i due modi
-     non devono divergere. Senza questa riga un `{ eta: 6 }` arriverebbe
-     al modulo senza finestra e il taglio non taglierebbe niente —
-     silenziosamente, che è il modo peggiore. */
   /* La finestra si calcola qui, una volta sola, e si passa già fatta ai
      moduli: chi chiama può dare l'età o la finestra, e i due modi non
      devono divergere. Senza questa riga un `{ eta: 6 }` arriverebbe al
@@ -200,19 +263,33 @@ export function classiDi(moduli, { spenti = [], difficolta = 0, bisogno = null,
   const finestra = regole?.finestra ?? finestraDi(regole?.eta ?? null)
   const qui = regole ? { ...regole, finestra } : null
   const target = bersaglio(difficolta, regole?.eta ?? null)
+
+  /* Prima si raccoglie chi è ammesso, poi si pesa: la banda dipende da
+     **quante classi ci sono** intorno al bersaglio, quindi non si può
+     sapere prima di averle contate. È l'unico motivo per cui questo giro
+     è in due passate invece che in una. */
   const fuori = []
   for (const m of moduli)
-    for (const g of m.gradiLiberi(spenti, qui)) {
+    for (const g of m.gradiLiberi(spenti, qui))
       fuori.push({
         modulo: m,
         grado: g,
         livello: m.livelloDi(g, spenti, qui),
         /* il peso guarda il livello **come lo vede questo bambino**: un
            ritocco di un grande sposta la classe, non la finestra */
-        peso: pesoDi(m.livelloVisto(g, spenti, qui), target) *
-              m.bisognoMedio(g, spenti, bisogno, qui),
+        visto: m.livelloVisto(g, spenti, qui),
       })
-    }
+
+  /* La banda si misura sulla sola distanza dal bersaglio, prima che il
+     ripasso ci metta mano: se no un bambino con tante cose da rivedere
+     si troverebbe la campana allargata per il motivo sbagliato — il
+     mazzo è vario lo stesso, è il bisogno che pende da una parte. */
+  const banda = bandaPer(fuori.map(v => v.visto), target)
+  for (const v of fuori) {
+    v.peso = pesoDi(v.visto, target, banda) *
+             v.modulo.bisognoMedio(v.grado, spenti, bisogno, qui)
+    delete v.visto
+  }
   return fuori
 }
 

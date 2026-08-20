@@ -91,6 +91,16 @@ import { pescaClasse, adatta, LIVELLO_MAX, livelloDegliAnni } from './classi.js'
    decide se una domanda arriva a un bambino o no. */
 const RIPIEGO = [livelloDegliAnni(6), livelloDegliAnni(11)]
 
+/* Il livello che una tipologia si dichiara per un grado: un numero
+   solo vale per tutti, un oggetto `{ grado: livello }` vale grado per
+   grado. Torna `undefined` se non ha detto niente per questo grado. */
+export function livelloVoluto(tipo, grado) {
+  const v = tipo && tipo.livello
+  if (Number.isFinite(v)) return v
+  if (v && typeof v === 'object' && Number.isFinite(v[grado])) return v[grado]
+  return undefined
+}
+
 /* un livello per grado, col ripiego per chi tace */
 function perGradoLivello(livelli, gradi) {
   return Array.from({ length: gradi }, (_, i) => {
@@ -200,9 +210,23 @@ export class Modulo {
   /* ── quanto è complicata una tipologia ──
      Come il suo grado, a meno che non l'abbia dichiarato per sé: nei
      gradi che ne mescolano due — «le doppie» e «cqu» insieme — capita
-     che una delle due stia un gradino più in là, e allora lo dice. */
+     che una delle due stia un gradino più in là, e allora lo dice.
+
+     ── UN NUMERO, O UNO PER GRADO ────────────────────────────────
+     `livello: 56` vale per tutti i gradi in cui la tipologia compare,
+     e va benissimo finché quei gradi chiedono la stessa fatica. Quando
+     invece è **la stessa cosa che si allunga** — un indovinello da
+     disfare a un passo, a due, a tre — un numero solo mente due volte:
+     dice troppo per il primo grado e troppo poco per l'ultimo. Il caso
+     che l'ha fatto nascere è proprio quello: gli indovinelli del senso
+     del numero si dichiaravano 56 (otto anni e mezzo) sia col passo
+     singolo sia con la catena da tre, e la catena da tre arrivava a
+     bambini di sette anni e mezzo. Perciò si accetta anche
+     `livello: { 4: 44, 5: 56, 6: 70 }`, con la stessa forma di `gradi`.
+     Un grado non elencato ricade sul livello del grado, come chi tace. */
   livelloDelTipo(tipo, grado) {
-    return Number.isFinite(tipo.livello) ? tipo.livello : this.livelli[grado - 1]
+    const suo = livelloVoluto(tipo, grado)
+    return Number.isFinite(suo) ? suo : this.livelli[grado - 1]
   }
 
   /* ── il livello di un grado ──

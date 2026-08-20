@@ -36,6 +36,7 @@
 
 import { pesoDi, bersaglio, finestraDi, anniDelLivello,
          livelloDegliAnni, MIRA_SOTTO } from './classi.js'
+import { livelloVoluto } from './modulo.js'
 
 /* Le fasce, che adesso sono **età** e non gradini astratti. Servono a
    due cose diverse e conviene tenerle a mente tutte e due: a
@@ -178,7 +179,7 @@ function voce(modulo, grado, { tipo, nome, sa, peso, scaletta }) {
     scaletta: scaletta && !ripete(scaletta, nome) ? scaletta : '',
     sa: [...sa],
     /* l'ha dichiarato lei, o è quello del suo grado? */
-    suo: !!(t && Number.isFinite(t.livello)),
+    suo: t ? livelloVoluto(t, grado) !== undefined : false,
     /* quanto spesso esce **dentro** il suo grado, quando il grado è
        toccato a lei: 1 se è l'unica, meno se se lo divide */
     peso,
@@ -269,4 +270,4 @@ export function giroDellaFascia(moduli, fascia, { spenti = [] } = {}) {
    volta su venti»), e il conto è quello di `classi.js` — non una
    copia. */
 export const quantoEsce = (classe, eta, difficolta = 0.5) =>
-  pesoDi(classe.livello, bersaglio(difficolta, finestraDi(eta)))
+  pesoDi(classe.livello, bersaglio(difficolta, eta))

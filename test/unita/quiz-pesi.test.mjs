@@ -64,9 +64,13 @@ nota(`${moduli.length} moduli, ${CLASSI} classi di domande in tutto`)
   controlla('l\'ammissione è più larga della mira',
             TAGLIO_SOTTO + TAGLIO_SOPRA > MIRA_SOTTO + MIRA_SOPRA)
   uguale('la carta più debole mira un anno indietro', bersaglio(0, 8), qui - MIRA_SOTTO)
-  uguale('la più tosta un anno e mezzo avanti', bersaglio(1, 8), qui + MIRA_SOPRA)
-  controlla('e la mira resta dentro l\'ammissione',
-            bersaglio(0, 8) > f[0] && bersaglio(1, 8) < f[1])
+  uguale('la più tosta mira dove finisce il mazzo', bersaglio(1, 8), qui + MIRA_SOPRA)
+  /* a fondo corsa la mira TOCCA il tetto dell'ammissione, e non è una
+     svista: sopra non c'è niente da pescare, quindi puntare più in alto
+     vorrebbe solo dire pescare dal di fuori. Sotto invece resta larga
+     distanza, perché lì il mazzo continua. */
+  controlla('e la mira non esce dall\'ammissione',
+            bersaglio(0, 8) > f[0] && bersaglio(1, 8) <= f[1])
   controlla('senza età non si taglia niente', adatta(3, finestraDi(null)))
   controlla('una domanda di due anni sotto è ancora ammessa', adatta(qui - 25, f))
   controlla('una di quattro anni sotto no: è una presa in giro', !adatta(qui - 50, f))
@@ -130,19 +134,43 @@ for (const [chi, eta] of ETA) {
        `${(massima * 100).toFixed(1)}%`)
 }
 
-/* ── quello che il taglio stretto rompeva ──
+/* ── ammesse non vuol dire frequenti, ed è cambiato ──
    Le ore intere sono di seconda elementare: a nove anni non sono più il
-   suo pane, ma restano una domanda onesta e devono poter capitare —
-   raramente, e più spesso quando il gioco chiede poco. */
+   suo pane, ma restano una domanda onesta. Con la banda a 19 capitavano
+   ogni tanto anche in mezzo al mazzo pieno; con la banda a 11 non più —
+   stanno due anni e mezzo sotto il bersaglio perfino con la carta più
+   debole, e a quella distanza il peso è un decimillesimo.
+
+   È il prezzo dichiarato dello stringere, e quello che si compra è
+   scritto in `nucleo/classi.js`: una porta della terza tappa del
+   sotterraneo smette di consegnare domande da sei anni a un bambino di
+   otto. Restano AMMESSE, che è un'altra cosa — e si vede quando il
+   mazzo si impoverisce: lì la banda si allarga da sola e tornano a
+   uscire, più con la carta debole che con quella tosta. Che è il verso
+   giusto anche nel degrado. */
 {
   const orologio = moduli.find(m => m.id === 'orologio')
   if (orologio) {
     const a9 = classiDi([orologio], { regole: { eta: 9 } }).map(c => c.grado)
     controlla('a nove anni le ore intere ci sono ancora', a9.includes(1), a9.join(','))
-    const debole = conta(9, 0.15).get('orologio/1') || 0
-    const tosta = conta(9, 0.85).get('orologio/1') || 0
-    controlla('e capitano più con la carta debole che con quella tosta', debole > tosta,
-              `${debole} contro ${tosta} su ${TIRI}`)
+    const pieno = conta(9, 0.15).get('orologio/1') || 0
+    controlla('ma col mazzo pieno non capitano quasi mai', pieno < TIRI / 100,
+              `${pieno} su ${TIRI}`)
+    /* mazzo povero: solo l'orologio acceso. La banda si allarga a
+       tentativi finché non c'è varietà, e le classi lontane tornano. */
+    const soloOrologio = (dif, quale) => {
+      const classi = classiDi([orologio], { difficolta: dif, regole: { eta: 9 } })
+      let quante = 0
+      for (let i = 0; i < TIRI; i++)
+        if (pescaClasse(new Sorte(i * 7919 + 13), classi).grado === quale) quante++
+      return quante
+    }
+    const debole = soloOrologio(0.15, 1)
+    const tosta = soloOrologio(0.85, 1)
+    controlla('col mazzo povero la banda si allarga e tornano', debole > 0,
+              `mai in ${TIRI} tiri`)
+    controlla('e anche lì capitano più con la carta debole che con quella tosta',
+              debole > tosta, `${debole} contro ${tosta} su ${TIRI}`)
     const a11 = classiDi([orologio], { regole: { eta: 11 } }).map(c => c.grado)
     controlla('ma a undici no: lì sono una presa in giro', !a11.includes(1), a11.join(','))
   }

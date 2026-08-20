@@ -180,7 +180,7 @@ tutti e due invisibili a ogni controllo di forma:
   mostrava sempre.
 
 Adesso `nucleo/classi.js` mette insieme tutte le classi giocabili e dà a
-ognuna un peso a campana centrato sulla difficoltà (`BANDA = 0.25`). La
+ognuna un peso a campana centrato sulla difficoltà (`BANDA`). La
 manopola resta una sola, ma è un **centro** e non un binario. Quante
 domande diverse sappia fare un modulo continua a non pesare: quella è
 ripetitività, non frequenza — e la misura il banco, non la scelta.
@@ -207,7 +207,8 @@ Adesso ci sono due cose, e stanno in due posti diversi:
 - **due larghezze, sul bambino**: la sua età (`settings.eta`) decide
   chi è **ammesso** — tre anni e mezzo sotto, due sopra: fuori di lì
   c'è solo la presa in giro e il muro — e dove **mira** la manopola, che
-  è molto più stretto (un anno indietro, un anno e mezzo avanti). Per un
+  è più stretto (un anno indietro, e in avanti fin dove finisce il
+  mazzo). Per un
   pezzo erano lo stesso numero, e il risultato era che a nove anni le
   ore intere dell'orologio sparivano del tutto invece di diventare rare.
 
@@ -216,8 +217,18 @@ scaletta: ['una storia sola: quello che arriva si somma', …],
 livelli: [38, 44, 56, 63, 75, 81],          // uno per grado
 tipi: [
   { chiave: 'cal:giorni-mese', livello: 38, … },   // se sta fuori dal suo grado
+  { chiave: 'num:catena', livello: { 3: 30, 4: 44, 5: 52, 6: 60 }, … },   // o grado per grado
 ],
 ```
+
+Il `livello` di una tipologia può essere **un numero solo** — vale per
+tutti i gradi in cui esce — oppure **uno per grado**, con la stessa
+forma di `gradi`. La seconda serve quando è la stessa cosa che si
+allunga: gli indovinelli del senso del numero si dichiaravano 56 (otto
+anni e mezzo) sia col passo singolo sia con la catena da tre da
+disfare, e la catena da tre finiva così davanti a bambini di sette anni
+e mezzo. Un numero solo lì mente due volte: dice troppo per il primo
+grado e troppo poco per l'ultimo.
 
 Il «fin quando una domanda è utile» **non si dichiara**: lo decide la
 finestra. È la differenza che conta rispetto al giro precedente, dove
@@ -264,18 +275,59 @@ sbaglia, e un pomeriggio storto o un fratello che ha giocato al posto
 suo gli insegnerebbero la cosa sbagliata senza che nessuno possa
 vederlo.
 
-### L'ampiezza della finestra, misurata
+### La banda: quanto è sfocato il tiro, e perché si è stretta
 
-Sedici punti sotto e venti sopra — quasi tre anni — non è un numero
-scelto a occhio: contando le classi che entrano, sotto i due anni di
-apertura il mazzo scende a una ventina di classi e diventa ripetitivo,
-sopra i quattro entra roba di due classi scolastiche di distanza. Agli
-estremi però la stessa ampiezza non basta, e non per colpa del bambino:
-il mazzo finisce (sotto i cinque anni e sopra gli undici c'è poco). Per
-questo la finestra **si allarga solo quando serve** — mezzo anno per
-volta, finché non ci sono almeno venti classi, mai oltre un anno e mezzo
-(`CLASSI_MINIME` e `ALLARGO`). Chi sta in mezzo alla primaria non se ne
-accorge mai.
+La banda è la larghezza della campana intorno al bersaglio. Era 19 — un
+anno e mezzo — con una mira che ne correva 31 in tutto: la rosa era
+larga quanto metà del poligono, quindi ovunque puntasse la manopola ci
+finiva dentro mezzo mazzo.
+
+Il difetto si vedeva solo contando, e si sentiva giocando. Misurato su
+**una porta della terza tappa del sotterraneo** — che è un punto
+perfettamente determinato, sempre difficoltà 0.45 — a un bambino di otto
+anni: il 41% delle domande stava sotto gli otto anni, il 10% sotto i sei
+e mezzo, e due domande di fila distavano in media 1,1 anni. Due tappe
+adiacenti ne distavano 0,25. **Il rumore batteva il segnale quattro a
+uno**, ed è tutto lì il «un po' facile, un po' difficile, a caso» che si
+sente giocando: la difficoltà chiesta era giusta e deterministica, la
+domanda consegnata era quasi un sorteggio.
+
+Adesso la banda è **11** (poco meno di un anno) e la mira arriva fino al
+tetto dell'ammissione. Sulla stessa porta: la coda sotto i sei anni e
+mezzo passa dal 10% allo 0,4%, la dispersione da ±0,95 a ±0,55 anni, e
+la campagna del sotterraneo corre da 7,1 a 9,5 anni invece che da 7,2 a
+8,8 — il doppio di strada con metà del rumore.
+
+**Ammesse non vuol dire frequenti**, ed è il prezzo dichiarato: le ore
+intere dell'orologio restano nel mazzo di un bambino di nove anni, ma
+con la campana stretta non gli capitano più. Restano ammesse per il caso
+in cui servano davvero, che è quello qui sotto.
+
+#### E quando il mazzo finisce, la banda si allarga
+
+Stringere la campana si paga agli estremi della scala, dove le classi
+scarseggiano: a dieci anni, sopra i dieci, il catalogo intero ne ha
+tredici, e con la banda ferma **una sola classe si prendeva il 54% dei
+tiri** davanti al capo dell'ultima tappa. È ripetitività, cioè l'altro
+modo di rovinare la stessa cosa — e il difetto è del catalogo, non del
+bambino: quelle domande lì non le abbiamo ancora scritte.
+
+Il rimedio è **un degrado felice, a tentativi**: si guarda quante classi
+contano davvero intorno al bersaglio, e se sono poche si allarga la
+banda di tre punti e si riprova, finché non ce ne sono abbastanza
+(`VARIETA_MINIMA`) o finché la campana non è tornata larga come prima
+(`BANDA_MASSIMA`). Chi sta in mezzo alla primaria non se ne accorge mai.
+
+«Quante contano davvero» non è «quante ce ne sono»: una classe con peso
+un millesimo c'è e non esce mai. Si conta col numero effettivo
+(`quanteContano`, l'inverso della somma dei quadrati dei pesi), che dà
+quattordici quando quattordici classi se la giocano alla pari e scende
+verso uno man mano che una sola se le mangia tutte.
+
+Il degrado si vede anche col mazzo svuotato da un genitore: acceso il
+solo orologio, la banda va al massimo e le ore intere tornano a uscire —
+più con la carta debole (222 tiri su 3000) che con quella tosta (17).
+Anche nel degrado il verso resta giusto.
 
 Un gioco non se n'è accorto di niente: continua a chiedere «una domanda
 facile» o «una tosta» senza sapere chi ha in mano il telefono. È lo
