@@ -158,9 +158,12 @@ export class Pilota {
    gioco non è quello dell'orologio, è quello che gli si dà. */
 export function gioca(regole, {
   rnd = Math.random, dt = 1 / 30, bravura = 1, sapienza = 0.8, gusto = 'forte',
-  esattezza = null, campo = null, fermo = false, fino = 180, oltre = 0,
+  esattezza = null, campo = null, fermo = false, fino = 180, oltre = 0, da = null,
 } = {}) {
-  const partita = new Partita(regole, { rnd, campo })
+  /* `da` è una partita già cominciata — quella che serve a provare che
+     una partita **ripresa** arriva in fondo (`motore/sosta.js`): il
+     pilota la prende in mano dove qualcun altro l'ha lasciata. */
+  const partita = da || new Partita(regole, { rnd, campo })
   const pilota = new Pilota({ rnd, bravura, sapienza, gusto, esattezza })
   const durata = Number.isFinite(regole.durata) ? regole.durata : fino
   /* `oltre` sono i secondi che il pilota resta in campo dopo aver vinto:

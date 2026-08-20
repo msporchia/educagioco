@@ -63,6 +63,25 @@
 .sv-tappa.sv-chiusa { opacity: .5; border-left-color: #c8cfc0; box-shadow: none }
 .sv-tappa.sv-adesso { box-shadow: 0 3px 0 var(--sv-accento) }
 
+/* ═══════════ la partita lasciata a metà ═══════════
+   In cima alla mappa, e si vede che è un'altra cosa dalle tappe: quelle
+   sono posti dove andare, questa è una cosa già cominciata. */
+.sv-ripresa { background: linear-gradient(180deg, #fff8e2, var(--sv-carta));
+              border: 2px solid #ffd257; border-radius: 16px; padding: 12px;
+              display: flex; flex-direction: column; gap: 8px }
+.sv-dove { display: grid; grid-template-columns: auto 1fr; gap: 0 10px }
+.sv-dove .sv-faccia { font-size: 30px; grid-row: span 2; align-self: center }
+.sv-dove b { font-size: 17px; align-self: end }
+.sv-dove i { font-style: normal; font-size: 12.5px; color: var(--sv-tenue) }
+
+.sv-modale { width: 100%; max-width: 340px; background: var(--sv-carta);
+             border-radius: 22px; padding: 16px; display: flex;
+             flex-direction: column; gap: 9px;
+             box-shadow: 0 10px 30px rgba(0,0,0,.35) }
+.sv-modale h2 { font-size: 19px; display: flex; align-items: center; gap: 8px;
+                color: var(--sv-inchiostro) }
+.sv-modale p { font-size: 13.5px; color: var(--sv-tenue); line-height: 1.45 }
+
 .sv-libero { display: flex; align-items: center; gap: 10px; justify-content: center;
              background: linear-gradient(180deg, #26324f, var(--sv-notte)); color: #ffe9c2;
              border-radius: 14px; padding: 14px; font-weight: 800; font-size: 16px }
@@ -94,6 +113,9 @@
              color: #fff; font-size: 16px; font-weight: 800; text-shadow: 0 2px 6px #000b;
              pointer-events: none; animation: sv-respira 1.8s infinite }
 @keyframes sv-respira { 0%, 100% { opacity: .95 } 50% { opacity: .45 } }
+/* il campo è fermo e non si capisce perché: la scritta sta in mezzo,
+   dove si guarda, e non in fondo come la dritta di chi comincia */
+.sv-attesa { bottom: auto; top: 30%; font-size: 19px }
 
 .sv-presi { position: absolute; left: 8px; right: 8px; bottom: 6px; text-align: center;
             font-size: 17px; pointer-events: none; line-height: 1.4;

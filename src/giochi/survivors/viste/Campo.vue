@@ -17,6 +17,10 @@ const props = defineProps({
   cruscotto: { type: Object, required: true },
   buio: { type: Boolean, default: false },
   dritta: { type: Boolean, default: true },     // «tieni premuto e trascina»
+  /* si riprende una partita lasciata a metà: il campo è fermo, e
+     riparte al primo dito. Chi ha appena riaperto il gioco sta ancora
+     guardando dov'era rimasto, e la marea non aspetta nessuno */
+  attesa: { type: Boolean, default: false },
 })
 const emit = defineEmits(['tela', 'muovi'])
 
@@ -101,7 +105,10 @@ onUnmounted(() => {
       <div class="sv-livello">LIVELLO {{ cruscotto.livello }}</div>
     </div>
 
-    <div v-if="dritta" class="sv-dritta em">tieni premuto e trascina 👆</div>
+    <div v-if="attesa" class="sv-dritta sv-attesa em" data-attesa="1">
+      tocca per ripartire 👆
+    </div>
+    <div v-else-if="dritta" class="sv-dritta em">tieni premuto e trascina 👆</div>
 
     <div class="sv-presi em">
       <span v-for="p in cruscotto.presi" :key="p.chiave">

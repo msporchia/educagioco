@@ -20,13 +20,15 @@ import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, stelleDi, completa, scelta, ricorda,
+         sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, SCALINI, LIBERO, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { scenario } from './dati/scenari.js'
 import { Regole, Partita } from './motore/partita.js'
+import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
 import { Giostra } from './scena/giostra.js'
 
@@ -55,6 +57,11 @@ const domanda = ref(null)             // la domanda che paga la carta scelta
 const finale = ref(null)
 const brindisi = ref('')
 const toccato = ref(false)
+/* Chi riprende trova il campo **fermo**, e riparte quando tocca. Questo
+   gioco non è a turni come il sotterraneo: riaprirlo vorrebbe dire
+   ritrovarsi in mezzo alla marea mentre si sta ancora capendo dove si
+   era rimasti, e il primo cuore se ne andrebbe lì. */
+const inAttesa = ref(false)
 
 let voluta = null                     // la carta che si sta pagando
 let ultimoModulo = null               // per non fare due domande di fila uguali
@@ -72,6 +79,66 @@ const veste = computed(() => scenario(regoleOra.value.scenario))
 function vuoto() {
   return { cuori: 3, cuoriMax: 3, livello: 1, quota: 0, tempo: 0,
            restano: 0, infinita: false, uccisi: 0, presi: [] }
+}
+
+/* ═══════════ LA PARTITA LASCIATA A METÀ ═══════════
+   Uscire non butta più via niente: si scrive dove si era
+   (`motore/sosta.js`) e la mappa la offre in cima. Il ref serve solo a
+   farla comparire e sparire: la verità sta in archivio. */
+const ripresa = ref(laRipresa())
+let daSalvare = 0
+
+/* La carta della mappa vuole anche la faccia dello scenario, che `dice`
+   non conosce: di là si sa che una tappa ha uno scenario, non che la
+   notte sia 🌙. Nella Sopravvivenza la faccia è la sua, ♾️, perché non
+   c'è nessuna tappa da riconoscere. */
+function laRipresa() {
+  const d = dice(sosta(CHIAVE), CAMPAGNA, LIBERO)
+  return d && { ...d, icona: d.libera ? '♾️' : scenario(d.scenario).icona }
+}
+
+function salva({ subito = false } = {}) {
+  const p = partita.value
+  if (!p) return
+  daSalvare = 0
+  const dato = scrivi(p, tappaIdx.value)
+  /* `scrivi` torna `null` a partita finita o già vinta, e allora la
+     sosta va **tolta**: se no una tappa portata a casa resterebbe in
+     cima alla mappa come se fosse ancora a metà. */
+  salvaSosta(CHIAVE, dato, { subito })
+}
+
+function scorda() {
+  buttaSosta(CHIAVE)
+  ripresa.value = null
+}
+
+/* Riprendere non è ricominciare. Se il salvataggio non si legge più —
+   una versione vecchia, un dato storto — si comincia la tappa da capo
+   invece di lasciare un tasto che non fa niente. */
+function riprendiPartita() {
+  const dato = sosta(CHIAVE)
+  const t = dato ? (dato.tappa < 0 ? LIBERO : CAMPAGNA[dato.tappa]) : null
+  const p = t ? leggi(dato, t) : null
+  if (!p) return scorda()          // la carta sparisce, la mappa resta
+  clearTimeout(attesa); attesa = 0
+  tappaIdx.value = dato.tappa
+  partita.value = p
+  cruscotto.value = p.cruscotto
+  offerta.value = null
+  domanda.value = null
+  finale.value = null
+  brindisi.value = ''
+  /* la dritta «tieni premuto e trascina» è per chi comincia: chi
+     riprende ha già giocato, e al suo posto c'è «tocca per ripartire» */
+  toccato.value = true
+  inAttesa.value = true
+  vista.value = 'campo'
+  pagata = false
+  contata = false
+  mostriSegnati = 0
+  ripresa.value = null
+  if (pittore) prendiTela(pittore.tela)
 }
 
 /* ═══════════ la mappa ═══════════
@@ -142,7 +209,16 @@ function suona(eventi) {
 function passo(dt) {
   const p = partita.value
   if (!p) return
-  if (!p.finita && !p.inPausa && !state.festa.length && !aiutoAperto.value) p.avanza(dt)
+  if (!p.finita && !p.inPausa && !state.festa.length && !aiutoAperto.value
+      && !inAttesa.value) {
+    p.avanza(dt)
+    /* ogni tanto, e non a ogni fotogramma: una partita salvata è meno di
+       un chilobyte, ma scriverla sessanta volte al secondo su un
+       telefono si sente. Cinque secondi è quello che al massimo si
+       riperde, e cinque secondi non sono niente. */
+    daSalvare += dt
+    if (daSalvare > 5) salva()
+  }
   if (p.eventi.length) suona(p.svuotaEventi())
 
   if (p.inPausa && !offerta.value && !domanda.value) {
@@ -161,6 +237,9 @@ function passo(dt) {
 /* ═══════════ giocare ═══════════ */
 function avvia(indice) {
   clearTimeout(attesa); attesa = 0
+  /* una partita nuova butta quella lasciata a metà: la mappa lo ha già
+     chiesto (`Mappa.vue`), qui non si chiede una seconda volta */
+  scorda()
   tappaIdx.value = indice
   const t = indice < 0 ? LIBERO : CAMPAGNA[indice]
   partita.value = new Partita(new Regole(t))
@@ -170,6 +249,7 @@ function avvia(indice) {
   finale.value = null
   brindisi.value = ''
   toccato.value = false
+  inAttesa.value = false
   vista.value = 'campo'
   pagata = false
   contata = false
@@ -195,7 +275,7 @@ function ridimensiona() {
 }
 
 function muovi(dx, dy) {
-  if (dx || dy) toccato.value = true
+  if (dx || dy) { toccato.value = true; inAttesa.value = false }
   partita.value?.muovi(dx, dy)
 }
 
@@ -233,6 +313,9 @@ function risposto({ giusto }) {
     brinda('🪙 +1 — niente carta, ma ci hai provato', false)
   }
   cruscotto.value = p.cruscotto
+  /* una carta è il momento in cui si perde di più: qualche secondo di
+     campo si rigioca, una domanda a cui si è già risposto no */
+  salva()
 }
 
 function brinda(testo, giusto) {
@@ -258,6 +341,7 @@ function chiudiPartita() {
   const p = partita.value
   if (!p) return
   giostra.ferma()
+  scorda()          // finita o vinta, non c'è più niente da riprendere
   const secondi = Math.floor(p.tempo)
   const extra = Math.floor(p.extra)
   let primato = false
@@ -332,9 +416,29 @@ function allaMappa() {
   vista.value = 'mappa'
 }
 
+/* ── tornare alla mappa ──
+   Uscire a metà **non chiude più la partita**: si scrive dove si era e
+   la mappa la offre in cima. Si salva sempre, anche dopo dieci secondi:
+   quello che si perde non sono i mostri uccisi, sono **le carte già
+   pagate con una domanda**, e quelle si riprendono solo rispondendo di
+   nuovo. */
 function indietro() {
-  if (vista.value === 'mappa') emit('vai', 'home')
-  else allaMappa()
+  if (vista.value === 'mappa') return emit('vai', 'home')
+  const p = partita.value
+  if (p && !p.finita) {
+    salva({ subito: true })
+    ripresa.value = laRipresa()
+  }
+  allaMappa()
+}
+
+/* ── il telefono che si mette in tasca ──
+   Su un telefono l'app non si chiude: sparisce. `visibilitychange` è
+   l'ultimo momento in cui si può ancora scrivere, e il `subito` serve
+   perché il salvataggio pigro potrebbe non scattare mai. */
+function seSparisce(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden')
+    salva({ subito: true })
 }
 
 /* ═══════════ il gancio per guardarsi ═══════════
@@ -360,10 +464,18 @@ function gancioDiProva() {
   }
 }
 
-onMounted(() => { addEventListener('resize', ridimensiona); gancioDiProva() })
+onMounted(() => {
+  addEventListener('resize', ridimensiona)
+  addEventListener('visibilitychange', seSparisce)
+  addEventListener('pagehide', seSparisce)
+  gancioDiProva()
+})
 onUnmounted(() => {
   if (import.meta.env.DEV) delete window.__survivors
+  salva({ subito: true })
   removeEventListener('resize', ridimensiona)
+  removeEventListener('visibilitychange', seSparisce)
+  removeEventListener('pagehide', seSparisce)
   clearTimeout(attesa)
   clearTimeout(orologioBrindisi)
   giostra.ferma()
@@ -376,10 +488,13 @@ onUnmounted(() => {
 
     <div class="sv" :style="{ '--sv-accento': veste.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"
-             @gioca="avvia" @libero="avvia(-1)" />
+             :ripresa="ripresa"
+             @gioca="avvia" @libero="avvia(-1)"
+             @riprendi="riprendiPartita" @scorda="scorda" />
 
       <CampoVista v-else :cruscotto="cruscotto" :buio="veste.buio"
                   :dritta="!toccato && cruscotto.tempo < 9 && !finale"
+                  :attesa="inAttesa"
                   @tela="prendiTela" @muovi="muovi" />
 
       <div v-if="brindisi" class="sv-brindisi em">{{ brindisi }}</div>

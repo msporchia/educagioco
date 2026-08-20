@@ -49,6 +49,44 @@ più utile», e la risposta sarebbe sempre la stessa.
 È anche il motivo per cui un bambino che ha voglia di vincere **sceglie da
 solo le domande difficili**, il che è esattamente il punto.
 
+## Una partita si può lasciare a metà
+
+Le tappe durano fra i 45 secondi e i tre minuti, la Sopravvivenza non
+finisce mai. Uscire non butta più via niente: si scrive dove si era
+(`motore/sosta.js`) e la mappa la offre in cima — «⏱ mancano 38s · ❤️ 3/4 ·
+livello 6 — torno in campo da dove ero». È la stessa promessa del
+[sotterraneo](sotterraneo.md), e vale la pena tenerla uguale in tutti i
+giochi: un bambino che ha imparato che di là si può uscire non deve
+scoprire che qui no.
+
+Quello che si salva sta in meno di un chilobyte, perché quasi tutto si
+**rifà**: lo scenario sta nella tappa, i numeri dell'eroe sono una funzione
+delle carte prese. Si scrive solo quello che è *successo* — dove si era
+arrivati, cosa si è preso, chi c'è in campo.
+
+Tre scelte dentro questa:
+
+- **I mostri non si cancellano, si spingono via.** Riaprire il gioco a campo
+  pulito sarebbe comodissimo, e diventerebbe *una mossa*: quando sei
+  circondato esci, rientri, e la marea ricomincia da capo mentre l'orologio
+  no. In campagna quei secondi valgono un cuore, cioè una stella; nella
+  Sopravvivenza valgono il primato. Quindi i mostri si ritrovano dov'erano,
+  e solo quelli addosso fanno un passo indietro — perché riprendere con la
+  melma sul naso e mezzo cuore in meno è il modo più rapido di far pentire
+  qualcuno di aver ripreso.
+- **Il campo riprende fermo**, e riparte al primo dito. Questo gioco non è a
+  turni: chi riapre sta ancora guardando dov'era rimasto, e la marea non
+  aspetta nessuno.
+- **Dopo il traguardo non si salva più.** Lì stelle e monete sono già state
+  contate: chi resta in campo gioca tempo regalato, e interromperlo costa
+  qualche monetina e nient'altro. Salvare anche quello vorrebbe dire
+  portarsi dietro *che i premi sono già stati pagati* — e un salvataggio che
+  si scorda quella riga paga la tappa due volte.
+
+Le tre carte in attesa si salvano **per chiave** e si rivestono riprendendo:
+ripescarle sarebbe una riga in meno e un tiro nuovo a ogni uscita, cioè chi
+non gradisce l'offerta esce e rientra finché non gliene capita una migliore.
+
 ## Quali domande escono
 
 Tutte le materie: italiano, matematica, spazio, tempo, logica. Il gioco non
