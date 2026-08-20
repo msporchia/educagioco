@@ -24,15 +24,29 @@
 import { EROE } from './mondo.js'
 import { ARMI_DI } from './cose.js'
 
+/* ── quanto spesso lasciano qualcosa ──
+   Era una probabilità sola per tutti (sette volte su dieci), e il conto
+   che ne usciva non tornava: il goblin è il mostro più comune del
+   sotterraneo e **lascia sempre e solo una boccetta**, quindi bastavano
+   quattro goblin per uscire da un piano con lo zaino pieno di pozioni
+   che non si berranno mai. Una pozione che avanza non è un premio, è
+   una tasca occupata — e quando ne hai sei, il momento in cui una
+   pozione ti salva non arriva più.
+
+   Adesso la dichiara ogni mostro: chi è debole e frequente lascia di
+   rado, chi è grosso quasi sempre. Il bottino torna a essere una cosa
+   che capita invece di una tassa che il gioco ti paga. */
 export const MOSTRI = {
   goblin: {
     em: '👺', sprite: 'goblin', nome: 'Un goblin',
     ossa: 4, att: 2, dif: 0, gemme: 2,
+    droppa: 0.22,
     lascia: ['pozione-piccola'],
   },
   scheletro: {
     em: '💀', sprite: 'scheletro', nome: 'Uno scheletro',
     ossa: 8, att: 3, dif: 1, gemme: 5,
+    droppa: 0.45,
     /* le armi si chiedono per **gradino**: una famiglia nuova entra nel
        bottino senza che nessuno debba ricordarsi di aggiungerla qui */
     lascia: [...ARMI_DI(1), 'panciotto', 'pozione-piccola'],
@@ -40,11 +54,13 @@ export const MOSTRI = {
   orco: {
     em: '👹', sprite: 'orco', nome: 'Un orco',
     ossa: 12, att: 4, dif: 1, gemme: 8,
+    droppa: 0.6,
     lascia: [...ARMI_DI(2), 'corazza', 'pozione'],
   },
   gigante: {
     em: '🗿', sprite: 'mostro-grosso', nome: 'Il gigante',
     ossa: 17, att: 5, dif: 1, gemme: 12, capo: true,
+    droppa: 0.85,
     lascia: [...ARMI_DI(3), 'manto', 'amuleto-rosso'],
   },
 }
@@ -78,6 +94,8 @@ export function guastiDeiMostri() {
     const costo = colpiPer(m, braccio)
     if (costo > 8) g.push(`${k}: ${costo} risposte di fila con attacco ${braccio}, troppe`)
     for (const c of m.lascia || []) if (typeof c !== 'string') g.push(`${k}: lascia una cosa senza nome`)
+    if (m.droppa == null) g.push(`${k}: non dice quanto spesso lascia qualcosa`)
+    else if (m.droppa < 0 || m.droppa > 1) g.push(`${k}: droppa ${m.droppa}, e non è una probabilità`)
   }
   for (const t of BRANCO) if (!MOSTRI[t]) g.push(`nel branco c'è "${t}", che non esiste`)
   return g

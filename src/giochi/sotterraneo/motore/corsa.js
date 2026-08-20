@@ -783,7 +783,7 @@ export class Corsa {
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
                              quante: scheda.gemme + Math.floor(this.piano * 1.5) })
     const possibili = scheda.lascia || []
-    if (possibili.length && this.rnd() < 0.7) {
+    if (possibili.length && this.rnd() < (scheda.droppa != null ? scheda.droppa : 0.5)) {
       const cosa = possibili[Math.floor(this.rnd() * possibili.length)]
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }

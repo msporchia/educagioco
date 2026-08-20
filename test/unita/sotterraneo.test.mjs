@@ -385,17 +385,41 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   for (let i = 0; i < 40; i++) {
     const l = new Livello({ seme: 300 + i * 97, piano: i % 3, largo: 34, alto: 34, giri: 3 })
     const porte = l.robe.filter(r => r.che === 'porta')
-    /* ogni stanza sbarrata deve avere **tutti** i suoi varchi chiusi */
+    /* Ogni stanza sbarrata dev'essere sbarrata **davvero**: ogni cella
+       dei suoi varchi o porta una porta, o è stata murata quando il
+       varco è stato ristretto. Contare le porte non basta più — un
+       varco largo quattro ne ha una sola — e non basterebbe comunque:
+       quello che conta è che non resti un buco da cui passare. */
     for (const g of new Set(porte.map(r => r.gruppo))) {
       const stanza = l.stanze[g]
-      const chiuse = porte.filter(r => r.gruppo === g).length
       sbarrate++
-      if (chiuse < stanza.porte.length) storte++
+      const buchi = stanza.porte.filter(p =>
+        l.calpestabile(p.x, p.y) &&
+        !porte.some(r => r.x === p.x && r.y === p.y))
+      if (buchi.length) storte++
     }
     if (l.serveUnaPorta) tagliati++
   }
-  controlla('ogni stanza sbarrata ha tutti i varchi chiusi', storte === 0,
+  controlla('ogni stanza sbarrata è chiusa davvero, senza buchi', storte === 0,
             `${storte} su ${sbarrate}`)
+
+  /* e una porta per varco, non una per cella: quattro cancelli in fila
+     con quattro teschi sopra sembravano una prigione, e non si capiva
+     quale fosse la porta */
+  let piuDiUna = 0, varchiVisti = 0
+  for (let i = 0; i < 40; i++) {
+    const l = new Livello({ seme: 700 + i * 53, piano: i % 3, largo: 34, alto: 34, giri: 3 })
+    const porte = l.robe.filter(r => r.che === 'porta')
+    for (const g of new Set(porte.map(r => r.gruppo))) {
+      for (const varco of l.varchiDi(l.stanze[g].porte)) {
+        varchiVisti++
+        const quante = porte.filter(r => varco.some(p => p.x === r.x && p.y === r.y)).length
+        if (quante > 1) piuDiUna++
+      }
+    }
+  }
+  controlla('un varco, una porta', piuDiUna === 0, `${piuDiUna} varchi su ${varchiVisti}`)
+  nota(`${varchiVisti} varchi visti, tutti con una porta sola`)
   /* e nessuna sbarra la strada: quello che vale sta in fondo a un ramo,
      non in mezzo al cammino, o il premio diventa un casello */
   uguale('nessun piano obbliga ad aprire una porta per arrivare alla scala', tagliati, 0)

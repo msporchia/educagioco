@@ -48,9 +48,15 @@
   border-radius: 999px; background: #00000055; overflow: hidden;
 }
 .sot-polso i { position: absolute; inset: 0 auto 0 0; background: var(--sot-polso, #4fce7c) }
+/* Il numero sta **sopra** la barra, che sotto di lui è verde per un
+   pezzo e scura per il resto: scritto scuro con un alone chiaro si
+   leggeva finché la vita era alta e spariva appena scendeva — cioè
+   proprio quando lo si guarda. Bianco con l'ombra netta si legge su
+   tutti e due i fondi. */
 .sot-polso b {
   position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 11px; font-weight: 800; color: #06111e; text-shadow: 0 0 3px #ffffff88;
+  font-size: 11px; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 2px #000c, 0 0 3px #000a;
 }
 .sot-n { display: inline-flex; align-items: center; gap: 2px; font-size: 13px }
 .sot-n b { font-size: 13px }
@@ -239,7 +245,9 @@
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: 0 0 12px; font-size: 13.5px; color: var(--sot-inchiostro);
 }
-.sot-riepilogo .sot-polso { width: 74px; height: 16px }
+/* più larga che nella fascia in cima: qui dentro il numero è «11/16»,
+   non «11» */
+.sot-riepilogo .sot-polso { width: 84px; height: 16px }
 
 .sot-corredo {
   display: grid; gap: 8px; margin-bottom: 14px; align-items: center;

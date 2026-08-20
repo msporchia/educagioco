@@ -448,28 +448,73 @@ export class Livello {
          resta aperta e senza segno. Meglio una stanza che si visita
          gratis di una promessa che è in realtà un obbligo. */
       if (this.taglierebbeLaStrada(s, messe)) continue
-      for (const p of s.porte) {
-        const k = p.x + ',' + p.y
+      /* ── un varco, una porta ──
+         I varchi di questo generatore sono larghi quanto capita, e
+         mettere una porta per cella voleva dire **quattro cancelli in
+         fila**, ognuno col suo teschio sopra: da lontano sembra una
+         prigione, e da vicino non si capisce quale sia la porta. Adesso
+         le celle contigue di uno stesso varco si contano come una cosa
+         sola: al centro va la porta, il resto **si mura**, e il passaggio
+         resta largo un passo — che è quello che una porta chiude. */
+      const varchi = this.varchiDi(s.porte)
+      const stretti = varchi.map(v => {
+        const mezzo = v[Math.floor(v.length / 2)]
+        return { mezzo, troppe: v.filter(p => p !== mezzo) }
+      })
+      /* o tutti o nessuno: una stanza con un varco murato e un altro
+         rimasto spalancato è una stanza «chiusa» in cui si entra
+         gratis dall'altra parte, ed è il difetto che le porte per
+         stanza erano nate per togliere */
+      if (!stretti.every(v => this.stringiIlVarco(v.troppe, v.mezzo))) continue
+      for (const { mezzo } of stretti) {
+        const k = mezzo.x + ',' + mezzo.y
         if (messe.has(k)) continue
-        const porta = { che: 'porta', x: p.x, y: p.y, em: '🚪', nome: 'Una porta chiusa',
-                        segno, aperta: false, gruppo: s.id }
+        const porta = { che: 'porta', x: mezzo.x, y: mezzo.y, em: '🚪',
+                        nome: 'Una porta chiusa', segno, aperta: false, gruppo: s.id }
         messe.set(k, porta)
         this.robe.push(porta)
       }
     }
-    /* Un varco largo due celle è **un** portone, non due porte: quella di
-       sinistra lo disegna intero (lo sprite del set è largo due celle
-       apposta) e quella di destra sta sotto e non si disegna. Senza
-       questo, due battenti si sovrappongono a metà e sembrano storti —
-       che è come lo si nota, prima ancora di accorgersi che si passa in
-       mezzo. */
-    for (const [k, porta] of messe) {
-      const destra = messe.get((porta.x + 1) + ',' + porta.y)
-      if (destra && destra.gruppo === porta.gruppo && !porta.coperta) {
-        porta.doppia = true
-        destra.coperta = true
+  }
+
+  /* Le celle di porta contigue, raggruppate: un varco largo quattro è
+     una lista di quattro, due varchi lontani sono due liste. Si guarda
+     solo in croce, come si cammina. */
+  varchiDi(porte) {
+    const restano = porte.map(p => ({ x: p.x, y: p.y }))
+    const gruppi = []
+    while (restano.length) {
+      const gruppo = [restano.pop()]
+      for (let i = 0; i < gruppo.length; i++) {
+        for (let j = restano.length - 1; j >= 0; j--) {
+          const d = Math.abs(restano[j].x - gruppo[i].x) + Math.abs(restano[j].y - gruppo[i].y)
+          if (d === 1) gruppo.push(restano.splice(j, 1)[0])
+        }
       }
+      gruppi.push(gruppo)
     }
+    return gruppi
+  }
+
+  /* Mura le celle in eccesso di un varco, e **si tira indietro se così
+     isola qualcosa**: restringere un passaggio è sicuro quasi sempre —
+     resta comunque un passo di larghezza — ma «quasi sempre» in un
+     generatore vuol dire che una volta su cento si chiude una stanza con
+     dentro la chiave. Si prova prima, e se il piano non regge si lascia
+     il varco com'era e quella stanza senza porta: una stanza che si
+     visita gratis è meglio di un piano che non si finisce. */
+  stringiIlVarco(troppe, mezzo) {
+    if (!troppe.length) return true
+    const prima = troppe.map(p => this.a(p.x, p.y))
+    for (const p of troppe) this.metti(p.x, p.y, ROCCIA)
+    const partenza = this.stanze[0]
+    const visti = raggiungibili((x, y) => this.calpestabile(x, y),
+                                { x: partenza.cx, y: partenza.cy })
+    const tutto = this.robe.every(r => visti.has(r.x + ',' + r.y)) &&
+                  visti.has(mezzo.x + ',' + mezzo.y)
+    if (tutto) return true
+    troppe.forEach((p, i) => this.metti(p.x, p.y, prima[i]))
+    return false
   }
 
   /* Si arriva ancora alla scala se si chiudono anche i varchi di questa
