@@ -20,7 +20,7 @@
         muri che si toccano per un angolo.
    ═══════════════════════════════════════════════════════════════════ */
 import { percorso, raggiungibili, siArriva, accanto, primaLibera,
-         passiFra, PASSI } from '../../src/motore/passi.js'
+         passiFra, viaVerso, PASSI } from '../../src/motore/passi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una mappetta a caratteri: `#` è muro, tutto il resto si cammina.
@@ -143,6 +143,31 @@ const APERTA = mappa([
   const quante = raggiungibili(senzaBordi, { x: 0, y: 0 }, 500).size
   controlla('il tetto ferma una mappa senza bordi', quante <= 500 && quante > 0)
   nota(`una mappa senza bordi si ferma a ${quante} celle`)
+}
+
+/* ══════════ 8. su una cosa che si calpesta si sale, e non ci si ferma prima ══════════
+   `sopra` vuol dire che la meta **è** la cella, non una accanto. Messa
+   in fila con le vicine perde sempre, perché chi arriva incontra la
+   vicina un passo prima: nel sotterraneo l'eroe si piantava accanto
+   alle monete e non le raccoglieva — si prendono camminandoci sopra —
+   e l'unico modo di prenderle era mirare una cella più in là. */
+{
+  const via = viaVerso(APERTA, { x: 4, y: 1 }, { x: 0, y: 1 }, { sopra: true })
+  uguale('si arriva proprio sopra', `${via.dove.x},${via.dove.y}`, '4,1')
+  uguale("e l'ultimo passo è la meta", `${via.strada.at(-1).x},${via.strada.at(-1).y}`, '4,1')
+
+  const accosto = viaVerso(APERTA, { x: 4, y: 1 }, { x: 0, y: 1 })
+  uguale('senza sopra ci si ferma accanto', `${accosto.dove.x},${accosto.dove.y}`, '3,1')
+
+  /* se sulla cella non si può stare, `sopra` non è un ordine: si ripiega
+     sul lato raggiungibile, come per un mostro o un forziere */
+  const OCCUPATA = mappa([
+    '.....',
+    '....#',
+    '.....',
+  ])
+  const ripiego = viaVerso(OCCUPATA, { x: 4, y: 1 }, { x: 0, y: 1 }, { sopra: true })
+  uguale('dove non si può salire si sta accanto', `${ripiego.dove.x},${ripiego.dove.y}`, '3,1')
 }
 
 riassunto('passi')

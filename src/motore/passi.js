@@ -150,14 +150,23 @@ export function accanto(buona, meta, da, { sopra = false } = {}) {
    così chi chiama non la ricalcola. `sopra` dice se vale anche stare
    sulla cella stessa: su una scala ci si sale, su un mostro no.
 
+   ── E QUANDO SI SALE, LA CELLA STESSA VIENE PRIMA ─────────────────
+   Non ordinata insieme alle altre: **prima**. Ordinandola per distanza
+   perde sempre, perché chi arriva incontra la vicina un passo prima
+   della meta — e si ferma lì. Sulle monete si vedeva ad occhio nudo: il
+   dito le tocca, l'eroe si pianta accanto e non le raccoglie, perché le
+   gemme si prendono camminandoci **sopra**. L'unico modo di prenderle
+   era mirare una cella più in là e passarci per caso.
+
    Costa fino a cinque ricerche invece di una, e succede solo quando si
    tocca qualcosa: su griglie di qualche migliaio di celle non si sente. */
 export function viaVerso(buona, meta, da, { sopra = false, tetto = TETTO } = {}) {
-  const scelte = (sopra ? [[0, 0]] : []).concat(PASSI)
+  const scelte = PASSI
     .map(([dx, dy]) => ({ x: meta.x + dx, y: meta.y + dy }))
     .filter(p => buona(p.x, p.y))
     .sort((a, b) => (Math.abs(a.x - da.x) + Math.abs(a.y - da.y)) -
                     (Math.abs(b.x - da.x) + Math.abs(b.y - da.y)))
+  if (sopra && buona(meta.x, meta.y)) scelte.unshift({ x: meta.x, y: meta.y })
   for (const p of scelte) {
     if (p.x === da.x && p.y === da.y) return { dove: p, strada: [] }
     const strada = percorso(buona, da, p, { tetto })
