@@ -38,9 +38,13 @@ const props = defineProps({
      non la decide chi chiama, quella di un'emoji sì — è un carattere, e
      in una riga di testo va tarata sul testo che le sta intorno */
   emAlto: { type: Number, default: 22 },
+  /* la scala di casa vale per le **cose**; un ritratto — la faccia di
+     chi hai davanti mentre rispondi — vuole essere più grande, e allora
+     lo si dice qui invece di lasciarlo decidere a una divisione */
+  scala: { type: Number, default: SCALA },
 })
 
-const f = computed(() => (props.sprite ? figura(props.sprite, { scala: SCALA }) : null))
+const f = computed(() => (props.sprite ? figura(props.sprite, { scala: props.scala }) : null))
 </script>
 
 <template>

@@ -128,8 +128,24 @@ function equipaggia(corsa) {
   for (let i = corsa.zaino.length - 1; i >= 0; i--) {
     const k = corsa.zaino[i]
     const c = COSE[k]
-    if (c.dove === 'mano' && meglio(k, corsa.mano, 'att')) { corsa.usa(i); continue }
+    /* Un'arma si giudica sul **totale delle due mani**, che è quello che
+       sa il motore: confrontarla con quella nel pugno mandava il banco
+       in tondo per sempre. Con due armi leggere entrambe più forti di
+       quella in mano, `usa` metteva la seconda nella mano debole e
+       rispediva la prima in tasca; al giro dopo la prima era di nuovo
+       «meglio di quella in pugno», e si scambiavano di posto
+       all'infinito — dodicimila giri, novanta secondi di prova, e
+       nessun errore da nessuna parte. */
+    if (c.dove === 'mano') {
+      const posto = corsa.postoDellArma(k)
+      if (posto.delta > 0) { corsa.usa(i); continue }
+    }
     if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
+    /* lo scudo va nella mano debole, e solo se là ci si può mettere
+       qualcosa: con un'arma a due mani in pugno il motore lo rifiuta */
+    if (c.dove === 'mancina' && !corsa.aDueMani(corsa.mano) && !corsa.mancina) {
+      corsa.usa(i); continue
+    }
     /* al dito ci va la prima cosa che capita: i gioielli non si
        confrontano su un numero solo — vedere più lontano e reggere un
        colpo in più non stanno sulla stessa scala — e un giocatore finto
@@ -192,6 +208,12 @@ function sbriga(corsa, bravura, sorte) {
     case 'porta':
     case 'forziere':
     case 'fonte':
+      corsa.rispondi(sorte() < bravura)
+      return true
+    /* una curiosità apre due volte: prima la domanda, poi la battuta
+       che resta a schermo finché non la si è letta */
+    case 'curiosita':
+      if (f.esito) { corsa.chiudi(); return false }
       corsa.rispondi(sorte() < bravura)
       return true
     /* Il caso 'trovata' non c'è più, e non è una semplificazione del

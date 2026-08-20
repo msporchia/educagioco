@@ -114,21 +114,54 @@ export const COSE = {
      spadone sul suo terreno: due su tre hanno il suo stesso braccio, e
      il pugnale ne ha meno. Si comprano care, e si trovano solo in fondo
      a un forziere. */
-  'spada-fiammeggiante': {
-    em: '🔥', nome: 'Spada fiammeggiante', sprite: 'arma-3', dove: 'mano', mani: 2,
+  /* Il nome dice quello che il foglio disegna, e non il contrario: la
+     prima stesura chiamava «spada fiammeggiante» un'ascia bipenne e
+     «ascia del ladro» una spada, e a schermo la cosa si legge subito —
+     una casella con dentro una figura che il suo nome smentisce sembra
+     un guasto anche quando non lo è. */
+  'bipenne-solare': {
+    em: '🔥', nome: 'Bipenne solare', sprite: 'arma-3', dove: 'mano', mani: 2,
     att: 3, luce: 2, prezzo: 36,
-    dice: 'La lama brucia di suo: al buio vedi molto più lontano. Due mani.',
+    dice: 'Le lame brillano di loro: al buio vedi molto più lontano. Due mani.',
   },
-  'ascia-del-ladro': {
-    em: '💰', nome: 'Ascia del ladro', sprite: 'arma-2', dove: 'mano', mani: 2,
+  'spada-del-ladro': {
+    em: '💰', nome: 'Spada del ladro', sprite: 'arma-2', dove: 'mano', mani: 2,
     att: 3, gemme: 0.5, prezzo: 34,
-    dice: 'Ogni gemma che raccogli ne vale una e mezza.',
+    dice: 'Ogni gemma che raccogli ne vale una e mezza. Due mani.',
   },
   'pugnale-vampiro': {
     em: '🩸', nome: 'Pugnale vampiro', sprite: 'arma-1', dove: 'mano', mani: 1,
     att: 2, vita: 6, prezzo: 30,
     dice: 'Corto e cattivo: finché lo tieni, sei punti di vita in più.',
   },
+
+  /* ═══ GLI SCUDI: LA MANO DEBOLE HA UNA SECONDA STRADA ═══
+     Fino a ieri nella mano debole ci stava solo una seconda arma, e la
+     scelta era una sola — più braccio. Con gli scudi diventa **braccio
+     o pelle**: due lame fanno cadere prima chi hai davanti, uno scudo
+     ti fa arrivare in fondo. È la stessa domanda del bivio, fatta con
+     le mani.
+
+     I numeri restano bassi apposta. Il danno di un mostro è
+     `attacco − difesa` col pavimento a 1: fra corazza, gioiello e
+     scudo si arriva presto a non prendere quasi più niente, e un gioco
+     dove sbagliare non costa nulla non è più un gioco. Il più prezioso
+     dà 3, e non ha altro. */
+  'scudo-legno': { em: '🛡️', nome: 'Scudo di legno', sprite: 'scudo-legno', dove: 'mancina',
+                   dif: 1, prezzo: 10, dice: 'Assi e borchie: para il primo colpo.' },
+  'scudo-borchiato': { em: '🛡️', nome: 'Scudo borchiato', sprite: 'scudo-borchiato',
+                       dove: 'mancina', dif: 1, vita: 3, prezzo: 16,
+                       dice: 'Para, e ti tiene in piedi un po\' di più.' },
+  'scudo-ferro': { em: '🛡️', nome: 'Scudo di ferro', sprite: 'scudo-ferro', dove: 'mancina',
+                   dif: 2, prezzo: 22, dice: 'Pesante: sbagliare fa parecchio meno male.' },
+  'scudo-crociato': { em: '✝️', nome: 'Scudo crociato', sprite: 'scudo-crociato', dove: 'mancina',
+                      dif: 2, luce: 1, prezzo: 28,
+                      dice: 'Lo stemma manda luce: pari, e vedi un po\' più in là.' },
+  'scudo-leone': { em: '🦁', nome: 'Scudo del leone', sprite: 'scudo-leone', dove: 'mancina',
+                   dif: 2, vita: 4, prezzo: 32,
+                   dice: 'Para bene, e ti dà quattro punti di vita in più.' },
+  'scudo-teschio': { em: '💀', nome: 'Scudo del teschio', sprite: 'scudo-teschio', dove: 'mancina',
+                     dif: 3, prezzo: 34, dice: 'Il più duro che ci sia. Non fa altro, e basta così.' },
 
   /* ── altre due cose da portarsi addosso ── */
   'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'dito',
@@ -178,12 +211,15 @@ export const ARMI_DI = grado =>
    un forziere. Sono due elenchi diversi apposta: dal forziere non escono
    chiavi né boccette — è la cosa che si è pagata cara, e deve valere. */
 export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo)
+export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
+
 export const NEI_FORZIERI = [
   ...ARMI_DI(2), ...ARMI_DI(3),
   'corazza', 'manto',
   'anello-ambra', 'anello-verde', 'amuleto-rosso', 'medaglione',
   'amuleto-osso', 'teschio-cercatore',
-  'spada-fiammeggiante', 'ascia-del-ladro', 'pugnale-vampiro',
+  'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
+  'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro',
   'pozione-grande', 'elisir-toro', 'torcia',
 ]
 
@@ -215,7 +251,9 @@ export function guastiDelleCose(nomi = null) {
     if (!c.em || !c.nome) g.push(`${k}: senza emoji o senza nome`)
     if (!c.dice) g.push(`${k}: non dice cosa fa, e il mercante lo mostra`)
     if (!c.dove && !c.usa) g.push(`${k}: né si indossa né si usa, quindi non fa niente`)
-    if (c.dove && !['mano', 'corpo', 'dito'].includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
+    if (c.dove && !['mano', 'mancina', 'corpo', 'dito'].includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
+    /* uno scudo che non para è una casella occupata per niente */
+    if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.usa === 'cura' && !c.cura) g.push(`${k}: cura zero`)
     /* un gioiello che non dà niente è una tasca sprecata con l'aria di
        essere un premio */

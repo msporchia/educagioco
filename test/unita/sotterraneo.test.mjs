@@ -12,6 +12,7 @@ import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
 import { guastiDelMondo, EROE, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { guastiDelleCose, COSE, ARMI_DI } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { CURIOSITA, guastiDelleCuriosita } from '../../src/giochi/sotterraneo/dati/curiosita.js'
 import { EROI, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { guastiDelleTessere } from '../../src/giochi/sotterraneo/dati/tessere.js'
 import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
@@ -445,6 +446,108 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.scappa()
   uguale('lo scontro si chiude', c.foglio, null)
   controlla('e il mostro resta calmo per qualche secondo', m.calmo > 0, String(m.calmo))
+}
+
+/* ══════════ 5-sexies. le curiosità: una battuta, e ogni tanto un prezzo ══════════
+   Un sotterraneo fatto solo di mostri e porte è una fila di esercizi
+   con un tema sopra. Queste cose non servono a niente ed è il punto:
+   si toccano per vedere che succede, e quello che succede è una frase.
+   Metà delle volte sbagliare non costa niente — hai starnutito, e
+   basta — perché se ogni risposta storta pesasse, toccarle diventerebbe
+   una cosa da evitare. */
+{
+  const guasti = guastiDelleCuriosita(Object.keys(PEZZI))
+  controlla('le curiosità non hanno guasti', guasti.length === 0, guasti.join(' · '))
+  controlla('e ce n\'è più d\'una', CURIOSITA.length >= 4)
+
+  const c = new Corsa(CAMPAGNA[1], { seme: 12, rnd: seminato(12) })
+  const r = { che: 'curiosita', tipo: 'libro', x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y),
+              em: '📖', nome: 'Un libro polveroso', pezzo: 'libro' }
+  c.livello.robe.push(r)
+  c.luce.add(r.y * c.livello.largo + r.x)
+  controlla('una curiosità si tocca', c.toccabile(r))
+
+  c.interagisci(r)
+  uguale('e apre un foglio suo', c.foglio.che, 'curiosita')
+  controlla('con una domanda da fare', !!c.chiesta)
+
+  const gemme = c.gemme, vita = c.vita
+  c.rispondi(true)
+  controlla('rispondendo bene resta la frase da leggere', !!c.foglio.esito, JSON.stringify(c.foglio.esito))
+  controlla('ed è una frase, non un\'etichetta', c.foglio.esito.dice.length > 30)
+  controlla('e qualcosa è migliorato', c.gemme > gemme || c.vita > vita || c.vitaMax > 24 || c.torcia,
+            `gemme ${gemme}→${c.gemme}, vita ${vita}→${c.vita}`)
+  uguale('la domanda è finita lì', c.chiesta, null)
+  c.chiudi()
+  uguale('e toccata una volta non si tocca più', c.toccabile(r), false)
+
+  /* sbagliando: la battuta c'è sempre, il conto quasi mai */
+  let conti = 0
+  for (let i = 0; i < 40; i++) {
+    const b = new Corsa(CAMPAGNA[1], { seme: 40 + i, rnd: seminato(40 + i) })
+    b.gemme = 30
+    const roba = { che: 'curiosita', tipo: CURIOSITA[i % CURIOSITA.length].tipo,
+                   x: Math.floor(b.eroe.x), y: Math.floor(b.eroe.y), em: '📖',
+                   pezzo: CURIOSITA[i % CURIOSITA.length].pezzo }
+    b.livello.robe.push(roba)
+    b.interagisci(roba)
+    b.rispondi(false)
+    controlla('sbagliando resta comunque una storia', !!b.foglio.esito.dice)
+    if (b.vita < b.vitaMax || b.gemme < 30) conti++
+  }
+  controlla('e a volte non costa niente davvero', conti < 40, `${conti} su 40 hanno pagato`)
+  controlla('ma qualche volta sì', conti > 0, `${conti} su 40 hanno pagato`)
+  nota(`sbagliando una curiosità si paga ${conti} volte su 40`)
+}
+
+/* ══════════ 5-quinquies. lo scudo, e la mano debole che non balla ══════════
+   Nella mano debole ci vanno due cose che fanno mestieri diversi: una
+   seconda arma (più braccio) o uno scudo (più pelle). Fra le due non
+   esiste un «più forte», quindi la casella si riempie da sola **solo
+   se è vuota** — e non è pignoleria: senza quella regola i due si
+   scambiavano di posto a ogni tocco, per sempre. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 3, rnd: seminato(3) })
+  const dove = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
+  const posa = k => {
+    const r = { che: 'cosa', cosa: k, x: dove.x, y: dove.y, em: COSE[k].em }
+    c.livello.robe.push(r)
+    return r
+  }
+  c.zaino = []
+  c.mano = 'spada'
+  c.mancina = null
+
+  const scudo = posa('scudo-ferro')
+  c.interagisci(scudo)
+  uguale('lo scudo si imbraccia da sé, a mano libera', c.mancina, 'scudo-ferro')
+  uguale('e para davvero', c.dif, c.io.dif + COSE['scudo-ferro'].dif)
+
+  /* adesso la mano è occupata: quello che si trova va in tasca, e la
+     scelta la fa chi gioca dallo zaino */
+  const accetta = posa('accetta')
+  c.interagisci(accetta)
+  uguale('con lo scudo imbracciato, la seconda arma va in tasca', c.mancina, 'scudo-ferro')
+  controlla('ed è in tasca', c.zaino.includes('accetta'), c.zaino.join())
+
+  /* e il contrario: con un'arma nella mano debole, uno scudo non la
+     scalza da solo — è il giro che mandava il banco in tondo */
+  c.mancina = 'accetta'
+  c.zaino = []
+  const altro = posa('scudo-legno')
+  c.interagisci(altro)
+  uguale('e uno scudo non scalza da solo la seconda arma', c.mancina, 'accetta')
+  controlla('va in tasca anche lui', c.zaino.includes('scudo-legno'), c.zaino.join())
+
+  /* con un'arma a due mani in pugno lo scudo non si mette affatto:
+     `sistemaLeMani` glielo toglierebbe un istante dopo */
+  c.mano = 'spadone'
+  c.mancina = null
+  c.zaino = []
+  const terzo = posa('scudo-teschio')
+  c.interagisci(terzo)
+  uguale('con le due mani impegnate lo scudo resta in tasca', c.mancina, null)
+  controlla('ma non si perde', c.zaino.includes('scudo-teschio'), c.zaino.join())
 }
 
 /* ══════════ 5-quater. la torcia non si accende: si ha ══════════

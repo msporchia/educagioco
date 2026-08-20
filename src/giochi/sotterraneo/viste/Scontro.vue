@@ -11,8 +11,11 @@
    Non calcola niente: riceve i numeri già fatti dal motore, che è
    l'unico che sa come si sommano.
    ═══════════════════════════════════════════════════════════════════ */
+import Icona from './Icona.vue'
+
 defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, att, dif, chiave }
+  sprite: { type: String, default: null },    // il suo pezzo, quello che si vede sul campo
   colpo: { type: Number, required: true },
   restano: { type: Number, required: true },
   graffio: { type: Number, required: true },  // quello che passa anche rispondendo bene
@@ -32,7 +35,9 @@ defineProps({
        scappare. Dirlo dopo sarebbe raccontare una brutta sorpresa. -->
   <div class="sot-scontro">
   <div class="sot-nemico" :key="scosso">
-    <div class="sot-faccia em" :class="{ 'sot-colpito': scosso }">{{ mostro.em }}</div>
+    <div class="sot-faccia" :class="{ 'sot-colpito': scosso }">
+      <Icona :sprite="sprite" :em="mostro.em" :scala="3" :emAlto="42" />
+    </div>
     <div class="sot-dati">
       <b>{{ mostro.nome }}<span v-if="mostro.chiave" class="em"> 🗝️</span></b>
       <div class="sot-vita">

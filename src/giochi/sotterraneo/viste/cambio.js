@@ -23,6 +23,7 @@
 
 const SEGNO = { att: '⚔️', dif: '🛡️' }
 const NUDO = { att: 'mani nude', dif: 'niente addosso' }
+const NUDO_MANCINA = 'mano libera'
 
 /* `conf` è quello che torna `confronto()`: `{ dove, campo, addosso, delta }`.
    `nomeDi` traduce la chiave di quello che si ha addosso nel suo nome —
@@ -35,7 +36,8 @@ export function cambioDetto(conf, nomeDi) {
     return conf.addosso ? `al posto ${dellArticolo(nomeDi(conf.addosso))}` : 'il dito è libero'
   if (!SEGNO[conf.campo]) return ''
   const segno = SEGNO[conf.campo]
-  const prima = conf.addosso ? nomeDi(conf.addosso).toLowerCase() : NUDO[conf.campo]
+  const prima = conf.addosso ? nomeDi(conf.addosso).toLowerCase()
+    : conf.dove === 'mancina' ? NUDO_MANCINA : NUDO[conf.campo]
   if (!conf.delta) return `${segno} come ${prima}`
   return `${segno} ${conf.delta > 0 ? '+' : ''}${conf.delta} rispetto a ${prima}`
 }

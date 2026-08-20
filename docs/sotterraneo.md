@@ -252,6 +252,35 @@ scudo o un'armatura, ed è lo stesso buco per cui panciotto, corazza e
 manto restano emoji. Quando ci sarà un foglio che li disegna, la casella
 per tenerli c'è già.
 
+## Le curiosità: le cose che si toccano per vedere che succede
+
+Un libro polveroso, una sfera di cristallo, una clessidra ferma, un
+calice pieno di qualcosa. Non servono a niente, e sono lì per quello: un
+sotterraneo fatto solo di mostri da abbattere e porte da aprire è **una
+fila di esercizi con un tema sopra**, e dopo tre discese si vede
+benissimo che è quello.
+
+Una domanda, e poi una frase. Quello che un bambino racconta a tavola non
+è «ho preso otto gemme»: è che ha starnutito così forte da spegnere una
+torcia in fondo al corridoio, o che ha bevuto una roba che sapeva di
+calzino di orco. Perciò qui il grosso del lavoro sono **le frasi** —
+quaranta per quando va bene, quaranta per quando va male — e il foglio
+non si chiude da sé: la battuta resta finché non si è letta.
+
+Rispondendo giusto arriva un premio (gemme, vita, un punto di vita
+massima, la torcia). Rispondendo storto, **metà delle volte non succede
+niente**: hai starnutito, e basta. Quando succede è mite — due punti di
+vita o qualche gemma — perché in un gioco dove uno svenimento ti riporta
+all'ingresso un malus vero è una punizione che fa chiudere il gioco, e
+perché se ogni risposta storta costasse qualcosa toccare le cose
+diventerebbe una cosa da evitare: tanto varrebbe non metterle. Il costo
+lo dichiara la singola frase, così chi ne scrive una nuova decide lì se
+pesa o se fa solo ridere.
+
+L'invito dice sempre che può andare male, prima di rispondere: una
+sorpresa cattiva non annunciata è la cosa che i bambini ricordano
+peggio, e la scommessa è tutto il gioco.
+
 ## Il banco del mercante: si compra, e adesso si vende
 
 È l'unica stanza senza domande: qui si **spende** quello che le domande

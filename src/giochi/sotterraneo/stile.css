@@ -180,7 +180,9 @@
 
 /* ═══════════ chi hai davanti ═══════════ */
 .sot-nemico { display: flex; align-items: center; gap: 12px; margin-bottom: 6px }
-.sot-nemico .sot-faccia { font-size: 40px }
+/* la faccia di chi hai davanti: il suo pezzo, grande, e il posto è
+   fisso — un mostro alto e uno basso non devono far ballare la riga */
+.sot-nemico .sot-faccia { display: grid; place-items: center; min-width: 52px; min-height: 56px }
 .sot-nemico .sot-faccia.sot-colpito { animation: sot-scossa .22s }
 @keyframes sot-scossa {
   25% { transform: translateX(-4px) rotate(-4deg) }
@@ -278,7 +280,28 @@
    l'emoji dove il foglio non disegna niente. `overflow: hidden` perché
    il pezzo dentro è ingrandito con un `transform` e sborderebbe. */
 .sot-icona { display: inline-grid; place-items: center; overflow: hidden; vertical-align: middle }
-.sot-icona > i { display: block }
+/* ── il filo di luce, anche qui ──
+   Nel campo lo disegna la tela (`grafica/atlante.js`, `alone`); in un
+   pannello non c'è nessun canvas, e il mestiere lo fa `drop-shadow`
+   quattro volte, una per lato, con sfocatura zero: segue l'alfa della
+   figura, quindi il contorno è la sagoma vera e resta netto come vuole
+   la pixel art. Serve per la stessa ragione del campo — uno scudo di
+   ferro è quasi nero, e su un riquadro scuro spariva del tutto — e non
+   dà fastidio a quello che è già chiaro. Il filtro si applica prima del
+   `transform`, quindi il pixel del contorno si ingrandisce con la
+   figura invece di restare un filo sottile addosso a un disegno
+   grande. */
+/* Non sul ritratto: là la figura è ingrandita quattro volte, e il
+   filtro si applica **prima** del transform — un pixel di contorno
+   diventa quattro, e l'eroe sembra ritagliato con le forbici. Serve
+   dove le figure sono piccole e si perdono nel fondo, non dove sono
+   già grandi. */
+.sot-icona > i, .sot-dentro > i, .sot-impugnata > i, .sot-imbracciata > i {
+  display: block;
+  filter:
+    drop-shadow(1px 0 0 #ffffff4d) drop-shadow(-1px 0 0 #ffffff4d)
+    drop-shadow(0 1px 0 #ffffff4d) drop-shadow(0 -1px 0 #ffffff4d);
+}
 
 /* ── il riquadro non taglia mai ──
    Alla scala di casa (×2) l'oggetto più alto del foglio — la spada
@@ -287,7 +310,10 @@
    bastone mozzato. Il riquadro è più alto di qualunque cosa ci vada
    dentro, e `overflow` resta solo come rete di sicurezza per un pezzo
    che un giorno fosse più grande di tutti. */
-.sot-dentro { display: grid; place-items: center; width: 52px; height: 54px; overflow: hidden }
+.sot-dentro { display: grid; place-items: center; width: 100%; height: 54px; overflow: hidden }
+/* tutte le caselle della stessa altezza, quale che sia la figura che ci
+   sta dentro: la misura la dà il riquadro, non lo sprite */
+.sot-tasca, .sot-slot { min-height: 92px; align-content: center }
 .sot-dentro .em { font-size: 24px }
 .sot-slot.sot-vuota .sot-dentro { opacity: .35 }
 
@@ -302,6 +328,9 @@
 .sot-ritratto > i, .sot-dentro > i, .sot-impugnata > i { display: block }
 .sot-ritratto .em { font-size: 40px }
 .sot-impugnata { position: absolute; right: 12%; bottom: 24%; overflow: hidden }
+/* l'altra mano, dal lato opposto: uno scudo si porta davanti al fianco
+   sinistro, e nel campo sta esattamente lì */
+.sot-imbracciata { position: absolute; left: 12%; bottom: 22%; overflow: hidden }
 
 .sot-tasche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px }
 .sot-tasca {
@@ -386,6 +415,10 @@
   margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;
   min-height: 54px;
 }
+/* la battuta di una curiosità: è il premio vero, quindi si legge come
+   un pezzo di racconto e non come un'etichetta */
+.sot-storia { margin: 4px 0 2px; font-size: 15px; line-height: 1.45 }
+
 /* i numeri prima della frase: sono quelli che fanno decidere */
 .sot-numeri { margin: 4px 0 0; font-size: 13.5px; font-weight: 700; color: var(--sot-oro) }
 .sot-detto { margin: 3px 0 0; font-size: 12.5px; color: var(--sot-tenue) }

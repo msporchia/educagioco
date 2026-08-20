@@ -35,6 +35,9 @@ import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella } from './dati/campagna.js'
 import { COSE, SEGNI } from './dati/cose.js'
+import { MOSTRI } from './dati/mostri.js'
+import { CURIOSITA_DI } from './dati/curiosita.js'
+import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
@@ -191,8 +194,13 @@ const nemico = computed(() => {
   const f = foglio.value
   if (!f || f.che !== 'scontro') return null
   const c = corsa.value
+  const scheda = MOSTRI[f.chi.tipo] || {}
   return {
     mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
+    /* la faccia di chi hai davanti è **la stessa che sta sul campo**:
+       un'emoji al suo posto è un secondo personaggio che nessuno ha mai
+       visto, e mentre si risponde una domanda quel salto confonde */
+    sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,
     /* quello che passa comunque, e quello che arriva sbagliando: si dice
        **prima** di rispondere, perché è con quei due numeri che si
        decide se restare o scappare */
@@ -251,6 +259,14 @@ const daVendere = computed(() => {
   })
 })
 
+/* la curiosità aperta adesso, coi suoi dati: il nome, il pezzo, la
+   frase d'invito. Il motore dice quale tipo è, la tabella il resto. */
+const curiosita = computed(() => {
+  const f = foglio.value
+  if (!f || f.che !== 'curiosita') return {}
+  return CURIOSITA_DI[f.chi.tipo] || {}
+})
+
 const segno = computed(() => {
   const f = foglio.value
   return f && f.che === 'porta' ? SEGNI[f.chi.segno] : null
@@ -292,6 +308,7 @@ function semeDallIndirizzo() {
 function corredoDaProva(c) {
   if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'roba') return
   c.mano = 'spada'
+  c.mancina = 'scudo-ferro'
   c.corpo = 'corazza'
   c.dito = 'anello-ambra'
   c.zaino = ['pozione-grande', 'pozione', 'torcia', 'chiave', 'spadone', 'medaglione']
@@ -444,6 +461,7 @@ function risolvi(giusto) {
     case 'ferito': suoni.ahia(); break
     case 'svenuto': suono.fine(); break
     case 'tesoro': suoni.tesoro(); break
+    case 'curiosita': esito.buono ? suoni.tesoro() : suoni.graffio(); break
     case 'aperta': suono.ok(); break
     case 'bevuto': suoni.tesoro(); break
     default: suono.no()
@@ -768,6 +786,34 @@ function ridimensiona() { if (pittore) pittore.misura() }
                 :dice="`Hai 💎 ${eroe.gemme}. Quello che compri finisce nello zaino.`">
           <Mercante :roba="merce" :tasche="daVendere" :gemme="eroe.gemme"
                     @compra="compra" @vendi="vendi" @chiudi="chiudiFoglio" />
+        </Foglio>
+
+        <!-- ═══ una curiosità ═══
+             Una domanda, e poi **la battuta**: il foglio non si chiude
+             da sé, perché quella frase è il premio vero e una riga che
+             passa in mezzo secondo non la legge nessuno. -->
+        <Foglio v-else-if="foglio && foglio.che === 'curiosita'"
+                :em="curiosita.em" :sprite="curiosita.pezzo"
+                :titolo="curiosita.nome"
+                :dice="foglio.esito ? '' : curiosita.dice + ' Può andare bene, o male.'">
+          <template v-if="foglio.esito">
+            <p class="sot-storia">{{ foglio.esito.dice }}</p>
+            <p v-if="foglio.esito.conto" class="sot-cambio em"
+               :class="{ 'sot-meglio': foglio.esito.buono }">{{ foglio.esito.conto }}</p>
+            <button class="sot-grosso" data-azione="avanti" @click="chiudiFoglio">
+              vado avanti
+            </button>
+          </template>
+          <template v-else>
+            <div v-if="domanda" class="sot-domanda">
+              <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
+                       :origine="domanda" gioco="sotterraneo" :respiro="900"
+                       @risposto="risposto" />
+            </div>
+            <button class="sot-grosso sot-chiaro" data-azione="dopo" @click="chiudiFoglio">
+              lascio perdere
+            </button>
+          </template>
         </Foglio>
 
         <Foglio v-else-if="foglio && foglio.che === 'chiusa'" em="🔒" titolo="La scala è chiusa"

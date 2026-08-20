@@ -27,7 +27,7 @@
    un telefono capita.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, watch, nextTick } from 'vue'
-import { figura, SCALA } from './figura.js'
+import { figura } from './figura.js'
 import Icona from './Icona.vue'
 import { cambioDetto } from './cambio.js'
 import { pezzoAndante } from '../dati/tessere.js'
@@ -117,12 +117,20 @@ const sceltoQui = (dove, i = 0) => {
 const ritratto = computed(() => figura(pezzoAndante(props.eroe.sprite, 'fermo', 0), { scala: 4 }))
 const inPugno = computed(() => (props.mano && props.mano.sprite
   ? figura(props.mano.sprite, { scala: 2 }) : null))
+/* e nell'altra mano: la seconda arma o lo scudo. Sta dall'altro lato
+   della figura, come nel campo — chi guarda il ritratto deve vedere
+   **com'è messo**, e uno scudo imbracciato che non si vede addosso è
+   una casella piena che non racconta niente. */
+const inBraccio = computed(() => (props.mancina && props.mancina.sprite && !dueMani.value
+  ? figura(props.mancina.sprite, { scala: 2 }) : null))
 
-/* Lo sprite di una cosa dentro una casella, alla scala di casa: la
-   stessa che ha nel banco del mercante e nella riga dell'avviso. Prima
-   era «grande quanto ci sta nel quadrato», e la stessa boccetta veniva
-   grande il doppio qui rispetto a là. */
-const dentro = c => (c && c.sprite ? figura(c.sprite, { scala: SCALA }) : null)
+/* ── il riquadro è fisso, la figura ci sta dentro ──
+   Prima la misura del riquadro **la dava lo sprite** (era la sua gabbia
+   messa a mano sul contenitore), quindi una tasca con dentro una
+   boccetta era alta la metà di una con dentro uno spadone: la griglia
+   in fondo veniva sbilenca, e quello che sporgeva finiva tagliato dalla
+   riga. Adesso il riquadro ha una misura sua — la più grande che serva
+   — e la figura ci sta in mezzo (`Icona.vue`). */
 
 /* ── cosa fa, in numeri ──
    «Una lama per parte: non perdona» racconta un'arma; per sapere se
@@ -149,6 +157,7 @@ const verbo = computed(() => {
   const c = cosa.value
   if (!c) return ''
   if (c.dove === 'mano') return 'la impugno'
+  if (c.dove === 'mancina') return 'me lo imbraccio'
   if (c.dove === 'corpo') return 'me la metto'
   if (c.dove === 'dito') return 'me lo infilo'
   if (c.usa === 'cura') return 'la bevo'
@@ -166,7 +175,7 @@ const cambio = computed(() => {
   const c = cosa.value
   if (!c || !c.dove || scelto.value.dove !== 'zaino') return ''
   if (c.dove === 'dito') return c.dice
-  const campo = c.dove === 'mano' ? 'att' : 'dif'
+  const campo = c.dove === 'mano' ? 'att' : 'dif'   // scudo e armatura cambiano la stessa cosa
   const gia = addosso(c.dove)
   return cambioDetto({ campo, addosso: gia ? gia.chiave : null, delta: (c[campo] || 0) - (gia ? (gia[campo] || 0) : 0) },
                      () => (gia ? gia.nome : ''))
@@ -196,16 +205,14 @@ const cambio = computed(() => {
              in ombra e girata, che è il modo di dire «è questa che te la
              tiene» senza scrivere una riga di regolamento -->
         <template v-if="spenta(c.dove)">
-          <span class="sot-dentro" :style="dentro(mano) ? dentro(mano).gabbia : null">
-            <i v-if="dentro(mano)" :style="dentro(mano).pezzo"></i>
-            <b v-else class="em">{{ mano.em }}</b>
-          </span>
+          <span class="sot-dentro"><Icona :sprite="mano.sprite" :em="mano.em" /></span>
           <i>a due mani</i>
         </template>
         <template v-else>
-          <span class="sot-dentro" :style="dentro(addosso(c.dove)) ? dentro(addosso(c.dove)).gabbia : null">
-            <i v-if="dentro(addosso(c.dove))" :style="dentro(addosso(c.dove)).pezzo"></i>
-            <b v-else class="em">{{ addosso(c.dove) ? addosso(c.dove).em : '·' }}</b>
+          <span class="sot-dentro">
+            <Icona v-if="addosso(c.dove)"
+                   :sprite="addosso(c.dove).sprite" :em="addosso(c.dove).em" />
+            <b v-else class="em">·</b>
           </span>
           <i>{{ addosso(c.dove) ? addosso(c.dove).nome : c.dice }}</i>
         </template>
@@ -220,6 +227,9 @@ const cambio = computed(() => {
         <span v-if="inPugno" class="sot-impugnata" :style="inPugno.gabbia">
           <i :style="inPugno.pezzo"></i>
         </span>
+        <span v-if="inBraccio" class="sot-imbracciata" :style="inBraccio.gabbia">
+          <i :style="inBraccio.pezzo"></i>
+        </span>
       </div>
     </div>
 
@@ -228,9 +238,9 @@ const cambio = computed(() => {
       <button v-for="(t, i) in tasche" :key="i" class="sot-tasca"
               :class="{ 'sot-vuota': !t, 'sot-scelto': sceltoQui('zaino', i) }"
               :disabled="!t" :data-tasca="i" @click="tocca('zaino', i)">
-        <span class="sot-dentro" :style="dentro(t) ? dentro(t).gabbia : null">
-          <i v-if="dentro(t)" :style="dentro(t).pezzo"></i>
-          <b v-else class="em">{{ t ? t.em : '·' }}</b>
+        <span class="sot-dentro">
+          <Icona v-if="t" :sprite="t.sprite" :em="t.em" />
+          <b v-else class="em">·</b>
         </span>
         <em>{{ t ? t.nome : '' }}</em>
       </button>

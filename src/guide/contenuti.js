@@ -336,6 +336,7 @@ export const AIUTI = {
         '🎁 **un forziere** — una domanda sola, tosta: se sbagli resta chiuso.',
         '⛲ **una fonte** — una domanda, e ti ridà vita.',
         '👹 **un mostro** — una domanda a colpo, finché uno dei due cade.',
+        '📖🔮⏳🍷 **le curiosità** — un libro, una sfera, una clessidra, un calice: una domanda, e poi si vede cosa succede. Può andare bene o male, e spesso male vuol dire solo una risata.',
       ] },
       { titolo: 'Le armi', righe: [
         'Un\'arma migliore di quella che hai **te la metti da sola** appena la tocchi, e la riga che compare dice quanto ci guadagni: «⚔️ +2».',
