@@ -264,24 +264,27 @@ committate: non è ricostruibile da git.
   metteva i grado-1 di sedici moduli nello stesso punto. L'elenco delle
   classi sta in `docs/livelli-delle-domande.md`, che è **generato**
   (`npm run quiz:livelli`) e non si scrive a mano.
-  **La schermata dei grandi ha tre schede**, e si tara in una sola:
+  **La schermata dei grandi ha due schede**, e si tara in una sola:
   «Bambini» (chi gioca, progressi, codice, guasti — con una riga sola
-  che dice «Leonardo ha 10 anni · modifica ›» e rimanda), **«Giochi e
-  domande»** (la manopola dell'età col **quadro** sotto, vedi la sezione
-  della manopola) e «Come va» (quello che il bambino ha già detto
-  giocando, `quiz/ComeVa.vue`). L'ordine è quello in cui si legge: chi
-  è, cosa gli diamo, come sta andando — e l'ultima è in fondo perché è
-  la sola che non si tocca: si guarda, e semmai rimanda alla seconda. Ce n'erano due che dicevano
+  che dice «Leonardo ha 10 anni · modifica ›» e rimanda) e **«Giochi e
+  domande»**, la manopola dell'età col **quadro** sotto (vedi la sezione
+  della manopola).
+  **«Come va» è sospeso**, non cancellato: `quiz/ComeVa.vue` e le soglie
+  di `quiz/consiglio.js` sono al loro posto, il suo test è
+  `test/integrazione/come-va.spento.mjs` (si riaccende rinominandolo
+  `.test.mjs`), ma non è montato da nessuna parte — il modo di
+  presentarlo è da rivedere, e mostrato a metà sarebbe peggio. Ce n'erano due che dicevano
   la stessa cosa in altri modi — un elenco di classi con quattro tondi
   per riga e una fila di interruttori per gioco — e la prima aveva
   pure **una seconda tacca dell'età**, cioè il difetto che la manopola
   era nata per togliere. Adesso il posto è uno: `quiz/Catalogo.vue` non
   esiste più.
-  Il bambino l'ha già detto giocando: `quiz/consiglio.js` legge
-  `store/srs.js` e, quando una chiave ha almeno otto tiri con meno di
-  metà giuste (o più di nove su dieci), **lo scrive in «Come va» col
-  tasto già pronto**. Consiglia, non ritocca da sé: un pomeriggio
-  storto insegnerebbe la cosa sbagliata.
+  Il conto che servirebbe c'è già: `quiz/consiglio.js` legge
+  `store/srs.js` e sa dire quando una chiave ha almeno otto tiri con
+  meno di metà giuste (un muro) o più di nove su dieci (un pedaggio).
+  Consiglia e non ritocca da sé — un pomeriggio storto insegnerebbe la
+  cosa sbagliata — ma **per ora non lo mostra nessuno**: vedi «Come va»
+  qui sopra.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio

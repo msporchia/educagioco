@@ -15,13 +15,12 @@ Si arriva dal link *Genitori* in fondo alla schermata iniziale.
 > Si cambia da lì dentro, e se lo dimentichi si rimette dall'indirizzo:
 > aggiungi `#pin=1234` all'URL.
 
-## Tre schede, e si tara in una sola
+## Due schede, e si tara in una sola
 
 **Bambini** dice chi gioca su questo telefono — nome, faccia, progressi — e
 dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
-**Come va** è quello che il bambino ha già detto giocando, senza che nessuno
-sia andato a cercarlo. **Giochi e domande** è dove si tara, ed è l'unico
-posto: l'età in cima, e sotto **il quadro di quell'età**.
+**Giochi e domande** è dove si tara, ed è l'unico posto: l'età in cima, e
+sotto **il quadro di quell'età**.
 
 Prima erano due schede diverse — una fila di interruttori per i giochi e un
 elenco di domande con quattro tondi per riga — e tutte e due finivano per
@@ -89,15 +88,6 @@ rimette.
 E in fondo al quadro c'è il tasto che **rimette tutto com'è di partenza a
 quell'età**, dicendo prima cosa perde: «2 giochi messi a mano, 1 domanda
 ritoccata». Non tocca l'età e non tocca i progressi.
-
-## Il gioco te lo dice da sé
-
-Le manopole c'erano anche prima, e non le toccava nessuno: **nessuno va a
-cercare un problema che non sa di avere**. La scheda **Come va** gira il
-verso — quando una tipologia va male per parecchie domande di fila, o è
-diventata troppo facile, lo scrive col conto in chiaro («8 su 10») e col
-tasto già pronto. Non cambia niente da sé: un pomeriggio storto insegnerebbe
-la cosa sbagliata.
 
 ## I progressi: salvarli e spostarli
 
