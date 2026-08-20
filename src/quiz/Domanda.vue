@@ -56,6 +56,7 @@ import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota } from './memoria.js'
+import { serveLaDritta } from './nucleo/domanda.js'
 
 const props = defineProps({
   domanda: { type: Object, required: true },
@@ -140,6 +141,26 @@ const esito = computed(() => {
   return risposte.value[scelto.value]?.perche || props.domanda.aiuto || ''
 })
 
+/* ── LA SCORCIATOIA, E QUANDO VA DETTA ──
+   Una domanda che si può risolvere con una formula porta una `dritta`
+   — «6 × 6 = 36: in un quadrato l'area è lato per lato» — e la dritta
+   serve a **chi ha risposto giusto contando a dito**: quello lì la
+   domanda l'ha saputa, ma per la strada lunga, e nessuno glielo dirà
+   mai perché il gioco gli ha detto «Giusto!» ed è andato avanti.
+   Quindi: si legge se si è sbagliato, e si legge dopo una risposta
+   giusta **solo se è arrivata tardi**. Chi risponde in cinque secondi
+   la strada corta ce l'ha già, e fermarlo per spiegargliela sarebbe
+   una punizione per aver saputo.
+   La soglia e la regola stanno in `nucleo/domanda.js`, pure: qui
+   dentro non si potrebbero provare senza un browser. */
+const quantoCiHaMesso = ref(0)
+const dritta = computed(() => {
+  if (scelto.value < 0) return ''
+  const giusto = scelto.value === props.domanda.giusta
+  return serveLaDritta(props.domanda, { giusto, tempo: quantoCiHaMesso.value })
+    ? props.domanda.dritta : ''
+})
+
 function classe(i) {
   if (scelto.value < 0) return ''
   if (i === props.domanda.giusta) return 'giusta'
@@ -152,6 +173,7 @@ function scegli(i) {
   scelto.value = i
   const giusto = i === props.domanda.giusta
   const tempo = (performance.now() - partenza.value) / 1000
+  quantoCiHaMesso.value = tempo
   /* il ripasso si annota subito, non fra un secondo e mezzo: il gioco
      che sta sotto può chiudere la domanda appena arriva l'evento, e
      una risposta persa perché si è cambiato schermo è una risposta che
@@ -166,7 +188,10 @@ function scegli(i) {
      si vede: la riga sotto la carta si riempie, e quando è piena si va
      avanti. È la stessa regola di «un errore non resta muto», applicata
      al tempo che passa. */
-  const quanto = giusto ? Math.min(props.respiro, 700)
+  /* indovinando si tira dritto, a meno che non ci sia una scorciatoia
+     da leggere: allora si resta quanto basta per leggerla, che è la
+     stessa attesa di quando si sbaglia */
+  const quanto = giusto ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
     : props.respiro + (esito.value ? 900 : 0)
   attesa.value = quanto
   const vaiAvanti = () => emit('risposto', {
@@ -251,6 +276,7 @@ const daGiudicare = () => ({
 async function inizia() {
   clearTimeout(cieca)
   scelto.value = -1
+  quantoCiHaMesso.value = 0
   attesa.value = 0
   clearTimeout(avanti)
   avanti = null
@@ -327,6 +353,7 @@ onUnmounted(() => clearTimeout(cieca))
         <template v-if="scelto >= 0">
           <span v-if="scelto === domanda.giusta" class="bene">Giusto!</span>
           <template v-else><span class="male">Era questa.</span> {{ esito }}</template>
+          <div v-if="dritta" class="qz-dritta">💡 {{ dritta }}</div>
         </template>
       </div>
     </div>
@@ -512,5 +539,12 @@ onUnmounted(() => clearTimeout(cieca))
   font: inherit; font-size: 18px; line-height: 1;
 }
 .qz-esito .bene { color: #7ee6a4; font-weight: 700; }
+/* la scorciatoia sta su una riga sua, più chiara del perché: è un
+   consiglio, non una correzione, e chi ha risposto giusto non deve
+   leggerla come un rimprovero */
+.qz-dritta {
+  margin-top: 4px; color: #ffd79a;
+  font-size: clamp(12px, 3.5vw, 14px); line-height: 1.35;
+}
 .qz-esito .male { color: #ffb0b0; font-weight: 700; }
 </style>

@@ -28,18 +28,28 @@
    buchi (`buchi()` lo verifica): una figura in pezzi sparsi renderebbe
    la domanda sul bordo senza risposta.
 
-   IL CONFRONTO SI PAGA DUE VOLTE. Chiedere l'area di una figura storta
-   è un conto solo; chiedere *quale di quattro* ha lo stesso bordo e
-   quadretti diversi sono otto conti, tutti a dito, tutti su figure che
-   non hanno una forma da cui dedurre niente. Il concetto — area e
-   perimetro non vanno insieme — si vede uguale su rettangoli e
-   quadrati, dove i due numeri si *calcolano* (righe per colonne, due
-   volte la base più due volte l'altezza) invece di contarli; e lì
-   compare anche il distrattore migliore che le figure storte non
-   sanno dare: LO STESSO RETTANGOLO GIRATO, uguale in tutte e due le
-   cose. Quello è il grado 6. Il confronto fra figure qualsiasi resta,
-   ma sale in cima alla scaletta (grado 7), dove va incontrato solo
-   chi ha già capito il resto.
+   IL CONFRONTO NON C'È PIÙ, ed è la cosa più importante di questo
+   file. «Quale di queste quattro ha gli stessi quadretti ma il bordo
+   diverso?» sono otto conti a dito su figure che non hanno una forma
+   da cui dedurre niente: il concetto si afferra in tre secondi, il
+   minuto dopo lo occupa l'indice sullo schermo. Chi ha capito e chi
+   non ha capito ci mettono lo stesso tempo, e sbaglia chi perde il
+   conto — cioè la domanda misurava la pazienza. Era stata spostata in
+   cima alla scaletta invece che tolta, e spostare non era la cura.
+
+   QUELLO CHE RESTA È MISURARE, e per lo più su figure dove il conto si
+   fa **a mente**: in un quadrato l'area è lato × lato e il giro è
+   lato × 4, in un rettangolo righe × colonne e due volte la base più
+   due volte l'altezza. Le figure storte restano dove servono davvero —
+   il primo incontro, dove area e perimetro si imparano contando — e
+   sono piccole, da quattro a nove quadretti.
+
+   LA SCORCIATOIA SI INSEGNA QUANDO SERVE. Una domanda che si può fare
+   con la formula porta una `dritta`, e la dritta si legge in due casi:
+   se hai sbagliato, e se hai indovinato ma **ci hai messo troppo** —
+   che è il segno che l'hai contata a dito. «6 × 6 = 36: in un quadrato
+   l'area è lato per lato» detto a chi ha appena contato trentasei
+   quadretti vale dieci volte lo stesso avviso letto prima.
    ═══════════════════════════════════════════════════════════════════ */
 
 import { Modulo } from '../nucleo/modulo.js'
@@ -72,38 +82,28 @@ const SCALETTA = [
   'i percorsi a frecce',
   'l\'area: i quadretti dentro',
   'il perimetro: il giro del bordo',
-  'area e perimetro nei rettangoli',
-  'area e perimetro, figure qualsiasi',
+  'area e perimetro a mente, sui rettangoli',
 ]
 
 /* Le tipologie. I primi quattro tipi si giocano guardando la griglia e
    stanno in un gruppo loro; area e perimetro sono due parole di scuola
-   e stanno nel gruppo che c'era già. Il confronto è diviso in due
-   perché sono due difficoltà diverse della stessa domanda: nei
-   rettangoli i conti si fanno moltiplicando, in una figura storta si
-   contano i quadretti a uno a uno. */
+   e stanno nel gruppo che c'era già. Sono **due chiavi in tutto**, e
+   ognuna torna due volte: al primo incontro si conta a dito una figura
+   storta, al grado 6 si misura un rettangolo moltiplicando. È la
+   stessa cosa da saper fare — la chiave del ripasso è il concetto, non
+   la forma della figura — e a cambiare è solo come ci si arriva. */
 const TIPI = [
   { chiave: 'gri:coordinate', nome: 'Le caselle: lettera e numero', sa: 'griglia', gradi: { 1: 1 } },
   { chiave: 'gri:direzioni', nome: 'Destra, sinistra, sopra e sotto', sa: 'griglia', gradi: { 2: 1 } },
   { chiave: 'gri:mosse', nome: 'Quante mosse servono', sa: 'griglia', gradi: { 3: 0.45 } },
   { chiave: 'gri:percorso', nome: 'Dove si arriva seguendo le frecce', sa: 'griglia', gradi: { 3: 0.55 } },
-  { chiave: 'gri:area', nome: "L'area: i quadretti dentro", sa: 'area-perimetro', gradi: { 4: 1 } },
-  { chiave: 'gri:perimetro', nome: 'Il perimetro: il giro del bordo', sa: 'area-perimetro', gradi: { 5: 1 } },
-  { chiave: 'gri:confronto', nome: 'Area e perimetro nei rettangoli', sa: 'area-perimetro', gradi: { 6: 1 } },
-  { chiave: 'gri:confronto-libero', nome: 'Area e perimetro, figure qualsiasi', sa: 'area-perimetro', gradi: { 7: 1 } },
+  { chiave: 'gri:area', nome: "L'area: i quadretti dentro", sa: 'area-perimetro', gradi: { 4: 1, 6: 0.5 } },
+  { chiave: 'gri:perimetro', nome: 'Il perimetro: il giro del bordo', sa: 'area-perimetro', gradi: { 5: 1, 6: 0.5 } },
 ]
-
-/* le due consegne del confronto, uguali per i rettangoli e per le
-   figure storte: cambia quanto costa rispondere, non cosa si chiede */
-const CHIESTE = {
-  giro: 'Quale figura ha il bordo lungo uguale a questa, ma un numero diverso di quadretti?',
-  area: 'Quale figura ha gli stessi quadretti di questa, ma il bordo di lunghezza diversa?',
-}
 
 const somma = ([x, y], [dx, dy], k = 1) => [x + dx * k, y + dy * k]
 const dentro = (l, a, [x, y]) => x >= 0 && y >= 0 && x < l && y < a
 const uguali = (a, b) => a[0] === b[0] && a[1] === b[1]
-const firma = celle => celle.map(c => c.join(',')).join(' ')
 
 /* ── le figure a quadretti ── */
 
@@ -176,12 +176,7 @@ function figura(quante, sorte, latoMax = 4) {
   return normalizza(Array.from({ length: quante }, (_, i) => [i % latoMax, Math.floor(i / latoMax)]))
 }
 
-/* ── i rettangoli ──
-   Il confronto si gioca in una griglia 6×6 uguale per tutte e quattro
-   le figure: più stretta e le coppie «stessa area, bordo diverso»
-   sarebbero quasi solo A=4, più larga i quadretti diventerebbero
-   macchie nel riquadro di una risposta (118 pixel). */
-const LATO_CONFRONTO = 6
+/* ── le figure che si misurano a mente ── */
 
 const rettangolo = (w, h) => {
   const celle = []
@@ -189,13 +184,34 @@ const rettangolo = (w, h) => {
   return celle
 }
 
-const RETTANGOLI = (() => {
-  const fuori = []
-  for (let w = 1; w <= LATO_CONFRONTO; w++)
-    for (let h = 1; h <= LATO_CONFRONTO; h++)
-      fuori.push({ w, h, area: w * h, giro: 2 * (w + h), celle: rettangolo(w, h) })
-  return fuori
-})()
+/* Un rettangolo, o un quadrato — che è il caso in cui i due lati sono
+   uguali, e l'unico che porta con sé una scorciatoia in più. Mai un
+   lato solo: un 1×6 è una riga, e lì moltiplicare non si distingue dal
+   contare. */
+function rettangoloDa(sorte, min, max) {
+  const w = sorte.fra(min, max)
+  if (sorte.forse(0.45)) return misure(w, w)
+  const h = sorte.fra(min, max)
+  return misure(w, h === w ? (w === max ? w - 1 : w + 1) : h)
+}
+
+const misure = (w, h) => ({
+  w, h, quadrato: w === h, celle: rettangolo(w, h),
+  area: w * h, giro: 2 * (w + h),
+})
+
+/* Le scorciatoie, col conto già fatto dentro: «6 × 6 = 36» e non «lato
+   per lato». Una regola senza il suo esempio si legge e non si ricorda,
+   e questa arriva addosso a un numero che il bambino ha appena avuto
+   sotto gli occhi. */
+const DRITTE = {
+  area: r => r.quadrato
+    ? `in un quadrato l'area è lato per lato: ${r.w} × ${r.w} = ${r.area}`
+    : `l'area di un rettangolo è le righe per le colonne: ${r.w} × ${r.h} = ${r.area}`,
+  giro: r => r.quadrato
+    ? `il giro di un quadrato è lato per 4: ${r.w} × 4 = ${r.giro}`
+    : `il giro di un rettangolo è due volte la base più due volte l'altezza: ${r.w} + ${r.h} = ${r.w + r.h}, e il doppio fa ${r.giro}`,
+}
 
 /* la scena di una figura, centrata in una griglia della misura data */
 function scenaFigura(celle, larghezza, altezza) {
@@ -225,7 +241,11 @@ class Griglia extends Modulo {
          di materna, cento la fine della primaria: dodici punti e mezzo
          per anno di scuola. Non dice a chi arriva — quello lo decide
          la finestra dell'età di chi gioca (`nucleo/classi.js`). */
-      livelli: [25, 29, 33, 56, 63, 75, 81],
+      /* il grado 6 sta a 69 (nove anni e mezzo) e non a 75: misurare
+         un rettangolo moltiplicando è di terza-quarta, mentre il
+         confronto che stava qui prima era roba da dieci anni e mezzo
+         — e non perché fosse più profondo, ma perché era più lungo. */
+      livelli: [25, 29, 33, 56, 63, 69],
       /* i primi tre gradi si giocano guardando: caselle, direzioni,
          percorsi. Gli ultimi quattro chiamano per nome due cose che si
          fanno a scuola — area e perimetro — e senza quei nomi la
@@ -240,10 +260,13 @@ class Griglia extends Modulo {
       case 'gri:direzioni': return this.direzione(sorte)
       case 'gri:mosse': return this.mosse(sorte)
       case 'gri:percorso': return this.arrivo(sorte)
-      case 'gri:area': return this.area(sorte)
-      case 'gri:perimetro': return this.bordo(sorte)
-      case 'gri:confronto': return this.rettangoli(sorte)
-      case 'gri:confronto-libero': return this.confronto(sorte)
+      /* al grado 6 la stessa cosa si misura invece di contarla, e la
+         figura è sempre un rettangolo o un quadrato. Sotto, un terzo
+         delle volte, il rettangolo compare lo stesso: è lì che la
+         formula si incontra la prima volta, mentre contare è ancora
+         una strada onesta. */
+      case 'gri:area': return grado >= 6 ? this.misura(sorte, 'area') : this.area(sorte, sorte.forse(0.35))
+      case 'gri:perimetro': return grado >= 6 ? this.misura(sorte, 'giro') : this.bordo(sorte, sorte.forse(0.35))
       default: return sorte.forse(0.45) ? this.chiCi(sorte) : this.dove(sorte)
     }
   }
@@ -512,10 +535,16 @@ class Griglia extends Modulo {
     })
   }
 
-  /* ── grado 4: l'area, i quadretti dentro ── */
-  area(sorte) {
-    const quante = sorte.fra(4, 9)
-    const celle = figura(quante, sorte, 4)
+  /* ── grado 4: l'area, i quadretti dentro ──
+     Un terzo delle volte la figura è un rettangolo piccolo: la domanda
+     si risolve uguale contando, ma la dritta in coda dice che c'era
+     una strada più corta. È il primo posto dove quella strada si vede,
+     e si vede **dopo** aver contato — che è l'unico momento in cui una
+     scorciatoia significa qualcosa. */
+  area(sorte, rett = false) {
+    const r = rett ? rettangoloDa(sorte, 2, 4) : null
+    const quante = r ? r.area : sorte.fra(4, 9)
+    const celle = r ? r.celle : figura(quante, sorte, 4)
     const [w, h] = ingombro(celle)
     const giro = perimetro(celle)
     const lato = Math.max(w, h, 4) + 1
@@ -535,20 +564,24 @@ class Griglia extends Modulo {
     }
 
     return domanda({
-      testo: 'Quanti quadretti formano questa figura?',
+      testo: r ? `Quanti quadretti formano questo ${r.quadrato ? 'quadrato' : 'rettangolo'}?`
+        : 'Quanti quadretti formano questa figura?',
       soggetto: scena(scenaFigura(celle, lato, lato)),
       buona: testo(quante),
       falsi: falsi.slice(0, 3).map(p => testo(p.v, p.perche)),
       chiave: 'gri:area',
-      aiuto: 'l\'area sono i quadretti colorati: contali uno per uno, anche quelli in mezzo',
+      aiuto: r ? DRITTE.area(r)
+        : 'l\'area sono i quadretti colorati: contali uno per uno, anche quelli in mezzo',
+      dritta: r ? DRITTE.area(r) : undefined,
       sorte,
     })
   }
 
   /* ── grado 5: il perimetro, il giro del bordo ── */
-  bordo(sorte) {
-    const quante = sorte.fra(4, 8)
-    const celle = figura(quante, sorte, 4)
+  bordo(sorte, rett = false) {
+    const r = rett ? rettangoloDa(sorte, 2, 4) : null
+    const quante = r ? r.area : sorte.fra(4, 8)
+    const celle = r ? r.celle : figura(quante, sorte, 4)
     const [w, h] = ingombro(celle)
     const giro = perimetro(celle)
     const lato = Math.max(w, h, 4) + 1
@@ -574,155 +607,66 @@ class Griglia extends Modulo {
       buona: testo(giro),
       falsi: sorte.mescola(falsi).slice(0, 3).map(p => testo(p.v, p.perche)),
       chiave: 'gri:perimetro',
-      aiuto: 'segui il contorno e conta un lato di quadretto per volta, fino a tornare al via',
+      aiuto: r ? DRITTE.giro(r)
+        : 'segui il contorno e conta un lato di quadretto per volta, fino a tornare al via',
+      dritta: r ? DRITTE.giro(r) : undefined,
       sorte,
     })
   }
 
-  /* ── grado 6: area e perimetro non vanno insieme, sui rettangoli ──
-     Due figure con lo stesso bordo possono avere dentro un numero
-     diverso di quadretti, ed è il punto in cui i due conti smettono di
-     sembrare la stessa cosa. Qui si vede senza contare a dito: in un
-     rettangolo i quadretti sono righe × colonne e il bordo è 2(b+h),
-     quindi 2×4 e 1×5 hanno lo stesso giro (12) e dentro 8 quadretti
-     contro 5 — e si può verificare a mente invece che con l'indice
-     sullo schermo.
-     I TRE FALSI SONO I TRE MODI DI SBAGLIARE:
-       · lo STESSO rettangolo girato (4×2 per 2×4): uguale in tutte e
-         due le cose, e sembra la risposta a chi guarda «è diverso da
-         quello di sopra?» invece di contare;
-       · quello che condivide l'altra grandezza — se si chiede lo
-         stesso bordo, uno con gli stessi quadretti;
-       · uno diverso in tutte e due.
-     Le quattro figure stanno tutte nella stessa griglia, altrimenti si
-     confronterebbero disegni di misura diversa. */
-  rettangoli(sorte) {
-    const lato = LATO_CONFRONTO
-    const modoA = sorte.forse(0.6)       // stesso bordo / stessi quadretti
-    const stesso = (a, b) => a.w === b.w && a.h === b.h
+  /* ── grado 6: misurare, non contare ──
+     Qui la figura è sempre un rettangolo o un quadrato, e i lati
+     arrivano a otto: l'area può fare 64, e nessuno conta 64 quadretti
+     — si moltiplica. È la sola differenza col grado 4, ed è tutta la
+     progressione: la stessa cosa da sapere, con dei numeri che
+     costringono alla strada corta.
 
-    for (const soggetto of sorte.mescola(RETTANGOLI.filter(r => r.w !== r.h))) {
-      const prese = [soggetto]
-      const prendi = tieni => {
-        const buoni = RETTANGOLI.filter(r => !prese.some(p => stesso(p, r)) && tieni(r))
-        if (!buoni.length) return null
-        const scelto = sorte.uno(buoni)
-        prese.push(scelto)
-        return scelto
-      }
+     I FALSI SONO I TRE MODI VERI DI SBAGLIARE: dare l'altro dei due
+     numeri (l'area quando si chiede il giro, e viceversa) — che è
+     l'errore che questa materia porta da sempre — sommare invece di
+     moltiplicare, e perdere per strada un lato o una riga. */
+  misura(sorte, quale) {
+    const r = rettangoloDa(sorte, 2, 8)
+    const lato = Math.max(r.w, r.h) + 1
+    const cosa = r.quadrato ? 'questo quadrato' : 'questo rettangolo'
+    const giusto = quale === 'area' ? r.area : r.giro
 
-      const buona = modoA
-        ? prendi(r => r.giro === soggetto.giro && r.area !== soggetto.area)
-        : prendi(r => r.area === soggetto.area && r.giro !== soggetto.giro)
-      if (!buona) continue
-      /* il girato c'è sempre: il soggetto non è mai un quadrato */
-      const girato = prendi(r => r.w === soggetto.h && r.h === soggetto.w)
-      const altra = modoA
-        ? prendi(r => r.area === soggetto.area && r.giro !== soggetto.giro)
-        : prendi(r => r.giro === soggetto.giro && r.area !== soggetto.area)
-      const diversa = r => r.area !== soggetto.area && r.giro !== soggetto.giro
-      /* per certi rettangoli l'altra grandezza non è condivisa da
-         nessuno (8 quadretti, dentro sei caselle, li fa solo 2×4):
-         invece di scartare il soggetto si mette un secondo lontano */
-      const spaiata = altra || prendi(diversa)
-      const lontana = prendi(diversa)
-      if (!girato || !spaiata || !lontana) continue
+    const proposte = quale === 'area' ? [
+      { v: r.giro, perche: 'quello è il giro del bordo, non i quadretti dentro' },
+      { v: r.w + r.h, perche: 'i quadretti si moltiplicano, non si sommano' },
+      { v: r.area - r.w, perche: 'ti è sfuggita una riga intera' },
+      { v: r.area + r.w, perche: 'una riga l\'hai contata due volte' },
+      /* per le figure piccole i due di sopra cadono spesso addosso a
+         un altro candidato: questi tengono la quaterna piena */
+      { v: r.area - 1, perche: 'ricontrolla: te n\'è sfuggito uno' },
+      { v: r.area + 1, perche: 'ricontrolla: uno l\'hai contato due volte' },
+    ] : [
+      { v: r.area, perche: 'quelli sono i quadretti dentro: quella è l\'area' },
+      { v: r.w + r.h, perche: 'quella è la base più l\'altezza: il giro le conta tutte e due due volte' },
+      { v: r.giro - r.w, perche: 'manca un lato: il giro ne ha quattro' },
+      { v: r.giro + 2, perche: 'un angolo contato due volte: ogni lato si conta una volta sola' },
+      { v: r.giro - 2, perche: 'due lati saltati: segui il contorno senza staccare il dito' },
+    ]
 
-      const perche = altra
-        ? (modoA ? 'questo ha gli stessi quadretti, non lo stesso bordo'
-          : 'questo ha lo stesso bordo, non gli stessi quadretti')
-        : 'questo è diverso in tutte e due le cose'
-
-      return domanda({
-        testo: modoA ? CHIESTE.giro : CHIESTE.area,
-        soggetto: scena(scenaFigura(soggetto.celle, lato, lato)),
-        buona: scena(scenaFigura(buona.celle, lato, lato)),
-        falsi: [
-          scena(scenaFigura(girato.celle, lato, lato),
-            'questo è lo stesso rettangolo girato: stesso bordo e stessi quadretti'),
-          scena(scenaFigura(spaiata.celle, lato, lato), perche),
-          scena(scenaFigura(lontana.celle, lato, lato),
-            'questo è diverso in tutte e due le cose'),
-        ],
-        chiave: 'gri:confronto',
-        aiuto: 'in un rettangolo i quadretti sono le righe per le colonne, il bordo è due volte la base più due volte l\'altezza',
-        sorte,
-      })
-    }
-    /* non capita: se capitasse, meglio il bordo che niente */
-    return this.bordo(sorte)
-  }
-
-  /* ── grado 7: lo stesso confronto, su figure qualsiasi ──
-     Qui non c'è formula: area e bordo si contano a dito su quattro
-     figure storte. È la stessa domanda del grado 6 ma costa il doppio,
-     e per questo sta in cima alla scaletta invece che in mezzo. */
-  confronto(sorte) {
-    const lato = 5
-    const raccolta = []
-    const viste = new Set()
-    const aggiungi = celle => {
-      const f = firma(celle)
-      if (viste.has(f) || buchi(celle)) return
-      viste.add(f)
-      raccolta.push({ celle, f, area: celle.length, giro: perimetro(celle) })
-    }
-    /* qualche figura sicura, perché le coppie giuste ci siano sempre */
-    aggiungi(normalizza([[0, 0], [1, 0], [0, 1], [1, 1]]))                       // 4 · 8
-    aggiungi(normalizza([[0, 0], [1, 0], [2, 0], [3, 0]]))                       // 4 · 10
-    aggiungi(normalizza([[0, 0], [0, 1], [1, 1], [2, 1]]))                       // 4 · 10
-    aggiungi(normalizza([[0, 0], [1, 0], [0, 1], [1, 1], [2, 1]]))               // 5 · 10
-    aggiungi(normalizza([[0, 0], [1, 0], [2, 0], [1, 1], [1, 2]]))               // 5 · 12
-    aggiungi(normalizza([[0, 0], [0, 1], [0, 2], [0, 3], [1, 3]]))               // 5 · 12
-    aggiungi(normalizza([[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]]))       // 6 · 10
-    aggiungi(normalizza([[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1]]))  // 8 · 12
-    for (let i = 0; i < 26; i++) {
-      const c = passeggiata(sorte.fra(4, 8), sorte, 4)
-      if (c) aggiungi(c)
+    const visti = new Set([giusto])
+    const falsi = []
+    for (const c of proposte) {
+      if (c.v < 1 || visti.has(c.v)) continue
+      visti.add(c.v)
+      falsi.push(c)
     }
 
-    const modoA = sorte.forse()          // stesso perimetro / stessa area
-    for (const soggetto of sorte.mescola(raccolta)) {
-      const altre = raccolta.filter(f => f.f !== soggetto.f)
-      const stessoGiro = altre.filter(f => f.giro === soggetto.giro)
-      const stessaArea = altre.filter(f => f.area === soggetto.area)
-
-      const cerca = (lista, tieni) => {
-        const buoni = lista.filter(tieni)
-        return buoni.length ? sorte.uno(buoni) : null
-      }
-      const buona = modoA
-        ? cerca(stessoGiro, f => f.area !== soggetto.area)
-        : cerca(stessaArea, f => f.giro !== soggetto.giro)
-      const gemella = cerca(stessoGiro, f => f.area === soggetto.area)          // uguale in tutto e due
-      const altra = modoA
-        ? cerca(stessaArea, f => f.giro !== soggetto.giro)
-        : cerca(stessoGiro, f => f.area !== soggetto.area)
-      const lontana = cerca(altre, f => f.giro !== soggetto.giro && f.area !== soggetto.area)
-      const quattro = [buona, gemella, altra, lontana]
-      if (quattro.some(f => !f)) continue
-      if (new Set(quattro.map(f => f.f)).size !== 4) continue
-
-      return domanda({
-        testo: modoA ? CHIESTE.giro : CHIESTE.area,
-        soggetto: scena(scenaFigura(soggetto.celle, lato, lato)),
-        buona: scena(scenaFigura(buona.celle, lato, lato)),
-        falsi: [
-          scena(scenaFigura(gemella.celle, lato, lato),
-            'questa ha lo stesso bordo, ma anche gli stessi quadretti'),
-          scena(scenaFigura(altra.celle, lato, lato), modoA
-            ? 'questa ha gli stessi quadretti, non lo stesso bordo'
-            : 'questa ha lo stesso bordo, non gli stessi quadretti'),
-          scena(scenaFigura(lontana.celle, lato, lato),
-            'questa è diversa in tutte e due le cose'),
-        ],
-        chiave: 'gri:confronto-libero',
-        aiuto: 'il bordo è il perimetro, i quadretti dentro sono l\'area: si contano separati',
-        sorte,
-      })
-    }
-    /* se la raccolta non ha offerto una quaterna, si chiede il bordo */
-    return this.bordo(sorte)
+    return domanda({
+      testo: quale === 'area' ? `Quanti quadretti ci sono dentro ${cosa}?`
+        : `Quanto è lungo il bordo di ${cosa}?`,
+      soggetto: scena(scenaFigura(r.celle, lato, lato)),
+      buona: testo(giusto),
+      falsi: falsi.slice(0, 3).map(c => testo(c.v, c.perche)),
+      chiave: quale === 'area' ? 'gri:area' : 'gri:perimetro',
+      aiuto: DRITTE[quale](r),
+      dritta: DRITTE[quale](r),
+      sorte,
+    })
   }
 }
 

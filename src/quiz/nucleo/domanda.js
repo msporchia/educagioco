@@ -14,7 +14,17 @@
        giusta:   1,                                  // indice della buona
        chiave:   'orto:gn',                          // il CONCETTO, non l'istanza
        aiuto:    'gn si scrive senza i',             // la dritta, dopo l'errore
+       dritta:   '6 × 6 = 36: lato per lato',        // la scorciatoia, anche a risposta giusta
      }
+
+   LA `dritta` NON È UN SECONDO AIUTO. L'`aiuto` si legge quando si
+   sbaglia, e dice **come si faceva**. La dritta dice che c'era una
+   strada più corta di quella presa, e per questo si legge anche
+   quando la risposta è giusta — ma solo se il bambino ci ha messo
+   troppo, che è il segno che l'ha fatta a mano. Chi risponde in tre
+   secondi la strada corta ce l'ha già, e fermarlo per spiegargliela
+   sarebbe una punizione per aver saputo. Chi la porta è chi ha una
+   formula da offrire: l'area di un rettangolo, il giro di un quadrato.
 
    Una RISPOSTA è una di queste tre cose, mai due insieme:
 
@@ -82,7 +92,7 @@ export const conNome = (risposta, nome) => ({ ...risposta, nome: String(nome) })
    sorte e tiene il conto di dov'è finita la buona. È il modo di non
    scrivere mai più `giusta: 0` per distrazione (e di non lasciare la
    buona sempre in cima, che i bambini imparano in tre partite). */
-export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto, sorte }) {
+export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto, dritta, sorte }) {
   const tutte = sorte.mescola([buona, ...falsi])
   const d = {
     testo: consegna,
@@ -92,7 +102,25 @@ export function domanda({ testo: consegna, soggetto, buona, falsi, chiave, aiuto
   }
   if (soggetto) d.soggetto = soggetto
   if (aiuto) d.aiuto = aiuto
+  if (dritta) d.dritta = dritta
   return d
+}
+
+/* ── quando la scorciatoia va detta ──
+   Pura, e fuori dal componente apposta: è una regola con dentro una
+   soglia, e una soglia che si può provare solo col telefono in mano
+   non la prova nessuno. La usa `quiz/Domanda.vue`, e la prova
+   `test/unita/griglia-misure`.
+
+   Dodici secondi è il tempo che ci vuole a contare a dito i quadretti
+   di un rettangolo 6×7 — non quello che ci vuole a moltiplicare. Chi
+   sta sotto la strada corta ce l'ha già, e fermarlo per spiegargliela
+   sarebbe una punizione per aver saputo. */
+export const LENTO = 12
+
+export function serveLaDritta(d, { giusto, tempo }) {
+  if (!d?.dritta) return false
+  return giusto ? tempo > LENTO : true
 }
 
 /* ── il controllo di forma ──

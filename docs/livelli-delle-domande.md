@@ -67,6 +67,10 @@ diverso da quello del suo grado.
 - 🧩 **Logica** g2 — Chi è più alto di chi
 - ➡️ **Sequenze** g3 — Il ritmo che si ripete
 
+## 30  ·  circa 6.4 anni
+
+- 🔢 **Senso del numero** g3 — Fare i conti in fila
+
 ## 33  ·  circa 6.6 anni
 
 - 🗺️ **La griglia** g3 — Dove si arriva seguendo le frecce
@@ -113,6 +117,7 @@ diverso da quello del suo grado.
 - ✏️ **Ortografia** g2 — Il suono sc (pesce, scienza)
 - 📝 **Problemi** g2 — Quello che arriva si somma
 - 📝 **Problemi** g2 — Quello che va via si toglie
+- 🔢 **Senso del numero** g4 — Fare i conti in fila
 - ✂️ **Sillabe** g3 — Le rime
 
 ## 50  ·  circa 8 anni
@@ -122,7 +127,12 @@ diverso da quello del suo grado.
 - 🦁 **Animali e ambienti** g4 — Il corpo dice il posto
 - ✏️ **Ortografia** g3 — Il suono sc (pesce, scienza)
 - ✏️ **Ortografia** g3 — Le doppie
+- 🔢 **Senso del numero** g4 — Indovina il numero di partenza
 - ✂️ **Sillabe** g4 — La sillaba che manca
+
+## 52  ·  circa 8.2 anni
+
+- 🔢 **Senso del numero** g5 — Fare i conti in fila
 
 ## 56  ·  circa 8.5 anni
 
@@ -153,13 +163,18 @@ diverso da quello del suo grado.
 - ✏️ **Ortografia** g4 — Le doppie
 - 📝 **Problemi** g3 — Le parti uguali
 - 📝 **Problemi** g3 — Tante volte tanti
-- ⚑ 🔢 **Senso del numero** g4 — Indovina il numero
-- ⚑ 🔢 **Senso del numero** g5 — Indovina il numero
 - 🔢 **Senso del numero** g5 — Le decine
 - 🔢 **Senso del numero** g5 — Quanto vale ogni cifra
-- ⚑ 🔢 **Senso del numero** g6 — Indovina il numero
 - ➡️ **Sequenze** g5 — Il passo che cresce o gira
 - ➡️ **Sequenze** g5 — Il ritmo che si ripete
+
+## 60  ·  circa 8.8 anni
+
+- 🔢 **Senso del numero** g6 — Fare i conti in fila
+
+## 62  ·  circa 9 anni
+
+- 🔢 **Senso del numero** g5 — Indovina il numero di partenza
 
 ## 63  ·  circa 9 anni
 
@@ -185,6 +200,8 @@ diverso da quello del suo grado.
 ## 69  ·  circa 9.5 anni
 
 - 🔤 **Grammatica** g5 — Soggetto e predicato
+- 🗺️ **La griglia** g6 — Il perimetro: il giro del bordo
+- 🗺️ **La griglia** g6 — L'area: i quadretti dentro
 
 ## 75  ·  circa 10 anni
 
@@ -195,7 +212,6 @@ diverso da quello del suo grado.
 - 📐 **Geometria** g6 — I cubetti, anche quelli nascosti
 - 📐 **Geometria** g6 — Lo sviluppo da piegare
 - 🔎 **Indizi** g5 — Chi sono io: le figure
-- 🗺️ **La griglia** g6 — Area e perimetro nei rettangoli
 - 📖 **Lessico** g5 — I modi di dire
 - 🧩 **Logica** g5 — «Nessuno» vuol dire nessuno
 - 🧩 **Logica** g5 — Le catene di regole
@@ -208,11 +224,11 @@ diverso da quello del suo grado.
 - 📝 **Problemi** g5 — Tre conti, con i gruppi
 - 🔢 **Senso del numero** g6 — Arrotondare
 - 🔢 **Senso del numero** g6 — Circa quanto fa
+- 🔢 **Senso del numero** g6 — Indovina il numero di partenza
 - 🔢 **Senso del numero** g6 — L'ordine di grandezza, e cosa è impossibile
 
 ## 81  ·  circa 10.5 anni
 
-- 🗺️ **La griglia** g7 — Area e perimetro, figure qualsiasi
 - 📏 **Misure** g5 — I problemi con le misure
 - 📝 **Problemi** g6 — I dati che non servono
 
@@ -232,4 +248,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 169 classi su 18 moduli.
+Totale: 173 classi su 18 moduli.
