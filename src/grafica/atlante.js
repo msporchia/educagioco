@@ -32,7 +32,21 @@
    ── perché non c'è una cache ──
    `drawImage` da un atlante già decodificato è una copia di pixel: fa
    già quello che farebbe una cache, e ogni copia in più è memoria che
-   su un telefono non abbiamo.
+   su un telefono non abbiamo. L'unica eccezione è `alone` qui sotto,
+   e il motivo è scritto lì.
+
+   ── il contorno: dire «questo si tocca» senza scriverlo ───────────
+   In una stanza disegnata a mano una cassa che si apre e una cassa che
+   è scenografia hanno lo stesso aspetto, perché sono lo stesso disegno.
+   Il modo con cui questo genere di giochi lo risolve da sempre è un
+   filo di luce intorno alla figura: `alone` posa la **sagoma** dello
+   sprite — la sua ombra piena, tinta di un colore — otto volte attorno
+   al posto dove andrà la figura, e sopra ci va la figura vera. Quello
+   che resta a vista è un bordo di un pixel.
+
+   La sagoma è l'unica cosa che si tiene da parte: ricavarla vuol dire
+   un `source-in` su un canvas a parte, che è caro, e i pezzi che si
+   illuminano sono qualche decina — non l'atlante intero.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Un foglio: la tabella `PEZZI` (nome → [x, y, larghezza, altezza]) e
@@ -103,8 +117,61 @@ export function creaFoglio({ pezzi, immagine, tessera = 32 }) {
     return posa(ctx, nome, (cx + 0.5) * tessera, (cy + 1) * tessera, opz)
   }
 
+  /* ── la sagoma di un pezzo, tinta ──
+     Un canvas grande quanto il ritaglio: dentro ci si disegna il pezzo,
+     poi `source-in` sostituisce **i pixel già disegnati** col colore e
+     lascia trasparente tutto il resto. Il risultato è la figura piena,
+     ed è quello che serve per farne un bordo. */
+  const sagome = new Map()
+  function sagoma(nome, colore) {
+    const chiave = nome + '|' + colore
+    if (sagome.has(chiave)) return sagome.get(chiave)
+    const p = pezzi[nome]
+    if (!p || !img) return null
+    const [sx, sy, w, h] = p
+    const c = document.createElement('canvas')
+    c.width = w; c.height = h
+    const g = c.getContext('2d')
+    g.imageSmoothingEnabled = false
+    g.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    g.globalCompositeOperation = 'source-in'
+    g.fillStyle = colore
+    g.fillRect(0, 0, w, h)
+    sagome.set(chiave, c)
+    return c
+  }
+
+  /* Il contorno, appoggiato come `posa`: stesso punto, stessa firma. Va
+     chiamato **prima** della figura, o le si mangia i bordi.
+
+     `raggio` è in pixel dello sprite: 1 è il filo giusto per una pixel
+     art da 16 px, 2 comincia a sembrare una fiamma. */
+  const INTORNO = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]
+  function alone(ctx, nome, x, y, { colore = '#ffd27a', alfa = 1, raggio = 1,
+                                    specchia = false } = {}) {
+    const m = misura(nome)
+    const s = sagoma(nome, colore)
+    if (!m || !s) return false
+    const prima = ctx.globalAlpha
+    ctx.globalAlpha = prima * alfa
+    const x0 = Math.round(x - m.w / 2), y0 = Math.round(y - m.h)
+    for (const [dx, dy] of INTORNO) {
+      if (specchia) {
+        ctx.save()
+        ctx.translate(x0 + dx * raggio + m.w, y0 + dy * raggio)
+        ctx.scale(-1, 1)
+        ctx.drawImage(s, 0, 0)
+        ctx.restore()
+      } else {
+        ctx.drawImage(s, x0 + dx * raggio, y0 + dy * raggio)
+      }
+    }
+    ctx.globalAlpha = prima
+    return true
+  }
+
   const foglio = {
-    carica, misura, pezzo, posa, posaTessera, tessera,
+    carica, misura, pezzo, posa, posaTessera, tessera, alone,
     get pronto() { return !!img },
     get immagine() { return img },
     ha: nome => !!pezzi[nome],

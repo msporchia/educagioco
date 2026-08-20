@@ -195,7 +195,9 @@ export class Tela {
       if (r.presa || r.morto) continue
       const luce = corsa.luceDi(r.x, r.y)
       if (!luce) continue
-      this.roba(r, luce, orologio)
+      /* `toccabile` è un fatto già deciso dal motore, come `potenziabile`
+         nel castello: qui non si ricalcola niente, si guarda. */
+      this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)))
     }
     this.eroe(corsa, orologio)
     if (corsa.bersaglio) this.bersaglio(corsa.bersaglio, orologio)
@@ -274,7 +276,7 @@ export class Tela {
      sull'orologio. Quello che nel foglio non c'è si disegna con l'emoji:
      un buco si nota, e un pezzo mancante non deve far sparire un
      forziere. */
-  roba(r, luce, t) {
+  roba(r, luce, t, tocca = false) {
     const ctx = this.ctx
     const px = r.fx != null ? r.fx : r.x + 0.5
     const py = r.fy != null ? r.fy : r.y + 0.5
@@ -292,8 +294,12 @@ export class Tela {
       ctx.arc(px * T, py * T + T * 0.2, T * 0.5, 0, 7)
       ctx.fill()
 
-      if (!this.posa(pezzoAndante(scheda.sprite, posa, fr), px - 0.5, py - 0.5,
-                     { alfa, specchia: r.guarda === 'sx' }))
+      const suo = pezzoAndante(scheda.sprite, posa, fr)
+      /* un mostro ha già il suo alone rosso, che dice la stessa cosa in
+         un'altra lingua: qui il filo serve solo a dire che ci si può
+         arrivare col dito da dove si sta */
+      if (tocca) this.filo(suo, px - 0.5, py - 0.5, t, { specchia: r.guarda === 'sx' })
+      if (!this.posa(suo, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
         this.emoji(r.em, px, py, alfa)
       if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
       if (!r.sveglio) this.emoji('💤', px + 0.4, py - 0.4, alfa * 0.8, 0.32)
@@ -332,6 +338,18 @@ export class Tela {
 
     const quale = PEZZO_DI[r.che]
     const nome = r.che === 'cosa' ? (COSE[r.cosa] || {}).sprite : quale ? quale(r, t) : null
+    /* ── il filo di luce su quello che si tocca ──
+       Una lanterna a terra e un forziere sono lo stesso genere di
+       disegno, e finché si somigliavano non c'era modo di sapere quale
+       dei due risponde al dito se non provandoli tutti. Il filo lo dice
+       senza scriverlo, ed è la convenzione di tutti i giochi di questo
+       genere. Solo in piena luce, perché toccabile lo è solo lì. */
+    if (tocca && nome) this.filo(nome, px - 0.5, py - 0.5 + su, t)
+    /* la fonte e il mercante sono emoji — il foglio non li disegna — e
+       un'emoji non ha una sagoma da contornare: lì il «questo si tocca»
+       lo dice un alone tondo dietro, che è la stessa luce con un'altra
+       forma */
+    if (tocca && !nome) this.aureola(px, py + su, t)
     if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
       this.emoji(r.em, px, py + su, alfa)
 
@@ -339,6 +357,26 @@ export class Tela {
        dove andare, quindi si vede anche in un piano già girato */
     if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
       this.emoji(SEGNI[r.segno].em, px, py - 1.25, alfa, 0.5)
+  }
+
+  /* Il filo di luce intorno a una figura: respira piano — abbastanza
+     da farsi notare girando lo sguardo, non tanto da sembrare un
+     allarme. Il colore è quello del bersaglio e dell'alone della roba
+     per terra: in questo gioco l'oro vuol dire «questo riguarda te». */
+  filo(nome, cx, cy, t, opz = {}) {
+    const q = 0.5 + 0.22 * Math.sin(t * 2.4)
+    this.foglio.alone(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T,
+                      { ...opz, colore: '#ffd27a', alfa: q, raggio: 1 })
+  }
+
+  aureola(px, py, t) {
+    const ctx = this.ctx
+    const q = 0.16 + 0.07 * Math.sin(t * 2.4)
+    const a = ctx.createRadialGradient(px * T, py * T, T * 0.15, px * T, py * T, T * 0.75)
+    a.addColorStop(0, `rgba(255,210,122,${q})`)
+    a.addColorStop(1, 'rgba(255,210,122,0)')
+    ctx.fillStyle = a
+    ctx.beginPath(); ctx.arc(px * T, py * T, T * 0.75, 0, 7); ctx.fill()
   }
 
   /* Le emoji le disegna il telefono, quindi non si tingono dell'ambiente
@@ -413,13 +451,31 @@ export class Tela {
      resta a destra mentre l'eroe guarda a sinistra sembra portata da
      qualcun altro. */
   arma(corsa, sx, sy, specchia, t, cammina) {
-    const k = corsa.mano
-    if (!k) return
-    const nome = (COSE[k] || {}).sprite
-    if (!nome) return
     const su = Math.sin(t * (cammina ? 9 : 3)) * (cammina ? 0.9 : 0.5)
     const lato = specchia ? -1 : 1
-    this.foglio.posa(this.ctx, nome, sx + lato * T * 0.42, sy + T * 0.42 + su, { specchia })
+    const posa = (k, verso, opz) => {
+      const nome = (COSE[k] || {}).sprite
+      if (!nome) return
+      this.foglio.posa(this.ctx, nome, sx + verso * T * 0.42, sy + T * 0.42 + su, opz)
+    }
+    /* chi porta due armi le porta **una per lato**, ed è l'unico modo
+       di far vedere dal campo che la scelta è stata fatta: nel corredo
+       si vedono due caselle piene, qui si vedono due lame. Quella
+       debole va dietro — si disegna prima — o coprirebbe il braccio
+       buono.
+
+       Un'arma a due mani si posa invece **in mezzo, davanti al corpo**:
+       è così che si tiene un'asta o uno spadone, e si legge a colpo
+       d'occhio che le mani sono impegnate tutte e due. La prima idea
+       era posarne una copia sbiadita anche dall'altro lato, come fa il
+       corredo con l'ombra nella casella: a schermo si vedono due armi,
+       non una tenuta in due — l'ombra funziona in un elenco di caselle,
+       dove il posto vuoto ha un significato, e non addosso a una
+       figura. */
+    const due = corsa.mano && (COSE[corsa.mano] || {}).mani === 2
+    if (due) return posa(corsa.mano, 0, { specchia, dy: -T * 0.06 })
+    if (corsa.mancina) posa(corsa.mancina, -lato, { specchia: !specchia })
+    if (corsa.mano) posa(corsa.mano, lato, { specchia })
   }
 
   bersaglio(b, t) {
