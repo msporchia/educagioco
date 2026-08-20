@@ -46,7 +46,8 @@ import { giocoDaOffrire, arcoDelGioco } from './portata.js'
 import { SAPERI, sapereDi } from './saperi.js'
 import { PARTENZE, eccezioniPerEta } from './partenze.js'
 import { FASCE_ETA, doveCadeCon } from '../quiz/nucleo/catalogo.js'
-import { finestraDi } from '../quiz/nucleo/classi.js'
+import { finestraDi, anniDelLivello } from '../quiz/nucleo/classi.js'
+import { PASSO } from '../quiz/nucleo/modulo.js'
 
 /* le chiavi spente in una mappa di eccezioni: `{ torri: false }` vuol
    dire spento, l'assenza vuol dire acceso (è il patto di `settings`) */
@@ -71,6 +72,16 @@ export const SPENTO = 'spento'      // l'ha spento un grande, non l'età
 export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false } = {}) {
   const spenti = spente(sa)
   const off = new Set(spente(giochi))
+  /* ── E QUELLO CHE UN GRANDE HA VOLUTO COMUNQUE ──
+     `settings.giochi[k] === true` non si scriveva mai: acceso era
+     l'assenza, e `accendiGioco(k, true)` cancellava la voce. Adesso
+     quel valore vuol dire una cosa che prima non si poteva dire —
+     **tienilo in casa anche se l'età dice di no**. Serve al caso che
+     l'età sbaglia: il Dungeon dichiarato dai sette anni e un bambino di
+     sei che ci gioca col fratello. Un profilo di ieri non ne ha
+     nessuno, quindi non cambia niente per nessuno finché qualcuno non
+     lo chiede. */
+  const forzati = new Set(Object.keys(giochi || {}).filter(k => giochi[k] === true))
   /* quello che a quest'età si spegnerebbe da sé: serve a distinguere
      «l'hai spento tu» da «è l'età», che a schermo sono due frasi
      diverse e per un grande sono due cose diversissime */
@@ -114,13 +125,64 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
          tolto, ed è l'unica di cui il grande è responsabile. Metterla
          in mezzo alle altre gli farebbe credere che basti spostare la
          manopola per farlo tornare. */
-      let stato = QUI
-      if ((manca && !mancaPerEta) || (off.has(g.chiave) && !dEta.has(g.chiave))) stato = SPENTO
-      else if (manca || off.has(g.chiave) || !inPortata) {
-        const passato = g.piccoli || (arco && arco.anniA < eta)
-        stato = passato ? PASSATO : AVANTI
+      /* ── LO STATO, DATE CERTE ECCEZIONI ──
+         Si calcola due volte: una con quelle **di questo bambino** —
+         ed è quello che si vede — e una con quelle che **la partenza di
+         quest'età scriverebbe adesso**, che è il termine di paragone.
+         Erano una sola, e il paragone era «nessuna eccezione»: così un
+         gioco spento dalla partenza (Prima e dopo a nove anni, che i
+         piccoli li tiene fuori) risultava messo a mano da un grande che
+         non aveva toccato niente — e restava ambra anche appena dopo
+         aver rimesso tutto ai difetti, che è il momento in cui è più
+         evidente che la riga sta mentendo. */
+      const statoCon = spentoQui => {
+        if ((manca && !mancaPerEta) || (spentoQui && !dEta.has(g.chiave))) return SPENTO
+        if (manca || spentoQui || !inPortata)
+          return (g.piccoli || (arco && arco.anniA < eta)) ? PASSATO : AVANTI
+        return QUI
       }
+      let stato = statoCon(off.has(g.chiave))
+      /* La forzatura vince sull'età, **non sui saperi spenti**: un
+         gioco fatto tutto di conversioni con le conversioni spente non
+         diventa giocabile perché qualcuno lo vuole in home — resterebbe
+         una carta che apre domande da indovinare. È la stessa riga di
+         `giocoGiocabile`, e sbagliarla qui vorrebbe dire prometterne
+         una che la home poi non mostra. */
+      if (forzati.has(g.chiave) && !manca) stato = QUI
+
+      /* ── E COSA SUCCEDE SCEGLIENDO «COME DICE L'ETÀ» ──
+         Non «senza nessuna eccezione», ma **con quelle di quest'età**:
+         è la stessa cosa che scrive il tasto che rimette tutto
+         (`rimettendoLEta`), quindi le due strade portano allo stesso
+         posto. Serve alla tacca, che deve poter rimettere una riga
+         com'era senza sapere niente di come ci si è arrivati. */
+      const difetto = statoCon(dEta.has(g.chiave))
+      /* La posizione della tacca è **rispetto all'atteso**: spegnere
+         quello che la partenza di quest'età spegneva già non è una
+         scelta di nessuno, ed è la posizione di mezzo — non «non ce
+         l'ha». Da qui esce anche l'ambra, che è la stessa domanda
+         detta in un altro modo: c'è qualcosa da ritrovare, qui? */
+      const attesoSpento = dEta.has(g.chiave)
+      /* Solo un `true` scritto per esteso è «ce l'ha comunque»:
+         l'assenza non forza niente — il gioco resta in mano alla
+         portata — quindi un profilo che non ha l'eccezione attesa non
+         sta dicendo nulla, e la tacca lo mostra nel mezzo. Dirlo «ce
+         l'ha» sarebbe una bugia visibile: la riga accanto direbbe
+         «arriva più avanti». */
+      const scelto = forzati.has(g.chiave) ? 'si'
+        : (off.has(g.chiave) && !attesoSpento) ? 'no' : 'difetto'
       return { chiave: g.chiave, nome: g.nome, ico: g.ico, che: g.che, stato,
+               difetto, scelto, attesoSpento,
+               /* il pezzo di scuola senza il quale questo gioco non ha
+                  più niente da chiedere: il laboratorio delle pozioni è
+                  tutto conversioni. La riga lo scrive al posto della
+                  sua descrizione — «spento» senza il perché manda a
+                  cercare un interruttore che non è quello. */
+               manca: mancano.map(k => sapereDi(k)?.nome || k).join(' e '),
+               /* una scelta che coincide con l'atteso non è una scelta:
+                  non lascia niente da ritrovare, e colorarla direbbe
+                  il falso */
+               aMano: scelto !== 'difetto',
                da: arco ? arco.anniDa : null, a: arco ? arco.anniA : null }
     })
 }
@@ -239,7 +301,21 @@ export function domandeDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = fals
   return { chiedono: false, quali: [], da: null }
 }
 
-export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = {},
+/* ── IL RITOCCO DI UNA RIGA ──
+   Un grande può dire «questa per lui è mezzo anno più dura», e la riga
+   si sposta di blocco. Vale per una tipologia e per un gruppo di
+   sapere, e i due **si sommano**: è la stessa somma che fa già la
+   scheda delle domande (`quiz/catalogo.js`), e c'è un solo modo di
+   sbagliarla — farla in due posti in due modi.
+
+   Un gradino è mezzo anno di scuola (`PASSO`), e il segno è quello del
+   profilo: positivo vuol dire «per lui è più facile», quindi il
+   livello scende. */
+const ritoccoDi = (c, ritocchi) =>
+  (ritocchi[c.tipo] || 0) + (c.sa || []).reduce((n, k) => n + (ritocchi[k] || 0), 0)
+
+export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
+                            ritocchi = {} } = {},
                           { classi = [] } = {}) {
   const spenti = spente(sa)
   const dove = doveCadeCon(eta)
@@ -253,6 +329,18 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
     /* la stessa cosa in anni: è la lingua in cui un grande giudica —
        nessuno guarda un «54», tutti guardano «otto anni e mezzo» */
     anni: c.anni,
+    /* quanto l'ha spostata un grande, e dove è finita: `anni` resta
+       **quello che dice la taratura di casa**, `anniOra` è quello che
+       vale per questo bambino. Servono tutti e due nello stesso posto:
+       la tacca che la sposta parte dal primo e mostra il secondo. */
+    ritocco: ritoccoDi(c, ritocchi),
+    /* la chiave su cui si scrive un ritocco di questa riga: è la
+       tipologia, non la classe — «le ore intere» al grado 1 e al grado 4
+       sono la stessa cosa per chi le tara. Chi non ce l'ha (i moduli
+       vecchi, che le tipologie non le dichiarano) non si può ritoccare
+       da solo, e la ✎ non compare: si sposta il suo pezzo di scuola. */
+    tipo: c.tipo || null,
+    anniOra: Math.round(anniDelLivello(c.livello - ritoccoDi(c, ritocchi) * PASSO) * 10) / 10,
     /* tutto quello che serve a **rigenerare** quella domanda, nella
        forma che vuole `quiz/nucleo/esempi.js`: è il motivo per cui una
        riga di questo elenco si può provare col dito senza che chi la
@@ -267,7 +355,7 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
     /* una classe spenta non cade in nessuna fascia: è tolta prima, e
        metterla fra le «troppo facili» direbbe una cosa falsa */
     dove: (c.sa || []).some(s => spenti.includes(s)) || spenti.includes(c.tipo)
-      ? 'spenta' : dove(c.livello),
+      ? 'spenta' : dove(c.livello - ritoccoDi(c, ritocchi) * PASSO),
   }))
 
   /* ── LE DOMANDE, IN QUATTRO GRUPPI COI NOMI DENTRO ──
@@ -303,7 +391,7 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
      dov'è più utile saperlo, e l'ordine di preferenza è quello: prima
      dove il bambino sta lavorando adesso, poi il gradino sopra, poi il
      ripasso, e per ultimo quello che non gli si chiede più. */
-  const ORDINE_GRUPPI = ['medie', 'toste', 'facili', 'sotto']
+  const ORDINE_GRUPPI = ['medie', 'toste', 'facili', 'sotto', 'spenta']
   const gia = new Set()
   const gruppi = ORDINE_GRUPPI.map(chiave => {
     const righe = inOrdine(chiave).filter(r => !gia.has(r.nome))
@@ -337,10 +425,10 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
   const gruppoDi = sa => (sa || []).slice()
     .sort((x, y) => (quanteHa[x] || 0) - (quanteHa[y] || 0))[0] || null
 
-  const perSapere = righe => {
+  const perSapere = (righe, scegli = gruppoDi) => {
     const dentro = new Map()
     for (const r of righe) {
-      const chiave = gruppoDi(r.sa) || 'altro'
+      const chiave = scegli(r.sa) || 'altro'
       if (!dentro.has(chiave)) dentro.set(chiave, [])
       dentro.get(chiave).push(r)
     }
@@ -356,11 +444,41 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
              serve a metterlo in fila con gli altri, e a dire quale pezzo
              di quel gruppo si sta guardando */
           livello: Math.max(...classi.map(c => c.livello)),
+          /* ── QUELLO CHE SERVE ALLA TACCA ──
+             Spostare un pezzo di scuola sposta **tutte le sue domande
+             insieme**, e quelle non stanno tutte allo stesso punto: la
+             tacca deve poter dire quante attraversano il confine, se no
+             direbbe «finisce in Difficili» mentre due su tre restano
+             dov'erano. `ritocco` è di quanto l'ha già spostato un
+             grande — il numero da cui riparte la tacca aprendosi. */
+          livelli: classi.map(c => c.livello),
+          ritocco: ritocchi[chiave] || 0,
+          spento: spenti.includes(chiave),
           classi,
         }
       })
       /* i più impegnativi per primi, come le classi dentro il gruppo */
       .sort((a, b) => b.livello - a.livello)
+  }
+
+  /* ── E IL BLOCCO DI QUELLO CHE È STATO TOLTO ──
+     Il gruppo di una riga spenta non è «il più specifico che dichiara»
+     ma **quello che l'ha spenta**: se un grande ha tolto «Le figure
+     piane», la riga va scritta sotto quel nome — non sotto «Geometria»,
+     che è ancora acceso e riaccenderlo non rimetterebbe niente.
+
+     E un pezzo spento che non ha domande resta lo stesso: le divisioni
+     vivono dentro il castello e non hanno una classe di quiz, ma se
+     sparissero da qui non ci sarebbe nessun posto dove riaccenderle. */
+  const spentoDi = sa => (sa || []).find(k => spenti.includes(k)) || null
+  const conSpenti = righe => {
+    const fila = perSapere(righe, spentoDi)
+    const gia = new Set(fila.map(x => x.chiave))
+    const nudi = spenti.filter(k => !gia.has(k) && sapereDi(k))
+      .map(k => ({ chiave: k, nome: sapereDi(k).nome, ico: sapereDi(k).ico || '•',
+                   quante: 0, livello: 0, livelli: [], ritocco: ritocchi[k] || 0,
+                   spento: true, classi: [] }))
+    return [...fila, ...nudi]
   }
   return {
     anni: eta,
@@ -378,9 +496,10 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false } = 
        arrivano, e un elenco di roba che non vedrà non aiuta a
        decidere niente — quello che serve sapere, cioè che salendo
        arriverebbero, lo dice già la manopola salendo. */
-    gruppi: ['facili', 'medie', 'toste', 'sotto'].map(chiave => {
+    gruppi: ['facili', 'medie', 'toste', 'sotto', 'spenta'].map(chiave => {
       const righe = gruppo(chiave)
-      return { chiave, righe, saperi: perSapere(righe), quante: righe.length }
+      const saperi = chiave === 'spenta' ? conSpenti(righe) : perSapere(righe)
+      return { chiave, righe, saperi, quante: righe.length }
     }),
     /* ── IL CENSIMENTO GREZZO ──
        Non è quello che si mostra, e i numeri **non combaciano** con la

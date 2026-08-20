@@ -46,12 +46,21 @@ await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('.carte', { timeout: 5000 })
 
-/* La scheda «Le domande» — era «Cosa sa», che mostrava le stesse cose in
-   un altro modo ed è sparita col riassetto della schermata dei grandi.
-   Il tasto ▶ per provare una classe adesso sta su ogni riga del catalogo
-   (`quiz/Catalogo.vue`), non più in fondo a un elenco di saperi. */
-await page.click('[data-scheda="domande"]')
-const prova = page.locator('[data-prova-classe]').first()
+/* Il ▶ sta su ogni riga del **quadro** dell'età, sotto la manopola
+   (`components/eta/Riga.vue`). Le schede «Cosa sa» e «Le domande» —
+   che mostravano le stesse cose in due altri modi — sono sparite col
+   riassetto: si guarda e si tara in un posto solo. */
+await page.click('[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+const apriQuadro = async k => {
+  const sel = `[data-manopola] [data-apri="${k}"]`
+  if ((await page.locator(sel).count()) === 0) return
+  if (!(await page.locator(sel).evaluate(el => el.classList.contains('aperta'))))
+    await page.click(sel)
+  await page.waitForTimeout(150)
+}
+await apriQuadro('medie')
+const prova = page.locator('[data-manopola] [data-apri="medie"] .prova').first()
 controlla('dai grandi si può provare una domanda', await prova.count() === 1)
 await prova.click()
 await page.waitForSelector('.qz-tasto', { timeout: 5000 })
@@ -125,20 +134,24 @@ uguale('rispondere dal banco dei grandi non tocca il ripasso',
    invece di sperare che la pesca ne dia una disegnata. */
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
-await page.click('[data-scheda="domande"]')
-/* Le classi stanno in cinque blocchi in fila rispetto al bambino, e le
-   due estreme nascono chiuse: quella che serve qui può essere dentro una
-   di quelle. Si aprono uno alla volta finché non compare, invece di
-   dare per scontato in quale fascia cada — l'età del profilo di prova
-   può cambiare, e con lei la fascia. */
-const BERSAGLIO = '[data-prova-classe="griglia:1:gri:coordinate"]'
-if (await page.locator(BERSAGLIO).count() === 0) {
-  for (const testa of await page.locator('[data-apri]').all()) {
-    await testa.click()
+await page.click('[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+/* Il quadro si apre a due livelli — blocco, pezzo di scuola, domande —
+   e in quale blocco cada questa classe dipende dall'età del profilo di
+   prova. Si aprono tutti, e poi i pezzi uno per uno finché la riga non
+   compare: dare per scontata la fascia vorrebbe dire riscrivere questo
+   test ogni volta che si sposta una taratura. */
+const BERSAGLIO = '[data-prova="griglia:1:gri:coordinate"]'
+for (const k of ['facili', 'medie', 'toste', 'sotto']) {
+  if (await page.locator(BERSAGLIO).count()) break
+  await apriQuadro(k)
+  for (const riga of await page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`).all()) {
     if (await page.locator(BERSAGLIO).count()) break
+    await riga.click()
+    await page.waitForTimeout(60)
   }
 }
-controlla('la classe della griglia si trova nel catalogo',
+controlla('la classe della griglia si trova nel quadro',
           await page.locator(BERSAGLIO).count() === 1)
 await page.click(BERSAGLIO)
 await page.waitForSelector('.qz-guarda', { timeout: 5000 })

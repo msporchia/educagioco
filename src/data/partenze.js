@@ -222,9 +222,30 @@ export const eccezioniPerEta = anni => {
 
 /* due mappe di eccezioni dicono la stessa cosa se spengono le stesse
    chiavi: l'ordine non conta e l'assenza vuol dire acceso */
-const spente = m => Object.keys(m || {}).filter(k => m[k] === false).sort().join(',')
+/* ── LE ECCEZIONI SONO TRE STATI, NON DUE ──
+   `false` è spento e l'assenza è acceso — è il patto di `settings` — ma
+   `true` scritto per esteso vuol dire una terza cosa: **tienilo
+   comunque**, anche se l'età dice di no (`store/profile.js`,
+   `fissaGioco`). Fin qui si contavano solo gli spenti, e una forzatura
+   se ne andava in silenzio cambiando fascia: il grande l'aveva messa a
+   mano, e la conferma gli diceva che non c'era niente da perdere. */
+const segno = v => v === false ? 'no' : v === true ? 'si' : '—'
+const messeAMano = m => Object.keys(m || {})
+  .filter(k => m[k] === false || m[k] === true)
+  .sort().map(k => `${k}${segno(m[k])}`).join(',')
 const stesseEccezioni = (a, b) =>
-  spente(a.giochi) === spente(b.giochi) && spente(a.sa) === spente(b.sa)
+  messeAMano(a.giochi) === messeAMano(b.giochi) && messeAMano(a.sa) === messeAMano(b.sa)
+
+/* Quante voci il grande ha messo diversamente dal difetto della sua
+   fascia: è il numero che rende la conferma una domanda vera invece di
+   un «sei sicuro?». Si contano le differenze nei due versi — un gioco
+   spento a mano e uno riacceso a mano se ne vanno tutti e due. */
+const quanteDiverse = (mia, difetto) => {
+  const chiavi = new Set([...Object.keys(mia || {}), ...Object.keys(difetto || {})])
+  let n = 0
+  for (const k of chiavi) if (segno(mia?.[k]) !== segno(difetto?.[k])) n++
+  return n
+}
 
 /* ── COSA SUCCEDE SPOSTANDO LA MANOPOLA ──
    Una manopola che riscrive le scelte fatte a mano senza dirlo è una
@@ -255,9 +276,19 @@ export function spostandoLEta ({ da, a, giochi = {}, sa = {}, ritocchi = {} }) {
      ripartire dai difetti li porta via. Se non entrassero in questo
      conto sparirebbero in silenzio nell'unico caso in cui un grande
      aveva toccato solo quelli. */
+  const difetti = prima ? eccezioniDi(prima.chiave) : { giochi: {}, sa: {} }
   const suMisura = !!prima &&
-    (!stesseEccezioni({ giochi, sa }, eccezioniDi(prima.chiave)) ||
+    (!stesseEccezioni({ giochi, sa }, difetti) ||
      Object.keys(ritocchi || {}).length > 0)
+
+  /* Cosa se ne va, voce per voce. Dentro la stessa fascia non se ne va
+     niente, e dirlo con degli zeri invece che con un `null` risparmia a
+     chi lo mostra di sapere quale dei due casi è. */
+  const perde = stessaFascia ? { giochi: 0, sa: 0, ritocchi: 0 } : {
+    giochi: quanteDiverse(giochi, difetti.giochi),
+    sa: quanteDiverse(sa, difetti.sa),
+    ritocchi: Object.keys(ritocchi || {}).length,
+  }
 
   return {
     eta: Number(a),
@@ -269,6 +300,38 @@ export function spostandoLEta ({ da, a, giochi = {}, sa = {}, ritocchi = {} }) {
     fascia: dopo,
     riscrive: !stessaFascia,
     chiede: !stessaFascia && suMisura,
+    perde,
+  }
+}
+
+/* ── E RIMETTERE TUTTO COM'ERA A QUEST'ETÀ ──
+   Lo stesso conto di `spostandoLEta`, ma senza spostare niente: l'età
+   resta quella che è, e quello che si butta sono **le eccezioni**.
+   Serve perché il quadro dei grandi si può correggere riga per riga —
+   un gioco forzato, un pezzo di scuola tolto, tre domande spostate — e
+   dopo un po' nessuno ricorda più cosa ha toccato. Senza un modo di
+   tornare indietro tutto insieme, l'unica strada era spostare l'età
+   avanti e indietro fino a cambiare fascia, che è un rimedio per
+   iniziati e per giunta cambia anche l'età.
+
+   Torna anche `cambia`: se non c'è niente di suo da buttare il tasto
+   non si mostra affatto — un ripristino che non ripristina niente fa
+   dubitare di aver capito male cosa fa. */
+export function rimettendoLEta ({ eta, giochi = {}, sa = {}, ritocchi = {} }) {
+  const fascia = partenzaPerEta(eta)
+  const difetti = fascia ? eccezioniDi(fascia.chiave) : { giochi: {}, sa: {} }
+  const perde = {
+    giochi: quanteDiverse(giochi, difetti.giochi),
+    sa: quanteDiverse(sa, difetti.sa),
+    ritocchi: Object.keys(ritocchi || {}).length,
+  }
+  return {
+    eta: Number(eta),
+    giochi: difetti.giochi,
+    sa: difetti.sa,
+    fascia,
+    perde,
+    cambia: perde.giochi + perde.sa + perde.ritocchi > 0,
   }
 }
 

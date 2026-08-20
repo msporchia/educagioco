@@ -13,12 +13,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
-         saperiCheMancano,
-         giocoAcceso, accendiGioco, quantiGiochiAccesi, spostaLEta,
+         spostaLEta,
          etaDelBambino,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
+         ritocca, accendiSapere, saperiSpenti, fissaGioco, rimettiAiDifetti,
          aspettoDi, scegliAspetto } from '../store/profile.js'
 import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
 import { leggiCestino } from '../store/cestino.js'
@@ -34,14 +34,11 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata } from '../guide/aiuto.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
-import { spostandoLEta, partenzaPerEta } from '../data/partenze.js'
-import { sapereDi } from '../data/saperi.js'
 import Barra from '../components/Barra.vue'
-import ManopolaEta from '../components/ManopolaEta.vue'
+import ManopolaEta from '../components/eta/Manopola.vue'
+import { anniInLettere } from '../components/eta/lettere.js'
 import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
-import Catalogo from '../quiz/Catalogo.vue'
-import ComeVa from '../quiz/ComeVa.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -472,7 +469,6 @@ const nomeInCorso = ref('')
 
 function chiudiTutto() {
   rinominando.value = ''; eliminando.value = ''; nomeInCorso.value = ''
-  confermaEta.value = null
 }
 
 /* ── QUANTI ANNI HA, CHE È L'UNICA MANOPOLA ──
@@ -498,20 +494,15 @@ function chiudiTutto() {
 const giroEta = ref(0)
 const anniOra = computed(() => (giroEta.value, etaDelBambino()))
 const settaggi = computed(() => (giroEta.value, state.profile.settings || {}))
-const confermaEta = ref(null)   // { a, mossa } | null
 
-function scegliAnni(anni) {
-  const s = state.profile.settings || {}
-  const mossa = spostandoLEta({ da: anniOra.value, a: anni,
-                                giochi: s.giochi || {}, sa: s.sa || {},
-                                ritocchi: s.ritocchi || {} })
-  if (mossa.chiede) { confermaEta.value = { a: anni, mossa }; return }
-  applicaAnni(anni)
-}
-
+/* Qui non si decide più niente: la manopola muove la sua bozza, mostra
+   il quadro di quell'età e chiede conferma da sé, con il cartello
+   appiccicato in fondo — `scegli` arriva una volta sola, quando il
+   grande ha premuto «Applica». Prima si scriveva a ogni tacca e la
+   conferma compariva in fondo alla colonna, dove non la vedeva
+   nessuno: si vedeva solo una freccia che smetteva di rispondere. */
 function applicaAnni(anni) {
   const mossa = spostaLEta(anni)
-  confermaEta.value = null
   giroEta.value++
   if (!mossa) return
   esito.value = { ok: true, testo: `${chi.value} è tarato su ${inLettere(anni)}. `
@@ -520,21 +511,58 @@ function applicaAnni(anni) {
       : 'Le domande si spostano di conseguenza; i giochi restano come li avevi messi.') }
 }
 
-const inLettere = a => a % 1 ? `${Math.floor(a)} anni e mezzo` : `${a} anni`
+const inLettere = anniInLettere
 
-/* Quanti interruttori tornerebbero al difetto: è il numero che rende la
-   conferma una domanda vera invece di un «sei sicuro?». */
-const quantoSiPerde = computed(() => {
-  if (!confermaEta.value) return ''
-  const s = state.profile.settings || {}
-  const spente = m => Object.keys(m || {}).filter(k => m[k] === false).length
-  const pezzi = []
-  if (spente(s.giochi)) pezzi.push(`${spente(s.giochi)} giochi spenti a mano`)
-  if (spente(s.sa)) pezzi.push(`${spente(s.sa)} pezzi di scuola`)
-  const r = Object.keys(s.ritocchi || {}).length
-  if (r) pezzi.push(`${r} domande ritoccate`)
-  return pezzi.join(', ')
-})
+/* ── LA CORREZIONE PICCOLA, DAL QUADRO ──
+   L'età è la manopola grossa e sta sopra; questa è la riga per volta:
+   *le stagioni le davamo per sapute, e a scuola sono indietro di mezzo
+   anno*. La tacca (`components/eta/Taratura.vue`) non scrive niente e
+   manda su cosa ha deciso — come fa già quella dell'età — e qui si
+   sceglie fra le due scritture, che sono due affermazioni diverse:
+
+     · **spostare** è un ritocco (`settings.ritocchi`), mezzo anno per
+       scatto e non più di tre: la domanda resta, cambia solo dove cade;
+     · **togliere** è un'altra cosa (`settings.sa`): il pezzo di scuola
+       si spegne e le domande che lo danno per scontato spariscono da
+       tutti i giochi, castello compreso.
+
+   Riaccendere si fa solo se era spento davvero: `accendiSapere` accetta
+   qualunque chiave, e passarle una tipologia di quiz scriverebbe una
+   voce che non spegne niente e che nessuno andrebbe più a togliere. */
+function ritoccaDalQuadro({ chiave, ritocco = 0, spenta = false }) {
+  if (!chiave) return
+  if (spenta) accendiSapere(chiave, false)
+  else {
+    if (saperiSpenti().includes(chiave)) accendiSapere(chiave, true)
+    ritocca(chiave, ritocco)
+  }
+  giroEta.value++
+}
+
+/* ── e la ✎ di un gioco ──
+   Non sposta niente di mezzo anno: dice **chi decide** se sta in casa.
+   `'difetto'` toglie l'eccezione e lascia decidere all'età, che è il
+   ripristino di una riga sola — quello di tutte insieme è il tasto in
+   fondo al quadro. */
+function fissaDalQuadro({ chiave, come }) {
+  if (!chiave) return
+  fissaGioco(chiave, come)
+  giroEta.value++
+}
+
+/* ── rimettere tutto com'è di partenza ──
+   Non tocca l'età e non tocca i progressi: butta le eccezioni — giochi
+   messi a mano, pezzi di scuola tolti, domande spostate — e riparte dai
+   valori della sua fascia. Il conto di cosa se ne va l'ha già mostrato
+   il quadro prima di chiedere conferma, e viene dalla stessa funzione
+   che qui scrive. */
+function rimettiTutto() {
+  const mossa = rimettiAiDifetti()
+  giroEta.value++
+  if (!mossa) return
+  esito.value = { ok: true, testo: `Rimesso tutto com'è di partenza a `
+    + `${inLettere(anniOra.value)}. I progressi non si sono toccati.` }
+}
 
 function apriRinomina(g) { chiudiTutto(); rinominando.value = g.id; nomeInCorso.value = g.nome }
 function apriElimina(g) { chiudiTutto(); eliminando.value = g.id }
@@ -608,14 +636,6 @@ async function eliminaOra(g) {
    divisioni, il laboratorio e le conversioni). */
 const prova = ref(null)          // { chiave, nome, eta } | { sorgente|giro|eta, nome } | null
 
-/* ── e dal catalogo ──
-   La terza scheda apre lo stesso pannello, ma sa dirgli molto di più:
-   una classe precisa, il giro di un blocco, o una difficoltà a cui
-   pescare come pescherebbe un gioco. Il pannello è uno solo apposta —
-   la messa in scena della domanda dev'essere la stessa da qualunque
-   parte si arrivi, se no si finisce a guardare due cose diverse
-   credendo di guardarne una. */
-const apriDalCatalogo = voce => { prova.value = voce }
 
 /* Tutte le tappe aperte da subito. L'interruttore c'è e la scelta si
    salva nel profilo; i giochi però non lo leggono ancora, quindi per ora
@@ -642,20 +662,6 @@ function cambiaAspetto(nome) {
   scegliAspetto(nome)
 }
 
-/* Le carte della home, una per gioco. Spegnere non cancella niente: i
-   progressi restano dove sono e riaccendendo si ritrovano tutti. Serve a
-   togliere di mezzo quello che a un bambino adesso non serve — e a
-   lasciarne pochi davanti a chi, con nove carte, non ne apre nessuna. */
-/* `manca` è il macrogruppo spento senza il quale quel gioco non si può
-   giocare: la sua carta resta lì, spenta e con scritto perché, invece
-   di sparire senza motivo dall'elenco dei genitori. */
-const conStato = g => {
-  const manca = saperiCheMancano(g.chiave).map(c => sapereDi(c)?.nome || c)
-  return { ...g, acceso: giocoAcceso(g.chiave), manca: manca.join(' e ') }
-}
-const giochi = computed(() => GIOCHI.filter(g => !g.sperimentale).map(conStato))
-const accesi = computed(() => quantiGiochiAccesi())
-
 /* ── i giochi in prova ──
    Il cancello è uno per tutti. Chiuso, i giochi che ci stanno dietro non
    si elencano nemmeno: accendere il singolo non avrebbe nessun effetto,
@@ -663,7 +669,7 @@ const accesi = computed(() => quantiGiochiAccesi())
    non c'è. */
 const inProva = computed(() => sperimentaliAccesi())
 const sperimentali = computed(() =>
-  inProva.value ? GIOCHI.filter(g => g.sperimentale).map(conStato) : [])
+  inProva.value ? GIOCHI.filter(g => g.sperimentale) : [])
 function cambiaProva() {
   accendiSperimentali(!inProva.value)
   esito.value = { ok: true, testo: inProva.value
@@ -686,21 +692,6 @@ function cambiaMente() {
     ? `Negli asteroidi ${chi.value} trova tutte e ${SCALETTA.length} le tappe.`
     : `Negli asteroidi restano i ${quantiPianeti} pianeti delle tabelline. ` +
       'I progressi a mente non si perdono: riaccendendo tornano dov\'erano.' }
-}
-
-function cambiaGioco(g) {
-  /* la carta bloccata da un sapere non si accende da qui: si accende
-     dall'altra scheda (il ✕ di una riga), ed è l'unica cosa utile da dire */
-  if (g.manca) {
-    esito.value = { ok: false, testo:
-      `${g.nome} è fatto tutto di quello: finché «${g.manca}» è spento fra le domande, ` +
-      `${chi.value} non lo trova in home.` }
-    return
-  }
-  accendiGioco(g.chiave, !giocoAcceso(g.chiave))
-  esito.value = { ok: true, testo: giocoAcceso(g.chiave)
-    ? `${g.nome} torna nella home di ${chi.value}.`
-    : `${g.nome} sparisce dalla home di ${chi.value}. I progressi restano: riaccendendolo si ritrovano.` }
 }
 
 async function azzera() {
@@ -880,22 +871,41 @@ async function rimetti(v) {
         <button class="bottone" data-azione="ho-letto" @click="hoLetto">Ho letto</button>
       </div>
 
-      <!-- ── TRE SCHEDE ──
-           Una per domanda che un grande si fa: *chi gioca su questo
-           telefono*, *cosa gli chiedono i giochi*, *cosa vede in home*.
-           Erano due, e la terza è nata togliendo «Cosa sa» — che
-           mostrava le stesse cose delle domande dette in un altro modo —
-           e tirando fuori i bambini da sotto i giochi, dov'erano finiti
-           per abitudine. Ogni sezione dice in una riga cosa fa: sono
-           gesti che si fanno una volta ogni tanto, e nessuno si ricorda
-           cosa faceva quello di fianco. -->
+      <!-- ── TRE SCHEDE, E UNA SOLA TARA ──
+           *Chi gioca su questo telefono*, *come sta andando*, *cosa gli
+           arriva*. Erano tre anche prima ma dicevano un'altra cosa:
+           «Domande» era l'elenco delle classi con quattro tondi per
+           riga, «Giochi» una fila di interruttori, e tutte e due
+           tornavano a dire quello che il quadro dell'età diceva già —
+           con l'aggravante di una **seconda tacca dell'età**, che è
+           esattamente il difetto (due manopole per la stessa cosa) che
+           la manopola era nata per togliere.
+
+           Adesso si tara in un posto solo, ed è il quadro: l'età in
+           cima e la ✎ su ogni riga. La prima scheda non lo ospita più —
+           ci si arrivava scorrendo due schermate di elenchi per
+           cambiare il nome a un bambino — e tiene solo la riga che dice
+           quanti anni ha, col rimando.
+
+           L'ordine è quello in cui si legge: **chi è**, **cosa gli
+           diamo**, **come sta andando**. «Come va» in fondo e non in
+           mezzo perché è l'unica che non si tocca: si guarda, e semmai
+           rimanda alla seconda col tasto già pronto. -->
       <div class="schede">
         <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini"
                 @click="scheda = 'bambini'">Bambini</button>
-        <button :class="{ ora: scheda === 'domande' }" data-scheda="domande"
-                @click="scheda = 'domande'">Domande</button>
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
-                @click="scheda = 'giochi'">Giochi</button>
+                @click="scheda = 'giochi'">Giochi e domande</button>
+        <!-- ══ «Come va», sospeso ══
+             C'era un terzo tab: le tipologie che il bambino sbaglia
+             quasi sempre o indovina quasi sempre, col tasto già pronto
+             per ritoccarle (`quiz/ComeVa.vue`, e le soglie in
+             `quiz/consiglio.js`). Il pezzo funziona ed è provato — il
+             suo test sta in `test/integrazione/come-va.spento.mjs`, che
+             si riaccende rinominandolo `.test.mjs` — ma il modo di
+             presentarlo è da rivedere, quindi per ora non si mostra a
+             nessuno invece di mostrarsi a metà. Si riaccende
+             rimettendo questo bottone e il suo ramo qui sotto. -->
       </div>
 
       <!-- ══════════ scheda: i bambini ══════════ -->
@@ -947,34 +957,20 @@ async function rimetti(v) {
             <i>sta giocando adesso</i>
 
             <div class="aspetto-sezione">
-              <!-- ── la manopola ──
-                   Una sola, e dice cosa fa mentre la si muove. Il tasto
-                   «Rimetti giochi e domande» che stava qui sotto non
-                   c'è più: faceva la stessa cosa in un secondo modo, e
-                   cancellava le scelte fatte a mano senza annunciarlo.
-                   Adesso lo annuncia, e solo quando c'è davvero
-                   qualcosa da cancellare. -->
-              <p class="mini">Quanti anni ha — è la taratura, non un'anagrafe:
-                decide i giochi in casa e la difficoltà delle domande</p>
-              <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
-                           :sa="settaggi.sa || {}" :sperimentali="inProva"
-                           @scegli="scegliAnni" @prova="prova = $event" />
-
-              <!-- la conferma: si vede solo quando spostarsi cancella
-                   davvero qualcosa che qualcuno ha messo a mano -->
-              <div v-if="confermaEta" class="carta pericolo aperta" data-conferma="eta">
-                <b>Si riparte dai valori di {{ inLettere(confermaEta.a) }}?</b>
-                <i>{{ chi }} ha delle impostazioni tue: {{ quantoSiPerde }}.
-                  Spostarsi a {{ inLettere(confermaEta.a) }} cambia fascia, e quelle
-                  tornano come sono di partenza a quell'età. Monete, animali, campagne
-                  e traguardi non si toccano.</i>
-                <div class="riga">
-                  <button class="bottone chiaro" type="button" data-azione="eta-lascia"
-                          @click="confermaEta = null">Lascia stare</button>
-                  <button class="bottone" type="button" data-azione="eta-conferma"
-                          @click="applicaAnni(confermaEta.a)">Sì, procedi</button>
-                </div>
-              </div>
+              <!-- ── l'età, qui, è solo una riga ──
+                   La manopola col quadro sotto è alta due schermate, e
+                   stava in mezzo alla carta di chi gioca: per cambiare
+                   il nome a un bambino bisognava scorrere tutto
+                   l'elenco delle domande. Qui resta la sola cosa che
+                   serve leggere — quanti anni ha, che è la taratura e
+                   non un'anagrafe — e il rimando alla scheda dove si
+                   cambia. -->
+              <button class="riga-eta" data-azione="vai-alla-tara"
+                      @click="scheda = 'giochi'">
+                <span><b>{{ chi }} ha {{ inLettere(anniOra) }}</b>
+                  <i>decide i giochi in casa e la difficoltà delle domande</i></span>
+                <em>modifica ›</em>
+              </button>
 
               <p class="mini">Con che faccia si vede in mappa</p>
               <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
@@ -1011,16 +1007,6 @@ async function rimetti(v) {
         </button>
       </div>
 
-      <!-- ══ quello che il bambino ha già detto giocando ══
-           Non nella scheda delle domande, ed è tutto il punto: le
-           manopole c'erano già e non le toccava nessuno, perché nessuno
-           va a cercare un problema che non sa di avere. Qui il verso si
-           gira — il gioco dice cosa ha notato, il grande decide
-           (`quiz/ComeVa.vue`). Sotto «Chi gioca» e non sopra: la prima
-           domanda di chi entra è *di chi sono queste impostazioni*, e un
-           riquadro che parla di un bambino prima di aver detto quale è
-           una risposta a una domanda non fatta. -->
-      <ComeVa @tutte="scheda = 'giochi'" />
 
       <h2>Progressi</h2>
       <p class="mini">Monete, animali, campagne e traguardi: si salvano su un file, si
@@ -1230,9 +1216,68 @@ async function rimetti(v) {
       </div>
       </template>
 
-      <!-- ══════════ scheda: le domande ══════════ -->
-      <template v-else-if="scheda === 'domande'">
-        <Catalogo :chi="chi" @prova="apriDalCatalogo" />
+      <!-- ══════════ scheda: giochi e domande ══════════ -->
+      <template v-else>
+      <!-- ── L'UNICO POSTO DOVE SI TARA ──
+           L'età in cima e, sotto, il quadro di quell'età: i giochi in
+           casa e le domande divise per come cadono rispetto a lui, ogni
+           riga con la sua ✎. Qui c'erano due elenchi di interruttori —
+           uno per gioco e uno per classe di domande — che dicevano le
+           stesse cose in un modo che non si poteva confrontare con
+           niente: la carta «Difendi il Castello» spenta non diceva che a
+           quell'età sarebbe comparsa comunque, e la riga di una domanda
+           non diceva a chi arrivava. -->
+      <h2>Quanti anni ha</h2>
+      <p class="mini">È la taratura, non un'anagrafe: decide quali giochi trova in home
+        e quanto sono difficili le domande. Sotto c'è il quadro di quell'età — e ogni
+        riga si può correggere con la ✎, se per {{ chi }} non è così.</p>
+
+      <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
+                   :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
+                   :sperimentali="inProva" conferma tarabile
+                   @scegli="applicaAnni" @prova="prova = $event"
+                   @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
+                   @rimetti="rimettiTutto" />
+
+      <h2>Interruttori di casa</h2>
+      <p class="mini">Non dipendono dall'età e non sono di un gioco solo.</p>
+
+      <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !inProva }"
+                data-flag="sperimentali" @click="cambiaProva">
+          <span class="ico">🧪</span>
+          <b>Mostra i giochi in prova</b>
+          <i>{{ inProva ? (sperimentali.length === 1
+                            ? '1 gioco in prova, ed è nel quadro qui sopra'
+                            : sperimentali.length + ' giochi in prova, e sono nel quadro qui sopra')
+                        : 'Nascosti: non compaiono in home e nemmeno nel quadro' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <!-- ── un modo di giocare, dentro un gioco ──
+             Non spegne una carta e non spegne un pezzo di scuola: spegne
+             metà di un gioco. Sta fra gli interruttori di casa perché non
+             dipende dall'età — a nessuna età «solo le tabelline» diventa
+             vero o falso. -->
+        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
+                data-flag="mente" @click="cambiaMente">
+          <span class="ico">🧠</span>
+          <b>Negli asteroidi, anche i conti a mente</b>
+          <i>{{ menteAccesa
+                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
+                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <button class="carta interruttore" :class="{ spento: !aperto }"
+                data-flag="tuttoAperto" @click="cambiaAperto">
+          <span class="ico">🔓</span>
+          <b>Sblocca tutti i livelli</b>
+          <i>{{ aperto ? 'Segnato — nessun gioco lo legge ancora: per ora non cambia niente'
+                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+      </div>
 
       <!-- ── GIUDICARE LE DOMANDE ──
            L'altra metà di quello che non va, e quella che nessun errore
@@ -1283,88 +1328,7 @@ async function rimetti(v) {
           </div>
         </div>
       </div>
-      </template>
 
-      <!-- ══════════ scheda: i giochi ══════════ -->
-      <template v-else>
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !aperto }"
-                data-flag="tuttoAperto" @click="cambiaAperto">
-          <span class="ico">🔓</span>
-          <b>Sblocca tutti i livelli</b>
-          <i>{{ aperto ? 'Segnato — nessun gioco lo legge ancora: per ora non cambia niente'
-                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-
-      <h2>Giochi in home</h2>
-      <p class="mini">Quali carte {{ chi }} si trova in home. Spegnere non cancella niente:
-        i progressi restano al loro posto e riaccendendo si ritrovano tutti.</p>
-
-      <div class="carte">
-        <button v-for="g in giochi" :key="g.chiave" class="carta interruttore gioco"
-                :class="{ spento: !g.acceso, bloccato: !!g.manca }" :data-gioco="g.chiave"
-                @click="cambiaGioco(g)">
-          <span class="ico">{{ g.ico }}</span>
-          <b>{{ g.nome }}</b>
-          <i v-if="g.manca">è tutto «{{ g.manca }}», che hai spento fra le domande</i>
-          <i v-else>{{ g.che }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-      <p v-if="!accesi" class="avviso">Sono spenti tutti: nella home di
-        {{ chi }} non resta nessun gioco.</p>
-
-      <!-- ── dentro un gioco ──
-           Non spegne una carta e non spegne un pezzo di scuola: spegne un
-           MODO di giocare. Sono qui perché è qui che si viene a togliere
-           di mezzo quello che adesso non serve. -->
-      <h2>Dentro gli asteroidi</h2>
-      <p class="mini">Negli asteroidi le tabelline e i conti a mente sono una scaletta
-        sola, ordinata dal più facile al più difficile.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
-                data-flag="mente" @click="cambiaMente">
-          <span class="ico">🧠</span>
-          <b>Anche i conti a mente</b>
-          <i>{{ menteAccesa
-                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
-                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
-
-      <!-- ── i giochi in prova ──
-           Il cancello, e dietro il cancello quello che c'è. Spento, i
-           giochi a metà non esistono per chi gioca: non sono in home e
-           non sono nemmeno qui, perché non c'è niente da accendere. -->
-      <h2>Giochi in prova</h2>
-      <p class="mini">Roba che sto ancora scrivendo: si vede a metà e può cambiare da un
-        giorno all'altro. Acceso, {{ chi }} li trova in home insieme agli altri.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !inProva }"
-                data-flag="sperimentali" @click="cambiaProva">
-          <span class="ico">🧪</span>
-          <b>Mostra i giochi in prova</b>
-          <i>{{ inProva ? (sperimentali.length === 1
-                            ? '1 gioco in prova, e ' + chi.value + ' lo vede'
-                            : sperimentali.length + ' giochi in prova, e ' + chi.value + ' li vede')
-                        : 'Nascosti: in home non compaiono' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
-        <button v-for="g in sperimentali" :key="g.chiave" class="carta interruttore gioco prova"
-                :class="{ spento: !g.acceso }" :data-gioco="g.chiave"
-                @click="cambiaGioco(g)">
-          <span class="ico">{{ g.ico }}</span>
-          <b>{{ g.nome }} <small>in prova</small></b>
-          <i>{{ g.che }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-      </div>
       </template>
 
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
@@ -1380,6 +1344,21 @@ async function rimetti(v) {
 </template>
 
 <style scoped>
+/* ── la riga che rimanda alla taratura ──
+   Non è un interruttore e non è una carta: è una frase con un rimando,
+   e si legge come tale. Quello che c'era prima al suo posto — la
+   manopola col quadro sotto — era alto due schermate in mezzo alla
+   carta di chi gioca. */
+.riga-eta { display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+            background:#f5f2ff; border:none; border-radius:14px; padding:10px 12px;
+            cursor:pointer; font-family:inherit }
+.riga-eta span { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
+.riga-eta b { font-size:14px; font-weight:800; color:var(--viola-scuro) }
+.riga-eta i { font-style:normal; font-size:11px; color:var(--tenue); line-height:1.3 }
+.riga-eta em { font-style:normal; font-size:12px; font-weight:800; color:var(--viola);
+               white-space:nowrap }
+.riga-eta:active { transform:translateY(1px) }
+
 .pallini { display:flex; gap:14px; margin:4px 0 2px }
 .pallini span { width:15px; height:15px; border-radius:50%; background:#ffffffcc;
                 box-shadow:inset 0 0 0 2px #d4dce6; transition:.12s }

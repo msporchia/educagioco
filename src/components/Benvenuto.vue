@@ -51,7 +51,7 @@ import { creaGiocatore } from '../store/profile.js'
 import { eccezioniPerEta } from '../data/partenze.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import SceltaAspetto from './SceltaAspetto.vue'
-import ManopolaEta from './ManopolaEta.vue'
+import ManopolaEta from './eta/Manopola.vue'
 import Prova from '../quiz/Prova.vue'
 
 const props = defineProps({
@@ -152,7 +152,11 @@ async function entra() {
                      @scegli="anni = $event" @prova="prova = $event" />
       </div>
 
-      <button class="via" type="button" :disabled="occupato"
+      <!-- Il tasto sta appiccicato in fondo, come l'«Applica» della
+           schermata dei grandi: il quadro cresce quanto ha da dire, e
+           su un telefono corto un tasto in coda a una colonna che
+           scorre non lo vede chi sta ancora leggendo. -->
+      <button class="via in-fondo" type="button" :disabled="occupato"
               data-azione="si-gioca" @click="entra">Si gioca!</button>
       <button class="indietro" type="button" @click="passo = 1">← cambia il nome</button>
     </div>
@@ -205,6 +209,7 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
   background:linear-gradient(180deg, var(--viola), var(--viola-scuro)); box-shadow:0 4px 0 #0003;
 }
 .via:disabled { opacity:.45; box-shadow:none }
+.via.in-fondo { position:sticky; bottom:6px; z-index:5 }
 .mini { opacity:.75; font-size:14px; text-align:center; margin:0 }
 .mini.alto { max-width:36ch; font-size:12.5px; margin:-4px 0 0 }
 .indietro { background:none; border:none; font-family:inherit; font-size:14px;

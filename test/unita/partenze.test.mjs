@@ -9,7 +9,8 @@
    aveva scelto «non va ancora a scuola» scopre il refuso il giorno che
    il figlio si trova davanti le divisioni in colonna.
    ═══════════════════════════════════════════════════════════════════ */
-import { PARTENZE, eccezioniDi, partenza } from '../../src/data/partenze.js'
+import { PARTENZE, eccezioniDi, partenza, spostandoLEta, rimettendoLEta,
+         eccezioniPerEta } from '../../src/data/partenze.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -156,7 +157,104 @@ uguale('una partenza sconosciuta non spegne giochi', Object.keys(nulla.giochi).l
 uguale('né saperi', Object.keys(nulla.sa).length, 0)
 uguale('e non si trova nel catalogo', partenza('quinta-ginnasio'), null)
 
+/* ═══════════════════════════════════════════════════════════════════
+   SPOSTARE L'ETÀ, CHE È QUELLO CHE LA MANOPOLA CHIEDE PRIMA DI FARE
+
+   La manopola non scrive più a ogni tacca: muove una bozza, mostra il
+   quadro di quell'età e chiede «Applica». Quello che il cartello dice
+   — cosa si riscrive, e quante voci messe a mano se ne vanno — esce
+   tutto da qui, quindi qui si prova: sbagliare il conto non dà nessun
+   errore, dice solo una bugia a chi sta decidendo.
+   ═══════════════════════════════════════════════════════════════════ */
+const difettiDi = anni => eccezioniPerEta(anni)
+
+/* ── dentro la stessa fascia non si perde niente ──
+   È la promessa che rende la manopola usabile: da 8 a 8,5 si sposta la
+   mira delle domande e tutto quello che il grande ha sistemato a mano
+   resta dov'era. */
+const dentro = spostandoLEta({ da: 8, a: 8.5, giochi: { dungeon: false }, sa: {},
+                               ritocchi: { 'math:x7': 1 } })
+uguale('mezzo anno nella stessa fascia non riscrive', dentro.riscrive, false)
+uguale('non chiede niente', dentro.chiede, false)
+uguale('e non porta via nessun gioco', dentro.perde.giochi, 0)
+uguale('nessun sapere', dentro.perde.sa, 0)
+uguale('nessun ritocco', dentro.perde.ritocchi, 0)
+uguale('i giochi restano quelli di prima', dentro.giochi.dungeon, false)
+
+/* ── cambiando fascia, chi stava sui difetti non perde niente ──
+   Non c'è niente di suo da difendere: si riscrive e si va dritti, e il
+   cartello lo dice con zero voci invece che con un «sei sicuro?». */
+const suiDifetti = spostandoLEta({ da: 8, a: 5,
+                                   giochi: difettiDi(8).giochi, sa: difettiDi(8).sa })
+uguale('cambiare fascia riscrive', suiDifetti.riscrive, true)
+uguale('ma chi stava sui difetti non deve rispondere', suiDifetti.chiede, false)
+uguale('e non perde nessun gioco messo a mano', suiDifetti.perde.giochi, 0)
+uguale('né saperi', suiDifetti.perde.sa, 0)
+
+/* ── e chi aveva messo le mani sa **quante** ne perde ──
+   Il numero è tutta la differenza fra una domanda a cui si può
+   rispondere e un «sei sicuro?»: si contano le differenze dai difetti
+   della fascia **da cui si parte**, nei due versi — un gioco spento a
+   mano e uno riacceso a mano se ne vanno tutti e due. */
+/* un sapere che a otto anni è acceso di suo: spegnerlo è una scelta
+   del grande, e va contata. Cercarlo invece di scriverlo a mano è la
+   differenza fra un test che prova il conto e uno che prova quali
+   saperi la terza elementare spegne oggi. */
+const sapereAcceso = CHIAVI_SAPERI.find(c => difettiDi(8).sa[c] !== false)
+const aMano = {
+  giochi: { ...difettiDi(8).giochi, dungeon: false },
+  sa: { ...difettiDi(8).sa, [sapereAcceso]: false },
+  ritocchi: { 'math:x7': 1, 'orologio:mezze': -1 },
+}
+const suMisura = spostandoLEta({ da: 8, a: 5, ...aMano })
+uguale('con roba a mano si chiede prima', suMisura.chiede, true)
+uguale('e si dice quanti giochi tornano di partenza', suMisura.perde.giochi, 1)
+uguale('quanti pezzi di scuola', suMisura.perde.sa, 1)
+uguale('e quante domande ritoccate', suMisura.perde.ritocchi, 2)
+
+/* I ritocchi da soli bastano a far chiedere: sono correzioni sopra
+   l'età, e ripartire dai difetti li porta via — se non entrassero nel
+   conto sparirebbero in silenzio nell'unico caso in cui un grande
+   aveva toccato solo quelli. */
+const soloRitocchi = spostandoLEta({ da: 8, a: 5, giochi: difettiDi(8).giochi,
+                                     sa: difettiDi(8).sa, ritocchi: { 'math:x7': 1 } })
+uguale('i soli ritocchi bastano a far chiedere', soloRitocchi.chiede, true)
+uguale('e si contano', soloRitocchi.perde.ritocchi, 1)
+
 nota(PARTENZE.map(p => `${p.nome}: ${Object.keys(eccezioniDi(p.chiave).giochi).length} giochi e ${p.saperi.length} saperi spenti`).join(' · '))
 nota('in home con «prima o seconda»:', accesiPrima.join(', '))
+
+/* ── E RIMETTERE TUTTO COM'È DI PARTENZA ──
+   Lo stesso conto senza spostare l'età: quello che si butta sono le
+   eccezioni. Due cose da tenere ferme. Che **conti giusto**: il tasto
+   dice cosa perde, e un numero diverso da quello che poi sparisce è
+   peggio di nessun numero. E che **si nasconda quando non c'è niente
+   da rimettere**: un ripristino che non ripristina niente fa dubitare
+   di aver capito cosa fa. */
+{
+  const pulito = rimettendoLEta({ eta: 8, giochi: difettiDi(8).giochi,
+                                  sa: difettiDi(8).sa, ritocchi: {} })
+  uguale('senza niente a mano non c\'è niente da rimettere', pulito.cambia, false)
+  uguale('e non si perde niente',
+         pulito.perde.giochi + pulito.perde.sa + pulito.perde.ritocchi, 0)
+
+  const sporco = rimettendoLEta({
+    eta: 8,
+    giochi: { ...difettiDi(8).giochi, torri: false, dungeon: true },
+    /* uno che a otto anni è acceso di suo: spegnere quello che l'età
+       spegneva già non è una differenza, e infatti non si conta */
+    sa: { ...difettiDi(8).sa, [sapereAcceso]: false },
+    ritocchi: { 'math:x7': 1, geometria: -2 },
+  })
+  uguale('con roba a mano c\'è qualcosa da rimettere', sporco.cambia, true)
+  /* si contano le differenze nei due versi: un gioco spento a mano e
+     uno tenuto a mano se ne vanno tutti e due */
+  uguale('due giochi messi a mano si contano', sporco.perde.giochi, 2)
+  uguale('un pezzo di scuola pure', sporco.perde.sa, 1)
+  uguale('e le domande ritoccate', sporco.perde.ritocchi, 2)
+  uguale('e quello che torna sono i difetti della sua fascia',
+         JSON.stringify(sporco.giochi), JSON.stringify(difettiDi(8).giochi))
+  uguale('l\'età non si tocca', sporco.eta, 8)
+}
 
 riassunto('le quattro partenze')

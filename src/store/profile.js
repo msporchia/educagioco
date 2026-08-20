@@ -15,7 +15,8 @@ import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
 import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
-import { eccezioniDi, eccezioniPerEta, spostandoLEta } from '../data/partenze.js'
+import { eccezioniDi, eccezioniPerEta, spostandoLEta,
+         rimettendoLEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
@@ -668,6 +669,37 @@ export function accendiGioco(chiave, si) {
   else s.giochi[chiave] = false
   persist()
 }
+
+/* ── «TIENILO COMUNQUE» ──
+   `true` scritto per esteso è una cosa che prima non si poteva dire.
+   Acceso è l'assenza — quindi `accendiGioco(k, true)` cancella la voce
+   e lascia decidere all'età — ma l'età a volte sbaglia: il Dungeon
+   dichiarato dai sette anni e un bambino di sei che ci gioca col
+   fratello, oppure il contrario, un gioco «già passato» che in casa si
+   apre ancora. Da qui si può fissare l'una o l'altra cosa, e
+   `'difetto'` rimette la riga a decidere all'età.
+
+   La forzatura scavalca **la portata, non i saperi spenti**: un gioco
+   fatto tutto di conversioni con le conversioni spente resterebbe una
+   carta che apre domande da indovinare, e `giocoGiocabile` continua a
+   valere per tutti. */
+export const giocoForzato = chiave =>
+  (state.profile.settings.giochi || {})[chiave] === true
+export function fissaGioco(chiave, come) {
+  const s = state.profile.settings
+  if (!s.giochi) s.giochi = {}
+  if (come !== 'difetto') { s.giochi[chiave] = come === 'si'; persist(); return }
+  /* «Come dice l'età» non vuol dire «nessuna eccezione»: vuol dire
+     **quella che la partenza di quest'età scriverebbe adesso**, che per
+     un gioco da piccoli a nove anni è `false`. È la stessa cosa che
+     scrive `rimettiAiDifetti`, e le due strade devono portare allo
+     stesso posto: se qui si cancellasse e basta, «rimetti tutto» e
+     «rimetti questa riga» lascerebbero due profili diversi. */
+  const atteso = eccezioniPerEta(etaDelBambino()).giochi || {}
+  if (atteso[chiave] === false) s.giochi[chiave] = false
+  else delete s.giochi[chiave]
+  persist()
+}
 /* quanti ne restano accesi: se sono zero la home lo dice invece di
    mostrare una pagina vuota */
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
@@ -713,6 +745,27 @@ export function spostaLEta (anni) {
   return mossa
 }
 
+/* ── E IL TASTO CHE RIMETTE TUTTO ──
+   Il compagno di `spostaLEta`, per il caso in cui l'età è giusta e a
+   essere sbagliato è quello che ci è stato messo sopra. Non tocca
+   l'età: butta le eccezioni e riparte dai difetti della sua fascia,
+   ritocchi compresi — sono correzioni sopra l'età, e rimetterla come
+   nuova vuol dire togliere anche quelle.
+
+   `null` quando non c'era niente da rimettere: chi lo chiama può dirlo
+   invece di far finta di aver fatto qualcosa. */
+export function rimettiAiDifetti () {
+  const s = state.profile.settings
+  const mossa = rimettendoLEta({ eta: etaDelBambino(), giochi: s.giochi || {},
+                                 sa: s.sa || {}, ritocchi: s.ritocchi || {} })
+  if (!mossa.cambia) return null
+  s.giochi = mossa.giochi
+  s.sa = mossa.sa
+  delete s.ritocchi
+  persist()
+  return mossa
+}
+
 /* ── quanti anni ha ──
    Il numero da cui dipende **quali domande arrivano**: ogni classe di
    domande dichiara a che età serve (`quiz/nucleo/classi.js`), e chi
@@ -730,12 +783,15 @@ export const etaDelBambino = () => {
   const e = Number(state.profile.settings.eta)
   return Number.isFinite(e) && e >= 3 && e <= 14 ? e : ETA_DIFETTO
 }
-export function scegliEta(anni) {
-  const e = Number(anni)
-  if (!Number.isFinite(e) || e < 3 || e > 14) return
-  state.profile.settings.eta = e
-  persist()
-}
+/* ── PERCHÉ NON C'È PIÙ UNA `scegliEta` ──
+   C'era, e scriveva `settings.eta` e nient'altro. La usava la scheda
+   delle domande, e siccome l'età da sola non riadatta niente, da lì si
+   poteva portare un bambino da quattro a dieci anni lasciandogli in
+   casa i giochi di quattro — senza che nulla, da nessuna parte,
+   dicesse che stava succedendo. L'unica strada è `spostaLEta`, che
+   decide anche cosa fare dei giochi e dei saperi e lo dice a chi
+   guarda; una scorciatoia che scrive solo il numero è la stessa
+   seconda manopola di prima, spostata in un altro file. */
 
 /* ── il ritocco: «per lui questo è facile» ──
    L'interruttore dei saperi era un sì/no, e il no è una risposta

@@ -16,8 +16,9 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          esportaTutto, importaTutto, persist,
          aspettoDi, scegliAspetto,
          sapereAcceso, accendiSapere, saperiSpenti,
-         spostaLEta, etaDelBambino, ETA_DIFETTO, scegliEta,
-         ritoccoSapere, ritocca, giocoAcceso } from '../../src/store/profile.js'
+         spostaLEta, etaDelBambino, ETA_DIFETTO,
+         ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco,
+         rimettiAiDifetti } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
@@ -346,10 +347,63 @@ ritocca('problemi', 0)
 uguale('a zero torna al difetto', ritoccoSapere('problemi'), 0)
 uguale('e la voce sparisce', state.profile.settings.ritocchi.problemi, undefined)
 
-scegliEta(7)
+/* ── l'età si sposta da una parte sola ──
+   `scegliEta` non c'è più: scriveva il numero e basta, e lasciava in
+   casa i giochi dell'età di prima. Chi sposta l'età passa da
+   `spostaLEta`, che decide anche cosa fare di giochi e saperi — e un
+   numero assurdo non entra da nessuna delle due parti. */
+spostaLEta(7)
 uguale('l\'età si cambia a mano', etaDelBambino(), 7)
-scegliEta(99)
+spostaLEta(99)
 uguale('e un numero assurdo non entra', etaDelBambino(), 7)
+
+/* ── LE TRE POSIZIONI DI UN GIOCO ──
+   Spento, com'è di partenza, o **tenuto comunque**. La terza è nuova, e
+   la sua prova è che si scriva `true` per esteso: acceso è l'assenza,
+   quindi un `true` che finisse cancellato per abitudine lascerebbe il
+   gioco a decidere all'età senza che nessuno se ne accorga. */
+{
+  fissaGioco('dungeon', 'no')
+  uguale('spento si scrive false', state.profile.settings.giochi.dungeon, false)
+  controlla('e il gioco è spento', !giocoAcceso('dungeon'))
+
+  fissaGioco('dungeon', 'si')
+  uguale('tenuto comunque si scrive true', state.profile.settings.giochi.dungeon, true)
+  controlla('e si riconosce', giocoForzato('dungeon'))
+  controlla('un gioco forzato è anche acceso', giocoAcceso('dungeon'))
+
+  fissaGioco('dungeon', 'difetto')
+  uguale('e «come dice l\'età» non lascia nessuna voce',
+         state.profile.settings.giochi.dungeon, undefined)
+  controlla('né una forzatura', !giocoForzato('dungeon'))
+}
+
+/* ── E IL TASTO CHE RIMETTE TUTTO ──
+   Butta le eccezioni e riparte dai difetti della fascia, ritocchi
+   compresi. Le due cose che non deve fare sono le due che
+   spaventerebbero: **non tocca l'età** e **non tocca i progressi**. */
+{
+  spostaLEta(8)
+  const monete = state.profile.coins
+  fissaGioco('torri', 'no')
+  fissaGioco('dungeon', 'si')
+  ritocca('math:x7', 2)
+  const sapere = SAPERI.map(x => x.chiave).find(c => !saperiSpenti().includes(c))
+  accendiSapere(sapere, false)
+
+  const mossa = rimettiAiDifetti()
+  controlla('rimettere dice di aver fatto qualcosa', !!mossa)
+  uguale('e conta quello che ha buttato', mossa.perde.giochi, 2)
+  uguale('coi ritocchi', mossa.perde.ritocchi, 1)
+  uguale('non resta nessun ritocco', ritoccoSapere('math:x7'), 0)
+  uguale('né il gioco spento a mano', state.profile.settings.giochi.torri, undefined)
+  uguale('né quello tenuto a mano', state.profile.settings.giochi.dungeon, undefined)
+  controlla('il pezzo di scuola torna acceso', !saperiSpenti().includes(sapere))
+  uguale('l\'età resta quella che era', etaDelBambino(), 8)
+  uguale('e le monete non si toccano', state.profile.coins, monete)
+  uguale('rimettere due volte non ha più niente da fare',
+         rimettiAiDifetti(), null)
+}
 
 nota('l\'archivio qui è quello in memoria: fuori dal browser è il ripiego previsto')
 riassunto('Chi gioca: roster, migrazione, salvataggio')

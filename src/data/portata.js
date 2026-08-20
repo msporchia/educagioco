@@ -77,10 +77,29 @@
    Questo file non importa Vue né lo store: gira in Node, e
    `test/unita/portata` ci conta sopra.
    ═══════════════════════════════════════════════════════════════════ */
-import { livelloDegliAnni, anniDelLivello, MIRA_SOTTO, MIRA_SOPRA,
+import { livelloDegliAnni, anniDelLivello,
          LIVELLO_MIN, LIVELLO_MAX } from '../quiz/nucleo/classi.js'
 
 export { livelloDegliAnni, anniDelLivello, LIVELLO_MIN, LIVELLO_MAX }
+
+/* ── LE DUE MISURE SONO SEPARATE, E LO SONO DIVENTATE COL SANGUE ──
+   Questi due numeri venivano da `classi.js`, importati insieme alla
+   scala: sembravano la stessa cosa detta una volta sola. Non lo sono,
+   e si è visto il giorno in cui la mira delle domande si è allargata in
+   alto — lì per far arrivare a fondo corsa le classi in cima al mazzo,
+   qui, senza che nessuno l'avesse chiesto, per tenere offerta mezz'anno
+   in più di campagna a ogni bambino. Due mestieri diversi attaccati
+   allo stesso chiodo: `unita/portata` l'ha preso al volo, ma solo
+   perché conta le tappe una per una.
+
+   Un anno indietro e un anno e mezzo avanti sono i numeri che qui
+   valgono, e il perché sta in `CALIBRAZIONE.md`: una campagna è una
+   fila che si macina tutta, non una campana da cui si pesca ogni tanto,
+   quindi la finestra deve essere quella stretta. Se un giorno la mira
+   delle domande si muove ancora, questi restano fermi finché non è
+   qualcuno a deciderlo guardando le tappe. */
+const MIRA_SOTTO = 12
+const MIRA_SOPRA = 19
 
 /* ── LA MIRA, PURA ──
    Da non confondere con `bersaglio()` di `classi.js`, che la mira non

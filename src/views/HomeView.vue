@@ -4,7 +4,7 @@ import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, calcProgresso, engProgresso, espProgresso, mercatoProgresso,
          labProgresso, tabellineIntere, genProgresso,
-         giocoAcceso, quantiGiochiAccesi, varianteAccesa,
+         giocoAcceso, giocoForzato, quantiGiochiAccesi, varianteAccesa,
          sperimentaliAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { CHIAVE_MENTE, scaletta, posizioneOra, progressiDa,
@@ -130,7 +130,13 @@ const oggetti = computed(() => state.profile.owned.length)
 
    Resta raggiungibile dall'indirizzo (`#pozioni`), come tutto quello che
    la home non mostra: è la strada dei grandi e dei test. */
-const acceso = chiave => giocoAcceso(chiave) && giocoDaVedere(chiave)
+/* La portata decide **cosa si offre a chi arriva**, e un grande può
+   dissentire riga per riga dal quadro delle impostazioni: `giocoForzato`
+   è quel dissenso scritto, e vince sull'età. Non vince su
+   `giocoAcceso`, che dentro ha anche i saperi spenti — quella non è
+   una questione di età ma di domande da indovinare. */
+const acceso = chiave =>
+  giocoAcceso(chiave) && (giocoForzato(chiave) || giocoDaVedere(chiave))
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 
 /* ═══════════ le carte, che adesso si costruiscono da sole ═══════════

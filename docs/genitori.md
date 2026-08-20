@@ -15,72 +15,89 @@ Si arriva dal link *Genitori* in fondo alla schermata iniziale.
 > Si cambia da lì dentro, e se lo dimentichi si rimette dall'indirizzo:
 > aggiungi `#pin=1234` all'URL.
 
-## Se un gioco non va bene
+## Tre schede, e si tara in una sola
 
-**Un interruttore per gioco.** Spento, la carta sparisce dalla home e basta:
-i progressi restano dove sono, e riaccendendolo si ritrovano tutti.
+**Bambini** dice chi gioca su questo telefono — nome, faccia, progressi — e
+dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
+**Come va** è quello che il bambino ha già detto giocando, senza che nessuno
+sia andato a cercarlo. **Giochi e domande** è dove si tara, ed è l'unico
+posto: l'età in cima, e sotto **il quadro di quell'età**.
 
-La scelta è **per bambino**, non per dispositivo: si può lasciare il castello
-al grande e toglierlo al piccolo.
+Prima erano due schede diverse — una fila di interruttori per i giochi e un
+elenco di domande con quattro tondi per riga — e tutte e due finivano per
+dire, in modi che non si potevano confrontare, quello che il quadro dice già.
+La seconda aveva perfino una **seconda manopola dell'età**, dieci schermate
+lontano dalla prima.
 
-## Se una *domanda* non va bene
+## Il quadro: cosa trova in casa, e cosa gli chiediamo
 
-Questa è la parte che uso di più, ed è la scheda **Domande**.
+Sotto la manopola c'è l'elenco di quello che quell'età comporta, e si apre a
+due livelli.
 
-L'elenco non è di giochi ma di **pezzi di scuola**: i numeri, le decine, la
-stima, le misure, le conversioni, le divisioni, area e perimetro, i solidi,
-l'orologio a lancette, contare i giorni, i suoni difficili, le sillabe, il
-significato delle parole, nomi e articoli, l'analisi grammaticale…
+Il primo blocco è **In casa**: tutti i giochi, ognuno col suo stato — *c'è* ·
+*l'ha già passato* · *arriva più avanti* · *l'hai spento tu*. Poi le domande,
+divise per come cadono rispetto a lui: *queste le sa fare* · *sta imparando
+queste* · *difficili, ma ce la può fare* · *superfluo chiedergliele*. Dentro
+ogni blocco ci sono i **pezzi di scuola**, e dentro ognuno le sue domande,
+con l'età a cui servono.
 
-Ognuno si spegne, e da quel momento **quelle domande non escono più**, in
+Il **▶** di una riga apre una domanda vera, generata dallo stesso modulo che
+la darebbe in partita: su un pezzo di scuola le scorre tutte, col contatore
+(«7 di 37»), che è il modo di rispondere a *le ho viste tutte?*.
+
+## Correggere una riga: la ✎
+
+L'età è la manopola grossa e si tocca una volta sola. La **✎** accanto a ogni
+riga è la correzione piccola, quella che serve quando l'età ha indovinato
+tutto tranne una cosa: *le stagioni le davamo per sapute, e a scuola sono
+indietro di mezzo anno*.
+
+Su un **pezzo di scuola** o su una **domanda** la ✎ apre una tacca in mezzi
+anni: `◀ Nel segno ▶`. Il nome grande è dove la riga andrà a finire, sotto
+c'è quello che stai dicendo — «mezzo anno più difficile · vale otto anni» —
+e finché non premi «Conferma» non è cambiato niente. Tre scatti per parte:
+oltre non è più una taratura, è un'altra affermazione, e infatti l'ultimo
+scatto a destra è **«non ancora spiegate»**: quello spegne il pezzo di
+scuola, e da lì in poi le domande che lo danno per scontato non escono più in
 nessun gioco.
 
 Il punto non è togliere difficoltà. È che una domanda su qualcosa che non si
 è mai visto **non è difficile: è muta**. Non c'è niente da ragionare, si può
 solo tirare a indovinare — e indovinare non insegna niente, anzi insegna che
-il gioco è ingiusto. Se a scuola non hanno ancora fatto i litri, «quanti
-centilitri sono due litri» va tolta, non affrontata.
+il gioco è ingiusto.
 
-Ogni voce dice tre cose: **cosa vuol dire saperlo**, **un esempio di domanda
-vera che sparisce**, e **cosa cambia nel gioco**. Serve a poter prevedere
-l'effetto prima di toccare l'interruttore.
-
-**I gruppi si aprono in dettaglio.** «Accenti e apostrofi» sono quattro
-tipologie diverse: si può spegnere tutto il gruppo, o solo la lettera h
-lasciando l'apostrofo. Il dettaglio sta chiuso finché non lo si chiede, e
-ogni voce dice da quale modulo arriva, a che grado esce e **quanto è
-difficile** — 0 la prima cosa che si impara, 100 l'ultima.
-
-## Vedere tutte le domande che esistono
-
-La stessa scheda serve anche a una cosa che prima non si poteva fare:
-**giudicare le domande**. Il tasto «prova» apre una domanda vera, ma una alla
-volta e a caso — per farsi un'idea di una tipologia bisognava insistere
-finché non ricapitava, senza mai sapere quante ce n'erano né a che
-difficoltà stessero.
-
-Qui ci sono tutte, un blocco per modulo dentro la sua materia, ognuna con la
-sua difficoltà di fianco. È lo stesso numero con cui i giochi pescano, quindi
-due materie diverse si possono confrontare: un modulo da quattro gradi e uno
-da sei stanno sulla stessa scala.
-
-Due modi di provarle, e sono due domande diverse:
-
-- **come le vede il bambino** — si pesca a quella difficoltà come farebbe un
-  gioco vero, con la stessa frequenza e gli stessi saperi spenti. Risponde a
-  «cosa gli capita davvero», che dall'elenco non si deduce;
-- **scorrile tutte** — il giro dell'elenco, una per una, col contatore («7 di
-  37») e il tasto per tornare indietro. Risponde a «le ho viste tutte?».
-
-Guardare non spegne niente: si spegne col ✕ sulla riga, che toglie il suo
-gruppo di scuola.
-Le domande spente si vedono lo stesso, sbiadite — un elenco che nasconde
-quello che è spento non fa più vedere *che* è spento.
+Su un **gioco** la tacca non sposta niente di mezzo anno: sceglie chi decide.
+*Non ce l'ha* · *Come dice l'età* · *Ce l'ha*. L'ultima serve quando l'età
+sbaglia — il piccolo che gioca col fratello grande — e tiene la carta in home
+anche se il gioco sarebbe «più avanti». Spegnere non cancella niente: i
+progressi restano dove sono e riaccendendo si ritrovano tutti. La scelta è
+**per bambino**: si può lasciare il castello al grande e toglierlo al piccolo.
 
 Quando si spegne qualcosa i giochi **degradano invece di sbarrare**: il
 castello senza divisioni chiede moltiplicazioni più difficili, un modulo di
 quiz che perde un grado scende a uno più facile invece di sparire. Nessun
 gioco diventa impossibile e nessuna tappa si blocca.
+
+## Ritrovare quello che si è toccato
+
+Le correzioni sono tante e piccole, e dopo un mese nessuno ricorda cosa ha
+spostato. Perciò **quello che hai messo a mano resta color ambra**
+nell'elenco — il contatore dice quante, il colore dice quali — e quello che
+hai tolto non sparisce: finisce in un blocco in fondo, chiuso, da dove si
+rimette.
+
+E in fondo al quadro c'è il tasto che **rimette tutto com'è di partenza a
+quell'età**, dicendo prima cosa perde: «2 giochi messi a mano, 1 domanda
+ritoccata». Non tocca l'età e non tocca i progressi.
+
+## Il gioco te lo dice da sé
+
+Le manopole c'erano anche prima, e non le toccava nessuno: **nessuno va a
+cercare un problema che non sa di avere**. La scheda **Come va** gira il
+verso — quando una tipologia va male per parecchie domande di fila, o è
+diventata troppo facile, lo scrive col conto in chiaro («8 su 10») e col
+tasto già pronto. Non cambia niente da sé: un pomeriggio storto insegnerebbe
+la cosa sbagliata.
 
 ## I progressi: salvarli e spostarli
 

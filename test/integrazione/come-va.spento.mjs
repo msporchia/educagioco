@@ -1,4 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════════
+   SPENTO, E APPOSTA — questo file non finisce in `.test.mjs`, quindi il
+   lanciatore non lo raccoglie.
+
+   «Come va» non si mostra più in nessuna scheda: il pezzo funziona (e
+   questo test lo provava), ma il modo di presentarlo è da rivedere
+   insieme. Il componente sta ancora in `src/quiz/ComeVa.vue` e le
+   soglie in `quiz/consiglio.js`; per riaccendere tutto servono tre
+   cose: il bottone della scheda e il suo ramo in `GenitoriView.vue`
+   (ci sono i commenti che dicono dove), e rinominare questo file
+   `come-va.test.mjs`.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
    COME VA — il riassunto in cima alla scheda dei bambini
 
    Le manopole per ritarare le domande c'erano da un pezzo, e non le
@@ -46,7 +59,15 @@ const entra = async () => {
 }
 await entra()
 
-controlla('il riassunto c\'è, e sta nella prima scheda',
+/* ── UNA SCHEDA SUA, E APERTA ──
+   Stava in coda alla prima scheda, sotto la carta di chi gioca: lo
+   leggeva chi era sceso fin laggiù per un altro motivo. Il punto di
+   questo blocco è che il verso si gira — non è il grande che va a
+   cercare un problema che non sa di avere, è il gioco che dice cosa ha
+   notato — e per farlo deve stare dove si guarda. */
+await page.click('.schede button[data-scheda="comeva"]')
+await page.waitForTimeout(300)
+controlla('il riassunto ha una scheda sua, e si apre già aperto',
   await page.isVisible('[data-blocco="come-va"]'))
 
 const righe = () => page.evaluate(() =>

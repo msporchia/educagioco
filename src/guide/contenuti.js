@@ -101,7 +101,8 @@ export const GUIDE = [
       'Ogni domanda del gioco ha una difficoltà, e ogni bambino ha un\'età: il gioco pesca solo quello che sta attorno a lui — un po\' indietro per ripassare, un po\' avanti per imparare. Non è una classifica e non lo boccia nessuno: serve a non chiedere le divisioni a chi fa la prima, e a non chiedere «con che lettera comincia 🐝» a chi ne ha dieci.',
       { titolo: 'Dove si cambia', passi: [
         'Impostazioni (il tasto grigio in fondo alla home).',
-        'Scheda «Bambini» → il numero degli anni, accanto al nome.',
+        'Scheda «Giochi e domande» → la manopola in cima.',
+        'Sotto compare il quadro di quell\'età: cosa trova in home e che domande gli arrivano. Si guarda, poi si preme «Applica».',
       ] },
       'Se non sei sicuro, **metti l\'età vera**. Se poi le domande sembrano fuori misura si aggiusta materia per materia, senza spostare l\'età: vedi la guida qui accanto.',
       { titolo: 'Quando l\'hai appena creato', righe: [
@@ -118,14 +119,18 @@ export const GUIDE = [
     blocchi: [
       'L\'età sposta tutto insieme. Ma un bambino può essere avanti in lettura e indietro nelle tabelline, quindi ogni materia si ritocca da sola.',
       { titolo: 'Come si fa', passi: [
-        'Impostazioni → scheda «Giochi».',
-        'Le materie sono in fila rispetto al bambino: troppo facili, facili, nel segno, difficili, troppo difficili.',
-        'Su ogni riga: **▼▲** la spostano di mezzo anno, **▶** ti fa provare una domanda vera, **✕** spegne quel pezzo di scuola.',
+        'Impostazioni → scheda «Giochi e domande» → sotto la manopola, il quadro.',
+        'Le materie stanno in blocchi, rispetto a lui: quelle che sa già fare, quelle che sta imparando, quelle difficili.',
+        'Apri il blocco, poi la **✎** della materia: una tacca la sposta di mezzo anno per volta, e dice dove va a finire. Si conferma.',
+        'Il **▶** ti fa provare una domanda vera, prima di decidere.',
+      ] },
+      { titolo: 'Se a scuola non l\'hanno ancora fatta', righe: [
+        'Nella stessa tacca, l\'ultimo scatto a destra è «non ancora spiegate»: fa sparire le *domande* che danno per scontata quella materia, in tutti i giochi. Si rimette quando l\'avranno fatta.',
       ] },
       { titolo: 'Il gioco te lo dice da sé', righe: [
-        'Quando una materia va male per parecchie domande di fila, compare un avviso sulla riga, col tasto già pronto. Non cambia niente da solo: un pomeriggio storto insegnerebbe la cosa sbagliata.',
+        'Se una materia gli va storta, i numeri li trovi provando le sue domande col **▶**: è lì che si vede se la taratura è sbagliata o se era solo una brutta giornata.',
       ] },
-      'Spegnere una materia (**✕**) non spegne un gioco: fa sparire le *domande* che la danno per scontata, in tutti i giochi. Serve per quello che a scuola non hanno ancora fatto.',
+      'Quello che hai messo a mano resta **color ambra** nell\'elenco, e in fondo al quadro c\'è il tasto che rimette tutto com\'è di partenza a quell\'età. I progressi non si toccano.',
     ],
   },
 
@@ -137,8 +142,11 @@ export const GUIDE = [
     blocchi: [
       'Undici giochi sono tanti per un bambino piccolo. Si possono spegnere quelli che non servono: la carta sparisce dalla home e il gioco non esiste più, per lui.',
       { titolo: 'Come si fa', passi: [
-        'Impostazioni → scheda «Bambini» → i giochi di quel bambino.',
-        'Tocca la carta del gioco per spegnerla o riaccenderla.',
+        'Impostazioni → scheda «Giochi e domande» → il primo blocco, «In casa».',
+        'La **✎** accanto al gioco: «Non ce l\'ha», «Come dice l\'età», «Ce l\'ha». Si conferma.',
+      ] },
+      { titolo: 'Se l\'età sbaglia', righe: [
+        'Alcuni giochi arrivano più avanti, altri il bambino li ha già passati: lo dice la riga. Con «Ce l\'ha» lo tieni in home lo stesso — serve quando il piccolo gioca col fratello grande.',
       ] },
       { titolo: 'Cosa succede ai progressi', righe: [
         'Niente: restano dove sono. Riaccendendo il gioco si riparte da dov\'era.',

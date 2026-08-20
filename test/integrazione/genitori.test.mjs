@@ -50,6 +50,66 @@ const apriScheda = async nome => {
   await page.waitForTimeout(150)
 }
 
+/* ── IL QUADRO, CHE È L'UNICO POSTO DOVE SI TARA ──
+   Non ci sono più le due file di interruttori (uno per gioco, uno per
+   classe di domande): c'è un elenco, e ogni riga ha la sua ✎. Questi
+   tre aiuti fanno il gesto vero — apri il blocco, apri la tacca,
+   spostala, conferma — e li usano metà dei controlli qui sotto. */
+const apriBlocco = async k => {
+  const sel = `[data-manopola] [data-apri="${k}"]`
+  if ((await page.locator(sel).count()) === 0) return false
+  if (!(await page.locator(sel).evaluate(el => el.classList.contains('aperta')))) {
+    await page.click(sel)
+    await page.waitForTimeout(150)
+  }
+  return true
+}
+
+/* La tacca si porta a fondo corsa e poi si risale: così non serve
+   sapere da dove partiva, che è il genere di cosa che rende un test
+   verde per il motivo sbagliato. */
+const spingi = async (sel, quante) => {
+  for (let i = 0; i < quante; i++) {
+    /* una freccia a fondo corsa è spenta, e `click()` su un tasto spento
+       aspetta finché non scade: si smette appena si arriva in fondo */
+    if (await page.locator(sel).isDisabled()) break
+    await page.click(sel)
+    await page.waitForTimeout(60)
+  }
+}
+const apriTutto = async () => {
+  for (const k of ['facili', 'medie', 'toste', 'sotto', 'spenta']) await apriBlocco(k)
+}
+/* la tacca di un pezzo di scuola: `via` è l'ultimo scatto, quello che
+   lo spegne; `rimetti` è la riga sotto i due tasti */
+const taraSapere = async (chiave, come) => {
+  await apriScheda('giochi')
+  await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+  await apriTutto()
+  /* lo stesso pezzo di scuola può avere una riga in due blocchi: si
+     prende la prima, e la tacca che si apre è la sua */
+  await page.locator(`[data-tara-apri="${chiave}"]`).first().click()
+  await page.waitForSelector(`[data-taratura="${chiave}"]`, { timeout: 5000 })
+  if (come === 'rimetti') {
+    await page.click('[data-tara="rimetti"]')
+  } else {
+    await spingi('[data-tara="su"]', 8)
+    await page.click('[data-tara="applica"]')
+  }
+  await page.waitForTimeout(500)
+}
+const taraGioco = async (chiave, verso) => {
+  await apriScheda('giochi')
+  await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+  await apriBlocco('giochi')
+  await page.click(`[data-tara-apri="${chiave}"]`)
+  await page.waitForSelector(`[data-in-casa="${chiave}"]`, { timeout: 5000 })
+  await spingi('[data-gioco-tara="giu"]', 3)                    // fino a «Non ce l'ha»
+  if (verso !== 'no') await spingi('[data-gioco-tara="su"]', verso === 'si' ? 2 : 1)
+  await page.click('[data-gioco-tara="applica"]')
+  await page.waitForTimeout(400)
+}
+
 /* ── 1. il gradino tiene ── */
 await vaiAiGenitori()
 controlla('la home non mostra più "azzera i dati"',
@@ -206,22 +266,32 @@ controlla('di partenza il castello è in home', await inHome('.carta.td'))
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('giochi')
-await page.waitForSelector('.carta.gioco', { timeout: 5000 })
-/* quanti sono lo dice l'elenco, non un numero scritto qui: un gioco nuovo
-   deve far comparire il suo interruttore, non diventare rosso questo test.
+await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+await apriBlocco('giochi')
+/* quanti sono lo dice l'elenco, non un numero scritto qui: un gioco
+   nuovo deve comparire nel quadro, non diventare rosso questo test.
    Quelli in prova non si contano: stanno dietro il loro cancello, e col
    cancello chiuso non c'è niente da accendere. */
 const NORMALI = GIOCHI.filter(g => !g.sperimentale)
 const IN_PROVA = GIOCHI.filter(g => g.sperimentale)
-uguale('c\'è un interruttore per gioco',
-       await page.locator('.carta.gioco').count(), NORMALI.length)
+uguale('nel quadro c\'è una riga per gioco',
+       await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
+       NORMALI.length)
 
-await page.click('.carta.gioco[data-gioco="torri"]')
-await page.waitForTimeout(150)
-controlla('spegnere lo dice invece di restare muto',
-  (await page.evaluate(() => document.body.innerText)).includes('sparisce dalla home'))
-controlla('l\'interruttore resta giù',
-  await page.isVisible('.carta.gioco[data-gioco="torri"].spento'))
+/* ── e si spegne dalla sua ✎ ──
+   Le carte-interruttore non ci sono più. Erano una fila di levette che
+   non diceva niente di quello che stava succedendo: «Difendi il
+   Castello» spento non lasciava capire che a quell'età sarebbe comparso
+   comunque, né che a un'altra non sarebbe comparso lo stesso. La riga
+   del quadro lo dice, e la tacca sceglie **chi decide**. */
+await taraGioco('torri', 'no')
+controlla('spegnere lo scrive nel profilo',
+  (await leggiProfilo(page)).settings.giochi?.torri === false,
+  JSON.stringify((await leggiProfilo(page)).settings.giochi || {}))
+controlla('e la riga lo dice, senza doverla riaprire',
+  (await page.locator('[data-manopola] [data-riga="torri"]').innerText()).includes('spento'))
+controlla('la riga di un gioco messo a mano si vede in mezzo alle altre',
+  (await page.locator('[data-manopola] [data-riga="torri"] .voce-riga.ritoccata').count()) > 0)
 
 controlla('il castello sparisce dalla home', !(await inHome('.carta.td')))
 controlla('gli altri giochi restano', await page.isVisible('.carta.mate'))
@@ -241,24 +311,59 @@ controlla('la scelta resta dopo un riavvio', !(await page.isVisible('.carta.td')
 
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('giochi')
-await page.waitForSelector('.carta.gioco', { timeout: 5000 })
-await page.click('.carta.gioco[data-gioco="torri"]')
-await page.waitForTimeout(150)
-controlla('il castello torna in home', await inHome('.carta.td'))
+await taraGioco('torri', 'difetto')
+controlla('rimessa su «come dice l\'età», il castello torna in home',
+  await inHome('.carta.td'))
+
+/* ── e la tacca sa dire anche il contrario ──
+   «Ce l'ha» è la posizione che prima non esisteva: tiene un gioco in
+   casa **anche se l'età dice di no**. Serve al caso in cui l'età
+   sbaglia — il fratello piccolo che gioca col grande — e prima non
+   c'era nessun modo di dirlo: accendere un gioco «che arriva più
+   avanti» non lo faceva comparire, e nessuno diceva perché. */
+{
+  await vaiAiGenitori()
+  await digita('0000')
+  await apriScheda('giochi')
+  await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+  await apriBlocco('giochi')
+  const fuori = await page.evaluate(() => {
+    const righe = [...document.querySelectorAll('[data-manopola] [data-apri="giochi"] .elenco li')]
+    const f = righe.find(r => /arriva più avanti|già passato/.test(r.innerText))
+    return f ? f.dataset.riga : null
+  })
+  if (fuori) {
+    controlla(`«${fuori}» a quest'età non è in home`, !(await inHome(`.carta[data-gioco="${fuori}"]`)))
+    await vaiAiGenitori()
+    await digita('0000')
+    await taraGioco(fuori, 'si')
+    controlla('tenuto a mano, compare lo stesso in home',
+      await inHome(`.carta[data-gioco="${fuori}"]`))
+    await vaiAiGenitori()
+    await digita('0000')
+    await taraGioco(fuori, 'difetto')
+    controlla('e rimesso all\'età sparisce di nuovo',
+      !(await inHome(`.carta[data-gioco="${fuori}"]`)))
+  } else {
+    nota('a quest\'età nessun gioco è fuori portata: la forzatura non si può provare qui')
+  }
+}
 
 /* ── 7b. i giochi in prova ──
    Un gioco che sto ancora scrivendo non deve arrivare ai bambini prima
-   che l'abbia deciso io. Non è l'interruttore di sempre messo giù: è un
-   cancello, e col cancello chiuso quel gioco non esiste — non è in home
-   e non è nemmeno qui fra le carte da accendere. */
+   che l'abbia deciso io. Non è la ✎ di una riga messa su «non ce
+   l'ha»: è un cancello, e col cancello chiuso quel gioco non esiste —
+   non è in home e **non è nemmeno nel quadro**, perché non c'è niente
+   da accendere. */
 if (IN_PROVA.length) {
+  /* Il gioco si cerca **dal manifesto**, non da una chiave scritta a
+     mano: questo blocco è rimasto fermo finché nessun gioco era in
+     prova, e si è risvegliato col selettore di un gioco che nel
+     frattempo era stato promosso. Un test che nomina un gioco per
+     esteso scade da solo. */
   const primo = IN_PROVA[0]
-  /* La carta si cerca **dal manifesto**, non da una classe scritta a mano:
-     questo blocco è rimasto fermo finché nessun gioco era in prova, e si è
-     risvegliato con il selettore di un gioco che nel frattempo era stato
-     promosso. Un test che nomina un gioco per esteso scade da solo. */
   const suaCarta = '.carta.gioco[data-gioco="' + primo.chiave + '"]'
+  const suaRiga = '[data-manopola] [data-riga="' + primo.chiave + '"]'
   /* qui siamo in home, dove l'ultimo controllo ci ha lasciati */
   controlla('col cancello chiuso, un gioco in prova non è in home',
             !(await page.isVisible(suaCarta)))
@@ -267,35 +372,32 @@ if (IN_PROVA.length) {
   await digita('0000')
   await apriScheda('giochi')
   await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
-  uguale('e non c\'è nemmeno il suo interruttore',
-         await page.locator('.carta.gioco.prova').count(), 0)
+  await apriBlocco('giochi')
+  uguale('e non c\'è nemmeno la sua riga nel quadro',
+         await page.locator(suaRiga).count(), 0)
 
   await page.click('.carta[data-flag="sperimentali"]')
-  await page.waitForTimeout(200)
-  uguale('acceso il cancello, gli interruttori dei giochi in prova compaiono',
-         await page.locator('.carta.gioco.prova').count(), IN_PROVA.length)
-  controlla('e la carta dice che è roba a metà',
-            (await page.locator('.carta.gioco.prova').first().innerText()).toLowerCase()
-              .includes('in prova'))
+  await page.waitForTimeout(300)
+  await apriBlocco('giochi')
+  uguale('acceso il cancello, i giochi in prova entrano nel quadro',
+         await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
+         NORMALI.length + IN_PROVA.length)
   controlla('adesso in home c\'è', await inHome(suaCarta))
 
-  /* dietro il cancello resta l'interruttore di sempre: un gioco in prova
-     si spegne e si riaccende come tutti gli altri */
+  /* dietro il cancello vale la ✎ di sempre: un gioco in prova si spegne
+     e si riaccende come tutti gli altri */
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('giochi')
-  await page.click(suaCarta)
-  await page.waitForTimeout(200)
-  controlla('e dietro il cancello vale l\'interruttore di sempre',
+  await taraGioco(primo.chiave, 'no')
+  controlla('e dietro il cancello vale la tacca di sempre',
             !(await inHome(suaCarta)))
 
   /* e il cancello si richiude: quello che si accende si deve poter
      rispegnere, e da chiuso non conta più cosa c'è dietro */
   await vaiAiGenitori()
   await digita('0000')
+  await taraGioco(primo.chiave, 'difetto')          // riacceso il singolo
   await apriScheda('giochi')
-  await page.click(suaCarta)                        // riacceso il singolo
-  await page.waitForTimeout(150)
   await page.click('.carta[data-flag="sperimentali"]')
   await page.waitForTimeout(200)
   controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
@@ -375,28 +477,70 @@ if (IN_PROVA.length) {
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.schede', { timeout: 5000 })
-controlla('le schede sono tre: bambini, domande, giochi',
-  (await page.locator('.schede button').count()) === 3)
-controlla('e «Cosa sa» non c\'è più',
-  (await page.locator('.schede button[data-scheda="sa"]').count()) === 0)
+controlla('le schede sono due: bambini, giochi e domande',
+  (await page.locator('.schede button').count()) === 2)
+/* «Come va» era la terza, e per ora non si mostra: il pezzo c'è ancora
+   (`quiz/ComeVa.vue`) ma il modo di presentarlo è da rivedere, e un
+   pezzo mostrato a metà è peggio di uno non mostrato. */
+uguale('«Come va» per ora non si mostra',
+  await page.locator('.schede button[data-scheda="comeva"]').count(), 0)
+/* «Cosa sa» era la scheda delle domande detta in un altro modo, e
+   «Domande» era l'elenco delle classi con quattro tondi per riga: tutte
+   e due dicevano quello che il quadro dell'età dice già, e la seconda
+   ci aggiungeva una tacca dell'età che era la stessa manopola in un
+   altro posto. Si tara nel quadro, e basta. */
+for (const morta of ['sa', 'domande'])
+  uguale(`la scheda «${morta}» non c'è più`,
+         await page.locator(`.schede button[data-scheda="${morta}"]`).count(), 0)
 
-/* ── l'età sta dove uno la cerca ──
-   È il numero da cui dipende tutto quello che il gioco chiede, e stava
-   solo in fondo alla scheda delle domande. Adesso è nella riga del
-   bambino, dove uno guarda quando pensa «quanti anni ha». */
+/* ── l'età si legge dove sta il bambino, si cambia dove si tara ──
+   La manopola col quadro sotto è alta due schermate, e stava in mezzo
+   alla carta di chi gioca: per cambiare il nome a un bambino bisognava
+   scorrere tutto l'elenco delle domande. Qui resta la riga che la dice,
+   col rimando; la manopola vive nella scheda dove si tara. */
 await page.click('.schede button[data-scheda="bambini"]')
 await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
-controlla('la carta di chi gioca mostra l\'età', await page.isVisible('[data-eta-ora]'))
-controlla('e sotto c\'è il quadro di quell\'età, senza dover muovere niente',
+controlla('la carta di chi gioca dice quanti anni ha',
+  (await page.locator('[data-azione="vai-alla-tara"]').innerText()).includes('anni'))
+uguale('e la manopola non è più qui in mezzo',
+  await page.locator('[data-manopola]').count(), 0)
+await page.click('[data-azione="vai-alla-tara"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+controlla('il rimando porta dove si tara, col quadro già aperto',
   await page.isVisible('[data-manopola] .quadro'))
 const anniPrima = (await page.locator('[data-eta-ora]').innerText()).trim()
+const etaScritta = () => leggiProfilo(page).then(p => p.settings.eta)
+const etaInizio = await etaScritta()
 await page.click('[data-eta="su"]')
 await page.waitForTimeout(600)
 controlla('e si sposta di mezzo anno per volta',
   (await page.locator('[data-eta-ora]').innerText()).trim() !== anniPrima,
   `${anniPrima} → ${(await page.locator('[data-eta-ora]').innerText()).trim()}`)
-uguale('finendo nel profilo', typeof (await leggiProfilo(page)).settings.eta, 'number')
+
+/* ── muovere non è applicare ──
+   La tacca muove una bozza e il quadro sotto diventa l'anteprima; il
+   profilo si tocca solo premendo «Applica». Prima si scriveva a ogni
+   tacca, e quando lo spostamento cambiava fascia la manopola si
+   fermava ad aspettare un cartello che stava in fondo alla colonna,
+   fuori dallo schermo: da sopra si vedeva solo una freccia che aveva
+   smesso di rispondere. */
+uguale('ma muovere la tacca non scrive ancora niente', await etaScritta(), etaInizio)
+controlla('e il cartello per applicare si vede', await page.isVisible('[data-conferma="eta"]'))
+await page.click('[data-azione="eta-applica"]')
+await page.waitForTimeout(600)
+uguale('applicando finisce nel profilo', typeof (await etaScritta()), 'number')
+/* e il numero scritto è **quello che la tacca mostrava**: un profilo
+   che si sposta di suo, o che si ferma mezzo anno prima, da fuori non
+   si distingue da uno che non si è mosso affatto. */
+const inNumero = t => {
+  const n = Number(String(t).match(/\d+/)?.[0])
+  return /mezzo/.test(t) ? n + 0.5 : n
+}
+uguale('e dice il numero che la tacca mostrava', await etaScritta(),
+  inNumero((await page.locator('[data-eta-ora]').first().innerText()).trim()))
+uguale('applicato, il cartello se ne va',
+  await page.locator('[data-conferma="eta"]').count(), 0)
 
 /* ── il quadro dice cosa succede a quell'età ──
    È il motivo per cui la manopola ha preso il posto delle quattro
@@ -448,7 +592,7 @@ await page.waitForTimeout(300)
 controlla('un pezzo di scuola si apre sulle sue domande',
   (await quanteRighe()) > soloPezzi, `${soloPezzi} → ${await quanteRighe()}`)
 controlla('e le domande stanno rientrate sotto di lui',
-  (await page.locator('[data-manopola] [data-apri="medie"] .elenco li.dentro').count()) > 0)
+  (await page.locator('[data-manopola] [data-apri="medie"] .elenco .voce-riga.dentro').count()) > 0)
 await page.locator('[data-manopola] [data-apri="medie"] .prova').first().click()
 await page.waitForSelector('.prova-velo', { timeout: 5000 })
 controlla('il ▶ di una riga apre la domanda vera',
@@ -462,58 +606,156 @@ controlla('e il gruppo da cui si è partiti è rimasto aperto',
   (await page.locator('[data-manopola] [data-apri="medie"] .prova').count()) > 0)
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+/* ── LA CORREZIONE PICCOLA: LA ✎ DI UNA RIGA ──
+   L'età è la manopola grossa e sta sopra. Questa è la riga per volta —
+   *le stagioni le davamo per sapute, e a scuola sono indietro di mezzo
+   anno* — e vive dentro la riga, non su di lei: a elenco chiuso ci sono
+   due tasti soli, ✎ e ▶.
+
+   Le tre cose da tenere ferme sono le tre che rendono onesta la tacca:
+   **non scrive muovendosi** (come quella dell'età), **scrive il verso
+   giusto** (a destra più difficile, e nel profilo il segno è
+   l'opposto), e quello che ha spostato **resta ambra** anche a tacca
+   chiusa — se no un grande non ha nessun modo di ritrovare, scorrendo,
+   cosa ha messo a mano. */
+const ritocchiScritti = async () =>
+  (await leggiProfilo(page)).settings.ritocchi || {}
+const quanteAmbra = async () => {
+  for (const k of ['facili', 'medie', 'toste', 'sotto']) await apriBlocco(k)
+  return page.locator('[data-manopola] .voce-riga.ritoccata').count()
+}
+
+await apriBlocco('medie')
+controlla('una riga del quadro ha due tasti soli: la ✎ e il ▶',
+  (await page.locator('[data-manopola] [data-apri="medie"] .matita').count()) > 0)
+uguale('e prima di toccarla non c\'è nessun ritocco nel profilo',
+  Object.keys(await ritocchiScritti()).length, 0)
+
+await page.locator('[data-manopola] [data-apri="medie"] .matita').first().click()
+await page.waitForSelector('[data-taratura]', { timeout: 5000 })
+const tarata = await page.locator('[data-taratura]').first().getAttribute('data-taratura')
+const dettoPrima = (await page.locator('[data-tara-ora]').first().innerText()).trim()
+await page.click('[data-tara="su"]')
+await page.waitForTimeout(200)
+uguale('muovere la tacca non scrive niente, come quella dell\'età',
+  Object.keys(await ritocchiScritti()).length, 0)
+
+await page.click('[data-tara="applica"]')
+await page.waitForTimeout(500)
+const ritocchi = await ritocchiScritti()
+uguale('confermando finisce nel profilo, sotto la chiave di quella riga',
+  Object.keys(ritocchi).join(' '), tarata)
+uguale('e uno scatto verso destra vuol dire «per lui è più difficile»',
+  ritocchi[tarata], -1, `${dettoPrima} → ${JSON.stringify(ritocchi)}`)
+controlla('la riga spostata resta ambra, anche a tacca chiusa',
+  (await quanteAmbra()) > 0)
+uguale('e la tacca si chiude da sé',
+  await page.locator('[data-taratura]').count(), 0)
+
+/* Rimettere com'era è una riga sola dentro la tacca, e non lascia
+   niente in giro: un ritocco a zero non si scrive (`ritocca()` lo
+   cancella), se no il profilo si riempirebbe di zeri che nessuno
+   saprebbe più distinguere da una taratura vera. */
+await page.locator(`[data-tara-apri="${tarata}"]`).first().click()
+await page.waitForSelector('[data-tara="rimetti"]', { timeout: 5000 })
+await page.click('[data-tara="rimetti"]')
+await page.waitForTimeout(500)
+uguale('e «rimettila com\'era» non lascia nemmeno uno zero',
+  Object.keys(await ritocchiScritti()).length, 0)
+uguale('e la riga torna com\'era', await quanteAmbra(), 0)
+
+/* ── E IL TASTO CHE RIMETTE TUTTO ──
+   Le correzioni sono tante e piccole, e dopo un po' nessuno ricorda
+   cosa ha toccato: senza un modo di tornare indietro tutti insieme
+   l'unica strada era spostare l'età avanti e indietro finché non
+   cambiava fascia. Le due cose da tenere ferme sono che **si nasconda
+   quando non c'è niente da rimettere** — se no si dubita di aver
+   capito cosa fa — e che **dica cosa perde** prima di farlo. */
+/* che si nasconda quando non c'è niente lo prova `unita/partenze`
+   (`cambia: false`): qui il bambino di prova ha già delle eccezioni
+   sue, ed è il caso normale di chi apre questa schermata. */
+const etaDiPrima = await etaScritta()
+
+await page.locator(`[data-tara-apri="${tarata}"]`).first().click()
+await page.waitForSelector('[data-taratura]', { timeout: 5000 })
+await page.click('[data-tara="su"]')
+await page.click('[data-tara="applica"]')
+await page.waitForTimeout(400)
+await page.waitForSelector('[data-azione="rimetti-difetti"]', { timeout: 5000 })
+controlla('con qualcosa a mano compare, e dice cosa hai messo',
+  (await page.locator('[data-perde-tutto]').innerText()).includes('domanda ritoccata'),
+  (await page.locator('[data-azione="rimetti-difetti"]').innerText()).replace(/\n/g, ' · '))
+
+await page.click('[data-azione="rimetti-difetti"]')
+await page.waitForSelector('[data-azione="rimetti-no"]', { timeout: 5000 })
+controlla('e prima di farlo chiede, dicendo che i progressi non si toccano',
+  (await page.locator('[data-azione="rimetti-si"]').isVisible()))
+await page.click('[data-azione="rimetti-no"]')
+await page.waitForTimeout(200)
+uguale('«lascia stare» non tocca niente',
+  Object.keys(await ritocchiScritti()).length, 1)
+
+await page.click('[data-azione="rimetti-difetti"]')
+await page.waitForSelector('[data-azione="rimetti-si"]', { timeout: 5000 })
+await page.click('[data-azione="rimetti-si"]')
+await page.waitForTimeout(600)
+uguale('confermando, i ritocchi spariscono',
+  Object.keys(await ritocchiScritti()).length, 0)
+uguale('e il tasto se ne va con loro',
+  await page.locator('[data-azione="rimetti-difetti"]').count(), 0)
+uguale('l\'età invece resta dov\'era', await etaScritta(), etaDiPrima)
+
 await page.click('[data-manopola] [data-apri="medie"]')
 await page.waitForTimeout(200)
 
 await page.click('[data-eta="giu"]')      // rimesso com'era
+await page.waitForTimeout(300)
+await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(600)
 
-await apriScheda('domande')
-await page.waitForSelector('.blocco .riga', { timeout: 5000 })
+await apriScheda('giochi')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 await scatto(page, 'genitori-domande')
 
-/* si cerca la riga di una conversione: è quella che porta via il
-   laboratorio, e quindi l'unica che si vede anche dalla home */
-const rigaMis = await page.evaluate(() => {
-  const r = [...document.querySelectorAll('.riga')]
-    .find(x => x.querySelector('[data-spegni]')?.getAttribute('aria-label')?.includes('conversioni'))
-  return r ? r.dataset.classe : null
-})
-controlla('c\'è una riga che spegne le conversioni', !!rigaMis, String(rigaMis))
-await page.click(`[data-spegni="${rigaMis}"]`)
-await page.waitForTimeout(700)
+/* Si spegne «Le conversioni»: è il pezzo di scuola che porta via il
+   laboratorio, e quindi l'unico il cui effetto si vede anche dalla
+   home. Il gesto è l'ultimo scatto della tacca — dopo «un anno e mezzo
+   più difficile» non c'è un muro, c'è «non ancora spiegate» — e non
+   più il ✕ che stava sulla riga di una domanda spegnendone otto. */
+await apriTutto()
+controlla('c\'è la riga delle conversioni, con la sua ✎',
+  (await page.locator('[data-tara-apri="conversioni"]').count()) > 0)
+await taraSapere('conversioni', 'via')
 
 const dopoSpento = await leggiProfilo(page)
-uguale('spegnere finisce nel profilo', dopoSpento.settings.sa.conversioni, false)
+uguale('l\'ultimo scatto spegne il pezzo di scuola, nel profilo',
+       dopoSpento.settings.sa.conversioni, false)
 uguale('e solo quello: acceso resta l\'assenza',
        Object.keys(dopoSpento.settings.sa).length, 1)
-controlla('le sue domande finiscono nel blocco delle spente',
-  (await page.locator('.blocco.spenta .riga').count()) === 0 ||
-  await page.isVisible('[data-apri="spenta"]'))
+await apriBlocco('spenta')
+controlla('e le sue domande finiscono nel blocco di quello che hai tolto',
+  (await page.locator('[data-manopola] [data-apri="spenta"] [data-riga="conversioni"]').count()) > 0)
 
 /* il degrado che si vede: il laboratorio delle pozioni è fatto tutto di
    conversioni, e senza quelle non è difficile, è da indovinare. Quindi
-   sparisce dalla home, e nella scheda dei giochi la sua carta resta lì
-   con scritto perché — invece di sparire senza motivo. */
+   sparisce dalla home, e nel quadro la sua riga resta lì con scritto
+   perché — invece di sparire senza motivo. */
 controlla('il laboratorio delle pozioni sparisce dalla home',
           !(await inHome('.carta.poz')))
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('giochi')
-await page.waitForSelector('.carta.gioco[data-gioco="pozioni"]', { timeout: 5000 })
-controlla('e la sua carta dice perché',
-  (await page.locator('.carta.gioco[data-gioco="pozioni"]').innerText()).includes('spento'))
+await page.waitForSelector('[data-manopola]', { timeout: 5000 })
+await apriBlocco('giochi')
+controlla('e la sua riga dice perché, invece di dire solo «spento»',
+  (await page.locator('[data-manopola] [data-riga="pozioni"]').innerText())
+    .toLowerCase().includes('conversioni'),
+  (await page.locator('[data-manopola] [data-riga="pozioni"]').innerText()).replace(/\n/g, ' · '))
 
-/* riacceso, torna tutto */
-await apriScheda('domande')
-await page.waitForSelector('.blocco', { timeout: 5000 })
-await page.click('[data-apri="spenta"]')
-await page.waitForTimeout(300)
-controlla('le spente si ritrovano, in fondo',
-  (await page.locator('.blocco.spenta .riga').count()) > 0)
-await page.locator('.blocco.spenta [data-riaccendi]').first().click()
-await page.waitForTimeout(700)
-uguale('riaccendere toglie la voce dal profilo',
+/* riacceso, torna tutto. E si riaccende **da dove è finito**: il blocco
+   in fondo non è un cimitero, è il posto dove si va a ripescare. */
+await taraSapere('conversioni', 'rimetti')
+uguale('rimettendola, la voce sparisce dal profilo',
        (await leggiProfilo(page)).settings.sa?.conversioni, undefined)
 controlla('e il gioco torna in home', await inHome('.carta.poz'))
 
@@ -751,7 +993,7 @@ await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
    dai profili, come il codice dei genitori, e devono sopravvivere a un
    riavvio e a un cambio di bambino. Se finissero in `settings` questo
    controllo li perderebbe. */
-await apriScheda('domande')       // i giudizi stanno con le domande, non coi giochi
+await apriScheda('giochi')        // i giudizi stanno dove si guardano le domande
 controlla('l\'interruttore dei giudizi c\'è', await page.isVisible('.carta[data-flag="giudizi"]'))
 controlla('e parte spento',
   await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento')))
@@ -761,8 +1003,11 @@ uguale('spento non c\'è niente da mandare',
 await page.click('.carta[data-flag="giudizi"]')
 await page.waitForTimeout(200)
 
-await page.waitForSelector('.blocco .riga', { timeout: 5000 })
-await page.locator('.blocco.medie [data-prova-classe]').first().click()
+/* la domanda si apre dal quadro, che è l'unico posto da cui si aprono:
+   il ▶ di un pezzo di scuola scorre le sue, una per una */
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+await apriBlocco('medie')
+await page.locator('[data-manopola] [data-apri="medie"] .prova').first().click()
 await page.waitForSelector('.prova-velo', { timeout: 5000 })
 controlla('sopra la domanda compaiono i tre tasti',
   await page.isVisible('[data-che="giudizio"]'))
@@ -778,7 +1023,7 @@ await page.reload()
 await page.waitForSelector('.carte', { timeout: 8000 })
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('domande')
+await apriScheda('giochi')
 await page.waitForSelector('.carta[data-flag="giudizi"]', { timeout: 5000 })
 controlla('l\'interruttore è rimasto acceso dopo il riavvio',
   !(await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento'))))
@@ -840,73 +1085,99 @@ await page.click('button[aria-label="indietro"]')   // il punto 11 finisce nell'
 await page.waitForSelector('.carte', { timeout: 5000 })
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('bambini')
-await page.waitForSelector('[data-manopola]', { timeout: 5000 })
-
 /* Prima si spegne un gioco a mano: è quello che rende questo bambino
    «su misura», ed è quello che la conferma deve annunciare. */
+await taraGioco('dungeon', 'no')
 await apriScheda('giochi')
-await page.waitForSelector('.carta.gioco', { timeout: 5000 })
-await page.click('.carta.gioco[data-gioco="dungeon"]')
-await page.waitForTimeout(300)
-await apriScheda('bambini')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 
-/* ── mezzo anno dentro la stessa fascia: muto ──
-   È la promessa che rende la manopola usabile. Se chiedesse conferma
-   anche qui, spostare l'età diventerebbe una cosa che non si fa. */
+/* ── mezzo anno dentro la stessa fascia: si applica, e lo dice ──
+   Il cartello c'è sempre — muovere e applicare sono due gesti, in
+   tutti i casi — ma qui dice l'altra metà della regola: si sposta solo
+   la mira delle domande, e quello che il grande ha messo a mano resta
+   dov'era. Senza quella riga «Applica» sembrerebbe pericoloso quanto
+   il caso che riscrive. */
 const monetePrima = (await leggiProfilo(page)).coins
 const etaPrima = (await leggiProfilo(page)).settings.eta
 await page.click('[data-eta="su"]')
+await page.waitForSelector('[data-conferma="eta"]', { timeout: 5000 })
+controlla('dentro la stessa fascia il cartello dice che non porta via niente',
+  await page.evaluate(() => document.querySelector('[data-conferma="eta"]')
+    .innerText.includes('si sposta solo la mira')))
+uguale('e non c\'è nessun avviso di roba che se ne va',
+  await page.locator('[data-conferma="eta"] [data-perde]').count(), 0)
+uguale('finché non si applica, l\'età non si muove',
+  (await leggiProfilo(page)).settings.eta, etaPrima)
+await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(500)
-uguale('mezzo anno dentro la stessa fascia non chiede niente',
-  await page.locator('[data-conferma="eta"]').count(), 0)
-uguale('e si sposta davvero', (await leggiProfilo(page)).settings.eta, etaPrima + 0.5)
+uguale('applicando si sposta davvero', (await leggiProfilo(page)).settings.eta, etaPrima + 0.5)
 controlla('col gioco spento a mano rimasto spento',
   (await leggiProfilo(page)).settings.giochi.dungeon === false)
 await page.click('[data-eta="giu"]')          // rimesso com'era
+await page.waitForTimeout(300)
+await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(400)
 
-/* ── la tacca che cambia fascia: chiede ──
+/* ── la tacca che cambia fascia: lo dice, e dice quanto costa ──
    Le scelte fatte a mano tornerebbero al difetto, e questo va detto
-   prima. Un tocco solo, e la conferma resta lì: finché è aperta la
-   manopola non si sposta, che è il motivo per cui esiste. */
+   **prima**, con dei numeri: «2 giochi messi a mano, 1 domanda
+   ritoccata» è una domanda a cui si può rispondere, «sei sicuro?» no. */
 await page.click('[data-eta="giu"]')
-await page.waitForSelector('[data-conferma="eta"]', { timeout: 5000 })
-controlla('cambiando fascia con roba sistemata a mano si chiede prima',
-  await page.isVisible('[data-conferma="eta"]'))
+await page.waitForSelector('[data-conferma="eta"] [data-perde]', { timeout: 5000 })
+controlla('cambiando fascia con roba sistemata a mano lo si legge prima',
+  await page.evaluate(() => document.querySelector('[data-conferma="eta"]')
+    .innerText.includes('tornano di partenza')))
 controlla('e si dice cosa si perde, non «sei sicuro?»',
   await page.evaluate(() =>
-    document.querySelector('[data-conferma="eta"]').innerText.includes('giochi spenti a mano')))
-uguale('e finché non si risponde l\'età non si muove',
+    document.querySelector('[data-conferma="eta"]').innerText.includes('a mano')))
+uguale('e finché non si applica l\'età non si muove',
   (await leggiProfilo(page)).settings.eta, etaPrima)
 
-/* «Lascia stare» non deve spostare niente: una conferma che ha già
-   fatto la cosa non è una conferma. */
-await page.click('[data-azione="eta-lascia"]')
+/* Il cartello sta **appiccicato in fondo allo schermo**, e non è un
+   dettaglio di stile: prima stava in coda alla colonna, sotto un
+   quadro alto due schermate, e chi spostava la manopola non lo vedeva
+   mai — vedeva una freccia che aveva smesso di rispondere. */
+const doveIlCartello = await page.locator('[data-conferma="eta"]').boundingBox()
+const altoSchermo = page.viewportSize().height
+controlla('e si vede senza scorrere, appiccicato in fondo',
+  !!doveIlCartello && doveIlCartello.y + doveIlCartello.height <= altoSchermo + 2,
+  JSON.stringify(doveIlCartello))
+
+/* «Annulla» non deve spostare niente: una conferma che ha già fatto la
+   cosa non è una conferma. E rimette la tacca dov'era, se no resterebbe
+   a schermo un numero che non è quello del bambino. */
+await page.click('[data-azione="eta-annulla"]')
 await page.waitForTimeout(400)
-controlla('lasciando stare, il gioco spento resta spento',
+controlla('annullando, il gioco spento resta spento',
   (await leggiProfilo(page)).settings.giochi.dungeon === false)
 uguale('e l\'età nemmeno', (await leggiProfilo(page)).settings.eta, etaPrima)
+uguale('la tacca torna sull\'età vera',
+  (await page.locator('[data-eta-ora]').first().innerText()).trim(),
+  etaPrima % 1 ? `${Math.floor(etaPrima)} anni e mezzo` : `${etaPrima} anni`)
+uguale('e il cartello sparisce', await page.locator('[data-conferma="eta"]').count(), 0)
 
 await page.click('[data-eta="giu"]')
 await page.waitForSelector('[data-conferma="eta"]', { timeout: 5000 })
-await page.click('[data-azione="eta-conferma"]')
+await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(600)
-controlla('confermando lo dice invece di restare muta',
+controlla('applicando lo dice invece di restare muta',
   await page.evaluate(() => document.body.innerText.includes('è tarato su')))
 uguale('e stavolta si è mosso', (await leggiProfilo(page)).settings.eta, etaPrima - 0.5)
 controlla('con le scelte a mano ripartite dai difetti',
   (await leggiProfilo(page)).settings.giochi.dungeon === undefined)
 
-/* Da qui in giù non c'è più niente di suo da perdere, quindi le fasce
-   si attraversano in silenzio: è l'altra metà della regola, e senza si
-   finirebbe a rispondere alla stessa domanda a ogni tacca. */
-for (let i = 0; i < 6; i++) { await page.click('[data-eta="giu"]'); await page.waitForTimeout(160) }
-await page.waitForTimeout(500)
-uguale('sui difetti si scende senza che chieda più niente',
-  await page.locator('[data-conferma="eta"]').count(), 0)
-uguale('fino in fondo', (await leggiProfilo(page)).settings.eta, etaPrima - 3.5)
+/* Scendere di sei tacche è **un solo Applica**: la bozza si muove
+   quanto si vuole e si scrive una volta. Prima ogni tacca era una
+   scrittura, e attraversare tre fasce voleva dire tre riscritture di
+   giochi e saperi per arrivare dove si voleva arrivare. */
+for (let i = 0; i < 6; i++) { await page.click('[data-eta="giu"]'); await page.waitForTimeout(120) }
+await page.waitForTimeout(300)
+uguale('sei tacche, e il profilo è ancora fermo',
+  (await leggiProfilo(page)).settings.eta, etaPrima - 0.5)
+await page.click('[data-azione="eta-applica"]')
+await page.waitForTimeout(600)
+uguale('un Applica solo, fino in fondo',
+  (await leggiProfilo(page)).settings.eta, etaPrima - 3.5)
 
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })

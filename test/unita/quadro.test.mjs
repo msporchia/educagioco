@@ -231,8 +231,8 @@ for (const eta of [6, 8, 10]) {
 {
   const q = quadroDi({ eta: 8, ...eccezioniPerEta(8) }, { classi })
   const chiavi = q.gruppi.map(g => g.chiave)
-  uguale('i gruppi sono quattro, dal ripasso a quello che non si chiede più',
-         chiavi.join(' '), 'facili medie toste sotto')
+  uguale('i gruppi sono cinque, dal ripasso a quello che un grande ha tolto',
+         chiavi.join(' '), 'facili medie toste sotto spenta')
   const nomi = q.gruppi.flatMap(g => g.righe.map(r => r.nome))
   uguale('e nessun nome compare due volte', nomi.length - new Set(nomi).size, 0)
   controlla('a otto anni sta studiando qualcosa',
@@ -433,5 +433,158 @@ for (const eta of [6, 8, 10]) {
   }
 }
 
+
+/* ── IL RITOCCO, CHE È LA CORREZIONE PICCOLA ──
+   L'età è la manopola grossa; questa è la riga per volta — «le stagioni
+   le davamo per sapute, e a scuola sono indietro di mezzo anno». Il
+   guasto da temere è lo stesso di tutto il resto del file: **non un
+   errore, una bugia**. Se la tacca dice «mezzo anno più difficile» e la
+   riga resta dov'era, un grande crede di aver corretto qualcosa e non
+   ha corretto niente.
+
+   Il segno è quello del profilo, e va provato in tutti e due i versi
+   perché è l'unica cosa qui dentro che si può scrivere all'incontrario
+   senza che niente diventi rosso: **positivo vuol dire più facile**,
+   quindi la riga scende di blocco. */
+{
+  const conTipo = classi.find(c => c.tipo && (c.sa || []).length)
+  controlla('c\'è una classe con tipologia e gruppo da usare come banco',
+            !!conTipo, conTipo ? `${conTipo.nome} · ${conTipo.tipo}` : 'nessuna')
+
+  const ETA = 8
+  const dove = doveCadeCon(ETA)
+  const rigaDi = (q, chiave) => q.righe.find(r => r.chiave === chiave)
+  const nudo = quadroDi({ eta: ETA, sa: {} }, { classi })
+  const prima = rigaDi(nudo, conTipo.chiave)
+
+  /* tre gradini per parte è il tetto di `ritocca()`: si prova il massimo,
+     che è anche il solo punto in cui un errore di scala si vede */
+  const piuFacile = quadroDi({ eta: ETA, sa: {}, ritocchi: { [conTipo.tipo]: 3 } }, { classi })
+  const piuTosta = quadroDi({ eta: ETA, sa: {}, ritocchi: { [conTipo.tipo]: -3 } }, { classi })
+
+  uguale('un ritocco positivo abbassa gli anni della riga',
+         rigaDi(piuFacile, conTipo.chiave).anniOra < prima.anni, true,
+         `${prima.anni} → ${rigaDi(piuFacile, conTipo.chiave).anniOra}`)
+  uguale('e uno negativo li alza',
+         rigaDi(piuTosta, conTipo.chiave).anniOra > prima.anni, true,
+         `${prima.anni} → ${rigaDi(piuTosta, conTipo.chiave).anniOra}`)
+  uguale('gli anni dichiarati da noi restano quelli, ritocco o no',
+         rigaDi(piuFacile, conTipo.chiave).anni, prima.anni)
+  uguale('il blocco è quello degli anni visti, non di quelli di casa',
+         rigaDi(piuFacile, conTipo.chiave).dove, dove(prima.livello - 3 * 6))
+
+  /* e non tocca le altre: un ritocco parla di una tipologia, non di
+     tutto il catalogo */
+  const mosse = nudo.righe.filter(r =>
+    r.dove !== rigaDi(piuFacile, r.chiave).dove).map(r => r.tipo)
+  uguale('e non sposta le righe di altre tipologie',
+         [...new Set(mosse)].filter(t => t !== conTipo.tipo).join(' · '), '')
+
+  /* ── il pezzo di scuola muove tutte le sue domande insieme ── */
+  const gruppo = conTipo.sa[0]
+  const suGruppo = quadroDi({ eta: ETA, sa: {}, ritocchi: { [gruppo]: 2 } }, { classi })
+  const sue = classi.filter(c => (c.sa || []).includes(gruppo))
+  const ferme = sue.filter(c => rigaDi(suGruppo, c.chiave).anniOra >= rigaDi(nudo, c.chiave).anni)
+  uguale(`ritoccare «${gruppo}» sposta tutte e ${sue.length} le sue domande`,
+         ferme.length, 0)
+
+  /* ── e i due si sommano ──
+     È la stessa somma di `quiz/catalogo.js`, ed è il punto in cui due
+     copie della stessa regola divergerebbero senza far cadere niente. */
+  const insieme = quadroDi({ eta: ETA, sa: {},
+                             ritocchi: { [gruppo]: 1, [conTipo.tipo]: 1 } }, { classi })
+  uguale('tipologia e gruppo si sommano', rigaDi(insieme, conTipo.chiave).ritocco, 2)
+}
+
+/* ── QUELLO CHE UN GRANDE HA TOLTO NON SPARISCE ──
+   L'ultimo scatto della tacca spegne un pezzo di scuola, e da lì in poi
+   quelle domande non escono più in nessun gioco. Se sparissero anche
+   dall'elenco non ci sarebbe **nessun posto dove riaccenderle**, ed è
+   il motivo per cui il blocco esiste: un elenco che nasconde quello che
+   ha tolto non fa vedere *che* l'ha tolto. */
+{
+  const gruppo = classi.find(c => (c.sa || []).length)?.sa[0]
+  const q = quadroDi({ eta: 8, sa: { [gruppo]: false } }, { classi })
+  const spente = q.gruppi.find(g => g.chiave === 'spenta')
+  controlla('un pezzo di scuola spento ha il suo blocco, con dentro le sue domande',
+            spente.saperi.some(s => s.chiave === gruppo && s.quante > 0),
+            spente.saperi.map(s => `${s.chiave}:${s.quante}`).join(' · '))
+  uguale('e le sue domande non restano in nessun blocco di difficoltà',
+         q.gruppi.filter(g => g.chiave !== 'spenta')
+           .flatMap(g => g.righe).filter(r => (r.sa || []).includes(gruppo)).length, 0)
+
+  /* un pezzo che vive solo dentro un gioco — le divisioni del castello —
+     non ha nessuna classe di quiz: se il blocco elencasse solo quelle,
+     spegnerlo vorrebbe dire non poterlo più riaccendere */
+  const senzaDomande = SAPERI.map(s => s.chiave)
+    .find(k => !classi.some(c => (c.sa || []).includes(k)))
+  if (senzaDomande) {
+    const q2 = quadroDi({ eta: 8, sa: { [senzaDomande]: false } }, { classi })
+    controlla(`«${senzaDomande}» non ha domande e si vede lo stesso, per poterlo riaccendere`,
+              q2.gruppi.find(g => g.chiave === 'spenta').saperi
+                .some(s => s.chiave === senzaDomande))
+  }
+}
+
+
+/* ── UN GIOCO TENUTO IN CASA CONTRO L'ETÀ ──
+   `settings.giochi[k] === true` è una cosa che prima non si poteva
+   dire: acceso era l'assenza, e accendere un gioco «che arriva più
+   avanti» non lo faceva comparire — senza che niente lo dicesse. Serve
+   al caso in cui l'età sbaglia, il fratello piccolo che gioca col
+   grande, e la regola da tenere ferma è **fin dove arriva**: vince
+   sulla portata, non sui saperi spenti, perché quelli non sono una
+   questione di età ma di domande da indovinare. */
+{
+  const a9 = giochiDiUnEta({ eta: 9 })
+  const fuori = a9.find(g => g.stato === 'passato' || g.stato === 'avanti')
+  controlla('a nove anni c\'è un gioco fuori portata da usare come banco',
+            !!fuori, fuori ? `${fuori.chiave} (${fuori.stato})` : 'nessuno')
+
+  const forzato = giochiDiUnEta({ eta: 9, giochi: { [fuori.chiave]: true } })
+    .find(g => g.chiave === fuori.chiave)
+  uguale('tenuto a mano, torna in casa', forzato.stato, 'qui')
+  uguale('e il quadro dice che non è stata l\'età', forzato.aMano, true)
+  uguale('mentre il difetto resta quello che l\'età direbbe',
+         forzato.difetto, fuori.stato)
+
+  /* ── E IL PARAGONE È L'ATTESO, NON «NESSUNA ECCEZIONE» ──
+     Il difetto che questo controllo chiude si vedeva nel momento
+     peggiore: **appena dopo aver rimesso tutto ai difetti**. Le
+     partenze spengono dei giochi (i piccoli a nove anni, i grandi a
+     cinque), e quelle righe risultavano «messe a mano» da un grande
+     che non aveva toccato niente — con l'ambra addosso, e il tasto che
+     rimette tutto che non riusciva a farla sparire perché rimettere
+     scriveva esattamente quelle eccezioni lì. */
+  for (const eta of [5, 7, 9, 11]) {
+    const suoi = eccezioniPerEta(eta)
+    const ambra = giochiDiUnEta({ eta, giochi: suoi.giochi, sa: suoi.sa })
+      .filter(g => g.aMano)
+    uguale(`a ${eta} anni, appena rimesso ai difetti, non c'è niente di messo a mano`,
+           ambra.map(g => g.chiave).join(' '), '')
+  }
+
+  /* e il contrario: quello che l'età spegneva già non è una scelta di
+     nessuno, quindi non si colora */
+  const dEta = giochiDiUnEta({ eta: 4 }).find(g => g.stato === 'avanti')
+  if (dEta) {
+    const spento = giochiDiUnEta({ eta: 4, giochi: { [dEta.chiave]: false } })
+      .find(g => g.chiave === dEta.chiave)
+    uguale(`spegnere «${dEta.chiave}», che a quattro anni non c'era comunque, non è roba a mano`,
+           spento.aMano, false)
+  }
+
+  /* un gioco fatto tutto di un pezzo di scuola spento non si forza: la
+     carta aprirebbe domande da indovinare */
+  const conSapere = GIOCHI.find(g => (g.serve || []).length)
+  if (conSapere) {
+    const chiuso = giochiDiUnEta({ eta: 9, sa: { [conSapere.serve[0]]: false },
+                                   giochi: { [conSapere.chiave]: true } })
+      .find(g => g.chiave === conSapere.chiave)
+    uguale(`«${conSapere.chiave}» non si accende contro un pezzo di scuola spento`,
+           chiuso.stato, 'spento')
+    uguale('e la riga dice cosa gli manca', chiuso.manca.length > 0, true, chiuso.manca)
+  }
+}
 
 riassunto('il quadro di un\'età')

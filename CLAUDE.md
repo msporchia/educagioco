@@ -244,31 +244,44 @@ committate: non è ricostruibile da git.
   partenza) e da lì **due larghezze diverse**, che è la cosa che si
   sbaglia più facilmente — l'**ammissione** è larga (tre anni e mezzo
   sotto, due sopra: si toglie solo la presa in giro e il muro), la
-  **mira** è stretta (un anno indietro, un anno e mezzo avanti) ed è
-  dove pesca la manopola. Con una larghezza sola a nove anni sparivano
-  le ore intere dell'orologio, che devono solo diventare rare. Taglio netto in tutte e due le direzioni: niente
+  **mira** è più stretta (un anno indietro, e in avanti fino al tetto
+  dell'ammissione) ed è dove pesca la manopola. Con una larghezza sola
+  a nove anni le ore intere dell'orologio non erano rare: sparivano.
+  Taglio netto in tutte e due le direzioni: niente
   domande di quarta a chi fa la prima, e niente «con che lettera
   comincia 🐝» come premio di una carta tosta a un bambino di dieci
   anni. La manopola 0..1 dei giochi diventa un punto dentro quella
-  finestra: fondo = carta debole, cima = carta tosta. Derivare la
+  finestra: fondo = carta debole, cima = carta tosta. **Quanto è
+  sfocato il tiro lo dice `BANDA`**, ed era la metà del difetto: a 19
+  la campana era larga quasi quanto tutta la corsa della manopola, e
+  la stessa porta della terza tappa del sotterraneo consegnava sia una
+  domanda da sei anni sia una da nove — la difficoltà chiesta è
+  deterministica, quella consegnata era quasi un sorteggio. A 11 la
+  manopola si sente; e dove il catalogo si dirada la banda **si allarga
+  a tentativi** finché non c'è varietà, che è l'unico modo di non
+  ritrovarsi una classe sola al 54% dei tiri. Derivare la
   difficoltà dalla posizione in scaletta è **il modello vecchio**:
   metteva i grado-1 di sedici moduli nello stesso punto. L'elenco delle
   classi sta in `docs/livelli-delle-domande.md`, che è **generato**
   (`npm run quiz:livelli`) e non si scrive a mano.
-  **La schermata dei grandi ha tre schede**: «Bambini» (chi gioca, con
-  **quanti anni ha** — il numero che decide le domande — più progressi,
-  codice, guasti), «Domande» e «Giochi». Quest'ultima elenca tutte le classi **in fila rispetto al
-  bambino** — cinque blocchi (troppo facili · facili · nel segno ·
-  difficili · troppo difficili), le due estreme chiuse ma contate — con
-  l'età in cima che sposta il gruppo e, su ogni riga, ▼▲ per ritoccarla
-  di mezzo anno (`settings.ritocchi`, max tre gradini), ▶ per provarla e
-  ✕ per **spegnere il suo gruppo di scuola** (non la riga: i saperi li
-  leggono anche i giochi, il castello guarda `divisioni`). «Cosa sa» non
-  c'è più: mostrava le stesse cose in un altro modo. Il bambino l'ha già
-  detto giocando: `quiz/consiglio.js` legge `store/srs.js` e, quando una
-  chiave ha almeno otto tiri con meno di metà giuste (o più di nove su
-  dieci), **lo scrive nella riga col tasto già pronto**. Consiglia, non
-  ritocca da sé: un pomeriggio storto insegnerebbe la cosa sbagliata.
+  **La schermata dei grandi ha tre schede**, e si tara in una sola:
+  «Bambini» (chi gioca, progressi, codice, guasti — con una riga sola
+  che dice «Leonardo ha 10 anni · modifica ›» e rimanda), **«Giochi e
+  domande»** (la manopola dell'età col **quadro** sotto, vedi la sezione
+  della manopola) e «Come va» (quello che il bambino ha già detto
+  giocando, `quiz/ComeVa.vue`). L'ordine è quello in cui si legge: chi
+  è, cosa gli diamo, come sta andando — e l'ultima è in fondo perché è
+  la sola che non si tocca: si guarda, e semmai rimanda alla seconda. Ce n'erano due che dicevano
+  la stessa cosa in altri modi — un elenco di classi con quattro tondi
+  per riga e una fila di interruttori per gioco — e la prima aveva
+  pure **una seconda tacca dell'età**, cioè il difetto che la manopola
+  era nata per togliere. Adesso il posto è uno: `quiz/Catalogo.vue` non
+  esiste più.
+  Il bambino l'ha già detto giocando: `quiz/consiglio.js` legge
+  `store/srs.js` e, quando una chiave ha almeno otto tiri con meno di
+  metà giuste (o più di nove su dieci), **lo scrive in «Come va» col
+  tasto già pronto**. Consiglia, non ritocca da sé: un pomeriggio
+  storto insegnerebbe la cosa sbagliata.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio
@@ -462,6 +475,10 @@ Quattro interruttori diversi, e la differenza conta:
 1. **Un gioco** (`settings.giochi`) — sparisce la carta in home, i progressi
    restano. Per bambino, come elenco di **eccezioni** (`{ torri: false }`),
    così un gioco nuovo nasce acceso anche per chi ha il profilo di ieri.
+   Da qui si dice anche il contrario: `{ dungeon: true }` lo **tiene in
+   casa contro l'età** (`fissaGioco`), e la home lo rispetta
+   (`giocoForzato` vince su `giocoDaVedere`). Si sceglie dalla ✎ della
+   sua riga nel quadro, non più da una fila di interruttori.
 2. **Un pezzo di scuola** (`settings.sa`, `data/saperi.js`) — spariscono le
    *domande* che lo danno per scontato, in tutti i giochi. Chi dichiara di
    averne bisogno è **chi fa la domanda** (un modulo di quiz lo dichiara nei
@@ -483,7 +500,16 @@ Nei test i bersagli sono `.carta.gioco[data-gioco="…"]`,
 
 ### Da dove parte un bambino, e la manopola dell'età
 
-**Una manopola sola, in anni** (`components/ManopolaEta.vue`). Gli anni
+**Una manopola sola, in anni** (`components/eta/Manopola.vue`, con i
+suoi pezzi nella stessa cartella: `Tacca.vue` è il `◀ 8 anni e mezzo ▶`,
+`Conferma.vue` il cartello che applica, `bozza.js` il numero che si
+muove senza toccare il profilo, `Blocco.vue` e `Riga.vue` il quadro).
+**Un componente solo in tutti i posti dove si sceglie un'età**: il
+primo avvio, la carta del bambino e la scheda delle domande — dove
+c'era una terza tacca, disegnata `− +` invece che `◀ ▶`, e che scriveva
+`settings.eta` e nient'altro: da lì si portava un bambino da quattro a
+dieci anni lasciandogli in casa i giochi di quattro, e niente lo
+diceva. Gli anni
 sono l'unità vera di tutto il sistema — 12,5 punti per anno, la stessa
 scala di `portata` e dei `livelli:` delle domande — e da lì dipendono
 tre cose: quali giochi si vedono, cosa si dà per scontato, fin dove
@@ -541,9 +567,9 @@ toste, e il riquadro direbbe una cosa mentre il tasto ne apre un'altra.
 Succedeva: a quattro anni «i numeri e le quantità» apriva una domanda
 dichiarata otto anni e mezzo.
 
-**La forma sta in due componenti** (`components/quadro/Blocco.vue` e
-`Riga.vue`) e non più in cinque copie scritte a mano dentro
-`ManopolaEta.vue`: era così che due blocchi erano finiti diversi dagli
+**La forma sta in due componenti** (`components/eta/Blocco.vue` e
+`Riga.vue`) e non più in cinque copie scritte a mano dentro la
+manopola: era così che due blocchi erano finiti diversi dagli
 altri senza che nessuno l'avesse deciso — uno con l'icona e l'altro no,
 uno col sottotitolo e l'altro no.
 
@@ -586,15 +612,98 @@ dava per scontato *leggere le parole*, *la simmetria* e *le analogie*:
 l'elenco era stato scritto pensando alla matematica di scuola, e tutto
 il resto era rimasto acceso per omissione.
 
-I tre casi dello spostamento stanno in `spostandoLEta`, che è **la
-stessa funzione** che poi scrive (`spostaLEta` in `store/profile.js`):
+**Muovere non è applicare, ed è la stessa regola nei tre posti.** La
+tacca muove una **bozza**: il quadro sotto diventa l'anteprima di
+quell'età, e si scrive premendo «Applica» nel cartello che resta
+**appiccicato in fondo allo schermo** finché la bozza è diversa. Prima
+la carta del bambino scriveva a ogni tacca, e quando lo spostamento
+cambiava fascia con delle scelte fatte a mano da difendere si fermava
+ad aspettare una conferma che compariva **in coda alla colonna**, sotto
+un quadro alto due schermate: da sopra si vedeva solo una freccia che
+smetteva di rispondere — si premeva tre volte e non succedeva niente.
+Un cartello che non si vede non è una conferma, è un tasto rotto. In
+più adesso attraversare tre fasce è **una scrittura sola** invece di
+sei.
 
-- **stessa fascia** — si sposta l'età e basta, muto. È la promessa che
-  rende la manopola usabile: quello che un grande ha sistemato a mano
-  resta dov'era.
-- **fascia diversa, ma era sui difetti** — si riscrive e si va dritti.
-- **fascia diversa, e c'era roba a mano** — si chiede, dicendo *cosa* si
-  perde (giochi spenti, saperi tolti, domande ritoccate).
+I tre casi dello spostamento stanno in `spostandoLEta`, che è **la
+stessa funzione** che poi scrive (`spostaLEta` in `store/profile.js`) e
+la stessa che calcola l'anteprima — se il riassunto se lo rifacesse per
+conto suo direbbe una cosa e il salvataggio ne farebbe un'altra:
+
+- **stessa fascia** — si sposta l'età e basta. Il cartello lo dice («si
+  sposta solo la mira delle domande»), perché senza quella riga
+  «Applica» sembrerebbe pericoloso quanto l'altro caso: quello che un
+  grande ha sistemato a mano resta dov'era.
+- **fascia diversa, ma era sui difetti** — si riscrive, e non c'è
+  niente di suo da perdere.
+- **fascia diversa, e c'era roba a mano** — il cartello conta *cosa* si
+  perde (`mossa.perde`: giochi, saperi, domande ritoccate), perché «2
+  giochi messi a mano, 1 domanda ritoccata» è una domanda a cui si può
+  rispondere e «sei sicuro?» no.
+
+### Correggere una riga: la ✎, e il tasto che rimette tutto
+
+L'età è la manopola grossa. Dentro il quadro **ogni riga ha la sua ✎**,
+che è la correzione piccola — «le stagioni le davamo per sapute, e a
+scuola sono indietro di mezzo anno». A riga chiusa i tasti sono due, ✎
+e ▶, e **una riga messa a mano resta ambra** anche a tacca chiusa: il
+contatore dice quante, il colore dice quali.
+
+**Su un pezzo di scuola e su una domanda** (`components/eta/Taratura.vue`)
+la tacca è in **mezzi anni**, non in blocchi, ed è misurato: per un
+bambino di otto anni i blocchi sono larghi 2,5 · 1,5 · 1,5 anni, quindi
+saltarne uno sono quattro gradini — due anni, mentre la correzione vera
+è un semestre. I nomi dei blocchi restano come **etichetta** (dove va a
+finire, `components/eta/gruppi.js`, gli stessi che il quadro scrive
+sopra i blocchi), e sotto c'è lo scarto: «mezzo anno più difficile ·
+vale otto anni». Sette scatti, tre per parte, col cerchietto vuoto sulla
+taratura di casa; su un pezzo di scuola c'è **l'ottavo, oltre una
+tacchetta**: «Non ancora spiegate», che non è un ritocco ma
+`settings.sa` — ed è la frase che stava già scritta in `profile.js`
+(«oltre un anno e mezzo non si sta più ritoccando una taratura, si sta
+dicendo un'altra cosa»). Su una domanda quello scatto non c'è: una
+domanda non ha un gruppo da spegnere, ed era il ✕ che, standosene sulla
+sua riga, ne toglieva otto.
+
+**Su un gioco** (`components/eta/InCasa.vue`) la tacca non sposta niente
+di mezzo anno: sceglie **chi decide** — «Non ce l'ha» · «Come dice
+l'età» · «Ce l'ha». La terza è nuova nel dato: `settings.giochi[k] ===
+true` non si scriveva mai (acceso era l'assenza) e adesso vuol dire
+*tienilo comunque*, scavalcando la portata — non i saperi spenti, che
+non sono una questione di età ma di domande da indovinare. La posizione
+di mezzo è il ripristino di una riga sola.
+
+**Il paragone è l'atteso, non «nessuna eccezione»**, ed è il difetto da
+non rifare: le partenze *scrivono* delle eccezioni (a nove anni «Prima e
+dopo» nasce spento, è `nientePiccoli`), quindi confrontando con un
+profilo vuoto quelle righe risultavano **messe a mano** da un grande che
+non aveva toccato niente — ambra addosso, e il tasto «rimetti tutto» che
+non riusciva a toglierla, perché rimettere scriveva esattamente quelle
+eccezioni lì. `aMano` e la posizione della tacca si misurano su
+`eccezioniPerEta(eta)`, e `fissaGioco(k, 'difetto')` scrive l'eccezione
+attesa invece di cancellare: se no «rimetti questa riga» e «rimetti
+tutto» lascerebbero due profili diversi.
+
+**E in fondo al quadro c'è il tasto che rimette tutto ai valori di
+quell'età** (`rimettendoLEta` in `data/partenze.js`, `rimettiAiDifetti`
+in `store/profile.js`): non tocca l'età e non tocca i progressi, e si
+mostra solo se c'è qualcosa di suo da buttare — dicendo *cosa*, con la
+stessa frase del cartello dell'età (`perdeInParole`). Senza, l'unico
+modo di tornare indietro era spostare l'età avanti e indietro finché non
+cambiava fascia.
+
+**Il ritocco non si fa mentre l'età è in sospeso**: cambiando fascia
+`spostandoLEta` porta via tutti i ritocchi, quindi la ✎ sparisce finché
+la bozza è diversa. Prima si decide l'età, poi si correggono le
+eccezioni.
+
+Nei test i bersagli sono `[data-manopola]`, `[data-eta="su"|"giu"]`,
+`[data-eta-ora]`, `[data-conferma="eta"]` col suo `[data-perde]`, i
+due tasti `[data-azione="eta-applica"|"eta-annulla"]`, e per le
+correzioni `[data-tara-apri="<chiave>"]`, `[data-taratura]` coi suoi
+`[data-tara="giu"|"su"|"applica"|"lascia"|"rimetti"]`, `[data-in-casa]`
+coi `[data-gioco-tara=…]`, e `[data-azione="rimetti-difetti"]` con
+`[data-perde-tutto]`.
 
 Si chiede **al primo avvio e ogni volta che si aggiunge un bambino**:
 `components/Benvenuto.vue` è un wizard solo per tutti e due i casi, e
