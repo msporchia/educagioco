@@ -60,14 +60,46 @@ export const CORONA = 'muro-alto-centro'
    il foglio non ce l'ha, resta l'emoji». La fontana e il mercante sono
    i due casi: 0x72 ha bracieri e fontane decorative ma nessuna che
    funzioni come una fonte, e di mercanti non ne ha affatto. */
+/* ── la pelle di una porta dice cosa c'è dietro ──
+   Il segno sopra la porta lo diceva già con un'emoji (`SEGNI` in
+   `dati/cose.js`) e continua a dirlo; la pelle lo ripete **col
+   disegno**, che è la lingua che un bambino legge per prima. Dietro il
+   teschio c'è la guardia, dietro l'oro la roba buona: sono le stesse
+   promesse di prima, e come prima non mentono mai.
+
+   Aperta, la porta torna quella di sempre: nel foglio non esiste
+   nessuna anta aperta, e fabbricarne una rietichettando una chiusa
+   avrebbe fatto vedere una porta chiusa in un varco da cui si passa. */
+export const PELLI_PORTA = {
+  guardia: 'porta-teschio-chiusa',
+  tesoro: 'porta-oro-chiusa',
+  mercante: 'porta-legno-chiusa',
+  fonte: 'porta-ferro-chiusa',
+  vuoto: 'porta-chiusa',
+}
+
+/* ── quanto luccica quello che c'è per terra ──
+   Una monetina, una moneta grossa, un mucchio: la figura dice **quanto
+   vale** prima di raccoglierlo, e scostarsi dalla strada per tre gemme
+   o per dodici non è la stessa decisione. Sotto le cinque resta
+   l'animazione della monetina, che gira e si fa notare. */
+export const pezzoDelleGemme = (quante, t) =>
+  (quante >= 12 ? 'mucchio-monete'
+    : quante >= 6 ? 'moneta-grossa'
+      : `moneta-${((t * 8) | 0) % 4}`)
+
 export const PEZZO_DI = {
   scala: () => 'scala-giu',
   /* l'arredo porta il suo pezzo addosso: è dato deciso quando il piano
      è nato (`motore/livello.js`), e qui non si sceglie niente */
   arredo: r => r.pezzo,
-  forziere: r => (r.aperto ? 'forziere-aperto' : 'forziere-chiuso'),
-  porta: r => (r.aperta ? 'porta-aperta' : 'porta-chiusa'),
-  gemme: (r, t) => `moneta-${((t * 8) | 0) % 4}`,
+  /* il forziere porta la sua pelle addosso, decisa quando il piano è
+     nato: quello d'oro è raro, e vedendolo da lontano si decide se vale
+     la strada. Mezzo e aperto restano i due di sempre — le altre
+     famiglie il foglio le disegna solo chiuse. */
+  forziere: r => (r.aperto ? 'forziere-aperto' : (r.pelle || 'forziere-chiuso')),
+  porta: r => (r.aperta ? 'porta-aperta' : (PELLI_PORTA[r.segno] || 'porta-chiusa')),
+  gemme: (r, t) => pezzoDelleGemme(r.quante, t),
   /* la curiosità porta il suo pezzo addosso, come l'arredo: quale sia
      lo ha deciso il piano quando è nato */
   curiosita: r => r.pezzo,
@@ -91,6 +123,10 @@ export function guastiDelleTessere(nomi = null) {
   const chiedi = (n, dove) => { if (n && !ha(n)) g.push(`${dove}: nell'atlante non c'è "${n}"`) }
 
   for (const s of SUOLI) chiedi(s, 'suoli')
+  for (const [k, n] of Object.entries(PELLI_PORTA)) chiedi(n, `porta ${k}`)
+  for (const q of [1, 6, 12]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
+  chiedi('forziere-oro-chiuso', 'forziere d\'oro')
+  chiedi('forziere-scuro-chiuso', 'forziere scuro')
   chiedi(MATTONI, 'mattoni')
   chiedi(CORONA, 'corona')
   for (const [k, n] of Object.entries(FACCE)) chiedi(n, `faccia ${k}`)

@@ -238,6 +238,10 @@ export class Livello {
       const s = pesca(); if (!s) break
       s.ruolo = 'tesoro'
       this.robe.push({ che: 'forziere', x: s.cx, y: s.cy, em: '🎁', nome: 'Un forziere',
+                       /* la pelle si decide qui, una volta: quello d'oro è
+                          raro e si riconosce da lontano, ed è il motivo per
+                          cui vale la pena scostarsi dalla strada */
+                       pelle: this.pelleDelForziere(),
                        aperto: false })
     }
 
@@ -301,6 +305,15 @@ export class Livello {
     this.spargiLeCuriosita(st)
     this.arredaLeStanze()
     this.chiudiPorte()
+  }
+
+  /* Un tiro solo, non due annidati: ogni numero pescato sposta tutta la
+     generazione a valle, e due tiri per una cosa che è **una** scelta
+     rendono i piani diversi da quelli di ieri senza nessun motivo. */
+  pelleDelForziere() {
+    const t = this.rnd()
+    return t < 0.2 ? 'forziere-oro-chiuso'
+      : t < 0.45 ? 'forziere-scuro-chiuso' : 'forziere-chiuso'
   }
 
   /* ── le curiosità ──

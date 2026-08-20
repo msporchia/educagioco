@@ -35,6 +35,10 @@ import { viaVerso, percorso } from '../../../motore/passi.js'
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
 const TETTO_GIRI = 12000        // azioni in una discesa, prima di dire che non finisce
+/* quante volte si riprova lo stesso ostacolo: sei perché una porta a cui
+   si sbaglia due volte di fila capita, e arrendersi lì vorrebbe dire
+   dichiarare chiusa una strada che è aperta */
+const TETTO_PROVE = 6
 
 /* Va su una cella, un passo alla volta, e si ferma appena qualcosa si
    apre: è quello che fa anche un bambino, che smette di camminare quando
@@ -105,9 +109,17 @@ function sblocca(corsa, meta, provati) {
   for (const c of sgombro) {
     const r = corsa.livello.robe.find(v => v.x === c.x && v.y === c.y && !v.morto && !v.presa &&
       (v.che === 'mostro' || (v.che === 'porta' && !v.aperta)))
-    if (!r || (provati.get(r) || 0) >= 3) continue
-    provati.set(r, (provati.get(r) || 0) + 1)
-    if (raggiungi(corsa, r)) return true
+    if (!r || (provati.get(r) || 0) >= TETTO_PROVE) continue
+    const arrivato = raggiungi(corsa, r)
+    /* Il tentativo si conta **solo se non è successo niente**. Prima si
+       contava sempre, e bastavano tre scontri finiti male sullo stesso
+       goblin — uno svenimento è un tentativo come un altro — perché il
+       banco lo saltasse per sempre e dichiarasse irraggiungibile un
+       guardiano che stava dietro di lui. Succedeva una volta su
+       duecento, e il test lo pescava o no a seconda del seme: il livello
+       era sano, era il giocatore finto ad arrendersi. */
+    if (!r.morto && !r.aperta) provati.set(r, (provati.get(r) || 0) + 1)
+    if (arrivato) return true
   }
   return false
 }
