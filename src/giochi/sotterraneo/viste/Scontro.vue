@@ -20,6 +20,9 @@ defineProps({
   vita: { type: Number, required: true },
   vitaMax: { type: Number, required: true },
   scosso: { type: Number, default: 0 },
+  /* com'è andato l'ultimo scambio: `{ dato, preso, caduto }`, o niente
+     se non si è ancora risposto. È la riga che mancava — vedi sotto. */
+  scambio: { type: Object, default: null },
 })
 </script>
 
@@ -46,6 +49,22 @@ defineProps({
       </div>
     </div>
   </div>
+  <!-- ═══ com'è andato il colpo ═══
+       Il mostro picchia **anche quando rispondi bene**, ed è voluto: è
+       quello che rende utile una pozione. Ma finché la cosa si vedeva
+       solo nella barra che cala, chi aveva appena risposto giusto
+       leggeva «hai sbagliato» — e il suono, che era quello dell'errore,
+       glielo confermava. Detto con due numeri diventa quello che è: uno
+       scambio, e uno scambio in cui hai avuto la meglio. -->
+  <p v-if="scambio" class="sot-scambio" :class="{ 'sot-male': !scambio.dato }">
+    <span v-if="scambio.dato" class="em">⚔️ gli hai tolto <b>{{ scambio.dato }}</b></span>
+    <span v-if="scambio.dato && scambio.preso"> · </span>
+    <span v-if="scambio.preso" class="em">
+      {{ scambio.dato ? 'ti ha graffiato' : 'ti ha colpito' }} <b>{{ scambio.preso }}</b>
+    </span>
+    <span v-if="scambio.caduto" class="em"> · è caduto!</span>
+  </p>
+
   <div class="sot-io-vita">
     <span class="sot-polso" :style="{ '--sot-polso': vita / vitaMax > 0.6 ? '#4fce7c'
                                       : vita / vitaMax > 0.3 ? '#f0b429' : '#e0432f' }">

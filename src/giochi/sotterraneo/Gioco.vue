@@ -44,6 +44,8 @@ import { Tela } from './scena/tela.js'
 import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
+import Icona from './viste/Icona.vue'
+import { cambioDetto } from './viste/cambio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
 import Mercante from './viste/Mercante.vue'
@@ -73,7 +75,12 @@ const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)
 const domanda = ref(null)
 const fine = ref(null)
-const avviso = ref('')
+/* Un avviso è una riga sola in mezzo al campo. Chi lo manda dal motore
+   può dire **quale cosa** riguarda (`dilloDi`), e allora accanto al
+   testo ci va la sua faccia vera invece di un'emoji: la stessa che si
+   vede per terra e nella tasca. Le righe che non parlano di una cosa —
+   «di là non si passa» — restano stringhe. */
+const avviso = ref(null)
 const zainoAperto = ref(false)
 const scosso = ref(0)
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
@@ -170,6 +177,16 @@ const eroe = computed(() => {
 
 const foglio = computed(() => { tic.value; return corsa.value?.foglio || null })
 
+/* ── com'è andato l'ultimo colpo ──
+   Due numeri, detti dopo: «gli hai tolto 8, ti ha graffiato 3». Serve
+   perché il graffio esiste da sempre ma non si vedeva: rispondendo bene
+   la propria barra calava e partiva un rumore di botta, e da fuori è
+   indistinguibile da uno sbaglio. Sta qui e non nel motore perché è una
+   cosa che si guarda, non una regola: il motore dice `dato` e `preso`,
+   e per quanto restino a schermo decide chi disegna. */
+const scambio = ref(null)
+let scambioFinoA = 0
+
 const nemico = computed(() => {
   const f = foglio.value
   if (!f || f.che !== 'scontro') return null
@@ -184,13 +201,18 @@ const nemico = computed(() => {
   }
 })
 
+/* quante tasche sono occupate: sta sul tasto, e dice quando conviene
+   aprirlo — sei su sei vuol dire che la prossima cosa resta per terra */
+const pieni = computed(() => { tic.value; return corsa.value ? corsa.value.zaino.length : 0 })
+
 const zaino = computed(() => {
   tic.value
   const c = corsa.value
   if (!c) return null
   const voce = k => (k ? { chiave: k, ...COSE[k] } : null)
   return {
-    mano: voce(c.mano), corpo: voce(c.corpo), dito: voce(c.dito),
+    mano: voce(c.mano), mancina: voce(c.mancina),
+    corpo: voce(c.corpo), dito: voce(c.dito),
     tasche: Array.from({ length: TASCHE }, (_, i) => voce(c.zaino[i])),
   }
 })
@@ -198,30 +220,35 @@ const zaino = computed(() => {
 const merce = computed(() => {
   const f = foglio.value
   if (!f || f.che !== 'mercante') return []
+  const c = corsa.value
   return (f.chi.roba || []).map(k => ({
-    chiave: k, ...COSE[k], posso: corsa.value.gemme >= COSE[k].prezzo,
+    chiave: k, ...COSE[k], posso: c.gemme >= COSE[k].prezzo,
+    /* quanto cambia rispetto a quello che si ha addosso: è il numero
+       con cui si decide se spendere, e al banco non c'era */
+    cambio: cambioDetto(c.confronto(k), x => COSE[x].nome),
+    /* quanto ti manca per portartela via: senza, una riga che non puoi
+       comprare si legge come una che puoi — il prezzo da solo non dice
+       niente finché non lo confronti con le tue gemme, e un bambino
+       quel confronto non lo fa guardando due numeri lontani */
+    mancano: Math.max(0, COSE[k].prezzo - c.gemme),
+    /* di pozioni se ne portano quante ne stanno, quindi restano in
+       vendita anche quando ne hai già: quello che serve sapere è
+       **quante**, o si compra la quarta senza accorgersene */
+    quante: c.quanteNeHo(k),
   }))
 })
 
-/* ── la cosa trovata, pronta da leggere ──
-   Il motore dice **quanto** cambia (`delta`), qui si dice come si legge:
-   il numero è tutto il punto del foglio, perché un bambino sceglie
-   un'arma dal disegno e il disegno non dice quanto fa male. */
-const trovata = computed(() => {
-  const f = foglio.value
-  if (!f || f.che !== 'trovata') return null
-  const c = COSE[f.cosa]
-  const segno = f.campo === 'att' ? '⚔️' : '🛡️'
-  const prima = f.addosso ? COSE[f.addosso].nome.toLowerCase()
-    : f.dove === 'mano' ? 'mani nude' : 'niente addosso'
-  return {
-    ...c, cosa: f.cosa,
-    verbo: f.dove === 'mano' ? 'la impugno' : 'me la metto',
-    confronto: f.delta === 0 ? `${segno} come ${prima}`
-      : `${segno} ${f.delta > 0 ? '+' : ''}${f.delta} rispetto a ${prima}`,
-    meglio: f.delta > 0,
-    pieno: corsa.value.zaino.length >= TASCHE,
-  }
+/* Quello che il mercante **ti** comprerebbe: le tasche, col loro mezzo
+   prezzo già fatto dal motore — che è l'unico che sa quanto vale una
+   cosa. Le caselle addosso non ci sono: quelle si ripongono prima. */
+const daVendere = computed(() => {
+  tic.value
+  const c = corsa.value
+  if (!c) return []
+  return Array.from({ length: TASCHE }, (_, i) => {
+    const k = c.zaino[i]
+    return k ? { chiave: k, ...COSE[k], vale: c.quantoVale(k) } : null
+  })
 })
 
 const segno = computed(() => {
@@ -236,6 +263,12 @@ const suoni = {
   passo: () => suono.nota(320, 320, 0.05, 'sine', 0.06),
   colpo: () => suono.boom(),
   ahia: () => suono.no(),
+  /* Il graffio che passa **rispondendo bene** non può suonare come uno
+     sbaglio, e suonava proprio così: era `suono.no()`, cioè il rumore
+     con cui il gioco dice «hai risposto male». Un bambino che risponde
+     giusto e sente quello impara la cosa sbagliata. Qui è un tonfo
+     sordo e breve, che è un'altra frase. */
+  graffio: () => suono.nota(200, 150, 0.09, 'triangle', 0.07),
   bottino: () => suono.moneta(),
   tesoro: () => suono.livello(),
 }
@@ -353,9 +386,11 @@ function guarda(c) {
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}`
   if (f !== firma) { firma = f; tic.value++ }
   if (c.avvisi.length) {
-    avviso.value = c.avvisi.shift()
+    const a = c.avvisi.shift()
+    avviso.value = typeof a === 'string' ? { testo: a } : { ...a, ...(COSE[a.cosa] || {}) }
     ultimoAvviso = orologio
-  } else if (avviso.value && orologio - ultimoAvviso > 1.8) avviso.value = ''
+  } else if (avviso.value && orologio - ultimoAvviso > 1.8) avviso.value = null
+  if (scambio.value && orologio > scambioFinoA) scambio.value = null
 }
 
 /* ═══════════ la domanda ═══════════
@@ -397,8 +432,14 @@ function risolvi(giusto) {
   salva()
   if (!esito) return
   scosso.value++
+  /* lo scambio resta a schermo un paio di secondi: il tempo di leggerlo
+     mentre la domanda dopo si sta già montando */
+  if (esito.dato != null || esito.preso != null) {
+    scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto' }
+    scambioFinoA = orologio + 2.4
+  }
   switch (esito.che) {
-    case 'colpo': suoni.colpo(); if (esito.male) setTimeout(() => suoni.ahia(), 180); break
+    case 'colpo': suoni.colpo(); if (esito.male) setTimeout(() => suoni.graffio(), 200); break
     case 'caduto': suoni.colpo(); setTimeout(() => suoni.bottino(), 260); break
     case 'ferito': suoni.ahia(); break
     case 'svenuto': suono.fine(); break
@@ -414,11 +455,10 @@ function scappa() { corsa.value.scappa(); domanda.value = null; tic.value++; suo
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
 function riprendi() { corsa.value.riprendi(); tic.value++ }
 function compra(k) { const e = corsa.value.compra(k); tic.value++; if (e?.che === 'comprato') suono.compra(); salva() }
+function vendi(i) { const e = corsa.value.vendi(i); tic.value++; if (e) suoni.bottino(); salva() }
 function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
 function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
 function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
-function impugna() { corsa.value.impugna(); domanda.value = null; tic.value++; suono.ok(); salva() }
-function inTasca() { corsa.value.inTasca(); tic.value++; suoni.bottino(); salva() }
 
 function scendi() {
   const e = corsa.value.scendi()
@@ -601,7 +641,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 <template>
   <div class="schermo">
     <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiutoAperto = $event" :monete="!corsa" scura @indietro="indietro">
-      <button v-if="corsa && eroe" class="sot-io" data-azione="zaino"
+      <button v-if="corsa && eroe" class="sot-io" data-azione="zaino-barra"
               aria-label="lo zaino" @click="zainoAperto = true">
         <span class="sot-polso" :style="{ '--sot-polso': eroe.polso }">
           <i :style="{ width: eroe.quota * 100 + '%' }"></i>
@@ -638,7 +678,23 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
-          <p v-if="avviso" class="sot-avviso">{{ avviso }}</p>
+          <!-- ═══ lo zaino, dove il pollice lo trova ═══
+               Si apriva toccando la fascia dei numeri in cima, e nessuno
+               lo sapeva: una fascia con dentro dei conti non ha l'aria
+               di un tasto, e in cima allo schermo il pollice non ci
+               arriva. Qui è un tasto tondo in basso a destra, con
+               scritto quante tasche sono piene — così si vede anche
+               *quando conviene aprirlo*. -->
+          <button class="sot-zaino-tasto" data-azione="zaino" aria-label="zaino"
+                  @click="zainoAperto = true">
+            <span class="em">🎒</span>
+            <b>{{ pieni }}/{{ TASCHE }}</b>
+          </button>
+
+          <p v-if="avviso" class="sot-avviso">
+            <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
+            {{ avviso.testo }}
+          </p>
         </div>
 
         <!-- ═══ lo scontro: al centro, non dal basso ═══
@@ -657,7 +713,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
              fare spazio a un pannello che spazio non ne chiede. -->
         <div v-if="foglio && foglio.che === 'scontro'" class="sot-velo">
           <div class="sot-modale">
-            <Scontro v-bind="nemico" :scosso="scosso" />
+            <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
             <div v-if="domanda" class="sot-domanda">
               <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                        :origine="domanda" gioco="sotterraneo" :respiro="900"
@@ -705,9 +761,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
-        <Foglio v-else-if="foglio && foglio.che === 'mercante'" em="🧙" titolo="Il mercante"
+        <!-- al centro come lo zaino: qui si sta scegliendo, non si sta
+             camminando, e adesso che si vende è anche il pannello più
+             lungo del gioco -->
+        <Foglio v-else-if="foglio && foglio.che === 'mercante'" em="🧙" titolo="Il mercante" centro
                 :dice="`Hai 💎 ${eroe.gemme}. Quello che compri finisce nello zaino.`">
-          <Mercante :roba="merce" :gemme="eroe.gemme" @compra="compra" @chiudi="chiudiFoglio" />
+          <Mercante :roba="merce" :tasche="daVendere" :gemme="eroe.gemme"
+                    @compra="compra" @vendi="vendi" @chiudi="chiudiFoglio" />
         </Foglio>
 
         <Foglio v-else-if="foglio && foglio.che === 'chiusa'" em="🔒" titolo="La scala è chiusa"
@@ -737,30 +797,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <button class="sot-grosso" data-azione="riprendi" @click="riprendi">riprovo</button>
         </Foglio>
 
-        <!-- ═══ una cosa per terra, toccata ═══
-             Solo per quello che si impugna o si indossa: una pozione va
-             in tasca senza chiedere niente, perché non c'è niente da
-             decidere. Qui invece si sceglie, e si sceglie **su un
-             numero** — vedi `trovata` qui sopra. -->
-        <Foglio v-else-if="foglio && foglio.che === 'trovata' && trovata"
-                :em="trovata.em" :titolo="trovata.nome" :dice="trovata.dice">
-          <p class="sot-cambio em" :class="{ 'sot-meglio': trovata.meglio }">
-            {{ trovata.confronto }}
-          </p>
-          <button class="sot-grosso" data-azione="impugna" @click="impugna">
-            {{ trovata.verbo }}
-          </button>
-          <button class="sot-grosso sot-chiaro" data-azione="in-tasca"
-                  :disabled="trovata.pieno" @click="inTasca">
-            <span class="em">🎒</span>
-            {{ trovata.pieno ? 'lo zaino è pieno' : 'nello zaino' }}
-          </button>
-          <button class="sot-grosso sot-chiaro" data-azione="lascio" @click="chiudiFoglio">
-            la lascio qui
-          </button>
-        </Foglio>
-
-        <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino">
+        <!-- ═══ lo zaino: al centro, come lo scontro ═══
+             Dal basso era un'appendice del campo: il gioco si fermava e
+             non si capiva perché, perché quello che si vedeva era
+             sempre la caverna. Al centro la ragione per cui non ci si
+             muove sta in mezzo allo schermo. -->
+        <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino" centro>
           <Zaino v-bind="zaino" :eroe="eroeScheda"
                  :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
                  :vita="eroe.vita" :vitaMax="eroe.vitaMax"

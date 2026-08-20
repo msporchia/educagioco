@@ -21,6 +21,15 @@ import { ATLANTE, PEZZI } from '../dati/atlante.js'
 
 export const haFigura = nome => !!(nome && PEZZI[nome])
 
+/* ── la scala dell'interfaccia ──
+   Una sola, per tutte le cose e in tutti i pannelli. Chiedere invece
+   «grande quanto ci sta» (`alto`) faceva uscire la stessa boccetta ×2
+   in una tasca e ×1 in una riga di avviso: a occhio, due icone diverse
+   per la stessa cosa. Le figure sono disegnate con le loro proporzioni,
+   e quelle vanno rispettate — un medaglione è piccolo perché è un
+   medaglione. */
+export const SCALA = 2
+
 /* Torna `{ gabbia, pezzo }`, i due oggetti di stile da legare ai due
    elementi. `null` se quel pezzo non c'è: chi chiama mostra l'emoji, che
    è il ripiego di tutto il gioco. */

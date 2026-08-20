@@ -106,6 +106,21 @@
   position: absolute; left: 0; right: 0; bottom: 8px; margin: 0;
   text-align: center; font-size: 12.5px; color: #7f8db0; pointer-events: none;
 }
+/* ── il tasto dello zaino ──
+   In basso a destra, dove sta il pollice, e tondo come tutti i tasti
+   che si premono col dito. Non copre il campo utile: sotto c'è la riga
+   del piano, che è testo e non si tocca. */
+.sot-zaino-tasto {
+  position: absolute; right: 12px; bottom: 34px; z-index: 6;
+  width: 62px; height: 62px; display: grid; place-items: center; gap: 0;
+  color: inherit; font: inherit; border-radius: 50%;
+  background: #141a2ee6; border: 2px solid var(--sot-oro);
+  box-shadow: 0 6px 20px #000a;
+}
+.sot-zaino-tasto .em { font-size: 26px; line-height: 1 }
+.sot-zaino-tasto b { font-size: 10.5px; color: var(--sot-oro); line-height: 1 }
+.sot-zaino-tasto:active { transform: scale(.94) }
+
 .sot-avviso {
   position: absolute; left: 0; right: 0; top: 42%; margin: 0;
   text-align: center; font-size: 16px; font-weight: 700; pointer-events: none;
@@ -149,8 +164,12 @@
 .sot-modale .sot-domanda { max-height: none }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
-.sot-foglio h2 { margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px }
-.sot-foglio > p { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px }
+/* la stessa testata del foglio dal basso, per chi sta in mezzo: sono lo
+   stesso pannello messo in due posti, e devono leggersi uguale */
+.sot-foglio h2, .sot-centrale h2 {
+  margin: 0 0 2px; font-size: 19px; display: flex; align-items: center; gap: 8px;
+}
+.sot-foglio > p, .sot-centrale > p { margin: 0 0 10px; color: var(--sot-tenue); font-size: 13.5px }
 
 .sot-grosso {
   display: block; width: 100%; margin-top: 9px; padding: 14px;
@@ -223,9 +242,14 @@
 .sot-corredo {
   display: grid; gap: 8px; margin-bottom: 14px; align-items: center;
   grid-template-columns: 1fr minmax(96px, 1.2fr) 1fr;
+  /* le mani in alto, **una per lato** come stanno addosso a chi le usa —
+     la debole a sinistra, il pugno a destra — e sotto quello che si
+     porta: guardando si vede come si è messi, che è quello che un
+     elenco di caselle non dice. La mano debole sotto quella buona
+     sembrava una seconda casella della destra. */
   grid-template-areas:
-    "corpo chi mano"
-    ".     dito .";
+    "mancina chi mano"
+    "corpo   chi dito";
   padding: 12px 8px 10px;
   border-radius: 20px;
   background: radial-gradient(90% 70% at 50% 0%, #1d2236, var(--sot-carta) 75%);
@@ -233,7 +257,12 @@
 }
 .sot-slot-mano { grid-area: mano }
 .sot-slot-corpo { grid-area: corpo }
-.sot-slot-dito { grid-area: dito; justify-self: center; min-width: 96px }
+.sot-slot-dito { grid-area: dito }
+.sot-slot-mancina { grid-area: mancina }
+/* la mano che tiene l'altro capo di un'arma a due mani: la stessa
+   figura, spenta e girata */
+.sot-slot.sot-ombra { opacity: .5 }
+.sot-slot.sot-ombra .sot-dentro { transform: scaleX(-1); filter: grayscale(.6) brightness(.7) }
 .sot-figura { grid-area: chi; position: relative; display: grid; place-items: center; min-height: 118px }
 
 /* una casella incisa nel fondo, non un bottone appoggiato sopra */
@@ -245,7 +274,20 @@
 }
 .sot-slot i { font-style: normal; font-size: 10.5px; color: var(--sot-tenue); line-height: 1.15 }
 .sot-slot.sot-vuota i { opacity: .75 }
-.sot-dentro { display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden }
+/* la faccia di una cosa (`viste/Icona.vue`): lo sprite dove c'è,
+   l'emoji dove il foglio non disegna niente. `overflow: hidden` perché
+   il pezzo dentro è ingrandito con un `transform` e sborderebbe. */
+.sot-icona { display: inline-grid; place-items: center; overflow: hidden; vertical-align: middle }
+.sot-icona > i { display: block }
+
+/* ── il riquadro non taglia mai ──
+   Alla scala di casa (×2) l'oggetto più alto del foglio — la spada
+   fiammeggiante, 24 px — viene 48, e un riquadro di 48 lo tagliava di
+   quel poco che basta a farlo sembrare storto: una lama senza punta, un
+   bastone mozzato. Il riquadro è più alto di qualunque cosa ci vada
+   dentro, e `overflow` resta solo come rete di sicurezza per un pezzo
+   che un giorno fosse più grande di tutti. */
+.sot-dentro { display: grid; place-items: center; width: 52px; height: 54px; overflow: hidden }
 .sot-dentro .em { font-size: 24px }
 .sot-slot.sot-vuota .sot-dentro { opacity: .35 }
 
@@ -318,8 +360,35 @@
 .sot-tasca.sot-scelto, .sot-casella.sot-scelto {
   border: 2px solid var(--sot-oro); background: #ffd23f1c; opacity: 1;
 }
-.sot-azioni { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sot-bordo) }
-.sot-dice { margin: 0; font-size: 13.5px }
+/* la riga che racconta l'ultimo scambio: sta fra il mostro e la propria
+   vita, cioè fra i due numeri di cui parla */
+.sot-scambio {
+  margin: 6px 0 0; padding: 5px 8px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 700; text-align: center;
+  background: #ffd23f18; color: var(--sot-oro);
+  animation: sot-appare .12s ease-out;
+}
+.sot-scambio.sot-male { background: #e0432f24; color: #ff9b8a }
+.sot-scambio b { font-size: 15px }
+
+/* Le azioni si appiccicano al fondo del pannello: comparendo in coda a
+   una griglia alta quanto lo schermo finivano oltre il bordo, e un
+   tasto che non si vede è un tasto che non c'è. */
+.sot-azioni {
+  position: sticky; bottom: -14px; z-index: 1;
+  margin-top: 10px; padding: 10px 10px 12px;
+  border-radius: 16px; background: #0b0f1af2;
+  box-shadow: 0 -8px 24px #000a;
+}
+/* nome e faccia sulla stessa riga, incolonnati: l'icona è alta quanto
+   una casella e in una riga di testo sborderebbe sulla riga sotto */
+.sot-dice {
+  margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px;
+  min-height: 54px;
+}
+/* i numeri prima della frase: sono quelli che fanno decidere */
+.sot-numeri { margin: 4px 0 0; font-size: 13.5px; font-weight: 700; color: var(--sot-oro) }
+.sot-detto { margin: 3px 0 0; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-dice .em { font-size: 20px; vertical-align: -3px }
 /* il numero su cui si sceglie: in verde solo quando conviene davvero,
    perché un colore uguale per ogni caso non dice niente */
@@ -337,7 +406,26 @@
 .sot-merce .sot-testo b { font-size: 14px }
 .sot-merce .sot-testo i { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
 .sot-merce.sot-caro { opacity: .45 }
-.sot-prezzo { color: var(--sot-oro); font-size: 13px; white-space: nowrap }
+/* quello che vendi tu: stessa riga, verso opposto — il prezzo è in
+   entrata, e il fondo lo dice senza scriverlo */
+.sot-merce.sot-vendo { background: #4fce7c12; border-color: #4fce7c2e }
+.sot-merce.sot-vendo .sot-prezzo { color: #4fce7c }
+.sot-banco {
+  margin: 14px 0 8px; font-size: 13px; font-weight: 700; color: var(--sot-tenue);
+}
+.sot-prezzo { color: var(--sot-oro); font-size: 13px; white-space: nowrap; display: grid; gap: 2px; justify-items: end }
+/* quante ne hai già: sopra il prezzo, in piccolo — serve a non comprare
+   la quarta pozione senza accorgersene */
+.sot-quante { font-size: 11px; font-weight: 700; color: var(--sot-tenue) }
+/* il prezzo di quello che non ti puoi permettere: spento, e con
+   scritto quanto manca. Il verde del «conviene» sparisce, o si legge
+   come un invito a premere un tasto che non fa niente. */
+.sot-prezzo.sot-manca { color: var(--sot-tenue) }
+.sot-prezzo.sot-manca .sot-quante { color: #e0644f }
+.sot-merce .sot-testo em {
+  font-style: normal; font-size: 12px; font-weight: 700; color: var(--sot-tenue);
+}
+.sot-merce .sot-testo em.sot-meglio { color: #4fce7c }
 .sot-vuoto { color: var(--sot-tenue); font-size: 13.5px; padding: 6px 0 }
 
 /* ═══════════ com'è finita ═══════════ */

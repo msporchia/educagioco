@@ -100,15 +100,20 @@ for (const [dx, dy] of [[0, -70], [70, 0], [0, 70], [-70, 0]]) {
 }
 controlla('dopo un tocco l\'eroe si è mosso', mosso)
 
-/* ---------- 4. lo zaino sale e scende ---------- */
+/* ---------- 4. lo zaino si apre in mezzo, e si chiude ----------
+   In mezzo e non in fondo: mentre è aperto il gioco sta fermo, e un
+   pannello incollato al bordo di sotto non lo dice — si continua a
+   toccare il campo senza capire perché non si va da nessuna parte. */
 await page.locator('[data-azione="zaino"]').click()
-await page.waitForSelector('.sot-foglio', { timeout: 3000 })
+await page.waitForSelector('.sot-centrale', { timeout: 3000 })
 uguale('lo zaino ha sei tasche', await page.locator('.sot-tasca').count(), 6)
-uguale('e tre caselle addosso: mano, corpo, dito',
-       await page.locator('[data-casella]').count(), 3)
+uguale('e quattro caselle addosso: le due mani, il corpo, il dito',
+       await page.locator('[data-casella]').count(), 4)
+uguale('e non è il foglio che sale dal basso',
+       await page.locator('.sot-foglio').count(), 0)
 await page.locator('[data-azione="chiudi"]').click()
 await attendi(page, 300)
-uguale('e si richiude', await page.locator('.sot-foglio').count(), 0)
+uguale('e si richiude', await page.locator('.sot-centrale').count(), 0)
 
 /* ---------- 5. si esce a metà, e la discesa resta lì ----------
    La cosa che rende giocabile una discesa da venti minuti: si chiude e
