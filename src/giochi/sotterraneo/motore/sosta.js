@@ -32,11 +32,23 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { Corsa } from './corsa.js'
 import { COSE } from '../dati/cose.js'
+import { DI_PARTENZA } from '../dati/eroi.js'
 
 /* Sale ogni volta che cambia la forma. La 2 porta i quattro eroi e la
    terza casella addosso: un salvataggio della 1 non sa chi fosse a
-   scendere, e non si indovina. */
-export const VERSIONE = 2
+   scendere, e non si indovina. La 3 separa **chi** scendeva da **dove**
+   era arrivato, che nella 2 finivano nella stessa casella (vedi sotto).
+
+   ── LA 2 SI LEGGE ANCORA, ED È UN'ECCEZIONE VOLUTA ────────────────
+   La regola di casa è che una forma vecchia si butta, perché un campo
+   che non torna è un gioco rotto in un modo che nessuno sa spiegare.
+   Qui però non c'è niente che non torni: la 2 ha tutto tranne il nome
+   di chi scendeva, e chi scendeva è esattamente quello che la 2
+   sbagliava comunque. Si riprende col cavaliere — cioè come faceva
+   prima — invece di buttare venti minuti di discesa a chi aggiorna
+   proprio adesso. */
+export const VERSIONE = 3
+const LEGGIBILI = [2, VERSIONE]
 
 /* ── il campo `visto` ──
    Duemilaseicento numeri di zero e uno: scritti così sono venti
@@ -81,17 +93,30 @@ export function scrivi(corsa, tappa) {
     tappa,
     seme: corsa.seme,
     piano: corsa.piano,
+    /* `eroe` è **chi** scende, `dove` è la cella in cui si era: erano
+       tutte e due `eroe`, e in un letterale la seconda cancella la
+       prima senza che niente si lamenti. Il gioco riprendeva quindi
+       sempre col cavaliere, chiunque avessi scelto — e la mappa delle
+       discese, che legge la scelta e non il salvataggio, continuava a
+       mostrare il ritratto giusto. */
     eroe: corsa.chiEro,
     vita: corsa.vita,
     vitaBase: corsa.vitaBase,
     gemme: corsa.gemme,
     zaino: [...corsa.zaino],
     mano: corsa.mano,
+    /* La mano debole è un campo **aggiunto**, e per questo la versione
+       non sale: un salvataggio che non ce l'ha si rilegge senza niente
+       in quella mano, che è esattamente com'era il gioco prima. La
+       versione sale quando un campo *cambia significato* — quella è la
+       cosa che nessuno saprebbe spiegare, non un campo in più con un
+       ripiego ovvio. */
+    mancina: corsa.mancina,
     corpo: corsa.corpo,
     dito: corsa.dito,
     torcia: corsa.torcia,
     chiave: corsa.chiaveDelPiano,
-    eroe: { x: corsa.eroe.x, y: corsa.eroe.y },
+    dove: { x: corsa.eroe.x, y: corsa.eroe.y },
     guarda: corsa.guarda,
     visto: stringaDi(corsa.visto),
     stanze: [...corsa.stanzeDentro],
@@ -118,9 +143,15 @@ function pulisci(r) {
    può leggere: chi chiama in quel caso comincia una discesa nuova, e
    non deve saperne il perché. */
 export function leggi(dato, tappa) {
-  if (!dato || dato.v !== VERSIONE || !dato.robe) return null
+  if (!dato || !LEGGIBILI.includes(dato.v) || !dato.robe) return null
   try {
-    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe })
+    /* Nella 2 `eroe` portava la cella, non il nome: quello che arriva
+       qui è un oggetto, e `eroeDi` di un oggetto torna il primo della
+       lista. Si dichiara invece di lasciarlo capitare. */
+    const chiEro = typeof dato.eroe === 'string' ? dato.eroe : DI_PARTENZA
+    const dove = dato.dove || (typeof dato.eroe === 'object' ? dato.eroe : null)
+    if (!dove) return null
+    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: chiEro })
     corsa.piano = dato.piano || 0
     corsa.nuovoPiano()                     // lo stesso piano di allora, dal seme
 
@@ -135,11 +166,12 @@ export function leggi(dato, tappa) {
     const vera = k => (k && COSE[k] ? k : null)
     corsa.zaino = (dato.zaino || []).filter(k => COSE[k])
     corsa.mano = vera(dato.mano)
+    corsa.mancina = vera(dato.mancina)
     corsa.corpo = vera(dato.corpo)
     corsa.dito = vera(dato.dito)
     corsa.torcia = !!dato.torcia
     corsa.chiaveDelPiano = !!dato.chiave
-    corsa.eroe = { x: dato.eroe.x, y: dato.eroe.y }
+    corsa.eroe = { x: dove.x, y: dove.y }
     corsa.guarda = dato.guarda || 'dx'
     corsa.visto = vistoDa(dato.visto, corsa.livello.largo * corsa.livello.alto)
     corsa.stanzeDentro = new Set(dato.stanze || [])
@@ -165,7 +197,7 @@ export function leggi(dato, tappa) {
 /* Due righe per la carta «riprendi»: cosa si sta lasciando in sospeso.
    Le legge la schermata delle discese, che di `Corsa` non sa niente. */
 export function dice(dato, campagna) {
-  if (!dato || dato.v !== VERSIONE) return null
+  if (!dato || !LEGGIBILI.includes(dato.v)) return null
   const t = campagna[dato.tappa]
   if (!t) return null
   return {
@@ -174,7 +206,7 @@ export function dice(dato, campagna) {
     icona: t.icona,
     piano: (dato.piano || 0) + 1,
     piani: t.piani,
-    eroe: dato.eroe,
+    eroe: typeof dato.eroe === 'string' ? dato.eroe : DI_PARTENZA,
     vita: dato.vita,
     gemme: dato.gemme,
   }

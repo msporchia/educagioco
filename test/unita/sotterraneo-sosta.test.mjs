@@ -41,6 +41,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   for (let i = 0; i < 30 && !m.morto; i++) { c.rispondi(true); if (!c.foglio) break }
   c.zaino.push('pozione')
   c.mano = 'spada'
+  c.mancina = 'accetta'      // la seconda arma si riprende com'era
   c.gemme = 77
   c.vita = 13
   for (let i = 0; i < 40; i++) c.passo(1 / 30)
@@ -49,7 +50,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   const b = leggi(dato, CAMPAGNA[1])
   controlla('il salvataggio si rilegge', !!b)
 
-  const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.mano, x.corpo,
+  const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.mano, x.mancina, x.corpo,
                       x.zaino.join(), x.chiaveDelPiano, x.torcia,
                       Math.floor(x.eroe.x), Math.floor(x.eroe.y),
                       x.domande, x.mostriBattuti, x.tesori, x.stanzeViste].join('|')
@@ -111,7 +112,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 5, rnd: seminato(5) })
   const dato = scrivi(c, 0)
-  uguale('un salvataggio di ieri non si legge', leggi({ ...dato, v: VERSIONE - 1 }, CAMPAGNA[0]), null)
+  uguale('un salvataggio di ieri non si legge', !!leggi({ ...dato, v: 1 }, CAMPAGNA[0]), false)
   uguale('e nemmeno un dato storto', leggi({ v: VERSIONE, robe: null }, CAMPAGNA[0]), null)
   uguale('niente salvataggio, niente ripresa', leggi(null, CAMPAGNA[0]), null)
 
@@ -122,6 +123,39 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   const riga = dice(dato, CAMPAGNA)
   uguale('la carta dice da che tappa si riprende', riga.nome, CAMPAGNA[0].nome)
   uguale('e a che piano si era', riga.piano, 1)
+}
+
+/* ══════════ 6. chi scendeva è chi risale ══════════
+   `eroe` voleva dire due cose nello stesso oggetto — chi scende e dove
+   sta — e la seconda cancellava la prima: si riprendeva col cavaliere
+   qualunque eroe si fosse scelto, mentre la mappa delle discese
+   continuava a mostrare il ritratto giusto. Da fuori si vedeva così:
+   «ogni tanto mi ritrovo con l'eroe sbagliato». */
+{
+  for (const chi of ['mago', 'nano', 'elfa', 'cavaliere']) {
+    const c = new Corsa(CAMPAGNA[1], { seme: 42, rnd: seminato(42), eroe: chi })
+    for (let i = 0; i < 30; i++) c.passo(1 / 30)
+    const dato = scrivi(c, 1)
+    const b = leggi(dato, CAMPAGNA[1])
+    uguale(`si riprende da ${chi}`, b.chiEro, chi)
+    uguale('con la sua vita', b.vitaMax, c.vitaMax)
+    uguale('e dove si era', `${Math.floor(b.eroe.x)},${Math.floor(b.eroe.y)}`,
+           `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`)
+    uguale('e la carta lo dice', dice(dato, CAMPAGNA).eroe, chi)
+  }
+
+  /* un salvataggio della 2 — dove `eroe` portava la cella — si legge
+     ancora: si riprende col cavaliere, che è quello che il gioco dava
+     comunque, invece di buttare venti minuti di discesa */
+  const c = new Corsa(CAMPAGNA[1], { seme: 42, rnd: seminato(42), eroe: 'mago' })
+  const vecchio = { ...scrivi(c, 1), v: 2 }
+  delete vecchio.dove
+  vecchio.eroe = { x: c.eroe.x, y: c.eroe.y }
+  const b = leggi(vecchio, CAMPAGNA[1])
+  controlla('un salvataggio della 2 si riprende lo stesso', !!b)
+  uguale('col cavaliere, e detto', b && b.chiEro, 'cavaliere')
+  uguale('e dalla cella giusta', b && `${Math.floor(b.eroe.x)},${Math.floor(b.eroe.y)}`,
+         `${Math.floor(c.eroe.x)},${Math.floor(c.eroe.y)}`)
 }
 
 /* le cose per terra sopravvivono alla chiusura: sono l'unica cosa che
