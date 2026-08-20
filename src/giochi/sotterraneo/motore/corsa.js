@@ -72,6 +72,10 @@ export class Corsa {
     this.gemme = 0
     this.zaino = []
     this.mano = null
+    /* la mano debole: ci sta una seconda arma leggera, o l'ombra di
+       quella che si tiene con tutte e due le mani (vedi `mani` in
+       `dati/cose.js`) */
+    this.mancina = null
     this.corpo = null
     this.dito = null
     this.torcia = false
@@ -99,6 +103,27 @@ export class Corsa {
      L'unico posto dove si sommano: chi vuole sapere quanto picchia
      chiede qui, e non va a guardare dentro le tasche. */
   get att() { return this.io.att + this.addosso('att') }
+
+  /* ── la mano debole colpisce la metà ──
+     Due armi non fanno il doppio, o portarne due sarebbe l'unica cosa
+     sensata da fare e le armi pesanti non se le prenderebbe più
+     nessuno. Metà, arrotondata per eccesso: **due armi di secondo
+     gradino valgono un terzo gradino**, che è il patto — le leggere si
+     sdoppiano, le pesanti no, e le due strade si equivalgono. */
+  get attaccoMancino() {
+    const c = COSE[this.mancina]
+    return c ? Math.ceil((c.att || 0) / 2) : 0
+  }
+
+  /* Quanto picchierebbero due mani messe così: serve a decidere dove
+     conviene mettere un'arma trovata, e non tocca niente. */
+  attaccoDelleMani(destra, sinistra) {
+    const d = COSE[destra] ? (COSE[destra].att || 0) : 0
+    const s = COSE[sinistra] ? Math.ceil((COSE[sinistra].att || 0) / 2) : 0
+    return d + s
+  }
+
+  aDueMani(k) { return !!(COSE[k] && COSE[k].mani === 2) }
   get dif() { return this.io.dif + this.addosso('dif') }
   /* La vita massima **non è un campo**: cresce coi piani (`vitaBase`) e
      con quello che si porta al dito. Tenerla come numero voleva dire
@@ -114,15 +139,66 @@ export class Corsa {
     let n = 0
     for (const k of [this.mano, this.corpo, this.dito])
       if (k && COSE[k]) n += COSE[k][campo] || 0
+    /* la seconda arma vale **piena** per tutto il resto — la luce di
+       una lama che brucia illumina uguale in qualunque mano — e metà
+       solo per il braccio */
+    if (this.mancina && COSE[this.mancina])
+      n += campo === 'att' ? this.attaccoMancino : (COSE[this.mancina][campo] || 0)
     return n
   }
 
   /* Dov'è la casella di una cosa, e cosa c'è dentro adesso. */
-  casella(dove) { return dove === 'mano' ? this.mano : dove === 'corpo' ? this.corpo : this.dito }
+  casella(dove) {
+    if (dove === 'mano') return this.mano
+    if (dove === 'mancina') return this.mancina
+    if (dove === 'corpo') return this.corpo
+    return this.dito
+  }
+
   metti(dove, k) {
     if (dove === 'mano') this.mano = k
+    else if (dove === 'mancina') this.mancina = k
     else if (dove === 'corpo') this.corpo = k
     else this.dito = k
+  }
+
+  /* ── le due mani devono stare d'accordo ──
+     Un'arma a due mani sfratta quello che c'era nella sinistra, e
+     quella che se ne va **non si perde**: torna in tasca, o per terra
+     se le tasche sono piene. È la stessa regola dello scambio in mano,
+     e per lo stesso motivo — una spada che sparisce perché ne hai
+     raccolta un'altra è la cosa che fa arrabbiare di più. */
+  sistemaLeMani(dove) {
+    if (!this.mancina) return
+    if (!this.mano || this.aDueMani(this.mano) || this.aDueMani(this.mancina)) {
+      const sfrattata = this.mancina
+      this.mancina = null
+      if (this.zaino.length < TASCHE) this.zaino.push(sfrattata)
+      else this.posaRoba({ che: 'cosa', cosa: sfrattata, em: COSE[sfrattata].em },
+                         { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
+      this.dillo(`${COSE[sfrattata].em} ${COSE[sfrattata].nome}: serve l'altra mano`)
+    }
+  }
+
+  /* ── dove conviene metterla, e quanto si guadagna ──
+     Un'arma può andare in due posti, e non è sempre il pugno: con la
+     spada già in mano, una seconda spada leggera vale di più nella
+     sinistra che al posto di quella che c'è. Si provano le sistemazioni
+     possibili e si tiene la migliore — che è quello che farebbe
+     chiunque, ma a mente e sbagliando. */
+  postoDellArma(k) {
+    const c = COSE[k]
+    const ora = this.attaccoDelleMani(this.mano, this.mancina)
+    const scelte = [{
+      dove: 'mano',
+      /* mettendola in pugno la sinistra sopravvive solo se nessuna
+         delle due chiede tutte e due le mani */
+      att: this.attaccoDelleMani(k, this.aDueMani(k) ? null : this.mancina),
+    }]
+    if (!this.aDueMani(k) && this.mano && !this.aDueMani(this.mano))
+      scelte.push({ dove: 'mancina', att: this.attaccoDelleMani(this.mano, k) })
+    const meglio = scelte.sort((a, b) => b.att - a.att)[0]
+    return { dove: meglio.dove, delta: meglio.att - ora }
   }
 
   colpo(m) { return Math.max(1, this.att - m.dif) }
@@ -151,6 +227,18 @@ export class Corsa {
   }
 
   dillo(testo) { this.avvisi.push(testo) }
+
+  /* L'avviso di una cosa trovata, presa o comprata dice **quale cosa**,
+     non come si scrive: a schermo ci va la sua faccia vera — lo sprite
+     del foglio — e l'emoji resta il ripiego di chi uno sprite non ce
+     l'ha. Scrivendo `${c.em} ${c.nome}` dentro la stringa, la stessa
+     boccetta finiva disegnata a mano per terra e in emoji nella riga
+     che diceva di averla presa. */
+  dilloDi(k, coda = '') {
+    const c = COSE[k]
+    if (!c) return
+    this.avvisi.push({ cosa: k, testo: c.nome + coda })
+  }
 
   /* ═══════════ il piano ═══════════ */
   nuovoPiano() {
@@ -402,19 +490,76 @@ export class Corsa {
 
   /* ── una cosa per terra, toccata ──
      Quello che si beve o si accende va in tasca e via: nessuna domanda,
-     perché non c'è niente da decidere. Quello che si **impugna o si
-     indossa** apre invece un foglio, ed è l'unico posto del gioco dove
-     un numero si legge prima di sceglierlo: «questa ti dà due colpi in
-     più di quella che hai». Senza quel confronto un bambino sceglie
-     un'arma dal disegno, e il disegno non dice quanto fa male. */
+     perché non c'è niente da decidere.
+
+     ── E QUELLO CHE È MEGLIO SE LO METTE DA SÉ ─────────────────────
+     Prima si apriva un foglio col confronto («⚔️ +2 rispetto alla spada
+     corta»), e la ragione era buona: è il solo numero che dice quanto
+     vale un'arma, e un bambino l'arma la sceglie dal disegno. Solo che
+     quel foglio chiedeva **una decisione che non è una decisione** —
+     davanti a un'arma migliore di quella che si ha in pugno non esiste
+     un secondo tasto sensato — e la chiedeva nel momento peggiore, cioè
+     mentre si gira per una stanza. Tre tocchi per un sì scontato.
+
+     Adesso quello che è meglio va addosso da solo, e il numero si legge
+     **dopo**, nella riga che compare («Spada ⚔️ +2»): la stessa
+     informazione, senza la finta scelta in mezzo. Quello che è peggio o
+     uguale finisce in tasca, e lì lo si confronta con calma nello
+     zaino, che è il posto dove si sceglie davvero. Una casella vuota
+     conta come «meglio»: a mani nude qualunque spada è un guadagno.
+
+     I gioielli restano fuori dall'automatismo quando il dito è già
+     occupato: fra due anelli non c'è un «più forte», c'è un modo di
+     giocare diverso — vedere lontano, tornare su con più gemme — e
+     quella è una scelta vera. */
   trovata(r) {
     const c = COSE[r.cosa]
     if (!c) return
-    if (c.dove) { this.foglio = { che: 'trovata', chi: r, cosa: r.cosa, ...this.confronto(r.cosa) }; return }
+    /* la torcia non va in tasca: si accende, e basta averla */
+    if (c.usa === 'luce') {
+      if (!this.accendi(r.cosa)) { this.dillo('🔦 ne hai già una accesa'); return }
+      r.presa = true
+      return
+    }
+    if (c.dove) {
+      const conf = this.confronto(r.cosa)
+      if (!conf.addosso || conf.delta > 0) return this.vesti(r, conf)
+    }
     if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return }
     this.zaino.push(r.cosa)
     r.presa = true
-    this.dillo(`${c.em} ${c.nome}`)
+    this.dilloDi(r.cosa)
+  }
+
+  /* Accendere è una cosa sola: o è accesa o non lo è, e una seconda
+     torcia non fa più luce della prima. Torna `false` se era già
+     accesa, così chi chiama sa che non è successo niente. */
+  accendi(k) {
+    if (this.torcia) return false
+    this.torcia = true
+    this.aggiornaLuce()
+    this.dilloDi(k, ' 🔦 si vede più lontano')
+    return true
+  }
+
+  /* Se lo mette, e quello che aveva **non si perde**: va nello zaino, o
+     per terra se le tasche sono piene. Una spada lasciata cadere per
+     prenderne un'altra è la cosa che fa arrabbiare di più, e succede
+     proprio quando lo zaino è pieno — cioè sempre quando conta. */
+  vesti(r, conf) {
+    const dove = conf.dove
+    const vecchio = this.casella(dove)
+    this.metti(dove, r.cosa)
+    r.presa = true
+    if (vecchio) {
+      if (this.zaino.length < TASCHE) this.zaino.push(vecchio)
+      else this.livello.robe.push({ che: 'cosa', cosa: vecchio, x: r.x, y: r.y,
+                                    em: COSE[vecchio].em })
+    }
+    this.sistemaLeMani()
+    const segno = conf.campo === 'att' ? '⚔️' : conf.campo === 'dif' ? '🛡️' : ''
+    this.dilloDi(r.cosa, conf.delta > 0 && segno ? ` ${segno} +${conf.delta}` : '')
+    return { che: 'addosso', cosa: r.cosa }
   }
 
   /* Quanto vale una cosa **rispetto a quella che si ha già addosso**: il
@@ -423,7 +568,14 @@ export class Corsa {
   confronto(k) {
     const c = COSE[k]
     if (!c || !c.dove) return null
-    const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' ? 'dif' : 'dono'
+    /* le armi hanno due caselle, e il confronto è con **il totale delle
+       mani**: con la spada in pugno una seconda spada leggera non è
+       «uguale a quella che hai», è un braccio in più */
+    if (c.dove === 'mano') {
+      const posto = this.postoDellArma(k)
+      return { dove: posto.dove, campo: 'att', addosso: this.casella(posto.dove), delta: posto.delta }
+    }
+    const campo = c.dove === 'corpo' ? 'dif' : 'dono'
     const addosso = this.casella(c.dove)
     /* la guardia non è pignoleria: un salvataggio scritto quando le cose
        si chiamavano in un altro modo arriva qui con una chiave che non
@@ -431,41 +583,6 @@ export class Corsa {
        nera invece di ignorare un oggetto */
     const mio = addosso ? (COSE[addosso]?.[campo] || 0) : 0
     return { dove: c.dove, campo, addosso, delta: (c[campo] || 0) - mio }
-  }
-
-  /* ── i tre modi di rispondere a una cosa trovata ──
-     Impugnare non passa dallo zaino: si prende e si mette, e quello che
-     si aveva **prende il posto per terra** di quello che si è raccolto
-     se le tasche sono piene. Uno scambio, non una perdita: una spada
-     lasciata cadere per prenderne un'altra è la cosa che fa arrabbiare
-     di più, e succede proprio quando lo zaino è pieno — cioè sempre
-     quando conta. */
-  impugna() {
-    const f = this.foglio
-    if (!f || f.che !== 'trovata') return null
-    const k = f.cosa, c = COSE[k], r = f.chi
-    const vecchio = this.casella(c.dove)
-    this.metti(c.dove, k)
-    r.presa = true
-    if (vecchio) {
-      if (this.zaino.length < TASCHE) this.zaino.push(vecchio)
-      else this.livello.robe.push({ che: 'cosa', cosa: vecchio, x: r.x, y: r.y,
-                                    em: COSE[vecchio].em })
-    }
-    this.dillo(`${c.em} ${c.nome}`)
-    this.chiudi()
-    return { che: 'addosso', cosa: k }
-  }
-
-  inTasca() {
-    const f = this.foglio
-    if (!f || f.che !== 'trovata') return null
-    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
-    this.zaino.push(f.cosa)
-    f.chi.presa = true
-    this.dillo(`${COSE[f.cosa].em} ${COSE[f.cosa].nome}`)
-    this.chiudi()
-    return { che: 'presa', cosa: f.cosa }
   }
 
   /* ═══════════ toccare una cosa ═══════════ */
@@ -532,26 +649,34 @@ export class Corsa {
     return null
   }
 
+  /* Ogni esito di uno scontro dice **lo scambio per intero**: quanto hai
+     tolto e quanto hai preso. Serve a schermo, e serve perché un
+     bambino che risponde bene e vede la propria vita calare senza un
+     numero accanto conclude di aver sbagliato — che è esattamente
+     quello che succedeva, aiutato da un suono di botta uguale a quello
+     dell'errore. Il graffio non è una punizione nascosta: è il prezzo
+     di una battaglia lunga, e va detto in faccia. */
   rispostaScontro(m, giusto) {
     if (!giusto) {
       const male = this.danno(m)
       this.ferisci(male)
-      if (this.vita <= 0) { this.svieni(); return { che: 'svenuto' } }
+      if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato: 0, preso: male } }
       this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
-      return { che: 'ferito', quanto: male }
+      return { che: 'ferito', quanto: male, dato: 0, preso: male }
     }
-    m.ossa -= this.colpo(m)
+    const dato = this.colpo(m)
+    m.ossa -= dato
     if (m.ossa > 0) {
       /* il mostro è ancora in piedi, quindi restituisce: chi è caduto no */
       const male = this.graffio(m)
       this.ferisci(male)
-      if (this.vita <= 0) { this.svieni(); return { che: 'svenuto' } }
+      if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', dato, preso: male } }
       this.chiedi('scontro', MOSTRI[m.tipo].capo ? RINCARO.capo : RINCARO.mostro)
-      return { che: 'colpo', restano: this.colpiPer(m), male }
+      return { che: 'colpo', restano: this.colpiPer(m), male, dato, preso: male }
     }
     this.cade(m)
     this.chiudi()
-    return { che: 'caduto', chi: m }
+    return { che: 'caduto', chi: m, dato, preso: 0 }
   }
 
   /* Il bottino grosso lo lasciano i mostri grossi: è il patto che fa
@@ -683,12 +808,66 @@ export class Corsa {
      domande hanno fruttato. Un gioco in cui ogni singola cosa costa un
      esercizio diventa un compito lungo; ci vuole un posto dove il lavoro
      già fatto valga da solo. */
+  /* Ce l'ho già? Addosso o in tasca, per il banco è lo stesso: una
+     seconda spada uguale alla prima non serve a niente. Le cose che si
+     bevono o si accendono fanno eccezione — di pozioni se ne portano
+     quante ne stanno, ed è il senso stesso di una pozione. */
+  possiedo(k) {
+    if (COSE[k] && COSE[k].usa === 'luce' && this.torcia) return true
+    return this.mano === k || this.mancina === k || this.corpo === k ||
+           this.dito === k || this.zaino.includes(k)
+  }
+
+  quanteNeHo(k) {
+    return this.zaino.filter(x => x === k).length +
+           (this.mano === k || this.corpo === k || this.dito === k ? 1 : 0)
+  }
+
   mercante(m) {
     if (!m.roba) {
-      const mescolato = [...IN_VENDITA].sort(() => this.rnd() - 0.5)
-      m.roba = mescolato.slice(0, 3)
+      /* cinque e non tre: con trenta voci in catalogo, tre pezzi
+         pescati a caso facevano un banco in cui non c'era mai niente
+         che servisse — e un mercante da cui non si compra mai è una
+         stanza attraversata.
+
+         E non si offre quello che si ha già addosso: il banco è di
+         cinque righe, e una riga occupata da una spada identica a
+         quella in pugno è una riga buttata. Le pozioni sì, che si
+         accumulano apposta. */
+      const utile = k => (COSE[k].usa ? true : !this.possiedo(k))
+      const mescolato = IN_VENDITA.filter(utile).sort(() => this.rnd() - 0.5)
+      m.roba = mescolato.slice(0, 5)
     }
     this.foglio = { che: 'mercante', chi: m }
+  }
+
+  /* ── vendere ──
+     A metà prezzo, ed è la parte che conta: comprare e rivendere è una
+     perdita, quindi il banco non diventa un modo di fare gemme girando
+     in tondo. Serve invece a due cose vere — liberare una tasca senza
+     buttare per terra quello che c'è dentro, e trasformare in gemme la
+     spada di gradino 2 che non si userà più adesso che se ne ha una
+     migliore. Si vende solo dallo zaino: quello che si ha addosso lo si
+     ripone prima, che è già un gesto che c'è.
+
+     Il prezzo non scende mai sotto 1: una cosa che si vende per zero
+     gemme è una cosa che il gioco ti dice di buttare. */
+  quantoVale(k) {
+    const c = COSE[k]
+    return c && c.prezzo ? Math.max(1, Math.floor(c.prezzo / 2)) : 0
+  }
+
+  vendi(i) {
+    const f = this.foglio
+    if (!f || f.che !== 'mercante') return null
+    const k = this.zaino[i]
+    if (!k) return null
+    const preso = this.quantoVale(k)
+    if (!preso) return null
+    this.zaino.splice(i, 1)
+    this.gemme += preso
+    this.dillo(`💎 +${preso}`)
+    return { che: 'venduto', cosa: k, gemme: preso }
   }
 
   compra(k) {
@@ -697,11 +876,43 @@ export class Corsa {
     const c = COSE[k]
     if (!c || !f.chi.roba.includes(k)) return null
     if (this.gemme < c.prezzo) return { che: 'niente' }
-    if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return { che: 'pieno' } }
+    /* Lo zaino pieno non ferma quello che si mette addosso: la casella
+       è un altro posto, e chi ha una casella vuota può comprare anche
+       con le sei tasche occupate. Fermava tutto, ed era il caso in cui
+       si sta al banco proprio perché non si ha più posto. */
+    const vaAddosso = c.dove && (() => {
+      const conf = this.confronto(k)
+      return !conf.addosso || conf.delta > 0
+    })()
+    /* la torcia comprata si accende e non chiede una tasca, come quella
+       trovata per terra */
+    const siAccende = c.usa === 'luce'
+    const serveTasca = !siAccende && (!vaAddosso || !!this.casella(this.confronto(k).dove))
+    if (serveTasca && this.zaino.length >= TASCHE) {
+      this.dillo('🎒 lo zaino è pieno')
+      return { che: 'pieno' }
+    }
     this.gemme -= c.prezzo
-    this.zaino.push(k)
     f.chi.roba.splice(f.chi.roba.indexOf(k), 1)
-    this.dillo(`${c.em} ${c.nome}`)
+    if (siAccende) { this.accendi(k); return { che: 'comprato', cosa: k, addosso: true } }
+    /* comprata e messa: è la stessa regola della roba per terra
+       (`trovata`), e per lo stesso motivo — chi ha appena speso venti
+       gemme per una corazza migliore non sta scegliendo se metterla,
+       la sta comprando **per** metterla. Quello che è peggio o uguale
+       va in tasca, che al banco capita: si compra una seconda arma per
+       rivenderla, o un anello che si userà più giù. */
+    if (vaAddosso) {
+      const conf = this.confronto(k)
+      const vecchio = this.casella(conf.dove)
+      this.metti(conf.dove, k)
+      if (vecchio) this.zaino.push(vecchio)
+      this.sistemaLeMani()
+      const segno = conf.campo === 'att' ? '⚔️' : conf.campo === 'dif' ? '🛡️' : ''
+      this.dilloDi(k, conf.delta > 0 && segno ? ` ${segno} +${conf.delta}` : '')
+      return { che: 'comprato', cosa: k, addosso: true }
+    }
+    this.zaino.push(k)
+    this.dilloDi(k)
     return { che: 'comprato', cosa: k }
   }
 
@@ -723,12 +934,16 @@ export class Corsa {
     if (c.dove) {
       /* quello che si aveva addosso torna nello zaino: non sparisce,
          perché una spada lasciata cadere per prenderne un'altra è la cosa
-         che fa arrabbiare di più */
-      const vecchio = this.casella(c.dove)
-      this.metti(c.dove, k)
+         che fa arrabbiare di più. Per un'arma il posto lo sceglie
+         `confronto`: col pugno pieno e la sinistra libera, una seconda
+         arma leggera va di là. */
+      const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
+      const vecchio = this.casella(dove)
+      this.metti(dove, k)
       this.zaino.splice(i, 1)
       if (vecchio) this.zaino.push(vecchio)
-      this.dillo(`${c.em} ${c.nome}`)
+      this.sistemaLeMani()
+      this.dilloDi(k)
       return { che: 'addosso', cosa: k }
     }
     if (c.usa === 'cura') {
@@ -737,11 +952,20 @@ export class Corsa {
       this.dillo(`❤️ +${c.cura}`)
       return { che: 'curato' }
     }
-    if (c.usa === 'luce') {
-      this.torcia = true
+    if (c.usa === 'cresci') {
+      this.vitaBase += c.cresce
+      this.vita += c.cresce
       this.zaino.splice(i, 1)
-      this.aggiornaLuce()
-      this.dillo('🔦 si vede più lontano')
+      this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
+      return { che: 'cresciuto' }
+    }
+    /* Una torcia in tasca adesso non ci finisce più — si accende
+       raccogliendola — ma un salvataggio di prima ce l'ha ancora, e un
+       oggetto che non si può né usare né togliere sarebbe una tasca
+       murata. Il tasto resta per loro. */
+    if (c.usa === 'luce') {
+      this.zaino.splice(i, 1)
+      if (!this.accendi(k)) this.dillo('🔦 ne hai già una accesa')
       return { che: 'luce' }
     }
     if (c.usa === 'porta') {

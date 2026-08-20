@@ -276,14 +276,15 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.raccogli()
   uguale('camminarci sopra non la raccoglie più', c.zaino.length, 0)
   c.interagisci(lasciata)
-  const preso = c.zaino.length === 1 || (c.foglio && c.foglio.che === 'trovata')
-  controlla('toccarla sì', preso, c.foglio ? c.foglio.che : c.zaino.join())
+  const preso = c.zaino.length === 1 || c.mano === lasciata.cosa || c.corpo === lasciata.cosa
+  controlla('toccarla sì', preso, c.zaino.join() + '|' + c.mano)
   c.chiudi()
 }
 
-/* quello che si impugna passa da un foglio che dice **quanto** cambia:
-   un bambino sceglie un'arma dal disegno, e il disegno non dice quanto
-   fa male */
+/* quello che è meglio se lo mette da sé: davanti a un'arma più forte di
+   quella che si ha in pugno non esiste un secondo tasto sensato, e
+   chiederlo mentre si gira per una stanza erano tre tocchi per un sì
+   scontato. Il numero si legge dopo, nella riga che compare. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 33, rnd: seminato(33) })
   c.zaino = []
@@ -293,20 +294,33 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.livello.robe.push(spada)
 
   c.interagisci(spada)
-  uguale('toccare un\'arma apre il confronto', c.foglio.che, 'trovata')
-  uguale('e dice di quanto è meglio', c.foglio.delta, COSE.spada.att - COSE['spada-corta'].att)
-  c.impugna()
-  uguale('impugnandola finisce in mano', c.mano, 'spada')
+  uguale('un\'arma migliore finisce in mano da sé', c.mano, 'spada')
+  uguale('senza aprire niente', c.foglio, null)
   controlla('e la corta torna nello zaino', c.zaino.includes('spada-corta'), c.zaino.join())
   uguale('la spada non è più per terra', spada.presa, true)
+  const detto = c.avvisi.at(-1)
+  controlla('la riga dice quanto si è guadagnato',
+            detto && detto.testo.includes('+' + (COSE.spada.att - COSE['spada-corta'].att)),
+            JSON.stringify(detto))
+
+  /* un'arma leggera con la destra già piena non è «peggio»: va nella
+     mano debole, dove vale la metà. Due leggere fanno una pesante. */
+  c.avvisi = []
+  const corta = { che: 'cosa', cosa: 'accetta', x: dove.x, y: dove.y, em: COSE.accetta.em }
+  c.livello.robe.push(corta)
+  c.interagisci(corta)
+  uguale('la spada resta nel pugno', c.mano, 'spada')
+  uguale('e la seconda arma va nella mano debole', c.mancina, 'accetta')
+  uguale('due leggere valgono una pesante',
+         c.att, c.io.att + COSE.spadone.att)
 
   /* con le tasche piene lo scambio non perde niente: il vecchio prende
      il posto per terra del nuovo */
+  c.mancina = null
   c.zaino = new Array(TASCHE).fill('pozione')
   const ascia = { che: 'cosa', cosa: 'spadone', x: dove.x, y: dove.y, em: COSE.spadone.em }
   c.livello.robe.push(ascia)
   c.interagisci(ascia)
-  c.impugna()
   uguale('con lo zaino pieno si impugna lo stesso', c.mano, 'spadone')
   uguale('e le tasche non traboccano', c.zaino.length, TASCHE)
   controlla('la spada di prima è per terra, non persa',
@@ -431,6 +445,157 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.scappa()
   uguale('lo scontro si chiude', c.foglio, null)
   controlla('e il mostro resta calmo per qualche secondo', m.calmo > 0, String(m.calmo))
+}
+
+/* ══════════ 5-quater. la torcia non si accende: si ha ══════════
+   Era una cosa da usare: si raccoglieva, occupava una tasca, e poi
+   bisognava aprire lo zaino e premere «l'accendo» — una scelta che non
+   è una scelta, perché nessuno preferisce restare al buio. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 44, rnd: seminato(44) })
+  c.zaino = []
+  const dove = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
+  const buio = c.luce.size
+  const torcia = { che: 'cosa', cosa: 'torcia', x: dove.x, y: dove.y, em: COSE.torcia.em }
+  c.livello.robe.push(torcia)
+
+  c.interagisci(torcia)
+  uguale('raccolta, è già accesa', c.torcia, true)
+  uguale('e non occupa una tasca', c.zaino.length, 0)
+  uguale('non è più per terra', torcia.presa, true)
+  controlla('e da lì in avanti si vede più lontano', c.luce.size > buio,
+            `${buio} → ${c.luce.size}`)
+
+  /* averla accesa vuol dire averla: il mercante non ne offre una seconda */
+  controlla('una torcia accesa conta come posseduta', c.possiedo('torcia'))
+  const altra = { che: 'cosa', cosa: 'torcia', x: dove.x, y: dove.y, em: COSE.torcia.em }
+  c.livello.robe.push(altra)
+  c.interagisci(altra)
+  uguale('e la seconda resta per terra', !!altra.presa, false)
+}
+
+/* ══════════ 5-ter. due mani, e chi ne occupa due ══════════
+   Le armi leggere si sdoppiano, le pesanti no: è il patto che tiene in
+   piedi tutte e due le strade. La sinistra colpisce la metà, quindi due
+   armi di secondo gradino valgono un terzo gradino — e uno spadone non
+   diventa mai una scelta sbagliata. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 21, rnd: seminato(21) })
+  c.zaino = []
+  c.mano = null
+  c.mancina = null
+  const nudo = c.att
+
+  c.mano = 'spada'                    // gradino 2, una mano
+  c.mancina = 'spada'
+  uguale('la mano debole colpisce la metà', c.att, nudo + 2 + 1)
+  uguale('e due leggere valgono una pesante', c.att, nudo + COSE.spadone.att)
+
+  /* un'arma a due mani sfratta la sinistra, e quello che c'era non si
+     perde: torna in tasca */
+  c.zaino = []
+  c.mano = 'spadone'
+  c.sistemaLeMani()
+  uguale('un\'arma a due mani libera la sinistra', c.mancina, null)
+  controlla('e quella che c\'era torna in tasca', c.zaino.includes('spada'), c.zaino.join())
+
+  /* dove conviene mettere quello che si trova: col pugno pieno di
+     un'arma leggera, una seconda leggera va nella mano debole */
+  c.mano = 'spada'
+  c.mancina = null
+  c.zaino = []
+  uguale('la seconda leggera va nella mano debole', c.postoDellArma('accetta').dove, 'mancina')
+  uguale('e ci si guadagna', c.postoDellArma('accetta').delta, 1)
+  uguale('un\'arma a due mani va invece nel pugno', c.postoDellArma('spadone').dove, 'mano')
+
+  /* con lo spadone in pugno una leggera non serve a niente: le mani
+     sono occupate tutte e due, e prenderla al posto suo è un passo
+     indietro */
+  c.mano = 'spadone'
+  c.mancina = null
+  controlla('con le mani occupate una leggera non conviene',
+            c.postoDellArma('accetta').delta < 0, `${c.postoDellArma('accetta').delta}`)
+
+  /* i tratti valgono pieni anche nella mano debole: è una copia sola
+     dell'oggetto, e la luce di una lama che brucia illumina uguale */
+  c.mano = 'spada'
+  c.mancina = 'pugnale-vampiro'
+  uguale('la vita del pugnale conta tutta', c.vitaMax, c.vitaBase + COSE['pugnale-vampiro'].vita)
+  uguale('ma il suo braccio conta metà', c.att, c.io.att + COSE.spada.att + 1)
+}
+
+/* ══════════ 5-bis. il banco del mercante: si compra e si vende ══════════
+   Vendere non è un modo di fare gemme — metà prezzo, quindi comprare e
+   rivendere perde — ma è l'unico modo di liberare una tasca senza
+   buttare per terra quello che c'è dentro. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 77, rnd: seminato(77) })
+  const m = c.livello.robe.find(r => r.che === 'mercante')
+  c.interagisci(m)
+  uguale('il mercante apre il suo banco', c.foglio.che, 'mercante')
+  controlla('con più di tre cose in vendita', c.foglio.chi.roba.length >= 4,
+            c.foglio.chi.roba.join(' '))
+
+  c.zaino = ['spada', 'pozione']
+  c.gemme = 0
+  const vale = c.quantoVale('spada')
+  uguale('una cosa vale metà del suo prezzo', vale, Math.floor(COSE.spada.prezzo / 2))
+  const e = c.vendi(0)
+  uguale('venduta, le gemme arrivano', c.gemme, vale)
+  uguale('e la tasca è libera', c.zaino.join(), 'pozione')
+  uguale('e il motore dice cosa è successo', e.che, 'venduto')
+
+  /* comprare e rivendere è una perdita: il banco non è una macchinetta */
+  c.gemme = 100
+  const k = c.foglio.chi.roba[0]
+  c.compra(k)
+  const speso = 100 - c.gemme
+  const reso = c.quantoVale(k)
+  controlla('rivendere quello che si è appena comprato ci rimette', reso < speso,
+            `${reso} contro ${speso}`)
+
+  /* il banco non offre quello che si ha già addosso o in tasca: una
+     riga su cinque occupata da una spada identica a quella in pugno è
+     una riga buttata. Le pozioni sì, che si accumulano apposta. */
+  {
+    const b = new Corsa(CAMPAGNA[1], { seme: 5, rnd: seminato(5) })
+    b.mano = 'spadone'
+    b.corpo = 'corazza'
+    b.zaino = ['medaglione']
+    const banco = b.livello.robe.find(r => r.che === 'mercante')
+    b.interagisci(banco)
+    const offerto = banco.roba
+    controlla('quello che hai addosso non è più in vendita',
+              !offerto.includes('spadone') && !offerto.includes('corazza'), offerto.join(' '))
+    controlla('e nemmeno quello che hai in tasca',
+              !offerto.includes('medaglione'), offerto.join(' '))
+  }
+
+  /* comprato = messo: chi spende venti gemme per una corazza migliore
+     non sta scegliendo se metterla */
+  {
+    const b = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9) })
+    b.zaino = []
+    b.mano = 'spada-corta'
+    b.gemme = 200
+    const banco = b.livello.robe.find(r => r.che === 'mercante')
+    b.interagisci(banco)
+    banco.roba = ['spadone', 'pozione']
+    const e = b.compra('spadone')
+    uguale('lo spadone comprato finisce in pugno', b.mano, 'spadone')
+    uguale('e il motore lo dice', e.addosso, true)
+    controlla('la spada corta torna in tasca', b.zaino.includes('spada-corta'))
+    uguale('quante ne ho: il banco lo sa dire', b.quanteNeHo('spadone'), 1)
+    b.compra('pozione')
+    uguale('una pozione invece va in tasca', b.zaino.filter(x => x === 'pozione').length, 1)
+  }
+
+  /* l'elisir non si beve: cresce, e resta cresciuto */
+  const prima = c.vitaMax
+  c.zaino = ['elisir-toro']
+  c.usa(0)
+  uguale('l\'elisir alza la vita massima', c.vitaMax, prima + COSE['elisir-toro'].cresce)
+  uguale('e la tasca si svuota', c.zaino.length, 0)
 }
 
 /* ══════════ 6. i traguardi ══════════ */

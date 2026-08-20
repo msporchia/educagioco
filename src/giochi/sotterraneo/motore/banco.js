@@ -194,15 +194,10 @@ function sbriga(corsa, bravura, sorte) {
     case 'fonte':
       corsa.rispondi(sorte() < bravura)
       return true
-    /* una cosa da impugnare: se è meglio di quella che si ha se la
-       mette, se no in tasca, e se non c'è posto la lascia lì. È quello
-       che fa un bambino, ed è l'unico modo perché il banco misuri il
-       gioco che si gioca davvero invece di uno giocato a mani nude */
-    case 'trovata':
-      if (f.delta > 0) corsa.impugna()
-      else if (corsa.zaino.length < TASCHE) corsa.inTasca()
-      else corsa.chiudi()
-      return false
+    /* Il caso 'trovata' non c'è più, e non è una semplificazione del
+       banco: quello che è meglio se lo mette **il motore** (`vesti`),
+       che è esattamente la regola scritta qui prima. Il banco continua
+       a misurare il gioco che si gioca davvero, senza doverla ripetere. */
     case 'svenuto':
       corsa.riprendi()
       return false
