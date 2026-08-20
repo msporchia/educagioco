@@ -287,7 +287,25 @@
 /* la faccia di una cosa (`viste/Icona.vue`): lo sprite dove c'è,
    l'emoji dove il foglio non disegna niente. `overflow: hidden` perché
    il pezzo dentro è ingrandito con un `transform` e sborderebbe. */
-.sot-icona { display: inline-grid; place-items: center; overflow: hidden; vertical-align: middle }
+/* ── il pezzo parte dall'angolo, non dal centro ──
+   La gabbia è già grande quanto la figura ingrandita, e il pezzo dentro
+   si ingrandisce con un `transform` che parte **dall'angolo in alto a
+   sinistra** (`viste/figura.js`). Centrandolo, il centraggio avveniva
+   sulla misura *prima* dell'ingrandimento — un'accetta da 8×18 messa in
+   mezzo a una gabbia da 16×36 e poi scalata ×2 usciva in basso a
+   destra, e `overflow` le tagliava il manico. Il difetto si vedeva
+   soltanto sulle figure alte e sembrava un problema di risoluzione: era
+   invece sempre lo stesso, su ogni schermo.
+
+   Il centraggio serve ancora all'emoji di ripiego, che una gabbia non
+   ce l'ha: resta al grid, e il pezzo si sfila con `position: absolute`. */
+.sot-icona {
+  position: relative; display: inline-grid; place-items: center;
+  overflow: hidden; vertical-align: middle;
+}
+.sot-icona > i, .sot-dentro > i, .sot-ritratto > i,
+.sot-impugnata > i, .sot-imbracciata > i { position: absolute; top: 0; left: 0 }
+.sot-dentro, .sot-ritratto, .sot-impugnata, .sot-imbracciata { position: relative }
 /* ── il filo di luce, anche qui ──
    Nel campo lo disegna la tela (`grafica/atlante.js`, `alone`); in un
    pannello non c'è nessun canvas, e il mestiere lo fa `drop-shadow`
