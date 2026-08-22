@@ -14,7 +14,7 @@
    primo avvio, se in casa non c'è nemmeno un profilo è
    un'installazione nuova.
    ═══════════════════════════════════════════════════════════════════ */
-import { scegli, initPosta, laPosta, segnaLetta, avvisa, daLeggere } from '../../src/store/posta.js'
+import { scegli, initPosta, laPosta, segnaLetta, avvisa, avvisaUnaVolta, daLeggere } from '../../src/store/posta.js'
 import { NOTE, ULTIMA } from '../../src/guide/novita.js'
 import { save, remove, chiavi, flush } from '../../src/store/storage.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -68,6 +68,31 @@ uguale('un avviso riaccende la posta', await avvisa('il codice è tornato a 0000
 uguale('e si legge com\'è stato scritto',
        (await laPosta()).avvisi[0].testo, 'il codice è tornato a 0000')
 uguale('«ho letto» li butta: sono fatti, non consigli', await segnaLetta(), 0)
+
+/* ── 6. l'avviso che si scrive una volta sola ──
+   Serve a chi si accorge di un fatto **mentre succede** e continuerà ad
+   accorgersene: una tipologia di domande che va male non va male una
+   volta sola, e un avviso a ogni risposta sbagliata riempirebbe la
+   posta di righe uguali. La memoria di quello che è già stato detto
+   **sopravvive al «Ho letto»**, se no la stessa riga tornerebbe il
+   giorno dopo. */
+await pulisci()
+await initPosta()
+uguale('la prima volta si scrive', await avvisaUnaVolta('g1:orto:doppie', 'va male'), true)
+uguale('la seconda no', await avvisaUnaVolta('g1:orto:doppie', 'va male ancora'), false)
+uguale('e in posta ce n\'è uno solo', (await laPosta()).avvisi.length, 1)
+uguale('un altro bambino è un altro fatto',
+       await avvisaUnaVolta('g2:orto:doppie', 'anche lei'), true)
+await segnaLetta()
+uguale('letto tutto, la posta è vuota', (await laPosta()).avvisi.length, 0)
+uguale('ma quello già detto non torna', await avvisaUnaVolta('g1:orto:doppie', 'di nuovo'), false)
+
+/* l'azione è quella delle note: un avviso che dice «guarda questa cosa»
+   senza portarci è metà avviso */
+await avvisaUnaVolta('g1:mat:frazioni', 'le frazioni vanno male',
+                     { testo: 'guarda le domande', scheda: 'sa' })
+uguale('l\'avviso porta alla sua scheda',
+       (await laPosta()).avvisi[0].azione.scheda, 'sa')
 
 nota('ULTIMA vale ' + ULTIMA + ': gli id non si riusano mai, nemmeno ritirando una nota')
 riassunto('La posta dei grandi: chi la riceve e chi no')

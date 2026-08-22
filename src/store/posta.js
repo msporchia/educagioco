@@ -22,6 +22,12 @@ import { NOTE, ULTIMA } from '../guide/novita.js'
 
 const CHIAVE = 'note-lette'
 const AVVISI = 'posta-avvisi'
+/* quali avvisi «una volta sola» sono già stati scritti: sta a parte
+   dagli avvisi perché quelli si buttano leggendoli, e questo no — se
+   sparisse col «Ho letto», la stessa tipologia che continua ad andare
+   male riscriverebbe la stessa riga il giorno dopo, e un avviso che
+   torna sempre è un avviso che non si legge più */
+const DETTI = 'posta-detti'
 
 /* Quante ce ne sono da leggere: lo guardano il nastro in home e il
    pallino sul tasto delle impostazioni. */
@@ -106,11 +112,36 @@ export async function segnaLetta() {
 
 /* Un fatto capitato su questo telefono, che il grande deve sapere anche
    se non c'era. Non è una nota di `novita.js`: quelle le scrivo io
-   prima, questi capitano dopo. */
-export async function avvisa(testo) {
+   prima, questi capitano dopo.
+
+   `azione` è facoltativa e ha la stessa forma di quella delle note —
+   `{ testo, scheda }` — perché un avviso che dice «guarda questa cosa»
+   senza portarci è metà avviso. */
+export async function avvisa(testo, azione = null) {
   const voci = await leggiAvvisi()
-  voci.unshift({ quando: new Date().toISOString(), testo })
+  voci.unshift({ quando: new Date().toISOString(), testo, azione })
   save(AVVISI, { voci: voci.slice(0, 10) })
   await flush()
   return ricalcola()
+}
+
+/* ── LO STESSO AVVISO, MA UNA VOLTA SOLA ──────────────────────────
+   Serve a chi si accorge di un fatto **mentre succede** e continuerà ad
+   accorgersene: una tipologia di domande che va male non va male una
+   volta, va male per settimane, e un avviso a ogni risposta sbagliata
+   riempirebbe la posta di dieci righe uguali.
+
+   La `chiave` è quella del fatto, non del testo: chi la sceglie la fa
+   contenere **il bambino** (`g2:orto:doppie`), o due fratelli che
+   inciampano nella stessa cosa si toglierebbero l'avviso a vicenda.
+   Torna `true` se ha scritto davvero, così chi chiama può dirlo. */
+export async function avvisaUnaVolta(chiave, testo, azione = null) {
+  if (!chiave) return false
+  const detti = (await load(DETTI))?.voci || []
+  if (detti.includes(chiave)) return false
+  /* al massimo duecento: sono stringhe corte, e la memoria di cosa si è
+     già detto non ha motivo di crescere all'infinito */
+  save(DETTI, { voci: [chiave, ...detti].slice(0, 200) })
+  await avvisa(testo, azione)
+  return true
 }

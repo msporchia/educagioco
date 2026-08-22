@@ -65,6 +65,7 @@ import { anniInLettere, perdeInParole } from './lettere.js'
 import { quadroDi } from '../../data/quadro.js'
 import { partenzaPerEta, rimettendoLEta } from '../../data/partenze.js'
 import { classiNude } from '../../quiz/catalogo.js'
+import { contoDi, consiglioDa } from '../../quiz/consiglio.js'
 
 const props = defineProps({
   /* gli anni di adesso, o `null` se non sono ancora stati scelti: è il
@@ -104,6 +105,17 @@ const props = defineProps({
      grandi sì: lì il quadro è di un bambino vero, e la ✎ di una riga
      apre la tacca (`Taratura.vue`). */
   tarabile: { type: Boolean, default: false },
+  /* ── COM'È ANDATA FINORA, RIGA PER RIGA ──
+     `state.profile.items`: per ogni tipologia quante ne ha prese e
+     quante sbagliate. Il quadro dice **cosa gli arriva**, e da solo non
+     dice mai la cosa che un grande cerca davvero — se quello che gli
+     arriva stia funzionando. Una riga che va male porta il suo numero
+     accanto al nome, con la stessa soglia dell'avviso in posta
+     (`quiz/consiglio.js`): otto risposte almeno, meno di metà giuste.
+
+     Vuoto nel primo avvio, ed è giusto: un bambino che non esiste
+     ancora non ha sbagliato niente. */
+  risposte: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['scegli', 'prova', 'ritocca', 'gioco', 'rimetti'])
 
@@ -299,6 +311,24 @@ const sottoDelSapere = s => s.spento
 const sottoDellaClasse = r => etaDella(r.anniOra ?? r.anni) +
   (r.ritocco ? ` · ${scartoDi(r.ritocco)}` : '')
 
+/* ── il segno di una riga che va male ──
+   Torna l'etichetta di destra, cioè lo stesso posto dove i giochi
+   dicono «c'è» o «arriva più avanti»: una riga ha un posto solo per
+   dire come sta, e inventarne un secondo avrebbe fatto due righe
+   diverse per la stessa cosa. Niente quando non c'è niente da dire, che
+   è il caso normale — un elenco che segnala tutto non segnala niente. */
+function allarmeDi(chiavi) {
+  const buone = (Array.isArray(chiavi) ? chiavi : [chiavi]).filter(Boolean)
+  if (!buone.length) return null
+  const c = consiglioDa(contoDi(buone, props.risposte))
+  if (!c || c.verso !== -1) return null
+  return { testo: `${c.detto}`, cls: 'va-male' }
+}
+/* un pezzo di scuola sta male se stanno male le sue domande **prese
+   insieme**: quattro tipologie con tre tiri ciascuna non direbbero
+   niente da sole, e sono dodici risposte che parlano */
+const allarmeDelSapere = s => allarmeDi((s.classi || []).map(c => c.tipo))
+
 const TRE = 3
 const assaggioDi = g => {
   const nomi = g.saperi.slice(0, TRE).map(s => giu(s.nome))
@@ -450,7 +480,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
                  domande in venti pezzi di scuola — mostrarle tutte
                  insieme non è un elenco, è un muro. -->
             <Riga :ico="s.ico" :nome="s.nome" :chiave="s.chiave"
-                  :sotto="sottoDelSapere(s)"
+                  :sotto="sottoDelSapere(s)" :stato="allarmeDelSapere(s)"
                   :prova="!!s.quante" :tara="siPuoTarare"
                   :tarando="tarando === `sapere:${g.chiave}:${s.chiave}`"
                   :ritoccata="!!s.ritocco || s.spento"
@@ -475,6 +505,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
             <Riga v-for="(r, i) in (eAperto(`${g.chiave}:${s.chiave}`) ? s.classi : [])"
                   :key="r.chiave" dentro :ultima="i === s.classi.length - 1"
                   :nome="r.nome" :sotto="sottoDellaClasse(r)" :chiave="r.chiave"
+                  :stato="allarmeDi(r.tipo)"
                   prova :tara="siPuoTarare && !!r.tipo"
                   :tarando="tarando === `classe:${g.chiave}:${r.chiave}`"
                   :ritoccata="!!r.ritocco"

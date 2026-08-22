@@ -856,6 +856,10 @@ async function rimetti(v) {
           <b>Su questo telefono</b>
           <p>{{ a.testo }}</p>
           <small>{{ quando(a.quando) }}</small>
+          <!-- un avviso che dice «guarda questa cosa» e non ci porta è
+               metà avviso: la scheda si apre da qui, come per le note -->
+          <button v-if="a.azione" class="bottone chiaro" data-azione="posta-vai"
+                  @click="scheda = a.azione.scheda">{{ a.azione.testo }}</button>
         </div>
 
         <div v-for="n in posta.note" :key="n.id" class="nota">
@@ -1234,8 +1238,13 @@ async function rimetti(v) {
         e quanto sono difficili le domande. Sotto c'è il quadro di quell'età — e ogni
         riga si può correggere con la ✎, se per {{ chi }} non è così.</p>
 
+      <!-- `risposte` è com'è andata finora, tipologia per tipologia: le
+           righe che vanno male portano il loro numero accanto al nome.
+           È lo stesso conto dell'avviso che arriva in posta, quindi chi
+           entra da lì ritrova qui la riga di cui parlava. -->
       <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
                    :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
+                   :risposte="state.profile?.items || {}"
                    :sperimentali="inProva" conferma tarabile
                    @scegli="applicaAnni" @prova="prova = $event"
                    @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
