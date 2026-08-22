@@ -49,10 +49,17 @@
    meccanismo è tutto in piedi (`store/posta.js`, `guide/Nastri.vue`,
    la scheda dei grandi) e aspetta la prossima.
 
-   Le due note qui sotto sono state scritte per provare il giro e sono
-   arrivate a destinazione: restano commentate perché **gli id non si
-   riusano mai**, nemmeno ritirando una nota. La prossima è la 3, se no
-   chi le ha già lette se le ritrova davanti.
+   Le note qui sotto sono state scritte e ritirate: restano commentate
+   perché **gli id non si riusano mai**, nemmeno ritirando una nota. La
+   prossima è la 4, se no chi le ha già lette se le ritrova davanti.
+
+   ── CHI DECIDE COSA È UNA NOTIZIA ─────────────────────────────────
+   Il proprietario del gioco, e nessun altro. La regola scritta qui
+   sopra — «solo se il genitore potrebbe voler fare qualcosa» — dice
+   cosa **non** è una nota, non basta a dire cosa lo è: una schermata
+   nuova la supera senza problemi, e il pallino si accenderebbe a ogni
+   pubblicazione. Chi lavora al codice aggiunge il pezzo e lascia questo
+   elenco com'è; la nota si scrive quando viene chiesta.
 
   {
     id: 1,
@@ -72,6 +79,14 @@
          + 'ne mette da parte una copia, e in fondo a **Progressi** c\'è il tasto per '
          + 'rimetterla. Ne tiene le ultime tre. Resta comunque una buona idea salvare '
          + 'su file ogni tanto: le copie stanno sullo stesso telefono.'
+  },
+  {
+    id: 3,
+    quando: '2026-08-22',
+    titolo: 'C\'è una scheda nuova: «Come va»',
+    testo: 'Dice quanto ha giocato e come gli vanno le domande, e da lì si '
+         + 'possono provare, spostare o togliere.',
+    azione: { scheda: 'comeva', testo: 'Guarda com\'è andata' }
   }
 */
 export const NOTE = [
@@ -81,8 +96,8 @@ export const NOTE = [
    non dalla prima nota — nessuno deve ricevere in faccia la storia del
    progetto al primo avvio.
 
-   Il conto parte da 2 e non da zero perché due note sono state scritte
+   Il conto parte da 3 e non da zero perché tre note sono state scritte
    e ritirate: si contano lo stesso, se no la prossima riprenderebbe un
    id già letto e chi l'ha letto se la ritroverebbe davanti. */
-const RITIRATE = 2
+const RITIRATE = 3
 export const ULTIMA = NOTE.reduce((m, n) => Math.max(m, n.id), RITIRATE)

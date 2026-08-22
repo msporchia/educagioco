@@ -320,12 +320,64 @@ committate: non è ricostruibile da git.
   Vite `apply: 'serve'` che nel build non esiste.
 - **`src/guide/`** — quello che nessuno legge nel README, messo dentro
   l'applicazione. `contenuti.js` è dato puro e ha due registri: `GUIDE`
-  (per i grandi: installare l'app, l'età, la difficoltà, i progressi) e
-  `AIUTI` (uno per gioco, dietro il `?` della barra). **«Come funziona»
-  sta fuori dal codice dei genitori**, ed è la regola da non rompere: la
-  prima guida spiega come si installa, e la legge chi ha appena ricevuto
-  il link da un'altra famiglia — dietro il tastierino la leggerebbe solo
-  chi non ne ha bisogno. Un gioco mette il suo `?` scrivendo
+  (per i grandi: cos'è, che giochi ci sono, installare l'app, l'età, le
+  domande, i progressi, chi l'ha fatto) e `AIUTI` (uno per gioco, dietro
+  il `?` della barra). **«Come funziona»
+  sta fuori dal codice dei genitori**, ed è la regola da non rompere: le
+  prime guide dicono cos'è e come si installa, e le legge chi ha appena
+  ricevuto il link da un'altra famiglia — dietro il tastierino le
+  leggerebbe solo chi non ne ha bisogno.
+  **L'elenco cominciava dalle manopole**, ed era il difetto: otto guide
+  che spiegavano *dove si cambia la difficoltà* a chi non sapeva ancora
+  cosa fosse l'applicazione sotto. Chi riceve il link vede per prima
+  cosa «Ciao! Come ti chiami?», e le domande che si fa lì sono *cos'è*,
+  *chi me l'ha dato*, *cosa ci guadagna*, *dove finisce quello che
+  scrivo*. Adesso ci sono quattro guide che rispondono a quelle
+  (`cose`, `giochi-elenco`, `domande`, `chi`) e le manopole vengono
+  dopo, tutte dov'erano.
+  **Le FAQ sono un registro solo**, e i posti da cui si leggono sono
+  due: la schermata «Come funziona» e il velo del primo avvio. Nessuno
+  dei due ha testi suoi — il velo mostra le voci `subito: true` dello
+  stesso `GUIDE` — e la riga dell'elenco la disegna un componente solo
+  (`guide/Elenco.vue`), perché era l'unica cosa davvero copiata in due.
+  **Due livelli, e il secondo sta chiuso.** Un blocco con `chiuso: true`
+  nasce ripiegato e si apre toccando il titolo: sopra la risposta di tre
+  righe, sotto il ragionamento lungo che stava solo nei `.md`. La regola
+  per decidere dove va un paragrafo è **se serve a fare qualcosa sta
+  fuori, se spiega perché è fatto così sta dentro**. Un blocco può anche
+  avere `testo` (paragrafi) e `collegamenti` (`[{url, testo, sotto}]`,
+  solo `http(s)`, si vede che portano fuori).
+  **`se` nasconde, `dove` ripiega.** I passi per installare l'app erano
+  dichiarati con `se: 'android'|'ios'|'computer'`, che li fa sparire
+  altrove: chi leggeva la guida **dal computer** vedeva solo i passi del
+  computer, cioè gli unici che non gli servivano — al computer ci si
+  siede per installarla sul telefono di un figlio. Con `dove:` il blocco
+  c'è sempre, aperto sulla piattaforma che si ha in mano e ripiegato
+  sulle altre, e i blocchi `dove` si riordinano da sé mettendo davanti il
+  proprio (`guide/Blocchi.vue`). `se` resta per i casi in cui altrove
+  sarebbe **una frase falsa** e non solo inutile («✅ è già installato»).
+  **Il codice di casa è scritto nelle guide**: dicevano cosa c'è dietro
+  senza dire mai qual è, e chi riceve il gioco da un'altra famiglia non
+  ha nessuno a cui chiederlo — `0000`, l'invito a cambiarlo, e il
+  recupero. Un test lo controlla, ed è marcato `subito` perché serve
+  prima di avere un profilo.
+  **L'elenco dei giochi non si scrive a mano**: la guida
+  `giochi-elenco` lo compone da `data/giochi.js` e `data/aree.js`, se no
+  il giorno dopo direbbe il falso.
+  **Dal primo avvio le guide si aprono in un velo**
+  (`guide/VeloGuide.vue`, tasto `[data-azione="cos-e"]` in
+  `components/Benvenuto.vue`): lì non si può navigare da nessuna parte —
+  senza un profilo `App.vue` monta il benvenuto al posto di tutto — e il
+  nome mezzo scritto deve restare dov'è. Il velo offre solo le guide
+  marcate **`subito: true`**, che sono quelle che parlano di cose che
+  esistono prima che esista un bambino: le altre spiegano manopole che
+  da lì non si aprono.
+  **Chi l'ha fatto sta scritto in due posti**, e nessuno dei due è una
+  carta in mezzo ai giochi: la guida `chi` (senza codice, col rimando al
+  codice sorgente e alla licenza) e il piede della schermata dei grandi
+  (`[data-firma]`, in fondo perché chi entra lì viene per altro). Gli
+  indirizzi stanno una volta sola in `guide/aiuto.js` — `CHI`, `CODICE`,
+  `AUTORE`, `SEGNALA`. Un gioco mette il suo `?` scrivendo
   `guida="<chiave della schermata>"` sulla `Barra`; se in `AIUTI` non c'è
   quella chiave il tasto non compare, perché un `?` che apre un foglio
   vuoto è peggio di nessun `?`. Chi ha un orologio che gira ascolta
