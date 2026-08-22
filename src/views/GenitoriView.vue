@@ -32,13 +32,16 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { GIOCHI } from '../data/giochi.js'
-import { INDIRIZZO, condividi, piattaforma, installata } from '../guide/aiuto.js'
+import { INDIRIZZO, condividi, piattaforma, installata,
+         CHI, CODICE, SEGNALA } from '../guide/aiuto.js'
 import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
 import Barra from '../components/Barra.vue'
 import ManopolaEta from '../components/eta/Manopola.vue'
 import { anniInLettere } from '../components/eta/lettere.js'
 import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
+import ComeVa from '../quiz/ComeVa.vue'
+import TempoDiGioco from '../components/TempoDiGioco.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -187,7 +190,6 @@ const riparaApp = () => ripara()
    nessun errore: il modulo si apre come sempre e il dato sparisce.
 
    Questo qui vuole `versione` e `guasto`. */
-const SEGNALA = 'https://tally.so/r/D4OO1q'
 
 const linkSegnala = computed(() => {
   const q = new URLSearchParams({ versione: __VERSIONE__.id })
@@ -1129,8 +1131,8 @@ async function rimetti(v) {
         <button class="carta" data-azione="vai-guide" @click="$emit('vai','guide')">
           <span class="ico">📖</span>
           <b>Come funziona</b>
-          <i v-if="daInstallare">Installarlo sul telefono, l'età, le domande, i progressi</i>
-          <i v-else>L'età, la difficoltà delle domande, dove stanno i progressi</i>
+          <i v-if="daInstallare">Cos'è, installarlo sul telefono, l'età, le domande, i progressi</i>
+          <i v-else>Cos'è, chi l'ha fatto, l'età, la difficoltà delle domande, i progressi</i>
         </button>
       </div>
 

@@ -53,6 +53,7 @@ import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import SceltaAspetto from './SceltaAspetto.vue'
 import ManopolaEta from './eta/Manopola.vue'
 import Prova from '../quiz/Prova.vue'
+import VeloGuide from '../guide/VeloGuide.vue'
 
 const props = defineProps({
   /* `false` quando si arriva qui dalle impostazioni per aggiungere un
@@ -84,6 +85,17 @@ const aspetto = ref(PERSONE[0])
    anni si sarebbe trovato la home di un terza elementare. */
 const anni = ref(4)
 const passo = ref(1)
+/* ── «COS'È QUESTO GIOCO?» ──
+   Chi apre il link ricevuto da un'altra famiglia si trova qui, e questa
+   schermata gli chiede il nome di suo figlio senza aver detto una parola
+   su cosa sia, chi l'abbia scritto e dove vada a finire quello che
+   scrive. Le risposte c'erano — nelle guide — ma dietro la home, cioè
+   dopo aver creato il profilo: si leggevano a decisione presa.
+
+   È un velo e non un'altra schermata perché qui non si può navigare da
+   nessuna parte (`App.vue` monta il benvenuto al posto di tutto), e
+   perché il nome mezzo scritto deve restare dov'è. */
+const spiegami = ref(false)
 const prova = ref(null)   // { sorgente|chiave, nome } | null
 
 const pulito = computed(() => nome.value.trim())
@@ -127,6 +139,15 @@ async function entra() {
       </form>
 
       <p v-if="primo" class="mini">Lo possono cambiare mamma e papà quando vogliono.</p>
+
+      <!-- ── la porta delle spiegazioni ──
+           Sotto il tasto e non sopra: chi ha già in mano il link da
+           un'altra famiglia e sa cos'è deve poter scrivere il nome e
+           andare. Ma si legge — non è una scritta piccola in fondo — e
+           dice cosa apre invece di dire «informazioni». -->
+      <button v-if="primo" class="che-roba" type="button"
+              data-azione="cos-e" @click="spiegami = true">
+        ❓ Cos'è questo gioco? Chi l'ha fatto? ›</button>
       <p v-else class="mini">Parte da zero, coi suoi progressi separati dagli altri.</p>
       <button v-if="!primo" class="indietro" type="button"
               data-azione="lascia-stare" @click="emit('lasciaStare')">← lascia stare</button>
@@ -177,6 +198,8 @@ async function entra() {
          modo «pesca come in partita» — si partiva da «i numeri e le
          quantità» e la domanda dopo era di logica. Un ripiego che
          funziona è il modo più caro di rompersi. -->
+    <VeloGuide v-if="spiegami" @chiudi="spiegami = false" />
+
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
            :sorgente="prova.sorgente || null" :giro="prova.giro || null"
            :eta="prova.eta ?? null"
@@ -212,8 +235,21 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .via.in-fondo { position:sticky; bottom:6px; z-index:5 }
 .mini { opacity:.75; font-size:14px; text-align:center; margin:0 }
 .mini.alto { max-width:36ch; font-size:12.5px; margin:-4px 0 0 }
+/* Era bianco, e lo sfondo di questa schermata è chiaro: «← cambia il
+   nome» e «← lascia stare» si leggevano solo sapendo che c'erano. */
 .indietro { background:none; border:none; font-family:inherit; font-size:14px;
-            color:#fff; opacity:.75; padding:4px 10px; cursor:pointer }
+            color:var(--tenue); opacity:.9; padding:4px 10px; cursor:pointer }
+
+/* Un tasto vero e non un rimando in punta di piedi: la domanda che si
+   fa chi è arrivato qui senza sapere niente è esattamente questa, e
+   scritta piccola in fondo allo schermo non la leggerebbe. Resta però
+   scavato invece che pieno — quello pieno è «Avanti», e la cosa da
+   fare qui è cominciare. */
+.che-roba { background:#ffffffcc; border:2px solid #d9d0f5; border-radius:999px;
+            font-family:inherit; font-size:14px; font-weight:800;
+            color:var(--viola-scuro); padding:11px 19px; cursor:pointer;
+            margin-top:-2px; box-shadow:0 3px 0 #d4dce6 }
+.che-roba:active { transform:translateY(1px) }
 
 .manopola-posto { width:min(360px, 92vw) }
 </style>

@@ -21,6 +21,7 @@
 import { ref, onMounted } from 'vue'
 import Barra from '../components/Barra.vue'
 import Blocchi from './Blocchi.vue'
+import Elenco from './Elenco.vue'
 import { GUIDE, guida } from './contenuti.js'
 import { raccogli } from './stato.js'
 import { INDIRIZZO, condividi } from './aiuto.js'
@@ -55,15 +56,11 @@ async function mandaIlLink () {
     <div class="corpo">
       <!-- ── l'elenco ── -->
       <template v-if="!aperta">
-        <p class="testo intro">Il gioco è fatto per i bambini, ma qualche manopola è
-          per te. Qui c'è quello che conviene sapere, in ordine di quanto serve.</p>
+        <p class="testo intro">Cos'è questo gioco, chi l'ha fatto, e le manopole che
+          sono per te e non per lui. In ordine di quanto serve: le prime si leggono
+          prima di cominciare, le altre quando qualcosa non va bene.</p>
 
-        <button v-for="g in GUIDE" :key="g.id" class="voce" :data-guida="g.id"
-                @click="aperta = g">
-          <span class="ico">{{ g.emoji }}</span>
-          <span class="dentro"><b>{{ g.titolo }}</b><i>{{ g.sommario }}</i></span>
-          <span class="freccia">›</span>
-        </button>
+        <Elenco :guide="GUIDE" @apri="aperta = $event" />
 
         <!-- Sta qui e non solo nelle impostazioni apposta: chi passa il
              gioco a un'altra famiglia non deve prima entrare col codice. -->
@@ -89,16 +86,6 @@ async function mandaIlLink () {
          display:flex; flex-direction:column; gap:10px;
          width:min(560px,100%); margin:0 auto }
 .intro { max-width:none; margin-bottom:4px }
-
-.voce { display:flex; align-items:center; gap:11px; text-align:left; width:100%;
-        padding:12px 13px; border-radius:16px; background:var(--carta);
-        box-shadow:0 3px 10px #8593a824 }
-.voce:active { transform:translateY(1px) }
-.voce .ico { font-size:25px; flex:none }
-.voce .dentro { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px }
-.voce b { font-size:15.5px; color:var(--viola-scuro) }
-.voce i { font-size:12.5px; color:var(--tenue); font-style:normal; line-height:1.35 }
-.voce .freccia { font-size:22px; color:#c3cbd8; flex:none }
 
 .manda { margin-top:8px; display:flex; flex-direction:column; gap:3px; padding:13px;
          border-radius:16px; background:#ffffffb0; box-shadow:0 2px 8px #8593a81f }

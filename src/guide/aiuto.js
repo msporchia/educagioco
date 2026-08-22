@@ -16,6 +16,28 @@
 export const INDIRIZZO = typeof __INDIRIZZO__ !== 'undefined'
   ? __INDIRIZZO__ : 'https://msporchia.github.io/educagioco/'
 
+/* ── DA CHI ARRIVA QUESTO GIOCO ──
+   Stavano scritti solo nel README, cioè in un posto che nessun genitore
+   apre: chi riceve il link da un'altra famiglia si trovava davanti
+   un'applicazione senza nome e senza nessuno dietro. Non è vanità ed è
+   il contrario di una firma in mezzo ai giochi: è la risposta a «questa
+   roba chi me l'ha data, e cosa ci guadagna» — che è la prima domanda
+   sensata che si fa un grande prima di installare qualcosa a un figlio.
+
+   Stanno qui e non dentro i contenuti perché li usano in due: la guida
+   «Chi l'ha fatto» e il piede della schermata dei grandi. Due copie di
+   un indirizzo sono un indirizzo che un giorno cambia in un posto solo. */
+export const CHI = 'Marco Sporchia'
+export const CODICE = 'https://github.com/msporchia/educagioco'
+export const AUTORE = 'https://www.linkedin.com/in/marcosporchia'
+
+/* Il modulo di segnalazione. Stava dentro `views/GenitoriView.vue`, che
+   è il posto da cui si arriva con la versione e l'ultimo guasto già
+   dentro — ma da lì lo legge solo chi ha il codice di casa, e la guida
+   «Chi l'ha fatto» la legge chi non ce l'ha ancora. Un indirizzo solo,
+   due porte. */
+export const SEGNALA = 'https://tally.so/r/D4OO1q'
+
 /* Che telefono ho in mano. Serve a una cosa sola — far vedere i passi
    giusti per installare — quindi tre risposte e basta. iPadOS recente si
    dichiara Mac: lo si riconosce dal fatto che ha il dito. */

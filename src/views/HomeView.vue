@@ -377,7 +377,7 @@ function aChePunto (chiave) {
            carte a colori nessun bambino lo tocca due volte. -->
       <button class="impostazioni guide" data-azione="guide" @click="$emit('vai','guide')">
         <b>? Come funziona</b>
-        <i>installarlo sul telefono, l'età, le domande, i progressi</i>
+        <i>cos'è, chi l'ha fatto, installarlo sul telefono, l'età, le domande</i>
       </button>
       <!-- la versione serve a rispondere «il telefono ha preso
            l'aggiornamento?» guardando lo schermo, e non è da toccare. -->

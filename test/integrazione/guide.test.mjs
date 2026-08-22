@@ -6,10 +6,14 @@
    trova è la ragione per cui questa roba è stata scritta.
 
    La cosa da non rompere mai: **«Come funziona» sta fuori dal codice di
-   casa**. La prima guida spiega come si installa l'app, e la legge un
-   genitore che ha appena ricevuto il link da un altro genitore: se un
-   giorno finisse dietro il tastierino, la leggerebbe solo chi non ne ha
-   bisogno.
+   casa**. Le prime guide dicono cos'è questo gioco e come si installa, e
+   le legge un genitore che ha appena ricevuto il link da un altro
+   genitore: se un giorno finissero dietro il tastierino, le leggerebbe
+   solo chi non ne ha bisogno.
+
+   E dal **primo avvio** — dove non c'è nessuna schermata in cui andare,
+   perché senza un profilo il benvenuto è montato al posto di tutto — le
+   stesse guide si aprono in un velo (punto 11).
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto } from '../aiuto/browser.mjs'
 import { GUIDE, AIUTI } from '../../src/guide/contenuti.js'
@@ -28,7 +32,7 @@ controlla('non chiede nessun codice', !(await page.isVisible('.tastierino')))
 const elenco = await page.evaluate(() =>
   [...document.querySelectorAll('[data-guida]')].map(b => b.dataset.guida))
 uguale('ci sono tutte le guide', elenco.length, GUIDE.length, elenco.join(','))
-controlla('e la prima è come si installa', elenco[0] === 'installare')
+controlla('e la prima dice cos\'è il gioco', elenco[0] === 'cose', elenco[0])
 await scatto(page, 'guide-elenco')
 
 /* ── 2. l'indirizzo da passare è quello pubblico, non quello di casa ──
@@ -52,11 +56,85 @@ controlla('la guida dell\'installazione parla di schermata iniziale',
    il banco di prova non ha. */
 controlla('e dice cosa fare, per il posto in cui gira',
   await page.isVisible('.blocco li'))
+
+/* ── 3a. i tre modi di installare ci sono tutti ──
+   Qui si gira su un computer, ed è il caso che ha fatto nascere questa
+   prova: i passi di Android e iPhone erano dichiarati con `se`, che
+   nasconde, quindi chi leggeva dal computer vedeva solo i passi del
+   computer — gli unici che non gli servono, visto che al computer ci si
+   siede per installarlo sul telefono di un figlio. */
+const modi = await page.evaluate(() =>
+  [...document.querySelectorAll('[data-apri]')].map(b => b.textContent.trim()))
+controlla('dal computer ci sono anche gli altri due telefoni, ripiegati',
+  modi.some(t => /iPhone/.test(t)) && modi.some(t => /Android/.test(t)), modi.join(' | '))
+controlla('e i passi di quel telefono restano chiusi finché non si aprono',
+  !dentro.includes('Aggiungi a Home'))
+await page.click('[data-apri*="iPhone"]')
+await page.waitForTimeout(200)
+const conIos = await page.evaluate(() => document.body.innerText)
+controlla('aperto iPhone, compaiono i passi di Safari',
+  conIos.includes('Safari') && conIos.includes('Aggiungi a Home'), conIos.slice(0, 80))
 await scatto(page, 'guide')
 
 /* Il grassetto delle guide è `**così**`, e viene tradotto: se un giorno
    arrivasse a schermo com'è scritto, si vedrebbe qui. */
 controlla('nessun asterisco a schermo', !dentro.includes('**'))
+
+/* ── 3b. il secondo livello ──
+   Le risposte restano corte perché il ragionamento lungo sta ripiegato.
+   Il modo di sbagliarlo è uno solo e non lancia niente: la fisarmonica
+   che si disegna già aperta (la risposta corta non c'è più) o che non si
+   apre affatto (il materiale c'è nel dato e non lo legge nessuno). */
+await page.click('button[aria-label="indietro"]')
+await page.waitForTimeout(200)
+await page.click('[data-guida="cose"]')
+await page.waitForTimeout(200)
+const chiusa = await page.evaluate(() => {
+  const b = document.querySelector('[data-apri]')
+  return { c: !!b, testo: document.body.innerText }
+})
+controlla('una guida ha dei blocchi da aprire', chiusa.c)
+controlla('e quello che c\'è dentro non si vede finché non si apre',
+  !chiusa.testo.includes('cresciuto guardandoli giocare'))
+await page.click('[data-apri]')
+await page.waitForTimeout(200)
+const aperta = await page.evaluate(() => document.body.innerText)
+controlla('aperto, il pezzo lungo compare',
+  aperta.includes('cresciuto guardandoli giocare'), aperta.slice(0, 100))
+await scatto(page, 'guide-due-livelli')
+
+/* ── 3c. l'elenco dei giochi è quello vero ──
+   Lo compone `data/giochi.js`, non una lista scritta a mano: se un
+   giorno la componesse male — un nome vuoto, il grassetto non tradotto —
+   si vedrebbe solo aprendo questa guida, che è esattamente quello che
+   nessuno fa. */
+await page.click('button[aria-label="indietro"]')
+await page.waitForTimeout(200)
+await page.click('[data-guida="giochi-elenco"]')
+await page.waitForTimeout(250)
+const listaGiochi = await page.evaluate(() => document.body.innerText)
+controlla('l\'elenco nomina i giochi veri',
+  listaGiochi.includes('La bancarella') && listaGiochi.includes('Il sotterraneo'))
+controlla('e nessun asterisco è arrivato a schermo', !listaGiochi.includes('*'),
+  (listaGiochi.match(/.{0,30}\*.{0,30}/) || [''])[0])
+
+/* ── 3d. il codice dei genitori si trova dall'elenco ──
+   La domanda «come entro nelle impostazioni» è una di quelle che si
+   fanno col dito già sullo schermo: deve avere una riga sua fra i
+   titoli, e la risposta deve essere la prima cosa che si legge dentro. */
+await page.click('button[aria-label="indietro"]')
+await page.waitForTimeout(200)
+const titoli = await page.evaluate(() =>
+  [...document.querySelectorAll('[data-guida] b')].map(b => b.textContent))
+controlla('nell\'elenco c\'è una voce sul codice',
+  titoli.some(t => /codice/i.test(t)), titoli.join(' | '))
+await page.click('[data-guida="codice"]')
+await page.waitForTimeout(200)
+const suCodice = await page.evaluate(() =>
+  document.querySelector('.guida-corpo')?.innerText || '')
+controlla('e la prima riga dice 0000',
+  suCodice.split('\n')[0].includes('0000'), suCodice.slice(0, 90))
+await scatto(page, 'guide-codice')
 
 /* ── 4. si torna indietro in due tempi: all'elenco, poi a casa ── */
 await page.click('button[aria-label="indietro"]')
@@ -181,6 +259,55 @@ if (erroriPrimo.length) erroriPrimo.forEach(e => nota(e))
 
 uguale('nessun errore in console dal telefono', erroriTel.length, 0)
 if (erroriTel.length) erroriTel.forEach(e => nota(e))
+
+/* ── 11. «cos'è questo gioco?» al primo avvio ──
+   Il caso vero di chi riceve il link: archivio vuoto, e la prima cosa a
+   schermo è una casella che chiede il nome di suo figlio. Da lì si deve
+   poter sapere cosa sia questa roba e chi l'abbia scritta **senza
+   perdere quello che si è già digitato** — se il velo azzerasse il
+   modulo, nessuno lo aprirebbe due volte. */
+const { page: nuovo, errori: erroriNuovo } =
+  await apriGioco(browser, { giocatori: null, attesa: '.benvenuto' })
+
+controlla('al primo avvio si può chiedere cos\'è',
+  await nuovo.isVisible('[data-azione="cos-e"]'))
+await scatto(nuovo, 'guide-cos-e')
+await nuovo.fill('.nome', 'Prova')
+await nuovo.click('[data-azione="cos-e"]')
+await nuovo.waitForTimeout(300)
+controlla('si apre il foglio delle domande', await nuovo.isVisible('[data-velo="guide"]'))
+await scatto(nuovo, 'guide-primo-avvio')
+
+/* Solo le guide `subito`: le altre spiegano manopole che stanno dentro
+   le impostazioni di un bambino che non esiste ancora. */
+const offerte = await nuovo.evaluate(() =>
+  [...document.querySelectorAll('[data-guida-velo]')].map(b => b.dataset.guidaVelo))
+controlla('offre le guide che si leggono prima di cominciare',
+  offerte.includes('cose') && offerte.includes('chi'), offerte.join(','))
+controlla('e non quelle sulle manopole delle impostazioni',
+  !offerte.includes('difficolta') && !offerte.includes('monete'), offerte.join(','))
+
+await nuovo.click('[data-guida-velo="chi"]')
+await nuovo.waitForTimeout(250)
+const firmato = await nuovo.evaluate(() => ({
+  testo: document.body.innerText,
+  codice: [...document.querySelectorAll('.collega')].map(a => a.href).join(' '),
+}))
+controlla('dice chi l\'ha fatto', firmato.testo.includes('Marco Sporchia'))
+controlla('e porta al codice su GitHub', /github\.com/.test(firmato.codice), firmato.codice)
+await scatto(nuovo, 'guide-chi')
+
+await nuovo.click('[data-azione="torna-guide"]')
+await nuovo.waitForTimeout(200)
+await nuovo.click('[data-azione="chiudi-guide"]')
+await nuovo.waitForTimeout(250)
+controlla('chiuso il foglio, si è ancora sul primo avvio',
+  !(await nuovo.isVisible('[data-velo="guide"]')) && await nuovo.isVisible('.benvenuto'))
+uguale('e il nome scritto è ancora lì',
+  await nuovo.inputValue('.nome'), 'Prova')
+
+uguale('nessun errore in console al primo avvio', erroriNuovo.length, 0)
+if (erroriNuovo.length) erroriNuovo.forEach(e => nota(e))
 
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))
