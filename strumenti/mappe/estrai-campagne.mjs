@@ -30,7 +30,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import './nucleo.js'
 import { writeFileSync, readFileSync, existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 
@@ -83,9 +83,9 @@ export const firmaScritta = () => {
 /* ── da qui in giù solo quando è chiamato a mano: importarlo (lo fa il
       test, per rifare il ritratto e confrontarlo) non deve riscrivere
       niente ── */
-if (import.meta.url !== `file://${process.argv[1]}`) { /* importato: basta così */ } else {
+if (import.meta.url !== pathToFileURL(process.argv[1]).href) { /* importato: basta così */ } else {
 
-const dati = await import(resolve(RADICE, 'src/data/campagne-generale.js'))
+const dati = await import(pathToFileURL(resolve(RADICE, 'src/data/campagne-generale.js')).href)
 const quadro = estrai(dati)
 const firma = firmaDi(quadro)
 const quante = quadro.campagne.reduce((n, c) => n + c.tappe.length, 0)

@@ -18,7 +18,7 @@
         parola che spiega perché.
    ═══════════════════════════════════════════════════════════════════ */
 import { existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { validaTutto, valida, leggi, scrivi, MAPPE, livelliDi }
   from '../../strumenti/mappe/valida.mjs'
@@ -310,7 +310,7 @@ const GIOCO = resolve(RADICE, 'src/data/generale.js')
 if (!existsSync(GIOCO)) {
   nota('`src/data/generale.js` non c\'è ancora: i livelli veri li controllerò quando arrivano')
 } else {
-  const modulo = await import(GIOCO)
+  const modulo = await import(pathToFileURL(GIOCO).href)
   const livelli = livelliDi(modulo).filter(l => Array.isArray(l.mappa) && typeof l.par === 'number')
   if (!livelli.length) {
     nota('`src/data/generale.js` c\'è ma non esporta livelli in questo formato: salto')
@@ -331,7 +331,7 @@ if (!existsSync(GIOCO)) {
    ha aggiunto una tappa e nell'editor non c'è. */
 {
   const { estrai, firmaDi, firmaScritta } = await import('../../strumenti/mappe/estrai-campagne.mjs')
-  const dati = await import(resolve(RADICE, 'src/data/campagne-generale.js'))
+  const dati = await import(pathToFileURL(resolve(RADICE, 'src/data/campagne-generale.js')).href)
   const quadro = estrai(dati)
   const quante = quadro.campagne.reduce((n, c) => n + c.tappe.length, 0)
   uguale('l\'editor conosce tutte le tappe delle campagne', firmaScritta(), firmaDi(quadro),
