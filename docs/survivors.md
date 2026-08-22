@@ -37,9 +37,18 @@ Serve a tenere viva la scelta: senza, prendere nove volte la stessa carta
 sarebbe nove volte lo stesso pedaggio, e dopo il terzo livello non ci sarebbe
 più niente da decidere.
 
-Se rispondi giusto, prendi il potenziamento. Se sbagli, al suo posto arriva
-una monetina — non un premio di consolazione travestito da premio, ma un «ci
-hai provato» che vale in cameretta e non in campo.
+Se rispondi giusto, prendi il potenziamento. Se sbagli, niente carta: il
+giro dopo arriva presto, perché le gemme continuano a cadere.
+
+Al posto di «niente» c'era una monetina — un «ci hai provato» che valeva in
+cameretta e non in campo, e che sembrava innocua. Era il buco più grosso del
+gioco, per una ragione che il codice non poteva sapere: **quello che un
+bambino vuole sono le monete**, perché quelle si spendono. Una moneta per
+ogni risposta sbagliata non è un premio di consolazione, è il modo più
+veloce di farne — chiedi una carta, premi un tasto a caso, incassi,
+ricominci — e nella partita libera, dove non si vince niente, era perfino
+l'unica fonte. Adesso le monete di questo gioco si prendono in un modo solo:
+arrivare in fondo a una tappa.
 
 Questo trasforma ogni offerta in **una scelta vera**: prendo la carta forte
 rischiando una domanda difficile, o mi accontento di quella debole che sono

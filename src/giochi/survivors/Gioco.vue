@@ -291,11 +291,25 @@ function scegliCarta(chiave) {
   suono.ok()
 }
 
-/* Il potenziamento si vince rispondendo: chi sbaglia non lo prende. Al
-   suo posto una monetina — non è un premio di consolazione mascherato da
-   premio, è un «ci hai provato» che vale in cameretta e non in campo, e
-   soprattutto non falsa la partita. Il giro dopo arriva presto: le gemme
-   continuano a cadere. */
+/* ── IL POTENZIAMENTO SI VINCE RISPONDENDO, E SBAGLIARE NON PAGA ──
+   Qui c'era una monetina di consolazione: «niente carta, ma ci hai
+   provato». Sembrava innocua — vale in cameretta, non in campo, non
+   falsa la partita — ed era il buco più grosso di tutto il gioco, per
+   una ragione che il codice non poteva sapere: **quello che un bambino
+   vuole sono le monete**. Non la carta, non la tappa: le monete, perché
+   quelle si spendono. E allora una moneta per ogni risposta sbagliata
+   non è un premio di consolazione, è **il modo più veloce di farne**:
+   si chiede una carta, si preme un tasto a caso, si incassa, si
+   ricomincia. Nella partita libera, dove non si vince niente, era
+   perfino l'unica fonte.
+
+   Adesso sbagliare non dà niente e lo dice: si è provato, non si è
+   preso, il giro dopo arriva presto perché le gemme continuano a
+   cadere. Il «ci hai provato» resta — è giusto che ci sia — ma non ha
+   un prezzo. Le monete di questo gioco si prendono in un modo solo:
+   arrivare in fondo a una tappa (`p.monete`, che è il premio delle
+   stelle). Vedi anche `CALIBRAZIONE.md`: una moneta vale dieci secondi
+   di esercizio, e un tasto premuto a caso non è esercizio. */
 function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
@@ -309,8 +323,7 @@ function risposto({ giusto }) {
     if (voluta.fascia === 'forte') segna('survivorsToste')
   } else {
     p.rinuncia()
-    addCoins(1)
-    brinda('🪙 +1 — niente carta, ma ci hai provato', false)
+    brinda('niente carta — ci riprovi alla prossima', false)
   }
   cruscotto.value = p.cruscotto
   /* una carta è il momento in cui si perde di più: qualche secondo di

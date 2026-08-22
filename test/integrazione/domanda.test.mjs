@@ -289,6 +289,7 @@ controlla('lo scontro è una modale in mezzo allo schermo',
    prima c'era un `break` muto adesso c'è un `controlla` che dichiara
    cos'è mancato. */
 let risposteDate = 0
+let diFretta = 0
 for (let giro = 0; giro < 2; giro++) {
   const cEDaRispondere = await page.locator('.qz-tasto').count() > 0
   controlla(`la ${giro + 1}ª domanda è lì da rispondere`, cEDaRispondere)
@@ -302,8 +303,23 @@ for (let giro = 0; giro < 2; giro++) {
             arrivato ? '' : 'il gioco si è piantato qui')
   if (!arrivato) break
   risposteDate++
-  await attendi(page, 2400)                       // l'esito, il respiro, la prossima
+  /* ── e qui si aspetta l'attesa VERA, non un numero ──
+     Il tocco arriva mezzo secondo dopo che la domanda è comparsa: è
+     esattamente il tiro a caso, quindi quando la risposta è sbagliata
+     scatta la penalità di fretta (`nucleo/domanda.js`) e l'attesa si
+     allunga di un secondo e mezzo. Con un `attendi(2400)` fisso il
+     giro dopo trovava ancora la domanda di prima con una risposta già
+     colorata — e il guasto sembrava quello del `v-if` che non rimonta,
+     cioè tutt'altra cosa. Si aspetta finché i tasti tornano nudi. */
+  if (await page.locator('.qz-fretta').count()) diFretta++
+  await page.waitForFunction(
+    () => !document.querySelector('.qz-tasto.giusta, .qz-tasto.sbagliata, .qz-tasto.spenta'),
+    null, { timeout: 12000 }).catch(() => {})
 }
+nota(diFretta
+  ? `${diFretta} risposta/e su ${risposteDate} sono arrivate prima di poterla leggere, `
+    + 'e l\'attesa si è allungata: è la penalità del tiro a caso'
+  : 'nessuna risposta di fretta in questo giro (il primo tasto era quello giusto)')
 controlla('due domande di fila si sono potute rispondere', risposteDate >= 2,
           `ne ho risposte ${risposteDate}`)
 await scatto(page, 'domanda-incatenata')

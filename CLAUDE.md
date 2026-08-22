@@ -404,6 +404,41 @@ committate: non è ricostruibile da git.
   due domande vere **nel sotterraneo** — dove la catena non dipende
   dall'azzeccare: si risponda bene o male, lo scontro va avanti e la
   domanda dopo arriva nella stessa istanza.
+- **Rispondere prima di aver letto costa tempo, non roba.**
+  `nucleo/domanda.js` (`tempoDiLettura`, `troppoDiFretta`) misura quanto
+  ci vuole a leggere *quella* domanda — consegna più risposte, ~1,7 s
+  per una tabellina, 3,8 s per un problema — e `Domanda.vue` allunga di
+  un secondo e mezzo l'attesa di chi sbaglia più in fretta di così,
+  dicendolo («🐢 Troppo di fretta»). Una soglia fissa direbbe «hai
+  tirato a caso» a chi le tabelline le sa. La penalità è il tempo e non
+  vita o monete: quelle punirebbero anche chi è svelto e sa, e
+  insegnerebbero che rispondere è pericoloso. **E dopo ogni sbaglio si sta
+  fermi almeno quattro secondi** (`PONDERA`), fretta o no: è lì che
+  compare la spiegazione, e il `respiro` che i giochi passano è tarato
+  sul ritmo della partita — 900 ms nel sotterraneo, cioè la spiegazione
+  spariva prima di poterla leggere. È un pavimento, non un'aggiunta:
+  chi aspettava già di più continua ad aspettare quello.
+  **La penalità cresce con l'insistenza** (`quiz/fretta.js`): 5,5 · 7 ·
+  9 · 10 secondi e poi 10 fisso, perché una penalità fissa sopra quel
+  pavimento non si sentiva — 4,0 contro 5,5 non si distingue, ed è stato
+  provato. Il primo scatto è piccolo (un tocco affrettato non è una
+  colpa), gli ultimi grossi (a quel punto non è un caso). **Per uscirne
+  servono quattro risposte giuste**, e qui sì che si chiede di
+  azzeccare: non è una misura sul sapere, è l'uscita da una penalità, e
+  dev'essere una cosa che tirando a caso non capita per sbaglio.
+  Il contatore vive **in un modulo e non nel componente**, che si
+  rimonta a ogni domanda e ripartirebbe da zero ogni volta. Vale per i quattro giochi
+  che passano da `Domanda.vue`; nei giochi vecchi (`views/`) il tiro a
+  caso costa già altro — negli asteroidi una vita, nelle lingue
+  un'attesa e la serie azzerata.
+- **Nessun gioco paga una risposta sbagliata.** Survivors dava una
+  monetina a chi sbagliava («ci hai provato»): sembrava innocua ed era
+  il buco più grosso, perché **quello che un bambino vuole sono le
+  monete** — una moneta per errore è il modo più veloce di farne, e
+  nella partita libera era l'unica fonte. Le monete si prendono
+  arrivando in fondo a una tappa. Vedi `CALIBRAZIONE.md`: una moneta
+  vale dieci secondi di esercizio, e un tasto premuto a caso non è
+  esercizio.
 - **Una schermata appena comparsa non si lascia toccare subito**, e
   **l'attesa si vede.** Le due metà del contorno dello stesso guasto: dopo
   uno sbaglio si resta fermi un paio di secondi per leggere il perché, e

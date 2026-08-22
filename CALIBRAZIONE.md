@@ -26,6 +26,21 @@ davvero chiesto**. Una tappa che fa otto domande vale 🪙24, che ci si metta
 tre minuti o dieci — il resto del tempo è il gioco, ed è il premio, non il
 lavoro.
 
+### E una risposta sbagliata non paga niente
+
+Corollario, e non è una crudeltà: **un tasto premuto a caso non è
+esercizio**, quindi non vale dieci secondi e non vale una moneta. Survivors
+dava una monetina a chi sbagliava la domanda del potenziamento — un «ci hai
+provato» che valeva in cameretta e non in campo — e sembrava innocua finché
+non si guarda cosa un bambino sta davvero cercando: **le monete**, perché
+quelle si spendono. Con quella regola il modo più veloce di farne era
+chiedere una carta e premere a caso; nella partita libera, dove non si vince
+niente, era l'unica fonte.
+
+Un premio di consolazione è una moneta stampata senza il lavoro dietro, e
+mette fuori scala tutto quello che viene dopo: se ne può fare quante se ne
+vuole, a costo zero.
+
 ## Il cambio: giocare costa il doppio di studiare
 
 La fattoria, la cameretta, tutto quello che si compra con le monete è **il

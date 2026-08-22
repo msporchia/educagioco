@@ -56,7 +56,9 @@ import { dipingi } from './grafica/riquadro.js'
 import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota } from './memoria.js'
-import { serveLaDritta } from './nucleo/domanda.js'
+import { guardaComeVa } from './allarme.js'
+import { serveLaDritta, troppoDiFretta } from './nucleo/domanda.js'
+import { pesoDellaFretta } from './fretta.js'
 
 const props = defineProps({
   domanda: { type: Object, required: true },
@@ -109,6 +111,35 @@ const pronta = ref(false)
 /* Quanto manca alla prossima, per non lasciare l'attesa muta (vedi
    `scegli`): 0 = non si sta aspettando niente. */
 const attesa = ref(0)
+/* ── la risposta arrivata prima della lettura ──
+   `nucleo/domanda.js` dice quanto tempo ci vuole a leggere *questa*
+   domanda; sotto quel tempo, e sbagliando, si resta fermi più a lungo e
+   la riga sotto lo dice. Non toglie niente di quello che il bambino ha:
+   la penalità è il tempo, e il motivo per cui è il tempo sta scritto là.
+
+   **Quanto in più lo decide la raffica** (`quiz/fretta.js`): un secondo
+   e mezzo la prima volta, tre la seconda di fila, quattro e mezzo dalla
+   terza. Una penalità fissa non funzionava — col pavimento dei quattro
+   secondi sotto, un secondo e mezzo sopra si perde: 4,0 contro 5,5 non
+   si distingue, e infatti non si distingueva. Il comportamento da
+   spegnere non è il tocco affrettato, che capita a chiunque abbia il
+   dito già in aria: è la fila di tocchi con cui si fa passare una
+   domanda senza guardarla. */
+const diFretta = ref(false)
+/* ── QUATTRO SECONDI DOPO UNO SBAGLIO, SEMPRE ──
+   Sotto la risposta sbagliata compare **la spiegazione** — «Era questa»,
+   il perché di quella scelta, la dritta — e finora il gioco andava
+   avanti prima che ci fosse il tempo di leggerla: il respiro che i
+   giochi chiedono è tarato sul ritmo della partita (il sotterraneo ne
+   chiede 900 ms), che è la misura giusta per una risposta giusta e
+   quella sbagliata per un errore. Una spiegazione che passa senza
+   essere letta è peggio di nessuna spiegazione: insegna che quel
+   riquadro non contiene niente di utile.
+   È un pavimento e non un'aggiunta — chi già aspettava di più continua
+   ad aspettare quello che aspettava. La barra dell'attesa si riempie
+   per tutto il tempo, così i quattro secondi si vedono passare invece
+   di sembrare un gioco impuntato. */
+const PONDERA = 4000
 /* il timer della prossima domanda e il modo di anticiparlo: non sono
    `ref` perché non si disegnano, e un `ref` che nessuno guarda è solo
    una cosa in più che può restare indietro */
@@ -178,8 +209,14 @@ function scegli(i) {
      che sta sotto può chiudere la domanda appena arriva l'evento, e
      una risposta persa perché si è cambiato schermo è una risposta che
      il bambino ha dato e che non conta */
-  if (props.origine && props.gioco !== 'prova')
+  if (props.origine && props.gioco !== 'prova') {
     annota({ chiave: props.domanda.chiave, giusto, tempo })
+    /* e subito dopo si guarda com'è andata **quella tipologia** in
+       generale: se è diventata un muro — otto tiri e meno di metà
+       giuste — un grande se lo trova scritto nella posta. Non tocca
+       niente e non aspetta: vedi `quiz/allarme.js`. */
+    guardaComeVa(props.domanda.chiave)
+  }
   /* Sbagliando si resta fermi più a lungo, perché c'è da leggere il
      perché. Ma un'attesa che non si vede è **indistinguibile da un gioco
      bloccato** — a un bambino col telefono in mano, due secondi di
@@ -191,14 +228,25 @@ function scegli(i) {
   /* indovinando si tira dritto, a meno che non ci sia una scorciatoia
      da leggere: allora si resta quanto basta per leggerla, che è la
      stessa attesa di quando si sbaglia */
-  const quanto = giusto ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
-    : props.respiro + (esito.value ? 900 : 0)
+  diFretta.value = troppoDiFretta(props.domanda, { giusto, tempo })
+  /* il conto della raffica si aggiorna **a ogni risposta**, anche
+     quando è stata letta: le risposte giuste sono il modo di uscirne
+     (`quiz/fretta.js`, quattro) */
+  const penale = pesoDellaFretta(diFretta.value, giusto)
+  const quanto = (giusto ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
+    : Math.max(PONDERA, props.respiro + (esito.value ? 900 : 0)))
+    + penale.attesa
   attesa.value = quanto
   const vaiAvanti = () => emit('risposto', {
     giusto,
     indice: i,
     chiave: props.domanda.chiave,
     tempo,
+    /* «ha risposto prima di poterla leggere»: nessun gioco lo usa
+       ancora, e sta nell'evento perché il giorno che uno volesse farne
+       qualcosa il conto è già fatto qui e non va rifatto in quattro
+       posti con quattro soglie diverse */
+    diFretta: diFretta.value,
   })
   /* tenuto da parte per chi salta: `clearTimeout` senza questo
      manderebbe l'evento due volte, e il pannello scorrerebbe di due
@@ -278,6 +326,7 @@ async function inizia() {
   scelto.value = -1
   quantoCiHaMesso.value = 0
   attesa.value = 0
+  diFretta.value = false
   clearTimeout(avanti)
   avanti = null
   salta = null
@@ -354,6 +403,18 @@ onUnmounted(() => clearTimeout(cieca))
           <span v-if="scelto === domanda.giusta" class="bene">Giusto!</span>
           <template v-else><span class="male">Era questa.</span> {{ esito }}</template>
           <div v-if="dritta" class="qz-dritta">💡 {{ dritta }}</div>
+          <!-- l'attesa più lunga non resta muta, o è un gioco che si è
+               impuntato: si dice cos'è successo e cosa si vuole -->
+          <!-- ── una riga, e non le regole del meccanismo ──
+               Che l'attesa cresca insistendo, e che per uscirne servano
+               quattro risposte giuste, sono cose che non si spiegano: si
+               sentono. Quello che va detto è la cosa che il bambino può
+               fare adesso — leggere la domanda — e quella sta tutta qui.
+               La versione con «ancora 2 risposte giuste e non si aspetta
+               più» diceva il vero e chiedeva di studiarsi un
+               regolamento, nel momento in cui c'era già una spiegazione
+               da leggere sopra. -->
+          <div v-if="diFretta" class="qz-fretta">🐢 Troppo di fretta: leggi bene la domanda.</div>
         </template>
       </div>
     </div>
@@ -547,4 +608,7 @@ onUnmounted(() => clearTimeout(cieca))
   font-size: clamp(12px, 3.5vw, 14px); line-height: 1.35;
 }
 .qz-esito .male { color: #ffb0b0; font-weight: 700; }
+/* la riga della fretta: dello stesso genere della dritta — un consiglio,
+   non un rimprovero — e per questo non è rossa */
+.qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; }
 </style>

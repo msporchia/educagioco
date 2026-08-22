@@ -123,6 +123,51 @@ export function serveLaDritta(d, { giusto, tempo }) {
   return giusto ? tempo > LENTO : true
 }
 
+/* ── QUANDO SI È TIRATO A CASO ─────────────────────────────────────
+   Il verso opposto della dritta, e nasce dallo stesso posto: guardando
+   un bambino giocare si vede che certe risposte non sono tentativi, sono
+   **tocchi**. Il tasto è lì, lo si preme, si vede cosa succede. Nei
+   giochi dove sbagliare non toglie niente quella è perfino la strada più
+   corta: quattro tocchi e una domanda è passata.
+
+   Non si può sapere se un bambino stava tirando a caso. Si può sapere
+   una cosa più modesta e sufficiente: **che non ha avuto il tempo di
+   leggere**. Sotto quel tempo, e con la risposta sbagliata, non c'è
+   niente da distinguere fra «non lo sapeva» e «non ha guardato», e il
+   gioco può trattarli allo stesso modo — perché la cura è la stessa:
+   fermarsi un momento e leggere.
+
+   LA SOGLIA NON È UN NUMERO SOLO, e questo è il punto. Un secondo e
+   mezzo è tantissimo per «7 × 8» e non basta per una consegna di venti
+   parole con quattro risposte scritte: una soglia fissa direbbe «hai
+   tirato a caso» a chi le tabelline le sa, che è esattamente il
+   contrario di quello che serve. Si misura quindi la roba da leggere —
+   consegna più risposte — e si conta un tempo di lettura.
+
+   E NON COSTA NIENTE DI QUELLO CHE SI HA. La penalità è **tempo**: si
+   resta fermi più a lungo, con scritto perché. Togliere vita o monete a
+   chi risponde in fretta punirebbe anche chi è svelto e sa, e
+   soprattutto insegnerebbe la cosa sbagliata — che rispondere è
+   pericoloso. Quello che si vuole insegnare è che leggere conviene, e
+   il modo di dirlo è non lasciare andare avanti chi non ha letto. */
+export const FRETTA = 1.1            // secondi, il minimo per guardare qualunque cosa
+export const A_PAROLA = 0.09         // e quanto costa leggere ogni parola
+export const FRETTA_MAX = 4          // oltre non si sale: sarebbe un'accusa, non una misura
+
+export function tempoDiLettura(d) {
+  if (!d) return FRETTA
+  const parti = [d.testo, ...(d.risposte || []).map(r => r?.testo)].filter(Boolean)
+  const parole = parti.join(' ').trim().split(/\s+/).filter(Boolean).length
+  return Math.min(FRETTA_MAX, FRETTA + parole * A_PAROLA)
+}
+
+/* Sbagliata **e** più veloce di quanto ci voglia a leggerla. La risposta
+   giusta non è mai fretta, per veloce che sia: chi la sa la sa. */
+export function troppoDiFretta(d, { giusto, tempo }) {
+  if (giusto) return false
+  return tempo < tempoDiLettura(d)
+}
+
 /* ── il controllo di forma ──
    Lo usa il banco di prova su ogni domanda generata; è anche la
    descrizione eseguibile del contratto qui sopra, quindi quando cambia
