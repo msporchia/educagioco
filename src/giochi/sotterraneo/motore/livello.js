@@ -37,7 +37,7 @@
    Non c'è niente di grafico qui dentro: gira in Node, e infatti è lì che
    si prova.
    ═══════════════════════════════════════════════════════════════════ */
-import { ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
+import { ROCCIA, PAVIMENTO, PORTA, ARREDI } from '../dati/mondo.js'
 import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, BRANCO } from '../dati/mostri.js'
 import { raggiungibili } from '../../../motore/passi.js'
@@ -317,14 +317,23 @@ export class Livello {
   }
 
   /* ── le curiosità ──
-     Una o due per piano, e mai nella stanza d'ingresso: sono la cosa
-     che si tocca **dopo** aver capito dove si è. Non bloccano, non
-     valgono una chiave, e si possono saltare tutte senza perdere
-     niente — è proprio quello che le rende una scelta invece di un
-     pedaggio. */
+     Mai nella stanza d'ingresso: sono la cosa che si tocca **dopo**
+     aver capito dove si è. Non bloccano, non valgono una chiave, e si
+     possono saltare tutte senza perdere niente — è proprio quello che
+     le rende una scelta invece di un pedaggio.
+
+     ── QUANTE, E PERCHÉ PIÙ DI PRIMA ──
+     Erano una o due per piano, cioè meno di una stanza su quattro:
+     giocando, la cosa che un bambino cerca non è il mostro seguente ma
+     **cosa fa quel libro**, e trovarne uno ogni due piani vuol dire
+     mandarlo a caccia di una cosa che quasi non c'è. Adesso sono due o
+     tre, e sui piani grandi (dalle otto stanze in su) tre o quattro:
+     una ogni tre stanze circa, che è la stessa densità dei forzieri.
+     Non cambia il costo della discesa — una curiosità non è un
+     pedaggio, si passa oltre — ma cambia quello che c'è da guardare. */
   spargiLeCuriosita(st) {
     const buone = st.filter(s => s.ruolo !== 'ingresso')
-    const quante = 1 + (this.rnd() < 0.55 ? 1 : 0)
+    const quante = (buone.length >= 8 ? 3 : 2) + (this.rnd() < 0.6 ? 1 : 0)
     for (let n = 0; n < quante; n++) {
       const s = buone[Math.floor(this.rnd() * buone.length)]
       if (!s) return
@@ -353,16 +362,11 @@ export class Livello {
      fosse è peggio di nessuna cassa. Il braciere porta la sua luce, ed
      è l'unica cosa d'arredo che cambi qualcosa di quello che si vede. */
   arredaLeStanze() {
-    /* Tre generi, e la differenza è **dove possono stare**: quello che
-       si appende va contro la parete di fondo (uno stendardo in mezzo al
-       pavimento non è arredo, è un errore che si vede subito), quello
-       che si posa sta lungo un bordo qualunque, e il fuoco è l'unico che
-       cambia quello che si vede. Uno solo acceso per stanza: due
+    /* I tre generi stanno in `dati/mondo.js` (`ARREDI`) con la frase che
+       ognuno dice a chi lo tocca. Uno solo acceso per stanza: due
        bracieri nella stessa cantina illuminano tutto, e il buio è metà
        del gioco. */
-    const APPESO = ['stendardo', 'candelabro']
-    const POSATO = ['barile', 'cassa', 'ossa', 'teschio-scena']
-    const FUOCO = ['braciere', 'lanterna']
+    const { appeso: APPESO, posato: POSATO, fuoco: FUOCO } = ARREDI
     const pesca = quali => quali[Math.floor(this.rnd() * quali.length)]
 
     for (const s of this.stanze) {

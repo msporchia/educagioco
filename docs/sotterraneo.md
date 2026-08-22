@@ -99,6 +99,13 @@ diventa il posto dove si è al sicuro e **la soglia diventa una decisione**.
 Sono anche più lenti di te, perché scappare deve funzionare sempre: «scappo
 via» non è un bottone, è uscire di lì.
 
+**E scappare costa un graffio.** Girare le spalle a un mostro che ti sta
+addosso ti fa prendere quello che prenderesti rispondendo bene — poco da
+un goblin, tre punti dal gigante. Gratis era la mossa migliore che ci
+fosse: tutta la fuga e nessuna domanda, e un tasto così accanto a una
+domanda risponde a un'altra domanda, quella su cosa costa meno. Il
+numero sta scritto **sul tasto**, prima di premerlo.
+
 ## Cosa resta fra una discesa e l'altra
 
 **Niente.** Dentro una discesa l'equipaggiamento scende con te di piano in
@@ -203,6 +210,30 @@ Il banco lo misura, e il risultato è quello che si voleva: chi corre
 dritto alla scala sviene una o due volte per discesa, chi gira e
 raccoglie quasi mai. La fretta si paga, l'esplorazione ripaga.
 
+## E si può anche non tornare su
+
+Svenire riportava all'ingresso con metà gemme e mezza vita, e si poteva
+riprovare all'infinito: il banco diceva che **la discesa si vinceva
+comunque** — dodici su dodici anche rispondendo giusto quattro volte su
+dieci. Una tappa che si supera a caso non misura niente, e la stella in
+meno non è una risposta: si vede a cose fatte, e chi tira a caso non la
+stava guardando.
+
+Adesso le occasioni sono contate: **quattro più una per piano** (sei
+nelle cantine, otto nel fondo). All'ultima si risale, la tappa non è
+superata e si rigioca da capo — la stessa fine di chi decide di
+smettere, raccontata per quello che è. Il cartello dello svenimento dice
+sempre quante ne restano: un fondo che non si vede arrivare è una
+partita che finisce senza motivo.
+
+Insieme a questo la vita di partenza è scesa di un quarto (il cavaliere
+da 24 a 18). I numeri non sono a occhio: venti discese per tappa, nei
+due modi di giocare. A otto risposte giuste su dieci si arriva in fondo
+diciotto volte su venti o più — il patto del banco, e resta intero; a
+sei su dieci circa metà delle volte; a quattro su dieci, cioè premendo a
+caso, quasi mai — salvo nelle cantine, che sono la tappa dove si impara
+la strada e devono perdonare.
+
 ## La torcia non si accende: si ha
 
 Era una cosa da usare: la raccoglievi, occupava una tasca, e poi
@@ -280,6 +311,33 @@ pesa o se fa solo ridere.
 L'invito dice sempre che può andare male, prima di rispondere: una
 sorpresa cattiva non annunciata è la cosa che i bambini ricordano
 peggio, e la scommessa è tutto il gioco.
+
+**Ce ne sono più di prima.** Erano una o due per piano, cioè meno di una
+stanza su quattro; guardando giocare, quello che un bambino cerca non è
+il mostro seguente ma *cosa fa quel libro* — e trovarne uno ogni due
+piani vuol dire mandarlo a caccia di una cosa che quasi non c'è. Adesso
+sono due o tre, e sui piani grandi tre o quattro: una ogni tre stanze
+circa, la stessa densità dei forzieri. Il costo della discesa non cambia
+— una curiosità non è un pedaggio, si passa oltre — cambia quello che
+c'è da guardare.
+
+## Quello che non si tocca lo dice
+
+Barili, casse, ossa, bracieri: arredo, cioè cose che stanno lì per far
+sembrare che qui sotto ci abbia vissuto qualcuno. Il gioco sapeva già
+che non sono toccabili, e le cose vere hanno un filo di luce dorato
+intorno — ma i bambini le toccavano lo stesso e chiedevano a cosa
+servissero. La domanda è ragionevole: sono disegnate dallo stesso foglio
+di un forziere, e un filo che respira piano è una convenzione che
+nessuno ha mai spiegato loro.
+
+Due risposte, e servono tutte e due. L'arredo adesso è disegnato **più
+spento** delle cose che rispondono (non sparisce: una stanza senza
+arredo è una stanza vuota, che è il difetto opposto), e toccandolo si
+ottiene una riga — la prima volta la regola, «quello che si può toccare
+ha la luce intorno», dopo la battuta: *una cassa sfondata: dentro non
+c'è più niente*. Una cosa che non fa niente e non dice niente non si
+legge come «non fa niente»: si legge come rotta.
 
 ## Il banco del mercante: si compra, e adesso si vende
 

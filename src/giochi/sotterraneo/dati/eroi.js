@@ -29,19 +29,19 @@
 
 export const EROI = [
   { chiave: 'cavaliere', nome: 'Cavaliere', em: '🛡️', sprite: 'cavaliere',
-    vita: 24, att: 3, dif: 1,
+    vita: 18, att: 3, dif: 1,
     dice: 'Tiene botta. Se non sai chi scegliere, è questo.' },
 
   { chiave: 'elfa', nome: 'Elfa', em: '🧝', sprite: 'elfa',
-    vita: 20, att: 4, dif: 1,
+    vita: 15, att: 4, dif: 1,
     dice: 'Colpisce più forte, e regge un po\' meno.' },
 
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
-    vita: 16, att: 5, dif: 0,
+    vita: 12, att: 5, dif: 0,
     dice: 'I mostri cadono in metà risposte. Ma ogni sbaglio fa malissimo.' },
 
   { chiave: 'nano', nome: 'Nano', em: '🧔', sprite: 'nano',
-    vita: 26, att: 3, dif: 2,
+    vita: 20, att: 3, dif: 2,
     dice: 'Sbagliare gli fa quasi il solletico. Non cade quasi mai.' },
 ]
 
@@ -61,7 +61,15 @@ export function guastiDegliEroi() {
        abbatterlo costa dodici risposte di fila. Non è difficile, è lungo
        — ed è il modo di far chiudere il gioco. */
     if (e.att < 3) g.push(`${e.chiave}: braccio ${e.att}, i mostri diventano lunghi invece che duri`)
-    if (e.vita < 14) g.push(`${e.chiave}: ${e.vita} di vita, si sviene al terzo sbaglio`)
+    /* Il pavimento della vita. Undici e non quattordici da quando le
+       discese si possono perdere (`SVENIMENTI_IN_REGALO`): la vita è
+       scesa di un quarto su tutta la fila perché con quella di prima si
+       arrivava in fondo anche rispondendo a caso, e la soglia doveva
+       scendere con lei o avrebbe bocciato il mago, che è fragile per
+       mestiere. Sotto undici però un colpo pieno di orco (4, e il mago
+       non para) vale un terzo della vita: tre sbagli e si è a terra
+       prima di aver capito com'è fatta la stanza. */
+    if (e.vita < 11) g.push(`${e.chiave}: ${e.vita} di vita, si sviene al terzo sbaglio`)
     if (e.dif < 0) g.push(`${e.chiave}: difesa sotto zero`)
   }
   if (!EROI.some(e => e.chiave === DI_PARTENZA))

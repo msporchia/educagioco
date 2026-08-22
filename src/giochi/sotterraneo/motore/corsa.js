@@ -41,12 +41,13 @@
 import {
   EROE, TASCHE, RAGGIO, RAGGIO_TORCIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
+  ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { eroeDi, DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, IN_VENDITA, NEI_FORZIERI } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi } from '../dati/campagna.js'
+import { durezzaDi, guardianoDi, svenimentiDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 
@@ -92,6 +93,13 @@ export class Corsa {
     this.finita = false
     this.vinta = false
     this.svenimenti = 0
+    /* l'ultima occasione è stata usata: `riprendi()` allora risale
+       invece di rimettere in piedi */
+    this.ultimoSvenimento = false
+    this.perche = null
+    /* la regola del filo di luce si spiega una volta per discesa: vedi
+       `diCheCosaC` */
+    this.dettoDellArredo = false
     /* i conti che l'albo vuole a fine discesa: si tengono qui perché
        sono fatti della partita, non del profilo */
     this.domande = 0
@@ -365,6 +373,21 @@ export class Corsa {
     return vicina
   }
 
+  /* La riga di una cosa che non risponde: la prima volta spiega la
+     regola del filo di luce, dopo dice cos'è e basta. Una volta per
+     discesa la spiegazione, perché ripetuta a ogni barile diventa
+     rumore. */
+  diCheCosaC(c) {
+    const a = this.livello.robe.find(r => r.che === 'arredo' && r.x === c.x && r.y === c.y)
+    if (!a) return
+    if (!this.dettoDellArredo) {
+      this.dettoDellArredo = true
+      this.dillo(ARREDO_LA_PRIMA_VOLTA)
+      return
+    }
+    this.dillo(ARREDO_DICE[a.pezzo] || 'Non c\'è niente da fare, qui.')
+  }
+
   /* Su cosa ci si sale, e a cosa ci si ferma accanto. Le cose per terra
      stanno fra le prime: raccoglierle vuol dire arrivarci sopra. */
   sopra(che) { return ['scala', 'mercante', 'fonte', 'cosa', 'gemme'].includes(che) }
@@ -375,6 +398,12 @@ export class Corsa {
   vaiVerso(c, preciso = true) {
     if (this.foglio || this.finita) return
     const mira = preciso ? this.cosaC(c) : null
+    /* ── un tocco su una cassa non resta muto ──
+       Non la rende toccabile — l'arredo non è un bersaglio e non deve
+       rubare il tocco a un forziere che gli sta accanto (vedi `cosaC`):
+       si guarda **solo la cella premuta**, e solo quando lì non c'è
+       niente da mirare. Poi si cammina come sempre. */
+    if (preciso && !mira) this.diCheCosaC(c)
     const da = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
     const buona = this.buona()
     /* Su una scala, da un mercante o a una fonte ci si sale sopra; a un
@@ -794,17 +823,28 @@ export class Corsa {
     this.vita = Math.max(0, this.vita - quanto)
   }
 
-  /* Svenire non fa perdere la discesa: ci si risveglia all'ingresso con
-     metà gemme e mezza vita. Quello che si aveva addosso resta — perdere
-     anche la spada vorrebbe dire ricominciare, e ricominciare dopo venti
-     minuti di strada è il modo di far chiudere il gioco. */
+  /* Svenire non fa perdere la discesa **finché ci sono occasioni**: ci
+     si risveglia all'ingresso con metà gemme e mezza vita, e quello che
+     si aveva addosso resta — perdere anche la spada vorrebbe dire
+     ricominciare, e ricominciare dopo venti minuti di strada è il modo
+     di far chiudere il gioco.
+
+     Le occasioni però sono contate (`svenimentiDi`): all'ultima ci si
+     risveglia **fuori**, e la tappa resta lì da rigiocare. Il foglio lo
+     dice prima di chiudere, perché una discesa che finisce senza che
+     nessuno abbia spiegato perché si legge come un guasto. */
   svieni() {
     this.svenimenti++
-    this.foglio = { che: 'svenuto' }
+    this.ultimoSvenimento = this.svenimenti >= svenimentiDi(this.tappa)
+    this.foglio = { che: 'svenuto', ultimo: this.ultimoSvenimento,
+                    restano: Math.max(0, svenimentiDi(this.tappa) - this.svenimenti) }
     this.chiesta = null
   }
 
   riprendi() {
+    /* l'ultima non è una ripresa: è la risalita, e la tappa non è
+       superata — la stessa fine di chi smette per suo conto */
+    if (this.ultimoSvenimento) { this.perche = 'svenuto'; this.risali(); return }
     this.gemme = Math.floor(this.gemme / 2)
     this.vita = Math.max(6, Math.round(this.vitaMax / 2))
     const dentro = this.livello.stanze[0]
@@ -878,11 +918,27 @@ export class Corsa {
      fermo il tempo di uscire dalla stanza, e chi resta lì dentro a girare
      se lo ritrova addosso. Senza quei tre secondi lo scontro si
      riaprirebbe al fotogramma dopo, e «scappo via» sarebbe un tasto che
-     non fa niente. */
+     non fa niente.
+
+     ── E COSTA UN GRAFFIO ──
+     Girare le spalle a un mostro che ti sta addosso non è gratis: si
+     prende quello che si prenderebbe rispondendo bene, cioè `graffio`.
+     Gratis era la mossa migliore che ci fosse — tutta la fuga e nessuna
+     domanda — e un tasto così accanto a una domanda è la risposta a
+     un'altra domanda, quella su cosa costa meno. Il conto è quello del
+     mostro che si ha davanti, quindi scappare dal goblin costa un
+     graffio e dal gigante ne costa tre: la fuga resta la mossa giusta
+     quando serve, e smette di essere quella giusta sempre. */
   scappa() {
     const f = this.foglio
-    if (f && f.che === 'scontro') { f.chi.calmo = CALMA; f.chi.sveglio = false }
+    if (!f || f.che !== 'scontro') { this.chiudi(); return { che: 'niente' } }
+    f.chi.calmo = CALMA; f.chi.sveglio = false
+    const preso = this.graffio(f.chi)
+    this.ferisci(preso)
+    this.dillo(`🏃 scappi — ${f.chi.em} ti graffia ❤️ −${preso}`)
+    if (this.vita <= 0) { this.svieni(); return { che: 'svenuto', preso } }
     this.chiudi()
+    return { che: 'scappato', preso }
   }
 
   chiudi() {
@@ -1149,6 +1205,9 @@ export class Corsa {
   get esito() {
     return {
       vinta: this.vinta, svenimenti: this.svenimenti, domande: this.domande,
+      /* perché è finita: `'svenuto'` se il fondo degli svenimenti è
+         stato toccato, niente se si è risaliti per scelta o si è vinto */
+      perche: this.perche || null,
       piani: this.pianiFatti, quantiPiani: this.quantiPiani,
       mostri: this.mostriBattuti, tesori: this.tesori,
       gemme: this.gemme, stanze: this.stanzeViste,

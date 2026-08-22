@@ -100,6 +100,31 @@ export function durezzaDi(tappa, piano) {
   return da + (a - da) * q
 }
 
+/* ── QUANTE VOLTE CI SI PUÒ SVEGLIARE ALL'INGRESSO ─────────────────
+   Svenire riportava all'ingresso, e basta: si poteva riprovare
+   all'infinito, quindi **la discesa si vinceva comunque** — il banco lo
+   dice senza mezzi termini, dodici discese su dodici anche rispondendo
+   giusto quattro volte su dieci. Una tappa che si supera a caso non
+   misura niente, e la stella in meno non è una risposta: si vede a cose
+   fatte, e chi tira a caso non la stava guardando.
+
+   Adesso c'è un fondo. Toccato quello si risale — la tappa non è
+   superata e si rigioca da capo, che è la stessa fine di chi decide di
+   smettere (`risali`). Il numero cresce coi piani, perché un piano è
+   un'occasione in più di prenderle: quattro in regalo più uno per piano,
+   cioè da sei nelle cantine a otto nel fondo.
+
+   IL NUMERO È MISURATO, non scelto a occhio. Venti discese per tappa,
+   nei due modi di giocare: a otto risposte giuste su dieci si arriva in
+   fondo diciotto volte su venti o più (il patto del banco, e resta
+   intero); a sei su dieci si arriva circa metà delle volte; a quattro
+   su dieci — cioè tirando a caso — non si arriva quasi mai, salvo che
+   nelle cantine, che sono la tappa dove si impara la strada e devono
+   perdonare. Con un tetto più basso (tre in regalo) cadeva anche chi
+   risponde bene, che è il difetto contrario. */
+export const SVENIMENTI_IN_REGALO = 4
+export const svenimentiDi = tappa => SVENIMENTI_IN_REGALO + tappa.piani
+
 /* Chi porta la chiave, piano per piano: l'ultimo è il capo della tappa,
    gli altri il suo guardiano di tutti i giorni. La chiave della scala è
    l'unica cosa che in tutto il sotterraneo **non si può aggirare**, e

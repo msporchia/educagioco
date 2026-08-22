@@ -280,7 +280,18 @@ export class Tela {
     const ctx = this.ctx
     const px = r.fx != null ? r.fx : r.x + 0.5
     const py = r.fy != null ? r.fy : r.y + 0.5
-    const alfa = luce === 2 ? 1 : 0.45
+    /* ── l'arredo sta un passo indietro ──
+       Barile, cassa, stendardo: sono disegnati dallo stesso foglio di un
+       forziere e con la stessa cura, quindi a piena luce chiedevano
+       attenzione esattamente quanto le cose che rispondono al dito — e
+       i bambini infatti le toccavano e chiedevano a cosa servissero. Il
+       filo dorato dice «io sì»; questo dice «io no», ed è la metà che
+       mancava. Non si spegne del tutto: sparire farebbe di una stanza
+       arredata una stanza vuota, che è il difetto opposto. La luce del
+       braciere resta piena, perché quella non è la figura — è quello
+       che la figura fa. */
+    const alfaLuce = luce === 2 ? 1 : 0.45
+    const alfa = alfaLuce * (r.che === 'arredo' ? 0.66 : 1)
 
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
@@ -320,7 +331,9 @@ export class Tela {
     if (r.arde) {
       const q = 0.22 + 0.07 * Math.sin(t * 6 + r.x * 1.7 + r.y)
       const alone = ctx.createRadialGradient(px * T, py * T, T * 0.2, px * T, py * T, T * 2.2)
-      alone.addColorStop(0, `rgba(255,176,80,${q * alfa})`)
+      /* la luce del braciere è piena anche se la sua figura è smorzata:
+         quello che fa non è arredo */
+      alone.addColorStop(0, `rgba(255,176,80,${q * alfaLuce})`)
       alone.addColorStop(1, 'rgba(255,176,80,0)')
       ctx.fillStyle = alone
       ctx.beginPath(); ctx.arc(px * T, py * T, T * 2.2, 0, 7); ctx.fill()
@@ -364,7 +377,12 @@ export class Tela {
      allarme. Il colore è quello del bersaglio e dell'alone della roba
      per terra: in questo gioco l'oro vuol dire «questo riguarda te». */
   filo(nome, cx, cy, t, opz = {}) {
-    const q = 0.5 + 0.22 * Math.sin(t * 2.4)
+    /* un filo più marcato di prima (0,5 ± 0,22): con l'arredo smorzato
+       accanto, i due segnali si leggono insieme — questo si accende,
+       quello sta indietro — ed è la coppia che spiega la regola senza
+       scriverla. Sotto l'unità non si sale: un contorno che pulsa da 0 a
+       1 diventa un allarme, e allora la stanza intera lampeggia. */
+    const q = 0.62 + 0.28 * Math.sin(t * 2.4)
     this.foglio.alone(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T,
                       { ...opz, colore: '#ffd27a', alfa: q, raggio: 1 })
   }

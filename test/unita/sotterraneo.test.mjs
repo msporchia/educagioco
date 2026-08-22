@@ -8,8 +8,8 @@
    `node test/esegui.mjs sotterraneo --niente-build`
    tempo: 300 */
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
-         guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { guastiDelMondo, EROE, TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+         svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { guastiDelleCose, COSE, ARMI_DI } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { CURIOSITA, guastiDelleCuriosita } from '../../src/giochi/sotterraneo/dati/curiosita.js'
@@ -147,6 +147,25 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     uguale(`gradino ${grado}: tutte le famiglie picchiano uguale`,
            new Set(forze).size, 1, ARMI_DI(grado).join())
   }
+}
+
+/* ── E ADESSO NON CI ARRIVA PROPRIO ──
+   Prima di `SVENIMENTI_IN_REGALO` questo era l'unico modo di dirlo:
+   chi tira a caso *paga di più*, in vite o in domande, ma in fondo ci
+   arrivava lo stesso — svenire riportava all'ingresso e si riprovava
+   all'infinito. Dodici discese su dodici vinte rispondendo giusto
+   quattro volte su dieci. Adesso la discesa ha un fondo, e il
+   controllo può chiedere la cosa vera: chi risponde bene passa, chi
+   preme a caso no. La forbice è il senso di tutto il gioco. */
+{
+  const t = CAMPAGNA[3]
+  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85 })
+  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35 })
+  controlla('rispondendo bene la cisterna si vince', bene.vinte >= 7,
+            `${bene.vinte}/${bene.quante}`)
+  controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
+  nota(`la cisterna: ${bene.vinte}/8 vinte all'85% di risposte giuste, ` +
+       `${caso.vinte}/8 al 35%`)
 }
 
 /* chi risponde a caso non arriva in fondo come chi risponde bene: se
@@ -723,6 +742,83 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.usa(0)
   uguale('l\'elisir alza la vita massima', c.vitaMax, prima + COSE['elisir-toro'].cresce)
   uguale('e la tasca si svuota', c.zaino.length, 0)
+}
+
+/* ══════════ 5-bis. scappare costa, e si può cadere per sempre ══════════
+   Le due regole che tolgono il «vinco comunque»: la fuga non è più
+   gratis, e gli svenimenti sono contati. Il banco non scappa mai — è la
+   sua definizione di gioco al minimo — quindi la fuga si prova a mano. */
+{
+  const c = new Corsa(CAMPAGNA[2], { seme: 5, rnd: seminato(5) })
+  const m = c.livello.robe.find(r => r.che === 'mostro' && !r.morto)
+  c.foglio = { che: 'scontro', chi: m }
+  const prima = c.vita
+  const atteso = c.graffio(m)
+  const via = c.scappa()
+  uguale('scappare toglie il graffio di quel mostro', prima - c.vita, atteso)
+  uguale('e lo dice a chi guarda', via.che, 'scappato')
+  controlla('il mostro resta calmo il tempo di uscire', m.calmo > 0, `calmo ${m.calmo}`)
+  controlla('e il graffio non è mai zero, o scappare tornerebbe gratis', atteso >= 1)
+
+  /* con un filo di vita, scappare fa svenire come le prende in faccia:
+     è la stessa ferita, e nessuna scorciatoia la salta */
+  c.vita = 1
+  c.foglio = { che: 'scontro', chi: m }
+  uguale('con un filo di vita scappare fa svenire', c.scappa().che, 'svenuto')
+  uguale('e il foglio è quello dello svenimento', c.foglio.che, 'svenuto')
+}
+
+{
+  const t = CAMPAGNA[0]
+  const c = new Corsa(t, { seme: 11, rnd: seminato(11) })
+  const quante = svenimentiDi(t)
+  controlla('il fondo cresce coi piani', svenimentiDi(CAMPAGNA[5]) > svenimentiDi(CAMPAGNA[0]),
+            `${svenimentiDi(CAMPAGNA[0])} contro ${svenimentiDi(CAMPAGNA[5])}`)
+
+  for (let i = 1; i < quante; i++) {
+    c.vita = 0
+    c.svieni()
+    uguale(`svenimento ${i}: si torna all'ingresso`, c.foglio.ultimo, false)
+    uguale('e il cartello dice quante ne restano', c.foglio.restano, quante - i)
+    c.riprendi()
+    controlla('la discesa continua', !c.finita)
+    controlla('e si riprende con mezza vita, mai a zero', c.vita > 0, String(c.vita))
+  }
+  c.vita = 0
+  c.svieni()
+  uguale(`all'ultimo (${quante}) il cartello lo dice`, c.foglio.ultimo, true)
+  c.riprendi()
+  controlla('e la discesa finisce', c.finita)
+  uguale('non vinta', c.vinta, false)
+  uguale('e si sa perché, o la schermata racconterebbe un\'altra fine',
+         c.esito.perche, 'svenuto')
+}
+
+/* ══════════ 5-ter. quello che non si tocca lo dice ══════════
+   Un barile non è toccabile e non deve diventarlo — ruberebbe il tocco
+   al forziere accanto — ma toccandolo si ottiene una riga: la prima
+   volta la regola, dopo la battuta. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 3, rnd: seminato(3) })
+  const a = c.livello.robe.find(r => r.che === 'arredo')
+  controlla('nei piani c\'è arredo', !!a)
+  uguale('e non è toccabile', c.toccabile(a), false)
+  c.avvisi = []
+  c.vaiVerso({ x: a.x, y: a.y }, true)
+  uguale('toccandolo la prima volta si spiega la regola', c.avvisi.length, 1)
+  controlla('e la riga parla della luce intorno', /luce/.test(String(c.avvisi[0])),
+            String(c.avvisi[0]))
+  c.avvisi = []
+  c.vaiVerso({ x: a.x, y: a.y }, true)
+  uguale('la seconda volta dice cos\'è', c.avvisi.length, 1)
+  controlla('con la frase del suo pezzo',
+            String(c.avvisi[0]) === ARREDO_DICE[a.pezzo], String(c.avvisi[0]))
+  /* e un tocco sul pavimento nudo resta muto: la riga è la risposta a
+     «ho toccato quella cosa lì», non un commento a ogni passo */
+  c.avvisi = []
+  const st = c.livello.stanze[0]
+  c.vaiVerso({ x: st.cx, y: st.cy }, true)
+  uguale('camminare non dice niente', c.avvisi.length, 0)
 }
 
 /* ══════════ 6. i traguardi ══════════ */

@@ -490,9 +490,27 @@ function risolvi(giusto) {
 }
 
 /* ═══════════ i tasti dei fogli ═══════════ */
-function scappa() { corsa.value.scappa(); domanda.value = null; tic.value++; suoni.passo(); salva() }
+/* Scappare costa un graffio (vedi `Corsa.scappa`), quindi può anche far
+   svenire: il suono lo dice, e il foglio che compare da solo è quello
+   dello svenimento. */
+function scappa() {
+  const e = corsa.value.scappa()
+  domanda.value = null
+  tic.value++
+  if (e?.che === 'svenuto') suono.fine()
+  else { suoni.graffio(); setTimeout(() => suoni.passo(), 160) }
+  salva()
+}
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
-function riprendi() { corsa.value.riprendi(); tic.value++ }
+/* «riprovo» rimette in piedi all'ingresso — tranne all'ultima occasione,
+   dove `riprendi()` risale da sé e la discesa è finita: allora la
+   schermata da mostrare è quella di fine, non il campo. */
+function riprendi() {
+  const c = corsa.value
+  c.riprendi()
+  tic.value++
+  if (c.finita) chiudi()
+}
 function compra(k) { const e = corsa.value.compra(k); tic.value++; if (e?.che === 'comprato') suono.compra(); salva() }
 function vendi(i) { const e = corsa.value.vendi(i); tic.value++; if (e) suoni.bottino(); salva() }
 function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
@@ -758,8 +776,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
                        :origine="domanda" gioco="sotterraneo" :respiro="900"
                        @risposto="risposto" />
             </div>
+            <!-- il costo sta **sul tasto**: scappare toglie un graffio,
+                 come restare e rispondere bene, e chi sceglie deve
+                 vederlo prima e non nell'avviso che arriva dopo -->
             <button class="sot-grosso sot-chiaro" data-azione="scappa" @click="scappa">
               <span class="em">🏃</span> scappo via
+              <small v-if="nemico">ti graffia ❤️ −{{ nemico.graffio }}</small>
             </button>
           </div>
         </div>
@@ -858,10 +880,24 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </button>
         </Foglio>
 
+        <!-- ═══ svenuto ═══
+             Due cartelli, e la differenza è tutta nel numero che resta.
+             Finché ci sono occasioni si torna all'ingresso e si dice
+             **quante ne restano**: un fondo che non si vede arrivare è
+             una partita che finisce senza motivo. All'ultima si risale,
+             e il tasto lo dice prima di premerlo. -->
         <Foglio v-else-if="foglio && foglio.che === 'svenuto'" em="💫"
-                titolo="Ti sei svegliato all'ingresso"
-                dice="Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più, ma quello che avevi addosso sì.">
-          <button class="sot-grosso" data-azione="riprendi" @click="riprendi">riprovo</button>
+                :titolo="foglio.ultimo ? 'Non ti reggi più in piedi' : 'Ti sei svegliato all\'ingresso'"
+                :dice="foglio.ultimo
+                  ? 'Ti hanno portato su. Il sotterraneo resta lì: questa discesa ricomincia da capo.'
+                  : 'Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più, ma quello che avevi addosso sì.'">
+          <p v-if="!foglio.ultimo" class="sot-storia">
+            Ancora <b>{{ foglio.restano }}</b>
+            {{ foglio.restano === 1 ? 'volta' : 'volte' }}, poi si risale.
+          </p>
+          <button class="sot-grosso" data-azione="riprendi" @click="riprendi">
+            {{ foglio.ultimo ? 'torno su' : 'riprovo' }}
+          </button>
         </Foglio>
 
         <!-- ═══ lo zaino: al centro, come lo scontro ═══

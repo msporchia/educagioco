@@ -15,7 +15,7 @@ defineProps({
   titolo: { type: String, default: '' },
   stelle: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
-  fatti: { type: Object, required: true },   // { piani, quantiPiani, domande, mostri, tesori, gemme }
+  fatti: { type: Object, required: true },   // { piani, quantiPiani, domande, mostri, tesori, gemme, perche }
 })
 defineEmits(['ancora', 'esci'])
 </script>
@@ -23,14 +23,25 @@ defineEmits(['ancora', 'esci'])
 <template>
   <div class="sot-velo">
     <div class="sot-fine">
-      <div class="sot-em em">{{ vinta ? '🏆' : '🕯️' }}</div>
+      <!-- ── tre modi di finire, non due ──
+           Vinta, lasciata a metà, e **finita male**: al fondo degli
+           svenimenti si risale per forza, e raccontarlo come «sei
+           tornato su a mani vuote» — la frase di chi ha scelto di
+           smettere — nasconde l'unica cosa che c'è da capire, cioè che
+           si è caduti troppe volte. Il numero degli svenimenti sta
+           sotto, fra i fatti, e la frase ci si appoggia. -->
+      <div class="sot-em em">{{ vinta ? '🏆' : fatti.perche === 'svenuto' ? '💫' : '🕯️' }}</div>
       <h2 :class="vinta ? 'sot-oro' : 'sot-rosso'">
-        {{ vinta ? 'Sei risalito!' : 'Sei tornato su a mani vuote' }}
+        {{ vinta ? 'Sei risalito!'
+           : fatti.perche === 'svenuto' ? 'Ti hanno portato su'
+           : 'Sei tornato su a mani vuote' }}
       </h2>
       <p class="sot-racconto">
         {{ vinta
           ? `${titolo}: hai trovato la scala fino in fondo.`
-          : 'Il sotterraneo resta lì. La prossima volta sarà tutto diverso.' }}
+          : fatti.perche === 'svenuto'
+            ? `Sei svenuto ${fatti.svenimenti} volte: ${titolo} ricomincia da capo. Cerca una spada prima di picchiarti con tutti.`
+            : 'Il sotterraneo resta lì. La prossima volta sarà tutto diverso.' }}
       </p>
 
       <div v-if="stelle" class="sot-stelle em">{{ '⭐'.repeat(stelle) }}</div>
