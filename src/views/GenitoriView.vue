@@ -1704,4 +1704,19 @@ a.bottone { text-decoration:none; display:inline-flex; align-items:center;
 }
 .campo .nome:focus { outline:3px solid var(--viola); outline-offset:1px }
 .campo .bottone { font-size:15px; padding:11px 17px }
+
+/* ── la firma ──
+   Sbiadita e senza carta sotto: è l'ultima cosa della colonna e non
+   deve competere con un'impostazione. Il rimando dice che porta fuori
+   (↗): un link che apre il browser dentro un'app installata è un
+   salto, e va annunciato. */
+.firma { width:100%; max-width:400px; margin:26px 0 6px; padding-top:14px;
+         border-top:1px solid #8593a826; text-align:center }
+.firma p { font-size:12.5px; line-height:1.5; color:var(--tenue); margin:0 }
+.firma b { color:var(--viola-scuro); font-weight:800 }
+.firma .fuori { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:10px 0 }
+.firma .fuori a { font-size:12.5px; font-weight:800; color:var(--viola);
+                  text-decoration:none; padding:7px 12px; border-radius:999px;
+                  background:#f5f2ff }
+.firma .fuori a:active { transform:translateY(1px) }
 </style>

@@ -371,6 +371,26 @@ committate: non è ricostruibile da git.
   `#ripara` buttano cache e service worker e ricaricano: **non toccano
   IndexedDB né localStorage**, e questa è tutta la differenza con
   «cancella i dati del sito».
+- **`src/store/sessioni.js`** — **quanto ha giocato, e a cosa.** Ogni
+  sessione di gioco (quale gioco, quando, quanti secondi) finisce in
+  archivio sotto `sessioni:<id del giocatore>`, **fuori dal profilo**:
+  quello si riscrive intero a ogni `persist()`, e un elenco che cresce
+  di dieci righe al giorno finirebbe in ogni scrittura per sempre. A
+  aprire e chiudere è `App.vue` — l'unico posto che sa quale schermata
+  è aperta — e un gioco non se ne occupa: se dovesse ricordarsene lui,
+  il quinto gioco che nasce se ne dimenticherebbe. Tre cose che si
+  sbagliano: il **telefono posato** col gioco aperto (si chiude la
+  sessione su `visibilitychange`/`pagehide`, e c'è comunque un tetto di
+  due ore), i **tocchi di passaggio** (sotto cinque secondi non si
+  scrive niente), e il **giorno**, che è quello locale — una partita
+  delle 23:40 è di ieri anche se in UTC è già oggi. I conti che i
+  grafici mostrano (`perGioco`, `perGiorno`, `oggiDi`) sono puri e
+  provati in `test/unita/sessioni`; il disegno è
+  `components/TempoDiGioco.vue`, barre di `div` e nessuna libreria.
+  **Il tetto giornaliero per gioco non c'è**, ed è deliberato: `oggiDi`
+  è la metà che gli servirebbe, e il resto si fa quando si decide.
+  Eliminare un bambino porta via anche il suo registro
+  (`scordaSessioni`): un dato fuori dai profili non se ne va da solo.
 - **`src/store/giudizi.js`** — il quaderno dei giudizi sulle domande.
   Acceso l'interruttore nella pagina dei grandi, sopra ogni domanda dei
   quiz compaiono tre tastini (😴 troppo facile, 😰 troppo difficile, 🐛

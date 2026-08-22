@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { init, state } from './store/profile.js'
 import { initPosta } from './store/posta.js'
+import { entra as entraNelGioco, esci as esciDalGioco } from './store/sessioni.js'
 import { controlla } from './aggiornamento.js'
 import HomeView from './views/HomeView.vue'
 import CamerettaView from './views/CamerettaView.vue'
@@ -91,9 +92,52 @@ onMounted(async () => {
      rimanderebbe in home chiunque sia entrato da `#sotterraneo`. Vale
      per i test che aprono una schermata dall'indirizzo e per il cheat
      che apre un gioco senza carta in home. */
-  watch(() => state.player, () => { vista.value = 'home' })
+  watch(() => state.player, () => {
+    /* la sessione è di **chi** stava giocando: si chiude prima di
+       cambiare, se no i minuti finirebbero addosso al bambino dopo */
+    esciDalGioco()
+    vista.value = 'home'
+  })
+  guardaLoSchermo()
 })
 function vai(v) { vista.value = v }
+
+/* ═══════════ quanto ha giocato, e a cosa ═══════════
+   `store/sessioni.js` tiene il registro; qui si dice soltanto **quando
+   comincia e quando finisce** una sessione, perché questo è l'unico
+   posto che sa quale schermata è aperta. Un gioco non se ne occupa: se
+   dovesse ricordarsene lui, il quinto gioco che nasce se ne
+   dimenticherebbe — come si erano dimenticati il `:key` della domanda
+   in quattro su cinque.
+
+   Contano solo i **giochi**: home, impostazioni, albo e guide non sono
+   tempo passato a giocare, e metterle nel conto direbbe a un genitore
+   che suo figlio ha passato dieci minuti sul gioco quando li ha passati
+   a scegliere. */
+const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide']
+const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
+
+function apriSessione(v) {
+  if (gioca(v)) entraNelGioco(v, state.player)
+  else esciDalGioco()
+}
+watch(vista, apriSessione)
+
+/* ── il telefono posato col gioco aperto ──
+   Senza questo, un bambino che lascia il sotterraneo aperto e va a
+   cena figura come tre ore di sotterraneo. Si chiude la sessione
+   quando la pagina sparisce e se ne apre una nuova quando torna: le
+   pause non si contano, e quello che resta nel registro sono partite
+   vere. `pagehide` copre il caso in cui la scheda venga chiusa e basta,
+   dove `visibilitychange` su iOS non arriva sempre. */
+function guardaLoSchermo() {
+  if (typeof document === 'undefined') return
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') esciDalGioco()
+    else apriSessione(vista.value)
+  })
+  window.addEventListener('pagehide', () => esciDalGioco())
+}
 
 /* ── tornare in home va a vedere se c'è una versione nuova ──
    Il controllo automatico dorme quando l'app è in secondo piano
