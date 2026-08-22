@@ -15,7 +15,7 @@ Si arriva dal link *Genitori* in fondo alla schermata iniziale.
 > Si cambia da lì dentro, e se lo dimentichi si rimette dall'indirizzo:
 > aggiungi `#pin=1234` all'URL.
 
-## Due schede, e si tara in una sola
+## Tre schede, e si tara in una sola
 
 **Bambini** dice chi gioca su questo telefono — nome, faccia, progressi — e
 dell'età mostra solo una riga: *«Leonardo ha 10 anni · modifica ›»*.
@@ -27,6 +27,53 @@ elenco di domande con quattro tondi per riga — e tutte e due finivano per
 dire, in modi che non si potevano confrontare, quello che il quadro dice già.
 La seconda aveva perfino una **seconda manopola dell'età**, dieci schermate
 lontano dalla prima.
+
+**Come va** è la terza, e risponde all'unica domanda che le altre due non
+possono: *sta funzionando?* Tutte le domande che esistono, ordinate da quella
+che gli va peggio a quella che gli va meglio, con cinque cuori sulla
+percentuale di risposte giuste — **sbiaditi finché le prove sono meno di
+otto**, perché una su tre non è «il 33%», è un bambino che ha visto quella
+cosa tre volte.
+
+Il **punteggio è il tasto**: premendolo si apre la scheda di quella domanda
+con tutti i numeri — quante volte gli è capitata, quante l'ha azzeccata,
+quanto ci mette a rispondere, quand'è stata l'ultima volta — e le tre cose
+che si possono fare: **▶ provala** (la domanda vera, generata dallo stesso
+modulo che la darebbe in partita), **✎ spostala** (la stessa tacca da mezzi
+anni del quadro, con l'ottavo scatto che dice «a scuola non l'hanno ancora
+fatta») e **↻ ricomincia a contare**.
+
+L'ultima è quella che serve appena si comincia a ritoccare: il conto è
+appiccicoso. Dopo aver reso una cosa più facile, «ne ha sbagliate 7 su 10»
+resta scritto per settimane — quelle dieci risposte le ha date sulle domande
+di prima — e l'elenco continua a mettere in cima una riga già sistemata.
+Azzerare butta il conto e **non** il ripasso: quando quella cosa va
+ripassata è un'altra faccenda.
+
+Questa scheda era stata tolta e adesso è tornata rifatta. Prima mostrava
+**solo i segnali**: le tre o quattro righe fuori soglia, col tasto per
+ritoccarle. Era corretta e non si capiva — tre righe senza il resto non
+dicono se sono tre su dieci o tre su centoventi, e senza quel confronto «7
+su 10» non si sa se è un disastro o la normalità.
+
+### Quanto ha giocato
+
+In cima a «Come va», prima delle domande, perché è la cosa che un genitore
+si chiede da solo: **oggi**, **sette giorni**, **trenta giorni**. Una fila di
+barre per i giorni — quelle vuote comprese, perché tre giorni di fila a zero
+sono l'informazione e non il nulla da nascondere — e sotto la classifica di
+*a cosa* ha giocato, col tempo accanto.
+
+Il conto lo tiene un registro di sessioni: cinque minuti di Survivors alle
+13:24, otto di sotterraneo alle 15:48. Le impostazioni, l'albo e le guide non
+contano come tempo di gioco, e nemmeno i tocchi di passaggio — sotto i cinque
+secondi non è una partita. Se il telefono viene posato col gioco aperto la
+sessione si chiude da sé: tre ore di schermo spento non sono tre ore di
+sotterraneo.
+
+**Non c'è nessun giudizio su quanto sia tanto**, e non è una dimenticanza:
+dipende dal giorno, dalla famiglia, da cosa stava facendo prima. Ci sono i
+numeri, il resto lo sa chi legge.
 
 ## Il quadro: cosa trova in casa, e cosa gli chiediamo
 
@@ -43,6 +90,12 @@ con l'età a cui servono.
 Il **▶** di una riga apre una domanda vera, generata dallo stesso modulo che
 la darebbe in partita: su un pezzo di scuola le scorre tutte, col contatore
 («7 di 37»), che è il modo di rispondere a *le ho viste tutte?*.
+
+Una riga che gli sta andando male porta il suo numero in rosso — «ne ha
+sbagliate 7 su 10» — con la stessa soglia dell'avviso che arriva in posta:
+almeno otto risposte, meno di metà giuste. È l'unico rosso del quadro, e
+c'è per quello: gli altri quattro stati dicono *dove* sta una cosa, questo
+dice che qualcosa non funziona.
 
 ## Correggere una riga: la ✎
 

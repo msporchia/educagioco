@@ -7,6 +7,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { reactive, computed } from 'vue'
 import { load, save, flush, remove, detectBackend, backend, chiavi } from './storage.js'
+import { scordaSessioni } from './sessioni.js'
 import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
 import { PRODOTTI, POSTI_CASA, SOGLIE, PREFERITO, petDi, prodottoDi, gradimento,
@@ -352,6 +353,13 @@ export async function eliminaGiocatore(id) {
   state.giocatori.splice(i, 1)
   salvaRoster()
   await remove(KEY(id))
+  /* il registro di quanto ha giocato sta **fuori** dal profilo
+     (`store/sessioni.js`, per non finire in ogni `persist()`), quindi
+     non se ne va da solo: senza questa riga resterebbe in archivio un
+     elenco di partite di un bambino che non c'è più, che nessuno può
+     più né vedere né cancellare. Nel cestino non ci va: si ripristinano
+     i progressi, non le ore passate davanti allo schermo. */
+  await scordaSessioni(id)
   if (state.player === id) {
     const prossimo = (state.giocatori[0] || {}).id
     if (prossimo) await selectPlayer(prossimo)
@@ -830,6 +838,28 @@ export function ritocca(chiave, gradini) {
   else s.ritocchi[chiave] = n
   persist()
   return n
+}
+
+/* ── RICOMINCIARE A CONTARE UNA RIGA ──────────────────────────────
+   «Come va» mostra il conto delle risposte di ogni tipologia, e quel
+   conto è **appiccicoso**: dopo aver reso una cosa più facile, il vecchio
+   «ne ha sbagliate 7 su 10» resta lì per settimane e continua a dire una
+   cosa che non è più vera — perché le dieci risposte vecchie le ha date
+   sulle domande di prima. Chi ritocca deve poter dire «adesso ricomincia
+   a contare», o l'unica alternativa è aspettare che le nuove risposte
+   diluiscano le vecchie.
+
+   Si butta **il conto**, non l'elemento: `s` (la forza del ripasso) e
+   `last` restano, perché quelli non parlano di quanto era tarata bene
+   una domanda ma di quando va ripassata — e un ripasso azzerato
+   rifarebbe uscire domani una cosa saputa ieri. Anche il tempo se ne va
+   con le risposte: è la loro media. */
+export function azzeraConto(chiave) {
+  const it = state.profile.items?.[chiave]
+  if (!it) return false
+  it.ok = 0; it.err = 0; it.seen = 0; it.t = 0
+  persist()
+  return true
 }
 
 /* Tutto quello che dipende dal bambino e non dal modulo, nella forma in

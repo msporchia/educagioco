@@ -264,27 +264,48 @@ committate: non è ricostruibile da git.
   metteva i grado-1 di sedici moduli nello stesso punto. L'elenco delle
   classi sta in `docs/livelli-delle-domande.md`, che è **generato**
   (`npm run quiz:livelli`) e non si scrive a mano.
-  **La schermata dei grandi ha due schede**, e si tara in una sola:
+  **La schermata dei grandi ha tre schede**, e si tara in una sola:
   «Bambini» (chi gioca, progressi, codice, guasti — con una riga sola
   che dice «Leonardo ha 10 anni · modifica ›» e rimanda) e **«Giochi e
   domande»**, la manopola dell'età col **quadro** sotto (vedi la sezione
   della manopola).
-  **«Come va» è sospeso**, non cancellato: `quiz/ComeVa.vue` e le soglie
-  di `quiz/consiglio.js` sono al loro posto, il suo test è
-  `test/integrazione/come-va.spento.mjs` (si riaccende rinominandolo
-  `.test.mjs`), ma non è montato da nessuna parte — il modo di
-  presentarlo è da rivedere, e mostrato a metà sarebbe peggio. Ce n'erano due che dicevano
+  E **«Come va»** (`quiz/ComeVa.vue`), che era sospesa ed è tornata
+  rifatta: **tutte** le tipologie di domande, ordinate dalla peggiore
+  alla migliore, cuori sulla percentuale di giuste — sbiaditi sotto le
+  otto risposte, dove il verdetto non c'è — e il **punteggio è il
+  tasto**: apre `quiz/SchedaDomanda.vue`, che porta i numeri (quante
+  volte, quante giuste, quanto ci mette, l'ultima volta) e le tre cose
+  da fare: ▶ provala, ✎ spostala (la stessa `Taratura.vue` del quadro),
+  ↻ ricomincia a contare. L'ordine è il contenuto, e il conto per riga
+  lo compone `quiz/andamento.js`, che è puro (`test/unita/andamento`).
+  Era stata sospesa perché mostrava **solo i segnali** — le tre righe
+  fuori soglia — e tre righe senza il resto non dicono se sono tre su
+  dieci o tre su centoventi.
+  **`azzeraConto` butta il conto e non il ripasso** (`s` e `last`
+  restano): un ripasso azzerato rifarebbe uscire domani una cosa saputa
+  ieri, mentre il conto va buttato perché dopo un ritocco parla delle
+  domande di prima. Ce n'erano due che dicevano
   la stessa cosa in altri modi — un elenco di classi con quattro tondi
   per riga e una fila di interruttori per gioco — e la prima aveva
   pure **una seconda tacca dell'età**, cioè il difetto che la manopola
   era nata per togliere. Adesso il posto è uno: `quiz/Catalogo.vue` non
   esiste più.
-  Il conto che servirebbe c'è già: `quiz/consiglio.js` legge
-  `store/srs.js` e sa dire quando una chiave ha almeno otto tiri con
-  meno di metà giuste (un muro) o più di nove su dieci (un pedaggio).
-  Consiglia e non ritocca da sé — un pomeriggio storto insegnerebbe la
-  cosa sbagliata — ma **per ora non lo mostra nessuno**: vedi «Come va»
-  qui sopra.
+  **Il muro adesso lo dice, e passa dalla posta.** `quiz/consiglio.js`
+  legge `store/srs.js` e sa quando una chiave ha almeno otto tiri con
+  meno di metà giuste (un muro) o più di nove su dieci (un pedaggio);
+  `quiz/allarme.js` è il pezzo che mancava — **il momento in cui si
+  dice**. `Domanda.vue` lo chiama a ogni risposta annotata, e al muro
+  scrive un avviso nella posta dei grandi (`avvisaUnaVolta`, una volta
+  per bambino e per chiave: la memoria di cosa si è già detto
+  sopravvive al «Ho letto», se no la stessa riga tornerebbe domani).
+  Solo il muro, mai il pedaggio: «le indovina quasi tutte» è vero e non
+  è un problema, e metterlo nella stessa posta insegnerebbe a scorrere
+  gli avvisi invece di leggerli. **Non ritocca da sé** e non cambia:
+  consiglia, e il tasto è la ✎ di sempre. Nel quadro dell'età la stessa
+  soglia colora la riga (`em.va-male`, l'unico rosso del quadro:
+  gli altri quattro stati dicono *dove* sta una cosa, questo dice che
+  qualcosa non funziona), e l'avviso porta dritto a «Come va», dove
+  quella riga sta in cima perché l'elenco è ordinato dalla peggiore.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio

@@ -154,6 +154,39 @@ controlla('ci sono tutte e tre le cose',
   dentro.includes('Salva su file') && dentro.includes('Rimetti da un file') && dentro.includes('Cancella'))
 await scatto(page, 'genitori')
 
+/* ── 2b. da chi arriva questo gioco ──
+   In fondo alle impostazioni, e non in cima: chi entra qui viene per
+   spegnere un gioco o salvare i progressi. Ma da qualche parte
+   l'applicazione deve dire di chi è e dove si guarda il codice, se no
+   una famiglia che l'ha ricevuta da un'altra famiglia non ha nessun
+   modo di saperlo. */
+const firma = await page.evaluate(() => {
+  const f = document.querySelector('[data-firma]')
+  return f ? { testo: f.innerText, fuori: [...f.querySelectorAll('a')].map(a => a.href) } : null
+})
+controlla('in fondo c\'è scritto chi l\'ha fatto',
+  !!firma && firma.testo.includes('Marco Sporchia'), JSON.stringify(firma)?.slice(0, 120))
+controlla('e da lì si arriva al codice',
+  !!firma && firma.fuori.some(u => /github\.com/.test(u)), (firma?.fuori || []).join(' '))
+/* ── e un link solo ──
+   Il profilo LinkedIn dell'autore stava qui accanto, ed è stato tolto
+   apposta: questa è la schermata di un genitore che sta tarando le
+   domande di suo figlio, e un profilo professionale in fondo trasforma
+   un regalo in un biglietto da visita. Sta in «Come funziona» → «Chi
+   l'ha fatto», dove è una risposta invece che un'insegna — e questo
+   controllo è qui perché una riga tolta per scelta torna indietro da
+   sola alla prima distrazione. */
+uguale('e non c\'è nient\'altro: un link solo, il codice',
+  (firma?.fuori || []).length, 1)
+controlla('niente LinkedIn nelle impostazioni',
+  !/linkedin/i.test(JSON.stringify(firma)), (firma?.fuori || []).join(' '))
+await page.evaluate(() => document.querySelector('[data-firma]')?.scrollIntoView(false))
+await page.waitForTimeout(150)
+await scatto(page, 'genitori-firma')
+controlla('i rimandi fuori si aprono in un\'altra scheda',
+  await page.evaluate(() => [...document.querySelectorAll('[data-firma] a')]
+    .every(a => a.target === '_blank' && /noopener/.test(a.rel))))
+
 /* ── 3. il salvataggio contiene i progressi veri ──
    Le monete non si confrontano col numero seminato, e la differenza
    costa un pomeriggio a chi non la sa: il seme porta due campagne a
@@ -477,13 +510,15 @@ if (IN_PROVA.length) {
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.schede', { timeout: 5000 })
-controlla('le schede sono due: bambini, giochi e domande',
-  (await page.locator('.schede button').count()) === 2)
-/* «Come va» era la terza, e per ora non si mostra: il pezzo c'è ancora
-   (`quiz/ComeVa.vue`) ma il modo di presentarlo è da rivedere, e un
-   pezzo mostrato a metà è peggio di uno non mostrato. */
-uguale('«Come va» per ora non si mostra',
-  await page.locator('.schede button[data-scheda="comeva"]').count(), 0)
+/* Tre, e rispondono a tre domande diverse: *chi gioca*, *cosa gli
+   arriva*, *come sta andando*. «Come va» è tornata dopo essere stata
+   sospesa — mostrava solo i segnali, e tre righe senza il resto non
+   dicono se sono tre su dieci o tre su centoventi. Quello che fa
+   adesso lo prova `integrazione/come-va`; qui basta che ci sia. */
+controlla('le schede sono tre: bambini, giochi e domande, come va',
+  (await page.locator('.schede button').count()) === 3)
+uguale('e «Come va» è una di loro',
+  await page.locator('.schede button[data-scheda="comeva"]').count(), 1)
 /* «Cosa sa» era la scheda delle domande detta in un altro modo, e
    «Domande» era l'elenco delle classi con quattro tondi per riga: tutte
    e due dicevano quello che il quadro dell'età dice già, e la seconda

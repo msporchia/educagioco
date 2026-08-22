@@ -902,16 +902,16 @@ async function rimetti(v) {
                 @click="scheda = 'bambini'">Bambini</button>
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
                 @click="scheda = 'giochi'">Giochi e domande</button>
-        <!-- ══ «Come va», sospeso ══
-             C'era un terzo tab: le tipologie che il bambino sbaglia
-             quasi sempre o indovina quasi sempre, col tasto già pronto
-             per ritoccarle (`quiz/ComeVa.vue`, e le soglie in
-             `quiz/consiglio.js`). Il pezzo funziona ed è provato — il
-             suo test sta in `test/integrazione/come-va.spento.mjs`, che
-             si riaccende rinominandolo `.test.mjs` — ma il modo di
-             presentarlo è da rivedere, quindi per ora non si mostra a
-             nessuno invece di mostrarsi a metà. Si riaccende
-             rimettendo questo bottone e il suo ramo qui sotto. -->
+        <!-- ══ E LA TERZA: COM'È ANDATA ══
+             Le tre schede rispondono a tre domande diverse, ed è il
+             motivo per cui sono tre e non una: *chi gioca*, *cosa gli
+             arriva*, *come sta andando*. Questa era stata sospesa
+             perché mostrava **solo i segnali** — tre righe sopra
+             soglia, senza il resto — e tre righe senza il resto non
+             dicono se sono tre su dieci o tre su centoventi. Adesso ci
+             sono tutte, in ordine di come vanno. -->
+        <button :class="{ ora: scheda === 'comeva' }" data-scheda="comeva"
+                @click="scheda = 'comeva'">Come va</button>
       </div>
 
       <!-- ══════════ scheda: i bambini ══════════ -->
@@ -1222,8 +1222,15 @@ async function rimetti(v) {
       </div>
       </template>
 
-      <!-- ══════════ scheda: giochi e domande ══════════ -->
-      <template v-else>
+      <!-- ══════════ scheda: giochi e domande ══════════
+           `v-else-if` e non `v-else`: finché le schede erano due, «non
+           bambini» voleva dire «giochi», e la terza scheda si è portata
+           dietro il quadro dell'età sopra il suo contenuto — «Come va»
+           apriva la manopola, e il suo grafico stava due schermate più
+           giù dove non lo vedeva nessuno. Un `v-else` è una condizione
+           che dice «tutto il resto», ed è giusta solo finché il resto è
+           uno. -->
+      <template v-else-if="scheda === 'giochi'">
       <!-- ── L'UNICO POSTO DOVE SI TARA ──
            L'età in cima e, sotto, il quadro di quell'età: i giochi in
            casa e le domande divise per come cadono rispetto a lui, ogni
@@ -1342,12 +1349,75 @@ async function rimetti(v) {
 
       </template>
 
+      <!-- ══════════ scheda: come va ══════════
+           Tutte le domande che esistono, ordinate da quella che gli va
+           peggio a quella che gli va meglio, col punteggio che è anche
+           il tasto: si preme, si aprono i numeri, si decide. Il ▶ passa
+           di qui e arriva allo stesso pannello di prova delle altre
+           schede — la messa in scena di una domanda dev'essere la
+           stessa da qualunque parte si arrivi. -->
+      <template v-if="scheda === 'comeva'">
+        <!-- ── prima quanto, poi come ──
+             Sono due domande diverse e la prima viene prima: «quanto ci
+             sta davanti» è quella che un genitore si fa da solo, senza
+             che nessuno gliela suggerisca, e trovarla in cima è il
+             motivo per cui poi scorre anche il resto. Nessun giudizio
+             su quanto sia tanto: dipende dal giorno e dalla famiglia,
+             e chi legge ha in mano il contesto che il gioco non ha. -->
+        <h2>Quanto ha giocato</h2>
+        <TempoDiGioco />
+
+        <h2>Come sta andando {{ chi }}</h2>
+        <ComeVa @prova="prova = $event" />
+      </template>
+
       <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
+
+      <!-- ══ DA CHI ARRIVA QUESTO GIOCO ══
+           Non c'era da nessuna parte, ed era la domanda che un grande si
+           fa per prima quando riceve un link da un'altra famiglia: chi me
+           l'ha dato, e cosa ci guadagna. La risposta lunga sta nelle
+           guide («Chi l'ha fatto»), che si leggono senza codice; qui sta
+           la riga corta, in fondo alle impostazioni, dove finisce chi ha
+           già deciso di fidarsi abbastanza da entrare.
+
+           In fondo e non in cima apposta: chi apre le impostazioni ci
+           entra per spegnere un gioco o salvare i progressi, non per
+           sapere di me. Una firma in cima sarebbe una firma in mezzo ai
+           piedi.
+
+           ── E UN LINK SOLO ──
+           C'era anche il LinkedIn dell'autore, accanto al codice. Da
+           qui è sbagliato: questa è la schermata di un genitore che sta
+           tarando le domande di suo figlio, e un profilo professionale
+           in fondo trasforma un regalo in un biglietto da visita. Chi
+           vuole sapere chi c'è dietro ha **«Come funziona» → «Chi l'ha
+           fatto»**, che è una pagina che si apre apposta: lì il link
+           c'è, e lì è una risposta invece che un'insegna.
+
+           Sparita anche la riga sulla licenza MIT: era la terza volta
+           che la stessa cosa veniva detta nella stessa applicazione (la
+           guida ha un capitolo suo, il README pure), e in fondo a una
+           schermata di impostazioni non serve a nessuno. -->
+      <footer class="firma" data-firma>
+        <p>Educagioco è di <b>{{ CHI }}</b>, che l'ha scritto per i suoi due figli.
+          Gratis, senza pubblicità e senza account: <b>niente esce da questo
+          telefono</b>.</p>
+        <!-- Il modulo per segnalare non si ripete qui: sta in una carta
+             dieci centimetri più su, e da lì parte con la versione e
+             l'ultimo guasto già dentro. Due strade per la stessa cosa, e
+             una peggiore dell'altra, è come si fa scegliere quella
+             sbagliata. -->
+        <div class="fuori">
+          <a :href="CODICE" target="_blank" rel="noopener" data-fuori="codice">
+            Il codice, aperto ↗</a>
+        </div>
+      </footer>
     </div>
 
     <!-- il pannello di prova copre tutto: si è entrati per guardare una
          cosa sola. Sta fuori dalle schede perché non è di nessuna delle
-         due: è un modo di leggere una voce, non un'impostazione. -->
+         tre: è un modo di leggere una voce, non un'impostazione. -->
     <Prova v-if="prova" :chiave="prova.chiave || ''" :nome="prova.nome"
            :sorgente="prova.sorgente || null" :giro="prova.giro || null"
            :eta="prova.eta ?? null" @chiudi="prova = null" />
