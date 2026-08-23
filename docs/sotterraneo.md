@@ -278,10 +278,17 @@ leggera, una seconda leggera vale più nella sinistra che al posto di
 quella che c'è. Un'arma a due mani sfratta la sinistra, e quello che
 c'era **torna in tasca**, o per terra se le tasche sono piene.
 
-Gli scudi non ci sono: né 0x72 né il foglio degli oggetti disegnano uno
-scudo o un'armatura, ed è lo stesso buco per cui panciotto, corazza e
-manto restano emoji. Quando ci sarà un foglio che li disegna, la casella
-per tenerli c'è già.
+Gli scudi e le armature ci sono, e sono arrivati in due giri: né 0x72 né
+il primo foglio degli oggetti li disegnavano — si equipaggiavano solo le
+mani — e per un pezzo panciotto, corazza e manto sono rimasti emoji, un
+giubbotto da cantiere in mezzo a uno schermo disegnato a mano. Adesso i
+sei scudi vengono da `items2.png` e le vesti da `item3.png`.
+
+Quello che **non** c'è, e non ci sarà con questo set, è l'armatura
+*addosso*: 0x72 non ha un fotogramma in cui il personaggio impugni o
+indossi qualcosa, l'arma si disegna accanto a lui, e la figura di ogni
+classe è fissa. Un'armatura vive quindi solo come icona — nello zaino,
+per terra, al banco — ed è il patto del set, non una svista.
 
 ## Le curiosità: le cose che si toccano per vedere che succede
 
@@ -356,18 +363,19 @@ l'unico modo di liberarne una che era buttare per terra quello che c'era
 dentro; e la spada di ieri che restava in fondo allo zaino per sempre,
 adesso che se ne ha una migliore.
 
-Il catalogo è lungo trenta voci, e il mercante ne tiene cinque per volta:
+Il catalogo è lungo una quarantina di voci, e il mercante ne tiene cinque per volta:
 con tre, pescate a caso, capitava di continuo un banco in cui non c'era
 niente che servisse — e un mercante da cui non si compra mai è una stanza
 attraversata.
 
-Fra quelle trenta ce ne sono **tre che hanno un nome proprio** — la spada
-fiammeggiante, l'ascia del ladro, il pugnale vampiro. Non rompono la
-regola delle quattro famiglie (a parità di gradino valgono tutte lo
-stesso): stanno *fuori* dalla scala, e quello che le distingue non è
-quanto fanno male ma un tratto che di solito sta al dito — fanno luce,
-fruttano di più, tengono in piedi. Nessuna batte lo spadone sul suo
-terreno, o la scala non servirebbe più a niente.
+Fra quelle ce ne sono **quattro che hanno un nome proprio** — la bipenne
+solare, la spada del ladro, il pugnale vampiro, la spada di ghiaccio.
+Non rompono la regola delle quattro famiglie (a parità di gradino
+valgono tutte lo stesso): stanno *fuori* dalla scala, e quello che le
+distingue non è quanto fanno male ma un tratto che di solito sta
+altrove — fanno luce, fruttano di più, tengono in piedi, parano.
+Nessuna batte lo spadone sul suo terreno, o la scala non servirebbe più
+a niente.
 
 ## Le porte chiudono la stanza, non il varco
 
@@ -455,10 +463,13 @@ diagramma, e un diagramma non fa venire voglia di girare l'angolo. Lo monta `str
 banco `strumenti/banco/mondo.html`, che legge lo stesso modulo: se i due si scollassero, quello che si
 prova sul prototipo non direbbe più niente sul gioco.
 
-Quello che i fogli **non hanno** resta emoji: la fontana, il mercante, e
-le tre armature — in nessuno dei due c'è un'armatura, uno scudo o un
-elmo, si equipaggiano solo le mani. Si vede che stonano, ed è il
-tipo di buco che va guardato *prima* di innamorarsi di un set.
+Quello che i fogli **non hanno** resta emoji: la fontana e il mercante.
+Le tre armature ci sono state a lungo, e stonavano — è il tipo di buco
+che va guardato *prima* di innamorarsi di un set — finché non è arrivato
+un terzo foglio dello stesso autore (`item3.png`) che le disegna. Di
+quel foglio si ritagliano **sette figure su centotrentasei**: l'atlante
+viaggia in base64 dentro il file unico, quindi si porta dentro solo
+quello che qualcuno nomina, e il suo foglietto scrive cosa è rimasto lì.
 
 ## Da guardare in mano a un bambino
 

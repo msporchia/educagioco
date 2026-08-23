@@ -329,12 +329,20 @@ function semeDallIndirizzo() {
    usarlo. */
 function corredoDaProva(c) {
   if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'roba') return
-  c.mano = 'spada'
+  c.mano = 'spada-di-ghiaccio'
   c.mancina = 'scudo-ferro'
   c.corpo = 'corazza'
-  c.dito = 'anello-ambra'
-  c.zaino = ['pozione-grande', 'pozione', 'torcia', 'chiave', 'spadone', 'medaglione']
+  c.dito = 'teschio-cercatore'
+  /* Nelle sei tasche ci vanno **le cose che si vedono solo qui**: le tre
+     armature, che addosso all'eroe non compaiono mai (vedi
+     `dati/cose.js`), e i due gioielli. Un corredo di prova serve a
+     guardare le icone, quindi tiene quelle che nessun altro schermo
+     mostra. */
+  c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
   c.gemme += 120
+  /* e la torcia accesa, se no metà di quello che si è venuti a guardare
+     resta al buio: il corredo di prova serve a **vedere** una schermata */
+  c.torcia = true
   c.aggiornaLuce()
 }
 

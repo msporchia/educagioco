@@ -16,14 +16,22 @@
    legge nel confronto («⚔️ +1 rispetto alla spada corta») senza dover
    sapere niente d'altro.
 
-   ── LE ARMATURE NON HANNO UNO SPRITE, E SI VEDE ───────────────────
-   Né 0x72 né il foglio degli oggetti disegnano un'armatura o uno scudo:
-   in tutti e due i fogli si equipaggiano solo le mani. Panciotto,
-   corazza e manto restano quindi **emoji**, e stonano in mezzo a uno
-   schermo disegnato a mano. È il buco che decide se un set basta, e va
-   guardato prima di innamorarsene; qui si dichiara `sprite: null`
-   invece di puntare a un pezzo che non c'è, perché un nome sbagliato si
-   presenta a schermo come un buco senza dire perché.
+   ── L'ARMATURA SI VEDE SOLO NELL'ICONA, E VA BENE COSÌ ────────────
+   Per due fogli su tre l'armatura non c'era affatto: 0x72 e il foglio
+   degli oggetti equipaggiano solo le mani, e panciotto, corazza e manto
+   restavano **emoji** — un giubbotto da cantiere e uno scudo prestato,
+   in mezzo a uno schermo disegnato a mano. Adesso il pezzo c'è
+   (`item3.png`, banda delle armature e banda dei mantelli), e i tre si
+   leggono come una scala senza dover leggere il numero: cuoio, piastre,
+   manto.
+
+   Quello che continua a non esserci è **l'armatura addosso all'eroe**.
+   0x72 non ha un solo fotogramma in cui il personaggio impugni o
+   indossi qualcosa — l'arma il gioco la disegna *accanto* a lui
+   (`scena/tela.js`) — e la figura di ogni classe è fissa. Un'armatura
+   vive quindi **solo come icona**: nello zaino, per terra, al banco.
+   Non è una mancanza da rattoppare, è il patto del set, e va detto qui
+   perché è la prima cosa che verrebbe da provare.
 
    ── IL GIOIELLO È L'UNICA COSA CHE NON PICCHIA ────────────────────
    Al dito ci va qualcosa che cambia **come si gira**, non quanto si fa
@@ -82,15 +90,38 @@ export const COSE = {
   'bastone-magico': arma(2, 'Bastone magico', 'bastone-magico', 'La punta brucia. Due mani.', 2),
   scettro: arma(3, 'Scettro', 'scettro', 'Quello che tocca non si rialza. Due mani.', 2),
 
-  /* ── quello che si mette addosso: emoji, per ora ── */
-  panciotto: { em: '🦺', nome: 'Panciotto', sprite: null, dove: 'corpo', dif: 1, prezzo: 9,
+  /* ── quello che si mette addosso ──
+     I tre sono una scala e si devono leggere come una scala **a colpo
+     d'occhio**, senza il numero: stoffa e cuoio, poi il ferro, poi
+     qualcosa di ricco. È l'unico posto dove queste tre cose si vedono
+     mai (vedi in cima), quindi il disegno non è decorazione: è tutta
+     l'informazione che c'è. */
+  panciotto: { em: '🦺', nome: 'Panciotto', sprite: 'corpo-cuoio', dove: 'corpo', dif: 1, prezzo: 9,
                dice: 'Sbagliare fa un po\' meno male.' },
-  corazza: { em: '🛡️', nome: 'Corazza', sprite: null, dove: 'corpo', dif: 2, prezzo: 18,
+  corazza: { em: '🛡️', nome: 'Corazza', sprite: 'corpo-piastre', dove: 'corpo', dif: 2, prezzo: 18,
              dice: 'Sbagliare fa molto meno male.' },
-  manto: { em: '🧥', nome: 'Manto', sprite: null, dove: 'corpo', dif: 3, prezzo: 28,
+  manto: { em: '🧥', nome: 'Manto', sprite: 'corpo-manto', dove: 'corpo', dif: 3, prezzo: 28,
            dice: 'Sbagliare non fa quasi più male.' },
+  /* ── e la quarta, che non sta nella scala ──
+     Le tre qui sopra sono una fila: chi ha il manto non guarda più il
+     resto, e la casella del corpo smette di essere una scelta appena la
+     si è riempita bene. Il saio la rimette in gioco **senza aggiungere
+     un numero nuovo**: para come il panciotto e tiene in piedi come un
+     amuleto d'ossa, cioè fa il mestiere che nella mano debole fanno già
+     lo scudo borchiato e quello del leone. La domanda torna a essere
+     «pelle o fiato?», che è una domanda. */
+  saio: { em: '🥋', nome: 'Saio', sprite: 'corpo-saio', dove: 'corpo', dif: 1, vita: 4, prezzo: 20,
+          dice: 'Para poco, ma ti tiene in piedi quattro punti di vita più a lungo.' },
 
-  /* ── quello che si porta al dito ── */
+  /* ── quello che si porta al dito ──
+     Il più economico costava quattordici gemme, e nelle prime tappe
+     quella casella non offriva **niente di comprabile**: al primo
+     banco delle cantine si arriva con una dozzina di gemme, e il dito
+     era l'unico posto addosso che non si potesse riempire. L'amuleto
+     azzurro è il fratello piccolo di quello rosso, e il prezzo è quella
+     proporzione e nient'altro: metà vita, metà prezzo. */
+  'amuleto-azzurro': { em: '💙', nome: 'Amuleto azzurro', sprite: 'amuleto-azzurro', dove: 'dito',
+                       vita: 3, prezzo: 9, dice: 'Tre punti di vita in più, finché lo porti.' },
   'anello-ambra': { em: '💍', nome: 'Anello d\'ambra', sprite: 'anello-ambra', dove: 'dito',
                     luce: 2.5, prezzo: 14, dice: 'Al buio vedi molto più lontano.' },
   'anello-verde': { em: '💚', nome: 'Anello verde', sprite: 'anello-verde', dove: 'dito',
@@ -100,20 +131,21 @@ export const COSE = {
   medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'medaglione', dove: 'dito',
                 dif: 1, prezzo: 15, dice: 'Para un pochino, come mezza corazza.' },
 
-  /* ═══ LE TRE ARMI CHE HANNO UN NOME PROPRIO ═══
+  /* ═══ LE ARMI CHE HANNO UN NOME PROPRIO ═══
      Le quattro famiglie valgono lo stesso a parità di gradino, ed è la
-     regola che tiene in piedi tutto il resto (vedi in cima). Queste tre
-     non la rompono: **stanno un gradino sopra la scala**, non dentro.
+     regola che tiene in piedi tutto il resto (vedi in cima). Queste non
+     la rompono: **stanno un gradino sopra la scala**, non dentro.
      Non ce n'è una per famiglia — sono pezzi unici, come si conviene a
      una cosa che ha un nome — e quello che le distingue non è quanto
      fanno male, ma **un tratto che di solito sta al dito**: fanno luce,
-     fruttano di più, tengono in piedi. È lo stesso mestiere dei
-     gioielli, portato in mano.
+     fruttano di più, tengono in piedi, parano. È lo stesso mestiere dei
+     gioielli, portato in mano, e sono quattro perché quattro sono i
+     doni che il gioco conosce.
 
-     Perché si possa scegliere davvero, nessuna delle tre batte lo
-     spadone sul suo terreno: due su tre hanno il suo stesso braccio, e
-     il pugnale ne ha meno. Si comprano care, e si trovano solo in fondo
-     a un forziere. */
+     Perché si possa scegliere davvero, nessuna batte lo spadone sul suo
+     terreno: due hanno il suo stesso braccio, il pugnale e la spada di
+     ghiaccio ne hanno meno. Si comprano care, e si trovano solo in
+     fondo a un forziere. */
   /* Il nome dice quello che il foglio disegna, e non il contrario: la
      prima stesura chiamava «spada fiammeggiante» un'ascia bipenne e
      «ascia del ladro» una spada, e a schermo la cosa si legge subito —
@@ -133,6 +165,27 @@ export const COSE = {
     em: '🩸', nome: 'Pugnale vampiro', sprite: 'arma-1', dove: 'mano', mani: 1,
     att: 2, vita: 6, prezzo: 30,
     dice: 'Corto e cattivo: finché lo tieni, sei punti di vita in più.',
+  },
+  /* La quarta, e il tratto è **la difesa**: era l'unico dei quattro
+     doni che nessuna arma portava, e `addosso('dif')` somma già anche
+     quello che si ha in pugno — non c'è niente da aggiungere al motore.
+     Una mano sola apposta: così si sceglie fra tenerla con uno scudo
+     (e parare due volte) o con una seconda lama, che è la scelta che il
+     due mani toglie. E `att: 2` apposta: la regola che tiene oneste le
+     armi col nome proprio è che nessuna batta lo spadone sul suo
+     terreno, e questa lo batterebbe se picchiasse uguale e in più
+     parasse.
+
+     Il prezzo esce dal listino come tutti gli altri: secondo gradino
+     16, più quel che costa parare di 1 (il medaglione, 15), meno lo
+     sconto che si fa già al pugnale vampiro (16 + 18 di amuleto rosso
+     fa 34, e sta in banco a 30). Vengono 26 — che è anche il prezzo di
+     uno spadone, ed è un confronto che si legge da sé: stessa spesa,
+     un braccio in meno e una mano libera. */
+  'spada-di-ghiaccio': {
+    em: '🧊', nome: 'Spada di ghiaccio', sprite: 'spada-runica', dove: 'mano', mani: 1,
+    att: 2, dif: 1, prezzo: 26,
+    dice: 'La lama gela chi ti sta addosso: sbagliare fa un po\' meno male.',
   },
 
   /* ═══ GLI SCUDI: LA MANO DEBOLE HA UNA SECONDA STRADA ═══
@@ -167,7 +220,12 @@ export const COSE = {
   'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'dito',
                     dif: 1, vita: 4, prezzo: 24,
                     dice: 'Para un pochino, e ti tiene in piedi un po\' di più.' },
-  'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'scena-teschio',
+  /* Portava addosso il teschio **dell'arredamento** — lo stesso pezzo
+     che sta per terra in una stanza — perché quando è nato non c'era
+     nient'altro: al dito si vedeva un soprammobile. Adesso c'è un
+     ciondolo vero (`item3.png`, la banda degli amuleti), e la chiave
+     resta quella: gli id non si rinominano. */
+  'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'amuleto-teschio',
                          dove: 'dito', gemme: 1, prezzo: 32,
                          dice: 'Ogni gemma che raccogli vale il doppio.' },
 
@@ -299,11 +357,11 @@ export function pescaMerce(profondita, { quante = 5, rnd = Math.random, ammessa 
 
 export const NEI_FORZIERI = [
   ...ARMI_DI(2), ...ARMI_DI(3),
-  'corazza', 'manto',
+  'corazza', 'manto', 'saio',
   'anello-ambra', 'anello-verde', 'amuleto-rosso', 'medaglione',
   'amuleto-osso', 'teschio-cercatore',
   'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
-  'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro',
+  'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro', 'spada-di-ghiaccio',
   'pozione-grande', 'elisir-toro', 'torcia',
 ]
 
@@ -338,6 +396,16 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove && !['mano', 'mancina', 'corpo', 'dito'].includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
     /* uno scudo che non para è una casella occupata per niente */
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
+    /* e la casella del corpo vale lo stesso: è una sola, e riempirla
+       con qualcosa che non para è peggio che lasciarla vuota */
+    if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
+    /* Quello che si indossa **non si vede mai addosso**: il set non ha
+       un fotogramma dell'eroe che porti qualcosa (vedi in cima), quindi
+       l'icona è tutta l'informazione che c'è, e un'emoji al suo posto è
+       un buco in mezzo a uno schermo disegnato a mano. È il difetto che
+       ha tenuto le tre armature con `sprite: null` per mesi, e da qui in
+       avanti si vede prima di pubblicarlo. */
+    if (c.dove && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
     if (c.usa === 'cura' && !c.cura) g.push(`${k}: cura zero`)
     /* un gioiello che non dà niente è una tasca sprecata con l'aria di
        essere un premio */
