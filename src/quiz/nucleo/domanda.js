@@ -17,7 +17,19 @@
        dritta:   '6 × 6 = 36: lato per lato',        // la scorciatoia, anche a risposta giusta
      }
 
-   LA `dritta` NON È UN SECONDO AIUTO. L'`aiuto` si legge quando si
+   L'`aiuto` E IL `perche` DI UNA RISPOSTA FANNO DUE MESTIERI, e dopo
+   uno sbaglio si leggono **tutti e due**. Il `perche` diagnostica la
+   scelta appena fatta — «hai guardato solo l'ultima cifra» — e vale
+   solo per quel tasto lì; l'`aiuto` insegna il metodo — «47 sta fra 40
+   e 50: l'ultima cifra è 7, quindi si va su» — e vale anche la volta
+   dopo. Per mesi la scheda ne ha mostrato uno solo, il primo dei due
+   che ci fosse, e siccome i moduli scritti bene hanno tutti e due
+   l'insegnamento non l'ha letto nessuno: chi sbagliava si prendeva la
+   diagnosi e basta. Chi li mette a schermo è `spiegazioneDi` qui
+   sotto, che li tiene separati apposta — un paragrafo unico rimette
+   insieme le due cose e il metodo si perde in coda alla correzione.
+
+   LA `dritta` NON È UN TERZO AIUTO. L'`aiuto` si legge quando si
    sbaglia, e dice **come si faceva**. La dritta dice che c'era una
    strada più corta di quella presa, e per questo si legge anche
    quando la risposta è giusta — ma solo se il bambino ci ha messo
@@ -154,11 +166,88 @@ export const FRETTA = 1.1            // secondi, il minimo per guardare qualunqu
 export const A_PAROLA = 0.09         // e quanto costa leggere ogni parola
 export const FRETTA_MAX = 4          // oltre non si sale: sarebbe un'accusa, non una misura
 
+/* quante parole ci sono da leggere, in un pezzo di testo o in tanti */
+const quanteParole = parti =>
+  parti.filter(Boolean).join(' ').trim().split(/\s+/).filter(Boolean).length
+
 export function tempoDiLettura(d) {
   if (!d) return FRETTA
-  const parti = [d.testo, ...(d.risposte || []).map(r => r?.testo)].filter(Boolean)
-  const parole = parti.join(' ').trim().split(/\s+/).filter(Boolean).length
-  return Math.min(FRETTA_MAX, FRETTA + parole * A_PAROLA)
+  return Math.min(FRETTA_MAX,
+    FRETTA + quanteParole([d.testo, ...(d.risposte || []).map(r => r?.testo)]) * A_PAROLA)
+}
+
+/* ── COSA SI LEGGE DOPO AVER SBAGLIATO ─────────────────────────────
+   Due righe con due mestieri, e la scheda le tiene separate: vedi il
+   cappello di questo file. Qui c'è solo la scelta di *cosa* mostrare,
+   e sta fuori dal componente per il motivo di sempre — dentro un `.vue`
+   non si prova senza un browser, e infatti il difetto che questa
+   funzione toglie (uno dei due invece di tutti e due) è vissuto per
+   mesi senza che niente diventasse rosso.
+
+   A risposta giusta non si spiega niente: quello che c'era da dire
+   l'ha detto il bambino. */
+export function spiegazioneDi(d, scelto) {
+  if (!d || !(scelto >= 0) || scelto === d.giusta) return { perche: '', comeSiFa: '' }
+  return {
+    perche: d.risposte?.[scelto]?.perche || '',
+    comeSiFa: d.aiuto || '',
+  }
+}
+
+/* ── QUANTO SI STA FERMI, E PERCHÉ CRESCE ──────────────────────────
+   Dopo uno sbaglio la scheda non va avanti subito: c'è da leggere. Il
+   pavimento è `PONDERA`, quattro secondi, ed è tarato su una
+   spiegazione di **una riga** — il respiro che i giochi chiedono è
+   tarato sul ritmo della partita (il sotterraneo ne chiede 900 ms),
+   che è la misura giusta per una risposta giusta e quella sbagliata
+   per un errore. Da quando la scheda dice il perché *e* come si fa le
+   righe sono due, e quattro secondi su venticinque parole vorrebbero
+   dire sei parole al secondo: una spiegazione che passa senza essere
+   letta è peggio di nessuna spiegazione, perché insegna che quel
+   riquadro non contiene niente di utile.
+
+   Quindi si misura la roba da leggere, come già si fa per la fretta —
+   stessa unità, le parole — ma con un passo diverso e per un motivo
+   diverso: `A_PAROLA` è quanto ci vuole a **posare l'occhio** su una
+   parola (serve a dire «non l'ha nemmeno guardata»), `A_CAPIRE` è
+   quanto ci vuole a leggerne una **per capirla**.
+
+   Un quarto di secondo, e il numero non è preso a caso: quattro
+   secondi diviso un quarto fanno sedici parole, che è esattamente la
+   spiegazione di una riga su cui `PONDERA` era stato tarato. Il
+   pavimento e il passo sono lo stesso numero detto due volte, e per
+   questo le spiegazioni corte restano ai quattro secondi di prima
+   invece di scattare in su per un arrotondamento.
+
+   E c'è un tetto, `LEGGERE_MAX`, perché le spiegazioni lunghe
+   esistono (la logica arriva a cinquanta parole) e sette secondi sono
+   già il limite di quanto un bambino sta a guardare una schermata
+   ferma senza toccarla.
+
+   IL TOTALE NON SUPERA MAI `TETTO`. La penalità della fretta
+   (`quiz/fretta.js`) si somma a questa attesa, e dieci secondi sono il
+   punto oltre il quale una pausa smette di sembrare una pausa e
+   comincia a sembrare un gioco rotto — è la stessa soglia dichiarata
+   là, e adesso è scritta una volta sola invece di risultare per caso
+   dalla somma di due numeri. Chi tira a caso su una domanda dalla
+   spiegazione lunga aspetta dieci secondi come chi tira a caso su una
+   corta: la penalità si accorcia, non l'attesa per leggere. */
+export const PONDERA = 4000
+export const A_CAPIRE = 0.25
+export const LEGGERE_MAX = 7000
+export const TETTO = 10000
+
+export function tempoDiCapire(righe = []) {
+  return Math.min(LEGGERE_MAX, Math.round(quanteParole(righe) * A_CAPIRE * 1000))
+}
+
+/* Quanto resta a schermo l'esito. `pavimento` è quello che il gioco (o
+   la regola) vuole comunque — `PONDERA` dopo uno sbaglio, il respiro
+   della partita quando si è indovinato — e `penale` è la fretta.
+   È un pavimento e non un'aggiunta: chi già aspettava di più continua
+   ad aspettare quello. */
+export function attesaDellEsito({ righe = [], pavimento = 0, penale = 0 } = {}) {
+  return Math.min(TETTO, Math.max(pavimento, tempoDiCapire(righe)) + penale)
 }
 
 /* Sbagliata **e** più veloce di quanto ci voglia a leggerla. La risposta

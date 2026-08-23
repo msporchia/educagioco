@@ -74,6 +74,37 @@ function minutiPer(passo, tipo, sorte) {
   return sorte.uno(buoni.length ? buoni : tutti)
 }
 
+/* ── COME SI LEGGE QUELL'ORA LÌ ────────────────────────────────────
+   «la lancetta corta è l'ora, quella lunga i minuti» era l'aiuto di
+   tutti e tre i modi di leggere il quadrante, e a chi sta ai minuti
+   spicci non dice niente: quella cosa la sa da due anni, ed è il
+   motivo per cui sta guardando i minuti invece delle ore intere. Un
+   aiuto che ripete quello che si sa già è peggio di nessun aiuto,
+   perché insegna che quel riquadro non contiene niente di utile.
+
+   Quello che manca a quel bambino è il pezzo che nessuno gli ha ancora
+   detto — **un numero del quadrante vale cinque minuti**, e le
+   tacchette in mezzo uno — e da lì il conto se lo rifà da solo la
+   volta dopo, che è tutta la differenza fra insegnare e consolare.
+
+   Il numero della lancetta si scrive senza articolo («arrivata a 8» e
+   non «sull'8»): uno, otto e undici lo vorrebbero apostrofato e gli
+   altri no, e una regola grammaticale dentro una stringa generata è il
+   modo di ritrovarsi «sul 8» a schermo. */
+function comeSiLegge(minuti) {
+  if (minuti === 0) return 'la lancetta corta è l\'ora, quella lunga rossa sono i minuti'
+  const tacca = minuti / 5
+  if (Number.isInteger(tacca))
+    return 'ogni numero del quadrante vale 5 minuti: la lancetta lunga è arrivata a '
+         + `${tacca}, e ${tacca} × 5 fa ${minuti}`
+  const numero = Math.floor(tacca)
+  if (numero === 0)
+    return 'le tacchette piccole valgono un minuto l\'una: la lancetta lunga ha passato '
+         + `il 12 di ${minuti} ${minuti === 1 ? 'tacchetta' : 'tacchette'}`
+  return 'ogni numero del quadrante vale 5 minuti e ogni tacchetta 1: arrivata a '
+       + `${numero} sono ${numero * 5}, più ${minuti - numero * 5} fa ${minuti}`
+}
+
 /* Gli errori tipici, come ore-minuti. Restituisce coppie diverse dalla
    giusta e fra loro: qui sta il valore del modulo, non nel disegno. */
 function sbagli(ore, minuti, sorte) {
@@ -140,7 +171,7 @@ class Orologio extends Modulo {
       buona: testo(scritta(ore, minuti)),
       falsi: falsi.map(([o, m]) => testo(scritta(o, m), 'la lancetta corta dice le ore, quella lunga i minuti')),
       chiave: minuti === 0 ? 'ora:intere' : minuti % 15 === 0 ? 'ora:quarti' : 'ora:minuti',
-      aiuto: 'la lancetta corta è l\'ora, quella lunga rossa sono i minuti',
+      aiuto: comeSiLegge(minuti),
       sorte,
     })
   }
@@ -153,7 +184,12 @@ class Orologio extends Modulo {
       buona: scena({ che: 'orologio', ore, minuti, numeri: grado <= 3 }),
       falsi: falsi.map(([o, m]) => scena({ che: 'orologio', ore: o, minuti: m, numeri: grado <= 3 })),
       chiave: 'ora:riconosci',
-      aiuto: 'guarda prima dov\'è la lancetta corta',
+      /* qui il quadrante è nelle risposte e non nel soggetto, quindi
+         l'aiuto non può parlare di una lancetta sola: dice l'ordine in
+         cui si guarda, e la cosa che a chi sbaglia manca sempre — che
+         un numero del quadrante vale cinque minuti */
+      aiuto: 'guarda prima dov\'è la lancetta corta, poi la lunga: '
+           + 'ogni numero del quadrante vale 5 minuti',
       sorte,
     })
   }

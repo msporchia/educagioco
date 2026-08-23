@@ -20,9 +20,9 @@
    ricomincia.
 
    ── LA SCALA, IN SECONDI DI ATTESA ────────────────────────────────
-   Sono i **totali** che si vedono a schermo, col pavimento dei quattro
-   secondi che serve a leggere la spiegazione (`PONDERA` in
-   `quiz/Domanda.vue`):
+   Sono i **totali** che si vedono a schermo su una domanda dalla
+   spiegazione corta, cioè col pavimento dei quattro secondi che serve
+   a leggerla (`PONDERA` in `nucleo/domanda.js`):
 
      sbaglia e basta          4,0 s
      1ª di fretta             5,5 s
@@ -35,6 +35,13 @@
    sono grossi perché a quel punto non è più un caso. Dieci secondi sono
    il tetto: oltre, una pausa smette di sembrare una pausa e comincia a
    sembrare un gioco rotto, e un gioco rotto si posa e basta.
+
+   Dove la spiegazione è lunga il pavimento è più alto — si legge il
+   perché **e** come si fa — e la colonna qui sopra parte da più su e
+   arriva prima al tetto. Il tetto è quello, ed è `TETTO` in
+   `nucleo/domanda.js`: la penalità si accorcia, l'attesa per leggere
+   no. È l'ordine giusto — il motivo per cui si sta fermi è che c'è da
+   leggere, e la penalità è quello che si aggiunge finché ci sta.
 
    ── E PER USCIRNE SERVONO QUATTRO RISPOSTE GIUSTE ─────────────────
    Prima bastava una risposta letta con calma, ed era troppo poco: si

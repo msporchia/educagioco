@@ -306,6 +306,22 @@ committate: non è ricostruibile da git.
   gli altri quattro stati dicono *dove* sta una cosa, questo dice che
   qualcosa non funziona), e l'avviso porta dritto a «Come va», dove
   quella riga sta in cima perché l'elenco è ordinato dalla peggiore.
+  **E quel rosso risale fino alla testata del blocco** (`vannoMale` in
+  `data/quadro.js`, `allarme` di `eta/Blocco.vue`): stava sotto due
+  aperture — il blocco, e dentro il blocco il pezzo di scuola — mentre
+  l'avviso nomina **la tipologia**, che nel quadro compare solo al
+  terzo livello. Un grande che aveva appena letto «Le analogie sulle
+  cose del mondo» scorreva un quadro senza niente di rosso da nessuna
+  parte, e cercava fra i pezzi di scuola un nome che i pezzi di scuola
+  non hanno. Adesso il blocco chiuso dice «1 va male» e scrive la
+  strada («Le analogie › «Le analogie sulle cose del mondo» · ne ha
+  sbagliate 8 su 10»), il pezzo di scuola si colora anche quando a
+  andare male è **una sola** delle sue domande — la somma delle altre
+  quattro la coprirebbe — e la domanda porta il numero. Quello che nel
+  quadro non ha nessuna riga (una tipologia oltre il tetto dell'età)
+  non si segnala lì: le tiene tutte «Come va», che è dove porta il
+  tasto dell'avviso. Nei test il bersaglio è `[data-va-male]` sulla
+  testata e `[data-male-frase]` sotto.
 - **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
   sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
   `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio
@@ -511,6 +527,16 @@ committate: non è ricostruibile da git.
   sul ritmo della partita — 900 ms nel sotterraneo, cioè la spiegazione
   spariva prima di poterla leggere. È un pavimento, non un'aggiunta:
   chi aspettava già di più continua ad aspettare quello.
+  **E il pavimento cresce con quello che c'è da leggere**
+  (`attesaDellEsito`): quattro secondi erano tarati su una riga sola, e
+  le righe sono due — un quarto di secondo a parola, che è lo stesso
+  numero detto due volte (quattro secondi diviso un quarto fanno sedici
+  parole, cioè quella riga lì). Il tetto è `LEGGERE_MAX`, sette secondi,
+  perché le spiegazioni lunghe esistono e una schermata ferma più di
+  così non si guarda più. **Il totale con la fretta non passa mai i
+  dieci secondi** (`TETTO`, la soglia che `quiz/fretta.js` dichiarava e
+  che adesso è scritta una volta sola): a spiegazione lunga si accorcia
+  la penalità, mai il tempo per leggere.
   **La penalità cresce con l'insistenza** (`quiz/fretta.js`): 5,5 · 7 ·
   9 · 10 secondi e poi 10 fisso, perché una penalità fissa sopra quel
   pavimento non si sentiva — 4,0 contro 5,5 non si distingue, ed è stato
@@ -524,6 +550,24 @@ committate: non è ricostruibile da git.
   che passano da `Domanda.vue`; nei giochi vecchi (`views/`) il tiro a
   caso costa già altro — negli asteroidi una vita, nelle lingue
   un'attesa e la serie azzerata.
+- **Dopo uno sbaglio si dice il perché E come si fa**, non uno dei due.
+  Sono due mestieri: il `perche` di una risposta diagnostica *quella
+  scelta lì* («hai guardato solo l'ultima cifra»), l'`aiuto` della
+  domanda insegna *il metodo* («47 sta fra 40 e 50: l'ultima cifra è 7,
+  quindi si va su») ed è l'unica delle due che serve anche la volta
+  dopo. Era un `||` — il primo dei due che ci fosse — e siccome i moduli
+  scritti bene danno un `perche` a ogni risposta falsa, l'insegnamento
+  non è mai arrivato a nessuno: a schermo compariva sempre qualcosa,
+  nessun errore da nessuna parte, e il difetto è vissuto per mesi. Chi
+  decide sta in `nucleo/domanda.js` (`spiegazioneDi`), puro, e a schermo
+  vanno su **due righe che si distinguono a occhio** — «Si fa così» in un
+  riquadro suo: in un paragrafo unico il metodo finisce in coda alla
+  correzione. È il motivo per cui una domanda su un concetto che il
+  bambino non ha ancora fatto **non si toglie**: se la si può spiegare
+  in una riga, sbagliarla è il momento in cui si impara. Quelle che in
+  una riga non si spiegano — girare una figura a mente, contare i
+  cubetti nascosti, il significato di un modo di dire — sono un altro
+  discorso, e per quelle la strada è spegnerle.
 - **Nessun gioco paga una risposta sbagliata.** Survivors dava una
   monetina a chi sbagliava («ci hai provato»): sembrava innocua ed era
   il buco più grosso, perché **quello che un bambino vuole sono le
@@ -615,6 +659,27 @@ Quattro interruttori diversi, e la differenza conta:
    averne bisogno è **chi fa la domanda** (un modulo di quiz lo dichiara nei
    suoi `tipi`), non un elenco da tenere allineato a mano. I giochi degradano
    invece di sbarrare.
+   **Anche un gioco può dichiarare**, con `chiede:` nel manifesto
+   (`data/giochi.js`): il castello chiede moltiplicazioni e divisioni e non
+   passa da `src/quiz/`, quindi senza quella riga la sua impostazione
+   esisteva e non aveva **nessuna schermata da cui toccarla** — è il guasto
+   che ha fatto nascere il campo, e un sapere che nessuno cita (né modulo né
+   gioco) adesso è rosso in `unita/saperi`. `chiede` non è `serve`:
+   `serve` spegne la carta in home, `chiede` toglie solo delle domande.
+   **`settings.sa` accetta due specie di chiavi**: un gruppo di
+   `saperi.js` (`solidi`) e la singola tipologia di un modulo
+   (`geo:viste`) — e anche una fascia di `data/partenze.js` può spegnere
+   a sottovoci, che è il modo di togliere le viste dall'alto senza
+   portarsi via i nomi dei solidi.
+   **Il criterio per decidere sta in testa a `data/partenze.js`, e non è
+   la difficoltà**: si spegne quello che **non si può insegnare in una
+   carta** — girare una figura a mente, i cubetti nascosti. Quello che si
+   può insegnare resta acceso, e si insegna nella risposta (vedi la
+   convenzione «perché *e* come si fa»). Ogni fascia deve dare un verdetto
+   su ogni pezzo di scuola, acceso o spento, nel campo `tiene:`: il guasto
+   di prima non era una riga sbagliata, era una riga **mai scritta** —
+   `stima`, `solidi` e `spazio-mente` erano rimasti accesi per omissione,
+   e nessuno dei cento test poteva vederlo.
 3. **I giochi in prova** (`settings.sperimentali`) — un flag solo per tutti
    quelli taggati `sperimentale: true`, che senza non esistono affatto.
 4. **Un modo di giocare, dentro un gioco** (`settings.varianti`,
@@ -834,7 +899,16 @@ due tasti `[data-azione="eta-applica"|"eta-annulla"]`, e per le
 correzioni `[data-tara-apri="<chiave>"]`, `[data-taratura]` coi suoi
 `[data-tara="giu"|"su"|"applica"|"lascia"|"rimetti"]`, `[data-in-casa]`
 coi `[data-gioco-tara=…]`, e `[data-azione="rimetti-difetti"]` con
-`[data-perde-tutto]`.
+`[data-perde-tutto]`. Un pezzo di scuola appeso a un gioco — quello che
+il gioco `chiede:` — ha la sua tacca a tre posizioni (`eta/Scuola.vue`,
+la stessa `eta/Tre.vue` di `InCasa.vue` e non quella dei mezzi anni,
+perché lì non c'è una taratura da spostare ma un sì/no):
+`[data-sapere-tara="<chiave>"]`,
+`[data-sapere-tara-verso="giu"|"su"|"applica"|"lascia"]`,
+`[data-sapere-ora]`. **Un estremo è sempre chiuso**: un sapere ha due
+stati veri nel profilo e il terzo è l'assenza, quindi l'estremo che
+coincide col difetto dell'età scriverebbe lo stesso profilo della
+posizione di mezzo e la riga tornerebbe indietro subito dopo.
 
 Si chiede **al primo avvio e ogni volta che si aggiunge un bambino**:
 `components/Benvenuto.vue` è un wizard solo per tutti e due i casi, e

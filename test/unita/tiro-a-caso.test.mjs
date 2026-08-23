@@ -17,7 +17,7 @@
 
    `node test/esegui.mjs tiro-a-caso --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { tempoDiLettura, troppoDiFretta, FRETTA, FRETTA_MAX }
+import { tempoDiLettura, troppoDiFretta, FRETTA, FRETTA_MAX, PONDERA }
   from '../../src/quiz/nucleo/domanda.js'
 import { pesoDellaFretta, azzeraLaFretta, quanteNeMancano, SCALA, PER_USCIRNE }
   from '../../src/quiz/fretta.js'
@@ -76,9 +76,13 @@ nota(`tabellina ${tempoDiLettura(corta).toFixed(2)}s · figure ` +
    affrettato (capita a chiunque abbia il dito già in aria): è la fila
    di tocchi con cui si fa passare una domanda senza guardarla. */
 {
-  /* la scala, in totali che si vedono a schermo: il pavionamento è
-     PONDERA = 4 s, e questi si sommano */
-  const PONDERA = 4000
+  /* La scala, in totali che si vedono a schermo. Il pavimento è
+     `PONDERA` = 4 s e questi si sommano — ma solo dove la spiegazione
+     sta in una riga: da quando la scheda dice il perché **e** come si
+     fa, il pavimento cresce con le parole da leggere
+     (`attesaDellEsito`) e questi totali sono il caso corto. Il tetto
+     dei dieci secondi vale comunque, ed è lì che le due cose si
+     incontrano. */
   const totale = a => (PONDERA + a) / 1000
 
   azzeraLaFretta()
@@ -118,7 +122,7 @@ nota(`tabellina ${tempoDiLettura(corta).toFixed(2)}s · figure ` +
          quanteNeMancano(), PER_USCIRNE)
 
   azzeraLaFretta()
-  nota('attesa dopo uno sbaglio: 4,0s · di fretta 5,5 · 7 · 9 · 10 · poi 10, ' +
+  nota('attesa dopo uno sbaglio corto: 4,0s · di fretta 5,5 · 7 · 9 · 10 · poi 10, ' +
        `e ne servono ${PER_USCIRNE} giuste per uscirne`)
 }
 

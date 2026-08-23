@@ -57,7 +57,8 @@ import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota } from './memoria.js'
 import { guardaComeVa } from './allarme.js'
-import { serveLaDritta, troppoDiFretta } from './nucleo/domanda.js'
+import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, PONDERA }
+  from './nucleo/domanda.js'
 import { pesoDellaFretta } from './fretta.js'
 
 const props = defineProps({
@@ -126,20 +127,14 @@ const attesa = ref(0)
    dito già in aria: è la fila di tocchi con cui si fa passare una
    domanda senza guardarla. */
 const diFretta = ref(false)
-/* ── QUATTRO SECONDI DOPO UNO SBAGLIO, SEMPRE ──
-   Sotto la risposta sbagliata compare **la spiegazione** — «Era questa»,
-   il perché di quella scelta, la dritta — e finora il gioco andava
-   avanti prima che ci fosse il tempo di leggerla: il respiro che i
-   giochi chiedono è tarato sul ritmo della partita (il sotterraneo ne
-   chiede 900 ms), che è la misura giusta per una risposta giusta e
-   quella sbagliata per un errore. Una spiegazione che passa senza
-   essere letta è peggio di nessuna spiegazione: insegna che quel
-   riquadro non contiene niente di utile.
-   È un pavimento e non un'aggiunta — chi già aspettava di più continua
-   ad aspettare quello che aspettava. La barra dell'attesa si riempie
-   per tutto il tempo, così i quattro secondi si vedono passare invece
-   di sembrare un gioco impuntato. */
-const PONDERA = 4000
+/* Quanto si sta fermi dopo aver risposto lo decide `nucleo/domanda.js`
+   (`attesaDellEsito`): un pavimento di quattro secondi dopo uno
+   sbaglio, che cresce con le parole da leggere e non supera mai i
+   dieci contando la fretta. Il conto sta là e non qui perché è una
+   taratura, e una taratura chiusa dentro un `.vue` non la prova
+   nessuno. Qui resta la metà che riguarda lo schermo: la barra si
+   riempie per tutto il tempo, così l'attesa si vede passare invece di
+   sembrare un gioco impuntato. */
 /* il timer della prossima domanda e il modo di anticiparlo: non sono
    `ref` perché non si disegnano, e un `ref` che nessuno guarda è solo
    una cosa in più che può restare indietro */
@@ -166,11 +161,14 @@ const colonne = computed(() =>
   lunghe.value ? 'lunghe' : risposte.value.length === 2 ? 'due'
     : risposte.value.length === 3 ? 'tre' : 'molte')
 
-const esito = computed(() => {
-  if (scelto.value < 0) return ''
-  if (scelto.value === props.domanda.giusta) return 'giusto'
-  return risposte.value[scelto.value]?.perche || props.domanda.aiuto || ''
-})
+/* ── LA SPIEGAZIONE È DOPPIA, E LE DUE METÀ RESTANO SEPARATE ──
+   `perche` corregge la scelta appena fatta, `comeSiFa` insegna il
+   metodo: vedi `nucleo/domanda.js`, che è dove sta la regola. Erano un
+   `||` — il primo dei due che ci fosse — e siccome i moduli scritti
+   bene hanno tutti e due, l'insegnamento non è mai arrivato a nessuno.
+   A schermo vanno su due righe diverse apposta: un bambino deve vedere
+   che una dice «ecco perché no» e l'altra «ecco come si fa». */
+const spiegazione = computed(() => spiegazioneDi(props.domanda, scelto.value))
 
 /* ── LA SCORCIATOIA, E QUANDO VA DETTA ──
    Una domanda che si può risolvere con una formula porta una `dritta`
@@ -233,9 +231,20 @@ function scegli(i) {
      quando è stata letta: le risposte giuste sono il modo di uscirne
      (`quiz/fretta.js`, quattro) */
   const penale = pesoDellaFretta(diFretta.value, giusto)
-  const quanto = (giusto ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
-    : Math.max(PONDERA, props.respiro + (esito.value ? 900 : 0)))
-    + penale.attesa
+  /* Quanto si sta fermi lo decidono **le righe che restano a schermo**:
+     dopo uno sbaglio sono «Era questa», il perché e il come si fa, che
+     insieme arrivano a venticinque parole e ogni tanto al doppio.
+     «Era questa.» si conta anche lui — sono due parole, ma il conto le
+     vuole tutte, se no la stessa funzione direbbe due cose diverse a
+     seconda di chi la chiama. */
+  const { perche, comeSiFa } = spiegazione.value
+  const quanto = attesaDellEsito({
+    righe: giusto ? [dritta.value] : ['Era questa.', perche, comeSiFa, dritta.value],
+    pavimento: giusto
+      ? (dritta.value ? props.respiro + 900 : Math.min(props.respiro, 700))
+      : Math.max(PONDERA, props.respiro),
+    penale: penale.attesa,
+  })
   attesa.value = quanto
   const vaiAvanti = () => emit('risposto', {
     giusto,
@@ -401,7 +410,17 @@ onUnmounted(() => clearTimeout(cieca))
       <div class="qz-esito">
         <template v-if="scelto >= 0">
           <span v-if="scelto === domanda.giusta" class="bene">Giusto!</span>
-          <template v-else><span class="male">Era questa.</span> {{ esito }}</template>
+          <!-- ── tre righe, tre mestieri ──
+               «Era questa» più il perché correggono **questa scelta**;
+               «Si fa così» insegna il metodo, ed è l'unica delle tre
+               che serve anche la volta dopo; la dritta dice che c'era
+               una strada più corta. Messe in un paragrafo unico si
+               leggono come una scusa lunga, e il metodo — che è la sola
+               parte che vale qualcosa domani — finisce in coda. -->
+          <template v-else><span class="male">Era questa.</span> {{ spiegazione.perche }}</template>
+          <div v-if="spiegazione.comeSiFa" class="qz-come">
+            <b>Si fa così:</b> {{ spiegazione.comeSiFa }}
+          </div>
           <div v-if="dritta" class="qz-dritta">💡 {{ dritta }}</div>
           <!-- l'attesa più lunga non resta muta, o è un gioco che si è
                impuntato: si dice cos'è successo e cosa si vuole -->
@@ -565,9 +584,20 @@ onUnmounted(() => clearTimeout(cieca))
   /* `fixed` e non `absolute`: il velo scorre quando la carta è più alta
      dello schermo, e un absolute scorrerebbe con lui — la lente si
      aprirebbe sopra la testa di chi ha scrollato in fondo. Fissa resta
-     dov'è; e resta comunque dentro il riquadro del gioco, perché il
-     velo ha un `backdrop-filter` addosso e quello basta a farne il
-     riferimento di quel che sta dentro. */
+     dov'è.
+
+     **Dove** si fermi però non lo dice questa riga: lo decide se un
+     antenato si è dichiarato riferimento — una `transform`, un
+     `filter`, il `backdrop-filter` del velo. Dove il velo ce l'ha
+     addosso (il banco di prova, Survivors, la Corsa) la lente sta
+     dentro il velo; nel Dungeon e nel sotterraneo il velo è l'ultima
+     striscia della colonna e il filtro è tolto apposta, quindi la
+     lente si stende sulla finestra intera — che è quello che serve lì,
+     ma è la conseguenza di una riga scritta per l'aspetto, non una
+     decisione presa. Chi rimette mano al velo di un gioco sposta la
+     lente senza accorgersene, e il modo in cui si vede è che quello
+     che stava sotto — il mostro, per dire — resta a vista. Il
+     controllo che se ne accorge sta in `integrazione/domanda`. */
   position: fixed; inset: 0; z-index: 50; cursor: zoom-out;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: clamp(6px, calc(1.5 * var(--qz-h)), 14px);
@@ -608,6 +638,20 @@ onUnmounted(() => clearTimeout(cieca))
   font-size: clamp(12px, 3.5vw, 14px); line-height: 1.35;
 }
 .qz-esito .male { color: #ffb0b0; font-weight: 700; }
+/* ── COME SI FA ──
+   Sta in un riquadro suo, con un filo di colore a sinistra, e le altre
+   due righe no: è l'unica che parla del **prossimo** tentativo invece
+   che di quello appena andato storto, e a occhio deve staccarsi dal
+   rosso della correzione qui sopra e dall'ambra del consiglio qui
+   sotto. Azzurro perché i due colori caldi sono già presi, e perché
+   qui non c'è niente da rimproverare: si sta spiegando. */
+.qz-come {
+  margin-top: 6px; padding: 5px 10px 6px;
+  border-left: 3px solid #6fc4ff; border-radius: 0 8px 8px 0;
+  background: rgba(111, 196, 255, .1); color: #dbeaff;
+  font-size: clamp(12.5px, 3.6vw, 14.5px); line-height: 1.4;
+}
+.qz-come b { color: #8fd0ff; font-weight: 750; }
 /* la riga della fretta: dello stesso genere della dritta — un consiglio,
    non un rimprovero — e per questo non è rossa */
 .qz-fretta { margin-top: 4px; font-size: 12.5px; color: #ffd9a0; }

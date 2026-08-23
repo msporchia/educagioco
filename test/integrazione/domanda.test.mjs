@@ -175,6 +175,31 @@ const pixel = await page.evaluate(() => {
 })
 controlla('ed è ridipinto, non stirato', Math.abs(pixel - grande) < 2,
           `${Math.round(pixel)} px dipinti su ${Math.round(grande)} di riquadro`)
+/* ── e la lente COPRE quello che c'era sotto ──
+   La misura del disegno non basta: quello che si rompe da solo è il
+   **posto**. `.qz-zoom` è `position: fixed`, e dove si ferma non lo
+   decide lei — lo decide il primo antenato che si sia dichiarato
+   riferimento (una `transform`, un `filter`, il `backdrop-filter` del
+   velo). Basta che un gioco ne aggiunga uno, o ne tolga uno, perché la
+   lente si apra dentro un francobollo e quello che stava sotto — nel
+   Dungeon un mostro grande mezzo schermo — resti a vista proprio
+   mentre si è chiesto di guardare meglio il disegno.
+
+   Non si guardano i pixel: si chiede al punto. Al centro del velo,
+   dove atterrerebbe il dito, ci dev'essere la lente e non la carta
+   rimasta dietro. */
+const copertura = await page.evaluate(() => {
+  const z = document.querySelector('.qz-zoom').getBoundingClientRect()
+  const v = document.querySelector('.qz-velo').getBoundingClientRect()
+  const chi = document.elementFromPoint(v.x + v.width / 2, v.y + v.height / 2)
+  return { larga: z.width >= v.width - 1, alta: z.height >= v.height - 1,
+           lente: !!chi && !!chi.closest('.qz-zoom'),
+           misure: `lente ${Math.round(z.width)}×${Math.round(z.height)}, `
+                 + `velo ${Math.round(v.width)}×${Math.round(v.height)}` }
+})
+controlla('la lente copre tutto il velo', copertura.larga && copertura.alta,
+          copertura.misure)
+controlla('e sotto il dito, in mezzo, c\'è lei e non la carta', copertura.lente)
 await scatto(page, 'domanda-lente')
 
 await page.click('.qz-zoom')
@@ -183,6 +208,107 @@ uguale('e si chiude toccando', await page.locator('.qz-zoom').count(), 0)
 /* la lente copre le risposte: chiudendola non se ne deve essere data
    nessuna — è il fantasma del tocco, la stessa storia dei punti 1 e 2 */
 uguale('senza rispondere per sbaglio', await risposto(), 0)
+
+/* ---------- 3d. SBAGLIANDO SI LEGGONO TUTTE E DUE LE RIGHE ----------
+   Il difetto che questo controlla non si notava giocando, ed è per
+   questo che è vissuto per mesi: la scheda mostrava `perche || aiuto`,
+   cioè il primo dei due che ci fosse. A schermo compariva sempre
+   qualcosa e non c'era nessun errore da nessuna parte — solo che
+   l'unica delle due righe che **insegna** era proprio quella che non
+   arrivava mai, visto che i moduli scritti bene danno un `perche` a
+   ogni risposta falsa.
+
+   Si va a prendere l'arrotondamento apposta: è la classe da cui nasce
+   tutto questo (un bambino di terza a cui a scuola non l'avevano
+   ancora spiegato), ha un `perche` su ogni falso e un `aiuto` che
+   insegna il metodo. La regola pura sta in `unita/spiegazione`; qui si
+   guarda che a schermo ci finiscano tutte e due, su due righe che si
+   distinguono a occhio.
+
+   Sbagliare apposta non si può — quale sia la giusta si sa solo dopo
+   averla toccata — quindi si tocca, e se si è azzeccato si lascia
+   arrivare la domanda dopo e si riprova. Con quattro risposte, otto
+   tiri tutti azzeccati capitano una volta su sessantacinquemila. */
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+await page.click('[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+const ARROTONDA = '[data-prova="numero:6:num:arrotonda"]'
+/* Al profilo di prova (nove anni) l'arrotondamento cade fra le
+   **difficili**, che è esattamente il caso da cui nasce questo lavoro:
+   una cosa che a scuola non hanno ancora spiegato. Gli altri blocchi si
+   guardano lo stesso, per non dover riscrivere il test il giorno che si
+   sposta una taratura. */
+for (const k of ['toste', 'medie', 'facili', 'sotto']) {
+  if (await page.locator(ARROTONDA).count()) break
+  await apriQuadro(k)
+  for (const riga of await page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`).all()) {
+    if (await page.locator(ARROTONDA).count()) break
+    await riga.click()
+    await page.waitForTimeout(60)
+  }
+}
+controlla("la classe dell'arrotondamento si trova nel quadro",
+          await page.locator(ARROTONDA).count() === 1)
+await page.click(ARROTONDA)
+await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+
+let sbagliata = false
+for (let tiro = 0; tiro < 8 && !sbagliata; tiro++) {
+  await attendi(page, 400)                       // la finestra cieca
+  await tocca(await page.locator('.qz-tasto').first().boundingBox())
+  await attendi(page, 250)
+  sbagliata = await page.locator('.qz-tasto.sbagliata').count() > 0
+  /* azzeccata: si lascia arrivare la prossima invece di chiederla col
+     tasto del piede. Chiedendola si lascerebbe indietro il timer della
+     domanda appena risposta, che scatterebbe dopo e ne farebbe passare
+     una **mentre la si sta guardando** — un test ballerino che dà la
+     colpa al codice sbagliato. */
+  if (!sbagliata) await page.waitForFunction(
+    () => !document.querySelector('.qz-tasto.giusta, .qz-tasto.sbagliata, .qz-tasto.spenta'),
+    null, { timeout: 8000 }).catch(() => {})
+}
+controlla('in otto tiri una risposta sbagliata capita', sbagliata)
+if (sbagliata) {
+  const righe = await page.evaluate(() => {
+    const e = document.querySelector('.qz-esito')
+    if (!e) return null
+    const come = e.querySelector('.qz-come')
+    /* il perché è il testo **nudo** dell'esito: quello che non sta
+       dentro nessuno dei riquadri. Si prendono i soli nodi di testo,
+       perché lì dentro ci sono anche «Era questa», il riquadro azzurro
+       e — visto che qui si risponde in mezzo secondo — la riga della
+       fretta, e sottrarre stringhe da `textContent` le prenderebbe
+       tutte. */
+    const perche = [...e.childNodes].filter(n => n.nodeType === 3)
+      .map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim()
+    return { perche, comeSiFa: (come?.textContent || '').replace(/\s+/g, ' ').trim(),
+             staccati: !!come }
+  })
+  controlla('sbagliando si legge il perché di quella scelta',
+            righe && righe.perche.length > 3, righe?.perche)
+  controlla('E ANCHE come si fa, che è la riga che insegna',
+            righe && righe.comeSiFa.length > 10,
+            righe?.comeSiFa || 'non c\'è: l\'insegnamento non arriva a nessuno')
+  controlla('e le due cose stanno su due righe diverse, non in un paragrafo solo',
+            !!righe?.staccati)
+  nota(`perché: «${righe?.perche}»`)
+  nota(`come si fa: «${righe?.comeSiFa}»`)
+  /* e c'è il tempo di leggerle: l'attesa cresce con le parole da
+     leggere, e con due righe passa il pavimento dei quattro secondi.
+     Il tetto è dieci: oltre, una pausa smette di sembrare una pausa. */
+  const attesaVera = await page.evaluate(() => {
+    const i = document.querySelector('.qz-avanti i')
+    return i ? parseFloat(getComputedStyle(i).animationDuration) : 0
+  })
+  controlla("e l'attesa dà il tempo di leggerle tutte e due", attesaVera >= 4,
+            `${attesaVera.toFixed(1)} s`)
+  controlla('senza diventare un castigo', attesaVera <= 10, `${attesaVera.toFixed(1)} s`)
+  nota(`l'attesa dopo lo sbaglio è di ${attesaVera.toFixed(1)} s`)
+}
+await scatto(page, 'domanda-spiegazione')
+await page.click('.prova-x')
+await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 
 /* ---------- 4. DUE DOMANDE DI FILA ----------
    Questa è la parte che conta, ed è il guasto vero: nel banco di prova
@@ -212,8 +338,6 @@ uguale('senza rispondere per sbaglio', await risposto(), 0)
    porta sulla strada del test la lascerebbe chiusa per sempre, perché
    qui si cammina e basta. Il seme si legge quando parte la discesa,
    quindi si scrive nell'indirizzo un attimo prima di toccare la tappa. */
-await page.click('.prova-x')                    // si chiude il banco di prova
-await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, { coins: 300, settings: { sperimentali: true } })
