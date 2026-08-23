@@ -213,6 +213,90 @@ export const ARMI_DI = grado =>
 export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo)
 export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
 
+/* ── quello che cura sta sempre sul banco, e non finisce mai ──
+   Il mercante pescava cinque righe a caso da tutto il catalogo, e le
+   tre cose che curano erano tre righe su trenta: capitava — spesso — di
+   arrivarci mezzi morti e di trovarci tre spade e un anello. Un negozio
+   che non vende bende è una stanza attraversata, e per giunta proprio
+   nel momento in cui ci si è andati apposta.
+
+   Perciò stanno **fuori dal sorteggio**: ci sono sempre tutte e tre, e
+   comprarne una non la toglie dal banco. Senza la seconda metà la prima
+   non basta — `compra()` toglieva dal banco quello che si comprava,
+   quindi anche trovandola se ne comprava esattamente una.
+
+   L'elisir del toro **non è qui**, ed è deliberato: è l'unica cosa che
+   non torna indietro (alza la vita massima per tutta la discesa, vedi
+   il suo commento sopra), e a scorta infinita diventerebbe «compro vita
+   massima finché ho gemme» — che è un'altra cosa dal potersi curare.
+   Resta fra i pescati, come una spada. */
+export const CURE = CHIAVI_COSE.filter(k => COSE[k].usa === 'cura')
+
+/* Quello che il banco pesca a sorte: tutto il vendibile meno le cure,
+   che una riga se la prendono già di diritto e non devono rubarne una
+   seconda alle cinque. */
+export const A_SORTE = IN_VENDITA.filter(k => !CURE.includes(k))
+
+/* ═══ QUANTO È BUONA UNA COSA: IL SUO PREZZO ═══
+   Più si scende, più la roba buona deve diventare normale; in cima deve
+   essere rara e cara. Per pesarla ci vuole un numero solo che valga per
+   tutto il catalogo, e `att`/`dif`/`dono` non lo sono: un anello che fa
+   vedere più lontano e una spada non si confrontano su nessuno dei tre
+   (sta scritto in `motore/banco.js`, ed è il motivo per cui lì il
+   gioiello si sceglie a caso).
+
+   Il prezzo invece quel confronto **lo ha già fatto**: chi ha scritto 36
+   sulla bipenne solare e 7 sulla torcia stava dicendo quanto vale l'una
+   rispetto all'altra, ed è l'unica scala su cui stanno tutte e trenta le
+   voci. Inventarne una seconda (`bonta: 3` su ogni riga) vorrebbe dire
+   tenerne allineate due, e la seconda si scollerebbe al primo prezzo
+   ritoccato. */
+const PREZZI = A_SORTE.map(k => COSE[k].prezzo)
+const MENO_CARO = Math.min(...PREZZI)
+const PIU_CARO = Math.max(...PREZZI)
+
+/* Quanto è sfocato il tiro, in gemme. La corsa dei prezzi è una
+   trentina: a 10 una cosa che costa il giusto pesa 1, una che sta dieci
+   gemme fuori pesa mezzo, e una ai due estremi opposti resta a un
+   decimo. **Un decimo e non zero**, ed è la riga che decide: la bipenne
+   solare intravista al primo piano delle cantine — cara, fuori portata,
+   spenta — è il motivo per tornare (`viste/Mercante.vue`), e un banco
+   che offre solo quello che ci si può permettere quel motivo non lo dà
+   mai. Pesare per livello non è «mostra solo il comprabile». */
+const LARGHEZZA = 10
+
+/* Il prezzo che ci si aspetta a quella profondità: 0 è il primo piano
+   delle cantine, 1 l'ultimo del fondo. Passa `durezzaDi` della campagna
+   — la stessa manopola che decide quanto sono toste le domande — perché
+   una seconda scala della profondità sarebbe una seconda cosa da tenere
+   allineata a mano. */
+export const prezzoAtteso = profondita =>
+  MENO_CARO + (PIU_CARO - MENO_CARO) * Math.max(0, Math.min(1, profondita))
+
+/* Le cinque righe del banco, pescate senza rimpiazzo con quel peso.
+   `ammessa` è il filtro di chi chiede (il motore non offre quello che si
+   ha già addosso): sta fuori perché questo file non sa niente di uno
+   zaino. */
+export function pescaMerce(profondita, { quante = 5, rnd = Math.random, ammessa = () => true } = {}) {
+  const atteso = prezzoAtteso(profondita)
+  const resto = A_SORTE.filter(ammessa)
+  const peso = k => {
+    const scarto = (COSE[k].prezzo - atteso) / LARGHEZZA
+    return 1 / (1 + scarto * scarto)
+  }
+  const presi = []
+  while (presi.length < quante && resto.length) {
+    let somma = 0
+    for (const k of resto) somma += peso(k)
+    let tiro = rnd() * somma
+    let i = 0
+    while (i < resto.length - 1 && (tiro -= peso(resto[i])) > 0) i++
+    presi.push(resto[i])
+    resto.splice(i, 1)
+  }
+  return presi
+}
+
 export const NEI_FORZIERI = [
   ...ARMI_DI(2), ...ARMI_DI(3),
   'corazza', 'manto',
@@ -292,6 +376,10 @@ export function guastiDelleCose(nomi = null) {
 
   for (const k of NEI_FORZIERI) if (!COSE[k]) g.push(`nei forzieri c'è "${k}", che non esiste`)
   if (!IN_VENDITA.length) g.push('il mercante non ha niente da vendere')
+  /* il banco ne mostra tre sempre, e se il catalogo smette di averle si
+     arriva mezzi morti a un negozio che non vende bende */
+  if (!CURE.length) g.push('niente che curi, e sul banco ci sta sempre')
+  if (A_SORTE.length < 5) g.push(`solo ${A_SORTE.length} cose da pescare: il banco ne vuole cinque`)
   for (const [k, s] of Object.entries(SEGNI))
     if (!s.em || !s.dice) g.push(`segno ${k}: senza emoji o senza frase`)
   return g

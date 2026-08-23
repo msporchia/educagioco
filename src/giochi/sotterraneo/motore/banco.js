@@ -27,7 +27,7 @@
    diversa.
    ═══════════════════════════════════════════════════════════════════ */
 import { Corsa } from './corsa.js'
-import { COSE } from '../dati/cose.js'
+import { COSE, CURE } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
 import { seminato } from './livello.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
@@ -39,6 +39,9 @@ const TETTO_GIRI = 12000        // azioni in una discesa, prima di dire che non 
    si sbaglia due volte di fila capita, e arrendersi lì vorrebbe dire
    dichiarare chiusa una strada che è aperta */
 const TETTO_PROVE = 6
+/* la più economica delle cose che curano: sotto questa cifra andare dal
+   mercante è una passeggiata, e il giocatore finto non la fa */
+const COSTO_MINIMO = Math.min(...CURE.map(k => COSE[k].prezzo))
 
 /* Va su una cella, un passo alla volta, e si ferma appena qualcosa si
    apre: è quello che fa anche un bambino, che smette di camminare quando
@@ -154,10 +157,12 @@ function equipaggia(corsa) {
     }
     if (c.dove === 'corpo' && meglio(k, corsa.corpo, 'dif')) { corsa.usa(i); continue }
     /* lo scudo va nella mano debole, e solo se là ci si può mettere
-       qualcosa: con un'arma a due mani in pugno il motore lo rifiuta */
-    if (c.dove === 'mancina' && !corsa.aDueMani(corsa.mano) && !corsa.mancina) {
-      corsa.usa(i); continue
-    }
+       qualcosa: con un'arma a due mani in pugno il motore lo rifiuta.
+       La domanda è la stessa che si fa il gioco (`mancinaLibera`), e
+       ripeterla qui vorrebbe dire misurare un giocatore che segue regole
+       sue — è così che il banco è rimasto senza scudo a mani nude per
+       tutta una campagna, rimettendoselo e perdendolo a ogni giro. */
+    if (c.dove === 'mancina' && corsa.mancinaLibera()) { corsa.usa(i); continue }
     /* al dito ci va la prima cosa che capita: i gioielli non si
        confrontano su un numero solo — vedere più lontano e reggere un
        colpo in più non stanno sulla stessa scala — e un giocatore finto
@@ -211,8 +216,9 @@ function robeInteressanti(corsa, quali) {
 
 /* Risponde a quello che c'è aperto, e dice se ha risposto a una domanda.
    `bravura` è la probabilità di azzeccarla: 1 è un adulto attento, 0.75
-   un bambino nel suo pomeriggio normale. */
-function sbriga(corsa, bravura, sorte) {
+   un bambino nel suo pomeriggio normale. `conto` è il taccuino della
+   discesa: quello che non sta nell'esito ma serve a capire la misura. */
+function sbriga(corsa, bravura, sorte, conto) {
   const f = corsa.foglio
   if (!f) return false
   switch (f.che) {
@@ -235,9 +241,40 @@ function sbriga(corsa, bravura, sorte) {
     case 'svenuto':
       corsa.riprendi()
       return false
-    case 'mercante':
+    /* ── al banco si compra da curarsi ──
+       Finché le tre boccette capitavano una volta su sei, chiudere e
+       andarsene era una fotografia onesta del gioco. Adesso che sul
+       banco c'è **sempre** qualcosa che cura, un giocatore finto che
+       passa oltre misura un gioco che nessuno gioca: chi arriva mezzo
+       morto davanti a un mercante con le gemme in tasca compra, ed è
+       proprio quel gesto a decidere se la discesa si può ancora
+       perdere. Questa riga sposta il metro, quindi va letta come parte
+       della misura e non come un dettaglio del banco.
+
+       Si prende **la più piccola che basta**: l'ampolla bevuta a mezza
+       vita butta via metà del suo effetto, ed è lo stesso ragionamento
+       per cui `equipaggia` non beve appena trova. Se nessuna arriva a
+       tappare il buco si prende la più grossa che le gemme permettono,
+       che è quello che farebbe chiunque. */
+    case 'mercante': {
+      let comprate = 0
+      while (corsa.vita < corsa.vitaMax * 0.6) {
+        const manca = corsa.vitaMax - corsa.vita
+        const posso = CURE.filter(k => COSE[k].prezzo <= corsa.gemme)
+          .sort((a, b) => COSE[a].cura - COSE[b].cura)
+        const quale = posso.find(k => COSE[k].cura >= manca) || posso[posso.length - 1]
+        if (!quale) break
+        const preso = corsa.compra(quale)
+        if (!preso || preso.che !== 'comprato') break
+        const i = corsa.zaino.lastIndexOf(quale)
+        if (i < 0) break
+        corsa.usa(i)
+        comprate++
+      }
+      conto.cure += comprate
       corsa.chiudi()
       return false
+    }
     case 'chiusa':
       corsa.chiudi()
       return false
@@ -264,13 +301,27 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   let giri = 0
   const persi = []
   const provati = new Map()
+  const conto = { cure: 0 }
+  const banchiVisti = new Set()
 
   while (!corsa.finita && giri++ < TETTO_GIRI) {
     /* prima si sbriga quello che si ha davanti: finché un foglio è
        aperto non si cammina */
-    if (corsa.foglio) { sbriga(corsa, bravura, sorte); continue }
+    if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }
     equipaggia(corsa)
     if (raccogliVicino(corsa, persi)) continue
+
+    /* ── mezzo morto, e le gemme in tasca: si va dal mercante ──
+       Vale in tutti e due i modi di giocare, e non è una svista:
+       comprarsi da curare non è «ripulire il piano», è restare in
+       piedi, e sta accanto alla chiave e alla scala fra le cose che
+       non si scelgono. Una volta per banco (`banchiVisti`), o chi
+       arriva senza gemme abbastanza ci tornerebbe sopra all'infinito
+       — ed è lo stesso difetto di `persi` qui sopra. */
+    if (corsa.vita < corsa.vitaMax * 0.45 && corsa.gemme >= COSTO_MINIMO) {
+      const banco = corsa.livello.robe.find(r => r.che === 'mercante' && !banchiVisti.has(r))
+      if (banco) { banchiVisti.add(banco); raggiungi(corsa, banco); continue }
+    }
 
     /* la roba facoltativa, se si sta giocando tutto */
     if (come === 'tutto') {
@@ -301,6 +352,11 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   return {
     corsa,
     esito: corsa.esito,
+    /* quante cure ha comprato: non sta nell'esito perché non è una cosa
+       del gioco, è il modo in cui questo giocatore finto lo gioca — e
+       serve a leggere i numeri qui sotto senza confondere «la tappa è
+       più facile» con «il metro compra le pozioni» */
+    cure: conto.cure,
     guasto: corsa.finita ? null : 'la discesa non finisce mai',
   }
 }

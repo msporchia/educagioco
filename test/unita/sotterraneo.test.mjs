@@ -7,15 +7,19 @@
    giocato.
    `node test/esegui.mjs sotterraneo --niente-build`
    tempo: 300 */
+import { readFileSync } from 'node:fs'
+import { ref, shallowRef } from 'vue'
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
-import { guastiDelleCose, COSE, ARMI_DI } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE,
+         pescaMerce } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { CURIOSITA, guastiDelleCuriosita } from '../../src/giochi/sotterraneo/dati/curiosita.js'
 import { EROI, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { guastiDelleTessere } from '../../src/giochi/sotterraneo/dati/tessere.js'
 import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca, costoDi, quanteVolteSiVince, pianiSani } from '../../src/giochi/sotterraneo/motore/banco.js'
@@ -591,6 +595,47 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.interagisci(terzo)
   uguale('con le due mani impegnate lo scudo resta in tasca', c.mancina, null)
   controlla('ma non si perde', c.zaino.includes('scudo-teschio'), c.zaino.join())
+
+  /* ── e a mani nude si imbraccia lo stesso ──
+     Il guasto, e si vedeva giocando: `sistemaLeMani` sfrattava la
+     mancina anche **a pugno vuoto**, cioè proprio nel caso di chi non ha
+     ancora trovato un'arma. Si premeva «me lo imbraccio», il motore lo
+     rispediva in tasca nello stesso istante, e da fuori era un tasto che
+     non fa niente — il verbo lo sceglie la vista dai dati, quindi
+     continuava a promettere una cosa che non succedeva. */
+  c.mano = null
+  c.mancina = null
+  c.zaino = ['scudo-legno']
+  c.usa(0)
+  uguale('a mani nude lo scudo si imbraccia', c.mancina, 'scudo-legno')
+  uguale('e la tasca resta libera', c.zaino.length, 0)
+  uguale('e para davvero', c.dif, c.io.dif + COSE['scudo-legno'].dif)
+  /* e ci resta: se tornasse in tasca al giro dopo, rimetterlo sarebbe un
+     rimbalzo infinito fra la mano e lo zaino — che è il ceppo di guasti
+     che ha già fatto girare il banco di prova seimila volte */
+  c.sistemaLeMani()
+  uguale('e ci resta anche al giro dopo', c.mancina, 'scudo-legno')
+
+  c.mano = null
+  c.mancina = null
+  c.zaino = []
+  const quarto = posa('scudo-crociato')
+  c.interagisci(quarto)
+  uguale('e a mani nude si raccoglie già imbracciato', c.mancina, 'scudo-crociato')
+
+  /* ── l'altra metà, quella per cui la riga era stata scritta ──
+     Un'**arma** nella mano debole col pugno vuoto sta nel posto
+     sbagliato — di là colpisce la metà — e allora passa in pugno. Non si
+     sfratta: sfrattarla voleva dire mettersi in tasca l'unica arma che
+     si ha addosso. */
+  c.mano = null
+  c.mancina = 'accetta'
+  c.zaino = []
+  c.sistemaLeMani()
+  uguale('un\'arma sola col pugno vuoto passa in pugno', c.mano, 'accetta')
+  uguale('e la mano debole torna libera', c.mancina, null)
+  uguale('senza finire in tasca', c.zaino.length, 0)
+  uguale('e adesso colpisce piena', c.att, c.io.att + COSE.accetta.att)
 }
 
 /* ══════════ 5-quater. la torcia non si accende: si ha ══════════
@@ -744,6 +789,136 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('e la tasca si svuota', c.zaino.length, 0)
 }
 
+/* ══════════ 5-bis. da curarsi ce n'è sempre, e non finisce ══════════
+   Il guasto che questo controllo tiene fuori **non si nota giocando**:
+   un mercante senza pozioni sembra un mercante sfortunato, non un
+   difetto, e per accorgersene bisognerebbe ricordarsi gli ultimi dieci.
+   Erano due meccanismi distinti e ce ne voleva uno solo per rimettercelo
+   — cinque righe pescate a sorte fra trenta, e quello che si compra che
+   sparisce dal banco — quindi si controllano tutti e due. */
+{
+  uguale('le cose che curano sono tre', CURE.length, 3)
+  controlla('e nessuna di loro è nel sorteggio',
+            CURE.every(k => !A_SORTE.includes(k)), CURE.join(' '))
+  /* l'elisir del toro **sì**: non torna indietro (alza la vita massima
+     per tutta la discesa), e a scorta infinita sarebbe «compro vita
+     massima finché ho gemme», che è un'altra cosa dal potersi curare */
+  controlla('ma l\'elisir del toro sì, che è un\'altra cosa',
+            A_SORTE.includes('elisir-toro') && !CURE.includes('elisir-toro'))
+
+  /* ogni banco di ogni piano di ogni tappa, su venti semi: le tre ci
+     sono, e ci sono per prime */
+  let banchi = 0
+  for (const t of CAMPAGNA) {
+    for (let s = 0; s < 20; s++) {
+      const c = new Corsa(t, { seme: 1 + s * 311, rnd: seminato(s + 1) })
+      for (let p = 0; p < t.piani; p++) {
+        const m = c.livello.robe.find(r => r.che === 'mercante')
+        if (!m) continue
+        c.interagisci(m)
+        const righe = c.mercanzia()
+        banchi++
+        const cure = righe.filter(r => r.sempre).map(r => r.chiave)
+        if (cure.join() !== CURE.join()) {
+          controlla(`${t.chiave} piano ${p} seme ${s}: le tre che curano sono in cima`,
+                    false, righe.map(r => r.chiave).join(' '))
+          s = 99; p = 99; break
+        }
+        c.chiudi()
+        if (p < t.piani - 1) { c.piano++; c.nuovoPiano() }
+      }
+    }
+  }
+  controlla('su tutti i banchi provati le tre che curano ci sono', banchi > 100, `${banchi} banchi`)
+  nota(`${banchi} banchi guardati: le tre che curano c'erano tutte`)
+
+  /* ── e non si esauriscono ──
+     La metà che mancava: trovarla e poterne comprare una sola è quasi
+     come non trovarla. Quattro boccette di fila, e il banco è ancora lì. */
+  {
+    const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
+    const m = c.livello.robe.find(r => r.che === 'mercante')
+    c.interagisci(m)
+    c.gemme = 100
+    c.zaino = []
+    for (let i = 1; i <= 4; i++) {
+      const e = c.compra('pozione-piccola')
+      uguale(`boccetta ${i}: si compra`, e && e.che, 'comprato')
+      uguale('e resta in vendita', c.mercanzia().filter(r => r.chiave === 'pozione-piccola').length, 1)
+    }
+    uguale('quattro comprate, quattro in tasca', c.quanteNeHo('pozione-piccola'), 4)
+    uguale('e le gemme sono scese di quattro prezzi',
+           c.gemme, 100 - 4 * COSE['pozione-piccola'].prezzo)
+
+    /* mentre quello che si pesca resta pezzo unico: se anche quello
+       tornasse, il banco diventerebbe un magazzino e la scelta di cosa
+       portarsi via sparirebbe */
+    const unico = c.foglio.chi.roba[0]
+    c.compra(unico)
+    controlla('quello pescato invece se ne va dal banco',
+              !c.mercanzia().some(r => r.chiave === unico), unico)
+  }
+}
+
+/* ══════════ 5-bis. il banco pesa per livello ══════════
+   Le cinque righe pescate non sono più un mescolamento uniforme: più si
+   scende, più la roba cara diventa normale. Il guasto da tenere fuori
+   non è che la formula sbagli — è che **lasci un piano senza niente di
+   comprabile**, e quello giocando non si vede: sembra sfortuna, e chi lo
+   scopre è un bambino che arriva al banco con nove gemme e non può
+   toccare niente. */
+{
+  const prezzoMedio = (t, piano) => {
+    const rnd = seminato(t.chiave.length * 97 + piano * 13 + 5)
+    const d = durezzaDi(t, piano)
+    let somma = 0
+    for (let i = 0; i < 200; i++) {
+      const r = pescaMerce(d, { rnd })
+      somma += r.reduce((s, k) => s + COSE[k].prezzo, 0) / r.length
+    }
+    return somma / 200
+  }
+  const cima = prezzoMedio(CAMPAGNA[0], 0)
+  const fondo = prezzoMedio(CAMPAGNA[5], CAMPAGNA[5].piani - 1)
+  controlla('in fondo il banco vende roba molto più cara che in cima',
+            fondo > cima * 1.5, `${cima.toFixed(1)} gemme contro ${fondo.toFixed(1)}`)
+  nota(`prezzo medio sul banco: ${cima.toFixed(1)} nelle cantine, ${fondo.toFixed(1)} in fondo`)
+
+  /* ── i due modi di sbagliarla ──
+     Un banco tutto fuori portata al primo piano è una stanza
+     attraversata; un banco di sola paccottiglia all'ultimo è un premio
+     che non premia. Si guardano tutti i piani di tutte le tappe, e la
+     soglia è sulla **quota**, non su un singolo tiro: pesare vuol dire
+     che ogni tanto capita di tutto, ed è giusto così. */
+  const quota = (d, prova, quanti = 400) => {
+    const rnd = seminato(4242)
+    let n = 0
+    for (let i = 0; i < quanti; i++)
+      if (pescaMerce(d, { rnd }).some(k => prova(COSE[k].prezzo))) n++
+    return n / quanti
+  }
+  const ECONOMICO = 10, PREGIATO = 30
+  for (const t of CAMPAGNA) {
+    for (let p = 0; p < t.piani; p++) {
+      const d = durezzaDi(t, p)
+      const abbordabile = quota(d, x => x <= ECONOMICO)
+      controlla(`${t.chiave} piano ${p + 1}: quasi sempre c'è qualcosa sotto le ${ECONOMICO} gemme`,
+                abbordabile >= 0.3, `solo ${(abbordabile * 100).toFixed(0)}% dei banchi`)
+    }
+  }
+  /* e la roba buona **si vede anche in cima**, spenta: sapere cosa c'era
+     è il motivo per tornare, e un banco che offre solo il comprabile
+     quel motivo non lo dà mai (`viste/Mercante.vue`) */
+  const sognoInCima = quota(durezzaDi(CAMPAGNA[0], 0), x => x >= PREGIATO)
+  dentro('nelle cantine la roba da 30 gemme si intravede, e resta rara',
+         Math.round(sognoInCima * 100), 5, 40)
+  const roboInFondo = quota(durezzaDi(CAMPAGNA[5], CAMPAGNA[5].piani - 1), x => x >= PREGIATO)
+  controlla('mentre in fondo è la norma', roboInFondo >= 0.8,
+            `${(roboInFondo * 100).toFixed(0)}% dei banchi`)
+  nota(`roba da ${PREGIATO}+ gemme: ${(sognoInCima * 100).toFixed(0)}% dei banchi nelle cantine, ` +
+       `${(roboInFondo * 100).toFixed(0)}% in fondo`)
+}
+
 /* ══════════ 5-bis. scappare costa, e si può cadere per sempre ══════════
    Le due regole che tolgono il «vinco comunque»: la fuga non è più
    gratis, e gli svenimenti sono contati. Il banco non scappa mai — è la
@@ -819,6 +994,94 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const st = c.livello.stanze[0]
   c.vaiVerso({ x: st.cx, y: st.cy }, true)
   uguale('camminare non dice niente', c.avvisi.length, 0)
+}
+
+/* ══════════ 5-septies. quello che si vede si aggiorna ══════════
+   Il guasto che nessuno dei controlli qui sopra poteva vedere, perché
+   non sta nel motore: sta nel modo in cui la schermata lo guarda. La
+   discesa è uno `shallowRef` — un proxy su ogni cella del piano sessanta
+   volte al secondo non si può pagare — quindi Vue non sa niente di
+   quello che succede là dentro, e la sveglia è un contatore a parte
+   (`tic`). Chi se ne dimentica non ottiene nessun errore: ottiene una
+   schermata ferma.
+
+   E c'è il modo insidioso di dimenticarsene, che è quello che è
+   successo: leggere il tic in un conto e poi **derivarne un altro da
+   quello**. Il foglio del mercante è sempre lo stesso oggetto finché
+   resta aperto, e un `computed` che rivaluta e ritorna un valore
+   identico non sveglia chi dipende da lui: si comprava, si vendeva, le
+   gemme scendevano e la lista della merce restava quella di prima.
+   Adesso il tic lo legge `viste/occhio.js` per conto di tutti. */
+{
+  const corsa = shallowRef(null)
+  const tic = ref(0)
+  const dallaCorsa = occhio(corsa, tic)
+
+  const foglio = dallaCorsa(c => c.foglio || null)
+  const merce = dallaCorsa(c => (c.foglio && c.foglio.che === 'mercante'
+    ? c.foglio.chi.roba.map(k => ({ chiave: k, posso: c.gemme >= COSE[k].prezzo }))
+    : []), [])
+
+  uguale('senza discesa non c\'è nessun foglio', foglio.value, null)
+  uguale('e le liste sono vuote, non rotte', merce.value.length, 0)
+
+  const c = new Corsa(CAMPAGNA[1], { seme: 77, rnd: seminato(77) })
+  const banco = c.livello.robe.find(r => r.che === 'mercante')
+  c.interagisci(banco)
+  c.gemme = 0
+  corsa.value = c
+  tic.value++
+  const primo = merce.value[0]
+  controlla('col banco aperto la merce si vede', !!primo, JSON.stringify(merce.value))
+  uguale('e senza gemme non si compra niente', primo.posso, false)
+
+  /* le gemme cambiano **dentro** la corsa, e il foglio resta lo stesso
+     oggetto: è esattamente la situazione in cui la lista si fermava */
+  const stesso = foglio.value
+  c.gemme = 999
+  tic.value++
+  uguale('il foglio è sempre lo stesso oggetto', foglio.value === stesso, true)
+  uguale('ma la merce si è rifatta i conti', merce.value[0].posso, true)
+
+  const quale = primo.chiave
+  c.compra(quale)
+  tic.value++
+  controlla('e quello che si compra sparisce dal banco',
+            !merce.value.some(v => v.chiave === quale),
+            merce.value.map(v => v.chiave).join(' '))
+}
+
+/* ── e nessuno se lo riscrive a mano ──
+   La prova che tiene in piedi quella qui sopra: `occhio.js` funziona,
+   ma un `computed` scritto a mano dentro `Gioco.vue` gli passa accanto
+   e torna a fermarsi, senza un errore da nessuna parte e senza che
+   nessun altro controllo se ne accorga. Qui si guarda il sorgente,
+   come per i lucchetti delle campagne. */
+{
+  const sorgente = readFileSync(
+    new URL('../../src/giochi/sotterraneo/Gioco.vue', import.meta.url), 'utf8')
+  /* il corpo di ogni `computed` scritto a mano, contando le parentesi:
+     un computed lungo venti righe non si prende a occhio */
+  const corpi = []
+  for (const m of sorgente.matchAll(/computed\(/g)) {
+    let i = m.index + m[0].length, aperte = 1
+    while (i < sorgente.length && aperte > 0) {
+      if (sorgente[i] === '(') aperte++
+      else if (sorgente[i] === ')') aperte--
+      i++
+    }
+    corpi.push(sorgente.slice(m.index, i))
+  }
+  controlla('nel coordinatore ci sono ancora dei computed da guardare', corpi.length > 0)
+  /* guardare **dentro** la corsa, non guardare se c'è: `corsa.value` da
+     solo è un ref come un altro, e sapere se una discesa è in corso è
+     una domanda che si aggiorna da sé */
+  const guardoni = corpi.filter(b => /corsa\.value(\.|\?\.)/.test(b))
+  controlla('nessuno di loro guarda dentro la corsa per conto suo',
+            guardoni.length === 0,
+            `${guardoni.length} su ${corpi.length} — ` +
+            'passa da dallaCorsa() (viste/occhio.js), o non si aggiorna')
+  nota(`${corpi.length} computed scritti a mano nel coordinatore, nessuno sulla corsa`)
 }
 
 /* ══════════ 6. i traguardi ══════════ */

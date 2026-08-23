@@ -45,7 +45,7 @@ import {
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { eroeDi, DI_PARTENZA } from '../dati/eroi.js'
-import { COSE, IN_VENDITA, NEI_FORZIERI } from '../dati/cose.js'
+import { COSE, CURE, NEI_FORZIERI, pescaMerce } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
 import { durezzaDi, guardianoDi, svenimentiDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
@@ -174,15 +174,40 @@ export class Corsa {
     else this.dito = k
   }
 
+  /* ── la mano debole è libera davvero ──
+     Vuota, e non impegnata dall'arma che sta nell'altra. È la stessa
+     domanda in tre posti — quello che si trova per terra, quello che si
+     compra, quello che il banco di prova si mette addosso — e finché
+     era scritta tre volte bastava ritoccarne due per averne una che
+     diceva un'altra cosa. */
+  mancinaLibera() { return !this.mancina && !this.aDueMani(this.mano) }
+
   /* ── le due mani devono stare d'accordo ──
      Un'arma a due mani sfratta quello che c'era nella sinistra, e
      quella che se ne va **non si perde**: torna in tasca, o per terra
      se le tasche sono piene. È la stessa regola dello scambio in mano,
      e per lo stesso motivo — una spada che sparisce perché ne hai
-     raccolta un'altra è la cosa che fa arrabbiare di più. */
-  sistemaLeMani(dove) {
+     raccolta un'altra è la cosa che fa arrabbiare di più.
+
+     C'era una riga che sfrattava anche **a pugno vuoto** (`!this.mano`),
+     e voleva dire un'altra cosa: che un'arma finita nella mano debole
+     con la destra libera sta nel posto sbagliato, perché di là colpisce
+     la metà. Scritta così però diceva pure «niente in pugno sfratta lo
+     scudo», ed è il guasto che si vedeva giocando — il tasto dello
+     zaino diceva «me lo imbraccio», il motore lo rispediva in tasca
+     nello stesso istante, e a mani nude uno scudo non si imbracciava
+     mai. Adesso i due casi sono due: un'arma **passa in pugno**, uno
+     scudo **resta dov'è**. */
+  sistemaLeMani() {
     if (!this.mancina) return
-    if (!this.mano || this.aDueMani(this.mano) || this.aDueMani(this.mancina)) {
+    /* l'arma rimasta di là col pugno vuoto ci passa: niente da sfrattare
+       e niente da dire, è la stessa arma che cambia mano */
+    if (!this.mano && COSE[this.mancina] && COSE[this.mancina].dove === 'mano') {
+      this.mano = this.mancina
+      this.mancina = null
+      return
+    }
+    if (this.aDueMani(this.mano) || this.aDueMani(this.mancina)) {
       const sfrattata = this.mancina
       this.mancina = null
       if (this.zaino.length < TASCHE) this.zaino.push(sfrattata)
@@ -573,7 +598,7 @@ export class Corsa {
       /* uno scudo si imbraccia da sé solo a mano libera, per la stessa
          ragione: con un'arma leggera già lì, quale delle due valga di
          più lo decide chi gioca, dallo zaino */
-      const stretto = c.dove === 'mancina' && (this.aDueMani(this.mano) || !!this.mancina)
+      const stretto = c.dove === 'mancina' && !this.mancinaLibera()
       const conf = this.confronto(r.cosa)
       if (!stretto && (!conf.addosso || conf.delta > 0)) return this.vesti(r, conf)
     }
@@ -975,13 +1000,36 @@ export class Corsa {
 
          E non si offre quello che si ha già addosso: il banco è di
          cinque righe, e una riga occupata da una spada identica a
-         quella in pugno è una riga buttata. Le pozioni sì, che si
-         accumulano apposta. */
-      const utile = k => (COSE[k].usa ? true : !this.possiedo(k))
-      const mescolato = IN_VENDITA.filter(utile).sort(() => this.rnd() - 0.5)
-      m.roba = mescolato.slice(0, 5)
+         quella in pugno è una riga buttata. Quello che si consuma fa
+         eccezione — di chiavi se ne portano quante ne stanno — ma non
+         la torcia: accesa è accesa, e una seconda non illumina niente
+         di più. */
+      const siAccumula = k => COSE[k].usa && COSE[k].usa !== 'luce'
+      const utile = k => siAccumula(k) || !this.possiedo(k)
+      /* Non è più un mescolamento uniforme: si pesca **pesando per
+         livello**, e il peso è il prezzo (`pescaMerce` in `dati/cose.js`
+         dice perché il prezzo e non altro). La profondità è la stessa
+         `durezza()` che decide quanto sono toste le domande qui — una
+         manopola sola per «quanto siamo giù», invece di una seconda
+         scala da tenere allineata alla campagna a mano. */
+      m.roba = pescaMerce(this.durezza(), { quante: 5, rnd: () => this.rnd(), ammessa: utile })
     }
     this.foglio = { che: 'mercante', chi: m }
+  }
+
+  /* ── quello che c'è sul banco adesso ──
+     In cima le tre che curano, sempre le stesse e sempre lì; sotto i
+     cinque pescati, che cambiano da un mercante all'altro. Chi disegna
+     riceve anche `sempre`, perché una riga che non si esaurisce **deve
+     dirlo**: se le altre spariscono comprandole e questa no, senza una
+     parola sembra un guasto. */
+  mercanzia() {
+    const f = this.foglio
+    if (!f || f.che !== 'mercante') return []
+    return [
+      ...CURE.map(chiave => ({ chiave, sempre: true })),
+      ...(f.chi.roba || []).map(chiave => ({ chiave, sempre: false })),
+    ]
   }
 
   /* ── vendere ──
@@ -1017,14 +1065,17 @@ export class Corsa {
     const f = this.foglio
     if (!f || f.che !== 'mercante') return null
     const c = COSE[k]
-    if (!c || !f.chi.roba.includes(k)) return null
+    /* le cure si comprano anche se non stanno fra i cinque pescati:
+       sono sul banco per conto loro, e ci restano */
+    const scorta = f.chi.roba.includes(k)
+    if (!c || !(scorta || CURE.includes(k))) return null
     if (this.gemme < c.prezzo) return { che: 'niente' }
     /* Lo zaino pieno non ferma quello che si mette addosso: la casella
        è un altro posto, e chi ha una casella vuota può comprare anche
        con le sei tasche occupate. Fermava tutto, ed era il caso in cui
        si sta al banco proprio perché non si ha più posto. */
     const vaAddosso = c.dove &&
-      !(c.dove === 'mancina' && (this.aDueMani(this.mano) || !!this.mancina)) && (() => {
+      (c.dove !== 'mancina' || this.mancinaLibera()) && (() => {
       const conf = this.confronto(k)
       return !conf.addosso || conf.delta > 0
     })()
@@ -1037,7 +1088,12 @@ export class Corsa {
       return { che: 'pieno' }
     }
     this.gemme -= c.prezzo
-    f.chi.roba.splice(f.chi.roba.indexOf(k), 1)
+    /* Il pezzo pescato è unico e se ne va dal banco; una cura no, e
+       questa è la seconda metà del «si può sempre comprare vita». Con
+       la sola prima — le tre in listino fisso — se ne comprava
+       esattamente una, e il mercante restava di nuovo senza bende
+       proprio quando servivano. */
+    if (scorta) f.chi.roba.splice(f.chi.roba.indexOf(k), 1)
     if (siAccende) { this.accendi(k); return { che: 'comprato', cosa: k, addosso: true } }
     /* comprata e messa: è la stessa regola della roba per terra
        (`trovata`), e per lo stesso motivo — chi ha appena speso venti

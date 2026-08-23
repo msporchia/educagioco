@@ -49,6 +49,7 @@ import Eroi from './viste/Eroi.vue'
 import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { cambioDetto } from './viste/cambio.js'
+import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Zaino from './viste/Zaino.vue'
 import Mercante from './viste/Mercante.vue'
@@ -87,6 +88,15 @@ const avviso = ref(null)
 const zainoAperto = ref(false)
 const scosso = ref(0)
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
+/* ── tutto quello che si guarda dentro la discesa passa di qui ──
+   La corsa è uno `shallowRef`, quindi Vue non vede niente di quello che
+   succede là dentro: chi vuole mostrarne un pezzo deve leggere il tic, e
+   scrivendo `computed` a mano ce ne si dimentica — o, peggio, si deriva
+   da un altro computed che il tic lo legge ma ritorna sempre lo stesso
+   oggetto, e allora non si sveglia nessuno. Il perché per esteso sta in
+   `viste/occhio.js`; qui basta la regola: **niente `computed` a mano su
+   quello che sta dentro la corsa**. */
+const dallaCorsa = occhio(corsa, tic)
 let ultimoModulo = null
 let pittore = null
 let orologio = 0
@@ -112,12 +122,8 @@ const chiEro = ref(scelta(CHIAVE, 'eroe', null))
    Durante una discesa comanda la discesa: chi è sceso è sceso, e
    cambiare idea a metà scala non si può. Fuori — sulla mappa delle
    tappe — comanda la scelta, perché lì si decide chi scenderà. */
-const eroeScheda = computed(() => {
-  tic.value
-  const c = corsa.value
-  if (c && c.io) return c.io
-  return eroeDi(chiEro.value || DI_PARTENZA)
-})
+const chiScende = dallaCorsa(c => c.io || null)
+const eroeScheda = computed(() => chiScende.value || eroeDi(chiEro.value || DI_PARTENZA))
 const scegliEroe = ref(!chiEro.value)
 
 function scegli(k) {
@@ -182,13 +188,8 @@ const titolo = computed(() =>
 
 /* ═══════════ com'è messo l'eroe, per la fascia ═══════════
    Già pronto da mostrare: la vista non somma bonus e non guarda dentro
-   le tasche. `tic` è la dipendenza che fa ridisegnare — la corsa è
-   `shallowRef` apposta, perché renderla reattiva in profondità vorrebbe
-   dire un proxy su ogni cella del piano, sessanta volte al secondo. */
-const eroe = computed(() => {
-  tic.value
-  const c = corsa.value
-  if (!c) return null
+   le tasche. */
+const eroe = dallaCorsa(c => {
   const q = c.vita / Math.max(1, c.vitaMax)
   return {
     vita: c.vita, vitaMax: c.vitaMax, quota: q,
@@ -199,7 +200,11 @@ const eroe = computed(() => {
   }
 })
 
-const foglio = computed(() => { tic.value; return corsa.value?.foglio || null })
+/* Il foglio aperto è **sempre lo stesso oggetto** finché resta aperto, e
+   per questo nessuno dei conti qui sotto si deriva da lui: guardano
+   `c.foglio` per conto proprio, che è il modo di svegliarsi quando
+   dentro quel foglio cambia qualcosa. */
+const foglio = dallaCorsa(c => c.foglio || null)
 
 /* ── com'è andato l'ultimo colpo ──
    Due numeri, detti dopo: «gli hai tolto 8, ti ha graffiato 3». Serve
@@ -211,10 +216,13 @@ const foglio = computed(() => { tic.value; return corsa.value?.foglio || null })
 const scambio = ref(null)
 let scambioFinoA = 0
 
-const nemico = computed(() => {
-  const f = foglio.value
+/* Quello che si legge sopra la domanda mentre si combatte, e **cambia a
+   ogni risposta**: le ossa che restano, quante risposte mancano, quanta
+   vita si ha. Erano numeri fatti una volta all'inizio della battaglia —
+   «ancora 3 risposte» restava 3 fino alla fine. */
+const nemico = dallaCorsa(c => {
+  const f = c.foglio
   if (!f || f.che !== 'scontro') return null
-  const c = corsa.value
   const scheda = MOSTRI[f.chi.tipo] || {}
   return {
     mostro: f.chi, colpo: c.colpo(f.chi), restano: c.colpiPer(f.chi),
@@ -232,12 +240,9 @@ const nemico = computed(() => {
 
 /* quante tasche sono occupate: sta sul tasto, e dice quando conviene
    aprirlo — sei su sei vuol dire che la prossima cosa resta per terra */
-const pieni = computed(() => { tic.value; return corsa.value ? corsa.value.zaino.length : 0 })
+const pieni = dallaCorsa(c => c.zaino.length, 0)
 
-const zaino = computed(() => {
-  tic.value
-  const c = corsa.value
-  if (!c) return null
+const zaino = dallaCorsa(c => {
   const voce = k => (k ? { chiave: k, ...COSE[k] } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
@@ -246,50 +251,46 @@ const zaino = computed(() => {
   }
 })
 
-const merce = computed(() => {
-  const f = foglio.value
-  if (!f || f.che !== 'mercante') return []
-  const c = corsa.value
-  return (f.chi.roba || []).map(k => ({
-    chiave: k, ...COSE[k], posso: c.gemme >= COSE[k].prezzo,
-    /* quanto cambia rispetto a quello che si ha addosso: è il numero
-       con cui si decide se spendere, e al banco non c'era */
-    cambio: cambioDetto(c.confronto(k), x => COSE[x].nome),
-    /* quanto ti manca per portartela via: senza, una riga che non puoi
-       comprare si legge come una che puoi — il prezzo da solo non dice
-       niente finché non lo confronti con le tue gemme, e un bambino
-       quel confronto non lo fa guardando due numeri lontani */
-    mancano: Math.max(0, COSE[k].prezzo - c.gemme),
-    /* di pozioni se ne portano quante ne stanno, quindi restano in
-       vendita anche quando ne hai già: quello che serve sapere è
-       **quante**, o si compra la quarta senza accorgersene */
-    quante: c.quanteNeHo(k),
-  }))
-})
+/* Il banco, riga per riga. Si rifà a ogni tic e non a ogni apertura del
+   foglio, perché **comprare e vendere cambiano tutte e tre le colonne**:
+   le gemme scendono, la roba esce dalla lista, quello che si ha addosso
+   non è più quello di prima. */
+/* Quali righe ci sono, e quali non finiscono mai, lo dice il motore
+   (`mercanzia`): qui si aggiunge solo quello che serve a disegnarle. */
+const merce = dallaCorsa(c => c.mercanzia().map(({ chiave: k, sempre }) => ({
+  chiave: k, sempre, ...COSE[k], posso: c.gemme >= COSE[k].prezzo,
+  /* quanto cambia rispetto a quello che si ha addosso: è il numero
+     con cui si decide se spendere, e al banco non c'era */
+  cambio: cambioDetto(c.confronto(k), x => COSE[x].nome),
+  /* quanto ti manca per portartela via: senza, una riga che non puoi
+     comprare si legge come una che puoi — il prezzo da solo non dice
+     niente finché non lo confronti con le tue gemme, e un bambino
+     quel confronto non lo fa guardando due numeri lontani */
+  mancano: Math.max(0, COSE[k].prezzo - c.gemme),
+  /* di pozioni se ne portano quante ne stanno, quindi restano in
+     vendita anche quando ne hai già: quello che serve sapere è
+     **quante**, o si compra la quarta senza accorgersene */
+  quante: c.quanteNeHo(k),
+})), [])
 
 /* Quello che il mercante **ti** comprerebbe: le tasche, col loro mezzo
    prezzo già fatto dal motore — che è l'unico che sa quanto vale una
    cosa. Le caselle addosso non ci sono: quelle si ripongono prima. */
-const daVendere = computed(() => {
-  tic.value
-  const c = corsa.value
-  if (!c) return []
-  return Array.from({ length: TASCHE }, (_, i) => {
-    const k = c.zaino[i]
-    return k ? { chiave: k, ...COSE[k], vale: c.quantoVale(k) } : null
-  })
-})
+const daVendere = dallaCorsa(c => Array.from({ length: TASCHE }, (_, i) => {
+  const k = c.zaino[i]
+  return k ? { chiave: k, ...COSE[k], vale: c.quantoVale(k) } : null
+}), [])
 
 /* la curiosità aperta adesso, coi suoi dati: il nome, il pezzo, la
    frase d'invito. Il motore dice quale tipo è, la tabella il resto. */
-const curiosita = computed(() => {
-  const f = foglio.value
+const curiosita = dallaCorsa(c => {
+  const f = c.foglio
   if (!f || f.che !== 'curiosita') return {}
   return CURIOSITA_DI[f.chi.tipo] || {}
-})
+}, {})
 
-const segno = computed(() => {
-  const f = foglio.value
+const segno = dallaCorsa(c => {
+  const f = c.foglio
   return f && f.che === 'porta' ? SEGNI[f.chi.segno] : null
 })
 
@@ -418,7 +419,14 @@ function giro() {
 let firma = ''
 function guarda(c) {
   const f = `${c.vita}|${c.gemme}|${c.foglio ? c.foglio.che : '-'}|${c.chiesta ? c.chiesta.id : 0}` +
-            `|${c.piano}|${c.zaino.length}|${c.mano}|${c.corpo}|${c.chiaveDelPiano}|${c.finita}` +
+            `|${c.piano}|${c.zaino.length}|${c.chiaveDelPiano}|${c.finita}` +
+            /* tutte e quattro le caselle, non solo le due che si vedono
+               nella fascia: uno scudo raccolto camminandoci sopra va
+               nella mancina e un anello al dito, e senza di loro qui
+               l'unica cosa che cambiava era la roba per terra — che alla
+               raccolta non cambia, perché quello che si prende resta in
+               elenco con addosso `presa` */
+            `|${c.mano}|${c.mancina}|${c.corpo}|${c.dito}` +
             /* due cose trovate di fila hanno lo stesso `che`: senza la
                cosa in chiaro il foglio resterebbe quello di prima */
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}`

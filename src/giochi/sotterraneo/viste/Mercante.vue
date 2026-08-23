@@ -11,6 +11,13 @@
    Quello che non ci si può permettere resta visibile e spento — sapere
    cosa c'era è il motivo per tornare.
 
+   ── LE TRE CHE CURANO NON FINISCONO, E LO DICONO ──────────────────
+   Stanno in cima, sempre le stesse, e comprarne una non la toglie dal
+   banco. Ma tutte le altre righe spariscono appena si comprano, quindi
+   una che resta lì **senza una parola sembra un guasto**: «ne ha
+   sempre» sta al posto del confronto, che su una boccetta non c'è
+   niente da fare (non si indossa, non c'è un «+1 rispetto a»).
+
    ── E ADESSO SI VENDE ANCHE ───────────────────────────────────────
    Sotto il banco ci sono **le proprie tasche**, a metà prezzo. Non è
    un modo di fare gemme — comprare e rivendere perde metà del valore —
@@ -25,7 +32,7 @@
 import Icona from './Icona.vue'
 
 defineProps({
-  roba: { type: Array, required: true },     // [{ …, posso, cambio, quante, mancano }]
+  roba: { type: Array, required: true },     // [{ …, posso, sempre, cambio, quante, mancano }]
   tasche: { type: Array, default: () => [] }, // [{ chiave, em, nome, sprite, vale } | null]
   gemme: { type: Number, required: true },
 })
@@ -34,7 +41,8 @@ defineEmits(['compra', 'vendi', 'chiudi'])
 
 <template>
   <div>
-    <div v-if="!roba.length" class="sot-vuoto">Ha finito la roba.</div>
+    <!-- «Ha finito la roba» non c'è più: le tre che curano stanno sul
+         banco comunque, quindi un banco vuoto non esiste. -->
     <button v-for="c in roba" :key="c.chiave" class="sot-merce"
             :class="{ 'sot-caro': !c.posso }" :data-merce="c.chiave"
             :disabled="!c.posso" @click="$emit('compra', c.chiave)">
@@ -44,7 +52,8 @@ defineEmits(['compra', 'vendi', 'chiudi'])
         <!-- prima c'era solo la frase dell'oggetto: racconta un'arma,
              non dice se conviene. Il confronto viene per primo perché è
              quello con cui si decide. -->
-        <em v-if="c.cambio" class="em"
+        <em v-if="c.sempre" class="em">ne ha sempre</em>
+        <em v-else-if="c.cambio" class="em"
             :class="{ 'sot-meglio': c.posso && c.cambio.includes('+') }">{{ c.cambio }}</em>
         <i>{{ c.dice }}</i>
       </span>
