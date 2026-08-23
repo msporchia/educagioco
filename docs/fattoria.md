@@ -217,7 +217,7 @@ come i prezzi dei cartelli, quindi cresce con lo zoom e resta leggibile — e
 ci mette la merce che quel recinto sta aspettando davvero (`cosaVuole` nel
 motore). Chi ha fame mostra il ritratto calmo: la faccia dell'animale in quei
 cinque disegni era comunque la stessa, e i cinque `_fame` sono usciti dal
-foglietto (`sorgenti/gfx/animali.json`), cioè dal file unico: 47 KB in meno.
+foglietto (`sorgenti/fattoria/generati/animali.json`), cioè dal file unico: 47 KB in meno.
 
 Il motore consegna alla scena **una faccia già decisa** (`{ pezzo, testo }`),
 non il nome di una merce: `scena/tela.js` non sa cosa sia il foraggio, e non
@@ -243,7 +243,7 @@ guardare cosa c'è già dentro `dati/atlante.js` — sono cinquecento pezzi, e i
 catalogo ne cita duecento.
 
 Le altre cinque no, e sono un **foglio generato apposta**
-(`sorgenti/oggetti.jpg`): il nido di uova, i gomitoli di lana, il sacco di
+(`sorgenti/fattoria/generati/merci.jpg`): il nido di uova, i gomitoli di lana, il sacco di
 becchime, la pentola di zuppa, i tartufi sul panno, la ciotola di mangime.
 Erano le due merci rimaste a emoji (l'uovo e la lana) più tre ripieghi che
 dicevano la cosa storta — un fungo rosso al posto di un tartufo, un calderone
@@ -815,7 +815,7 @@ che le due sezioni qui sopra esistono. Restano:
 | `viste/Roba.vue` `viste/Provino.vue` | il baule: lo scaffale, e la figura che ci sta dentro in scala |
 | `viste/Merce.vue` | la faccia di una roba del granaio: il disegno se c'è, l'emoji se no |
 | `motore/consiglio.js` | il prossimo passo, che risale la catena da solo |
-| `sorgenti/gfx/campi.json` `animali.json` `sorgenti/oggetti.json` | i tre fogli, e il perché di ogni ritaglio |
+| `fattoria/generati/campi.json` `animali.json` `merci.json` | i tre fogli, e il perché di ogni ritaglio |
 | `test/unita/coltivazioni.test.mjs` | si coltiva per davvero, spostando l'orologio |
 | `test/unita/recinti.test.mjs` | i ritratti, la catena intera giocata, e cosa chiede chi ha fame |
 | `test/integrazione/campi.test.mjs` | col dito: semina, chiude il gioco, torna e raccoglie |

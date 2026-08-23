@@ -328,7 +328,7 @@ stesso file solo perché è la stessa cartella di lavoro (`sorgenti/`) e lo
 stesso metodo (scaricare per davvero, ritagliare, verificare a occhio prima
 di fidarsi).
 
-**Dove sta.** `strumenti/sprite/sorgenti/0x72/`: il foglio
+**Dove sta.** `strumenti/sprite/sorgenti/sotterraneo/0x72/`: il foglio
 `0x72_DungeonTilesetII_v1.7.png` (512×512, versione **1.7**, quella con gli
 autotile — non un ripiego), il catalogo dei ritagli in
 `pezzi.json`, e le carte che provano da dove viene: `PROVENIENZA.txt`,

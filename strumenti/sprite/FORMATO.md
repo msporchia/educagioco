@@ -67,7 +67,7 @@ basta: l'attrezzo non cambia.
   sull'immagine intera, fondo compreso**: su un foglio dove il fondo è
   due terzi della superficie ed è di una tinta accesa, il fondo si mangia
   quasi tutta la tavolozza e agli oggetti restano i suoi rosa. Lì si
-  scrive `0` (`gfx/campi.json`, `oggetti.json`).
+  scrive `0` (`fattoria/generati/campi.json`, `merci.json`).
 - **`cella`** — la misura di un fotogramma, in pixel **veri** (dopo aver
   diviso per la scala). Si può ridichiarare per singolo sprite: di lato un
   quadrupede è lungo il doppio, e questa è la riga che lo dice invece di
@@ -98,7 +98,7 @@ basta: l'attrezzo non cambia.
   nomi `_giu`/`_lato`/`_su`): `"persona"` o `"bestia"`. Non si ricava dal
   nome — un cane si può chiamare come si vuole — e serve a distinguere chi
   un bambino **sceglie come proprio aspetto** da chi cammina per conto suo
-  nella scena. Un foglio senza attori (le tessere, `gfx/Overworld.json`)
+  nella scena. Un foglio senza attori (le tessere, `armm1998/Overworld.json`)
   non lo dichiara. Vale per **tutto il foglio**, non sprite per sprite: un
   foglio è o l'uno o l'altro, e ridirlo riga per riga sarebbe solo rumore.
   Chi lo legge è `atlante.py`, che ne scrive due elenchi nel modulo

@@ -15,12 +15,20 @@ mondi a griglia, dove di una tessera bisogna anche sapere *come si attacca
 alle vicine*, e quello non si dichiara: si misura. Quello che scrivono è lo
 stesso modulo, perché la testa la scrive `catalogo.py` per tutti e due.
 
-Per quale gioco sia un foglio **lo dice il foglio**, nel suo foglietto
-(`"bersaglio": "sotterraneo"`), come già dichiara la propria geometria.
+Per quale gioco sia un foglio **lo dice la cartella in cui sta**: il
+primo livello di `sorgenti/` è il gioco, e un `atlante.json` lì dentro
+apre il bersaglio per tutto quello che ha sotto (`FORMATO.md`,
+`sorgenti/LEGGIMI.md`). Non lo dice il foglietto, e la riga che qui
+diceva `"bersaglio": "sotterraneo"` era sbagliata: quel campo non esiste
+e non è mai esistito.
+
 Un attrezzo solo e un comando solo apposta: due script che leggono la
 stessa cartella finiscono, prima o poi, con un atlante e una tabella che
 non combaciano più — e quel guasto si presenta come uno sprite sbagliato
-a schermo, cioè tardi.
+a schermo, cioè tardi. Per lo stesso motivo `terreni.py` non ha più il
+suo `sorgenti/td/` scritto dentro: cerca la cartella che dichiara
+`"attrezzo": "terreni"`, cioè la stessa riga che dice ad `atlante.py` di
+saltarla.
 
 ```bash
 python3 strumenti/sprite/atlante.py              # rifà tutti i bersagli
@@ -152,29 +160,53 @@ i colori.
 
 ## Le sorgenti sono qui, ed è voluto
 
-`sorgenti/` è versionata. Sono meno di 900 KB di roba CC0, e **un atlante
-che non si rigenera da un clone è un atlante che prima o poi si rompe**.
+`sorgenti/` è versionata: **un atlante che non si rigenera da un clone è
+un atlante che prima o poi si rompe**. Com'è ordinata — una cartella per
+gioco, e dentro una per provenienza — lo dice
+[`sorgenti/LEGGIMI.md`](sorgenti/LEGGIMI.md), che è anche il posto dove
+sta scritto perché il primo livello **deve** essere il gioco: la cartella
+non è un ordinamento, è la dichiarazione che `atlante.py` legge per
+decidere di chi è un foglio.
 
-- `sorgenti/gfx/` e `armm1998-zelda-like.zip` — *Zelda-like tilesets and
-  sprites* di **ArMM1998**, CC0 1.0,
+### I set di terzi
+
+- `sorgenti/fattoria/armm1998/` — *Zelda-like tilesets and sprites* di
+  **ArMM1998**, CC0 1.0,
   <https://opengameart.org/content/zelda-like-tilesets-and-sprites>.
   Attenzione: il CC0 è dichiarato **sulla pagina**, dentro lo zip non c'è
   nessun `License.txt` — questa cartella è la prova di provenienza, e per
-  quello ci sta anche lo zip pristino accanto alla cartella estratta.
-- `sorgenti/0x72/` — *16×16 DungeonTileset II* di **0x72**, CC-0,
-  <https://0x72.itch.io/dungeontileset-ii>: è l'atlante del sotterraneo.
-  Le coordinate stanno in `pezzi.json`, che incrocia il `tile_list_v1.7`
-  distribuito dall'autore dentro lo zip; le carte di provenienza (da
-  quale mirror, con quale sha256, e l'HTML della pagina itch salvato il
-  giorno del download) stanno in `PROVENIENZA.txt`. Il ragionamento per
-  esteso — cosa contiene, e soprattutto **cosa non contiene** — è in
+  quello ci sta anche lo zip pristino accanto ai file estratti. I nomi
+  sono quelli dell'autore e non si toccano: sono otto file, e sono
+  esattamente gli otto dello zip.
+- `sorgenti/sotterraneo/0x72/` — *16×16 DungeonTileset II* di **0x72**,
+  CC-0, <https://0x72.itch.io/dungeontileset-ii>. Le coordinate stanno in
+  `pezzi.json`, che incrocia il `tile_list_v1.7` distribuito dall'autore
+  dentro lo zip; le carte di provenienza (da quale mirror, con quale
+  sha256, e l'HTML della pagina itch salvato il giorno del download)
+  stanno in `PROVENIENZA.txt`. Il ragionamento per esteso — cosa
+  contiene, e soprattutto **cosa non contiene** — è in
   [`poc/SPRITE.md`](../../poc/SPRITE.md).
-- `sorgenti/bobtail-generato.jpeg` e `sorgenti/arciera-generata.jpeg` —
-  generati con Gemini nel formato di `character.png`, che è quello che i
-  generatori di immagini restituiscono se glielo si fa vedere. Il
-  riferimento di stile da mettergli davanti è
-  `poc/scatti/riferimento-stile.png`.
+
+### Quello che è generato
+
+Tutto il resto: `fattoria/generati/`, `sotterraneo/generati/`,
+`castello/generati/`. Sono fogli fatti con un generatore di immagini,
+non hanno la licenza di nessuno, e ogni cartella ha il suo
+`PROVENIENZA.txt` che dice cosa c'è dentro.
+
+Due cose che quelle carte dicono e vale la pena ripetere qui:
+
+- **il prompt non è stato conservato per nessuno di loro.** È il buco
+  vero: rigenerare un foglio nello stesso stile è quello che serve ogni
+  volta che manca un pezzo, e senza prompt si riparte a occhio. Il
+  riferimento di stile da mettere davanti a un generatore è
+  `poc/scatti/riferimento-stile.png`, e il formato che i generatori
+  restituiscono meglio è quello di `armm1998/character.png`.
+- **il foglio dei terreni del castello non si sa da dove venga.** Si
+  chiamava `d8Rn3.png`, cioè come un file scaricato e non come un file
+  generato, e nel repo non c'è una riga che dica da dove. Sta scritto in
+  `castello/generati/PROVENIENZA.txt` con le due strade per chiuderla.
 
 Il set di ArMM1998 **non contiene un solo animale**, controllati tutti e
-otto i file: tutte le bestie della fattoria arrivano da lì, generate. Il
-perché, e cosa manca ancora, stanno in [`poc/fattoria.md`](../../poc/fattoria.md).
+otto i file: tutte le bestie della fattoria sono generate. Il perché, e
+cosa manca ancora, stanno in [`poc/fattoria.md`](../../poc/fattoria.md).

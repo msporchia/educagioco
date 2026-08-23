@@ -1,6 +1,6 @@
 {
   "__": "Il foglio dei terreni: otto file di strade, una per ambiente, e in fondo (fila 8) la fila dei terreni pieni. La griglia NON si scrive più qui: la misura `terreni.py` dall'alfa a ogni giro, fila per fila. Su questo foglio le tessere vanno da 54 a 75 px di larghezza e non stanno su una griglia — un elenco solo di colonne buono per tutte e otto le file ritagliava pezzi di due tessere insieme, e si vedeva a schermo invece che qui. Gli attacchi si misurano col centro contro gli angoli, e la forma di una colonna la detta la fila col contrasto migliore: sulla pietra e sulla lava la strada è della stessa materia del fondo e una lettura lì è inventata.",
-  "foglio": "d8Rn3.png",
+  "foglio": "terreni.png",
   "minima": 30,
   "orlo": 5,
   "minimo": 2,

@@ -103,8 +103,8 @@ sotterraneo e nel castello. La pagina ha **due metà**, che sono le due
 estremità dello stesso tubo.
 
 ```
-sorgenti/gfx/oggetti_2.png   ─┐
-sorgenti/gfx/oggetti_2.json  ─┤  «i ritagli» guarda QUI
+sorgenti/fattoria/generati/giardino.png   ─┐
+sorgenti/fattoria/generati/giardino.json  ─┤  «i ritagli» guarda QUI
                               ▼
                     atlante.py / terreni.py
                               ▼

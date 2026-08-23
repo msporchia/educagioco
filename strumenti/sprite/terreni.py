@@ -45,7 +45,28 @@ from catalogo import Catalogo, breve, scrivi
 
 QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
-SORGENTI = QUI / 'sorgenti' / 'td'
+RADICE = QUI / 'sorgenti'
+
+
+def cartella_mia():
+    """Dove stanno i fogli che ritaglia **questo** attrezzo.
+
+    Non è cablata, e non deve esserlo: la cartella di un gioco si
+    rinomina (`sorgenti/td/` è diventata `sorgenti/castello/`) e un
+    percorso scritto qui dentro si accorge del cambio nel modo peggiore,
+    cioè scrivendo un atlante vuoto sopra quello buono. Chi lo dice è
+    lo stesso `atlante.json` che apre il bersaglio, con la riga
+    `"attrezzo": "terreni"` — la stessa che fa saltare la cartella ad
+    `atlante.py`. Una dichiarazione, letta da tutti e due."""
+    quali = [g.parent for g in sorted(RADICE.rglob('atlante.json'))
+             if json.loads(g.read_text()).get('attrezzo') == 'terreni']
+    if not quali:
+        raise SystemExit(f'nessun atlante.json con "attrezzo": "terreni" sotto {RADICE}')
+    if len(quali) > 1:
+        raise SystemExit('più di una cartella dichiara «terreni»: '
+                         + ', '.join(str(q.relative_to(RADICE)) for q in quali))
+    return quali[0]
+
 LARGO = 512                       # larghezza dell'atlante, in pixel
 NIENTE = '·'                     # il lato che la strada non attraversa
 MISURA = 36                       # a che misura si legge la forma di una tessera
@@ -454,17 +475,23 @@ def nominati_dal_gioco(percorso):
 
 
 def main():
+    SORGENTI = cartella_mia()
     conf = json.loads((SORGENTI / 'atlante.json').read_text())
     tessera = conf.get('tessera', 36)
     voluti = nominati_dal_gioco(conf['referenze']) if conf.get('referenze') else None
     ritagli, att, ambienti, figure = {}, {}, {}, []
     cat = Catalogo()
 
-    for f in sorted(SORGENTI.glob('*.json')):
+    # `rglob` e non `glob`: i fogli stanno in una sottocartella
+    # (`generati/`), accanto a una `non-usati/` che di foglietti non ne
+    # ha. E `foglio` si risolve **accanto al suo foglietto**, come fa
+    # `ritagli` in atlante.py: è l'unica lettura che regge uno
+    # spostamento di cartella.
+    for f in sorted(SORGENTI.rglob('*.json')):
         if f.name == 'atlante.json':
             continue
         fg = json.loads(f.read_text())
-        sorgente = SORGENTI / fg['foglio']
+        sorgente = f.parent / fg['foglio']
         im = Image.open(sorgente).convert('RGBA')
         prima = len(ritagli)
         griglia = None

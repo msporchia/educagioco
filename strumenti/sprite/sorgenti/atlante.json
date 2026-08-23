@@ -1,6 +1,0 @@
-{
-  "__": "Il bersaglio predefinito: tutto quello che sta qui sotto e non è rivendicato da una cartella più vicina finisce nell'atlante della fattoria. Vedi ../FORMATO.md.",
-  "nome": "fattoria",
-  "modulo": "src/giochi/fattoria/dati/atlante.js",
-  "tessera": 16
-}

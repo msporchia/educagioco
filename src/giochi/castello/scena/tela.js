@@ -33,7 +33,7 @@
    Adesso che la scala non è più un vincolo, `TESSERA` è solo **quanta
    roba c'è nel foglio**: i ritagli veri sono da una sessantina di pixel,
    quindi tagliarli a 36 butta via metà del disegno. Il numero sta nel
-   foglietto (`strumenti/sprite/sorgenti/td/atlante.json`), qui non
+   foglietto (`sorgenti/castello/atlante.json`), qui non
    cambia una riga, e l'unica cosa che cresce è il peso dell'atlante.
    ═══════════════════════════════════════════════════════════════════ */
 import { ATLANTE, PEZZI } from '../dati/atlante.js'

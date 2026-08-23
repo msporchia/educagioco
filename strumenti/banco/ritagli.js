@@ -1365,8 +1365,8 @@ function accendiModo() {
    pieno, poi lo stelo — le due sole forme che il generatore produce. */
 export async function apriSu(foglio, pezzo) {
   if (!R.fogli.length) raduna()
-  /* `da` porta il nome dell'**immagine** (`oggetti_2.png`), qui i fogli
-     si chiamano col percorso del foglietto (`gfx/oggetti_2.json`): si
+  /* `da` porta il nome dell'**immagine** (`giardino.png`), qui i fogli
+     si chiamano col percorso del foglietto (`fattoria/generati/giardino.json`): si
      confronta il gambo, che è l'unica parte che i due hanno in comune.
      Cercare `.json` dentro un `.png` è il genere di sbaglio che non dà
      nessun errore — non trova, e basta. */

@@ -1,0 +1,37 @@
+Fogli generati — la fattoria
+============================
+
+Sono fogli prodotti con un generatore di immagini — modelli diversi, in
+momenti diversi, e QUALE non è annotato per nessuno di loro. Non vengono
+da nessun set di terzi e non hanno la licenza di nessuno: sono roba di
+casa.
+
+Cosa c'è dentro
+---------------
+  animali.png      i cinque recinti da cortile, cinque stati per specie
+  campi.png        cinque colture a sette stadi, coi cartelli
+  giardino.png     201 pezzi da giardino: fontane, pozzi, mulini,
+                   arredi, animaletti, vegetazione
+  edifici.png      24 costruzioni del podere: fienili, silo, serra,
+                   pollaio, stalla, forni, gazebo
+  merci.jpg        le sei merci che si vendono (uova, lana, becchime…)
+  cane-beagle      \
+  cane-bobtail      |  gli animali di casa, un foglio per bestia,
+  cane-bobtail2     |  nel formato a tre versi di character.png
+  gatto-giallo      |  (giù · lato · su)
+  gatto-nero        |
+  gatto-tuxedo      |
+  pappagallo       /
+
+Il cane di casa è un bobtail, quindi quello si guarda più severamente
+degli altri: chi lo vede tutti i giorni si accorge di un orecchio
+sbagliato. `cane-bobtail2.png` è il secondo tentativo — nell'atlante ci
+sono tutti e due, con nomi diversi.
+
+Perché non c'è il prompt
+------------------------
+Non è stato conservato, e andrebbe fatto: rigenerare un foglio nello
+stesso stile è la cosa che serve ogni volta che ne manca un pezzo. Il
+riferimento di stile da mettere davanti a un generatore è
+`poc/scatti/riferimento-stile.png`; il formato che i generatori
+restituiscono meglio è quello di `../armm1998/character.png`.

@@ -1,0 +1,33 @@
+Il foglio dei terreni — il castello
+===================================
+
+  terreni.png   (si chiamava d8Rn3.png)
+
+È il foglio da cui `terreni.py` ricava tutte le tessere del tower
+defense: nove file di sedici caselle, sette materie (bosco, sabbia,
+neve, pietra, lava, palude, sterpaglia) con le loro strade, più una
+fila di prati pieni.
+
+⚠ LA PROVENIENZA DI QUESTO FOGLIO NON È DOCUMENTATA.
+
+Il nome che aveva — `d8Rn3.png`, come `PVX1O.png` e `8E9zz.png` in
+`../non-usati/` — è la forma di un identificativo di un servizio di
+immagini, non quella di un file generato: sembra scaricato, non prodotto
+in casa. Ma da dove, e con che licenza, non sta scritto da nessuna parte
+del repo, e chi l'ha portato dentro non l'ha annotato.
+
+Va chiarito prima di pubblicare il castello altrove che qui in casa. Le
+strade sono due: ritrovare la fonte (e allora questa carta diventa una
+carta vera, come quella di `../../sotterraneo/0x72/PROVENIENZA.txt`),
+oppure rifare il foglio con un generatore e buttare questo. Il secondo
+è più lavoro ma chiude la questione: `terreni.py` misura la griglia
+dall'alfa e gli attacchi dal disegno, quindi un foglio nuovo con la
+stessa disposizione entra senza toccare una riga di codice.
+
+Il resto della cartella
+-----------------------
+`../non-usati/` tiene otto `Gemini_Generated_Image_*.jpeg` (quelli sì
+generati, e si vede dal nome), `8E9zz.png`, `PVX1O.png`, `log.png` e i
+due `tower_def*.jpeg` che stavano in radice, cioè dentro il bersaglio
+della fattoria. Nessuno di loro ha un foglietto, quindi nessuno di loro
+entra in un atlante.

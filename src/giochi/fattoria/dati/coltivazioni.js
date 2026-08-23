@@ -44,7 +44,7 @@
    Ogni coltura dichiara come si vede mano a mano che cresce: una
    tessera per stadio. Erano **ripieghi** — un germoglio generico, un
    mucchio di fieno — in attesa del foglio dei campi a stadi; il foglio
-   è arrivato (`sorgenti/gfx/campi.png`) ed è cambiata questa tabella e
+   è arrivato (`sorgenti/fattoria/generati/campi.png`) ed è cambiata questa tabella e
    nient'altro, come c'era scritto. La scena disegna il nome che le
    arriva e non sa cosa sia il grano.
 
@@ -116,7 +116,7 @@ export const MINUTO = 60000
    Nove delle quattordici facce erano **già nell'atlante e non le
    nominava nessuno** (le casse del raccolto, la balla, la bottiglia
    del latte). Le altre sei sono un foglio a parte, generato apposta:
-   `strumenti/sprite/sorgenti/oggetti.jpg`, sei oggetti su fondo
+   `sorgenti/fattoria/generati/merci.jpg`, sei oggetti su fondo
    magenta — e il magenta è la ragione per cui si scontornano da soli. */
 export const PRODOTTI = {
   /* dai campi — il silo del raccolto */

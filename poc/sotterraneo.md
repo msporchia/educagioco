@@ -187,7 +187,7 @@ monete che girano, e personaggi animati (un cavaliere, goblin,
 scheletri, orchi, un mostro grosso). L'atlante ritagliato su misura pesa
 **10 KB per 106 pezzi**, incorporato in base64: il file resta uno solo e
 si apre col doppio click. Lo monta `strumenti/sprite/dungeon.py`
-partendo da `strumenti/sprite/sorgenti/0x72/pezzi.json`.
+partendo da `strumenti/sprite/sorgenti/sotterraneo/0x72/pezzi.json`.
 
 Le cose che valgono anche per il prossimo set:
 

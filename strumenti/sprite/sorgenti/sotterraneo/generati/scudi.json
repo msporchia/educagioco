@@ -1,0 +1,21 @@
+{
+  "__": "Il foglietto di scudi.png (vedi ../../../FORMATO.md), il foglio gemello di bottino-e-arredo.png: stesso autore, stessa tela 1254x1254, RGB senza alfa, fondo nero pieno, figure disposte a mano e non su una griglia a passo fisso. LA SCALA NON E' 3 COME bottino-e-arredo.png: quel foglio teneva 29 pezzi sparsi su una tela quasi tutta fondo; questo ne tiene oltre 190 (tre righe di 13 scudi, poi libri, pergamene, sfere, bacchette, clessidra, candelabri, calici, mobilio, pozioni, statue, fontane) — e' un foglio fitto, non un elenco largo, quindi le figure sono piu' piccole in proporzione. Misurato con lo stesso metodo di items.json (confronto con quel che gia' c'e' in pezzi.json: weapon_regular_sword 10x21, l'eroe 16x28): il bounding box di uno scudo sulla tela raw e' 59-70px di lato; a \"scala\": 3 verrebbe 20-27px, piu' grande di uno spadone (11x22) e vicino a un forziere — troppo, per un oggetto che un cavaliere tiene al braccio. A \"scala\": 5 (\"foglio\": [251, 251], 1254/5 arrotondato) gli scudi vengono 13x13-17, in linea con lo spadone e con la meta' dell'altezza dell'eroe, ed e' li' che si e' fermata la ricerca. \"colori\": 0 come bottino-e-arredo.png, e per lo stesso motivo ma piu' forte: qui le tinte diverse sono decine (scudi, libri, gemme, gioielli), e una tavolozza a 12 colori le avrebbe rase tutte sulla tinta del fondo. Il foglio contiene MOLTO di piu' di quello che e' dichiarato qui sotto (mobilio, pozioni, statue, fontane, cerchi magici): questo giro ha ritagliato solo gli scudi richiesti (dal piu' semplice al piu' prezioso, guardando il disegno: legno pieno, legno con umbo, ferro liscio senza blasone, crociato, leone, teschio) piu' una manciata di oggetti da studio chiaramente utili a un sotterraneo (un libro, una sfera di cristallo, una clessidra, un calice). Il resto resta da ritagliare in un giro successivo, quando servira'.",
+  "scala": 5,
+  "foglio": [251, 251],
+  "fondo": "auto",
+  "colori": 0,
+  "cella": [1, 1],
+  "sprite": {
+    "scudo-legno":      { "da": [16, 19],  "cella": [13, 13] },
+    "scudo-borchiato":  { "da": [33, 18],  "cella": [13, 14] },
+    "scudo-ferro":      { "da": [210, 18], "cella": [13, 16] },
+    "scudo-crociato":   { "da": [69, 18],  "cella": [13, 15] },
+    "scudo-leone":      { "da": [105, 19], "cella": [13, 15] },
+    "scudo-teschio":    { "da": [51, 52],  "cella": [13, 17] },
+
+    "libro":            { "da": [16, 73],  "cella": [13, 14] },
+    "sfera-cristallo":  { "da": [16, 93],  "cella": [12, 14] },
+    "clessidra":        { "da": [16, 114], "cella": [11, 15] },
+    "calice":           { "da": [103, 116],"cella": [9, 13] }
+  }
+}

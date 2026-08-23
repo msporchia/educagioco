@@ -16,7 +16,7 @@ si sanno guardando:
     cadono le bande e i fotogrammi quando si scrive il suo foglietto la
     prima volta.
 
-    python3 strumenti/sprite/attori.py sorgenti/cane-bobtail2.png
+    python3 strumenti/sprite/attori.py sorgenti/fattoria/generati/cane-bobtail2.png
 """
 import sys
 from collections import Counter

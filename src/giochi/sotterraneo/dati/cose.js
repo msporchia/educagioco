@@ -66,7 +66,7 @@
    degli oggetti equipaggiano solo le mani, e panciotto, corazza e manto
    restavano **emoji** — un giubbotto da cantiere e uno scudo prestato,
    in mezzo a uno schermo disegnato a mano. Adesso il pezzo c'è
-   (`item3.png`, banda delle armature e banda dei mantelli), e i tre si
+   (`armature-e-vesti.png`, banda delle armature e banda dei mantelli), e i tre si
    leggono come una scala senza dover leggere il numero: cuoio, piastre,
    manto.
 
@@ -315,7 +315,7 @@ export const COSE = {
   /* Portava addosso il teschio **dell'arredamento** — lo stesso pezzo
      che sta per terra in una stanza — perché quando è nato non c'era
      nient'altro: al dito si vedeva un soprammobile. Adesso c'è un
-     ciondolo vero (`item3.png`, la banda degli amuleti), e la chiave
+     ciondolo vero (`armature-e-vesti.png`, la banda degli amuleti), e la chiave
      resta quella: gli id non si rinominano. */
   'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'amuleto-teschio',
                          dove: 'dito', gemme: 1, prezzo: 32,

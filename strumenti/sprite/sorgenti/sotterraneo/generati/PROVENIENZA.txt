@@ -1,0 +1,29 @@
+Fogli generati — il sotterraneo
+===============================
+
+Fogli prodotti con un generatore di immagini, non presi da nessun set di
+terzi. Stanno accanto a `../0x72/`, che invece è CC0 e ha le sue carte:
+i due non vanno confusi, ed è il motivo per cui non stanno più nella
+stessa cartella.
+
+Cosa c'è dentro
+---------------
+  bottino-e-arredo.png   48 pezzi: armi delle quattro famiglie, pozioni,
+                         gioielli, chiavi, torce, arredo di scena, porte,
+                         forzieri, monete e gemme
+  scudi.png              i sei scudi, più libro, sfera, clessidra, calice
+  armature-e-vesti.png   le quattro cose da mettere sul corpo, una spada
+                         col nome proprio e due ciondoli
+  mostri-1.png           27 creature, quattro-cinque fotogrammi l'una
+  mostri-2.png           altre 27, stessa mano
+
+Dei 54 mostri ne sono ritagliati 11: quello che nessuno nomina non entra
+nel file unico, e ogni ritaglio si paga in base64 dentro
+`src/giochi/sotterraneo/dati/atlante.js`. Quali sono e perché lo dicono i
+due foglietti.
+
+Perché non c'è il prompt
+------------------------
+Non è stato conservato. Vale quello che vale per la fattoria: rigenerare
+nello stesso stile è la cosa che serve ogni volta che manca un pezzo, e
+senza il prompt si riparte a occhio.

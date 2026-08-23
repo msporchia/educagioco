@@ -92,7 +92,7 @@
     "recinto_incrociato_giunto": {"da": [4, 17], "cella": [16, 32]},
     "recinto_asse": {"da": [26, 4], "cella": [16, 64]},
     "siepe_tonda": {"da": [0, 16], "cella": [32, 16]},
-    "__cespuglio": "TOLTO. Il ritaglio (da [5,16], cella [48,32]) prendeva l'albero tondo — che è già «albero», alle stesse identiche coordinate — più una casella di fogliame accanto, e a provino si vedeva un albero con un rettangolo verde appiccicato a destra. Non è un ritaglio da correggere: un cespuglio, in questo foglio, non c'è. Quello che sembra fogliame sono tessere di terreno fatte per affiancarsi, e ritagliarne una da sola dà un quadrato con gli spigoli. I cespugli veri stanno in oggetti_2 (arbusto*), ed è di lì che pesca il catalogo.",
+    "__cespuglio": "TOLTO. Il ritaglio (da [5,16], cella [48,32]) prendeva l'albero tondo — che è già «albero», alle stesse identiche coordinate — più una casella di fogliame accanto, e a provino si vedeva un albero con un rettangolo verde appiccicato a destra. Non è un ritaglio da correggere: un cespuglio, in questo foglio, non c'è. Quello che sembra fogliame sono tessere di terreno fatte per affiancarsi, e ritagliarne una da sola dà un quadrato con gli spigoli. I cespugli veri stanno in giardino (arbusto*), ed è di lì che pesca il catalogo.",
     "pianta_germoglio": {"da": [35, 0], "cella": [16, 16]},
     "pianta_vaso2": {"da": [35, 1], "cella": [16, 16]},
     "fioriera": {"da": [34, 2], "cella": [32, 16]},
