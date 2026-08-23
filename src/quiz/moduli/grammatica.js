@@ -236,7 +236,41 @@ const CONFUSIONE_INVERSA = {}
 for (const [categoria, sbagli] of Object.entries(CONFUSIONI_ARTICOLO))
   for (const art of sbagli) (CONFUSIONE_INVERSA[art] ??= []).push(categoria)
 
-/* ── che parte del discorso è ── */
+/* ── che parte del discorso è ──
+
+   OGNI PAROLA STA DENTRO UNA FRASE, E LA FRASE È SCRITTA A MANO. Prima
+   si mostrava la parola nuda — «che parte del discorso è "lo"?» — e
+   quella domanda **non aveva una risposta giusta**: «lo» è articolo in
+   «lo zaino» e pronome in «lo vedo», e lo stesso vale per «la» («la
+   porta» / «la vedo»), «gli» («gli amici» / «gli ho detto»), «legge»
+   («il papà legge» / «la legge»). Un bambino che rispondeva l'altra
+   aveva ragione lui, e siccome `pronome` non è nemmeno fra le risposte
+   possibili si trovava davanti a una domanda senza uscita.
+
+   In più c'era il guaio tipografico, che da solo bastava: nei caratteri
+   di sistema la elle minuscola e la i maiuscola sono **lo stesso
+   glifo**, quindi «lo» nudo si legge anche «Io» — e «Io» è un pronome,
+   che fra le cinque risposte non c'è.
+
+   Le frasi non si compongono da una regola: si scrivono una per una,
+   come le quattro forme degli aggettivi qui sotto. Una regola sola le
+   avrebbe scritte storte proprio dove serve — «lo vedo» è una frase
+   perfetta e darebbe la risposta sbagliata. Ognuna è corta come deve
+   leggerla un bambino di terza (la difficoltà sta nella grammatica, non
+   nella lettura) e **rende la parola non ambigua**: è tutto il punto.
+   La parola compare sempre in mezzo e minuscola, mai in testa, perché
+   la maiuscola d'inizio frase è metà del guaio tipografico.
+
+   L'EMOJI È SPARITA, e non per fare posto. Ce l'avevano tutti e otto i
+   nomi e nessun'altra parola: chi aveva capito quello rispondeva
+   «nome» ogni volta che c'era un disegno, senza leggere niente. Otto
+   domande su trentasei regalavano la risposta.
+
+   L'`aiuto` è scritto a mano anche lui, e parla di *questa* frase — «lo
+   sta davanti al nome zaino» — perché con la frase in mano la regola
+   generale si può far vedere invece che enunciare. Il `perche` dei
+   tasti sbagliati fa il mestiere opposto e dice cos'è la parte scelta:
+   erano la stessa identica stringa, e a schermo si leggeva due volte. */
 const PARTI = ['nome', 'verbo', 'aggettivo', 'articolo', 'preposizione']
 const AIUTO_PARTI = {
   nome: 'il nome indica una persona, un animale o una cosa',
@@ -245,43 +279,53 @@ const AIUTO_PARTI = {
   articolo: "l'articolo va sempre davanti al nome: il, lo, la, un…",
   preposizione: 'la preposizione lega le parole della frase: di, a, da, in, con, su, per, tra',
 }
+/* «non è un verbo» / «non è una preposizione»: l'articolo davanti alla
+   parte del discorso, che è l'unica irregolarità di questo elenco */
+const UN_UNA = {
+  nome: 'un nome', verbo: 'un verbo', aggettivo: 'un aggettivo',
+  articolo: 'un articolo', preposizione: 'una preposizione',
+}
 const PAROLE_PARTI = [
-  { parola: 'gatto', parte: 'nome', em: '🐱' },
-  { parola: 'cane', parte: 'nome', em: '🐶' },
-  { parola: 'albero', parte: 'nome', em: '🌳' },
-  { parola: 'scuola', parte: 'nome', em: '🏫' },
-  { parola: 'bambino', parte: 'nome', em: '👦' },
-  { parola: 'sole', parte: 'nome', em: '☀️' },
-  { parola: 'mare', parte: 'nome', em: '🌊' },
-  { parola: 'libro', parte: 'nome', em: '📖' },
-  { parola: 'corre', parte: 'verbo' },
-  { parola: 'mangia', parte: 'verbo' },
-  { parola: 'salta', parte: 'verbo' },
-  { parola: 'dorme', parte: 'verbo' },
-  { parola: 'gioca', parte: 'verbo' },
-  { parola: 'canta', parte: 'verbo' },
-  { parola: 'legge', parte: 'verbo' },
-  { parola: 'nuota', parte: 'verbo' },
-  { parola: 'bello', parte: 'aggettivo' },
-  { parola: 'grande', parte: 'aggettivo' },
-  { parola: 'piccolo', parte: 'aggettivo' },
-  { parola: 'veloce', parte: 'aggettivo' },
-  { parola: 'rosso', parte: 'aggettivo' },
-  { parola: 'felice', parte: 'aggettivo' },
-  { parola: 'alto', parte: 'aggettivo' },
-  { parola: 'simpatico', parte: 'aggettivo' },
-  { parola: 'il', parte: 'articolo' },
-  { parola: 'la', parte: 'articolo' },
-  { parola: 'un', parte: 'articolo' },
-  { parola: 'gli', parte: 'articolo' },
-  { parola: 'una', parte: 'articolo' },
-  { parola: 'lo', parte: 'articolo' },
-  { parola: 'con', parte: 'preposizione' },
-  { parola: 'su', parte: 'preposizione' },
-  { parola: 'per', parte: 'preposizione' },
-  { parola: 'tra', parte: 'preposizione' },
-  { parola: 'di', parte: 'preposizione' },
-  { parola: 'da', parte: 'preposizione' },
+  { parola: 'gatto', parte: 'nome', frase: 'Il gatto dorme sul divano.', aiuto: '«gatto» è un animale, e gli animali, le persone e le cose sono nomi' },
+  { parola: 'cane', parte: 'nome', frase: 'Il cane corre nel prato.', aiuto: '«cane» è un animale, e gli animali, le persone e le cose sono nomi' },
+  { parola: 'albero', parte: 'nome', frase: "Nel giardino c'è un albero grande.", aiuto: '«albero» è una cosa che si può indicare col dito: le cose sono nomi' },
+  { parola: 'scuola', parte: 'nome', frase: 'La scuola comincia a settembre.', aiuto: '«scuola» è un posto, e i posti si contano fra le cose: sono nomi' },
+  { parola: 'bambino', parte: 'nome', frase: 'Il bambino mangia una mela.', aiuto: '«bambino» è una persona, e le persone sono nomi' },
+  { parola: 'sole', parte: 'nome', frase: 'Il sole scalda la spiaggia.', aiuto: '«sole» è una cosa, anche se non si tocca: le cose sono nomi' },
+  { parola: 'mare', parte: 'nome', frase: "D'estate andiamo al mare.", aiuto: '«mare» è un posto: i posti e le cose sono nomi' },
+  { parola: 'libro', parte: 'nome', frase: 'Ho letto un libro bellissimo.', aiuto: '«libro» è una cosa, e le cose sono nomi' },
+  { parola: 'corre', parte: 'verbo', frase: 'Luca corre nel cortile.', aiuto: '«corre» dice che cosa fa Luca: è un verbo' },
+  { parola: 'mangia', parte: 'verbo', frase: 'La nonna mangia la torta.', aiuto: '«mangia» dice che cosa fa la nonna: è un verbo' },
+  { parola: 'salta', parte: 'verbo', frase: 'Il gatto salta sul muro.', aiuto: '«salta» dice che cosa fa il gatto: è un verbo' },
+  { parola: 'dorme', parte: 'verbo', frase: 'Il cane dorme nella cuccia.', aiuto: '«dorme» dice che cosa fa il cane: è un verbo' },
+  { parola: 'gioca', parte: 'verbo', frase: 'Sara gioca con le bambole.', aiuto: '«gioca» dice che cosa fa Sara: è un verbo' },
+  { parola: 'canta', parte: 'verbo', frase: 'Il coro canta una canzone.', aiuto: '«canta» dice che cosa fa il coro: è un verbo' },
+  /* qui la frase non è un contorno: «la legge» sarebbe un nome, e senza
+     il papà davanti la domanda non avrebbe una risposta sola */
+  { parola: 'legge', parte: 'verbo', frase: 'Il papà legge il giornale.', aiuto: '«legge» dice che cosa fa il papà: è un verbo — in «la legge dello Stato» sarebbe un nome' },
+  { parola: 'nuota', parte: 'verbo', frase: 'Il pesce nuota nello stagno.', aiuto: '«nuota» dice che cosa fa il pesce: è un verbo' },
+  { parola: 'bello', parte: 'aggettivo', frase: 'Il quadro è bello.', aiuto: "«bello» dice com'è il quadro: è un aggettivo" },
+  { parola: 'grande', parte: 'aggettivo', frase: 'Il mio cane è grande.', aiuto: "«grande» dice com'è il cane: è un aggettivo" },
+  { parola: 'piccolo', parte: 'aggettivo', frase: 'Il topo è piccolo.', aiuto: "«piccolo» dice com'è il topo: è un aggettivo" },
+  { parola: 'veloce', parte: 'aggettivo', frase: 'Il treno è veloce.', aiuto: "«veloce» dice com'è il treno: è un aggettivo" },
+  { parola: 'rosso', parte: 'aggettivo', frase: 'Ho comprato un quaderno rosso.', aiuto: "«rosso» dice com'è il quaderno: è un aggettivo" },
+  { parola: 'felice', parte: 'aggettivo', frase: 'La bambina è felice.', aiuto: "«felice» dice com'è la bambina: è un aggettivo" },
+  { parola: 'alto', parte: 'aggettivo', frase: 'Il palazzo è alto.', aiuto: "«alto» dice com'è il palazzo: è un aggettivo" },
+  { parola: 'simpatico', parte: 'aggettivo', frase: 'Il mio maestro è simpatico.', aiuto: "«simpatico» dice com'è il maestro: è un aggettivo" },
+  { parola: 'il', parte: 'articolo', frase: 'Ho perso il cappello.', aiuto: '«il» sta davanti al nome «cappello»: è un articolo' },
+  /* «la» e «lo» sono i due che hanno fatto nascere tutto questo: da
+     soli sono articolo o pronome a seconda di quello che viene dopo */
+  { parola: 'la', parte: 'articolo', frase: 'Apro la finestra.', aiuto: '«la» sta davanti al nome «finestra»: è un articolo — in «la vedo» sarebbe un pronome' },
+  { parola: 'un', parte: 'articolo', frase: 'Ho visto un cavallo.', aiuto: '«un» sta davanti al nome «cavallo»: è un articolo' },
+  { parola: 'gli', parte: 'articolo', frase: 'Ho salutato gli amici.', aiuto: '«gli» sta davanti al nome «amici»: è un articolo — in «gli ho detto tutto» sarebbe un pronome' },
+  { parola: 'una', parte: 'articolo', frase: 'Mangio una pera.', aiuto: '«una» sta davanti al nome «pera»: è un articolo' },
+  { parola: 'lo', parte: 'articolo', frase: 'Metto lo zaino in spalla.', aiuto: '«lo» sta davanti al nome «zaino»: è un articolo — in «lo vedo» sarebbe un pronome' },
+  { parola: 'con', parte: 'preposizione', frase: 'Gioco con il mio cane.', aiuto: '«con» lega «gioco» al cane: è una preposizione' },
+  { parola: 'su', parte: 'preposizione', frase: 'Il gatto salta su una sedia.', aiuto: '«su» dice dove salta il gatto e lega le parole: è una preposizione' },
+  { parola: 'per', parte: 'preposizione', frase: 'Questo regalo è per te.', aiuto: '«per» dice per chi è il regalo e lega le parole: è una preposizione' },
+  { parola: 'tra', parte: 'preposizione', frase: 'Ci vediamo tra due ore.', aiuto: '«tra» lega «ci vediamo» alle due ore: è una preposizione' },
+  { parola: 'di', parte: 'preposizione', frase: 'Questa è la penna di Marco.', aiuto: '«di» dice di chi è la penna e lega le parole: è una preposizione' },
+  { parola: 'da', parte: 'preposizione', frase: 'Torno da scuola alle quattro.', aiuto: '«da» dice da dove si torna e lega le parole: è una preposizione' },
 ]
 
 /* ── la concordanza: nome e aggettivo devono avere lo stesso genere
@@ -538,18 +582,22 @@ class Grammatica extends Modulo {
     })
   }
 
-  /* che parte del discorso è una parola: i falsi sono le altre
-     categorie, perché è proprio lì che un bambino esita */
+  /* che parte del discorso è una parola **dentro una frase**: fuori da
+     una frase metà di queste parole non ha una risposta sola (vedi il
+     cappello di PAROLE_PARTI). I falsi sono le altre categorie, perché
+     è proprio lì che un bambino esita, e ognuno si porta dietro cos'è
+     la parte che ha scelto — l'aiuto invece dice questa frase qui. */
   partiDelDiscorso(sorte) {
     const v = sorte.uno(PAROLE_PARTI)
     const altre = PARTI.filter(p => p !== v.parte)
     return domanda({
-      testo: `Che parte del discorso è «${v.parola}»?`,
-      soggetto: v.em ? { emoji: v.em } : undefined,
+      testo: `Che parte del discorso è «${v.parola}» in questa frase?`,
+      soggetto: { testo: v.frase, evidenzia: v.parola },
       buona: testo(v.parte),
-      falsi: sorte.alcuni(altre, Math.min(3, altre.length)).map(p => testo(p, AIUTO_PARTI[v.parte])),
+      falsi: sorte.alcuni(altre, Math.min(3, altre.length))
+        .map(p => testo(p, `«${v.parola}» qui non è ${UN_UNA[p]}: ${AIUTO_PARTI[p]}`)),
       chiave: 'gram:parti-del-discorso',
-      aiuto: AIUTO_PARTI[v.parte],
+      aiuto: v.aiuto,
       sorte,
     })
   }

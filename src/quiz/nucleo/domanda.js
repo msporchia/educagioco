@@ -9,7 +9,9 @@
 
      {
        testo:    'Quale parola è scritta giusta?',   // la consegna
-       soggetto: { testo: '🕐' } | { scena: {…} },   // opzionale: la cosa da guardare
+       soggetto: { testo: '…' } | { scena: {…} },   // opzionale: la cosa da guardare
+                 // e una frase può avere una parola in rilievo:
+                 // { testo: 'Metto lo zaino in spalla.', evidenzia: 'lo' }
        risposte: [ Risposta, … ],                    // da 2 a 6
        giusta:   1,                                  // indice della buona
        chiave:   'orto:gn',                          // il CONCETTO, non l'istanza
@@ -47,6 +49,25 @@
    e può portarsi dietro un `perche`, che si legge solo se il bambino
    sceglie proprio quella: «qui manca il riporto» vale dieci volte
    «sbagliato».
+
+   UN SOGGETTO PUÒ ESSERE UNA FRASE, CON DENTRO UNA PAROLA IN RILIEVO.
+   `{ testo: 'Metto lo zaino in spalla.', evidenzia: 'lo' }` — la frase si
+   legge intera e la parola di cui si parla si vede a colpo d'occhio.
+   Serve dove **la parola da sola non ha una risposta**: «che parte del
+   discorso è "lo"?» non ne ha nessuna, perché «lo» è articolo in «lo
+   zaino» e pronome in «lo vedo», e il bambino che rispondeva l'altra
+   aveva ragione lui. Nei caratteri di sistema si aggiunge il guaio di
+   sopra: la elle minuscola e la i maiuscola sono lo stesso glifo, quindi
+   «lo» nudo si legge anche «Io».
+
+   L'evidenza è **dato, mai HTML**: `evidenzia` porta la parola così
+   com'è scritta nella frase, e chi mette in scena la ritaglia da sé
+   (`evidenziando` qui sotto). La parola dev'esserci **esattamente una
+   volta**, come parola intera — con due occorrenze non si saprebbe
+   quale delle due si sta chiedendo, con zero si è sbagliato a scriverla
+   e a schermo non si vedrebbe niente di strano. È l'unico modo che un
+   controllo automatico ha di accorgersi di un refuso su una frase su
+   trentasei: lo fa `guastiDi`.
 
    UNA FIGURA PUÒ AVERE IL SUO NOME SOTTO. `conNome` aggiunge un `nome`
    accanto all'icona o al disegno — `{ emoji:'🦁', nome:'leone' }`,
@@ -98,6 +119,40 @@ export const scena = (s, perche) => perche ? { scena: s, perche } : { scena: s }
    giorno che una domanda mescola tasti scritti e tasti disegnati non si
    capisce più quale sia quale. */
 export const conNome = (risposta, nome) => ({ ...risposta, nome: String(nome) })
+
+/* ── la parola in rilievo dentro una frase ──
+   Pura, e qui invece che dentro `Domanda.vue`, per i due motivi di
+   sempre: la stessa frase va ritagliata uguale anche dalla scheda in
+   DOM puro (`grafica/scheda.js`), e una regola chiusa in un `.vue` non
+   si prova senza un browser.
+
+   Il confine di parola non è `\b`: in italiano l'apostrofo attacca
+   («l'albero» non contiene la parola «albero»), e `\b` lo tratterebbe
+   come uno spazio. Le lettere accentate, dall'altro lato, `\b` le
+   considererebbe confini. Quindi si guarda il carattere prima e quello
+   dopo, e vale come «dentro un'altra parola» qualunque lettera o
+   apostrofo.
+
+   Con zero o più di una occorrenza non si evidenzia niente e la frase
+   resta intera: a schermo si perde il rilievo, non il testo. Il guasto
+   lo dice `guastiDi`, che è il posto dove va detto. */
+const ATTACCATA = /[\p{L}\p{M}'’]/u
+
+function doveCompare(frase, parola) {
+  const dentro = c => c !== undefined && ATTACCATA.test(c)
+  const punti = []
+  for (let i = frase.indexOf(parola); i >= 0; i = frase.indexOf(parola, i + 1))
+    if (!dentro(frase[i - 1]) && !dentro(frase[i + parola.length])) punti.push(i)
+  return punti
+}
+
+export function evidenziando(frase, parola) {
+  const f = String(frase ?? '')
+  const p = String(parola ?? '')
+  const punti = p ? doveCompare(f, p) : []
+  if (punti.length !== 1) return { prima: f, parola: '', dopo: '', volte: punti.length }
+  return { prima: f.slice(0, punti[0]), parola: p, dopo: f.slice(punti[0] + p.length), volte: 1 }
+}
 
 /* ── la fabbrica della domanda ──
    Prende la risposta giusta e i falsi già pronti, li mescola con la
@@ -170,10 +225,16 @@ export const FRETTA_MAX = 4          // oltre non si sale: sarebbe un'accusa, no
 const quanteParole = parti =>
   parti.filter(Boolean).join(' ').trim().split(/\s+/).filter(Boolean).length
 
+/* Il soggetto conta se è scritto: da quando una domanda può mettere lì
+   una frase intera — «che parte del discorso è "lo" in questa frase?» —
+   la roba da leggere sta per metà fuori dalla consegna, e senza questa
+   riga la soglia direbbe «hai tirato a caso» a chi ha letto tutto. Il
+   soggetto disegnato non si conta: guardare non è leggere. */
 export function tempoDiLettura(d) {
   if (!d) return FRETTA
   return Math.min(FRETTA_MAX,
-    FRETTA + quanteParole([d.testo, ...(d.risposte || []).map(r => r?.testo)]) * A_PAROLA)
+    FRETTA + quanteParole([d.testo, d.soggetto?.testo,
+      ...(d.risposte || []).map(r => r?.testo)]) * A_PAROLA)
 }
 
 /* ── COSA SI LEGGE DOPO AVER SBAGLIATO ─────────────────────────────
@@ -297,6 +358,22 @@ export function guastiDi(d, { pittori = {} } = {}) {
       dice(forme.length === 1, 'il soggetto deve avere UNA fra testo/emoji/scena')
       if (d.soggetto.scena) dice(!!pittori[d.soggetto.scena.che], `nessun pittore per la scena «${d.soggetto.scena.che}»`)
       guastiDelNome(d.soggetto, 'soggetto')
+
+      /* la parola in rilievo dev'esserci, e una volta sola: è il solo
+         controllo che può accorgersi di una frase scritta storta fra
+         trentasei, e senza di lui a schermo si vedrebbe una frase
+         perfettamente normale con una parola non evidenziata */
+      if (d.soggetto.evidenzia !== undefined) {
+        dice(typeof d.soggetto.evidenzia === 'string' && d.soggetto.evidenzia.trim().length > 0,
+          'soggetto: «evidenzia» vuoto')
+        dice(typeof d.soggetto.testo === 'string',
+          'soggetto: «evidenzia» senza una frase in cui evidenziare')
+        if (typeof d.soggetto.testo === 'string' && typeof d.soggetto.evidenzia === 'string') {
+          const { volte } = evidenziando(d.soggetto.testo, d.soggetto.evidenzia)
+          dice(volte === 1,
+            `soggetto: «${d.soggetto.evidenzia}» compare ${volte} volte in «${d.soggetto.testo}» — ne serve esattamente una`)
+        }
+      }
     }
 
     /* due risposte identiche sono un guasto grave: la domanda ha due

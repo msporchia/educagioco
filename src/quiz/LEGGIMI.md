@@ -26,6 +26,16 @@ Tre file per capire tutto, in quest'ordine:
   in una domanda di lingua straniera la stessa aggiunta regala la
   risposta, e nessun controllo automatico se ne accorge. Il perché per
   esteso sta in testa a quel file.
+  Un soggetto scritto può essere **una frase con una parola in
+  rilievo** — `{ testo: 'Metto lo zaino in spalla.', evidenzia: 'lo' }`
+  — e serve dove la parola da sola non ha una risposta: «che parte del
+  discorso è "lo"?» non ne ha nessuna, perché «lo» è articolo in «lo
+  zaino» e pronome in «lo vedo». Nel dato non va **mai** HTML: c'è la
+  parola, il grassetto lo mettono le due messe in scena
+  (`Domanda.vue` e `grafica/scheda.js`, che ritagliano tutte e due con
+  `evidenziando`). La parola dev'esserci **esattamente una volta**, come
+  parola intera, e `guastiDi` lo controlla: è l'unico modo di
+  accorgersi di un refuso su una frase fra trentasei.
 - `nucleo/modulo.js` — la classe base. Un modulo è
   `genera(grado, sorte, tipo)` e basta: nessuno stato, nessuna memoria,
   nessun punteggio. Le tipologie che sa fare le dichiara (`tipi`), e

@@ -30,6 +30,7 @@
 
 import { dipingi } from './riquadro.js'
 import { sorteQualunque } from '../nucleo/sorte.js'
+import { evidenziando } from '../nucleo/domanda.js'
 
 /* Le misure sono quelle di `Domanda.vue`, e per lo stesso motivo: i
    disegni fissi a 148 e 118 pixel mandavano metà scheda fuori da uno
@@ -77,6 +78,12 @@ const STILE = `
 .quiz-soggetto canvas {
   width: clamp(76px, calc(17 * var(--qz-h)), 148px); height: auto; aspect-ratio: 1;
 }
+/* la frase è da leggere, non da guardare: più piccola della parola sola
+   che il corpo qui sopra ha in mente, con la parola in rilievo grossa e
+   sottolineata — il colore da solo non si vede su ogni schermo */
+.quiz-soggetto.frase { font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4; }
+.quiz-spicca { color: #ffd58a; font-weight: 800;
+  border-bottom: 2px solid #ffb43f; padding-bottom: 1px; }
 .quiz-risposte { display: grid; gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px); }
 .quiz-risposte.due   { grid-template-columns: 1fr 1fr; }
 .quiz-risposte.tre   { grid-template-columns: 1fr 1fr 1fr; }
@@ -131,7 +138,19 @@ function riempi(el, cosa, pittori) {
     el.classList.add('emoji')
     el.appendChild(document.createTextNode(cosa.emoji))
   } else if (cosa.testo !== undefined) {
-    el.appendChild(document.createTextNode(cosa.testo))
+    /* una frase con la parola in rilievo: tre nodi di testo e un <b> in
+       mezzo, mai una stringa di HTML — nel dato la parola è una parola,
+       e il grassetto lo mette qui */
+    const { prima, parola, dopo } = evidenziando(cosa.testo, cosa.evidenzia)
+    if (parola) {
+      el.classList.add('frase')
+      const b = document.createElement('b')
+      b.className = 'quiz-spicca'
+      b.textContent = parola
+      el.append(prima, b, dopo)
+    } else {
+      el.appendChild(document.createTextNode(cosa.testo))
+    }
   } else {
     const cv = document.createElement('canvas')
     el.appendChild(cv)

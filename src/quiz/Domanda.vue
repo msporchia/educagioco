@@ -57,7 +57,7 @@ import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota } from './memoria.js'
 import { guardaComeVa } from './allarme.js'
-import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, PONDERA }
+import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando, PONDERA }
   from './nucleo/domanda.js'
 import { pesoDellaFretta } from './fretta.js'
 
@@ -156,6 +156,16 @@ const ingrandito = ref(false)
 const teloZoom = ref(null)
 
 const risposte = computed(() => props.domanda.risposte || [])
+/* ── la frase col rilievo ──
+   Un soggetto scritto può essere una frase con dentro la parola di cui
+   si parla — «che parte del discorso è "lo" in questa frase?» — e la
+   parola si ritaglia qui. Il taglio sta in `nucleo/domanda.js` perché
+   la stessa frase la deve ritagliare uguale anche la scheda in DOM
+   puro, e perché una regola dentro un `.vue` non si prova senza un
+   browser. Nel dato non c'è nessun HTML: c'è la parola, e il grassetto
+   lo mette la messa in scena. */
+const frase = computed(() =>
+  evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
 const lunghe = computed(() => risposte.value.some(r => (r.testo || '').length > 13))
 const colonne = computed(() =>
   lunghe.value ? 'lunghe' : risposte.value.length === 2 ? 'due'
@@ -383,6 +393,11 @@ onUnmounted(() => clearTimeout(cieca))
           <span class="qz-lente" aria-hidden="true">🔍</span>
         </button>
         <span v-else-if="domanda.soggetto.emoji" class="qz-emoji">{{ domanda.soggetto.emoji }}</span>
+        <!-- una frase con la parola in rilievo: i tre pezzi stanno
+             attaccati apposta, uno spazio in più qui dentro si vedrebbe
+             in mezzo alla frase -->
+        <span v-else-if="frase.parola" class="qz-frase"
+        >{{ frase.prima }}<b class="qz-spicca">{{ frase.parola }}</b>{{ frase.dopo }}</span>
         <span v-else>{{ domanda.soggetto.testo }}</span>
         <span v-if="domanda.soggetto.nome" class="qz-nome grande">{{ domanda.soggetto.nome }}</span>
       </div>
@@ -518,6 +533,21 @@ onUnmounted(() => clearTimeout(cieca))
    pochi: a sei anni si guarda l'immagine, non la si sbircia. Grande
    quanto il riquadro concede, che è la stessa regola del disegno. */
 .qz-emoji { font-size: clamp(38px, 11vw, 56px); }
+/* ── LA FRASE DA LEGGERE ──
+   Il corpo del soggetto è tarato su un'emoji o su una parola sola: sei
+   parole a trenta pixel diventano tre righe, e una frase su tre righe
+   non si legge, si scorre. Quindi più piccola e meno grassa della
+   parola in rilievo, che invece resta grossa — è quella su cui si
+   risponde, e deve saltare all'occhio senza doverla cercare.
+   Il colore non basta da solo (c'è chi non lo distingue, e ci sono i
+   telefoni al sole): sotto la parola c'è anche una riga. */
+.qz-frase {
+  font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4;
+}
+.qz-spicca {
+  color: #ffd58a; font-weight: 800;
+  border-bottom: 2px solid #ffb43f; padding-bottom: 1px;
+}
 .qz-guarda {
   position: relative; display: block; padding: 0; border: 0; cursor: zoom-in;
   background: none; color: inherit; font: inherit; line-height: 0;

@@ -116,7 +116,7 @@ const REGOLE = {
       ['sette', ['sete', 'settte'], '7️⃣'], ['babbo', ['babo', 'bbabbo'], '👨'],
       ['pizza', ['piza', 'pizzza'], '🍕'], ['tartaruga', ['tartarruga', 'tarttaruga'], '🐢'],
       ['zucchero', ['zuchero', 'zuccero'], '🍬'], ['sacco', ['saco', 'sacchò'], '🎒'],
-      ['mamma', ['mama', 'mammma'], '👩'], ['neve', ['nevve', 'nnevе'], '❄️'],
+      ['mamma', ['mama', 'mammma'], '👩'], ['neve', ['nevve', 'nneve'], '❄️'],
       ['barca', ['barcca', 'bbarca'], '⛵'], ['penna', ['pena', 'pennna'], '🖊️'],
       ['coltello', ['coltelo', 'colltello'], '🔪'], ['formica', ['formicca', 'fformica'], '🐜'],
       ['scoppio', ['scopio', 'scoppjo'], '💥'], ['pennello', ['penello', 'pennelo'], '🖌️'],
