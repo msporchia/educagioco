@@ -46,6 +46,13 @@ const MESI = [
   { nome: 'dicembre', giorni: 31 },
 ]
 
+/* «ad aprile», «a ottobre»: la d eufonica solo davanti alla stessa
+   vocale, che è la regola che si usa oggi. Due mesi su dodici la
+   vogliono — aprile e agosto — e senza si legge «a aprile», che a un
+   bambino che sta imparando a leggere fa inciampare la frase prima
+   ancora di arrivare alla domanda. */
+const aMese = nome => (nome.startsWith('a') ? 'ad ' : 'a ') + nome
+
 /* le quattro stagioni, con dove cominciano (mese 1-12, giorno): l'ordine
    conta, perché la vicinanza (±1) è quella che genera i falsi «stagione
    confinante» */
@@ -479,7 +486,27 @@ class Calendario extends Modulo {
     })
   }
 
-  /* quanti mesi mancano da un mese all'altro */
+  /* ── quanti mesi mancano, a partire da adesso ──
+     Diceva «Quanti mesi mancano da marzo a gennaio?», e sono due
+     difetti in una riga sola. Il primo: **da marzo a gennaio non si
+     va avanti**, si va indietro — a meno di sottintendere il giro
+     dell'anno, che nella domanda non c'era scritto da nessuna parte.
+     Il conto giusto era 10 e chi rispondeva 2 aveva contato una cosa
+     sensata: la domanda aveva due risposte difendibili, ed è il
+     difetto peggiore che una domanda possa avere. Tanto è vero che il
+     falso si chiamava «hai contato dalla parte sbagliata», cioè
+     sapevamo che la parte non era dichiarata.
+
+     Il secondo: «mancano **da** X» non è italiano che si parla —
+     mancano *a* qualcosa, a partire da un momento. Ed è la stessa cosa
+     detta bene: «Siamo a marzo» mette il presente, e da un presente si
+     manca solo in avanti. Il giro dell'anno smette di essere un
+     sottinteso e diventa il modo naturale di leggerla, come chiedere a
+     settembre quanto manca a Natale.
+
+     La sorella qui sopra (`durataGiorni`) aveva già fatto la stessa
+     scelta per un'ambiguità diversa — «passano» e non «ci sono», per
+     non contare due volte il giorno di partenza. */
   durataMesi(sorte) {
     const idx1 = sorte.fra(0, 11)
     let idx2 = sorte.fra(0, 11)
@@ -489,7 +516,9 @@ class Calendario extends Modulo {
 
     const usatiNum = new Set([giusto])
     const principali = []
-    if (!usatiNum.has(erroreDirezione)) { usatiNum.add(erroreDirezione); principali.push(testo(String(erroreDirezione), 'hai contato dalla parte sbagliata')) }
+    /* adesso è un errore vero e non una lettura possibile: dichiarato
+       il presente, all'indietro non si manca */
+    if (!usatiNum.has(erroreDirezione)) { usatiNum.add(erroreDirezione); principali.push(testo(String(erroreDirezione), 'hai contato all\'indietro: «manca» vuol dire in avanti')) }
     for (const off of [1, -1]) {
       const n = giusto + off
       if (n >= 1 && n <= 12 && !usatiNum.has(n)) { usatiNum.add(n); principali.push(testo(String(n))) }
@@ -498,11 +527,18 @@ class Calendario extends Modulo {
     for (const n of sorte.distrattori(pool, Math.max(0, 3 - principali.length))) principali.push(testo(String(n)))
 
     return domanda({
-      testo: `Quanti mesi mancano da ${MESI[idx1].nome} a ${MESI[idx2].nome}?`,
+      testo: `Siamo ${aMese(MESI[idx1].nome)}. Quanti mesi mancano ${aMese(MESI[idx2].nome)}?`,
       buona: testo(String(giusto)),
       falsi: sorte.mescola(principali).slice(0, 3),
       chiave: 'cal:durata',
-      aiuto: "conta i mesi in avanti, uno per uno, dal primo nome all'altro",
+      /* corto si conta, lungo si dice come si conta: undici nomi in
+         fila non sono un aiuto, sono la risposta scritta male */
+      aiuto: giusto <= 4
+        ? 'conta in avanti: ' +
+          Array.from({ length: giusto }, (_, i) => MESI[(idx1 + i + 1) % 12].nome).join(', ') +
+          ` → ${giusto}`
+        : `conta i mesi in avanti da ${MESI[idx1].nome}, uno per uno` +
+          (idx2 < idx1 ? ' — e dopo dicembre si ricomincia da gennaio' : ''),
       sorte,
     })
   }
