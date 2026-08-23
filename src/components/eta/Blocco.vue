@@ -25,6 +25,14 @@ defineProps({
      si apre: un riquadro identico agli altri che non risponde al dito
      è peggio di uno che dichiara di essere una riga e basta. */
   apribile: { type: Boolean, default: true },
+  /* ── QUI DENTRO C'È QUALCOSA CHE NON FUNZIONA ──
+     `{ conta, frase }`, e sono l'unica cosa rossa di un blocco: le
+     righe che vanno male stanno due aperture più sotto, e da chiuso un
+     blocco non ne mostra niente — quindi il segnale risale fin qui,
+     col nome, che è quello che un grande ha letto nell'avviso e sta
+     cercando. Chi lo compone è `data/quadro.js` (`vannoMale`), con la
+     stessa soglia della posta. */
+  allarme: { type: Object, default: null },
 })
 defineEmits(['apri'])
 </script>
@@ -36,11 +44,16 @@ defineEmits(['apri'])
     <span class="tit">
       <span>{{ titolo }}</span>
       <b v-if="conta">{{ conta }}</b>
+      <b v-if="allarme" class="male" data-va-male>{{ allarme.conta }}</b>
       <em v-if="apribile">{{ aperto ? '▴' : '▾' }}</em>
     </span>
     <i v-if="spiega" class="spiega">{{ spiega }}</i>
 
     <template v-if="!aperto">
+      <!-- prima dell'assaggio, e non al posto suo: l'assaggio dice cosa
+           c'è qui dentro — è vero tutti i giorni — questa dice cosa non
+           funziona adesso, ed è la sola per cui valga la pena aprire -->
+      <b v-if="allarme" class="frase male" data-male-frase>{{ allarme.frase }}</b>
       <slot name="chiuso">
         <b v-if="assaggio" class="frase">{{ assaggio }}</b>
       </slot>
@@ -62,8 +75,13 @@ defineEmits(['apri'])
 .tit > b { font-size:13px; font-weight:800; color:var(--viola-scuro);
            text-transform:none; letter-spacing:0 }
 .tit > em { font-style:normal; font-size:13px; font-weight:800; color:var(--viola) }
+/* Rosso vero, come l'etichetta della riga che va male (`Riga.vue`): è
+   lo stesso fatto detto da più lontano, quindi è lo stesso colore. */
+.tit > b.male { color:#8c2f2f; background:#ffdede; padding:1px 7px; border-radius:8px;
+                font-size:11px }
 
 .frase { font-size:13.5px; font-weight:650; line-height:1.4 }
+.frase.male { color:#8c2f2f; font-size:12.5px; font-weight:700 }
 .spiega { font-style:normal; font-size:11px; color:#9a9aa8; line-height:1.3; margin:-1px 0 3px }
 
 /* Si tocca tutto il riquadro, non la parolina in fondo alla riga:

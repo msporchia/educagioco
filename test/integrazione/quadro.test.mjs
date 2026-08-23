@@ -24,7 +24,7 @@
    comparsa non si lascia toccare per 320 ms (`quiz/Domanda.vue`), e
    senza il test racconterebbe che rispondere non fa niente.
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, semina, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, leggiProfilo, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const CIECA = 400          // la finestra cieca di Domanda.vue, con margine
@@ -196,6 +196,124 @@ if (settings) {
 }
 uguale('e nessuna riga si è colorata',
        await page.locator('[data-manopola] .voce-riga.ritoccata').count(), 0)
+
+/* ── 7. IL PEZZO DI SCUOLA CHE VIVE DENTRO UN GIOCO ──
+   Le divisioni del castello non passano dai moduli di quiz: la cassa le
+   guarda e basta. Finché il quadro si componeva dalle sole domande, a
+   sei anni non avevano nessuna riga — e un genitore non aveva modo né di
+   cambiarle né, che è peggio, di accorgersi che erano spente.
+
+   Qui si prova la strada intera col dito, che è l'unica cosa che i test
+   senza browser non possono fare: la riga sta sotto il gioco che la
+   chiede, la ✎ apre la tacca a tre posizioni, e «Conferma» scrive
+   davvero nel profilo. Sei anni e non otto perché è l'età in cui la riga
+   può arrivare **solo** dal gioco: a otto ce l'hanno i problemi a
+   parole, e si guarderebbe l'altra strada. */
+await semina(page, { coins: 100, settings: { eta: 6, sa: {} } })
+await page.click('[data-azione="grandi"]')
+await page.waitForSelector('.tastierino', { timeout: 5000 })
+for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+await page.click('.schede button[data-scheda="giochi"]')
+await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+
+await apriBlocco('giochi')
+const castello = page.locator('[data-manopola] [data-riga="torri"] .voce-riga').first()
+controlla('il castello si apre, perché ha dei pezzi di scuola sotto',
+  await castello.locator('.apri').isVisible())
+await castello.click()
+await page.waitForTimeout(200)
+
+const divisioni = page.locator('[data-manopola] [data-riga="divisioni"]')
+uguale('e sotto c\'è la riga delle divisioni', await divisioni.count(), 1)
+controlla('con scritto che il gioco le dà per scontate',
+  (await divisioni.locator('.voce-riga em').innerText()).includes('per scontato'))
+
+controlla('e colorata, perché a sei anni l\'età da sola le terrebbe spente',
+  await divisioni.locator('.voce-riga.ritoccata').isVisible())
+
+await divisioni.locator('[data-tara-apri="divisioni"]').click()
+await page.waitForSelector('[data-sapere-tara="divisioni"]', { timeout: 3000 })
+controlla('la ✎ apre la tacca a tre posizioni, non quella dei mezzi anni',
+  (await page.locator('[data-taratura="divisioni"]').count()) === 0)
+uguale('che parte da dov\'è messa adesso: tenute accese contro l\'età',
+  (await page.locator('[data-sapere-ora]').innerText()).trim(), 'L\'ha già fatto')
+
+await page.click('[data-sapere-tara-verso="giu"]')
+await page.waitForTimeout(120)
+uguale('e scende su «come dice l\'età»',
+  (await page.locator('[data-sapere-ora]').innerText()).trim(), 'Come dice l\'età')
+/* quello che l'età dice già non si può ridire dall'altra parte:
+   scriverebbe lo stesso profilo, e la riga tornerebbe dov'era un
+   istante dopo aver premuto «Conferma» */
+controlla('e più giù non si va: a sei anni «non l\'ha ancora fatto» è già l\'età',
+  await page.locator('[data-sapere-tara-verso="giu"]').isDisabled())
+await page.click('[data-sapere-tara-verso="applica"]')
+/* `persist()` scrive con un ritardo (350 ms in `store/storage.js`):
+   rileggere prima vorrebbe dire leggere il profilo di un istante fa */
+await page.waitForTimeout(800)
+
+const dopoTara = await leggiProfilo(page)
+uguale('confermando si scrive l\'eccezione nel profilo',
+       dopoTara?.settings?.sa?.divisioni, false)
+controlla('mentre il castello, chiuso, dice che gliele abbiamo tolte',
+  (await page.locator('[data-manopola] [data-riga="torri"] .testo i').first().innerText())
+    .includes('senza le divisioni'))
+await scatto(page, 'quadro-pezzo-di-scuola')
+
+/* ── 8. QUELLO CHE VA MALE SI VEDE SENZA APRIRE NIENTE ──
+   Un muro fa scattare un avviso nella posta dei grandi, e l'avviso
+   nomina la tipologia: «Le analogie sulle cose del mondo». Nel quadro
+   quel nome sta al terzo livello — blocco, pezzo di scuola, domanda —
+   e il rosso stava lì con lui: chi arrivava dall'avviso scorreva un
+   quadro in cui non c'era niente di rosso da nessuna parte, e cercava
+   fra i pezzi di scuola un nome che i pezzi di scuola non hanno.
+
+   Il gesto provato qui è quello vero: si entra, si guarda, e si scende
+   seguendo il rosso fino alla riga di cui parlava l'avviso. */
+{
+  const MURO = { ok: 2, err: 8 }
+  await semina(page, { coins: 100, settings: { eta: 8 },
+                       items: { 'ana:mondo': MURO } })
+  await page.click('[data-azione="grandi"]')
+  await page.waitForSelector('.tastierino', { timeout: 5000 })
+  for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+  await page.click('.schede button[data-scheda="giochi"]')
+  await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+
+  const segnati = page.locator('[data-manopola] [data-apri] [data-va-male]')
+  uguale('un blocco solo dice che qui dentro qualcosa non funziona',
+         await segnati.count(), 1)
+  uguale('e dice quante righe sono', (await segnati.innerText()).trim(), '1 va male')
+
+  const frase = await page.locator('[data-manopola] [data-male-frase]').innerText()
+  controlla('da chiuso il blocco nomina la domanda, com\'è scritta nell\'avviso',
+    frase.includes('Le analogie sulle cose del mondo'), frase)
+  controlla('col pezzo di scuola dove sta, che è la mappa per trovarla',
+    frase.includes('Le analogie ›'), frase)
+  controlla('e col numero della posta, non un altro',
+    frase.includes('8 su 10'), frase)
+  await scatto(page, 'quadro-va-male')
+
+  /* e scendendo: il pezzo di scuola lo ridice, la domanda porta il
+     numero. Senza questo pezzo il grande aprirebbe il blocco giusto e
+     si ritroverebbe venti pezzi di scuola tutti uguali. */
+  const quale = await page.locator('[data-manopola] [data-apri]')
+    .filter({ has: page.locator('[data-va-male]') }).getAttribute('data-apri')
+  await apriBlocco(quale)
+  const dentroIl = `[data-manopola] [data-apri="${quale}"]`
+  const pezzo = page.locator(`${dentroIl} [data-riga="analogie"]`)
+  uguale('aperto il blocco, il pezzo di scuola è uno solo a essere rosso',
+    await page.locator(`${dentroIl} .voce-riga:not(.dentro) em.va-male`).count(), 1)
+  uguale('ed è quello che contiene la domanda', await pezzo.count(), 1)
+  await pezzo.locator('.voce-riga').first().click()
+  await page.waitForTimeout(250)
+  /* le domande di un pezzo di scuola sono `li` fratelli del suo, non
+     figli: `dentro` è un rientro, non un annidamento nel DOM */
+  const dentro = page.locator(`${dentroIl} .voce-riga.dentro em.va-male`)
+  uguale('e sotto, la riga della domanda col numero', await dentro.count(), 1)
+  uguale('che è lo stesso numero letto in posta',
+         (await dentro.innerText()).trim(), 'ne ha sbagliate 8 su 10')
+}
 
 uguale('nessun errore in console', errori.length, 0, errori.join(' | '))
 await browser.close()

@@ -9,6 +9,9 @@
    aveva scelto «non va ancora a scuola» scopre il refuso il giorno che
    il figlio si trova davanti le divisioni in colonna.
    ═══════════════════════════════════════════════════════════════════ */
+import { readdirSync, existsSync } from 'node:fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, resolve } from 'node:path'
 import { PARTENZE, eccezioniDi, partenza, spostandoLEta, rimettendoLEta,
          eccezioniPerEta } from '../../src/data/partenze.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
@@ -19,12 +22,38 @@ const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)
 const PICCOLI = GIOCHI.filter(g => g.piccoli).map(g => g.chiave)
 const GRANDI = GIOCHI.filter(g => g.grandi).map(g => g.chiave)
 
+/* ── I MODULI DI QUIZ, PER LE SOTTOVOCI ──
+   Una fascia può spegnere una tipologia sola invece di un gruppo
+   intero — la terza toglie «Come si vede un solido dall'alto» e lascia
+   acceso «I solidi» — e quelle chiavi non stanno in `saperi.js`: le
+   dichiarano i moduli, tipologia per tipologia. Si raccolgono dalla
+   cartella come fa `unita/saperi`, perché il registro vero
+   (`quiz/registro.js`) gira solo sotto Vite. */
+const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const CARTELLA = resolve(RADICE, 'src/quiz/moduli')
+const moduli = []
+if (existsSync(CARTELLA))
+  for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
+    const mod = (await import(pathToFileURL(resolve(CARTELLA, f)).href)).default
+    if (mod) moduli.push(mod)
+  }
+controlla('i moduli di quiz si raccolgono da soli', moduli.length > 0)
+
+const TIPI = moduli.flatMap(m => m.tipi)
+/* i gruppi di sapere che una chiave copre: un gruppo copre se stesso,
+   una tipologia copre quelli che dichiara */
+const gruppiDi = chiave => CHIAVI_SAPERI.includes(chiave)
+  ? [chiave]
+  : (TIPI.find(t => t.chiave === chiave)?.sa || [])
+const esiste = chiave => gruppiDi(chiave).length > 0
+
 /* ── quello che citano esiste ──
    È il controllo che giustifica il file: una chiave morta non dà errore
    da nessuna parte, spegne solo il silenzio. */
 for (const p of PARTENZE) {
-  const ignoti = p.saperi.filter(s => !CHIAVI_SAPERI.includes(s))
-  uguale(`${p.chiave}: cita solo saperi che esistono`, ignoti.join(',') || '—', '—')
+  const ignoti = p.saperi.filter(s => !esiste(s))
+  uguale(`${p.chiave}: cita solo saperi (o tipologie) che esistono`,
+         ignoti.join(',') || '—', '—')
   controlla(`${p.chiave}: ha un nome e una riga che spiega`, !!p.nome && !!p.che)
   /* `come` è il nome che sta **dentro una frase** («come in prima o
      seconda»). Senza, la manopola ci infilava `nome` e usciva «come in
@@ -72,11 +101,71 @@ uguale('e le moltiplicazioni', piccoli.sa.moltiplicazioni, false)
    toglieva — cioè a quattro anni il gioco supponeva più cose che a sei.
    Nessun errore, nessun test rosso: solo domande fuori misura ai più
    piccoli, che è il difetto che questa scala esiste per evitare. */
+/* Con le sottovoci il confronto non è più fra due elenchi di nomi: la
+   terza spegne `geo:viste`, che la fascia dei piccoli non nomina — ma
+   spegne «I solidi», che se la porta dietro tutta. Quindi si guarda
+   **cosa copre** una chiave, non come si chiama. */
+const copre = (fascia, chiave) => fascia.saperi.includes(chiave) ||
+  gruppiDi(chiave).every(g => fascia.saperi.includes(g))
 for (let i = 1; i < PARTENZE.length; i++) {
   const grande = PARTENZE[i], piccola = PARTENZE[i - 1]
-  const mancano = grande.saperi.filter(k => !piccola.saperi.includes(k))
+  const mancano = grande.saperi.filter(k => !copre(piccola, k))
   uguale(`«${piccola.nome}» spegne tutto quello che spegne «${grande.nome}»`,
          mancano.join(',') || '—', '—')
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUELLO CHE UNA FASCIA TIENE ACCESO VA DETTO
+
+   Il difetto che questi due controlli rendono rossi non è una riga
+   sbagliata: è una riga **mai scritta**. `stima` è rimasta accesa in
+   terza per anni perché l'elenco era stato pensato per i conti in
+   colonna e nessuno era più tornato a guardare il resto del catalogo,
+   ed è lo stesso identico difetto della fascia dei quattro anni —
+   dove la lettura, la simmetria e le analogie erano rimaste accese per
+   omissione. Un test che controlla quello che c'è non può vedere
+   quello che manca: bisogna pretendere che ogni pezzo di scuola abbia
+   un verdetto, spento o motivato che sia.
+
+   Il costo è una riga per sapere, scritta una volta. Il guadagno è che
+   il giorno che si aggiunge un gruppo a `saperi.js` la fascia dei
+   piccoli diventa rossa, e da lì la catena si propaga in su fascia per
+   fascia — che è esattamente il giro che nessuno aveva rifatto.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. i piccoli hanno un verdetto su TUTTO il catalogo. Quelli che
+   nascono già spenti (`difetto: false`) non c'entrano: non li accende
+   nessuna fascia, li accende un grande. */
+{
+  const p = partenza('piccoli')
+  const senza = SAPERI.filter(s => s.difetto !== false).map(s => s.chiave)
+    .filter(k => !p.saperi.includes(k) && !p.tiene?.[k])
+  uguale('«piccoli» dice di ogni pezzo di scuola se lo spegne o perché no',
+         senza.join(',') || '—', '—')
+}
+
+/* 2. e ogni fascia più grande motiva quello che riaccende. Il conto è
+   sui **gruppi**: una fascia che spegne metà gruppo per sottovoce lo
+   sta lasciando acceso per l'altra metà, e quella metà va motivata
+   come tutto il resto. */
+for (let i = 1; i < PARTENZE.length; i++) {
+  const grande = PARTENZE[i], piccola = PARTENZE[i - 1]
+  const muti = [...new Set(piccola.saperi.flatMap(gruppiDi))]
+    .filter(k => !grande.saperi.includes(k) && !grande.tiene?.[k])
+  uguale(`«${grande.nome}» dice perché riaccende quello che «${piccola.nome}» spegne`,
+         muti.join(',') || '—', '—')
+}
+
+/* e un motivo è una frase, non una spunta: `tiene: { stima: true }`
+   passerebbe i due controlli sopra senza dire niente a nessuno */
+for (const p of PARTENZE) {
+  const vuoti = Object.entries(p.tiene || {})
+    .filter(([, m]) => typeof m !== 'string' || m.length < 15).map(([k]) => k)
+  uguale(`${p.chiave}: ogni motivo è scritto per esteso`, vuoti.join(',') || '—', '—')
+  /* e parla di roba che esiste: un motivo su una chiave sbagliata è un
+     verdetto che non copre niente, e il controllo sopra passerebbe */
+  const ignoti = Object.keys(p.tiene || {}).filter(k => !esiste(k))
+  uguale(`${p.chiave}: i motivi parlano di saperi che esistono`, ignoti.join(',') || '—', '—')
 }
 
 /* ── prima o seconda ──
@@ -110,6 +199,24 @@ uguale('«terza» spegne le divisioni', terza.sa.divisioni, false)
 controlla('«terza» LASCIA le moltiplicazioni', terza.sa.moltiplicazioni === undefined)
 uguale('«terza» spegne le misure', terza.sa.misure, false)
 uguale('e le conversioni', terza.sa.conversioni, false)
+/* ── E LA REGOLA CHE DECIDE COSA ALTRO SPEGNERE ──
+   Si spegne quello che non si può insegnare in una carta. Arrotondare
+   a otto anni a scuola non l'hanno fatto, ma «47 sta fra 40 e 50»
+   entra in una riga di spiegazione: la domanda non è muta, è una cosa
+   nuova, e toglierla toglierebbe una lezione. Contare i cubetti che
+   stanno dietro a quelli che si vedono no — lì non c'è nessuna riga
+   che colmi il buco. Se un giorno «Stima e arrotondamento» finisse
+   nell'elenco, questa riga lo dice prima che se ne accorga un
+   bambino. */
+controlla('«terza» LASCIA la stima, che si insegna in una riga',
+          terza.sa.stima === undefined)
+uguale('ma spegne i cubetti nascosti, che no', terza.sa['geo:cubetti'], false)
+/* e li spegne a sottovoci: i nomi dei solidi sono di prima e la figura
+   allo specchio di seconda, e spegnere i due gruppi interi per
+   prendersi le viste dall'alto porterebbe via anche quelli */
+uguale('e le viste dall\'alto', terza.sa['geo:viste'], false)
+controlla('lasciando acceso il gruppo «I solidi»', terza.sa.solidi === undefined)
+controlla('e «Girare le figure con la mente»', terza.sa['spazio-mente'] === undefined)
 for (const k of PICCOLI) uguale(`«terza» spegne il gioco per i piccoli ${k}`, terza.giochi[k], false)
 const spentiTerza = CHIAVI_GIOCHI.filter(k => terza.giochi[k] === false)
 uguale('e non spegne nessun altro gioco',
@@ -220,6 +327,26 @@ const soloRitocchi = spostandoLEta({ da: 8, a: 5, giochi: difettiDi(8).giochi,
                                      sa: difettiDi(8).sa, ritocchi: { 'math:x7': 1 } })
 uguale('i soli ritocchi bastano a far chiedere', soloRitocchi.chiede, true)
 uguale('e si contano', soloRitocchi.perde.ritocchi, 1)
+
+/* ── SPEGNERE NON DEVE SVUOTARE ──
+   È il controllo che ha impedito di proporre troppo, e vale la pena
+   averlo fermo: a ogni fascia deve restare **un mazzo**, non un modulo
+   scampato. Un modulo che va muto non è di per sé un guasto — le
+   misure in terza sono spente da sempre e il loro modulo tace, ed è
+   voluto — quindi quello che diventa rosso è il mazzo che si svuota,
+   e chi tace si stampa e si guarda.
+   Il ripiego di `quiz/scelta.js` riaprirebbe comunque tutto se
+   restasse a mani vuote, ma arrivarci vuol dire che i saperi spenti
+   non contano più niente: è la rete, non il piano. */
+for (const p of PARTENZE) {
+  const spenti = Object.keys(eccezioniDi(p.chiave).sa)
+  const vivi = moduli.filter(m => m.gradiLiberi(spenti).length)
+  const muti = moduli.filter(m => !m.gradiLiberi(spenti).length).map(m => m.id)
+  controlla(`a «${p.nome}» resta un mazzo da cui pescare`, vivi.length >= 3,
+            `${vivi.length} moduli vivi su ${moduli.length}`)
+  nota(`${p.nome}: ${vivi.length}/${moduli.length} moduli vivi` +
+       (muti.length ? ` · muti: ${muti.join(' ')}` : ''))
+}
 
 nota(PARTENZE.map(p => `${p.nome}: ${Object.keys(eccezioniDi(p.chiave).giochi).length} giochi e ${p.saperi.length} saperi spenti`).join(' · '))
 nota('in home con «prima o seconda»:', accesiPrima.join(', '))

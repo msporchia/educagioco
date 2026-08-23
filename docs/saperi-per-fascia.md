@@ -1,8 +1,45 @@
 # Cosa una fascia dà per scontato — il giro completo
 
-**Questo file è una proposta, non una descrizione.** Dice cosa andrebbe
-aggiunto a `saperi:` in [`src/data/partenze.js`](../src/data/partenze.js)
-e perché, con la fonte accanto a ogni riga. **Non è stato applicato.**
+**Questo file è la ricerca, con la fonte accanto a ogni riga.** È stato
+applicato a `saperi:` in [`src/data/partenze.js`](../src/data/partenze.js),
+**ma non alla lettera**: tre delle decisioni sono state prese diversamente
+da come le propone il seguito, e dove il testo dice «la proposta» va letto
+sapendo quello che segue.
+
+## Cosa è finito nel codice, e cosa no
+
+**Il criterio è cambiato, ed è la cosa più importante di questo giro.**
+Non si spegne quello che a scuola non è ancora stato fatto: si spegne
+**quello che non si può insegnare in una carta**. Una domanda su un
+concetto nuovo che sta in una riga di spiegazione non è muta — è una
+lezione, ed è il mestiere per cui i moduli hanno un `aiuto`. La regola sta
+scritta in testa a `partenze.js`, che è dove si decide la prossima volta.
+
+Da lì, le differenze:
+
+| voce | la proposta qui sotto | cosa è stato fatto |
+| --- | --- | --- |
+| `stima` in `terza` | spegnere | **resta accesa**: le sue tre tipologie hanno già un `aiuto` che insegna («47 sta fra 40 e 50: l'ultima cifra è 7, quindi si va su»), e toglierla toglierebbe una lezione invece di una presa in giro |
+| `spazio-mente` e `solidi` in `terza` | gruppo intero | **sottovoci**: `geo:rotazione`, `geo:cubetti`, `geo:sviluppo`, `geo:viste`. Restano accesi la figura allo specchio (seconda), i nomi dei solidi (prima) e il contare le facce, che sono cose che il bambino ha |
+| `adattamento` in `prima` e `piccoli` | spegnere | applicato |
+| migrazione dei profili | nessuna | **fatta**, in `store/profile.js` (`SAPERI_ARRIVATI`), in base all'età impostata |
+| il campo `tiene:` | proposto | **fatto**, con i due controlli in `test/unita/partenze` |
+
+I due ritocchi che le sottovoci costavano sono stati pagati tutti e due:
+`test/unita/partenze` adesso legge i moduli di quiz dalla cartella per
+sapere quali tipologie esistono e quali gruppi coprono, e `spentoDi` in
+`data/quadro.js` guarda anche `c.tipo` — senza, la riga di una sottovoce
+spenta finiva sotto «• altro», cioè in un posto dove un grande non la
+cerca e da cui non potrebbe rimetterla.
+
+**La misura è stata rifatta col diff vero** (più piccolo di quello
+proposto). A 8 anni le classi ammesse passano da 82 a 81 e la varietà
+effettiva con la carta tosta da 25,3 a 24,3; a 8,5 da 15,3 a 14,4.
+Nessuna fascia scende sotto i 17 moduli vivi su 18 in terza, e l'unico
+muto resta `misure`, che lo era già. In `piccoli` e in `prima` non cambia
+**niente di misurabile**: l'unica classe di `adattamento` sta a 50 (otto
+anni) e a quelle età il suo peso è già nullo — spegnerla lì è una
+dichiarazione per il giorno che il catalogo cresce, non un taglio.
 
 ## Il fatto da cui si parte
 
@@ -359,6 +396,18 @@ niente. Nessuna tappa dichiara `scuola: 'solidi'` o `'spazio-mente'`.
 
 ## Cosa cambia per chi ha già un profilo
 
+> **Sorpassato: la migrazione è stata fatta.** Sta in `store/profile.js`
+> (`SAPERI_ARRIVATI`, dietro il salto di `v` a 7) e scrive **in base
+> all'età impostata**. Il ragionamento qui sotto resta valido su un punto
+> — riaccendere un sapere al suo difetto cancella la voce, quindi
+> l'assenza non si può leggere — e la migrazione lo aggira senza
+> indovinare: tocca una chiave **solo nella fascia in cui il difetto è
+> nuovo**, dove l'assenza non può essere la traccia di una riaccensione.
+> Un profilo senza età vale nove anni, cioè la fascia che non spegne
+> niente, e non viene toccato. Il tasto «Rimetti tutto» che compariva da
+> solo (la domanda 4) non compare più: dopo la migrazione le eccezioni
+> salvate coincidono di nuovo coi difetti.
+
 **Niente, automaticamente.** Le partenze scrivono le eccezioni **una volta
 sola**, dentro `creaGiocatore` e su un profilo ancora vuoto
 (`store/profile.js`): un bambino creato ieri non riceve nulla. Il suo
@@ -514,6 +563,14 @@ const morti = MODULI.filter(m => m.gradiLiberi(spentiOggi, regole).length > 0 &&
 ```
 
 ## Domande aperte
+
+**Risposte, tranne due.** 1 — `stima` non si spegne (criterio nuovo).
+2 — sottovoci. 3 — la migrazione si fa. 4 — non si pone più. 5 — il campo
+`tiene:` si fa. 8 — la nota in `guide/novita.js` la decide chi possiede
+il gioco, e non è stata scritta. Restano aperte la **6** (il livello di
+`geo:rotazione`, dichiarato 38 mentre le rotazioni sono di quarta: è un
+difetto di taratura indipendente, e adesso quella tipologia è comunque
+spenta in terza) e la **7** (la frase su `ambienti` in `saperi.js`).
 
 Sono poste perché si possa rispondere con una parola.
 

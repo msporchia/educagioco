@@ -17,7 +17,7 @@ import { SERIE, mancanti, estrai, postoDi } from '../data/capsule.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
-         rimettendoLEta } from '../data/partenze.js'
+         rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
 import { allineaCalcolo } from './calcolo.js'
@@ -50,7 +50,7 @@ const KEY = id => 'profilo:' + id
 const PREFISSO = 'profilo:'
 
 const blank = () => ({
-  v: 6,
+  v: 7,
   coins: 0,
   owned: [],
   layout: [[], [], []],
@@ -431,16 +431,89 @@ export function riscuotiCheat() {
    prossimo avvio `da` sarà già la versione di adesso e nessuno saprà più
    da dove veniva.
 
-   Oggi non c'è niente da fare: il roster si ricostruisce dalle chiavi
-   dell'archivio e i profili in sé non cambiano forma. La funzione esiste
-   lo stesso, con il numero già letto e messo in mano a chi serve, perché
-   il momento per agganciarla è questo — quando la prossima build tocca i
-   telefoni, l'informazione non c'è più. Chi aggiunge un caso qui scriva
-   anche il suo test in `test/unita/profilo.test.mjs`. */
+   Il numero è già letto e messo in mano a chi serve, perché il momento
+   per agganciarsi è questo — quando la prossima build tocca i telefoni,
+   l'informazione non c'è più. Chi aggiunge un caso qui scriva anche il
+   suo test in `test/unita/profilo.test.mjs`. */
 export function migraProfilo(p, da) {
   if (da === 0) return p        // profilo nuovo: non c'è niente da cui migrare
-  // if (da < 7) { … }          ← la forma di un caso futuro
+  if (da < 7) saperiArrivatiTardi(p.settings)
   return p
+}
+
+/* ── QUELLO CHE UNA FASCIA HA IMPARATO A SPEGNERE DOPO ──
+   Le partenze scrivono le eccezioni **una volta sola**, dentro
+   `creaGiocatore`: un bambino creato ieri non riceve niente di quello
+   che l'elenco impara oggi. Finché si trattava di aggiungere un gioco
+   andava bene — acceso è l'assenza, e un gioco nuovo nasce acceso per
+   tutti — ma un pezzo di scuola che si scopre di dover spegnere è il
+   caso opposto: chi ha già il profilo continua a ricevere le domande
+   mute, e il difetto è arrivato in mano a un genitore giocando, non da
+   qui.
+
+   Qui sotto c'è **la fotografia** di cosa è stato aggiunto ai difetti
+   di ogni fascia in questo giro. Non è un elenco da tenere allineato a
+   `data/partenze.js`: è storia congelata, e il giro prossimo alzerà `v`
+   e scriverà la sua accanto. Leggere gli elenchi di oggi non
+   servirebbe — direbbero cosa una fascia spegne *adesso*, non cosa ha
+   appena imparato a spegnere.
+
+   ── E QUELLO CHE UN GRANDE HA MESSO A MANO NON SI TOCCA ──
+   È la sola cosa che rende questa migrazione lecita, e regge per
+   costruzione: si scrive una chiave **solo per la fascia in cui è
+   nuova**, e solo se il profilo non dice già niente di suo su quella
+   chiave. Il paragone non è mai con un profilo vuoto — le partenze
+   *scrivono* delle eccezioni, e confrontare col vuoto farebbe
+   risultare «messa a mano» ogni riga che nessuno ha toccato.
+
+   I casi, uno per uno:
+
+     · **c'è già scritto qualcosa** (`false`, o `true` per i pochi che
+       nascono spenti) — è la voce di un grande, e non si tocca.
+     · **non c'è scritto niente e la chiave è nuova per la sua fascia**
+       — ieri il difetto non la nominava, quindi l'assenza non può
+       voler dire «un grande l'ha riaccesa»: la riaccensione di un
+       sapere al suo difetto non lascia traccia (`accendiSapere`
+       cancella la voce), ed è esattamente il motivo per cui si guarda
+       **la fascia** e non lo stato di oggi. Si scrive.
+     · **non c'è scritto niente e la chiave non è nuova per la sua
+       fascia** — lì l'assenza è la traccia di un grande che l'ha
+       riaccesa, e infatti non si scrive niente.
+     · **profilo senza età** — `settings.eta` manca ai profili nati
+       prima che la domanda esistesse, e valgono `ETA_DIFETTO` (nove
+       anni), cioè la fascia «quarta o quinta», che non spegne niente:
+       la migrazione non li tocca, ed è la risposta giusta anche senza
+       saperne l'età. Nessuna riga scritta a indovinare.
+
+   ── E IL CESTINO ──
+   Una copia messa da parte **prima** dell'aggiornamento porta con sé
+   il suo `v` vecchio, quindi rimetterla la fa passare di qui e viene
+   migrata; una fatta dopo ha già `v` nuovo e non si tocca due volte.
+   Non c'è niente da fare: `ripristinaCestinato` scrive il profilo e
+   chiama `selectPlayer`, che è la strada da cui si arriva qui. */
+const SAPERI_ARRIVATI = {
+  /* «Com'è fatto un animale»: il corpo che dice il posto è un
+     obiettivo di fine terza, e a cinque e a sei anni e mezzo mancano
+     due anni buoni. */
+  piccoli: ['adattamento'],
+  prima: ['adattamento'],
+  /* Le sottovoci di quinta dentro due gruppi che restano accesi:
+     ruotare a mente, i cubetti nascosti, lo sviluppo del cubo e le
+     viste dall'alto. Vedi il commento della fascia in `partenze.js`. */
+  terza: ['geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste'],
+  quarta: [],
+}
+
+function saperiArrivatiTardi(s) {
+  if (!s || typeof s !== 'object') return
+  if (!s.sa || typeof s.sa !== 'object') s.sa = {}
+  const anni = Number(s.eta)
+  /* la stessa lettura di `etaDelBambino`, che non si può chiamare da
+     qui: `state.profile` è ancora quello di prima */
+  const fascia = partenzaPerEta(
+    Number.isFinite(anni) && anni >= 3 && anni <= 14 ? anni : ETA_DIFETTO)
+  for (const k of (fascia && SAPERI_ARRIVATI[fascia.chiave]) || [])
+    if (s.sa[k] === undefined) s.sa[k] = false
 }
 
 export async function selectPlayer(id) {
@@ -593,6 +666,30 @@ export function accendiSapere(chiave, si) {
 export const saperiSpenti = () =>
   [...new Set([...Object.keys(state.profile.settings.sa || {}), ...SPENTI_DI_PARTENZA])]
     .filter(c => !sapereAcceso(c))
+
+/* ── LE TRE POSIZIONI DI UN PEZZO DI SCUOLA ──
+   Il gemello di `fissaGioco`, e per lo stesso motivo. `accendiSapere`
+   risponde a «acceso o spento?», che è la domanda giusta quando a
+   chiedere è chi fa le domande; la tacca della schermata dei grandi ne
+   fa un'altra — **chi decide**, l'età o il grande — e le posizioni sono
+   tre, non due.
+
+   «Come dice l'età» non vuol dire «nessuna eccezione»: vuol dire quella
+   che la partenza di quest'età scriverebbe adesso, che per le divisioni
+   a otto anni è `false`. È la stessa cosa che scrive `rimettiAiDifetti`,
+   e le due strade devono portare allo stesso posto — se qui si
+   cancellasse e basta, «rimetti questa riga» e «rimetti tutto»
+   lascerebbero due profili diversi, e la riga resterebbe ambra dopo
+   aver rimesso tutto. */
+export function fissaSapere(chiave, come) {
+  const s = state.profile.settings
+  if (!s.sa) s.sa = {}
+  if (come !== 'difetto') { accendiSapere(chiave, come === 'si'); return }
+  const atteso = eccezioniPerEta(etaDelBambino()).sa || {}
+  if (atteso[chiave] === false) s.sa[chiave] = false
+  else delete s.sa[chiave]
+  persist()
+}
 
 /* Le divisioni sono un sapere come gli altri; questi due nomi restano
    perché il castello li chiama così da sempre e dire `sapereAcceso

@@ -59,10 +59,11 @@ import Tacca from './Tacca.vue'
 import Conferma from './Conferma.vue'
 import Taratura from './Taratura.vue'
 import InCasa from './InCasa.vue'
+import Scuola from './Scuola.vue'
 import { GRUPPI } from './gruppi.js'
 import { usaBozzaEta } from './bozza.js'
 import { anniInLettere, perdeInParole } from './lettere.js'
-import { quadroDi } from '../../data/quadro.js'
+import { quadroDi, vannoMale } from '../../data/quadro.js'
 import { partenzaPerEta, rimettendoLEta } from '../../data/partenze.js'
 import { classiNude } from '../../quiz/catalogo.js'
 import { contoDi, consiglioDa } from '../../quiz/consiglio.js'
@@ -117,7 +118,7 @@ const props = defineProps({
      ancora non ha sbagliato niente. */
   risposte: { type: Object, default: () => ({}) },
 })
-const emit = defineEmits(['scegli', 'prova', 'ritocca', 'gioco', 'rimetti'])
+const emit = defineEmits(['scegli', 'prova', 'ritocca', 'gioco', 'sapere', 'rimetti'])
 
 /* ── PROVARE UNA VOCE DELL'ELENCO ──
    Un nome non basta, e non è colpa del nome: «le analogie fra figure»
@@ -232,6 +233,13 @@ function fissa (chiave, come) {
   emit('gioco', { chiave, come })
   tarando.value = ''
 }
+/* e la stessa cosa per un pezzo di scuola che vive dentro un gioco: la
+   tacca è un'altra (`Scuola.vue`) perché le parole sono altre, ma il
+   patto è identico — non salva niente, dice cosa ha deciso */
+function fissaSap (chiave, come) {
+  emit('sapere', { chiave, come })
+  tarando.value = ''
+}
 
 /* ── E IL TASTO CHE RIMETTE TUTTO ──
    Le correzioni riga per riga sono tante e piccole, e dopo un po'
@@ -311,6 +319,27 @@ const sottoDelSapere = s => s.spento
 const sottoDellaClasse = r => etaDella(r.anniOra ?? r.anni) +
   (r.ritocco ? ` · ${scartoDi(r.ritocco)}` : '')
 
+/* ── E SOTTO UN GIOCO, QUELLO CHE GLI MANCA ──
+   Un pezzo di scuola spento si vede aprendo la riga, e una riga chiusa
+   che non lo dice è metà del guasto da cui è nato tutto questo: le
+   divisioni del castello erano spente da anni e niente, a nessun
+   livello, lo diceva a un grande che non fosse andato a cercarle.
+   `senza le divisioni` sta nella riga di contesto perché è la stessa
+   frase che risponde a «perché il castello chiede solo
+   moltiplicazioni». */
+const sottoDelGioco = g => {
+  if (g.manca) return `è tutto «${g.manca}», che hai tolto dalle domande`
+  const via = (g.chiede || []).filter(s => s.spento)
+  return via.length ? `${g.che} · senza ${elencoDi(via.map(s => giu(s.nome)))}` : g.che
+}
+
+/* Le due parole con cui si dice come sta un pezzo di scuola. Sono le
+   stesse del blocco che raccoglie quelli tolti (`eta/gruppi.js`): due
+   nomi per lo stesso stato farebbero credere a due stati. */
+const statoDelPezzo = s => s.spento
+  ? { testo: 'non ancora spiegate', cls: 'off' }
+  : { testo: 'lo dà per scontato', cls: 'si' }
+
 /* ── il segno di una riga che va male ──
    Torna l'etichetta di destra, cioè lo stesso posto dove i giochi
    dicono «c'è» o «arriva più avanti»: una riga ha un posto solo per
@@ -326,8 +355,54 @@ function allarmeDi(chiavi) {
 }
 /* un pezzo di scuola sta male se stanno male le sue domande **prese
    insieme**: quattro tipologie con tre tiri ciascuna non direbbero
-   niente da sole, e sono dodici risposte che parlano */
-const allarmeDelSapere = s => allarmeDi((s.classi || []).map(c => c.tipo))
+   niente da sole, e sono dodici risposte che parlano.
+
+   E sta male anche se **una sola** delle sue domande va male, pur
+   restando la somma dentro la soglia: quattro tipologie che vanno bene
+   ne coprono una che va a fondo, e quella riga sta un'apertura più
+   sotto — chiusa non si vede. Il numero però resta quello della somma
+   solo quando è la somma a parlare: qui si dice quante righe, e il
+   numero vero si legge aprendo, sulla riga di cui è. */
+const allarmeDelSapere = s => {
+  const insieme = allarmeDi((s.classi || []).map(c => c.tipo))
+  if (insieme) return insieme
+  const righe = vannoMale({ saperi: [s] }, props.risposte)
+  if (!righe.length) return null
+  return { testo: righe.length === 1 ? '1 domanda va male'
+                                     : `${righe.length} domande vanno male`,
+           cls: 'va-male' }
+}
+
+/* ── E IL SEGNALE RISALE FINO ALLA TESTATA ──
+   Le due etichette qui sopra vivono su una riga, e una riga si vede
+   solo dopo due aperture: il blocco, e dentro il blocco il pezzo di
+   scuola. Un grande che ha appena letto in posta «Le analogie sulle
+   cose del mondo» non sa in quale blocco cercarla — quel nome nel
+   quadro sta al terzo livello — e scorrendo il quadro chiuso non
+   trovava niente di rosso da nessuna parte. Quello che si è scritto
+   nella posta dei grandi deve restare scritto anche qui, dove si va a
+   fare qualcosa.
+
+   Il conto lo fa `data/quadro.js` (`vannoMale`), che è puro e si
+   prova; qui si scelgono solo le parole. Una sola riga si nomina per
+   intero, col numero e col pezzo di scuola dove sta — che è la mappa
+   per trovarla aprendo — due o più si contano, perché una testata non
+   è un elenco: l'elenco è quello che si apre sotto. */
+const maleDi = g => {
+  const righe = vannoMale(g, props.risposte)
+  if (!righe.length) return null
+  const uno = righe[0]
+  return {
+    conta: righe.length === 1 ? '1 va male' : `${righe.length} vanno male`,
+    /* «in Le analogie» non si può scrivere e «nelle analogie» vorrebbe
+       sapere che articolo ha il nome: la strada da fare si dice come si
+       dice una strada, un pezzo dopo l'altro */
+    frase: righe.length === 1
+      ? `⚠ ${uno.dentro ? `${uno.dentro} › ` : ''}«${uno.nome}» · ${uno.detto}`
+      : `⚠ ${righe.slice(0, 2).map(r => `«${r.nome}»`).join(' · ')}` +
+        (righe.length > 2 ? ` · e altre ${righe.length - 2}` : ''),
+  }
+}
 
 const TRE = 3
 const assaggioDi = g => {
@@ -418,21 +493,47 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
           </span>
         </template>
         <ul class="elenco">
-          <!-- La ✎ di un gioco non sposta niente di mezzo anno: sceglie
-               **chi decide** se sta in casa — l'età, o il grande. È la
-               stessa forma della tacca delle domande perché è lo stesso
-               gesto, e la riga si colora uguale quando la scelta non è
-               più quella dell'età. -->
-          <Riga v-for="g in quadro.giochi" :key="g.chiave" :chiave="g.chiave"
-                :ico="g.ico" :nome="g.nome" :stato="stato(g)"
-                :sotto="g.manca ? `è tutto «${g.manca}», che hai tolto dalle domande` : g.che"
-                :tara="siPuoTarare" :tarando="tarando === `gioco:${g.chiave}`"
-                :ritoccata="g.aMano" @tara="apriTara(`gioco:${g.chiave}`)">
-            <InCasa v-if="tarando === `gioco:${g.chiave}`"
-                    :nome="g.nome" :scelto="g.scelto" :difetto="g.difetto" :stato="g.stato"
-                    :eta="anniVisti" :chiave="g.chiave"
-                    @applica="fissa(g.chiave, $event)" @chiudi="tarando = ''" />
-          </Riga>
+          <template v-for="g in quadro.giochi" :key="g.chiave">
+            <!-- La ✎ di un gioco non sposta niente di mezzo anno: sceglie
+                 **chi decide** se sta in casa — l'età, o il grande. È la
+                 stessa forma della tacca delle domande perché è lo stesso
+                 gesto, e la riga si colora uguale quando la scelta non è
+                 più quella dell'età. -->
+            <Riga :chiave="g.chiave" :ico="g.ico" :nome="g.nome" :stato="stato(g)"
+                  :sotto="sottoDelGioco(g)"
+                  :tara="siPuoTarare" :tarando="tarando === `gioco:${g.chiave}`"
+                  :ritoccata="g.aMano"
+                  :apribile="g.chiedeQui.length > 0" :aperto="eAperto(`gioco:${g.chiave}`)"
+                  @tara="apriTara(`gioco:${g.chiave}`)" @apri="apri(`gioco:${g.chiave}`)">
+              <InCasa v-if="tarando === `gioco:${g.chiave}`"
+                      :nome="g.nome" :scelto="g.scelto" :difetto="g.difetto" :stato="g.stato"
+                      :eta="anniVisti" :chiave="g.chiave"
+                      @applica="fissa(g.chiave, $event)" @chiudi="tarando = ''" />
+            </Riga>
+            <!-- ══ I PEZZI DI SCUOLA CHE QUESTO GIOCO CHIEDE ══
+                 Le divisioni del castello: `chiede:` nel manifesto
+                 (`data/giochi.js`). Stanno qui e non fra i blocchi delle
+                 domande per una ragione sola — non ne hanno una, quindi
+                 non cadono in nessuna fascia di padronanza — e questo è
+                 anche il posto dove un grande le va a cercare: «cosa
+                 chiede il castello». Chi le domande ce le ha, la sua riga
+                 ce l'ha già di là, e `data/quadro.js` non la ripete: due
+                 tacche diverse sulla stessa voce del profilo sono il
+                 modo più veloce di far confermare la cosa sbagliata. -->
+            <Riga v-for="(s, i) in (eAperto(`gioco:${g.chiave}`) ? g.chiedeQui : [])"
+                  :key="s.chiave" dentro :ultima="i === g.chiedeQui.length - 1"
+                  :ico="s.ico" :nome="s.nome" :sotto="s.che" :chiave="s.chiave"
+                  :stato="statoDelPezzo(s)"
+                  :tara="siPuoTarare" :tarando="tarando === `chiede:${g.chiave}:${s.chiave}`"
+                  :ritoccata="s.aMano" @tara="apriTara(`chiede:${g.chiave}:${s.chiave}`)">
+              <!-- niente scatti in mezzi anni: senza domande non c'è una
+                   difficoltà da spostare, c'è un acceso e uno spento -->
+              <Scuola v-if="tarando === `chiede:${g.chiave}:${s.chiave}`"
+                      :nome="s.nome" :scelto="s.scelto" :atteso-spento="s.attesoSpento"
+                      :spegne="s.spegne" :eta="anniVisti" :chiave="s.chiave"
+                      @applica="fissaSap(s.chiave, $event)" @chiudi="tarando = ''" />
+            </Riga>
+          </template>
         </ul>
       </Blocco>
 
@@ -464,12 +565,16 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
            a parte, «dà per scontato che sappia», fatto di gruppi mentre
            questi erano fatti di classi: due unità di misura per la
            stessa roba, e nessuna delle due diceva l'altra. -->
-      <Blocco v-for="g in (quadro.domande.chiedono
-                     ? quadro.gruppi.filter(x => x.quante || x.saperi.length) : [])"
+      <!-- `quadro.gruppi` è già vuoto dove nessun gioco in casa le
+           chiede: la regola sta in `data/quadro.js`, insieme al conto
+           di chi le chiede e a quello che decide dove va la riga di un
+           pezzo di scuola. Qui resta solo «un blocco vuoto non si
+           mostra». -->
+      <Blocco v-for="g in quadro.gruppi.filter(x => x.quante || x.saperi.length)"
               :key="g.chiave" :data-apri="g.chiave"
               :titolo="GRUPPI[g.chiave].nome" :conta="String(g.quante)"
               :spiega="GRUPPI[g.chiave].che"
-              :assaggio="assaggioDi(g)"
+              :assaggio="assaggioDi(g)" :allarme="maleDi(g)"
               :aperto="eAperto(g.chiave)" @apri="apri(g.chiave)">
         <ul class="elenco">
           <template v-for="s in g.saperi" :key="s.chiave">

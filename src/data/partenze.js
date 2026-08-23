@@ -42,6 +42,51 @@
    imparano — e un elenco che si legge è meglio di una regola che
    indovina. `test/unita/partenze.test.mjs`
    controlla che ogni chiave citata qui esista davvero.
+
+   ── COSA SI SPEGNE, E COSA INVECE SI INSEGNA ─────────────────────
+   La regola con cui si decide, e va letta prima di aggiungere una
+   riga a un elenco qui sotto: **si spegne quello che non si può
+   insegnare in una carta; quello che si può insegnare resta, e si
+   insegna.**
+
+   Spegnere non è la risposta a «è difficile», e non è nemmeno la
+   risposta a «a scuola non l'ha ancora fatto». Una domanda su un
+   concetto mai visto, ma che sta in una riga di spiegazione — «47 sta
+   fra 40 e 50: l'ultima cifra è 7, quindi si va su» — non è muta: è
+   una cosa nuova che il gioco insegna, ed è il mestiere per cui i
+   moduli hanno un `aiuto`. Toglierla vuol dire togliere una lezione,
+   non una presa in giro. Va spento quello che in una frase non si
+   spiega: ruotare una figura a mente, contare i cubetti che stanno
+   dietro a quelli che si vedono, capire cosa si vede guardando un
+   cilindro dall'alto — lì non c'è una riga che colmi il buco, c'è un
+   pezzo di scuola che manca.
+
+   Il metro resta il programma della primaria italiana, con le due
+   eccezioni di sempre: i gruppi di **ragionamento** non hanno una
+   lezione da aver fatto (`materia: 'ragionamento'` in `saperi.js`, che
+   lo dice già), e quello che **la scuola non dà affatto** — dove vive
+   il pinguino arriva dai libri illustrati — non si giudica col
+   programma.
+
+   E quando un gruppo è troppo grosso, si spegne **a sottovoci**: i
+   nomi dei solidi sono di prima e le viste dall'alto sono di quinta,
+   e spegnere «I solidi» per prendere le seconde porterebbe via i
+   primi. `settings.sa` accetta sia la chiave di un gruppo sia quella
+   di una tipologia (`store/profile.js`, `saperiSpenti`), e per chi fa
+   le domande sono la stessa cosa (`Modulo.tipoSpento`).
+
+   ── E OGNI FASCIA DEVE PRONUNCIARSI SU TUTTO ─────────────────────
+   `tiene` è l'altra metà di `saperi`: uno dice cosa si spegne,
+   l'altro **perché il resto resta acceso**. Non è documentazione — è
+   quello che rende visibile l'errore per omissione, che è l'unico che
+   qui si fa davvero: `stima` è rimasta accesa in terza per anni
+   perché l'elenco era stato scritto pensando ai conti in colonna e
+   nessuno era più tornato a guardare il resto del catalogo, ed è lo
+   stesso identico difetto della fascia dei quattro anni raccontato
+   più sotto. Un test che controlla quello che c'è non può vedere
+   quello che manca: bisogna pretendere un verdetto per ogni pezzo di
+   scuola. `test/unita/partenze.test.mjs` diventa rosso se un sapere
+   nuovo non ne ha uno, e la catena si propaga dai piccoli in su.
    ═══════════════════════════════════════════════════════════════════ */
 import { GIOCHI } from './giochi.js'
 /* ── L'ETÀ ──
@@ -134,7 +179,22 @@ export const PARTENZE = [
                 ritmi, e gli animali coi loro posti — roba che arriva
                 dai libri illustrati, non dalla scuola. */
              'lettura', 'sillabe', 'griglia', 'calendario', 'simmetria',
-             'deduzione', 'incertezza', 'insiemi', 'confronti', 'analogie'],
+             'deduzione', 'incertezza', 'insiemi', 'confronti', 'analogie',
+             /* «il corpo dice il posto» — il pelo bianco vuol dire gelo,
+                le zampe palmate l'acqua — è un obiettivo di **fine
+                terza** (Indicazioni 2012: «Riconoscere in altri
+                organismi viventi, in relazione con i loro ambienti,
+                bisogni analoghi ai propri»). Restano accesi «gli
+                ambienti del mondo», che è il gradino sotto e non arriva
+                da scuola. */
+             'adattamento'],
+    tiene: {
+      numeri: 'contare fino a dieci e dire chi è di più si fa prima della scuola',
+      figure: 'il cerchio e il quadrato si riconoscono dai libri illustrati',
+      lessico: 'i contrari — grande e piccolo, caldo e freddo — si imparano parlando',
+      sequenze: 'rosso, blu, rosso, blu è un gioco da tavolino, non una lezione',
+      ambienti: 'dove vive il pinguino arriva dai cartoni, non da un\'ora di geografia',
+    },
   },
   {
     chiave: 'prima',
@@ -163,7 +223,22 @@ export const PARTENZE = [
     saperi: ['moltiplicazioni', 'divisioni', 'misure', 'conversioni', 'decine',
              'stima', 'problemi', 'orologio', 'date', 'area-perimetro', 'solidi',
              'spazio-mente', 'analisi', 'flessione', 'presente', 'tempi-verbali',
-             'accenti', 'suoni-difficili'],
+             'accenti', 'suoni-difficili',
+             /* stesso motivo dei piccoli: è di fine terza, e a sei anni
+                e mezzo mancano due anni buoni. Restano gli ambienti. */
+             'adattamento'],
+    tiene: {
+      lettura: 'in prima si impara a leggere: è esattamente quello che si sta facendo',
+      sillabe: 'le sillabe e le rime sono il primo mese di prima',
+      griglia: 'la casella B3 e le frecce si fanno sul quaderno a quadretti, in prima',
+      calendario: 'i giorni e i mesi si appendono al muro il primo giorno di scuola',
+      simmetria: 'la farfalla piegata a metà è di prima',
+      deduzione: 'a sei anni si tira la conclusione da una regola detta a voce',
+      incertezza: '«non si può sapere» è la risposta che si impara a dare a questa età',
+      insiemi: '«tutti» e «nessuno» si usano parlando, prima che a scuola',
+      confronti: 'mettere in fila tre bambini per altezza si fa in cortile',
+      analogie: 'il cane sta all\'osso: si capisce a voce, senza saper leggere',
+    },
   },
   {
     chiave: 'terza',
@@ -173,7 +248,53 @@ export const PARTENZE = [
     che: 'Moltiplicazioni sì, divisioni no. Niente metri, litri e chili: quelli arrivano dopo.',
     nientePiccoli: true,
     anni: 8,
-    saperi: ['divisioni', 'misure', 'conversioni'],
+    /* ── E QUESTE QUATTRO SONO ARRIVATE RIFACENDO IL GIRO ──
+       L'elenco diceva tre nomi — le divisioni, le misure, le
+       conversioni — ed erano stati scritti pensando ai conti in
+       colonna. Tutto il resto era rimasto acceso per omissione,
+       esattamente com'era successo a quattro anni con la lettura e le
+       analogie: a otto anni il gioco chiedeva di dire quanti cubetti
+       stanno dietro a quelli che si vedono e cosa si vede guardando un
+       cilindro dall'alto. Sono cose che a scuola arrivano in quarta e
+       in quinta, e a un bambino di terza non arrivano difficili:
+       arrivano mute — non c'è una riga che possa colmare il buco.
+
+       Si spengono **a sottovoci** e non a gruppi, perché i due gruppi
+       che le tengono sono troppo grossi: «I solidi» si porterebbe via
+       i nomi (cubo, piramide, cilindro) e il contare le facce, che
+       sono di prima e di terza, e «Girare le figure con la mente» si
+       porterebbe via la figura allo specchio, che è di seconda.
+       Quelle restano, e sono anche il motivo per cui i due gruppi
+       hanno lo stesso una riga in `tiene`: sono accesi per metà.
+
+       Quello che NON si spegne è altrettanto deciso, ed è la regola
+       nuova in testa al file: l'arrotondamento a scuola arriva dopo,
+       ma «47 sta fra 40 e 50, l'ultima cifra è 7, quindi si va su» è
+       una riga — quindi «Stima e arrotondamento» resta acceso e si
+       insegna. Il perimetro e l'area contati sui quadretti sono di
+       terza, i tempi dell'indicativo sono di terza, le parti del
+       discorso sono di terza. La riga sopra dice «Moltiplicazioni sì,
+       divisioni no» e resta vera. */
+    saperi: ['divisioni', 'misure', 'conversioni',
+             'geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste'],
+    tiene: {
+      moltiplicazioni: 'le tabelline sono di terza: è la riga che dà il nome a questa fascia',
+      decine: 'il valore posizionale fino alle migliaia è di terza',
+      stima: 'arrotondare arriva dopo, ma si spiega in una riga — e la spiegazione c\'è',
+      problemi: 'due operazioni di fila e i dati che non servono sono di terza',
+      orologio: 'ore, mezze, quarti e minuti sono di seconda',
+      date: 'quanti giorni passano fra due date è di seconda',
+      'area-perimetro': 'contare i quadretti e i passi del bordo è di terza; le formule sono di quinta e non si chiedono',
+      solidi: 'i nomi e il contare le facce restano; le viste dall\'alto sono spente qui sopra, per sottovoce',
+      'spazio-mente': 'la figura allo specchio è di seconda e resta; le rotazioni e i cubetti sono spenti qui sopra',
+      analisi: 'i nomi delle parti del discorso sono di terza',
+      flessione: 'plurali, generi e articoli sono di prima',
+      presente: 'il presente indicativo è di seconda',
+      'tempi-verbali': 'passato prossimo e imperfetto si cominciano in terza',
+      accenti: 'accenti, apostrofi e la lettera h sono di seconda',
+      'suoni-difficili': 'gn, gl, sc e le doppie sono di prima',
+      adattamento: 'è l\'obiettivo di fine terza, e a otto anni ci siamo',
+    },
   },
   {
     chiave: 'quarta',
@@ -183,7 +304,23 @@ export const PARTENZE = [
     che: 'Tutto acceso, tranne i giochi per i più piccoli.',
     nientePiccoli: true,
     anni: 9.5,
+    /* Vuota, e verificato: a 9,5 anni la finestra arriva a 94, e tutto
+       quello che sta a 95 — i tempi composti, il passato remoto, il
+       condizionale, il congiuntivo, l'imperativo — o nasce già spento
+       (`difetto: false` in `data/saperi.js`) o resta fuori. Le due
+       classi più alte ammesse stanno a 81: i problemi con le misure
+       dentro e i dati che non servono, tutti e due in mano a una
+       quarta. E una cosa da tenere a mente prima di toccarla: questa
+       fascia copre **da 8,75 anni in su**, quindi quello che si
+       spegnesse qui si spegnerebbe anche agli undicenni. */
     saperi: [],
+    tiene: {
+      divisioni: 'le divisioni in colonna sono di quarta',
+      misure: 'metri, litri e chili si cominciano in terza e si consolidano qui',
+      conversioni: 'le equivalenze sono di quarta',
+      solidi: 'viste dall\'alto e facce sono di quinta, e da 8,75 anni in su ci siamo',
+      'spazio-mente': 'le rotazioni sono di quarta, lo sviluppo del cubo di quinta',
+    },
   },
 ]
 

@@ -48,6 +48,7 @@ import { PARTENZE, eccezioniPerEta } from './partenze.js'
 import { FASCE_ETA, doveCadeCon } from '../quiz/nucleo/catalogo.js'
 import { finestraDi, anniDelLivello } from '../quiz/nucleo/classi.js'
 import { PASSO } from '../quiz/nucleo/modulo.js'
+import { contoDi, consiglioDa } from '../quiz/consiglio.js'
 
 /* le chiavi spente in una mappa di eccezioni: `{ torri: false }` vuol
    dire spento, l'assenza vuol dire acceso (è il patto di `settings`) */
@@ -171,8 +172,30 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
          «arriva più avanti». */
       const scelto = forzati.has(g.chiave) ? 'si'
         : (off.has(g.chiave) && !attesoSpento) ? 'no' : 'difetto'
+      /* ── I PEZZI DI SCUOLA CHE QUESTO GIOCO CHIEDE ──
+         `chiede:` nel manifesto (`data/giochi.js`): le domande che il
+         gioco si fa in casa danno per scontato quel pezzo, e senza
+         degradano invece di sparire — il castello con le divisioni
+         spente chiede moltiplicazioni più difficili.
+         Le tre posizioni sono le stesse di un gioco, e per la stessa
+         ragione: qui non c'è niente da spostare di mezzo anno, c'è da
+         dire **chi decide** — l'età, o il grande. */
+      const chiede = (g.chiede || []).map(k => {
+        const s = sapereDi(k)
+        if (!s) return null
+        const via = spenti.includes(k)
+        const viaPerEta = saDEta.has(k)
+        /* stessa regola dei giochi: una scelta che coincide con quello
+           che la partenza di quest'età scriverebbe non è una scelta di
+           nessuno, ed è la posizione di mezzo */
+        const come = via === viaPerEta ? 'difetto' : (via ? 'no' : 'si')
+        return { chiave: k, nome: s.nome, ico: s.ico, che: s.che, spegne: s.spegne,
+                 spento: via, attesoSpento: viaPerEta, scelto: come,
+                 aMano: come !== 'difetto' }
+      }).filter(Boolean)
+
       return { chiave: g.chiave, nome: g.nome, ico: g.ico, che: g.che, stato,
-               difetto, scelto, attesoSpento,
+               difetto, scelto, attesoSpento, chiede,
                /* il pezzo di scuola senza il quale questo gioco non ha
                   più niente da chiedere: il laboratorio delle pozioni è
                   tutto conversioni. La riga lo scrive al posto della
@@ -428,17 +451,23 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
   const perSapere = (righe, scegli = gruppoDi) => {
     const dentro = new Map()
     for (const r of righe) {
-      const chiave = scegli(r.sa) || 'altro'
+      const chiave = scegli(r.sa, r.tipo) || 'altro'
       if (!dentro.has(chiave)) dentro.set(chiave, [])
       dentro.get(chiave).push(r)
     }
     return [...dentro.entries()]
       .map(([chiave, classi]) => {
         const s = sapereDi(chiave)
+        /* Una sottovoce non sta nel catalogo dei pezzi di scuola — le
+           tipologie le dichiarano i moduli — quindi il nome da leggere
+           è quello della domanda («Come si vede un solido dall'alto») e
+           l'icona quella del gruppo che se la porta dietro. Senza,
+           resterebbe la chiave nuda addosso a un pallino. */
+        const suo = !s && sapereDi((classi[0]?.sa || [])[0])
         return {
           chiave,
-          nome: s?.nome || chiave,
-          ico: s?.ico || '•',
+          nome: s?.nome || classi[0]?.nome || chiave,
+          ico: s?.ico || suo?.ico || '•',
           quante: classi.length,
           /* il livello più alto che il gruppo tocca in questa fascia:
              serve a metterlo in fila con gli altri, e a dire quale pezzo
@@ -467,10 +496,19 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
      piane», la riga va scritta sotto quel nome — non sotto «Geometria»,
      che è ancora acceso e riaccenderlo non rimetterebbe niente.
 
-     E un pezzo spento che non ha domande resta lo stesso: le divisioni
-     vivono dentro il castello e non hanno una classe di quiz, ma se
-     sparissero da qui non ci sarebbe nessun posto dove riaccenderle. */
-  const spentoDi = sa => (sa || []).find(k => spenti.includes(k)) || null
+     E un pezzo spento che non ha domande resta lo stesso: se sparisse
+     da qui non ci sarebbe nessun posto dove riaccenderlo. È la stessa
+     ragione per cui, più sotto, quello che nessuna domanda cita finisce
+     appeso al gioco che lo chiede. */
+  /* E chi l'ha spenta può essere **una sottovoce**, non un gruppo: una
+     fascia può togliere «Come si vede un solido dall'alto» lasciando
+     acceso «I solidi», e in `settings.sa` finisce la chiave della
+     tipologia. Cercando solo fra i gruppi la riga non trovava nessun
+     nome e finiva sotto «• altro», che è il posto dove un grande non
+     la cerca: la vede sparita e non ha modo di rimetterla. La riga
+     sopra (`dove:`) guardava già `c.tipo`, questa no. */
+  const spentoDi = (sa, tipo) => (sa || []).find(k => spenti.includes(k)) ||
+    (spenti.includes(tipo) ? tipo : null)
   const conSpenti = righe => {
     const fila = perSapere(righe, spentoDi)
     const gia = new Set(fila.map(x => x.chiave))
@@ -480,27 +518,86 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
                    spento: true, classi: [] }))
     return [...fila, ...nudi]
   }
+  /* L'ordine è quello in cui si leggono: dal già saputo al non ancora,
+     e in fondo quello che non gli si chiede più. Le «troppo difficili»
+     non ci sono: sono fuori dalla sua portata e non gli arrivano, e un
+     elenco di roba che non vedrà non aiuta a decidere niente — quello
+     che serve sapere, cioè che salendo arriverebbero, lo dice già la
+     manopola salendo. */
+  const blocchi = ['facili', 'medie', 'toste', 'sotto', 'spenta'].map(chiave => {
+    const righe = gruppo(chiave)
+    const saperi = chiave === 'spenta' ? conSpenti(righe) : perSapere(righe)
+    return { chiave, righe, saperi, quante: righe.length }
+  })
+
+  const elencoGiochi = giochiDiUnEta({ eta, giochi, sa, sperimentali })
+  const domande = domandeDiUnEta({ eta, giochi, sa, sperimentali })
+
+  /* ── E SE NESSUNO LE CHIEDE, I BLOCCHI NON CI SONO ──
+     Da quattro a cinque anni e mezzo in casa ci sono tre giochi e
+     nessuno pesca dai moduli di quiz: elencare lo stesso undici classi
+     col tastino per provarle le fa leggere come «ecco cosa gli
+     chiederemo», e non gliele chiederemo mai. Era una condizione nel
+     template, ed è una regola: sta qui, dove sta anche il conto di chi
+     le chiede, se no chi guarda il dato e chi guarda lo schermo
+     vedrebbero due cose diverse — ed è proprio la differenza fra le due
+     a decidere dove va la riga di un pezzo di scuola (sotto).
+     Il censimento crudo resta in `fasce` e in `righe`: quello serve a
+     un test, e non è una cosa da mostrare. */
+  const blocchiVivi = domande.chiedono ? blocchi : []
+
+  /* ── UNA RIGA SOLA PER PEZZO DI SCUOLA ──
+     Un sapere che le domande citano ha già la sua riga fra i blocchi,
+     dove sta insieme alla sua difficoltà e alla tacca che la sposta di
+     mezzo anno. Quello che un gioco chiede e nessuna domanda cita non
+     ha nessun blocco in cui cadere — non ha una difficoltà, ha un
+     acceso e uno spento — e resta appeso al gioco che lo chiede, che è
+     anche il posto dove un grande lo va a cercare: «cosa chiede il
+     castello».
+
+     Due righe per la stessa chiave sarebbero due tacche diverse che
+     scrivono la stessa voce del profilo, con due scale diverse: è il
+     difetto che i cinque blocchi tutti uguali sono nati per non fare.
+
+     Valgono i blocchi che si mostrano davvero, e non è un cavillo: dove
+     le domande non le chiede nessuno l'elenco non c'è, e senza questa
+     riga quei saperi tornerebbero irraggiungibili — che è esattamente
+     il guasto da cui è nato tutto questo.
+
+     E vale **avere delle domande**, non comparire in un blocco: il
+     blocco di quelli tolti raccoglie anche i pezzi di scuola spenti che
+     di domande non ne hanno (`conSpenti`, sopra), e senza questa
+     distinzione la riga delle divisioni salterebbe da sotto il castello
+     al fondo dell'elenco nel momento stesso in cui la si spegne — la si
+     tocca in un posto e ricompare in un altro. Quello che un gioco
+     dichiara resta dove il gioco lo dichiara, acceso o spento che sia. */
+  const conDomande = new Set(blocchiVivi
+    .flatMap(b => b.saperi.filter(s => s.quante > 0).map(s => s.chiave)))
+  /* `chiede` resta intero, ed è la parte che non si vede aprendo: la
+     riga di contesto del gioco dice «senza le divisioni» a qualunque
+     età, anche quando la riga da toccare sta di là. È quella frase a
+     rispondere alla metà peggiore del guasto — non «non posso
+     cambiarle», ma «non so nemmeno che sono spente». */
+  for (const g of elencoGiochi)
+    g.chiedeQui = g.chiede.filter(s => !conDomande.has(s.chiave))
+  /* e il blocco di quelli tolti non ripete chi è già appeso a un gioco:
+     è l'altra metà della stessa regola, vista dall'altra parte */
+  const appesi = new Set(elencoGiochi.flatMap(g => g.chiedeQui.map(s => s.chiave)))
+  for (const b of blocchiVivi)
+    if (b.chiave === 'spenta')
+      b.saperi = b.saperi.filter(s => s.quante > 0 || !appesi.has(s.chiave))
+
   return {
     anni: eta,
     /* l'elenco intero, ognuno col suo stato: chi mostra decide se
        aprirlo o riassumerlo, ma il dato è sempre tutto */
-    giochi: giochiDiUnEta({ eta, giochi, sa, sperimentali }),
+    giochi: elencoGiochi,
     /* quello che il gioco dà per scontato, i più recenti per primi */
     sa: saperiDiUnEta(sa, { classi, eta }),
     /* chi gliele chiede, queste domande — e se in casa non c'è nessuno,
        da che età ne arriva uno */
-    domande: domandeDiUnEta({ eta, giochi, sa, sperimentali }),
-    /* L'ordine è quello in cui si leggono: dal già saputo al non
-       ancora, e in fondo quello che non gli si chiede più. Le «troppo
-       difficili» non ci sono: sono fuori dalla sua portata e non gli
-       arrivano, e un elenco di roba che non vedrà non aiuta a
-       decidere niente — quello che serve sapere, cioè che salendo
-       arriverebbero, lo dice già la manopola salendo. */
-    gruppi: ['facili', 'medie', 'toste', 'sotto', 'spenta'].map(chiave => {
-      const righe = gruppo(chiave)
-      const saperi = chiave === 'spenta' ? conSpenti(righe) : perSapere(righe)
-      return { chiave, righe, saperi, quante: righe.length }
-    }),
+    domande,
+    gruppi: blocchiVivi,
     /* ── IL CENSIMENTO GREZZO ──
        Non è quello che si mostra, e i numeri **non combaciano** con la
        lunghezza dei gruppi: qui ogni classe si conta una volta, lì i
@@ -512,6 +609,61 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
     spente: righe.filter(r => r.dove === 'spenta').length,
     righe,
   }
+}
+
+/* ── E DOVE STA QUELLO CHE NON FUNZIONA ──
+   Il quadro dice **come stanno le cose**; una riga che va male è la
+   sola che dica che qualcosa non funziona, ed è la stessa soglia
+   dell'avviso in posta (`quiz/consiglio.js`): otto risposte almeno,
+   meno di metà giuste. Stesso conto, stesso numero, dette nelle stesse
+   parole — se qui dicesse «5 su 12» e la posta «7 su 10» un grande
+   penserebbe a due cose diverse.
+
+   ── PERCHÉ IL SEGNALE DEVE RISALIRE ──────────────────────────────
+   Il rosso c'era già, ma **sepolto sotto due aperture**: il blocco, e
+   dentro il blocco il pezzo di scuola. Un grande che ha appena letto
+   in posta «Le analogie sulle cose del mondo» non sa nemmeno in quale
+   dei blocchi cercarla — quel nome nel quadro compare al terzo
+   livello, mentre il primo dice «Le analogie» e il secondo pure — e
+   scorrendo il quadro chiuso non vede niente di rosso da nessuna
+   parte. Un avviso che vale la posta dei grandi deve restare scritto
+   dove si va a fare qualcosa.
+
+   ── E PERCHÉ SI NOMINA LA DOMANDA, NON IL PEZZO ──────────────────
+   Perché è il nome che il grande sta cercando: quello che ha letto
+   nell'avviso. Il pezzo di scuola si nomina solo quando a andare male
+   sono le sue domande **prese insieme** e nessuna da sola — quattro
+   tipologie con tre tiri ciascuna non dicono niente separate, e sono
+   dodici risposte che parlano. È la stessa somma che fa la riga del
+   pezzo dentro il blocco, e per la stessa ragione.
+
+   Quello che nel quadro non ha nessuna riga non si segnala, e non c'è
+   niente da fare: una tipologia le cui classi cadono tutte oltre il
+   tetto dell'età non sta in nessun blocco — succede a chi ha spostato
+   l'età dopo aver giocato. Il posto dove ci sono comunque tutte è
+   «Come va» (`quiz/ComeVa.vue`), che è anche dove porta il tasto
+   dell'avviso. */
+const vaMale = (chiavi, risposte) => {
+  const c = consiglioDa(contoDi(chiavi.filter(Boolean), risposte))
+  return c && c.verso === -1 ? c.detto : null
+}
+
+export function vannoMale (blocco, risposte = {}) {
+  const fuori = []
+  for (const s of (blocco && blocco.saperi) || []) {
+    const sue = ((s.classi || [])
+      .map(c => ({ riga: c, detto: vaMale([c.tipo], risposte) }))
+      .filter(x => x.detto))
+    if (sue.length) {
+      for (const x of sue)
+        fuori.push({ chiave: x.riga.chiave, nome: x.riga.nome,
+                     dentro: s.nome, detto: x.detto })
+      continue
+    }
+    const insieme = vaMale((s.classi || []).map(c => c.tipo), risposte)
+    if (insieme) fuori.push({ chiave: s.chiave, nome: s.nome, dentro: null, detto: insieme })
+  }
+  return fuori
 }
 
 /* ── COSA È CAMBIATO FRA UNA TACCA E L'ALTRA ──

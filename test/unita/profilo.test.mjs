@@ -17,7 +17,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          aspettoDi, scegliAspetto,
          sapereAcceso, accendiSapere, saperiSpenti,
          spostaLEta, etaDelBambino, ETA_DIFETTO,
-         ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco,
+         ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco, fissaSapere,
          rimettiAiDifetti } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
@@ -145,6 +145,75 @@ uguale('un profilo che non c\'era non ha niente da migrare',
   migraProfilo({ coins: 1 }, 0).coins, 1)
 uguale('e uno che c\'era passa di qui con la sua versione',
   migraProfilo({ coins: 2 }, 6).coins, 2)
+
+/* ── 7b. LA FASCIA CHE HA IMPARATO A SPEGNERE DOPO ──
+   Le partenze scrivono le eccezioni una volta sola, alla creazione:
+   quando l'elenco di una fascia impara che un pezzo di scuola arriva
+   dopo, chi ha già il profilo continua a ricevere quelle domande. È
+   così che il difetto è finito in mano a un genitore giocando invece
+   che da qui, e la migrazione esiste per quello.
+
+   La parte da non sbagliare non è scrivere: è **non scrivere sopra a
+   un grande**. La regola è che si tocca una chiave solo nella fascia
+   in cui il difetto è nuovo, perché lì l'assenza non può essere la
+   traccia di una riaccensione — riaccendere un sapere al suo difetto
+   cancella la voce e non lascia niente. Se questo controllo fosse
+   sbagliato porterebbe via una scelta di un genitore **senza che
+   nessuno se ne accorga**, che è il modo peggiore di rompersi. */
+{
+  const ieri = (settings) => ({ ...profiloFinto(0), settings })
+
+  await pulisci()
+  save('giocatori', [{ id: 'g1', nome: 'Otto' }, { id: 'g2', nome: 'Sei' },
+                     { id: 'g3', nome: 'SenzaEta' }, { id: 'g4', nome: 'Oggi' }])
+  /* un bambino di terza come lo scriveva la build di ieri: tre saperi
+     spenti e niente altro */
+  save('profilo:g1', ieri({ eta: 8, sa: { divisioni: false, misure: false, conversioni: false } }))
+  /* uno di prima a cui un grande aveva **riacceso** la stima: nel
+     profilo non c'è scritto niente, perché riaccendere cancella la
+     voce — ed è esattamente il caso in cui una migrazione distratta
+     gliela rispegne */
+  save('profilo:g2', ieri({ eta: 6.5, sa: { moltiplicazioni: false, problemi: false } }))
+  /* e uno nato prima che l'età esistesse */
+  save('profilo:g3', ieri({ sa: {} }))
+  /* uno già aggiornato: non deve passare di qui una seconda volta */
+  save('profilo:g4', { ...profiloFinto(0), v: 7, settings: { eta: 8, sa: {} } })
+  await flush()
+  await init()
+
+  await selectPlayer('g1')
+  const sa1 = state.profile.settings.sa
+  uguale('a otto anni i cubetti nascosti si spengono', sa1['geo:cubetti'], false)
+  uguale('e le viste dall\'alto', sa1['geo:viste'], false)
+  controlla('ma il gruppo «I solidi» resta acceso', sapereAcceso('solidi'))
+  controlla('e la stima pure, perché si insegna in una riga', sapereAcceso('stima'))
+  uguale('quello che c\'era resta dov\'era', sa1.divisioni, false)
+
+  await selectPlayer('g2')
+  const sa2 = state.profile.settings.sa
+  controlla('la stima riaccesa a mano a sei anni e mezzo resta accesa',
+            sapereAcceso('stima'), JSON.stringify(sa2))
+  uguale('e le due spente a mano restano spente', sa2.problemi, false)
+  uguale('mentre «Com\'è fatto un animale» arriva adesso', sa2.adattamento, false)
+
+  await selectPlayer('g3')
+  uguale('un profilo senza età vale nove anni, e a nove non si spegne niente',
+         Object.keys(state.profile.settings.sa).length, 0)
+
+  await selectPlayer('g4')
+  uguale('e chi era già aggiornato non si tocca',
+         Object.keys(state.profile.settings.sa).length, 0)
+
+  /* ── e il cestino non rimigra due volte ──
+     Una copia messa da parte **oggi** porta con sé la versione di
+     oggi, quindi rimetterla non la fa ripassare di qui; una fatta
+     prima dell'aggiornamento ha ancora la sua, e viene migrata come
+     tutte le altre. Basta che il timbro finisca nella copia: se
+     `selectPlayer` non lo scrivesse, un ripristino rifarebbe il giro e
+     riscriverebbe sopra le scelte fatte nel frattempo. */
+  await selectPlayer('g1')
+  uguale('un profilo appena letto porta la versione di oggi', state.profile.v, 7)
+}
 
 /* ── 8. il salvataggio da portare via ── */
 await pulisci()
@@ -376,6 +445,50 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
   uguale('e «come dice l\'età» non lascia nessuna voce',
          state.profile.settings.giochi.dungeon, undefined)
   controlla('né una forzatura', !giocoForzato('dungeon'))
+}
+
+/* ── E LE TRE POSIZIONI DI UN PEZZO DI SCUOLA ──
+   Le divisioni del castello non hanno domande nel mazzo: la loro tacca
+   non sposta niente di mezzo anno, sceglie **chi decide** — ed è la
+   stessa forma dei giochi, con la stessa trappola. «Come dice l'età»
+   non vuol dire «nessuna eccezione»: a otto anni la partenza le spegne,
+   quindi rimettere quella riga deve **scrivere** `false`. Se cancellasse
+   e basta, «rimetti questa riga» e «rimetti tutto» lascerebbero due
+   profili diversi, e la riga resterebbe ambra appena dopo aver rimesso
+   tutto — che è il momento in cui è più evidente che sta mentendo. */
+{
+  spostaLEta(8)
+  fissaSapere('divisioni', 'si')
+  controlla('«l\'ha già fatto» le accende contro l\'età', sapereAcceso('divisioni'))
+  uguale('e non lascia scritto un difetto', state.profile.settings.sa.divisioni, undefined)
+
+  fissaSapere('divisioni', 'no')
+  controlla('«non l\'ha ancora fatto» le spegne', !sapereAcceso('divisioni'))
+  uguale('scrivendo l\'eccezione', state.profile.settings.sa.divisioni, false)
+
+  fissaSapere('divisioni', 'difetto')
+  uguale('e «come dice l\'età» scrive quello che la partenza scriverebbe',
+         state.profile.settings.sa.divisioni, false)
+
+  /* la prova che le due strade portano allo stesso posto: si rimette la
+     riga, si rimette tutto, e i due salvataggi devono coincidere */
+  /* l'ordine delle chiavi non è il dato: una mappa di eccezioni dice la
+     stessa cosa comunque siano scritte */
+  const eccezioni = () => Object.entries(state.profile.settings.sa || {})
+    .map(([k, v]) => `${k}=${v}`).sort().join(' ')
+  const unaRiga = eccezioni()
+  fissaSapere('divisioni', 'si')
+  rimettiAiDifetti()
+  uguale('rimettere la riga e rimettere tutto lasciano lo stesso profilo',
+         eccezioni(), unaRiga)
+
+  /* e dove l'età non lo spegne, «come dice l'età» non scrive niente */
+  spostaLEta(9.5)
+  fissaSapere('divisioni', 'no')
+  fissaSapere('divisioni', 'difetto')
+  uguale('a 9,5 anni la voce sparisce, perché il difetto è acceso',
+         state.profile.settings.sa.divisioni, undefined)
+  controlla('e le divisioni sono accese', sapereAcceso('divisioni'))
 }
 
 /* ── E IL TASTO CHE RIMETTE TUTTO ──

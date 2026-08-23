@@ -18,13 +18,18 @@
    DOVE STA LA MAPPA. Non qui: qui c'è solo l'elenco dei pezzi di
    scuola, con le parole per dirlo a un genitore. **Chi dichiara di aver
    bisogno di un sapere è chi fa le domande** — un modulo di quiz lo
-   dichiara tipologia per tipologia (`sa:` dentro `tipi`), il castello
-   lo chiede a `divisioniAccese()`. Così la domanda e il suo requisito
+   dichiara tipologia per tipologia (`sa:` dentro `tipi`), un gioco che
+   le domande se le fa in casa lo dichiara nel suo manifesto (`chiede:`
+   in `data/giochi.js`, che è la strada del castello per le divisioni e
+   le moltiplicazioni). Così la domanda e il suo requisito
    cambiano insieme, e non esiste un elenco da tenere allineato a mano.
    `test/unita/saperi.test.mjs` controlla che le due parti si parlino:
    una chiave citata da un modulo e non elencata qui è un guasto, e un
-   sapere che non toglie niente da nessuna parte è un interruttore finto
-   — peggio che non averlo.
+   sapere che non lo cita nessuno è un interruttore che esiste e non si
+   raggiunge — peggio che non averlo, perché nessuno ha modo di
+   accorgersene. La dichiarazione è anche quello che dà al pezzo di
+   scuola **una riga** nel quadro dell'età: senza, si spegne e non si
+   riaccende.
 
    DUE LIVELLI. Un gruppo è grosso — «accenti e apostrofi» — e le
    tipologie che ci stanno dentro sono tre: l'accento, l'apostrofo, la

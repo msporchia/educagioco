@@ -23,7 +23,7 @@ import { readdirSync, existsSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { quadroDi, giochiDiUnEta, differenzaFra } from '../../src/data/quadro.js'
+import { quadroDi, giochiDiUnEta, differenzaFra, vannoMale } from '../../src/data/quadro.js'
 import { classiDelModulo, FASCE_ETA, doveCadeCon } from '../../src/quiz/nucleo/catalogo.js'
 import { PARTENZE, partenzaPerEta, eccezioniPerEta, eccezioniDi } from '../../src/data/partenze.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
@@ -527,6 +527,115 @@ for (const eta of [6, 8, 10]) {
 }
 
 
+/* ── I PEZZI DI SCUOLA CHE VIVONO DENTRO UN GIOCO ──
+   Il guasto da cui è nato questo blocco: le divisioni e le
+   moltiplicazioni le guarda **solo il castello** (`contiPermessi()`), e
+   da quando il quadro si compone dai pezzi di scuola che le domande
+   citano, la loro riga esisteva soltanto quando un problema a parole
+   capitava nella finestra di quell'età. Sotto i sette anni non c'era
+   niente, e un genitore non aveva nessun modo — non di cambiarle: di
+   **accorgersi** che a suo figlio erano spente.
+
+   Adesso il gioco le dichiara (`chiede:` in `data/giochi.js`) e la
+   regola è una sola: **una riga per pezzo di scuola, e una sola**. Chi
+   ha domande sta dove sta la sua difficoltà, chi non ne ha resta appeso
+   al gioco che lo chiede. Due righe vorrebbero dire due tacche diverse
+   che scrivono la stessa voce del profilo con due scale diverse. */
+{
+  const chiesti = new Set(GIOCHI.flatMap(g => g.chiede || []))
+  controlla('almeno un gioco dichiara un pezzo di scuola che chiede',
+            chiesti.size > 0, [...chiesti].join(' '))
+
+  /* Nei blocchi lo stesso pezzo può stare in due posti — è il punto di
+     tutta la forma — ma i due posti sono lo stesso tipo di riga, con la
+     stessa ✎. Quello che non deve succedere è che stia **di qua e di
+     là**: due tacche diverse, due scale, una sola voce del profilo. */
+  const neiBlocchi = (q, k) => q.gruppi.some(g => g.saperi.some(s => s.chiave === k))
+  const neiGiochi = (q, k) => q.giochi.some(g => g.chiedeQui.some(s => s.chiave === k))
+
+  const doppie = []
+  const mai = new Map()
+  /* con le eccezioni della sua età e senza: sono due profili diversi —
+     nella prima le divisioni a sei anni sono spente, nella seconda no —
+     e la riga deve esserci in tutti e due i casi */
+  for (const suoi of [true, false])
+    for (let eta = 4; eta <= 12; eta += 0.5) {
+      const ecc = suoi ? eccezioniPerEta(eta) : { giochi: {}, sa: {} }
+      const q = quadroDi({ eta, ...ecc }, { classi })
+      for (const k of chiesti) {
+        const dove = [neiBlocchi(q, k) && 'domande', neiGiochi(q, k) && 'giochi'].filter(Boolean)
+        if (dove.length > 1) doppie.push(`${eta}a ${k}: ${dove.join('+')}`)
+        if (!dove.length) mai.set(k, [...(mai.get(k) || []), eta])
+      }
+    }
+  uguale('nessun pezzo di scuola sta insieme fra le domande e sotto un gioco',
+         doppie.join(' · '), '')
+  uguale('e a nessuna età resta senza una riga da cui toccarlo',
+         [...mai.entries()].map(([k, e]) => `${k}: ${e.join(' ')}`).join(' · '), '')
+
+  /* Il caso che si vede meglio: a sei anni le divisioni non hanno
+     nessuna domanda dentro la finestra, quindi accese la riga può
+     arrivare solo dal castello. Se un giorno un modulo di quiz le
+     portasse anche lì, l'invariante di sopra resterebbe vera comunque —
+     quello che non deve succedere è che spariscano tutte e due. */
+  const q6 = quadroDi({ eta: 6, sa: {}, giochi: {} }, { classi })
+  const dalGioco = q6.giochi.find(g => g.chiedeQui.some(s => s.chiave === 'divisioni'))
+  controlla('a 6 anni «Le divisioni» stanno appese al gioco che le chiede',
+            !!dalGioco, dalGioco ? dalGioco.nome : 'nessuno')
+  nota('a 6 anni il castello si porta dietro: ' +
+       (q6.giochi.find(g => g.chiave === 'torri')?.chiedeQui || []).map(s => s.nome).join(' · '))
+
+  /* e a otto, dove il problema a parole c'è, la riga è quella delle
+     domande: il gioco non la ripete */
+  const q8 = quadroDi({ eta: 8, sa: {}, giochi: {} }, { classi })
+  uguale('a 8 anni la riga è quella dei blocchi, e il gioco non la ripete',
+         q8.giochi.filter(g => g.chiedeQui.some(s => s.chiave === 'divisioni')).length, 0)
+
+  /* Ma la **dichiarazione** resta intera, ed è l'altra metà del guasto:
+     a otto anni la partenza spegne le divisioni, e la riga di contesto
+     del castello lo deve dire lì dov'è — «senza le divisioni» — anche se
+     la riga da toccare sta in fondo, fra quelle tolte. Il guaio di
+     Leonardo non era non poterle cambiare: era non sapere che erano
+     spente. */
+  const torri = quadroDi({ eta: 8, ...eccezioniPerEta(8) }, { classi })
+    .giochi.find(g => g.chiave === 'torri')
+  controlla('a 8 anni il castello sa di avere le divisioni spente, riga o non riga',
+            torri.chiede.some(s => s.chiave === 'divisioni' && s.spento) &&
+            !torri.chiedeQui.some(s => s.chiave === 'divisioni'),
+            torri.chiede.map(s => `${s.chiave}${s.spento ? '(spento)' : ''}`).join(' '))
+
+  /* ── IL PARAGONE È L'ATTESO, NON «NESSUNA ECCEZIONE» ──
+     Le partenze *scrivono* `divisioni: false` per la fascia della terza:
+     confrontando con un profilo vuoto quella riga risulterebbe messa a
+     mano da un grande che non ha toccato niente — ambra addosso, e il
+     tasto «rimetti tutto» incapace di toglierla. */
+  for (const eta of [5, 6, 8, 9.5]) {
+    const suoi = eccezioniPerEta(eta)
+    const q = quadroDi({ eta, giochi: suoi.giochi, sa: suoi.sa }, { classi })
+    const ambra = q.giochi.flatMap(g => g.chiede.filter(s => s.aMano).map(s => s.chiave))
+    uguale(`a ${eta} anni, appena rimesso ai difetti, nessun pezzo di scuola è messo a mano`,
+           ambra.join(' '), '')
+  }
+
+  /* e il contrario nei due versi: spegnere quello che l'età dava per
+     saputo è una scelta, e riaccendere quello che l'età teneva spento
+     pure — la tacca deve saperlo dire, se no non c'è niente da
+     ritrovare */
+  {
+    const q = quadroDi({ eta: 6, sa: { ...eccezioniPerEta(6).sa, divisioni: undefined } },
+                       { classi })
+    const riga = q.giochi.flatMap(g => g.chiede).find(s => s.chiave === 'divisioni')
+    uguale('a 6 anni riaccendere le divisioni è una scelta di un grande', riga.scelto, 'si')
+    uguale('e la riga si colora', riga.aMano, true)
+    uguale('mentre l\'età da sola le teneva spente', riga.attesoSpento, true)
+  }
+  {
+    const q = quadroDi({ eta: 9.5, sa: { divisioni: false } }, { classi })
+    const dove = q.gruppi.find(g => g.saperi.some(s => s.chiave === 'divisioni'))
+    uguale('a 9,5 anni spegnerle a mano le porta fra quelle tolte', dove.chiave, 'spenta')
+  }
+}
+
 /* ── UN GIOCO TENUTO IN CASA CONTRO L'ETÀ ──
    `settings.giochi[k] === true` è una cosa che prima non si poteva
    dire: acceso era l'assenza, e accendere un gioco «che arriva più
@@ -585,6 +694,71 @@ for (const eta of [6, 8, 10]) {
            chiuso.stato, 'spento')
     uguale('e la riga dice cosa gli manca', chiuso.manca.length > 0, true, chiuso.manca)
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   E DOVE STA QUELLO CHE NON FUNZIONA
+
+   Un muro fa scattare un avviso nella posta dei grandi
+   (`quiz/allarme.js`), e l'avviso nomina **la tipologia** — «Le
+   analogie sulle cose del mondo». Nel quadro quel nome sta al terzo
+   livello: blocco chiuso, dentro il pezzo di scuola chiuso, dentro la
+   domanda. Chi arrivava dall'avviso non trovava niente di rosso
+   scorrendo, e nemmeno il nome fra i pezzi di scuola, che si chiamano
+   in un altro modo («Le analogie»).
+
+   Qui si prova che il segnale risale fino al blocco, con la stessa
+   soglia della posta, e che si ferma dove deve: un conto corto o una
+   quota buona non colorano niente.
+   ═══════════════════════════════════════════════════════════════════ */
+{
+  const quadro = quadroDi({ eta: 8 }, { classi })
+  /* una tipologia vera, presa dal quadro stesso: cablarne una a mano
+     vorrebbe dire riscrivere il test il giorno che si rinomina */
+  const conTipo = quadro.gruppi
+    .flatMap(b => b.saperi.map(s => ({ b, s })))
+    .find(x => x.s.classi.some(c => c.tipo))
+  const riga = conTipo.s.classi.find(c => c.tipo)
+
+  uguale('senza risposte non va male niente',
+         vannoMale(conTipo.b, {}).length, 0)
+  uguale('e nemmeno con poche risposte, per quanto storte',
+         vannoMale(conTipo.b, { [riga.tipo]: { ok: 0, err: 4 } }).length, 0)
+
+  const male = vannoMale(conTipo.b, { [riga.tipo]: { ok: 2, err: 8 } })
+  uguale(`«${riga.nome}» a 2 su 10 sale fino al blocco`, male.length, 1)
+  uguale('e si nomina la domanda, che è il nome scritto nell\'avviso',
+         male[0].nome, riga.nome)
+  uguale('col pezzo di scuola dove sta, che è la mappa per trovarla',
+         male[0].dentro, conTipo.s.nome)
+  uguale('e col numero della posta, non un altro',
+         male[0].detto, 'ne ha sbagliate 8 su 10')
+
+  uguale('chi le indovina quasi tutte non è un problema e non si colora',
+         vannoMale(conTipo.b, { [riga.tipo]: { ok: 10, err: 1 } }).length, 0)
+  uguale('e nemmeno chi sta nel mezzo',
+         vannoMale(conTipo.b, { [riga.tipo]: { ok: 7, err: 3 } }).length, 0)
+
+  /* ── il pezzo di scuola si nomina solo quando parla la somma ──
+     Quattro tipologie con tre tiri ciascuna non dicono niente da sole,
+     e sono dodici risposte che parlano: allora il nome utile è quello
+     del gruppo, perché non c'è una riga sola da indicare. */
+  const largo = quadro.gruppi
+    .flatMap(b => b.saperi.map(s => ({ b, s })))
+    .find(x => x.s.classi.filter(c => c.tipo).length >= 3)
+  if (largo) {
+    const sparse = {}
+    for (const c of largo.s.classi) if (c.tipo) sparse[c.tipo] = { ok: 1, err: 3 }
+    const insieme = vannoMale({ saperi: [largo.s] }, sparse)
+    uguale(`«${largo.s.nome}»: nessuna riga da sola, ma insieme parlano`,
+           insieme.length, 1)
+    uguale('e allora si nomina il pezzo di scuola', insieme[0].nome, largo.s.nome)
+    uguale('che non sta dentro nessun altro', insieme[0].dentro, null)
+  }
+
+  /* il blocco dei giochi non ha domande: chiederglielo non deve
+     scoppiare, deve dire di no */
+  uguale('un blocco senza domande non va male', vannoMale(null, {}).length, 0)
 }
 
 riassunto('il quadro di un\'età')

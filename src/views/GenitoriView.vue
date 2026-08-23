@@ -18,7 +18,8 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
-         ritocca, accendiSapere, saperiSpenti, fissaGioco, rimettiAiDifetti,
+         ritocca, accendiSapere, saperiSpenti, fissaGioco, fissaSapere,
+         rimettiAiDifetti,
          aspettoDi, scegliAspetto } from '../store/profile.js'
 import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
 import { leggiCestino } from '../store/cestino.js'
@@ -549,6 +550,20 @@ function ritoccaDalQuadro({ chiave, ritocco = 0, spenta = false }) {
 function fissaDalQuadro({ chiave, come }) {
   if (!chiave) return
   fissaGioco(chiave, come)
+  giroEta.value++
+}
+
+/* ── e la ✎ di un pezzo di scuola che vive dentro un gioco ──
+   Le divisioni del castello non hanno domande nel mazzo, quindi non
+   hanno una difficoltà da spostare di mezzo anno: quello che si sceglie
+   è la stessa cosa dei giochi — chi decide, l'età o il grande — e si
+   scrive con la stessa funzione di `fissaGioco`, dall'altra parte
+   (`settings.sa`). Passa da qui e non da `ritoccaDalQuadro` perché
+   quello parla di ritocchi, e un ritocco su una chiave senza domande
+   sarebbe una voce nel salvataggio che non sposta niente. */
+function fissaSapereDalQuadro({ chiave, come }) {
+  if (!chiave) return
+  fissaSapere(chiave, come)
   giroEta.value++
 }
 
@@ -1255,6 +1270,7 @@ async function rimetti(v) {
                    :sperimentali="inProva" conferma tarabile
                    @scegli="applicaAnni" @prova="prova = $event"
                    @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
+                   @sapere="fissaSapereDalQuadro"
                    @rimetti="rimettiTutto" />
 
       <h2>Interruttori di casa</h2>

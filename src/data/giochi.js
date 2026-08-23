@@ -85,6 +85,29 @@
    Non è l'interruttore dei genitori messo giù: è la stessa carta che
    non si può accendere finché quel sapere è spento, e la schermata dei
    genitori lo scrive invece di far sparire una carta senza motivo.
+
+   ── E `chiede`, CHE È L'AFFERMAZIONE PIÙ DEBOLE ──────────────────
+   `chiede: ['moltiplicazioni', 'divisioni']` vuol dire **questo gioco
+   fa domande che danno per scontato quel pezzo di scuola**, e senza
+   degrada invece di sparire: il castello con le divisioni spente chiede
+   moltiplicazioni più difficili, e resta il castello. È la stessa
+   dichiarazione che un modulo di quiz fa nei suoi `tipi` (`sa:`), detta
+   da un gioco che le domande se le fa in casa.
+
+   Serve perché senza di lei quelle due voci erano **impostazioni
+   irraggiungibili**: da quando la schermata dei genitori compone il
+   quadro dell'età dai pezzi di scuola che le domande citano, un sapere
+   che vive solo dentro un gioco non aveva più nessuna riga da cui
+   essere toccato — e un genitore non aveva nemmeno modo di accorgersi
+   che a suo figlio le divisioni erano spente. La regola, adesso, è che
+   **chi guarda un sapere lo dichiara**: un modulo di quiz o un gioco,
+   e `test/unita/saperi.test.mjs` diventa rosso se qualcuno resta senza
+   nessuno che lo citi.
+
+   Non si confonde con `serve`: quella dice «senza, questa carta non si
+   può nemmeno accendere», questa dice «senza, questo gioco chiede
+   qualcos'altro». Un gioco può dichiarare tutte e due, e sono due righe
+   diverse nella schermata dei grandi.
    ═══════════════════════════════════════════════════════════════════ */
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
@@ -103,9 +126,16 @@ export const GIOCHI = [
     che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',
     che: 'parole, verbi e frasi in spagnolo', area: 'parole', come: 'domande', grandi: true },
+  /* Le due operazioni del castello sono l'esempio per cui `chiede`
+     esiste: la cassa le guarda da sempre (`contiPermessi()` in
+     `store/profile.js`) e nessun altro le nominava, quindi le loro righe
+     nella schermata dei grandi dipendevano dal fatto che un problema a
+     parole le citasse di sfuggita. Detto qui, il legame è quello vero —
+     ed è il castello a portarsele dietro anche alle età in cui quel
+     problema non arriva. */
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
-    grandi: true },
+    grandi: true, chiede: ['moltiplicazioni', 'divisioni'] },
   { chiave: 'pozioni',    ico: '⚗️', nome: 'Il laboratorio delle pozioni',
     che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
     area: 'numeri', come: 'fare', grandi: true },
@@ -128,7 +158,8 @@ export const GIOCHI = [
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
                               grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
                               tinta: g.tinta,
-                              sperimentale: !!g.sperimentale, serve: g.serve || [] })),
+                              sperimentale: !!g.sperimentale, serve: g.serve || [],
+                              chiede: g.chiede || [] })),
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)
@@ -140,3 +171,9 @@ export const CHIAVI_SPERIMENTALI = GIOCHI.filter(g => g.sperimentale).map(g => g
 /* cosa dà per scontato un gioco: lo chiede `store/profile.js` per non
    mettere in home un gioco che il bambino non può giocare */
 export const serveA = chiave => GIOCHI.find(g => g.chiave === chiave)?.serve || []
+/* e cosa **chiede** senza esigerlo. Il quadro dell'età scorre l'elenco
+   e se lo legge da sé (`data/quadro.js`); questo serve a chi ha in mano
+   una chiave sola, ed è il gemello di `serveA` perché le due domande si
+   somigliano abbastanza da volerle vedere una accanto all'altra:
+   nessuno decide con questa se una carta si accende. */
+export const chiedeA = chiave => GIOCHI.find(g => g.chiave === chiave)?.chiede || []

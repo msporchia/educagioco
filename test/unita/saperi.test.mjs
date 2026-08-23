@@ -5,8 +5,9 @@
    fanno niente: contano perché qualcuno li cita. Un modulo di quiz li
    cita tipologia per tipologia (`sa:` dentro `tipi`) — o, se le
    tipologie non le dichiara ancora, grado per grado (`saperi:` accanto
-   alla scaletta) — e il castello cita `divisioni` chiedendo
-   `divisioniAccese()`. Le due parti stanno
+   alla scaletta) — e un gioco lo dichiara nel suo manifesto (`chiede:`
+   in `data/giochi.js`), che è la strada del castello per le divisioni e
+   le moltiplicazioni. Le due parti stanno
    in file diversi apposta — la domanda dichiara di cosa ha bisogno, il
    catalogo dice solo come si chiama — e questo test è il punto in cui
    si controlla che si parlino:
@@ -15,7 +16,11 @@
        refuso che nessuno vedrebbe mai: spegnere quel macrogruppo non
        toglierebbe niente;
      · un sapere elencato e citato da nessuno è un interruttore finto,
-       e qui vale la regola di sempre — peggio che non averlo;
+       e qui vale la regola di sempre — peggio che non averlo. Vale nei
+       due versi: una chiave che un gioco dichiara e il catalogo non ha
+       è un refuso, e un sapere che né un modulo né un gioco nominano è
+       un'impostazione che esiste e non si raggiunge — che è il guasto
+       vero, perché nessuno ha modo di accorgersene;
      · il DEGRADO deve reggere: spento un sapere, nessuna domanda che
        lo dava per scontato deve più uscire, e i giochi devono avere
        comunque qualcosa da chiedere. Questa è la parte che conta: un
@@ -23,12 +28,12 @@
        litro è peggio di nessun filtro, perché il genitore crede di
        averla spenta.
    ═══════════════════════════════════════════════════════════════════ */
-import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { readdirSync, existsSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { nota, controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { SAPERI, CHIAVI_SAPERI, MATERIE_SAPERI, sapereDi, esisteSapere } from '../../src/data/saperi.js'
-import { GIOCHI, serveA } from '../../src/data/giochi.js'
+import { GIOCHI, serveA, chiedeA } from '../../src/data/giochi.js'
 import { Sorte } from '../../src/quiz/nucleo/sorte.js'
 import { classiDi, pescaClasse } from '../../src/quiz/nucleo/classi.js'
 import { sorgentiDi, esempioDa, esempioDi } from '../../src/quiz/nucleo/esempi.js'
@@ -120,45 +125,55 @@ for (const m of moduli) {
 }
 
 /* ── i giochi che dichiarano cosa danno per scontato ──
-   Un gioco può dire «io sono tutto conversioni» (`serve:` in
-   `data/giochi.js`) e sparire dalla home quando quel macrogruppo è
-   spento. Vale solo per i giochi che senza quel pezzo non hanno più
-   niente da chiedere: tutti gli altri degradano e restano. */
+   Due dichiarazioni, e sono due affermazioni diverse. `serve:` vuol dire
+   «io sono tutto conversioni»: senza quel macrogruppo la carta non si
+   accende nemmeno. `chiede:` è quella debole — le domande che il gioco
+   si fa in casa danno per scontato quel pezzo, e senza degradano: il
+   castello con le divisioni spente chiede moltiplicazioni più
+   difficili, e resta il castello. */
 for (const g of GIOCHI) {
-  const ignoti = (g.serve || []).filter(c => !esisteSapere(c))
+  const suoi = [...(g.serve || []), ...(g.chiede || [])]
+  const ignoti = suoi.filter(c => !esisteSapere(c))
   controlla(`gioco ${g.chiave}: dichiara saperi che esistono`, ignoti.length === 0,
             'sconosciuti: ' + ignoti.join(', '))
-  ;(g.serve || []).forEach(c => citati.add(c))
+  suoi.forEach(c => citati.add(c))
+  /* le due liste non si sovrappongono: un pezzo di scuola senza il quale
+     il gioco non esiste non è anche uno che il gioco «chiede», e avere
+     la stessa chiave nei due elenchi vorrebbe dire due righe diverse
+     nella schermata dei grandi che parlano della stessa cosa */
+  const doppie = (g.serve || []).filter(c => (g.chiede || []).includes(c))
+  controlla(`gioco ${g.chiave}: non dichiara la stessa cosa in tutti e due i modi`,
+            doppie.length === 0, doppie.join(', '))
 }
 uguale('il laboratorio delle pozioni è tutto conversioni',
        serveA('pozioni').includes('conversioni'), true)
-controlla('il castello invece degrada e non dichiara niente',
-          serveA('torri').length === 0)
+controlla('il castello invece degrada: non le esige, le chiede',
+          serveA('torri').length === 0 &&
+          chiedeA('torri').includes('divisioni') && chiedeA('torri').includes('moltiplicazioni'))
 nota('giochi che dipendono da un macrogruppo: ' +
      GIOCHI.filter(g => g.serve?.length).map(g => `${g.chiave}(${g.serve.join('+')})`).join(' '))
+nota('giochi che ne chiedono uno senza esigerlo: ' +
+     GIOCHI.filter(g => g.chiede?.length).map(g => `${g.chiave}(${g.chiede.join('+')})`).join(' '))
 
-/* Chi non lo cita nessun modulo deve agire da qualche altra parte —
-   `divisioni` vive nel castello. Si cerca la chiave nel sorgente fuori
-   dai quiz: se non si trova, quell'interruttore non fa niente. */
-const fuoriDaiQuiz = leggiSorgente(resolve(RADICE, 'src'))
-for (const c of CHIAVI_SAPERI) {
-  const nelGioco = fuoriDaiQuiz.includes(`'${c}'`) || fuoriDaiQuiz.includes(`"${c}"`)
-  controlla(`${c}: qualcuno lo guarda davvero`, citati.has(c) || nelGioco,
-            'nessun modulo lo cita e non compare nel sorgente: interruttore finto')
-}
+/* ── E NESSUNO PUÒ RESTARE SENZA QUALCUNO CHE LO CITI ──
+   Questo controllo c'era già e passava lo stesso, ed è il modo in cui il
+   guasto è vissuto per mesi: cercava la chiave **nel sorgente**, con una
+   grep. `'divisioni'` compariva in `store/profile.js` — dentro
+   `divisioniAccese()`, che il castello chiama da sempre — quindi il test
+   era verde, mentre nella schermata dei grandi quella riga non c'era
+   più: da quando il quadro dell'età si compone dai pezzi di scuola che
+   le domande citano, un sapere che vive solo dentro un gioco non aveva
+   nessuna riga da cui essere toccato. Un'impostazione che esiste e non
+   si raggiunge è peggio di un interruttore finto: un genitore non ha
+   nemmeno modo di accorgersi che a suo figlio le divisioni sono spente.
 
-function leggiSorgente(dir, fuori = '') {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    const p = resolve(dir, e.name)
-    if (e.isDirectory()) { fuori = leggiSorgente(p, fuori); continue }
-    if (!/\.(js|vue)$/.test(e.name)) continue
-    // il catalogo elenca le chiavi per forza, e i moduli le dichiarano:
-    // né l'uno né gli altri contano come «qualcuno le guarda»
-    if (p.includes('/data/saperi.js') || p.includes('/quiz/moduli/')) continue
-    fuori += readFileSync(p, 'utf8')
-  }
-  return fuori
-}
+   Adesso il canale è dichiarato — un modulo di quiz nei suoi `tipi`, un
+   gioco in `chiede:` — e la grep non c'è più. Chi aggiunge un sapere
+   deve dire chi lo guarda, e se non c'è nessuno il test lo dice. */
+for (const c of CHIAVI_SAPERI)
+  controlla(`${c}: qualcuno lo cita davvero`, citati.has(c),
+            'nessun modulo di quiz lo cita e nessun gioco lo dichiara: ' +
+            'interruttore irraggiungibile')
 
 /* ═══════════ 3. il degrado ═══════════ */
 
