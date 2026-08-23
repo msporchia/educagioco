@@ -90,11 +90,148 @@ export const CAMPAGNA = [
 
 export const QUANTE_TAPPE = CAMPAGNA.length
 
+/* ═══════════════════════════════════════════════════════════════════
+   L'ABISSO — sotto il fondo, e senza fondo
+
+   Non è la settima discesa: è **un posto**, e la differenza non è di
+   gusto. Una tappa 7 finirebbe come finisce la 6 — si risale, e
+   l'equipaggiamento resta lì — mentre la frase da cui nasce tutto questo
+   è «ho trovato un'arma super figa e ora ho finito la tappa e la butta».
+   L'abisso toglie il confine amministrativo, non aggiunge contenuto.
+
+   Perciò **non entra nella campagna**: `CAMPAGNA` resta di sei voci,
+   `QUANTE_TAPPE` resta 6, `stelle` non cresce (è un oggetto dentro il
+   profilo, e una chiave per piano su duecento piani finirebbe in ogni
+   `persist()` per sempre) e `profile.campagne['sotterraneo'].tappa` non
+   si muove. Si apre su `libera`, che è il campo che `giochi/campagne.js`
+   scrive già quando le sei discese sono finite: un cancello che esiste
+   invece di uno nuovo.
+
+   L'indice è **−1** e non un settimo posto in fila, per la stessa
+   ragione: `tappa` è un indice, e una fila che cresce sposta
+   l'avanzamento di tutti senza che scatti niente.
+   ═══════════════════════════════════════════════════════════════════ */
+export const INDICE_ABISSO = -1
+
+/* ── la difficoltà delle domande, e dove si ferma ──
+   `dif` va da 0 a 1 e `quiz/scelta.js` la traduce in un punto dentro la
+   finestra **dell'età del bambino**: a 1 si punta due anni sopra la sua
+   età, che è il tetto dell'ammissione. Oltre non c'è niente da cercare —
+   l'età sta sul bambino e non sulla domanda, ed è una regola di casa —
+   quindi `dif` sale scendendo e, arrivata a 1, **ci resta appiccicata**.
+
+   Il conto è corto: 0.92 · 0.94 · 0.96 · 0.98 · 1.00, cioè si arriva al
+   tetto al **quinto piano** (`piano === 4`, che si conta da 0). Vale la
+   pena scriverlo in faccia, perché è il punto in cui il gioco cambia
+   natura: entro la prima serata l'abisso smette di diventare più
+   difficile *da studiare*, e da lì in poi diventa solo più difficile da
+   sopravvivere. Non è un difetto da rattoppare — la sesta tappa finisce
+   già a 0.92, cioè a un soffio dal tetto, e l'headroom sulla scala
+   scolastica è tutto lì. */
+export const DIF_ABISSO = 0.92, DIF_PER_PIANO = 0.02
+export const PIANO_DEL_TETTO = Math.ceil((1 - DIF_ABISSO) / DIF_PER_PIANO)  // 4, cioè il quinto
+
+/* ── quante volte ci si può svegliare all'ingresso, quaggiù ──
+   `svenimentiDi(tappa) = 4 + tappa.piani` non ha senso su una discesa
+   che di piani non ne ha un numero. Il conto diventa: **tre per piano, e
+   riparte scendendo**. Scendere è la cosa che si è guadagnata e rinnova
+   le occasioni; accamparsi su un piano no.
+   Tre è largo apposta: il banco ne misura sei ogni dieci piani, e il suo
+   giocatore finto è avaro (non beve quasi mai, non compra niente). Morde
+   solo sul piano andato storto — e il freno vero non è questo contatore,
+   sono **le gemme**: chi sviene di continuo arriva al mercante con le
+   tasche vuote e metà gemme, quindi non compra, quindi si ferma da sé. */
+export const SVENIMENTI_PER_PIANO = 3
+
+/* Le forme che il piano prende scendendo. Ciclano invece di crescere, ed
+   è la regola che taglia quasi tutte le leve possibili: **quello che
+   allunga un piano non lo indurisce**, e un sotterraneo più grande
+   *sembra* più difficile mentre è solo più lungo. Sono le stesse tre
+   misure che la campagna già usa, così quaranta piani non hanno tutti la
+   stessa stanza senza che nessuno abbia dovuto renderli più cari. */
+const FORME_DELL_ABISSO = [
+  { misura: 34, giri: 3 },
+  { misura: 42, giri: 3 },
+  { misura: 52, giri: 4 },
+]
+
+export const L_ABISSO = {
+  chiave: 'abisso', nome: 'L\'abisso', icona: '🕳️',
+  abisso: true,
+  dritta: 'si scende finché si regge',
+  /* non ha un ultimo piano: è la riga che rende `allaScala()` e
+     `scendi()` incapaci di chiudere la discesa da soli */
+  piani: Infinity,
+  misura: FORME_DELL_ABISSO[0].misura, giri: FORME_DELL_ABISSO[0].giri,
+  forme: FORME_DELL_ABISSO,
+  dif: [DIF_ABISSO, 1],
+  /* ── chi guarda la scala, scendendo ──
+     Una scaletta corta e poi il gigante per sempre: `BRANCO` ha quattro
+     mostri e li esaurisce entro i primi piani, quindi da lì in giù
+     quello che cambia sono le cifre. È scritto perché si scoprirà
+     giocando, e la cura giusta non è una leva che allunga i piani — è un
+     quinto mostro, cioè un bestiario (vedi il Dungeon).
+
+     I primi due piani li guarda **lo scheletro**, ed è misurato: qui si
+     entra nudi, con addosso solo quello che si è imparato, e un orco a
+     guardia della prima scala vuol dire svenire due volte prima di aver
+     trovato un'arma. L'abisso si apre a chi ha finito sei discese: non
+     ha bisogno di essere perdonato, ha bisogno di due piani per
+     armarsi. */
+  guardiani: ['scheletro', 'scheletro', 'orco', 'orco', 'orco'],
+  capo: 'gigante',
+  /* ── la crescita ritarata, ed è il numero più importante di tutti ──
+     `att: m.att + floor(piano / 2)` non ha tetto, la difesa dell'eroe sì
+     (fra corazza, scudo e gioiello si arriva sì e no a 9), e
+     `danno = m.att − dif`. Misurato: lasciando crescere il piano e basta
+     ci si ferma **fra il settimo e l'undicesimo**, sempre, e non perché
+     i mostri diventino lunghi da abbattere — perché **fanno troppo
+     male**. Al piano 20 un orco picchia 14, e la metà arriva addosso
+     anche rispondendo bene, perché il graffio è metà del colpo pieno:
+     quattro scambi sono ventotto punti di vita a chi non ha sbagliato
+     niente. Un terzo invece di mezzo, e la difesa dei mostri ferma per
+     sempre — quella entra in una sottrazione, e allunga invece di
+     indurire. */
+  attOgni: 3,
+  /* niente `portata`: non è una tappa, non sta in `TAPPE_DEL_GIOCO`, e
+     il suo cancello non è l'età ma «hai finito le sei discese» — che è
+     un criterio migliore, perché è dimostrato invece che stimato */
+}
+
+/* La tappa di un indice, l'abisso compreso. Un posto solo, perché
+   `CAMPAGNA[-1]` è `undefined` e un `undefined` che arriva dentro una
+   `Corsa` non dà nessun errore: dà una discesa senza numeri. */
+export const tappaDi = indice => (indice === INDICE_ABISSO ? L_ABISSO : CAMPAGNA[indice])
+
+/* Che forma ha il piano `piano` (da 0). Nella campagna è quella
+   dichiarata dalla tappa e non cambia mai; nell'abisso gira fra le tre. */
+export function formaDi(tappa, piano) {
+  if (!tappa.forme) return { misura: tappa.misura, giri: tappa.giri }
+  return tappa.forme[((piano % tappa.forme.length) + tappa.forme.length) % tappa.forme.length]
+}
+
+/* Quanto crescono i mostri scendendo. `ossa` è la leva principale — è
+   quella che il bottino compensa — e l'attacco la segue più piano: se
+   crescessero insieme allo stesso passo il gioco diventerebbe lungo, se
+   crescesse solo l'attacco diventerebbe una lotteria. */
+export const OSSA_PER_PIANO = 0.22
+export const crescitaDi = tappa => ({
+  ossa: OSSA_PER_PIANO,
+  /* la campagna resta a mezzo apposta: sono quattro piani al massimo,
+     quindi il difetto misurato qui sopra non le arriva mai addosso, e
+     cambiarglielo sposterebbe l'equilibrio di sei tappe già misurate
+     senza comprare niente */
+  attOgni: tappa && tappa.attOgni ? tappa.attOgni : 2,
+})
+
 /* Quanto è difficile una domanda al piano `piano` (da 0) di una tappa.
    Un solo piano vuol dire un solo numero: si prende il primo, e non la
    media, perché il primo è quello che il bambino vede appena entra. */
 export function durezzaDi(tappa, piano) {
   const [da, a] = tappa.dif
+  /* l'abisso non ha un ultimo piano su cui interpolare: sale di un passo
+     fisso e si ferma al tetto (vedi `PIANO_DEL_TETTO`) */
+  if (tappa.abisso) return Math.min(a, da + DIF_PER_PIANO * Math.max(0, piano))
   if (tappa.piani <= 1) return da
   const q = Math.max(0, Math.min(1, piano / (tappa.piani - 1)))
   return da + (a - da) * q
@@ -123,14 +260,19 @@ export function durezzaDi(tappa, piano) {
    perdonare. Con un tetto più basso (tre in regalo) cadeva anche chi
    risponde bene, che è il difetto contrario. */
 export const SVENIMENTI_IN_REGALO = 4
-export const svenimentiDi = tappa => SVENIMENTI_IN_REGALO + tappa.piani
+/* Nell'abisso il conto è un altro e si azzera scendendo: quello che
+   torna qui è **quante occasioni ha questo piano**, e chi le conta è la
+   `Corsa` (vedi `svenimentiSpesi`). */
+export const svenimentiDi = tappa =>
+  tappa.abisso ? SVENIMENTI_PER_PIANO : SVENIMENTI_IN_REGALO + tappa.piani
 
 /* Chi porta la chiave, piano per piano: l'ultimo è il capo della tappa,
    gli altri il suo guardiano di tutti i giorni. La chiave della scala è
    l'unica cosa che in tutto il sotterraneo **non si può aggirare**, e
    per questo chi la porta lo dichiara la tappa e non il caso. */
 export const guardianoDi = (tappa, piano) =>
-  piano >= tappa.piani - 1 ? tappa.capo : tappa.guardiano
+  tappa.guardiani ? (tappa.guardiani[piano] || tappa.capo)
+                  : (piano >= tappa.piani - 1 ? tappa.capo : tappa.guardiano)
 
 /* Le stelle: si arriva in fondo, e la seconda e la terza dicono **come**.
    Svenire non fa perdere la discesa (ci si risveglia all'ingresso), ma
@@ -161,5 +303,33 @@ export function guastiDellaCampagna() {
   for (let i = 1; i < CAMPAGNA.length; i++)
     if (CAMPAGNA[i].dif[1] <= CAMPAGNA[i - 1].dif[1])
       g.push(`${CAMPAGNA[i].chiave} non chiede più di ${CAMPAGNA[i - 1].chiave}`)
+  return g.concat(guastiDellAbisso())
+}
+
+/* L'abisso non passa dal controllo delle tappe — non ha `piani`, non ha
+   `premio`, non ha `portata` — ma le due cose che lo romperebbero in
+   silenzio sono le stesse: una forma che il generatore non sa fare, e
+   una difficoltà fuori dalla scala dei quiz. */
+export function guastiDellAbisso() {
+  const g = []
+  const a = L_ABISSO
+  if (!a.nome || !a.icona || !a.dritta) g.push('l\'abisso: senza nome, icona o dritta')
+  for (const f of a.forme || []) {
+    if (f.misura < 24) g.push(`l'abisso: un piano ${f.misura}×${f.misura} non tiene le stanze`)
+    if (f.giri < 2 || f.giri > 4) g.push(`l'abisso: ${f.giri} giri di taglio, fuori da 2..4`)
+  }
+  if (!a.forme || !a.forme.length) g.push('l\'abisso: nessuna forma di piano')
+  if (a.dif[0] < 0 || a.dif[1] > 1 || a.dif[0] > a.dif[1])
+    g.push(`l'abisso: difficoltà ${a.dif[0]}..${a.dif[1]} storta`)
+  /* il tetto va toccato, e presto: se il passo fosse così piccolo da non
+     arrivarci mai, la promessa scritta qui sopra sarebbe falsa */
+  if (durezzaDi(a, PIANO_DEL_TETTO) < a.dif[1])
+    g.push(`l'abisso: al piano ${PIANO_DEL_TETTO + 1} la difficoltà non è ancora al tetto`)
+  if (!(a.guardiani || []).length || !a.guardiani.every(k => typeof k === 'string' && k))
+    g.push('l\'abisso: la scaletta dei guardiani è vuota o storta')
+  if (!a.capo) g.push('l\'abisso: nessun capo dopo la scaletta')
+  if (a.attOgni < 3) g.push(`l'abisso: l'attacco cresce ogni ${a.attOgni} piani, troppo in fretta`)
+  if (a.piani !== Infinity) g.push('l\'abisso ha un ultimo piano: non è più un abisso')
   return g
 }
+

@@ -58,13 +58,21 @@ export class Livello {
      dichiara la tappa: è l'unica cosa che non si può aggirare, quindi
      non la si lascia al caso. */
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro' } = {}) {
+                guardiano = 'scheletro', crescita = null } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
     this.alto = alto
     this.giri = giri
     this.chiGuarda = guardiano
+    /* Quanto sono più grossi i mostri a questa profondità. Lo dichiara
+       chi genera il piano e non questo file, perché **dipende da quanto
+       può scendere la discesa**: una fila di quattro piani e un abisso
+       senza fondo non vogliono la stessa curva (vedi `crescitaDi` in
+       `dati/campagna.js`). I valori di sistema sono quelli della
+       campagna, così un piano generato senza dirlo resta quello di
+       sempre. */
+    this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
     this.celle = new Uint8Array(largo * alto)
     this.stanze = []
     this.robe = []                    // tutto ciò che sta su una cella e si tocca
@@ -400,14 +408,17 @@ export class Livello {
   }
 
   /* Le ossa crescono col piano: lo stesso scheletro, più giù, costa più
-     risposte — ed è l'unico modo perché scendere si senta. */
+     risposte — ed è l'unico modo perché scendere si senta. L'attacco le
+     segue più piano, e **la difesa non cresce mai**: entra in una
+     sottrazione, quindi un punto in più lì dentro allunga la battaglia
+     invece di indurirla (è la manopola velenosa di `dati/mostri.js`). */
   mostro(tipo, x, y) {
     const m = MOSTRI[tipo]
-    const su = 1 + this.piano * 0.22
+    const su = 1 + this.piano * this.crescita.ossa
     const ossa = Math.round(m.ossa * su)
     return { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
              ossa, ossaMax: ossa,
-             att: m.att + Math.floor(this.piano / 2), dif: m.dif,
+             att: m.att + Math.floor(this.piano / this.crescita.attOgni), dif: m.dif,
              chiave: false, morto: false }
   }
 

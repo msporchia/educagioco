@@ -1159,7 +1159,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 
   const pieno = {
     totals: { sotStanze: 500, sotPiani: 50, sotMostri: 250, sotTesori: 60, sotInteri: 12 },
-    best: { sotGemme: 200 },
+    best: { sotGemme: 200, sotFondo: 60 },
     items: {},
     /* `libera: true` è come `campagne.js` segna una campagna finita:
        `m.finita()` legge quel flag, non il conto delle tappe */

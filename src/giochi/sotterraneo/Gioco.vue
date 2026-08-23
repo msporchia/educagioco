@@ -33,13 +33,14 @@ import { progresso, aperta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
-import { CAMPAGNA, QUANTE_TAPPE, stelleDella } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO,
+         tappaDi } from './dati/campagna.js'
 import { COSE, SEGNI } from './dati/cose.js'
 import { MOSTRI } from './dati/mostri.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { pezzoAndante } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
-import { TASCHE } from './dati/mondo.js'
+import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Tela } from './scena/tela.js'
@@ -76,7 +77,12 @@ const tela = ref(null)
 const corsa = shallowRef(null)
 /* aperto il foglio del `?`, il tempo del sotterraneo si ferma */
 const aiutoAperto = ref(false)
-const tappaIdx = ref(-1)
+/* Quale discesa si sta giocando: un indice della campagna, oppure
+   `INDICE_ABISSO` (−1). **`null` vuol dire nessuna**, e non più −1: da
+   quando l'abisso ha un indice suo, «minore di zero» non è più la stessa
+   domanda di «non sto giocando». */
+const tappaIdx = ref(null)
+const nellAbisso = computed(() => tappaIdx.value === INDICE_ABISSO)
 const domanda = ref(null)
 const fine = ref(null)
 /* Un avviso è una riga sola in mezzo al campo. Chi lo manda dal motore
@@ -144,7 +150,7 @@ let ultimoSalvato = 0
 
 function salva({ subito = false } = {}) {
   const c = corsa.value
-  if (!c || c.finita || tappaIdx.value < 0) return
+  if (!c || c.finita || tappaIdx.value == null) return
   ultimoSalvato = orologio
   salvaSosta(CHIAVE, scrivi(c, tappaIdx.value), { subito })
 }
@@ -163,7 +169,7 @@ function riprendiDiscesa() {
   /* un salvataggio vecchio non sa chi stava scendendo — era il difetto
      dei due campi `eroe` — e in quel caso vale la scelta di casa invece
      del cavaliere di sistema: è quasi sempre la stessa persona */
-  const c = dato ? leggi(dato, CAMPAGNA[dato.tappa], chiEro.value || DI_PARTENZA) : null
+  const c = dato ? leggi(dato, tappaDi(dato.tappa), chiEro.value || DI_PARTENZA) : null
   if (!c) { scorda(); return }
   tappaIdx.value = dato.tappa
   fine.value = null
@@ -184,7 +190,31 @@ const tappe = computed(() => CAMPAGNA.map((t, i) => ({
 })))
 
 const titolo = computed(() =>
-  corsa.value ? CAMPAGNA[tappaIdx.value].nome : 'Il sotterraneo')
+  corsa.value ? tappaDi(tappaIdx.value).nome : 'Il sotterraneo')
+
+/* ═══════════ l'abisso ═══════════
+   Si apre su `libera`, cioè quando le sei discese sono finite: è il
+   campo che `giochi/campagne.js` scrive già da sé, e leggerlo invece di
+   inventare un cancello nuovo vuol dire che non c'è niente da tenere
+   allineato. Il record sta in `cfg` — dove stanno l'eroe scelto e le
+   altre scelte del bambino — perché deve sopravvivere alla sosta buttata
+   via, e **non** in `stelle`, che è un oggetto dentro il profilo e con
+   una chiave per piano finirebbe in ogni `persist()` per sempre. */
+const fondoDellAbisso = ref((scelta(CHIAVE, 'abisso', null) || {}).fondo || 0)
+const abisso = computed(() => (avanza.libera
+  ? { indice: INDICE_ABISSO, nome: L_ABISSO.nome, icona: L_ABISSO.icona,
+      dritta: L_ABISSO.dritta, fondo: fondoDellAbisso.value }
+  : null))
+
+/* Il più giù di sempre. Si scrive **scendendo** e non solo alla fine:
+   una discesa che dura tre sere non finisce quasi mai, e un record che
+   arriva solo alla fine sarebbe un record che non compare mai. */
+function segnaIlFondo(piano) {
+  if (!piano || piano <= fondoDellAbisso.value) return
+  fondoDellAbisso.value = piano
+  ricorda(CHIAVE, 'abisso', { fondo: piano })
+  segnaBest('sotFondo', piano)
+}
 
 /* ═══════════ com'è messo l'eroe, per la fascia ═══════════
    Già pronto da mostrare: la vista non somma bonus e non guarda dentro
@@ -194,7 +224,9 @@ const eroe = dallaCorsa(c => {
   return {
     vita: c.vita, vitaMax: c.vitaMax, quota: q,
     att: c.att, dif: c.dif, gemme: c.gemme,
-    piano: c.piano + 1, piani: c.quantiPiani,
+    /* `piani` è `null` nell'abisso: «piano 3 di ∞» non è un conto, e la
+       fascia sotto il campo scrive «piano 3» e basta */
+    piano: c.piano + 1, piani: c.senzaFondo ? null : c.quantiPiani,
     chiave: c.chiaveDelPiano,
     polso: q > 0.6 ? '#4fce7c' : q > 0.3 ? '#f0b429' : '#e0432f',
   }
@@ -361,14 +393,29 @@ function corredoDaProva(c) {
   c.sistemaIlCorredo()
 }
 
+/* `#abisso=12` comincia l'abisso già a quel piano, e serve a **guardare
+   una schermata**: il piano 12 sta a due sere di discesa, e nessuno
+   aspetta due sere per vedere se il numero sotto il campo sta al suo
+   posto. Sta accanto agli altri cheat di casa (`#monete=500`,
+   `#sotterraneo=roba`), e come quelli non è nascosto. */
+function pianoDaProva(c) {
+  const n = Number(new URLSearchParams(location.hash.slice(1)).get('abisso'))
+  if (!c.senzaFondo || !Number.isFinite(n) || n < 2) return
+  c.piano = Math.floor(n) - 1
+  c.vitaBase += VITA_PER_PIANO * c.piano
+  c.vita = c.vitaBase
+  c.nuovoPiano()
+}
+
 function avvia(i) {
   scorda()
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
   zainoAperto.value = false
-  corsa.value = new Corsa(CAMPAGNA[i], { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA })
+  corsa.value = new Corsa(tappaDi(i), { seme: semeDallIndirizzo(), eroe: chiEro.value || DI_PARTENZA })
   corredoDaProva(corsa.value)
+  pianoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
@@ -553,6 +600,7 @@ function scendi() {
   tic.value++
   if (e?.che === 'finita') return chiudi()
   suono.livello()
+  if (nellAbisso.value) segnaIlFondo(corsa.value.piano + 1)
   salva()          // un piano nuovo è il momento in cui si perde di più
 }
 
@@ -561,9 +609,25 @@ function chiudi() {
   const c = corsa.value
   if (!c) return
   if (!c.finita) c.risali()
-  scorda()          // finita o risalita, non c'è più niente da riprendere
   const e = c.esito
   const stelle = stelleDella(e)
+  /* ── l'abisso non si butta ──
+     Una tappa finita non ha più niente da riprendere; l'abisso sì,
+     perché quello che è finito è la sera. Si scrive il punto da cui si
+     rientra — l'ingresso di questo piano, mezza vita, metà gemme, le
+     tasche vuote — e la mappa lo offre in cima come qualunque altra
+     discesa lasciata a metà. Senza questa riga svenire tre volte al
+     piano 23 vorrebbe dire rifarne ventitré a piedi, che è la cosa che
+     l'abisso è nato per non chiedere mai. */
+  /* il record **di prima**: `segnaIlFondo` lo sposta, e leggerlo dopo
+     vorrebbe dire dire «nessuno era mai arrivato così giù» anche a chi è
+     rientrato al piano 23 e non è sceso di un gradino */
+  const eraIlFondo = fondoDellAbisso.value
+  if (nellAbisso.value) {
+    segnaIlFondo(e.fondo)
+    salvaSosta(CHIAVE, scrivi(c, INDICE_ABISSO, { anchePerFinite: true }), { subito: true })
+    ripresa.value = conNome(dice(sosta(CHIAVE), CAMPAGNA))
+  } else scorda()
 
   /* prima l'avanzamento, poi i contatori: i traguardi si controllano
      dentro `segna()` e devono vedere la tappa già segnata come fatta */
@@ -578,17 +642,27 @@ function chiudi() {
   if (e.tesori) segna('sotTesori', e.tesori)
   segnaBest('sotGemme', e.gemme)
 
+  /* L'abisso non paga: le tappe pagano `premio × stelle`, e qui non c'è
+     né una tappa né una stella. Il premio giusto sarebbe 🪙1 per
+     risposta giusta — che è il tasso di oggi per chi esplora — e vuole
+     un contatore che il motore ancora non tiene: si fa con quello, non
+     inventando qui una cifra a occhio. */
   const monete = e.vinta ? CAMPAGNA[tappaIdx.value].premio * Math.max(1, stelle) : 0
   if (monete) addCoins(monete)
   if (e.vinta) { if (e.svenimenti === 0) segna('sotInteri'); suono.livello() } else suono.fine()
 
-  fine.value = { vinta: e.vinta, titolo: CAMPAGNA[tappaIdx.value].nome, stelle, monete, fatti: e }
+  fine.value = { vinta: e.vinta, titolo: tappaDi(tappaIdx.value).nome, stelle, monete, fatti: e,
+                 abisso: nellAbisso.value, record: e.fondo > eraIlFondo }
 }
 
 function ancora() {
   const vinta = fine.value.vinta
+  /* dall'abisso si torna alla mappa, dove la carta in cima offre di
+     riprendere da dove si era: «ci riprovo» ricomincerebbe dal piano 1,
+     cioè butterebbe proprio quello che si è appena salvato */
+  const allaFila = vinta || fine.value.abisso
   fine.value = null
-  if (vinta) return allaMappa()
+  if (allaFila) return allaMappa()
   avvia(tappaIdx.value)
 }
 
@@ -744,7 +818,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
     <div class="sot">
       <template v-if="!corsa">
-        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda"
+        <Campagna :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   @gioca="avvia" @riprendi="riprendiDiscesa" @scorda="scorda"
                   @eroe="scegliEroe = true" />
         <Eroi v-if="scegliEroe" :eroi="EROI" :scelto="chiEro || ''" :primo="!chiEro"
@@ -762,7 +836,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @wheel.prevent="rotella"></canvas>
 
           <p class="sot-piede">
-            piano {{ eroe.piano }} di {{ eroe.piani }} ·
+            piano {{ eroe.piano }}<template v-if="eroe.piani"> di {{ eroe.piani }}</template> ·
             <span v-if="eroe.chiave" class="em">🗝️ la scala è aperta</span>
             <span v-else>la chiave ce l'ha qualcuno, qua sotto</span>
           </p>
@@ -917,17 +991,28 @@ function ridimensiona() { if (pittore) pittore.misura() }
              **quante ne restano**: un fondo che non si vede arrivare è
              una partita che finisce senza motivo. All'ultima si risale,
              e il tasto lo dice prima di premerlo. -->
+        <!-- Nell'abisso le due frasi cambiano tutte e due, e non è
+             cosmesi: là sotto **si perde lo zaino** (le sei tasche,
+             non solo le gemme) e **la discesa non ricomincia da capo**
+             — all'ultima occasione si risale e si rientra da lì. Dirlo
+             con le parole delle tappe insegnerebbe due cose false, e
+             sono proprio le due che fanno decidere se scappare. -->
         <Foglio v-else-if="foglio && foglio.che === 'svenuto'" em="💫"
-                :titolo="foglio.ultimo ? 'Non ti reggi più in piedi' : 'Ti sei svegliato all\'ingresso'"
-                :dice="foglio.ultimo
-                  ? 'Ti hanno portato su. Il sotterraneo resta lì: questa discesa ricomincia da capo.'
-                  : 'Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più, ma quello che avevi addosso sì.'">
+                :titolo="foglio.ultimo && !nellAbisso ? 'Non ti reggi più in piedi'
+                         : foglio.ultimo ? 'Per stasera basta' : 'Ti sei svegliato all\'ingresso'"
+                :dice="nellAbisso
+                  ? (foglio.ultimo
+                      ? 'Ti hanno portato su. L\'abisso resta dov\'è: ci si rientra da questo piano, con quello che hai addosso.'
+                      : 'Qualcuno ti ha trascinato all\'ingresso. Quello che avevi nelle tasche non c\'è più, ma quello che avevi addosso sì.')
+                  : foglio.ultimo
+                    ? 'Ti hanno portato su. Il sotterraneo resta lì: questa discesa ricomincia da capo.'
+                    : 'Qualcuno ti ha trascinato fuori. Le gemme che avevi in tasca non ci sono più, ma quello che avevi addosso sì.'">
           <p v-if="!foglio.ultimo" class="sot-storia">
             Ancora <b>{{ foglio.restano }}</b>
             {{ foglio.restano === 1 ? 'volta' : 'volte' }}, poi si risale.
           </p>
           <button class="sot-grosso" data-azione="riprendi" @click="riprendi">
-            {{ foglio.ultimo ? 'torno su' : 'riprovo' }}
+            {{ !foglio.ultimo ? 'riprovo' : nellAbisso ? 'torno su per stasera' : 'torno su' }}
           </button>
         </Foglio>
 

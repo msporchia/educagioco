@@ -33,6 +33,7 @@
 import { Corsa } from './corsa.js'
 import { COSE } from '../dati/cose.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
+import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
 /* Sale ogni volta che cambia la forma. La 2 porta i quattro eroi e la
    terza casella addosso: un salvataggio della 1 non sa chi fosse a
@@ -85,9 +86,20 @@ export function vistoDa(stringa, quante) {
 
 /* ── quello che si scrive ──
    `tappa` è l'indice nella campagna, non la tappa intera: la tabella
-   sta nel codice e cambia con le versioni, l'indice no. */
-export function scrivi(corsa, tappa) {
-  if (!corsa || corsa.finita) return null
+   sta nel codice e cambia con le versioni, l'indice no. L'abisso è
+   l'indice **−1** (`INDICE_ABISSO`): il campo non cambia significato,
+   guadagna un valore — e per questo `VERSIONE` non sale. Un salvataggio
+   di ieri porta un indice fra 0 e 5 e si rilegge esattamente come prima.
+
+   ── E UNA DISCESA FINITA NON SI SALVA, TRANNE UNA ─────────────────
+   Non c'è più niente da riprendere: è la regola, e vale per le sei
+   tappe. L'abisso però **non finisce** — quello che finisce è la sera —
+   e quando si risale al fondo degli svenimenti quello che si scrive è
+   *il punto da cui si rientra*. Chi lo vuole lo chiede per nome
+   (`anchePerFinite`), così la regola resta quella e l'eccezione si
+   legge dove viene usata. */
+export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
+  if (!corsa || (corsa.finita && !anchePerFinite)) return null
   return {
     v: VERSIONE,
     tappa,
@@ -124,6 +136,11 @@ export function scrivi(corsa, tappa) {
       domande: corsa.domande, mostri: corsa.mostriBattuti, tesori: corsa.tesori,
       stanzeViste: corsa.stanzeViste, piani: corsa.pianiFatti,
       svenimenti: corsa.svenimenti, chieste: corsa.contaChieste,
+      /* quante occasioni si sono spese **su questo piano**: serve solo
+         all'abisso, e un salvataggio che non ce l'ha riparte da zero —
+         che è il ripiego ovvio, cioè il motivo per cui la versione non
+         sale */
+      qui: corsa.svenimentiQui,
     },
     robe: corsa.livello.robe.map(pulisci),
   }
@@ -186,6 +203,7 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.stanzeViste = c.stanzeViste || 0
     corsa.pianiFatti = c.piani || 0
     corsa.svenimenti = c.svenimenti || 0
+    corsa.svenimentiQui = c.qui || 0
     corsa.contaChieste = c.chieste || 0
 
     corsa.aggiornaLuce()
@@ -211,14 +229,21 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
    Le legge la schermata delle discese, che di `Corsa` non sa niente. */
 export function dice(dato, campagna) {
   if (!dato || !LEGGIBILI.includes(dato.v)) return null
-  const t = campagna[dato.tappa]
+  /* L'abisso non sta nella campagna, quindi `campagna[-1]` è
+     `undefined`: senza questa riga la carta «riprendi» **sparirebbe in
+     silenzio** invece di dire «l'abisso · piano 23», e venti minuti di
+     discesa sembrerebbero buttati. Una riga, e se ci si dimentica non lo
+     dice nessuno. */
+  const t = dato.tappa === INDICE_ABISSO ? L_ABISSO : campagna[dato.tappa]
   if (!t) return null
   return {
     tappa: dato.tappa,
     nome: t.nome,
     icona: t.icona,
     piano: (dato.piano || 0) + 1,
-    piani: t.piani,
+    /* quanti piani ha in tutto: l'abisso non lo sa, e chi disegna scrive
+       «piano 23» invece di «piano 23 di …» */
+    piani: t.abisso ? null : t.piani,
     eroe: typeof dato.eroe === 'string' ? dato.eroe : null,
     vita: dato.vita,
     gemme: dato.gemme,

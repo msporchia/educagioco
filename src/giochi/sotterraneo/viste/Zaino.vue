@@ -56,7 +56,9 @@ const props = defineProps({
   vitaMax: { type: Number, required: true },
   gemme: { type: Number, required: true },
   piano: { type: Number, required: true },
-  piani: { type: Number, required: true },
+  /* quanti piani ha la discesa, o `null`: l'abisso non lo sa, e «26/»
+     con il numero dopo la barra mancante si legge come un guasto */
+  piani: { type: Number, default: null },
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi'])
 
@@ -202,7 +204,7 @@ const cambio = computed(() => {
         <i :style="{ width: (vita / vitaMax) * 100 + '%' }"></i>
         <b>{{ vita }}/{{ vitaMax }}</b>
       </span>
-      ⚔️ {{ att }} · 🛡️ {{ dif }} · 💎 {{ gemme }} · 🪜 {{ piano }}/{{ piani }}
+      ⚔️ {{ att }} · 🛡️ {{ dif }} · 💎 {{ gemme }} · 🪜 {{ piano }}<template v-if="piani">/{{ piani }}</template>
     </p>
 
     <!-- ═══ chi sei, e cosa hai addosso ═══ -->

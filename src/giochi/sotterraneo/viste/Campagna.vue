@@ -23,6 +23,10 @@ const props = defineProps({
   tappe: { type: Array, required: true },   // [{ indice, nome, icona, dritta, piani, aperta, adesso, stelle }]
   ripresa: { type: Object, default: null }, // { tappa, nome, icona, piano, piani, vita, gemme, chi }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
+  /* L'abisso, o niente finché le sei discese non sono finite:
+     { indice, nome, icona, dritta, fondo }. Va **in fondo** e non in
+     cima perché in cima ci sta già la ripresa, che è la cosa urgente. */
+  abisso: { type: Object, default: null },
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'eroe'])
 
@@ -76,7 +80,9 @@ function comincia() {
         <!-- con chi si riprende: si può cambiare eroe dalla mappa
              mentre una discesa è in sospeso, e chi è sceso è sceso —
              dirlo qui evita la sorpresa di ritrovarsi un altro in mano -->
-        <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano }} di {{ ripresa.piani }} ·
+        <!-- l'abisso non ha un «di quanti»: la sua riga è «piano 23» -->
+        <i>{{ ripresa.chi ? ripresa.chi + ' · ' : '' }}piano {{ ripresa.piano
+           }}<template v-if="ripresa.piani"> di {{ ripresa.piani }}</template> ·
            ❤️ {{ ripresa.vita }} · 💎 {{ ripresa.gemme }}</i>
       </p>
       <button class="sot-grosso" data-azione="riprendi" @click="$emit('riprendi')">
@@ -98,6 +104,22 @@ function comincia() {
       </span>
       <span class="sot-conto em">
         {{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.piani} 🪜` }}
+      </span>
+    </button>
+
+    <!-- ═══ l'abisso ═══
+         Non è la settima discesa e non deve sembrarlo: niente stelle,
+         niente lucchetto, niente «di 6». Il conto a destra è il record,
+         che è l'unica cosa misurabile di un posto senza fondo. -->
+    <button v-if="abisso" class="sot-tappa sot-abisso" data-abisso="1"
+            @click="tocca(abisso, !!ripresa)">
+      <span class="sot-faccia em">{{ abisso.icona }}</span>
+      <span class="sot-testo">
+        <b>{{ abisso.nome }}</b>
+        <i>{{ abisso.dritta }}</i>
+      </span>
+      <span class="sot-conto em" data-fondo>
+        {{ abisso.fondo ? `piano ${abisso.fondo}` : 'mai sceso' }}
       </span>
     </button>
 

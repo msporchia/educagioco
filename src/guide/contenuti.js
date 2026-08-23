@@ -629,10 +629,17 @@ export const AIUTI = {
         'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: dal mercante puoi vendere a metà prezzo quello che non usi.',
         '🔦 **La torcia non si accende**: basta prenderla, e da lì in avanti vedi più lontano. Non occupa nemmeno una tasca.',
       ] },
+      { titolo: 'L\'abisso', righe: [
+        'Finite tutte e sei le discese, in fondo alla mappa se ne apre una che **non finisce**: si scende finché si regge.',
+        'Serve a una cosa sola: l\'arma bella che si trova non si butta più a fine tappa. Là sotto non c\'è una fine da raggiungere, quindi non c\'è un momento in cui si riparte da zero.',
+        'Le domande smettono presto di diventare più difficili — dal quinto piano restano le più toste che il gioco chiede a quell\'età, e non si va oltre. Quello che cresce sono i mostri.',
+        'Svenendo si perde **quello che si ha nelle tasche**, mai quello che si ha addosso; dopo tre svenimenti sullo stesso piano si risale, e la volta dopo si riprende da lì.',
+      ] },
       { titolo: 'Consigli', righe: [
         'Non serve aprire tutto: alla scala si arriva anche saltando qualcosa.',
         'Se la vita è quasi finita, la fonte vale più di un forziere.',
         'Le gemme si prendono camminandoci sopra: quello che luccica intorno a una cosa vuol dire che quella cosa si tocca.',
+        'Nell\'abisso conta più lo **scudo** dell\'arma: quello che i mostri tolgono a ogni scambio è il loro attacco meno la tua difesa, quindi un punto di difesa si sente due volte.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le domande sono di tutte le materie, tarate sull\'età del bambino: matematica, italiano, le lingue, quello che è acceso nelle impostazioni.',

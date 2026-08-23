@@ -47,7 +47,7 @@ import { MOSTRI } from '../dati/mostri.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
 import { COSE, CURE, NEI_FORZIERI, pescaMerce, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi } from '../dati/campagna.js'
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 
@@ -93,6 +93,11 @@ export class Corsa {
     this.finita = false
     this.vinta = false
     this.svenimenti = 0
+    /* ── e quante se ne sono spese **su questo piano** ──
+       Serve solo all'abisso, dove il conto riparte scendendo: scendere è
+       la cosa che si è guadagnata e rinnova le occasioni, accamparsi su
+       un piano no. Nella campagna resta a zero e non lo guarda nessuno. */
+    this.svenimentiQui = 0
     /* l'ultima occasione è stata usata: `riprendi()` allora risale
        invece di rimettere in piedi */
     this.ultimoSvenimento = false
@@ -143,6 +148,22 @@ export class Corsa {
      esce, cioè dimenticarsene una volta su due. */
   get vitaMax() { return this.vitaBase + this.addosso('vita') }
   get quantiPiani() { return this.tappa.piani }
+
+  /* ── questa discesa ha un ultimo piano? ──
+     L'abisso no, e le uniche tre righe che se ne accorgono sono
+     `allaScala()`, `scendi()` e chi mostra «piano 3 di 4»: con
+     `piani: Infinity` il confronto è già falso da sé, ma dirlo per nome
+     serve a chi legge — e serve alle regole che cambiano quaggiù senza
+     passare da un numero (lo zaino che si perde svenendo, il conto degli
+     svenimenti che riparte). */
+  get senzaFondo() { return !!this.tappa.abisso }
+
+  /* Quante occasioni restano prima di risalire, e quante se ne sono
+     spese: nella campagna il conto è di tutta la discesa, nell'abisso è
+     di questo piano. Due getter e non due `if` sparsi, perché sono la
+     stessa domanda fatta in tre posti (`svieni`, il cartello, il banco). */
+  get svenimentiConcessi() { return svenimentiDi(this.tappa) }
+  get svenimentiSpesi() { return this.senzaFondo ? this.svenimentiQui : this.svenimenti }
 
   /* Quanto danno, in tutto, le tre caselle addosso. Un posto solo: chi
      vuole sapere quanto picchia chiede qui, e non va a guardare dentro
@@ -325,10 +346,15 @@ export class Corsa {
   /* ═══════════ il piano ═══════════ */
   nuovoPiano() {
     const t = this.tappa
+    /* La forma la chiede alla tappa **per questo piano**: nella campagna
+       è sempre la stessa, nell'abisso gira fra tre. Il piano è comunque
+       una funzione del seme, quindi rientrando si ritrova identico. */
+    const forma = formaDi(t, this.piano)
     this.livello = generaPiano({
       seme: this.seme + this.piano * 7919, piano: this.piano,
-      largo: t.misura, alto: t.misura, giri: t.giri,
+      largo: forma.misura, alto: forma.misura, giri: forma.giri,
       guardiano: guardianoDi(t, this.piano),
+      crescita: crescitaDi(t),
     })
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
@@ -336,7 +362,11 @@ export class Corsa {
     this.strada = null
     this.mira = null
     this.bersaglio = null
-    this.visto = new Uint8Array(t.misura * t.misura)
+    /* la misura si prende dal piano generato e non dalla tappa: da
+       quando l'abisso cambia forma scendendo, le due potevano divergere
+       — e una mappa vista lunga la metà non dà nessun errore, spegne la
+       luce su mezzo piano */
+    this.visto = new Uint8Array(this.livello.largo * this.livello.alto)
     this.luce = new Set()
     this.chiaveDelPiano = false
     this.stanzeDentro = new Set()
@@ -907,26 +937,64 @@ export class Corsa {
      nessuno abbia spiegato perché si legge come un guasto. */
   svieni() {
     this.svenimenti++
-    this.ultimoSvenimento = this.svenimenti >= svenimentiDi(this.tappa)
+    this.svenimentiQui++
+    this.ultimoSvenimento = this.svenimentiSpesi >= this.svenimentiConcessi
     this.foglio = { che: 'svenuto', ultimo: this.ultimoSvenimento,
-                    restano: Math.max(0, svenimentiDi(this.tappa) - this.svenimenti) }
+                    restano: Math.max(0, this.svenimentiConcessi - this.svenimentiSpesi) }
     this.chiesta = null
   }
 
   riprendi() {
-    /* l'ultima non è una ripresa: è la risalita, e la tappa non è
-       superata — la stessa fine di chi smette per suo conto */
+    /* Nella campagna l'ultima non è una ripresa: è la risalita, e la
+       tappa non è superata — la stessa fine di chi smette per suo conto.
+       Nell'abisso invece **quello che finisce è la sera, non la
+       discesa**: ci si rimette in piedi comunque, e quello che si scrive
+       è il punto da cui si rientra. Non è gentilezza, è che qui non c'è
+       nessuna tappa da fallire: il contatore serve a rendere la serata
+       leggibile, non a difendere l'economia — quella si difende da sé,
+       perché ogni svenimento porta via proprio le gemme che servono a
+       scendere ancora. */
+    if (this.ultimoSvenimento && !this.senzaFondo) { this.perche = 'svenuto'; this.risali(); return }
+    this.rimettiInPiedi()
     if (this.ultimoSvenimento) { this.perche = 'svenuto'; this.risali(); return }
+    this.chiudi()
+  }
+
+  /* Il risveglio all'ingresso: metà gemme, mezza vita, e i mostri a
+     casa loro — risvegliarsi con l'orco ancora addosso non è una
+     seconda occasione. */
+  rimettiInPiedi() {
     this.gemme = Math.floor(this.gemme / 2)
     this.vita = Math.max(6, Math.round(this.vitaMax / 2))
+    /* ── e nell'abisso si svuotano le tasche ──
+       Quello che si ha **addosso** resta — l'arma, la mano debole, il
+       corpo, il dito — e si perdono le sei tasche. Punisce senza
+       umiliare: se ne va il margine accumulato, non il lavoro di dieci
+       piani, che in una discesa senza fine sarebbe una brutta sera che
+       cancella una settimana. È anche l'unica regola che tiene in piedi
+       la richiesta di partenza — l'ascia leggendaria non si butta *mai*,
+       né a fine tappa né a fine serata né svenendo — e insieme rende
+       vera una cosa che il gioco già raccontava: il cartello dice da
+       sempre «le gemme che avevi in tasca non ci sono più, ma quello che
+       avevi addosso sì», e qui «in tasca» smette di voler dire solo le
+       gemme.
+       Non si rovescia per terra: la roba se ne va. Ritrovarla
+       all'ingresso vorrebbe dire non aver perso niente, con in più un
+       giro a piedi. E una pozione bevuta vale da adesso più di una
+       tenuta da parte, che è esattamente il comportamento che si voleva
+       togliere. La torcia non è nello zaino (è un interruttore sulla
+       corsa) e la vita cresciuta con l'elisir sta in `vitaBase`: chi
+       sviene non si ritrova al buio né più piccolo di prima. */
+    if (this.senzaFondo && this.zaino.length) {
+      const quante = this.zaino.length
+      this.zaino = []
+      this.dillo(`🎒 ${quante === 1 ? 'quello che avevi in tasca' : 'quello che avevi nelle tasche'} non c'è più`)
+    }
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
     this.strada = null; this.mira = null; this.bersaglio = null
-    /* i mostri svegli tornano a casa: risvegliarsi all'ingresso con
-       l'orco ancora addosso non è una seconda occasione */
     for (const m of this.livello.robe) if (m.che === 'mostro') { m.sveglio = false; m.calmo = CALMA }
     this.aggiornaLuce()
-    this.chiudi()
   }
 
   /* Una porta chiusa: il segno dice cosa promette, la domanda è il
@@ -1308,6 +1376,9 @@ export class Corsa {
       return { che: 'finita' }
     }
     this.piano++
+    /* le occasioni si rinnovano scendendo, e solo scendendo: è la cosa
+       che si è guadagnata (vedi `svenimentiSpesi`) */
+    this.svenimentiQui = 0
     this.vitaBase += VITA_PER_PIANO
     this.vita = Math.min(this.vitaMax, this.vita + RIPOSO_SCALA)
     this.nuovoPiano()
@@ -1333,7 +1404,14 @@ export class Corsa {
       /* perché è finita: `'svenuto'` se il fondo degli svenimenti è
          stato toccato, niente se si è risaliti per scelta o si è vinto */
       perche: this.perche || null,
-      piani: this.pianiFatti, quantiPiani: this.quantiPiani,
+      piani: this.pianiFatti,
+      /* l'abisso non ha un «su quanti»: dirlo `Infinity` metterebbe a
+         schermo «3 piani su ∞», che non è un conto */
+      quantiPiani: this.senzaFondo ? null : this.quantiPiani,
+      /* il più giù che si è arrivati, contato come lo conta un bambino
+         (il primo piano è l'1): è il record dell'abisso, e nella
+         campagna è semplicemente il piano dove si è finiti */
+      fondo: this.piano + 1,
       mostri: this.mostriBattuti, tesori: this.tesori,
       gemme: this.gemme, stanze: this.stanzeViste,
     }

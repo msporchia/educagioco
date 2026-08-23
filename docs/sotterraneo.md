@@ -118,6 +118,68 @@ ripara, cosa si rivende, come si evita che l'ultima discesa sia una
 passeggiata per chi ha l'ascia), e quella economia è un altro gioco. Se un
 giorno la si vorrà, si cambia in `dati/campagna.js`.
 
+## 🕳️ L'abisso: sotto il fondo, e senza fondo
+
+Finite tutte e sei le discese, in fondo alla mappa compare **l'abisso**: una
+discesa sola che comincia al piano 1 e non finisce. Non è la settima tappa e
+non deve sembrarlo — non ha stelle, non ha un «superata», non entra
+nell'indice della campagna.
+
+La ragione non è «più contenuto». Nasce da una frase precisa: *«ho trovato
+un'arma super figa e ora ho finito la tappa e la butta».* Dentro una discesa
+l'equipaggiamento è sempre sceso di piano in piano; quello che si buttava era
+il confine fra una tappa e l'altra. **In una discesa che non finisce quel
+momento non arriva mai**, e la regola qui sopra resta intatta.
+
+Cosa cambia scendendo:
+
+- **le domande smettono presto di diventare più difficili.** `dif` parte da
+  0,92 — dove finisce la sesta discesa — e sale di 0,02 a piano: al **quinto
+  piano** è a 1 e ci resta appiccicata. Non c'è niente oltre, e non è una
+  mancanza: la finestra delle domande è quella dell'**età del bambino**, non
+  della tappa, e un bambino di nove anni al piano 40 non deve trovarsi
+  domande da quattordicenne. Da lì in giù l'abisso non è più difficile *da
+  studiare*, solo da sopravvivere;
+- **i mostri crescono, ma non come prima.** Le ossa salgono del 22% a piano —
+  è la leva principale, quella che il bottino compensa — e l'attacco le segue
+  a un terzo del ritmo (`+1 ogni tre piani` invece che ogni due). La difesa
+  **non cresce mai**: entra in una sottrazione, e allunga la battaglia invece
+  di indurirla. Il numero vecchio non si vedeva leggendo la tabella: al piano
+  20 un orco picchiava 14 contro una difesa che arriva sì e no a 9, e la metà
+  passava **anche rispondendo bene**, perché il graffio è metà del colpo;
+- **la forma del piano gira invece di crescere** (34, 42, 52 celle a rotazione).
+  Un sotterraneo più grande *sembra* più difficile ed è solo più lungo, e la
+  noia non è difficoltà;
+- **svenendo si perdono le tasche, mai il corredo.** L'arma, lo scudo,
+  l'armatura e l'anello restano addosso; le sei tasche si svuotano e le gemme
+  si dimezzano. Punisce senza umiliare: se ne va il margine accumulato, non il
+  lavoro di dieci piani. Le occasioni sono **tre per piano e ripartono
+  scendendo** — scendere è la cosa che si è guadagnata, accamparsi su un piano
+  no;
+- **e all'ultima occasione la discesa non si butta.** Si risale, e quello che
+  finisce è la sera: la mappa offre in cima «l'abisso · piano 23 — torno giù
+  da dove ero», con addosso quello che si aveva. Nessuno rifà ventitré piani
+  a piedi.
+
+Il record — il più giù dove si è arrivati — sta in `cfg.abisso`, accanto
+all'eroe scelto, e non fra le stelle: quelle sono un oggetto dentro il
+profilo, e una chiave per piano finirebbe in ogni salvataggio per sempre.
+
+**Fin dove regge, oggi.** Il bottino non ha ancora gradi: l'eroe si ferma al
+gradino 3 delle armi e i mostri no. Col migliore equipaggiamento che il gioco
+sa produrre l'abisso si gioca per **una decina di piani** (misurato: 8–13 su
+sei semi), che sono due o tre serate; partendo nudi si va dal piano 4 al 13 a
+seconda di chi scende e di quanto si esplora. Il costo di un piano invece
+**non cresce** — fra 6 e 25 domande obbligate dal primo all'undicesimo — ed è
+il segno che ossa e braccio si muovono insieme. Il pezzo che manca per andare
+più giù è il **bottino graduato** (`ascia#7`), che è il lavoro dopo.
+
+**La difesa vale più dell'attacco, quaggiù**, ed è una conseguenza che non
+era stata prevista: il graffio è `(attacco del mostro − la tua difesa) / 2`,
+quindi un punto di difesa vale il doppio di un punto di vita a ogni scambio.
+Fra i quattro eroi il nano arriva più giù di tutti e il cavaliere meno,
+a parità di braccio.
+
 ## Una discesa si può lasciare a metà
 
 Tre o quattro piani, quaranta domande, venti minuti buoni: una discesa dura
@@ -225,6 +287,11 @@ superata e si rigioca da capo — la stessa fine di chi decide di
 smettere, raccontata per quello che è. Il cartello dello svenimento dice
 sempre quante ne restano: un fondo che non si vede arrivare è una
 partita che finisce senza motivo.
+
+Nell'abisso il conto è un altro — tre per piano, e riparte scendendo — e
+all'ultima non si ricomincia da capo: si risale e si rientra da lì. Là
+sotto non c'è nessuna tappa da fallire, quindi il contatore serve a
+rendere leggibile la serata e non a difendere l'economia (vedi sopra).
 
 Insieme a questo la vita di partenza è scesa di un quarto (il cavaliere
 da 24 a 18). I numeri non sono a occhio: venti discese per tappa, nei

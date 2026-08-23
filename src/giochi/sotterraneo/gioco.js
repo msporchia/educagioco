@@ -64,6 +64,12 @@ export default {
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
+    /* Finite le sei discese, «discesa 6 di 6» non racconta più niente:
+       quello che si sta facendo è scendere nell'abisso, e il numero che
+       conta è il più giù dove si è arrivati. Si dice solo da quando c'è
+       un record: prima la riga direbbe «piano più profondo 0». */
+    const fondo = (av.cfg && av.cfg.abisso && av.cfg.abisso.fondo) || 0
+    if (av.libera && fondo) return `abisso · piano più profondo ${fondo}${coda}`
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
     return `discesa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },
@@ -76,6 +82,7 @@ export default {
        sotTesori   forzieri aperti (quelli sbagliati non contano: restano chiusi)
        sotInteri   discese finite senza svenire nemmeno una volta
        sotGemme    (primato) le gemme portate a casa in una discesa sola
+       sotFondo    (primato) il piano più profondo toccato nell'abisso
      Si scrivono alla fine e non stanza per stanza apposta: salvare venti
      volte per discesa non aggiunge niente e costa a ogni tocco. */
   albo: {
@@ -106,6 +113,13 @@ export default {
         come: n => n === 1 ? 'Finisci una discesa senza mai svenire'
                            : `Finisci ${n} discese senza mai svenire`,
         soglie: [1, 3, 10], valore: m => m.tot('sotInteri') },
+      /* L'abisso non ha stelle e non ha un «superata»: l'unica cosa che
+         si può misurare è **quanto giù si è arrivati**, e per questo il
+         traguardo legge un primato invece di un totale. Le soglie sono
+         quelle di una sera, di una settimana e di un'ostinazione. */
+      { id: 'sot-abisso', emoji: '🕳️', nome: 'Giù per il buco',
+        come: n => `Arriva al piano ${n} dell'abisso`,
+        soglie: [10, 25, 50], valore: m => m.best('sotFondo') },
       { id: 'sot-campagna', emoji: '🏁', nome: 'Fino al fondo',
         come: () => 'Finisci tutte le discese',
         soglie: [1], valore: m => m.finita(CHIAVE) },

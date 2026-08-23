@@ -100,6 +100,18 @@
 .sot-tappa .sot-testo i { font-style: normal; font-size: 12.5px; color: var(--sot-tenue) }
 .sot-conto { font-size: 13px; color: var(--sot-oro); white-space: nowrap }
 
+/* ── l'abisso ──
+   Sotto le sei, e più scuro di loro: non è la settima discesa, è quello
+   che c'è **sotto** il fondo. Il filo viola lo separa dalla fila senza
+   trasformarlo in un premio che luccica — quello che luccica in questa
+   schermata è la discesa lasciata a metà. */
+.sot-tappa.sot-abisso {
+  margin-top: 4px;
+  background: linear-gradient(160deg, #171226, var(--sot-carta) 75%);
+  border-color: #7a5cc266;
+}
+.sot-tappa.sot-abisso .sot-conto { color: #b39ddb }
+
 /* ═══════════ il campo ═══════════ */
 .sot-campo { flex: 1; min-height: 0; position: relative }
 /* Il canvas è **ancorato**, non semplicemente al 100%: la Tela si misura

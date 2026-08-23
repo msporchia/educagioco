@@ -5,6 +5,22 @@
 *Progetto, non elenco di idee. Qui sotto ci sono i numeri, le formule e i
 punti di rottura — detti prima, che è l'unico momento in cui servono.*
 
+> ## 📍 A che punto è
+>
+> **Il punto 2 è fatto e si gioca** (l'abisso, `dif` appiccicata a 1, la
+> crescita ritarata, la carta, il record, `Fine.vue`). Il bottino è
+> ancora quello di oggi, senza gradi. Restano il punto 1 (`cosa(k)`), il
+> 3 (bottino graduato), il 4 (la risalita) e il 5 (il banco e le monete).
+>
+> Quello che, **realizzandolo, è risultato diverso dal progetto** — con i
+> numeri misurati — sta in fondo, in [«Cos'è cambiato realizzando il
+> punto 2»](#cosè-cambiato-realizzando-il-punto-2). In due righe: la
+> discesa regge una decina di piani con l'equipaggiamento al tetto di
+> oggi (come previsto), ma **partendo nudi ci si ferma prima** perché i
+> primi piani si spendono ad armarsi — da cui una scaletta di guardiani
+> nei primi due piani, che il progetto non aveva. E l'ultimo svenimento
+> **non butta la discesa**: scrive il punto da cui si rientra.
+
 ## Da dove viene
 
 La richiesta è arrivata così: «può continuare a scendere e dovrebbe
@@ -1041,7 +1057,7 @@ guardare col telefono prima di cominciare il successivo.
 | | cosa | giornate |
 |---|---|---|
 | 1 | `cosa(k)`: la lettura unica, il parser `base#N`, il controllo che fuori da `cose.js` non resti nessun `COSE[`. **Niente cambia a schermo.** | ½ |
-| 2 | L'abisso: la discesa senza fondo, `dif` che si appiccica a 1, la crescita dei mostri ritarata, la carta in `Campagna.vue`, il record, `Fine.vue`. **Bottino ancora senza gradi.** | 1 |
+| 2 | ✅ **fatto** — L'abisso: la discesa senza fondo, `dif` che si appiccica a 1, la crescita dei mostri ritarata, la carta in `Campagna.vue`, il record, `Fine.vue`. **Bottino ancora senza gradi.** | 1 |
 | 3 | Il bottino graduato: tabelle per profondità, il guardiano che lascia sempre, il mercante, i nomi col genere, la correzione della mano debole. | 1 |
 | 4 | La scala che risale, la memoria dei piani lasciati alle spalle: la differenza, gli indici, il tetto ai venti, la riscrittura di `scrivi`/`leggi`. | 1 |
 | 5 | Il banco dell'abisso, il file di prova, il conto delle risposte giuste e le monete. | ½ |
@@ -1127,3 +1143,125 @@ scopriranno giocando, e che è meglio aver scritto prima.
   risalgono davvero di venti piani, il numero si alza: costa 340 byte a
   piano, e la riga da guardare è quella di `store/storage.js`, non
   questa.
+
+## Cos'è cambiato realizzando il punto 2
+
+*Scritto dopo, coi numeri del banco. Il progetto è stato eseguito quasi
+per intero; quattro cose sono risultate diverse, e stanno qui per non
+farle riscoprire due volte.*
+
+### 1. Partendo nudi ci si ferma prima del decimo piano
+
+Il progetto diceva: «si gioca male dopo il decimo piano — il bottino di
+grado 3 non regge mostri di piano 12 — ma dieci piani sono due sere».
+**È vero, e solo a metà**, e la metà che manca è che nell'abisso si
+comincia da zero:
+
+| come si scende | fin dove si arriva (sei semi, bravura 0,8) |
+|---|---|
+| **con l'equipaggiamento al tetto di oggi** (spadone, corazza, anello) | 8 · 9 · 9 · 11 · 12 · 13 — **medio 10,3** |
+| partendo nudi, andando dritti alla scala | dal 3 al 13, mediana **5** |
+| partendo nudi, ripulendo ogni piano | 6 quasi sempre, e non per la difficoltà: un 52×52 profondo giocato «tutto» sono venti battaglie, e ognuna un graffio |
+
+La riga di sopra è **esattamente la previsione del progetto**: col
+bottino di oggi il tetto è una decina di piani, e il pezzo che manca per
+andare più giù è il bottino graduato (punto 3). Le altre due dicono che
+il primo terzo della discesa se ne va ad armarsi, e che quel tratto è
+quello dove si sviene.
+
+**La cura è stata una sola, e sta dentro le leve dichiarate:** i primi
+due piani dell'abisso li guarda **lo scheletro** invece dell'orco
+(`guardiani: ['scheletro', 'scheletro', 'orco', 'orco', 'orco']` e poi il
+gigante per sempre). Misurato: senza, si sveniva due volte sul primo
+piano prima di aver trovato un'arma, cioè il peggior biglietto da visita
+possibile per un posto che si apre a chi ha finito sei discese.
+Spostare invece **da quale piano compare il gigante** non cambia quasi
+niente (medio 5,2 → 6,0 fra il piano 3 e il piano 9): non è il capo a
+fermare la discesa, è il non avere un'arma.
+
+### 2. La difesa vale più dell'attacco, e non era previsto
+
+`graffio = (attacco del mostro − la tua difesa) / 2`, e nell'abisso il
+graffio si prende **a ogni scambio**, anche rispondendo bene. Quindi un
+punto di difesa vale il doppio di un punto di vita, e fra i quattro eroi
+la classifica dell'abisso non è quella della campagna:
+
+| chi scende | fin dove arriva (nudo, sei semi) |
+|---|---|
+| Nano (❤️20 ⚔️3 🛡️2) | 4 · 6 · 6 · 8 · 13 · 13 |
+| Elfa (❤️15 ⚔️4 🛡️1) | 3 · 4 · 5 · 6 · 11 · 13 |
+| Mago (❤️12 ⚔️5 🛡️0) | 4 · 4 · 5 · 5 · 6 · 6 |
+| Cavaliere (❤️18 ⚔️3 🛡️1) | 3 · 4 · 4 · 4 · 6 · 11 |
+
+**La classe che si ferma per prima è il cavaliere**, che nella campagna è
+quella che perdona di più. Non è un guasto ed è coerente col resto — la
+scala non è chiusa a nessuno — ma è la riga da guardare quando arriverà
+il bottino graduato: se lì la corazza cresce come cresce l'arma, il
+divario si allarga invece di chiudersi.
+
+### 3. Il costo di un piano non cresce, e questa regge intera
+
+La misura più importante del progetto — *«il costo di un mostro in
+domande è una costante; quello che cresce è il prezzo di restare
+indietro»* — torna:
+
+```
+domande obbligate per piano, dal 1° all'11°:
+10 · 6 · 19 · 13 · 18 · 25 · 15 · 15 · 10 · 17 · 16
+```
+
+Nessuna deriva verso l'alto, e la forbice fra «il minimo» e «tutto»
+resta oltre il doppio. Il numero 6 è un piano fortunato — guardiano a due
+stanze dall'ingresso — e non un piano rotto: il generatore non promette
+dove mette la scala, e la soglia del test è larga in basso apposta.
+
+### 4. L'ultimo svenimento non butta la discesa
+
+Il progetto lo diceva in una riga («toccato il fondo si risale, col
+corredo addosso e col record… la discesa riprende da lì») e la riga
+costava più di quanto sembrasse, perché `scrivi()` rifiuta una corsa
+finita. Fatto così: nell'abisso `riprendi()` **rimette in piedi comunque**
+(ingresso, mezza vita, metà gemme, tasche vuote) e *poi* risale, e
+`Gioco.vue` scrive la sosta chiedendola per nome
+(`scrivi(c, INDICE_ABISSO, { anchePerFinite: true })`).
+
+La conseguenza da sapere: **rientrando si ritrova il piano com'era**, coi
+mostri già battuti e i forzieri già aperti. Vale a dire che il contatore
+a tre non difende l'economia — e infatti il progetto scrive proprio
+questo: *«serve a rendere la serata leggibile, non a difendere
+l'economia; quella si difende da sé»*, perché ogni svenimento porta via
+le gemme che servono a scendere ancora.
+
+### 5. Le tre cose scritte nel progetto che **non** sono state fatte
+
+- **`abisso: true` nella sosta.** Il progetto elencava tre campi nuovi;
+  ne è stato scritto **uno solo che li vale**, `tappa: −1`. Due fonti per
+  lo stesso fatto divergono, ed è il ceppo di guasti che questo repo ha
+  già pagato più volte. Il valore ha un nome (`INDICE_ABISSO`), non è un
+  numero magico. `dietro` e `fondo` restano al punto 4, che è chi li usa.
+- **🪙1 per risposta giusta.** L'abisso non paga: serve `corsa.giuste`,
+  che è dichiarato punto 5. Meglio zero che una cifra inventata qui.
+- **Le scorte che si diradano e la scorta del guardiano.** Il progetto le
+  dà per non misurate e sono rimaste tali: sono due leve che *induriscono*
+  una discesa che oggi si ferma per un altro motivo (l'arma che non
+  cresce). Vanno provate al punto 3, non prima.
+
+### E una cosa in più, che non costava niente
+
+La forma del piano **gira** fra le tre misure che la campagna già usa
+(34/3, 42/3, 52/4, scelte dal piano modulo 3), come il progetto proponeva
+fra parentesi. È varietà e non crescita, e ha portato con sé l'unica
+riga di manutenzione vera: `visto` adesso si dimensiona **sul piano
+generato** e non sulla tappa, o a ogni cambio di forma metà mappa
+resterebbe al buio senza nessun errore da nessuna parte.
+
+### Dove guardare
+
+- `dati/campagna.js` — `L_ABISSO`, `INDICE_ABISSO`, `durezzaDi`,
+  `guardianoDi`, `formaDi`, `crescitaDi`, `guastiDellAbisso`.
+- `motore/corsa.js` — `senzaFondo`, `svenimentiSpesi`, `rimettiInPiedi`.
+- `motore/banco.js` — `gioca({ fino })`, `costoDeiPiani`, `finoADove`.
+- `test/unita/sotterraneo-abisso.test.mjs` — le soglie e le misure qui
+  sopra, rifatte a ogni giro.
+- `#abisso=12` nell'indirizzo comincia l'abisso a quel piano: serve a
+  guardare una schermata senza giocarsi due sere.

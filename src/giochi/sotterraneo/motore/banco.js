@@ -302,8 +302,16 @@ function sbriga(corsa, bravura, sorte, conto) {
 /* `da` è una discesa **già cominciata**: serve a provare che una partita
    ripresa a metà si finisce davvero, che è l'unica prova seria che il
    salvataggio non ha perso niente per strada. */
+/* `fino` è il piano oltre il quale si smette di scendere, e serve a una
+   cosa sola: **misurare una discesa che non finisce**. L'abisso non ha un
+   ultimo piano, quindi senza un fermo dichiarato il giocatore finto
+   scende finché non sviene troppe volte — che è una misura interessante
+   (`finoADove`), ma non è quella che serve quando si vuole sapere quanto
+   costa il piano 12. Nella campagna non si passa e non cambia niente.
+   `perPiano` è il taccuino di quante domande è costato ognuno: si legge
+   dopo, e senza di lui «il costo di un piano non cresce» non si può dire. */
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
-                              eroe = undefined } = {}) {
+                              eroe = undefined, fino = null, tettoGiri = TETTO_GIRI } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
   const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe })
   if (da) da.rnd = sorte
@@ -312,8 +320,17 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   const provati = new Map()
   const conto = { cure: 0 }
   const banchiVisti = new Set()
+  const perPiano = []
+  let pianoOra = corsa.piano, domandeAllInizio = corsa.domande
+  const chiudiIlPiano = () => {
+    perPiano[pianoOra] = (perPiano[pianoOra] || 0) + (corsa.domande - domandeAllInizio)
+    pianoOra = corsa.piano
+    domandeAllInizio = corsa.domande
+  }
 
-  while (!corsa.finita && giri++ < TETTO_GIRI) {
+  while (!corsa.finita && giri++ < tettoGiri) {
+    if (corsa.piano !== pianoOra) chiudiIlPiano()
+    if (fino != null && corsa.piano >= fino) break
     /* prima si sbriga quello che si ha davanti: finché un foglio è
        aperto non si cammina */
     if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }
@@ -358,6 +375,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
       return { corsa, esito: corsa.esito, guasto: 'alla scala non si arriva' }
   }
 
+  chiudiIlPiano()
   return {
     corsa,
     esito: corsa.esito,
@@ -366,8 +384,45 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
        serve a leggere i numeri qui sotto senza confondere «la tappa è
        più facile» con «il metro compra le pozioni» */
     cure: conto.cure,
-    guasto: corsa.finita ? null : 'la discesa non finisce mai',
+    perPiano,
+    guasto: corsa.finita || (fino != null && corsa.piano >= fino)
+      ? null : 'la discesa non finisce mai',
   }
+}
+
+/* ═══════════ il metro dell'abisso ═══════════
+   Le due misure che una discesa senza fondo chiede e che `costoDi` non
+   sa dare, perché quello prende una tappa con `piani` finiti.
+
+   `costoDeiPiani` conta le domande piano per piano fino a `fino`, nei due
+   modi: se il numero **cresce** scendendo vuol dire che ossa e braccio
+   non si muovono insieme, e la discesa sta diventando lunga invece che
+   difficile. `finoADove` dice a che piano si ferma un giocatore finto —
+   cioè dove il bottino di oggi smette di reggere i mostri di laggiù. */
+export function costoDeiPiani(tappa, { fino = 12, seme = 7, bravura = 0.8,
+                                       eroe = undefined } = {}) {
+  const giri = 400 + fino * 900
+  const minimo = gioca(tappa, { seme, bravura, come: 'minimo', fino, tettoGiri: giri, eroe })
+  const tutto = gioca(tappa, { seme, bravura, come: 'tutto', fino, tettoGiri: giri, eroe })
+  return {
+    minimo: minimo.perPiano, tutto: tutto.perPiano,
+    /* dove si è arrivati davvero: chi sviene troppe volte si ferma
+       prima, e i piani che mancano non hanno un costo da leggere */
+    arrivato: [minimo.corsa.piano, tutto.corsa.piano],
+    svenimenti: [minimo.esito.svenimenti, tutto.esito.svenimenti],
+  }
+}
+
+export function finoADove(tappa, { bravura = 0.8, semi = [7, 41, 99, 203],
+                                   tetto = 40, eroe = undefined } = {}) {
+  const fondi = []
+  for (const seme of semi) {
+    const g = gioca(tappa, { seme, bravura, come: 'minimo', fino: tetto,
+                             tettoGiri: 400 + tetto * 900, eroe })
+    fondi.push(g.corsa.piano + 1)
+  }
+  return { fondi, peggio: Math.min(...fondi), meglio: Math.max(...fondi),
+           medio: fondi.reduce((a, b) => a + b, 0) / fondi.length }
 }
 
 /* Quante domande costa un piano, nei due modi. È la misura che va
