@@ -44,8 +44,8 @@ import {
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { eroeDi, DI_PARTENZA } from '../dati/eroi.js'
-import { COSE, CURE, NEI_FORZIERI, pescaMerce } from '../dati/cose.js'
+import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
+import { COSE, CURE, NEI_FORZIERI, pescaMerce, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
 import { durezzaDi, guardianoDi, svenimentiDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
@@ -157,6 +157,42 @@ export class Corsa {
     if (this.mancina && COSE[this.mancina])
       n += campo === 'att' ? this.attaccoMancino : (COSE[this.mancina][campo] || 0)
     return n
+  }
+
+  /* ── quello che questa classe può mettersi addosso ──
+     Il motore non nomina nessun eroe e non conosce nessuna famiglia:
+     chiede al dato (`porta` in `dati/eroi.js`, `famiglia` in
+     `dati/cose.js`) e basta. Le due righe stanno qui perché **è il
+     motore l'unico che sa chi sta scendendo**, e chi disegna non deve
+     mettersi a confrontare due elenchi per sapere se un tasto va acceso.
+
+     Il limite è sull'indossare e mai sul prendere: `posso` non compare
+     in `trovata` per rifiutare la raccolta, ma solo per non vestire da
+     sé una cosa che poi non si toglierebbe più. */
+  posso(k) { return portaLa(this.io, COSE[k]) }
+  perchéNo(k) { return nonLaPorta(this.io, COSE[k]) }
+
+  /* ── quello che si aveva addosso e adesso non si porta più ──
+     Serve a una cosa sola, ed è il rientro: un salvataggio di ieri può
+     avere in pugno un'ascia scritta quando le asce le impugnavano tutti.
+     Non si butta e non resta addosso di nascosto — va in tasca, o per
+     terra se le tasche sono piene, che è la stessa regola dello
+     sfratto in `sistemaLeMani`. Detto, perché una spada che cambia posto
+     da sola senza una riga si legge come un salvataggio andato storto. */
+  sistemaIlCorredo() {
+    for (const dove of ['mano', 'mancina', 'corpo', 'dito']) {
+      const k = this.casella(dove)
+      if (!k || this.posso(k)) continue
+      this.metti(dove, null)
+      if (this.zaino.length < TASCHE) this.zaino.push(k)
+      else this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em },
+                         { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) })
+      this.dillo(`${COSE[k].em} ${COSE[k].nome}: ${this.perchéNo(k).toLowerCase()}`)
+    }
+    /* la vita segue il tetto: togliendo un amuleto o un saio il massimo
+       scende, e restare sopra il proprio massimo è uno stato che nessuna
+       altra riga del motore sa produrre */
+    this.vita = Math.min(this.vita, this.vitaMax)
   }
 
   /* Dov'è la casella di una cosa, e cosa c'è dentro adesso. */
@@ -591,7 +627,12 @@ export class Corsa {
       r.presa = true
       return
     }
-    if (c.dove) {
+    /* Quello che la classe non porta si raccoglie **come tutto il
+       resto** — vale gemme al banco — solo che non si veste da sé: la
+       riga che dice perché la si legge nello zaino, dove si è andati a
+       guardarla. Dirlo qui, in mezzo a una stanza, vorrebbe dire un
+       cartello a ogni cosa che si tocca. */
+    if (c.dove && this.posso(r.cosa)) {
       /* uno scudo con un'arma a due mani in pugno non si mette da solo:
          `sistemaLeMani` glielo toglierebbe subito, e a schermo si
          vedrebbe una cosa presa e persa nello stesso istante */
@@ -605,7 +646,13 @@ export class Corsa {
     if (this.zaino.length >= TASCHE) { this.dillo('🎒 lo zaino è pieno'); return }
     this.zaino.push(r.cosa)
     r.presa = true
-    this.dilloDi(r.cosa)
+    /* Raccolta lo stesso, e la riga dice perché non è finita in pugno.
+       Si dice **qui**, nel momento in cui la si prende, e non solo
+       aprendo lo zaino: chi trova un'ascia e la vede sparire in una
+       tasca senza una parola crede che il gioco l'abbia ignorata, e la
+       ritocca. */
+    const perché = this.perchéNo(r.cosa)
+    this.dilloDi(r.cosa, perché ? ` · ${perché.charAt(0).toLowerCase()}${perché.slice(1)}` : '')
   }
 
   /* Accendere è una cosa sola: o è accesa o non lo è, e una seconda
@@ -838,7 +885,7 @@ export class Corsa {
                              quante: scheda.gemme + Math.floor(this.piano * 1.5) })
     const possibili = scheda.lascia || []
     if (possibili.length && this.rnd() < (scheda.droppa != null ? scheda.droppa : 0.5)) {
-      const cosa = possibili[Math.floor(this.rnd() * possibili.length)]
+      const cosa = pescaCosa(possibili, { rnd: () => this.rnd(), tua: k => this.posso(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: m.x + 1, y: m.y })
     }
     this.dillo(`${m.em} è caduto!`)
@@ -917,8 +964,11 @@ export class Corsa {
       return { che: 'niente' }
     }
     this.tesori++
-    /* il bottino cade **davanti** al baule, mai dentro: vedi `posaRoba` */
-    const cosa = NEI_FORZIERI[Math.floor(this.rnd() * NEI_FORZIERI.length)]
+    /* il bottino cade **davanti** al baule, mai dentro: vedi `posaRoba`.
+       E predilige la classe che ha aperto il baule (`PESO_ALTRUI` in
+       `dati/cose.js`): un forziere è la cosa che si è pagata più cara di
+       tutte, ed è il posto dove trovarci roba d'altri pesa di più. */
+    const cosa = pescaCosa(NEI_FORZIERI, { rnd: () => this.rnd(), tua: k => this.posso(k) })
     this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, { x: f.x, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: 6 + this.piano * 3 }, { x: f.x + 1, y: f.y + 1 })
     this.dillo('🎁 si apre!')
@@ -1011,8 +1061,16 @@ export class Corsa {
          dice perché il prezzo e non altro). La profondità è la stessa
          `durezza()` che decide quanto sono toste le domande qui — una
          manopola sola per «quanto siamo giù», invece di una seconda
-         scala da tenere allineata alla campagna a mano. */
-      m.roba = pescaMerce(this.durezza(), { quante: 5, rnd: () => this.rnd(), ammessa: utile })
+         scala da tenere allineata alla campagna a mano.
+
+         Il secondo peso è la classe (`tua`), e non è un filtro: una
+         riga che questa classe non impugna può ancora capitare, e
+         quando capita il banco dice perché. Un banco che mostrasse
+         soltanto il portabile non insegnerebbe mai che le altre tre
+         classi esistono — e quella riga lì si può comunque non
+         comprare, mica raccogliere per terra. */
+      m.roba = pescaMerce(this.durezza(), { quante: 5, rnd: () => this.rnd(),
+                                            ammessa: utile, tua: k => this.posso(k) })
     }
     this.foglio = { che: 'mercante', chi: m }
   }
@@ -1069,6 +1127,11 @@ export class Corsa {
        sono sul banco per conto loro, e ci restano */
     const scorta = f.chi.roba.includes(k)
     if (!c || !(scorta || CURE.includes(k))) return null
+    /* Comprare quello che non si può impugnare sarebbe l'unico modo di
+       perdere gemme senza guadagnare niente: si rivende a metà, quindi
+       è una tassa e basta. La riga compare lo stesso sul banco — dice
+       perché no, come nello zaino e per terra — ma non si compra. */
+    if (c.dove && !this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
     if (this.gemme < c.prezzo) return { che: 'niente' }
     /* Lo zaino pieno non ferma quello che si mette addosso: la casella
        è un altro posto, e chi ha una casella vuota può comprare anche
@@ -1132,6 +1195,12 @@ export class Corsa {
     if (!k) return null
     const c = COSE[k]
     if (c.dove) {
+      /* Il tasto c'è comunque e dice perché non si preme, che è la
+         regola di casa: quanto manca, mai un tasto spento e muto. Chi
+         disegna lo sa già (`posso`) e lo scrive addosso alla tasca —
+         questa riga è la rete sotto, per il caso in cui ci si arrivi
+         lo stesso. */
+      if (!this.posso(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
       /* quello che si aveva addosso torna nello zaino: non sparisce,
          perché una spada lasciata cadere per prenderne un'altra è la cosa
          che fa arrabbiare di più. Per un'arma il posto lo sceglie

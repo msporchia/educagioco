@@ -16,6 +16,51 @@
    legge nel confronto («⚔️ +1 rispetto alla spada corta») senza dover
    sapere niente d'altro.
 
+   ── «VALGONO LO STESSO» CONTA ANCHE LA MANO CHE RESTA LIBERA ──────
+   Per un pezzo quella regola è stata scritta come *stesso attacco e
+   stesso prezzo, gradino per gradino*, ed era falsa in un modo che non
+   si vedeva leggendo la tabella. Al primo gradino la spada corta e
+   l'arco corto costavano 🪙8 e picchiavano 1 tutti e due, solo che
+   l'arco **mangia anche la sinistra**: chi teneva la spada ci metteva
+   uno scudo di ferro (+2 di pelle) o una seconda lama (+1 di braccio),
+   chi teneva l'arco no. Stesso numero, stesso prezzo, e una delle due
+   strettamente peggiore. Al secondo gradino la stessa cosa fra spada e
+   ascia; al terzo il difetto spariva soltanto perché a una mano non
+   esisteva più niente.
+
+   Adesso il conto è fatto per intero: **un'arma a due mani picchia uno
+   più del suo gradino** (`LA_MANO_CHE_RESTA`), che è esattamente quello
+   che la mano libera avrebbe portato. La mano debole colpisce la metà
+   (`attaccoMancino` in `motore/corsa.js`), quindi a ogni gradino dove
+   esistono tutte e due le forme il conto torna in pari:
+
+     gradino 1 → una mano 1 + 1 di rimbalzo = 2, due mani 2
+     gradino 2 → una mano 2 + 1 di rimbalzo = 3, due mani 3
+
+   Due armi leggere valgono una pesante **dello stesso gradino**, non
+   più «una del gradino dopo»: la parità è dove serve, cioè fra due cose
+   che costano uguale, e la scelta torna a essere quella vera — braccio
+   subito e una mano sola, o due caselle da riempire e in una ci può
+   andare anche uno scudo.
+
+   Perché l'attacco e non il prezzo: il prezzo lo guarda solo il
+   mercante, e le armi si **trovano** molto più di quanto si comprino —
+   ritoccare i listini avrebbe lasciato l'arco trovato per terra
+   strettamente peggiore della spada trovata per terra, cioè il difetto
+   intero. Alzare invece il gradino a parità d'attacco avrebbe voluto
+   dire mentire sul confronto («⚔️ +1» che non c'è). Il braccio è la
+   manopola velenosa e si tocca a malincuore: qui si è toccata di uno,
+   e cosa costa in domande sta misurato in `test/unita/sotterraneo`, eroe
+   per eroe.
+
+   ── E OGNI CLASSE PORTA LE SUE ───────────────────────────────────
+   `famiglia` dice **a chi serve** una cosa, e la classe dichiara cosa
+   porta (`porta` in `dati/eroi.js`, dove sta anche il perché non è un
+   tratto nascosto). Chi non ha famiglia la porta chiunque, ed è la parte
+   più grossa del catalogo. Il limite è sull'indossare e mai sul
+   prendere: quello che non si può usare si raccoglie, si porta al banco
+   e si vende a metà prezzo come tutto il resto.
+
    ── L'ARMATURA SI VEDE SOLO NELL'ICONA, E VA BENE COSÌ ────────────
    Per due fogli su tre l'armatura non c'era affatto: 0x72 e il foglio
    degli oggetti equipaggiano solo le mani, e panciotto, corazza e manto
@@ -43,14 +88,27 @@
    `prezzo` serve solo al banco del mercante: quello che si trova in
    giro non costa niente, si raccoglie toccandolo.
    ═══════════════════════════════════════════════════════════════════ */
+import { EROI, FAMIGLIE, portaLa } from './eroi.js'
 
 /* I tre gradini, uguali per tutte le famiglie: il numero sta qui una
-   volta sola, così una famiglia nuova non può nascere sbilanciata. */
+   volta sola, così una famiglia nuova non può nascere sbilanciata.
+   `att` è quanto picchia **a una mano**; chi ne chiede due prende quello
+   che la mano libera avrebbe reso (vedi in cima). */
 const GRADINI = [
   { att: 1, prezzo: 8 },
   { att: 2, prezzo: 16 },
   { att: 3, prezzo: 26 },
 ]
+
+/* Quanto rende la mano che un'arma pesante ti mangia. Uno, e non è
+   scelto a occhio: è `Math.ceil(att / 2)` di un'arma dello stesso
+   gradino, cioè quello che la sinistra rende davvero ai primi due
+   gradini — che sono gli unici dove le due forme convivono e dove
+   quindi il confronto si fa. Alzarlo a due vorrebbe dire pareggiare col
+   terzo gradino, dove a una mano non c'è niente con cui pareggiare, e
+   comprare quella simmetria finta con un'altra risposta risparmiata su
+   ogni mostro del gioco. */
+const LA_MANO_CHE_RESTA = 1
 
 /* ── una mano o due ──
    `mani: 2` vuol dire che l'arma **occupa anche la sinistra**: un
@@ -60,48 +118,65 @@ const GRADINI = [
    altro, che è la sola cosa che un elenco di caselle non dice mai.
 
    Chi ne ha una sola ne può portare due, ed è il patto: le armi
-   leggere si sdoppiano, quelle pesanti no. Due armi di secondo gradino
-   valgono un terzo gradino (vedi `attaccoMancino` in `motore/corsa.js`:
-   la sinistra colpisce la metà), quindi la scelta resta una scelta e
-   non una scorciatoia. */
-const arma = (grado, nome, sprite, dice, mani = 1) => ({
-  em: '⚔️', nome, sprite, dove: 'mano', grado, mani,
-  att: GRADINI[grado - 1].att, prezzo: GRADINI[grado - 1].prezzo, dice,
+   leggere si sdoppiano, quelle pesanti no. Due armi leggere di un
+   gradino valgono la pesante dello **stesso** gradino (vedi in cima, e
+   `attaccoMancino` in `motore/corsa.js`: la sinistra colpisce la metà),
+   quindi la scelta resta una scelta e non una scorciatoia. */
+const arma = (famiglia, grado, nome, sprite, dice, mani = 1) => ({
+  em: '⚔️', nome, sprite, dove: 'mano', famiglia, grado, mani,
+  att: GRADINI[grado - 1].att + (mani === 2 ? LA_MANO_CHE_RESTA : 0),
+  prezzo: GRADINI[grado - 1].prezzo, dice,
 })
 
 export const COSE = {
   /* ── le spade: quello che tutti si aspettano di trovare ── */
-  'spada-corta': arma(1, 'Spada corta', 'spada-corta', 'I mostri cadono un po\' prima.'),
-  spada: arma(2, 'Spada', 'spada', 'Ogni risposta giusta fa più male.'),
-  spadone: arma(3, 'Spadone', 'spadone', 'Anche i grossi cadono in pochi colpi. Due mani.', 2),
+  'spada-corta': arma('spade', 1, 'Spada corta', 'spada-corta', 'I mostri cadono un po\' prima.'),
+  spada: arma('spade', 2, 'Spada', 'spada', 'Ogni risposta giusta fa più male.'),
+  spadone: arma('spade', 3, 'Spadone', 'spadone', 'Anche i grossi cadono in pochi colpi. Due mani.', 2),
 
   /* ── le asce: pesanti, e si vede ── */
-  accetta: arma(1, 'Accetta', 'accetta', 'Piccola, ma taglia.'),
-  ascia: arma(2, 'Ascia', 'ascia', 'Due mani, e si sente.', 2),
-  bipenne: arma(3, 'Bipenne', 'bipenne', 'Una lama per parte: non perdona. Due mani.', 2),
+  accetta: arma('asce', 1, 'Accetta', 'accetta', 'Piccola, ma taglia.'),
+  ascia: arma('asce', 2, 'Ascia', 'ascia', 'Due mani, e si sente.', 2),
+  bipenne: arma('asce', 3, 'Bipenne', 'bipenne', 'Una lama per parte: non perdona. Due mani.', 2),
 
   /* ── gli archi: la stessa forza, da lontano ── */
-  'arco-corto': arma(1, 'Arco corto', 'arco-corto', 'Colpisce prima che ti arrivino addosso. Due mani.', 2),
-  'arco-lungo': arma(2, 'Arco lungo', 'arco-lungo', 'Freccia lunga, colpo pesante. Due mani.', 2),
-  balestra: arma(3, 'Balestra', 'balestra', 'Un colpo solo, e fa un buco. Due mani.', 2),
+  'arco-corto': arma('archi', 1, 'Arco corto', 'arco-corto', 'Colpisce prima che ti arrivino addosso. Due mani.', 2),
+  'arco-lungo': arma('archi', 2, 'Arco lungo', 'arco-lungo', 'Freccia lunga, colpo pesante. Due mani.', 2),
+  balestra: arma('archi', 3, 'Balestra', 'balestra', 'Un colpo solo, e fa un buco. Due mani.', 2),
 
-  /* ── le bacchette: per chi scende da mago ── */
-  verga: arma(1, 'Verga', 'verga', 'Una scintilla a ogni risposta giusta.'),
-  'bastone-magico': arma(2, 'Bastone magico', 'bastone-magico', 'La punta brucia. Due mani.', 2),
-  scettro: arma(3, 'Scettro', 'scettro', 'Quello che tocca non si rialza. Due mani.', 2),
+  /* ── le bacchette: per chi scende da mago ──
+     Lo scettro è **a una mano**, ed è l'unica arma di terzo gradino che
+     lo sia. Non è una concessione: uno scettro si regge in una mano e
+     un bastone no, e il disegno lo dice prima del numero. Quello che
+     cambia nel gioco è che il mago — l'unico che porta bacchette, con
+     zero di difesa e dodici di vita — arrivato in fondo può finalmente
+     imbracciare uno scudo, che è la strada per cui gli scudi esistono
+     («braccio o pelle»). Con tutte e tre le bacchette a due mani quella
+     strada gli era chiusa per costruzione, e la misura diceva che era
+     l'unico dei quattro a non arrivare in fondo. */
+  verga: arma('bacchette', 1, 'Verga', 'verga', 'Una scintilla a ogni risposta giusta.'),
+  'bastone-magico': arma('bacchette', 2, 'Bastone magico', 'bastone-magico', 'La punta brucia. Due mani.', 2),
+  scettro: arma('bacchette', 3, 'Scettro', 'scettro', 'Quello che tocca non si rialza.'),
 
   /* ── quello che si mette addosso ──
      I tre sono una scala e si devono leggere come una scala **a colpo
      d'occhio**, senza il numero: stoffa e cuoio, poi il ferro, poi
      qualcosa di ricco. È l'unico posto dove queste tre cose si vedono
      mai (vedi in cima), quindi il disegno non è decorazione: è tutta
-     l'informazione che c'è. */
+     l'informazione che c'è.
+
+     Il cuoio **non ha famiglia**: è la prima armatura che si trova — la
+     lascia lo scheletro, cioè il mostro del primo piano — e negarla a
+     qualcuno vorrebbe dire mandarlo giù nudo finché non trova di
+     meglio. Il ferro e la stoffa sì, e sono le due strade: chi para di
+     suo (cavaliere e nano) veste ferro, chi non para niente (elfa e
+     mago) veste stoffa, che infatti para di più. */
   panciotto: { em: '🦺', nome: 'Panciotto', sprite: 'corpo-cuoio', dove: 'corpo', dif: 1, prezzo: 9,
                dice: 'Sbagliare fa un po\' meno male.' },
-  corazza: { em: '🛡️', nome: 'Corazza', sprite: 'corpo-piastre', dove: 'corpo', dif: 2, prezzo: 18,
-             dice: 'Sbagliare fa molto meno male.' },
-  manto: { em: '🧥', nome: 'Manto', sprite: 'corpo-manto', dove: 'corpo', dif: 3, prezzo: 28,
-           dice: 'Sbagliare non fa quasi più male.' },
+  corazza: { em: '🛡️', nome: 'Corazza', sprite: 'corpo-piastre', dove: 'corpo', famiglia: 'ferro',
+             dif: 2, prezzo: 18, dice: 'Sbagliare fa molto meno male.' },
+  manto: { em: '🧥', nome: 'Manto', sprite: 'corpo-manto', dove: 'corpo', famiglia: 'stoffa',
+           dif: 3, prezzo: 28, dice: 'Sbagliare non fa quasi più male.' },
   /* ── e la quarta, che non sta nella scala ──
      Le tre qui sopra sono una fila: chi ha il manto non guarda più il
      resto, e la casella del corpo smette di essere una scelta appena la
@@ -110,7 +185,8 @@ export const COSE = {
      amuleto d'ossa, cioè fa il mestiere che nella mano debole fanno già
      lo scudo borchiato e quello del leone. La domanda torna a essere
      «pelle o fiato?», che è una domanda. */
-  saio: { em: '🥋', nome: 'Saio', sprite: 'corpo-saio', dove: 'corpo', dif: 1, vita: 4, prezzo: 20,
+  saio: { em: '🥋', nome: 'Saio', sprite: 'corpo-saio', dove: 'corpo', famiglia: 'stoffa',
+          dif: 1, vita: 4, prezzo: 20,
           dice: 'Para poco, ma ti tiene in piedi quattro punti di vita più a lungo.' },
 
   /* ── quello che si porta al dito ──
@@ -145,20 +221,34 @@ export const COSE = {
      Perché si possa scegliere davvero, nessuna batte lo spadone sul suo
      terreno: due hanno il suo stesso braccio, il pugnale e la spada di
      ghiaccio ne hanno meno. Si comprano care, e si trovano solo in
-     fondo a un forziere. */
+     fondo a un forziere.
+
+     **La famiglia ce l'hanno anche loro**, e per la stessa ragione per
+     cui il nome dice quello che il foglio disegna: una bipenne è una
+     bipenne, e se il nano la impugna e il mago no, quella col nome
+     proprio non fa eccezione — se no il limite di classe sarebbe una
+     regola che vale per la roba normale e salta proprio sui pezzi che
+     si vanno a cercare. L'unica senza famiglia è il pugnale: è un
+     pugnale, lo impugna chiunque, ed è l'unica lama che un mago possa
+     toccare. */
   /* Il nome dice quello che il foglio disegna, e non il contrario: la
      prima stesura chiamava «spada fiammeggiante» un'ascia bipenne e
      «ascia del ladro» una spada, e a schermo la cosa si legge subito —
      una casella con dentro una figura che il suo nome smentisce sembra
      un guasto anche quando non lo è. */
+  /* Il braccio è 4 e non più 3, e non è un ritocco a sé: è la stessa
+     riga di prima — «il suo stesso braccio dello spadone» — riletta
+     dopo che lo spadone è salito a 4 perché tiene due mani. Lasciarle a
+     3 avrebbe voluto dire un pezzo unico che costa dieci gemme più di
+     una bipenne di banco e picchia uno meno: un premio che si vende. */
   'bipenne-solare': {
-    em: '🔥', nome: 'Bipenne solare', sprite: 'arma-3', dove: 'mano', mani: 2,
-    att: 3, luce: 2, prezzo: 36,
+    em: '🔥', nome: 'Bipenne solare', sprite: 'arma-3', dove: 'mano', famiglia: 'asce', mani: 2,
+    att: 4, luce: 2, prezzo: 36,
     dice: 'Le lame brillano di loro: al buio vedi molto più lontano. Due mani.',
   },
   'spada-del-ladro': {
-    em: '💰', nome: 'Spada del ladro', sprite: 'arma-2', dove: 'mano', mani: 2,
-    att: 3, gemme: 0.5, prezzo: 34,
+    em: '💰', nome: 'Spada del ladro', sprite: 'arma-2', dove: 'mano', famiglia: 'spade', mani: 2,
+    att: 4, gemme: 0.5, prezzo: 34,
     dice: 'Ogni gemma che raccogli ne vale una e mezza. Due mani.',
   },
   'pugnale-vampiro': {
@@ -180,11 +270,13 @@ export const COSE = {
      16, più quel che costa parare di 1 (il medaglione, 15), meno lo
      sconto che si fa già al pugnale vampiro (16 + 18 di amuleto rosso
      fa 34, e sta in banco a 30). Vengono 26 — che è anche il prezzo di
-     uno spadone, ed è un confronto che si legge da sé: stessa spesa,
-     un braccio in meno e una mano libera. */
+     uno spadone, ed è un confronto che si legge da sé: stessa spesa, e
+     da una parte due bracci in più con tutte e due le mani occupate,
+     dall'altra un po' di pelle e la sinistra libera, dove una lama
+     leggera rimette in pari quasi tutto il braccio. */
   'spada-di-ghiaccio': {
-    em: '🧊', nome: 'Spada di ghiaccio', sprite: 'spada-runica', dove: 'mano', mani: 1,
-    att: 2, dif: 1, prezzo: 26,
+    em: '🧊', nome: 'Spada di ghiaccio', sprite: 'spada-runica', dove: 'mano', famiglia: 'spade',
+    mani: 1, att: 2, dif: 1, prezzo: 26,
     dice: 'La lama gela chi ti sta addosso: sbagliare fa un po\' meno male.',
   },
 
@@ -331,16 +423,66 @@ const LARGHEZZA = 10
 export const prezzoAtteso = profondita =>
   MENO_CARO + (PIU_CARO - MENO_CARO) * Math.max(0, Math.min(1, profondita))
 
+/* ═══ IL BOTTINO PREDILIGE LA TUA CLASSE ═══
+   Quanto pesa, nel sorteggio, una cosa che la tua classe non può usare.
+   **Predilige, non garantisce**: un terzo e non zero, perché la
+   frustrazione ogni tanto ci vuole — quello che non puoi impugnare si
+   vende, e vendere è un gesto del gioco come gli altri. A zero il
+   sotterraneo diventerebbe un distributore della tua roba, e un
+   forziere smetterebbe di essere una notizia.
+
+   Cosa vale in pratica, misurato su ventimila tiri (lo rifà
+   `test/unita/sotterraneo`, che tiene fermo il pavimento):
+
+     da un forziere, la roba che si può usare   79% → 92% (cavaliere)
+                                                64% → 85% (mago)
+     ...contando solo le armi                   66% → 85% (cavaliere)
+                                                24% → 50% (mago)
+     da un orco                                 57% → 80% (cavaliere)
+     sul banco, righe che si possono comprare   3,8 → 4,5 su cinque
+
+   Il mago è quello che si vede di più perché è quello che porta meno:
+   metà delle armi che gli cadono davanti sono sue, contro una su
+   quattro di prima. Metà e non sette su dieci, ed è la riga da leggere
+   se un giorno sembrerà troppo poco — per portarlo a sette servirebbe
+   un peso di un settimo, cioè quasi il filtro, e a quel punto un
+   forziere gli direbbe sempre la stessa cosa.
+
+   Il peso si moltiplica a quello del prezzo, non lo sostituisce: al
+   banco valgono tutti e due, e una bacchetta fuori portata resta cara
+   anche per un mago. */
+export const PESO_ALTRUI = 1 / 3
+
+/* Un tiro solo, pesato: `tua` dice se quella cosa è della classe che sta
+   scendendo. Un posto solo, perché i posti da cui esce bottino sono tre
+   — il forziere, quello che lascia un mostro, il banco — e finché la
+   riga era `elenco[floor(rnd * elenco.length)]` copiata tre volte,
+   prediligere in due su tre sarebbe stato un difetto invisibile. */
+export function pescaCosa(elenco, { rnd = Math.random, tua = () => true } = {}) {
+  if (!elenco || !elenco.length) return null
+  let somma = 0
+  for (const k of elenco) somma += tua(k) ? 1 : PESO_ALTRUI
+  let tiro = rnd() * somma
+  for (const k of elenco) {
+    tiro -= tua(k) ? 1 : PESO_ALTRUI
+    if (tiro <= 0) return k
+  }
+  return elenco[elenco.length - 1]
+}
+
 /* Le cinque righe del banco, pescate senza rimpiazzo con quel peso.
    `ammessa` è il filtro di chi chiede (il motore non offre quello che si
    ha già addosso): sta fuori perché questo file non sa niente di uno
-   zaino. */
-export function pescaMerce(profondita, { quante = 5, rnd = Math.random, ammessa = () => true } = {}) {
+   zaino. `tua` è il secondo peso, quello della classe: non è un filtro
+   — una riga che non si può impugnare compare lo stesso, ogni tanto, e
+   il banco dice perché no invece di nasconderla. */
+export function pescaMerce(profondita, { quante = 5, rnd = Math.random,
+                                         ammessa = () => true, tua = () => true } = {}) {
   const atteso = prezzoAtteso(profondita)
   const resto = A_SORTE.filter(ammessa)
   const peso = k => {
     const scarto = (COSE[k].prezzo - atteso) / LARGHEZZA
-    return 1 / (1 + scarto * scarto)
+    return (1 / (1 + scarto * scarto)) * (tua(k) ? 1 : PESO_ALTRUI)
   }
   const presi = []
   while (presi.length < quante && resto.length) {
@@ -414,19 +556,48 @@ export function guastiDelleCose(nomi = null) {
   }
   /* le quattro famiglie devono valere lo stesso, gradino per gradino:
      è la condizione perché scegliere l'arma sia una questione di gusto
-     e non una trappola per chi sceglie male */
+     e non una trappola per chi sceglie male. «Lo stesso» si conta **a
+     parità di mani** (vedi in cima): due armi dello stesso gradino che
+     chiedono lo stesso numero di mani devono picchiare uguale, e chi ne
+     chiede due deve picchiare esattamente `LA_MANO_CHE_RESTA` di più —
+     né meno, che era il difetto vecchio, né di più, che sarebbe quello
+     opposto. */
   for (const grado of [1, 2, 3]) {
     const armi = ARMI_DI(grado)
     if (armi.length < 2) { g.push(`gradino ${grado}: solo ${armi.length} arma`); continue }
-    const forze = new Set(armi.map(k => COSE[k].att))
-    if (forze.size > 1)
-      g.push(`gradino ${grado}: armi di forza diversa (${[...forze].join(', ')}), una famiglia sarebbe da evitare`)
+    for (const mani of [1, 2]) {
+      const forze = new Set(armi.filter(k => (COSE[k].mani || 1) === mani).map(k => COSE[k].att))
+      if (forze.size > 1)
+        g.push(`gradino ${grado}, a ${mani} mani: forze diverse (${[...forze].join(', ')}), una famiglia sarebbe da evitare`)
+    }
+    const aUna = armi.filter(k => (COSE[k].mani || 1) === 1)
+    const aDue = armi.filter(k => COSE[k].mani === 2)
+    if (aUna.length && aDue.length && COSE[aDue[0]].att - COSE[aUna[0]].att !== LA_MANO_CHE_RESTA)
+      g.push(`gradino ${grado}: a due mani ${COSE[aDue[0]].att} contro ${COSE[aUna[0]].att}, ` +
+             `e la mano che resta libera ne vale ${LA_MANO_CHE_RESTA}`)
     const prezzi = new Set(armi.map(k => COSE[k].prezzo))
     if (prezzi.size > 1) g.push(`gradino ${grado}: stesse armi, prezzi diversi`)
   }
+  const forzaDi = grado => Math.max(...ARMI_DI(grado).map(k => COSE[k].att))
   for (let grado = 2; grado <= 3; grado++)
-    if (COSE[ARMI_DI(grado)[0]].att <= COSE[ARMI_DI(grado - 1)[0]].att)
+    if (forzaDi(grado) <= forzaDi(grado - 1))
       g.push(`il gradino ${grado} non picchia più del ${grado - 1}`)
+
+  /* ── la famiglia dichiarata deve esistere, e ogni classe deve avere
+     una fila intera ──
+     Una classe che può impugnare tre cose in tutto il catalogo non gioca
+     più al gioco del bottino: apre un forziere e la risposta è quasi
+     sempre no. Il minimo è **un'arma per gradino e un'armatura**, che è
+     il pavimento sotto al «si trova qualcosa che serve». */
+  for (const [k, c] of Object.entries(COSE))
+    if (c.famiglia && !FAMIGLIE[c.famiglia]) g.push(`${k}: famiglia "${c.famiglia}", che non esiste`)
+  for (const e of EROI) {
+    for (const grado of [1, 2, 3])
+      if (!ARMI_DI(grado).some(k => portaLa(e, COSE[k])))
+        g.push(`${e.chiave}: nessuna arma di gradino ${grado}, la sua fila ha un buco`)
+    const addosso = CHIAVI_COSE.filter(k => COSE[k].dove === 'corpo' && portaLa(e, COSE[k]))
+    if (!addosso.length) g.push(`${e.chiave}: niente da mettersi addosso`)
+  }
 
   /* Le armi che hanno un nome proprio stanno **fuori** dalla scala (non
      dichiarano `grado`), e la regola che le tiene oneste è questa: non

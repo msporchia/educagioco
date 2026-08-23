@@ -511,6 +511,11 @@ Due sottigliezze da non dimenticare:
 - **`possiedo(k)` e `quanteNeHo(k)` confrontano la base, non la chiave
   intera.** Il mercante non deve offrire una `spada#3` a chi ha una
   `spada#7` in pugno — è la stessa spada;
+- **e così `posso(k)`**, che è nato dopo questo documento: una classe
+  porta una **famiglia**, e la famiglia sta sulla scheda nuda. Un
+  `ascia#7` la impugna chi impugna le asce, come l'ascia di banco — se
+  la lettura passasse dalla chiave intera, il grado diventerebbe di
+  colpo una scappatoia al limite di classe;
 - **lo sprite viene dalla base.** Un'ascia +7 è disegnata come un'ascia,
   e va bene: nessuna arte nuova. Se si vuole che si veda che è speciale,
   il posto è il filo di luce che `scena/tela.js` già disegna intorno alle
@@ -581,12 +586,21 @@ oggi.
 ### Una cosa che si rompe: due armi leggere contro una pesante
 
 C'è un invariante scritto in `dati/cose.js` e provato in
-`unita/sotterraneo`: **due armi di secondo gradino valgono un terzo
+`unita/sotterraneo`: **due armi leggere valgono la pesante dello stesso
 gradino**, perché la mano debole colpisce la metà. Oggi torna:
-2 + ⌈2/2⌉ = 3 = lo spadone.
+2 + ⌈2/2⌉ = 3 = l'ascia (gradino 2, due mani).
+
+> **Nota, scritta dopo.** Questa riga diceva «due armi di secondo
+> gradino valgono un **terzo** gradino», e ci si arrivava perché
+> un'arma a due mani non veniva pagata per la mano che ti mangia: la
+> spada e l'ascia costavano uguale e picchiavano uguale, quindi
+> pareggiare l'ascia richiedeva di salire di gradino. Adesso `mani: 2`
+> vale `LA_MANO_CHE_RESTA` (+1) e il pareggio è fra cose che costano
+> uguale. **Il conto qui sotto non cambia**: cambia solo con chi si
+> confronta la coppia.
 
 Col `+N` sommato all'attacco non torna più. Due `spada#5` fanno
-7 + ⌈7/2⌉ = 11, uno `spadone#5` ne fa 8. Il rapporto va a 1,5× e ci
+7 + ⌈7/2⌉ = 11, un `ascia#5` ne fa 8. Il rapporto va a 1,4× e ci
 resta: portarne due diventa **sempre** la mossa giusta, e le armi
 pesanti smettono di esistere.
 
@@ -600,7 +614,7 @@ get attaccoMancino() {
 }
 ```
 
-Con questa: due `spada#5` fanno 7 + 1 = 8 = `spadone#5`. L'invariante
+Con questa: due `spada#5` fanno 7 + 1 = 8 = `ascia#5`. L'invariante
 torna a ogni grado, e il test che c'è già («due leggere valgono una
 pesante») è la guardia che lo tiene fermo per sempre.
 

@@ -143,6 +143,15 @@ function equipaggia(corsa) {
   for (let i = corsa.zaino.length - 1; i >= 0; i--) {
     const k = corsa.zaino[i]
     const c = COSE[k]
+    /* ── quello che questa classe non porta non si prova nemmeno ──
+       Senza questa riga il giocatore finto misura **un gioco che nessuno
+       può giocare**: si mette addosso l'ascia che un mago non impugna, e
+       il costo in domande che ne esce è quello di un mago armato di
+       ascia. Peggio ancora, `usa` la rifiuterebbe e la tasca resterebbe
+       lì: il giro dopo ci riprova, e il tetto dei dodicimila giri
+       diventa una discesa che non finisce mai — lo stesso muro del
+       ciclo infinito raccontato qui sotto, con un'altra causa. */
+    if (c.dove && !corsa.posso(k)) continue
     /* Un'arma si giudica sul **totale delle due mani**, che è quello che
        sa il motore: confrontarla con quella nel pugno mandava il banco
        in tondo per sempre. Con due armi leggere entrambe più forti di

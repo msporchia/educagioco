@@ -18,6 +18,14 @@
    sempre» sta al posto del confronto, che su una boccetta non c'è
    niente da fare (non si indossa, non c'è un «+1 rispetto a»).
 
+   ── E QUELLO CHE LA TUA CLASSE NON IMPUGNA ────────────────────────
+   Capita, di rado: il banco pesca prediligendo la classe che scende
+   (`PESO_ALTRUI` in `dati/cose.js`), ma non filtra. Quando capita la
+   riga c'è e dice **perché no** al posto del confronto — comprarla
+   sarebbe l'unico modo di perdere gemme senza guadagnare niente, visto
+   che si rivende a metà. È lo stesso avviso che compare nello zaino e
+   per terra: uno solo, scritto una volta sola (`nonLaPorta`).
+
    ── E ADESSO SI VENDE ANCHE ───────────────────────────────────────
    Sotto il banco ci sono **le proprie tasche**, a metà prezzo. Non è
    un modo di fare gemme — comprare e rivendere perde metà del valore —
@@ -44,15 +52,19 @@ defineEmits(['compra', 'vendi', 'chiudi'])
     <!-- «Ha finito la roba» non c'è più: le tre che curano stanno sul
          banco comunque, quindi un banco vuoto non esiste. -->
     <button v-for="c in roba" :key="c.chiave" class="sot-merce"
-            :class="{ 'sot-caro': !c.posso }" :data-merce="c.chiave"
-            :disabled="!c.posso" @click="$emit('compra', c.chiave)">
+            :class="{ 'sot-caro': !c.posso || c.nonPuoi }" :data-merce="c.chiave"
+            :disabled="!c.posso || !!c.nonPuoi" @click="$emit('compra', c.chiave)">
       <Icona :sprite="c.sprite" :em="c.em" :emAlto="26" />
       <span class="sot-testo">
         <b>{{ c.nome }}</b>
         <!-- prima c'era solo la frase dell'oggetto: racconta un'arma,
              non dice se conviene. Il confronto viene per primo perché è
              quello con cui si decide. -->
-        <em v-if="c.sempre" class="em">ne ha sempre</em>
+        <!-- e quando non si può impugnare, al posto del confronto va il
+             perché: «⚔️ +1 rispetto alla spada» sopra una riga che non
+             si può comprare sarebbe una presa in giro -->
+        <em v-if="c.nonPuoi" class="em sot-altrui" data-non-puoi>✋ {{ c.nonPuoi }}</em>
+        <em v-else-if="c.sempre" class="em">ne ha sempre</em>
         <em v-else-if="c.cambio" class="em"
             :class="{ 'sot-meglio': c.posso && c.cambio.includes('+') }">{{ c.cambio }}</em>
         <i>{{ c.dice }}</i>
@@ -60,7 +72,7 @@ defineEmits(['compra', 'vendi', 'chiudi'])
       <span class="sot-prezzo em" :class="{ 'sot-manca': !c.posso }">
         <b v-if="c.quante" class="sot-quante">ne hai {{ c.quante }}</b>
         💎 {{ c.prezzo }}
-        <b v-if="!c.posso" class="sot-quante">ti mancano {{ c.mancano }}</b>
+        <b v-if="!c.posso && !c.nonPuoi" class="sot-quante">ti mancano {{ c.mancano }}</b>
       </span>
     </button>
 

@@ -25,6 +25,17 @@
    c'era dentro — bere una pozione buona per far posto a una spada. E una
    pozione beveva sé stessa al primo tocco sbagliato, che con un dito su
    un telefono capita.
+
+   ── QUELLO CHE QUESTA CLASSE NON PORTA ────────────────────────────
+   Una cosa che non si può impugnare **si vede prima di toccarla** — la
+   tasca è spenta e ha una ✋ addosso — e appena la si tocca dice
+   perché: «Il mago non impugna le asce», che è la regola di casa
+   (`fattoria/stile.css`: quanto manca, e non un tasto spento senza il
+   perché). Al posto del tasto «la impugno» c'è la riga che spiega,
+   e sotto quella che conta: **al banco te la comprano.** Un limite che
+   non dice cosa farne di quello che hai in mano è una tasca murata; con
+   quella riga la stessa ascia diventa gemme, e la frustrazione dura il
+   tempo di arrivare dal mercante.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, watch, nextTick } from 'vue'
 import { figura } from './figura.js'
@@ -236,11 +247,16 @@ const cambio = computed(() => {
     <!-- ═══ le tasche ═══ -->
     <div class="sot-tasche">
       <button v-for="(t, i) in tasche" :key="i" class="sot-tasca"
-              :class="{ 'sot-vuota': !t, 'sot-scelto': sceltoQui('zaino', i) }"
+              :class="{ 'sot-vuota': !t, 'sot-scelto': sceltoQui('zaino', i),
+                        'sot-altrui': t && t.nonPuoi }"
               :disabled="!t" :data-tasca="i" @click="tocca('zaino', i)">
         <span class="sot-dentro">
           <Icona v-if="t" :sprite="t.sprite" :em="t.em" />
           <b v-else class="em">·</b>
+          <!-- la ✋ si vede **prima** di toccare la tasca: senza, una
+               cosa inservibile è indistinguibile da una buona finché
+               non ci si prova -->
+          <b v-if="t && t.nonPuoi" class="sot-vietata em">✋</b>
         </span>
         <em>{{ t ? t.nome : '' }}</em>
       </button>
@@ -255,10 +271,14 @@ const cambio = computed(() => {
       </p>
       <p v-if="numeri.length" class="sot-numeri em">{{ numeri.join(' · ') }}</p>
       <p class="sot-detto">{{ cosa.dice }}</p>
-      <p v-if="cambio" class="sot-cambio em">{{ cambio }}</p>
+      <p v-if="cosa.nonPuoi" class="sot-nonpuoi" data-non-puoi>
+        <span class="em">✋</span> {{ cosa.nonPuoi }}<i v-if="cosa.prezzo">Al banco te la comprano.</i>
+      </p>
+      <p v-else-if="cambio" class="sot-cambio em">{{ cambio }}</p>
 
       <template v-if="scelto.dove === 'zaino'">
-        <button class="sot-grosso" data-azione="usa" @click="fai('usa', scelto.i)">
+        <button v-if="!cosa.nonPuoi" class="sot-grosso" data-azione="usa"
+                @click="fai('usa', scelto.i)">
           {{ verbo }}
         </button>
         <button class="sot-grosso sot-chiaro" data-azione="butta" @click="fai('butta', scelto.i)">

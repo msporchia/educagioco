@@ -243,7 +243,11 @@ const nemico = dallaCorsa(c => {
 const pieni = dallaCorsa(c => c.zaino.length, 0)
 
 const zaino = dallaCorsa(c => {
-  const voce = k => (k ? { chiave: k, ...COSE[k] } : null)
+  /* `nonPuoi` è la riga che dice perché quella cosa non si può
+     indossare, e la scrive il motore (`perchéNo`) perché è l'unico che
+     sa chi sta scendendo. Vuota per quasi tutto — chi disegna nasconde
+     la riga invece di mostrarne una vuota, come per `cambio`. */
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -259,6 +263,9 @@ const zaino = dallaCorsa(c => {
    (`mercanzia`): qui si aggiunge solo quello che serve a disegnarle. */
 const merce = dallaCorsa(c => c.mercanzia().map(({ chiave: k, sempre }) => ({
   chiave: k, sempre, ...COSE[k], posso: c.gemme >= COSE[k].prezzo,
+  /* quello che questa classe non impugna: la riga del perché no prende
+     il posto del confronto, e il tasto non si preme */
+  nonPuoi: c.perchéNo(k),
   /* quanto cambia rispetto a quello che si ha addosso: è il numero
      con cui si decide se spendere, e al banco non c'era */
   cambio: cambioDetto(c.confronto(k), x => COSE[x].nome),
@@ -344,6 +351,14 @@ function corredoDaProva(c) {
      resta al buio: il corredo di prova serve a **vedere** una schermata */
   c.torcia = true
   c.aggiornaLuce()
+  /* Il corredo è lo stesso per tutti e quattro, quindi a qualcuno tocca
+     roba d'altri: qui si passa dalla stessa riga del rientro, che la
+     toglie di dosso e la mette in tasca. Serve a due cose — un cheat non
+     deve poter produrre uno stato che nel gioco vero non esiste (un mago
+     con la corazza addosso), e chi viene a **guardare la schermata**
+     deve trovarci anche la ✋ di quello che non si può usare, che è
+     metà di quello che c'è da vedere. */
+  c.sistemaIlCorredo()
 }
 
 function avvia(i) {

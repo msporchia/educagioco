@@ -55,7 +55,14 @@ export const MOSTRI = {
     em: '👹', sprite: 'orco', nome: 'Un orco',
     ossa: 12, att: 4, dif: 1, gemme: 8,
     droppa: 0.6,
-    lascia: [...ARMI_DI(2), 'corazza', 'pozione'],
+    /* L'armatura di mezzo **nelle due stoffe**, e non è simmetria per la
+       simmetria: da quando la corazza è ferro, un mago che batte un
+       orco non ne ricava niente da mettersi addosso, e il ferro lo
+       lascia solo l'orco. Con la corazza sola il mago arrivava in fondo
+       diciassette volte su venti invece di diciotto, che è appena sotto
+       il patto — ed era tutto lì. Il cuoio invece resta senza famiglia
+       (`dati/cose.js`), quindi lo scheletro non ha bisogno di questo. */
+    lascia: [...ARMI_DI(2), 'corazza', 'saio', 'pozione'],
   },
   gigante: {
     em: '🗿', sprite: 'mostro-grosso', nome: 'Il gigante',

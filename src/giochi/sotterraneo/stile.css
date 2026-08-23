@@ -374,6 +374,26 @@
 .sot-tasca em { font-style: normal; font-size: 10.5px; line-height: 1.1; text-align: center }
 .sot-tasca.sot-vuota { opacity: .4 }
 .sot-tasca.sot-vuota .sot-dentro .em { opacity: .5 }
+/* ── quello che questa classe non porta ──
+   Spenta a metà, non nascosta: la si è raccolta apposta, e al banco
+   vale gemme. La ✋ sta **sopra la figura** perché la tasca si guarda
+   prima di toccarla, e un colore da solo non dice cosa vuol dire. */
+.sot-tasca.sot-altrui .sot-dentro > i { opacity: .38; filter: grayscale(.7) }
+.sot-tasca.sot-altrui em { opacity: .5 }
+.sot-vietata {
+  position: absolute; right: 2px; top: -2px; font-size: 15px;
+  filter: drop-shadow(0 1px 2px #000a);
+}
+.sot-tasca .sot-dentro { position: relative }
+/* il perché no, quando la tasca è aperta: la riga che sostituisce il
+   tasto, più la sola cosa che si può fare con quella roba lì */
+.sot-nonpuoi {
+  margin: 7px 0 0; padding: 7px 9px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; color: #f0b429;
+  background: #f0b4291a; border: 1px solid #f0b42933;
+}
+.sot-nonpuoi .em { font-size: 14px }
+.sot-nonpuoi i { display: block; font-style: normal; font-weight: 400; color: var(--sot-tenue); margin-top: 2px }
 
 /* ── chi scende, e come si cambia ── */
 .sot-chi {
@@ -413,6 +433,15 @@
 .sot-cuore::before { background: linear-gradient(90deg, #e0644f66, #ff9b7a55) }
 .sot-braccio::before { background: linear-gradient(90deg, #ffd23f55, #ffe98a44) }
 .sot-scudo { font-size: 12px; color: var(--sot-tenue) }
+/* cosa impugna e cosa veste, sotto le barrette: pastiglie con l'icona
+   davanti, perché questa carta la guarda anche chi non legge ancora */
+.sot-porta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px }
+.sot-porta > span {
+  display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px 2px;
+  font-size: 11.5px; color: var(--sot-tenue);
+  background: #ffffff0d; border: 1px solid #ffffff14; border-radius: 999px;
+}
+.sot-porta .em { font-size: 12px; font-style: normal }
 
 /* ── quello che si è scelto, e cosa se ne può fare ──
    La cornice d'oro dice «sto parlando di questa qui»: senza, i due tasti
@@ -471,6 +500,9 @@
 .sot-merce .sot-testo b { font-size: 14px }
 .sot-merce .sot-testo i { font-style: normal; font-size: 11.5px; color: var(--sot-tenue) }
 .sot-merce.sot-caro { opacity: .45 }
+/* il perché no, sulla riga del banco: ambra come nello zaino, perché è
+   lo stesso avviso e non deve sembrarne un altro */
+.sot-merce .sot-altrui { color: #f0b429; font-weight: 700 }
 /* quello che vendi tu: stessa riga, verso opposto — il prezzo è in
    entrata, e il fondo lo dice senza scriverlo */
 .sot-merce.sot-vendo { background: #4fce7c12; border-color: #4fce7c2e }

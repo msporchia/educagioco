@@ -189,6 +189,16 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.contaChieste = c.chieste || 0
 
     corsa.aggiornaLuce()
+    /* ── e quello che allora si portava e adesso no ──
+       Il caso vero non è un id sparito (quelli li ha già tolti `vera`):
+       è una discesa cominciata **prima** che le classi avessero un
+       limite, che rientra con un'ascia in pugno a un mago. Buttarla
+       sarebbe rubare, lasciarla addosso sarebbe un gioco che si
+       contraddice da solo — quindi va in tasca, o per terra se le
+       tasche sono piene, e lo dice. La versione non sale apposta: la
+       forma del salvataggio è identica, non c'è nessun campo che non
+       torni, e c'è un ripiego ovvio. */
+    corsa.sistemaIlCorredo()
     return corsa
   } catch (e) {
     /* un salvataggio storto non porta giù il gioco: si ricomincia. È la

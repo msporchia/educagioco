@@ -13,10 +13,10 @@ import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
-import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE,
-         pescaMerce } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE, NEI_FORZIERI,
+         pescaMerce, pescaCosa } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { CURIOSITA, guastiDelleCuriosita } from '../../src/giochi/sotterraneo/dati/curiosita.js'
-import { EROI, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { EROI, portaLa, nonLaPorta, guastiDegliEroi } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { guastiDelleTessere } from '../../src/giochi/sotterraneo/dati/tessere.js'
 import { PEZZI, TESSERA } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { occhio } from '../../src/giochi/sotterraneo/viste/occhio.js'
@@ -53,7 +53,11 @@ uguale('la tessera dell\'atlante è quella del gioco', TESSERA, 16)
   const orco = MOSTRI.orco
   uguale('a mani nude l\'orco costa 6 risposte', colpiPer(orco, EROE.att), 6)
   uguale('con la spada ne costa 3', colpiPer(orco, EROE.att + COSE.spada.att), 3)
-  uguale('con lo spadone ne costa 3', colpiPer(orco, EROE.att + COSE.spadone.att), 3)
+  /* Due e non tre: da quando un'arma a due mani picchia uno più del suo
+     gradino (`LA_MANO_CHE_RESTA` in `dati/cose.js`), lo spadone toglie
+     sei per colpo invece di cinque. È il conto in domande che quel
+     ritocco sposta, e sta scritto qui perché si veda in faccia. */
+  uguale('con lo spadone ne costa 2', colpiPer(orco, EROE.att + COSE.spadone.att), 2)
   /* il colpo non scende mai a zero, o un mostro diventerebbe immortale */
   uguale('anche con attacco 0 si toglie qualcosa', colpiPer({ ossa: 4, dif: 9 }, 0), 4)
 }
@@ -145,12 +149,57 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   for (const r of righe) nota(r)
 
   /* le quattro famiglie d'arma valgono lo stesso: se una fosse più
-     forte, le altre tre sarebbero una trappola per chi sceglie male */
+     forte, le altre tre sarebbero una trappola per chi sceglie male.
+     «Lo stesso» si conta **a parità di mani**: chi ne chiede due
+     picchia uno di più, che è quanto rende la mano che ti mangia (vedi
+     `LA_MANO_CHE_RESTA` in `dati/cose.js`). */
   for (const grado of [1, 2, 3]) {
-    const forze = ARMI_DI(grado).map(k => COSE[k].att)
-    uguale(`gradino ${grado}: tutte le famiglie picchiano uguale`,
-           new Set(forze).size, 1, ARMI_DI(grado).join())
+    for (const mani of [1, 2]) {
+      const forze = ARMI_DI(grado).filter(k => (COSE[k].mani || 1) === mani).map(k => COSE[k].att)
+      if (forze.length < 2) continue
+      uguale(`gradino ${grado}, a ${mani} mani: tutte le famiglie picchiano uguale`,
+             new Set(forze).size, 1, ARMI_DI(grado).join())
+    }
   }
+}
+
+/* ══════════ 4c. cosa porta ognuno, e cosa gli capita davanti ══════════
+   Il terzo asse delle classi (`porta` in `dati/eroi.js`) è misurabile in
+   due numeri, e tutti e due possono guastarsi in silenzio: quanto
+   catalogo resta a una classe, e quanto spesso il bottino le capita
+   addosso. Il primo lo tiene fermo `guastiDelleCose` (una fila intera,
+   gradino per gradino); il secondo è questo. */
+{
+  const TIRI = 4000
+  const armi = NEI_FORZIERI.filter(k => COSE[k].dove === 'mano')
+  const righe = []
+  for (const e of EROI) {
+    const tua = k => portaLa(e, COSE[k])
+    /* il caso arriva da un seme dichiarato: la quota del mago cade
+       **esattamente** sul pavimento, e con `Math.random` questo
+       controllo sarebbe rosso una volta su due senza che niente sia
+       cambiato */
+    const sorte = seminato(909)
+    let mie = 0
+    for (let i = 0; i < TIRI; i++) if (tua(pescaCosa(armi, { tua, rnd: sorte }))) mie++
+    const quota = mie / TIRI
+    const nudo = armi.filter(tua).length / armi.length
+    /* Il pavimento: **metà delle armi che cadono deve essere roba tua**.
+       Sotto quella soglia il bottino smette di essere un premio e
+       diventa un elenco di cose da vendere — ed è il mago a decidere,
+       perché è quello che porta meno (una famiglia sola). */
+    controlla(`${e.chiave}: almeno metà delle armi che trova le può impugnare`,
+              quota >= 0.5, `${(quota * 100).toFixed(0)}%`)
+    /* e prediligere deve **fare qualcosa**: se pesare non spostasse la
+       quota, la riga in `dati/cose.js` sarebbe un commento */
+    controlla(`${e.chiave}: prediligere sposta davvero il tiro`,
+              quota > nudo + 0.05 || nudo > 0.95,
+              `${(nudo * 100).toFixed(0)}% → ${(quota * 100).toFixed(0)}%`)
+    righe.push(`  ${e.nome.padEnd(10)} porta ${(e.porta || []).join(', ').padEnd(22)} ` +
+               `armi dal forziere: ${(nudo * 100).toFixed(0)}% → ${(quota * 100).toFixed(0)}%`)
+  }
+  nota('cosa porta ognuno, e quante delle armi che trova sono sue:')
+  for (const r of righe) nota(r)
 }
 
 /* ── E ADESSO NON CI ARRIVA PROPRIO ──
@@ -335,8 +384,10 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.interagisci(corta)
   uguale('la spada resta nel pugno', c.mano, 'spada')
   uguale('e la seconda arma va nella mano debole', c.mancina, 'accetta')
+  /* la pesante con cui pareggiare è quella dello **stesso** gradino,
+     non del gradino dopo: è il ritocco delle due mani (vedi 5-ter) */
   uguale('due leggere valgono una pesante',
-         c.att, c.io.att + COSE.spadone.att)
+         c.att, c.io.att + COSE.ascia.att)
 
   /* con le tasche piene lo scambio non perde niente: il vecchio prende
      il posto per terra del nuovo */
@@ -668,8 +719,13 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 /* ══════════ 5-ter. due mani, e chi ne occupa due ══════════
    Le armi leggere si sdoppiano, le pesanti no: è il patto che tiene in
    piedi tutte e due le strade. La sinistra colpisce la metà, quindi due
-   armi di secondo gradino valgono un terzo gradino — e uno spadone non
-   diventa mai una scelta sbagliata. */
+   armi leggere di un gradino valgono la pesante **dello stesso
+   gradino** — e un'arma a due mani non è mai una scelta sbagliata.
+
+   Prima diceva «un terzo gradino», ed era la fotografia del difetto: a
+   due mani si picchiava quanto a una, quindi per pareggiare l'ascia
+   bisognava salire di prezzo. Adesso il conto torna dove costa uguale,
+   che è l'unico posto dove un pareggio vuol dire qualcosa. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 21, rnd: seminato(21) })
   c.zaino = []
@@ -680,7 +736,15 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.mano = 'spada'                    // gradino 2, una mano
   c.mancina = 'spada'
   uguale('la mano debole colpisce la metà', c.att, nudo + 2 + 1)
-  uguale('e due leggere valgono una pesante', c.att, nudo + COSE.spadone.att)
+  uguale('e due leggere valgono una pesante dello stesso gradino',
+         c.att, nudo + COSE.ascia.att)
+  /* e il pareggio deve tornare a **ogni** gradino dove esistono tutte e
+     due le forme, se no è un caso e non una regola */
+  c.mano = 'spada-corta'
+  c.mancina = 'accetta'
+  uguale('e vale anche al primo gradino', c.att, nudo + COSE['arco-corto'].att)
+  c.mano = 'spada'
+  c.mancina = 'spada'
 
   /* un'arma a due mani sfratta la sinistra, e quello che c'era non si
      perde: torna in tasca */

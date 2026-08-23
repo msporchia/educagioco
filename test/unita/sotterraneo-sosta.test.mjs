@@ -6,6 +6,7 @@
    `node test/esegui.mjs sosta --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
@@ -176,7 +177,38 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   const b = leggi(scrivi(c, 0), CAMPAGNA[0])
   controlla('l\'ascia lasciata per terra è ancora lì',
             b.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
-  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 2)
+  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 3)
+}
+
+/* ── e quello che allora si portava e adesso no ──
+   Il caso non è un id sparito, che `leggi` toglieva già: è una discesa
+   cominciata **prima** che le classi avessero un limite, e ripresa da
+   una classe che quella roba non la porta. Non si butta e non resta
+   addosso di nascosto: va in tasca, o per terra se le tasche sono
+   piene, che è la stessa regola dello sfratto delle due mani. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 77, rnd: seminato(77), eroe: 'mago' })
+  const dato = scrivi(c, 0)
+  dato.mano = 'ascia'          // un mago non impugna le asce
+  dato.corpo = 'corazza'       // e non veste il ferro
+  dato.zaino = []
+  const b = leggi(dato, CAMPAGNA[0])
+  uguale('l\'ascia di ieri esce dal pugno', b.mano, null)
+  uguale('e la corazza da addosso', b.corpo, null)
+  controlla('ma finiscono in tasca, non nel niente',
+            b.zaino.includes('ascia') && b.zaino.includes('corazza'), b.zaino.join())
+  controlla('e la riga dice perché', b.avvisi.some(a => String(a).includes('non impugna')),
+            JSON.stringify(b.avvisi))
+
+  /* con le tasche piene non c'è posto: allora per terra, dove ci si può
+     tornare — mai buttata via */
+  const pieno = scrivi(c, 0)
+  pieno.mano = 'ascia'
+  pieno.zaino = new Array(TASCHE).fill('pozione')
+  const d = leggi(pieno, CAMPAGNA[0])
+  uguale('con lo zaino pieno il pugno si svuota lo stesso', d.mano, null)
+  controlla('e l\'ascia è per terra, non persa',
+            d.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
 }
 
 riassunto('la discesa lasciata a metà')
