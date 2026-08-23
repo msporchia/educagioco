@@ -350,7 +350,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
    La staccionata qui sopra gira perché il foglio ha *due disegni*. Una
    siepe no: il foglio ne ha uno solo, e girarla è un `ctx.rotate` a
    schermo — lecito perché il suo foglietto dichiara che è disegnata a
-   piombo dall'alto (`trasforma` in `sorgenti/gfx/Overworld.json`, che
+   piombo dall'alto (`trasforma` in `sorgenti/fattoria/armm1998/Overworld.json`, che
    `atlante.py` porta dentro `VOCI`). Le due strade arrivano allo stesso
    posto, e il motore non deve saperle distinguere: chiede quanti versi
    ha una cosa e li fa scorrere. */

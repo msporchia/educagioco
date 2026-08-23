@@ -66,13 +66,27 @@ export const CAMPAGNA = [
     portata: 48,
     dritta: 'larga, e in fondo c\'è qualcosa di grosso',
     piani: 4, misura: 44, giri: 3, dif: [0.32, 0.62],
-    guardiano: 'orco', capo: 'gigante', premio: 22 },
+    /* ── i guardiani non sono più tutti l'orco ──
+       Quattro tappe di fila avevano lo stesso guardiano a ogni piano, e
+       il guardiano è quello che si incontra **per forza**: era la faccia
+       che un bambino vedeva più di ogni altra, quattro discese di
+       seguito. Adesso la cisterna la guarda un granchio e il labirinto
+       un lupo — costano quanto l'orco (`dati/mostri.js` li tiene nella
+       stessa fascia, e un controllo lo pretende), e in più stanno nel
+       posto giusto: un granchio in una cisterna, un lupo dove ci si
+       perde. Misurato col banco: le sei discese si vincono come prima. */
+    guardiano: 'granchio', capo: 'gigante', premio: 22 },
 
   { chiave: 'labirinto', nome: 'Il labirinto', icona: '🌀',
     portata: 56,
     dritta: 'sedici stanze: senza mappina ci si perde',
     piani: 3, misura: 52, giri: 4, dif: [0.42, 0.76],
-    guardiano: 'orco', capo: 'gigante', premio: 26 },
+    /* il troll e non il gigante, e non è una taratura: le ultime tre
+       discese finivano tutte con la stessa faccia, e il capo è l'unica
+       cosa di una tappa che si è **sicuri** di vedere. Vale un gigante
+       a meno di due punti di ossa (`dati/mostri.js`), quindi quello che
+       cambia è chi si incontra, non quanto costa */
+    guardiano: 'lupo', capo: 'troll', premio: 26 },
 
   { chiave: 'fondo', nome: 'Il fondo', icona: '🕳️',
     portata: 64,
@@ -84,8 +98,13 @@ export const CAMPAGNA = [
     /* il gigante **solo in fondo**: metterlo a guardia di ogni piano
        portava la discesa a novantasei risposte obbligate, cioè fuori da
        una seduta. Il numero non si vedeva leggendo la tabella — si vede
-       solo contando, ed è il banco a contarlo */
-    guardiano: 'orco', capo: 'gigante', premio: 34 },
+       solo contando, ed è il banco a contarlo.
+       Per lo stesso motivo a guardia dei piani c'è il serpente e non
+       l'orco: sono nella stessa fascia, ma il serpente è quello che si
+       abbatte in meno colpi, e qui le domande arrivano già a 0.92 —
+       quello che deve essere duro in fondo sono le domande, non il
+       numero di volte che bisogna rispondere per passare una porta */
+    guardiano: 'serpente', capo: 'gigante', premio: 34 },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -166,19 +185,26 @@ export const L_ABISSO = {
   forme: FORME_DELL_ABISSO,
   dif: [DIF_ABISSO, 1],
   /* ── chi guarda la scala, scendendo ──
-     Una scaletta corta e poi il gigante per sempre: `BRANCO` ha quattro
-     mostri e li esaurisce entro i primi piani, quindi da lì in giù
-     quello che cambia sono le cifre. È scritto perché si scoprirà
-     giocando, e la cura giusta non è una leva che allunga i piani — è un
-     quinto mostro, cioè un bestiario (vedi il Dungeon).
+     Era una scaletta corta e poi il gigante per sempre: `BRANCO` aveva
+     quattro mostri e li esauriva entro i primi piani, quindi da lì in
+     giù quello che cambiava erano solo le cifre. Stava scritto qui che
+     la cura giusta non è una leva che allunga i piani ma **un quinto
+     mostro, cioè un bestiario** — ed è quello che è stato fatto: le
+     fasce del branco adesso sono cinque e tengono quattordici facce, e
+     la scaletta di quaggiù arriva al golem prima del capo.
 
      I primi due piani li guarda **lo scheletro**, ed è misurato: qui si
      entra nudi, con addosso solo quello che si è imparato, e un orco a
      guardia della prima scala vuol dire svenire due volte prima di aver
      trovato un'arma. L'abisso si apre a chi ha finito sei discese: non
      ha bisogno di essere perdonato, ha bisogno di due piani per
-     armarsi. */
-  guardiani: ['scheletro', 'scheletro', 'orco', 'orco', 'orco'],
+     armarsi.
+
+     Resta vero che dopo la scaletta c'è **un capo per sempre**
+     (`guardianoDi` ripiega su `capo`), e resta un limite: la differenza
+     è che adesso quello che si incontra *per strada* fra una scala e
+     l'altra cambia per tutta la discesa, e prima no. */
+  guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem', 'golem'],
   capo: 'gigante',
   /* ── la crescita ritarata, ed è il numero più importante di tutti ──
      `att: m.att + floor(piano / 2)` non ha tetto, la difesa dell'eroe sì

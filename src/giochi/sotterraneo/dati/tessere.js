@@ -23,6 +23,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import { EROI } from './eroi.js'
+import { MOSTRI } from './mostri.js'
 
 /* Il pavimento: otto varianti tutte di pietra crepata, nessuna a tinta
    piatta. `suolo-0` ripetuto è il modo di dire «le altre spuntano di
@@ -134,11 +135,24 @@ export function guastiDelleTessere(nomi = null) {
   for (const k of Object.keys(FACCE))
     if (!CIME[k]) g.push(`la faccia ${k} non ha il suo coronamento`)
   if (nomi) {
-    /* i quattro eroi si chiedono alla loro tabella: aggiungerne uno non
-       deve voler dire ricordarsi di scriverlo anche qui */
-    for (const chi of [...EROI.map(e => e.sprite), 'goblin', 'scheletro', 'orco', 'mostro-grosso'])
-      for (const posa of ['fermo', 'corsa'])
-        for (let i = 0; i < 4; i++) chiedi(pezzoAndante(chi, posa, i), `${chi} ${posa}`)
+    /* gli eroi e i mostri si chiedono alle **loro** tabelle: aggiungerne
+       uno non deve voler dire ricordarsi di scriverlo anche qui. I
+       mostri erano invece un elenco a mano di quattro nomi, ed è
+       esattamente il posto in cui un bestiario di undici creature
+       sarebbe entrato senza che niente lo controllasse.
+
+       Chi dichiara `unaPosa` ha solo il respiro: chiedergli anche la
+       corsa griderebbe al lupo su un pezzo che nessuno disegna mai
+       (vedi `scena/tela.js`). */
+    const chiedeva = [
+      ...EROI.map(e => ({ sprite: e.sprite, pose: ['fermo', 'corsa'] })),
+      ...Object.values(MOSTRI).map(m => ({
+        sprite: m.sprite, pose: m.unaPosa ? ['fermo'] : ['fermo', 'corsa'],
+      })),
+    ]
+    for (const { sprite, pose } of chiedeva)
+      for (const posa of pose)
+        for (let i = 0; i < 4; i++) chiedi(pezzoAndante(sprite, posa, i), `${sprite} ${posa}`)
   }
   return g
 }

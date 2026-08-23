@@ -244,20 +244,55 @@ fondo che si tocca prima:
 
 > **L'abisso ha varietà per una ventina di piani e numeri per sempre.**
 
-Il motivo non è il numero delle leve, è che **il foglio 0x72 disegna
+Il motivo non era il numero delle leve, era che **il foglio 0x72 disegna
 quattro mostri**: goblin, scheletro, orco e un mostro grosso. `BRANCO` li
-esaurisce entro i primi piani, e da lì in poi il guardiano è il gigante
+esauriva entro i primi piani, e da lì in poi il guardiano era il gigante
 per il resto dell'eternità, con più ossa. Le scorte si possono diradare
 una volta sola, e la scorta del guardiano si aggiunge una volta sola.
-Dopo, quello che cambia sono solo le cifre.
+Dopo, quello che cambiava erano solo le cifre.
 
-Questo va scritto adesso perché è la cosa che si scoprirà giocando, e
-perché la cura giusta non è reintrodurre di nascosto una leva che allunga
-i piani: **è un quinto mostro.** La strada c'è già ed è battuta — il
-Dungeon ha smesso di usare le emoji e si è fatto un `grafica/bestiario/`
-di venti creature disegnate a mano (vedi `CLAUDE.md`). Il giorno in cui
-l'abisso avrà bisogno di più profondità, il lavoro da fare è quello, non
-un'altra formula.
+Stava scritto qui che la cura giusta non è reintrodurre di nascosto una
+leva che allunga i piani: **è un quinto mostro.** Ed è quello che è
+stato fatto.
+
+### Il bestiario, e cosa ha insegnato tararlo
+
+Due fogli nuovi (`sorgenti/sotterraneo/generati/mostri-1.png` e
+`mostri-2.png`, cinquantaquattro creature dipinte, undici ritagliate)
+portano il sotterraneo da quattro mostri a quattordici. `BRANCO` non è
+più una fila di nomi ma **una scaletta di fasce**: ogni riga è un
+gradino di forza e dentro la riga i mostri si equivalgono, quindi la
+profondità sceglie la fascia e il caso sceglie la faccia. Le fasce sono
+cinque, e la quinta — il golem — si raggiunge solo dove la campagna non
+arriva, cioè quaggiù.
+
+Tararlo ha insegnato tre cose che vale la pena tenere scritte, perché
+sono tutte e tre difetti che la tabella non mostra e che ha trovato solo
+il banco:
+
+1. **La velocità di discesa non deve dipendere da quante fasce ci sono.**
+   `tipoPer()` scriveva `BRANCO.length * 0.6`: aggiungere una fascia in
+   fondo ricalibrava *anche il primo piano delle cantine*, e la cisterna
+   è passata da 36 a 58 risposte obbligate senza che nessuna riga lo
+   chiedesse. Adesso il passo è una costante dichiarata
+   (`PASSO_DEL_BRANCO`), e il tetto lo mette il `min` con la lunghezza.
+2. **Una seconda pesca dal caso sposta tutto il piano.** La faccia si
+   sceglie dallo **stesso tiro** che sceglie la fascia (cifre alte la
+   fascia, cifre basse la faccia). Un `rnd()` in più muove il flusso di
+   un passo, e da lì in giù stanze, porte e forzieri nascono diversi:
+   il banco non confronterebbe più due tarature, confronterebbe due
+   sotterranei.
+3. **Dentro una fascia non basta che i numeri combacino.** Le prime
+   misure davano il gioco più duro anche con ossa e attacchi pareggiati,
+   e il conto del danno per mostro ha detto perché: il mostro di 0x72
+   era l'unico della sua fascia a lasciare un'armatura, e diluendolo fra
+   tre facce l'armatura usciva una volta su tre. Adesso il bottino di
+   una fascia è della fascia: cambia cosa si trova, non quanto spesso.
+
+Il metro finale è quello di sempre — le sei discese si vincono
+rispondendo bene otto volte su dieci — ed è tornato dov'era: venti su
+venti su cinque tappe, diciannove su venti sul labirinto, come prima del
+bestiario.
 
 ## Come cresce l'abisso: le formule, coi numeri
 

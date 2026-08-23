@@ -1,0 +1,40 @@
+{
+  "__": "Il foglietto di mostri-1.png (vedi ../../../FORMATO.md), primo dei due fogli di creature. Ventisette mostri disposti in tre blocchi di nove righe, ognuno con quattro o cinque fotogrammi di respiro e in coda uno o due di morte (la sagoma che si accascia, poi quello che resta per terra): quelli di morte NON si ritagliano, perche' il sotterraneo un mostro morto non lo disegna — lo toglie dalla scena. LA SCALA E' 4, ed e' scelta per proporzione come per i fogli fratelli: non c'e' nessuna griglia nascosta da recuperare (misurato l'istogramma dei passi fra i cambi di colore lungo le righe — nessun picco, cioe' e' dipinto a piena risoluzione, non un ingrandimento a blocchi). A 4 le creature vengono alte 14-26 px, cioe' esattamente la fascia di quelle che il gioco ha gia' da 0x72_DungeonTilesetII (goblin e scheletro 16, orco 23, mostro-grosso 36) e dell'eroe (28); a 3 il lupo sarebbe piu' alto del cavaliere, a 5 la melma sparirebbe sotto una moneta. 1536/4 e 1024/4 sono interi, quindi \"foglio\": [384, 256] e le coordinate qui sotto sono in pixel dell'immagine GIA' RIDOTTA — e' li' che atlante.py le legge.\n\nIL RITAGLIO E' STRETTO IN LARGHEZZA E COMUNE IN ALTEZZA, e non e' un dettaglio: i fotogrammi non stanno su un passo fisso (il foglio li dispone a mano, con distanze da 16 a 27 px) e ogni figura ha un ingombro suo. Un rettangolo comune abbastanza largo da tenere il fotogramma piu' largo prende dentro il bordo del vicino — misurato: succedeva a golem, pipistrello, fungo e serpente. Quindi ogni fotogramma porta la larghezza della sua sagoma, mentre l'altezza e' quella della banda intera: a schermo un pezzo si appoggia col fondo della sua cella (scena/tela.js), quindi l'altezza comune e' cio' che tiene i piedi fermi per terra e lascia il saltello, e la larghezza propria non si vede perche' il disegno centra.\n\nCosa resta li' dentro, per il giro in cui servira': ventuno creature fra cui uno scheletro e uno zombie (il gioco lo scheletro ce l'ha gia' da 0x72), un diavoletto, un golem di ghiaccio, un polpo, un occhio volante, uno spirito di fuoco, un negromante, una pianta carnivora, un piranha, un grifone e due draghi. I due draghi e il grifone stanno nelle ultime righe del terzo blocco, dove le figure si toccano fra loro: prenderli vuole segmentarli a mano, non basta la banda.\n\nDue cose da sapere per quando si aggiungera' un mostro qui. La prima: la fascia di righe si legge sulla larghezza INTERA del foglio, non blocco per blocco — i tre blocchi non sono separati da una colonna vuota, e tagliare a occhio a un terzo spezzava in due il primo fungo del foglio fratello. La seconda: \"fondo\": \"trasparente\" perche' il PNG l'alfa ce l'ha gia', e quindi \"colori\" qui non fa niente (pulisci() esce prima) — le sfumature dei bordi restano quelle del foglio, che e' dipinto morbido mentre 0x72 e' a tinte piatte.",
+  "scala": 4,
+  "foglio": [384, 256],
+  "fondo": "trasparente",
+  "cella": [1, 1],
+  "famiglia": "attore",
+  "trasforma_ripiego": { "giri": 1, "ribalta": false },
+  "sprite": {
+    "melma-fermo-0": { "da": [3, 5], "cella": [13, 14] },
+    "melma-fermo-1": { "da": [19, 5], "cella": [13, 14] },
+    "melma-fermo-2": { "da": [36, 5], "cella": [14, 14] },
+    "melma-fermo-3": { "da": [53, 5], "cella": [18, 14] },
+
+    "pipistrello-fermo-0": { "da": [267, 3], "cella": [22, 16] },
+    "pipistrello-fermo-1": { "da": [290, 3], "cella": [18, 16] },
+    "pipistrello-fermo-2": { "da": [311, 3], "cella": [17, 16] },
+    "pipistrello-fermo-3": { "da": [330, 3], "cella": [22, 16] },
+
+    "granchio-fermo-0": { "da": [131, 162], "cella": [20, 18] },
+    "granchio-fermo-1": { "da": [157, 162], "cella": [21, 18] },
+    "granchio-fermo-2": { "da": [183, 162], "cella": [20, 18] },
+    "granchio-fermo-3": { "da": [208, 162], "cella": [16, 18] },
+
+    "lupo-fermo-0": { "da": [262, 46], "cella": [23, 21] },
+    "lupo-fermo-1": { "da": [287, 46], "cella": [21, 21] },
+    "lupo-fermo-2": { "da": [310, 46], "cella": [19, 21] },
+    "lupo-fermo-3": { "da": [331, 46], "cella": [21, 21] },
+
+    "golem-fermo-0": { "da": [3, 128], "cella": [17, 24] },
+    "golem-fermo-1": { "da": [23, 128], "cella": [15, 24] },
+    "golem-fermo-2": { "da": [42, 128], "cella": [19, 24] },
+    "golem-fermo-3": { "da": [65, 128], "cella": [23, 24] },
+
+    "troll-fermo-0": { "da": [2, 216], "cella": [17, 26] },
+    "troll-fermo-1": { "da": [23, 216], "cella": [21, 26] },
+    "troll-fermo-2": { "da": [46, 216], "cella": [22, 26] },
+    "troll-fermo-3": { "da": [71, 216], "cella": [23, 26] }
+  }
+}

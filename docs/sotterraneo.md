@@ -54,6 +54,31 @@ mentono mai — dietro un teschio c'è davvero una guardia. Se un segno
 promettesse a vuoto diventerebbe una decorazione, e con lui se ne andrebbe
 l'unico motivo per cui tornare indietro è una scelta e non una penitenza.
 
+## Chi ci abita
+
+Quattordici creature, e non si incontrano a caso: `BRANCO` è una
+**scaletta di fasce**, e più si scende più si sale di fascia. Dentro una
+fascia i mostri si equivalgono — costano lo stesso numero di risposte e
+picchiano quasi uguale — quindi quello che cambia scendendo è *quanto è
+dura*, e quello che cambia da una stanza all'altra è *chi trovi*.
+
+| fascia | chi si incontra | quanto costa a mani nude |
+|---|---|---|
+| 1 | ratto · pipistrello | una risposta |
+| 2 | goblin · melma · fantasma | due |
+| 3 | scheletro · fungo · vespone | tre o quattro |
+| 4 | orco · lupo · serpente · granchio | dalle quattro alle sei |
+| 5 | golem | sette — e si vede solo nell'abisso |
+
+Fuori dalla scaletta ci sono i due **capi**, il gigante e il troll: quelli
+non capitano, li mette la discesa in fondo (vedi qui sotto).
+
+Le differenze dentro una fascia non sono di quantità ma di forma: il
+serpente ha poche ossa e morde forte, il granchio para e lascia scudi,
+la melma è lenta e non fa quasi male. Due mostri che costano lo stesso
+ma si sbagliano in modi diversi sono due mostri; due che costano diverso
+nella stessa fascia sarebbero una lotteria.
+
 ## La scala è chiusa, e la chiave ce l'ha un guardiano
 
 È la regola che tiene in piedi tutto il resto, e si è vista solo misurando: i
@@ -69,12 +94,18 @@ davvero), non a occhio:
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| Le cantine | 2 | 11 | 29 |
-| Il pozzo | 3 | 41 | 64 |
-| Le gallerie | 3 | 28 | 64 |
-| La cisterna | 4 | 44 | 111 |
-| Il labirinto | 3 | 50 | 104 |
-| Il fondo | 4 | 44 | 91 |
+| Le cantine | 2 | 14 | 25 |
+| Il pozzo | 3 | 38 | 82 |
+| Le gallerie | 3 | 40 | 70 |
+| La cisterna | 4 | 54 | 88 |
+| Il labirinto | 3 | 25 | 102 |
+| Il fondo | 4 | 28 | 97 |
+
+Sono **una discesa sola per riga**, col seme del banco: il numero balla
+parecchio da un seme all'altro e serve a leggere la forbice, non a
+confrontare due tappe al punto. La misura che conta davvero è un'altra e
+sta nel test: rispondendo bene otto volte su dieci si arriva in fondo, e
+ci si arriva **tutte le volte**.
 
 **La forbice è il punto.** Se «tutto» costasse quanto «il minimo», in mezzo
 non ci sarebbe più niente da scegliere — e la scelta è il motivo per cui un
@@ -349,7 +380,7 @@ Gli scudi e le armature ci sono, e sono arrivati in due giri: né 0x72 né
 il primo foglio degli oggetti li disegnavano — si equipaggiavano solo le
 mani — e per un pezzo panciotto, corazza e manto sono rimasti emoji, un
 giubbotto da cantiere in mezzo a uno schermo disegnato a mano. Adesso i
-sei scudi vengono da `items2.png` e le vesti da `item3.png`.
+sei scudi vengono da `scudi.png` e le vesti da `armature-e-vesti.png`.
 
 Quello che **non** c'è, e non ci sarà con questo set, è l'armatura
 *addosso*: 0x72 non ha un fotogramma in cui il personaggio impugni o
@@ -533,7 +564,7 @@ prova sul prototipo non direbbe più niente sul gioco.
 Quello che i fogli **non hanno** resta emoji: la fontana e il mercante.
 Le tre armature ci sono state a lungo, e stonavano — è il tipo di buco
 che va guardato *prima* di innamorarsi di un set — finché non è arrivato
-un terzo foglio dello stesso autore (`item3.png`) che le disegna. Di
+un terzo foglio dello stesso autore (`armature-e-vesti.png`) che le disegna. Di
 quel foglio si ritagliano **sette figure su centotrentasei**: l'atlante
 viaggia in base64 dentro il file unico, quindi si porta dentro solo
 quello che qualcuno nomina, e il suo foglietto scrive cosa è rimasto lì.

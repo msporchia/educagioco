@@ -39,7 +39,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ROCCIA, PAVIMENTO, PORTA, ARREDI } from '../dati/mondo.js'
 import { CURIOSITA } from '../dati/curiosita.js'
-import { MOSTRI, BRANCO } from '../dati/mostri.js'
+import { MOSTRI, BRANCO, PASSO_DEL_BRANCO } from '../dati/mostri.js'
 import { raggiungibili } from '../../../motore/passi.js'
 
 /* Il caso che non cambia: xorshift, un numero da 0 a 1. */
@@ -259,10 +259,27 @@ export class Livello {
        dietro un teschio non ci fosse niente, il segno diventerebbe una
        decorazione e non lo guarderebbe più nessuno. */
     const scala = Math.min(1, this.piano / 5)
+    /* La profondità sceglie **la fascia**, il caso sceglie la faccia
+       dentro la fascia: sono due domande diverse e prima erano la
+       stessa, cioè un piano aveva un mostro solo (vedi `BRANCO` in
+       `dati/mostri.js`). Chi sta nella stessa riga costa lo stesso —
+       un controllo lo pretende — quindi questa seconda pesca non
+       sposta la difficoltà di niente. */
     const tipoPer = forza => {
+      /* **un tiro solo**, e le due scelte ne escono tutte e due: le
+         cifre alte dicono la fascia, quelle basse la faccia. Un
+         secondo `this.rnd()` sposterebbe il flusso del caso di un
+         passo, e da lì in giù *tutto* il piano nasce diverso — stanze,
+         porte, forzieri. Il seme è la promessa che una discesa si
+         possa rifare identica (vedi in cima), e il banco di prova la
+         usa per dire se un ritocco ha reso una tappa più dura: con il
+         flusso spostato non confronta più due tarature, confronta due
+         sotterranei diversi. */
+      const r = this.rnd()
       const i = Math.min(BRANCO.length - 1,
-        Math.floor((forza + scala) * BRANCO.length * 0.6 + this.rnd() * 1.4))
-      return BRANCO[Math.max(0, i)]
+        Math.floor((forza + scala) * PASSO_DEL_BRANCO + r * 1.4))
+      const fascia = BRANCO[Math.max(0, i)]
+      return fascia[Math.floor(r * 1e6) % fascia.length]
     }
     for (const s of st) {
       if (s.ruolo === 'ingresso') continue

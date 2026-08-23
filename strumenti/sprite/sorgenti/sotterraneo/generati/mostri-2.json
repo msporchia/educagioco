@@ -1,0 +1,35 @@
+{
+  "__": "Il foglietto di mostri-2.png, secondo foglio di creature della stessa mano di mostri-1.png: stessa tela 1536x1024 con l'alfa gia' dentro, stessi tre blocchi di nove righe, stessa scala 4 e stesse ragioni — il ragionamento per esteso (perche' 4, perche' il ritaglio e' stretto in larghezza e comune in altezza, perche' i fotogrammi di morte restano fuori, perche' la banda si legge su tutta la larghezza) sta nel foglietto fratello e non si ripete qui.\n\nDA QUESTO FOGLIO ESCONO CINQUE CREATURE su ventisette, e la scelta e' quella di casa: quello che nessuno nomina non entra nel file unico. Sono le cinque che riempiono un buco nella scaletta del branco (dati/mostri.js) invece di ripetere una faccia che c'e' gia' — il ratto e il fantasma per le cantine, il fungo e la vespa per la fascia di mezzo, il serpente per quella tosta. Quello che resta li' dentro, per il giro in cui servira': un ent, un golem di magma, uno di pietra e uno di muschio, uno scorpione, un piranha, uno spirito elettrico, un cinghiale, un teschio fiammeggiante, una tartaruga corazzata, un draghetto alato, un tornado e uno scheletro con spada e scudo.\n\nUna nota sul serpente: il quarto fotogramma e' il morso, e porta con se' lo schizzo — e' 27 px contro i 17 del primo. Non e' un errore di ritaglio ed e' voluto che ci sia: e' il fotogramma in cui il mostro fa qualcosa, e in un'animazione da quattro pose il gioco lo mostra un quarto del tempo.",
+  "scala": 4,
+  "foglio": [384, 256],
+  "fondo": "trasparente",
+  "cella": [1, 1],
+  "famiglia": "attore",
+  "trasforma_ripiego": { "giri": 1, "ribalta": false },
+  "sprite": {
+    "fantasma-fermo-0": { "da": [4, 4], "cella": [15, 19] },
+    "fantasma-fermo-1": { "da": [23, 4], "cella": [13, 19] },
+    "fantasma-fermo-2": { "da": [42, 4], "cella": [14, 19] },
+    "fantasma-fermo-3": { "da": [61, 4], "cella": [14, 19] },
+
+    "ratto-fermo-0": { "da": [3, 80], "cella": [25, 20] },
+    "ratto-fermo-1": { "da": [31, 80], "cella": [24, 20] },
+    "ratto-fermo-2": { "da": [57, 80], "cella": [23, 20] },
+    "ratto-fermo-3": { "da": [81, 80], "cella": [23, 20] },
+
+    "fungo-fermo-0": { "da": [125, 55], "cella": [18, 21] },
+    "fungo-fermo-1": { "da": [148, 55], "cella": [18, 21] },
+    "fungo-fermo-2": { "da": [171, 55], "cella": [21, 21] },
+    "fungo-fermo-3": { "da": [196, 55], "cella": [21, 21] },
+
+    "serpente-fermo-0": { "da": [136, 79], "cella": [17, 22] },
+    "serpente-fermo-1": { "da": [157, 79], "cella": [19, 22] },
+    "serpente-fermo-2": { "da": [180, 79], "cella": [21, 22] },
+    "serpente-fermo-3": { "da": [205, 79], "cella": [27, 22] },
+
+    "vespa-fermo-0": { "da": [5, 133], "cella": [17, 24] },
+    "vespa-fermo-1": { "da": [30, 133], "cella": [18, 24] },
+    "vespa-fermo-2": { "da": [55, 133], "cella": [18, 24] },
+    "vespa-fermo-3": { "da": [80, 133], "cella": [25, 24] }
+  }
+}

@@ -295,7 +295,13 @@ export class Tela {
 
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
-      const posa = r.sveglio ? 'corsa' : 'fermo'
+      /* `unaPosa` è dichiarato dal mostro (`dati/mostri.js`): i fogli
+         del bestiario nuovo disegnano il respiro e basta, una corsa
+         separata non ce l'hanno. Chiederla lo stesso vorrebbe dire un
+         nome che nell'atlante non c'è, e `drawImage` con un argomento
+         non finito torna **senza disegnare e senza lanciare** — cioè
+         un mostro invisibile e nessun errore da nessuna parte. */
+      const posa = r.sveglio && !scheda.unaPosa ? 'corsa' : 'fermo'
       const fr = (t * (r.sveglio ? 8 : 4)) | 0
       /* l'alone dice «questo ti costa», e da sveglio pulsa: si vede prima
          di essergli arrivati addosso */
