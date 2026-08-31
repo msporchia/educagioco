@@ -34,6 +34,7 @@ import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
+import { spintaAlBordo, conIlResto } from './scena/spinta.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, siloDi, macchinaDi,
          statiDi } from './dati/catalogo.js'
@@ -309,6 +310,19 @@ onMounted(() => {
   scena.avvia()
   giro = requestAnimationFrame(passo)
   addEventListener('resize', vaiACasa)
+  /* ── LA RETE SOTTO LA SPINTA AL BORDO ────────────────────────────
+     Il dito che si alza sul campo passa da `lascia`, e quello annullato
+     da `annulla`. Ma un puntatore può anche finire **fuori di qui** —
+     il mouse trascinato oltre la finestra e mollato là, la app messa in
+     secondo piano col dito ancora giù, il sistema che si prende il
+     tocco per un suo gesto — e in tutti quei casi sul canvas non arriva
+     più niente: la vista continuerebbe a correre da sola, e al ritorno
+     ci si ritroverebbe dall'altra parte della mappa. Questi tre ascolti
+     fermano **solo lo scorrimento** e non toccano il gesto: quello che
+     si aveva in mano resta in mano. */
+  addEventListener('pointerup', fermaLaSpinta)
+  addEventListener('pointercancel', fermaLaSpinta)
+  addEventListener('blur', fermaLaSpinta)
   setTimeout(() => avvisa('Tocca una cosa per le sue opzioni, o tienila premuta e trascinala ' +
                           'per spostarla. Sul prato, tieni premuto per il baule.'), 500)
 })
@@ -317,6 +331,9 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(giro)
   if (scena) scena.ferma()
   removeEventListener('resize', vaiACasa)
+  removeEventListener('pointerup', fermaLaSpinta)
+  removeEventListener('pointercancel', fermaLaSpinta)
+  removeEventListener('blur', fermaLaSpinta)
   salvaOra()
 })
 
@@ -394,15 +411,67 @@ function passo(ora) {
   if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra() }
   bisogniFra -= dt
   if (bisogniFra <= 0) { bisogniFra = 3; aggiornaIBisogni() }
+  scorriDalBordo(dt)
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
     orologio, pennello: anteprimaPennello(),
   })
 }
 
+/* ── TRASCINARE OLTRE IL BORDO DELLO SCHERMO ────────────────────────
+   Tenendo una cosa in mano contro il bordo, il mondo scorre da solo
+   verso quel lato finché da quella parte c'è ancora qualcosa da vedere.
+   Quanto e verso dove lo dice `scena/spinta.js`, che è puro e si prova
+   senza browser; qui restano solo le tre righe che lo attaccano al
+   gioco.
+
+   **Non c'è nessun giro nuovo.** Il conto sta dentro `passo`, il
+   fotogramma che questo gioco fa girare comunque per far camminare le
+   bestie: un `requestAnimationFrame` in più sarebbe un secondo orologio
+   da spegnere, e un orologio che qualcuno dimentica acceso su un
+   telefono si paga in batteria. Fuori dal trascinamento questa funzione
+   esce alla prima riga.
+
+   La cosa in mano **resta sotto il dito**: il dito non si è mosso, ma il
+   mondo sì, quindi la cella sotto è un'altra e `muoviPreso` la
+   ricalcola dallo stesso punto di schermo. Senza, la panchina
+   sembrerebbe scappare all'indietro mentre il prato le passa sotto. */
+function scorriDalBordo(dt) {
+  if (!preso || !ultimoTocco || !scena) return
+  const s = spintaAlBordo({
+    punto: ultimoTocco, L: scena.L, A: scena.A,
+    vista: scena.vista, mondo: scena.riquadroMondo, dt,
+  })
+  /* La vista è in pixel interi, e una spinta docile vale una frazione
+     di pixel per fotogramma: quello che avanza si tiene da parte
+     invece di buttarlo, se no metà della fascia non muove niente. */
+  const avanzo = conIlResto(restoSpinta, s.dx, s.dy)
+  restoSpinta = avanzo.resto
+  if (!avanzo.dx && !avanzo.dy) return
+  scena.vista.x += avanzo.dx
+  scena.vista.y += avanzo.dy
+  scena.limita()
+  muoviPreso(ultimoTocco)
+}
+
+/* Il dito si è alzato, è uscito dalla finestra, o il tocco è stato
+   annullato: la vista si ferma qui. Il resto si azzera con lui — una
+   frazione di pixel avanzata da un gesto finito non deve saltare fuori
+   all'inizio del prossimo. */
+function fermaLaSpinta() {
+  ultimoTocco = null
+  restoSpinta = { x: 0, y: 0 }
+}
+
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
 let pizzico = null, giu = null, lungo = null, anello = null, preso = null, scorrendo = false
+/* Dove sta il dito che sta trascinando qualcosa, e la frazione di pixel
+   che la spinta al bordo si porta dietro fra un fotogramma e l'altro
+   (vedi `scena/spinta.js`). Fuori dal trascinamento `ultimoTocco` è
+   `null`, ed è quello che tiene ferma la vista: non c'è nessun altro
+   interruttore da ricordare di spegnere. */
+let ultimoTocco = null, restoSpinta = { x: 0, y: 0 }
 /* La cella su cui è stato aperto il baule, se è stato aperto tenendo
    premuto sul prato. Vive **fuori** dal pannello perché il pannello si
    chiude nell'istante in cui si preme una voce, e quella cella serve un
@@ -477,6 +546,10 @@ function premi(e) {
   if (dita.size === 2) {
     if (lungo) { clearTimeout(lungo); lungo = null }
     giu = null; anello = null; aggancio = null; scorrendo = false
+    /* Due dita sul campo sono un pizzico, non un trascinamento: se una
+       cosa era in mano resta in mano, ma la vista smette di correre —
+       adesso la sta guidando lo zoom. */
+    fermaLaSpinta()
     pizzico = { d0: centro().d, scala0: scena.scala }
     return
   }
@@ -574,6 +647,12 @@ function muovi(e) {
     const premuto = e.pointerType !== 'mouse' || e.buttons > 0
     const scarto = e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO
     if (premuto && Math.hypot(p.x - preso.x0, p.y - preso.y0) > scarto) preso.pronto = true
+    /* Da qui in poi la vista può scorrere da sola verso il bordo che il
+       dito sta toccando (`scorriDalBordo`). Il mouse che passa sopra
+       senza premere non trascina niente e non deve muovere niente: è la
+       stessa distinzione che decide `pronto` due righe più su. */
+    if (premuto) ultimoTocco = p
+    else fermaLaSpinta()
     return muoviPreso(p)
   }
   if (!giu) return
@@ -663,6 +742,7 @@ function zittisciIlFantasma(x, y) {
 
 function lascia(e) {
   if (e.pointerType !== 'mouse') zittisciIlFantasma(e.clientX, e.clientY)
+  fermaLaSpinta()
   const eraPizzico = !!pizzico
   dita.delete(e.pointerId)
   if (dita.size < 2) pizzico = null
@@ -867,6 +947,7 @@ const nomeDi = chi => (animale(chi) || {}).nome || chi
 function annulla() {
   if (lungo) { clearTimeout(lungo); lungo = null }
   dita.clear(); pizzico = null; anello = null; preso = null; giu = null; aggancio = null
+  fermaLaSpinta()
 }
 
 /* col mouse non si pizzica: la rotella fa lo stesso mestiere, ma a passi

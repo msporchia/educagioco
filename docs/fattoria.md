@@ -617,6 +617,18 @@ apre la sua scheda, toccare un campo apre la sua. Tenere premuto e trascinare
 sposta; tenere premuto sul prato apre il baule *dove* si vuole mettere
 qualcosa.
 
+**Trascinando contro il bordo, il mondo scorre da solo.** Lo schermo di un
+telefono tiene meno della metà della fattoria, e prima il trascinamento
+finiva dove finiva lo schermo: per portare una panchina di là bisognava
+posarla, spostare la vista con un dito, riprenderla, e magari rifarlo
+ancora. Adesso il dito che si ferma dentro una fascia lungo un bordo fa
+scorrere il mondo verso quel lato — piano se la si sfiora, svelto se ci si
+appoggia contro — e la panchina resta sotto il dito mentre il prato le passa
+sotto. Si ferma da sé dove il mondo finisce: non c'è nessuna corsa a vuoto
+contro un muro, e le due direzioni valgono per tutti e quattro i lati su cui
+c'è ancora qualcosa da vedere. Il conto sta in `scena/spinta.js`, ed è puro
+apposta: si prova senza browser (`test/unita/spinta-fattoria`).
+
 **Il baule tenuto premuto si ricorda dove.** Tenere premuto in mezzo al
 prato vuol dire «voglio metterci qualcosa *qui*»: la scelta del posto è già
 stata fatta, e farsela chiedere di nuovo col tocco dopo è chiedere due volte
