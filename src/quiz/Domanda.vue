@@ -166,10 +166,60 @@ const risposte = computed(() => props.domanda.risposte || [])
    lo mette la messa in scena. */
 const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
-const lunghe = computed(() => risposte.value.some(r => (r.testo || '').length > 13))
-const colonne = computed(() =>
-  lunghe.value ? 'lunghe' : risposte.value.length === 2 ? 'due'
-    : risposte.value.length === 3 ? 'tre' : 'molte')
+/* ═════ QUANTI TASTI IN RIGA, E PERCHÉ NON SI CONTANO I CARATTERI ═════
+   Le risposte stanno affiancate finché ci stanno, e quando non ci stanno
+   scendono una sotto l'altra. Prima la decisione era **una soglia a
+   caratteri** — «se una risposta supera i 13, una colonna sola» — ed era
+   cieca due volte.
+
+   Cieca sul tasto: 13 caratteri in **tre** colonne su un telefono da 360
+   px sono tre tasti da 90, e «insegniante» non ci sta in nessuno dei
+   tre. Cieca sul verso: la griglia era `1fr 1fr 1fr`, ma un `1fr` non
+   scende sotto il **min-content** della sua cella, e il min-content di
+   un tasto con dentro una parola che non si spezza È quella parola.
+   Quindi la colonna non si stringeva: si allargava la griglia, e i tasti
+   uscivano di lato dalla carta. Misurato: tre volte «insegniante» in una
+   carta larga 308 px fanno una griglia da 309 dentro un posto da 282, e
+   il terzo tasto finisce oltre il bordo — cioè fuori dallo schermo di un
+   telefono un filo più stretto, o con un carattere di sistema un filo
+   più grosso.
+
+   Adesso non c'è nessuna soglia. La fila sa **quanto largo deve poter
+   essere un tasto** e ne mette in riga quanti ne stanno, fino a un tetto
+   che è quello di sempre: due risposte affiancate, tre in fila, quattro
+   a due a due. Quando non ce ne stanno, vanno a capo — e chi resta solo
+   sull'ultima riga si prende tutta la larghezza invece di restare un
+   mezzo tasto spaiato. La misura si dichiara in `ch`, che è l'unità
+   giusta perché quello che deve starci dentro è testo:
+
+     · la **parola più lunga** — quella non si spezza mai, e se non ci
+       sta è lei a sfondare;
+     · **metà della risposta più lunga** — cioè: una risposta si può
+       leggere su due righe, non su cinque.
+
+   Il resto lo fa `min-width: 0` più `overflow-wrap` sul tasto: da lì in
+   poi un tasto può stringersi quanto vuole e il testo va a capo invece
+   di uscire. Le due cose insieme sono la garanzia — la fila sceglie
+   quanti tasti stanno bene in riga, e il tasto non può comunque
+   sfondare quello che gli tocca.
+
+   I disegni e le emoji non entrano nel conto: hanno una `max-width`
+   loro, e il nome sotto la figura è una didascalia che va a capo da sé. */
+const colonne = computed(() => (risposte.value.length === 3 ? 3 : 2))
+const minTasto = computed(() => {
+  const testi = risposte.value
+    .map(r => (r.testo ?? '') + '')
+    .filter(t => t.trim().length)
+  if (!testi.length) return '0px'
+  const parola = Math.max(...testi.flatMap(t => t.split(/\s+/).map(p => p.length)))
+  const intera = Math.max(...testi.map(t => t.length))
+  /* i 18 px sono il tasto intorno al testo — 8 di imbottitura per lato
+     più il bordo — e ci vanno perché la misura è una `flex-basis`, che
+     con `box-sizing: border-box` comprende anche quelli: senza, si
+     direbbe quanto è larga la parola e non quanto è largo il tasto che
+     la deve contenere */
+  return `calc(${Math.max(parola, Math.ceil(intera / 2))}ch + 18px)`
+})
 
 /* ── LA SPIEGAZIONE È DOPPIA, E LE DUE METÀ RESTANO SEPARATE ──
    `perche` corregge la scelta appena fatta, `comeSiFa` insegna il
@@ -402,7 +452,8 @@ onUnmounted(() => clearTimeout(cieca))
         <span v-if="domanda.soggetto.nome" class="qz-nome grande">{{ domanda.soggetto.nome }}</span>
       </div>
 
-      <div class="qz-risposte" :class="colonne">
+      <div class="qz-risposte"
+           :style="{ '--qz-colonne': colonne, '--qz-min': minTasto }">
         <button v-for="(r, i) in risposte" :key="i" type="button"
                 class="qz-tasto"
                 :class="[classe(i), { emoji: r.emoji !== undefined, nominata: r.nome !== undefined }]"
@@ -593,13 +644,43 @@ onUnmounted(() => clearTimeout(cieca))
   width: clamp(76px, calc(17 * var(--qz-h)), 148px);
   height: auto; aspect-ratio: 1;
 }
-.qz-risposte { display: grid; gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px); }
-.qz-risposte.due { grid-template-columns: 1fr 1fr; }
-.qz-risposte.tre { grid-template-columns: 1fr 1fr 1fr; }
-.qz-risposte.molte { grid-template-columns: 1fr 1fr; }
-.qz-risposte.lunghe { grid-template-columns: 1fr; }
+/* ── I TASTI IN RIGA SI CONTANO DA SÉ ──
+   Una fila che va a capo, non una griglia a colonne fisse, ed è per una
+   ragione sola: **chi resta solo sull'ultima riga si prende tutta la
+   larghezza**. Con la griglia le tre risposte dell'ortografia venivano
+   due sopra e una sotto larga la metà, spaiata, sotto due tasti uguali;
+   qui la terza è un tasto intero e la fila si legge come una scaletta.
+
+   Il conto delle due variabili sta nello script, col perché per esteso:
+   `--qz-colonne` è il **tetto** (due, o tre quando le risposte sono
+   tre) e `--qz-min` la larghezza sotto la quale un tasto non si
+   stringe. La `flex-basis` prende la più grande delle due — la fetta
+   che toccherebbe a uno di `--qz-colonne`, oppure la misura del testo
+   se è più larga — e da lì in poi decide il ritorno a capo. Il pixel in
+   meno serve solo a un arrotondamento: senza, capita di mandare a capo
+   l'ultimo tasto proprio quando ci starebbero tutti. */
+.qz-risposte {
+  --qz-gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px);
+  /* il corpo del carattere sta anche qui, e non solo sul tasto: `ch` si
+     misura dove la variabile si usa, e con 16 px qui e 19 sul tasto la
+     misura sarebbe corta di un quinto proprio sugli schermi larghi */
+  font-size: clamp(16px, 4.4vw, 19px);
+  display: flex; flex-wrap: wrap; gap: var(--qz-gap);
+}
 .qz-tasto {
+  flex: 1 1 max(var(--qz-min, 0px),
+                (100% - (var(--qz-colonne, 2) - 1) * var(--qz-gap))
+                  / var(--qz-colonne, 2) - 1px);
   display: flex; align-items: center; justify-content: center;
+  /* ── il tasto non sfonda mai il posto che gli tocca ──
+     Un elemento flessibile non scende sotto il proprio min-content, e
+     il min-content di un tasto è la parola più lunga che ci sta
+     dentro: senza queste due righe una risposta come «insegniante»
+     allarga il tasto invece di andare a capo, e la fila esce dalla
+     carta. `anywhere` e non `break-word` apposta — solo il primo
+     abbassa anche il min-content, cioè dice alla fila che quella
+     parola, all'occorrenza, si può spezzare. */
+  min-width: 0; overflow-wrap: anywhere;
   /* 42px è il dito, non l'estetica: sotto non si scende mai */
   min-height: clamp(42px, calc(7 * var(--qz-h)), 62px);
   padding: clamp(6px, calc(1.1 * var(--qz-h)), 12px) 8px; cursor: pointer;
