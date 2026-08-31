@@ -453,18 +453,46 @@ onUnmounted(() => clearTimeout(cieca))
       </div>
     </div>
 
-    <!-- Il disegno grande. Sta dentro il velo della domanda, non dentro
-         la carta: così prende tutto lo spazio che il gioco ha concesso
-         alla domanda, e si chiude con un tocco qualunque — sul disegno,
-         sulla consegna, sul nero intorno. Chiudere sul `click` e non sul
-         `pointerup` non è un dettaglio: col secondo il dito si lascia
-         dietro un click che atterrerebbe sul tasto rimasto sotto, e la
-         risposta partirebbe da sola. -->
-    <div v-if="ingrandito" class="qz-zoom" @click="ingrandito = false">
-      <canvas ref="teloZoom" class="qz-telo-zoom" />
-      <div class="qz-zoom-testo">{{ domanda.testo }}</div>
-      <button type="button" class="qz-zoom-x" aria-label="chiudi">✕</button>
-    </div>
+    <!-- ══════════ IL DISEGNO GRANDE, E PERCHÉ ESCE DA QUI ══════════
+         Si chiude con un tocco qualunque — sul disegno, sulla consegna,
+         sul nero intorno. Chiudere sul `click` e non sul `pointerup`
+         non è un dettaglio: col secondo il dito si lascia dietro un
+         click che atterrerebbe sul tasto rimasto sotto, e la risposta
+         partirebbe da sola.
+
+         Il `Teleport` invece è il rimedio a un guasto riferito da chi
+         ci giocava: nel sotterraneo la lente **si apriva a metà
+         schermo**, con la caverna che restava a vista sopra. Stava
+         dentro il velo della domanda, cioè in fondo al pannello del
+         gioco, e da lì un `position: fixed` non vuol dire affatto
+         «tutto il telefono»: lo dice l'antenato più vicino che si sia
+         dichiarato riferimento. I fogli del sotterraneo entrano in
+         scena con una `transform` (`sot-sale`, `sot-cresce`), e una
+         `transform` su un antenato **è** quella dichiarazione: la
+         lente smetteva di essere lo schermo e diventava il pannello,
+         ritagliata dentro il foglio in basso.
+
+         E anche senza nessuna `transform` c'era la seconda metà: lo
+         `z-index: 50` si spendeva **dentro** la pila del pannello che
+         ospita la domanda (`.sot-foglio` è 10, `.sot-velo` 12), quindi
+         qualunque cosa l'applicazione metta più in alto — la barra in
+         cima, che è 20 — passava sopra la lente. Misurato: al centro
+         della striscia in cima, sotto il dito c'era la barra.
+
+         Appesa al `body` non c'è più niente in mezzo: nessun antenato
+         da cui farsi ritagliare, nessuna pila in cui restare
+         intrappolata. Il rimedio sta qui e non nei cinque giochi
+         perché il difetto non è di un gioco: chi monta una domanda non
+         deve sapere che esiste una lente, e finché lo doveva sapere
+         bastava una riga di aspetto scritta in un `.css` di gioco per
+         spostarla senza che se ne accorgesse nessuno. -->
+    <Teleport to="body">
+      <div v-if="ingrandito" class="qz-zoom" @click="ingrandito = false">
+        <canvas ref="teloZoom" class="qz-telo-zoom" />
+        <div class="qz-zoom-testo">{{ domanda.testo }}</div>
+        <button type="button" class="qz-zoom-x" aria-label="chiudi">✕</button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -614,21 +642,22 @@ onUnmounted(() => clearTimeout(cieca))
   /* `fixed` e non `absolute`: il velo scorre quando la carta è più alta
      dello schermo, e un absolute scorrerebbe con lui — la lente si
      aprirebbe sopra la testa di chi ha scrollato in fondo. Fissa resta
-     dov'è.
+     dov'è, e **appesa al `body`** (il `Teleport` nel template) è fissa
+     rispetto allo schermo e non rispetto al pannello di un gioco: il
+     perché per esteso sta lì.
 
-     **Dove** si fermi però non lo dice questa riga: lo decide se un
-     antenato si è dichiarato riferimento — una `transform`, un
-     `filter`, il `backdrop-filter` del velo. Dove il velo ce l'ha
-     addosso (il banco di prova, Survivors, la Corsa) la lente sta
-     dentro il velo; nel Dungeon e nel sotterraneo il velo è l'ultima
-     striscia della colonna e il filtro è tolto apposta, quindi la
-     lente si stende sulla finestra intera — che è quello che serve lì,
-     ma è la conseguenza di una riga scritta per l'aspetto, non una
-     decisione presa. Chi rimette mano al velo di un gioco sposta la
-     lente senza accorgersene, e il modo in cui si vede è che quello
-     che stava sotto — il mostro, per dire — resta a vista. Il
-     controllo che se ne accorge sta in `integrazione/domanda`. */
-  position: fixed; inset: 0; z-index: 50; cursor: zoom-out;
+     Lo `z-index` è alto apposta, e la scala è quella
+     dell'applicazione: i veli dei giochi stanno fra 5 e 40, quelli di
+     casa (le sorprese, il banco di prova, un traguardo) fra 60 e 80.
+     Sopra tutti perché la lente è l'ultima cosa chiesta e nessuna di
+     quelle deve tagliarla; sotto il 200 del cartello «gira il
+     telefono», che vince sempre su tutto.
+
+     `--qz-h` non si eredita più da chi ha aperto la domanda, e va
+     bene così: un gioco dichiara quanto schermo ha concesso **alla
+     carta**, mentre la lente lo schermo ce l'ha tutto. */
+  --qz-h: 1vh;
+  position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: clamp(6px, calc(1.5 * var(--qz-h)), 14px);
   padding: clamp(8px, calc(2 * var(--qz-h)), 18px);

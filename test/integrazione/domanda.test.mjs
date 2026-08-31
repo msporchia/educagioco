@@ -175,31 +175,38 @@ const pixel = await page.evaluate(() => {
 })
 controlla('ed è ridipinto, non stirato', Math.abs(pixel - grande) < 2,
           `${Math.round(pixel)} px dipinti su ${Math.round(grande)} di riquadro`)
-/* ── e la lente COPRE quello che c'era sotto ──
+/* ── e la lente COPRE TUTTO LO SCHERMO ──
    La misura del disegno non basta: quello che si rompe da solo è il
-   **posto**. `.qz-zoom` è `position: fixed`, e dove si ferma non lo
-   decide lei — lo decide il primo antenato che si sia dichiarato
-   riferimento (una `transform`, un `filter`, il `backdrop-filter` del
-   velo). Basta che un gioco ne aggiunga uno, o ne tolga uno, perché la
-   lente si apra dentro un francobollo e quello che stava sotto — nel
-   Dungeon un mostro grande mezzo schermo — resti a vista proprio
-   mentre si è chiesto di guardare meglio il disegno.
+   **posto**. `.qz-zoom` è `position: fixed`, e finché stava dentro il
+   velo della domanda «fisso» non voleva dire lo schermo: voleva dire
+   il primo antenato che si fosse dichiarato riferimento — una
+   `transform`, un `filter`, un `backdrop-filter`. Nel sotterraneo i
+   pannelli entrano in scena con una `transform`, e la lente si apriva
+   ritagliata dentro il foglio in basso, con la caverna a vista sopra.
+   Adesso è appesa al `body` (`Teleport`), quindi la misura giusta non
+   è più «copre il velo» ma **copre la finestra**: è la sola cosa che
+   nessuna riga di aspetto di un gioco possa più smentire.
 
-   Non si guardano i pixel: si chiede al punto. Al centro del velo,
-   dove atterrerebbe il dito, ci dev'essere la lente e non la carta
-   rimasta dietro. */
+   L'altra metà è la pila: lo `z-index` si spendeva dentro quella del
+   pannello del gioco, e la barra in cima ci passava sopra. Non si
+   guardano i pixel — si chiede al punto, in tre posti, compreso uno
+   nella striscia in alto dove sta la barra. */
 const copertura = await page.evaluate(() => {
   const z = document.querySelector('.qz-zoom').getBoundingClientRect()
-  const v = document.querySelector('.qz-velo').getBoundingClientRect()
-  const chi = document.elementFromPoint(v.x + v.width / 2, v.y + v.height / 2)
-  return { larga: z.width >= v.width - 1, alta: z.height >= v.height - 1,
-           lente: !!chi && !!chi.closest('.qz-zoom'),
+  const chiE = (x, y) => {
+    const e = document.elementFromPoint(x, y)
+    return !!e && !!e.closest('.qz-zoom')
+  }
+  return { larga: z.width >= innerWidth - 1, alta: z.height >= innerHeight - 1,
+           mezzo: chiE(innerWidth / 2, innerHeight / 2),
+           cima: chiE(innerWidth / 2, 12),
            misure: `lente ${Math.round(z.width)}×${Math.round(z.height)}, `
-                 + `velo ${Math.round(v.width)}×${Math.round(v.height)}` }
+                 + `finestra ${innerWidth}×${innerHeight}` }
 })
-controlla('la lente copre tutto il velo', copertura.larga && copertura.alta,
+controlla('la lente copre tutta la finestra', copertura.larga && copertura.alta,
           copertura.misure)
-controlla('e sotto il dito, in mezzo, c\'è lei e non la carta', copertura.lente)
+controlla('e sotto il dito, in mezzo, c\'è lei e non la carta', copertura.mezzo)
+controlla('e anche in cima, dove passa la barra', copertura.cima)
 await scatto(page, 'domanda-lente')
 
 await page.click('.qz-zoom')

@@ -155,8 +155,13 @@ Nella carta il disegno del soggetto sta in un riquadro largo al massimo
 casella viene venti pixel, con dentro una lettera, un numero e un'emoji,
 e «cosa c'è nella casella E5» smette di essere una domanda sulle
 coordinate per diventarne una sulla vista. **Toccando il disegno si apre
-grande quanto il riquadro concede** (`.qz-zoom`), e si chiude toccando
-ovunque.
+grande quanto tutto lo schermo** (`.qz-zoom`), e si chiude toccando
+ovunque. «Tutto lo schermo» è letterale ed è costato un guasto: la lente
+è appesa al `body` con un `Teleport`, perché montata dentro il pannello
+del gioco un `position: fixed` non vuol dire la finestra — vuol dire il
+primo antenato con una `transform` addosso, e i fogli del sotterraneo ne
+hanno una per entrare in scena. Si apriva ritagliata a metà schermo, con
+la caverna a vista sopra.
 
 Due dettagli che sembrano piccoli e non lo sono. Il primo: si ingrandisce
 **solo il soggetto**, mai i disegni delle risposte — lì il tocco *è* la
