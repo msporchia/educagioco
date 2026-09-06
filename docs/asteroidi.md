@@ -25,18 +25,39 @@ doppi, e senza 7+7 non c'è nessun 2×7), le decine tonde arrivano dopo la
 tabellina del 10, e **moltiplicare e dividere a mente vengono dopo tutte le
 tabelline** — 56:8 è la tabellina dell'8 girata.
 
-In mezzo alla fila possono esserci **due tappe aperte invece di una**, una
-per specie: i due progressi restano contati separatamente, ed è la ragione
-per cui fondendo le liste nessuno ha perso niente.
+La fila è una anche **sotto**: un solo avanzamento, una sola tappa aperta —
+quella dopo l'ultima superata, che sia un pianeta o una stazione. Per un po'
+i progressi sono stati due, uno per specie, e allora in mezzo alla scaletta
+capitava di vedere la tappa 6 aperta, la 7 chiusa e la 8 aperta: da fuori
+non si legge come «due progressi rispettati», si legge come una fila che non
+si capisce dove continui. Chi giocava da prima non ha perso niente — i due
+contatori si sono travasati in uno prendendo la posizione più avanzata, cioè
+sbagliando semmai in favore del bambino.
+
+(La scaletta apre in anticipo anche tutto quello che a quell'età è **roba
+già saputa** — a nove anni non si ricomincia dalla tabellina del 2 per
+arrivare al 7 — ma quello lo decide l'età, non l'avanzamento: la tappa
+cerchiata, cioè «sei qui», resta una sola.)
 
 ## L'astronave
 
 In fondo allo schermo c'è una nave che difende il pianeta, e **dice come sta
-andando senza numeri**: nuova, poi ammaccata, poi con l'ala squarciata, il
-vetro rotto, il fumo e la luce rossa. Se resta una vita sola gli asteroidi
-rallentano un po' — chi è arrivato lì il conto di solito lo sa, e non fa in
-tempo a farlo. Man mano che si sale di livello la nave cresce: navetta,
-caccia, incrociatore.
+andando senza numeri**. Alla prima botta l'ala sinistra si **strappa**: bordo
+frastagliato e bruciato, i pezzi che le galleggiano accanto, le scintille e
+il fumo che escono da lì, e una spia ambra che lampeggia sullo scafo. Se
+resta una vita sola lo strappo si mangia quasi tutta l'ala, la spia diventa
+rossa e batte il doppio, il vetro si crepa e un motore va a singhiozzo.
+
+Prima il primo gradino era «l'ala si accorcia», e non lo capiva nessuno: non
+c'è niente a schermo con cui confrontarla, e un'ala più piccola non dice
+*rotta*, dice che la nave è fatta così. Quello che si legge di sfuggita su un
+telefono è **qualcosa che si muove** (la spia, le scintille), **un buco nel
+contorno** e **dei pezzi staccati** — tre segnali sullo stesso punto, e
+ognuno regge da solo.
+
+Se resta una vita sola gli asteroidi rallentano un po' — chi è arrivato lì il
+conto di solito lo sa, e non fa in tempo a farlo. Man mano che si sale di
+livello la nave cresce: navetta, caccia, incrociatore.
 
 Due potenziamenti si guadagnano giocando e finiscono con la partita:
 
@@ -123,6 +144,11 @@ del saperlo: rispondere piano conta, non solo rispondere giusto.
 - Al contrario, **chi vuole solo le tabelline spegne il calcolo a mente**
   (*Genitori → giochi → dentro gli asteroidi*): le tappe a mente
   spariscono dalla fila e i pianeti si richiudono in ordine, senza buchi.
-  I progressi a mente restano dove sono e riaccendendo tornano.
+  Spegnere l'interruttore non cancella niente e la fila torna intera
+  riaccendendolo; quello che si perde è il segnaposto delle stazioni
+  saltate mentre era spento — con un avanzamento solo, quelle restano
+  dietro di lui e risultano passate. È la lettura giusta di quel gesto:
+  un grande che toglie il calcolo a mente non sta mettendo delle tappe in
+  pausa, sta dicendo che questo bambino fa le tabelline.
 - Le divisioni si possono spegnere dai settaggi (*Genitori → cosa sa*).
 - A che punto della fila si è arrivati si vede nella carta in home.

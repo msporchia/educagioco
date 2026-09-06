@@ -296,7 +296,11 @@ export const concettiSaldi = (items, now = Date.now()) =>
 /* Allinea la campagna delle stazioni a quello che il bambino già sa: chi
    arriva qui dopo mesi di tabelline non deve rifare 3+4 per venti
    partite. Apre le tappe, non le regala — superarle, e prendersi le
-   monete, resta da fare. Stessa scelta di `allineaMate`. */
+   monete, resta da fare. Stessa scelta di `allineaMate`.
+
+   Scrive l'indice della campagna delle stazioni, che dalla fila unica in
+   poi è **uno specchio**: a portarlo dentro il contatore vero
+   (`mate.fila`) è `sincronizzaAsteroidi`, in `store/profile.js`. */
 export function allineaCalcolo(p, now = Date.now()) {
   if (!p.calc) p.calc = { tappa: 0, libera: false }
   const items = p.items || {}

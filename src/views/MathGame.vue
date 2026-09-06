@@ -26,9 +26,9 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, item, answer, level, addCoins, countMastered,
-         segna, segnaBest, mateProgresso, mateCompleta, tabellineIntere,
-         calcProgresso, calcCompleta, tappaAperta, varianteAccesa } from '../store/profile.js'
-import { tappaApertaQui } from '../data/portata-giochi.js'
+         segna, segnaBest, mateProgresso, tabellineIntere, asteroidiCompleta,
+         calcProgresso, varianteAccesa } from '../store/profile.js'
+import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker } from '../store/srs.js'
 import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
 import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
@@ -38,9 +38,9 @@ import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
 import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
          insiemeDi, chiaviDelle } from '../store/tabelline.js'
 import { CAPITOLI, CHIAVE_MENTE, scaletta, superata, dopoDi,
-         progressiDa } from '../data/asteroidi.js'
+         posizioneOra, filaDi } from '../data/asteroidi.js'
 import { suono } from '../audio.js'
-import { dipingiFondale, disegnaNave, disegnaAsteroide,
+import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
 import { POTENZIAMENTI, TASCA_MAX, EMERGENZA, premioDaSerie,
          gettoneDopo } from '../data/potenziamenti.js'
@@ -74,11 +74,12 @@ const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine | t
    indice dentro la sua campagna. Il resto del gioco — asteroidi, vite,
    boss, monete — non sa nemmeno quello.
 
-   I DUE CONTATORI RESTANO DUE (`mate.tappa`, `calc.tappa`), ed è la
-   ragione per cui nessuno perde niente fondendo le liste: una voce è
-   superata se il progresso della SUA campagna la copriva. Un contatore
-   solo regalerebbe le stazioni a chi è avanti coi pianeti e
-   richiuderebbe i pianeti a chi è avanti con le stazioni. */
+   IL CONTATORE È UNO SOLO (`mate.fila`): una voce è superata se la fila
+   l'ha lasciata dietro, e quella aperta è **una**, la prossima. Prima
+   erano due contatori, uno per mestiere, e la fila era una sola solo a
+   vedersi: in mezzo alla scaletta c'erano due tappe aperte insieme, la 6
+   e la 8 con la 7 chiusa in mezzo. Chi arriva da lì viene migrato in
+   `store/profile.js` (`sincronizzaAsteroidi`), e non perde niente. */
 const modo = ref('tabelline')      // tabelline | mente
 const mente = computed(() => modo.value === 'mente')
 
@@ -87,8 +88,12 @@ const progressoMente = computed(() => calcProgresso())
 /* i grandi possono spegnere il calcolo a mente: le voci a mente
    spariscono dalla fila e i pianeti si richiudono senza buchi */
 const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
-const prog = computed(() => progressiDa(progresso.value, progressoMente.value))
+/* il contatore unico, e dove cade dentro la fila che QUESTO bambino
+   vede: col calcolo a mente spento la fila è più corta, quindi «quante
+   ne ha fatte» non è lo stesso numero */
+const contatore = computed(() => filaDi(progresso.value))
 const fila = computed(() => scaletta(menteAccesa.value))
+const dove = computed(() => posizioneOra(contatore.value, menteAccesa.value))
 /* i capitoli, ognuno con le sue voci: su un telefono ventidue righe di
    fila sono un muro, tre o quattro per volta sono una lista */
 const capitoli = computed(() => CAPITOLI
@@ -100,25 +105,24 @@ const tappa = computed(() =>
   mente.value ? (tappaIdx.value < 0 ? VOLO_A_MENTE : STAZIONI[tappaIdx.value])
               : (tappaIdx.value < 0 ? VOLO_LIBERO : CAMPAGNA[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
-/* aperta col lucchetto di sempre, ma letto sul contatore della campagna
-   a cui la voce appartiene */
-/* Il lucchetto adesso guarda anche l'età: quello che il bambino ha già
-   passato nasce aperto (a nove anni non si ricomincia dalla tabellina
-   del 2 per arrivare al 7), e quello che gli sta troppo avanti resta
-   chiuso. Il conto sta in `data/portata-giochi.js`, che legge la
-   `portata` dichiarata su ogni tappa in `data/tabelline.js` e
-   `data/calcolo.js`. I due contatori restano due — `mate.tappa` per i
-   pianeti, `calc.tappa` per le stazioni — perché la fila è una sola ma
-   le campagne sotto sono ancora due. */
-const apertaVoce = v => tappaApertaQui(v.tipo === 'pianeta' ? 'mate-pianeti' : 'mate-mente',
-                                       v.i, prog.value[v.tipo])
-const fattaVoce = v => superata(v, prog.value)
+/* Aperta col lucchetto di sempre — la prossima sì, quelle dopo no — ma
+   letto **sulla fila**, che è una: `v.n - 1` è il posto della voce nella
+   fila che questo bambino vede, `dove` quante ne ha superate.
+
+   Il lucchetto guarda anche l'età: quello che il bambino ha già passato
+   nasce aperto (a nove anni non si ricomincia dalla tabellina del 2 per
+   arrivare al 7), e quello che gli sta troppo avanti resta chiuso. Il
+   conto sta in `data/portata-giochi.js`, che legge la `portata`
+   dichiarata su ogni tappa in `data/tabelline.js` e `data/calcolo.js`. */
+const apertaVoce = v => apertaQui(v.T, v.n - 1, dove.value)
+const fattaVoce = v => superata(v, contatore.value)
 /* dove si sta adesso, e cosa viene dopo NELLA FILA: dopo un pianeta può
    toccare a una stazione, ed è tutto il senso di averle mescolate */
 const voceOra = computed(() => campagna.value
-  ? { tipo: mente.value ? 'mente' : 'pianeta', i: tappaIdx.value } : null)
+  ? fila.value.find(v => v.tipo === (mente.value ? 'mente' : 'pianeta') &&
+                         v.i === tappaIdx.value) || null : null)
 const dopo = computed(() => voceOra.value
-  ? dopoDi(voceOra.value, prog.value, menteAccesa.value, apertaVoce) : null)
+  ? dopoDi(voceOra.value, contatore.value, menteAccesa.value, apertaVoce) : null)
 /* le stelle non stanno nel profilo né qui né là: si rileggono dal motore,
    così una strategia lasciata lì per un mese perde la sua e torna a farsi
    vedere. `state.profile.items` è reattivo, quindi la mappa si aggiorna
@@ -166,7 +170,9 @@ let fondale = null, fumo = 0
    non stanno più nella fascia in alto: i cuoricini erano nel posto dove
    nessuno guarda — chi gioca guarda il cielo, e la nave sta appena
    sotto, dentro lo stesso sguardo. Adesso una vita in meno è un'ala
-   squarciata, e l'ultima è una nave in fiamme che fuma.
+   **strappata** — bordo frastagliato, i pezzi che le galleggiano
+   accanto, le scintille e la spia d'allarme che lampeggia — e l'ultima è
+   una nave in fiamme che fuma.
    Il campo `danno` è tutto quello che il disegno sa dello stato — la
    traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto, e i
    tre gradini in cui si legge stanno in `grafica/spazio.js`. */
@@ -683,8 +689,9 @@ function dammiVita(perche) {
 }
 
 /* Una vita in meno non si dice con un numero: la nave si sbianca per un
-   attimo, e da lì in poi resta più malconcia di prima — un'ala rotta,
-   poi le fiamme. È tutto quello che c'è, e basta perché sta dentro lo
+   attimo, e da lì in poi resta più malconcia di prima — un'ala
+   strappata che fuma e lampeggia, poi le fiamme. È tutto quello che
+   c'è, e basta perché sta dentro lo
    stesso sguardo con cui si guardano i sassi. */
 function perdiVita() {
   hud.serie = 0
@@ -827,17 +834,27 @@ function effetti(dt) {
   if (nave.botta > 0) nave.botta -= dt * 2.2
   if (nave.riparata > 0) nave.riparata -= dt * 1.6
   if (nave.spinta > 0) nave.spinta -= dt * 2.5
-  // la nave malconcia fuma, e quando è messa peggio butta anche
-  // scintille: sono le due cose che si vedono di sfuggita mentre si
-  // guarda in alto, e dicono «questa sta per saltare» meglio di un cuore
-  if (nave.danno > 0.6 && (fumo -= dt) <= 0) {
-    fumo = 0.12
-    const x = nave.x + (Math.random() - 0.5) * nave.r
-    particelle.push({ x, y: nave.y - nave.r * 0.2, vx: (Math.random() - 0.5) * 24 * S,
+  /* La nave malconcia fuma, e il fumo **esce dallo strappo**, non dal
+     centro: è il pezzo che il disegno non può fare (sono particelle) e
+     insieme il modo di dire dov'è il guasto — un pennacchio che parte
+     dal buco è la freccia che indica il buco.
+
+     La soglia è `statoScafo` e non un numero scritto qui: i gradini
+     stanno in `grafica/spazio.js`, e chiedere «danno > 0.6» voleva dire
+     che al primo gradino la nave non fumava affatto mentre il commento
+     là dentro diceva di sì. Il fumo comincia con lo strappo; le
+     scintille grosse restano dell'ultimo gradino. */
+  const rovina = statoScafo(nave.danno)
+  if (rovina >= 1 && (fumo -= dt) <= 0) {
+    fumo = rovina >= 2 ? 0.1 : 0.16
+    const rotto = puntoRotto(nave.lv)
+    const x = nave.x + rotto.x * nave.r + (Math.random() - 0.5) * nave.r * 0.3
+    const y = nave.y + rotto.y * nave.r
+    particelle.push({ x, y, vx: (Math.random() - 0.5) * 24 * S,
                       vy: -34 * S, vita: 0.85, leggera: true,
                       r: (2.5 + Math.random() * 3.5) * S,
-                      c: nave.danno > 0.8 ? '#6a6a78' : '#9898a6' })
-    if (nave.danno > 0.8 && Math.random() < 0.5)
+                      c: rovina >= 2 ? '#6a6a78' : '#9898a6' })
+    if (rovina >= 2 && Math.random() < 0.5)
       particelle.push({ x, y: nave.y, vx: (Math.random() - 0.5) * 70 * S,
                         vy: -(40 + Math.random() * 60) * S, vita: 0.7,
                         r: (1.5 + Math.random() * 2) * S,
@@ -957,15 +974,19 @@ function riassunto() {
 
 function tappaSuperata() {
   asteroidi = []
-  const quante = mente.value ? STAZIONI.length : CAMPAGNA.length
-  const ultima = tappaIdx.value === quante - 1
+  const v = voceOra.value
+  // l'ultima è l'ultima DELLA FILA che questo bambino vede: col calcolo a
+  // mente spento la scaletta finisce sul pianeta del 9, non sulla prova
+  const ultima = !!v && v.n === fila.value.length
   // il premio è della prima volta: rigiocare una tappa già superata lascia
   // una moneta di cortesia, non uno stipendio
-  const giaFatto = (mente.value ? progressoMente.value : progresso.value).tappa > tappaIdx.value
-  if (mente.value) calcCompleta(tappaIdx.value, quante)
-  else mateCompleta(tappaIdx.value, quante)
-  // da 1 a 3 per il livello del giocatore, come le tappe del castello: due
-  // campagne che pagano in modo diverso per lo stesso lavoro sgonfiano l'economia
+  const giaFatto = !!v && fattaVoce(v)
+  if (v) asteroidiCompleta(v)
+  /* da 1 a 3 per il livello del giocatore, come le tappe del castello. Il
+     rincaro si conta sull'indice DENTRO la sua campagna e non sulla
+     posizione in fila: la fila è lunga il doppio, e contarla lì
+     raddoppierebbe i premi senza che nessuno l'abbia deciso (vedi
+     `CALIBRAZIONE.md`). */
   premio.value = giaFatto ? 1 : level.value * (1 + Math.floor(tappaIdx.value / 4))
   addCoins(premio.value)
   riassunto()
@@ -990,13 +1011,21 @@ function finePartita() {
   riassunto()
 }
 
+/* tornando alla mappa ci si rimette su **dove è arrivata la fila**, non
+   sulla prossima della campagna che si stava giocando: il posto è uno
+   solo, e da lì riparte anche il modo (pianeta o stazione) */
 function allaMappa() {
   fase.value = 'mappa'
   asteroidi = []
   dritta.value = ''
-  tappaIdx.value = mente.value
-    ? Math.min(STAZIONI.length - 1, progressoMente.value.tappa)
-    : Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
+  suFrontiera()
+}
+
+function suFrontiera() {
+  const v = fila.value[Math.min(fila.value.length - 1, dove.value)]
+  if (!v) return
+  modo.value = v.tipo === 'mente' ? 'mente' : 'tabelline'
+  tappaIdx.value = v.i
 }
 
 /* "Cosa so" si apre da due posti — la mappa e la fine partita — e il tasto
@@ -1017,15 +1046,16 @@ const quota = (n, tot) => Math.min(100, Math.round((n / tot) * 100)) + '%'
 const finoA = (n, max) => Math.min(n, max)
 
 onMounted(() => {
-  tappaIdx.value = Math.min(CAMPAGNA.length - 1, progresso.value.tappa)
+  suFrontiera()
   // aggancio per i test automatici: permette di colpire l'asteroide giusto
   // senza dover indovinare dove il numero e' disegnato sul canvas
   window.__mate = { hud, domanda, colpisci, inizia, CAMPAGNA, tappaIdx, tappa,
                     asteroidi: () => asteroidi, fase, finale, progresso, nave,
                     // -1 è il volo libero: tabelline a scelta, nessun bersaglio
                     iniziaLibero: () => inizia(-1),
-                    // la fila mescolata, e cosa viene dopo dentro la fila
-                    fila, dopo, menteAccesa,
+                    // la fila mescolata, il contatore unico (quante voci
+                    // sono superate) e cosa viene dopo dentro la fila
+                    fila, dopo, menteAccesa, contatore, dove,
                     // la seconda campagna: stazioni del calcolo a mente
                     modo, STAZIONI, progressoMente, iniziaStazione,
                     // la tappa dopo: è da lì che arriva il boss, e un test
@@ -1140,7 +1170,7 @@ onUnmounted(() => {
             <button v-for="v in c.voci" :key="v.tipo + v.i"
                     :class="[v.tipo === 'mente' ? 'stazione' : 'pianeta',
                              { fatto: fattaVoce(v), chiuso: !apertaVoce(v),
-                               ora: apertaVoce(v) && !fattaVoce(v) }]"
+                               ora: v.n - 1 === dove }]"
                     :disabled="!apertaVoce(v)" @click="iniziaVoce(v)">
               <span class="em">{{ apertaVoce(v) ? v.T.emoji : '🔒' }}</span>
               <b>{{ v.n }}. {{ v.T.nome }}</b>
@@ -1171,9 +1201,9 @@ onUnmounted(() => {
              compare in basso è un'icona che nessuno ha capito. -->
         <div class="hangar">
           <div class="capitolo">🚀 La tua astronave</div>
-          <p class="testo">Le vite sono la nave: intatta, poi ammaccata con l'ala rotta,
-            poi in fiamme. Se cresce di livello diventa più grossa. A fine partita torna
-            com'era.</p>
+          <p class="testo">Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
+            fuma e la spia che lampeggia, poi in fiamme. Se cresce di livello diventa più
+            grossa. A fine partita torna com'era.</p>
           <p class="testo">Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
             Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
             vuoi — e sbagliando non si perde.</p>
@@ -1244,20 +1274,22 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- campagna finita -->
+    <!-- La fila finita. È una sola, quindi il cartello è uno solo: prima
+         diceva «tutte le stazioni» o «tutti i pianeti» a seconda di come
+         finiva la campagna che si stava giocando, che con una fila
+         mescolata vuol dire dare due nomi diversi allo stesso traguardo. -->
     <div v-if="fase === 'trionfo'" class="velo">
-      <h1 class="chiaro">🎉 Campagna<br><span>finita!</span></h1>
-      <p v-if="mente" class="testo chiaro">Tutte e {{ STAZIONI.length }} le stazioni sono
-        superate. Premio: <b>+{{ premio }} 🪙</b>. Si apre il <b>volo a mente</b>, dove i
-        numeri continuano a crescere e non c'è un ultimo calcolo.</p>
-      <p v-else class="testo chiaro">Tutti e {{ CAMPAGNA.length }} i pianeti sono superati.
-        Premio: <b>+{{ premio }} 🪙</b>. Si apre il <b>volo libero</b>, senza fine.</p>
-      <div v-if="mente" class="dato">⭐ Stazioni sicure:
+      <h1 class="chiaro">🎉 Scaletta<br><span>finita!</span></h1>
+      <p class="testo chiaro">Tutte e {{ fila.length }} le tappe sono superate.
+        Premio: <b>+{{ premio }} 🪙</b>. Adesso si vola senza bersaglio: i numeri
+        continuano a crescere e non c'è un ultimo calcolo.</p>
+      <div class="dato">⭐ Tabelline imparate: <span>{{ intere.size }}/10</span></div>
+      <div v-if="menteAccesa" class="dato">⭐ Stazioni sicure:
         <span>{{ stelleMente }}/{{ STAZIONI.length }}</span></div>
-      <div v-else class="dato">⭐ Tabelline imparate: <span>{{ intere.size }}/10</span></div>
       <div class="riga">
-        <button v-if="mente" class="bottone" @click="iniziaStazione(-1)">Volo a mente ♾️</button>
-        <button v-else class="bottone" @click="iniziaPianeta(-1)">Volo libero ♾️</button>
+        <button v-if="progresso.libera" class="bottone" @click="iniziaPianeta(-1)">Volo libero ♾️</button>
+        <button v-if="menteAccesa && progressoMente.libera" class="bottone"
+                @click="iniziaStazione(-1)">Volo a mente ♾️</button>
         <button class="bottone chiaro" @click="allaMappa">Mappa</button>
       </div>
     </div>
@@ -1399,7 +1431,11 @@ h1.chiaro span { color:#7fe3ff }
            font-style:normal; color:var(--verde); font-size:19px }
 /* superato: resta acceso ma smette di chiamare */
 .pianeta.fatto, .stazione.fatto { background:linear-gradient(120deg,#e9f7ea,#fffffff0) }
-/* è il prossimo da fare: è quello che deve saltare all'occhio */
+/* ADESSO TOCCA A QUESTA, e a una sola. Prima l'anello ce l'aveva ogni
+   riga aperta e non ancora fatta: con l'età che apre in anticipo tutto
+   quello che il bambino sa già, mezza scaletta si accendeva insieme e
+   «dove sono arrivato» non si leggeva più. Con un contatore solo la
+   risposta esiste ed è una, quindi l'anello va lì e basta. */
 .pianeta.ora, .stazione.ora { background:linear-gradient(120deg,#e8f0ff,#fffffff0);
                box-shadow:0 4px 0 #c9d8f5, 0 0 0 2px var(--viola) }
 .pianeta.chiuso, .stazione.chiuso { opacity:.5; box-shadow:0 3px 0 #e9ddf5 }

@@ -22,7 +22,8 @@
 import { CAMPAGNA, VOLO_LIBERO, calcoliTabellina, fattoriDi } from '../../src/data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
 import { SCALETTA, CAPITOLI, CHIAVE_MENTE, scaletta, superata, raggiunta,
-         dopoDi, posizioneOra, progressiDa } from '../../src/data/asteroidi.js'
+         dopoDi, posizioneOra, filaDi, filaDopo, campagneDaFila,
+         filaDaCampagne } from '../../src/data/asteroidi.js'
 import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina, insiemeDi,
          chiaviDelle, ultimeTabelline, eNulla, CUORE, TUTTE_LE_TABELLE }
   from '../../src/store/tabelline.js'
@@ -30,7 +31,8 @@ import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo }
   from '../../src/store/calcolo.js'
 import { createPicker, record, newItem, strength } from '../../src/store/srs.js'
 import { state, init, selectPlayer, mateProgresso, calcProgresso,
-         varianteAccesa, accendiVariante } from '../../src/store/profile.js'
+         asteroidiCompleta, varianteAccesa,
+         accendiVariante } from '../../src/store/profile.js'
 import { save, remove, chiavi, flush } from '../../src/store/storage.js'
 import { premioDaSerie, gettoneDopo, POTENZIAMENTI, TASCA_MAX }
   from '../../src/data/potenziamenti.js'
@@ -273,6 +275,18 @@ const PROFILI = T => ({
   controlla('anche nella fila intera i pianeti si susseguono in ordine',
             pianeti.every((v, i) => v.i === i))
   controlla('e le stazioni pure', stazioni.every((v, i) => v.i === i))
+
+  /* `pos` è la coordinata del contatore unico: dev'esserci su ogni voce,
+     essere la posizione vera e **non cambiare** quando la fila si
+     accorcia — se cambiasse, spegnere il calcolo a mente sposterebbe i
+     progressi di chi non ha toccato niente. */
+  controlla('ogni voce porta la sua posizione in fila',
+            SCALETTA.every((v, i) => v.pos === i))
+  controlla('e la posizione non cambia con la fila accorciata',
+            soloPianeti.every(v => SCALETTA[v.pos].tipo === 'pianeta' &&
+                                   SCALETTA[v.pos].i === v.i))
+  controlla('superata una voce il contatore si porta subito dopo di lei',
+            SCALETTA.every(v => filaDopo(v) === v.pos + 1))
 }
 
 /* ═══════════ 7. L'ORDINE RISPETTA QUELLO CHE SERVE ═══════════
@@ -411,20 +425,62 @@ const PROFILI = T => ({
   nota(`camminando la fila si arriva in fondo con ${salde} tabelline salde su 9`)
 }
 
+/* ═══════════ 9a. UN CONTATORE SOLO, SENZA PROFILO ═══════════
+   I due travasi fra la fila e i due specchi sono funzioni pure, e sono
+   il pezzo su cui poggia tutto il resto: se `campagneDaFila` e
+   `filaDaCampagne` non si rispondono, un profilo migrato risulta
+   indietro di una tappa e nessuno se ne accorge finché non lo apre un
+   bambino. Si provano qui, sulla fila e basta. */
+{
+  uguale('a fila zero non è passato niente',
+         JSON.stringify(campagneDaFila(0)), JSON.stringify({ pianeta: 0, mente: 0 }))
+  const tutto = campagneDaFila(SCALETTA.length)
+  uguale('a fila piena sono passati tutti i pianeti', tutto.pianeta, CAMPAGNA.length)
+  uguale('e tutte le stazioni', tutto.mente, STAZIONI.length)
+
+  /* dentro la fila i pianeti si susseguono in ordine, quindi «quanti ne
+     sono passati» è anche «qual è il prossimo»: è la sola ragione per
+     cui gli specchi possono essere dei conteggi */
+  let ok = true
+  for (let f = 0; f <= SCALETTA.length; f++) {
+    const c = campagneDaFila(f)
+    const fatte = SCALETTA.slice(0, f)
+    if (fatte.some(v => v.i >= (v.tipo === 'pianeta' ? c.pianeta : c.mente))) ok = false
+  }
+  controlla('lo specchio di una posizione è sempre l\'indice della prossima', ok)
+
+  /* e il travaso all'indietro non toglie mai niente: quello che i due
+     contatori di ieri davano per superato resta superato */
+  const persi = []
+  for (let p = 0; p <= CAMPAGNA.length; p++)
+    for (let m = 0; m <= STAZIONI.length; m++) {
+      const f = filaDaCampagne(p, m)
+      const c = campagneDaFila(f)
+      if (c.pianeta < p || c.mente < m) persi.push(`${p}/${m} → ${f}`)
+    }
+  controlla('migrando non si perde mai una tappa già superata', !persi.length,
+            persi.slice(0, 4).join(' · '))
+  uguale('e chi non aveva giocato resta a zero', filaDaCampagne(0, 0), 0)
+  nota(`chi era al quinto pianeta e alla seconda stazione finisce alla posizione ` +
+       `${filaDaCampagne(5, 2)} di ${SCALETTA.length}`)
+}
+
 /* ═══════════ 9. I PROGRESSI DI IERI ═══════════
    La cosa che, se sbagliata, non la vede nessun test ma la vede il
    bambino che riapre il gioco e non trova più i suoi pianeti. Si semina
    un profilo vero — quello di chi era **al quinto pianeta e alla
-   seconda stazione** — e si guarda cosa gli mostra la fila nuova.
+   seconda stazione**, coi due contatori di prima della fila unica — e si
+   guarda cosa gli mostra la fila di adesso.
 
-   Il patto è che i contatori restano due: una voce è superata se il
-   progresso della SUA campagna la copriva. Un contatore solo o
-   regalerebbe le stazioni o richiuderebbe i pianeti. */
+   Il patto è quello scritto in testa a `data/asteroidi.js`: il contatore
+   diventa uno solo, e la migrazione è **generosa** — chi aveva superato
+   una tappa non se la ritrova chiusa, e in cambio un pugno di stazioni
+   in mezzo passa senza essere stato giocato. */
 {
   for (const k of await chiavi('')) await remove(k)
   state.giocatori = []
   state.player = ''
-  // un profilo come quelli di ieri: due contatori, e nessun `varianti`
+  // un profilo come quelli di ieri: due contatori, nessun `fila`, nessun `varianti`
   save('profilo:Ieri', { v: 6, coins: 0, items: {}, totals: { math: 0 },
                          mate: { tappa: 5, libera: false },
                          calc: { tappa: 2, libera: false } })
@@ -432,34 +488,38 @@ const PROFILI = T => ({
   await init()
   await selectPlayer('Ieri')
 
-  const prog = progressiDa(mateProgresso(), calcProgresso())
-  uguale('il quinto pianeta è ancora dov\'era', prog.pianeta, 5)
-  uguale('e la seconda stazione pure', prog.mente, 2)
+  const contatore = filaDi(mateProgresso())
+  uguale('i due contatori di ieri diventano una posizione sola',
+         contatore, filaDaCampagne(5, 2))
+  uguale('e i due specchi si riscrivono da lì',
+         mateProgresso().tappa, campagneDaFila(contatore).pianeta)
+  uguale('anche quello delle stazioni',
+         calcProgresso().tappa, campagneDaFila(contatore).mente)
 
   const fila = scaletta(true)
-  const fatte = fila.filter(v => superata(v, prog))
-  uguale('nella fila risultano superate cinque tappe di tabelline',
+  const fatte = fila.filter(v => superata(v, contatore))
+  uguale('i cinque pianeti superati sono ancora superati',
          fatte.filter(v => v.tipo === 'pianeta').length, 5)
-  uguale('e due di calcolo a mente', fatte.filter(v => v.tipo === 'mente').length, 2)
-  controlla('e sono proprio le prime di ognuna, non altre',
-            fatte.every(v => v.i < (v.tipo === 'pianeta' ? 5 : 2)))
+  controlla('e sono proprio i primi cinque, non altri',
+            fatte.filter(v => v.tipo === 'pianeta').every((v, i) => v.i === i))
+  controlla('nessuna delle due stazioni giocate è tornata chiusa',
+            fatte.filter(v => v.tipo === 'mente').length >= 2)
 
-  /* le due frontiere restano aperte tutte e due: è il senso di non aver
-     fuso i contatori, e si vede qui — due tappe aperte in mezzo alla
-     fila, una per mestiere */
-  const aperte = fila.filter(v => raggiunta(v, prog) && !superata(v, prog))
-  uguale('restano aperte due tappe, una per mestiere', aperte.length, 2)
-  uguale('il sesto pianeta', aperte.find(v => v.tipo === 'pianeta').i, 5)
-  uguale('e la terza stazione', aperte.find(v => v.tipo === 'mente').i, 2)
+  /* IL PUNTO DI TUTTO: una tappa aperta, non due. Prima ce n'erano due
+     in mezzo alla fila — la 6 aperta, la 7 chiusa, la 8 aperta — ed è
+     il difetto che la fila unica è venuta a togliere. */
+  const aperte = fila.filter(v => raggiunta(v, contatore, true) && !superata(v, contatore))
+  uguale('in tutta la fila c\'è una tappa aperta e una sola', aperte.length, 1)
+  uguale('ed è la prima non superata', aperte[0].pos, contatore)
   controlla('niente si è aperto da solo più avanti',
-            fila.filter(v => raggiunta(v, prog)).length === 7 + 2,
-            `${fila.filter(v => raggiunta(v, prog)).length} voci raggiungibili`)
+            fila.filter(v => raggiunta(v, contatore, true)).length === contatore + 1)
+  controlla('e le superate sono un blocco senza buchi in testa alla fila',
+            fatte.every((v, i) => v.pos === i))
 
   /* dove si è arrivati, che è quello che dice la home */
-  const dove = posizioneOra(prog, true)
-  uguale('la home apre sulla prima tappa non ancora fatta',
-         fila[dove].tipo + fila[dove].i, fila.find(v => !superata(v, prog)).tipo +
-         fila.find(v => !superata(v, prog)).i)
+  const dove = posizioneOra(contatore, true)
+  uguale('la home apre sulla prima tappa non ancora fatta', fila[dove].pos, contatore)
+  uguale('e «quante ne ha fatte» è lo stesso numero', dove, fatte.length)
 
   /* ── l'interruttore dei grandi ── */
   uguale('il calcolo a mente nasce acceso anche per un profilo di ieri',
@@ -469,11 +529,15 @@ const PROFILI = T => ({
 
   const corta = scaletta(varianteAccesa(CHIAVE_MENTE))
   uguale('la fila si accorcia ai soli pianeti', corta.length, CAMPAGNA.length)
-  uguale('e i cinque superati restano cinque',
-         corta.filter(v => superata(v, prog)).length, 5)
+  controlla('e numerati da uno senza buchi', corta.every((v, i) => v.n === i + 1))
+  uguale('i cinque pianeti superati restano cinque',
+         corta.filter(v => superata(v, contatore)).length, 5)
   uguale('con una sola tappa aperta, la sesta',
-         corta.filter(v => raggiunta(v, prog) && !superata(v, prog)).length, 1)
-  uguale('i progressi a mente non sono stati toccati', calcProgresso().tappa, 2)
+         corta.filter(v => raggiunta(v, contatore, false) && !superata(v, contatore)).length, 1)
+  uguale('ed è proprio il pianeta numero sei',
+         corta.find(v => raggiunta(v, contatore, false) && !superata(v, contatore)).i, 5)
+  uguale('spegnere l\'interruttore non tocca il contatore',
+         filaDi(mateProgresso()), contatore)
   accendiVariante(CHIAVE_MENTE, true)
   uguale('riacceso, la fila torna intera', scaletta(varianteAccesa(CHIAVE_MENTE)).length,
          SCALETTA.length)
@@ -483,15 +547,28 @@ const PROFILI = T => ({
   let v = scaletta(true)[0]
   for (let i = 0; i < 3 && v; i++) {
     seguito.push(v.tipo)
-    v = dopoDi(v, { pianeta: 99, mente: 99 }, true)   // tutto aperto, niente superato
+    v = dopoDi(v, SCALETTA.length, true)   // tutto aperto, niente superato
   }
   controlla('dopo una tappa può toccare all\'altro mestiere',
             new Set(seguito).size > 1, seguito.join(' → '))
 
-  const dopoQuinto = dopoDi({ tipo: 'pianeta', i: 4 }, prog, true)
-  controlla('e dopo il pianeta appena finito si va alla prima non fatta e aperta',
-            dopoQuinto && !superata(dopoQuinto, prog) && raggiunta(dopoQuinto, prog),
-            dopoQuinto ? dopoQuinto.T.nome : 'nessuna')
+  const qui = fila.find(v => v.pos === contatore - 1)
+  const dopoUltima = dopoDi(qui, contatore, true)
+  controlla('e dopo la tappa appena finita si va alla prima non fatta e aperta',
+            dopoUltima && !superata(dopoUltima, contatore) &&
+            raggiunta(dopoUltima, contatore, true),
+            dopoUltima ? dopoUltima.T.nome : 'nessuna')
+
+  /* ── e da qui in poi il contatore cammina di uno ──
+     Superata la tappa aperta, quella dopo si apre e nessuna viene
+     scavalcata: è la promessa che con due contatori non si poteva fare. */
+  asteroidiCompleta(aperte[0])
+  uguale('superata una tappa il contatore avanza di uno',
+         filaDi(mateProgresso()), contatore + 1)
+  const ora = scaletta(true).filter(v => raggiunta(v, filaDi(mateProgresso()), true) &&
+                                         !superata(v, filaDi(mateProgresso())))
+  uguale('e la tappa aperta resta una sola', ora.length, 1)
+  uguale('cioè quella subito dopo', ora[0].pos, contatore + 1)
 
   for (const k of await chiavi('')) await remove(k)
 }

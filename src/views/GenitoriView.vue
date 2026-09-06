@@ -699,8 +699,18 @@ function cambiaProva() {
    spariscono dalla fila e i pianeti si richiudono in ordine, senza
    buchi. Non è un sapere spento (`data/saperi.js` dice cosa il bambino
    ha fatto a scuola, non che esercizi preferisce) e non è un gioco
-   spento: la carta degli asteroidi resta in home. I progressi restano
-   dove sono, e riaccendendo la fila torna intera. */
+   spento: la carta degli asteroidi resta in home. Premere qui non
+   cancella niente, e riaccendendo la fila torna intera.
+
+   QUELLO CHE SI PERDE VA DETTO, e va detto qui e non solo nel `.md`:
+   l'avanzamento degli asteroidi è **uno solo su una fila sola**
+   (`mate.fila`, il perché in `data/asteroidi.js`), quindi le tappe a
+   mente che stanno dietro a un pianeta superato mentre l'interruttore
+   era spento risultano passate se un giorno torna acceso. Prima qui
+   c'era scritto «i progressi a mente non si perdono, riaccendendo
+   tornano dov'erano»: con due contatori era vero, con uno non lo è
+   più, e una frase così è peggio di nessuna frase — è quella su cui un
+   grande decide. */
 const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
 const quantiPianeti = SCALETTA.filter(v => v.tipo === 'pianeta').length
 function cambiaMente() {
@@ -708,7 +718,7 @@ function cambiaMente() {
   esito.value = { ok: true, testo: menteAccesa.value
     ? `Negli asteroidi ${chi.value} trova tutte e ${SCALETTA.length} le tappe.`
     : `Negli asteroidi restano i ${quantiPianeti} pianeti delle tabelline. ` +
-      'I progressi a mente non si perdono: riaccendendo tornano dov\'erano.' }
+      'Le tappe a mente che salta contano come passate, se un giorno le riaccendi.' }
 }
 
 async function azzera() {
@@ -1299,7 +1309,7 @@ async function rimetti(v) {
           <b>Negli asteroidi, anche i conti a mente</b>
           <i>{{ menteAccesa
                 ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
-                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. I progressi a mente restano' }}</i>
+                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. Le tappe a mente saltate contano come passate' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
 

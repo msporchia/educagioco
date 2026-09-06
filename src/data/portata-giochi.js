@@ -30,8 +30,6 @@ import { misure } from '../store/progressi.js'
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
 import { SCALETTA } from './asteroidi.js'
-import { CAMPAGNA as PIANETI } from './tabelline.js'
-import { STAZIONI } from './calcolo.js'
 import { CAMPAGNA as INGLESE } from './campagna-inglese.js'
 import { CAMPAGNA as SPAGNOLO } from './campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
@@ -51,14 +49,12 @@ import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
    cameretta sono posti, non scalette — e resta sempre alla portata di
    tutti: l'assenza vuol dire «non si giudica», non «si nasconde». */
 export const TAPPE_DEL_GIOCO = {
+  /* Gli asteroidi sono una fila sola, e adesso lo sono anche sotto: un
+     contatore unico su questa scaletta qui (`mate.fila`). Le due file
+     separate non servono più a nessuno — il lucchetto lavora sulla
+     posizione in fila, e il gioco chiama `apertaQui` con la tappa in
+     mano invece che con la chiave di una campagna. */
   mate: SCALETTA.map(v => v.T),
-  /* Gli asteroidi sono una fila sola a schermo ma **due campagne
-     sotto**, con due contatori separati (`mate.tappa` per i pianeti,
-     `calc.tappa` per le stazioni). Il lucchetto lavora su quegli indici
-     lì, quindi gli servono le due file separate: `mate` è la fila intera
-     e serve solo a decidere se la carta si vede in home. */
-  'mate-pianeti': PIANETI,
-  'mate-mente': STAZIONI,
   inglese: INGLESE,
   spagnolo: SPAGNOLO,
   torri: CASTELLO,
