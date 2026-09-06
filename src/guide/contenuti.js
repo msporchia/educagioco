@@ -719,6 +719,10 @@ export const AIUTI = {
         '✂️ **taglia** — trascina la lama sul righello e taglia.',
       ] },
       'Si sbaglia col troppo: la boccia trabocca e la pozione fa BOOM. Non costa una vita, costa tempo.',
+      { titolo: 'Una conversione per volta', righe: [
+        'Ogni tappa porta **una conversione nuova sola**, e comincia guidata: le prime dosi sono già scritte nell\'unità del banco («400 g»), le due dopo portano la conversione accanto («0,4 kg (400 g)»), e poi resta il cartello **1 kg = 1000 g** sopra la bilancia.',
+        'Il cartello se ne va da solo quando la conversione è imparata, e **torna se sbagli**. Non c\'è niente da chiudere.',
+      ] },
       { titolo: 'Cosa allena', righe: [
         'Le misure e le unità: litri e millilitri, chili e grammi, metri e centimetri — e passare dall\'una all\'altra.',
         'I decimali visti come quantità e non come numeri sulla carta: 0,75 l è tre quarti di boccia.',
