@@ -80,6 +80,7 @@ import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
 import { ANIMALI, famigliaDi } from '../dati/animali.js'
+import { PER_ID as ADDOBBI_PER_ID, staA, addossoA } from '../dati/addobbi.js'
 import { qualcosaDaConsegnare } from './mercato.js'
 import { primaLibera } from '../../../motore/passi.js'
 
@@ -135,6 +136,13 @@ export class Fattoria {
        volte. */
     this.ordini = []
     this.prossimoOrdine = 1
+    /* Gli addobbi comprati e **non addosso a nessuno**: il guardaroba.
+       È il magazzino delle bestie, ed è la stessa regola — niente si
+       perde mai: toglierlo lo rimette qui, e da qui torna addosso a chi
+       si vuole quante volte si vuole. Quello che una bestia **ha
+       addosso** invece viaggia dentro la bestia (`addobbi`), come la
+       coltura viaggia dentro il campo. */
+    this.guardaroba = {}
     /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
        fattoria appena nata deve avere in mano il campo, il silo e un
        seme, e chiedere di reclamarli prima ancora di aver visto il prato
@@ -204,7 +212,7 @@ export class Fattoria {
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
              speso: this.speso, reclamati: this.reclamati,
              guadagnato: this.guadagnato, ordini: this.ordini,
-             prossimoOrdine: this.prossimoOrdine,
+             prossimoOrdine: this.prossimoOrdine, guardaroba: this.guardaroba,
              terreno: this.terreno,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
@@ -213,6 +221,10 @@ export class Fattoria {
      che manca si rimette a posto qui, e un id che non è più in catalogo
      si butta invece di far cadere tutto il disegno. */
   deserializza(d) {
+    /* Gli addobbi che una bestia non può più portare: si raccolgono
+       leggendo le bestie e si rimettono nel guardaroba più sotto, dove
+       il guardaroba esiste già. */
+    const persi = []
     this.piazzole = (d && d.piazzole) || {}
     /* Un tipo di ostacolo che non esiste più si butta **qui**, non lo si
        lascia arrivare a chi disegna. È già successo due volte: prima col
@@ -233,6 +245,22 @@ export class Fattoria {
     this.bestie = ((d && d.bestie) || [])
       .map(b => typeof b === 'string' ? { chi: b, nome: '' } : b)
       .filter(b => b && typeof b.chi === 'string')
+      /* Quello che una bestia ha addosso si rilegge **solo se sta ancora
+         in piedi**: un addobbo tolto dal catalogo, o messo su una bestia
+         a cui oggi non sta più, sparirebbe dal disegno restando nel
+         salvataggio — cioè una cosa comprata che non si vede e non si
+         può togliere. Qui torna nel guardaroba, e da lì si rimette dove
+         si vuole. */
+      .map(b => {
+        if (!b.addobbi || typeof b.addobbi !== 'object') return { ...b, addobbi: {} }
+        const addobbi = {}
+        for (const [dove, id] of Object.entries(b.addobbi)) {
+          const a = ADDOBBI_PER_ID[id]
+          if (a && a.dove === dove && staA(id, b.chi)) addobbi[dove] = id
+          else if (a) persi.push(id)
+        }
+        return { ...b, addobbi }
+      })
     /* `acqua` era il nome di prima, quando la materia era una sola:
        un salvataggio di ieri si rilegge senza chiedere una migrazione. */
     this.terreno = (d && d.terreno) ||
@@ -306,6 +334,13 @@ export class Fattoria {
     })
     this.prossimoOrdine = Math.max(1, (d && d.prossimoOrdine) || 0,
                                    ...this.ordini.map(o => ((o && o.id) || 0) + 1))
+    /* Il guardaroba: solo addobbi che esistono ancora, in quantità sane.
+       Ci rientra anche quello che una bestia non può più portare — vedi
+       sopra: niente si perde mai. */
+    this.guardaroba = {}
+    for (const [id, n] of Object.entries((d && d.guardaroba) || {}))
+      if (ADDOBBI_PER_ID[id] && n > 0) this.guardaroba[id] = Math.floor(n)
+    for (const id of persi) this.guardaroba[id] = (this.guardaroba[id] || 0) + 1
     /* ── I PREMI PRESI ──────────────────────────────────────────────
        Una fattoria salvata prima che i premi si reclamassero non ce li
        ha, e i suoi livelli sono già passati: si considerano **presi
@@ -862,6 +897,92 @@ export class Fattoria {
     if (!b) return { ok: false, motivo: 'non-e-tua' }
     b.nome = String(nome || '').slice(0, 16).trim()
     return { ok: true, nome: b.nome }
+  }
+
+  /* ═══════════ vestire una bestia ═══════════
+     Un cappellino, un fiocco, una sciarpa: il catalogo sta in
+     `dati/addobbi.js` e **dove si attaccano** nella scheda
+     dell'animale, che è l'unica che sa dov'è la sua testa.
+
+     Due cassetti, come per le cose del prato: quello che si **ha
+     addosso** viaggia dentro la bestia (`b.addobbi`, una mappa
+     `aggancio → id`), quello comprato e non indossato sta nel
+     **guardaroba**. Toglierlo non lo consuma: torna nel guardaroba, e
+     da lì si rimette dove si vuole. Niente si perde mai, come in tutto
+     il resto della fattoria.
+
+     Un aggancio tiene **una cosa sola**: mettere un cilindro a chi ha
+     già un cappellino rimanda il cappellino nel guardaroba invece di
+     dire di no. Un rifiuto lì sarebbe la risposta giusta a una domanda
+     che nessuno ha fatto — chi preme il secondo cappello sta chiedendo
+     di cambiarlo, non di indossarne due. */
+  quantiAddobbi(id) { return (this.guardaroba || {})[id] || 0 }
+
+  /* Cosa ha addosso, come mappa `aggancio → id`. Sempre un oggetto: una
+     bestia salvata prima che esistessero gli addobbi non ce l'ha. */
+  addobbiDi(chi) {
+    const b = this.laBestia(chi)
+    return (b && b.addobbi) || {}
+  }
+
+  /* Quello che chi disegna deve sapere: le figure e le taglie, già
+     scelte. Il nome dell'aggancio esce insieme perché è la chiave con
+     cui si trova il punto, ma la scena non sa cosa voglia dire. */
+  comeEVestita(chi) { return addossoA(this.addobbiDi(chi)) }
+
+  compraAddobbo(id) {
+    const a = ADDOBBI_PER_ID[id]
+    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (this.borsa.quante() < a.prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
+    this.spendi(a.prezzo)
+    this.guardaroba[id] = this.quantiAddobbi(id) + 1
+    return { ok: true, costo: a.prezzo, addobbo: a }
+  }
+
+  /* Mettere addosso quello che si ha in guardaroba. I due rifiuti che
+     contano sono diversi e vanno detti diversi: **non ce l'hai** si
+     risolve comprandolo, **non gli sta** no — un pappagallo la
+     mantellina non la porta e non la porterà mai, perché la schiena non
+     è fra i suoi agganci (`porta` in `dati/animali.js`). */
+  vestiBestia(chi, id) {
+    const b = this.laBestia(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    const a = ADDOBBI_PER_ID[id]
+    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (!staA(id, chi)) return { ok: false, motivo: 'non-gli-sta', dove: a.dove }
+    if (!b.addobbi) b.addobbi = {}
+    /* Quello che c'era su quell'aggancio torna nel guardaroba: si
+       cambia cappello, non se ne perde uno. */
+    const prima = b.addobbi[a.dove]
+    /* «Ce l'ha già addosso» si guarda **prima** di «non ce l'hai»: un
+       addobbo indossato non sta più in guardaroba, quindi ripremerlo
+       risponderebbe «non ce l'hai» di una cosa che si sta guardando in
+       testa alla bestia — e chi legge quel motivo lo compra due volte. */
+    if (prima === id) return { ok: false, motivo: 'gia-addosso' }
+    if (this.quantiAddobbi(id) < 1) return { ok: false, motivo: 'non-ce-lhai', costo: a.prezzo }
+    if (prima) this.guardaroba[prima] = this.quantiAddobbi(prima) + 1
+    this.guardaroba[id]--
+    if (!this.guardaroba[id]) delete this.guardaroba[id]
+    b.addobbi[a.dove] = id
+    return { ok: true, addobbo: a, tolto: prima || null }
+  }
+
+  /* Quanti addobbi ci sono addosso alle bestie, **in tutto e adesso**.
+     È un primato e non un contatore, come `tipiPosseduti`: mettere e
+     togliere lo stesso cappello venti volte non deve valere venti
+     volte. Lo legge il traguardo nel manifesto (`gioco.js`). */
+  get addobbiAddosso() {
+    return this.bestie.reduce((n, b) => n + Object.keys(b.addobbi || {}).length, 0)
+  }
+
+  spogliaBestia(chi, dove) {
+    const b = this.laBestia(chi)
+    if (!b || !b.addobbi || !b.addobbi[dove]) return { ok: false, motivo: 'non-lo-porta' }
+    const id = b.addobbi[dove]
+    delete b.addobbi[dove]
+    this.guardaroba[id] = this.quantiAddobbi(id) + 1
+    return { ok: true, id }
   }
 
   /* ═══════════ i due silos ═══════════

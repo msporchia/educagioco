@@ -526,6 +526,62 @@ await chiudi()
        lo stato prima di leggere il cibo (`viste/Bestia.vue`), passava un
        `null` a chi nutre e mandava a schermo il cartello di guasto — che
        da fuori è «premo e non succede niente». */
+    /* ── E LA SI VESTE ────────────────────────────────────────────
+       Un cappellino si compra dalla sua scheda e **si vede in
+       fattoria**, mentre cammina. Si fa **qui**, con la scheda già
+       aperta, e non ritrovando il cane col dito una terza volta: un
+       beagle non sta fermo, e una prova che inciampa in un cane che
+       cammina fallisce per il motivo sbagliato.
+
+       Il disegno sul canvas non lo guarda nessun test (i pixel sono
+       roba da occhio umano, `--scatti`): quello che si può inchiodare
+       da qui è che si compri, che resti addosso e che il salvataggio se
+       lo ricordi. */
+    if (await page.locator('[data-azione="vesti"]').count()) {
+      await page.locator('[data-azione="vesti"]').click()
+      await attendi(page, 300)
+      controlla('dalla scheda della bestia si apre il vestiario',
+                await page.locator('[data-vestiario]').count() === 1)
+      const monete = () => page.evaluate(
+        () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+      await page.locator('[data-addobbo="cappellino"]').click()
+      await attendi(page, 400)
+      controlla('premere un addobbo glielo mette addosso',
+                (await page.locator('[data-addobbo="cappellino"]').innerText())
+                  .includes('addosso'))
+      /* Che si paghi si guarda sul **secondo**, e non sul primo: il
+         primo porta con sé la medaglia di bronzo di «Che eleganza», e
+         una medaglia paga monete in tutti i giochi — sommata al prezzo
+         del cappello il conto va nel verso sbagliato per un motivo che
+         col vestiario non c'entra. Sul secondo il prezzo si legge
+         pulito, e dev'essere quello scritto sul tasto. */
+      const primaDelFiocco = await monete()
+      await page.locator('[data-addobbo="fiocco"]').click()
+      await attendi(page, 400)
+      const dopoIlCappello = await monete()
+      uguale('e lo compra, al prezzo scritto sul tasto',
+             primaDelFiocco - dopoIlCappello, 8)
+      controlla('anche il fiocco è addosso, su un altro aggancio',
+                (await page.locator('[data-addobbo="fiocco"]').innerText())
+                  .includes('addosso'))
+      await scatto(page, 'fattoria-vestiario')
+      /* Toglierlo **non lo perde**: torna nel guardaroba e non costa
+         niente. È la regola di tutta la fattoria. */
+      await page.locator('[data-togli="testa"]').click()
+      await attendi(page, 400)
+      uguale('toglierlo non costa niente', await monete(), dopoIlCappello)
+      controlla('e resta nel guardaroba, pronto da rimettere',
+                (await page.locator('[data-addobbo="cappellino"]').innerText())
+                  .includes('ce l\'hai'))
+      await page.locator('[data-addobbo="cappellino"]').click()
+      await attendi(page, 400)
+      uguale('rimetterlo non lo ricompra', await monete(), dopoIlCappello)
+      await chiudi()
+      /* Riaperta la scheda si torna a quello che c'era prima: il
+         vestiario è un foglio a parte e non si porta via la bestia. */
+      dove = await cercaLaBestia(60)
+    }
+
     const senza = page.locator('.fa-cibo', { hasText: 'Mangime' }).first()
     if (await senza.count()) {
       await senza.click()
@@ -545,6 +601,8 @@ await chiudi()
       }
     }
     await chiudi()
+
+    await chiudi()
   }
 
   await attendi(page, 1800)               // il salvataggio è a ritardo
@@ -553,6 +611,12 @@ await chiudi()
   controlla('l\'animale è nel salvataggio con la sua posizione',
             !!(bestie && bestie[0] && typeof bestie[0].x === 'number'),
             JSON.stringify(bestie))
+  controlla('e con addosso il cappellino che gli è stato messo',
+            !!(bestie && bestie.some(b => (b.addobbi || {}).testa === 'cappellino')),
+            JSON.stringify(bestie && bestie.map(b => b.addobbi)))
+  controlla('e con addosso quello che gli è stato messo',
+            !!(bestie && bestie.some(b => (b.addobbi || {}).testa === 'cappellino')),
+            JSON.stringify(bestie && bestie.map(b => b.addobbi)))
 }
 
 /* ---------- 9. tenere premuto non è ancora trascinare ----------

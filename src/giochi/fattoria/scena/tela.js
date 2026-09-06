@@ -145,6 +145,19 @@ export class Attore {
        quando uno dei valori scende sotto la soglia — vedi il commento
        in testa al file su cosa manca ancora. */
     this.bisogni = opz.bisogni || null
+    /* ── QUELLO CHE HA ADDOSSO ──────────────────────────────────────
+       Facoltativo, e **già risolto da fuori**: `[{ testo, misura,
+       punti }]`, dove `punti` dice in che frazione del riquadro cade
+       quell'addobbo **in ogni verso**. Qui dentro non si sa cosa voglia
+       dire «testa» né quanto costi un cappello — arrivano fatti già
+       decisi, come per il fumetto di un recinto che riceve una faccia e
+       non il nome di una merce.
+
+       `bob` è di quanto si abbassa il disegno a ogni fotogramma della
+       camminata (`BOB` in `dati/animali.js`, misurato sul foglio): senza,
+       il cappello resta fermo mentre il cane ondeggia sotto. */
+    this.addobbi = opz.addobbi || []
+    this.bob = opz.bob || null
   }
 
   /* Il rettangolo che occupa a schermo, per chi deve sapere se lo si è
@@ -173,16 +186,31 @@ export class Attore {
     const scala = cellaPx / T
     const fr = this.corpo.cammina ? 1 + (((this.corpo.passo * 6) | 0) % 3) : 0
     const specchio = this.corpo.verso === 'sinistra'
-    const p = pezzoAttore(this.nome, specchio ? 'lato' : this.corpo.verso, fr)
+    /* Le pose di lato guardano a destra: la sinistra è la stessa
+       specchiata, e nell'atlante non c'è. Il verso serve due volte —
+       per scegliere il fotogramma e per sapere dove cade un addobbo —
+       quindi si scrive una volta sola. */
+    const verso = specchio ? 'lato' : this.corpo.verso
+    const p = pezzoAttore(this.nome, verso, fr)
     if (!p) return
     const r = this.riquadro(cellaPx, vista, p)
     const x = Math.round(r.x), y = Math.round(r.y), w = p[2] * scala, h = p[3] * scala
     if (specchio) {
+      /* Lo specchio è **una trasformazione sola**, e l'addobbo ci sta
+         dentro: così un cappello messo a destra della testa nel foglio
+         finisce a sinistra quando il cane va a sinistra, senza che qui
+         si faccia nessun conto. Chi lo disegnasse fuori dovrebbe
+         ribaltare a mano ogni punto, e sbaglierebbe il giorno che ne
+         arriva uno non centrato. */
       ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1)
       ctx.drawImage(immagine, p[0], p[1], p[2], p[3], 0, 0, w, h)
+      this.addosso(ctx, w, h, verso, fr, scala)
       ctx.restore()
     } else {
       ctx.drawImage(immagine, p[0], p[1], p[2], p[3], x, y, w, h)
+      ctx.save(); ctx.translate(x, y)
+      this.addosso(ctx, w, h, verso, fr, scala)
+      ctx.restore()
     }
     if (evidenziato) {
       ctx.save()
@@ -194,6 +222,33 @@ export class Attore {
     } else if (this.bisogni && this.bisogni.some(b => b.valore < .35)) {
       this.fumetto(ctx, x + w / 2, y - 4, orologio, scala)
     }
+  }
+
+  /* Quello che ha addosso, sopra lo sprite e **dentro la stessa
+     trasformazione**: l'origine del contesto è già l'angolo in alto a
+     sinistra del riquadro, quindi qui si lavora in frazioni di `w` e
+     `h` e non si sa dove sia l'attore sullo schermo.
+
+     Un addobbo che quel verso non conosce **non si disegna**: gli
+     occhialini visti di spalle non ci sono, e metterli sulla nuca
+     sarebbe peggio che non metterli (`AGGANCI` in `dati/animali.js`).
+
+     La taglia è in **pixel dello sprite** moltiplicati per la scala,
+     come tutto il resto qui dentro: un cappello resta della stessa
+     misura sull'animale a qualunque zoom. */
+  addosso(ctx, w, h, verso, fr, scala) {
+    if (!this.addobbi.length) return
+    const salto = ((this.bob || {})[verso] || [])[fr] || 0
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    for (const a of this.addobbi) {
+      const punto = a.punti && a.punti[verso]
+      if (!punto) continue
+      ctx.font = `${Math.max(6, Math.round(a.misura * scala))}px system-ui,sans-serif`
+      ctx.fillText(a.testo, punto[0] * w, (punto[1] + salto) * h)
+    }
+    ctx.restore()
   }
 
   /* Le barrette sopra la testa, disegnate nel mondo: seguono l'attore

@@ -39,7 +39,8 @@ import { spintaAlBordo, conIlResto } from './scena/spinta.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
          macchinaDi, statiDi } from './dati/catalogo.js'
-import { animale, siDisegna, IN_VENDITA } from './dati/animali.js'
+import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
+import { addobbiPer, addobbo } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
@@ -50,6 +51,7 @@ import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 import Roba from './viste/Roba.vue'
 import Vicino from './viste/Vicino.vue'
 import Mercato from './viste/Mercato.vue'
+import Vestiario from './viste/Vestiario.vue'
 import Attrezzi from './viste/Attrezzi.vue'
 import Battesimo from './viste/Battesimo.vue'
 import Bestia from './viste/Bestia.vue'
@@ -354,9 +356,30 @@ function metti_in_scena_le_bestie() {
        manca perché «l'ho messo nel recinto» resti vero domani. */
     const dove = mondo.dovEra(b.chi)
     attori.push(new Attore(b.chi, new Camminatore(dove.x, dove.y, { velocita: 2.4, vaga: 2.4 }),
-      { chi: b.nome || nomeDi(b.chi), bisogni: [] }))
+      { chi: b.nome || nomeDi(b.chi), bisogni: [], bob: BOB,
+        addobbi: addobbiInScena(b.chi) }))
   }
   aggiornaIBisogni()
+}
+
+/* ── QUELLO CHE UNA BESTIA HA ADDOSSO, PER CHI DISEGNA ─────────
+   La scena riceve **fatti già decisi** — la figura, la taglia, e dove
+   cade quel punto in ogni verso — e non sa cosa voglia dire «testa» né
+   quanto costi un cappello: è la stessa divisione del fumetto sopra un
+   recinto, che riceve una faccia e non il nome di una merce. Il
+   catalogo sta in `dati/addobbi.js`, i punti nella scheda dell'animale.
+
+   Si rifà **a ogni cambio**, non a ogni fotogramma: un addobbo si mette
+   una volta ogni tanto. */
+function addobbiInScena(chi) {
+  return mondo.comeEVestita(chi)
+    .map(a => ({ ...a, punti: puntiDi(chi, a.dove) }))
+    .filter(a => a.punti)
+}
+
+function rivestiLaBestia(chi) {
+  const a = attori.find(x => x.nome === chi)
+  if (a) a.addobbi = addobbiInScena(chi)
 }
 
 /* ── LE BARRETTE SOPRA LA TESTA, CHE C'ERANO E NON SI VEDEVANO ──────
@@ -1586,6 +1609,61 @@ function apriBestia(chi) {
                      stato: mondo.stato(chi) }
 }
 
+/* ═══════════ vestire una bestia ═══════════
+   Il guardaroba è del motore (`vestiBestia`, `guardaroba`); qui c'è
+   solo il braccio, e una cosa in più che il motore non fa apposta:
+   **premere quello che non hai lo compra**. È lo stesso gesto del
+   baule, dove premere è già posare e si paga posando — un tasto che
+   dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
+   una cosa sola. */
+function apriVestiario(chi) {
+  const b = mondo.laBestia(chi)
+  if (!b) return
+  pannello.value = {
+    tipo: 'vestiario', chi, che: nomeDi(chi), nome: b.nome || '',
+    addobbi: addobbiPer(chi),
+    portati: { ...mondo.addobbiDi(chi) },
+    guardaroba: { ...mondo.guardaroba },
+  }
+}
+
+function metti(id) {
+  const { chi } = pannello.value
+  const a = addobbo(id)
+  /* Ripremere quello che ha **già addosso** non fa niente, e soprattutto
+     non lo ricompra: un addobbo indossato non sta più in guardaroba,
+     quindi senza questa riga il tasto della cosa che si sta guardando
+     in testa alla bestia ne comprerebbe un secondo a ogni tocco. */
+  if (a && mondo.addobbiDi(chi)[a.dove] === id) return
+  if (mondo.quantiAddobbi(id) < 1) {
+    const c = mondo.compraAddobbo(id)
+    if (!c.ok) return avvisa(c.motivo === 'poche-monete'
+      ? `Ti ${c.costo - monete.value === 1 ? 'manca' : 'mancano'} 🪙${c.costo - monete.value}: ` +
+        'fai un po\' di esercizi negli altri giochi.'
+      : 'Non è andata: riprova.')
+  }
+  const r = mondo.vestiBestia(chi, id)
+  if (!r.ok && r.motivo !== 'gia-addosso') return avvisa(r.motivo === 'non-gli-sta'
+    ? `${nomeDi(chi)} lì non ci mette niente.` : 'Non è andata: riprova.')
+  if (r.ok) avvisa(`${r.addobbo.emoji} ${r.addobbo.nome} addosso!`)
+  /* Un **primato** e non un contatore: mettere e togliere lo stesso
+     cappello venti volte non vale venti volte. */
+  segnaBest('fattoriaVestiti', mondo.addobbiAddosso)
+  rivestiLaBestia(chi)
+  salva()
+  apriVestiario(chi)
+}
+
+function togli(dove) {
+  const { chi } = pannello.value
+  const r = mondo.spogliaBestia(chi, dove)
+  if (!r.ok) return
+  avvisa(`${(addobbo(r.id) || {}).nome || 'Tolto'}: torna nel guardaroba.`)
+  rivestiLaBestia(chi)
+  salva()
+  apriVestiario(chi)
+}
+
 function nutri(cibo) {
   const chi = pannello.value.chi
   const nome = pannello.value.nome || pannello.value.che
@@ -1715,9 +1793,16 @@ function tiraVoce({ voce, x, y }) {
               :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
               :stato="pannello.stato" :monete="monete" :granaio="mondo.granaio"
               @nutri="nutri" @coccola="coccola"
+              @vesti="apriVestiario(pannello.chi)"
               @rinomina="pannello = { tipo: 'battesimo', chi: pannello.chi,
                                       che: pannello.che, nome: pannello.nome, prezzo: 0 }"
               @chiudi="chiudi()" />
+
+      <Vestiario v-else-if="pannello.tipo === 'vestiario'"
+                 :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
+                 :addobbi="pannello.addobbi" :portati="pannello.portati"
+                 :guardaroba="pannello.guardaroba" :monete="monete"
+                 @metti="metti" @togli="togli" @chiudi="chiudi()" />
 
       <Campo v-else-if="pannello.tipo === 'campo'"
              :stato="pannello.stato" :monete="monete" :ci-sta="pannello.ciSta"

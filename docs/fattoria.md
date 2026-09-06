@@ -603,6 +603,88 @@ li prende da sé — sessanta quadratini da premere non sono quello che si sta
 andando a guardare — e lascia da prendere quelli **del livello a cui porta**,
 cioè la situazione esatta di chi ci è arrivato spendendo.
 
+### Vestire le bestie (dal 6 settembre 2026)
+
+Una bestia comprata si nutre, si spazzola e cammina, e da lì in poi è uguale
+a quella di chiunque altro. Adesso dalla sua scheda c'è **🎩 Vestilo**:
+cappellini, occhialini, fiocchi, sciarpe, una mantellina — e quello che le si
+mette **si vede in fattoria**, mentre passa per il prato.
+
+È la stessa cosa che il nome fa alle parole fatta al disegno, ed è la ragione
+per cui si vedono in mappa e non dentro un foglio: *un vestito che si guarda
+solo aprendo una scheda non lo mette nessuno.*
+
+#### Quattro punti di attacco, e li dice l'animale
+
+```
+   testa    🌸 🧢 🎩 👑        muso     👓 🕶️
+   collo    🎀 🧣 🔔           schiena  🧥 🎒
+```
+
+Dove cade un cappello **non si indovina**: sta nella scheda dell'animale
+(`AGGANCI` in `dati/animali.js`), misurato dall'alfa del foglio riquadro per
+riquadro, in frazioni del riquadro e non in pixel. Un cappellino posato a
+occhio finisce mezzo dentro il muso da davanti e in mezzo alla schiena di
+lato.
+
+Tre cose che ne discendono, e sono quelle che fanno sembrare un addobbo
+*indossato* invece che appiccicato sopra:
+
+- **Lo specchio è una trasformazione sola.** Le pose di lato guardano a
+  destra, quindi lì la testa sta a destra; quando l'animale va a sinistra
+  l'addobbo sta *dentro* la stessa trasformazione dello sprite e ci finisce da
+  solo. Chi lo disegnasse fuori dovrebbe ribaltare a mano ogni punto.
+- **Segue il passo.** Camminando la testa si abbassa su due fotogrammi su
+  quattro — un pixel di fronte, due di spalle, niente di lato: è misurato sul
+  foglio (`BOB`). Senza, il cappello resta fermo mentre il cane ondeggia
+  sotto.
+- **Quello che quel verso non conosce non si disegna.** Di spalle il muso non
+  c'è, quindi gli occhialini spariscono girandosi: metterli sulla nuca sarebbe
+  peggio che non metterli.
+
+E **non tutti portano tutto**: il pappagallo non ha la schiena fra i suoi
+agganci — ha le ali — quindi la mantellina non gliela si mette e nel suo
+vestiario non compare affatto. La campanella invece è dei gatti, ed è una
+scelta di gusto: sono due rifiuti diversi e stanno in due posti diversi — il
+primo è un fatto del disegno (`porta` nella scheda dell'animale), il secondo
+una riga del catalogo (`per`). Tenerli insieme avrebbe voluto dire un elenco
+di eccezioni per specie da allineare a mano per sempre.
+
+#### Sono emoji, ed è un primo passo dichiarato
+
+Nel dungeon un mostro non è mai un'emoji, e il motivo vale ancora: le emoji le
+disegna il telefono, quindi hanno lo stile di Apple in mezzo a uno schermo
+dipinto a mano. Qui però la cosa da disegnare è *un cappello sopra un cane*,
+non la creatura che fa paura — si ridimensiona con lo sprite, si specchia con
+lui e segue il passo, quindi la differenza si vede molto meno. E il prezzo di
+aspettare un foglio di sprite è che gli addobbi non esistono affatto.
+
+Resta una cosa da rifare quando ci sarà il foglio: una riga può dichiarare
+`pezzo` invece di `emoji`, esattamente come le merci, e da lì in poi la scena
+disegna la tessera. Oggi nessuna lo fa.
+
+#### I prezzi, e il guardaroba
+
+Da 🪙6 a 🪙24, cioè la fascia **«una cosetta»** di
+[`CALIBRAZIONE.md`](../CALIBRAZIONE.md): da uno a quattro minuti di esercizi.
+Non è una spesa che si pesa — è quello che si compra col resto delle monete,
+dopo il campo e prima del prossimo recinto — e va tenuta lì: un cappello che
+costasse quanto un pollaio metterebbe una decorazione in concorrenza con la
+catena, e a quel punto o non lo compra nessuno o si smette di costruire.
+`guastiDegliAddobbi()` rifiuta un prezzo fuori dalla fascia.
+
+Un addobbo **si compra una volta e non si consuma**. Toglierlo lo rimette nel
+guardaroba, e da lì torna addosso a chi si vuole quante volte si vuole: è la
+regola del baule — niente si perde mai — applicata a quello che le bestie
+indossano. Un aggancio tiene una cosa sola, e mettere un cilindro a chi ha già
+un cappellino **cambia** il cappellino invece di dire di no: chi preme il
+secondo cappello sta chiedendo di cambiarlo, non di indossarne due.
+
+Comprarlo si fa **premendolo**, come nel baule dove premere è già posare: un
+tasto che dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
+una cosa sola. Il prezzo sta sul tasto, e chi non ce l'ha vede di quanto
+manca.
+
 ### Il mercato, e chi chiede (dal 6 settembre 2026)
 
 **Quello che la fattoria produce lo mangiavano solo il cane e il gatto**, e
@@ -915,11 +997,14 @@ che le due sezioni qui sopra esistono. Restano:
 4. **Altri modi di spendere.** Un campo che matura più in fretta, un
    annaffiatoio, una seconda macchina: il money pit vive sull'attrezzatura,
    ed è lì che vanno le monete grosse. (Ingrandire i silos c'è già, ed è la
-   spesa che la produzione stessa fa desiderare.)
+   spesa che la produzione stessa fa desiderare, e gli addobbi delle bestie
+   sono la spesa piccola — ma quella non brucia monete, ne brucia dieci.)
 5. **Il pastone è l'ultimo ripiego.** Tutte le merci hanno la loro figura
    tranne quella: è il calderone grigio dell'arredamento, piccolo e
    anonimo in mezzo a nove scomparti. Un disegno suo — una pentola di
-   pappa densa — è l'unico ritaglio che manca.
+   pappa densa — è l'unico ritaglio che manca. Gli **addobbi** sono
+   nella stessa condizione, ed è dichiarato: oggi sono emoji, e una riga
+   può già dire `pezzo` invece di `emoji` quando il foglio ci sarà.
 6. **Le azioni sui campi, rifinite.** Oggi sono la stessa scheda dei cani, e
    va bene così; se un giorno i campi diventano molti, raccoglierli uno per
    uno diventerà noioso prima di diventare comodo.
@@ -943,6 +1028,10 @@ che le due sezioni qui sopra esistono. Restano:
 | `dati/mercato.js` | chi ordina, quanto rende un ordine, e perché non paga monete |
 | `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
 | `viste/Mercato.vue` | i tre ordini, a caselle |
+| `dati/addobbi.js` | cappellini e fiocchi: nome, prezzo, dove si attaccano |
+| `dati/animali.js` | e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
+| `viste/Vestiario.vue` | «Vestilo», uno slot per punto di attacco |
+| `test/unita/addobbi.test.mjs` | si compra, si mette, si toglie — e cosa non gli sta |
 | `test/unita/mercato.test.mjs` | si chiede solo il possibile, a ogni livello |
 | `fattoria/generati/campi.json` `animali.json` `merci.json` | i tre fogli, e il perché di ogni ritaglio |
 | `test/unita/coltivazioni.test.mjs` | si coltiva per davvero, spostando l'orologio |

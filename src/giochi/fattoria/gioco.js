@@ -96,6 +96,11 @@ export default {
        fattoriaOrdini    ordini consegnati al mercato — il gesto che
                          chiude la catena, e l'unico che porta via roba
                          dal silo senza darla a una bestia
+       fattoriaVestiti   (primato) quanti addobbi hanno addosso le
+                         bestie, tutte insieme e adesso. È un primato e
+                         non un contatore per la stessa ragione della
+                         varietà: mettere e togliere lo stesso
+                         cappellino venti volte non vale venti volte
 
      Non c'è un contatore per gli animali: nel catalogo di oggi
      (`dati/catalogo.js`) non ce ne sono — solo terreno, recinti, case e
@@ -119,7 +124,7 @@ export default {
                 l'esperienza vera che un ordine dà è **il livello della
                 fattoria**, che è un'altra scala e sta in
                 `dati/livelli.js`. */
-             + 2 * m.tot('fattoriaOrdini'),
+             + 2 * m.tot('fattoriaOrdini') + m.best('fattoriaVestiti'),
     provato: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
                   + m.tot('fattoriaPosati') + m.tot('fattoriaRaccolti') > 0,
 
@@ -152,6 +157,13 @@ export default {
       { id: 'fattoria-ordini', emoji: '🧺', nome: 'Servizio a domicilio',
         come: n => `Consegna ${n} ordini al mercato`,
         soglie: [1, 10, 35], valore: m => m.tot('fattoriaOrdini') },
+      /* Le soglie contano gli addobbi **addosso insieme**, non i
+         cappelli comprati: l'ultima chiede di vestire più di una
+         bestia, che è il modo di far scoprire che il guardaroba si
+         sposta da una all'altra. */
+      { id: 'fattoria-vestiti', emoji: '🎩', nome: 'Che eleganza',
+        come: n => `Metti ${n} addobbi alle tue bestie`,
+        soglie: [1, 4, 8], valore: m => m.best('fattoriaVestiti') },
     ],
   },
 }

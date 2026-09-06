@@ -558,3 +558,13 @@
   justify-content: center; margin-bottom: 8px }
 .fa-ordine .fa-fila { justify-content: flex-end }
 .fa-ordine .fa-manca { text-align: center; margin-top: 6px }
+
+/* ── vestire una bestia ──────────────────────────────────────────
+   Stessa forma della sua scheda — un blocco per aggancio, dentro i
+   tasti — perché è la stessa schermata con un mestiere diverso: là i
+   blocchi sono i bisogni, qui sono i posti dove si mette qualcosa. Chi
+   arriva dal «Vestilo» non deve imparare una seconda disposizione. */
+.fa-vestiario { max-height: 100%; overflow-y: auto; overscroll-behavior: contain }
+/* Il «togli» sta in fondo alla testata del blocco, dove c'è il numero
+   nei bisogni: piccolo, perché togliere è una cosa che si fa di rado. */
+.fa-minuto.dentro { margin: 0; padding: 2px 8px; font-size: 11px }
