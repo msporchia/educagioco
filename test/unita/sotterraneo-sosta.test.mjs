@@ -99,6 +99,20 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   const oggi = leggi(scrivi(c, 0), CAMPAGNA[0])
   uguale('una torcia a metà resta a metà', oggi.torciaResta, 3)
   uguale('e la scorta si riprende', oggi.torceInScorta, 1)
+
+  /* ── e riprendere non è entrare in una stanza ──
+     La torcia paga la strada girata al buio: un piano nuovo, il
+     risveglio dopo uno svenimento e una discesa ripresa non sono
+     strada. Senza `segnaLaStanza`, chi riprende in una stanza qualunque
+     risulta arrivato adesso da quella d'ingresso, e il primo passo gli
+     costa una stanza di luce che nessuno ha girato. */
+  const altrove = c.livello.stanze[2] || c.livello.stanze[1]
+  c.eroe = { x: altrove.cx + 0.5, y: altrove.cy + 0.5 }
+  const li = leggi(scrivi(c, 0), CAMPAGNA[0])
+  uguale('si riprende nella stanza in cui si era', li.stanzaOra, altrove.id)
+  const prima = li.torciaResta
+  li.bruciaLaTorcia()
+  uguale('e il primo passo non costa luce', li.torciaResta, prima)
 }
 
 /* ══════════ 3. i mostri tornano al loro posto ══════════

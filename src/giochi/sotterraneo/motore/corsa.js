@@ -375,11 +375,6 @@ export class Corsa {
     })
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
-    /* si è **già** in questa stanza, quindi non ci si entra: scendere
-       una scala non consuma torcia. La torcia brucia camminando, e una
-       scala non è un pezzo di strada girata al buio — vale lo stesso
-       per il risveglio dopo uno svenimento (`rimettiInPiedi`). */
-    this.stanzaOra = dentro.id
     this.guarda = 'dx'
     this.strada = null
     this.mira = null
@@ -390,6 +385,7 @@ export class Corsa {
        luce su mezzo piano */
     this.visto = new Uint8Array(this.livello.largo * this.livello.alto)
     this.luce = new Set()
+    this.segnaLaStanza()
     this.chiaveDelPiano = false
     this.stanzeDentro = new Set()
     this.aggiornaLuce()
@@ -744,6 +740,16 @@ export class Corsa {
      passo — brucerebbe una torcia in mezzo metro. Tornare sui propri
      passi invece consuma, ed è giusto: la torcia serve a girare, e
      girare due volte lo stesso piano è girare. */
+  /* ── dove si è, senza far bruciare niente ──
+     Chi ci arriva **senza camminare** non consuma torcia: un piano
+     nuovo, il risveglio all'ingresso dopo uno svenimento, una discesa
+     ripresa da un salvataggio. La torcia paga la strada girata al buio,
+     e nessuna delle tre lo è. */
+  segnaLaStanza() {
+    const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
+    if (st) this.stanzaOra = st.id
+  }
+
   bruciaLaTorcia() {
     const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
     if (!st || st.id === this.stanzaOra) return
@@ -1066,9 +1072,7 @@ export class Corsa {
     }
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
-    /* svegliarsi all'ingresso non è entrare in una stanza: uno
-       svenimento non consuma anche la torcia (vedi `nuovoPiano`) */
-    this.stanzaOra = dentro.id
+    this.segnaLaStanza()
     this.strada = null; this.mira = null; this.bersaglio = null
     for (const m of this.livello.robe) if (m.che === 'mostro') { m.sveglio = false; m.calmo = CALMA }
     this.aggiornaLuce()

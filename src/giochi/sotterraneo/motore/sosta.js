@@ -219,6 +219,10 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.contaChieste = c.chieste || 0
 
     corsa.aggiornaLuce()
+    /* si riprende **dov'era**, e riprendere non è entrare in una
+       stanza: senza questa riga il primo passo dopo la ripresa
+       consumerebbe una stanza di torcia che nessuno ha girato */
+    corsa.segnaLaStanza()
     /* ── e quello che allora si portava e adesso no ──
        Il caso vero non è un id sparito (quelli li ha già tolti `vera`):
        è una discesa cominciata **prima** che le classi avessero un
