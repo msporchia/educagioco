@@ -56,7 +56,11 @@ const PROFILO = {
   eng: { tappa: 6, libera: false },
   esp: { tappa: 4, libera: false },
   mercato: { tappa: 3, libera: false },
-  lab: { tappa: 5, libera: false },
+  /* il `v` per esteso e non per migrazione: qui il profilo si scrive a
+     mano, e un numero che passa dalla tabella delle vecchie otto tappe
+     vorrebbe dire una foto che cambia da sola il giorno in cui la
+     tabella cambia */
+  lab: { tappa: 5, libera: false, v: 2 },
   gen: { tappa: 8, libera: false, ordini: {}, stelle: {} },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
   /* Un animale adottato e **vestito**: la cameretta fotografata vuota non

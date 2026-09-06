@@ -171,10 +171,11 @@ function piuDebole(scale) {
    (`saltaLeSpiegazioni`): un test rigioca la stessa «prima volta» a ogni
    giro, e una prima ricetta scritta già in grammi gli cambierebbe sotto i
    piedi tutto quello che sta misurando. Chi vuole provarla chiede
-   `apriGioco(browser, { spiegazioni: true })`. */
-/* la copia non è pignoleria: `misureFresche()` è sempre lo stesso oggetto
+   `apriGioco(browser, { spiegazioni: true })`.
+
+   La copia non è pignoleria: `misureFresche()` è sempre lo stesso oggetto
    del profilo, e un ref che riceve la stessa referenza non sveglia
-   nessuno — il cartello non tornerebbe finché non cambia ricetta */
+   nessuno — il cartello non tornerebbe finché non cambia ricetta. */
 const aiuti = () => (saltaLeSpiegazioni() ? null : { ...misureFresche() })
 const fresche = ref(aiuti())
 
