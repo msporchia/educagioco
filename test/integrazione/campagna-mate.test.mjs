@@ -33,13 +33,15 @@ controlla('e il volo libero è ancora chiuso', !/Volo libero ♾️/.test(testo)
 const pianeti = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].map(b => ({ testo: b.innerText, chiuso: b.disabled })))
 uguale('dieci pianeti in fila', pianeti.length, 10)
-/* Non più «solo il primo»: a profilo appena azzerato il progresso è
-   zero, quindi il lucchetto ne aprirebbe uno solo — ma quelli che questo
-   bambino ha già passato per età nascono aperti lo stesso. Vedi il conto
-   uguale più sotto, dopo la ricarica. */
+/* Quanti pianeti nascono aperti non è più «il primo, più…»: il contatore
+   è uno solo e a profilo azzerato sta a zero, quindi la tappa aperta
+   dalla fila è la PRIMA DELLA FILA, che è a mente. I pianeti che si
+   vedono aperti qui sono solo quelli che a questa età sono già roba
+   saputa (`portata`), e si contano con la stessa regola invece di
+   cablarli. */
 const primiAperti = PIANETI
-  .filter((p, i) => i === 0 || statoDellaTappa(p, { eta: ETA_DIFETTO }) === PASSATA).length
-uguale('è aperto il primo, più quelli che a quell\'età sono già roba saputa',
+  .filter(p => statoDellaTappa(p, { eta: ETA_DIFETTO }) === PASSATA).length
+uguale('sono aperti i pianeti che a quell\'età sono già roba saputa',
        pianeti.filter(p => !p.chiuso).length, primiAperti)
 
 await scatto(page, 'campagna-mate-mappa')
@@ -202,13 +204,16 @@ controlla('e il boss non lascia niente in archivio', chiuse.length === 0, chiuse
 await page.reload()
 await page.waitForSelector('.carte', { timeout: 10000 })
 const home = await page.evaluate(() => document.body.innerText)
-/* La home conta le tappe della FILA, che è una sola: quante ne sono
-   state fatte e da dove si riprende. Qui è stato superato un pianeta e
-   nessuna stazione, quindi «1 tappa» — e «ora» indica la prima della
-   fila, che è a mente: è giusto che lo dica, quella è la più facile di
-   tutte ed è ancora lì. */
+/* La home conta le tappe della FILA, che è una sola — e con un contatore
+   solo «quante ne ha fatte» e «da dove si riprende» sono lo stesso
+   numero. Qui è stato superato il primo pianeta, che nella fila sta in
+   terza posizione: le due voci a mente che lo precedevano restano
+   dietro il contatore, ed è la scelta scritta in testa a
+   `data/asteroidi.js` — chi salta avanti su roba che sa già non se la
+   ritrova aperta alle spalle. */
+const dovuto = SCALETTA.findIndex(v => v.tipo === 'pianeta' && v.i === 0) + 1
 controlla('la home conta le tappe della fila unica',
-          new RegExp(`1 tappa su ${SCALETTA.length}`).test(home),
+          new RegExp(`${dovuto} tappe su ${SCALETTA.length}`).test(home),
           home.split('\n').find(r => /tapp/i.test(r)) || 'nessuna riga sugli asteroidi')
 
 await page.getByText('Asteroidi', { exact: true }).click()

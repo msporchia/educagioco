@@ -22,13 +22,17 @@ import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
 import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
 import { ETA_DIFETTO } from '../../src/store/profile.js'
 
-/* Quante voci della fila nascono aperte. Erano due — una per mestiere,
-   con i due contatori a zero — e adesso a quelle si aggiungono tutte
-   quelle che a questa età sono **roba già passata**: `portata` sulla
-   tappa, il conto in `data/portata.js`. Si calcola invece di cablarlo,
-   così se i livelli si spostano il test si sposta con loro. */
+/* Quante voci della fila nascono aperte. Il contatore è **uno solo** e a
+   profilo azzerato sta a zero, quindi la fila ne apre UNA: la prima,
+   che è a mente. A quella si aggiungono tutte quelle che a questa età
+   sono **roba già passata** — `portata` sulla tappa, il conto in
+   `data/portata.js` — e la prima ci sta già dentro, quindi non si
+   somma due volte. Si calcola invece di cablarlo, così se i livelli si
+   spostano il test si sposta con loro. */
 const giaSapute = fila => fila.filter(t => statoDellaTappa(t, { eta: ETA_DIFETTO }) === PASSATA).length
-const APERTE_ALL_INIZIO = 2 + giaSapute(STAZIONI.slice(1)) + giaSapute(PIANETI.slice(1))
+const passata = t => statoDellaTappa(t, { eta: ETA_DIFETTO }) === PASSATA
+const APERTE_ALL_INIZIO = giaSapute(STAZIONI) + giaSapute(PIANETI) +
+                          (passata(STAZIONI[0]) ? 0 : 1)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser, { viewport: TELEFONO })
@@ -55,11 +59,16 @@ controlla('le due linguette non ci sono più: è una fila sola', !mappa.schede)
    tabellina, ed è la prima giunzione dell'ordine (vedi `data/asteroidi.js`) */
 controlla('la scaletta comincia da una tappa a mente', mappa.fila[0].mente)
 controlla('la prima tappa è aperta a chi comincia adesso', !mappa.fila[0].chiusa)
-/* due sole tappe aperte in tutta la fila, una per mestiere: è quello che
-   si vede quando i contatori restano due — e che permette a chi era
-   avanti coi pianeti di non perdere niente */
-uguale('le aperte sono una per mestiere, più quelle già sapute per età',
+/* UNA sola tappa aperta dalla fila, non due. Erano due — una per
+   mestiere — quando sotto c'erano due contatori: in mezzo alla scaletta
+   si vedeva la 6 aperta, la 7 chiusa e la 8 aperta, e da fuori non si
+   capiva dove continuasse la fila. Le altre aperte le apre l'età, non
+   il progresso. */
+uguale('la fila apre una tappa sola, più quelle già sapute per età',
        mappa.fila.filter(v => !v.chiusa).length, APERTE_ALL_INIZIO)
+const aperteDopoLaPrima = mappa.fila.filter((v, i) => i > 0 && !v.chiusa).length
+uguale('e passata la prima non ce n\'è nessun\'altra che il progresso abbia aperto',
+       aperteDopoLaPrima, APERTE_ALL_INIZIO - 1)
 controlla('si vede di che calcoli si tratta', /3\+4/.test(mappa.testo), mappa.stazioni[0].testo)
 controlla('il volo a mente è ancora chiuso', !mappa.volo)
 
@@ -183,8 +192,9 @@ await page.getByText('Asteroidi', { exact: true }).click()
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 const dopo = await page.evaluate(() =>
   [...document.querySelectorAll('.stazione')].filter(b => !b.disabled).length)
-/* Le stazioni sole, non la fila intera: una per il contatore a zero più
-   quelle che a nove anni sono già passate. */
+/* Le stazioni sole, non la fila intera: la prima è superata, la seconda
+   è quella che la fila tiene aperta adesso, e dietro restano quelle che
+   a nove anni sono già passate. */
 uguale('dopo la ricarica sono aperte le stazioni giuste',
        dopo, 2 + giaSapute(STAZIONI.slice(2)))
 

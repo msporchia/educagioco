@@ -419,6 +419,11 @@ export function allineaPozioni(p, now = Date.now()) {
   return p.lab
 }
 
+/* Chi sa già le prime tabelline non deve rigiocarsele. Scrive l'indice
+   della campagna dei pianeti, che dalla fila unica in poi è **uno
+   specchio**: chi lo porta dentro il contatore vero (`mate.fila`) è
+   `sincronizzaAsteroidi`, in `store/profile.js`, chiamata subito dopo
+   di qui. */
 export function allineaMate(p, now = Date.now()) {
   if (!p.mate) p.mate = { tappa: 0, libera: false }
   const intere = new Set(tabellineIntereDi(p, now))

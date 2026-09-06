@@ -2,13 +2,12 @@
 import { computed } from 'vue'
 import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
-         mateProgresso, calcProgresso, engProgresso, espProgresso, mercatoProgresso,
+         mateProgresso, engProgresso, espProgresso, mercatoProgresso,
          labProgresso, tabellineIntere, genProgresso,
          giocoAcceso, giocoForzato, quantiGiochiAccesi, varianteAccesa,
          sperimentaliAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
-import { CHIAVE_MENTE, scaletta, posizioneOra, progressiDa,
-         superata } from '../data/asteroidi.js'
+import { CHIAVE_MENTE, scaletta, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { SCALE, TAPPE as TAPPE_POZ } from '../data/pozioni.js'
@@ -51,19 +50,15 @@ const stelleMate = computed(() => tabellineIntere().length)
    è la cosa che il bambino ritrova aprendo il gioco. Il numero cambia se
    i grandi hanno spento il calcolo a mente, e deve: la fila che si vede
    è più corta. */
-const stazione = computed(() => calcProgresso())
 const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
 const filaMate = computed(() => scaletta(menteAccesa.value))
-const progMate = computed(() => progressiDa(pianeta.value, stazione.value))
-const doveMate = computed(() => posizioneOra(progMate.value, menteAccesa.value))
-/* Quante ne sono state fatte e qual è la prima che manca sono DUE numeri
-   diversi, e vanno detti tutti e due: chi arriva da prima della fusione
-   può avere cinque pianeti e nessuna stazione, e allora «quante ne hai
-   fatte» dice sette mentre «da dove si riprende» indica la prima tappa
-   della fila. Dire solo il secondo farebbe sembrare che i progressi
-   siano spariti. */
-const fatteMate = computed(() =>
-  filaMate.value.filter(v => superata(v, progMate.value)).length)
+/* Un contatore solo, quindi un numero solo: «quante ne ha fatte» e «da
+   dove si riprende» sono lo stesso posto. Erano due quando i binari
+   erano due — cinque pianeti e nessuna stazione facevano «cinque fatte»
+   e «si riprende dalla prima» — e dirne uno solo faceva sembrare che i
+   progressi fossero spariti. */
+const doveMate = computed(() => posizioneOra(filaDi(pianeta.value), menteAccesa.value))
+const fatteMate = doveMate
 
 /* il laboratorio ha le sue tappe, e a campagna finita il laboratorio libero */
 const QUANTE_MISURE = SCALE.length

@@ -20,6 +20,7 @@ import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { SCALETTA, campagneDaFila, filaDaCampagne, filaDopo } from '../data/asteroidi.js'
 import { allineaCalcolo } from './calcolo.js'
 import { cestina, voceCestinata } from './cestino.js'
 import { riscuotiTraguardi, segnaGiorno, serieViva, livelloTotale,
@@ -126,8 +127,12 @@ const blank = () => ({
      numero di versione un salvataggio di ieri direbbe «due» intendendo una
      cosa diversa da quello che intende oggi. Vedi `migraCastello`. */
   td: { tappa: 0, libera: false, v: 2 },
-  mate: { tappa: 0, libera: false },// stessa cosa per la campagna delle tabelline
-  calc: { tappa: 0, libera: false },// e per le stazioni del calcolo a mente
+  /* Gli asteroidi hanno UNA fila e un contatore solo, `mate.fila`:
+     quante voci della scaletta di `data/asteroidi.js` sono superate.
+     `mate.tappa` e `calc.tappa` restano come specchio per chi parla di
+     una campagna sola, e li scrive `sincronizzaAsteroidi`. */
+  mate: { tappa: 0, fila: 0, libera: false },
+  calc: { tappa: 0, libera: false },// lo specchio delle stazioni a mente
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
   mercato: { tappa: 0, libera: false }, // e per le giornate di mercato della bancarella
@@ -601,6 +606,11 @@ export async function selectPlayer(id) {
   // chi giocava prima che le campagne esistessero non deve ricominciare da capo
   allineaMate(p)
   allineaCalcolo(p)
+  /* e chi giocava prima della fila unica ha due contatori: qui si
+     travasano nell'unico, insieme a quello che le due righe qui sopra
+     hanno appena aperto. Va DOPO di loro, se no la fila resterebbe
+     indietro di quello che il bambino sa già. */
+  sincronizzaAsteroidi(p)
   allineaInglese(p)
   allineaSpagnolo(p)
   allineaPozioni(p)
@@ -1317,39 +1327,69 @@ export function tdCompleta(indice, quanteTappe) {
   return td
 }
 
-/* ---------- campagna delle tabelline ----------
-   Stessa forma della campagna del castello: `tappa` è quante ne sono
-   state superate ed è l'indice della prossima. Le stelle invece non si
-   segnano da nessuna parte: si ricalcolano dal motore ogni volta che si
-   guarda, perché una tabellina che non si ripassa smette di essere sicura
-   e la stella deve poter tornare indietro. */
+/* ---------- gli asteroidi: UN contatore su UNA fila ----------
+   `mate.fila` è quante voci della scaletta sono state superate, ed è
+   l'indice della prossima. Non c'è più un contatore per i pianeti e uno
+   per le stazioni: la fila è una, e l'ordine — col perché di ogni
+   giunzione — sta in `data/asteroidi.js`.
+
+   `mate.tappa` e `calc.tappa` restano scritti, ma **come specchio**: si
+   ricavano dalla fila (`campagneDaFila`) e li legge solo chi parla di
+   una campagna sola — i traguardi che contano le tabelline, la mappa dei
+   concetti, i due voli infiniti. Nessuno di loro decide più cosa è
+   aperto, e infatti non li scrive più nessun gioco.
+
+   Le stelle invece non si segnano da nessuna parte: si ricalcolano dal
+   motore ogni volta che si guarda, perché una tabellina che non si
+   ripassa smette di essere sicura e la stella deve poter tornare
+   indietro. */
 export const mateProgresso = () => state.profile.mate
+export const calcProgresso = () => state.profile.calc
 export const tabellineIntere = (now = Date.now()) => tabellineIntereDi(state.profile, now)
 
-export function mateCompleta(indice, quanteTappe) {
-  const mate = state.profile.mate
-  mate.tappa = Math.max(mate.tappa || 0, indice + 1)
-  if (mate.tappa >= quanteTappe) mate.libera = true
-  controllaTraguardi()
-  persist()
-  flush()
+/* quante ne ha di suo ognuna delle due campagne: serve a sapere quando
+   si apre un volo infinito, e si ricava dalla fila invece di essere un
+   secondo elenco da tenere allineato */
+const TOTALI_ASTEROIDI = campagneDaFila(SCALETTA.length)
+
+/* L'UNICO POSTO CHE SCRIVE I DUE SPECCHI, e anche la migrazione.
+
+   Un profilo che non ha `fila` viene da prima della fila unica: i suoi
+   due contatori si travasano in uno solo, prendendo la posizione più
+   avanzata compatibile — chi aveva superato una tappa non se la ritrova
+   chiusa. Il perché della scelta generosa sta in testa a
+   `data/asteroidi.js`.
+
+   Poi c'è il secondo mestiere, che vale a ogni avvio: `allineaMate` e
+   `allineaCalcolo` aprono le tappe che il bambino **sa già** e lo dicono
+   scrivendo i due indici di campagna. Quello che aprono va portato
+   dentro il contatore unico, se no la fila resterebbe indietro rispetto
+   a due numeri che nessuno guarda più. */
+export function sincronizzaAsteroidi(p) {
+  const mate = p.mate || (p.mate = { tappa: 0, fila: 0, libera: false })
+  const calc = p.calc || (p.calc = { tappa: 0, libera: false })
+  const daiDue = filaDaCampagne(mate.tappa || 0, calc.tappa || 0)
+  const ora = Number.isFinite(mate.fila) ? Math.max(mate.fila, daiDue) : daiDue
+  mate.fila = Math.max(0, Math.min(SCALETTA.length, Math.round(ora)))
+  const specchio = campagneDaFila(mate.fila)
+  mate.tappa = specchio.pianeta
+  calc.tappa = specchio.mente
+  // `libera` non torna mai indietro: un volo infinito aperto resta aperto
+  if (specchio.pianeta >= TOTALI_ASTEROIDI.pianeta) mate.libera = true
+  if (specchio.mente >= TOTALI_ASTEROIDI.mente) calc.libera = true
   return mate
 }
 
-/* ---------- campagna del calcolo a mente ----------
-   Le stazioni stanno accanto ai pianeti e nel profilo hanno un campo
-   loro: le due campagne degli asteroidi si aprono in parallelo, perché
-   3+4 viene prima delle tabelline e 4×23 viene dopo. */
-export const calcProgresso = () => state.profile.calc
-
-export function calcCompleta(indice, quanteTappe) {
-  const c = state.profile.calc
-  c.tappa = Math.max(c.tappa || 0, indice + 1)
-  if (c.tappa >= quanteTappe) c.libera = true
+/* superata una voce della fila, che sia un pianeta o una stazione: il
+   contatore si porta subito dopo di lei, e non scavalca niente */
+export function asteroidiCompleta(voce) {
+  const mate = state.profile.mate
+  mate.fila = Math.max(mate.fila || 0, filaDopo(voce))
+  sincronizzaAsteroidi(state.profile)
   controllaTraguardi()
   persist()
-  flush()
-  return c
+  flush()          // una tappa si vince di rado: non deve perdersi
+  return mate
 }
 
 /* ═══════════ campagne delle lingue ═══════════

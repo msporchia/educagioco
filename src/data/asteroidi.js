@@ -87,28 +87,60 @@
      con una cifra in più, e il Sole e «La prova» non portano niente di
      nuovo: sono le due verifiche, una per mestiere.
 
-   ═══════════ I PROGRESSI NON SI TOCCANO ═══════════
+   ═══════════ UN CONTATORE SOLO, SU UNA FILA SOLA ═══════════
 
-   La fila è nuova, i contatori sono quelli di sempre: `mate.tappa` per i
-   pianeti, `calc.tappa` per le stazioni. Una voce della scaletta è
-   superata se il progresso **della sua campagna** la copriva, ed è
-   aperta con la stessa regola di prima (`tappaAperta`). Non c'è nessuna
-   migrazione da fare — e non poteva esserci: un contatore solo o
-   regalerebbe le stazioni a chi è avanti coi pianeti, o richiuderebbe i
-   pianeti a chi è avanti con le stazioni. Chi era al quinto pianeta e
-   alla seconda stazione ritrova esattamente quello, dentro una fila
-   sola.
+   La fila è una, e adesso lo è anche il progresso: `mate.fila` dice
+   quante voci della scaletta sono state passate, ed è l'unico numero che
+   decide cosa è aperto. Prima erano due — `mate.tappa` per i pianeti,
+   `calc.tappa` per le stazioni — e la fila era una sola solo a vedersi:
+   sotto restavano due binari, con **due tappe aperte insieme** in mezzo
+   alla scaletta, una per mestiere. Da fuori quello non si legge come
+   «due progressi rispettati», si legge come una fila che non si capisce
+   dove continui: la tappa 6 è aperta, la 7 è chiusa, la 8 è aperta.
 
-   Da qui viene anche la cosa che sembra strana e non lo è: in mezzo alla
-   scaletta possono esserci due tappe aperte invece di una, una per
-   mestiere. È il prezzo — giusto — di non aver perso niente.
+   I due contatori restano scritti nel profilo, ma **come specchio e non
+   come cancello**: li tiene allineati `sincronizzaAsteroidi` in
+   `store/profile.js`, e servono a chi parla di una campagna sola — i
+   traguardi che contano le tabelline fatte, la mappa dei concetti, i due
+   voli infiniti. Il gioco non li interroga più per sapere cosa è aperto.
+
+   ── LA MIGRAZIONE, E PERCHÉ È GENEROSA ──
+   Chi ha già giocato ha due numeri e ne serve uno, e con un'unica fila
+   l'informazione che si perde è inevitabile: qualcuno era al quinto
+   pianeta e alla seconda stazione, cioè avanti su un binario e indietro
+   sull'altro. Fra le due strade — tirarlo indietro alla prima voce non
+   passata, o portarlo avanti all'ultima passata — si prende la seconda
+   (`filaDaCampagne`): **chi ha superato una tappa non se la ritrova
+   chiusa**. Il prezzo è che un pugno di stazioni in mezzo risulti
+   passato senza essere stato giocato, e va bene così: regalare due
+   tappe a chi c'era è un attimo di stupore, richiuderne tre che aveva
+   vinto è la sera in cui il gioco gli ha mangiato i progressi.
+
+   La migrazione si riconosce da sé — un profilo senza `mate.fila` viene
+   da prima — e scatta anche su una copia rimessa dal cestino, che è
+   l'altra strada da cui un salvataggio vecchio torna in circolo.
+
+   ── E DA QUI IN POI NON SI PERDE PIÙ NIENTE ──
+   A fila unica il contatore cammina di una voce per volta e non scavalca
+   niente: `filaDopo` è la posizione della tappa appena superata più uno.
+   L'unico caso in cui qualcosa viene scavalcato è il calcolo a mente
+   spento (qui sotto), e lì le stazioni non sono roba che il bambino
+   deve: sono roba che un grande gli ha tolto.
 
    ═══════════ SPENTO IL CALCOLO A MENTE ═══════════
 
    `settings.varianti['asteroidi:mente']` (pagina dei grandi): spento, le
    voci a mente spariscono e i pianeti si richiudono in fila senza buchi,
-   nell'ordine di sempre. I progressi restano dove sono, e riaccendendo
-   la fila torna intera.
+   nell'ordine di sempre. Spegnere l'interruttore non scrive niente nel
+   profilo: la fila si accorcia a chi la guarda, il contatore resta dov'è.
+
+   Quello che cambia con un contatore solo è cosa succede **giocando** a
+   mente spento: superando un pianeta il contatore si porta a quella
+   posizione, e le stazioni che stavano in mezzo restano dietro di lui,
+   cioè risultano passate se un giorno l'interruttore si riaccende. È la
+   conseguenza diretta di avere un numero solo, ed è la lettura giusta:
+   un grande che toglie il calcolo a mente non sta mettendo in pausa
+   delle tappe, sta dicendo che questo bambino fa le tabelline.
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA } from './tabelline.js'
 import { STAZIONI } from './calcolo.js'
@@ -151,53 +183,100 @@ const daCodice = c => {
 }
 
 /* La scaletta intera, com'è scritta qui sopra. `cap` è l'indice del
-   capitolo, e serve alla mappa per stampare il titolino una volta sola. */
-export const SCALETTA = CAPITOLI_ORDINE.flatMap((c, cap) =>
-  c.voci.map(codice => ({ ...daCodice(codice), cap })))
+   capitolo, e serve alla mappa per stampare il titolino una volta sola;
+   `pos` è la posizione nella fila, ed è **l'unica coordinata che conta**
+   da quando il progresso è un numero solo. `i` resta l'indice dentro la
+   campagna di provenienza, e serve ancora a chi parla di una campagna
+   sola: il premio della tappa, la tavola pitagorica, la mappa dei
+   concetti. */
+export const SCALETTA = CAPITOLI_ORDINE
+  .flatMap((c, cap) => c.voci.map(codice => ({ ...daCodice(codice), cap })))
+  .map((v, pos) => ({ ...v, pos }))
 
 export const CAPITOLI = CAPITOLI_ORDINE.map(({ emoji, titolo, che }) => ({ emoji, titolo, che }))
 
 /* ═══════════ le domande che si fanno sulla fila ═══════════
-   `prog` è la coppia di contatori del profilo, nella forma in cui la
-   scaletta la vuole: `{ pianeta: mate.tappa, mente: calc.tappa }`. Sono
-   funzioni pure — girano in Node e non importano il profilo. */
-export const progressiDa = (mate, calc) => ({
-  pianeta: (mate && mate.tappa) || 0,
-  mente: (calc && calc.tappa) || 0,
-})
+   Tutto quello che segue lavora su UN numero: quante voci della fila
+   sono state passate. Sono funzioni pure — girano in Node e non
+   importano il profilo. */
 
-/* superata: il contatore della SUA campagna l'aveva già passata */
-export const superata = (v, prog) => v.i < prog[v.tipo]
-/* raggiunta: è la prossima della sua campagna, o una già fatta. Chi
-   chiama ci mette davanti `tuttoAperto()` (vedi `tappaAperta`). */
-export const raggiunta = (v, prog) => v.i <= prog[v.tipo]
+/* il contatore, letto dal campo degli asteroidi del profilo */
+export const filaDi = mate => Math.max(0, Math.round((mate && mate.fila) || 0))
+
+/* ── i due travasi fra il contatore solo e i due specchi ──
+   `campagneDaFila` dice quanti pianeti e quante stazioni stanno dietro
+   una posizione: siccome dentro la fila i pianeti si susseguono in
+   ordine (e le stazioni pure), quel conteggio è anche l'indice della
+   prossima di quella campagna, che è esattamente quello che vogliono
+   dire `mate.tappa` e `calc.tappa`.
+
+   `filaDaCampagne` fa il contrario, ed è la migrazione: la posizione
+   **più avanzata** compatibile con i due contatori di ieri, cioè uno
+   dopo l'ultima voce che risultava superata. Generosa di proposito — il
+   perché sta in testa al file. */
+export function campagneDaFila(fila) {
+  const fatte = SCALETTA.slice(0, Math.max(0, Math.min(SCALETTA.length, fila)))
+  return { pianeta: fatte.filter(v => v.tipo === 'pianeta').length,
+           mente: fatte.filter(v => v.tipo === 'mente').length }
+}
+
+export function filaDaCampagne(pianeti = 0, mente = 0) {
+  let ultima = -1
+  for (const v of SCALETTA) if (v.i < (v.tipo === 'pianeta' ? pianeti : mente)) ultima = v.pos
+  return ultima + 1
+}
+
+/* dove si porta il contatore chi ha appena superato questa voce */
+export const filaDopo = v => v.pos + 1
+
+/* superata: la fila l'ha già lasciata dietro. Una domanda sola, uguale
+   per un pianeta e per una stazione — che è tutto il punto. */
+export const superata = (v, fila) => v.pos < fila
 
 /* La fila come la vede questo bambino: senza le voci a mente se i
    grandi le hanno spente. `n` è il numero stampato accanto al nome, e si
    ricalcola sulla fila filtrata — se no spegnendo il calcolo a mente i
    pianeti resterebbero numerati 3, 4, 6, 8… cioè con i buchi di quello
-   che non c'è. */
+   che non c'è. `pos` invece NON si ricalcola: è la coordinata del
+   contatore, e deve dire la stessa cosa con l'interruttore acceso o
+   spento. */
 export function scaletta(menteAccesa = true) {
   const voci = menteAccesa ? SCALETTA : SCALETTA.filter(v => v.tipo === 'pianeta')
   return voci.map((v, n) => ({ ...v, n: n + 1 }))
 }
 
-/* dove si è arrivati: la prima voce non ancora superata. È il numero che
-   la home mostra («tappa 7 di 22») e il posto su cui si apre la mappa. */
-export function posizioneOra(prog, menteAccesa = true) {
-  const fila = scaletta(menteAccesa)
-  const i = fila.findIndex(v => !superata(v, prog))
-  return i < 0 ? fila.length : i
+/* dove si è arrivati: quante voci di QUESTA fila sono superate, che è
+   anche l'indice della prossima da giocare. È il numero che la home
+   mostra («7 tappe su 22») e il posto su cui si apre la mappa. */
+export function posizioneOra(fila, menteAccesa = true) {
+  const voci = scaletta(menteAccesa)
+  const i = voci.findIndex(v => !superata(v, fila))
+  return i < 0 ? voci.length : i
 }
 
-/* la voce dopo, seguendo la fila e non la campagna: è quella che il
-   cartello di fine tappa annuncia e che il tasto «avanti» gioca. Salta
-   quelle già superate — chi rigioca una vecchia tappa vuole tornare dov'era
-   — e quelle ancora chiuse, che nella fila mescolata possono capitare. */
-export function dopoDi(voce, prog, menteAccesa = true, aperta = raggiunta) {
-  const fila = scaletta(menteAccesa)
-  const da = fila.findIndex(v => v.tipo === voce.tipo && v.i === voce.i)
+/* raggiunta: superata, oppure **la** prossima della fila che si vede.
+   Una sola, e non più una per mestiere: è qui che si legge il contatore
+   unico. Si chiede alla fila filtrata e non a `pos + 1`, perché col
+   calcolo a mente spento la prossima tappa può stare parecchie posizioni
+   più in là del contatore — in mezzo ci sono le stazioni che questo
+   bambino non ha. Chi chiama ci mette davanti `tuttoAperto()` (vedi
+   `tappaAperta` in `store/profile.js`). */
+export function raggiunta(v, fila, menteAccesa = true) {
+  if (superata(v, fila)) return true
+  const prossima = scaletta(menteAccesa).find(x => !superata(x, fila))
+  return !!prossima && prossima.pos === v.pos
+}
+
+/* la voce dopo, seguendo la fila: è quella che il cartello di fine tappa
+   annuncia e che il tasto «avanti» gioca. Salta quelle già superate —
+   chi rigioca una vecchia tappa vuole tornare dov'era — e quelle ancora
+   chiuse, che con l'età di mezzo possono capitare anche adesso che il
+   contatore è uno. */
+export function dopoDi(voce, fila, menteAccesa = true,
+                       aperta = v => raggiunta(v, fila, menteAccesa)) {
+  const voci = scaletta(menteAccesa)
+  const da = voci.findIndex(v => v.pos === voce.pos)
   if (da < 0) return null
-  return fila.slice(da + 1).find(v => aperta(v, prog) && !superata(v, prog)) ||
-         fila.slice(da + 1).find(v => aperta(v, prog)) || null
+  return voci.slice(da + 1).find(v => aperta(v) && !superata(v, fila)) ||
+         voci.slice(da + 1).find(v => aperta(v)) || null
 }

@@ -687,7 +687,12 @@ Quattro interruttori diversi, e la differenza conta:
    scuola: è metà di un gioco che si può togliere senza togliere il gioco. Il
    primo è `asteroidi:mente`, che leva le tappe di calcolo a mente dalla fila
    degli asteroidi e lascia solo le tabelline; i pianeti si rinumerano senza
-   buchi, i progressi restano dove sono e la carta in home non si muove.
+   buchi, spegnere non scrive niente nel profilo e la carta in home non si
+   muove. **Giocando** a mente spento, però, qualcosa si perde: gli asteroidi
+   hanno un avanzamento solo su una fila sola (`mate.fila`,
+   `data/asteroidi.js`), quindi le stazioni saltate restano dietro il
+   contatore e riaccendendo risultano passate — è la conseguenza diretta di
+   avere un numero solo, ed è la lettura giusta del gesto.
    Stessa forma degli altri due: **eccezioni per bambino**, così una variante
    nuova nasce accesa per chi ha il profilo di ieri.
 
