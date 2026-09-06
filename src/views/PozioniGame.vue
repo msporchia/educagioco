@@ -12,13 +12,26 @@
 
    Si sbaglia col troppo: la boccia trabocca e la pozione fa BOOM. Non
    costa una vita — costa tempo, e il tempo è il vero avversario.
+
+   ── E LA CONVERSIONE NON SI DÀ PER SAPUTA ──
+   Il gioco chiedeva di convertire dalla prima ricetta della prima tappa
+   e non insegnava mai come si fa: la scala delle misure c'era già, ma
+   dietro un tasto, e un tasto lo preme chi sa già di averne bisogno.
+   Adesso la tappa che porta una conversione nuova comincia guidata — le
+   prime dosature parlano già nell'unità dell'attrezzo, poi la portano
+   fra parentesi, poi resta solo il cartello «1 kg = 1000 g» finché
+   serve. Le regole e il perché stanno in `data/pozioni.js`; qui c'è il
+   filo col profilo del bambino e il cartellino a schermo.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, answer, level, addCoins, segna, segnaBest, strengthOf,
-         difficoltaOra, labProgresso, labCompleta, tappaAperta } from '../store/profile.js'
+         difficoltaOra, labProgresso, labCompleta, tappaAperta,
+         misureFresche, scriviMisura } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
 import { generaRicetta, taratura, scomponi, mescola, laboratorioLibero, premioTappa,
+         residuoDi, freschezzaDopo, promemoriaDi, assistenzaDi,
          ATTREZZI, vaBene, SCALINI, TAPPE, CUORI, CUORI_MAX } from '../data/pozioni.js'
+import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { suono } from '../audio.js'
 import Barra from '../components/Barra.vue'
 
@@ -32,7 +45,7 @@ const ricetta = ref(null)
 const hud = reactive({ cuori: CUORI, pozioni: 0, perfette: 0, serie: 0 })
 
 /* ═══════════ la campagna ═══════════
-   Otto tappe: la prima chiede solo di pesare, l'ultima tutte e nove le
+   Undici tappe: la prima chiede solo di pesare, l'ultima tutte e nove le
    conversioni insieme. Finita la fila si apre il laboratorio libero, ed è
    l'unico posto dove a decidere quanto strizzare torna a essere il motore
    di apprendimento invece del punto del viaggio. */
@@ -59,6 +72,11 @@ const strumento = ref(null)     // null = si è ancora davanti allo scaffale
 const aiuto = ref(false)        // la scala delle misure appesa al muro
 let grezzo = 0                  // il livello continuo prima dello scatto di tacca
 const esito = ref('')           // '' | 'boom' | 'ok'
+/* quante volte si è sbagliato su QUESTO ingrediente, che non è `sbagli`:
+   quello vale per la pozione intera e serve al «perfetta». Qui serve per
+   conversione — è la conversione su cui si è inciampato che deve tornare
+   a vedersi, non quella dell'ingrediente dopo. */
+let sbagliQui = 0
 const battuta = ref('')
 const cartello = ref('')        // la mancia, quando arriva
 const moneta = ref(0)
@@ -145,12 +163,55 @@ function piuDebole(scale) {
   return peggio
 }
 
+/* ═══════════ l'introduzione guidata ═══════════
+   Il perché sta in `data/pozioni.js`, che è anche dove sta la regola: qui
+   c'è solo il filo fra il profilo del bambino e la ricetta.
+
+   `null` vuol dire nessun aiuto, ed è quello che vede il banco di prova
+   (`saltaLeSpiegazioni`): un test rigioca la stessa «prima volta» a ogni
+   giro, e una prima ricetta scritta già in grammi gli cambierebbe sotto i
+   piedi tutto quello che sta misurando. Chi vuole provarla chiede
+   `apriGioco(browser, { spiegazioni: true })`. */
+/* la copia non è pignoleria: `misureFresche()` è sempre lo stesso oggetto
+   del profilo, e un ref che riceve la stessa referenza non sveglia
+   nessuno — il cartello non tornerebbe finché non cambia ricetta */
+const aiuti = () => (saltaLeSpiegazioni() ? null : { ...misureFresche() })
+const fresche = ref(aiuti())
+
+/* Una dose finita: azzeccata consuma un gradino di aiuto, sbagliata lo
+   rimette in piedi. È l'unico posto che scrive, e scrive sempre —
+   anche le dosature guidate, se no la scaletta non finirebbe mai. */
+function segnaFreschezza(id, giusto) {
+  if (!fresche.value) return
+  const dopo = freschezzaDopo(residuoDi(fresche.value, id), giusto)
+  scriviMisura(id, dopo)
+  fresche.value = aiuti()
+}
+
+/* Il cartello sopra il banco: c'è finché la conversione è fresca, e dice
+   di più nei primi due gradini — quando la dose è già convertita bisogna
+   pur dire perché è così facile, se no sembra un altro gioco.
+
+   Non si legge dal `guida` dell'ingrediente e basta, ed è la metà che
+   conta: quello è deciso quando la ricetta nasce, e uno sbaglio deve
+   riportare il cartello **su questa dose qui**, non sulla prossima. Il
+   `guida` scritto vince (è lui a dire se la dose è già convertita), e
+   dove non c'è si chiede al conto com'è adesso. */
+const promemoria = computed(() => {
+  const i = ing.value
+  if (!i || !fresche.value) return null
+  const guida = i.guida || assistenzaDi(residuoDi(fresche.value, i.scala.id), false)
+  return guida ? { ...promemoriaDi(i.scala), guida } : null
+})
+
 function nuovaRicetta() {
+  fresche.value = aiuti()
   ricetta.value = generaRicetta(tappa.value,
-    campagna.value ? { n: nCliente.value } : { pesca: piuDebole })
+    campagna.value ? { n: nCliente.value, fresche: fresche.value }
+                   : { pesca: piuDebole, fresche: fresche.value })
   restaPazienza.value = ricetta.value.pazienza
   passo.value = 0; dose.value = 0; grezzo = 0; pesati.value = []; strumento.value = null
-  esito.value = ''; sbagli = 0; occupato = false; dettoFretta = false
+  esito.value = ''; sbagli = 0; sbagliQui = 0; occupato = false; dettoFretta = false
   brodo.value = []; pronta.value = false; ribolle.value = false; volo.value = null
   apertoIl = performance.now()
   battuta.value = pick(ricetta.value.esigente ? PRETESE : ORDINA)
@@ -203,7 +264,10 @@ function scaduta() {
   occupato = true
   hud.serie = 0
   battuta.value = pick(VIA)
-  answer(ing.value?.chiave || 'pozioni:l-ml', { correct: false, ms: performance.now() - apertoIl })
+  // una dosatura guidata porta la conversione già scritta: se il cliente se
+  // ne va, se n'è andato per il gesto o per l'attrezzo, non per l'equivalenza
+  if (!ing.value || ing.value.chiede)
+    answer(ing.value?.chiave || 'pozioni:l-ml', { correct: false, ms: performance.now() - apertoIl })
   suono.no()
   if (--hud.cuori <= 0) return chiudi()
   nCliente.value++
@@ -233,7 +297,8 @@ function goccia() {
 
 function trabocca() {
   versando.value = false
-  sbagli++
+  sbagli++; sbagliQui++
+  if (ing.value) segnaFreschezza(ing.value.scala.id, false)
   esito.value = 'boom'
   suono.no()
   restaPazienza.value = Math.max(3, restaPazienza.value - 4)
@@ -267,7 +332,8 @@ function conferma() {
   const i = ing.value
   if (!i || occupato || esito.value) return
   if (dentro.value !== i.piccolo) {
-    sbagli++
+    sbagli++; sbagliQui++
+    segnaFreschezza(i.scala.id, false)
     esito.value = 'boom'
     suono.no()
     restaPazienza.value = Math.max(3, restaPazienza.value - 4)
@@ -276,7 +342,12 @@ function conferma() {
     return
   }
   i.fatto = true
-  answer(i.chiave, { correct: sbagli === 0, ms: performance.now() - apertoIl })
+  /* Una dosatura guidata NON si segna al motore di apprendimento: la
+     conversione era già scritta sulla pergamena, quindi nessuno l'ha
+     chiesta e segnarla giusta direbbe che la sa. Il gesto invece è stato
+     fatto davvero, e `misure` lo conta. */
+  if (i.chiede) answer(i.chiave, { correct: sbagli === 0, ms: performance.now() - apertoIl })
+  segnaFreschezza(i.scala.id, sbagliQui === 0)
   segna('misure')
   esito.value = 'ok'
   suono.nota(760, 1180, 0.1, 'triangle', 0.11)
@@ -293,7 +364,7 @@ function conferma() {
     esito.value = ''; svuota(); strumento.value = null
     const next = ricetta.value.ingredienti.findIndex(x => !x.fatto)
     if (next < 0) return finita()
-    passo.value = next
+    passo.value = next; sbagliQui = 0
   }, VOLO + 280)
 }
 
@@ -382,6 +453,7 @@ onMounted(() => {
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
   window.__poz = { fase, ricetta, hud, livello, inizia, passo, ing, dose, pesati, dentro,
                    strumento, scegliStrumento, riponi, vaBene, aiuto, SCALINI,
+                   promemoria, fresche,
                    metti, togli, conferma, svuota, giu, su, goccia,
                    versa: v => { dose.value = v; grezzo = v },
                    esito, battuta, restaPazienza, scomponi, taratura, finiti, troppo,
@@ -427,7 +499,7 @@ onUnmounted(() => cancelAnimationFrame(raf))
     </div>
 
     <!-- ═════ LA MAPPA DELLE TAPPE ═════
-         Si entra da qui: la fila delle otto tappe, quelle fatte, quella da
+         Si entra da qui: la fila delle undici tappe, quelle fatte, quella da
          fare e quelle ancora chiuse. Il laboratorio libero compare in fondo
          solo quando la fila è finita. -->
     <div v-if="fase === 'mappa'" class="mappa">
@@ -526,6 +598,37 @@ onUnmounted(() => cancelAnimationFrame(raf))
         <div class="cartello">
           <b>{{ attrezzo.verbo }} {{ ing.testo }}</b>
           <span class="di">di {{ ing.nome }}</span>
+        </div>
+
+        <!-- ═════ IL PROMEMORIA DELLA CONVERSIONE ═════
+             Il pezzo che al gioco mancava: finché la conversione è fresca
+             sta scritta qui sopra, dove l'occhio sta già guardando la
+             dose. Non è un velo e non si chiude — non c'è niente da
+             chiudere: sbiadisce da sé quando il bambino non ne ha più
+             bisogno, e torna se sbaglia. La barretta dice l'altra metà,
+             quella che le tabelle non dicono mai: quanto è grande. -->
+        <div v-if="promemoria" class="promemoria" data-promemoria>
+          <b>1 {{ promemoria.da }} = {{ promemoria.k }} {{ promemoria.a }}</b>
+          <div class="gradinata">
+            <template v-for="(u, n) in promemoria.scalini" :key="u">
+              <i v-if="n" class="per">×10</i>
+              <span class="u" :class="{ capo: n === 0 || n === promemoria.scalini.length - 1 }">{{ u }}</span>
+            </template>
+          </div>
+          <div class="barretta" aria-hidden="true">
+            <span class="fetta" :style="{ width: Math.max(0.7, 100 / promemoria.k) + '%' }"></span>
+            <b>1 {{ promemoria.da }}</b>
+          </div>
+          <i class="quanto">1 {{ promemoria.da }} è {{ promemoria.grande }} ·
+            1 {{ promemoria.a }} è {{ promemoria.piccolo }}</i>
+          <!-- «niente da convertire» sarebbe una bugia: la dose sì, ma
+               scegliere l'attrezzo chiede lo stesso di sapere quanto è un
+               chilo. Si dice quello che è vero, cioè che la dose si può
+               segnare così com'è. -->
+          <em v-if="promemoria.guida === 'diretta'">
+            Questa dose è già in {{ promemoria.a }}: sul banco si segna così com'è</em>
+          <em v-else-if="promemoria.guida === 'accanto'">
+            Fra parentesi c'è la dose già convertita</em>
         </div>
 
         <!-- ---------- LO SCAFFALE: prima si sceglie l'attrezzo ---------- -->
@@ -790,6 +893,40 @@ onUnmounted(() => cancelAnimationFrame(raf))
 .cartello { display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:6px }
 .cartello b { font-size:clamp(19px,5.4vmin,28px); font-weight:900; color:#fff }
 .cartello .di { font-size:13px; font-weight:700; color:#c9bde6 }
+
+/* ---------- il promemoria della conversione ----------
+   Stessa idea della riga dei primi passi del tower defense: un cartellino
+   chiaro dentro la schermata del gioco, che non blocca niente e non si
+   chiude. Sta fra la dose e l'attrezzo perché è lì che l'occhio passa —
+   sopra la barra sarebbe un'insegna, sotto il banco non lo vedrebbe
+   nessuno. `pointer-events:none`: è una didascalia, e un dito che ci
+   finisce sopra deve poter premere quello che c'è sotto. */
+.promemoria { flex:none; align-self:center; width:min(100%,420px); box-sizing:border-box;
+              display:flex; flex-direction:column; align-items:center; gap:4px;
+              padding:7px 12px 8px; border-radius:14px; pointer-events:none;
+              background:#fffdf7ee; color:#4b3a1f; box-shadow:0 3px 10px #0000004d;
+              animation:passi-su .3s ease-out }
+@keyframes passi-su { from { opacity:0; transform:translateY(6px) } }
+.promemoria > b { font-size:clamp(15px,4.2vmin,19px); font-weight:900; letter-spacing:.2px }
+.gradinata { display:flex; align-items:center; gap:2px }
+.gradinata .u { padding:3px 7px; border-radius:7px; font-size:12px; font-weight:900;
+                background:#00000012; color:#8a7048 }
+.gradinata .u.capo { background:#ffd85e; color:#4b3a1f; box-shadow:inset 0 0 0 2px #e0a52e }
+.gradinata .per { font-style:normal; font-size:9px; font-weight:900; color:#b09468 }
+/* la barretta: tutta la larghezza è UNA unità grande, e la scheggia accesa
+   in testa è UNA unità piccola. A ×1000 resta un capello, ed è il punto —
+   «un millilitro è una goccia» si legge, questo si vede */
+.barretta { position:relative; width:100%; height:15px; border-radius:5px; overflow:hidden;
+            background:linear-gradient(90deg,#d9c496,#c4ac78);
+            box-shadow:inset 0 0 0 1px #00000022 }
+.barretta .fetta { display:block; height:100%; min-width:3px; background:#e2603a;
+                   box-shadow:0 0 5px #e2603acc }
+.barretta b { position:absolute; right:7px; top:50%; transform:translateY(-50%);
+              font-size:10px; font-weight:900; color:#5a4623; letter-spacing:.2px }
+.promemoria .quanto { font-style:normal; font-size:11.5px; font-weight:700; color:#8a7048;
+                      text-align:center; line-height:1.25 }
+.promemoria em { font-style:normal; font-size:12px; font-weight:900; color:#4b3a1f;
+                 text-align:center; background:#ffd85e66; border-radius:8px; padding:2px 8px }
 
 .attrezzo { flex:0 1 auto; min-height:0; display:flex; align-items:center; justify-content:center; gap:14px }
 

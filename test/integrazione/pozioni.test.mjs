@@ -26,7 +26,7 @@ const intro = await page.evaluate(() => document.body.innerText)
 controlla('la mappa spiega il gioco', /litri|La bilancia/i.test(intro))
 
 const quante = await page.locator('.tappa').count()
-uguale('le otto tappe sono in mappa', quante, 8)
+uguale('le undici tappe sono in mappa', quante, 11)
 uguale('solo la prima è aperta', await page.locator('.tappa.chiusa').count(), quante - 1)
 controlla('il laboratorio libero non c\'è ancora',
           await page.locator('.tappa.libera').count() === 0)
@@ -187,17 +187,17 @@ const home = await page.evaluate(() => {
   document.querySelector('button[aria-label="indietro"]').click()
   return new Promise(r => setTimeout(() => r(document.body.innerText), 400))
 })
-controlla('la home racconta a che punto si è', /tappa 3 di 8/.test(home),
+controlla('la home racconta a che punto si è', /tappa 3 di 11/.test(home),
           home.split('\n').find(r => /preparate|tappa|pozioni/i.test(r)) || 'niente sulle pozioni')
 
 /* ---------- 6. l'ultima tappa apre il laboratorio libero ----------
    Giocarsi tutte e otto le tappe qui dentro vorrebbe dire tre minuti di
    test: si semina il profilo davanti all'ultima, che è l'unica cosa che
    il resto della campagna non può dire. */
-await semina(page, { lab: { tappa: 7, libera: false } })
+await semina(page, { lab: { tappa: 10, libera: false, v: 2 } })
 await page.getByText('Il laboratorio delle pozioni').click()
 await page.waitForSelector('.lab', { timeout: 5000 })
-uguale('con sette tappe fatte non resta niente di chiuso',
+uguale('con dieci tappe fatte non resta niente di chiuso',
        await page.locator('.tappa.chiusa').count(), 0)
 await page.locator('.tappa[data-tappa="calderone"]').click()
 await page.waitForTimeout(200)
@@ -239,7 +239,110 @@ const homeDopo = await page.evaluate(() => {
 controlla('e la home lo racconta', /laboratorio libero/i.test(homeDopo),
           homeDopo.split('\n').find(r => /pozioni|laboratorio/i.test(r)) || 'niente sulle pozioni')
 
-/* ---------- 6. niente errori per strada ---------- */
+/* ---------- 7. l'introduzione guidata, che il banco di solito salta ----------
+   Il difetto segnalato da un genitore: il gioco chiedeva di convertire
+   dalla prima ricetta della prima tappa e non insegnava mai come si fa.
+   Adesso la tappa che porta una conversione nuova comincia guidata, e
+   siccome è una spiegazione che compare da sola il banco la spegne
+   (`saltaLeSpiegazioni`): tutto quello che si è giocato fin qui è il
+   gioco senza aiuti, ed è così che deve restare. Qui si apre una seconda
+   pagina che le chiede, perché una scaletta che nessuno prova è una
+   scaletta che un giorno smette di comparire senza dirlo. */
+const { page: guidata, errori: erroriGuida } =
+  await apriGioco(browser, { viewport: TELEFONO, spiegazioni: true })
+await azzera(guidata)
+await guidata.getByText('Il laboratorio delle pozioni').click()
+await guidata.waitForSelector('.lab', { timeout: 5000 })
+await guidata.locator('.tappa[data-tappa="bilancia"]').click()
+await guidata.waitForTimeout(200)
+
+const cartello = await guidata.evaluate(() => ({
+  testo: document.querySelector('[data-promemoria]')?.innerText || '',
+  dose: window.__poz.ing.value.testo,
+  guida: window.__poz.ing.value.guida,
+  chiede: window.__poz.ing.value.chiede,
+}))
+controlla('la conversione sta scritta sopra il banco, non dietro un tasto',
+          /1 kg = 1000 g/.test(cartello.testo), JSON.stringify(cartello).slice(0, 140))
+controlla('e dice anche quanto sono grandi le due unità',
+          /graffetta/.test(cartello.testo), cartello.testo.replace(/\n/g, ' · '))
+uguale('la prima dose non chiede nessuna conversione', cartello.guida, 'diretta')
+controlla('è scritta nell\'unità del banco', / g$/.test(cartello.dose), cartello.dose)
+controlla('e non si segna al motore di apprendimento, perché nessuno l\'ha chiesta',
+          cartello.chiede === false)
+await scatto(guidata, 'pozioni-guidata')
+
+/* si gioca la tappa dosando giusto, e si guarda la scaletta scendere */
+const scaletta = await guidata.evaluate(async () => {
+  const P = window.__poz
+  const dormi = ms => new Promise(r => setTimeout(r, ms))
+  const passi = []
+  for (let giro = 0; giro < 12 && P.fase.value === 'gioco'; giro++) {
+    for (let n = 0; n < 80 && (!P.ing.value || P.ing.value.fatto || P.esito.value); n++)
+      await dormi(50)
+    if (P.fase.value !== 'gioco') break
+    const i = P.ing.value
+    passi.push({ guida: i.guida, testo: i.testo,
+                 cartello: !!document.querySelector('[data-promemoria]') })
+    P.scegliStrumento(i.attrezzi.find(a => P.vaBene(a, i.piccolo)))
+    for (const p of P.scomponi(i.piccolo, P.strumento.value.pesi)) P.metti(p)
+    P.conferma()
+    await dormi(70)
+  }
+  return passi
+})
+uguale('le prime dosature sono guidate e poi non lo sono più',
+       scaletta.map(p => p.guida || 'nuda').join(' '),
+       'diretta diretta accanto accanto promemoria')
+controlla('il cartello resta finché la conversione è fresca',
+          scaletta.every(p => p.cartello), JSON.stringify(scaletta.map(p => p.cartello)))
+nota('la scaletta della prima tappa: ' + scaletta.map(p => `${p.testo} [${p.guida}]`).join(' · '))
+
+const dopoTappa = await leggiProfilo(guidata)
+controlla('il conto delle conversioni fresche è sceso, e sta nel profilo del bambino',
+          (dopoTappa.settings.misureNuove || {})['kg-g'] === 1,
+          JSON.stringify(dopoTappa.settings.misureNuove))
+uguale('e al motore sono arrivate solo le dosature che una conversione la chiedevano',
+       (dopoTappa.items['pozioni:kg-g'] || {}).ok, 1)
+
+/* ── e uno sbaglio lo rimette ──
+   La metà che conta: chi ha imparato la conversione non vede più niente,
+   ma chi ci ricasca deve ritrovarsela davanti senza doverla cercare. */
+await semina(guidata, { lab: { tappa: 0, libera: false, v: 2 },
+                        settings: { ...dopoTappa.settings, misureNuove: { 'kg-g': 0 } } })
+await guidata.getByText('Il laboratorio delle pozioni').click()
+await guidata.waitForSelector('.lab', { timeout: 5000 })
+await guidata.locator('.tappa[data-tappa="bilancia"]').click()
+await guidata.waitForTimeout(200)
+const ricaduta = await guidata.evaluate(async () => {
+  const P = window.__poz
+  const prima = !!document.querySelector('[data-promemoria]')
+  const i = P.ing.value
+  const buono = i.attrezzi.find(a => P.vaBene(a, i.piccolo))
+  P.scegliStrumento(buono)
+  P.metti(buono.pesi[buono.pesi.length - 1])
+  P.metti(buono.pesi[buono.pesi.length - 1])
+  P.conferma()                                   // dose sbagliata: 💥
+  await new Promise(r => setTimeout(r, 900))
+  return { prima, dopo: !!document.querySelector('[data-promemoria]'),
+           guida: (P.promemoria.value || {}).guida || '',
+           dose: P.ing.value && P.ing.value.testo }
+})
+controlla('a conversione imparata il cartello non c\'è più', !ricaduta.prima)
+/* e torna sulla dose che si sta sbagliando, non sulla prossima: la
+   ricetta è già nata, quindi il cartello lo decide il conto com'è
+   adesso e non quello che era quando la ricetta è stata scritta */
+controlla('ma uno sbaglio lo riporta, subito e su questa dose',
+          ricaduta.dopo, JSON.stringify(ricaduta))
+uguale('e quello che torna è il promemoria, non la dose già convertita',
+       ricaduta.guida, 'promemoria')
+controlla('la dose infatti resta da convertire', / kg$/.test(ricaduta.dose || ''), ricaduta.dose)
+await scatto(guidata, 'pozioni-promemoria')
+
+uguale('nessun errore in console con le spiegazioni accese', erroriGuida.length, 0)
+if (erroriGuida.length) erroriGuida.forEach(e => nota(e))
+
+/* ---------- 8. niente errori per strada ---------- */
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))
 
