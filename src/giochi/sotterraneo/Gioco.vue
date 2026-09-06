@@ -228,6 +228,16 @@ const eroe = dallaCorsa(c => {
        fascia sotto il campo scrive «piano 3» e basta */
     piano: c.piano + 1, piani: c.senzaFondo ? null : c.quantiPiani,
     chiave: c.chiaveDelPiano,
+    /* ── la torcia, già pronta da guardare ──
+       Niente quando non se ne ha nessuna: un lume spento in cima allo
+       schermo si legge come una cosa rotta, e che si sia spenta l'ha
+       già detto la riga del motore. `quota` è quanto ne resta sulla sua
+       durata intera, e il conto sta qui e non nella vista: chi disegna
+       riceve un numero fra 0 e 1 e alza la fiamma. */
+    torcia: c.torciaAccesa
+      ? { resta: c.torciaResta, quota: c.torciaResta / (COSE.torcia.stanze || 1),
+          scorta: c.torceInScorta, agliSgoccioli: c.torciaResta <= 3 && !c.torceInScorta }
+      : null,
     polso: q > 0.6 ? '#4fce7c' : q > 0.3 ? '#f0b429' : '#e0432f',
   }
 })
@@ -379,10 +389,12 @@ function corredoDaProva(c) {
      mostra. */
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
   c.gemme += 120
-  /* e la torcia accesa, se no metà di quello che si è venuti a guardare
-     resta al buio: il corredo di prova serve a **vedere** una schermata */
-  c.torcia = true
-  c.aggiornaLuce()
+  /* e due torce: una accesa e una alla cintura. Se no metà di quello
+     che si è venuti a guardare resta al buio — e la seconda serve a far
+     vedere anche il «+1» della scorta, che è la parte nuova della
+     fascia in cima */
+  c.accendi('torcia')
+  c.accendi('torcia')
   /* Il corredo è lo stesso per tutti e quattro, quindi a qualcuno tocca
      roba d'altri: qui si passa dalla stessa riga del rientro, che la
      toglie di dosso e la mette in tasca. Serve a due cose — un cheat non
@@ -497,6 +509,10 @@ function guarda(c) {
                raccolta non cambia, perché quello che si prende resta in
                elenco con addosso `presa` */
             `|${c.mano}|${c.mancina}|${c.corpo}|${c.dito}` +
+            /* la torcia cala da sola, camminando: senza queste due la
+               fiamma in cima resterebbe ferma su quella di dieci stanze
+               fa, e a spegnersi sarebbe soltanto la luce sul campo */
+            `|${c.torciaResta}|${c.torceInScorta}` +
             /* due cose trovate di fila hanno lo stesso `che`: senza la
                cosa in chiaro il foglio resterebbe quello di prima */
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}`
@@ -853,6 +869,31 @@ function ridimensiona() { if (pittore) pittore.misura() }
             <b>{{ pieni }}/{{ TASCHE }}</b>
           </button>
 
+          <!-- ═══ quanta luce resta ═══
+               Da quando la torcia si consuma, il buio che torna deve
+               **vedersi arrivare**: la fiamma cala dentro il suo lume, e
+               accanto ci sono le stanze che restano e le torce alla
+               cintura. Senza, l'unica notizia sarebbe il raggio che si
+               accorcia di colpo a metà corridoio.
+
+               In basso a sinistra e non nella fascia in cima, che è già
+               piena: là dentro `.sot-io` è largo 278px in una fessura da
+               148 (il titolo di una discesa si prende il resto), quindi
+               quello che si aggiunge non compare — spinge fuori la barra
+               della vita, che è il numero che si guarda mentre si
+               combatte. Qui invece è dove stanno gli occhi, in faccia al
+               tasto dello zaino e sopra la riga del piano. -->
+          <p v-if="eroe.torcia" class="sot-torcia" data-torcia
+             :class="{ 'sot-sgoccioli': eroe.torcia.agliSgoccioli }">
+            <!-- l'emoji dice **di cosa** è la colonnina: da sola una
+                 barretta arancione in un angolo non è la luce, è una
+                 barretta arancione in un angolo -->
+            <span class="em">🔦</span>
+            <i class="sot-lume"><u :style="{ height: eroe.torcia.quota * 100 + '%' }"></u></i>
+            <b>{{ eroe.torcia.resta }}</b>
+            <em v-if="eroe.torcia.scorta">+{{ eroe.torcia.scorta }}</em>
+          </p>
+
           <p v-if="avviso" class="sot-avviso">
             <Icona v-if="avviso.cosa" :sprite="avviso.sprite" :em="avviso.em" :emAlto="20" />
             {{ avviso.testo }}
@@ -1022,7 +1063,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
              sempre la caverna. Al centro la ragione per cui non ci si
              muove sta in mezzo allo schermo. -->
         <Foglio v-else-if="zainoAperto" em="🎒" titolo="Lo zaino" centro>
-          <Zaino v-bind="zaino" :eroe="eroeScheda"
+          <Zaino v-bind="zaino" :eroe="eroeScheda" :torcia="eroe.torcia"
                  :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
                  :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                  :piano="eroe.piano" :piani="eroe.piani"

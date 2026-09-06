@@ -161,6 +161,39 @@ await page.waitForSelector('.sot-tela', { timeout: 5000 })
 controlla('e si ricomincia senza che nessuno chieda niente',
           await page.locator('.sot-velo').count() === 0)
 
+/* ---------- 8. la luce che resta si vede, in due posti ----------
+   La torcia si consuma, quindi il buio che torna deve vedersi arrivare:
+   una colonnina che cala nella fascia in cima mentre si cammina, e la
+   riga per esteso nello zaino, che è dove si va a guardare *quante ne
+   ho*. Nessuna delle due si può misurare senza una torcia in mano, e
+   guadagnarsela giocando vorrebbe dire un test che qualche volta la
+   trova e qualche volta no: si passa dal cheat di casa
+   (`#sotterraneo=roba`), che scende con una accesa e una alla cintura. */
+await page.locator('button[aria-label="indietro"]').click()
+await page.waitForSelector('.sot-tappe', { timeout: 5000 })
+await page.locator('[data-azione="scorda"]').click()
+await attendi(page, 300)
+await page.evaluate(() => { location.hash = 'sotterraneo=roba' })
+await page.locator('.sot-tappa[data-tappa="0"]').click()
+await page.waitForSelector('.sot-tela', { timeout: 5000 })
+await attendi(page, 400)
+
+const lume = page.locator('[data-torcia]')
+uguale('la fascia in cima porta la torcia', await lume.count(), 1)
+const detto = await lume.textContent()
+controlla('con le stanze che restano', /12/.test(detto), detto)
+controlla('e la torcia di scorta', /\+1/.test(detto), detto)
+controlla('e la fiamma è alta quanto quello che resta',
+          await page.locator('[data-torcia] .sot-lume u').evaluate(
+            e => parseFloat(e.style.height) > 90))
+
+await page.locator('[data-azione="zaino"]').click()
+await page.waitForSelector('.sot-centrale', { timeout: 3000 })
+const riga = await page.locator('[data-torcia-zaino]').textContent()
+controlla('e lo zaino lo dice per esteso', /stanze/.test(riga) && /cintura/.test(riga), riga)
+await page.locator('[data-azione="chiudi"]').click()
+await attendi(page, 300)
+
 uguale('nessun errore in console', errori.join(' · '), '')
 nota('il tocco che apre un foglio dal campo lo prova unita/sotterraneo')
 

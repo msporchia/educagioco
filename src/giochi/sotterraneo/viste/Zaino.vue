@@ -55,6 +55,16 @@ const props = defineProps({
   vita: { type: Number, required: true },
   vitaMax: { type: Number, required: true },
   gemme: { type: Number, required: true },
+  /* ── la torcia non è in una tasca, ma si vede lo stesso ──
+     Accenderla non è una scelta, quindi non spende un posto che si
+     sceglie: sta fuori dalle sei tasche, come è sempre stata. Da quando
+     però si consuma, «quante ne ho e quanta luce mi resta» è una
+     domanda che ci si fa, e lo zaino è il posto dove si va a
+     guardare — se non ci fosse scritta qui, l'unico posto dove esiste
+     sarebbe la fascia in cima, che si legge di sfuggita mentre si
+     cammina. `null` quando non se ne ha nessuna: una riga spenta
+     racconterebbe una cosa che non c'è. */
+  torcia: { type: Object, default: null },
   piano: { type: Number, required: true },
   /* quanti piani ha la discesa, o `null`: l'abisso non lo sa, e «26/»
      con il numero dopo la barra mancante si legge come un guasto */
@@ -205,6 +215,17 @@ const cambio = computed(() => {
         <b>{{ vita }}/{{ vitaMax }}</b>
       </span>
       ⚔️ {{ att }} · 🛡️ {{ dif }} · 💎 {{ gemme }} · 🪜 {{ piano }}<template v-if="piani">/{{ piani }}</template>
+    </p>
+
+    <!-- ═══ la luce che si ha ═══ -->
+    <p v-if="torcia" class="sot-torcia-riga" data-torcia-zaino>
+      <span class="em">🔦</span>
+      <i class="sot-lume"><u :style="{ height: torcia.quota * 100 + '%' }"></u></i>
+      <b>ancora {{ torcia.resta }} {{ torcia.resta === 1 ? 'stanza' : 'stanze' }}</b>
+      <em v-if="torcia.scorta">
+        e {{ torcia.scorta }} alla cintura: {{ torcia.scorta === 1 ? 'si accende' : 'si accendono' }} da sé
+      </em>
+      <em v-else>poi si spegne</em>
     </p>
 
     <!-- ═══ chi sei, e cosa hai addosso ═══ -->
