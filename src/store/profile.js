@@ -135,7 +135,10 @@ const blank = () => ({
   calc: { tappa: 0, libera: false },// lo specchio delle stazioni a mente
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
-  mercato: { tappa: 0, libera: false }, // e per le giornate di mercato della bancarella
+  /* La bancarella: stessa forma, più il numero di versione — le giornate
+     sono passate da sei a sedici e un «4» scritto ieri non parla dello
+     stesso posto di un «4» scritto oggi. Vedi `migraMercato`. */
+  mercato: { tappa: 0, libera: false, v: 2 },
   /* Il laboratorio delle pozioni. Stessa forma e stesso `v` del castello,
      per la stessa ragione: le tappe sono passate da otto a undici quando
      si è deciso che una tappa porta **una** conversione nuova e non due,
@@ -563,7 +566,7 @@ export async function selectPlayer(id) {
   p.calc = { ...vuoto.calc, ...(p.calc || {}) }
   p.eng = { ...vuoto.eng, ...(p.eng || {}) }
   p.esp = { ...vuoto.esp, ...(p.esp || {}) }
-  p.mercato = { ...vuoto.mercato, ...(p.mercato || {}) }
+  p.mercato = migraMercato(vuoto.mercato, raw && raw.mercato)
   p.lab = migraLaboratorio(vuoto.lab, raw && raw.lab)
   p.gen = { ...vuoto.gen, ...(p.gen || {}) }
   p.giorni = { ...vuoto.giorni, ...(p.giorni || {}) }
@@ -1441,6 +1444,54 @@ export function linguaCompleta(campo, indice, quanteTappe) {
    l'indice della prossima da aprire. Finita l'ultima si apre la giornata
    libera, che non chiude mai. */
 export const mercatoProgresso = () => state.profile.mercato
+
+/* ---------- il salvataggio di chi giocava alle sei giornate ----------
+
+   La bancarella aveva sei giornate; adesso ne ha sedici, perché fra le
+   prime e la cassa rotta è entrata la scala che mancava (vedi la tabella
+   in testa a `data/bancarella.js`). `mercato.tappa` è un indice su quella
+   fila, quindi un «4» scritto ieri e un «4» scritto oggi non parlano dello
+   stesso posto: senza rimappare, chi aveva finito il mercato coperto si
+   ritroverebbe a metà delle giornate del totale.
+
+   La regola è quella di sempre, la stessa di `migraCastello`: **nessuno
+   torna indietro**. Le sei giornate di ieri sono tutte ancora qui, con lo
+   stesso id, e si sono solo spostate lungo la fila:
+
+     banchetto 0→0 · paese 1→1 · grande 2→5 · fiera 4→10 · coperto 3→13 ·
+     mente 5→15
+
+   `tappa` è **quante ne sono state finite**, cioè l'indice della prossima.
+   Chi ne aveva finite k aveva superato le vecchie 0..k-1, e quindi tutto
+   quello che sta prima della più avanzata fra quelle: da cui la tabella,
+   che non è una proporzione ma il conto vero, giornata per giornata.
+   Nota il 4 e il 5 che finiscono nello stesso posto: ieri il mercato
+   coperto veniva prima della fiera, oggi viene dopo, e chi si era fermato
+   in mezzo trova aperte tutte e due — mai una in meno.
+
+   Chi le aveva finite tutte (k = 6) trova aperto tutto, e la giornata
+   libera se l'era già sbloccata resta sbloccata: era un premio già preso.
+   Le dieci giornate nuove gli risultano fatte, ed è la scelta meno
+   peggio — l'alternativa era richiudergli la cassa rotta che aveva già
+   battuto.
+
+   `v` è il segno che la migrazione è già stata fatta, e va letto **prima**
+   di fondere il salvataggio con il profilo vuoto: se si fondesse per
+   primo, il `v` del vuoto coprirebbe l'assenza nel salvataggio e la
+   rimappatura non partirebbe mai. */
+export const MERCATO_VERSIONE = 2
+const MERCATO_DA_SEI = [0, 1, 2, 6, 14, 14, 16]
+
+export function migraMercato(vuoto, salvato) {
+  const dati = salvato && typeof salvato === 'object' ? salvato : {}
+  const m = { ...vuoto, ...dati }
+  if (dati.v === MERCATO_VERSIONE) return m
+  const vecchia = Math.max(0, Math.min(MERCATO_DA_SEI.length - 1, Math.round(m.tappa || 0)))
+  m.tappa = Math.max(m.tappa || 0, MERCATO_DA_SEI[vecchia])
+  m.libera = !!m.libera
+  m.v = MERCATO_VERSIONE
+  return m
+}
 
 export function mercatoCompleta(indice, quanteGiornate) {
   const m = state.profile.mercato

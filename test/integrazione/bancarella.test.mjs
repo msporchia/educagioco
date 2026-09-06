@@ -2,8 +2,9 @@
    LA BANCARELLA, GIOCATA DAVVERO
      node test/integrazione/bancarella.test.mjs   (dopo `npm run build`)
 
-   Il test di unità dice che ogni resto è componibile. Qui si guarda il
-   giro completo, che nessun conto può dire:
+   Il test di unità dice che ogni resto è componibile e che la scaletta
+   sale una leva per volta. Qui si guarda il giro completo, che nessun
+   conto può dire:
      · dalla home ci si arriva, e col tasto ‹ si torna indietro
      · le giornate di mercato: la prima è aperta, le altre no
      · **niente da aprire**: la merce della tappa è tutta in vista nelle
@@ -12,6 +13,10 @@
        disegnata: scontrino, display col resto, cassetto a scomparti
      · sbagliare costa tempo, non un cuore
      · una giornata intera si finisce, e il profilo se ne accorge
+     · **i tre gradini del conto**, che sono la cura del difetto
+       segnalato da un genitore: la giornata in cui il totale lo batti
+       tu sulla tastiera, quella in cui le copie e i centesimi si
+       incontrano, e la cassa rotta in fondo
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -268,13 +273,79 @@ const dopo = await page.evaluate(() => ({
 uguale('la giornata finita si vede come fatta', dopo.fatte, 1)
 uguale('e quella dopo si è aperta', dopo.chiuse, dopo.quante - 2)
 
-/* ---------- 7. una giornata avanzata: «due angurie» e resti da più monete ----------
-   La prima giornata non ha copie né monete piccole per scelta: quello che
-   cresce si vede solo più avanti, e va provato lì. */
-await semina(page, { mercato: { tappa: 4, libera: false } })
+/* ---------- 6b. il gradino nuovo: il totale lo batte lui ----------
+   È la giornata che il difetto ha fatto nascere. La cassa non somma più:
+   sullo scontrino c'è `? ? ?`, sotto c'è una tastiera vera, e finché la
+   cifra non è giusta il cassetto **non si apre nemmeno** — dare il resto
+   senza sapere quanto costa la spesa non vuol dire niente. */
+await semina(page, { mercato: { tappa: 2, libera: false, v: 2 } })
 await page.getByText('La bancarella').click()
 await page.waitForSelector('.giornate', { timeout: 5000 })
-await page.locator('.giornata[data-camp="fiera"]').click()
+await page.locator('.giornata[data-camp="conto-dieci"]').click()
+await page.waitForSelector('.banco', { timeout: 5000 })
+await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
+
+const conto = await page.evaluate(async () => {
+  const S = window.__shop
+  const dormi = ms => new Promise(r => setTimeout(r, ms))
+  const c = S.cliente.value
+  for (const a of [...S.daPrendere.value])
+    for (let k = 0; k < a.quanti; k++) { S.prendi(a); await dormi(20) }
+  await dormi(80)
+  const totale = c.totale
+  const somma = (document.querySelector('.somma b') || {}).textContent || ''
+  const tasti = document.querySelectorAll('.tastierone .tasto').length
+  const cassetto = document.querySelectorAll('.cassetto .scomparto').length
+
+  // 1. una cifra sbagliata costa tempo, non un cuore, e non svela il totale
+  const cuoriPrima = S.hud.cuori, pazienzaPrima = c.restaPazienza
+  for (const t of String((totale + 100) / 100)) S.batti(t)
+  S.confermaTotale()
+  await dormi(60)
+  const sbagliato = { cuori: S.hud.cuori, pazienza: c.restaPazienza,
+                      somma: (document.querySelector('.somma b') || {}).textContent || '',
+                      battuta: S.battuta.value, aperto: S.contoFatto.value }
+
+  return { totale, somma, tasti, cassetto, ...sbagliato, cuoriPrima, pazienzaPrima }
+})
+/* la foto si scatta QUI, con la tastiera ancora su: dopo il ✓ sparisce, e
+   quello che c'era da guardare era proprio lei */
+await scatto(page, 'bancarella-tastiera')
+
+// 2. la cifra giusta apre il cassetto, e da lì è la cassa a dire il resto
+const dopoIlConto = await page.evaluate(async () => {
+  const S = window.__shop
+  for (const t of String(S.cliente.value.totale / 100)) S.batti(t)
+  const scritto = S.digitato.value
+  S.confermaTotale()
+  await new Promise(r => setTimeout(r, 120))
+  return { scritto, fatto: S.contoFatto.value,
+           cassettoDopo: document.querySelectorAll('.cassetto .scomparto').length,
+           display: (document.querySelector('.cassa .display b') || {}).textContent || '' }
+})
+Object.assign(conto, dopoIlConto)
+uguale('finché non batte il totale, lo scontrino non lo dice', conto.somma, '? ? ?')
+uguale('la tastiera ha i suoi dodici tasti', conto.tasti - 1, 12)
+uguale('e il cassetto è ancora chiuso', conto.cassetto, 0)
+uguale('una cifra sbagliata non costa un cuore', conto.cuori, conto.cuoriPrima)
+controlla('costa tempo', conto.pazienza < conto.pazienzaPrima - 2,
+          `${conto.pazienzaPrima.toFixed(1)}s → ${conto.pazienza.toFixed(1)}s`)
+uguale('e non svela il totale', conto.somma, '? ? ?')
+controlla('la cassa dice solo troppo o troppo poco', /troppo|poco/i.test(conto.battuta),
+          conto.battuta)
+uguale('il totale sbagliato non apre niente', conto.aperto, false)
+controlla('col totale giusto il cassetto si apre', conto.fatto && conto.cassettoDopo > 0,
+          `fatto ${conto.fatto}, ${conto.cassettoDopo} scomparti`)
+controlla('e da lì il resto lo dice ancora la cassa', /\d/.test(conto.display), conto.display)
+nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
+
+/* ---------- 7. una giornata avanzata: «due angurie» e resti da più monete ----------
+   Le prime giornate non hanno copie né monete piccole per scelta: quello che
+   cresce si vede solo più avanti, e va provato lì. */
+await semina(page, { mercato: { tappa: 14, libera: false, v: 2 } })
+await page.getByText('La bancarella').click()
+await page.waitForSelector('.giornate', { timeout: 5000 })
+await page.locator('.giornata[data-camp="resto-copie"]').click()
 await page.waitForSelector('.banco', { timeout: 5000 })
 await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 5000 })
 
@@ -305,6 +376,8 @@ const fiera = await page.evaluate(async () => {
                    tagli: [...c.monete] }
       const prima = S.hud.serviti
       for (const v of S.scomponi(c.resto - S.dato.value, c.monete)) S.metti(v)
+      // qui il resto non lo dice più la cassa: si consegna col ✓
+      if (S.aMente.value) S.proponi()
       for (let k = 0; k < 60; k++) {
         if (S.hud.serviti > prima && (S.momento.value === 'raccolta' || S.fase.value !== 'gioco')) break
         await dormi(50)
@@ -314,7 +387,7 @@ const fiera = await page.evaluate(async () => {
   }
   return { quanti, monete, badge, ...cassetto }
 })
-controlla('alla fiera qualcuno vuole due o tre cose uguali',
+controlla('in fondo alla campagna qualcuno vuole due o tre cose uguali',
           fiera.quanti.some(q => q > 1), fiera.quanti.join(','))
 controlla('e la cesta ricorda quante ne mancano', fiera.badge > 0,
           `${fiera.badge} promemoria visti`)
@@ -325,13 +398,14 @@ controlla('nel cassetto ci sono anche 1c, 2c e la banconota da 10 €',
           fiera.tagli.join(' '))
 uguale('e ogni taglio ha il suo scomparto', fiera.scomparti, fiera.tagli.length)
 await scatto(page, 'bancarella-fiera')
-nota(`fiera: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
+nota(`due cose uguali: pezzi per articolo [${fiera.quanti.join(',')}] · ` +
      `monete a resto [${fiera.monete.join(',')}]`)
 
-/* ---------- 8. l'ultima giornata: la cassa non calcola ----------
-   Qui l'aiuto sparisce: il display non dice il resto, le monete si posano
-   tutte (anche troppe) e la risposta la dà il bambino col tasto ✓. */
-await semina(page, { mercato: { tappa: 5, libera: false } })
+/* ---------- 8. l'ultima giornata: la cassa non calcola più niente ----------
+   Qui sparisce anche l'ultimo aiuto: prima si batte il totale, poi il
+   display non dice il resto, le monete si posano tutte (anche troppe) e
+   la risposta la dà il bambino col tasto ✓. */
+await semina(page, { mercato: { tappa: 15, libera: false, v: 2 } })
 await page.getByText('La bancarella').click()
 await page.waitForSelector('.giornate', { timeout: 5000 })
 await page.locator('.giornata[data-camp="mente"]').click()
@@ -345,14 +419,24 @@ const rotta = await page.evaluate(async () => {
   for (const a of [...S.daPrendere.value])
     for (let k = 0; k < a.quanti; k++) { S.prendi(a); await dormi(20) }
   await dormi(60)
+  // qui la cassa non somma nemmeno: prima si batte il totale
+  const primaDelTotale = (document.querySelector('.somma b') || {}).textContent || ''
+  for (const t of (c.totale / 100).toFixed(2).replace('.', ',')) S.batti(t)
+  S.confermaTotale()
+  await dormi(80)
   const display = (document.querySelector('.cassa .display b') || {}).textContent || ''
   const quanto = (document.querySelector('.piatto .quanto') || {}).innerText || ''
   const tasto = () => document.querySelector('.eccolo')
 
-  // 1. una moneta più grande del resto NON viene rifiutata: qui si può sbagliare
-  const grossa = [...c.monete].reverse().find(m => m > c.resto)
-  S.metti(grossa)
-  const accettata = S.piatto.value.length
+  /* 1. QUI SI PUÒ SBAGLIARE PER ECCESSO. Nelle giornate normali una
+     moneta che sfonda il resto viene rifiutata; qui la cassa non sa
+     nemmeno quanto sia il resto, quindi si posa tutto. Non si cerca «una
+     moneta più grande del resto» — con le banconote da 10 € e un resto da
+     11 € non esisterebbe — si posa la più grossa finché il piatto passa
+     la cifra giusta. */
+  const grossa = Math.max(...c.monete)
+  while (S.dato.value <= c.resto) S.metti(grossa)
+  const accettata = S.dato.value > c.resto ? S.piatto.value.length : 0
   await dormi(80)                       // il tasto compare al render dopo
   const tastoDopoUnaMoneta = !!tasto()
 
@@ -365,7 +449,7 @@ const rotta = await page.evaluate(async () => {
                       restoSvelato: /\d/.test(document.querySelector('.cassa .display b').textContent) }
 
   // 3. il resto giusto invece passa, ma solo dopo il ✓
-  S.togli()
+  while (S.piatto.value.length) S.togli()
   for (const v of S.scomponi(c.resto, c.monete)) S.metti(v)
   await dormi(120)
   const primaDelSi = S.hud.serviti
@@ -373,6 +457,7 @@ const rotta = await page.evaluate(async () => {
   for (let k = 0; k < 40 && S.hud.serviti === primaDelSi; k++) await dormi(50)
 
   return { aMente: S.aMente ? S.aMente.value : null, display, quanto,
+           primaDelTotale, totaleScritto: (document.querySelector('.somma b') || {}).textContent,
            accettata, grossa, resto: c.resto, tastoDopoUnaMoneta,
            cuoriPrima, cuoriDopo: sbagliato.cuori, pazienzaPrima,
            pazienzaDopo: sbagliato.pazienza, servitiPrima, dopoSbaglio: sbagliato.serviti,
@@ -380,10 +465,13 @@ const rotta = await page.evaluate(async () => {
            primaDelSi, serviti: S.hud.serviti }
 })
 controlla('nella cassa rotta il gioco lo sa', rotta.aMente === true)
+uguale('qui nemmeno il totale lo fa la cassa', rotta.primaDelTotale, '? ? ?')
+controlla('battuto quello giusto, lo scontrino lo scrive',
+          /\d/.test(rotta.totaleScritto || ''), rotta.totaleScritto)
 controlla('il display non dice più il resto', !/\d/.test(rotta.display), rotta.display)
 controlla('e nemmeno il piatto dice quanto manca', !/manca/i.test(rotta.quanto), rotta.quanto)
-uguale('qui la moneta troppo grande si può posare: sbagliare è permesso',
-       rotta.accettata, 1)
+controlla('qui si può posare più del dovuto: sbagliare è permesso',
+          rotta.accettata > 0, `${rotta.accettata} pezzi sul banco`)
 controlla('e c\'è il tasto per dire "ecco il resto"', rotta.tastoDopoUnaMoneta)
 uguale('un resto sbagliato non serve il cliente', rotta.dopoSbaglio, rotta.servitiPrima)
 uguale('e non costa un cuore', rotta.cuoriDopo, rotta.cuoriPrima)
@@ -394,7 +482,7 @@ controlla('la cassa dice solo se è giusto o sbagliato, non la cifra',
 uguale('col resto giusto il cliente è servito', rotta.serviti, rotta.primaDelSi + 1)
 await scatto(page, 'bancarella-cassa-rotta')
 nota(`cassa rotta: resto ${rotta.resto}c, rifiutata a mente nessuna moneta ` +
-     `(posata anche una da ${rotta.grossa}c)`)
+     `(posati ${rotta.accettata} pezzi da ${rotta.grossa}c, cioè troppi)`)
 
 /* ---------- 9. niente errori per strada ---------- */
 uguale('nessun errore in console', errori.length, 0)

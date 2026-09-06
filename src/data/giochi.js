@@ -140,11 +140,11 @@ export const GIOCHI = [
     che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
     area: 'numeri', come: 'fare', grandi: true },
   /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
-     giornata è tarata su 7 anni (`portata: 37` in `data/bancarella.js`),
-     cioè seconda elementare — e contare le monete e dare il resto non
-     chiede di saper leggere niente. Il flag la spegneva a tutta la
-     partenza «prima o seconda», compresi i sette anni a cui il gioco
-     dice di rivolgersi. */
+     giornata è tarata sui sei anni e mezzo (`portata: 32`, ricavata in
+     `data/bancarella.js`), cioè prima elementare — e contare le monete e
+     dare il resto non chiede di saper leggere niente. Il flag la spegneva
+     a tutta la partenza «prima o seconda», compresi gli anni a cui il
+     gioco dice di rivolgersi. */
   { chiave: 'bancarella', ico: '🛒', nome: 'La bancarella',
     che: 'euro, centesimi e resto', area: 'numeri', come: 'fare' },
   { chiave: 'generale',   ico: '🎖️', nome: 'Il generale',

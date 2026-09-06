@@ -703,8 +703,15 @@ export const AIUTI = {
         'I clienti **hanno una loro pazienza**: se ci si mette troppo si lamentano, e la giornata si può chiudere male.',
         'Tappa dopo tappa il tempo si stringe: è lì che il gioco diventa difficile, non nei numeri più grandi.',
       ] },
+      { titolo: 'La cassa fa sempre meno conti', chiuso: true, righe: [
+        'Le prime giornate la cassa somma la spesa e dice quanto resto dare: il lavoro è comporlo con le monete del cassetto.',
+        'Poi il totale sparisce e si batte sulla tastiera — somme in euro tondi, entro il dieci.',
+        'Poi tocca al resto: il totale resta scritto, il cliente paga con 10 €, e la sottrazione la fa lui.',
+        'Nell\'ultima giornata la cassa non calcola più niente. **Ogni giornata aggiunge una cosa sola**: un prodotto in più, o una banconota più grossa, o i centesimi — mai due insieme.',
+      ] },
       { titolo: 'Cosa allena', righe: [
         'I soldi veri: euro e centesimi, comporre una cifra coi tagli che si hanno, e **il resto**.',
+        'La somma e la sottrazione dove servono davvero: alla cassa, con la roba sul banco.',
         'Contare avendo un po\' di fretta addosso — che è come si conta alla cassa vera.',
       ] },
     ],

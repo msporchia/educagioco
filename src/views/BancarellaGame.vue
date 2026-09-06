@@ -10,17 +10,22 @@
    1. RACCOLTA — chiede la sua roba (la lista sta nel suo fumetto) e
       tu la prendi dalle ceste del banco.
    2. CASSA — quando ha tutto ti allunga la banconota. Il banco
-      diventa il registratore: il display calcola il resto, tu lo
-      componi con le monete del cassetto.
+      diventa il registratore, e **quanto calcola la cassa lo dice la
+      giornata** (`conto` in `data/bancarella.js`): può sommare la
+      spesa e dire il resto, può chiedere che il totale lo batta tu
+      sulla tastiera, può tacere il resto, o tutte e due le cose
+      insieme. Quello che non fa mai è dire la cifra giusta a chi
+      sbaglia: dice troppo o troppo poco, e costa tempo.
 
-   La difficoltà cresce di giornata in giornata: più banchi, prezzi
-   più precisi, monete più piccole e soprattutto meno tempo — che
-   dentro la giornata si stringe tappa dopo tappa.
+   La difficoltà cresce di giornata in giornata, ma **una leva per
+   volta**: la tabella sta in testa a `data/bancarella.js`, e un test
+   la ricontrolla.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { answer, level, addCoins, segna, segnaBest,
+import { answer, addCoins, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
+         centesimiScritti, scriviCifra, premioCliente,
          BANCHI, CAMPAGNE, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
 import { suono } from '../audio.js'
 import Barra from '../components/Barra.vue'
@@ -28,6 +33,10 @@ import Barra from '../components/Barra.vue'
 defineEmits(['vai'])
 
 const CUORI = 3, PER_MONETA = 3
+/* i dodici tasti della cassa, nell'ordine di un registratore vero: le
+   cifre, la virgola e il cancelletto. Il ✓ sta a parte perché è l'unico
+   che manda qualcosa — gli altri scrivono e basta. */
+const TASTI = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫']
 const fase = ref('mappa')           // mappa | gioco | fine
 const idx = ref(0)                  // quale giornata (-1 = giornata libera)
 const nTappa = ref(0)               // a che tappa del giro siamo
@@ -42,6 +51,8 @@ const rifiutata = ref(0)
 const bonus = ref(false)
 const moneta = ref(0)
 const battuta = ref('')
+const digitato = ref('')            // la cifra che sta battendo sulla cassa
+const contoFatto = ref(false)       // il totale l'ha già indovinato
 const cambio = ref(null)            // il cartello del cambio banco
 const esito = ref('')               // vinta | persa
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
@@ -65,6 +76,7 @@ const SALUTI   = ['Ciao! 👋', 'Buongiorno!', 'Salve!', 'Buondì!']
 const CHIEDE   = ['Vorrei…', 'Mi dà…', 'Per favore…', 'Prendo…']
 const OFFERTE  = ['Ecco a lei!', 'Tenga pure', 'Le do questa']
 const SBAGLIO  = ['No, non quello!', 'Non è questo…', 'Ehm, no']
+const ESATTO   = ['Esatto!', 'Proprio così', 'Giusto!']
 const GRAZIE   = ['Grazie! 😊', 'Grazie mille!', 'A presto!', 'Arrivederci!']
 const PERFETTI = ['Preciso! ✨', 'Che bravo!', 'Giusti giusti!']
 const FRETTA   = ['Ho un po\' di fretta…', 'Sbrighiamoci?', 'Uhm…']
@@ -108,6 +120,8 @@ function alBanco() {
   momento.value = 'raccolta'
   presi.value = []
   piatto.value = []
+  digitato.value = ''
+  contoFatto.value = false
   battuta.value = pick(SALUTI)
   apertoIl = performance.now()
   setTimeout(() => { if (cliente.value && !occupato && momento.value === 'raccolta')
@@ -165,17 +179,57 @@ function prendi(a) {
 }
 
 /* ---------- fase 2: la cassa ----------
-   Due modi, e cambia tutto. Nelle giornate normali la cassa dice il resto e
-   il gioco è comporlo: allora una moneta che sfonda la cifra viene rifiutata
-   e appena il piatto torna il cliente è servito. Nella giornata «a mente» la
-   cassa non dice niente: le monete si posano tutte, e la risposta la dai tu
-   col tasto ✓. */
-const aMente = computed(() => !!(cliente.value && cliente.value.mente))
+   Chi fa i conti lo dice la giornata (`conto` in `data/bancarella.js`), e
+   qui diventano due domande separate:
+
+     `chiediTotale`  la riga TOTALE dello scontrino è `? ? ?` e la cifra si
+                     batte sulla tastiera. Finché non è indovinata il
+                     cassetto non si apre nemmeno: dare il resto prima di
+                     sapere quanto costa la spesa non vuol dire niente.
+     `aMente`        il display non dice il resto: le monete si posano
+                     tutte, anche troppe, e la risposta la dai tu col ✓.
+
+   Quando non c'è né l'una né l'altra la cassa fa tutto, e allora una moneta
+   che sfonda la cifra viene rifiutata e appena il piatto torna il cliente è
+   servito — è il gesto di base delle prime due giornate. */
+const aMente = computed(() => !!(cliente.value && cliente.value.chiediResto))
+const chiediTotale = computed(() =>
+  !!(cliente.value && cliente.value.chiediTotale) && !contoFatto.value)
+
+/* ═══════════ il totale battuto sulla cassa ═══════════
+   La cassa non dice mai la cifra giusta: dice troppo o troppo poco, come
+   fa già col resto. Sbagliare costa tempo e si riprova — se svelasse il
+   numero, il conto dopo non lo farebbe più nessuno. */
+function batti(t) {
+  if (occupato || !cliente.value || momento.value !== 'cassa' || !chiediTotale.value) return
+  digitato.value = scriviCifra(digitato.value, t)
+  suono.nota(600, 700, 0.05, 'square', 0.05)
+}
+
+function confermaTotale() {
+  const c = cliente.value
+  if (occupato || !c || momento.value !== 'cassa' || !chiediTotale.value) return
+  const detto = centesimiScritti(digitato.value)
+  if (detto === null) return
+  if (detto === c.totale) {
+    contoFatto.value = true
+    battuta.value = pick(ESATTO)
+    suono.nota(720, 980, 0.09, 'triangle', 0.11)
+    return
+  }
+  rifiuti++
+  sbagliato.value = 'conto'
+  setTimeout(() => { if (sbagliato.value === 'conto') sbagliato.value = '' }, 600)
+  battuta.value = detto > c.totale ? 'È troppo!' : 'È poco…'
+  suono.no()
+  c.restaPazienza = Math.max(2, c.restaPazienza - 3)
+  digitato.value = ''
+}
 
 function metti(v) {
   const c = cliente.value
-  if (occupato || !c || momento.value !== 'cassa') return
-  if (!c.mente && dato.value + v > c.resto) {
+  if (occupato || !c || momento.value !== 'cassa' || chiediTotale.value) return
+  if (!c.chiediResto && dato.value + v > c.resto) {
     // non si può sbagliare per eccesso: la moneta viene rifiutata e basta,
     // costa due secondi di pazienza e non un cuore
     rifiuti++
@@ -187,7 +241,7 @@ function metti(v) {
   }
   piatto.value.push(v)
   suono.nota(680, 900, 0.06, 'triangle', 0.09)
-  if (!c.mente && dato.value === c.resto) consegna()
+  if (!c.chiediResto && dato.value === c.resto) consegna()
 }
 
 const togli = () => { if (!occupato) piatto.value.pop() }
@@ -197,7 +251,8 @@ const togli = () => { if (!occupato) piatto.value.pop() }
    secondi e si riprova, che è come va quando si sbaglia a dare il resto. */
 function proponi() {
   const c = cliente.value
-  if (occupato || !c || momento.value !== 'cassa' || !piatto.value.length) return
+  if (occupato || !c || momento.value !== 'cassa' || chiediTotale.value ||
+      !piatto.value.length) return
   if (dato.value === c.resto) return consegna()
   rifiuti++
   sbagliato.value = 'conto'
@@ -217,8 +272,14 @@ function consegna() {
   if (perfetto) { hud.perfetti++; bonus.value = true; segna('restiPerfetti') }
   battuta.value = pick(perfetto ? PERFETTI : GRAZIE)
   suono.moneta()
+  /* il premio lo dice la giornata, non il livello di chi gioca: una
+     giornata facile rende meno di una tosta, e il conto sta in
+     `MONETE_CLIENTE` (`data/bancarella.js`, che cita `CALIBRAZIONE.md`).
+     Prima era `level`, cioè la stessa giornata pagava il doppio a chi
+     giocava da più tempo. */
   if (hud.serviti % PER_MONETA === 0) {
-    addCoins(level.value); moneta.value = level.value
+    const preso = PER_MONETA * premioCliente(camp.value)
+    addCoins(preso); moneta.value = preso
     setTimeout(() => (moneta.value = 0), 1100)
   }
   clearTimeout(timer)
@@ -326,6 +387,7 @@ onMounted(() => {
   window.__shop = { fase, coda, piatto, hud, inizia, metti, togli, prendi, proponi,
                     cliente, dato, manca, battuta, scomponi, momento, presi, aMente,
                     daPrendere, esposti, tappa: nTappa, camp, T, cambio, esito,
+                    batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
                     CAMPAGNE, BANCHI, prog }
 })
 onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
@@ -359,7 +421,10 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
             <span class="banchini"><i v-for="(b, j) in g.tappe" :key="j">{{ BANCHI[b].icona }}</i></span>
           </span>
           <span class="stato">{{ !sbloccata(i) ? '🔒' : i < prog.tappa ? '✅' : '▶' }}</span>
-          <span class="mini">{{ g.mente ? '🧠 la cassa non calcola: il resto lo conti tu'
+          <!-- quello che questa giornata aggiunge: è la scaletta, detta a voce
+               alta. Senza, sedici carte in fila sembrano sedici volte la
+               stessa cosa. -->
+          <span class="mini">{{ g.nuovo ? '＋ ' + g.nuovo
                                         : g.tappe.length + ' banchi · ' + g.tempo[1] + 's a cliente' }}</span>
         </button>
         <button v-if="prog.libera" class="giornata libera" data-camp="libera" @click="inizia(-1)">
@@ -462,12 +527,23 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
                   <b>{{ euro(a.prezzo * a.quanti) }}</b>
                 </span>
               </div>
-              <div class="somma"><span>TOTALE</span><b>{{ euro(cliente.totale) }}</b></div>
+              <!-- il totale: scritto dalla cassa, oppure `? ? ?` finché non
+                   l'ha battuto lui -->
+              <div class="somma" :class="{ daFare: chiediTotale }">
+                <span>TOTALE</span><b>{{ chiediTotale ? '? ? ?' : euro(cliente.totale) }}</b>
+              </div>
             </div>
             <!-- il registratore: quando la cassa è rotta il display non
                  calcola più, e al posto della cifra c'è un punto interrogativo -->
-            <div class="corpo" :class="{ rotta: aMente }">
-              <div class="display">
+            <div class="corpo" :class="{ rotta: aMente || chiediTotale }">
+              <!-- il display: mentre batte il totale mostra quello che sta
+                   scrivendo, come su un registratore vero -->
+              <div class="display" v-if="chiediTotale">
+                <span>QUANTO FA?</span>
+                <b>{{ digitato ? digitato + ' €' : '_ _ _' }}</b>
+                <span>BATTI IL TOTALE</span>
+              </div>
+              <div class="display" v-else>
                 <span>PAGA {{ euro(cliente.paga) }}</span>
                 <b>{{ aMente ? '? ? ?' : euro(cliente.resto) }}</b>
                 <span>DI RESTO</span>
@@ -476,8 +552,20 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
             </div>
           </div>
 
+          <!-- LA TASTIERA VERA. Sta qui e non dentro il registratore per una
+               ragione sola: sotto le dita di un bambino dodici tasti larghi
+               due centimetri non ci stanno in 74 pixel. Prende il posto del
+               piatto e del cassetto, che finché il totale non è battuto non
+               servono — dare il resto senza sapere quanto costa la spesa non
+               vuol dire niente. -->
+          <div v-if="chiediTotale" class="tastierone" :class="{ nonTorna: sbagliato === 'conto' }">
+            <button v-for="t in TASTI" :key="t" class="tasto" :data-tasto="t"
+                    @click="batti(t)">{{ t }}</button>
+            <button class="tasto ok" data-tasto="fatto" @click="confermaTotale">✓ è questo</button>
+          </div>
+
           <!-- quello che hai già posato sul banco -->
-          <div class="piatto" :class="{ nonTorna: sbagliato === 'conto' }">
+          <div v-else class="piatto" :class="{ nonTorna: sbagliato === 'conto' }">
             <div class="quanto">
               <b>{{ euro(dato) }}</b>
               <!-- a mente non si dice quanto manca: sarebbe dire il resto -->
@@ -499,7 +587,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
           </div>
 
           <!-- il cassetto estratto, con gli scomparti -->
-          <div class="cassetto">
+          <div v-if="!chiediTotale" class="cassetto">
             <div class="vaschette">
               <button v-for="v in monetine" :key="v" class="scomparto" :data-v="v" @click="metti(v)">
                 <span class="soldo" :class="[tipo(v), { rifiutata: rifiutata === v }]">
@@ -723,6 +811,34 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
              font-variant-numeric:tabular-nums }
 .tastiera { display:grid; grid-template-columns:repeat(4,1fr); gap:2.5px; width:74px }
 .tastiera i { height:6px; border-radius:2px; background:#78848c; box-shadow:inset 0 1px 0 #ffffff55 }
+/* il totale ancora da battere: si vede che è un buco, non una cifra */
+.somma.daFare b { color:#c8442f; letter-spacing:2px }
+
+/* ═══════════ la tastiera vera ═══════════
+   Tre colonne larghe, che è il minimo perché un dito ci prenda dentro senza
+   guardare: le cifre come su un telefono, la virgola dove sta lo zero di un
+   registratore, e il ✓ largo quanto tutta la fila — è l'unico che manda
+   qualcosa, e non deve poter essere confuso con un tasto che scrive. */
+/* Le righe sono dichiarate (`repeat(5,1fr)`) e non lasciate al contenuto: un
+   grid che si misura sui tasti cresce oltre il `flex:1` e la tastiera esce
+   dallo schermo dal basso — cioè proprio il ✓ non si vede più. */
+.tastierone { flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr);
+              grid-template-rows:repeat(5,1fr); gap:5px; padding:7px; border-radius:12px;
+              background:linear-gradient(180deg,#5d4a3a,#7a6350);
+              box-shadow:inset 0 3px 8px #00000055 }
+.tastierone .tasto { display:flex; align-items:center; justify-content:center;
+                     min-height:0; font:900 clamp(18px,5.5vw,26px)/1 inherit; color:#3c3226;
+                     border:0; border-radius:9px; padding:0; cursor:pointer;
+                     background:linear-gradient(180deg,#f6efe0,#d8c8ad);
+                     box-shadow:0 3px 0 #00000055, inset 0 1px 0 #fff9 }
+.tastierone .tasto:active { transform:translateY(2px); box-shadow:0 1px 0 #00000055 }
+.tastierone .ok { grid-column:1/-1; font-size:clamp(15px,4.6vw,19px); color:#123a1c;
+                  background:linear-gradient(180deg,#bff0c4,#6fc47e) }
+/* uno scarto laterale e basta: la rotazione di `scarto` sta bene su un
+   piattino e fa ribaltare un pannello alto mezzo schermo */
+.tastierone.nonTorna { animation:sussulto .4s }
+@keyframes sussulto { 0%,100%{transform:none} 20%{transform:translateX(-9px)}
+                      50%{transform:translateX(8px)} 80%{transform:translateX(-4px)} }
 
 /* il piano dove finiscono le monete date */
 .piatto { flex:none; background:#00000026; border-radius:11px; padding:5px 8px 6px;

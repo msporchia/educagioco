@@ -55,9 +55,9 @@ const PROFILO = {
   calc: { tappa: 4, libera: false },
   eng: { tappa: 6, libera: false },
   esp: { tappa: 4, libera: false },
-  mercato: { tappa: 3, libera: false },
+  mercato: { tappa: 8, libera: false, v: 2 },
   /* il `v` per esteso e non per migrazione: qui il profilo si scrive a
-     mano, e un numero che passa dalla tabella delle vecchie otto tappe
+     mano, e un numero che passa dalla tabella delle vecchie tappe
      vorrebbe dire una foto che cambia da sola il giorno in cui la
      tabella cambia */
   lab: { tappa: 5, libera: false, v: 2 },
