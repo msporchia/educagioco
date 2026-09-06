@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA BANCARELLA, SENZA BROWSER
-   tempo: 260
 
    Le spese sono generate, e la promessa da non rompere è una sola ma
    grossa: **il resto deve essere componibile esattamente** con le
