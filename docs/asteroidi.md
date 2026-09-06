@@ -42,11 +42,22 @@ cerchiata, cioè «sei qui», resta una sola.)
 ## L'astronave
 
 In fondo allo schermo c'è una nave che difende il pianeta, e **dice come sta
-andando senza numeri**: nuova, poi ammaccata, poi con l'ala squarciata, il
-vetro rotto, il fumo e la luce rossa. Se resta una vita sola gli asteroidi
-rallentano un po' — chi è arrivato lì il conto di solito lo sa, e non fa in
-tempo a farlo. Man mano che si sale di livello la nave cresce: navetta,
-caccia, incrociatore.
+andando senza numeri**. Alla prima botta l'ala sinistra si **strappa**: bordo
+frastagliato e bruciato, i pezzi che le galleggiano accanto, le scintille e
+il fumo che escono da lì, e una spia ambra che lampeggia sullo scafo. Se
+resta una vita sola lo strappo si mangia quasi tutta l'ala, la spia diventa
+rossa e batte il doppio, il vetro si crepa e un motore va a singhiozzo.
+
+Prima il primo gradino era «l'ala si accorcia», e non lo capiva nessuno: non
+c'è niente a schermo con cui confrontarla, e un'ala più piccola non dice
+*rotta*, dice che la nave è fatta così. Quello che si legge di sfuggita su un
+telefono è **qualcosa che si muove** (la spia, le scintille), **un buco nel
+contorno** e **dei pezzi staccati** — tre segnali sullo stesso punto, e
+ognuno regge da solo.
+
+Se resta una vita sola gli asteroidi rallentano un po' — chi è arrivato lì il
+conto di solito lo sa, e non fa in tempo a farlo. Man mano che si sale di
+livello la nave cresce: navetta, caccia, incrociatore.
 
 Due potenziamenti si guadagnano giocando e finiscono con la partita:
 

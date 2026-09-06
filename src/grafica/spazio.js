@@ -100,14 +100,35 @@ export function dipingiFondale(W, H, sorte = Math.random) {
    guarda mentre si sta fissando il cielo:
 
      0  intatta      bianca, vetro azzurro, fiamme regolari
-     1  ammaccata    scafo bruciacchiato, un'ala squarciata, fumo
-     2  in fiamme    luce rossa che lampeggia, vetro rotto, motore a
-                     singhiozzo, scintille
+     1  ammaccata    l'ala sinistra STRAPPATA — bordo frastagliato,
+                     bruciato, coi pezzi staccati lì accanto — scintille
+                     dallo strappo, scafo annerito, una luce d'allarme
+                     ambra che lampeggia, fumo
+     2  in fiamme    lo strappo si mangia quasi tutta l'ala, la luce
+                     d'allarme diventa rossa e batte il doppio, vetro
+                     rotto, motore a singhiozzo, alone rosso
+
+   ── PERCHÉ LO STRAPPO E NON UN'ALA PIÙ CORTA ──
+   Il gradino 1 era «l'ala sinistra si accorcia del 38%», e non lo
+   capiva nessuno: un'ala più piccola non dice **rotta**, dice che la
+   nave è fatta così — non c'è niente a schermo con cui confrontarla, e
+   l'unico momento in cui si vedrebbe il cambio è l'istante della botta,
+   che è proprio quello in cui si sta guardando il sasso. Una silhouette
+   diversa non basta se resta una silhouette *pulita*.
+
+   Quello che si legge a colpo d'occhio su un telefono, in ordine di
+   forza: **una cosa che si muove** (la luce che lampeggia, le
+   scintille), **un buco nel contorno** (il bordo frastagliato: nessuna
+   nave nasce con i denti), **dei pezzi staccati** che stanno accanto
+   alla sagoma invece che dentro. Sono tre segnali sullo stesso punto, e
+   ognuno regge da solo se lo schermo è piccolo o se la nave è mezza
+   coperta da un sasso.
 
    Chi chiama passa `danno` da 0 a 1 e non sa niente di vite: la
    traduzione la fa il gioco. `statoScafo` è esportata perché il fumo lo
    soffia il gioco (sono particelle, non disegno) e i gradini devono
-   restare scritti in un posto solo.
+   restare scritti in un posto solo — ed è anche il modo in cui il gioco
+   sa **dove** soffiarlo: `puntoRotto` dice dov'è lo strappo.
 
    Il muso guarda in su; `mira` è l'angolo del cannone, in radianti,
    con -π/2 dritto verso l'alto. */
@@ -134,6 +155,45 @@ function ali(lv) {
 
 const PROPULSORI = { 1: [[0, 0.78, 0.20]], 2: [[-0.20, 0.76, 0.17], [0.20, 0.76, 0.17]],
                      3: [[-0.30, 0.74, 0.15], [0, 0.80, 0.19], [0.30, 0.74, 0.15]] }
+
+/* ─────────── L'ALA STRAPPATA ───────────
+   Un'ala è sempre scritta nello stesso verso: primo punto l'attacco in
+   alto, ultimo l'attacco in basso, e in mezzo la punta. Tanto basta a
+   tagliarla dove si vuole senza sapere quale ala sia.
+
+   `quanto` è la parte di apertura che RESTA (0.55 = poco più di metà).
+   Al posto del taglio dritto ci va un bordo a denti: è la cosa che dice
+   «strappata» invece di «più corta», e i denti sono **fissi** perché una
+   nave che si sfrangia diversamente a ogni fotogramma sembra un guasto
+   del disegno, non un guasto della nave. */
+const lerp = (p, q, k) => [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k]
+const DENTI = [0.20, -0.30, 0.26, -0.22, 0.14]
+
+function strappa(a, quanto) {
+  const n = a.length
+  const alto = lerp(a[0], a[1], quanto)
+  const basso = lerp(a[n - 1], a[n - 2], quanto)
+  const bordo = DENTI.map((d, i) => {
+    const b = lerp(alto, basso, (i + 1) / (DENTI.length + 1))
+    return [b[0] + d * 0.26, b[1]]
+  })
+  return [a[0], alto, ...bordo, basso, a[n - 1]]
+}
+
+/* i pezzi che si sono staccati: due schegge appena oltre lo strappo, che
+   fluttuano piano. Stanno FUORI dalla sagoma, ed è tutto il loro
+   mestiere — un contorno pulito si legge come una forma, un contorno con
+   dei cocci attorno si legge come una cosa rotta. */
+const SCHEGGE = [[0.16, -0.10, 0.10, 1.0], [0.30, 0.16, 0.07, -1.4]]
+
+/* dove sta lo strappo, in unità di raggio e rispetto al centro della
+   nave: serve al gioco per soffiarci il fumo e non alla nave, che il
+   fumo non lo disegna (sono particelle) */
+export const puntoRotto = (lv = 1) => {
+  const a = ali(Math.max(1, Math.min(3, lv)))[0]
+  const alto = lerp(a[0], a[1], 0.55)
+  return { x: -alto[0], y: alto[1] }
+}
 
 export function disegnaNave(ctx, n) {
   const R = n.r, lv = Math.max(1, Math.min(3, n.lv || 1))
@@ -182,24 +242,62 @@ export function disegnaNave(ctx, n) {
     ctx.fillRect(x - w * 0.7, y - w * 0.5, w * 1.4, w * 0.8)
   }
 
-  // le ali
+  /* ── le ali, e lo strappo ──
+     L'ala sinistra si STRAPPA già alla prima botta: bordo a denti,
+     bruciato, e i pezzi staccati lì accanto. Il perché di questo
+     linguaggio invece di un'ala più corta sta in testa al file. Lo
+     strappo si allarga al secondo gradino, così i due stati non si
+     assomigliano nemmeno fra loro. */
+  const resta = st >= 2 ? 0.34 : 0.55
   for (const [i, a] of ali(lv).entries()) {
     for (const verso of [1, -1]) {
-      /* uno squarcio: l'ala sinistra si accorcia già alla prima botta.
-         È il gradino che si vede da più lontano di tutti — la
-         silhouette cambia — ed è quello che deve dire «me ne resta una
-         sola» senza far contare niente a nessuno. */
-      const rovinata = st >= 1 && verso < 0 && i === 0
-      const p = rovinata ? a.map(([x, y]) => [x * 0.62, y]) : a
+      const rotta = st >= 1 && verso < 0 && i === 0
+      const p = rotta ? strappa(a, resta) : a
       traccia(ctx, p.map(([x, y]) => [x * verso, y]), R)
       const g = ctx.createLinearGradient(0, -R * 0.4, 0, R * 0.8)
       g.addColorStop(0, chiaro); g.addColorStop(1, scuro)
       ctx.fillStyle = g; ctx.fill()
       ctx.lineWidth = Math.max(1, R * 0.05); ctx.strokeStyle = accento; ctx.stroke()
-      if (rovinata) {   // il bordo bruciato dello squarcio
-        ctx.strokeStyle = '#1a0f0c'; ctx.lineWidth = Math.max(2, R * 0.09); ctx.stroke()
+      if (rotta) {   // il bordo bruciato dello strappo
+        ctx.strokeStyle = '#1a0f0c'; ctx.lineWidth = Math.max(2.5, R * 0.10); ctx.stroke()
       }
     }
+  }
+
+  /* i cocci, appena oltre lo strappo: fluttuano piano e non tornano mai
+     al loro posto. Si disegnano dopo le ali perché devono staccarsi
+     anche dal bordo bruciato. */
+  if (st >= 1) {
+    const a0 = ali(lv)[0]
+    const dove = lerp(a0[0], a0[1], resta)
+    for (const [dx, dy, r, giro] of SCHEGGE) {
+      const ondeggio = Math.sin(t * 1.6 + dx * 9) * 0.045
+      const x = -(dove[0] + dx) * R, y = (dove[1] + dy + ondeggio) * R
+      ctx.save(); ctx.translate(x, y); ctx.rotate(giro + Math.sin(t * 1.1 + dy * 7) * 0.25)
+      ctx.beginPath()
+      ctx.moveTo(-r * R, -r * R * 0.7); ctx.lineTo(r * R, -r * R * 0.2)
+      ctx.lineTo(r * R * 0.2, r * R * 0.9); ctx.closePath()
+      ctx.fillStyle = scuro; ctx.fill()
+      ctx.lineWidth = Math.max(1, R * 0.035); ctx.strokeStyle = '#1a0f0c'; ctx.stroke()
+      ctx.restore()
+    }
+    /* e le scintille che escono dallo strappo: sono la cosa che SI
+       MUOVE, cioè quella che l'occhio prende per prima mentre sta
+       guardando il cielo. Tre lampi corti, sfasati, sempre nello stesso
+       punto — quello rotto. */
+    const bocca = { x: -dove[0] * R, y: dove[1] * R }
+    for (let k = 0; k < 3; k++) {
+      const q = (t * 2.2 + k * 0.37) % 1
+      if (q > 0.42) continue
+      const su = q * 0.9
+      ctx.globalAlpha = 1 - q / 0.42
+      ctx.fillStyle = k % 2 ? '#ffd94a' : '#ff9d1c'
+      ctx.beginPath()
+      ctx.arc(bocca.x - su * R * 0.28, bocca.y - su * R * 0.5,
+              Math.max(1.4, R * 0.07) * (1 - su), 0, TAU)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
   }
 
   // lo scafo
@@ -217,6 +315,30 @@ export function disegnaNave(ctx, n) {
     macchie.slice(0, st === 2 ? 3 : 2).forEach(([x, y, r]) => {
       ctx.beginPath(); ctx.arc(x * R, y * R, r * R, 0, TAU); ctx.fill()
     })
+
+    /* LA LUCE D'ALLARME. Sta sullo scafo, a destra, cioè dal lato buono
+       — messa sull'ala strappata sparirebbe insieme al pezzo che manca.
+       È ambra al primo gradino e rossa al secondo, e al secondo batte il
+       doppio: due stati che si distinguono anche da fermi, in una foto.
+       Serve perché è l'unica cosa **accesa e spenta** del disegno: a
+       nave piccola, mezza coperta da un sasso, quello che si vede è che
+       qualcosa lampeggia. */
+    const rossa = st >= 2
+    const battito = Math.abs(Math.sin(t * (rossa ? 7.5 : 3.6)))
+    const acceso = 0.22 + 0.78 * battito * battito
+    const tinta = rossa ? '255,70,60' : '255,176,32'
+    const bx = R * 0.20, by = -R * 0.05
+    const raggio = Math.max(9, R * 0.5)
+    const al = ctx.createRadialGradient(bx, by, 0, bx, by, raggio)
+    al.addColorStop(0, `rgba(${tinta},${0.95 * acceso})`)
+    al.addColorStop(0.45, `rgba(${tinta},${0.4 * acceso})`)
+    al.addColorStop(1, `rgba(${tinta},0)`)
+    ctx.fillStyle = al
+    ctx.beginPath(); ctx.arc(bx, by, raggio, 0, TAU); ctx.fill()
+    // il vetrino, che a nave piccola è la sola cosa che resta: non
+    // scende mai sotto due pixel, se no la spia sparisce dove serve di più
+    ctx.fillStyle = `rgba(${tinta},${0.45 + 0.55 * acceso})`
+    ctx.beginPath(); ctx.arc(bx, by, Math.max(2.2, R * 0.11), 0, TAU); ctx.fill()
   }
 
   // la cabina

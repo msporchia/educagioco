@@ -40,7 +40,7 @@ import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
 import { CAPITOLI, CHIAVE_MENTE, scaletta, superata, dopoDi,
          posizioneOra, filaDi } from '../data/asteroidi.js'
 import { suono } from '../audio.js'
-import { dipingiFondale, disegnaNave, disegnaAsteroide,
+import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
 import { POTENZIAMENTI, TASCA_MAX, EMERGENZA, premioDaSerie,
          gettoneDopo } from '../data/potenziamenti.js'
@@ -170,7 +170,9 @@ let fondale = null, fumo = 0
    non stanno più nella fascia in alto: i cuoricini erano nel posto dove
    nessuno guarda — chi gioca guarda il cielo, e la nave sta appena
    sotto, dentro lo stesso sguardo. Adesso una vita in meno è un'ala
-   squarciata, e l'ultima è una nave in fiamme che fuma.
+   **strappata** — bordo frastagliato, i pezzi che le galleggiano
+   accanto, le scintille e la spia d'allarme che lampeggia — e l'ultima è
+   una nave in fiamme che fuma.
    Il campo `danno` è tutto quello che il disegno sa dello stato — la
    traduzione da vite a danno la fa `sincronizzaNave()`, qui sotto, e i
    tre gradini in cui si legge stanno in `grafica/spazio.js`. */
@@ -687,8 +689,9 @@ function dammiVita(perche) {
 }
 
 /* Una vita in meno non si dice con un numero: la nave si sbianca per un
-   attimo, e da lì in poi resta più malconcia di prima — un'ala rotta,
-   poi le fiamme. È tutto quello che c'è, e basta perché sta dentro lo
+   attimo, e da lì in poi resta più malconcia di prima — un'ala
+   strappata che fuma e lampeggia, poi le fiamme. È tutto quello che
+   c'è, e basta perché sta dentro lo
    stesso sguardo con cui si guardano i sassi. */
 function perdiVita() {
   hud.serie = 0
@@ -831,17 +834,27 @@ function effetti(dt) {
   if (nave.botta > 0) nave.botta -= dt * 2.2
   if (nave.riparata > 0) nave.riparata -= dt * 1.6
   if (nave.spinta > 0) nave.spinta -= dt * 2.5
-  // la nave malconcia fuma, e quando è messa peggio butta anche
-  // scintille: sono le due cose che si vedono di sfuggita mentre si
-  // guarda in alto, e dicono «questa sta per saltare» meglio di un cuore
-  if (nave.danno > 0.6 && (fumo -= dt) <= 0) {
-    fumo = 0.12
-    const x = nave.x + (Math.random() - 0.5) * nave.r
-    particelle.push({ x, y: nave.y - nave.r * 0.2, vx: (Math.random() - 0.5) * 24 * S,
+  /* La nave malconcia fuma, e il fumo **esce dallo strappo**, non dal
+     centro: è il pezzo che il disegno non può fare (sono particelle) e
+     insieme il modo di dire dov'è il guasto — un pennacchio che parte
+     dal buco è la freccia che indica il buco.
+
+     La soglia è `statoScafo` e non un numero scritto qui: i gradini
+     stanno in `grafica/spazio.js`, e chiedere «danno > 0.6» voleva dire
+     che al primo gradino la nave non fumava affatto mentre il commento
+     là dentro diceva di sì. Il fumo comincia con lo strappo; le
+     scintille grosse restano dell'ultimo gradino. */
+  const rovina = statoScafo(nave.danno)
+  if (rovina >= 1 && (fumo -= dt) <= 0) {
+    fumo = rovina >= 2 ? 0.1 : 0.16
+    const rotto = puntoRotto(nave.lv)
+    const x = nave.x + rotto.x * nave.r + (Math.random() - 0.5) * nave.r * 0.3
+    const y = nave.y + rotto.y * nave.r
+    particelle.push({ x, y, vx: (Math.random() - 0.5) * 24 * S,
                       vy: -34 * S, vita: 0.85, leggera: true,
                       r: (2.5 + Math.random() * 3.5) * S,
-                      c: nave.danno > 0.8 ? '#6a6a78' : '#9898a6' })
-    if (nave.danno > 0.8 && Math.random() < 0.5)
+                      c: rovina >= 2 ? '#6a6a78' : '#9898a6' })
+    if (rovina >= 2 && Math.random() < 0.5)
       particelle.push({ x, y: nave.y, vx: (Math.random() - 0.5) * 70 * S,
                         vy: -(40 + Math.random() * 60) * S, vita: 0.7,
                         r: (1.5 + Math.random() * 2) * S,
@@ -1188,9 +1201,9 @@ onUnmounted(() => {
              compare in basso è un'icona che nessuno ha capito. -->
         <div class="hangar">
           <div class="capitolo">🚀 La tua astronave</div>
-          <p class="testo">Le vite sono la nave: intatta, poi ammaccata con l'ala rotta,
-            poi in fiamme. Se cresce di livello diventa più grossa. A fine partita torna
-            com'era.</p>
+          <p class="testo">Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
+            fuma e la spia che lampeggia, poi in fiamme. Se cresce di livello diventa più
+            grossa. A fine partita torna com'era.</p>
           <p class="testo">Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
             Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
             vuoi — e sbagliando non si perde.</p>
