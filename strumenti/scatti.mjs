@@ -55,7 +55,7 @@ const PROFILO = {
   calc: { tappa: 4, libera: false },
   eng: { tappa: 6, libera: false },
   esp: { tappa: 4, libera: false },
-  mercato: { tappa: 3, libera: false },
+  mercato: { tappa: 8, libera: false, v: 2 },
   lab: { tappa: 5, libera: false },
   gen: { tappa: 8, libera: false, ordini: {}, stelle: {} },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
