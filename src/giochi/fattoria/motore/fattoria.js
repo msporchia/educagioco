@@ -66,8 +66,9 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi, laMacchina,
-         statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare } from '../dati/catalogo.js'
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, eMercato, siloDi, macchinaDi,
+         laMacchina, statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare }
+  from '../dati/catalogo.js'
 import {
   PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, COLTURE, RICETTE,
   ricetteDi, postiPerMerce, costoIngrandimento,
@@ -79,6 +80,7 @@ import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
 import { ANIMALI, famigliaDi } from '../dati/animali.js'
+import { qualcosaDaConsegnare } from './mercato.js'
 import { primaLibera } from '../../../motore/passi.js'
 
 /* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
@@ -119,6 +121,20 @@ export class Fattoria {
        mai. Non si azzera nemmeno mettendo via le cose — quello che hai
        imparato a fare non si disimpara. */
     this.speso = 0
+    /* L'esperienza guadagnata **consegnando** al mercato
+       (`motore/mercato.js`). È la seconda sorgente del livello, e sta
+       in un campo suo e non dentro `speso`: le due cose si sommano per
+       il livello ma vogliono dire cose diverse — quella è roba
+       comprata, questa è roba portata al banco — e sommarle qui
+       vorrebbe dire non poter più dire quanto vale ciascuna. */
+    this.guadagnato = 0
+    /* I tre posti del banco. Vuoti finché non c'è una bancarella:
+       chi non ce l'ha non ha nessun ordine, e il conto degli id serve
+       a non riusare mai lo stesso — un ordine consegnato e uno nuovo
+       con la stessa chiave sarebbero lo stesso ordine consegnato due
+       volte. */
+    this.ordini = []
+    this.prossimoOrdine = 1
     /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
        fattoria appena nata deve avere in mano il campo, il silo e un
        seme, e chiedere di reclamarli prima ancora di aver visto il prato
@@ -187,6 +203,8 @@ export class Fattoria {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
              speso: this.speso, reclamati: this.reclamati,
+             guadagnato: this.guadagnato, ordini: this.ordini,
+             prossimoOrdine: this.prossimoOrdine,
              terreno: this.terreno,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
@@ -263,6 +281,31 @@ export class Fattoria {
        davvero. */
     this.speso = Number.isFinite(d && d.speso) && d.speso > 0 ? Math.floor(d.speso)
       : this.stimaLoSpeso()
+    /* ── IL BANCO DEL MERCATO ───────────────────────────────────────
+       Una fattoria salvata prima che il mercato esistesse non ha né
+       ordini né esperienza guadagnata: nasce con zero e con i posti
+       vuoti, che è esattamente lo stato di chi la bancarella non l'ha
+       ancora comprata. Non c'è niente da migrare, e questo è il punto —
+       un salvataggio di ieri si riapre senza chiedere niente a nessuno.
+
+       Un ordine si rilegge solo se sta in piedi: chiede della roba che
+       esiste ancora, in quantità sane. Una merce tolta dalla tabella
+       lascerebbe un ordine impossibile da consegnare per sempre, cioè
+       un posto occupato da un tasto rotto. */
+    this.guadagnato = Number.isFinite(d && d.guadagnato) && d.guadagnato > 0
+      ? Math.floor(d.guadagnato) : 0
+    this.ordini = ((d && d.ordini) || []).map(o => {
+      if (!o) return null
+      if (!o.chiede) return o.dal > 0 ? { dal: o.dal } : null
+      const chiede = {}
+      for (const [k, n] of Object.entries(o.chiede))
+        if (PRODOTTI[k] && n > 0) chiede[k] = Math.floor(n)
+      if (!Object.keys(chiede).length) return null
+      return { id: o.id | 0, chi: o.chi, chiede, xp: Math.max(0, o.xp | 0),
+               minuti: Math.max(0, o.minuti | 0), nato: o.nato || 0 }
+    })
+    this.prossimoOrdine = Math.max(1, (d && d.prossimoOrdine) || 0,
+                                   ...this.ordini.map(o => ((o && o.id) || 0) + 1))
     /* ── I PREMI PRESI ──────────────────────────────────────────────
        Una fattoria salvata prima che i premi si reclamassero non ce li
        ha, e i suoi livelli sono già passati: si considerano **presi
@@ -306,11 +349,13 @@ export class Fattoria {
   }
 
   /* ═══════════ il livello della fattoria ═══════════
-     L'esperienza sono **le monete spese qui dentro** — il perché sta in
-     `dati/livelli.js`. Ci passano tutti i pagamenti, ed è il motivo per
-     cui in questo file non si chiama più `this.borsa.paga()` da nessuna
-     parte: uno solo dimenticato sarebbe un livello che cresce piano
-     senza che nessuno capisca perché. */
+     L'esperienza sono **le monete spese qui dentro** più **gli ordini
+     consegnati al mercato** — il perché delle due sorgenti, e perché la
+     seconda non paga monete, sta in `dati/livelli.js`. Ci passano tutti
+     i pagamenti, ed è il motivo per cui in questo file non si chiama
+     più `this.borsa.paga()` da nessuna parte: uno solo dimenticato
+     sarebbe un livello che cresce piano senza che nessuno capisca
+     perché. */
   spendi(n) {
     /* `paga(-n)` incassa (sgombrare il bosco rendeva, in una vecchia
        versione): un'entrata non è esperienza. */
@@ -318,11 +363,28 @@ export class Fattoria {
     return this.borsa.paga(n)
   }
 
-  get livello() { return livelloPer(this.speso) }
+  /* L'altra metà: quello che il mercato regala consegnando. Non tocca
+     la borsa — **il mercato non paga monete, mai** — e non scende, come
+     tutto il resto dell'esperienza. Torna se il livello è salito, che è
+     l'unica cosa che chi consegna deve sapere. */
+  guadagna(n) {
+    if (!(n > 0)) return false
+    const prima = this.livello
+    this.guadagnato = (this.guadagnato || 0) + Math.floor(n)
+    return this.livello > prima
+  }
+
+  /* Le due sorgenti sommate: è questa la misura del livello, e sta in
+     un posto solo perché due conti diversi per lo stesso numero prima o
+     poi si scostano — e allora il gettone in alto direbbe una cosa e il
+     baule ne aprirebbe un'altra. */
+  get esperienza() { return (this.speso || 0) + (this.guadagnato || 0) }
+
+  get livello() { return livelloPer(this.esperienza) }
 
   /* Tutto quello che la pagina dei livelli deve sapere, in un colpo:
      livello, nome, quanto manca al prossimo. */
-  get avanzamento() { return avanzamento(this.speso) }
+  get avanzamento() { return avanzamento(this.esperienza) }
 
   /* Una fattoria salvata prima che i livelli esistessero: quanto avrà
      speso, guardando quello che ha in mappa e in magazzino.
@@ -1104,6 +1166,13 @@ export class Fattoria {
      `sopra` si ripete su ogni cella del piede: quattro germogli su un
      campo 2×2 sono un campo che cresce, uno solo in mezzo è un ciuffo. */
   aspettoDellaCosa(cosa, ora = Date.now()) {
+    /* La bancarella non lavora e non contiene: **aspetta**. Il fumetto
+       compare quando c'è un ordine che si può consegnare adesso, ed è
+       la stessa idea del 🧺 sopra un campo pronto — si vede da lontano
+       e non chiede di aprire niente. Quando non c'è niente da portare
+       resta muta: un invito che c'è sempre non è un invito. */
+    if (eMercato(cosa))
+      return qualcosaDaConsegnare(this) ? { sopra: null, fumetto: '📋' } : null
     const c = this.statoCampo(cosa, ora)
     if (c) {
       if (c.vuoto) return null

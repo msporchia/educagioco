@@ -20,6 +20,16 @@
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+/* Il mercato si prova su **una fattoria seminata**: la si costruisce
+   qui con lo stesso motore che gira nel gioco e la si scrive nel
+   profilo. Arrivarci col dito vorrebbe dire comprare la bancarella, due
+   silos e riempire un granaio a colpi di tocco — mezz'ora di test per
+   provare tre bottoni. */
+import { Fattoria, borsaInfinita }
+  from '../../src/giochi/fattoria/motore/fattoria.js'
+import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
+import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
+import { CELLE, PRIMA, ULTIMA } from '../../src/giochi/fattoria/dati/mondo.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -682,6 +692,153 @@ await chiudi()
   /* Per le bestie la stessa prova sta al punto 8: appena arrivate si sa
      dove sono, e dopo il primo tocco stanno ferme perché sono
      selezionate — cercarle qui vorrebbe dire tastare mezzo prato. */
+}
+
+/* ---------- 10. il mercato: si consegna un ordine ----------
+   La catena finisce qui: quello che si produce non lo mangiano più solo
+   il cane e il gatto — al banco arrivano degli ordini, e consegnarli fa
+   salire il livello (`motore/mercato.js`). Quello che si guarda col
+   dito è che il foglio si apra toccando la bancarella, che i tre ordini
+   ci siano, e che consegnando **la roba esca dal silo e l'esperienza
+   entri**.
+
+   Il granaio si semina pieno: gli ordini si pescano a caso, e provare
+   con quello che il gioco ha già in mano vorrebbe dire un test che
+   passa quattro volte su cinque. */
+{
+  /* Prima si torna in home, così la fattoria si smonta e scrive quello
+     che ha: `semina` ricarica la pagina, e una scrittura in ritardo
+     partita da qui riscriverebbe sopra quello che stiamo seminando. */
+  await chiudi()
+  await page.locator('button[aria-label="indietro"]').click()
+  await attendi(page, 600)
+
+  /* La fattoria si costruisce col motore vero, non a mano: livello
+     alto, la bancarella e i due silos in mezzo alla terra di partenza,
+     e ogni scomparto pieno. */
+  const f = new Fattoria({ borsa: borsaInfinita() })
+  f.speso = sogliaDi(30)
+  f.reclamaTutto()
+  /* Al **centro** della terra di partenza, non in un angolo: è lì che
+     la telecamera si apre (`vaiACasa`), e una bancarella posata sul
+     bordo può restare fuori dallo schermo di un telefono. Si cerca a
+     cerchi, come fa il motore per far comparire una bestia. */
+  const centro = ((PRIMA + ULTIMA + 1) / 2) * CELLE
+  const posa = id => {
+    for (let r = 0; r <= CELLE * 2; r++)
+      for (let dy = -r; dy <= r; dy++)
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue
+          const x = Math.round(centro + dx), y = Math.round(centro + dy)
+          if (f.posa(id, x, y).ok) return { x, y }
+        }
+    return null
+  }
+  const dovE = posa('mercato')
+  controlla('la bancarella si posa nella fattoria seminata', !!dovE)
+  posa('silo'); posa('silo_bianco')
+  for (const p of Object.keys(PRODOTTI)) f.metti(p, 8)
+
+  const prima = await leggiProfilo(page)
+  await semina(page, {
+    ...(prima || {}),
+    coins: 3000,
+    campagne: { ...((prima || {}).campagne || {}),
+                fattoria: { tappa: 0, libera: false, stelle: {},
+                            cfg: { stato: f.serializza() } } },
+  })
+  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await page.waitForSelector('.fa-tela', { timeout: 5000 })
+  await attendi(page, 700)
+
+  /* Dov'è a schermo non si calcola: si cerca, come si cerca il pezzo di
+     terra al punto 2. La vista dipende da quanto è grande lo schermo, e
+     un numero scritto a mano qui sarebbe vero su un telefono solo. */
+  const tela = await page.locator('.fa-tela').boundingBox()
+  let banco = null
+  for (let y = tela.y + 16; y < tela.y + tela.height - 16 && !banco; y += 24)
+    for (let x = tela.x + 20; x < tela.x + tela.width - 20 && !banco; x += 36) {
+      await dito(Math.round(x), Math.round(y))
+      if (await page.locator('[data-mercato]').count()) banco = { x, y }
+      else await chiudi()
+    }
+  controlla('col dito si arriva alla bancarella del mercato', !!banco)
+
+  if (banco) {
+    const ordini = page.locator('[data-ordine]')
+    uguale('al banco ci sono tre ordini', await ordini.count(), 3)
+    await scatto(page, 'fattoria-mercato')
+
+    const monetePrima = await page.evaluate(
+      () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+    const livelloPrima = Number(
+      (await page.locator('.fa-liv').innerText()).replace(/\D/g, ''))
+    const quale = await ordini.first().getAttribute('data-ordine')
+    const consegna = ordini.first().locator('[data-azione="consegna"]')
+    uguale('col granaio pieno il tasto è acceso', await consegna.isDisabled(), false)
+    await consegna.click()
+    await attendi(page, 500)
+
+    uguale('consegnato, quell\'ordine non è più al banco',
+           await page.locator(`[data-ordine="${quale}"]`).count(), 0)
+    uguale('e il banco resta pieno: al posto liberato ne arriva un altro',
+           await page.locator('[data-ordine]').count(), 3)
+
+    /* ── LA RIGA CHE CONTA: IL MERCATO NON PAGA MONETE ──────────────
+       Le monete si guadagnano facendo esercizi negli altri giochi, e un
+       banco che comprasse il grano chiuderebbe l'anello
+       (`CALIBRAZIONE.md`). Si guarda però **la seconda** consegna e non
+       la prima: la prima porta con sé la medaglia di bronzo del
+       traguardo «Servizio a domicilio», e una medaglia paga monete in
+       tutti i giochi — è l'economia delle medaglie, non il mercato che
+       compra la roba. Contarla qui vorrebbe dire un test che dice una
+       cosa falsa sulla riga più importante del file. */
+    const monetePrimaDelSecondo = await page.evaluate(
+      () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1]))
+    controlla('la medaglia del primo ordine può aver pagato, il mercato no',
+              monetePrimaDelSecondo >= monetePrima,
+              `${monetePrima} → ${monetePrimaDelSecondo}`)
+    const secondo = page.locator('[data-ordine]').first()
+      .locator('[data-azione="consegna"]')
+    if (!await secondo.isDisabled()) {
+      await secondo.click()
+      await attendi(page, 500)
+      uguale('la seconda consegna non muove le monete di una',
+             await page.evaluate(
+               () => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])),
+             monetePrimaDelSecondo)
+    }
+    await chiudi()
+
+    await attendi(page, 1800)                    // il salvataggio è a ritardo
+    const dopo = await leggiProfilo(page)
+    const stato = ((((dopo || {}).campagne || {}).fattoria || {}).cfg || {}).stato || {}
+    controlla('l\'esperienza del mercato è nel salvataggio',
+              (stato.guadagnato || 0) > 0, `${stato.guadagnato}`)
+    controlla('e il livello non è sceso',
+              Number((await page.locator('.fa-liv').innerText()).replace(/\D/g, ''))
+                >= livelloPrima)
+    /* E il contatore dei traguardi si è mosso: è quello che l'albo
+       legge, e non lo saprebbe da nessun'altra parte. */
+    controlla('e gli ordini consegnati sono contati',
+              (((dopo || {}).totals || {}).fattoriaOrdini || 0) >= 1,
+              `${((dopo || {}).totals || {}).fattoriaOrdini}`)
+
+    /* Rifiutare **costa attesa**: il posto resta vuoto, e il foglio lo
+       dice invece di lasciare un buco. Senza quell'attesa il gesto
+       giusto sarebbe premere ✕ finché non esce l'ordine più facile. */
+    await dito(Math.round(banco.x), Math.round(banco.y))
+    await attendi(page, 300)
+    if (await page.locator('[data-mercato]').count()) {
+      await page.locator('[data-ordine]').first()
+        .locator('[data-azione="rifiuta"]').click()
+      await attendi(page, 400)
+      uguale('rifiutato, al banco ne restano due', await page.locator('[data-ordine]').count(), 2)
+      controlla('e il foglio dice fra quanto ne arriva un altro',
+                await page.locator('[data-riposo]').count() > 0)
+      await chiudi()
+    }
+  }
 }
 
 uguale('nessun errore in console', errori.length ? errori.join(' | ') : '', '')

@@ -9,9 +9,11 @@
    catena — campo, mulino, recinto — non si legge da nessuna parte:
    c'è, ma bisogna indovinarla.
 
-   ── L'ESPERIENZA SONO LE MONETE SPESE QUI ─────────────────────────
-   Non i raccolti, non i minuti, non le partite: **le monete spese in
-   fattoria**. È la misura giusta per tre motivi.
+   ── L'ESPERIENZA SONO LE MONETE SPESE QUI, E GLI ORDINI ───────────
+   Le sorgenti sono **due**, e la prima è di gran lunga la più grossa.
+
+   La prima sono **le monete spese in fattoria**. Non i raccolti, non i
+   minuti, non le partite. È la misura giusta per tre motivi.
 
      · È già la cosa che il gioco vuole. La fattoria è il money pit —
        si guadagna negli altri giochi e si brucia qui — quindi il
@@ -23,6 +25,25 @@
      · Non si perde e non si punisce. Spendere è sempre un passo
        avanti, anche quando si compra un cespuglio storto: niente di
        quello che si fa qui può far scendere il livello.
+
+   La seconda sono **gli ordini consegnati al mercato**
+   (`dati/mercato.js`), e *questa riga ribalta quella di prima*, che
+   diceva «spendere è l'unica esperienza». Il motivo del cambio è che
+   la catena non aveva una fine: quello che la fattoria produce lo
+   mangiavano solo il cane e il gatto, e chi coltivava per un'ora si
+   ritrovava il silo colmo e nessuna ragione per svuotarlo. Il mercato
+   è quella ragione, e un mercato che non paga niente non è un mercato.
+
+   Paga **esperienza e mai monete**, ed è la riga da non rompere: le
+   monete entrano solo dagli esercizi fatti negli altri giochi, e un
+   banco che comprasse il grano chiuderebbe l'anello (semina gratis,
+   raccogli per 🪙1, vendi per 🪙5) rendendo inutile tutto il resto
+   dell'applicazione. Il ragionamento per esteso, e i numeri, stanno in
+   `dati/mercato.js`.
+
+   Le due sorgenti si sommano e nient'altro cambia: il livello resta
+   **tempo**, che sia tempo di studio o tempo passato a far girare la
+   catena, e continua a non scendere mai.
 
    ── SI SBLOCCA, NON SI NASCONDE ───────────────────────────────────
    Quello che non è ancora arrivato **non sta nel baule**, e il posto
@@ -60,7 +81,7 @@ import { ANIMALI } from './animali.js'
 
    In tempo di esercizi (🪙6 al minuto, `CALIBRAZIONE.md`): il livello 2
    sono 35 minuti, il 10 sei ore, il 30 quaranta, l'ultimo del catalogo
-   centoventisette — spalmate su mesi, che è la scala giusta per un
+   centoventitré — spalmate su mesi, che è la scala giusta per un
    posto che si guarda cinque minuti al giorno.
 
    *Ribalta due volte la scelta di prima.* Erano dieci livelli con le
@@ -158,6 +179,7 @@ export const NOMI = {
   1: 'Il primo campo',
   2: 'Il primo amico',
   3: 'Il mulino',
+  4: 'Il mercato',
   5: 'Il fienile e i conigli',
   8: 'Le galline',
   10: 'Il pastone',

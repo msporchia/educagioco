@@ -285,7 +285,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
      sistemato tante cose, ben oltre l'ultima soglia di ogni traguardo */
   const pieno = {
     totals: { fattoriaTerre: 40, fattoriaSgomberi: 60, fattoriaPosati: 130,
-              fattoriaRaccolti: 50, fattoriaRitiri: 20 },
+              fattoriaRaccolti: 50, fattoriaRitiri: 20, fattoriaOrdini: 40 },
     best: { fattoriaVarieta: 40 },
     items: {}, campagne: {},
   }

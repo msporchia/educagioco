@@ -357,6 +357,27 @@ export const CATEGORIE = [
        `motore/vicino.js`. */
     V('carretto_mercato', 'carretto_mercato', 'Carretto del vicino', 32,
       { vicino: true, liv: 2, unico: true }),
+    /* ── LA BANCARELLA DEL MERCATO ───────────────────────────────
+       **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
+       stesso prezzo — la quarta volta che succede qui dentro, dopo
+       l'orto, il carretto del vicino e il fienile, e sempre per la
+       stessa ragione. Chi se l'era comprata per bellezza se la ritrova
+       utile, e non c'è niente da migrare in nessun salvataggio.
+
+       Cosa fa sta in `motore/mercato.js`: al banco arrivano tre ordini
+       («il fornaio vuole 3 grano e 2 uova») e consegnarli fa salire il
+       livello. È la cosa che mancava alla fine della catena — quello
+       che si produce lo mangiavano solo il cane e il gatto.
+
+       **Al 4, cioè appena dopo il mulino.** Prima di lì l'unica merce
+       ottenibile è il grano, e un mercato che chiede sempre la stessa
+       cosa non è un mercato: col mulino al 3 diventano due, col fienile
+       al 5 diventano quattro. `unico` come i silos — tre posti al banco
+       sono tre, e una seconda bancarella non ne aggiungerebbe nessuno:
+       un oggetto che si compra due volte e la seconda non fa niente è
+       peggio di uno che non si può comprare. */
+    V('mercato',       'mercato',           'Mercato',            40,
+      { mercato: true, liv: 4, unico: true }),
     /* Al 3 e non al 4, **insieme al mulino**: da quando il mangime è
        roba da animali finisce qui dentro, e un mulino che macina un
        livello prima che esista il posto dove mettere quello che fa
@@ -537,7 +558,10 @@ export const CATEGORIE = [
     V('forno_pizza',   'forno_pizza',       'Forno a cupola',    85),
     V('chiosco_rosa',  'dehors_rosa',       'Chiosco rosa',      80),
     V('chiosco_azzurro', 'dehors_azzurro',  'Chiosco azzurro',   80),
-    V('mercato',       'mercato',           'Mercato',           40),
+    /* Il mercato era qui, fra le case, e adesso lavora: sta con la
+       catena, qualche riga più su. Stesso id, stesso pezzo, stesso
+       prezzo — la quarta volta che succede, dopo l'orto, il carretto
+       del vicino e il fienile. */
     V('casotta',       'pollaio',           'Casotta',           60),
     V('serra',         'serra',             'Serra',             90),
     V('tettoia_fieno', 'tettoia_fieno',     'Tettoia',           45),
@@ -779,6 +803,13 @@ export const eSilo = cosa => !!siloDi(cosa)
    orologio) e non è un silo (non contiene niente). È la terza cosa che
    si tocca e apre un foglio, e si riconosce come le altre due. */
 export const eVicino = cosa => !!(PER_ID[cosa && cosa.id] || {}).vicino
+
+/* La bancarella del mercato: come il carretto, non è una macchina e non
+   è un silo — si tocca e apre il foglio degli ordini
+   (`motore/mercato.js`). La differenza fra i due sta in cosa fanno: il
+   carretto **prende** quello che avanza, il mercato **chiede** quello
+   che serve. */
+export const eMercato = cosa => !!(PER_ID[cosa && cosa.id] || {}).mercato
 export const statiDi = cosa => (PER_ID[cosa && cosa.id] || {}).stati || null
 
 /* ── SI PARTE DA ZERO ─────────────────────────────────────────────

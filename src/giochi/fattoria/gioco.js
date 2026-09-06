@@ -93,6 +93,9 @@ export default {
                          semina: chi semina raccoglie, e sarebbe lo
                          stesso numero contato due volte
        fattoriaRitiri    volte che si è ritirato qualcosa dal mulino
+       fattoriaOrdini    ordini consegnati al mercato — il gesto che
+                         chiude la catena, e l'unico che porta via roba
+                         dal silo senza darla a una bestia
 
      Non c'è un contatore per gli animali: nel catalogo di oggi
      (`dati/catalogo.js`) non ce ne sono — solo terreno, recinti, case e
@@ -109,7 +112,14 @@ export default {
              /* un raccolto vale mezzo punto: è il gesto che si ripete più
                 di tutti, e a punto pieno la fattoria diventerebbe il modo
                 più svelto di salire di livello senza fare un esercizio */
-             + Math.floor(m.tot('fattoriaRaccolti') / 2) + m.tot('fattoriaRitiri'),
+             + Math.floor(m.tot('fattoriaRaccolti') / 2) + m.tot('fattoriaRitiri')
+             /* Un ordine vale due punti e non uno: dietro ce n'è una
+                catena intera — semina, attesa vera, ricetta — mentre un
+                ritiro è un tocco. Resta comunque modesto, perché
+                l'esperienza vera che un ordine dà è **il livello della
+                fattoria**, che è un'altra scala e sta in
+                `dati/livelli.js`. */
+             + 2 * m.tot('fattoriaOrdini'),
     provato: m => m.tot('fattoriaTerre') + m.tot('fattoriaSgomberi')
                   + m.tot('fattoriaPosati') + m.tot('fattoriaRaccolti') > 0,
 
@@ -135,6 +145,13 @@ export default {
       { id: 'fattoria-raccolti', emoji: '🌾', nome: 'Buon raccolto',
         come: n => `Raccogli ${n} campi`,
         soglie: [3, 12, 40], valore: m => m.tot('fattoriaRaccolti') },
+      /* Le soglie sono basse per lo stesso motivo dei raccolti — un
+         ordine costa tempo vero, non tocchi — e la prima è **uno**: il
+         primo ordine consegnato è il momento in cui si scopre che la
+         catena ha una fine, e va segnato lì. */
+      { id: 'fattoria-ordini', emoji: '🧺', nome: 'Servizio a domicilio',
+        come: n => `Consegna ${n} ordini al mercato`,
+        soglie: [1, 10, 35], valore: m => m.tot('fattoriaOrdini') },
     ],
   },
 }

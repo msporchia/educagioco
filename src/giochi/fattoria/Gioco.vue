@@ -32,21 +32,24 @@ import { Fattoria } from './motore/fattoria.js'
 import { comeAvere, comeFarePosto } from './motore/consiglio.js'
 import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
+import { aggiornaIlMercato, bancoDi, consegna, rifiuta } from './motore/mercato.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { spintaAlBordo, conIlResto } from './scena/spinta.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
-         puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, siloDi, macchinaDi,
-         statiDi } from './dati/catalogo.js'
+         puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
+         macchinaDi, statiDi } from './dati/catalogo.js'
 import { animale, siDisegna, IN_VENDITA } from './dati/animali.js'
 import { BISOGNI, CHIAVI } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
+import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
 import { pezzoAttore } from './dati/atlante.js'
 import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 
 import Roba from './viste/Roba.vue'
 import Vicino from './viste/Vicino.vue'
+import Mercato from './viste/Mercato.vue'
 import Attrezzi from './viste/Attrezzi.vue'
 import Battesimo from './viste/Battesimo.vue'
 import Bestia from './viste/Bestia.vue'
@@ -275,7 +278,10 @@ onMounted(() => {
   if (cheat) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
     const meta = parseInt(cheat[1], 10)
-    mondo.speso = Math.max(mondo.speso, sogliaDi(meta))
+    /* Si toglie quello che il mercato ha già dato: il cheat porta **a**
+       quel livello, e sommandoci l'esperienza degli ordini ci si
+       ritroverebbe più avanti di quanto si è chiesto. */
+    mondo.speso = Math.max(mondo.speso, sogliaDi(meta) - (mondo.guadagnato || 0))
     /* I premi dei livelli **già passati** si prendono da sé: il cheat
        serve a guardare col telefono una cosa che arriverebbe dopo mesi,
        e farsi premere sessanta quadratini prima di vederla non è quello
@@ -922,7 +928,8 @@ function almeno(r, lato) {
    campo si semina, una macchina trasforma, un silo si guarda dentro. Una
    panchina no, e infatti al tocco mostra i suoi attrezzi e basta. */
 function haFoglio(cosa) {
-  return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa)
+  return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa) ||
+         eMercato(cosa)
 }
 
 /* Le bestie si guardano dal rettangolo davvero disegnato, non dalla
@@ -1188,6 +1195,49 @@ function apriLavoro(cosa, con = '') {
      l'ha già fatto, e ripeterglielo è il compito che il consiglio
      doveva togliere. */
   if (eVicino(cosa)) return apriVicino(con)
+  /* La bancarella: non trasforma e non contiene, **chiede**. È la
+     quarta cosa che si tocca e apre un foglio, e si riconosce come le
+     altre tre. */
+  if (eMercato(cosa)) return apriMercato()
+}
+
+/* ═══════════ il mercato ═══════════
+   I tre posti al banco si rimettono a posto **aprendo**, non con un
+   orologio che gira: un ordine rifiutato torna dopo cinque minuti veri,
+   e il conto si fa leggendo l'ora — come per i campi che crescono a
+   gioco chiuso. Il caso arriva da qui (`Math.random`), perché il motore
+   non ne ha uno suo: una partita si deve poter rifare identica.
+
+   Il foglio si ricompone a ogni gesto invece di tenersi in mano quello
+   di prima: cosa si può consegnare dipende da cosa c'è in granaio, e il
+   granaio cambia a ogni consegna — un elenco tenuto da prima
+   proporrebbe un ordine già consegnato. */
+function apriMercato() {
+  if (aggiornaIlMercato(mondo, Date.now(), Math.random)) salva()
+  pannello.value = { tipo: 'mercato', ...bancoDi(mondo, Date.now()) }
+}
+
+function consegnaOrdine(id) {
+  const r = consegna(mondo, id, Date.now(), Math.random)
+  if (!r.ok) return avvisa(r.motivo === 'manca-roba'
+    ? 'Ti manca ancora qualcosa: guarda le caselle vuote.'
+    : 'Quell\'ordine non c\'è più.')
+  /* Il contatore è del profilo e non della fattoria: i traguardi li
+     legge l'albo (`gioco.js`), che di un salvataggio non sa niente. */
+  segna('fattoriaOrdini', 1)
+  avvisa(`✅ Consegnato! ⭐ ${r.xp} di esperienza.`)
+  salva()
+  /* Si resta al banco: chi ne ha due pronti li consegna uno dopo
+     l'altro senza riaprire il foglio. */
+  apriMercato()
+}
+
+function rifiutaOrdine(id) {
+  const r = rifiuta(mondo, id, Date.now())
+  if (!r.ok) return avvisa('Quell\'ordine non c\'è più.')
+  avvisa(`Va bene: ne arriva un altro fra ${RIPOSO_MIN} minuti.`)
+  salva()
+  apriMercato()
 }
 
 /* Il carretto: due passi, e il secondo si ricalcola ogni volta invece di
@@ -1685,6 +1735,11 @@ function tiraVoce({ voce, x, y }) {
               :colmi="pannello.colmi" :scelto="pannello.scelto"
               @scegli="apriVicino" @scambia="alVicino" @regala="alVicino(null)"
               @chiudi="chiudi()" />
+
+      <Mercato v-else-if="pannello.tipo === 'mercato'"
+               :ordini="pannello.ordini" :riposi="pannello.riposi"
+               @consegna="consegnaOrdine" @rifiuta="rifiutaOrdine"
+               @chiudi="chiudi()" />
 
       <Granaio v-else-if="pannello.tipo === 'granaio'"
                :famiglia="pannello.famiglia"

@@ -529,3 +529,32 @@
 .fa-minuto { display: block; margin: 10px auto 0; padding: 4px 10px; border: none;
   background: none; color: #8fa691; font: inherit; font-size: 12px;
   text-decoration: underline; cursor: pointer }
+
+/* ── il mercato: tre ordini, uno sotto l'altro ───────────────────
+   Più largo delle altre modali e alto quanto lo schermo, come la
+   pagina dei livelli: dentro ci sono tre riquadri con dentro delle
+   caselle, e a 400 px il terzo finiva sotto il bordo — cioè un foglio
+   da cui il tasto «Chiudi» non si vede più. */
+.fa-mercato { width: min(460px, 95vw); max-height: 100%;
+  overflow-y: auto; overscroll-behavior: contain }
+.fa-ordini { display: grid; gap: 8px; margin: 6px 0 8px }
+/* Un ordine è **un riquadro**, non una riga: dentro c'è chi lo fa,
+   cosa vuole e cosa si può fare: tre cose che vanno guardate insieme.
+   Quello che si può consegnare adesso ha il bordo verde, la stessa
+   tinta con cui un cibo «suo» si distingue da uno che non hai. */
+.fa-ordine { border: 2px solid #2b4430; border-radius: 14px;
+  background: #0d160f66; padding: 8px 9px 9px }
+.fa-ordine.pronto { border-color: #9fd3a8; background: #1b3220cc }
+.fa-chi { display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
+  align-items: center; margin-bottom: 6px }
+.fa-chi b { font-size: 20px; line-height: 1 }
+.fa-chi span { font-size: 13.5px; color: #e8efe6 }
+/* Il premio porta la ⭐ del gettone in alto e **non la moneta**: il
+   mercato non paga monete, e la faccia del numero lo dice prima della
+   riga che lo spiega. */
+.fa-premio-xp { font-style: normal; font-size: 13px; font-weight: 700;
+  color: #ffd98a; white-space: nowrap }
+.fa-chiede { display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; margin-bottom: 8px }
+.fa-ordine .fa-fila { justify-content: flex-end }
+.fa-ordine .fa-manca { text-align: center; margin-top: 6px }
