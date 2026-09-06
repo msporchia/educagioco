@@ -306,17 +306,24 @@ const conto = await page.evaluate(async () => {
                       somma: (document.querySelector('.somma b') || {}).textContent || '',
                       battuta: S.battuta.value, aperto: S.contoFatto.value }
 
-  // 2. la cifra giusta apre il cassetto, e da lì è la cassa a dire il resto
-  for (const t of String(totale / 100)) S.batti(t)
+  return { totale, somma, tasti, cassetto, ...sbagliato, cuoriPrima, pazienzaPrima }
+})
+/* la foto si scatta QUI, con la tastiera ancora su: dopo il ✓ sparisce, e
+   quello che c'era da guardare era proprio lei */
+await scatto(page, 'bancarella-tastiera')
+
+// 2. la cifra giusta apre il cassetto, e da lì è la cassa a dire il resto
+const dopoIlConto = await page.evaluate(async () => {
+  const S = window.__shop
+  for (const t of String(S.cliente.value.totale / 100)) S.batti(t)
   const scritto = S.digitato.value
   S.confermaTotale()
-  await dormi(80)
-  return { totale, somma, tasti, cassetto, scritto,
-           ...sbagliato, fatto: S.contoFatto.value,
-           cuoriPrima, pazienzaPrima,
+  await new Promise(r => setTimeout(r, 120))
+  return { scritto, fatto: S.contoFatto.value,
            cassettoDopo: document.querySelectorAll('.cassetto .scomparto').length,
            display: (document.querySelector('.cassa .display b') || {}).textContent || '' }
 })
+Object.assign(conto, dopoIlConto)
 uguale('finché non batte il totale, lo scontrino non lo dice', conto.somma, '? ? ?')
 uguale('la tastiera ha i suoi dodici tasti', conto.tasti - 1, 12)
 uguale('e il cassetto è ancora chiuso', conto.cassetto, 0)
@@ -330,7 +337,6 @@ uguale('il totale sbagliato non apre niente', conto.aperto, false)
 controlla('col totale giusto il cassetto si apre', conto.fatto && conto.cassettoDopo > 0,
           `fatto ${conto.fatto}, ${conto.cassettoDopo} scomparti`)
 controlla('e da lì il resto lo dice ancora la cassa', /\d/.test(conto.display), conto.display)
-await scatto(page, 'bancarella-tastiera')
 nota(`totale battuto: ${conto.scritto} € su ${conto.totale}c`)
 
 /* ---------- 7. una giornata avanzata: «due angurie» e resti da più monete ----------

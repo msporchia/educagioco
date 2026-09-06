@@ -540,7 +540,7 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
                    scrivendo, come su un registratore vero -->
               <div class="display" v-if="chiediTotale">
                 <span>QUANTO FA?</span>
-                <b>{{ digitato ? digitato + ' €' : '_' }}</b>
+                <b>{{ digitato ? digitato + ' €' : '_ _ _' }}</b>
                 <span>BATTI IL TOTALE</span>
               </div>
               <div class="display" v-else>
@@ -819,18 +819,26 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
    guardare: le cifre come su un telefono, la virgola dove sta lo zero di un
    registratore, e il ✓ largo quanto tutta la fila — è l'unico che manda
    qualcosa, e non deve poter essere confuso con un tasto che scrive. */
+/* Le righe sono dichiarate (`repeat(5,1fr)`) e non lasciate al contenuto: un
+   grid che si misura sui tasti cresce oltre il `flex:1` e la tastiera esce
+   dallo schermo dal basso — cioè proprio il ✓ non si vede più. */
 .tastierone { flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr);
-              gap:6px; padding:8px; border-radius:12px;
+              grid-template-rows:repeat(5,1fr); gap:5px; padding:7px; border-radius:12px;
               background:linear-gradient(180deg,#5d4a3a,#7a6350);
               box-shadow:inset 0 3px 8px #00000055 }
-.tastierone .tasto { font:900 clamp(19px,6vw,26px)/1 inherit; color:#3c3226;
-                     border:0; border-radius:9px; padding:6px 0; cursor:pointer;
+.tastierone .tasto { display:flex; align-items:center; justify-content:center;
+                     min-height:0; font:900 clamp(18px,5.5vw,26px)/1 inherit; color:#3c3226;
+                     border:0; border-radius:9px; padding:0; cursor:pointer;
                      background:linear-gradient(180deg,#f6efe0,#d8c8ad);
                      box-shadow:0 3px 0 #00000055, inset 0 1px 0 #fff9 }
 .tastierone .tasto:active { transform:translateY(2px); box-shadow:0 1px 0 #00000055 }
 .tastierone .ok { grid-column:1/-1; font-size:clamp(15px,4.6vw,19px); color:#123a1c;
                   background:linear-gradient(180deg,#bff0c4,#6fc47e) }
-.tastierone.nonTorna { animation:scarto .5s }
+/* uno scarto laterale e basta: la rotazione di `scarto` sta bene su un
+   piattino e fa ribaltare un pannello alto mezzo schermo */
+.tastierone.nonTorna { animation:sussulto .4s }
+@keyframes sussulto { 0%,100%{transform:none} 20%{transform:translateX(-9px)}
+                      50%{transform:translateX(8px)} 80%{transform:translateX(-4px)} }
 
 /* il piano dove finiscono le monete date */
 .piatto { flex:none; background:#00000026; border-radius:11px; padding:5px 8px 6px;
