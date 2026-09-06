@@ -136,7 +136,12 @@ const blank = () => ({
   eng: { tappa: 0, libera: false }, // e per la campagna di English
   esp: { tappa: 0, libera: false }, // e per quella di Spagnolo
   mercato: { tappa: 0, libera: false }, // e per le giornate di mercato della bancarella
-  lab: { tappa: 0, libera: false },     // e per le tappe del laboratorio delle pozioni
+  /* Il laboratorio delle pozioni. Stessa forma e stesso `v` del castello,
+     per la stessa ragione: le tappe sono passate da otto a undici quando
+     si è deciso che una tappa porta **una** conversione nuova e non due,
+     e senza il numero di versione un salvataggio di ieri direbbe «sei»
+     intendendo un'altra tappa. Vedi `migraLaboratorio`. */
+  lab: { tappa: 0, libera: false, v: 2 },
   /* Il generale ha la stessa forma delle altre campagne — `tappa` è quanti
      livelli sono stati superati ed è l'indice del prossimo — più due cose
      sue, tenute per livello e non in totale: `ordini` è il RECORD (il
@@ -559,7 +564,7 @@ export async function selectPlayer(id) {
   p.eng = { ...vuoto.eng, ...(p.eng || {}) }
   p.esp = { ...vuoto.esp, ...(p.esp || {}) }
   p.mercato = { ...vuoto.mercato, ...(p.mercato || {}) }
-  p.lab = { ...vuoto.lab, ...(p.lab || {}) }
+  p.lab = migraLaboratorio(vuoto.lab, raw && raw.lab)
   p.gen = { ...vuoto.gen, ...(p.gen || {}) }
   p.giorni = { ...vuoto.giorni, ...(p.giorni || {}) }
   /* i due dizionari del generale: un profilo salvato prima che il gioco
@@ -1020,6 +1025,29 @@ export function segnaGuidaVista(chiave) {
   persist()
 }
 
+/* ── LE CONVERSIONI ANCORA NUOVE (il laboratorio delle pozioni) ──
+   `guideViste` è un sì/no e basta a una riga che si mostra una volta
+   sola; una conversione di misura no: non si impara in un colpo, si
+   scolora. Qui si tiene un **residuo di dosature** per conversione
+   (`'kg-g' -> 4`), che scende di uno a ogni dose azzeccata e risale se
+   il bambino sbaglia — chi arriva a zero non vede più niente.
+
+   Sta accanto a `guideViste` e per lo stesso motivo: è per bambino, non
+   per casa. Chi non ha la voce non ha ancora incontrato quella
+   conversione, e vale come «fresca» — l'assenza è il caso di partenza,
+   non un valore da scrivere alla creazione del profilo. Le regole
+   (quanto dura, cosa mostra a che punto) stanno in `data/pozioni.js`:
+   qui c'è solo il cassetto. */
+export const misureFresche = () => state.profile.settings.misureNuove || {}
+export function scriviMisura(id, residuo) {
+  const s = state.profile.settings
+  if (!s.misureNuove) s.misureNuove = {}
+  const v = Math.max(0, residuo | 0)
+  if (s.misureNuove[id] === v) return
+  s.misureNuove[id] = v
+  persist()
+}
+
 /* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
    che è il comportamento di sempre. Acceso, tutte le tappe di tutti i
    giochi si aprono subito. */
@@ -1427,7 +1455,41 @@ export function mercatoCompleta(indice, quanteGiornate) {
 
 /* ═══════════ campagna del laboratorio delle pozioni ═══════════
    `tappa` è quante tappe sono state superate ed è l'indice della prossima.
-   Finita l'ultima si apre il laboratorio libero, che non chiude mai. */
+   Finita l'ultima si apre il laboratorio libero, che non chiude mai.
+
+   ── DA OTTO TAPPE A UNDICI ──
+   La fila si è allungata il giorno in cui si è deciso che **una tappa
+   porta una conversione nuova sola**: il centilitro arrivava coi suoi due
+   scalini in una volta, e il decimetro se ne stava dentro la tappa in cui
+   si cambia attrezzo a metà ricetta. Le tre conversioni scorporate sono
+   diventate tre tappe (`filo`, `gocce`, `spanna`), e l'indice salvato ha
+   smesso di voler dire quello che voleva dire.
+
+   La tabella è scritta a mano e dice, per ogni vecchio numero, dove sta
+   adesso la prima tappa che quel bambino non ha ancora fatto. Due cose
+   che non fa, e sono le stesse del castello: **non toglie niente** (chi
+   aveva finito ha finito) e **non regala il nuovo** a chi non c'era —
+   con un'eccezione voluta, chi aveva già superato la vecchia
+   `pesoemisura`, perché lì dentro il decimetro e il salto metro→millimetro
+   li aveva fatti davvero.
+
+   `v` va letto **prima** di fondere il salvataggio col profilo vuoto: se
+   si fondesse per primo, il `v` del vuoto coprirebbe l'assenza e la
+   rimappatura non partirebbe mai. */
+export const LAB_VERSIONE = 2
+const LAB_DA_OTTO = [0, 1, 2, 3, 4, 5, 6, 10, 11]
+
+export function migraLaboratorio(vuoto, salvato) {
+  const dati = salvato && typeof salvato === 'object' ? salvato : {}
+  const lab = { ...vuoto, ...dati }
+  if (dati.v === LAB_VERSIONE) return lab
+  const vecchia = Math.max(0, Math.min(LAB_DA_OTTO.length - 1, Math.round(lab.tappa || 0)))
+  lab.tappa = Math.max(lab.tappa || 0, LAB_DA_OTTO[vecchia])
+  lab.libera = !!lab.libera
+  lab.v = LAB_VERSIONE
+  return lab
+}
+
 export const labProgresso = () => state.profile.lab
 
 export function labCompleta(indice, quanteTappe) {

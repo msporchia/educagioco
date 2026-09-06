@@ -203,8 +203,8 @@ const TRAGUARDI_TUTTI = [
     soglie: [5, 10, 20], valore: m => m.best('pozioni') },
   { id: 'poz-tappe', area: 'pozioni', emoji: '🗺️', nome: 'Il laboratorio',
     come: n => n === 1 ? 'Supera la prima tappa del laboratorio'
-                       : n === 8 ? 'Finisci tutte e otto le tappe' : `Supera ${n} tappe`,
-    soglie: [1, 4, 8], valore: m => m.tappePoz() },
+                       : n === 11 ? 'Finisci tutte e undici le tappe' : `Supera ${n} tappe`,
+    soglie: [1, 5, 11], valore: m => m.tappePoz() },
 
   /* ---------- La bancarella ---------- */
   { id: 'banco-clienti', area: 'bancarella', emoji: '🧾', nome: 'Bottegaio',

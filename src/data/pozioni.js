@@ -158,7 +158,32 @@ export const CUORI = 3, CUORI_MAX = 5
    'conversioni'` non ripete il `serve:` che il gioco ha già in
    `data/giochi.js`: quello dice «senza conversioni non si può giocare»,
    questo dice «a chi le conversioni le ha fatte da un pezzo, questa
-   tappa non serve più». */
+   tappa non serve più».
+
+   ── UNA CONVERSIONE NUOVA PER TAPPA, E MAI DUE ──
+   È la regola che ha rifatto la fila, e viene da un genitore: il gioco
+   dava per scontato che le conversioni si sapessero già. Non è vero
+   nemmeno per quelle di casa, e per l'ettogrammo o il decimetro non lo
+   è affatto — sono unità che a scuola arrivano una per volta e qui
+   arrivavano a mazzi. Due tappe ne portavano due per una: `boccette`
+   apriva il centilitro con tutti e due i suoi scalini (×100 dal litro e
+   ×10 dai millilitri), e `pesoemisura` — la tappa il cui mestiere è
+   cambiare attrezzo a metà ricetta — ci infilava dentro anche il
+   decimetro, cioè l'unità meno familiare di tutte. Un bambino che
+   sbagliava lì non poteva sapere quale delle due cose non gli fosse
+   chiara, ed è esattamente il difetto che la fila a coppie era nata per
+   togliere.
+
+   Adesso ogni tappa porta **al più una conversione mai vista**, e il
+   test lo controlla contando la fila: `introduce` non si scrive a mano.
+   Le conversioni sono nove, quindi le tappe che aprono qualcosa sono
+   nove, più due che non aprono niente e chiedono tutto insieme.
+
+   ── L'ONDA ──
+   Siccome quasi ogni tappa apre qualcosa, «la coppia» non è più un gesto
+   nuovo seguito da numeri stretti: è un'onda. La tappa che porta la
+   conversione nuova **riparte coi numeri larghi**, quella dopo stringe.
+   Cinque onde, poi le due tappe che non aprono niente. */
 const RACCONTO = [
   { id: 'bilancia', nome: 'La bilancia', emoji: '⚖️',
     portata: 62, scuola: 'conversioni',
@@ -171,30 +196,51 @@ const RACCONTO = [
     scale: ['kg-g', 'hg-g'], passo: 25, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'righello', nome: 'Il righello', emoji: '📏',
-    portata: 66, scuola: 'conversioni',
+    portata: 65, scuola: 'conversioni',
     dritta: 'Si taglia invece di pesare. Un metro sono cento centimetri.',
     scale: ['m-cm'], passo: 50, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'sarto', nome: 'Il metro da sarto', emoji: '🎗️',
-    portata: 69, scuola: 'conversioni',
+    portata: 67, scuola: 'conversioni',
     dritta: 'Roba corta, da millimetri: dieci in un centimetro.',
     scale: ['m-cm', 'cm-mm'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'caraffa', nome: 'La caraffa', emoji: '🫙',
-    portata: 72, scuola: 'conversioni',
+    portata: 69, scuola: 'conversioni',
     dritta: 'Si versa. Un litro sono mille millilitri, come il chilo coi grammi.',
     scale: ['l-ml'], passo: 25, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'boccette', nome: 'Le boccette', emoji: '🧪',
+    portata: 71, scuola: 'conversioni',
+    dritta: 'Arriva il centilitro: cento in un litro, due scalini sotto.',
+    scale: ['l-ml', 'l-cl'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  /* Il giro di ritorno: le tre conversioni che restano non portano un
+     gesto nuovo — l'attrezzo si conosce già — ma un salto di scalini che
+     non si era ancora fatto. Per questo tornano coi numeri larghi. */
+  { id: 'filo', nome: 'Il filo sottile', emoji: '🧵',
+    portata: 73, scuola: 'conversioni',
+    dritta: 'Dal metro al millimetro in un colpo solo: tre scalini, mille.',
+    scale: ['m-cm', 'cm-mm', 'm-mm'], passo: 25, ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  { id: 'gocce', nome: 'A gocce', emoji: '💧',
     portata: 75, scuola: 'conversioni',
-    dritta: 'Il centilitro sta in mezzo: cento in un litro, dieci millilitri l\'uno.',
+    dritta: 'L\'ultimo scalino della capacità: dieci millilitri in un centilitro.',
     scale: ['l-ml', 'l-cl', 'cl-ml'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 2 },
 
+  { id: 'spanna', nome: 'La spanna', emoji: '🖐️',
+    portata: 76, scuola: 'conversioni',
+    dritta: 'Il decimetro: una spanna di mano, dieci centimetri.',
+    scale: ['m-cm', 'cm-mm', 'm-mm', 'dm-cm'], passo: 25,
+    ingredienti: 2, clienti: 6, esigenti: 2 },
+
   /* Il salto vero: due ingredienti della stessa pozione chiedono due
-     attrezzi diversi, e la testa deve cambiare mestiere a metà ricetta. */
+     attrezzi diversi, e la testa deve cambiare mestiere a metà ricetta.
+     Qui dentro non entra più niente di nuovo — cambiare gesto è già
+     abbastanza, e il decimetro se n'è andato nella tappa prima. */
   { id: 'pesoemisura', nome: 'Peso e misura', emoji: '⚖️📏',
     portata: 78, scuola: 'conversioni',
-    dritta: 'Pesare e tagliare nella stessa pozione. Occhio a decimetri e millimetri.',
+    dritta: 'Pesare e tagliare nella stessa pozione, senza confondere le scale.',
     scale: ['kg-g', 'hg-g', 'm-cm', 'm-mm', 'dm-cm'], passo: 10,
     ingredienti: 3, clienti: 6, esigenti: 2 },
 
@@ -204,6 +250,32 @@ const RACCONTO = [
     scale: SCALE.map(s => s.id), passo: 5, passoFine: 1,
     ingredienti: 3, clienti: 7, esigenti: 2 },
 ]
+
+/* ── cosa porta di nuovo una tappa ──
+   Non si scrive a mano, si guarda la fila: `introduce` sono le
+   conversioni che compaiono lì per la prima volta e `unitaNuove` le
+   unità di misura mai viste prima. Scritto a mano, il giorno in cui
+   qualcuno sposta una tappa il dato direbbe il falso e nessuno se ne
+   accorgerebbe — l'unica cosa che cambierebbe è che le prime dosature
+   smetterebbero di essere guidate, e una spiegazione che non compare
+   non lascia nessuna traccia.
+
+   Le unità nuove sono **due sole** alla prima tappa di una famiglia (il
+   chilo e il grammo arrivano insieme: sono i due lati della stessa
+   conversione) e mai più di una dopo. */
+function conLeNovita(fila) {
+  const conversioni = new Set(), unita = new Set()
+  return fila.map(t => {
+    const introduce = t.scale.filter(id => !conversioni.has(id))
+    const unitaNuove = []
+    for (const id of introduce) {
+      conversioni.add(id)
+      for (const u of [SCALA[id].da, SCALA[id].a])
+        if (!unita.has(u)) { unita.add(u); unitaNuove.push(u) }
+    }
+    return { ...t, introduce, unitaNuove }
+  })
+}
 
 /* ── quanto fine può essere il passo su una certa scala ──
    0,05 dm sarebbero mezzo millimetro, e mezzo millimetro non si taglia: le
@@ -294,15 +366,22 @@ export const dosatureDi = t =>
     ? (t.ingredienti[0] + t.ingredienti[1]) / 2 : t.ingredienti) + (t.esigenti || 0)
 export const premioTappa = i => Math.max(1, Math.round(dosatureDi(TAPPE[i]) / 10))
 
-export const TAPPE = RACCONTO.map((t, i) => ({ ...t, margine: margineDi(i, RACCONTO.length) }))
+export const TAPPE = conLeNovita(RACCONTO)
+  .map((t, i) => ({ ...t, margine: margineDi(i, RACCONTO.length) }))
 
 /* Il laboratorio libero: nessuna tappa, nessuna fine. Le conversioni sono
    tutte e il passo lo dà il motore di apprendimento — è l'unico posto dove
    la difficoltà la decide quanto si sa, e non a che punto del viaggio si è. */
 export function laboratorioLibero(lv) {
   const t = taratura(lv)
+  /* `introduce` vuoto e non assente: qui non si apre mai niente — chi
+     arriva nel libero ha finito la campagna e le nove conversioni le ha
+     viste tutte. Il promemoria di una conversione ancora fresca ci arriva
+     lo stesso (è per bambino, non per tappa), le dosature già convertite
+     no: quelle sono la prima volta, e la prima volta è passata. */
   return { id: 'libero', nome: 'Laboratorio libero', emoji: '♾️', libero: true,
            scale: SCALE.map(s => s.id), passo: t.passo, ingredienti: t.ingredienti,
+           introduce: [], unitaNuove: [],
            clienti: Infinity, esigenti: 0, margine: margineDi(-1) }
 }
 
@@ -409,12 +488,127 @@ export function scaffale(scala) {
    proprio lì sopra */
 export const vaBene = (str, dose) => !!str && dose <= str.cap && dose % str.grana === 0
 
+/* ═══════════════════════════════════════════════════════════════════
+   QUANDO UNA CONVERSIONE È ANCORA NUOVA — l'introduzione guidata
+
+   Il difetto, detto da un genitore: **il gioco dava per scontato che il
+   bambino sapesse già convertire.** La prima ricetta della prima tappa
+   chiedeva «1,4 kg» e il banco contava in grammi, e chi non aveva ancora
+   fatto le equivalenze a scuola non aveva da nessuna parte, né prima né
+   durante, il pezzo che gli mancava: che un chilo sono mille grammi. La
+   scala al muro c'era già ma sta dietro un tasto, e un tasto lo preme chi
+   sa già di averne bisogno.
+
+   Le tappe servono a questo, quindi la conversione si insegna **dentro la
+   tappa che la porta**, in tre gradini che si abbassano da soli:
+
+     diretta     la ricetta parla già nell'unità dell'attrezzo («400 g»):
+                 non c'è niente da convertire, e le prime dosature
+                 servono a prendere le misure dell'attrezzo e a farsi
+                 un'idea di quanto è un grammo.
+     accanto     la ricetta parla in unità grandi ma porta la conversione
+                 già fatta fra parentesi: «0,4 kg (400 g)». Si vede la
+                 coppia, non la si deve trovare.
+     promemoria  la dose è nuda come sempre, ma sopra al banco resta la
+                 riga «1 kg = 1000 g» con i suoi scalini, finché la
+                 conversione è fresca.
+
+   Poi non resta niente e il gioco è quello di prima. **Uno sbaglio
+   riporta il promemoria**, e questa è la metà che conta: un bambino che
+   sbaglia sull'unità non ha bisogno di essere fermato, ha bisogno che il
+   pezzo che gli manca torni a vedersi.
+
+   Il conto è **per bambino e per conversione** — un residuo di dosature,
+   che scende di uno a ogni dose azzeccata — e sta nelle impostazioni del
+   profilo accanto a `guideViste` (`store/profile.js`). Per bambino
+   perché un fratello che apre il gioco per la prima volta deve rivedere
+   tutto, e per conversione perché il centilitro può essere nuovo mentre
+   il chilo non lo è più da un mese.
+
+   Qui dentro non si legge nessun profilo: si ricevono dei numeri e si
+   dice cosa mostrare. È il motivo per cui `test/unita/pozioni` lo può
+   provare senza browser. */
+
+export const FRESCA = 6      // dosature di grazia quando una conversione entra
+export const DIRETTE = 2     // le prime, scritte già nell'unità dell'attrezzo
+export const ACCANTO = 2     // poi altrettante con la conversione fra parentesi
+/* Quante ne rimette in piedi uno sbaglio. Non è un numero libero: sta
+   sotto `FRESCA − DIRETTE − ACCANTO`, cioè dentro la fascia del solo
+   promemoria, e ci sta apposta. Più in alto rimetterebbe la dose già
+   convertita, e togliere la conversione a chi l'ha appena sbagliata vuol
+   dire togliergli proprio la domanda su cui deve tornare. */
+export const RITORNO = 2
+
+/* mai vista = fresca come appena entrata: non sapere non è un motivo per
+   togliere l'aiuto, ed è quello che succede a chi ricomincia da capo */
+export const residuoDi = (fresche, id) => {
+  if (!fresche) return 0                       // banco di prova: niente aiuti
+  const v = fresche[id]
+  return v == null ? FRESCA : Math.max(0, Math.min(FRESCA, v | 0))
+}
+
+/* `introdotta` è vero solo nella tappa che porta quella conversione: le
+   dosature già convertite sono un passo della prima volta, e nel
+   laboratorio libero — o in una tappa che quella conversione la ripassa
+   soltanto — regalerebbero la risposta. Il promemoria invece segue il
+   bambino ovunque, perché è un cartello e non uno sconto. */
+export function assistenzaDi(residuo, introdotta = false) {
+  const r = Math.max(0, Math.min(FRESCA, residuo | 0))
+  if (!r) return ''
+  if (introdotta && r > FRESCA - DIRETTE) return 'diretta'
+  if (introdotta && r > FRESCA - DIRETTE - ACCANTO) return 'accanto'
+  return 'promemoria'
+}
+
+/* Una dose azzeccata consuma un gradino, una sbagliata rimette il
+   promemoria per tre. Non torna mai fino a `diretta`: rifare la dose
+   già convertita dopo uno sbaglio vorrebbe dire togliere proprio la
+   domanda su cui si è inciampato. */
+export const freschezzaDopo = (residuo, giusto) =>
+  giusto ? Math.max(0, (residuo | 0) - 1) : Math.max(residuo | 0, RITORNO)
+
+/* ── quanto è grande, detto con una cosa che si ha in mano ──
+   Il pezzo che le tabelle di scuola non danno mai: un millilitro è una
+   goccia, un litro è una bottiglia grande. Sono parole e non disegnini,
+   per la stessa ragione per cui non ce ne sono accanto agli scalini —
+   qualunque icona qui somiglierebbe a uno degli attrezzi sullo scaffale,
+   e l'attrezzo si sceglierebbe accoppiando i simboli. */
+export const QUANTO_E = {
+  kg: 'un pacco di zucchero', hg: 'un etto di prosciutto',
+  dag: 'dieci graffette',     g:  'una graffetta',
+  l:  'una bottiglia grande', dl: 'un bicchiere',
+  cl: 'un cucchiaio',         ml: 'una goccia',
+  m:  'un passo lungo',       dm: 'una spanna di mano',
+  cm: 'la larghezza di un dito', mm: 'la punta di una matita',
+}
+
+/* ── gli scalini fra due unità ──
+   `['l','dl','cl','ml']` per l→ml: tre gradini, e tre gradini fanno
+   mille. È la stessa riga del cartellone al muro, tagliata sul pezzo che
+   serve adesso — e a differenza di quella qui il fattore si scrive,
+   perché è il momento in cui lo si sta imparando e non quello in cui lo
+   si deve ricordare. */
+export function scaliniFra(da, a) {
+  const riga = SCALINI.find(r => r.unita.includes(da) && r.unita.includes(a))
+  if (!riga) return []
+  const i = riga.unita.indexOf(da), j = riga.unita.indexOf(a)
+  return riga.unita.slice(Math.min(i, j), Math.max(i, j) + 1)
+}
+
+/* tutto quello che serve a disegnare il promemoria di una conversione */
+export const promemoriaDi = scala => ({
+  da: scala.da, a: scala.a, k: scala.k,
+  scalini: scaliniFra(scala.da, scala.a),
+  grande: QUANTO_E[scala.da] || '', piccolo: QUANTO_E[scala.a] || '',
+})
+
 /* ═══════════ generazione ═══════════ */
 
 const mcd = (a, b) => (b ? mcd(b, a % b) : a)
 const mcm = (a, b) => a / mcd(a, b) * b
 
-export function generaIngrediente(tappa, scala = scegli(scaleDi(tappa)), passo = tappa.passo) {
+export function generaIngrediente(tappa, scala = scegli(scaleDi(tappa)),
+                                  passo = tappa.passo, guida = '') {
   // la scala non regge tutti i passi: 0,25 cm sarebbero 2,5 mm, e mezzo
   // millimetro su un righello non lo si taglia. Il passo della tappa è un
   // tetto, e ogni scala scende fin dove può.
@@ -438,10 +632,21 @@ export function generaIngrediente(tappa, scala = scegli(scaleDi(tappa)), passo =
   const grande = piccolo / scala.k
   const ing = scegli(INGREDIENTI.filter(i => i.tipo === scala.tipo))
 
+  /* Com'è scritta la dose sulla pergamena. Le tre righe sono la stessa
+     dose: cambia solo quanto lavoro resta da fare a chi legge.
+     `chiede` dice se la conversione è ancora una domanda — quando non lo
+     è, il gioco non la segna al motore di apprendimento, perché nessuno
+     l'ha chiesta e segnarla direbbe che la sa. */
+  const nudo = misura(grande, scala.da)
+  const testo = guida === 'diretta' ? misura(piccolo, scala.a)
+    : guida === 'accanto' ? nudo + ' (' + misura(piccolo, scala.a) + ')'
+    : nudo
+
   return {
-    ...ing, scala, grande, piccolo, grana,
+    ...ing, scala, grande, piccolo, grana, guida,
+    chiede: guida !== 'diretta' && guida !== 'accanto',
     attrezzi, buoni: attrezzi.filter(a => vaBene(a, piccolo)).map(a => a.nome),
-    testo: String(grande).replace('.', ',') + ' ' + scala.da,
+    testo,
     chiave: 'pozioni:' + scala.da + '-' + scala.a,
     fatto: false,
   }
@@ -453,8 +658,15 @@ export function generaIngrediente(tappa, scala = scegli(scaleDi(tappa)), passo =
 
    `pesca` è la mano del motore di apprendimento: nel laboratorio libero
    sceglie quale conversione far uscire, in campagna non c'è e le conversioni
-   sono quelle della tappa, in ordine sparso. */
-export function generaRicetta(tappa, { n = 0, pesca = scegli } = {}) {
+   sono quelle della tappa, in ordine sparso.
+
+   `fresche` è il residuo di aiuto per conversione, letto dal profilo del
+   bambino. Il conto scende **dentro la ricetta**: due ingredienti della
+   stessa conversione nella stessa pozione non possono essere tutti e due
+   la prima volta, se no la scaletta si fermerebbe al primo gradino.
+   Assente (`null`) vuol dire nessun aiuto, ed è quello che chiede il
+   banco di prova. */
+export function generaRicetta(tappa, { n = 0, pesca = scegli, fresche = null } = {}) {
   const esigente = esigenteAl(tappa, n)
   const scale = scaleDi(tappa)
   const passo = passoAl(tappa, n)
@@ -463,14 +675,19 @@ export function generaRicetta(tappa, { n = 0, pesca = scegli } = {}) {
 
   const lista = []
   const visti = new Set()
+  const resta = {}
+  const introduce = tappa.introduce || []
   let guardia = 0
   while (lista.length < n_ing && guardia++ < 200) {
     // l'esigente apre con la conversione appena entrata nella tappa: l'ultima
     // dell'elenco è sempre quella nuova
     const scala = esigente && !lista.length ? scale[scale.length - 1] : pesca(scale)
-    const i = generaIngrediente(tappa, scala, passo)
+    if (!(scala.id in resta)) resta[scala.id] = residuoDi(fresche, scala.id)
+    const guida = assistenzaDi(resta[scala.id], introduce.includes(scala.id))
+    const i = generaIngrediente(tappa, scala, passo, guida)
     if (visti.has(i.nome)) continue
     visti.add(i.nome)
+    resta[scala.id] = Math.max(0, resta[scala.id] - 1)
     lista.push(i)
   }
   return {
