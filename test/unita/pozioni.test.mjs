@@ -18,7 +18,10 @@
 import { generaRicetta, taratura, scomponi, scaffale, vaBene, capienza, mescola,
          laboratorioLibero, esigenteAl, passoAl, passoPer, passiDi, faticaDi,
          costoDi, dosatureDi, premioTappa, scaleDi, PAZIENZA_MINIMA,
+         assistenzaDi, freschezzaDopo, promemoriaDi, QUANTO_E,
+         FRESCA, DIRETTE, ACCANTO,
          TAPPE, PASSI, SCALE, STRUMENTI, SCALINI, INGREDIENTI } from '../../src/data/pozioni.js'
+import { migraLaboratorio, LAB_VERSIONE } from '../../src/store/profile.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const GIRI = 300            // ricette per tappa: bastano a pescare ogni scala
@@ -184,31 +187,64 @@ controlla('le conversioni di casa vengono prima di quelle scolastiche',
 nota('entrano alla tappa: ' + Object.entries(primaVolta)
      .sort((a, b) => a[1] - b[1]).map(([s, i]) => `${s}→${i + 1}`).join(' · '))
 
+/* ── UNA CONVERSIONE NUOVA PER TAPPA, E MAI DUE ──
+   È la promessa che ha rifatto la fila, e la sola cosa che la tiene in
+   piedi è questo blocco: `introduce` lo calcola `data/pozioni.js`
+   guardando la fila, quindi spostare una tappa non può far mentire il
+   dato — può però rimettere due conversioni nella stessa tappa, ed è
+   quello che qui si conta. Due erano: `boccette` apriva il centilitro
+   con tutti e due i suoi scalini, e `pesoemisura` — la tappa in cui si
+   cambia attrezzo a metà ricetta — ci teneva dentro anche il decimetro. */
+const doppie = TAPPE.filter(t => t.introduce.length > 1)
+uguale('nessuna tappa porta due conversioni nuove insieme',
+       doppie.map(t => `${t.id}: ${t.introduce.join('+')}`).join(' · '), '')
+uguale('e le nove conversioni entrano una per una',
+       TAPPE.reduce((s, t) => s + t.introduce.length, 0), SCALE.length)
+controlla('`introduce` è la prima volta di quella conversione, non una lista a mano',
+          TAPPE.every((t, i) => t.introduce.every(s => primaVolta[s] === i) &&
+                      t.scale.every(s => primaVolta[s] !== i || t.introduce.includes(s))),
+          TAPPE.map(t => t.introduce.join('+') || '—').join(' · '))
+/* le unità nuove sono due sole alla prima tappa di una famiglia — il chilo
+   e il grammo arrivano insieme perché sono i due lati della stessa
+   conversione — e da lì in poi una alla volta */
+const troppeUnita = TAPPE.filter((t, i) => t.unitaNuove.length > (t.introduce.length ? 2 : 0) ||
+                                 (t.unitaNuove.length === 2 && i > 0 && !t.introduce.length))
+uguale('e mai più di un\'unità di misura nuova, fuori dall\'apertura di una famiglia',
+       troppeUnita.map(t => `${t.id}: ${t.unitaNuove.join('+')}`).join(' · '), '')
+nota('portano di nuovo: ' + TAPPE.map((t, i) =>
+     `${i + 1} ${t.introduce.join('+') || '—'}`).join(' · '))
+
 /* ── un gesto per volta, e mai tre famiglie prima della fine ── */
 const famiglieDi = t => new Set(scaleDi(t).map(s => s.tipo))
 const famiglie = TAPPE.map(famiglieDi)
-controlla('le prime sei tappe chiedono un gesto solo',
-          famiglie.slice(0, 6).every(f => f.size === 1),
+controlla('tutte le tappe che aprono una conversione chiedono un gesto solo',
+          TAPPE.every((t, i) => !t.introduce.length || famiglie[i].size === 1),
           famiglie.map(f => f.size).join(''))
-controlla('il gesto nuovo arriva sempre da solo, con la conversione più facile',
-          TAPPE.every((t, i) => i === 0 || famiglie[i].size > 1 ||
-                      [...famiglie[i]][0] === [...famiglie[i - 1]][0] || t.scale.length === 1),
-          TAPPE.map(t => t.scale.length).join(''))
+/* la prima volta che un attrezzo entra in scena entra da solo, con una
+   conversione sola: imparare il gesto e la conversione insieme vuol dire
+   non sapere quale delle due non è chiara */
+const apertura = {}
+TAPPE.forEach((t, i) => famiglie[i].forEach(f => { if (!(f in apertura)) apertura[f] = i }))
+controlla('il gesto nuovo arriva da solo, con la conversione più facile della sua famiglia',
+          Object.values(apertura).every(i => TAPPE[i].scale.length === 1),
+          Object.entries(apertura).map(([f, i]) => `${f}→${TAPPE[i].id}`).join(' · '))
 uguale('l\'ultima tappa le mette tutte insieme', famiglie[famiglie.length - 1].size, 3)
 
-/* ── la campagna sale, ma a coppie ──
-   La tappa che porta un gesto nuovo riparte coi numeri facili: la sua
-   fatica SCENDE apposta, e a stringere è la seconda della coppia. */
+/* ── la campagna sale a onde ──
+   Quasi ogni tappa apre una conversione, quindi «la coppia» non è più il
+   gesto nuovo seguito dai numeri stretti: è un'onda. Chi porta la
+   conversione nuova riparte coi numeri larghi — la sua fatica SCENDE
+   apposta — e la tappa dopo stringe. */
 const fatiche = TAPPE.map(faticaDi)
-const COPPIE = [[0, 1], [2, 3], [4, 5]]
-controlla('dentro ogni coppia la seconda tappa stringe',
-          COPPIE.every(([a, b]) => fatiche[b] > fatiche[a]),
+const ONDE = [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
+controlla('dentro ogni onda la seconda tappa stringe',
+          ONDE.every(([a, b]) => fatiche[b] > fatiche[a]),
           fatiche.map(f => f.toFixed(1)).join(' · '))
-controlla('il gesto nuovo dà respiro rispetto alla tappa prima',
-          fatiche[2] < fatiche[1] && fatiche[4] < fatiche[3],
-          `${fatiche[1].toFixed(1)} → ${fatiche[2].toFixed(1)} · ${fatiche[3].toFixed(1)} → ${fatiche[4].toFixed(1)}`)
+controlla('e chi apre un\'onda dà respiro rispetto alla tappa prima',
+          ONDE.slice(1).every(([a]) => fatiche[a] < fatiche[a - 1]),
+          ONDE.slice(1).map(([a]) => `${fatiche[a - 1].toFixed(1)}→${fatiche[a].toFixed(1)}`).join(' · '))
 controlla('le due tappe finali sono più dure di tutte le altre',
-          fatiche[6] > Math.max(...fatiche.slice(0, 6)) && fatiche[7] > fatiche[6],
+          fatiche[9] > Math.max(...fatiche.slice(0, 9)) && fatiche[10] > fatiche[9],
           fatiche.map(f => f.toFixed(1)).join(' · '))
 nota('fatica: ' + TAPPE.map((t, i) => `${i + 1} ${faticaDi(t).toFixed(1)}`).join(' · '))
 
@@ -233,9 +269,10 @@ for (const t of TAPPE)
   }
 controlla('ogni conversione ha un passo giocabile in ogni tappa che la usa',
           senzaPasso.length === 0, senzaPasso.join(' · '))
+const calderone = TAPPE[TAPPE.length - 1]
 controlla('il grande calderone stringe il passo strada facendo',
-          passoAl(TAPPE[7], 0) > passoAl(TAPPE[7], TAPPE[7].clienti - 1),
-          [...Array(TAPPE[7].clienti)].map((_, n) => passoAl(TAPPE[7], n)).join(' '))
+          passoAl(calderone, 0) > passoAl(calderone, calderone.clienti - 1),
+          [...Array(calderone.clienti)].map((_, n) => passoAl(calderone, n)).join(' '))
 
 /* ── i clienti esigenti: quanti sono e dove cadono ── */
 for (const t of TAPPE) {
@@ -298,5 +335,128 @@ for (const v of [3, 7, 38, 99, 176, 645]) {
   uguale(`${v} g si compone col minimo di pesi`, avido.length, dp[v])
   uguale(`${v} g: i pesi scelti fanno ${v}`, avido.reduce((a, b) => a + b, 0), v)
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   L'INTRODUZIONE GUIDATA
+
+   Il difetto segnalato da un genitore: il gioco dava per scontato che il
+   bambino sapesse già convertire, e la scala al muro sta dietro un tasto
+   che preme solo chi sa già di averne bisogno. La cura è una scaletta
+   che si abbassa da sé — dose già convertita, dose con la conversione
+   accanto, promemoria, niente — e le cose da non sbagliare sono tre: che
+   la scaletta finisca (se no il gioco resta guidato per sempre), che uno
+   sbaglio la faccia tornare, e che una dose guidata **non venga segnata
+   al motore di apprendimento** come se il bambino avesse convertito.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── la scaletta scende, e finisce ── */
+const gradini = [...Array(FRESCA + 2)].map((_, n) => assistenzaDi(FRESCA - n, true))
+uguale('la scaletta va da «già convertita» a niente',
+       gradini.join(' '), 'diretta diretta accanto accanto promemoria promemoria  ')
+uguale(`le prime ${DIRETTE} dosature non chiedono nessuna conversione`,
+       gradini.filter(g => g === 'diretta').length, DIRETTE)
+uguale('fuori dalla tappa che la introduce resta solo il promemoria',
+       [...new Set([...Array(FRESCA)].map((_, n) => assistenzaDi(FRESCA - n, false)))].join(),
+       'promemoria')
+uguale('e a conversione imparata non resta niente', assistenzaDi(0, true), '')
+
+/* il residuo scende di uno per volta e si esaurisce: `FRESCA` dosature
+   azzeccate e il bambino è per conto suo */
+let resta = FRESCA, giri = 0
+while (resta > 0 && giri++ < 50) resta = freschezzaDopo(resta, true)
+uguale('l\'aiuto si esaurisce dopo tante dosature quante ne dichiara', giri, FRESCA)
+uguale('uno sbaglio lo rimette in piedi, ma solo fino al promemoria',
+       assistenzaDi(freschezzaDopo(0, false), true), 'promemoria')
+uguale('e non riporta mai la dose già convertita',
+       freschezzaDopo(0, false) <= FRESCA - DIRETTE - ACCANTO, true)
+
+/* ── la dose guidata è la stessa dose, scritta in un altro modo ── */
+const guasteGuide = []
+for (const t of TAPPE) {
+  if (!t.introduce.length) continue
+  for (let n = 0; n < 40; n++) {
+    const nuova = generaRicetta(t, { n, fresche: {} })
+    for (const i of nuova.ingredienti) {
+      if (Math.abs(i.grande * i.scala.k - i.piccolo) > 1e-6)
+        guasteGuide.push(`${t.id}: ${i.testo} non fa ${i.piccolo}`)
+      if (i.guida === 'diretta') {
+        if (i.chiede) guasteGuide.push(`${t.id}: la dose già convertita si segna al motore`)
+        if (!i.testo.endsWith(' ' + i.scala.a))
+          guasteGuide.push(`${t.id}: dose diretta scritta in ${i.testo}`)
+        if (!t.introduce.includes(i.scala.id))
+          guasteGuide.push(`${t.id}: ${i.scala.id} guidata senza essere nuova`)
+      }
+      if (i.guida === 'accanto' && !i.testo.includes(String(i.piccolo) + ' ' + i.scala.a))
+        guasteGuide.push(`${t.id}: dose accanto senza la conversione: ${i.testo}`)
+      if ((i.guida === '' || i.guida === 'promemoria') && !i.chiede)
+        guasteGuide.push(`${t.id}: dose nuda che non conta: ${i.testo}`)
+    }
+  }
+}
+uguale('le dosature guidate dicono la stessa dose e non barano sul motore',
+       guasteGuide.slice(0, 3).join(' · '), '')
+
+/* ── senza aiuti il gioco è quello di prima ──
+   È la porta del banco di prova (`saltaLeSpiegazioni`): un test rigioca
+   la stessa «prima volta» a ogni giro, e una ricetta scritta già in
+   grammi gli cambierebbe sotto i piedi quello che sta misurando. */
+const nude = []
+for (const t of TAPPE)
+  for (let n = 0; n < 20; n++)
+    for (const i of generaRicetta(t, { n, fresche: null }).ingredienti)
+      if (i.guida || !i.chiede) nude.push(`${t.id}: ${i.testo} [${i.guida}]`)
+uguale('senza il conto delle conversioni fresche non compare nessun aiuto',
+       nude.slice(0, 3).join(' · '), '')
+
+/* ═══════════ I SALVATAGGI DI CHI GIOCAVA ALLE OTTO TAPPE ═══════════
+   `lab.tappa` è un indice sulla fila, e la fila è passata da otto a
+   undici: lo stesso numero non vuol più dire la stessa cosa. La regola è
+   quella del castello — nessuno torna indietro — più una cosa sua: chi
+   aveva superato la vecchia `pesoemisura` aveva fatto lì dentro il
+   decimetro e il salto metro→millimetro, quindi le due tappe nate da
+   quello scorporo gli risultano già passate. */
+const VUOTO = { tappa: 0, libera: false, v: LAB_VERSIONE }
+const percorso = []
+for (let vecchia = 0; vecchia <= 8; vecchia++) {
+  const dopo = migraLaboratorio(VUOTO, { tappa: vecchia, libera: vecchia >= 8 })
+  percorso.push(`${vecchia}→${dopo.tappa}`)
+  if (dopo.tappa < vecchia || dopo.v !== LAB_VERSIONE)
+    guasteGuide.push(`migrazione ${vecchia} → ${dopo.tappa}`)
+}
+uguale('chi giocava alle otto tappe non torna mai indietro',
+       guasteGuide.filter(g => g.startsWith('migrazione')).join(' · '), '')
+const finita = migraLaboratorio(VUOTO, { tappa: 8, libera: true })
+controlla('chi le aveva finite tutte e otto ha finito anche le undici',
+          finita.tappa >= TAPPE.length && finita.libera === true,
+          `${finita.tappa} su ${TAPPE.length}`)
+controlla('chi era a metà si trova davanti le tappe nuove, non dentro',
+          migraLaboratorio(VUOTO, { tappa: 6 }).tappa < TAPPE.length,
+          `tappa ${migraLaboratorio(VUOTO, { tappa: 6 }).tappa}`)
+uguale('un profilo già migrato non si tocca',
+       migraLaboratorio(VUOTO, { tappa: 4, libera: false, v: LAB_VERSIONE }).tappa, 4)
+uguale('e la migrazione fatta due volte dà lo stesso numero',
+       migraLaboratorio(VUOTO, migraLaboratorio(VUOTO, { tappa: 5 })).tappa,
+       migraLaboratorio(VUOTO, { tappa: 5 }).tappa)
+uguale('chi comincia oggi comincia da capo', migraLaboratorio(VUOTO, null).tappa, 0)
+nota('vecchie otto tappe → nuove undici: ' + percorso.join(' · '))
+
+/* ── il promemoria dice il vero ──
+   Gli scalini si contano, e contati devono fare il fattore: una riga che
+   dicesse «1 l = 1000 ml» sopra due gradini insegnerebbe una cosa falsa,
+   e nessuno se ne accorgerebbe guardando il gioco. */
+const bugie = []
+for (const s of SCALE) {
+  const p = promemoriaDi(s)
+  if (10 ** (p.scalini.length - 1) !== s.k)
+    bugie.push(`${s.id}: ${p.scalini.length - 1} scalini per ×${s.k}`)
+  if (p.scalini[0] !== s.da || p.scalini[p.scalini.length - 1] !== s.a)
+    bugie.push(`${s.id}: scalini da ${p.scalini[0]} a ${p.scalini[p.scalini.length - 1]}`)
+  if (!p.grande || !p.piccolo) bugie.push(`${s.id}: nessuna idea di quanto sia grande`)
+}
+uguale('gli scalini del promemoria contati fanno il fattore', bugie.join(' · '), '')
+uguale('ogni unità in gioco sa dire quanto è grande con una cosa di casa',
+       [...new Set(SCALE.flatMap(s => [s.da, s.a]))].filter(u => !QUANTO_E[u]).join(','), '')
+nota('quanto è grande: ' + [...new Set(SCALE.flatMap(s => [s.da, s.a]))]
+     .map(u => `${u} = ${QUANTO_E[u]}`).join(' · '))
 
 riassunto('il laboratorio delle pozioni')
