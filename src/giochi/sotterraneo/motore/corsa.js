@@ -728,6 +728,16 @@ export class Corsa {
     return true
   }
 
+  /* ── dove si è, senza far bruciare niente ──
+     Chi ci arriva **senza camminare** non consuma torcia: un piano
+     nuovo, il risveglio all'ingresso dopo uno svenimento, una discesa
+     ripresa da un salvataggio. La torcia paga la strada girata al buio,
+     e nessuna delle tre lo è. */
+  segnaLaStanza() {
+    const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
+    if (st) this.stanzaOra = st.id
+  }
+
   /* ── e si consuma entrando in una stanza ──
      Una stanza, non un secondo: col foglio di una domanda aperto qui
      sotto il tempo è fermo, e un conto che scorresse davvero farebbe
@@ -740,16 +750,6 @@ export class Corsa {
      passo — brucerebbe una torcia in mezzo metro. Tornare sui propri
      passi invece consuma, ed è giusto: la torcia serve a girare, e
      girare due volte lo stesso piano è girare. */
-  /* ── dove si è, senza far bruciare niente ──
-     Chi ci arriva **senza camminare** non consuma torcia: un piano
-     nuovo, il risveglio all'ingresso dopo uno svenimento, una discesa
-     ripresa da un salvataggio. La torcia paga la strada girata al buio,
-     e nessuna delle tre lo è. */
-  segnaLaStanza() {
-    const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
-    if (st) this.stanzaOra = st.id
-  }
-
   bruciaLaTorcia() {
     const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
     if (!st || st.id === this.stanzaOra) return
