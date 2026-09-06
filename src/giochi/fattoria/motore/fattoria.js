@@ -66,8 +66,9 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, siloDi, macchinaDi, laMacchina,
-         statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare } from '../dati/catalogo.js'
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, eMercato, siloDi, macchinaDi,
+         laMacchina, statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare }
+  from '../dati/catalogo.js'
 import {
   PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, COLTURE, RICETTE,
   ricetteDi, postiPerMerce, costoIngrandimento,
@@ -79,6 +80,8 @@ import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
 import { ANIMALI, famigliaDi } from '../dati/animali.js'
+import { PER_ID as ADDOBBI_PER_ID, staA, addossoA } from '../dati/addobbi.js'
+import { qualcosaDaConsegnare } from './mercato.js'
 import { primaLibera } from '../../../motore/passi.js'
 
 /* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
@@ -119,6 +122,27 @@ export class Fattoria {
        mai. Non si azzera nemmeno mettendo via le cose — quello che hai
        imparato a fare non si disimpara. */
     this.speso = 0
+    /* L'esperienza guadagnata **consegnando** al mercato
+       (`motore/mercato.js`). È la seconda sorgente del livello, e sta
+       in un campo suo e non dentro `speso`: le due cose si sommano per
+       il livello ma vogliono dire cose diverse — quella è roba
+       comprata, questa è roba portata al banco — e sommarle qui
+       vorrebbe dire non poter più dire quanto vale ciascuna. */
+    this.guadagnato = 0
+    /* I tre posti del banco. Vuoti finché non c'è una bancarella:
+       chi non ce l'ha non ha nessun ordine, e il conto degli id serve
+       a non riusare mai lo stesso — un ordine consegnato e uno nuovo
+       con la stessa chiave sarebbero lo stesso ordine consegnato due
+       volte. */
+    this.ordini = []
+    this.prossimoOrdine = 1
+    /* Gli addobbi comprati e **non addosso a nessuno**: il guardaroba.
+       È il magazzino delle bestie, ed è la stessa regola — niente si
+       perde mai: toglierlo lo rimette qui, e da qui torna addosso a chi
+       si vuole quante volte si vuole. Quello che una bestia **ha
+       addosso** invece viaggia dentro la bestia (`addobbi`), come la
+       coltura viaggia dentro il campo. */
+    this.guardaroba = {}
     /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
        fattoria appena nata deve avere in mano il campo, il silo e un
        seme, e chiedere di reclamarli prima ancora di aver visto il prato
@@ -187,6 +211,8 @@ export class Fattoria {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
              speso: this.speso, reclamati: this.reclamati,
+             guadagnato: this.guadagnato, ordini: this.ordini,
+             prossimoOrdine: this.prossimoOrdine, guardaroba: this.guardaroba,
              terreno: this.terreno,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
@@ -195,6 +221,10 @@ export class Fattoria {
      che manca si rimette a posto qui, e un id che non è più in catalogo
      si butta invece di far cadere tutto il disegno. */
   deserializza(d) {
+    /* Gli addobbi che una bestia non può più portare: si raccolgono
+       leggendo le bestie e si rimettono nel guardaroba più sotto, dove
+       il guardaroba esiste già. */
+    const persi = []
     this.piazzole = (d && d.piazzole) || {}
     /* Un tipo di ostacolo che non esiste più si butta **qui**, non lo si
        lascia arrivare a chi disegna. È già successo due volte: prima col
@@ -215,6 +245,22 @@ export class Fattoria {
     this.bestie = ((d && d.bestie) || [])
       .map(b => typeof b === 'string' ? { chi: b, nome: '' } : b)
       .filter(b => b && typeof b.chi === 'string')
+      /* Quello che una bestia ha addosso si rilegge **solo se sta ancora
+         in piedi**: un addobbo tolto dal catalogo, o messo su una bestia
+         a cui oggi non sta più, sparirebbe dal disegno restando nel
+         salvataggio — cioè una cosa comprata che non si vede e non si
+         può togliere. Qui torna nel guardaroba, e da lì si rimette dove
+         si vuole. */
+      .map(b => {
+        if (!b.addobbi || typeof b.addobbi !== 'object') return { ...b, addobbi: {} }
+        const addobbi = {}
+        for (const [dove, id] of Object.entries(b.addobbi)) {
+          const a = ADDOBBI_PER_ID[id]
+          if (a && a.dove === dove && staA(id, b.chi)) addobbi[dove] = id
+          else if (a) persi.push(id)
+        }
+        return { ...b, addobbi }
+      })
     /* `acqua` era il nome di prima, quando la materia era una sola:
        un salvataggio di ieri si rilegge senza chiedere una migrazione. */
     this.terreno = (d && d.terreno) ||
@@ -263,6 +309,38 @@ export class Fattoria {
        davvero. */
     this.speso = Number.isFinite(d && d.speso) && d.speso > 0 ? Math.floor(d.speso)
       : this.stimaLoSpeso()
+    /* ── IL BANCO DEL MERCATO ───────────────────────────────────────
+       Una fattoria salvata prima che il mercato esistesse non ha né
+       ordini né esperienza guadagnata: nasce con zero e con i posti
+       vuoti, che è esattamente lo stato di chi la bancarella non l'ha
+       ancora comprata. Non c'è niente da migrare, e questo è il punto —
+       un salvataggio di ieri si riapre senza chiedere niente a nessuno.
+
+       Un ordine si rilegge solo se sta in piedi: chiede della roba che
+       esiste ancora, in quantità sane. Una merce tolta dalla tabella
+       lascerebbe un ordine impossibile da consegnare per sempre, cioè
+       un posto occupato da un tasto rotto. */
+    this.guadagnato = Number.isFinite(d && d.guadagnato) && d.guadagnato > 0
+      ? Math.floor(d.guadagnato) : 0
+    this.ordini = ((d && d.ordini) || []).map(o => {
+      if (!o) return null
+      if (!o.chiede) return o.dal > 0 ? { dal: o.dal } : null
+      const chiede = {}
+      for (const [k, n] of Object.entries(o.chiede))
+        if (PRODOTTI[k] && n > 0) chiede[k] = Math.floor(n)
+      if (!Object.keys(chiede).length) return null
+      return { id: o.id | 0, chi: o.chi, chiede, xp: Math.max(0, o.xp | 0),
+               minuti: Math.max(0, o.minuti | 0), nato: o.nato || 0 }
+    })
+    this.prossimoOrdine = Math.max(1, (d && d.prossimoOrdine) || 0,
+                                   ...this.ordini.map(o => ((o && o.id) || 0) + 1))
+    /* Il guardaroba: solo addobbi che esistono ancora, in quantità sane.
+       Ci rientra anche quello che una bestia non può più portare — vedi
+       sopra: niente si perde mai. */
+    this.guardaroba = {}
+    for (const [id, n] of Object.entries((d && d.guardaroba) || {}))
+      if (ADDOBBI_PER_ID[id] && n > 0) this.guardaroba[id] = Math.floor(n)
+    for (const id of persi) this.guardaroba[id] = (this.guardaroba[id] || 0) + 1
     /* ── I PREMI PRESI ──────────────────────────────────────────────
        Una fattoria salvata prima che i premi si reclamassero non ce li
        ha, e i suoi livelli sono già passati: si considerano **presi
@@ -306,11 +384,13 @@ export class Fattoria {
   }
 
   /* ═══════════ il livello della fattoria ═══════════
-     L'esperienza sono **le monete spese qui dentro** — il perché sta in
-     `dati/livelli.js`. Ci passano tutti i pagamenti, ed è il motivo per
-     cui in questo file non si chiama più `this.borsa.paga()` da nessuna
-     parte: uno solo dimenticato sarebbe un livello che cresce piano
-     senza che nessuno capisca perché. */
+     L'esperienza sono **le monete spese qui dentro** più **gli ordini
+     consegnati al mercato** — il perché delle due sorgenti, e perché la
+     seconda non paga monete, sta in `dati/livelli.js`. Ci passano tutti
+     i pagamenti, ed è il motivo per cui in questo file non si chiama
+     più `this.borsa.paga()` da nessuna parte: uno solo dimenticato
+     sarebbe un livello che cresce piano senza che nessuno capisca
+     perché. */
   spendi(n) {
     /* `paga(-n)` incassa (sgombrare il bosco rendeva, in una vecchia
        versione): un'entrata non è esperienza. */
@@ -318,11 +398,28 @@ export class Fattoria {
     return this.borsa.paga(n)
   }
 
-  get livello() { return livelloPer(this.speso) }
+  /* L'altra metà: quello che il mercato regala consegnando. Non tocca
+     la borsa — **il mercato non paga monete, mai** — e non scende, come
+     tutto il resto dell'esperienza. Torna se il livello è salito, che è
+     l'unica cosa che chi consegna deve sapere. */
+  guadagna(n) {
+    if (!(n > 0)) return false
+    const prima = this.livello
+    this.guadagnato = (this.guadagnato || 0) + Math.floor(n)
+    return this.livello > prima
+  }
+
+  /* Le due sorgenti sommate: è questa la misura del livello, e sta in
+     un posto solo perché due conti diversi per lo stesso numero prima o
+     poi si scostano — e allora il gettone in alto direbbe una cosa e il
+     baule ne aprirebbe un'altra. */
+  get esperienza() { return (this.speso || 0) + (this.guadagnato || 0) }
+
+  get livello() { return livelloPer(this.esperienza) }
 
   /* Tutto quello che la pagina dei livelli deve sapere, in un colpo:
      livello, nome, quanto manca al prossimo. */
-  get avanzamento() { return avanzamento(this.speso) }
+  get avanzamento() { return avanzamento(this.esperienza) }
 
   /* Una fattoria salvata prima che i livelli esistessero: quanto avrà
      speso, guardando quello che ha in mappa e in magazzino.
@@ -802,6 +899,92 @@ export class Fattoria {
     return { ok: true, nome: b.nome }
   }
 
+  /* ═══════════ vestire una bestia ═══════════
+     Un cappellino, un fiocco, una sciarpa: il catalogo sta in
+     `dati/addobbi.js` e **dove si attaccano** nella scheda
+     dell'animale, che è l'unica che sa dov'è la sua testa.
+
+     Due cassetti, come per le cose del prato: quello che si **ha
+     addosso** viaggia dentro la bestia (`b.addobbi`, una mappa
+     `aggancio → id`), quello comprato e non indossato sta nel
+     **guardaroba**. Toglierlo non lo consuma: torna nel guardaroba, e
+     da lì si rimette dove si vuole. Niente si perde mai, come in tutto
+     il resto della fattoria.
+
+     Un aggancio tiene **una cosa sola**: mettere un cilindro a chi ha
+     già un cappellino rimanda il cappellino nel guardaroba invece di
+     dire di no. Un rifiuto lì sarebbe la risposta giusta a una domanda
+     che nessuno ha fatto — chi preme il secondo cappello sta chiedendo
+     di cambiarlo, non di indossarne due. */
+  quantiAddobbi(id) { return (this.guardaroba || {})[id] || 0 }
+
+  /* Cosa ha addosso, come mappa `aggancio → id`. Sempre un oggetto: una
+     bestia salvata prima che esistessero gli addobbi non ce l'ha. */
+  addobbiDi(chi) {
+    const b = this.laBestia(chi)
+    return (b && b.addobbi) || {}
+  }
+
+  /* Quello che chi disegna deve sapere: le figure e le taglie, già
+     scelte. Il nome dell'aggancio esce insieme perché è la chiave con
+     cui si trova il punto, ma la scena non sa cosa voglia dire. */
+  comeEVestita(chi) { return addossoA(this.addobbiDi(chi)) }
+
+  compraAddobbo(id) {
+    const a = ADDOBBI_PER_ID[id]
+    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (this.borsa.quante() < a.prezzo)
+      return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
+    this.spendi(a.prezzo)
+    this.guardaroba[id] = this.quantiAddobbi(id) + 1
+    return { ok: true, costo: a.prezzo, addobbo: a }
+  }
+
+  /* Mettere addosso quello che si ha in guardaroba. I due rifiuti che
+     contano sono diversi e vanno detti diversi: **non ce l'hai** si
+     risolve comprandolo, **non gli sta** no — un pappagallo la
+     mantellina non la porta e non la porterà mai, perché la schiena non
+     è fra i suoi agganci (`porta` in `dati/animali.js`). */
+  vestiBestia(chi, id) {
+    const b = this.laBestia(chi)
+    if (!b) return { ok: false, motivo: 'non-e-tua' }
+    const a = ADDOBBI_PER_ID[id]
+    if (!a) return { ok: false, motivo: 'non-esiste' }
+    if (!staA(id, chi)) return { ok: false, motivo: 'non-gli-sta', dove: a.dove }
+    if (!b.addobbi) b.addobbi = {}
+    /* Quello che c'era su quell'aggancio torna nel guardaroba: si
+       cambia cappello, non se ne perde uno. */
+    const prima = b.addobbi[a.dove]
+    /* «Ce l'ha già addosso» si guarda **prima** di «non ce l'hai»: un
+       addobbo indossato non sta più in guardaroba, quindi ripremerlo
+       risponderebbe «non ce l'hai» di una cosa che si sta guardando in
+       testa alla bestia — e chi legge quel motivo lo compra due volte. */
+    if (prima === id) return { ok: false, motivo: 'gia-addosso' }
+    if (this.quantiAddobbi(id) < 1) return { ok: false, motivo: 'non-ce-lhai', costo: a.prezzo }
+    if (prima) this.guardaroba[prima] = this.quantiAddobbi(prima) + 1
+    this.guardaroba[id]--
+    if (!this.guardaroba[id]) delete this.guardaroba[id]
+    b.addobbi[a.dove] = id
+    return { ok: true, addobbo: a, tolto: prima || null }
+  }
+
+  /* Quanti addobbi ci sono addosso alle bestie, **in tutto e adesso**.
+     È un primato e non un contatore, come `tipiPosseduti`: mettere e
+     togliere lo stesso cappello venti volte non deve valere venti
+     volte. Lo legge il traguardo nel manifesto (`gioco.js`). */
+  get addobbiAddosso() {
+    return this.bestie.reduce((n, b) => n + Object.keys(b.addobbi || {}).length, 0)
+  }
+
+  spogliaBestia(chi, dove) {
+    const b = this.laBestia(chi)
+    if (!b || !b.addobbi || !b.addobbi[dove]) return { ok: false, motivo: 'non-lo-porta' }
+    const id = b.addobbi[dove]
+    delete b.addobbi[dove]
+    this.guardaroba[id] = this.quantiAddobbi(id) + 1
+    return { ok: true, id }
+  }
+
   /* ═══════════ i due silos ═══════════
      Il raccolto, che non è il magazzino (il perché sta in testa al
      file). Sta in **due silos separati** — la terra da una parte, le
@@ -1104,6 +1287,13 @@ export class Fattoria {
      `sopra` si ripete su ogni cella del piede: quattro germogli su un
      campo 2×2 sono un campo che cresce, uno solo in mezzo è un ciuffo. */
   aspettoDellaCosa(cosa, ora = Date.now()) {
+    /* La bancarella non lavora e non contiene: **aspetta**. Il fumetto
+       compare quando c'è un ordine che si può consegnare adesso, ed è
+       la stessa idea del 🧺 sopra un campo pronto — si vede da lontano
+       e non chiede di aprire niente. Quando non c'è niente da portare
+       resta muta: un invito che c'è sempre non è un invito. */
+    if (eMercato(cosa))
+      return qualcosaDaConsegnare(this) ? { sopra: null, fumetto: '📋' } : null
     const c = this.statoCampo(cosa, ora)
     if (c) {
       if (c.vuoto) return null

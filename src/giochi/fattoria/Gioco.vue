@@ -32,21 +32,26 @@ import { Fattoria } from './motore/fattoria.js'
 import { comeAvere, comeFarePosto } from './motore/consiglio.js'
 import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
+import { aggiornaIlMercato, bancoDi, consegna, rifiuta } from './motore/mercato.js'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { spintaAlBordo, conIlResto } from './scena/spinta.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
-         puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, siloDi, macchinaDi,
-         statiDi } from './dati/catalogo.js'
-import { animale, siDisegna, IN_VENDITA } from './dati/animali.js'
+         puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
+         macchinaDi, statiDi } from './dati/catalogo.js'
+import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
+import { addobbiPer, addobbo } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
+import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
 import { pezzoAttore } from './dati/atlante.js'
 import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
 
 import Roba from './viste/Roba.vue'
 import Vicino from './viste/Vicino.vue'
+import Mercato from './viste/Mercato.vue'
+import Vestiario from './viste/Vestiario.vue'
 import Attrezzi from './viste/Attrezzi.vue'
 import Battesimo from './viste/Battesimo.vue'
 import Bestia from './viste/Bestia.vue'
@@ -275,7 +280,10 @@ onMounted(() => {
   if (cheat) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
     const meta = parseInt(cheat[1], 10)
-    mondo.speso = Math.max(mondo.speso, sogliaDi(meta))
+    /* Si toglie quello che il mercato ha già dato: il cheat porta **a**
+       quel livello, e sommandoci l'esperienza degli ordini ci si
+       ritroverebbe più avanti di quanto si è chiesto. */
+    mondo.speso = Math.max(mondo.speso, sogliaDi(meta) - (mondo.guadagnato || 0))
     /* I premi dei livelli **già passati** si prendono da sé: il cheat
        serve a guardare col telefono una cosa che arriverebbe dopo mesi,
        e farsi premere sessanta quadratini prima di vederla non è quello
@@ -348,9 +356,30 @@ function metti_in_scena_le_bestie() {
        manca perché «l'ho messo nel recinto» resti vero domani. */
     const dove = mondo.dovEra(b.chi)
     attori.push(new Attore(b.chi, new Camminatore(dove.x, dove.y, { velocita: 2.4, vaga: 2.4 }),
-      { chi: b.nome || nomeDi(b.chi), bisogni: [] }))
+      { chi: b.nome || nomeDi(b.chi), bisogni: [], bob: BOB,
+        addobbi: addobbiInScena(b.chi) }))
   }
   aggiornaIBisogni()
+}
+
+/* ── QUELLO CHE UNA BESTIA HA ADDOSSO, PER CHI DISEGNA ─────────
+   La scena riceve **fatti già decisi** — la figura, la taglia, e dove
+   cade quel punto in ogni verso — e non sa cosa voglia dire «testa» né
+   quanto costi un cappello: è la stessa divisione del fumetto sopra un
+   recinto, che riceve una faccia e non il nome di una merce. Il
+   catalogo sta in `dati/addobbi.js`, i punti nella scheda dell'animale.
+
+   Si rifà **a ogni cambio**, non a ogni fotogramma: un addobbo si mette
+   una volta ogni tanto. */
+function addobbiInScena(chi) {
+  return mondo.comeEVestita(chi)
+    .map(a => ({ ...a, punti: puntiDi(chi, a.dove) }))
+    .filter(a => a.punti)
+}
+
+function rivestiLaBestia(chi) {
+  const a = attori.find(x => x.nome === chi)
+  if (a) a.addobbi = addobbiInScena(chi)
 }
 
 /* ── LE BARRETTE SOPRA LA TESTA, CHE C'ERANO E NON SI VEDEVANO ──────
@@ -922,7 +951,8 @@ function almeno(r, lato) {
    campo si semina, una macchina trasforma, un silo si guarda dentro. Una
    panchina no, e infatti al tocco mostra i suoi attrezzi e basta. */
 function haFoglio(cosa) {
-  return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa)
+  return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa) ||
+         eMercato(cosa)
 }
 
 /* Le bestie si guardano dal rettangolo davvero disegnato, non dalla
@@ -1188,6 +1218,49 @@ function apriLavoro(cosa, con = '') {
      l'ha già fatto, e ripeterglielo è il compito che il consiglio
      doveva togliere. */
   if (eVicino(cosa)) return apriVicino(con)
+  /* La bancarella: non trasforma e non contiene, **chiede**. È la
+     quarta cosa che si tocca e apre un foglio, e si riconosce come le
+     altre tre. */
+  if (eMercato(cosa)) return apriMercato()
+}
+
+/* ═══════════ il mercato ═══════════
+   I tre posti al banco si rimettono a posto **aprendo**, non con un
+   orologio che gira: un ordine rifiutato torna dopo cinque minuti veri,
+   e il conto si fa leggendo l'ora — come per i campi che crescono a
+   gioco chiuso. Il caso arriva da qui (`Math.random`), perché il motore
+   non ne ha uno suo: una partita si deve poter rifare identica.
+
+   Il foglio si ricompone a ogni gesto invece di tenersi in mano quello
+   di prima: cosa si può consegnare dipende da cosa c'è in granaio, e il
+   granaio cambia a ogni consegna — un elenco tenuto da prima
+   proporrebbe un ordine già consegnato. */
+function apriMercato() {
+  if (aggiornaIlMercato(mondo, Date.now(), Math.random)) salva()
+  pannello.value = { tipo: 'mercato', ...bancoDi(mondo, Date.now()) }
+}
+
+function consegnaOrdine(id) {
+  const r = consegna(mondo, id, Date.now(), Math.random)
+  if (!r.ok) return avvisa(r.motivo === 'manca-roba'
+    ? 'Ti manca ancora qualcosa: guarda le caselle vuote.'
+    : 'Quell\'ordine non c\'è più.')
+  /* Il contatore è del profilo e non della fattoria: i traguardi li
+     legge l'albo (`gioco.js`), che di un salvataggio non sa niente. */
+  segna('fattoriaOrdini', 1)
+  avvisa(`✅ Consegnato! ⭐ ${r.xp} di esperienza.`)
+  salva()
+  /* Si resta al banco: chi ne ha due pronti li consegna uno dopo
+     l'altro senza riaprire il foglio. */
+  apriMercato()
+}
+
+function rifiutaOrdine(id) {
+  const r = rifiuta(mondo, id, Date.now())
+  if (!r.ok) return avvisa('Quell\'ordine non c\'è più.')
+  avvisa(`Va bene: ne arriva un altro fra ${RIPOSO_MIN} minuti.`)
+  salva()
+  apriMercato()
 }
 
 /* Il carretto: due passi, e il secondo si ricalcola ogni volta invece di
@@ -1536,6 +1609,61 @@ function apriBestia(chi) {
                      stato: mondo.stato(chi) }
 }
 
+/* ═══════════ vestire una bestia ═══════════
+   Il guardaroba è del motore (`vestiBestia`, `guardaroba`); qui c'è
+   solo il braccio, e una cosa in più che il motore non fa apposta:
+   **premere quello che non hai lo compra**. È lo stesso gesto del
+   baule, dove premere è già posare e si paga posando — un tasto che
+   dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
+   una cosa sola. */
+function apriVestiario(chi) {
+  const b = mondo.laBestia(chi)
+  if (!b) return
+  pannello.value = {
+    tipo: 'vestiario', chi, che: nomeDi(chi), nome: b.nome || '',
+    addobbi: addobbiPer(chi),
+    portati: { ...mondo.addobbiDi(chi) },
+    guardaroba: { ...mondo.guardaroba },
+  }
+}
+
+function metti(id) {
+  const { chi } = pannello.value
+  const a = addobbo(id)
+  /* Ripremere quello che ha **già addosso** non fa niente, e soprattutto
+     non lo ricompra: un addobbo indossato non sta più in guardaroba,
+     quindi senza questa riga il tasto della cosa che si sta guardando
+     in testa alla bestia ne comprerebbe un secondo a ogni tocco. */
+  if (a && mondo.addobbiDi(chi)[a.dove] === id) return
+  if (mondo.quantiAddobbi(id) < 1) {
+    const c = mondo.compraAddobbo(id)
+    if (!c.ok) return avvisa(c.motivo === 'poche-monete'
+      ? `Ti ${c.costo - monete.value === 1 ? 'manca' : 'mancano'} 🪙${c.costo - monete.value}: ` +
+        'fai un po\' di esercizi negli altri giochi.'
+      : 'Non è andata: riprova.')
+  }
+  const r = mondo.vestiBestia(chi, id)
+  if (!r.ok && r.motivo !== 'gia-addosso') return avvisa(r.motivo === 'non-gli-sta'
+    ? `${nomeDi(chi)} lì non ci mette niente.` : 'Non è andata: riprova.')
+  if (r.ok) avvisa(`${r.addobbo.emoji} ${r.addobbo.nome} addosso!`)
+  /* Un **primato** e non un contatore: mettere e togliere lo stesso
+     cappello venti volte non vale venti volte. */
+  segnaBest('fattoriaVestiti', mondo.addobbiAddosso)
+  rivestiLaBestia(chi)
+  salva()
+  apriVestiario(chi)
+}
+
+function togli(dove) {
+  const { chi } = pannello.value
+  const r = mondo.spogliaBestia(chi, dove)
+  if (!r.ok) return
+  avvisa(`${(addobbo(r.id) || {}).nome || 'Tolto'}: torna nel guardaroba.`)
+  rivestiLaBestia(chi)
+  salva()
+  apriVestiario(chi)
+}
+
 function nutri(cibo) {
   const chi = pannello.value.chi
   const nome = pannello.value.nome || pannello.value.che
@@ -1665,9 +1793,16 @@ function tiraVoce({ voce, x, y }) {
               :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
               :stato="pannello.stato" :monete="monete" :granaio="mondo.granaio"
               @nutri="nutri" @coccola="coccola"
+              @vesti="apriVestiario(pannello.chi)"
               @rinomina="pannello = { tipo: 'battesimo', chi: pannello.chi,
                                       che: pannello.che, nome: pannello.nome, prezzo: 0 }"
               @chiudi="chiudi()" />
+
+      <Vestiario v-else-if="pannello.tipo === 'vestiario'"
+                 :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
+                 :addobbi="pannello.addobbi" :portati="pannello.portati"
+                 :guardaroba="pannello.guardaroba" :monete="monete"
+                 @metti="metti" @togli="togli" @chiudi="chiudi()" />
 
       <Campo v-else-if="pannello.tipo === 'campo'"
              :stato="pannello.stato" :monete="monete" :ci-sta="pannello.ciSta"
@@ -1685,6 +1820,11 @@ function tiraVoce({ voce, x, y }) {
               :colmi="pannello.colmi" :scelto="pannello.scelto"
               @scegli="apriVicino" @scambia="alVicino" @regala="alVicino(null)"
               @chiudi="chiudi()" />
+
+      <Mercato v-else-if="pannello.tipo === 'mercato'"
+               :ordini="pannello.ordini" :riposi="pannello.riposi"
+               @consegna="consegnaOrdine" @rifiuta="rifiutaOrdine"
+               @chiudi="chiudi()" />
 
       <Granaio v-else-if="pannello.tipo === 'granaio'"
                :famiglia="pannello.famiglia"

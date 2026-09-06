@@ -45,7 +45,7 @@ const props = defineProps({
   monete: { type: Number, default: 0 },
   granaio: { type: Object, default: () => ({}) },  // per i cibi che si producono
 })
-const emit = defineEmits(['nutri', 'coccola', 'rinomina', 'chiudi'])
+const emit = defineEmits(['nutri', 'coccola', 'rinomina', 'vesti', 'chiudi'])
 
 const famiglia = computed(() => famigliaDi(props.chi))
 const pieno = k => (props.stato[k] ?? 0) > 0.93
@@ -170,6 +170,13 @@ const invece = computed(() => {
     </section>
 
     <div class="fa-fila">
+      <!-- «Vestilo» sta **fra i tasti in fondo e non fra i blocchi**: i
+           blocchi sono i bisogni, cioè quello che si fa per lui, e un
+           cappellino non riempie nessuna barra. È una cosa che si fa
+           ogni tanto e per piacere, quindi non ruba il posto a quelle
+           che si fanno ogni volta. -->
+      <button class="fa-bot piano" data-azione="vesti"
+              @click="emit('vesti')">🎩 Vestilo</button>
       <button class="fa-bot forte" @click="emit('chiudi')">Va bene</button>
     </div>
     <!-- il nome si dà una volta e si cambia di rado: sta in fondo, piccolo,

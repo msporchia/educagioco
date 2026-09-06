@@ -48,7 +48,78 @@ export const ANIMALI = {
   'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75, liv: 7 },
   'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75, liv: 20 },
   'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75, liv: 30 },
-  'pappagallo':   { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120, liv: 42 },
+  /* Un pappagallo **non porta niente sulla schiena**: ha le ali, e una
+     copertina addosso a un uccello non si sa disegnare. È l'unica riga
+     che si scosta dal ripiego, ed è il caso per cui `porta` esiste — se
+     no il catalogo degli addobbi avrebbe dovuto tenere un elenco di
+     eccezioni per specie, allineato a mano per sempre. */
+  pappagallo:     { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120, liv: 42,
+                    porta: ['testa', 'muso', 'collo'] },
+}
+
+/* ── DOVE SI ATTACCA UN ADDOBBO ───────────────────────────────────
+   *Dove sta la testa dentro lo sprite*, e non «al centro in alto»: un
+   cappellino posato a occhio finisce mezzo dentro il muso da davanti e
+   in mezzo alla schiena di lato. Questi quattro punti sono **misurati
+   dall'alfa del foglio**, riquadro per riquadro, e stanno qui — nella
+   scheda dell'animale — perché sono un fatto del disegno: la scena li
+   riceve già risolti e non sa cosa voglia dire «testa»
+   (`dati/addobbi.js`, `scena/tela.js`).
+
+   Sono **frazioni del riquadro**, non pixel: un attore nuovo con un
+   foglio di un'altra misura resta a posto senza riscrivere niente. In
+   pixel, sui riquadri di oggi (16×32 di fronte e di spalle, 32×32 di
+   lato), valgono così:
+
+     di fronte   testa (8,8) · muso (8,12) · collo (8,15) · schiena (8,19)
+     di lato     testa (23,7) · muso (27,11) · collo (21,13) · schiena (15,12)
+     di spalle   testa (8,4) · collo (8,12) · schiena (8,16)
+
+   **Le pose di lato guardano a destra** (`dati/atlante.js`), quindi lì
+   la testa sta a destra: quando l'animale va a sinistra è lo *specchio*
+   a portarla dall'altra parte, e chi disegna non deve fare nessun
+   conto — l'addobbo sta dentro la stessa trasformazione dello sprite.
+
+   **Di spalle il muso non c'è**, e non è una dimenticanza: un paio di
+   occhialini visto da dietro non si vede, e disegnarlo sulla nuca
+   sarebbe peggio che non disegnarlo. Un aggancio che quel verso non ha
+   vuol dire «adesso non si vede». */
+export const AGGANCI = {
+  giu:  { testa: [0.50, 0.25],  muso: [0.50, 0.375], collo: [0.50, 0.48], schiena: [0.50, 0.59] },
+  lato: { testa: [0.72, 0.22],  muso: [0.84, 0.34],  collo: [0.66, 0.41], schiena: [0.47, 0.38] },
+  su:   { testa: [0.50, 0.125],                      collo: [0.50, 0.375], schiena: [0.50, 0.50] },
+}
+
+/* ── E IL PASSO ───────────────────────────────────────────────────
+   Camminando la testa **si abbassa** su due fotogrammi su quattro: è
+   misurato sul foglio (di fronte 1 pixel, di spalle 2, di lato niente —
+   di lato il disegno resta incollato in alto e a muoversi sono le
+   zampe). Senza questa riga il cappello resta fermo mentre il cane
+   ondeggia sotto, ed è la cosa che fa sembrare un addobbo appiccicato
+   sopra invece che indossato.
+
+   In frazioni dell'altezza del riquadro, come gli agganci. */
+export const BOB = {
+  giu:  [0, 0.031, 0, 0.031],
+  lato: [0, 0, 0, 0],
+  su:   [0, 0.062, 0, 0.062],
+}
+
+/* Quali agganci ha questa bestia. Il ripiego è **tutti e quattro**, e
+   una riga si scosta solo quando su quel punto lì non ci si può
+   mettere niente (il pappagallo e la schiena). */
+export const AGGANCI_TUTTI = ['testa', 'muso', 'collo', 'schiena']
+export const portaDi = chi => (ANIMALI[chi] || {}).porta || AGGANCI_TUTTI
+
+/* Il punto di un aggancio, verso per verso, già pronto per chi disegna.
+   Torna `null` per un verso in cui quell'aggancio non si vede. */
+export const puntiDi = (chi, dove) => {
+  if (!portaDi(chi).includes(dove)) return null
+  const agganci = (ANIMALI[chi] || {}).agganci || AGGANCI
+  const punti = {}
+  for (const verso of Object.keys(agganci))
+    if (agganci[verso][dove]) punti[verso] = agganci[verso][dove]
+  return Object.keys(punti).length ? punti : null
 }
 
 /* Quelli che si possono davvero comprare oggi: dichiarati **e**
@@ -92,6 +163,20 @@ export const animale = chi => ANIMALI[chi] || null
 
 export function guastiDegliAnimali() {
   const g = []
+  /* Un aggancio dichiarato che nessun verso sa disegnare è un addobbo
+     che si compra, si mette e non si vede da nessuna parte — cioè un
+     acquisto che sembra non aver funzionato. */
+  for (const verso of Object.keys(AGGANCI))
+    if (!AGGANCI[verso].testa)
+      g.push(`il verso «${verso}» non sa dove sta la testa`)
+  for (const chi of Object.keys(ANIMALI)) {
+    for (const dove of portaDi(chi)) {
+      if (!AGGANCI_TUTTI.includes(dove))
+        g.push(`${chi}: l'aggancio «${dove}» non esiste`)
+      else if (!puntiDi(chi, dove))
+        g.push(`${chi}: porta «${dove}» e nessun verso lo sa disegnare`)
+    }
+  }
   for (const [chi, a] of Object.entries(ANIMALI)) {
     if (!a.nome) g.push(`${chi}: senza nome`)
     if (!(a.prezzo > 0)) g.push(`${chi}: prezzo impossibile`)

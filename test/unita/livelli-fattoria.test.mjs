@@ -2,9 +2,11 @@
    dentro**, e passando di livello arriva roba nuova.
 
    Le tre cose che questo file difende, e sono decisioni di prodotto:
-     1. **spendere è l'unica esperienza** — non i raccolti, non i
-        minuti: la fattoria è il money pit, e il livello premia il gesto
-        che tiene in piedi tutto il resto;
+     1. **si sale spendendo** — non coi raccolti, non coi minuti: la
+        fattoria è il money pit, e il livello premia il gesto che tiene
+        in piedi tutto il resto. (La seconda sorgente sono gli ordini
+        del mercato, e sta in `unita/mercato`: là si prova che pagano
+        esperienza e mai monete.);
      2. **non si scende mai**, per nessun motivo, nemmeno mettendo via
         quello che si è comprato;
      3. **al primo livello si può cominciare la catena** — un campo, un

@@ -452,8 +452,9 @@ raccolta la prima volta. Oggi il massimo è il mais con 5 contro 6 posti, e
 
 ### I livelli della fattoria (dal 18 agosto 2026)
 
-**L'esperienza sono le monete spese qui dentro.** Non i raccolti, non i
-minuti, non le partite: la fattoria è il money pit, quindi il livello premia
+**L'esperienza sono le monete spese qui dentro**, più gli ordini consegnati
+al mercato (vedi sopra: pagano esperienza e mai monete). Non i raccolti, non
+i minuti, non le partite: la fattoria è il money pit, quindi il livello premia
 esattamente il gesto che tiene in piedi tutto il resto. Non si può fare in
 fretta (le monete arrivano solo dagli esercizi, quindi il livello è tempo di
 studio riletto) e non scende mai — nemmeno mettendo via quello che si è
@@ -464,7 +465,7 @@ minuto**, in undici linguette. Per un bambino che apre la fattoria la prima
 volta non è ricchezza, è una lista da cui non si sa cosa scegliere, dove il
 campo che fa partire tutta la catena sta in mezzo a novanta cespugli.
 
-**Sessantacinque livelli, e ognuno dà poco.** Due o tre decorazioni per
+**Sessantaquattro livelli, e ognuno dà poco.** Due o tre decorazioni per
 volta, mai di più — è la regola che rende lungo il gioco, ed è possibile
 proprio perché il catalogo è grande. Le decorazioni stanno in una fila sola
 ordinata **per prezzo**: il vaso da quattro monete arriva al secondo livello,
@@ -479,6 +480,7 @@ di gioco:
    1   🪙0        il campo, il silo del raccolto, il grano
    2   🪙210      il primo amico (il bobtail)
    3   🪙430      il mulino, e il silo della stalla
+   4   🪙670      il mercato, cioè gli ordini
    5   🪙930      il fienile, la conigliera, le carote e il foraggio
    8   🪙1790     il pollaio
   10   🪙2450     il mais, cioè il pastone
@@ -486,7 +488,7 @@ di gioco:
   18   🪙5710     la stalla
   26   🪙10000    il porcile, e le zucche
   42   🪙21650    il pappagallo
-  65   🪙45570    l'ultima cosa del catalogo (~127 ore di esercizi)
+  64   🪙44350    l'ultima cosa del catalogo (~123 ore di esercizi)
 ```
 
 **Ogni coltura arriva con la bocca che la mangia**, e da quando c'è il
@@ -517,7 +519,7 @@ il silo e si sbloccava mezzo baule senza aver ancora raccolto niente. Adesso
 il livello 2 chiede l'attrezzatura, un secondo campo e qualche giro di semina
 e raccolto: **il tempo di capire come gira**, che è la cosa che il primo
 livello deve comprare. In tempo di esercizi: il livello 2 è mezz'ora, il 10 sei
-ore, l'ultimo centoventisette, spalmate su mesi
+ore, l'ultimo centoventitré, spalmate su mesi
 ([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)).
 
 **Il baule ha tre metà, e stanno in alto.** 🌾 *La fattoria* è quello che fa
@@ -600,6 +602,199 @@ quindicimila monete c'è **`#fattoria=40`** nell'indirizzo, il fratello di
 li prende da sé — sessanta quadratini da premere non sono quello che si sta
 andando a guardare — e lascia da prendere quelli **del livello a cui porta**,
 cioè la situazione esatta di chi ci è arrivato spendendo.
+
+### Vestire le bestie (dal 6 settembre 2026)
+
+Una bestia comprata si nutre, si spazzola e cammina, e da lì in poi è uguale
+a quella di chiunque altro. Adesso dalla sua scheda c'è **🎩 Vestilo**:
+cappellini, occhialini, fiocchi, sciarpe, una mantellina — e quello che le si
+mette **si vede in fattoria**, mentre passa per il prato.
+
+È la stessa cosa che il nome fa alle parole fatta al disegno, ed è la ragione
+per cui si vedono in mappa e non dentro un foglio: *un vestito che si guarda
+solo aprendo una scheda non lo mette nessuno.*
+
+#### Quattro punti di attacco, e li dice l'animale
+
+```
+   testa    🌸 🧢 🎩 👑        muso     👓 🕶️
+   collo    🎀 🧣 🔔           schiena  🧥 🎒
+```
+
+Dove cade un cappello **non si indovina**: sta nella scheda dell'animale
+(`AGGANCI` in `dati/animali.js`), misurato dall'alfa del foglio riquadro per
+riquadro, in frazioni del riquadro e non in pixel. Un cappellino posato a
+occhio finisce mezzo dentro il muso da davanti e in mezzo alla schiena di
+lato.
+
+Tre cose che ne discendono, e sono quelle che fanno sembrare un addobbo
+*indossato* invece che appiccicato sopra:
+
+- **Lo specchio è una trasformazione sola.** Le pose di lato guardano a
+  destra, quindi lì la testa sta a destra; quando l'animale va a sinistra
+  l'addobbo sta *dentro* la stessa trasformazione dello sprite e ci finisce da
+  solo. Chi lo disegnasse fuori dovrebbe ribaltare a mano ogni punto.
+- **Segue il passo.** Camminando la testa si abbassa su due fotogrammi su
+  quattro — un pixel di fronte, due di spalle, niente di lato: è misurato sul
+  foglio (`BOB`). Senza, il cappello resta fermo mentre il cane ondeggia
+  sotto.
+- **Quello che quel verso non conosce non si disegna.** Di spalle il muso non
+  c'è, quindi gli occhialini spariscono girandosi: metterli sulla nuca sarebbe
+  peggio che non metterli.
+
+E **non tutti portano tutto**: il pappagallo non ha la schiena fra i suoi
+agganci — ha le ali — quindi la mantellina non gliela si mette e nel suo
+vestiario non compare affatto. La campanella invece è dei gatti, ed è una
+scelta di gusto: sono due rifiuti diversi e stanno in due posti diversi — il
+primo è un fatto del disegno (`porta` nella scheda dell'animale), il secondo
+una riga del catalogo (`per`). Tenerli insieme avrebbe voluto dire un elenco
+di eccezioni per specie da allineare a mano per sempre.
+
+#### Sono emoji, ed è un primo passo dichiarato
+
+Nel dungeon un mostro non è mai un'emoji, e il motivo vale ancora: le emoji le
+disegna il telefono, quindi hanno lo stile di Apple in mezzo a uno schermo
+dipinto a mano. Qui però la cosa da disegnare è *un cappello sopra un cane*,
+non la creatura che fa paura — si ridimensiona con lo sprite, si specchia con
+lui e segue il passo, quindi la differenza si vede molto meno. E il prezzo di
+aspettare un foglio di sprite è che gli addobbi non esistono affatto.
+
+Resta una cosa da rifare quando ci sarà il foglio: una riga può dichiarare
+`pezzo` invece di `emoji`, esattamente come le merci, e da lì in poi la scena
+disegna la tessera. Oggi nessuna lo fa.
+
+#### I prezzi, e il guardaroba
+
+Da 🪙6 a 🪙24, cioè la fascia **«una cosetta»** di
+[`CALIBRAZIONE.md`](../CALIBRAZIONE.md): da uno a quattro minuti di esercizi.
+Non è una spesa che si pesa — è quello che si compra col resto delle monete,
+dopo il campo e prima del prossimo recinto — e va tenuta lì: un cappello che
+costasse quanto un pollaio metterebbe una decorazione in concorrenza con la
+catena, e a quel punto o non lo compra nessuno o si smette di costruire.
+`guastiDegliAddobbi()` rifiuta un prezzo fuori dalla fascia.
+
+Un addobbo **si compra una volta e non si consuma**. Toglierlo lo rimette nel
+guardaroba, e da lì torna addosso a chi si vuole quante volte si vuole: è la
+regola del baule — niente si perde mai — applicata a quello che le bestie
+indossano. Un aggancio tiene una cosa sola, e mettere un cilindro a chi ha già
+un cappellino **cambia** il cappellino invece di dire di no: chi preme il
+secondo cappello sta chiedendo di cambiarlo, non di indossarne due.
+
+Comprarlo si fa **premendolo**, come nel baule dove premere è già posare: un
+tasto che dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
+una cosa sola. Il prezzo sta sul tasto, e chi non ce l'ha vede di quanto
+manca.
+
+### Il mercato, e chi chiede (dal 6 settembre 2026)
+
+**Quello che la fattoria produce lo mangiavano solo il cane e il gatto**, e
+una ciotola non è un consumo: si riempie in un gesto e la pancia risale da
+sola. Chi coltivava per un pomeriggio si ritrovava il silo colmo e nessuna
+ragione per svuotarlo — la catena arrivava in fondo e finiva contro un muro.
+
+Mancava **qualcuno che chiedesse**. Adesso c'è una bancarella, e al banco
+arrivano tre ordini per volta:
+
+```
+   🥖 Il fornaio vuole      3 🌾 grano  ·  2 🥚 uova        ⭐ 58
+   👵 La nonna vuole        2 🥛 latte                      ⭐ 46
+   🧁 La pasticcera vuole   1 🍄 tartufo                    ⭐ 42
+```
+
+Un ordine è un obiettivo che si legge in due secondi e che dice da solo cosa
+seminare, che è la cosa che nessun magazzino sa dire. Quello che serve non è
+un numero da confrontare con un altro numero: sono **caselle**, una per pezzo
+che serve, accesa se quel pezzo ce l'hai — lo stesso disegno delle ricette
+delle macchine, e per la stessa ragione: leggere è la cosa che qui non si può
+dare per scontato.
+
+**È il mercato che c'era già.** Stesso id, stesso pezzo, stesso prezzo
+(🪙40): era una decorazione fra le case e adesso lavora. È la quarta volta che
+succede qui dentro, dopo l'orto, il carretto del vicino e il fienile, e per la
+stessa ragione — chi se l'era comprato per bellezza se lo ritrova utile, e non
+c'è niente da migrare in nessun salvataggio. Arriva al **livello 4**, cioè
+appena dopo il mulino: prima di lì l'unica merce ottenibile è il grano, e un
+mercato che chiede sempre la stessa cosa non è un mercato.
+
+#### Non paga monete, e questo è il numero più importante
+
+In un gioco di fattoria un ordine si paga in monete. Qui no, e non è una
+dimenticanza: la regola che tiene in piedi tutta l'applicazione è che
+**niente si vende, il verso è sempre monete → cose**
+([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)). Le monete si guadagnano facendo
+esercizi negli altri giochi e si bruciano qui. Un banco che comprasse il grano
+chiuderebbe l'anello — semina gratis, raccogli per 🪙1, vendi per 🪙5 — e da
+quel momento la strada più corta per le monete non passerebbe più da nessuna
+tabellina. È lo stesso motivo per cui sgomberare il bosco costa e non rende, e
+per cui il carretto del vicino scambia roba con roba.
+
+Quindi un ordine paga **esperienza**: fa salire il livello, che apre il
+catalogo. Il numero porta la ⭐ del gettone in alto e non la 🪙, così si vede
+dove va a finire prima di leggere la riga che lo spiega.
+
+**È la seconda sorgente del livello**, e cambia una frase che era scritta qui:
+l'esperienza non è più solo «le monete spese in fattoria». Le due si sommano e
+nient'altro cambia — il livello resta *tempo*, che sia tempo di studio o tempo
+passato a far girare la catena, e continua a non scendere mai.
+
+#### Quanto rende, e il conto
+
+```
+   premio = 6 + 4 × (quello che la roba è costata a produrre, in monete)
+```
+
+Il costo lo **risale la catena da sola** (`valoreDi` in `dati/mercato.js`): un
+uovo non sa di essere fatto di grano, lo sanno le ricette. I numeri che ne
+escono sono esattamente quelli della tabella qui sopra — mangime 🪙3, uovo 🪙5,
+pastone 🪙7, tartufo 🪙9 — ed è il modo di sapere che non se li è inventati
+nessuno.
+
+| l'ordine | rende | ci vuole (un campo solo) |
+|:--|--:|--:|
+| 3 🌾 grano | ⭐ 18 | 15 min |
+| 2 🥣 mangime + 2 🌾 grano | ⭐ 38 | ~38 min |
+| 3 🌾 grano + 2 🥚 uova | ⭐ 58 | ~1 h 27 |
+| 3 🍄 tartufi | ⭐ 114 | ~3 h 36 |
+
+Il metro è quello di sempre: 🪙1 sono dieci secondi di esercizio, 🪙6 un
+minuto. **Un ordine non rende mai più di quanto costa il tempo di
+produrlo** — il caso più generoso rende un quarto di quello che varrebbe il
+suo tempo — e `guastiDelMercato()` diventa rosso se una tabella ritoccata
+rompesse quel rapporto. È il freno che impedisce al mercato di diventare la
+scorciatoia per salire di livello senza fare esercizi.
+
+#### Rifiutare costa attesa, consegnare no
+
+Un posto **consegnato** si riempie subito: la roba l'hai portata, il posto è
+tuo. Un posto **rifiutato** resta vuoto per cinque minuti veri. Senza
+quell'attesa il gesto giusto sarebbe premere ✕ finché non esce l'ordine più
+facile, cioè un mercato che si gioca col pollice invece che coi campi. Cinque
+minuti sono un campo di grano: chi rifiuta torna a coltivare, non aspetta
+guardando. Il tasto lo dice prima («ne arriva un altro fra 5 minuti»), perché
+una cosa che si scopre dopo averla premuta è una trappola.
+
+#### Non si chiede quello che non si può fare
+
+Un ordine pesca solo fra le merci **ottenibili adesso**: quelle che il livello
+ha aperto e che questa fattoria sa davvero produrre — la stessa domanda con
+cui il silo decide quali scomparti mostrare. Non c'è nessun elenco a mano:
+quando una merce diventa ottenibile lo sa già `livelloDelProdotto`. Offrire
+zucche a chi le vedrà fra ventimila monete sarebbe un tasto che non si può
+premere, ed è la stessa promessa che il carretto del vicino evita allo stesso
+modo. `test/unita/mercato` lo controlla **per ogni livello**, dal primo
+all'ultimo.
+
+Un ordine resta piccolo — al massimo tre merci e tre pezzi di ognuna — per la
+stessa ragione per cui un campo rende **uno**: «tre grano» si conta sulle
+dita, e a sei anni è la differenza fra un obiettivo e un compito. E tre pezzi
+stanno anche nello scomparto più piccolo, che ne tiene otto: un ordine
+impossibile da tenere in magazzino sarebbe un ordine che si può solo
+rifiutare.
+
+Sopra la bancarella galleggia un 📋 quando c'è qualcosa da consegnare adesso:
+la stessa idea del 🧺 sopra un campo pronto, si vede da lontano e non chiede
+di aprire niente. Quando non c'è niente da portare resta muta — un invito che
+c'è sempre non è un invito.
 
 ### Non si può più spegnere
 
@@ -802,11 +997,14 @@ che le due sezioni qui sopra esistono. Restano:
 4. **Altri modi di spendere.** Un campo che matura più in fretta, un
    annaffiatoio, una seconda macchina: il money pit vive sull'attrezzatura,
    ed è lì che vanno le monete grosse. (Ingrandire i silos c'è già, ed è la
-   spesa che la produzione stessa fa desiderare.)
+   spesa che la produzione stessa fa desiderare, e gli addobbi delle bestie
+   sono la spesa piccola — ma quella non brucia monete, ne brucia dieci.)
 5. **Il pastone è l'ultimo ripiego.** Tutte le merci hanno la loro figura
    tranne quella: è il calderone grigio dell'arredamento, piccolo e
    anonimo in mezzo a nove scomparti. Un disegno suo — una pentola di
-   pappa densa — è l'unico ritaglio che manca.
+   pappa densa — è l'unico ritaglio che manca. Gli **addobbi** sono
+   nella stessa condizione, ed è dichiarato: oggi sono emoji, e una riga
+   può già dire `pezzo` invece di `emoji` quando il foglio ci sarà.
 6. **Le azioni sui campi, rifinite.** Oggi sono la stessa scheda dei cani, e
    va bene così; se un giorno i campi diventano molti, raccoglierli uno per
    uno diventerà noioso prima di diventare comodo.
@@ -827,6 +1025,14 @@ che le due sezioni qui sopra esistono. Restano:
 | `viste/Roba.vue` `viste/Provino.vue` | il baule: lo scaffale, e la figura che ci sta dentro in scala |
 | `viste/Merce.vue` | la faccia di una roba del granaio: il disegno se c'è, l'emoji se no |
 | `motore/consiglio.js` | il prossimo passo, che risale la catena da solo |
+| `dati/mercato.js` | chi ordina, quanto rende un ordine, e perché non paga monete |
+| `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
+| `viste/Mercato.vue` | i tre ordini, a caselle |
+| `dati/addobbi.js` | cappellini e fiocchi: nome, prezzo, dove si attaccano |
+| `dati/animali.js` | e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
+| `viste/Vestiario.vue` | «Vestilo», uno slot per punto di attacco |
+| `test/unita/addobbi.test.mjs` | si compra, si mette, si toglie — e cosa non gli sta |
+| `test/unita/mercato.test.mjs` | si chiede solo il possibile, a ogni livello |
 | `fattoria/generati/campi.json` `animali.json` `merci.json` | i tre fogli, e il perché di ogni ritaglio |
 | `test/unita/coltivazioni.test.mjs` | si coltiva per davvero, spostando l'orologio |
 | `test/unita/recinti.test.mjs` | i ritratti, la catena intera giocata, e cosa chiede chi ha fame |
