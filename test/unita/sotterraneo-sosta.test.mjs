@@ -5,7 +5,7 @@
    stessa partita e arrivi in fondo.
    `node test/esegui.mjs sosta --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, STANZE_TORCIA } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
@@ -41,6 +41,8 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   c.foglio = { che: 'scontro', chi: m }
   for (let i = 0; i < 30 && !m.morto; i++) { c.rispondi(true); if (!c.foglio) break }
   c.zaino.push('pozione')
+  c.accendi('torcia')       // una accesa e una alla cintura: sono due campi diversi
+  c.accendi('torcia')
   c.mano = 'spada'
   c.mancina = 'accetta'      // la seconda arma si riprende com'era
   c.gemme = 77
@@ -52,7 +54,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
   controlla('il salvataggio si rilegge', !!b)
 
   const firma = x => [x.piano, x.vita, x.vitaMax, x.gemme, x.mano, x.mancina, x.corpo,
-                      x.zaino.join(), x.chiaveDelPiano, x.torcia,
+                      x.zaino.join(), x.chiaveDelPiano, x.torciaResta, x.torceInScorta,
                       Math.floor(x.eroe.x), Math.floor(x.eroe.y),
                       x.domande, x.mostriBattuti, x.tesori, x.stanzeViste].join('|')
   uguale('e la discesa è la stessa', firma(b), firma(c))
@@ -67,6 +69,36 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
             c.livello.robe.filter(r => r.che === 'mostro' && r.morto).length)
 
   nota(`un salvataggio pesa ${JSON.stringify(dato).length} byte con ${dato.robe.length} cose in giro`)
+}
+
+/* ══════════ 2-bis. una torcia di ieri era una torcia che non finiva ══════════
+   `torcia: true` è tutto quello che i salvataggi di prima dicevano, e
+   allora voleva dire luce fino alla risalita. Il ripiego ovvio è quindi
+   **una torcia piena**: chi rientra in una discesa cominciata ieri non
+   si ritrova al buio, e nemmeno con una luce eterna che nel gioco di
+   oggi non esiste più. È il motivo per cui la versione non sale — il
+   campo vecchio vuol dire ancora quello che voleva dire. */
+{
+  const c = new Corsa(CAMPAGNA[0], { seme: 77, rnd: seminato(77) })
+  const dato = scrivi(c, 0)
+  const vecchio = { ...dato, torcia: true }
+  delete vecchio.torciaResta
+  delete vecchio.torce
+  const b = leggi(vecchio, CAMPAGNA[0])
+  uguale('una torcia di ieri si riaccende piena', b.torciaResta, STANZE_TORCIA)
+  uguale('e senza scorte, che ieri non c\'erano', b.torceInScorta, 0)
+
+  const spenta = { ...dato, torcia: false }
+  delete spenta.torciaResta
+  const nessuna = leggi(spenta, CAMPAGNA[0])
+  uguale('chi non ne aveva riparte senza', nessuna.torciaAccesa, false)
+
+  /* e quello di oggi si rilegge com'è: mezza torcia resta mezza */
+  c.accendi('torcia'); c.accendi('torcia')
+  c.torciaResta = 3
+  const oggi = leggi(scrivi(c, 0), CAMPAGNA[0])
+  uguale('una torcia a metà resta a metà', oggi.torciaResta, 3)
+  uguale('e la scorta si riprende', oggi.torceInScorta, 1)
 }
 
 /* ══════════ 3. i mostri tornano al loro posto ══════════

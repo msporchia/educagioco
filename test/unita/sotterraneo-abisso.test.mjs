@@ -228,7 +228,8 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   c.corpo = 'corazza'
   c.dito = 'amuleto-rosso'
   c.zaino = ['pozione', 'pozione-grande', 'chiave']
-  c.torcia = true
+  c.accendi('torcia')
+  c.accendi('torcia')       // una accesa, una alla cintura
   c.gemme = 40
   const tetto = c.vitaMax
   c.vita = 0
@@ -239,10 +240,12 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   uguale('e il gioiello al dito', c.dito, 'amuleto-rosso')
   uguale('le sei tasche si svuotano', c.zaino.length, 0)
   uguale('le gemme si dimezzano, non si azzerano', c.gemme, 20)
-  /* la torcia non è nello zaino: è un interruttore sulla corsa. Chi
-     sviene non si ritrova al buio, che sarebbe il modo più rapido di
-     trasformare uno svenimento in una serata finita */
-  uguale('la torcia resta accesa', c.torcia, true)
+  /* la torcia non è nello zaino: brucia sulla corsa, e le altre
+     aspettano alla cintura. Chi sviene non si ritrova al buio, che
+     sarebbe il modo più rapido di trasformare uno svenimento in una
+     serata finita */
+  uguale('la torcia resta accesa', c.torciaAccesa, true)
+  uguale('e quella di scorta resta alla cintura', c.torceInScorta, 1)
   uguale('e il tetto della vita non scende', c.vitaMax, tetto)
   controlla('e la roba non resta per terra da recuperare',
             !c.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'pozione' && !r.presa))

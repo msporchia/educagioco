@@ -110,6 +110,16 @@ const GRADINI = [
    ogni mostro del gioco. */
 const LA_MANO_CHE_RESTA = 1
 
+/* ── quanto dura una torcia, in stanze ──
+   Sta qui e non in `mondo.js` perché è **quello che quella cosa dà**,
+   come `cura: 6` su una boccetta: chi un giorno metterà in catalogo una
+   fiaccola che dura il doppio scrive `stanze: 24` sulla sua riga e non
+   tocca niente altro. Il motore la legge da lì (`accendi` in
+   `motore/corsa.js`) e la esporta di nuovo solo per riaccendere quelle
+   di scorta, che sono torce normali. Il ragionamento sul numero sta
+   sulla riga della torcia, più sotto. */
+export const STANZE_TORCIA = 12
+
 /* ── una mano o due ──
    `mani: 2` vuol dire che l'arma **occupa anche la sinistra**: un
    bastone, un arco, uno spadone non si tengono con una mano sola, e nel
@@ -335,16 +345,51 @@ export const COSE = {
   'elisir-toro': { em: '🐂', nome: 'Elisir del toro', sprite: 'pozione-rossa',
                    usa: 'cresci', cresce: 3, prezzo: 22,
                    dice: 'Tre punti di vita massima, per tutta la discesa.' },
-  /* ── la torcia non si accende: si ha ──
-     Era una cosa da usare: la raccoglievi, occupava una tasca, e poi
-     bisognava aprire lo zaino e premere «l'accendo». Ma quella scelta
-     non è una scelta — non esiste il momento in cui uno preferisce
-     restare al buio — ed era per giunta l'unico modo di scoprire che la
-     torcia serviva a qualcosa. Adesso si accende **appena la prendi**,
-     e non entra nemmeno nello zaino: una tasca in meno da spendere per
-     una cosa che non si può sbagliare. */
-  torcia: { em: '🔦', nome: 'Torcia', sprite: 'torcia', usa: 'luce', prezzo: 7,
-            dice: 'La prendi e si accende: da lì in avanti vedi più lontano.' },
+  /* ── la torcia si accende da sé, e si consuma ──
+     Due mestieri diversi, e per un pezzo erano confusi in uno solo.
+     **Accenderla** non è una scelta — non esiste il momento in cui uno
+     preferisce restare al buio — quindi si accende appena la prendi e
+     non chiede una tasca: quella metà resta com'era, ed era giusta.
+     **Averla per sempre** invece non lo era: una torcia che dura tutta
+     la discesa si compra una volta e da lì in poi il buio non esiste
+     più, e le altre torce del sotterraneo diventano roba da rifiutare —
+     «ne hai già una accesa», che è la riga da cui nasce questa
+     riscrittura. Adesso brucia, e finisce.
+
+     ── L'UNITÀ È LA STANZA, E NON IL TEMPO ─────────────────────────
+     Si consuma **entrando in una stanza** e non a orologio: col foglio
+     di una domanda aperto il tempo qui sotto è fermo, ma un secondo
+     conto che scorresse davvero farebbe pagare la luce a chi legge
+     piano — che è esattamente quello che questo repo non fa mai
+     («rispondere prima di aver letto costa tempo, non roba»). La
+     stanza è anche l'unica unità che un bambino conta da sé: «mi è
+     durata tutto il piano» è una frase, «duecento passi» no.
+
+     ── DODICI, CIOÈ UN PIANO — E NON È A OCCHIO ────────────────────
+     Il banco lo conta (`motore/banco.js`, otto semi per tappa, chi
+     tocca ogni cosa che vale): una discesa intera costa 34 entrate nel
+     pozzo, 36 nelle gallerie, 45 nella cisterna, 44 nel fondo, 83 nel
+     labirinto — cioè **undici o dodici per piano** dappertutto tranne
+     il labirinto, che di stanze ne ha sedici invece di otto. Dodici è
+     quel numero lì: una torcia dura un piano, e una discesa da tre o
+     quattro piani ne chiede tre o quattro. Sotto le otto si spegne
+     mentre si sta ancora cercando la chiave del piano, e una cosa che
+     finisce prima di servire si legge come rotta; sopra le venti si
+     torna a quella di prima, che copriva la discesa intera.
+
+     ── E IL PREZZO SCENDE DA 7 A 5 ─────────────────────────────────
+     Il prezzo è l'unica scala su cui stanno tutte e trenta le voci
+     (vedi PREZZI, più sotto), quindi cambiando quello che una cosa dà
+     va cambiato anche quello che chiede: sette gemme compravano la luce
+     per due, tre o quattro piani, adesso ne comprano uno. Cinque la
+     mette appena sotto la boccetta (sei gemme, sei punti di vita), che
+     è il paragone giusto — un piano di luce è una comodità, non la
+     sopravvivenza — e sopra il gesto, perché una torcia non è un
+     gesto. La scala di `CALIBRAZIONE.md` qui non decide: quella è in
+     **monete**, e le gemme non escono dalla discesa. */
+  torcia: { em: '🔦', nome: 'Torcia', sprite: 'torcia', usa: 'luce',
+            stanze: STANZE_TORCIA, prezzo: 5,
+            dice: `La prendi e si accende: ${STANZE_TORCIA} stanze di luce, poi si spegne.` },
   chiave: { em: '🗝️', nome: 'Chiave', sprite: 'chiave-oro', usa: 'porta', prezzo: 6,
             dice: 'Apre una porta senza rispondere.' },
 }
@@ -549,6 +594,10 @@ export function guastiDelleCose(nomi = null) {
        avanti si vede prima di pubblicarlo. */
     if (c.dove && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
     if (c.usa === 'cura' && !c.cura) g.push(`${k}: cura zero`)
+    /* una torcia che non dice quanto dura si accenderebbe e non si
+       spegnerebbe mai: è il difetto vecchio, rimesso in piedi da una
+       riga dimenticata */
+    if (c.usa === 'luce' && !(c.stanze > 0)) g.push(`${k}: fa luce, ma non dice per quante stanze`)
     /* un gioiello che non dà niente è una tasca sprecata con l'aria di
        essere un premio */
     if (c.dove === 'dito' && !(c.luce || c.gemme || c.vita || c.dif))

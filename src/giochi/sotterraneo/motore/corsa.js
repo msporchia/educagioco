@@ -45,7 +45,7 @@ import {
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta } from '../dati/eroi.js'
-import { COSE, CURE, NEI_FORZIERI, pescaMerce, pescaCosa } from '../dati/cose.js'
+import { COSE, CURE, NEI_FORZIERI, STANZE_TORCIA, pescaMerce, pescaCosa } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
 import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi } from '../dati/campagna.js'
 import { generaPiano } from './livello.js'
@@ -83,7 +83,19 @@ export class Corsa {
     this.mancina = null
     this.corpo = null
     this.dito = null
-    this.torcia = false
+    /* ── la torcia, e quelle che aspettano il loro turno ──
+       `torciaResta` sono le stanze che quella accesa ha ancora davanti,
+       zero quando è spenta; `torceInScorta` quante ne aspettano alla
+       cintura. Non sono due nomi per la stessa cosa: la prima si
+       consuma, le seconde no, e chi disegna vuole tutte e due — la
+       barretta e il «×2». Non stanno nelle sei tasche, e resta la
+       ragione di sempre: accendere non è una scelta, quindi non deve
+       costare un posto che si sceglie. */
+    this.torciaResta = 0
+    this.torceInScorta = 0
+    /* in che stanza si è adesso, per sapere quando se ne entra un'altra:
+       è l'unità in cui brucia la torcia (`bruciaLaTorcia`) */
+    this.stanzaOra = null
 
     this.foglio = null          // cosa è aperto adesso, o niente
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -120,6 +132,11 @@ export class Corsa {
      L'unico posto dove si sommano: chi vuole sapere quanto picchia
      chiede qui, e non va a guardare dentro le tasche. */
   get att() { return this.io.att + this.addosso('att') }
+
+  /* Accesa vuol dire che ha ancora stanze davanti: chi guarda la luce
+     non deve sapere che è un conto alla rovescia, e chi la consuma non
+     deve tenere in piedi un secondo interruttore che può divergere. */
+  get torciaAccesa() { return this.torciaResta > 0 }
 
   /* ── la mano debole colpisce la metà ──
      Due armi non fanno il doppio, o portarne due sarebbe l'unica cosa
@@ -358,6 +375,11 @@ export class Corsa {
     })
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    /* si è **già** in questa stanza, quindi non ci si entra: scendere
+       una scala non consuma torcia. La torcia brucia camminando, e una
+       scala non è un pezzo di strada girata al buio — vale lo stesso
+       per il risveglio dopo uno svenimento (`rimettiInPiedi`). */
+    this.stanzaOra = dentro.id
     this.guarda = 'dx'
     this.strada = null
     this.mira = null
@@ -386,7 +408,7 @@ export class Corsa {
       this.luce.add(y * L + x)
       this.visto[y * L + x] = 1
     }
-    const raggio = (this.torcia ? RAGGIO_TORCIA : RAGGIO) + this.addosso('luce')
+    const raggio = (this.torciaAccesa ? RAGGIO_TORCIA : RAGGIO) + this.addosso('luce')
     const r = Math.ceil(raggio) + 1
     for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++)
       if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
@@ -593,6 +615,7 @@ export class Corsa {
       this.eroe.x = mx; this.eroe.y = my
       this.strada.shift()
       this.aggiornaLuce()
+      this.bruciaLaTorcia()
       this.raccogli()
       if (!this.strada.length) {
         this.strada = null
@@ -651,9 +674,10 @@ export class Corsa {
   trovata(r) {
     const c = COSE[r.cosa]
     if (!c) return
-    /* la torcia non va in tasca: si accende, e basta averla */
+    /* la torcia non va in tasca: si accende, o aspetta il suo turno
+       alla cintura se una brucia già (`accendi`) */
     if (c.usa === 'luce') {
-      if (!this.accendi(r.cosa)) { this.dillo('🔦 ne hai già una accesa'); return }
+      this.accendi(r.cosa)
       r.presa = true
       return
     }
@@ -685,15 +709,59 @@ export class Corsa {
     this.dilloDi(r.cosa, perché ? ` · ${perché.charAt(0).toLowerCase()}${perché.slice(1)}` : '')
   }
 
-  /* Accendere è una cosa sola: o è accesa o non lo è, e una seconda
-     torcia non fa più luce della prima. Torna `false` se era già
-     accesa, così chi chiama sa che non è successo niente. */
+  /* ── una torcia si prende sempre ──
+     C'era un ramo che diceva di no («ne hai già una accesa») e mandava
+     indietro un `false` che chi chiamava traduceva in una riga a
+     schermo: da fuori era un gioco che rifiuta un oggetto senza che si
+     capisca perché — la torcia stava per terra, la si toccava, e
+     restava lì. Adesso la prima si accende e le altre aspettano il loro
+     turno alla cintura; **la scorta non ha un tetto**, perché un tetto
+     rimetterebbe in piedi esattamente il rifiuto che questa riscrittura
+     toglie. Chi ne compra cinque ha speso venticinque gemme, e quello è
+     già il prezzo che le conta. */
   accendi(k) {
-    if (this.torcia) return false
-    this.torcia = true
+    const quante = (COSE[k] && COSE[k].stanze) || STANZE_TORCIA
+    if (this.torciaAccesa) {
+      this.torceInScorta++
+      this.dilloDi(k, ` 🔦 alla cintura · ne hai ${this.torceInScorta} di scorta`)
+      return true
+    }
+    this.torciaResta = quante
     this.aggiornaLuce()
-    this.dilloDi(k, ' 🔦 si vede più lontano')
+    this.dilloDi(k, ` 🔦 si vede più lontano · ${quante} stanze`)
     return true
+  }
+
+  /* ── e si consuma entrando in una stanza ──
+     Una stanza, non un secondo: col foglio di una domanda aperto qui
+     sotto il tempo è fermo, e un conto che scorresse davvero farebbe
+     pagare la luce a chi legge piano. Il perché sta per esteso sulla
+     riga della torcia in `dati/cose.js`.
+
+     Si conta l'**entrata**, cioè il momento in cui la stanza sotto i
+     piedi non è quella di prima: uscendo in corridoio `stanzaOra` non
+     si azzera, se no un eroe fermo sulla soglia — dentro e fuori a ogni
+     passo — brucerebbe una torcia in mezzo metro. Tornare sui propri
+     passi invece consuma, ed è giusto: la torcia serve a girare, e
+     girare due volte lo stesso piano è girare. */
+  bruciaLaTorcia() {
+    const st = this.livello.stanzaDi(Math.floor(this.eroe.x), Math.floor(this.eroe.y))
+    if (!st || st.id === this.stanzaOra) return
+    this.stanzaOra = st.id
+    if (!this.torciaAccesa) return
+    this.torciaResta--
+    if (this.torciaResta > 0) return
+    /* Quella dopo si accende **da sé**: chiedere di aprire lo zaino e
+       premere «l'accendo» sarebbe la scelta che non è una scelta,
+       tornata dalla finestra. */
+    if (this.torceInScorta > 0) {
+      this.torceInScorta--
+      this.torciaResta = STANZE_TORCIA
+      this.dillo(`🔦 la torcia si spegne, ne accendi un'altra`)
+    } else {
+      this.dillo('🔦 la torcia si è spenta')
+    }
+    this.aggiornaLuce()
   }
 
   /* Se lo mette, e quello che aveva **non si perde**: va nello zaino, o
@@ -857,7 +925,9 @@ export class Corsa {
       if (p.gemme) this.gemme += p.gemme
       if (p.cura) this.vita = Math.min(this.vitaMax, this.vita + p.cura)
       if (p.vitaPiu) { this.vitaBase += p.vitaPiu; this.vita += p.vitaPiu }
-      if (p.torcia && !this.torcia) { this.torcia = true; this.aggiornaLuce() }
+      /* dalla stessa porta di tutte le altre: se una brucia già,
+         questa aspetta alla cintura invece di svanire */
+      if (p.torcia) this.accendi('torcia')
       this.tesori++
       f.esito = { buono: true, dice: b.dice, conto: this.dettoIlPremio(p) }
       return { che: 'curiosita', buono: true }
@@ -893,7 +963,10 @@ export class Corsa {
     if (p.gemme) parti.push(`💎 +${p.gemme}`)
     if (p.cura) parti.push(`❤️ +${p.cura}`)
     if (p.vitaPiu) parti.push(`❤️ +${p.vitaPiu} per sempre`)
-    if (p.torcia) parti.push('🔦 torcia accesa')
+    /* «una torcia» e non «torcia accesa»: adesso può anche finire di
+       scorta, e un conto che dice una cosa mentre ne succede un'altra è
+       peggio di nessun conto */
+    if (p.torcia) parti.push('🔦 una torcia')
     return parti.join(' · ')
   }
 
@@ -982,9 +1055,10 @@ export class Corsa {
        all'ingresso vorrebbe dire non aver perso niente, con in più un
        giro a piedi. E una pozione bevuta vale da adesso più di una
        tenuta da parte, che è esattamente il comportamento che si voleva
-       togliere. La torcia non è nello zaino (è un interruttore sulla
-       corsa) e la vita cresciuta con l'elisir sta in `vitaBase`: chi
-       sviene non si ritrova al buio né più piccolo di prima. */
+       togliere. La torcia non è nello zaino — brucia sulla corsa, e le
+       altre aspettano alla cintura — e la vita cresciuta con l'elisir
+       sta in `vitaBase`: chi sviene non si ritrova al buio né più
+       piccolo di prima. */
     if (this.senzaFondo && this.zaino.length) {
       const quante = this.zaino.length
       this.zaino = []
@@ -992,6 +1066,9 @@ export class Corsa {
     }
     const dentro = this.livello.stanze[0]
     this.eroe = { x: dentro.cx + 0.5, y: dentro.cy + 0.5 }
+    /* svegliarsi all'ingresso non è entrare in una stanza: uno
+       svenimento non consuma anche la torcia (vedi `nuovoPiano`) */
+    this.stanzaOra = dentro.id
     this.strada = null; this.mira = null; this.bersaglio = null
     for (const m of this.livello.robe) if (m.che === 'mostro') { m.sveglio = false; m.calmo = CALMA }
     this.aggiornaLuce()
@@ -1099,12 +1176,16 @@ export class Corsa {
      bevono o si accendono fanno eccezione — di pozioni se ne portano
      quante ne stanno, ed è il senso stesso di una pozione. */
   possiedo(k) {
-    if (COSE[k] && COSE[k].usa === 'luce' && this.torcia) return true
     return this.mano === k || this.mancina === k || this.corpo === k ||
            this.dito === k || this.zaino.includes(k)
   }
 
   quanteNeHo(k) {
+    /* la torcia non sta in nessuna tasca: quelle che si hanno sono
+       quella che brucia più quelle alla cintura, e al banco è proprio
+       quel numero che dice se comprarne un'altra */
+    if (COSE[k] && COSE[k].usa === 'luce')
+      return (this.torciaAccesa ? 1 : 0) + this.torceInScorta
     return this.zaino.filter(x => x === k).length +
            (this.mano === k || this.corpo === k || this.dito === k ? 1 : 0)
   }
@@ -1119,10 +1200,12 @@ export class Corsa {
          E non si offre quello che si ha già addosso: il banco è di
          cinque righe, e una riga occupata da una spada identica a
          quella in pugno è una riga buttata. Quello che si consuma fa
-         eccezione — di chiavi se ne portano quante ne stanno — ma non
-         la torcia: accesa è accesa, e una seconda non illumina niente
-         di più. */
-      const siAccumula = k => COSE[k].usa && COSE[k].usa !== 'luce'
+         eccezione — di chiavi se ne portano quante ne stanno — e da
+         quando la torcia si consuma anche lei, l'eccezione non ha più
+         un caso speciale: una seconda torcia adesso serve, ed era la
+         riga che la teneva fuori dal banco proprio a chi ce l'ha
+         accesa e sta per restare al buio. */
+      const siAccumula = k => !!COSE[k].usa
       const utile = k => siAccumula(k) || !this.possiedo(k)
       /* Non è più un mescolamento uniforme: si pesca **pesando per
          livello**, e il peso è il prezzo (`pescaMerce` in `dati/cose.js`
@@ -1300,13 +1383,14 @@ export class Corsa {
       this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
       return { che: 'cresciuto' }
     }
-    /* Una torcia in tasca adesso non ci finisce più — si accende
+    /* Una torcia in tasca non ci finisce più — si accende
        raccogliendola — ma un salvataggio di prima ce l'ha ancora, e un
        oggetto che non si può né usare né togliere sarebbe una tasca
-       murata. Il tasto resta per loro. */
+       murata. Il tasto resta per loro, e adesso non può nemmeno dire di
+       no: o si accende, o va alla cintura. */
     if (c.usa === 'luce') {
       this.zaino.splice(i, 1)
-      if (!this.accendi(k)) this.dillo('🔦 ne hai già una accesa')
+      this.accendi(k)
       return { che: 'luce' }
     }
     if (c.usa === 'porta') {

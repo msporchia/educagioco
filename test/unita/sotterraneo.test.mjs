@@ -573,7 +573,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   c.rispondi(true)
   controlla('rispondendo bene resta la frase da leggere', !!c.foglio.esito, JSON.stringify(c.foglio.esito))
   controlla('ed è una frase, non un\'etichetta', c.foglio.esito.dice.length > 30)
-  controlla('e qualcosa è migliorato', c.gemme > gemme || c.vita > vita || c.vitaMax > 24 || c.torcia,
+  controlla('e qualcosa è migliorato', c.gemme > gemme || c.vita > vita || c.vitaMax > 24 || c.torciaAccesa,
             `gemme ${gemme}→${c.gemme}, vita ${vita}→${c.vita}`)
   uguale('la domanda è finita lì', c.chiesta, null)
   c.chiudi()
@@ -689,31 +689,86 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('e adesso colpisce piena', c.att, c.io.att + COSE.accetta.att)
 }
 
-/* ══════════ 5-quater. la torcia non si accende: si ha ══════════
-   Era una cosa da usare: si raccoglieva, occupava una tasca, e poi
-   bisognava aprire lo zaino e premere «l'accendo» — una scelta che non
-   è una scelta, perché nessuno preferisce restare al buio. */
+/* ══════════ 5-quater. la torcia si accende da sé, e si consuma ══════════
+   Accenderla non è una scelta (nessuno preferisce restare al buio),
+   quindi si accende raccogliendola e non occupa una tasca: quella metà
+   è di prima. Quello che è cambiato è che **finisce** — dodici stanze,
+   `STANZE_TORCIA` — e che una seconda si prende sempre: prima diceva
+   «ne hai già una accesa» e la lasciava per terra, cioè un gioco che
+   rifiuta un oggetto senza che si capisca perché. */
 {
   const c = new Corsa(CAMPAGNA[0], { seme: 44, rnd: seminato(44) })
   c.zaino = []
   const dove = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
   const buio = c.luce.size
-  const torcia = { che: 'cosa', cosa: 'torcia', x: dove.x, y: dove.y, em: COSE.torcia.em }
+  const perTerra = () => ({ che: 'cosa', cosa: 'torcia', x: dove.x, y: dove.y, em: COSE.torcia.em })
+  const torcia = perTerra()
   c.livello.robe.push(torcia)
 
   c.interagisci(torcia)
-  uguale('raccolta, è già accesa', c.torcia, true)
+  uguale('raccolta, è già accesa', c.torciaAccesa, true)
+  uguale('e dura quello che dice il catalogo', c.torciaResta, COSE.torcia.stanze)
   uguale('e non occupa una tasca', c.zaino.length, 0)
   uguale('non è più per terra', torcia.presa, true)
   controlla('e da lì in avanti si vede più lontano', c.luce.size > buio,
             `${buio} → ${c.luce.size}`)
 
-  /* averla accesa vuol dire averla: il mercante non ne offre una seconda */
-  controlla('una torcia accesa conta come posseduta', c.possiedo('torcia'))
-  const altra = { che: 'cosa', cosa: 'torcia', x: dove.x, y: dove.y, em: COSE.torcia.em }
+  /* ── la seconda si prende sempre, e si vede dove sta ── */
+  const altra = perTerra()
   c.livello.robe.push(altra)
   c.interagisci(altra)
-  uguale('e la seconda resta per terra', !!altra.presa, false)
+  uguale('la seconda si raccoglie lo stesso', !!altra.presa, true)
+  uguale('e va di scorta, senza spegnere quella accesa', c.torceInScorta, 1)
+  uguale('quella accesa non si allunga', c.torciaResta, COSE.torcia.stanze)
+  uguale('e quante ne ho è un numero solo', c.quanteNeHo('torcia'), 2)
+  controlla('nessuna riga dice di no',
+            !c.avvisi.some(a => /già una accesa/.test(String(a.testo || a))),
+            JSON.stringify(c.avvisi))
+
+  /* ── si consuma entrando in una stanza, e la scorta subentra da sé ── */
+  /* «entrare in un'altra stanza» senza dover camminare fin là: si
+     dimentica in quale si era, e il conto vede una stanza nuova */
+  const entra = () => { c.stanzaOra = null; c.bruciaLaTorcia() }
+  const stanzaVera = c.livello.stanzaDi(Math.floor(c.eroe.x), Math.floor(c.eroe.y))
+  controlla('si parte da dentro una stanza', !!stanzaVera)
+  for (let i = 0; i < COSE.torcia.stanze; i++) entra()
+  uguale('finite le sue stanze, si accende quella di scorta', c.torciaResta, COSE.torcia.stanze)
+  uguale('e la cintura è vuota', c.torceInScorta, 0)
+  const acceso = c.luce.size
+  for (let i = 0; i < COSE.torcia.stanze; i++) entra()
+  uguale('finita anche quella, si resta al buio', c.torciaAccesa, false)
+  controlla('e si vede di nuovo poco', c.luce.size < acceso, `${acceso} → ${c.luce.size}`)
+  controlla('la riga lo dice', c.avvisi.some(a => /spent/.test(String(a.testo || a))),
+            JSON.stringify(c.avvisi))
+
+  /* ── e stare nella stessa stanza non la consuma ──
+     Un eroe sulla soglia entra ed esce a ogni passo: se il conto
+     guardasse «sono dentro una stanza?» invece di «è un'altra stanza?»
+     brucerebbe una torcia in mezzo metro. */
+  c.accendi('torcia')
+  const resta = c.torciaResta
+  for (let i = 0; i < 20; i++) c.bruciaLaTorcia()
+  uguale('venti passi nella stessa stanza non costano niente', c.torciaResta, resta)
+}
+
+/* ══════════ 5-quinquies. e un piano di discesa se ne beve una ══════════
+   Il numero non è a occhio: dodici stanze sono **un piano girato per
+   bene**, e chi lo cambia deve vedere qui che cosa sposta. Si gioca una
+   discesa vera col giocatore finto e si contano le entrate. */
+{
+  const entrate = tappa => {
+    const c = new Corsa(tappa, { seme: 5, rnd: seminato(5) })
+    let quante = 0
+    const suo = c.bruciaLaTorcia.bind(c)
+    c.bruciaLaTorcia = () => { const p = c.stanzaOra; suo(); if (c.stanzaOra !== p) quante++ }
+    gioca(tappa, { seme: 5, come: 'tutto', bravura: 0.8, da: c })
+    return quante
+  }
+  const gallerie = entrate(CAMPAGNA[2])
+  const perPiano = gallerie / CAMPAGNA[2].piani
+  dentro('un piano delle gallerie costa una torcia', perPiano, 8, 18)
+  nota(`le gallerie: ${gallerie} stanze entrate in ${CAMPAGNA[2].piani} piani, ` +
+       `${perPiano.toFixed(1)} per piano, e una torcia ne dura ${COSE.torcia.stanze}`)
 }
 
 /* ══════════ 5-ter. due mani, e chi ne occupa due ══════════

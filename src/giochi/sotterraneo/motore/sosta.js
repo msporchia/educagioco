@@ -31,7 +31,7 @@
    modo che nessuno sa spiegare.
    ═══════════════════════════════════════════════════════════════════ */
 import { Corsa } from './corsa.js'
-import { COSE } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA } from '../dati/cose.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
 
@@ -126,7 +126,17 @@ export function scrivi(corsa, tappa, { anchePerFinite = false } = {}) {
     mancina: corsa.mancina,
     corpo: corsa.corpo,
     dito: corsa.dito,
-    torcia: corsa.torcia,
+    /* ── la torcia, in tre campi e non in uno ──
+       `torcia` resta quello che è sempre stato — è accesa, sì o no —
+       perché un campo che cambia significato è la cosa che nessuno sa
+       spiegare (vedi `mancina`, qui sopra); quello che è cambiato è il
+       gioco, quindi si **aggiungono** due campi con un ripiego ovvio, e
+       la versione non sale. Un salvataggio di prima diceva soltanto
+       `torcia: true`, e si rilegge come una torcia piena: era, di
+       fatto, una torcia che non finiva mai. */
+    torcia: corsa.torciaAccesa,
+    torciaResta: corsa.torciaResta,
+    torce: corsa.torceInScorta,
     chiave: corsa.chiaveDelPiano,
     dove: { x: corsa.eroe.x, y: corsa.eroe.y },
     guarda: corsa.guarda,
@@ -189,7 +199,9 @@ export function leggi(dato, tappa, ripiego = DI_PARTENZA) {
     corsa.mancina = vera(dato.mancina)
     corsa.corpo = vera(dato.corpo)
     corsa.dito = vera(dato.dito)
-    corsa.torcia = !!dato.torcia
+    corsa.torciaResta = dato.torciaResta != null ? dato.torciaResta
+      : (dato.torcia ? STANZE_TORCIA : 0)
+    corsa.torceInScorta = dato.torce || 0
     corsa.chiaveDelPiano = !!dato.chiave
     corsa.eroe = { x: dove.x, y: dove.y }
     corsa.guarda = dato.guarda || 'dx'
