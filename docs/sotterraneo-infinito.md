@@ -422,9 +422,11 @@ perso niente, con in più un giro a piedi.
 Tre cose sopravvivono e vanno dette, perché sono quelle che eviterebbero
 una sorpresa brutta:
 
-- **la torcia non è nello zaino.** È un interruttore sulla corsa
-  (`corsa.torcia`), non un oggetto — vedi «la torcia non si accende: si
-  ha» in `dati/cose.js`. Chi sviene non si ritrova al buio, che sarebbe
+- **la torcia non è nello zaino.** Brucia sulla corsa
+  (`corsa.torciaResta`, e `corsa.torceInScorta` per quelle che aspettano
+  alla cintura), non è un oggetto in una tasca — vedi «la torcia si
+  accende da sé, e finisce» in `dati/cose.js`. Chi sviene non si ritrova
+  al buio né senza scorta, che sarebbe
   il modo più rapido di trasformare uno svenimento in una serata finita;
 - **la vita massima cresciuta con l'elisir del toro resta**: è in
   `vitaBase`, non in tasca;

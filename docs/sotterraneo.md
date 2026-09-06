@@ -332,16 +332,62 @@ sei su dieci circa metà delle volte; a quattro su dieci, cioè premendo a
 caso, quasi mai — salvo nelle cantine, che sono la tappa dove si impara
 la strada e devono perdonare.
 
-## La torcia non si accende: si ha
+## La torcia si accende da sé, e finisce
 
-Era una cosa da usare: la raccoglievi, occupava una tasca, e poi
-bisognava aprire lo zaino e premere «l'accendo». Ma quella non è una
-scelta — non esiste il momento in cui uno preferisce restare al buio —
-ed era per giunta l'unico modo di scoprire che la torcia serviva a
-qualcosa. Adesso si accende **appena la prendi**, e non entra nemmeno
-nello zaino: una tasca in meno spesa per una cosa che non si può
-sbagliare. Averla accesa conta come averla, quindi il mercante non te ne
-offre una seconda.
+Sono due mestieri diversi, e per un pezzo sono stati confusi in uno solo.
+
+**Accenderla non è una scelta**: non esiste il momento in cui uno
+preferisce restare al buio. Perciò si accende appena la prendi e non
+entra nemmeno nello zaino — una tasca in meno spesa per una cosa che non
+si può sbagliare. Prima bisognava raccoglierla, tenerla in tasca, aprire
+lo zaino e premere «l'accendo», che era anche l'unico modo di scoprire
+che serviva a qualcosa. Questa metà resta com'è.
+
+**Averla per sempre**, invece, era sbagliato. Una torcia che dura tutta
+la discesa si prende una volta e da lì in avanti il buio non esiste più;
+e siccome averla accesa contava come averla, tutte le altre torce del
+sotterraneo diventavano roba da rifiutare — la prendevi e il gioco
+rispondeva «ne hai già una accesa» lasciandotela per terra. Un oggetto
+che non si può raccogliere, senza che si capisca perché.
+
+Adesso **brucia**. Dura dodici stanze, poi si spegne e il raggio torna
+quello di prima; e una seconda torcia **si prende sempre**: aspetta alla
+cintura, e quando quella accesa finisce si accende da sé. La scorta non
+ha un tetto, se no tornerebbe esattamente il rifiuto che tutto questo
+toglie.
+
+Tre cose non ovvie:
+
+- **L'unità è la stanza, non il tempo.** Col foglio di una domanda
+  aperto, qui sotto l'orologio è fermo; un conto che scorresse davvero
+  farebbe pagare la luce a chi legge piano, che è la cosa che in questo
+  gioco non si fa mai. La stanza è anche l'unica unità che un bambino
+  conta da sé: «mi è durata tutto il piano» è una frase, «duecento
+  passi» no. Scendere una scala e risvegliarsi dopo uno svenimento non
+  consumano niente: non si è camminato.
+- **Dodici è misurato, non scelto a occhio.** Il giocatore finto
+  (`motore/banco.js`) conta le stanze in cui entra chi tocca ogni cosa
+  che vale: 34 nel pozzo, 36 nelle gallerie, 45 nella cisterna, 44 nel
+  fondo, 83 nel labirinto — cioè undici o dodici per piano dappertutto
+  tranne il labirinto, che di stanze ne ha sedici invece di otto. Una
+  torcia vale **un piano**, e una discesa ne chiede tre o quattro.
+- **Il prezzo è sceso da 7 a 5 gemme.** Sette compravano la luce per
+  l'intera discesa, cinque ne comprano un piano: il prezzo è l'unica
+  scala su cui stanno tutte le cose del catalogo, quindi cambiando quello
+  che una cosa dà si cambia anche quello che chiede. Cinque la mette
+  appena sotto la boccetta, che è il paragone giusto — un piano di luce è
+  una comodità, non la sopravvivenza.
+
+E quanta ne resta **si vede**: in basso a sinistra, in faccia al tasto
+dello zaino, c'è una fiamma che cala dentro il suo lume, con le stanze
+che restano e le torce di scorta accanto; agli sgoccioli, e solo se non
+ce n'è un'altra dietro, guizza. Lo zaino lo dice per esteso. Senza, il
+buio arriverebbe di colpo a metà corridoio e si leggerebbe come un
+guasto.
+
+Una discesa lasciata a metà **prima** di tutto questo si riprende con una
+torcia piena: nel salvataggio `torcia: true` era tutto quello che si
+diceva, e voleva dire luce fino alla risalita.
 
 ## Due mani, e chi ne occupa due
 

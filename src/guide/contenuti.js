@@ -627,7 +627,8 @@ export const AIUTI = {
         'Si bevono dallo zaino, quando vuoi tu: la 🧪 boccetta ridà 6 punti, la pozione 10, la 🍷 ampolla 18. Non scadono e non si sprecano — bevute a vita piena, la parte che avanza è persa.',
         'Il mostro ti prende qualcosa **anche quando rispondi giusto** (un graffio, metà del colpo), e per questo le pozioni servono: senza, una discesa lunga finisce con uno svenimento.',
         'Le tasche sono sei. Quando sono piene, quello che trovi resta per terra: dal mercante puoi vendere a metà prezzo quello che non usi.',
-        '🔦 **La torcia non si accende**: basta prenderla, e da lì in avanti vedi più lontano. Non occupa nemmeno una tasca.',
+        '🔦 **La torcia si accende da sé** appena la prendi, e non occupa una tasca. Dura **12 stanze**: quanta luce ti resta lo dice la fiamma in basso a sinistra.',
+        'Se ne trovi un\'altra mentre una brucia, la prendi lo stesso: aspetta alla cintura e si accende da sé quando la prima si spegne.',
       ] },
       { titolo: 'L\'abisso', righe: [
         'Finite tutte e sei le discese, in fondo alla mappa se ne apre una che **non finisce**: si scende finché si regge.',
