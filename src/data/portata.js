@@ -37,8 +37,11 @@
    tappa: se una campagna si accorciasse in testa, un bambino che era
    «alla terza» si ritroverebbe da un'altra parte, senza che nessun
    errore scatti da nessuna parte. Il precedente da guardare è la
-   variante `asteroidi:mente`, che leva delle tappe e per questo
-   rinumera i pianeti senza buchi lasciando i progressi dove sono.
+   variante `asteroidi:mente`, che levava delle tappe dalla fila degli
+   asteroidi: per non spostare i progressi le rinumerava senza buchi e
+   teneva una coordinata a parte per il contatore — due numerazioni per
+   la stessa fila. Non esiste più, ed è la ragione per cui qui non si
+   toglie niente.
 
    Qui non serve nemmeno rinumerare, perché la fila resta intera. Le
    tappe cambiano solo stato:

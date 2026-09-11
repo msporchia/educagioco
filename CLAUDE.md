@@ -711,7 +711,7 @@ committate: non è ricostruibile da git.
 
 ### Cosa possono spegnere i genitori
 
-Quattro interruttori diversi, e la differenza conta:
+Tre interruttori diversi, e la differenza conta:
 
 1. **Un gioco** (`settings.giochi`) — sparisce la carta in home, i progressi
    restano. Per bambino, come elenco di **eccezioni** (`{ torri: false }`),
@@ -748,19 +748,23 @@ Quattro interruttori diversi, e la differenza conta:
    e nessuno dei cento test poteva vederlo.
 3. **I giochi in prova** (`settings.sperimentali`) — un flag solo per tutti
    quelli taggati `sperimentale: true`, che senza non esistono affatto.
-4. **Un modo di giocare, dentro un gioco** (`settings.varianti`,
-   `varianteAccesa`/`accendiVariante`) — non è un gioco e non è un pezzo di
-   scuola: è metà di un gioco che si può togliere senza togliere il gioco. Il
-   primo è `asteroidi:mente`, che leva le tappe di calcolo a mente dalla fila
-   degli asteroidi e lascia solo le tabelline; i pianeti si rinumerano senza
-   buchi, spegnere non scrive niente nel profilo e la carta in home non si
-   muove. **Giocando** a mente spento, però, qualcosa si perde: gli asteroidi
-   hanno un avanzamento solo su una fila sola (`mate.fila`,
-   `data/asteroidi.js`), quindi le stazioni saltate restano dietro il
-   contatore e riaccendendo risultano passate — è la conseguenza diretta di
-   avere un numero solo, ed è la lettura giusta del gesto.
-   Stessa forma degli altri due: **eccezioni per bambino**, così una variante
-   nuova nasce accesa per chi ha il profilo di ieri.
+**Ce n'era un quarto, e non si rifà.** `settings.varianti`
+(`varianteAccesa`/`accendiVariante`) spegneva *un modo di giocare dentro un
+gioco*: non un gioco, non un pezzo di scuola, ma metà di un gioco. L'unica
+voce che ha mai avuto era `asteroidi:mente` — via le tappe di calcolo a
+mente, restano i pianeti — e sembrava innocua: la carta in home non si
+muoveva, i progressi restavano dove erano. Era invece il modo di rimettere
+in piedi le **due metà** che la fila unica degli asteroidi esiste per
+togliere (vedi `src/data/asteroidi.js`), e un gioco che a seconda di un flag
+ne è uno o due è due giochi. Si portava dietro una fila filtrata, una
+seconda numerazione, un `menteAccesa` sparso in quattro file e un contatore
+che scavalcava le stazioni saltate — un mese a interruttore spento e mezza
+scaletta risultava passata senza essere stata giocata. Il meccanismo
+generico non è rimasto senza voci: è stato tolto, perché un interruttore che
+non accende niente è codice che qualcuno rimetterà in uso senza rifarsi la
+domanda. Chi vuole meno moltiplicazioni lo dice dove si dicono queste cose —
+l'età, o il pezzo di scuola nel quadro — che valgono per tutti i giochi
+insieme e non per metà di uno.
 
 Nei test i bersagli sono `.carta.gioco[data-gioco="…"]`,
 `.carta[data-flag="…"]`, `.carta[data-azione="…"]`.

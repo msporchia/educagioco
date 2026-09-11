@@ -26,13 +26,30 @@ tabellina del 10, e **moltiplicare e dividere a mente vengono dopo tutte le
 tabelline** — 56:8 è la tabellina dell'8 girata.
 
 La fila è una anche **sotto**: un solo avanzamento, una sola tappa aperta —
-quella dopo l'ultima superata, che sia un pianeta o una stazione. Per un po'
+quella dopo l'ultima superata, che sia un pianeta o una stazione — e **un
+solo segno**, la ⭐ di «superata». Per un po'
 i progressi sono stati due, uno per specie, e allora in mezzo alla scaletta
 capitava di vedere la tappa 6 aperta, la 7 chiusa e la 8 aperta: da fuori
 non si legge come «due progressi rispettati», si legge come una fila che non
 si capisce dove continui. Chi giocava da prima non ha perso niente — i due
 contatori si sono travasati in uno prendendo la posizione più avanzata, cioè
 sbagliando semmai in favore del bambino.
+
+I segni erano due: una ✔ verde per «bersaglio preso» e una ⭐ per «questa
+tabellina il motore te la dà per imparata». Sono due domande diverse
+schiacciate nella stessa colonna, e per leggere la fila bisognava sapere
+quale delle due si stava guardando. Adesso la fila risponde a una domanda
+sola — *dove sono arrivato* — e quello che il motore sa sta dove quella
+domanda è la domanda: i due conti in cima alla mappa (✖️ le tabelline, 🧠 i
+trucchi), «Cosa so», l'albo e i traguardi. Sono numeri che **scendono** se
+non si ripassa, ed è giusto che si vedano; una tappa superata invece resta
+superata, e le due cose non possono stare nello stesso simbolo.
+
+Anche fuori dalla fila non resta niente di diviso: un cartello solo a fine
+tappa («Tappa superata!», non «Pianeta» o «Stazione»), un solo trionfo
+quando la scaletta finisce, e i **due voli infiniti che si aprono insieme**
+a fila finita — non sono due campagne, sono due modi di continuare a volare
+quando non c'è più niente da macinare.
 
 (La scaletta apre in anticipo anche tutto quello che a quell'età è **roba
 già saputa** — a nove anni non si ricomincia dalla tabellina del 2 per
@@ -112,9 +129,9 @@ sassi sbagliati da scartare, ma il tempo per fare il conto resta quello. E
 il sasso con la risposta giusta entra sempre entro tre secondi dalla
 domanda: aspettare non è saper rispondere piano.
 
-Nel **volo libero**, che si apre a campagna finita, non si sceglie più
-niente a mano: pesca da sé quello che si ricorda meno, e a chi ricorda tutto
-ripropone gli ultimi pianeti giocati.
+Nei **voli infiniti**, che si aprono a fila finita, non si sceglie più
+niente a mano: pescano da sé quello che si ricorda meno, e a chi ricorda
+tutto ripropongono gli ultimi pianeti giocati.
 
 ### Il calcolo a mente ha una regola in più
 
@@ -141,14 +158,12 @@ del saperlo: rispondere piano conta, non solo rispondere giusto.
 
 - Se le tabelline sono ancora troppo, la fila comincia proprio dai conti
   a mente: 3+4 non aspetta nessuna tabellina.
-- Al contrario, **chi vuole solo le tabelline spegne il calcolo a mente**
-  (*Genitori → giochi → dentro gli asteroidi*): le tappe a mente
-  spariscono dalla fila e i pianeti si richiudono in ordine, senza buchi.
-  Spegnere l'interruttore non cancella niente e la fila torna intera
-  riaccendendolo; quello che si perde è il segnaposto delle stazioni
-  saltate mentre era spento — con un avanzamento solo, quelle restano
-  dietro di lui e risultano passate. È la lettura giusta di quel gesto:
-  un grande che toglie il calcolo a mente non sta mettendo delle tappe in
-  pausa, sta dicendo che questo bambino fa le tabelline.
+- **Non c'è nessun interruttore per togliere il calcolo a mente**, e non
+  si rimette. C'era, e faceva esattamente la cosa che questo gioco è
+  stato rimesso a posto per non fare: due metà, due file, due
+  numerazioni. Chi ha bisogno di una scaletta più bassa muove **l'età**
+  (*Genitori → Giochi e domande*), che apre in anticipo quello che il
+  bambino sa già e tiene chiuso quello che gli sta avanti — tabelline e
+  conti a mente insieme, perché sono la stessa aritmetica.
 - Le divisioni si possono spegnere dai settaggi (*Genitori → cosa sa*).
 - A che punto della fila si è arrivati si vede nella carta in home.

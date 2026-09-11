@@ -4,10 +4,10 @@ import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, engProgresso, espProgresso, mercatoProgresso,
          labProgresso, tabellineIntere, genProgresso,
-         giocoAcceso, giocoForzato, quantiGiochiAccesi, varianteAccesa,
+         giocoAcceso, giocoForzato, quantiGiochiAccesi,
          sperimentaliAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
-import { CHIAVE_MENTE, scaletta, posizioneOra, filaDi } from '../data/asteroidi.js'
+import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
 import { SCALE, TAPPE as TAPPE_POZ } from '../data/pozioni.js'
@@ -47,17 +47,17 @@ const pianeta = computed(() => mateProgresso())
 const stelleMate = computed(() => tabellineIntere().length)
 /* Negli asteroidi le tabelline e i conti a mente sono una scaletta sola
    (`data/asteroidi.js`): la carta dice a che punto della fila si è, che
-   è la cosa che il bambino ritrova aprendo il gioco. Il numero cambia se
-   i grandi hanno spento il calcolo a mente, e deve: la fila che si vede
-   è più corta. */
-const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
-const filaMate = computed(() => scaletta(menteAccesa.value))
-/* Un contatore solo, quindi un numero solo: «quante ne ha fatte» e «da
+   è la cosa che il bambino ritrova aprendo il gioco. La fila è una e
+   sempre la stessa — c'era un interruttore che la accorciava ai soli
+   pianeti, e con lui c'era anche una seconda numerazione da tenere in
+   piedi qui dentro.
+   Un contatore solo, quindi un numero solo: «quante ne ha fatte» e «da
    dove si riprende» sono lo stesso posto. Erano due quando i binari
    erano due — cinque pianeti e nessuna stazione facevano «cinque fatte»
    e «si riprende dalla prima» — e dirne uno solo faceva sembrare che i
    progressi fossero spariti. */
-const doveMate = computed(() => posizioneOra(filaDi(pianeta.value), menteAccesa.value))
+const filaMate = SCALETTA
+const doveMate = computed(() => posizioneOra(filaDi(pianeta.value)))
 const fatteMate = doveMate
 
 /* il laboratorio ha le sue tappe, e a campagna finita il laboratorio libero */
@@ -169,10 +169,10 @@ const gruppi = computed(() => AREE
 const dove = computed(() => {
   const q = (n, tot) => `${Math.min(n + 1, tot)} di ${tot}`
   return {
-    mate: doveMate.value >= filaMate.value.length
-      ? `volo libero ♾️ · ⭐ ${stelleMate.value}/10 tabelline`
+    mate: doveMate.value >= filaMate.length
+      ? `voli infiniti ♾️ · ✖️ ${stelleMate.value}/10 tabelline`
       : `${fatteMate.value} tapp${fatteMate.value === 1 ? 'a' : 'e'} ` +
-        `su ${filaMate.value.length} · ora ${filaMate.value[doveMate.value].T.nome}`,
+        `su ${filaMate.length} · ora ${filaMate[doveMate.value].T.nome}`,
     inglese: tappaEn.value.libera
       ? `gioco libero ♾️ · 🎯 ${imparateEn.value} sicure`
       : `tappa ${q(tappaEn.value.tappa, TAPPE_EN.length)} · 🎯 ${imparateEn.value} sicure`,

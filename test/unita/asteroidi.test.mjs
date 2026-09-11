@@ -21,9 +21,12 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA, VOLO_LIBERO, calcoliTabellina, fattoriDi } from '../../src/data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
-import { SCALETTA, CAPITOLI, CHIAVE_MENTE, scaletta, superata, raggiunta,
+import { SCALETTA, CAPITOLI, superata, raggiunta,
          dopoDi, posizioneOra, filaDi, filaDopo, campagneDaFila,
          filaDaCampagne } from '../../src/data/asteroidi.js'
+/* serve a una cosa sola: controllare che una funzione NON ci sia più
+   (`scaletta`, la fila filtrata dell'interruttore di una volta) */
+import * as ASTEROIDI from '../../src/data/asteroidi.js'
 import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina, insiemeDi,
          chiaviDelle, ultimeTabelline, eNulla, CUORE, TUTTE_LE_TABELLE }
   from '../../src/store/tabelline.js'
@@ -31,8 +34,9 @@ import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo }
   from '../../src/store/calcolo.js'
 import { createPicker, record, newItem, strength } from '../../src/store/srs.js'
 import { state, init, selectPlayer, mateProgresso, calcProgresso,
-         asteroidiCompleta, varianteAccesa,
-         accendiVariante } from '../../src/store/profile.js'
+         asteroidiCompleta, sincronizzaAsteroidi } from '../../src/store/profile.js'
+/* come sopra: serve a controllare che due funzioni NON ci siano più */
+import * as PROFILO from '../../src/store/profile.js'
 import { save, remove, chiavi, flush } from '../../src/store/storage.js'
 import { premioDaSerie, gettoneDopo, POTENZIAMENTI, TASCA_MAX }
   from '../../src/data/potenziamenti.js'
@@ -262,29 +266,21 @@ const PROFILI = T => ({
   controlla('e ogni capitolo ha delle voci',
             CAPITOLI.every((_, i) => SCALETTA.some(v => v.cap === i)))
 
-  /* Spento il calcolo a mente i pianeti si richiudono in fila: stesso
-     ordine di prima, senza buchi e rinumerati da uno. È la promessa
-     fatta a chi vuole solo le tabelline. */
-  const soloPianeti = scaletta(false)
-  uguale('spento il calcolo a mente restano i soli pianeti',
-         soloPianeti.length, CAMPAGNA.length)
-  controlla('nell\'ordine della campagna di sempre',
-            soloPianeti.every((v, i) => v.i === i))
-  controlla('e numerati da uno senza buchi',
-            soloPianeti.every((v, i) => v.n === i + 1))
-  controlla('anche nella fila intera i pianeti si susseguono in ordine',
+  controlla('i pianeti si susseguono in ordine dentro la fila',
             pianeti.every((v, i) => v.i === i))
   controlla('e le stazioni pure', stazioni.every((v, i) => v.i === i))
 
-  /* `pos` è la coordinata del contatore unico: dev'esserci su ogni voce,
-     essere la posizione vera e **non cambiare** quando la fila si
-     accorcia — se cambiasse, spegnere il calcolo a mente sposterebbe i
-     progressi di chi non ha toccato niente. */
+  /* LA FILA È UNA SOLA, e non c'è nessuna versione filtrata: c'era
+     `scaletta(menteAccesa)`, che toglieva le stazioni e rinumerava i
+     pianeti da uno — cioè una seconda numerazione della stessa fila, il
+     pezzo su cui poggiava l'interruttore dei grandi. Adesso `pos` e `n`
+     stanno sulla voce e dicono la stessa cosa a chiunque guardi. */
+  uguale('la scaletta non ha una seconda versione da filtrare',
+         typeof ASTEROIDI.scaletta, 'undefined')
   controlla('ogni voce porta la sua posizione in fila',
             SCALETTA.every((v, i) => v.pos === i))
-  controlla('e la posizione non cambia con la fila accorciata',
-            soloPianeti.every(v => SCALETTA[v.pos].tipo === 'pianeta' &&
-                                   SCALETTA[v.pos].i === v.i))
+  controlla('e il suo numero, che è la stessa cosa scritta da uno',
+            SCALETTA.every(v => v.n === v.pos + 1))
   controlla('superata una voce il contatore si porta subito dopo di lei',
             SCALETTA.every(v => filaDopo(v) === v.pos + 1))
 }
@@ -463,6 +459,29 @@ const PROFILI = T => ({
   uguale('e chi non aveva giocato resta a zero', filaDaCampagne(0, 0), 0)
   nota(`chi era al quinto pianeta e alla seconda stazione finisce alla posizione ` +
        `${filaDaCampagne(5, 2)} di ${SCALETTA.length}`)
+
+  /* ── I DUE VOLI INFINITI SI APRONO INSIEME ──
+     Aspettavano ognuno la sua campagna, e siccome i pianeti finiscono
+     prima delle stazioni c'erano due sere in cui la mappa offriva il
+     volo libero e non quello a mente: una metà del gioco che finisce
+     prima dell'altra, dentro una fila che è una. Adesso il cancello è
+     la fila, e il conto si fa sul posto esatto in cui l'ultimo pianeta
+     va dietro — se fosse rimasto il vecchio, lì uno dei due sarebbe già
+     aperto. */
+  const ultimoPianeta = Math.max(...SCALETTA.filter(v => v.tipo === 'pianeta').map(v => v.pos))
+  const voli = f => {
+    const p = { mate: { tappa: 0, fila: f, libera: false },
+                calc: { tappa: 0, libera: false } }
+    sincronizzaAsteroidi(p)
+    return [p.mate.libera, p.calc.libera]
+  }
+  uguale('coi pianeti finiti ma la fila no, nessuno dei due voli è aperto',
+         voli(ultimoPianeta + 1).join(' '), 'false false')
+  uguale('e a fila finita si aprono tutti e due',
+         voli(SCALETTA.length).join(' '), 'true true')
+  controlla('l\'ultimo pianeta non è l\'ultima voce della fila',
+            ultimoPianeta < SCALETTA.length - 1,
+            'senza questo il controllo qui sopra non prova niente')
 }
 
 /* ═══════════ 9. I PROGRESSI DI IERI ═══════════
@@ -496,7 +515,7 @@ const PROFILI = T => ({
   uguale('anche quello delle stazioni',
          calcProgresso().tappa, campagneDaFila(contatore).mente)
 
-  const fila = scaletta(true)
+  const fila = SCALETTA
   const fatte = fila.filter(v => superata(v, contatore))
   uguale('i cinque pianeti superati sono ancora superati',
          fatte.filter(v => v.tipo === 'pianeta').length, 5)
@@ -508,55 +527,49 @@ const PROFILI = T => ({
   /* IL PUNTO DI TUTTO: una tappa aperta, non due. Prima ce n'erano due
      in mezzo alla fila — la 6 aperta, la 7 chiusa, la 8 aperta — ed è
      il difetto che la fila unica è venuta a togliere. */
-  const aperte = fila.filter(v => raggiunta(v, contatore, true) && !superata(v, contatore))
+  const aperte = fila.filter(v => raggiunta(v, contatore) && !superata(v, contatore))
   uguale('in tutta la fila c\'è una tappa aperta e una sola', aperte.length, 1)
   uguale('ed è la prima non superata', aperte[0].pos, contatore)
   controlla('niente si è aperto da solo più avanti',
-            fila.filter(v => raggiunta(v, contatore, true)).length === contatore + 1)
+            fila.filter(v => raggiunta(v, contatore)).length === contatore + 1)
   controlla('e le superate sono un blocco senza buchi in testa alla fila',
             fatte.every((v, i) => v.pos === i))
 
   /* dove si è arrivati, che è quello che dice la home */
-  const dove = posizioneOra(contatore, true)
+  const dove = posizioneOra(contatore)
   uguale('la home apre sulla prima tappa non ancora fatta', fila[dove].pos, contatore)
   uguale('e «quante ne ha fatte» è lo stesso numero', dove, fatte.length)
 
-  /* ── l'interruttore dei grandi ── */
-  uguale('il calcolo a mente nasce acceso anche per un profilo di ieri',
-         varianteAccesa(CHIAVE_MENTE), true)
-  accendiVariante(CHIAVE_MENTE, false)
-  uguale('spento, resta spento', varianteAccesa(CHIAVE_MENTE), false)
-
-  const corta = scaletta(varianteAccesa(CHIAVE_MENTE))
-  uguale('la fila si accorcia ai soli pianeti', corta.length, CAMPAGNA.length)
-  controlla('e numerati da uno senza buchi', corta.every((v, i) => v.n === i + 1))
-  uguale('i cinque pianeti superati restano cinque',
-         corta.filter(v => superata(v, contatore)).length, 5)
-  uguale('con una sola tappa aperta, la sesta',
-         corta.filter(v => raggiunta(v, contatore, false) && !superata(v, contatore)).length, 1)
-  uguale('ed è proprio il pianeta numero sei',
-         corta.find(v => raggiunta(v, contatore, false) && !superata(v, contatore)).i, 5)
-  uguale('spegnere l\'interruttore non tocca il contatore',
-         filaDi(mateProgresso()), contatore)
-  accendiVariante(CHIAVE_MENTE, true)
-  uguale('riacceso, la fila torna intera', scaletta(varianteAccesa(CHIAVE_MENTE)).length,
-         SCALETTA.length)
+  /* ── E NON C'È NESSUN INTERRUTTORE CHE LA ACCORCI ──
+     `settings.varianti['asteroidi:mente']` toglieva le stazioni dalla
+     fila, e per farlo si portava dietro una seconda numerazione dei
+     pianeti e un contatore che scavalcava le tappe saltate. Se n'è
+     andato insieme al meccanismo che lo reggeva, che non aveva altri
+     inquilini: qui si controlla che non torni di soppiatto — cioè che
+     non esista più nessun modo di spegnere «metà di un gioco». */
+  uguale('il meccanismo delle varianti non esiste più',
+         [typeof PROFILO.varianteAccesa, typeof PROFILO.accendiVariante].join(' '),
+         'undefined undefined')
+  uguale('e un profilo non porta nessun elenco di varianti',
+         state.profile.settings.varianti, undefined)
+  uguale('la fila è intera per tutti', SCALETTA.length,
+         CAMPAGNA.length + STAZIONI.length)
 
   /* ── «adesso tocca a» segue la fila, non la campagna ── */
   const seguito = []
-  let v = scaletta(true)[0]
+  let v = SCALETTA[0]
   for (let i = 0; i < 3 && v; i++) {
     seguito.push(v.tipo)
-    v = dopoDi(v, SCALETTA.length, true)   // tutto aperto, niente superato
+    v = dopoDi(v, SCALETTA.length)   // tutto aperto, niente superato
   }
   controlla('dopo una tappa può toccare all\'altro mestiere',
             new Set(seguito).size > 1, seguito.join(' → '))
 
   const qui = fila.find(v => v.pos === contatore - 1)
-  const dopoUltima = dopoDi(qui, contatore, true)
+  const dopoUltima = dopoDi(qui, contatore)
   controlla('e dopo la tappa appena finita si va alla prima non fatta e aperta',
             dopoUltima && !superata(dopoUltima, contatore) &&
-            raggiunta(dopoUltima, contatore, true),
+            raggiunta(dopoUltima, contatore),
             dopoUltima ? dopoUltima.T.nome : 'nessuna')
 
   /* ── e da qui in poi il contatore cammina di uno ──
@@ -565,8 +578,8 @@ const PROFILI = T => ({
   asteroidiCompleta(aperte[0])
   uguale('superata una tappa il contatore avanza di uno',
          filaDi(mateProgresso()), contatore + 1)
-  const ora = scaletta(true).filter(v => raggiunta(v, filaDi(mateProgresso()), true) &&
-                                         !superata(v, filaDi(mateProgresso())))
+  const ora = SCALETTA.filter(v => raggiunta(v, filaDi(mateProgresso())) &&
+                                   !superata(v, filaDi(mateProgresso())))
   uguale('e la tappa aperta resta una sola', ora.length, 1)
   uguale('cioè quella subito dopo', ora[0].pos, contatore + 1)
 

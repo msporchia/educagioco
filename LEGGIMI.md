@@ -341,16 +341,38 @@ mestieri a pari difficoltà. `unita/asteroidi` cammina la fila con un finto
 bambino e controlla le due facce dell'ordine sbagliato: nessuna tappa
 arriva prima di quello che le serve, nessuna arriva quando è già saputa.
 
-**I contatori restano due** (`mate.tappa`, `calc.tappa`), ed è la ragione
-per cui la fusione non ha fatto perdere niente a nessuno: una voce è
-superata se il progresso della *sua* campagna la copriva. Da lì viene anche
-il fatto che in mezzo alla fila possano esserci due tappe aperte invece di
-una, una per mestiere — è il prezzo, giusto, di non aver tolto niente.
+**Il contatore è uno** (`mate.fila`): quante voci della scaletta sono state
+superate, e basta. Ne sono stati due per un po' — `mate.tappa` per i pianeti
+e `calc.tappa` per le stazioni — ed era la fusione fatta a metà: la fila era
+una a vedersi, sotto restavano due binari, e in mezzo alla scaletta si
+trovavano **due tappe aperte insieme**, una per mestiere, con quella in
+mezzo chiusa. Da fuori quello non si legge come «due progressi rispettati»,
+si legge come una fila che non si capisce dove continui. I due numeri
+restano scritti nel profilo ma **come specchio**, ricavati dalla fila da
+`sincronizzaAsteroidi`: li legge solo chi parla di una campagna sola (i
+traguardi che contano le tabelline, la mappa dei concetti). Chi arrivava dai
+due contatori è stato travasato prendendo la posizione più avanzata delle
+due, cioè sbagliando semmai in favore del bambino.
 
-I genitori possono **spegnere il calcolo a mente** per un bambino
-(`settings.varianti['asteroidi:mente']`, elenco di eccezioni come i giochi):
-le tappe a mente spariscono dalla fila, i pianeti si richiudono in ordine e
-i progressi restano dove sono.
+E il segno accanto a una tappa è **uno**: la ⭐ di «superata». Erano due —
+la ✔ del bersaglio preso e la ⭐ della tabellina che il motore dà per
+imparata — cioè due domande diverse nella stessa colonna. Quello che il
+motore sa non sparisce: sta nei due conti in cima alla mappa (✖️ n/10 le
+tabelline, 🧠 n/12 i trucchi), in «Cosa so», nell'albo e nei traguardi, che
+sono i posti dove quella domanda è *la* domanda — e sono numeri che scendono
+se non si ripassa, mentre una tappa superata resta superata.
+
+**Non c'è nessun interruttore per togliere metà gioco**, e non si rimette.
+C'era: `settings.varianti['asteroidi:mente']`, che levava le tappe a mente
+dalla fila e richiudeva i pianeti senza buchi. Era la stessa domanda
+«tabelline o conti a mente?» spostata dal bambino al genitore, e per reggerla
+servivano una fila filtrata, una seconda numerazione, un `menteAccesa`
+sparso in quattro file e un contatore che scavalcava le stazioni saltate — un
+mese a interruttore spento e mezza scaletta risultava passata senza essere
+stata giocata. Chi ha bisogno di una scaletta più bassa muove **l'età**, che
+apre in anticipo quello che il bambino sa già e tiene chiuso quello che gli
+sta avanti, senza spaccare il gioco in due. Con lui se n'è andato anche il
+meccanismo `settings.varianti`, che non aveva altri inquilini.
 
 ### Il calcolo a mente: le stazioni
 Le tabelline sono 55 fatti: si contano, si imparano, finiscono. Poi restava

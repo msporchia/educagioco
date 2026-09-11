@@ -93,14 +93,20 @@ const partita = await page.evaluate(async () => {
     await new Promise(r => setTimeout(r, 12))
   }
   return { viste, ondate, fase: m.fase.value, giuste: m.hud.giuste, mirate: m.hud.mirate,
-           bersaglio: m.tappa.value.bersaglio, tappa: m.progressoMente.value.tappa,
-           modo: m.modo.value, dopo: m.prossima.value?.nuovi || [],
+           bersaglio: m.tappa.value.bersaglio, fila: m.contatore.value,
+           mente: m.mente.value, dopo: m.prossima.value?.nuovi || [],
            suoi: m.tappa.value.concetti }
 })
 
-uguale('si sta giocando la campagna del calcolo a mente', partita.modo, 'mente')
+/* «a mente» non è un modo che qualcuno ha scelto lanciando la partita:
+   è il tipo della voce su cui si è, cioè un fatto della fila. C'era un
+   `modo` scritto da chi apriva la tappa, ed era l'ultimo posto in cui
+   la domanda «tabelline o conti a mente?» viveva ancora nel codice. */
+uguale('la tappa su cui si è è una di quelle a mente', partita.mente, true)
 uguale('il bersaglio chiude la stazione', partita.fase, 'vinta')
-uguale('e la stazione risulta superata', partita.tappa, 1)
+/* il contatore è uno e cammina di una voce: la prima della fila è a
+   mente, quindi superandola la fila va a uno */
+uguale('e il contatore della fila avanza di uno', partita.fila, 1)
 dentro('senza chiedere molto più del bersaglio', partita.giuste,
        partita.bersaglio, partita.bersaglio + 4)
 
@@ -159,7 +165,13 @@ nota(`${partita.viste.length} domande, per esempio: ` +
 await scatto(page, 'calcolo-vinta')
 
 /* ---------- 3. il trucco arriva alla seconda volta storta ---------- */
-await page.evaluate(() => window.__mate.iniziaStazione(0))
+/* si riapre la prima tappa a mente dicendo il suo POSTO nella fila: non
+   c'è più nessun `iniziaStazione`, perché non c'è più nessun mestiere da
+   dichiarare aprendo una tappa — lo dice la voce */
+await page.evaluate(() => {
+  const m = window.__mate
+  m.inizia(m.fila.find(v => v.tipo === 'mente').pos)
+})
 await page.waitForTimeout(200)
 const trucco = await page.evaluate(async () => {
   const m = window.__mate

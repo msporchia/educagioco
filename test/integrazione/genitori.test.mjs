@@ -436,63 +436,38 @@ if (IN_PROVA.length) {
   controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
 }
 
-/* ── 7b-bis. il calcolo a mente dentro gli asteroidi ──
-   Il terzo tipo di interruttore, e la differenza conta: non spegne un
-   gioco (la carta degli asteroidi resta in home) e non spegne un pezzo
-   di scuola. Spegne un MODO di giocare — le tappe a mente spariscono
-   dalla fila e i pianeti si richiudono in ordine — e i progressi
-   restano dove sono. Chi vuole solo le tabelline passa da qui. */
+/* ── 7b-ter. gli interruttori di casa sono tre, e non quattro ──
+   Ce n'era un quarto — «negli asteroidi, anche i conti a mente» — e
+   spegneva *un modo di giocare dentro un gioco*: non un gioco, non un
+   pezzo di scuola, metà di un gioco. Gli asteroidi sono una fila sola
+   apposta, e quell'interruttore rimetteva in piedi le due metà che la
+   fila esiste per togliere. Qui si controlla che non sia tornato: è il
+   genere di cosa che rispunta perché sembra un servizio ai genitori. */
 {
-  const contaMappa = async () => {
-    await page.click('button[aria-label="indietro"]')
-    await page.waitForSelector('.carte', { timeout: 5000 })
-    await page.getByText('Asteroidi', { exact: true }).click()
-    await page.waitForSelector('.scaletta', { timeout: 5000 })
-    const conto = await page.evaluate(() => ({
-      pianeti: document.querySelectorAll('.pianeta').length,
-      stazioni: document.querySelectorAll('.stazione').length,
-      numeri: [...document.querySelectorAll('.pianeta b')].map(b => parseInt(b.textContent, 10)),
-    }))
-    await page.click('button[aria-label="indietro"]')
-    await page.waitForSelector('.carte', { timeout: 5000 })
-    return conto
-  }
-
   await vaiAiGenitori()
   await digita('0000')
   await apriScheda('giochi')
-  await page.waitForSelector('.carta[data-flag="mente"]', { timeout: 5000 })
-  controlla('di partenza il calcolo a mente è acceso',
-            !(await page.evaluate(() =>
-              document.querySelector('.carta[data-flag="mente"]').className.includes('spento'))))
-
-  const intera = await contaMappa()
-  uguale('a fila intera ci sono tutti i pianeti', intera.pianeti, 10)
-  controlla('e anche le stazioni', intera.stazioni > 0)
-
-  await vaiAiGenitori()
-  await digita('0000')
-  await apriScheda('giochi')
-  await page.click('.carta[data-flag="mente"]')
-  await page.waitForTimeout(200)
-  const corta = await contaMappa()
-  uguale('spento, le tappe a mente spariscono dalla mappa', corta.stazioni, 0)
-  uguale('e i pianeti restano tutti', corta.pianeti, 10)
-  /* «senza buchi» è la parte che si vedrebbe solo dal telefono: se la
-     numerazione restasse quella della fila intera, i pianeti sarebbero
-     il 3, il 4, il 6… cioè numerati sui vuoti di quello che non c'è */
+  await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
+  uguale('non c\'è nessun interruttore per il calcolo a mente',
+         await page.locator('.carta[data-flag="mente"]').count(), 0)
+  /* e la fila degli asteroidi resta intera: è la stessa promessa vista
+     dall'altra parte, cioè dalla mappa che un bambino apre davvero */
+  await page.click('button[aria-label="indietro"]')
+  await page.waitForSelector('.carte', { timeout: 5000 })
+  await page.getByText('Asteroidi', { exact: true }).click()
+  await page.waitForSelector('.scaletta', { timeout: 5000 })
+  const conto = await page.evaluate(() => ({
+    pianeti: document.querySelectorAll('.pianeta').length,
+    stazioni: document.querySelectorAll('.stazione').length,
+    numeri: [...document.querySelectorAll('.pianeta b, .stazione b')]
+      .map(b => parseInt(b.textContent, 10)),
+  }))
+  uguale('la mappa ha tutti i pianeti', conto.pianeti, 10)
+  controlla('e anche le stazioni', conto.stazioni > 0)
   controlla('numerati da uno in fila, senza buchi',
-            corta.numeri.every((n, i) => n === i + 1), corta.numeri.join(', '))
-  controlla('e la carta degli asteroidi è ancora in home',
-            await page.isVisible('.carta.mate'))
-
-  await vaiAiGenitori()
-  await digita('0000')
-  await apriScheda('giochi')
-  await page.click('.carta[data-flag="mente"]')      // rimesso com'era
-  await page.waitForTimeout(200)
-  const tornata = await contaMappa()
-  uguale('riacceso, le tappe a mente tornano', tornata.stazioni, intera.stazioni)
+            conto.numeri.every((n, i) => n === i + 1), conto.numeri.join(', '))
+  await page.click('button[aria-label="indietro"]')
+  await page.waitForSelector('.carte', { timeout: 5000 })
 }
 
 /* ── 7c. spegnere un pezzo di scuola, dalla scheda delle domande ──

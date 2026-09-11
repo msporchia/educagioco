@@ -123,31 +123,42 @@
    ── E DA QUI IN POI NON SI PERDE PIÙ NIENTE ──
    A fila unica il contatore cammina di una voce per volta e non scavalca
    niente: `filaDopo` è la posizione della tappa appena superata più uno.
-   L'unico caso in cui qualcosa viene scavalcato è il calcolo a mente
-   spento (qui sotto), e lì le stazioni non sono roba che il bambino
-   deve: sono roba che un grande gli ha tolto.
+   Non c'è nessun caso in cui una voce venga saltata — ce n'era uno, il
+   calcolo a mente spento, ed è andato via con l'interruttore (qui
+   sotto).
 
-   ═══════════ SPENTO IL CALCOLO A MENTE ═══════════
+   ── UN SEGNO SOLO SULLA FILA: ⭐ = SUPERATA ──
+   Il conto è uno, quindi anche il segno accanto a una tappa è uno.
+   Erano due — la ✔ del bersaglio preso e la ⭐ della tabellina che il
+   motore dà per imparata — e leggere una lista di tappe voleva dire
+   sapere quali due domande diverse stessero rispondendo due simboli
+   vicini. Quello che il motore sa non sparisce: sta in «Cosa so», nei
+   due conti in cima alla mappa (✖️ n/10, 🧠 n/12), nell'albo e nei
+   traguardi, che sono i posti dove quella domanda è **la** domanda. Qui
+   la domanda è un'altra, ed è una sola: dove sono arrivato.
 
-   `settings.varianti['asteroidi:mente']` (pagina dei grandi): spento, le
-   voci a mente spariscono e i pianeti si richiudono in fila senza buchi,
-   nell'ordine di sempre. Spegnere l'interruttore non scrive niente nel
-   profilo: la fila si accorcia a chi la guarda, il contatore resta dov'è.
+   ═══════════ E NON C'È NESSUN INTERRUTTORE ═══════════
 
-   Quello che cambia con un contatore solo è cosa succede **giocando** a
-   mente spento: superando un pianeta il contatore si porta a quella
-   posizione, e le stazioni che stavano in mezzo restano dietro di lui,
-   cioè risultano passate se un giorno l'interruttore si riaccende. È la
-   conseguenza diretta di avere un numero solo, ed è la lettura giusta:
-   un grande che toglie il calcolo a mente non sta mettendo in pausa
-   delle tappe, sta dicendo che questo bambino fa le tabelline.
+   C'era: `settings.varianti['asteroidi:mente']` toglieva le voci a mente
+   dalla fila e richiudeva i pianeti senza buchi. Non si rifà, ed è la
+   cosa da non rimettere. Era la spaccatura in due metà scritta a mano —
+   la stessa domanda «preferisci le tabelline o i conti a mente?», solo
+   spostata dal bambino al genitore — e per reggerla servivano una fila
+   filtrata, una numerazione che si ricalcolava, un `menteAccesa` in giro
+   per quattro file e, sotto, un contatore che scavalcava le stazioni
+   saltate: un grande lo spegneva per un mese e si ritrovava mezza
+   scaletta passata senza che nessuno l'avesse giocata.
+
+   Quello che quell'interruttore voleva davvero — «questo bambino le
+   tabelline le fa, i conti a mente ancora no» — lo dicono già le due
+   manopole che esistono: l'età, che apre in anticipo quello che sa già e
+   tiene chiuso quello che gli sta avanti (`data/portata-giochi.js`), e i
+   pezzi di scuola spenti (`settings.sa`), che tolgono le domande che
+   danno per scontata una cosa mai fatta. Nessuna delle due spacca il
+   gioco in due metà.
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA } from './tabelline.js'
 import { STAZIONI } from './calcolo.js'
-
-/* la chiave dell'interruttore dei grandi: sta in `settings.varianti`,
-   come elenco di eccezioni — chi non dichiara niente ce l'ha acceso */
-export const CHIAVE_MENTE = 'asteroidi:mente'
 
 /* I capitoli. Servono a due cose insieme: raccontare la salita («adesso
    si fanno le decine») e spezzare ventidue righe in blocchi da tre o
@@ -182,16 +193,20 @@ const daCodice = c => {
     : { tipo: 'mente', i, T: STAZIONI[i] }
 }
 
-/* La scaletta intera, com'è scritta qui sopra. `cap` è l'indice del
-   capitolo, e serve alla mappa per stampare il titolino una volta sola;
-   `pos` è la posizione nella fila, ed è **l'unica coordinata che conta**
-   da quando il progresso è un numero solo. `i` resta l'indice dentro la
-   campagna di provenienza, e serve ancora a chi parla di una campagna
-   sola: il premio della tappa, la tavola pitagorica, la mappa dei
-   concetti. */
+/* La scaletta intera, com'è scritta qui sopra, ed è **l'unica**: non
+   c'è nessuna versione filtrata, perché non c'è più niente da filtrare.
+   `cap` è l'indice del capitolo, e serve alla mappa per stampare il
+   titolino una volta sola; `pos` è la posizione nella fila, ed è l'unica
+   coordinata che conta da quando il progresso è un numero solo; `n` è
+   lo stesso numero scritto per un bambino, cioè da uno — sta qui e non
+   nella schermata perché una fila sola ha una numerazione sola, e
+   ricalcolarla altrove era il pezzo che serviva all'interruttore.
+   `i` resta l'indice dentro la campagna di provenienza, e serve ancora a
+   chi parla di una campagna sola: il premio della tappa, la tavola
+   pitagorica, la mappa dei concetti. */
 export const SCALETTA = CAPITOLI_ORDINE
   .flatMap((c, cap) => c.voci.map(codice => ({ ...daCodice(codice), cap })))
-  .map((v, pos) => ({ ...v, pos }))
+  .map((v, pos) => ({ ...v, pos, n: pos + 1 }))
 
 export const CAPITOLI = CAPITOLI_ORDINE.map(({ emoji, titolo, che }) => ({ emoji, titolo, che }))
 
@@ -233,50 +248,29 @@ export const filaDopo = v => v.pos + 1
    per un pianeta e per una stazione — che è tutto il punto. */
 export const superata = (v, fila) => v.pos < fila
 
-/* La fila come la vede questo bambino: senza le voci a mente se i
-   grandi le hanno spente. `n` è il numero stampato accanto al nome, e si
-   ricalcola sulla fila filtrata — se no spegnendo il calcolo a mente i
-   pianeti resterebbero numerati 3, 4, 6, 8… cioè con i buchi di quello
-   che non c'è. `pos` invece NON si ricalcola: è la coordinata del
-   contatore, e deve dire la stessa cosa con l'interruttore acceso o
-   spento. */
-export function scaletta(menteAccesa = true) {
-  const voci = menteAccesa ? SCALETTA : SCALETTA.filter(v => v.tipo === 'pianeta')
-  return voci.map((v, n) => ({ ...v, n: n + 1 }))
-}
+/* dove si è arrivati: quante voci della fila sono superate, che è anche
+   l'indice della prossima da giocare. È il numero che la home mostra
+   («7 tappe su 22») e il posto su cui si apre la mappa. Con una fila
+   sola è il contatore stesso, tenuto dentro i bordi — il conto esiste
+   ancora come funzione perché chi chiama non deve sapere quanto è lunga
+   la scaletta per non sforarla. */
+export const posizioneOra = fila => Math.max(0, Math.min(SCALETTA.length, fila))
 
-/* dove si è arrivati: quante voci di QUESTA fila sono superate, che è
-   anche l'indice della prossima da giocare. È il numero che la home
-   mostra («7 tappe su 22») e il posto su cui si apre la mappa. */
-export function posizioneOra(fila, menteAccesa = true) {
-  const voci = scaletta(menteAccesa)
-  const i = voci.findIndex(v => !superata(v, fila))
-  return i < 0 ? voci.length : i
-}
-
-/* raggiunta: superata, oppure **la** prossima della fila che si vede.
-   Una sola, e non più una per mestiere: è qui che si legge il contatore
-   unico. Si chiede alla fila filtrata e non a `pos + 1`, perché col
-   calcolo a mente spento la prossima tappa può stare parecchie posizioni
-   più in là del contatore — in mezzo ci sono le stazioni che questo
-   bambino non ha. Chi chiama ci mette davanti `tuttoAperto()` (vedi
-   `tappaAperta` in `store/profile.js`). */
-export function raggiunta(v, fila, menteAccesa = true) {
-  if (superata(v, fila)) return true
-  const prossima = scaletta(menteAccesa).find(x => !superata(x, fila))
-  return !!prossima && prossima.pos === v.pos
-}
+/* raggiunta: superata, oppure **la** prossima della fila. Una sola, e
+   non più una per mestiere: è qui che si legge il contatore unico. Chi
+   chiama ci mette davanti `tuttoAperto()` (vedi `tappaAperta` in
+   `store/profile.js`). */
+export const raggiunta = (v, fila) => v.pos <= fila
 
 /* la voce dopo, seguendo la fila: è quella che il cartello di fine tappa
    annuncia e che il tasto «avanti» gioca. Salta quelle già superate —
    chi rigioca una vecchia tappa vuole tornare dov'era — e quelle ancora
    chiuse, che con l'età di mezzo possono capitare anche adesso che il
    contatore è uno. */
-export function dopoDi(voce, fila, menteAccesa = true,
-                       aperta = v => raggiunta(v, fila, menteAccesa)) {
-  const voci = scaletta(menteAccesa)
-  const da = voci.findIndex(v => v.pos === voce.pos)
+export function dopoDi(voce, fila, aperta = v => raggiunta(v, fila)) {
+  const da = SCALETTA.findIndex(v => v.pos === voce.pos)
   if (da < 0) return null
-  return voci.slice(da + 1).find(v => aperta(v) && !superata(v, fila)) ||
-         voci.slice(da + 1).find(v => aperta(v)) || null
+  const resto = SCALETTA.slice(da + 1)
+  return resto.find(v => aperta(v) && !superata(v, fila)) ||
+         resto.find(v => aperta(v)) || null
 }

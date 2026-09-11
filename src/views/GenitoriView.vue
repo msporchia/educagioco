@@ -15,7 +15,6 @@ import { state, esportaTutto, importaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
          etaDelBambino,
-         varianteAccesa, accendiVariante,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
          ritocca, accendiSapere, saperiSpenti, fissaGioco, fissaSapere,
@@ -35,7 +34,6 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata,
          CHI, CODICE, SEGNALA } from '../guide/aiuto.js'
-import { CHIAVE_MENTE, SCALETTA } from '../data/asteroidi.js'
 import Barra from '../components/Barra.vue'
 import ManopolaEta from '../components/eta/Manopola.vue'
 import { anniInLettere } from '../components/eta/lettere.js'
@@ -693,34 +691,6 @@ function cambiaProva() {
     ? `I giochi in prova compaiono nella home di ${chi.value}. Sono a metà: aspettati che cambino.`
     : `I giochi in prova spariscono dalla home di ${chi.value}.` }
 }
-/* ── il calcolo a mente negli asteroidi ──
-   Negli asteroidi le tabelline e i conti a mente stanno in una scaletta
-   sola. Chi vuole solo le tabelline spegne qui: le tappe a mente
-   spariscono dalla fila e i pianeti si richiudono in ordine, senza
-   buchi. Non è un sapere spento (`data/saperi.js` dice cosa il bambino
-   ha fatto a scuola, non che esercizi preferisce) e non è un gioco
-   spento: la carta degli asteroidi resta in home. Premere qui non
-   cancella niente, e riaccendendo la fila torna intera.
-
-   QUELLO CHE SI PERDE VA DETTO, e va detto qui e non solo nel `.md`:
-   l'avanzamento degli asteroidi è **uno solo su una fila sola**
-   (`mate.fila`, il perché in `data/asteroidi.js`), quindi le tappe a
-   mente che stanno dietro a un pianeta superato mentre l'interruttore
-   era spento risultano passate se un giorno torna acceso. Prima qui
-   c'era scritto «i progressi a mente non si perdono, riaccendendo
-   tornano dov'erano»: con due contatori era vero, con uno non lo è
-   più, e una frase così è peggio di nessuna frase — è quella su cui un
-   grande decide. */
-const menteAccesa = computed(() => varianteAccesa(CHIAVE_MENTE))
-const quantiPianeti = SCALETTA.filter(v => v.tipo === 'pianeta').length
-function cambiaMente() {
-  accendiVariante(CHIAVE_MENTE, !menteAccesa.value)
-  esito.value = { ok: true, testo: menteAccesa.value
-    ? `Negli asteroidi ${chi.value} trova tutte e ${SCALETTA.length} le tappe.`
-    : `Negli asteroidi restano i ${quantiPianeti} pianeti delle tabelline. ` +
-      'Le tappe a mente che salta contano come passate, se un giorno le riaccendi.' }
-}
-
 async function azzera() {
   await resetPlayer()
   confermaAzzera.value = false
@@ -1295,21 +1265,6 @@ async function rimetti(v) {
                             ? '1 gioco in prova, ed è nel quadro qui sopra'
                             : sperimentali.length + ' giochi in prova, e sono nel quadro qui sopra')
                         : 'Nascosti: non compaiono in home e nemmeno nel quadro' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
-        <!-- ── un modo di giocare, dentro un gioco ──
-             Non spegne una carta e non spegne un pezzo di scuola: spegne
-             metà di un gioco. Sta fra gli interruttori di casa perché non
-             dipende dall'età — a nessuna età «solo le tabelline» diventa
-             vero o falso. -->
-        <button class="carta interruttore" :class="{ spento: !menteAccesa }"
-                data-flag="mente" @click="cambiaMente">
-          <span class="ico">🧠</span>
-          <b>Negli asteroidi, anche i conti a mente</b>
-          <i>{{ menteAccesa
-                ? 'La scaletta è intera: ' + SCALETTA.length + ' tappe, tabelline e conti a mente'
-                : 'Solo le tabelline: ' + quantiPianeti + ' pianeti in fila. Le tappe a mente saltate contano come passate' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
 

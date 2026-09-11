@@ -92,15 +92,13 @@ const blank = () => ({
      legge è `tappaAperta()`, qui sotto, e i giochi passano da lì: la
      regola sta in un posto solo perché quando stava in cinque il flag si
      è scollato senza che nessuno se ne accorgesse. */
-  /* `varianti` è la terza forma di interruttore, e non è nessuna delle
-     altre due: non spegne un gioco (la carta resta in home) e non spegne
-     un pezzo di scuola (`sa` dice cosa il bambino ha fatto in classe,
-     non che tipo di esercizio preferisce). Spegne un MODO di giocare
-     dentro un gioco — oggi ce n'è uno solo, il calcolo a mente negli
-     asteroidi (`asteroidi:mente`). Elenco di eccezioni come `giochi`:
-     chi non dichiara niente ce l'ha acceso. */
+  /* C'era anche `varianti`, per spegnere un MODO di giocare dentro un
+     gioco: aveva un inquilino solo (il calcolo a mente negli asteroidi)
+     ed è andato via con lui — il perché sta accanto a `guidaGiaVista`,
+     qui sotto. Un salvataggio di ieri può ancora portarselo dietro, e
+     non dà fastidio a nessuno: non lo legge più niente. */
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
-              giochi: {}, sa: {}, varianti: {}, tuttoAperto: false },
+              giochi: {}, sa: {}, tuttoAperto: false },
   /* contatori che salgono e non scendono mai: sono la memoria di quanto
      si è giocato, e i traguardi si misurano quasi tutti qui sopra */
   /* i contatori dello spagnolo hanno un nome loro (`es`, `verbiEs`,
@@ -142,9 +140,11 @@ const blank = () => ({
   /* Il laboratorio delle pozioni. Stessa forma e stesso `v` del castello,
      per la stessa ragione: le tappe sono passate da otto a undici quando
      si è deciso che una tappa porta **una** conversione nuova e non due,
-     e senza il numero di versione un salvataggio di ieri direbbe «sei»
-     intendendo un'altra tappa. Vedi `migraLaboratorio`. */
-  lab: { tappa: 0, libera: false, v: 2 },
+     e da undici a diciassette quando gli attrezzi hanno smesso di
+     contare sempre in grammi — senza il numero di versione un
+     salvataggio di ieri direbbe «sei» intendendo un'altra tappa. Vedi
+     `migraLaboratorio`. */
+  lab: { tappa: 0, libera: false, v: 3 },
   /* Il generale ha la stessa forma delle altre campagne — `tappa` è quanti
      livelli sono stati superati ed è l'indice del prossimo — più due cose
      sue, tenute per livello e non in totale: `ordini` è il RECORD (il
@@ -845,9 +845,9 @@ export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
 
    Quello che questa funzione non tocca è tutto il resto: monete,
    animali, campagne, traguardi, la memoria di cosa il bambino sa — e
-   nemmeno gli altri settaggi (il suono, i giochi in prova, le
-   varianti). L'età decide cosa si vede e cosa si chiede, non cancella
-   niente di quello che è stato guadagnato. */
+   nemmeno gli altri settaggi (il suono, i giochi in prova). L'età decide
+   cosa si vede e cosa si chiede, non cancella niente di quello che è
+   stato guadagnato. */
 export function spostaLEta (anni) {
   const s = state.profile.settings
   const mossa = spostandoLEta({ da: etaDelBambino(), a: anni,
@@ -986,23 +986,20 @@ export const regoleDomande = () => ({
   ritocchi: { ...(state.profile.settings.ritocchi || {}) },
 })
 
-/* ── le varianti: un MODO di giocare dentro un gioco ──
-   Non è l'interruttore di un gioco (la carta resta in home) e non è
-   quello di un sapere: `data/saperi.js` dichiara cosa un bambino ha
-   fatto a scuola, e «preferisco solo le tabelline» non è la stessa cosa
-   — spegnere una variante non toglie nessuna domanda agli altri giochi.
-   Elenco di eccezioni come i giochi, per bambino: chi non dichiara
-   niente ce l'ha accesa, quindi una variante nuova nasce accesa anche
-   per chi ha il profilo di ieri. */
-export const varianteAccesa = chiave =>
-  (state.profile.settings.varianti || {})[chiave] !== false
-export function accendiVariante(chiave, si) {
-  const s = state.profile.settings
-  if (!s.varianti) s.varianti = {}
-  if (si) delete s.varianti[chiave]   // acceso è l'assenza: niente voci inutili nel salvataggio
-  else s.varianti[chiave] = false
-  persist()
-}
+/* ── NON C'È UN QUARTO INTERRUTTORE, e non si rifà ──
+   C'era: `settings.varianti`, «un MODO di giocare dentro un gioco», con
+   dentro una voce sola — `asteroidi:mente`, che toglieva il calcolo a
+   mente dagli asteroidi. Se n'è andato col suo unico inquilino, e il
+   motivo è scritto in `data/asteroidi.js`: spegnere metà di un gioco
+   vuol dire tenerne due, con due file, due numerazioni e due strade in
+   ogni schermata che lo nomina. Le tre forme che restano (un gioco, un
+   pezzo di scuola, i giochi in prova) dicono tutte una cosa che vale in
+   casa o a scuola; questa diceva soltanto «di questo gioco preferisco
+   metà», che è la domanda che le file uniche esistono per non fare.
+
+   Se un giorno servisse davvero togliere un modo di giocare, la strada
+   è l'età e i pezzi di scuola spenti — che tolgono delle domande e non
+   spaccano un gioco in due.
 
 /* ── QUELLO CHE UN BAMBINO HA GIÀ VISTO UNA VOLTA ──
    Serve alle spiegazioni che compaiono **dentro la partita** e devono
@@ -1016,8 +1013,8 @@ export function accendiVariante(chiave, si) {
 
    Sta nelle impostazioni del bambino e non nell'archivio di casa: un
    fratello che apre il gioco per la prima volta deve rivederla anche se
-   l'altro l'ha già superata. Come le varianti, si scrive solo quello che
-   è successo — chi non ha una voce non l'ha mai vista. */
+   l'altro l'ha già superata. Come i giochi spenti, si scrive solo quello
+   che è successo — chi non ha una voce non l'ha mai vista. */
 export const guidaGiaVista = chiave =>
   (state.profile.settings.guideViste || {})[chiave] === true
 export function segnaGuidaVista(chiave) {
@@ -1378,11 +1375,6 @@ export const mateProgresso = () => state.profile.mate
 export const calcProgresso = () => state.profile.calc
 export const tabellineIntere = (now = Date.now()) => tabellineIntereDi(state.profile, now)
 
-/* quante ne ha di suo ognuna delle due campagne: serve a sapere quando
-   si apre un volo infinito, e si ricava dalla fila invece di essere un
-   secondo elenco da tenere allineato */
-const TOTALI_ASTEROIDI = campagneDaFila(SCALETTA.length)
-
 /* L'UNICO POSTO CHE SCRIVE I DUE SPECCHI, e anche la migrazione.
 
    Un profilo che non ha `fila` viene da prima della fila unica: i suoi
@@ -1405,9 +1397,16 @@ export function sincronizzaAsteroidi(p) {
   const specchio = campagneDaFila(mate.fila)
   mate.tappa = specchio.pianeta
   calc.tappa = specchio.mente
-  // `libera` non torna mai indietro: un volo infinito aperto resta aperto
-  if (specchio.pianeta >= TOTALI_ASTEROIDI.pianeta) mate.libera = true
-  if (specchio.mente >= TOTALI_ASTEROIDI.mente) calc.libera = true
+  /* I DUE VOLI INFINITI SI APRONO INSIEME, quando la fila è finita.
+     Prima ognuno aspettava la sua campagna, e siccome i pianeti
+     finiscono alla posizione 20 e le stazioni alla 22, in mezzo c'erano
+     due sere in cui la mappa offriva «Volo libero ♾️» e non «Volo a
+     mente ♾️» — cioè una metà del gioco che finiva prima dell'altra,
+     dentro una fila che è una. Non sono due campagne: sono due modi di
+     continuare a volare quando non c'è più niente da macinare, e
+     arrivano insieme perché insieme si è finito.
+     `libera` non torna mai indietro: un volo aperto resta aperto. */
+  if (mate.fila >= SCALETTA.length) { mate.libera = true; calc.libera = true }
   return mate
 }
 
