@@ -45,10 +45,20 @@
    ed erano tasti piccoli premuti da dita piccole. Chi cambia questi
    numeri cambi anche `larghezzaAttrezzi` in `Gioco.vue`, che li usa per
    sapere quanto è larga la barretta e non farla uscire dallo schermo. */
-.fa-attrezzi button { width: 44px; height: 44px; border: none; border-radius: 11px;
+.fa-attrezzi button { position: relative; width: 44px; height: 44px; border: none;
+  border-radius: 11px;
   background: #3d5c42; color: #f4efe2; font-size: 19px; cursor: pointer }
 .fa-attrezzi button:active { transform: scale(.92) }
 .fa-attrezzi button:disabled { opacity: .4 }
+/* Il prezzo di un gesto, appeso al tasto che lo fa. Sta **sotto**
+   l'icona e non sopra perché la barretta si apre sopra la cosa
+   selezionata: un cartellino in alto finirebbe contro l'oggetto, e
+   quello che si sta per pagare va letto senza spostare la testa. Il
+   tasto non si allarga — è la misura minima di un polpastrello, e
+   `larghezzaAttrezzi` in `Gioco.vue` la dà per buona. */
+.fa-attrezzi .fa-costo-gesto { position: absolute; left: 0; right: 0; bottom: 1px;
+  font-size: 9px; line-height: 1; letter-spacing: -.4px; color: #f0d98a;
+  pointer-events: none }
 
 /* ── i pannelli ──────────────────────────────────────────────────── */
 .fa-velo { position: absolute; inset: 0; z-index: 9; display: grid;

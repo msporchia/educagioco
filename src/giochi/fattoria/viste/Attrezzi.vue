@@ -18,10 +18,18 @@
    Spariscono mentre la stai tirando — è quando sono lontani dal dito e
    non servono a niente — e sotto un foglio aperto, che è la stessa
    regola detta da un'altra parte (`doveAttrezzi` in `Gioco.vue`). */
+/* ── QUELLO CHE COSTA PORTA IL NUMERO ADDOSSO ──────────────────────
+   Un gesto può dichiarare un `prezzo`, e allora sul tasto compare una
+   monetina col numero. Serve al 📦, che da quando togliere costa
+   quanto spostare toglie una moneta: senza il numero, il gesto è
+   identico a quello di ieri e la moneta se ne va senza che si sia
+   vista chiedere. Gli altri due tasti — girare, rovesciare — non
+   dichiarano niente e restano nudi, che è il modo in cui si vede a
+   colpo d'occhio quale dei tre si paga. */
 defineProps({
   x: { type: Number, default: 0 },
   y: { type: Number, default: 0 },
-  gesti: { type: Array, default: () => [] },   // [{ chiave, icona, titolo, spento }]
+  gesti: { type: Array, default: () => [] },   // [{ chiave, icona, titolo, prezzo, spento }]
 })
 const emit = defineEmits(['fai', 'fine'])
 </script>
@@ -29,7 +37,9 @@ const emit = defineEmits(['fai', 'fine'])
 <template>
   <div class="fa-attrezzi" :style="{ left: x + 'px', top: y + 'px' }">
     <button v-for="g in gesti" :key="g.chiave" :title="g.titolo"
-            :disabled="g.spento" @click="emit('fai', g.chiave)">{{ g.icona }}</button>
+            :data-attrezzo="g.chiave"
+            :disabled="g.spento" @click="emit('fai', g.chiave)">{{ g.icona }}<span
+      v-if="g.prezzo" class="fa-costo-gesto" data-costo>🪙{{ g.prezzo }}</span></button>
     <button title="ho finito" @click="emit('fine')">✓</button>
   </div>
 </template>

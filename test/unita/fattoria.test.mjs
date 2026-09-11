@@ -155,7 +155,10 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
   uguale('il saldo scende di quel poco', b.saldo(), 50 - COSTO_SPOSTARE)
 }
 
-/* quello che si mette via torna in magazzino e da lì si ripiazza gratis */
+/* quello che si mette via torna in magazzino e da lì si ripiazza gratis.
+   Togliere però **costa quanto spostare**: finché era gratis, «📦 e poi
+   rimetti giù» era uno spostamento a costo zero, e la monetina la pagava
+   solo chi non aveva trovato la scorciatoia. */
 {
   const b = borsaTracciata(50)
   const f = cresciuta({ borsa: borsaInfinita() })
@@ -165,6 +168,8 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
 
   const via = f.mettiVia(barile)
   controlla('mettere via riesce', via.ok)
+  uguale('e costa quanto uno spostamento', via.costo, COSTO_SPOSTARE)
+  uguale('il saldo scende di quel poco', b.saldo(), 50 - COSTO_SPOSTARE)
   uguale('ora ce n\'è uno in magazzino', f.quantiNe('barile'), 1)
   uguale('e non è più in mappa', f.cose.includes(barile), false)
 
@@ -173,8 +178,114 @@ for (const [id, o] of Object.entries(OSTACOLI)) {
   controlla('riposizionarlo dal magazzino riesce', dalMagazzino.ok)
   uguale('a costo zero', dalMagazzino.costo, 0)
   uguale('e viene proprio dal magazzino', dalMagazzino.dalMagazzino, true)
-  uguale('il saldo non è cambiato', b.saldo(), 50)
+  uguale('il giro intero è costato come uno spostamento',
+         b.saldo(), 50 - COSTO_SPOSTARE)
   uguale('il magazzino torna vuoto', f.quantiNe('barile'), 0)
+}
+
+/* togli + rimetti non è più la scorciatoia gratis dello spostamento:
+   i due gesti costano lo stesso, ed è il conto che chiude il buco */
+{
+  const dove = f => f.cellaLibera(14, 14)
+  const spostando = borsaTracciata(50)
+  const f1 = cresciuta({ borsa: borsaInfinita() })
+  const d1 = dove(f1)
+  const panca1 = f1.posa('panchina', d1.x, d1.y).cosa
+  f1.borsa = spostando
+  const a1 = f1.cellaLibera(d1.x + 5, d1.y)
+  f1.posa('panchina', a1.x, a1.y, { sposta: panca1 })
+
+  const togliendo = borsaTracciata(50)
+  const f2 = cresciuta({ borsa: borsaInfinita() })
+  const d2 = dove(f2)
+  const panca2 = f2.posa('panchina', d2.x, d2.y).cosa
+  f2.borsa = togliendo
+  f2.mettiVia(panca2)
+  const a2 = f2.cellaLibera(d2.x + 5, d2.y)
+  f2.posa('panchina', a2.x, a2.y)
+
+  uguale('spostare e togli+rimetti costano uguale',
+         spostando.saldo(), togliendo.saldo())
+}
+
+/* a zero monete non si mette via, e lo si dice: la cosa resta in mappa
+   invece di sparire in un baule non pagato */
+{
+  const b = borsaTracciata(0)
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const q = f.cellaLibera(14, 14)
+  const barile = f.posa('barile', q.x, q.y).cosa
+  f.borsa = b
+
+  const no = f.mettiVia(barile)
+  uguale('senza monete non si mette via', no.ok, false)
+  uguale('e il motivo è quello vero', no.motivo, 'poche-monete')
+  uguale('col prezzo dentro', no.costo, COSTO_SPOSTARE)
+  controlla('il barile è ancora in mappa', f.cose.includes(barile))
+  uguale('e non ne è comparso uno nel baule', f.quantiNe('barile'), 0)
+}
+
+/* i due no che vengono prima del prezzo non costano niente: chi tocca
+   il 📦 su un campo seminato non ha sbagliato nulla da pagare */
+{
+  const b = borsaTracciata(50)
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const q = f.cellaLibera(14, 14)
+  const campo = f.posa('orto', q.x, q.y).cosa
+  f.borsa = b
+  controlla('la semina di prova riesce', f.seminaCampo(campo, 'grano').ok)
+  const saldoDopoLaSemina = b.saldo()
+
+  const no = f.mettiVia(campo)
+  uguale('un campo seminato non si mette via', no.motivo, 'campo-seminato')
+  uguale('e il rifiuto non costa niente', b.saldo(), saldoDopoLaSemina)
+}
+
+/* ── IL SILO MESSO VIA SI RIMETTE GIÙ ──────────────────────────────
+   Il guasto: `posa` chiedeva `quanteNeHo`, che conta **la mappa e il
+   baule**, per decidere se di una cosa `unico` ce n'era già una. Un silo
+   messo via risultava «già uno» — quell'uno era lui, nel baule — e non
+   tornava più sul prato. A schermo diceva pure la cosa sbagliata, perché
+   `Gioco.vue` traduceva ogni no che non fosse di monete in «lì non ci
+   sta», e si finiva a provare tutte le celle del prato una per una.
+   L'unico modo di perdere qualcosa in un gioco che promette il
+   contrario. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const q = f.cellaLibera(14, 14)
+  const silo = f.posa('silo', q.x, q.y).cosa
+  controlla('il silo si posa', !!silo)
+  const altrove = f.cellaLibera(q.x + 6, q.y)
+  uguale('un secondo silo no', f.posa('silo', altrove.x, altrove.y).motivo, 'ne-hai-gia')
+
+  controlla('il silo si mette via', f.mettiVia(silo).ok)
+  uguale('ed è nel baule', f.quantiNe('silo'), 1)
+  uguale('in mappa non ce n\'è più', f.quantiInMappa('silo'), 0)
+
+  const cella = f.cellaLibera(20, 20)
+  controlla('la cella è libera davvero', f.libera(cella.x, cella.y, 2, 1))
+  const torna = f.posa('silo', cella.x, cella.y)
+  controlla('e da lì torna giù', torna.ok, torna.motivo)
+  uguale('senza pagarlo una seconda volta', torna.costo, 0)
+  uguale('perché viene dal baule', torna.dalMagazzino, true)
+  uguale('il baule si svuota', f.quantiNe('silo'), 0)
+
+  /* e il divieto vero regge ancora: uno giù, e il secondo si rifiuta */
+  const terza = f.cellaLibera(cella.x + 6, cella.y)
+  uguale('con uno giù, un altro resta un no',
+         f.posa('silo', terza.x, terza.y).motivo, 'ne-hai-gia')
+}
+
+/* comprarne un secondo guarda invece **anche il baule**: chi ne ha già
+   uno messo via non deve poterne pagare un altro che non gli servirebbe */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  const q = f.cellaLibera(14, 14)
+  const silo = f.posa('silo', q.x, q.y).cosa
+  f.mettiVia(silo)
+  uguale('con uno nel baule non se ne compra un altro',
+         f.compra('silo').motivo, 'ne-hai-gia')
+  uguale('e nel baule ne resta uno solo', f.quantiNe('silo'), 1)
 }
 
 /* girare una cosa che non ci starebbe girata la lascia com'era */

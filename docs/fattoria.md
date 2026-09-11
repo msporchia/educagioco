@@ -18,7 +18,14 @@ pomeriggio a spostare la stessa panchina — ma rimettere una cosa esattamente
 dov'era è gratis, perché cambiare idea a metà gesto non è un errore da punire.
 
 Niente si perde mai: quello che si mette via va in un baule e da lì si
-ripiazza gratis quante volte si vuole.
+ripiazza gratis quante volte si vuole. **Metterla via costa la stessa
+monetina dello spostamento**, e il tasto 📦 lo dice prima che si prema.
+Non è un prezzo in più: è quello di prima detto per bene. Finché togliere
+era gratis, «📦 e poi rimetti giù dal baule» faceva lo stesso lavoro di uno
+spostamento senza pagare niente — cioè la monetina la pagava solo chi non
+aveva trovato la scorciatoia, che è il modo più rapido di insegnare che le
+regole valgono per i distratti. Il conto del gesto intero resta uno:
+togliere 1, riposare dal baule 0.
 
 ## I campi (dal 17 agosto 2026)
 
@@ -405,6 +412,17 @@ esattamente le tre che sono cambiate:
 - **il secondo silo era un doppione.** Adesso il silo è una struttura sola e
   si potenzia, come in Hay Day: niente da capire su cosa faccia la seconda
   copia, perché non se ne mette una seconda.
+
+«Uno solo» vuol dire **uno solo in mappa**, non uno solo al mondo — e per
+un po' ha voluto dire la seconda cosa. Il conto guardava mappa e baule
+insieme, quindi un silo messo via risultava «ne hai già uno» (quell'uno era
+lui, nel baule) e non tornava più sul prato: una cosa comprata, chiusa per
+sempre, nell'unico gioco che promette che non si perde niente. A schermo
+diceva pure «lì non ci sta», perché ogni rifiuto che non fosse di monete
+usciva con quella frase, e si finiva a provare tutte le celle del prato una
+per una. **Un rifiuto che nomina la ragione sbagliata manda a cercare la
+soluzione dove non c'è**, ed è il pezzo che costa di più: il divieto era una
+riga, il cartello che lo spiegava male era mezz'ora di un bambino.
 
 E i silos sono **due, diversi, e servono tutti e due**:
 

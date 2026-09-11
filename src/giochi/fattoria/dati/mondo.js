@@ -124,7 +124,14 @@ export function prezzoPiazzola(quante) {
    non un tavolino dove si passa il pomeriggio a spostare avanti e
    indietro la stessa panchina. Rimettere una cosa esattamente dov'era è
    gratis, e chi è a zero non resta bloccato — la fattoria sta ferma
-   finché non guadagna altre monete giocando. */
+   finché non guadagna altre monete giocando.
+
+   **Lo stesso prezzo lo paga il 📦**, cioè rimettere una cosa nel baule
+   (`Fattoria.mettiVia`). Non è un secondo prezzo: è questo, perché
+   togliere e riposare dal baule fa lo stesso lavoro di uno spostamento,
+   e finché era gratis era la scorciatoia che rendeva gratis anche
+   quello. Riposare dal baule non costa niente, quindi il gesto intero
+   costa una moneta da qualunque parte lo si prenda. */
 export const COSTO_SPOSTARE = 1
 
 /* ── la sorte, senza sorte ─────────────────────────────────────────

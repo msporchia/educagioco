@@ -46,7 +46,7 @@ import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
 import { pezzoAttore } from './dati/atlante.js'
-import { CELLE, SCALA_INIZIALE, piazzolaDi } from './dati/mondo.js'
+import { CELLE, SCALA_INIZIALE, COSTO_SPOSTARE, piazzolaDi } from './dati/mondo.js'
 
 import Roba from './viste/Roba.vue'
 import Vicino from './viste/Vicino.vue'
@@ -1078,6 +1078,24 @@ function muoviPreso(p) {
     : mondo.libera(preso.cx, preso.cy, piede[0], piede[1], da)
 }
 
+/* Perché non si è potuta posare, **detto per esteso**. Era un `else`
+   solo — «Lì non ci sta.» per tutto quello che non fossero le monete — e
+   `posa` di no ne dice quattro: uno solo dei quattro parla di posto.
+   Quello che si leggeva era un cartello che dice il falso, e il caso in
+   cui mentiva davvero era il silo: messo via e ripreso dal baule,
+   `ne-hai-gia` diventava «lì non ci sta», e chi lo leggeva provava tutte
+   le celle del prato una per una. Un rifiuto che nomina la ragione
+   sbagliata manda a cercare la soluzione dove non c'è. */
+function perchePosaNo(r) {
+  if (r.motivo === 'poche-monete')
+    return `Ti servono ${r.costo - monete.value} monete in più.`
+  if (r.motivo === 'ne-hai-gia')
+    return 'Ne hai già uno: di questo ce n\'è uno solo per fattoria.'
+  if (r.motivo === 'non-sbloccato')
+    return `Si apre al livello ${r.liv} della fattoria.`
+  return 'Lì non ci sta.'
+}
+
 function posaPreso() {
   const p = preso
   preso = null
@@ -1085,9 +1103,7 @@ function posaPreso() {
   if (p.bestia) return posaLaBestia(p)
   const r = mondo.posa(p.voce.id, p.cx, p.cy, { sposta: p.da })
   if (!r.ok) {
-    avvisa(r.motivo === 'poche-monete'
-      ? `Ti servono ${r.costo - monete.value} monete in più.`
-      : 'Lì non ci sta.')
+    avvisa(perchePosaNo(r))
     return
   }
   if (!p.da) { segna('fattoriaPosati'); segnaBest('fattoriaVarieta', mondo.tipiPosseduti) }
@@ -1142,7 +1158,13 @@ const gestiDiScelto = computed(() => {
        un tasto che si preme e non fa niente è peggio di un tasto che
        non c'è. */
     ...(puoSpecchiare(v) ? [{ chiave: 'specchia', icona: '⇄', titolo: 'rovescialo' }] : []),
-    { chiave: 'via', icona: '📦', titolo: 'mettilo via' },
+    /* Il prezzo si vede **prima di premere**, ed è la metà che mancava:
+       da quando mettere via costa quanto spostare (`COSTO_SPOSTARE`),
+       un 📦 muto sarebbe una moneta che sparisce senza che nessuno
+       l'abbia vista chiedere. Girare e rovesciare restano senza numero
+       perché restano gratis: il numero c'è dove c'è da pagare. */
+    { chiave: 'via', icona: '📦', titolo: `mettilo via (${COSTO_SPOSTARE} moneta)`,
+      prezzo: COSTO_SPOSTARE },
   ]
 })
 
@@ -1188,10 +1210,17 @@ function attrezzo(chiave) {
        ritorno si buttava — ora buttarlo vorrebbe dire un tasto che non fa
        niente senza spiegare perché. */
     const r = mondo.mettiVia(s)
-    if (!r.ok) return avvisa(r.motivo === 'campo-seminato'
-      ? 'Nel campo c\'è qualcosa che sta crescendo: raccoglilo prima.'
-      : `${(PER_ID[s.id] || {}).nome || 'La macchina'} sta lavorando: ` +
-        'ritira quello che ha fatto, prima.')
+    if (!r.ok) return avvisa(
+      r.motivo === 'campo-seminato'
+        ? 'Nel campo c\'è qualcosa che sta crescendo: raccoglilo prima.'
+      : r.motivo === 'poche-monete'
+        /* Mettere via costa quanto spostare, quindi può mancare la
+           moneta: senza questa riga il tasto non avrebbe fatto niente
+           e non avrebbe detto perché. */
+        ? `Mettere via costa 🪙${r.costo}: ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} ` +
+          `🪙${r.costo - monete.value} in più.`
+        : `${(PER_ID[s.id] || {}).nome || 'La macchina'} sta lavorando: ` +
+          'ritira quello che ha fatto, prima.')
     scelto.value = null
     salva()
   }
@@ -1729,10 +1758,16 @@ function prezziCorrenti() {
    le mostra più, perché posarne una seconda non si può e un tasto che
    risponde «ne hai già uno» è un tasto rotto. Si guarda la mappa e non
    `quanteNeHo`, che conta anche il baule: un silo comprato e non ancora
-   messo giù deve restare prendibile. */
+   messo giù deve restare prendibile.
+
+   È la stessa domanda che fa `posa` (`quantiInMappa`), e adesso passa
+   proprio da lì. Erano due conti scritti in due posti, e quello del
+   motore contava anche il baule: qui il silo messo via si vedeva, si
+   prendeva, e arrivato sul prato il motore diceva di no. Uno scaffale
+   che offre quello che il motore rifiuta è peggio di uno scaffale che
+   non lo offre. */
 function giaPosati() {
-  return CATALOGO.filter(v => v.unico && mondo.cose.some(c => c.id === v.id))
-    .map(v => v.id)
+  return CATALOGO.filter(v => v.unico && mondo.quantiInMappa(v.id) > 0).map(v => v.id)
 }
 
 function tiraVoce({ voce, x, y }) {

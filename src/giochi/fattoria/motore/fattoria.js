@@ -61,6 +61,25 @@
    Non c'è nessun metodo che distrugge. Quello che rimetti via va in
    magazzino e da lì si ripiazza gratis quante volte vuoi; non ti
    rimborsa, ma non sparisce. È la regola su cui un bambino conta.
+
+   ── TOGLIERE COSTA QUANTO SPOSTARE ────────────────────────────────
+   `mettiVia` paga `COSTO_SPOSTARE`, esattamente come `posa(…, {sposta})`,
+   e **non è una tassa in più**: è la stessa tassa detta due volte. Finché
+   togliere era gratis, «📦 e poi rimetti giù dal baule» faceva lo stesso
+   lavoro di uno spostamento a costo zero — cioè la monetina dello
+   spostamento non la pagava nessuno che avesse capito il giro, e chi non
+   l'aveva capito pagava. Una regola che punisce solo chi non ha trovato
+   la scorciatoia è peggio di nessuna regola.
+
+   Il conto resta di una moneta per gesto: togliere 1, rimettere giù dal
+   baule 0 — in tutto 1, come spostare. Il perché del prezzo (una moneta
+   = dieci secondi di esercizio) sta in `CALIBRAZIONE.md`, e il perché di
+   una monetina proprio qui in `dati/mondo.js`.
+
+   Paga **solo il gesto del bambino**: nessun altro metodo di questo file
+   chiama `mettiVia`, e chi ne aggiungesse uno per conto del gioco (una
+   migrazione, un raccolto che si porta via la sua cosa) sappia che così
+   farebbe pagare una cosa che nessuno ha chiesto.
    ═══════════════════════════════════════════════════════════════════ */
 import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
@@ -669,9 +688,18 @@ export class Fattoria {
       return { ok: false, motivo: 'non-sbloccato', liv: livelloDellaVoce(v) }
     /* Di un silo ce n'è **uno solo per tipo**: la capienza è del tipo e
        si compra ingrandendo, quindi il secondo non conterrebbe niente
-       di più. Il baule non lo rivende, e qui si dice di no anche a chi
-       ne avesse uno in magazzino da prima. */
-    if (!sposta && v.unico && this.quanteNeHo(id) > 0)
+       di più.
+
+       Qui si guarda **la mappa e non il baule**, ed è la differenza con
+       `compra` (che guarda tutti e due, perché comprarne un secondo
+       avendone già uno in mano è la spesa che non ha senso). Contando
+       anche il baule, un silo messo via non si poteva più rimettere
+       giù: `quanteNeHo` tornava 1 — quell'1 era proprio il silo nel
+       baule — e `posa` diceva `ne-hai-gia` a chi in mappa non ne aveva
+       nessuno. Cioè una cosa comprata, messa via una volta, chiusa nel
+       baule per sempre: l'unico modo di perdere davvero qualcosa in un
+       gioco che promette che non si perde niente. */
+    if (!sposta && v.unico && this.quantiInMappa(id) > 0)
       return { ok: false, motivo: 'ne-hai-gia' }
     const finto = { id, g: g === null ? (sposta ? sposta.g : 0) : g }
     const [w, h] = piedeDi(finto, v)
@@ -1400,12 +1428,19 @@ export class Fattoria {
   /* ═══════════ il magazzino ═══════════ */
   quantiNe(id) { return this.magazzino[id] || 0 }
 
+  /* Quante ne ho **giù**, cioè in mappa. È la domanda giusta per chi
+     chiede «ce n'è già uno?» di una cosa `unico`: un silo nel baule non
+     contiene niente e non occupa nessun posto — vedi `posa`. */
+  quantiInMappa(id) {
+    return this.cose.reduce((n, c) => n + (c.id === id ? 1 : 0), 0)
+  }
+
   /* Quante ne ho **in tutto**: in mappa e nel baule. È il numero da cui
      dipende il prezzo della prossima (`quantoCosta`), e conta tutte e
      due le parti apposta — se contasse solo la mappa, mettere via un
      campo e ricomprarlo sarebbe il modo di pagarlo sempre 22. */
   quanteNeHo(id) {
-    return this.quantiNe(id) + this.cose.reduce((n, c) => n + (c.id === id ? 1 : 0), 0)
+    return this.quantiNe(id) + this.quantiInMappa(id)
   }
 
   /* Quanto costa **adesso** questa cosa. Quasi tutte costano sempre
@@ -1419,6 +1454,13 @@ export class Fattoria {
     return prezzoDellaVoce(PER_ID[id], this.quanteNeHo(id))
   }
 
+  /* Toglierlo dal prato e rimetterlo nel baule. **Costa quanto
+     spostarlo**, e il perché sta in testa al file: gratis, era la
+     scorciatoia che rendeva gratis anche lo spostamento.
+
+     I due no che vengono prima non costano niente, ed è di proposito:
+     chi tocca il 📦 su un campo seminato non ha fatto niente di male e
+     non deve rimetterci una moneta per essersene accorto. */
   mettiVia(cosa) {
     const i = this.cose.indexOf(cosa)
     if (i < 0) return { ok: false, motivo: 'non-in-mappa' }
@@ -1428,9 +1470,12 @@ export class Fattoria {
        perde — nemmeno per distrazione — quindi si dice no e si aspetta. */
     if (cosa.coltura) return { ok: false, motivo: 'campo-seminato' }
     if (cosa.lavoro) return { ok: false, motivo: 'sta-lavorando' }
+    if (this.borsa.quante() < COSTO_SPOSTARE)
+      return { ok: false, motivo: 'poche-monete', costo: COSTO_SPOSTARE }
+    this.spendi(COSTO_SPOSTARE)
     this.cose.splice(i, 1)
     this.magazzino[cosa.id] = this.quantiNe(cosa.id) + 1
-    return { ok: true, id: cosa.id }
+    return { ok: true, costo: COSTO_SPOSTARE, id: cosa.id }
   }
 
   /* Comprarne uno senza metterlo giù. Dal baule non ci passa più

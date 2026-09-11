@@ -699,6 +699,17 @@ await chiudi()
   await page.locator('.fa-attrezzi button[title="rovescialo"]').click()
   await attendi(page, 200)
 
+  /* ── IL 📦 PORTA IL SUO PREZZO ADDOSSO ──
+     Mettere via costa quanto spostare (`COSTO_SPOSTARE`), e da fuori il
+     gesto è identico a quello di ieri, che era gratis: senza il numero
+     sul tasto la moneta se ne andrebbe senza che si sia vista chiedere.
+     Gli altri due restano nudi, ed è così che si legge a colpo d'occhio
+     quale dei tre si paga. */
+  uguale('il tasto che mette via porta il prezzo scritto sopra',
+         await page.locator('.fa-attrezzi button[data-attrezzo="via"] [data-costo]').count(), 1)
+  uguale('e quello che rovescia no, perché è gratis',
+         await page.locator('.fa-attrezzi button[data-attrezzo="specchia"] [data-costo]').count(), 0)
+
   /* La stessa prova **fuori dalla cella d'appoggio**, ed è quella che
      inchioda il guasto vecchio. La casetta occupa due celle: tenendo
      premuto sulla seconda, il codice di prima l'aveva già in mano allo
