@@ -78,8 +78,13 @@ controlla('toccare una tappa avendo una partita a metà chiede prima',
 await page.locator('[data-azione="riprendi-invece"]').click()
 await page.waitForSelector('.sv-tela', { timeout: 5000 })
 
-/* ---------- 4. si riprende da dove si era ---------- */
-uguale('il campo ripreso aspetta un tocco', await page.locator('[data-attesa]').count(), 1)
+/* ---------- 4. si riprende da dove si era ----------
+   Il campo ripreso nasce **fermo**, e il cartello è il velo della pausa
+   di casa (`giochi/VeloPausa.vue`): prima era una riga scritta apposta
+   qui dentro, cioè lo stesso velo in una seconda copia. */
+uguale('il campo ripreso aspetta un tocco', await page.locator('[data-pausa]').count(), 1)
+controlla('e dice a che punto era',
+          (await page.locator('[data-pausa]').textContent()).includes('mancano'))
 const ripreso = await secondi()
 controlla('e l\'orologio è quello di prima', Math.abs(ripreso - aMeta) <= 1,
           `mancano ${ripreso}s invece di ${aMeta}s`)
@@ -99,11 +104,17 @@ controlla('e si vede', acceso > 200, `${acceso} campioni accesi`)
 /* ---------- 5. sta fermo finché non lo tocchi, e poi riparte ---------- */
 await attendi(page, 1500)
 uguale('il tempo non passa mentre aspetta', await secondi(), ripreso)
+/* e non basta muoversi: il velo copre tutto, e finché c'è lui le frecce
+   non fanno passare un secondo. Prima il cartello stava *dentro* il
+   campo e il primo movimento lo toglieva. */
+await gioca(1200)
+uguale('nemmeno muovendosi sotto il velo', await secondi(), ripreso)
+await page.locator('[data-azione="riprendi"]').click()
+uguale('il cartello sparisce al tocco', await page.locator('[data-pausa]').count(), 0)
 /* tre secondi e non uno: il tetto della giostra (50 ms) fa perdere
    tempo quando un fotogramma è lento, e in un browser senza schermo
    succede — un secondo solo non basta a far girare la cifra */
 await gioca(3000)
-uguale('e il cartello sparisce al primo dito', await page.locator('[data-attesa]').count(), 0)
 const ripartito = await secondi()
 controlla('l\'orologio riparte', ripartito < ripreso, `${ripartito}s contro ${ripreso}s`)
 nota(`ripresa a ${aMeta}s dal traguardo, ripartita fino a ${ripartito}s`)
@@ -118,7 +129,7 @@ await page.locator('.sv-tappa[data-tappa="0"]').click()
 await page.waitForSelector('.sv-tela', { timeout: 5000 })
 uguale('e si ricomincia senza che nessuno chieda niente',
        await page.locator('.sv-modale').count(), 0)
-uguale('da capo', await page.locator('[data-attesa]').count(), 0)
+uguale('da capo', await page.locator('[data-pausa]').count(), 0)
 controlla('con tutto l\'orologio davanti', await secondi() >= 43)
 
 uguale('nessun errore in console', errori.join(' · '), '')

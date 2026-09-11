@@ -24,8 +24,10 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, addCoins, segna, segnaBest } from '../../store/profile.js'
+import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { usaPausa } from '../pausa.js'
+import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
@@ -49,9 +51,6 @@ const RESPIRO = 700          // quanto si guarda la pista prima del cartello
 
 /* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')          // mappa | pista
-/* col foglio del `?` aperto la pista sta ferma: si legge come si gioca
-   senza perdere la gara mentre si legge */
-const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)            // -1 = corsa infinita
 const partita = shallowRef(null)    // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
@@ -66,6 +65,15 @@ let orologio = 0
 let attesa = 0
 let orologioBrindisi = 0
 const giostra = new Giostra(passo)
+
+/* ═══════════ la pausa ═══════════
+   Tutta in `giochi/pausa.js`: il ⏸ della barra, il telefono posato, il
+   foglio del `?`, il cartello di un traguardo. Qui si aggiunge la sola
+   condizione di casa che sia reattiva — col cartello finale davanti non
+   si corre — mentre quello che vive nel motore (`p.finita`,
+   `p.inPausa`) si guarda dentro il battito: uno `shallowRef` non
+   avvisa nessuno quando cambia un campo dentro. */
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
 
 const avanza = progresso(CHIAVE)
 const libera = computed(() => tappaIdx.value < 0)
@@ -103,6 +111,14 @@ const statoLibera = computed(() => ({
 
 const titolo = computed(() =>
   vista.value === 'pista' ? regoleOra.value.nome : 'La corsa dei numeri')
+
+/* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
+   dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
+   che si accende, e una riga che dice a che punto era la gara è quello
+   che gli fa tornare in mente cosa sta per riprendere. */
+const dovEravamo = computed(() => cruscotto.value.infinita
+  ? `🏁 ${cruscotto.value.metri} m corsi`
+  : `🏁 mancano ${cruscotto.value.restano} m`)
 
 /* ═══════════ i suoni ═══════════
    Il motore non suona: dice cosa è successo e qui si decide come. E non
@@ -149,17 +165,22 @@ function reagisci(eventi) {
 }
 
 /* ═══════════ il battito ═══════════
-   La corsa si ferma anche quando c'è **il cartello di un traguardo**
-   davanti (`state.festa`, che `App.vue` mostra a schermo intero per tre
-   secondi buoni): il velo copre la pista, e quando il bambino torna a
-   vederla ha un mostro addosso. Un traguardo che si paga con la partita è
-   un traguardo che si impara a temere. Vale uguale per il foglio del `?`,
-   che copre lo schermo nello stesso modo. */
+   La corsa si ferma quando qualcosa le sta davanti, e l'elenco non sta
+   più qui: è `fermo`, che arriva da `giochi/pausa.js` e vale uguale in
+   tutti i giochi — la pausa chiesta col ⏸, il telefono posato, il
+   cartello di un traguardo (`state.festa`, che `App.vue` mostra a
+   schermo intero per tre secondi buoni), il foglio del `?`. Il motivo
+   per cui il cartello conta: il velo copre la pista, e quando il
+   bambino torna a vederla ha un mostro addosso — un traguardo che si
+   paga con la partita è un traguardo che si impara a temere.
+
+   Quello che resta scritto qui è **roba del motore**, che non è
+   reattiva e va riguardata a ogni fotogramma. */
 function passo(dt) {
   const p = partita.value
   if (!p) return
-  const fermo = p.finita || p.inPausa || state.festa.length || aiutoAperto.value
-  if (!fermo) p.avanza(dt)
+  const bloccato = fermo.value || p.finita || p.inPausa
+  if (!bloccato) p.avanza(dt)
   if (p.eventi.length) reagisci(p.svuotaEventi())
 
   /* il cancello d'oro: la domanda arriva quando il motore si è fermato,
@@ -173,12 +194,16 @@ function passo(dt) {
 
   orologio += dt
   if (orologio > 0.15) { orologio = 0; cruscotto.value = p.cruscotto }
-  pittore?.disegna(p.scena(), fermo ? 0 : dt)
+  pittore?.disegna(p.scena(), bloccato ? 0 : dt)
 }
 
 /* ═══════════ giocare ═══════════ */
 function avvia(indice) {
   clearTimeout(attesa); attesa = 0
+  /* una partita che comincia non comincia in pausa: il telefono posato
+     sulla mappa lascia acceso il freno, e senza questa riga la gara
+     nuova nascerebbe dietro un velo che nessuno ha chiesto */
+  togli()
   tappaIdx.value = indice
   const t = indice < 0 ? LIBERA : CAMPAGNA[indice]
   partita.value = new Partita(new Regole(t))
@@ -234,6 +259,14 @@ function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
+  /* ── rispondere È il tocco che riprende ──
+     Mentre la domanda è a schermo il velo della pausa non si mostra
+     (una domanda è già un velo, e due uno sull'altro sono un gioco
+     rotto) e il ⏸ sparisce dalla barra. Ma il freno può essersi acceso
+     lo stesso — il telefono posato *durante* la domanda — e senza
+     questa riga la corsa resterebbe ferma dietro un velo che non c'è:
+     cioè un gioco impuntato senza niente da toccare. */
+  togli()
   const esito = p?.rispondi(giusto)
   if (!esito) return
   if (giusto) {
@@ -313,6 +346,7 @@ function ancora() {
 
 function allaMappa() {
   clearTimeout(attesa); attesa = 0
+  togli()
   giostra.ferma()
   partita.value = null
   pittore = null
@@ -337,7 +371,11 @@ onUnmounted(() => {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" guida="corsa" @aiuto="aiutoAperto = $event" monete :scura="vista === 'pista' && vestito.buio" @indietro="indietro" />
+    <!-- il ⏸ c'è solo dove scorre qualcosa: sulla mappa non c'è niente
+         da fermare, e dietro una domanda il gioco è già fermo -->
+    <Barra :titolo="titolo" guida="corsa" @aiuto="aiuto" monete
+           :pausa="vista === 'pista' && !domanda" @pausa="metti()"
+           :scura="vista === 'pista' && vestito.buio" @indietro="indietro" />
 
     <div class="co" :style="{ '--co-accento': vestito.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libera="statoLibera"
@@ -354,6 +392,12 @@ onUnmounted(() => {
                :origine="domanda" gioco="corsa" @risposto="risposto" />
 
       <Finale v-if="finale" v-bind="finale" @ancora="ancora" @esci="allaMappa" />
+
+      <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
+           qualunque cosa: la domanda e il cartello finale hanno già la
+           loro pausa, e sopra di loro non ci va -->
+      <VeloPausa v-if="inPausa && vista === 'pista' && !domanda && !finale"
+                 :dove="dovEravamo" @riprendi="togli" />
     </div>
   </div>
 </template>

@@ -105,6 +105,24 @@ l'avanzamento salvato. Tiene lo stato reattivo, decide quale schermata è in
 scena, e passa da `src/giochi/campagne.js` per salvare. Se domani il profilo
 cambia forma, si cambia lì e nessun gioco se ne accorge.
 
+### La pausa, se il gioco ha un orologio
+
+Non si scrive in casa: `usaPausa()` di `pausa.js` e `VeloPausa.vue` sono
+tre righe nel coordinatore, e il contratto sta in testa a `pausa.js`.
+
+```js
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa()
+```
+```html
+<Barra … pausa @pausa="metti()" @aiuto="aiuto" />
+<VeloPausa v-if="inPausa" @riprendi="togli" />
+```
+
+Nel battito, `if (!fermo.value) p.avanza(dt)`. `fermo` somma la pausa, il
+telefono posato, il foglio del `?` e il cartello di un traguardo: erano
+quattro copie scritte a mano, e divergevano. Chi non ha un orologio — un
+posto, non una scaletta — non mette niente.
+
 ## L'avanzamento
 
 Un gioco **non aggiunge un campo suo al profilo**. I giochi vecchi l'hanno

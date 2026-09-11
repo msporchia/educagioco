@@ -20,7 +20,7 @@
    in `viste/`. Se qui dentro comincia a comparire una regola di gioco,
    vuol dire che è nel file sbagliato.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
@@ -55,14 +55,86 @@ const domanda = ref(null)         // la domanda in scena, se c'è
 const scosso = ref(0)             // cambia a ogni colpo: il mostro trema
 const fine = ref(null)            // il cartello di fine discesa
 let ultimoModulo = null           // per non ripetere la stessa materia
-let attesa = 0
 
 const avanza = progresso(CHIAVE)
 const libera = computed(() => tappaIdx.value < 0)
 const dove = computed(() => corsa.value ? corsa.value.dove : 'campagna')
 const stanza = computed(() => corsa.value?.stanza || null)
 
-onUnmounted(() => clearTimeout(attesa))
+/* ═══════════════════════════════════════════════════════════════════
+   L'UNICO OROLOGIO DEL DUNGEON — e perché qui NON c'è il ⏸
+
+   Questo gioco è a turni: si tocca una stanza, si risponde, si aspetta
+   il proprio turno. Non scorre niente — nessun `requestAnimationFrame`,
+   nessun mostro che cammina addosso mentre si pensa — e quindi **non
+   c'è il tasto di pausa**. Un ⏸ dove non si muove nulla non ferma
+   niente, e un tasto che non fa niente insegna che i tasti mentono:
+   quando poi ne arriva uno che serve (il ⏸ di Survivors, quello della
+   Corsa) è già stato svuotato di significato. Chi vuole smettere qui
+   può semplicemente posare il telefono e tornare quando gli pare: la
+   stanza lo aspetta.
+
+   Quello che scorre è **un `setTimeout` solo** — il respiro prima che
+   la domanda compaia — e i `setTimeout` non si accorgono di niente:
+   scattano a schermo spento e col foglio del `?` davanti. Risultato: si
+   riapriva il telefono e la domanda era già lì da mezz'ora, o si
+   leggeva come si gioca e intanto ne arrivava una dietro. Si congela
+   quello che resta e si riparte da lì, che è la stessa cosa che fa
+   `quiz/Domanda.vue` con la sua attesa dell'esito.
+
+   E qui il ritorno **riprende da solo**, al contrario di `pausa.js`:
+   là c'è una partita in corsa da consegnare in faccia a chi ha appena
+   acceso il telefono, qui c'è una schermata ferma che resta ferma per
+   il mezzo secondo che le mancava. */
+let attesa = 0          // il timer, 0 = nessuno
+let scade = 0           // quando scatterebbe, in `performance.now()`
+let restava = 0         // quanto le mancava quando l'hanno congelata
+let alFreddo = false    // schermo spento, o foglio del `?` aperto
+
+function congela() {
+  alFreddo = true
+  if (!attesa) return
+  restava = Math.max(0, scade - performance.now())
+  clearTimeout(attesa)
+  attesa = 0
+}
+
+function scongela() {
+  alFreddo = false
+  if (attesa || !restava) return
+  chiediFra(restava)
+}
+
+/* Spento per davvero: non è una pausa, è «quella domanda non serve
+   più». Senza azzerare anche il residuo, uscire da una stanza mentre il
+   respiro correva e poi riaprire il telefono farebbe comparire la
+   domanda di una stanza in cui non si è più. */
+function spegniLAttesa() {
+  clearTimeout(attesa)
+  attesa = 0
+  restava = 0
+}
+
+/* aperto il foglio del `?`, il respiro si ferma: leggere come si gioca
+   non deve far arrivare una domanda dietro il velo che si sta leggendo */
+function aiuto(aperto) { aperto ? congela() : scongela() }
+
+/* `visibilitychange` si ascolta sul `document`, che è dove viene
+   lanciato: alla finestra ci arriva solo perché risale. */
+function schermo(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') congela()
+  else scongela()
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', schermo)
+  addEventListener('pagehide', schermo)
+})
+onUnmounted(() => {
+  spegniLAttesa()
+  document.removeEventListener('visibilitychange', schermo)
+  removeEventListener('pagehide', schermo)
+})
 
 /* ═══════════ la mappa delle tappe ═══════════
    Le tappe arrivano alla vista già decise: cosa è aperto, quante
@@ -240,7 +312,7 @@ const suoni = {
 
 /* ═══════════ giocare ═══════════ */
 function avvia(tappa, indice) {
-  clearTimeout(attesa)
+  spegniLAttesa()
   tappaIdx.value = indice
   fine.value = null
   domanda.value = null
@@ -275,10 +347,22 @@ function entra(id) {
    quanto dev'essere difficile e chi la sceglie fa il resto. */
 function chiediFra(quando) {
   clearTimeout(attesa)
+  attesa = 0
+  /* ── congelato prima ancora di partire ──
+     Non è un caso di scuola: fra il tocco su una stanza e l'ingresso
+     vero c'è **la camminata della pedina**, che la vista si fa per
+     conto suo. Chi posa il telefono mentre l'eroe cammina arma il
+     respiro a schermo già spento, e senza questa riga la domanda
+     arriverebbe lì — cioè il guasto che tutto il resto è qui per
+     togliere, per la sola strada che resta aperta. */
+  if (alFreddo) { restava = quando; return }
+  restava = 0
+  scade = performance.now() + quando
   attesa = setTimeout(chiedi, quando)
 }
 
 function chiedi() {
+  attesa = 0
   const st = stanza.value
   if (!st || st.che !== 'sfida' || st.momento !== 'domanda') return
   try {
@@ -349,7 +433,7 @@ function scegli(chiave) {
 
 /* si esce dalla stanza e si torna sulla mappa — o si chiude la discesa */
 function avanti() {
-  clearTimeout(attesa)
+  spegniLAttesa()
   corsa.value.esci()
   if (corsa.value.dove === 'fine') chiudi()
   else suoni.passo()
@@ -357,7 +441,7 @@ function avanti() {
 
 /* ═══════════ com'è finita ═══════════ */
 function chiudi() {
-  clearTimeout(attesa)
+  spegniLAttesa()
   domanda.value = null
   const c = corsa.value
   const vinta = c.vinta
@@ -408,7 +492,7 @@ function ancora() {
 }
 
 function allaMappa() {
-  clearTimeout(attesa)
+  spegniLAttesa()
   fine.value = null
   domanda.value = null
   corsa.value = null
@@ -422,7 +506,11 @@ function indietro() {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" guida="dungeon" :monete="!corsa" scura @indietro="indietro">
+    <!-- niente ⏸: qui non scorre niente da fermare (vedi «l'unico
+         orologio del dungeon», più su). Il `?` invece sì: mentre si
+         legge, il respiro prima della domanda sta fermo. -->
+    <Barra :titolo="titolo" guida="dungeon" :monete="!corsa" scura
+           @aiuto="aiuto" @indietro="indietro">
       <!-- Un bottone solo, non cinque gettoni: i numeri che servono a
            decidere, e toccandoli si apre la scheda con l'equipaggiamento.
            Le emoji degli oggetti stavano qui e spingevano fuori il

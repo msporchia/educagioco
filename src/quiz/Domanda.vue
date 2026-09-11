@@ -57,7 +57,8 @@ import Giudizio from '../components/Giudizio.vue'
 import { giudiziAccesi } from '../store/giudizi.js'
 import { annota } from './memoria.js'
 import { guardaComeVa } from './allarme.js'
-import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando, PONDERA }
+import { serveLaDritta, troppoDiFretta, spiegazioneDi, attesaDellEsito, evidenziando,
+         tempoDaAnnotare, PONDERA }
   from './nucleo/domanda.js'
 import { pesoDellaFretta } from './fretta.js'
 
@@ -95,7 +96,30 @@ const emit = defineEmits(['risposto'])
 let cieca = 0
 
 const scelto = ref(-1)
-const partenza = ref(0)
+/* ══════════ GLI OROLOGI SI FERMANO COL TELEFONO ══════════
+   Un gioco che gira su `requestAnimationFrame` si congela da sé quando
+   la pagina sparisce. Questa scheda no: è fatta di `setTimeout` e di
+   `performance.now()`, e quelli non si accorgono di niente. Due guasti,
+   tutti e due invisibili da dentro.
+
+   **Il tempo di parete.** `partenza` era un istante, e il tempo della
+   risposta la differenza da adesso: il telefono posato per quaranta
+   minuti con la domanda a schermo annotava quaranta minuti in
+   `store/srs.js`, che di quel numero tiene una media pesata al 45% —
+   un campione solo, e la tipologia risulta «ci mette venti minuti» per
+   sempre. Adesso si conta **solo il tempo in cui la domanda era
+   davanti agli occhi**: `visto` accumula, `partenza` vale 0 mentre la
+   pagina è nascosta, e il tetto (`tempoDaAnnotare`) copre quel che
+   resta.
+
+   **L'attesa dell'esito.** `avanti` scattava lo stesso a schermo
+   spento, quindi la domanda dopo arrivava mentre il telefono era in
+   tasca: si tornava e si trovava una schermata nuova al posto della
+   spiegazione che non si era ancora letta. Quell'attesa **esiste per
+   essere letta**, quindi si congela quello che resta e riparte da lì —
+   barra compresa, che senza riparte da capo o resta piena. */
+let partenza = 0        // quando è ricominciato il conto (0 = fermo)
+let visto = 0           // quanto è già stata guardata, in ms
 /* ── la finestra cieca ──
    Una domanda appena comparsa **non si lascia toccare** per un pelo di
    tempo. Non è pignoleria: i giochi che incatenano domande — il
@@ -138,8 +162,13 @@ const diFretta = ref(false)
 /* il timer della prossima domanda e il modo di anticiparlo: non sono
    `ref` perché non si disegnano, e un `ref` che nessuno guarda è solo
    una cosa in più che può restare indietro */
-let avanti = null
-let salta = null
+let avanti = null        // il timer
+let vaiAvanti = null     // cosa fa quando scatta
+let scade = 0            // a che istante scatterebbe
+/* la barra dell'attesa si rifà da capo quando l'attesa riparte dopo un
+   telefono posato: un'animazione CSS già avviata non cambia durata, e
+   senza questa chiave la riga resterebbe piena mentre si aspetta */
+const giro = ref(0)
 const tele = ref([])          // i canvas delle risposte disegnate
 const teloSoggetto = ref(null)
 /* ── LA LENTE ──
@@ -257,11 +286,18 @@ function classe(i) {
   return 'spenta'
 }
 
+/* quanto è stata guardata questa domanda, in secondi: `visto` più il
+   pezzo in corso, e 0 per il pezzo che non c'è mentre il telefono è
+   posato */
+function guardata() {
+  return tempoDaAnnotare(visto + (partenza ? performance.now() - partenza : 0))
+}
+
 function scegli(i) {
   if (scelto.value >= 0 || !pronta.value) return
   scelto.value = i
   const giusto = i === props.domanda.giusta
-  const tempo = (performance.now() - partenza.value) / 1000
+  const tempo = guardata()
   quantoCiHaMesso.value = tempo
   /* il ripasso si annota subito, non fra un secondo e mezzo: il gioco
      che sta sotto può chiudere la domanda appena arriva l'evento, e
@@ -306,7 +342,7 @@ function scegli(i) {
     penale: penale.attesa,
   })
   attesa.value = quanto
-  const vaiAvanti = () => emit('risposto', {
+  vaiAvanti = () => emit('risposto', {
     giusto,
     indice: i,
     chiave: props.domanda.chiave,
@@ -317,16 +353,29 @@ function scegli(i) {
        posti con quattro soglie diverse */
     diFretta: diFretta.value,
   })
-  /* tenuto da parte per chi salta: `clearTimeout` senza questo
-     manderebbe l'evento due volte, e il pannello scorrerebbe di due
-     domande a ogni tocco */
-  avanti = setTimeout(() => { avanti = null; vaiAvanti() }, quanto)
-  salta = () => {
-    if (!avanti) return
-    clearTimeout(avanti)
-    avanti = null
-    vaiAvanti()
-  }
+  programma(quanto)
+}
+
+/* Il timer dell'esito, in un posto solo: lo arma chi risponde e lo
+   riarma chi torna a guardare lo schermo, e tutti e due devono
+   ricordarsi di segnare **quando scade** — se no il pezzo che resta,
+   quando il telefono si posa, non si può calcolare. */
+function programma(quanto) {
+  clearTimeout(avanti)
+  scade = performance.now() + quanto
+  avanti = setTimeout(() => { avanti = null; salta() }, quanto)
+}
+
+/* `vaiAvanti` si svuota prima di chiamarlo: senza, un tocco che arriva
+   mentre il timer sta scattando manderebbe l'evento due volte, e il
+   pannello scorrerebbe di due domande a ogni tocco. */
+function salta() {
+  if (!vaiAvanti) return
+  clearTimeout(avanti)
+  avanti = null
+  const fatto = vaiAvanti
+  vaiAvanti = null
+  fatto()
 }
 
 /* il tocco che salta l'attesa: vale solo dopo aver risposto, e solo se
@@ -337,7 +386,7 @@ function scegli(i) {
    volta, perché il pannello ascoltava tutti e due — un difetto che si
    vede solo contando, e infatti l'ha trovato il contatore del giro. */
 function saltaAttesa() {
-  if (props.saltabile && salta) salta()
+  if (props.saltabile) salta()
 }
 
 /* La lente si apre solo a domanda pronta: nei primi millisecondi il
@@ -363,7 +412,7 @@ const daGiudicare = () => ({
   testo: props.domanda.testo || '',
   esito: scelto.value < 0 ? 'aperta'
     : scelto.value === props.domanda.giusta ? 'giusta' : 'sbagliata',
-  tempo: partenza.value ? (performance.now() - partenza.value) / 1000 : 0,
+  tempo: guardata(),
 })
 
 /* ══════════ UNA DOMANDA NUOVA AZZERA TUTTO ══════════
@@ -398,10 +447,12 @@ async function inizia() {
   diFretta.value = false
   clearTimeout(avanti)
   avanti = null
-  salta = null
+  vaiAvanti = null
+  scade = 0
   pronta.value = false
   ingrandito.value = false
-  partenza.value = performance.now()
+  visto = 0
+  partenza = performance.now()
   cieca = setTimeout(() => { pronta.value = true }, CIECA)
   await nextTick()
   if (props.domanda.soggetto?.scena && teloSoggetto.value)
@@ -411,13 +462,58 @@ async function inizia() {
   })
 }
 
-onMounted(inizia)
+/* ── il telefono che si posa, e che torna ──
+   Tre orologi da fermare, e uno solo va rimesso in moto. Il conto del
+   tempo riparte (era fermo, non perso) e l'attesa dell'esito riparte
+   **da quello che restava**: si torna e si ha ancora il tempo di
+   leggere la spiegazione. La finestra cieca invece no — quei 320 ms
+   sono passati da un pezzo, e chi torna non ha nessun fantasma del dito
+   da schivare.
+
+   Nessuno riprende «da solo» niente di più di così: qui non c'è nessuna
+   partita che riparte in corsa (quella è `giochi/pausa.js`, e infatti
+   aspetta un tocco). Qui c'è una schermata ferma che resta ferma per il
+   tempo che le mancava. */
+function schermo(e) {
+  if (e?.type === 'pagehide' || document.visibilityState === 'hidden') {
+    if (partenza) { visto += performance.now() - partenza; partenza = 0 }
+    if (avanti) {
+      attesa.value = Math.max(0, Math.round(scade - performance.now()))
+      clearTimeout(avanti)
+      avanti = null
+    }
+    return
+  }
+  if (!partenza) partenza = performance.now()
+  /* c'era un'attesa in corso: riparte da dov'era, e la barra con lei */
+  if (!avanti && vaiAvanti) {
+    giro.value++
+    programma(attesa.value)
+  }
+}
+
+onMounted(() => {
+  inizia()
+  /* sul `document`, che è dove `visibilitychange` viene lanciato: alla
+     finestra ci arriva solo perché risale */
+  document.addEventListener('visibilitychange', schermo)
+  addEventListener('pagehide', schermo)
+})
 /* Sull'oggetto, non sulla chiave: due domande di fila possono avere la
    stessa `chiave` (la stessa tabellina chiesta due volte) e restare due
    domande diverse a cui si deve poter rispondere due volte. */
 watch(() => props.domanda, inizia)
 
-onUnmounted(() => clearTimeout(cieca))
+/* `avanti` va spento come `cieca`: un gioco che chiude la domanda
+   appena arriva l'evento smonta questo componente col timer ancora
+   armato, e quello scatta lo stesso — emettendo `risposto` su un
+   componente che non c'è più. */
+onUnmounted(() => {
+  clearTimeout(cieca)
+  clearTimeout(avanti)
+  document.removeEventListener('visibilitychange', schermo)
+  removeEventListener('pagehide', schermo)
+})
 </script>
 
 <template>
@@ -470,7 +566,7 @@ onUnmounted(() => clearTimeout(cieca))
            gioco fermo. -->
       <div v-if="attesa" class="qz-avanti" :class="{ saltabile }"
            @click="saltaAttesa">
-        <i :style="{ animationDuration: attesa + 'ms' }"></i>
+        <i :key="giro" :style="{ animationDuration: attesa + 'ms' }"></i>
       </div>
 
       <div class="qz-esito">

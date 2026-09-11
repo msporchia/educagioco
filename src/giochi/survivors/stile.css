@@ -113,9 +113,9 @@
              color: #fff; font-size: 16px; font-weight: 800; text-shadow: 0 2px 6px #000b;
              pointer-events: none; animation: sv-respira 1.8s infinite }
 @keyframes sv-respira { 0%, 100% { opacity: .95 } 50% { opacity: .45 } }
-/* il campo è fermo e non si capisce perché: la scritta sta in mezzo,
-   dove si guarda, e non in fondo come la dritta di chi comincia */
-.sv-attesa { bottom: auto; top: 30%; font-size: 19px }
+/* qui c'era `.sv-attesa`, il «tocca per ripartire» di una partita
+   ripresa: adesso quel cartello è il velo della pausa, che è di casa
+   (`giochi/VeloPausa.vue`) e porta il suo stile con sé */
 
 .sv-presi { position: absolute; left: 8px; right: 8px; bottom: 6px; text-align: center;
             font-size: 17px; pointer-events: none; line-height: 1.4;

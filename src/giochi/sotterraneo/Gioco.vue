@@ -30,6 +30,8 @@ import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
          scelta, ricorda } from '../campagne.js'
+import { usaPausa } from '../pausa.js'
+import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
@@ -75,8 +77,6 @@ const FERMO_PX = 16
 
 const tela = ref(null)
 const corsa = shallowRef(null)
-/* aperto il foglio del `?`, il tempo del sotterraneo si ferma */
-const aiutoAperto = ref(false)
 /* Quale discesa si sta giocando: un indice della campagna, oppure
    `INDICE_ABISSO` (−1). **`null` vuol dire nessuna**, e non più −1: da
    quando l'abisso ha un indice suo, «minore di zero» non è più la stessa
@@ -109,6 +109,29 @@ let orologio = 0
 let ultimoAvviso = 0
 
 const avanza = progresso(CHIAVE)
+
+/* ═══════════ la pausa ═══════════
+   Tutta in `giochi/pausa.js`: il ⏸ della barra, il telefono posato, il
+   foglio del `?` (che prima si teneva un `ref` suo, `aiutoAperto`) e —
+   questo non c'era — **il cartello di un traguardo**. `state.festa`
+   copre lo schermo per tre secondi buoni, e finché il giro non lo
+   contava quei tre secondi la caverna continuava a girare sotto: un
+   mostro che arriva addosso mentre si guarda una medaglia è un colpo che
+   nessuno vede, e un traguardo che si paga con una botta è un traguardo
+   che il bambino impara a temere.
+
+   Una discesa è a passi e non a riflessi, quindi la pausa non salva
+   nessuna vita: serve a **fermarsi volendo** senza uscire, che qui
+   costava una risalita, e a non ritrovarsi in cammino appena si
+   riaccende il telefono. Quello che sta nel motore (`c.finita`, il
+   foglio aperto) non è reattivo e si guarda dentro il giro. */
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!fine.value })
+
+/* Dove il gioco scorre, ed è l'unico posto in cui il ⏸ e il velo hanno
+   senso: dentro una discesa, senza una domanda davanti — quella è già un
+   velo, e due veli uno sull'altro sono un gioco rotto — e senza il
+   cartello di fine. */
+const siGioca = computed(() => !!corsa.value && !domanda.value && !fine.value)
 
 /* ═══════════ chi scende ═══════════
    Si sceglie una volta e resta (`cfg.eroe`, che è il posto delle scelte
@@ -171,6 +194,10 @@ function riprendiDiscesa() {
      del cavaliere di sistema: è quasi sempre la stessa persona */
   const c = dato ? leggi(dato, tappaDi(dato.tappa), chiEro.value || DI_PARTENZA) : null
   if (!c) { scorda(); return }
+  /* una discesa che riparte non riparte in pausa: il telefono posato
+     sulla mappa lascia acceso il freno, e senza questa riga si
+     ritroverebbe dietro un velo che nessuno ha chiesto */
+  togli()
   tappaIdx.value = dato.tappa
   fine.value = null
   domanda.value = null
@@ -241,6 +268,14 @@ const eroe = dallaCorsa(c => {
     polso: q > 0.6 ? '#4fce7c' : q > 0.3 ? '#f0b429' : '#e0432f',
   }
 })
+
+/* Cosa si stava facendo, sul velo della pausa. Una discesa dura più di
+   una seduta: chi riapre il telefono dopo mezz'ora non sta guardando il
+   gioco, sta guardando il telefono che si accende, e «piano 2 di 3 ·
+   ❤️ 24» è quello che gli fa tornare in mente dov'era. */
+const dovEravamo = dallaCorsa(c => `🕳️ piano ${c.piano + 1}`
+  + (c.senzaFondo ? '' : ` di ${c.quantiPiani}`)
+  + ` · ❤️ ${c.vita}`, '')
 
 /* Il foglio aperto è **sempre lo stesso oggetto** finché resta aperto, e
    per questo nessuno dei conti qui sotto si deriva da lui: guardano
@@ -420,6 +455,7 @@ function pianoDaProva(c) {
 }
 
 function avvia(i) {
+  togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
   tappaIdx.value = i
   fine.value = null
@@ -474,11 +510,19 @@ function giro() {
     raf = requestAnimationFrame(passo)
     const dt = Math.min(0.05, (ora - prima) / 1000)
     prima = ora
-    orologio += dt
     const c = corsa.value
-    /* col foglio del `?` davanti il sotterraneo sta fermo: il velo copre
-       lo schermo, e quello che si muove sotto non lo vede nessuno */
-    if (!c || c.finita || aiutoAperto.value) return
+    /* Cosa tiene ferma la discesa non si scrive più qui: è `fermo`, che
+       arriva da `giochi/pausa.js` e vale uguale in tutti i giochi — la
+       pausa chiesta col ⏸, il telefono posato, il foglio del `?`, il
+       cartello di un traguardo. Quello che resta è roba del motore, che
+       vive in uno `shallowRef` e non avvisa nessuno quando cambia. */
+    if (!c || c.finita || fermo.value) return
+    /* l'orologio si muove **dopo**: è il tempo del sotterraneo, non
+       quello dell'orologio a muro, e lo leggono il salvataggio pigro,
+       l'avviso che sbiadisce e lo scambio che resta a schermo. Contarlo
+       anche in pausa vorrebbe dire tornare dal telefono in tasca e
+       vedere sparire all'istante la riga che si era lasciata a metà. */
+    orologio += dt
     c.passo(dt)
     /* col foglio aperto la telecamera alza l'eroe, così la porta o il
        forziere di cui si sta leggendo restano visibili sopra il
@@ -553,6 +597,12 @@ watch(() => { tic.value; return corsa.value?.chiesta?.id }, (id) => {
 
 function risposto({ giusto }) {
   domanda.value = null
+  /* ── rispondere È il tocco che riprende ──
+     Mentre la domanda è a schermo il velo della pausa non si mostra e il
+     ⏸ sparisce dalla barra, ma il freno può essersi acceso lo stesso —
+     il telefono posato *durante* la domanda. Senza questa riga, appena
+     risposto comparirebbe un velo che non si è chiesto. */
+  togli()
   risolvi(giusto)
 }
 
@@ -590,6 +640,7 @@ function risolvi(giusto) {
 function scappa() {
   const e = corsa.value.scappa()
   domanda.value = null
+  togli()          // stessa ragione di `risposto`: scappare è un tocco
   tic.value++
   if (e?.che === 'svenuto') suono.fine()
   else { suoni.graffio(); setTimeout(() => suoni.passo(), 160) }
@@ -684,6 +735,7 @@ function ancora() {
 
 function allaMappa() {
   cancelAnimationFrame(raf)
+  togli()
   if (pittore) pittore.ferma()
   fine.value = null
   domanda.value = null
@@ -795,20 +847,25 @@ function nienteClickDalCampo(e) { if (e.cancelable) e.preventDefault() }
 /* ── il telefono che si mette in tasca ──
    Su un telefono l'app non si chiude: sparisce. `visibilitychange` è
    l'ultimo momento in cui si può ancora scrivere, e `flushNow` serve
-   perché il salvataggio pigro potrebbe non scattare mai. */
+   perché il salvataggio pigro potrebbe non scattare mai. Che la discesa
+   si fermi lo fa `giochi/pausa.js`, che ascolta lo stesso evento per
+   conto suo: qui resta solo la scrittura. */
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
 
 onMounted(() => {
   addEventListener('resize', ridimensiona)
-  addEventListener('visibilitychange', seSparisce)
+  /* `visibilitychange` si ascolta sul `document`, che è dove viene
+     lanciato: alla finestra ci arriva solo perché risale. Il `pagehide`
+     invece è della finestra e basta. */
+  document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
 onUnmounted(() => {
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)
-  removeEventListener('visibilitychange', seSparisce)
+  document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   cancelAnimationFrame(raf)
   if (pittore) pittore.ferma()
@@ -818,7 +875,10 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiutoAperto = $event" :monete="!corsa" scura @indietro="indietro">
+    <!-- il ⏸ c'è solo dentro una discesa: sulla mappa non c'è niente da
+         fermare, e dietro una domanda il gioco è già fermo -->
+    <Barra :titolo="titolo" guida="sotterraneo" @aiuto="aiuto" :monete="!corsa" scura
+           :pausa="siGioca" @pausa="metti()" @indietro="indietro">
       <button v-if="corsa && eroe" class="sot-io" data-azione="zaino-barra"
               aria-label="lo zaino" @click="zainoAperto = true">
         <span class="sot-polso" :style="{ '--sot-polso': eroe.polso }">
@@ -1073,6 +1133,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>
+
+      <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
+           qualunque cosa: la domanda e il cartello di fine hanno già la
+           loro pausa, e sopra di loro non ci va -->
+      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" />
     </div>
   </div>
 </template>

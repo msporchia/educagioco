@@ -241,6 +241,20 @@ ricomincia la discesa. Una partita persa è un dispiacere; una partita
 ripresa con dei campi che non tornano è un gioco rotto in un modo che
 nessuno sa spiegare.
 
+### E ci si può anche solo fermare
+
+Uscire e riprendere vuol dire tornare alla mappa. Per la mamma che chiama
+basta meno: il **⏸** in barra ferma la discesa dov'è — il velo dice «piano
+2 di 3 · ❤️ 14» — e si riparte al tocco. Il telefono posato fa lo stesso da
+sé, e **al ritorno non riparte da solo**: chi riaccende il telefono sta
+guardando il telefono che si accende, non la caverna. È il pezzo comune di
+`src/giochi/pausa.js`, lo stesso di [Survivors](survivors.md) e della
+[corsa](corsa.md); porta con sé anche una cosa che qui mancava, cioè che
+il **cartello di un traguardo** ferma la discesa invece di lasciarla
+correre dietro al velo per tre secondi. Il ⏸ non compare davanti a una
+domanda: quella è già un velo, e due veli uno sull'altro sono un gioco
+rotto.
+
 ## Quello che sta per terra si tocca
 
 Le gemme si prendono camminandoci sopra — sono il conto in tasca, non una

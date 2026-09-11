@@ -17,8 +17,11 @@
        segnalato da un genitore: la giornata in cui il totale lo batti
        tu sulla tastiera, quella in cui le copie e i centesimi si
        incontrano, e la cassa rotta in fondo
+     · la pausa ferma la fila — e **il cartello del cambio banco**, che
+       è un `setTimeout` e quindi scatterebbe anche col velo davanti
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi,
+         TELEFONO } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -483,6 +486,73 @@ uguale('col resto giusto il cliente è servito', rotta.serviti, rotta.primaDelSi
 await scatto(page, 'bancarella-cassa-rotta')
 nota(`cassa rotta: resto ${rotta.resto}c, rifiutata a mente nessuna moneta ` +
      `(posati ${rotta.accettata} pezzi da ${rotta.grossa}c, cioè troppi)`)
+
+/* ---------- 8 bis. la pausa, col dito ----------
+   Due orologi da fermare, e sono di specie diversa. La pazienza della
+   fila scorre a fotogrammi; il cartello del cambio banco è un
+   `setTimeout` di un secondo e mezzo, cioè **tempo di parete**, e
+   quello scatta lo stesso col velo davanti. Il telefono posato proprio
+   lì tornava con la fila già al banco e nessuno che avesse letto dove
+   si era arrivati. */
+const veli = () => page.locator('[data-pausa]').count()
+const attesaCliente = () => page.evaluate(() => {
+  const c = window.__shop.coda.value[0]
+  return c ? Math.round(c.restaPazienza * 10) : -1
+})
+
+await page.evaluate(() => window.__shop.inizia(0))
+await page.waitForSelector('button[aria-label="pausa"]', { timeout: 3000 })
+const cartelloSu = await page.evaluate(() => !!window.__shop.cambio.value)
+await page.locator('button[aria-label="pausa"]').click()
+uguale('si arriva al banco e il cartello è su', cartelloSu, true)
+uguale('il velo compare', await veli(), 1)
+await attendi(page, 2200)
+uguale('e il secondo e mezzo del cartello non se ne va da solo',
+       await page.evaluate(() => !!window.__shop.cambio.value), true)
+await page.locator('[data-azione="riprendi"]').click()
+uguale('il velo sparisce', await veli(), 0)
+await page.waitForFunction(() => !window.__shop.cambio.value, { timeout: 3000 })
+nota('il cartello del cambio banco riparte da quello che gli restava')
+
+/* la fila: la pazienza è la cosa che questo gioco toglie a chi è lento */
+await page.waitForFunction(() => window.__shop.cliente.value &&
+                                 window.__shop.momento.value === 'raccolta', { timeout: 5000 })
+await attendi(page, 600)
+const inFila = await attesaCliente()
+controlla('e intanto la fila si spazientisce', inFila > 0)
+
+await page.locator('button[aria-label="pausa"]').click()
+uguale('il velo compare di nuovo', await veli(), 1)
+/* il fantasma: il dito che ha premuto ⏸ si lascia dietro un click, che
+   arriva al velo appena nato e lo toglierebbe da solo */
+await page.evaluate(() => document.querySelector('[data-azione="riprendi"]')?.click())
+uguale('il click che il dito si lascia dietro non la toglie', await veli(), 1)
+const ferma = await attesaCliente()
+await attendi(page, 1400)
+uguale('e la fila non perde un decimo di secondo', await attesaCliente(), ferma)
+await scatto(page, 'bancarella-pausa')
+const suBanco = await page.evaluate(() => window.__shop.BANCHI[window.__shop.T.value.banco].nome)
+controlla('la pausa dice a che banco si era',
+          (await page.locator('[data-pausa]').textContent()).includes(suBanco), suBanco)
+
+await page.locator('[data-azione="riprendi"]').click()
+uguale('e si riparte al tocco', await veli(), 0)
+await attendi(page, 700)
+controlla('il cliente ricomincia ad aspettare', await attesaCliente() < ferma,
+          `${await attesaCliente()} contro ${ferma}`)
+
+/* il `?` c'era già come tasto e non fermava niente: si leggeva «come si
+   gioca» e intanto il cliente se ne andava */
+await page.locator('button[aria-label="aiuto"]').click()
+await attendi(page, 300)
+const conIlFoglio = await attesaCliente()
+await attendi(page, 1400)
+uguale('col `?` aperto la fila sta ferma', await attesaCliente(), conIlFoglio)
+uguale('e il velo della pausa non ci si mette sopra', await veli(), 0)
+await page.locator('[data-azione="chiudi-aiuto"]').click()
+await attendi(page, 700)
+controlla('chiuso il foglio si riparte', await attesaCliente() < conIlFoglio,
+          `${await attesaCliente()} contro ${conIlFoglio}`)
 
 /* ---------- 9. niente errori per strada ---------- */
 uguale('nessun errore in console', errori.length, 0)

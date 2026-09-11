@@ -104,6 +104,27 @@ Il ragionamento sotto pressione — c'è sempre la tentazione di scendere
 ancora — e un ripasso trasversale che tocca materie diverse nella stessa
 partita. È anche il gioco che introduce l'idea del **rischio calcolato**.
 
+## Fermarsi: qui non serve un tasto
+
+Negli altri giochi a orologio — [Survivors](survivors.md), il
+[sotterraneo](sotterraneo.md), la [corsa](corsa.md) — c'è un **⏸** in barra.
+Qui no, ed è voluto: il Dungeon è a turni, la stanza aspetta, e nessun
+mostro cammina addosso mentre si pensa. Un ⏸ dove non si muove niente non
+ferma niente, e un tasto che non fa niente insegna che i tasti mentono —
+quando poi ne arriva uno che serve è già stato svuotato di significato.
+Chi vuole smettere posa il telefono e torna quando gli pare.
+
+L'unica cosa che qui scorre è il mezzo secondo di respiro **prima che la
+domanda compaia**, e quello sì che va fermato a mano: un `setTimeout`
+scatta uguale a schermo spento, quindi si riapriva il telefono e la
+domanda era già lì da mezz'ora, o si apriva il `?` e ne arrivava una
+dietro il foglio che si stava leggendo. Adesso si congela quello che
+restava e si riparte da lì (la stessa cosa che fa `quiz/Domanda.vue` con
+l'attesa dopo una risposta). Qui il ritorno **riprende da solo**, al
+contrario della pausa degli altri giochi: là c'è una partita in corsa da
+consegnare in faccia a chi ha appena acceso il telefono, qui c'è una
+schermata ferma che resta ferma per il mezzo secondo che le mancava.
+
 ## Note per i genitori
 
 - Le domande rispettano quello che hai spento in *Genitori → cosa sa*: se il

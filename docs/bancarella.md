@@ -106,6 +106,21 @@ intera va da 🪙18 a 🪙48 — fra i tre e gli otto minuti di esercizio, che �
 quello che ci si mette davvero. Una giornata facile rende meno di una tosta,
 e un cliente che se ne va non paga niente.
 
+## Fermarsi
+
+Al banco, in cima allo schermo, c'è **⏸**. La fila smette di spazientirsi e
+resta ferma finché non si tocca; chi torna trova scritto a che banco era.
+
+Serve anche senza premerlo. **Se il telefono si posa — si blocca lo schermo,
+si cambia applicazione, arriva una chiamata — il mercato va in pausa da
+solo, e quando si riapre non riparte**: aspetta un tocco. Si ferma anche il
+cartello che annuncia il banco nuovo, che dura un secondo e mezzo: prima se
+ne andava lo stesso a telefono spento, e si tornava con la fila già al banco
+senza aver letto dove si era arrivati.
+
+Lo stesso vale per il `?`: finché il foglio «come si gioca» è aperto nessuno
+in fila perde la pazienza.
+
 ## Cosa allena
 
 Il sistema decimale nella sua forma più concreta: euro e centesimi,

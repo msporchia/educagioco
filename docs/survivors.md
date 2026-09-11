@@ -83,9 +83,12 @@ Tre scelte dentro questa:
   e solo quelli addosso fanno un passo indietro — perché riprendere con la
   melma sul naso e mezzo cuore in meno è il modo più rapido di far pentire
   qualcuno di aver ripreso.
-- **Il campo riprende fermo**, e riparte al primo dito. Questo gioco non è a
+- **Il campo riprende fermo**, e riparte al tocco. Questo gioco non è a
   turni: chi riapre sta ancora guardando dov'era rimasto, e la marea non
-  aspetta nessuno.
+  aspetta nessuno. Il cartello è **il velo della pausa**, lo stesso che si
+  vede col ⏸ (vedi sotto): prima era una riga scritta apposta dentro il
+  campo, cioè lo stesso velo in una seconda copia, con un'altra frase e in
+  un altro punto dello schermo.
 - **Dopo il traguardo non si salva più.** Lì stelle e monete sono già state
   contate: chi resta in campo gioca tempo regalato, e interromperlo costa
   qualche monetina e nient'altro. Salvare anche quello vorrebbe dire
@@ -95,6 +98,17 @@ Tre scelte dentro questa:
 Le tre carte in attesa si salvano **per chiave** e si rivestono riprendendo:
 ripescarle sarebbe una riga in meno e un tiro nuovo a ogni uscita, cioè chi
 non gradisce l'offerta esce e rientra finché non gliene capita una migliore.
+
+## E ci si può anche solo fermare
+
+Il ⏸ in barra ferma la partita senza uscire, e il telefono posato la ferma
+da sé — ma **al ritorno non riparte da sola**: si riprende al tocco, perché
+chi riaccende il telefono sta guardando il telefono che si accende, non il
+campo. È il pezzo comune di `src/giochi/pausa.js`, lo stesso della
+[corsa](corsa.md), e vale la pena tenerlo uguale in tutti i giochi per la
+stessa ragione della sosta. Il ⏸ sparisce dove il gioco è già fermo dietro
+un altro velo — le tre carte, la domanda che le paga, il cartello finale —
+perché due veli uno sull'altro sono un gioco rotto.
 
 ## Quali domande escono
 

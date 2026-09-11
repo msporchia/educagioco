@@ -42,6 +42,8 @@ import { state, answer, level, addCoins, tdProgresso, tdCompleta,
          segna, segnaBest, divisioniAccese, tuttoAperto,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
+import { usaPausa } from '../giochi/pausa.js'
+import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
 import { CFG, TAPPE, LIBERA, premioTappa } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
@@ -61,10 +63,29 @@ import { suono } from '../audio.js'
 defineEmits(['vai'])
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
-/* Il foglio del `?` copre il campo, e un campo che cammina sotto un
-   foglio è una vita persa mentre si legge come si gioca: finché è aperto
-   la battaglia sta ferma, come fa già col cartello di un traguardo. */
-const aiutoAperto = ref(false)
+
+/* ═══════════ la pausa ═══════════
+   Le condizioni che fermano il campo se le scriveva questo file — il
+   foglio del `?`, il cartello di un traguardo — e adesso sono quelle di
+   tutti (`giochi/pausa.js`). Quello che ci si guadagna sono le due che
+   mancavano: il ⏸, e **il telefono posato**. Il secondo qui costava
+   caro: il castello è l'unico gioco dove si può restare fermi a fare
+   una divisione in colonna, e chi metteva giù il telefono a metà conto
+   lo ritrovava con l'ondata passata e i cuori in meno.
+
+   `anche` dice la sola condizione di casa che sia reattiva — fuori
+   dalla partita non c'è niente da far camminare — così `fermo` vuol
+   dire esattamente «il campo non avanza», che è tutto quello che il
+   campo deve sapere.
+
+   **Quello che NON entra qui è `calcolando`.** Il campo non si ferma
+   mentre si fanno i conti, ed è una regola dichiarata: un minimo di
+   fretta ci va, e per guardare la battaglia c'è già il gesto giusto,
+   che è chiudere il foglio. La pausa è un'altra cosa — è il bambino che
+   chiede di fermarsi, non il gioco che aspetta. */
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
+  anche: () => fase.value !== 'gioco',
+})
 
 /* il tabellone: il motore ci scrive dentro e lo schermo si aggiorna da sé */
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
@@ -85,6 +106,16 @@ const divisioni = computed(() => divisioniAccese())
 /* la partita libera si apre vincendo l'ultima tappa — o subito, se i
    genitori hanno acceso «tutto aperto» */
 const libera = computed(() => progresso.value.libera || tuttoAperto())
+
+/* Cosa si stava facendo, sul velo della pausa. A che ondata si era è la
+   sola cosa che serve a riconoscere la partita che ci si ritrova in
+   mano mezz'ora dopo: i cuori e l'energia sono già scritti nella barra
+   che sta sopra. */
+const dovEravamo = computed(() => {
+  if (!hud.onda) return '⚔️ la battaglia non è ancora cominciata'
+  return campagna.value ? `⚔️ ondata ${hud.onda} di ${tappa.value.ondate}`
+                        : `⚔️ ondata ${hud.onda}`
+})
 
 /* ── il foglio ──
    Una cosa sola alla volta, e sa sempre *di che cosa* si sta parlando:
@@ -349,6 +380,11 @@ watch(fase, () => nextTick(() => campo.value?.ridimensiona()))
 /* ── le fasi ── */
 function inizia(i = tappaIdx.value) {
   accendiPrimiPassi()
+  /* una tappa che comincia non comincia in pausa: il telefono posato
+     sulla mappa, o davanti al cartello di fine, lascia il freno acceso —
+     e senza questa riga la battaglia nuova nascerebbe dietro un velo che
+     nessuno ha chiesto */
+  togli()
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
   chiudi()
@@ -387,6 +423,7 @@ function finePartita() {
 }
 
 function allaMappa() {
+  togli()
   fase.value = 'mappa'
   chiudi()
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
@@ -423,20 +460,26 @@ onMounted(() => {
   <div class="schermo td">
     <!-- la barra è quella di tutte le schermate: si torna indietro sempre
          allo stesso modo, e il gioco ci appende i suoi indicatori -->
-    <Barra titolo="Castello" guida="torri" @aiuto="aiutoAperto = $event" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
+    <!-- il ⏸ c'è solo dove il campo cammina: sulla mappa non c'è niente
+         da fermare, e davanti al cartello di fine tappa (o a quello di un
+         traguardo) il gioco è già fermo dietro un velo suo -->
+    <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
+           :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
+           :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
                     :ondate="campagna ? tappa.ondate : ''" @velocita="cambiaVelocita" />
     </Barra>
 
     <!-- ════════ L'ARENA ════════
          Il campo, quello che gli sta intorno, e il foglio che ci sale
-         sopra. Il campo si ferma anche quando c'è il cartello di un
-         traguardo davanti (`state.festa`): quel velo copre tutto per tre
-         secondi, e un premio non deve costare un cuore a chi non vede
-         più i mostri. -->
+         sopra. Quando il campo cammina lo dice `fermo`, che è l'elenco
+         comune (`giochi/pausa.js`): la pausa chiesta col ⏸, il telefono
+         posato, il foglio del `?`, e il cartello di un traguardo — quel
+         velo copre tutto per tre secondi, e un premio non deve costare
+         un cuore a chi non vede più i mostri. -->
     <div class="arena" :class="{ gioca: fase === 'gioco' }">
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
-                        :attivo="fase === 'gioco' && !state.festa.length && !aiutoAperto" :calcolando="!!scelta"
+                        :attivo="!fermo" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
                         :mira="mira"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
@@ -508,6 +551,13 @@ onMounted(() => {
           <ColumnOp :op="op" @fatto="operazioneFinita" />
         </template>
       </Foglio>
+
+      <!-- il velo copre tutto, foglio compreso: in pausa non c'è niente
+           da fare se non ripartire. Le condizioni sono le stesse del ⏸ —
+           dove il gioco sta già dietro un altro velo non se ne mette un
+           secondo sopra. -->
+      <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
+                 :dove="dovEravamo" @riprendi="togli" />
     </div>
   </div>
 </template>

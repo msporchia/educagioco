@@ -101,6 +101,29 @@ resto si adatta di conseguenza — compresa la resistenza dei mostri, che un
 simulatore misura giocando la tappa migliaia di volte per assicurarsi che sia
 superabile senza essere una passeggiata.
 
+## Fermarsi
+
+Durante una tappa, in cima allo schermo c'è **⏸**. Il campo si ferma dov'è —
+mostri a metà strada, colpi a mezz'aria — e resta lì finché non si tocca:
+niente conto alla rovescia, e chi torna trova scritto a che punto era
+(«ondata 4 di 9»).
+
+Serve anche senza premerlo. **Se il telefono si posa — si blocca lo schermo,
+si cambia applicazione, arriva una chiamata — la battaglia va in pausa da
+sola, e quando si riapre non riparte**: aspetta un tocco. È il gioco dove
+serviva di più, perché è l'unico in cui si sta fermi a fare una divisione in
+colonna: chi metteva giù il telefono a metà conto lo ritrovava con l'ondata
+passata e i cuori in meno.
+
+Lo stesso vale per il `?`: finché il foglio «come si gioca» è aperto, il
+campo non cammina.
+
+Quello che invece **non** ferma niente è il conto: mentre si fa
+un'operazione in colonna la battaglia va avanti dietro il foglio, e un
+minimo di fretta ci va. Per guardare il campo si chiude il foglio; per
+fermare tutto c'è il ⏸, che è un'altra cosa — è il bambino che chiede di
+smettere, non il gioco che aspetta.
+
 ## Cosa allena
 
 L'algoritmo delle operazioni in colonna — riporti e prestiti — con una

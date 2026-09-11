@@ -6,9 +6,11 @@
    che sale dal basso e copre il gioco: chi lo apre sta già giocando, e
    deve poterlo chiudere senza cercare dove.
 
-   Non mette in pausa niente da sé — non saprebbe come, i giochi si
-   fermano in undici modi diversi. La barra avvisa con `@aiuto`, e chi
-   ha un orologio che gira se lo ferma da sé.
+   Non mette in pausa niente da sé, e non deve: un foglio non sa quale
+   motore stia girando sotto. La barra avvisa con `@aiuto`, e chi ha un
+   orologio che gira se lo ferma da sé — oggi non più in undici modi
+   diversi, ma con `giochi/pausa.js`, che somma questa condizione alle
+   altre (il telefono posato, il cartello di un traguardo, il ⏸).
    ═══════════════════════════════════════════════════════════════════ */
 import Blocchi from './Blocchi.vue'
 

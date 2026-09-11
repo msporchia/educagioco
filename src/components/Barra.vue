@@ -29,11 +29,19 @@ const props = defineProps({
      La chiave della schermata (`torri`, `fattoria`, …). Se in
      `guide/contenuti.js` non c'è niente sotto quel nome il tasto non
      compare affatto: un `?` che apre un foglio vuoto è peggio di
-     nessun `?`. Chi ha un orologio che gira ascolti `@aiuto`, che dice
-     quando il foglio si apre e quando si chiude. */
+     nessun `?`. Chi ha un orologio che gira ascolti `@aiuto` e `@pausa`,
+     che dicono quando il foglio si apre e quando si chiude, e quando il
+     bambino ha chiesto di fermarsi. */
   guida: { type: String, default: '' },
+  /* ── IL ⏸ ──
+     Stessa regola del `?`: compare solo se il gioco lo chiede, perché
+     un tasto di pausa dove non scorre niente (la fattoria, la
+     cameretta) è un tasto che non fa niente. Chi lo passa ascolta
+     `@pausa` e si ferma — il pezzo che lo fa per tutti è
+     `giochi/pausa.js`, e non si riscrive in casa. */
+  pausa: { type: Boolean, default: false },
 })
-const emit = defineEmits(['indietro', 'aiuto'])
+const emit = defineEmits(['indietro', 'aiuto', 'pausa'])
 
 const aiuto = computed(() => aiutoDi(props.guida))
 const apertoAiuto = ref(false)
@@ -59,6 +67,10 @@ function mostraAiuto (v) { apertoAiuto.value = v; emit('aiuto', v) }
     <div class="mezzo"><slot /></div>
     <!-- prima dell'audio e mai al posto di «indietro»: la mano di un
          bambino torna sempre nello stesso angolo -->
+    <!-- il ⏸ sta prima del `?` perché è l'unico dei due che serve
+         **adesso**: chi lo cerca ha già la mamma che chiama -->
+    <button v-if="pausa" class="tondo" aria-label="pausa" data-azione="pausa"
+            @click="$emit('pausa')">⏸</button>
     <button v-if="aiuto" class="tondo" aria-label="aiuto" data-azione="aiuto"
             @click="mostraAiuto(true)">?</button>
     <div v-if="monete" class="gettone">🪙 <b>{{ state.profile.coins }}</b></div>
@@ -86,6 +98,10 @@ function mostraAiuto (v) { apertoAiuto.value = v; emit('aiuto', v) }
 /* il `?` non deve competere col tasto per tornare indietro: stessa forma
    degli altri tondi chiari, nessun colore che chiami */
 .barra-app .tondo[aria-label="aiuto"] { font-weight:900; color:var(--viola-scuro) }
+/* un filo più piccolo degli altri tondi: il telefono disegna ⏸ con la
+   sua font a colori, cioè un riquadro pieno, e alla misura del `?` pesa
+   il doppio di tutto quello che ha intorno */
+.barra-app .tondo[aria-label="pausa"] { font-size:clamp(13px,3.6vw,16px) }
 /* Il tasto per tornare indietro è il solo che un bambino deve trovare senza
    cercarlo: pieno, colorato, con l'ombra sotto come i bottoni veri, e una
    freccia intera invece di un accento. Gli altri restano chiari. */

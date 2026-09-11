@@ -19,9 +19,11 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, addCoins, segna, segnaBest } from '../../store/profile.js'
+import { addCoins, segna, segnaBest } from '../../store/profile.js'
 import { progresso, aperta, stelleDi, completa, scelta, ricorda,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { usaPausa } from '../pausa.js'
+import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
@@ -46,9 +48,6 @@ const RESPIRO = 500          // quanto si guarda il campo prima del cartello
 
 /* ═══════════ dove siamo ═══════════ */
 const vista = ref('mappa')            // mappa | campo
-/* col foglio del `?` aperto il campo sta fermo: leggere come si gioca
-   non deve costare la partita che si sta giocando */
-const aiutoAperto = ref(false)
 const tappaIdx = ref(-1)              // -1 = gioco libero
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
@@ -57,11 +56,6 @@ const domanda = ref(null)             // la domanda che paga la carta scelta
 const finale = ref(null)
 const brindisi = ref('')
 const toccato = ref(false)
-/* Chi riprende trova il campo **fermo**, e riparte quando tocca. Questo
-   gioco non è a turni come il sotterraneo: riaprirlo vorrebbe dire
-   ritrovarsi in mezzo alla marea mentre si sta ancora capendo dove si
-   era rimasti, e il primo cuore se ne andrebbe lì. */
-const inAttesa = ref(false)
 
 let voluta = null                     // la carta che si sta pagando
 let ultimoModulo = null               // per non fare due domande di fila uguali
@@ -71,10 +65,54 @@ let attesa = 0
 let orologioBrindisi = 0
 const giostra = new Giostra(passo)
 
+/* ═══════════ la pausa ═══════════
+   Tutta in `giochi/pausa.js`: il ⏸ della barra, il telefono posato, il
+   foglio del `?`, il cartello di un traguardo. Qui si aggiunge la sola
+   condizione di casa che sia reattiva — col cartello finale davanti non
+   si combatte — mentre quello che vive nel motore (`p.finita`,
+   `p.inPausa`, cioè la sosta delle carte) si guarda dentro il battito:
+   uno `shallowRef` non avvisa nessuno quando cambia un campo dentro.
+
+   ── `inAttesa` non c'è più, ed è una fusione voluta ────────────────
+   Questo gioco aveva già il suo «tocca per ripartire»: una partita
+   ripresa dalla mappa nasceva ferma, con una riga in mezzo al campo, e
+   ripartiva al primo dito. È **la stessa idea** del velo comune, scritta
+   a mano prima che il pezzo comune esistesse — e tenerle tutte e due
+   voleva dire due riprese diverse per lo stesso gesto: chi riprendeva
+   una partita e poi si metteva il telefono in tasca tornava a trovarsi
+   due cartelli da togliere, in due punti dello schermo, con due frasi
+   diverse. Adesso riprendere una partita lasciata a metà **mette in
+   pausa** (`metti({ auto: true })`, come il telefono posato: non l'ha
+   chiesto nessuno, è successo), e quello che si vede è il velo di
+   sempre, con sotto la riga che dice a che punto era. Una ripresa sola,
+   un velo solo, e il campo che sta fermo finché non lo si tocca — che
+   era la ragione per cui `inAttesa` era nato. */
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
+
 const avanza = progresso(CHIAVE)
 const libera = computed(() => tappaIdx.value < 0)
 const regoleOra = computed(() => libera.value ? LIBERO : CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const veste = computed(() => scenario(regoleOra.value.scenario))
+
+/* Dove il gioco **scorre davvero**, ed è l'unico posto in cui il ⏸ e il
+   velo hanno senso: sul campo, senza nessun altro velo davanti. Le tre
+   carte, la domanda che le paga e il cartello finale sono già veli sopra
+   una partita ferma, e un secondo velo sopra di loro è un gioco rotto. */
+const siGioca = computed(() => vista.value === 'campo'
+  && !offerta.value && !domanda.value && !finale.value)
+
+/* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
+   dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
+   che si accende, e una riga che dice a che punto era la partita è
+   quello che gli fa tornare in mente cosa sta per riprendere. */
+const dovEravamo = computed(() => {
+  const c = cruscotto.value
+  const s = Math.max(0, Math.ceil(c.oltre ? c.extra : c.infinita ? c.tempo : c.restano))
+  const mmss = `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+  return c.infinita || c.oltre
+    ? `⏱ ${mmss} in campo · livello ${c.livello}`
+    : `⏱ mancano ${mmss} · livello ${c.livello}`
+})
 
 function vuoto() {
   return { cuori: 3, cuoriMax: 3, livello: 1, quota: 0, tempo: 0,
@@ -130,9 +168,14 @@ function riprendiPartita() {
   finale.value = null
   brindisi.value = ''
   /* la dritta «tieni premuto e trascina» è per chi comincia: chi
-     riprende ha già giocato, e al suo posto c'è «tocca per ripartire» */
+     riprende ha già giocato, e al suo posto c'è il velo della pausa */
   toccato.value = true
-  inAttesa.value = true
+  /* ── il campo ripreso nasce fermo ──
+     `auto` perché non l'ha chiesto nessuno: è successo, come col
+     telefono posato. Riaprire una partita e ritrovarsi in mezzo alla
+     marea mentre si sta ancora capendo dove si era rimasti costa il
+     primo cuore, e questo gioco non è a turni come il Dungeon. */
+  metti({ auto: true })
   vista.value = 'campo'
   pagata = false
   contata = false
@@ -205,12 +248,17 @@ function suona(eventi) {
    quando torna a vederlo ne ha tre addosso. Un traguardo che si paga con
    una vita è un traguardo che il bambino impara a temere. Il tempo qui è
    fermo davvero — `avanza` è l'unico posto dove passa — quindi si
-   ricomincia esattamente dalla scena che si era lasciata. */
+   ricomincia esattamente dalla scena che si era lasciata.
+
+   L'elenco non sta più qui: è `fermo`, che arriva da `giochi/pausa.js` e
+   vale uguale in tutti i giochi. Quello che resta scritto è **roba del
+   motore** (`p.finita`, `p.inPausa`, che è la sosta delle carte), che
+   non è reattiva e va riguardata a ogni fotogramma. */
 function passo(dt) {
   const p = partita.value
   if (!p) return
-  if (!p.finita && !p.inPausa && !state.festa.length && !aiutoAperto.value
-      && !inAttesa.value) {
+  const bloccato = fermo.value || p.finita || p.inPausa
+  if (!bloccato) {
     p.avanza(dt)
     /* ogni tanto, e non a ogni fotogramma: una partita salvata è meno di
        un chilobyte, ma scriverla sessanta volte al secondo su un
@@ -237,6 +285,10 @@ function passo(dt) {
 /* ═══════════ giocare ═══════════ */
 function avvia(indice) {
   clearTimeout(attesa); attesa = 0
+  /* una partita che comincia non comincia in pausa: il telefono posato
+     sulla mappa lascia acceso il freno, e senza questa riga la partita
+     nuova nascerebbe dietro un velo che nessuno ha chiesto */
+  togli()
   /* una partita nuova butta quella lasciata a metà: la mappa lo ha già
      chiesto (`Mappa.vue`), qui non si chiede una seconda volta */
   scorda()
@@ -249,7 +301,6 @@ function avvia(indice) {
   finale.value = null
   brindisi.value = ''
   toccato.value = false
-  inAttesa.value = false
   vista.value = 'campo'
   pagata = false
   contata = false
@@ -275,7 +326,7 @@ function ridimensiona() {
 }
 
 function muovi(dx, dy) {
-  if (dx || dy) { toccato.value = true; inAttesa.value = false }
+  if (dx || dy) toccato.value = true
   partita.value?.muovi(dx, dy)
 }
 
@@ -314,6 +365,14 @@ function risposto({ giusto }) {
   const p = partita.value
   ultimoModulo = domanda.value?.modulo || null
   domanda.value = null
+  /* ── rispondere È il tocco che riprende ──
+     Mentre la domanda è a schermo il velo della pausa non si mostra (una
+     domanda è già un velo, e due uno sull'altro sono un gioco rotto) e il
+     ⏸ sparisce dalla barra. Ma il freno può essersi acceso lo stesso — il
+     telefono posato *durante* la domanda — e senza questa riga il campo
+     si ritroverebbe fermo dietro un velo comparso dal niente, subito dopo
+     aver risposto. */
+  togli()
   if (giusto) {
     const presa = p.prendi(voluta.chiave)
     brinda(`${presa.icona} ${presa.nome} — ${presa.chiaro}`, true)
@@ -402,6 +461,9 @@ function chiudiPartita() {
 function resta() {
   const p = partita.value
   if (!p?.continua()) return
+  /* stessa ragione di `risposto`: il cartello finale è un velo suo, e
+     sotto di lui il freno può essersi acceso senza che si vedesse */
+  togli()
   finale.value = null
   cruscotto.value = p.cruscotto
   giostra.avvia()
@@ -420,6 +482,7 @@ function ancora() {
 
 function allaMappa() {
   clearTimeout(attesa); attesa = 0
+  togli()
   giostra.ferma()
   partita.value = null
   pittore = null
@@ -448,7 +511,9 @@ function indietro() {
 /* ── il telefono che si mette in tasca ──
    Su un telefono l'app non si chiude: sparisce. `visibilitychange` è
    l'ultimo momento in cui si può ancora scrivere, e il `subito` serve
-   perché il salvataggio pigro potrebbe non scattare mai. */
+   perché il salvataggio pigro potrebbe non scattare mai. Che il campo si
+   fermi lo fa `giochi/pausa.js`, che ascolta lo stesso evento per conto
+   suo: qui resta solo la scrittura. */
 function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden')
     salva({ subito: true })
@@ -479,7 +544,10 @@ function gancioDiProva() {
 
 onMounted(() => {
   addEventListener('resize', ridimensiona)
-  addEventListener('visibilitychange', seSparisce)
+  /* `visibilitychange` si ascolta sul `document`, che è dove viene
+     lanciato: alla finestra ci arriva solo perché risale. Il `pagehide`
+     invece è della finestra e basta. */
+  document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
   gancioDiProva()
 })
@@ -487,7 +555,7 @@ onUnmounted(() => {
   if (import.meta.env.DEV) delete window.__survivors
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)
-  removeEventListener('visibilitychange', seSparisce)
+  document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   clearTimeout(attesa)
   clearTimeout(orologioBrindisi)
@@ -497,7 +565,12 @@ onUnmounted(() => {
 
 <template>
   <div class="schermo">
-    <Barra :titolo="titolo" guida="survivors" @aiuto="aiutoAperto = $event" monete :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
+    <!-- il ⏸ c'è solo dove scorre qualcosa: sulla mappa non c'è niente
+         da fermare, e dietro le tre carte, la domanda o il cartello
+         finale il gioco è già fermo -->
+    <Barra :titolo="titolo" guida="survivors" @aiuto="aiuto" monete
+           :pausa="siGioca" @pausa="metti()"
+           :scura="vista === 'campo' && veste.buio" @indietro="indietro" />
 
     <div class="sv" :style="{ '--sv-accento': veste.accento }">
       <Mappa v-if="vista === 'mappa'" :scalini="scalini" :libero="statoLibero"
@@ -507,7 +580,6 @@ onUnmounted(() => {
 
       <CampoVista v-else :cruscotto="cruscotto" :buio="veste.buio"
                   :dritta="!toccato && cruscotto.tempo < 9 && !finale"
-                  :attesa="inAttesa"
                   @tela="prendiTela" @muovi="muovi" />
 
       <div v-if="brindisi" class="sv-brindisi em">{{ brindisi }}</div>
@@ -521,6 +593,11 @@ onUnmounted(() => {
 
       <Finale v-if="finale" v-bind="finale"
               @ancora="ancora" @esci="allaMappa" @resta="resta" />
+
+      <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
+           qualunque cosa: le carte, la domanda e il cartello finale hanno
+           già la loro pausa, e sopra di loro non ci va -->
+      <VeloPausa v-if="inPausa && siGioca" :dove="dovEravamo" @riprendi="togli" />
     </div>
   </div>
 </template>

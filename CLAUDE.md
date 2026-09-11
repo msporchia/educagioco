@@ -479,6 +479,56 @@ committate: non è ricostruibile da git.
 - **La barra in cima è una sola** (`components/Barra.vue`): indietro sempre
   primo a sinistra, sempre `←`, unico tasto pieno. Nei test si trova con
   `button[aria-label="indietro"]`, non col carattere.
+- **La pausa è una sola** (`giochi/pausa.js`, `giochi/VeloPausa.vue`). Un
+  gioco a orologio si congela già da sé a pagina nascosta — il browser non
+  consegna fotogrammi a una scheda che non si vede — e il guasto non è
+  quello: è **la ripresa**, istantanea e senza preavviso, con la partita in
+  corsa in faccia a chi ha appena riacceso il telefono. Più il fatto che
+  fermarsi *volendo* non si poteva: l'unica uscita era «indietro», che nella
+  corsa butta via la gara. Si aggiunge a un gioco in tre righe:
+
+  ```js
+  const { inPausa, fermo, metti, togli, aiuto } = usaPausa()
+  ```
+  ```html
+  <Barra … pausa @pausa="metti()" @aiuto="aiuto" />
+  <VeloPausa v-if="inPausa" @riprendi="togli" />
+  ```
+
+  e nel battito `if (!fermo.value) p.avanza(dt)`, al posto della somma che
+  ognuno si scriveva in casa. **Non si riprende mai da soli**: tornare a
+  vedere lo schermo mette in pausa e basta, si riparte al tocco (è la stessa
+  scelta che Survivors aveva già fatto a mano con `inAttesa`). `fermo` non è
+  `inPausa`: il primo è tutto quello che tiene ferma la partita — la pausa,
+  il cartello di un traguardo, il foglio del `?`, quello che il gioco
+  aggiunge con `anche:` — il secondo è solo quello che merita il velo.
+  `anche:` legge dentro un `computed`, quindi **vuole roba reattiva**: i
+  campi di un motore in `shallowRef` (`p.finita`, `p.inPausa`) non lo sono e
+  si guardano dentro il battito. Il ⏸ compare solo dove il gioco lo chiede,
+  come il `?`. **Non si mette in pausa** quello che non ha un orologio (la
+  fattoria, la cameretta: un ⏸ lì è un tasto che non fa niente), il
+  Generale (ha il suo Via/Stop, e lì fermare il tempo *è* una mossa), **il
+  Dungeon** (è a turni: la stanza aspetta, e quello che c'è da fermare lì è
+  un `setTimeout` — vedi la voce dopo) e la
+  domanda di quiz — che è già un velo sopra il gioco, e due veli uno
+  sull'altro sono un gioco rotto: lì il ⏸ sparisce dalla barra e rispondere
+  *è* il tocco che riprende. Chi la monta la toglie anche in `avvia()` e
+  nell'uscita alla mappa, se no la partita nuova nasce dietro un velo che
+  nessuno ha chiesto. In Survivors **ha preso il posto di `inAttesa`**: il
+  «tocca per ripartire» di una partita ripresa era lo stesso velo scritto a
+  mano, e tenerli tutti e due voleva dire due riprese diverse per lo stesso
+  gesto. Nei test i bersagli sono
+  `button[aria-label="pausa"]`, `[data-pausa]` sul velo e
+  `[data-azione="riprendi"]`.
+- **Gli orologi che non sono fotogrammi vanno fermati a mano.** Un
+  `setTimeout` scatta lo stesso a schermo spento, e `performance.now()`
+  misura il tempo di parete: `quiz/Domanda.vue` annotava in `store/srs.js`
+  i quaranta minuti del telefono posato con la domanda a schermo — e `it.t`
+  è una media pesata al 45%, quindi un campione solo bastava a far
+  risultare «ci mette venti minuti» per sempre. Si conta il tempo in cui la
+  domanda era **davanti agli occhi**, col tetto di `TEMPO_MAX`, e l'attesa
+  dell'esito si congela e riparte da quello che restava: quell'attesa esiste
+  per essere letta.
 - **I giochi sono verticali**: il manifest chiede `portrait`, e dal browser
   esce il cartello «gira il telefono» (`.gira`).
 - **Chi gioca non disegna.** Una view costruisce la lista delle cose in scena
@@ -589,6 +639,22 @@ committate: non è ricostruibile da git.
   puntatore: sotto quella misura Android e iOS considerano il dito ancora
   fermo, e un gioco più severo del telefono butta via i tocchi di chi
   preme forte — cioè dei bambini.
+- **Il dito non seleziona, e la regola è in un posto solo**
+  (`src/style.css`). Su iPhone tenere premuto dentro un gioco accendeva
+  l'evidenziazione blu e il callout «Copia»: c'era `user-select:none` e
+  basta, che Safari ha imparato solo dalla 17. Servono tutte e tre —
+  `-webkit-user-select`, `user-select`, `-webkit-touch-callout` — e la
+  terza non è un doppione: il menù del tener-premuto esce anche dove non
+  c'è testo, sui link e sulle tele. Stanno su `html,body,#app` e **non su
+  `*`**, perché si eredita: con `*` ogni figlio se la riprenderebbe
+  addosso e le eccezioni non arriverebbero ai loro paragrafi. Dove si deve
+  poter copiare a dito si scrive `class="copiabile"` (più `input`,
+  `textarea`, `[contenteditable]`, già dentro la regola) — e non si
+  appende l'eccezione a una classe che c'era già: `.avviso` sembrava
+  giusta e se la riprende anche il nastro delle ondate del castello, in
+  mezzo a una partita. `touch-action:manipulation` su `#app` toglie solo
+  lo zoom del doppio tocco: chi trascina da sé dichiara
+  `touch-action:none` per conto suo, ed è più stretto.
 - **I giochi non toccano i contatori a mano**: usano `segna()` e
   `segnaBest()` di `store/profile.js`.
 - **Un errore non resta muto.** Vue scrive in console e lascia la

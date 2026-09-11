@@ -298,6 +298,31 @@ export const A_CAPIRE = 0.25
 export const LEGGERE_MAX = 7000
 export const TETTO = 10000
 
+/* ── QUANTO PUÒ VALERE UNA RISPOSTA, AL MASSIMO ──
+   Il tempo di una risposta finisce in `store/srs.js` (`it.t`), che ne
+   tiene una media pesata **al 45%**: un solo campione storto sposta la
+   media di quasi la metà, e da lì non torna più indietro da solo. Il
+   campione storto esiste ed è facilissimo da produrre — il telefono
+   posato con la domanda a schermo, che `Domanda.vue` adesso non conta
+   più perché ferma l'orologio quando la pagina sparisce.
+
+   Questo è il pavimento sotto quel rimedio, per i casi che l'orologio
+   non vede: il telefono acceso, posato sul tavolo, con la domanda
+   davanti e nessuno che la guarda. Due minuti, e non è la soglia di
+   `TETTO` (quella dice fin dove una pausa sembra una pausa, ed è
+   un'altra domanda): due minuti sono il punto oltre il quale nessun
+   bambino sta ancora pensando a quella domanda lì. Chi ci mette
+   davvero novanta secondi su un problema li vede contati tutti — è il
+   suo tempo, ed è un'informazione vera. */
+export const TEMPO_MAX = 120000
+
+/* Il tempo da annotare, in secondi: quello che si è guardato davvero,
+   tagliato al tetto. Sta qui e non nel `.vue` per la solita ragione —
+   una taratura chiusa dentro un componente non la prova nessuno. */
+export function tempoDaAnnotare(ms) {
+  return Math.min(TEMPO_MAX, Math.max(0, ms || 0)) / 1000
+}
+
 export function tempoDiCapire(righe = []) {
   return Math.min(LEGGERE_MAX, Math.round(quanteParole(righe) * A_CAPIRE * 1000))
 }

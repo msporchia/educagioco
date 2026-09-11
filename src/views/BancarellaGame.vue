@@ -21,14 +21,16 @@
    volta**: la tabella sta in testa a `data/bancarella.js`, e un test
    la ricontrolla.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { answer, addCoins, segna, segnaBest,
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { state, answer, addCoins, segna, segnaBest,
          mercatoProgresso, mercatoCompleta, tappaAperta } from '../store/profile.js'
 import { generaCliente, esposizione, tappaDi, campagnaDi, scomponi, euro,
          centesimiScritti, scriviCifra, premioCliente,
          BANCHI, CAMPAGNE, CLIENTI_PER_TAPPA } from '../data/bancarella.js'
 import { suono } from '../audio.js'
 import Barra from '../components/Barra.vue'
+import { usaPausa } from '../giochi/pausa.js'
+import VeloPausa from '../giochi/VeloPausa.vue'
 
 defineEmits(['vai'])
 
@@ -57,7 +59,7 @@ const cambio = ref(null)            // il cartello del cambio banco
 const esito = ref('')               // vinta | persa
 const volo = ref(null)              // la roba che vola dalla cesta al cliente
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, rifiuti = 0
-let dettoFretta = false, timer = 0, nVolo = 0
+let dettoFretta = false, nVolo = 0
 
 const prog = computed(() => mercatoProgresso())
 const sbloccata = i => tappaAperta(i, prog.value.tappa)
@@ -69,6 +71,78 @@ const dato = computed(() => piatto.value.reduce((s, c) => s + c, 0))
 const manca = computed(() => (cliente.value ? cliente.value.resto - dato.value : 0))
 const monetine = computed(() => (cliente.value ? cliente.value.monete.filter(v => v < 500) : []))
 const carte = computed(() => (cliente.value ? cliente.value.monete.filter(v => v >= 500) : []))
+
+/* ═══════════ la pausa ═══════════
+   Una pausa di gioco qui c'era già — il cartello del cambio banco, che
+   ferma il tempo mentre si legge dove si è arrivati — ma non c'era
+   niente per il bambino che vuole fermarsi, né per il telefono posato
+   con la fila davanti al banco. E il `?` era un tasto senza effetto:
+   si apriva «come si gioca» e intanto il cliente si spazientiva.
+
+   `anche` dice la sola condizione di casa, ed è reattiva: fuori dalla
+   partita non scorre niente. Il cartello del cambio banco resta fuori
+   di proposito — è un'attesa *dentro* la partita, e il suo orologio
+   sarebbe il primo a rimetterci (vedi sotto).
+
+   I nomi arrivano da fuori perché `metti` e `togli` qui sono già le
+   monete sul piatto della cassa. */
+const { inPausa, fermo, aiutoAperto, metti: mettiInPausa, togli: togliLaPausa,
+        aiuto: leggeLaGuida } = usaPausa({ anche: () => fase.value !== 'gioco' })
+
+/* Cosa si stava facendo, sul velo: il banco, che è la sola cosa che fa
+   riconoscere la giornata lasciata a metà. */
+const dovEravamo = computed(() => (fase.value === 'gioco' && B.value
+  ? `${B.value.icona} ${B.value.nome}` : ''))
+
+/* ── l'orologio che non è un fotogramma ──
+   Il `ciclo` si congela da sé a pagina nascosta, un `setTimeout` no: il
+   cartello del cambio banco dura un secondo e mezzo di **tempo di
+   parete**, quindi il telefono posato proprio lì tornava con la fila
+   già al banco e la pazienza che scorreva. Si congela quello che resta
+   e riparte da lì, come fa `quiz/Domanda.vue` con l'attesa dell'esito —
+   quel secondo e mezzo esiste per essere letto.
+
+   L'orologio è uno solo perché i due usi non capitano mai insieme: il
+   cartello del banco, e il cliente servito che lascia il posto. */
+let timer = 0, scadeIl = 0, restaAl = 0, faPoi = null
+
+function programma(fn, ms) {
+  clearTimeout(timer)
+  faPoi = fn
+  scadeIl = performance.now() + ms
+  timer = setTimeout(() => { timer = 0; const f = faPoi; faPoi = null; f() }, ms)
+}
+
+function spegniOrologio() {
+  clearTimeout(timer); timer = 0; faPoi = null; restaAl = 0
+}
+
+/* Fermarsi e ripartire — ma **non su tutto `fermo`**, e le due
+   esclusioni sono l'una il rovescio dell'altra.
+
+   Il cartello del cambio banco è dentro `fermo` solo in quanto ferma il
+   battito: congelare per causa sua l'orologio che lo sta aspettando
+   vorrebbe dire non farlo scattare mai più.
+
+   Il cartello di un traguardo (`state.festa`) invece passa da sé in tre
+   secondi, e non c'è niente da salvare: la pazienza intanto è già ferma
+   (quella la guarda `fermo`, nel battito), quindi congelare anche
+   l'orologio allungherebbe soltanto la mano di chi guarda — e chi è
+   stato servito resterebbe piantato al banco a ringraziare per tre
+   secondi in più.
+
+   Quello che resta è quello che conta: il velo della pausa (il ⏸, il
+   telefono posato) e il foglio del `?`, cioè i due casi in cui quel
+   secondo e mezzo di cartello se ne andrebbe senza che nessuno lo legga. */
+watch(() => inPausa.value || aiutoAperto.value, giu => {
+  if (giu) {
+    if (!timer) return
+    restaAl = Math.max(0, scadeIl - performance.now())
+    clearTimeout(timer); timer = 0
+  } else if (!timer && faPoi) {
+    programma(faPoi, restaAl)
+  }
+})
 
 /* ---------- battute ---------- */
 const pick = a => a[Math.floor(Math.random() * a.length)]
@@ -85,6 +159,11 @@ const UFFA     = ['Me ne vado!', 'Troppo lento!', 'Uffa…']
 /* ═══════════ la giornata ═══════════ */
 function inizia(i = idx.value) {
   if (i >= 0 && !sbloccata(i)) return
+  /* una giornata che comincia non comincia in pausa: il telefono posato
+     sulla mappa lascia il freno acceso, e il mercato nuovo nascerebbe
+     dietro un velo che nessuno ha chiesto */
+  togliLaPausa()
+  spegniOrologio()
   idx.value = i
   nTappa.value = 0
   hud.cuori = CUORI; hud.serviti = 0; hud.perfetti = 0; hud.incasso = 0
@@ -111,8 +190,7 @@ function apriTappa() {
   momento.value = 'raccolta'
   presi.value = []
   cambio.value = { banco: t.banco, n: nTappa.value }
-  clearTimeout(timer)
-  timer = setTimeout(() => { cambio.value = null; alBanco() }, 1500)
+  programma(() => { cambio.value = null; alBanco() }, 1500)
 }
 
 function alBanco() {
@@ -282,14 +360,17 @@ function consegna() {
     addCoins(preso); moneta.value = preso
     setTimeout(() => (moneta.value = 0), 1100)
   }
-  clearTimeout(timer)
-  timer = setTimeout(prossimo, 900)
+  programma(prossimo, 900)
 }
 
-/* ---------- il tempo ---------- */
+/* ---------- il tempo ----------
+   `fermo` è l'elenco comune (`giochi/pausa.js`) e comprende già «non si
+   sta giocando»; quello che resta scritto qui sono le due attese di
+   casa, che un velo non deve coprire perché non sono una pausa: il
+   cartello del cambio banco e il cliente appena servito. */
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
-  if (fase.value === 'gioco' && !cambio.value && !occupato) {
+  if (!fermo.value && !cambio.value && !occupato) {
     // chi è in fila si spazientisce molto più piano di chi è al banco
     coda.value.forEach((c, i) => { c.restaPazienza -= dt * (i === 0 ? 1 : 0.35) })
     const c = coda.value[0]
@@ -312,7 +393,7 @@ function chiudi(come) {
   esito.value = come
   fase.value = 'fine'
   cancelAnimationFrame(raf)
-  clearTimeout(timer)
+  spegniOrologio()
   cambio.value = null
   segnaBest('clienti', hud.serviti)
   if (come === 'vinta' && idx.value >= 0) mercatoCompleta(idx.value, CAMPAGNE.length)
@@ -390,7 +471,7 @@ onMounted(() => {
                     batti, confermaTotale, digitato, contoFatto, chiediTotale, TASTI,
                     CAMPAGNE, BANCHI, prog }
 })
-onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
+onUnmounted(() => { cancelAnimationFrame(raf); spegniOrologio() })
 </script>
 
 <template>
@@ -398,7 +479,11 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
     <!-- in partita le monete se ne vanno dalla barra: qui si maneggiano euro,
          due salvadanai in cima sarebbero solo confusione, e lo spazio serve
          ai cuori — vedi la stessa scelta nel laboratorio -->
-    <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
+    <!-- il ⏸ c'è solo dove la fila si spazientisce: sulla mappa e sul
+         cartello di fine giornata non c'è niente da fermare -->
+    <Barra titolo="Bancarella" guida="bancarella" :monete="fase !== 'gioco'"
+           :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
+           @aiuto="leggeLaGuida" @indietro="$emit('vai','home')">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone">🧾 <b>{{ hud.serviti }}</b></div>
@@ -636,6 +721,13 @@ onUnmounted(() => { cancelAnimationFrame(raf); clearTimeout(timer) })
     </div>
 
     <div v-if="moneta" class="moneta">+{{ moneta }} 🪙</div>
+
+    <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
+         qualunque cosa. Dove il gioco è già fermo dietro un velo suo —
+         il cartello di fine giornata, quello di un traguardo — non se ne
+         mette un secondo sopra. -->
+    <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
+               :dove="dovEravamo" @riprendi="togliLaPausa" />
   </div>
 </template>
 

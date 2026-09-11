@@ -132,6 +132,24 @@ Le righe di corsa ai lati dello schermo si spengono quando la spinta
 smette di lavorare: si vede, invece di continuare a premere senza capire
 perché.
 
+## Fermarsi
+
+In gara, in cima allo schermo, c'è **⏸**. La corsa si ferma dov'è e resta
+lì finché non si tocca: non c'è nessun conto alla rovescia, e chi torna
+trova scritto a che punto era («mancano 240 m»).
+
+Serve anche senza premerlo. **Se il telefono si posa — si blocca lo
+schermo, si cambia applicazione, si risponde a una chiamata — la corsa va
+in pausa da sola, e quando si riapre non riparte**: aspetta un tocco.
+Riprendere da soli vorrebbe dire consegnare una partita in corsa a un
+bambino che sta ancora guardando il telefono che si accende, e il primo
+mostro se lo prende lì.
+
+Il tasto «indietro» invece **abbandona la gara** e torna alla mappa: la
+corsa non si salva a metà, si ricomincia la tappa da capo. Per questo c'è
+il ⏸ — prima, l'unico modo di fermarsi quando si veniva chiamati a tavola
+era perdere la corsa.
+
 ## Le tre stelle
 
 - ⭐ **arrivare** in fondo
