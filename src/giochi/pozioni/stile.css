@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL LABORATORIO DELLE POZIONI — L'ASPETTO
+
+   Un file solo, ogni classe comincia per `pz-`. Il fondo è quello
+   notturno del laboratorio di sempre; le carte chiare sono la
+   pergamena e gli attrezzi, cioè le cose che si toccano.
+   ═══════════════════════════════════════════════════════════════════ */
+.pz {
+  --pz-fondo: #1e1533;
+  --pz-carta: #fff9ee;
+  --pz-inchiostro: #2d2340;
+  --pz-tenue: #8d7fae;
+  --pz-bordo: #d9cfe8;
+  --pz-viola: #7a5cc4;
+  --pz-verde: #2f9e5a;
+  --pz-rosso: #d8524d;
+  --pz-ambra: #f0b429;
+  background: radial-gradient(120% 90% at 50% 0%, #3b2a55, var(--pz-fondo) 70%);
+  color: #f0e9ff;
+}
+.pz .em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+                       "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la mappa ═══════════ */
+.pz-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+            gap: 14px; width: 100%; max-width: 520px; margin: 0 auto;
+            padding: 8px 12px calc(16px + env(safe-area-inset-bottom)) }
+.pz-intro { margin: 0; font-size: 12.5px; color: #c9bde6; text-align: center }
+.pz-blocco > h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
+                  font-size: 15px; color: #c9bde6 }
+.pz-blocco > h3 b { color: #fff; font-size: 16px }
+.pz-blocco > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right }
+.pz-tappe { display: flex; flex-direction: column; gap: 7px }
+.pz-tappa { display: flex; align-items: center; gap: 10px; text-align: left;
+            padding: 9px 11px; border-radius: 14px; background: #ffffff16;
+            box-shadow: 0 3px 0 #00000055, inset 0 0 0 2px #ffffff22; color: #fff;
+            transition: transform .12s }
+.pz-tappa:active { transform: translateY(2px); box-shadow: 0 1px 0 #00000055 }
+.pz-tappa .pz-numero { flex: none; width: 28px; height: 28px; border-radius: 50%;
+                       background: #ffffff22; display: grid; place-items: center;
+                       font-weight: 900; font-size: 13px }
+.pz-tappa .pz-testo { flex: 1; min-width: 0 }
+.pz-tappa b { display: block; font-size: 14.5px; font-weight: 900 }
+.pz-tappa i { display: block; font-style: normal; font-size: 11.5px; color: #c9bde6;
+              line-height: 1.25 }
+.pz-tappa .pz-stelle { flex: none; font-size: 14px; letter-spacing: 1px }
+.pz-tappa.pz-chiusa { opacity: .45; box-shadow: none }
+.pz-tappa.pz-adesso { box-shadow: 0 3px 0 var(--pz-viola), inset 0 0 0 2px var(--pz-viola) }
+.pz-tappa.pz-fatta .pz-numero { background: var(--pz-verde) }
+
+/* ═══════════ il banco ═══════════ */
+.pz-banco { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px;
+            width: 100%; max-width: 520px; margin: 0 auto; padding: 6px 10px;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom)); position: relative }
+.pz-bloccato .pz-attrezzi, .pz-bloccato .pz-scaffale { pointer-events: none }
+
+/* la pergamena e il calderone */
+.pz-alto { display: flex; gap: 8px; align-items: stretch; flex: none }
+.pz-pergamena { flex: 1; min-width: 0; background: var(--pz-carta); color: var(--pz-inchiostro);
+                border-radius: 12px; padding: 8px 10px; box-shadow: 0 3px 0 #00000055 }
+.pz-pergamena > b { display: block; font-size: 14px; margin-bottom: 4px }
+.pz-voci { display: flex; flex-direction: column; gap: 3px }
+.pz-voce { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 3px 6px;
+           border-radius: 8px; line-height: 1.2 }
+.pz-voce b { font-size: 15px }
+.pz-voce.pz-qui { background: #f3e8ff; box-shadow: inset 0 0 0 2px var(--pz-viola) }
+.pz-voce.pz-fatto { opacity: .55; text-decoration: line-through }
+.pz-paiolo { flex: none; width: 92px; position: relative; display: flex; flex-direction: column;
+             align-items: center; justify-content: flex-end }
+.pz-cliente { position: absolute; top: 0; right: 2px; font-size: 26px }
+.pz-pentola { width: 76px; height: 46px; border-radius: 8px 8px 30px 30px;
+              background: linear-gradient(180deg, #4a4358, #221c30); overflow: hidden;
+              box-shadow: 0 3px 0 #00000077; position: relative }
+.pz-brodo { position: absolute; left: 6px; right: 6px; top: 6px; height: 16px; border-radius: 50%;
+            background: var(--p); box-shadow: 0 0 10px var(--p); transition: background .6s }
+.pz-galleggia { position: absolute; bottom: 30px; font-size: 15px; animation: pz-galleggia 2.2s ease-in-out infinite }
+@keyframes pz-galleggia { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+
+/* il cartello */
+.pz-cartello { flex: none; background: var(--pz-carta); color: var(--pz-inchiostro);
+               border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column;
+               gap: 5px; font-size: 13.5px; line-height: 1.3; box-shadow: 0 3px 0 #00000055;
+               border-left: 6px solid var(--pz-viola) }
+.pz-cartello > b { font-size: 15px }
+.pz-cartello.pz-giusto { border-left-color: var(--pz-verde) }
+.pz-cartello.pz-sbaglio { border-left-color: var(--pz-rosso) }
+.pz-cosi { background: #fff; border-radius: 8px; padding: 6px 8px; display: flex;
+           flex-direction: column; gap: 3px }
+.pz-cosi > i { font-style: normal; font-weight: 900; font-size: 11px; color: var(--pz-tenue);
+               text-transform: uppercase; letter-spacing: .5px }
+.pz-catena { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 16px;
+             font-weight: 900 }
+.pz-catena em { font-style: normal; color: var(--pz-tenue) }
+.pz-catena .pz-meta { color: var(--pz-viola) }
+.pz-attesa { height: 5px; border-radius: 3px; background: #e6dff2; overflow: hidden }
+.pz-attesa i { display: block; height: 100%; background: var(--pz-rosso) }
+.pz-gradinata { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 900 }
+.pz-gradinata .pz-per { font-style: normal; font-size: 10px; color: var(--pz-tenue) }
+.pz-gradinata .pz-u { padding: 2px 6px; border-radius: 6px; background: #efe8f9 }
+.pz-gradinata .pz-capo { background: var(--pz-viola); color: #fff }
+.pz-consiglio { font-size: 13px }
+.pz-procedimento { font-weight: 700 }
+.pz-quanto { font-style: normal; font-size: 11.5px; color: var(--pz-tenue) }
+
+/* gli attrezzi */
+/* ancorati in basso, vicino allo scaffale e al pollice: lo spazio che
+   avanza resta sotto il cartello, dove non c'è niente da toccare */
+.pz-attrezzi { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: stretch;
+               justify-content: center; flex-wrap: wrap; align-content: flex-end; overflow-y: auto }
+.pz-attrezzo { flex: 1 1 130px; max-width: 190px; min-height: 150px; display: flex; flex-direction: column;
+               align-items: center; justify-content: flex-end; gap: 4px; padding: 8px 6px;
+               border-radius: 14px; background: var(--pz-carta); color: var(--pz-inchiostro);
+               box-shadow: 0 3px 0 #00000055; transition: transform .12s, box-shadow .12s }
+.pz-attrezzo.pz-sopra { transform: scale(1.06); box-shadow: 0 0 0 4px var(--pz-ambra) }
+.pz-attrezzo:active { transform: translateY(2px) }
+.pz-tanti .pz-attrezzo { flex-basis: 30%; min-height: 96px; padding: 4px }
+.pz-tanti .pz-figura { height: 50px }
+.pz-figura { width: 100%; height: 92px; display: block }
+.pz-taglia-G { height: 104px }
+.pz-targa { display: flex; flex-direction: column; text-align: center; line-height: 1.2 }
+.pz-targa b { font-size: 12.5px }
+.pz-targa i { font-style: normal; font-size: 11px; color: var(--pz-tenue) }
+.pz-targa em { font-style: normal; font-weight: 900; color: var(--pz-viola) }
+.pz-tanti .pz-targa b { font-size: 11px }
+.pz-tanti .pz-targa i { font-size: 10px }
+
+/* i tratti delle figure */
+.pz-legno { fill: #8b5e3c } .pz-metallo { fill: #9aa3b5 } .pz-metallo-chiaro { fill: #c7ced9 }
+.pz-peso-fig { fill: #4b4358 } .pz-corpo-fig { fill: #e9e3f5; stroke: #9a8cbb; stroke-width: 2 }
+/* la taglia si vede anche dal colore, non solo dalla grandezza: la
+   bilancia del mercato è di legno chiaro, quella del magazzino di ferro */
+.pz-taglia-M .pz-corpo-fig { fill: #f6e7c8; stroke: #b98b1a }
+.pz-taglia-G .pz-corpo-fig { fill: #cfd5df; stroke: #5b6474 }
+.pz-taglia-M .pz-vetro { fill: #fff3dc; stroke: #b98b1a } .pz-taglia-M .pz-manico { stroke: #b98b1a }
+.pz-taglia-G .pz-vetro { fill: #e2e6ec; stroke: #5b6474 } .pz-taglia-G .pz-manico { stroke: #5b6474 }
+.pz-taglia-M .pz-nastro { fill: #ffd27a; stroke: #a0701a } .pz-taglia-G .pz-nastro { fill: #c9d1dc; stroke: #5b6474 } .pz-quadrante { fill: #fff; stroke: #4b4358; stroke-width: 2 }
+.pz-lancetta { stroke: #d8524d; stroke-width: 2; stroke-linecap: round }
+.pz-vetro { fill: #eaf4ff; stroke: #7fa8d8; stroke-width: 2.5 }
+.pz-vetro-bordo { fill: none; stroke: #7fa8d8; stroke-width: 2.5; stroke-linejoin: round }
+.pz-manico { fill: none; stroke: #7fa8d8; stroke-width: 3 }
+.pz-tacca { stroke: #4b4358; stroke-width: 1.5 }
+.pz-nastro { fill: #ffe08a; stroke: #b98b1a; stroke-width: 1.5 }
+.pz-arrotolato { fill: none; stroke: #b98b1a; stroke-width: 3; stroke-linecap: round }
+
+/* il pannello della dosatura */
+.pz-dosa { flex: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px;
+           background: var(--pz-carta); color: var(--pz-inchiostro); border-radius: 14px;
+           padding: 8px 10px; box-shadow: 0 3px 0 #00000055 }
+.pz-testa { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+.pz-testa .pz-targa { text-align: left }
+.pz-corpo { display: flex; align-items: center; gap: 10px; flex: 1; min-height: 0 }
+.pz-figura-grande { flex: 1; position: relative; height: 112px }
+.pz-figura-grande .pz-figura { height: 100% }
+.pz-sopra-figura { position: absolute; left: 50%; top: 0; transform: translateX(-50%); font-size: 26px }
+.pz-lettura { flex: none; min-width: 96px; text-align: center; font-size: 26px; font-weight: 900;
+              color: var(--pz-viola); background: #fff; border-radius: 10px; padding: 6px 8px;
+              box-shadow: inset 0 0 0 2px var(--pz-bordo) }
+.pz-pezzi { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center }
+.pz-pezzo { min-width: 54px; padding: 8px 8px; border-radius: 10px; background: #4b4358; color: #fff;
+            font-weight: 900; font-size: 13px; box-shadow: 0 3px 0 #2a2436 }
+.pz-pezzo:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a2436 }
+.pz-pezzo:disabled { opacity: .35; box-shadow: none }
+.pz-pezzo.pz-annulla { background: #fff; color: var(--pz-inchiostro); box-shadow: inset 0 0 0 2px var(--pz-bordo) }
+.pz-azioni { display: flex; gap: 8px; align-items: center; justify-content: flex-end }
+.pz-piccolo { padding: 7px 10px; border-radius: 999px; background: #fff; color: var(--pz-inchiostro);
+              font-weight: 800; font-size: 12.5px; box-shadow: inset 0 0 0 2px var(--pz-bordo) }
+.pz-piccolo:disabled { opacity: .4 }
+.pz-grosso { padding: 11px 18px; border-radius: 999px; background: var(--pz-viola); color: #fff;
+             font-weight: 900; font-size: 15px; box-shadow: 0 4px 0 #4f3a8a }
+.pz-grosso:active { transform: translateY(2px); box-shadow: 0 2px 0 #4f3a8a }
+.pz-grosso:disabled { opacity: .45; box-shadow: none; transform: none }
+.pz-grosso.pz-chiaro { background: #fff; color: var(--pz-inchiostro); box-shadow: 0 4px 0 #d4dce6 }
+
+/* lo scaffale */
+.pz-scaffale { flex: none; display: flex; gap: 8px; justify-content: center; padding: 8px 6px 4px;
+               border-radius: 14px; background: #ffffff12; box-shadow: inset 0 3px 0 #00000033 }
+/* `touch-action: none` sulla carta e non sul contenitore: è il dito su
+   questa che trascina, e il browser non deve scambiarlo per uno
+   scorrimento */
+.pz-ingrediente { flex: 1 1 0; max-width: 110px; display: flex; flex-direction: column; align-items: center;
+                  gap: 3px; padding: 7px 4px; border-radius: 12px; background: var(--pz-carta);
+                  color: var(--pz-inchiostro); box-shadow: 0 3px 0 #00000055; touch-action: none;
+                  cursor: grab; transition: transform .12s, box-shadow .12s }
+.pz-ingrediente .pz-icona { font-size: 30px }
+.pz-ingrediente .pz-nome { font-size: 11px; font-weight: 800; text-align: center; line-height: 1.15 }
+.pz-ingrediente.pz-in-mano { transform: translateY(-8px); box-shadow: 0 0 0 3px var(--pz-ambra), 0 8px 0 #00000055 }
+.pz-ingrediente.pz-in-uso { opacity: .5 }
+.pz-ingrediente.pz-preso { opacity: .35 }
+.pz-ingrediente.pz-fatto { opacity: .3; cursor: default }
+.pz-fantasma { position: fixed; z-index: 50; pointer-events: none; font-size: 40px;
+               transform: translate(-50%, -60%); filter: drop-shadow(0 4px 4px #0006) }
+
+/* ═══════════ il cartello di fine ═══════════ */
+.pz-velo { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center;
+           justify-content: center; padding: 20px; background: #1e153399 }
+.pz-cartello-fine { width: 100%; max-width: 360px; background: var(--pz-carta); color: var(--pz-inchiostro);
+                    border-radius: 18px; padding: 18px 16px; display: flex; flex-direction: column;
+                    align-items: center; gap: 8px; text-align: center; box-shadow: 0 6px 0 #00000077 }
+.pz-cartello-fine h2 { margin: 0; font-size: 20px }
+.pz-cartello-fine p { margin: 0; font-size: 13.5px; color: #5e5378 }
+.pz-faccia { font-size: 44px }
+.pz-punteggio { font-size: 26px; letter-spacing: 2px; min-height: 1em }
+.pz-monete { font-size: 20px; font-weight: 900; color: #b8860b }
+.pz-cartello-fine .pz-grosso { width: 100%; margin-top: 4px }
+
+/* orizzontale su un telefono: il banco stretto perde lo scaffale sotto,
+   e lì il gioco si gira (`.gira`, come tutti gli altri) */
+@media (max-height: 520px) {
+  .pz-figura { height: 48px }
+  .pz-attrezzo { min-height: 90px }
+}

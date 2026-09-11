@@ -25,9 +25,10 @@ import corsa from './corsa/gioco.js'
 import fattoria from './fattoria/gioco.js'
 import sotterraneo from './sotterraneo/gioco.js'
 import castello from './castello/gioco.js'
+import pozioni from './pozioni/gioco.js'
 
 export const GIOCHI_NUOVI = [codiceSegreto, survivors, dungeon, conta, primaDopo, corsa, fattoria,
-                             sotterraneo, castello]
+                             sotterraneo, castello, pozioni]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null
 

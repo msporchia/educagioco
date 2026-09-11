@@ -136,9 +136,6 @@ export const GIOCHI = [
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
     grandi: true, chiede: ['moltiplicazioni', 'divisioni'] },
-  { chiave: 'pozioni',    ico: '⚗️', nome: 'Il laboratorio delle pozioni',
-    che: 'litri, chili e metri', serve: ['misure', 'conversioni'],
-    area: 'numeri', come: 'fare', grandi: true },
   /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
      giornata è tarata sui sei anni e mezzo (`portata: 32`, ricavata in
      `data/bancarella.js`), cioè prima elementare — e contare le monete e

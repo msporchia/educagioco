@@ -9,7 +9,6 @@ import CamerettaView from './views/CamerettaView.vue'
 import LinguaGame from './views/LinguaGame.vue'
 import MathGame from './views/MathGame.vue'
 import TowerDefense from './views/TowerDefense.vue'
-import PozioniGame from './views/PozioniGame.vue'
 import BancarellaGame from './views/BancarellaGame.vue'
 import GeneraleGame from './views/GeneraleGame.vue'
 import AlboView from './views/AlboView.vue'
@@ -30,7 +29,7 @@ const pronto = ref(false)
 const viste = { home: HomeView, cameretta: CamerettaView, animali: CamerettaView,
                 inglese: LinguaGame, verbi: LinguaGame, spagnolo: LinguaGame,
                 mate: MathGame, torri: TowerDefense,
-                pozioni: PozioniGame, bancarella: BancarellaGame,
+                bancarella: BancarellaGame,
                 generale: GeneraleGame,
                 albo: AlboView, genitori: GenitoriView,
                 /* «Come funziona»: sta fuori dal codice dei genitori

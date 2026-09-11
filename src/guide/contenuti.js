@@ -720,27 +720,20 @@ export const AIUTI = {
   pozioni: {
     emoji: '🧪', titolo: 'Le pozioni',
     blocchi: [
-      'La ricetta è scritta in unità grandi (0,75 l), gli attrezzi del banco contano in unità più piccole: convertire non è una domanda, è il modo di usare l\'attrezzo.',
-      { titolo: 'I tre attrezzi', righe: [
-        '🫗 **versa** — tieni premuto per riempire in fretta, poi la goccia fine.',
-        '⚖️ **pesa** — metti i pesi sul piatto finché fanno la quantità.',
-        '✂️ **taglia** — trascina la lama sul righello e taglia.',
-        'Sul cartellino c\'è scritto **in che unità conta quell\'attrezzo lì**: la bilancia da mercato ha i pesi da 1 hg, il metro da sarto le tacche da 1 dm. Non è sempre il fondo della scala, ed è metà del mestiere.',
+      'La ricetta chiede «1,5 kg di polvere di luna». Sullo scaffale ci sono più ingredienti: prendi quello giusto e **trascinalo sull\'attrezzo** — oppure toccalo, e poi tocca l\'attrezzo.',
+      { titolo: 'Ogni attrezzo conta in una unità, e arriva fin lì', righe: [
+        'Sul cartellino c\'è scritto **in che unità conta** (la bilancia da cucina in grammi, quella del mercato in etti) e **fino a quanto arriva**. Otto chili sulla bilancia dei grammi non ci stanno: si sale a quella degli etti.',
+        'Sull\'attrezzo si mettono i pezzi — i pesi, i misurini, i pezzi di nastro — finché il numero fa la dose. Poi «nel calderone».',
+        'Qualunque attrezzo su cui la dose ci sta va bene: un chilo sono mille grammi sulla bilancia da cucina e dieci etti su quella del mercato.',
       ] },
-      'Si sbaglia col troppo: la boccia trabocca e la pozione fa BOOM. Non costa una vita, costa tempo.',
-      { titolo: 'Una conversione per volta', righe: [
-        'Ogni tappa porta **una conversione nuova sola**, e comincia guidata: le prime dosi sono già scritte nell\'unità del banco («400 g»), le due dopo portano la conversione accanto («0,4 kg (400 g)»), e poi resta il cartello **1 kg = 1000 g** sopra la bilancia.',
-        'Nelle prime dosi il cartello fa **il conto per intero** sulla dose che hai in mano: «da kg a g sono 3 scalini in giù · la virgola va a destra di 3 posti · 0,4 → 4 → 40 → **400 g**». Spostare la virgola non è una cosa ovvia, e si impara vedendola fare.',
-        'Il cartello se ne va da solo quando la conversione è imparata, e **torna se sbagli**. Non c\'è niente da chiudere.',
+      { titolo: 'Una cosa nuova per volta', righe: [
+        'Prima si impara il gesto, senza conversioni. Poi arriva il chilo, col conto scritto per intero: «da kg a g sono 3 scalini in giù, aggiungi 3 zeri». Poi lo stesso senza il risultato, poi la virgola, poi la bilancia degli etti, poi le conversioni al contrario.',
+        'Le lunghezze e i liquidi rifanno la stessa scaletta. Nelle ultime due tappe arriva di tutto, e solo nell\'ultima ci sono tre attrezzi per famiglia.',
+        'Se sbagli, il cartello dice **perché e come si fa**, per intero, anche nelle tappe senza aiuti. Non c\'è fretta e non ci sono cuori: la tappa si finisce sempre, e a cambiare sono le stelle.',
       ] },
-      { titolo: 'Se la barra del tempo non c\'è', righe: [
-        'Vuol dire che la conversione è nuova: finché c\'è il procedimento scritto il cliente **non ha fretta** e non se ne va, e al posto della barra c\'è scritto «senza fretta».',
-        'La barra torna insieme alla sparizione degli aiuti. Le monete sono le stesse: si paga l\'esercizio, e l\'esercizio è lo stesso.',
-      ] },
-      'Con **⏸** in cima si mette in pausa, e il laboratorio si ferma da solo se posi il telefono. Anche il foglio che stai leggendo adesso ferma il cliente; la 🪜 al muro no, quella è un attrezzo del banco.',
       { titolo: 'Cosa allena', righe: [
-        'Le misure e le unità: litri e millilitri, chili e grammi, metri e centimetri — e passare dall\'una all\'altra.',
-        'I decimali visti come quantità e non come numeri sulla carta: 0,75 l è tre quarti di boccia.',
+        'Le misure e le unità: chili, etti e grammi; metri, decimetri e centimetri; litri, decilitri e millilitri — e passare dall\'una all\'altra, in tutti e due i versi.',
+        'Scegliere l\'attrezzo giusto per la quantità: leggere un cartellino è metà del mestiere.',
       ] },
     ],
   },

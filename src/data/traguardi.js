@@ -46,7 +46,6 @@ const AREE_TUTTE = [
   { id: 'inglese',  nome: 'English',             emoji: '🌐', classe: 'eng' },
   { id: 'spagnolo', nome: 'Español',             emoji: '🇪🇸', classe: 'esp' },
   { id: 'torri',    nome: 'Difendi il Castello', emoji: '🏰', classe: 'td' },
-  { id: 'pozioni',  nome: 'Il laboratorio delle pozioni', emoji: '⚗️', classe: 'poz' },
   { id: 'bancarella', nome: 'La bancarella',       emoji: '🛒', classe: 'banco' },
   { id: 'generale', nome: 'Il generale',           emoji: '🎖️', classe: 'gen' },
   { id: 'animali',  nome: 'Watson, Sherlock & Irene', emoji: '🐾', classe: 'pets' },
@@ -185,30 +184,6 @@ const TRAGUARDI_TUTTI = [
     come: n => n === 4 ? 'Diventa sicuro in tutte e quattro le operazioni'
                        : `Diventa sicuro in ${n} operazioni`,
     soglie: [2, 4], valore: m => m.imparati('op:') },
-
-  /* ---------- Il laboratorio delle pozioni ---------- */
-  { id: 'poz-pozioni', area: 'pozioni', emoji: '🧪', nome: 'Alchimista',
-    come: n => `Prepara ${n} pozioni`,
-    soglie: [10, 50, 200], valore: m => m.tot('pozioni') },
-  { id: 'poz-perfette', area: 'pozioni', emoji: '✨', nome: 'Mano ferma',
-    come: n => `Prepara ${n} pozioni senza un errore`,
-    soglie: [5, 30, 120], valore: m => m.tot('pozioniPerfette') },
-  /* le conversioni sono l'intero programma del gioco: saperle tutte
-     vuol dire aver capito che ogni scalino vale ×10. Sono quindici da
-     quando gli attrezzi hanno smesso di contare sempre nell'unità base
-     — una bilancia da mercato conta in etti — e la soglia d'oro le
-     segue: un traguardo che si chiude a nove su quindici direbbe
-     «tutte» a chi ne ha imparate sei meno del programma */
-  { id: 'poz-misure', area: 'pozioni', emoji: '🪜', nome: 'La scala delle misure',
-    come: n => n === 15 ? 'Impara tutte e quindici le conversioni' : `Impara ${n} conversioni`,
-    soglie: [3, 8, 15], valore: m => m.imparati('pozioni:') },
-  { id: 'poz-turno', area: 'pozioni', emoji: '🔮', nome: 'Turno da record',
-    come: n => `Prepara ${n} pozioni prima di finire i cuori`,
-    soglie: [5, 10, 20], valore: m => m.best('pozioni') },
-  { id: 'poz-tappe', area: 'pozioni', emoji: '🗺️', nome: 'Il laboratorio',
-    come: n => n === 1 ? 'Supera la prima tappa del laboratorio'
-                       : n === 17 ? 'Finisci tutte e diciassette le tappe' : `Supera ${n} tappe`,
-    soglie: [1, 8, 17], valore: m => m.tappePoz() },
 
   /* ---------- La bancarella ---------- */
   { id: 'banco-clienti', area: 'bancarella', emoji: '🧾', nome: 'Bottegaio',

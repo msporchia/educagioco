@@ -3,14 +3,13 @@ import { computed } from 'vue'
 import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, engProgresso, espProgresso, mercatoProgresso,
-         labProgresso, tabellineIntere, genProgresso,
+         tabellineIntere, genProgresso,
          giocoAcceso, giocoForzato, quantiGiochiAccesi,
          sperimentaliAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
-import { SCALE, TAPPE as TAPPE_POZ } from '../data/pozioni.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
 /* la riga del generale conta le prove CHE SI VEDONO, non tutte quelle
    che ci sono: quelle non ancora approvate stanno dietro il cancello dei
@@ -60,12 +59,6 @@ const filaMate = SCALETTA
 const doveMate = computed(() => posizioneOra(filaDi(pianeta.value)))
 const fatteMate = doveMate
 
-/* il laboratorio ha le sue tappe, e a campagna finita il laboratorio libero */
-const QUANTE_MISURE = SCALE.length
-const QUANTE_TAPPE_POZ = TAPPE_POZ.length
-const lab = computed(() => labProgresso())
-const pozioni = computed(() => state.profile.totals.pozioni || 0)
-const misure = computed(() => countMastered('pozioni:'))
 const clienti = computed(() => state.profile.totals.clienti || 0)
 const restiPerfetti = computed(() => state.profile.totals.restiPerfetti || 0)
 /* la bancarella invece la campagna ce l'ha: le giornate di mercato */
@@ -150,7 +143,7 @@ const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
    manifesto perché nascono senza una riga di CSS dedicata. */
 const CLASSE = {
   mate: 'mate', inglese: 'eng', spagnolo: 'esp', torri: 'td',
-  pozioni: 'poz', bancarella: 'banco', generale: 'gen',
+  bancarella: 'banco', generale: 'gen',
 }
 
 /* Un gruppo senza nemmeno un gioco acceso non si disegna: i genitori
@@ -180,11 +173,6 @@ const dove = computed(() => {
       ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
       : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
     torri: '',
-    pozioni: lab.value.libera
-      ? `♾️ laboratorio libero · 🪜 ${misure.value}/${QUANTE_MISURE} conversioni`
-      : pozioni.value
-        ? `⚗️ tappa ${lab.value.tappa + 1} di ${QUANTE_TAPPE_POZ} · 🧪 ${pozioni.value} preparate`
-        : '',
     bancarella: mercato.value.libera
       ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`
       : clienti.value
@@ -409,7 +397,6 @@ function aChePunto (chiave) {
 .carta.verbi { background:linear-gradient(120deg,#e8edf8,#fffffff0) }
 .carta.esp  { background:linear-gradient(120deg,#fff0d9,#fffffff0) }
 .carta.td   { background:linear-gradient(120deg,#e6f7e2,#fffffff0) }
-.carta.poz  { background:linear-gradient(120deg,#ece2ff,#fffffff0) }
 .carta.banco{ background:linear-gradient(120deg,#fff0dc,#fffffff0) }
 .carta.gen  { background:linear-gradient(120deg,#e4f0e8,#fffffff0) }
 .carta.room { background:linear-gradient(120deg,#ffeede,#fff6e0 45%,#fffffff0) }

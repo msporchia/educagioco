@@ -36,7 +36,7 @@ import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campa
 import { CAMPAGNA as INGLESE } from '../../src/data/campagna-inglese.js'
 import { CAMPAGNA as SPAGNOLO } from '../../src/data/campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from '../../src/data/campagne-castello.js'
-import { TAPPE as POZIONI } from '../../src/data/pozioni.js'
+import { CAMPAGNA as POZIONI } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
 import { CAMPAGNE as GENERALE } from '../../src/data/campagne-generale.js'
 import { SAPERI } from '../../src/data/saperi.js'

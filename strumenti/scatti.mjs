@@ -235,9 +235,9 @@ const RICETTE = [
   { file: 'castello-calcolo', dove: 'torri', attesa: '.tappe',
     passi: [['.tap:not(.chiusa)', 1500], scegliTorre] },
 
-  { file: 'pozioni-mappa', dove: 'pozioni', attesa: '.tappe, .mappa' },
-  { file: 'pozioni-gioco', dove: 'pozioni', attesa: '.tappe, .mappa',
-    passi: [['.tappa:not(.chiusa)', 1600]] },
+  { file: 'pozioni-mappa', dove: 'pozioni', attesa: '.pz-mappa' },
+  { file: 'pozioni-gioco', dove: 'pozioni', attesa: '.pz-mappa',
+    passi: [['.pz-tappa:not(.pz-chiusa)', 1600]] },
 
   { file: 'bancarella-mappa', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa' },
   { file: 'bancarella-gioco', dove: 'bancarella', attesa: '.giornata, .tappe, .mappa',

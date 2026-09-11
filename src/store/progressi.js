@@ -26,7 +26,6 @@ import { TOTALE_ELEMENTI } from '../data/calcolo.js'
 import { concettiSaldi as concettiSaldiDi } from './calcolo.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
-import { TAPPE as TAPPE_POZ } from '../data/pozioni.js'
 import { WORDS } from '../data/words.js'
 import { VERBI } from '../data/verbi.js'
 import { FRASI } from '../data/frasi.js'
@@ -35,7 +34,6 @@ import { VERBI_ES } from '../data/verbi-es.js'
 import { FRASI_ES } from '../data/frasi-es.js'
 import { PETS, SOGLIE, sazietaDi, contento } from '../data/pets.js'
 import { SERIE } from '../data/capsule.js'
-import { SCALE } from '../data/pozioni.js'
 import { FASCE } from '../data/bancarella.js'
 
 export { AREE, MEDAGLIE, PREMI, TRAGUARDI }
@@ -60,8 +58,6 @@ const MATERIE_TUTTE = [
   { id: 'verbi-es',  prefisso: 'verbo-es:', nome: 'Verbi spagnoli', emoji: '🎧', totale: VERBI_ES.length },
   { id: 'frasi-es',  prefisso: 'frase-es:', nome: 'Frasi spagnole', emoji: '💬', totale: FRASI_ES.length },
   { id: 'torri',   prefisso: 'op:',    nome: 'Operazioni in colonna', emoji: '➗', totale: 4 },
-  /* le nove conversioni fra unità grandi e piccole del laboratorio */
-  { id: 'misure',  prefisso: 'pozioni:',    nome: 'Misure e conversioni', emoji: '⚗️', totale: SCALE.length },
   /* nel resto l'elemento non è la cifra ma il pezzo più piccolo che serve
      per comporla: cinque fasce, dagli euro tondi ai centesimi */
   { id: 'soldi',   prefisso: 'bancarella:', nome: 'Euro e resto', emoji: '🪙', totale: FASCE.length },
@@ -124,11 +120,6 @@ export const XP_AREA = {
                   + m.tot('frasiEs') + m.imparati('frase-es:') * 10
                   + m.tappeEs() * 40,
   torri:     m => m.tot('torri') * 3 + m.tot('ondate') * 2 + m.tappe() * 40,
-  /* nel laboratorio l'unità di lavoro è l'ingrediente, non la pozione: è lì
-     che si fa una conversione, e vale come una risposta altrove. La pozione
-     finita è il di più per averle azzeccate tutte di fila. */
-  pozioni:   m => m.tot('misure') + m.tot('pozioni') * 3 + m.tot('pozioniPerfette') * 2
-                  + m.imparati('pozioni:') * 10 + m.tappePoz() * 40,
   /* alla bancarella l'unità è il cliente: raccogliere la spesa e comporre il
      resto è un giro solo, e costa più di una risposta a quiz */
   bancarella: m => m.tot('clienti') * 3 + m.tot('restiPerfetti') * 2
@@ -259,7 +250,6 @@ export function misure(p, now = Date.now()) {
     concettiSaldi: () => concettiSaldiDi(items, now),
     tappeEn: () => (p.eng && p.eng.tappa) || 0,
     tappeEs: () => (p.esp && p.esp.tappa) || 0,
-    tappePoz: () => (p.lab && p.lab.tappa) || 0,
     tappeGen: () => (p.gen && p.gen.tappa) || 0,
 
     /* ---------- le campagne dei giochi nuovi ----------
@@ -338,7 +328,7 @@ export function misure(p, now = Date.now()) {
     giochiProvati: () => {
       const t = p.totals || {}
       return [t.math > 0, t.en > 0 || t.verbi > 0, t.es > 0, t.torri > 0, t.pasti > 0,
-              t.pozioni > 0, t.clienti > 0, t.missioni > 0]
+              t.clienti > 0, t.missioni > 0]
         .filter(Boolean).length + giochiNuoviProvati(m)
     },
   }
@@ -401,22 +391,6 @@ export function allineaSpagnolo(p, now = Date.now()) {
   p.esp.tappa = Math.max(p.esp.tappa || 0, t)
   if (p.esp.tappa >= TAPPE_ES.length) p.esp.libera = true
   return p.esp
-}
-
-/* Il laboratorio, che invece qualcuno l'ha già giocato per intero quando
-   ancora non aveva tappe: chi sa già convertire non deve ricominciare dalla
-   bilancia. Una tappa risulta fatta se **tutte** le sue conversioni sono
-   sapute — sono una, due o tre, mica decine di parole come nelle lingue,
-   quindi qui si può pretendere tutto. */
-export function allineaPozioni(p, now = Date.now()) {
-  if (!p.lab) p.lab = { tappa: 0, libera: false }
-  const items = p.items || {}
-  const sa = k => items[k] && isMastered(items[k], now)
-  let t = 0
-  while (t < TAPPE_POZ.length && TAPPE_POZ[t].scale.every(s => sa('pozioni:' + s))) t++
-  p.lab.tappa = Math.max(p.lab.tappa || 0, t)
-  if (p.lab.tappa >= TAPPE_POZ.length) p.lab.libera = true
-  return p.lab
 }
 
 /* Chi sa già le prime tabelline non deve rigiocarsele. Scrive l'indice

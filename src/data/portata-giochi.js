@@ -33,7 +33,7 @@ import { SCALETTA } from './asteroidi.js'
 import { CAMPAGNA as INGLESE } from './campagna-inglese.js'
 import { CAMPAGNA as SPAGNOLO } from './campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
-import { TAPPE as POZIONI } from './pozioni.js'
+import { CAMPAGNA as POZIONI } from '../giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from './bancarella.js'
 import { CAMPAGNE as GENERALE } from './campagne-generale.js'
 import { CAMPAGNA as CONTA } from '../giochi/conta/dati/campagna.js'
@@ -84,7 +84,7 @@ const regole = () => ({ eta: etaDelBambino(), spenti: saperiSpenti() })
    qui. */
 const CONTATORE_VECCHIO = {
   mate: 'math', inglese: 'en', spagnolo: 'es', torri: 'torri',
-  pozioni: 'pozioni', bancarella: 'clienti', generale: 'missioni',
+  bancarella: 'clienti', generale: 'missioni',
 }
 
 export function giaProvato (chiave) {
