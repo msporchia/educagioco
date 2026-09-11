@@ -10,7 +10,51 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body,#app{height:100%}
-body{overflow:hidden;color:var(--testo);user-select:none;
+
+/* ── IL DITO CHE TIENE PREMUTO ──
+   Su iPhone, tenendo premuto o trascinando dentro un gioco, compariva
+   l'evidenziazione blu della selezione e il callout «Copia · Cerca ·
+   Condividi». Su Android no, e il motivo è tutto qui: c'era `user-select`
+   e basta, che Safari ha imparato solo dalla 17 — sui telefoni di ieri
+   quella riga non esisteva. Servono tutte e tre:
+
+   - `-webkit-user-select` è quella che Safari legge davvero;
+   - `user-select` è quella standard, per tutti gli altri;
+   - `-webkit-touch-callout` è un'altra cosa ancora, e senza di lei metà
+     del difetto resta: il menù del tener-premuto esce **anche dove non
+     c'è testo da selezionare** — su un link, e su tutto quello che iOS
+     tratta come un'immagine, tele comprese («Salva immagine»).
+
+   Stanno su `html,body,#app` e non su `*`, ed è deliberato: la proprietà
+   si eredita, quindi il verso «tutto spento, qualcosa riacceso» funziona
+   solo se le eccezioni possono ereditare a loro volta. Con `*` ogni
+   figlio se la riprenderebbe addosso, e un paragrafo dentro una guida
+   riaccesa tornerebbe muto.
+
+   `touch-action:manipulation` sta su `#app` e toglie **solo** lo zoom del
+   doppio tocco (e il mezzo secondo di attesa che si porta dietro):
+   scorrere e pizzicare per ingrandire restano. Non è su `body` perché il
+   viewport propaga il suo `touch-action` altrove e lì la regola non
+   conterebbe. Chi ha bisogno di più — le tele che si trascinano da sé —
+   dichiara `touch-action:none` per conto suo, ed è più stretto di questo:
+   vince lui. */
+html,body,#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#app{touch-action:manipulation}
+
+/* Le eccezioni: dove si scrive, e dove un grande deve poter prendere il
+   testo a dito. `.copiabile` si scrive addosso al singolo pezzo e **non**
+   si appende a una classe che c'era già: `.avviso` sembrava il posto
+   giusto — è il riquadro dove finisce l'indirizzo quando il telefono non
+   sa condividere, e il «si legge da qui» dei guasti quando gli appunti
+   non funzionano — ma quel nome se lo riprende anche il nastro delle
+   ondate in arrivo del castello, cioè roba in mezzo a una partita dove il
+   dito trascina. Una parola che dice «leggilo da qui» sopra un testo che
+   non si può prendere è una presa in giro; una selezione che si accende
+   sotto il dito di chi sta giocando è il difetto di partenza. */
+input,textarea,[contenteditable],.copiabile{
+  -webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
+body{overflow:hidden;color:var(--testo);
      font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
      /* Il fondo è di tutti e due i bambini: crema, verde tenue e azzurro.
         Prima andava dal rosa al lilla, e questi giochi li apre anche un

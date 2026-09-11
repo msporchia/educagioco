@@ -92,6 +92,9 @@ async function mandaIlLink () {
 .manda b { font-size:14.5px; color:var(--viola-scuro) }
 .manda i { font-size:12px; color:var(--tenue); font-style:normal;
            overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.esito { margin-top:2px; user-select:text }
+/* qui dentro finisce l'indirizzo, quando il telefono non sa condividere:
+   va preso a dito, quindi selezione e callout riaccesi (vedi `style.css`) */
+.esito { margin-top:2px; -webkit-user-select:text; user-select:text;
+         -webkit-touch-callout:default }
 .torna { align-self:center; margin-top:12px; padding:11px 26px; font-size:15px }
 </style>

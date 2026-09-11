@@ -142,8 +142,13 @@ const testo = inGrassetto
 </template>
 
 <style scoped>
+/* una guida si copia e si incolla in chat: è l'eccezione alla regola di
+   `style.css`, che spegne la selezione in tutta l'app. Il `-webkit-` non è
+   un di più — è quello che legge Safari, e senza, su iPhone, questa riga
+   non esiste; il callout si riaccende perché è lui che porta «Copia». */
 .guida-corpo { display:flex; flex-direction:column; gap:14px; text-align:left;
-               user-select:text }   /* una guida si copia e si incolla in chat */
+               -webkit-user-select:text; user-select:text;
+               -webkit-touch-callout:default }
 .par { font-size:15px; line-height:1.5; color:var(--testo) }
 .blocco { background:#ffffffb0; border-radius:14px; padding:12px 14px;
           box-shadow:0 2px 8px #8593a81f }
