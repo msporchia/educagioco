@@ -15,18 +15,20 @@
    È aritmetica, quindi gira in un lampo: giocarci davvero serve a
    un'altra cosa.
    ═══════════════════════════════════════════════════════════════════ */
-import { generaRicetta, taratura, scomponi, scaffale, vaBene, capienza, mescola,
+import { generaRicetta, taratura, scomponi, scaffale, vaBene, capienza, mescola, tara,
          laboratorioLibero, esigenteAl, passoAl, passoPer, passiDi, faticaDi,
          costoDi, dosatureDi, premioTappa, scaleDi, PAZIENZA_MINIMA,
          assistenzaDi, freschezzaDopo, promemoriaDi, QUANTO_E,
+         aiutoDi, spintaDi, senzaFretta, fattoreRespiro, SPINTA_PIENA,
          FRESCA, DIRETTE, ACCANTO,
-         TAPPE, PASSI, SCALE, STRUMENTI, SCALINI, INGREDIENTI } from '../../src/data/pozioni.js'
+         TAPPE, PASSI, SCALE, SCALA, STRUMENTI, SCALINI,
+         INGREDIENTI } from '../../src/data/pozioni.js'
 import { migraLaboratorio, LAB_VERSIONE } from '../../src/store/profile.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const GIRI = 300            // ricette per tappa: bastano a pescare ogni scala
 
-/* tutti i banchi di prova: le otto tappe della campagna più il laboratorio
+/* tutti i banchi di prova: le tappe della campagna più il laboratorio
    libero ai suoi cinque gradi di strizzatura */
 const BANCHI = [...TAPPE, ...[1, 2, 3, 4, 5].map(laboratorioLibero)]
 
@@ -35,6 +37,7 @@ const guasti = new Set()
 const conta = { liquido: 0, polvere: 0, radice: 0 }
 const chiavi = new Set()
 const quote = []            // dove cade la dose sulla scala dell'attrezzo, 0..1
+const perScala = {}         // quanto spesso, su ogni scala, qualche attrezzo è sbagliato
 let ingredienti = 0, scelteVere = 0
 
 for (const t of BANCHI) {
@@ -66,7 +69,9 @@ for (const t of BANCHI) {
 
       const buoni = i.attrezzi.filter(a => vaBene(a, i.piccolo))
       if (!buoni.length) guasti.add(`nessun attrezzo per ${i.piccolo} ${i.scala.a}`)
-      if (buoni.length < i.attrezzi.length) scelteVere++
+      const c = perScala[i.scala.id] || (perScala[i.scala.id] = { tot: 0, vere: 0 })
+      c.tot++
+      if (buoni.length < i.attrezzi.length) { scelteVere++; c.vere++ }
       for (const a of buoni) quote.push(i.piccolo / a.cap)
 
       for (const a of i.attrezzi) {
@@ -91,17 +96,31 @@ controlla('nessuna ricetta impossibile', guasti.size === 0, [...guasti].slice(0,
 nota(`${ingredienti} ingredienti generati · attrezzi usati:`,
      Object.entries(conta).map(([k, v]) => `${k} ${v}`).join(' · '))
 
-/* ── le nove conversioni escono davvero tutte ── */
+/* ── le conversioni escono davvero tutte ── */
 uguale('tutte le conversioni della tabella vengono giocate', chiavi.size, SCALE.length)
 controlla('le chiavi sono quelle che il motore si aspetta',
           [...chiavi].every(k => k.startsWith('pozioni:')), [...chiavi][0])
 
 /* ── scegliere l'attrezzo deve essere una scelta ──
-   Se andassero sempre bene tutti, lo scaffale sarebbe scenografia. */
+   Se andassero sempre bene tutti, lo scaffale sarebbe scenografia.
+
+   La soglia è scesa da 0,8 a 0,75 quando le bilance hanno cominciato a
+   contare anche in etti, e non per pigrizia: **su una scala ×10 gli
+   attrezzi che sanno contare in quell'unità sono due o tre in tutto**.
+   Una bilancia da cucina non conta in etti — le sue tacche sarebbero
+   mezzi etti — quindi lo scaffale di kg→hg è corto per forza, e con due
+   attrezzi capita spesso che vadano bene tutti e due. Quello che non
+   deve succedere è che una conversione diventi scenografia da sola, e
+   per questo si guarda anche scala per scala. */
 const quotaScelte = scelteVere / ingredienti
-controlla('quasi sempre c\'è almeno un attrezzo sbagliato', quotaScelte > 0.8,
+controlla('quasi sempre c\'è almeno un attrezzo sbagliato', quotaScelte > 0.75,
           `solo nel ${(quotaScelte * 100).toFixed(0)}% dei casi`)
-nota(`scelte vere: ${(quotaScelte * 100).toFixed(0)}% degli ingredienti`)
+const scenografia = Object.entries(perScala).filter(([, c]) => c.vere / c.tot < 0.25)
+controlla('e su nessuna conversione lo scaffale è scenografia',
+          scenografia.length === 0,
+          scenografia.map(([k, c]) => `${k} ${(c.vere / c.tot * 100).toFixed(0)}%`).join(' · '))
+nota(`scelte vere: ${(quotaScelte * 100).toFixed(0)}% degli ingredienti · ` +
+     Object.entries(perScala).map(([k, c]) => `${k} ${(c.vere / c.tot * 100).toFixed(0)}%`).join(' '))
 
 /* ── la dose non deve cadere sempre in cima ──
    È il difetto che rendeva la boccia una risposta gratis: bastava
@@ -138,14 +157,26 @@ controlla('nessun ingrediente ha il disegno di un attrezzo', doppioni.length ===
 /* ── il cartellino dell'attrezzo dice una capienza da persona ──
    «fino a 100 cm» non lo dice nessuno: si dice 1 m. La capienza sta in unità
    grandi e le tacche in unità piccole, ed è lì che sta il ×100 da fare — ma
-   le unità in gioco restano due, quelle della scala, mai una terza. */
+   le unità in gioco restano due, quelle della scala, mai una terza.
+
+   Si guarda `quanto`, che è quello che finisce sul cartellino: qui si
+   rifaceva il conto con `capienza(a, s)` sull'attrezzo **già tarato**,
+   cioè si divideva due volte, e il numero controllato non era quello
+   che il bambino legge. Funzionava per caso finché le unità piccole
+   erano cinque; alla prima caraffa contata in decilitri («0,2 dl») il
+   conto doppio sarebbe venuto fuori da solo. */
 const brutte = [], terze = []
 for (const s of SCALE)
   for (const a of scaffale(s)) {
-    const q = capienza(a, s)
+    const q = a.quanto
     if (!Number.isInteger(q.v) || q.v < 1 || q.v > 999) brutte.push(`${a.nome}: ${q.v} ${q.u}`)
     if (q.u !== s.da && q.u !== s.a) terze.push(`${s.da}→${s.a} ${a.nome}: ${q.v} ${q.u}`)
   }
+/* e `capienza` da sola dice la stessa cosa, se le si dà l'attrezzo crudo */
+for (const s of SCALE)
+  for (const a of STRUMENTI[s.tipo])
+    if (tara(a, s) && capienza(a, s).v !== tara(a, s).quanto.v)
+      brutte.push(`${a.nome}: cartellino stantio`)
 controlla('ogni attrezzo si legge con un numero tondo', brutte.length === 0, brutte.join(' · '))
 controlla('e in una delle due unità della scala, non in una terza',
           terze.length === 0, terze.join(' · '))
@@ -176,7 +207,7 @@ controlla('nel libero il passo si fa sempre più fine',
 
 /* ── ogni conversione entra in campagna, e nell'ordine giusto ── */
 const inCampagna = new Set(TAPPE.flatMap(t => t.scale))
-uguale('le nove conversioni entrano tutte in campagna', inCampagna.size, SCALE.length)
+uguale('tutte le conversioni entrano in campagna', inCampagna.size, SCALE.length)
 const primaVolta = {}
 TAPPE.forEach((t, i) => t.scale.forEach(s => { if (!(s in primaVolta)) primaVolta[s] = i }))
 controlla('le conversioni di casa vengono prima di quelle scolastiche',
@@ -184,6 +215,18 @@ controlla('le conversioni di casa vengono prima di quelle scolastiche',
           primaVolta['m-cm'] < primaVolta['cm-mm'] &&
           primaVolta['l-ml'] < primaVolta['l-cl'],
           JSON.stringify(primaVolta))
+/* l'unità di mezzo arriva prima come posto in cui si *scende* e poi come
+   posto in cui si *conta*: prima `hg→g`, poi la bilancia che conta in
+   etti. Il decagrammo, che non nomina nessuno, per ultimo. */
+controlla('l\'unità di mezzo si impara scendendoci, prima di contarci',
+          primaVolta['hg-g'] < primaVolta['kg-hg'] &&
+          primaVolta['m-cm'] < primaVolta['m-dm'] &&
+          primaVolta['l-ml'] < primaVolta['l-dl'],
+          JSON.stringify(primaVolta))
+controlla('il decagrammo arriva per ultimo, che non lo usa nessuno',
+          Math.min(primaVolta['kg-dag'], primaVolta['hg-dag']) >
+          Math.max(primaVolta['kg-hg'], primaVolta['hg-g']),
+          `dag alla ${primaVolta['kg-dag'] + 1}, hg alla ${primaVolta['kg-hg'] + 1}`)
 nota('entrano alla tappa: ' + Object.entries(primaVolta)
      .sort((a, b) => a[1] - b[1]).map(([s, i]) => `${s}→${i + 1}`).join(' · '))
 
@@ -198,7 +241,7 @@ nota('entrano alla tappa: ' + Object.entries(primaVolta)
 const doppie = TAPPE.filter(t => t.introduce.length > 1)
 uguale('nessuna tappa porta due conversioni nuove insieme',
        doppie.map(t => `${t.id}: ${t.introduce.join('+')}`).join(' · '), '')
-uguale('e le nove conversioni entrano una per una',
+uguale('e le conversioni entrano una per una',
        TAPPE.reduce((s, t) => s + t.introduce.length, 0), SCALE.length)
 controlla('`introduce` è la prima volta di quella conversione, non una lista a mano',
           TAPPE.every((t, i) => t.introduce.every(s => primaVolta[s] === i) &&
@@ -236,15 +279,26 @@ uguale('l\'ultima tappa le mette tutte insieme', famiglie[famiglie.length - 1].s
    conversione nuova riparte coi numeri larghi — la sua fatica SCENDE
    apposta — e la tappa dopo stringe. */
 const fatiche = TAPPE.map(faticaDi)
-const ONDE = [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
-controlla('dentro ogni onda la seconda tappa stringe',
-          ONDE.every(([a, b]) => fatiche[b] > fatiche[a]),
+/* Le onde sono scritte qui e non nel dato, come prima: sono un disegno
+   della fila, e il test è il posto dove un disegno si dichiara. La
+   prima ne tiene tre — la massa apre il gioco e porta anche il primo
+   attrezzo che non conta in grammi — l'ultima sono le due che non
+   aprono niente e chiedono tutto insieme. */
+const ONDE = [[0, 1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
+uguale('le onde coprono tutta la fila', ONDE.flat().join(','),
+       TAPPE.map((t, i) => i).join(','))
+controlla('dentro ogni onda la fatica cresce',
+          ONDE.every(o => o.every((i, n) => !n || fatiche[i] > fatiche[o[n - 1]])),
           fatiche.map(f => f.toFixed(1)).join(' · '))
+/* il finale non dà respiro, ed è il finale: per quello c'è il controllo
+   dopo, che lo vuole più duro di tutto quello che c'è stato prima */
 controlla('e chi apre un\'onda dà respiro rispetto alla tappa prima',
-          ONDE.slice(1).every(([a]) => fatiche[a] < fatiche[a - 1]),
-          ONDE.slice(1).map(([a]) => `${fatiche[a - 1].toFixed(1)}→${fatiche[a].toFixed(1)}`).join(' · '))
+          ONDE.slice(1, -1).every(([a]) => fatiche[a] < fatiche[a - 1]),
+          ONDE.slice(1, -1).map(([a]) => `${fatiche[a - 1].toFixed(1)}→${fatiche[a].toFixed(1)}`).join(' · '))
+const [penultima, ultima] = ONDE[ONDE.length - 1]
 controlla('le due tappe finali sono più dure di tutte le altre',
-          fatiche[9] > Math.max(...fatiche.slice(0, 9)) && fatiche[10] > fatiche[9],
+          fatiche[penultima] > Math.max(...fatiche.slice(0, penultima)) &&
+          fatiche[ultima] > fatiche[penultima],
           fatiche.map(f => f.toFixed(1)).join(' · '))
 nota('fatica: ' + TAPPE.map((t, i) => `${i + 1} ${faticaDi(t).toFixed(1)}`).join(' · '))
 
@@ -303,6 +357,121 @@ dentro('e il margine non è nemmeno una passeggiata',
        margini.reduce((a, b) => a + b, 0) / margini.length, 1.5, 2.8)
 nota('margine sul lavoro: da ' + Math.min(...margini).toFixed(1) + '× a ' +
      Math.max(...margini).toFixed(1) + '×')
+
+/* ═══════════════════════════════════════════════════════════════════
+   LE BILANCE NON CONTANO SEMPRE IN GRAMMI
+   Il cuore della faccenda: l'attrezzo dice **in che unità conta lui**, e
+   quell'unità non è sempre il fondo della scala. Se lo fosse, tutto il
+   gioco chiederebbe una cosa sola — scendi in fondo — e leggere il
+   cartellino non servirebbe a niente.
+   ═══════════════════════════════════════════════════════════════════ */
+const contano = new Set(SCALE.map(s => s.a))
+for (const [fam, mezze] of [['massa', ['hg', 'dag']], ['capacità', ['dl', 'cl']],
+                            ['lunghezza', ['dm', 'cm']]])
+  controlla(`qualche attrezzo di ${fam} conta in unità di mezzo`,
+            mezze.every(u => contano.has(u)), [...contano].join(' '))
+/* e ogni attrezzo in scaffale conta davvero in quell'unità lì: la tacca
+   è la stessa cosa del cartellino, se no il ×10 sarebbero due */
+const storte = []
+for (const s of SCALE)
+  for (const a of scaffale(s)) if (a.unita !== s.a) storte.push(`${a.nome} conta in ${a.unita}`)
+controlla('e le tacche sono nell\'unità piccola della scala', storte.length === 0,
+          storte.join(' · '))
+nota('unità in cui contano gli attrezzi: ' + [...contano].join(' · '))
+
+/* ── e una dose in etti si compone davvero coi pesi da etto ──
+   La scomposizione avida trova il minimo solo se il peso più piccolo
+   divide tutti gli altri: con una grana da 200 g il peso da 500 resta a
+   metà strada e 2,6 kg non si compone più. È il guasto che ha deciso le
+   grane delle bilance nuove, e nessun altro controllo lo vedrebbe —
+   quelli sopra guardano le dosi che escono, questo le guarda **tutte**,
+   bilancia per bilancia. */
+const monconi = []
+for (const s of SCALE.filter(s => s.tipo === 'polvere'))
+  for (const a of scaffale(s))
+    for (let v = a.grana; v <= Math.min(a.cap, 60 * a.grana); v += a.grana)
+      if (scomponi(v, a.pesi).reduce((x, y) => x + y, 0) !== v)
+        monconi.push(`${a.nome}: ${v} ${a.unita}`)
+controlla('ogni dose si compone esattamente coi pesi di quella bilancia',
+          monconi.length === 0, monconi.slice(0, 3).join(' · '))
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL PROCEDIMENTO DELLA VIRGOLA
+   Il pezzo che mancava alla scaletta: il cartello diceva l'uguaglianza
+   e gli scalini — i fatti — e dava per scontato il gesto. Adesso nei
+   primi gradini il conto sta svolto sulla dose in mano, e sfuma insieme
+   alla scaletta. Il livello non è un contatore nuovo, è il gradino.
+   ═══════════════════════════════════════════════════════════════════ */
+uguale('il gradino della scaletta è anche quanto si spiega',
+       ['diretta', 'accanto', 'promemoria', ''].map(spintaDi).join(''), '3210')
+
+const dose = (id, piccolo) => ({ scala: SCALA[id], piccolo, grande: piccolo / SCALA[id].k })
+const pieno = aiutoDi(dose('kg-g', 1400), SPINTA_PIENA)
+uguale('alla prima dosatura il procedimento è svolto fino in fondo',
+       pieno.catena.join(' → '), '1,4 → 14 → 140 → 1400 g')
+controlla('e dice quanti scalini sono, e da che parte va la virgola',
+          /3 scalini in giù/.test(pieno.passi) && /destra di 3 posti/.test(pieno.come),
+          pieno.passi + ' · ' + pieno.come)
+controlla('su un numero intero si aggiungono gli zeri, che la virgola non si vede',
+          /aggiungi 3 zeri/.test(aiutoDi(dose('kg-g', 2000), 3).come),
+          aiutoDi(dose('kg-g', 2000), 3).come)
+controlla('uno scalino solo si dice al singolare',
+          /è uno scalino/.test(aiutoDi(dose('kg-hg', 14), 3).passi) &&
+          /un posto/.test(aiutoDi(dose('kg-hg', 14), 3).come),
+          aiutoDi(dose('kg-hg', 14), 3).passi)
+uguale('al gradino dopo il risultato non c\'è', aiutoDi(dose('kg-g', 1400), 2).catena, undefined)
+controlla('col solo promemoria non si spiega più niente: resta l\'uguaglianza',
+          aiutoDi(dose('kg-g', 1400), 1) === null)
+controlla('e a conversione imparata nemmeno quella',
+          aiutoDi(dose('kg-g', 1400), 0) === null)
+/* la catena non deve mai mentire: l'ultimo anello è la dose vera */
+const catenaBugiarda = []
+for (const s of SCALE)
+  for (const piccolo of [10, 14, 137, 250]) {
+    const a = aiutoDi(dose(s.id, piccolo), SPINTA_PIENA)
+    if (a.catena.length !== a.scalini + 1) catenaBugiarda.push(`${s.id}: ${a.catena.length} anelli`)
+    if (a.catena[a.catena.length - 1] !== `${piccolo} ${s.a}`)
+      catenaBugiarda.push(`${s.id}: ${a.risultato}`)
+    if (a.catena[0].replace(',', '.') !== String(piccolo / s.k))
+      catenaBugiarda.push(`${s.id}: parte da ${a.catena[0]}`)
+  }
+controlla('la catena parte dalla dose scritta e finisce su quella vera',
+          catenaBugiarda.length === 0, catenaBugiarda.slice(0, 3).join(' · '))
+nota('a kg→g: ' + pieno.passi + ' · ' + pieno.come + ' · ' + pieno.catena.join(' → '))
+
+/* ── e finché c'è la spiegazione, il cliente non ha fretta ──
+   Sono la stessa manopola: leggere tre righe mentre una barra scende
+   non insegna a essere svelti, insegna a non leggere. */
+controlla('coi gradini guidati il tempo non corre', senzaFretta(3) && senzaFretta(2))
+controlla('col solo promemoria corre, ma largo', !senzaFretta(1) && fattoreRespiro(1) > 1)
+uguale('e senza aiuti è quello di sempre', fattoreRespiro(0), 1)
+const affannati = [], calmi = [], acerbe = [], guidate = []
+for (const t of TAPPE) {
+  if (!t.introduce.length) continue
+  for (let n = 0; n < 20; n++) {
+    const r = generaRicetta(t, { n, fresche: {} })
+    if (!r.ingredienti.some(i => t.introduce.includes(i.scala.id))) continue
+    guidate.push(t.id)
+    if (!r.calma) calmi.push(`${t.id}: spinta ${r.spinta}`)
+    /* basta un ingrediente col procedimento scritto perché il cliente
+       aspetti: una barra che scende a metà ricetta, proprio quando
+       arriva la conversione nuova, sarebbe il peggio dei due mondi */
+    if (r.spinta !== Math.max(...r.ingredienti.map(i => spintaDi(i.guida))))
+      acerbe.push(`${t.id}: ${r.ingredienti.map(i => i.guida || '—').join(' ')}`)
+  }
+}
+controlla('con la conversione nuova in ricetta nessun cliente ha fretta',
+          calmi.length === 0, [...new Set(calmi)].slice(0, 3).join(' · '))
+controlla('la ricetta prende la spinta del suo ingrediente più acerbo',
+          acerbe.length === 0, acerbe.slice(0, 3).join(' · '))
+nota(`ricette guidate provate: ${guidate.length} su ${new Set(guidate).size} tappe`)
+for (const t of BANCHI)
+  for (let n = 0; n < 12; n++) {
+    const r = generaRicetta(t, { n, fresche: null })
+    if (r.calma || r.spinta !== 0) affannati.push(t.id)
+  }
+controlla('e senza aiuti il tempo torna a correre ovunque',
+          affannati.length === 0, [...new Set(affannati)].join(' · '))
 
 /* ── lo scaffale è un catalogo fisso, non una taratura sulla dose ── */
 for (const s of SCALE) {
@@ -408,13 +577,17 @@ for (const t of TAPPE)
 uguale('senza il conto delle conversioni fresche non compare nessun aiuto',
        nude.slice(0, 3).join(' · '), '')
 
-/* ═══════════ I SALVATAGGI DI CHI GIOCAVA ALLE OTTO TAPPE ═══════════
-   `lab.tappa` è un indice sulla fila, e la fila è passata da otto a
-   undici: lo stesso numero non vuol più dire la stessa cosa. La regola è
-   quella del castello — nessuno torna indietro — più una cosa sua: chi
-   aveva superato la vecchia `pesoemisura` aveva fatto lì dentro il
-   decimetro e il salto metro→millimetro, quindi le due tappe nate da
-   quello scorporo gli risultano già passate. */
+/* ═══════════ I SALVATAGGI DI CHI GIOCAVA A UNA FILA PIÙ CORTA ═══════════
+   `lab.tappa` è un indice sulla fila, e la fila si è allungata due
+   volte: da otto a undici quando si è deciso che una tappa porta una
+   conversione nuova sola, e da undici a diciassette quando gli attrezzi
+   hanno smesso di contare sempre nell'unità base. Lo stesso numero non
+   vuol più dire la stessa cosa, e le due tabelle si applicano in fila.
+
+   La regola è quella del castello — nessuno torna indietro — e qui
+   costa qualcosa: le tappe nuove che cadono **dietro** al punto in cui
+   un bambino è arrivato gli vengono regalate, perché il salvataggio è
+   un fronte solo e mandarcelo sarebbe farlo tornare indietro. */
 const VUOTO = { tappa: 0, libera: false, v: LAB_VERSIONE }
 const percorso = []
 for (let vecchia = 0; vecchia <= 8; vecchia++) {
@@ -423,22 +596,37 @@ for (let vecchia = 0; vecchia <= 8; vecchia++) {
   if (dopo.tappa < vecchia || dopo.v !== LAB_VERSIONE)
     guasteGuide.push(`migrazione ${vecchia} → ${dopo.tappa}`)
 }
-uguale('chi giocava alle otto tappe non torna mai indietro',
+const percorsoUndici = []
+for (let media = 0; media <= 11; media++) {
+  const dopo = migraLaboratorio(VUOTO, { tappa: media, libera: media >= 11, v: 2 })
+  percorsoUndici.push(`${media}→${dopo.tappa}`)
+  if (dopo.tappa < media || dopo.v !== LAB_VERSIONE)
+    guasteGuide.push(`migrazione ${media} → ${dopo.tappa}`)
+}
+uguale('nessuna delle due filature fa tornare indietro qualcuno',
        guasteGuide.filter(g => g.startsWith('migrazione')).join(' · '), '')
 const finita = migraLaboratorio(VUOTO, { tappa: 8, libera: true })
-controlla('chi le aveva finite tutte e otto ha finito anche le undici',
+controlla('chi le aveva finite tutte e otto ha finito anche queste',
           finita.tappa >= TAPPE.length && finita.libera === true,
           `${finita.tappa} su ${TAPPE.length}`)
+const finitaUndici = migraLaboratorio(VUOTO, { tappa: 11, libera: true, v: 2 })
+controlla('e così chi aveva finito le undici',
+          finitaUndici.tappa >= TAPPE.length && finitaUndici.libera === true,
+          `${finitaUndici.tappa} su ${TAPPE.length}`)
 controlla('chi era a metà si trova davanti le tappe nuove, non dentro',
           migraLaboratorio(VUOTO, { tappa: 6 }).tappa < TAPPE.length,
           `tappa ${migraLaboratorio(VUOTO, { tappa: 6 }).tappa}`)
+controlla('e chi era a metà della fila di mezzo pure',
+          migraLaboratorio(VUOTO, { tappa: 6, v: 2 }).tappa < TAPPE.length,
+          `tappa ${migraLaboratorio(VUOTO, { tappa: 6, v: 2 }).tappa}`)
 uguale('un profilo già migrato non si tocca',
        migraLaboratorio(VUOTO, { tappa: 4, libera: false, v: LAB_VERSIONE }).tappa, 4)
 uguale('e la migrazione fatta due volte dà lo stesso numero',
        migraLaboratorio(VUOTO, migraLaboratorio(VUOTO, { tappa: 5 })).tappa,
        migraLaboratorio(VUOTO, { tappa: 5 }).tappa)
 uguale('chi comincia oggi comincia da capo', migraLaboratorio(VUOTO, null).tappa, 0)
-nota('vecchie otto tappe → nuove undici: ' + percorso.join(' · '))
+nota('otto tappe → oggi: ' + percorso.join(' · '))
+nota('undici tappe → oggi: ' + percorsoUndici.join(' · '))
 
 /* ── il promemoria dice il vero ──
    Gli scalini si contano, e contati devono fare il fattore: una riga che

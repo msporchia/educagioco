@@ -1524,18 +1524,46 @@ export function mercatoCompleta(indice, quanteGiornate) {
    `pesoemisura`, perché lì dentro il decimetro e il salto metro→millimetro
    li aveva fatti davvero.
 
+   ── E DA UNDICI A DICIASSETTE ──
+   Stessa storia una seconda volta, e per lo stesso motivo: gli attrezzi
+   hanno smesso di contare sempre nell'unità base — una bilancia da
+   mercato conta in etti, una caraffa in decilitri — e le conversioni
+   sono passate da nove a quindici. Con la regola di prima (una
+   conversione nuova per tappa, mai due) sono sei tappe in più, infilate
+   dove l'unità arriva: `etti` dopo l'ettogrammo, `spanne` prima delle
+   dita, `bicchiere` e `cucchiaio` fra i liquidi, le due del decagrammo
+   in fondo.
+
+   Le tappe nuove che cadono **dietro** al punto in cui un bambino è
+   arrivato si regalano: mandarcelo sarebbe farlo tornare indietro, e il
+   numero salvato è un fronte solo, non un elenco di bandierine. Quelle
+   conversioni le ritrova comunque in «Peso e misura», nel «Grande
+   calderone» e nel laboratorio libero — e col promemoria addosso, che
+   il conto degli aiuti è per bambino e per conversione, non per tappa.
+
+   Le due tabelle si applicano **in fila**: un salvataggio di due
+   versioni fa passa da otto a undici e poi da undici a diciassette, se
+   no il giorno in cui arriva la terza tabella bisognerebbe riscrivere
+   anche le prime due.
+
    `v` va letto **prima** di fondere il salvataggio col profilo vuoto: se
    si fondesse per primo, il `v` del vuoto coprirebbe l'assenza e la
    rimappatura non partirebbe mai. */
-export const LAB_VERSIONE = 2
+export const LAB_VERSIONE = 3
 const LAB_DA_OTTO = [0, 1, 2, 3, 4, 5, 6, 10, 11]
+const LAB_DA_UNDICI = [0, 1, 3, 4, 5, 6, 7, 8, 10, 15, 16, 17]
+
+const rimappaLab = (tabella, n) =>
+  tabella[Math.max(0, Math.min(tabella.length - 1, Math.round(n || 0)))]
 
 export function migraLaboratorio(vuoto, salvato) {
   const dati = salvato && typeof salvato === 'object' ? salvato : {}
   const lab = { ...vuoto, ...dati }
   if (dati.v === LAB_VERSIONE) return lab
-  const vecchia = Math.max(0, Math.min(LAB_DA_OTTO.length - 1, Math.round(lab.tappa || 0)))
-  lab.tappa = Math.max(lab.tappa || 0, LAB_DA_OTTO[vecchia])
+  let t = Math.max(0, Math.round(lab.tappa || 0))
+  if (!(dati.v >= 2)) t = Math.max(t, rimappaLab(LAB_DA_OTTO, t))
+  t = Math.max(t, rimappaLab(LAB_DA_UNDICI, t))
+  lab.tappa = t
   lab.libera = !!lab.libera
   lab.v = LAB_VERSIONE
   return lab

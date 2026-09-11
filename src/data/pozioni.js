@@ -16,17 +16,39 @@ const scegli = a => a[Math.floor(Math.random() * a.length)]
 
 /* ---------- le scale, divise per attrezzo ----------
    L'`id` è il nome con cui le tappe della campagna le chiamano, ed è lo
-   stesso pezzo di chiave che finisce nel motore di apprendimento. */
+   stesso pezzo di chiave che finisce nel motore di apprendimento.
+
+   ── LE BILANCE NON CONTANO SEMPRE IN GRAMMI ──
+   All'inizio ogni scala finiva nell'unità base del suo attrezzo (g, ml,
+   mm) più le due di mezzo che c'erano già (cl, cm), e il gioco chiedeva
+   sempre la stessa cosa: scendi in fondo alla scala. Ma un attrezzo può
+   contare **in qualunque unità**, e leggere sul cartellino in quale
+   conta *questo* attrezzo è metà del mestiere: una bilancia da mercato
+   conta in etti, un metro da sarto in decimetri, una caraffa in
+   decilitri. Da qui le cinque scale per famiglia, sempre dalla grande
+   alla piccola — ×1000, ×100 e i tre ×10 — così un ettogrammo non è
+   più un posto dove si arriva soltanto, è anche un posto da cui si
+   parte.
+
+   Le chiavi vecchie non si toccano: `pozioni:kg-g` vuol dire oggi
+   quello che voleva dire ieri, e chi aveva imparato una conversione se
+   la ritrova imparata. */
 export const SCALE = [
-  { tipo: 'liquido', da: 'l',  a: 'ml', k: 1000 },
-  { tipo: 'liquido', da: 'l',  a: 'cl', k: 100 },
-  { tipo: 'liquido', da: 'cl', a: 'ml', k: 10 },
-  { tipo: 'polvere', da: 'kg', a: 'g',  k: 1000 },
-  { tipo: 'polvere', da: 'hg', a: 'g',  k: 100 },
-  { tipo: 'radice',  da: 'm',  a: 'cm', k: 100 },
-  { tipo: 'radice',  da: 'm',  a: 'mm', k: 1000 },
-  { tipo: 'radice',  da: 'dm', a: 'cm', k: 10 },
-  { tipo: 'radice',  da: 'cm', a: 'mm', k: 10 },
+  { tipo: 'liquido', da: 'l',  a: 'ml',  k: 1000 },
+  { tipo: 'liquido', da: 'l',  a: 'cl',  k: 100 },
+  { tipo: 'liquido', da: 'l',  a: 'dl',  k: 10 },
+  { tipo: 'liquido', da: 'dl', a: 'cl',  k: 10 },
+  { tipo: 'liquido', da: 'cl', a: 'ml',  k: 10 },
+  { tipo: 'polvere', da: 'kg', a: 'g',   k: 1000 },
+  { tipo: 'polvere', da: 'kg', a: 'dag', k: 100 },
+  { tipo: 'polvere', da: 'kg', a: 'hg',  k: 10 },
+  { tipo: 'polvere', da: 'hg', a: 'g',   k: 100 },
+  { tipo: 'polvere', da: 'hg', a: 'dag', k: 10 },
+  { tipo: 'radice',  da: 'm',  a: 'mm',  k: 1000 },
+  { tipo: 'radice',  da: 'm',  a: 'cm',  k: 100 },
+  { tipo: 'radice',  da: 'm',  a: 'dm',  k: 10 },
+  { tipo: 'radice',  da: 'dm', a: 'cm',  k: 10 },
+  { tipo: 'radice',  da: 'cm', a: 'mm',  k: 10 },
 ].map(s => ({ ...s, id: s.da + '-' + s.a }))
 
 export const SCALA = Object.fromEntries(SCALE.map(s => [s.id, s]))
@@ -41,7 +63,13 @@ export const ATTREZZI = {
    Il promemoria appeso al muro del laboratorio. Mostra le unità in fila con
    il ×10 fra uno scalino e l'altro, e accende quelle in gioco — ma NON scrive
    il fattore fra le due: gli scalini vanno contati, che è poi tutto il punto.
-   Serve a chi non si ricorda cos'è un hg, non a chi non vuole pensare. */
+   Serve a chi non si ricorda cos'è un hg, non a chi non vuole pensare.
+
+   Chi invece non sa *cosa farci* con quegli scalini non lo impara da qui: a
+   dirlo è il procedimento scritto sul cartello sopra il banco (più sotto,
+   `aiutoDi`), che svolge il conto sulla dose in mano e poi se ne va. Le due
+   cose non si sovrappongono — questo è un attrezzo da consultare per
+   sempre, quello è una spiegazione che deve sparire. */
 export const SCALINI = [
   // niente disegnini accanto ai nomi: qualunque icona qui finirebbe per
   // assomigliare a uno degli strumenti sullo scaffale, e si sceglierebbe
@@ -141,7 +169,11 @@ export function taratura(lv) {
    dell'unità**: `1 kg = 1000 g` un bambino lo sa già, mentre `2,7 hg`
    chiede prima di sapere cos'è un ettogrammo. Quindi le ×1000 vengono
    prima delle ×10, e il gesto nuovo arriva sempre da solo, con la
-   conversione più facile della sua famiglia.
+   conversione più facile della sua famiglia. Per la stessa ragione
+   l'unità di mezzo entra **da dove si arriva, non da dove si parte**:
+   prima `hg→g` (l'etto è il posto in cui si scende), poi `kg→hg`
+   (l'etto è il posto in cui si conta) — e il decagrammo, che non usa
+   nessuno, buono ultimo.
 
    La promessa della campagna, verificata dai test:
 
@@ -176,14 +208,19 @@ export const CUORI = 3, CUORI_MAX = 5
 
    Adesso ogni tappa porta **al più una conversione mai vista**, e il
    test lo controlla contando la fila: `introduce` non si scrive a mano.
-   Le conversioni sono nove, quindi le tappe che aprono qualcosa sono
-   nove, più due che non aprono niente e chiedono tutto insieme.
+   Le conversioni sono quindici, quindi le tappe che aprono qualcosa
+   sono quindici, più due che non aprono niente e chiedono tutto
+   insieme. La fila è lunga apposta: il giorno in cui le bilance hanno
+   smesso di contare sempre in grammi le conversioni sono passate da
+   nove a quindici, e infilarne due in una tappa per accorciare sarebbe
+   stato rompere la regola per cui la fila esiste.
 
    ── L'ONDA ──
    Siccome quasi ogni tappa apre qualcosa, «la coppia» non è più un gesto
    nuovo seguito da numeri stretti: è un'onda. La tappa che porta la
    conversione nuova **riparte coi numeri larghi**, quella dopo stringe.
-   Cinque onde, poi le due tappe che non aprono niente. */
+   Otto onde, e l'ultima è quella che non apre più niente e chiede tutto
+   insieme. */
 const RACCONTO = [
   { id: 'bilancia', nome: 'La bilancia', emoji: '⚖️',
     portata: 62, scuola: 'conversioni',
@@ -191,9 +228,20 @@ const RACCONTO = [
     scale: ['kg-g'], passo: 50, ingredienti: 1, clienti: 5, esigenti: 0 },
 
   { id: 'peso', nome: 'Il peso giusto', emoji: '🧂',
-    portata: 64, scuola: 'conversioni',
+    portata: 63, scuola: 'conversioni',
     dritta: 'Arriva l\'ettogrammo: cento grammi, uno scalino solo sotto il chilo.',
     scale: ['kg-g', 'hg-g'], passo: 25, ingredienti: 2, clienti: 5, esigenti: 1 },
+
+  /* L'etto visto dall'altra parte, e la prima volta che **il banco non
+     conta in grammi**: la bilancia da mercato ha i pesi da un etto, e
+     la ricetta parla di chili. La cosa nuova qui non è il conto — ×10 è
+     la conversione più facile che ci sia — è *leggere il cartellino*, e
+     arriva subito dopo la tappa che l'etto lo ha presentato, finché è
+     fresco. */
+  { id: 'etti', nome: 'La bilancia del mercato', emoji: '🧺',
+    portata: 64, scuola: 'conversioni',
+    dritta: 'Questa bilancia conta in etti, e la ricetta parla di chili.',
+    scale: ['kg-g', 'hg-g', 'kg-hg'], passo: 10, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'righello', nome: 'Il righello', emoji: '📏',
     portata: 65, scuola: 'conversioni',
@@ -201,52 +249,87 @@ const RACCONTO = [
     scale: ['m-cm'], passo: 50, ingredienti: 2, clienti: 5, esigenti: 1 },
 
   { id: 'sarto', nome: 'Il metro da sarto', emoji: '🎗️',
-    portata: 67, scuola: 'conversioni',
+    portata: 66, scuola: 'conversioni',
     dritta: 'Roba corta, da millimetri: dieci in un centimetro.',
     scale: ['m-cm', 'cm-mm'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'caraffa', nome: 'La caraffa', emoji: '🫙',
-    portata: 69, scuola: 'conversioni',
+    portata: 67, scuola: 'conversioni',
     dritta: 'Si versa. Un litro sono mille millilitri, come il chilo coi grammi.',
     scale: ['l-ml'], passo: 25, ingredienti: 2, clienti: 6, esigenti: 1 },
 
   { id: 'boccette', nome: 'Le boccette', emoji: '🧪',
-    portata: 71, scuola: 'conversioni',
+    portata: 68, scuola: 'conversioni',
     dritta: 'Arriva il centilitro: cento in un litro, due scalini sotto.',
     scale: ['l-ml', 'l-cl'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 2 },
 
-  /* Il giro di ritorno: le tre conversioni che restano non portano un
-     gesto nuovo — l'attrezzo si conosce già — ma un salto di scalini che
-     non si era ancora fatto. Per questo tornano coi numeri larghi. */
+  /* Il giro di ritorno: le conversioni che restano non portano un gesto
+     nuovo — l'attrezzo si conosce già — ma un salto di scalini che non
+     si era ancora fatto, o un'unità che finora era solo un nome sul
+     cartellone al muro. Per questo ogni onda torna coi numeri larghi. */
   { id: 'filo', nome: 'Il filo sottile', emoji: '🧵',
-    portata: 73, scuola: 'conversioni',
+    portata: 69, scuola: 'conversioni',
     dritta: 'Dal metro al millimetro in un colpo solo: tre scalini, mille.',
     scale: ['m-cm', 'cm-mm', 'm-mm'], passo: 25, ingredienti: 2, clienti: 6, esigenti: 2 },
 
   { id: 'gocce', nome: 'A gocce', emoji: '💧',
-    portata: 75, scuola: 'conversioni',
+    portata: 70, scuola: 'conversioni',
     dritta: 'L\'ultimo scalino della capacità: dieci millilitri in un centilitro.',
     scale: ['l-ml', 'l-cl', 'cl-ml'], passo: 10, ingredienti: 2, clienti: 6, esigenti: 2 },
 
-  { id: 'spanna', nome: 'La spanna', emoji: '🖐️',
-    portata: 76, scuola: 'conversioni',
-    dritta: 'Il decimetro: una spanna di mano, dieci centimetri.',
-    scale: ['m-cm', 'cm-mm', 'm-mm', 'dm-cm'], passo: 25,
+  { id: 'spanne', nome: 'Il metro a spanne', emoji: '🖐️',
+    portata: 71, scuola: 'conversioni',
+    dritta: 'Il decimetro: una spanna di mano, e dieci spanne fanno un metro.',
+    scale: ['m-cm', 'cm-mm', 'm-mm', 'm-dm'], passo: 25,
     ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  { id: 'spanna', nome: 'Spanne e dita', emoji: '✋',
+    portata: 72, scuola: 'conversioni',
+    dritta: 'E dentro una spanna ci stanno dieci centimetri, larghi come un dito.',
+    scale: ['m-cm', 'cm-mm', 'm-mm', 'm-dm', 'dm-cm'], passo: 10,
+    ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  { id: 'bicchiere', nome: 'Il bicchiere', emoji: '🥛',
+    portata: 73, scuola: 'conversioni',
+    dritta: 'Il decilitro: un bicchiere, e dieci bicchieri fanno un litro.',
+    scale: ['l-ml', 'l-cl', 'cl-ml', 'l-dl'], passo: 25,
+    ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  { id: 'cucchiaio', nome: 'Il cucchiaio', emoji: '🥄',
+    portata: 74, scuola: 'conversioni',
+    dritta: 'Dal bicchiere al cucchiaio: dieci centilitri in un decilitro.',
+    scale: ['l-ml', 'l-cl', 'cl-ml', 'l-dl', 'dl-cl'], passo: 10,
+    ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  /* Il decagrammo per ultimo, ed è la stessa regola della familiarità:
+     è l'unità che non nomina nessuno: non si compra un decagrammo di
+     niente. Arriva quando la famiglia della massa è tutta in piedi, e
+     nasce con la spiegazione al massimo. */
+  { id: 'graffette', nome: 'A decagrammi', emoji: '📎',
+    portata: 75, scuola: 'conversioni',
+    dritta: 'Il decagrammo: dieci grammi, dieci graffette. Cento in un chilo.',
+    scale: ['kg-g', 'hg-g', 'kg-hg', 'kg-dag'], passo: 25,
+    ingredienti: 2, clienti: 6, esigenti: 2 },
+
+  { id: 'decagrammi', nome: 'Etti e decagrammi', emoji: '⚖️',
+    portata: 76, scuola: 'conversioni',
+    dritta: 'L\'ultimo scalino della massa: dieci decagrammi in un etto.',
+    scale: ['kg-g', 'hg-g', 'kg-hg', 'kg-dag', 'hg-dag'], passo: 10,
+    ingredienti: [2, 3], clienti: 6, esigenti: 2 },
 
   /* Il salto vero: due ingredienti della stessa pozione chiedono due
      attrezzi diversi, e la testa deve cambiare mestiere a metà ricetta.
      Qui dentro non entra più niente di nuovo — cambiare gesto è già
-     abbastanza, e il decimetro se n'è andato nella tappa prima. */
+     abbastanza. */
   { id: 'pesoemisura', nome: 'Peso e misura', emoji: '⚖️📏',
     portata: 78, scuola: 'conversioni',
     dritta: 'Pesare e tagliare nella stessa pozione, senza confondere le scale.',
-    scale: ['kg-g', 'hg-g', 'm-cm', 'm-mm', 'dm-cm'], passo: 10,
+    scale: SCALE.filter(s => s.tipo !== 'liquido').map(s => s.id), passo: 10,
     ingredienti: 3, clienti: 6, esigenti: 2 },
 
   { id: 'calderone', nome: 'Il grande calderone', emoji: '🔮',
     portata: 80, scuola: 'conversioni',
-    dritta: 'Tutte e nove le conversioni, e i numeri con due decimali.',
+    dritta: `Tutte e ${SCALE.length} le conversioni, e i numeri con due decimali.`,
     scale: SCALE.map(s => s.id), passo: 5, passoFine: 1,
     ingredienti: 3, clienti: 7, esigenti: 2 },
 ]
@@ -340,6 +423,29 @@ export const pazienzaDi = (ingredienti, margine) =>
   Math.max(PAZIENZA_MINIMA,
            Math.round(margine * ingredienti.reduce((s, i) => s + costoDi(i), 0)))
 
+/* ═══════════ IL RESPIRO — la fretta arriva dopo gli aiuti ═══════════
+   Una manopola sola per due cose, e devono muoversi insieme: finché il
+   procedimento è scritto a schermo il cliente **non ha fretta affatto**.
+   Lì c'è da leggere tre righe, contare gli scalini e rifare il conto, e
+   una barra che scende mentre si legge non insegna a essere veloci —
+   insegna a non leggere. «Non è come per gli adulti, che spostare la
+   virgola è immediato»: la fretta entra quando la spiegazione esce, ed
+   è allora che diventa una sfida invece di una punizione.
+
+     diretta · accanto   il tempo non corre: niente barra, nessuno se ne va
+     promemoria          corre, ma largo
+     niente              quello di sempre, ed è lì che vale la promessa
+                         della campagna — chi sa convertire consegna con
+                         metà tempo ancora in mano
+
+   Le monete no, quelle restano tarate sul lavoro (`CALIBRAZIONE.md`):
+   una tappa fatta con gli aiuti paga come le altre, perché quello che
+   si paga è l'esercizio e l'esercizio è lo stesso. */
+export const RESPIRO = [1, 1.6, null, null]
+export const fattoreRespiro = s =>
+  RESPIRO[Math.max(0, Math.min(RESPIRO.length - 1, Math.round(s) || 0))]
+export const senzaFretta = s => fattoreRespiro(s) == null
+
 /* ── quanto è dura una tappa ──
    Serve a controllare che la campagna salga davvero, e va detto con un
    numero solo perché le leve sono quattro e a occhio si sbaglia. Non è
@@ -375,7 +481,7 @@ export const TAPPE = conLeNovita(RACCONTO)
 export function laboratorioLibero(lv) {
   const t = taratura(lv)
   /* `introduce` vuoto e non assente: qui non si apre mai niente — chi
-     arriva nel libero ha finito la campagna e le nove conversioni le ha
+     arriva nel libero ha finito la campagna e le conversioni le ha
      viste tutte. Il promemoria di una conversione ancora fresca ci arriva
      lo stesso (è per bambino, non per tappa), le dosature già convertite
      no: quelle sono la prima volta, e la prima volta è passata. */
@@ -399,12 +505,20 @@ export function laboratorioLibero(lv) {
 export const STRUMENTI = {
   // capienza e grana in unità base: ml per i liquidi, g per le polveri,
   // mm per le lunghezze. Ogni strumento ha da 10 a 40 tacche, mai di più.
+  /* ── PERCHÉ QUESTI NUMERI E NON ALTRI ──
+     La grana non è un numero libero: decide **in che unità conta**
+     l'attrezzo, perché una tacca a mezza unità lo rende inusabile
+     (`tara` lo scarta). Il secchio segnava 250 ml, cioè due tacche e
+     mezza per decilitro, e questo lo teneva fuori da tutte le scale che
+     finiscono in dl; a 200 ml conta 2 dl per tacca e ci rientra. Stessa
+     ragione per il metro da sarto, passato da 5 a 10 cm: adesso una sua
+     tacca è un decimetro tondo. */
   liquido: [
     { emoji: '🥃', nome: 'misurino',  cap: 50,    grana: 5 },
     { emoji: '🧉', nome: 'bicchiere', cap: 200,   grana: 20 },
     { emoji: '🧪', nome: 'cilindro',  cap: 500,   grana: 50 },
     { emoji: '🫙', nome: 'caraffa',   cap: 2000,  grana: 100 },
-    { emoji: '🪣', nome: 'secchio',   cap: 5000,  grana: 250 },
+    { emoji: '🪣', nome: 'secchio',   cap: 5000,  grana: 200 },
   ],
   /* Come per le lunghezze qui sotto: si chiamano come le chiamerebbe un
      bambino, e il nome dice già la taglia. Prima erano «bilancino» e
@@ -412,10 +526,20 @@ export const STRUMENTI = {
      prima aveva per icona un alambicco, che non è una bilancia. Quando
      il nome non dice niente, scegliere lo strumento diventa provare a
      caso, e scegliere lo strumento è metà del gioco. */
+  /* Cinque bilance e non più tre, e la ragione non è la varietà: sono
+     le uniche che sanno contare in etti e in decagrammi. La grana di
+     una bilancia però non è solo una tacca, sono **i pesi che si
+     posano** (`PESI`), e prendere sempre il più grande dà il minimo
+     solo se il peso più piccolo divide tutti gli altri: con una grana
+     da 200 g il peso da 500 resta a metà strada e 2,6 kg non si
+     compone più. Quindi le grane buone sono 1 e 5 per dieci — 1, 5,
+     10, 50, 100, 500 — e il magazzino conta in mezzi chili. */
   polvere: [
-    { emoji: '⚖️', nome: 'bilancia da spezie',   cap: 200,   grana: 1 },
-    { emoji: '🍰', nome: 'bilancia da cucina',   cap: 2000,  grana: 5 },
-    { emoji: '📦', nome: 'bilancia da magazzino', cap: 20000, grana: 50 },
+    { emoji: '⚖️', nome: 'bilancia da spezie',    cap: 200,   grana: 1 },
+    { emoji: '🥐', nome: 'bilancia da forno',     cap: 1000,  grana: 10 },
+    { emoji: '🍰', nome: 'bilancia da cucina',    cap: 2000,  grana: 5 },
+    { emoji: '🧺', nome: 'bilancia da mercato',   cap: 5000,  grana: 100 },
+    { emoji: '📦', nome: 'bilancia da magazzino', cap: 20000, grana: 500 },
   ],
   // Le misure di lunghezza sono quelle che un bambino ha in mano davvero: il
   // righello dell'astuccio, la squadra, il metro da sarto della mamma, la
@@ -425,18 +549,22 @@ export const STRUMENTI = {
   radice: [
     { emoji: '📏', nome: 'righello',       cap: 150,   grana: 5 },
     { emoji: '📐', nome: 'squadra',        cap: 300,   grana: 10 },
-    { emoji: '🎗️', nome: 'metro da sarto', cap: 2000,  grana: 50 },
+    { emoji: '🎗️', nome: 'metro da sarto', cap: 2000,  grana: 100 },
     { emoji: '🪢', nome: 'corda annodata', cap: 10000, grana: 500 },
   ],
 }
-
-/* quanto vale l'unità piccola della scala nell'unità base dello strumento */
-export const BASE = { ml: 1, cl: 10, g: 1, cm: 10, mm: 1 }
 
 /* quanto vale un'unità qualsiasi nella base dello strumento (ml, g, mm) */
 const VALE = { ml: 1, cl: 10, dl: 100, l: 1000,
                g: 1, dag: 10, hg: 100, kg: 1000,
                mm: 1, cm: 10, dm: 100, m: 1000 }
+
+/* Quanto vale l'unità piccola della scala nell'unità base dello strumento.
+   Era una tabella a parte con dentro cinque unità, perché solo quelle
+   potevano essere «la piccola» di una scala; da quando una bilancia conta
+   anche in etti, **qualunque unità può esserlo** e le due tabelle sono la
+   stessa cosa. Resta il nome, che dice a cosa serve. */
+export const BASE = VALE
 
 /* ═══════════ COME SI LEGGE UN ATTREZZO ═══════════
    La capienza si scrive nell'unità in cui la direbbe una persona: un metro
@@ -505,10 +633,14 @@ export const vaBene = (str, dose) => !!str && dose <= str.cap && dose % str.gran
      diretta     la ricetta parla già nell'unità dell'attrezzo («400 g»):
                  non c'è niente da convertire, e le prime dosature
                  servono a prendere le misure dell'attrezzo e a farsi
-                 un'idea di quanto è un grammo.
+                 un'idea di quanto è un grammo. Sopra il banco intanto
+                 c'è **il procedimento svolto su quella dose lì**: «da
+                 kg a g sono 3 scalini in giù · la virgola va a destra
+                 di 3 posti · 1,4 → 14 → 140 → 1400 g».
      accanto     la ricetta parla in unità grandi ma porta la conversione
                  già fatta fra parentesi: «0,4 kg (400 g)». Si vede la
-                 coppia, non la si deve trovare.
+                 coppia, non la si deve trovare — e il cartello dice
+                 ancora scalini e verso, ma non più il risultato.
      promemoria  la dose è nuda come sempre, ma sopra al banco resta la
                  riga «1 kg = 1000 g» con i suoi scalini, finché la
                  conversione è fresca.
@@ -516,7 +648,9 @@ export const vaBene = (str, dose) => !!str && dose <= str.cap && dose % str.gran
    Poi non resta niente e il gioco è quello di prima. **Uno sbaglio
    riporta il promemoria**, e questa è la metà che conta: un bambino che
    sbaglia sull'unità non ha bisogno di essere fermato, ha bisogno che il
-   pezzo che gli manca torni a vedersi.
+   pezzo che gli manca torni a vedersi — con tutto il procedimento, che
+   è la regola di casa: dopo uno sbaglio si dice il perché **e** come si
+   fa.
 
    Il conto è **per bambino e per conversione** — un residuo di dosature,
    che scende di uno a ogni dose azzeccata — e sta nelle impostazioni del
@@ -566,6 +700,78 @@ export function assistenzaDi(residuo, introdotta = false) {
    domanda su cui si è inciampato. */
 export const freschezzaDopo = (residuo, giusto) =>
   giusto ? Math.max(0, (residuo | 0) - 1) : Math.max(residuo | 0, RITORNO)
+
+/* ═══════════════════════════════════════════════════════════════════
+   IL PROCEDIMENTO — spostare la virgola, detto per esteso
+
+   Il pezzo che mancava alla scaletta, e viene dalla stessa prova coi
+   bambini: gli aiuti vanno nella direzione giusta, ma **ci vuole
+   qualche spintarella in più all'inizio**. Spostare la virgola per un
+   adulto è immediato, e per questo si dimentica di spiegarlo: il
+   cartello diceva l'uguaglianza («1 kg = 1000 g») e gli scalini, cioè i
+   *fatti*, e dava per scontato il gesto. Un bambino che non sa cosa
+   farci con quegli scalini lì si ferma, e la scala al muro non lo tira
+   fuori — gli dice le unità in fila, non cosa farne.
+
+   Quindi nei primi gradini della scaletta il conto sta **svolto sulla
+   dose che ha in mano**, e sfuma insieme alla scaletta:
+
+     diretta     Da kg a g sono 3 scalini in giù · la virgola va a
+                 destra di 3 posti
+                 1,4 → 14 → 140 → 1400 g     (la risposta è lì: resta
+                                              da comporla con l'attrezzo)
+     accanto     gli scalini e il verso, senza il risultato
+     promemoria  l'uguaglianza di oggi, e basta
+     niente      e la scala al muro resta dov'è, per chi la vuole
+
+   A `diretta` la risposta è regalata **apposta**: quello che si impara
+   lì non è il numero — la dose è già scritta in grammi sulla pergamena
+   — è il gesto di contare gli scalini, e il resto della schermata
+   (scegliere l'attrezzo, arrivarci coi pesi) basta e avanza da fare.
+
+   Il livello non è un contatore nuovo: è **lo stesso gradino della
+   scaletta**, letto dal residuo per bambino e per conversione. Un
+   secondo conto qui dentro vorrebbe dire due cose che scadono a ritmi
+   diversi e un cartello che dice una cosa mentre la pergamena ne dice
+   un'altra. */
+export const SPINTA = { diretta: 3, accanto: 2, promemoria: 1 }
+export const SPINTA_PIENA = 3
+export const spintaDi = guida => SPINTA[guida] || 0
+
+/* i passaggi della virgola su questa dose: 1,4 → 14 → 140 → 1400.
+   Si parte dall'intero di unità piccole e si torna indietro dividendo per
+   dieci, perché così ogni passaggio è un numero esatto — moltiplicando
+   1,4 per dieci il computer risponde 14.000000000000002. */
+const numero = v => String(Math.round(v * 1e6) / 1e6).replace('.', ',')
+
+export function passaggiDi(ing) {
+  const scalini = Math.round(Math.log10(ing.scala.k))
+  const catena = []
+  for (let j = scalini; j >= 0; j--) catena.push(numero(ing.piccolo / 10 ** j))
+  return { scalini, catena, intero: Number.isInteger(ing.grande) }
+}
+
+/* Le parole stanno qui e non nel foglio della schermata perché sono un
+   contenuto: si provano senza browser, e la schermata resta un disegno.
+   `null` quando non c'è niente da dire, che è dove si arriva. */
+export function aiutoDi(ing, spinta) {
+  if (!ing || spinta <= 1) return null
+  const { da, a } = ing.scala
+  const p = passaggiDi(ing)
+  const quanti = p.scalini === 1 ? 'è uno scalino' : `sono ${p.scalini} scalini`
+  /* «aggiungi gli zeri» e «sposta la virgola» sono la stessa regola, ma a
+     chi legge «2 kg» la virgola non si vede: dirgli di spostarla è dirgli
+     di cercare una cosa che non c'è. */
+  const come = p.intero
+    ? `aggiungi ${p.scalini === 1 ? 'uno zero' : p.scalini + ' zeri'}`
+    : `la virgola va a destra di ${p.scalini === 1 ? 'un posto' : p.scalini + ' posti'}`
+  const aiuto = { livello: spinta, scalini: p.scalini,
+                  passi: `Da ${da} a ${a} ${quanti} in giù`, come }
+  if (spinta < SPINTA_PIENA) return aiuto
+  const catena = [...p.catena]
+  catena[catena.length - 1] += ' ' + a
+  return { ...aiuto, catena, risultato: catena[catena.length - 1] }
+}
 
 /* ── quanto è grande, detto con una cosa che si ha in mano ──
    Il pezzo che le tabelle di scuola non danno mai: un millilitro è una
@@ -690,12 +896,21 @@ export function generaRicetta(tappa, { n = 0, pesca = scegli, fresche = null } =
     resta[scala.id] = Math.max(0, resta[scala.id] - 1)
     lista.push(i)
   }
+  /* La fretta è del cliente, non dell'ingrediente: **basta un
+     ingrediente col procedimento ancora scritto** perché aspetti. Una
+     ricetta che fa scendere la barra a metà, quando arriva la
+     conversione nuova, sarebbe il peggio dei due mondi. */
+  const spinta = lista.reduce((m, i) => Math.max(m, spintaDi(i.guida)), 0)
+  const pazienza = pazienzaDi(lista, tappa.margine ?? margineDi(-1))
   return {
     ...scegli(POZIONI),
     cliente: esigente ? scegli(ESIGENTI) : scegli(CLIENTI),
-    esigente, n,
+    esigente, n, spinta, calma: senzaFretta(spinta),
     ingredienti: lista,
-    pazienza: pazienzaDi(lista, tappa.margine ?? margineDi(-1)),
+    /* a cliente calmo la pazienza resta scritta lo stesso: nessuno la
+       consuma, ma la barra ha bisogno di un denominatore e il gioco di
+       un numero che non sia infinito */
+    pazienza: senzaFretta(spinta) ? pazienza : Math.round(pazienza * fattoreRespiro(spinta)),
   }
 }
 

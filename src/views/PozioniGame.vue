@@ -3,8 +3,9 @@
    IL LABORATORIO DELLE POZIONI — le misure diventano un gesto.
 
    La ricetta è scritta in unità grandi (0,75 l), gli attrezzi del banco
-   sono tarati in unità piccole (ml): la conversione non è una domanda a
-   cui rispondere, è il modo di usare l'attrezzo.
+   sono tarati in unità più piccole e ognuno dice sul cartellino in quale
+   conta (ml, cl, dl): la conversione non è una domanda a cui rispondere,
+   è il modo di usare l'attrezzo.
 
      🫗 versa   tieni premuto per riempire in fretta, poi la goccia fine
      ⚖️ pesa    metti i pesi sul piatto finché fanno la quantità
@@ -20,8 +21,11 @@
    Adesso la tappa che porta una conversione nuova comincia guidata — le
    prime dosature parlano già nell'unità dell'attrezzo, poi la portano
    fra parentesi, poi resta solo il cartello «1 kg = 1000 g» finché
-   serve. Le regole e il perché stanno in `data/pozioni.js`; qui c'è il
-   filo col profilo del bambino e il cartellino a schermo.
+   serve — e nei primi gradini il cartello **svolge il conto sulla dose
+   in mano** invece di dire soltanto l'uguaglianza. Finché c'è quello, il
+   cliente non ha fretta: la barra entra quando la spiegazione esce. Le
+   regole e il perché stanno in `data/pozioni.js`; qui c'è il filo col
+   profilo del bambino e il cartellino a schermo.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { state, answer, level, addCoins, segna, segnaBest, strengthOf,
@@ -29,11 +33,14 @@ import { state, answer, level, addCoins, segna, segnaBest, strengthOf,
          misureFresche, scriviMisura } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
 import { generaRicetta, taratura, scomponi, mescola, laboratorioLibero, premioTappa,
-         residuoDi, freschezzaDopo, promemoriaDi, assistenzaDi,
-         ATTREZZI, vaBene, SCALINI, TAPPE, CUORI, CUORI_MAX } from '../data/pozioni.js'
+         residuoDi, freschezzaDopo, promemoriaDi, assistenzaDi, aiutoDi, spintaDi,
+         ATTREZZI, vaBene, SCALINI, SCALE, TAPPE, SPINTA_PIENA,
+         CUORI, CUORI_MAX } from '../data/pozioni.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { suono } from '../audio.js'
 import Barra from '../components/Barra.vue'
+import { usaPausa } from '../giochi/pausa.js'
+import VeloPausa from '../giochi/VeloPausa.vue'
 
 defineEmits(['vai'])
 
@@ -45,7 +52,7 @@ const ricetta = ref(null)
 const hud = reactive({ cuori: CUORI, pozioni: 0, perfette: 0, serie: 0 })
 
 /* ═══════════ la campagna ═══════════
-   Undici tappe: la prima chiede solo di pesare, l'ultima tutte e nove le
+   Diciassette tappe: la prima chiede solo di pesare, l'ultima tutte le
    conversioni insieme. Finita la fila si apre il laboratorio libero, ed è
    l'unico posto dove a decidere quanto strizzare torna a essere il motore
    di apprendimento invece del punto del viaggio. */
@@ -69,19 +76,44 @@ const dose = ref(0)             // quanto c'è nell'attrezzo adesso
 const pesati = ref([])          // i pesi messi sul piatto
 const versando = ref(false)
 const strumento = ref(null)     // null = si è ancora davanti allo scaffale
-const aiuto = ref(false)        // la scala delle misure appesa al muro
+/* La scala delle misure appesa al muro. Si chiamava `aiuto`, e il nome
+   serviva altrove: l'aiuto di questo gioco è il `?` della barra, che è
+   un'altra cosa — questo è un attrezzo da consultare mentre si lavora,
+   e infatti la pazienza del cliente continua a scendere. */
+const scalaAlMuro = ref(false)
 let grezzo = 0                  // il livello continuo prima dello scatto di tacca
 const esito = ref('')           // '' | 'boom' | 'ok'
 /* quante volte si è sbagliato su QUESTO ingrediente, che non è `sbagli`:
    quello vale per la pozione intera e serve al «perfetta». Qui serve per
    conversione — è la conversione su cui si è inciampato che deve tornare
-   a vedersi, non quella dell'ingrediente dopo. */
-let sbagliQui = 0
+   a vedersi, non quella dell'ingrediente dopo. È un `ref` e non un
+   contatore muto perché il cartello lo guarda: dopo uno sbaglio il
+   procedimento torna per intero su questa dose qui. */
+const sbagliQui = ref(0)
 const battuta = ref('')
 const cartello = ref('')        // la mancia, quando arriva
 const moneta = ref(0)
 const restaPazienza = ref(0)
 let raf = 0, ultimo = 0, apertoIl = 0, occupato = false, sbagli = 0, dettoFretta = false
+
+/* ═══════════ la pausa ═══════════
+   Qui il tempo È l'avversario — la pazienza del cliente scende e a zero
+   costa un cuore — quindi ogni secondo che passa senza che nessuno
+   guardi lo schermo è un secondo rubato. Mancavano tutti e tre: il ⏸,
+   il telefono posato, e **il foglio del `?`**, che c'era già come tasto
+   ma non fermava niente: si apriva «come si gioca» e intanto il cliente
+   se ne andava, cioè leggere le istruzioni costava il cuore che quelle
+   istruzioni servivano a non perdere.
+
+   I nomi arrivano da fuori perché `metti` e `togli` qui sono già i pesi
+   sul piatto della bilancia, e `aiuto` era la scala al muro. */
+const { inPausa, fermo, metti: mettiInPausa, togli: togliLaPausa, aiuto: leggeLaGuida }
+  = usaPausa({ anche: () => fase.value !== 'gioco' })
+
+/* Cosa si stava facendo, sul velo: chi riapre il telefono dopo mezz'ora
+   deve riconoscere la ricetta che aveva in mano, non indovinarla. */
+const dovEravamo = computed(() => (ricetta.value
+  ? `${ricetta.value.emoji} ${ricetta.value.nome}` : ''))
 
 /* Nel libero quanto strizzare lo chiede al motore comune, come tutti gli
    altri giochi: chi ha già convertito litri per mezz'ora non riparte da capo
@@ -205,6 +237,23 @@ const promemoria = computed(() => {
   return guida ? { ...promemoriaDi(i.scala), guida } : null
 })
 
+/* ═══════════ il procedimento ═══════════
+   Quanta spiegazione c'è scritta sopra la dose: il conto svolto, gli
+   scalini e il verso, o niente (`aiutoDi` in `data/pozioni.js`). Il
+   gradino è **quello della scaletta**, non un secondo contatore — e
+   `sbagliQui` è l'altra metà, la convenzione di tutti i giochi di casa:
+   dopo uno sbaglio si dice il perché E come si fa, quindi chi ha appena
+   fatto traboccare la boccia si rivede il conto per intero, a qualunque
+   gradino sia arrivato e solo fino alla dose dopo. */
+const spinta = computed(() => {
+  if (!ing.value || !promemoria.value) return 0
+  return sbagliQui.value ? SPINTA_PIENA : spintaDi(promemoria.value.guida)
+})
+const spiegazione = computed(() => aiutoDi(ing.value, spinta.value))
+/* il cliente calmo non ha la barra: una barra che non scende è un tasto
+   rotto, e dire «hai tutto il tempo» tacendo si può solo togliendola */
+const calma = computed(() => !!ricetta.value?.calma)
+
 function nuovaRicetta() {
   fresche.value = aiuti()
   ricetta.value = generaRicetta(tappa.value,
@@ -212,7 +261,7 @@ function nuovaRicetta() {
                    : { pesca: piuDebole, fresche: fresche.value })
   restaPazienza.value = ricetta.value.pazienza
   passo.value = 0; dose.value = 0; grezzo = 0; pesati.value = []; strumento.value = null
-  esito.value = ''; sbagli = 0; sbagliQui = 0; occupato = false; dettoFretta = false
+  esito.value = ''; sbagli = 0; sbagliQui.value = 0; occupato = false; dettoFretta = false
   brodo.value = []; pronta.value = false; ribolle.value = false; volo.value = null
   apertoIl = performance.now()
   battuta.value = pick(ricetta.value.esigente ? PRETESE : ORDINA)
@@ -220,6 +269,10 @@ function nuovaRicetta() {
 
 function inizia(i = tappaIdx.value) {
   if (i >= 0 && !sbloccata(i)) return
+  /* una tappa che comincia non comincia in pausa: il telefono posato
+     sulla mappa lascia il freno acceso, e la tappa nuova nascerebbe
+     dietro un velo che nessuno ha chiesto */
+  togliLaPausa()
   tappaIdx.value = i
   hud.cuori = CUORI; hud.pozioni = 0; hud.perfette = 0; hud.serie = 0
   nCliente.value = 0; premio.value = 0
@@ -232,13 +285,20 @@ function inizia(i = tappaIdx.value) {
 
 const allaMappa = () => {
   cancelAnimationFrame(raf)
+  togliLaPausa()
   fase.value = 'mappa'
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
 }
 
+/* Il battito. `fermo` è l'elenco comune (`giochi/pausa.js`) e comprende
+   già «non si sta giocando»: dentro ci sta il versamento — un dito
+   appoggiato sul tasto quando il telefono si posa non deve continuare a
+   riempire la boccia — e la pazienza, che è la sola cosa che costa un
+   cuore. Il fotogramma si chiede lo stesso: fermi si resta, ma la
+   schermata resta viva. */
 function ciclo(ts) {
   const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0); ultimo = ts
-  if (fase.value === 'gioco') {
+  if (!fermo.value) {
     if (versando.value && ing.value) {
       // la boccia si riempirebbe tutta in cinque secondi, ma il livello scatta
       // di tacca in tacca: si versa in fretta, e la dose esatta resta possibile
@@ -247,7 +307,9 @@ function ciclo(ts) {
       dose.value = Math.floor(grezzo / a.grana + 1e-9) * a.grana
       if (troppo.value) trabocca()
     }
-    if (!occupato) {
+    /* il cliente che ha davanti la spiegazione scritta aspetta e basta:
+       niente conto alla rovescia, niente «fai in fretta» */
+    if (!occupato && !calma.value) {
       restaPazienza.value -= dt
       if (!dettoFretta && barra.value < 32) { dettoFretta = true; battuta.value = pick(FRETTA) }
       if (restaPazienza.value <= 0) scaduta()
@@ -298,7 +360,7 @@ function goccia() {
 
 function trabocca() {
   versando.value = false
-  sbagli++; sbagliQui++
+  sbagli++; sbagliQui.value++
   if (ing.value) segnaFreschezza(ing.value.scala.id, false)
   esito.value = 'boom'
   suono.no()
@@ -333,7 +395,7 @@ function conferma() {
   const i = ing.value
   if (!i || occupato || esito.value) return
   if (dentro.value !== i.piccolo) {
-    sbagli++; sbagliQui++
+    sbagli++; sbagliQui.value++
     segnaFreschezza(i.scala.id, false)
     esito.value = 'boom'
     suono.no()
@@ -348,7 +410,7 @@ function conferma() {
      chiesta e segnarla giusta direbbe che la sa. Il gesto invece è stato
      fatto davvero, e `misure` lo conta. */
   if (i.chiede) answer(i.chiave, { correct: sbagli === 0, ms: performance.now() - apertoIl })
-  segnaFreschezza(i.scala.id, sbagliQui === 0)
+  segnaFreschezza(i.scala.id, sbagliQui.value === 0)
   segna('misure')
   esito.value = 'ok'
   suono.nota(760, 1180, 0.1, 'triangle', 0.11)
@@ -365,7 +427,7 @@ function conferma() {
     esito.value = ''; svuota(); strumento.value = null
     const next = ricetta.value.ingredienti.findIndex(x => !x.fatto)
     if (next < 0) return finita()
-    passo.value = next; sbagliQui = 0
+    passo.value = next; sbagliQui.value = 0
   }, VOLO + 280)
 }
 
@@ -449,12 +511,23 @@ const tacche = computed(() => {
   return out
 })
 
+/* Gli scalini contati: quelli fra l'unità della ricetta e quella in cui
+   conta l'attrezzo. Il `×10` di indice n sta fra l'unità n-1 e la n,
+   quindi è dentro il conto se n cade nella coppia — ed è esattamente il
+   numero che il procedimento scrive sopra la pergamena. */
+function contato(riga, n) {
+  if (!ing.value) return false
+  const a = riga.unita.indexOf(ing.value.scala.da), b = riga.unita.indexOf(ing.value.scala.a)
+  if (a < 0 || b < 0) return false
+  return n > Math.min(a, b) && n <= Math.max(a, b)
+}
+
 onMounted(() => {
   // si entra dalla mappa, sulla prima tappa ancora da fare
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
   window.__poz = { fase, ricetta, hud, livello, inizia, passo, ing, dose, pesati, dentro,
-                   strumento, scegliStrumento, riponi, vaBene, aiuto, SCALINI,
-                   promemoria, fresche,
+                   strumento, scegliStrumento, riponi, vaBene, scalaAlMuro, SCALINI,
+                   promemoria, fresche, spinta, spiegazione, calma,
                    metti, togli, conferma, svuota, giu, su, goccia,
                    versa: v => { dose.value = v; grezzo = v },
                    esito, battuta, restaPazienza, scomponi, taratura, finiti, troppo,
@@ -472,17 +545,21 @@ onUnmounted(() => cancelAnimationFrame(raf))
          restano fuori — che è l'unica cosa che non può mancare. Le pozioni
          perfette si contano nella schermata finale. -->
     <Barra titolo="Pozioni" guida="pozioni" scura :monete="fase !== 'gioco'"
+           :pausa="fase === 'gioco' && !state.festa.length" @pausa="mettiInPausa()"
+           @aiuto="leggeLaGuida"
            @indietro="fase === 'gioco' ? allaMappa() : $emit('vai','home')">
       <template v-if="fase === 'gioco'">
         <div class="gettone">{{ '❤️'.repeat(Math.max(0, hud.cuori)) || '💔' }}</div>
         <div class="gettone" v-if="campagna">🧍 <b>{{ nCliente + 1 }}/{{ tappa.clienti }}</b></div>
         <div class="gettone" v-else>🧪 <b>{{ hud.pozioni }}</b></div>
       </template>
-      <button class="tondo" title="scala delle misure" @click="aiuto = !aiuto">🪜</button>
+      <button class="tondo" title="scala delle misure" @click="scalaAlMuro = !scalaAlMuro">🪜</button>
     </Barra>
 
-    <!-- ═════ LA SCALA DELLE MISURE ═════ -->
-    <div v-if="aiuto" class="muro" @click="aiuto = false">
+    <!-- ═════ LA SCALA DELLE MISURE ═════
+         Non è il `?` e non mette in pausa: è un attrezzo del banco, si
+         consulta mentre si lavora e il cliente intanto aspetta. -->
+    <div v-if="scalaAlMuro" class="muro" @click="scalaAlMuro = false">
       <div class="cartellone" @click.stop>
         <b>La scala delle misure</b>
         <p>Ogni scalino vale <em>×10</em>. Da un'unità all'altra conta gli scalini.</p>
@@ -490,23 +567,27 @@ onUnmounted(() => cancelAnimationFrame(raf))
           <span class="fam">{{ r.nome }}</span>
           <div class="gradini">
             <template v-for="(u, n) in r.unita" :key="u">
-              <i v-if="n" class="per">×10</i>
+              <!-- gli scalini fra le due unità in gioco si accendono: sono
+                   quelli che il cartello dice di contare, e vederli contati
+                   qui sopra è metà della spiegazione -->
+              <i v-if="n" class="per" :class="{ contato: contato(r, n) }">×10</i>
               <span class="u" :class="{ ora: ing && (ing.scala.da === u || ing.scala.a === u) }">{{ u }}</span>
             </template>
           </div>
         </div>
-        <button class="bottone chiaro piccolo" @click="aiuto = false">chiudi</button>
+        <button class="bottone chiaro piccolo" @click="scalaAlMuro = false">chiudi</button>
       </div>
     </div>
 
     <!-- ═════ LA MAPPA DELLE TAPPE ═════
-         Si entra da qui: la fila delle undici tappe, quelle fatte, quella da
-         fare e quelle ancora chiuse. Il laboratorio libero compare in fondo
+         Si entra da qui: la fila delle tappe, quelle fatte, quella da fare
+         e quelle ancora chiuse. Il laboratorio libero compare in fondo
          solo quando la fila è finita. -->
     <div v-if="fase === 'mappa'" class="mappa">
       <h1>Il laboratorio<br><span>delle pozioni</span></h1>
-      <p class="testo">La ricetta parla di chili, metri e litri. Gli attrezzi del banco
-        contano in grammi, centimetri e millilitri: sta a te tradurre.</p>
+      <p class="testo">La ricetta parla di chili, metri e litri. Ogni attrezzo del banco
+        conta nella sua unità — grammi, etti, centimetri, decilitri — e lo dice sul
+        cartellino: sta a te tradurre.</p>
       <div class="tappe">
         <button v-for="(t, i) in TAPPE" :key="t.id" class="tappa" :data-tappa="t.id"
                 :class="{ chiusa: !sbloccata(i), fatta: i < progresso.tappa, ora: i === progresso.tappa }"
@@ -535,8 +616,8 @@ onUnmounted(() => cancelAnimationFrame(raf))
       <h1 v-if="fase === 'trionfo'">Maestro<br><span>alchimista</span></h1>
       <h1 v-else>{{ tappa.emoji }}<br><span>{{ tappa.nome }}</span></h1>
       <div class="vetrina">{{ fase === 'trionfo' ? '🏆🔮🏆' : '✨🧪✨' }}</div>
-      <p class="testo" v-if="fase === 'trionfo'">Tutte e nove le conversioni, senza sbagliare
-        una dose. Il laboratorio libero è aperto.</p>
+      <p class="testo" v-if="fase === 'trionfo'">Tutte e {{ SCALE.length }} le conversioni, senza
+        sbagliare una dose. Il laboratorio libero è aperto.</p>
       <p class="testo" v-else>{{ hud.pozioni }} pozioni consegnate, {{ hud.perfette }} senza un errore.</p>
       <p class="premio" v-if="premio">+{{ premio }} 🪙</p>
       <div class="riga">
@@ -565,8 +646,9 @@ onUnmounted(() => cancelAnimationFrame(raf))
         <div class="tizio" :class="{ pregiato: ricetta.esigente }">
           <div class="fumetto" :key="battuta">{{ battuta }}</div>
           <div class="chi">{{ ricetta.cliente }}</div>
-          <div class="pazienza"><i :style="{ width: barra + '%',
+          <div v-if="!calma" class="pazienza" data-pazienza><i :style="{ width: barra + '%',
                background: barra < 30 ? '#ef5f5f' : barra < 60 ? '#ffc93c' : '#38c172' }"></i></div>
+          <div v-else class="calmo" data-calmo>senza fretta</div>
         </div>
 
         <!-- ═════ IL CALDERONE ═════
@@ -609,6 +691,22 @@ onUnmounted(() => cancelAnimationFrame(raf))
              bisogno, e torna se sbaglia. La barretta dice l'altra metà,
              quella che le tabelle non dicono mai: quanto è grande. -->
         <div v-if="promemoria" class="promemoria" data-promemoria>
+          <!-- ═════ IL PROCEDIMENTO ═════
+               Le prime volte l'uguaglianza non basta: dice il *fatto* e dà
+               per scontato il gesto. Qui sopra il conto sta svolto sulla
+               dose che si ha in mano — scalini, verso della virgola e, al
+               primo gradino, la catena fino al numero. Poche parole
+               grandi: è la riga che si copia col dito in aria. -->
+          <div v-if="spiegazione" class="procedimento" :data-spinta="spinta">
+            <b>{{ spiegazione.passi }}</b>
+            <i v-if="spiegazione.come">{{ spiegazione.come }}</i>
+            <div v-if="spiegazione.catena" class="catena">
+              <template v-for="(v, n) in spiegazione.catena" :key="n">
+                <em v-if="n">→</em>
+                <span :class="{ meta: n === spiegazione.catena.length - 1 }">{{ v }}</span>
+              </template>
+            </div>
+          </div>
           <b>1 {{ promemoria.da }} = {{ promemoria.k }} {{ promemoria.a }}</b>
           <div class="gradinata">
             <template v-for="(u, n) in promemoria.scalini" :key="u">
@@ -620,7 +718,10 @@ onUnmounted(() => cancelAnimationFrame(raf))
             <span class="fetta" :style="{ width: Math.max(0.7, 100 / promemoria.k) + '%' }"></span>
             <b>1 {{ promemoria.da }}</b>
           </div>
-          <i class="quanto">1 {{ promemoria.da }} è {{ promemoria.grande }} ·
+          <!-- col procedimento a schermo questa riga se ne va: sono parole,
+               e le parole sono quello che fa crescere il cartello finché
+               copre il banco. La barretta resta, perché non ne ha -->
+          <i v-if="!spiegazione" class="quanto">1 {{ promemoria.da }} è {{ promemoria.grande }} ·
             1 {{ promemoria.a }} è {{ promemoria.piccolo }}</i>
           <!-- «niente da convertire» sarebbe una bugia: la dose sì, ma
                scegliere l'attrezzo chiede lo stesso di sapere quanto è un
@@ -725,6 +826,13 @@ onUnmounted(() => cancelAnimationFrame(raf))
         <button class="bottone chiaro" @click="allaMappa">Le tappe</button>
       </div>
     </div>
+
+    <!-- il velo copre tutto lo schermo, quindi sta in fondo e fuori da
+         qualunque cosa. Dove il gioco è già fermo dietro un velo suo —
+         il cartello di fine tappa, quello di un traguardo — non se ne
+         mette un secondo sopra. -->
+    <VeloPausa v-if="inPausa && fase === 'gioco' && !state.festa.length"
+               :dove="dovEravamo" @riprendi="togliLaPausa" />
   </div>
 </template>
 
@@ -785,6 +893,7 @@ onUnmounted(() => cancelAnimationFrame(raf))
 @keyframes dice { from { transform:scale(.5) translateY(6px); opacity:0 } to { transform:none; opacity:1 } }
 .pazienza { width:82px; height:7px; border-radius:4px; background:#ffffff26; overflow:hidden }
 .pazienza i { display:block; height:100%; transition:width .2s linear }
+.calmo { font-size:10px; font-weight:900; color:#9fd8a8; letter-spacing:.3px }
 
 /* ---------- il calderone ----------
    Tre pezzi sovrapposti: la pancia, l'ellisse del brodo che si vede dentro
@@ -909,6 +1018,23 @@ onUnmounted(() => cancelAnimationFrame(raf))
               animation:passi-su .3s ease-out }
 @keyframes passi-su { from { opacity:0; transform:translateY(6px) } }
 .promemoria > b { font-size:clamp(15px,4.2vmin,19px); font-weight:900; letter-spacing:.2px }
+
+/* ---------- il procedimento ----------
+   Poche parole grandi, in cima al cartello e su fondo scuro perché è la
+   riga nuova e non deve confondersi con l'uguaglianza che c'era già. La
+   catena è quella che si deve poter leggere da lontano: è quella che si
+   copia col dito in aria. */
+.procedimento { align-self:stretch; display:flex; flex-direction:column; align-items:center;
+                gap:1px; text-align:center; padding:6px 10px 7px; border-radius:11px;
+                background:linear-gradient(180deg,#ffe9a8,#ffd77e); color:#5a3d0a;
+                box-shadow:inset 0 0 0 2px #ffffff88 }
+.procedimento b { font-size:clamp(14px,4vmin,17px); font-weight:900; line-height:1.2 }
+.procedimento i { font-style:normal; font-size:12.5px; font-weight:800; color:#8a6212 }
+.catena { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:center; gap:5px;
+          margin-top:3px; font-size:clamp(16px,4.6vmin,22px); font-weight:900;
+          font-variant-numeric:tabular-nums }
+.catena em { font-style:normal; font-size:.72em; color:#b0843a }
+.catena .meta { padding:1px 8px; border-radius:8px; background:#5a3d0a; color:#ffe9a8 }
 .gradinata { display:flex; align-items:center; gap:2px }
 .gradinata .u { padding:3px 7px; border-radius:7px; font-size:12px; font-weight:900;
                 background:#00000012; color:#8a7048 }
@@ -1058,6 +1184,8 @@ onUnmounted(() => cancelAnimationFrame(raf))
 .u { flex:1; text-align:center; padding:7px 2px; border-radius:8px; font-size:14px; font-weight:900;
      background:#ffffff9c; box-shadow:inset 0 0 0 2px #00000012 }
 .u.ora { background:#ffd85e; box-shadow:0 0 0 3px #e2a53a }
-.per { font-style:normal; font-size:9px; font-weight:900; color:#b09468; flex:none }
+.per { font-style:normal; font-size:9px; font-weight:900; color:#b09468; flex:none;
+       padding:2px 1px; border-radius:5px }
+.per.contato { background:#e2a53a; color:#fffdf7 }
 .vetrina { font-size:38px; letter-spacing:2px }
 </style>

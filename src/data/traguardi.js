@@ -193,18 +193,22 @@ const TRAGUARDI_TUTTI = [
   { id: 'poz-perfette', area: 'pozioni', emoji: '✨', nome: 'Mano ferma',
     come: n => `Prepara ${n} pozioni senza un errore`,
     soglie: [5, 30, 120], valore: m => m.tot('pozioniPerfette') },
-  /* le nove conversioni sono l'intero programma del gioco: saperle tutte
-     vuol dire aver capito che ogni scalino vale ×10 */
-  { id: 'poz-misure', area: 'pozioni', emoji: '🪜', nome: 'Le nove conversioni',
-    come: n => n === 9 ? 'Impara tutte e nove le conversioni' : `Impara ${n} conversioni`,
-    soglie: [3, 6, 9], valore: m => m.imparati('pozioni:') },
+  /* le conversioni sono l'intero programma del gioco: saperle tutte
+     vuol dire aver capito che ogni scalino vale ×10. Sono quindici da
+     quando gli attrezzi hanno smesso di contare sempre nell'unità base
+     — una bilancia da mercato conta in etti — e la soglia d'oro le
+     segue: un traguardo che si chiude a nove su quindici direbbe
+     «tutte» a chi ne ha imparate sei meno del programma */
+  { id: 'poz-misure', area: 'pozioni', emoji: '🪜', nome: 'La scala delle misure',
+    come: n => n === 15 ? 'Impara tutte e quindici le conversioni' : `Impara ${n} conversioni`,
+    soglie: [3, 8, 15], valore: m => m.imparati('pozioni:') },
   { id: 'poz-turno', area: 'pozioni', emoji: '🔮', nome: 'Turno da record',
     come: n => `Prepara ${n} pozioni prima di finire i cuori`,
     soglie: [5, 10, 20], valore: m => m.best('pozioni') },
   { id: 'poz-tappe', area: 'pozioni', emoji: '🗺️', nome: 'Il laboratorio',
     come: n => n === 1 ? 'Supera la prima tappa del laboratorio'
-                       : n === 11 ? 'Finisci tutte e undici le tappe' : `Supera ${n} tappe`,
-    soglie: [1, 5, 11], valore: m => m.tappePoz() },
+                       : n === 17 ? 'Finisci tutte e diciassette le tappe' : `Supera ${n} tappe`,
+    soglie: [1, 8, 17], valore: m => m.tappePoz() },
 
   /* ---------- La bancarella ---------- */
   { id: 'banco-clienti', area: 'bancarella', emoji: '🧾', nome: 'Bottegaio',

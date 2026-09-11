@@ -644,8 +644,11 @@ Le misure — litri, chili, metri — col gesto giusto invece che con un eserciz
 
 La ricetta è scritta in unità **grandi** (0,75 l di bava di drago · 1,4 kg di
 polvere di luna · 0,3 m di radice di mandragora). Gli attrezzi del banco sono
-tarati in unità **piccole** (ml, g, cm). La conversione non è una domanda a cui
-rispondere: è il modo di usare l'attrezzo.
+tarati in unità **più piccole** — e non sempre in quella base: una bilancia da
+mercato conta in etti, un metro da sarto in decimetri, una caraffa in
+decilitri, e sul cartellino c'è scritto in che unità conta *quell'* attrezzo.
+La conversione non è una domanda a cui rispondere: è il modo di usare
+l'attrezzo.
 
 **Prima si sceglie l'attrezzo.** È il punto delicato di tutto il gioco: se lo
 strumento fosse tarato *sulla dose* — una boccia che finisce sempre poco sopra
@@ -654,15 +657,25 @@ fermarsi in cima. Quindi lo scaffale è un catalogo **fisso**, sempre lo stesso:
 
 | liquidi | polveri | lunghezze |
 |---|---|---|
-| 🥃 misurino 50 ml (tacche 5) | ⚗️ bilancino fino a 200 g (pesi da 1 g) | 📏 righello 15 cm (tacche 5 mm) |
-| 🧉 bicchiere 200 ml (20) | ⚖️ bilancia fino a 2 kg (da 5 g) | 📐 squadra 30 cm (1 cm) |
-| 🧪 cilindro 500 ml (50) | 🏋️ stadera fino a 20 kg (da 50 g) | 🎗️ metro da sarto 2 m (5 cm) |
-| 🫙 caraffa 2 l (100) | | 🪢 corda annodata 10 m (50 cm) |
-| 🪣 secchio 5 l (250) | | |
+| 🥃 misurino 50 ml (tacche 5) | ⚖️ bilancia da spezie fino a 200 g (pesi da 1 g) | 📏 righello 15 cm (tacche 5 mm) |
+| 🧉 bicchiere 200 ml (20) | 🥐 bilancia da forno fino a 1 kg (da 10 g) | 📐 squadra 30 cm (1 cm) |
+| 🧪 cilindro 500 ml (50) | 🍰 bilancia da cucina fino a 2 kg (da 5 g) | 🎗️ metro da sarto 2 m (1 dm) |
+| 🫙 caraffa 2 l (1 dl) | 🧺 bilancia da mercato fino a 5 kg (da 1 hg) | 🪢 corda annodata 10 m (50 cm) |
+| 🪣 secchio 5 l (2 dl) | 📦 bilancia da magazzino fino a 20 kg (da 5 hg) | |
 
 Gli attrezzi delle lunghezze sono quelli che un bambino ha in mano davvero:
 prima c'erano un metro da 1 m — il numero meno interessante di tutti, non c'è
 niente da convertire — e una «rotella» che non diceva niente a nessuno.
+
+**La grana di una bilancia non è un numero libero.** Decide *in che unità
+conta* l'attrezzo — una tacca a mezza unità lo rende inusabile — e decide
+anche quali pesi si posano sul piatto: la scomposizione avida dà il minimo
+solo se il peso più piccolo divide tutti gli altri, e con pesi da 200 g quello
+da 500 resta a metà strada, cioè 2,6 kg non si compone più. Le grane buone
+sono 1 e 5 per dieci, e un test prova **ogni dose di ogni bilancia**. Per la
+stessa ragione il secchio è passato da 250 a 200 ml (a 250 erano due tacche e
+mezza per decilitro, e restava fuori da tutte le scale che finiscono in dl) e
+il metro da sarto da 5 a 10 cm, cioè un decimetro tondo.
 
 Sul cartellino la **capienza è in unità grandi** e le **tacche in unità
 piccole**: *fino a 2 m · tacche da 5 cm*. Sono due unità diverse nella stessa
@@ -693,7 +706,47 @@ tiene i due insiemi separati.
 cartellone con le tre file — lunghezza, massa, capacità — dalle unità grandi
 alle piccole, con il **×10** fra uno scalino e l'altro e le due unità in gioco
 accese. Serve a chi non si ricorda cos'è un hg. Il fattore fra le due non è
-scritto da nessuna parte: gli scalini si contano.
+scritto da nessuna parte: gli scalini si contano — e quelli **fra le due unità
+in gioco si accendono**, perché sono esattamente quelli che il cartello sopra
+il banco dice di contare.
+
+#### Gli aiuti che sfumano, e la fretta che arriva dopo
+
+Spostare la virgola per un adulto è immediato, e proprio per questo si
+dimentica di spiegarlo: la prima versione degli aiuti diceva l'uguaglianza
+(`1 kg = 1000 g`) e gli scalini, cioè i **fatti**, e dava per scontato il
+gesto. Provata coi bambini: direzione giusta, ma «ci vuole qualche spintarella
+in più all'inizio». Adesso la prima volta che esce una conversione il
+procedimento sta scritto a schermo, **svolto sulla dose che si ha in mano**, e
+poi se ne va da solo:
+
+| gradino | cosa c'è scritto sopra il banco | il cliente |
+|---|---|---|
+| le prime due dosature | *Da kg a g sono 3 scalini in giù · la virgola va a destra di 3 posti*<br>1,4 → 14 → 140 → **1400 g** | non ha fretta: niente barra, non se ne va |
+| le due dopo | gli scalini e il verso, **senza il risultato** | non ha fretta |
+| poi | il cartello `1 kg = 1000 g` con i suoi scalini | aspetta, ma il tempo corre (×1,6) |
+| quando è imparata | niente, e la 🪜 resta al muro per chi la vuole | quello di sempre |
+
+Il gradino è **lo stesso della scaletta** delle dosature guidate (`spintaDi`,
+`aiutoDi` in `data/pozioni.js`): un secondo contatore vorrebbe dire due cose
+che scadono a ritmi diversi, e un cartello che dice una cosa mentre la
+pergamena ne dice un'altra. Al primo gradino la risposta è regalata
+**apposta**: lì la dose è già scritta in grammi sulla pergamena, quindi quello
+che si impara non è il numero ma il gesto di contare gli scalini — e scegliere
+l'attrezzo e arrivarci coi pesi basta e avanza da fare. Sugli interi si dice
+«aggiungi 3 zeri» invece di «sposta la virgola», che a chi legge «2 kg» la
+virgola non si vede. E **dopo uno sbaglio il procedimento torna per intero**,
+a qualunque gradino si fosse arrivati: è la regola di casa — si dice il perché
+*e* come si fa — e su una conversione sbagliata quello che manca è il metodo.
+
+**La fretta è la stessa manopola** (`RESPIRO`). Finché c'è da leggere tre
+righe e rifare un conto, una barra che scende non insegna a essere veloci,
+insegna a non leggere: quindi non c'è, e al suo posto è scritto *senza fretta*
+— una barra ferma sarebbe indistinguibile da un tasto rotto. La ricetta prende
+la spinta del suo **ingrediente più acerbo**: una barra che scende a metà,
+proprio quando arriva la conversione nuova, sarebbe il peggio dei due mondi.
+Le monete no, quelle restano tarate sul lavoro (`CALIBRAZIONE.md`): si paga
+l'esercizio, e l'esercizio è lo stesso.
 
 Poi il gesto, diverso per ogni attrezzo:
 
@@ -719,34 +772,58 @@ già stato fatto, e quando la ricetta è finita il brodo prende il colore della
 pozione, che esce dal paiolo. Non conta niente e non chiede niente: serve solo
 a far vedere che quella dose è servita a qualcosa.
 
-#### Le otto tappe
+#### Le diciassette tappe
 
 Il laboratorio si gira **a tappe**, come il castello e il mercato. Una tappa è
 una fila di clienti da servire, e quello che cresce non sono i numeri: sono le
-cose che si devono tenere in testa insieme.
+cose che si devono tenere in testa insieme. La regola che decide la fila è una
+sola: **una tappa porta una conversione nuova, mai due.** Le conversioni sono
+quindici, quindi quindici tappe aprono qualcosa e le ultime due non aprono
+niente.
 
-| # | tappa | gesto | conversioni | passo | ingr. | clienti |
+| # | tappa | gesto | apre | passo | ingr. | clienti |
 |---|---|---|---|---|---|---|
 | 1 | ⚖️ La bilancia | pesa | kg→g | 0,5 | 1 | 5 |
-| 2 | 🧂 Il peso giusto | pesa | kg→g · hg→g | 0,25 | 2 | 5 |
-| 3 | 📏 Il righello | taglia | m→cm | 0,5 | 2 | 5 |
-| 4 | 🎗️ Il metro da sarto | taglia | m→cm · cm→mm | 0,1 | 2 | 6 |
-| 5 | 🫙 La caraffa | versa | l→ml | 0,25 | 2 | 6 |
-| 6 | 🧪 Le boccette | versa | l→ml · l→cl · cl→ml | 0,1 | 2 | 6 |
-| 7 | ⚖️📏 Peso e misura | pesa + taglia | + dm→cm · m→mm | 0,1 | 3 | 6 |
-| 8 | 🔮 Il grande calderone | tutti e tre | tutte e nove | 0,05 → 0,01 | 3 | 7 |
+| 2 | 🧂 Il peso giusto | pesa | hg→g | 0,25 | 2 | 5 |
+| 3 | 🧺 La bilancia del mercato | pesa | kg→hg | 0,1 | 2 | 5 |
+| 4 | 📏 Il righello | taglia | m→cm | 0,5 | 2 | 5 |
+| 5 | 🎗️ Il metro da sarto | taglia | cm→mm | 0,1 | 2 | 6 |
+| 6 | 🫙 La caraffa | versa | l→ml | 0,25 | 2 | 6 |
+| 7 | 🧪 Le boccette | versa | l→cl | 0,1 | 2 | 6 |
+| 8 | 🧵 Il filo sottile | taglia | m→mm | 0,25 | 2 | 6 |
+| 9 | 💧 A gocce | versa | cl→ml | 0,1 | 2 | 6 |
+| 10 | 🖐️ Il metro a spanne | taglia | m→dm | 0,25 | 2 | 6 |
+| 11 | ✋ Spanne e dita | taglia | dm→cm | 0,1 | 2 | 6 |
+| 12 | 🥛 Il bicchiere | versa | l→dl | 0,25 | 2 | 6 |
+| 13 | 🥄 Il cucchiaio | versa | dl→cl | 0,1 | 2 | 6 |
+| 14 | 📎 A decagrammi | pesa | kg→dag | 0,25 | 2 | 6 |
+| 15 | ⚖️ Etti e decagrammi | pesa | hg→dag | 0,1 | 2-3 | 6 |
+| 16 | ⚖️📏 Peso e misura | pesa + taglia | — (tutte massa e lunghezza) | 0,1 | 3 | 6 |
+| 17 | 🔮 Il grande calderone | tutti e tre | — (tutte e quindici) | 0,05 → 0,01 | 3 | 7 |
 | ♾️ | Laboratorio libero | tutti e tre | le più deboli | dal motore | 2-3 | ∞ |
 
 **L'ordine non è per grandezza del fattore ma per familiarità dell'unità**:
 `1 kg = 1000 g` un bambino lo sa già, mentre `2,7 hg` chiede prima di sapere
-cos'è un ettogrammo. Quindi le ×1000 vengono prima delle ×10.
+cos'è un ettogrammo. Quindi le ×1000 vengono prima delle ×10 — e **l'unità di
+mezzo si impara prima come posto in cui si scende** (`hg→g`) e poi come posto
+in cui si conta (`kg→hg`, la bilancia da mercato). Il decagrammo, che non
+nomina nessuno, buono ultimo.
 
-**La campagna va a coppie**, e per questo la fatica non sale sempre: la tappa
-che porta un gesto nuovo riparte coi numeri facili — si impara una cosa per
-volta — e a stringere è la seconda della coppia. Il salto vero è alla settima,
-dove per la prima volta due ingredienti della stessa pozione chiedono due
-attrezzi diversi. Il test di unità verifica proprio questo disegno, non una
-monotonia che non c'è.
+**La campagna va a onde**, e per questo la fatica non sale sempre: la tappa che
+apre un'onda riparte coi numeri larghi — si impara una cosa per volta — e le
+altre stringono. Otto onde, e l'ultima è quella dove due ingredienti della
+stessa pozione chiedono due attrezzi diversi e poi arriva tutto insieme. Il
+test di unità verifica proprio questo disegno, non una monotonia che non c'è.
+
+**`lab.tappa` porta un numero di versione** e la fila si è allungata due volte
+(otto → undici → diciassette): un «6» scritto ieri non parla della stessa
+tappa di oggi. `migraLaboratorio` applica le tabelle **in fila**, con la regola
+del castello — nessuno torna indietro — e una conseguenza che va detta: le
+tappe nuove che cadono *dietro* al punto in cui un bambino è arrivato gli
+vengono regalate, perché il salvataggio è un fronte solo e rimandarcelo
+sarebbe farlo tornare indietro. Quelle conversioni le ritrova comunque in
+*Peso e misura*, nel *Grande calderone* e nel libero, col promemoria addosso —
+il conto degli aiuti è per bambino e per conversione, non per tappa.
 
 **Il passo è un tetto, non un obbligo.** 0,05 dm sarebbero mezzo millimetro, e
 mezzo millimetro non si taglia: le scale ×10 reggono solo i passi larghi. Ogni
@@ -759,7 +836,21 @@ costa diverso a seconda di quale è (mettere sette pesi sul piatto è più lento
 che trascinare una lama una volta sola). Il margine scende da 2,4× a 1,5× lungo
 la campagna, e sotto i 45 secondi non si scende mai. La promessa, verificata dal
 test: **chi sa convertire e non sbaglia consegna con almeno metà del tempo
-ancora in mano**.
+ancora in mano** — e quella promessa vale dove il tempo corre davvero, cioè a
+aiuti spenti (vedi sopra: finché c'è il procedimento a schermo il cliente non
+ha fretta, e un cuore per il tempo non si perde).
+
+#### Fermarsi
+
+Il ⏸ della barra, il telefono posato e il foglio del `?` fermano tutti e tre
+la pazienza del cliente: qui il tempo **è** l'avversario, quindi ogni secondo
+che passa senza che nessuno guardi lo schermo è un cuore rubato — e leggere
+«come si gioca» costava proprio il cuore che quelle istruzioni servivano a non
+perdere. Il pezzo è quello comune (`giochi/pausa.js`, `giochi/VeloPausa.vue`),
+e come dappertutto **non si riprende da soli**: chi riapre l'app non sta
+guardando il gioco, sta guardando il telefono che si accende. La 🪜 al muro
+invece non ferma niente, ed è voluto: quella è un attrezzo del banco, si
+consulta mentre si lavora.
 
 #### La mancia 👑
 
@@ -790,8 +881,11 @@ conversione che esce è quella che si sa peggio. In campagna decide la tappa —
 no «la quarta è più dura della terza» non sarebbe vero per tutti, e non ci
 sarebbe niente da verificare.
 
-Nove conversioni diverse (l↔ml, l↔cl, cl↔ml, kg↔g, hg↔g, m↔cm, m↔mm, dm↔cm,
-cm↔mm) su diciotto ingredienti e dieci pozioni: le ricette non finiscono.
+Quindici conversioni diverse, cinque per famiglia (kg→g, kg→dag, kg→hg, hg→g,
+hg→dag; l→ml, l→cl, l→dl, dl→cl, cl→ml; m→mm, m→cm, m→dm, dm→cm, cm→mm) su
+diciotto ingredienti e dieci pozioni: le ricette non finiscono. Le chiavi
+vecchie non si sono toccate — `pozioni:kg-g` vuol dire oggi quello che voleva
+dire ieri — quindi chi aveva imparato una conversione se la ritrova imparata.
 
 ### La bancarella
 Il negoziante sei tu, e il mercato si gira **a tappe**.
