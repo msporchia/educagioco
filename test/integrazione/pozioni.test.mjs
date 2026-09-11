@@ -151,6 +151,23 @@ const centro = async sel => {
   await scatto(page, 'pozioni-gioco')
 }
 
+/* ---------- 5. la bilancia del mercato si apre senza crollare ----------
+   Qui il consiglio «usa la bilancia del mercato» compare prima di
+   prendere l'ingrediente: è la schermata che crollava con «cannot read
+   properties of null (reading 'dose')». */
+await semina(page, { settings: { eta: 9 }, campagne: { pozioni: { tappa: 5, libera: false, stelle: {}, cfg: {} } } })
+await page.locator('.carta.gioco[data-gioco="pozioni"]').click()
+await page.waitForSelector('.pz-mappa', { timeout: 5000 })
+await page.locator('.pz-tappa[data-tappa="5"]').click()
+await page.waitForSelector('.pz-banco', { timeout: 5000 })
+uguale('la bilancia del mercato si apre davanti allo scaffale',
+       await page.locator('.pz-banco').getAttribute('data-fase'), 'scaffale')
+uguale('con due attrezzi', await page.locator('[data-strumento]').count(), 2)
+controlla('e il consiglio già a schermo, con la dose dentro',
+          /kg .* non ci stanno/.test(await page.locator('[data-consiglio]').innerText()),
+          await page.locator('[data-consiglio]').innerText())
+await scatto(page, 'pozioni-mercato')
+
 uguale('nessun errore JS', errori.length, 0, errori.join(' | '))
 await browser.close()
 riassunto('il laboratorio delle pozioni nel browser')

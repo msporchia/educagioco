@@ -103,8 +103,10 @@ export class Partita {
     if (!str) return null
     const sp = spiegazione(d, str.unita, livello)
     if (!sp) return null
-    return { livello, strumento: str, consiglia: !this.strumento && this.strumenti.length > 1
-               && livello === 'svolto', ...sp }
+    /* la dose viaggia col cartello: prima di prendere non c'è nessun
+       ingrediente in mano, e chi disegna non deve andarsela a cercare */
+    return { livello, dose: d, strumento: str,
+             consiglia: !this.strumento && this.strumenti.length > 1 && livello === 'svolto', ...sp }
   }
 
   /* ── i gesti ── */

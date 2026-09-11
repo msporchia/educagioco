@@ -182,8 +182,8 @@ const quantoE = u => QUANTO_E[u] || ''
         </div>
         <template v-if="aiuto.livello === 'svolto'">
           <span v-if="aiuto.consiglia" class="pz-consiglio" data-consiglio>
-            👉 {{ ing.dose.testo }} {{ famigliaDi(ing.famiglia).dove }} dei
-            {{ famigliaDi(ing.famiglia).parole.P[1] }} non ci stanno:
+            👉 {{ aiuto.dose.testo }} {{ famigliaDi(aiuto.dose.famiglia).dove }} dei
+            {{ famigliaDi(aiuto.dose.famiglia).parole.P[1] }} non ci stanno:
             usa <b>{{ aiuto.strumento.nome }}</b>, che conta in {{ aiuto.strumento.unita }}
           </span>
           <span class="pz-procedimento" data-procedimento>{{ aiuto.passi }} · {{ aiuto.come }}</span>

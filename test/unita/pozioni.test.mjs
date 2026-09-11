@@ -253,6 +253,20 @@ controlla('un attrezzo troppo piccolo dice fin dove arriva',
   dentro('con meno stelle', p.stelle, 1, 2)
 }
 
+{
+  /* la tappa della bilancia del mercato: il consiglio compare prima di
+     prendere l'ingrediente, e deve portarsi la dose — a schermo si
+     leggeva dall'ingrediente in mano, che lì è ancora null, e la tappa
+     crashava all'apertura */
+  const t = CAMPAGNA.find(x => x.chiave === 'massa-media')
+  const p = new Partita(t, { rnd: caso(2) })
+  uguale('davanti allo scaffale non c\'è niente in mano', p.ingrediente, null)
+  controlla('ma il cartello c\'è, consiglia l\'attrezzo e porta la dose',
+            !!p.aiuto && p.aiuto.consiglia === true && !!p.aiuto.dose && !!p.aiuto.dose.testo,
+            JSON.stringify(p.aiuto))
+  uguale('e consiglia la bilancia del mercato', p.aiuto.strumento.chiave, 'mercato')
+}
+
 /* ══════════ 7. tutte le tappe si vincono davvero ══════════ */
 let dosiInTutto = 0
 for (const [i, t] of CAMPAGNA.entries()) {
