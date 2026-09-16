@@ -11,6 +11,14 @@
    cambia a ogni tappa apposta: nove tappe con gli stessi otto animali
    sono la stessa schermata nove volte, e a metà non ci si torna più.
 
+   **Qui dentro non si scrive quante prove concede una tappa**, e non è
+   una dimenticanza: quel numero sta in `difficolta.js` e si muove quando
+   lo dice la taratura. Le dritte degli scalini e i racconti l'avevano
+   scritto in lettere («le prove sono sempre sei»), e sono rimasti a dire
+   sei per due giri di taratura buoni — a schermo, dove nessun test guarda.
+   Una dritta dice **cosa cambia in quella tappa** (i doppioni, un disegno
+   in più), il tabellone lo conta il tabellone.
+
    `partite` è quanti codici bisogna indovinare per portarla a casa. Un
    codice sbagliato non toglie niente e non fa arretrare: si ricomincia da
    un altro codice, e la tappa resta lì che aspetta. A sei anni la
@@ -27,7 +35,7 @@ export const SCALINI = [
   { chiave: 'normale', nome: 'Serrature vere',  icona: '🔑',
     dritta: 'Quattro caselle, e adesso un disegno può tornare due volte.' },
   { chiave: 'tosto',   nome: 'La cassaforte',   icona: '🔐',
-    dritta: 'Sei disegni diversi: le prove sono sempre sei.' },
+    dritta: 'Sei disegni diversi, e un tabellone più lungo per arrivarci.' },
 ]
 
 /* `portata` è dove sta la tappa sulla scala 0-100 di `data/portata.js`,
@@ -69,7 +77,7 @@ export const CAMPAGNA = [
   { chiave: 'palestra',  nome: 'La palestra',      tema: 'sport',
     portata: 50,
     scalino: 'tosto',   difficolta: 'tosto',   partite: 3,
-    racconto: 'Sei palloni per quattro caselle. Sempre sei prove.' },
+    racconto: 'Sei palloni per quattro caselle. Guarda bene prima di posare.' },
   { chiave: 'teatro',    nome: 'Il teatro',        tema: 'faccine',
     portata: 55,
     scalino: 'tosto',   difficolta: 'tosto',   partite: 3,

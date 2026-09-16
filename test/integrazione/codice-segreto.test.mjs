@@ -177,8 +177,11 @@ controlla('e si può richiamare dal punto interrogativo in barra',
    diagonale del telefono: quando le righe non ci stanno tutte non si
    stringono fino a diventare illeggibili, si fermano a un'altezza minima e
    il tabellone scorre. Qui si prova sullo scaglione più lungo — il gioco
-   libero «esperto», nove righe — su uno schermo piccolo, che è dove le
-   righe non ci stanno di sicuro. E si prova la cosa che rende lo scroll
+   libero «esperto», che è il tabellone più lungo che ci sia — su uno
+   schermo piccolo, che è dove le righe non ci stanno di sicuro. Quante
+   siano non si scrive qui: si chiede allo scaglione, che è l'unico posto
+   dove quel numero sta, e che si è già mosso due volte.
+   E si prova la cosa che rende lo scroll
    usabile invece che solo possibile: dopo aver consegnato, la riga da
    scrivere deve trovarsi sotto gli occhi da sola. */
 {

@@ -20,8 +20,27 @@ import { confronta } from './indizi.js'
 
 /* Tutti i codici possibili con queste regole. Cresce come una potenza: lo
    chiama solo il banco, e solo sugli scaglioni della campagna (al più
-   16.807 con «esperto», che una macchina se li mangia). */
+   16.807 con «esperto», che una macchina se li mangia).
+
+   **La lista si tiene da parte, per regole.** Non è una micro-ottimizzazione
+   gratuita: `gioca` la rifaceva a ogni partita, e un test che gioca
+   seicento partite di «esperto» costruiva seicento volte le stesse 16.807
+   liste da cinque — il conto vero (scegliere e filtrare) sparisce dentro
+   quello. Si può condividere perché nessuno la tocca: `gioca` legge i
+   codici e `compatibili` filtra, e nessuno dei due scrive dentro.
+   La chiave è l'oggetto `regole`, quindi una regola buttata via se la
+   porta dietro. */
+const listino = new WeakMap()
+
 export function tuttiICodici(regole) {
+  const pronta = listino.get(regole)
+  if (pronta) return pronta
+  const fatta = componiTutti(regole)
+  listino.set(regole, fatta)
+  return fatta
+}
+
+function componiTutti(regole) {
   let liste = [[]]
   for (let i = 0; i < regole.caselle; i++) {
     const nuove = []
