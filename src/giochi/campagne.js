@@ -23,6 +23,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { state, persist, flushNow, tappaAperta } from '../store/profile.js'
 import { tappaApertaQui } from '../data/portata-giochi.js'
+/* tutti i giochi e non solo i nuovi: la partita libera del castello ha un
+   record come la corsa infinita, e la tabella li vuole insieme */
+import { GIOCHI } from '../data/giochi.js'
+import { apriQuaderno, conRisultato, inParole, primatoInParole, dettagliInParole }
+  from './primati.js'
 
 const VUOTA = () => ({ tappa: 0, libera: false, stelle: {}, cfg: {} })
 
@@ -133,4 +138,101 @@ export function ricorda(chiave, campo, valore) {
   progresso(chiave).cfg[campo] = valore
   persist()
   return valore
+}
+
+/* ═══════════ i giochi che non finiscono ═══════════
+   La corsa infinita e la Sopravvivenza non si vincono: si dura. Quello
+   che hanno da dare è **il confronto con sé stessi**, e il conto lo fa
+   `giochi/primati.js`, che è puro. Qui c'è solo il pezzo che tocca il
+   profilo, che è il mestiere di questo file.
+
+   Il record sta in `campagne[chiave].primato`, accanto a `stelle`: il
+   perché (e la lettura del posto vecchio, `cfg.primato`) sta scritto in
+   testa a `primati.js`. */
+export const primatoDi = chiave => apriQuaderno(progresso(chiave))
+
+/* Una partita senza fine è finita. Torna **cosa dire** — è record? di
+   quanto? — così il gioco festeggia senza doversi ricordare il numero
+   di prima, che è esattamente quello che i due giochi non facevano.
+
+   Si scrive subito (`flushNow`) e non col salvataggio pigro: una
+   partita dura minuti, quindi succede di rado, e il momento in cui
+   finisce è anche quello in cui un bambino chiude l'app per andare a
+   cena. Un record perso lì non torna più. */
+export function segnaPrimato(chiave, valore, quando = Date.now(), dettagli = null) {
+  const c = progresso(chiave)
+  const { quaderno, esito } = conRisultato(apriQuaderno(c), valore, quando, dettagli)
+  c.primato = quaderno
+  /* il posto vecchio si legge una volta e poi si lascia andare: due
+     numeri che dicono la stessa cosa divergono al primo giro */
+  if (c.cfg && c.cfg.primato !== undefined) delete c.cfg.primato
+  persist()
+  flushNow()
+  return esito
+}
+
+/* ═══════════ i regali della partita libera ═══════════
+   Il castello regala un potenziamento ogni cinque ondate della partita
+   libera, e **resta per sempre**: sta accanto al record perché è della
+   stessa specie — roba di questo bambino su questo gioco, che
+   sopravvive alla partita. Il catalogo e i numeri stanno in
+   `data/castello.js`; qui c'è solo il pezzo che tocca il profilo.
+
+   La lettura non passa da `progresso()` apposta: quella scrive la voce
+   che non c'è, e la mappa del castello legge questo numero ogni volta
+   che si apre — non è un motivo per scrivere nel profilo. Un profilo di
+   ieri non ha il campo, e parte da zero senza nessuna migrazione. */
+export const regaliDi = chiave => {
+  const c = (state.profile.campagne || {})[chiave]
+  const r = c && c.regali
+  return r && typeof r === 'object' ? r : {}
+}
+
+/* Un grado in più, e si scrive subito: un regalo si prende ogni cinque
+   ondate, cioè di rado, e il momento in cui lo si prende è anche quello
+   in cui la partita può finire male. Torna la mappa aggiornata, perché
+   chi l'ha chiesto la deve mostrare. */
+export function regaloPreso(chiave, id) {
+  const c = progresso(chiave)
+  if (!c.regali || typeof c.regali !== 'object') c.regali = {}
+  c.regali[id] = (c.regali[id] || 0) + 1
+  persist()
+  flushNow()
+  return { ...c.regali }
+}
+
+/* ── LA TABELLA DEI RECORD ──
+   Una riga per sfida senza fine, per la pagina dei progressi. La
+   compone qui e non nella vista perché mettere insieme i manifesti e il
+   profilo è roba di store: l'albo è una vetrina e non deve calcolare
+   niente.
+
+   Si mostrano solo le sfide **già giocate almeno una volta**: una
+   tabella di record vuoti non è un invito, è un elenco di cose che non
+   hai fatto — e dove si va a farle lo dice la mappa del gioco, non
+   questa pagina. */
+export function tabellaDeiPrimati() {
+  /* si legge e basta, senza passare da `progresso()`: quella crea la
+     voce che non c'è, e una pagina che guarda i record non ha nessun
+     motivo di scrivere nel profilo undici campagne mai giocate */
+  const tutte = state.profile.campagne || {}
+  return GIOCHI.filter(g => g.senzaFine).map(g => {
+    const q = apriQuaderno(tutte[g.chiave] || {})
+    return {
+      chiave: g.chiave,
+      gioco: g.nome,
+      icona: g.senzaFine.icona || g.ico,
+      nome: g.senzaFine.nome,
+      che: g.senzaFine.che,
+      misura: g.senzaFine.misura,
+      best: q.best,
+      parole: primatoInParole(q, g.senzaFine.misura),
+      dettagli: dettagliInParole(q, g.senzaFine),   // «580 mostri · livello 6», o vuoto
+      quando: q.quando,
+      partite: q.partite,
+      /* i risultati più recenti, dal più vecchio al più nuovo: sotto
+         forma di barrette si legge da sinistra a destra come il tempo */
+      ultime: q.ultime.map(u => ({ ...u, parole: inParole(u.v, g.senzaFine.misura) })).reverse(),
+    }
+  }).filter(r => r.partite > 0 || r.best > 0)
 }

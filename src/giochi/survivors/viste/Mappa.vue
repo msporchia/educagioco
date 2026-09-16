@@ -100,7 +100,9 @@ function vai(quale) {
       <span class="em">{{ libero.aperto ? '♾️' : '🔒' }}</span>
       <span v-if="libero.aperto">
         sopravvivenza
-        <b v-if="libero.primato"> · primato {{ libero.primato }}s</b>
+        <!-- il primato arriva già scritto in parole («2:05»): l'unità
+             la sa il manifesto del gioco, non questa schermata -->
+        <b v-if="libero.primato"> · primato {{ libero.primato }}</b>
       </span>
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>
     </button>

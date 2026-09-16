@@ -110,6 +110,65 @@ stessa ragione della sosta. Il ⏸ sparisce dove il gioco è già fermo dietro
 un altro velo — le tre carte, la domanda che le paga, il cartello finale —
 perché due veli uno sull'altro sono un gioco rotto.
 
+## La Sopravvivenza, che non finisce
+
+Finite le nove tappe si apre **la Sopravvivenza**: nessun traguardo, la marea
+che sale e basta. Una partita che non si può vincere non dà né stelle né
+tappe nuove, e allora l'unica cosa che ha da dare è **dire di quanto sei
+migliorato**. Alla fine il cartello porta il confronto con il record — «🥇
+Nuovo record! 2:05 (32s meglio di prima)», coi coriandoli — e quando il
+record resta dov'era dice comunque quanto è mancato. La prima partita in
+assoluto non batte niente, e infatti non lo dice: «il tuo primo risultato».
+
+Il record, quante partite sono state fatte e le ultime cinque in fila stanno
+anche nella pagina **I miei progressi**, sotto *I miei record*, insieme a
+quelli degli altri giochi senza fine. Il conto è di tutti
+(`src/giochi/primati.js`), non di questo gioco: Survivors dichiara soltanto
+che la sua sfida infinita si misura in tempo.
+
+### E le carte non finiscono prima della marea
+
+Il mazzo ha diciotto carte per settantacinque copie in tutto, che in una
+tappa da tre minuti sono più di quante se ne possano prendere — ma la
+Sopravvivenza non finisce, e si può interrompere e riprendere: una partita
+libera dura un pomeriggio. Quando l'ultima copia era presa, la salita di
+livello **non offriva più niente**: nessuna pausa, nessuna domanda, nessuna
+carta, e le gemme che continuavano a cadere senza servire a niente. Misurato
+col banco su un eroe che ha già tutto: ventidue livelli buttati, e nemmeno
+una domanda.
+
+Le due strade erano dichiarare vittoria o allungare la scaletta, e la
+vittoria si è scartata: **una vittoria metterebbe un tetto sopra il
+record**, e il record è la ragione per cui si rigioca. Quindi nella
+Sopravvivenza — e lì soltanto, le nove tappe non si muovono di un numero —
+**una carta non ha tetto**, e le copie oltre il suo ultimo livello rendono
+ogni volta meno: la prima in più vale sei decimi di un livello vero, la
+seconda tre, la terza due. È una serie che si chiude, ed è per questo che
+non rende immortali: *tutte* le copie in più di una carta, quante se ne
+prendano, non arrivano a valere due livelli. La potenza dell'eroe smette di
+raddoppiare, la marea no — la partita la chiude la marea, come prima, solo
+un po' più tardi (misurato: da 859 a 986 secondi, con ventinove domande in
+più al posto di ventidue livelli a vuoto).
+
+Due dettagli che stanno lì per un motivo:
+
+- **Il secondo giro comincia quando il mazzo è finito davvero.** Finché una
+  carta qualunque ha ancora un livello pieno da dare, l'offerta pesca solo
+  fra quelle. Messa in fila con i livelli pieni, una copia oltre il tetto
+  sarebbe una fregatura — costa la domanda più tosta che ci sia e dà un
+  pezzetto di livello — e chi cerca la carta più cara si ritroverebbe a
+  riprendere per la settima volta l'anello di fuoco con gli stivali ancora
+  intatti in fondo al mazzo. Provato: così la partita finiva **prima** di
+  quanto finisse senza tutto questo.
+- **Quello che dà una cosa intera il tetto ce l'ha davvero**: una freccia in
+  più è una freccia, un cuore è un cuore, una cometa gira o non gira. Mezza
+  copia di quelle non vuol dire niente, e una freccia in più per sempre
+  renderebbe immortali.
+
+Sulla carta si vede: al posto di «livello 4 di 4» c'è scritto **«ancora un
+po' di più»**, in grigio invece che in blu, perché non è una salita — è
+quello che resta quando la scaletta è finita.
+
 ## Quali domande escono
 
 Tutte le materie: italiano, matematica, spazio, tempo, logica. Il gioco non

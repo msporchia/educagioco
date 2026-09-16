@@ -13,6 +13,7 @@
    tempo: 240 */
 import manifesto, { CHIAVE } from '../../src/giochi/corsa/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { CAMBIO, ORDINI, TETTO, scomponi, figure, aParole, guastiDegliOrdini }
   from '../../src/giochi/corsa/dati/ordini.js'
 import { VESTI, veste, guastiDelleVesti } from '../../src/giochi/corsa/dati/vesti.js'
@@ -33,6 +34,9 @@ for (const [che, guasti] of [
   /* il proprio manifesto, non l'elenco globale: questo test non deve
      diventare rosso per come è fatto un altro gioco */
   ["l'albo", guastiDellAlbo([manifesto])],
+  /* e la sfida senza fine: una misura sbagliata non si vede a schermo,
+     si vede come un numero senza unità */
+  ['la sfida senza fine', guastiDelleSfide([manifesto])],
 ]) controlla(`${che} non ha guasti`, guasti.length === 0, guasti.join(' · '))
 
 uguale('nove tappe', CAMPAGNA.length, 9)
@@ -67,8 +71,16 @@ controlla('si corre piano anche in cima',
 
 /* il riassunto in home: deve dire qualcosa in tutti e tre gli stati */
 controlla('il riassunto parla del profilo vuoto', /tappa 1 di 9/.test(manifesto.riassunto()))
+/* il record della corsa infinita sta in `campagne[corsa].primato`
+   (`giochi/primati.js`). Il posto vecchio — `cfg.primato` — si legge
+   ancora: chi aveva corso novecento metri non deve ritrovarsi il
+   primato sparito il giorno dell'aggiornamento. */
 controlla('il riassunto parla della corsa infinita',
-          /primato 900 m/.test(manifesto.riassunto({ tappa: 9, libera: true, stelle: {}, cfg: { primato: 900 } })))
+          /primato 312 m/.test(manifesto.riassunto(
+            { tappa: 9, libera: true, stelle: {}, primato: { best: 312 } })))
+controlla('e il record scritto nel posto vecchio si legge ancora',
+          /primato 900 m/.test(manifesto.riassunto(
+            { tappa: 9, libera: true, stelle: {}, cfg: { primato: 900 } })))
 controlla('il riassunto conta le stelle',
           /⭐ 5/.test(manifesto.riassunto({ tappa: 2, stelle: { 0: 3, 1: 2 }, cfg: {} })))
 

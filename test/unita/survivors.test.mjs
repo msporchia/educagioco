@@ -15,18 +15,19 @@ import { dirname, resolve } from 'node:path'
 
 import manifesto, { CHIAVE } from '../../src/giochi/survivors/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { CFG, soglia, stellePerFerite, guastiDellaTaratura }
   from '../../src/giochi/survivors/dati/taratura.js'
 import { MOSTRI, ammessi, guastiDeiMostri }
   from '../../src/giochi/survivors/dati/mostri.js'
 import { SCENARI, guastiDegliScenari } from '../../src/giochi/survivors/dati/scenari.js'
 import { MAZZO, FASCE, PALLINI, prezzoDomanda, maturita, palliniDelPrezzo,
-         scalinoDelPrezzo, guastiDelMazzo }
+         scalinoDelPrezzo, resa, tettoDi, RESA_OLTRE, RESA_TOTALE, guastiDelMazzo }
   from '../../src/giochi/survivors/dati/mazzo.js'
 import { CAMPAGNA, SCALINI, LIBERO, QUANTE_TAPPE, guastiDellaCampagna }
   from '../../src/giochi/survivors/dati/campagna.js'
 import { Regole, Partita } from '../../src/giochi/survivors/motore/partita.js'
-import { gioca, misura, caso } from '../../src/giochi/survivors/motore/banco.js'
+import { gioca, misura, caso, Pilota } from '../../src/giochi/survivors/motore/banco.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
@@ -54,6 +55,9 @@ for (const [che, guasti] of [
   /* il proprio manifesto, non l'elenco globale: questo test non deve
      diventare rosso per come è fatto un altro gioco */
   ["l'albo", guastiDellAlbo([manifesto])],
+  /* e la sfida senza fine: una misura sbagliata non si vede a schermo,
+     si vede come un numero senza unità */
+  ['la sfida senza fine', guastiDelleSfide([manifesto])],
 ]) controlla(`${che} non ha guasti`, guasti.length === 0, guasti.join(' · '))
 
 uguale('nove tappe', CAMPAGNA.length, 9)
@@ -74,8 +78,17 @@ controlla('nessuna tappa dura più di quattro minuti',
 /* il riassunto in home: deve dire qualcosa in tutti e tre gli stati */
 controlla('il riassunto parla del profilo vuoto',
           /tappa 1 di 9/.test(manifesto.riassunto()))
+/* il record del gioco libero sta in `campagne[survivors].primato`
+   (`giochi/primati.js`) e si scrive in minuti e secondi. Il posto
+   vecchio — `cfg.primato`, un numero di secondi — si legge ancora: chi
+   aveva resistito un minuto e mezzo non deve ritrovarsi il primato
+   sparito il giorno dell'aggiornamento. */
 controlla('il riassunto parla del gioco libero',
-          /primato 90/.test(manifesto.riassunto({ tappa: 9, libera: true, stelle: {}, cfg: { primato: 90 } })))
+          /primato 2:05/.test(manifesto.riassunto(
+            { tappa: 9, libera: true, stelle: {}, primato: { best: 125 } })))
+controlla('e il record scritto nel posto vecchio si legge ancora',
+          /primato 1:30/.test(manifesto.riassunto(
+            { tappa: 9, libera: true, stelle: {}, cfg: { primato: 90 } })))
 controlla('il riassunto conta le stelle',
           /⭐ 5/.test(manifesto.riassunto({ tappa: 2, stelle: { 0: 3, 1: 2 }, cfg: {} })))
 
@@ -543,6 +556,172 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const medio = tempi.reduce((a, b) => a + b, 0) / tempi.length
   nota(`sopravvivenza: si resiste in media ${medio.toFixed(0)} secondi`)
   dentro('la sopravvivenza dura quanto una partita vera', medio, 30, 240)
+}
+
+/* ══════════ 7-bis. E NEL GIOCO LIBERO IL MAZZO NON FINISCE ══════════
+   Il guasto che questa parte esiste per non far tornare: nella
+   Sopravvivenza **le carte finivano prima della marea**. Le settantacinque
+   copie del mazzo sono tante, ma una partita libera si interrompe e si
+   riprende (`motore/sosta.js`), quindi dura un pomeriggio; e quando
+   l'ultima era presa, `offri()` tornava vuoto — il livello saliva in
+   silenzio, senza pausa, senza domanda e senza carta, e le gemme non
+   servivano più a niente. Misurato col banco su un eroe che ha già tutto:
+   ventidue salite di livello buttate, e nemmeno una domanda.
+
+   Il rimedio è in `dati/mazzo.js` (`resa`, `tettoDi`): nel gioco libero
+   una carta non ha tetto, e le copie in più rendono ogni volta meno. Qui
+   si controlla che duri un po' di più, che continui a chiedere, e che la
+   marea vinca comunque. */
+{
+  /* ── i conti della resa ── */
+  for (const c of MAZZO) {
+    uguale(`«${c.nome}»: in campagna il tetto è il suo max`, tettoDi(c, false), c.max)
+    uguale(`«${c.nome}»: nel gioco libero il tetto ${c.intera ? 'resta' : 'sparisce'}`,
+           tettoDi(c, true), c.intera ? c.max : Infinity)
+    for (let lv = 0; lv <= c.max; lv++)
+      uguale(`«${c.nome}»: dentro il tetto la resa è il numero di copie (${lv})`,
+             resa(lv, c.max), lv)
+  }
+  const c = MAZZO.find(x => x.chiave === 'mani')
+  controlla('la prima copia in più rende meno di un grado vero',
+            resa(c.max + 1, c.max) - c.max < 1)
+  controlla('e la seconda rende meno della prima',
+            resa(c.max + 2, c.max) - resa(c.max + 1, c.max) <
+            resa(c.max + 1, c.max) - resa(c.max, c.max))
+  uguale('la prima copia in più vale quello che dichiara',
+         Number((resa(c.max + 1, c.max) - c.max).toFixed(6)), RESA_OLTRE)
+  /* ── ed è questo che non rende immortali ──
+     La serie si chiude: prendendo la stessa carta per sempre non si
+     arriva a due gradi in più. Senza questo limite «mani veloci» — che
+     moltiplica, non somma — basterebbe da sola. */
+  controlla('prendendola per sempre non si superano i gradi dichiarati',
+            resa(c.max + 10000, c.max) - c.max < RESA_TOTALE + 1e-9,
+            `arriva a ${(resa(c.max + 10000, c.max) - c.max).toFixed(3)} su ${RESA_TOTALE}`)
+  dentro('e il limite non è né un nulla né un raddoppio', RESA_TOTALE, 1, 2.5)
+
+  /* ── in campagna non cambia niente ──
+     Le nove tappe sono tarate sui tetti veri: qui si controlla che il
+     motore non conosca nemmeno la strada per uscirne. */
+  const t = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(71), campo })
+  for (const x of MAZZO) t.potenziamenti[x.chiave] = x.max
+  t.ricalcola()
+  uguale('in campagna il mazzo pieno chiude le offerte', t.offri(), null)
+  for (const x of MAZZO)
+    uguale(`in campagna la resa di «${x.chiave}» è il numero di copie`,
+           t.resaDi(x.chiave), x.max)
+}
+{
+  /* ── un eroe che ha già tutto, nel gioco libero ── */
+  const p = new Partita(new Regole(LIBERO), { rnd: caso(72), campo })
+  for (const x of MAZZO) p.potenziamenti[x.chiave] = x.max
+  p.ricalcola()
+  const o = p.offri()
+  controlla('col mazzo finito la Sopravvivenza offre ancora tre carte', o?.length === 3,
+            `ne offre ${o?.length}`)
+  stessaLista('e sono ancora una per fascia', o.map(x => x.fascia),
+              ['debole', 'media', 'forte'])
+  controlla('tutte e tre dicono di essere oltre il loro ultimo livello',
+            o.every(x => x.oltreIlTetto) && o.every(x => !x.nuova))
+  controlla('e nessuna è una carta che dà una cosa intera',
+            o.every(x => !MAZZO.find(c => c.chiave === x.chiave).intera),
+            o.map(x => x.chiave).join(' '))
+  /* la scelta «quanto voglio lavorare» non si spegne nel secondo giro:
+     i tre prezzi restano una scala, alta ma una scala */
+  controlla('i prezzi del secondo giro sono ancora una scala',
+            o[0].prezzo < o[1].prezzo && o[1].prezzo < o[2].prezzo,
+            o.map(x => x.prezzo.toFixed(2)).join(' < '))
+  /* oltre il tetto il prezzo è quello dell'ultima copia e non sale più:
+     la difficoltà di una domanda è una manopola da 0 a 1, e sopra «la più
+     tosta» non c'è niente */
+  const carta = MAZZO.find(x => x.chiave === 'fuoco')
+  p.potenziamenti.fuoco = carta.max + 6
+  uguale('oltre il tetto il prezzo resta quello dell\'ultima copia',
+         p.vestiCarta(carta).prezzo,
+         prezzoDomanda(carta.fascia, LIBERO.rincaro, carta.max - 1, carta.max))
+
+  /* ── e le copie in più si sentono, ma poco ── */
+  const q = new Partita(new Regole(LIBERO), { rnd: caso(73), campo })
+  for (const x of MAZZO) q.potenziamenti[x.chiave] = x.max
+  q.ricalcola()
+  const alMassimo = { ...q.f }
+  q.potenziamenti.mani = MAZZO.find(x => x.chiave === 'mani').max + 1
+  q.potenziamenti.grandi = MAZZO.find(x => x.chiave === 'grandi').max + 1
+  q.ricalcola()
+  controlla('una copia in più di «mani veloci» accorcia ancora la cadenza',
+            q.f.cadenza < alMassimo.cadenza)
+  controlla('ma meno di quanto avrebbe fatto un grado vero',
+            q.f.cadenza > alMassimo.cadenza * Math.pow(0.75, 1),
+            `${alMassimo.cadenza.toFixed(4)} → ${q.f.cadenza.toFixed(4)}`)
+  controlla('e una copia in più di «frecce grosse» fa un po\' più male',
+            q.f.danno > alMassimo.danno && q.f.danno < alMassimo.danno + 2.1)
+  /* ── quello che si conta a pezzi interi resta intero ──
+     Una freccia e mezza non esiste, e `palle.length` con la virgola è un
+     errore di JavaScript, non un difetto di bilanciamento. */
+  q.potenziamenti.frecce = 99
+  q.potenziamenti.palla = 99
+  q.potenziamenti.occhi = 99
+  q.ricalcola()
+  for (const k of ['frecce', 'palle', 'perfora'])
+    controlla(`«${k}» resta un numero intero`, Number.isInteger(q.f[k]), `vale ${q.f[k]}`)
+  /* e quelle carte non si offrono comunque, perché il tetto ce l'hanno */
+  const r = new Partita(new Regole(LIBERO), { rnd: caso(74), campo })
+  for (const x of MAZZO) r.potenziamenti[x.chiave] = x.max
+  r.ricalcola()
+  const intere = new Set(MAZZO.filter(x => x.intera).map(x => x.chiave))
+  let vista = null
+  for (let i = 0; i < 300; i++)
+    for (const x of r.offri()) if (intere.has(x.chiave)) vista = x.chiave
+  uguale('una carta che dà una cosa intera non si riprende mai', vista, null)
+}
+{
+  /* ── e adesso si gioca ──
+     Un eroe col mazzo già finito, dal primo secondo della Sopravvivenza:
+     è la situazione che il bambino ha trovato dopo un pomeriggio. Non
+     deve più esserci nemmeno una salita di livello a vuoto, e la partita
+     deve finirla la marea — non c'è nessuna vittoria da dichiarare, o il
+     primato avrebbe un tetto sopra e rigiocare non servirebbe più. */
+  const partite = []
+  for (const seme of [3001, 3113]) {
+    const p = new Partita(new Regole(LIBERO), { rnd: caso(seme), campo })
+    for (const x of MAZZO) p.potenziamenti[x.chiave] = x.max
+    p.eroe.cuoriMax += MAZZO.find(x => x.chiave === 'cuore').max
+    p.eroe.cuori = p.eroe.cuoriMax
+    p.livello = 76                       // le settantacinque copie sono state prese
+    p.ricalcola()
+    /* si gioca a mano invece di chiamare `gioca`, perché la cosa da
+       contare è proprio quella che il banco non riporta: le salite di
+       livello che non hanno portato nessuna carta */
+    const pilota = new Pilota({ rnd: caso(seme + 7), bravura: 1, esattezza: 1 })
+    const dt = 1 / 30
+    let vuote = 0, passi = 0
+    while (passi++ < 3600 / dt && !p.finita) {
+      if (p.inPausa) { pilota.rispondi(p); continue }
+      const prima = p.livello
+      pilota.guida(p, dt)
+      p.avanza(dt)
+      if (p.eventi.length) p.svuotaEventi()
+      if (p.livello > prima && !p.offerta) vuote++
+    }
+    partite.push({ partita: p, pilota, vuote })
+  }
+  for (const { partita, vuote } of partite) {
+    controlla('col mazzo finito la marea vince comunque', partita.esito === 'persa',
+              `finisce ${partita.esito}`)
+    controlla('e non si vince niente', !partita.vinta && partita.stelle === 0)
+    uguale('nessuna salita di livello resta senza carta', vuote, 0)
+  }
+  const medio = partite.reduce((a, x) => a + x.partita.tempo, 0) / partite.length
+  const oltre = partite.reduce((a, x) => a + MAZZO.reduce(
+    (s, c) => s + Math.max(0, (x.partita.potenziamenti[c.chiave] || 0) - c.max), 0), 0) / partite.length
+  const chieste = partite.reduce((a, x) => a + x.pilota.domande, 0) / partite.length
+  nota(`col mazzo finito si resiste ancora ${medio.toFixed(0)}s, ` +
+       `con ${chieste.toFixed(0)} domande e ${oltre.toFixed(0)} copie oltre il tetto`)
+  controlla('il secondo giro consegna delle carte, non dei livelli a vuoto', oltre >= 10,
+            `solo ${oltre.toFixed(0)} copie in più`)
+  /* «ancora un po'», non «il doppio»: col vecchio mazzo si resisteva in
+     media 859 secondi in questa stessa situazione, con ventidue salite
+     di livello buttate */
+  dentro('e si resiste ancora un po\', non il doppio', Math.round(medio), 700, 1600)
 }
 
 /* ══════════ 8. i traguardi scattano ══════════

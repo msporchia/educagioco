@@ -1,10 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════
-   CORIANDOLI — l'unica cosa che qui si disegna su tela
+   CORIANDOLI — la festa, per chiunque ne abbia una da fare
 
    Una classe con `lancia()` e `ferma()`, che riceve il canvas e non sa
    niente del gioco: non le si dice «ha vinto», le si dice «butta giù dei
-   pezzetti di carta». Se domani i coriandoli servono a un altro gioco, si
-   porta via questo file e basta.
+   pezzetti di carta». Stava dentro il Codice Segreto ed è venuta qui il
+   giorno in cui è servita anche a un'altra cosa — un record battuto in
+   un gioco senza fine — che era la condizione scritta in questa riga
+   fin dal principio.
+
+   Chi la usa dentro Vue non se la monta a mano: `giochi/Festa.vue` è la
+   tela e le tre righe che la accendono.
    ═══════════════════════════════════════════════════════════════════ */
 
 const COLORI = ['#17a34a', '#f0900e', '#4b8bf5', '#e2467a', '#f5d33c', '#8b5cf6']

@@ -20,8 +20,27 @@
      Gioco.vue  il coordinatore, l'unico che sa di monete e domande
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'survivors'
+
+/* ── LA SFIDA SENZA FINE ──
+   Finite le tappe si apre la Sopravvivenza, che **non si vince**: si
+   resiste finché si resiste. Un gioco che non finisce non ha una stella
+   da dare, e l'unica cosa che può dire è «sei migliorato» — ma per
+   dirla serve sapere cosa si misura e come si scrive. `misura: 'tempo'`
+   è una chiave di `MISURE` (`giochi/primati.js`) e non un'unità scritta
+   a mano: è lì che 125 diventa «2:05» invece di «125s», che a un
+   bambino che ha resistito due minuti dice molto meno. */
+export const SENZA_FINE = {
+  nome: 'La Sopravvivenza',
+  icona: '♾️',
+  misura: 'tempo',
+  che: 'quanto resisti',
+  /* com'era la partita del record, accanto al tempo: i mostri e il
+     livello dell'eroe sono le due cose che un bambino racconta */
+  dettagli: d => [`${d.uccisi} mostri`, `livello ${d.livello}`],
+}
 
 export default {
   chiave: CHIAVE,
@@ -42,6 +61,7 @@ export default {
   /* il colore della carta in home: se lo porta il gioco, così aggiungerne
      uno non vuol dire aggiungere una riga al foglio di stile della home */
   tinta: '#dff0d8',
+  senzaFine: SENZA_FINE,
 
   /* La riga che la home mostra sotto il nome. La scrive il gioco perché è
      il gioco a sapere cosa vuol dire il suo avanzamento. Riceve il record
@@ -51,8 +71,11 @@ export default {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     if (av.libera) {
-      const primato = (av.cfg || {}).primato
-      return primato ? `sopravvivenza · primato ${primato}s${coda}`
+      /* il record lo legge `primati.js`, che sa anche dov'era prima
+         (`cfg.primato`): chi aveva resistito un minuto e mezzo se lo
+         ritrova scritto in home senza nessuna migrazione */
+      const primato = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+      return primato ? `sopravvivenza · primato ${primato}${coda}`
                      : `sopravvivenza ♾️${coda}`
     }
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)

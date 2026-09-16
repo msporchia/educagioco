@@ -2,7 +2,13 @@
    i dati stanno in piedi, il conteggio dei pallini è giusto anche coi
    doppioni (è lì che questo gioco si sbaglia sempre), e le nove tappe si
    vincono **giocandole davvero** col giocatore finto invece che a occhio.
-   `node test/esegui.mjs codice-segreto` */
+   `node test/esegui.mjs codice-segreto`
+
+   È uno dei test cari, e da qui in poi lo dichiara: giocare davvero vuol
+   dire settemila partite, e le duemila di «esperto» costano da sole metà
+   del conto — 16.807 codici da setacciare alla prima riga di ognuna. Resta
+   fuori da `--svelti`, come gli altri che giocano una campagna intera.
+   tempo: 120 */
 import { TEMI, guastiDeiTemi, MINIMO_SIMBOLI } from '../../src/giochi/codice-segreto/dati/temi.js'
 import { SCAGLIONI, guastiDegliScaglioni, scaglione, stellePer }
   from '../../src/giochi/codice-segreto/dati/difficolta.js'
@@ -14,6 +20,7 @@ import { Corsa } from '../../src/giochi/codice-segreto/motore/corsa.js'
 import { gioca, misura, caso, tuttiICodici } from '../../src/giochi/codice-segreto/motore/banco.js'
 import manifesto from '../../src/giochi/codice-segreto/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { TRAGUARDI, AREE, XP_AREA, misure, statoTraguardi } from '../../src/store/progressi.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -147,19 +154,31 @@ uguale('il pieno viene prima del vuoto',
    concesse crescono con lo scaglione: quando erano sei per tutti, l'ultimo
    scalino ne faceva perdere una su quattro e nessun test se ne accorgeva —
    il minimo chiesto qui era «più di una volta su due». Perdere una partita
-   su quattro non è un gioco difficile, è un gioco che sembra rotto. */
-nota('tappa                       ragiona sempre   ragiona a sprazzi   prove medie')
+   su quattro non è un gioco difficile, è un gioco che sembra rotto.
+
+   **Le attenzioni provate sono due, e il vincolo vero è la seconda.** A
+   0,55 il bambino finto ragiona poco più di una volta su due, ed è la
+   taratura con cui questo gioco è nato; guardare giocare dei bambini veri
+   dice che è ottimistica, quindi si prova anche a 0,4 — uno che il
+   ragionamento lo fa due volte su cinque. Col tetto di oggi le tappe stanno
+   sopra il 90% anche lì, e senza il caso a 0,4 questo blocco sarebbe una
+   riga verde che non guarda più niente: a 0,55 si passa col 99%. */
+nota('tappa                       ragiona sempre   a sprazzi (0,55)   distratto (0,4)   prove medie')
 for (const [i, t] of CAMPAGNA.entries()) {
   const regole = Regole.perTappa(t)
   const attento = misura(regole, { volte: 120, attenzione: 1, rnd: caso(100 + i) })
   const distratto = misura(regole, { volte: 120, attenzione: 0.55, rnd: caso(200 + i) })
+  const svagato = misura(regole, { volte: 150, attenzione: 0.4, rnd: caso(400 + i) })
   nota(`${(i + 1 + '. ' + t.nome).padEnd(26)} ${(attento.quota * 100).toFixed(0).padStart(6)}%` +
-       `${(distratto.quota * 100).toFixed(0).padStart(18)}%` +
+       `${(distratto.quota * 100).toFixed(0).padStart(17)}%` +
+       `${(svagato.quota * 100).toFixed(0).padStart(17)}%` +
        `${attento.proveMedie.toFixed(1).padStart(14)}`)
   controlla(`tappa ${i + 1} (${t.nome}): chi ragiona la vince quasi sempre`,
             attento.quota >= 0.95, `ce la fa il ${(attento.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): ce la fa anche chi ragiona a sprazzi`,
-            distratto.quota >= 0.9, `ce la fa il ${(distratto.quota * 100).toFixed(0)}%`)
+            distratto.quota >= 0.97, `ce la fa il ${(distratto.quota * 100).toFixed(0)}%`)
+  controlla(`tappa ${i + 1} (${t.nome}): e anche un bambino distratto sul serio`,
+            svagato.quota >= 0.9, `ce la fa il ${(svagato.quota * 100).toFixed(0)}%`)
   dentro(`tappa ${i + 1} (${t.nome}): non si vince né al primo colpo né all'ultimo`,
          Number(attento.proveMedie.toFixed(2)), 2, regole.prove - 0.5)
 }
@@ -179,7 +198,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
    Un tetto troppo stretto fa perdere chi ragionava; una soglia sbagliata
    rende le tre stelle un regalo o una cosa che non capita mai — e in
    entrambi i casi la mappa smette di raccontare qualcosa. */
-nota('scaglione   codici  prove   perse   ★★★   ★★    ★     (chi ragiona a sprazzi)')
+nota('scaglione   codici  prove   perse   ★★★   ★★    ★     (chi ragiona a sprazzi, 0,55)')
 for (const s of SCAGLIONI) {
   const regole = Regole.libere(s.chiave, 'animali')
   const rnd = caso(300)
@@ -191,12 +210,47 @@ for (const s of SCAGLIONI) {
        `${String(s.prove).padStart(5)} ` +
        [0, 3, 2, 1].map(n => `${perc(n).toFixed(0)}%`.padStart(6)).join(''))
 
-  controlla(`«${s.chiave}»: chi ragiona a sprazzi non perde più di una volta su dieci`,
-            perc(0) <= 10, `ne perde il ${perc(0).toFixed(0)}%`)
+  controlla(`«${s.chiave}»: chi ragiona a sprazzi non perde quasi mai`,
+            perc(0) <= 3, `ne perde il ${perc(0).toFixed(1)}%`)
   /* le tre stelle si devono poter prendere, ma non a ogni partita: se le
-     prende sempre non sono un premio, se non le prende mai non esistono */
+     prende sempre non sono un premio, se non le prende mai non esistono.
+     Il tetto più alto non le tocca: `perfetto` e `bene` non si sono mossi */
   dentro(`«${s.chiave}»: le tre stelle capitano, ma non sempre`, perc(3), 10, 60)
   controlla(`«${s.chiave}»: e capita anche di prenderne una sola`, perc(1) > 0)
+}
+
+/* …e la stessa cosa col bambino distratto sul serio, che è il metro con cui
+   il tetto è stato alzato: la soglia qui è **una partita persa su venti**
+   (vedi la tabella in testa a `dati/difficolta.js`). Le due attenzioni
+   stanno tutte e due perché dicono cose diverse: 0,55 dice che chi ragiona
+   quasi sempre non perde mai, 0,4 dice che chi si distrae davvero riesce
+   comunque a finire una tappa senza sentirsi preso in giro. */
+nota('scaglione   prove   perse   ★★★   ★★    ★     (distratto sul serio, 0,4)')
+for (const s of SCAGLIONI) {
+  const regole = Regole.libere(s.chiave, 'animali')
+  const rnd = caso(301)
+  const conto = [0, 0, 0, 0]
+  /* «esperto» costa da solo dieci volte gli altri tre messi insieme — sono
+     16.807 codici da setacciare alla prima riga di ogni partita — e questo
+     file gira a ogni commit: trecento partite lì e seicento dove costano
+     niente. È l'unico scaglione che non capita mai in campagna, per giunta:
+     ci arriva chi ha finito le nove tappe e se lo va a prendere. */
+  const VOLTE = regole.quantiCodici > 5000 ? 300 : 600
+  for (let i = 0; i < VOLTE; i++) conto[gioca(regole, { rnd, attenzione: 0.4 }).stelle]++
+  const perc = n => (conto[n] / VOLTE * 100)
+  nota(`${s.chiave.padEnd(10)} ${String(s.prove).padStart(5)} ` +
+       [0, 3, 2, 1].map(n => `${perc(n).toFixed(0)}%`.padStart(6)).join(''))
+
+  /* il bersaglio è il 5%, la soglia è il 6%: «normale» ci cade sopra
+     (5,0% su 2.000 partite), e seicento partite non distinguono il 5,0 dal
+     5,4 — una soglia che taglia dentro il rumore è un test che diventa
+     rosso a caso e che si impara a rilanciare invece che a leggere */
+  controlla(`«${s.chiave}»: un bambino distratto non perde più di una volta su venti`,
+            perc(0) <= 6, `ne perde il ${perc(0).toFixed(1)}%`)
+  /* e le stelle restano un giudizio, non un regalo: allungare il tabellone
+     non deve spostare quello che vale tre stelle */
+  dentro(`«${s.chiave}»: anche distratto le tre stelle capitano, ma non sempre`,
+         perc(3), 10, 60)
 }
 
 /* le soglie non si scavalcano mai col tetto: la stella singola deve avere
@@ -271,6 +325,17 @@ for (const s of SCAGLIONI) {
   const guastiAlbo = guastiDellAlbo([manifesto])
   controlla('il blocco albo del manifesto non ha guasti',
             guastiAlbo.length === 0, guastiAlbo.join(' · '))
+  /* e la sfida senza fine del gioco libero: una misura sbagliata non si
+     vede a schermo, si vede come un numero senza unità */
+  const guastiSfida = guastiDelleSfide([manifesto])
+  controlla('la sfida senza fine è dichiarata bene',
+            guastiSfida.length === 0, guastiSfida.join(' · '))
+  /* il riassunto in home: nel libero dice il record, se c'è */
+  controlla('il riassunto del libero senza record non inventa un numero',
+            /gioco libero ♾️/.test(manifesto.riassunto({ tappa: 9, libera: true, stelle: {} })))
+  controlla('e con un record lo scrive in parole',
+            /record 8 di fila/.test(manifesto.riassunto(
+              { tappa: 9, libera: true, stelle: {}, primato: { best: 8 } })))
 
   const suoi = TRAGUARDI.filter(t => t.area === manifesto.chiave)
   uguale('i suoi traguardi sono nell\'albo', suoi.length, manifesto.albo.traguardi.length)

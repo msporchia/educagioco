@@ -25,7 +25,10 @@ import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, stelleDi, completa,
+         primatoDi, segnaPrimato } from '../campagne.js'
+import { fraseDiFine, primatoInParole } from '../primati.js'
+import { SENZA_FINE } from './gioco.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -102,11 +105,14 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
+/* Il tasto della corsa infinita porta con sé il record già scritto in
+   parole («312 m»): la mappa non sa in che unità si misuri questo gioco,
+   e non deve impararlo — lo dice il manifesto una volta sola. */
 const statoLibera = computed(() => ({
   aperta: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
-  primato: scelta(CHIAVE, 'primato', 0),
+  primato: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
 }))
 
 const titolo = computed(() =>
@@ -297,15 +303,18 @@ function chiudiPartita() {
   const p = partita.value
   if (!p) return
   giostra.ferma()
-  let primato = false
+  let primato = null
   let monete = p.monete
 
   if (libera.value) {
-    /* nella corsa infinita non si vince: si dura, e il primato sono i
-       metri. Sta in `cfg`, l'unico cassetto che un gioco nuovo ha. */
-    const metri = Math.floor(p.dist)
-    primato = metri > scelta(CHIAVE, 'primato', 0)
-    if (primato) ricorda(CHIAVE, 'primato', metri)
+    /* Nella corsa infinita non si vince: si dura, e quello che il gioco
+       ha da dare è il confronto con sé stessi. Il conto e la frase
+       stanno in `giochi/primati.js`, il record in `campagne[corsa]`:
+       qui si consegna il numero e si porta al cartello cosa dire —
+       compreso quanti metri si è migliorato, che è la sola cosa che un
+       «🥇 nuovo primato!» non diceva. */
+    const esito = segnaPrimato(CHIAVE, p.dist)
+    primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
   } else if (p.vinta && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: p.stelle })
     segna('corsaTappe')

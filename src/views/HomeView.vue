@@ -18,6 +18,7 @@ import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
 import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi } from '../giochi/campagne.js'
+import { apriQuaderno, recordInParole } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import { giocoDaVedere } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
@@ -159,6 +160,10 @@ const gruppi = computed(() => AREE
    qui perché il template adesso è un ciclo solo e non ha più un posto
    dove metterle. Una riga vuota è legittima: vuol dire «non l'hai
    ancora aperto», e la carta dice comunque cosa insegna. */
+const recordTorri = computed(() => recordInParole(
+  apriQuaderno((state.profile.campagne || {}).torri || {}),
+  GIOCHI.find(g => g.chiave === 'torri').senzaFine))
+
 const dove = computed(() => {
   const q = (n, tot) => `${Math.min(n + 1, tot)} di ${tot}`
   return {
@@ -172,7 +177,10 @@ const dove = computed(() => {
     spagnolo: tappaEs.value.libera
       ? `gioco libero ♾️ · 🎯 ${imparateEs.value} sicure`
       : `tappa ${q(tappaEs.value.tappa, TAPPE_ES.length)} · 🎯 ${imparateEs.value} sicure`,
-    torri: '',
+    /* il castello dice qualcosa solo quando c'è un record della partita
+       libera: si legge senza `progressoDi`, che creerebbe la voce a chi
+       non ci ha mai giocato */
+    torri: recordTorri.value ? `♾️ partita libera · record ${recordTorri.value}` : '',
     bancarella: mercato.value.libera
       ? `♾️ mercato libero · ✨ ${restiPerfetti.value} resti precisi`
       : clienti.value

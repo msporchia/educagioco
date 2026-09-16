@@ -22,8 +22,21 @@
      Gioco.vue  il coordinatore, l'unico che sa che esistono le monete
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'codice'
+
+/* Il gioco libero non finisce: si gioca finché va. Quello che si può
+   migliorare lì è **quanti codici si indovinano di fila**, e la serie si
+   chiude quando un codice scappa (o quando si torna alla mappa con una
+   serie in corso: abbandonarla non la cancella). `misura` è una chiave
+   di `MISURE` in `giochi/primati.js`, dove sta scritto come si legge. */
+export const SENZA_FINE = {
+  nome: 'Il gioco libero',
+  icona: '🎲',
+  misura: 'fila',
+  che: 'quanti codici indovini di fila',
+}
 
 export default {
   chiave: CHIAVE,
@@ -38,6 +51,7 @@ export default {
   /* il colore della carta in home: se lo porta il gioco, così aggiungerne
      uno non vuol dire aggiungere una riga al foglio di stile della home */
   tinta: '#f7ecd6',
+  senzaFine: SENZA_FINE,
 
   /* La riga che la home mostra sotto il nome. La scrive il gioco perché
      è il gioco a sapere cosa vuol dire il suo avanzamento: la home non
@@ -47,7 +61,11 @@ export default {
   riassunto(av = { tappa: 0, libera: false, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
-    if (av.libera) return `gioco libero ♾️${coda}`
+    if (av.libera) {
+      const primato = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+      return primato ? `gioco libero · record ${primato}${coda}`
+                     : `gioco libero ♾️${coda}`
+    }
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
     return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
   },

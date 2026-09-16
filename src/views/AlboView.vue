@@ -2,18 +2,22 @@
 /* ═══════════════════════════════════════════════════════════════════
    L'ALBO — la pagina che risponde a "a che punto sono?".
 
-   Tre fasce, in quest'ordine, perché è l'ordine delle domande che si fa
-   un bambino quando riapre il gioco:
+   Quattro fasce, in quest'ordine, perché è l'ordine delle domande che
+   si fa un bambino quando riapre il gioco:
      1. chi sono adesso   → livello, monete, giorni di fila
-     2. cosa so fare      → una barra per materia, con il grado
-     3. cosa ho vinto     → i traguardi, presi e da prendere
+     2. i miei record     → i giochi senza fine, e se sto migliorando
+     3. cosa so fare      → una barra per materia, con il grado
+     4. cosa ho vinto     → i traguardi, presi e da prendere
    Non c'è niente di calcolato qui dentro: tutto viene da
-   store/progressi.js, così la pagina resta una vetrina.
+   store/progressi.js e da `giochi/campagne.js`, così la pagina resta
+   una vetrina.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed } from 'vue'
 import { state, traguardi, livelloOra, areaOra, serieGiorni, abilitaOra,
          tabellineIntere, nomeCorrente } from '../store/profile.js'
 import { AREE, MATERIE, quantiTotali } from '../store/progressi.js'
+import { tabellaDeiPrimati } from '../giochi/campagne.js'
+import Primati from '../giochi/Primati.vue'
 import Barra from '../components/Barra.vue'
 
 defineEmits(['vai'])
@@ -41,6 +45,11 @@ const aree = computed(() => AREE.map(a => {
 const visibili = a => filtro.value === 'presi' ? a.suoi.filter(t => t.preso)
                     : filtro.value === 'manca' ? a.suoi.filter(t => !t.finito)
                     : a.suoi
+
+/* i giochi che non finiscono, con il loro record. Vuoto finché non se
+   n'è giocato nessuno: una tabella di record a zero non è un invito, è
+   un elenco di cose che non hai fatto */
+const primati = computed(() => tabellaDeiPrimati())
 
 const ultimi = computed(() =>
   presi.value.filter(t => t.quando).sort((a, b) => b.quando - a.quando).slice(0, 4))
@@ -83,6 +92,18 @@ const pct = q => Math.round(q * 100) + '%'
           <i>{{ t.nome }}<br><small>{{ data(t.quando) }}</small></i>
         </span>
       </div>
+
+      <!-- ══════ i miei record ══════
+           I giochi senza fine non danno stelle e non danno tappe: danno
+           un numero che cresce, e questo è il posto dove si vedono
+           insieme. Se non se n'è ancora giocato nessuno la fascia non
+           c'è: un blocco vuoto non si mostra. -->
+      <template v-if="primati.length">
+        <h2 class="sezione">I miei record</h2>
+        <p class="testo">Questi giochi non finiscono: si va avanti finché si resiste.
+          L'unico record da battere è il tuo.</p>
+        <Primati :righe="primati" />
+      </template>
 
       <!-- ══════ cosa so fare ══════ -->
       <h2 class="sezione">Cosa so fare</h2>

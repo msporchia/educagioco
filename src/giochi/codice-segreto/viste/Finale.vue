@@ -21,6 +21,11 @@ defineProps({
   rimaste: { type: Number, default: 0 },       // quanti codici mancano alla tappa
   titolo: { type: String, default: '' },
   libero: { type: Boolean, default: false },
+  /* solo nel gioco libero: { record, frase } — la serie di codici in
+     fila e com'è messa rispetto al record (`giochi/primati.js`). I
+     coriandoli qui non si raddoppiano: il tavolo li lancia già a ogni
+     codice trovato, e la festa del record è la riga in evidenza. */
+  primato: { type: Object, default: null },
 })
 defineEmits(['avanti', 'esci'])
 </script>
@@ -45,6 +50,11 @@ defineEmits(['avanti', 'esci'])
 
       <p v-if="monete">+{{ monete }} 🪙</p>
       <p v-else-if="!vinta && che === 'partita'">un codice sbagliato non toglie niente</p>
+
+      <p v-if="primato && primato.record" class="cs-primato em" data-primato="nuovo">
+        🥇 {{ primato.frase }}
+      </p>
+      <p v-else-if="primato && primato.frase" data-primato="no">🔑 {{ primato.frase }}</p>
 
       <p v-if="che === 'partita' && vinta && !libero && rimaste > 0">
         ne {{ rimaste === 1 ? 'manca ancora uno' : `mancano ancora ${rimaste}` }}

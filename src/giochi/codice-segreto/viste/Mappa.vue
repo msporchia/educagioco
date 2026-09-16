@@ -8,7 +8,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
-  libero: { type: Object, required: true },   // { aperto, quante, fatte }
+  libero: { type: Object, required: true },   // { aperto, quante, fatte, primato }
 })
 defineEmits(['gioca', 'libero'])
 </script>
@@ -44,7 +44,11 @@ defineEmits(['gioca', 'libero'])
     <button class="cs-libero" :class="{ 'cs-chiusa': !libero.aperto }"
             data-tappa="libero" :disabled="!libero.aperto" @click="$emit('libero')">
       <span class="em">{{ libero.aperto ? '🎲' : '🔒' }}</span>
-      <span v-if="libero.aperto">gioco libero</span>
+      <span v-if="libero.aperto">
+        gioco libero
+        <!-- già in parole («8 di fila»): l'unità la sa il manifesto -->
+        <b v-if="libero.primato"> · record {{ libero.primato }}</b>
+      </span>
       <span v-else>finisci le {{ libero.quante }} tappe ({{ libero.fatte }} fatte)</span>
     </button>
   </div>

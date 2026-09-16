@@ -220,6 +220,9 @@
 .cs-cartello .cs-faccia { font-size: 50px }
 .cs-cartello h2 { font-size: 21px; text-align: center; color: var(--cs-inchiostro) }
 .cs-cartello p { font-size: 14px; color: var(--cs-tenue); text-align: center }
+/* la riga del record nel gioco libero: l'unica in evidenza sul cartello,
+   perché è l'unica cosa che lì c'è da guadagnare */
+.cs-cartello .cs-primato { color: #d1481f; font-weight: 900; font-size: 15px }
 .cs-punteggio { font-size: 24px; letter-spacing: 3px; min-height: 28px }
 .cs-fila { display: flex; gap: 8px }
 .cs-fila span { width: 50px; height: 50px; border-radius: 14px; background: #fff6e0;

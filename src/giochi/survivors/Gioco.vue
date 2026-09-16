@@ -20,8 +20,10 @@ import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda,
+import { progresso, aperta, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { fraseDiFine, recordInParole } from '../primati.js'
+import { SENZA_FINE } from './gioco.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -200,11 +202,15 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
+/* Il tasto della Sopravvivenza porta con sé il record già scritto in
+   parole («2:05»): la mappa non sa in che unità si misuri questo gioco,
+   e non deve impararlo — lo dice il manifesto una volta sola. */
 const statoLibero = computed(() => ({
   aperto: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
-  primato: scelta(CHIAVE, 'primato', 0),
+  // col racconto della partita del record: «2:05 · 580 mostri · livello 6»
+  primato: recordInParole(primatoDi(CHIAVE), SENZA_FINE),
 }))
 
 const titolo = computed(() =>
@@ -416,16 +422,20 @@ function chiudiPartita() {
   scorda()          // finita o vinta, non c'è più niente da riprendere
   const secondi = Math.floor(p.tempo)
   const extra = Math.floor(p.extra)
-  let primato = false
+  let primato = null
   let monete = 0
 
   if (libera.value) {
-    /* nel gioco libero non si vince: si resiste, e le monete sono il
-       tempo. Il primato sta in `cfg`, che è l'unico cassetto che un
-       gioco nuovo ha nel profilo. */
+    /* Nel gioco libero non si vince: si resiste, e le monete sono il
+       tempo. Quello che la partita ha da dare è il confronto con sé
+       stessi: il conto e la frase stanno in `giochi/primati.js`, il
+       record in `campagne[survivors]`, e al cartello arriva anche di
+       quanto si è migliorato — che è la sola cosa che un «🥇 nuovo
+       primato!» non diceva. */
     monete = Math.min(20, Math.floor(secondi / 15))
-    primato = secondi > scelta(CHIAVE, 'primato', 0)
-    if (primato) ricorda(CHIAVE, 'primato', secondi)
+    const esito = segnaPrimato(CHIAVE, secondi, Date.now(),
+                               { uccisi: p.uccisi, livello: p.livello })
+    primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
   } else if (p.vinta && !pagata) {
     monete = p.monete
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle: p.stelle })

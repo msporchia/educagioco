@@ -27,8 +27,25 @@
      Gioco.vue  il coordinatore, l'unico che sa di monete e domande
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'corsa'
+
+/* ── LA SFIDA SENZA FINE ──
+   Finite le nove tappe si apre la corsa infinita, che **non si vince**:
+   si dura. Un gioco che non finisce non ha una stella da dare, e
+   l'unica cosa che può dire è «sei migliorato» — ma per dirla serve
+   sapere cosa si misura e come si scrive. Lo dichiara qui, e da questa
+   riga vivono il record (`giochi/primati.js`), il cartello di fine e la
+   tabella dei record nell'albo. `misura: 'metri'` non è un'unità
+   scritta a mano: è una chiave di `MISURE`, così due giochi non
+   scrivono la stessa cosa in due modi. */
+export const SENZA_FINE = {
+  nome: 'La corsa infinita',
+  icona: '♾️',
+  misura: 'metri',
+  che: 'quanto lontano arrivi',
+}
 
 export default {
   chiave: CHIAVE,
@@ -51,6 +68,7 @@ export default {
      a un ritmo che a sei anni non si tiene */
   grandi: true,
   tinta: '#ffe8cf',
+  senzaFine: SENZA_FINE,
 
   /* La riga che la home mostra sotto il nome. La scrive il gioco perché è
      il gioco a sapere cosa vuol dire il suo avanzamento. Riceve il record
@@ -60,8 +78,11 @@ export default {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
     if (av.libera) {
-      const primato = (av.cfg || {}).primato
-      return primato ? `corsa infinita · primato ${primato} m${coda}`
+      /* il record lo legge `primati.js`, che sa anche dov'era prima
+         (`cfg.primato`): chi ha corso novecento metri il mese scorso se
+         li ritrova scritti in home senza nessuna migrazione */
+      const primato = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+      return primato ? `corsa infinita · primato ${primato}${coda}`
                      : `corsa infinita ♾️${coda}`
     }
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)

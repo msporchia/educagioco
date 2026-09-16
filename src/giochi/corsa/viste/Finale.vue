@@ -13,7 +13,15 @@
    La riga che conta di più è **la mira**: quanti dei cancelli erano il
    migliore. È l'unica cosa qui dentro che parli di matematica invece che
    di fortuna, ed è quella che vale la terza stella.
+
+   Nella corsa infinita la riga che conta è un'altra, ed è **il
+   primato**: lì non si vince niente, quindi l'unica cosa che il gioco
+   ha da dare è dire di quanto si è migliorato. Arriva già scritta
+   (`giochi/primati.js`) e con i coriandoli quando è un record: questo
+   file non conta e non confronta niente.
    ═══════════════════════════════════════════════════════════════════ */
+import Festa from '../../Festa.vue'
+
 defineProps({
   vinta: { type: Boolean, default: false },
   titolo: { type: String, default: '' },
@@ -26,7 +34,9 @@ defineProps({
   meglio: { type: Number, default: 0 },
   libri: { type: Number, default: 0 },        // esercizi indovinati
   causa: { type: String, default: '' },
-  primato: { type: Boolean, default: false },
+  /* `{ record, primo, frase, … }` nella corsa infinita, niente nelle
+     tappe: un primato non c'entra dove c'è un traguardo da tagliare */
+  primato: { type: Object, default: null },
   libera: { type: Boolean, default: false },
   ultima: { type: Boolean, default: false },  // la campagna è finita qui
 })
@@ -35,6 +45,9 @@ defineEmits(['ancora', 'esci'])
 
 <template>
   <div class="co-velo co-fine" :data-fine="vinta ? 'vinta' : 'persa'">
+    <!-- i coriandoli cadono dietro il cartello, e solo per un record -->
+    <Festa v-if="primato && primato.record" />
+
     <div class="co-cartello">
       <div class="co-faccia em">{{ ultima ? '🏆' : vinta ? '🎉' : '🙈' }}</div>
       <h2 v-if="ultima">Campagna finita!</h2>
@@ -54,7 +67,14 @@ defineEmits(['ancora', 'esci'])
         🎯 il cancello migliore <b>{{ meglio }}</b> volte su {{ cancelli }}
       </p>
       <p v-if="libri" class="co-libri em">📚 {{ libri }} esercizi indovinati</p>
-      <p v-if="primato" class="co-primato em">🥇 nuovo primato!</p>
+      <!-- il record, e di quanto: «🥇 Nuovo record! 312 m (32 m meglio
+           di prima)». Quando non è un record si dice lo stesso quanto è
+           mancato — è la riga che fa venire voglia di rigiocare, e non
+           è un rimprovero: quel record è suo. -->
+      <p v-if="primato && primato.record" class="co-primato em" data-primato="nuovo">
+        🥇 {{ primato.frase }}
+      </p>
+      <p v-else-if="primato && primato.frase" data-primato="no">🏁 {{ primato.frase }}</p>
       <p v-if="monete">+{{ monete }} 🪙</p>
       <p v-else-if="!vinta">non hai perso niente: la tappa ti aspetta</p>
 

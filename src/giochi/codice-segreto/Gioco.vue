@@ -5,7 +5,8 @@
    Il gioco nasconde un codice di disegni. Il bambino prova una
    combinazione, il gioco risponde con i pallini: verde pieno = disegno
    giusto al posto giusto, cerchio arancione = disegno giusto ma nel
-   posto sbagliato. Sei prove (otto nello scaglione più duro).
+   posto sbagliato. Quante righe abbia il tabellone lo dice lo scaglione
+   (`dati/difficolta.js`), che è l'unico posto dove quel numero è scritto.
 
    Non c'è matematica e non c'è un regolamento da leggere: la prima volta
    si apre da sola una spiegazione senza parole di pochi secondi, che
@@ -21,15 +22,18 @@ import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, stelleDi, completa, scelta, ricorda,
+         primatoDi, segnaPrimato } from '../campagne.js'
+import { fraseDiFine, primatoInParole } from '../primati.js'
 
+import { SENZA_FINE } from './gioco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { SCAGLIONI, PREDEFINITO } from './dati/difficolta.js'
 import { TEMI, CHIAVI_TEMI } from './dati/temi.js'
 import { Regole } from './motore/partita.js'
 import { Corsa } from './motore/corsa.js'
 import { passiSpiegazione } from './motore/indizi.js'
-import { Coriandoli } from './scena/coriandoli.js'
+import { Coriandoli } from '../../grafica/coriandoli.js'
 
 import Mappa from './viste/Mappa.vue'
 import Libero from './viste/Libero.vue'
@@ -52,7 +56,12 @@ const finale = ref(null)            // il cartello di fine, quando c'è
 const spiega = ref(false)
 const posata = ref(-1)              // l'ultima buca riempita: solo per il tonfo
 const rifiuti = ref(0)              // dita finite su una riga già piena
-const serie = ref(0)                // codici indovinati di fila
+const serie = ref(0)                // codici indovinati di fila (per l'albo)
+/* La serie del gioco libero, tenuta a parte da `serie`: quella sopra
+   conta anche i codici delle tappe e alimenta un traguardo, questa è il
+   risultato di una sfida senza fine (`giochi/primati.js`) e parte da
+   zero ogni volta che si entra nel libero. */
+const fila = ref(0)
 
 const avanza = progresso(CHIAVE)
 const libero = computed(() => tappaIdx.value < 0)
@@ -80,6 +89,8 @@ const statoLibero = computed(() => ({
   aperto: aperta(CHIAVE, QUANTE_TAPPE),
   quante: QUANTE_TAPPE,
   fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
+  // già in parole («8 di fila»): l'unità la sa il manifesto, non la mappa
+  primato: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
 }))
 
 /* ═══════════ le manopole del gioco libero ═══════════ */
@@ -128,8 +139,40 @@ const avviaTappa = i => alTavolo(Corsa.perTappa(CAMPAGNA[i]), i)
 
 /* nel libero non si contano i codici: si gioca finché va. La corsa non
    finisce mai, e ogni codice è una partita a sé. */
-const avviaLibero = () =>
+const avviaLibero = () => {
+  fila.value = 0
   alTavolo(new Corsa(Regole.libere(scDifficolta.value, scTema.value), Infinity), -1)
+}
+
+/* ═══════════ il record del gioco libero ═══════════
+   Una serie è un risultato **quando si chiude** — al codice sbagliato, o
+   quando si lascia il tavolo con dei codici in fila — non a ogni codice:
+   se si scrivesse a ogni vittoria, le «ultime partite» del quaderno
+   sarebbero 1, 2, 3, 4 della stessa serie. Finché la serie corre, il
+   cartello confronta con il record di prima, che intanto non si muove. */
+function chiudiLaFila() {
+  if (!fila.value) return null
+  const esito = segnaPrimato(CHIAVE, fila.value)
+  fila.value = 0
+  return esito
+}
+
+/* cosa dire sul cartello del libero: chiusa la serie, la frase di tutti i
+   giochi senza fine; in corsa, quanti di fila e se si è già oltre il record */
+function primatoDelLibero(vinta) {
+  if (!vinta) {
+    const esito = chiudiLaFila()
+    return esito ? { record: esito.record, frase: fraseDiFine(esito, SENZA_FINE.misura) } : null
+  }
+  const prima = primatoDi(CHIAVE).best
+  const record = fila.value > prima
+  return {
+    record,
+    frase: record && prima ? `${fila.value} di fila · nuovo record (era ${prima})`
+         : record ? `${fila.value} di fila · il tuo primo record`
+         : `${fila.value} di fila · il record è ${prima}`,
+  }
+}
 
 function posa(simbolo) {
   const buca = partita.value.posa(simbolo)
@@ -161,6 +204,7 @@ function conferma() {
     segna('codici')
     serie.value++
     segnaBest('serieCodici', serie.value)
+    if (libero.value) fila.value++
   } else serie.value = 0
 
   attesa = setTimeout(() => mostraFinale(tappaFinita), RESPIRO)
@@ -179,7 +223,7 @@ function mostraFinale(tappaFinita) {
   } else {
     finale.value = { che: 'partita', vinta: p.vinta, codice: p.codice,
                      stelle: p.stelle, monete: p.monete, rimaste: c.rimaste,
-                     titolo: '' }
+                     titolo: '', primato: libero.value ? primatoDelLibero(p.vinta) : null }
     if (p.vinta) { suono.moneta(); coriandoli() } else suono.fine()
   }
 }
@@ -195,10 +239,12 @@ function avanti() {
 function allaMappa() {
   clearTimeout(attesa)
   festa?.ferma()
+  chiudiLaFila()           // una serie lasciata a metà vale quanto una chiusa
   finale.value = null
   corsa.value = null
   vista.value = 'mappa'
 }
+onUnmounted(chiudiLaFila)  // anche chi esce dal gioco con la serie in corso
 
 function indietro() {
   if (vista.value === 'mappa') emit('vai', 'home')

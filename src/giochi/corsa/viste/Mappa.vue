@@ -55,7 +55,9 @@ const durata = s => s < 60 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).p
       <span class="em">{{ libera.aperta ? '♾️' : '🔒' }}</span>
       <span v-if="libera.aperta">
         la corsa infinita
-        <b v-if="libera.primato"> · primato {{ libera.primato }} m</b>
+        <!-- il primato arriva già scritto in parole («312 m»): l'unità
+             la sa il manifesto del gioco, non questa schermata -->
+        <b v-if="libera.primato"> · primato {{ libera.primato }}</b>
       </span>
       <span v-else>finisci le {{ libera.quante }} tappe ({{ libera.fatte }} fatte)</span>
     </button>

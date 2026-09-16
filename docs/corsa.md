@@ -188,3 +188,17 @@ larghi un dito ciascuno.
 
 Si apre **la corsa infinita**: non c'è traguardo, i cancelli si leggono
 senza pensarci, e il punteggio è quanto lontano si arriva.
+
+Una corsa che non finisce non può dare né una stella né una tappa nuova, e
+allora l'unica cosa che ha da dare è **dire di quanto sei migliorato**. Alla
+fine di ogni corsa infinita il cartello porta il confronto con il record —
+«🥇 Nuovo record! 312 m (32 m meglio di prima)», coi coriandoli — e quando il
+record resta dov'era dice comunque quanto è mancato: «il tuo record è 312 m ·
+ti sono mancati 32 m». La prima corsa in assoluto non batte niente, e infatti
+non lo dice: «il tuo primo risultato: 120 m».
+
+Il record, quante corse sono state fatte e le ultime cinque in fila stanno
+anche nella pagina **I miei progressi**, sotto *I miei record*, insieme a
+quelli degli altri giochi senza fine. Il conto è di tutti
+(`src/giochi/primati.js`), non di questo gioco: la corsa dichiara soltanto
+che la sua sfida infinita si misura in metri.

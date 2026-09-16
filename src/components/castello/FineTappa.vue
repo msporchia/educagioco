@@ -9,6 +9,7 @@
    qualcosa di nuovo, e non va sprecato.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI, segnoDi } from '../../data/ops.js'
+import Festa from '../../giochi/Festa.vue'
 
 const props = defineProps({
   fase: { type: String, required: true },      // vinta | trionfo | fine
@@ -22,6 +23,9 @@ const props = defineProps({
      («le divisioni»), ed è diventato una coppia quando anche le
      moltiplicazioni si sono potute spegnere. */
   sa: { type: Object, default: () => ({}) },
+  /* solo nella partita libera: { record, frase } da `giochi/primati.js`
+     — lì non si vince, e l'unica cosa da dire è se si è fatto meglio */
+  primato: { type: Object, default: null },
 })
 defineEmits(['avanti', 'mappa', 'libera', 'riprova'])
 
@@ -61,12 +65,15 @@ const segno = k => segnoDi(k, props.sa)
 
   <!-- sconfitta -->
   <template v-else>
+    <Festa v-if="primato && primato.record" />
     <h2>Il castello è caduto</h2>
     <p class="testo">
       <template v-if="campagna">{{ tappa.emoji }} {{ tappa.nome }}: ondate superate
         <b>{{ hud.onda - 1 }}</b> su {{ tappa.ondate }}</template>
       <template v-else>Ondate superate: <b>{{ hud.onda - 1 }}</b></template>
       · nemici fermati: <b>{{ hud.uccisi }}</b> · torri costruite: <b>{{ hud.torri }}</b></p>
+    <p v-if="primato && primato.record" class="primato" data-primato="nuovo">🥇 {{ primato.frase }}</p>
+    <p v-else-if="primato && primato.frase" class="dritta" data-primato="no">🏁 {{ primato.frase }}</p>
     <div class="riga">
       <button class="bottone" @click="$emit('riprova')">Riprova ▶</button>
       <button class="bottone chiaro" @click="$emit('mappa')">Mappa</button>
@@ -76,4 +83,5 @@ const segno = k => segnoDi(k, props.sa)
 
 <style scoped>
 .dritta { font-size:13px; color:var(--tenue); font-weight:700; text-align:center }
+.primato { color:#d1481f; font-weight:900; font-size:15px; text-align:center }
 </style>

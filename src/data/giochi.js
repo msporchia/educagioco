@@ -135,7 +135,16 @@ export const GIOCHI = [
      problema non arriva. */
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
-    grandi: true, chiede: ['moltiplicazioni', 'divisioni'] },
+    grandi: true, chiede: ['moltiplicazioni', 'divisioni'],
+    /* La partita libera non finisce: quello che si porta a casa è quante
+       ondate si sono rette, e com'era fatta quella partita. La forma è
+       quella di `giochi/primati.js`; i giochi nuovi la dichiarano nel
+       manifesto, questo la dichiara qui perché un manifesto non ce l'ha. */
+    senzaFine: {
+      nome: 'La partita libera', icona: '♾️', misura: 'ondate',
+      che: 'quante ondate reggi',
+      dettagli: d => [`${d.uccisi} nemici fermati`, `${d.torri} torri`],
+    } },
   /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
      giornata è tarata sui sei anni e mezzo (`portata: 32`, ricavata in
      `data/bancarella.js`), cioè prima elementare — e contare le monete e
@@ -156,7 +165,11 @@ export const GIOCHI = [
                               grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [],
-                              chiede: g.chiede || [] })),
+                              chiede: g.chiede || [],
+                              /* la sfida senza fine, se il gioco ne ha una: è
+                                 così che la tabella dei record vede vecchi e
+                                 nuovi in un elenco solo */
+                              senzaFine: g.senzaFine || null })),
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)
