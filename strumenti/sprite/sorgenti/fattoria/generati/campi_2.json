@@ -1,0 +1,1033 @@
+{
+ "__": "Il secondo foglio dei campi, otto colture nuove: pomodori, patate, fragole, melanzane, peperoni, cavolfiori, cipolle e aglio. Stessa forma di `campi.png`: il cartello, l'aiuola nuda (che non entra, come di là), sette stadi dal seminato al maturo, e la cassetta del raccolto. Il PNG è RGB con la scacchiera dipinta: «fondo»: «auto» e «colori»: 0, per le stesse ragioni scritte in `campi.json`. «cella»: [1, 1] e coordinate in pixel, stampate da `misura.py --figure`.\n\n«misura» è la riga che conta anche qui. Il generatore disegna l'aiuola più larga negli ultimi due stadi (da ~124 a ~148 px) e le piante alte sbordano in su; ogni stadio è riportato a un letto di 32×27 — il piede 2×2 di un campo — misurando il **letto** e non il riquadro: uno script ha preso, riquadro per riquadro, il rettangolo dei pixel color terra, e la misura è il riquadro intero scalato di quanto serve a portare quel letto a 32×27. Cartelli e casse hanno lo stesso fattore di quelli di `campi.json`, così stanno in fila coi vecchi.",
+ "fondo": "auto",
+ "colori": 0,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "oggetto",
+ "__trasforma": "Come in `campi.json`: il campo ha una pianta in piedi e non si corica, il cartello ha una parola scritta e non si specchia, la cassetta ha una faccia.",
+ "trasforma": {
+  "campo": {
+   "giri": 1
+  },
+  "cartello": {
+   "giri": 1,
+   "specchia": false
+  },
+  "raccolto": {
+   "giri": 1
+  }
+ },
+ "sprite": {
+  "campo_pomodori4": {
+   "da": [
+    920,
+    15
+   ],
+   "cella": [
+    125,
+    133
+   ],
+   "misura": [
+    33,
+    35
+   ]
+  },
+  "campo_pomodori5": {
+   "da": [
+    1057,
+    10
+   ],
+   "cella": [
+    138,
+    138
+   ],
+   "misura": [
+    32,
+    35
+   ]
+  },
+  "campo_pomodori6": {
+   "da": [
+    1213,
+    10
+   ],
+   "cella": [
+    149,
+    138
+   ],
+   "misura": [
+    32,
+    36
+   ]
+  },
+  "cartello_pomodori": {
+   "da": [
+    27,
+    38
+   ],
+   "cella": [
+    153,
+    108
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_pomodori3": {
+   "da": [
+    783,
+    33
+   ],
+   "cella": [
+    125,
+    114
+   ],
+   "misura": [
+    33,
+    29
+   ]
+  },
+  "campo_pomodori0": {
+   "da": [
+    360,
+    44
+   ],
+   "cella": [
+    135,
+    105
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_pomodori1": {
+   "da": [
+    509,
+    43
+   ],
+   "cella": [
+    127,
+    105
+   ],
+   "misura": [
+    33,
+    27
+   ]
+  },
+  "campo_pomodori2": {
+   "da": [
+    647,
+    43
+   ],
+   "cella": [
+    124,
+    105
+   ],
+   "misura": [
+    33,
+    28
+   ]
+  },
+  "raccolto_pomodori": {
+   "da": [
+    1395,
+    43
+   ],
+   "cella": [
+    120,
+    106
+   ],
+   "misura": [
+    25,
+    22
+   ]
+  },
+  "cartello_patate": {
+   "da": [
+    27,
+    168
+   ],
+   "cella": [
+    152,
+    109
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_patate0": {
+   "da": [
+    359,
+    174
+   ],
+   "cella": [
+    137,
+    106
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_patate1": {
+   "da": [
+    509,
+    174
+   ],
+   "cella": [
+    128,
+    105
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_patate2": {
+   "da": [
+    647,
+    175
+   ],
+   "cella": [
+    124,
+    104
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_patate3": {
+   "da": [
+    784,
+    174
+   ],
+   "cella": [
+    124,
+    105
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_patate4": {
+   "da": [
+    919,
+    175
+   ],
+   "cella": [
+    126,
+    104
+   ],
+   "misura": [
+    33,
+    27
+   ]
+  },
+  "campo_patate5": {
+   "da": [
+    1057,
+    162
+   ],
+   "cella": [
+    138,
+    118
+   ],
+   "misura": [
+    32,
+    31
+   ]
+  },
+  "campo_patate6": {
+   "da": [
+    1213,
+    161
+   ],
+   "cella": [
+    149,
+    118
+   ],
+   "misura": [
+    32,
+    31
+   ]
+  },
+  "raccolto_patate": {
+   "da": [
+    1396,
+    186
+   ],
+   "cella": [
+    119,
+    99
+   ],
+   "misura": [
+    25,
+    21
+   ]
+  },
+  "cartello_fragole": {
+   "da": [
+    27,
+    295
+   ],
+   "cella": [
+    153,
+    109
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_fragole0": {
+   "da": [
+    359,
+    306
+   ],
+   "cella": [
+    137,
+    102
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_fragole1": {
+   "da": [
+    508,
+    306
+   ],
+   "cella": [
+    128,
+    102
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_fragole2": {
+   "da": [
+    647,
+    305
+   ],
+   "cella": [
+    124,
+    102
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_fragole3": {
+   "da": [
+    783,
+    306
+   ],
+   "cella": [
+    125,
+    101
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_fragole4": {
+   "da": [
+    919,
+    306
+   ],
+   "cella": [
+    126,
+    101
+   ],
+   "misura": [
+    33,
+    27
+   ]
+  },
+  "campo_fragole5": {
+   "da": [
+    1057,
+    305
+   ],
+   "cella": [
+    139,
+    102
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_fragole6": {
+   "da": [
+    1213,
+    303
+   ],
+   "cella": [
+    149,
+    104
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "raccolto_fragole": {
+   "da": [
+    1396,
+    314
+   ],
+   "cella": [
+    118,
+    97
+   ],
+   "misura": [
+    25,
+    21
+   ]
+  },
+  "campo_melanzane6": {
+   "da": [
+    1214,
+    417
+   ],
+   "cella": [
+    148,
+    118
+   ],
+   "misura": [
+    32,
+    32
+   ]
+  },
+  "cartello_melanzane": {
+   "da": [
+    28,
+    424
+   ],
+   "cella": [
+    151,
+    110
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_melanzane0": {
+   "da": [
+    360,
+    433
+   ],
+   "cella": [
+    136,
+    103
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_melanzane1": {
+   "da": [
+    509,
+    434
+   ],
+   "cella": [
+    127,
+    102
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_melanzane2": {
+   "da": [
+    647,
+    434
+   ],
+   "cella": [
+    124,
+    101
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_melanzane3": {
+   "da": [
+    783,
+    423
+   ],
+   "cella": [
+    125,
+    112
+   ],
+   "misura": [
+    32,
+    30
+   ]
+  },
+  "campo_melanzane4": {
+   "da": [
+    919,
+    423
+   ],
+   "cella": [
+    126,
+    112
+   ],
+   "misura": [
+    33,
+    30
+   ]
+  },
+  "campo_melanzane5": {
+   "da": [
+    1058,
+    420
+   ],
+   "cella": [
+    137,
+    116
+   ],
+   "misura": [
+    32,
+    31
+   ]
+  },
+  "raccolto_melanzane": {
+   "da": [
+    1396,
+    438
+   ],
+   "cella": [
+    119,
+    104
+   ],
+   "misura": [
+    25,
+    22
+   ]
+  },
+  "cartello_peperoni": {
+   "da": [
+    27,
+    553
+   ],
+   "cella": [
+    152,
+    109
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_peperoni4": {
+   "da": [
+    919,
+    556
+   ],
+   "cella": [
+    126,
+    106
+   ],
+   "misura": [
+    33,
+    29
+   ]
+  },
+  "campo_peperoni5": {
+   "da": [
+    1057,
+    552
+   ],
+   "cella": [
+    139,
+    110
+   ],
+   "misura": [
+    32,
+    30
+   ]
+  },
+  "campo_peperoni6": {
+   "da": [
+    1214,
+    556
+   ],
+   "cella": [
+    148,
+    106
+   ],
+   "misura": [
+    32,
+    29
+   ]
+  },
+  "campo_peperoni0": {
+   "da": [
+    359,
+    561
+   ],
+   "cella": [
+    137,
+    102
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_peperoni1": {
+   "da": [
+    509,
+    561
+   ],
+   "cella": [
+    127,
+    101
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_peperoni2": {
+   "da": [
+    647,
+    561
+   ],
+   "cella": [
+    123,
+    101
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_peperoni3": {
+   "da": [
+    783,
+    560
+   ],
+   "cella": [
+    125,
+    102
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "raccolto_peperoni": {
+   "da": [
+    1396,
+    569
+   ],
+   "cella": [
+    118,
+    99
+   ],
+   "misura": [
+    25,
+    21
+   ]
+  },
+  "cartello_cavolfiori": {
+   "da": [
+    28,
+    680
+   ],
+   "cella": [
+    151,
+    106
+   ],
+   "misura": [
+    34,
+    24
+   ]
+  },
+  "campo_cavolfiori0": {
+   "da": [
+    360,
+    688
+   ],
+   "cella": [
+    135,
+    99
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_cavolfiori1": {
+   "da": [
+    509,
+    688
+   ],
+   "cella": [
+    127,
+    98
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_cavolfiori2": {
+   "da": [
+    647,
+    688
+   ],
+   "cella": [
+    123,
+    98
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_cavolfiori3": {
+   "da": [
+    783,
+    688
+   ],
+   "cella": [
+    125,
+    98
+   ],
+   "misura": [
+    33,
+    27
+   ]
+  },
+  "campo_cavolfiori4": {
+   "da": [
+    919,
+    686
+   ],
+   "cella": [
+    126,
+    100
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_cavolfiori5": {
+   "da": [
+    1057,
+    687
+   ],
+   "cella": [
+    139,
+    99
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_cavolfiori6": {
+   "da": [
+    1213,
+    682
+   ],
+   "cella": [
+    149,
+    104
+   ],
+   "misura": [
+    32,
+    29
+   ]
+  },
+  "raccolto_cavolfiori": {
+   "da": [
+    1395,
+    690
+   ],
+   "cella": [
+    119,
+    102
+   ],
+   "misura": [
+    25,
+    22
+   ]
+  },
+  "cartello_cipolle": {
+   "da": [
+    27,
+    802
+   ],
+   "cella": [
+    150,
+    101
+   ],
+   "misura": [
+    33,
+    22
+   ]
+  },
+  "campo_cipolle0": {
+   "da": [
+    359,
+    808
+   ],
+   "cella": [
+    137,
+    94
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_cipolle1": {
+   "da": [
+    508,
+    808
+   ],
+   "cella": [
+    128,
+    94
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_cipolle2": {
+   "da": [
+    647,
+    808
+   ],
+   "cella": [
+    123,
+    93
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_cipolle3": {
+   "da": [
+    783,
+    807
+   ],
+   "cella": [
+    125,
+    95
+   ],
+   "misura": [
+    33,
+    28
+   ]
+  },
+  "campo_cipolle4": {
+   "da": [
+    919,
+    808
+   ],
+   "cella": [
+    127,
+    94
+   ],
+   "misura": [
+    33,
+    27
+   ]
+  },
+  "campo_cipolle5": {
+   "da": [
+    1057,
+    806
+   ],
+   "cella": [
+    139,
+    97
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_cipolle6": {
+   "da": [
+    1212,
+    807
+   ],
+   "cella": [
+    150,
+    96
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "raccolto_cipolle": {
+   "da": [
+    1396,
+    810
+   ],
+   "cella": [
+    118,
+    96
+   ],
+   "misura": [
+    25,
+    20
+   ]
+  },
+  "cartello_aglio": {
+   "da": [
+    28,
+    910
+   ],
+   "cella": [
+    150,
+    99
+   ],
+   "misura": [
+    33,
+    22
+   ]
+  },
+  "campo_aglio0": {
+   "da": [
+    359,
+    917
+   ],
+   "cella": [
+    136,
+    89
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_aglio1": {
+   "da": [
+    509,
+    915
+   ],
+   "cella": [
+    127,
+    91
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_aglio2": {
+   "da": [
+    647,
+    916
+   ],
+   "cella": [
+    122,
+    90
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_aglio3": {
+   "da": [
+    783,
+    916
+   ],
+   "cella": [
+    124,
+    90
+   ],
+   "misura": [
+    32,
+    28
+   ]
+  },
+  "campo_aglio4": {
+   "da": [
+    918,
+    916
+   ],
+   "cella": [
+    127,
+    90
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_aglio5": {
+   "da": [
+    1058,
+    916
+   ],
+   "cella": [
+    136,
+    90
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "campo_aglio6": {
+   "da": [
+    1210,
+    915
+   ],
+   "cella": [
+    152,
+    91
+   ],
+   "misura": [
+    32,
+    27
+   ]
+  },
+  "raccolto_aglio": {
+   "da": [
+    1398,
+    920
+   ],
+   "cella": [
+    115,
+    93
+   ],
+   "misura": [
+    24,
+    20
+   ]
+  }
+ }
+}

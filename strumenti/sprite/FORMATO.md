@@ -256,6 +256,7 @@ migliore rimette in gioco una correzione che nessuno ricorda.
 | due disegni diversi sotto un nome solo (e il gioco li fa lampeggiare, credendoli fotogrammi) | due nomi invece di uno | una riga in più |
 | una cosa sola spezzata in più nomi (e il gioco te la vende due volte) | `cose` | una riga, e nessun pezzo si rinomina |
 | dentro il ritaglio giusto resta roba che non c'entra | `cancella` | un rettangolo |
+| …e quella roba copre qualcosa che serve (un fumetto dipinto sopra la staccionata) | `toppa` | un rettangolo, e da quale riquadro prenderlo |
 | la stessa cosa è disegnata a misure diverse (e a schermo cambia taglia da sé) | `misura` | due numeri |
 
 ```json
@@ -267,6 +268,26 @@ ritaglio**, e quei rettangoli escono trasparenti. Vale per tutti i
 fotogrammi dello sprite. Non è una regola nel generatore — quelle cercano
 di essere furbe su tutti i fogli e sbagliano — è **una correzione a questo
 foglio qui**, e sta accanto al foglio che descrive.
+
+```json
+"recinto_anatre_calmo": { "da": [765, 225], "cella": [248, 193],
+  "toppa": [{ "zona": [140, 0, 72, 49], "da": "recinto_anatre_dorme" }] }
+```
+
+`toppa` è per quando bucare non basta: la roba che non c'entra sta
+**sopra** qualcosa che serve. Il foglio dei recinti disegna il ritratto
+calmo con un fumetto in alto a destra, e il fumetto copre la staccionata
+— un `cancella` lì lascia una staccionata rotta. Ma nel riquadro accanto
+lo stesso recinto dorme senza fumetto, e la staccionata sotto il fumetto
+è quella lì. Ogni voce dice **la zona** (dentro il ritaglio, come
+`cancella`) e **da quale sprite dello stesso foglietto** prenderla; i due
+riquadri si allineano **per il piede** — bordo di sotto e centro — perché
+è così che si posano a schermo, e due riquadri alti diverso hanno la
+staccionata alla stessa altezza da terra. Si guarda che il riquadro
+sorgente non abbia roba sua in quella zona (lo Zzz di chi dorme, per
+dire): l'attrezzo copia, non giudica. Dove ce l'ha, `"sposta": [dx, dy]`
+pesca la zona traslata di tanto — la staccionata è la stessa qualche
+pixel più in là — e `da` può essere lo sprite stesso.
 
 ```json
 "campo_grano3": { "da": [614, 439], "cella": [125, 110], "misura": [34, 27] }

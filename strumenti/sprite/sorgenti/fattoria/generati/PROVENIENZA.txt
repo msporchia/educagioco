@@ -9,7 +9,13 @@ casa.
 Cosa c'è dentro
 ---------------
   animali.png      i cinque recinti da cortile, cinque stati per specie
+  animali_2.png    altri cinque recinti (anatre, capre, api, alpaca,
+                   asini), tre stati per specie e un fumetto dipinto
+                   che il foglietto rattoppa via (settembre 2026)
   campi.png        cinque colture a sette stadi, coi cartelli
+  campi_2.png      altre otto (pomodori, patate, fragole, melanzane,
+                   peperoni, cavolfiori, cipolle, aglio), stessa forma
+                   (settembre 2026)
   giardino.png     201 pezzi da giardino: fontane, pozzi, mulini,
                    arredi, animaletti, vegetazione
   edifici.png      24 costruzioni del podere: fienili, silo, serra,

@@ -312,6 +312,66 @@ def cancella_in(pezzo, rettangoli, nome):
     return fuori
 
 
+def toppa_in(pezzo, toppe, nome, im, fg):
+    """Rattoppa il ritaglio con un pezzo di un **altro riquadro dello
+    stesso foglio**.
+
+    È la sorella di `cancella_in`, per il caso in cui bucare non basta:
+    la roba che non c'entra sta *sopra* qualcosa che serve. Il foglio
+    dei recinti (`fattoria/generati/animali_2.png`) disegna il ritratto
+    calmo con un fumetto dipinto in alto a destra, e il fumetto copre la
+    staccionata — un `cancella` lì lascia un buco nel recinto, che si
+    legge come una staccionata rotta. Ma lo stesso recinto, nel riquadro
+    accanto, dorme senza fumetto: la staccionata sotto il fumetto è
+    **quella lì**, disegnata dallo stesso generatore nello stesso posto.
+
+    `"toppa": [{"zona": [x, y, largo, alto], "da": "nome_sprite"}, …]`:
+    i pixel di `zona` (coordinate dentro il ritaglio) vengono presi dal
+    riquadro di `da`, che dev'essere uno sprite dichiarato nello stesso
+    foglietto. I due riquadri si allineano **per il piede** — bordo di
+    sotto e centro orizzontale — perché è così che si posano a schermo:
+    due riquadri alti diverso (198 px col fumetto, 174 senza) hanno la
+    staccionata alla stessa altezza da terra, non dallo stesso bordo di
+    sopra. Dove il riquadro sorgente non arriva la zona esce trasparente.
+
+    `"sposta": [dx, dy]` (facoltativo) prende i pixel da un'altra zona
+    del riquadro sorgente, traslata di tanto: serve quando nel posto
+    giusto il sorgente ha roba sua — lo Zzz di chi dorme sta proprio
+    sotto l'arco del fumetto — e la staccionata è la stessa dieci pixel
+    più in là. Una toppa può anche pescare dal proprio riquadro (`da`
+    uguale al nome dello sprite), che con `sposta` è il modo di ricopiare
+    un pezzo di staccionata pulita da fianco.
+
+    Come `cancella`, è una correzione a questo foglio qui, dichiarata
+    accanto al foglio: il PNG non si tocca, e si rigenera identico."""
+    if not toppe:
+        return pezzo
+    cw, ch = fg['cella']
+    fuori = pezzo.copy()
+    px = fuori.load()
+    for t in toppe:
+        zona, da = t.get('zona'), t.get('da')
+        d = (fg.get('sprite') or {}).get(da)
+        sposta = t.get('sposta', [0, 0])
+        if not zona or len(zona) != 4 or not d or len(sposta) != 2:
+            print(f'  ! {nome}: "toppa" vuole {{"zona": [x, y, largo, alto], '
+                  f'"da": "<sprite del foglietto>", "sposta": [dx, dy]?}}, ho {t}')
+            continue
+        pw, ph = d.get('cella', [cw, ch])
+        sx, sy = d['da'][0] * cw, d['da'][1] * ch
+        s = im.crop((sx, sy, sx + pw, sy + ph))
+        sp = s.load()
+        dx = (fuori.width - s.width) // 2 - sposta[0]
+        dy = fuori.height - s.height - sposta[1]
+        x, y, w, h = zona
+        for a in range(max(0, x), min(fuori.width, x + w)):
+            for b in range(max(0, y), min(fuori.height, y + h)):
+                u, v = a - dx, b - dy
+                px[a, b] = sp[u, v] if 0 <= u < s.width and 0 <= v < s.height \
+                    else (0, 0, 0, 0)
+    return fuori
+
+
 def alla_misura(pezzo, misura, nome):
     """Il ritaglio riportato alla misura voluta.
 
@@ -429,6 +489,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             if d.get('specchia'):
                 pezzo = ImageOps.mirror(pezzo)
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
+            pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
             ritagli[chi] = pezzo
             provenienza[chi] = provenienza.get(chi) or Path(fg['_file']).name

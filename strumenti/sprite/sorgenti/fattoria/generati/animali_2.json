@@ -1,0 +1,552 @@
+{
+ "__": "Il secondo foglio dei recinti, cinque specie nuove: anatre, capre, api, alpaca e asini (le altre cinque righe rifanno maiali, mucche, galline, pecore e conigli, che stanno già in `animali.png` con cinque stati: non entrano, quello che nessuno nomina non sta nel file unico). Qui ogni specie ha **tre riquadri e non cinque** — calmo, mangia, dorme — e i primi due portano un fumetto dipinto in alto a destra con dentro la roba che la bestia rende. Il fumetto non entra, per la stessa ragione del `_fame` di `animali.json`: quello che un recinto dice lo disegna la scena, e due fumetti uno sull'altro (quello dipinto e il 🧺 del pronto) sono un recinto che parla a vanvera. Ma qui non si può bucare e basta, perché il fumetto sta sopra la staccionata: si **rattoppa** (`toppa`, FORMATO.md) prendendo la staccionata dal riquadro che dorme — che è la stessa, allo stesso posto — e per l'arco in basso a destra, dove il riquadro che dorme ha il suo Zzz, si ricopia un pezzo di staccionata pulita dello stesso riquadro settanta pixel più a sinistra. Le zone le ha misurate uno script dal bianco del fumetto e dal blu dello Zzz, riquadro per riquadro.\n\nGli stati che mancano — felice e pronto — non si inventano: `RECINTO()` in `dati/catalogo.js` li manda sul ritratto calmo, come già fa con la fame. Il PNG è RGB con la scacchiera dipinta, quindi «fondo»: «auto» e «colori»: 0 come per i campi. «cella»: [1, 1] e coordinate in pixel, stampate da `misura.py --figure`. «misura» riporta ogni recinto a 70 px di larghezza — il fattore è 70/241, lo stesso rapporto di `animali.json` — così i tre stati non cambiano taglia passando dall'uno all'altro; i riquadri che dormono sono più bassi perché non hanno il fumetto, e a schermo si posano col piede, quindi la staccionata resta dov'è.",
+ "fondo": "auto",
+ "colori": 0,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "figura",
+ "sprite": {
+  "recinto_anatre_calmo": {
+   "da": [
+    765,
+    225
+   ],
+   "cella": [
+    248,
+    193
+   ],
+   "misura": [
+    72,
+    56
+   ],
+   "toppa": [
+    {
+     "zona": [
+      128,
+      0,
+      59,
+      42
+     ],
+     "da": "recinto_anatre_dorme"
+    },
+    {
+     "zona": [
+      128,
+      42,
+      29,
+      17
+     ],
+     "da": "recinto_anatre_dorme"
+    },
+    {
+     "zona": [
+      157,
+      42,
+      30,
+      17
+     ],
+     "da": "recinto_anatre_calmo",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_anatre_mangia": {
+   "da": [
+    1026,
+    225
+   ],
+   "cella": [
+    244,
+    193
+   ],
+   "misura": [
+    71,
+    56
+   ],
+   "toppa": [
+    {
+     "zona": [
+      129,
+      0,
+      59,
+      42
+     ],
+     "da": "recinto_anatre_dorme"
+    },
+    {
+     "zona": [
+      129,
+      42,
+      28,
+      17
+     ],
+     "da": "recinto_anatre_dorme"
+    },
+    {
+     "zona": [
+      157,
+      42,
+      31,
+      17
+     ],
+     "da": "recinto_anatre_mangia",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_anatre_dorme": {
+   "da": [
+    1282,
+    246
+   ],
+   "cella": [
+    242,
+    173
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_capre_calmo": {
+   "da": [
+    10,
+    424
+   ],
+   "cella": [
+    241,
+    190
+   ],
+   "misura": [
+    70,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      120,
+      0,
+      60,
+      39
+     ],
+     "da": "recinto_capre_dorme"
+    },
+    {
+     "zona": [
+      120,
+      39,
+      37,
+      20
+     ],
+     "da": "recinto_capre_dorme"
+    },
+    {
+     "zona": [
+      157,
+      39,
+      23,
+      20
+     ],
+     "da": "recinto_capre_calmo",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_capre_mangia": {
+   "da": [
+    262,
+    424
+   ],
+   "cella": [
+    240,
+    190
+   ],
+   "misura": [
+    70,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      119,
+      0,
+      60,
+      39
+     ],
+     "da": "recinto_capre_dorme"
+    },
+    {
+     "zona": [
+      119,
+      39,
+      38,
+      20
+     ],
+     "da": "recinto_capre_dorme"
+    },
+    {
+     "zona": [
+      157,
+      39,
+      22,
+      20
+     ],
+     "da": "recinto_capre_mangia",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_capre_dorme": {
+   "da": [
+    514,
+    445
+   ],
+   "cella": [
+    242,
+    171
+   ],
+   "misura": [
+    70,
+    50
+   ]
+  },
+  "recinto_api_calmo": {
+   "da": [
+    776,
+    622
+   ],
+   "cella": [
+    246,
+    188
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      119,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_api_dorme"
+    },
+    {
+     "zona": [
+      119,
+      43,
+      40,
+      16
+     ],
+     "da": "recinto_api_dorme"
+    },
+    {
+     "zona": [
+      159,
+      43,
+      19,
+      16
+     ],
+     "da": "recinto_api_calmo",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_api_mangia": {
+   "da": [
+    1034,
+    622
+   ],
+   "cella": [
+    244,
+    189
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      111,
+      0,
+      61,
+      43
+     ],
+     "da": "recinto_api_dorme"
+    },
+    {
+     "zona": [
+      111,
+      43,
+      48,
+      16
+     ],
+     "da": "recinto_api_dorme"
+    },
+    {
+     "zona": [
+      159,
+      43,
+      13,
+      16
+     ],
+     "da": "recinto_api_mangia",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_api_dorme": {
+   "da": [
+    1287,
+    643
+   ],
+   "cella": [
+    244,
+    168
+   ],
+   "misura": [
+    71,
+    49
+   ]
+  },
+  "recinto_alpaca_calmo": {
+   "da": [
+    10,
+    811
+   ],
+   "cella": [
+    245,
+    189
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      117,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_alpaca_dorme"
+    },
+    {
+     "zona": [
+      117,
+      43,
+      43,
+      16
+     ],
+     "da": "recinto_alpaca_dorme"
+    },
+    {
+     "zona": [
+      160,
+      43,
+      16,
+      16
+     ],
+     "da": "recinto_alpaca_calmo",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_alpaca_mangia": {
+   "da": [
+    266,
+    811
+   ],
+   "cella": [
+    244,
+    188
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      115,
+      0,
+      59,
+      43
+     ],
+     "da": "recinto_alpaca_dorme"
+    },
+    {
+     "zona": [
+      115,
+      43,
+      45,
+      16
+     ],
+     "da": "recinto_alpaca_dorme"
+    },
+    {
+     "zona": [
+      160,
+      43,
+      14,
+      16
+     ],
+     "da": "recinto_alpaca_mangia",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_alpaca_dorme": {
+   "da": [
+    520,
+    833
+   ],
+   "cella": [
+    247,
+    168
+   ],
+   "misura": [
+    72,
+    49
+   ]
+  },
+  "recinto_asini_calmo": {
+   "da": [
+    779,
+    813
+   ],
+   "cella": [
+    247,
+    188
+   ],
+   "misura": [
+    72,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      114,
+      0,
+      60,
+      42
+     ],
+     "da": "recinto_asini_dorme"
+    },
+    {
+     "zona": [
+      114,
+      42,
+      47,
+      17
+     ],
+     "da": "recinto_asini_dorme"
+    },
+    {
+     "zona": [
+      161,
+      42,
+      13,
+      17
+     ],
+     "da": "recinto_asini_calmo",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_asini_mangia": {
+   "da": [
+    1036,
+    813
+   ],
+   "cella": [
+    246,
+    188
+   ],
+   "misura": [
+    71,
+    55
+   ],
+   "toppa": [
+    {
+     "zona": [
+      113,
+      0,
+      60,
+      42
+     ],
+     "da": "recinto_asini_dorme"
+    },
+    {
+     "zona": [
+      113,
+      42,
+      48,
+      17
+     ],
+     "da": "recinto_asini_dorme"
+    },
+    {
+     "zona": [
+      161,
+      42,
+      12,
+      17
+     ],
+     "da": "recinto_asini_mangia",
+     "sposta": [
+      -70,
+      0
+     ]
+    }
+   ]
+  },
+  "recinto_asini_dorme": {
+   "da": [
+    1290,
+    834
+   ],
+   "cella": [
+    245,
+    169
+   ],
+   "misura": [
+    71,
+    49
+   ]
+  }
+ }
+}
