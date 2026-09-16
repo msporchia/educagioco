@@ -750,8 +750,13 @@ controlla('e le sue domande finiscono nel blocco di quello che hai tolto',
    conversioni, e senza quelle non è difficile, è da indovinare. Quindi
    sparisce dalla home, e nel quadro la sua riga resta lì con scritto
    perché — invece di sparire senza motivo. */
+/* il bersaglio è `.carta.gioco[data-gioco=…]`, come per tutti i giochi
+   nuovi: `.carta.poz` non è mai esistito — la classe corta ce l'hanno
+   solo i giochi vecchi — e con quel selettore «sparisce» passava a
+   vuoto e «torna» non poteva passare mai */
+const POZIONI = '.carta.gioco[data-gioco="pozioni"]'
 controlla('il laboratorio delle pozioni sparisce dalla home',
-          !(await inHome('.carta.poz')))
+          !(await inHome(POZIONI)))
 await vaiAiGenitori()
 await digita('0000')
 await apriScheda('giochi')
@@ -767,7 +772,7 @@ controlla('e la sua riga dice perché, invece di dire solo «spento»',
 await taraSapere('conversioni', 'rimetti')
 uguale('rimettendola, la voce sparisce dal profilo',
        (await leggiProfilo(page)).settings.sa?.conversioni, undefined)
-controlla('e il gioco torna in home', await inHome('.carta.poz'))
+controlla('e il gioco torna in home', await inHome(POZIONI))
 
 /* ── 7d. la migrazione del flag vecchio ──
    Il profilo di ieri aveva `settings.divisioni: false` e non sapeva
