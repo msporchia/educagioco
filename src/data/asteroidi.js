@@ -274,3 +274,39 @@ export function dopoDi(voce, fila, aperta = v => raggiunta(v, fila)) {
   return resto.find(v => aperta(v) && !superata(v, fila)) ||
          resto.find(v => aperta(v)) || null
 }
+
+/* ═══════════ LA TAPPA CHE IL BOSS PUÒ ASSAGGIARE ═══════════
+   Un boss è un boss perché arriva da dove non si è ancora stati: al
+   pianeta del 6 porta un calcolo del 7, alla stazione dei riporti un
+   concetto di quella dopo. Ma quel «dopo» non c'è sempre, e non basta
+   che ci sia: dev'essere una tappa che **porta qualcosa di nuovo**. Due
+   non lo fanno, ed è di proposito — sono gli esami in fondo ai due
+   mestieri, il Sole (`nuova: null`) e «La prova» (`nuovi: []`), che
+   rimescolano quello che c'era già.
+
+   Sono TRE i casi in cui non c'è niente da assaggiare, ed è il motivo
+   per cui la domanda si fa qui una volta sola invece che a occhio in
+   mezzo alla partita: un volo infinito (nessuna voce, quindi nessun
+   dopo), l'ultima tappa di un mestiere (nessun dopo), e la penultima —
+   che un dopo ce l'ha, ma è l'esame.
+
+   Il guasto arrivato dai telefoni («`x.value.nuova is null` mentre fa
+   livello il Sole») stava tutto in questa distinzione mancante:
+   `views/MathGame.vue` leggeva la tabellina della tappa dopo appena il
+   boss sceglieva una chiave, e al Sole una tappa dopo non c'è. Dove non
+   scoppiava, mentiva: al pianeta del 9 il dopo è il Sole, e il grido
+   diventava «BOSS DAL PIANETA DEL null».
+
+   Quando non c'è niente da assaggiare il boss resta un boss — chiede la
+   casella più tosta fra quelle che ancora non reggono (`chiaveDelBoss`
+   in `store/tabelline.js`) — ma quella domanda è roba di casa, e va
+   **segnata sul motore** come tutte le altre: l'assaggio si tiene fuori
+   dall'SRS perché misurare una cosa mai insegnata non dice niente di
+   vero, e al Sole non c'è niente di non insegnato. Tenerla fuori voleva
+   dire buttare via una risposta su otto dell'esame. */
+export function daAssaggiare(voce) {
+  if (!voce) return null                  // un volo infinito non ha nessun dopo
+  const dopo = (voce.tipo === 'mente' ? STAZIONI : CAMPAGNA)[voce.i + 1] || null
+  if (!dopo) return null
+  return (voce.tipo === 'mente' ? dopo.nuovi.length : dopo.nuova) ? dopo : null
+}

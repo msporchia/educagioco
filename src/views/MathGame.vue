@@ -39,7 +39,7 @@ import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
          creaMiscela } from '../store/calcolo.js'
 import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
          insiemeDi, chiaviDelle } from '../store/tabelline.js'
-import { CAPITOLI, SCALETTA, superata, dopoDi,
+import { CAPITOLI, SCALETTA, superata, dopoDi, daAssaggiare,
          posizioneOra, filaDi } from '../data/asteroidi.js'
 import { suono } from '../audio.js'
 import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
@@ -168,13 +168,14 @@ const stelleMente = computed(() =>
 /* La tappa dopo DELLO STESSO MESTIERE, che è da dove viene il boss: un
    assaggio si fa con la roba che quella tappa lì è venuta a insegnare,
    quindi a un pianeta serve il pianeta dopo e a una stazione la stazione
-   dopo. È contenuto, non fila — e per questo legge `voce.i`, l'indice
-   dentro la campagna di provenienza, e non `pos`.
-   Un volo infinito (posizione -1) non ha nessun «dopo»: prima `-1 + 1`
-   faceva zero e il boss del volo libero anticipava il PRIMO pianeta,
-   cioè il più facile di tutti. Un assaggio che guarda all'indietro. */
-const prossima = computed(() => voce.value
-  ? (mente.value ? STAZIONI : CAMPAGNA)[voce.value.i + 1] || null : null)
+   dopo. È contenuto, non fila — e per questo la regola legge `voce.i`,
+   l'indice dentro la campagna di provenienza, e non `pos`.
+   Sta in `data/asteroidi.js` perché è pura e perché era il posto dove
+   sbagliarla non si vedeva: **è `null` anche quando una tappa dopo c'è
+   ma non porta niente di nuovo** (il Sole, «La prova»), e i tre casi in
+   cui non c'è niente da assaggiare stanno scritti là, accanto
+   all'incidente che sono costati. */
+const prossima = computed(() => daAssaggiare(voce.value))
 
 /* la riga sotto il nome: cosa porta questa tappa */
 const cheChiede = v => (v.tipo === 'mente'
@@ -315,10 +316,14 @@ function distrattori(a, b, n) {
    «debole» un calcolo mai visto. Le vite e i punti invece contano: il
    rischio è quello che rende il boss un boss.
 
-   Dove un «dopo» non c'è — il Sole, l'ultimo pianeta, il volo libero —
+   Dove un «dopo» da assaggiare non c'è — il volo libero, l'ultima tappa
+   di un mestiere, e la penultima, che il dopo ce l'ha ma è un esame e
+   non insegna niente di nuovo (i tre casi stanno in `daAssaggiare`) —
    il boss chiede la casella più tosta fra quelle che ancora non reggono
    (nel calcolo a mente non serve: là i numeri crescono da soli con la
-   taglia, e il boss è una domanda normale con la musica).
+   taglia, e il boss è una domanda normale con la musica). Quella non è
+   un anticipo e **si segna** come tutte le altre: di non insegnato lì
+   non c'è più niente.
    Prima chiedeva la «più in bilico», cioè quella col peso più alto: ed
    è così che è uscito un boss che chiedeva 1×1, perché il peso premia
    chi non si è mai visto e le caselle mai viste sono proprio quelle che
@@ -337,7 +342,8 @@ function chiaveDalDopo() {
   if (!mente.value) return chiaveDelBoss(tabellineInGioco(), t, state.profile.items,
                                          Date.now(), Math.random, domanda.chiave)
   if (t) {
-    if (!t.nuovi.length) return null
+    // che `t` abbia dei concetti nuovi lo garantisce `prossima`: una tappa
+    // dopo che non insegna niente non è una tappa da assaggiare
     // `poolDi` sceglie da sé da dove cominciare dentro la stazione; qui si
     // tiene solo quello che la stazione dopo viene a insegnare
     const p = poolDi(t, state.profile.items, Date.now(), 6).filter(k => eNuovo(t, k))
@@ -400,17 +406,25 @@ function scegli(p) {
 
 function nuovaDomanda(boss) {
   const p = mente.value ? poolMente() : poolAttivo()
-  const futura = boss ? chiaveDalDopo() : null
-  const k = futura || scegli(p)
-  anticipo = !!futura
+  const dalBoss = boss ? chiaveDalDopo() : null
+  const k = dalBoss || scegli(p)
+  /* UNA CHIAVE DEL BOSS NON È SEMPRE UN ASSAGGIO, ed è il guasto che
+     arrivava dai telefoni: dove una tappa da assaggiare non c'è — il
+     Sole, il volo libero, il pianeta prima del Sole — `chiaveDelBoss`
+     ripiega sulla casella più tosta di casa. Quella non ha nessuna
+     tabellina da mettere davanti (`prossima` è `null`, e leggerci dentro
+     era l'incidente) e soprattutto **va segnata sul motore**: è roba già
+     insegnata, e tenerla fuori buttava via una risposta su otto di tutta
+     la tappa del Sole. */
+  anticipo = !!dalBoss && !!prossima.value
   // il boss non passa dal picker: la memoria corta va avvisata a mano, se
   // no la domanda dopo può essere la stessa del boss
-  if (futura) picker.annota(k)
+  if (dalBoss) picker.annota(k)
   // il boss arriva dalla tappa dopo: conta come una domanda fuori tappa,
   // se no la quota promessa è più alta di quella che si misura
   miscela.segna(eDellaTappa(k))
   if (mente.value) preparaMente(k)
-  else preparaTabellina(k, futura ? prossima.value.nuova : null)
+  else preparaTabellina(k, anticipo ? prossima.value.nuova : null)
   apertoIl = performance.now()
   /* IL GHIACCIO SI SCIOGLIE QUI. Una domanda nuova nasce sempre col
      cielo alla sua velocità: il gelo si compra per la domanda che si ha
