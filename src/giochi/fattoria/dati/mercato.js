@@ -66,18 +66,58 @@ import { livelloDelProdotto } from './livelli.js'
    grano, e un nome di persona non direbbe niente. Sono la parte del
    mercato che si ricorda — un bambino racconta che «è arrivato il
    pasticcere», non che ha consegnato due uova. */
+/* ── E `vuole` DICE PERCHÉ È VENUTO LUI ───────────────────────────
+   Il cliente era **una faccia pescata a caso**, e con sette merci non
+   si notava; con ventidue sì — il pizzaiolo che chiede la lana e la
+   sarta che chiede i pomodori sono la cosa che fa sembrare il banco
+   una lotteria invece di un mercato. Adesso la merce si pesca per
+   prima e **il cliente si sceglie fra quelli a cui quella roba
+   serve** (`clientiPer`, e il gesto sta in `motore/mercato.js`).
+
+   `vuole` è un **restringimento, non un elenco di compiti**: chi non
+   lo dichiara prende di tutto, ed è giusto che ce ne siano — la nonna
+   e il bottegaio comprano quello che c'è, e senza di loro una merce
+   dimenticata da tutti non la chiederebbe più nessuno. */
 export const CLIENTI = [
-  { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖' },
-  { id: 'pasticcera',  nome: 'La pasticcera',  emoji: '🧁' },
+  { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖',
+    vuole: ['grano', 'uova', 'latte', 'patate'] },
+  { id: 'pasticcera',  nome: 'La pasticcera',  emoji: '🧁',
+    vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda'] },
   { id: 'nonna',       nome: 'La nonna',       emoji: '👵' },
-  { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳' },
-  { id: 'maestra',     nome: 'La maestra',     emoji: '🍎' },
+  { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳',
+    vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio'] },
+  { id: 'maestra',     nome: 'La maestra',     emoji: '🍎',
+    vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda'] },
   { id: 'bottegaio',   nome: 'Il bottegaio',   emoji: '🏪' },
-  { id: 'veterinaria', nome: 'La veterinaria', emoji: '🩺' },
-  { id: 'giardiniere', nome: 'Il giardiniere', emoji: '🌻' },
+  { id: 'veterinaria', nome: 'La veterinaria', emoji: '🩺',
+    vuole: ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'pastura'] },
+  { id: 'giardiniere', nome: 'Il giardiniere', emoji: '🌻',
+    vuole: ['concime', 'fiori', 'zucche'] },
+  /* I quattro mestieri dell'orto. Sono qui perché una merce nuova
+     senza nessuno che la chieda per mestiere finisce sempre in mano al
+     bottegaio, che è il modo di dire «non ci ho pensato». */
+  { id: 'pizzaiolo',   nome: 'Il pizzaiolo',   emoji: '🍕',
+    vuole: ['pomodori', 'cipolle', 'aglio', 'melanzane', 'peperoni', 'grano'] },
+  { id: 'fruttivendola', nome: 'La fruttivendola', emoji: '🥕',
+    vuole: ['pomodori', 'patate', 'cipolle', 'cavolfiori', 'carote', 'fragole', 'zucche'] },
+  { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
+    vuole: ['miele', 'fiori', 'cipolle'] },
+  { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
+    vuole: ['lana'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
+
+/* Chi può venire a chiedere questa roba. Chi non dichiara `vuole`
+   c'è sempre; se nessuno la vuole ci sono tutti, perché un ordine
+   senza cliente sarebbe un posto vuoto al banco — un `vuole`
+   dimenticato deve costare una faccia sbagliata, non un ordine in
+   meno. */
+export function clientiPer(chiede) {
+  const merci = Object.keys(chiede || {})
+  const suoi = CLIENTI.filter(c => !c.vuole || c.vuole.some(p => merci.includes(p)))
+  return suoi.length ? suoi : CLIENTI
+}
 
 /* ── QUANTI ORDINI ALLA VOLTA ─────────────────────────────────────
    Tre, e non uno né dieci. Uno solo vuol dire che chi non ha quello
@@ -200,7 +240,21 @@ export function guastiDelMercato() {
     if (visti.has(c.id)) g.push(`il cliente ${c.id} c'è due volte`)
     visti.add(c.id)
     if (!c.nome || !c.emoji) g.push(`il cliente ${c.id} è senza nome o senza faccia`)
+    /* Una merce che non esiste dentro un `vuole` non dà nessun errore:
+       fa solo sì che quel cliente non venga mai per quella roba, ed è
+       invisibile — un mestiere che non compare più al banco senza che
+       niente sia cambiato a schermo. */
+    for (const p of c.vuole || [])
+      if (!PRODOTTI[p]) g.push(`${c.id}: vuole «${p}», che non è una merce`)
+    if (c.vuole && !c.vuole.length)
+      g.push(`${c.id}: dichiara un «vuole» vuoto — non verrebbe mai`)
   }
+  /* Almeno un cliente che prende di tutto: è quello che garantisce che
+     ogni merce trovi qualcuno anche quando nessuno la chiede per
+     mestiere. Senza, `clientiPer` cadrebbe sempre sul ripiego — cioè
+     su tutti — e il mestiere non direbbe più niente. */
+  if (!CLIENTI.some(c => !c.vuole))
+    g.push('nessun cliente prende di tutto: una merce dimenticata non la chiederebbe nessuno')
   if (!(POSTI >= 2 && POSTI <= 4)) g.push('gli ordini aperti non sono due o tre')
   if (!(RIPOSO_MIN > 0)) g.push('rifiutare non fa aspettare: si scorrerebbe fino al facile')
   /* ── UN ORDINE NON RENDE PIÙ DEL TEMPO CHE COSTA ────────────────

@@ -13,7 +13,7 @@ import {
 } from '../../src/giochi/fattoria/dati/mondo.js'
 import { guastiDelCatalogo, CATALOGO, PER_ID, piedeDi, assettoDi, quantiVersi,
          puoGirare, puoSpecchiare } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { VOCI } from '../../src/giochi/fattoria/dati/atlante.js'
+import { VOCI, PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
 
 /* Se il disegno di questa voce regge il capovolgimento. Sta nel test e
    non nel catalogo perché al gioco non serve saperlo — al gioco serve
@@ -23,7 +23,8 @@ const ribaltabile = v => {
   return v.ribalta != null ? v.ribalta : (voce || {}).ribalta !== false
 }
 import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria/dati/ostacoli.js'
-import { guastiDeiBisogni, CIBI, COCCOLE, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { guastiDeiBisogni, CIBI, COCCOLE, CHIAVI, cibiPer,
+         foto } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { guastiDegliAnimali, famigliaDi, IN_VENDITA } from '../../src/giochi/fattoria/dati/animali.js'
 import manifesto from '../../src/giochi/fattoria/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -68,6 +69,39 @@ const guastiB = guastiDeiBisogni()
 controlla('i bisogni non hanno guasti', guastiB.length === 0, guastiB.join(' · '))
 const guastiA = guastiDegliAnimali()
 controlla('gli animali non hanno guasti', guastiA.length === 0, guastiA.join(' · '))
+
+/* ══════════ 1b. I RITRATTI DI UN RECINTO, E IL RIPIEGO ══════════
+   I sei stati di un recinto sono **sei domande al foglio**, non sei
+   disegni obbligatori: chi il ritratto non ce l'ha mostra quello
+   calmo (`RECINTO` in `dati/catalogo.js`). Le cinque specie della
+   prima metà hanno cinque disegni su sei — il `fame` era stato tolto
+   apposta — e le cinque dell'orto ne hanno tre.
+
+   Il guasto che questo controlla è **muto**: `drawImage` con un nome
+   che l'atlante non ha torna senza disegnare e senza lanciare, quindi
+   il recinto sparirebbe in un certo momento della giornata e in
+   nessun altro, senza niente in console. `guastiDelCatalogo` lo dice
+   già riga per riga; qui si guarda che il ripiego sia **quello
+   giusto** e non un nome qualunque che esiste per caso. */
+{
+  const recinti = Object.values(PER_ID).filter(v => v.stati)
+  for (const v of recinti) {
+    const specie = v.pezzo.replace(/^recinto_|_calmo$/g, '')
+    uguale(`${v.id}: chi ha fame mostra il ritratto calmo`,
+           v.stati.fame, `recinto_${specie}_calmo`)
+    for (const [quale, nome] of Object.entries(v.stati))
+      controlla(`${v.id}/${quale}: il ritratto è nell'atlante`, !!PEZZI[nome])
+  }
+  /* Le due metà del contratto, una per verso: chi il disegno ce l'ha
+     lo usa, chi non ce l'ha ripiega. Senza la prima riga il ripiego
+     potrebbe mangiarsi anche i ritratti che esistono. */
+  uguale('il pollaio, che ha il ritratto del pronto, usa quello',
+         PER_ID.pollaio.stati.pronto, 'recinto_galline_pronto')
+  uguale('le anatre, che non ce l\'hanno, ripiegano sul calmo',
+         PER_ID.stagno_anatre.stati.pronto, 'recinto_anatre_calmo')
+  nota(`${recinti.length} recinti, ` +
+       `${recinti.filter(v => new Set(Object.values(v.stati)).size > 3).length} coi ritratti di prima`)
+}
 
 /* Il primo pezzo di terra comprabile, cercato nel mondo di adesso: il
    mondo non è più una costante, quindi non si può scrivere un numero. */
@@ -813,6 +847,65 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
      fondo (0,15) e aspetta il primo esercizio fatto. */
   controlla('la bestia sta comunque sopra il fondo',
             f.stato('cane-beagle').pelo >= 0.15)
+}
+
+/* ══════════ 9. un oggetto, un bisogno solo ══════════
+   Il guasto raccontato da chi giocava col telefono in mano: «dai un
+   gomitolo e salgono due stati». Il motore non l'ha mai fatto — qui si
+   controlla che continui a non farlo, roba per roba — e quello che
+   saliva due volte era **il disegno**: il foglio della bestia riceveva
+   il record vivo del motore, cioè sempre lo stesso oggetto, e un foglio
+   con tutte le prop identiche a prima non si ridisegna. Un gesto pagato
+   col granaio non muove nemmeno le monete, quindi la barra restava
+   ferma e recuperava il colpo alla prima cosa comprata dopo, insieme a
+   quella. Il rimedio è `foto()`, e si prova qui sotto. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  f.compraBestia('cane-beagle', 0, 'Birba')
+  /* la roba si mette in granaio a mano: `metti` vuole il silo costruito
+     (`quantoCiSta`), e qui i silos non c'entrano niente */
+  /* Quello che serve **lo dicono le tabelle**: un elenco scritto a
+     mano qui diventa rosso il giorno che arriva una pappa nuova, per
+     una ragione che con questa prova non c'entra niente (è successo
+     con la merenda). */
+  for (const c of [...CIBI, ...COCCOLE]) if (c.da) f.granaio[c.da] = 5
+
+  const rob = [...cibiPer('cane'), ...COCCOLE]
+  for (const cosa of rob) {
+    /* si parte da tre bisogni a metà: così c'è posto per salire in
+       tutti e tre, e un gesto che ne tocca un altro si vede */
+    const b = f.stato('cane-beagle')
+    for (const k of CHIAVI) b[k] = 0.4
+    const prima = { ...b }
+    const suo = cosa.bisogno || 'pancia'
+
+    const r = cosa.bisogno ? f.coccola('cane-beagle', cosa) : f.nutri('cane-beagle', cosa)
+    controlla(`${cosa.nome}: si può dare`, r.ok, r.motivo)
+    const dopo = f.stato('cane-beagle')
+    controlla(`${cosa.nome}: alza ${suo}`, dopo[suo] > prima[suo])
+    for (const k of CHIAVI)
+      if (k !== suo) uguale(`${cosa.nome}: e non tocca ${k}`, dopo[k], prima[k])
+  }
+}
+
+/* La fotografia: un oggetto nuovo a ogni scatto, coi tre bisogni e
+   niente altro. È tutto quello che serve perché chi disegna si accorga
+   che qualcosa è cambiato — passargli il record del motore vuol dire
+   passargli ogni volta lo stesso oggetto, e quello non lo sveglia. */
+{
+  const f = cresciuta({ borsa: borsaInfinita() })
+  f.compraBestia('cane-beagle', 0, 'Birba')
+  const vivo = f.stato('cane-beagle')
+
+  const a = foto(vivo)
+  const b = foto(vivo)
+  controlla('due scatti dello stesso stato non sono lo stesso oggetto', a !== b)
+  stessaLista('una fotografia tiene i tre bisogni e basta', Object.keys(a).sort(), [...CHIAVI].sort())
+
+  vivo.pelo = 1
+  controlla('e uno scatto vecchio non cambia sotto il naso di nessuno', a.pelo !== 1)
+  uguale('mentre il nuovo lo vede', foto(vivo).pelo, 1)
+  uguale('una bestia che non c\'è dà tre zeri', foto(null).pancia, 0)
 }
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +

@@ -71,7 +71,13 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
            sempre la stessa cosa e si scopre il silo tappato dieci
            minuti dopo, davanti a un raccolto che non entra. Uno
            scomparto colmo lo dice qui, **prima** di seminare. -->
-      <div class="fa-nomi">
+      <!-- `fa-semi` scorre: erano cinque semi e ci stavano tutti nel
+           foglio, da quando c'è l'orto sono tredici — cinque file di
+           bottoni, cioè un foglio più alto dello schermo di un
+           telefono, e quello che restava fuori era **tagliato** (il
+           velo centra e `.fa` nasconde quello che sborda), non
+           raggiungibile scorrendo. -->
+      <div class="fa-nomi fa-semi">
         <button v-for="k in colture" :key="k.id"
                 :class="['fa-cibo', 'grande', k.ciSta < k.resa ? 'colma' : 'suo']"
                 :disabled="k.semina > monete" @click="emit('semina', k)">

@@ -49,7 +49,7 @@ import { PRODOTTI } from '../dati/coltivazioni.js'
 import { eMercato } from '../dati/catalogo.js'
 import {
   CLIENTI, POSTI, MERCI_MAX, PEZZI_MAX, RIPOSO_MIN,
-  merciDelLivello, premioPer, minutiPer,
+  merciDelLivello, premioPer, minutiPer, clientiPer,
 } from '../dati/mercato.js'
 
 const MINUTO = 60000
@@ -88,7 +88,15 @@ export function componiOrdine(f, rnd = Math.random, id = 1) {
     const [p] = resta.splice(pesca(rnd, resta.length), 1)
     chiede[p] = 1 + Math.floor(rnd() * PEZZI_MAX)
   }
-  const chi = CLIENTI[pesca(rnd, CLIENTI.length)]
+  /* **Prima la roba, poi chi la vuole.** Il cliente era pescato fra
+     tutti, e con sette merci non si notava; con ventidue sì — il
+     pizzaiolo che chiede la lana fa sembrare il banco una lotteria.
+     Chi può venire lo dice il dato (`clientiPer` in `dati/mercato.js`,
+     dove `vuole` restringe e la sua assenza vuol dire «prende di
+     tutto»): qui resta un'estrazione sola, come prima, così una
+     partita seminata si rifà identica. */
+  const possibili = clientiPer(chiede)
+  const chi = possibili[pesca(rnd, possibili.length)]
   return { id, chi: chi.id, chiede, xp: premioPer(chiede), minuti: minutiPer(chiede) }
 }
 

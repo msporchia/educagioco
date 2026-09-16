@@ -278,6 +278,12 @@
 /* ── il battesimo ────────────────────────────────────────────────── */
 .fa-nomi { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
   margin: 10px 0 8px }
+/* La stessa fila, quando è la scelta del seme: tredici colture sono
+   cinque file di bottoni, e un foglio più alto dello schermo non
+   scorre — il velo lo centra e `.fa` taglia quello che sborda, sopra e
+   sotto. Il tetto è lo stesso delle ricette di una macchina (44vh),
+   per la stessa ragione. */
+.fa-semi { max-height: 44vh; overflow-y: auto; overscroll-behavior: contain }
 .fa-nome-scelta { padding: 6px 12px; border-radius: 14px; font-size: 14px;
   background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; cursor: pointer }
 .fa-nome-scelta.viva { background: #3d5c42; border-color: #9fd3a8 }

@@ -81,7 +81,7 @@ import { ANIMALI } from './animali.js'
 
    In tempo di esercizi (🪙6 al minuto, `CALIBRAZIONE.md`): il livello 2
    sono 35 minuti, il 10 sei ore, il 30 quaranta, l'ultimo del catalogo
-   centoventitré — spalmate su mesi, che è la scala giusta per un
+   centoquaranta — spalmate su mesi, che è la scala giusta per un
    posto che si guarda cinque minuti al giorno.
 
    *Ribalta due volte la scelta di prima.* Erano dieci livelli con le
@@ -185,7 +185,27 @@ export const NOMI = {
   10: 'Il pastone',
   12: 'Le pecore',
   18: 'Le mucche',
+  /* ── DA QUI IN POI C'È L'ORTO ────────────────────────────────────
+     Fra il porcile (26) e l'ultima cosa del catalogo (64) non arrivava
+     **niente che lavorasse**: trentotto livelli di sole decorazioni,
+     cioè la metà del gioco in cui chi ha imparato la catena non ha più
+     niente da imparare. Adesso sette di quei livelli portano una bocca
+     nuova o una coltura nuova, scaglionati fino al 57 — e l'unico che
+     sta *prima* del porcile sono le anatre, messe nel buco fra le
+     mucche (18) e i maiali (26), che era il più lungo della prima
+     metà. */
+  22: 'Le anatre',
   26: 'I maiali',
+  29: 'La zuppa d\'orto',
+  33: 'Le capre',
+  38: 'Le api',
+  44: 'Le fragole',
+  /* Erano al 50 e al 57 — troppo in là: provato a mano, chi arriva
+     alle api aveva davanti dodici livelli di sole decorazioni prima
+     della bestia dopo. Adesso i buchi fra una bestia e l'altra restano
+     sotto i sei livelli. */
+  41: 'Gli alpaca',
+  47: 'Gli asini',
 }
 
 export function nomeDi(livello) {

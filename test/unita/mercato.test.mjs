@@ -21,7 +21,7 @@ import {
 import {
   guastiDelMercato, CLIENTI, POSTI, PEZZI_MAX, MERCI_MAX, RIPOSO_MIN,
   merciDelLivello, valoreDi, minutiDi, premioPer, PREMIO_BASE, PER_VALORE,
-  MONETE_AL_MINUTO,
+  MONETE_AL_MINUTO, clientiPer,
 } from '../../src/giochi/fattoria/dati/mercato.js'
 import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { ULTIMO, sogliaDi, livelloDelProdotto }
@@ -79,13 +79,49 @@ controlla('il mercato non ha guasti', guasti.length === 0, guasti.join(' · '))
 controlla('i clienti sono almeno quattro', CLIENTI.length >= 4)
 uguale('i posti al banco sono tre', POSTI, 3)
 
+/* ══════════ 1b. CHI ORDINA È UNO A CUI QUELLA ROBA SERVE ══════════
+   Il cliente era pescato fra tutti, e con sette merci non si notava:
+   con ventidue sì — il pizzaiolo che chiede la lana fa sembrare il
+   banco una lotteria invece di un mercato. Adesso si pesca prima la
+   roba e poi la faccia (`clientiPer`), e qui si controlla sulla
+   scaletta intera che non esca mai un mestiere a sproposito. */
+{
+  const f = conIlMercato(ULTIMO)
+  let quanti = 0, storti = 0
+  const facce = new Set()
+  for (let s = 1; s <= 200; s++) {
+    f.ordini = []
+    aggiornaIlMercato(f, 1000, sorte(s))
+    for (const o of ordiniDi(f)) {
+      quanti++
+      facce.add(o.chi)
+      const c = CLIENTI.find(x => x.id === o.chi)
+      if (c.vuole && !c.vuole.some(p => o.chiede[p])) storti++
+    }
+  }
+  uguale(`nessun mestiere chiede roba che non gli serve (${quanti} ordini)`, storti, 0)
+  controlla('e al banco si vedono quasi tutti', facce.size >= CLIENTI.length - 2,
+            `${facce.size} facce su ${CLIENTI.length}`)
+  /* Chi prende di tutto è il ripiego che tiene: una merce che nessun
+     mestiere cita di suo deve poter uscire lo stesso. */
+  controlla('una merce che nessuno vuole per mestiere trova comunque un cliente',
+            clientiPer({ verzatorta: 1 }).length > 0)
+}
+
 /* I due conti che risalgono la catena rifanno **esatti** i numeri della
    tabella in `docs/fattoria.md`: è il modo di sapere che non se li sono
    inventati, e diventa rosso il giorno che qualcuno ritocca una ricetta
    senza aggiornare la documentazione. */
 {
-  const attesi = { mangime: [3, 14], uova: [5, 36], latte: [5, 36],
-                   pastone: [7, 30], tartufi: [9, 72] }
+  /* Uova e tartufi hanno **cambiato minuti e non prezzo**, ed è
+     esattamente quello che l'orto doveva fare: le anatre fanno l'uovo
+     in 33 minuti invece dei 36 del pollaio e la zuppa di pomodori
+     porta il tartufo da 72 a 60, ma tutti e due costano ancora 🪙5 e
+     🪙9 — una bocca nuova guadagna sul tempo e sui campi, mai sul
+     prezzo, se no svaluterebbe quella di chi c'è arrivato prima. */
+  const attesi = { mangime: [3, 14], uova: [5, 33], latte: [5, 36],
+                   pastone: [7, 30], tartufi: [9, 60],
+                   miele: [5, 56], merenda: [8, 84], concime: [5, 38] }
   for (const [p, [v, m]] of Object.entries(attesi)) {
     uguale(`${p} costa 🪙${v} a produrlo`, valoreDi(p), v)
     uguale(`e ci vogliono ${m} minuti`, minutiDi(p), m)

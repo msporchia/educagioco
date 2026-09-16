@@ -23,6 +23,7 @@
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -253,12 +254,15 @@ controlla('e dice quanto ci sta di ogni cosa',
           /\d+ di ogni cosa/.test(granaio),
           granaio.replace(/\n+/g, ' · ').slice(0, 200))
 
-/* Gli scomparti sono **cinque, uno per merce dei campi**, e ci sono
+/* Gli scomparti sono **uno per merce dei campi** (il numero si legge dal
+   dato: erano cinque, con l'orto sono tredici, e il cinque scritto a
+   mano è diventato rosso il giorno delle patate), e ci sono
    anche quelli vuoti: uno scomparto a zero è il posto dove potrebbe
    andare qualcosa, cioè il modo di far scoprire che si può coltivare
    altro. Se un giorno tornassero i posti condivisi, questa riga cade. */
 uguale('c\'è uno scomparto per ogni merce dei campi',
-       await page.locator('.fa-scomparto').count(), 5)
+       await page.locator('.fa-scomparto').count(),
+       Object.values(PRODOTTI).filter(p => p.silo === 'terra').length)
 controlla('e il mangime non è fra questi: sta con gli animali',
           !/mangime/i.test(granaio), granaio.replace(/\n+/g, ' · ').slice(0, 200))
 await scatto(page, 'campi-granaio')

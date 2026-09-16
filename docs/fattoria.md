@@ -34,7 +34,9 @@ posizionare»*. Adesso un campo si semina, cresce col tempo vero e si
 raccoglie; il raccolto si trasforma — al mulino in pappa per il cane e il
 gatto di casa, al fienile in mangime per le bestie del cortile.
 
-Cinque colture, e ognuna ha **sette stati che si vedono**: i semi per terra,
+Tredici colture — cinque dal primo giorno, otto arrivate con
+[l'orto](#lorto-e-le-cinque-bocche-nuove-dal-15-settembre-2026) — e ognuna
+ha **sette stati che si vedono**: i semi per terra,
 il germoglio, e via fino al maturo. Sono tanti apposta — il tempo di crescita
 è vero, e in dieci minuti deve succedere qualcosa a ogni occhiata, se no il
 campo sembra fermo e non ci si torna più.
@@ -49,11 +51,19 @@ capiva se seminare avesse funzionato.
 ```
    🌿 erba medica  ── 4 min ──▶  1 fieno   ─┐
    🌾 grano        ── 5 min ──▶  1 grano   ─┤
-   🥕 carote       ── 6 min ──▶  1 carota  ─┼──▶  mulino  ──▶ 🥣 🍲
+   🥕 carote       ── 6 min ──▶  1 carota  ─┼──▶  mulino  ──▶ 🥣 🍲 🥧
    🌽 mais         ── 8 min ──▶  1 mais    ─┤
-   🎃 zucche       ──10 min ──▶  1 zucca   ─┴──▶  fienile ──▶ 🌰 🥬 🥘
+   🎃 zucche       ──10 min ──▶  1 zucca   ─┤
+   🥔 patate       ── 7 min ──▶  1 patata  ─┤
+   🥦 cavolfiori   ── 9 min ──▶  1 cavolo  ─┤
+   🍅 pomodori     ── 8 min ──▶  1 pomodoro┤
+   🍆 melanzane    ── 9 min ──▶  1 melanzana
+   🫑 peperoni     ── 7 min ──▶  1 peperone┤
+   🧅 cipolle      ── 6 min ──▶  1 cipolla ─┤
+   🧄 aglio        ──12 min ──▶  1 aglio   ─┤
+   🍓 fragole      ──11 min ──▶  1 fragola ─┴──▶  fienile ──▶ 🌰 🥬 🥘 🪣 🍃 🌼
                                                     │
-                                                 recinti ──▶ 🥚 🥛 🍄 🧶
+                                              dieci recinti ──▶ 🥚 🥛 🍄 🧶 🍯 💩
 ```
 
 ### N → 1, e mai il contrario (dal 19 agosto 2026)
@@ -88,10 +98,18 @@ Due conseguenze che si vedono:
 | | prodotto | comprato | riempie |
 |:--|--:|--:|--:|
 | 🥣 Mangime | 🪙3 e ~14 min | 🪙5 subito | 30% di pancia |
-| 🥚 Uovo | 🪙5 e ~36 min | 🪙7,5 subito | 45% di pancia |
+| 🥚 Uovo | 🪙5 e ~33 min | 🪙7,5 subito | 45% di pancia |
 | 🥛 Latte | 🪙5 e ~36 min | 🪙9 subito | 55% di pancia |
 | 🍲 Pastone | 🪙7 e ~30 min | 🪙12 subito | 70% di pancia |
-| 🍄 Tartufo | 🪙9 e ~72 min | 🪙15 subito | 90% di pancia |
+| 🥧 Merenda | 🪙8 e ~84 min | — | 75% di pancia |
+| 🍄 Tartufo | 🪙9 e ~60 min | 🪙15 subito | 90% di pancia |
+
+I minuti dell'uovo e del tartufo si sono **accorciati e non gli è cambiato
+il prezzo**, ed è quello che le bocche dell'orto devono fare: le anatre
+fanno l'uovo in 33 minuti invece di 36 e la zuppa di pomodori porta il
+tartufo da 72 a 60, ma costano ancora 🪙5 e 🪙9. La merenda non ha una
+colonna «comprato» perché non si compra: è l'unica pappa che esiste solo
+coltivandola.
 
 I minuti sono quelli di **un campo solo che gira**: chi ne ha tre li divide
 per tre, ed è il motivo per cui il secondo campo è la spesa che cambia di più
@@ -106,7 +124,7 @@ rosso se qualcuno ritocca un prezzo di troppo.
 
 Il freno vero non è il prezzo: è **il tempo e quanti campi hai**. E
 l'attrezzatura si paga prima, in monete grosse — campo 🪙22, mulino 🪙150,
-fienile 🪙150, silos 🪙120 l'uno, e i recinti dai 🪙95 ai 🪙260 — cioè la catena
+fienile 🪙150, silos 🪙120 l'uno, e i recinti dai 🪙95 ai 🪙355 — cioè la catena
 *dà un motivo per spendere*, non è il modo di smettere.
 
 **E il campo rincara a ogni copia** (🪙22, 32, 46, 67, 97…), come il pezzo di
@@ -117,7 +135,9 @@ baule, se no metterli via e ricomprarli sarebbe il modo di non pagarlo.
 
 ### I recinti (dal 18 agosto 2026)
 
-Conigliera, pollaio, ovile, stalla, porcile: cinque, e **non sono una
+Conigliera, pollaio, ovile, stalla, porcile: cinque — e dal 15 settembre
+2026 sono dieci, coi [cinque
+dell'orto](#lorto-e-le-cinque-bocche-nuove-dal-15-settembre-2026) — e **non sono una
 meccanica nuova**. Sono macchine come il mulino — dai da mangiare, aspetti,
 ritiri — quindi non c'è niente di nuovo da imparare né per chi gioca né per
 chi legge il codice.
@@ -134,6 +154,11 @@ già dove deve andare.
    🐑 ovile      🪙190  1 🥬 ── 8 min──▶ 1 🧶 lana
    🐄 stalla     🪙220  2 🥬 ──10 min──▶ 1 🥛 latte
    🐖 porcile    🪙260  2 🥘 ──20 min──▶ 1 🍄 tartufo
+   🦆 anatre     🪙240  1 🪣 ── 6 min──▶ 1 🥚 uovo
+   🐐 capre      🪙280  1 🍃 ──12 min──▶ 1 🥛 latte
+   🐝 arnie      🪙300  2 🌼 ──12 min──▶ 1 🍯 miele
+   🦙 alpaca     🪙330  1 🥬 ── 5 min──▶ 1 🧶 lana
+   🫏 asini      🪙355  2 🌰 ──10 min──▶ 1 💩 concime
 ```
 
 La **lana** è l'unica cosa della catena che non si mangia: paga una coccola,
@@ -427,9 +452,10 @@ riga, il cartello che lo spiegava male era mezz'ora di un bambino.
 E i silos sono **due, diversi, e servono tutti e due**:
 
 ```
-   🌾 silo del raccolto 🪙120   grano, mais, carote, zucche, fieno
-   🥛 silo della stalla 🪙120   becchime, foraggio, zuppa · mangime, pastone
-                                · uova, latte, tartufi, lana
+   🌾 silo del raccolto 🪙120   le tredici colture
+   🥛 silo della stalla 🪙120   becchime, foraggio, zuppa, beverone, pastura,
+                                fiori · mangime, pastone, merenda
+                                · uova, latte, tartufi, lana, miele, concime
 ```
 
 **Il rosso è dei campi, il bianco è degli animali** — quello che mangiano e
@@ -483,7 +509,7 @@ minuto**, in undici linguette. Per un bambino che apre la fattoria la prima
 volta non è ricchezza, è una lista da cui non si sa cosa scegliere, dove il
 campo che fa partire tutta la catena sta in mezzo a novanta cespugli.
 
-**Sessantaquattro livelli, e ognuno dà poco.** Due o tre decorazioni per
+**Sessantanove livelli, e ognuno dà poco.** Due o tre decorazioni per
 volta, mai di più — è la regola che rende lungo il gioco, ed è possibile
 proprio perché il catalogo è grande. Le decorazioni stanno in una fila sola
 ordinata **per prezzo**: il vaso da quattro monete arriva al secondo livello,
@@ -504,9 +530,16 @@ di gioco:
   10   🪙2450     il mais, cioè il pastone
   12   🪙3170     l'ovile, e l'erba medica
   18   🪙5710     la stalla
+  22   🪙7730     le anatre, le patate e i cavolfiori
   26   🪙10000    il porcile, e le zucche
+  29   🪙11870    i pomodori, cioè la zuppa d'orto
+  33   🪙14590    le capre, le melanzane e i peperoni
+  38   🪙18350    le api, le cipolle e l'aglio
+  41   🪙20800    gli alpaca
   42   🪙21650    il pappagallo
-  64   🪙44350    l'ultima cosa del catalogo (~123 ore di esercizi)
+  44   🪙23390    le fragole, cioè la merenda
+  47   🪙26130    gli asini, e il prato fiorito
+  69   🪙50590    l'ultima cosa del catalogo (~140 ore di esercizi)
 ```
 
 **Ogni coltura arriva con la bocca che la mangia**, e da quando c'è il
@@ -515,7 +548,10 @@ scelta sola — a quattro anni cinque bottoni sono un elenco da leggere, uno è
 una cosa da fare — e le altre arrivano quando serve: le carote con la
 conigliera e il foraggio che ne esce; il mais quando il mulino gira da un
 pezzo; l'erba medica con l'ovile (prima il fieno, poi le pecore); le zucche
-col porcile e la zuppa.
+col porcile e la zuppa. Le otto dell'orto arrivano **a coppie**, ognuna col
+suo recinto — e la regola adesso la controlla un test invece di tenerla a
+mente (`unita/coltivazioni`, sezione 1b): con cinque colture si ricordava,
+con tredici no.
 
 Il fienile arriva **con la prima coltura che ci va dentro e con la prima
 bocca che la mangia**, tutti e tre al livello 5. Stava al 4 — «prima la
@@ -537,7 +573,7 @@ il silo e si sbloccava mezzo baule senza aver ancora raccolto niente. Adesso
 il livello 2 chiede l'attrezzatura, un secondo campo e qualche giro di semina
 e raccolto: **il tempo di capire come gira**, che è la cosa che il primo
 livello deve comprare. In tempo di esercizi: il livello 2 è mezz'ora, il 10 sei
-ore, l'ultimo centoventitré, spalmate su mesi
+ore, l'ultimo centoquaranta, spalmate su mesi
 ([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)).
 
 **Il baule ha tre metà, e stanno in alto.** 🌾 *La fattoria* è quello che fa
@@ -814,6 +850,115 @@ la stessa idea del 🧺 sopra un campo pronto, si vede da lontano e non chiede
 di aprire niente. Quando non c'è niente da portare resta muta — un invito che
 c'è sempre non è un invito.
 
+#### E chi ordina è uno a cui quella roba serve (dal 15 settembre 2026)
+
+Il cliente era **una faccia pescata a caso**, e con sette merci non si
+notava. Con ventidue sì: il pizzaiolo che chiede la lana e la sarta che
+chiede i pomodori sono la cosa che fa sembrare il banco una lotteria invece
+di un mercato — e il mestiere è la parte del mercato che un bambino
+racconta («è arrivato l'apicoltore»), quindi se il mestiere non vuol dire
+niente non resta niente da raccontare.
+
+Adesso si pesca **prima la roba e poi la faccia** fra quelli a cui quella
+roba serve (`vuole` in `dati/mercato.js`, `clientiPer`). I mestieri sono
+dodici, quattro dei quali nati con l'orto — il pizzaiolo 🍕, la
+fruttivendola 🥕, l'apicoltore 🐝 e la sarta 🧵 — e **due non dichiarano
+niente**: la nonna e il bottegaio comprano quello che c'è. Non è pigrizia,
+è il ripiego che tiene: una merce che nessun mestiere cita di suo deve
+poter uscire lo stesso, e `guastiDelMercato()` diventa rosso se un giorno
+non restasse nessuno che prende di tutto.
+
+### L'orto, e le cinque bocche nuove (dal 15 settembre 2026)
+
+**Fra il porcile e la fine del catalogo non arrivava più niente che
+lavorasse.** Il porcile è al livello 26 e l'ultima cosa del baule al 64:
+trentotto livelli — dieci ore di esercizi buone — in cui chi aveva imparato
+tutta la catena riceveva solo decorazioni. Il gioco non si rompeva, smetteva
+di insegnare.
+
+Otto colture e cinque recinti nuovi, scaglionati dal 22 al 57, e **la cosa
+che hanno di nuovo non sono i disegni**: sono le coppie.
+
+```
+   🥔 patate + 🥦 cavolfiori  ──▶ 🪣 beverone ──▶ 🦆 anatre ──▶ 🥚 uova
+   🍅 pomodori                ──▶ 🥘 zuppa    ──▶ 🐖 maiali ──▶ 🍄 tartufi
+   🍆 melanzane + 🫑 peperoni  ──▶ 🍃 pastura  ──▶ 🐐 capre  ──▶ 🥛 latte
+   🧅 cipolle + 🧄 aglio       ──▶ 🌼 fiorume  ──▶ 🐝 api    ──▶ 🍯 miele
+                 🥬 foraggio  ──────────────────▶ 🦙 alpaca ──▶ 🧶 lana
+                 🌰 becchime  ──────────────────▶ 🫏 asini  ──▶ 💩 concime
+   🍓 fragole + 🍯 miele       ──▶ 🥧 merenda  (al mulino, per la ciotola)
+   💩 concime + 🌿 fieno       ──▶ 🌼 fiori    (e l'anello si chiude)
+```
+
+**Una ricetta dell'orto prende due colture**, ed è la differenza fra un
+cereale e un orto: in una pentola non ci va mai una cosa sola. La ragione
+vera però è di conto — con una coltura per ricetta le otto nuove avrebbero
+voluto otto ricette e otto merci in più nel silo, cioè un elenco. In coppia
+ognuna dice **cosa seminare accanto**, e «2 🍆 e 1 🫑» resta una cosa che si
+conta sulle dita, che è tutto quello che la regola N → 1 esiste per
+difendere.
+
+**Tre delle cinque bocche danno una roba che c'era già** — uova, latte,
+lana — e non costano meno di chi le faceva prima. È voluto: un'anatra che
+facesse l'uovo a metà prezzo svaluterebbe il pollaio di chi ci è appena
+arrivato, che è il modo di rendere inutile la prima metà del catalogo.
+Guadagnano sulla leva che qui conta davvero, **quanti campi e quanti
+passaggi**:
+
+| | costa | ci vuole | campi | passaggi |
+|:--|--:|--:|--:|--:|
+| 🥚 pollaio (8) | 🪙5 | 36 min | 4 🌾 | 3 |
+| 🥚 anatre (22) | 🪙5 | 33 min | 2 🥔 + 1 🥦 | 2 |
+| 🥛 stalla (18) | 🪙5 | 36 min | 4 🥕/🌿 | 3 |
+| 🥛 capre (33) | 🪙6 | 42 min | 2 🍆 + 1 🫑 | 2 |
+| 🧶 ovile (12) | 🪙3 | 21 min | 2 🥕/🌿 | 2 |
+| 🧶 alpaca (41) | 🪙3 | 18 min | 2 🥕/🌿 | 2 |
+
+Le capre sono l'unica riga che **peggiora** una colonna: costano una monetina
+in più e sei minuti in più, e in cambio chiedono tre campi invece di quattro
+e due passaggi invece di tre. È la scelta fra tempo e spazio, e da quel
+livello in poi è quasi sempre lo spazio a mancare.
+
+#### Il concime, e l'unico anello che si chiude
+
+Gli asini sono le uniche bestie del cortile che **non danno da mangiare a
+nessuno**, e questo era il motivo per cui rischiavano di restare fuori: una
+specie senza un mestiere onesto è meglio non metterla che inventarle una
+ricetta finta. Il mestiere ce l'hanno, ed è quello vero — quello che
+mangiano torna alla terra:
+
+```
+   🌰 becchime ──▶ 🫏 asini ──▶ 💩 concime ──▶ 🌼 prato fiorito ──▶ 🐝 api
+```
+
+È l'unico punto della fattoria in cui la catena non va avanti dritta ma si
+richiude, e **non è la strada più economica per i fiori**: il fiorume di
+cipolle e aglio costa 🪙2 e ventidue minuti, il prato fiorito 🪙6 e
+quarantasette. Non deve esserlo — è la strada che **non chiede l'orto**. Chi
+ha i campi pieni di pomodori fa il miele col grano e con gli asini.
+
+E le api: **cipolle e aglio lasciati fiorire**. Non è una licenza — i fiori
+dell'allium sono fra i migliori per le api, e lasciare andare a fiore invece
+di raccogliere è una cosa che si fa per davvero. Nel gioco è il modo in cui
+due colture che non finiscono in nessuna ciotola trovano una bocca: proprio
+perché non le si raccoglie per mangiarle.
+
+#### I disegni sono tre e non sei, e lo dice il foglio
+
+Ogni recinto dichiara **sei stati** — calmo, fame, mangia, felice, dorme,
+pronto — e le cinque specie nuove hanno tre ritratti. Gli altri tre
+ripiegano sul calmo, e la regola sta in una riga di `dati/catalogo.js` invece
+che in un elenco di eccezioni per specie: **chi il ritratto ce l'ha lo usa,
+chi non ce l'ha mostra quello calmo.** Il giorno che quei disegni
+arriveranno non c'è nessuna riga da cambiare, basta generare il foglio.
+
+Le due posizioni che non si sono fatte disegnare sono quelle che non
+servivano. *Felice* dura un terzo del lavoro e sta in mezzo fra «mangia» e
+«dorme»: a schermo è un battito d'occhi. *Pronto* ha già il 🧺 che la scena
+gli mette in testa, che è la cosa che si vede da lontano e che dice di
+andare lì — e infatti è sempre stata quella a fare il lavoro, il ritratto
+serviva solo a colorarla.
+
 ### Non si può più spegnere
 
 C'era **una variante** (`fattoria:coltivazione`) che toglieva i campi dalla
@@ -900,7 +1045,7 @@ quella di tutto il resto punta in giù. **I campi non girano**, ed è il
 caso che sembra più assurdo di tutti finché non lo si guarda: l'aiuola
 vuota girerebbe benissimo, ma i sette stadi di ogni coltura hanno il
 bordo dell'aiuola dipinto dentro lo stesso ritaglio della pianta, e
-girati il grano si corica. E i cinque cartelli dei campi non si
+girati il grano si corica. E i tredici cartelli dei campi non si
 rovesciano affatto, perché ci sono delle parole dipinte sopra
 («Carote», «Erba medica») e allo specchio non dicono più niente.
 

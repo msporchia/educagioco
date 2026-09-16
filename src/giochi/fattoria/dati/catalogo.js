@@ -240,10 +240,30 @@ export function prezzoDellaVoce(v, quante = 0) {
    mette **la merce che quel recinto sta aspettando davvero**
    (`Fattoria.cosaVuole`). Il ritratto di chi ha fame torna a essere
    quello calmo: la faccia dell'animale in quei cinque disegni era la
-   stessa. */
+   stessa.
+
+   ── E CHI IL RITRATTO NON CE L'HA MOSTRA QUELLO CALMO ─────────────
+   I sei stati sono **sei domande al foglio, non sei disegni
+   obbligatori**: il pezzo che l'atlante non ha si sostituisce col
+   `calmo`, ed è quello che già succedeva al `fame`. Le cinque specie
+   dell'orto (anatre, capre, api, alpaca, asini) hanno tre ritratti —
+   calmo, mangia, dorme — e le altre tre posizioni cadono lì:
+
+     · **felice** dura un terzo del lavoro e sta in mezzo fra «mangia»
+       e «dorme»: a schermo è un battito d'occhi, e un disegno in più
+       per specie costava più foglio di quanto rendesse.
+     · **pronto** non ha bisogno di una faccia perché ce l'ha già il
+       🧺 che la scena gli mette in testa (`aspettoDellaCosa`), che è
+       la cosa che si vede da lontano e che dice di andare lì.
+
+   La regola sta qui e non in un elenco di eccezioni per specie: chi
+   domani disegnerà i sei ritratti delle anatre non deve toccare
+   nessuna riga, gli basta generare il foglio. */
 const RECINTO = specie => Object.fromEntries(
-  ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto']
-    .map(q => [q, `recinto_${specie}_${q === 'fame' ? 'calmo' : q}`]))
+  ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto'].map(q => {
+    const suo = `recinto_${specie}_${q}`
+    return [q, PEZZI[suo] ? suo : `recinto_${specie}_calmo`]
+  }))
 
 export const CATEGORIE = [
   { chiave: 'verde', zona: 'bello', nome: 'Verde', icona: '🌳', voci: [
@@ -432,6 +452,37 @@ export const CATEGORIE = [
       { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3], liv: 18, cresce: RINCARO }),
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
       { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 26, cresce: RINCARO }),
+
+    /* ── LE CINQUE BOCCHE DELL'ORTO ──────────────────────────────
+       Stessa forma dei cinque di sopra — macchine con dei ritratti,
+       piede 4×3, rincaro lineare — e la ragione per cui esistono non
+       è «altri cinque animali»: fra il porcile (26) e la fine del
+       catalogo (64) non arrivava **più niente che lavorasse**, cioè
+       trentotto livelli in cui chi aveva imparato la catena non
+       aveva più niente da imparare. Cosa mangiano e cosa danno sta in
+       `dati/coltivazioni.js`, con la tabella delle coppie.
+
+       I prezzi salgono col livello e restano tutti nella fascia
+       «struttura» di `CALIBRAZIONE.md` (🪙150–360, mezz'ora-un'ora di
+       esercizi): l'ultimo è a 🪙355 e non oltre, perché sopra le due
+       ore non ci va niente e una bestia non è un ingrandimento del
+       silo. */
+    V('stagno_anatre', 'recinto_anatre_calmo',  'Stagno delle anatre', 240,
+      { macchina: 'anatre', stati: RECINTO('anatre'), piede: [4, 3], liv: 22, cresce: RINCARO }),
+    V('recinto_capre', 'recinto_capre_calmo',   'Recinto delle capre', 280,
+      { macchina: 'capre', stati: RECINTO('capre'), piede: [4, 3], liv: 33, cresce: RINCARO }),
+    /* «Arnie» e non «apiario»: l'apiario è la decorazione da 🪙30 che
+       sta fra le case da sempre, e questa è la macchina. Sono due
+       cose diverse con due prezzi diversi, come il fienile che lavora
+       e il fienile rosso che sta lì — quando si ha un disegno apposta
+       non si riusa una decorazione, si riusa **quando il disegno è lo
+       stesso** (l'orto, il carretto, il fienile, il mercato). */
+    V('arnie',         'recinto_api_calmo',     'Arnie',               300,
+      { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 38, cresce: RINCARO }),
+    V('recinto_alpaca', 'recinto_alpaca_calmo', 'Recinto degli alpaca', 330,
+      { macchina: 'alpaca', stati: RECINTO('alpaca'), piede: [4, 3], liv: 41, cresce: RINCARO }),
+    V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,
+      { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 47, cresce: RINCARO }),
   ] },
 
 
@@ -516,6 +567,19 @@ export const CATEGORIE = [
     V('cartello_carote', 'cartello_carote', 'Cartello carote',    6),
     V('cartello_zucche', 'cartello_zucche', 'Cartello zucche',    6),
     V('cartello_erba', 'cartello_erba',     'Cartello erba',      6),
+    /* E gli otto dell'orto. Stesso prezzo dei cinque di sopra perché
+       sono la stessa cosa — una tavoletta piantata per terra — e
+       quindi arrivano dove li manda il prezzo, in mezzo agli altri
+       cartelli e non al livello della loro coltura. Un cartello non è
+       il permesso di seminare: è legno. */
+    V('cartello_pomodori', 'cartello_pomodori', 'Cartello pomodori', 6),
+    V('cartello_patate', 'cartello_patate',   'Cartello patate',    6),
+    V('cartello_fragole', 'cartello_fragole', 'Cartello fragole',   6),
+    V('cartello_melanzane', 'cartello_melanzane', 'Cartello melanzane', 6),
+    V('cartello_peperoni', 'cartello_peperoni', 'Cartello peperoni', 6),
+    V('cartello_cavolfiori', 'cartello_cavolfiori', 'Cartello cavoli', 6),
+    V('cartello_cipolle', 'cartello_cipolle', 'Cartello cipolle',   6),
+    V('cartello_aglio', 'cartello_aglio',     'Cartello aglio',     6),
     /* Una bandiera sola, e non due. I quattro pezzi sono i **quattro
        fotogrammi della stessa bandiera che sventola**. Il terzo si
        chiamava `bandiera_asta`, e quel nome è precisamente quello che
@@ -625,6 +689,19 @@ export const CATEGORIE = [
     V('raccolto_carote', 'raccolto_carote', 'Cassa di carote',    9),
     V('raccolto_zucche', 'raccolto_zucche', 'Cassa di zucche',    9),
     V('raccolto_erba', 'raccolto_erba',     'Cassa di erba',      9),
+    /* Le otto casse dell'orto: la stessa figura che il silo mostra
+       sullo scaffale (`PRODOTTI` in `dati/coltivazioni.js`), qui
+       comprabile per lasciarla in giro. Vale la pena dirlo perché è
+       il motivo per cui costano 9 come le altre cinque e non di più:
+       chi la posa non compra un raccolto, compra una cassa. */
+    V('raccolto_patate', 'raccolto_patate', 'Cassa di patate',    9),
+    V('raccolto_cavolfiori', 'raccolto_cavolfiori', 'Cassa di cavoli', 9),
+    V('raccolto_pomodori', 'raccolto_pomodori', 'Cassa di pomodori', 9),
+    V('raccolto_melanzane', 'raccolto_melanzane', 'Cassa di melanzane', 9),
+    V('raccolto_peperoni', 'raccolto_peperoni', 'Cassa di peperoni', 9),
+    V('raccolto_cipolle', 'raccolto_cipolle', 'Cassa di cipolle',  9),
+    V('raccolto_aglio',  'raccolto_aglio',    'Cassa di aglio',    9),
+    V('raccolto_fragole', 'raccolto_fragole', 'Cassa di fragole',  9),
     V('cassetta_fragole', 'cassetta_fragole', 'Fragole',            9),
     V('cassetta_raccolto', 'cassetta_raccolto', 'Cassetta piena',     8),
     V('cesta_pomodori', 'cesta_pomodori',   'Cesta di pomodori',  9),

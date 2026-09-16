@@ -21,7 +21,8 @@ import {
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { CIBI, COCCOLE, cibiPer, serveA } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
+import { livelloDellaRicetta } from '../../src/giochi/fattoria/dati/livelli.js'
+import { controlla, uguale, dentro, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene il conto: qui l'economia È l'oggetto della prova,
    quindi `borsaInfinita()` non servirebbe a niente. */
@@ -80,6 +81,61 @@ controlla('c\'è almeno una ricetta', RICETTE.length > 0)
   for (const r of RICETTE) {
     const macchine = Object.values(PER_ID).filter(v => v.macchina === r.dove)
     controlla(`la ricetta «${r.id}» ha una macchina in catalogo`, macchine.length > 0)
+  }
+}
+
+/* ══════════ 1b. OGNI COLTURA HA LA BOCCA CHE LA MANGIA ══════════
+   La regola scritta in testa a `dati/coltivazioni.js`, e fino a oggi
+   non la controllava nessuno: si vedeva solo giocando, e la si vedeva
+   male — una coltura senza bocca non dà nessun errore, riempie uno
+   scomparto e non serve a niente, cioè fa sembrare rotto un gioco che
+   funziona. Con cinque colture si teneva a mente; con tredici no. */
+{
+  for (const c of COLTURE) {
+    const bocche = RICETTE.filter(r => (r.prende || {})[c.da])
+    controlla(`${c.emoji} ${c.nome.toLowerCase()}: c'è chi la mangia`, bocche.length > 0)
+    /* E la bocca non arriva **dopo**: una coltura che si può seminare
+       mentre quello che la consuma è ancora chiuso è roba che occupa
+       il silo per dei livelli interi. Il verso giusto è l'opposto —
+       la ricetta può anche arrivare insieme, mai più tardi. */
+    const quando = Math.min(...bocche.map(r => livelloDellaRicetta(r)))
+    /* **Il grano è l'eccezione, ed è il primo livello.** Si semina al
+       1 e il mulino arriva al 3: per due livelli il raccolto si
+       accumula senza servire a niente, ed è voluto — al livello 1 ci
+       dev'essere qualcosa da seminare (`guastiDeiLivelli`), e il grano
+       che aspetta è esattamente la ragione per cui si vuole il mulino.
+       Vale finché la roba in attesa è **una sola**: dalla seconda in
+       poi non è più un'attesa, è un magazzino. */
+    if ((c.liv || 1) === 1) {
+      uguale(`${c.nome.toLowerCase()}: è la coltura del primo livello`, quando <= 3, true)
+      continue
+    }
+    controlla(`e arriva col suo livello, non dopo (${c.liv || 1} → ${quando})`,
+              quando <= (c.liv || 1),
+              `${c.nome}: si semina al ${c.liv || 1} e si usa al ${quando}`)
+  }
+  uguale('e la coltura del primo livello è una sola',
+         COLTURE.filter(c => (c.liv || 1) === 1).length, 1)
+  nota(`${COLTURE.length} colture, ognuna con la sua bocca`)
+}
+
+/* ══════════ 1c. I RECINTI: UNA BOCCA SOLA, E UNA FACCIA ══════════
+   Un recinto è una macchina come il mulino, con due cose sue: **il
+   fumetto dice il primo ingrediente** (`Fattoria.cosaVuole`), quindi
+   una ricetta di recinto con due ingredienti ne direbbe metà; e **la
+   faccia si legge da lontano**, quindi i sei stati devono esserci
+   tutti, fosse anche ripiegando sul ritratto calmo. */
+{
+  const recinti = Object.values(PER_ID).filter(v => v.stati)
+  controlla(`i recinti sono ${recinti.length}, e sono macchine`,
+            recinti.length >= 10 && recinti.every(v => v.macchina))
+  for (const v of recinti) {
+    const sue = RICETTE.filter(r => r.dove === v.macchina)
+    uguale(`${v.nome.toLowerCase()}: una ricetta sola`, sue.length, 1)
+    uguale('e con un ingrediente solo, che è quello che il fumetto dice',
+           Object.keys(sue[0].prende).length, 1)
+    for (const q of ['calmo', 'fame', 'mangia', 'felice', 'dorme', 'pronto'])
+      controlla(`${v.id}: ha una faccia per «${q}»`, !!v.stati[q])
   }
 }
 
@@ -261,8 +317,15 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
    **macinare libera posto nel silo che si tappa.** */
 {
   const { f, mulino } = conCampoEMulino(1000, 0)
-  uguale('nel silo del raccolto ci sono solo le cinque cose dei campi',
-         merciDi('terra').join(','), 'grano,mais,carote,zucche,fieno')
+  /* Nel raccolto ci va **tutto e solo quello che esce da un campo** —
+     cinque cereali e otto ortaggi — e il conto non si scrive a mano:
+     quello che le due righe difendono è il criterio (il rosso è dei
+     campi), non il numero, che cresce a ogni coltura nuova. */
+  stessaLista('nel silo del raccolto ci sono tutte e sole le colture',
+              merciDi('terra').slice().sort(),
+              COLTURE.map(c => c.da).sort())
+  controlla('e nel raccolto non finisce niente che esca da una macchina',
+            !merciDi('terra').some(p => RICETTE.some(r => r.da === p)))
   controlla('il mangime sta con gli animali', merciDi('stalla').includes('mangime'))
   controlla('e il pastone pure', merciDi('stalla').includes('pastone'))
 

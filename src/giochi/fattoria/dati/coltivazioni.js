@@ -125,22 +125,55 @@ export const PRODOTTI = {
   carote:  { nome: 'Carote',  emoji: '🥕', silo: 'terra', pezzo: 'raccolto_carote' },
   zucche:  { nome: 'Zucche',  emoji: '🎃', silo: 'terra', pezzo: 'raccolto_zucche' },
   fieno:   { nome: 'Fieno',   emoji: '🌿', silo: 'terra', pezzo: 'raccolto_erba' },
+  /* ── L'ORTO, CIOÈ LA SECONDA METÀ DEI CAMPI ──────────────────────
+     Otto colture che arrivano dal livello 22 in poi, e non sono «altre
+     cinque uguali»: le prime cinque sono **cereali e foraggio** (roba
+     che si dà tale e quale alle bestie), queste sono **un orto** — e
+     un orto si mangia a coppie, perché in una pentola non ci va mai
+     una cosa sola. È per questo che le ricette dell'orto prendono due
+     colture invece di una (vedi `RICETTE`): è la stessa lezione di
+     «ogni coltura ha la bocca che la mangia», detta un gradino più su. */
+  patate:     { nome: 'Patate',     emoji: '🥔', silo: 'terra', pezzo: 'raccolto_patate' },
+  cavolfiori: { nome: 'Cavolfiori', emoji: '🥦', silo: 'terra', pezzo: 'raccolto_cavolfiori' },
+  pomodori:   { nome: 'Pomodori',   emoji: '🍅', silo: 'terra', pezzo: 'raccolto_pomodori' },
+  melanzane:  { nome: 'Melanzane',  emoji: '🍆', silo: 'terra', pezzo: 'raccolto_melanzane' },
+  peperoni:   { nome: 'Peperoni',   emoji: '🫑', silo: 'terra', pezzo: 'raccolto_peperoni' },
+  cipolle:    { nome: 'Cipolle',    emoji: '🧅', silo: 'terra', pezzo: 'raccolto_cipolle' },
+  aglio:      { nome: 'Aglio',      emoji: '🧄', silo: 'terra', pezzo: 'raccolto_aglio' },
+  fragole:    { nome: 'Fragole',    emoji: '🍓', silo: 'terra', pezzo: 'raccolto_fragole' },
   /* il mangime delle bestie del cortile: esce dal fienile e non si
      mangia in casa — è la riga di mezzo della catena */
   becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', pezzo: 'merce_becchime' },
   foraggio: { nome: 'Foraggio', emoji: '🥬', silo: 'stalla', pezzo: 'balla_fieno_tonda' },
   zuppa:    { nome: 'Zuppa',    emoji: '🥘', silo: 'stalla', pezzo: 'merce_zuppa' },
+  /* e i tre che escono dall'orto, uno per bocca nuova. Hanno una
+     faccia che c'era già nell'atlante e che non nominava nessuno — la
+     cassetta piena, la cesta di verdure, il cesto di fiori — che è la
+     prima cosa da guardare prima di far disegnare qualcosa di nuovo. */
+  beverone: { nome: 'Beverone', emoji: '🪣', silo: 'stalla', pezzo: 'cassetta_raccolto' },
+  pastura:  { nome: 'Pastura',  emoji: '🍃', silo: 'stalla', pezzo: 'cesta_verdure' },
+  fiori:    { nome: 'Fiori',    emoji: '🌼', silo: 'stalla', pezzo: 'cesto_fiori_misti0' },
   /* quello che mangiano il cane e il gatto di casa: esce dal mulino */
   mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', pezzo: 'merce_mangime' },
   /* Il calderone e non la ciotola rosa dei gatti: in una fila di nove
      scomparti di legno e iuta quella era l'unica cosa fucsia, e si
      leggeva come un errore. Un pastone sta in una pentola. */
   pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', pezzo: 'calderone0' },
+  /* la merenda di casa: esce dal mulino come il mangime e il pastone,
+     ed è l'unica pappa che non nasce da un cereale — fragole e miele. */
+  merenda: { nome: 'Merenda', emoji: '🥧', silo: 'stalla', pezzo: 'cesta_picnic' },
   /* e quello che danno */
   uova:    { nome: 'Uova',    emoji: '🥚', silo: 'stalla', pezzo: 'merce_uova' },
   latte:   { nome: 'Latte',   emoji: '🥛', silo: 'stalla', pezzo: 'latte' },
   tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla', pezzo: 'merce_tartufi' },
   lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla', pezzo: 'merce_lana' },
+  miele:   { nome: 'Miele',   emoji: '🍯', silo: 'stalla', pezzo: 'marmellata1' },
+  /* **Il concime è un prodotto come gli altri**, e non una battuta: gli
+     asini sono le uniche bestie del cortile che non danno da mangiare a
+     nessuno, e quello che rendono torna alla terra — il prato fiorito
+     su cui poi vanno le api (vedi la ricetta «Prato fiorito»). È il
+     solo anello della fattoria che si chiude su se stesso. */
+  concime: { nome: 'Concime', emoji: '💩', silo: 'stalla', pezzo: 'sacco' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -169,17 +202,33 @@ const CRESCE = coltura => Array.from({ length: 7 }, (_, i) => `campo_${coltura}$
 /* `liv` è il livello della fattoria a cui la coltura si sblocca
    (`dati/livelli.js`), e **ognuna arriva con la bocca che la mangia**:
 
-     grano   1   e al 3 c'è il mulino che ne fa mangime
-     carote  5   insieme alla conigliera, che mangia solo quelle
-     mais   10   per il pastone, quando il mulino gira da un pezzo
-     erba   12   insieme all'ovile: prima il fieno, poi le pecore
-     zucche 26   insieme al porcile, l'unico che le vuole
+     grano       1   e al 3 c'è il mulino che ne fa mangime
+     carote      5   insieme alla conigliera, che mangia solo quelle
+     mais       10   per il pastone, quando il mulino gira da un pezzo
+     erba       12   insieme all'ovile: prima il fieno, poi le pecore
+     patate     22   col beverone e lo stagno delle anatre
+     cavolfiori 22   nello stesso beverone: una coppia, una bocca
+     zucche     26   insieme al porcile, l'unico che le vuole
+     pomodori   29   la zuppa d'orto, più svelta di quella di zucca
+     melanzane  33   con la pastura e il recinto delle capre
+     peperoni   33   nella stessa pastura
+     cipolle    38   lasciate fiorire: il fiorume delle api
+     aglio      38   nello stesso fiorume
+     fragole    44   col miele fanno la merenda, al mulino
 
    Il primo campo ha **una scelta sola**, e non è una limitazione: a
    quattro anni cinque bottoni sono un elenco da leggere, uno è una cosa
    da fare. Una coltura che arriva prima di quello che la consuma
    sarebbe roba che riempie il silo senza servire a niente — che è il
-   modo di far sembrare rotto un gioco che funziona. */
+   modo di far sembrare rotto un gioco che funziona.
+
+   ── E TREDICI NON SONO CINQUE ─────────────────────────────────────
+   Le prime cinque arrivano entro il livello 26, cioè nella prima metà
+   del gioco; le altre otto stanno tutte oltre, ed è deliberato. Fra il
+   porcile (26) e la fine del catalogo (64) non arrivava **più niente
+   che lavorasse**: trentotto livelli di sole decorazioni, cioè la
+   parte del gioco in cui chi ha imparato la catena non ha più niente
+   da imparare. L'orto è quel pezzo lì. */
 export const COLTURE = [
   /* L'erba medica è la più veloce, e non è cibo per nessuno: serve al
      fienile, che è il modo di dire «prima il fieno, poi gli animali»
@@ -210,6 +259,61 @@ export const COLTURE = [
     id: 'zucche', liv: 26, nome: 'Zucche', emoji: '🎃',
     semina: 0, raccolta: 2, minuti: 10, resa: 1, da: 'zucche',
     stadi: CRESCE('zucche'),
+  },
+
+  /* ── L'ORTO ──────────────────────────────────────────────────────
+     Otto colture nella seconda metà del gioco. I tempi stanno nella
+     stessa forchetta delle prime cinque (4–12 minuti): quello che le
+     distingue non è la lentezza, è **con cosa vanno in coppia**.
+
+     Il prezzo di raccolta resta 1 o 2 monete — un gesto è un gesto
+     (`CALIBRAZIONE.md`) — e quello che costa davvero è avere due campi
+     liberi nello stesso momento invece di uno. */
+  {
+    id: 'patate', liv: 22, nome: 'Patate', emoji: '🥔',
+    semina: 0, raccolta: 1, minuti: 7, resa: 1, da: 'patate',
+    stadi: CRESCE('patate'),
+  },
+  {
+    id: 'cavolfiori', liv: 22, nome: 'Cavolfiori', emoji: '🥦',
+    semina: 0, raccolta: 1, minuti: 9, resa: 1, da: 'cavolfiori',
+    stadi: CRESCE('cavolfiori'),
+  },
+  /* Costano 2 come le zucche, ed è il numero che tiene in piedi il
+     tartufo: la zuppa d'orto è la seconda strada per la zuppa dei
+     maiali, e se i pomodori costassero 1 il tartufo verrebbe a metà
+     prezzo del cibo che sostituisce (`unita/coltivazioni`). */
+  {
+    id: 'pomodori', liv: 29, nome: 'Pomodori', emoji: '🍅',
+    semina: 0, raccolta: 2, minuti: 8, resa: 1, da: 'pomodori',
+    stadi: CRESCE('pomodori'),
+  },
+  {
+    id: 'melanzane', liv: 33, nome: 'Melanzane', emoji: '🍆',
+    semina: 0, raccolta: 2, minuti: 9, resa: 1, da: 'melanzane',
+    stadi: CRESCE('melanzane'),
+  },
+  {
+    id: 'peperoni', liv: 33, nome: 'Peperoni', emoji: '🫑',
+    semina: 0, raccolta: 1, minuti: 7, resa: 1, da: 'peperoni',
+    stadi: CRESCE('peperoni'),
+  },
+  {
+    id: 'cipolle', liv: 38, nome: 'Cipolle', emoji: '🧅',
+    semina: 0, raccolta: 1, minuti: 6, resa: 1, da: 'cipolle',
+    stadi: CRESCE('cipolle'),
+  },
+  /* La più lenta di tutte, e non per bilanciamento: l'aglio ci mette
+     davvero mesi, ed è la coltura su cui si aspetta. */
+  {
+    id: 'aglio', liv: 38, nome: 'Aglio', emoji: '🧄',
+    semina: 0, raccolta: 1, minuti: 12, resa: 1, da: 'aglio',
+    stadi: CRESCE('aglio'),
+  },
+  {
+    id: 'fragole', liv: 44, nome: 'Fragole', emoji: '🍓',
+    semina: 0, raccolta: 1, minuti: 11, resa: 1, da: 'fragole',
+    stadi: CRESCE('fragole'),
   },
 ]
 
@@ -292,6 +396,27 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    arrivano col primo recinto, il fieno sette livelli dopo ed è la metà
    del prezzo — chi ha aspettato risparmia, come sempre qui dentro.
 
+   ── E L'ORTO, CIOÈ LE COPPIE ──────────────────────────────────────
+   Le otto colture della seconda metà si mangiano **a due per volta**,
+   che è la differenza fra un cereale e un orto:
+
+     🥔 patate + 🥦 cavolfiori → 🪣 beverone → 🦆 anatre  → 🥚 uova
+     🍅 pomodori               → 🥘 zuppa    → 🐖 maiali  → 🍄 tartufi
+     🍆 melanzane + 🫑 peperoni → 🍃 pastura  → 🐐 capre   → 🥛 latte
+     🧅 cipolle + 🧄 aglio      → 🌼 fiorume  → 🐝 api     → 🍯 miele
+                  🥬 foraggio              → 🦙 alpaca  → 🧶 lana
+                  🌰 becchime              → 🫏 asini   → 💩 concime
+     🍓 fragole + 🍯 miele      → 🥧 merenda  (il mulino, per la ciotola)
+     💩 concime + 🌿 fieno      → 🌼 fiori    (e l'anello si chiude)
+
+   Due cose da leggere in quella tabella. La prima: **le api e gli
+   asini non mangiano niente di nuovo** — foraggio e becchime sono
+   quelli di sempre — perché cinque bocche nuove con cinque mangimi
+   nuovi sarebbero stati cinque scomparti di silo in più per nulla.
+   La seconda: **il concime torna nel prato**, ed è l'unico punto in
+   cui la catena non va avanti dritta ma si richiude. Non è la strada
+   più economica per i fiori: è quella che non chiede l'orto.
+
    ── E ALLORA LE PECORE E I CONIGLI? ───────────────────────────────
    Mangiano lo stesso foraggio e fanno la stessa lana, quindi l'ovile
    dev'essere **più efficiente**, se no costa il doppio della conigliera
@@ -360,6 +485,121 @@ export const RICETTE = [
   {
     id: 'tartufi', nome: 'Tartufo', emoji: '🍄', dove: 'porcile',
     prende: { zuppa: 2 }, costo: 1, minuti: 20, da: 'tartufi', resa: 1,
+  },
+
+  /* ═══════════ L'ORTO, E LE CINQUE BOCCHE NUOVE ═══════════
+     La seconda metà del cortile. Cinque specie in più, e nessuna di
+     loro è una meccanica nuova: sono macchine come le altre, con la
+     faccia che cambia da sola. Quello che hanno di nuovo è **da dove
+     arriva quello che mangiano**: non da un cereale, ma da una coppia
+     di ortaggi.
+
+     ── PERCHÉ UNA RICETTA DELL'ORTO PRENDE DUE COLTURE ─────────────
+     Perché in una pentola non ci va mai una cosa sola, e perché con
+     una coltura per ricetta le otto nuove avrebbero voluto otto
+     ricette e otto scomparti di silo: un elenco, non un gioco. In
+     coppia, invece, ognuna dice cosa seminare *accanto*, e la domanda
+     «cosa mi manca» resta una cosa che si conta sulle dita — 2 🍆 e
+     1 🫑, che sono tre campi da riempire.
+
+     La resa resta **uno** (vedi `RESA`): N → 1 vale anche quando gli N
+     sono di due specie diverse.
+
+     ── E NESSUNA DELLE CINQUE È UN DOPPIONE ────────────────────────
+     Tre danno una roba che c'era già (uova, latte, lana) e due una
+     roba nuova (miele, concime). Le prime tre **non costano meno** di
+     chi le faceva prima — sarebbe il modo di rendere inutile la prima
+     metà del catalogo a chi ci è appena arrivato — e guadagnano su
+     un'altra leva, che qui è la sola che conta davvero: **quanti campi
+     e quanti passaggi**. Il freno della fattoria non è il prezzo, è il
+     tempo e quanti campi hai. */
+
+  /* ── il fienile dell'orto ── */
+  /* Patate lesse e foglie di cavolo: è il pastone vero del pollame, e
+     costa una monetina perché si scalda — le altre ricette del fienile
+     sono tagli a freddo e non costano niente. */
+  {
+    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'fienile', liv: 22,
+    prende: { patate: 2, cavolfiori: 1 }, costo: 1, minuti: 4, da: 'beverone', resa: 1,
+  },
+  /* **La seconda strada per la zuppa dei maiali**, e la prima che non
+     passa dalle zucche. Costa uguale (🪙4) e ci mette sei minuti in
+     meno: chi ha aspettato risparmia, come per le due strade del
+     foraggio. */
+  {
+    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'fienile', liv: 29,
+    prende: { pomodori: 2 }, costo: 0, minuti: 4, da: 'zuppa', resa: 1,
+  },
+  {
+    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'fienile', liv: 33,
+    prende: { melanzane: 2, peperoni: 1 }, costo: 0, minuti: 5, da: 'pastura', resa: 1,
+  },
+  /* **Cipolle e aglio lasciati fiorire.** Non è una licenza: i fiori
+     dell'aglio e della cipolla sono fra i migliori per le api, e
+     lasciare andare a fiore invece di raccogliere è una cosa che si
+     fa per davvero. Ed è il senso di questa riga nel gioco: due
+     colture che non finiscono in nessuna ciotola trovano una bocca
+     proprio perché non le si raccoglie per mangiarle. */
+  {
+    id: 'fiorume', nome: 'Fiorume', emoji: '🌼', dove: 'fienile', liv: 38,
+    prende: { cipolle: 1, aglio: 1 }, costo: 0, minuti: 4, da: 'fiori', resa: 1,
+  },
+  /* ── E QUI L'ANELLO SI CHIUDE ──────────────────────────────────
+     Il concime degli asini più un po' di erba medica: il prato torna
+     a fiorire e le api ci vanno sopra. È l'unica ricetta della
+     fattoria il cui ingrediente **viene da una bestia** invece che da
+     un campo, e per questo arriva ultima.
+
+     Non è la strada più corta per i fiori (il fiorume costa 🪙2 e
+     ventidue minuti, questa 🪙6 e quarantasette) e non deve esserlo:
+     è la strada che **non chiede l'orto**. Chi ha i campi pieni di
+     pomodori fa il miele col grano e con gli asini. */
+  {
+    id: 'fiorume_concime', nome: 'Prato fiorito', emoji: '🌼', dove: 'fienile', liv: 47,
+    prende: { concime: 1, fieno: 1 }, costo: 0, minuti: 5, da: 'fiori', resa: 1,
+  },
+
+  /* ── il mulino: la seconda pappa di casa ── */
+  /* L'unica cosa di questa fattoria che non nasce da un cereale, e la
+     ragione per cui le api servono a qualcosa dentro casa e non solo
+     al banco del mercato. */
+  {
+    id: 'merenda', nome: 'Fragole al miele', emoji: '🥧', dove: 'mulino', liv: 44,
+    prende: { fragole: 2, miele: 1 }, costo: 1, minuti: 6, da: 'merenda', resa: 1,
+  },
+
+  /* ── i cinque recinti nuovi ── */
+  /* **Le anatre non fanno un uovo più a buon mercato del pollaio**:
+     ne fanno uno con **un campo in meno** (tre invece di quattro) e
+     tre minuti prima. Costa 🪙5 tutti e due, ed è voluto: un uovo è un
+     uovo, e chi ha il pollaio non deve ritrovarselo svalutato. */
+  {
+    id: 'uova_anatra', nome: 'Uova d\'anatra', emoji: '🥚', dove: 'anatre',
+    prende: { beverone: 1 }, costo: 1, minuti: 6, da: 'uova', resa: 1,
+  },
+  /* Le capre si accontentano dell'orto: **una pastura sola** dove la
+     stalla vuole due foraggi, cioè tre campi invece di quattro e due
+     passaggi di macchina invece di tre. In minuti sono più lente
+     (quarantadue contro trentasei) — la scelta è fra tempo e spazio, e
+     da qui in avanti è quasi sempre lo spazio a mancare. */
+  {
+    id: 'latte_capra', nome: 'Latte di capra', emoji: '🥛', dove: 'capre',
+    prende: { pastura: 1 }, costo: 1, minuti: 12, da: 'latte', resa: 1,
+  },
+  {
+    id: 'miele', nome: 'Miele', emoji: '🍯', dove: 'arnie',
+    prende: { fiori: 2 }, costo: 1, minuti: 12, da: 'miele', resa: 1,
+  },
+  /* Come l'ovile — un foraggio solo — ma in cinque minuti invece di
+     otto: è la stessa efficienza in più che l'ovile ha sulla
+     conigliera, spostata di un gradino e pagata prima. */
+  {
+    id: 'lana_alpaca', nome: 'Lana d\'alpaca', emoji: '🧶', dove: 'alpaca',
+    prende: { foraggio: 1 }, costo: 1, minuti: 5, da: 'lana', resa: 1,
+  },
+  {
+    id: 'concime', nome: 'Concime', emoji: '💩', dove: 'asini',
+    prende: { becchime: 2 }, costo: 1, minuti: 10, da: 'concime', resa: 1,
   },
 ]
 

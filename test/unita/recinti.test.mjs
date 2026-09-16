@@ -61,7 +61,9 @@ const RECINTI = Object.values(PER_ID).filter(v => v.stati)
    nelle ricette, e le ricette cambiano. Adesso il fumetto lo disegna la
    scena con la merce vera, e sotto resta la faccia calma, che nei
    cinque disegni era comunque la stessa. Il conto qui sotto tiene
-   perché guarda **quali pezzi escono**, non quanti stati ci sono. */
+   perché guarda **quali pezzi escono**, non quanti stati ci sono — e
+   per lo stesso motivo regge le cinque specie dell'orto, che di
+   ritratti ne hanno tre e ripiegano sul calmo per gli altri tre. */
 const IN_MAPPA = ['fame', 'mangia', 'felice', 'dorme', 'pronto']
 
 /* ══════════ 1. i sei ritratti ci sono tutti ══════════ */
@@ -168,9 +170,19 @@ for (const v of RECINTI) {
   f.ritira(cosa, fra(r.minuti * 2))
   usciti.add(f.aspettoDellaCosa(cosa, fra(r.minuti * 2)).invece)
 
-  stessaLista(`${v.id}: si vedono tutti e cinque gli stati di mappa`,
-    [...usciti].sort(), IN_MAPPA.map(q => v.stati[q]).sort())
+  /* Il paragone è **fra i pezzi che escono e i pezzi che quel recinto
+     dichiara**, tolti i doppioni da tutte e due le parti: le cinque
+     specie di prima hanno cinque disegni diversi (`fame` è il `calmo`),
+     le cinque dell'orto ne hanno tre e le altre tre posizioni ripiegano
+     lì (`RECINTO` in `dati/catalogo.js`). Scritto col numero cinque,
+     questo controllo diceva «gli stati non si vedono» di un recinto
+     che si vede benissimo. */
+  stessaLista(`${v.id}: si vede ogni ritratto che dichiara`,
+    [...usciti].sort(), [...new Set(IN_MAPPA.map(q => v.stati[q]))].sort())
 }
+nota('i ritratti che un recinto fa vedere in mappa: ' +
+     RECINTI.map(v => `${v.nome.toLowerCase()} ${new Set(IN_MAPPA.map(q => v.stati[q])).size}`)
+       .join(' · '))
 
 /* ══════════ 4. la lana non si mangia: si mette addosso ══════════
    Il primo prodotto della catena che non passa dalla pancia. Vale come
