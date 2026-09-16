@@ -115,7 +115,14 @@ export const tappa = indice =>
   CAMPAGNA[Math.max(0, Math.min(indice, CAMPAGNA.length - 1))]
 
 /* Il gioco libero: non finisce, e ha tutto dentro dal primo minuto. Non è
-   una tappa e non sta nella campagna — è quello che resta dopo. */
+   una tappa e non sta nella campagna — è quello che resta dopo.
+
+   `durata: Infinity` non è solo «non c'è traguardo»: è la riga che il
+   motore legge (`Regole.infinita`) per sapere che qui **il mazzo delle
+   carte non ha tetto** — le copie oltre l'ultimo livello rendono ogni
+   volta meno, e il perché sta in `mazzo.js` sotto `resa`. Dentro le nove
+   tappe quella strada non si apre nemmeno: sono tarate sui tetti veri e
+   girano identiche al bit. */
 export const LIBERO = {
   chiave: 'libero', nome: 'Sopravvivenza', scenario: 'notte', scalino: null,
   durata: Infinity, ritmo: 1.20, vigore: 1.90, fretta: 1.05, rincaro: 0.08,

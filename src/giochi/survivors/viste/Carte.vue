@@ -16,6 +16,12 @@
    livello portano): questa schermata non sa cosa faccia un
    potenziamento, non sa come nasca un prezzo e non sa che esistano le
    materie. Emette la chiave di quella toccata.
+
+   Una carta può arrivare **oltre il suo ultimo livello**: capita solo
+   nella Sopravvivenza, che non finisce, e vuol dire che stavolta rende
+   meno di prima (il perché sta in `dati/mazzo.js`, sotto `resa`). Si
+   dice, perché una carta che promette quanto la prima volta e dà la
+   metà è una carta che mente.
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
   carte: { type: Array, required: true },
@@ -37,6 +43,11 @@ defineEmits(['scegli'])
         <b>{{ c.nome }}</b>
         <small class="sv-chiaro">{{ c.chiaro }}</small>
         <i v-if="c.nuova" class="sv-nuova">NUOVA!</i>
+        <!-- nella Sopravvivenza una carta si può riprendere anche dopo il
+             suo ultimo livello, e allora rende ogni volta un po' meno:
+             «livello 7 di 5» sarebbe una bugia, e chi sceglie deve
+             sapere che stavolta ne prende poco -->
+        <i v-else-if="c.oltreIlTetto" class="sv-ancora">ancora un po' di più</i>
         <i v-else class="sv-salita">livello {{ c.livello }} di {{ c.max }}</i>
       </span>
       <span class="sv-prezzo" :data-pallini="c.pallini">

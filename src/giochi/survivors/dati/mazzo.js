@@ -31,6 +31,13 @@
    Il gioco non sa che materie esistano: passa `prezzo` a
    `src/quiz/scelta.js` e riceve una domanda. Aggiungere una materia non
    vuol dire aprire questo file.
+
+   Un'ultima cosa, ed è l'unica differenza fra la campagna e il gioco
+   libero: **nella Sopravvivenza il mazzo non finisce**. Diciotto carte
+   per settantacinque copie sono più di quante se ne prendano in una
+   tappa di tre minuti, ma una partita libera si interrompe e si riprende
+   e dura un pomeriggio — e quando le copie erano finite il livello
+   saliva in silenzio. Il come e il perché stanno in fondo, a `resa`.
    ═══════════════════════════════════════════════════════════════════ */
 
 export const FASCE = [
@@ -44,10 +51,17 @@ export const fascia = chiave => FASCE.find(f => f.chiave === chiave) || FASCE[0]
 /* Le carte. `max` è quante volte si può cumulare, `chiaro` è cosa dà —
    una riga sola, che si legge sulla carta **prima** di sceglierla e
    torna nel brindisi dopo. Una riga: mentre si sceglie non si corre, ma
-   tre righe di istruzioni per tre carte nessuno le legge lo stesso. */
+   tre righe di istruzioni per tre carte nessuno le legge lo stesso.
+
+   `intera: true` vuol dire **quello che dà non si può dare a metà**: una
+   freccia in più è una freccia, un cuore è un cuore, una cometa gira o
+   non gira. Sono le carte che nel gioco libero il tetto ce l'hanno
+   davvero, perché la mezza copia che le altre ammettono (vedi `resa`,
+   in fondo) qui non vuol dire niente — e una freccia in più per sempre
+   renderebbe immortali. Chi non lo dichiara cresce a frazioni. */
 export const MAZZO = [
   /* ── deboli: comodità, non potenza ── */
-  { chiave: 'mela',     nome: 'Mela curativa',   icona: '🍎', fascia: 'debole', max: 9,
+  { chiave: 'mela',     nome: 'Mela curativa',   icona: '🍎', fascia: 'debole', max: 9, intera: true,
     chiaro: 'ti torna un cuore, subito' },
   { chiave: 'magnete',  nome: 'Calamita',        icona: '🧲', fascia: 'debole', max: 4,
     chiaro: 'le gemme volano da te da più lontano' },
@@ -72,19 +86,19 @@ export const MAZZO = [
     chiaro: 'chi ti tocca si punge' },
   { chiave: 'gemme',    nome: 'Gemme doppie',    icona: '💎', fascia: 'media', max: 3,
     chiaro: 'ogni gemma vale di più: sali di livello prima' },
-  { chiave: 'palla',    nome: 'Cometa in orbita', icona: '☄️', fascia: 'media', max: 4,
+  { chiave: 'palla',    nome: 'Cometa in orbita', icona: '☄️', fascia: 'media', max: 4, intera: true,
     chiaro: 'una cometa ti gira intorno e travolge chi tocca' },
-  { chiave: 'occhi',    nome: 'Occhi acuti',     icona: '👀', fascia: 'media', max: 3,
+  { chiave: 'occhi',    nome: 'Occhi acuti',     icona: '👀', fascia: 'media', max: 3, intera: true,
     chiaro: 'le frecce passano attraverso i mostri' },
 
   /* ── forti: si sente subito ── */
-  { chiave: 'frecce',   nome: 'Frecce gemelle',  icona: '🏹', fascia: 'forte', max: 5,
+  { chiave: 'frecce',   nome: 'Frecce gemelle',  icona: '🏹', fascia: 'forte', max: 5, intera: true,
     chiaro: 'una freccia in più a ogni tiro' },
   { chiave: 'mani',     nome: 'Mani veloci',     icona: '⚡', fascia: 'forte', max: 5,
     chiaro: 'spari molto più spesso' },
   { chiave: 'grandi',   nome: 'Frecce grosse',   icona: '💥', fascia: 'forte', max: 4,
     chiaro: 'le frecce fanno molto più male' },
-  { chiave: 'cuore',    nome: 'Cuore grande',    icona: '❤️', fascia: 'forte', max: 3,
+  { chiave: 'cuore',    nome: 'Cuore grande',    icona: '❤️', fascia: 'forte', max: 3, intera: true,
     chiaro: 'un cuore in più, e te lo riempie' },
   { chiave: 'fuoco',    nome: 'Anello di fuoco', icona: '🔥', fascia: 'forte', max: 4,
     chiaro: 'ogni tanto esplodi tutto intorno a te' },
@@ -124,6 +138,64 @@ export const prezzoDomanda = (chiaveFascia, rincaro = 0, lv = 0, max = 1) => {
   const base = Math.max(0, Math.min(1, fascia(chiaveFascia).prezzo + rincaro))
   return base + (1 - base) * MATURITA * maturita(lv, max)
 }
+
+/* ═══════════ OLTRE IL TETTO — soltanto dove la partita non finisce ═══════════
+   Nella Sopravvivenza si sta in campo finché la marea non vince, e
+   **le carte finivano prima della marea**. Misurato al banco: un
+   giocatore che schiva bene e risponde a tutto porta a zero le tredici
+   carte che cambiano davvero la partita intorno al livello 50, dopo
+   dodici o tredici minuti, e da lì in poi ogni salita di livello gli
+   offriva solo gli avanzi deboli; finiti anche quelli — e ci si arriva,
+   perché una partita libera si può interrompere e riprendere
+   (`motore/sosta.js`), quindi dura un pomeriggio — `offri()` tornava
+   `null`: il livello saliva **in silenzio**, senza pausa, senza domanda
+   e senza carta, e le gemme non servivano più a niente.
+
+   Dichiarare vittoria era l'altra strada, e si è scartata: il gioco
+   libero ha un record (`gioco.js`, `SENZA_FINE`), e una vittoria gli
+   metterebbe un tetto sopra — battere il proprio primato smetterebbe di
+   essere il motivo per rigiocare.
+
+   Quindi nel gioco libero **una carta non ha tetto**, e le copie oltre
+   il suo `max` rendono ogni volta meno: la prima in più vale
+   `RESA_OLTRE` di un grado vero, la seconda `RESA_OLTRE²`, la terza
+   `RESA_OLTRE³`… È una serie geometrica, e il suo limite è la ragione
+   per cui questo non rende immortali: **tutte le copie in più di una
+   carta, quante se ne prendano, non arrivano a valere due gradi veri**
+   (`RESA_TOTALE` = 1,5). La potenza dell'eroe smette di raddoppiare
+   mentre la marea continua (×1,95 di vita ogni tappa-tipo, vedi
+   `taratura.js`): la partita finisce perché la marea vince, non perché
+   il mazzo si è svuotato.
+
+   Due cose che restano fuori:
+
+   - **la campagna**, che non passa da qui. Le nove tappe sono tarate
+     sui tetti veri e hanno i loro test: `Partita` chiede la resa solo
+     quando `regole.infinita`, e dentro una tappa la resa coincide col
+     numero di copie. Non cambia un numero.
+   - **le carte `intera`**, che danno una cosa che non si può dare a
+     metà (vedi il mazzo qui sopra).
+
+   Il prezzo, oltre il tetto, resta quello dell'ultima copia: `maturita`
+   si ferma a 1 e la difficoltà di una domanda è una manopola da 0 a 1 —
+   non c'è niente sopra «la più tosta». Va bene così: si continua a
+   pagare il massimo, e quello che si prende è sempre meno. */
+export const RESA_OLTRE = 0.6
+export const RESA_TOTALE = RESA_OLTRE / (1 - RESA_OLTRE)
+
+export const resa = (lv = 0, max = 1) => {
+  if (!(lv > max)) return Math.max(0, lv)
+  /* la somma delle prime `n` potenze di RESA_OLTRE, in chiuso: scritta a
+     ciclo sarebbe la stessa cosa, ma qui si legge che ha un limite */
+  const n = lv - max
+  return max + RESA_TOTALE * (1 - Math.pow(RESA_OLTRE, n))
+}
+
+/* Fin dove si può cumulare una carta. In campagna è il suo `max` e non
+   si discute; nel gioco libero non c'è tetto, tranne per le carte che
+   danno una cosa intera. */
+export const tettoDi = (c, infinita = false) =>
+  infinita && !c.intera ? Infinity : c.max
 
 /* ═══════════ IL PREZZO COME SI VEDE ═══════════
    Sulla carta il prezzo si legge dai pallini, e i pallini devono dire
@@ -203,6 +275,49 @@ export function guastiDelMazzo(mazzo = MAZZO, fasce = FASCE) {
       guasti.push(`carta "${c.chiave}": la prima copia non costa quanto la sua fascia`)
     if (c.max > 1 && !(matura - nuova >= 0.05))
       guasti.push(`carta "${c.chiave}": dalla prima all'ultima copia il prezzo sale di ${(matura - nuova).toFixed(3)}`)
+  }
+
+  /* ── il secondo giro del gioco libero ──
+     Le copie oltre il tetto devono rendere sempre meno e non sommare
+     mai a più di `RESA_TOTALE`: è tutto quello che tiene in piedi la
+     promessa «il mazzo non finisce e nessuno diventa immortale». */
+  if (!(RESA_OLTRE > 0 && RESA_OLTRE < 1))
+    guasti.push(`la resa delle copie in più vale ${RESA_OLTRE}: sopra 1 non è una serie che si chiude`)
+  for (const c of mazzo) {
+    /* il tetto: vero in campagna per tutti, e vero anche nel gioco
+       libero per chi dà una cosa intera */
+    if (tettoDi(c, false) !== c.max)
+      guasti.push(`carta "${c.chiave}": in campagna il tetto non è il suo max`)
+    const senzaFine = tettoDi(c, true)
+    if (c.intera ? senzaFine !== c.max : Number.isFinite(senzaFine))
+      guasti.push(`carta "${c.chiave}": nel gioco libero il tetto è ${senzaFine}, ` +
+                  `e la carta ${c.intera ? 'è' : 'non è'} dichiarata intera`)
+    if (c.intera) continue
+    /* dentro il tetto la resa è il numero di copie, e questo è il motivo
+       per cui la campagna non cambia di un numero */
+    for (let lv = 0; lv <= c.max; lv++)
+      if (resa(lv, c.max) !== lv) {
+        guasti.push(`carta "${c.chiave}": dentro il tetto la resa non è il numero di copie`)
+        break
+      }
+    let prima = 1
+    for (let n = 1; n <= 12; n++) {
+      const passo = resa(c.max + n, c.max) - resa(c.max + n - 1, c.max)
+      if (!(passo > 0)) guasti.push(`carta "${c.chiave}": la ${n}ª copia in più non dà niente`)
+      if (!(passo < prima)) guasti.push(`carta "${c.chiave}": la ${n}ª copia in più rende quanto la precedente`)
+      prima = passo
+    }
+    if (!(resa(c.max + 300, c.max) - c.max < RESA_TOTALE + 1e-9))
+      guasti.push(`carta "${c.chiave}": prendendola per sempre supera i ` +
+                  `${RESA_TOTALE.toFixed(2)} gradi in più`)
+  }
+  /* ogni fascia deve tenere in piedi la terna **anche quando tutte le
+     sue carte intere sono al massimo**: se no, dopo mezz'ora di gioco
+     libero l'offerta di quella fascia si ripete sempre uguale */
+  for (const f of fasce) {
+    const ancora = mazzo.filter(c => c.fascia === f.chiave && !c.intera).length
+    if (ancora < 3)
+      guasti.push(`la fascia "${f.chiave}" ha solo ${ancora} carte che crescono oltre il tetto`)
   }
   return guasti
 }

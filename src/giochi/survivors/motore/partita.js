@@ -24,7 +24,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { CFG, soglia, stellePerFerite } from '../dati/taratura.js'
 import { MOSTRI, CHIAVI_MOSTRI, ammessi } from '../dati/mostri.js'
-import { MAZZO, prezzoDomanda, palliniDelPrezzo, scalinoDelPrezzo, PALLINI }
+import { MAZZO, prezzoDomanda, palliniDelPrezzo, scalinoDelPrezzo, PALLINI,
+         resa, tettoDi }
   from '../dati/mazzo.js'
 
 const CAMPO_MINIMO = { larghezza: 360, altezza: 620 }
@@ -131,6 +132,10 @@ export class Partita {
     this.regole = regole
     this.rnd = rnd
     this.mazzo = mazzo
+    /* la carta a partire dalla sua chiave: serve a ogni `ricalcola()` per
+       sapere dov'è il tetto di quella capacità, e un `find` per ognuna
+       delle diciotto sarebbe trecento confronti per una somma */
+    this.carte = new Map(mazzo.map(c => [c.chiave, c]))
     this.campo = { ...CAMPO_MINIMO, ...(campo || {}) }
 
     this.eroe = {
@@ -189,8 +194,23 @@ export class Partita {
     return Math.max(0, this.regole.durata - this.tempo)
   }
 
-  /* quanto vale adesso un potenziamento */
+  /* quante copie di quella carta si sono prese */
   livelloDi(chiave) { return this.potenziamenti[chiave] || 0 }
+
+  /* Fin dove si può cumulare questa carta **in questa partita**: il suo
+     `max` in campagna, nessun tetto nel gioco libero (vedi `tettoDi` in
+     `dati/mazzo.js`). */
+  tettoDi(c) { return tettoDi(c, this.regole.infinita) }
+
+  /* Quanto **rende** adesso un potenziamento, che dentro il tetto è
+     esattamente il numero di copie prese — ed è per questo che le nove
+     tappe non cambiano di un numero. Oltre il tetto, cioè solo nel gioco
+     libero, le copie in più valgono una frazione sempre più piccola. */
+  resaDi(chiave) {
+    const preso = this.livelloDi(chiave)
+    const c = this.carte.get(chiave)
+    return c && !c.intera ? resa(preso, c.max) : preso
+  }
 
   /* Il campo si misura da fuori: in Node è una stanza qualunque, nel
      browser è il canvas vero. Serve per sapere da dove entrano i mostri —
@@ -218,7 +238,13 @@ export class Partita {
      secondo: sono venti moltiplicazioni, ma sono anche l'unico posto in
      cui una carta diventa un numero, e va guardato tutto insieme. */
   ricalcola() {
-    const lv = k => this.livelloDi(k)
+    /* `lv` è la **resa**, non il numero di copie: dentro il tetto sono
+       la stessa cosa, oltre (solo nel gioco libero) la resa è un numero
+       con la virgola. Tutte le righe qui sotto sono conti, e una virgola
+       non le disturba — tranne le tre che contano delle cose intere, che
+       passano da `quanti`. */
+    const lv = k => this.resaDi(k)
+    const quanti = k => Math.round(this.resaDi(k))
     this.f = {
       velocita: CFG.velocitaEroe * (1 + 0.17 * lv('stivali')),
       raggio: CFG.raggioEroe,
@@ -230,7 +256,7 @@ export class Partita {
          passare e non passare. Se il moltiplicatore fosse gentile,
          sbagliare costerebbe un fastidio invece di una tappa. */
       cadenza: CFG.cadenza * Math.pow(0.75, lv('mani')),
-      frecce: 1 + lv('frecce'),
+      frecce: 1 + quanti('frecce'),
       danno: 1 + 2.1 * lv('grandi'),
       gittata: CFG.gittata * (1 + 0.26 * lv('lunghe')),
       velColpo: CFG.velocitaFreccia * (1 + 0.16 * lv('lunghe')),
@@ -247,9 +273,9 @@ export class Partita {
       spine: lv('spine') ? 2 + 3 * lv('spine') : 0,
       valoreGemma: 1 + lv('gemme'),
       fortuna: 0.14 * lv('stella'),
-      perfora: lv('occhi'),
+      perfora: quanti('occhi'),
       invuln: CFG.invulnerabilita + 0.5 * lv('fantasma'),
-      palle: lv('palla'),
+      palle: quanti('palla'),
       fuoco: lv('fuoco'),
       fulmine: lv('fulmine'),
     }
@@ -679,8 +705,11 @@ export class Partita {
     this.segnala('livello')
     this.anello(this.eroe.x, this.eroe.y, 120, '#ffe98a')
     this.fermati()                                 // il dito non conta più
+    /* `null` vuol dire «niente da offrire, si tira dritto», e capita solo
+       in campagna: là il mazzo ha un tetto e si può finire. Nel gioco
+       libero non finisce mai (vedi `tettoDi` in `dati/mazzo.js`) — la
+       partita continua a chiedere e a dare, e a chiuderla è la marea. */
     this.offerta = this.offri()
-    if (!this.offerta) this.offerta = null         // mazzo finito: si tira dritto
   }
 
   /* Tre carte, **una per fascia**: la facile, la media e la tosta. Non
@@ -688,16 +717,32 @@ export class Partita {
      tornerebbe a essere «quale disegno mi piace», e il prezzo in
      difficoltà, che è il punto di tutto il gioco, non si vedrebbe. */
   offri() {
-    const libere = this.mazzo.filter(c => this.livelloDi(c.chiave) < c.max)
+    const libere = this.mazzo.filter(c => this.livelloDi(c.chiave) < this.tettoDi(c))
     if (!libere.length) return null
+    /* ── prima si finisce il primo giro ──
+       `fresche` sono le carte che hanno ancora un livello **vero** da
+       dare, e finché ne resta **una qualunque** l'offerta pesca solo fra
+       quelle. Il secondo giro del gioco libero comincia quando il mazzo
+       è finito davvero, non prima: una copia oltre il tetto rende un
+       pezzetto di grado e costa la domanda più tosta che ci sia, quindi
+       messa in fila con i livelli pieni sarebbe una fregatura — chi
+       cerca la carta più cara si ritroverebbe a riprendere per la
+       settima volta l'anello di fuoco mentre gli stivali sono ancora
+       intatti in fondo al mazzo. Misurato: succedeva, e la partita
+       finiva **prima** di quanto finisse senza tutto questo.
+       In campagna non c'è niente oltre il tetto, le due liste hanno gli
+       stessi elementi nello stesso ordine e non cambia un tiro di dado —
+       le nove tappe girano identiche al bit. */
+    const fresche = libere.filter(c => this.livelloDi(c.chiave) < c.max)
+    const banco = fresche.length ? fresche : libere
     const scelte = []
     for (const f of ['debole', 'media', 'forte']) {
-      const dentro = libere.filter(c => c.fascia === f && !scelte.includes(c))
+      const dentro = banco.filter(c => c.fascia === f && !scelte.includes(c))
       if (dentro.length) scelte.push(dentro[Math.floor(this.rnd() * dentro.length)])
     }
     /* una fascia esaurita non lascia un buco: si pesca dalle altre */
-    while (scelte.length < 3 && scelte.length < libere.length) {
-      const resto = libere.filter(c => !scelte.includes(c))
+    while (scelte.length < 3 && scelte.length < banco.length) {
+      const resto = banco.filter(c => !scelte.includes(c))
       scelte.push(resto[Math.floor(this.rnd() * resto.length)])
     }
     return scelte
@@ -712,7 +757,13 @@ export class Partita {
      Il prezzo è di *questa* carta a *questo* livello: chi l'ha già presa
      quattro volte la paga più cara. E quello che si vede — pallini,
      parola, colore — si legge dal prezzo vero, non dalla fascia, o la
-     quinta freccia sembrerebbe costare quanto la prima. */
+     quinta freccia sembrerebbe costare quanto la prima.
+
+     `oltreIlTetto` è la carta già arrivata al suo ultimo livello e
+     ripresa nel gioco libero: «livello 7 di 5» sarebbe una bugia, e chi
+     la sceglie deve sapere che stavolta rende meno. Si chiama così per
+     lungo e non `oltre`, che nel cruscotto vuol dire un'altra cosa — il
+     tempo oltre il traguardo. */
   vestiCarta(c) {
     const preso = this.livelloDi(c.chiave)
     const prezzo = prezzoDomanda(c.fascia, this.regole.rincaro, preso, c.max)
@@ -721,8 +772,9 @@ export class Partita {
       chiave: c.chiave, nome: c.nome, icona: c.icona, chiaro: c.chiaro,
       fascia: c.fascia, etichetta: scalino.nome, colore: scalino.colore,
       tinta: scalino.chiave,          // il colore della carta è quello del prezzo
-      pallini: palliniDelPrezzo(prezzo), pallinoTot: PALLINI,
       livello: preso + 1, nuova: preso === 0, max: c.max,
+      oltreIlTetto: preso >= c.max,
+      pallini: palliniDelPrezzo(prezzo), pallinoTot: PALLINI,
       prezzo,
     }
   }

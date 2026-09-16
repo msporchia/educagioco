@@ -167,6 +167,12 @@
                        color: #3a4468; margin: 2px 0 3px }
 .sv-carta .sv-nuova { color: #d1481f }
 .sv-carta .sv-salita { color: #2b6cb0 }
+/* «ancora un po' di più»: una carta ripresa oltre il suo ultimo livello,
+   che capita solo nella Sopravvivenza. Grigia e non blu, perché non è una
+   salita — è quello che resta quando la scaletta è finita. Il nome non è
+   `sv-oltre`: quello è già l'orologio del tempo **oltre il traguardo**,
+   che è un'altra cosa che si chiamerebbe uguale */
+.sv-carta .sv-ancora { color: #6b7280 }
 /* il prezzo: i pallini e una parola. Un bambino che non legge ancora
    bene conta i pallini, e sono la stessa cosa. Sono cinque e non tre
    perché adesso il prezzo non è quello della fascia ma quello della
