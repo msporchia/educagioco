@@ -41,7 +41,7 @@ import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          macchinaDi, statiDi } from './dati/catalogo.js'
 import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
 import { addobbiPer, addobbo } from './dati/addobbi.js'
-import { BISOGNI, CHIAVI } from './dati/bisogni.js'
+import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
@@ -1630,12 +1630,20 @@ function prendiUnaBestia({ bestia, x, y }) {
 }
 
 /* Toccare una bestia mostra **come sta**, non chiede il nome: il nome
-   glielo dai una volta, lo stato lo guardi ogni volta. */
+   glielo dai una volta, lo stato lo guardi ogni volta.
+
+   `stato` è una **fotografia** dei tre bisogni e non il record del
+   motore, che è sempre lo stesso oggetto: il perché per esteso sta in
+   `dati/bisogni.js` accanto a `foto`, e in due righe è che un foglio
+   le cui prop sono tutte identiche a prima **non si ridisegna**. Dare
+   un gomitolo non muove le monete — si paga in lana — quindi la barra
+   restava ferma, e saltava su alla prima cosa comprata dopo, insieme a
+   quella di quel gesto lì: due barre in su per un tocco solo. */
 function apriBestia(chi) {
   const b = mondo.laBestia(chi)
   if (!b) return
   pannello.value = { tipo: 'bestia', chi, che: nomeDi(chi), nome: b.nome || '',
-                     stato: mondo.stato(chi) }
+                     stato: foto(mondo.stato(chi)) }
 }
 
 /* ═══════════ vestire una bestia ═══════════

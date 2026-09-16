@@ -82,7 +82,7 @@ export const CIBI = [
   { id: 'semi',    nome: 'Semini',  emoji: '🌰', prezzo: 5,  quanto: 0.30, per: ['pappagallo'] },
   { id: 'frutta',  nome: 'Frutta',  emoji: '🍎', prezzo: 14, quanto: 0.70, per: ['pappagallo'] },
   /* quelli che non si comprano: costano zero monete e un pezzo di
-     granaio — il perché sta in testa al file. Due vengono dal mulino,
+     granaio — il perché sta in testa al file. Tre vengono dal mulino,
      tre dai recinti, e la scaletta è la stessa di sempre: il mangime
      riempie poco, il tartufo riempie quasi tutto e costa una catena
      lunga (zucche → porcile → mezz'ora). */
@@ -94,6 +94,14 @@ export const CIBI = [
     quanto: 0.55, per: ['cane', 'gatto'] },
   { id: 'pastone', nome: 'Pastone', emoji: '🍲', prezzo: 0, da: 'pastone',
     quanto: 0.70, per: ['cane', 'gatto', 'pappagallo'] },
+  /* La merenda è **la sesta pappa, e la più lunga da fare**: fragole
+     e miele, cioè un campo da undici minuti e tutta la catena delle
+     api. Sta fra il pastone e il tartufo perché costa quel tanto, e
+     vale per tutti e tre apposta — una pappa che riempie 3/4 di pancia
+     e la potesse mangiare solo il pappagallo sarebbe una catena da
+     cinquanta livelli chiusa dietro una bestia da 🪙120. */
+  { id: 'merenda', nome: 'Merenda', emoji: '🥧', prezzo: 0, da: 'merenda',
+    quanto: 0.75, per: ['cane', 'gatto', 'pappagallo'] },
   { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
     quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
 ]
@@ -121,6 +129,29 @@ export const COCCOLE = [
 
 export const nuovo = (ora = Date.now()) =>
   ({ pancia: 0.8, pelo: 0.9, gioco: 0.7, quando: ora })
+
+/* ── UNA FOTOGRAFIA, NON IL RECORD DELLA BESTIA ───────────────────
+   Chi mostra i bisogni riceve **una copia dei tre numeri**, mai la
+   bestia viva del motore. Sembra un dettaglio e non lo è: è il guasto
+   che da fuori si vedeva come *«dai un gomitolo e salgono due stati»*.
+
+   Il foglio della bestia riceveva `mondo.stato(chi)`, che è **sempre lo
+   stesso oggetto** — il record dentro `fattoria.bestie` — e Vue non
+   ridisegna un figlio quando nessuna delle sue prop è cambiata di
+   *identità*. Un gesto pagato col granaio (la copertina di lana, il
+   mangime, il pastone: `prezzo: 0`) non muove nemmeno le monete, quindi
+   dopo il tocco tutte le prop erano identiche a prima e **la barra
+   restava ferma**: il gesto sembrava non fatto. Poi bastava un gesto
+   pagato a monete perché il foglio si ridisegnasse, e saltavano su
+   **due barre insieme** — quella di adesso e quella di prima. Da fuori
+   è un oggetto con doppio effetto; sotto, il motore aveva sempre
+   alzato un bisogno solo.
+
+   Una fotografia è un oggetto nuovo a ogni scatto, quindi chi guarda si
+   accorge che è cambiata. Tiene solo i tre bisogni: l'orologio, il
+   nome e le coordinate sono roba del motore e a chi disegna una barra
+   non servono. */
+export const foto = b => Object.fromEntries(CHIAVI.map(k => [k, (b || {})[k] ?? 0]))
 
 /* Quanto è calato da `quando` a ora. Chi legge lo stato lo fa scendere
    e riscrive l'orologio: così il calo non dipende da quanto spesso si
@@ -238,7 +269,14 @@ export function guastiDeiBisogni() {
       if (suoi[i].quanto / suoi[i].prezzo > suoi[i - 1].quanto / suoi[i - 1].prezzo)
         g.push(`${suoi[i].id}: rende più al pezzo di quello prima — gli altri diventano inutili`)
   }
+  /* **Un oggetto riempie un bisogno solo**, e si riconosce da un id
+     solo. Se lo stesso id stesse in tutte e due le tabelle, il foglio
+     della bestia lo mostrerebbe sotto due barre diverse — la stessa
+     figura premuta in due posti che fanno due cose — e chi lo tocca non
+     saprebbe quale sta muovendo. */
   for (const c of COCCOLE) {
+    if (visti.has(c.id)) g.push(`${c.id}: l'id è già di un'altra roba — un oggetto, un bisogno`)
+    visti.add(c.id)
     if (!BISOGNI[c.bisogno]) g.push(`${c.id}: riempie un bisogno che non esiste`)
     if (!(c.quanto > 0)) g.push(`${c.id}: non riempie niente`)
     if (!(c.prezzo >= 0)) g.push(`${c.id}: prezzo impossibile`)

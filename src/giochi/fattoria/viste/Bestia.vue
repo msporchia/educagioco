@@ -29,6 +29,12 @@
 
    Non sa niente del profilo: riceve `stato`, `monete` e `granaio`, e
    manda fuori `nutri` e `coccola`. Chi paga è `Gioco.vue`.
+
+   `stato` è una **fotografia** dei tre bisogni (`foto` in
+   `dati/bisogni.js`), non la bestia viva del motore: il record del
+   motore è sempre lo stesso oggetto, e un foglio le cui prop sono tutte
+   identiche a prima non si ridisegna affatto. Il perché per esteso, e
+   cosa si vedeva a schermo, stanno lì.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, ref } from 'vue'
 import { BISOGNI, CHIAVI, comeSta, cibiPer, gestiPer } from '../dati/bisogni.js'
