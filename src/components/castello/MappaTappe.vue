@@ -32,6 +32,16 @@ const props = defineProps({
   tappe: { type: Array, required: true },
   fatte: { type: Number, default: 0 },      // quante ne ha già superate
   libera: { type: Boolean, default: false },
+  /* il record della partita libera, già in parole («12 ondate · 580
+     nemici fermati · 9 torri»): sta sul tasto, prima di entrare, perché è
+     lì che si decide se riprovarci */
+  primato: { type: String, default: '' },
+  /* quanti potenziamenti definitivi si è già presi nella partita libera
+     (`REGALI` in `data/castello.js`): sta sul tasto accanto al record
+     perché è l'altra cosa che ci si porta dietro da una partita
+     all'altra — e a zero non si dice, che un contatore a zero su un
+     tasto mai premuto non spiega niente */
+  regali: { type: Number, default: 0 },
 })
 defineEmits(['gioca', 'libera', 'indietro'])
 
@@ -90,7 +100,11 @@ const fatteDi = arco => arco.tappe.filter(({ i }) => i < props.fatte).length
     </div>
   </template>
   <div class="riga">
-    <button v-if="libera" class="bottone" @click="$emit('libera')">Partita libera ♾️</button>
+    <button v-if="libera" class="bottone" data-tappa="libera" @click="$emit('libera')">
+      Partita libera ♾️<small v-if="primato" class="record"> · record {{ primato }}</small>
+      <small v-if="regali" class="record dote" data-regali>🎁 {{ regali }}
+        {{ regali === 1 ? 'potenziamento' : 'potenziamenti' }} · restano per sempre</small>
+    </button>
     <button class="bottone chiaro" @click="$emit('indietro')">Indietro</button>
   </div>
 </template>

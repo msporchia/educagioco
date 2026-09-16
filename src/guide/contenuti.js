@@ -508,6 +508,7 @@ export const AIUTI = {
         'Una torre potenziata vale più di due torri deboli.',
         'A metà scaletta una torre sceglie un mestiere: cambia **come** colpisce, non quanto. Nessuno dei due è quello sbagliato.',
         'Il campo non si ferma mentre fai i conti: i nemici camminano.',
+        'Nella **partita libera** ogni cinque ondate arriva un 🎁 regalo: scegli un potenziamento, e quello resta anche nelle partite dopo.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Le quattro operazioni **in colonna**, coi riporti e i prestiti, su numeri che crescono tappa dopo tappa.',

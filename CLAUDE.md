@@ -222,6 +222,10 @@ committate: non è ricostruibile da git.
   mondi a griglia (quello ritaglia figure, questo tessere) e misura anche
   la griglia, dall'alfa, a ogni giro. I fogli li ritaglia
   `strumenti/sprite/atlante.py`, un bersaglio per gioco.
+  Qui sta anche `coriandoli.js`, la festa: stava dentro il Codice
+  Segreto ed è venuta fuori il giorno in cui è servita anche a un record
+  battuto. Chi la usa dentro Vue passa da `giochi/Festa.vue` e non se la
+  monta a mano.
 - **`src/quiz/`** — i moduli di quiz, staccati da qualunque gioco: servono a
   far *pagare* un potenziamento con un esercizio. Il patto è che **un modulo
   consegna una domanda e non sa chi gliel'ha chiesta**: `genera(grado, sorte)`
@@ -520,6 +524,41 @@ committate: non è ricostruibile da git.
   gesto. Nei test i bersagli sono
   `button[aria-label="pausa"]`, `[data-pausa]` sul velo e
   `[data-azione="riprendi"]`.
+- **Un gioco che non finisce dice di quanto sei migliorato**
+  (`giochi/primati.js`, puro; `giochi/Festa.vue` i coriandoli;
+  `giochi/Primati.vue` la tabella dei record nell'albo). La corsa
+  infinita e la Sopravvivenza non danno né stelle né tappe nuove:
+  l'unica cosa che hanno da dare è il confronto con sé stessi, e
+  `🥇 nuovo primato!` era **la notizia senza la misura** — né il numero
+  di adesso né quello di prima, così chi correva 312 metri dopo averne
+  fatti 280 non leggeva da nessuna parte di averne guadagnati 32. Un
+  gioco lo dichiara nel manifesto (`senzaFine: { nome, icona, misura,
+  che }`, con `misura` che è una chiave di `MISURE` e **non** un'unità
+  scritta a mano: se fosse libera, «sec» e «secondi» farebbero due
+  tabelle) e a fine partita chiama `segnaPrimato(chiave, valore)` di
+  `giochi/campagne.js`, che torna **cosa dire**. Tre cose che si
+  sbagliano: **la prima partita in assoluto non batte niente** («il tuo
+  primo risultato», non «hai battuto il record» — quale?), **un
+  pareggio non è un record** (i coriandoli a ogni partita uguale non
+  sono più una notizia) e **il record vecchio non si butta**: la corsa e
+  Survivors lo tenevano in `cfg.primato`, e a ripartire da zero sarebbero
+  stati proprio i due bambini che avevano giocato di più — `apriQuaderno`
+  legge ancora quel posto. **Il record si legge prima di entrare**, sul
+  tasto della modalità infinita nella mappa, e porta con sé com'era
+  fatta quella partita («2:05 · 580 mostri · livello 6»): il gioco passa
+  a `segnaPrimato` un oggetto di `dettagli` e dichiara in `senzaFine`
+  la funzione che li mette in parole — solo lui sa che i suoi numeri
+  sono mostri e non ondate. I dettagli sono della partita del record, e
+  una partita storta non li sovrascrive. **Un gioco vecchio** (il
+  castello, con la partita libera) non ha manifesto: dichiara
+  `senzaFine` nella sua riga di `data/giochi.js`, e `tabellaDeiPrimati`
+  guarda `GIOCHI` e non solo i nuovi. Adesso sta in `campagne[chiave].primato`,
+  accanto a `stelle` (che è già «il primato di ogni tappa»): non in
+  `cfg`, che sono **le scelte** del bambino e un record non si sceglie, e
+  non in un campo nuovo del profilo, che un gioco non aggiunge mai. Col
+  record si tengono **le ultime cinque partite**: il record da solo dice
+  «il te di ieri è più bravo di te», la fila delle ultime dice che stai
+  salendo — ed è quello il premio di un gioco che non finisce.
 - **Gli orologi che non sono fotogrammi vanno fermati a mano.** Un
   `setTimeout` scatta lo stesso a schermo spento, e `performance.now()`
   misura il tempo di parete: `quiz/Domanda.vue` annotava in `store/srs.js`
@@ -686,6 +725,32 @@ committate: non è ricostruibile da git.
   *forma* del danno, mai la quantità. È la condizione perché il modello
   che tara le tappe possa ignorarli, e `unita/rami-castello` la conta
   ramo per ramo.
+- **I regali stanno nella partita libera, e solo lì** (`REGALI`,
+  `OGNI_REGALO`, `doniDi` in `data/castello.js`; i gradi presi in
+  `profile.campagne.torri.regali`, scritti da `regaloPreso` in
+  `giochi/campagne.js`). Ogni cinque ondate della libera si sceglie un
+  potenziamento fra tre carte e **resta per sempre**, riprendibile
+  quante volte si vuole: senza, quella modalità cedeva sempre
+  all'ondata venti — la difesa è già in cima alla scaletta e la vita
+  sale del 45% a ondata — e un record che non si muove nessuno lo
+  guarda. **Nella campagna non si applicano**: la tappa deve
+  dichiararli (`regali: true`, ce l'ha solo `LIBERA`) e il motore
+  ignora quelli che gli arrivano per una tappa che non li prevede,
+  perché la campagna è tarata ondata per ondata e un bonus che cresce
+  col giocare renderebbe la promessa dei `calcoli` una cosa che dipende
+  da quante partite libere si sono fatte. Zero regali è il gioco di
+  ieri bit per bit (moltiplicatori a 1, somme a 0), e `npm run tara`
+  tara la libera con `regali: false`: quello che si tara è il
+  pavimento. **È un bonus regalato, cioè una cosa che non passa da un
+  esercizio**, e la riga per cui va bene è che le ondate che l'hanno
+  fatto arrivare fin lì erano tutte pagate in operazioni in colonna, e
+  che il regalo non si spende — non compra monete e non apre tappe
+  (vedi `CALIBRAZIONE.md`). Dimensionare un regalo **si misura**, non si
+  stima: il banco sta in `unita/regali-castello`, e due voci sono già
+  state provate e tolte — «+1 cuore» non sposta niente (l'ondata che
+  ferma la partita ne fa passare ventotto) e «+⚡ per nemico fermato»
+  sposta tutto (al muro il metro è a corto di soldi, non di potenza:
+  bastava +2,5% per saltare tre ondate).
 - **I nomi dei bambini non stanno nel codice.** Il roster è un dato
   (`state.giocatori`), la migrazione enumera le chiavi `profilo:*` invece di
   cercare un nome. Se una modifica sembra chiedere una stringa col nome di un

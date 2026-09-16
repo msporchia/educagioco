@@ -66,6 +66,12 @@ export function seme(n) {
 const PASSO = 1 / 60          // lo stesso passo di un telefono che va liscio
 const LIMITE = 3600           // un'ora di gioco simulato: oltre, è uno stallo
 
+/* i regali che il finto giocatore prende, a giro: le quattro voci che
+   toccano una torre. `veleno` resta fuori perché vale solo per chi ha
+   scelto il ramo che avvelena, e lui i rami non li sceglie; `vista` e
+   `mura` si misurano a parte, chiedendoli con `sceglie`. */
+const GIRO_REGALI = ['frecce', 'incanto', 'polvere', 'gelo']
+
 /* ── il giocatore finto ──
 
    Non è un'intelligenza artificiale: è un bambino diligente. Costruisce
@@ -137,13 +143,18 @@ export const PROFILI = {
 export function gioca(tappa, opzioni = {}) {
   const { quota = 1, strategia = 'potenzia', tOp = 10, sbaglia = 0, svelto = true,
           traOndate = false, resistenze = false, misure = TELEFONO, s = 7, finoA = tappa.ondate,
-          da = null, istantanee = null } = opzioni
+          da = null, istantanee = null, regali = null, sceglie = null } = opzioni
   const caso = seme(s)
   const stato = { cuori: 0, onda: 0, uccisi: 0, torri: 0, energia: 0 }
-  const motore = creaBattaglia({ tappa, misure, stato, caso })
+  /* i regali della partita libera (`REGALI` in `data/castello.js`): li
+     applica solo la tappa che li prevede, quindi per la campagna questa
+     riga non esiste. Serve a misurare quanto vale un regalo — che è
+     l'unico modo di dimensionarli, vedi `docs/castello.md`. */
+  const motore = creaBattaglia({ tappa, misure, stato, caso, regali })
   motore.inizia()
 
   let speso = 0                 // quanto ha messo in torri, penali comprese
+  let presi = 0                 // quanti regali ha scelto durante la partita
   let occupato = 0              // secondi che ancora mancano all'operazione in corso
   let inCorso = null            // cosa sta comprando mentre calcola
   let t = 0
@@ -235,6 +246,16 @@ export function gioca(tappa, opzioni = {}) {
   }
 
   while (t < LIMITE) {
+    /* ── il regalo ──
+       Nella partita libera ogni cinque ondate ce n'è uno da scegliere, e
+       finché non è scelto l'ondata dopo non parte: è la regola vera, e un
+       simulatore che la ignorasse aspetterebbe per sempre. Il finto
+       giocatore prende quello che gli dice `sceglie` — a giro fra le
+       quattro voci che toccano una torre, se non gli si dice altro. */
+    if (motore.regaliDaScegliere > 0) {
+      motore.prendiRegalo((sceglie || (n => GIRO_REGALI[n % GIRO_REGALI.length]))(presi))
+      presi++
+    }
     // sta calcolando: il campo va avanti, lui no
     if (occupato > 0) {
       occupato -= PASSO
@@ -298,7 +319,7 @@ export function gioca(tappa, opzioni = {}) {
   function rendiconto(esito) {
     const guadagnato = stato.energia + speso
     return {
-      esito, onda: stato.onda, cuori: stato.cuori, uccisi: stato.uccisi,
+      esito, onda: stato.onda, cuori: stato.cuori, uccisi: stato.uccisi, regali: presi,
       livelli: motore.torri.map(x => x.lv), speso: Math.round(speso),
       guadagnato: Math.round(guadagnato), avanzo: Math.round(stato.energia),
       /* il numero che riassume tutto: quanta dell'energia ricevuta è

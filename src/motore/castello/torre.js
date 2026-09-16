@@ -17,7 +17,7 @@
    che tratta un tipo diversamente dagli altri.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from '../../data/ops.js'
-import { tiroDi, geloDi, raggioDi } from '../../data/castello.js'
+import { tiroConDoni, geloConDoni, raggioDi, doniZero } from '../../data/castello.js'
 import { dist } from '../../grafica/geometria.js'
 import { Colpo } from './colpo.js'
 import { Schizzo } from './schizzo.js'
@@ -26,19 +26,29 @@ import { Schizzo } from './schizzo.js'
    crescita che si deve vedere è quella del danno */
 const RAGGIO_PIU = 0.04
 
+/* i doni a riposo, per chi nasce senza regali: una torre della campagna
+   non sa che i regali esistano, e non deve controllare niente */
+const NIENTE = doniZero()
+
 export class Torre {
-  constructor({ x, y, tipo, lv = 1, ramo = null, ricarica = 0 }) {
+  /* `doni` sono i regali della partita libera, già ridotti a numeri da
+     `doniDi` (`data/castello.js`). Li passa la battaglia, che è l'unica
+     a sapere se la tappa li prevede; qui dentro sono un dato come il
+     livello, e a zero regali la torre spara esattamente come prima. */
+  constructor({ x, y, tipo, lv = 1, ramo = null, ricarica = 0, doni = null }) {
     this.x = x; this.y = y
     this.tipo = tipo
     this.lv = lv
     this.ramo = ramo
     this.ricarica = ricarica
+    this.doni = doni || NIENTE
   }
 
   get modello() { return TORRI[this.tipo] }
   get gelante() { return !!TORRI[this.tipo].gela }
   raggio(S) {
-    return TORRI[this.tipo].raggio * S * (1 + (this.lv - 1) * RAGGIO_PIU) * raggioDi(this.ramo)
+    return TORRI[this.tipo].raggio * S * (1 + (this.lv - 1) * RAGGIO_PIU) *
+           raggioDi(this.ramo) * this.doni.raggio
   }
 
   /* Salire di un gradino, e se è il gradino del bivio anche prendere una
@@ -69,14 +79,14 @@ export class Torre {
 
     // la cadenza è quella del livello e del ramo: l'arciere alto spara
     // una raffica, il cecchino un colpo solo ogni tanto
-    const tiro = tiroDi(this.tipo, this.lv, this.ramo)
+    const tiro = tiroConDoni(this.tipo, this.lv, this.ramo, this.doni)
     this.ricarica = tiro.ricarica
 
     if (this.gelante) {
       /* il gelo di una torre alta frena di più e dura di più; l'onda si
          allarga *piano* e resta lì a sbiadire: è una folata di freddo,
          non un'esplosione */
-      const g = geloDi(this.lv, this.ramo)
+      const g = geloConDoni(this.lv, this.ramo, this.doni)
       const largo = raggio
       for (const n of dentro) n.gela(g.durata, g.freno, g.fragile)
       return { schizzi: [new Schizzo({ x: this.x, y: this.y, max: largo, tipo: this.tipo,

@@ -33,7 +33,9 @@ export class Tabellone {
   paga(quanto) { this.stato.energia = Math.max(0, this.stato.energia - quanto) }
   incassa(quanto) { this.stato.energia += quanto; return quanto }
 
-  perNemico() { return this.incassa(CFG.perNemico) }
+  /* `piu` è il regalo «vena d'energia» della partita libera: arriva da
+     fuori perché qui non si sa niente dei regali — si sa contare */
+  perNemico(piu = 0) { return this.incassa(CFG.perNemico + piu) }
   /* il premio di fine ondata, doppio se non è passato nessuno */
   perOnda(pulita) { return this.incassa(CFG.fineOnda + (pulita ? CFG.ondataPulita : 0)) }
   /* chi la chiama subito si prende il bonus: la fretta è una scelta che

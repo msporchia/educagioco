@@ -211,7 +211,14 @@ const riga = r => `${(vinta(r) ? 'superata' : r.esito === 'persa' ? `persa o${r.
    chi ha appena finito una campagna tarata al filo trovava nella libera
    dei mostri di burro per quaranta ondate. */
 const ONDATE_LIBERE = 20
-const libera = { ...LIBERA, ondate: ONDATE_LIBERE, attesa: LIBERA.attesa }
+/* `regali: false` non è una dimenticanza: la partita libera regala un
+   potenziamento ogni cinque ondate (`REGALI` in `data/castello.js`), e
+   la taratura si fa **su chi non ne ha nessuno** — quello che si tara è
+   il pavimento, cioè la prima partita di uno che apre la modalità
+   appena finita la campagna. Tarando su un giocatore con i regali in
+   tasca, chi entra la prima volta troverebbe un muro, e quel muro
+   crescerebbe a ogni ritaratura. */
+const libera = { ...LIBERA, ondate: ONDATE_LIBERE, attesa: LIBERA.attesa, regali: false }
 
 const fatte = {}
 let oltre = 1.2

@@ -48,6 +48,10 @@ const tela = ref(null)
 let campo = null           // la tela: sa di pixel, non di regole
 let motore = null          // il motore: sa di regole, non di pixel
 let tappa = null, seme = 1
+/* i regali della partita libera, come li ha in tasca questo bambino:
+   arrivano da fuori (`giochi/campagne.js` li legge dal profilo) e il
+   campo li passa al motore, che è l'unico a sapere cosa farne */
+let regali = null
 let raf = 0, ultimo = 0, chiuso = false
 
 const dito = new Trascino({
@@ -62,18 +66,19 @@ const dito = new Trascino({
    Un motore nuovo per la tappa che si sta guardando: costruisce il suo
    percorso e le sue piazzole, e da lì esce anche lo sfondo — dipinto una
    volta sola e poi solo ricopiato. */
-function apparecchia(quale = tappa, s = seme) {
+function apparecchia(quale = tappa, s = seme, doni = regali) {
   if (!campo || !quale) return null
-  tappa = quale; seme = s
-  motore = creaBattaglia({ tappa, misure: campo.misure, stato: props.hud, eventi: props.eventi })
+  tappa = quale; seme = s; regali = doni
+  motore = creaBattaglia({ tappa, misure: campo.misure, stato: props.hud,
+                           eventi: props.eventi, regali })
   dito.attacca(motore, campo.misure.S)
   dipingiFondale()
   chiuso = false
   return motore
 }
 
-function avvia(quale, s) {
-  apparecchia(quale, s)
+function avvia(quale, s, doni = null) {
+  apparecchia(quale, s, doni)
   motore.inizia()
   chiuso = false
   aggiornaVista(true)
@@ -109,6 +114,10 @@ function aggiornaVista(forza = false) {
   v.bestia = motore.bestia
   v.inCampo = motore.nemici.length
   v.vitaOnda = Math.round(motore.ondate.vitaDi(Math.max(1, props.hud.onda)))
+  /* il regalo in sospeso: la schermata ne fa un velo, e finché c'è il
+     campo sta fermo — il motore da parte sua non manda l'ondata */
+  v.regalo = motore.regaliDaScegliere
+  v.regaliPresi = motore.regaliPresi
   if (forza || props.hud.onda !== firmaOnda) {
     firmaOnda = props.hud.onda
     v.prossime = motore.prossime()

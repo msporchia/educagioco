@@ -24,11 +24,18 @@
      `caso`     da dove escono i numeri a caso. Il gioco usa Math.random,
                 il simulatore un seme, così una partita si può rigiocare
                 identica
+     `regali`   i potenziamenti definitivi della partita libera,
+                `{ id: quanti }` (vedi `REGALI` in `data/castello.js`).
+                Li applica **solo** se la tappa li prevede
+                (`tappa.regali`): la campagna è tarata, e un bonus che
+                cresce fra una partita e l'altra la farebbe scivolare
+                senza dirlo a nessuno. Senza regali la partita è quella
+                di sempre, numero per numero
 
    Quello che la battaglia NON fa: non sa cosa sia un'operazione in
    colonna (chi compra dice quanto paga), non disegna, non salva niente.
    ═══════════════════════════════════════════════════════════════════ */
-import { CFG } from '../../data/castello.js'
+import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO } from '../../data/castello.js'
 import { Percorso } from './percorso.js'
 import { Ondate } from './ondate.js'
 import { Tabellone } from './tabellone.js'
@@ -43,10 +50,16 @@ const zitto = () => {}
 export const PREAVVISO = 3
 
 export class Battaglia {
-  constructor({ tappa, misure, stato, eventi = {}, caso = Math.random }) {
+  constructor({ tappa, misure, stato, eventi = {}, caso = Math.random, regali = null }) {
     this.tappa = tappa
     this.caso = caso
     this.misure = misure
+
+    /* i regali, e i doni che ne escono. La tappa che non li prevede non
+       ne riceve nemmeno uno: è la riga che tiene la campagna tarata. */
+    this.regali = tappa.regali ? { ...(regali || {}) } : {}
+    this.doni = doniDi(this.regali)
+    this.daScegliere = 0
 
     this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure)
     this.ondate = new Ondate(tappa)
@@ -79,8 +92,34 @@ export class Battaglia {
     this.usciti = 0
     this.ondaChiusa = true; this.ondataPulita = true
     this.finito = null
+    this.daScegliere = 0
     this.bestia = this.ondate.bestiaDi(1)
   }
+
+  /* ═══════════ i regali ═══════════
+     Uno ogni `OGNI_REGALO` ondate, e solo dove la tappa li prevede. Il
+     conto di quanti ce ne sono da scegliere sta qui e non nella
+     schermata per due motivi: perché **l'ondata non parte** finché ce
+     n'è uno in sospeso (così un regalo rimandato non si perde), e
+     perché un regalo non scelto non deve poter diventare due. */
+  prendiRegalo(id) {
+    if (!this.tappa.regali || !regaloDi(id)) return null
+    this.regali[id] = (this.regali[id] || 0) + 1
+    this.doni = doniDi(this.regali)
+    /* le torri già in piedi ci guadagnano subito: un regalo che valesse
+       solo per quelle costruite dopo sarebbe un regalo da leggere */
+    for (const t of this.torri) t.doni = this.doni
+    if (this.daScegliere > 0) this.daScegliere--
+    this.suona('livello')
+    return this.regali
+  }
+
+  /* quanti regali aspettano di essere scelti (0 o 1, di fatto: finché
+     c'è un regalo in sospeso l'ondata dopo non parte) */
+  get regaliDaScegliere() { return this.daScegliere }
+  /* quanti ne sono stati presi in tutto: è il numero del giro delle
+     carte, e quello che la mappa mostra sul tasto */
+  get regaliPresi() { return quantiRegali(this.regali) }
 
   /* ═══════════ le ondate ═══════════ */
   nuovaOnda(extra = '') {
@@ -106,7 +145,7 @@ export class Battaglia {
   restaAttesa() { return Math.max(0, Math.ceil(this.tappa.attesa - this.pausa)) }
 
   chiamaOnda() {
-    if (!this.inAttesa()) return false
+    if (!this.inAttesa() || this.daScegliere > 0) return false
     const subito = this.pronti()
     if (subito) { this.tabellone.perFretta(); this.suona('moneta') }
     this.nuovaOnda(subito ? ` · pronti +${CFG.bonusPronti} ⚡` : '')
@@ -168,7 +207,7 @@ export class Battaglia {
     const scelto = posto != null && this.libera(posto) ? posto
                                                        : this.liberi()[0] ?? 0
     const dove = posti[scelto]
-    const torre = new Torre({ x: dove.x, y: dove.y, tipo })
+    const torre = new Torre({ x: dove.x, y: dove.y, tipo, doni: this.doni })
     this.torri.push(torre)
     this.tabellone.torreNuova()
     this.segna('torri')
@@ -272,8 +311,15 @@ export class Battaglia {
       // nella campagna le monete arrivano dal traguardo, non dal tempo passato:
       // qui paga solo la partita libera, che un traguardo non ce l'ha
       if (!this.ondate.campagna && this.tabellone.onda % CFG.perMoneta === 0) this.moneta()
+      // e ogni tanto un regalo, che è l'altra cosa che la partita libera
+      // ha da dare: un potenziamento che resta anche domani
+      if (this.tappa.regali && this.tabellone.onda % OGNI_REGALO === 0) this.daScegliere++
     }
     if (this.tabellone.onda >= this.tappa.ondate && this.pausa > CFG.respiro) return this.chiudi('vinta')
+    /* col regalo da scegliere l'ondata non parte, nemmeno da sola: chi
+       lo rimanda per guardarsi il campo se lo ritrova prima della
+       prossima, e chi posa il telefono non trova un'ondata in faccia */
+    if (this.daScegliere > 0) return null
     // stare fermi non è una strategia: passato il tempo, i nemici arrivano lo stesso
     if (this.pausa >= this.tappa.attesa) this.nuovaOnda()
     return null
@@ -292,7 +338,7 @@ export class Battaglia {
        ramo del veleno regalerebbe morti che non pagano energia, e
        sceglierlo sarebbe una punizione. */
     for (const n of this.nemici)
-      if (!n.vivo && !n.arrivato) { this.tabellone.ucciso(); this.tabellone.perNemico() }
+      if (!n.vivo && !n.arrivato) { this.tabellone.ucciso(); this.tabellone.perNemico(this.doni.perNemico) }
     this.nemici = this.nemici.filter(n => n.vivo)
     return null
   }
@@ -317,7 +363,7 @@ export class Battaglia {
     for (const c of this.colpi) {
       if (!c.avanza(dt)) continue
       const { colpiti, morti, schizzo, rimbalzi } = c.impatto(this.nemici, this.percorso, dove)
-      for (const _ of morti) { this.tabellone.ucciso(); this.tabellone.perNemico() }
+      for (const _ of morti) { this.tabellone.ucciso(); this.tabellone.perNemico(this.doni.perNemico) }
       if (schizzo) this.schizzi.push(schizzo)
       if (rimbalzi && rimbalzi.length) nati.push(...rimbalzi)
       if (colpiti) this.suona('colpito')
@@ -344,7 +390,7 @@ export class Battaglia {
 
   riprendi(f) {
     this.tabellone.riprendi(f.stato)
-    this.torri = f.torri.map(t => Torre.da(t))
+    this.torri = f.torri.map(t => Torre.da({ ...t, doni: this.doni }))
     this.nemici = []; this.colpi = []; this.schizzi = []
     this.daGenerare = 0; this.prossimo = 0
     this.pausa = f.pausa; this.tempo = f.tempo

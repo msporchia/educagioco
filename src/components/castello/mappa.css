@@ -25,3 +25,11 @@
 .arco.finito i { color:#1c7a45; background:#dff5e6 }
 /* il primo titolo non ha bisogno di staccarsi da quello che c'è sopra */
 .arco:first-of-type { margin-top:2px }
+/* il record sul tasto della partita libera: più piccolo del nome, sulla
+   stessa riga finché ci sta, a capo quando il racconto è lungo */
+.record { font-size:12.5px; font-weight:800; opacity:.85; white-space:normal }
+/* i regali vanno **sempre a capo**, sotto il record: sono due cose che
+   ci si porta dietro dalla partita di ieri, e sulla stessa riga «record
+   12 ondate · 🎁 7 potenziamenti» si legge come se le ondate fossero
+   sette */
+.record.dote { display:block; font-size:12px; opacity:.8 }

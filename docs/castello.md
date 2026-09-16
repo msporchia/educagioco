@@ -101,6 +101,57 @@ resto si adatta di conseguenza — compresa la resistenza dei mostri, che un
 simulatore misura giocando la tappa migliaia di volte per assicurarsi che sia
 superabile senza essere una passeggiata.
 
+## Il regalo della partita libera *(settembre 2026)*
+
+La partita libera non finisce mai, ma **finiva sempre allo stesso punto**:
+l'ondata venti, con tutti e cinque i cuori ancora pieni fino a lì. Non per
+come si giocava — a quel punto la difesa è già in cima alla scaletta e non
+c'è più niente da comprare, mentre la vita dei nemici continua a salire del
+45% a ondata. Un record che non si muove smette di essere un record.
+
+Adesso **ogni cinque ondate arriva un regalo**: tre carte, se ne sceglie una,
+e quello che si prende **resta per sempre** — vale anche nelle partite di
+domani, e lo stesso regalo si può riprendere quante volte si vuole. Sette
+voci in catalogo: frecce più affilate, incanto più forte, polvere da sparo,
+gelo che morde, vista lunga, veleno tenace, mani veloci.
+
+Così la partita libera diventa quello che deve essere: **una fila di record
+che sale**. Le prime partite si ferma alla venti; con una decina di regali in
+tasca passa il muro e arriva alla ventiquattresima; poi si va avanti a
+guadagnare ondate sempre più lentamente.
+
+**Solo nella partita libera.** Le quindici tappe della campagna sono tarate
+ondata per ondata da un simulatore, e un bonus che cresce col giocare
+renderebbe la promessa «questa tappa costa dodici operazioni» una cosa che
+dipende da quante partite libere si sono fatte prima. Il motore i regali li
+applica soltanto dove la tappa li dichiara, e a dichiararli è solo la libera.
+
+**Quanto vale un regalo**, misurato facendo giocare il simulatore
+(`node test/esegui.mjs regali`, che rifà queste misure a ogni giro):
+
+| regali in tasca | fin dove arriva |
+|---|---|
+| 0 | ondata 20 |
+| 10 | ondata 24 |
+| 35 | ondata 26 |
+| 140 | ondata 30 |
+
+I salti sono a gradoni e non uno per volta: l'ondata venti è un muro (arriva
+il Fantasma, che regge la magia), e chi lo passa si ritrova con l'energia per
+finire la quarta torre e tira dritto fino alla ventiquattresima. In media
+sono **due regali e mezzo per ogni ondata guadagnata** all'inizio, e sempre
+di più andando avanti: quaranta gradi tutti sulla stessa voce portano
+dall'ondata 20 alla 24-26, non oltre. Immortali non si diventa, ed è la
+condizione perché la modalità resti un gioco — la vita dei nemici cresce
+moltiplicando, i regali sommando, e il moltiplicare vince sempre.
+
+**Una scelta fatta a occhi aperti**: un regalo non si paga con un esercizio,
+e in questo progetto tutto quello che si riceve si paga in esercizio
+(`CALIBRAZIONE.md`). La riga per cui qui è accettabile: le venti ondate che
+l'hanno fatto arrivare fin lì erano **tutte pagate in operazioni in colonna**,
+e il regalo non si spende — non compra monete, non apre tappe, non esce dalla
+partita libera.
+
 ## Fermarsi
 
 Durante una tappa, in cima allo schermo c'è **⏸**. Il campo si ferma dov'è —
@@ -134,6 +185,14 @@ perché il gioco aspetta.
 
 - Le divisioni si spengono da *Genitori → cosa sa*.
 - C'è anche una **partita libera** senza fine, che si sblocca finendo le
-  tappe: lì le operazioni sono miste e il gioco non finisce mai.
+  tappe: lì le operazioni sono miste e il gioco non finisce mai. Quello
+  che resta è il **record** — quante ondate si sono rette, con quanti
+  nemici fermati e quante torri — scritto sul tasto della mappa prima di
+  entrare e nella tabella dei record di *I miei progressi*; batterlo fa
+  coriandoli e dice di quanto (`giochi/primati.js`, come la corsa
+  infinita e la Sopravvivenza). Lì dentro ogni cinque ondate si sceglie
+  un **potenziamento definitivo** (vedi sopra): è quello che fa salire il
+  record di partita in partita, e sul tasto della mappa c'è scritto
+  quanti se ne hanno.
 - Se il bambino sbaglia spesso, non perde: paga di più in energia. Non c'è
   schermata di fallimento legata al calcolo.

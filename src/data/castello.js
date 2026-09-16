@@ -743,6 +743,199 @@ export function firmaEquilibrio() {
 }
 export const firmaTaratura = () => FIRMA
 
+/* ═══════════════ I REGALI DELLA PARTITA LIBERA ═══════════════
+
+   Ogni `OGNI_REGALO` ondate la partita libera regala un potenziamento, si
+   scegle fra quelli qui sotto, e **resta per sempre**: il grado preso
+   vale anche nelle partite dopo, e lo stesso regalo si può riprendere
+   quante volte si vuole. Il posto nel profilo è
+   `campagne.torri.regali` (`{ id: quanti }`), e a scriverlo è
+   `giochi/campagne.js` come tutto il resto dell'avanzamento.
+
+   ── perché esistono, e perché stanno solo qui ──
+
+   La partita libera cede **sempre alla stessa ondata**, e non è
+   un'impressione: oltre la ventesima la tabella delle vite finisce e
+   la vita continua a salire di `OLTRE` (1,45) per ondata, cioè +45% a
+   giro. Una difesa che è già al massimo della scaletta — quattro torri
+   di livello 10 — non ha più niente da comprare, quindi la ventunesima
+   ondata non si può vincere giocando meglio: si può solo non giocarla.
+   Un record che non si muove è un record che non si guarda più.
+
+   Il regalo è quello che manca: **qualcosa che cambia fra una partita e
+   l'altra**. Tre o quattro gradi valgono grosso modo un'ondata in più —
+   è misurato, vedi `docs/castello.md` — quindi chi arriva alla venti
+   oggi arriva alla ventuno domani, e la fila dei record torna a
+   salire.
+
+   ── e perché **non** stanno nella campagna ──
+
+   Una tappa della campagna è tarata ondata per ondata (`npm run tara`),
+   e la taratura è fatta su una difesa che si conosce. Un bonus
+   definitivo la renderebbe più facile a ogni partita giocata altrove,
+   cioè renderebbe la promessa dei `calcoli` una cosa che dipende da
+   quanto si è giocato prima. Perciò i regali li prende solo la tappa
+   che lo dichiara (`regali: true`, e ce l'ha solo `LIBERA`), e il
+   motore ignora quelli che gli arrivano per una tappa che non li
+   prevede.
+
+   ── una scelta fatta a occhi aperti ──
+
+   Un regalo **non passa da un esercizio**: si prende per essere
+   arrivati fin lì, non per aver fatto un conto in più. Va contro la
+   regola generale del progetto (vedi `CALIBRAZIONE.md`: quello che si
+   riceve si paga in esercizio) e la riga per cui è accettabile è
+   questa: le ondate che l'hanno fatto arrivare erano **tutte pagate in
+   operazioni in colonna**, e il regalo non si spende — non compra
+   monete, non compra tappe, non esce dalla partita libera. È un modo
+   di dire «hai retto venti ondate», non una valuta.
+
+   ── come sono dimensionati ──
+
+   Un grado vale grosso modo il 10% di una delle quattro torri, cioè un
+   3% della difesa in campo. Serve perché la curva lo pretende: sopra la
+   ventesima ondata guadagnare un'ondata vuol dire reggere il 45% di
+   vita in più, e i cinque cuori la ammorbidiscono solo un po'. Gradini
+   più grossi comprerebbero tre ondate alla prima partita; più piccoli
+   non si sentirebbero mai. `docs/castello.md` porta la tabella
+   misurata. */
+export const OGNI_REGALO = 5
+
+/* Quante carte si offrono fra cui scegliere: tre, perché su uno schermo
+   verticale tre carte si leggono senza scorrere e perché scegliere fra
+   sette è un catalogo, non una decisione. Il giro è deterministico
+   (vedi `regaliOfferti`), quindi chi non vede la carta che voleva sa
+   che tornerà. */
+export const QUANTE_CARTE = 3
+
+/* I doni a riposo: i numeri che il motore applica quando non c'è
+   nessun regalo. Sono moltiplicatori a 1 e somme a 0 apposta — così
+   «zero regali» e «nessun regalo» sono la stessa partita, bit per bit,
+   e la campagna non cambia di un capello. */
+export const doniZero = () => ({
+  danno: { arciere: 1, magica: 1, bombe: 1, ghiaccio: 1 },
+  raggio: 1, cadenza: 0, gelo: 0, fragile: 0, veleno: 1,
+})
+
+/* Il catalogo. Ogni voce sa **una cosa sola**: di quanto sposta un dono
+   per ogni grado preso (`dai`). Il numero sta scritto qui e in nessun
+   altro posto: il motore non conosce le percentuali, chiede i doni e
+   li applica. I gradi si sommano senza tetto — riprendere lo stesso
+   regalo venti volte è previsto, e misurato. */
+export const REGALI = [
+  /* L'arciere è l'unico che colpisce un nemico solo, e nelle ondate
+     alte della partita libera è **quasi sempre lui quello a cui si
+     resiste** (Goblin, Pipistrello, Ragno, Orco: guarda
+     `data/mostri.js`). Perciò il suo gradino è il più grosso del
+     catalogo, e non è generosità: misurato al muro, +10% di arciere
+     vale un settimo di +10% di bombe. */
+  { id: 'frecce', emoji: '🏹', nome: 'Frecce affilate', torre: 'add',
+    che: 'gli arcieri fanno molto più male', per: '+30% di danno',
+    dai: (d, g) => { d.danno.arciere += 0.30 * g } },
+  { id: 'incanto', emoji: '🔮', nome: 'Incanto più forte', torre: 'sub',
+    che: "l'onda magica fa più male", per: '+12% di danno',
+    dai: (d, g) => { d.danno.magica += 0.12 * g } },
+  { id: 'polvere', emoji: '💣', nome: 'Polvere da sparo', torre: 'div',
+    che: 'le bombe fanno più male', per: '+8% di danno',
+    dai: (d, g) => { d.danno.bombe += 0.08 * g } },
+  /* Il ghiaccio non fa danno, quindi il suo regalo non può essere «più
+     danno» — e **non può essere solo più gelo**: il freno è già al
+     tetto e allungare la durata oltre la strada non aggiunge niente
+     (misurato: +72 s di gelo ferma nove nemici in più di +12 s, e poi
+     si ferma lì). Quello che scala è la **fragilità**, cioè la regola
+     della brina: chi è gelato prende più male da tutti. È il modo in
+     cui una torre che non ferisce diventa la più importante del campo,
+     e vale tanto quanto le altre perché passa dal danno degli altri. */
+  { id: 'gelo', emoji: '❄️', nome: 'Gelo che morde', torre: 'mul',
+    che: 'il gelo dura di più, e chi è gelato prende più male da tutti',
+    per: '+0,4 s di gelo e +4% di danno su chi è gelato',
+    dai: (d, g) => { d.gelo += 0.4 * g; d.fragile += 0.04 * g } },
+  { id: 'vista', emoji: '🦅', nome: 'Vista lunga',
+    che: 'tutte le torri arrivano più lontano', per: '+9% di raggio',
+    dai: (d, g) => { d.raggio += 0.09 * g } },
+  /* Vale solo per chi ha scelto il ramo che avvelena o che brucia, e va
+     detto sulla carta: un regalo che non fa niente è peggio di un
+     regalo che non c'è. Il veleno però è l'unico danno che **passa
+     attraverso le resistenze** (`Nemico.avvelena` non le guarda: il
+     male è già dentro), quindi per chi ha quel ramo è il regalo più
+     forte del catalogo — e sta bene così, perché è la ricompensa di
+     una scelta fatta col campo davanti. */
+  { id: 'veleno', emoji: '☠️', nome: 'Veleno tenace', ramo: true,
+    che: 'veleno e fuoco fanno più male — solo le torri che ce l\'hanno',
+    per: '+30% di veleno',
+    dai: (d, g) => { d.veleno += 0.30 * g } },
+  /* ── il settimo tocca tutti, e passa dal tempo ──
+     Ricaricare più in fretta è danno in più senza dirlo, e vale per
+     tutte e quattro le torri — ghiaccio compreso, che così rinfresca il
+     gelo più spesso. È il regalo di chi in campo ha un po' di tutto e
+     non vuole scegliere.
+
+     ── i due che sono stati provati e non ci sono ──
+     **«+1 cuore»** non vale niente: l'ondata che ferma la partita non
+     fa passare un nemico, ne fa passare **ventotto** — con quaranta
+     cuori regalati si guadagna una sola ondata.
+     **«+⚡ per ogni nemico fermato»** vale troppo, e in un modo che
+     rompe la scala: al muro il metro non è a corto di potenza, è a
+     corto di soldi (arriva alla ventesima con la quarta torre a metà
+     scaletta), quindi **anche +2,5% di energia** basta a comprargli il
+     gradino che gli manca e a saltare tre ondate in un colpo — un
+     grado solo, e la stessa cosa a quaranta gradi. Un regalo che vale
+     dieci volte gli altri non è un regalo forte: è l'unico che si
+     prende. Quello che non sposta niente e quello che sposta tutto
+     costano la stessa scelta, e nessuno dei due si tiene. */
+  { id: 'cadenza', emoji: '💨', nome: 'Mani veloci',
+    che: 'tutte le torri ricaricano più in fretta', per: '+4% di cadenza',
+    dai: (d, g) => { d.cadenza += 0.04 * g } },
+]
+
+export const regaloDi = id => REGALI.find(r => r.id === id) || null
+
+/* Da `{ id: quanti }` ai doni che il motore applica. Puro, e chiamato
+   una volta per partita (più una a ogni regalo preso): quello che gira
+   sessanta volte al secondo legge il risultato. */
+export function doniDi(regali) {
+  const d = doniZero()
+  if (!regali) return d
+  for (const r of REGALI) {
+    const g = Math.max(0, Math.floor(regali[r.id] || 0))
+    if (g > 0) r.dai(d, g)
+  }
+  return d
+}
+
+export const quantiRegali = regali =>
+  REGALI.reduce((n, r) => n + Math.max(0, Math.floor((regali || {})[r.id] || 0)), 0)
+
+/* ── quali carte si offrono ──
+   Tre voci del catalogo, scelte **a giro** e non a sorte: la scelta
+   numero `k` parte dalla posizione `k × quante` e prende le tre
+   successive. Così in due giri il catalogo passa tutto davanti, nessuna
+   voce si nasconde per sempre e non serve un seme da salvare nel
+   profilo. */
+export function regaliOfferti(k, quante = QUANTE_CARTE) {
+  const n = Math.min(quante, REGALI.length)
+  return Array.from({ length: n }, (_, i) => REGALI[(k * n + i) % REGALI.length])
+}
+
+/* ── i doni addosso a una torre ──
+   Le due funzioni che il motore chiama al posto di `tiroDi` e `geloDi`
+   quando in campo ci sono dei regali. Stanno qui perché i numeri sono
+   equilibrio: in `motore/` non entra una percentuale. */
+export function tiroConDoni(k, lv, ramo, doni) {
+  const t = tiroDi(k, lv, ramo)
+  if (!doni) return t
+  const f = doni.danno[TORRI[k].aspetto] ?? 1
+  if (f === 1 && doni.veleno === 1 && !doni.cadenza) return t
+  return { ...t, danno: t.danno * f, veleno: t.veleno * f * doni.veleno,
+           ricarica: t.ricarica / (1 + doni.cadenza) }
+}
+
+export function geloConDoni(lv, ramo, doni) {
+  const g = geloDi(lv, ramo)
+  if (!doni || (!doni.gelo && !doni.fragile)) return g
+  return { ...g, durata: g.durata + doni.gelo, fragile: g.fragile + doni.fragile }
+}
+
 /* La partita libera non finisce: le ondate continuano, i nemici crescono
    di vita e di velocità a ogni giro, e prima o poi si perde — è quello il
    punto. Il modello dice dove cede (test unita/castello lo stampa). */
@@ -760,6 +953,10 @@ export const LIBERA = {
      dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
   ambiente: 'bosco-fitto',
   resistenze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
+  /* e i regali: solo qui. Nelle tappe della campagna il campo non
+     esiste, quindi il motore non li applica mai — vedi il blocco dei
+     regali qui sopra */
+  regali: true,
   mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js
   partenza: partenzaDi({ cap: 4 }), durezza: 1, attesa: 30,
   /* le prime venti ondate sono tarate come una tappa; dopo, la vita

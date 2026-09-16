@@ -450,8 +450,13 @@ controlla('il gelo di una torre alta frena di più e dura di più',
    come una tappa; dopo, la vita continua a salire da sola finché la
    difesa non basta più — una difesa che tiene per sempre è una schermata
    fissa, non un gioco. */
-const primeLibere = gioca({ ...LIBERA, ondate: 12 }, PROFILI.misura)
-controlla('la partita libera regge una partita vera',
+/* `regali: false` non è una dimenticanza: la libera regala un
+   potenziamento ogni cinque ondate (`unita/regali-castello`), e quello
+   che si controlla qui è **il pavimento** — la primissima partita di
+   chi apre la modalità, che di regali non ne ha nessuno. È anche la
+   partita su cui `npm run tara` la tara. */
+const primeLibere = gioca({ ...LIBERA, ondate: 12, regali: false }, PROFILI.misura)
+controlla('la partita libera regge una partita vera, senza nessun regalo',
           primeLibere.esito === 'vinta' || primeLibere.onda >= 12,
           `cede già all'ondata ${primeLibere.onda}`)
 controlla('la partita libera prima o poi cede',

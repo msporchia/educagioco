@@ -43,9 +43,15 @@ import { state, answer, level, addCoins, tdProgresso, tdCompleta,
          guidaGiaVista, segnaGuidaVista } from '../store/profile.js'
 import { saltaLeSpiegazioni } from '../guide/aiuto.js'
 import { usaPausa } from '../giochi/pausa.js'
+/* il record della partita libera: il conto e le frasi stanno in
+   `giochi/primati.js`, il posto nel profilo in `giochi/campagne.js` —
+   gli stessi della corsa infinita e della Sopravvivenza */
+import { primatoDi, segnaPrimato, regaliDi, regaloPreso } from '../giochi/campagne.js'
+import { fraseDiFine, recordInParole } from '../giochi/primati.js'
+import { GIOCHI } from '../data/giochi.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
-import { CFG, TAPPE, LIBERA, premioTappa } from '../data/castello.js'
+import { CFG, TAPPE, LIBERA, premioTappa, quantiRegali } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
 import GettoniCampo from '../components/castello/GettoniCampo.vue'
@@ -57,6 +63,7 @@ import SchedaTorre from '../components/castello/SchedaTorre.vue'
 import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
 import MappaTappe from '../components/castello/MappaTappe.vue'
 import FineTappa from '../components/castello/FineTappa.vue'
+import Regalo from '../components/castello/Regalo.vue'
 import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
@@ -83,17 +90,47 @@ const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
    fretta ci va, e per guardare la battaglia c'è già il gesto giusto,
    che è chiudere il foglio. La pausa è un'altra cosa — è il bambino che
    chiede di fermarsi, non il gioco che aspetta. */
+/* `anche` porta anche il regalo: il velo delle tre carte tiene fermo il
+   campo come il cartello di un traguardo — non è una pausa chiesta dal
+   bambino, quindi non mostra il velo della pausa, ma il campo non deve
+   camminare mentre si legge cosa fanno. */
 const { inPausa, fermo, metti, togli, aiuto } = usaPausa({
-  anche: () => fase.value !== 'gioco',
+  anche: () => fase.value !== 'gioco' || regaloAperto.value,
 })
 
 /* il tabellone: il motore ci scrive dentro e lo schermo si aggiorna da sé */
 const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 0 })
 /* quello che il campo fa sapere alla schermata: si riempie a ogni fotogramma */
 const vista = reactive({ inAttesa: false, pronti: false, restaAttesa: 0, bestia: null,
-                         inCampo: 0, vitaOnda: 0, prossime: [] })
+                         inCampo: 0, vitaOnda: 0, prossime: [],
+                         regalo: 0, regaliPresi: 0 })
 const messaggio = reactive({ testo: '', n: 0 })
+
+/* ── il regalo ──
+   Ogni cinque ondate la partita libera ne mette uno da scegliere, e il
+   motore lo tiene in sospeso (`vista.regalo`): finché c'è, l'ondata
+   dopo non parte. `rimandato` è il «guardo prima il campo» — il velo si
+   toglie, il regalo resta lì, e torna appena si prova a chiamare
+   l'ondata. I gradi presi stanno nel profilo
+   (`campagne.torri.regali`), e questo `ref` è la copia che il velo
+   mostra.
+   `regaloAperto` lo legge anche `fermo` qui sopra: è un computed, quindi
+   si valuta quando serve e non quando è scritto. */
+const regali = ref({})
+const rimandato = ref(false)
+const regaloAperto = computed(() => fase.value === 'gioco' && vista.regalo > 0 &&
+                                    !rimandato.value && !state.festa.length)
+
 const premio = ref(0)
+/* la partita libera appena finita, rispetto al record: { record, frase } */
+const primato = ref(null)
+const SFIDA = GIOCHI.find(g => g.chiave === 'torri').senzaFine
+// già in parole («12 ondate · 580 nemici fermati · 9 torri»), per il tasto della mappa
+const recordLibera = computed(() => recordInParole(primatoDi('torri'), SFIDA))
+/* quanti potenziamenti definitivi ha in tasca: sta sul tasto della
+   mappa accanto al record, perché è l'altra cosa che uno si porta
+   dietro da una partita libera all'altra */
+const doteLibera = computed(() => quantiRegali(regali.value))
 
 const campo = ref(null)            // il componente del campo, non la tela
 const cassa = new Cassa()
@@ -367,7 +404,37 @@ function cambiaVelocita() {
   velocita.value = VELOCITA[(VELOCITA.indexOf(velocita.value) + 1) % VELOCITA.length]
 }
 
-function chiamaOnda() { motore()?.chiamaOnda() }
+/* Chiamare l'ondata con un regalo in sospeso **riapre il regalo** invece
+   di mandare i mostri: è il modo in cui «guardo prima il campo» non
+   perde niente. Il motore rifiuta comunque (`chiamaOnda` guarda
+   `daScegliere`), ma se qui non si riaprisse il velo il tasto
+   sembrerebbe rotto. */
+function chiamaOnda() {
+  if (vista.regalo > 0) { rimandato.value = false; return }
+  motore()?.chiamaOnda()
+}
+
+/* ── un regalo scelto ──
+   Due scritture, e sono due cose diverse: nel profilo (definitivo,
+   vale da domani) e nel motore (subito, sulle torri già in piedi). */
+function prendiRegalo(id) {
+  regali.value = regaloPreso('torri', id)
+  /* il suono lo fa il motore (`suona('livello')`), come per ogni altra
+     cosa che succede in campo: due colpi di gong per lo stesso gesto si
+     sentono come un guasto */
+  const m = motore()
+  m?.prendiRegalo(id)
+  /* ── e qui si rilegge il motore a mano, che è l'unico punto di tutto
+     il file dove si fa ──
+     `vista` la riempie il campo a ogni fotogramma, ma col velo aperto il
+     campo è fermo (`fermo` lo include), e `fermo` dipende da
+     `vista.regalo`: aspettare il prossimo fotogramma vorrebbe dire
+     aspettare un fotogramma che non arriverà mai, cioè un velo che non
+     si chiude più. */
+  vista.regalo = m ? m.regaliDaScegliere : 0
+  vista.regaliPresi = m ? m.regaliPresi : 0
+  rimandato.value = false
+}
 function avvisa(t) { messaggio.testo = t; messaggio.n++ }
 
 /* Il campo cambia misura quando si entra e si esce dalla partita —
@@ -388,7 +455,13 @@ function inizia(i = tappaIdx.value) {
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
   chiudi()
-  campo.value.avvia(tappa.value, i + 1)
+  /* i regali si rileggono dal profilo a ogni partita: è lì che vivono,
+     e una partita nuova deve partire con quello che si è preso nella
+     precedente. Nella campagna il motore li ignora da sé (la tappa non
+     li prevede), quindi qui non c'è nessun `if` da ricordarsi. */
+  regali.value = regaliDi('torri')
+  rimandato.value = false
+  campo.value.avvia(tappa.value, i + 1, regali.value)
   fase.value = 'gioco'
   avvisa('Tocca una piazzola per costruire')
 }
@@ -420,6 +493,16 @@ function finePartita() {
   fase.value = 'fine'
   chiudi()
   suono.fine()
+  /* Nella partita libera non si vince: si regge. Quello che resta è
+     quante ondate, e com'era fatta quella partita — è la stessa cosa che
+     la corsa infinita fa coi metri. Le ondate *superate* sono quella in
+     corso meno una, come le conta il cartello. */
+  primato.value = null
+  if (!campagna.value) {
+    const esito = segnaPrimato('torri', Math.max(0, hud.onda - 1), Date.now(),
+                               { uccisi: hud.uccisi, torri: hud.torri })
+    primato.value = { ...esito, frase: fraseDiFine(esito, SFIDA.misura) }
+  }
 }
 
 function allaMappa() {
@@ -433,6 +516,7 @@ function allaMappa() {
 onMounted(() => {
   tappaIdx.value = Math.min(TAPPE.length - 1, progresso.value.tappa)
   cassa.perTappa(tappa.value)
+  regali.value = regaliDi('torri')
   campo.value.apparecchia(tappa.value, tappaIdx.value + 1)
   /* il gancio dei test: da fuori si gioca una partita senza toccare lo
      schermo. Non lo usa nessuna parte del gioco. */
@@ -441,6 +525,8 @@ onMounted(() => {
                   colpi: () => motore().colpi, livelloOp,
                   TAPPE, tappaIdx, postazioni: () => motore().postazioni,
                   velocita, cambiaVelocita, chiamaOnda, potenzia, potenziaIndice, bersaglio,
+                  // i regali della partita libera: quanti se ne hanno, e prenderne uno
+                  regali, regaloAperto, prendiRegalo,
                   inAttesa: computed(() => vista.inAttesa),
                   pronti: computed(() => vista.pronti),
                   prossime: () => vista.prossime,
@@ -511,11 +597,12 @@ onMounted(() => {
       <!-- mappa della campagna · vinta · trionfo · sconfitta -->
       <div v-else class="banco">
         <MappaTappe v-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
-                    :libera="libera" @gioca="inizia" @libera="inizia(-1)"
+                    :libera="libera" :primato="recordLibera" :regali="doteLibera"
+                    @gioca="inizia" @libera="inizia(-1)"
                     @indietro="$emit('vai','home')" />
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :premio="premio" :quante="TAPPE.length" :campagna="campagna"
-                   :divisioni="divisioni"
+                   :divisioni="divisioni" :primato="primato"
                    @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1)"
                    @riprova="inizia()" />
       </div>
@@ -551,6 +638,13 @@ onMounted(() => {
           <ColumnOp :op="op" @fatto="operazioneFinita" />
         </template>
       </Foglio>
+
+      <!-- ════════ IL REGALO ════════
+           Ogni cinque ondate della partita libera. Sta sopra il foglio e
+           sotto la pausa: chi posa il telefono davanti alle tre carte
+           trova la pausa, e dietro le carte che aspettano. -->
+      <Regalo v-if="regaloAperto && !inPausa" :presi="vista.regaliPresi" :gradi="regali"
+              @scegli="prendiRegalo" @piu-tardi="rimandato = true" />
 
       <!-- il velo copre tutto, foglio compreso: in pausa non c'è niente
            da fare se non ripartire. Le condizioni sono le stesse del ⏸ —
