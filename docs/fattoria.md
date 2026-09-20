@@ -497,7 +497,8 @@ raccolta la prima volta. Oggi il massimo è il mais con 5 contro 6 posti, e
 ### I livelli della fattoria (dal 18 agosto 2026)
 
 **L'esperienza sono le monete spese qui dentro**, più gli ordini consegnati
-al mercato (vedi sopra: pagano esperienza e mai monete). Non i raccolti, non
+al mercato e le bestie di casa rimesse a posto (vedi sotto: pagano
+esperienza e mai monete). Non i raccolti, non
 i minuti, non le partite: la fattoria è il money pit, quindi il livello premia
 esattamente il gesto che tiene in piedi tutto il resto. Non si può fare in
 fretta (le monete arrivano solo dagli esercizi, quindi il livello è tempo di
@@ -868,6 +869,56 @@ niente**: la nonna e il bottegaio comprano quello che c'è. Non è pigrizia,
 poter uscire lo stesso, e `guastiDelMercato()` diventa rosso se un giorno
 non restasse nessuno che prende di tutto.
 
+### Una bestia rimessa a posto paga esperienza (dal 20 settembre 2026)
+
+**Il cane, il gatto e il pappagallo costavano e non rendevano.** Un recinto
+produce lana e uova, un campo produce grano, e le tre bestie di casa — quelle
+coi tre bisogni, pancia, pelo e voglia di giocare — erano l'unica cosa della
+fattoria che si accudisce e basta. Giusto che non producano niente: non sono
+galline. Ma accudirle *è* il gioco, e un gioco che non dice mai «bravo» lo
+si smette.
+
+Adesso, quando dopo un gesto **tutti e tre i bisogni stanno nella fascia
+«sta benissimo»** — la stessa soglia della frase sulla scheda, non una
+nuova — la bestia paga esperienza: come un ordine del mercato, **mai
+monete** ([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)). La riga in cima lo dice
+(«🐕 Bobtail sta benissimo! ⭐ +9 di esperienza») e sul prato sale un
+«+9 ⭐» dalla testa della bestia, che svanisce in due secondi e mezzo.
+
+```
+   il premio  =  un decimo del prezzo della bestia
+   🐕 cane  🪙90 → ⭐9     🐈 gatto  🪙75 → ⭐8     🦜 pappagallo  🪙120 → ⭐12
+```
+
+Tre cose decise, e il perché.
+
+- **Per singola bestia, non «quando stanno bene tutte».** Chi ne ha una
+  sola deve poter vincere qualcosa; chi ne ha sei non deve fare un giro di
+  diciotto gesti prima di sentirsi dire qualcosa.
+- **Sotto l'ordine più piccolo del mercato.** Tre grano rendono ⭐18 e
+  chiedono un quarto d'ora di campo; rimettere a posto un cane sono tre
+  gesti da 🪙1–14 e le ore che ci mette la pancia a scendere. Il numero è
+  legato al prezzo così non è scritto due volte: chi ritocca il prezzo
+  ritocca anche questo.
+- **Una volta per ciclo.** Il premio non torna finché almeno un bisogno non
+  è risceso sotto «sta bene» — la pancia ci mette tre ore. Senza questa
+  riga tre spazzolate da una monetina sarebbero una zecca: non di monete,
+  che qui non entrano mai, ma di livelli. Anche con tutte e sei le bestie
+  in casa e due giri al giorno sono poco più di cento ⭐ al giorno, un
+  ottavo del gradino di livello a cui si arriva con la sesta.
+
+Il ciclo sta nel record della bestia (`premiato`) e si riarma leggendo,
+dentro lo stesso conto che fa calare i bisogni (`scendi` in
+`dati/bisogni.js`). Un salvataggio di ieri non ha il campo e si legge come
+«non ancora premiata» — ma **la prima spazzolata a una bestia che stava già
+bene non paga**: il premio è per averla rimessa a posto, e il motore guarda
+com'era prima del gesto (`premiaSeStaBene`, `tuttoAPosto`). Quanto paga sta
+nella scheda dell'animale (`premioBenessere` in `dati/animali.js`), e il
+motore ci mette solo il braccio (`premiaIlBenessere`): sono le stesse
+funzioni che, in `test/unita/fattoria`, provano che si premia una volta e
+non due, che torna dopo il ciclo, che due bisogni su tre non bastano e che
+il livello può scattare.
+
 ### L'orto, e le cinque bocche nuove (dal 15 settembre 2026)
 
 **Fra il porcile e la fine del catalogo non arrivava più niente che
@@ -1180,7 +1231,7 @@ che le due sezioni qui sopra esistono. Restano:
 | `dati/livelli.js` | le soglie del livello, e cosa arriva quando |
 | `viste/Livelli.vue` | la pagina dei livelli, e la festa quando si sale |
 | `dati/catalogo.js` | cosa si compra; `campo`, `macchina`, `silo` dicono chi lavora, `stati` chi si legge da lontano |
-| `dati/bisogni.js` | i cibi: chi si compra a monete e chi si scala dal granaio |
+| `dati/bisogni.js` | i cibi: chi si compra a monete e chi si scala dal granaio — e quando una bestia rimessa a posto si premia |
 | `motore/fattoria.js` | tutte le regole, senza schermo — gira anche in Node |
 | `scena/tela.js` | il disegno, che non sa cosa sia il grano |
 | `viste/Campo.vue` `viste/Macchina.vue` | le due schede che si toccano — la seconda vale per il mulino e per tutti i recinti |
@@ -1192,7 +1243,7 @@ che le due sezioni qui sopra esistono. Restano:
 | `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
 | `viste/Mercato.vue` | i tre ordini, a caselle |
 | `dati/addobbi.js` | cappellini e fiocchi: nome, prezzo, dove si attaccano |
-| `dati/animali.js` | e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
+| `dati/animali.js` | le bestie di casa: quanto costano, quanto pagano rimesse a posto (`premioBenessere`) e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
 | `viste/Vestiario.vue` | «Vestilo», uno slot per punto di attacco |
 | `test/unita/addobbi.test.mjs` | si compra, si mette, si toglie — e cosa non gli sta |
 | `test/unita/mercato.test.mjs` | si chiede solo il possibile, a ogni livello |

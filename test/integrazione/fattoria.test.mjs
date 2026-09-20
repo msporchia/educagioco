@@ -507,6 +507,7 @@ await chiudi()
     return null
   }
   let dove = await cercaLaBestia(60)
+  let premioDellaBestia = 0        // quanto ha pagato rimessa a posto, si legge in fondo
   controlla('toccando la bestia si apre la sua scheda', !!dove)
   await chiudi()
   /* La stessa pressione, ma lunga e ferma: su una bestia il tocco lungo
@@ -520,6 +521,42 @@ await chiudi()
     uguale('e i blocchi sono tre, uno per bisogno',
            await page.locator('.fa-blocco').count(), 3)
     await scatto(page, 'fattoria-bestia')
+
+    /* ── E RIMESSA A POSTO, PAGA ESPERIENZA ───────────────────────
+       Appena comprata ha la pancia quasi piena, il pelo a posto e poca
+       voglia di giocare: si premono **le due coccole**, una per volta,
+       finché la riga d'avviso non dice che sta benissimo — la ciotola
+       no, perché più giù si prova che un cibo che non hai dice come si
+       fa, e a pancia piena quel riquadro non si apre. Si fa **qui**,
+       con la scheda appena aperta e ogni gesto che la riapre da sé: il
+       cane cammina a caso, e ritrovarlo col dito dopo il vestiario è
+       una lotteria. Che il premio sia nel salvataggio si guarda in
+       fondo, insieme al resto — e l'etichetta «+9 ⭐» che sale dalla
+       sua testa la guarda un occhio umano, nello scatto: un test non
+       legge i pixel. Nello scatto la scheda è aperta e l'etichetta si
+       vede attraverso il velo, che è quello che vede anche il bambino. */
+    {
+      const avviso = () => page.evaluate(
+        () => (document.querySelector('.fa-avviso') || {}).innerText || '')
+      let detto = '', gesti = 0
+      for (const nome of ['Spazzolalo', 'Gioca con lui']) {
+        const tasto = page.locator('.fa-cibo.suo', { hasText: nome }).first()
+        if (!await tasto.count()) continue
+        await tasto.click()
+        gesti++
+        await attendi(page, 300)
+        detto = await avviso()
+        if (/benissimo|Livello/.test(detto)) break
+      }
+      controlla('dopo le coccole la riga d\'avviso dice che sta benissimo, e quanto vale',
+                /sta benissimo! ⭐ \+\d+ di esperienza/.test(detto) || /Livello/.test(detto),
+                `${gesti} gesti, avviso: «${detto}»`)
+      premioDellaBestia = Number((detto.match(/\+(\d+)/) || [])[1]) || 0
+      nota(`rimessa a posto in ${gesti} gesti: «${detto}»`)
+      await scatto(page, 'fattoria-benessere')
+      uguale('e la scheda è ancora aperta, riaperta dal gesto',
+             await page.locator('.fa-blocco').count(), 3)
+    }
 
     /* Un cibo che non hai dice **come si fa**, e solo lì dentro offre di
        comprarne uno adesso. Quel tasto è già caduto una volta: azzerava
@@ -600,14 +637,14 @@ await chiudi()
                   `${prima} → ${dopo}`)
       }
     }
-    await chiudi()
 
     await chiudi()
   }
 
   await attendi(page, 1800)               // il salvataggio è a ritardo
   const salvato = await leggiProfilo(page)
-  const bestie = (((((salvato || {}).campagne || {}).fattoria || {}).cfg || {}).stato || {}).bestie
+  const stato = ((((salvato || {}).campagne || {}).fattoria || {}).cfg || {}).stato || {}
+  const bestie = stato.bestie
   controlla('l\'animale è nel salvataggio con la sua posizione',
             !!(bestie && bestie[0] && typeof bestie[0].x === 'number'),
             JSON.stringify(bestie))
@@ -617,6 +654,12 @@ await chiudi()
   controlla('e con addosso quello che gli è stato messo',
             !!(bestie && bestie.some(b => (b.addobbi || {}).testa === 'cappellino')),
             JSON.stringify(bestie && bestie.map(b => b.addobbi)))
+  controlla('l\'esperienza del premio è nel salvataggio, sommata a quella del mercato',
+            (stato.guadagnato || 0) >= premioDellaBestia && (stato.guadagnato || 0) > 0,
+            `guadagnato ${stato.guadagnato}, premio ${premioDellaBestia}`)
+  controlla('e la bestia è segnata come premiata: non si ripaga nello stesso ciclo',
+            !!(bestie && bestie.some(b => b.premiato === true)),
+            JSON.stringify(bestie && bestie.map(b => b.premiato)))
 }
 
 /* ---------- 9. tenere premuto non è ancora trascinare ----------

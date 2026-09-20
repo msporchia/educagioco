@@ -110,6 +110,19 @@ negozio. I numeri da tenere a mente: il secondo livello a dieci minuti di
 esercizi, il decimo a tre ore, l'ultimo a un centinaio — e mai un livello che
 non porta niente.
 
+Le altre due sorgenti del livello pagano **esperienza e mai monete**, e
+stanno sulla stessa scala delle monete perché si sommano a quelle spese:
+
+| cosa | rende | il freno |
+|---|---|---|
+| un ordine del mercato | ⭐ 6 + 4·(quanto è costata la roba) — da 18 a 114 | mai più del tempo di campo che chiede (`guastiDelMercato`) |
+| una bestia di casa rimessa a posto (pancia, pelo e gioco tutti nella fascia «sta benissimo») | ⭐ un decimo del suo prezzo: 9 il cane, 8 il gatto, 12 il pappagallo | **una volta per ciclo** — non torna finché un bisogno non è risceso sotto «sta bene», cioè non prima di tre ore |
+
+Il numero della bestia sta sotto l'ordine più piccolo del mercato apposta:
+tre gesti da 🪙1–14 e le ore che ci mette la pancia a scendere non sono un
+quarto d'ora di campo. Senza il ciclo, tre coccole da una monetina sarebbero
+una zecca — non di monete, di livelli.
+
 ## Dove stanno i numeri
 
 - `src/giochi/fattoria/dati/coltivazioni.js` — prezzi dei gesti, capienza e

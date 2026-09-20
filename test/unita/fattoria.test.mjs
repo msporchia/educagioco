@@ -23,9 +23,13 @@ const ribaltabile = v => {
   return v.ribalta != null ? v.ribalta : (voce || {}).ribalta !== false
 }
 import { guastiDegliOstacoli, OSTACOLI } from '../../src/giochi/fattoria/dati/ostacoli.js'
-import { guastiDeiBisogni, CIBI, COCCOLE, CHIAVI, cibiPer,
-         foto } from '../../src/giochi/fattoria/dati/bisogni.js'
-import { guastiDegliAnimali, famigliaDi, IN_VENDITA } from '../../src/giochi/fattoria/dati/animali.js'
+import { guastiDeiBisogni, CIBI, COCCOLE, CHIAVI, cibiPer, foto,
+         tuttoAPosto, nuovo as bisogniNuovi, comeSta, BENISSIMO, BENE,
+         premiaSeStaBene } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { guastiDegliAnimali, famigliaDi, IN_VENDITA,
+         premioBenessere } from '../../src/giochi/fattoria/dati/animali.js'
+import { premioPer } from '../../src/giochi/fattoria/dati/mercato.js'
+import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
 import manifesto from '../../src/giochi/fattoria/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -906,6 +910,112 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   controlla('e uno scatto vecchio non cambia sotto il naso di nessuno', a.pelo !== 1)
   uguale('mentre il nuovo lo vede', foto(vivo).pelo, 1)
   uguale('una bestia che non c\'è dà tre zeri', foto(null).pancia, 0)
+}
+
+/* ══════════ 10. una bestia rimessa a posto paga esperienza ══════════
+   Come il mercato consegnando: esperienza, mai monete. Il momento è
+   il gesto dopo il quale **tutti e tre** i bisogni stanno sopra la
+   soglia di «sta benissimo» — la stessa di `comeSta`, non una nuova —
+   e il premio è **uno per ciclo**: non torna finché almeno un bisogno
+   non è risceso sotto «sta bene». Senza quella riga tre coccole da
+   una monetina sarebbero una zecca di livelli (`dati/bisogni.js`). */
+{
+  const per = id => [...CIBI, ...COCCOLE].find(c => c.id === id)
+  const osso = per('osso'), bistecca = per('bistecca')
+  const gioca = per('gioca'), spazzola = per('spazzola')
+  const chi = 'cane-bobtail'
+
+  /* quanto: un decimo del prezzo, e mai più di un ordine piccolo */
+  uguale('un cane da 90 rimesso a posto paga 9', premioBenessere('cane-bobtail'), 9)
+  uguale('un gatto da 75 paga 8', premioBenessere('gatto-nero'), 8)
+  uguale('il pappagallo da 120 paga 12', premioBenessere('pappagallo'), 12)
+  controlla('e chi non è in tabella paga come il più economico',
+            premioBenessere('drago') === premioBenessere('gatto-nero'))
+  const treGrano = premioPer({ grano: 3 })
+  for (const a of IN_VENDITA)
+    controlla(`${a.chi}: rende meno di tre grano al mercato (${treGrano})`,
+              premioBenessere(a.chi) < treGrano, String(premioBenessere(a.chi)))
+
+  /* le soglie sono quelle delle frasi, non altre */
+  const tutti = v => Object.fromEntries(CHIAVI.map(k => [k, v]))
+  controlla('appena sopra la soglia alta «sta benissimo»',
+            comeSta(tutti(BENISSIMO + 0.01)).includes('benissimo'))
+  controlla('e lì la bestia è a posto', tuttoAPosto(tutti(BENISSIMO + 0.01)))
+  controlla('appena sopra quella bassa «sta bene», e non è a posto',
+            comeSta(tutti(BENE + 0.01)).includes('sta bene') && !tuttoAPosto(tutti(BENE + 0.01)))
+  controlla('una bestia appena comprata non nasce a posto', !tuttoAPosto(bisogniNuovi()))
+  uguale('e la decisione da sola non premia chi stava già bene prima del gesto',
+         premiaSeStaBene(tutti(0.9), true), false)
+
+  const f = cresciuta({ borsa: borsaInfinita() })
+  f.compraBestia(chi, 90, 'Bobtail')
+  const b = f.stato(chi)
+  for (const k of CHIAVI) b[k] = 0.4
+  const primaXp = f.guadagnato || 0
+
+  uguale('spazzolarlo alza il pelo e basta: niente premio', f.coccola(chi, spazzola).premio, null)
+  uguale('giocarci fa due su tre: niente premio', f.coccola(chi, gioca).premio, null)
+  uguale('e l\'esperienza non si è mossa', f.guadagnato || 0, primaXp)
+  const terzo = f.nutri(chi, bistecca)
+  controlla('la bistecca è il terzo su tre, e si premia', !!terzo.premio, JSON.stringify(terzo))
+  uguale('con nove stelle, un decimo del prezzo', terzo.premio && terzo.premio.xp, 9)
+  uguale('sommate all\'esperienza guadagnata, come un ordine', f.guadagnato, primaXp + 9)
+  uguale('e la bestia è segnata come premiata', f.laBestia(chi).premiato, true)
+
+  /* non due volte nello stesso ciclo */
+  b.pelo = 0.8
+  const ancora = f.coccola(chi, spazzola)
+  controlla('un\'altra spazzolata si fa', ancora.ok)
+  uguale('ma non si ripaga: è lo stesso ciclo', ancora.premio, null)
+  uguale('e l\'esperienza è ferma', f.guadagnato, primaXp + 9)
+
+  /* il ciclo si riarma quando un bisogno scende sotto «sta bene»: si
+     sposta l'orologio di sette ore, che alla pancia bastano */
+  b.quando = Date.now() - 7 * 3600000
+  const dopo = f.stato(chi)
+  controlla('dopo sette ore la pancia è sotto «sta bene»', dopo.pancia <= BENE, String(dopo.pancia))
+  uguale('e il premio è riarmato', dopo.premiato, false)
+  uguale('un osso da solo non basta: gli altri due sono calati', f.nutri(chi, osso).premio, null)
+  uguale('nemmeno la spazzola', f.coccola(chi, spazzola).premio, null)
+  const giro = f.coccola(chi, gioca)
+  controlla('la pallina chiude il secondo giro, e si ripaga', !!giro.premio, JSON.stringify(giro))
+  uguale('altre nove', f.guadagnato, primaXp + 18)
+
+  /* il salvataggio regge, in tutti e due i versi */
+  const salvato = JSON.parse(JSON.stringify(f.serializza()))
+  const riaperta = new Fattoria({ dato: salvato, borsa: borsaInfinita() })
+  uguale('riaperta, la bestia è ancora premiata', riaperta.laBestia(chi).premiato, true)
+  uguale('e l\'esperienza pure', riaperta.guadagnato, f.guadagnato)
+  riaperta.stato(chi).pelo = 0.8
+  uguale('e non si ripaga a riapertura', riaperta.coccola(chi, spazzola).premio, null)
+
+  /* un salvataggio di ieri: la bestia sta bene e il campo non c'è —
+     la prima spazzolata non è un premio da riscuotere */
+  const ieri = JSON.parse(JSON.stringify(f.serializza()))
+  for (const v of ieri.bestie) { delete v.premiato; for (const k of CHIAVI) v[k] = 0.85 }
+  const vecchia = new Fattoria({ dato: ieri, borsa: borsaInfinita() })
+  uguale('letta, non è premiata', vecchia.laBestia(chi).premiato, false)
+  uguale('e un osso a chi stava già bene non paga', vecchia.nutri(chi, osso).premio, null)
+  const vec = vecchia.stato(chi)
+  vec.gioco = 0.4
+  controlla('mentre rimetterla a posto sì', !!vecchia.coccola(chi, gioca).premio)
+
+  /* e il livello può scattare: cinque monete sotto la soglia del 3,
+     nove stelle lo portano di là. La pappa è del granaio (zero monete),
+     se no il livello salirebbe già col prezzo del cibo e il premio non
+     avrebbe niente da far scattare. */
+  const g = new Fattoria({ borsa: borsaInfinita() })
+  g.speso = sogliaDi(3) - 5
+  g.reclamaTutto()
+  g.compraBestia(chi, 0, 'Bobtail')
+  g.granaio.pastone = 1
+  const gb = g.stato(chi)
+  gb.pancia = 0.4; gb.pelo = 0.9; gb.gioco = 0.9
+  uguale('prima è al livello 2', g.livello, 2)
+  const scatto = g.nutri(chi, per('pastone'))
+  controlla('il pastone rimette a posto e il premio dice che il livello è salito',
+            !!(scatto.premio && scatto.premio.salito), JSON.stringify(scatto))
+  uguale('ed è al 3', g.livello, 3)
 }
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +
