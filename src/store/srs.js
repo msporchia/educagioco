@@ -30,6 +30,16 @@
       riproporlo nella stessa partita è tempo tolto a quello che non sa.
       L'elemento va a riposo fino a fine sessione e ne entra un altro.
       Il consolidamento vero resta affidato ai ripassi dei giorni dopo.
+
+   E una cosa che il motore NON decide: la LENTEZZA. La curva dell'oblio
+   è uguale per tutti gli elementi, e per una materia a scala — le
+   tabelline, il calcolo a mente — è cieca a un fatto che un maestro
+   vede subito: chi sa 7×8 non ha dimenticato 2×3, anche se non lo vede
+   da dieci giorni. Chi chiama può passare un fattore di lentezza per
+   elemento (`lentezza`, ≥ 1: quante volte più lungo è il suo
+   intervallo), e chi lo calcola è `store/marea.js`. Qui si sa solo che
+   l'intervallo si allunga; senza il fattore tutto resta com'era, ed è
+   così che lo usano le lingue e i quiz.
    ═══════════════════════════════════════════════════════════════════ */
 
 const DAY = 86400000;
@@ -50,32 +60,38 @@ export const SRS = {
 
 export const newItem = () => ({ s: 0, ok: 0, err: 0, last: 0, seen: 0, t: 0 });
 
+/* l'intervallo di ripasso di questo elemento, allungato della sua
+   lentezza (1 = la curva di sempre) */
+const intervallo = (it, lentezza = 1) => IVL[Math.min(it.s, MAX_S)] * DAY * lentezza;
+
 /* quando l'elemento andrebbe ripassato */
-export const dueAt = it => (it.last || 0) + IVL[Math.min(it.s, MAX_S)] * DAY;
+export const dueAt = (it, lentezza = 1) => (it.last || 0) + intervallo(it, lentezza);
 
 /* quanto è in ritardo, in multipli del proprio intervallo.
    0 = appena scaduto, 1 = scaduto da un intervallo intero, ... */
-export function overdue(it, now) {
+export function overdue(it, now, lentezza = 1) {
   if (!it.last) return 1;                       // mai visto: da fare
-  const span = IVL[Math.min(it.s, MAX_S)] * DAY;
-  return (now - dueAt(it)) / span;
+  const span = intervallo(it, lentezza);
+  return (now - dueAt(it, lentezza)) / span;
 }
 
 /* forza EFFICACE: quella nominale meno il decadimento accumulato */
-export function strength(it, now) {
+export function strength(it, now, lentezza = 1) {
   if (!it.last) return 0;
-  const late = Math.max(0, overdue(it, now));
+  const late = Math.max(0, overdue(it, now, lentezza));
   return Math.max(0, it.s - Math.floor(late / 1.5));
 }
 
-export const isMastered = (it, now) => strength(it, now) >= SRS.masterS;
+export const isMastered = (it, now, lentezza = 1) =>
+  strength(it, now, lentezza) >= SRS.masterS;
 
 /* Peso di estrazione. Alto = esce spesso.
    Cala con la forza efficace e cresce con il ritardo accumulato. */
 export function weight(it, now, opts = {}) {
-  const s = strength(it, now);
+  const lentezza = opts.lentezza || 1;
+  const s = strength(it, now, lentezza);
   const base = Math.max(0.35, (MAX_S + 1) - s * 1.4);
-  const late = Math.max(0, overdue(it, now));
+  const late = Math.max(0, overdue(it, now, lentezza));
   const urgency = 1 + Math.min(2, late * 0.6);          // scaduto da tanto = urgente
   let w = base * urgency;
   // dove la velocità conta (tabelline) una risposta lenta pesa come mezza sbagliata
@@ -93,6 +109,10 @@ export function record(it, { correct, ms = 0, now = Date.now() }) {
   } else {
     it.err++;
     it.s = Math.max(0, strength(it, now) - SRS.lossErr);
+    // quando è stato sbagliato l'ultima volta: la marea (`store/marea.js`)
+    // non tocca quello che è stato sbagliato di recente, e senza questa
+    // data non avrebbe modo di saperlo — `err` conta, non dice quando
+    it.errAt = now;
   }
   if (ms > 0) it.t = it.t ? it.t * 0.55 + ms * 0.45 : ms;
   return it;
@@ -101,7 +121,8 @@ export function record(it, { correct, ms = 0, now = Date.now() }) {
 /* ═══════════ SELEZIONE ═══════════
    Tiene la memoria corta della sessione (ultimi elementi visti) e una
    coda di ripasso per quelli sbagliati. */
-export function createPicker({ getItem, useTime = false, pausaDopo = 0 } = {}) {
+export function createPicker({ getItem, useTime = false, pausaDopo = 0,
+                               lentezza = () => 1 } = {}) {
   let recent = [];       // ultimi id mostrati, per la distanza minima
   let queue = [];        // ripassi programmati: { id, due }
   let round = 0;
@@ -128,7 +149,7 @@ export function createPicker({ getItem, useTime = false, pausaDopo = 0 } = {}) {
       if (!cand.length) cand = pool.filter(x => !tooSoon(x));
       if (!cand.length) cand = pool.filter(x => x !== recent[recent.length - 1]);
       if (!cand.length) cand = pool.slice();
-      const w = cand.map(x => weight(getItem(x), now, { useTime }));
+      const w = cand.map(x => weight(getItem(x), now, { useTime, lentezza: lentezza(x) }));
       let r = Math.random() * w.reduce((a, b) => a + b, 0);
       id = cand[cand.length - 1];
       for (let i = 0; i < cand.length; i++) { r -= w[i]; if (r <= 0) { id = cand[i]; break } }
@@ -183,11 +204,15 @@ export function createPicker({ getItem, useTime = false, pausaDopo = 0 } = {}) {
    dell'1 e quella del 10, che sono le più facili di tutte: chi ha spuntato
    tutte le tabelline non vedeva mai il 7. Con `gruppi(id) -> [chiavi]` la
    scelta gira a turno fra i gruppi, così ogni tabellina spuntata porta il
-   suo elemento più facile prima che una qualsiasi porti il secondo. */
+   suo elemento più facile prima che una qualsiasi porti il secondo.
+
+   `lentezza(id)` è il fattore della marea, per elemento: chi non lo
+   passa ha la curva di sempre. */
 export function activeSet(allIds, getItem, order, now = Date.now(),
-                          size = SRS.setSize, gruppi = null) {
-  const learning = allIds.filter(id => !isMastered(getItem(id), now));
-  const due = allIds.filter(id => isMastered(getItem(id), now) && overdue(getItem(id), now) >= 0);
+                          size = SRS.setSize, gruppi = null, lentezza = () => 1) {
+  const learning = allIds.filter(id => !isMastered(getItem(id), now, lentezza(id)));
+  const due = allIds.filter(id => isMastered(getItem(id), now, lentezza(id)) &&
+                                  overdue(getItem(id), now, lentezza(id)) >= 0);
   const ordinati = learning.sort((a, b) => order(a) - order(b));
   if (!gruppi) return { learning: ordinati.slice(0, size), due };
 

@@ -32,6 +32,7 @@ import { state, item, answer, level, addCoins,
          asteroidiCompleta } from '../store/profile.js'
 import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker } from '../store/srs.js'
+import { mareaTabelline, mareaCalcolo } from '../store/marea.js'
 import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
 import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
          distrattoriDi, appartiene } from '../data/calcolo.js'
@@ -244,9 +245,18 @@ let prontaIl = 0
 /* la domanda in corso è un assaggio della tappa che viene dopo: si gioca
    come le altre, ma non si segna sul motore (vedi `chiaveDalDopo`) */
 let anticipo = false
+/* LA MAREA, per il picker. I pool se la calcolano da soli
+   (`store/marea.js`), ma il picker pesa i candidati per conto suo e
+   deve pesarli con la stessa lentezza, se no il pool dice «2×3 non
+   serve» e il picker lo pesca lo stesso perché lo vede arrugginito. La
+   frontiera si legge una volta per domanda, dentro il pool, e il picker
+   la riusa: ricalcolarla a ogni candidato sarebbe una scansione di
+   tutte le caselle per ogni sasso in cielo. */
+let marea = () => 1
 /* tre risposte giuste di fila sullo stesso calcolo bastano per oggi: va a
    riposo e al suo posto entra qualcosa che ancora non si sa */
-const picker = createPicker({ getItem: k => item(k), useTime: true, pausaDopo: 3 })
+const picker = createPicker({ getItem: k => item(k), useTime: true, pausaDopo: 3,
+                              lentezza: k => marea(k) })
 
 /* ---------- cosa può uscire ----------
    Il lavoro vero lo fanno `store/tabelline.js` e `store/calcolo.js`: qui
@@ -256,13 +266,17 @@ const chiaviPossibili = () => chiaviDelle(tabelle.value)
 
 function poolAttivo() {
   const quanti = insiemeDi(tabelle.value) + picker.riposati
+  const ora = Date.now()
+  marea = mareaTabelline(state.profile.items, ora)
   return campagna.value
-    ? poolTappa(tappa.value, state.profile.items, Date.now(), quanti)
-    : poolLibero(state.profile.items, Date.now(), quanti, progresso.value.tappa)
+    ? poolTappa(tappa.value, state.profile.items, ora, quanti)
+    : poolLibero(state.profile.items, ora, quanti, progresso.value.tappa)
 }
 
 function poolMente() {
-  return poolDi(tappa.value, state.profile.items, Date.now(), 12 + picker.riposati)
+  const ora = Date.now()
+  marea = mareaCalcolo(state.profile.items, ora)
+  return poolDi(tappa.value, state.profile.items, ora, 12 + picker.riposati)
 }
 
 /* ---------- difficoltà ----------

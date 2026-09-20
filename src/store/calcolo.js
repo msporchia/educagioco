@@ -31,6 +31,7 @@ import { strength, overdue, activeSet, SRS } from './srs.js'
 import { CONCETTI, CONCETTI_PER_ID, STAZIONI, chiaviDi, eConcettoDiFatti,
          concettoDiChiave, chiaveConcetto, esercizioDi, faticaFatto, famigliaFatto,
          eFatto, appartiene } from '../data/calcolo.js'
+import { mareaCalcolo } from './marea.js'
 import { calcoliTabellina } from '../data/tabelline.js'
 
 /* «regge» non vuol dire «perfetto»: si chiede un gradino meno della
@@ -159,12 +160,19 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
                                                 aperto(id, items, now, tab))
 
   const getItem = k => leggi(items, k)
+  /* la marea (`store/marea.js`): quello che sta sotto la stazione a cui
+     il bambino è arrivato si dimentica più piano, così chi fa 27+38 non
+     si vede tornare 3+4 per il solo passare dei giorni. Passa dai tre
+     insiemi, dagli scaduti e dall'ordine; non dal grafo (`saldo`,
+     `aperto`), che guarda solo i prerequisiti diretti — quelli stanno a
+     una o due stazioni sotto, dove la marea comunque non si sente */
+  const marea = mareaCalcolo(items, now)
   const ordine = k => {
     const id = concettoDiChiave(k)
     // tre criteri in fila, ognuno più fine del precedente: prima quello che
     // sta in fondo al grafo, poi quello che si sa meno, e a pari merito il
     // fatto che costa meno — altrimenti si passa una partita a sommare uno
-    return profonditaDi(id) * 10 + (4 - Math.min(4, strength(getItem(k), now)))
+    return profonditaDi(id) * 10 + (4 - Math.min(4, strength(getItem(k), now, marea(k))))
            + faticaFatto(k)
   }
   /* il giro non è solo fra concetti ma fra le famiglie dentro ognuno:
@@ -177,7 +185,7 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
      tutti i posti e i concetti della tappa non uscivano mai. */
   const vuoto = { learning: [], due: [] }
   const A = activeSet(chiaviDei(nuovi), getItem, ordine, now,
-                      Math.max(4, Math.round(quanti * 0.55)), gruppi)
+                      Math.max(4, Math.round(quanti * 0.55)), gruppi, marea)
   /* IL RIPASSO SI MISURA SU QUANTO PORTA LA TAPPA, non su quanti posti
      restano liberi. Un concetto a istanze infinite è UNA chiave che vale
      infinite domande, mentre i fatti già visti sono centinaia: dando al
@@ -191,13 +199,13 @@ export function poolDi(stazione, items, now = Date.now(), quanti = 12) {
   const P = puntelli.length
     ? activeSet(chiaviDei(puntelli), getItem, ordine, now,
                 Math.max(1, Math.min(Math.round(quanti * 0.2),
-                                     Math.ceil(porta / 2))), gruppi)
+                                     Math.ceil(porta / 2))), gruppi, marea)
     : vuoto
   const B = activeSet(chiaviDei(vecchi), getItem, ordine, now,
                       Math.max(1, Math.min(Math.round(quanti * 0.3),
-                                           porta - P.learning.length)), gruppi)
+                                           porta - P.learning.length)), gruppi, marea)
   const scaduti = [...A.due, ...P.due, ...B.due]
-    .sort((x, y) => overdue(getItem(y), now) - overdue(getItem(x), now))
+    .sort((x, y) => overdue(getItem(y), now, marea(y)) - overdue(getItem(x), now, marea(x)))
     .slice(0, Math.max(1, Math.min(4, Math.round(porta / 2))))
 
   let pool = [...new Set([...A.learning, ...P.learning, ...B.learning, ...scaduti])]

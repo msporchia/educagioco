@@ -16,9 +16,15 @@
      · cosa può uscire in questa tappa?   → `poolTappa`
      · e nel volo libero?                 → `poolLibero`
      · cosa chiede il boss?               → `chiaveDelBoss`
-   ═══════════════════════════════════════════════════════════════════ */
+
+   E in tutti e tre i pool passa LA MAREA (`store/marea.js`): quello che
+   sta sotto il livello del bambino si dimentica più piano, così chi sa
+   fino all'8 non si vede chiedere 2×3 per il solo passare dei giorni.
+   Il boss no: chiede la casella più tosta fra quelle che non reggono, e
+   una casella arrugginita in fondo alla scala non è mai la più tosta. */
 import { strength, overdue, weight, activeSet, isMastered, SRS } from './srs.js'
 import { CAMPAGNA, chiaveCalcolo, fattoriDi, calcoliTabellina } from '../data/tabelline.js'
+import { mareaTabelline } from './marea.js'
 
 const VUOTO = { s: 0, ok: 0, err: 0, last: 0, seen: 0, t: 0 }
 /* letto e non creato: chiedere se una casella è forte non deve scriverla
@@ -132,32 +138,34 @@ export const CUORE = 6
 export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
   const dammi = k => leggi(items, k)
   const ordine = ordineDi(items, now)
+  const marea = mareaTabelline(items, now)
   const tabelle = tappa.tabelle
   const tutte = chiaviDelle(tabelle)
   const quante = quanti || insiemeDi(tabelle)
   const scaduti = (lista, max) => lista
-    .sort((x, y) => overdue(dammi(y), now) - overdue(dammi(x), now)).slice(0, max)
+    .sort((x, y) => overdue(dammi(y), now, marea(y)) - overdue(dammi(x), now, marea(x)))
+    .slice(0, max)
 
   // il Sole: nessuna tabellina nuova, tutto insieme e senza sconti
   if (!tappa.nuova) {
     const { learning, due } = activeSet(tutte, dammi, ordine, now, quante,
-                                        k => tabellineDi(k, tabelle))
+                                        k => tabellineDi(k, tabelle), marea)
     const p = [...new Set([...learning, ...scaduti(due, 4)])]
     return p.length ? p : tutte
   }
 
   const sue = calcoliTabellina(tappa.nuova)
   const altre = tutte.filter(k => !sue.includes(k))
-  const A = activeSet(sue, dammi, ordine, now, Math.max(CUORE, Math.round(quante * 0.6)))
+  const A = activeSet(sue, dammi, ordine, now, Math.max(CUORE, Math.round(quante * 0.6)),
+                      null, marea)
 
   const cuore = [...A.learning]
   if (cuore.length < CUORE) {
     // le già imparate rientrano dalla meno salda: è ripasso della tappa,
     // non ripasso di ieri, e tiene il pool abbastanza largo perché la
     // stessa domanda non debba uscire due volte di fila
-    const tornano = sue.filter(k => !cuore.includes(k))
-      .sort((x, y) => weight(dammi(y), now, { useTime: true }) -
-                      weight(dammi(x), now, { useTime: true }))
+    const peso = k => weight(dammi(k), now, { useTime: true, lentezza: marea(k) })
+    const tornano = sue.filter(k => !cuore.includes(k)).sort((x, y) => peso(y) - peso(x))
     cuore.push(...tornano.slice(0, CUORE - cuore.length))
   }
 
@@ -166,7 +174,7 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
      con sei caselle della tabellina nuova e otto di quelle vecchie, cioè
      l'opposto della ricetta scritta qui sopra. */
   const spazio = Math.max(2, Math.min(quante - CUORE, cuore.length))
-  const B = activeSet(altre, dammi, ordine, now, spazio, k => tabellineDi(k, tabelle))
+  const B = activeSet(altre, dammi, ordine, now, spazio, k => tabellineDi(k, tabelle), marea)
   const vecchi = [...new Set([...B.learning,
                               ...scaduti([...A.due, ...B.due], spazio)])].slice(0, spazio)
 
@@ -185,11 +193,13 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
    che il motore trova da ridire. */
 export function poolLibero(items, now = Date.now(), quanti = 16, tappaRaggiunta = 0) {
   const dammi = k => leggi(items, k)
+  const marea = mareaTabelline(items, now)
   const tutte = chiaviDelle(TUTTE_LE_TABELLE)
   const { learning, due } = activeSet(tutte, dammi, ordineDi(items, now), now, quanti,
-                                      k => tabellineDi(k, TUTTE_LE_TABELLE))
+                                      k => tabellineDi(k, TUTTE_LE_TABELLE), marea)
   const scaduti = due
-    .sort((x, y) => overdue(dammi(y), now) - overdue(dammi(x), now)).slice(0, 4)
+    .sort((x, y) => overdue(dammi(y), now, marea(y)) - overdue(dammi(x), now, marea(x)))
+    .slice(0, 4)
   const p = [...new Set([...learning, ...scaduti])]
   if (p.length) return p
   return chiaviDelle(ultimeTabelline(tappaRaggiunta))

@@ -18,6 +18,7 @@
 import { ref, computed } from 'vue'
 import { state } from '../store/profile.js'
 import { strength } from '../store/srs.js'
+import { mareaTabelline, frontieraTabelline } from '../store/marea.js'
 
 const props = defineProps({ tabelle: { type: Array, default: () => [] } })
 
@@ -33,6 +34,13 @@ const statoDi = (a, b) => state.profile.items[chiave(a, b)] || null
 const adesso = ref(Date.now())
 const scelta = ref(null)
 
+/* la marea (`store/marea.js`): la stessa forza efficace che usa il pool,
+   se no la tavola direbbe «da ripassare» di un 2×3 che il gioco, a
+   ragione, non ripropone a chi sa fino all'8. E la frontiera si dice,
+   in una riga: è la risposta a «fin dove sono arrivato». */
+const marea = computed(() => mareaTabelline(state.profile.items, adesso.value))
+const frontiera = computed(() => frontieraTabelline(state.profile.items))
+
 /* i colori sono quelli del tema, non altri quattro: il rosso è quello
    degli errori, il verde quello delle barre dei progressi */
 const GRADI = [
@@ -45,7 +53,7 @@ const GRADI = [
 function grado(a, b) {
   const it = statoDi(a, b)
   if (!it || !it.seen) return GRADI[0]
-  const s = strength(it, adesso.value)
+  const s = strength(it, adesso.value, marea.value(chiave(a, b)))
   return s >= 4 ? GRADI[3] : s >= 2 ? GRADI[2] : GRADI[1]
 }
 
@@ -86,8 +94,11 @@ const dettaglio = computed(() => {
       <div class="chi">
         <b>Calcoli che sai</b>
         <div class="barretta"><i :style="{ width: quota }"></i></div>
-        <p class="mini">Il colore dice come stai messo oggi: quello che non si
-          ripassa torna indietro da solo.</p>
+        <p class="mini" :data-frontiera="frontiera"><template v-if="frontiera >= 2">Sai
+          tutte le tabelline fino al <b>{{ frontiera }}</b>: quelle sotto restano
+          ferme più a lungo, il resto torna indietro da solo se non si
+          ripassa.</template><template v-else>Il colore dice come stai messo oggi:
+          quello che non si ripassa torna indietro da solo.</template></p>
       </div>
     </div>
 

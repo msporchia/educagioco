@@ -232,6 +232,66 @@ riposo** fino a fine partita: ha dimostrato di saperlo adesso, e al suo posto
 l'insieme in lavorazione ne fa entrare un altro. Il consolidamento vero resta
 affidato ai ripassi dei giorni dopo.
 
+#### La marea: quello che sta sotto il livello si dimentica più piano
+
+La curva dell'oblio è una sola, uguale per ogni elemento, e per le parole
+inglesi va bene: «dog» e «butterfly» non stanno su una scala. Le tabelline
+e il calcolo a mente sì, e lì la curva era cieca a una cosa che un maestro
+vede subito: **chi sa 7×8 non ha dimenticato 2×3**. Un bambino che sapeva
+tutto fino all'8 si vedeva chiedere 2×3 nel volo libero — non l'aveva
+sbagliato, non lo vedeva da dieci giorni, e la forza efficace scendeva da 4
+a 3 come per qualunque altra casella; un elemento arrugginito pesa più di
+un 7×8 imparato ieri, e la pesca lo tirava fuori.
+
+`store/marea.js` stima **la frontiera** — fin dove il bambino sa tutto —
+e da lì dà a ogni elemento una **lentezza**: quante volte più lungo è il
+suo intervallo di ripasso. Il motore la riceve come numero (`lentezza` in
+`overdue`, `strength`, `weight`, `activeSet`) e non sa da dove viene; chi
+non la passa — le lingue, i quiz — ha la curva di sempre.
+
+- **La frontiera delle tabelline** è la tabellina più alta fin dove i
+  gradini reggono tutti, contando dal 2. Il gradino di un calcolo è il suo
+  fattore più alto (la fatica di 3×7 è quella del 7), quindi la scala è
+  triangolare: il gradino 3 è 2×3 e 3×3, il gradino 8 va da 2×8 a 8×8. Un
+  gradino regge se ne manca al più una casella su cinque, e comunque una:
+  con lo zero uno sbaglio solo farebbe crollare la stima, e con lei tutta
+  la marea. Un buco al 5 ferma la frontiera al 4 anche se il 7 regge: quel
+  7 non dice «è arrivato al 7», dice che ha un buco. ×1 e ×10 non contano
+  e stanno in fondo alla scala, come già in `banale`.
+- **La frontiera del calcolo a mente** è quante stazioni reggono di
+  seguito dalla prima, e il gradino di una chiave è la stazione del suo
+  concetto. È **una stima separata**: chi sa 47+29 non ha nessun titolo su
+  7×8, e le due frontiere non si guardano.
+- **La curva** è `1 + (distanza/2)²`, col tetto a 10: a un gradino sotto
+  1,25, a due 2, a quattro 5, a sei 10. Continua e senza scalini, perché
+  uno scalino a una distanza precisa vorrebbe dire che 5×6 e 4×6 si
+  dimenticano in modi diversi. Due esempi: per chi sa fino all'8, 2×3 sta
+  sei gradini sotto e dopo quaranta giorni ha ancora forza 5 (senza marea
+  ne avrebbe 3, e tornerebbe in giro); 7×8 è la frontiera, lentezza 1,
+  cadenza di sempre. Per chi sa tutto fino al 9, 7×9 ha lentezza 2 e 2×3
+  10: in cento giorni di volo libero escono 268 caselle del 7-8-9 e
+  nessuna del 2-3-4.
+
+Tre cose che la marea **non** fa, ed è quello che la tiene onesta: non
+tocca la frontiera né quello che sta sopra (il 9 di chi lavora sul 9 ha la
+cadenza di sempre); non tocca quello che è stato **sbagliato di recente**
+— un 2×3 sbagliato ieri torna comunque, alla curva normale, per un mese
+(`RIENTRO`; la data la scrive `record` in `errAt`, perché `err` conta e non
+dice quando); e non rende niente eterno — l'intervallo più lungo, tre
+settimane, al tetto fa sette mesi. Il boss non ne sa niente: chiede la
+casella più tosta fra quelle che non reggono, e una casella arrugginita in
+fondo alla scala non è mai la più tosta.
+
+**La frontiera si legge dalla forza nominale**, non da quella efficace,
+per non mordersi la coda: la forza efficace dipende dalla lentezza e la
+lentezza dalla frontiera. La nominale è quello che il bambino ha dimostrato,
+e scende con gli sbagli: chi torna dopo un anno e sbaglia 7×8 abbassa la
+frontiera, e con lei tornano a farsi vedere anche le tabelline sotto. La
+stessa lentezza passa dalla ⭐ dei pianeti (`tabellineIntereDi`) e da «Cosa
+so», se no la stella del 2 si spegnerebbe mentre il pool, a ragione, non lo
+ripropone — e «Cosa so» dice la frontiera in una riga («sai tutte le
+tabelline fino all'8»). I numeri stanno in `unita/asteroidi`, blocco 10.
+
 ### Tabelline Asteroidi
 Si tocca l'asteroide con il risultato giusto prima che arrivi in fondo.
 

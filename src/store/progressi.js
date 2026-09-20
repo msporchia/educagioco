@@ -23,6 +23,7 @@ import { TRAGUARDI, AREE, MEDAGLIE, PREMI, GENERALE_ATTIVO } from '../data/tragu
 import { XP_GIOCHI, MATERIE_GIOCHI, giochiNuoviProvati } from '../giochi/albo.js'
 import { CAMPAGNA, calcoliTabellina } from '../data/tabelline.js'
 import { TOTALE_ELEMENTI } from '../data/calcolo.js'
+import { mareaTabelline } from './marea.js'
 import { concettiSaldi as concettiSaldiDi } from './calcolo.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
 import { CAMPAGNA as TAPPE_ES } from '../data/campagna-spagnolo.js'
@@ -338,12 +339,20 @@ export function misure(p, now = Date.now()) {
 /* ═══════════ le tabelline sapute per intero ═══════════
    Quali delle dieci tabelline sono imparate tutte e dieci le caselle,
    adesso. Torna i numeri e non un conteggio perché la campagna deve
-   sapere *quale* pianeta ha la stella, non quanti. */
+   sapere *quale* pianeta ha la stella, non quanti.
+
+   Con la marea (`store/marea.js`): la stella si legge dalla forza
+   efficace, e la forza efficace di un 2×3 per chi sa fino all'8 cala
+   più piano — se qui non se ne tenesse conto, la stella del 2 si
+   spegnerebbe mentre il pool, che ne tiene conto, non lo ripropone, e
+   un bambino avrebbe una stella persa senza modo di riprendersela. */
 export function tabellineIntereDi(p, now = Date.now()) {
   const items = p.items || {}
+  const marea = mareaTabelline(items, now)
   const out = []
   for (let n = 1; n <= 10; n++)
-    if (calcoliTabellina(n).every(k => items[k] && isMastered(items[k], now))) out.push(n)
+    if (calcoliTabellina(n).every(k => items[k] && isMastered(items[k], now, marea(k))))
+      out.push(n)
   return out
 }
 

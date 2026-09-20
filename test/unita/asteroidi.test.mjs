@@ -19,7 +19,8 @@
    E poi il volo libero, che non chiede più quali tabelline allenare e
    quindi deve saper scegliere da sé.
    ═══════════════════════════════════════════════════════════════════ */
-import { CAMPAGNA, VOLO_LIBERO, calcoliTabellina, fattoriDi } from '../../src/data/tabelline.js'
+import { CAMPAGNA, VOLO_LIBERO, calcoliTabellina, fattoriDi, chiaveCalcolo }
+  from '../../src/data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
 import { SCALETTA, CAPITOLI, superata, raggiunta,
          dopoDi, posizioneOra, filaDi, filaDopo, campagneDaFila,
@@ -28,11 +29,14 @@ import { SCALETTA, CAPITOLI, superata, raggiunta,
    (`scaletta`, la fila filtrata dell'interruttore di una volta) */
 import * as ASTEROIDI from '../../src/data/asteroidi.js'
 import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina, insiemeDi,
-         chiaviDelle, ultimeTabelline, eNulla, CUORE, TUTTE_LE_TABELLE }
+         chiaviDelle, ultimeTabelline, eNulla, CUORE, TUTTE_LE_TABELLE, banale }
   from '../../src/store/tabelline.js'
 import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo }
   from '../../src/store/calcolo.js'
-import { createPicker, record, newItem, strength } from '../../src/store/srs.js'
+import { createPicker, record, newItem, strength, IVL, SRS } from '../../src/store/srs.js'
+import { frontieraTabelline, mareaTabelline, frontieraCalcolo, mareaCalcolo,
+         lentezzaDa, MAREA_MAX, RIENTRO } from '../../src/store/marea.js'
+import { chiaviDi, concettoDiChiave } from '../../src/data/calcolo.js'
 import { state, init, selectPlayer, mateProgresso, calcProgresso,
          asteroidiCompleta, sincronizzaAsteroidi } from '../../src/store/profile.js'
 /* come sopra: serve a controllare che due funzioni NON ci siano più */
@@ -745,6 +749,174 @@ const PROFILI = T => ({
   controlla('e dura una domanda, non un cronometro',
             POTENZIAMENTI.gelo.durata === undefined, 'è tornata una durata a tempo')
   nota(`gelo a ${POTENZIAMENTI.gelo.lento}× per una domanda, tasca da ${TASCA_MAX}`)
+}
+
+/* ═══════════ 10. LA MAREA ═══════════
+   Il guasto, visto giocando: un bambino che sa tutto fino all'8 si
+   vedeva chiedere 2×3 nel volo libero. Non l'aveva sbagliato — non lo
+   vedeva da dieci giorni, e la curva dell'oblio del motore, uguale per
+   ogni elemento, lo faceva arrugginire quanto un 7×8: forza efficace da
+   4 a 3, e un elemento arrugginito pesa più di uno appena imparato. La
+   curva è giusta e cieca a una cosa che un maestro vede subito: chi sa
+   7×8 non ha dimenticato 2×3.
+
+   `store/marea.js` stima la FRONTIERA — fin dove il bambino sa tutto —
+   e rallenta il decadimento di quello che sta sotto, in proporzione
+   alla distanza. Qui si prova con lo stesso finto bambino: la stima, la
+   curva, e i tre «non» che la tengono onesta (non tocca la frontiera,
+   non tocca lo sbaglio recente, non rende niente eterno). Due stime
+   separate: chi sa 47+29 non ha nessun titolo su 7×8. */
+{
+  /* le caselle fino alla tabellina `n` compresa, più ×1 e ×10 (che
+     sono regole e il gioco le dà per sapute): ogni chiave UNA volta,
+     altrimenti la forza parte da sei invece che da cinque */
+  const finoA = n => {
+    const out = new Set()
+    for (let a = 1; a <= n; a++) for (let b = a; b <= n; b++) out.add(chiaveCalcolo(a, b))
+    for (let a = 1; a <= 10; a++) out.add(chiaveCalcolo(a, 10))
+    return [...out]
+  }
+  const tabellineNel = p => new Set(p.map(k => {
+    const [lo, hi] = fattoriDi(k)
+    return lo === 1 || hi === 10 ? 'banale' : hi
+  }))
+
+  /* ── la curva ── */
+  uguale('alla frontiera e sopra la curva è quella di sempre',
+         [lentezzaDa(0), lentezzaDa(-1), lentezzaDa(-3)].join(' '), '1 1 1')
+  controlla('sotto cresce con la distanza, senza gradini',
+            lentezzaDa(1) > 1 && lentezzaDa(2) > lentezzaDa(1) && lentezzaDa(4) > lentezzaDa(2),
+            [1, 2, 3, 4].map(lentezzaDa).join(' '))
+  dentro('a un gradino sotto è quasi la curva normale', lentezzaDa(1), 1.1, 1.5)
+  dentro('a quattro gradini sotto si vede a un quinto della cadenza', lentezzaDa(4), 4, 6)
+  uguale('e non passa mai il tetto', lentezzaDa(20), MAREA_MAX)
+  nota(`la curva: ${[0, 1, 2, 3, 4, 5, 6].map(d => lentezzaDa(d)).join(' · ')}` +
+       ` — con l'intervallo più lungo (${IVL[IVL.length - 1]} giorni) il tetto fa ` +
+       `${Math.round(IVL[IVL.length - 1] * MAREA_MAX / 30)} mesi`)
+
+  /* ── la frontiera delle tabelline ── */
+  uguale('chi non sa niente non ha nessuna frontiera', frontieraTabelline({}), 0)
+  uguale('chi sa tutto fino all\'8 ha la frontiera all\'8',
+         frontieraTabelline(saputo(finoA(8))), 8)
+  uguale('chi sa tutto ce l\'ha al 9', frontieraTabelline(saputo(finoA(9))), 9)
+  const buco = saputo(finoA(8).filter(k => !calcoliTabellina(5).includes(k)))
+  uguale('un buco al 5 ferma la frontiera al 4, anche se il 7 regge',
+         frontieraTabelline(buco), 4)
+  const quasi = saputo(finoA(8).filter(k => k !== 'math:7x8'))
+  uguale('una casella sola che manca non la ferma: una su cinque può mancare',
+         frontieraTabelline(quasi), 8)
+  uguale('e ×1 e ×10 non contano: sono regole, non fatti',
+         frontieraTabelline(saputo(finoA(8).filter(k => !banale(k)))), 8)
+
+  /* ── chi sa fino all'8 non riceve 2×3 per solo decadimento ──
+     Quaranta giorni: a forza cinque l'intervallo è di otto giorni, e
+     la curva di sempre porta la forza efficace sotto la padronanza
+     dopo trentadue. La marea la tiene su per sette mesi. */
+  {
+    const items = saputo(finoA(8), ORA - 40 * GIORNO)
+    const m = mareaTabelline(items, ORA)
+    uguale('la tabellina del 9, che sta sopra la frontiera, ha la curva di sempre',
+           m('math:8x9'), 1)
+    uguale('e l\'8, che È la frontiera, pure', m('math:7x8'), 1)
+    controlla('mentre 2×3, sei gradini sotto, è al tetto', m('math:2x3') >= 5,
+              `lentezza ${m('math:2x3')}`)
+    controlla('e ×1 sta in fondo alla scala per principio', m('math:1x7') >= m('math:2x3'))
+    uguale('senza la marea 2×3 sarebbe già arrugginito',
+           strength(items['math:2x3'], ORA) < SRS.masterS, true)
+    uguale('con la marea è ancora saputo', strength(items['math:2x3'], ORA, m('math:2x3')),
+           SRS.masterS + 1)
+
+    for (const giorni of [12, 30]) {
+      const it = saputo(finoA(8), ORA - giorni * GIORNO)
+      const p = poolLibero(it, ORA, 16, 8)
+      const tab = tabellineNel(p)
+      controlla(`dopo ${giorni} giorni il volo libero non ripesca il 2, il 3 o il 4`,
+                ![2, 3, 4].some(n => tab.has(n)), [...tab].join(', '))
+      controlla(`e sta sul 9, che non sa, e sull'8 e il 7`,
+                tab.has(9), [...tab].join(', '))
+      const t = poolTappa(CAMPAGNA[8], it, ORA)
+      const tt = tabellineNel(t)
+      controlla(`e nemmeno il pianeta del 9`, ![2, 3, 4].some(n => tt.has(n)), [...tt].join(', '))
+    }
+  }
+
+  /* ── ma lo riceve, se l'ha sbagliato ieri ── */
+  {
+    const items = saputo(finoA(8), ORA - 12 * GIORNO)
+    items['math:2x3'] = record(items['math:2x3'], { correct: false, ms: 3000, now: ORA - GIORNO })
+    const m = mareaTabelline(items, ORA)
+    uguale('la frontiera non si muove per uno sbaglio solo', frontieraTabelline(items), 8)
+    uguale('ma 2×3 sbagliato ieri torna alla curva di sempre', m('math:2x3'), 1)
+    controlla('e quindi nel volo libero c\'è', poolLibero(items, ORA, 16, 8).includes('math:2x3'))
+    controlla('e nel pianeta del 9 pure', poolTappa(CAMPAGNA[8], items, ORA).includes('math:2x3'))
+    uguale('mentre 2×4, mai sbagliato, resta fermo', m('math:2x4') > 1, true)
+    // e dopo un mese lo sbaglio è passato: torna sotto la marea
+    const dopo = mareaTabelline(items, ORA + RIENTRO)
+    controlla('passato il mese dello sbaglio la marea lo riprende', dopo('math:2x3') > 1)
+  }
+
+  /* ── chi sa tutto ripassa 7-8-9 più di 2-3-4 ── */
+  {
+    const items = saputo(finoA(9), ORA - 60 * GIORNO)
+    const m = mareaTabelline(items, ORA)
+    controlla('per chi sa tutto il 9 si dimentica più in fretta del 2',
+              m('math:2x3') > m('math:7x9'), `2×3: ${m('math:2x3')}, 7×9: ${m('math:7x9')}`)
+    let alte = 0, basse = 0
+    for (let g = 0; g < 20; g++) {
+      const p = poolLibero(items, ORA + g * 5 * GIORNO, 16, 10)
+      for (const k of p) {
+        const [lo, hi] = fattoriDi(k)
+        if (lo === 1 || hi === 10) continue
+        if (hi >= 7) alte++; else if (hi <= 4) basse++
+      }
+    }
+    controlla('e nel volo libero, guardato per cento giorni, 7-8-9 escono più di 2-3-4',
+              alte > basse * 2, `${alte} contro ${basse}`)
+    nota(`chi sa tutto: ${alte} caselle del 7-8-9 contro ${basse} del 2-3-4 in cento giorni`)
+  }
+
+  /* ── e il boss non ne sa niente ── */
+  {
+    const items = saputo(finoA(8), ORA - 30 * GIORNO)
+    const scelte = Array.from({ length: 100 },
+      () => chiaveDelBoss(VOLO_LIBERO, null, items, ORA))
+    controlla('il boss chiede ancora la casella più tosta, non una arrugginita in fondo',
+              scelte.every(k => fattoriDi(k)[1] >= 7), [...new Set(scelte)].join(', '))
+  }
+
+  /* ── il calcolo a mente: una stima SUA ── */
+  {
+    const ks = STAZIONI.slice(0, 6).flatMap(S => S.nuovi).flatMap(id => chiaviDi(id))
+    const items = saputo([...new Set(ks)], ORA - 12 * GIORNO)
+    uguale('chi sa le prime sei stazioni ha la frontiera alla sesta',
+           frontieraCalcolo(items), 6)
+    uguale('e sulle tabelline non ha nessuna frontiera: sono due mestieri',
+           frontieraTabelline(items), 0)
+    uguale('chi sa fino all\'8 non ha nessuna frontiera a mente',
+           frontieraCalcolo(saputo(finoA(8))), 0)
+
+    const m = mareaCalcolo(items, ORA)
+    uguale('«Due cifre», la frontiera, ha la curva di sempre', m('calc:due-somma'), 1)
+    uguale('e «Riporti», che sta sopra, pure', m('calc:somma-riporto'), 1)
+    controlla('mentre 3+4, cinque stazioni sotto, va piano', m('calc:3+4') >= 5,
+              `lentezza ${m('calc:3+4')}`)
+
+    const S = STAZIONI[6]
+    const stazioneDi = k => STAZIONI.findIndex(x => x.nuovi.includes(concettoDiChiave(k)))
+    let vecchie = 0
+    for (let g = 0; g < 20; g++) {
+      const p = poolDi(S, items, ORA + g * GIORNO)
+      vecchie += p.filter(k => stazioneDi(k) <= 1).length
+    }
+    uguale('nella stazione dei riporti, per venti giorni, le prime due stazioni non tornano',
+           vecchie, 0)
+
+    // sbagliato ieri: 3+4 torna, con la forza che gli resta
+    items['calc:3+4'] = record(items['calc:3+4'], { correct: false, ms: 3000, now: ORA - GIORNO })
+    uguale('3+4 sbagliato ieri torna alla curva di sempre', mareaCalcolo(items, ORA)('calc:3+4'), 1)
+    controlla('e sta nel pool della stazione dei riporti',
+              poolDi(S, items, ORA).includes('calc:3+4'), poolDi(S, items, ORA).join(' '))
+  }
 }
 
 riassunto('Asteroidi: quali domande escono, e in che ordine')
