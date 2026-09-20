@@ -731,8 +731,14 @@ export function firmaEquilibrio() {
   const roba = JSON.stringify([
     CFG, CRESCITA, GEOMETRIA, MONDO, VALE_IL_GELO, RAMI, RAMI_DA, PIAZZOLE_PER_INGRESSO,
     Object.entries(TORRI).map(([k, T]) => [k, T.danno, T.ricarica, T.area, T.raggio, !!T.gela]),
+    // Il tracciato entra per intero, che la tappa dichiari `forma` o
+    // `forme`: le spezzate decidono quanta strada ogni torre tiene sotto
+    // tiro, e con `t.forma` da solo le sette tappe a più bocche
+    // finivano nella firma come `null` — si poteva ridisegnare la
+    // palude senza che la taratura risultasse stantia. `fronti` sta qui
+    // esplicito e non solo di rimbalzo via `durezza`.
     RACCONTO.map(t => [chiaveTappa(t), t.calcoli, t.cap, t.torri, t.mostri,
-                       !!t.resistenze, !!t.rami, t.forma]),
+                       !!t.resistenze, !!t.rami, t.forme || [t.forma], t.fronti ?? null]),
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una
     // tappa tarata su mostri più lenti non è la stessa tappa
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
