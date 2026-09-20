@@ -82,6 +82,14 @@ import { PER_ID, assettoDi } from '../dati/catalogo.js'
 import { OSTACOLI } from '../dati/ostacoli.js'
 import { tesseraDi } from './bordi.js'
 
+/* Quanto vive un'etichetta effimera (secondi) e di quanto sale (pixel
+   di schermo) lungo tutta la sua vita — vedi `Tela.etichetta`. Due
+   secondi e mezzo perché nasce quasi sempre **sotto un foglio aperto**
+   (la scheda della bestia si riapre dopo il gesto) e deve essere ancora
+   lì quando il foglio si chiude. */
+export const ETICHETTA_DURATA = 2.5
+export const ETICHETTA_SALITA = 28
+
 /* Un rettangolo con gli angoli tondi, in `arcTo` e non in `roundRect`:
    la seconda è recente, e su un telefono che non ce l'ha un `beginPath`
    senza tracciato disegna **niente**, in silenzio — che è il modo in cui
@@ -305,6 +313,18 @@ export class Tela {
     this.A = 0
     this.quadro = null
     this._raf = 0
+    /* ── LE ETICHETTE CHE SALGONO E SVANISCONO ─────────────────────
+       `[{ testo, x, y, nascita, durata }]`: un testo posato su un
+       punto del mondo (in celle, come gli attori), che sale di qualche
+       pixel e sbiadisce in un paio di secondi. È il «+9 ⭐» sopra una
+       bestia rimessa a posto, e domani il «+1 🌾» sopra un campo
+       raccolto: questa classe **non sa cosa ci sia scritto** — riceve
+       un testo e un punto, come il fumetto riceve una faccia.
+
+       La nascita si segna al primo fotogramma in cui si disegna, con
+       l'orologio del quadro: la tela non ha un orologio suo, e non
+       deve averne uno (vedi `disegna`). */
+    this.etichette = []
     /* L'atlante si carica una volta, in background: disegnare prima
        che sia pronto non fa niente (`drawImage` su un'immagine non
        ancora caricata è un no-op silenzioso, non un errore), e il
@@ -415,6 +435,15 @@ export class Tela {
      aggiorna più di rado (mentre si trascina la vista, per dire, dove
      cambia solo `vista` e nient'altro nel resto del quadro). */
   mostra(quadro) { this.quadro = quadro }
+
+  /* Posa un'etichetta effimera su un punto del mondo. `x`, `y` sono in
+     celle — la stessa unità degli attori, così lo zoom non c'entra — e
+     `y` è **dove comincia**: chi la mette sopra una bestia passa la
+     cima della testa, non i piedi. Chi la chiama non aspetta niente:
+     l'etichetta vive nel giro di disegno e sparisce da sola. */
+  etichetta(testo, x, y, durata = ETICHETTA_DURATA) {
+    this.etichette.push({ testo: String(testo), x, y, nascita: null, durata })
+  }
 
   avvia() {
     if (this._raf) return
@@ -537,7 +566,46 @@ export class Tela {
     for (const f of fumetti)
       if (f.vuole) this.chiede(f, quadro.orologio)
       else this.fumetto(f, quadro.orologio)
+    this.disegnaEtichette(quadro.orologio)
     this.disegnaAnello(quadro.anello)
+  }
+
+  /* ── LE ETICHETTE ──────────────────────────────────────────────
+     Sopra tutto, dopo gli attori e i fumetti: un «+9» coperto da una
+     casa è un premio che nessuno ha visto. Ognuna sale di
+     `ETICHETTA_SALITA` pixel lungo la sua vita e sbiadisce nell'ultima
+     metà; scaduta, si toglie dalla lista qui — nessun timer da fuori,
+     e una tela ferma (pagina nascosta) le tiene ferme con sé.
+
+     Il testo è in **pixel di schermo** come i cartelli e il 🧺: deve
+     leggersi a qualunque zoom, e cresce solo un poco con la scala. */
+  disegnaEtichette(orologio) {
+    if (!this.etichette.length) return
+    const ctx = this.ctx
+    const vive = []
+    for (const e of this.etichette) {
+      if (e.nascita == null) e.nascita = orologio
+      const q = (orologio - e.nascita) / e.durata
+      if (q >= 1) continue
+      vive.push(e)
+      const x = e.x * this.cellaPx - this.vista.x
+      const y = e.y * this.cellaPx - this.vista.y - q * ETICHETTA_SALITA
+      if (x < -60 || y < -40 || x > this.L + 60 || y > this.A + 40) continue
+      const alfa = q < .5 ? 1 : 1 - (q - .5) * 2
+      ctx.save()
+      ctx.globalAlpha = Math.max(0, Math.min(1, alfa))
+      ctx.font = `bold ${Math.round(15 + this.scala * 3)}px system-ui,sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'bottom'
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = 4
+      ctx.strokeStyle = 'rgba(8,20,12,.85)'
+      ctx.strokeText(e.testo, x, y)
+      ctx.fillStyle = '#ffe58a'
+      ctx.fillText(e.testo, x, y)
+      ctx.restore()
+    }
+    this.etichette = vive
   }
 
   /* «Qui c'è qualcosa da fare», sopra un campo maturo o una macchina che
