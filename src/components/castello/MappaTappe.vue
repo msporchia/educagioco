@@ -19,8 +19,9 @@
 
    Una tappa chiusa resta visibile: sapere cosa c'è dopo è metà del
    motivo per finire quella di adesso. E se i genitori hanno acceso
-   «tutto aperto», di chiuse non ce n'è nessuna — partita libera
-   compresa, che è una campagna a tutti gli effetti.
+   «tutto aperto», di chiuse non ce n'è nessuna — partite libere
+   comprese, che sono un arco a tutti gli effetti: quattro tasti in
+   fondo, uno per terreno, ognuno col suo record.
    ═══════════════════════════════════════════════════════════════════ */
 import { computed } from 'vue'
 import { TORRI } from '../../data/ops.js'
@@ -32,15 +33,18 @@ const props = defineProps({
   tappe: { type: Array, required: true },
   fatte: { type: Number, default: 0 },      // quante ne ha già superate
   libera: { type: Boolean, default: false },
-  /* il record della partita libera, già in parole («12 ondate · 580
-     nemici fermati · 9 torri»): sta sul tasto, prima di entrare, perché è
-     lì che si decide se riprovarci */
-  primato: { type: String, default: '' },
-  /* quanti potenziamenti definitivi si è già presi nella partita libera
-     (`REGALI` in `data/castello.js`): sta sul tasto accanto al record
-     perché è l'altra cosa che ci si porta dietro da una partita
-     all'altra — e a zero non si dice, che un contatore a zero su un
-     tasto mai premuto non spiega niente */
+  /* le quattro partite libere, una per terreno, ognuna col suo record
+     già in parole («12 ondate · 580 nemici fermati · 9 torri»):
+     `[{ chiave, nome, emoji, primato }]`. Il record sta sul tasto,
+     prima di entrare, perché è lì che si decide se riprovarci. Si
+     aprono tutte insieme, a campagna finita (`libera`). */
+  libere: { type: Array, default: () => [] },
+  /* quanti potenziamenti definitivi si è già presi nelle partite libere
+     (`REGALI` in `data/castello.js`): sono **uno** per il castello, non
+     uno per terreno, e stanno sotto i quattro tasti perché sono l'altra
+     cosa che ci si porta dietro da una partita all'altra — e a zero non
+     si dice, che un contatore a zero su un tasto mai premuto non spiega
+     niente */
   regali: { type: Number, default: 0 },
 })
 defineEmits(['gioca', 'libera', 'indietro'])
@@ -99,12 +103,30 @@ const fatteDi = arco => arco.tappe.filter(({ i }) => i < props.fatte).length
       </button>
     </div>
   </template>
+  <!-- ── le partite libere ──
+       Quattro, una per terreno, e si aprono tutte insieme a campagna
+       finita. Ognuna porta il suo record: quattro terreni non si
+       confrontano fra loro, e un record solo direbbe di un terreno e
+       tacerebbe degli altri. -->
+  <template v-if="libera">
+    <div class="arco libere">
+      <span class="faccia">♾️</span>
+      <b>Partite libere</b>
+      <i v-if="regali" data-regali>🎁 {{ regali }}
+        {{ regali === 1 ? 'potenziamento' : 'potenziamenti' }}</i>
+    </div>
+    <div class="tappe">
+      <button v-for="l in libere" :key="l.chiave" class="tap" :data-tappa="l.chiave"
+              @click="$emit('libera', l.chiave)">
+        <span class="em">{{ l.emoji }}</span>
+        <b>{{ l.nome }}</b>
+        <i v-if="l.primato" class="record">record {{ l.primato }}</i>
+        <i v-else>senza fine</i>
+      </button>
+    </div>
+    <p v-if="regali" class="dote">I potenziamenti presi restano per sempre, su tutti i terreni</p>
+  </template>
   <div class="riga">
-    <button v-if="libera" class="bottone" data-tappa="libera" @click="$emit('libera')">
-      Partita libera ♾️<small v-if="primato" class="record"> · record {{ primato }}</small>
-      <small v-if="regali" class="record dote" data-regali>🎁 {{ regali }}
-        {{ regali === 1 ? 'potenziamento' : 'potenziamenti' }} · restano per sempre</small>
-    </button>
     <button class="bottone chiaro" @click="$emit('indietro')">Indietro</button>
   </div>
 </template>

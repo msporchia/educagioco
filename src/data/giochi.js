@@ -110,6 +110,8 @@
    diverse nella schermata dei grandi.
    ═══════════════════════════════════════════════════════════════════ */
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
+/* le quattro partite libere del castello: dato puro, come questo file */
+import { LIBERE_RACCONTO } from './campagne-castello.js'
 
 export const GIOCHI = [
   /* Senza `grandi`, ed è la stessa correzione già fatta per il Dungeon e
@@ -136,14 +138,22 @@ export const GIOCHI = [
   { chiave: 'torri',      ico: '🏰', nome: 'Difendi il Castello',
     che: 'operazioni in colonna, torri e nemici', area: 'numeri', come: 'strategia',
     grandi: true, chiede: ['moltiplicazioni', 'divisioni'],
-    /* La partita libera non finisce: quello che si porta a casa è quante
-       ondate si sono rette, e com'era fatta quella partita. La forma è
-       quella di `giochi/primati.js`; i giochi nuovi la dichiarano nel
-       manifesto, questo la dichiara qui perché un manifesto non ce l'ha. */
+    /* Le partite libere non finiscono: quello che si porta a casa è
+       quante ondate si sono rette, e com'era fatta quella partita. La
+       forma è quella di `giochi/primati.js`; i giochi nuovi la
+       dichiarano nel manifesto, questo la dichiara qui perché un
+       manifesto non ce l'ha. Sono **quattro sfide**, una per terreno,
+       con un record ciascuna: misura e racconto sono gli stessi per
+       tutte e stanno scritti una volta. La prima — il bosco — eredita
+       il record di quando la libera era una sola: chi aveva retto
+       ventun ondate ieri se le ritrova lì, che era il bosco anche
+       allora. */
     senzaFine: {
-      nome: 'La partita libera', icona: '♾️', misura: 'ondate',
-      che: 'quante ondate reggi',
+      misura: 'ondate', che: 'quante ondate reggi',
       dettagli: d => [`${d.uccisi} nemici fermati`, `${d.torri} torri`],
+      sfide: LIBERE_RACCONTO.map((l, i) => ({
+        chiave: l.chiave, nome: l.nome, icona: l.emoji, eredita: i === 0,
+      })),
     } },
   /* Senza `grandi`, ed è stato un errore di taratura: la sua prima
      giornata è tarata sui sei anni e mezzo (`portata: 32`, ricavata in

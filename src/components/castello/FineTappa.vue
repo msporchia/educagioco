@@ -56,9 +56,10 @@ const segno = k => segnoDi(k, props.sa)
   <template v-else-if="fase === 'trionfo'">
     <h2>🎉 Campagna vinta!</h2>
     <p class="testo">Tutte e {{ quante }} le tappe sono superate: il regno è salvo.
-      Premio: <b>+{{ premio }} 🪙</b>. Si apre la <b>partita libera</b>, senza fine.</p>
+      Premio: <b>+{{ premio }} 🪙</b>. Si aprono le <b>partite libere</b>, senza fine:
+      una per terreno.</p>
     <div class="riga">
-      <button class="bottone" @click="$emit('libera')">Partita libera ♾️</button>
+      <button class="bottone" @click="$emit('libera')">{{ tappa.emoji }} Partita libera ♾️</button>
       <button class="bottone chiaro" @click="$emit('mappa')">Mappa</button>
     </div>
   </template>

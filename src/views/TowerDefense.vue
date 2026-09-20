@@ -47,11 +47,11 @@ import { usaPausa } from '../giochi/pausa.js'
    `giochi/primati.js`, il posto nel profilo in `giochi/campagne.js` —
    gli stessi della corsa infinita e della Sopravvivenza */
 import { primatoDi, segnaPrimato, regaliDi, regaloPreso } from '../giochi/campagne.js'
-import { fraseDiFine, recordInParole } from '../giochi/primati.js'
+import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
-import { CFG, TAPPE, LIBERA, premioTappa, quantiRegali } from '../data/castello.js'
+import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
 import GettoniCampo from '../components/castello/GettoniCampo.vue'
@@ -124,20 +124,30 @@ const regaloAperto = computed(() => fase.value === 'gioco' && vista.regalo > 0 &
 const premio = ref(0)
 /* la partita libera appena finita, rispetto al record: { record, frase } */
 const primato = ref(null)
-const SFIDA = GIOCHI.find(g => g.chiave === 'torri').senzaFine
-// già in parole («12 ondate · 580 nemici fermati · 9 torri»), per il tasto della mappa
-const recordLibera = computed(() => recordInParole(primatoDi('torri'), SFIDA))
-/* quanti potenziamenti definitivi ha in tasca: sta sul tasto della
-   mappa accanto al record, perché è l'altra cosa che uno si porta
-   dietro da una partita libera all'altra */
+/* le quattro sfide del castello, una per partita libera: `sfidaDi` dà
+   quella con la chiave della libera, con misura e racconto ereditati
+   da quello scritto in cima al manifesto */
+const SENZA_FINE = GIOCHI.find(g => g.chiave === 'torri').senzaFine
+/* le quattro libere per la mappa, ognuna col suo record già in parole
+   («12 ondate · 580 nemici fermati · 9 torri»). Si rilegge a ogni
+   partita finita (`primato` cambia), non a ogni fotogramma. */
+const libere = computed(() => (primato.value, LIBERE.map(l => ({
+  chiave: l.chiave, nome: l.nome, emoji: l.emoji,
+  primato: recordInParole(primatoDi('torri', l.chiave), sfidaDi(SENZA_FINE, l.chiave)),
+}))))
+/* quanti potenziamenti definitivi ha in tasca: sta sulla mappa sopra i
+   quattro tasti, perché è l'altra cosa che uno si porta dietro da una
+   partita libera all'altra — e vale su tutti i terreni */
 const doteLibera = computed(() => quantiRegali(regali.value))
 
 const campo = ref(null)            // il componente del campo, non la tela
 const cassa = new Cassa()
 
 const progresso = computed(() => tdProgresso())
-const tappaIdx = ref(0)            // -1 = partita libera
-const tappa = computed(() => (tappaIdx.value < 0 ? LIBERA : TAPPE[tappaIdx.value]))
+const tappaIdx = ref(0)            // -1 = partita libera, quella di `liberaScelta`
+const liberaScelta = ref(LIBERE[0].chiave)
+const tappa = computed(() => (tappaIdx.value < 0 ? liberaDi(liberaScelta.value) || LIBERE[0]
+                                                  : TAPPE[tappaIdx.value]))
 const campagna = computed(() => tappaIdx.value >= 0)
 const divisioni = computed(() => divisioniAccese())
 /* la partita libera si apre vincendo l'ultima tappa — o subito, se i
@@ -444,14 +454,18 @@ function avvisa(t) { messaggio.testo = t; messaggio.n++ }
    solo quanto lo si vede grande. */
 watch(fase, () => nextTick(() => campo.value?.ridimensiona()))
 
-/* ── le fasi ── */
-function inizia(i = tappaIdx.value) {
+/* ── le fasi ──
+   `i` è l'indice della tappa, o -1 per una partita libera: quale, lo
+   dice `quale` (la chiave di una di `LIBERE`), e chi non lo dice
+   rigioca quella di prima. */
+function inizia(i = tappaIdx.value, quale = null) {
   accendiPrimiPassi()
   /* una tappa che comincia non comincia in pausa: il telefono posato
      sulla mappa, o davanti al cartello di fine, lascia il freno acceso —
      e senza questa riga la battaglia nuova nascerebbe dietro un velo che
      nessuno ha chiesto */
   togli()
+  if (quale && liberaDi(quale)) liberaScelta.value = quale
   tappaIdx.value = i
   cassa.perTappa(tappa.value)
   chiudi()
@@ -488,6 +502,10 @@ function tappaSuperata() {
 
 const prossimaTappa = () => inizia(Math.min(TAPPE.length - 1, tappaIdx.value + 1))
 const prossima = computed(() => (campagna.value ? TAPPE[tappaIdx.value + 1] || null : null))
+/* la partita libera del terreno su cui si è appena giocato: è quella
+   che il cartello del trionfo offre — si è finito nella palude, e la
+   palude senza fine è la porta accanto */
+const liberaDiQui = () => (LIBERE.find(l => l.campagna === tappa.value.campagna) || LIBERE[0]).chiave
 
 function finePartita() {
   fase.value = 'fine'
@@ -499,9 +517,12 @@ function finePartita() {
      corso meno una, come le conta il cartello. */
   primato.value = null
   if (!campagna.value) {
+    /* il record è **di questa libera**: la chiave della sfida è quella
+       del terreno, e il quaderno di ogni terreno è suo */
+    const sfida = sfidaDi(SENZA_FINE, tappa.value.chiave)
     const esito = segnaPrimato('torri', Math.max(0, hud.onda - 1), Date.now(),
-                               { uccisi: hud.uccisi, torri: hud.torri })
-    primato.value = { ...esito, frase: fraseDiFine(esito, SFIDA.misura) }
+                               { uccisi: hud.uccisi, torri: hud.torri }, tappa.value.chiave)
+    primato.value = { ...esito, frase: fraseDiFine(esito, sfida.misura) }
   }
 }
 
@@ -535,8 +556,10 @@ onMounted(() => {
                   foglio, apriPiazzola, apriTorre, chiudi,
                   liberi: () => motore().liberi(),
                   versoLoSchermo: (x, y) => campo.value.versoLoSchermo(x, y),
-                  // -1 è la partita libera: tutte le torri, nessun traguardo
-                  iniziaLibera: () => inizia(-1),
+                  // -1 è una partita libera: nessun traguardo. Quale, lo dice
+                  // la chiave (`libera-bosco`…); senza, la prima
+                  iniziaLibera: (quale = LIBERE[0].chiave) => inizia(-1, quale),
+                  LIBERE, liberaScelta,
                   // aggancio per i test: apre un'operazione a un livello preciso
                   forzaOp: (t, lv) => { scelta.value = t; op.value = cassa.operazioneA(t, lv) } }
 })
@@ -597,13 +620,13 @@ onMounted(() => {
       <!-- mappa della campagna · vinta · trionfo · sconfitta -->
       <div v-else class="banco">
         <MappaTappe v-if="fase === 'mappa'" :tappe="TAPPE" :fatte="progresso.tappa"
-                    :libera="libera" :primato="recordLibera" :regali="doteLibera"
-                    @gioca="inizia" @libera="inizia(-1)"
+                    :libera="libera" :libere="libere" :regali="doteLibera"
+                    @gioca="inizia" @libera="quale => inizia(-1, quale)"
                     @indietro="$emit('vai','home')" />
         <FineTappa v-else :fase="fase" :tappa="tappa" :prossima="prossima" :hud="hud"
                    :premio="premio" :quante="TAPPE.length" :campagna="campagna"
                    :divisioni="divisioni" :primato="primato"
-                   @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1)"
+                   @avanti="prossimaTappa" @mappa="allaMappa" @libera="inizia(-1, liberaDiQui())"
                    @riprova="inizia()" />
       </div>
 

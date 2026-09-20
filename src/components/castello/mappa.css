@@ -25,11 +25,15 @@
 .arco.finito i { color:#1c7a45; background:#dff5e6 }
 /* il primo titolo non ha bisogno di staccarsi da quello che c'è sopra */
 .arco:first-of-type { margin-top:2px }
-/* il record sul tasto della partita libera: più piccolo del nome, sulla
-   stessa riga finché ci sta, a capo quando il racconto è lungo */
-.record { font-size:12.5px; font-weight:800; opacity:.85; white-space:normal }
-/* i regali vanno **sempre a capo**, sotto il record: sono due cose che
-   ci si porta dietro dalla partita di ieri, e sulla stessa riga «record
-   12 ondate · 🎁 7 potenziamenti» si legge come se le ondate fossero
+/* il record sul tasto di una partita libera: al posto delle ondate di
+   una tappa, e con lo stesso corpo — è quello che c'è da leggere prima
+   di entrare, e va a capo quando il racconto è lungo */
+.tap .record { color:var(--arancio, #d1481f); font-weight:800; white-space:normal;
+               text-align:center; line-height:1.25 }
+/* i regali stanno nella testata dell'arco e non su un tasto: sono di
+   tutte e quattro le libere insieme, e su un tasto solo «record 12
+   ondate · 🎁 7 potenziamenti» si leggeva come se le ondate fossero
    sette */
-.record.dote { display:block; font-size:12px; opacity:.8 }
+.arco.libere i { color:#8a4a00; background:#fff1d6 }
+.dote { font-size:11.5px; color:var(--tenue); font-weight:700; text-align:center;
+        margin:2px 0 0; max-width:420px }
