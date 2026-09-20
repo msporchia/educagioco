@@ -21,9 +21,8 @@
 
    Il conto lo fa una bisezione: la vita è monotòna rispetto a dove
    muoiono i nemici, quindi bastano una quindicina di partite simulate
-   per ondata. Quindici tappe più la partita libera — centotrentotto
-   ondate in tutto — costano una ventina di secondi, senza aprire un
-   browser.
+   per ondata. Venti tappe più le quattro partite libere — a venti
+   ondate ciascuna — costano un minuto scarso, senza aprire un browser.
 
      npm run tara                 # tara tutto e riscrive il file dati
      npm run tara -- --prova      # tara e stampa, senza scrivere niente
@@ -32,7 +31,8 @@
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { TAPPE, LIBERA, firmaEquilibrio, vitaDiOnda, chiaveTappa } from '../src/data/castello.js'
+import { TAPPE, LIBERE, ONDATE_TARATE, firmaEquilibrio, vitaDiOnda, chiaveTappa }
+  from '../src/data/castello.js'
 import { gioca, PROFILI } from './simula-castello.mjs'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -204,13 +204,16 @@ const riga = r => `${(vinta(r) ? 'superata' : r.esito === 'persa' ? `persa o${r.
                   ` ${r.cuori}❤ [${r.livelli.join(',')}] speso ${r.speso}/${r.guadagnato}⚡` +
                   ` (in tasca ${(r.inTasca * 100).toFixed(0)}%)`
 
-/* ── anche la partita libera ──
-   Non finisce mai, quindi non si può tabellare tutta: se ne tarano le
-   prime venti ondate come una tappa qualsiasi, e da lì in poi la vita
-   continua a salire con la stessa progressione (`OLTRE`). Senza questo,
-   chi ha appena finito una campagna tarata al filo trovava nella libera
-   dei mostri di burro per quaranta ondate. */
-const ONDATE_LIBERE = 20
+/* ── anche le partite libere, una per una ──
+   Non finiscono mai, quindi non si possono tabellare tutte: se ne
+   tarano le prime venti ondate come una tappa qualsiasi, e da lì in poi
+   la vita continua a salire con la progressione che ognuna ha mostrato
+   in coda (`OLTRE[chiave]`). Senza questo, chi ha appena finito una
+   campagna tarata al filo trovava nella libera dei mostri di burro per
+   quaranta ondate. Sono quattro, una per terreno, e ognuna ha il suo
+   tracciato a due bocche: si tarano **una per una**, perché quello che
+   una Y perdona un anello non lo perdona. */
+const ONDATE_LIBERE = ONDATE_TARATE
 /* `regali: false` non è una dimenticanza: la partita libera regala un
    potenziamento ogni cinque ondate (`REGALI` in `data/castello.js`), e
    la taratura si fa **su chi non ne ha nessuno** — quello che si tara è
@@ -218,16 +221,54 @@ const ONDATE_LIBERE = 20
    appena finita la campagna. Tarando su un giocatore con i regali in
    tasca, chi entra la prima volta troverebbe un muro, e quel muro
    crescerebbe a ogni ritaratura. */
-const libera = { ...LIBERA, ondate: ONDATE_LIBERE, attesa: LIBERA.attesa, regali: false }
+const libere = LIBERE.map(l => ({ ...l, ondate: ONDATE_LIBERE, regali: false }))
+
+/* ── di quanto continua a salire, oltre la tabella ──
+   Il passo con cui la vita cresce dopo l'ultima ondata tarata. Si
+   ricava dai **limiti** della seconda metà della tabella — la vita
+   oltre la quale il metro perde — con una retta sui logaritmi: il
+   limite sale a scatti (un gradino comprato, un mostro che chiude la
+   torre di una strada), e una retta legge la pendenza senza farsi
+   trascinare dal singolo scatto.
+
+   Prima era la media dei rapporti fra le ultime sei vite **spianate**,
+   e con due bocche non funzionava: la spianatura tira la coda giù al
+   livello della sua ondata più mite, quindi la coda è piatta per otto
+   ondate e poi salta — e la media di «×1» e «×5» diceva ×3,9. Cioè un
+   muro alla ventunesima che nessun regalo avrebbe mai comprato.
+
+   E c'è un pavimento, che è **il patto della modalità** e non una
+   misura: prima o poi vince lei. Il passo misurato sta fra 1,10 e 1,16
+   — nella seconda metà della tabella la difesa cresce ancora, e il
+   limite sale piano — ma a quel passo la libera non chiude più:
+   misurato col metro e trentacinque regali in tasca, a ×1,16 si arriva
+   alla 33ª, a ×1,10 non si muore entro un'ora di gioco. A ×1,3 senza
+   regali si cede fra la 20ª e la 22ª e con trentacinque fra la 27ª e
+   la 31ª, che è la scala su cui i regali sono dimensionati
+   (`docs/castello.md`). Sopra 1,3 si tiene quello che il tracciato
+   dice, se dice di più. */
+const OLTRE_MINIMO = 1.3
+function passoOltre(righe) {
+  const meta = righe.filter(r => r.limite > 0 && r.onda > ONDATE_LIBERE / 2)
+  if (meta.length < 3) return 1.2
+  const xs = meta.map(r => r.onda), ys = meta.map(r => Math.log(r.limite))
+  const mx = xs.reduce((s, x) => s + x, 0) / xs.length
+  const my = ys.reduce((s, y) => s + y, 0) / ys.length
+  const cov = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0)
+  const var_ = xs.reduce((s, x) => s + (x - mx) ** 2, 0)
+  return Math.max(OLTRE_MINIMO, Math.round(Math.exp(cov / var_) * 100) / 100)
+}
+/* la chiave con cui una libera sta in `VITE`: la sua, non «campagna/nome» */
+const chiaveDi = t => t.chiave || chiaveTappa(t)
 
 const fatte = {}
-let oltre = 1.2
+const oltre = {}
 console.log(`si gioca dal ${(DA * 100).toFixed(0)}% del limite nella prima ondata ` +
             `al ${(A * 100).toFixed(0)}% nell'ultima\n`)
-for (const [i, tappa] of [...TAPPE.entries(), [TAPPE.length, libera]]) {
+for (const [i, tappa] of [...TAPPE.entries(), ...libere.map((l, k) => [TAPPE.length + k, l])]) {
   const via = Date.now()
   const { vite, righe, a, prove } = taraFinchePassa(tappa)
-  fatte[chiaveTappa(tappa)] = vite
+  fatte[chiaveDi(tappa)] = vite
   const reggono = prove.filter(r => r.esito === 'vinta').length
   console.log(`${i + 1}. ${tappa.nome} — ${tappa.ondate} ondate · ${tappa.posti} posti · ` +
               `cap ${tappa.cap} · fino al ${(a * 100).toFixed(0)}% del limite` +
@@ -242,16 +283,14 @@ for (const [i, tappa] of [...TAPPE.entries(), [TAPPE.length, libera]]) {
                 `  torri [${r.torri || '—'}] ⚡${String(r.energia ?? '').padStart(3)}` +
                 `  arrivati al ${((r.avanzata ?? 0) * 100).toFixed(0)}%` +
                 `${r.persi ? ' · −' + r.persi + '❤' : ''}`)
-  if (tappa === libera) {
-    /* di quanto cresce, alla fine: è il passo con cui la vita continuerà
-       a salire oltre l'ultima ondata tarata */
-    const ultime = vite.slice(-6)
-    const passi = ultime.slice(1).map((v, k) => v / ultime[k]).filter(x => x > 1)
-    oltre = passi.length ? Math.round((passi.reduce((s, x) => s + x, 0) / passi.length) * 100) / 100 : 1.2
-    console.log(`   oltre l'ondata ${ONDATE_LIBERE} la vita continua a salire di ×${oltre} per ondata`)
+  let suoOltre = tappa.oltre
+  if (tappa.chiave) {
+    suoOltre = passoOltre(righe)
+    oltre[tappa.chiave] = suoOltre
+    console.log(`   oltre l'ondata ${ONDATE_LIBERE} la vita continua a salire di ×${suoOltre} per ondata`)
   }
   // il collaudo si fa sulla tappa con le vite appena trovate
-  const esiti = collauda({ ...tappa, vite, oltre })
+  const esiti = collauda({ ...tappa, vite, oltre: suoOltre })
   for (const [nome, r] of Object.entries(esiti)) console.log(`   ${nome.padEnd(12)} ${riga(r)}`)
   console.log()
 }
@@ -272,9 +311,9 @@ export const VITE = {
 ${Object.entries(fatte).map(([nome, v]) =>
     `  ${JSON.stringify(nome)}: [${v.join(', ')}],`).join('\n')}
 }
-/* di quanto cresce la vita nella partita libera dopo l'ultima ondata
+/* di quanto cresce la vita in ogni partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = ${oltre}
+export const OLTRE = ${JSON.stringify(oltre)}
 export const FIRMA = ${JSON.stringify(firmaEquilibrio())}
 export const BERSAGLIO = [${DA}, ${A}]
 `

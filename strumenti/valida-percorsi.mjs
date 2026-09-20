@@ -76,7 +76,7 @@
                   devono chiudere la stessa torre.
    ═══════════════════════════════════════════════════════════════════ */
 import { Percorso } from '../src/motore/castello/percorso.js'
-import { CAMPAGNE, RACCONTO } from '../src/data/campagne-castello.js'
+import { CAMPAGNE, RACCONTO, LIBERE_RACCONTO } from '../src/data/campagne-castello.js'
 import { MOSTRI, torreResistente } from '../src/data/mostri.js'
 import { TORRI } from '../src/data/ops.js'
 /* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
@@ -84,7 +84,7 @@ import { TORRI } from '../src/data/ops.js'
    scrive — perché senza quel numero questo strumento controllerebbe
    una mappa che non esiste: gli stessi tracciati con otto torri e con
    tre non sono la stessa difesa. */
-import { postiDi, MONDO } from '../src/data/castello.js'
+import { postiDi, MONDO, LIBERE } from '../src/data/castello.js'
 
 /* ── i margini del campo ──
    Il campo è verticale: i mostri entrano dal bordo **alto** e scendono
@@ -169,7 +169,8 @@ const PRESIDIO_MINIMO = 1.85    // il pavimento, ovunque: sotto è un tiro al be
    e a quattro le piazzole non stanno negli stessi posti, e una mappa
    che regge a quattro può avere un buco a tre. Se un giorno l'economia
    cambia quel numero, questo controllo se ne accorge da solo. */
-const postiVeri = t => postiDi(t)
+/* le partite libere non hanno un piano da cui derivarle: le dichiarano */
+const postiVeri = t => t.posti ?? postiDi(t)
 /* In più si prova sempre il caso più magro — **tre** postazioni, il
    minimo che `postiDi` possa dare — anche se oggi nessuna tappa ci
    arriva. Non fa fallire niente: è un avvertimento, perché quanto
@@ -381,7 +382,13 @@ function esaminaForma(t) {
        è un'altra cosa e si paga in piazzole (vedi `postiDi`). */
     const lunghe = vie.map(v => v.lunghezza / S)
     const lung = Math.max(...lunghe)
-    const fascia = FASCE[t.campagna]
+    /* Le partite libere stanno **fuori dalla fascia** della loro
+       campagna, ed è il loro mestiere: sono i tracciati più intricati
+       di ogni mondo, con due bocche che si fondono, quindi più lunghi e
+       più presidiati di qualunque tappa. Tutto il resto — tornanti,
+       corsie, piazzole, buchi, il pavimento del presidio — vale uguale:
+       una strada che si sbava resta una strada che si sbava. */
+    const fascia = t.libera ? null : FASCE[t.campagna]
 
     if (r.gomito < GOMITO)
       guasti.push(`${M.nome}: tornante a spillo, ${r.gomito.toFixed(0)}u ` +
@@ -401,12 +408,12 @@ function esaminaForma(t) {
       guasti.push(`${M.nome}: due piazzole a ${p.fitta.toFixed(0)}u ` +
                   `(minimo ${PIAZZOLE_FITTE}) con qualche postazione in più`)
     lunghe.forEach((l, k) => {
-      if (l < fascia.lung[0] || l > fascia.lung[1])
+      if (fascia && (l < fascia.lung[0] || l > fascia.lung[1]))
         guasti.push(`${M.nome}: ${vie.length > 1 ? `strada ${k + 1} ` : ''}lunga ` +
                     `${l.toFixed(0)}u, fuori dalla fascia ` +
                     `${fascia.lung[0]}–${fascia.lung[1]} della campagna`)
     })
-    if (presidio < fascia.presidio[0] || presidio > fascia.presidio[1])
+    if (fascia && (presidio < fascia.presidio[0] || presidio > fascia.presidio[1]))
       guasti.push(`${M.nome}: presidio ${presidio.toFixed(2)}, fuori dalla fascia ` +
                   `${fascia.presidio[0]}–${fascia.presidio[1]} della campagna`)
     if (presidio < PRESIDIO_MINIMO)
@@ -478,7 +485,7 @@ let rotti = 0
 const medie = {}
 const avvertimenti = []
 
-console.log('\n  ═══ LE QUINDICI TAPPE DEL CASTELLO ═══════════════════════════════════\n')
+console.log('\n  ═══ LE TAPPE DEL CASTELLO, E LE QUATTRO LIBERE ═══════════════════════\n')
 console.log('      tappa                  lung   presidio  gomito corsie  piazzole 3-8 9-12  post: presidio  buco')
 console.log('      ' + '─'.repeat(88))
 
@@ -504,6 +511,32 @@ for (const c of CAMPAGNE) {
     if (tutti.length) { rotti++; for (const g of tutti) console.log(`        ✗ ${g}`) }
   }
   medie[c.id] = presidi.reduce((s, v) => s + v, 0) / presidi.length
+}
+
+/* ── e le quattro partite libere ──
+   Una per terreno, il tracciato più intricato del suo mondo: fuori dalla
+   fascia della campagna (vedi `esaminaForma`), dentro tutto il resto.
+   Mostri e torri arrivano dalla campagna (`LIBERE` in `data/castello.js`),
+   quindi il controllo delle resistenze qui guarda quello che il gioco
+   mette davvero in campo. */
+console.log('\n      ♾️ LE PARTITE LIBERE')
+for (const l of LIBERE) {
+  const t = { ...l, libera: true }
+  const { guasti, avvisi, misure } = esaminaForma(t)
+  const tutti = [...guasti, ...esaminaMostri(t)]
+  for (const a of avvisi) avvertimenti.push(`${t.nome}: ${a}`)
+  const [m] = misure
+  console.log(`    ${tutti.length ? '✗' : ' '} ${(t.nome + ' ' + t.emoji).padEnd(21)}` +
+    `${m.lung.toFixed(0).padStart(5)} ` +
+    `${m.presidio.toFixed(2).padStart(7)} ` +
+    `${m.gomito.toFixed(0).padStart(7)} ` +
+    `${m.corridoio.toFixed(0).padStart(6)} ` +
+    `${m.larga.toFixed(0).padStart(8)} ` +
+    `${m.fitta.toFixed(0).padStart(4)}  ` +
+    `${m.posti}: ${m.poche.presidio.toFixed(2)} ` +
+    `buco ${m.poche.buco.toFixed(0).padStart(3)}u` +
+    `  comune ${(m.comune * 100).toFixed(0)}%`)
+  if (tutti.length) { rotti++; for (const g of tutti) console.log(`        ✗ ${g}`) }
 }
 
 console.log('\n      ' + '─'.repeat(88))
@@ -536,5 +569,6 @@ if (avvertimenti.length) {
   for (const a of avvertimenti) console.log(`        ⚠ ${a}`)
 }
 
-if (rotti) { console.log(`\n  ✗ ${rotti} cose da sistemare su ${RACCONTO.length} tappe\n`); process.exit(1) }
-console.log(`\n  ✓ tutte e ${RACCONTO.length} in regola\n`)
+const QUANTE = RACCONTO.length + LIBERE_RACCONTO.length
+if (rotti) { console.log(`\n  ✗ ${rotti} cose da sistemare su ${QUANTE} tappe e libere\n`); process.exit(1) }
+console.log(`\n  ✓ tutte e ${QUANTE} in regola\n`)

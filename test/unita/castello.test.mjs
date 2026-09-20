@@ -23,13 +23,14 @@
    secondi. Il test nel browser serve a un'altra cosa: a controllare che
    il gioco vero e il simulatore raccontino la stessa partita.
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
+import { TAPPE, LIBERE, LIBERA, CFG, difesaCon, difesaLarga, energiaAll, nemiciDiOnda,
          costoNuovaTorre, costoSalita, forzaDi, partenzaDi, resaTipi, dpsDi,
          tiroDi, operazioniDi, premioTappa, geloDi, vitaNemico, costoDifesaPiena,
          energiaMassima, potenzaDi, pianoDi, ondateDi, postiDi, entrataOnda, frontiDi,
-         firmaEquilibrio, firmaTaratura }
+         ingressiDi, firmaEquilibrio, firmaTaratura }
   from '../../src/data/castello.js'
-import { CAMPAGNE } from '../../src/data/campagne-castello.js'
+import { CAMPAGNE, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
+import { torreResistente } from '../../src/data/mostri.js'
 import { migraCastello, TD_VERSIONE } from '../../src/store/profile.js'
 import { TORRI } from '../../src/data/ops.js'
 import { RESISTENZA } from '../../src/data/mostri.js'
@@ -395,8 +396,8 @@ controlla('le ondate successive portano più nemici', nemiciDiOnda(5) > nemiciDi
 controlla('i nemici delle ondate avanti sono più robusti',
           TAPPE.every(t => vitaNemico(t, t.ondate) > vitaNemico(t, 1)),
           TAPPE.map(t => `${vitaNemico(t, 1)}→${vitaNemico(t, t.ondate)}`).join(' · '))
-controlla('la partita libera parte con la stessa generosità di una tappa di mezzo',
-          LIBERA.partenza >= partenzaDi({ cap: 3 }), `${LIBERA.partenza}⚡`)
+controlla('le partite libere partono con la stessa generosità di una tappa di mezzo',
+          LIBERE.every(l => l.partenza >= partenzaDi({ cap: 3 })), LIBERE.map(l => `${l.partenza}⚡`).join(' '))
 controlla('un errore costa energia ma non è una condanna',
           CFG.malusErrore > 0 && CFG.malusErrore < CFG.potenziamento,
           `${CFG.malusErrore}⚡ contro un potenziamento da ${CFG.potenziamento}⚡`)
@@ -444,27 +445,69 @@ controlla('il gelo di una torre alta frena di più e dura di più',
           `−${(geloDi(1).freno * 100).toFixed(0)}% per ${geloDi(1).durata.toFixed(1)}s → ` +
           `−${(geloDi(10).freno * 100).toFixed(0)}% per ${geloDi(10).durata.toFixed(1)}s`)
 
-/* ── 12. la partita libera ──
-   Non ha traguardo, quindi non si "supera": deve reggere abbastanza da
-   valere una partita, e poi cedere. Le prime venti ondate sono tarate
-   come una tappa; dopo, la vita continua a salire da sola finché la
-   difesa non basta più — una difesa che tiene per sempre è una schermata
-   fissa, non un gioco. */
+/* ── 12. le partite libere, una per terreno ──
+   Non hanno traguardo, quindi non si "superano": ognuna deve reggere
+   abbastanza da valere una partita, e poi cedere. Le prime venti ondate
+   sono tarate come una tappa; dopo, la vita continua a salire da sola
+   finché la difesa non basta più — una difesa che tiene per sempre è
+   una schermata fissa, non un gioco.
+
+   Sono quattro, e ognuna si controlla **da sola**: hanno tracciati a
+   due bocche diversi fra loro, e quello che una Y perdona un anello
+   non lo perdona. La vecchia libera era a strada singola per paura che
+   con due bocche non si tarasse: qui si misura, e se una non reggesse
+   il test lo direbbe col nome. */
 /* `regali: false` non è una dimenticanza: la libera regala un
    potenziamento ogni cinque ondate (`unita/regali-castello`), e quello
    che si controlla qui è **il pavimento** — la primissima partita di
    chi apre la modalità, che di regali non ne ha nessuno. È anche la
    partita su cui `npm run tara` la tara. */
-const primeLibere = gioca({ ...LIBERA, ondate: 12, regali: false }, PROFILI.misura)
-controlla('la partita libera regge una partita vera, senza nessun regalo',
-          primeLibere.esito === 'vinta' || primeLibere.onda >= 12,
-          `cede già all'ondata ${primeLibere.onda}`)
-controlla('la partita libera prima o poi cede',
-          vitaNemico(LIBERA, 60) > vitaNemico(LIBERA, 20) * 20,
-          `all'ondata 60 i nemici hanno ${Math.round(vitaNemico(LIBERA, 60))} di vita, ` +
-          `contro ${Math.round(vitaNemico(LIBERA, 20))} alla ventesima`)
-nota(`partita libera: dodici ondate → ${primeLibere.cuori}❤ con torri ` +
-     `[${primeLibere.livelli}] · la vita all'ondata 40 è ${Math.round(vitaNemico(LIBERA, 40))}`)
+uguale('le partite libere sono quattro, una per campagna',
+       LIBERE.map(l => l.campagna).join(), CAMPAGNE.map(c => c.id).join())
+uguale('e le loro chiavi sono quelle del racconto',
+       LIBERE.map(l => l.chiave).join(), LIBERE_RACCONTO.map(l => l.chiave).join())
+for (const l of LIBERE) {
+  const ultima = TAPPE.filter(t => t.campagna === l.campagna).at(-1)
+  const tutti = new Set(TAPPE.filter(t => t.campagna === l.campagna).flatMap(t => t.mostri))
+  uguale(`${l.nome}: offre le torri dell'ultima tappa della sua campagna`,
+         l.torri.join(), ultima.torri.join())
+  uguale(`${l.nome}: i rami come nella sua campagna`, l.rami, !!ultima.rami)
+  uguale(`${l.nome}: il terreno dell'ultima tappa`, l.ambiente, ultima.ambiente)
+  controlla(`${l.nome}: tutti i mostri della campagna, ognuno una volta`,
+            l.mostri.length === tutti.size && l.mostri.every(m => tutti.has(m)),
+            `${l.mostri.join(' ')} contro ${[...tutti].join(' ')}`)
+  controlla(`${l.nome}: due ondate di fila non chiudono la stessa torre`,
+            l.mostri.every((m, i) => torreResistente(m) !== torreResistente(l.mostri[(i + 1) % l.mostri.length])),
+            l.mostri.map(m => torreResistente(m)).join(' '))
+  controlla(`${l.nome}: ha più di una bocca`, ingressiDi(l) >= 2, `${ingressiDi(l)}`)
+  controlla(`${l.nome}: ogni ondata tarata ha la sua vita`,
+            Array.isArray(l.vite) && l.vite.length === 20 && l.vite.every(v => v > 0),
+            `${l.vite ? l.vite.length : 0} vite`)
+  controlla(`${l.nome}: i nemici non si ammorbidiscono mai andando avanti`,
+            (l.vite || []).every((v, k) => k === 0 || v >= l.vite[k - 1]), (l.vite || []).join(' → '))
+  controlla(`${l.nome}: la vita continua a salire oltre la tabella`, l.oltre > 1, `×${l.oltre}`)
+  /* si gioca **com'è in gioco** — `ondate: Infinity`, così le bocche
+     insieme arrivano da dove le mette `ONDATE_TARATE` — e ci si ferma
+     alla dodicesima: giocarla come una campagna da dodici cambierebbe
+     quella regola, ed è proprio la disallineamento che ha fatto cedere
+     il bivio alla sesta */
+  const prime = gioca({ ...l, regali: false }, { ...PROFILI.misura, finoA: 12 })
+  controlla(`${l.nome}: regge una partita vera, senza nessun regalo`,
+            prime.esito === 'arrivato' && prime.cuori === CFG.cuori,
+            `${prime.esito} all'ondata ${prime.onda} con ${prime.cuori}❤`)
+  controlla(`${l.nome}: prima o poi cede`,
+            vitaNemico(l, 60) > vitaNemico(l, 20) * 20,
+            `all'ondata 60 i nemici hanno ${Math.round(vitaNemico(l, 60))} di vita, ` +
+            `contro ${Math.round(vitaNemico(l, 20))} alla ventesima`)
+  /* e dove cede davvero, giocata fino in fondo da chi corre: è il
+     numero che i regali (`unita/regali-castello`) fanno salire */
+  const fino = gioca({ ...l, regali: false }, PROFILI.pieno)
+  controlla(`${l.nome}: giocata fino in fondo si perde`, fino.esito === 'persa',
+            `${fino.esito} all'ondata ${fino.onda}`)
+  nota(`${l.nome}: dodici ondate → ${prime.cuori}❤ con torri [${prime.livelli}] · ` +
+       `cede all'ondata ${fino.onda} · la vita all'ondata 40 è ${Math.round(vitaNemico(l, 40))}`)
+}
+controlla('`LIBERA` è la prima delle quattro, per chi ne vuole una sola', LIBERA === LIBERE[0])
 
 /* ── 13. le monete: pagare come gli altri giochi ──
    Tabelline, inglese e verbi danno una moneta (per il livello) ogni dieci

@@ -57,7 +57,8 @@
    invece della tassa.
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from './ops.js'
-import { RACCONTO } from './campagne-castello.js'
+import { torreResistente } from './mostri.js'
+import { RACCONTO, LIBERE_RACCONTO } from './campagne-castello.js'
 import { VITE, FIRMA, OLTRE } from './taratura-castello.js'
 
 export const CFG = {
@@ -389,8 +390,8 @@ const durataOnda = o => nemiciDiOnda(o) * intervallo(o) + 6
    tappa tarata sulla sua ondata più dura risultava larga di manica in
    tutte le altre. I numeri li trova `strumenti/tara-castello.mjs`
    giocando la tappa migliaia di volte, e stanno in `taratura-castello.js`.
-   Dove la tabella non arriva — la partita libera, che non finisce mai —
-   resta la vecchia curva. */
+   Dove la tabella non arriva — le partite libere, che non finiscono
+   mai — resta la progressione `oltre` di ciascuna. */
 export function vitaNemico(tappa, onda) {
   const v = tappa.vite
   if (!v || !v.length) return vitaDiOnda(onda, tappa.durezza)
@@ -742,6 +743,10 @@ export function firmaEquilibrio() {
     // `durezza` c'è dentro perché muove la **velocità** dei nemici: una
     // tappa tarata su mostri più lenti non è la stessa tappa
     TAPPE.map(t => [t.ondate, t.posti, t.partenza, t.attesa, t.durezza]),
+    // e le quattro libere, ognuna col suo tracciato: sono tarate come le
+    // tappe, e ridisegnarne una senza ritarare sarebbe lo stesso buco
+    LIBERE.map(l => [l.chiave, l.campagna, l.cap, l.posti, l.torri, l.mostri, l.rami,
+                     l.forme, l.fronti ?? null, l.partenza, l.attesa]),
   ])
   let h = 5381
   for (let i = 0; i < roba.length; i++) h = ((h * 33) ^ roba.charCodeAt(i)) >>> 0
@@ -781,9 +786,12 @@ export const firmaTaratura = () => FIRMA
    definitivo la renderebbe più facile a ogni partita giocata altrove,
    cioè renderebbe la promessa dei `calcoli` una cosa che dipende da
    quanto si è giocato prima. Perciò i regali li prende solo la tappa
-   che lo dichiara (`regali: true`, e ce l'ha solo `LIBERA`), e il
-   motore ignora quelli che gli arrivano per una tappa che non li
-   prevede.
+   che lo dichiara (`regali: true`, e ce l'hanno solo le quattro
+   `LIBERE`), e il motore ignora quelli che gli arrivano per una tappa
+   che non li prevede. I gradi presi sono **uno** per il castello e
+   non uno per terreno: un regalo è una cosa che ci si porta dietro, e
+   quattro tasche separate avrebbero voluto dire ricominciare da zero
+   ogni volta che si cambia terreno.
 
    ── una scelta fatta a occhi aperti ──
 
@@ -942,30 +950,105 @@ export function geloConDoni(lv, ramo, doni) {
   return { ...g, durata: g.durata + doni.gelo, fragile: g.fragile + doni.fragile }
 }
 
-/* La partita libera non finisce: le ondate continuano, i nemici crescono
-   di vita e di velocità a ogni giro, e prima o poi si perde — è quello il
-   punto. Il modello dice dove cede (test unita/castello lo stampa). */
-export const LIBERA = {
-  nome: 'Partita libera', emoji: '♾️', ondate: Infinity, posti: 14, cap: 10,
-  torri: ['add', 'sub', 'mul', 'div'], forma: RACCONTO[3].forma,
-  /* Una strada sola, ed è una scelta. Con due bocche la partita libera
-     diventa intarabile: le sue vite non escono da una tabella completa
-     — oltre la ventesima ondata c'è solo una progressione che sale — e
-     un'ondata che si divide fra due strade fa saltare il gradino dove
-     la tabella finisce e la progressione comincia. I due ingressi sono
-     il tema della Palude, che è tarata ondata per ondata; qui il tema è
-     un altro, cioè quanto si resiste.
-     La forma è quella del folto, e il terreno va detto: senza, si
-     dipingerebbe il bosco di mezzogiorno sopra il tracciato sbagliato */
-  ambiente: 'bosco-fitto',
-  resistenze: true, rami: true,            // tutto aperto: è la modalità di chi sa già
-  /* e i regali: solo qui. Nelle tappe della campagna il campo non
-     esiste, quindi il motore non li applica mai — vedi il blocco dei
-     regali qui sopra */
-  regali: true,
-  mostri: null,                           // i mostri li pesca tutti, vedi data/mostri.js
-  partenza: partenzaDi({ cap: 4 }), durezza: 1, attesa: 30,
-  /* le prime venti ondate sono tarate come una tappa; dopo, la vita
-     continua a salire di questo passo e prima o poi vince lei */
-  vite: VITE['Partita libera'], oltre: OLTRE,
+/* ═══════════════ LE PARTITE LIBERE ═══════════════
+
+   Una partita libera non finisce: le ondate continuano, i nemici
+   crescono di vita e di velocità a ogni giro, e prima o poi si perde —
+   è quello il punto. Ce n'è **una per terreno**, e ognuna eredita
+   dalla sua campagna: tutti i mostri che ci vivono, le torri e la
+   regola dei rami dell'ultima tappa (nel Bosco niente rami, come nella
+   campagna), il terreno dell'ultima tappa. Il tracciato invece è suo,
+   e sta in `LIBERE_RACCONTO` (`campagne-castello.js`): è il più
+   intricato del suo mondo, con due bocche che si fondono.
+
+   ── perché quattro, e perché a più bocche ──
+   Ce n'era una, a strada singola, con una nota che diceva che con due
+   bocche «la partita libera diventa intarabile»: un'ondata che si
+   divide farebbe saltare il gradino fra la tabella e la progressione.
+   Era una paura, non una misura. Adesso ogni libera si tara da sola —
+   la sua tabella `VITE` di venti ondate, il suo `oltre` — e il gradino
+   lo si guarda in `unita/castello`: ognuna regge una partita vera e
+   prima o poi cede. Se una non reggesse, il test lo direbbe col nome.
+
+   ── quello che è di tutte e quattro ──
+   `cap: 10` e le quattro torri dove la campagna le dà, i regali
+   (`regali: true`, e i gradi presi sono **uno** per il castello,
+   `campagne.torri.regali`: un regalo preso nel bosco vale anche sulle
+   mura), le stesse piazzole della vecchia libera, e la stessa
+   generosità di partenza. Le vite di ogni libera stanno sotto la sua
+   chiave in `VITE`, e la chiave è stabile come un id di contenuto.
+
+   ── i mostri ──
+   Sono **tutti quelli della campagna**, in fila come `mostroDiOnda` li
+   pesca. Non `mostroLibero`, che pescava dal bestiario intero — un
+   lupo di palude nel bosco di notte è un'altra storia. La fila si
+   dispone **a giro di resistenza**, come fanno a mano le tappe: due
+   ondate di fila non devono chiudere la stessa torre, se no chi ha
+   costruito bene per questa non deve pensare per la prossima. Si
+   pesca ogni volta dal mucchio più grosso fra quelli che non chiudono
+   la torre di prima, e il validatore (`strumenti/valida-percorsi.mjs`)
+   ricontrolla la fila che ne esce. */
+const ultimaDi = campagna => RACCONTO.filter(t => t.campagna === campagna).at(-1)
+function mostriDi(campagna) {
+  const tutti = [...new Set(RACCONTO.filter(t => t.campagna === campagna).flatMap(t => t.mostri))]
+  const mucchi = new Map()
+  for (const m of tutti) {
+    const k = torreResistente(m) || '?'
+    if (!mucchi.has(k)) mucchi.set(k, [])
+    mucchi.get(k).push(m)
+  }
+  const fila = []
+  let prima = null
+  while (fila.length < tutti.length) {
+    const scelte = [...mucchi.entries()].filter(([k, v]) => v.length && k !== prima)
+    const [k, v] = (scelte.length ? scelte : [...mucchi.entries()].filter(([, v]) => v.length))
+      .sort((a, b) => b[1].length - a[1].length)[0]
+    fila.push(v.shift())
+    prima = k
+  }
+  /* la fila gira in tondo: se l'ultimo chiude la stessa torre del
+     primo, lo si infila dove sta bene — fra due che non la chiudono */
+  const res = m => torreResistente(m) || '?'
+  const ultimo = fila[fila.length - 1]
+  if (fila.length > 2 && res(ultimo) === res(fila[0])) {
+    const dove = fila.findIndex((m, i) => i > 0 && i < fila.length - 1 &&
+                                          res(fila[i - 1]) !== res(ultimo) && res(m) !== res(ultimo))
+    if (dove > 0) { fila.pop(); fila.splice(dove, 0, ultimo) }
+  }
+  return fila
 }
+
+/* Quante ondate di una libera sono tarate: le prime venti, come una
+   tappa. Lo legge anche il motore (`Ondate.daQuandoInsieme`): la regola
+   «da quando le ondate arrivano da tutte le bocche» dipende da quante
+   ondate ha la tappa, e una libera ne ha infinite — la taratura la
+   gioca a venti, e il gioco deve giocarla come la taratura, se no il
+   sotterraneo tarato con le bocche insieme dalla nona le trovava dalla
+   sesta e cedeva lì (misurato: persa all'ondata 6 senza un regalo). */
+export const ONDATE_TARATE = 20
+
+export const LIBERE = LIBERE_RACCONTO.map(r => {
+  const ultima = ultimaDi(r.campagna)
+  return {
+    ...r, ondate: Infinity, posti: 14, cap: 10,
+    torri: ultima.torri, ambiente: ultima.ambiente,
+    resistenze: true, rami: !!ultima.rami,
+    /* e i regali: solo qui. Nelle tappe della campagna il campo non
+       esiste, quindi il motore non li applica mai — vedi il blocco dei
+       regali qui sopra */
+    regali: true,
+    mostri: mostriDi(r.campagna),
+    partenza: partenzaDi({ cap: 4 }), durezza: 1, attesa: 30,
+    /* le prime venti ondate sono tarate come una tappa; dopo, la vita
+       continua a salire di questo passo e prima o poi vince lei */
+    vite: VITE[r.chiave], oltre: (OLTRE && OLTRE[r.chiave]) || 1.2,
+  }
+})
+
+export const liberaDi = chiave => LIBERE.find(l => l.chiave === chiave) || null
+
+/* La prima delle quattro, per chi ne vuole una sola: i banchi che
+   misurano i regali, e chi chiede «la partita libera» senza dire quale.
+   È anche quella che eredita il record della libera di prima
+   (`senzaFine` in `data/giochi.js`). */
+export const LIBERA = LIBERE[0]

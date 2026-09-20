@@ -32,7 +32,7 @@
 
    `node test/esegui.mjs regali --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, TAPPE, MONDO, CFG,
+import { REGALI, OGNI_REGALO, QUANTE_CARTE, LIBERA, LIBERE, TAPPE, MONDO, CFG,
          doniZero, doniDi, regaloDi, quantiRegali, regaliOfferti,
          tiroConDoni, geloConDoni, tiroDi, geloDi } from '../../src/data/castello.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
@@ -186,17 +186,18 @@ for (const i of [0, 7, 14]) {
          JSON.stringify(con.doni), JSON.stringify(doniZero()))
   uguale(`${i + 1}. ${t.nome}: e non ne arriva nessuno da scegliere`, con.regalati, 0)
 }
-/* la tappa che li prevede è una sola, e lo dichiara */
-uguale('solo la partita libera prevede i regali', TAPPE.filter(t => t.regali).length, 0)
-controlla('e la partita libera li prevede', LIBERA.regali === true)
+/* le tappe che li prevedono sono le quattro libere, e lo dichiarano */
+uguale('nessuna tappa della campagna prevede i regali', TAPPE.filter(t => t.regali).length, 0)
+controlla('e le quattro partite libere li prevedono tutte',
+          LIBERE.length === 4 && LIBERE.every(l => l.regali === true))
 
-/* ── 3b. nella libera, zero regali è il gioco di ieri ── */
-{
-  const senza = partita(LIBERA, null), zero = partita(LIBERA, {})
-  stessaLista('zero regali gioca come nessun regalo',
+/* ── 3b. in ogni libera, zero regali è il gioco di ieri ── */
+for (const l of LIBERE) {
+  const senza = partita(l, null), zero = partita(l, {})
+  stessaLista(`${l.nome}: zero regali gioca come nessun regalo`,
               [senza.uccisi, senza.cuori], [zero.uccisi, zero.cuori])
-  const con = partita(LIBERA, { frecce: 10 })
-  controlla('e con dieci gradi di frecce si ferma più gente',
+  const con = partita(l, { frecce: 10 })
+  controlla(`${l.nome}: e con dieci gradi di frecce si ferma più gente`,
             con.uccisi > senza.uccisi, `${senza.uccisi} → ${con.uccisi} nemici fermati`)
 }
 
@@ -255,8 +256,19 @@ controlla('e la partita libera li prevede', LIBERA.regali === true)
    la curva **salga** e che non finisca mai in cielo.
 
    `tempo: 60` in testa al file: sono partite vere giocate fino alla
-   sconfitta, e costano secondi. */
-const LUNGA = { ...LIBERA, ondate: 90 }
+   sconfitta, e costano secondi. La scala si misura **sulla prima
+   libera** (il bosco, che è anche quella che eredita il record di
+   ieri): le altre tre hanno la loro tabella e il loro muro, e che
+   ognuna regga e ceda lo controlla `unita/castello`. Misurarla quattro
+   volte costerebbe quattro volte tanto per dire la stessa cosa — i
+   regali sono gli stessi, e la curva sale a moltiplicare dappertutto. */
+/* si gioca com'è in gioco (`ondate: Infinity`), non come una campagna
+   da novanta: cambierebbe da quando le ondate arrivano da tutte e due
+   le bocche. `attesa: 1` toglie solo il tempo morto: il metro non
+   chiama mai l'ondata, e trenta secondi per trentasette ondate sono
+   mezz'ora dell'ora che il simulatore concede a una partita — con
+   cento regali si arrivava allo stallo per orologio, non per difesa */
+const LUNGA = { ...LIBERA, attesa: 1 }
 const SEMI = [7, 29]
 const spalma = k => {
   const o = {}
@@ -264,7 +276,7 @@ const spalma = k => {
   return o
 }
 const finoDove = regali => {
-  const r = SEMI.map(s => gioca(LUNGA, { ...PROFILI.misura, s, finoA: 90, regali }))
+  const r = SEMI.map(s => gioca(LUNGA, { ...PROFILI.misura, s, regali }))
   return { onda: r.reduce((n, x) => n + x.onda, 0) / r.length,
            persa: r.every(x => x.esito === 'persa') }
 }

@@ -17,7 +17,8 @@
    `prossime()` è quello che l'interfaccia mette in un nastro, ed è il
    solo motivo per cui il motore espone il futuro invece del presente.
    ═══════════════════════════════════════════════════════════════════ */
-import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico } from '../../data/castello.js'
+import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, ONDATE_TARATE }
+  from '../../data/castello.js'
 import { MOSTRI, mostroDiOnda, mostroLibero, torreResistente } from '../../data/mostri.js'
 
 export class Ondate {
@@ -98,8 +99,14 @@ export class Ondate {
      si perde per una ragione che nessuno può vedere. Si comincia a un
      terzo della tappa — mai prima della quinta ondata — quando le torri
      sono cresciute abbastanza da reggere un fronte per parte. */
+  /* Una partita libera non ha un numero di ondate: si conta come se ne
+     avesse tante quante ne tara `npm run tara` (`ONDATE_TARATE`), così
+     il gioco e la taratura giocano la stessa partita. Prima era «6»
+     scritto a mano, e la taratura — che gioca la libera a venti ondate
+     — le metteva insieme dalla nona: il bivio tarato così cedeva in
+     gioco alla sesta. */
   get daQuandoInsieme() {
-    return this.campagna ? Math.max(5, Math.ceil(this.quante / 3)) : 6
+    return Math.max(5, Math.ceil(Math.min(this.quante, ONDATE_TARATE) / 3))
   }
 
   /* ── il preavviso ──

@@ -28,10 +28,13 @@ export const VITE = {
   "palude/Le isole": [42, 42, 42, 42, 46, 46, 70, 70, 135, 135, 266, 266],
   "palude/Il pantano": [14, 14, 14, 31, 31, 31, 45, 46, 46, 64, 70, 70, 94],
   "palude/La foce": [14, 14, 14, 36, 36, 36, 44, 51, 51, 63, 69, 69, 92, 371],
-  "Partita libera": [43, 43, 60, 60, 79, 79, 115, 115, 138, 142, 142, 176, 176, 316, 316, 756, 915, 1110, 1233, 1624],
+  "libera-bosco": [50, 50, 50, 50, 82, 82, 82, 129, 129, 138, 138, 154, 188, 222, 222, 222, 222, 230, 510, 510],
+  "libera-sotterraneo": [30, 30, 60, 60, 83, 83, 83, 95, 95, 152, 152, 152, 152, 152, 152, 152, 152, 152, 591, 591],
+  "libera-mura": [30, 30, 60, 60, 97, 103, 103, 153, 153, 153, 206, 206, 238, 262, 262, 379, 520, 520, 520, 1431],
+  "libera-palude": [14, 14, 14, 14, 15, 15, 15, 53, 53, 59, 61, 61, 61, 61, 61, 61, 61, 61, 93, 510],
 }
-/* di quanto cresce la vita nella partita libera dopo l'ultima ondata
+/* di quanto cresce la vita in ogni partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
-export const OLTRE = 1.45
-export const FIRMA = "6150cd02"
+export const OLTRE = {"libera-bosco":1.3,"libera-sotterraneo":1.3,"libera-mura":1.3,"libera-palude":1.3}
+export const FIRMA = "1c1e6b1a"
 export const BERSAGLIO = [0.6, 0.85]

@@ -23,9 +23,9 @@
      · da dove arriva l'ondata si sa **tre ondate prima**, se no
        spostare una torre è una carezza invece che una mossa.
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, MONDO, CFG, ingressiDi, postiDi,
+import { TAPPE, LIBERE, MONDO, CFG, ingressiDi, postiDi,
          PIAZZOLE_PER_INGRESSO, firmaEquilibrio } from '../../src/data/castello.js'
-import { RACCONTO } from '../../src/data/campagne-castello.js'
+import { RACCONTO, LIBERE_RACCONTO } from '../../src/data/campagne-castello.js'
 import { Percorso } from '../../src/motore/castello/percorso.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
@@ -36,12 +36,15 @@ const misure = { ...MONDO }
 
 controlla('qualche tappa ha due ingressi', doppie.length >= 2)
 nota('a più ingressi:', doppie.map(t => `${t.nome} (${ingressiDi(t)})`).join(' · '))
-/* la partita libera no, ed è scritto perché è una scelta: le sue vite
-   non stanno in una tabella completa, e un'ondata che si divide fa
-   saltare il punto in cui la tabella finisce e la progressione comincia */
-uguale('la partita libera resta a una strada sola', ingressiDi(LIBERA), 1)
+/* Anche le quattro partite libere, e qui c'era scritto il contrario:
+   «la partita libera resta a una strada sola», per paura che con due
+   bocche non si tarasse. Adesso ognuna si tara da sola, e le stesse
+   regole delle tappe a due bocche — porta unica, piazzole su tutte le
+   strade, una per strada le prime — valgono anche per loro. */
+controlla('le partite libere hanno tutte più di una bocca',
+          LIBERE.every(l => ingressiDi(l) >= 2), LIBERE.map(l => `${l.nome} (${ingressiDi(l)})`).join(' · '))
 
-for (const t of doppie) {
+for (const t of [...doppie, ...LIBERE]) {
   const p = new Percorso(t.forme, t.posti, misure)
   const quante = p.quanteVie
   controlla(`${t.nome}: più di una strada (${quante})`, quante >= 2)
@@ -209,6 +212,18 @@ for (const chiave of ['forme', 'fronti']) {
     tappa.fronti = era
   }
   uguale(`e rimesso a posto torna quella di prima (${chiave})`, firmaEquilibrio(), prima)
+}
+/* e le libere, che sono tarate come le tappe: ridisegnarne una senza
+   ritarare sarebbe lo stesso buco */
+{
+  const prima = firmaEquilibrio()
+  const punto = LIBERE_RACCONTO[2].forme[1][1]
+  const era = punto[0]
+  punto[0] = era + 0.01
+  controlla('la firma cambia se si sposta un punto di una partita libera',
+            firmaEquilibrio() !== prima, `firma ferma a ${prima}`)
+  punto[0] = era
+  uguale('e rimesso a posto torna quella di prima (libera)', firmaEquilibrio(), prima)
 }
 
 riassunto('le tappe a due ingressi')

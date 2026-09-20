@@ -27,11 +27,12 @@
    `data/castello.js` è sbagliato, non il dato.
 
    Uso:
-     node strumenti/simula-castello.mjs                  # tutte e quindici
+     node strumenti/simula-castello.mjs                  # tutte e venti
      node strumenti/simula-castello.mjs 6                # solo la sesta
+     node strumenti/simula-castello.mjs libera-mura      # una partita libera
      node strumenti/simula-castello.mjs --quote 1,.9,.8  # con che tetti
    ═══════════════════════════════════════════════════════════════════ */
-import { TAPPE, LIBERA, CFG, MONDO, primeQuante,
+import { TAPPE, LIBERE, liberaDi, CFG, MONDO, primeQuante,
          costoNuovaTorre, costoSalita } from '../src/data/castello.js'
 import { creaBattaglia } from '../src/motore/battaglia.js'
 import { TORRI } from '../src/data/ops.js'
@@ -304,8 +305,12 @@ export function gioca(tappa, opzioni = {}) {
        cambi poco alla volta per poterci cercare sopra. */
     if (storia.length) {
       const corsa = storia[storia.length - 1]
+      /* sulla **sua** strada, non sulla prima: con due bocche le strade
+         hanno lunghezze diverse, e un nemico misurato sulla strada
+         sbagliata risultava al 110% del cammino — o al 70% quando era
+         già alla porta */
       for (const n of motore.nemici)
-        corsa.avanzata = Math.max(corsa.avanzata, n.d / motore.via.lunghezza)
+        corsa.avanzata = Math.max(corsa.avanzata, n.d / motore.viaDi(n).lunghezza)
       if (stato.cuori < cuoriPrima) {
         corsa.persi = (corsa.persi || 0) + cuoriPrima - stato.cuori
         corsa.avanzata = 1
@@ -348,10 +353,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const quali = argv.filter(a => /^\d+$/.test(a)).map(Number)
   const iQuote = argv.indexOf('--quote')
   const quote = iQuote >= 0 ? argv[iQuote + 1].split(',').map(Number) : null
-  const tappe = quali.length ? quali.map(n => [n - 1, TAPPE[n - 1]]) : [...TAPPE.entries()]
+  /* una partita libera si chiede per chiave (`libera-mura`) e si gioca
+     come la tara: venti ondate, senza regali — è il pavimento */
+  const libere = argv.filter(a => liberaDi(a)).map(a => {
+    const l = liberaDi(a)
+    return [TAPPE.length + LIBERE.indexOf(l), { ...l, ondate: 20, regali: false }]
+  })
+  const tappe = quali.length || libere.length
+    ? [...quali.map(n => [n - 1, TAPPE[n - 1]]), ...libere] : [...TAPPE.entries()]
 
   for (const [i, t] of tappe) {
-    console.log(`\n${i + 1}. ${t.nome} — ${t.calcoli} calcoli promessi · ${t.ondate} ondate · ` +
+    console.log(`\n${i + 1}. ${t.nome} — ${t.calcoli ? `${t.calcoli} calcoli promessi` : 'partita libera'}` +
+                ` · ${t.ondate} ondate · ` +
                 `${t.posti} posti · cap ${t.cap} · durezza ${t.durezza} · torri ${t.torri.join(' ')}`)
     if (quote) {
       for (const q of quote) {

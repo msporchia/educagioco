@@ -310,6 +310,88 @@ const PALUDE_FOCE = [
   [[0.86, 0.04], [0.92, 0.26], [0.74, 0.42], ...FOCE_NODO,
    [0.72, 0.70], [0.62, 0.86], ...FOCE_PORTA]]
 
+/* ═══════════════ LE PARTITE LIBERE: UNA PER TERRENO ═══════════════
+
+   Finita la campagna si aprono **quattro** partite senza fine, una per
+   terreno, e ognuna ha il tracciato più intricato del suo mondo: qui
+   non c'è più niente da insegnare, quindi la mappa può usare tutto
+   quello che il `Percorso` sa fare — due forme che condividono dei
+   punti sono una Y, un anello, una clessidra — e una torre ben messa
+   deve poter battere la stessa strada due o tre volte. Ce n'era una
+   sola, a strada singola, ed era una scelta di prudenza: con due
+   bocche si temeva che la taratura non tornasse. Adesso ognuna si tara
+   da sola, ondata per ondata, e quello che si temeva si misura.
+
+     la radura grande   una bocca sola che si sdoppia attorno a una
+                        radura larga mezzo campo — due bracci serpentini
+                        — e si richiude in un tronco che si ripiega
+                        ancora prima della porta
+     il bivio           due cunicoli a squadra, uno per bocca, che
+                        scendono a zig-zag e si incontrano a metà campo;
+                        da lì una galleria sola, a scala, fino in fondo
+     il bastione        una clessidra a squadra: due rampe che si
+                        incontrano al portone di mezzo, alto, e da lì
+                        due scale lunghe ai lati che si ritrovano solo
+                        alla porta
+     il delta           due canali che serpeggiano, si fondono in un
+                        tronco, e il tronco si sdoppia attorno a
+                        un'isola per richiudersi davanti alla porta
+
+   I vincoli sono gli stessi delle tappe (`strumenti/valida-percorsi.mjs`
+   le passa ai raggi X con le altre): niente tornanti a spillo, niente
+   corsie che si sfiorano senza fondersi, e mai più di metà strada in
+   comune — se no le due bocche sono un disegno. */
+
+const RADURA_TRONCO = [[0.50, 0.68], [0.28, 0.76], [0.34, 0.86], [0.50, 0.95]]
+const LIBERA_BOSCO = [
+  [[0.50, 0.04], [0.50, 0.09], [0.20, 0.15], [0.14, 0.26], [0.40, 0.33], [0.16, 0.44],
+   [0.12, 0.56], [0.36, 0.62], ...RADURA_TRONCO],
+  [[0.50, 0.04], [0.50, 0.09], [0.80, 0.15], [0.86, 0.26], [0.60, 0.33], [0.84, 0.44],
+   [0.88, 0.56], [0.64, 0.62], ...RADURA_TRONCO]]
+
+const BIVIO_GALLERIA = [[0.50, 0.50], [0.50, 0.60], [0.24, 0.60], [0.24, 0.74], [0.70, 0.74],
+                        [0.70, 0.86], [0.50, 0.86], [0.50, 0.95]]
+const LIBERA_SOTTERRANEO = [
+  [[0.20, 0.04], [0.20, 0.16], [0.40, 0.16], [0.40, 0.28], [0.14, 0.28], [0.14, 0.40],
+   [0.40, 0.40], [0.40, 0.50], ...BIVIO_GALLERIA],
+  [[0.80, 0.04], [0.80, 0.16], [0.60, 0.16], [0.60, 0.28], [0.86, 0.28], [0.86, 0.40],
+   [0.60, 0.40], [0.60, 0.50], ...BIVIO_GALLERIA]]
+
+const BASTIONE_PORTONE = [[0.50, 0.38], [0.50, 0.46]]
+const BASTIONE_PORTA = [[0.50, 0.95]]
+const LIBERA_MURA = [
+  [[0.18, 0.04], [0.18, 0.16], [0.40, 0.16], [0.40, 0.27], [0.22, 0.27], [0.22, 0.38],
+   ...BASTIONE_PORTONE, [0.20, 0.52], [0.20, 0.64], [0.40, 0.64], [0.40, 0.76],
+   [0.22, 0.76], [0.22, 0.88], ...BASTIONE_PORTA],
+  [[0.82, 0.04], [0.82, 0.16], [0.60, 0.16], [0.60, 0.27], [0.78, 0.27], [0.78, 0.38],
+   ...BASTIONE_PORTONE, [0.80, 0.52], [0.80, 0.64], [0.60, 0.64], [0.60, 0.76],
+   [0.78, 0.76], [0.78, 0.88], ...BASTIONE_PORTA]]
+
+const DELTA_TRONCO = [[0.50, 0.44], [0.50, 0.54]]
+const DELTA_PORTA = [[0.50, 0.84], [0.50, 0.95]]
+const LIBERA_PALUDE = [
+  [[0.14, 0.04], [0.08, 0.16], [0.30, 0.24], [0.10, 0.34], [0.30, 0.40], ...DELTA_TRONCO,
+   [0.22, 0.62], [0.18, 0.74], [0.36, 0.80], ...DELTA_PORTA],
+  [[0.86, 0.04], [0.92, 0.16], [0.70, 0.24], [0.90, 0.34], [0.70, 0.40], ...DELTA_TRONCO,
+   [0.78, 0.62], [0.82, 0.74], [0.64, 0.80], ...DELTA_PORTA]]
+
+/* Quello che di una libera si racconta. Il resto — torri, mostri, rami
+   — lo eredita dalla sua campagna (`LIBERE` in `data/castello.js`):
+   tutti i mostri che ci vivono, le torri e i rami dell'ultima tappa.
+   `ambiente` è quello dell'ultima tappa: la libera è quello che viene
+   dopo. `fronti` come nelle tappe a più bocche: quante difese separate
+   chiede davvero — meno di due, perché le strade si fondono. */
+export const LIBERE_RACCONTO = [
+  { chiave: 'libera-bosco', campagna: 'bosco', nome: 'La radura grande', emoji: '🌲',
+    fronti: 1.5, forme: LIBERA_BOSCO },
+  { chiave: 'libera-sotterraneo', campagna: 'sotterraneo', nome: 'Il bivio', emoji: '🕯️',
+    fronti: 1.5, forme: LIBERA_SOTTERRANEO },
+  { chiave: 'libera-mura', campagna: 'mura', nome: 'Il bastione', emoji: '🏰',
+    fronti: 1.7, forme: LIBERA_MURA },
+  { chiave: 'libera-palude', campagna: 'palude', nome: 'Il delta', emoji: '🐸',
+    fronti: 1.5, forme: LIBERA_PALUDE },
+]
+
 /* ═══════════════ LE TAPPE ═══════════════
 
    `ambiente` è la chiave di `grafica/terreni/indice.js`: tre terreni
