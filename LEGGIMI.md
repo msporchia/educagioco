@@ -662,15 +662,28 @@ ondate e le torri che mette a disposizione:
 | ⛰️ La gola | 10 | 🏹 ❄️ 🔮 | nemici più duri |
 | 🏰 Le mura | 12 | tutte | divisione |
 
-Superata una tappa si apre la seguente; vinte tutte e sei si sblocca la
-**partita libera**, senza traguardo. Il progresso sta nel profilo, quindi ogni
+Superata una tappa si apre la seguente; vinte tutte si sbloccano le
+**partite libere**, senza traguardo. Il progresso sta nel profilo, quindi ogni
 bambino ha la sua campagna.
+
+**Le partite libere sono quattro, una per terreno** (`LIBERE` in
+`data/castello.js`, i tracciati in `LIBERE_RACCONTO` di
+`data/campagne-castello.js`): la radura grande, il bivio, il bastione, il
+delta. Ognuna eredita dalla sua campagna tutti i mostri, le torri e i rami
+dell'ultima tappa, e ha il tracciato più intricato del suo mondo — due bocche
+che si fondono, e il `Percorso` lo sa fare da sé condividendo dei punti fra le
+`forme`. Ce n'era una sola a strada singola, con scritto che con due bocche
+«diventa intarabile»: era una paura, e adesso si misura — ogni libera ha la
+sua tabella `VITE` di venti ondate e il suo passo `OLTRE`, e `unita/castello`
+dice per ciascuna dove cede. I regali (`REGALI`) sono gli stessi su tutti i
+terreni, e ogni terreno ha il suo record (`campagne.torri.primati[<chiave>]`,
+vedi `giochi/primati.js`); quello della vecchia libera lo eredita il bosco.
 
 Le monete arrivano dal traguardo, non dal tempo passato lì davanti, e non sono
 una cifra scelta a occhio: sono le operazioni che la tappa chiede, contate con
 lo stesso metro degli altri giochi — una moneta ogni dieci risposte giuste. Da
 2 a 5 monete per tappa (per il livello del giocatore), una sola di cortesia se
-la tappa era già stata vinta, una ogni cinque ondate nella partita libera.
+la tappa era già stata vinta, una ogni cinque ondate nelle partite libere.
 
 ### L'energia, e perché il calcolo difficile conviene
 Ogni nemico fermato lascia **⚡**, e con l'energia si costruisce oppure si

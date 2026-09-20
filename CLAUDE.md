@@ -550,7 +550,7 @@ committate: non è ricostruibile da git.
   la funzione che li mette in parole — solo lui sa che i suoi numeri
   sono mostri e non ondate. I dettagli sono della partita del record, e
   una partita storta non li sovrascrive. **Un gioco vecchio** (il
-  castello, con la partita libera) non ha manifesto: dichiara
+  castello, con le partite libere) non ha manifesto: dichiara
   `senzaFine` nella sua riga di `data/giochi.js`, e `tabellaDeiPrimati`
   guarda `GIOCHI` e non solo i nuovi. Adesso sta in `campagne[chiave].primato`,
   accanto a `stelle` (che è già «il primato di ogni tappa»): non in
@@ -559,6 +559,23 @@ committate: non è ricostruibile da git.
   record si tengono **le ultime cinque partite**: il record da solo dice
   «il te di ieri è più bravo di te», la fila delle ultime dice che stai
   salendo — ed è quello il premio di un gioco che non finisce.
+  **Un gioco può avere più sfide senza fine** (il castello ne ha
+  quattro, una per terreno; gli asteroidi ne avranno due): il
+  manifesto le elenca in `senzaFine.sfide` — `{ chiave, nome, icona,
+  eredita? }`, con misura, `che` e `dettagli` scritti una volta in cima
+  come difetti — e ogni record sta in `campagne[chiave].primati[<sfida>]`.
+  **Una sola** dice `eredita: true` e si prende il `primato` di quando
+  la sfida era una (la libera del bosco): la migrazione è una lettura
+  in `apriQuaderno`, non una riscrittura, e `segnaPrimato` lascia
+  andare il posto vecchio alla prima scrittura. `primatoDi(chiave,
+  sfida)` e `segnaPrimato(…, sfida)` prendono la chiave della sfida in
+  coda, `sfideDi` torna sempre un elenco, `tabellaDeiPrimati` fa una
+  riga per sfida (`id` = `gioco/sfida`, ed è il `data-primato`), e dove
+  c'è posto per una riga sola — la home — `recordPiuRecente` racconta
+  **il record fatto più di recente**, non il più alto: quattro terreni
+  non si confrontano fra loro, e quello di ieri sera è quello che il
+  bambino ha in testa. Chi ha una sfida sola non cambia una riga. Il
+  contratto sta in testa a `giochi/primati.js`.
 - **Gli orologi che non sono fotogrammi vanno fermati a mano.** Un
   `setTimeout` scatta lo stesso a schermo spento, e `performance.now()`
   misura il tempo di parete: `quiz/Domanda.vue` annotava in `store/srs.js`
@@ -734,14 +751,38 @@ committate: non è ricostruibile da git.
   all'ondata venti — la difesa è già in cima alla scaletta e la vita
   sale del 45% a ondata — e un record che non si muove nessuno lo
   guarda. **Nella campagna non si applicano**: la tappa deve
-  dichiararli (`regali: true`, ce l'ha solo `LIBERA`) e il motore
-  ignora quelli che gli arrivano per una tappa che non li prevede,
+  dichiararli (`regali: true`, ce l'hanno solo le quattro `LIBERE`) e
+  il motore ignora quelli che gli arrivano per una tappa che non li
+  prevede,
   perché la campagna è tarata ondata per ondata e un bonus che cresce
   col giocare renderebbe la promessa dei `calcoli` una cosa che dipende
   da quante partite libere si sono fatte. Zero regali è il gioco di
   ieri bit per bit (moltiplicatori a 1, somme a 0), e `npm run tara`
-  tara la libera con `regali: false`: quello che si tara è il
-  pavimento. **È un bonus regalato, cioè una cosa che non passa da un
+  tara le libere con `regali: false`: quello che si tara è il
+  pavimento. **I gradi presi sono uno per il castello, non uno per
+  terreno**: un regalo preso nel bosco vale anche sulle mura.
+  **Le partite libere sono quattro, una per terreno** (`LIBERE` in
+  `data/castello.js`, tracciati in `LIBERE_RACCONTO` di
+  `campagne-castello.js`, chiavi stabili `libera-bosco`… che sono le
+  chiavi di `VITE`, di `OLTRE` e dei record). Ognuna eredita mostri,
+  torri e rami dalla sua campagna, ha due bocche che si fondono, e si
+  tara da sola: la tabella di venti ondate e il passo `oltre`, che
+  esce da una retta sui logaritmi dei limiti della seconda metà con
+  un **pavimento a 1,3** — la media dei rapporti della coda spianata
+  diceva ×3,9, un muro alla ventunesima che nessun regalo avrebbe
+  comprato, e il passo misurato nudo (×1,1–1,16) non chiude più la
+  partita entro un'ora: il pavimento è il patto della modalità, non
+  una misura. **Il gioco gioca la libera come la taratura**:
+  `ONDATE_TARATE` (20) dice al motore da quando le ondate arrivano da
+  tutte e due le bocche anche con `ondate: Infinity`, e i test la
+  giocano con `Infinity` e `finoA`, mai come una campagna corta — il
+  bivio giocato come campagna da dodici cedeva alla sesta. La vecchia
+  nota «la libera è a strada singola perché con due bocche è
+  intarabile» era una paura: adesso si misura, e `unita/castello`
+  dice per ciascuna dove cede. Si aprono tutte insieme a campagna
+  finita, e `LIBERA` è la prima delle quattro, per i banchi che ne
+  vogliono una. Nei test i bersagli sono `[data-tappa="libera-bosco"]`
+  ecc. sulla mappa. **È un bonus regalato, cioè una cosa che non passa da un
   esercizio**, e la riga per cui va bene è che le ondate che l'hanno
   fatto arrivare fin lì erano tutte pagate in operazioni in colonna, e
   che il regalo non si spende — non compra monete e non apre tappe

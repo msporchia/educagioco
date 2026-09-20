@@ -10,8 +10,9 @@ torri, e per costruire una torre bisogna fare il conto.
 
 ## Come è fatto
 
-Quindici tappe in tre campagne (il bosco, il sottosuolo, le mura). Ogni
-tappa ha il suo scenario, i suoi mostri e la sua scaletta di operazioni.
+Venti tappe in quattro campagne (il bosco, il sottosuolo, le mura, la
+palude), e in coda quattro partite libere, una per terreno. Ogni tappa ha il
+suo scenario, i suoi mostri e la sua scaletta di operazioni.
 
 Il ciclo è: arriva l'ondata → serve una torre → **compare l'operazione in
 colonna** → si scrive il risultato cifra per cifra, coi riporti → la torre si
@@ -49,11 +50,39 @@ due è la scelta sbagliata.
 
 ## Due porte da difendere
 
-Due tappe — *Le fogne* e *Il torrione* — più la partita libera hanno **due
-ingressi**: due strade che scendono da parti diverse e arrivano allo stesso
-castello. Le ondate si alternano fra le due bocche, e ogni terza arriva da
-tutte e due insieme; il nastro in cima dice da dove, tre ondate prima, così
-si fa in tempo a spostare una torre dalla parte giusta.
+Due tappe — *Le fogne* e *Il torrione* — tutta la Palude e le quattro
+partite libere hanno **due ingressi**: due strade che scendono da parti
+diverse e arrivano allo stesso castello. Le ondate si alternano fra le due
+bocche, e ogni terza arriva da tutte e due insieme; il nastro in cima dice
+da dove, tre ondate prima, così si fa in tempo a spostare una torre dalla
+parte giusta.
+
+## Quattro partite libere, una per terreno *(settembre 2026)*
+
+Finita la campagna si aprono **quattro partite senza fine** insieme, una per
+terreno: *La radura grande* nel bosco, *Il bivio* sotto terra, *Il bastione*
+sulle mura, *Il delta* nella palude. Ognuna prende dalla sua campagna tutti i
+mostri che ci vivono, le torri dell'ultima tappa e la regola dei rami (nel
+bosco niente rami, come nella campagna), e ha un tracciato suo — il più
+intricato del suo mondo, con due bocche che si fondono: un anello attorno a
+una radura, due cunicoli che si incontrano in una galleria sola, una
+clessidra a squadra, un delta che si sdoppia attorno a un'isola.
+
+Ce n'era una sola, a strada singola, per paura che con due bocche non si
+riuscisse a tararla. Adesso ognuna si tara da sola (`npm run tara`, venti
+ondate e il suo passo di crescita oltre), e il test dice dove cede ciascuna.
+
+**Un record per terreno.** Sul tasto di ogni libera c'è il suo record, e
+nella tabella dei record di *I miei progressi* ci sono quattro righe. Chi
+aveva un record della vecchia partita libera se lo ritrova sotto il bosco,
+che era il bosco anche allora. In home, dove c'è posto per una riga sola, si
+legge il record **fatto più di recente**: quattro terreni non si confrontano
+fra loro, e quello di ieri sera è quello che il bambino ha in testa.
+
+**I regali sono gli stessi su tutti i terreni**: un potenziamento preso nel
+bosco vale anche sulle mura. Sono una cosa che ci si porta dietro, e quattro
+tasche separate avrebbero voluto dire ricominciare da zero a ogni cambio di
+terreno.
 
 ## Quali operazioni escono, e quanto crescono
 
@@ -101,9 +130,9 @@ resto si adatta di conseguenza — compresa la resistenza dei mostri, che un
 simulatore misura giocando la tappa migliaia di volte per assicurarsi che sia
 superabile senza essere una passeggiata.
 
-## Il regalo della partita libera *(settembre 2026)*
+## Il regalo delle partite libere *(settembre 2026)*
 
-La partita libera non finisce mai, ma **finiva sempre allo stesso punto**:
+Una partita libera non finisce mai, ma **finiva sempre allo stesso punto**:
 l'ondata venti, con tutti e cinque i cuori ancora pieni fino a lì. Non per
 come si giocava — a quel punto la difesa è già in cima alla scaletta e non
 c'è più niente da comprare, mentre la vita dei nemici continua a salire del
@@ -120,30 +149,29 @@ che sale**. Le prime partite si ferma alla venti; con una decina di regali in
 tasca passa il muro e arriva alla ventiquattresima; poi si va avanti a
 guadagnare ondate sempre più lentamente.
 
-**Solo nella partita libera.** Le quindici tappe della campagna sono tarate
+**Solo nelle partite libere.** Le venti tappe della campagna sono tarate
 ondata per ondata da un simulatore, e un bonus che cresce col giocare
 renderebbe la promessa «questa tappa costa dodici operazioni» una cosa che
 dipende da quante partite libere si sono fatte prima. Il motore i regali li
-applica soltanto dove la tappa li dichiara, e a dichiararli è solo la libera.
+applica soltanto dove la tappa li dichiara, e a dichiararli sono solo le
+quattro libere.
 
-**Quanto vale un regalo**, misurato facendo giocare il simulatore
-(`node test/esegui.mjs regali`, che rifà queste misure a ogni giro):
+**Quanto vale un regalo**, misurato facendo giocare il simulatore sulla
+libera del bosco (`node test/esegui.mjs regali`, che rifà queste misure a
+ogni giro):
 
 | regali in tasca | fin dove arriva |
 |---|---|
 | 0 | ondata 20 |
-| 10 | ondata 24 |
-| 35 | ondata 26 |
-| 140 | ondata 30 |
+| 10 | ondata 25 |
+| 35 | ondata 31 |
+| 140 | ondata 39 |
 
-I salti sono a gradoni e non uno per volta: l'ondata venti è un muro (arriva
-il Fantasma, che regge la magia), e chi lo passa si ritrova con l'energia per
-finire la quarta torre e tira dritto fino alla ventiquattresima. In media
-sono **due regali e mezzo per ogni ondata guadagnata** all'inizio, e sempre
-di più andando avanti: quaranta gradi tutti sulla stessa voce portano
-dall'ondata 20 alla 24-26, non oltre. Immortali non si diventa, ed è la
-condizione perché la modalità resti un gioco — la vita dei nemici cresce
-moltiplicando, i regali sommando, e il moltiplicare vince sempre.
+I salti sono a gradoni e non uno per volta, e il rendimento cala: oltre la
+ventesima la vita cresce a moltiplicare (×1,3 a ondata, su ogni terreno), i
+regali a sommare, e il moltiplicare vince sempre — quaranta gradi tutti sulla
+stessa voce portano dalla 20 alla 25-28, non oltre. Immortali non si
+diventa, ed è la condizione perché la modalità resti un gioco.
 
 **Una scelta fatta a occhi aperti**: un regalo non si paga con un esercizio,
 e in questo progetto tutto quello che si riceve si paga in esercizio
@@ -184,15 +212,16 @@ perché il gioco aspetta.
 ## Note per i genitori
 
 - Le divisioni si spengono da *Genitori → cosa sa*.
-- C'è anche una **partita libera** senza fine, che si sblocca finendo le
-  tappe: lì le operazioni sono miste e il gioco non finisce mai. Quello
-  che resta è il **record** — quante ondate si sono rette, con quanti
-  nemici fermati e quante torri — scritto sul tasto della mappa prima di
-  entrare e nella tabella dei record di *I miei progressi*; batterlo fa
-  coriandoli e dice di quanto (`giochi/primati.js`, come la corsa
-  infinita e la Sopravvivenza). Lì dentro ogni cinque ondate si sceglie
-  un **potenziamento definitivo** (vedi sopra): è quello che fa salire il
-  record di partita in partita, e sul tasto della mappa c'è scritto
-  quanti se ne hanno.
+- Ci sono anche **quattro partite libere** senza fine, una per terreno,
+  che si sbloccano insieme finendo le tappe: lì le operazioni sono miste e
+  il gioco non finisce mai. Quello che resta è il **record di ogni
+  terreno** — quante ondate si sono rette, con quanti nemici fermati e
+  quante torri — scritto sul suo tasto nella mappa prima di entrare e
+  nella tabella dei record di *I miei progressi*; batterlo fa coriandoli
+  e dice di quanto (`giochi/primati.js`, come la corsa infinita e la
+  Sopravvivenza). Lì dentro ogni cinque ondate si sceglie un
+  **potenziamento definitivo** (vedi sopra), che vale su tutti e quattro
+  i terreni: è quello che fa salire i record di partita in partita, e
+  sulla mappa c'è scritto quanti se ne hanno.
 - Se il bambino sbaglia spesso, non perde: paga di più in energia. Non c'è
   schermata di fallimento legata al calcolo.
