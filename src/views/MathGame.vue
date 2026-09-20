@@ -62,6 +62,9 @@ const CFG = {
   // il bambino non è lento, sta aspettando (vedi `ondata`)
   rispostaEntro: 3,
   base: 3, maxAsteroidi: 6, ogniLivelli: 2, salitaOgni: 5,
+  // quanto scende il tempo di caduta a ogni livello, e i due pavimenti:
+  // il perché dei numeri sta in `difficolta`
+  ritmoPasso: 0.05, ritmoTappa: 0.7, ritmoVolo: 0.5,
   puntiOk: 10, puntiNo: -5, bossOgni: 8, bossLento: 1.45, difficileLento: 1.25,
   msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
   bossPunti: 40, serieVita: 10, perMoneta: 10,
@@ -285,18 +288,46 @@ function poolMente() {
    multipla su un calcolo lungo diventa una lotteria: il tempo finisce
    prima che il conto sia fatto.
 
-   SALENDO DI LIVELLO IL CIELO SI INFITTISCE, NON ACCELERA. Prima ogni
-   livello tagliava un decimo del tempo di caduta, e a quel punto la
-   domanda non era più «quanto fa 7×8» ma «quanto sei svelto di mano»:
-   un bambino che il conto lo sa ma lo fa in cinque secondi veniva
-   segnato come uno che non lo sa. Un sasso in più, invece, è una
-   risposta sbagliata in più da scartare — cioè esattamente il lavoro
-   che vogliamo far fare. Il tempo di caduta resta quello, e lo allungano
-   solo il peso del calcolo, il boss e l'ultima vita. */
-function difficolta(lv, peso = 1) {
+   SALENDO DI LIVELLO IL CIELO SI INFITTISCE, E ACCELERA FINO A UN
+   PAVIMENTO. Un sasso in più è una risposta sbagliata in più da scartare
+   — cioè esattamente il lavoro che vogliamo far fare — e quello resta
+   il modo principale di salire. La velocità è stata tolta una volta,
+   perché ogni livello tagliava un decimo del tempo di caduta senza
+   fondo: a livello sei la domanda non era più «quanto fa 7×8» ma
+   «quanto sei svelto di mano», e un bambino che il conto lo sa in
+   cinque secondi veniva segnato come uno che non lo sa. Ma senza nessuna
+   accelerazione il livello era solo un numero: chi sa tutto fino
+   all'8 giocava il pianeta del 9 allo stesso ritmo di chi comincia, e
+   il volo libero non finiva mai — e un gioco che non finisce mai non
+   dà niente da battere.
+
+   Il livello si guadagna con le risposte giuste di QUESTA partita (uno
+   ogni cinque, `salitaOgni`): chi è a livello sette ha appena
+   azzeccato trenta calcoli, e sta dimostrando che il ritmo lo regge. Il
+   cielo scende del 5% a livello (`ritmoPasso`: mezzo secondo su dieci),
+   e si ferma a un pavimento che dipende da dove si sta:
+
+     · nelle TAPPE al 70% (`ritmoTappa`), cioè sette secondi, raggiunto a
+       livello sette: una tappa ha un bersaglio e si chiude in una serata,
+       e il livello non deve diventare il muro che la tiene aperta;
+     · nei VOLI INFINITI al 50% (`ritmoVolo`), cinque secondi, a livello
+       undici: lì l'unica cosa che c'è da fare è durare, e un cielo che
+       non accelera mai è una partita che finisce solo per noia.
+
+   Il pavimento è quello che tiene la domanda una domanda di conto: a
+   cinque secondi il sasso giusto è in scena entro tre (`rispostaEntro`,
+   in `ondata`) e resta da toccare per almeno due — sotto, si tornerebbe
+   a misurare la mano. Il peso del calcolo, il boss e l'ultima vita
+   allungano come prima, moltiplicando sopra questo. */
+function ritmo(lv, volo) {
+  const pavimento = volo ? CFG.ritmoVolo : CFG.ritmoTappa
+  return Math.max(pavimento, 1 - (lv - 1) * CFG.ritmoPasso)
+}
+
+function difficolta(lv, peso = 1, volo = false) {
   const quanti = Math.min(CFG.maxAsteroidi,
                           CFG.base + Math.floor((lv - 1) / CFG.ogniLivelli))
-  return { caduta: CFG.cadutaSec * (1 + (peso - 1) * 0.45),
+  return { caduta: CFG.cadutaSec * (1 + (peso - 1) * 0.45) * ritmo(lv, volo),
            quanti: Math.max(3, quanti - (peso - 1)) }
 }
 
@@ -463,7 +494,7 @@ function ondata() {
   nuovaDomanda(boss)
   chieste++
 
-  const { caduta, quanti } = difficolta(hud.livello, domanda.peso)
+  const { caduta, quanti } = difficolta(hud.livello, domanda.peso, !campagna.value)
   const falsi = mente.value ? distrattoriDi(esercizio, quanti - 1)
                             : distrattori(domanda.a, domanda.b, quanti - 1)
   const valori = [domanda.ris, ...falsi].sort(() => Math.random() - 0.5)
@@ -497,8 +528,9 @@ function ondata() {
 
        Quando nemmeno partire attaccati al bordo basta — un boss grosso su
        uno schermo piccolo, con l'ultima vita che rallenta tutto — il
-       sasso giusto nasce già affacciato invece di accelerare: la regola
-       è che si infittisce, non si corre (vedi `difficolta`). */
+       sasso giusto nasce già affacciato invece di accelerare: il ritmo
+       lo decide il livello, col suo pavimento (vedi `difficolta`), e
+       una covata non corre per far tornare i conti a un'altra. */
     const inScena = 2 * r                   // da y = -r-off a centro in y = r
     const sfalsa = Math.random() * H * (boss ? 0.18 : 0.30)
     const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))

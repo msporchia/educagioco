@@ -344,6 +344,40 @@ che riporta da dove si è arrivati. Le tabelline in gioco adesso si riconoscono
 dai numeri di riga e colonna accesi; le altre caselle restano visibili ma
 smorzate.
 
+#### Il livello, e quanto corre il cielo
+
+Il livello della partita sale di uno ogni cinque risposte giuste, e fa due
+cose: **infittisce** il cielo (un sasso sbagliato in più da scartare ogni
+due livelli, fino a sei) e **lo accelera del 5% a livello, fino a un
+pavimento**. La velocità era stata tolta del tutto, per una ragione buona:
+ogni livello tagliava un decimo della caduta senza fondo, e a livello sei
+la domanda non era più «quanto fa 7×8» ma «quanto sei svelto di mano» — un
+bambino che il conto lo sa in cinque secondi veniva segnato dal motore
+come uno che non lo sa. Ma senza nessuna accelerazione il livello era un
+numero e basta: chi sa tutto fino all'8 giocava il pianeta del 9 allo
+stesso ritmo di chi comincia, e il volo libero non finiva mai — e un gioco
+che non finisce mai non dà niente da battere.
+
+Il livello si guadagna con le risposte giuste di *questa* partita: chi è a
+sette ha appena azzeccato trenta calcoli, e sta dimostrando che il ritmo lo
+regge. I pavimenti sono due, perché i posti sono due (`ritmoTappa`,
+`ritmoVolo` in `views/MathGame.vue`):
+
+| dove | pavimento | cioè | lo si tocca a |
+|---|---|---|---|
+| le tappe | 70% | sette secondi invece di dieci | livello 7 (30 centri) |
+| i voli infiniti | 50% | cinque secondi | livello 11 (50 centri) |
+
+Nelle tappe il pavimento è alto perché una tappa ha un bersaglio e si
+chiude in una serata: il livello non deve diventare il muro che la tiene
+aperta. Nei voli è più basso perché lì l'unica cosa da fare è durare, e un
+cielo che non accelera mai è una partita che finisce solo per noia. Il
+pavimento è quello che tiene la domanda una domanda di conto: a cinque
+secondi il sasso giusto è in scena entro tre (`rispostaEntro`) e resta da
+toccare per almeno due — sotto, si tornerebbe a misurare la mano. Il peso
+del calcolo, il boss e l'ultima vita allungano come prima, moltiplicando
+sopra.
+
 #### L'astronave, e cosa può e non può fare
 
 In fondo al cielo c'è una nave, e non è un ornamento: è **il secondo posto

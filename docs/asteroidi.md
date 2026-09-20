@@ -124,10 +124,15 @@ Il **boss**, ogni otto domande, è l'unico che sta fuori: arriva dal pianeta
 *successivo*. È un assaggio di quello che non si è ancora fatto — perderlo
 non toglie niente al motore, perché una cosa mai insegnata non si misura.
 
-Salendo di livello **il cielo si infittisce, non accelera**: arrivano più
-sassi sbagliati da scartare, ma il tempo per fare il conto resta quello. E
-il sasso con la risposta giusta entra sempre entro tre secondi dalla
-domanda: aspettare non è saper rispondere piano.
+Salendo di livello — uno ogni cinque risposte giuste della partita — **il
+cielo si infittisce, e accelera fino a un pavimento**: arrivano più sassi
+sbagliati da scartare, e la caduta si accorcia del 5% a livello. Nelle tappe
+si ferma al 70% del tempo di partenza (sette secondi invece di dieci), nei
+voli infiniti al 50%: lì l'unica cosa da fare è durare, e un cielo che non
+accelera mai sarebbe una partita che finisce solo per noia. Il pavimento è
+quello che tiene la domanda una domanda di conto e non di mano: anche al
+minimo il sasso con la risposta giusta entra entro tre secondi dalla domanda
+e resta da toccare per almeno due. Aspettare non è saper rispondere piano.
 
 Nei **voli infiniti**, che si aprono a fila finita, non si sceglie più
 niente a mano: pescano da sé quello che si ricorda meno, e a chi ricorda
