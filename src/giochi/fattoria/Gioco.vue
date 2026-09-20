@@ -23,7 +23,7 @@
    di tutto il gioco: la fattoria è il posto dove si *spende* quello che
    si è guadagnato facendo esercizi altrove, non un'altra lezione.
    ═══════════════════════════════════════════════════════════════════ */
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
@@ -242,6 +242,7 @@ function avvisa(testo) { avviso.value = testo; setTimeout(() => { avviso.value =
 function chiudi() {
   pannello.value = null; scelto.value = null; punta.value = ''
   dovePosare = null
+  posaLEtichettaInSospeso()
 }
 
 /* Il baule dal tasto in alto: nessuna cella da ricordare, e quella di
@@ -1745,8 +1746,21 @@ function coccola(gesto) {
 function festeggiaIlBenessere(chi, nome, premio) {
   const faccia = (animale(chi) || {}).emoji || '🐾'
   avvisa(`${faccia} ${nome} sta benissimo! ⭐ +${premio.xp} di esperienza.`)
-  const a = attori.find(x => x.nome === chi)
-  if (a && scena) scena.etichetta(`+${premio.xp} ⭐`, a.corpo.x, a.corpo.y - 1.6)
+  etichettaInSospeso = { chi, testo: `+${premio.xp} ⭐` }
+  /* la scheda della bestia si riapre nello stesso giro, a tutta altezza,
+     e un'etichetta che vive due secondi e mezzo dietro un foglio non la
+     vede nessuno: si posa quando il foglio si chiude (`chiudi()`), o
+     subito se non c'è nessun foglio davanti. */
+  nextTick(() => { if (!pannello.value) posaLEtichettaInSospeso() })
+}
+
+let etichettaInSospeso = null
+function posaLEtichettaInSospeso() {
+  const e = etichettaInSospeso
+  if (!e) return
+  etichettaInSospeso = null
+  const a = attori.find(x => x.nome === e.chi)
+  if (a && scena) scena.etichetta(e.testo, a.corpo.x, a.corpo.y - 1.6)
 }
 
 function battezza(nome) {
