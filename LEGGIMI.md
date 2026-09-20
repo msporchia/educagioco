@@ -380,21 +380,40 @@ sopra.
 
 #### L'astronave, e cosa può e non può fare
 
-In fondo al cielo c'è una nave, e non è un ornamento: è **il secondo posto
-dove si legge come sta andando**, quello dove l'occhio è già. I cuori nella
-fascia in alto dicono il numero esatto, la nave dice la sostanza — intatta,
-poi ammaccata, poi con l'ala squarciata, il vetro crepato, il fumo e la luce
-rossa d'emergenza. Con una vita sola gli asteroidi rallentano di un quarto:
-chi è arrivato lì di solito il conto lo sa e non fa in tempo a farlo, e la
+In fondo al cielo c'è una nave, e non è un ornamento: è **l'unico posto
+dove si leggono le vite**. I cuoricini stavano nella fascia in alto, cioè
+nel posto dove nessuno guarda — chi gioca guarda il cielo, e la nave sta
+appena sotto, dentro lo stesso sguardo — e la fascia adesso dice solo le
+due cose che la nave non può dire: quanto manca al bersaglio della tappa e
+quanti centri sulla tabellina nuova. La nave dice la sostanza — intatta,
+poi con l'ala **strappata** (bordo frastagliato, pezzi che galleggiano
+accanto, scintille e una spia ambra che lampeggia), poi con lo strappo che
+si mangia l'ala, il vetro crepato, il fumo e la spia rossa che batte il
+doppio. Con una vita sola gli asteroidi rallentano di un quarto: chi è
+arrivato lì di solito il conto lo sa e non fa in tempo a farlo, e la
 differenza è fra chiudere la partita avendo imparato qualcosa e chiuderla e
 basta. Cresce anche: al livello 3 diventa un caccia, al 6 un incrociatore.
 
-Due potenziamenti si guadagnano **giocando**, e finiscono con la partita:
+Due **gettoni** si guadagnano giocando, si tengono in tasca (mai più di
+tre, in basso a destra) e si spendono quando si vuole, premendoli; finiscono
+con la partita. Sono la seconda versione: prima erano potenziamenti che si
+accendevano da soli — il cannone doppio col filotto, lo scudo col boss — e
+si perdevano sbagliando, cioè arrivavano e se ne andavano senza che nessuno
+avesse deciso niente. Un premio che si accende da solo mentre guardi in
+alto è un lampo giallo, e uno che si perde sbagliando è una seconda
+punizione sopra quella che c'è già. **Un gettone non si perde mai
+sbagliando**: si spende, o resta lì.
 
 | | come arriva | cosa fa |
 |---|---|---|
-| 🔫 cannone doppio | 5, 15, 25… risposte giuste di fila | i punti valgono doppio e l'onda porta via due sassi sbagliati vicini. **Si perde sbagliando** |
-| 🛡️ scudo | abbattendo un boss | para il prossimo errore, o il prossimo sasso caduto, senza costare una vita |
+| ❄️ gelo | 5, 15, 25… risposte giuste di fila, o un boss abbattuto | congela **la domanda in corso e basta**: i sassi vanno al 42%, e dalla domanda dopo il cielo riparte. Era a tempo, e dieci secondi coprivano tre domande |
+| 🎯 mirino | idem, a turno col gelo | fa sparire **una** risposta sbagliata a caso: non dice qual è la giusta, toglie un sasso e lascia il conto da fare. Quel sasso non lascia niente in archivio |
+
+I due si alternano guardando l'ultimo uscito, da qualunque parte arrivi —
+prima l'alternanza era sulla serie (5 il gelo, 15 il mirino), e siccome una
+tappa si chiude sui quindici centri il mirino lo vedeva solo chi non
+sbagliava mai. A dieci di fila, e a venti, arriva una vita invece del
+gettone. I numeri e le ragioni stanno in `src/data/potenziamenti.js`.
 
 Alla stessa regola risponde anche il cannone: **a riposo non punta niente**.
 Spazza il cielo da una parte all'altra (±54°, avanti e indietro ogni 3,4 s)
@@ -406,12 +425,16 @@ giusto. Nemmeno un dondolio stretto attorno alla verticale bastava: passando
 sempre in mezzo si legge come «guarda lì». Per non dire niente, il cannone
 deve arrivare sopra ogni colonna.
 
-La regola che li tiene in riga è una sola: **un potenziamento non risponde
-mai al posto del bambino**. Nessuno accorcia un calcolo, ne salta uno o
+La regola che li tiene in riga è una sola: **un gettone non risponde mai
+al posto del bambino**. Nessuno accorcia un calcolo, ne salta uno o
 segnala qual è l'asteroide giusto — un aiuto così alzerebbe i punti e
 abbasserebbe quello che si impara, che è l'unica cosa per cui il gioco
-esiste. Possono pagare meglio chi va bene, perdonare una botta, dare più
-tempo a chi è in difficoltà. Per lo stesso motivo **non si comprano**: le
+esiste. Il mirino la tocca, la domanda, e regge lo stesso per due ragioni
+che vanno tenute insieme: si paga in anticipo con cinque centri di fila, e
+con quattro o sei sassi in cielo toglierne uno sbagliato lascia il calcolo
+da fare — quello che non deve succedere è che un aiuto *indichi* la
+giusta, e si porta via una sbagliata a caso. Possono dare più tempo a chi è
+in difficoltà, non di più. Per lo stesso motivo **non si comprano**: le
 monete sono la valuta della cameretta, e un hangar che le succhia sposterebbe
 l'equilibrio di un gioco che non c'entra niente. Qui si paga con le risposte
 giuste. I numeri e le ragioni stanno in `src/data/potenziamenti.js`; il

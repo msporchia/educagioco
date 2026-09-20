@@ -76,17 +76,25 @@ Se resta una vita sola gli asteroidi rallentano un po' — chi è arrivato lì i
 conto di solito lo sa, e non fa in tempo a farlo. Man mano che si sale di
 livello la nave cresce: navetta, caccia, incrociatore.
 
-Due potenziamenti si guadagnano giocando e finiscono con la partita:
+Le vite non stanno in una barra: si leggono sulla nave, e basta. In cima
+restano solo le due cose che la nave non può dire — quanto manca al
+bersaglio della tappa e quanti centri sulla tabellina nuova.
 
-- 🔫 **cannone doppio** — dopo cinque risposte giuste di fila. I punti valgono
-  doppio e l'onda porta via anche i sassi sbagliati vicini. Si perde
-  sbagliando.
-- 🛡️ **scudo** — abbattendo un boss. Para il prossimo errore, o il prossimo
-  sasso caduto, senza costare una vita.
+Due **gettoni** si guadagnano giocando, restano in tasca (in basso a
+destra, mai più di tre) finché non li si preme, e finiscono con la partita.
+Arrivano a turno, uno ogni cinque risposte giuste di fila e uno per ogni boss
+abbattuto; a dieci di fila arriva una vita al posto del gettone. **Non si
+perdono sbagliando**: si spendono quando si decide, o restano lì.
 
-Nessuno dei due tocca il calcolo: non accorciano una domanda, non ne saltano
-una e non dicono qual è l'asteroide giusto. Non si comprano con le monete —
-si pagano con le risposte giuste.
+- ❄️ **gelo** — congela la domanda che si ha davanti: i sassi rallentano e
+  c'è tutto il tempo di fare il conto. Vale per quella domanda sola, dalla
+  dopo il cielo riparte.
+- 🎯 **mirino** — fa sparire una risposta sbagliata, scelta a caso. Non dice
+  qual è quella giusta: il conto lo si fa lo stesso, con un sasso in meno.
+
+Nessuno dei due risponde al posto del bambino: non accorciano una domanda,
+non ne saltano una e non indicano l'asteroide giusto. Non si comprano con le
+monete — si pagano con le risposte giuste.
 
 ## Quali domande escono, e perché proprio quelle
 
@@ -102,7 +110,7 @@ frequenza quel fatto ricompare. In pratica:
 |---|---|
 | l'ha appena sbagliato | torna quasi subito, e più spesso |
 | ci mette tanto a rispondere | conta quasi come mezzo errore: la velocità qui è parte del saperlo |
-| l'ha detto giusto due volte di fila | esce dal giro **per il resto della partita** — sa già farlo, è tempo tolto ad altro |
+| l'ha detto giusto tre volte di fila | esce dal giro **per il resto della partita** — sa già farlo, è tempo tolto ad altro |
 | lo sa da tre settimane | sparisce a lungo, poi rispunta da solo per un controllo |
 
 L'ultima riga è la più importante e la meno ovvia: **la forza cala da sola

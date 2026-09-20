@@ -25,8 +25,9 @@
       raffica: la coda richiamava una parola dopo 3 turni e il campione
       pesato poteva ripescarla subito dopo.
 
-   3. RIPOSO DENTRO LA SESSIONE. Chi risponde giusto due volte di fila su
-      uno stesso elemento ha dimostrato di saperlo *adesso*: continuare a
+   3. RIPOSO DENTRO LA SESSIONE. Chi risponde giusto `pausaDopo` volte di
+      fila (tre, negli asteroidi) su uno stesso elemento ha dimostrato di
+      saperlo *adesso*: continuare a
       riproporlo nella stessa partita è tempo tolto a quello che non sa.
       L'elemento va a riposo fino a fine sessione e ne entra un altro.
       Il consolidamento vero resta affidato ai ripassi dei giorni dopo.
