@@ -81,19 +81,21 @@ export const CIBI = [
   { id: 'pate',    nome: 'Paté',    emoji: '🥫', prezzo: 14, quanto: 0.70, per: ['gatto'] },
   { id: 'semi',    nome: 'Semini',  emoji: '🌰', prezzo: 5,  quanto: 0.30, per: ['pappagallo'] },
   { id: 'frutta',  nome: 'Frutta',  emoji: '🍎', prezzo: 14, quanto: 0.70, per: ['pappagallo'] },
+  { id: 'carota',  nome: 'Carota',  emoji: '🥕', prezzo: 5,  quanto: 0.30, per: ['coniglio'] },
+  { id: 'insalata', nome: 'Insalata', emoji: '🥬', prezzo: 14, quanto: 0.70, per: ['coniglio'] },
   /* quelli che non si comprano: costano zero monete e un pezzo di
      granaio — il perché sta in testa al file. Tre vengono dal mulino,
      tre dai recinti, e la scaletta è la stessa di sempre: il mangime
      riempie poco, il tartufo riempie quasi tutto e costa una catena
      lunga (zucche → porcile → mezz'ora). */
   { id: 'mangime', nome: 'Mangime', emoji: '🥣', prezzo: 0, da: 'mangime',
-    quanto: 0.30, per: ['cane', 'gatto', 'pappagallo'] },
+    quanto: 0.30, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   { id: 'uova', nome: 'Uovo', emoji: '🥚', prezzo: 0, da: 'uova',
     quanto: 0.45, per: ['cane', 'gatto', 'pappagallo'] },
   { id: 'latte', nome: 'Ciotola di latte', emoji: '🥛', prezzo: 0, da: 'latte',
     quanto: 0.55, per: ['cane', 'gatto'] },
   { id: 'pastone', nome: 'Pastone', emoji: '🍲', prezzo: 0, da: 'pastone',
-    quanto: 0.70, per: ['cane', 'gatto', 'pappagallo'] },
+    quanto: 0.70, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   /* La merenda è **la sesta pappa, e la più lunga da fare**: fragole
      e miele, cioè un campo da undici minuti e tutta la catena delle
      api. Sta fra il pastone e il tartufo perché costa quel tanto, e
@@ -101,7 +103,7 @@ export const CIBI = [
      e la potesse mangiare solo il pappagallo sarebbe una catena da
      cinquanta livelli chiusa dietro una bestia da 🪙120. */
   { id: 'merenda', nome: 'Merenda', emoji: '🥧', prezzo: 0, da: 'merenda',
-    quanto: 0.75, per: ['cane', 'gatto', 'pappagallo'] },
+    quanto: 0.75, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
     quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
 ]

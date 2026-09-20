@@ -48,6 +48,11 @@ export const ANIMALI = {
   'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75, liv: 7 },
   'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75, liv: 20 },
   'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75, liv: 30 },
+  /* Il coniglio è la prima bestia nata da una scheda di prompt
+     (`strumenti/sprite/.../PROMPT-bestia.md`) e non da un foglio capitato:
+     il nome dello sprite è anche la famiglia, quindi `coniglio` e non
+     `coniglio-bianco` finché ce n'è uno solo. */
+  coniglio:       { nome: 'Coniglio',     emoji: '🐰', prezzo: 85, liv: 10 },
   /* Un pappagallo **non porta niente sulla schiena**: ha le ali, e una
      copertina addosso a un uccello non si sa disegnare. È l'unica riga
      che si scosta dal ripiego, ed è il caso per cui `porta` esiste — se
@@ -145,6 +150,8 @@ export const NOMI = {
   gatto: ['Micio', 'Ombra', 'Zenzero', 'Perla', 'Briciola', 'Pallino',
           'Neve', 'Tigro', 'Mimì', 'Fumo'],
   pappagallo: ['Coco', 'Arcobaleno', 'Kiwi', 'Cielo', 'Rio', 'Sole'],
+  coniglio: ['Batuffolo', 'Carota', 'Saltino', 'Nuvola', 'Pallina', 'Trottola',
+             'Cannella', 'Zucchero'],
 }
 
 /* La famiglia si ricava dal nome dello sprite — `cane-beagle` è un cane
