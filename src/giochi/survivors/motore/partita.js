@@ -1,9 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
    UNA PARTITA — le regole, senza schermo
 
-   L'eroe sta fermo in mezzo al mondo e spara da solo al mostro più
-   vicino: il bambino ha **una cosa sola da fare col dito**, schivare. I
-   mostri lasciano gemme, le gemme fanno salire di livello, e a ogni
+   L'eroe spara da solo al mostro più vicino, e il dito serve a
+   **andare in giro**: le gemme restano dove cadono, ogni tanto a terra
+   compare un oggetto che sta lì qualche secondo e poi svanisce
+   (`dati/oggetti.js`), e chi sta fermo raccoglie solo quello che gli
+   arriva sotto la calamita. Le gemme fanno salire di livello, e a ogni
    livello la partita si ferma e chiede di scegliere una carta — che si
    paga con una domanda (`dati/mazzo.js` dice quanto).
 
@@ -24,6 +26,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { CFG, soglia, stellePerFerite } from '../dati/taratura.js'
 import { MOSTRI, CHIAVI_MOSTRI, ammessi } from '../dati/mostri.js'
+import { OGGETTI, pescaOggetto } from '../dati/oggetti.js'
 import { MAZZO, prezzoDomanda, palliniDelPrezzo, scalinoDelPrezzo, PALLINI,
          resa, tettoDi }
   from '../dati/mazzo.js'
@@ -146,8 +149,13 @@ export class Partita {
     this.nemici = []
     this.colpi = []
     this.gemme = []
+    this.oggetti = []
     this.effetti = []
     this.palle = []
+    /* la calamita trovata a terra: finché dura, tutte le gemme in campo
+       volano verso l'eroe, anche quelle fuori dalla calamita sua */
+    this.risucchio = 0
+    this.tOggetto = CFG.oggetti.primo
 
     this.tempo = 0
     this.uccisi = 0
@@ -157,6 +165,11 @@ export class Partita {
     this.prossima = soglia(1)
     this.potenziamenti = {}
     this.offerta = null
+    /* perché la partita si è fermata a offrire: `livello` (si è saliti)
+       o `cassa` (si è aperta una cassa trovata a terra). Chi mostra le
+       carte lo scrive in cima, perché «livello 4» sopra una cassa
+       sarebbe una bugia */
+    this.motivoOfferta = null
     this.esito = null
     this.eventi = []
     /* la tappa è stata portata a casa (e con quante ferite): si segna al
@@ -309,6 +322,7 @@ export class Partita {
 
     this.muoviEroe(dt)
     this.nascite(dt)
+    this.compaiono(dt)
     if (this.camminaNemici(dt)) return this.esito     // l'ultimo cuore
     this.tira(dt)
     this.muoviColpi(dt)
@@ -317,6 +331,7 @@ export class Partita {
     this.saetta(dt)
     this.raccogliMorti()
     this.muoviGemme(dt)
+    this.raccogliOggetti(dt)
     this.muoviEffetti(dt)
     return this.esito
   }
@@ -392,7 +407,7 @@ export class Partita {
 
   nasceNemico() {
     if (this.nemici.length >= this.regole.tetto(this.tempo)) return
-    const t = this.tipoDelMomento(), m = MOSTRI[t]
+    const t = this.tipoDelMomento()
     const mx = this.campo.larghezza / 2 + 34, my = this.campo.altezza / 2 + 34
     const a = this.angoloDiNascita()
     const cx = Math.cos(a), cy = Math.sin(a)
@@ -400,11 +415,16 @@ export class Partita {
        non esce dallo schermo, sul lato che si incontra per primo */
     const quanto = Math.min(mx / Math.max(0.0001, Math.abs(cx)),
                             my / Math.max(0.0001, Math.abs(cy)))
-    const ox = cx * quanto, oy = cy * quanto
+    this.nemici.push(this.mostroNuovo(t, this.eroe.x + cx * quanto, this.eroe.y + cy * quanto))
+  }
+
+  /* un mostro con i numeri di adesso: la vita e la fretta della marea */
+  mostroNuovo(t, x, y) {
+    const m = MOSTRI[t]
     const mult = this.regole.vitaNemico(this.tempo)
     const vita = Math.ceil(m.vita * mult)
-    this.nemici.push({
-      tipo: t, x: this.eroe.x + ox, y: this.eroe.y + oy,
+    return {
+      tipo: t, x, y,
       r: m.r, vita, vitaMax: vita,
       passo: m.passo * (0.85 + this.rnd() * 0.3) * this.regole.frettaNemico(this.tempo),
       /* quanto costa spostarlo e quanto poco lo prende il freddo: si
@@ -412,7 +432,7 @@ export class Partita {
          Dentro la campagna vale 1 e non si sente */
       massa: CFG.stazza(mult),
       spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0, fase: this.rnd() * 6.3,
-    })
+    }
   }
 
   /* ── i mostri camminano verso l'eroe ──
@@ -572,7 +592,9 @@ export class Partita {
     this.segnala('tuono')
   }
 
-  /* ── chi è morto lascia la gemma ── */
+  /* ── chi è morto lascia la gemma ──
+     E i grossi, qualche volta, anche un oggetto: ammazzare un colosso
+     deve valere qualcosa di più della sua gemma. */
   raccogliMorti() {
     let caduti = false
     for (const n of this.nemici) {
@@ -583,33 +605,37 @@ export class Partita {
       this.gemme.push({ x: n.x, y: n.y, vx: (this.rnd() - 0.5) * 60,
                         vy: (this.rnd() - 0.5) * 60,
                         val: this.f.valoreGemma, fase: this.rnd() * 6.3 })
+      if (MOSTRI[n.tipo].vita >= CFG.oggetti.grosso && this.rnd() < CFG.oggetti.daiGrossi)
+        this.lasciaOggetto(n.x, n.y)
       this.segnala('morto')
     }
     if (caduti || this.nemici.some(n => n.sparito))
       this.nemici = this.nemici.filter(n => n.vita > 0 && !n.sparito)
   }
 
-  /* ── le gemme: la calamita è la sensazione da non perdere ── */
+  /* ── le gemme: la calamita è la sensazione da non perdere ──
+     Ma vale solo dentro il suo raggio. Una gemma fuori **resta dov'è**:
+     prima si incamminava da sola, e arrivava a correre più dell'eroe —
+     era il gioco che si giocava da fermi. Chi la vuole ci va; quella
+     lasciata a tre schermate di distanza non torna più, come i mostri. */
   muoviGemme(dt) {
     const e = this.eroe
     const cal = this.f.calamita
     const preso = this.f.raggio + 12
     const attrito = Math.pow(0.25, dt)
+    const limite = Math.hypot(this.campo.larghezza, this.campo.altezza) * CFG.troppoLontano
+    const risucchio = this.risucchio > 0
     let prese = false
     for (const g of this.gemme) {
       const gdx = e.x - g.x, gdy = e.y - g.y
       const gd = Math.sqrt(gdx * gdx + gdy * gdy) || 1
-      if (gd < cal) {
+      if (gd > limite) { g.presa = true; prese = true; continue }
+      if (risucchio) {
+        /* la calamita trovata a terra: tutto vola, anche da lontano */
+        g.vx += gdx / gd * 1100 * dt; g.vy += gdy / gd * 1100 * dt
+      } else if (gd < cal) {
         const tira = 260 + (cal - gd) * 5.5
         g.vx += gdx / gd * tira * dt; g.vy += gdy / gd * tira * dt
-      } else {
-        /* fuori dalla calamita si incamminano lo stesso, piano, e tanto
-           più in fretta quanto più sono rimaste indietro: una gemma persa
-           per sempre è una fatica buttata, e il codino di gemme che
-           insegue è anche una bella cosa da vedere */
-        const deriva = Math.min(CFG.derivaMax, CFG.derivaGemma + gd * 0.30)
-        g.x += gdx / gd * deriva * dt
-        g.y += gdy / gd * deriva * dt
       }
       g.vx *= attrito; g.vy *= attrito
       g.x += g.vx * dt; g.y += g.vy * dt
@@ -617,6 +643,86 @@ export class Partita {
       if (gd < preso && !this.offerta) { g.presa = true; prese = true; this.prendiGemma(g) }
     }
     if (prese) this.gemme = this.gemme.filter(g => !g.presa)
+  }
+
+  /* ═══════════ GLI OGGETTI A TERRA ═══════════
+     Compaiono a tempo (`CFG.oggetti`), dentro lo schermo ma non sotto i
+     piedi, e i mostri grossi ne lasciano uno ogni tanto. Stanno lì
+     qualche secondo e poi svaniscono: sono la ragione per cui si va in
+     giro invece di aspettare che le cose arrivino. */
+  compaiono(dt) {
+    this.tOggetto -= dt
+    if (this.tOggetto > 0) return
+    this.tOggetto = CFG.oggetti.ogni(this.regole.marea(this.tempo))
+    this.lasciaOggetto()
+  }
+
+  /* Senza coordinate lo si posa in un punto a caso dello schermo, a una
+     distanza che si copre in un paio di secondi: né sotto i piedi (non
+     sarebbe una corsa) né oltre il bordo (non si vedrebbe). Il cuore
+     esce solo a chi ne ha perso uno. */
+  lasciaOggetto(x, y) {
+    if (this.oggetti.length >= CFG.oggetti.massimo) return null
+    const e = this.eroe
+    const tipo = pescaOggetto(this.rnd, { feribile: e.cuori < e.cuoriMax })
+    if (x === undefined) {
+      const { vicino, lontano } = CFG.oggetti
+      const mx = this.campo.larghezza / 2 - 30, my = this.campo.altezza / 2 - 40
+      const a = this.rnd() * 6.283
+      const d = vicino + this.rnd() * (lontano - vicino)
+      /* la direzione è a caso, la distanza si accorcia per non uscire
+         dallo schermo, e sotto `vicino` non si scende: si scala dal lato */
+      const dx = Math.cos(a) * d, dy = Math.sin(a) * d
+      const scala = Math.min(1, mx / Math.max(1, Math.abs(dx)), my / Math.max(1, Math.abs(dy)))
+      x = e.x + dx * scala
+      y = e.y + dy * scala
+    }
+    const o = { tipo, x, y, resta: CFG.oggetti.durata, fase: this.rnd() * 6.3 }
+    this.oggetti.push(o)
+    this.segnala('oggetto')
+    return o
+  }
+
+  raccogliOggetti(dt) {
+    if (this.risucchio > 0) this.risucchio = Math.max(0, this.risucchio - dt)
+    if (!this.oggetti.length) return
+    const e = this.eroe
+    const preso = this.f.raggio + 16
+    let via = false
+    for (const o of this.oggetti) {
+      o.resta -= dt
+      o.fase += dt * 3
+      if (o.resta <= 0) { o.via = true; via = true; continue }
+      const d = Math.hypot(o.x - e.x, o.y - e.y)
+      if (d < preso && !this.offerta) { o.via = true; via = true; this.prendiOggetto(o) }
+    }
+    if (via) this.oggetti = this.oggetti.filter(o => !o.via)
+  }
+
+  prendiOggetto(o) {
+    const e = this.eroe
+    if (o.tipo === 'cuore') {
+      e.cuori = Math.min(e.cuoriMax, e.cuori + 1)
+      this.anello(e.x, e.y, 60, OGGETTI.cuore.colore)
+      this.segnala('cuore')
+    } else if (o.tipo === 'calamita') {
+      this.risucchio = OGGETTI.calamita.secondi
+      this.anello(e.x, e.y, 200, OGGETTI.calamita.colore)
+      this.segnala('calamita')
+    } else if (o.tipo === 'cassa') {
+      /* la cassa apre un'offerta come una salita di livello, ma senza
+         salire: le carte si pagano con la domanda come sempre, e chi
+         sbaglia non prende niente. In campagna col mazzo finito non c'è
+         niente da offrire, e la cassa è vuota */
+      this.anello(e.x, e.y, 90, OGGETTI.cassa.colore)
+      this.segnala('cassa')
+      const offerta = this.offri()
+      if (offerta) {
+        this.fermati()
+        this.motivoOfferta = 'cassa'
+        this.offerta = offerta
+      }
+    }
   }
 
   prendiGemma(g) {
@@ -710,6 +816,7 @@ export class Partita {
        libero non finisce mai (vedi `tettoDi` in `dati/mazzo.js`) — la
        partita continua a chiedere e a dare, e a chiuderla è la marea. */
     this.offerta = this.offri()
+    this.motivoOfferta = this.offerta ? 'livello' : null
   }
 
   /* Tre carte, **una per fascia**: la facile, la media e la tosta. Non
@@ -791,6 +898,7 @@ export class Partita {
   rinuncia() {
     if (!this.offerta) return null
     this.offerta = null
+    this.motivoOfferta = null
     this.segnala('niente')
     return null
   }
@@ -809,6 +917,7 @@ export class Partita {
     if (c.chiave === 'mela')
       this.eroe.cuori = Math.min(this.eroe.cuoriMax, this.eroe.cuori + 1)
     this.offerta = null
+    this.motivoOfferta = null
     this.ricalcola()
     return c
   }
@@ -830,6 +939,9 @@ export class Partita {
       nemici: this.nemici,
       colpi: this.colpi,
       gemme: this.gemme,
+      oggetti: this.oggetti,
+      /* la calamita trovata sta tirando: chi disegna lo fa vedere */
+      risucchio: this.risucchio > 0,
       effetti: this.effetti,
       palle: this.palle,
       dolore: e.invuln > 0 ? Math.min(1, e.invuln / this.f.invuln) : 0,
@@ -853,6 +965,9 @@ export class Partita {
       oltre: this.oltre,
       extra: this.extra,
       uccisi: this.uccisi,
+      /* le tre carte vengono da una cassa e non da un livello: si scrive
+         in cima all'offerta, perché «livello 4» sopra una cassa mente */
+      cassa: this.motivoOfferta === 'cassa',
       presi: this.mazzo
         .filter(c => this.livelloDi(c.chiave) > 0)
         .map(c => ({ chiave: c.chiave, icona: c.icona, quante: this.livelloDi(c.chiave) })),

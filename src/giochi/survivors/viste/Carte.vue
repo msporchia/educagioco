@@ -26,13 +26,17 @@
 defineProps({
   carte: { type: Array, required: true },
   livello: { type: Number, default: 0 },
+  /* le tre carte vengono da una cassa trovata a terra e non da una
+     salita di livello: sopra c'è scritto quello, perché «livello 4»
+     sopra una cassa sarebbe una bugia */
+  cassa: { type: Boolean, default: false },
 })
 defineEmits(['scegli'])
 </script>
 
 <template>
-  <div class="sv-velo sv-carte">
-    <div class="sv-titolone em">⭐ LIVELLO {{ livello }}</div>
+  <div class="sv-velo sv-carte" :data-cassa="cassa || null">
+    <div class="sv-titolone em">{{ cassa ? '📦 UNA CASSA!' : `⭐ LIVELLO ${livello}` }}</div>
     <p class="sv-sottotitolo">scegli una carta — e paga la sua domanda</p>
 
     <button v-for="c in carte" :key="c.chiave" class="sv-carta"

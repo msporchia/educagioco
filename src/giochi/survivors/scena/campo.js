@@ -14,6 +14,7 @@
    deve restare un HTML unico.
    ═══════════════════════════════════════════════════════════════════ */
 import { MOSTRI } from '../dati/mostri.js'
+import { OGGETTI } from '../dati/oggetti.js'
 import { scenario } from '../dati/scenari.js'
 
 /* Il caso ripetibile dell'erba: lo stesso ciuffo deve stare sempre nello
@@ -78,7 +79,9 @@ export class Campo {
       const px = o.x + cx, py = o.y + cy
       return px > -m && px < W + m && py > -m && py < H + m
     }
-    for (const g of s.gemme) if (dentro(g, 30)) this.gemma(g)
+    for (const g of s.gemme) if (dentro(g, 30)) this.gemma(g, s.risucchio, s.eroe)
+    for (const o of s.oggetti || []) if (dentro(o, 40)) this.oggetto(o, s.tempo)
+    if (s.risucchio) this.risucchio(s.eroe, s.tempo)
     /* ordinati per profondità: chi sta più in basso passa davanti */
     const ordinati = s.nemici.filter(n => dentro(n)).sort((a, b) => a.y - b.y)
     for (const n of ordinati) this.mostro(n, s.eroe)
@@ -424,19 +427,89 @@ export class Campo {
     }
   }
 
-  /* ═══════════ una gemma di esperienza ═══════════ */
-  gemma(g) {
+  /* ═══════════ una gemma di esperienza ═══════════
+     Quando la calamita trovata a terra sta tirando, ogni gemma si lascia
+     dietro una scia verso l'eroe: è così che si vede che vola *per quel
+     motivo*, e non per conto suo. */
+  gemma(g, tirata = false, eroe = null) {
     const ctx = this.ctx
     const s = 6 + Math.min(4, g.val) + Math.sin(g.fase) * 0.8
     const oro = g.val > 1
+    const col = oro ? '#ffd257' : '#4fc3ff'
+    if (tirata && eroe) {
+      const dx = eroe.x - g.x, dy = eroe.y - g.y, d = Math.hypot(dx, dy) || 1
+      ctx.globalAlpha = 0.45
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(g.x, g.y)
+      ctx.lineTo(g.x - dx / d * Math.min(26, d), g.y - dy / d * Math.min(26, d)); ctx.stroke()
+      ctx.globalAlpha = 1
+    }
     ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(0.78)
-    ctx.fillStyle = oro ? '#ffd257' : '#4fc3ff'
+    ctx.fillStyle = col
     ctx.fillRect(-s / 2, -s / 2, s, s)
     ctx.fillStyle = oro ? '#fff2b8' : '#b6ecff'
     ctx.fillRect(-s / 2, -s / 2, s * 0.45, s * 0.45)
     ctx.restore()
     ctx.globalAlpha = 0.25
-    this.cerchio(g.x, g.y, s, oro ? '#ffd257' : '#4fc3ff')
+    this.cerchio(g.x, g.y, s, col)
+    ctx.globalAlpha = 1
+  }
+
+  /* ═══════════ un oggetto a terra ═══════════
+     Disegnati a mano e non con le emoji: un'emoji ha lo stile del
+     telefono, non si tinge del prato e non respira. Ognuno ha un alone
+     del suo colore che pulsa, così si vede da lontano che c'è qualcosa
+     da andare a prendere, e negli ultimi due secondi lampeggia: sta per
+     sparire, e chi lo vuole deve muoversi. */
+  oggetto(o, tempo) {
+    const ctx = this.ctx
+    const scheda = OGGETTI[o.tipo]
+    if (!scheda) return
+    if (o.resta < 2 && Math.floor(tempo * 8) % 2 === 0) return
+    const su = Math.sin(o.fase) * 3
+    const x = o.x, y = o.y - 6 + su
+    this.ellisse(o.x, o.y + 9, 11, 4, '#00000030')
+    ctx.globalAlpha = 0.22 + 0.1 * Math.sin(o.fase * 2)
+    this.cerchio(x, y, 22, scheda.colore)
+    ctx.globalAlpha = 1
+    ctx.save(); ctx.translate(x, y)
+    if (o.tipo === 'cuore') {
+      ctx.fillStyle = scheda.colore
+      ctx.beginPath()
+      ctx.moveTo(0, 9)
+      ctx.bezierCurveTo(-14, -2, -8, -13, 0, -6)
+      ctx.bezierCurveTo(8, -13, 14, -2, 0, 9)
+      ctx.fill()
+      this.ellisse(-4, -5, 2.5, 1.6, '#ffffffaa')
+    } else if (o.tipo === 'calamita') {
+      /* una U rossa con le punte chiare: il ferro di cavallo che tutti
+         riconoscono */
+      ctx.strokeStyle = scheda.colore; ctx.lineWidth = 6; ctx.lineCap = 'butt'
+      ctx.beginPath(); ctx.arc(0, -2, 8, Math.PI, 0); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(-8, -2); ctx.lineTo(-8, 8); ctx.moveTo(8, -2); ctx.lineTo(8, 8); ctx.stroke()
+      ctx.fillStyle = '#e8f4ff'
+      ctx.fillRect(-11, 5, 6, 5); ctx.fillRect(5, 5, 6, 5)
+    } else if (o.tipo === 'cassa') {
+      ctx.fillStyle = scheda.colore
+      ctx.beginPath(); ctx.roundRect(-11, -8, 22, 18, 3); ctx.fill()
+      ctx.fillStyle = '#8a5a2b'
+      ctx.fillRect(-11, -1, 22, 3)
+      ctx.fillRect(-2, -8, 4, 18)
+      ctx.fillStyle = '#ffe98a'
+      ctx.beginPath(); ctx.roundRect(-4, -4, 8, 8, 2); ctx.fill()
+      this.cerchio(0, 0, 1.6, '#8a5a2b')
+    }
+    ctx.restore()
+  }
+
+  /* la calamita trovata a terra sta tirando: un cerchio che si allarga
+     intorno all'eroe, così si capisce perché tutto vola da lui */
+  risucchio(eroe, tempo) {
+    const ctx = this.ctx
+    const q = (tempo * 1.4) % 1
+    ctx.globalAlpha = 0.35 * (1 - q)
+    ctx.strokeStyle = OGGETTI.calamita.colore; ctx.lineWidth = 3
+    ctx.beginPath(); ctx.arc(eroe.x, eroe.y, 40 + 160 * (1 - q), 0, 6.29); ctx.stroke()
     ctx.globalAlpha = 1
   }
 

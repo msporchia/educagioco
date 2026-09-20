@@ -52,9 +52,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { Partita, Regole } from './partita.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { OGGETTI } from '../dati/oggetti.js'
 import { soglia } from '../dati/taratura.js'
 
-export const VERSIONE = 1
+/* 2: gli oggetti a terra e la cassa che apre un'offerta. Un salvataggio
+   di versione 1 riprendeva senza oggetti e con «livello» scritto sopra
+   le carte di una cassa: si butta. */
+export const VERSIONE = 2
 
 /* Quanto spazio si trova davanti chi riprende. Poco più della metà
    della gittata dell'arco (275): l'eroe li vede arrivare e comincia a
@@ -68,6 +72,10 @@ export const SPAZIO = 170
    lontani, riprendendo, sarebbero arrivati comunque. */
 export const MAX_NEMICI = 140
 const MAX_GEMME = 120
+/* gli oggetti a terra: il motore ne tiene pochi (`CFG.oggetti.massimo`),
+   e il tetto qui è solo perché un dato scritto sul telefono ha sempre
+   un tetto — anche quando non ci si arriva */
+export const MAX_OGGETTI = 8
 
 const vicini = (roba, eroe, quanti) => roba.length <= quanti ? roba : [...roba]
   .sort((a, b) => (a.x - eroe.x) ** 2 + (a.y - eroe.y) ** 2
@@ -100,6 +108,9 @@ export function scrivi(partita, tappa) {
        e un tiro nuovo a ogni uscita: chi non gradisce l'offerta esce e
        rientra finché non gliene capita una migliore. */
     offerta: p.offerta ? p.offerta.map(c => c.chiave) : null,
+    /* da dove viene l'offerta: riprendendo, sopra le carte di una cassa
+       deve esserci scritto «cassa», non il livello */
+    cassa: p.motivoOfferta === 'cassa' || undefined,
     nemici: vicini(p.nemici, e, MAX_NEMICI).map(n => ({
       t: n.tipo, x: arrotonda(n.x), y: arrotonda(n.y),
       vita: arrotonda(n.vita), max: arrotonda(n.vitaMax),
@@ -107,6 +118,11 @@ export function scrivi(partita, tappa) {
     })),
     gemme: vicini(p.gemme, e, MAX_GEMME)
       .map(g => ({ x: arrotonda(g.x), y: arrotonda(g.y), val: g.val })),
+    /* con quanto gli resta: un oggetto che stava per svanire non deve
+       ritrovarsi nuovo di zecca, o uscire e rientrare lo farebbe durare
+       per sempre */
+    oggetti: vicini(p.oggetti, e, MAX_OGGETTI)
+      .map(o => ({ t: o.tipo, x: arrotonda(o.x), y: arrotonda(o.y), resta: arrotonda(o.resta) })),
   }
 }
 
@@ -163,6 +179,11 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
       x: g.x, y: g.y, vx: 0, vy: 0, val: g.val || 1, fase: rnd() * 6.3,
     }))
 
+    /* un oggetto senza scheda si butta, come un mostro senza scheda */
+    p.oggetti = (dato.oggetti || [])
+      .filter(o => o && OGGETTI[o.t] && o.resta > 0)
+      .map(o => ({ tipo: o.t, x: o.x, y: o.y, resta: o.resta, fase: rnd() * 6.3 }))
+
     if (dato.offerta?.length) {
       const carte = dato.offerta
         .map(k => p.mazzo.find(c => c.chiave === k))
@@ -170,6 +191,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
         .map(c => p.vestiCarta(c))
         .sort((a, b) => a.prezzo - b.prezzo)
       p.offerta = carte.length ? carte : null
+      p.motivoOfferta = p.offerta ? (dato.cassa ? 'cassa' : 'livello') : null
     }
     return p
   } catch {

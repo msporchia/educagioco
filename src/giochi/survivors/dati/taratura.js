@@ -32,14 +32,32 @@ export const CFG = {
   apertura: 0.16,           // quanto si aprono a ventaglio le frecce in più
 
   /* ── le gemme ──
-     Quelle lontane si incamminano da sole, e alla fine corrono più
-     dell'eroe (`derivaMax` > `velocitaEroe`): chi scappa in linea retta
-     non deve seminare la propria esperienza per sempre. Una gemma persa è
-     una fatica buttata, e a sette anni non si torna indietro a
-     raccogliere quella dietro l'angolo. */
+     **Una gemma resta dove cade.** Prima quelle lontane si incamminavano
+     da sole verso l'eroe, e alla fine correvano più di lui (178 contro
+     152): sembrava una gentilezza — «a sette anni non si torna indietro
+     a raccogliere quella dietro l'angolo» — ed era il motivo per cui il
+     gioco si giocava da fermi. L'esperienza ti veniva addosso, i mostri
+     da fermo arrivavano comodi da tutti i lati, l'arco tirava da solo:
+     il dito non serviva. Adesso le cose si trovano in giro, e ci si va.
+     La calamita resta — è la sensazione da non perdere — e le carte
+     `magnete` la allargano; quello che sta fuori aspetta. */
   calamita: 115,            // da quanto lontano volano di scatto
-  derivaGemma: 70,          // quanto svelte si incamminano quelle lontane
-  derivaMax: 178,           // e quanto possono arrivare a correre
+
+  /* ── gli oggetti a terra (`dati/oggetti.js`) ──
+     Compaiono a tempo, sempre dentro lo schermo ma mai sotto i piedi
+     (`vicino`..`lontano`, in pixel), restano `durata` secondi e poi
+     svaniscono: per prenderli bisogna andarci. Più la marea sale, più
+     spesso ne arriva uno — è anche il modo di dare un cuore a chi ne
+     ha bisogno quando la partita si fa dura. */
+  oggetti: {
+    primo: 7,                                   // secondi prima del primo
+    ogni: m => Math.max(7, 15 - 3 * Math.max(0, m)),
+    durata: 9,
+    massimo: 5,                                 // in campo nello stesso momento
+    vicino: 140, lontano: 260,
+    grosso: 5,                                  // vita base da cui un mostro è «grosso»
+    daiGrossi: 0.3,                             // quante volte su cento ne lascia uno
+  },
 
   /* ── la folla ──
      **Il tetto sale col tempo**, e non è un dettaglio tecnico: è la
@@ -253,6 +271,21 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push(`oltre il traguardo i mostri pesano ${cfg.stazza(cfg.vitaNemico(4)).toFixed(2)}: le botte li spazzano ancora`)
   if (!(cfg.stazza(cfg.vitaNemico(9)) > cfg.stazza(cfg.vitaNemico(6))))
     guasti.push('la stazza ha un tetto')
+
+  /* ── gli oggetti a terra ──
+     Devono comparire dentro lo schermo di un telefono (390×620: mezza
+     larghezza è 195) ma non sotto i piedi, restare abbastanza da
+     essere raggiunti — a 152 pixel al secondo la distanza massima si
+     copre in meno di due secondi — e arrivare più spesso con la marea. */
+  const o = cfg.oggetti || {}
+  if (!(o.vicino >= 100 && o.lontano > o.vicino && o.lontano <= 280))
+    guasti.push(`gli oggetti compaiono fra ${o.vicino} e ${o.lontano} pixel: o sotto i piedi o fuori dallo schermo`)
+  if (!(o.durata >= 6 && o.durata <= 15))
+    guasti.push(`un oggetto resta a terra ${o.durata} secondi: o non si arriva o non svanisce mai`)
+  if (!(o.ogni?.(0) > 0 && o.ogni(3) < o.ogni(0) && o.ogni(50) >= 5))
+    guasti.push('gli oggetti non arrivano più spesso con la marea, o arrivano a raffica')
+  if (!(o.massimo >= 2 && o.massimo <= 8)) guasti.push(`al massimo ${o.massimo} oggetti in campo`)
+  if (!(o.daiGrossi > 0 && o.daiGrossi <= 0.6)) guasti.push(`i grossi lasciano un oggetto ${o.daiGrossi} volte`)
 
   /* la scaletta dell'esperienza deve salire sempre, o un livello costa
      meno del precedente e i potenziamenti piovono tutti insieme */

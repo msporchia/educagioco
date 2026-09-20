@@ -21,6 +21,8 @@ import { CFG, soglia, stellePerFerite, guastiDellaTaratura }
 import { MOSTRI, ammessi, guastiDeiMostri }
   from '../../src/giochi/survivors/dati/mostri.js'
 import { SCENARI, guastiDegliScenari } from '../../src/giochi/survivors/dati/scenari.js'
+import { OGGETTI, pescaOggetto, guastiDegliOggetti }
+  from '../../src/giochi/survivors/dati/oggetti.js'
 import { MAZZO, FASCE, PALLINI, prezzoDomanda, maturita, palliniDelPrezzo,
          scalinoDelPrezzo, resa, tettoDi, RESA_OLTRE, RESA_TOTALE, guastiDelMazzo }
   from '../../src/giochi/survivors/dati/mazzo.js'
@@ -50,6 +52,7 @@ for (const [che, guasti] of [
   ['la taratura', guastiDellaTaratura()],
   ['i mostri', guastiDeiMostri()],
   ['gli scenari', guastiDegliScenari()],
+  ['gli oggetti a terra', guastiDegliOggetti()],
   ['il mazzo', guastiDelMazzo()],
   ['la campagna', guastiDellaCampagna(CAMPAGNA, SCENARI, MOSTRI)],
   /* il proprio manifesto, non l'elenco globale: questo test non deve
@@ -395,6 +398,140 @@ controlla('il riassunto conta le stelle',
   const altro = gioca(new Regole(CAMPAGNA[3]), { rnd: caso(78), campo, bravura: 0.8 })
   controlla('semi diversi, partite diverse',
             altro.partita.uccisi !== uno.partita.uccisi || altro.partita.tempo !== uno.partita.tempo)
+}
+
+/* ══════════ 4-bis. LE COSE SI TROVANO IN GIRO ══════════
+   Il gioco era «sto fermo e guardo»: le gemme camminavano da sole verso
+   l'eroe fino a correre più di lui, e l'esperienza arrivava addosso a
+   chi non muoveva il dito. Adesso una gemma resta dove cade, e sul campo
+   compaiono oggetti che stanno lì qualche secondo e poi svaniscono. È
+   la metà di quello che rende il muoversi necessario (l'altra metà sono
+   i muri, più sotto). */
+{
+  /* ── una gemma fuori dalla calamita non si muove ── */
+  const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(41), campo })
+  p.gemme.push({ x: 300, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  p.gemme.push({ x: 60, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  for (let i = 0; i < 30; i++) p.avanza(1 / 30)
+  const lontana = p.gemme.find(g => g.x > 200)
+  controlla('una gemma lontana resta dove cade', lontana && lontana.x === 300 && lontana.y === 0,
+            lontana ? `si è spostata a ${lontana.x.toFixed(1)}` : 'è sparita')
+  controlla('e quella dentro la calamita vola da sé', !p.gemme.some(g => g.x > 30 && g.x < 200),
+            'la gemma vicina è ancora a terra')
+  controlla('ed è stata presa', p.xp === 1, `xp ${p.xp}`)
+  /* e non c'è più nessuna deriva nella taratura: se torna, torna qui */
+  controlla('la taratura non ha più una deriva delle gemme',
+            !('derivaGemma' in CFG) && !('derivaMax' in CFG))
+}
+{
+  /* ── gli oggetti compaiono a tempo, dentro lo schermo, e svaniscono ── */
+  const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(42), campo })
+  p.eroe.invuln = 1e9                  // fermo sul posto, e i mostri non contano
+  const passi = Math.ceil((CFG.oggetti.primo + 0.5) * 30)
+  for (let i = 0; i < passi; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
+  uguale('dopo qualche secondo a terra c\'è un oggetto', p.oggetti.length, 1)
+  const o = p.oggetti[0]
+  controlla('di un tipo che esiste', !!OGGETTI[o.tipo], o.tipo)
+  const d = Math.hypot(o.x - p.eroe.x, o.y - p.eroe.y)
+  controlla('non sotto i piedi', d >= 100, `a ${d.toFixed(0)} pixel`)
+  controlla('e dentro lo schermo',
+            Math.abs(o.x - p.eroe.x) <= campo.larghezza / 2 && Math.abs(o.y - p.eroe.y) <= campo.altezza / 2,
+            `a ${(o.x - p.eroe.x).toFixed(0)}, ${(o.y - p.eroe.y).toFixed(0)}`)
+  controlla('con un tempo che scende', o.resta > 0 && o.resta < CFG.oggetti.durata)
+  /* fermo lì, senza andarci: dopo la sua durata non c'è più */
+  const fino = Math.ceil(CFG.oggetti.durata * 30) + 5
+  const prima = p.oggetti.length
+  for (let i = 0; i < fino; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
+  controlla('chi non ci va lo vede svanire', !p.oggetti.includes(o) && prima === 1)
+  /* la scena li porta a chi disegna, con la calamita che tira */
+  const s = p.scena()
+  controlla('la scena porta gli oggetti', Array.isArray(s.oggetti))
+  uguale('e dice se la calamita trovata sta tirando', s.risucchio, false)
+}
+{
+  /* ── il cuore ── */
+  const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(43), campo })
+  p.eroe.cuori = 1
+  p.oggetti.push({ tipo: 'cuore', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
+  p.avanza(1 / 30)
+  uguale('il cuore trovato ridà un cuore', p.eroe.cuori, 2)
+  uguale('ma non alza il tetto', p.eroe.cuoriMax, 3)
+  uguale('e sparisce da terra', p.oggetti.length, 0)
+  controlla('e lo si sente', p.svuotaEventi().includes('cuore'))
+  /* a cuori pieni non esce: sarebbe una corsa per niente */
+  let cuori = 0
+  const r = caso(44)
+  for (let i = 0; i < 60; i++) if (pescaOggetto(r, { feribile: false }) === 'cuore') cuori++
+  uguale('a cuori pieni il cuore non esce mai', cuori, 0)
+  let feriti = 0
+  for (let i = 0; i < 60; i++) if (pescaOggetto(r, { feribile: true }) === 'cuore') feriti++
+  controlla('a chi ne ha perso uno sì', feriti > 5, `${feriti} su 60`)
+}
+{
+  /* ── la calamita trovata tira tutto, anche da lontano ── */
+  const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(45), campo })
+  p.gemme.push({ x: 420, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  p.gemme.push({ x: 0, y: -380, vx: 0, vy: 0, val: 1, fase: 0 })
+  p.oggetti.push({ tipo: 'calamita', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
+  p.avanza(1 / 30)
+  controlla('la calamita trovata accende il risucchio', p.risucchio > 0 && p.scena().risucchio)
+  for (let i = 0; i < 60; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
+  uguale('e in due secondi le gemme lontane sono arrivate', p.gemme.length, 0)
+  controlla('con la loro esperienza', p.xp >= 2 || p.livello > 1, `xp ${p.xp}, livello ${p.livello}`)
+  for (let i = 0; i < OGGETTI.calamita.secondi * 30 + 5; i++) { if (p.inPausa) p.rinuncia(); p.avanza(1 / 30) }
+  uguale('poi il risucchio si spegne', p.risucchio, 0)
+}
+{
+  /* ── la cassa apre un'offerta, pagata come sempre ── */
+  const p = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(46), campo })
+  const livello = p.livello, xp = p.xp
+  p.oggetti.push({ tipo: 'cassa', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
+  p.avanza(1 / 30)
+  controlla('la cassa ferma la partita con tre carte', p.inPausa && p.offerta?.length === 3)
+  uguale('e dice che viene da una cassa', p.motivoOfferta, 'cassa')
+  uguale('anche nel cruscotto', p.cruscotto.cassa, true)
+  uguale('senza salire di livello', p.livello, livello)
+  uguale('né toccare l\'esperienza', p.xp, xp)
+  const primaDi = p.offerta.map(c => p.livelloDi(c.chiave))
+  p.rinuncia()
+  stessaLista('chi sbaglia la domanda della cassa non prende niente',
+              p.offerta ? [] : primaDi.map((_, i) => 0), primaDi)
+  uguale('e la partita riparte', p.motivoOfferta, null)
+  /* la salita di livello dice «livello», non «cassa» */
+  p.xp = p.prossima
+  p.avanza(1 / 30)
+  uguale('una salita di livello si dichiara livello', p.motivoOfferta, 'livello')
+  uguale('e il cruscotto non dice cassa', p.cruscotto.cassa, false)
+  p.prendi(p.offerta[0].chiave)
+  /* col mazzo finito, in campagna, la cassa è vuota e non ferma niente */
+  const pieno = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(47), campo })
+  for (const x of MAZZO) pieno.potenziamenti[x.chiave] = x.max
+  pieno.ricalcola()
+  pieno.oggetti.push({ tipo: 'cassa', x: 0, y: 0, resta: 5, fase: 0 })
+  pieno.avanza(1 / 30)
+  controlla('col mazzo finito la cassa è vuota e non ferma la partita', !pieno.inPausa)
+}
+{
+  /* ── quanti ce ne possono essere, e chi li lascia ── */
+  const p = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(48), campo })
+  for (let i = 0; i < 12; i++) p.lasciaOggetto()
+  uguale('a terra non ce ne stanno più di quanti dice la taratura',
+         p.oggetti.length, CFG.oggetti.massimo)
+  /* un mostro grosso lascia qualcosa: col caso a zero, sempre */
+  const q = new Partita(new Regole(CAMPAGNA[8]), { rnd: () => 0.001, campo })
+  q.nemici.push({ tipo: 'colosso', x: 200, y: 50, r: 27, vita: 0, vitaMax: 10, passo: 30,
+                  massa: 1, spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0, fase: 0 })
+  q.raccogliMorti()
+  uguale('un colosso morto lascia un oggetto dove è caduto', q.oggetti.length, 1)
+  controlla('proprio lì', q.oggetti[0].x === 200 && q.oggetti[0].y === 50)
+  const m = new Partita(new Regole(CAMPAGNA[8]), { rnd: () => 0.001, campo })
+  m.nemici.push({ tipo: 'melma', x: 200, y: 50, r: 15, vita: 0, vitaMax: 1, passo: 60,
+                  massa: 1, spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0, fase: 0 })
+  m.raccogliMorti()
+  uguale('una melma no', m.oggetti.length, 0)
+  /* e il conto della campagna: quanti oggetti vede una partita */
+  const { partita } = gioca(new Regole(CAMPAGNA[5]), { rnd: caso(49), campo, bravura: 1, esattezza: 0.9 })
+  nota(`in una partita alle dune il pilota ha trovato oggetti e preso ${partita.xp + partita.livello} tra xp e livelli`)
 }
 
 /* ══════════ 5. le nove tappe si vincono davvero ══════════ */
@@ -789,8 +926,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const senzaCommenti = f => readFileSync(resolve(QUI, '../../src/giochi/survivors/', f), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
 
-  const files = ['motore/partita.js', 'motore/banco.js', 'dati/campagna.js',
-                 'dati/mazzo.js', 'dati/mostri.js', 'dati/taratura.js', 'dati/scenari.js']
+  const files = ['motore/partita.js', 'motore/banco.js', 'motore/sosta.js', 'dati/campagna.js',
+                 'dati/mazzo.js', 'dati/mostri.js', 'dati/taratura.js', 'dati/scenari.js',
+                 'dati/oggetti.js']
   for (const f of files)
     controlla(`${f} non sa cosa sia un canvas`,
               !/getContext|document\.|window\.|from 'vue'/.test(senzaCommenti(f)))

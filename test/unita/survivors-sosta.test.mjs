@@ -7,15 +7,15 @@
 import { CAMPAGNA, LIBERO } from '../../src/giochi/survivors/dati/campagna.js'
 import { Partita, Regole } from '../../src/giochi/survivors/motore/partita.js'
 import { Pilota, gioca, caso } from '../../src/giochi/survivors/motore/banco.js'
-import { scrivi, leggi, dice, VERSIONE, SPAZIO, MAX_NEMICI }
+import { scrivi, leggi, dice, VERSIONE, SPAZIO, MAX_NEMICI, MAX_OGGETTI }
   from '../../src/giochi/survivors/motore/sosta.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* una partita giocata davvero, fino a un certo secondo, e poi lasciata
    lì com'è: è quello che succede quando suonano alla porta */
-function fino(regole, secondi, rnd, bravura = 0.85) {
+function fino(regole, secondi, rnd, bravura = 0.85, esattezza = null) {
   const p = new Partita(regole, { rnd })
-  const pilota = new Pilota({ rnd, bravura })
+  const pilota = new Pilota({ rnd, bravura, esattezza })
   while (p.tempo < secondi && !p.finita) {
     if (p.inPausa) { pilota.rispondi(p); continue }
     pilota.guida(p, 1 / 30)
@@ -42,7 +42,7 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
                       x.eroe.cuori, x.eroe.cuoriMax,
                       Math.round(x.eroe.x), Math.round(x.eroe.y),
                       JSON.stringify(x.potenziamenti),
-                      x.nemici.length, x.gemme.length].join('|')
+                      x.nemici.length, x.gemme.length, x.oggetti.length].join('|')
   uguale('e la partita è la stessa', firma(b), firma(p))
   /* i numeri dell'eroe non si salvano: si **rifanno** dalle carte prese,
      ed è il motivo per cui il salvataggio sta in poche righe */
@@ -82,11 +82,13 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 {
   const t = CAMPAGNA[4]
   const regole = new Regole(t)
-  const p = fino(regole, t.durata * 0.6, caso(77))
+  const p = fino(regole, t.durata * 0.6, caso(77), 0.85, 1)
   controlla('si interrompe una partita viva', !p.finita && p.eroe.cuori > 0)
 
+  /* chi riprende risponde a tutto: qui si prova la ripresa, non la
+     taratura della grotta — quella sta in `unita/survivors` */
   const ripresa = leggi(scrivi(p, 4), t, { rnd: caso(78) })
-  const { partita } = gioca(regole, { rnd: caso(78), bravura: 1, da: ripresa })
+  const { partita } = gioca(regole, { rnd: caso(78), bravura: 1, esattezza: 1, da: ripresa })
   controlla('una partita ripresa arriva al traguardo', partita.vinta,
             `finita a ${partita.tempo.toFixed(1)}s con ${partita.eroe.cuori} cuori`)
   controlla('e i mostri uccisi prima contano ancora', partita.uccisi >= p.uccisi,
@@ -110,6 +112,39 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
   uguale('e col prezzo che avevano', b.offerta.map(c => c.prezzo).join(),
          p.offerta.map(c => c.prezzo).join())
   controlla('la partita riprende in pausa, come l\'avevi lasciata', b.inPausa)
+}
+
+/* ══════════ 4-bis. gli oggetti a terra tornano com'erano ══════════
+   Con quanto gli resta: un oggetto che stava per svanire non deve
+   ritrovarsi nuovo, o uscire e rientrare lo farebbe durare per sempre.
+   E le carte di una cassa restano carte di una cassa. */
+{
+  const t = CAMPAGNA[3]
+  const p = new Partita(new Regole(t), { rnd: caso(21) })
+  p.tempo = 30
+  p.oggetti.push({ tipo: 'cuore', x: 120, y: -80, resta: 3.4, fase: 0 })
+  p.oggetti.push({ tipo: 'cassa', x: -90, y: 60, resta: 7.1, fase: 0 })
+  p.oggetti.push({ tipo: 'nonesiste', x: 0, y: 0, resta: 5, fase: 0 })
+  const b = leggi(scrivi(p, 3), t, { rnd: caso(22) })
+  uguale('gli oggetti a terra si ritrovano, meno quello senza scheda', b.oggetti.length, 2)
+  const cuore = b.oggetti.find(o => o.tipo === 'cuore')
+  controlla('dove stavano', cuore && cuore.x === 120 && cuore.y === -80)
+  uguale('con quanto gli resta', cuore?.resta, 3.4)
+
+  p.oggetti = Array.from({ length: 20 }, (_, i) => ({ tipo: 'cuore', x: i * 30, y: 0, resta: 5, fase: 0 }))
+  uguale('e hanno un tetto nel salvataggio', scrivi(p, 3).oggetti.length, MAX_OGGETTI)
+
+  /* la cassa aperta: uscendo mentre si sceglie, riprendendo c'è ancora
+     scritto «cassa» sopra le carte */
+  const c = new Partita(new Regole(t), { rnd: caso(23) })
+  c.oggetti.push({ tipo: 'cassa', x: 0, y: 0, resta: 5, fase: 0 })
+  c.avanza(1 / 30)
+  controlla('la cassa ha aperto un\'offerta', c.inPausa && c.motivoOfferta === 'cassa')
+  const d = leggi(scrivi(c, 3), t, { rnd: caso(24) })
+  uguale('riprendendo l\'offerta è ancora di una cassa', d.motivoOfferta, 'cassa')
+  c.rinuncia(); c.xp = c.prossima; c.avanza(1 / 30)
+  uguale('e quella di un livello è di un livello',
+         leggi(scrivi(c, 3), t, { rnd: caso(25) }).motivoOfferta, 'livello')
 }
 
 /* ══════════ 5. dopo il traguardo non si salva più ══════════

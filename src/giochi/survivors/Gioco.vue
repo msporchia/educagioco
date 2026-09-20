@@ -118,7 +118,7 @@ const dovEravamo = computed(() => {
 
 function vuoto() {
   return { cuori: 3, cuoriMax: 3, livello: 1, quota: 0, tempo: 0,
-           restano: 0, infinita: false, uccisi: 0, presi: [] }
+           restano: 0, infinita: false, uccisi: 0, presi: [], cassa: false }
 }
 
 /* ═══════════ LA PARTITA LASCIATA A METÀ ═══════════
@@ -231,6 +231,12 @@ const VERSI = {
   morto: () => suono.nota(220, 90, 0.09, 'square', 0.05),
   gemma: () => suono.nota(1180, 1760, 0.05, 'sine', 0.05),
   ahia: () => suono.nota(300, 70, 0.22, 'sawtooth', 0.12),
+  /* gli oggetti a terra: un «ding» quando ne compare uno, così si alza
+     lo sguardo, e un verso suo per ognuno quando lo si prende */
+  oggetto: () => suono.nota(1400, 1900, 0.09, 'sine', 0.05),
+  cuore: () => suono.vita(),
+  calamita: () => suono.nota(380, 1500, 0.35, 'sine', 0.07),
+  cassa: () => suono.compra(),
   livello: () => suono.livello(),
   fuoco: () => suono.rumore(0.22, 0.06, 900, 200),
   tuono: () => suono.rumore(0.18, 0.07, 2400, 120),
@@ -595,7 +601,7 @@ onUnmounted(() => {
       <div v-if="brindisi" class="sv-brindisi em">{{ brindisi }}</div>
 
       <Carte v-if="offerta" :carte="offerta" :livello="cruscotto.livello"
-             @scegli="scegliCarta" />
+             :cassa="cruscotto.cassa" @scegli="scegliCarta" />
 
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
                :titolo="`${domanda.icona} ${domanda.nome}`"
