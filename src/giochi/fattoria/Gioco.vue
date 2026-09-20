@@ -1713,11 +1713,13 @@ function nutri(cibo) {
        sbagliata. */
     : r.motivo === 'manca-roba' ? `Non hai ${cibo.nome.toLowerCase()}: passa dal mulino.`
     : `Ti servono ${r.costo - monete.value} monete in più.`)
+  if (r.premio) festeggiaIlBenessere(chi, nome, r.premio)
   salva(); apriBestia(chi)
 }
 
 function coccola(gesto) {
   const chi = pannello.value.chi
+  const nome = pannello.value.nome || pannello.value.che
   const r = mondo.coccola(chi, gesto)
   if (!r.ok) return avvisa(
     r.motivo === 'poche-monete'
@@ -1727,7 +1729,24 @@ function coccola(gesto) {
        domanda sbagliata. Stessa forma del mangime in `nutri`. */
     : r.motivo === 'manca-roba' ? 'Non hai lana: tieni delle pecore, o dei conigli.'
     : 'Non ne ha bisogno adesso.')
+  if (r.premio) festeggiaIlBenessere(chi, nome, r.premio)
   salva(); apriBestia(chi)
+}
+
+/* ── UNA BESTIA RIMESSA A POSTO ─────────────────────────────────────
+   Il motore ha già deciso e già contato (`premiaIlBenessere`): qui si
+   dice, in due posti. La riga d'avviso in cima, che dice **quanto** e
+   dove va a finire (la ⭐ del gettone, come per un ordine consegnato),
+   e un «+9 ⭐» che sale dalla testa della bestia sul prato — la tela
+   riceve un testo e un punto, e non sa cosa sia l'esperienza. Il punto
+   è la cima dello sprite: il corpo sta ai piedi e la figura è alta due
+   celle. Se poi `salva()` annuncia un livello nuovo, quella riga copre
+   questa, ed è giusto: è la notizia più grossa delle due. */
+function festeggiaIlBenessere(chi, nome, premio) {
+  const faccia = (animale(chi) || {}).emoji || '🐾'
+  avvisa(`${faccia} ${nome} sta benissimo! ⭐ +${premio.xp} di esperienza.`)
+  const a = attori.find(x => x.nome === chi)
+  if (a && scena) scena.etichetta(`+${premio.xp} ⭐`, a.corpo.x, a.corpo.y - 1.6)
 }
 
 function battezza(nome) {

@@ -97,8 +97,9 @@ import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi, ULTIMO,
          premiDi, premioDi, chiaveDi } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
-import { nuovo as bisogniNuovi, scendi, gradisce } from '../dati/bisogni.js'
-import { ANIMALI, famigliaDi } from '../dati/animali.js'
+import { nuovo as bisogniNuovi, scendi, gradisce, tuttoAPosto, premiaSeStaBene }
+  from '../dati/bisogni.js'
+import { ANIMALI, famigliaDi, premioBenessere } from '../dati/animali.js'
 import { PER_ID as ADDOBBI_PER_ID, staA, addossoA } from '../dati/addobbi.js'
 import { qualcosaDaConsegnare } from './mercato.js'
 import { primaLibera } from '../../../motore/passi.js'
@@ -280,6 +281,10 @@ export class Fattoria {
         }
         return { ...b, addobbi }
       })
+      /* Il ciclo del premio (`dati/bisogni.js`): un salvataggio di ieri
+         non ce l'ha, e si legge come «non ancora premiata». Un sì/no e
+         basta — qualunque altra cosa ci fosse finita si butta. */
+      .map(b => ({ ...b, premiato: b.premiato === true }))
     /* `acqua` era il nome di prima, quando la materia era una sola:
        un salvataggio di ieri si rilegge senza chiedere una migrazione. */
     this.terreno = (d && d.terreno) ||
@@ -417,10 +422,12 @@ export class Fattoria {
     return this.borsa.paga(n)
   }
 
-  /* L'altra metà: quello che il mercato regala consegnando. Non tocca
-     la borsa — **il mercato non paga monete, mai** — e non scende, come
-     tutto il resto dell'esperienza. Torna se il livello è salito, che è
-     l'unica cosa che chi consegna deve sapere. */
+  /* L'altra metà: quello che il mercato regala consegnando, e quello
+     che una bestia regala quando è rimessa a posto (`premiaIlBenessere`).
+     Non tocca la borsa — **né il mercato né le bestie pagano monete,
+     mai** — e non scende, come tutto il resto dell'esperienza. Torna
+     se il livello è salito, che è l'unica cosa che chi consegna deve
+     sapere. */
   guadagna(n) {
     if (!(n > 0)) return false
     const prima = this.livello
@@ -887,9 +894,25 @@ export class Fattoria {
         return { ok: false, motivo: 'poche-monete', costo: cibo.prezzo }
       this.spendi(cibo.prezzo)
     }
+    const eraAPosto = tuttoAPosto(b)
     b.pancia = Math.min(1, b.pancia + cibo.quanto)
     b.quando = Date.now()
-    return { ok: true, costo: cibo.prezzo || 0, prodotto: cibo.da || null }
+    return { ok: true, costo: cibo.prezzo || 0, prodotto: cibo.da || null,
+             premio: this.premiaIlBenessere(chi, b, eraAPosto) }
+  }
+
+  /* ═══════════ una bestia rimessa a posto ═══════════
+     Dopo un gesto, se **tutti e tre** i bisogni stanno nella fascia
+     alta e prima non ci stavano, la bestia paga esperienza — come il
+     mercato consegnando, e mai monete. Se e quando lo decide
+     `premiaSeStaBene` in `dati/bisogni.js` (una volta per ciclo, il
+     ciclo sta nel record); quanto lo dice il prezzo della bestia
+     (`premioBenessere`). Qui c'è solo il braccio, e torna **cosa
+     dire**: `{ xp, salito }`, o `null` se non c'è niente da dire. */
+  premiaIlBenessere(chi, b, eraAPosto) {
+    if (!premiaSeStaBene(b, eraAPosto)) return null
+    const xp = premioBenessere(chi)
+    return { xp, salito: this.guadagna(xp) }
   }
 
   /* Spazzolare resta gratis; giocare costa una monetina (il perché, e la
@@ -912,9 +935,11 @@ export class Fattoria {
       if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
       if (costo) this.spendi(costo)
     }
+    const eraAPosto = tuttoAPosto(b)
     b[gesto.bisogno] = Math.min(1, b[gesto.bisogno] + gesto.quanto)
     b.quando = Date.now()
-    return { ok: true, costo: gesto.prezzo || 0, prodotto: gesto.da || null }
+    return { ok: true, costo: gesto.prezzo || 0, prodotto: gesto.da || null,
+             premio: this.premiaIlBenessere(chi, b, eraAPosto) }
   }
 
   /* Rinominare è gratis e si può fare sempre: un nome scelto a otto anni

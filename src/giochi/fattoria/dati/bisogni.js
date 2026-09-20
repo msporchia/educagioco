@@ -49,6 +49,22 @@
    tre catene di produzione parallele per la stessa mossa, e la fattoria
    diventerebbe un lavoro d'ufficio. Quello che cambia fra le famiglie
    resta la roba buona che si compra — l'osso, il pesce, i semi.
+
+   ── E UNA BESTIA RIMESSA A POSTO PAGA ESPERIENZA ──────────────────
+   Quando, dopo un gesto, **tutti e tre** i bisogni stanno nella fascia
+   alta — la stessa soglia di «sta benissimo» in `comeSta`, non una
+   nuova — la bestia paga esperienza, come fa il mercato consegnando:
+   mai monete (`CALIBRAZIONE.md`). Quanto, lo dice il suo prezzo
+   (`premioBenessere` in `dati/animali.js`); *se*, lo decide
+   `premiaSeStaBene` qui sotto, ed è **una volta per ciclo**: il
+   premio non torna finché almeno un bisogno non è risceso sotto la
+   fascia «sta bene». Senza quella riga tre coccole da una monetina
+   sarebbero una zecca — non di monete, ma di livelli.
+
+   Il ciclo sta nel record della bestia (`premiato`), e si riarma
+   **leggendo**, dentro `scendi`: è lì che i bisogni calano, e un
+   salvataggio di ieri che non ha il campo si legge come «non ancora
+   premiata», che è il verso giusto.
    ═══════════════════════════════════════════════════════════════════ */
 /* L'unico import, e va in una direzione sola: dato che guarda dato. Le
    ricette servono a `serveA()`, in fondo al file. Il catalogo invece
@@ -160,22 +176,56 @@ export const foto = b => Object.fromEntries(CHIAVI.map(k => [k, (b || {})[k] ?? 
    guarda, che è l'errore classico di questi conti. */
 export function scendi(b, ora = Date.now()) {
   const ore = Math.max(0, (ora - (b.quando || ora)) / 3600000)
-  if (ore <= 0.02) return b
-  for (const k of CHIAVI)
-    b[k] = Math.max(FONDO, Math.min(1, (b[k] ?? 0.8) - ore / BISOGNI[k].ore))
-  b.quando = ora
+  if (ore > 0.02) {
+    for (const k of CHIAVI)
+      b[k] = Math.max(FONDO, Math.min(1, (b[k] ?? 0.8) - ore / BISOGNI[k].ore))
+    b.quando = ora
+  }
+  riarma(b)
   return b
 }
 
+/* ── LE DUE SOGLIE DI `comeSta`, SCRITTE UNA VOLTA ────────────────
+   Sopra `BENISSIMO` si sta benissimo, sopra `BENE` si sta bene. Sono
+   le stesse che decidono il premio: tutti e tre sopra la prima lo
+   danno, uno solo sotto la seconda lo riarma. Una soglia in più per il
+   premio sarebbe una terza fascia che nessuna frase racconta. */
+export const BENISSIMO = 0.78
+export const BENE = 0.55
+
 export const umore = b => CHIAVI.reduce((s, k) => s + (b[k] ?? 0), 0) / CHIAVI.length
 export const haBisogno = b => CHIAVI.some(k => (b[k] ?? 1) < 0.35)
+
+/* Tutti e tre i bisogni nella fascia alta — non la media: una pancia
+   piena e un pelo arruffato fanno una media da «sta bene» e una bestia
+   che non è a posto. */
+export const tuttoAPosto = b => CHIAVI.every(k => ((b || {})[k] ?? 0) > BENISSIMO)
+
+/* Il ciclo si riarma quando **almeno un** bisogno è sceso sotto la
+   fascia «sta bene»: da lì in su c'è di nuovo del lavoro da fare, e il
+   prossimo «tutto a posto» è di nuovo una notizia. */
+export function riarma(b) {
+  if (b.premiato && CHIAVI.some(k => (b[k] ?? 0) <= BENE)) b.premiato = false
+  return b
+}
+
+/* Dopo un gesto: si premia? Torna `true` una volta per ciclo, e segna
+   il record. `eraAPosto` è com'era la bestia **prima** del gesto: se
+   stava già benissimo il gesto non ha rimesso a posto niente — è il
+   caso di un salvataggio di ieri, letto senza `premiato`, con la bestia
+   in forma: la prima spazzolata non è un premio da riscuotere. */
+export function premiaSeStaBene(b, eraAPosto = false) {
+  if (!b || eraAPosto || b.premiato || !tuttoAPosto(b)) return false
+  b.premiato = true
+  return true
+}
 
 /* Le frasi valgono per **tutte** le bestie: un pappagallo che scodinzola
    e porta la pallina era il prezzo di averle scritte pensando al cane. */
 export function comeSta(b, nome = 'Sta') {
   const u = umore(b)
-  if (u > 0.78) return `${nome} sta benissimo. Ti viene incontro appena ti vede.`
-  if (u > 0.55) return `${nome} sta bene.`
+  if (u > BENISSIMO) return `${nome} sta benissimo. Ti viene incontro appena ti vede.`
+  if (u > BENE) return `${nome} sta bene.`
   if (b.pancia < 0.35) return `${nome} ha fame: guarda te, poi la ciotola.`
   if (b.gioco < 0.35) return `${nome} si annoia: gira in tondo e ti guarda.`
   if (b.pelo < 0.35) return `${nome} ha il pelo tutto arruffato.`
@@ -241,6 +291,13 @@ export function guastiDeiBisogni() {
   for (const id of Object.keys(PRODOTTI))
     if (!serveA(id).length) g.push(`${id}: non serve a niente, e occuperebbe un posto per sempre`)
   if (!(FONDO > 0)) g.push('il fondo dev\'essere sopra zero: una bestia non sta mai male')
+  if (!(BENE < BENISSIMO && BENISSIMO < 1))
+    g.push('le due soglie di «come sta» non stanno in ordine: il premio non si riarmerebbe mai')
+  /* Una bestia appena comprata **non nasce a posto**: se nascesse già
+     sopra la soglia, il primo gesto non avrebbe niente da rimettere a
+     posto e il primo premio sarebbe una cosa che non si capisce. */
+  if (tuttoAPosto(nuovo()))
+    g.push('una bestia appena comprata nasce già a posto: il primo premio sarebbe gratis')
   for (const [k, b] of Object.entries(BISOGNI))
     if (!(b.ore > 0)) g.push(`${k}: ore impossibili`)
   const visti = new Set()

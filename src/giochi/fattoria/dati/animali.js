@@ -62,6 +62,32 @@ export const ANIMALI = {
                     porta: ['testa', 'muso', 'collo'] },
 }
 
+/* ── QUANTO PAGA UNA BESTIA RIMESSA A POSTO ───────────────────────
+   Esperienza, mai monete (`dati/bisogni.js`, `CALIBRAZIONE.md`), e
+   **un decimo del suo prezzo**: 🪙90 → ⭐9 per un cane, ⭐8 per un
+   gatto, ⭐12 per il pappagallo. Tre ragioni per questo numero.
+
+     · È dell'ordine di un ordine piccolo del mercato (tre grano
+       rendono ⭐18, `dati/mercato.js`), e sta sotto: un ordine chiede
+       un quarto d'ora di campo, rimettere a posto una bestia chiede
+       tre gesti e le ore che ci mette la pancia a scendere.
+     · Cresce col prezzo perché una bestia cara è un impegno più
+       grosso — il pappagallo arriva al livello 42 — e perché così il
+       numero non è scritto due volte: chi ritocca il prezzo ritocca
+       anche questo.
+     · Il ciclo non si ripete prima di tre ore (la pancia cala di 1 in
+       14 ore, e da «benissimo» a «sotto bene» c'è un quarto di barra):
+       anche con tutte e sei le bestie in casa e due giri al giorno
+       sono poco più di cento ⭐, cioè un ottavo del gradino di livello
+       a cui si arriva con la sesta.
+
+   Chi non è in tabella prende il prezzo più basso: meglio un premio
+   piccolo che una riga che non paga. */
+export const QUOTA_BENESSERE = 0.1
+const PREZZO_MINIMO = Math.min(...Object.values(ANIMALI).map(a => a.prezzo))
+export const premioBenessere = chi =>
+  Math.max(1, Math.round(((ANIMALI[chi] || {}).prezzo || PREZZO_MINIMO) * QUOTA_BENESSERE))
+
 /* ── DOVE SI ATTACCA UN ADDOBBO ───────────────────────────────────
    *Dove sta la testa dentro lo sprite*, e non «al centro in alto»: un
    cappellino posato a occhio finisce mezzo dentro il muso da davanti e
@@ -187,6 +213,8 @@ export function guastiDegliAnimali() {
   for (const [chi, a] of Object.entries(ANIMALI)) {
     if (!a.nome) g.push(`${chi}: senza nome`)
     if (!(a.prezzo > 0)) g.push(`${chi}: prezzo impossibile`)
+    if (!(premioBenessere(chi) >= 1))
+      g.push(`${chi}: rimessa a posto non pagherebbe niente`)
     /* non è un guasto: è il promemoria che una riga sta aspettando lo
        sprite, e senza questo non se ne accorgerebbe nessuno */
     if (!BESTIE.includes(chi)) g.push(`nota: ${chi} è dichiarato e non ancora disegnabile`)
