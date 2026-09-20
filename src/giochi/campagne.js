@@ -26,7 +26,8 @@ import { tappaApertaQui } from '../data/portata-giochi.js'
 /* tutti i giochi e non solo i nuovi: la partita libera del castello ha un
    record come la corsa infinita, e la tabella li vuole insieme */
 import { GIOCHI } from '../data/giochi.js'
-import { apriQuaderno, conRisultato, inParole, primatoInParole, dettagliInParole }
+import { apriQuaderno, conRisultato, inParole, primatoInParole, dettagliInParole,
+         sfideDi, sfidaDi, chiaveSfida }
   from './primati.js'
 
 const VUOTA = () => ({ tappa: 0, libera: false, stelle: {}, cfg: {} })
@@ -146,10 +147,22 @@ export function ricorda(chiave, campo, valore) {
    `giochi/primati.js`, che è puro. Qui c'è solo il pezzo che tocca il
    profilo, che è il mestiere di questo file.
 
-   Il record sta in `campagne[chiave].primato`, accanto a `stelle`: il
-   perché (e la lettura del posto vecchio, `cfg.primato`) sta scritto in
-   testa a `primati.js`. */
-export const primatoDi = chiave => apriQuaderno(progresso(chiave))
+   Il record sta in `campagne[chiave].primato`, accanto a `stelle` — o
+   in `campagne[chiave].primati[<sfida>]` per chi di sfide ne ha più
+   d'una: il perché (e la lettura del posto vecchio, `cfg.primato`) sta
+   scritto in testa a `primati.js`.
+
+   `sfida` è la chiave di una sfida del manifesto (`libera-bosco`), e
+   chi ne ha una sola non la passa. Si cerca nel manifesto perché è lì
+   che una sfida dice se **eredita** il record di quando era sola: la
+   chiave nuda non lo saprebbe. */
+const sfidaDelGioco = (chiave, sfida) => {
+  const g = GIOCHI.find(x => x.chiave === chiave)
+  return sfidaDi(g && g.senzaFine, sfida) || sfida
+}
+
+export const primatoDi = (chiave, sfida = null) =>
+  apriQuaderno(progresso(chiave), sfidaDelGioco(chiave, sfida))
 
 /* Una partita senza fine è finita. Torna **cosa dire** — è record? di
    quanto? — così il gioco festeggia senza doversi ricordare il numero
@@ -159,13 +172,22 @@ export const primatoDi = chiave => apriQuaderno(progresso(chiave))
    partita dura minuti, quindi succede di rado, e il momento in cui
    finisce è anche quello in cui un bambino chiude l'app per andare a
    cena. Un record perso lì non torna più. */
-export function segnaPrimato(chiave, valore, quando = Date.now(), dettagli = null) {
+export function segnaPrimato(chiave, valore, quando = Date.now(), dettagli = null, sfida = null) {
   const c = progresso(chiave)
-  const { quaderno, esito } = conRisultato(apriQuaderno(c), valore, quando, dettagli)
-  c.primato = quaderno
+  const s = sfidaDelGioco(chiave, sfida)
+  const { quaderno, esito } = conRisultato(apriQuaderno(c, s), valore, quando, dettagli)
+  const k = chiaveSfida(s)
+  if (k) {
+    if (!c.primati || typeof c.primati !== 'object') c.primati = {}
+    c.primati[k] = quaderno
+  } else c.primato = quaderno
   /* il posto vecchio si legge una volta e poi si lascia andare: due
-     numeri che dicono la stessa cosa divergono al primo giro */
-  if (c.cfg && c.cfg.primato !== undefined) delete c.cfg.primato
+     numeri che dicono la stessa cosa divergono al primo giro. Lo lascia
+     andare solo chi lo eredita — una sfida che non ne ha diritto non
+     deve buttare il record che un'altra sta per raccogliere. */
+  const erede = !k || (s && typeof s === 'object' && s.eredita)
+  if (erede && k && c.primato !== undefined) delete c.primato
+  if (erede && c.cfg && c.cfg.primato !== undefined) delete c.cfg.primato
   persist()
   flushNow()
   return esito
@@ -216,23 +238,27 @@ export function tabellaDeiPrimati() {
      voce che non c'è, e una pagina che guarda i record non ha nessun
      motivo di scrivere nel profilo undici campagne mai giocate */
   const tutte = state.profile.campagne || {}
-  return GIOCHI.filter(g => g.senzaFine).map(g => {
-    const q = apriQuaderno(tutte[g.chiave] || {})
+  /* una riga per sfida, non per gioco: il castello ne ha quattro, e
+     `id` è quello che distingue le righe fra loro (`torri/libera-bosco`) */
+  return GIOCHI.filter(g => g.senzaFine).flatMap(g => sfideDi(g.senzaFine).map(s => {
+    const q = apriQuaderno(tutte[g.chiave] || {}, s)
     return {
+      id: s.chiave ? `${g.chiave}/${s.chiave}` : g.chiave,
       chiave: g.chiave,
+      sfida: s.chiave,
       gioco: g.nome,
-      icona: g.senzaFine.icona || g.ico,
-      nome: g.senzaFine.nome,
-      che: g.senzaFine.che,
-      misura: g.senzaFine.misura,
+      icona: s.icona || g.ico,
+      nome: s.nome,
+      che: s.che,
+      misura: s.misura,
       best: q.best,
-      parole: primatoInParole(q, g.senzaFine.misura),
-      dettagli: dettagliInParole(q, g.senzaFine),   // «580 mostri · livello 6», o vuoto
+      parole: primatoInParole(q, s.misura),
+      dettagli: dettagliInParole(q, s),   // «580 mostri · livello 6», o vuoto
       quando: q.quando,
       partite: q.partite,
       /* i risultati più recenti, dal più vecchio al più nuovo: sotto
          forma di barrette si legge da sinistra a destra come il tempo */
-      ultime: q.ultime.map(u => ({ ...u, parole: inParole(u.v, g.senzaFine.misura) })).reverse(),
+      ultime: q.ultime.map(u => ({ ...u, parole: inParole(u.v, s.misura) })).reverse(),
     }
-  }).filter(r => r.partite > 0 || r.best > 0)
+  })).filter(r => r.partite > 0 || r.best > 0)
 }

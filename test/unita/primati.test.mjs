@@ -22,7 +22,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { VUOTO, ULTIME, MISURE, apriQuaderno, conRisultato, inParole,
          scartoInParole, fraseDiFine, primatoInParole, guastiDelleSfide,
-         dettagliInParole, recordInParole }
+         dettagliInParole, recordInParole, sfideDi, sfidaDi, chiaveSfida,
+         recordPiuRecente }
   from '../../src/giochi/primati.js'
 /* tutti i giochi, non solo i nuovi: la partita libera del castello
    dichiara la sua sfida nella riga di `data/giochi.js` */
@@ -171,6 +172,74 @@ uguale('una misura sconosciuta non pianta niente', inParole(7, 'boh'), '7')
          dettagliInParole(primo.quaderno, { misura: 'tempo' }), '')
   const riletto = apriQuaderno({ primato: { ...primo.quaderno } })
   uguale('e i dettagli sopravvivono alla rilettura dal profilo', riletto.dettagli.livello, 6)
+}
+
+/* ══════════ 4c. un gioco con più sfide ══════════
+   Il castello ha una partita libera per terreno, gli asteroidi due
+   voli: il manifesto le elenca in `sfide`, ognuna col suo record in
+   `primati[<chiave>]`, e i campi scritti in cima valgono per tutte
+   quelle che non li ridicono. Il record di quando la sfida era una
+   sola lo eredita **una** di loro, senza che nessuno riscriva il
+   profilo per leggerlo. */
+{
+  const SOLA = { nome: 'La corsa', icona: '🏃', misura: 'metri', che: 'quanto corri' }
+  const PIU = {
+    misura: 'ondate', che: 'quante ondate reggi',
+    dettagli: d => [`${d.torri} torri`],
+    sfide: [
+      { chiave: 'bosco', nome: 'Nel bosco', icona: '🌲', eredita: true },
+      { chiave: 'mura', nome: 'Sulle mura', icona: '🏰', che: 'quante ondate reggi sulle mura' },
+    ],
+  }
+  uguale('una sfida sola è un elenco di uno', sfideDi(SOLA).length, 1)
+  uguale('e non ha chiave', sfideDi(SOLA)[0].chiave, null)
+  uguale('due sfide sono un elenco di due', sfideDi(PIU).length, 2)
+  uguale('la misura scritta in cima vale per tutte', sfidaDi(PIU, 'mura').misura, 'ondate')
+  uguale('e quello che una sfida ridice vince', sfidaDi(PIU, 'mura').che,
+         'quante ondate reggi sulle mura')
+  uguale('i dettagli si ereditano dalla cima', typeof sfidaDi(PIU, 'bosco').dettagli, 'function')
+  uguale('la sfida sola si trova senza chiave', sfidaDi(SOLA).nome, 'La corsa')
+  uguale('e con più sfide la chiave va detta', sfidaDi(PIU), null)
+  uguale('una chiave che non c\'è non è una sfida', sfidaDi(PIU, 'palude'), null)
+  uguale('la chiave si legge da una stringa o da una voce', chiaveSfida('x') + chiaveSfida({ chiave: 'y' }), 'xy')
+  uguale('e niente non ha chiave', chiaveSfida(null), null)
+  stessaLista('un manifesto senza niente non ha sfide', sfideDi(undefined), [])
+
+  /* il posto nel profilo: `primati[<chiave>]`, e l'erede legge `primato` */
+  const av = { primato: { best: 21, partite: 3, ultime: [{ v: 21, t: 5 }], quando: 5 },
+               primati: { mura: { best: 7, partite: 1, ultime: [{ v: 7, t: 9 }], quando: 9 } } }
+  uguale('ogni sfida legge il suo quaderno', apriQuaderno(av, 'mura').best, 7)
+  uguale('e con la voce intera è lo stesso', apriQuaderno(av, sfidaDi(PIU, 'mura')).best, 7)
+  uguale('l\'erede senza quaderno suo legge il record di quando la sfida era una sola',
+         apriQuaderno(av, sfidaDi(PIU, 'bosco')).best, 21)
+  uguale('una chiave nuda non eredita niente', apriQuaderno(av, 'bosco').best, 0)
+  uguale('e senza sfida si legge come sempre', apriQuaderno(av).best, 21)
+  uguale('l\'erede arriva fino al posto vecchio di cfg',
+         apriQuaderno({ cfg: { primato: 900 } }, sfidaDi(PIU, 'bosco')).best, 900)
+  uguale('chi non eredita non lo vede', apriQuaderno({ cfg: { primato: 900 } }, 'mura').best, 0)
+  const ereditato = { ...av, primati: { ...av.primati, bosco: { best: 30, partite: 1, ultime: [] } } }
+  uguale('appena l\'erede ha un quaderno suo, il vecchio non conta più',
+         apriQuaderno(ereditato, sfidaDi(PIU, 'bosco')).best, 30)
+  uguale('un dizionario storto non pianta niente', apriQuaderno({ primati: 'boh' }, 'mura').best, 0)
+
+  /* quale sfida raccontare in una riga sola: la più recente, non la più alta */
+  const recente = recordPiuRecente(av, PIU)
+  uguale('la riga sola racconta il record fatto più di recente', recente.sfida.chiave, 'mura')
+  uguale('col suo numero', recente.quaderno.best, 7)
+  uguale('e con una sfida sola racconta quella', recordPiuRecente({ primato: { best: 3 } }, SOLA).sfida.nome, 'La corsa')
+  uguale('senza nessun record non racconta niente', recordPiuRecente({}, PIU), null)
+
+  /* la dichiarazione, coi suoi guasti */
+  uguale('il manifesto a più sfide è dichiarato bene', guastiDelleSfide([{ chiave: 'g', senzaFine: PIU }]).length, 0)
+  const doppie = guastiDelleSfide([{ chiave: 'g', senzaFine: { ...PIU,
+    sfide: [{ chiave: 'a', nome: 'a', icona: 'a', eredita: true }, { chiave: 'a', nome: 'b', icona: 'b', eredita: true }] } }])
+  controlla('due sfide con la stessa chiave sono un guasto', doppie.some(g => /stessa chiave/.test(g)), doppie.join(' · '))
+  controlla('e due eredi pure', doppie.some(g => /più di una sfida eredita/.test(g)), doppie.join(' · '))
+  const senzaChiave = guastiDelleSfide([{ chiave: 'g', senzaFine: { ...PIU, sfide: [{ nome: 'a', icona: 'a' }] } }])
+  controlla('una sfida senza chiave è un guasto', senzaChiave.some(g => /senza chiave/.test(g)), senzaChiave.join(' · '))
+  const senzaMisura = guastiDelleSfide([{ chiave: 'g', senzaFine: { sfide: [{ chiave: 'a', nome: 'a', icona: 'a', che: 'x' }] } }])
+  controlla('e la misura manca anche se manca in cima', senzaMisura.some(g => /misura/.test(g)), senzaMisura.join(' · '))
+  uguale('un elenco vuoto è un guasto', guastiDelleSfide([{ chiave: 'g', senzaFine: { misura: 'metri', sfide: [] } }]).length, 1)
 }
 
 /* ══════════ 5. il pezzo che tocca il profilo ══════════

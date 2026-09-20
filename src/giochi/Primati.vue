@@ -23,8 +23,10 @@
    `div` alti una percentuale e nessuna libreria, come vuole la casa.
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
-  /* [{ chiave, gioco, icona, nome, che, parole, best, quando, partite,
-        ultime: [{ v, t, parole }] }] — vedi `tabellaDeiPrimati()` */
+  /* [{ id, chiave, sfida, gioco, icona, nome, che, parole, best, quando,
+        partite, ultime: [{ v, t, parole }] }] — vedi `tabellaDeiPrimati()`.
+     `id` è la riga (`torri/libera-bosco`): un gioco può avere più sfide,
+     e la chiave del gioco da sola non le distingue */
   righe: { type: Array, required: true },
 })
 
@@ -40,7 +42,7 @@ const alta = (u, r) => Math.max(6, Math.round(u.v / Math.max(1, r.best) * 100)) 
 
 <template>
   <div class="primati" data-primati>
-    <div v-for="r in righe" :key="r.chiave" class="sfida" :data-primato="r.chiave">
+    <div v-for="r in righe" :key="r.id" class="sfida" :data-primato="r.id">
       <div class="capo">
         <span class="ico em">{{ r.icona }}</span>
         <span class="chi">

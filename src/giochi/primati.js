@@ -30,11 +30,43 @@
    cassetto si crea da sé alla prima lettura, e chi giocava ieri si
    ritrova il suo record senza nessuna migrazione (vedi `apriQuaderno`).
 
-   ── UNO PER GIOCO ────────────────────────────────────────────────
-   Un gioco ha una sfida senza fine sola, e finché è così il record è
-   un campo e non un dizionario. Il giorno che un gioco ne avesse due
-   si aggiunge la chiave — non prima: un dizionario con dentro sempre
-   la stessa voce è un giro in più da leggere ogni volta.
+   ── UNA SFIDA, O PIÙ D'UNA ───────────────────────────────────────
+   Un gioco che ha **una** sfida senza fine la dichiara così, e il
+   record sta in `campagne[chiave].primato`:
+
+     senzaFine: { nome, icona, misura, che, dettagli? }
+
+   Un gioco che ne ha **più d'una** — il castello, con una partita
+   libera per terreno; gli asteroidi, con due voli — le elenca, e ogni
+   record sta in `campagne[chiave].primati[<chiave della sfida>]`:
+
+     senzaFine: {
+       misura, che, dettagli?,               ← i difetti di ogni sfida
+       sfide: [
+         { chiave: 'libera-bosco', nome, icona, eredita: true },
+         { chiave: 'libera-mura',  nome, icona, che?, misura? },
+       ],
+     }
+
+   Quello che sta in cima vale per tutte le sfide che non lo ridicono:
+   quattro partite libere misurano tutte ondate, e scriverlo quattro
+   volte sarebbe il modo di scriverne una diversa per sbaglio. La
+   `chiave` è stabile come gli id dei contenuti — è la chiave del
+   salvataggio — e **una sola** può dire `eredita: true`: è quella che
+   si prende il record di quando la sfida era una sola (`primato`), così
+   chi aveva retto ventun ondate ieri se le ritrova sotto la sfida
+   giusta senza nessuna migrazione, e `segnaPrimato` lascia andare il
+   posto vecchio alla prima scrittura, come fa già con `cfg.primato`.
+
+   Chi legge non deve sapere quante sono: `sfideDi(senzaFine)` torna
+   sempre un elenco (per la sfida sola, un elenco di uno, con `chiave`
+   nulla), `apriQuaderno(av, sfida)` legge il posto giusto, e
+   `recordPiuRecente` sceglie quale delle sfide raccontare in una riga
+   sola. I due punti d'ingresso che toccano il profilo —
+   `primatoDi(chiave, sfida)` e `segnaPrimato(chiave, valore, quando,
+   dettagli, sfida)` in `campagne.js` — accettano la chiave della
+   sfida in coda, e chi ne ha una sola non la passa e non cambia una
+   riga.
 
    ── COSA C'È DENTRO ──────────────────────────────────────────────
      best      il record, nella misura dichiarata dal gioco
@@ -116,23 +148,78 @@ function intero(v) {
    volta sola, e da lì in poi si scrive nel posto nuovo. Buttarlo
    avrebbe fatto ripartire da zero proprio i due bambini che avevano
    giocato di più. */
-export function apriQuaderno(av = {}) {
-  const q = av && av.primato
-  if (q && typeof q === 'object') {
-    return {
-      best: intero(q.best),
-      quando: Number(q.quando) || 0,
-      partite: Number(q.partite) || 0,
-      ultime: Array.isArray(q.ultime)
-        ? q.ultime.slice(0, ULTIME).map(u => ({ v: intero(u && u.v), t: Number(u && u.t) || 0 }))
-        : [],
-      /* com'era fatta la partita del record — 580 mostri, livello 6 —
-         nelle parole del gioco, che è l'unico a sapere cosa contare */
-      dettagli: q.dettagli && typeof q.dettagli === 'object' ? { ...q.dettagli } : null,
-    }
+/* ── LE SFIDE DI UN MANIFESTO, SEMPRE COME ELENCO ──
+   Chi legge un `senzaFine` non deve sapere se è una sfida o quattro:
+   qui esce sempre un elenco, e ogni voce porta con sé i difetti scritti
+   in cima (`misura`, `che`, `dettagli`) dove non li ridice. La sfida
+   sola ha `chiave: null`, che è come `apriQuaderno` sa di dover leggere
+   `primato` e non `primati`. */
+export function sfideDi(senzaFine) {
+  if (!senzaFine || typeof senzaFine !== 'object') return []
+  if (!Array.isArray(senzaFine.sfide)) return [{ ...senzaFine, chiave: null }]
+  const { sfide, ...comune } = senzaFine
+  return sfide.map(s => ({ ...comune, ...s }))
+}
+
+/* una sfida per chiave: `null` chiede quella sola, e su un gioco che ne
+   ha più d'una torna niente — lì una chiave va detta */
+export const sfidaDi = (senzaFine, chiave = null) =>
+  sfideDi(senzaFine).find(s => (s.chiave || null) === (chiave || null)) || null
+
+/* la chiave di una sfida, che arrivi come stringa o come voce dell'elenco */
+export const chiaveSfida = sfida =>
+  (sfida && typeof sfida === 'object' ? sfida.chiave : sfida) || null
+
+/* il quaderno com'è scritto nel profilo, rimesso in piedi campo per campo */
+function leggi(q) {
+  return {
+    best: intero(q.best),
+    quando: Number(q.quando) || 0,
+    partite: Number(q.partite) || 0,
+    ultime: Array.isArray(q.ultime)
+      ? q.ultime.slice(0, ULTIME).map(u => ({ v: intero(u && u.v), t: Number(u && u.t) || 0 }))
+      : [],
+    /* com'era fatta la partita del record — 580 mostri, livello 6 —
+       nelle parole del gioco, che è l'unico a sapere cosa contare */
+    dettagli: q.dettagli && typeof q.dettagli === 'object' ? { ...q.dettagli } : null,
   }
+}
+
+/* `sfida` è la chiave di una sfida (o la voce intera, che sa anche se
+   `eredita`): senza, si legge il record della sfida sola. L'erede che
+   non ha ancora un quaderno suo legge quello di quando la sfida era una
+   sola — è la migrazione, e sta tutta in questa riga: nessuno riscrive
+   il profilo per leggerlo. */
+export function apriQuaderno(av = {}, sfida = null) {
+  const chiave = chiaveSfida(sfida)
+  if (chiave) {
+    const tutti = av && av.primati
+    const suo = tutti && typeof tutti === 'object' ? tutti[chiave] : null
+    if (suo && typeof suo === 'object') return leggi(suo)
+    return sfida && typeof sfida === 'object' && sfida.eredita ? apriQuaderno(av, null) : VUOTO()
+  }
+  const q = av && av.primato
+  if (q && typeof q === 'object') return leggi(q)
   const vecchio = intero((av && av.cfg || {}).primato)
   return vecchio ? { ...VUOTO(), best: vecchio } : VUOTO()
+}
+
+/* ── QUALE SFIDA RACCONTARE, QUANDO C'È POSTO PER UNA RIGA SOLA ──
+   La home ha una riga per gioco, e con quattro partite libere non può
+   dirle tutte. Si sceglie **il record fatto più di recente**, non il
+   più alto: quattro terreni diversi non si confrontano — dodici ondate
+   nella palude a due bocche valgono più di quindici nel bosco, e la
+   riga non ha lo spazio per spiegarlo — mentre il record di ieri sera
+   è quello che il bambino ha in testa. Torna `{ sfida, quaderno }`, o
+   niente se non c'è ancora nessun record. */
+export function recordPiuRecente(av, senzaFine) {
+  let scelto = null
+  for (const sfida of sfideDi(senzaFine)) {
+    const quaderno = apriQuaderno(av, sfida)
+    if (!quaderno.best) continue
+    if (!scelto || quaderno.quando > scelto.quaderno.quando) scelto = { sfida, quaderno }
+  }
+  return scelto
 }
 
 /* ── UNA PARTITA FINITA ──
@@ -225,6 +312,7 @@ export const recordInParole = (quaderno, sfida) =>
    nella loro riga di `data/giochi.js`):
 
      senzaFine: { nome, icona, misura, che, dettagli? }
+     senzaFine: { misura, che, dettagli?, sfide: [{ chiave, nome, icona, eredita? }, …] }
 
    `misura` è una chiave di `MISURE` e non un'unità scritta a mano: se
    fosse una stringa libera, il giorno che due giochi scrivessero «sec»
@@ -232,20 +320,35 @@ export const recordInParole = (quaderno, sfida) =>
    si vede a schermo — si vede come un numero senza unità — quindi il
    test di ogni gioco fa girare questo sul proprio manifesto. `dettagli`,
    se c'è, è una funzione: riceve quello che il gioco ha salvato col
-   record e torna le frasi da mettere accanto al numero. */
+   record e torna le frasi da mettere accanto al numero. Con più sfide
+   ognuna vuole una `chiave` sua — è la chiave del salvataggio, e due
+   uguali sarebbero un record solo con due nomi — e al massimo una può
+   ereditare il record di quando la sfida era una sola. */
 export function guastiDelleSfide(giochi = []) {
   const guasti = []
   for (const g of giochi) {
     const s = g && g.senzaFine
     if (!s) continue
-    const dove = `senzaFine di «${g.chiave}»`
-    if (!s.nome) guasti.push(`${dove}: manca il nome`)
-    if (!s.icona) guasti.push(`${dove}: manca l'icona`)
-    if (!s.che) guasti.push(`${dove}: manca la riga che dice cosa si misura`)
-    if (!MISURE[s.misura])
-      guasti.push(`${dove}: misura «${s.misura}» sconosciuta (${Object.keys(MISURE).join(', ')})`)
-    if (s.dettagli !== undefined && typeof s.dettagli !== 'function')
-      guasti.push(`${dove}: «dettagli» dev'essere una funzione (dettagli salvati → frasi)`)
+    const sfide = sfideDi(s)
+    const piu = Array.isArray(s.sfide)
+    if (piu && !sfide.length) guasti.push(`senzaFine di «${g.chiave}»: l'elenco delle sfide è vuoto`)
+    if (piu && sfide.filter(x => x.eredita).length > 1)
+      guasti.push(`senzaFine di «${g.chiave}»: più di una sfida eredita il record vecchio`)
+    const chiavi = sfide.map(x => x.chiave)
+    if (piu && new Set(chiavi).size !== chiavi.length)
+      guasti.push(`senzaFine di «${g.chiave}»: due sfide con la stessa chiave`)
+    for (const x of sfide) {
+      const dove = piu ? `sfida «${x.chiave}» di «${g.chiave}»` : `senzaFine di «${g.chiave}»`
+      if (piu && (typeof x.chiave !== 'string' || !x.chiave))
+        guasti.push(`senzaFine di «${g.chiave}»: una sfida senza chiave`)
+      if (!x.nome) guasti.push(`${dove}: manca il nome`)
+      if (!x.icona) guasti.push(`${dove}: manca l'icona`)
+      if (!x.che) guasti.push(`${dove}: manca la riga che dice cosa si misura`)
+      if (!MISURE[x.misura])
+        guasti.push(`${dove}: misura «${x.misura}» sconosciuta (${Object.keys(MISURE).join(', ')})`)
+      if (x.dettagli !== undefined && typeof x.dettagli !== 'function')
+        guasti.push(`${dove}: «dettagli» dev'essere una funzione (dettagli salvati → frasi)`)
+    }
   }
   return guasti
 }
