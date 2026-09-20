@@ -101,7 +101,8 @@ export function scrivi(partita, tappa) {
     uccisi: p.uccisi,
     ferite: p.ferite,
     eroe: { x: arrotonda(e.x), y: arrotonda(e.y), cuori: e.cuori,
-            cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi) },
+            cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi),
+            rotta: Math.round(e.rotta * 100) / 100 },
     potenziamenti: { ...p.potenziamenti },
     /* Le tre carte in attesa di essere scelte si salvano **per chiave**
        e si rivestono riprendendo. Rigenerarle sarebbe una riga in meno
@@ -115,6 +116,9 @@ export function scrivi(partita, tappa) {
       t: n.tipo, x: arrotonda(n.x), y: arrotonda(n.y),
       vita: arrotonda(n.vita), max: arrotonda(n.vitaMax),
       passo: arrotonda(n.passo), massa: arrotonda(n.massa),
+      /* chi è in fila resta in fila: riprendendo, un muro che diventa
+         una folla che insegue è un altro gioco */
+      ...(n.rotta ? { rx: n.rotta.x, ry: n.rotta.y } : {}),
     })),
     gemme: vicini(p.gemme, e, MAX_GEMME)
       .map(g => ({ x: arrotonda(g.x), y: arrotonda(g.y), val: g.val })),
@@ -155,6 +159,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
       x: e.x || 0, y: e.y || 0,
       cuoriMax: Math.max(1, e.cuoriMax || p.regole.cuori),
       guarda: e.guarda === -1 ? -1 : 1,
+      rotta: Number.isFinite(e.rotta) ? e.rotta : 0,
       passi: e.passi || 0,
       vx: 0, vy: 0, invuln: 0, mira: 0,
     })
@@ -172,6 +177,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
         passo: n.passo || MOSTRI[n.t].passo, massa: n.massa || 1,
         spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0,
         fase: rnd() * 6.3,
+        ...(n.rx || n.ry ? { rotta: { x: n.rx || 0, y: n.ry || 0 } } : {}),
       }))
     for (const n of p.nemici) faiSpazio(n, p.eroe, rnd)
 

@@ -145,6 +145,9 @@ export class Partita {
       x: 0, y: 0, vx: 0, vy: 0,
       cuori: regole.cuori, cuoriMax: regole.cuori,
       invuln: 0, guarda: 1, passi: 0, ricarica: 0.25, mira: 0,
+      /* dove si sta andando, in radianti: è la mira delle armi che
+         guardano davanti. Da fermo resta l'ultima direzione presa */
+      rotta: 0,
     }
     this.nemici = []
     this.colpi = []
@@ -156,6 +159,7 @@ export class Partita {
        volano verso l'eroe, anche quelle fuori dalla calamita sua */
     this.risucchio = 0
     this.tOggetto = CFG.oggetti.primo
+    this.tMuro = CFG.muro.primo
 
     this.tempo = 0
     this.uccisi = 0
@@ -184,6 +188,8 @@ export class Partita {
     this.orbita = 0
     this.tFuoco = 0
     this.tFulmine = 0
+    this.tLancia = 0
+    this.tFendente = 0
 
     this.ricalcola()
   }
@@ -291,6 +297,18 @@ export class Partita {
       palle: quanti('palla'),
       fuoco: lv('fuoco'),
       fulmine: lv('fulmine'),
+      /* ── le armi che guardano dove corri ──
+         Picchiano più dell'arco apposta: mirare costa, perché per usarle
+         bisogna correre *verso* i mostri, e una carta che chiede di più
+         deve rendere di più. La lancia trapassa tutto quello che trova
+         sulla sua strada; il fendente è un colpo largo davanti */
+      lancia: lv('lancia'),
+      dannoLancia: 3 + 2.5 * lv('lancia'),
+      cadenzaLancia: Math.max(0.55, 1.6 - 0.25 * lv('lancia')),
+      fendente: lv('fendente'),
+      raggioFendente: 80 + 14 * lv('fendente'),
+      dannoFendente: 2.5 + 2 * lv('fendente'),
+      cadenzaFendente: Math.max(0.6, 1.4 - 0.18 * lv('fendente')),
     }
   }
 
@@ -322,6 +340,7 @@ export class Partita {
 
     this.muoviEroe(dt)
     this.nascite(dt)
+    this.muri(dt)
     this.compaiono(dt)
     if (this.camminaNemici(dt)) return this.esito     // l'ultimo cuore
     this.tira(dt)
@@ -329,6 +348,8 @@ export class Partita {
     this.pallaGirante(dt)
     this.anelloDiFuoco(dt)
     this.saetta(dt)
+    this.lanciaDritta(dt)
+    this.fendenteDavanti(dt)
     this.raccogliMorti()
     this.muoviGemme(dt)
     this.raccogliOggetti(dt)
@@ -367,6 +388,7 @@ export class Partita {
       e.y += e.vy * dt
       if (this.dir.x > 0.5) e.guarda = 1
       else if (this.dir.x < -0.5) e.guarda = -1
+      e.rotta = Math.atan2(this.dir.y, this.dir.x)
       e.passi += v * dt
       /* polvere sotto i piedi: si vede che gli stivali fanno effetto */
       if (this.rnd() < dt * (6 + v / 26))
@@ -435,25 +457,91 @@ export class Partita {
     }
   }
 
+  /* ═══════════ I MURI ═══════════
+     Una fila di mostri deboli che attraversa lo schermo, dritta, da un
+     lato scelto a caso: non inseguono nessuno, e chi sta fermo ci
+     finisce dentro. C'è un varco, e l'eroe è più svelto di loro — si
+     passa dal buco, o si corre via. È quello che costringe a muoversi
+     anche chi ha già raccolto tutto (`CFG.muro`). */
+  muri(dt) {
+    this.tMuro -= dt
+    if (this.tMuro > 0) return
+    this.tMuro = CFG.muro.ogni(this.regole.marea(this.tempo))
+    this.nasceMuro()
+  }
+
+  /* chi fa la fila: il più debole e più svelto fra quelli già in scena.
+     Un muro di colossi non sarebbe un muro, sarebbe la fine */
+  tipoDelMuro() {
+    const buoni = this.regole.squadraOra(this.tempo)
+    return buoni.slice().sort((a, b) =>
+      MOSTRI[a].vita - MOSTRI[b].vita || MOSTRI[b].passo - MOSTRI[a].passo)[0]
+  }
+
+  nasceMuro() {
+    const e = this.eroe
+    const lato = Math.floor(this.rnd() * 4)
+    /* da sinistra si va a destra, dall'alto si scende, e così via */
+    const rotta = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }][lato]
+    const orizzontale = rotta.y === 0
+    const W = this.campo.larghezza, H = this.campo.altezza
+    /* la fila è lunga quanto il lato dello schermo che attraversa, con
+       un po' di margine perché non si scappi rasente al bordo */
+    const lunga = (orizzontale ? H : W) / 2 + 30
+    const partenza = (orizzontale ? W : H) / 2 + 40
+    const { passo, varco } = CFG.muro
+    /* il varco sta nel mezzo della fila, mai proprio agli estremi (lì
+       sarebbe uguale a non averlo) e mai per forza davanti all'eroe */
+    const centroVarco = (this.rnd() * 1.4 - 0.7) * lunga
+    const t = this.tipoDelMuro()
+    const tetto = this.regole.tetto(this.tempo)
+    /* tutti allo stesso passo: con la fretta di ognuno la fila si
+       sfilaccia in tre secondi, e una fila sfilacciata è una folla */
+    const andatura = MOSTRI[t].passo * this.regole.frettaNemico(this.tempo)
+    let quanti = 0
+    for (let s = -lunga; s <= lunga; s += passo) {
+      if (Math.abs(s - centroVarco) < varco / 2) continue
+      if (this.nemici.length >= tetto) break
+      const x = orizzontale ? e.x - rotta.x * partenza : e.x + s
+      const y = orizzontale ? e.y + s : e.y - rotta.y * partenza
+      const n = this.mostroNuovo(t, x, y)
+      n.rotta = rotta
+      n.passo = andatura
+      this.nemici.push(n)
+      quanti++
+    }
+    if (!quanti) return
+    this.segnala('muro')
+    /* il lato da cui arriva si dice a chi disegna, che accende il bordo */
+    this.effetti.push({ che: 'muro', rotta, vita: 1.1, tot: 1.1, x: e.x, y: e.y })
+  }
+
   /* ── i mostri camminano verso l'eroe ──
      Torna `true` se qui è finita: è l'unico punto in cui si perde. */
   camminaNemici(dt) {
     const e = this.eroe
     const rg = this.f.gelo, freno = this.f.freno, raggio = this.f.raggio
     const limite = Math.hypot(this.campo.larghezza, this.campo.altezza) * CFG.troppoLontano
+    /* chi è in fila sparisce appena ha attraversato: una schermata oltre
+       l'eroe, dalla sua parte. Non insegue, quindi non tornerebbe mai */
+    const oltreIlMuro = Math.max(this.campo.larghezza, this.campo.altezza) / 2 + 80
     const smorza = Math.pow(0.02, dt)
     for (const n of this.nemici) {
       const ddx = e.x - n.x, ddy = e.y - n.y
       const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
       if (d > limite) { n.sparito = true; continue }
+      if (n.rotta && -(ddx * n.rotta.x + ddy * n.rotta.y) > oltreIlMuro) { n.sparito = true; continue }
       /* il freddo scende, e quando è finito il mostro riparte come nuovo;
          chi è dentro l'aura se lo prende di nuovo a ogni battito */
       n.gelato = Math.max(0, n.gelato - dt)
       if (n.gelato <= 0) n.freno = 1
       if (rg && d < rg) this.gela(n, 0.5, freno)
       const p = n.passo * n.freno
-      n.x += ddx / d * p * dt + n.spx * dt
-      n.y += ddy / d * p * dt + n.spy * dt
+      /* la fila tira dritto per la sua strada; tutti gli altri vengono
+         verso l'eroe */
+      const vx = n.rotta ? n.rotta.x : ddx / d, vy = n.rotta ? n.rotta.y : ddy / d
+      n.x += vx * p * dt + n.spx * dt
+      n.y += vy * p * dt + n.spy * dt
       n.spx *= smorza; n.spy *= smorza          // la spinta si spegne
       n.lampo = Math.max(0, n.lampo - dt * 4)
       n.attesa = Math.max(0, n.attesa - dt)
@@ -574,6 +662,57 @@ export class Partita {
       const dx = n.x - this.eroe.x, dy = n.y - this.eroe.y
       if (dx * dx + dy * dy < R * R) { this.ferisci(n, danno, '#ffb347'); this.spingi(n, 220) }
     }
+  }
+
+  /* ═══════════ LE ARMI CHE GUARDANO DOVE CORRI ═══════════
+     L'arco tira da solo al più vicino; queste due tirano **davanti**,
+     nella direzione di marcia (`eroe.rotta`). Sono il pezzo che manca a
+     un gioco in cui tutto tira da solo: per usarle bisogna scegliere da
+     che parte correre, e chi sta fermo le tiene puntate dov'era andato
+     l'ultima volta. Il danno è alto apposta — mirare costa. */
+
+  /* la lancia: un colpo che trapassa tutti, in linea retta, e va più
+     lontano dell'arco */
+  lanciaDritta(dt) {
+    if (!this.f.lancia) return
+    this.tLancia -= dt
+    if (this.tLancia > 0) return
+    this.tLancia = this.f.cadenzaLancia
+    const e = this.eroe, a = e.rotta
+    const vel = CFG.velocitaFreccia * 1.2
+    this.colpi.push({
+      x: e.x + Math.cos(a) * 16, y: e.y + Math.sin(a) * 16,
+      vx: Math.cos(a) * vel, vy: Math.sin(a) * vel,
+      a, danno: this.f.dannoLancia, lancia: true,
+      r: 7, vita: this.f.gittata * 1.4 / vel,
+      restano: 999, presi: [],
+    })
+    this.segnala('lancia')
+  }
+
+  /* il fendente: un colpo largo davanti, con la spinta. Parte solo se
+     davanti c'è qualcuno — un colpo nel vuoto non è un'arma, è un tic —
+     e allora si vede l'arco del colpo (`effetti`) e chi c'era dentro
+     vola via */
+  fendenteDavanti(dt) {
+    if (!this.f.fendente) return
+    this.tFendente -= dt
+    if (this.tFendente > 0) return
+    const e = this.eroe, R = this.f.raggioFendente, a = e.rotta
+    const APERTURA = 1.15                          // radianti per lato: un arco di 130°
+    const colpiti = []
+    for (const n of this.nemici) {
+      const dx = n.x - e.x, dy = n.y - e.y
+      if (dx * dx + dy * dy > R * R) continue
+      const s = Math.atan2(dy, dx) - a
+      if (Math.abs(Math.atan2(Math.sin(s), Math.cos(s))) <= APERTURA) colpiti.push(n)
+    }
+    if (!colpiti.length) return
+    this.tFendente = this.f.cadenzaFendente
+    for (const n of colpiti) { this.ferisci(n, this.f.dannoFendente, '#ffffff'); this.spingi(n, 260) }
+    this.effetti.push({ che: 'fendente', x: e.x, y: e.y, a, r: R, apertura: APERTURA,
+                        vita: 0.22, tot: 0.22 })
+    this.segnala('fendente')
   }
 
   /* ── il fulmine ── */
@@ -932,6 +1071,9 @@ export class Partita {
       tempo: this.tempo,
       eroe: {
         x: e.x, y: e.y, mira: e.mira, guarda: e.guarda, passi: e.passi,
+        /* dove guardano le armi direzionali, se ce n'è una: chi disegna
+           mette una freccina ai piedi, così si vede dove si sta mirando */
+        rotta: this.f.lancia || this.f.fendente ? e.rotta : null,
         fermo: !e.vx && !e.vy, raggio: this.f.raggio,
         lampeggia: e.invuln > 0, spine: this.f.spine > 0,
       },

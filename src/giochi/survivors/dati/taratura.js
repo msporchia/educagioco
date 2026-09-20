@@ -59,6 +59,21 @@ export const CFG = {
     daiGrossi: 0.3,                             // quante volte su cento ne lascia uno
   },
 
+  /* ── i muri ──
+     Ogni tanto una fila di mostri deboli attraversa lo schermo da un
+     lato scelto a caso, dritta, senza inseguire nessuno: chi sta fermo
+     ci finisce dentro, e si scansa spostandosi — verso il varco, o
+     correndo via, che l'eroe è più svelto. È l'altra metà del motivo
+     per cui il dito serve (la prima sono le gemme che restano dove
+     cadono). Con la marea arrivano più spesso, ma mai a raffica: fra
+     un muro e l'altro c'è sempre il tempo di respirare. */
+  muro: {
+    primo: 12,                                  // secondi prima del primo
+    ogni: m => Math.max(7, 20 - 5 * Math.max(0, m)),
+    passo: 44,                                  // fra un mostro e l'altro nella fila
+    varco: 130,                                 // il buco, in pixel
+  },
+
   /* ── la folla ──
      **Il tetto sale col tempo**, e non è un dettaglio tecnico: è la
      differenza fra un gioco che si vince e uno che si perde. Con un tetto
@@ -286,6 +301,20 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push('gli oggetti non arrivano più spesso con la marea, o arrivano a raffica')
   if (!(o.massimo >= 2 && o.massimo <= 8)) guasti.push(`al massimo ${o.massimo} oggetti in campo`)
   if (!(o.daiGrossi > 0 && o.daiGrossi <= 0.6)) guasti.push(`i grossi lasciano un oggetto ${o.daiGrossi} volte`)
+
+  /* ── i muri ──
+     Il varco deve essere più largo dell'eroe con un margine da dito, e
+     più stretto di mezzo schermo, o non è un muro; il passo fra un
+     mostro e l'altro più stretto del varco, o il varco non si distingue
+     da un buco qualunque. E devono arrivare più spesso con la marea, mai
+     però più di uno ogni pochi secondi. */
+  const mu = cfg.muro || {}
+  if (!(mu.varco >= cfg.raggioEroe * 4 && mu.varco <= 180))
+    guasti.push(`il varco del muro è largo ${mu.varco} pixel`)
+  if (!(mu.passo >= 30 && mu.passo < mu.varco))
+    guasti.push(`la fila del muro ha un passo di ${mu.passo} pixel`)
+  if (!(mu.primo >= 8 && mu.ogni?.(0) > 0 && mu.ogni(3) < mu.ogni(0) && mu.ogni(50) >= 5))
+    guasti.push('i muri non arrivano più spesso con la marea, o arrivano a raffica')
 
   /* la scaletta dell'esperienza deve salire sempre, o un livello costa
      meno del precedente e i potenziamenti piovono tutti insieme */

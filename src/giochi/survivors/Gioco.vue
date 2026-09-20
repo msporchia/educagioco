@@ -237,9 +237,15 @@ const VERSI = {
   cuore: () => suono.vita(),
   calamita: () => suono.nota(380, 1500, 0.35, 'sine', 0.07),
   cassa: () => suono.compra(),
+  /* il muro: un brontolio basso, per alzare lo sguardo al bordo */
+  muro: () => suono.rumore(0.5, 0.09, 500, 120),
   livello: () => suono.livello(),
   fuoco: () => suono.rumore(0.22, 0.06, 900, 200),
   tuono: () => suono.rumore(0.18, 0.07, 2400, 120),
+  /* le armi che guardano dove corri: un sibilo per la lancia, un
+     colpo secco per il fendente */
+  lancia: () => suono.nota(700, 180, 0.14, 'sawtooth', 0.06),
+  fendente: () => suono.rumore(0.12, 0.09, 2000, 400),
   fine: () => suono.fine(),
   trionfo: () => suono.livello(),
 }

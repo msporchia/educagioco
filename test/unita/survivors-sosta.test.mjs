@@ -74,6 +74,15 @@ const distanza = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
   uguale('e anche chi stava esattamente sopra', d[1], SPAZIO)
   uguale('chi era lontano non si muove', d[2], 400)
   uguale('ma non se ne va nessuno', b.nemici.length, 3)
+
+  /* chi è in fila resta in fila: un muro che riprendendo diventa una
+     folla che insegue è un altro gioco */
+  p.nemici.push({ tipo: 'moscerino', x: 300, y: 0, vita: 1, vitaMax: 1, passo: 100, massa: 1,
+                  rotta: { x: -1, y: 0 } })
+  const c = leggi(scrivi(p, 3), t, { rnd: caso(4) })
+  const inFila = c.nemici.filter(n => n.rotta)
+  uguale('chi era in fila si ritrova in fila', inFila.length, 1)
+  controlla('con la stessa rotta', inFila[0]?.rotta.x === -1 && inFila[0]?.rotta.y === 0)
 }
 
 /* ══════════ 3. una partita ripresa si finisce ══════════

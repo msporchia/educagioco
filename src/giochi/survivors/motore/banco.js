@@ -47,6 +47,16 @@ const SGUARDO = 300          // fin dove il pilota guarda per decidere
 const PORTATA = 420          // fin dove conta una gemma o un oggetto
 const QUANTE = 16            // le direzioni che prova
 const GIUSTA = Math.PI / 4   // entro quanto una direzione «guarda» il grumo
+/* una direzione è abbastanza sicura per mirarci se dopo il passo nessun
+   mostro è a meno di 75 pixel (il pericolo è la somma di 1/d²) */
+const PERICOLO_OK = 1 / (75 * 75)
+/* una finta — un'occhiata sola verso il grumo — si fa solo se il più
+   vicino è ancora a più di questi pixel */
+const FINTA_OK = 90
+/* quanto più pericolosa della migliore può essere una direzione perché
+   ci si miri lo stesso: misurato — a 1.8 il pilota che mira moriva il
+   triplo (la grotta da 92% a 25%), a 1.0 non mirava quasi mai (9%) */
+const QUASI = 1.15
 
 /* quanto pesa una meta rispetto a un mostro: un oggetto vale tre gemme,
    perché svanisce e perché una cassa è un'offerta intera */
@@ -79,6 +89,7 @@ export class Pilota {
        stava entro `GIUSTA` dal grumo */
     this.occasioni = 0
     this.mirate = 0
+    this.ultimaFinta = null
   }
 
   /* Ogni quanto ci ripensa: chi è sveglio corregge in continuazione, chi
@@ -167,23 +178,34 @@ export class Pilota {
 
     /* ── la mira ──
        Con un'arma che colpisce dove si corre e un grumo a tiro, fra le
-       direzioni quasi sicure quanto la migliore si prende quella che
-       guarda il grumo — non sempre, e mai quando tutte sono pericolose */
+       direzioni **abbastanza sicure** — quasi quanto la migliore, o con
+       nessuno a meno di `SPAZIO_OK` dopo il passo — si prende quella
+       che guarda il grumo. Non sempre (`mira`), e mai a costo di
+       finirci dentro. Se nessuna direzione sicura guarda il grumo ma
+       nessuno è ancora addosso, si fa **una finta**: un'occhiata sola
+       verso di loro, che punta l'arma, e al battito dopo si torna a
+       scappare. È quello che fa un bambino col fendente in mano: un
+       passo verso i mostri e via. */
     const grumo = this.grumo(partita)
     if (grumo !== null) {
       this.occasioni++
       if (this.rnd() < this.mira) {
-        const sicure = prove.filter(p => p.pericolo <= minPericolo * 1.8 + 2e-5)
+        const sicure = prove.filter(p => p.pericolo <= Math.max(minPericolo * QUASI, PERICOLO_OK))
         let vicina = scelta
-        for (const p of sicure) if (scarto(p.a, grumo) < scarto(vicina.a, grumo)) vicina = p
-        scelta = vicina
+        for (const p of sicure) if (scarto(p.a, grumo.a) < scarto(vicina.a, grumo.a)) vicina = p
+        if (scarto(vicina.a, grumo.a) <= GIUSTA) scelta = vicina
+        else if (grumo.vicino > FINTA_OK && this.ultimaFinta !== grumo.a) {
+          scelta = { a: grumo.a, pericolo: 0, costo: 0 }
+          this.ultimaFinta = grumo.a         // una finta sola, non due di fila
+        }
       }
     }
 
     /* la mano storta: quanto meno è bravo, tanto più tira di sghembo */
     const storto = (this.rnd() - 0.5) * (1 - this.bravura) * 2.2
     const a = scelta.a + storto
-    if (grumo !== null && scarto(a, grumo) <= GIUSTA) this.mirate++
+    if (grumo !== null && scarto(a, grumo.a) <= GIUSTA) this.mirate++
+    else this.ultimaFinta = null
     this.vai(partita, a)
   }
 
@@ -220,17 +242,21 @@ export class Pilota {
 
   /* Dove sta il grumo di mostri più fitto a tiro dell'arma che guarda
      dove si corre: la direzione, fra sedici, con più mostri nel suo
-     spicchio, pesati per vicinanza. `null` se non c'è un'arma così o
-     non c'è nessuno a tiro — allora mirare non vuol dire niente. */
+     spicchio, pesati per vicinanza — e quanto è vicino il più vicino di
+     tutti, che decide se una finta è ancora possibile. `null` se non
+     c'è un'arma così o non c'è nessuno a tiro: allora mirare non vuol
+     dire niente. */
   grumo(partita) {
     const f = partita.f
     if (!(f.lancia > 0 || f.fendente > 0)) return null
     const e = partita.eroe
-    const R = (f.fendente > 0 ? f.raggioFendente || 90 : f.gittata) * 1.15
+    const R = Math.max(f.lancia > 0 ? f.gittata * 1.4 : 0, f.fendente > 0 ? f.raggioFendente : 0)
     const dentro = []
+    let vicino = Infinity
     for (const n of partita.nemici) {
       const dx = n.x - e.x, dy = n.y - e.y
       const d = Math.hypot(dx, dy)
+      if (d < vicino) vicino = d
       if (d < R) dentro.push({ a: Math.atan2(dy, dx), peso: 1 / (1 + d / 100) })
     }
     if (!dentro.length) return null
@@ -241,7 +267,7 @@ export class Pilota {
       for (const n of dentro) if (scarto(n.a, a) < 0.55) somma += n.peso
       if (somma > migliore) { migliore = somma; miglioreA = a }
     }
-    return miglioreA
+    return miglioreA === null ? null : { a: miglioreA, vicino }
   }
 
   /* La pausa dei potenziamenti: si sceglie una carta e si paga la

@@ -33,8 +33,8 @@
    vuol dire aprire questo file.
 
    Un'ultima cosa, ed è l'unica differenza fra la campagna e il gioco
-   libero: **nella Sopravvivenza il mazzo non finisce**. Diciotto carte
-   per settantacinque copie sono più di quante se ne prendano in una
+   libero: **nella Sopravvivenza il mazzo non finisce**. Venti carte
+   per ottantatré copie sono più di quante se ne prendano in una
    tappa di tre minuti, ma una partita libera si interrompe e si riprende
    e dura un pomeriggio — e quando le copie erano finite il livello
    saliva in silenzio. Il come e il perché stanno in fondo, a `resa`.
@@ -90,6 +90,15 @@ export const MAZZO = [
     chiaro: 'una cometa ti gira intorno e travolge chi tocca' },
   { chiave: 'occhi',    nome: 'Occhi acuti',     icona: '👀', fascia: 'media', max: 3, intera: true,
     chiaro: 'le frecce passano attraverso i mostri' },
+  /* ── le armi che guardano dove corri ──
+     L'arco tira da solo al più vicino, e va bene: è quello che lascia
+     al dito una cosa sola da fare. Ma un gioco in cui *tutto* tira da
+     solo si guarda e basta. Queste due colpiscono **davanti**, cioè
+     dove si sta andando: per usarle bisogna correre verso i mostri, e
+     mirare costa — quindi picchiano più delle altre, apposta. Chi sta
+     fermo le tiene puntate dov'era andato l'ultima volta. */
+  { chiave: 'fendente', nome: 'Fendente',        icona: '⚔️', fascia: 'media', max: 4,
+    chiaro: 'un colpo largo davanti a te, dove corri' },
 
   /* ── forti: si sente subito ── */
   { chiave: 'frecce',   nome: 'Frecce gemelle',  icona: '🏹', fascia: 'forte', max: 5, intera: true,
@@ -104,6 +113,8 @@ export const MAZZO = [
     chiaro: 'ogni tanto esplodi tutto intorno a te' },
   { chiave: 'fulmine',  nome: 'Fulmine',         icona: '🌩️', fascia: 'forte', max: 4,
     chiaro: 'ogni tanto un mostro viene incenerito' },
+  { chiave: 'lancia',   nome: 'Lancia',          icona: '🗡️', fascia: 'forte', max: 4,
+    chiaro: 'una lancia parte dove corri e trapassa tutti' },
 ]
 
 export const carta = chiave => MAZZO.find(c => c.chiave === chiave) || null

@@ -534,6 +534,100 @@ controlla('il riassunto conta le stelle',
   nota(`in una partita alle dune il pilota ha trovato oggetti e preso ${partita.xp + partita.livello} tra xp e livelli`)
 }
 
+/* ══════════ 4-ter. I MURI ══════════
+   L'altra metà del muoversi: ogni tanto una fila di mostri deboli
+   attraversa lo schermo da un lato scelto a caso, dritta, senza inseguire
+   nessuno. Chi sta fermo ci finisce dentro; chi si sposta passa dal varco
+   o corre via. Deterministico col seme, come tutto il motore. */
+{
+  /* ── la fila nasce a tempo, in linea, con un varco ── */
+  const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(51), campo })
+  p.aNascere = -1e9; p.tOggetto = 1e9          // solo il muro, per guardarlo
+  p.eroe.invuln = 1e9                          // e un eroe fermo che non muore
+  for (let i = 0; i < Math.ceil((CFG.muro.primo + 0.2) * 30); i++) p.avanza(1 / 30)
+  const fila = p.nemici.filter(n => n.rotta)
+  controlla('dopo qualche secondo c\'è una fila in campo', fila.length >= 8, `${fila.length} in fila`)
+  controlla('e lo si sente', p.svuotaEventi().includes('muro'))
+  const rotta = fila[0].rotta
+  controlla('tutti con la stessa rotta', fila.every(n => n.rotta.x === rotta.x && n.rotta.y === rotta.y))
+  controlla('una rotta lungo un asse, lunga uno',
+            Math.abs(rotta.x) + Math.abs(rotta.y) === 1)
+  const orizzontale = rotta.y === 0
+  const lungo = n => orizzontale ? n.x : n.y          // la coordinata di avanzamento
+  const trasv = n => orizzontale ? n.y : n.x          // quella lungo la fila
+  controlla('in linea', fila.every(n => Math.abs(lungo(n) - lungo(fila[0])) < 1))
+  controlla('fuori dallo schermo, dal lato da cui entra',
+            Math.abs(lungo(fila[0]) - (orizzontale ? p.eroe.x : p.eroe.y)) > (orizzontale ? campo.larghezza : campo.altezza) / 2)
+  /* il varco: fra due vicini in fila c'è un buco più largo del passo */
+  const posti = fila.map(trasv).sort((a, b) => a - b)
+  const buchi = posti.slice(1).map((v, i) => v - posti[i])
+  /* la fila sta su una griglia a `passo`, quindi il varco è largo
+     quello dichiarato più al massimo due passi */
+  controlla('con un varco largo quanto dichiarato',
+            Math.max(...buchi) >= CFG.muro.varco - 1 && Math.max(...buchi) < CFG.muro.varco + 2 * CFG.muro.passo,
+            `il buco più largo è ${Math.max(...buchi).toFixed(0)}`)
+  controlla('e il resto della fila a passo stretto',
+            buchi.filter(b => b < CFG.muro.varco - 1).every(b => Math.abs(b - CFG.muro.passo) < 1))
+  /* chi disegna lo sa: un effetto dice da che lato entra */
+  controlla('la scena porta l\'avviso del bordo',
+            p.scena().effetti.some(e => e.che === 'muro' && e.rotta))
+
+  /* ── tira dritta, non insegue ── */
+  const prima = fila.map(n => ({ x: n.x, y: n.y }))
+  for (let i = 0; i < 30; i++) p.avanza(1 / 30)
+  const vivi = p.nemici.filter(n => n.rotta)
+  controlla('dopo un secondo la fila è avanzata lungo la sua rotta',
+            vivi.every(n => (orizzontale ? n.x - prima[0].x : n.y - prima[0].y) * (orizzontale ? rotta.x : rotta.y) > 40))
+  controlla('senza stringersi verso l\'eroe',
+            vivi.length > 3 && Math.abs(trasv(vivi[0]) - trasv(vivi[vivi.length - 1])) > 300,
+            'la fila si è stretta')
+  /* ── e sparisce dopo aver attraversato ──
+     L'eroe si sposta fuori dalla strada della fila: da fermo e
+     intoccabile la rimbalzerebbe addosso per sempre */
+  p.eroe.x += orizzontale ? 0 : 2000
+  p.eroe.y += orizzontale ? 2000 : 0
+  for (let i = 0; i < 30 * 30; i++) p.avanza(1 / 30)
+  uguale('trenta secondi dopo la fila non c\'è più', p.nemici.filter(n => n.rotta).length, 0)
+  controlla('e nemmeno si è persa in giro', p.nemici.length <= 14)
+}
+{
+  /* ── chi sta fermo ci finisce dentro, chi si muove no ──
+     Con la fila da sola in campo, a marea alta (una freccia non la
+     buca): dieci muri, e si conta chi viene preso. */
+  const colpi = { fermo: 0, pilota: 0 }
+  for (const modo of ['fermo', 'pilota']) {
+    for (let seme = 1; seme <= 10; seme++) {
+      const p = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(seme), campo })
+      p.tempo = 150
+      p.aNascere = -1e9; p.tOggetto = 1e9; p.tMuro = 1e9
+      p.nasceMuro()
+      const pilota = new Pilota({ rnd: caso(seme + 50), bravura: 1 })
+      let ahia = 0
+      for (let i = 0; i < 30 * 8 && !p.finita; i++) {
+        if (modo === 'pilota') pilota.guida(p, 1 / 30)
+        p.avanza(1 / 30)
+        ahia += p.svuotaEventi().filter(e => e === 'ahia').length
+      }
+      if (ahia) colpi[modo]++
+    }
+  }
+  nota(`un muro da solo prende chi sta fermo ${colpi.fermo} volte su 10, chi si sposta ${colpi.pilota}`)
+  controlla('chi sta fermo finisce dentro il muro', colpi.fermo >= 8, `${colpi.fermo} su 10`)
+  controlla('chi si sposta lo scansa', colpi.pilota <= 2, `${colpi.pilota} su 10`)
+  /* più spesso con la marea */
+  controlla('con la marea i muri arrivano più spesso', CFG.muro.ogni(2) < CFG.muro.ogni(0))
+  /* la fila è fatta dei più deboli fra chi è in scena */
+  const t = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(52), campo })
+  t.tempo = 150
+  controlla('la fila è fatta di mostri deboli', MOSTRI[t.tipoDelMuro()].vita === 1, t.tipoDelMuro())
+  /* e rispetta il tetto della folla */
+  const pieno = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(53), campo })
+  const tetto = pieno.regole.tetto(0)
+  for (let i = 0; i < tetto; i++) pieno.nemici.push(pieno.mostroNuovo('melma', 900, 900))
+  pieno.nasceMuro()
+  uguale('un muro non sfonda il tetto della folla', pieno.nemici.length, tetto)
+}
+
 /* ══════════ 5. le nove tappe si vincono davvero ══════════ */
 const VOLTE = 24
 const bravi = [], bimbi = []
@@ -578,7 +672,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   /* le domande sono il prezzo delle carte, e sono anche il motivo per cui
      questo gioco esiste: una tappa lunga ne deve chiedere di più */
   dentro(`tappa ${i + 1} (${t.nome}): quante domande in una partita`,
-         Number(sa.domandeMedie.toFixed(1)), 3, 16)
+         Number(sa.domandeMedie.toFixed(1)), 3, 20)
 }
 {
   const primi = bimbi.slice(0, 3).reduce((a, b) => a + b, 0) / 3

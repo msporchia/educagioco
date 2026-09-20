@@ -91,7 +91,32 @@ export class Campo {
     for (const e of s.effetti) this.effetto(e, H)
 
     ctx.restore()
+    /* il bordo da cui sta arrivando una fila: si accende fuori dal
+       mondo, sullo schermo, perché è il bordo dello schermo che conta */
+    for (const e of s.effetti) if (e.che === 'muro') this.bordoDelMuro(e)
     if (s.dolore) this.dolore(s.dolore)
+  }
+
+  /* ═══════════ il bordo che avverte del muro ═══════════
+     Una fascia rossa che pulsa sul lato da cui entra la fila, per un
+     secondo: la fila nasce fuori dallo schermo, e senza questo il primo
+     mostro che si vede è già a un passo. */
+  bordoDelMuro(e) {
+    const ctx = this.ctx, W = this.larghezza, H = this.altezza
+    const q = e.vita / e.tot
+    const spessore = 26
+    ctx.globalAlpha = 0.55 * q * (0.6 + 0.4 * Math.sin(q * 25))
+    const r = e.rotta
+    let x0 = 0, y0 = 0, x1 = W, y1 = H, gx0 = 0, gy0 = 0, gx1 = 0, gy1 = 0
+    if (r.x > 0) { x1 = spessore; gx1 = spessore }
+    else if (r.x < 0) { x0 = W - spessore; gx0 = W; gx1 = W - spessore }
+    else if (r.y > 0) { y1 = spessore; gy1 = spessore }
+    else { y0 = H - spessore; gy0 = H; gy1 = H - spessore }
+    const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1)
+    g.addColorStop(0, '#ff3b5c'); g.addColorStop(1, '#ff3b5c00')
+    ctx.fillStyle = g
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+    ctx.globalAlpha = 1
   }
 
   /* ═══════════ il fondo ═══════════
@@ -195,6 +220,18 @@ export class Campo {
     ctx.beginPath(); ctx.arc(0, -9, 2.6, 0.3, 2.84); ctx.stroke()
     ctx.restore()
 
+    /* la freccina ai piedi: dove guardano le armi direzionali. C'è solo
+       quando ce n'è una, così chi non le ha non si chiede cosa sia */
+    if (e.rotta !== null && e.rotta !== undefined) {
+      ctx.save(); ctx.translate(x, y + 17 * s); ctx.rotate(e.rotta)
+      ctx.globalAlpha = 0.85
+      ctx.fillStyle = '#fff3c4'
+      ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(13, -5); ctx.lineTo(13, 5); ctx.closePath(); ctx.fill()
+      ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(14, 0); ctx.stroke()
+      ctx.restore()
+    }
+
     // l'arco, sempre puntato dove si spara
     ctx.save(); ctx.translate(x, y); ctx.rotate(e.mira)
     ctx.globalAlpha = lampeggia ? 0.4 : 1
@@ -220,6 +257,16 @@ export class Campo {
     const salto = Math.abs(Math.sin(n.fase * 0.5)) * 3
     const x = n.x, y = n.y - salto
     this.ellisse(n.x, n.y + n.r * 0.85, n.r * 0.85, n.r * 0.3, '#00000030')
+    /* chi è in fila si lascia dietro una scia: è quello che fa leggere
+       la fila come una cosa che passa, non come una folla che viene */
+    if (n.rotta) {
+      for (let k = 1; k <= 3; k++) {
+        ctx.globalAlpha = 0.22 - k * 0.05
+        this.cerchio(n.x - n.rotta.x * k * n.r * 0.9, n.y - n.rotta.y * k * n.r * 0.9,
+                     n.r * (0.7 - k * 0.15), m.colore)
+      }
+      ctx.globalAlpha = 1
+    }
     const colore = n.lampo > 0.35 ? '#ffffff'
       : (n.gelato ? mescola(m.colore, '#9fe4ff', 0.55) : m.colore)
     const scuro = n.gelato ? '#4a9dc8' : m.scuro
@@ -348,6 +395,7 @@ export class Campo {
   /* ═══════════ una freccia ═══════════ */
   freccia(c) {
     const ctx = this.ctx
+    if (c.lancia) return this.lancia(c)
     ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a)
     const L = c.r * 2.6
     /* tre frecce diverse, e si distinguono a colpo d'occhio: bianca la
@@ -367,6 +415,32 @@ export class Campo {
     ctx.lineWidth = c.r * 1.5
     ctx.beginPath(); ctx.moveTo(-L * 2.4, 0); ctx.lineTo(-L, 0); ctx.stroke()
     ctx.globalAlpha = 1
+    ctx.restore()
+  }
+
+  /* ═══════════ la lancia ═══════════
+     Più lunga e più grossa di una freccia, con l'asta scura e la punta
+     larga: si deve vedere che è un'altra arma, e che va dritta dove si
+     stava correndo. */
+  lancia(c) {
+    const ctx = this.ctx
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a)
+    const L = 30
+    ctx.globalAlpha = 0.3
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 9; ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.moveTo(-L * 2.2, 0); ctx.lineTo(-L * 0.8, 0); ctx.stroke()
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = 4
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L * 0.55, 0); ctx.stroke()
+    ctx.strokeStyle = '#d9c1a0'; ctx.lineWidth = 1.5
+    ctx.beginPath(); ctx.moveTo(-L, -1); ctx.lineTo(L * 0.55, -1); ctx.stroke()
+    ctx.fillStyle = '#e8eef5'
+    ctx.beginPath(); ctx.moveTo(L, 0); ctx.lineTo(L * 0.45, -6); ctx.lineTo(L * 0.55, 0)
+    ctx.lineTo(L * 0.45, 6); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = '#ff5470'
+    for (const s of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(-L - 7, s * 5); ctx.lineTo(-L - 9, 0); ctx.closePath(); ctx.fill()
+    }
     ctx.restore()
   }
 
@@ -414,6 +488,18 @@ export class Campo {
       ctx.globalAlpha = e.vita / e.tot
       ctx.strokeStyle = e.colore; ctx.lineWidth = 7 * (1 - q) + 2
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r0 + (e.r - e.r0) * q, 0, 6.29); ctx.stroke()
+      ctx.globalAlpha = 1
+    } else if (e.che === 'fendente') {
+      /* lo spicchio del colpo, davanti a chi corre: bianco che sbiadisce */
+      const q = e.vita / e.tot
+      ctx.globalAlpha = 0.55 * q
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath(); ctx.moveTo(e.x, e.y)
+      ctx.arc(e.x, e.y, e.r * (1.1 - 0.1 * q), e.a - e.apertura, e.a + e.apertura)
+      ctx.closePath(); ctx.fill()
+      ctx.globalAlpha = 0.9 * q
+      ctx.strokeStyle = '#fff3c4'; ctx.lineWidth = 4; ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (1.1 - 0.1 * q), e.a - e.apertura, e.a + e.apertura); ctx.stroke()
       ctx.globalAlpha = 1
     } else if (e.che === 'saetta') {
       ctx.globalAlpha = e.vita / e.tot
