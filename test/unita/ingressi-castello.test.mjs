@@ -24,7 +24,8 @@
        spostare una torre è una carezza invece che una mossa.
    ═══════════════════════════════════════════════════════════════════ */
 import { TAPPE, LIBERA, MONDO, CFG, ingressiDi, postiDi,
-         PIAZZOLE_PER_INGRESSO } from '../../src/data/castello.js'
+         PIAZZOLE_PER_INGRESSO, firmaEquilibrio } from '../../src/data/castello.js'
+import { RACCONTO } from '../../src/data/campagne-castello.js'
 import { Percorso } from '../../src/motore/castello/percorso.js'
 import { Ondate } from '../../src/motore/castello/ondate.js'
 import { creaBattaglia } from '../../src/motore/battaglia.js'
@@ -180,6 +181,34 @@ for (const t of doppie) {
   const ferma = { x: torre.x, y: torre.y }
   controlla('e senza energia non si muove', !b.sposta(torre, b.liberi()[0]))
   controlla('resta dov\'era', torre.x === ferma.x && torre.y === ferma.y)
+}
+
+/* ── la firma della taratura vede anche queste strade ──
+   Le vite dei nemici sono tarate su *quel* tracciato: quanta strada ogni
+   torre tiene sotto tiro è il presidio che regge la difficoltà. La firma
+   leggeva `forma` e basta, e le sette tappe con `forme` ci finivano come
+   `null`: si poteva ridisegnare la palude da cima a fondo senza che
+   nessun test chiedesse di ritarare. Si muove un punto vero — le spezzate
+   arrivano in `RACCONTO` per riferimento, quindi la mutazione è la
+   stessa che vedrebbe il gioco — e si rimette a posto subito dopo. */
+for (const chiave of ['forme', 'fronti']) {
+  const tappa = RACCONTO.find(t => t.forme && (chiave !== 'fronti' || t.fronti))
+  const prima = firmaEquilibrio()
+  if (chiave === 'forme') {
+    const punto = tappa.forme[0][0]
+    const era = punto[1]
+    punto[1] = era + 0.01
+    controlla('la firma cambia se si sposta un punto di una tappa a più bocche',
+              firmaEquilibrio() !== prima, `${tappa.nome}: firma ferma a ${prima}`)
+    punto[1] = era
+  } else {
+    const era = tappa.fronti
+    tappa.fronti = era + 0.1
+    controlla('la firma cambia se cambiano i fronti dichiarati',
+              firmaEquilibrio() !== prima, `${tappa.nome}: firma ferma a ${prima}`)
+    tappa.fronti = era
+  }
+  uguale(`e rimesso a posto torna quella di prima (${chiave})`, firmaEquilibrio(), prima)
 }
 
 riassunto('le tappe a due ingressi')
