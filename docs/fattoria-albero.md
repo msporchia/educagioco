@@ -1,11 +1,21 @@
 # 🌳 L'albero della produzione — progetto
 
-> **Stato: proposta.** Niente di quello che segue è implementato. È la
-> progettazione dell'albero a più fasi della [fattoria](fattoria.md): prima
-> si decide l'albero, poi si generano gli sprite giusti — l'inverso di come
-> è andata finora, dove i fogli arrivavano «a caso» e i dati si adattavano.
-> I numeri stanno sulla scala di [`CALIBRAZIONE.md`](../CALIBRAZIONE.md) e
-> non la ripetono.
+> **Stato: fatto fino alla tappa 3 del piano, più la sartoria (5) e il
+> pentolone (6)** — dal 21 settembre 2026. Nel gioco ci sono le fondamenta
+> (`PROFONDITA`, `dati/usi.js`, la dispensa), il telaio e la stoffa, il
+> panificio col pane e la farina, lo sdoppiamento del fienile, la sartoria
+> col maglione, e la pagina dell'albero. Mancano il caseificio e la torta
+> (4), la lavanda e la tintoria (7), la coda (8) e **tutti gli sprite**:
+> ogni voce nata qui dichiara in `aspetta` il pezzo che il foglio le
+> porterà, e usa intanto un ripiego. Le tre decisioni in fondo sono state
+> prese: sì al terzo magazzino, sì allo sdoppiamento, sì alla merenda nel
+> panificio.
+>
+> È la progettazione dell'albero a più fasi della [fattoria](fattoria.md):
+> prima si decide l'albero, poi si generano gli sprite giusti — l'inverso di
+> come è andata finora, dove i fogli arrivavano «a caso» e i dati si
+> adattavano. I numeri stanno sulla scala di
+> [`CALIBRAZIONE.md`](../CALIBRAZIONE.md) e non la ripetono.
 
 ## Da dove si parte
 
@@ -581,13 +591,13 @@ Tappe committabili, ognuna giocabile da sola. Le unità girano a ogni tappa
 
 | # | tappa | dati | schermo | sprite | test da toccare |
 |--:|:--|:--|:--|:--|:--|
-| 0 | **Le fondamenta** | `PROFONDITA` + `profonditaDi` in `coltivazioni.js`, letta da `valoreDi`/`minutiDi`, `livelloDelProdotto`, `ottenibile`, `GIRI`; `serveA` con `addobbo` e `ordine`; `da` sugli addobbi; il silo `bottega` e la voce `dispensa` | `Granaio.vue` disegna anche la dispensa (è già generico per famiglia) | nessuno (la dispensa può nascere col `casetta_tetto_lungo` come ripiego dichiarato) | `coltivazioni` (guasti, 5b, 8), `mercato`, `consiglio`, `addobbi`: verde senza nuove merci |
-| 1 | **Il telaio e la stoffa** (14) | `stoffa`, `telaio`, la sarta la vuole, `NOMI[14]` | — | telaio, dispensa, `merce_stoffa` | `coltivazioni` 1b/8, `livelli-fattoria`, `mercato` (la stoffa si ordina dal 14) |
-| 2 | **Il panificio e il pane** (16) | `farina` nel mulino, `panificio`, `pane` cibo, la merenda passa al panificio, fornaio/maestra/oste | `Bestia.vue` ha una pappa in più: niente da fare | panificio, `merce_farina`, `merce_pane` (`pane` dell'atlante intanto) | `coltivazioni` 8 (rapporto 70%), `sblocchi`, `recinti` (la merenda ha cambiato casa) |
-| 3 | **La pagina dell'albero** | `dati/albero.js` | `viste/Albero.vue`, i tre ingressi, `pannello.tipo = 'albero'` | — | `unita/albero` nuovo, `consiglio` (+1 riga), `integrazione/albero` |
+| 0 ✅ | **Le fondamenta** | `PROFONDITA` + `profonditaDi` in `coltivazioni.js`, letta da `valoreDi`/`minutiDi`, `livelloDelProdotto`, `ottenibile`, `GIRI`; `serveA` con `addobbo` e `ordine`; `da` sugli addobbi; il silo `bottega` e la voce `dispensa` | `Granaio.vue` disegna anche la dispensa (è già generico per famiglia) | nessuno (la dispensa può nascere col `casetta_tetto_lungo` come ripiego dichiarato) | `coltivazioni` (guasti, 5b, 8), `mercato`, `consiglio`, `addobbi`: verde senza nuove merci |
+| 1 ✅ | **Il telaio e la stoffa** (14) | `stoffa`, `telaio`, la sarta la vuole, `NOMI[14]` | — | telaio, dispensa, `merce_stoffa` | `coltivazioni` 1b/8, `livelli-fattoria`, `mercato` (la stoffa si ordina dal 14) |
+| 2 ✅ | **Il panificio e il pane** (16) | `farina` nel mulino, `panificio`, `pane` cibo, la merenda passa al panificio, fornaio/maestra/oste | `Bestia.vue` ha una pappa in più: niente da fare | panificio, `merce_farina`, `merce_pane` (`pane` dell'atlante intanto) | `coltivazioni` 8 (rapporto 70%), `sblocchi`, `recinti` (la merenda ha cambiato casa) |
+| 3 ✅ | **La pagina dell'albero** | `dati/albero.js` | `viste/Albero.vue`, i tre ingressi, `pannello.tipo = 'albero'` | — | `unita/albero` nuovo, `consiglio` (+1 riga), `integrazione/albero` |
 | 4 | **Il caseificio e la torta** (20) | `burro`, `formaggio`, `caseificio`, `torta` + coccola «Festa», pasticcera/cuoco | `Bestia.vue`: la festa sotto la barra del gioco | caseificio, `merce_burro`, `merce_formaggio`, `merce_torta` | `coltivazioni` 8 (formaggio 71%), `bisogni` (coccola con `da`), `mercato` |
-| 5 | **La sartoria e il maglione** (36) | `maglione`, `sartoria`, l'addobbo `da: 'maglione'` | `Vestiario.vue`: un addobbo pagato col granaio mostra «ne hai 1» invece del prezzo | sartoria, `merce_maglione` | `addobbi` (si compra col granaio, non con le monete), `coltivazioni` 8 |
-| 6 | **Il pentolone** (22) | quattro ricette cambiano `dove`, `pentolone` in catalogo | — | pentolone | `recinti` (la catena intera passa dal pentolone), `consiglio`, `sblocchi` |
+| 5 ✅ | **La sartoria e il maglione** (36) | `maglione`, `sartoria`, l'addobbo `da: 'maglione'` | `Vestiario.vue`: un addobbo pagato col granaio mostra «ne hai 1» invece del prezzo | sartoria, `merce_maglione` | `addobbi` (si compra col granaio, non con le monete), `coltivazioni` 8 |
+| 6 ✅ | **Il pentolone** (22) | quattro ricette cambiano `dove`, `pentolone` in catalogo | — | pentolone | `recinti` (la catena intera passa dal pentolone), `consiglio`, `sblocchi` |
 | 7 | **La lavanda e la tintoria** (52) | `lavanda` coltura, `tintura`, `maglione_lavanda`, `sapone` + coccola «Bagnetto», lavandaia | — | `campi_3.png`, tintoria, `merce_tintura`, `merce_maglione_lavanda`, `merce_sapone` | `coltivazioni` 1b (la lavanda ha la bocca), `albero` (sei fasi), `mercato` |
 | 8 | **La coda** (58, 64) | `sciarpa_lana`, `berretto` nella sartoria, addobbi collo e testa | — | `merce_sciarpa`, `merce_berretto` | `livelli-fattoria` (`ULTIMO`, i buchi), `addobbi` |
 
@@ -601,7 +611,109 @@ Dopo ogni tappa con sprite: `python3 strumenti/sprite/atlante.py fattoria`,
 `npm run mondo` per guardare i ritagli, e il foglietto con il campo
 `prompt` compilato.
 
+## 8. La seconda iterazione: più catene, e i posti dove si consegna
+
+> Solo progetto, senza sprite e senza codice: si scrive dopo la tappa 8.
+
+Due cose che l'albero di sopra non fa, dette da chi ci gioca: **le
+ricette più interessanti nascono da ingredienti che si incrociano** —
+miele, zucchero, uova, farina — e **il mercato è un banco solo**, mentre
+in un gioco di fattoria ci sono posti diversi dove le persone chiedono
+cose: la pasticceria, la rosticceria, la scuola.
+
+### Le catene in più
+
+Stessa regola di tutto il resto: N → 1, ogni edificio un mestiere, mai
+più di quattro ricette, ogni coltura con la bocca che la mangia. Quattro
+catene, in ordine di dove entrano.
+
+| catena | fasi | dove si incontra |
+|:--|:--|:--|
+| **Lo zucchero** | 🌱 barbabietola (campo) → 🍬 zucchero (**zuccherificio**) | entra nella torta, nei biscotti, nella marmellata |
+| **La pasta** | farina ✚ uova → 🍝 pasta (**pastificio**) → 🍲 lasagne (pasta ✚ pomodori ✚ formaggio, **cucina**) | ✚ col pane e col latte |
+| **Il pesce** | 🌰 becchime → 🐟 pesce (**stagno dei pesci**, un recinto: si dà da mangiare, si ritira) | ✚ col riso |
+| **Il sushi** | 🌾 riso (campo, un cereale nuovo) ✚ pesce → 🍣 sushi (**cucina**) | è la catena più lunga: sei fasi |
+
+- **La barbabietola e non la canna**: cresce in un campo dell'orto come
+  le altre, e il foglio dei campi ha già la forma «cartello, sette
+  aiuole, cassetta».
+- **Lo stagno dei pesci è un recinto**, con i suoi tre ritratti e il
+  fumetto che dice cosa vuole: non è una meccanica nuova. Mangia becchime
+  come le galline e gli asini, perché tre bocche sullo stesso mangime
+  sono tre scomparti in meno.
+- **La cucina** è l'ottavo edificio (lasagne, sushi, e più avanti le
+  cose che si fanno con due merci cotte): arriva dopo la tintoria, nella
+  coda del gioco che oggi non ha niente che lavori.
+- Quello che esce (zucchero, pasta, pesce, sushi, lasagne) va nella
+  dispensa: sono tutte cose che escono da una bottega. Il pesce esce da
+  un recinto e va nel silo bianco, con le uova.
+
+I numeri — prezzi nella fascia «una struttura», tempi, il rapporto della
+pasta e delle lasagne come pappe contro il cibo comprato — si fanno con
+lo stesso conto di §3 quando si scrive la tappa, non prima.
+
+### I posti di consegna al posto del banco unico
+
+Il mercato di oggi è **una bancarella che chiede a caso** fra tutte le
+merci ottenibili, con una faccia scelta dopo. Il verso da girare è
+l'opposto: **un posto chiede il suo mestiere**, e la faccia dice prima
+cosa aspettarsi.
+
+**Come si dichiara un posto.** Una voce di catalogo con `posto: {…}` al
+posto di `mercato: true` — stessa forma dei recinti, che sono macchine
+con una faccia:
+
+```js
+V('pasticceria', 'pasticceria', 'Pasticceria', 200, {
+  posto: { chiede: ['torta', 'biscotti', 'miele', 'merenda', 'uova'],
+           clienti: ['pasticcera', 'maestra'] },
+  liv: 20, unico: true,
+})
+```
+
+- `chiede` è **l'elenco chiuso** delle merci che quel posto ordina: si
+  pesca da lì e non da `merciDelLivello`. Il filtro sul livello resta
+  (non si chiede una torta a chi non ha il caseificio), ma dentro
+  l'elenco del posto.
+- `clienti` sono i mestieri che si vedono al banco di quel posto, presi
+  da `CLIENTI`: la pasticcera in pasticceria, l'oste in rosticceria. Il
+  campo `vuole` dei clienti resta per il ripiego — la nonna e il
+  bottegaio stanno alla bancarella di sempre, che non sparisce.
+- Ogni posto ha **i suoi tre ordini** (`f.ordini` diventa
+  `f.ordini[postoId]`, con la bancarella che tiene la chiave `mercato`
+  per i salvataggi di ieri) e il suo riposo dopo un rifiuto.
+
+**Quali posti, e cosa chiedono.**
+
+| posto | liv | chiede | chi |
+|:--|--:|:--|:--|
+| 🏪 la bancarella (c'è già) | 4 | di tutto: è il ripiego | nonna, bottegaio, e chi non ha un posto suo |
+| 🧁 pasticceria | 20 | torta, biscotti, miele, merenda, uova, burro, zucchero | pasticcera, maestra |
+| 🍽 rosticceria | 26 | pane, formaggio, lasagne, tartufi, latte, pasta | oste, cuoco |
+| 🧵 merceria | 36 | lana, stoffa, maglione, sciarpa, berretto, sapone | sarta, lavandaia |
+| 🍣 il sushi bar | 60 | sushi, pesce, riso | un cliente nuovo |
+
+**Come si sblocca.** Un posto arriva col livello e **con la sua prima
+merce**, come una macchina arriva con la sua prima ricetta: la
+pasticceria al 20 con la torta, non prima — `guastiDegliSblocchi` lo
+controlla con la stessa regola delle macchine. È un premio nella pagina
+dei livelli e si compra nel baule, `unico` come la bancarella.
+
+**Cosa cambia nel motore.** `componiOrdine` prende il posto e pesca da
+`chiede`; `clientiPer` guarda prima i `clienti` del posto; `bancoDi`
+riceve l'id del posto. Il premio resta esperienza, mai monete, con lo
+stesso tetto `6·minuti·pezzi`. La pagina dell'albero si apre da ogni
+posto, come dalla bancarella.
+
+**Perché non subito.** Un posto che chiede solo torte a chi ha una torta
+ogni due ore è un banco fermo: i posti hanno senso quando ogni catena
+ha tre o quattro merci consegnabili, cioè dopo la tappa 8 e le catene di
+sopra.
+
 ## Le decisioni da confermare prima di scrivere codice
+
+> **Prese, tutte e tre**, il 21 settembre 2026: sì. Restano scritte perché
+> dicono cosa si è pesato.
 
 1. **Il terzo magazzino.** La dispensa (`silo: 'bottega'`, 🪙120, unico)
    contro infilare undici merci nel silo della stalla. La dispensa costa

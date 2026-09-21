@@ -1048,6 +1048,73 @@ aprono con la finestra, non spendendo. Per guardarle fuori stagione
 c'è `#stagione=natale` (o `halloween`) nell'indirizzo, accanto a
 `#fattoria=`.
 
+### L'albero a più fasi: le botteghe, la dispensa, e la pagina che lo srotola (dal 21 settembre 2026)
+
+Il progetto intero sta in [`fattoria-albero.md`](fattoria-albero.md); qui
+c'è quello che è arrivato. Tre cose non tornavano: il fienile aveva nove
+ricette e il mulino una che non era una macinatura; la lana finiva in una
+copertina e fra la lana e un vestito non c'era niente; sopra il 47 non
+arrivava più niente che lavorasse. La risposta sono **le botteghe** —
+macchine che prendono quello che esce da un'altra macchina e lo portano un
+gradino più su — e una regola: un edificio è un mestiere che si riconosce
+a colpo d'occhio, mai più di quattro ricette.
+
+**La dispensa** (📦, 🪙120, `unico`, livello 14) è il terzo silo: il rosso è
+dei campi, il bianco è degli animali, e quello che esce dalle botteghe non
+esce da nessuno dei due. Le merci di ieri non si spostano di silo.
+
+**Il fienile fa il secco, il pentolone fa il cotto.** Beverone, zuppa, zuppa
+d'orto e pastura si fanno nel pentolone (🪙150, al 22, quando la prima
+ricetta cotta compariva già). «Fragole al miele» passa al panificio, e il
+mulino macina e basta — mangime, pastone e adesso la farina. È l'unica tappa
+che toglie qualcosa a una fattoria di ieri, ed è gratis da migrare: una
+lavorazione in corso è un id di ricetta dentro la cosa, quindi la zuppa
+partita ieri nel fienile finisce e si ritira, e la prossima vuole il
+pentolone — il consiglio lo dice per nome.
+
+**Le catene nuove, fin dove sono arrivate:**
+
+| catena | fasi | livelli |
+|:--|:--|:--|
+| il filo | 🌿 erba → 🥬 foraggio → 🧶 lana → 🧵 stoffa (telaio) → 🧥 maglione (sartoria) | 14, 36 |
+| il pane | 🌾 grano → 🌾 farina (mulino) → 🍞 pane (panificio) | 16 |
+
+Il pane è una pappa (0,60 di pancia, 🪙7 contro 🪙10 comprata: il 70%, dentro
+la fascia di `unita/coltivazioni`); il maglione è **un addobbo pagato col
+granaio** — `da: 'maglione'` al posto di `prezzo`, come la copertina fra le
+coccole — ed è la prima cosa da indossare che si coltiva. Fornaio, maestra e
+l'oste nuovo chiedono il pane; la sarta vuole stoffa e maglione.
+
+**Le botteghe nascono prima del loro disegno**, ed è deliberato: prima si
+decide l'albero, poi si generano gli sprite. Una voce dichiara in `aspetta`
+il pezzo che il foglio porterà (`telaio`, `merce_stoffa`…) e usa intanto un
+ripiego — una tettoia, il forno a cupola, il paiolo, il chiosco rosa; per le
+merci l'emoji, o il `pane` dell'arredo. `guastiDelCatalogo` e
+`guastiDelleColture` diventano rossi il giorno che il pezzo atteso c'è e la
+riga non l'ha preso.
+
+**La catena ha un tetto solo.** Quattro conti risalivano la catena — valore
+e minuti al mercato, il livello di una merce, l'ottenibile del silo, il
+consiglio — ognuno col suo fondo (5, 4, 4, 5), e nessuno diventava rosso
+quando la catena si allungava: rispondevano `Infinity`, cioè una stoffa che
+non si ordina mai. Adesso è `PROFONDITA` (8) in `dati/coltivazioni.js`,
+`profonditaDi` misura la strada più corta di ogni merce, e un guasto scatta
+a due passi dal tetto.
+
+**«A cosa serve» vede cinque uscite** (`dati/usi.js`): ricette, ciotola,
+coccole, addobbi pagati col granaio e ordini del mercato. Stava in
+`bisogni.js`, che ne vedeva tre e non può importare le altre due senza
+chiudere un anello — e la stoffa risultava «non serve a niente».
+
+**La pagina dell'albero** (`dati/albero.js` puro, `viste/Albero.vue`) è il
+consiglio srotolato: in cima la merce, in mezzo la macchina con quattro
+stati (✓ ce l'hai · ⏳ lavora · 🛒 da comprare · 🎁 nei premi), sotto gli
+ingredienti con «ne hai 1, manca 1», e giù fino a un campo. Solo quello che
+è sbloccato; una strada sola per riga, la più economica e a parità la più
+svelta; le righe ambra portano il tasto del consiglio. Si apre sempre con
+una merce già scelta — 🌳 «Come si fa» nel silo, l'ingrediente che manca al
+mercato e sotto una ricetta — e non c'è una vista «tutto l'albero».
+
 ### Non si può più spegnere
 
 C'era **una variante** (`fattoria:coltivazione`) che toglieva i campi dalla
@@ -1277,6 +1344,9 @@ che le due sezioni qui sopra esistono. Restano:
 | `viste/Roba.vue` `viste/Provino.vue` | il baule: lo scaffale, e la figura che ci sta dentro in scala |
 | `viste/Merce.vue` | la faccia di una roba del granaio: il disegno se c'è, l'emoji se no |
 | `motore/consiglio.js` | il prossimo passo, che risale la catena da solo |
+| `dati/albero.js` `viste/Albero.vue` | il consiglio srotolato: tutta la strada di una merce, in colonna |
+| `dati/usi.js` | a cosa serve una merce, tutte e cinque le uscite |
+| `test/unita/albero.test.mjs` `test/integrazione/albero.test.mjs` | l'albero per ogni merce a ogni livello; e col dito, dal silo al baule |
 | `dati/mercato.js` | chi ordina, quanto rende un ordine, e perché non paga monete |
 | `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
 | `viste/Mercato.vue` | i tre ordini, a caselle |

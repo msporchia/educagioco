@@ -479,6 +479,20 @@ committate: non è ricostruibile da git.
   che c'è: il modulo di segnalazione, precompilato. È il difetto che
   nessun controllo automatico trova, perché una domanda fuori misura è
   formalmente ineccepibile.
+- **`src/giochi/fattoria/`** — **l'albero a più fasi** è in
+  [`docs/fattoria-albero.md`](docs/fattoria-albero.md), con lo stato in
+  testa. Tre regole da non rompere: la catena ha **un tetto solo**
+  (`PROFONDITA` in `dati/coltivazioni.js`, letta dai quattro conti che
+  la risalgono — un numero copiato in quattro file è il modo in cui il
+  quinto dimentica di alzarlo); «a cosa serve» si chiede a `dati/usi.js`,
+  che vede tutte e cinque le uscite (`bisogni.js` ne vede tre e non può
+  importare le altre due senza un anello); una voce nata prima del suo
+  sprite dichiara in `aspetta` il pezzo che il foglio porterà, e i
+  guasti scattano il giorno che quel pezzo c'è. La pagina dell'albero
+  (`dati/albero.js` puro, `viste/Albero.vue`) si apre **sempre con una
+  merce già scelta** e le sue righe eseguono le azioni del consiglio:
+  bersagli `[data-albero]`, `[data-albero-riga="<merce>"]`,
+  `[data-albero-macchina="<id>"]`, `[data-albero-apri="<merce>"]`.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni
