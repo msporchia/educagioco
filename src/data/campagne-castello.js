@@ -329,10 +329,10 @@ const PALUDE_FOCE = [
      il bivio           due cunicoli a squadra, uno per bocca, che
                         scendono a zig-zag e si incontrano a metà campo;
                         da lì una galleria sola, a scala, fino in fondo
-     il bastione        una clessidra a squadra: due rampe che si
-                        incontrano al portone di mezzo, alto, e da lì
-                        due scale lunghe ai lati che si ritrovano solo
-                        alla porta
+     il bastione        una strada sola che fa un cappio a squadra e
+                        **si attraversa da sé**: l'unica a una bocca,
+                        e l'unica dove un mostro passa due volte dallo
+                        stesso punto
      il delta           due canali che serpeggiano, si fondono in un
                         tronco, e il tronco si sdoppia attorno a
                         un'isola per richiudersi davanti alla porta
@@ -340,7 +340,9 @@ const PALUDE_FOCE = [
    I vincoli sono gli stessi delle tappe (`strumenti/valida-percorsi.mjs`
    le passa ai raggi X con le altre): niente tornanti a spillo, niente
    corsie che si sfiorano senza fondersi, e mai più di metà strada in
-   comune — se no le due bocche sono un disegno. */
+   comune — se no le due bocche sono un disegno. Un incrocio si
+   **dichiara** (`incroci: 1`), e vale solo se è netto: due tratti che
+   si tagliano a angolo largo, non due che si sfiorano. */
 
 const RADURA_TRONCO = [[0.50, 0.68], [0.28, 0.76], [0.34, 0.86], [0.50, 0.95]]
 const LIBERA_BOSCO = [
@@ -357,15 +359,27 @@ const LIBERA_SOTTERRANEO = [
   [[0.80, 0.04], [0.80, 0.16], [0.60, 0.16], [0.60, 0.28], [0.86, 0.28], [0.86, 0.40],
    [0.60, 0.40], [0.60, 0.50], ...BIVIO_GALLERIA]]
 
-const BASTIONE_PORTONE = [[0.50, 0.38], [0.50, 0.46]]
-const BASTIONE_PORTA = [[0.50, 0.95]]
+/* ── il bastione: una strada sola, che si incrocia da sé ──
+   È l'unica libera a una bocca, ed è **un anello vero**: la strada
+   scende lungo il cortile, gira a sinistra sotto la torre, risale, e
+   attraversa sé stessa — a squadra, com'è tutto sulle mura — prima di
+   scendere dall'altra parte fino alla porta. Un mostro passa **due
+   volte** dallo stesso punto (l’incrocio, a `(0.58, 0.21)`), e le torri
+   piazzate lì gli sparano all’andata e al ritorno: è il regalo di
+   questo terreno, come i due bracci lo sono della radura. Non ha una
+   seconda bocca perché le due cose insieme non ci stanno — un
+   cappio largo tutto il campo è già la difesa divisa in due, solo
+   che qui si divide **nel tempo** e non nello spazio.
+
+   Le due braccia del cappio distano fra loro più delle corsie (109u fra
+   il gambo e la discesa, 182 fra la traversa e il fondo), e
+   l'incrocio è dichiarato (`incroci: 1`): il validatore ammette
+   quello, netto e a angolo retto, e continua a vietare le corsie che
+   si sfiorano senza incrociarsi. Nel fondale la cella dell'incrocio
+   chiede la tessera a croce, che il foglio delle mura ha. */
 const LIBERA_MURA = [
-  [[0.18, 0.04], [0.18, 0.16], [0.40, 0.16], [0.40, 0.27], [0.22, 0.27], [0.22, 0.38],
-   ...BASTIONE_PORTONE, [0.20, 0.52], [0.20, 0.64], [0.40, 0.64], [0.40, 0.76],
-   [0.22, 0.76], [0.22, 0.88], ...BASTIONE_PORTA],
-  [[0.82, 0.04], [0.82, 0.16], [0.60, 0.16], [0.60, 0.27], [0.78, 0.27], [0.78, 0.38],
-   ...BASTIONE_PORTONE, [0.80, 0.52], [0.80, 0.64], [0.60, 0.64], [0.60, 0.76],
-   [0.78, 0.76], [0.78, 0.88], ...BASTIONE_PORTA]]
+  [0.58, 0.04], [0.58, 0.45], [0.20, 0.45], [0.20, 0.21], [0.84, 0.21], [0.84, 0.64],
+  [0.50, 0.64], [0.50, 0.95]]
 
 const DELTA_TRONCO = [[0.50, 0.44], [0.50, 0.54]]
 const DELTA_PORTA = [[0.50, 0.84], [0.50, 0.95]]
@@ -380,14 +394,16 @@ const LIBERA_PALUDE = [
    tutti i mostri che ci vivono, le torri e i rami dell'ultima tappa.
    `ambiente` è quello dell'ultima tappa: la libera è quello che viene
    dopo. `fronti` come nelle tappe a più bocche: quante difese separate
-   chiede davvero — meno di due, perché le strade si fondono. */
+   chiede davvero — meno di due, perché le strade si fondono. Chi ha
+   una bocca sola non lo dice, e dichiara invece `incroci`: quante volte
+   la sua strada attraversa sé stessa. */
 export const LIBERE_RACCONTO = [
   { chiave: 'libera-bosco', campagna: 'bosco', nome: 'La radura grande', emoji: '🌲',
     fronti: 1.5, forme: LIBERA_BOSCO },
   { chiave: 'libera-sotterraneo', campagna: 'sotterraneo', nome: 'Il bivio', emoji: '🕯️',
     fronti: 1.5, forme: LIBERA_SOTTERRANEO },
   { chiave: 'libera-mura', campagna: 'mura', nome: 'Il bastione', emoji: '🏰',
-    fronti: 1.7, forme: LIBERA_MURA },
+    forme: [LIBERA_MURA], incroci: 1 },
   { chiave: 'libera-palude', campagna: 'palude', nome: 'Il delta', emoji: '🐸',
     fronti: 1.5, forme: LIBERA_PALUDE },
 ]

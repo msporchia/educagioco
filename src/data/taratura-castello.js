@@ -30,11 +30,11 @@ export const VITE = {
   "palude/La foce": [14, 14, 14, 36, 36, 36, 44, 51, 51, 63, 69, 69, 92, 371],
   "libera-bosco": [50, 50, 50, 50, 82, 82, 82, 129, 129, 138, 138, 154, 188, 222, 222, 222, 222, 230, 510, 510],
   "libera-sotterraneo": [30, 30, 60, 60, 83, 83, 83, 95, 95, 152, 152, 152, 152, 152, 152, 152, 152, 152, 591, 591],
-  "libera-mura": [30, 30, 60, 60, 97, 103, 103, 153, 153, 153, 206, 206, 238, 262, 262, 379, 520, 520, 520, 1431],
+  "libera-mura": [84, 84, 86, 86, 123, 123, 123, 183, 183, 183, 238, 238, 238, 451, 451, 451, 784, 784, 784, 2133],
   "libera-palude": [14, 14, 14, 14, 15, 15, 15, 53, 53, 59, 61, 61, 61, 61, 61, 61, 61, 61, 93, 510],
 }
 /* di quanto cresce la vita in ogni partita libera dopo l'ultima ondata
    tarata: da lì in poi non c'è tabella, c'è questa progressione */
 export const OLTRE = {"libera-bosco":1.3,"libera-sotterraneo":1.3,"libera-mura":1.3,"libera-palude":1.3}
-export const FIRMA = "1c1e6b1a"
+export const FIRMA = "ef1cc946"
 export const BERSAGLIO = [0.6, 0.85]

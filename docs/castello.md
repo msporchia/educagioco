@@ -64,9 +64,12 @@ terreno: *La radura grande* nel bosco, *Il bivio* sotto terra, *Il bastione*
 sulle mura, *Il delta* nella palude. Ognuna prende dalla sua campagna tutti i
 mostri che ci vivono, le torri dell'ultima tappa e la regola dei rami (nel
 bosco niente rami, come nella campagna), e ha un tracciato suo — il più
-intricato del suo mondo, con due bocche che si fondono: un anello attorno a
-una radura, due cunicoli che si incontrano in una galleria sola, una
-clessidra a squadra, un delta che si sdoppia attorno a un'isola.
+intricato del suo mondo: un anello attorno a una radura, due cunicoli che si
+incontrano in una galleria sola, un delta che si sdoppia attorno a un'isola —
+tre con due bocche che si fondono, e **il bastione**, a una bocca sola, dove
+la strada fa un cappio e **ripassa sopra sé stessa**: un mostro passa due
+volte dall'incrocio, e le torri piazzate lì gli sparano all'andata e al
+ritorno.
 
 Ce n'era una sola, a strada singola, per paura che con due bocche non si
 riuscisse a tararla. Adesso ognuna si tara da sola (`npm run tara`, venti

@@ -783,7 +783,12 @@ committate: non è ricostruibile da git.
   `data/castello.js`, tracciati in `LIBERE_RACCONTO` di
   `campagne-castello.js`, chiavi stabili `libera-bosco`… che sono le
   chiavi di `VITE`, di `OLTRE` e dei record). Ognuna eredita mostri,
-  torri e rami dalla sua campagna, ha due bocche che si fondono, e si
+  torri e rami dalla sua campagna, ha due bocche che si fondono — tranne
+  il bastione, che è **un anello vero**: una bocca sola e una strada che
+  si attraversa da sé, dichiarato con `incroci: 1` (il motore non lo sa,
+  un nemico ha un `d` scalare; lo sa `strumenti/valida-percorsi.mjs`,
+  che conta gli incroci e li vuole netti, e `sbroglia()` in
+  `percorso.js`, che scosta le piazzole anche a strada singola) — e si
   tara da sola: la tabella di venti ondate e il passo `oltre`, che
   esce da una retta sui logaritmi dei limiti della seconda metà con
   un **pavimento a 1,3** — la media dei rapporti della coda spianata

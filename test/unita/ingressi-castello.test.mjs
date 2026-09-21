@@ -41,10 +41,16 @@ nota('a più ingressi:', doppie.map(t => `${t.nome} (${ingressiDi(t)})`).join(' 
    bocche non si tarasse. Adesso ognuna si tara da sola, e le stesse
    regole delle tappe a due bocche — porta unica, piazzole su tutte le
    strade, una per strada le prime — valgono anche per loro. */
-controlla('le partite libere hanno tutte più di una bocca',
-          LIBERE.every(l => ingressiDi(l) >= 2), LIBERE.map(l => `${l.nome} (${ingressiDi(l)})`).join(' · '))
+/* Tutte tranne una: il bastione è a **una bocca** e si attraversa da
+   sé — l'anello vero, provato più sotto. Le due cose insieme non ci
+   stanno, e la sua difesa si divide nel tempo invece che nello spazio. */
+const libereDoppie = LIBERE.filter(l => !l.incroci)
+const anelli = LIBERE.filter(l => l.incroci)
+controlla('le partite libere senza anello hanno tutte più di una bocca',
+          libereDoppie.every(l => ingressiDi(l) >= 2), LIBERE.map(l => `${l.nome} (${ingressiDi(l)})`).join(' · '))
+uguale('e una sola ha l\'anello', anelli.map(l => l.chiave).join(), 'libera-mura')
 
-for (const t of [...doppie, ...LIBERE]) {
+for (const t of [...doppie, ...libereDoppie]) {
   const p = new Percorso(t.forme, t.posti, misure)
   const quante = p.quanteVie
   controlla(`${t.nome}: più di una strada (${quante})`, quante >= 2)
@@ -77,6 +83,57 @@ for (const t of [...doppie, ...LIBERE]) {
       minima = Math.min(minima, Math.hypot(p.postazioni[i].x - p.postazioni[k].x,
                                            p.postazioni[i].y - p.postazioni[k].y))
   dentro(`${t.nome}: nessuna piazzola addosso a un'altra`, minima / MONDO.S, 33, 999)
+}
+
+/* ── l'anello vero: un mostro passa due volte dallo stesso punto ──
+   Nel bastione la strada scende, fa un cappio e ripassa sopra sé
+   stessa. Il motore non sa niente di incroci — un nemico ha un `d`
+   scalare e `puntoA(d)` lo mette dove deve stare — quindi la prova è
+   tutta geometria: esistono due `d` lontani fra loro (più di un
+   raggio) in cui il nemico sta nello stesso punto, e c'è una piazzola
+   che li vede tutti e due dentro il raggio dell'arciere. È il regalo
+   del terreno, e senza questa prova un ritocco al tracciato lo
+   toglierebbe senza che niente diventi rosso. */
+for (const t of anelli) {
+  const p = new Percorso(t.forme, t.posti, misure)
+  uguale(`${t.nome}: una strada sola`, p.quanteVie, 1)
+  const via = p.vie[0]
+  const passo = 4 * MONDO.S
+  const RAGGIO = 92 * MONDO.S             // l'arciere di livello 1 (`data/ops.js`)
+  let incrocio = null
+  for (let a = 0; a < via.lunghezza && !incrocio; a += passo)
+    for (let b = a + RAGGIO; b < via.lunghezza; b += passo) {
+      const P = via.puntoA(a), Q = via.puntoA(b)
+      if (Math.hypot(P.x - Q.x, P.y - Q.y) < 6 * MONDO.S) { incrocio = { a, b, P }; break }
+    }
+  controlla(`${t.nome}: la strada ripassa sopra sé stessa`, !!incrocio)
+  if (!incrocio) continue
+  nota(`${t.nome}: l'incrocio a (${(incrocio.P.x / MONDO.W).toFixed(2)}, ` +
+       `${(incrocio.P.y / MONDO.H).toFixed(2)}), a ${(incrocio.a / MONDO.S).toFixed(0)}u ` +
+       `e a ${(incrocio.b / MONDO.S).toFixed(0)}u di cammino`)
+  controlla(`${t.nome}: con più di un raggio di strada in mezzo`,
+            incrocio.b - incrocio.a > RAGGIO)
+  /* quante piazzole vedono tutti e due i passaggi: ce ne vuole almeno
+     una, e `sbroglia` — che qui gira anche a strada singola — non deve
+     averle scostate fuori tiro */
+  const vedono = p.postazioni.filter(q => {
+    const d = k => Math.hypot(q.x - via.puntoA(k).x, q.y - via.puntoA(k).y)
+    return d(incrocio.a) <= RAGGIO && d(incrocio.b) <= RAGGIO
+  })
+  controlla(`${t.nome}: almeno una piazzola vede tutti e due i passaggi (${vedono.length})`,
+            vedono.length >= 1)
+  /* e il nemico ci passa davvero due volte: la stessa piazzola lo ha
+     nel raggio in due tratti separati del suo cammino */
+  const q = vedono[0] || p.postazioni[0]
+  let tratti = 0, dentroPrima = false
+  for (let d = 0; d <= via.lunghezza; d += passo) {
+    const P = via.puntoA(d)
+    const dentroOra = Math.hypot(q.x - P.x, q.y - P.y) <= RAGGIO
+    if (dentroOra && !dentroPrima) tratti++
+    dentroPrima = dentroOra
+  }
+  controlla(`${t.nome}: da quella piazzola il mostro entra nel raggio due volte (${tratti})`,
+            tratti >= 2)
 }
 
 /* ── le piazzole in più ──
@@ -217,7 +274,7 @@ for (const chiave of ['forme', 'fronti']) {
    ritarare sarebbe lo stesso buco */
 {
   const prima = firmaEquilibrio()
-  const punto = LIBERE_RACCONTO[2].forme[1][1]
+  const punto = LIBERE_RACCONTO[0].forme[1][1]
   const era = punto[0]
   punto[0] = era + 0.01
   controlla('la firma cambia se si sposta un punto di una partita libera',

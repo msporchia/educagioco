@@ -142,7 +142,7 @@ export const CFG = {
    che c'era, e la prossima taratura sarà fatta per un campo che non
    esiste più. */
 export const GEOMETRIA = {
-  v: 6,                  // ↑ di uno a ogni modifica di `piazzole()`
+  v: 7,                  // ↑ di uno a ogni modifica di `piazzole()`
   dallIngresso: true,    // le piazzole si occupano da dove entrano i mostri
   scostamento: 34,       // quanto stanno staccate dal ciglio della strada
   margine: 22,           // e quanto restano lontane dal bordo del campo

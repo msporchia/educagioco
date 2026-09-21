@@ -479,7 +479,11 @@ for (const l of LIBERE) {
   controlla(`${l.nome}: due ondate di fila non chiudono la stessa torre`,
             l.mostri.every((m, i) => torreResistente(m) !== torreResistente(l.mostri[(i + 1) % l.mostri.length])),
             l.mostri.map(m => torreResistente(m)).join(' '))
-  controlla(`${l.nome}: ha più di una bocca`, ingressiDi(l) >= 2, `${ingressiDi(l)}`)
+  /* due bocche, o una strada che si attraversa da sé: il bastione è
+     l'anello vero, e la sua difesa si divide nel tempo (vedi
+     `unita/ingressi-castello`) */
+  controlla(`${l.nome}: ha più di una bocca, o un anello`,
+            ingressiDi(l) >= 2 || l.incroci >= 1, `${ingressiDi(l)} bocche, incroci ${l.incroci || 0}`)
   controlla(`${l.nome}: ogni ondata tarata ha la sua vita`,
             Array.isArray(l.vite) && l.vite.length === 20 && l.vite.every(v => v > 0),
             `${l.vite ? l.vite.length : 0} vite`)

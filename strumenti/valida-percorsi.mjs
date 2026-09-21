@@ -220,11 +220,58 @@ function campoDi(forme, W, H, S, quante) {
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 const dove = (p, M) => p ? `(${(p.x / M.W).toFixed(2)}, ${(p.y / M.H).toFixed(2)})` : '—'
 
+/* ── una strada che si attraversa da sé ──
+   Un anello vero — la strada scende, fa un cappio e ripassa sopra sé
+   stessa — è due tratti della **stessa** via che si tagliano. Il motore
+   non ha bisogno di saperlo (un nemico ha un `d` scalare, e passa due
+   volte dallo stesso punto senza che nessuno glielo dica), il fondale
+   nemmeno (la cella dell'incrocio chiede la tessera a croce), ma il
+   validatore sì: senza, un cappio sarebbe indistinguibile da due
+   corsie che si sfiorano. Quindi la tappa lo **dichiara** (`incroci`),
+   e qui si contano quelli che ci sono davvero: due segmenti della
+   spezzata smussata che si tagliano, con abbastanza cammino in mezzo
+   da non essere lo stesso gomito. Torna il punto e l'angolo, perché un
+   incrocio va bene solo se è netto — sotto `INCROCIO_NETTO` gradi due
+   tratti non si attraversano, si sfiorano per un pezzo, ed è proprio
+   quello che le corsie non devono fare. */
+const INCROCIO_NETTO = 60       // gradi: sotto, non è un incrocio ma una sbavata
+const ATTORNO_ALL_INCROCIO = 80 // unità: fin dove il ravvicinamento è l'incrocio stesso
+function incrociDi(vie, S) {
+  const trovati = []
+  for (const via of vie) {
+    const P = via.punti
+    const cum = [0]
+    for (let i = 1; i < P.length; i++) cum.push(cum[i - 1] + dist(P[i - 1], P[i]))
+    for (let i = 0; i < P.length - 1; i++)
+      for (let k = i + 2; k < P.length - 1; k++) {
+        if ((cum[k] - cum[i + 1]) / S < LONTANO) continue
+        const a = P[i], b = P[i + 1], c = P[k], e = P[k + 1]
+        const den = (b.x - a.x) * (e.y - c.y) - (b.y - a.y) * (e.x - c.x)
+        if (Math.abs(den) < 1e-9) continue
+        const t = ((c.x - a.x) * (e.y - c.y) - (c.y - a.y) * (e.x - c.x)) / den
+        const u = ((c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)) / den
+        if (t < 0 || t > 1 || u < 0 || u > 1) continue
+        const punto = { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) }
+        const l1 = dist(a, b), l2 = dist(c, e)
+        const cos = ((b.x - a.x) * (e.x - c.x) + (b.y - a.y) * (e.y - c.y)) / (l1 * l2 || 1)
+        const angolo = Math.acos(Math.max(-1, Math.min(1, Math.abs(cos)))) * 180 / Math.PI
+        trovati.push({ punto, angolo, cammino: (cum[k] - cum[i + 1]) / S })
+      }
+  }
+  return trovati
+}
+const vicinoAUnIncrocio = (p, incroci, S) =>
+  incroci.some(c => dist(p, c.punto) / S < ATTORNO_ALL_INCROCIO)
+
 /* quanto si sfiorano due parti del tracciato, distinguendo il gomito
-   (poco cammino in mezzo) dalla corsia parallela (molto cammino) */
-function ravvicinamenti(vie, S) {
+   (poco cammino in mezzo) dalla corsia parallela (molto cammino).
+   `sfiorano` è la corsia parallela **della stessa strada** che sta
+   sotto `CORRIDOIO` senza essere un incrocio dichiarato: è il guasto
+   che un cappio deve poter evitare senza che si smetta di cercarlo. */
+function ravvicinamenti(vie, S, incroci = []) {
   const passo = 4 * S
   let gomito = Infinity, corridoio = Infinity, dg = null, dc = null
+  let sfiorano = Infinity, ds = null, ds2 = null
   let comune = 0                  // quanta parte di strada due vie fanno insieme
   let inMezzo = 0                 // e quanta ne fanno né insieme né larghe
   for (const via of vie) {
@@ -235,7 +282,11 @@ function ravvicinamenti(vie, S) {
         if (cammino < VICINO) continue
         const d = dist(camp[i], camp[k]) / S
         if (cammino < LONTANO) { if (d < gomito) { gomito = d; dg = camp[i] } }
-        else if (d < corridoio) { corridoio = d; dc = camp[i] }
+        else {
+          if (d < corridoio) { corridoio = d; dc = camp[i] }
+          if (d < sfiorano && !vicinoAUnIncrocio(camp[i], incroci, S) &&
+              !vicinoAUnIncrocio(camp[k], incroci, S)) { sfiorano = d; ds = camp[i]; ds2 = camp[k] }
+        }
       }
   }
   /* ── e fra due strade diverse ──
@@ -259,7 +310,7 @@ function ravvicinamenti(vie, S) {
       comune = Math.max(comune, fusi / ca.length)
       inMezzo = Math.max(inMezzo, mezzo / ca.length)
     }
-  return { gomito, corridoio, dg, dc, comune, inMezzo }
+  return { gomito, corridoio, dg, dc, sfiorano, ds, ds2, comune, inMezzo }
 }
 
 /* Le due postazioni più vicine, dalle tre di magra fino a quante ne
@@ -345,7 +396,10 @@ function esaminaForma(t) {
   const guasti = [], avvisi = []
   /* una strada o due: una tappa a due ingressi dichiara `forme`, e da
      qui in giù cambia solo il plurale */
-  const forme = t.forme || [t.forma]
+  const dichiarate = t.forme || [t.forma]
+  /* una libera a una bocca dichiara `forme: [una]`, e chi scrivesse la
+     spezzata nuda va letto lo stesso */
+  const forme = Array.isArray(dichiarate[0][0]) ? dichiarate : [dichiarate]
   const f = forme[0]
 
   forme.forEach((g, k) => {
@@ -372,7 +426,8 @@ function esaminaForma(t) {
   for (const M of MISURE) {
     const S = scalaDi(M.W, M.H)
     const { vie } = campoDi(forme, M.W, M.H, S, 6)
-    const r = ravvicinamenti(vie, S)
+    const incroci = incrociDi(vie, S)
+    const r = ravvicinamenti(vie, S, incroci)
     const p = piazzoleStrette(forme, M.W, M.H, S, postiVeri(t))
     const presidio = presidioDi(forme, M.W, M.H, S)
     /* la lunghezza si guarda **strada per strada**, non sommata: un
@@ -393,6 +448,25 @@ function esaminaForma(t) {
     if (r.gomito < GOMITO)
       guasti.push(`${M.nome}: tornante a spillo, ${r.gomito.toFixed(0)}u ` +
                   `(minimo ${GOMITO}) attorno a ${dove(r.dg, M)}`)
+    /* ── gli incroci: tanti quanti dichiarati, e netti ──
+       Un cappio che ripassa sopra sé stesso è voluto e va detto
+       (`incroci: 1`); uno che non è dichiarato è quasi sempre una
+       spezzata sbagliata. E fuori dall'incrocio la stessa strada non
+       si sfiora: due tratti a meno di `CORRIDOIO` senza tagliarsi sono
+       due corsie che nessuna torre copre insieme e che a schermo sono
+       una strada sbavata. */
+    const attesi = t.incroci || 0
+    if (incroci.length !== attesi)
+      guasti.push(`${M.nome}: la strada si attraversa ${incroci.length} volte ` +
+                  `(ne dichiara ${attesi})` +
+                  (incroci.length ? ` — a ${incroci.map(c => dove(c.punto, M)).join(', ')}` : ''))
+    for (const c of incroci)
+      if (c.angolo < INCROCIO_NETTO)
+        guasti.push(`${M.nome}: incrocio di sbieco a ${dove(c.punto, M)}, ` +
+                    `${c.angolo.toFixed(0)}° (minimo ${INCROCIO_NETTO}): non si attraversa, si sfiora`)
+    if (r.sfiorano < CORRIDOIO)
+      guasti.push(`${M.nome}: la stessa strada si sfiora a ${r.sfiorano.toFixed(0)}u ` +
+                  `(minimo ${CORRIDOIO}) senza incrociarsi, fra ${dove(r.ds, M)} e ${dove(r.ds2, M)}`)
     if (r.inMezzo > IN_MEZZO)
       guasti.push(`${M.nome}: due strade restano nella via di mezzo per il ` +
                   `${(r.inMezzo * 100).toFixed(0)}% (massimo ${IN_MEZZO * 100}%): ` +
@@ -442,7 +516,8 @@ function esaminaForma(t) {
                     `sarebbe ${v.presidio.toFixed(2)}`)
     }
 
-    misure.push({ ...M, S, lung, ...r, ...p, presidio, poche, posti: q, vie: vie.length })
+    misure.push({ ...M, S, lung, ...r, ...p, presidio, poche, posti: q, vie: vie.length,
+                  incroci: incroci.length })
   }
   return { guasti, avvisi, misure }
 }
@@ -535,7 +610,8 @@ for (const l of LIBERE) {
     `${m.fitta.toFixed(0).padStart(4)}  ` +
     `${m.posti}: ${m.poche.presidio.toFixed(2)} ` +
     `buco ${m.poche.buco.toFixed(0).padStart(3)}u` +
-    `  comune ${(m.comune * 100).toFixed(0)}%`)
+    `  comune ${(m.comune * 100).toFixed(0)}%` +
+    (m.incroci ? `  incroci ${m.incroci}` : ''))
   if (tutti.length) { rotti++; for (const g of tutti) console.log(`        ✗ ${g}`) }
 }
 

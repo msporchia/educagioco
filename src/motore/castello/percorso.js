@@ -144,9 +144,16 @@ export class Percorso {
      una già messa si scosta di lato, dalla parte opposta alla strada.
      Se non basta, si toglie: meglio una piazzola in meno che due
      sovrapposte, che a schermo sono una e a dito sono un terno al
-     lotto. */
+     lotto.
+
+     Vale anche con **una strada sola**: una strada che si attraversa
+     da sé (il bastione) mette all'incrocio due piazzole una sull'altra
+     esattamente come due strade che si fondono. Prima qui c'era un
+     `return` per la strada singola, ed era innocuo solo finché nessuna
+     strada si incrociava: sulle venti tappe a una via non sposta
+     niente, perché le loro piazzole stanno già più larghe della
+     minima (lo controlla `strumenti/valida-percorsi.mjs`). */
   sbroglia(fila) {
-    if (this.vie.length < 2) return fila
     const minima = MINIMA_FRA_PIAZZOLE * this.S
     const tenute = []
     for (const p of fila) {
