@@ -676,11 +676,23 @@ solo aprendo una scheda non lo mette nessuno.*
    collo    🎀 🧣 🔔           schiena  🧥 🎒
 ```
 
-Dove cade un cappello **non si indovina**: sta nella scheda dell'animale
-(`AGGANCI` in `dati/animali.js`), misurato dall'alfa del foglio riquadro per
-riquadro, in frazioni del riquadro e non in pixel. Un cappellino posato a
-occhio finisce mezzo dentro il muso da davanti e in mezzo alla schiena di
-lato.
+Dove cade un cappello **non si indovina, e non è uguale per tutti**: sta nel
+foglietto dello sprite di *quella* bestia (`agganci` in
+`strumenti/sprite/sorgenti/…/<bestia>.json`, in frazioni del riquadro e non
+in pixel), e `atlante.py` lo copia in `AGGANCI` dell'atlante generato. Prima
+c'era una tabella sola in `dati/animali.js` per tutte le specie, ed era il
+difetto: un pappagallo e un bobtail hanno la testa in posti diversi, e la
+stessa frazione metteva il cappello sulla fronte a uno e a metà collo
+all'altro. Quella tabella resta come ripiego per una bestia non ancora
+calibrata, e `guastiDegliAnimali` lo segnala.
+
+**Si calibra guardando, non contando.** L'alfa dice dov'è il riquadro, non
+dov'è la fronte: nel banco degli sprite (`npm run mondo` → «i ritagli» →
+modo **agganci**) i quattro punti si trascinano sul fotogramma e l'anteprima
+accanto veste la bestia con la stessa formula del gioco; «salva il
+foglietto» li scrive, poi si rilancia `atlante.py`. Il provino di tutte le
+bestie nei tre versi, con gli agganci segnati e gli addobbi posati, sta in
+`poc/scatti/agganci-fattoria.png`.
 
 Tre cose che ne discendono, e sono quelle che fanno sembrare un addobbo
 *indossato* invece che appiccicato sopra:

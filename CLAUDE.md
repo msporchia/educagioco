@@ -338,6 +338,13 @@ committate: non è ricostruibile da git.
   trascinare. Il PNG non si tocca mai: le correzioni sono dato nel
   foglietto (`strumenti/sprite/FORMATO.md`), e chi salva è un plugin di
   Vite `apply: 'serve'` che nel build non esiste.
+  **Dove sta la testa di una bestia lo dice il suo foglietto**
+  (`agganci`, verso per verso, frazioni del riquadro), non una tabella
+  per tutte le specie: `atlante.py` lo copia in `AGGANCI` dell'atlante
+  della fattoria e `puntiDi` in `fattoria/dati/animali.js` legge
+  foglietto → scheda → ripiego. Si calibra a occhio nel banco («i
+  ritagli» → modo **agganci**, trascinando i cerchietti con l'anteprima
+  vestita accanto) e si controlla in `poc/scatti/agganci-fattoria.png`.
 - **`src/guide/`** — quello che nessuno legge nel README, messo dentro
   l'applicazione. `contenuti.js` è dato puro e ha due registri: `GUIDE`
   (per i grandi: cos'è, che giochi ci sono, installare l'app, l'età, le
