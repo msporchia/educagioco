@@ -16,21 +16,25 @@
      2. la stessa identica domanda usciva due volte di fila;
      3. un boss chiedeva 1×1.
 
-   E poi il volo libero, che non chiede più quali tabelline allenare e
-   quindi deve saper scegliere da sé.
+   E poi il volo infinito, uno per tabelline e calcolo a mente insieme,
+   che si complica col livello della partita (`store/volo.js`).
    ═══════════════════════════════════════════════════════════════════ */
-import { CAMPAGNA, VOLO_LIBERO, calcoliTabellina, fattoriDi, chiaveCalcolo }
+import { CAMPAGNA, calcoliTabellina, fattoriDi, chiaveCalcolo }
   from '../../src/data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
-import { SCALETTA, CAPITOLI, superata, raggiunta,
+import { SCALETTA, CAPITOLI, VOLO, superata, raggiunta,
          dopoDi, posizioneOra, filaDi, filaDopo, campagneDaFila,
          filaDaCampagne, daAssaggiare } from '../../src/data/asteroidi.js'
 /* serve a una cosa sola: controllare che una funzione NON ci sia più
    (`scaletta`, la fila filtrata dell'interruttore di una volta) */
 import * as ASTEROIDI from '../../src/data/asteroidi.js'
-import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina, insiemeDi,
-         chiaviDelle, ultimeTabelline, eNulla, CUORE, TUTTE_LE_TABELLE, banale }
+import { poolTappa, chiaveDelBoss, dellaTabellina, insiemeDi,
+         chiaviDelle, eNulla, CUORE, TUTTE_LE_TABELLE, banale, stima }
   from '../../src/store/tabelline.js'
+import { miraDelLivello, LIVELLO_TETTO, MIRA_MIN, altezzaTabellina, altezzaMente,
+         poolVoloTabelline, poolVoloMente, creaAlternanza, MAX_DI_FILA, MAGAZZINI,
+         chiaviDelVolo, pescaPesati }
+  from '../../src/store/volo.js'
 import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo }
   from '../../src/store/calcolo.js'
 import { createPicker, record, newItem, strength, IVL, SRS } from '../../src/store/srs.js'
@@ -230,7 +234,7 @@ const PROFILI = T => ({
   // il volo libero non ha nessun «dopo»: prima `-1 + 1` faceva zero e il
   // boss anticipava il primo pianeta, cioè il più facile di tutti
   const libero = Array.from({ length: 200 },
-    () => chiaveDelBoss(VOLO_LIBERO, null, saputo(chiaviDelle(TUTTE_LE_TABELLE)), ORA))
+    () => chiaveDelBoss(VOLO, null, saputo(chiaviDelle(TUTTE_LE_TABELLE)), ORA))
   controlla('anche nel volo libero il boss non chiede calcoli-nulla',
             libero.every(k => k && !eNulla(k)), [...new Set(libero)].join(', '))
   controlla('e non ripiega sul primo pianeta',
@@ -339,28 +343,102 @@ const PROFILI = T => ({
        `${daAssaggiare(quinto).nuova}, quello del Sole la casella più tosta di casa`)
 }
 
-/* ═══════════ 5. IL VOLO LIBERO SCEGLIE DA SÉ ═══════════
-   Non chiede più quali tabelline allenare — è una domanda a cui un
-   bambino non sa rispondere anche dopo aver finito la campagna. */
+/* ═══════════ 5. IL VOLO INFINITO SI COMPLICA COL LIVELLO ═══════════
+   Un volo solo, tabelline e calcolo a mente insieme: il livello della
+   partita sposta la mira sulla scala della difficoltà, i due magazzini
+   si alternano, e la marea resta sotto. */
 {
-  // chi zoppica sul 7 e sull'8 deve ritrovarsi il 7 e l'8
-  const items = saputo(chiaviDelle(TUTTE_LE_TABELLE))
-  for (const k of [...calcoliTabellina(7), ...calcoliTabellina(8)])
-    items[k] = record(items[k], { correct: false, ms: 5200, now: ORA })
-  const p = poolLibero(items, ORA, 16, CAMPAGNA.length)
-  const deboli = p.filter(k => fattoriDi(k).some(n => n === 7 || n === 8)).length
-  controlla('il volo libero pesca quello che si ricorda meno',
-            deboli * 2 > p.length, `solo ${deboli} chiavi su ${p.length} toccano il 7 o l'8`)
+  uguale('a livello 1 la mira sta in fondo', miraDelLivello(1), MIRA_MIN)
+  uguale('al tetto sta in cima', miraDelLivello(LIVELLO_TETTO), 1)
+  uguale('e sopra il tetto non sale più: da lì cresce solo la velocità',
+         miraDelLivello(LIVELLO_TETTO + 5), 1)
+  controlla('in mezzo cresce', miraDelLivello(5) > miraDelLivello(2) && miraDelLivello(5) < miraDelLivello(8))
 
-  // e chi ricorda tutto bene torna sugli ultimi pianeti giocati
-  const bravo = saputo(chiaviDelle(TUTTE_LE_TABELLE), ORA)
-  const q = poolLibero(bravo, ORA, 16, CAMPAGNA.length)
-  controlla('chi ricorda tutto vola lo stesso', q.length > 0)
-  const ultime = ultimeTabelline(CAMPAGNA.length)
-  controlla('e le domande vengono dagli ultimi pianeti giocati',
-            q.every(k => fattoriDi(k).some(n => ultime.includes(n))),
-            `ultime tabelline: ${ultime.join(', ')}`)
-  nota(`gli ultimi pianeti giocati sono le tabelline ${ultime.join(', ')}`)
+  /* le due scale, riportate a 0..1: 2×2 in fondo, 9×9 in cima; le somme
+     entro il dieci in fondo, le centinaia in cima */
+  controlla('2×2 sta più in basso di 3×7, che sta più in basso di 9×9',
+            altezzaTabellina('math:2x2') < altezzaTabellina('math:3x7') &&
+            altezzaTabellina('math:3x7') < altezzaTabellina('math:9x9'))
+  uguale('×1 e ×10 stanno a zero: sono regole', altezzaTabellina('math:1x7'), 0)
+  const bassa = STAZIONI[0].nuovi.flatMap(id => chiaviDi(id))[0]
+  const alta = STAZIONI.filter(S => S.nuovi.length).at(-1).nuovi.flatMap(id => chiaviDi(id))[0]
+  uguale('la prima stazione sta a zero', altezzaMente(bassa), 0)
+  uguale('l\'ultima che insegna qualcosa sta a uno', altezzaMente(alta), 1)
+
+  /* la campana, contata su molte partite: cosa prevale a ogni livello */
+  const contaTab = lv => {
+    const n = { basse: 0, alte: 0, tot: 0 }
+    for (let g = 0; g < 200; g++)
+      for (const k of poolVoloTabelline(lv)) {
+        const [lo, hi] = fattoriDi(k)
+        n.tot++
+        if (hi <= 5 && !banale(k)) n.basse++
+        if (lo >= 6 && hi >= 6) n.alte++
+      }
+    return n
+  }
+  const t1 = contaTab(1), t9 = contaTab(9)
+  controlla('a livello 1 prevalgono le tabelline basse',
+            t1.basse * 2 > t1.tot && t1.alte * 10 < t1.tot,
+            `basse ${t1.basse}, alte ${t1.alte} su ${t1.tot}`)
+  controlla('a livello 9 prevalgono 6-7-8-9 per 6-7-8-9',
+            t9.alte * 2 > t9.tot && t9.basse * 10 < t9.tot,
+            `basse ${t9.basse}, alte ${t9.alte} su ${t9.tot}`)
+  controlla('e ×1 e ×10 non si prendono il volo a livello 1',
+            Array.from({ length: 50 }, () => poolVoloTabelline(1)).flat()
+              .filter(banale).length < 50 * 8 * 0.3)
+
+  const contaMente = lv => {
+    const n = { basse: 0, alte: 0, tot: 0 }
+    for (let g = 0; g < 200; g++)
+      for (const k of poolVoloMente(lv)) {
+        const h = altezzaMente(k)
+        n.tot++
+        if (h <= 0.3) n.basse++
+        if (h >= 0.7) n.alte++
+      }
+    return n
+  }
+  const m1 = contaMente(1), m9 = contaMente(9)
+  controlla('a livello 1 prevalgono le stazioni basse',
+            m1.basse * 2 > m1.tot && m1.alte * 10 < m1.tot,
+            `basse ${m1.basse}, alte ${m1.alte} su ${m1.tot}`)
+  controlla('a livello 9 le stazioni alte',
+            m9.alte * 2 > m9.tot && m9.basse * 10 < m9.tot,
+            `basse ${m9.basse}, alte ${m9.alte} su ${m9.tot}`)
+  const c5 = new Set(Array.from({ length: 100 }, () => poolVoloMente(5)).flat()
+                       .map(k => concettoDiChiave(k)))
+  controlla('a metà scala i concetti non sono uno solo', c5.size >= 4, [...c5].join(', '))
+  nota(`a livello 5 escono ${c5.size} concetti diversi`)
+
+  /* la pesca pesata: senza rimessa, e il peso conta */
+  const pesca = pescaPesati(['a', 'b', 'c'], k => (k === 'a' ? 100 : 1), 3, () => 0.5)
+  uguale('la pesca dà tante chiavi quante chieste, senza doppioni', new Set(pesca).size, 3)
+  controlla('e quella che pesa di più esce per prima', pesca[0] === 'a')
+
+  /* i due magazzini si alternano, mai più di tre di fila */
+  const alt = creaAlternanza()
+  const fila = []
+  for (let g = 0; g < 300; g++) { const m = alt.prossimo(); alt.segna(m); fila.push(m) }
+  const tab = fila.filter(m => m === 'tabelline').length
+  controlla('i due magazzini si alternano, metà e metà',
+            tab > 100 && tab < 200, `${tab} tabelline su 300`)
+  let max = 0, n = 0
+  for (let i = 0; i < fila.length; i++) { n = i && fila[i] === fila[i - 1] ? n + 1 : 1; max = Math.max(max, n) }
+  controlla(`mai più di ${MAX_DI_FILA} di fila dello stesso`, max <= MAX_DI_FILA, `${max} di fila`)
+  const sempre = creaAlternanza()
+  for (let g = 0; g < 3; g++) sempre.segna('mente')
+  uguale('dopo tre a mente tocca per forza alle tabelline', sempre.prossimo(() => 0.9), 'tabelline')
+  controlla('e i magazzini sono due', MAGAZZINI.length === 2)
+
+  /* tutto quello che il volo può chiedere: tutte le tabelline e tutti i
+     concetti, cioè quello che la fila finita ha insegnato */
+  const tutte = chiaviDelVolo()
+  controlla('il volo pesca da tutte e dieci le tabelline',
+            chiaviDelle(TUTTE_LE_TABELLE).every(k => tutte.includes(k)))
+  controlla('e da tutti i concetti a mente', VOLO.concetti.every(id => chiaviDi(id).some(k => tutte.includes(k))))
+  controlla('il volo è uno e non ha portata: non è una tappa della fila',
+            VOLO.i === -1 && VOLO.portata === undefined && VOLO.bersaglio === Infinity)
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -828,16 +906,33 @@ const PROFILI = T => ({
 
     for (const giorni of [12, 30]) {
       const it = saputo(finoA(8), ORA - giorni * GIORNO)
-      const p = poolLibero(it, ORA, 16, 8)
-      const tab = tabellineNel(p)
-      controlla(`dopo ${giorni} giorni il volo libero non ripesca il 2, il 3 o il 4`,
-                ![2, 3, 4].some(n => tab.has(n)), [...tab].join(', '))
-      controlla(`e sta sul 9, che non sa, e sull'8 e il 7`,
-                tab.has(9), [...tab].join(', '))
       const t = poolTappa(CAMPAGNA[8], it, ORA)
       const tt = tabellineNel(t)
-      controlla(`e nemmeno il pianeta del 9`, ![2, 3, 4].some(n => tt.has(n)), [...tt].join(', '))
+      controlla(`dopo ${giorni} giorni il pianeta del 9 non ripesca il 2, il 3 o il 4`,
+                ![2, 3, 4].some(n => tt.has(n)), [...tt].join(', '))
     }
+
+    /* E NEL VOLO LA MAREA SI SOMMA ALLA MIRA. Il pool lo dà il livello
+       (`store/volo.js`), il picker ci pesca dentro con la lentezza della
+       marea: a livello 3 la mira offre sia 2×3 sia 2×7, e per chi sa fino
+       all'8 il picker deve preferire quello vicino alla frontiera. Si
+       confronta con lo stesso volo senza marea, che è la sola prova che
+       la differenza la fa lei e non la mira. */
+    const conta = (it, lentezza) => {
+      const picker = createPicker({ getItem: k => it[k] || newItem(), useTime: true, lentezza })
+      let basse = 0
+      for (let g = 0; g < 1000; g++) {
+        const k = picker.pick(poolVoloTabelline(3), ORA)
+        if (!banale(k) && fattoriDi(k)[1] <= 3) basse++
+      }
+      return basse
+    }
+    const it = saputo(finoA(8), ORA - 30 * GIORNO)
+    const conMarea = conta(it, mareaTabelline(it, ORA))
+    const senza = conta(it, () => 1)
+    controlla('nel volo, a livello 3, chi sa fino all\'8 rivede 2-3 meno che senza marea',
+              conMarea * 4 < senza * 3, `${conMarea} con la marea, ${senza} senza, su 1000`)
+    nota(`volo a livello 3, chi sa fino all'8: ${conMarea} caselle del 2-3 con la marea, ${senza} senza`)
   }
 
   /* ── ma lo riceve, se l'ha sbagliato ieri ── */
@@ -847,7 +942,6 @@ const PROFILI = T => ({
     const m = mareaTabelline(items, ORA)
     uguale('la frontiera non si muove per uno sbaglio solo', frontieraTabelline(items), 8)
     uguale('ma 2×3 sbagliato ieri torna alla curva di sempre', m('math:2x3'), 1)
-    controlla('e quindi nel volo libero c\'è', poolLibero(items, ORA, 16, 8).includes('math:2x3'))
     controlla('e nel pianeta del 9 pure', poolTappa(CAMPAGNA[8], items, ORA).includes('math:2x3'))
     uguale('mentre 2×4, mai sbagliato, resta fermo', m('math:2x4') > 1, true)
     // e dopo un mese lo sbaglio è passato: torna sotto la marea
@@ -861,25 +955,26 @@ const PROFILI = T => ({
     const m = mareaTabelline(items, ORA)
     controlla('per chi sa tutto il 9 si dimentica più in fretta del 2',
               m('math:2x3') > m('math:7x9'), `2×3: ${m('math:2x3')}, 7×9: ${m('math:7x9')}`)
+    /* nel volo a livello 5 la mira sta a metà, e offre tanto 3×4 quanto
+       3×7: per chi sa tutto è la marea a far uscire il 7-8-9 più del 2-3-4 */
+    const picker = createPicker({ getItem: k => items[k] || newItem(), useTime: true,
+                                  lentezza: mareaTabelline(items, ORA) })
     let alte = 0, basse = 0
-    for (let g = 0; g < 20; g++) {
-      const p = poolLibero(items, ORA + g * 5 * GIORNO, 16, 10)
-      for (const k of p) {
-        const [lo, hi] = fattoriDi(k)
-        if (lo === 1 || hi === 10) continue
-        if (hi >= 7) alte++; else if (hi <= 4) basse++
-      }
+    for (let g = 0; g < 200; g++) {
+      const [lo, hi] = fattoriDi(picker.pick(poolVoloTabelline(5), ORA))
+      if (lo === 1 || hi === 10) continue
+      if (hi >= 7) alte++; else if (hi <= 4) basse++
     }
-    controlla('e nel volo libero, guardato per cento giorni, 7-8-9 escono più di 2-3-4',
+    controlla('e nel volo a metà scala 7-8-9 escono più di 2-3-4',
               alte > basse * 2, `${alte} contro ${basse}`)
-    nota(`chi sa tutto: ${alte} caselle del 7-8-9 contro ${basse} del 2-3-4 in cento giorni`)
+    nota(`chi sa tutto, volo a livello 5: ${alte} caselle del 7-8-9 contro ${basse} del 2-3-4`)
   }
 
   /* ── e il boss non ne sa niente ── */
   {
     const items = saputo(finoA(8), ORA - 30 * GIORNO)
     const scelte = Array.from({ length: 100 },
-      () => chiaveDelBoss(VOLO_LIBERO, null, items, ORA))
+      () => chiaveDelBoss(VOLO, null, items, ORA))
     controlla('il boss chiede ancora la casella più tosta, non una arrugginita in fondo',
               scelte.every(k => fattoriDi(k)[1] >= 7), [...new Set(scelte)].join(', '))
   }

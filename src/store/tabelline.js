@@ -14,10 +14,12 @@
    Tre risposte, e sono tutte quelle che il gioco chiede:
 
      · cosa può uscire in questa tappa?   → `poolTappa`
-     · e nel volo libero?                 → `poolLibero`
      · cosa chiede il boss?               → `chiaveDelBoss`
 
-   E in tutti e tre i pool passa LA MAREA (`store/marea.js`): quello che
+   (Il volo infinito non sta qui: pesca da tabelline e calcolo a mente
+   insieme, con una mira che sale col livello, e sta in `store/volo.js`.)
+
+   E in tutti e due passa LA MAREA (`store/marea.js`): quello che
    sta sotto il livello del bambino si dimentica più piano, così chi sa
    fino all'8 non si vede chiedere 2×3 per il solo passare dei giorni.
    Il boss no: chiede la casella più tosta fra quelle che non reggono, e
@@ -179,38 +181,6 @@ export function poolTappa(tappa, items, now = Date.now(), quanti = null) {
                               ...scaduti([...A.due, ...B.due], spazio)])].slice(0, spazio)
 
   return [...new Set([...cuore, ...vecchi])]
-}
-
-/* ═══════════ IL VOLO LIBERO ═══════════
-   Qui non si chiede più «quali tabelline vuoi allenare?»: è una domanda
-   a cui un bambino non sa rispondere — chi non conosce il 7 non sceglie
-   il 7 — e la risposta sbagliata rovina la partita. Il volo libero pesca
-   da solo quello che si ricorda meno, su tutte e dieci le tabelline.
-
-   E se uno ricorda tutto bene? Allora non c'è niente «in lavorazione» e
-   niente di scaduto: si torna sugli ULTIMI PIANETI GIOCATI, che sono
-   anche i più difficili, invece di ripescare 1×3 perché è l'unica cosa
-   che il motore trova da ridire. */
-export function poolLibero(items, now = Date.now(), quanti = 16, tappaRaggiunta = 0) {
-  const dammi = k => leggi(items, k)
-  const marea = mareaTabelline(items, now)
-  const tutte = chiaviDelle(TUTTE_LE_TABELLE)
-  const { learning, due } = activeSet(tutte, dammi, ordineDi(items, now), now, quanti,
-                                      k => tabellineDi(k, TUTTE_LE_TABELLE), marea)
-  const scaduti = due
-    .sort((x, y) => overdue(dammi(y), now, marea(y)) - overdue(dammi(x), now, marea(x)))
-    .slice(0, 4)
-  const p = [...new Set([...learning, ...scaduti])]
-  if (p.length) return p
-  return chiaviDelle(ultimeTabelline(tappaRaggiunta))
-}
-
-/* le tabelline degli ultimi pianeti giocati, dal più recente */
-export function ultimeTabelline(tappaRaggiunta, quante = 3) {
-  const out = []
-  for (let i = Math.min(tappaRaggiunta, CAMPAGNA.length) - 1; i >= 0 && out.length < quante; i--)
-    if (CAMPAGNA[i].nuova) out.push(CAMPAGNA[i].nuova)
-  return out.length ? out : TUTTE_LE_TABELLE
 }
 
 /* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════

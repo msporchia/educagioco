@@ -33,15 +33,21 @@ import { state, item, answer, level, addCoins,
 import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker } from '../store/srs.js'
 import { mareaTabelline, mareaCalcolo } from '../store/marea.js'
-import { CAMPAGNA, VOLO_LIBERO, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
-import { STAZIONI, VOLO_A_MENTE, CONCETTI_PER_ID, concettoDiChiave, eFatto,
+import { CAMPAGNA, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
+import { STAZIONI, CONCETTI_PER_ID, concettoDiChiave, eFatto,
          distrattoriDi, appartiene } from '../data/calcolo.js'
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
          creaMiscela } from '../store/calcolo.js'
-import { poolTappa, poolLibero, chiaveDelBoss, dellaTabellina,
+import { poolTappa, chiaveDelBoss, dellaTabellina,
          insiemeDi, chiaviDelle } from '../store/tabelline.js'
-import { CAPITOLI, SCALETTA, superata, dopoDi, daAssaggiare,
+import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza }
+  from '../store/volo.js'
+import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi, daAssaggiare,
          posizioneOra, filaDi } from '../data/asteroidi.js'
+import { GIOCHI } from '../data/giochi.js'
+import { segnaPrimato, primatoDi } from '../giochi/campagne.js'
+import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
+import Festa from '../giochi/Festa.vue'
 import { suono } from '../audio.js'
 import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
@@ -125,26 +131,33 @@ const capitoli = computed(() => CAPITOLI
   .map((c, i) => ({ ...c, voci: fila.filter(v => v.cap === i) }))
   .filter(c => c.voci.length))
 
-/* dove si sta giocando: il posto nella fila, oppure -1 per i due voli
-   infiniti — e lì `voloMente` dice quale dei due, perché non c'è nessuna
-   voce da cui leggerlo. */
+/* dove si sta giocando: il posto nella fila, oppure -1 per il volo
+   infinito. Nel volo il mestiere non è un fatto della fila — non c'è
+   nessuna voce da cui leggerlo — ed è **della domanda**: tabelline e
+   calcolo a mente si alternano, e `magazzino` dice da dove viene quella
+   in corso (lo sceglie `nuovaDomanda`, con l'alternanza di
+   `store/volo.js`). Prima erano due voli, uno per mestiere, con un
+   `voloMente` scritto da chi premeva il tasto: cioè le due metà che la
+   fila esiste per fondere, rimesse in piedi in fondo alla mappa. */
 const posizione = ref(0)
-const voloMente = ref(false)
+const magazzino = ref('tabelline')
 const voce = computed(() => (posizione.value >= 0 ? fila[posizione.value] : null))
 const campagna = computed(() => posizione.value >= 0)
 /* quale dei due mestieri si sta giocando. Non è un modo scelto da
-   qualcuno: è il tipo della voce su cui si è, cioè un fatto della fila. */
-const mente = computed(() => (voce.value ? voce.value.tipo === 'mente' : voloMente.value))
-const tappa = computed(() => voce.value ? voce.value.T
-                                        : (mente.value ? VOLO_A_MENTE : VOLO_LIBERO))
+   qualcuno: è il tipo della voce su cui si è, cioè un fatto della fila —
+   e nel volo, il magazzino della domanda in corso. */
+const mente = computed(() => (voce.value ? voce.value.tipo === 'mente'
+                                         : magazzino.value === 'mente'))
+const tappa = computed(() => (voce.value ? voce.value.T : VOLO))
+/* la sfida senza fine del manifesto: misura, racconto e record del volo */
+const SFIDA_VOLO = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
 /* Cosa si stava facendo, sul velo della pausa. Chi riapre il telefono
    dopo mezz'ora non sta guardando il gioco: sta guardando il telefono
    che si accende, e il posto nella fila è quello che gli fa tornare in
-   mente cosa sta per riprendere. Nei voli infiniti un posto non c'è, e
-   si dice quale dei due. */
+   mente cosa sta per riprendere. */
 const dovEravamo = computed(() => voce.value
   ? `${voce.value.T.emoji} tappa ${voce.value.n} di ${fila.length}`
-  : (mente.value ? '🧠 Volo a mente ♾️' : '🚀 Volo libero ♾️'))
+  : `${VOLO.emoji} ${VOLO.nome}`)
 /* Aperta col lucchetto di sempre — la prossima sì, quelle dopo no — ma
    letto **sulla fila**, che è una: `v.pos` è il posto della voce,
    `dove` quante ne ha superate.
@@ -186,14 +199,26 @@ const cheChiede = v => (v.tipo === 'mente'
   ? v.T.esempio
   : v.T.nuova ? 'la tabellina del ' + v.T.nuova : 'tutte le tabelline')
 
-/* le tabelline in gioco: quelle della tappa, e nel volo libero tutte e
+/* le tabelline in gioco: quelle della tappa, e nel volo infinito tutte e
    dieci — non si spuntano più a mano da nessuna parte */
 const tabelle = computed(() =>
-  !mente.value && campagna.value ? tappa.value.tabelle : VOLO_LIBERO.tabelle)
+  !mente.value && campagna.value ? tappa.value.tabelle : VOLO.tabelle)
 
-const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1, serie: 0 })
+/* `serieMax` è il filotto più lungo della partita: `serie` si azzera a
+   ogni sbaglio, e il record del volo vuole sapere com'era fatta la
+   partita, non com'è finita */
+const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
+                       serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
-const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [] })
+/* `primato` è cosa dire del record del volo (`segnaPrimato`): nullo in
+   una tappa, dove il record non c'è */
+const finale = reactive({ punti: 0, giuste: 0, mirate: 0, livello: 1, record: false, ripasso: [],
+                          primato: null })
+/* il record del volo, letto **prima di entrare**: sul tasto della mappa,
+   col racconto di quella partita («1240 punti · livello 7 · 43 centri»).
+   È un `computed` su un profilo reattivo, quindi si aggiorna da sé a
+   fine partita, quando la mappa torna. */
+const recordVolo = computed(() => recordInParole(primatoDi('mate'), SFIDA_VOLO))
 const premio = ref(0)
 
 const tela = ref(null)
@@ -271,15 +296,29 @@ function poolAttivo() {
   const quanti = insiemeDi(tabelle.value) + picker.riposati
   const ora = Date.now()
   marea = mareaTabelline(state.profile.items, ora)
-  return campagna.value
-    ? poolTappa(tappa.value, state.profile.items, ora, quanti)
-    : poolLibero(state.profile.items, ora, quanti, progresso.value.tappa)
+  return poolTappa(tappa.value, state.profile.items, ora, quanti)
 }
 
 function poolMente() {
   const ora = Date.now()
   marea = mareaCalcolo(state.profile.items, ora)
   return poolDi(tappa.value, state.profile.items, ora, 12 + picker.riposati)
+}
+
+/* IL VOLO INFINITO: il pool lo dà la mira del livello (`store/volo.js`),
+   dal magazzino scelto per questa domanda, e il picker ci pesca dentro
+   con la marea di quel mestiere — così quello che sta sotto la frontiera
+   del bambino esce di rado anche qui. `riposati` allarga il pool come
+   nelle tappe: chi è andato a riposo lascia il posto libero. */
+function poolVolo() {
+  const ora = Date.now()
+  const quanti = 8 + picker.riposati
+  if (mente.value) {
+    marea = mareaCalcolo(state.profile.items, ora)
+    return poolVoloMente(hud.livello, quanti)
+  }
+  marea = mareaTabelline(state.profile.items, ora)
+  return poolVoloTabelline(hud.livello, quanti)
 }
 
 /* ---------- difficoltà ----------
@@ -449,8 +488,17 @@ function scegli(p) {
     ? miscela.parte(p, eDellaTappa, domanda.chiave) : p)
 }
 
+/* nel volo i due magazzini si alternano: a monetina, mai più di tre di
+   fila dello stesso. Il boss non sceglie — chiede dal magazzino
+   dell'ultima domanda, e non si conta nella fila */
+const alternanza = creaAlternanza()
+
 function nuovaDomanda(boss) {
-  const p = mente.value ? poolMente() : poolAttivo()
+  if (!campagna.value && !boss) {
+    magazzino.value = alternanza.prossimo()
+    alternanza.segna(magazzino.value)
+  }
+  const p = !campagna.value ? poolVolo() : mente.value ? poolMente() : poolAttivo()
   const dalBoss = boss ? chiaveDalDopo() : null
   const k = dalBoss || scegli(p)
   /* UNA CHIAVE DEL BOSS NON È SEMPRE UN ASSAGGIO, ed è il guasto che
@@ -719,6 +767,7 @@ function colpisci(a) {
   if (a.ok) {
     if (segnalo) { answer(k, nota); picker.afterAnswer(k, true) }
     hud.giuste++; hud.serie++
+    hud.serieMax = Math.max(hud.serieMax, hud.serie)
     if (mirata) hud.mirate++
     // il filotto si registra mentre cresce: chiudere la partita a metà non
     // deve buttare via il record
@@ -1050,7 +1099,8 @@ function inizia(i = posizione.value) {
   togli()
   posizione.value = i
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
-  hud.livello = 1; hud.serie = 0
+  hud.livello = 1; hud.serie = 0; hud.serieMax = 0
+  finale.primato = null
   particelle = []; anelli = []; frammenti = []; raggi = []
   scossa = 0; lampo = 0; chieste = 0
   // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
@@ -1061,7 +1111,7 @@ function inizia(i = posizione.value) {
   tasca.gelo = 0; tasca.mirino = 0
   gelo = false; gelato.value = false; ultimoGettone = null
   sincronizzaNave()
-  picker.reset(); miscela.azzera()
+  picker.reset(); miscela.azzera(); alternanza.azzera()
   sbagli.clear(); dritta.value = ''
   segna('partiteMath')
   fase.value = 'gioco'
@@ -1072,10 +1122,10 @@ function inizia(i = posizione.value) {
    stazione lo dice il dato, non chi tocca — e non c'è nessun «modo» da
    scegliere prima, che era la domanda da cui è cominciato tutto */
 const iniziaVoce = v => inizia(v.pos)
-/* i due voli infiniti, che si aprono insieme quando la fila è finita:
-   non sono due campagne, sono due modi di continuare a volare quando non
-   c'è più una fila da macinare */
-const iniziaVolo = aMente => { voloMente.value = aMente; inizia(-1) }
+/* il volo infinito, che si apre quando la fila è finita: non è una
+   campagna, è il modo di continuare a volare quando non c'è più una fila
+   da macinare — tabelline e calcolo a mente insieme, sempre più tosti */
+const iniziaVolo = () => inizia(-1)
 
 /* com'è andata: serve sia a chi finisce le vite sia a chi supera il pianeta.
    Il «da ripassare» dice il calcolo quando è un fatto (7 × 8, 13 − 7) e il
@@ -1093,7 +1143,7 @@ function riassunto() {
   finale.punti = hud.punti; finale.giuste = hud.giuste; finale.mirate = hud.mirate
   finale.livello = hud.livello
   finale.record = segnaBest('math', hud.punti)
-  const dove = mente.value ? poolMente() : chiaviPossibili()
+  const dove = !campagna.value ? chiaviDelVolo() : mente.value ? poolMente() : chiaviPossibili()
   finale.ripasso = dove
     .map(k => ({ k, it: item(k) }))
     .filter(x => x.it.err > 0)
@@ -1136,6 +1186,15 @@ function finePartita() {
   asteroidi = []
   suono.fine()
   riassunto()
+  /* IL RECORD DEL VOLO. Una tappa finisce con un bersaglio, il volo con
+     i punti: qui si scrive il quaderno (`giochi/primati.js`) e si tiene
+     cosa dire — di quanto sei migliorato, o quanto ti è mancato. Il
+     racconto sono il livello, i centri e la serie più lunga: quello che
+     un bambino cita quando racconta la partita. `best.math` resta
+     scritto da `riassunto`, perché i traguardi lo guardano. */
+  if (!campagna.value)
+    finale.primato = segnaPrimato('mate', hud.punti, Date.now(),
+                                  { livello: hud.livello, centri: hud.giuste, serie: hud.serieMax })
 }
 
 /* tornando alla mappa ci si rimette su **dove è arrivata la fila**: il
@@ -1178,10 +1237,10 @@ onMounted(() => {
   window.__mate = { hud, domanda, colpisci, inizia, CAMPAGNA, STAZIONI, tappa,
                     asteroidi: () => asteroidi, fase, finale, progresso, nave,
                     // dove si è nella fila, e che mestiere è quel posto lì
-                    posizione, voce, mente,
-                    // -1 è un volo infinito, e `iniziaVolo(false|true)` dice quale
-                    iniziaLibero: () => iniziaVolo(false),
-                    iniziaVoloMente: () => iniziaVolo(true),
+                    // (nel volo, il magazzino della domanda in corso)
+                    posizione, voce, mente, magazzino,
+                    // -1 è il volo infinito, uno solo
+                    iniziaVolo, recordVolo,
                     // la fila mescolata, il contatore unico (quante voci
                     // sono superate) e cosa viene dopo dentro la fila
                     fila, dopo, contatore, dove,
@@ -1218,7 +1277,7 @@ onUnmounted(() => {
          — chi sta giocando sa dov'è — e l'avanzamento prende quel posto. -->
     <!-- il ⏸ non ha bisogno di una condizione sua: questa barra esiste
          solo mentre si vola, e fuori di lì non c'è niente da fermare -->
-    <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : (mente ? 'A mente' : 'Volo libero')"
+    <Barra v-if="fase === 'gioco'" :titolo="campagna ? '' : VOLO.nome"
            guida="mate" scura pausa @pausa="metti()" @aiuto="aiuto" @indietro="allaMappa">
       <div v-if="campagna" class="avanza">
         <i :style="{ width: quota(hud.giuste, tappa.bersaglio) }"></i>
@@ -1232,7 +1291,7 @@ onUnmounted(() => {
         {{ mente ? '🧠' : '×' + tappa.nuova }}
         {{ finoA(hud.mirate, tappa.mirate) }}/{{ tappa.mirate }}
       </div>
-      <!-- nel volo libero non c'è nessun bersaglio: lì l'unico riscontro
+      <!-- nel volo infinito non c'è nessun bersaglio: lì l'unico riscontro
            sono i punti, e senza non resterebbe niente -->
       <div v-if="!campagna" class="gettone">{{ hud.punti }} p</div>
       <!-- il filotto si vede da cinque in su, che è dove comincia a
@@ -1321,21 +1380,19 @@ onUnmounted(() => {
           </div>
         </template>
 
-        <!-- i due voli infiniti: si aprono INSIEME, quando la fila è
-             finita, perché la fila è una. Restano due perché sono due
-             modi di continuare a volare quando non c'è più niente da
-             macinare — tutte le tabelline da una parte, tutti i trucchi
-             dall'altra — e non due campagne. -->
+        <!-- il volo infinito: si apre quando la fila è finita, ed è UNO,
+             perché la fila è una — tabelline e calcolo a mente insieme,
+             sempre più tosti col livello (`store/volo.js`). Erano due,
+             uno per mestiere, cioè le due metà rimesse in piedi in fondo
+             alla mappa. Il record si legge qui, prima di entrare: un
+             tasto senza il numero da battere è un tasto senza motivo. -->
         <div class="riga">
-          <!-- si vola e basta: quali tabelline lo decide il motore, pescando
-               quello che si ricorda meno (`poolLibero`) -->
-          <button v-if="progresso.libera" class="bottone"
-                  @click="iniziaVolo(false)">Volo libero ♾️</button>
-          <button v-if="progresso.libera" class="bottone"
-                  @click="iniziaVolo(true)">Volo a mente ♾️</button>
+          <button v-if="progresso.libera" class="bottone volo" data-volo
+                  @click="iniziaVolo()">{{ VOLO.nome }} ♾️
+            <i v-if="recordVolo" data-record>record {{ recordVolo }}</i></button>
         </div>
-        <p v-if="!progresso.libera" class="mini">I voli infiniti — tutte le tabelline da una
-          parte, tutti i trucchi dall'altra, senza bersaglio — si aprono quando la fila
+        <p v-if="!progresso.libera" class="mini">Il volo infinito — tabelline e conti a
+          mente insieme, sempre più tosti, senza bersaglio — si apre quando la fila
           è finita.</p>
 
         <!-- l'astronave e i gettoni: si guadagnano giocando, quindi va
@@ -1418,14 +1475,13 @@ onUnmounted(() => {
       <h1 class="chiaro">🎉 Scaletta<br><span>finita!</span></h1>
       <p class="testo chiaro">Tutte e {{ fila.length }} le tappe sono superate: i
         {{ CAMPAGNA.length }} pianeti e le {{ STAZIONI.length }} stazioni.
-        Premio: <b>+{{ premio }} 🪙</b>. Si aprono i <b>voli infiniti</b>, dove i numeri
-        continuano a crescere e non c'è un ultimo calcolo.</p>
+        Premio: <b>+{{ premio }} 🪙</b>. Si apre il <b>volo infinito</b>, dove i calcoli
+        diventano sempre più tosti e non ce n'è un ultimo.</p>
       <div class="dato">✖️ Tabelline imparate: <span>{{ intere.size }}/10</span></div>
       <div class="dato">🧠 Trucchi in mano:
         <span>{{ stelleMente }}/{{ STAZIONI.length }}</span></div>
       <div class="riga">
-        <button class="bottone" @click="iniziaVolo(false)">Volo libero ♾️</button>
-        <button class="bottone" @click="iniziaVolo(true)">Volo a mente ♾️</button>
+        <button class="bottone" @click="iniziaVolo()">{{ VOLO.nome }} ♾️</button>
         <button class="bottone chiaro" @click="allaMappa">Mappa</button>
       </div>
     </div>
@@ -1437,7 +1493,16 @@ onUnmounted(() => {
         <span>{{ finale.giuste }}/{{ tappa.bersaglio }}</span> centri</div>
       <div class="dato">Punti: <span>{{ finale.punti }}</span></div>
       <div class="dato">Livello: <span>{{ finale.livello }}</span></div>
-      <div class="dato">{{ finale.record ? '🏆 Nuovo record!' : 'Record: ' + (state.profile.best.math || 0) }}</div>
+      <!-- nel volo il record dice I DUE NUMERI — quello di adesso e di
+           quanto è meglio, o quanto è mancato («🏆 Nuovo record!» da
+           solo era la notizia senza la misura); i coriandoli solo quando
+           è battuto, mai a un pareggio. In una tappa il record dei punti
+           resta quello di sempre, col numero accanto. -->
+      <div v-if="finale.primato" class="dato" data-primato>
+        {{ finale.primato.record ? '🏆 ' : '' }}{{ fraseDiFine(finale.primato, SFIDA_VOLO.misura) }}</div>
+      <div v-else class="dato">{{ finale.record ? '🏆 Nuovo record: ' + finale.punti
+                                                : 'Record: ' + (state.profile.best.math || 0) }}</div>
+      <Festa v-if="finale.primato && finale.primato.record" />
       <div v-if="finale.ripasso.length" class="ripasso">
         <div class="tit">Da ripassare</div>
         <div v-for="r in finale.ripasso" :key="r.che">
@@ -1570,6 +1635,9 @@ h1.chiaro span { color:#7fe3ff }
 .pianeta .em, .stazione .em { grid-row:1/3; font-size:31px }
 .pianeta b, .stazione b { font-size:16px; font-weight:900; color:var(--viola-scuro) }
 .pianeta i, .stazione i { font-style:normal; font-size:12px; color:var(--tenue) }
+/* il record sotto il nome del volo: la riga da battere, sul tasto */
+.bottone.volo { display:flex; flex-direction:column; align-items:center; gap:2px }
+.bottone.volo i { font-style:normal; font-size:12.5px; font-weight:600; opacity:.85 }
 .pianeta .stato, .stazione .stato { grid-row:1/3; font-size:22px }
 .pianeta .stato em, .stazione .stato em { font-style:normal }
 /* superato: resta acceso ma smette di chiamare */

@@ -687,12 +687,6 @@ export const STAZIONI = TAPPE.map((t, i) => ({
   mirate: t.nuovi.length ? Math.round(Math.round(13 + i * 1.2) * 0.55) : 0,
 }))
 
-export const VOLO_A_MENTE = {
-  i: -1, emoji: '♾️', nome: 'Volo a mente', nuovi: [], esempio: 'tutto',
-  /* nessun livello: non è una tappa della fila, è quello che resta dopo */
-  concetti: CONCETTI.map(c => c.id),
-  dritta: 'Tutti i calcoli che sai fare, senza bersaglio e senza fine.',
-  bersaglio: Infinity, mirate: 0,
-}
-
-export const stazioneDi = i => (i >= 0 && i < STAZIONI.length ? STAZIONI[i] : VOLO_A_MENTE)
+/* Il volo infinito — tutti i concetti, senza bersaglio — non sta qui:
+   è uno per stazioni e pianeti insieme, e sta in `data/asteroidi.js`
+   (`VOLO`), che è il file della fila. */

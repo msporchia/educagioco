@@ -19,7 +19,7 @@
      6. il gestore apre e chiude i concetti come deve, tabelline comprese,
         e il decadimento riporta indietro quello che non si ripassa
    ═══════════════════════════════════════════════════════════════════ */
-import { CONCETTI, CONCETTI_PER_ID, STAZIONI, VOLO_A_MENTE, TUTTI_I_FATTI,
+import { CONCETTI, CONCETTI_PER_ID, STAZIONI, TUTTI_I_FATTI,
          TOTALE_ELEMENTI, chiaviDi, eConcettoDiFatti, eFatto, concettoDiChiave,
          chiaveConcetto, fattoDaChiave, esercizioDi, distrattoriDi }
   from '../../src/data/calcolo.js'
@@ -28,6 +28,7 @@ import { SALDO, forzaDi, saldo, aperto, frontiera, tagliaDi, poolDi, eNuovo,
          sottoPool, QUOTA_TAPPA, creaMiscela }
   from '../../src/store/calcolo.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
+import { VOLO } from '../../src/data/asteroidi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { spiegaColonnaAdd } from '../../src/data/ops.js'
 
@@ -363,7 +364,7 @@ function profiloCon(ids, quando = ORA) {
   }
 
   const esperto = profiloCon(CONCETTI.map(c => c.id))
-  for (const s of [...STAZIONI, VOLO_A_MENTE]) {
+  for (const s of [...STAZIONI, VOLO]) {
     const p = poolDi(s, esperto, ORA, 12)
     controlla(`${s.emoji} ${s.nome}: c'è sempre qualcosa da chiedere`, p.length > 0)
     const e = esercizioDi(p[0], { taglia: 1, tabelline: [2, 3, 4, 5, 6, 7, 8, 9] })

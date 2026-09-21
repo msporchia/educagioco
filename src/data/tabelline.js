@@ -98,17 +98,6 @@ CAMPAGNA.push({
   mirate: 0,
 })
 
-/* Il volo libero: si apre a campagna finita e non finisce mai. Le dieci
-   tabelline ci sono tutte, ma non si spuntano a mano — nemmeno qui: la
-   domanda «quali vuoi allenare?» resta una domanda a cui un bambino non
-   sa rispondere anche dopo aver finito la campagna. Sceglie il motore,
-   quello che si ricorda meno (`poolLibero` in `store/tabelline.js`). */
-export const VOLO_LIBERO = {
-  i: -1, nome: 'Volo libero', emoji: '♾️', dritta: '',
-  /* nessun livello: non è una tappa della fila, è quello che resta dopo.
-     Chi non dichiara niente è sempre alla portata di tutti. */
-  nuova: null, tabelle: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  bersaglio: Infinity, mirate: 0,
-}
-
-export const tappaMate = i => (i >= 0 && i < CAMPAGNA.length ? CAMPAGNA[i] : VOLO_LIBERO)
+/* Il volo infinito — quello che resta a campagna finita — non sta qui:
+   è uno per pianeti e stazioni insieme, e sta in `data/asteroidi.js`
+   (`VOLO`), che è il file della fila. */

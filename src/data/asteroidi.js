@@ -158,7 +158,7 @@
    gioco in due metà.
    ═══════════════════════════════════════════════════════════════════ */
 import { CAMPAGNA } from './tabelline.js'
-import { STAZIONI } from './calcolo.js'
+import { STAZIONI, CONCETTI } from './calcolo.js'
 
 /* I capitoli. Servono a due cose insieme: raccontare la salita («adesso
    si fanno le decine») e spezzare ventidue righe in blocchi da tre o
@@ -209,6 +209,24 @@ export const SCALETTA = CAPITOLI_ORDINE
   .map((v, pos) => ({ ...v, pos, n: pos + 1 }))
 
 export const CAPITOLI = CAPITOLI_ORDINE.map(({ emoji, titolo, che }) => ({ emoji, titolo, che }))
+
+/* ═══════════ il volo infinito ═══════════
+   Quello che resta quando la fila è finita, ed è **uno**: tabelline e
+   calcolo a mente insieme, che si complicano col livello della partita.
+   Erano due — «Volo libero» con tutte le tabelline, «Volo a mente» con
+   tutti i trucchi — e due voli erano il posto in cui le due metà che la
+   fila esiste per fondere tornavano a dividersi. Chi pesca cosa sta in
+   `store/volo.js`; qui c'è la tappa come la vede il gioco: tutte le
+   tabelline, tutti i concetti, niente di nuovo, nessun bersaglio.
+   Nessuna portata: non è una tappa della fila, è quello che resta dopo,
+   e chi non dichiara niente è sempre alla portata di tutti. */
+export const VOLO = {
+  i: -1, nome: 'Volo infinito', emoji: '♾️',
+  nuova: null, tabelle: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  nuovi: [], concetti: CONCETTI.map(c => c.id), esempio: 'tutto',
+  dritta: 'Tabelline e conti a mente insieme, sempre più tosti, senza fine.',
+  bersaglio: Infinity, mirate: 0,
+}
 
 /* ═══════════ le domande che si fanno sulla fila ═══════════
    Tutto quello che segue lavora su UN numero: quante voci della fila
