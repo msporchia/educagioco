@@ -81,6 +81,17 @@ export const ADDOBBI = [
      Il pappagallo non ce l'ha (`porta` nella sua scheda): ha le ali. */
   { id: 'mantellina', nome: 'Mantellina',  emoji: '🧥', prezzo: 20, dove: 'schiena', misura: 11 },
   { id: 'zainetto',   nome: 'Zainetto',    emoji: '🎒', prezzo: 22, dove: 'schiena', misura: 10 },
+  /* ── E UNO CHE SI COLTIVA ──────────────────────────────────────────
+     Il maglione esce dalla sartoria (`dati/coltivazioni.js`) e si paga
+     **col granaio** invece che con le monete: `da` al posto di
+     `prezzo`, come già fa la copertina fra le coccole. È la prima cosa
+     da *indossare* che si coltiva, e la ragione per cui la catena del
+     filo — erba, foraggio, lana, stoffa, maglione — arriva da qualche
+     parte. L'id è `maglione_addobbo` e non `maglione`, perché `maglione`
+     è la merce del granaio e `vestiBestia` ragiona per id di addobbo:
+     due tabelle con la stessa chiave sono due cose che si confondono. */
+  { id: 'maglione_addobbo', nome: 'Maglione', emoji: '🧶', prezzo: 0, da: 'maglione',
+    dove: 'schiena', misura: 11 },
 ]
 
 export const PER_ID = Object.fromEntries(ADDOBBI.map(a => [a.id, a]))
@@ -133,11 +144,17 @@ export function guastiDegliAddobbi() {
     if (!AGGANCI_TUTTI.includes(a.dove))
       g.push(`${a.id}: l'aggancio «${a.dove}» non esiste`)
     if (!(a.misura > 0)) g.push(`${a.id}: misura impossibile`)
+    /* O si paga in monete o si scala dal granaio, non entrambi: la
+       stessa regola dei cibi (`dati/bisogni.js`), e per lo stesso
+       motivo — un prezzo che è metà del vero non si racconta. */
+    if (a.da && a.prezzo) g.push(`${a.id}: costa monete e roba insieme — decidi quale`)
     /* La fascia «una cosetta» di `CALIBRAZIONE.md`: da un minuto a
        cinque di esercizi. Un cappello fuori da lì non è caro o
        economico, è **nella scala sbagliata** — e allora o non lo compra
-       nessuno o si smette di costruire la catena per comprarne uno. */
-    if (!(a.prezzo >= 6 && a.prezzo <= 30))
+       nessuno o si smette di costruire la catena per comprarne uno.
+       Chi si paga col granaio non ha un prezzo da mettere in fascia:
+       il suo freno è il tempo della catena. */
+    if (!a.da && !(a.prezzo >= 6 && a.prezzo <= 30))
       g.push(`${a.id}: 🪙${a.prezzo} è fuori dalla fascia di una cosetta (6–30)`)
   }
   /* Ogni aggancio deve avere qualcosa da metterci: uno slot vuoto in

@@ -442,6 +442,10 @@ export const CATEGORIE = [
     V('pentolone',     'calderone0',        'Pentolone',        150,
       { macchina: 'pentolone', liv: 22, cresce: RINCARO, aspetta: 'pentolone',
         anima: ['calderone0', 'calderone1'] }),
+    /* La sartoria al 36, con la vetrina: il chiosco rosa le fa da
+       faccia finché il foglio non arriva. */
+    V('sartoria',      'dehors_rosa',       'Sartoria',         250,
+      { macchina: 'sartoria', liv: 36, cresce: RINCARO, aspetta: 'sartoria' }),
 
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────

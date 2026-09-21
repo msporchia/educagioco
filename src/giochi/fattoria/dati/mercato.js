@@ -103,7 +103,7 @@ export const CLIENTI = [
   { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
     vuole: ['miele', 'fiori', 'cipolle'] },
   { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
-    vuole: ['lana', 'stoffa'] },
+    vuole: ['lana', 'stoffa', 'maglione'] },
   /* L'oste vuole quello che si mette in tavola: è il mestiere che
      tiene il pane fuori dalle mani del solo fornaio. */
   { id: 'oste',        nome: 'L\'oste',        emoji: '🍽️',

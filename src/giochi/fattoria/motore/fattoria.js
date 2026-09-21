@@ -991,6 +991,15 @@ export class Fattoria {
   compraAddobbo(id) {
     const a = ADDOBBI_PER_ID[id]
     if (!a) return { ok: false, motivo: 'non-esiste' }
+    /* Un addobbo che si paga col granaio (`da`, il maglione): non tocca
+       le monete e scala un pezzo, come la copertina fra le coccole. Il
+       rifiuto dice **quale merce**, perché la cosa da fare è coltivarla. */
+    if (a.da) {
+      if (!this.quantoHo(a.da)) return { ok: false, motivo: 'manca-roba', prodotto: a.da }
+      this.togli(a.da, 1)
+      this.guardaroba[id] = this.quantiAddobbi(id) + 1
+      return { ok: true, costo: 0, addobbo: a, prodotto: a.da }
+    }
     if (this.borsa.quante() < a.prezzo)
       return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
     this.spendi(a.prezzo)

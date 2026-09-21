@@ -24,6 +24,7 @@ import {
 } from '../../src/giochi/fattoria/dati/animali.js'
 import { VERSI, BESTIE, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
+import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 function borsaTracciata(iniziale) {
@@ -284,18 +285,51 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
    sbagliata — e un cappello che costa quanto un pollaio mette una
    decorazione in concorrenza con la catena. */
 {
-  const caro = Math.max(...ADDOBBI.map(a => a.prezzo))
-  const misero = Math.min(...ADDOBBI.map(a => a.prezzo))
+  /* Solo quelli a monete: chi si paga col granaio non ha un prezzo da
+     mettere in fascia, ha una catena. */
+  const aMonete = ADDOBBI.filter(a => !a.da)
+  const caro = Math.max(...aMonete.map(a => a.prezzo))
+  const misero = Math.min(...aMonete.map(a => a.prezzo))
   controlla(`il più caro costa 🪙${caro}, cioè ${(caro / 6).toFixed(1)} minuti di esercizi`,
             caro <= 30)
   controlla(`e il più economico 🪙${misero}`, misero >= 6)
   /* Tutti insieme restano sotto una bestia: vestire non deve costare
      più che avere. */
-  const tutti = ADDOBBI.reduce((n, a) => n + a.prezzo, 0)
+  const tutti = aMonete.reduce((n, a) => n + a.prezzo, 0)
   const bestia = Math.min(...Object.values(ANIMALI).map(a => a.prezzo))
   controlla(`il guardaroba intero (🪙${tutti}) costa più di una bestia (🪙${bestia})`,
             tutti > bestia)
-  nota(`${ADDOBBI.length} addobbi, da 🪙${misero} a 🪙${caro}`)
+  nota(`${aMonete.length} addobbi a monete, da 🪙${misero} a 🪙${caro}`)
+}
+
+/* ══════════ 6b. UN ADDOBBO PAGATO COL GRANAIO ══════════
+   Il maglione esce dalla sartoria e si paga con la merce, non con le
+   monete: è la prima cosa da indossare che si coltiva, e la ragione per
+   cui la catena del filo arriva da qualche parte. Stessa forma della
+   copertina fra le coccole — `da` e niente `prezzo`. */
+{
+  const coltivati = ADDOBBI.filter(a => a.da)
+  controlla('c\'è almeno un addobbo che si paga col granaio', coltivati.length > 0)
+  for (const a of coltivati)
+    controlla(`${a.id}: paga con «${a.da}», che è una merce`, !!PRODOTTI[a.da])
+
+  const borsa = borsaTracciata(500)
+  const f = conLaBestia('cane-beagle', borsa)
+  const saldo = borsa.saldo()
+  const senza = f.compraAddobbo('maglione_addobbo')
+  uguale('a dispensa vuota non si prende', senza.ok, false)
+  uguale('e dice che manca la roba, non le monete', senza.motivo, 'manca-roba')
+  uguale('e quale', senza.prodotto, 'maglione')
+  uguale('senza toccare le monete', borsa.saldo(), saldo)
+
+  f.granaio.maglione = 2
+  const con = f.compraAddobbo('maglione_addobbo')
+  controlla('col maglione nella dispensa si prende', con.ok)
+  uguale('costa zero monete', con.costo, 0)
+  uguale('e scala un pezzo dal granaio', f.quantoHo('maglione'), 1)
+  uguale('e sta nel guardaroba', f.quantiAddobbi('maglione_addobbo'), 1)
+  controlla('e il cane se lo mette addosso', f.vestiBestia('cane-beagle', 'maglione_addobbo').ok)
+  uguale('sulla schiena', f.addobbiDi('cane-beagle').schiena, 'maglione_addobbo')
 }
 
 /* E `addossoA` è puro: la stessa mappa dà sempre la stessa lista. */

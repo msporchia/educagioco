@@ -208,6 +208,7 @@ export const NOMI = {
   26: 'I maiali',
   29: 'La zuppa d\'orto',
   33: 'Le capre',
+  36: 'La sartoria',
   38: 'Le api',
   44: 'Le fragole',
   /* Erano al 50 e al 57 — troppo in là: provato a mano, chi arriva
