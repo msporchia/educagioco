@@ -39,7 +39,7 @@
    Non sa niente di Vue né di monete: riceve la fattoria e risponde.
    Gira in Node, e infatti si prova senza browser.
    ═══════════════════════════════════════════════════════════════════ */
-import { PRODOTTI, merciDi } from '../dati/coltivazioni.js'
+import { PRODOTTI, SILI, merciDi } from '../dati/coltivazioni.js'
 import { eVicino } from '../dati/catalogo.js'
 import { livelloDelProdotto } from '../dati/livelli.js'
 
@@ -116,7 +116,9 @@ export function scambia(f, dato, verso = null) {
    allora deve parlare di quello. */
 export function scompartiColmi(f) {
   const colmi = []
-  for (const fam of ['terra', 'stalla'])
+  /* Tutti i silos che esistono, letti dalla tabella: erano scritti
+     qui per nome, e il terzo — la dispensa — sarebbe rimasto fuori. */
+  for (const fam of Object.keys(SILI))
     for (const prodotto of merciDi(fam))
       if (f.eCostruito(fam) && f.quantoCiSta(prodotto) === 0) colmi.push(prodotto)
   return colmi

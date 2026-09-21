@@ -405,6 +405,29 @@ export const CATEGORIE = [
        sarebbe un tasto che non si può premere. */
     V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 3, unico: true }),
 
+    /* ── LE BOTTEGHE, E IL TERZO SILO ────────────────────────────
+       L'albero a più fasi (`docs/fattoria-albero.md`): macchine che
+       prendono quello che esce da un'altra macchina e lo portano un
+       gradino più su. Un edificio è **un mestiere che si riconosce a
+       colpo d'occhio**, mai più di quattro ricette.
+
+       Nascono **prima del loro disegno**, ed è deliberato: prima si
+       decide l'albero, poi si generano gli sprite. Il `pezzo` è un
+       ripiego preso dal foglio delle case — una tettoia per il telaio,
+       una casa lunga per la dispensa — e `aspetta` dice quale pezzo
+       il foglio degli edifici porterà; `guastiDelCatalogo` diventa
+       rosso il giorno che quel pezzo esiste e la riga non l'ha ancora
+       preso. Il piede è quello del ripiego, misurato dal disegno: col
+       foglio vero diventerà quello del progetto.
+
+       Prezzi nella fascia «una struttura» (🪙150–360, `CALIBRAZIONE.md`),
+       tutti con `cresce: RINCARO` come il mulino; la dispensa costa
+       quanto gli altri due silos ed è `unico` come loro. */
+    V('dispensa',      'casetta_tetto_lungo', 'Dispensa',        120,
+      { silo: 'bottega', liv: 14, unico: true, aspetta: 'dispensa' }),
+    V('telaio',        'tettoia_fieno',     'Telaio',           170,
+      { macchina: 'telaio', liv: 14, cresce: RINCARO, aspetta: 'telaio' }),
+
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
        Il fienile e cinque recinti, e non sono arredo: sono macchine
@@ -929,6 +952,11 @@ export function guastiDelCatalogo() {
     if (visti.has(v.id)) g.push(`id doppio nel catalogo: ${v.id}`)
     visti.add(v.id)
     if (!PEZZI[v.pezzo]) g.push(`${v.id}: la tessera «${v.pezzo}» non è nell'atlante`)
+    /* Una voce nata prima del suo disegno dice cosa aspetta: il giorno
+       che quel pezzo c'è, va preso — se no la bottega resta una tettoia
+       col disegno vero a due righe di distanza. */
+    if (v.aspetta && PEZZI[v.aspetta])
+      g.push(`${v.id}: aspetta «${v.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
     if (!(v.prezzo > 0)) g.push(`${v.id}: prezzo impossibile`)
     if (!Array.isArray(v.piede) || v.piede.length !== 2 || v.piede.some(n => n < 1))
       g.push(`${v.id}: piede impossibile`)

@@ -48,7 +48,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, ref, watch } from 'vue'
 import { PRODOTTI, SILI, SCOMPARTO_PIU } from '../dati/coltivazioni.js'
-import { serveA } from '../dati/bisogni.js'
+import { serveA } from '../dati/usi.js'
 import { laMacchina } from '../dati/catalogo.js'
 import { dentroA } from '../motore/consiglio.js'
 import Merce from './Merce.vue'
@@ -108,6 +108,10 @@ const dice = u => {
   }
   if (u.che === 'cibo')
     return `nella ciotola: riempie ${Math.round(u.quanto * 100)}% di pancia`
+  /* Le due uscite che non passano dalla ciotola: un vestito per una
+     bestia, e un mestiere che la chiede al mercato. */
+  if (u.che === 'addobbo') return `${u.emoji} ${u.nome.toLowerCase()}: si mette addosso a una bestia`
+  if (u.che === 'ordine') return `${u.emoji} ${u.nome.toLowerCase()} la chiede al mercato`
   return `${u.nome.toLowerCase()}, per il ${u.bisogno.toLowerCase()}`
 }
 </script>
@@ -130,7 +134,7 @@ const dice = u => {
          silo della stalla, che si può costruire prima delle bestie. Si
          dice cosa manca, invece di mostrare un riquadro vuoto. -->
     <p v-if="!scomparti.length" class="fa-piccolo">Qui dentro non c'è
-       ancora niente da mettere: ci arriverà la roba degli animali.</p>
+       ancora niente da mettere: ci arriverà {{ silo.vuoto }}.</p>
 
     <!-- ── gli scomparti ──
          Uno per riga, barretta e numeri: è la risposta alla domanda per

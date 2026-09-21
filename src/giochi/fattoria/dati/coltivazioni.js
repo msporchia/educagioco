@@ -174,6 +174,29 @@ export const PRODOTTI = {
      su cui poi vanno le api (vedi la ricetta «Prato fiorito»). È il
      solo anello della fattoria che si chiude su se stesso. */
   concime: { nome: 'Concime', emoji: '💩', silo: 'stalla', pezzo: 'sacco' },
+
+  /* ── LA DISPENSA: QUELLO CHE ESCE DALLE BOTTEGHE ──────────────────
+     Il rosso è dei campi, il bianco è degli animali, e niente di
+     questo esce da un campo o da una bestia: la stoffa la fa il
+     telaio, il pane il panificio. Quindi **un terzo magazzino**, la
+     dispensa (`silo: 'bottega'`), che tiene quello che esce dalle
+     botteghe. Le merci di ieri non si spostano di silo: un prodotto
+     che cambia famiglia si troverebbe a capienza zero in un
+     salvataggio dove la famiglia nuova non è costruita.
+
+     ── `aspetta` — LA FACCIA CHE NON C'È ANCORA ────────────────────
+     Prima si decide l'albero, poi si generano gli sprite: l'inverso di
+     com'era andata finora (`docs/fattoria-albero.md`). Una merce nuova
+     nasce quindi **prima del suo disegno**, con l'emoji come ripiego
+     dichiarato — che è esattamente il caso per cui `Merce.vue` tiene il
+     ripiego — e scrive in `aspetta` il nome del pezzo che il foglio le
+     porterà. Non è `pezzo`: un `pezzo` che l'atlante non ha è muto
+     (`drawImage` non disegna e non lancia), ed è un guasto. Il giorno
+     che il foglio arriva, `aspetta` diventa `pezzo` e il controllo in
+     fondo lo pretende: un pezzo atteso che l'atlante ha già è una
+     riga da aggiornare. Chi ha un disegno vicino lo usa intanto
+     (`pezzo: 'pane'` per il pane) e dichiara lo stesso cosa aspetta. */
+  stoffa: { nome: 'Stoffa', emoji: '🧵', silo: 'bottega', aspetta: 'merce_stoffa' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -601,6 +624,25 @@ export const RICETTE = [
     id: 'concime', nome: 'Concime', emoji: '💩', dove: 'asini',
     prende: { becchime: 2 }, costo: 1, minuti: 10, da: 'concime', resa: 1,
   },
+
+  /* ═══════════ LE BOTTEGHE: L'ALBERO A PIÙ FASI ═══════════
+     La lana finiva in una copertina, e fra la lana e un vestito non
+     c'era niente: l'unico prodotto che non si mangia aveva un'uscita
+     sola. Da qui in poi le ricette prendono **quello che esce da
+     un'altra macchina** e lo portano un gradino più su — la catena
+     del filo è erba → foraggio → lana → stoffa → maglione, cinque fasi
+     — e quello che ne esce finisce nella dispensa, il terzo silo.
+     Il progetto intero, con le catene che arrivano dopo, sta in
+     `docs/fattoria-albero.md`. */
+
+  /* ── il telaio: la stoffa ──
+     Arriva al 14, due livelli dopo l'ovile: due lane fanno una stoffa,
+     e la stoffa è il primo pezzo della catena che finisce addosso a
+     una bestia (il maglione, in sartoria). */
+  {
+    id: 'stoffa', nome: 'Stoffa', emoji: '🧵', dove: 'telaio', liv: 14,
+    prende: { lana: 2 }, costo: 1, minuti: 8, da: 'stoffa', resa: 1,
+  },
 ]
 
 export const PER_RICETTA = Object.fromEntries(RICETTE.map(r => [r.id, r]))
@@ -645,9 +687,20 @@ export const ricetteDi = (dove, liv = null) =>
    Chi non ha costruito il silo **non ha capienza affatto**: capienza
    zero, non capienza piccola. Un raccolto senza posto dove finire non
    si raccoglie, e il campo resta pronto ad aspettare (`motore/`). */
+/* `vuoto` è la frase del silo costruito prima di avere di che
+   riempirlo: la dice `viste/Granaio.vue`, e va detta con le parole di
+   quel silo — «ci arriverà la roba degli animali» sopra la dispensa
+   sarebbe una bugia. */
 export const SILI = {
-  terra:  { cosa: 'silo',        nome: 'Silo del raccolto', emoji: '🌾' },
-  stalla: { cosa: 'silo_bianco', nome: 'Silo della stalla',  emoji: '🥛' },
+  terra:  { cosa: 'silo',        nome: 'Silo del raccolto', emoji: '🌾',
+            vuoto: 'quello che raccogli nei campi' },
+  stalla: { cosa: 'silo_bianco', nome: 'Silo della stalla',  emoji: '🥛',
+            vuoto: 'la roba degli animali' },
+  /* Il terzo, per quello che esce dalle botteghe: il perché sta sopra
+     `PRODOTTI`, alla voce della stoffa. Arriva al 14 col telaio, che è
+     la prima bottega, e costa quanto gli altri due. */
+  bottega: { cosa: 'dispensa',   nome: 'Dispensa',           emoji: '📦',
+             vuoto: 'quello che esce dalle botteghe' },
 }
 
 /* ── UNO SCOMPARTO PER MERCE ──────────────────────────────────────
@@ -905,6 +958,13 @@ export function guastiDelleColture() {
        dichiarato — quello che non si regge è un nome sbagliato. */
     if (pr.pezzo && !PEZZI[pr.pezzo])
       g.push(`${id}: il pezzo «${pr.pezzo}» non è nell'atlante`)
+    /* Il pezzo **atteso** è quello che un foglio futuro porterà: il
+       giorno che c'è, la riga va aggiornata — se no la merce resta
+       un'emoji con il disegno pronto a due righe di distanza. */
+    if (pr.aspetta && PEZZI[pr.aspetta])
+      g.push(`${id}: aspetta «${pr.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
+    if (!pr.pezzo && !pr.aspetta)
+      g.push(`${id}: senza pezzo e senza dire quale aspetta — un'emoji per sempre`)
   }
   if (!(SCOMPARTO_BASE > 0)) g.push('uno scomparto da zero non tiene niente')
   if (!(SCOMPARTO_PIU > 0)) g.push('un ingrandimento che non aggiunge niente non si paga')

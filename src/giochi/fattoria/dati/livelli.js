@@ -188,6 +188,11 @@ export const NOMI = {
   8: 'Le galline',
   10: 'Il pastone',
   12: 'Le pecore',
+  /* ── LE BOTTEGHE ─────────────────────────────────────────────────
+     L'albero a più fasi (`docs/fattoria-albero.md`): il 14 riempie il
+     buco 13–17 della prima metà col telaio e la dispensa, cioè con la
+     prima macchina che prende quello che esce da un'altra macchina. */
+  14: 'Il telaio',
   18: 'Le mucche',
   /* ── DA QUI IN POI C'È L'ORTO ────────────────────────────────────
      Fra il porcile (26) e l'ultima cosa del catalogo (64) non arrivava

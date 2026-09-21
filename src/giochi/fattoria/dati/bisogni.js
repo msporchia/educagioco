@@ -246,7 +246,12 @@ export function comeSta(b, nome = 'Sta') {
 
    Torna righe già pronte per essere lette, ma **non frasi**: il nome
    della macchina lo sa il catalogo (che importa da qui, quindi da qui
-   non si può importare lui) e la frase la compone chi mostra. */
+   non si può importare lui) e la frase la compone chi mostra.
+
+   E sono **tre uscite su cinque**: gli addobbi pagati col granaio e gli
+   ordini del mercato stanno in tabelle che questo file non può
+   importare senza chiudere un anello. Il conto intero lo fa
+   `dati/usi.js`, ed è lì che si chiede «a cosa serve» per davvero. */
 /* ── I GESTI CHE RIEMPIONO UN BISOGNO ─────────────────────────────
    La scheda di una bestia è fatta di **tre blocchi**, uno per bisogno,
    e dentro ognuno stanno le cose che quel bisogno lo riempiono: sotto
@@ -285,11 +290,8 @@ export function serveA(prodotto) {
 
 export function guastiDeiBisogni() {
   const g = []
-  /* Una roba che non serve a niente si accumula in un silo che ha
-     quattro posti: dopo un po' quel silo è pieno di roba inutile e non
-     entra più niente, e non c'è niente a schermo che lo dica. */
-  for (const id of Object.keys(PRODOTTI))
-    if (!serveA(id).length) g.push(`${id}: non serve a niente, e occuperebbe un posto per sempre`)
+  /* «Non serve a niente» si controlla in `dati/usi.js`, che vede anche
+     gli addobbi e gli ordini: da qui si vedono tre uscite su cinque. */
   if (!(FONDO > 0)) g.push('il fondo dev\'essere sopra zero: una bestia non sta mai male')
   if (!(BENE < BENISSIMO && BENISSIMO < 1))
     g.push('le due soglie di «come sta» non stanno in ordine: il premio non si riarmerebbe mai')

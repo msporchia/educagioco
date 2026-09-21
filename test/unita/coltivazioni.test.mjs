@@ -19,7 +19,8 @@ import {
   SILI, SCOMPARTO_BASE, SCOMPARTO_PIU, MINUTO, postiPerMerce, merciDi, costoIngrandimento,
   quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA, profonditaDi,
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
-import { CIBI, COCCOLE, cibiPer, serveA } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { CIBI, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { serveA, guastiDegliUsi } from '../../src/giochi/fattoria/dati/usi.js'
 import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { livelloDellaRicetta } from '../../src/giochi/fattoria/dati/livelli.js'
 import { controlla, uguale, dentro, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -385,7 +386,11 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 {
   /* **Ogni roba dice chi la usa**, perché è l'unica cosa che una riga di
      scaffale può dire di utile — e perché una roba che non serve a
-     niente occuperebbe per sempre uno dei quattro posti di un silo. */
+     niente occuperebbe per sempre uno dei quattro posti di un silo. Le
+     uscite sono cinque (ricetta, ciotola, coccola, addobbo, ordine) e
+     le conta `dati/usi.js`, che è l'unico che le vede tutte. */
+  const guastiU = guastiDegliUsi()
+  controlla('ogni merce serve a qualcosa', guastiU.length === 0, guastiU.join(' · '))
   for (const id of Object.keys(PRODOTTI)) {
     const usi = serveA(id)
     controlla(`«${id}»: premendolo si legge chi lo usa`, usi.length > 0)
@@ -404,9 +409,21 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
      raccoglierebbe mai, e nessuno lo direbbe. */
   for (const [id, pr] of Object.entries(PRODOTTI))
     controlla(`«${id}» ha un silo dove stare`, !!SILI[pr.silo])
-  controlla('e tutti e due i silos hanno qualcosa dentro',
+  controlla('e ogni silo ha qualcosa dentro',
             Object.keys(SILI).every(fam =>
               Object.values(PRODOTTI).some(pr => pr.silo === fam)))
+  /* La dispensa tiene **quello che esce dalle botteghe**, e solo
+     quello: niente che cresca in un campo, niente che esca da un
+     recinto. È il criterio «il rosso è dei campi, il bianco è degli
+     animali», detto per il terzo silo. */
+  const recinti = new Set(Object.values(PER_ID).filter(v => v.stati).map(v => v.macchina))
+  for (const p of merciDi('bottega')) {
+    controlla(`«${p}» sta nella dispensa e non cresce in un campo`,
+              !COLTURE.some(c => c.da === p))
+    controlla(`e non esce da un recinto`,
+              !RICETTE.some(r => r.da === p && recinti.has(r.dove)))
+    controlla('ma esce da una bottega', RICETTE.some(r => r.da === p))
+  }
 }
 
 /* ══════════ 6. il mulino ══════════ */
@@ -549,14 +566,14 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
        granaio c'è un tetto: dopo un po' i recinti smetterebbero di
        poter ritirare, senza che niente dica perché. */
     const pappa = CIBI.find(c => c.da === r.da)
-    const carezza = COCCOLE.find(c => c.da === r.da)
-    const ingrediente = RICETTE.some(x => (x.prende || {})[r.da])
-    controlla(`«${r.id}» rende roba che serve a qualcosa`,
-              !!pappa || !!carezza || ingrediente)
+    /* Le cinque uscite le conta `dati/usi.js`: una coccola, un'altra
+       ricetta, un addobbo, un ordine del mercato. */
+    const altri = serveA(r.da).filter(u => u.che !== 'cibo')
+    controlla(`«${r.id}» rende roba che serve a qualcosa`, !!pappa || altri.length > 0)
     if (!pappa) {
       nota(`${r.emoji} ${r.nome}: 🪙${costoDi(r).toFixed(1)} e ` +
            `${minutiDi(r).toFixed(0)} min · non si mangia, ` +
-           `serve a «${(carezza || {}).nome || 'un\'altra ricetta'}»`)
+           `serve a «${(altri[0] || {}).nome || '?'}»`)
       continue
     }
     const mio = costoDi(r), suo = pappa.quanto * tariffa

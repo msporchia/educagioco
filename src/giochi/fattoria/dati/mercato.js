@@ -103,7 +103,7 @@ export const CLIENTI = [
   { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
     vuole: ['miele', 'fiori', 'cipolle'] },
   { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
-    vuole: ['lana'] },
+    vuole: ['lana', 'stoffa'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
