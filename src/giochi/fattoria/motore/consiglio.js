@@ -188,7 +188,15 @@ export function comeAvere(f, prodotto, ora = Date.now(), giri = GIRI) {
      dall'ovile e dalla conigliera) si guardano tutte, e vince la prima
      che si può fare **davvero**: consigliare l'ovile a chi ha solo la
      conigliera manda a spendere il triplo per niente. */
+  /* E fra quelle, **prima quella che ha già tutto in granaio**: con due
+     fieni in mano e il fienile fermo il consiglio diceva «ti mancano 2
+     carote, fanne un campo», perché il foraggio di carote sta prima in
+     tabella e un consiglio con un tasto vinceva su quello dopo. Chi ha
+     gli ingredienti di una strada non va mandato a comprare per
+     l'altra. */
+  const haTutto = r => Object.keys(r.prende || {}).every(k => f.quantoHo(k) >= r.prende[k])
   const ricette = leRicette(f).filter(r => r.da === prodotto)
+    .sort((a, b) => haTutto(b) - haTutto(a))
   let ripiego = null
   for (const r of ricette) {
     const dalla = dallaMacchina(f, r, ora, giri)
