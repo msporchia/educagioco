@@ -91,7 +91,7 @@ import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, eMercato, siloDi, macchinaDi,
 import {
   PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, COLTURE, RICETTE,
   ricetteDi, postiPerMerce, costoIngrandimento,
-  merciDi, siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano,
+  merciDi, siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA,
 } from '../dati/coltivazioni.js'
 import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi, ULTIMO,
          premiDi, premioDi, chiaveDi } from '../dati/livelli.js'
@@ -1134,8 +1134,10 @@ export class Fattoria {
   /* Se una merce si può avere **adesso**: la dà una coltura già presa,
      o una ricetta che si può fare — cioè che è arrivata, la cui
      macchina è aperta, e i cui ingredienti sono a loro volta
-     ottenibili. `giri` ferma una catena che si mordesse la coda. */
-  ottenibile(prodotto, giri = 4) {
+     ottenibili. `giri` ferma una catena che si mordesse la coda, ed è
+     `PROFONDITA` di `dati/coltivazioni.js` e non un numero scritto qui:
+     era 4, e lo scomparto della stoffa non sarebbe mai comparso. */
+  ottenibile(prodotto, giri = PROFONDITA) {
     if (giri <= 0) return false
     for (const c of COLTURE)
       if (c.da === prodotto && this.colturaAperta(c.id)) return true

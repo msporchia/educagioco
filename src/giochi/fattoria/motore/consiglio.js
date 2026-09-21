@@ -49,21 +49,22 @@
    Non sa niente di Vue, di monete del profilo o di pixel: riceve la
    fattoria e legge. Gira in Node, e infatti si prova senza browser.
    ═══════════════════════════════════════════════════════════════════ */
-import { COLTURE, RICETTE, PRODOTTI, SILI } from '../dati/coltivazioni.js'
+import { COLTURE, RICETTE, PRODOTTI, SILI, PROFONDITA } from '../dati/coltivazioni.js'
 import { PER_ID, eCampo, macchinaDi } from '../dati/catalogo.js'
 import { livelloDelProdotto, livelloDellaVoce } from '../dati/livelli.js'
 import { carrettoIn, DAI } from './vicino.js'
 
-/* Quanto in là si risale prima di arrendersi. Quattro passi coprono la
-   catena più lunga che il gioco abbia — ciotola → uovo → becchime →
-   grano → campo, da quando in mezzo c'è il fienile — e il quinto esiste
-   solo per non avvitarsi su una tabella scritta male.
+/* Quanto in là si risale prima di arrendersi. È `PROFONDITA` di
+   `dati/coltivazioni.js`, scritta una volta per i quattro conti che
+   risalgono la catena, e non un numero di questo file.
 
-   Erano tre più uno, e bastavano finché il pollaio mangiava il grano
-   così com'era. Un numero troppo piccolo qui non dà nessun errore: dà
-   un consiglio che si ferma a «il becchime si fa in fattoria», cioè un
-   vicolo cieco proprio dove il consiglio doveva togliere il compito. */
-const GIRI = 5
+   Lo era: tre più uno finché il pollaio mangiava il grano così com'era,
+   poi cinque col fienile in mezzo. Un numero troppo piccolo qui non dà
+   nessun errore: dà un consiglio che si ferma a «il becchime si fa in
+   fattoria», cioè un vicolo cieco proprio dove il consiglio doveva
+   togliere il compito — e con la stoffa a quattro passi dall'erba
+   sarebbe successo di nuovo. */
+const GIRI = PROFONDITA
 
 const nomeDi = id => (PER_ID[id] || {}).nome || 'quella cosa'
 /* ── QUANDO SI SCRIVE IL NOME E QUANDO L'EMOJI ────────────────────

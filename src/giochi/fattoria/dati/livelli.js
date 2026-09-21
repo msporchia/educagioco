@@ -60,7 +60,7 @@
    `roba(liv)` le raccoglie girando le tabelle vere.
    ═══════════════════════════════════════════════════════════════════ */
 import { CATEGORIE, CATALOGO } from './catalogo.js'
-import { COLTURE, RICETTE } from './coltivazioni.js'
+import { COLTURE, RICETTE, PROFONDITA } from './coltivazioni.js'
 import { ANIMALI } from './animali.js'
 
 /* ── LE SOGLIE ────────────────────────────────────────────────────
@@ -399,8 +399,12 @@ export function guastiDeiLivelli() {
 
    Serve a due cose diverse. A chi consiglia, per dire «arriva al
    livello 10» invece di mandare a comprare qualcosa che non c'è. E al
-   controllo qui sotto, che è nato da un difetto vero. */
-export function livelloDelProdotto(prodotto, giri = 4) {
+   controllo qui sotto, che è nato da un difetto vero.
+
+   `giri` è `PROFONDITA`, scritta una volta in `dati/coltivazioni.js`:
+   qui era 4, e già la stoffa — quattro passaggi dopo l'erba — non
+   risultava mai ottenibile, quindi mai al mercato e mai nel silo. */
+export function livelloDelProdotto(prodotto, giri = PROFONDITA) {
   if (giri <= 0) return Infinity
   let min = Infinity
   for (const c of COLTURE) if (c.da === prodotto) min = Math.min(min, c.liv || 1)
@@ -411,7 +415,7 @@ export function livelloDelProdotto(prodotto, giri = 4) {
 /* Quando una ricetta si può fare per davvero: il più tardo fra il suo
    `liv`, il livello della macchina che la ospita, e quello di ogni
    ingrediente. */
-export function livelloDellaRicetta(r, giri = 4) {
+export function livelloDellaRicetta(r, giri = PROFONDITA) {
   const macchina = CATALOGO.find(v => v.macchina === r.dove)
   const ing = Object.keys(r.prende || {}).map(k => livelloDelProdotto(k, giri - 1))
   return Math.max(r.liv || 1, macchina ? livelloDellaVoce(macchina) : 1,

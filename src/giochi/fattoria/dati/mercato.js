@@ -58,7 +58,7 @@
    Un ordine **non regala mai monete** e non toglie mai niente oltre
    alla merce che chiede: consegnare non può far male.
    ═══════════════════════════════════════════════════════════════════ */
-import { COLTURE, RICETTE, PRODOTTI } from './coltivazioni.js'
+import { COLTURE, RICETTE, PRODOTTI, PROFONDITA } from './coltivazioni.js'
 import { livelloDelProdotto } from './livelli.js'
 
 /* ── CHI ORDINA ───────────────────────────────────────────────────
@@ -172,7 +172,10 @@ export const MONETE_AL_MINUTO = 6
    il modo di sapere che non si sono inventati. */
 const menoDi = (a, b) => (a < b ? a : b)
 
-export function valoreDi(prodotto, giri = 5) {
+/* `giri` è `PROFONDITA` di `dati/coltivazioni.js`, e non un numero
+   scritto qui: era 5, e il maglione alla lavanda — sei fasi — sarebbe
+   valso `Infinity`, cioè premio base e «non si produce in nessun modo». */
+export function valoreDi(prodotto, giri = PROFONDITA) {
   if (giri <= 0 || !PRODOTTI[prodotto]) return Infinity
   let min = Infinity
   for (const c of COLTURE)
@@ -186,7 +189,7 @@ export function valoreDi(prodotto, giri = 5) {
   return min
 }
 
-export function minutiDi(prodotto, giri = 5) {
+export function minutiDi(prodotto, giri = PROFONDITA) {
   if (giri <= 0 || !PRODOTTI[prodotto]) return Infinity
   let min = Infinity
   for (const c of COLTURE) if (c.da === prodotto) min = menoDi(min, c.minuti || 0)

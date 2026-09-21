@@ -17,7 +17,7 @@ import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
   guastiDelleColture, COLTURE, RICETTE, PRODOTTI, PER_COLTURA, PER_RICETTA,
   SILI, SCOMPARTO_BASE, SCOMPARTO_PIU, MINUTO, postiPerMerce, merciDi, costoIngrandimento,
-  quantoCresciuto, stadioDi, minutiCheMancano,
+  quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA, profonditaDi,
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { CIBI, COCCOLE, cibiPer, serveA } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
@@ -82,6 +82,30 @@ controlla('c\'è almeno una ricetta', RICETTE.length > 0)
     const macchine = Object.values(PER_ID).filter(v => v.macchina === r.dove)
     controlla(`la ricetta «${r.id}» ha una macchina in catalogo`, macchine.length > 0)
   }
+}
+
+/* ══════════ 1a. LA CATENA HA UN TETTO, ED È UNO SOLO ══════════
+   Quattro conti risalgono la catena (il valore, i minuti, il livello,
+   l'ottenibile) e si fermano tutti a `PROFONDITA`. Era un numero
+   copiato in quattro file — 5, 4, 4, 5 — e nessuno diventava rosso
+   quando la catena si allungava: rispondevano `Infinity`, cioè una
+   merce che non si ordina mai e un consiglio che finisce in un vicolo
+   cieco. Qui si misura la catena più lunga e si pretende il margine. */
+{
+  const lunghezze = Object.keys(PRODOTTI).map(p => [p, profonditaDi(p)])
+  for (const [p, n] of lunghezze)
+    controlla(`«${p}» si produce in un numero finito di passaggi (${n})`, Number.isFinite(n))
+  const [piuLungo, quanti] = lunghezze.slice().sort((a, b) => b[1] - a[1])[0]
+  controlla(`la catena più lunga (${piuLungo}, ${quanti} passaggi) sta sotto il tetto con due di margine`,
+            quanti <= PROFONDITA - 2)
+  uguale('un campo è un passaggio solo', profonditaDi('grano'), 1)
+  uguale('e una ricetta ne aggiunge uno al suo ingrediente più lontano',
+         profonditaDi('mangime'), 2)
+  /* Il fondo esiste per non avvitarsi: chiesto con zero giri risponde
+     subito, e una merce che non esiste non è mai raggiungibile. */
+  uguale('con zero giri si arrende', profonditaDi('grano', 0), Infinity)
+  uguale('una merce che non esiste non ha strada', profonditaDi('polvere'), Infinity)
+  nota(`PROFONDITA = ${PROFONDITA} · la catena più lunga è ${piuLungo} (${quanti})`)
 }
 
 /* ══════════ 1b. OGNI COLTURA HA LA BOCCA CHE LA MANGIA ══════════
@@ -463,8 +487,10 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
 
      `giri` è il fondo della ricorsione: una tabella scritta male
      potrebbe avere un anello (il pastone che serve al pastone), e un
-     test che si avvita non dà un guasto, non finisce. */
-  function costoRoba(prodotto, giri = 4) {
+     test che si avvita non dà un guasto, non finisce. È `PROFONDITA`,
+     lo stesso tetto del gioco: qui era 4, e con la stoffa a quattro
+     passi dall'erba il conto sarebbe diventato infinito. */
+  function costoRoba(prodotto, giri = PROFONDITA) {
     if (giri <= 0) return Infinity
     let min = Infinity
     for (const c of COLTURE)
@@ -473,7 +499,7 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
       if (r.da === prodotto) min = Math.min(min, costoDi(r, giri - 1))
     return min
   }
-  function minutiRoba(prodotto, giri = 4) {
+  function minutiRoba(prodotto, giri = PROFONDITA) {
     if (giri <= 0) return Infinity
     let min = Infinity
     for (const c of COLTURE)
@@ -482,13 +508,13 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
       if (r.da === prodotto) min = Math.min(min, minutiDi(r, giri - 1))
     return min
   }
-  function costoDi(ricetta, giri = 4) {
+  function costoDi(ricetta, giri = PROFONDITA) {
     let monete = ricetta.costo
     for (const [k, quanti] of Object.entries(ricetta.prende))
       monete += quanti * costoRoba(k, giri)
     return monete / ricetta.resa
   }
-  function minutiDi(ricetta, giri = 4) {
+  function minutiDi(ricetta, giri = PROFONDITA) {
     let m = ricetta.minuti
     for (const [k, quanti] of Object.entries(ricetta.prende))
       m += quanti * minutiRoba(k, giri)

@@ -803,8 +803,57 @@ export function minutiCheMancano(da, minuti, ora = Date.now()) {
    leve che si leggono tutte guardando il tasto. */
 export const RESA = 1
 
+/* ── QUANTO È LUNGA LA CATENA, SCRITTO UNA VOLTA ──────────────────
+   Quattro conti risalgono la catena da soli — `valoreDi` e `minutiDi`
+   in `dati/mercato.js`, `livelloDelProdotto` in `dati/livelli.js`,
+   `Fattoria.ottenibile` nel motore, `comeAvere` in `motore/consiglio.js`
+   — e ognuno si ferma dopo un certo numero di passi, perché una tabella
+   scritta male potrebbe avere un anello (il pastone che serve al
+   pastone) e un conto che si avvita non dà un guasto: non finisce.
+
+   Quel numero era **scritto in ciascuno dei quattro** (5, 4, 4, 5), e
+   nessuno lanciava un errore quando la catena diventava più lunga:
+   rispondevano `Infinity` o un vicolo cieco — la stoffa che non si può
+   mai ordinare, «🌿 Fieno si fa in fattoria». Un numero copiato in
+   quattro file è il modo in cui il quinto file dimentica di alzarlo.
+
+   Adesso è **uno**: la profondità massima che una catena può avere,
+   più due di margine. Chi aggiunge una fase lo alza qui, e
+   `guastiDelleColture` diventa rosso prima — `profonditaDi` misura la
+   strada più corta di ogni merce, e quella che si avvicina al tetto si
+   vede senza giocare. */
+export const PROFONDITA = 8
+
+/* Quanti passaggi ci vogliono, al minimo, da un campo a questa merce:
+   una coltura è 1, una ricetta è 1 più il più lungo dei suoi
+   ingredienti. `Infinity` se non si produce in nessun modo entro il
+   tetto — che per una merce vera è un guasto, e per un anello è
+   l'unica risposta che non blocca il fotogramma. */
+export function profonditaDi(prodotto, giri = PROFONDITA) {
+  if (giri <= 0 || !PRODOTTI[prodotto]) return Infinity
+  let min = Infinity
+  for (const c of COLTURE) if (c.da === prodotto) min = Math.min(min, 1)
+  for (const r of RICETTE) {
+    if (r.da !== prodotto) continue
+    let n = 1
+    for (const k of Object.keys(r.prende || {})) n = Math.max(n, 1 + profonditaDi(k, giri - 1))
+    min = Math.min(min, n)
+  }
+  return min
+}
+
 export function guastiDelleColture() {
   const g = []
+  /* La catena più lunga deve stare **sotto** il tetto, con due passi di
+     margine: al tetto esatto il conto torna giusto oggi e diventa
+     `Infinity` alla prossima ricetta, senza che niente lo dica. */
+  for (const p of Object.keys(PRODOTTI)) {
+    const n = profonditaDi(p)
+    if (!Number.isFinite(n))
+      g.push(`${p}: non si produce in nessun modo entro ${PROFONDITA} passaggi — un anello, o PROFONDITA è bassa`)
+    else if (n > PROFONDITA - 2)
+      g.push(`${p}: la sua catena è lunga ${n} passaggi, troppo vicina al tetto (${PROFONDITA}) — alza PROFONDITA`)
+  }
   for (const c of COLTURE)
     if (c.resa !== RESA)
       g.push(`${c.id}: rende ${c.resa} e non ${RESA} — un campo dà una cosa sola`)
