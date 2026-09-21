@@ -61,14 +61,15 @@ function conIlMercato(livello = 26, borsa = borsaInfinita()) {
     const r = f.posa('mercato', dove.x, dove.y)
     if (!r.ok) throw new Error('la bancarella non si posa: ' + r.motivo)
   }
-  /* E i due silos: senza, la capienza è **zero** e non si tiene in mano
-     niente (`dati/coltivazioni.js`). Non è una comodità del test — è la
-     fattoria vera di chi arriva al mercato, che il silo ce l'ha da
-     prima del banco. */
-  for (const [id, x] of [['silo', 22], ['silo_bianco', 26]]) {
+  /* E i silos — tutti e tre, la dispensa compresa: senza, la capienza
+     è **zero** e non si tiene in mano niente (`dati/coltivazioni.js`).
+     Non è una comodità del test — è la fattoria vera di chi arriva al
+     mercato, che il silo ce l'ha da prima del banco. */
+  for (const [id, x, y] of [['silo', 22, 22], ['silo_bianco', 26, 22], ['dispensa', 20, 26]]) {
     if (!f.sbloccata(id)) continue
-    const dove = f.cellaLibera(x, 22)
-    f.posa(id, dove.x, dove.y)
+    const dove = f.cellaLibera(x, y)
+    const r = f.posa(id, dove.x, dove.y)
+    if (!r.ok) throw new Error(`${id} non si posa: ${r.motivo}`)
   }
   return f
 }

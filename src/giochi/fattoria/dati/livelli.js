@@ -193,6 +193,7 @@ export const NOMI = {
      buco 13–17 della prima metà col telaio e la dispensa, cioè con la
      prima macchina che prende quello che esce da un'altra macchina. */
   14: 'Il telaio',
+  16: 'Il panificio',
   18: 'Le mucche',
   /* ── DA QUI IN POI C'È L'ORTO ────────────────────────────────────
      Fra il porcile (26) e l'ultima cosa del catalogo (64) non arrivava
@@ -203,7 +204,7 @@ export const NOMI = {
      sta *prima* del porcile sono le anatre, messe nel buco fra le
      mucche (18) e i maiali (26), che era il più lungo della prima
      metà. */
-  22: 'Le anatre',
+  22: 'Le anatre e il pentolone',
   26: 'I maiali',
   29: 'La zuppa d\'orto',
   33: 'Le capre',

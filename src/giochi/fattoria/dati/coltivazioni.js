@@ -197,6 +197,10 @@ export const PRODOTTI = {
      riga da aggiornare. Chi ha un disegno vicino lo usa intanto
      (`pezzo: 'pane'` per il pane) e dichiara lo stesso cosa aspetta. */
   stoffa: { nome: 'Stoffa', emoji: '🧵', silo: 'bottega', aspetta: 'merce_stoffa' },
+  farina: { nome: 'Farina', emoji: '🌾', silo: 'bottega', aspetta: 'merce_farina' },
+  /* Il pane ha un disegno nell'atlante già oggi — le due pagnotte del
+     foglio dell'arredo — e lo usa intanto. */
+  pane:   { nome: 'Pane',   emoji: '🍞', silo: 'bottega', pezzo: 'pane', aspetta: 'merce_pane' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -399,8 +403,30 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    E i due mestieri restano separati, che è quello che rende leggibili
    due macchine invece di una sola con sette tasti:
 
-     🌾 il mulino  → 🥣 mangime, 🍲 pastone   la ciotola di casa
-     🏚 il fienile → 🌰 becchime, 🥬 foraggio, 🥘 zuppa   il cortile
+     🌾 il mulino    → 🥣 mangime, 🍲 pastone, 🌾 farina   macina e basta
+     🏚 il fienile   → 🌰 becchime, 🥬 foraggio, 🌼 fiorume  i tagli a freddo
+     🍲 il pentolone → 🪣 beverone, 🥘 zuppa, 🍃 pastura    quello che si scalda
+     🍞 il panificio → 🍞 pane, 🥧 merenda                  la tavola di casa
+
+   ── IL FIENILE FA IL SECCO, IL PENTOLONE FA IL COTTO ──────────────
+   *Ribalta la scelta di prima*, che teneva nove ricette nel fienile e
+   tre nel mulino, di cui una — «Fragole al miele» — non è una
+   macinatura. Il criterio è **un edificio = un mestiere che si
+   riconosce a colpo d'occhio**, e mai più di quattro ricette: quattro
+   tasti in un foglio si leggono, nove sono un elenco. Restano nel
+   fienile i tagli a freddo; le quattro cose che si scaldano vanno nel
+   pentolone, che arriva al 22 col beverone — cioè quando la prima
+   ricetta cotta compariva già; la merenda va nel panificio.
+
+   ── E UNA FATTORIA DI IERI NON SI ROMPE ───────────────────────────
+   Una lavorazione in corso è `{ ricetta, da }` dentro la cosa, e il
+   motore la legge per **id di ricetta**, non per macchina: una zuppa
+   partita ieri nel fienile finisce e si ritira lo stesso, e solo la
+   *prossima* si fa nel pentolone. Chi è oltre il 22 con la zuppa nel
+   fienile deve comprare il pentolone (🪙150) per farla ancora, e il
+   consiglio glielo dice («si fa nel pentolone, che non hai») — è
+   l'unica tappa che toglie qualcosa a una fattoria di ieri, ed è
+   stata confermata. `unita/recinti` gioca la migrazione.
 
    ── TRE MANGIMI, TRE BOCCHE ───────────────────────────────────────
    Uno solo sarebbe stato più semplice da scrivere e avrebbe cancellato
@@ -480,7 +506,7 @@ export const RICETTE = [
     prende: { fieno: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
-    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'fienile', liv: 26,
+    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'pentolone', liv: 26,
     prende: { zucche: 2 }, costo: 0, minuti: 6, da: 'zuppa', resa: 1,
   },
 
@@ -542,7 +568,7 @@ export const RICETTE = [
      costa una monetina perché si scalda — le altre ricette del fienile
      sono tagli a freddo e non costano niente. */
   {
-    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'fienile', liv: 22,
+    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'pentolone', liv: 22,
     prende: { patate: 2, cavolfiori: 1 }, costo: 1, minuti: 4, da: 'beverone', resa: 1,
   },
   /* **La seconda strada per la zuppa dei maiali**, e la prima che non
@@ -550,11 +576,11 @@ export const RICETTE = [
      meno: chi ha aspettato risparmia, come per le due strade del
      foraggio. */
   {
-    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'fienile', liv: 29,
+    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'pentolone', liv: 29,
     prende: { pomodori: 2 }, costo: 0, minuti: 4, da: 'zuppa', resa: 1,
   },
   {
-    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'fienile', liv: 33,
+    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'pentolone', liv: 33,
     prende: { melanzane: 2, peperoni: 1 }, costo: 0, minuti: 5, da: 'pastura', resa: 1,
   },
   /* **Cipolle e aglio lasciati fiorire.** Non è una licenza: i fiori
@@ -582,12 +608,13 @@ export const RICETTE = [
     prende: { concime: 1, fieno: 1 }, costo: 0, minuti: 5, da: 'fiori', resa: 1,
   },
 
-  /* ── il mulino: la seconda pappa di casa ── */
-  /* L'unica cosa di questa fattoria che non nasce da un cereale, e la
-     ragione per cui le api servono a qualcosa dentro casa e non solo
-     al banco del mercato. */
+  /* ── il panificio: la seconda pappa di casa ──
+     Stava nel mulino, che macina e basta; stesso id, stesso livello,
+     cambia solo `dove`. L'unica cosa di questa fattoria che non nasce
+     da un cereale, e la ragione per cui le api servono a qualcosa
+     dentro casa e non solo al banco del mercato. */
   {
-    id: 'merenda', nome: 'Fragole al miele', emoji: '🥧', dove: 'mulino', liv: 44,
+    id: 'merenda', nome: 'Fragole al miele', emoji: '🥧', dove: 'panificio', liv: 44,
     prende: { fragole: 2, miele: 1 }, costo: 1, minuti: 6, da: 'merenda', resa: 1,
   },
 
@@ -642,6 +669,20 @@ export const RICETTE = [
   {
     id: 'stoffa', nome: 'Stoffa', emoji: '🧵', dove: 'telaio', liv: 14,
     prende: { lana: 2 }, costo: 1, minuti: 8, da: 'stoffa', resa: 1,
+  },
+
+  /* ── il mulino macina la farina, il panificio la cuoce ──
+     La farina arriva al 16 **col panificio** e non prima: farina
+     senza panificio è roba che riempie la dispensa e non serve. Il
+     pane è un cibo (0,60 di pancia): 🪙7 contro 🪙10 comprato, il 70%,
+     dentro la fascia di `unita/coltivazioni`. */
+  {
+    id: 'farina', nome: 'Farina', emoji: '🌾', dove: 'mulino', liv: 16,
+    prende: { grano: 2 }, costo: 1, minuti: 5, da: 'farina', resa: 1,
+  },
+  {
+    id: 'pane', nome: 'Pane', emoji: '🍞', dove: 'panificio', liv: 16,
+    prende: { farina: 2 }, costo: 1, minuti: 6, da: 'pane', resa: 1,
   },
 ]
 

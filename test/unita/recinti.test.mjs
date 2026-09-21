@@ -23,6 +23,7 @@ import { PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
 import { RICETTE, PER_RICETTA, COLTURE, PRODOTTI, MINUTO, SILI }
   from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { COCCOLE } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { comeAvere } from '../../src/giochi/fattoria/motore/consiglio.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const T0 = 1770000000000            // un'ora qualunque, fissa: niente Date.now()
@@ -308,6 +309,49 @@ for (const v of RECINTI) {
   f.avvia(cosa, RICETTE.find(r => r.dove === v.macchina).id, T0)
   uguale(`${v.id}: al lavoro non chiede più niente`,
          f.aspettoDellaCosa(cosa, T0 + MINUTO).vuole, null)
+}
+
+/* ══════════ 8. IL FIENILE FA IL SECCO, IL PENTOLONE FA IL COTTO ══════════
+   Quattro ricette hanno cambiato casa (`dati/coltivazioni.js`): la
+   zuppa, la zuppa d'orto, il beverone e la pastura si fanno nel
+   pentolone. È l'unica tappa dell'albero che toglie qualcosa a una
+   fattoria di ieri, e qui si gioca la migrazione: una zuppa partita
+   ieri nel fienile **finisce e si ritira**, la prossima vuole il
+   pentolone, e il consiglio lo dice invece di lasciare fermi. */
+{
+  const cotte = ['zuppa', 'zuppa_orto', 'beverone', 'pastura']
+  for (const id of cotte)
+    uguale(`${id} si fa nel pentolone`, PER_RICETTA[id].dove, 'pentolone')
+  const fredde = RICETTE.filter(r => r.dove === 'fienile')
+  controlla(`nel fienile restano i tagli a freddo (${fredde.map(r => r.id).join(', ')})`,
+            fredde.length > 0 && fredde.every(r => !r.costo))
+  controlla('e nessuna macchina ha più di quattro ricette',
+            [...new Set(RICETTE.map(r => r.dove))]
+              .every(d => RICETTE.filter(r => r.dove === d).length <= 5))
+  uguale('la merenda si fa nel panificio', PER_RICETTA.merenda.dove, 'panificio')
+  uguale('e il mulino macina e basta',
+         RICETTE.filter(r => r.dove === 'mulino').every(r => r.prende.grano || r.prende.mais), true)
+
+  /* Il salvataggio di ieri: un fienile con la zuppa a metà. */
+  const f = conSilos(new Fattoria({ borsa: borsaTracciata(1000) }))
+  const fienile = { i: 1, id: 'fienile', g: 0, x: 14, y: 14, lavoro: { ricetta: 'zuppa', da: T0 } }
+  f.cose.push(fienile)
+  const g = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })
+  const ieri = g.cose.find(c => c.i === 1)
+  uguale('la zuppa partita ieri nel fienile si rilegge', (ieri.lavoro || {}).ricetta, 'zuppa')
+  const s = g.statoMacchina(ieri, fra(PER_RICETTA.zuppa.minuti))
+  controlla('e finisce lo stesso', s.pronto)
+  controlla('e si ritira', g.ritira(ieri, fra(PER_RICETTA.zuppa.minuti)).ok)
+  uguale('la zuppa è nel silo', g.quantoHo('zuppa'), 1)
+  /* Ma la prossima no: il fienile non la sa più fare. */
+  g.metti('zucche', 4)
+  uguale('la prossima zuppa nel fienile non parte',
+         g.avvia(ieri, 'zuppa', fra(60)).motivo, 'non-esiste')
+  /* E il consiglio manda a comprare il pentolone, non a fare altro. */
+  const c = comeAvere(g, 'zuppa', fra(60))
+  uguale('il consiglio manda a comprare il pentolone', (c.azione || {}).voce, 'pentolone')
+  controlla('e lo dice per nome', /nel pentolone/i.test(c.testo), c.testo)
+  nota(`migrazione: ${c.testo}`)
 }
 
 riassunto('i recinti del cortile')

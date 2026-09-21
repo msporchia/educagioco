@@ -427,6 +427,21 @@ export const CATEGORIE = [
       { silo: 'bottega', liv: 14, unico: true, aspetta: 'dispensa' }),
     V('telaio',        'tettoia_fieno',     'Telaio',           170,
       { macchina: 'telaio', liv: 14, cresce: RINCARO, aspetta: 'telaio' }),
+    /* `panificio` e non `forno`: `forno` è già la decorazione «Forno a
+       legna», e la regola delle arnie contro l'apiario vale anche qui —
+       quando si ha un disegno apposta si fa una voce nuova. Il forno a
+       cupola è il ripiego finché il foglio non arriva. */
+    V('panificio',     'forno_pizza',       'Panificio',        180,
+      { macchina: 'panificio', liv: 16, cresce: RINCARO, aspetta: 'panificio' }),
+    /* Il pentolone prende dal fienile le quattro cose che si scaldano
+       (`dati/coltivazioni.js`, «il fienile fa il secco»): arriva al 22
+       col beverone, e il paiolo dell'arredo gli fa da faccia intanto.
+       «Pentolone» e non «Cucina del cortile»: i consigli lo nominano con
+       `dentroA`, che sa «nel» e «nell'» e non «nella» — e «nel cucina» è
+       lo sbaglio che un bambino risente ripetuto. */
+    V('pentolone',     'calderone0',        'Pentolone',        150,
+      { macchina: 'pentolone', liv: 22, cresce: RINCARO, aspetta: 'pentolone',
+        anima: ['calderone0', 'calderone1'] }),
 
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────

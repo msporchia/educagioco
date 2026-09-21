@@ -120,6 +120,10 @@ export const CIBI = [
      cinquanta livelli chiusa dietro una bestia da 🪙120. */
   { id: 'merenda', nome: 'Merenda', emoji: '🥧', prezzo: 0, da: 'merenda',
     quanto: 0.75, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
+  /* Il pane esce dal panificio, la prima pappa che passa dalla
+     dispensa: fra il latte e il pastone, e vale per tutti. */
+  { id: 'pane', nome: 'Pane', emoji: '🍞', prezzo: 0, da: 'pane',
+    quanto: 0.60, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
     quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
 ]
