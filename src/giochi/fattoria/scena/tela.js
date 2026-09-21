@@ -122,6 +122,33 @@ const COLORE_MATERIA = {
   '*': [140, 220, 120],
 }
 
+/* ── LA STAGIONE È UN VELO, NON UNA TINTA ─────────────────────────
+   A Natale nevica e a Halloween ci sono le zucche, e la scena lo sa
+   perché il quadro glielo dice (`quadro.stagione`, `quadro.stagionali`
+   — vedi `disegna`): qui dentro non c'è nessun `Date`. Niente si
+   tinge e non c'è nessuno sprite in più — è quello che si può fare
+   sopra il disegno di sempre: fiocchi che cadono, una crosta bianca
+   sulle cose alte, macchie sull'erba, lucine sui tetti, e le emoji
+   che `dati/stagioni.js` ha già deciso dove posare.
+
+   I fiocchi stanno in un `Float32Array` riempito **una volta**, qui:
+   per ognuno la posizione di partenza, la velocità e la taglia, e a
+   ogni fotogramma si calcola dove sta adesso dall'orologio — nessun
+   oggetto nuovo, nessun array per fotogramma. Sono in frazione di
+   schermo, non in celle: la neve cade davanti alla telecamera, non
+   sul mondo, e trascinando la vista non deve scorrere col prato. */
+const FIOCCHI_N = 70
+const FIOCCHI = new Float32Array(FIOCCHI_N * 4)
+for (let i = 0; i < FIOCCHI_N; i++) {
+  FIOCCHI[i * 4] = caso(i, 1, 21)                    // x di partenza, 0..1
+  FIOCCHI[i * 4 + 1] = caso(i, 2, 21)                // y di partenza, 0..1
+  FIOCCHI[i * 4 + 2] = .045 + caso(i, 3, 21) * .045  // schermi al secondo: 11–22 s a cadere
+  FIOCCHI[i * 4 + 3] = 1.5 + caso(i, 4, 21) * 2      // taglia, in pixel di schermo
+}
+/* la crosta di neve sopra una cosa: solo su quello che è alto almeno
+   così, in tessere — una panchina non ha un tetto */
+const ALTO_PER_LA_NEVE = 1.5
+
 /* ═══════════ un attore: chiunque cammini ═══════════
    La bambina, un cane, domani una gallina: nell'atlante sono tutti lo
    stesso formato — tre versi (giù/lato/su), N fotogrammi ciascuno — e
@@ -466,17 +493,23 @@ export class Tela {
        orologio  i secondi trascorsi: l'unico orologio che questa classe usa
        pennello  { celle, materia, ok } l'anteprima di dove finirebbe la
                  materia che si sta dipingendo, o null/assente —
-                 vedi `disegnaPennello` */
+                 vedi `disegnaPennello`
+       stagione  'natale' | 'halloween' | null — che velo mettere sopra
+                 (neve, lucine); chi lo sa è chi guarda il calendario
+       stagionali `[{ testo, x, y, misura, ondeggia? }]` le emoji della
+                 stagione, già decise cella per cella da
+                 `dati/stagioni.js`: qui si disegnano e basta */
   disegna(quadro) {
     if (!quadro || !this.misura()) return
     this.quadro = quadro
     const { fattoria } = quadro
+    const natale = quadro.stagione === 'natale'
     const ctx = this.ctx
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     ctx.imageSmoothingEnabled = false
     ctx.clearRect(0, 0, this.L, this.A)
 
-    this.disegnaPrato()
+    this.disegnaPrato(natale)
     this.disegnaTerreno(fattoria)
 
     /* tutto quello che sta in scena, ordinato per quanto è avanti */
@@ -551,6 +584,7 @@ export class Tela {
         continue
       }
       this.posa(e.nome, e.x, e.y, e.piede, null, e.verso)
+      if (natale && e.cosa) this.imbianca(e, quadro.orologio)
       /* quello che cresce si disegna qui solo se è basso: se è alto ha
          una riga sua in scena, ed è già passato o deve ancora passare */
       if (e.sopra && e.sopra.sopra && !e.sopra.alto)
@@ -559,6 +593,7 @@ export class Tela {
         this.schiarisci(e.nome, e.x, e.y, e.piede, quadro.orologio, e.verso)
     }
 
+    this.disegnaStagionali(quadro.stagionali, quadro.orologio)
     this.disegnaAtterraggio(quadro.preso)
     this.disegnaPennello(quadro.pennello)
     this.disegnaNebbia(fattoria)
@@ -567,7 +602,89 @@ export class Tela {
       if (f.vuole) this.chiede(f, quadro.orologio)
       else this.fumetto(f, quadro.orologio)
     this.disegnaEtichette(quadro.orologio)
+    if (natale) this.disegnaNeve(quadro.orologio)
     this.disegnaAnello(quadro.anello)
+  }
+
+  /* ── LA NEVE CHE CADE ──────────────────────────────────────────────
+     Sopra tutto, davanti alla telecamera. Ogni fiocco è quattro numeri
+     in `FIOCCHI` e la sua posizione di adesso si ricava dall'orologio:
+     scende della sua velocità e ondeggia piano di lato, e uscito dal
+     fondo rientra dall'alto (`% 1`). Nessun oggetto per fotogramma,
+     nessuna lista da tenere: settanta `fillRect`. */
+  disegnaNeve(orologio) {
+    const ctx = this.ctx, L = this.L, A = this.A
+    ctx.fillStyle = 'rgba(255,255,255,.85)'
+    for (let i = 0; i < FIOCCHI_N; i++) {
+      const b = i * 4
+      let x = FIOCCHI[b] + Math.sin(orologio * .6 + i) * .012
+      x -= Math.floor(x)
+      let y = FIOCCHI[b + 1] + orologio * FIOCCHI[b + 2]
+      y -= Math.floor(y)
+      const r = FIOCCHI[b + 3]
+      ctx.fillRect(x * L, y * A, r, r)
+    }
+  }
+
+  /* ── LA NEVE APPOGGIATA, E LE LUCINE ──────────────────────────────
+     Una crosta bianca lungo il bordo alto di ogni cosa alta più di
+     una cella (`ALTO_PER_LA_NEVE`): sui tetti, sulle chiome, sui
+     silos. Non sa cos'è un tetto — sa che il disegno è alto, e che il
+     bianco va sulla sua cima. Le cose larghe (piede da due celle in
+     su: le case, le stalle) e quelle che il catalogo dichiara `luci`
+     (l'albero con le lucine) hanno anche una fila di puntini sotto la
+     neve, gialli e rossi alternati, che lampeggiano a coppie: metà
+     accesi e metà spenti, e si scambiano a ogni mezzo secondo. */
+  imbianca(e, orologio) {
+    const p = PEZZI[e.nome]
+    if (!p || p[3] < T * ALTO_PER_LA_NEVE) return
+    const r = this.riquadroPosa(e.nome, e.x, e.y, e.piede, e.verso); if (!r) return
+    if (r.x > this.L || r.y > this.A || r.x + r.w < 0 || r.y + r.h < 0) return
+    const ctx = this.ctx
+    const spessore = Math.max(3, Math.round(r.h * .11))
+    ctx.fillStyle = 'rgba(255,255,255,.8)'
+    tondo(ctx, r.x + r.w * .08, r.y + 1, r.w * .84, spessore, Math.min(4, spessore / 2))
+    ctx.fill()
+    const v = PER_ID[e.cosa.id]
+    if (!v || !(v.luci || e.piede[0] >= 2)) return
+    const passo = Math.max(5, 4 * this.scala), d = Math.max(2, Math.round(this.scala))
+    const fase = ((orologio * 2) | 0) & 1
+    const righe = v.luci ? 3 : 1
+    for (let k = 0; k < righe; k++) {
+      const y = Math.round(r.y + spessore + 1 + k * r.h * .22)
+      let i = 0
+      for (let x = r.x + r.w * .12; x < r.x + r.w * .88; x += passo, i++) {
+        if ((i & 1) !== fase) continue
+        ctx.fillStyle = (i >> 1) & 1 ? '#ff6b57' : '#ffe066'
+        ctx.fillRect(Math.round(x + (k & 1) * passo / 2), y, d, d)
+      }
+    }
+  }
+
+  /* ── LE EMOJI DELLA STAGIONE ──────────────────────────────────────
+     Zucche sull'erba, stelle sui tetti, un alberello accanto alla
+     casa: `x`, `y` sono in celle e dicono il **centro**, `misura` è
+     in pixel dello sprite come per i cappelli delle bestie — così una
+     zucca resta della stessa taglia rispetto al prato a qualunque
+     zoom. Chi `ondeggia` (un pipistrello) si muove piano; il resto
+     sta fermo, che è come stanno le zucche. Vanno **dopo** la scena e
+     prima di quello che si tiene in mano: sono per terra, non in
+     aria. */
+  disegnaStagionali(lista, orologio) {
+    if (!lista || !lista.length) return
+    const ctx = this.ctx
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    for (const s of lista) {
+      const x = s.x * this.cellaPx - this.vista.x
+      let y = s.y * this.cellaPx - this.vista.y
+      if (x < -40 || y < -40 || x > this.L + 40 || y > this.A + 40) continue
+      if (s.ondeggia) y += Math.sin(orologio * 3 + s.x) * 2
+      ctx.font = `${Math.max(8, Math.round(s.misura * this.scala))}px system-ui,sans-serif`
+      ctx.fillText(s.testo, x, y)
+    }
+    ctx.restore()
   }
 
   /* ── LE ETICHETTE ──────────────────────────────────────────────
@@ -810,13 +927,34 @@ export class Tela {
     return { c0x, c0y, c1x, c1y }
   }
 
-  disegnaPrato() {
+  disegnaPrato(neve = false) {
     const cellaPx = this.cellaPx
     const { c0x, c0y, c1x, c1y } = this.celleVisibili()
     for (let cx = c0x; cx < c1x; cx++)
       for (let cy = c0y; cy < c1y; cy++) {
         const e = ERBE[((caso(cx, cy, 7) * 100) | 0) % ERBE.length]
         this.pezzo(e, cx * cellaPx - this.vista.x, cy * cellaPx - this.vista.y)
+      }
+    if (neve) this.innevaIlPrato(c0x, c0y, c1x, c1y)
+  }
+
+  /* Macchie bianche sull'erba, una cella su tre, in posti che non
+     cambiano (`caso` col suo sale): non un manto uniforme, che
+     coprirebbe i fiorellini e le tessere dei bordi, ma neve a chiazze
+     come quella che resta dopo una nevicata leggera. Sopra il prato e
+     sotto il terreno: sull'acqua non si posa. */
+  innevaIlPrato(c0x, c0y, c1x, c1y) {
+    const ctx = this.ctx, cellaPx = this.cellaPx
+    ctx.fillStyle = 'rgba(255,255,255,.62)'
+    for (let cx = c0x; cx < c1x; cx++)
+      for (let cy = c0y; cy < c1y; cy++) {
+        const q = caso(cx, cy, 13)
+        if (q > .34) continue
+        const x = cx * cellaPx - this.vista.x, y = cy * cellaPx - this.vista.y
+        ctx.beginPath()
+        ctx.ellipse(x + cellaPx * (.3 + q), y + cellaPx * (.35 + q * .6),
+                    cellaPx * (.3 + q * .4), cellaPx * (.18 + q * .3), 0, 0, 7)
+        ctx.fill()
       }
   }
 

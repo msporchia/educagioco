@@ -45,8 +45,9 @@ import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
-import { pezzoAttore } from './dati/atlante.js'
-import { CELLE, SCALA_INIZIALE, COSTO_SPOSTARE, piazzolaDi } from './dati/mondo.js'
+import { pezzoAttore, PEZZI } from './dati/atlante.js'
+import { CELLE, T, SCALA_INIZIALE, COSTO_SPOSTARE, piazzolaDi } from './dati/mondo.js'
+import { stagioneDi, semeDelGiorno, addobbiStagionali, FINESTRE } from './dati/stagioni.js'
 
 import Roba from './viste/Roba.vue'
 import Vicino from './viste/Vicino.vue'
@@ -139,6 +140,18 @@ let scena = null                    // la Tela (disegno)
 let attori = []
 let bambino = null
 let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0
+
+/* ── LA STAGIONE ──────────────────────────────────────────────────
+   Che periodo dell'anno è lo dice `dati/stagioni.js` guardando la
+   data di oggi; qui si tiene il nome (`''` un giorno qualunque) e la
+   lista di quello che la scena deve posare in più — zucche, stelle
+   sui tetti, alberelli — già decisa cella per cella. La scena riceve
+   il nome e la lista, e non sa che giorno è; la lista si rifà ogni
+   pochi secondi, non a ogni fotogramma: le cose si spostano di rado,
+   e a mezzanotte il seme cambia da sé. `stagioneForzata` è il cheat
+   `#stagione=natale`, per guardarla a settembre. */
+const stagione = ref('')
+let stagioneForzata = null, stagionali = [], stagioneFra = 0
 
 /* La borsa che il motore usa: il salvadanaio vero. `paga(-n)` incassa —
    sgombrare il bosco rende, ed è l'unico modo di guadagnare qui dentro. */
@@ -277,7 +290,17 @@ onMounted(() => {
 
      Alza e basta: **non scende mai**, che è la regola del livello e
      varrebbe poco se un indirizzo potesse violarla. */
-  const cheat = /(?:^#?|&)fattoria=(\d{1,2})(?=&|$)/i.exec(location.hash || '')
+  /* `#stagione=natale` (o `halloween`) accende una stagione fuori dal
+     suo periodo: è il modo di guardare la neve a settembre, e lo usa
+     `integrazione/fattoria-stagioni`. Vale per questa apertura e non
+     si salva da nessuna parte. */
+  const frammento = location.hash || ''       // letto una volta: il primo cheat lo cancella
+  const stagioneCheat = /(?:^#?|&)stagione=(\w+)(?=&|$)/i.exec(frammento)
+  if (stagioneCheat && FINESTRE[stagioneCheat[1].toLowerCase()]) {
+    stagioneForzata = stagioneCheat[1].toLowerCase()
+    try { location.hash = '' } catch (e) { /* pazienza */ }
+  }
+  const cheat = /(?:^#?|&)fattoria=(\d{1,2})(?=&|$)/i.exec(frammento)
   if (cheat) {
     try { location.hash = '' } catch (e) { /* pazienza */ }
     const meta = parseInt(cheat[1], 10)
@@ -441,11 +464,43 @@ function passo(ora) {
   if (salvaFra > 0) { salvaFra -= dt; if (salvaFra <= 0) salvaOra() }
   bisogniFra -= dt
   if (bisogniFra <= 0) { bisogniFra = 3; aggiornaIBisogni() }
+  stagioneFra -= dt
+  if (stagioneFra <= 0) { stagioneFra = 4; aggiornaLaStagione() }
   scorriDalBordo(dt)
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
     orologio, pennello: anteprimaPennello(),
+    stagione: stagione.value || null, stagionali,
   })
+}
+
+/* ── COSA POSA LA STAGIONE, E DOVE ─────────────────────────────────
+   La scelta delle celle è di `addobbiStagionali` (puro); qui si
+   prepara solo quello che le serve, letto dal mondo: le celle di
+   prato libere — terra tua, niente cose, niente bosco, e si guarda
+   solo dentro le piazzole possedute, che è dove può esserci del
+   prato tuo — e le cose posate col loro piede e l'altezza del
+   disegno in celle, perché una stella va **sul tetto** e il tetto
+   sta sopra il piede di quanto è alto lo sprite. */
+function aggiornaLaStagione() {
+  stagione.value = stagioneForzata || stagioneDi(new Date()) || ''
+  if (!stagione.value) { stagionali = []; return }
+  const libere = []
+  for (const k of Object.keys(mondo.piazzole)) {
+    const [px, py] = k.split(',').map(Number)
+    for (let i = 0; i < CELLE; i++) for (let j = 0; j < CELLE; j++) {
+      const x = px * CELLE + i, y = py * CELLE + j
+      if (mondo.cellaBuona(x, y)) libere.push([x, y])
+    }
+  }
+  const edifici = []
+  for (const c of mondo.cose) {
+    const v = PER_ID[c.id]; if (!v) continue
+    const a = assettoDi(c, v)
+    const p = PEZZI[a.pezzo]; if (!p) continue
+    edifici.push({ x: c.x, y: c.y, w: a.piede[0], h: a.piede[1], alto: p[3] / T })
+  }
+  stagionali = addobbiStagionali(stagione.value, { libere, edifici, seme: semeDelGiorno(new Date()) })
 }
 
 /* ── TRASCINARE OLTRE IL BORDO DELLO SCHERMO ────────────────────────
@@ -1861,7 +1916,7 @@ function tiraVoce({ voce, x, y }) {
       <Roba v-if="pannello.tipo === 'roba'" class="fa-foglio"
             :monete="monete" :magazzino="mondo.magazzino" :bestie="mondo.bestie"
             :prezzi="prezziCorrenti()" :presi="presi" :posati="giaPosati()"
-            :punta="punta" :zona-iniziale="pannello.zona"
+            :punta="punta" :zona-iniziale="pannello.zona" :stagione="stagione"
             @tira="tiraVoce" @tira-bestia="prendiUnaBestia"
             @chiudi="chiudi()" />
 
