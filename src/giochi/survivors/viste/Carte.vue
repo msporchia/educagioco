@@ -62,6 +62,8 @@ defineEmits(['scegli'])
       </span>
     </button>
 
-    <p class="sv-nota">se sbagli prendi comunque la prima carta</p>
+    <!-- è la regola vera: sbagliare non dà niente, e prima qui c'era
+         scritto il contrario («prendi comunque la prima carta») -->
+    <p class="sv-nota">se sbagli, niente carta: ci riprovi al prossimo livello</p>
   </div>
 </template>

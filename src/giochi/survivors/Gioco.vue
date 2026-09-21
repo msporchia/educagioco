@@ -2,12 +2,13 @@
 /* ═══════════════════════════════════════════════════════════════════
    SURVIVORS — IL COORDINATORE
 
-   L'eroe spara da solo al mostro più vicino: il bambino ha una cosa sola
-   da fare col dito, schivare. I mostri lasciano gemme, le gemme fanno
-   salire di livello, e **a ogni livello il gioco si ferma e propone tre
-   carte che si pagano con una domanda** — facile, media o tosta a
-   seconda di quanto è forte la carta. Chi sbaglia non resta a mani
-   vuote: prende la più debole delle tre.
+   L'eroe spara da solo al mostro più vicino, e col dito si va in giro:
+   a prendere le gemme e gli oggetti rimasti a terra, a scansare le
+   file di mostri che attraversano lo schermo, a puntare le armi che
+   colpiscono dove si corre. Le gemme fanno salire di livello, e **a
+   ogni livello il gioco si ferma e propone tre carte che si pagano con
+   una domanda** — facile, media o tosta a seconda di quanto è forte la
+   carta. Chi sbaglia non prende niente: il giro dopo arriva presto.
 
    Questo file mette insieme i pezzi ed è **l'unico che sa che esistono
    le monete e l'avanzamento**: le regole stanno in `motore/`, i numeri

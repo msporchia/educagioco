@@ -743,10 +743,12 @@ export const AIUTI = {
   survivors: {
     emoji: '🏹', titolo: 'Survivors',
     blocchi: [
-      'Si scappa dai mostri, e si spara da soli: il dito serve solo a **muoversi**.',
+      'Si scappa dai mostri, e si spara da soli: il dito serve a **muoversi** — e muoversi serve.',
       { titolo: 'Come si gioca', righe: [
         'Trascina il dito sullo schermo per spostarti.',
-        'I mostri arrivano da tutte le parti: stare fermi non conviene mai.',
+        'Le gemme restano dove cadono, e ogni tanto a terra compare un cuore, una calamita o una cassa: stanno lì pochi secondi, bisogna andarli a prendere.',
+        'Ogni tanto una fila di mostri attraversa lo schermo (il bordo si accende di rosso): ci si sposta per non finirci dentro, dal buco o correndo via.',
+        'Alcune armi — la lancia, il fendente — colpiscono **dove stai correndo**: per mirare si corre verso i mostri.',
         'Ogni tanto si sceglie un potenziamento. Prendere sempre lo stesso lo rende molto forte, prenderne di diversi copre più situazioni.',
       ] },
       { titolo: 'Cosa allena', righe: [

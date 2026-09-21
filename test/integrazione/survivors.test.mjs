@@ -25,7 +25,7 @@
    `node test/esegui.mjs survivors --niente-build`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, attendi }
+import { apriBrowser, apriGioco, azzera, semina, attendi, scatto }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -47,6 +47,34 @@ async function gioca(ms) {
   await attendi(page, ms)
   await page.keyboard.up('ArrowRight')
 }
+
+/* Le tre carte arrivano presto — la seconda gemma è già il livello due —
+   e coprono il campo: qui si prende la prima e si risponde a caso alla
+   domanda (sbagliare non toglie niente), così il campo torna visibile.
+   Il tempo di gioco non passa sotto le carte, quindi si aspetta sul
+   cronometro e non sull'orologio di parete. */
+async function sbrigaLeCarte() {
+  if (!(await page.locator('.sv-carte').count())) return
+  await page.locator('.sv-carta').first().click()
+  await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+  await attendi(page, 450)                       // la finestra cieca del montaggio
+  await page.locator('.qz-tasto').first().click()
+  await page.waitForSelector('.qz-tasto', { state: 'hidden', timeout: 15000 })
+}
+/* Si va avanti finché il cronometro non dice `restano`, muovendosi con
+   `passo` fra una lettura e l'altra. Due passi: `corri` scappa a destra
+   (l'eroe fa 152 pixel al secondo, le melme 62: chi corre le semina),
+   `traccheggia` fa un passetto di qua e uno di là e resta nei paraggi. */
+async function finoA(restano, passo) {
+  for (let i = 0; i < 300; i++) {
+    await sbrigaLeCarte()
+    if (await secondi() <= restano) return
+    await passo()
+  }
+}
+const tasto = async (k, ms) => { await page.keyboard.down(k); await attendi(page, ms); await page.keyboard.up(k) }
+const corri = () => tasto('ArrowRight', 300)
+const traccheggia = async () => { await tasto('ArrowRight', 150); await tasto('ArrowLeft', 150) }
 
 /* ---------- 1. si entra e si gioca un pezzo ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="survivors"]')
@@ -131,6 +159,24 @@ uguale('e si ricomincia senza che nessuno chieda niente',
        await page.locator('.sv-modale').count(), 0)
 uguale('da capo', await page.locator('[data-pausa]').count(), 0)
 controlla('con tutto l\'orologio davanti', await secondi() >= 43)
+
+/* ---------- 7. le cose in giro si vedono ----------
+   Nessun test guarda i pixel: le foto sono per un occhio umano, e si
+   fanno in questa partita nuova, dove morire non guasta nessun
+   controllo. Il primo oggetto compare a sette secondi e resta nove; il
+   primo muro arriva a dodici, col bordo acceso per un secondo, e un
+   secondo dopo la fila è dentro lo schermo (`CFG.oggetti.primo`,
+   `CFG.muro.primo`). La tappa dura 45 secondi e il cronometro conta
+   alla rovescia. Prima del muro si corre via dalle melme — fermi in
+   mezzo a loro si perdono tre cuori in dieci secondi — e ci si ferma
+   un secondo prima che la fila nasca, così entra da qualunque lato. */
+await finoA(37, traccheggia)
+await scatto(page, 'survivors-oggetto-a-terra')
+await finoA(34, corri)
+await finoA(33, traccheggia)
+await scatto(page, 'survivors-muro-bordo')
+await finoA(32, traccheggia)
+await scatto(page, 'survivors-muro')
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

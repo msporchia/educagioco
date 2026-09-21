@@ -12,6 +12,58 @@ Si resiste a ondate di nemici che arrivano da tutti i lati. Ogni tanto il
 gioco si ferma e offre **tre carte** fra cui scegliere: un'arma nuova, più
 velocità, più vita, un colpo che rimbalza.
 
+## Le cose si trovano in giro
+
+Questo gioco si giocava **da fermi**, ed era misurato: le gemme fuori
+dalla calamita camminavano da sole verso l'eroe, fino a correre più di lui
+— l'esperienza ti veniva addosso — e i mostri, da fermi, arrivavano comodi
+da tutti i lati mentre l'arco tirava da solo. Il dito serviva a scansare,
+e neanche sempre. Tre cose lo hanno rimesso in piedi, e ognuna è misurata
+col giocatore finto del banco (`motore/banco.js`).
+
+**Una gemma resta dove cade.** La calamita c'è ancora — è la sensazione da
+non perdere, e le carte «calamita» la allargano — ma quello che sta fuori
+aspetta. Chi non si muove raccoglie solo quello che gli cade sotto i
+piedi, e non sale più di livello.
+
+**A terra compaiono degli oggetti**, ogni dieci-quindici secondi (più
+spesso con la marea) e qualche volta lasciati dai mostri grossi. Restano
+nove secondi, lampeggiano negli ultimi due e svaniscono: chi li vuole ci
+va. Sono tre:
+
+- **❤️ un cuore**, che ne ridà uno senza alzare il tetto — ed esce solo a
+  chi ne ha perso uno, se no sarebbe una corsa per niente;
+- **🧲 una calamita**, che per quattro secondi tira tutte le gemme in campo,
+  anche quelle lontane;
+- **📦 una cassa**, che apre un'offerta di tre carte **pagata con la domanda
+  come sempre**. Non è un potenziamento gratis, è un'occasione in più di
+  guadagnarselo: una risposta sbagliata non paga, e niente si regala
+  senza esercizio (vedi `CALIBRAZIONE.md`). Sopra le carte c'è scritto
+  «una cassa», non «livello», perché non si è saliti di niente.
+
+**I muri.** Ogni tanto — dopo dodici secondi la prima volta, poi sempre
+più spesso con la marea — una fila di mostri deboli attraversa lo schermo
+da un lato scelto a caso, dritta, senza inseguire nessuno. Il bordo da cui
+entra si accende di rosso un secondo prima. La fila ha **un varco**, e
+l'eroe è più svelto di lei: si passa dal buco, o si corre via. Chi sta
+fermo ci finisce dentro, ed è misurato: un muro da solo prende chi non
+muove il dito dieci volte su dieci, e chi si sposta zero.
+
+**Due armi guardano dove corri.** L'arco tira da solo al più vicino, e va
+bene così — ma un gioco in cui *tutto* tira da solo si guarda e basta. Il
+**Fendente** (carta media) è un colpo largo davanti, nella direzione di
+marcia, e parte solo se davanti c'è qualcuno; la **Lancia** (carta forte)
+parte dove si sta correndo e trapassa tutti quelli che trova. Per usarle
+bisogna correre *verso* i mostri, e mirare costa: quindi picchiano più
+dell'arco, apposta. Chi sta fermo le tiene puntate dov'era andato l'ultima
+volta, e una freccina ai piedi dice dove.
+
+Il risultato, misurato sul banco tappa per tappa: chi non muove il dito
+vinceva la prima tappa una volta su sei e la terza una su tre; adesso non
+ne vince nessuna. Il giocatore finto, per contare ancora, ha dovuto
+imparare tre cose — andare a prendere gemme e oggetti, scansare le file, e
+correre verso il grumo di mostri quando ha un'arma che guarda avanti.
+
 ## La regola che rende il gioco un gioco
 
 **Le carte non sono gratis: ognuna ha un prezzo, e il prezzo è la difficoltà
@@ -128,7 +180,7 @@ che la sua sfida infinita si misura in tempo.
 
 ### E le carte non finiscono prima della marea
 
-Il mazzo ha diciotto carte per settantacinque copie in tutto, che in una
+Il mazzo ha venti carte per ottantatré copie in tutto, che in una
 tappa da tre minuti sono più di quante se ne possano prendere — ma la
 Sopravvivenza non finisce, e si può interrompere e riprendere: una partita
 libera dura un pomeriggio. Quando l'ultima copia era presa, la salita di

@@ -8,13 +8,14 @@
    di gioco invece di un pedaggio: senza il prezzo, la scelta è «quale
    disegno mi piace», e la domanda è una tassa che si paga comunque.
 
-   Chi sbaglia **non prende niente**: una monetina di consolazione e si
-   torna in campo. Prima si dava la carta più debole delle tre, e il
-   risultato era che tirando a caso ci si potenziava lo stesso — la
-   domanda diventava un pedaggio che si pagava comunque, e chi rispondeva
-   bene non ci guadagnava abbastanza. Adesso il potenziamento **si vince
-   rispondendo**, e chi sbaglia perde il giro, non la partita: la moneta
-   dice «ci hai provato», e il giro dopo arriva presto perché le gemme
+   Chi sbaglia **non prende niente** e torna in campo. Prima si dava la
+   carta più debole delle tre, e il risultato era che tirando a caso ci
+   si potenziava lo stesso — la domanda diventava un pedaggio che si
+   pagava comunque, e chi rispondeva bene non ci guadagnava abbastanza.
+   Poi c'è stata una monetina di consolazione, ed era peggio (vedi
+   `CALIBRAZIONE.md`: un tasto premuto a caso non è esercizio). Adesso
+   il potenziamento **si vince rispondendo**, e chi sbaglia perde il
+   giro, non la partita: il giro dopo arriva presto perché le gemme
    continuano a cadere.
 
    Le tre fasce non sono un'etichetta: sono **quanto quella carta cambia
