@@ -42,5 +42,5 @@ riferimento di stile da mettere davanti a un generatore è
 `poc/scatti/riferimento-stile.png`; il formato che i generatori
 restituiscono meglio è quello di `../armm1998/character.png`.
 
-coniglio.jpg — il primo foglio nato da una scheda di prompt (PROMPT-bestia.md), col foglio del bobtail allegato come base; il prompt sta nel foglietto coniglio.json. Generatore: da annotare (l'ha fatto l'utente il 20 settembre 2026).
+coniglio.jpg — il primo foglio nato da una scheda di prompt (PROMPT-bestia.md), col foglio del bobtail allegato come base; il prompt sta nel foglietto coniglio.json. Generatore: Grok, 20 settembre 2026.
 
