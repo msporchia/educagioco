@@ -137,6 +137,13 @@
   .canc code { font-size: 11px; color: #ff9a9a }
   .canc button { padding: 0 6px; line-height: 1.4 }
   .bottoni { display: flex; flex-direction: column; gap: 6px; margin-top: 14px }
+  #r-agganci .agg { display: grid; grid-template-columns: 14px 56px 1fr 1fr 22px; gap: 4px; align-items: center;
+    margin: 3px 0; font-size: 11px }
+  #r-agganci .agg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid }
+  #r-agganci .agg input { width: 100%; font-size: 11px }
+  #r-agganci .agg button { padding: 0 5px; line-height: 1.4 }
+  #r-agganci canvas { image-rendering: pixelated; border: 1px solid var(--riga); border-radius: 3px;
+    display: block; margin: 6px auto }
 </style>
 </head>
 <body>
@@ -199,6 +206,7 @@
         <button data-modo="ritaglio" class="acceso">sposta il ritaglio</button>
         <button data-modo="cancella">buca</button>
         <button data-modo="nuovo">ritaglio nuovo</button>
+        <button data-modo="agganci">agganci</button>
       </span>
       <button id="ritagli-tutto">tutto il foglio</button>
       <label><input id="ritagli-scoperti" type="checkbox"> quello che nessuno prende</label>

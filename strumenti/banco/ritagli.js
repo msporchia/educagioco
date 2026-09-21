@@ -44,6 +44,8 @@
    sapere se c'è qualcosa da salvare, e non passa da un parse e un
    serialize che potrebbero perdere per strada una chiave che non
    conosciamo. */
+import { AGGANCI as AGGANCI_RIPIEGO, AGGANCI_TUTTI } from '../../src/giochi/fattoria/dati/animali.js'
+
 const FOGLIETTI = import.meta.glob('/strumenti/sprite/sorgenti/**/*.json',
                                    { eager: true, query: '?raw', import: 'default' })
 const IMMAGINI = import.meta.glob('/strumenti/sprite/sorgenti/**/*.{png,jpg,jpeg}',
@@ -341,6 +343,128 @@ function metteAnima(nome, valore) {
   }
 }
 
+/* ═══════════ gli agganci di una bestia ═══════════
+   Dove le si attacca un addobbo — testa, muso, collo, schiena — verso
+   per verso, in frazioni del riquadro (`agganci` in FORMATO.md). Sono
+   la cosa che **non si conta dall'alfa**: l'alfa dice dov'è il
+   riquadro, non dov'è la fronte, e infatti la prima tabella scritta a
+   tavolino metteva il cappello a metà collo del pappagallo. Qui si
+   trascinano sul fotogramma e si vede subito cosa fanno: l'anteprima
+   accanto mette un cappello, gli occhialini, un fiocco e una
+   mantellina proprio lì, con la stessa formula del gioco
+   (`fattoria/scena/tela.js`, `Attore.addosso`).
+
+   Il verso lo dice il nome della voce (`coniglio_lato0` → `lato`), e
+   gli agganci valgono per **tutti i fotogrammi** di quel verso: il
+   passo lo fa `BOB`, non un punto per fotogramma. Si disegnano quindi
+   sul primo rettangolo della voce scelta, e più tenui sugli altri. */
+const COLORE_AGGANCIO = { testa: '#ff5a5a', muso: '#5aa0ff', collo: '#5aff8a', schiena: '#ffd24a' }
+const ADDOBBI_DI_PROVA = [
+  { dove: 'testa', testo: '🧢', misura: 7 }, { dove: 'muso', testo: '👓', misura: 6 },
+  { dove: 'collo', testo: '🎀', misura: 5 }, { dove: 'schiena', testo: '🧥', misura: 8 },
+]
+
+function versoDi(nome) {
+  const m = (nome || '').match(/_(giu|lato|su)\d*$/)
+  return m ? m[1] : null
+}
+/* gli agganci si toccano solo su una bestia e su una voce che è un
+   verso: su un albero un cappello non vuol dire niente */
+function agganciabile(nome = R.scelto) {
+  return modificabile() && R.aperto.fg.tipo === 'bestia' && !!versoDi(nome)
+}
+function agganciDelVerso(verso) {
+  return ((R.aperto.fg.agganci || {})[verso]) || null
+}
+/* quelli che quel verso può avere: di spalle il muso non c'è */
+const agganciPossibili = verso => AGGANCI_TUTTI.filter(d => !(verso === 'su' && d === 'muso'))
+
+function mettiAggancio(verso, dove, fx, fy) {
+  const fg = R.aperto.fg
+  fg.agganci ||= {}
+  fg.agganci[verso] ||= {}
+  fg.agganci[verso][dove] = [Math.round(Math.max(0, Math.min(1, fx)) * 1000) / 1000,
+                             Math.round(Math.max(0, Math.min(1, fy)) * 1000) / 1000]
+}
+function togliAggancio(verso, dove) {
+  const fg = R.aperto.fg
+  if (!fg.agganci || !fg.agganci[verso]) return
+  delete fg.agganci[verso][dove]
+  if (!Object.keys(fg.agganci[verso]).length) delete fg.agganci[verso]
+  if (!Object.keys(fg.agganci).length) delete fg.agganci
+}
+/* la partenza per un verso che non ha niente: il ripiego del gioco,
+   cioè i numeri con cui gli addobbi sono nati — meglio un punto da
+   spostare che un pannello vuoto */
+function seminaAgganci(verso) {
+  for (const dove of agganciPossibili(verso)) {
+    const p = (AGGANCI_RIPIEGO[verso] || {})[dove]
+    if (p && !(agganciDelVerso(verso) || {})[dove]) mettiAggancio(verso, dove, p[0], p[1])
+  }
+}
+function agganciToccati() {
+  return scritto(R.aperto.originale.agganci) !== scritto(R.aperto.fg.agganci)
+}
+
+/* il disegno dei quattro punti su un rettangolo, in coordinate del
+   foglio (il contesto è già trasformato dallo zoom) */
+function disegnaAgganci(c, [x, y, w, h], verso, z, tenue = false) {
+  const punti = agganciDelVerso(verso)
+  if (!punti) return
+  /* misure **a schermo**, non del foglio: a zoom 12 un cerchietto di
+     quattro pixel del foglio coprirebbe mezza testa, a zoom 1 non si
+     vedrebbe. Un contorno scuro sotto, se no sul bianco del coniglio
+     il giallo della schiena sparisce. */
+  c.save()
+  c.globalAlpha = tenue ? .4 : 1
+  const r = 7 / z
+  for (const [dove, [fx, fy]] of Object.entries(punti)) {
+    const px = x + fx * w, py = y + fy * h
+    for (const [colore, largo] of [['rgba(0,0,0,.7)', 4 / z], [COLORE_AGGANCIO[dove] || '#fff', 2 / z]]) {
+      c.strokeStyle = colore; c.lineWidth = largo
+      c.beginPath(); c.arc(px, py, r, 0, Math.PI * 2); c.stroke()
+      c.beginPath()
+      c.moveTo(px - r * 1.8, py); c.lineTo(px + r * 1.8, py)
+      c.moveTo(px, py - r * 1.8); c.lineTo(px, py + r * 1.8)
+      c.stroke()
+    }
+    if (!tenue) {
+      c.font = `bold ${12 / z}px system-ui`
+      c.textBaseline = 'middle'
+      c.lineWidth = 3 / z; c.strokeStyle = 'rgba(0,0,0,.8)'
+      c.strokeText(dove, px + r * 1.4, py - r * 1.6)
+      c.fillStyle = COLORE_AGGANCIO[dove] || '#fff'
+      c.fillText(dove, px + r * 1.4, py - r * 1.6)
+    }
+  }
+  c.restore()
+}
+
+/* l'anteprima vestita: il primo fotogramma coi quattro addobbi di
+   prova posati con LA STESSA FORMULA di `Attore.addosso()` — testo
+   centrato, font = misura × scala, origine nell'angolo del riquadro.
+   Se qui il cappello sta sulla testa, ci sta anche in gioco. */
+function anteprimaVestita(dove, nome, verso) {
+  const r = rettangoli(nome)[0]
+  const [ow, oh] = misuraUscita(nome, r)
+  const zz = Math.max(2, Math.min(8, Math.floor(160 / Math.max(ow, oh))))
+  const cv = document.createElement('canvas')
+  cv.width = ow * zz; cv.height = oh * zz
+  const c = cv.getContext('2d')
+  c.fillStyle = '#7fb36a'; c.fillRect(0, 0, cv.width, cv.height)
+  pezzoSu(c, nome, r, 0, 0, zz, { rosso: false })
+  const punti = agganciDelVerso(verso) || {}
+  c.textAlign = 'center'; c.textBaseline = 'middle'
+  for (const a of ADDOBBI_DI_PROVA) {
+    const p = punti[a.dove]
+    if (!p) continue
+    c.font = `${Math.max(6, Math.round(a.misura * zz))}px system-ui,sans-serif`
+    c.fillText(a.testo, p[0] * cv.width, p[1] * cv.height)
+  }
+  cv.title = 'come lo veste il gioco'
+  dove.appendChild(cv)
+}
+
 /* ═══════════ il disegno ═══════════ */
 const tela = () => $('#foglio')
 
@@ -421,6 +545,10 @@ function ridisegna() {
       c.fillStyle = '#7fe0c0'
       for (const [hx, hy] of maniglie(x, y, w, h))
         c.fillRect(hx - 3 / z, hy - 3 / z, 6 / z, 6 / z)
+    }
+    if (R.modo === 'agganci' && agganciabile()) {
+      const verso = versoDi(R.scelto)
+      rr.forEach((r, i) => disegnaAgganci(c, r, verso, z, i > 0))
     }
     if (R.trascina && R.trascina.che === 'nuovo-cancella') {
       const r = R.trascina.rett
@@ -780,6 +908,7 @@ function dettaglio() {
       </select></label>
     </div>
     <div id="r-cancella"></div>
+    <div id="r-agganci"></div>
     <div class="bottoni">
       <button id="r-unisci"${R.segnati.length > 1 && modificabile() ? '' : ' disabled'}>${
         R.segnati.length > 1 ? `unisci i ${R.segnati.length} segnati in una cosa sola`
@@ -864,6 +993,8 @@ function dettaglio() {
     canc.appendChild(riga)
   })
 
+  aggiornaPannelloAgganci()
+
   if (!modificabile()) return
   const leggi = () => {
     const nuovo = {
@@ -927,6 +1058,65 @@ function dettaglio() {
     R.scelto = null
     cambiato()
   })
+}
+
+/* Il blocco degli agganci nel pannello: una riga per aggancio col
+   colore del cerchietto, le due frazioni scrivibili a mano, e sotto
+   l'anteprima vestita. Sta a parte da `dettaglio()` perché si rifà a
+   ogni mossa del trascinamento, e rifare tutto il pannello a ogni
+   pixel farebbe scattare la pagina. Su una voce che non è un verso di
+   una bestia non compare affatto. */
+function aggiornaPannelloAgganci() {
+  const dove = $('#r-agganci')
+  if (!dove) return
+  if (!R.scelto || R.aperto.fg.tipo !== 'bestia' || !versoDi(R.scelto)) { dove.innerHTML = ''; return }
+  const verso = versoDi(R.scelto)
+  const punti = agganciDelVerso(verso)
+  const bloc = modificabile() ? '' : ' disabled'
+  dove.innerHTML = `<h3>agganci <span class="tenue">· ${verso}${
+    punti ? '' : ' — nessuno: il gioco va col ripiego'}</span></h3>`
+  if (!punti) {
+    const b = document.createElement('button')
+    b.textContent = 'metti quelli di partenza'
+    b.disabled = !modificabile()
+    b.addEventListener('click', () => { seminaAgganci(verso); R.modo = 'agganci'; accendiModo(); cambiato() })
+    dove.appendChild(b)
+    return
+  }
+  for (const nome of agganciPossibili(verso)) {
+    const p = punti[nome]
+    const riga = document.createElement('div')
+    riga.className = 'agg'
+    riga.innerHTML = `<i style="border-color:${COLORE_AGGANCIO[nome]}"></i><span>${nome}</span>` +
+      (p ? `<input type="number" step="0.01" min="0" max="1" value="${p[0]}" data-fx${bloc}>` +
+           `<input type="number" step="0.01" min="0" max="1" value="${p[1]}" data-fy${bloc}>`
+         : `<span class="tenue">—</span><span></span>`)
+    const b = document.createElement('button')
+    b.textContent = p ? '×' : '+'
+    b.title = p ? 'toglilo: da questo verso non si vede' : 'aggiungilo'
+    b.disabled = !modificabile()
+    b.addEventListener('click', () => {
+      if (p) togliAggancio(verso, nome)
+      else {
+        const s = (AGGANCI_RIPIEGO[verso] || {})[nome] || [0.5, 0.5]
+        mettiAggancio(verso, nome, s[0], s[1])
+      }
+      cambiato()
+    })
+    riga.appendChild(b)
+    if (p) for (const inp of riga.querySelectorAll('input'))
+      inp.addEventListener('change', () => {
+        mettiAggancio(verso, nome, +riga.querySelector('[data-fx]').value, +riga.querySelector('[data-fy]').value)
+        cambiato()
+      })
+    dove.appendChild(riga)
+  }
+  anteprimaVestita(dove, R.scelto, verso)
+  const nota = document.createElement('p')
+  nota.className = 'tenue'
+  nota.textContent = 'frazioni del riquadro, uguali per tutti i fotogrammi del verso; ' +
+    'nel modo «agganci» si trascinano sul foglio'
+  dove.appendChild(nota)
 }
 
 /* ═══════════ le correzioni che spostano nomi ═══════════ */
@@ -1179,6 +1369,20 @@ function collega() {
 
     if (R.scelto && modificabile()) {
       const [x, y, w, h] = rettangoli(R.scelto)[0]
+      /* un aggancio si prende per il cerchietto e si porta dove deve
+         stare; dentro il ritaglio ma lontano da tutti, si lascia
+         passare al ramo di sotto che sceglie la voce sotto il dito */
+      if (R.modo === 'agganci' && agganciabile()) {
+        const verso = versoDi(R.scelto)
+        const vicino = 9 / R.zoom
+        const preso = Object.entries(agganciDelVerso(verso) || {})
+          .find(([, [fx, fy]]) => Math.abs(px - (x + fx * w)) < vicino && Math.abs(py - (y + fy * h)) < vicino)
+        if (preso) {
+          R.trascina = { che: 'aggancio', verso, dove: preso[0], rett: [x, y, w, h] }
+          cv.setPointerCapture(e.pointerId)
+          return
+        }
+      }
       if (R.modo === 'cancella') {
         if (px >= x && px < x + w && py >= y && py < y + h) {
           R.trascina = { che: 'nuovo-cancella', partenza: [px, py], base: [x, y], rett: [0, 0, 0, 0] }
@@ -1217,6 +1421,12 @@ function collega() {
     if (t.che === 'pan') {
       R.pan = [t.pan[0] - (e.clientX - t.schermo[0]) / R.zoom,
                t.pan[1] - (e.clientY - t.schermo[1]) / R.zoom]
+      return ridisegna()
+    }
+    if (t.che === 'aggancio') {
+      const [x, y, w, h] = t.rett
+      mettiAggancio(t.verso, t.dove, (px - x) / w, (py - y) / h)
+      aggiornaPannelloAgganci()
       return ridisegna()
     }
     const d = R.aperto.fg.sprite[R.scelto]
@@ -1311,6 +1521,7 @@ function scriviJson(v, ind = '') {
 async function salva() {
   const testo = scriviJson(R.aperto.fg) + '\n'
   const cambiate = tutteToccate()
+  if (agganciToccati()) cambiate.push('gli agganci')
   try {
     const r = await fetch('/__foglietto', {
       method: 'POST',
@@ -1349,6 +1560,9 @@ function accendiModo() {
     ritaglio: 'trascina il rettangolo per spostarlo, gli angoli per stringerlo — le frecce di un pixel',
     cancella: 'trascina DENTRO il ritaglio scelto per bucarlo: è dato nel foglietto, il PNG non si tocca',
     nuovo: 'tira un rettangolo attorno a qualcosa che nessuno ritagliava ancora',
+    agganci: R.aperto && R.aperto.fg.tipo === 'bestia'
+      ? 'scegli un verso della bestia e trascina i cerchietti: testa, muso, collo, schiena — l\'anteprima a destra li veste'
+      : 'gli agganci sono delle bestie: questo foglio non ne ha',
   }[R.modo])
   ridisegna()
 }
