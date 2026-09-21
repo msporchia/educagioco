@@ -442,6 +442,12 @@
   justify-content: center; gap: 4px }
 .fa-manca b { display: inline-flex; align-items: center; gap: 3px;
   color: #d8e4d6 }
+/* L'ingrediente che manca è un tasto: apre l'albero di quella merce.
+   Sembra la riga di prima con un 🌳 in coda, perché è la stessa
+   informazione con una porta in più. */
+.fa-manca-tasto { display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 4px; border-radius: 9px; cursor: pointer; font: inherit;
+  background: #0d160fcc; border: 1px dashed #c9a227; color: #ffd98a }
 /* ── LA FACCIA DI UNA MERCE ──────────────────────────────────────
    *Ribalta la scelta di prima*, che era «un'emoji grande al posto del
    provino, perché una tessera per il grano sciolto non c'è». C'era: il
@@ -584,3 +590,36 @@
 /* Il «togli» sta in fondo alla testata del blocco, dove c'è il numero
    nei bisogni: piccolo, perché togliere è una cosa che si fa di rado. */
 .fa-minuto.dentro { margin: 0; padding: 2px 8px; font-size: 11px }
+
+/* ── l'albero di una merce ──────────────────────────────────────────
+   Una colonna, dal telefono: la merce in cima, i suoi ingredienti
+   rientrati sotto, e fra i due la macchina come connettore. Il colore
+   dice lo stato — verde ce l'hai, ambra manca, grigio arriva dopo —
+   e il tasto sta solo sulle righe ambra. Scorre, perché una catena da
+   cinque fasi non sta in uno schermo. */
+.fa-albero { max-height: 100%; overflow-y: auto; overscroll-behavior: contain }
+.fa-rami { display: flex; flex-direction: column; gap: 5px; margin: 8px 0 10px;
+  text-align: left }
+.fa-ramo { display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+  border-radius: 11px; background: #0d160fcc; border: 2px solid #2b4430;
+  color: #d8e4d6 }
+.fa-ramo.radice { border-color: #6f9b6f; background: #1b3220cc }
+.fa-ramo.ok { border-color: #6f9b6f }
+.fa-ramo.manca { border-color: #c9a227 }
+.fa-ramo.arriva { opacity: .6 }
+.fa-ramo.compra, .fa-ramo.premio { border-color: #c9a227 }
+.fa-ramo.lavora { border-color: #7fb4e0 }
+.fa-ramo-testo { flex: 1; min-width: 0; display: flex; flex-direction: column }
+.fa-ramo-testo b { font-size: 13.5px; color: #f4efe2; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis }
+.fa-ramo-testo b em { font-style: normal; font-weight: 400; color: #8fa691 }
+.fa-ramo-testo span { font-size: 12px; color: #d8e4d6; opacity: .85 }
+.fa-ramo.manca .fa-ramo-testo span, .fa-ramo.compra .fa-ramo-testo span,
+.fa-ramo.premio .fa-ramo-testo span { color: #ffd98a; opacity: 1 }
+.fa-ramo.ok .fa-ramo-testo span { color: #9fd3a8 }
+/* La macchina è il connettore: più piccola, senza figura, col bordo
+   tratteggiato che la distingue da una merce. */
+.fa-ramo.fa-macchina { padding: 3px 8px; border-width: 1px; border-style: dashed;
+  background: transparent }
+.fa-ramo.fa-macchina .fa-ramo-testo b { font-size: 12.5px; font-weight: 500 }
+.fa-ramo .fa-bot { flex: none; white-space: nowrap }

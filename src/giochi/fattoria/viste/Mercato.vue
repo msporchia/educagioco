@@ -39,7 +39,7 @@ const props = defineProps({
   /* `[{ minuti }]`: i posti che stanno riposando dopo un rifiuto */
   riposi: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['consegna', 'rifiuta', 'chiudi'])
+const emit = defineEmits(['consegna', 'rifiuta', 'chiudi', 'albero'])
 
 const pronti = computed(() => props.ordini.filter(o => o.pronto).length)
 
@@ -103,13 +103,17 @@ const caselle = riga => Array.from({ length: riga.serve },
         </div>
         <!-- Un tasto spento dice sempre **cosa manca**, come in tutto il
              resto del gioco: è il numero che rimanda a coltivare. -->
+        <!-- Quello che manca **si preme**: apre l'albero di quella
+             merce, cioè la strada per farla (`viste/Albero.vue`). -->
         <p v-if="!o.pronto" class="fa-piccolo fa-manca">
           <span>Ti {{ o.righe.filter(r => !r.pieno).length > 1
                       ? 'servono ancora' : 'serve ancora' }}</span>
-          <b v-for="r in o.righe.filter(r => !r.pieno)" :key="r.prodotto">
-            {{ r.serve - r.hai }}
+          <button v-for="r in o.righe.filter(r => !r.pieno)" :key="r.prodotto"
+                  type="button" class="fa-manca-tasto" :data-albero-apri="r.prodotto"
+                  @click="emit('albero', r.prodotto)">
+            <b>{{ r.serve - r.hai }}
             <Merce :merce="r.prodotto" :lato="20" />
-            {{ r.nome.toLowerCase() }}</b>
+            {{ r.nome.toLowerCase() }}</b> 🌳</button>
         </p>
       </div>
     </div>

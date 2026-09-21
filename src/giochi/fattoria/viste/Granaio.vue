@@ -70,7 +70,7 @@ const props = defineProps({
   costo: { type: Number, default: 0 },
   monete: { type: Number, default: 0 },
 })
-defineEmits(['ingrandisci', 'chiudi'])
+defineEmits(['ingrandisci', 'chiudi', 'albero'])
 
 const silo = computed(() => SILI[props.famiglia] || SILI.terra)
 const roba = id => PRODOTTI[id] || { nome: id, emoji: '📦' }
@@ -162,6 +162,11 @@ const dice = u => {
       <b><Merce :merce="aperto" :lato="26" /> {{ roba(aperto).nome }}</b>
       <p v-for="(u, i) in usiDi" :key="i">{{ dice(u) }}</p>
       <p v-if="!usiDi.length">Per adesso non serve a niente.</p>
+      <!-- Da qui si vede la strada intera: il silo è il posto dove la
+           catena «si scopre da dentro», e questo è il tasto che la
+           mostra tutta (`viste/Albero.vue`). -->
+      <button type="button" class="fa-bot piccolo" data-azione="albero"
+              @click="$emit('albero', aperto)">🌳 Come si fa</button>
     </div>
     <p v-else-if="pieni.length" class="fa-piccolo">Uno scomparto pieno non
        ferma gli altri: si può raccogliere tutto il resto. Premi

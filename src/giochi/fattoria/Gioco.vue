@@ -60,6 +60,8 @@ import Campo from './viste/Campo.vue'
 import Granaio from './viste/Granaio.vue'
 import Livelli from './viste/Livelli.vue'
 import Macchina from './viste/Macchina.vue'
+import Albero from './viste/Albero.vue'
+import { alberoDi } from './dati/albero.js'
 import Provino from './viste/Provino.vue'
 import './stile.css'
 
@@ -1395,6 +1397,19 @@ function apriGranaio(famiglia) {
                      costo: mondo.costoDellIngrandimento(famiglia) }
 }
 
+/* ═══════════ l'albero di una merce ═══════════
+   Il consiglio srotolato (`dati/albero.js`, `viste/Albero.vue`). Si apre
+   sempre **con una merce già scelta** — dal silo, dal mercato, dalla
+   macchina — e si ricompone a ogni apertura, perché è un conto
+   sull'orologio e sul granaio. Le sue righe eseguono le stesse azioni
+   dei consigli: non c'è niente di nuovo da fare qui. */
+function apriAlbero(prodotto) {
+  if (!prodotto) return
+  const albero = alberoDi(mondo, prodotto)
+  if (!albero) return
+  pannello.value = { tipo: 'albero', prodotto, albero }
+}
+
 /* Ingrandire è la sola cosa che si fa da dentro un silo, e il foglio si
    rifà con i numeri nuovi invece di chiudersi: si guarda il posto che
    si è appena comprato, e chi ne vuole altri due è già lì. */
@@ -1959,6 +1974,7 @@ function tiraVoce({ voce, x, y }) {
 
       <Mercato v-else-if="pannello.tipo === 'mercato'"
                :ordini="pannello.ordini" :riposi="pannello.riposi"
+               @albero="apriAlbero"
                @consegna="consegnaOrdine" @rifiuta="rifiutaOrdine"
                @chiudi="chiudi()" />
 
@@ -1967,7 +1983,11 @@ function tiraVoce({ voce, x, y }) {
                :scomparti="pannello.scomparti" :livello="pannello.livello"
                :posti="pannello.posti"
                :costo="pannello.costo" :monete="monete"
-               @ingrandisci="ingrandisci" @chiudi="chiudi()" />
+               @ingrandisci="ingrandisci" @albero="apriAlbero" @chiudi="chiudi()" />
+
+      <Albero v-else-if="pannello.tipo === 'albero'"
+              :albero="pannello.albero"
+              @fai="faiIlPasso" @chiudi="chiudi()" />
 
       <Macchina v-else-if="pannello.tipo === 'macchina'"
                 :stato="pannello.stato" :ricette="pannello.ricette"
@@ -1975,7 +1995,7 @@ function tiraVoce({ voce, x, y }) {
                 :ci-sta="pannello.ciSta" :silo="pannello.silo" :passo="pannello.passo"
                 :senza-silo="pannello.senzaSilo" :prezzo-silo="pannello.prezzoSilo"
                 @avvia="avvia" @ritira="ritira" @passo="faiIlPasso"
-                @chiudi="chiudi()" />
+                @albero="apriAlbero" @chiudi="chiudi()" />
 
       <Battesimo v-else-if="pannello.tipo === 'battesimo'"
                  :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome || ''"

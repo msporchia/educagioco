@@ -59,7 +59,7 @@ const props = defineProps({
   /* Il prossimo passo quando quello che è pronto non ha dove andare */
   passo: { type: Object, default: null },
 })
-const emit = defineEmits(['avvia', 'ritira', 'chiudi', 'passo'])
+const emit = defineEmits(['avvia', 'ritira', 'chiudi', 'passo', 'albero'])
 
 const r = computed(() => props.stato.ricetta)
 const pieno = computed(() => !props.stato.ferma && props.stato.pronto &&
@@ -146,9 +146,14 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
         <p class="fa-piccolo fa-manca">
           <span>Per {{ v.ricetta.nome.toLowerCase() }} ti
             {{ v.manca.length + (v.monete ? 1 : 0) > 1 ? 'servono ancora' : 'serve ancora' }}</span>
-          <b v-for="m in v.manca" :key="m.prodotto">{{ m.quanti }}
+          <!-- L'ingrediente che manca **si preme**, e apre l'albero di
+               quella merce: la strada intera, non solo il passo dopo. -->
+          <button v-for="m in v.manca" :key="m.prodotto" type="button"
+                  class="fa-manca-tasto" :data-albero-apri="m.prodotto"
+                  @click="emit('albero', m.prodotto)">
+            <b>{{ m.quanti }}
             <Merce :merce="m.prodotto" :lato="20" />
-            {{ prodotto(m.prodotto).nome.toLowerCase() }}</b>
+            {{ prodotto(m.prodotto).nome.toLowerCase() }}</b> 🌳</button>
           <b v-if="v.monete">🪙{{ v.monete }}</b>
         </p>
         <Passo :passo="v.passo" @fai="a => emit('passo', a)" />
