@@ -628,11 +628,93 @@ controlla('il riassunto conta le stelle',
   uguale('un muro non sfonda il tetto della folla', pieno.nemici.length, tetto)
 }
 
+/* ══════════ 4-quater. LE ARMI CHE GUARDANO DOVE CORRI ══════════
+   L'arco tira da solo al più vicino. La lancia e il fendente tirano
+   **davanti**, nella direzione di marcia: per usarle bisogna correre
+   verso i mostri, e mirare costa — quindi picchiano più dell'arco. Chi
+   sta fermo le tiene puntate dov'era andato l'ultima volta. */
+{
+  const bestia = (tipo, x, y, vita = 50) => ({
+    tipo, x, y, r: 15, vita, vitaMax: vita, passo: 0, massa: 1,
+    spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0, fase: 0 })
+  const solo = (seme, carta) => {
+    const p = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(seme), campo })
+    p.aNascere = -1e9; p.tOggetto = 1e9; p.tMuro = 1e9   // niente altro in campo
+    p.eroe.invuln = 1e9
+    p.potenziamenti[carta] = 1; p.ricalcola()
+    return p
+  }
+  /* le due carte esistono, e stanno nelle fasce dichiarate */
+  const lancia = MAZZO.find(c => c.chiave === 'lancia'), fendente = MAZZO.find(c => c.chiave === 'fendente')
+  controlla('la lancia è una carta forte', lancia?.fascia === 'forte')
+  controlla('il fendente è una carta media', fendente?.fascia === 'media')
+
+  /* ── la lancia parte dove si corre, e resta puntata lì da fermi ── */
+  const p = solo(61, 'lancia')
+  p.muovi(0, 1); p.avanza(1 / 30)
+  const l = p.colpi.filter(c => c.lancia)
+  uguale('correndo in giù parte una lancia', l.length, 1)
+  controlla('e va in giù', l[0].vy > 400 && Math.abs(l[0].vx) < 1)
+  controlla('trapassa senza fermarsi', l[0].restano > 50)
+  controlla('e fa più male di una freccia', l[0].danno > p.f.danno * 2, `${l[0].danno} contro ${p.f.danno}`)
+  controlla('e lo si sente', p.svuotaEventi().includes('lancia'))
+  p.muovi(0, 0)
+  for (let i = 0; i < 60; i++) p.avanza(1 / 30)
+  const dopo = p.colpi.filter(c => c.lancia)
+  controlla('da fermo la lancia va ancora dove si correva', dopo.length >= 1 && dopo.every(c => c.vy > 0))
+  uguale('la scena dice dove si mira', p.scena().eroe.rotta, Math.PI / 2)
+  /* trapassa davvero: tre rocce in fila, tutte colpite */
+  const q = solo(62, 'lancia')
+  q.nemici.push(bestia('roccia', 80, 0), bestia('roccia', 140, 0), bestia('roccia', 200, 0))
+  q.muovi(1, 0); q.avanza(1 / 30); q.muovi(0, 0)
+  for (let i = 0; i < 30; i++) q.avanza(1 / 30)
+  controlla('una lancia colpisce tutti quelli sulla sua strada', q.nemici.every(n => n.vita < 50),
+            q.nemici.map(n => n.vita).join(' '))
+
+  /* ── il fendente colpisce solo davanti, e non parte nel vuoto ── */
+  const f = solo(63, 'fendente')
+  f.nemici.push(bestia('roccia', 60, 0), bestia('roccia', -60, 0), bestia('roccia', 0, 60))
+  f.muovi(1, 0); f.avanza(1 / 30); f.muovi(0, 0)
+  /* l'effetto dura un quinto di secondo: si guarda al primo battito */
+  controlla('con un effetto che si vede', f.scena().effetti.some(e => e.che === 'fendente'))
+  for (let i = 0; i < 10; i++) f.avanza(1 / 30)
+  const [davanti, dietro, lato] = f.nemici.map(n => n.vita)
+  controlla('il fendente colpisce chi sta davanti', davanti < 50, `vita ${davanti}`)
+  uguale('non chi sta dietro', dietro, 50)
+  controlla('e non chi sta di lato, fuori dall\'arco', lato > davanti, `lato ${lato}, davanti ${davanti}`)
+  controlla('e picchia più di una freccia', 50 - davanti > f.f.danno * 2)
+  const g = solo(64, 'fendente')
+  g.nemici.push(bestia('roccia', -60, 0))
+  g.muovi(1, 0); g.avanza(1 / 30); g.muovi(0, 0)
+  for (let i = 0; i < 40; i++) g.avanza(1 / 30)
+  uguale('senza nessuno davanti non parte', g.svuotaEventi().filter(e => e === 'fendente').length, 0)
+  /* senza armi direzionali la scena non mette la freccina ai piedi */
+  uguale('senza armi che mirano la scena non mostra la mira',
+         new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(65), campo }).scena().eroe.rotta, null)
+
+  /* ── e il pilota le sa usare: la mira si misura ──
+     «Direzione giusta» = la direzione presa sta entro 45° dal grumo di
+     mostri più fitto a tiro; `quotaMira` è quante occasioni su cento.
+     Deve seguire la manopola `mira`, e non costare la partita. */
+  const r = new Regole(CAMPAGNA[6])
+  const mirato = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.65, campo, rnd: caso(70) })
+  const distratto = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0.3, campo, rnd: caso(70) })
+  const mai = misura(r, { volte: 8, bravura: 1, esattezza: 1, mira: 0, campo, rnd: caso(70) })
+  nota(`la mira del pilota: a 0.65 guarda il grumo il ${(mirato.quotaMira * 100).toFixed(0)}% delle volte, ` +
+       `a 0.3 il ${(distratto.quotaMira * 100).toFixed(0)}%, a 0 il ${(mai.quotaMira * 100).toFixed(0)}%`)
+  controlla('il pilota ha occasioni di mirare', mirato.occasioniMedie > 50)
+  dentro('chi mira guarda il grumo una buona parte del tempo', mirato.quotaMira, 0.4, 0.8)
+  controlla('chi è distratto meno', distratto.quotaMira < mirato.quotaMira - 0.1)
+  controlla('e chi non mira quasi mai', mai.quotaMira < 0.1)
+  controlla('mirare non costa la tappa', mirato.quota >= mai.quota - 0.26,
+            `${(mirato.quota * 100).toFixed(0)}% contro ${(mai.quota * 100).toFixed(0)}%`)
+}
+
 /* ══════════ 5. le nove tappe si vincono davvero ══════════ */
 const VOLTE = 24
 const bravi = [], bimbi = []
-nota('tappa                     sa   sbaglia  schiva   fermo   livello  domande')
-nota('                        rispondere  1su3  a sprazzi')
+nota('tappa                     sa   distratto  sbaglia  schiva   fermo   livello  domande')
+nota('                        rispondere  (mira .3)  1su3  a sprazzi')
 for (const [i, t] of CAMPAGNA.entries()) {
   const r = new Regole(t)
   /* Il giocatore di riferimento non è più «uno che schiva bene»: è **uno
@@ -640,14 +722,22 @@ for (const [i, t] of CAMPAGNA.entries()) {
      hanno vita da vendere, saper schivare non basta a passare le ultime
      tappe — bisogna aver preso le carte che picchiano, e quelle si pagano
      con le domande toste. `esattezza` è la manopola che dice quante ne
-     indovina, sempre, e serve a misurare proprio questo. */
-  const sa = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.95, campo, rnd: caso(100 + i) })
-  const sbaglia = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.66, campo, rnd: caso(150 + i) })
-  const bimbo = misura(r, { volte: VOLTE, bravura: 0.55, esattezza: 0.7, campo, rnd: caso(200 + i) })
+     indovina, sempre, e serve a misurare proprio questo.
+
+     E da quando le cose si trovano in giro, il pilota **va in giro**: a
+     prendere gemme e oggetti, a scansare i muri, e — con un'arma che
+     guarda dove corre — verso il grumo di mostri (`mira`, vedi 4-quater).
+     «Distratto» è lo stesso giocatore che mira una volta su tre invece
+     di due: serve a vedere che mirare aiuta, o almeno non costa. */
+  const sa = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.95, mira: 0.65, campo, rnd: caso(100 + i) })
+  const distratto = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.95, mira: 0.3, campo, rnd: caso(120 + i) })
+  const sbaglia = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.66, mira: 0.65, campo, rnd: caso(150 + i) })
+  const bimbo = misura(r, { volte: VOLTE, bravura: 0.55, esattezza: 0.7, mira: 0.3, campo, rnd: caso(200 + i) })
   const fermo = misura(r, { volte: 12, fermo: true, campo, rnd: caso(300 + i) })
   bravi.push(sa.quota); bimbi.push(bimbo.quota)
   nota(`${(i + 1 + '. ' + t.nome).padEnd(24)}` +
        `${(sa.quota * 100).toFixed(0).padStart(4)}%` +
+       `${(distratto.quota * 100).toFixed(0).padStart(9)}%` +
        `${(sbaglia.quota * 100).toFixed(0).padStart(8)}%` +
        `${(bimbo.quota * 100).toFixed(0).padStart(9)}%` +
        `${(fermo.quota * 100).toFixed(0).padStart(8)}%` +
@@ -658,16 +748,29 @@ for (const [i, t] of CAMPAGNA.entries()) {
      Le soglie sono per scalino: il primo insegna e si vince quasi sempre,
      l'ultimo è una salita che chiede di aver risposto bene. Chi perde non
      perde niente e riprova, e intanto ha fatto i suoi conti: è quello il
-     costo di una sconfitta, e non è un costo. */
-  const soglieSa = [0.9, 0.9, 0.75, 0.7, 0.7, 0.6, 0.6, 0.55, 0.5]
-  const soglieBimbo = [0.8, 0.7, 0.35, 0.25, 0.05, 0.02, 0.02, 0, 0]
+     costo di una sconfitta, e non è un costo.
+
+     Ritarate il giorno in cui il dito è diventato necessario (gemme
+     ferme, oggetti, muri, armi che mirano): il giocatore che risponde
+     a tutto passava le ultime tre tappe il 58-88% delle volte e adesso
+     il 55-80%, quello a sprazzi il 33-58% e adesso il 10-40% — la
+     campagna è più dura di un gradino perché ha una cosa in più da fare,
+     ed è voluto. Quello che non cambia è la forma: si scende. */
+  const soglieSa = [0.9, 0.85, 0.85, 0.75, 0.6, 0.65, 0.65, 0.5, 0.45]
+  const soglieBimbo = [0.8, 0.65, 0.6, 0.25, 0.1, 0.15, 0.15, 0.05, 0]
   controlla(`tappa ${i + 1} (${t.nome}): chi risponde bene la porta a casa`,
             sa.quota >= soglieSa[i], `ce la fa il ${(sa.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): chi schiva a sprazzi non resta fuori`,
             bimbo.quota >= soglieBimbo[i], `ce la fa il ${(bimbo.quota * 100).toFixed(0)}%`)
-  /* il gioco non si deve giocare da solo: chi non muove il dito perde */
+  /* mirare meno non deve costare una tappa: la mira è un di più, e una
+     manopola che spegnendola fa perdere non è una manopola, è un obbligo */
+  controlla(`tappa ${i + 1} (${t.nome}): chi mira meno non resta fuori`,
+            distratto.quota >= soglieSa[i] - 0.3, `ce la fa il ${(distratto.quota * 100).toFixed(0)}%`)
+  /* il gioco non si deve giocare da solo: chi non muove il dito perde.
+     Era «al massimo il 45%», e da fermo si vinceva la terza tappa una
+     volta su tre: le gemme arrivavano da sole. Adesso non arriva niente */
   controlla(`tappa ${i + 1} (${t.nome}): chi sta fermo non la vince`,
-            fermo.quota <= (i === 0 ? 0.4 : 0.45),
+            fermo.quota <= 0.2,
             `da fermo ce la fa il ${(fermo.quota * 100).toFixed(0)}%`)
   /* le domande sono il prezzo delle carte, e sono anche il motivo per cui
      questo gioco esiste: una tappa lunga ne deve chiedere di più */
@@ -697,7 +800,14 @@ for (const [i, t] of CAMPAGNA.entries()) {
     misura(r, { volte: 30, bravura: 1, esattezza: e, campo, rnd: caso(600 + k) }).quota)
   nota('ultima tappa, per quante domande indovina:  ' +
        TASSI.map((e, k) => `${(e * 100).toFixed(0)}% → ${(quote[k] * 100).toFixed(0)}%`).join('   '))
-  controlla('chi risponde a tutto la porta a casa', quote[0] >= 0.6,
+  /* Era 0.6 quando l'unica cosa da fare col dito era schivare. Adesso
+     l'ultima tappa chiede anche di andare a prendere le gemme, passare i
+     muri e mirare, e il giocatore che risponde a tutto la passa il 55-57%
+     delle volte: si abbassa la soglia e non si alza il danno delle armi
+     nuove, perché quelle si pagano con una domanda e alzarle vorrebbe
+     dire che chi le ha scelte vince la campagna al posto di chi risponde.
+     La forma resta: più si sbaglia, meno si vince. */
+  controlla('chi risponde a tutto la porta a casa', quote[0] >= 0.5,
             `ce la fa il ${(quote[0] * 100).toFixed(0)}%`)
   controlla('chi ne sbaglia una su tre non ce la fa quasi mai',
             quote[2] <= 0.45, `ce la fa il ${(quote[2] * 100).toFixed(0)}%`)

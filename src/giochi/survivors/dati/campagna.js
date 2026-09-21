@@ -81,7 +81,11 @@ export const CAMPAGNA = [
     racconto: 'I funghi hanno la pelle dura: serve qualcosa che picchi.' },
   { chiave: 'grotta', nome: 'La grotta', scenario: 'grotta', scalino: 'fitto',
     portata: 35,
-    durata: 105, ritmo: 1.14, vigore: 1.70, fretta: 1.00, rincaro: 0.05,
+    /* il vigore era 1.70, come le dune: da quando si va in giro per le
+       gemme e si scansano i muri, i ragni che arrivano a 37 secondi
+       facevano della grotta un avvallamento (63% al banco, contro l'80%
+       delle due tappe dopo). Misurato, non stimato */
+    durata: 105, ritmo: 1.14, vigore: 1.58, fretta: 1.00, rincaro: 0.05,
     squadra: ['melma', 'pipistrello', 'moscerino', 'fungo', 'ragno', 'spettro'], premio: 6,
     racconto: 'I ragni ti raggiungono: scappare dritto non basta più.' },
   { chiave: 'dune', nome: 'Le dune', scenario: 'deserto', scalino: 'fitto',
