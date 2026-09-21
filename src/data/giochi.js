@@ -123,7 +123,19 @@ export const GIOCHI = [
      ci pensa la portata, che non offre una tappa fuori mira. Con due
      dichiarazioni che dicono cose diverse vinceva la più grossolana. */
   { chiave: 'mate',       ico: '☄️', nome: 'Asteroidi',
-    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande' },
+    che: 'tabelline e calcolo a mente', area: 'numeri', come: 'domande',
+    /* Il volo infinito non finisce: quello che si porta a casa sono i
+       punti, e com'era fatta quella partita. Una sfida sola — il volo è
+       uno, tabelline e calcolo a mente insieme (`data/asteroidi.js`).
+       Il record di prima stava in `best.math`, fuori dalla campagna, e
+       `vecchio` lo fa leggere finché un quaderno non c'è: chi aveva
+       fatto 1240 punti ieri se li ritrova. `best.math` resta, e si
+       scrive ancora, perché i traguardi lo guardano. */
+    senzaFine: {
+      nome: 'Volo infinito', icona: '♾️', misura: 'punti', che: 'quanti punti fai',
+      dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
+      vecchio: p => (p && p.best ? p.best.math : 0),
+    } },
   { chiave: 'inglese',    ico: '🌐', nome: 'English',
     che: 'parole, verbi e frasi in inglese', area: 'parole', come: 'domande', grandi: true },
   { chiave: 'spagnolo',   ico: '🇪🇸', nome: 'Spagnolo',

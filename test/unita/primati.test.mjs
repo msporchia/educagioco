@@ -293,6 +293,30 @@ uguale('una misura sconosciuta non pianta niente', inParole(7, 'boh'), '7')
   const rigaTd = tabellaDeiPrimati().find(r => r.chiave === 'torri')
   uguale('le ondate si scrivono come ondate', rigaTd.parole, '12 ondate')
   uguale('e accanto c\'è com\'era fatta quella partita', rigaTd.dettagli, '580 nemici fermati · 9 torri')
+
+  /* ── gli asteroidi: il record stava FUORI dalla campagna ── */
+  /* Il volo infinito teneva i punti in `best.math`, che non è dentro
+     `campagne.mate`: il manifesto lo dice con `vecchio`, e si legge
+     finché un quaderno non c'è. Chi aveva fatto 1240 punti ieri se li
+     ritrova come record da battere, e la prima partita di oggi non è
+     «la prima» — c'è un numero da confrontare. */
+  state.profile.best.math = 1240
+  delete state.profile.campagne.mate
+  uguale('il record vecchio degli asteroidi si legge da best.math', primatoDi('mate').best, 1240)
+  controlla('e la mappa lo scrive già', recordInParole(primatoDi('mate'),
+            sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)) === '1240 punti')
+  const sotto = segnaPrimato('mate', 900, 5000, { livello: 5, centri: 30, serie: 8 })
+  controlla('una partita sotto il record vecchio non lo batte, e non è la prima',
+            !sotto.record && !sotto.primo && sotto.mancano === 340)
+  uguale('la frase dice quanto è mancato', fraseDiFine(sotto, 'punti'),
+         'Il tuo record è 1240 punti · ti sono mancati 340')
+  const sopra = segnaPrimato('mate', 1300, 6000, { livello: 7, centri: 43, serie: 12 })
+  controlla('una sopra lo batte, e dice di quanto', sopra.record && sopra.meglio === 60)
+  uguale('la frase porta i due numeri', fraseDiFine(sopra, 'punti'),
+         'Nuovo record! 1300 punti (60 meglio di prima)')
+  const rigaMate = tabellaDeiPrimati().find(r => r.chiave === 'mate')
+  uguale('e il racconto è livello, centri e serie', rigaMate.dettagli, 'livello 7 · 43 centri · serie 12')
+  uguale('best.math non si tocca: lo guardano i traguardi', state.profile.best.math, 1240)
 }
 
 riassunto('I primati')

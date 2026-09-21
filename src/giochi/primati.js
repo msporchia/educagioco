@@ -122,6 +122,12 @@ export const MISURE = {
     scrivi: v => `${v} ondat${v === 1 ? 'a' : 'e'}`,
     scarto: v => `${v}`,
   },
+  /* i punti di una partita: «1240 punti», e lo scarto è un numero e basta */
+  punti: {
+    nome: 'punti',
+    scrivi: v => `${v} punt${v === 1 ? 'o' : 'i'}`,
+    scarto: v => `${v}`,
+  },
 }
 
 const misuraDi = m => MISURE[m] || MISURE.quanti
@@ -190,18 +196,24 @@ function leggi(q) {
    non ha ancora un quaderno suo legge quello di quando la sfida era una
    sola — è la migrazione, e sta tutta in questa riga: nessuno riscrive
    il profilo per leggerlo. */
-export function apriQuaderno(av = {}, sfida = null) {
+/* E `vecchio` è un record che sta **fuori dalla campagna**: gli
+   asteroidi tenevano i punti in `profile.best.math`, che non è dentro
+   `campagne.mate` e che questo file non legge — lo legge `campagne.js`
+   con la funzione `vecchio` del manifesto, e lo passa qui. Vale solo
+   finché un quaderno non c'è, come `cfg.primato`. */
+export function apriQuaderno(av = {}, sfida = null, vecchio = 0) {
   const chiave = chiaveSfida(sfida)
   if (chiave) {
     const tutti = av && av.primati
     const suo = tutti && typeof tutti === 'object' ? tutti[chiave] : null
     if (suo && typeof suo === 'object') return leggi(suo)
-    return sfida && typeof sfida === 'object' && sfida.eredita ? apriQuaderno(av, null) : VUOTO()
+    return sfida && typeof sfida === 'object' && sfida.eredita
+      ? apriQuaderno(av, null, vecchio) : VUOTO()
   }
   const q = av && av.primato
   if (q && typeof q === 'object') return leggi(q)
-  const vecchio = intero((av && av.cfg || {}).primato)
-  return vecchio ? { ...VUOTO(), best: vecchio } : VUOTO()
+  const prima = intero((av && av.cfg || {}).primato) || intero(vecchio)
+  return prima ? { ...VUOTO(), best: prima } : VUOTO()
 }
 
 /* ── QUALE SFIDA RACCONTARE, QUANDO C'È POSTO PER UNA RIGA SOLA ──
@@ -348,6 +360,10 @@ export function guastiDelleSfide(giochi = []) {
         guasti.push(`${dove}: misura «${x.misura}» sconosciuta (${Object.keys(MISURE).join(', ')})`)
       if (x.dettagli !== undefined && typeof x.dettagli !== 'function')
         guasti.push(`${dove}: «dettagli» dev'essere una funzione (dettagli salvati → frasi)`)
+      /* `vecchio`: il record di quando stava fuori dalla campagna
+         (`best.math`), una funzione sul profilo — vedi `apriQuaderno` */
+      if (x.vecchio !== undefined && typeof x.vecchio !== 'function')
+        guasti.push(`${dove}: «vecchio» dev'essere una funzione (profilo → record di prima)`)
     }
   }
   return guasti

@@ -161,8 +161,19 @@ const sfidaDelGioco = (chiave, sfida) => {
   return sfidaDi(g && g.senzaFine, sfida) || sfida
 }
 
-export const primatoDi = (chiave, sfida = null) =>
-  apriQuaderno(progresso(chiave), sfidaDelGioco(chiave, sfida))
+/* il record di quando stava fuori dalla campagna (`best.math` per gli
+   asteroidi): lo dice il manifesto con `vecchio`, una funzione sul
+   profilo, e `apriQuaderno` lo legge finché un quaderno non c'è */
+const vecchioDi = s =>
+  (s && typeof s === 'object' && typeof s.vecchio === 'function' ? s.vecchio(state.profile) : 0)
+
+/* si legge senza passare da `progresso()`: quella crea la voce che non
+   c'è, e la mappa di un gioco legge il record ogni volta che si apre —
+   non è un motivo per scrivere nel profilo */
+export function primatoDi(chiave, sfida = null) {
+  const s = sfidaDelGioco(chiave, sfida)
+  return apriQuaderno((state.profile.campagne || {})[chiave] || {}, s, vecchioDi(s))
+}
 
 /* Una partita senza fine è finita. Torna **cosa dire** — è record? di
    quanto? — così il gioco festeggia senza doversi ricordare il numero
@@ -175,7 +186,7 @@ export const primatoDi = (chiave, sfida = null) =>
 export function segnaPrimato(chiave, valore, quando = Date.now(), dettagli = null, sfida = null) {
   const c = progresso(chiave)
   const s = sfidaDelGioco(chiave, sfida)
-  const { quaderno, esito } = conRisultato(apriQuaderno(c, s), valore, quando, dettagli)
+  const { quaderno, esito } = conRisultato(apriQuaderno(c, s, vecchioDi(s)), valore, quando, dettagli)
   const k = chiaveSfida(s)
   if (k) {
     if (!c.primati || typeof c.primati !== 'object') c.primati = {}
@@ -241,7 +252,7 @@ export function tabellaDeiPrimati() {
   /* una riga per sfida, non per gioco: il castello ne ha quattro, e
      `id` è quello che distingue le righe fra loro (`torri/libera-bosco`) */
   return GIOCHI.filter(g => g.senzaFine).flatMap(g => sfideDi(g.senzaFine).map(s => {
-    const q = apriQuaderno(tutte[g.chiave] || {}, s)
+    const q = apriQuaderno(tutte[g.chiave] || {}, s, vecchioDi(s))
     return {
       id: s.chiave ? `${g.chiave}/${s.chiave}` : g.chiave,
       chiave: g.chiave,

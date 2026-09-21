@@ -17,8 +17,8 @@ import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
    direbbe niente di vero */
 import { fatte as proveFatte, quante as proveQuante } from './generale/fila.js'
 import { gioco as giocoNuovo } from '../giochi/indice.js'
-import { progresso as progressoDi } from '../giochi/campagne.js'
-import { recordPiuRecente, recordInParole } from '../giochi/primati.js'
+import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
+import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import { giocoDaVedere } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
@@ -170,11 +170,19 @@ const recordTorri = computed(() => {
   return r ? `${r.sfida.icona} ${r.sfida.nome} · record ${recordInParole(r.quaderno, r.sfida)}` : ''
 })
 
+/* il volo infinito degli asteroidi ha una sfida sola: si legge da
+   `primatoDi`, che non crea niente, e si dice solo se c'è */
+const recordMate = computed(() => {
+  const s = sfidaDi(GIOCHI.find(g => g.chiave === 'mate').senzaFine)
+  const r = recordInParole(primatoDi('mate'), s)
+  return r ? ` · record ${r}` : ''
+})
+
 const dove = computed(() => {
   const q = (n, tot) => `${Math.min(n + 1, tot)} di ${tot}`
   return {
     mate: doveMate.value >= filaMate.length
-      ? `voli infiniti ♾️ · ✖️ ${stelleMate.value}/10 tabelline`
+      ? `volo infinito ♾️ · ✖️ ${stelleMate.value}/10 tabelline${recordMate.value}`
       : `${fatteMate.value} tapp${fatteMate.value === 1 ? 'a' : 'e'} ` +
         `su ${filaMate.length} · ora ${filaMate[doveMate.value].T.nome}`,
     inglese: tappaEn.value.libera
