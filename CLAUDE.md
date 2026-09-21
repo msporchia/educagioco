@@ -567,7 +567,10 @@ committate: non è ricostruibile da git.
   «il te di ieri è più bravo di te», la fila delle ultime dice che stai
   salendo — ed è quello il premio di un gioco che non finisce.
   **Un gioco può avere più sfide senza fine** (il castello ne ha
-  quattro, una per terreno; gli asteroidi ne avranno due): il
+  quattro, una per terreno; gli asteroidi ne hanno una, il volo
+  infinito — che è **uno**, tabelline e calcolo a mente insieme, con
+  la mira che sale col livello in `store/volo.js`, e il record letto
+  da `best.math` con `vecchio` finché un quaderno non c'è): il
   manifesto le elenca in `senzaFine.sfide` — `{ chiave, nome, icona,
   eredita? }`, con misura, `che` e `dettagli` scritti una volta in cima
   come difetti — e ogni record sta in `campagne[chiave].primati[<sfida>]`.

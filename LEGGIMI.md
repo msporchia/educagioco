@@ -319,8 +319,7 @@ di cui una parte sulla tabellina nuova — e paga in monete la prima volta.
 Dentro la tappa il pool è per più di metà la tabellina del pianeta: con una
 quota minore la tappa diventava un'attesa, con tutto il pool le tabelline di
 prima si dimenticavano una dopo l'altra. Superato l'ultimo si apre il **volo
-libero**, senza bersaglio, ed è lì — e solo lì — che le tabelline si tornano a
-scegliere a mano.
+infinito**, senza bersaglio (vedi sotto).
 
 La ⭐ di un pianeta è un'altra cosa dal superarlo: arriva quando **tutte e
 dieci le caselle** di quella tabellina sono imparate secondo il motore, ed è
@@ -366,17 +365,59 @@ regge. I pavimenti sono due, perché i posti sono due (`ritmoTappa`,
 | dove | pavimento | cioè | lo si tocca a |
 |---|---|---|---|
 | le tappe | 70% | sette secondi invece di dieci | livello 7 (30 centri) |
-| i voli infiniti | 50% | cinque secondi | livello 11 (50 centri) |
+| il volo infinito | 50% | cinque secondi | livello 11 (50 centri) |
 
 Nelle tappe il pavimento è alto perché una tappa ha un bersaglio e si
 chiude in una serata: il livello non deve diventare il muro che la tiene
-aperta. Nei voli è più basso perché lì l'unica cosa da fare è durare, e un
+aperta. Nel volo è più basso perché lì l'unica cosa da fare è durare, e un
 cielo che non accelera mai è una partita che finisce solo per noia. Il
 pavimento è quello che tiene la domanda una domanda di conto: a cinque
 secondi il sasso giusto è in scena entro tre (`rispostaEntro`) e resta da
 toccare per almeno due — sotto, si tornerebbe a misurare la mano. Il peso
 del calcolo, il boss e l'ultima vita allungano come prima, moltiplicando
 sopra.
+
+#### Il volo infinito: uno, e si complica col livello
+
+A fila finita si apre **un volo solo**, tabelline e calcolo a mente
+insieme (`data/asteroidi.js`, `VOLO`). Erano due — «Volo libero» con
+tutte le tabelline, «Volo a mente» con tutti i trucchi — cioè le due
+metà che la fila esiste per fondere, rimesse in piedi in fondo alla
+mappa. E nessuno dei due si complicava: il livello alzava la velocità e
+basta, quindi a livello nove scendeva 2×3 alla cadenza di 7×8.
+
+Il conto sta in `store/volo.js`, puro. **Il livello sposta una mira**
+sulla scala 0..1 della difficoltà: 0,15 a livello 1, 1 a livello 9, e
+oltre il nove cresce solo la velocità. Le due scale sono riportate a
+0..1 — `stima` per le tabelline (2×2 → 0,14 · 3×7 → 0,5 · 9×9 → 0,93;
+×1 e ×10 a zero, sono regole), la stazione del concetto per il calcolo
+a mente (somme entro il dieci → 0 · riporti → 0,6 · centinaia → 1) —
+così la mira è una per tutti e due. Attorno alla mira c'è una **campana
+stretta** (`BANDA` 0,2, la forma di `pesoDi` dei quiz): a livello 5 la
+mira è 0,57 e 9×9 pesa il 4% di 3×7, esiste ma capita di rado. Il pool
+di ogni domanda sono otto chiavi pescate con quei pesi.
+
+Due esempi. **Livello 1**, mira 0,15: 2×3, 3×5, 2×2 e le somme entro il
+dieci; 7×8 pesa un milionesimo, cioè mai. **Livello 9**, mira 1: 7×8,
+9×7, 6×9 e le centinaia; 2×3 pesa un centomilionesimo, cioè mai. ×1 e ×10 sono diciannove caselle
+per una regola sola: si dividono mezza casella (`PESO_BANALE`), se no a
+livello 1 un terzo delle domande sarebbe 1×7.
+
+**I due magazzini si alternano**, a monetina, mai più di tre di fila
+dello stesso (`creaAlternanza`): un pool unico lo pescherebbe il motore
+per bisogno, e il bisogno di 55 fatti non si confronta con quello di
+una strategia che vale infinite domande. Il boss chiede dal magazzino
+dell'ultima domanda. **La marea si somma**: il picker pesca nel pool
+della mira con la lentezza di quel mestiere, e per chi sa fino all'8 a
+livello 3 il 2-3 esce un terzo delle volte che uscirebbe senza
+(`unita/asteroidi` lo misura contro lo stesso volo senza marea).
+
+**Il record** è in punti (`senzaFine` di `mate` in `data/giochi.js`,
+misura `punti`), col racconto «livello 7 · 43 centri · serie 12». Il
+record di prima stava in `best.math`, fuori dalla campagna: il manifesto
+lo dice con `vecchio`, e si legge finché un quaderno non c'è. Si scrive
+**prima** di `riassunto()`, che riscrive `best.math` coi punti di
+adesso — letto dopo, ogni primo volo era un pareggio con sé stesso.
 
 #### L'astronave, e cosa può e non può fare
 

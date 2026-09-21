@@ -47,9 +47,8 @@ superata, e le due cose non possono stare nello stesso simbolo.
 
 Anche fuori dalla fila non resta niente di diviso: un cartello solo a fine
 tappa («Tappa superata!», non «Pianeta» o «Stazione»), un solo trionfo
-quando la scaletta finisce, e i **due voli infiniti che si aprono insieme**
-a fila finita — non sono due campagne, sono due modi di continuare a volare
-quando non c'è più niente da macinare.
+quando la scaletta finisce, e **un volo infinito solo** a fila finita —
+tabelline e conti a mente insieme, non due modi di volare uno per mestiere.
 
 (La scaletta apre in anticipo anche tutto quello che a quell'età è **roba
 già saputa** — a nove anni non si ricomincia dalla tabellina del 2 per
@@ -135,16 +134,28 @@ non toglie niente al motore, perché una cosa mai insegnata non si misura.
 Salendo di livello — uno ogni cinque risposte giuste della partita — **il
 cielo si infittisce, e accelera fino a un pavimento**: arrivano più sassi
 sbagliati da scartare, e la caduta si accorcia del 5% a livello. Nelle tappe
-si ferma al 70% del tempo di partenza (sette secondi invece di dieci), nei
-voli infiniti al 50%: lì l'unica cosa da fare è durare, e un cielo che non
+si ferma al 70% del tempo di partenza (sette secondi invece di dieci), nel
+volo infinito al 50%: lì l'unica cosa da fare è durare, e un cielo che non
 accelera mai sarebbe una partita che finisce solo per noia. Il pavimento è
 quello che tiene la domanda una domanda di conto e non di mano: anche al
 minimo il sasso con la risposta giusta entra entro tre secondi dalla domanda
 e resta da toccare per almeno due. Aspettare non è saper rispondere piano.
 
-Nei **voli infiniti**, che si aprono a fila finita, non si sceglie più
-niente a mano: pescano da sé quello che si ricorda meno, e a chi ricorda
-tutto ripropongono gli ultimi pianeti giocati.
+### Il volo infinito
+
+Si apre a fila finita, ed è **uno**: tabelline e conti a mente, a turno,
+mai più di tre di fila dello stesso. Non si sceglie niente a mano. **Si
+complica col livello**: a livello 1 escono le tabelline del 2 e del 3 e
+le somme entro il dieci, a livello 5 il 4 e il 6 e le somme col riporto,
+a livello 9 il 7×8, il 9×7 e le centinaia. Sopra il nove il livello alza
+solo la velocità. Quello che si sa da un pezzo esce comunque di rado: la
+marea vale anche qui.
+
+Il volo ha un **record** in punti, e lo dice prima di entrare: sul tasto
+della mappa c'è «record 1240 punti · livello 7 · 43 centri · serie 12».
+A fine partita si legge di quanto è stato battuto, o quanto è mancato —
+i coriandoli solo a record battuto, non alla prima partita e non a un
+pareggio. Il record sta anche nell'albo, nella tabella dei primati.
 
 ### Il calcolo a mente ha una regola in più
 
