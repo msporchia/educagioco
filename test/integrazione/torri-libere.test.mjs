@@ -11,7 +11,7 @@
 
    `node test/esegui.mjs torri-libere`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, semina, leggiProfilo, attendi } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, semina, leggiProfilo, attendi, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -59,16 +59,30 @@ const dentro = await page.evaluate(() => {
 uguale('la partita è cominciata', dentro.fase, 'gioco')
 uguale('ed è una libera', dentro.idx, -1)
 uguale('quella delle mura', dentro.quale, 'libera-mura')
-await page.evaluate(async () => {
+await scatto(page, 'torri-libere-bastione')   // il campo: l'anello che si attraversa
+/* si perde in fretta: **un** arciere — senza nemmeno una torre il gioco
+   non manda l'ondata, aspetta il bambino — poi ondate chiamate appena
+   si può, campo a tutta velocità. Un regalo in sospeso blocca la
+   chiamata (`chiamaOnda` lo riapre invece di mandare i mostri), quindi
+   si prende il primo che capita. `daOnda` spinge il contatore delle
+   ondate, per fingere una partita lunga senza giocarla. */
+const perdi = (daOnda = 0) => page.evaluate(async daOnda => {
   const attesa = ms => new Promise(r => setTimeout(r, ms))
   const T = window.__td
+  T.scegliTorre('add')
+  T.operazioneFinita({ errori: 0, ms: 900 })   // il conto, pagato senza tastiera
+  await attesa(100)
   T.velocita.value = 60
-  for (let giro = 0; giro < 400 && T.fase.value === 'gioco'; giro++) {
+  if (daOnda) T.hud.onda = daOnda
+  for (let giro = 0; giro < 600 && T.fase.value === 'gioco'; giro++) {
+    if (T.regaloAperto.value) T.prendiRegalo('frecce')
     if (T.inAttesa.value) T.chiamaOnda()
     await attesa(25)
   }
-})
-uguale('senza torri il castello cade', await page.evaluate(() => window.__td.fase.value), 'fine')
+  return { fase: T.fase.value, onda: T.hud.onda, cuori: T.hud.cuori, torri: T.hud.torri }
+}, daOnda)
+const caduta = await perdi()
+uguale('con un arciere solo il castello cade', caduta.fase, 'fine', JSON.stringify(caduta))
 const cartello = await page.locator('[data-primato]').textContent()
 controlla('e il cartello dice del primo risultato su questo terreno',
           /primo risultato/.test(cartello), cartello)
@@ -88,6 +102,32 @@ const dopo = await page.$$eval('[data-tappa^="libera-"]', bs =>
   Object.fromEntries(bs.map(b => [b.dataset.tappa, b.textContent.replace(/\s+/g, ' ').trim()])))
 controlla('le mura adesso hanno il loro record', /record/.test(dopo['libera-mura']), dopo['libera-mura'])
 controlla('e il bosco tiene il suo', /21 ondate/.test(dopo['libera-bosco']), dopo['libera-bosco'])
+
+/* ── il record si aggiorna subito, senza uscire e rientrare ──
+   Si gioca il bosco, che ha il record ereditato di 21, e si batte:
+   l'ondata la si spinge a mano a 30 prima che il castello cada, così
+   la partita finisce a 29 superate. Tornati in mappa **senza
+   ricaricare** il tasto del bosco deve dire 29, non 21 — e la home,
+   che racconta il record più recente, deve dire lo stesso. */
+await page.click('[data-tappa="libera-bosco"]')
+await attendi(page, 300)
+const cadutaBosco = await perdi(30)
+uguale('anche nel bosco il castello cade', cadutaBosco.fase, 'fine')
+uguale('a un\'ondata oltre la trentesima', cadutaBosco.onda >= 30, true)
+const cartelloBosco = await page.locator('[data-primato]').textContent()
+controlla('e il cartello festeggia il record', /record/i.test(cartelloBosco), cartelloBosco)
+await page.click('.banco .bottone.chiaro')
+await page.waitForSelector('[data-tappa="libera-bosco"]')
+await page.locator('[data-tappa="libera-palude"]').scrollIntoViewIfNeeded()
+await scatto(page, 'torri-libere-mappa')      // i quattro tasti coi record
+const subito = await page.locator('[data-tappa="libera-bosco"]').textContent()
+const nuovo = `${cadutaBosco.onda - 1} ondate`
+controlla(`il tasto del bosco dice subito il record nuovo (${nuovo})`, subito.includes(nuovo), subito)
+controlla('e non più quello di ieri', !/21 ondate/.test(subito), subito)
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('.carta.td')
+const rigaDopo = await page.locator('.carta.td').textContent()
+controlla('e la home racconta il record appena fatto', rigaDopo.includes(nuovo), rigaDopo)
 
 uguale('nessun errore JS', errori.join(' · '), '')
 await browser.close()
