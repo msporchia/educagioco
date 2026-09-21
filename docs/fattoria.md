@@ -1010,6 +1010,32 @@ gli mette in testa, che è la cosa che si vede da lontano e che dice di
 andare lì — e infatti è sempre stata quella a fare il lavoro, il ritratto
 serviva solo a colorarla.
 
+### Le feste: neve a Natale, zucche a Halloween (dal 21 settembre 2026)
+
+Dal 20 ottobre al 2 novembre e dal 6 dicembre al 6 gennaio (le date
+stanno in `FINESTRE`, `dati/stagioni.js`, e si leggono in **ora
+locale**) la fattoria si addobba da sola: a Halloween 🎃 sparse sul
+prato, 🕸️ e 🦇 agli angoli delle case; a Natale i fiocchi che cadono,
+una crosta bianca sui tetti e sulle chiome, chiazze di neve sull'erba,
+lucine gialle e rosse che lampeggiano sotto le grondaie, ⭐ e 🔔 sui
+tetti e un 🎄 accanto a ogni edificio. **Niente si tinge e non c'è
+nessuno sprite nuovo**: è un velo sopra il disegno di sempre, e le
+emoji sono posate dove c'è posto da una funzione pura
+(`addobbiStagionali`) che riceve le celle libere e le cose posate —
+la scena riceve la lista e non sa che giorno è. Le celle cambiano col
+giorno (il seme è la data), non si salvano e non si posano: una bestia
+ci cammina attraverso.
+
+Nel baule, solo in quei giorni, compare la linguetta **Feste** con due
+o tre cose da comprare (`stagione:` nel catalogo, prezzi da cosetta):
+le zucche intagliate, un teschio, l'albero con le lucine. **Quello che
+si è comprato resta** — posato tutto l'anno, o nel baule finché lo si
+rimette giù — perché niente sparisce mai dal salvataggio. Non sono
+premi di livello e non entrano nella fila dei due-tre per livello: si
+aprono con la finestra, non spendendo. Per guardarle fuori stagione
+c'è `#stagione=natale` (o `halloween`) nell'indirizzo, accanto a
+`#fattoria=`.
+
 ### Non si può più spegnere
 
 C'era **una variante** (`fattoria:coltivazione`) che toglieva i campi dalla
@@ -1243,6 +1269,7 @@ che le due sezioni qui sopra esistono. Restano:
 | `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
 | `viste/Mercato.vue` | i tre ordini, a caselle |
 | `dati/addobbi.js` | cappellini e fiocchi: nome, prezzo, dove si attaccano |
+| `dati/stagioni.js` | le finestre dell'anno, e dove cadono zucche e alberelli — puro, la scena riceve la lista |
 | `dati/animali.js` | le bestie di casa: quanto costano, quanto pagano rimesse a posto (`premioBenessere`) e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
 | `viste/Vestiario.vue` | «Vestilo», uno slot per punto di attacco |
 | `test/unita/addobbi.test.mjs` | si compra, si mette, si toglie — e cosa non gli sta |

@@ -561,6 +561,7 @@ export const AIUTI = {
       { titolo: 'Le cose nuove nel baule', righe: [
         'Non c\'è tutto dal primo giorno: il baule si riempie **spendendo**. Più monete si spendono qui, più sale il livello della fattoria e più roba arriva.',
         'Cosa arriva al livello dopo si legge nella pagina dei livelli — così si sa per cosa si sta risparmiando.',
+        'A **Halloween** e a **Natale** la fattoria si addobba da sola — zucche sul prato, neve sui tetti — e nel baule compare per qualche giorno la linguetta delle feste: quello che si compra lì resta tutto l\'anno.',
       ] },
       { titolo: 'La catena', righe: [
         'Il raccolto non si mangia così com\'è: al **fienile** diventa mangime, e il mangime si dà ai recinti.',

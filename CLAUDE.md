@@ -592,6 +592,14 @@ committate: non è ricostruibile da git.
   Aggiungere una figura è aggiungere una riga a `PITTORI`, non un `ctx.arc`
   dentro il gioco. Al contrario, in `grafica/` non entrano energia e prezzi:
   solo fatti già decisi (`potenziabile: true`).
+  **Vale anche per il calendario.** La fattoria si addobba da sola a
+  Halloween e a Natale (`giochi/fattoria/dati/stagioni.js`, puro:
+  `stagioneDi(data)` in ora locale, `addobbiStagionali` sceglie le celle
+  col seme del giorno), ma la tela non sa che giorno è: riceve
+  `quadro.stagione` e la lista `{ testo, x, y }`, e disegna neve e lucine
+  senza tingere niente e senza sprite nuovi. Le voci `stagione:` del
+  catalogo si comprano solo nella finestra e **restano** (non sono premi
+  di livello); `#stagione=natale` le accende fuori stagione.
 - **Il dito si lascia dietro un click, e quel click va ingoiato.** Chi apre
   un pannello dal `pointerup` di un canvas deve sapere che subito dopo
   arriva anche un `click`, mandato a chi sta sotto il dito **in quel
@@ -1196,7 +1204,8 @@ a `ultimo-giocatore` e **non dentro i profili** — è di casa, non di un
 bambino. Si rimette dall'indirizzo con `#pin=1234`, dove stanno già i cheat
 delle monete (`#monete=500`) e del livello della fattoria (`#fattoria=9`, che
 alza e non fa mai scendere: serve a guardare col telefono una cosa che
-arriverebbe dopo tremila monete spese).
+arriverebbe dopo tremila monete spese) e della stagione della fattoria
+(`#stagione=natale|halloween`, per vedere la neve a settembre).
 
 **La porta non si nasconde, si rende noiosa.** In home è un tasto piatto
 nel piede — «⚙︎ Impostazioni · giochi visibili, chi gioca, salvataggio dei
