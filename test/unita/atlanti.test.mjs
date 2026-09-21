@@ -116,6 +116,27 @@ const senzaVersi = [...FATTORIA.PERSONE, ...FATTORIA.BESTIE]
   .filter(chi => !['giu', 'lato', 'su'].every(v => FATTORIA.fotogrammi(chi, v) > 0))
 uguale('tutti hanno i tre versi', senzaVersi.length, 0, senzaVersi.join(' '))
 
+/* Gli agganci degli addobbi: `AGGANCI` è bestia → verso → aggancio →
+   `[fx, fy]`, copiato dal foglietto. La forma la tiene ferma questo
+   file, che le frazioni siano giuste lo guarda un occhio (il provino
+   in `poc/scatti/agganci-fattoria.png`, o il banco). Una chiave che non
+   è una bestia, o un verso che non esiste, è il generatore che si è
+   messo a scrivere qualcos'altro. */
+controlla('AGGANCI è un oggetto', FATTORIA.AGGANCI && typeof FATTORIA.AGGANCI === 'object')
+const agganciStorti = []
+for (const [chi, versi] of Object.entries(FATTORIA.AGGANCI || {})) {
+  if (!FATTORIA.BESTIE.includes(chi)) agganciStorti.push(`${chi} non è una bestia`)
+  for (const [v, punti] of Object.entries(versi)) {
+    if (!['giu', 'lato', 'su'].includes(v)) agganciStorti.push(`${chi}: verso "${v}"`)
+    for (const [dove, xy] of Object.entries(punti))
+      if (!['testa', 'muso', 'collo', 'schiena'].includes(dove) ||
+          !Array.isArray(xy) || xy.length !== 2 || !xy.every(n => Number.isFinite(n) && n >= 0 && n <= 1))
+        agganciStorti.push(`${chi}/${v}/${dove} = ${JSON.stringify(xy)}`)
+  }
+}
+uguale('ogni aggancio è bestia/verso/dove → [fx, fy] fra 0 e 1', agganciStorti.length, 0,
+       agganciStorti.slice(0, 4).join(' · '))
+
 /* ═══════════ 4. quello che il castello dà per scontato ═══════════ */
 nota('il castello, che compone le strade')
 

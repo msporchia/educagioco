@@ -35,7 +35,7 @@
    aveva chiuso nel recinto se ne sarebbe uscito da solo durante la
    notte, e la colpa sembrerebbe del recinto.
    ═══════════════════════════════════════════════════════════════════ */
-import { BESTIE } from './atlante.js'
+import { BESTIE, AGGANCI as AGGANCI_DEL_FOGLIO } from './atlante.js'
 import { cibiPer } from './bisogni.js'
 
 /* nome dello sprite → come si presenta, quanto costa e a che livello
@@ -91,20 +91,26 @@ export const premioBenessere = chi =>
 /* ── DOVE SI ATTACCA UN ADDOBBO ───────────────────────────────────
    *Dove sta la testa dentro lo sprite*, e non «al centro in alto»: un
    cappellino posato a occhio finisce mezzo dentro il muso da davanti e
-   in mezzo alla schiena di lato. Questi quattro punti sono **misurati
-   dall'alfa del foglio**, riquadro per riquadro, e stanno qui — nella
-   scheda dell'animale — perché sono un fatto del disegno: la scena li
-   riceve già risolti e non sa cosa voglia dire «testa»
-   (`dati/addobbi.js`, `scena/tela.js`).
+   in mezzo alla schiena di lato. Sono quattro punti per verso, in
+   **frazioni del riquadro** e non in pixel, e sono un fatto del
+   disegno: la scena li riceve già risolti e non sa cosa voglia dire
+   «testa» (`dati/addobbi.js`, `scena/tela.js`).
 
-   Sono **frazioni del riquadro**, non pixel: un attore nuovo con un
-   foglio di un'altra misura resta a posto senza riscrivere niente. In
-   pixel, sui riquadri di oggi (16×32 di fronte e di spalle, 32×32 di
-   lato), valgono così:
+   **Stanno nel foglietto dello sprite, bestia per bestia** (`agganci`
+   in `strumenti/sprite/sorgenti/…/<bestia>.json`, FORMATO.md), e
+   `atlante.py` li copia in `AGGANCI` di `dati/atlante.js`. Prima c'era
+   solo la tabella qui sotto, una per tutte le specie, ed era il
+   difetto: un pappagallo e un bobtail hanno la testa in posti diversi,
+   e la stessa frazione metteva il cappello sulla fronte a uno e a metà
+   collo all'altro. Si calibrano **guardando** — col banco degli sprite
+   (`npm run mondo` → «i ritagli» → «agganci»), che li lascia trascinare
+   sul fotogramma, o col provino `poc/scatti/agganci-fattoria.png` — e
+   non si contano dall'alfa: l'alfa dice dov'è il riquadro, non dov'è
+   la fronte.
 
-     di fronte   testa (8,8) · muso (8,12) · collo (8,15) · schiena (8,19)
-     di lato     testa (23,7) · muso (27,11) · collo (21,13) · schiena (15,12)
-     di spalle   testa (8,4) · collo (8,12) · schiena (8,16)
+   La tabella qui sotto è **il ripiego** per una bestia che il foglietto
+   non ha ancora calibrato (e `guastiDegliAnimali` lo segnala): i numeri
+   sono quelli dei fogli a 16×32 / 32×32 con cui gli addobbi sono nati.
 
    **Le pose di lato guardano a destra** (`dati/atlante.js`), quindi lì
    la testa sta a destra: quando l'animale va a sinistra è lo *specchio*
@@ -142,11 +148,21 @@ export const BOB = {
 export const AGGANCI_TUTTI = ['testa', 'muso', 'collo', 'schiena']
 export const portaDi = chi => (ANIMALI[chi] || {}).porta || AGGANCI_TUTTI
 
+/* Gli agganci di questa bestia, con la precedenza scritta una volta:
+   il foglietto dello sprite (via l'atlante), poi una riga `agganci`
+   nella scheda qui sopra, poi il ripiego comune. `daDove` dice quale
+   dei tre ha risposto, per chi controlla. */
+export const agganciDi = chi => {
+  if (AGGANCI_DEL_FOGLIO[chi]) return { agganci: AGGANCI_DEL_FOGLIO[chi], daDove: 'foglietto' }
+  if ((ANIMALI[chi] || {}).agganci) return { agganci: ANIMALI[chi].agganci, daDove: 'scheda' }
+  return { agganci: AGGANCI, daDove: 'ripiego' }
+}
+
 /* Il punto di un aggancio, verso per verso, già pronto per chi disegna.
    Torna `null` per un verso in cui quell'aggancio non si vede. */
 export const puntiDi = (chi, dove) => {
   if (!portaDi(chi).includes(dove)) return null
-  const agganci = (ANIMALI[chi] || {}).agganci || AGGANCI
+  const { agganci } = agganciDi(chi)
   const punti = {}
   for (const verso of Object.keys(agganci))
     if (agganci[verso][dove]) punti[verso] = agganci[verso][dove]
@@ -218,6 +234,12 @@ export function guastiDegliAnimali() {
     /* non è un guasto: è il promemoria che una riga sta aspettando lo
        sprite, e senza questo non se ne accorgerebbe nessuno */
     if (!BESTIE.includes(chi)) g.push(`nota: ${chi} è dichiarato e non ancora disegnabile`)
+    /* Una bestia disegnabile che va col ripiego porta il cappello dove
+       ce l'aveva il bobtail del primo foglio, cioè quasi certamente
+       storto: il foglietto ha bisogno dei suoi `agganci`, e finché non
+       ce li ha lo si dice qui. */
+    else if (agganciDi(chi).daDove === 'ripiego')
+      g.push(`${chi}: gli agganci degli addobbi non sono nel foglietto (va col ripiego)`)
     /* Una bestia senza cibi suoi è una bestia che non si può nutrire:
        la ciotola sarebbe piena di roba che rifiuta, e sembrerebbe un
        guasto del gioco invece di una tabella dimenticata. */

@@ -13,6 +13,11 @@
     "generatore": "Grok, 20 settembre 2026",
     "testo": "Disegna una tavola di sprite in pixel art nello stesso stile e nella stessa disposizione di questa immagine: stessa misura delle figure, stesso numero di righe e di colonne, stesse pose nelle stesse posizioni, stesso contorno scuro di un pixel, stessa luce da in alto a sinistra. L'animale è un coniglio bianco con le macchie marroni, le orecchie lunghe dritte, la coda a batuffolo. È alto quanto il cane della tavola allegata: non più grande. Le righe, dall'alto: (1) di fronte, quattro fotogrammi che camminano; (2) di fronte, pose ferme; (3) di spalle, quattro fotogrammi che camminano; (4) di spalle, pose ferme; (5) di lato rivolto a destra, quattro fotogrammi che camminano; (6) di lato che corre; (7) e (8) pose singole (annusa, si gratta, dorme, felice). Quello che conta sono le righe 1, 3 e 5: le altre possono essere anche vuote. Fondo magenta uniforme (#e0197d) su tutta la tavola, nessuna scacchiera, nessuna ombra sotto le zampe, nessun testo. Le figure non si toccano fra loro."
   },
+  "agganci": {
+    "giu": {"testa": [0.5, 0.26], "muso": [0.5, 0.45], "collo": [0.5, 0.62], "schiena": [0.5, 0.74]},
+    "lato": {"testa": [0.75, 0.25], "muso": [0.82, 0.42], "collo": [0.59, 0.57], "schiena": [0.36, 0.47]},
+    "su": {"testa": [0.46, 0.26], "collo": [0.46, 0.57], "schiena": [0.46, 0.71]}
+  },
   "sprite": {
     "coniglio_giu0":  { "da": [3, 4],    "cella": [13, 21] },
     "coniglio_giu1":  { "da": [18, 4],   "cella": [13, 21] },

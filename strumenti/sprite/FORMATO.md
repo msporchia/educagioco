@@ -104,6 +104,35 @@ basta: l'attrezzo non cambia.
   Chi lo legge è `atlante.py`, che ne scrive due elenchi nel modulo
   generato — `PERSONE` e `BESTIE` — un attore senza `tipo` dichiarato resta
   fuori da entrambi e lo script lo segnala in console.
+- **`agganci`** — solo per una bestia: **dove le si attacca un addobbo**,
+  verso per verso, in frazioni del riquadro del fotogramma (0,0 in alto a
+  sinistra, 1,1 in basso a destra):
+
+  ```json
+  "agganci": {
+    "giu":  {"testa": [0.5, 0.28], "muso": [0.5, 0.39], "collo": [0.5, 0.56], "schiena": [0.5, 0.67]},
+    "lato": {"testa": [0.83, 0.25], "muso": [0.85, 0.34], "collo": [0.66, 0.44], "schiena": [0.48, 0.43]},
+    "su":   {"testa": [0.5, 0.15], "collo": [0.5, 0.4], "schiena": [0.5, 0.56]}
+  }
+  ```
+
+  I quattro nomi sono `testa`, `muso`, `collo`, `schiena` — sono gli
+  slot del vestiario della fattoria (`fattoria/dati/addobbi.js`) — e
+  un aggancio che un verso non ha vuol dire «da qui non si vede»: di
+  spalle il muso non si scrive, se no gli occhialini finiscono sulla
+  nuca. Di lato la bestia guarda a destra (vedi `specchia`), quindi la
+  testa sta a destra. Frazioni e non pixel perché il riquadro cambia
+  da foglio a foglio (16×32 il bobtail, 13×21 il coniglio) e da verso a
+  verso. `atlante.py` li copia in `AGGANCI` del modulo generato; una
+  bestia senza va col ripiego del gioco, e l'attrezzo lo dice.
+
+  **Si calibrano guardando, non contando.** L'alfa dice dov'è il
+  riquadro, non dov'è la fronte: `npm run mondo` → «i ritagli» → modo
+  **agganci** disegna i quattro punti sul fotogramma scelto e li lascia
+  trascinare (l'anteprima accanto mette un cappello, gli occhialini, un
+  fiocco e una mantellina proprio lì, con la stessa formula del gioco),
+  e «salva il foglietto» li scrive. Un provino di tutte le bestie, tre
+  versi ciascuna, sta in `poc/scatti/agganci-fattoria.png`.
 - **`famiglie`** — di che famiglia è un pezzo, **per prefisso**:
   `{"muro": "tessera", "suolo": "tessera"}` dice che ogni nome che comincia
   per `muro` o per `suolo` è di quella famiglia. Le famiglie ammesse sono

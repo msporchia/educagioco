@@ -9,6 +9,11 @@
   ],
   "fondo": "auto",
   "tipo": "bestia",
+  "agganci": {
+    "giu": {"testa": [0.53, 0.27], "muso": [0.53, 0.34], "collo": [0.53, 0.47]},
+    "lato": {"testa": [0.83, 0.23], "muso": [0.86, 0.3], "collo": [0.72, 0.41]},
+    "su": {"testa": [0.5, 0.16], "collo": [0.5, 0.38]}
+  },
   "sprite": {
     "pappagallo_giu": {
       "da": [

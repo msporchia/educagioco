@@ -9,6 +9,11 @@
   ],
   "fondo": "auto",
   "tipo": "bestia",
+  "agganci": {
+    "giu": {"testa": [0.5, 0.28], "muso": [0.5, 0.39], "collo": [0.5, 0.56], "schiena": [0.5, 0.67]},
+    "lato": {"testa": [0.83, 0.25], "muso": [0.85, 0.34], "collo": [0.66, 0.44], "schiena": [0.48, 0.43]},
+    "su": {"testa": [0.5, 0.15], "collo": [0.5, 0.4], "schiena": [0.5, 0.56]}
+  },
   "sprite": {
     "cane-beagle_giu": {
       "da": [

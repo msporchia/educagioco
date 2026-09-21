@@ -69,6 +69,14 @@ EXTRA_DOC = """
    BESTIE     e chi no. Non si ricava dal nome (un cane si può chiamare
               in mille modi): viene dal `tipo` dichiarato nel foglietto
               della sorgente (FORMATO.md).
+   AGGANCI    bestia → verso → dove stanno testa, muso, collo e schiena,
+              in frazioni del riquadro del fotogramma. È il campo
+              `agganci` del foglietto, copiato tale e quale: un
+              pappagallo e un bobtail hanno la testa in posti diversi,
+              e una tabella sola per tutte le specie metteva il
+              cappello a metà collo a uno dei due. Chi non lo dichiara
+              non compare, e il gioco ripiega sulla sua tabella
+              (`fattoria/dati/animali.js`).
 """
 
 CODA = """
@@ -77,6 +85,8 @@ export const DA = {provenienza}
 export const PERSONE = {persone}
 
 export const BESTIE = {bestie}
+
+export const AGGANCI = {agganci}
 
 /* Un attore cammina in tre versi — giù, di lato, su — per N fotogrammi.
    Le pose di lato guardano a DESTRA: la sinistra è la stessa specchiata,
@@ -743,6 +753,38 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
     return cat
 
 
+AGGANCI_NOTI = ('testa', 'muso', 'collo', 'schiena')
+
+
+def agganci_puliti(nome_foglio, agganci):
+    """`agganci` del foglietto (FORMATO.md): verso → aggancio → `[fx, fy]`,
+    frazioni del riquadro del fotogramma. Si controlla la forma e passa
+    solo quello che ha senso, dicendo il resto: un punto fuori dal
+    riquadro o un verso inventato non fanno cadere niente a schermo,
+    mettono solo un cappello dove non c'è nessuno."""
+    fuori = {}
+    for verso, punti in (agganci or {}).items():
+        if verso.startswith('__'):
+            continue
+        if verso not in VERSI:
+            print(f'  ! {nome_foglio}: agganci per il verso "{verso}", che non esiste')
+            continue
+        buoni = {}
+        for dove, p in (punti or {}).items():
+            if dove not in AGGANCI_NOTI:
+                print(f'  ! {nome_foglio}: aggancio "{dove}" ({verso}) sconosciuto')
+                continue
+            ok = (isinstance(p, (list, tuple)) and len(p) == 2
+                  and all(isinstance(n, (int, float)) and 0 <= n <= 1 for n in p))
+            if not ok:
+                print(f'  ! {nome_foglio}: aggancio {verso}/{dove} = {p!r}, '
+                      f'atteso [fx, fy] fra 0 e 1')
+                continue
+            buoni[dove] = [round(float(p[0]), 3), round(float(p[1]), 3)]
+        fuori[verso] = buoni
+    return fuori
+
+
 def costruisci(bers, fogli, con_provini):
     """Un atlante, dai fogli di quella cartella. `bers` è il suo
     `atlante.json`: nome, dove scrivere il modulo, quanto vale una
@@ -755,6 +797,7 @@ def costruisci(bers, fogli, con_provini):
     # e vanno cercate per provenienza, sotto.
     TIPI_VALIDI = ('persona', 'bestia')
     tipo_di_file = {}
+    agganci_di_file = {}          # nome del file → `agganci` del foglietto, già controllati
     ritagli, provenienza, famiglie, trasforma, anima = {}, {}, {}, {}, {}
     cose = {}                     # i gruppi dichiarati dai foglietti
     print(f'{bersaglio}:')
@@ -764,6 +807,8 @@ def costruisci(bers, fogli, con_provini):
             print(f'  ! {f.name}: tipo "{t}" sconosciuto, atteso persona o bestia')
             t = None
         tipo_di_file[f.name] = t
+        if fg.get('agganci') is not None:
+            agganci_di_file[f.name] = agganci_puliti(f.name, fg['agganci'])
         # I nomi che questo foglio produce davvero. Un foglio che punta a
         # una tabella dell'autore (`"ritagli": "pezzi.json"`) i suoi nomi
         # ce li ha lì e non in `sprite`: leggerli dal posto sbagliato
@@ -818,6 +863,16 @@ def costruisci(bers, fogli, con_provini):
     if senza_tipo:
         print(f'  ! senza "tipo" nel foglietto sorgente, fuori da PERSONE e BESTIE: '
               f'{", ".join(senza_tipo)}')
+    # Gli agganci degli addobbi stanno nel foglietto della bestia e da lì
+    # passano nel modulo tali e quali. Una bestia senza non è un guasto
+    # (il gioco ha un ripiego), ma va detto: il cappello a metà collo è
+    # il difetto che nessun controllo automatico vede.
+    agganci = {chi: agganci_di_file[provenienza[f'{chi}_giu0']]
+               for chi in bestie if provenienza.get(f'{chi}_giu0') in agganci_di_file}
+    senza_agganci = [chi for chi in bestie if chi not in agganci]
+    if senza_agganci:
+        print(f'  ! senza "agganci" nel foglietto, gli addobbi vanno col ripiego: '
+              f'{", ".join(senza_agganci)}')
 
     # Un bersaglio senza un pezzo non è un atlante vuoto, è un bersaglio
     # che questo attrezzo non sa leggere: si dice e si passa oltre invece
@@ -838,7 +893,8 @@ def costruisci(bers, fogli, con_provini):
                 tessera=bers.get('tessera', 32),
                 extra_doc=EXTRA_DOC, coda=CODA.format(
                     provenienza=breve(provenienza),
-                    persone=breve(persone), bestie=breve(bestie)))
+                    persone=breve(persone), bestie=breve(bestie),
+                    agganci=breve(agganci)))
 
     print(f'  atlante {atlante.width}×{atlante.height}, {kb} KB di PNG, '
           f'{len(mappa)} pezzi → {dest.relative_to(REPO)}')

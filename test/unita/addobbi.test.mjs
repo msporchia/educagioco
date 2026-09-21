@@ -19,10 +19,10 @@ import {
   ADDOBBI, PER_ID, addobbiPer, staA, addossoA, guastiDegliAddobbi,
 } from '../../src/giochi/fattoria/dati/addobbi.js'
 import {
-  ANIMALI, AGGANCI, AGGANCI_TUTTI, BOB, portaDi, puntiDi, famigliaDi,
+  ANIMALI, AGGANCI, AGGANCI_TUTTI, BOB, portaDi, puntiDi, agganciDi, famigliaDi,
   guastiDegliAnimali,
 } from '../../src/giochi/fattoria/dati/animali.js'
-import { VERSI, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
+import { VERSI, BESTIE, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -74,6 +74,44 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
      sulla nuca. */
   uguale('di spalle il muso non c\'è', AGGANCI.su.muso, undefined)
   controlla('ma di fronte e di lato sì', !!AGGANCI.giu.muso && !!AGGANCI.lato.muso)
+
+  /* ── e sono di ogni bestia, non di tutte insieme ──
+     Un pappagallo e un bobtail hanno la testa in posti diversi, e una
+     tabella sola per tutte le specie metteva il cappello a metà collo
+     a uno dei due. Ogni bestia che l'atlante sa disegnare porta i suoi
+     agganci nel foglietto — se va col ripiego, `guastiDegliAnimali`
+     l'ha già detto sopra — per i versi che ha, dentro il riquadro, e
+     con un ordine che si può controllare: di fronte la testa sta sopra
+     il muso, il muso sopra il collo, il collo sopra la schiena. Di
+     lato e di spalle no: di lato il muso sporge davanti alla testa e
+     la schiena sta a metà, e girando si vede solo che la testa è in
+     cima. */
+  for (const chi of BESTIE) {
+    const { agganci, daDove } = agganciDi(chi)
+    uguale(`${chi}: gli agganci vengono dal foglietto`, daDove, 'foglietto')
+    for (const v of VERSI) {
+      const suoi = agganci[v] || {}
+      const attesi = portaDi(chi).filter(d => !(v === 'su' && d === 'muso'))
+      const mancano = attesi.filter(d => !suoi[d])
+      uguale(`${chi}/${v}: c'è ogni aggancio che porta`, mancano.length, 0, mancano.join(' '))
+      uguale(`${chi}/${v}: e di spalle il muso non c'è`, v === 'su' ? suoi.muso : undefined, undefined)
+      for (const [dove, xy] of Object.entries(suoi))
+        controlla(`${chi}/${v}/${dove}: frazioni fra 0 e 1`,
+                  Array.isArray(xy) && xy.length === 2 && xy.every(n => n >= 0 && n <= 1),
+                  JSON.stringify(xy))
+    }
+    const g = agganci.giu
+    if (g && g.testa && g.muso && g.collo)
+      controlla(`${chi}: di fronte testa sopra muso sopra collo`,
+                g.testa[1] < g.muso[1] && g.muso[1] < g.collo[1] &&
+                (!g.schiena || g.collo[1] < g.schiena[1]),
+                `testa ${g.testa[1]} · muso ${g.muso[1]} · collo ${g.collo[1]}`)
+    const l = agganci.lato
+    if (l && l.testa && l.schiena)
+      controlla(`${chi}: di lato la testa sta a destra della schiena (le pose guardano a destra)`,
+                l.testa[0] > l.schiena[0])
+  }
+  nota(`${BESTIE.length} bestie coi loro agganci: ${BESTIE.join(', ')}`)
   /* Il bob della camminata ha un valore per **ogni fotogramma** di ogni
      verso: uno più corto lascerebbe il cappello fermo su una parte del
      passo, che è peggio di non muoverlo affatto. */

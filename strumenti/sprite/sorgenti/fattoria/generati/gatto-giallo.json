@@ -9,6 +9,11 @@
   ],
   "fondo": "auto",
   "tipo": "bestia",
+  "agganci": {
+    "giu": {"testa": [0.5, 0.31], "muso": [0.5, 0.38], "collo": [0.5, 0.54], "schiena": [0.5, 0.66]},
+    "lato": {"testa": [0.81, 0.28], "muso": [0.86, 0.34], "collo": [0.66, 0.44], "schiena": [0.47, 0.43]},
+    "su": {"testa": [0.5, 0.2], "collo": [0.5, 0.41], "schiena": [0.5, 0.56]}
+  },
   "sprite": {
     "gatto-giallo_giu": {
       "da": [
