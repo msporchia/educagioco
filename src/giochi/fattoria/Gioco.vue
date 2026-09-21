@@ -238,7 +238,16 @@ function annotaLeBestie() {
   }
 }
 
-function avvisa(testo) { avviso.value = testo; setTimeout(() => { avviso.value = '' }, 2600) }
+/* Un avviso che ne segue un altro entro due secondi e mezzo veniva
+   cancellato dal timer del primo: «Beagle è arrivato!» e subito dopo
+   «sta benissimo, +9» — e il secondo spariva prima di essere letto.
+   Il timer è uno solo, e ogni avviso nuovo lo rimette da capo. */
+let avvisoTimer = null
+function avvisa(testo) {
+  avviso.value = testo
+  clearTimeout(avvisoTimer)
+  avvisoTimer = setTimeout(() => { avviso.value = '' }, 2600)
+}
 
 /* Chiudere un foglio lascia il prato **pulito**: via il foglio e via la
    selezione. Sono due cose sole ma vanno insieme, perché la selezione
