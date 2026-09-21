@@ -1185,16 +1185,20 @@ function finePartita() {
   fase.value = 'fine'
   asteroidi = []
   suono.fine()
-  riassunto()
   /* IL RECORD DEL VOLO. Una tappa finisce con un bersaglio, il volo con
      i punti: qui si scrive il quaderno (`giochi/primati.js`) e si tiene
      cosa dire — di quanto sei migliorato, o quanto ti è mancato. Il
      racconto sono il livello, i centri e la serie più lunga: quello che
-     un bambino cita quando racconta la partita. `best.math` resta
-     scritto da `riassunto`, perché i traguardi lo guardano. */
+     un bambino cita quando racconta la partita.
+     PRIMA di `riassunto()`, e non è un dettaglio: finché il quaderno
+     non c'è il record di ieri si legge da `best.math`, che `riassunto`
+     riscrive con i punti di adesso — letto dopo, ogni prima partita del
+     volo risultava un pareggio con sé stessa. `best.math` resta scritto,
+     perché i traguardi lo guardano. */
   if (!campagna.value)
     finale.primato = segnaPrimato('mate', hud.punti, Date.now(),
                                   { livello: hud.livello, centri: hud.giuste, serie: hud.serieMax })
+  riassunto()
 }
 
 /* tornando alla mappa ci si rimette su **dove è arrivata la fila**: il

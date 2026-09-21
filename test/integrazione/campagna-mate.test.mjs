@@ -8,8 +8,11 @@
      · dentro una tappa le domande sono per lo più della tabellina nuova
      · superato il bersaglio la tappa si chiude, paga, e resta superata
        anche dopo aver richiuso il gioco
+     · a fila finita c'è UN volo infinito, col record scritto sul tasto,
+       che mescola tabelline e calcolo a mente e a fine partita dice di
+       quanto sei migliorato
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, TELEFONO } from '../aiuto/browser.mjs'
 import { CAMPAGNA as PIANETI } from '../../src/data/tabelline.js'
 import { statoDellaTappa, PASSATA } from '../../src/data/portata.js'
 import { ETA_DIFETTO } from '../../src/store/profile.js'
@@ -28,7 +31,7 @@ const testo = await page.evaluate(() => document.body.innerText)
 controlla('la mappa dei pianeti sostituisce la scelta delle tabelline',
           !/Quali tabelline vuoi allenare/i.test(testo))
 controlla('si vede il primo pianeta', /Il pianeta del 2/.test(testo))
-controlla('e il volo libero è ancora chiuso', !/Volo libero ♾️/.test(testo))
+controlla('e il volo infinito è ancora chiuso', !/Volo infinito/.test(testo))
 
 const pianeti = await page.evaluate(() =>
   [...document.querySelectorAll('.pianeta')].map(b => ({ testo: b.innerText, chiuso: b.disabled })))
@@ -256,6 +259,62 @@ await page.locator('.barra-app button[aria-label="indietro"]').click()
 await page.waitForSelector('.scaletta', { timeout: 5000 })
 // `.scaletta` è un blocco per capitolo: la mappa è tornata se c'è il primo
 controlla('e il tasto riporta alla mappa', await page.locator('.scaletta').first().isVisible())
+
+/* ---------- 4. il volo infinito: uno, col record sul tasto ---------- */
+/* Si semina una fila finita e il record di ieri, che stava in
+   `best.math`: il tasto deve dirlo prima di entrare. Poi si vola:
+   tante giuste per salire di livello, tre sbagli per finire, e in fondo
+   la frase coi due numeri. */
+await semina(page, { mate: { tappa: 10, fila: SCALETTA.length, libera: true },
+                     best: { math: 40 } })
+await page.getByText('Asteroidi', { exact: true }).click()
+await page.waitForSelector('.scaletta', { timeout: 5000 })
+const tasti = await page.evaluate(() => ({
+  voli: document.querySelectorAll('[data-volo]').length,
+  record: document.querySelector('[data-volo] [data-record]')?.textContent.trim() || '',
+  vecchi: /Volo libero|Volo a mente/.test(document.body.innerText),
+}))
+uguale('a fila finita il tasto del volo è uno solo', tasti.voli, 1)
+controlla('e non ci sono più i due voli di prima', !tasti.vecchi)
+uguale('sul tasto c\'è il record di ieri, letto da best.math', tasti.record, 'record 40 punti')
+
+await page.locator('[data-volo]').click()
+await page.waitForFunction(() => window.__mate && window.__mate.fase.value === 'gioco', null, { timeout: 5000 })
+const volo = await page.evaluate(async () => {
+  const m = window.__mate
+  const magazzini = new Set(), testi = []
+  let sbagli = 0
+  for (let i = 0; i < 80 && m.fase.value === 'gioco'; i++) {
+    const vivi = m.asteroidi().filter(x => !x.morto)
+    if (!vivi.length) break
+    magazzini.add(m.magazzino.value)
+    testi.push(m.domanda.testo)
+    // venti giuste per salire di livello, poi si sbaglia fino alla fine
+    const giusto = vivi.find(x => x.ok)
+    const scelto = i < 20 || !vivi.find(x => !x.ok) ? giusto : vivi.find(x => !x.ok)
+    if (scelto !== giusto) sbagli++
+    m.colpisci(scelto)
+    await new Promise(r => setTimeout(r, 15))
+  }
+  await new Promise(r => setTimeout(r, 300))
+  return { magazzini: [...magazzini], testi, sbagli, fase: m.fase.value, livello: m.hud.livello,
+           punti: m.hud.punti, primato: m.finale.primato,
+           frase: document.querySelector('[data-primato]')?.textContent.trim() || '',
+           festa: !!document.querySelector('[data-festa]') }
+})
+uguale('la partita finisce', volo.fase, 'fine')
+controlla('nel volo escono tutti e due i magazzini', volo.magazzini.length === 2, volo.magazzini.join(', '))
+controlla('cioè tabelline E conti a mente', volo.testi.some(t => /×/.test(t)) && volo.testi.some(t => /[+\-−:]/.test(t)),
+          volo.testi.slice(0, 12).join(' | '))
+controlla('il livello è salito', volo.livello >= 4, `livello ${volo.livello}`)
+controlla('il record di ieri è battuto', volo.primato && volo.primato.record && volo.primato.prima === 40,
+          JSON.stringify(volo.primato))
+controlla('e la fine dice i due numeri', /Nuovo record! \d+ punti \(\d+ meglio di prima\)/.test(volo.frase), volo.frase)
+controlla('con i coriandoli', volo.festa)
+const salvato = await leggiProfilo(page)
+uguale('il record è scritto accanto alle stelle', salvato.campagne.mate.primato.best, volo.punti)
+uguale('e best.math resta, per i traguardi', salvato.best.math, volo.punti)
+await scatto(page, 'campagna-mate-volo')
 
 /* ---------- 5. niente errori per strada ---------- */
 uguale('nessun errore in console', errori.length, 0)

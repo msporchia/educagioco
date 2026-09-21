@@ -49,7 +49,7 @@ const mappa = await page.evaluate(() => ({
   stazioni: [...document.querySelectorAll('.stazione')]
     .map(b => ({ testo: b.innerText, chiusa: b.disabled })),
   schede: !!document.querySelector('.campagna .schede'),
-  volo: !![...document.querySelectorAll('.bottone')].find(b => /Volo a mente/.test(b.textContent)),
+  volo: !!document.querySelector('[data-volo]'),
   testo: document.body.innerText,
 }))
 uguale('c\'è un bottone per ogni stazione', mappa.stazioni.length, STAZIONI.length)
@@ -70,7 +70,7 @@ const aperteDopoLaPrima = mappa.fila.filter((v, i) => i > 0 && !v.chiusa).length
 uguale('e passata la prima non ce n\'è nessun\'altra che il progresso abbia aperto',
        aperteDopoLaPrima, APERTE_ALL_INIZIO - 1)
 controlla('si vede di che calcoli si tratta', /3\+4/.test(mappa.testo), mappa.stazioni[0].testo)
-controlla('il volo a mente è ancora chiuso', !mappa.volo)
+controlla('il volo infinito è ancora chiuso', !mappa.volo)
 
 await scatto(page, 'calcolo-mappa')
 

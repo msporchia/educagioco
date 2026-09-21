@@ -1369,15 +1369,13 @@ export function sincronizzaAsteroidi(p) {
   const specchio = campagneDaFila(mate.fila)
   mate.tappa = specchio.pianeta
   calc.tappa = specchio.mente
-  /* I DUE VOLI INFINITI SI APRONO INSIEME, quando la fila è finita.
-     Prima ognuno aspettava la sua campagna, e siccome i pianeti
-     finiscono alla posizione 20 e le stazioni alla 22, in mezzo c'erano
-     due sere in cui la mappa offriva «Volo libero ♾️» e non «Volo a
-     mente ♾️» — cioè una metà del gioco che finiva prima dell'altra,
-     dentro una fila che è una. Non sono due campagne: sono due modi di
-     continuare a volare quando non c'è più niente da macinare, e
-     arrivano insieme perché insieme si è finito.
-     `libera` non torna mai indietro: un volo aperto resta aperto. */
+  /* IL VOLO INFINITO SI APRE QUANDO LA FILA È FINITA, ed è uno —
+     tabelline e calcolo a mente insieme (`data/asteroidi.js`). Erano
+     due, uno per campagna, e siccome i pianeti finiscono alla posizione
+     20 e le stazioni alla 22 c'erano due sere in cui la mappa ne offriva
+     uno solo: una metà del gioco che finiva prima dell'altra, dentro
+     una fila che è una. `calc.libera` resta scritto per chi lo legge
+     ancora. `libera` non torna mai indietro: un volo aperto resta aperto. */
   if (mate.fila >= SCALETTA.length) { mate.libera = true; calc.libera = true }
   return mate
 }
