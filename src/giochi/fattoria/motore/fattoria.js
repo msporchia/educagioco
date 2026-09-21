@@ -515,7 +515,12 @@ export class Fattoria {
      motore lo usa anche chi scrive un test. */
   sbloccata(id) {
     const v = PER_ID[id]
-    return !!v && this.reclamato(chiaveDi('cosa', id))
+    /* Una voce stagionale non è un premio di nessun livello: il
+       cancello è la finestra dell'anno, e lo tiene il baule
+       (`viste/Roba.vue`, con `stagioneDi`). Il motore non sa che
+       giorno è — e non deve: un salvataggio con una zucca posata a
+       ottobre si riapre a marzo senza che niente la rifiuti. */
+    return !!v && (!!v.stagione || this.reclamato(chiaveDi('cosa', id)))
   }
 
   /* Le stesse due domande per le altre due specie di premio. */

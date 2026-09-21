@@ -140,7 +140,11 @@ export const zonaDi = id => (PER_CHIAVE[categoriaDi(id)] || {}).zona || 'bello'
    spareggia, se no due voci allo stesso prezzo cambierebbero posto fra
    una build e l'altra — e una cosa comprata ieri sparirebbe. */
 const FILA = CATALOGO
-  .filter(v => !v.liv && zonaDi(v.id) === 'bello')
+  /* Le voci stagionali non stanno in fila: si comprano solo nella
+     loro finestra (`dati/stagioni.js`) e non sono un premio di nessun
+     livello — se ci stessero, una zucca comprabile due settimane
+     l'anno occuperebbe uno dei due-tre posti di un livello. */
+  .filter(v => !v.liv && !v.stagione && zonaDi(v.id) === 'bello')
   .slice()
   .sort((a, b) => a.prezzo - b.prezzo || (a.id < b.id ? -1 : 1))
   .map(v => v.id)
@@ -240,8 +244,10 @@ export function roba(livello) {
     /* Una linguetta che si apre per la prima volta è una notizia («si
        apre uno scaffale nuovo»), e le sue voci di quel livello si
        elencano lo stesso: adesso sono due o tre, non novanta. */
-    schede: CATEGORIE.filter(c => livelloDellaScheda(c) === l),
-    cose: CATALOGO.filter(v => livelloDellaVoce(v) === l),
+    schede: CATEGORIE.filter(c => !c.stagionale && livelloDellaScheda(c) === l),
+    /* le stagionali non arrivano con un livello: compaiono con la
+       loro finestra, e non sono un premio da reclamare */
+    cose: CATALOGO.filter(v => !v.stagione && livelloDellaVoce(v) === l),
     colture: COLTURE.filter(c => (c.liv || 1) === l),
     animali: Object.entries(ANIMALI).filter(([, a]) => (a.liv || 1) === l)
       .map(([chi, a]) => ({ chi, ...a })),
@@ -356,7 +362,7 @@ export function guastiDeiLivelli() {
   }
   /* Ogni linguetta deve aprirsi prima o poi, e con qualcosa dentro. */
   for (const c of CATEGORIE)
-    if (!(livelloDellaScheda(c) <= ULTIMO))
+    if (!c.stagionale && !(livelloDellaScheda(c) <= ULTIMO))
       g.push(`la linguetta «${c.chiave}» non si apre mai`)
   for (const c of COLTURE)
     if ((c.liv || 1) > ULTIMO) g.push(`la coltura ${c.id} arriva a un livello che non esiste`)

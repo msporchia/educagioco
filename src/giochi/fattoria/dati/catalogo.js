@@ -137,6 +137,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { PEZZI, TESSERA, VOCI } from './atlante.js'
 import { ricetteDi, SILI } from './coltivazioni.js'
+import { FINESTRE } from './stagioni.js'
 
 /* Il piede che si ricava dal disegno, e il ragionamento sta in testa al
    file. Chi non ci si ritrova scrive `piede` nella sua riga e vince lui:
@@ -671,6 +672,30 @@ export const CATEGORIE = [
       anima: ['calderone0', 'calderone1'] }),
   ] },
 
+  /* ── LE FESTE: SI COMPRANO SOLO NELLA LORO FINESTRA ───────────────
+     `stagione:` è una chiave di `FINESTRE` (`dati/stagioni.js`), e vuol
+     dire tre cose insieme: la voce sta nel baule **solo in quei
+     giorni**, non è un premio di nessun livello (non entra nella fila
+     dei due-tre per livello di `dati/livelli.js`, se no una zucca
+     comprabile due settimane l'anno occuperebbe un posto che si vede
+     tutto l'anno), e non chiede di essere reclamata — `sbloccata()`
+     la dà per aperta. Quello che si è comprato **resta**: posato tutto
+     l'anno, o nel baule finché lo si rimette giù. La linguetta è
+     `stagionale`, così la pagina dei livelli non la annuncia come uno
+     scaffale nuovo.
+
+     Niente sprite nuovi, ed è deliberato: le zucche sono la zucca
+     matura dell'orto, l'albero è l'albero grande — con le lucine e la
+     stella addosso, che le disegna la scena (`luci: true`). Prezzi
+     nella fascia «una cosetta» di `CALIBRAZIONE.md`. */
+  { chiave: 'feste', zona: 'bello', nome: 'Feste', icona: '🎉', stagionale: true, voci: [
+    V('zucche_halloween', 'campo_zucche6',  'Zucche di Halloween', 9,
+      { sotto: true, piede: [2, 2], stagione: 'halloween' }),
+    V('teschio',       'teschio',           'Teschio',            6, { stagione: 'halloween' }),
+    V('albero_natale', 'albero_verde',      'Albero con le lucine', 24,
+      { stagione: 'natale', luci: true }),
+  ] },
+
   /* Si chiamava «Banco», che diceva dov'era finita la roba e non cos'è.
      Qui sta quello che **viene dai campi** e si mette in giro: cassette,
      ceste, balle di fieno, e lo spaventapasseri che le guarda. */
@@ -951,12 +976,23 @@ export function guastiDelCatalogo() {
        compra una cosa e in mappa ne compare un'altra. */
     if (v.stati && !Object.values(v.stati).includes(v.pezzo))
       g.push(`${v.id}: il ritratto «${v.pezzo}» non è fra i suoi stati`)
+    /* Una stagione che non esiste è una voce che non compare mai: il
+       baule la mostra solo quando `stagioneDi()` risponde quel nome. */
+    if (v.stagione && !FINESTRE[v.stagione])
+      g.push(`${v.id}: la stagione «${v.stagione}» non è in FINESTRE`)
   }
   const cat = new Set()
   for (const c of CATEGORIE) {
     if (cat.has(c.chiave)) g.push(`categoria doppia: ${c.chiave}`)
     cat.add(c.chiave)
     if (!c.voci.length) g.push(`categoria vuota: ${c.chiave}`)
+    /* Una linguetta stagionale tiene solo voci stagionali e viceversa:
+       una voce di sempre in mezzo alle feste non si aprirebbe mai (la
+       linguetta non è un premio), e una stagionale fra le panchine
+       farebbe comparire e sparire la linguetta con lei. */
+    for (const v of c.voci)
+      if (!!v.stagione !== !!c.stagionale)
+        g.push(`${v.id}: ${v.stagione ? 'è stagionale' : 'non è stagionale'} e sta in «${c.chiave}»`)
   }
   /* `animali` è una linguetta che `viste/Roba.vue` aggiunge da sé — le
      bestie di casa — e una categoria di catalogo che si chiamasse così la

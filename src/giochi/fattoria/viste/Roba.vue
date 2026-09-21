@@ -90,6 +90,12 @@ const props = defineProps({
      ancora aperto. Il conto lo fa il motore, che è l'unico a sapere
      cosa c'è in mappa; qui si mostra e non si decide. */
   posati: { type: Array, default: () => [] },
+  /* Che periodo dell'anno è (`stagioneDi` in `dati/stagioni.js`), o
+     vuoto. Le voci con `stagione:` stanno sullo scaffale **solo** in
+     quei giorni — e, fuori, solo se ce n'è già una nel baule: una cosa
+     comprata non sparisce mai, nemmeno da qui. Chi sa che giorno è è
+     `Gioco.vue`; questo foglio riceve il nome e basta. */
+  stagione: { type: String, default: '' },
 })
 const emit = defineEmits(['tira', 'tiraBestia', 'chiudi'])
 
@@ -127,6 +133,7 @@ const DICE = {
   recinti: 'Per chiudere un pezzo di prato. Una bestia dentro ci resta.',
   case: 'Le cose grandi: costano tanto e si vedono da lontano.',
   arredo: 'Panchine, tavoli e lampioni, da sedersi e da guardare.',
+  feste: 'Solo in questi giorni. Quello che compri resta tutto l\'anno.',
 }
 
 /* ── APERTO SU UNA COSA PRECISA ───────────────────────────────────
@@ -170,7 +177,9 @@ const eMia = chi => props.bestie.some(b => (b.chi || b) === chi)
 const vociDi = chiave => {
   const c = CATEGORIE.find(c => c.chiave === chiave)
   if (!c) return []
-  return c.voci.filter(v => preso('cosa', v.id)
+  return c.voci.filter(v => (v.stagione
+      ? v.stagione === props.stagione || quantiNe(v.id)
+      : preso('cosa', v.id))
     && !(v.unico && props.posati.includes(v.id) && !quantiNe(v.id)))
 }
 
