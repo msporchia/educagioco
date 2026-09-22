@@ -592,15 +592,19 @@ await chiudi()
          del cappello il conto va nel verso sbagliato per un motivo che
          col vestiario non c'entra. Sul secondo il prezzo si legge
          pulito, e dev'essere quello scritto sul tasto. */
-      const primaDelFiocco = await monete()
-      await page.locator('[data-addobbo="fiocco"]').click()
+      const primaDegliOcchialini = await monete()
+      await page.locator('[data-addobbo="occhialini"]').click()
       await attendi(page, 400)
       const dopoIlCappello = await monete()
       uguale('e lo compra, al prezzo scritto sul tasto',
-             primaDelFiocco - dopoIlCappello, 8)
-      controlla('anche il fiocco è addosso, su un altro aggancio',
-                (await page.locator('[data-addobbo="fiocco"]').innerText())
+             primaDegliOcchialini - dopoIlCappello, 10)
+      controlla('anche gli occhialini sono addosso, su un altro aggancio',
+                (await page.locator('[data-addobbo="occhialini"]').innerText())
                   .includes('addosso'))
+      /* Collo e schiena sono sospesi (`dati/addobbi.js`): un fiocco mai
+         comprato non ha un tasto, e uno scaffale vuoto non si mostra. */
+      uguale('il fiocco, sospeso, non è in vendita',
+             await page.locator('[data-addobbo="fiocco"]').count(), 0)
       await scatto(page, 'fattoria-vestiario')
       /* Toglierlo **non lo perde**: torna nel guardaroba e non costa
          niente. È la regola di tutta la fattoria. */

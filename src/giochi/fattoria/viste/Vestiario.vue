@@ -8,6 +8,11 @@
    negozio, per prezzo. Un elenco ordinato per prezzo si scorre due
    volte: la prima per capire cos'è un cappello e cos'è una sciarpa.
 
+   Oggi in vendita ci sono solo testa e muso (`sospeso` in
+   `dati/addobbi.js`): gli altri due scaffali compaiono solo se il
+   bambino ci ha già qualcosa — un fiocco comprato ieri resta un tasto,
+   e uno scaffale vuoto non si mostra.
+
    ── UNO SLOT TIENE UNA COSA SOLA ──────────────────────────────────
    Premere un cappello quando ce n'è già uno **lo cambia**, non dice di
    no: chi preme il secondo sta chiedendo di cambiarlo. Quello di prima
@@ -43,10 +48,6 @@ const props = defineProps({
   /* `{ id: quanti }` — comprati e non addosso a nessuno */
   guardaroba: { type: Object, default: () => ({}) },
   monete: { type: Number, default: 0 },
-  /* `{ prodotto: quanti }` — il granaio, per gli addobbi che si pagano
-     con la roba (`da` in `dati/addobbi.js`): il maglione non ha un
-     prezzo, ha una catena, e il tasto dice se il pezzo c'è */
-  granaio: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['metti', 'togli', 'chiudi'])
 
@@ -61,10 +62,9 @@ const gruppi = computed(() => AGGANCI_TUTTI
 const ce = a => (props.guardaroba[a.id] || 0) > 0
 const addosso = a => props.portati[a.dove] === a.id
 const manca = a => Math.max(0, a.prezzo - props.monete)
-/* Quanti pezzi della merce che lo paga stanno in granaio: vale solo
-   per chi dichiara `da`, e per gli altri è zero senza che conti. */
-const inGranaio = a => (a.da && props.granaio[a.da]) || 0
-const puoi = a => addosso(a) || ce(a) || (a.da ? inGranaio(a) > 0 : manca(a) === 0)
+/* Un sospeso si mette e si toglie ma non si compra: il tasto c'è solo
+   se ce l'ha, e a quel punto non c'è niente da pagare. */
+const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
 </script>
 
 <template>
@@ -93,11 +93,7 @@ const puoi = a => addosso(a) || ce(a) || (a.da ? inGranaio(a) > 0 : manca(a) ===
           <span>{{ a.nome }}</span>
           <em v-if="addosso(a)">addosso</em>
           <em v-else-if="ce(a)">ce l'hai</em>
-          <!-- Pagato col granaio: non un prezzo ma **quanti ne hai**,
-               come la copertina fra le coccole. A zero dice che si
-               coltiva, che è la cosa da fare. -->
-          <em v-else-if="a.da && inGranaio(a)">ne hai {{ inGranaio(a) }} nella dispensa</em>
-          <em v-else-if="a.da">si fa in fattoria</em>
+          <em v-else-if="a.sospeso">non si vende più</em>
           <em v-else-if="manca(a)">manca 🪙{{ manca(a) }}</em>
           <em v-else>🪙{{ a.prezzo }}</em>
         </button>

@@ -730,6 +730,19 @@ Resta una cosa da rifare quando ci sarà il foglio: una riga può dichiarare
 `pezzo` invece di `emoji`, esattamente come le merci, e da lì in poi la scena
 disegna la tessera. Oggi nessuna lo fa.
 
+**E per ora si vendono solo cappelli e occhiali.** Il ragionamento regge in
+testa e sul muso — un punto solo da rispettare — e non regge al collo e sulla
+schiena: un'emoji di fiocco, sciarpa, mantellina o zainetto è disegnata per
+una persona vista di fronte, e posata su una bestia a quattro zampe non si
+aggancia. Quelle voci portano `sospeso: true` in `dati/addobbi.js`: fuori dal
+vestiario e dal negozio (`IN_VENDITA`), ma **non cancellate** — chi le ha già
+comprate se le tiene, in guardaroba o addosso, continua a metterle e
+toglierle, e il salvataggio si rilegge uguale, perché gli id restano. Gli
+agganci `collo` e `schiena` nei foglietti e in `atlante.py` restano anche
+loro: serviranno il giorno che quegli addobbi arriveranno come sprite
+disegnati per una bestia. Con loro è andato via anche il maglione della
+sartoria come addobbo (vedi l'albero, più sotto).
+
 #### I prezzi, e il guardaroba
 
 Da 🪙6 a 🪙24, cioè la fascia **«una cosetta»** di
@@ -1080,10 +1093,13 @@ pentolone — il consiglio lo dice per nome.
 | il pane | 🌾 grano → 🌾 farina (mulino) → 🍞 pane (panificio) | 16 |
 
 Il pane è una pappa (0,60 di pancia, 🪙7 contro 🪙10 comprata: il 70%, dentro
-la fascia di `unita/coltivazioni`); il maglione è **un addobbo pagato col
-granaio** — `da: 'maglione'` al posto di `prezzo`, come la copertina fra le
-coccole — ed è la prima cosa da indossare che si coltiva. Fornaio, maestra e
-l'oste nuovo chiedono il pane; la sarta vuole stoffa e maglione.
+la fascia di `unita/coltivazioni`); il maglione è **una merce e basta**: la
+vuole la sarta al mercato, e vale quello che dice `valoreDi`. Era nato come
+addobbo sulla schiena pagato col granaio (`da: 'maglione'` al posto di
+`prezzo`) ed è stato sospeso con gli altri addobbi della schiena — un'emoji
+di maglione non sta su una bestia — senza toccare la catena: erba, foraggio,
+lana, stoffa, maglione arriva alla sarta. Fornaio, maestra e l'oste nuovo
+chiedono il pane; la sarta vuole lana, stoffa e maglione.
 
 **Le botteghe nascono prima del loro disegno**, ed è deliberato: prima si
 decide l'albero, poi si generano gli sprite. Una voce dichiara in `aspetta`
@@ -1101,10 +1117,11 @@ non si ordina mai. Adesso è `PROFONDITA` (8) in `dati/coltivazioni.js`,
 `profonditaDi` misura la strada più corta di ogni merce, e un guasto scatta
 a due passi dal tetto.
 
-**«A cosa serve» vede cinque uscite** (`dati/usi.js`): ricette, ciotola,
-coccole, addobbi pagati col granaio e ordini del mercato. Stava in
-`bisogni.js`, che ne vedeva tre e non può importare le altre due senza
-chiudere un anello — e la stoffa risultava «non serve a niente».
+**«A cosa serve» vede quattro uscite** (`dati/usi.js`): ricette, ciotola,
+coccole e ordini del mercato. Stava in `bisogni.js`, che ne vedeva tre e non
+può importare la quarta senza chiudere un anello — e la stoffa risultava
+«non serve a niente». La quinta, un addobbo pagato col granaio, c'è stata un
+giorno e tornerà con gli sprite.
 
 **La pagina dell'albero** (`dati/albero.js` puro, `viste/Albero.vue`) è il
 consiglio srotolato: in cima la merce, in mezzo la macchina con quattro
@@ -1350,7 +1367,7 @@ che le due sezioni qui sopra esistono. Restano:
 | `dati/mercato.js` | chi ordina, quanto rende un ordine, e perché non paga monete |
 | `motore/mercato.js` | le regole del banco: cosa si chiede, cosa succede consegnando |
 | `viste/Mercato.vue` | i tre ordini, a caselle |
-| `dati/addobbi.js` | cappellini e fiocchi: nome, prezzo, dove si attaccano |
+| `dati/addobbi.js` | cappellini e occhiali in vendita, fiocchi e mantelline sospesi: nome, prezzo, dove si attaccano |
 | `dati/stagioni.js` | le finestre dell'anno, e dove cadono zucche e alberelli — puro, la scena riceve la lista |
 | `dati/animali.js` | le bestie di casa: quanto costano, quanto pagano rimesse a posto (`premioBenessere`) e **dove sta la testa** dentro lo sprite (`AGGANCI`, `BOB`) |
 | `viste/Vestiario.vue` | «Vestilo», uno slot per punto di attacco |

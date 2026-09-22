@@ -40,7 +40,7 @@ import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
          macchinaDi, statiDi } from './dati/catalogo.js'
 import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
-import { addobbiPer, addobbo } from './dati/addobbi.js'
+import { addobbo } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
 import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
@@ -1738,7 +1738,9 @@ function apriVestiario(chi) {
   if (!b) return
   pannello.value = {
     tipo: 'vestiario', chi, che: nomeDi(chi), nome: b.nome || '',
-    addobbi: addobbiPer(chi),
+    /* In vendita più quello sospeso che ha già: un fiocco comprato
+       prima della sospensione resta un tasto, uno mai comprato no. */
+    addobbi: mondo.vestiarioDi(chi),
     portati: { ...mondo.addobbiDi(chi) },
     guardaroba: { ...mondo.guardaroba },
   }
@@ -1757,10 +1759,10 @@ function metti(id) {
     if (!c.ok) return avvisa(c.motivo === 'poche-monete'
       ? `Ti ${c.costo - monete.value === 1 ? 'manca' : 'mancano'} 🪙${c.costo - monete.value}: ` +
         'fai un po\' di esercizi negli altri giochi.'
-      /* Pagato col granaio e il granaio è vuoto: la cosa da fare è la
-         catena, e il consiglio la risale da solo. */
-      : c.motivo === 'manca-roba'
-      ? `${(PRODOTTI[c.prodotto] || {}).emoji || ''} ${comeAvere(mondo, c.prodotto).testo}`
+      /* Un sospeso che non si ha: nel vestiario non compare, quindi
+         qui ci si arriva solo da un tasto vecchio rimasto a schermo. */
+      : c.motivo === 'sospeso'
+      ? 'Questo per ora non si vende.'
       : 'Non è andata: riprova.')
   }
   const r = mondo.vestiBestia(chi, id)
@@ -1961,7 +1963,6 @@ function tiraVoce({ voce, x, y }) {
                  :chi="pannello.chi" :che="pannello.che" :nome="pannello.nome"
                  :addobbi="pannello.addobbi" :portati="pannello.portati"
                  :guardaroba="pannello.guardaroba" :monete="monete"
-                 :granaio="mondo.granaio"
                  @metti="metti" @togli="togli" @chiudi="chiudi()" />
 
       <Campo v-else-if="pannello.tipo === 'campo'"

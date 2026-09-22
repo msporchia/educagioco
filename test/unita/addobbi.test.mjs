@@ -12,11 +12,14 @@
      4. **i punti di attacco esistono in ogni verso che serve**, se no
         un addobbo comprato non si vede da nessuna parte;
      5. **un salvataggio di ieri si riapre senza rompersi**, e senza
-        addobbi fantasma addosso a chi non li può portare.
+        addobbi fantasma addosso a chi non li può portare;
+     6. **un addobbo sospeso non si vende ma non si perde**: collo e
+        schiena sono fuori dal negozio finché non arrivano come sprite,
+        e chi li ha già comprati se li tiene, in guardaroba o addosso.
    `node test/esegui.mjs addobbi --niente-build` */
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
-  ADDOBBI, PER_ID, addobbiPer, staA, addossoA, guastiDegliAddobbi,
+  ADDOBBI, IN_VENDITA, PER_ID, addobbiPer, inVendita, staA, addossoA, guastiDegliAddobbi,
 } from '../../src/giochi/fattoria/dati/addobbi.js'
 import {
   ANIMALI, AGGANCI, AGGANCI_TUTTI, BOB, portaDi, puntiDi, agganciDi, famigliaDi,
@@ -24,7 +27,6 @@ import {
 } from '../../src/giochi/fattoria/dati/animali.js'
 import { VERSI, BESTIE, fotogrammi } from '../../src/giochi/fattoria/dati/atlante.js'
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
-import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 function borsaTracciata(iniziale) {
@@ -52,6 +54,18 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   controlla('e nemmeno gli animali', a.length === 0, a.join(' · '))
   controlla('ce n\'è per ogni aggancio',
             AGGANCI_TUTTI.every(d => ADDOBBI.some(x => x.dove === d)))
+  /* La decisione: finché sono emoji si vendono solo cappelli e occhiali.
+     Un fiocco al collo di un cane a quattro zampe non si aggancia, e si
+     rifà come sprite — il giorno che una voce del collo torna in
+     vendita, questa riga lo dice a chi non se lo aspetta. */
+  const venduti = [...new Set(IN_VENDITA.map(a => a.dove))].sort().join(' ')
+  uguale('in vendita ci sono solo testa e muso', venduti, 'muso testa')
+  controlla('e al collo e sulla schiena tutto è sospeso',
+            ADDOBBI.filter(a => a.dove === 'collo' || a.dove === 'schiena')
+                   .every(a => a.sospeso))
+  controlla('ma un sospeso esiste ancora nel catalogo', !!PER_ID.fiocco && !inVendita('fiocco'))
+  nota(`${IN_VENDITA.length} in vendita su ${ADDOBBI.length}: ` +
+       ADDOBBI.filter(a => a.sospeso).map(a => a.id).join(', ') + ' sospesi')
 }
 
 /* ══════════ 2. i punti di attacco ci sono davvero ══════════
@@ -171,15 +185,15 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   uguale('rimetterlo due volte non fa niente',
          f.vestiBestia('cane-bobtail', 'cappellino').motivo, 'gia-addosso')
 
-  /* Agganci diversi convivono: un cappello **e** una sciarpa. */
-  f.compraAddobbo('sciarpa')
-  controlla('una sciarpa sta insieme al cappello',
-            f.vestiBestia('cane-bobtail', 'sciarpa').ok)
+  /* Agganci diversi convivono: un cappello **e** gli occhiali. */
+  f.compraAddobbo('occhiali')
+  controlla('gli occhiali stanno insieme al cappello',
+            f.vestiBestia('cane-bobtail', 'occhiali').ok)
   uguale('e la bestia ne porta due', f.comeEVestita('cane-bobtail').length, 2)
   /* L'ordine è quello degli agganci, non quello in cui li hai messi:
      chi disegna li mette in scena sempre uguali. */
   uguale('nell\'ordine degli agganci',
-         f.comeEVestita('cane-bobtail').map(a => a.dove).join(' '), 'testa collo')
+         f.comeEVestita('cane-bobtail').map(a => a.dove).join(' '), 'testa muso')
 }
 
 /* ══════════ 4. quello che non gli sta ══════════
@@ -192,8 +206,8 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   const f = conLaBestia('pappagallo')
   controlla('il pappagallo non porta niente sulla schiena',
             !portaDi('pappagallo').includes('schiena'))
-  const c = f.compraAddobbo('mantellina')
-  controlla('la mantellina si compra lo stesso', c.ok)
+  /* La mantellina oggi è sospesa: arriva da un guardaroba di ieri. */
+  f.guardaroba.mantellina = 1
   const r = f.vestiBestia('pappagallo', 'mantellina')
   uguale('ma addosso al pappagallo non ci va', r.ok, false)
   uguale('e dice perché', r.motivo, 'non-gli-sta')
@@ -214,10 +228,10 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
    «non gli sta» no. */
 {
   const f = conLaBestia('cane-bobtail')
-  const r = f.vestiBestia('cane-bobtail', 'fiocco')
+  const r = f.vestiBestia('cane-bobtail', 'occhialini')
   uguale('un addobbo che non hai non si mette', r.ok, false)
   uguale('e dice quanto costa', r.motivo, 'non-ce-lhai')
-  uguale('col suo prezzo', r.costo, PER_ID.fiocco.prezzo)
+  uguale('col suo prezzo', r.costo, PER_ID.occhialini.prezzo)
 
   /* Si svuota **dopo** aver comprato la bestia: quello che si prova qui
      è il prezzo dell'addobbo, non quello del cane. */
@@ -225,14 +239,14 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   const povera = conLaBestia('cane-bobtail', borsa)
   borsa.svuota()
   uguale('e a zero monete non si compra',
-         povera.compraAddobbo('fiocco').motivo, 'poche-monete')
-  uguale('e non è finito in guardaroba', povera.quantiAddobbi('fiocco'), 0)
+         povera.compraAddobbo('occhialini').motivo, 'poche-monete')
+  uguale('e non è finito in guardaroba', povera.quantiAddobbi('occhialini'), 0)
 
   /* Una bestia che non è tua non si veste, e un addobbo che non esiste
      nemmeno: un motore che accetta tutto è un buco, e questo motore lo
      usa anche chi scrive un test. */
   uguale('una bestia che non hai non si veste',
-         f.vestiBestia('gatto-nero', 'fiocco').motivo, 'non-e-tua')
+         f.vestiBestia('gatto-nero', 'occhialini').motivo, 'non-e-tua')
   uguale('e un addobbo inventato non esiste',
          f.vestiBestia('cane-bobtail', 'sombrero').motivo, 'non-esiste')
 }
@@ -240,7 +254,9 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
 /* ══════════ 5. un salvataggio si riapre uguale ══════════ */
 {
   const f = conLaBestia('gatto-tuxedo')
-  f.compraAddobbo('campanella'); f.compraAddobbo('cilindro')
+  /* La campanella è sospesa: qui sta per un salvataggio di prima. */
+  f.guardaroba.campanella = 1
+  f.compraAddobbo('cilindro')
   f.vestiBestia('gatto-tuxedo', 'campanella')
 
   const dato = JSON.parse(JSON.stringify(f.serializza()))
@@ -285,9 +301,9 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
    sbagliata — e un cappello che costa quanto un pollaio mette una
    decorazione in concorrenza con la catena. */
 {
-  /* Solo quelli a monete: chi si paga col granaio non ha un prezzo da
-     mettere in fascia, ha una catena. */
-  const aMonete = ADDOBBI.filter(a => !a.da)
+  /* Anche i sospesi: il giorno che tornano il prezzo dev'essere già
+     nella fascia. */
+  const aMonete = ADDOBBI
   const caro = Math.max(...aMonete.map(a => a.prezzo))
   const misero = Math.min(...aMonete.map(a => a.prezzo))
   controlla(`il più caro costa 🪙${caro}, cioè ${(caro / 6).toFixed(1)} minuti di esercizi`,
@@ -299,43 +315,69 @@ function conLaBestia(chi, borsa = borsaInfinita()) {
   const bestia = Math.min(...Object.values(ANIMALI).map(a => a.prezzo))
   controlla(`il guardaroba intero (🪙${tutti}) costa più di una bestia (🪙${bestia})`,
             tutti > bestia)
-  nota(`${aMonete.length} addobbi a monete, da 🪙${misero} a 🪙${caro}`)
+  nota(`${aMonete.length} addobbi, ${IN_VENDITA.length} in vendita, da 🪙${misero} a 🪙${caro}`)
 }
 
-/* ══════════ 6b. UN ADDOBBO PAGATO COL GRANAIO ══════════
-   Il maglione esce dalla sartoria e si paga con la merce, non con le
-   monete: è la prima cosa da indossare che si coltiva, e la ragione per
-   cui la catena del filo arriva da qualche parte. Stessa forma della
-   copertina fra le coccole — `da` e niente `prezzo`. */
+/* ══════════ 7. UN SOSPESO NON SI VENDE, MA NON SI PERDE ══════════
+   Collo e schiena sono fuori dal negozio finché non arrivano come
+   sprite. Tre cose da tenere insieme: **non si compra** (né si vede nel
+   vestiario di chi non ce l'ha), **chi ce l'ha lo tiene** — in
+   guardaroba, o addosso alla bestia — e continua a metterlo e toglierlo,
+   e un salvataggio con un fiocco addosso si riapre col fiocco addosso. */
 {
-  const coltivati = ADDOBBI.filter(a => a.da)
-  controlla('c\'è almeno un addobbo che si paga col granaio', coltivati.length > 0)
-  for (const a of coltivati)
-    controlla(`${a.id}: paga con «${a.da}», che è una merce`, !!PRODOTTI[a.da])
-
   const borsa = borsaTracciata(500)
-  const f = conLaBestia('cane-beagle', borsa)
+  const f = conLaBestia('cane-bobtail', borsa)
   const saldo = borsa.saldo()
-  const senza = f.compraAddobbo('maglione_addobbo')
-  uguale('a dispensa vuota non si prende', senza.ok, false)
-  uguale('e dice che manca la roba, non le monete', senza.motivo, 'manca-roba')
-  uguale('e quale', senza.prodotto, 'maglione')
+  const c = f.compraAddobbo('fiocco')
+  uguale('un fiocco non si compra', c.ok, false)
+  uguale('e il motivo è che è sospeso, non le monete', c.motivo, 'sospeso')
   uguale('senza toccare le monete', borsa.saldo(), saldo)
+  uguale('e non è finito in guardaroba', f.quantiAddobbi('fiocco'), 0)
+  controlla('nel vestiario di chi non ce l\'ha non compare',
+            !f.vestiarioDi('cane-bobtail').some(a => a.id === 'fiocco'))
+  controlla('e nemmeno nessun altro sospeso',
+            f.vestiarioDi('cane-bobtail').every(a => !a.sospeso))
+  controlla('mentre i cappelli e gli occhiali ci sono tutti',
+            IN_VENDITA.filter(a => staA(a.id, 'cane-bobtail'))
+                      .every(a => f.vestiarioDi('cane-bobtail').some(x => x.id === a.id)))
 
-  f.granaio.maglione = 2
-  const con = f.compraAddobbo('maglione_addobbo')
-  controlla('col maglione nella dispensa si prende', con.ok)
-  uguale('costa zero monete', con.costo, 0)
-  uguale('e scala un pezzo dal granaio', f.quantoHo('maglione'), 1)
-  uguale('e sta nel guardaroba', f.quantiAddobbi('maglione_addobbo'), 1)
-  controlla('e il cane se lo mette addosso', f.vestiBestia('cane-beagle', 'maglione_addobbo').ok)
-  uguale('sulla schiena', f.addobbiDi('cane-beagle').schiena, 'maglione_addobbo')
+  /* Chi l'aveva comprato ieri se lo tiene. */
+  f.guardaroba.fiocco = 1
+  controlla('un fiocco comprato ieri resta nel vestiario',
+            f.vestiarioDi('cane-bobtail').some(a => a.id === 'fiocco'))
+  controlla('e si mette addosso', f.vestiBestia('cane-bobtail', 'fiocco').ok)
+  uguale('al collo', f.addobbiDi('cane-bobtail').collo, 'fiocco')
+  controlla('addosso, sta ancora nel vestiario (per toglierlo)',
+            f.vestiarioDi('cane-bobtail').some(a => a.id === 'fiocco'))
+  uguale('chi disegna lo riceve come sempre',
+         f.comeEVestita('cane-bobtail').map(a => a.id).join(' '), 'fiocco')
+  controlla('e si toglie', f.spogliaBestia('cane-bobtail', 'collo').ok)
+  uguale('tornando nel guardaroba', f.quantiAddobbi('fiocco'), 1)
+
+  /* Il salvataggio se lo porta dietro: gli id restano. */
+  f.vestiBestia('cane-bobtail', 'fiocco')
+  f.guardaroba.mantellina = 1
+  const dato = JSON.parse(JSON.stringify(f.serializza()))
+  const g = new Fattoria({ borsa: borsaInfinita(), dato })
+  uguale('un fiocco addosso si rilegge addosso', g.addobbiDi('cane-bobtail').collo, 'fiocco')
+  uguale('e una mantellina in guardaroba resta lì', g.quantiAddobbi('mantellina'), 1)
+  controlla('e la mantellina compare nel vestiario, perché ce l\'ha',
+            g.vestiarioDi('cane-bobtail').some(a => a.id === 'mantellina'))
+  controlla('ma lo zainetto no, perché non ce l\'ha',
+            !g.vestiarioDi('cane-bobtail').some(a => a.id === 'zainetto'))
+  /* `addobbiPer` da solo, senza guardaroba, è il negozio: niente sospesi. */
+  controlla('il catalogo di una bestia senza guardaroba non ha sospesi',
+            addobbiPer('cane-bobtail').every(a => !a.sospeso))
+  uguale('e con `tieni` mostra solo quelli chiesti',
+         addobbiPer('cane-bobtail', ['fiocco']).filter(a => a.sospeso).map(a => a.id).join(' '),
+         'fiocco')
 }
 
-/* E `addossoA` è puro: la stessa mappa dà sempre la stessa lista. */
+/* E `addossoA` è puro: la stessa mappa dà sempre la stessa lista — e
+   un sospeso addosso si disegna come tutti gli altri. */
 {
   const uno = addossoA({ testa: 'corona', collo: 'fiocco' })
-  uguale('due addobbi diventano due righe', uno.length, 2)
+  uguale('due addobbi diventano due righe, sospeso compreso', uno.length, 2)
   uguale('nell\'ordine degli agganci', uno.map(a => a.dove).join(' '), 'testa collo')
   uguale('e una mappa vuota non dà niente', addossoA({}).length, 0)
   uguale('e un id inventato si salta', addossoA({ testa: 'sombrero' }).length, 0)

@@ -488,7 +488,14 @@ committate: non è ricostruibile da git.
   che vede tutte e cinque le uscite (`bisogni.js` ne vede tre e non può
   importare le altre due senza un anello); una voce nata prima del suo
   sprite dichiara in `aspetta` il pezzo che il foglio porterà, e i
-  guasti scattano il giorno che quel pezzo c'è. La pagina dell'albero
+  guasti scattano il giorno che quel pezzo c'è. **Gli addobbi al collo e
+  sulla schiena sono sospesi** (`sospeso: true` in `dati/addobbi.js`,
+  `IN_VENDITA` è il negozio): le emoji non si agganciano a una bestia a
+  quattro zampe e si rifanno come sprite — non si cancellano, perché gli
+  id sono le chiavi del salvataggio e chi le ha comprate le tiene
+  (`vestiarioDi` nel motore mostra i sospesi solo a chi li ha); il
+  maglione della sartoria per lo stesso motivo è una merce e non un
+  addobbo, e va alla sarta. La pagina dell'albero
   (`dati/albero.js` puro, `viste/Albero.vue`) si apre **sempre con una
   merce già scelta** e le sue righe eseguono le azioni del consiglio:
   bersagli `[data-albero]`, `[data-albero-riga="<merce>"]`,

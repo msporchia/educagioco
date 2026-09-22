@@ -100,7 +100,7 @@ import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce, tuttoAPosto, premiaSeStaBene }
   from '../dati/bisogni.js'
 import { ANIMALI, famigliaDi, premioBenessere } from '../dati/animali.js'
-import { PER_ID as ADDOBBI_PER_ID, staA, addossoA } from '../dati/addobbi.js'
+import { PER_ID as ADDOBBI_PER_ID, staA, addossoA, addobbiPer } from '../dati/addobbi.js'
 import { qualcosaDaConsegnare } from './mercato.js'
 import { primaLibera } from '../../../motore/passi.js'
 
@@ -988,18 +988,21 @@ export class Fattoria {
      cui si trova il punto, ma la scena non sa cosa voglia dire. */
   comeEVestita(chi) { return addossoA(this.addobbiDi(chi)) }
 
+  /* Il vestiario di una bestia: quello in vendita che le sta, più
+     quello **sospeso** che il bambino ha già — in guardaroba o addosso
+     a lei (`sospeso` in `dati/addobbi.js`). Un fiocco comprato prima
+     della sospensione resta un tasto; uno mai comprato non compare. */
+  vestiarioDi(chi) {
+    const tieni = Object.keys(this.guardaroba || {}).filter(id => this.quantiAddobbi(id) > 0)
+    return addobbiPer(chi, [...tieni, ...Object.values(this.addobbiDi(chi))])
+  }
+
   compraAddobbo(id) {
     const a = ADDOBBI_PER_ID[id]
     if (!a) return { ok: false, motivo: 'non-esiste' }
-    /* Un addobbo che si paga col granaio (`da`, il maglione): non tocca
-       le monete e scala un pezzo, come la copertina fra le coccole. Il
-       rifiuto dice **quale merce**, perché la cosa da fare è coltivarla. */
-    if (a.da) {
-      if (!this.quantoHo(a.da)) return { ok: false, motivo: 'manca-roba', prodotto: a.da }
-      this.togli(a.da, 1)
-      this.guardaroba[id] = this.quantiAddobbi(id) + 1
-      return { ok: true, costo: 0, addobbo: a, prodotto: a.da }
-    }
+    /* Un sospeso esiste — si rilegge, si mette, si toglie — ma non si
+       vende: il negozio è `IN_VENDITA`, non il catalogo. */
+    if (a.sospeso) return { ok: false, motivo: 'sospeso' }
     if (this.borsa.quante() < a.prezzo)
       return { ok: false, motivo: 'poche-monete', costo: a.prezzo }
     this.spendi(a.prezzo)
