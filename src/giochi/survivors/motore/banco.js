@@ -32,6 +32,13 @@
    quante volte ci prova. La differenza è che provarci quando tutte le
    direzioni sono pericolose non serve, e il pilota lo sa.
 
+   `raccolta` è quanto gli importa di quello che c'è per terra: a 1 va
+   a prendere gemme e oggetti, a 0 li ignora e schiva e basta — è il
+   bambino che **sta al centro** e raccoglie solo quello che calpesta.
+   Da quando le gemme si prendono a contatto (niente calamita senza la
+   carta), la differenza fra i due è la misura di quanto conta andare
+   in giro, e la scaletta dei livelli è tarata su quella.
+
    `sapienza` è quanto spesso risponde giusto alla domanda che paga la
    carta: sbagliare non dà niente, e il giro dopo si riprova. Anche
    questo va misurato — una tappa che si vince **solo** rispondendo bene
@@ -61,16 +68,19 @@ const QUASI = 1.15
 /* quanto pesa una meta rispetto a un mostro: un oggetto vale tre gemme,
    perché svanisce e perché una cassa è un'offerta intera */
 const PESO_OGGETTO = 3
-const RICHIAMO = 1.0
+/* quanto è stretto il nocciolo del richiamo: una gemma a più di trenta
+   pixel dal tragitto non si prende, e non deve nemmeno tirare molto */
+const RACCOLTA_KERNEL = 30 * 30
 
 const scarto = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)))
 
 export class Pilota {
   constructor({ rnd = Math.random, bravura = 1, sapienza = 0.8, gusto = 'forte',
-                esattezza = null, mira = 0.65 } = {}) {
+                esattezza = null, mira = 0.65, raccolta = 1 } = {}) {
     this.rnd = rnd
     this.bravura = bravura
     this.sapienza = sapienza
+    this.raccolta = raccolta
     /* Quante ne indovina, sempre, indipendentemente da quanto è cara la
        carta. Serve a **misurare quanto pesa sbagliare**: con `sapienza` la
        probabilità dipende dal prezzo, e allora «ne sbaglia il 10%» non si
@@ -84,6 +94,9 @@ export class Pilota {
     this.ultima = 0            // la direzione di adesso, in radianti
     this.domande = 0
     this.giuste = 0
+    /* quante delle offerte venivano da una cassa trovata a terra e non
+       da un livello: è il numero che tiene la cassa rara (vedi il test) */
+    this.casse = 0
     /* il conto della mira: le occasioni in cui c'era un'arma che guarda
        dove si corre e un grumo a tiro, e quante volte la direzione presa
        stava entro `GIUSTA` dal grumo */
@@ -149,32 +162,62 @@ export class Pilota {
       return
     }
 
+    /* Le direzioni da provare: sedici a ventaglio, più quella **esatta**
+       verso le tre mete migliori. Da quando una gemma si prende a
+       contatto, «più o meno di là» non basta: a ventidue gradi e mezzo
+       di passo si passa a un braccio dalla gemma e non la si prende
+       mai — è quello che il vecchio pilota faceva, e la calamita di
+       base glielo copriva. La direzione esatta si valuta come le altre:
+       se è pericolosa non si prende. */
+    const direzioni = []
+    for (let i = 0; i < QUANTE; i++) direzioni.push(i / QUANTE * 6.283)
+    for (const m of this.meteMigliori(mete, e, 3)) direzioni.push(Math.atan2(m.y - e.y, m.x - e.x))
+
     const prove = []
     let minPericolo = Infinity
-    for (let i = 0; i < QUANTE; i++) {
-      const a = i / QUANTE * 6.283
-      const px = e.x + Math.cos(a) * passo, py = e.y + Math.sin(a) * passo
+    for (const a of direzioni) {
+      const ux = Math.cos(a), uy = Math.sin(a)
+      const px = e.x + ux * passo, py = e.y + uy * passo
       let pericolo = 0
       for (const v of vicini) {
         const dx = v.x - px, dy = v.y - py
         pericolo += 1 / Math.max(900, dx * dx + dy * dy)
       }
-      /* le cose da raccogliere tirano: poco, perché una gemma non vale
-         un cuore, ma abbastanza da far curvare la fuga verso di loro */
+      /* le cose da raccogliere: conta quanto il **tragitto** del passo
+         ci passa vicino — non il punto d'arrivo. Una gemma si prende
+         passandoci sopra, e un passo che ci passa sopra e finisce oltre
+         l'ha presa; il nocciolo è stretto (trenta pixel) perché a un
+         braccio di distanza non si prende niente */
       let richiamo = 0
       for (const m of mete) {
-        const dx = m.x - px, dy = m.y - py
-        richiamo += m.peso / (dx * dx + dy * dy + 12000)
+        const mx = m.x - e.x, my = m.y - e.y
+        const t = Math.max(0, Math.min(passo, mx * ux + my * uy))
+        const dx = mx - ux * t, dy = my - uy * t
+        richiamo += m.peso / (dx * dx + dy * dy + RACCOLTA_KERNEL)
       }
       /* cambiare idea di colpo costa: chi zigzaga a vuoto non va da
          nessuna parte, e nemmeno un bambino lo fa */
       const svolta = scarto(a, this.ultima)
-      const costo = pericolo * (1 + 0.12 * svolta) - RICHIAMO * richiamo + 1e-5 * svolta
-      prove.push({ a, pericolo, costo })
+      prove.push({ a, pericolo, richiamo, svolta, costo: pericolo * (1 + 0.12 * svolta) })
       if (pericolo < minPericolo) minPericolo = pericolo
     }
+    /* ── prima la pelle, poi le gemme ──
+       Si parte dalla direzione meno pericolosa; poi, fra quelle **quasi
+       sicure quanto quella** (lo stesso `QUASI` della mira: con nessuno
+       a meno di 75 pixel dopo il passo sono tutte buone), si prende
+       quella che passa sopra più roba. Era una somma pesata — pericolo
+       meno richiamo — e il richiamo non vinceva mai: fra due direzioni
+       la differenza di pericolo è cento volte quella di richiamo, e a
+       quel punto il pilota andava dove lo portava la paura e le gemme
+       le prendeva solo se ci passava per caso. Con la calamita di base
+       «per caso» bastava; a contatto no. */
+    const sogliaSicura = Math.max(minPericolo * QUASI, PERICOLO_OK)
     let scelta = prove[0]
     for (const p of prove) if (p.costo < scelta.costo) scelta = p
+    for (const p of prove) {
+      if (p.pericolo > sogliaSicura) continue
+      if (p.richiamo - 1e-5 * p.svolta > scelta.richiamo - 1e-5 * scelta.svolta) scelta = p
+    }
 
     /* ── la mira ──
        Con un'arma che colpisce dove si corre e un grumo a tiro, fra le
@@ -221,23 +264,32 @@ export class Pilota {
   mete(partita) {
     const e = partita.eroe
     const mete = []
+    if (!(this.raccolta > 0)) return mete          // chi sta al centro non le guarda
     const entro = PORTATA * PORTATA
     for (const o of partita.oggetti || [])
-      if ((o.x - e.x) ** 2 + (o.y - e.y) ** 2 < entro) mete.push({ x: o.x, y: o.y, peso: PESO_OGGETTO })
+      if ((o.x - e.x) ** 2 + (o.y - e.y) ** 2 < entro)
+        mete.push({ x: o.x, y: o.y, peso: PESO_OGGETTO * this.raccolta })
     for (const g of partita.gemme)
-      if ((g.x - e.x) ** 2 + (g.y - e.y) ** 2 < entro) mete.push({ x: g.x, y: g.y, peso: g.val || 1 })
+      if ((g.x - e.x) ** 2 + (g.y - e.y) ** 2 < entro)
+        mete.push({ x: g.x, y: g.y, peso: (g.val || 1) * this.raccolta })
     return mete
   }
 
   metaMigliore(mete, e) {
-    let migliore = null, punteggio = 0
+    return this.meteMigliori(mete, e, 1)[0] || null
+  }
+
+  /* le `quante` mete che valgono di più per la distanza: vicine e
+     pesanti prima. Quella già sotto i piedi non conta, la prende da sé */
+  meteMigliori(mete, e, quante) {
+    const pesate = []
     for (const m of mete) {
       const d = Math.hypot(m.x - e.x, m.y - e.y)
-      if (d < 20) continue                    // già sotto i piedi: la prende da sé
-      const p = m.peso / (d + 60)
-      if (p > punteggio) { punteggio = p; migliore = m }
+      if (d < 20) continue
+      pesate.push({ m, p: m.peso / (d + 60) })
     }
-    return migliore
+    pesate.sort((a, b) => b.p - a.p)
+    return pesate.slice(0, quante).map(x => x.m)
   }
 
   /* Dove sta il grumo di mostri più fitto a tiro dell'arma che guarda
@@ -279,6 +331,7 @@ export class Pilota {
     if (!offerta?.length) return null
     const voluta = this.scegli(offerta)
     this.domande++
+    if (partita.motivoOfferta === 'cassa') this.casse++
     const giusto = this.rnd() < this.probabilita(voluta.prezzo)
     if (giusto) this.giuste++
     return giusto ? partita.prendi(voluta.chiave) : partita.rinuncia()
@@ -302,13 +355,14 @@ export class Pilota {
    gioco non è quello dell'orologio, è quello che gli si dà. */
 export function gioca(regole, {
   rnd = Math.random, dt = 1 / 30, bravura = 1, sapienza = 0.8, gusto = 'forte',
-  esattezza = null, mira = 0.65, campo = null, fermo = false, fino = 180, oltre = 0, da = null,
+  esattezza = null, mira = 0.65, raccolta = 1, campo = null, fermo = false,
+  fino = 180, oltre = 0, da = null,
 } = {}) {
   /* `da` è una partita già cominciata — quella che serve a provare che
      una partita **ripresa** arriva in fondo (`motore/sosta.js`): il
      pilota la prende in mano dove qualcun altro l'ha lasciata. */
   const partita = da || new Partita(regole, { rnd, campo })
-  const pilota = new Pilota({ rnd, bravura, sapienza, gusto, esattezza, mira })
+  const pilota = new Pilota({ rnd, bravura, sapienza, gusto, esattezza, mira, raccolta })
   const durata = Number.isFinite(regole.durata) ? regole.durata : fino
   /* `oltre` sono i secondi che il pilota resta in campo dopo aver vinto:
      serve a provare che la marea continua a salire e che prima o poi
@@ -337,7 +391,7 @@ export function misura(regole, {
   volte = 20, rnd = Math.random, ...resto
 } = {}) {
   let vinte = 0, tempo = 0, livello = 0, uccisi = 0, domande = 0, ferite = 0
-  let occasioni = 0, mirate = 0
+  let occasioni = 0, mirate = 0, casse = 0
   for (let i = 0; i < volte; i++) {
     const { partita, pilota } = gioca(regole, { rnd, ...resto })
     if (partita.vinta) vinte++
@@ -346,6 +400,7 @@ export function misura(regole, {
     uccisi += partita.uccisi
     ferite += partita.ferite
     domande += pilota.domande
+    casse += pilota.casse
     occasioni += pilota.occasioni
     mirate += pilota.mirate
   }
@@ -356,6 +411,8 @@ export function misura(regole, {
     ucciseMedie: uccisi / volte,
     feriteMedie: ferite / volte,
     domandeMedie: domande / volte,
+    /* quante di quelle domande le ha aperte una cassa trovata a terra */
+    casseMedie: casse / volte,
     /* la quota di occasioni in cui ha guardato dalla parte giusta, su
        tutte le partite insieme: `null` se non ne ha mai avuta una */
     quotaMira: occasioni ? mirate / occasioni : null,
