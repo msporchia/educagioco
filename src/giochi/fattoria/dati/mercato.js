@@ -82,38 +82,43 @@ export const CLIENTI = [
   { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖',
     vuole: ['grano', 'uova', 'latte', 'patate', 'farina', 'pane'] },
   { id: 'pasticcera',  nome: 'La pasticcera',  emoji: '🧁',
-    vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda', 'burro', 'torta'] },
+    vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda', 'burro', 'torta',
+            'crostata'] },
   { id: 'nonna',       nome: 'La nonna',       emoji: '👵' },
   { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳',
     vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio',
-            'formaggio', 'burro'] },
+            'formaggio', 'burro', 'minestrone', 'conserva', 'salsa'] },
   { id: 'maestra',     nome: 'La maestra',     emoji: '🍎',
-    vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane', 'torta'] },
+    vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane', 'torta',
+            'crostata'] },
   { id: 'bottegaio',   nome: 'Il bottegaio',   emoji: '🏪' },
   { id: 'veterinaria', nome: 'La veterinaria', emoji: '🩺',
     vuole: ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'pastura'] },
   { id: 'giardiniere', nome: 'Il giardiniere', emoji: '🌻',
-    vuole: ['concime', 'fiori', 'zucche'] },
+    vuole: ['concime', 'fiori', 'zucche', 'lavanda', 'fieno'] },
   /* I quattro mestieri dell'orto. Sono qui perché una merce nuova
      senza nessuno che la chieda per mestiere finisce sempre in mano al
      bottegaio, che è il modo di dire «non ci ho pensato». */
   { id: 'pizzaiolo',   nome: 'Il pizzaiolo',   emoji: '🍕',
-    vuole: ['pomodori', 'cipolle', 'aglio', 'melanzane', 'peperoni', 'grano'] },
+    vuole: ['pomodori', 'cipolle', 'aglio', 'melanzane', 'peperoni', 'grano',
+            'salsa', 'farina'] },
   { id: 'fruttivendola', nome: 'La fruttivendola', emoji: '🥕',
-    vuole: ['pomodori', 'patate', 'cipolle', 'cavolfiori', 'carote', 'fragole', 'zucche'] },
+    vuole: ['pomodori', 'patate', 'cipolle', 'cavolfiori', 'carote', 'fragole',
+            'zucche', 'mais'] },
   { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
     vuole: ['miele', 'fiori', 'cipolle'] },
   { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
-    vuole: ['lana', 'stoffa', 'maglione', 'maglione_lavanda'] },
+    vuole: ['lana', 'stoffa', 'maglione', 'maglione_lavanda', 'sacchetto'] },
   /* L'oste vuole quello che si mette in tavola: è il mestiere che
      tiene il pane fuori dalle mani del solo fornaio. */
   { id: 'oste',        nome: 'L\'oste',        emoji: '🍽️',
-    vuole: ['pane', 'tartufi', 'uova', 'latte', 'formaggio'] },
+    vuole: ['pane', 'tartufi', 'uova', 'latte', 'formaggio', 'polenta',
+            'minestrone', 'salsa'] },
   /* La lavandaia è il mestiere della tintoria, e **non chiede solo il
      sapone**: prende anche la lavanda cruda e la stoffa, che è il modo
      di dare un banco a chi la tintoria non ce l'ha ancora. */
   { id: 'lavandaia',   nome: 'La lavandaia',   emoji: '🧼',
-    vuole: ['sapone', 'lavanda', 'stoffa'] },
+    vuole: ['sapone', 'lavanda', 'stoffa', 'sacchetto'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]

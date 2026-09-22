@@ -235,6 +235,32 @@ export const PRODOTTI = {
   maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', silo: 'bottega',
                       aspetta: 'merce_maglione_lavanda' },
   sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', aspetta: 'merce_sapone' },
+
+  /* ── LA CUCINA: DOVE LE COLTURE SI INCONTRANO ────────────────────
+     Quattro merci che nascono **da colture diverse messe insieme**, e
+     il perché sta in fondo al file, alla sezione delle confluenze: una
+     coltura con una bocca sola è una coltura che si semina una volta e
+     poi non più. La salsa e il minestrone tengono insieme l'orto, la
+     conserva i tre ortaggi tardivi, la polenta lega il mais al
+     caseificio.
+
+     Il minestrone è **l'unica pappa delle quattro**: le altre tre
+     costano più di quanto una ciotola possa valere (la polenta 🪙15),
+     e il loro sbocco è il banco del mercato. */
+  minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', aspetta: 'merce_minestrone' },
+  /* Il vasetto rosso dell'arredo fa da salsa finché il foglio non
+     porta il suo — è lo stesso ripiego che il miele usa da sempre. */
+  salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'marmellata0',
+               aspetta: 'merce_salsa' },
+  conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega',
+               aspetta: 'merce_conserva' },
+  polenta:   { nome: 'Polenta',   emoji: '🍛', silo: 'bottega', aspetta: 'merce_polenta' },
+  /* La crostatina dell'arredo e il sacco di iuta: due facce che
+     l'atlante ha già e che non nominava nessuno. */
+  crostata:  { nome: 'Crostata',  emoji: '🍰', silo: 'bottega', pezzo: 'crostatina',
+               aspetta: 'merce_crostata' },
+  sacchetto: { nome: 'Sacchetto profumato', emoji: '👝', silo: 'bottega',
+               pezzo: 'sacco_iuta', aspetta: 'merce_sacchetto' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -798,6 +824,61 @@ export const RICETTE = [
   {
     id: 'sapone', nome: 'Sapone', emoji: '🧼', dove: 'tintoria', liv: 52,
     prende: { tintura: 1, burro: 1 }, costo: 1, minuti: 5, da: 'sapone', resa: 1,
+  },
+  /* La quarta della tintoria, e la seconda bocca della lavanda: due
+     mazzi dentro un pezzo di stoffa. È la confluenza più corta fra il
+     colore e il filo, e arriva insieme alle altre — una coltura con
+     una bocca sola è una coltura che si semina una volta. */
+  {
+    id: 'sacchetto', nome: 'Sacchetto profumato', emoji: '👝',
+    dove: 'tintoria', liv: 52,
+    prende: { lavanda: 2, stoffa: 1 }, costo: 1, minuti: 5, da: 'sacchetto', resa: 1,
+  },
+
+  /* ═══════════ LA CUCINA: LE COLTURE CHE SI INCONTRANO ═══════════
+     Il difetto che questa macchina esiste per riparare sta in fondo al
+     file, in `guastiDelleColture`: **dodici colture su tredici avevano
+     una bocca sola**, e quasi tutte una bocca che prendeva solo loro.
+     Un orto fatto così si semina una volta per vedere com'è e poi si
+     torna alla coltura che serve — mentre quello che rende vivo un
+     orto è che due cose diverse, insieme, ne facciano una terza.
+
+     Le quattro ricette sono tutte **a confluenza**, cioè prendono roba
+     di catene diverse, e nessuna prende meno di due ingredienti. La
+     cucina arriva al 24, fra le anatre e i maiali: è il primo livello
+     in cui il caseificio c'è già e l'orto ha aperto. */
+  {
+    id: 'minestrone', nome: 'Minestrone', emoji: '🍜', dove: 'cucina', liv: 24,
+    prende: { patate: 1, carote: 1, cavolfiori: 1 }, costo: 1, minuti: 6,
+    da: 'minestrone', resa: 1,
+  },
+  /* La polenta lega il mais al caseificio, ed è la ragione per cui il
+     mais non è più la coltura che serve solo ai cani: costa 🪙15, cioè
+     troppo per una ciotola — si porta al banco. */
+  {
+    id: 'polenta', nome: 'Polenta e formaggio', emoji: '🍛', dove: 'cucina', liv: 24,
+    prende: { mais: 2, formaggio: 1 }, costo: 1, minuti: 8, da: 'polenta', resa: 1,
+  },
+  {
+    id: 'conserva', nome: 'Conserva d\'orto', emoji: '🥗', dove: 'cucina', liv: 33,
+    prende: { melanzane: 1, peperoni: 1, zucche: 1 }, costo: 1, minuti: 7,
+    da: 'conserva', resa: 1,
+  },
+  /* Pomodori, cipolle e aglio: il soffritto, cioè le tre colture che
+     al banco andavano solo crude. */
+  {
+    id: 'salsa', nome: 'Salsa di pomodoro', emoji: '🥫', dove: 'cucina', liv: 38,
+    prende: { pomodori: 2, cipolle: 1, aglio: 1 }, costo: 1, minuti: 6,
+    da: 'salsa', resa: 1,
+  },
+
+  /* La quarta del panificio, e la seconda bocca delle fragole: farina,
+     fragole e burro, cioè tre catene di nuovo. */
+  {
+    id: 'crostata', nome: 'Crostata di fragole', emoji: '🍰',
+    dove: 'panificio', liv: 44,
+    prende: { farina: 1, fragole: 1, burro: 1 }, costo: 2, minuti: 7,
+    da: 'crostata', resa: 1,
   },
 ]
 

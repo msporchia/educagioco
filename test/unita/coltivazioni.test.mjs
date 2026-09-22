@@ -20,6 +20,7 @@ import {
   quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA, profonditaDi,
 } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { CIBI, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
+import { CLIENTI } from '../../src/giochi/fattoria/dati/mercato.js'
 import { serveA, guastiDegliUsi } from '../../src/giochi/fattoria/dati/usi.js'
 import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { livelloDellaRicetta } from '../../src/giochi/fattoria/dati/livelli.js'
@@ -142,6 +143,61 @@ controlla('c\'è almeno una ricetta', RICETTE.length > 0)
   uguale('e la coltura del primo livello è una sola',
          COLTURE.filter(c => (c.liv || 1) === 1).length, 1)
   nota(`${COLTURE.length} colture, ognuna con la sua bocca`)
+}
+
+/* ══════════ 1b-bis. E DUE BOCCHE, DI CUI UNA CHE LA MESCOLA ══════════
+   *Alza l'asticella di 1b*, e il difetto che ripara si vedeva solo
+   contando: **dodici colture su tredici avevano una bocca sola**, e
+   quasi sempre una bocca che prendeva solo loro. Il mais ne aveva una
+   (il pastone) e nessun cliente al banco: si seminava una volta per
+   vedere com'era e poi non più.
+
+   Una bocca sola non è un bilanciamento sbagliato, è un orto che non
+   si usa: se una coltura serve a una cosa e basta, chi gioca semina
+   sempre quella cosa lì. Le tre condizioni, per ognuna:
+
+     · **almeno due ricette** la prendono;
+     · **almeno una è a confluenza** — prende roba di due catene
+       diverse — oppure porta a un prodotto che a sua volta entra in
+       un'altra ricetta: è quello che rende una coltura il pezzo di un
+       risultato più in alto invece che un vicolo cieco;
+     · **almeno un cliente** la chiede, anche *a valle*: l'erba medica
+       non la compra nessuno, ma diventa lana, e la lana la vuole la
+       sarta. Un cliente diretto non serve, un cliente da qualche parte
+       sopra sì — se no quella roba non lascia mai il granaio. */
+{
+  /* Tutto quello che si può ottenere partendo da una merce, salendo.
+     Il tetto è `PROFONDITA` per la stessa ragione di sempre: una
+     tabella con un anello non deve avvitare un test. */
+  function aValle(prodotto, giri = PROFONDITA, visti = new Set()) {
+    if (giri <= 0 || visti.has(prodotto)) return visti
+    visti.add(prodotto)
+    for (const r of RICETTE)
+      if ((r.prende || {})[prodotto]) aValle(r.da, giri - 1, visti)
+    return visti
+  }
+  const chiede = new Set(CLIENTI.flatMap(c => c.vuole || []))
+  for (const c of COLTURE) {
+    const bocche = RICETTE.filter(r => (r.prende || {})[c.da])
+    controlla(`${c.emoji} ${c.nome.toLowerCase()}: ha almeno due bocche (${bocche.length})`,
+              bocche.length >= 2,
+              `${c.nome}: ${bocche.map(r => r.id).join(', ') || 'nessuna'}`)
+    /* A confluenza vuol dire **due ingredienti diversi**: due grani in
+       un mangime restano una catena sola. */
+    const mescola = bocche.filter(r => Object.keys(r.prende || {}).length >= 2)
+    /* L'altra strada: quello che esce dalla sua bocca entra in
+       un'altra ricetta, cioè la coltura è il primo gradino di una
+       catena e non il suo ultimo. */
+    const piuSu = bocche.filter(r => RICETTE.some(x => (x.prende || {})[r.da]))
+    controlla('e almeno una la mescola con un\'altra catena, o porta più in alto',
+              mescola.length > 0 || piuSu.length > 0,
+              `${c.nome}: ${bocche.map(r => r.id).join(', ')}`)
+    const suoi = [...aValle(c.da)].filter(p => chiede.has(p))
+    controlla(`e qualcuno la chiede al banco, prima o poi (${suoi.length})`,
+              suoi.length > 0, `${c.nome}: niente di suo finisce in un ordine`)
+  }
+  const mescolate = RICETTE.filter(r => Object.keys(r.prende || {}).length >= 2)
+  nota(`${mescolate.length} ricette su ${RICETTE.length} mettono insieme due catene o più`)
 }
 
 /* ══════════ 1c. I RECINTI: UNA BOCCA SOLA, E UNA FACCIA ══════════

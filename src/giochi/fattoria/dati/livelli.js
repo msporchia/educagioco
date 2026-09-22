@@ -209,6 +209,9 @@ export const NOMI = {
      mucche (18) e i maiali (26), che era il più lungo della prima
      metà. */
   22: 'Le anatre e il pentolone',
+  /* La cucina è dove le colture si incontrano: arriva appena dopo il
+     beverone, cioè appena l'orto ha aperto e il caseificio c'è. */
+  24: 'La cucina',
   26: 'I maiali',
   29: 'La zuppa d\'orto',
   33: 'Le capre',

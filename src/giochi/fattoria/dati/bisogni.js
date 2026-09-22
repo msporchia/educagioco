@@ -130,6 +130,12 @@ export const CIBI = [
      dentro la fascia ma sul bordo. */
   { id: 'formaggio', nome: 'Formaggio', emoji: '🧀', prezzo: 0, da: 'formaggio',
     quanto: 0.85, per: ['cane', 'gatto', 'coniglio'] },
+  /* Il minestrone è la pappa dell'orto, e l'unica delle quattro della
+     cucina che costi abbastanza poco per una ciotola: tre colture
+     diverse, cioè tre campi liberi nello stesso momento — che qui è il
+     prezzo vero, molto più delle quattro monete. */
+  { id: 'minestrone', nome: 'Minestrone', emoji: '🍜', prezzo: 0, da: 'minestrone',
+    quanto: 0.50, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
   { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
     quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
 ]

@@ -456,6 +456,13 @@ export const CATEGORIE = [
        stese ad asciugare. */
     V('tintoria',      'dehors_azzurro',    'Tintoria',         300,
       { macchina: 'tintoria', liv: 52, cresce: RINCARO, aspetta: 'tintoria' }),
+    /* La cucina al 24, fra le anatre e i maiali: è la macchina dove le
+       colture si incontrano (`dati/coltivazioni.js`, le confluenze) e
+       l'unica che prende roba di tre catene diverse per volta. Il
+       forno a legna le fa da faccia finché il foglio non porta la sua
+       — una tettoia con i fornelli e le pentole appese. */
+    V('cucina',        'forno_legna',       'Cucina',           210,
+      { macchina: 'cucina', liv: 24, cresce: RINCARO, aspetta: 'cucina' }),
 
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
