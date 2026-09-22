@@ -4,7 +4,12 @@
 > pentolone (6)** — dal 21 settembre 2026. Nel gioco ci sono le fondamenta
 > (`PROFONDITA`, `dati/usi.js`, la dispensa), il telaio e la stoffa, il
 > panificio col pane e la farina, lo sdoppiamento del fienile, la sartoria
-> col maglione, e la pagina dell'albero. Mancano il caseificio e la torta
+> col maglione, e la pagina dell'albero. **Dal 22 settembre il maglione è
+> una merce e non un addobbo**: gli addobbi al collo e sulla schiena sono
+> sospesi finché non arrivano come sprite (`dati/addobbi.js`), quindi le
+> uscite «addobbo» di questa tabella — maglione, maglione alla lavanda,
+> sciarpa di lana, berretto — sono **il progetto per quando ci saranno**, e
+> oggi ognuna di quelle merci va alla sarta. Mancano il caseificio e la torta
 > (4), la lavanda e la tintoria (7), la coda (8) e **tutti gli sprite**:
 > ogni voce nata qui dichiara in `aspetta` il pezzo che il foglio le
 > porterà, e usa intanto un ripiego. Le tre decisioni in fondo sono state
@@ -90,7 +95,7 @@ salvataggio dove la famiglia nuova non è costruita.
 | `burro` | Burro | 🧈 | bottega | caseificio | torta, sapone, pasticcera |
 | `formaggio` | Formaggio | 🧀 | bottega | caseificio | **cibo** (0,85), cuoco, oste |
 | `stoffa` | Stoffa | 🧵 | bottega | telaio | maglione, sciarpa, berretto, sarta |
-| `maglione` | Maglione | 🧥 | bottega | sartoria | **addobbo** (schiena), tintoria, sarta |
+| `maglione` | Maglione | 🧥 | bottega | sartoria | sarta (oggi); **addobbo** (schiena) con gli sprite, tintoria |
 | `lavanda` | Lavanda | 💐 | **terra** | campo (coltura) | tintura, lavandaia |
 | `tintura` | Tintura | 🫙 | bottega | tintoria | maglione alla lavanda, sapone |
 | `maglione_lavanda` | Maglione alla lavanda | 💜 | bottega | tintoria | **addobbo** (schiena), sarta |
@@ -101,9 +106,10 @@ salvataggio dove la famiglia nuova non è costruita.
 Tre uscite nuove per una merce, oltre alla ciotola e al banco del
 mercato, e sono la ragione per cui l'albero regge: **un addobbo pagato col
 granaio** (`da: 'maglione'` al posto di `prezzo`, come già fa la copertina
-fra le coccole — la prima cosa da *indossare* che si coltiva), una **coccola
-che fa festa** (la torta riempie la voglia di giocare: è il compleanno del
-cane) e il **bagnetto** col sapone. `sciarpa_lana` e non `sciarpa`, perché
+fra le coccole — la prima cosa da *indossare* che si coltiva: c'è stata un
+giorno, e torna quando il maglione sarà uno sprite e non un'emoji sulla
+schiena di un cane), una **coccola che fa festa** (la torta riempie la
+voglia di giocare: è il compleanno del cane) e il **bagnetto** col sapone. `sciarpa_lana` e non `sciarpa`, perché
 `sciarpa` è già l'addobbo comprato a 🪙14: sono due cose, una si compra e
 una si tesse.
 

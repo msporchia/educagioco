@@ -201,9 +201,10 @@ export const PRODOTTI = {
   /* Il pane ha un disegno nell'atlante già oggi — le due pagnotte del
      foglio dell'arredo — e lo usa intanto. */
   pane:   { nome: 'Pane',   emoji: '🍞', silo: 'bottega', pezzo: 'pane', aspetta: 'merce_pane' },
-  /* Il maglione è la fine della catena del filo, e la prima cosa da
-     indossare che si coltiva: si mette addosso a una bestia pagandolo
-     col granaio (`dati/addobbi.js`). */
+  /* Il maglione è la fine della catena del filo: lo vuole la sarta al
+     mercato (`dati/mercato.js`). Era anche un addobbo sulla schiena
+     pagato col granaio, ed è stato sospeso con gli altri della schiena
+     — un'emoji di maglione non sta su una bestia (`dati/addobbi.js`). */
   maglione: { nome: 'Maglione', emoji: '🧥', silo: 'bottega', aspetta: 'merce_maglione' },
 }
 
@@ -668,8 +669,8 @@ export const RICETTE = [
 
   /* ── il telaio: la stoffa ──
      Arriva al 14, due livelli dopo l'ovile: due lane fanno una stoffa,
-     e la stoffa è il primo pezzo della catena che finisce addosso a
-     una bestia (il maglione, in sartoria). */
+     e la stoffa è il primo pezzo della catena che finisce alla sarta
+     (il maglione, in sartoria). */
   {
     id: 'stoffa', nome: 'Stoffa', emoji: '🧵', dove: 'telaio', liv: 14,
     prende: { lana: 2 }, costo: 1, minuti: 8, da: 'stoffa', resa: 1,
@@ -691,9 +692,9 @@ export const RICETTE = [
 
   /* ── la sartoria: il maglione ──
      Due stoffe fanno un maglione, al 36: vale 🪙16 e un'ora e cinquanta
-     di fattoria con un campo solo (`docs/fattoria-albero.md`, §3), ed è
-     un addobbo, quindi non entra nel conto delle pappe — il suo freno è
-     il tempo. */
+     di fattoria con un campo solo (`docs/fattoria-albero.md`, §3), e
+     non si mangia — lo vuole la sarta — quindi non entra nel conto
+     delle pappe: il suo freno è il tempo. */
   {
     id: 'maglione', nome: 'Maglione', emoji: '🧥', dove: 'sartoria', liv: 36,
     prende: { stoffa: 2 }, costo: 2, minuti: 10, da: 'maglione', resa: 1,
