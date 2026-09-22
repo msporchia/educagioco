@@ -21,7 +21,7 @@
 import { strength, isMastered, SRS, MAX_S } from './srs.js'
 import { TRAGUARDI, AREE, MEDAGLIE, PREMI, GENERALE_ATTIVO } from '../data/traguardi.js'
 import { XP_GIOCHI, MATERIE_GIOCHI, giochiNuoviProvati } from '../giochi/albo.js'
-import { CAMPAGNA, calcoliTabellina } from '../data/tabelline.js'
+import { CAMPAGNA, calcoliTabellina, eCasella } from '../data/tabelline.js'
 import { TOTALE_ELEMENTI } from '../data/calcolo.js'
 import { mareaTabelline } from './marea.js'
 import { concettiSaldi as concettiSaldiDi } from './calcolo.js'
@@ -46,7 +46,13 @@ const GIORNO = 86400000
    188" e per calcolare la padronanza. Le tabelline sono 55 e non 100
    perché 6×8 e 8×6 sono lo stesso fatto e il motore usa una chiave sola. */
 const MATERIE_TUTTE = [
-  { id: 'mate',    prefisso: 'math:',  nome: 'Tabelline',    emoji: '✖️', totale: 55 },
+  /* `vale` dice quali chiavi del prefisso contano: le tabelline grandi
+     del volo (`math:8x11`, `GRANDI` in data/tabelline.js) hanno la stessa
+     forma delle 55 caselle e non sono fra le 55 — senza il filtro un
+     bambino arrivato in cima al volo leggerebbe «62 su 55». Chi non
+     dichiara `vale` conta tutto il prefisso, come sempre. */
+  { id: 'mate',    prefisso: 'math:',  nome: 'Tabelline',    emoji: '✖️', totale: 55,
+    vale: eCasella },
   /* nel calcolo a mente l'elemento non è sempre un calcolo: dove i casi
      sono infiniti è la strategia (vedi data/calcolo.js), e il totale li
      conta insieme — i fatti uno per uno, i concetti uno ciascuno */
@@ -163,7 +169,7 @@ export function abilita(p, materia, now = Date.now()) {
   const items = p.items || {}
   let visti = 0, imparati = 0, somma = 0
   for (const [k, it] of Object.entries(items)) {
-    if (!k.startsWith(def.prefisso)) continue
+    if (!k.startsWith(def.prefisso) || (def.vale && !def.vale(k))) continue
     visti++
     const s = strength(it, now)
     somma += Math.min(SRS.masterS, s)
@@ -226,8 +232,14 @@ export function serieViva(p, now = Date.now()) {
 /* ═══════════ le misure che i traguardi leggono ═══════════ */
 export function misure(p, now = Date.now()) {
   const items = p.items || {}
-  const conta = pre => Object.entries(items)
-    .filter(([k, v]) => k.startsWith(pre) && isMastered(v, now)).length
+  /* per prefisso, col filtro della materia se ne dichiara uno: le
+     tabelline grandi del volo non sono fra le 55 «sicure» */
+  const conta = pre => {
+    const def = MATERIE_TUTTE.find(m => m.prefisso === pre)
+    const vale = def && def.vale ? def.vale : () => true
+    return Object.entries(items)
+      .filter(([k, v]) => k.startsWith(pre) && vale(k) && isMastered(v, now)).length
+  }
 
   const m = {
     p, now,

@@ -52,9 +52,14 @@ export const TUTTE_LE_TABELLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
    bambino lo dirà il cronometro. */
 
 /* 1 e 10 non sono fatti da imparare: sono regole. 2, 3 e 5 si contano a
-   mente in un attimo. Il resto va saputo, ed è lì che sta la fatica. */
+   mente in un attimo. Il resto va saputo, ed è lì che sta la fatica.
+   Sopra il 10 (le grandi, `GRANDI` in `data/tabelline.js`) si spezza —
+   12×7 è 70+14 — e costa un po' più di un fatto da sapere: così la
+   stima le mette in cima e il boss del volo, che pesca la più tosta,
+   le trova prima di 9×9. */
 const durezza = n => (n === 1 || n === 10) ? 0
-                   : (n === 2 || n === 3 || n === 5) ? 1 : 2
+                   : (n === 2 || n === 3 || n === 5) ? 1
+                   : n > 10 ? 2.5 : 2
 
 export const IN_FONDO = 9        // ×1 e ×10 si introducono per ultimi
 export const banale = k => { const [lo, hi] = fattoriDi(k); return lo === 1 || hi === 10 }
@@ -93,6 +98,28 @@ export function ordineDi(items, now = Date.now()) {
 /* ═══════════ le chiavi in gioco ═══════════ */
 export const chiaviDelle = tabelle => [...new Set(
   tabelle.flatMap(a => Array.from({ length: 10 }, (_, i) => chiaveCalcolo(a, i + 1))))]
+
+/* ═══════════ I FALSI DI UNA TABELLINA ═══════════
+   Gli errori tipici di chi moltiplica: la riga prima o dopo (a×(b±1)),
+   la colonna accanto ((a±1)×b), il prodotto più o meno un fattore, e i
+   soliti ±1 e ±10. Stava dentro `views/MathGame.vue`, e lì non si
+   poteva provare che i falsi di 12×7 restino credibili; il tetto a
+   200 è quello del cielo — 12×12 più un fattore ci sta. */
+export function distrattoriTabellina(a, b, n, sorte = Math.random) {
+  const c = [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, a * b + a, a * b - a,
+             a * b + b, a * b - b, a * b + 1, a * b - 1, a * b + 10, a * b - 10]
+  const out = [], visti = new Set([a * b])
+  for (const v of c.sort(() => sorte() - 0.5)) {
+    if (v > 0 && v <= 200 && !visti.has(v)) { visti.add(v); out.push(v) }
+    if (out.length === n) break
+  }
+  let g = 0
+  while (out.length < n && g++ < 300) {
+    const v = a * b + Math.floor(sorte() * 21) - 10
+    if (v > 0 && !visti.has(v)) { visti.add(v); out.push(v) }
+  }
+  return out
+}
 
 /* a quali tabelline *in gioco* appartiene un calcolo: 6×7 vale sia per la 6
    sia per la 7, e l'insieme attivo gira a turno fra queste per non
@@ -205,7 +232,7 @@ export const eNulla = k => {
 }
 
 export function chiaveDelBoss(tappa, prossima, items, now = Date.now(),
-                              sorte = Math.random, vietata = null) {
+                              sorte = Math.random, vietata = null, chiavi = null) {
   /* Fra i tre in cima, e a sorte: sempre lo stesso calcolo diventerebbe la
      faccia del boss invece di un assaggio. Mai quella appena chiesta — il
      divieto di ripetersi due volte di fila vale anche per il boss — e per
@@ -234,8 +261,11 @@ export function chiaveDelBoss(tappa, prossima, items, now = Date.now(),
      fatti da sapere, e un boss che le chiede è un boss per finta. Poi la
      più tosta fra quelle che ancora non reggono — e la stima dei banali
      (`IN_FONDO`) qui non si guarda proprio, se no risulterebbero loro i
-     calcoli più difficili di tutti. */
-  const tutte = chiaviDelle(tappa.tabelle).filter(k => !eNulla(k))
+     calcoli più difficili di tutti. `chiavi` è l'elenco da cui pescare
+     quando non è quello della tappa: il volo passa le sue
+     (`caselleDelBoss` in `store/volo.js`), che sopra il livello nove
+     hanno anche le grandi — e per stima sono loro le più toste. */
+  const tutte = (chiavi || chiaviDelle(tappa.tabelle)).filter(k => !eNulla(k))
   const vere = tutte.filter(k => !banale(k))
   const fatti = vere.length ? vere : tutte
   const deboli = fatti.filter(k => !isMastered(leggi(items, k), now))

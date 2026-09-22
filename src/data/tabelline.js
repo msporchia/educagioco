@@ -30,6 +30,33 @@ export const fattoriDi = k => k.slice(5).split('x').map(Number)
 export const calcoliTabellina = n =>
   Array.from({ length: 10 }, (_, i) => chiaveCalcolo(n, i + 1))
 
+/* ═══════════ LE TABELLINE GRANDI ═══════════
+   Il catalogo finisce a 9×9, e a scuola pure: le 55 caselle sono la
+   scaletta, la mappa, le stelle, la marea. Ma chi nel volo infinito è
+   arrivato a livello nove le sa tutte, e continuare a chiedergliele è
+   logoramento, non esercizio. Queste sono lo STRATO OLTRE del volo
+   (`store/volo.js`): l'11 e il 12 per intero, e le prime caselle del
+   13, 14 e 15 — quelle che si fanno a mente spezzando (13×4 = 40+12).
+
+   Hanno la stessa forma di chiave delle altre (`math:8x11`): sono fatti
+   della stessa specie e il motore li segue allo stesso modo. Ma NON
+   SONO CASELLE: non contano fra le 55, non entrano in nessuna tappa,
+   non hanno una riga nella mappa né un pezzo di stella. Chi conta le
+   caselle passa da `eCasella`, e `unita/asteroidi` lo controlla su ogni
+   consumatore. ×1 e ×10 delle grandi non ci sono: 11×10 è una regola,
+   non un fatto. */
+const FATTORI_GRANDI = [
+  ...Array.from({ length: 8 }, (_, i) => [i + 2, 11]),   // 2×11 … 9×11
+  ...Array.from({ length: 8 }, (_, i) => [i + 2, 12]),   // 2×12 … 9×12
+  [11, 11], [11, 12], [12, 12],
+  ...[13, 14, 15].flatMap(n => [2, 3, 4, 5].map(m => [m, n])),
+]
+export const GRANDI = FATTORI_GRANDI.map(([a, b]) => chiaveCalcolo(a, b))
+export const eGrande = k => fattoriDi(k)[1] > 10
+/* le 55 caselle del catalogo: tutto quello che conta, si mappa e si
+   premia guarda queste e non le grandi */
+export const eCasella = k => !eGrande(k)
+
 /* I pianeti, in ordine di introduzione. `dritta` è il trucco che si dice
    al bambino prima di partire: sono le regole vere che gli insegnanti
    danno a voce, e scritte una volta valgono più di cento ripetizioni. */
