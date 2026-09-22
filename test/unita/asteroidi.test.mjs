@@ -34,7 +34,7 @@ import { poolTappa, chiaveDelBoss, dellaTabellina, insiemeDi,
 import { miraDelLivello, LIVELLO_TETTO, LIVELLO_CATALOGO, MIRA_MIN, MIRA_OLTRE,
          altezzaTabellina, altezzaMente, altezzaGrande, tagliaDelVolo,
          poolVoloTabelline, poolVoloMente, creaAlternanza, MAX_DI_FILA, MAGAZZINI,
-         chiaviDelVolo, pescaPesati, caselleDelBoss, giraLaGrande,
+         chiaviDelVolo, pescaPesati, caselleDelBoss, giraLaGrande, partenzaDalRecord,
          CASELLE_DEL_VOLO }
   from '../../src/store/volo.js'
 import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo,
@@ -550,6 +550,17 @@ const PROFILI = T => ({
             GRANDI.every(k => mareaTabelline(conLe55, ORA)(k) === 1))
   controlla('e il volo le ha tutte fra le sue chiavi',
             GRANDI.every(k => chiaviDelVolo().includes(k)) && CASELLE_DEL_VOLO.length === 55 + GRANDI.length)
+
+  /* ── da dove si parte ── */
+  uguale('senza record si parte da 1', partenzaDalRecord(undefined), 1)
+  uguale('con un record a livello 3 pure', partenzaDalRecord(3), 1)
+  uguale('con un record a livello 11 si parte da 9', partenzaDalRecord(11), 9)
+  const prime = Array.from({ length: 10 }, () => poolVoloTabelline(partenzaDalRecord(11))).flat()
+  controlla('e chi ha un record a 11 riceve le grandi già nel primo pool',
+            prime.filter(eGrande).length > prime.length / 4, `${prime.filter(eGrande).length} su ${prime.length}`)
+  controlla('con la taglia alta', tagliaDelVolo(partenzaDalRecord(11)) >= 0.6)
+  controlla('chi non ha record parte da livello 1 come oggi: niente grandi nel primo pool',
+            !Array.from({ length: 10 }, () => poolVoloTabelline(partenzaDalRecord(null))).flat().some(eGrande))
 }
 
 /* ═══════════════════════════════════════════════════════════════════

@@ -41,7 +41,7 @@ import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
 import { poolTappa, chiaveDelBoss, dellaTabellina,
          insiemeDi, chiaviDelle, distrattoriTabellina } from '../store/tabelline.js'
 import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza,
-         tagliaDelVolo, caselleDelBoss, giraLaGrande }
+         tagliaDelVolo, caselleDelBoss, giraLaGrande, partenzaDalRecord }
   from '../store/volo.js'
 import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi, daAssaggiare,
          posizioneOra, filaDi } from '../data/asteroidi.js'
@@ -208,8 +208,15 @@ const tabelle = computed(() =>
 /* `serieMax` è il filotto più lungo della partita: `serie` si azzera a
    ogni sbaglio, e il record del volo vuole sapere com'era fatta la
    partita, non com'è finita */
+/* `partenza` è il livello da cui la partita comincia: 1 in una tappa, e
+   nel volo qualche gradino sotto il record (`partenzaDalRecord`), così
+   chi ieri è arrivato a 12 non rifà cinque livelli di 2×3. Il livello a
+   schermo parte da lì e sale da lì — non «resta 1 e sposta solo la
+   mira», perché sassi e velocità (`difficolta`) leggono il livello, e
+   la partita di chi riparte da 8 deve essere quella di livello 8 in
+   tutto, non una di livello 1 con le domande di 8. */
 const hud = reactive({ vite: 3, punti: 0, giuste: 0, mirate: 0, sbagliate: 0, livello: 1,
-                       serie: 0, serieMax: 0 })
+                       partenza: 1, serie: 0, serieMax: 0 })
 const cartello = reactive({ testo: '', colore: '', n: 0 })
 /* `primato` è cosa dire del record del volo (`segnaPrimato`): nullo in
    una tappa, dove il record non c'è */
@@ -247,9 +254,10 @@ const nave = reactive({
 /* a una vita sola la nave è un rottame che lampeggia, a tre è nuova:
    `CFG.vite` è il riferimento, così le vite di scorta guadagnate col
    filotto si vedono come una nave sana e non come una nave super */
+const stazzaDi = livello => (livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
 function sincronizzaNave() {
   nave.danno = Math.max(0, Math.min(1, 1 - (hud.vite - 1) / Math.max(1, CFG.vite - 1)))
-  const lv = hud.livello >= 6 ? 3 : hud.livello >= 3 ? 2 : 1
+  const lv = stazzaDi(hud.livello)
   if (lv > nave.lv) {
     nave.lv = lv
     mostraCartello(lv === 3 ? '🛰️ INCROCIATORE!' : '🛸 NAVE POTENZIATA!', '#7fe3ff')
@@ -801,7 +809,7 @@ function colpisci(a) {
       addCoins(level.value); mostraCartello('+' + level.value + ' 🪙', '#ffd94a'); suono.moneta()
     }
     segna(mente.value ? 'mente' : 'math')
-    const nuovo = 1 + Math.floor(hud.giuste / CFG.salitaOgni)
+    const nuovo = hud.partenza + Math.floor(hud.giuste / CFG.salitaOgni)
     if (nuovo > hud.livello) { hud.livello = nuovo; salitaLivello() }
     sincronizzaNave()
     if (centrato()) return tappaSuperata()
@@ -1111,14 +1119,22 @@ function inizia(i = posizione.value) {
   togli()
   posizione.value = i
   hud.vite = CFG.vite; hud.punti = 0; hud.giuste = 0; hud.mirate = 0; hud.sbagliate = 0
-  hud.livello = 1; hud.serie = 0; hud.serieMax = 0
+  /* il volo riparte da sotto il record, non da 2×3 (`partenzaDalRecord`):
+     il livello del record sta nei `dettagli` del quaderno. Una tappa
+     parte da 1, sempre. Va letto PRIMA di `ondata()`: il primo pool si
+     costruisce prima della prima risposta, e deve già essere il suo */
+  const record = campagna.value ? null : primatoDi('mate')
+  hud.partenza = record && record.dettagli ? partenzaDalRecord(record.dettagli.livello) : 1
+  hud.livello = hud.partenza; hud.serie = 0; hud.serieMax = 0
   finale.primato = null
   particelle = []; anelli = []; frammenti = []; raggi = []
   scossa = 0; lampo = 0; chieste = 0
   // la nave torna nuova a ogni partita, e la tasca si svuota: i gettoni
   // sono il premio di *questa* partita e non un salvataggio — il perché
   // sta in `data/potenziamenti.js`
-  nave.lv = 1; nave.gelo = 0
+  // chi riparte da livello 8 riparte con l'incrociatore, senza il
+  // cartello che lo annuncia: non l'ha appena guadagnato, ce l'aveva
+  nave.lv = stazzaDi(hud.partenza); nave.gelo = 0
   nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
   tasca.gelo = 0; tasca.mirino = 0
   gelo = false; gelato.value = false; ultimoGettone = null
