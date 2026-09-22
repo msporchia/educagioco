@@ -217,6 +217,35 @@ export function minutiDi(prodotto, giri = PROFONDITA) {
   return min
 }
 
+/* ── QUANTO COSTA **UNA** STRADA, E QUAL È LA MIGLIORE ────────────
+   `valoreDi` e `minutiDi` dicono quanto costa una *merce* per la
+   strada più economica. Queste due dicono quanto costa **quella
+   ricetta lì**, e servono a scegliere fra due strade aperte per la
+   stessa merce: la lana esce dall'ovile (1 foraggio, 8 min), dalla
+   conigliera (2 foraggi, 14 min) e dal recinto degli alpaca (1
+   foraggio, 5 min).
+
+   Stanno qui, e non nei due file che le usano, perché **devono
+   ordinare allo stesso modo**. Il consiglio le ordinava in ordine di
+   tabella e l'albero per costo, e a schermo veniva fuori una colonna
+   che diceva «Recinto degli alpaca · 🪙330» con sotto un tasto che
+   apriva il baule sull'ovile: la riga mostrava una macchina e il suo
+   tasto ne comprava un'altra. Nessun errore, e nessun test poteva
+   vederlo — le due regole coincidono finché una sola delle tre
+   ricette è arrivata col livello, e la terza arriva al 41.
+
+   `megliaDi` è il confronto intero: **prima quella di cui hai già gli
+   ingredienti** (chi ha due fieni in mano non va mandato a comprare
+   per l'altra strada), poi la più economica, poi la più svelta. */
+export const costoDellaRicetta = r =>
+  Object.entries(r.prende || {}).reduce((n, [k, q]) => n + q * valoreDi(k), r.costo || 0)
+export const minutiDellaRicetta = r =>
+  Object.entries(r.prende || {}).reduce((n, [k, q]) => n + q * minutiDi(k), r.minuti || 0)
+export const megliaDi = haTutto => (a, b) =>
+  (haTutto(b) - haTutto(a))
+  || (costoDellaRicetta(a) - costoDellaRicetta(b))
+  || (minutiDellaRicetta(a) - minutiDellaRicetta(b))
+
 /* Quanto rende un ordine, dato quello che chiede (`{ prodotto: n }`).
    Sta qui e non nel motore perché è **un numero della tabella**: chi
    ritocca l'economia lo ritocca leggendo il ragionamento in testa al

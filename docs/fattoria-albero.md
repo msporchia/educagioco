@@ -445,7 +445,8 @@ faccia vera (`Merce.vue`), il nome, quanti ne servono e **lo stato**:
    │  ┌ sartoria  🛒 non ce l'hai · 🪙250        ← il tasto apre il baule
    │  └ 🧵 Stoffa       ×2   ne hai 1, manca 1
    │     ┌ telaio  ⏳ pronto fra 4 min
-   │     └ 🧶 Lana      ×2   ✓ ne hai 3
+   │     │  o nella conigliera
+   │     └ 🧶 Lana      ×4   ✓ ne hai 3
    └ 🫙 Tintura         ×1   manca
       ┌ tintoria
       └ 💐 Lavanda      ×2   🌱 sta crescendo · 3 min
@@ -457,10 +458,32 @@ Le regole di quello che si vede:
   arriva dopo non compare; se l'*unica* strada per una merce arriva dopo,
   la riga dice «arriva al livello 52» e si ferma lì, come fa il consiglio.
   Non racconta il futuro: quello sta nella pagina dei livelli.
-- **una strada sola per riga**, la più economica fra quelle aperte (la
-  stessa scelta di `valoreDi`), e un tastino «o dalla conigliera» dove ce
-  n'è più d'una. Due strade affiancate raddoppiano le righe e nessuno le
-  confronta.
+- **una strada sola per riga**, e sotto la macchina una riga piccola che
+  dice le altre: «o nella conigliera». Due strade affiancate
+  raddoppiano le righe e nessuno le confronta.
+
+  Il progetto diceva «un tastino», e non è stato fatto: un tasto che
+  cambia la strada mostrata è un secondo modo di navigare dentro una
+  pagina che è una colonna, e quello che serve davvero a chi guarda è
+  **sapere che l'altra strada c'è** — il resto lo fa lui. Un tastino che
+  si limitasse a scoprire del testo sarebbe peggio: è la regola del `?`
+  che apre un foglio vuoto.
+
+  E **quale strada sia la prescelta lo decide `megliaDi`**
+  (`dati/mercato.js`), che è la stessa funzione del consiglio: prima
+  quella di cui hai già gli ingredienti, poi la più economica, poi la
+  più svelta. Erano due regole diverse — qui il costo, là l'ordine di
+  tabella — e a sessanta la colonna mostrava «Recinto degli alpaca
+  🪙330» con sotto un tasto che apriva il baule sull'ovile: una riga che
+  mostra una macchina e ne compra un'altra. Lo stesso capitava alle uova
+  (stagno delle anatre contro pollaio). Adesso `unita/albero` lo
+  controlla a sette livelli diversi.
+- **si vede che è un albero.** Rotaie `┌ ├ │ └` a sinistra, disegnate
+  coi bordi e non coi caratteri di riquadro — quei caratteri cambiano
+  altezza da un font all'altro e la riga verticale si spezza fra una
+  riga e l'altra. Quale rotaia va dove lo dice `righeDi`, che è dato
+  puro. Un rientro e basta non basta: con sei fasi due rami che scendono
+  in parallelo si leggono come una lista sola.
 - **la macchina sta fra la merce e i suoi ingredienti**, come connettore
   con quattro stati: ✓ ce l'hai · ⏳ sta lavorando (con i minuti) · 🛒 non
   ce l'hai (col prezzo, e il tasto che apre il baule su quella voce) · 🎁
@@ -469,6 +492,16 @@ Le regole di quello che si vede:
 - **un ingrediente dice quanti ne hai contro quanti ne servono**, letto dal
   granaio: ✓ verde quando basta, ambra quando manca, e per una coltura lo
   stato del campo (🌱 cresce, 🧺 pronto, nessun campo).
+
+  Due conti, e tutti e due sono stati sbagliati una volta.
+  **`servono` si moltiplica lungo la catena**: un maglione vuole 2
+  stoffe, ogni stoffa 2 lane, ogni lana 1 foraggio, ogni foraggio 2
+  erbe — `1 · 2 · 4 · 4 · 8`. Passando giù la quantità della ricetta
+  così com'è si leggeva `1 · 2 · 2 · 1 · 2`, cioè una lista della spesa
+  sbagliata a ogni riga sotto la prima, e sbagliata **al ribasso**. E
+  **il granaio è uno solo**: si spartisce fra i rami in ordine di
+  lettura, se no due rami che vogliono entrambi grano dicono tutti e due
+  «✓ ne hai 3» mentre insieme ne chiedono 6.
 - **quello che manca si apre.** Ogni riga ambra porta con sé la stessa
   `azione` del consiglio — `apri`, `compra`, `premio` — e premerla fa
   quello. Non c'è niente di nuovo da eseguire in `Gioco.vue`: il pannello
@@ -485,8 +518,8 @@ alberoDi(f, prodotto, ora = Date.now()) → nodo | null
 
 nodo = {
   prodotto, nome, emoji, pezzo,
-  servono: 1,             // quanti ne chiede il padre (1 alla radice)
-  ho: 2,                  // quanti ne ha il granaio
+  servono: 4,             // quanti ne servono IN TUTTO per la radice
+  ho: 2,                  // quanti ne restano in granaio per questa riga
   stato: 'ok' | 'manca' | 'arriva',
   arriva: null | 52,      // se 'arriva', a che livello
   via: null | {           // come si ottiene, la strada scelta
@@ -494,11 +527,15 @@ nodo = {
     macchina: null | { id, nome, stato: 'ok'|'lavora'|'compra'|'premio',
                        manca: 4, prezzo: 250 },
     campo:    null | { stato: 'libero'|'cresce'|'pronto'|'nessuno', manca: 3 },
-    alternative: ['lana_angora'],       // le altre strade aperte, solo gli id
+    alternative: [{ id: 'lana_angora', nome: 'Lana d\'angora',
+                    dove: { nome: 'Conigliera', la: true } }],
     azione: null | { che: 'apri'|'compra'|'premio', … },   // quella del consiglio
   },
   rami: [ nodo, … ],      // gli ingredienti della strada scelta
 }
+
+// e `righeDi(nodo)` aggiunge, per la colonna:
+//   livello, ultimo, guide[], guideSotto[]   ← le rotaie
 ```
 
 Tre cose che la funzione garantisce, e che il test difende:
@@ -523,7 +560,31 @@ Tre cose che la funzione garantisce, e che il test difende:
   `comeAvere` propongono la stessa azione.
 - `integrazione/albero` — apre il silo, preme la stoffa, preme 🌳, preme
   la riga del telaio e trova il baule aperto sul telaio (`[data-albero]`,
-  `[data-albero-riga="<prodotto>"]`, `[data-albero-macchina="<id>"]`).
+  `[data-albero-riga="<prodotto>"]`, `[data-albero-macchina="<id>"]`), e
+  legge i `×N` lungo la catena.
+
+  **La dispensa si cerca dal centro, non a tappeto.** È una casella sola
+  in tutta la fattoria, e spazzare la tela dall'angolo costava 960
+  tocchi da 320 ms l'uno: quattro minuti, due volte, in una suite che
+  ne costa cinque e mezzo in tutto — e la CI non lancia
+  `integrazione/`, quindi non poteva vederlo nessuno. Ma dov'è non è un
+  mistero: `posa()` prova a spirale dal centro del mondo e la dispensa è
+  la prima cosa posata, e il gioco apre la telecamera su quello stesso
+  centro. Gli stessi punti, ordinati per distanza dal centro invece che
+  per riga: la copertura non cambia, il tempo passa da quattro minuti a
+  sei secondi.
+
+### Il pannello si rifà da solo
+
+Un pannello della fattoria è un'istantanea: si compone all'apertura e
+resta com'era. Per quasi tutti va bene, ma l'albero è fatto di orologi
+e ne mostra fino a cinque insieme — `⏳ pronto fra 4 min` sulla
+macchina, `🌱 sta crescendo · 3 min` sul campo — e un conto alla
+rovescia che non scende è un numero che dice il falso proprio a chi è lì
+per sapere quanto manca. Si rifà ogni cinque secondi dal battito della
+scena (`rinfrescaLAlbero` in `Gioco.vue`), dove stanno già i bisogni e
+la stagione: non un orologio suo, che poi bisogna ricordarsi di
+spegnerlo.
 
 ## 6. Gli sprite da generare
 

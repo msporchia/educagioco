@@ -52,6 +52,7 @@
 import { COLTURE, RICETTE, PRODOTTI, SILI, PROFONDITA } from '../dati/coltivazioni.js'
 import { PER_ID, eCampo, macchinaDi } from '../dati/catalogo.js'
 import { livelloDelProdotto, livelloDellaVoce } from '../dati/livelli.js'
+import { megliaDi } from '../dati/mercato.js'
 import { carrettoIn, DAI } from './vicino.js'
 
 /* Quanto in là si risale prima di arrendersi. È `PROFONDITA` di
@@ -256,9 +257,12 @@ export function comeAvere(f, prodotto, ora = Date.now(), giri = GIRI) {
      tabella e un consiglio con un tasto vinceva su quello dopo. Chi ha
      gli ingredienti di una strada non va mandato a comprare per
      l'altra. */
+  /* ...e poi **la più economica, e a parità la più svelta**, che è
+     l'ordine di `megliaDi` in `dati/mercato.js`. Era l'ordine della
+     tabella, e l'albero della stessa merce ne sceglieva un'altra: vedi
+     lì perché sono la stessa funzione. */
   const haTutto = r => Object.keys(r.prende || {}).every(k => f.quantoHo(k) >= r.prende[k])
-  const ricette = leRicette(f).filter(r => r.da === prodotto)
-    .sort((a, b) => haTutto(b) - haTutto(a))
+  const ricette = leRicette(f).filter(r => r.da === prodotto).sort(megliaDi(haTutto))
   let ripiego = null
   for (const r of ricette) {
     const dalla = dallaMacchina(f, r, ora, giri)

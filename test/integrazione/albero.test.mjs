@@ -82,16 +82,53 @@ async function chiudi() {
   }
 }
 const titolo = () => page.evaluate(
-  () => ((document.querySelector('.fa-foglio') || {}).innerText || '').split('\n')[0])
+  /* dall'`h2`, non dalla prima riga di `innerText`: da quando ogni
+     foglio ha la ✕ in alto a destra (`viste/Chiudi.vue`) la prima riga
+     è quella. Il titolo è il titolo. */
+  () => ((document.querySelector('.fa-foglio h2') || {}).innerText || '').trim())
 
-const tela = await page.locator('.fa-tela').boundingBox()
-let trovata = false
-for (let y = tela.y + 16; y < tela.y + tela.height - 16 && !trovata; y += 20)
-  for (let x = tela.x + 16; x < tela.x + tela.width - 16 && !trovata; x += 24) {
-    await dito(Math.round(x), Math.round(y))
-    if ((await titolo()) === 'Dispensa') trovata = true
-    else await chiudi()
+/* ── DOVE SI CERCA LA DISPENSA, E PERCHÉ NON A TAPPETO ──
+   La dispensa è **una casella sola** in tutta la fattoria, e cercarla
+   spazzando la tela dall'angolo in alto a sinistra costava 960 tocchi
+   da 320 ms l'uno — cinque minuti, due volte, per un file che si
+   dichiara `tempo: 90`. In `integrazione/fattoria` lo stesso giro
+   funziona perché lì il bersaglio (un pezzo di terra da comprare) è
+   abbondante: la spazzata lo trova al terzo tocco. Qui arrivava quasi
+   sempre in fondo.
+
+   Ma dov'è la dispensa non è un mistero: `posa()` prova a spirale **dal
+   centro del mondo**, e la dispensa è la prima cosa che posa, quindi
+   finisce al centro o a una cella da lì. E il gioco apre la telecamera
+   sul centro delle terre possedute (`vaiACasa` in `Gioco.vue`), che con
+   `reclamaTutto()` è lo stesso punto. Il bersaglio è **sotto il primo
+   tocco**, non in fondo alla spazzata.
+
+   Quindi si cerca a spirale anche col dito: gli stessi punti di prima,
+   ordinati per distanza dal centro della tela invece che per riga. La
+   copertura non cambia — nel caso peggiore si tocca tutto lo stesso —
+   ma il caso normale è un tocco invece di novecento. E il punto che ha
+   funzionato si tiene da parte: il secondo atto rifà la stessa
+   fattoria, quindi la dispensa sta dove stava. */
+const dalCentro = tela => {
+  const cx = tela.x + tela.width / 2, cy = tela.y + tela.height / 2
+  const punti = []
+  for (let y = tela.y + 16; y < tela.y + tela.height - 16; y += 20)
+    for (let x = tela.x + 16; x < tela.x + tela.width - 16; x += 24)
+      punti.push({ x: Math.round(x), y: Math.round(y), d: (x - cx) ** 2 + (y - cy) ** 2 })
+  return punti.sort((a, b) => a.d - b.d)
+}
+async function cercaLaDispensa(gia = null) {
+  const tela = await page.locator('.fa-tela').boundingBox()
+  for (const p of (gia ? [gia, ...dalCentro(tela)] : dalCentro(tela))) {
+    await dito(p.x, p.y)
+    if ((await titolo()) === 'Dispensa') return p
+    await chiudi()
   }
+  return null
+}
+
+const dovEra = await cercaLaDispensa()
+const trovata = !!dovEra
 controlla('col dito si apre la dispensa', trovata)
 
 /* ---------- dal silo all'albero ---------- */
@@ -115,8 +152,21 @@ if (trovata) {
   uguale('sotto c\'è la lana', await riga('lana').count(), 1)
   controlla('con uno su due', /ne hai 1/.test(await riga('lana').innerText()))
   uguale('e sotto ancora il foraggio', await riga('foraggio').count(), 1)
-  uguale('e in fondo il fieno, che è verde: ne ho due',
-         await riga('fieno').getAttribute('data-stato'), 'ok')
+  /* ── LE QUANTITÀ SI MOLTIPLICANO, E SI LEGGONO ──
+     Una stoffa vuole 2 lane, ogni lana 1 foraggio, ogni foraggio 2
+     erbe: la colonna dice `×2 · ×2 · ×4`. Passando giù la quantità
+     della ricetta senza moltiplicarla diceva `×2 · ×1 · ×2`, e il
+     fieno risultava **verde** con due in granaio — cioè la colonna
+     diceva «ce l'hai» a chi era a metà. Qui si guarda proprio quel
+     numero, perché è l'unico dei cinque difetti che cambiava cosa
+     legge un bambino. */
+  for (const [id, quanti] of [['lana', 2], ['foraggio', 2], ['fieno', 4]])
+    controlla(`di ${id} ne servono ${quanti}`,
+              new RegExp(`×${quanti}\\b`).test(await riga(id).innerText()),
+              await riga(id).innerText())
+  uguale('e i due fieni in granaio non bastano per quattro',
+         await riga('fieno').getAttribute('data-stato'), 'manca')
+  controlla('lo dice contando', /ne hai 2, mancano 2/.test(await riga('fieno').innerText()))
   /* le macchine in mezzo */
   const telaio = page.locator('[data-albero-macchina="telaio"]')
   uguale('fra la stoffa e la lana c\'è il telaio', await telaio.count(), 1)
@@ -170,14 +220,9 @@ if (trovata) {
   await page.waitForSelector('.fa-tela', { timeout: 5000 })
   await attendi(page, 700)
 
-  const tela2 = await page.locator('.fa-tela').boundingBox()
-  let aperta2 = false
-  for (let y = tela2.y + 16; y < tela2.y + tela2.height - 16 && !aperta2; y += 20)
-    for (let x = tela2.x + 16; x < tela2.x + tela2.width - 16 && !aperta2; x += 24) {
-      await dito(Math.round(x), Math.round(y))
-      if ((await titolo()) === 'Dispensa') aperta2 = true
-      else await chiudi()
-    }
+  /* La seconda fattoria posa le stesse cose nello stesso ordine, quindi
+     la dispensa sta dove stava: si riprova quel punto per primo. */
+  const aperta2 = !!(await cercaLaDispensa(dovEra))
   controlla('col dito si apre la dispensa della seconda fattoria', aperta2)
 
   const viola = page.locator('.fa-scomparto', { hasText: 'Maglione alla lavanda' })

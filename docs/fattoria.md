@@ -1162,6 +1162,43 @@ svelta; le righe ambra portano il tasto del consiglio. Si apre sempre con
 una merce già scelta — 🌳 «Come si fa» nel silo, l'ingrediente che manca al
 mercato e sotto una ricetta — e non c'è una vista «tutto l'albero».
 
+**Le quantità si moltiplicano lungo la catena, e il granaio è uno solo.**
+Un maglione vuole 2 stoffe, ogni stoffa 2 lane, ogni lana 1 foraggio,
+ogni foraggio 2 erbe: la colonna dice `1 · 2 · 4 · 4 · 8`. Per un giro
+ha detto `1 · 2 · 2 · 1 · 2` — la quantità della ricetta passata giù
+senza moltiplicarla — cioè una lista della spesa sbagliata a ogni riga
+sotto la prima, e sbagliata al ribasso. E i `ne hai` si spartiscono fra
+i rami in ordine di lettura: due rami che volevano entrambi grano
+dicevano tutti e due «✓ ne hai 3» mentre insieme ne chiedevano 6.
+
+**Si vede che è un albero**: rotaie `┌ ├ │ └` a sinistra, fatte coi
+bordi e non coi caratteri di riquadro, che fra una riga e l'altra si
+spezzano. Prima era un rientro tappato a quattro livelli, e con sei
+fasi due rami in parallelo si leggevano come una lista sola.
+
+**Le altre strade si dicono**: sotto la macchina, «o nella conigliera».
+Erano calcolate e mai scritte, e chi aveva solo la conigliera leggeva
+una colonna che gli diceva di comprare un ovile.
+
+**E la strada mostrata è quella che il tasto compra.** L'albero
+sceglieva la più economica, il consiglio la prima in tabella: a livello
+60 la colonna diceva «Recinto degli alpaca · 🪙330» con sotto un tasto
+che apriva il baule sull'ovile. Adesso decidono con la stessa funzione
+(`megliaDi` in `dati/mercato.js`): prima quella di cui hai già gli
+ingredienti, poi la più economica, poi la più svelta.
+
+**Il foglio si rifà da solo** ogni cinque secondi finché è aperto: è
+l'unico pannello della fattoria fatto di orologi, e ne mostra fino a
+cinque insieme — un `⏳ pronto fra 4 min` che non scende è un numero
+che dice il falso proprio a chi è lì per sapere quanto manca.
+
+**E adesso hanno tutti una faccia.** Le otto botteghe
+(`generati/edifici_2.png`), la bancarella e il carretto del vicino
+(`edifici_3.png`) e sei merci — stoffa, farina, burro, formaggio,
+minestrone, polenta (`merci_2.png`). Chi ancora aspetta il suo disegno
+lo dichiara in `aspetta` e usa un ripiego; la lista da spuntare è in §6
+di [`fattoria-albero.md`](fattoria-albero.md#6-gli-sprite-da-generare).
+
 ### Non si può più spegnere
 
 C'era **una variante** (`fattoria:coltivazione`) che toglieva i campi dalla

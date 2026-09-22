@@ -646,9 +646,39 @@
    dice lo stato — verde ce l'hai, ambra manca, grigio arriva dopo —
    e il tasto sta solo sulle righe ambra. Scorre, perché una catena da
    cinque fasi non sta in uno schermo. */
-.fa-albero { max-height: 100%; overflow-y: auto; overscroll-behavior: contain }
 .fa-rami { display: flex; flex-direction: column; gap: 5px; margin: 8px 0 10px;
   text-align: left }
+/* ── LE ROTAIE DELL'ALBERO ──
+   Una riga è [rotaie][riquadro]: tante colonnine quanti sono gli
+   antenati, più lo snodo. Sono **bordi e non caratteri** (┌ ├ │ └):
+   quei caratteri cambiano altezza da un font all'altro, e la riga
+   verticale si spezza fra una riga e la successiva — proprio dove deve
+   essere continua. Con i bordi la rotaia scende fino al fondo della
+   riga e riparte dal bordo di sopra della prossima, quindi non ha
+   giunture.
+
+   La colonnina è stretta (13 px) perché un albero a sei fasi deve
+   stare su un telefono: quattro rientri da 14 px erano già mezzo
+   schermo, ed è il motivo per cui il rientro era stato tappato a
+   quattro — la cura sbagliata per il problema giusto. */
+.fa-riga { display: flex; align-items: stretch }
+.fa-riga > .fa-ramo { flex: 1; min-width: 0 }
+.fa-rotaie { display: flex; flex: none }
+.fa-rot { width: 13px; position: relative }
+/* │ — la rotaia di un antenato che ha ancora fratelli sotto */
+.fa-rot.giu::before { content: ''; position: absolute; left: 6px; top: -5px; bottom: -5px;
+  border-left: 2px solid #4e7355 }
+/* il braccio che entra nel riquadro, uguale per tutti e tre gli snodi */
+.fa-rot.mezzo::after, .fa-rot.chiude::after, .fa-rot.apre::after {
+  content: ''; position: absolute; left: 6px; top: 50%; right: 0;
+  border-top: 2px solid #4e7355 }
+/* ├ passa e continua · └ arriva e finisce · ┌ comincia qui e scende */
+.fa-rot.mezzo::before { content: ''; position: absolute; left: 6px; top: -5px; bottom: -5px;
+  border-left: 2px solid #4e7355 }
+.fa-rot.chiude::before { content: ''; position: absolute; left: 6px; top: -5px; height: calc(50% + 5px);
+  border-left: 2px solid #4e7355 }
+.fa-rot.apre::before { content: ''; position: absolute; left: 6px; top: 50%; bottom: -5px;
+  border-left: 2px solid #4e7355 }
 .fa-ramo { display: flex; align-items: center; gap: 8px; padding: 5px 8px;
   border-radius: 11px; background: #0d160fcc; border: 2px solid #2b4430;
   color: #d8e4d6 }
@@ -672,3 +702,17 @@
   background: transparent }
 .fa-ramo.fa-macchina .fa-ramo-testo b { font-size: 12.5px; font-weight: 500 }
 .fa-ramo .fa-bot { flex: none; white-space: nowrap }
+/* La frase del consiglio sotto il tasto che la esegue, e le altre
+   strade sotto la macchina: due righe piccole, che si mandano a capo —
+   sono frasi intere, non etichette.
+
+   `fa-ramo-perche` e non `fa-consiglio`: quel nome c'è già qui sopra
+   ed è il riquadro del consiglio sotto una ricetta (`Passo.vue`), con
+   bordo e sfondo suoi. Riusato qui si portava dietro il riquadro e
+   spezzava la riga in due — è il caso di `.avviso` scritto in
+   CLAUDE.md, capitato di nuovo: una classe che sembra giusta ce l'ha
+   già qualcun altro. */
+.fa-ramo-testo small { font-size: 11.5px; line-height: 1.3; white-space: normal;
+  margin-top: 2px }
+.fa-ramo-testo .fa-ramo-perche { color: #ffd98a; opacity: .9 }
+.fa-ramo-testo .fa-ramo-altrove { color: #8fa691; font-style: italic }

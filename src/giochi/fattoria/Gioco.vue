@@ -142,7 +142,7 @@ let mondo = null                    // la Fattoria (motore)
 let scena = null                    // la Tela (disegno)
 let attori = []
 let bambino = null
-let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0
+let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0, alberoFra = 0
 
 /* ── LA STAGIONE ──────────────────────────────────────────────────
    Che periodo dell'anno è lo dice `dati/stagioni.js` guardando la
@@ -478,6 +478,8 @@ function passo(ora) {
   if (bisogniFra <= 0) { bisogniFra = 3; aggiornaIBisogni() }
   stagioneFra -= dt
   if (stagioneFra <= 0) { stagioneFra = 4; aggiornaLaStagione() }
+  alberoFra -= dt
+  if (alberoFra <= 0) { alberoFra = 5; rinfrescaLAlbero() }
   scorriDalBordo(dt)
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
@@ -1418,6 +1420,27 @@ function apriAlbero(prodotto) {
   const albero = alberoDi(mondo, prodotto)
   if (!albero) return
   pannello.value = { tipo: 'albero', prodotto, albero }
+}
+
+/* ── E SI RIFÀ DA SOLO, FINCHÉ È APERTO ──
+   Un pannello di questa fattoria è **un'istantanea**: si compone
+   all'apertura e resta com'era. Per quasi tutti va bene — un foglio di
+   ricette non ha niente che scorra — ma l'albero è fatto di orologi, e
+   ne mostra fino a cinque insieme: `⏳ pronto fra 4 min` sulla
+   macchina, `🌱 sta crescendo · 3 min` sul campo, e sotto ancora. Un
+   conto alla rovescia che non scende non è un dettaglio: è un numero
+   che dice il falso, e lo dice proprio a chi è lì per sapere quanto
+   manca.
+
+   Si rifà ogni cinque secondi, dal battito della scena, che è dove
+   stanno già i bisogni e la stagione. Non serve più spesso: quello che
+   mostra sono minuti. E non serve un orologio suo — uno `setInterval`
+   qui vorrebbe dire ricordarsi di spegnerlo, e un orologio dimenticato
+   in una pagina di gioco lavora a schermo spento. */
+function rinfrescaLAlbero() {
+  const p = pannello.value
+  if (!p || p.tipo !== 'albero') return
+  pannello.value = { ...p, albero: alberoDi(mondo, p.prodotto) }
 }
 
 /* Ingrandire è la sola cosa che si fa da dentro un silo, e il foglio si

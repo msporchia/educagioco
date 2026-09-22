@@ -79,7 +79,9 @@ const posa = (f, id, x, y) => {
   uguale('il foraggio prende la strada dell\'erba, che costa meno',
          a.via.id, 'foraggio')
   controlla('e sa che c\'è anche quella delle carote',
-            a.via.alternative.includes('foraggio_carote'))
+            a.via.alternative.some(v => v.id === 'foraggio_carote'))
+  controlla('con dentro dove si fa, che è quello che si può scrivere',
+            a.via.alternative.every(v => v.nome && (!v.dove || v.dove.nome)))
   const [erba] = a.rami
   uguale('sotto c\'è l\'erba, che è una coltura', erba.via.che, 'coltura')
   uguale('e ne servono due', erba.servono, PER_RICETTA.foraggio.prende.fieno)
@@ -148,19 +150,41 @@ const posa = (f, id, x, y) => {
 
 /* ══════════ 5. la prima riga ambra e il consiglio dicono lo stesso ══════════
    Per ogni merce, in una fattoria avviata: il tasto della radice
-   dell'albero è quello che `comeAvere` propone. */
+   dell'albero è quello che `comeAvere` propone.
+
+   E a **ogni** livello, non solo a trenta: le due regole coincidevano
+   finché di una merce era arrivata una strada sola, e si scostavano
+   appena ne arrivava la seconda. La lana è il caso: esce dall'ovile
+   (12), dalla conigliera (5) e dal recinto degli alpaca (41), e a
+   sessanta la colonna mostrava il recinto degli alpaca con sotto un
+   tasto che apriva il baule sull'ovile. Non è un errore, è una riga
+   che mostra una macchina e ne compra un'altra — e il modo di vederla
+   è guardare **che il tasto parli della macchina della riga**. */
 {
-  const f = fattoria(30)
-  posa(f, 'silo', 20, 14); posa(f, 'silo_bianco', 20, 17)
-  posa(f, 'mulino', 14, 14); posa(f, 'orto', 14, 20)
-  let diversi = []
-  for (const p of Object.keys(PRODOTTI)) {
-    const a = alberoDi(f, p, T0)
-    if (!a.via) continue
-    const c = comeAvere(f, p, T0)
-    if (JSON.stringify(a.via.azione) !== JSON.stringify(c.azione)) diversi.push(p)
+  const diversi = [], altrove = []
+  for (const liv of [10, 20, 30, 40, 50, 60, ULTIMO]) {
+    const f = fattoria(liv)
+    posa(f, 'silo', 20, 14); posa(f, 'silo_bianco', 20, 17)
+    posa(f, 'mulino', 14, 14); posa(f, 'orto', 14, 20)
+    for (const p of Object.keys(PRODOTTI)) {
+      const a = alberoDi(f, p, T0)
+      if (!a.via) continue
+      const c = comeAvere(f, p, T0)
+      if (JSON.stringify(a.via.azione) !== JSON.stringify(c.azione))
+        diversi.push(`${p}@${liv}`)
+      /* il tasto «compra» di una riga compra la macchina di quella
+         riga, mai un'altra che fa la stessa merce */
+      for (const n of righeDi(a)) {
+        const v = n.via, az = v && v.azione
+        if (!az || az.che !== 'compra' || !v.macchina) continue
+        if (v.macchina.stato === 'compra' && az.voce !== v.macchina.id)
+          altrove.push(`${n.prodotto}@${liv}: mostra ${v.macchina.id}, compra ${az.voce}`)
+      }
+    }
   }
-  uguale('la radice e il consiglio propongono la stessa azione', diversi.join(', '), '')
+  uguale('la radice e il consiglio propongono la stessa azione', diversi.slice(0, 5).join(', '), '')
+  uguale('e nessuna riga compra una macchina diversa da quella che mostra',
+         altrove.slice(0, 5).join(' · '), '')
 }
 
 /* Le righe in fila, con la profondità: quello che la colonna disegna. */
