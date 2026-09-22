@@ -1,0 +1,25 @@
+{
+  "__": "Otto edifici, e servono a due momenti diversi. **Adesso** servono i primi due: `bancarella` e `carretto` prendono il posto di `mercato` e `carretto_mercato` di `edifici.png`, che erano i due pezzi rosa — gli unici fuori stile accanto alle botteghe nuove.\n\n**Gli altri sei sono disegnati prima della riga che li userà**, ed è la disciplina di `aspetta` girata al contrario: `aspetta` dice «questa voce di catalogo aspetta un pezzo», qui si dice **«questo pezzo aspetta una voce»**. La voce che lo prenderà, per ognuno, è scritta qui perché altrimenti non è scritta da nessuna parte:\n\n  · `zuccherificio` → voce `zuccherificio` (§8, la catena dello zucchero)\n  · `pastificio`    → voce `pastificio` (§8, la catena della pasta)\n  · `pasticceria`   → voce `pasticceria` (§8, i posti di consegna, liv 20)\n  · `rosticceria`   → voce `rosticceria` (§8, liv 26)\n  · `merceria`      → voce `merceria` (§8, liv 36)\n  · `sushi_bar`     → voce `sushi_bar` (§8, liv 60 — l'unico a cui §8 non dava ancora un id: è scelto qui)\n\nStanno nell'atlante da subito, e nessuna riga di codice li nomina finché §8 non si scrive. Costa l'1,1% del file unico (sei pezzi da ~67×77, circa 87 KB di base64 su otto mega) e il conto è stato fatto: dei 607 pezzi dell'atlante di allora, **313 non erano nominati da nessuna riga** — quasi tutti di `giardino.png`, che ne dichiara 201 mentre il catalogo ne usa qualche decina. Tenere fuori sei pezzi disegnati apposta mentre se ne portano trecento capitati lì per inerzia sarebbe una coerenza scritta nel posto sbagliato; la leva vera, il giorno che servono byte, è `giardino.json`. Il rischio da evitare qui è l'altro: un pezzo che sta solo nel PNG e in un paragrafo di `PROVENIENZA.txt` fra tre mesi nessuno sa di averlo e lo rigenera, mentre un pezzo nel foglietto lo trova un `grep pasticceria`. E `non-usati/` non è il posto: lì dentro c'è il primo bobtail, cioè un foglio **scartato**, non uno disegnato in anticipo.\n\n«scala»: 5 e «foglio»: [307, 205], col «cella»: [1, 1] di `edifici.json`. **Cinque e non quattro**, al contrario di `edifici2.json`: qui il generatore ha disegnato più grande — 271–370 px contro i 241–271 dell'altro foglio — e a scala 4 verrebbero 68–93 px di gioco, cioè più larghi del fienile, che a 78 è la cosa più grande del podere. A scala 5 vengono 54–75, che è la fascia giusta. È il motivo per cui la scala sta nel foglietto e non nell'attrezzo: due fogli dello stesso generatore, a due settimane di distanza, non hanno la stessa misura.\n\n«misura» sui primi due, e non è estetica: **il piede si ricava dal disegno** (`piedeDalDisegno` in `dati/catalogo.js`), quindi un pezzo più largo occupa più celle. La bancarella viene 62 px contro i 53 del mercato di oggi, e il carretto 55 contro 41: rimessi a 53 e 41 il piede resta [3, 2] per tutti e due, e un mercato già posato in una fattoria salvata non si ritrova a occupare la cella del vicino. Le proporzioni sono quelle del disegno nuovo — la bancarella nuova è più alta che larga, e schiacciarla dentro il rettangolo di quella vecchia (53×42) la storcerebbe.\n\nFondo già trasparente. Tutto il foglio è «figura», nessuna gira: facciata sola, e il ripiego della famiglia (giri: 1) è già quello giusto.",
+  "prompt": {
+    "scheda": "PROMPT-edificio.md",
+    "base": "edifici_2.png",
+    "generatore": "settembre 2026",
+    "testo": "Non conservato. I fogli si generano in una finestra di chat che non lascia un file, e il testo va copiato qui **nello stesso momento** in cui si salva il PNG: rimandarlo vuol dire perderlo. È il buco che il campo «prompt» esiste per chiudere, e questo è il giro in cui si è chiuso a metà. Per rigenerare un pezzo di questo foglio si riparte dalla scheda (vedi «scheda») e dalla descrizione in §6 di docs/fattoria-albero.md, che è dove ogni pezzo è descritto a parole.",
+    "file": "prompt-edifici_3-da-zero.txt"
+  },
+  "scala": 5,
+  "fondo": "trasparente",
+  "foglio": [307, 205],
+  "cella": [1, 1],
+  "famiglia": "figura",
+  "sprite": {
+    "bancarella": {"da": [7, 31], "cella": [62, 60], "misura": [53, 51]},
+    "carretto": {"da": [82, 34], "cella": [55, 55], "misura": [41, 41]},
+    "zuccherificio": {"da": [153, 16], "cella": [72, 81]},
+    "pastificio": {"da": [233, 23], "cella": [70, 72]},
+    "pasticceria": {"da": [6, 107], "cella": [68, 80]},
+    "rosticceria": {"da": [79, 105], "cella": [68, 83]},
+    "merceria": {"da": [156, 115], "cella": [75, 73]},
+    "sushi_bar": {"da": [230, 118], "cella": [70, 70]}
+  }
+}

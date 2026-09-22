@@ -1,0 +1,25 @@
+{
+  "__": "Sei delle merci nate con l'albero della produzione (`docs/fattoria-albero.md`, §6): stoffa, farina, burro nella riga di sopra; formaggio, minestrone, polenta in quella di sotto. Quattro di loro erano **solo un'emoji** dentro il fumetto di un recinto e sullo scaffale di un silo — liscie in mezzo alla pixel art — e due (pane, torta) avevano un ripiego preso dall'arredo.\n\n**Fondo trasparente, non magenta**, ed è il verso opposto di `merci.json`. Lì il magenta era il rimedio a un generatore che l'alfa non la sapeva fare, e si portava dietro un avvertimento: nessun oggetto poteva avere quella tinta addosso. Adesso l'alfa torna pulita, quindi niente «fondo»: auto, niente «ombra»: true, e la lavanda del foglio dopo può essere viola quanto vuole.\n\n«colori»: 0, cioè **niente quantizzazione**, come `merci.json` e come il foglio dei campi. Sei oggetti piccoli non pesano, e ridurre i colori su un foglio che è per due terzi trasparente sposta la tavolozza dove non serve.\n\n«cella»: [1, 1] fa sì che «da» e «cella» valgano pixel del foglio: gli oggetti stanno su una griglia 3×2 di celle da 512, ma dentro la cella sono disposti a mano e nessuno è largo uguale a un altro.\n\n«misura» riporta tutto alla scala del resto del gioco dividendo per **quindici** — lo stesso mestiere del nove di `merci.json`, con un numero diverso perché questo foglio è disegnato più grande. Ne escono 24–29 px di larghezza e 19–28 di altezza, che è la fascia in cui stanno già le sei di prima (20–29 × 20–25). Il fattore è uno solo per tutte e sei, così le proporzioni fra loro restano quelle del foglio: erano già giuste, ed è quello che si era chiesto.\n\n**La farina versata sta dentro il rettangolo.** Il sacco e i mucchietti di farina caduti fuori sono tre macchie di pixel staccate — `misura.py --figure` ne conta tre — ma le due piccole cadono dentro il riquadro della grande, quindi un rettangolo solo le prende tutte e non serve né allargarlo a mano né rinunciare alla farina versata. È il caso dello sbuffo di fumo di `forno_pizza`, risolto gratis.\n\nLe merci sono le uniche cose della fattoria che si vedono **solo dentro un riquadro**: nel fumetto sopra un recinto che ha fame, sullo scaffale di un silo, sui tasti di una ricetta. Non si posano in mappa e non si girano mai, quindi «giri»: 1 e niente specchio.",
+  "prompt": {
+    "scheda": "PROMPT-merce.md",
+    "base": "merci.jpg",
+    "generatore": "settembre 2026",
+    "testo": "Non conservato. I fogli si generano in una finestra di chat che non lascia un file, e il testo va copiato qui **nello stesso momento** in cui si salva il PNG: rimandarlo vuol dire perderlo. È il buco che il campo «prompt» esiste per chiudere, e questo è il giro in cui si è chiuso a metà. Per rigenerare un pezzo di questo foglio si riparte dalla scheda (vedi «scheda») e dalla descrizione in §6 di docs/fattoria-albero.md, che è dove ogni pezzo è descritto a parole.",
+    "file": "prompt-merci_2.txt"
+  },
+  "fondo": "trasparente",
+  "colori": 0,
+  "cella": [1, 1],
+  "famiglia": "oggetto",
+  "trasforma": {
+    "merce": {"giri": 1, "specchia": false}
+  },
+  "sprite": {
+    "merce_stoffa": {"da": [90, 82], "cella": [367, 419], "misura": [24, 28]},
+    "merce_farina": {"da": [565, 101], "cella": [376, 388], "misura": [25, 26]},
+    "merce_burro": {"da": [1050, 195], "cella": [418, 278], "misura": [28, 19]},
+    "merce_formaggio": {"da": [73, 587], "cella": [383, 349], "misura": [26, 23]},
+    "merce_minestrone": {"da": [535, 557], "cella": [437, 393], "misura": [29, 26]},
+    "merce_polenta": {"da": [1056, 633], "cella": [414, 308], "misura": [28, 21]}
+  }
+}

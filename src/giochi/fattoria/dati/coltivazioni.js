@@ -203,8 +203,8 @@ export const PRODOTTI = {
      fondo lo pretende: un pezzo atteso che l'atlante ha già è una
      riga da aggiornare. Chi ha un disegno vicino lo usa intanto
      (`pezzo: 'pane'` per il pane) e dichiara lo stesso cosa aspetta. */
-  stoffa: { nome: 'Stoffa', emoji: '🧵', silo: 'bottega', aspetta: 'merce_stoffa' },
-  farina: { nome: 'Farina', emoji: '🌾', silo: 'bottega', aspetta: 'merce_farina' },
+  stoffa: { nome: 'Stoffa', emoji: '🧵', silo: 'bottega', pezzo: 'merce_stoffa' },
+  farina: { nome: 'Farina', emoji: '🌾', silo: 'bottega', pezzo: 'merce_farina' },
   /* Il pane ha un disegno nell'atlante già oggi — le due pagnotte del
      foglio dell'arredo — e lo usa intanto. */
   pane:   { nome: 'Pane',   emoji: '🍞', silo: 'bottega', pezzo: 'pane', aspetta: 'merce_pane' },
@@ -219,8 +219,8 @@ export const PRODOTTI = {
      sdoppia: il burro è **un ingrediente** (entra nella torta, nella
      crostata e nel sapone) e il formaggio è **una pappa** e un
      ingrediente insieme (la polenta). */
-  burro:     { nome: 'Burro',     emoji: '🧈', silo: 'bottega', aspetta: 'merce_burro' },
-  formaggio: { nome: 'Formaggio', emoji: '🧀', silo: 'bottega', aspetta: 'merce_formaggio' },
+  burro:     { nome: 'Burro',     emoji: '🧈', silo: 'bottega', pezzo: 'merce_burro' },
+  formaggio: { nome: 'Formaggio', emoji: '🧀', silo: 'bottega', pezzo: 'merce_formaggio' },
   /* La torta ha già una faccia nell'atlante — quella dell'arredo — e
      la usa intanto, come il pane. */
   torta:     { nome: 'Torta',     emoji: '🎂', silo: 'bottega', pezzo: 'torta0', aspetta: 'merce_torta' },
@@ -247,14 +247,14 @@ export const PRODOTTI = {
      Il minestrone è **l'unica pappa delle quattro**: le altre tre
      costano più di quanto una ciotola possa valere (la polenta 🪙15),
      e il loro sbocco è il banco del mercato. */
-  minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', aspetta: 'merce_minestrone' },
+  minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', pezzo: 'merce_minestrone' },
   /* Il vasetto rosso dell'arredo fa da salsa finché il foglio non
      porta il suo — è lo stesso ripiego che il miele usa da sempre. */
   salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'marmellata0',
                aspetta: 'merce_salsa' },
   conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega',
                aspetta: 'merce_conserva' },
-  polenta:   { nome: 'Polenta',   emoji: '🍛', silo: 'bottega', aspetta: 'merce_polenta' },
+  polenta:   { nome: 'Polenta',   emoji: '🍛', silo: 'bottega', pezzo: 'merce_polenta' },
   /* La crostatina dell'arredo e il sacco di iuta: due facce che
      l'atlante ha già e che non nominava nessuno. */
   crostata:  { nome: 'Crostata',  emoji: '🍰', silo: 'bottega', pezzo: 'crostatina',

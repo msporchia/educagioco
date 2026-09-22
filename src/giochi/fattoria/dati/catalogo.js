@@ -375,8 +375,15 @@ export const CATEGORIE = [
        guadagnare: è la **valvola** di chi ha il silo tappato di una
        cosa sola, e una valvola che si può permettere solo chi sta bene
        non serve a niente. Cosa fa e perché perde sta in
-       `motore/vicino.js`. */
-    V('carretto_mercato', 'carretto_mercato', 'Carretto del vicino', 32,
+       `motore/vicino.js`.
+
+       Il disegno è cambiato — `carretto` di `edifici_3.png` al posto
+       del `carretto_mercato` rosa di `edifici.png` — e nel foglietto
+       porta un `misura` che lo riporta ai 41 px di prima. Non è
+       vezzo: **il piede si ricava dal disegno**, e un carretto che
+       cresce di una cella si ritroverebbe addosso il vicino in una
+       fattoria già salvata. Vale uguale per il mercato qui sotto. */
+    V('carretto_mercato', 'carretto',       'Carretto del vicino', 32,
       { vicino: true, liv: 2, unico: true }),
     /* ── LA BANCARELLA DEL MERCATO ───────────────────────────────
        **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
@@ -397,7 +404,7 @@ export const CATEGORIE = [
        sono tre, e una seconda bancarella non ne aggiungerebbe nessuno:
        un oggetto che si compra due volte e la seconda non fa niente è
        peggio di uno che non si può comprare. */
-    V('mercato',       'mercato',           'Mercato',            40,
+    V('mercato',       'bancarella',        'Mercato',            40,
       { mercato: true, liv: 4, unico: true }),
     /* Al 3 e non al 4, **insieme al mulino**: da quando il mangime è
        roba da animali finisce qui dentro, e un mulino che macina un
@@ -411,58 +418,65 @@ export const CATEGORIE = [
        gradino più su. Un edificio è **un mestiere che si riconosce a
        colpo d'occhio**, mai più di quattro ricette.
 
-       Nascono **prima del loro disegno**, ed è deliberato: prima si
-       decide l'albero, poi si generano gli sprite. Il `pezzo` è un
-       ripiego preso dal foglio delle case — una tettoia per il telaio,
-       una casa lunga per la dispensa — e `aspetta` dice quale pezzo
-       il foglio degli edifici porterà; `guastiDelCatalogo` diventa
-       rosso il giorno che quel pezzo esiste e la riga non l'ha ancora
-       preso. Il piede è quello del ripiego, misurato dal disegno: col
-       foglio vero diventerà quello del progetto.
+       Sono nate **prima del loro disegno**, ed era deliberato: prima
+       si decide l'albero, poi si generano gli sprite giusti. Per un
+       giro il `pezzo` è stato un ripiego preso dal foglio delle case
+       — una tettoia per il telaio, una casa lunga per la dispensa — e
+       `aspetta` diceva quale pezzo il foglio avrebbe portato, con
+       `guastiDelCatalogo` a diventare rosso il giorno che il pezzo
+       c'era e la riga non l'aveva ancora preso. Il foglio è arrivato
+       (`generati/edifici_2.png`) e adesso ognuna ha la sua faccia: il
+       telaio col filo teso, il forno acceso col fumo, le tinozze
+       viola. Il piede non si scrive lo stesso — lo ricava
+       `piedeDalDisegno`, e viene [4, 2] per tutte come diceva il
+       progetto, [3, 2] per la dispensa.
 
        Prezzi nella fascia «una struttura» (🪙150–360, `CALIBRAZIONE.md`),
        tutti con `cresce: RINCARO` come il mulino; la dispensa costa
        quanto gli altri due silos ed è `unico` come loro. */
-    V('dispensa',      'casetta_tetto_lungo', 'Dispensa',        120,
-      { silo: 'bottega', liv: 14, unico: true, aspetta: 'dispensa' }),
-    V('telaio',        'tettoia_fieno',     'Telaio',           170,
-      { macchina: 'telaio', liv: 14, cresce: RINCARO, aspetta: 'telaio' }),
+    V('dispensa',      'dispensa',          'Dispensa',         120,
+      { silo: 'bottega', liv: 14, unico: true, la: true }),
+    V('telaio',        'telaio',            'Telaio',           170,
+      { macchina: 'telaio', liv: 14, cresce: RINCARO }),
     /* `panificio` e non `forno`: `forno` è già la decorazione «Forno a
        legna», e la regola delle arnie contro l'apiario vale anche qui —
-       quando si ha un disegno apposta si fa una voce nuova. Il forno a
-       cupola è il ripiego finché il foglio non arriva. */
-    V('panificio',     'forno_pizza',       'Panificio',        180,
-      { macchina: 'panificio', liv: 16, cresce: RINCARO, aspetta: 'panificio' }),
+       quando si ha un disegno apposta si fa una voce nuova. E ce l'ha:
+       lo sbuffo di fumo sopra il camino sta **dentro il rettangolo del
+       ritaglio**, perché è il pezzo che dice che il forno è acceso. */
+    V('panificio',     'panificio',         'Panificio',        180,
+      { macchina: 'panificio', liv: 16, cresce: RINCARO }),
     /* Il pentolone prende dal fienile le quattro cose che si scaldano
        (`dati/coltivazioni.js`, «il fienile fa il secco»): arriva al 22
-       col beverone, e il paiolo dell'arredo gli fa da faccia intanto.
-       «Pentolone» e non «Cucina del cortile»: i consigli lo nominano con
-       `dentroA`, che sa «nel» e «nell'» e non «nella» — e «nel cucina» è
-       lo sbaglio che un bambino risente ripetuto. */
-    V('pentolone',     'calderone0',        'Pentolone',        150,
-      { macchina: 'pentolone', liv: 22, cresce: RINCARO, aspetta: 'pentolone',
-        anima: ['calderone0', 'calderone1'] }),
-    /* La sartoria al 36, con la vetrina: il chiosco rosa le fa da
-       faccia finché il foglio non arriva. */
-    /* Il caseificio al 20, due livelli dopo le mucche: la casetta
-       bianca gli fa da faccia finché il foglio non porta quella col
-       tetto verde e le forme di formaggio sulla mensola. */
-    V('caseificio',    'casetta',           'Caseificio',       200,
-      { macchina: 'caseificio', liv: 20, cresce: RINCARO, aspetta: 'caseificio' }),
-    V('sartoria',      'dehors_rosa',       'Sartoria',         250,
-      { macchina: 'sartoria', liv: 36, cresce: RINCARO, aspetta: 'sartoria' }),
-    /* La tintoria al 52, con la lavanda: il chiosco azzurro le fa da
-       faccia finché il foglio non porta le tinozze viola e le stoffe
-       stese ad asciugare. */
-    V('tintoria',      'dehors_azzurro',    'Tintoria',         300,
-      { macchina: 'tintoria', liv: 52, cresce: RINCARO, aspetta: 'tintoria' }),
+       col beverone. «Pentolone» e non «Cucina del cortile» era una
+       scelta fatta **per aggirare una funzione**: i consigli lo
+       nominano con `dentroA`, che sapeva «nel» e «nell'» e non
+       «nella». Poi è arrivata la cucina, e con lei sartoria, tintoria
+       e dispensa — quattro nomi femminili — e la stalla e la
+       conigliera dicevano «nel stalla» **da sempre**, senza che
+       nessuno se ne fosse accorto. Adesso il genere si dichiara
+       (`la: true`, vedi `motore/consiglio.js`) e il nome si sceglie
+       per come suona, non per come si declina. */
+    V('pentolone',     'pentolone',         'Pentolone',        150,
+      { macchina: 'pentolone', liv: 22, cresce: RINCARO }),
+    /* Il caseificio al 20, due livelli dopo le mucche: tetto verde,
+       le forme di formaggio sulla mensola davanti, il bidone del latte
+       accanto alla porta. */
+    V('caseificio',    'caseificio',        'Caseificio',       200,
+      { macchina: 'caseificio', liv: 20, cresce: RINCARO }),
+    V('sartoria',      'sartoria',          'Sartoria',         250,
+      { macchina: 'sartoria', liv: 36, cresce: RINCARO, la: true }),
+    /* La sartoria al 36: la vetrina col manichino e l'insegna delle
+       forbici. La tintoria al 52, con la lavanda: le due tinozze
+       davanti e le stoffe stese ad asciugare. */
+    V('tintoria',      'tintoria',          'Tintoria',         300,
+      { macchina: 'tintoria', liv: 52, cresce: RINCARO, la: true }),
     /* La cucina al 24, fra le anatre e i maiali: è la macchina dove le
        colture si incontrano (`dati/coltivazioni.js`, le confluenze) e
-       l'unica che prende roba di tre catene diverse per volta. Il
-       forno a legna le fa da faccia finché il foglio non porta la sua
-       — una tettoia con i fornelli e le pentole appese. */
-    V('cucina',        'forno_legna',       'Cucina',           210,
-      { macchina: 'cucina', liv: 24, cresce: RINCARO, aspetta: 'cucina' }),
+       l'unica che prende roba di tre catene diverse per volta. Una
+       tettoia coi fornelli accesi, le pentole appese alla trave e le
+       verdure tagliate sul ceppo. */
+    V('cucina',        'cucina',            'Cucina',           210,
+      { macchina: 'cucina', liv: 24, cresce: RINCARO, la: true }),
 
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
