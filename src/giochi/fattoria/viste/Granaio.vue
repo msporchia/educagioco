@@ -103,7 +103,7 @@ const dice = u => {
     /* Il **nome** e non l'emoji: la riga sopra mostra la figura vera
        della merce, e un'emoji che non le somiglia (🥬 per una balla di
        fieno) fa sembrare due cose diverse quello che è una cosa sola. */
-    return `${u.quanti} ${dove ? dentroA(dove.nome.toLowerCase()) : ''}` +
+    return `${u.quanti} ${dentroA(dove)}` +
            ` ${u.minuti > 0 ? `(${u.minuti} min)` : ''} → ${u.resa} ${u.nome.toLowerCase()}`
   }
   if (u.che === 'cibo')

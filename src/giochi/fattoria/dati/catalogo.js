@@ -149,6 +149,29 @@ export function piedeDalDisegno(pezzo) {
   return [largo, largo >= 3 && p[3] / TESSERA >= 2.5 ? 2 : 1]
 }
 
+/* ── `la` E `plurale` — IL GENERE DEL NOME, DICHIARATO ────────────
+   I consigli parlano di queste voci per nome e ci mettono davanti un
+   articolo: «nel mulino», «il fienile ha qualcosa da ritirare», «i
+   tuoi mulini stanno lavorando». Tutto il resto — l'apostrofo davanti
+   a una vocale (nell'ovile), lo `lo` davanti alla esse impura (nello
+   stagno), il plurale del nome (fienile → fienili) — si ricava dal
+   nome; **il genere no**, e non c'è regola che lo indovini senza
+   sbagliare.
+
+   Era rimasto scritto che i consigli sapevano «nel» e «nell'» e non
+   «nella», e che perciò un nome femminile non si poteva usare: tant'è
+   che il pentolone si chiama così e non «Cucina del cortile». Ma
+   *Conigliera* e *Stalla* c'erano già, e dicevano «nel conigliera»
+   da sempre — e le *Arnie*, che sono anche plurali, dicevano «nel
+   arnie». Nessuno se n'era accorto perché non è un errore, è una
+   frase storta: non la trova nessun test, la trova un genitore che
+   legge ad alta voce a un bambino che sta imparando a leggere.
+
+   Quindi si dichiara: `la: true` per il femminile, `plurale: true`
+   per il nome che è già plurale. Chi non dice niente è maschile
+   singolare, che è la maggioranza. Le funzioni stanno in
+   `motore/consiglio.js`, una volta sola per le quattro frasi che le
+   scrivono. */
 const V = (id, pezzo, nome, prezzo, extra) =>
   ({ id, pezzo, nome, prezzo, piede: piedeDalDisegno(pezzo), ...extra })
 
@@ -517,13 +540,15 @@ export const CATEGORIE = [
     V('fienile',       'fienile0',          'Fienile',         150,
       { macchina: 'fienile', liv: 5, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
-      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO }),
+      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO,
+        la: true }),
     V('pollaio',       'recinto_galline_calmo', 'Pollaio',      130,
       { macchina: 'pollaio', stati: RECINTO('galline'), piede: [4, 3], liv: 8, cresce: RINCARO }),
     V('ovile',         'recinto_pecore_calmo',  'Ovile',        190,
       { macchina: 'ovile', stati: RECINTO('pecore'), piede: [4, 3], liv: 12, cresce: RINCARO }),
     V('stalla',        'recinto_mucche_calmo',  'Stalla',       220,
-      { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3], liv: 18, cresce: RINCARO }),
+      { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3], liv: 18, cresce: RINCARO,
+        la: true }),
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
       { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 26, cresce: RINCARO }),
 
@@ -552,7 +577,8 @@ export const CATEGORIE = [
        non si riusa una decorazione, si riusa **quando il disegno è lo
        stesso** (l'orto, il carretto, il fienile, il mercato). */
     V('arnie',         'recinto_api_calmo',     'Arnie',               300,
-      { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 38, cresce: RINCARO }),
+      { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 38, cresce: RINCARO,
+        la: true, plurale: true }),
     V('recinto_alpaca', 'recinto_alpaca_calmo', 'Recinto degli alpaca', 330,
       { macchina: 'alpaca', stati: RECINTO('alpaca'), piede: [4, 3], liv: 41, cresce: RINCARO }),
     V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,

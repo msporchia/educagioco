@@ -936,7 +936,7 @@ export const SILI = {
   /* Il terzo, per quello che esce dalle botteghe: il perché sta sopra
      `PRODOTTI`, alla voce della stoffa. Arriva al 14 col telaio, che è
      la prima bottega, e costa quanto gli altri due. */
-  bottega: { cosa: 'dispensa',   nome: 'Dispensa',           emoji: '📦',
+  bottega: { cosa: 'dispensa',   nome: 'Dispensa',           emoji: '📦', la: true,
              vuoto: 'quello che esce dalle botteghe' },
 }
 

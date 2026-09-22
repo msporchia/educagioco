@@ -66,7 +66,6 @@ import { carrettoIn, DAI } from './vicino.js'
    sarebbe successo di nuovo. */
 const GIRI = PROFONDITA
 
-const nomeDi = id => (PER_ID[id] || {}).nome || 'quella cosa'
 /* ── QUANDO SI SCRIVE IL NOME E QUANDO L'EMOJI ────────────────────
    Da quando ogni merce ha **una figura vera** (`dati/coltivazioni.js`,
    campo `pezzo`) l'emoji che le sta scritta accanto è un ripiego, e in
@@ -92,13 +91,76 @@ const merce = id => roba(id).nome.toLowerCase()
    il pannello di una macchina (`ricetteDi`), e va fatto qui per lo
    stesso motivo. */
 const leRicette = f => RICETTE.filter(r => (r.liv || 1) <= f.livello)
-/* «nel mulino», ma «nell'ovile». L'apostrofo davanti alla vocale non è
-   pignoleria da grammatici: queste frasi le legge ad alta voce un
-   genitore a un bambino che sta imparando a leggere, e «nel ovile» è
-   esattamente il tipo di sbaglio che poi si risente ripetuto. Sta qui
-   in una funzione sola perché la stessa coda la scrivono in tre. */
-export const dentroA = nome =>
-  /^[aeiou]/i.test(nome) ? `nell'${nome}` : `nel ${nome}`
+/* ── GLI ARTICOLI ─────────────────────────────────────────────────
+   «nel mulino», ma «nell'ovile», ma «nella stalla», ma «nello stagno
+   delle anatre», ma «nelle arnie». Non è pignoleria da grammatici:
+   queste frasi le legge ad alta voce un genitore a un bambino che sta
+   imparando a leggere, e «nel ovile» è esattamente il tipo di sbaglio
+   che poi si risente ripetuto.
+
+   Stanno qui in tre funzioni sole perché la stessa coda la scrivono in
+   quattro posti, e perché quando erano sparse una sapeva il femminile
+   e le altre no.
+
+   **Il genere è l'unica cosa che si dichiara** (`la` sulla voce di
+   catalogo, vedi lì il perché): il resto è meccanico e si ricava dal
+   nome — l'apostrofo davanti a una vocale, lo `lo` davanti alla esse
+   impura e alle altre di quella specie, il plurale.
+
+   Il plurale non c'era affatto, e il difetto era in piena vista: «I
+   tuoi fienile stanno lavorando». La regola italiana copre tutti i
+   nomi di questo catalogo (-a → -e, -io → -i, -o/-e → -i), e chi è
+   già plurale lo dice (`plurale: true`, le arnie). */
+const vocale = n => /^[aeiou]/i.test(n)
+/* La esse impura e compagnia: davanti a queste l'articolo è «lo». Non
+   è un caso di scuola — «Stagno delle anatre» sta nel catalogo, e
+   diceva «nel stagno». */
+const impura = n => /^(s[^aeiouh]|z|gn|pn|ps|x|y)/i.test(n)
+
+const articoloDi = v => {
+  const n = (v.nome || '').toLowerCase()
+  if (v.plurale) return v.la ? 'le' : vocale(n) || impura(n) ? 'gli' : 'i'
+  if (vocale(n)) return "l'"
+  return v.la ? 'la' : impura(n) ? 'lo' : 'il'
+}
+const IN = { il: 'nel', lo: 'nello', la: 'nella', "l'": "nell'", i: 'nei', gli: 'negli', le: 'nelle' }
+const stacca = a => a.endsWith("'") ? a : a + ' '
+
+/* «nella sartoria». Vuole **la voce**, non il nome: il genere sta sulla
+   voce, e una funzione che prende una stringa si fa chiamare senza. */
+export const dentroA = v => {
+  if (!v) return ''
+  const a = articoloDi(v)
+  return stacca(IN[a]) + (v.nome || '').toLowerCase()
+}
+/* «la sartoria» — per le frasi che cominciano con lei serve la
+   maiuscola, e la mette chi scrive la frase (`Su`). */
+export const laCosa = v => v ? stacca(articoloDi(v)) + (v.nome || '').toLowerCase() : ''
+export const Su = s => s.charAt(0).toUpperCase() + s.slice(1)
+
+/* «le tue sartorie», «i tuoi fienili» — e **si piega solo la prima
+   parola**. Mezzo catalogo ha un nome composto («Silo del raccolto»,
+   «Stagno delle anatre», «Recinto delle capre») e a piegare l'ultima
+   venivano fuori «i tuoi silo del raccolti» e «i tuoi stagno delle
+   anatri»: quello che va al plurale è il nome, non il suo
+   complemento. */
+const unaParola = n =>
+  /a$/i.test(n) ? n.replace(/a$/i, 'e')
+  : /io$/i.test(n) ? n.replace(/io$/i, 'i')
+  : /[oe]$/i.test(n) ? n.replace(/[oe]$/i, 'i')
+  : n
+const alPlurale = n => n.replace(/^\S+/, unaParola)
+export const leTue = v => {
+  if (!v) return ''
+  const n = (v.nome || '').toLowerCase()
+  return `${v.la ? 'le tue' : 'i tuoi'} ${v.plurale ? n : alPlurale(n)}`
+}
+
+/* Il verbo che concorda con quello che `laCosa` ha appena scritto.
+   «Le arnie ha qualcosa da ritirare» è la frase che esce quando il
+   nome è già plurale e il verbo è rimasto al singolare: il dato lo
+   sa (`plurale`), quindi si concorda invece di sperare. */
+export const concorda = (v, uno, tanti) => (v && v.plurale) ? tanti : uno
 const roba = id => PRODOTTI[id] || { nome: id, emoji: '📦' }
 
 /* I campi che ci sono, divisi in quello che a chi consiglia interessa:
@@ -232,7 +294,7 @@ function daiCampi(f, coltura, ora) {
     const a = acquisto(f, Object.values(PER_ID).find(v => v.silo === fam))
     const si = SILI[fam]
     if (a && si)
-      return { testo: `Prima ti serve il ${si.nome.toLowerCase()} (${costa(a)}):` +
+      return { testo: `Prima ti serve ${laCosa(si)} (${costa(a)}):` +
                       ` è lì che finisce ${coltura.emoji} quando lo raccogli.`,
                azione: a.azione }
   }
@@ -283,15 +345,16 @@ function dallaMacchina(f, ricetta, ora, giri) {
   if (!tutte.length) {
     const a = acquisto(f, voce)
     if (!a) return null
-    return { testo: `${ricetta.nome} si fa ` +
-                    `${dentroA(nomeDi(voce.id).toLowerCase())}, che non hai (${costa(a)}).`,
+    return { testo: `${ricetta.nome} si fa ${dentroA(voce)},` +
+                    ` che non hai (${costa(a)}).`,
              azione: a.azione }
   }
 
   /* Una che ha già finito: ritirare è gratis e immediato, quindi viene
      prima di qualunque altra cosa. */
   if (pronte.length)
-    return { testo: `Il ${nomeDi(voce && voce.id).toLowerCase()} ha qualcosa da ritirare.`,
+    return { testo: `${Su(laCosa(voce))} ${concorda(voce, 'ha', 'hanno')}` +
+                    ' qualcosa da ritirare.',
              azione: { che: 'apri', cosa: pronte[0] } }
 
   if (ferme.length) {
@@ -300,7 +363,7 @@ function dallaMacchina(f, ricetta, ora, giri) {
       .filter(k => f.quantoHo(k) < ricetta.prende[k])
     if (!manca.length)
       return { testo: `Hai tutto: fai ${ricetta.nome.toLowerCase()}` +
-                      ` ${voce ? dentroA(nomeDi(voce.id).toLowerCase()) : ''}.`,
+                      ` ${dentroA(voce)}.`,
                azione: { che: 'apri', cosa: ferme[0] } }
     const k = manca[0]
     const quanti = ricetta.prende[k] - f.quantoHo(k)
@@ -313,9 +376,9 @@ function dallaMacchina(f, ricetta, ora, giri) {
   /* Tutte occupate. Due risposte diverse: se ne finisce una presto si
      aspetta, se no se ne fa un'altra — che è la cosa che l'utente
      chiede di proporre invece di lasciare fermi. */
-  const nome = nomeDi(voce && voce.id)
-  const quante = tutte.length === 1 ? `Il ${nome.toLowerCase()} sta lavorando`
-                                    : `I tuoi ${nome.toLowerCase()} stanno lavorando`
+  const quante = tutte.length === 1
+    ? `${Su(laCosa(voce))} ${concorda(voce, 'sta', 'stanno')} lavorando`
+    : `${Su(leTue(voce))} stanno lavorando`
   if (prima && prima.manca <= 5)
     return { testo: `${quante}: pronto fra ${prima.manca} min.`, azione: null }
   const a = acquisto(f, voce)
@@ -342,8 +405,8 @@ export function comeFarePosto(f, prodotto, ora = Date.now()) {
   if (!f.eCostruito(fam)) {
     const a = acquisto(f, Object.values(PER_ID).find(v => v.silo === fam))
     if (!a) return { testo: `${pr.emoji} non ha dove andare.`, azione: null }
-    return { testo: `${pr.emoji} non ha dove andare: ti serve il` +
-                    ` ${si.nome.toLowerCase()} (${costa(a)}).`,
+    return { testo: `${pr.emoji} non ha dove andare: ti serve` +
+                    ` ${laCosa(si)} (${costa(a)}).`,
              azione: a.azione }
   }
 
@@ -355,8 +418,7 @@ export function comeFarePosto(f, prodotto, ora = Date.now()) {
     if (!ferme.length) continue
     const voce = vocePerMacchina(r.dove)
     return { testo: `Lo scomparto ${pr.emoji} è pieno. Usane ${r.prende[prodotto]}` +
-                    ` ${voce ? dentroA(nomeDi(voce.id).toLowerCase()) : ''}: ` +
-                    `${r.resa} ${r.nome.toLowerCase()}.`,
+                    ` ${dentroA(voce)}: ${r.resa} ${r.nome.toLowerCase()}.`,
              azione: { che: 'apri', cosa: ferme[0] } }
   }
 
@@ -379,7 +441,7 @@ export function comeFarePosto(f, prodotto, ora = Date.now()) {
   /* Nessuno lo consuma adesso: allora sì, si allarga il silo. */
   const costo = f.costoDellIngrandimento(fam)
   return { testo: `Lo scomparto ${pr.emoji} è pieno (${f.capienzaDi(fam)}).` +
-                  ` Ingrandisci il ${si.nome.toLowerCase()}: ${costo} monete,` +
+                  ` Ingrandisci ${laCosa(si)}: ${costo} monete,` +
                   ' e cresce anche il posto per tutto il resto.',
            azione: { che: 'ingrandisci', famiglia: fam, prezzo: costo } }
 }

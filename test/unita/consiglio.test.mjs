@@ -16,9 +16,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { comeAvere, comeFarePosto } from '../../src/giochi/fattoria/motore/consiglio.js'
-import { COLTURE, PRODOTTI, PER_RICETTA, RICETTE, merciDi, ricetteDi }
+import { comeAvere, comeFarePosto, dentroA, laCosa, leTue, concorda }
+  from '../../src/giochi/fattoria/motore/consiglio.js'
+import { COLTURE, PRODOTTI, PER_RICETTA, RICETTE, SILI, merciDi, ricetteDi }
   from '../../src/giochi/fattoria/dati/coltivazioni.js'
+import { PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
 import { sogliaDi, guastiDegliSblocchi, livelloDelProdotto }
   from '../../src/giochi/fattoria/dati/livelli.js'
 import { scambia, cosaOffre, cosaPuoiDare, carrettoIn, scompartiColmi, DAI, RICEVI }
@@ -382,6 +384,65 @@ const posa = (f, id, x, y) => {
          scompartiColmi(f).length, 0)
   /* Cioè il foglio si apre nello stato che spiega cos'è questo posto,
      invece che in quello che risolve un problema che non c'è. */
+}
+
+/* ══════════ GLI ARTICOLI ══════════
+   Il consiglio nomina macchine e silos e ci mette davanti un articolo,
+   e per mesi ne sapeva due: «nel» e «nell'». Conigliera e Stalla
+   dicevano «nel conigliera» **da sempre**, le Arnie «nel arnie», lo
+   Stagno delle anatre «nel stagno»; poi sono arrivate sartoria,
+   tintoria, cucina e dispensa e sono diventate sette righe storte.
+
+   Nessun test poteva vederle, ed è il punto: una frase storta non è un
+   errore, è **formalmente ineccepibile**. La trova un genitore che
+   legge ad alta voce.
+
+   Quello che si può controllare a macchina è l'altra metà: che il
+   genere sia **dichiarato** dove serve, e che nessuna frase esca con
+   un articolo impossibile. Il giudizio su come suona resta a chi
+   guarda l'elenco che questo blocco stampa. */
+{
+  const conArticolo = [...Object.values(PER_ID).filter(v => v.macchina || v.silo),
+                       ...Object.values(SILI)]
+  const storte = []
+  for (const v of conArticolo) {
+    const dove = dentroA(v), la = laCosa(v), tue = leTue(v)
+    if (!dove || !la || !tue) { storte.push(`${v.nome}: frase vuota`); continue }
+    /* l'apostrofo davanti a una vocale, e mai «nel» davanti a una */
+    if (/^nel [aeiou]/i.test(dove)) storte.push(`${v.nome}: «${dove}» vuole l'apostrofo`)
+    /* «lo/nello» davanti alla esse impura: c'è lo stagno delle anatre */
+    if (/^nel s[^aeiouh]/i.test(dove)) storte.push(`${v.nome}: «${dove}» vuole «nello»`)
+    /* un nome femminile non dichiarato si vede da qui: «nel sartoria» */
+    if (/^nel [a-z]*a /i.test(dove + ' ')) storte.push(`${v.nome}: «${dove}» — manca «la: true»?`)
+    /* il plurale piega la prima parola, non l'ultima: «i tuoi sili del
+       raccolto», non «i tuoi silo del raccolti» */
+    const resto = v.nome.toLowerCase().split(' ').slice(1).join(' ')
+    if (resto && !tue.endsWith(resto))
+      storte.push(`${v.nome}: «${tue}» ha piegato la parola sbagliata`)
+  }
+  uguale(`${conArticolo.length} nomi prendono l'articolo giusto`, storte.join(' · '), '')
+
+  /* ── il lint del genere ──
+     Non può sapere se una voce nuova è femminile; può però dire che un
+     nome che finisce per -a e non lo dichiara è quasi sempre una
+     dimenticanza. È un'euristica usata dove le euristiche vanno usate:
+     a segnalare una **dichiarazione mancante**, mai a decidere cosa
+     scrivere a schermo. */
+  const sospette = conArticolo.filter(v => /a$/i.test(v.nome.split(' ')[0]) && !v.la)
+  uguale('nessun nome che finisce per -a si è dimenticato «la: true»',
+         sospette.map(v => v.nome).join(', '), '')
+
+  /* E il verbo concorda con quello che l'articolo ha appena scritto:
+     «le arnie hanno», non «le arnie ha». */
+  const arnie = PER_ID.arnie
+  uguale('le arnie sono plurali', concorda(arnie, 'ha', 'hanno'), 'hanno')
+  uguale('e prendono il loro articolo', laCosa(arnie), 'le arnie')
+  uguale('il fienile no', concorda(PER_ID.fienile, 'ha', 'hanno'), 'ha')
+
+  nota('come li nomina il consiglio:')
+  for (const v of conArticolo)
+    nota(`  si fa ${dentroA(v)} · ${laCosa(v)} ${concorda(v, 'sta', 'stanno')} lavorando` +
+         ` · ${leTue(v)}`)
 }
 
 nota(`${Object.keys(PRODOTTI).length} prodotti, ${COLTURE.length} colture, ` +
