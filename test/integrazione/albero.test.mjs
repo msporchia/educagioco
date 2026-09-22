@@ -10,8 +10,17 @@
    La fattoria si semina col motore vero, a livello 40 e con i tre
    silos, il telaio no: così la stoffa ha una strada aperta ma una
    macchina da comprare, che è la riga più utile da provare.
+
+   Poi c'è un **secondo atto**, e vuole una fattoria sua: il maglione
+   alla lavanda è la catena più lunga del gioco — sei fasi — e arriva
+   al 52, quindi a livello 40 l'albero si fermerebbe alla prima riga
+   dicendo «arriva al 52». È giusto e non prova niente, perciò lì si
+   semina di nuovo a 60. Non si alza e basta il livello del primo atto
+   perché a 60 gli alpaca sono aperti e l'albero della stoffa
+   sceglierebbe **loro** invece dell'ovile: la strada è la più
+   economica fra quelle aperte, non quella che si possiede.
    `node test/esegui.mjs albero`
-   tempo: 40
+   tempo: 90
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, leggiProfilo, scatto, attendi }
   from '../aiuto/browser.mjs'
@@ -124,6 +133,81 @@ if (trovata) {
   uguale('e il baule è aperto sulla voce indicata', await indicata.count(), 1)
   controlla('che è il telaio', /Telaio/.test(await indicata.innerText()))
   await scatto(page, 'albero-baule-telaio')
+}
+
+/* ---------- secondo atto: la catena più lunga ----------
+   Il maglione alla lavanda è il punto in cui due rami si toccano — il
+   filo e il colore — ed è la ragione per cui la pagina dell'albero
+   esiste: sei fasi non stanno in un consiglio da una riga. Qui si
+   guarda che la colonna le srotoli **tutte fino ai campi**, e che
+   nessuna si fermi a metà.
+
+   Fattoria nuova a livello 60, col perché in testa al file. */
+{
+  const g = new Fattoria({ borsa: borsaInfinita() })
+  g.speso = sogliaDi(60)
+  g.reclamaTutto()
+  const posaIn = id => {
+    for (let r = 0; r <= CELLE * 2; r++)
+      for (let dy = -r; dy <= r; dy++)
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue
+          const x = Math.round(centro + dx), y = Math.round(centro + dy)
+          if (g.posa(id, x, y).ok) return true
+        }
+    return false
+  }
+  controlla('la dispensa si posa anche nella seconda fattoria', posaIn('dispensa'))
+  posaIn('silo'); posaIn('silo_bianco'); posaIn('orto')
+  const prima = await leggiProfilo(page)
+  await semina(page, {
+    ...(prima || {}),
+    campagne: { ...((prima || {}).campagne || {}),
+                fattoria: { tappa: 0, libera: false, stelle: {},
+                            cfg: { stato: g.serializza() } } },
+  })
+  await page.locator('.carta.gioco[data-gioco="fattoria"]').click()
+  await page.waitForSelector('.fa-tela', { timeout: 5000 })
+  await attendi(page, 700)
+
+  const tela2 = await page.locator('.fa-tela').boundingBox()
+  let aperta2 = false
+  for (let y = tela2.y + 16; y < tela2.y + tela2.height - 16 && !aperta2; y += 20)
+    for (let x = tela2.x + 16; x < tela2.x + tela2.width - 16 && !aperta2; x += 24) {
+      await dito(Math.round(x), Math.round(y))
+      if ((await titolo()) === 'Dispensa') aperta2 = true
+      else await chiudi()
+    }
+  controlla('col dito si apre la dispensa della seconda fattoria', aperta2)
+
+  const viola = page.locator('.fa-scomparto', { hasText: 'Maglione alla lavanda' })
+  uguale('c\'è lo scomparto del maglione alla lavanda', await viola.count(), 1)
+  await viola.click()
+  await attendi(page, 200)
+  await page.locator('[data-azione="albero"]').click()
+  await attendi(page, 300)
+
+  uguale('l\'albero è quello del maglione alla lavanda',
+         await page.locator('[data-albero]').getAttribute('data-albero-di'), 'maglione_lavanda')
+  const riga2 = id => page.locator(`[data-albero-riga="${id}"]`)
+  /* Le sei fasi, dalla cima ai campi: il ramo del filo scende fino al
+     foraggio e al fieno, quello del colore si ferma alla lavanda —
+     sotto non c'è niente perché sotto c'è la terra. */
+  for (const id of ['maglione_lavanda', 'maglione', 'stoffa', 'lana',
+                    'foraggio', 'fieno', 'tintura', 'lavanda'])
+    uguale(`c'è la riga di ${id}`, await riga2(id).count(), 1)
+  /* La tintoria compare **due volte** — sopra il maglione alla lavanda
+     e sopra la tintura — ed è giusto: è la stessa macchina che fa due
+     passi della stessa colonna. */
+  for (const id of ['tintoria', 'sartoria', 'telaio', 'fienile'])
+    controlla(`e la macchina ${id} sta fra due righe`,
+              await page.locator(`[data-albero-macchina="${id}"]`).count() >= 1)
+  /* Nessuna riga «arriva più avanti»: a livello 60 la strada è tutta
+     aperta, e una riga che si ferma lì vorrebbe dire una catena che
+     dal livello non si può percorrere. */
+  uguale('e niente si ferma dicendo «arriva più avanti»',
+         await page.locator('[data-albero-riga][data-stato="arriva"]').count(), 0)
+  await scatto(page, 'albero-maglione-lavanda')
 }
 
 nota(`errori in console: ${errori.length}`)
