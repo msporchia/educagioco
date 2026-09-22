@@ -104,11 +104,16 @@ export const CLIENTI = [
   { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
     vuole: ['miele', 'fiori', 'cipolle'] },
   { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
-    vuole: ['lana', 'stoffa', 'maglione'] },
+    vuole: ['lana', 'stoffa', 'maglione', 'maglione_lavanda'] },
   /* L'oste vuole quello che si mette in tavola: è il mestiere che
      tiene il pane fuori dalle mani del solo fornaio. */
   { id: 'oste',        nome: 'L\'oste',        emoji: '🍽️',
     vuole: ['pane', 'tartufi', 'uova', 'latte', 'formaggio'] },
+  /* La lavandaia è il mestiere della tintoria, e **non chiede solo il
+     sapone**: prende anche la lavanda cruda e la stoffa, che è il modo
+     di dare un banco a chi la tintoria non ce l'ha ancora. */
+  { id: 'lavandaia',   nome: 'La lavandaia',   emoji: '🧼',
+    vuole: ['sapone', 'lavanda', 'stoffa'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]

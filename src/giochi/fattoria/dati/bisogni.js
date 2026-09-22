@@ -164,6 +164,12 @@ export const COCCOLE = [
      ritrovarsi la barra ancora da finire. */
   { id: 'festa', bisogno: 'gioco', nome: 'Festa con la torta', emoji: '🎂',
     quanto: 1, prezzo: 0, da: 'torta' },
+  /* Il bagnetto fa per il pelo quello che la festa fa per il gioco, e
+     sta in fondo a una catena ancora più lunga: il colore dai campi, il
+     burro dal latte. La spazzola resta il gesto di tutti i giorni, il
+     bagnetto è la cosa che si fa quando si è coltivato per una sera. */
+  { id: 'bagnetto', bisogno: 'pelo', nome: 'Bagnetto', emoji: '🧼',
+    quanto: 1, prezzo: 0, da: 'sapone' },
 ]
 
 export const nuovo = (ora = Date.now()) =>

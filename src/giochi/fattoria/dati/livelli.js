@@ -221,6 +221,10 @@ export const NOMI = {
      sotto i sei livelli. */
   41: 'Gli alpaca',
   47: 'Gli asini',
+  /* La lavanda e la tintoria stanno **dopo** gli asini, che erano
+     l'ultima cosa che lavorasse: da qui in avanti il gioco aveva
+     diciassette livelli di sole decorazioni. */
+  52: 'La lavanda e la tintoria',
 }
 
 export function nomeDi(livello) {

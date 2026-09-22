@@ -141,6 +141,13 @@ export const PRODOTTI = {
   cipolle:    { nome: 'Cipolle',    emoji: '🧅', silo: 'terra', pezzo: 'raccolto_cipolle' },
   aglio:      { nome: 'Aglio',      emoji: '🧄', silo: 'terra', pezzo: 'raccolto_aglio' },
   fragole:    { nome: 'Fragole',    emoji: '🍓', silo: 'terra', pezzo: 'raccolto_fragole' },
+  /* La lavanda è l'unica coltura che non finisce in nessuna bocca: va
+     in tintoria, e da lì esce il colore. Sta nel silo del raccolto
+     perché esce da un campo — il criterio è quello, non cosa se ne fa.
+     Il vaso di lavanda del giardino le fa da faccia finché il foglio
+     dei campi non porta la cassetta coi mazzi legati. */
+  lavanda:    { nome: 'Lavanda',    emoji: '💐', silo: 'terra', pezzo: 'vaso_lavanda',
+                aspetta: 'raccolto_lavanda' },
   /* il mangime delle bestie del cortile: esce dal fienile e non si
      mangia in casa — è la riga di mezzo della catena */
   becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', pezzo: 'merce_becchime' },
@@ -217,6 +224,17 @@ export const PRODOTTI = {
   /* La torta ha già una faccia nell'atlante — quella dell'arredo — e
      la usa intanto, come il pane. */
   torta:     { nome: 'Torta',     emoji: '🎂', silo: 'bottega', pezzo: 'torta0', aspetta: 'merce_torta' },
+  /* ── LA TINTORIA ─────────────────────────────────────────────────
+     La lavanda sta **nel silo del raccolto** perché esce da un campo
+     (il rosso è dei campi, e `unita/coltivazioni` lo pretende); tutto
+     quello che la tintoria ne ricava esce da una bottega e va in
+     dispensa. Il maglione alla lavanda è una **merce**, non un
+     addobbo: la tintoria prende un maglione e ne rende un altro, e chi
+     lo vuole è la sarta al banco. */
+  tintura:   { nome: 'Tintura',   emoji: '🫙', silo: 'bottega', aspetta: 'merce_tintura' },
+  maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', silo: 'bottega',
+                      aspetta: 'merce_maglione_lavanda' },
+  sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', aspetta: 'merce_sapone' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -357,6 +375,24 @@ export const COLTURE = [
     id: 'fragole', liv: 44, nome: 'Fragole', emoji: '🍓',
     semina: 0, raccolta: 1, minuti: 11, resa: 1, da: 'fragole',
     stadi: CRESCE('fragole'),
+  },
+
+  /* ── LA LAVANDA, E IL PRIMO CAMPO CHE CRESCE COL DISEGNO DI UN
+       ALTRO ─────────────────────────────────────────────────────────
+     Arriva al 52 **con la tintoria**, che è la bocca che la mangia:
+     l'unica coltura della fattoria che non finisce in una ciotola né
+     in una mangiatoia.
+
+     Gli stadi sono quelli delle melanzane, ed è un ripiego dichiarato:
+     il foglio `campi_3.png` non c'è ancora, e un campo che cresce
+     senza vedersi crescere sembra rotto — meglio un cespuglio viola
+     che assomiglia, dicendo qui quale sarà il suo. `aspetta` è il
+     **prefisso** dei sette riquadri (`campo_lavanda0..6`) e
+     `guastiDelleColture` diventa rosso il giorno che il primo c'è. */
+  {
+    id: 'lavanda', liv: 52, nome: 'Lavanda', emoji: '💐',
+    semina: 0, raccolta: 1, minuti: 9, resa: 1, da: 'lavanda',
+    stadi: CRESCE('melanzane'), aspetta: 'campo_lavanda',
   },
 ]
 
@@ -736,6 +772,33 @@ export const RICETTE = [
     id: 'torta', nome: 'Torta', emoji: '🎂', dove: 'panificio', liv: 20,
     prende: { farina: 2, uova: 1, burro: 1 }, costo: 2, minuti: 8, da: 'torta', resa: 1,
   },
+
+  /* ── la tintoria: dove il colore incontra il filo e il latte ──
+     La catena più lunga della fattoria finisce qui: erba → foraggio →
+     lana → stoffa → maglione → maglione alla lavanda, **sei fasi**, e
+     non ne esiste una più corta (è il numero che `PROFONDITA` tiene
+     d'occhio). La tintoria è anche il punto in cui tre rami si
+     toccano: il colore dai campi, il maglione dal filo, il burro dal
+     latte.
+
+     **Il maglione alla lavanda è una merce e non un addobbo**: entra
+     un maglione, esce un maglione di un altro colore, e chi lo vuole
+     è la sarta al banco. Il sapone invece è una coccola — il bagnetto
+     — ed è la seconda cosa che si fa col burro. */
+  {
+    id: 'tintura', nome: 'Tintura', emoji: '🫙', dove: 'tintoria', liv: 52,
+    prende: { lavanda: 2 }, costo: 1, minuti: 5, da: 'tintura', resa: 1,
+  },
+  {
+    id: 'maglione_lavanda', nome: 'Maglione alla lavanda', emoji: '💜',
+    dove: 'tintoria', liv: 52,
+    prende: { maglione: 1, tintura: 1 }, costo: 1, minuti: 6,
+    da: 'maglione_lavanda', resa: 1,
+  },
+  {
+    id: 'sapone', nome: 'Sapone', emoji: '🧼', dove: 'tintoria', liv: 52,
+    prende: { tintura: 1, burro: 1 }, costo: 1, minuti: 5, da: 'sapone', resa: 1,
+  },
 ]
 
 export const PER_RICETTA = Object.fromEntries(RICETTE.map(r => [r.id, r]))
@@ -1024,6 +1087,13 @@ export function guastiDelleColture() {
        console. È il motivo per cui i nomi si controllano qui. */
     for (const s of c.stadi || [])
       if (s && !PEZZI[s]) g.push(`${c.id}: lo stadio «${s}» non è nell'atlante`)
+    /* Una coltura nata prima del suo foglio cresce **col disegno di
+       un'altra**, e dice qui quale sarà il suo: `aspetta` è il
+       prefisso dei sette riquadri. Il giorno che il primo c'è, la riga
+       va aggiornata — se no il campo resta viola di melanzane con il
+       suo disegno pronto a due cartelle di distanza. */
+    if (c.aspetta && PEZZI[`${c.aspetta}0`])
+      g.push(`${c.id}: aspetta «${c.aspetta}0…», che nell'atlante c'è già — prendi i suoi stadi`)
   }
   const idRicette = new Set()
   for (const r of RICETTE) {

@@ -451,6 +451,11 @@ export const CATEGORIE = [
       { macchina: 'caseificio', liv: 20, cresce: RINCARO, aspetta: 'caseificio' }),
     V('sartoria',      'dehors_rosa',       'Sartoria',         250,
       { macchina: 'sartoria', liv: 36, cresce: RINCARO, aspetta: 'sartoria' }),
+    /* La tintoria al 52, con la lavanda: il chiosco azzurro le fa da
+       faccia finché il foglio non porta le tinozze viola e le stoffe
+       stese ad asciugare. */
+    V('tintoria',      'dehors_azzurro',    'Tintoria',         300,
+      { macchina: 'tintoria', liv: 52, cresce: RINCARO, aspetta: 'tintoria' }),
 
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
