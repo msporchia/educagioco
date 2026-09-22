@@ -1089,8 +1089,11 @@ pentolone — il consiglio lo dice per nome.
 
 | catena | fasi | livelli |
 |:--|:--|:--|
-| il filo | 🌿 erba → 🥬 foraggio → 🧶 lana → 🧵 stoffa (telaio) → 🧥 maglione (sartoria) | 14, 36 |
+| il filo | 🌿 erba → 🥬 foraggio → 🧶 lana → 🧵 stoffa (telaio) → 🧥 maglione (sartoria) → 💜 maglione alla lavanda (tintoria) | 14, 36, 52 |
 | il pane | 🌾 grano → 🌾 farina (mulino) → 🍞 pane (panificio) | 16 |
+| il latte | 🌿 erba → 🥬 foraggio → 🥛 latte → 🧈 burro · 🧀 formaggio (caseificio) | 20 |
+| la torta | farina ✚ 🥚 uova ✚ 🧈 burro → 🎂 torta (panificio) | 20 |
+| la lavanda | 💐 lavanda → 🫙 tintura (tintoria) → 💜 maglione alla lavanda · 🧼 sapone (tintura ✚ burro) | 52 |
 
 Il pane è una pappa (0,60 di pancia, 🪙7 contro 🪙10 comprata: il 70%, dentro
 la fascia di `unita/coltivazioni`); il maglione è **una merce e basta**: la
@@ -1100,6 +1103,33 @@ addobbo sulla schiena pagato col granaio (`da: 'maglione'` al posto di
 di maglione non sta su una bestia — senza toccare la catena: erba, foraggio,
 lana, stoffa, maglione arriva alla sarta. Fornaio, maestra e l'oste nuovo
 chiedono il pane; la sarta vuole lana, stoffa e maglione.
+
+**Il caseificio (🪙200, al 20) sdoppia il latte**, che era l'unico prodotto
+di recinto con un'uscita sola: il burro è un ingrediente (torta, crostata,
+sapone) e il formaggio è insieme una pappa (0,85 di pancia, 🪙10 contro
+🪙14,2: il 71%) e un ingrediente. Cagliare non costa un gesto apposta — con
+🪙1 il formaggio starebbe al 78%, sul bordo della fascia. La **torta**
+(farina ✚ uova ✚ burro) è la prima ricetta che mette insieme tre catene, e
+non è una pappa: riempie la voglia di giocare, ed è il compleanno del cane.
+
+**La tintoria (🪙300, al 52) chiude la catena più lunga del gioco.** La
+lavanda è l'unica coltura che non finisce in nessuna bocca: ne esce la
+tintura, e da lì il **maglione alla lavanda** (sei fasi dall'erba: è il
+numero che `PROFONDITA` tiene d'occhio) e il **sapone**, che è il bagnetto.
+Il maglione alla lavanda è una merce e non un addobbo — entra un maglione,
+esce un maglione di un altro colore — e chi lo vuole è la sarta.
+
+**La cucina (🪙210, al 24) è dove le colture si incontrano**, e non stava nel
+progetto: è nata da un conto sui dati veri, che diceva che **dodici colture
+su tredici avevano una bocca sola**. Le sue quattro ricette prendono tutte
+roba di catene diverse — minestrone (patate, carote, cavolfiori: l'unica
+pappa, 0,50 di pancia), polenta (mais e formaggio), conserva (melanzane,
+peperoni, zucche), salsa (pomodori, cipolle, aglio) — e insieme alla
+crostata del panificio e al sacchetto profumato della tintoria portano ogni
+coltura ad avere **due sbocchi, di cui uno che la mescola con un'altra
+catena**. La regola è scritta in `unita/coltivazioni`, che pretende anche
+che qualcuno la chieda al banco, foss'anche solo a valle: l'erba non la
+compra nessuno, ma diventa lana, e la lana la vuole la sarta.
 
 **Le botteghe nascono prima del loro disegno**, ed è deliberato: prima si
 decide l'albero, poi si generano gli sprite. Una voce dichiara in `aspetta`

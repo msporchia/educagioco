@@ -1,20 +1,28 @@
 # 🌳 L'albero della produzione — progetto
 
-> **Stato: fatto fino alla tappa 3 del piano, più la sartoria (5) e il
-> pentolone (6)** — dal 21 settembre 2026. Nel gioco ci sono le fondamenta
-> (`PROFONDITA`, `dati/usi.js`, la dispensa), il telaio e la stoffa, il
-> panificio col pane e la farina, lo sdoppiamento del fienile, la sartoria
-> col maglione, e la pagina dell'albero. **Dal 22 settembre il maglione è
-> una merce e non un addobbo**: gli addobbi al collo e sulla schiena sono
-> sospesi finché non arrivano come sprite (`dati/addobbi.js`), quindi le
-> uscite «addobbo» di questa tabella — maglione, maglione alla lavanda,
-> sciarpa di lana, berretto — sono **il progetto per quando ci saranno**, e
-> oggi ognuna di quelle merci va alla sarta. Mancano il caseificio e la torta
-> (4), la lavanda e la tintoria (7), la coda (8) e **tutti gli sprite**:
-> ogni voce nata qui dichiara in `aspetta` il pezzo che il foglio le
-> porterà, e usa intanto un ripiego. Le tre decisioni in fondo sono state
-> prese: sì al terzo magazzino, sì allo sdoppiamento, sì alla merenda nel
-> panificio.
+> **Stato: fatte le tappe da 0 a 7, meno la coda (8)** — dal 22 settembre
+> 2026. Nel gioco ci sono le fondamenta (`PROFONDITA`, `dati/usi.js`, la
+> dispensa), il telaio e la stoffa, il panificio col pane e la farina, lo
+> sdoppiamento del fienile, la sartoria col maglione, la pagina
+> dell'albero, **il caseificio con burro, formaggio e torta** (4) e **la
+> lavanda con la tintoria** (7): tintura, maglione alla lavanda, sapone.
+> Manca la coda (8) — sciarpa e berretto — e mancano **tutti gli
+> sprite**: ogni voce nata qui dichiara in `aspetta` il pezzo che il
+> foglio le porterà e usa intanto un ripiego; l'elenco completo, da
+> spuntare, è in §6. Le tre decisioni in fondo sono state prese: sì al
+> terzo magazzino, sì allo sdoppiamento, sì alla merenda nel panificio.
+>
+> Due scostamenti dal progetto, tutti e due presi strada facendo e
+> scritti in §1b:
+>
+> - **il maglione alla lavanda è una merce e non un addobbo** (la
+>   tintoria prende un maglione e ne rende un altro; chi lo vuole è la
+>   sarta al banco);
+> - **c'è una macchina in più che il progetto non aveva: la cucina** (al
+>   24), nata da un conto fatto sui dati veri — dodici colture su tredici
+>   avevano una bocca sola. Con lei ogni coltura ha due sbocchi e almeno
+>   uno che la mescola con un'altra catena, e la regola adesso è scritta
+>   in un test.
 >
 > È la progettazione dell'albero a più fasi della [fattoria](fattoria.md):
 > prima si decide l'albero, poi si generano gli sprite giusti — l'inverso di
@@ -112,6 +120,73 @@ schiena di un cane), una **coccola che fa festa** (la torta riempie la
 voglia di giocare: è il compleanno del cane) e il **bagnetto** col sapone. `sciarpa_lana` e non `sciarpa`, perché
 `sciarpa` è già l'addobbo comprato a 🪙14: sono due cose, una si compra e
 una si tesse.
+
+## 1b. Le confluenze, e la cucina (aggiunta il 22 settembre 2026)
+
+*Non stava nel progetto*, ed è venuta da un conto fatto sui dati veri:
+contando, per ogni coltura, le ricette che la prendono e i mestieri che
+la chiedono, **dodici colture su tredici avevano una bocca sola** — e
+quasi sempre una bocca che prendeva solo lei. Il mais ne aveva una (il
+pastone) e nessun cliente al banco.
+
+Una bocca sola non è un bilanciamento sbagliato: è un orto che non si
+usa. Se una coltura serve a una cosa e basta, si semina quella cosa lì e
+il resto del campo non si tocca — mentre quello che rende vivo un orto è
+che due cose diverse, insieme, ne facciano una terza.
+
+La regola, che adesso è un test (`unita/coltivazioni`, sezione 1b-bis):
+
+- **almeno due ricette** prendono ogni coltura;
+- **almeno una è a confluenza** — prende roba di due catene diverse — o
+  porta a un prodotto che a sua volta entra in un'altra ricetta;
+- **almeno un cliente** la chiede, anche *a valle*: l'erba medica non la
+  compra nessuno, ma diventa lana, e la lana la vuole la sarta.
+
+**La cucina** (🍳, `cucina`, 🪙210, livello 24, `cresce: RINCARO`) è la
+macchina dove le colture si incontrano: quattro ricette, tutte a
+confluenza, e nessuna che prenda meno di due ingredienti.
+
+| ricetta | liv | prende | costo · min |
+|:--|--:|:--|:--|
+| `minestrone` | 24 | 1 patate + 1 carote + 1 cavolfiori | 🪙1 · 6 |
+| `polenta` | 24 | 2 mais + 1 formaggio | 🪙1 · 8 |
+| `conserva` | 33 | 1 melanzane + 1 peperoni + 1 zucche | 🪙1 · 7 |
+| `salsa` | 38 | 2 pomodori + 1 cipolle + 1 aglio | 🪙1 · 6 |
+
+E due ricette nelle botteghe che c'erano già, per le due colture che
+restavano fuori:
+
+| ricetta | dove | liv | prende | costo · min |
+|:--|:--|--:|:--|:--|
+| `crostata` | panificio | 44 | 1 farina + 1 fragole + 1 burro | 🪙2 · 7 |
+| `sacchetto` | tintoria | 52 | 2 lavanda + 1 stoffa | 🪙1 · 5 |
+
+**Il minestrone è l'unica pappa delle sei** (0,50 di pancia, 🪙4 contro
+🪙8,3 comprata: il 48%): le altre costano più di quanto una ciotola
+possa valere — la polenta 🪙15, cioè quasi il doppio del tetto — e il
+loro sbocco è il banco. Il prezzo vero del minestrone non sono le
+quattro monete: sono **tre campi liberi nello stesso momento**.
+
+Gli sbocchi, prima e dopo:
+
+| coltura | prima | dopo |
+|:--|:--|:--|
+| grano | mangime, becchime, farina | *invariata* |
+| erba | foraggio, prato fiorito | *invariata* |
+| carote | foraggio di carote | + minestrone |
+| mais | pastone | + polenta |
+| zucche | zuppa | + conserva |
+| patate | beverone | + minestrone |
+| cavolfiori | beverone | + minestrone |
+| pomodori | zuppa d'orto | + salsa |
+| melanzane | pastura | + conserva |
+| peperoni | pastura | + conserva |
+| cipolle | fiorume | + salsa |
+| aglio | fiorume | + salsa |
+| fragole | merenda | + crostata |
+| lavanda | tintura | + sacchetto |
+
+Con queste, **14 ricette su 38 mettono insieme due catene o più**.
 
 ## 2. Gli edifici
 
@@ -447,8 +522,56 @@ Tre cose che la funzione garantisce, e che il test difende:
 
 ## 6. Gli sprite da generare
 
-In ordine di tappa (§7). Ogni riga: com'è fatto in una riga, e il foglio a
-cui somigliare.
+**La lista è questa, e si spunta.** Tutto quello che nel gioco dichiara
+oggi un `aspetta` sta qui sotto: finché la casella è vuota quella roba
+si vede col ripiego scritto accanto — e il giorno che il foglio arriva,
+`guastiDelCatalogo` e `guastiDelleColture` diventano rossi finché la
+riga non prende il pezzo vero. Nessuno deve andarsele a cercare.
+
+### Edifici → `edifici_2.png` (8 pezzi, due prompt da quattro)
+
+| ✓ | pezzo | ripiego di oggi | dove |
+|:-:|:--|:--|:--|
+| ☐ | `dispensa` | `casetta_tetto_lungo` | catalogo, il terzo silo |
+| ☐ | `telaio` | `tettoia_fieno` | catalogo |
+| ☐ | `panificio` | `forno_pizza` | catalogo |
+| ☐ | `caseificio` | `casetta` | catalogo |
+| ☐ | `pentolone` | `calderone0` (animato) | catalogo |
+| ☐ | `cucina` | `forno_legna` | catalogo |
+| ☐ | `sartoria` | `dehors_rosa` | catalogo |
+| ☐ | `tintoria` | `dehors_azzurro` | catalogo |
+
+### Merci → `merci_2.png` e `merci_3.png` (16 pezzi, sei per foglio)
+
+| ✓ | pezzo | ripiego di oggi | merce |
+|:-:|:--|:--|:--|
+| ☐ | `merce_stoffa` | solo l'emoji 🧵 | stoffa |
+| ☐ | `merce_farina` | solo l'emoji 🌾 | farina |
+| ☐ | `merce_pane` | `pane` (l'arredo) | pane |
+| ☐ | `merce_maglione` | solo l'emoji 🧥 | maglione |
+| ☐ | `merce_burro` | solo l'emoji 🧈 | burro |
+| ☐ | `merce_formaggio` | solo l'emoji 🧀 | formaggio |
+| ☐ | `merce_torta` | `torta0` (l'arredo) | torta |
+| ☐ | `merce_crostata` | `crostatina` (l'arredo) | crostata |
+| ☐ | `merce_tintura` | solo l'emoji 🫙 | tintura |
+| ☐ | `merce_maglione_lavanda` | solo l'emoji 💜 | maglione alla lavanda |
+| ☐ | `merce_sapone` | solo l'emoji 🧼 | sapone |
+| ☐ | `merce_sacchetto` | `sacco_iuta` (l'arredo) | sacchetto profumato |
+| ☐ | `merce_minestrone` | solo l'emoji 🍜 | minestrone |
+| ☐ | `merce_salsa` | `marmellata0` (l'arredo) | salsa |
+| ☐ | `merce_conserva` | solo l'emoji 🥗 | conserva d'orto |
+| ☐ | `merce_polenta` | solo l'emoji 🍛 | polenta |
+
+E quando arriva la coda (tappa 8): `merce_sciarpa` e `merce_berretto`.
+
+### Colture → `campi_3.png` (8 pezzi)
+
+| ✓ | pezzo | ripiego di oggi | |
+|:-:|:--|:--|:--|
+| ☐ | `campo_lavanda0..6` | i sette stadi delle melanzane | sette riquadri in fila |
+| ☐ | `raccolto_lavanda` | `vaso_lavanda` (il giardino) | la cassetta |
+
+Sotto, com'è fatto ognuno e il foglio a cui somigliare.
 
 ### Edifici (`edifici_2.png`)
 
@@ -463,6 +586,7 @@ porta** che si legge da lontano. Larghi quattro celle, alti tre e mezzo.
 | `panificio` | casetta col tetto rosso, forno di pietra a cupola incassato nella facciata col fuoco acceso, sbuffo di fumo, pagnotte sul davanzale |
 | `caseificio` | casetta bianca col tetto verde, forme di formaggio gialle su una mensola davanti, un bidone del latte accanto alla porta |
 | `pentolone` | tettoia aperta di pali con un grande pentolone di rame sul fuoco, vapore, un mestolo — tre celle |
+| `cucina` | tettoia aperta di legno con un piano di lavoro, due fornelli a fuoco vivo, pentole e mestoli appesi a una trave, un ceppo con le verdure tagliate |
 | `sartoria` | casetta col tetto blu e la vetrina, un manichino col maglione in vetrina, insegna con forbici |
 | `tintoria` | casetta col tetto viola, davanti due tinozze di legno con l'acqua viola e stoffe stese ad asciugare su un filo |
 
@@ -483,6 +607,12 @@ po' dall'alto, su fondo magenta, senza ombra a macchia.
 | `merce_tintura` | vasetto di vetro con la tintura viola e un tappo di sughero |
 | `merce_maglione_lavanda` | lo stesso maglione piegato, viola lavanda |
 | `merce_sapone` | tre saponette viola e crema impilate, con una bollicina |
+| `merce_crostata` | crostata rotonda con la griglia di pasta e la confettura di fragole che si vede fra le strisce |
+| `merce_sacchetto` | sacchettino di tela grezza chiuso da un nastro, con tre steli di lavanda che escono dalla bocca |
+| `merce_minestrone` | scodella panciuta di terracotta con la minestra densa e i pezzi di verdura che spuntano, un cucchiaio di legno appoggiato al bordo |
+| `merce_salsa` | barattolo di vetro con la salsa rossa, tappo di metallo, un pomodorino accanto |
+| `merce_conserva` | vaso di vetro largo con gli ortaggi a pezzi sott'olio — viola, rosso e arancio a strati |
+| `merce_polenta` | fetta spessa di polenta gialla su un tagliere, con una scaglia di formaggio che si scioglie sopra |
 | `merce_sciarpa` | sciarpa di lana arrotolata a spirale, righe crema e rosse |
 | `merce_berretto` | berretto di lana crema col pompon |
 
@@ -601,10 +731,11 @@ Tappe committabili, ognuna giocabile da sola. Le unità girano a ogni tappa
 | 1 ✅ | **Il telaio e la stoffa** (14) | `stoffa`, `telaio`, la sarta la vuole, `NOMI[14]` | — | telaio, dispensa, `merce_stoffa` | `coltivazioni` 1b/8, `livelli-fattoria`, `mercato` (la stoffa si ordina dal 14) |
 | 2 ✅ | **Il panificio e il pane** (16) | `farina` nel mulino, `panificio`, `pane` cibo, la merenda passa al panificio, fornaio/maestra/oste | `Bestia.vue` ha una pappa in più: niente da fare | panificio, `merce_farina`, `merce_pane` (`pane` dell'atlante intanto) | `coltivazioni` 8 (rapporto 70%), `sblocchi`, `recinti` (la merenda ha cambiato casa) |
 | 3 ✅ | **La pagina dell'albero** | `dati/albero.js` | `viste/Albero.vue`, i tre ingressi, `pannello.tipo = 'albero'` | — | `unita/albero` nuovo, `consiglio` (+1 riga), `integrazione/albero` |
-| 4 | **Il caseificio e la torta** (20) | `burro`, `formaggio`, `caseificio`, `torta` + coccola «Festa», pasticcera/cuoco | `Bestia.vue`: la festa sotto la barra del gioco | caseificio, `merce_burro`, `merce_formaggio`, `merce_torta` | `coltivazioni` 8 (formaggio 71%), `bisogni` (coccola con `da`), `mercato` |
+| 4 ✅ | **Il caseificio e la torta** (20) | `burro`, `formaggio`, `caseificio`, `torta` + coccola «Festa», pasticcera/cuoco | `Bestia.vue`: la festa sotto la barra del gioco | caseificio, `merce_burro`, `merce_formaggio`, `merce_torta` | `coltivazioni` 8 (formaggio 71%), `bisogni` (coccola con `da`), `mercato` |
 | 5 ✅ | **La sartoria e il maglione** (36) | `maglione`, `sartoria`, l'addobbo `da: 'maglione'` | `Vestiario.vue`: un addobbo pagato col granaio mostra «ne hai 1» invece del prezzo | sartoria, `merce_maglione` | `addobbi` (si compra col granaio, non con le monete), `coltivazioni` 8 |
 | 6 ✅ | **Il pentolone** (22) | quattro ricette cambiano `dove`, `pentolone` in catalogo | — | pentolone | `recinti` (la catena intera passa dal pentolone), `consiglio`, `sblocchi` |
-| 7 | **La lavanda e la tintoria** (52) | `lavanda` coltura, `tintura`, `maglione_lavanda`, `sapone` + coccola «Bagnetto», lavandaia | — | `campi_3.png`, tintoria, `merce_tintura`, `merce_maglione_lavanda`, `merce_sapone` | `coltivazioni` 1b (la lavanda ha la bocca), `albero` (sei fasi), `mercato` |
+| 7 ✅ | **La lavanda e la tintoria** (52) | `lavanda` coltura, `tintura`, `maglione_lavanda` (**merce**, non addobbo), `sapone` + coccola «Bagnetto», lavandaia | — | `campi_3.png`, tintoria, `merce_tintura`, `merce_maglione_lavanda`, `merce_sapone` | `coltivazioni` 1b (la lavanda ha la bocca), `albero` (sei fasi), `mercato` |
+| 7b ✅ | **Le confluenze** (§1b) | la `cucina` con quattro ricette, `crostata`, `sacchetto`: ogni coltura ha due bocche | — | cucina, sei merci (§6) | `coltivazioni` 1b-bis, nuovo |
 | 8 | **La coda** (58, 64) | `sciarpa_lana`, `berretto` nella sartoria, addobbi collo e testa | — | `merce_sciarpa`, `merce_berretto` | `livelli-fattoria` (`ULTIMO`, i buchi), `addobbi` |
 
 La tappa 3 sta prima del caseificio apposta: da lì in poi le catene hanno

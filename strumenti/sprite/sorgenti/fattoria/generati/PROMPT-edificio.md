@@ -46,6 +46,46 @@ Le parti fra parentesi quadre si riempiono; il resto si manda così.
 > 2. [descrizione in una riga]
 > …
 
+## Quello che manca oggi, già scritto
+
+Otto edifici, cioè **due fogli da quattro**: sopra i quattro per riga
+di 1536 px ognuno scende sotto i 256 px di larghezza e i dettagli del
+mestiere — il telaio sotto la tettoia, le forme sulla mensola — non si
+leggono più a sessantaquattro pixel. La lista intera, con i ripieghi che
+usano intanto, sta in
+[`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md), §6.
+
+**Primo foglio** (`edifici_2.png`, 4 colonne × 1 riga, celle 384×1024 —
+oppure 2×2 con celle 768×512 se il generatore non regge una riga sola):
+
+> Da sinistra a destra:
+> 1. una tettoia di legno a un solo spiovente, sotto un telaio a mano
+>    con la stoffa a righe tesa e una matassa di lana appesa alla trave
+> 2. una casetta col tetto rosso e un forno di pietra a cupola incassato
+>    nella facciata, il fuoco acceso dentro, uno sbuffo di fumo dal
+>    comignolo e tre pagnotte sul davanzale
+> 3. una casetta bianca col tetto verde, tre forme di formaggio gialle
+>    su una mensola davanti alla porta e un bidone del latte di metallo
+>    appoggiato accanto
+> 4. una casetta bassa di pietra col tetto grigio e la porta doppia
+>    aperta, dentro si vedono scaffali con sacchi e barattoli — questa è
+>    **più piccola delle altre**: larga circa 128 px invece di 256
+
+**Secondo foglio** (`edifici_3.png`, stessa griglia):
+
+> Da sinistra a destra:
+> 1. una tettoia aperta di pali con un grande pentolone di rame sul
+>    fuoco, il vapore che sale e un mestolo di legno appoggiato al bordo
+> 2. una tettoia aperta di legno con un piano di lavoro, due fornelli a
+>    fuoco vivo, pentole e mestoli appesi a una trave e un ceppo con le
+>    verdure tagliate
+> 3. una casetta col tetto blu e una vetrina, dentro la vetrina un
+>    manichino con un maglione crema, e sopra la porta un'insegna con
+>    delle forbici (nessuna parola)
+> 4. una casetta col tetto viola, davanti due tinozze di legno piene
+>    d'acqua color lavanda e un filo teso con due stoffe viola stese ad
+>    asciugare
+
 ## Le misure, spiegate
 
 - **1536×1024 e scala 4** è la forma di `edifici.png`: il foglietto
