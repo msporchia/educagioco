@@ -861,8 +861,19 @@ await chiudi()
   }
   const dovE = posa('mercato')
   controlla('la bancarella si posa nella fattoria seminata', !!dovE)
-  posa('silo'); posa('silo_bianco')
+  /* **Tutti e tre i silos**, dispensa compresa: `metti` non mette
+     niente dove non c'è il magazzino di quella famiglia, e da quando
+     esistono le botteghe sedici merci hanno `silo: 'bottega'`. Con due
+     silos su tre «ogni scomparto pieno» era falso — quelle sedici
+     restavano a zero — e il banco pesca fra le merci del livello: il
+     giorno che il primo ordine cadeva su una di loro il tasto
+     «Consegna» nasceva spento e il test si fermava lì. Non tutte le
+     volte, il che è il modo peggiore di rompersi. */
+  posa('silo'); posa('silo_bianco'); posa('dispensa')
   for (const p of Object.keys(PRODOTTI)) f.metti(p, 8)
+  const vuoti = Object.keys(PRODOTTI).filter(p => !f.quantoHo(p))
+  uguale('e il granaio è pieno di tutto, che è il patto di questo blocco',
+         vuoti.join(', '), '')
 
   const prima = await leggiProfilo(page)
   await semina(page, {
