@@ -124,6 +124,12 @@ export const CIBI = [
      dispensa: fra il latte e il pastone, e vale per tutti. */
   { id: 'pane', nome: 'Pane', emoji: '🍞', prezzo: 0, da: 'pane',
     quanto: 0.60, per: ['cane', 'gatto', 'pappagallo', 'coniglio'] },
+  /* Il formaggio esce dal caseificio, dove il latte si sdoppia: è la
+     pappa più ricca che non chieda un porcile, e **cagliare non costa
+     un gesto** — con 🪙1 sarebbe al 78% della stessa pancia comprata,
+     dentro la fascia ma sul bordo. */
+  { id: 'formaggio', nome: 'Formaggio', emoji: '🧀', prezzo: 0, da: 'formaggio',
+    quanto: 0.85, per: ['cane', 'gatto', 'coniglio'] },
   { id: 'tartufi', nome: 'Tartufo', emoji: '🍄', prezzo: 0, da: 'tartufi',
     quanto: 0.90, per: ['cane', 'gatto', 'pappagallo'] },
 ]
@@ -147,6 +153,17 @@ export const COCCOLE = [
   { id: 'gioca',    bisogno: 'gioco', nome: 'Gioca con lui', emoji: '🎾', quanto: 0.55, prezzo: 1 },
   { id: 'copertina', bisogno: 'pelo', nome: 'Copertina di lana', emoji: '🧶',
     quanto: 0.95, prezzo: 0, da: 'lana' },
+  /* ── LA FESTA ────────────────────────────────────────────────────
+     La coccola del caseificio, e la ragione per cui la torta non è
+     soltanto roba da vendere al banco: è **il compleanno del cane** —
+     tre catene che si incontrano in una torta, e la voglia di giocare
+     torna piena.
+
+     Riempie **tutto** (1) e non quasi tutto come la copertina: sta in
+     fondo a una catena di cinque fasi, e chi ci arriva non deve
+     ritrovarsi la barra ancora da finire. */
+  { id: 'festa', bisogno: 'gioco', nome: 'Festa con la torta', emoji: '🎂',
+    quanto: 1, prezzo: 0, da: 'torta' },
 ]
 
 export const nuovo = (ora = Date.now()) =>

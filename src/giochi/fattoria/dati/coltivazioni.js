@@ -206,6 +206,17 @@ export const PRODOTTI = {
      pagato col granaio, ed è stato sospeso con gli altri della schiena
      — un'emoji di maglione non sta su una bestia (`dati/addobbi.js`). */
   maglione: { nome: 'Maglione', emoji: '🧥', silo: 'bottega', aspetta: 'merce_maglione' },
+  /* ── IL CASEIFICIO: IL LATTE CHE DIVENTA DUE COSE ────────────────
+     Il latte aveva un'uscita sola — la ciotola — ed era l'unico
+     prodotto di recinto che non portava da nessuna parte. Qui si
+     sdoppia: il burro è **un ingrediente** (entra nella torta, nella
+     crostata e nel sapone) e il formaggio è **una pappa** e un
+     ingrediente insieme (la polenta). */
+  burro:     { nome: 'Burro',     emoji: '🧈', silo: 'bottega', aspetta: 'merce_burro' },
+  formaggio: { nome: 'Formaggio', emoji: '🧀', silo: 'bottega', aspetta: 'merce_formaggio' },
+  /* La torta ha già una faccia nell'atlante — quella dell'arredo — e
+     la usa intanto, come il pane. */
+  torta:     { nome: 'Torta',     emoji: '🎂', silo: 'bottega', pezzo: 'torta0', aspetta: 'merce_torta' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -698,6 +709,32 @@ export const RICETTE = [
   {
     id: 'maglione', nome: 'Maglione', emoji: '🧥', dove: 'sartoria', liv: 36,
     prende: { stoffa: 2 }, costo: 2, minuti: 10, da: 'maglione', resa: 1,
+  },
+
+  /* ── il caseificio: il latte si sdoppia ──
+     **Il burro costa un gesto, il formaggio no**, e non è una svista:
+     cagliare è un taglio a freddo come il foraggio, e con 🪙1 il
+     formaggio arriverebbe al 78% della stessa pancia comprata — dentro
+     la fascia di `unita/coltivazioni`, ma sul bordo. Il burro invece
+     non è una pappa: il suo freno è il tempo di chi lo usa più su. */
+  {
+    id: 'burro', nome: 'Burro', emoji: '🧈', dove: 'caseificio', liv: 20,
+    prende: { latte: 1 }, costo: 1, minuti: 5, da: 'burro', resa: 1,
+  },
+  {
+    id: 'formaggio', nome: 'Formaggio', emoji: '🧀', dove: 'caseificio', liv: 20,
+    prende: { latte: 2 }, costo: 0, minuti: 10, da: 'formaggio', resa: 1,
+  },
+
+  /* ── la torta: tre rami che si incontrano ──
+     È la prima ricetta della fattoria che prende **tre cose da tre
+     catene diverse** — il grano macinato, le uova del pollaio, il
+     burro del caseificio — e per questo è l'ordine che il mercato paga
+     di più. Non è una pappa: riempie la **voglia di giocare**, ed è il
+     compleanno del cane (`COCCOLE` in `dati/bisogni.js`). */
+  {
+    id: 'torta', nome: 'Torta', emoji: '🎂', dove: 'panificio', liv: 20,
+    prende: { farina: 2, uova: 1, burro: 1 }, costo: 2, minuti: 8, da: 'torta', resa: 1,
   },
 ]
 

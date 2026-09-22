@@ -195,6 +195,10 @@ export const NOMI = {
   14: 'Il telaio',
   16: 'Il panificio',
   18: 'Le mucche',
+  /* Il caseificio arriva due livelli dopo le mucche, e non insieme: il
+     latte deve prima essere una cosa che si ha, se no si comprerebbe
+     una macchina per una roba mai vista. */
+  20: 'Il caseificio',
   /* ── DA QUI IN POI C'È L'ORTO ────────────────────────────────────
      Fra il porcile (26) e l'ultima cosa del catalogo (64) non arrivava
      **niente che lavorasse**: trentotto livelli di sole decorazioni,

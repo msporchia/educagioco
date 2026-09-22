@@ -444,6 +444,11 @@ export const CATEGORIE = [
         anima: ['calderone0', 'calderone1'] }),
     /* La sartoria al 36, con la vetrina: il chiosco rosa le fa da
        faccia finché il foglio non arriva. */
+    /* Il caseificio al 20, due livelli dopo le mucche: la casetta
+       bianca gli fa da faccia finché il foglio non porta quella col
+       tetto verde e le forme di formaggio sulla mensola. */
+    V('caseificio',    'casetta',           'Caseificio',       200,
+      { macchina: 'caseificio', liv: 20, cresce: RINCARO, aspetta: 'caseificio' }),
     V('sartoria',      'dehors_rosa',       'Sartoria',         250,
       { macchina: 'sartoria', liv: 36, cresce: RINCARO, aspetta: 'sartoria' }),
 

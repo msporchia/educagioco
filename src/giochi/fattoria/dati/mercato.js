@@ -82,12 +82,13 @@ export const CLIENTI = [
   { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖',
     vuole: ['grano', 'uova', 'latte', 'patate', 'farina', 'pane'] },
   { id: 'pasticcera',  nome: 'La pasticcera',  emoji: '🧁',
-    vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda'] },
+    vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda', 'burro', 'torta'] },
   { id: 'nonna',       nome: 'La nonna',       emoji: '👵' },
   { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳',
-    vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio'] },
+    vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio',
+            'formaggio', 'burro'] },
   { id: 'maestra',     nome: 'La maestra',     emoji: '🍎',
-    vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane'] },
+    vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane', 'torta'] },
   { id: 'bottegaio',   nome: 'Il bottegaio',   emoji: '🏪' },
   { id: 'veterinaria', nome: 'La veterinaria', emoji: '🩺',
     vuole: ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'pastura'] },
@@ -107,7 +108,7 @@ export const CLIENTI = [
   /* L'oste vuole quello che si mette in tavola: è il mestiere che
      tiene il pane fuori dalle mani del solo fornaio. */
   { id: 'oste',        nome: 'L\'oste',        emoji: '🍽️',
-    vuole: ['pane', 'tartufi', 'uova', 'latte'] },
+    vuole: ['pane', 'tartufi', 'uova', 'latte', 'formaggio'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
