@@ -505,8 +505,15 @@ export const CONCETTI = [
   { id: 'quante-volte', nome: 'Quante volte ci sta', segno: ':', peso: 2,
     prereq: ['divide-tabellina'],
     dritta: 'In 29 il 4 ci sta 7 volte (28) e avanza 1: si cerca il più vicino senza superare.',
+    /* in cima alla taglia il divisore ha due cifre — «in 87 quante volte
+       c'è 12?» → 7, col resto 3 — che è la tabellina grande del volo
+       (`GRANDI` in data/tabelline.js) letta al contrario e con l'avanzo.
+       Il quoziente resta dentro la tabellina: fino a 12 per l'11 e il
+       12, fino a 5 per il 13-14-15, come le caselle grandi che esistono */
     genera: t => {
-      const m = casuale(3, 9), q = casuale(2, fra(t, 9, 20))
+      const grande = t >= 0.75 && Math.random() < 0.5
+      const m = grande ? casuale(11, 15) : casuale(3, 9)
+      const q = grande ? casuale(2, m <= 12 ? 12 : 5) : casuale(2, fra(t, 9, 20))
       const a = q * m + casuale(1, m - 1)
       return { a, b: m, segno: ':', ris: q, testo: `in ${a} quante volte c'è ${m}?` }
     },

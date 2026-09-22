@@ -158,6 +158,9 @@ const MISURA = {
   'centinaia-meno': nonTondo(100),
   /* qui il risultato cala mentre il minuendo sale: si guarda da dove si parte */
   'arrotonda-meno': e => e.a,
+  /* e qui in cima alla taglia il divisore ha due cifre e il quoziente
+     torna piccolo (87:12 → 7): a crescere è il numero da cui si parte */
+  'quante-volte': e => e.a,
 }
 
 for (const c of procedure) {
