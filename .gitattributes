@@ -1,0 +1,32 @@
+# I fine riga sono LF, dentro il repo e su disco.
+#
+# Non c'era niente qui, e il repo era misto: 1124 file LF e 14 CRLF,
+# capitati così per l'editor con cui erano stati scritti. Non dava
+# nessun fastidio finché non si toccavano — poi uno strumento riscriveva
+# un file di quei quattordici, i fine riga cambiavano tutti, e il diff
+# diceva «1231 righe cambiate» per sette righe vere. Una modifica vera
+# annegata in un file intero non si rilegge, e il `git log -p` di quel
+# file smette di raccontare qualcosa.
+#
+# `text=auto` lascia che sia git a capire chi è testo e chi no (i PNG
+# dei fogli di sprite, gli zip dei set) e a normalizzare a LF quello che
+# entra nel repo; `eol=lf` dice che anche sul disco si scrive LF, su
+# qualunque sistema.
+* text=auto eol=lf
+
+# Dichiarati lo stesso, perché l'euristica di git guarda i primi ottomila
+# byte: un PNG che comincia con un'intestazione quasi testuale può
+# ingannarla, e un binario «normalizzato» è un binario rotto.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.mp3  binary
+*.wav  binary
+*.zip  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary

@@ -506,6 +506,18 @@ committate: non è ricostruibile da git.
 
 - **Il codice è in italiano**: nomi, funzioni, commenti (`colonnaAdd`,
   `guasti`, `forza`, `ripassoFraGiorni`).
+- **I fine riga sono LF**, e lo tiene fermo `.gitattributes` (`* text=auto
+  eol=lf`). Il repo era misto — 1124 file LF e 14 CRLF, capitati così per
+  l'editor con cui erano stati scritti — e non dava nessun fastidio finché
+  non si toccavano: poi uno strumento riscriveva uno di quei quattordici,
+  i fine riga cambiavano tutti, e il diff diceva «1231 righe cambiate» per
+  sette righe vere. Una modifica vera annegata in un file intero non si
+  rilegge, e il `git log -p` di quel file smette di raccontare qualcosa.
+  **Chi scrive un file con uno script se ne accorge tardi**: Python legge
+  con *universal newlines* e riscrive LF, quindi la conversione avviene
+  senza che nessuno l'abbia chiesta; e un `git diff` letto con `text=True`
+  perde i `\r`, quindi il patch che se ne ricava non si applica più e
+  `git apply` lo rifiuta senza dire perché.
 - **Niente dipendenze a runtime oltre a Vue.** Suoni sintetizzati, icone
   emoji, nessun file esterno: il build deve restare un HTML unico.
 - **La barra in cima è una sola** (`components/Barra.vue`): indietro sempre
