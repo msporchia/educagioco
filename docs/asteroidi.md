@@ -147,9 +147,21 @@ Si apre a fila finita, ed è **uno**: tabelline e conti a mente, a turno,
 mai più di tre di fila dello stesso. Non si sceglie niente a mano. **Si
 complica col livello**: a livello 1 escono le tabelline del 2 e del 3 e
 le somme entro il dieci, a livello 5 il 4 e il 6 e le somme col riporto,
-a livello 9 il 7×8, il 9×7 e le centinaia. Sopra il nove il livello alza
-solo la velocità. Quello che si sa da un pezzo esce comunque di rado: la
-marea vale anche qui.
+a livello 9 il 7×8, il 9×7 e le centinaia. Quello che si sa da un pezzo
+esce comunque di rado: la marea vale anche qui.
+
+**E dal nove continua oltre il catalogo.** Chi è arrivato lì le
+tabelline le sa tutte, e chiedergliele ancora, solo più in fretta, è
+logoramento: entrano le **tabelline grandi** — 11×8, 12×5, 13×4, e le
+stesse girate: 132 : 11 — poche a livello 8, la metà a 9, quasi tutte da
+11; e i conti a mente crescono di taglia col livello, non con quanto si
+sa: a livello 10 «spezza e moltiplica» chiede 7×86, «tre cifre» 640+380,
+«quante volte ci sta» divide anche per 12 col resto. Le grandi non
+contano da nessun'altra parte: non stanno nella fila, nella mappa delle
+tabelline né nel conto delle stelle. Sopra il dodici il livello alza
+solo la velocità. **Chi ha un record non riparte da 2×3**: la partita
+comincia due livelli sotto quello del record, e in dieci calcoli si è
+di nuovo dove si era arrivati.
 
 Il volo ha un **record** in punti, e lo dice prima di entrare: sul tasto
 della mappa c'è «record 1240 punti · livello 7 · 43 centri · serie 12».

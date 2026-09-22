@@ -583,8 +583,13 @@ committate: non è ricostruibile da git.
   **Un gioco può avere più sfide senza fine** (il castello ne ha
   quattro, una per terreno; gli asteroidi ne hanno una, il volo
   infinito — che è **uno**, tabelline e calcolo a mente insieme, con
-  la mira che sale col livello in `store/volo.js`, e il record letto
-  da `best.math` con `vecchio` finché un quaderno non c'è): il
+  la mira che sale col livello in `store/volo.js` e **continua oltre
+  il catalogo** dal livello 9 al 12 (le tabelline grandi di `GRANDI`,
+  che non sono fra le 55 caselle — `eCasella` — e la taglia dei
+  concetti dal livello invece che dallo SRS), col record letto
+  da `best.math` con `vecchio` finché un quaderno non c'è, e la
+  partita che **riparte due livelli sotto il record** invece che da
+  2×3: il
   manifesto le elenca in `senzaFine.sfide` — `{ chiave, nome, icona,
   eredita? }`, con misura, `che` e `dettagli` scritti una volta in cima
   come difetti — e ogni record sta in `campagne[chiave].primati[<sfida>]`.

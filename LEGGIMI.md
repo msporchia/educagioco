@@ -388,7 +388,8 @@ basta, quindi a livello nove scendeva 2×3 alla cadenza di 7×8.
 
 Il conto sta in `store/volo.js`, puro. **Il livello sposta una mira**
 sulla scala 0..1 della difficoltà: 0,15 a livello 1, 1 a livello 9, e
-oltre il nove cresce solo la velocità. Le due scale sono riportate a
+da lì continua **oltre il catalogo** fino a 1,4 a livello 12 (vedi
+sotto); oltre il dodici cresce solo la velocità. Le due scale sono riportate a
 0..1 — `stima` per le tabelline (2×2 → 0,14 · 3×7 → 0,5 · 9×9 → 0,93;
 ×1 e ×10 a zero, sono regole), la stazione del concetto per il calcolo
 a mente (somme entro il dieci → 0 · riporti → 0,6 · centinaia → 1) —
@@ -411,6 +412,53 @@ dell'ultima domanda. **La marea si somma**: il picker pesca nel pool
 della mira con la lentezza di quel mestiere, e per chi sa fino all'8 a
 livello 3 il 2-3 esce un terzo delle volte che uscirebbe senza
 (`unita/asteroidi` lo misura contro lo stesso volo senza marea).
+
+**Lo strato oltre: dal livello 9 il volo continua sopra il catalogo.**
+La scala finiva a uno — 9×9, «fino a mille» — e chi a livello otto
+aveva appena azzeccato trentacinque calcoli continuava a ricevere 20+80
+e 6×7, solo più in fretta: vincere sempre la stessa cosa è logoramento.
+Adesso la mira non si ferma a uno: sale fino a `MIRA_OLTRE` (1,4) a
+livello 12, e sopra l'uno ci stanno **le tabelline grandi** (`GRANDI` in
+`data/tabelline.js`: l'11 e il 12 interi, 2..5 del 13-14-15, ×1 e ×10
+escluse perché sono regole), ognuna con la sua altezza (`altezzaGrande`:
+11×2 a 1,06 appena sopra 9×9, 12×5 a 1,22, 12×12 a 1,40). Hanno la
+stessa forma di chiave delle altre (`math:8x11`) e il motore le segue
+allo stesso modo, ma **non sono caselle**: non contano fra le 55, non
+stanno in nessuna tappa, non hanno una riga nella mappa né un pezzo di
+stella né un gradino nella marea — `eCasella` è il filtro, e
+`unita/asteroidi` lo prova su ogni consumatore. Il calcolo a mente non
+ha chiavi nuove: per lui l'oltre è **la taglia**, che nel volo la dice
+il livello (`tagliaDelVolo`, 0 a livello 1, 1 al 12) e non la forza del
+concetto — un concetto consolidato usciva a taglia piena anche a livello
+1, uno no anche a livello 10. Nelle tappe la taglia resta quella della
+forza: passa a `esercizioDaChiave` come opzione, non come globale. Una
+grande su tre scende **girata** (96 : 12 = ?), e si segna sulla sua
+casella; «quante volte ci sta» a taglia piena divide anche per due
+cifre, col resto (in 87 quante volte c'è 12? → 7). Il boss del volo alto
+pesca fra le grandi, che per stima sono le più toste.
+
+Quello che esce, per livello (misurato in `unita/asteroidi`):
+
+| livello | mira | taglia | grandi nel magazzino delle tabelline | esempi |
+|---|---|---|---|---|
+| 3 | 0,36 | 0,18 | nessuna | 3×5 · 2×4 · 30+40 · 26+7 |
+| 7 | 0,79 | 0,55 | il 7% | 6×7 · 8×9 · 47+29 · 4×43 |
+| 8 | 0,89 | 0,64 | una su quattro | 7×8 · 11×3 · 350+200 · 4×61 |
+| 9 | 1,00 | 0,73 | la metà | 9×9 · 11×8 · 132 : 11 · 560+320 |
+| 10 | 1,13 | 0,82 | quasi tutte | 12×5 · 11×9 · 7×86 · in 87 quante volte c'è 12 |
+| 12 | 1,40 | 1,00 | tutte | 12×12 · 11×12 · 96 : 8 · 640+380 |
+
+**E la partita non riparte da 2×3 a chi ha un record.** Il livello
+partiva da 1 a ogni partita, e chi ieri era arrivato a 12 rifaceva
+cinque livelli di tabelline del 3 prima di rivedere le sue:
+`partenzaDalRecord` legge il livello dai dettagli del quaderno e parte
+**due gradini sotto** — dieci calcoli di scaldamento, dentro la sua
+fascia. Due e non tre perché è misurato sulle grandi: chi ha un record a
+11 riparte da 9, dove sono metà del magazzino, e le rivede nelle prime
+domande; da 8 sarebbero una su quattro, cioè forse nessuna prima del
+boss. Il livello a schermo parte da lì e sale da lì: sassi e velocità
+leggono il livello, e la partita di chi riparte da 9 dev'essere quella
+di livello 9 in tutto. Chi non ha un record parte da 1 come sempre.
 
 **Il record** è in punti (`senzaFine` di `mate` in `data/giochi.js`,
 misura `punti`), col racconto «livello 7 · 43 centri · serie 12». Il
