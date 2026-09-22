@@ -20,7 +20,7 @@
 
    Le tre fasce non sono un'etichetta: sono **quanto quella carta cambia
    la partita**. Una freccia in più raddoppia il fuoco, la calamita fa
-   solo volare le gemme un po' più da lontano.
+   solo volare le gemme invece di doverci passare sopra.
 
    Ma la fascia non è tutto il prezzo: conta anche **quanto quella carta
    è già cresciuta**. La prima freccia in più costa quello che dice la
@@ -64,8 +64,15 @@ export const MAZZO = [
   /* ── deboli: comodità, non potenza ── */
   { chiave: 'mela',     nome: 'Mela curativa',   icona: '🍎', fascia: 'debole', max: 9, intera: true,
     chiaro: 'ti torna un cuore, subito' },
-  { chiave: 'magnete',  nome: 'Calamita',        icona: '🧲', fascia: 'debole', max: 4,
-    chiaro: 'le gemme volano da te da più lontano' },
+  /* La calamita di base non c'è più: le gemme si prendono a contatto,
+     e questa carta è l'unico modo di averne una. La prima copia dà un
+     raggio piccolo, ogni copia dopo lo allarga (`CFG.calamita`): si
+     paga un posto che sarebbe andato a un'arma, e vale la pena solo se
+     la si potenzia — per questo il tetto è salito a cinque. Resta
+     debole perché è comodità, non potenza: non uccide nessuno, e la
+     maturità la rincara da sé copia dopo copia. */
+  { chiave: 'magnete',  nome: 'Calamita',        icona: '🧲', fascia: 'debole', max: 5,
+    chiaro: 'le gemme vicine volano da te: più copie, più lontano' },
   { chiave: 'stella',   nome: 'Stella fortunata',icona: '⭐', fascia: 'debole', max: 4,
     chiaro: 'ogni tanto una freccia fa il doppio del male' },
   /* Il dardo gelato ha preso il posto di «corpo piccolo», che rimpiccioliva

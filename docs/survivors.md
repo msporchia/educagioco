@@ -14,17 +14,26 @@ velocità, più vita, un colpo che rimbalza.
 
 ## Le cose si trovano in giro
 
-Questo gioco si giocava **da fermi**, ed era misurato: le gemme fuori
-dalla calamita camminavano da sole verso l'eroe, fino a correre più di lui
+Questo gioco si giocava **da fermi**, ed era misurato: le gemme
+camminavano da sole verso l'eroe, fino a correre più di lui
 — l'esperienza ti veniva addosso — e i mostri, da fermi, arrivavano comodi
 da tutti i lati mentre l'arco tirava da solo. Il dito serviva a scansare,
 e neanche sempre. Tre cose lo hanno rimesso in piedi, e ognuna è misurata
 col giocatore finto del banco (`motore/banco.js`).
 
-**Una gemma resta dove cade.** La calamita c'è ancora — è la sensazione da
-non perdere, e le carte «calamita» la allargano — ma quello che sta fuori
-aspetta. Chi non si muove raccoglie solo quello che gli cade sotto i
-piedi, e non sale più di livello.
+**Una gemma si prende passandoci sopra.** Nessuna calamita di base: resta
+dove cade finché non ci si va. C'era un risucchio di un quarto di schermo
+per tutti — «la sensazione da non perdere» — ed era la stessa cosa in
+piccolo: girando intorno a un mostro si raccoglieva tutto quello che
+cadeva. Una calamita si può **avere**, in due modi, e tutti e due si
+guadagnano: la carta 🧲 *Calamita*, che di suo tira da poco e si allarga
+copia dopo copia (prenderla costa un posto che sarebbe andato a un'arma,
+e vale la pena solo se la si potenzia), e l'oggetto calamita che ogni
+tanto compare a terra. Misurato sul banco: chi raccoglie fa una decina di
+livelli a tappa, chi sta al centro e schiva e basta meno di due — e prima
+ne faceva sei, perché l'esperienza gli arrivava addosso. La scaletta
+dell'esperienza (`soglia` in `dati/taratura.js`) è tarata su quello
+scarto: le gemme valgono meno di prima, e si vanno a cercare.
 
 **A terra compaiono degli oggetti**, ogni dieci-quindici secondi (più
 spesso con la marea) e qualche volta lasciati dai mostri grossi. Restano
@@ -72,7 +81,8 @@ della domanda che devi indovinare per averla.**
 Il prezzo si compone di due cose.
 
 **Quanto quella carta cambia la partita.** Una freccia in più raddoppia il
-fuoco; la calamita fa solo volare le gemme un po' più da lontano.
+fuoco; la calamita fa solo volare le gemme vicine invece di doverci
+passare sopra.
 
 | fascia | esempi | che domanda arriva |
 |---|---|---|

@@ -39,9 +39,25 @@ export const CFG = {
      gioco si giocava da fermi. L'esperienza ti veniva addosso, i mostri
      da fermo arrivavano comodi da tutti i lati, l'arco tirava da solo:
      il dito non serviva. Adesso le cose si trovano in giro, e ci si va.
-     La calamita resta — è la sensazione da non perdere — e le carte
-     `magnete` la allargano; quello che sta fuori aspetta. */
-  calamita: 115,            // da quanto lontano volano di scatto
+
+     ── e la calamita c'è solo con la carta ──
+     Di base una gemma si prende **a contatto**: il raggio dell'eroe più
+     un dito (`raggioEroe` + 12, in `muoviGemme`), e quella a un passo
+     resta lì finché non ci si passa sopra. C'era un raggio di 115 pixel
+     per tutti — «la sensazione da non perdere» — ed era l'altra metà
+     del giocare da fermi: con un quarto di schermo che tira da solo,
+     basta girare intorno a un mostro per raccogliere tutto quello che
+     cade. La carta **Calamita** (`magnete` in `mazzo.js`) è l'unico
+     modo di averne una: la prima copia dà `prima` pixel — un raggio e
+     mezzo dell'eroe oltre il contatto: si sente, ma non cambia come si
+     gioca — e ogni copia dopo ne aggiunge `inPiu`. A cinque copie sono
+     195 pixel, mezzo schermo: più del vecchio raggio di base, meno di
+     dove arrivava la vecchia carta al tetto (307). È così che prenderla
+     costa un posto che sarebbe andato a un'arma, e vale la pena solo se
+     la si potenzia. L'oggetto calamita a terra (`dati/oggetti.js`) è
+     l'altra strada, e da oggi vale di più: senza la carta è l'unico
+     risucchio che esiste. */
+  calamita: { prima: 55, inPiu: 35 },
 
   /* ── gli oggetti a terra (`dati/oggetti.js`) ──
      Compaiono a tempo, sempre dentro lo schermo ma mai sotto i piedi
@@ -196,8 +212,22 @@ export const CFG = {
    minuti: non perdeva perché era difficile, perdeva perché non gli era
    arrivato niente. Adesso i livelli piovono più fitti: si sbaglia, si
    riprova due minuti dopo, e intanto di conti se ne sono fatti il doppio
-   — che poi è il motivo per cui questo gioco esiste. */
-export const soglia = l => Math.round(2 + 0.9 * l + 0.15 * l * l)
+   — che poi è il motivo per cui questo gioco esiste.
+
+   **E si è abbassata di nuovo il giorno in cui è sparita la calamita di
+   base.** Non è un ritocco di gusto: una gemma adesso si prende solo
+   passandoci sopra, quindi il pilota del banco che gioca come prima ne
+   raccoglie circa la metà di quelle che cadono, e con la vecchia
+   scaletta (`2 + 0.9l + 0.15l²`) i livelli medi di una tappa scendevano
+   da 11,0 a 6,1 — cioè metà dei potenziamenti e **metà delle domande**,
+   che è il motivo per cui il gioco esiste. Da `0.5l + 0.08l²` un
+   giocatore che raccoglie bene rifà gli stessi undici livelli di prima,
+   e chi **sta al centro** (il pilota con `raccolta: 0`, che schiva e
+   basta) ne fa meno di due. Era quello il difetto da togliere: prima
+   quel giocatore lì arrivava lo stesso a 5,8, perché la calamita gli
+   portava l'esperienza addosso. Le gemme valgono meno e si vanno a
+   cercare: sono la stessa cosa detta due volte. */
+export const soglia = l => Math.round(2 + 0.6 * l + 0.08 * l * l)
 
 /* Quante stelle vale una tappa portata a casa: si contano le ferite, non
    i cuori rimasti — le carte cambiano i cuori massimi e un voto che
@@ -214,9 +244,23 @@ export const stellePerFerite = ferite =>
 export function guastiDellaTaratura(cfg = CFG) {
   const guasti = []
   const positivi = ['velocitaEroe', 'raggioEroe', 'cuoriIniziali', 'invulnerabilita',
-                    'cadenza', 'gittata', 'velocitaFreccia', 'calamita']
+                    'cadenza', 'gittata', 'velocitaFreccia']
   for (const k of positivi)
     if (!(cfg[k] > 0)) guasti.push(`CFG.${k} vale ${cfg[k]}`)
+
+  /* ── la calamita della carta ──
+     La prima copia deve arrivare oltre il contatto (se no la carta non
+     fa niente) e restare piccola (se no la prima copia è già il gioco
+     di prima); le copie in più devono allargarla, e a cinque copie non
+     deve superare mezzo schermo di telefono — a quel punto sarebbe di
+     nuovo «sto fermo e guardo», solo pagato. */
+  const cal = cfg.calamita || {}
+  if (!(cal.prima > cfg.raggioEroe + 12 && cal.prima <= 80))
+    guasti.push(`la prima Calamita tira da ${cal.prima} pixel: o non si sente o è già il gioco da fermi`)
+  if (!(cal.inPiu >= 20 && cal.inPiu <= 60))
+    guasti.push(`ogni copia di Calamita in più allarga di ${cal.inPiu} pixel`)
+  if (!(cal.prima + 4 * cal.inPiu <= 200))
+    guasti.push(`a cinque copie la Calamita tira da ${cal.prima + 4 * cal.inPiu} pixel: più di mezzo schermo`)
 
   /* una freccia più lenta del mostro che insegue non lo prende mai */
   if (!(cfg.velocitaFreccia > cfg.velocitaEroe))

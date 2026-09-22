@@ -746,8 +746,9 @@ export const AIUTI = {
       'Si scappa dai mostri, e si spara da soli: il dito serve a **muoversi** — e muoversi serve.',
       { titolo: 'Come si gioca', righe: [
         'Trascina il dito sullo schermo per spostarti.',
-        'Le gemme restano dove cadono, e ogni tanto a terra compare un cuore, una calamita o una cassa: stanno lì pochi secondi, bisogna andarli a prendere.',
-        'Ogni tanto una fila di mostri attraversa lo schermo (il bordo si accende di rosso): ci si sposta per non finirci dentro, dal buco o correndo via.',
+        'Le gemme restano dove cadono e si prendono passandoci sopra: chi sta fermo non sale di livello. Ogni tanto a terra compare un cuore, una calamita o una cassa, per pochi secondi: bisogna andarli a prendere.',
+        'La 🧲 Calamita è un potenziamento come gli altri: senza, le gemme non volano da sole.',
+        'Ogni tanto una fila di mostri attraversa lo schermo, dritta e senza inseguire nessuno: la si sente arrivare, e ci si sposta per non finirci dentro — dal buco o correndo via.',
         'Alcune armi — la lancia, il fendente — colpiscono **dove stai correndo**: per mirare si corre verso i mostri.',
         'Ogni tanto si sceglie un potenziamento. Prendere sempre lo stesso lo rende molto forte, prenderne di diversi copre più situazioni.',
       ] },

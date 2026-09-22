@@ -408,20 +408,50 @@ controlla('il riassunto conta le stelle',
    la metà di quello che rende il muoversi necessario (l'altra metà sono
    i muri, più sotto). */
 {
-  /* ── una gemma fuori dalla calamita non si muove ── */
+  /* ── senza la carta, una gemma si prende a contatto e basta ──
+     Niente calamita di base: quella a un passo resta lì, quella sotto i
+     piedi si prende. */
   const p = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(41), campo })
+  p.aNascere = -1e9; p.tOggetto = 1e9; p.tMuro = 1e9
   p.gemme.push({ x: 300, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
   p.gemme.push({ x: 60, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  p.gemme.push({ x: 20, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
   for (let i = 0; i < 30; i++) p.avanza(1 / 30)
+  uguale('senza la carta la calamita è zero', p.f.calamita, 0)
   const lontana = p.gemme.find(g => g.x > 200)
   controlla('una gemma lontana resta dove cade', lontana && lontana.x === 300 && lontana.y === 0,
             lontana ? `si è spostata a ${lontana.x.toFixed(1)}` : 'è sparita')
-  controlla('e quella dentro la calamita vola da sé', !p.gemme.some(g => g.x > 30 && g.x < 200),
-            'la gemma vicina è ancora a terra')
-  controlla('ed è stata presa', p.xp === 1, `xp ${p.xp}`)
+  const aUnPasso = p.gemme.find(g => g.x > 30 && g.x < 200)
+  controlla('e anche quella a un passo: nessuna calamita la tira',
+            aUnPasso && aUnPasso.x === 60, aUnPasso ? `si è spostata a ${aUnPasso.x.toFixed(1)}` : 'è sparita')
+  controlla('quella sotto i piedi è stata presa', p.xp === 1 && p.gemme.length === 2, `xp ${p.xp}`)
   /* e non c'è più nessuna deriva nella taratura: se torna, torna qui */
   controlla('la taratura non ha più una deriva delle gemme',
             !('derivaGemma' in CFG) && !('derivaMax' in CFG))
+  controlla('né un raggio di calamita per tutti', typeof CFG.calamita === 'object' && !(CFG.calamita > 0))
+
+  /* ── la carta Calamita: la prima copia tira da poco, ogni copia da più lontano ── */
+  const q = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(41), campo })
+  q.aNascere = -1e9; q.tOggetto = 1e9; q.tMuro = 1e9
+  q.potenziamenti.magnete = 1; q.ricalcola()
+  uguale('con una copia la calamita è quella dichiarata', q.f.calamita, CFG.calamita.prima)
+  q.gemme.push({ x: CFG.calamita.prima - 8, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  q.gemme.push({ x: CFG.calamita.prima + 20, y: 0, vx: 0, vy: 0, val: 1, fase: 0 })
+  for (let i = 0; i < 45; i++) q.avanza(1 / 30)
+  controlla('la gemma dentro il raggio vola da sé ed è presa', q.xp === 1 && q.gemme.length === 1,
+            `xp ${q.xp}, ${q.gemme.length} gemme a terra`)
+  controlla('quella appena fuori resta lì', q.gemme[0] && q.gemme[0].x === CFG.calamita.prima + 20)
+  const cinque = new Partita(new Regole(CAMPAGNA[0]), { rnd: caso(41), campo })
+  cinque.potenziamenti.magnete = 5; cinque.ricalcola()
+  uguale('a cinque copie il raggio è cresciuto di quattro passi',
+         cinque.f.calamita, CFG.calamita.prima + 4 * CFG.calamita.inPiu)
+  const mag = MAZZO.find(c => c.chiave === 'magnete')
+  uguale('e cinque è il tetto della carta', mag.max, 5)
+  controlla('al tetto la calamita sta dentro mezzo schermo',
+            CFG.calamita.prima + (mag.max - 1) * CFG.calamita.inPiu <= campo.larghezza / 2 + 5,
+            `${CFG.calamita.prima + (mag.max - 1) * CFG.calamita.inPiu} pixel`)
+  controlla('la prima copia si sente: tira oltre il contatto',
+            CFG.calamita.prima > CFG.raggioEroe + 12)
 }
 {
   /* ── gli oggetti compaiono a tempo, dentro lo schermo, e svaniscono ── */
@@ -712,8 +742,8 @@ controlla('il riassunto conta le stelle',
 
 /* ══════════ 5. le nove tappe si vincono davvero ══════════ */
 const VOLTE = 24
-const bravi = [], bimbi = []
-nota('tappa                     sa   distratto  sbaglia  schiva   fermo   livello  domande')
+const bravi = [], bimbi = [], centri = [], livelli = []
+nota('tappa                     sa   distratto  sbaglia  schiva   fermo   livello  domande  casse  liv.centro')
 nota('                        rispondere  (mira .3)  1su3  a sprazzi')
 for (const [i, t] of CAMPAGNA.entries()) {
   const r = new Regole(t)
@@ -734,6 +764,14 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const sbaglia = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.66, mira: 0.65, campo, rnd: caso(150 + i) })
   const bimbo = misura(r, { volte: VOLTE, bravura: 0.55, esattezza: 0.7, mira: 0.3, campo, rnd: caso(200 + i) })
   const fermo = misura(r, { volte: 12, fermo: true, campo, rnd: caso(300 + i) })
+  /* **chi sta al centro**: lo stesso giocatore bravo, che però le cose
+     per terra non le guarda (`raccolta: 0`) e raccoglie solo quello che
+     calpesta scappando. Da quando la calamita di base non c'è più, è la
+     misura di quanto conta andare in giro — ed è su questo scarto che è
+     tarata la scaletta dell'esperienza (`soglia` in `taratura.js`) */
+  const centro = misura(r, { volte: VOLTE, bravura: 1, esattezza: 0.95, mira: 0.65, raccolta: 0,
+                             campo, rnd: caso(400 + i) })
+  centri.push(centro.livelloMedio); livelli.push(sa.livelloMedio)
   bravi.push(sa.quota); bimbi.push(bimbo.quota)
   nota(`${(i + 1 + '. ' + t.nome).padEnd(24)}` +
        `${(sa.quota * 100).toFixed(0).padStart(4)}%` +
@@ -755,9 +793,20 @@ for (const [i, t] of CAMPAGNA.entries()) {
      a tutto passava le ultime tre tappe il 58-88% delle volte e adesso
      il 55-80%, quello a sprazzi il 33-58% e adesso il 10-40% — la
      campagna è più dura di un gradino perché ha una cosa in più da fare,
-     ed è voluto. Quello che non cambia è la forma: si scende. */
-  const soglieSa = [0.9, 0.85, 0.85, 0.75, 0.6, 0.65, 0.65, 0.5, 0.45]
-  const soglieBimbo = [0.8, 0.65, 0.6, 0.25, 0.1, 0.15, 0.15, 0.05, 0]
+     ed è voluto. Quello che non cambia è la forma: si scende.
+
+     **E ritarate di nuovo con la calamita.** Tolto il risucchio di base,
+     una gemma si prende passandoci sopra: il pilota ne raccoglie circa
+     la metà di quelle che cadono invece di quasi tutte, e ci arriva
+     curvando la fuga — quindi schiva un po' peggio. Misurato a parità
+     di scaletta, le nove tappe passavano dal 100·96·96·88·71·83·79·63·54%
+     al 100·83·83·67·63·71·58·38·63: la campagna costa un gradino in più
+     in mezzo, e a fine fila resta dov'era. Le soglie stanno sotto quei
+     numeri con un margine da rumore statistico (24 partite per casella:
+     una tappa sul filo oscilla di dieci punti da un seme all'altro), e
+     la forma resta quella — si scende. */
+  const soglieSa = [0.85, 0.7, 0.7, 0.55, 0.5, 0.5, 0.45, 0.3, 0.3]
+  const soglieBimbo = [0.8, 0.6, 0.45, 0.25, 0.15, 0.1, 0.1, 0, 0]
   controlla(`tappa ${i + 1} (${t.nome}): chi risponde bene la porta a casa`,
             sa.quota >= soglieSa[i], `ce la fa il ${(sa.quota * 100).toFixed(0)}%`)
   controlla(`tappa ${i + 1} (${t.nome}): chi schiva a sprazzi non resta fuori`,
@@ -782,6 +831,21 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const ultimi = bimbi.slice(-3).reduce((a, b) => a + b, 0) / 3
   controlla('la campagna diventa più dura andando avanti', ultimi < primi,
             `primo scalino ${(primi * 100).toFixed(0)}%, ultimo ${(ultimi * 100).toFixed(0)}%`)
+
+  /* ── l'esperienza si va a prendere, e la scaletta è tarata su questo ──
+     Chi raccoglie fa più o meno i livelli di sempre (una decina a
+     tappa); chi sta al centro e schiva e basta ne fa pochi, e non è
+     una punizione — è che le gemme restano dove cadono e nessuna
+     calamita gliele porta. Prima della carta-sola la differenza non
+     esisteva quasi: il risucchio di base faceva arrivare l'esperienza
+     addosso anche a lui. */
+  const media = v => v.reduce((a, b) => a + b, 0) / v.length
+  const chiRaccoglie = media(livelli), chiSta = media(centri)
+  nota(`livelli medi per tappa: chi raccoglie ${chiRaccoglie.toFixed(1)}, ` +
+       `chi sta al centro ${chiSta.toFixed(1)}`)
+  dentro('chi raccoglie fa più o meno i livelli di sempre', Number(chiRaccoglie.toFixed(1)), 8, 13)
+  controlla('e chi sta al centro molti di meno', chiSta < chiRaccoglie - 3,
+            `${chiSta.toFixed(1)} contro ${chiRaccoglie.toFixed(1)}`)
 }
 
 /* ══════════ 5-ter. SBAGLIARE LE DOMANDE SI PAGA ══════════

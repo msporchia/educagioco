@@ -5,7 +5,8 @@
    **andare in giro**: le gemme restano dove cadono, ogni tanto a terra
    compare un oggetto che sta lì qualche secondo e poi svanisce
    (`dati/oggetti.js`), e chi sta fermo raccoglie solo quello che gli
-   arriva sotto la calamita. Le gemme fanno salire di livello, e a ogni
+   cade sotto i piedi — una calamita c'è solo con la carta, o per
+   quattro secondi trovandola a terra. Le gemme fanno salire di livello, e a ogni
    livello la partita si ferma e chiede di scegliere una carta — che si
    paga con una domanda (`dati/mazzo.js` dice quanto).
 
@@ -280,7 +281,11 @@ export class Partita {
       gittata: CFG.gittata * (1 + 0.26 * lv('lunghe')),
       velColpo: CFG.velocitaFreccia * (1 + 0.16 * lv('lunghe')),
       raggioColpo: 5 + 1.6 * lv('grandi'),
-      calamita: CFG.calamita + 48 * lv('magnete'),
+      /* zero senza la carta: le gemme si prendono a contatto. La prima
+         copia dà il raggio piccolo, ogni copia dopo lo allarga (e nel
+         gioco libero le copie oltre il tetto valgono a frazioni, come
+         tutte le altre) */
+      calamita: lv('magnete') > 0 ? CFG.calamita.prima + CFG.calamita.inPiu * (lv('magnete') - 1) : 0,
       gelo: lv('gelo') ? 66 + 20 * lv('gelo') : 0,
       freno: Math.max(0.30, 1 - 0.20 * lv('gelo')),
       /* il dardo gelato: quante frecce su cento congelano, e quanto pesa
@@ -752,11 +757,15 @@ export class Partita {
       this.nemici = this.nemici.filter(n => n.vita > 0 && !n.sparito)
   }
 
-  /* ── le gemme: la calamita è la sensazione da non perdere ──
-     Ma vale solo dentro il suo raggio. Una gemma fuori **resta dov'è**:
-     prima si incamminava da sola, e arrivava a correre più dell'eroe —
-     era il gioco che si giocava da fermi. Chi la vuole ci va; quella
-     lasciata a tre schermate di distanza non torna più, come i mostri. */
+  /* ── le gemme: si prendono a contatto ──
+     Una gemma **resta dov'è** finché non ci si passa sopra: prima si
+     incamminava da sola, e arrivava a correre più dell'eroe — era il
+     gioco che si giocava da fermi. Poi c'era un raggio di base che la
+     faceva volare da un quarto di schermo, ed era la stessa cosa in
+     piccolo. Adesso tira solo la carta Calamita (`f.calamita`, zero
+     senza) e, per qualche secondo, quella trovata a terra. Chi la vuole
+     ci va; quella lasciata a tre schermate di distanza non torna più,
+     come i mostri. */
   muoviGemme(dt) {
     const e = this.eroe
     const cal = this.f.calamita
@@ -772,7 +781,7 @@ export class Partita {
       if (risucchio) {
         /* la calamita trovata a terra: tutto vola, anche da lontano */
         g.vx += gdx / gd * 1100 * dt; g.vy += gdy / gd * 1100 * dt
-      } else if (gd < cal) {
+      } else if (cal > 0 && gd < cal) {
         const tira = 260 + (cal - gd) * 5.5
         g.vx += gdx / gd * tira * dt; g.vy += gdy / gd * tira * dt
       }
