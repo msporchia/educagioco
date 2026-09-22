@@ -19,7 +19,7 @@
    E poi il volo infinito, uno per tabelline e calcolo a mente insieme,
    che si complica col livello della partita (`store/volo.js`).
    ═══════════════════════════════════════════════════════════════════ */
-import { CAMPAGNA, calcoliTabellina, fattoriDi, chiaveCalcolo }
+import { CAMPAGNA, calcoliTabellina, fattoriDi, chiaveCalcolo, GRANDI, eGrande, eCasella }
   from '../../src/data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID } from '../../src/data/calcolo.js'
 import { SCALETTA, CAPITOLI, VOLO, superata, raggiunta,
@@ -29,14 +29,18 @@ import { SCALETTA, CAPITOLI, VOLO, superata, raggiunta,
    (`scaletta`, la fila filtrata dell'interruttore di una volta) */
 import * as ASTEROIDI from '../../src/data/asteroidi.js'
 import { poolTappa, chiaveDelBoss, dellaTabellina, insiemeDi,
-         chiaviDelle, eNulla, CUORE, TUTTE_LE_TABELLE, banale, stima }
+         chiaviDelle, eNulla, CUORE, TUTTE_LE_TABELLE, banale, stima, distrattoriTabellina }
   from '../../src/store/tabelline.js'
-import { miraDelLivello, LIVELLO_TETTO, MIRA_MIN, altezzaTabellina, altezzaMente,
+import { miraDelLivello, LIVELLO_TETTO, LIVELLO_CATALOGO, MIRA_MIN, MIRA_OLTRE,
+         altezzaTabellina, altezzaMente, altezzaGrande, tagliaDelVolo,
          poolVoloTabelline, poolVoloMente, creaAlternanza, MAX_DI_FILA, MAGAZZINI,
-         chiaviDelVolo, pescaPesati }
+         chiaviDelVolo, pescaPesati, caselleDelBoss, giraLaGrande,
+         CASELLE_DEL_VOLO }
   from '../../src/store/volo.js'
-import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo }
+import { creaMiscela, QUOTA_TAPPA, poolDi, eNuovo, tabellineSalde, saldo,
+         esercizioDaChiave }
   from '../../src/store/calcolo.js'
+import { tabellineIntereDi, abilita, misure } from '../../src/store/progressi.js'
 import { createPicker, record, newItem, strength, IVL, SRS } from '../../src/store/srs.js'
 import { frontieraTabelline, mareaTabelline, frontieraCalcolo, mareaCalcolo,
          lentezzaDa, MAREA_MAX, RIENTRO } from '../../src/store/marea.js'
@@ -349,9 +353,10 @@ const PROFILI = T => ({
    si alternano, e la marea resta sotto. */
 {
   uguale('a livello 1 la mira sta in fondo', miraDelLivello(1), MIRA_MIN)
-  uguale('al tetto sta in cima', miraDelLivello(LIVELLO_TETTO), 1)
+  uguale('in cima al catalogo sta a uno', miraDelLivello(LIVELLO_CATALOGO), 1)
+  uguale('al tetto sta oltre', miraDelLivello(LIVELLO_TETTO), MIRA_OLTRE)
   uguale('e sopra il tetto non sale più: da lì cresce solo la velocità',
-         miraDelLivello(LIVELLO_TETTO + 5), 1)
+         miraDelLivello(LIVELLO_TETTO + 5), MIRA_OLTRE)
   controlla('in mezzo cresce', miraDelLivello(5) > miraDelLivello(2) && miraDelLivello(5) < miraDelLivello(8))
 
   /* le due scale, riportate a 0..1: 2×2 in fondo, 9×9 in cima; le somme
@@ -367,13 +372,15 @@ const PROFILI = T => ({
 
   /* la campana, contata su molte partite: cosa prevale a ogni livello */
   const contaTab = lv => {
-    const n = { basse: 0, alte: 0, tot: 0 }
+    const n = { basse: 0, alte: 0, grandi: 0, tot: 0 }
     for (let g = 0; g < 200; g++)
       for (const k of poolVoloTabelline(lv)) {
         const [lo, hi] = fattoriDi(k)
         n.tot++
         if (hi <= 5 && !banale(k)) n.basse++
-        if (lo >= 6 && hi >= 6) n.alte++
+        // in cima al catalogo, e le grandi che dal nove cominciano a entrare
+        if ((lo >= 6 && hi >= 6) || eGrande(k)) n.alte++
+        if (eGrande(k)) n.grandi++
       }
     return n
   }
@@ -381,7 +388,7 @@ const PROFILI = T => ({
   controlla('a livello 1 prevalgono le tabelline basse',
             t1.basse * 2 > t1.tot && t1.alte * 10 < t1.tot,
             `basse ${t1.basse}, alte ${t1.alte} su ${t1.tot}`)
-  controlla('a livello 9 prevalgono 6-7-8-9 per 6-7-8-9',
+  controlla('a livello 9 prevalgono 6-7-8-9 per 6-7-8-9, e le grandi',
             t9.alte * 2 > t9.tot && t9.basse * 10 < t9.tot,
             `basse ${t9.basse}, alte ${t9.alte} su ${t9.tot}`)
   controlla('e ×1 e ×10 non si prendono il volo a livello 1',
@@ -439,6 +446,110 @@ const PROFILI = T => ({
   controlla('e da tutti i concetti a mente', VOLO.concetti.every(id => chiaviDi(id).some(k => tutte.includes(k))))
   controlla('il volo è uno e non ha portata: non è una tappa della fila',
             VOLO.i === -1 && VOLO.portata === undefined && VOLO.bersaglio === Infinity)
+}
+
+/* ═══════════ 5b. LO STRATO OLTRE: IL VOLO CONTINUA SOPRA IL CATALOGO ═══════════
+   A livello nove il catalogo è finito — 9×9, «fino a mille» — e chi va
+   avanti non deve rifare 20+80: entrano le tabelline grandi (11×8,
+   12×5) e i concetti a mente alla taglia del livello. E le chiavi nuove
+   non entrano da nessun'altra parte: né nella fila, né nella mappa, né
+   nei conti, né nella marea. */
+{
+  /* ── le grandi, da dove e quanto ── */
+  controlla('le grandi sono l\'11 e il 12 interi, e le prime del 13-14-15',
+            GRANDI.includes('math:8x11') && GRANDI.includes('math:5x12') &&
+            GRANDI.includes('math:12x12') && GRANDI.includes('math:4x13') &&
+            !GRANDI.includes('math:7x13') && GRANDI.every(eGrande))
+  controlla('nessuna grande è ×1 o ×10: quelle sono regole',
+            GRANDI.every(k => !banale(k)) && GRANDI.every(k => !eNulla(k)))
+  controlla('e ogni grande sta sopra l\'uno, sotto la mira del tetto',
+            GRANDI.every(k => altezzaGrande(k) > 1 && altezzaGrande(k) <= MIRA_OLTRE))
+  controlla('11×2 sta sotto 12×5, che sta sotto 12×12',
+            altezzaGrande('math:2x11') < altezzaGrande('math:5x12') &&
+            altezzaGrande('math:5x12') < altezzaGrande('math:12x12'))
+  controlla('e per stima sono più toste di 9×9: sono il boss del volo alto',
+            stima('math:8x11') > stima('math:9x9'))
+
+  const quota = (lv, giri = 200) => {
+    let g = 0, t = 0
+    for (let i = 0; i < giri; i++)
+      for (const k of poolVoloTabelline(lv)) { t++; if (eGrande(k)) g++ }
+    return g / t
+  }
+  const q3 = quota(3), q7 = quota(7), q10 = quota(10)
+  uguale('a livello 3 non esce mai una grande', q3, 0)
+  controlla('a livello 7 cominciano, poche', q7 > 0 && q7 < 0.2, `${(q7 * 100).toFixed(0)}%`)
+  controlla('a livello 10 escono più della metà delle volte', q10 > 0.5, `${(q10 * 100).toFixed(0)}%`)
+  nota(`grandi nel volo: ${(q7 * 100).toFixed(0)}% a livello 7, ${(quota(9) * 100).toFixed(0)}% a 9, ${(q10 * 100).toFixed(0)}% a 10`)
+  const varie = new Set(Array.from({ length: 100 }, () => poolVoloTabelline(11)).flat())
+  controlla('a livello 11 le grandi che escono sono tante, non una', varie.size >= 15, `${varie.size} diverse`)
+
+  /* ── la taglia dal livello ── */
+  uguale('a livello 1 la taglia è zero', tagliaDelVolo(1), 0)
+  uguale('al tetto è piena', tagliaDelVolo(LIVELLO_TETTO), 1)
+  controlla('e in mezzo cresce', tagliaDelVolo(3) < tagliaDelVolo(8) && tagliaDelVolo(8) < tagliaDelVolo(11))
+  const somme = lv => Array.from({ length: 100 }, () =>
+    esercizioDaChiave('calc:tre-cifre-somma', {}, ORA, { taglia: tagliaDelVolo(lv) }))
+  uguale('a livello 3 una somma a tre cifre non arriva mai a 800',
+         somme(3).filter(e => e.a + e.b >= 800).length, 0)
+  const grosse = somme(10).filter(e => e.a + e.b >= 600).length
+  controlla('a livello 10 passa i 600 più della metà delle volte', grosse > 50, `${grosse} su 100`)
+  const spezza = lv => Array.from({ length: 100 }, () =>
+    esercizioDaChiave('calc:spezza-prodotto', {}, ORA,
+                      { taglia: tagliaDelVolo(lv), tabelline: [2, 3, 4, 5, 6, 7, 8, 9] }))
+  controlla('a livello 3 «spezza» resta sotto il 50', spezza(3).every(e => e.b < 50))
+  controlla('a livello 10 arriva oltre il 60', spezza(10).some(e => e.b > 60))
+  nota(`tre cifre a livello 10: ${somme(10).slice(0, 3).map(e => e.testo.replace(' = ?', '')).join(' · ')}`)
+  nota(`«spezza» a livello 10: ${spezza(10).slice(0, 3).map(e => e.testo.replace(' = ?', '')).join(' · ')}`)
+  /* e senza l'opzione la taglia resta quella della forza: nelle tappe
+     non cambia niente, e con la testa vuota è zero */
+  controlla('senza opzione la taglia viene dallo SRS, come nelle tappe',
+            Array.from({ length: 50 }, () => esercizioDaChiave('calc:tre-cifre-somma', {}, ORA))
+              .every(e => e.a <= 480 && e.b <= 210))
+  /* le divisioni grandi: la casella girata, e «quante volte» a due cifre */
+  const girate = Array.from({ length: 300 }, () => giraLaGrande('math:8x12')).filter(Boolean).length
+  controlla('una grande su tre esce girata (96 : 12)', girate > 50 && girate < 150, `${girate} su 300`)
+  controlla('una casella del catalogo non si gira mai', !Array.from({ length: 50 }, () => giraLaGrande('math:7x8')).some(Boolean))
+  const volte = t => Array.from({ length: 200 }, () =>
+    esercizioDaChiave('calc:quante-volte', {}, ORA, { taglia: t }))
+  controlla('«quante volte» a taglia bassa ha divisori a una cifra', volte(0.3).every(e => e.b <= 9))
+  controlla('e a taglia piena anche a due cifre, col resto',
+            volte(1).some(e => e.b >= 11 && e.a % e.b !== 0 && e.ris === Math.floor(e.a / e.b)))
+
+  /* ── i distrattori di una grande restano credibili ── */
+  const vicini = (a, b) => distrattoriTabellina(a, b, 5).every(v =>
+    v > 0 && v !== a * b && Math.abs(v - a * b) <= Math.max(a, b) + 1)
+  controlla('i falsi di 12×7 stanno attorno a 84, a un fattore di distanza', vicini(12, 7))
+  controlla('e quelli di 11×8 e 12×5 pure', vicini(11, 8) && vicini(12, 5))
+  uguale('e sono cinque, distinti', new Set(distrattoriTabellina(12, 7, 5)).size, 5)
+
+  /* ── il boss del volo alto chiede una grande, quello basso no ── */
+  const nessuno = {}
+  const bossA = Array.from({ length: 30 }, () =>
+    chiaveDelBoss(VOLO, null, nessuno, ORA, Math.random, null, caselleDelBoss(3)))
+  const bossB = Array.from({ length: 30 }, () =>
+    chiaveDelBoss(VOLO, null, nessuno, ORA, Math.random, null, caselleDelBoss(11)))
+  controlla('a livello 3 il boss del volo non chiede una grande', !bossA.some(eGrande))
+  controlla('a livello 11 sì', bossB.every(eGrande), bossB.slice(0, 3).join(', '))
+  controlla('e le caselle del boss sono sempre almeno le 55', caselleDelBoss(1).length === 55)
+
+  /* ── le chiavi nuove non entrano da nessun'altra parte ── */
+  const tutteLeGrandi = saputo(GRANDI)
+  controlla('nessuna grande è in una tappa della fila',
+            SCALETTA.every(v => v.tipo !== 'tab' || chiaviDelle(v.T.tabelle).every(eCasella)))
+  controlla('e nessuna nel pool di una tappa',
+            CAMPAGNA.every(T => poolTappa(T, tutteLeGrandi, ORA).every(eCasella)))
+  uguale('sapere tutte le grandi non fa nessuna tabellina intera',
+         tabellineIntereDi({ items: tutteLeGrandi }, ORA).length, 0)
+  uguale('né sposta la frontiera della marea', frontieraTabelline(tutteLeGrandi), 0)
+  uguale('né conta fra le 55 caselle sicure', abilita({ items: tutteLeGrandi }, 'mate', ORA).imparati, 0)
+  uguale('né fra gli «imparati» dei traguardi', misure({ items: tutteLeGrandi }, ORA).imparati('math:'), 0)
+  const conLe55 = saputo([...chiaviDelle(TUTTE_LE_TABELLE), ...GRANDI])
+  uguale('chi sa tutto ha 55 su 55, non di più', abilita({ items: conLe55 }, 'mate', ORA).imparati, 55)
+  controlla('ma la marea le lascia alla curva normale: stanno sopra la frontiera',
+            GRANDI.every(k => mareaTabelline(conLe55, ORA)(k) === 1))
+  controlla('e il volo le ha tutte fra le sue chiavi',
+            GRANDI.every(k => chiaviDelVolo().includes(k)) && CASELLE_DEL_VOLO.length === 55 + GRANDI.length)
 }
 
 /* ═══════════════════════════════════════════════════════════════════

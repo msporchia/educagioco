@@ -120,14 +120,19 @@ export function tagliaDi(id, items, now = Date.now()) {
 }
 
 /* il contesto che serve ai generatori: la taglia del concetto e le
-   tabelline su cui può appoggiarsi */
-export function contestoDi(id, items, now = Date.now(), tabelline = null) {
-  return { taglia: tagliaDi(id, items, now),
+   tabelline su cui può appoggiarsi. Nelle tappe la taglia è quella
+   della forza (`tagliaDi`): il concetto cresce con chi lo consolida.
+   Nel volo infinito no — lì la dice il livello della partita
+   (`tagliaDelVolo` in `store/volo.js`), e chi la sa la passa in
+   `opzioni.taglia`: un parametro, non un globale, così una tappa e un
+   volo nello stesso profilo restano due cose. */
+export function contestoDi(id, items, now = Date.now(), { tabelline = null, taglia = null } = {}) {
+  return { taglia: taglia ?? tagliaDi(id, items, now),
            tabelline: tabelline || tabellineSalde(items, now) }
 }
 
-export function esercizioDaChiave(chiave, items, now = Date.now(), tabelline = null) {
-  return esercizioDi(chiave, contestoDi(concettoDiChiave(chiave), items, now, tabelline))
+export function esercizioDaChiave(chiave, items, now = Date.now(), opzioni = {}) {
+  return esercizioDi(chiave, contestoDi(concettoDiChiave(chiave), items, now, opzioni))
 }
 
 /* ═══════════ IL POOL DI UNA SESSIONE ═══════════

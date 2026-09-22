@@ -33,14 +33,15 @@ import { state, item, answer, level, addCoins,
 import { apertaQui } from '../data/portata-giochi.js'
 import { createPicker } from '../store/srs.js'
 import { mareaTabelline, mareaCalcolo } from '../store/marea.js'
-import { CAMPAGNA, chiaveCalcolo, fattoriDi } from '../data/tabelline.js'
+import { CAMPAGNA, chiaveCalcolo, fattoriDi, eGrande } from '../data/tabelline.js'
 import { STAZIONI, CONCETTI_PER_ID, concettoDiChiave, eFatto,
          distrattoriDi, appartiene } from '../data/calcolo.js'
 import { poolDi, esercizioDaChiave, eNuovo, stellaDi as stellaStazione,
          creaMiscela } from '../store/calcolo.js'
 import { poolTappa, chiaveDelBoss, dellaTabellina,
-         insiemeDi, chiaviDelle } from '../store/tabelline.js'
-import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza }
+         insiemeDi, chiaviDelle, distrattoriTabellina } from '../store/tabelline.js'
+import { poolVoloTabelline, poolVoloMente, chiaviDelVolo, creaAlternanza,
+         tagliaDelVolo, caselleDelBoss, giraLaGrande }
   from '../store/volo.js'
 import { CAPITOLI, SCALETTA, VOLO, superata, dopoDi, daAssaggiare,
          posizioneOra, filaDi } from '../data/asteroidi.js'
@@ -370,22 +371,6 @@ function difficolta(lv, peso = 1, volo = false) {
            quanti: Math.max(3, quanti - (peso - 1)) }
 }
 
-function distrattori(a, b, n) {
-  const c = [a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b, a * b + a, a * b - a,
-             a * b + b, a * b - b, a * b + 1, a * b - 1, a * b + 10, a * b - 10]
-  const out = [], visti = new Set([a * b])
-  for (const v of c.sort(() => Math.random() - 0.5)) {
-    if (v > 0 && v <= 200 && !visti.has(v)) { visti.add(v); out.push(v) }
-    if (out.length === n) break
-  }
-  let g = 0
-  while (out.length < n && g++ < 300) {
-    const v = a * b + Math.floor(Math.random() * 21) - 10
-    if (v > 0 && !visti.has(v)) { visti.add(v); out.push(v) }
-  }
-  return out
-}
-
 /* ═══════════ IL BOSS VIENE DAL PIANETA DOPO ═══════════
    Un boss che chiede una domanda come tutte le altre non è un boss: è una
    domanda con la musica. Quello che lo rende un avversario è che **arriva
@@ -422,9 +407,12 @@ function distrattori(a, b, n) {
    che il grafo esiste per evitare. */
 function chiaveDalDopo() {
   const t = prossima.value
-  // `domanda.chiave` è quella appena chiesta: nemmeno il boss la ripete
+  // `domanda.chiave` è quella appena chiesta: nemmeno il boss la ripete.
+  // Nel volo le caselle sono le sue: sopra il livello nove ci sono
+  // anche le grandi, che per stima sono le più toste e quindi il boss
   if (!mente.value) return chiaveDelBoss(tabellineInGioco(), t, state.profile.items,
-                                         Date.now(), Math.random, domanda.chiave)
+                                         Date.now(), Math.random, domanda.chiave,
+                                         campagna.value ? null : caselleDelBoss(hud.livello))
   if (t) {
     // che `t` abbia dei concetti nuovi lo garantisce `prossima`: una tappa
     // dopo che non insegna niente non è una tappa da assaggiare
@@ -458,6 +446,9 @@ function preparaTabellina(k, davanti = null) {
   else {
     if (tabelle.value.includes(lo)) versi.push([lo, hi])
     if (tabelle.value.includes(hi) && hi !== lo) versi.push([hi, lo])
+    // una grande si legge in tutti e due i versi: 8×11 e 11×8 sono la
+    // stessa casella, e «la tabellina dell'11» non è fra quelle in gioco
+    if (eGrande(k) && hi !== lo) versi.push([hi, lo])
   }
   const [a, b] = versi.length ? versi[Math.floor(Math.random() * versi.length)] : [lo, hi]
   esercizio = null
@@ -465,15 +456,34 @@ function preparaTabellina(k, davanti = null) {
   domanda.testo = `${a} × ${b} = ?`
   domanda.peso = 1
   domanda.difficile = (Math.min(a, b) >= 6 && Math.max(a, b) >= 6) || a * b >= 48
+  /* LA GRANDE GIRATA: nel volo una grande su tre scende come divisione
+     (96 : 12 = ?), che è la stessa casella letta al contrario — si segna
+     su 8×12, e i falsi sono quelli di una divisione (`distrattoriDi`),
+     non quelli di un prodotto. Il peso è quello di un conto a mente da
+     due: si spezza, non si ricorda. */
+  if (!campagna.value && giraLaGrande(k)) {
+    domanda.a = a * b; domanda.b = a; domanda.ris = b
+    domanda.testo = `${a * b} : ${a} = ?`
+    domanda.peso = 2; domanda.difficile = true
+    esercizio = { a: a * b, b: a, segno: ':', ris: b }
+  }
 }
 
 function preparaMente(k) {
-  const e = esercizioDaChiave(k, state.profile.items)
+  /* nel volo la taglia la dice il livello (`tagliaDelVolo`), nelle tappe
+     la forza del concetto: è il terzo strato del volo per il calcolo a
+     mente, che non ha chiavi nuove — a livello 10 «spezza e moltiplica»
+     chiede 7×86, non 4×12 */
+  const taglia = campagna.value ? null : tagliaDelVolo(hud.livello)
+  const e = esercizioDaChiave(k, state.profile.items, Date.now(), { taglia })
   esercizio = e
   domanda.chiave = k; domanda.a = e.a; domanda.b = e.b; domanda.ris = e.ris
   domanda.testo = e.testo
   domanda.peso = e.peso
-  domanda.difficile = e.peso >= 2
+  // un conto da due, o un concetto da uno alla taglia in cui i numeri
+  // sono grossi davvero (90+90, 87×10): il tempo di caduta si allunga.
+  // Un fatto (3+4) non ha taglia e resta quello che è
+  domanda.difficile = e.peso >= 2 || (!eFatto(k) && (taglia ?? 0) >= 0.8)
 }
 
 /* Quale delle due parti del pool parla in questa domanda. Il pool dice
@@ -543,8 +553,10 @@ function ondata() {
   chieste++
 
   const { caduta, quanti } = difficolta(hud.livello, domanda.peso, !campagna.value)
-  const falsi = mente.value ? distrattoriDi(esercizio, quanti - 1)
-                            : distrattori(domanda.a, domanda.b, quanti - 1)
+  // `esercizio` c'è per un conto a mente e per una grande girata: i
+  // falsi di una divisione non sono quelli di un prodotto
+  const falsi = esercizio ? distrattoriDi(esercizio, quanti - 1)
+                          : distrattoriTabellina(domanda.a, domanda.b, quanti - 1)
   const valori = [domanda.ris, ...falsi].sort(() => Math.random() - 0.5)
   const colonna = W / quanti
   let lento = boss ? CFG.bossLento : (domanda.difficile ? CFG.difficileLento : 1)
@@ -1144,9 +1156,11 @@ function riassunto() {
   finale.livello = hud.livello
   finale.record = segnaBest('math', hud.punti)
   const dove = !campagna.value ? chiaviDelVolo() : mente.value ? poolMente() : chiaviPossibili()
+  // letto e non creato: `item()` scriverebbe in archivio un elemento
+  // vuoto per ogni casella mai chiesta, grandi comprese
   finale.ripasso = dove
-    .map(k => ({ k, it: item(k) }))
-    .filter(x => x.it.err > 0)
+    .map(k => ({ k, it: state.profile.items[k] }))
+    .filter(x => x.it && x.it.err > 0)
     .sort((x, y) => (y.it.err - y.it.ok) - (x.it.err - x.it.ok))
     .slice(0, 3)
     .map(x => ({ che: etichettaDi(x.k), err: x.it.err }))
