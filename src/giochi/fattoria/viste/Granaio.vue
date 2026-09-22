@@ -52,6 +52,7 @@ import { serveA } from '../dati/usi.js'
 import { laMacchina } from '../dati/catalogo.js'
 import { dentroA } from '../motore/consiglio.js'
 import Merce from './Merce.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* 'terra' o 'stalla': il perché di due silos sta in `coltivazioni.js` */
@@ -118,6 +119,7 @@ const dice = u => {
 
 <template>
   <div class="fa-foglio fa-granaio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ silo.nome }}</h2>
 
     <!-- Cosa ci sta, detto una volta e in numero: «8 di ogni cosa» è la

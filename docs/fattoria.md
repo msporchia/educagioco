@@ -1337,6 +1337,40 @@ ancora permettere non è solo pallido: **dice di quanto** («manca 🪙12»), ch
 mulino, silo, recinti — hanno un filo d'oro attorno, perché a scaffale non
 c'era modo di distinguerle da un mobile.
 
+### I fogli si chiudono tutti allo stesso modo (dal 22 settembre 2026)
+
+Undici fogli, e undici modi di uscirne: «Chiudi», «Va bene», «Lascia
+stare», «Indietro», e in un paio di casi soltanto il velo da toccare
+fuori. Nessuno in alto a destra, che è il posto dove si guarda per
+primo. E nessuno **sempre visibile**: il tasto stava in fondo alla
+colonna, quindi in un foglio lungo — il baule, i livelli, l'albero a sei
+fasi — per uscire bisognava prima scorrere fino in fondo.
+
+Adesso ogni foglio ha **la stessa ✕ in alto a destra**
+(`viste/Chiudi.vue`), appiccicata: il foglio scorre e lei resta dov'è.
+Nei test si trova con `[data-chiudi]` o con `aria-label="chiudi"`, non
+col carattere — la stessa regola della freccia «indietro» della barra.
+
+I tasti in fondo restano **dove sono una scelta**: «Lascia stare /
+Compra», «Chiudi / Ritira», «🎩 Vestilo / Va bene». Lì la seconda voce è
+quella che conta e la prima è il suo contrario. Dove invece l'unica cosa
+da fare era chiudere — il baule, i livelli, il mercato, l'albero — il
+tasto in fondo non c'è più: lo fa la ✕, che è sempre sullo schermo.
+
+**E lo scorrimento è uno solo.** Quattro fogli facevano scorrere sé
+stessi, quattro facevano scorrere un elenco dentro a un'altezza
+inventata — 52vh lo scaffale del baule, 46vh gli scomparti del silo,
+44vh i semi e le ricette — e i restanti non scorrevano affatto: su uno
+schermo basso uscivano dal velo, e i tasti in fondo diventavano
+irraggiungibili. Cioè il foglio non si poteva chiudere.
+
+Un'altezza in `vh` è una misura presa a occhio su un telefono solo: su
+uno schermo alto lascia il foglio mezzo vuoto, su uno basso lo fa uscire
+lo stesso, perché 44vh è l'elenco ma sopra e sotto c'è dell'altro che in
+vh non si conta. Adesso **ogni foglio è una colonna**: titolo e tasti
+stanno fermi, l'elenco in mezzo si stringe di quanto serve e scorre lui
+(`flex: 0 1 auto; min-height: 0`), e nessuno dichiara più un'altezza.
+
 ## Cosa manca ancora
 
 I primi tre punti di questa lista — gli sprite veri dei campi, gli animali da

@@ -31,6 +31,7 @@
 import { computed } from 'vue'
 import { AGGANCI_TUTTI } from '../dati/animali.js'
 import Provino from './Provino.vue'
+import Chiudi from './Chiudi.vue'
 
 const NOMI = {
   testa: 'In testa', muso: 'Sul muso',
@@ -69,6 +70,7 @@ const puoi = a => addosso(a) || ce(a) || (!a.sospeso && manca(a) === 0)
 
 <template>
   <div class="fa-foglio fa-vestiario" data-vestiario>
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Vesti {{ nome || che }}</h2>
     <Provino :pezzo="chi + '_giu0'" :lato="64" />
     <p>Quello che gli metti si vede <b>in fattoria</b>, mentre cammina.

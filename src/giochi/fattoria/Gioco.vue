@@ -61,6 +61,7 @@ import Granaio from './viste/Granaio.vue'
 import Livelli from './viste/Livelli.vue'
 import Macchina from './viste/Macchina.vue'
 import Albero from './viste/Albero.vue'
+import Chiudi from './viste/Chiudi.vue'
 import { alberoDi } from './dati/albero.js'
 import Provino from './viste/Provino.vue'
 import './stile.css'
@@ -2013,6 +2014,7 @@ function tiraVoce({ voce, x, y }) {
                  @conferma="battezza" @chiudi="chiudi()" />
 
       <div v-else-if="pannello.tipo === 'piazzola'" class="fa-foglio">
+        <Chiudi @chiudi="chiudi()" />
         <h2>Un altro pezzo di terra</h2>
         <p>Costa <b>🪙{{ mondo.prezzoDellaProssima }}</b>. Ogni pezzo dopo
            costa un po' di più.</p>
@@ -2024,6 +2026,7 @@ function tiraVoce({ voce, x, y }) {
       </div>
 
       <div v-else class="fa-foglio">
+        <Chiudi @chiudi="chiudi()" />
         <h2>{{ pannello.o.nome }}</h2>
         <Provino :pezzo="pannello.o.pezzo" :lato="64" />
         <p>Toglierlo costa <b>🪙{{ pannello.o.costo }}</b>, e libera il posto

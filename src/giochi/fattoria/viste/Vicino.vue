@@ -28,6 +28,7 @@ import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import { DAI, RICEVI } from '../motore/vicino.js'
 import Merce from './Merce.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* `[{ prodotto, quanti, colmo }]` — quello di cui hai almeno cinque */
@@ -54,6 +55,7 @@ const troppo = computed(() => props.puoiDare.filter(r => r.colmo))
 
 <template>
   <div class="fa-foglio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il carretto del vicino</h2>
 
     <!-- ── primo passo: cosa gli dai ── -->

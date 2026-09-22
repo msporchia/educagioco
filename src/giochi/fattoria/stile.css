@@ -67,12 +67,64 @@
    emoji ma le figure vere dell'atlante (`viste/Merce.vue`), e una
    ricetta si legge come una freccia — quello che entra, quello che esce
    — che a 360 px andava a capo nel mezzo. */
-.fa-foglio { width: min(400px, 94vw); background: #16261a; border: 2px solid #3d5c42;
+/* ── E SCORRE, SEMPRE ALLO STESSO MODO ──
+   Ogni foglio si arrangiava a modo suo. Quattro facevano scorrere sé
+   stessi (`max-height: 100%`); quattro facevano scorrere **un elenco
+   dentro**, a un'altezza inventata — 52vh lo scaffale del baule, 46vh
+   gli scomparti del silo, 44vh i semi e le ricette — e i restanti non
+   scorrevano affatto: su uno schermo basso uscivano dal velo, e i
+   tasti in fondo diventavano irraggiungibili. Cioè il foglio non si
+   poteva chiudere.
+
+   Un'altezza in `vh` è una misura presa a occhio su un telefono solo:
+   su uno schermo alto lascia il foglio mezzo vuoto, su uno basso lo fa
+   uscire lo stesso — perché 44vh è l'elenco, ma sopra e sotto c'è
+   dell'altro che in vh non si conta.
+
+   **Adesso ogni foglio è una colonna**: titolo e tasti stanno fermi,
+   l'elenco in mezzo si stringe di quanto serve e scorre lui
+   (`flex: 0 1 auto; min-height: 0`), e nessuno dichiara più un'altezza.
+   Il foglio ha anche il suo scorrimento, come rete: un foglio senza
+   elenco che non ci sta lo stesso scorre tutto invece di sbordare.
+
+   `overscroll-behavior: contain` è quello che impedisce al dito, una
+   volta arrivato in fondo, di portarsi dietro la pagina sotto.
+
+   Gli elenchi che si stringono sono quattro, e dicono tutti la stessa
+   riga (`flex: 0 1 auto; min-height: 0`): `.fa-scaffale` nel baule,
+   `.fa-scomparti` nel silo, `.fa-semi` in un campo, `.fa-ricette` in
+   una macchina. */
+.fa-foglio { position: relative; width: min(400px, 94vw);
+  display: flex; flex-direction: column;
+  max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  background: #16261a; border: 2px solid #3d5c42;
   border-radius: 18px; padding: 16px 16px 14px; text-align: center;
   box-shadow: 0 18px 40px #0008 }
+
+/* ── LA ✕, IN ALTO A DESTRA E SEMPRE LÌ ──
+   `viste/Chiudi.vue`, e il perché sta lì. `position: sticky` dentro il
+   foglio che scorre: il contenuto le passa sotto e lei resta in cima.
+   È **quella** che rende sicuro far scorrere il foglio intero — senza,
+   in un baule da duecento voci la via d'uscita sta due schermate più
+   giù.
+
+   `margin-bottom: -34px` la toglie dal flusso senza farla uscire dal
+   foglio: la riga dopo (il titolo) comincia dove comincerebbe
+   comunque, e la ✕ le sta sopra. 40 px di lato è la misura che Android
+   e iOS chiedono per un tasto, ed è la stessa dei tondi della barra. */
+.fa-chiudi { position: sticky; top: 0; z-index: 4;
+  width: 34px; height: 34px; margin: -4px -4px -34px auto;
+  display: grid; place-items: center; cursor: pointer;
+  /* il bordo **chiaro**, e non quello del foglio: col bordo del foglio
+     si confonde con la cornice e smette di sembrare un tasto */
+  border: 2px solid #6f9b6f; border-radius: 11px; background: #0d160fcc;
+  color: #f4efe2; font-size: 15px; line-height: 1; padding: 0 }
+.fa-chiudi:active { transform: scale(.92) }
 /* il colore va detto: senza, il titolo eredita il blu dell'applicazione
-   e su un foglio scuro si legge male */
-.fa-foglio h2 { margin: 0 0 6px; font-size: 19px; color: #f4efe2 }
+   e su un foglio scuro si legge male. Il margine ai lati tiene il
+   titolo lontano dalla ✕: centrato, uno lungo ci finirebbe sotto. */
+.fa-foglio h2 { margin: 0 0 6px; font-size: 19px; color: #f4efe2;
+  padding: 0 34px }
 .fa-foglio p { color: #d8e4d6 }
 .fa-foglio p { margin: 0 0 12px; font-size: 14px; line-height: 1.4; opacity: .85 }
 .fa-fila { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap }
@@ -158,7 +210,7 @@
 
 .fa-scaffale { display: grid; gap: 8px; margin-bottom: 10px;
   grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
-  max-height: 52vh; overflow-y: auto; overscroll-behavior: contain;
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   touch-action: pan-y; padding: 2px }
 
 /* `touch-action: none` sulla CARTA e non sul contenitore. Senza, il
@@ -253,7 +305,7 @@
    delle cose — si legge quanto ce n'è, e una colonna di barrette
    allineate si confronta con l'occhio invece che leggendola. */
 .fa-scomparti { display: grid; gap: 5px; margin-bottom: 8px;
-  max-height: 46vh; overflow-y: auto; overscroll-behavior: contain }
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain }
 .fa-scomparto { display: grid; align-items: center; gap: 8px;
   grid-template-columns: 34px 1fr 88px 46px;
   padding: 5px 8px; border-radius: 11px; cursor: pointer; text-align: left;
@@ -279,11 +331,11 @@
 .fa-nomi { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
   margin: 10px 0 8px }
 /* La stessa fila, quando è la scelta del seme: tredici colture sono
-   cinque file di bottoni, e un foglio più alto dello schermo non
-   scorre — il velo lo centra e `.fa` taglia quello che sborda, sopra e
-   sotto. Il tetto è lo stesso delle ricette di una macchina (44vh),
-   per la stessa ragione. */
-.fa-semi { max-height: 44vh; overflow-y: auto; overscroll-behavior: contain }
+   cinque file di bottoni. Si stringe come gli altri elenchi (vedi
+   `.fa-foglio`): il titolo sopra e i tasti sotto restano fermi, e a
+   scorrere è la fila dei semi. */
+.fa-semi { flex: 0 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain }
 .fa-nome-scelta { padding: 6px 12px; border-radius: 14px; font-size: 14px;
   background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; cursor: pointer }
 .fa-nome-scelta.viva { background: #3d5c42; border-color: #9fd3a8 }
@@ -309,8 +361,7 @@
    schermo, mai di più: al primo livello ci sono cinque quadratini, al
    quarantesimo ce ne sono otto e la riga che spiega — e un foglio che
    sborda in basso nasconde proprio il tasto per chiudere. */
-.fa-livelli { width: min(560px, 96vw); max-height: 100%;
-  overflow-y: auto; overscroll-behavior: contain }
+.fa-livelli { width: min(560px, 96vw) }
 
 /* I premi, a quadratini. Sono **tasti** e non righe di elenco: quello
    che è arrivato si va a prendere premendolo, ed è tutta la differenza
@@ -485,7 +536,7 @@
    spingono il tasto «Chiudi» sotto il bordo dello schermo — cioè un
    foglio da cui non si esce più. */
 .fa-ricette { display: grid; gap: 7px; margin: 10px 0 8px;
-  max-height: 44vh; overflow-y: auto; overscroll-behavior: contain }
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain }
 .fa-ricetta { display: grid; gap: 2px; justify-items: center;
   padding: 7px 10px 6px; border-radius: 13px; cursor: pointer;
   background: #0d160f; border: 2px solid #2b4430; color: #e8efe6; font: inherit }
@@ -557,8 +608,7 @@
    pagina dei livelli: dentro ci sono tre riquadri con dentro delle
    caselle, e a 400 px il terzo finiva sotto il bordo — cioè un foglio
    da cui il tasto «Chiudi» non si vede più. */
-.fa-mercato { width: min(460px, 95vw); max-height: 100%;
-  overflow-y: auto; overscroll-behavior: contain }
+.fa-mercato { width: min(460px, 95vw) }
 .fa-ordini { display: grid; gap: 8px; margin: 6px 0 8px }
 /* Un ordine è **un riquadro**, non una riga: dentro c'è chi lo fa,
    cosa vuole e cosa si può fare: tre cose che vanno guardate insieme.
@@ -586,7 +636,6 @@
    tasti — perché è la stessa schermata con un mestiere diverso: là i
    blocchi sono i bisogni, qui sono i posti dove si mette qualcosa. Chi
    arriva dal «Vestilo» non deve imparare una seconda disposizione. */
-.fa-vestiario { max-height: 100%; overflow-y: auto; overscroll-behavior: contain }
 /* Il «togli» sta in fondo alla testata del blocco, dove c'è il numero
    nei bisogni: piccolo, perché togliere è una cosa che si fa di rado. */
 .fa-minuto.dentro { margin: 0; padding: 2px 8px; font-size: 11px }

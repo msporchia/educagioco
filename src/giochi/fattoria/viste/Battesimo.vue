@@ -14,6 +14,7 @@
 import { ref } from 'vue'
 import { nomiPer } from '../dati/animali.js'
 import Provino from './Provino.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   chi: { type: String, required: true },      // lo sprite, es. 'cane-beagle'
@@ -31,6 +32,7 @@ function prendi(n) { scelto.value = n; scritto.value = n }
 
 <template>
   <div class="fa-foglio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ prezzo ? 'Come lo chiami?' : (nome || che) }}</h2>
     <Provino :pezzo="chi + '_giu0'" :lato="64" />
     <p v-if="prezzo">È un {{ che.toLowerCase() }}. Tocca un nome, o scrivine uno tu.</p>

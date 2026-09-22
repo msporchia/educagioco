@@ -54,6 +54,7 @@ import { CATEGORIE, ZONE, ANIMALI_ZONA } from '../dati/catalogo.js'
 import { chiaveDi } from '../dati/livelli.js'
 import { IN_VENDITA } from '../dati/animali.js'
 import Provino from './Provino.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   monete: { type: Number, default: 0 },
@@ -210,6 +211,7 @@ function giuBestia(e, a) {
 
 <template>
   <div class="fa-baule">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il baule</h2>
 
     <nav v-if="zone.length > 1" class="fa-zone">
@@ -272,6 +274,5 @@ function giuBestia(e, a) {
       </div>
     </div>
 
-    <div class="fa-fila"><button class="fa-bot" @click="emit('chiudi')">Chiudi</button></div>
   </div>
 </template>

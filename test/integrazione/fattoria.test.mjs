@@ -72,7 +72,10 @@ async function dito(x, y, scarto = 0, tieni = 60) {
 }
 
 const foglio = () => page.evaluate(
-  () => ((document.querySelector('.fa-foglio') || {}).innerText || '').split('\n')[0])
+  /* dall'`h2`, non dalla prima riga di `innerText`: da quando ogni
+     foglio ha la ✕ in alto a destra (`viste/Chiudi.vue`) la prima riga
+     è quella. Il titolo è il titolo. */
+  () => ((document.querySelector('.fa-foglio h2') || {}).innerText || '').trim())
 const cartelloAperto = async () => (await foglio()) === 'Un altro pezzo di terra'
 
 async function chiudi() {

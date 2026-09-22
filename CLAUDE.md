@@ -511,6 +511,27 @@ committate: non è ricostruibile da git.
 - **La barra in cima è una sola** (`components/Barra.vue`): indietro sempre
   primo a sinistra, sempre `←`, unico tasto pieno. Nei test si trova con
   `button[aria-label="indietro"]`, non col carattere.
+- **Un foglio si chiude con la ✕ in alto a destra, sempre visibile**
+  (`giochi/fattoria/viste/Chiudi.vue`, `[data-chiudi]` nei test). La
+  fattoria ne aveva undici e ognuno usciva a modo suo — «Chiudi», «Va
+  bene», «Lascia stare», o solo il velo da toccare fuori — e nessuno in
+  alto a destra, che è il posto dove si guarda per primo. Il tasto in
+  fondo resta **solo dove è una scelta** («Lascia stare / Compra»):
+  dov'era l'unica cosa da fare, lo fa la ✕. Che è `sticky`, e quello è
+  il punto: in un baule da duecento voci la via d'uscita stava due
+  schermate più giù.
+  **E lo scorrimento è uno solo**: il foglio è una colonna (`display:
+  flex`), titolo e tasti stanno fermi, e l'elenco in mezzo si stringe e
+  scorre lui (`flex: 0 1 auto; min-height: 0`). Nessuno dichiara
+  un'altezza: c'erano 52vh, 46vh e due 44vh, e un'altezza in `vh` è una
+  misura presa a occhio su un telefono solo — su uno schermo alto lascia
+  il foglio mezzo vuoto, su uno basso lo fa uscire lo stesso, perché
+  44vh è l'elenco ma sopra e sotto c'è dell'altro che in vh non si
+  conta. Chi non scorreva affatto sbordava dal velo, e i tasti in fondo
+  diventavano irraggiungibili: cioè il foglio non si poteva chiudere.
+  Un test statico (`unita/fattoria`) legge i `.vue` e pretende la ✕ da
+  ogni vista che dichiara `'chiudi'` fra i suoi `emits` — è l'unico modo
+  di dirlo di un foglio che ancora non esiste.
 - **La pausa è una sola** (`giochi/pausa.js`, `giochi/VeloPausa.vue`). Un
   gioco a orologio si congela già da sé a pagina nascosta — il browser non
   consegna fotogrammi a una scheda che non si vede — e il guasto non è

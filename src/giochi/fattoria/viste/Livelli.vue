@@ -39,6 +39,7 @@
 import { computed } from 'vue'
 import { ULTIMO, premiDi } from '../dati/livelli.js'
 import Provino from './Provino.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.avanzamento` */
@@ -76,6 +77,7 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
 
 <template>
   <div class="fa-foglio fa-livelli">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>⭐ Livello {{ stato.livello }} · {{ stato.nome }}</h2>
 
     <!-- ── quello che è arrivato ──
@@ -133,8 +135,5 @@ const restano = computed(() => Math.max(0, ULTIMO - props.stato.livello))
        <template v-else>Da qui in poi si continua a salire, ma il baule
          è già tutto aperto.</template></p>
 
-    <div class="fa-fila">
-      <button class="fa-bot forte" @click="$emit('chiudi')">Chiudi</button>
-    </div>
   </div>
 </template>

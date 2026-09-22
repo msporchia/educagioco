@@ -32,6 +32,7 @@
 import { computed } from 'vue'
 import { RIPOSO_MIN } from '../dati/mercato.js'
 import Merce from './Merce.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* `[{ id, cliente, righe, xp, minuti, pronto }]` — vedi `bancoDi` */
@@ -53,6 +54,7 @@ const caselle = riga => Array.from({ length: riga.serve },
 
 <template>
   <div class="fa-foglio fa-mercato" data-mercato>
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il mercato</h2>
 
     <!-- La prima riga cambia con lo stato, come nel carretto del
@@ -125,9 +127,6 @@ const caselle = riga => Array.from({ length: riga.serve },
       Un altro ordine arriva fra <b>{{ r.minuti }}</b>
       {{ r.minuti === 1 ? 'minuto' : 'minuti' }}.</p>
 
-    <div class="fa-fila">
-      <button class="fa-bot" @click="emit('chiudi')">Chiudi</button>
-    </div>
     <p class="fa-piccolo">Consegnare non dà monete: quelle si guadagnano
        negli altri giochi. Dà <b>esperienza</b>, cioè livelli — e i
        livelli aprono roba nuova nel baule.</p>

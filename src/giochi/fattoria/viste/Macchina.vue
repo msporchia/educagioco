@@ -32,6 +32,7 @@ import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import Merce from './Merce.vue'
 import Passo from './Passo.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.statoMacchina()` */
@@ -86,6 +87,7 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
 
 <template>
   <div class="fa-foglio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ nome }}</h2>
 
     <!-- ── ferma: cosa faccio ── -->

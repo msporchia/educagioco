@@ -26,6 +26,7 @@ import { computed } from 'vue'
 import { PRODOTTI } from '../dati/coltivazioni.js'
 import Merce from './Merce.vue'
 import Passo from './Passo.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   /* quello che torna da `Fattoria.statoCampo()` */
@@ -60,6 +61,7 @@ const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
 
 <template>
   <div class="fa-foglio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ stato.vuoto ? 'Un campo da seminare' : c.nome }}</h2>
 
     <!-- ── vuoto: cosa ci metto ── -->

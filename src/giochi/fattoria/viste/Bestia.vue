@@ -42,6 +42,7 @@ import { comeSiFa, PRODOTTI } from '../dati/coltivazioni.js'
 import { laMacchina } from '../dati/catalogo.js'
 import { famigliaDi } from '../dati/animali.js'
 import Provino from './Provino.vue'
+import Chiudi from './Chiudi.vue'
 
 const props = defineProps({
   chi: { type: String, required: true },
@@ -132,6 +133,7 @@ const invece = computed(() => {
 
 <template>
   <div class="fa-foglio">
+    <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ nome || che }}</h2>
     <Provino :pezzo="chi + '_giu0'" :lato="64" />
     <p>{{ comeSta(stato, nome || che) }}</p>

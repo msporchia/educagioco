@@ -5,6 +5,7 @@
    un giocatore finto compra e sgombera finché può senza lasciare il mondo
    incoerente, e i traguardi scattano solo a chi ha davvero giocato.
    `node test/esegui.mjs fattoria --niente-build` */
+import { readdirSync, readFileSync } from 'node:fs'
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { Camminatore } from '../../src/giochi/fattoria/motore/camminata.js'
 import {
@@ -1020,5 +1021,36 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +
      `e il mondo tiene ${MARGINE} piazzole di margine per lato`)
+
+/* ══════════ LA ✕ STA IN TUTTI I FOGLI ══════════
+   Un foglio nuovo si aggiunge scrivendo un `.vue` in `viste/`, e la via
+   d'uscita è la cosa che ci si dimentica: ci si ricorda del titolo, dei
+   tasti, di quello che il foglio deve dire — e si esce toccando il velo
+   fuori, che funziona e quindi non sembra un difetto. Poi lo apre un
+   bambino su un telefono, dove «fuori dal foglio» sono dodici pixel di
+   margine.
+
+   Questo controllo guarda **il sorgente**, non lo schermo: ogni vista
+   che sa chiudersi (`'chiudi'` fra i suoi `emits`) deve montare
+   `Chiudi.vue`. È l'unico modo di dirlo di un foglio che ancora non
+   esiste. Il perché della ✕ sta in `viste/Chiudi.vue`. */
+{
+  const viste = readdirSync(new URL('../../src/giochi/fattoria/viste/', import.meta.url))
+    .filter(f => f.endsWith('.vue') && f !== 'Chiudi.vue')
+  const senza = []
+  let quanti = 0
+  for (const f of viste) {
+    const src = readFileSync(
+      new URL(`../../src/giochi/fattoria/viste/${f}`, import.meta.url), 'utf8')
+    /* si chiude da sé solo chi lo dichiara: `Merce.vue` e `Provino.vue`
+       sono pezzi dentro un foglio, non fogli */
+    if (!/emits?\s*\(\s*\[[^\]]*'chiudi'/s.test(src) &&
+        !/defineEmits\(\[[^\]]*'chiudi'/s.test(src)) continue
+    quanti++
+    if (!src.includes('<Chiudi')) senza.push(f)
+  }
+  controlla(`${quanti} fogli sanno chiudersi`, quanti >= 10, `ne ho contati ${quanti}`)
+  uguale('e tutti montano la ✕ di Chiudi.vue', senza.join(', '), '')
+}
 
 riassunto('la fattoria')
