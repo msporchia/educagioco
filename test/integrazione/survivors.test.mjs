@@ -164,17 +164,23 @@ controlla('con tutto l\'orologio davanti', await secondi() >= 43)
    Nessun test guarda i pixel: le foto sono per un occhio umano, e si
    fanno in questa partita nuova, dove morire non guasta nessun
    controllo. Il primo oggetto compare a sette secondi e resta nove; il
-   primo muro arriva a dodici, col bordo acceso per un secondo, e un
-   secondo dopo la fila è dentro lo schermo (`CFG.oggetti.primo`,
-   `CFG.muro.primo`). La tappa dura 45 secondi e il cronometro conta
-   alla rovescia. Prima del muro si corre via dalle melme — fermi in
-   mezzo a loro si perdono tre cuori in dieci secondi — e ci si ferma
-   un secondo prima che la fila nasca, così entra da qualunque lato. */
+   primo muro arriva a dodici e un secondo dopo la fila è dentro lo
+   schermo (`CFG.oggetti.primo`, `CFG.muro.primo`). La tappa dura 45
+   secondi e il cronometro conta alla rovescia. Prima del muro si corre
+   via dalle melme — fermi in mezzo a loro si perdono tre cuori in dieci
+   secondi — e ci si ferma un secondo prima che la fila nasca, così
+   entra da qualunque lato.
+
+   **Le due foto del muro servono a guardare che non ci sia niente.**
+   Il bordo rosso che si accendeva un secondo prima è stato tolto: la
+   prima è l'istante prima che la fila nasca — lo schermo dev'essere
+   quello di sempre, nessuna fascia colorata da nessun lato — e la
+   seconda è la fila dentro lo schermo, che è l'unico avviso che c'è. */
 await finoA(37, traccheggia)
 await scatto(page, 'survivors-oggetto-a-terra')
 await finoA(34, corri)
 await finoA(33, traccheggia)
-await scatto(page, 'survivors-muro-bordo')
+await scatto(page, 'survivors-muro-niente-avviso')
 await finoA(32, traccheggia)
 await scatto(page, 'survivors-muro')
 

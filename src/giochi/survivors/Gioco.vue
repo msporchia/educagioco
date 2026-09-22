@@ -238,7 +238,8 @@ const VERSI = {
   cuore: () => suono.vita(),
   calamita: () => suono.nota(380, 1500, 0.35, 'sine', 0.07),
   cassa: () => suono.compra(),
-  /* il muro: un brontolio basso, per alzare lo sguardo al bordo */
+  /* il muro: un brontolio basso, per alzare lo sguardo — è l'unico
+     avviso che c'è, e non dice da che parte: quello lo si vede */
   muro: () => suono.rumore(0.5, 0.09, 500, 120),
   livello: () => suono.livello(),
   fuoco: () => suono.rumore(0.22, 0.06, 900, 200),

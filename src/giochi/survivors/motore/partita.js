@@ -519,9 +519,12 @@ export class Partita {
       quanti++
     }
     if (!quanti) return
+    /* si sente e basta: c'era un bordo rosso che si accendeva sul lato
+       da cui entra, ed è stato tolto apposta. La fila nasce appena fuori
+       dallo schermo e un secondo dopo è dentro: vederla arrivare e
+       capire da soli da che parte scansarsi è il gioco, e un cartello
+       che lo dice prima toglie proprio quello */
     this.segnala('muro')
-    /* il lato da cui arriva si dice a chi disegna, che accende il bordo */
-    this.effetti.push({ che: 'muro', rotta, vita: 1.1, tot: 1.1, x: e.x, y: e.y })
   }
 
   /* ── i mostri camminano verso l'eroe ──

@@ -636,9 +636,11 @@ controlla('il riassunto conta le stelle',
             `il buco più largo è ${Math.max(...buchi).toFixed(0)}`)
   controlla('e il resto della fila a passo stretto',
             buchi.filter(b => b < CFG.muro.varco - 1).every(b => Math.abs(b - CFG.muro.passo) < 1))
-  /* chi disegna lo sa: un effetto dice da che lato entra */
-  controlla('la scena porta l\'avviso del bordo',
-            p.scena().effetti.some(e => e.che === 'muro' && e.rotta))
+  /* e non lo annuncia nessuno: c'era un bordo rosso che si accendeva un
+     secondo prima, ed è stato tolto — la fila si vede arrivare, e da che
+     parte scansarsi lo si capisce guardando. Resta il brontolio */
+  controlla('nessun avviso a schermo prima che la fila entri',
+            !p.scena().effetti.some(e => e.che === 'muro'))
 
   /* ── tira dritta, non insegue ── */
   const prima = fila.map(n => ({ x: n.x, y: n.y }))

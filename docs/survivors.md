@@ -43,20 +43,30 @@ va. Sono tre:
 - **❤️ un cuore**, che ne ridà uno senza alzare il tetto — ed esce solo a
   chi ne ha perso uno, se no sarebbe una corsa per niente;
 - **🧲 una calamita**, che per quattro secondi tira tutte le gemme in campo,
-  anche quelle lontane;
+  anche quelle lontane — ed è l'unico risucchio che ha chi non ha preso
+  la carta;
 - **📦 una cassa**, che apre un'offerta di tre carte **pagata con la domanda
   come sempre**. Non è un potenziamento gratis, è un'occasione in più di
   guadagnarselo: una risposta sbagliata non paga, e niente si regala
   senza esercizio (vedi `CALIBRAZIONE.md`). Sopra le carte c'è scritto
   «una cassa», non «livello», perché non si è saliti di niente.
+  **Ed è rara, con un tetto dichiarato** (`CFG.oggetti.cassa`): mai nei
+  primi dieci secondi, mai due in campo insieme, e non più di una ogni
+  tre quarti di minuto di partita. Senza il tetto, a fine campagna era
+  quasi un quarto delle offerte — e a quel punto le carte si prendono
+  aspettando una cassa invece di raccogliere. Il banco conta quante
+  offerte in più dà una tappa intera e le tiene **sotto un terzo**.
 
 **I muri.** Ogni tanto — dopo dodici secondi la prima volta, poi sempre
 più spesso con la marea — una fila di mostri deboli attraversa lo schermo
-da un lato scelto a caso, dritta, senza inseguire nessuno. Il bordo da cui
-entra si accende di rosso un secondo prima. La fila ha **un varco**, e
-l'eroe è più svelto di lei: si passa dal buco, o si corre via. Chi sta
-fermo ci finisce dentro, ed è misurato: un muro da solo prende chi non
-muove il dito dieci volte su dieci, e chi si sposta zero.
+da un lato scelto a caso, dritta, senza inseguire nessuno. La fila ha
+**un varco**, e l'eroe è più svelto di lei: si passa dal buco, o si corre
+via. Chi sta fermo ci finisce dentro, ed è misurato: un muro da solo
+prende chi non muove il dito dieci volte su dieci, e chi si sposta zero.
+**Non c'è nessun avviso**: c'era un bordo rosso che si accendeva un
+secondo prima, ed è stato tolto — la fila si vede arrivare, e capire da
+che parte scansarsi è il gioco. Resta il brontolio basso, che fa alzare
+lo sguardo senza dire da dove.
 
 **Due armi guardano dove corri.** L'arco tira da solo al più vicino, e va
 bene così — ma un gioco in cui *tutto* tira da solo si guarda e basta. Il

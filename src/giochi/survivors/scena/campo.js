@@ -91,32 +91,11 @@ export class Campo {
     for (const e of s.effetti) this.effetto(e, H)
 
     ctx.restore()
-    /* il bordo da cui sta arrivando una fila: si accende fuori dal
-       mondo, sullo schermo, perché è il bordo dello schermo che conta */
-    for (const e of s.effetti) if (e.che === 'muro') this.bordoDelMuro(e)
+    /* di un muro in arrivo non si disegna niente: c'era una fascia
+       rossa sul bordo da cui entrava la fila, ed è stata tolta apposta —
+       la fila si vede arrivare, e capire da che parte scansarsi è il
+       gioco (`nasceMuro` nel motore) */
     if (s.dolore) this.dolore(s.dolore)
-  }
-
-  /* ═══════════ il bordo che avverte del muro ═══════════
-     Una fascia rossa che pulsa sul lato da cui entra la fila, per un
-     secondo: la fila nasce fuori dallo schermo, e senza questo il primo
-     mostro che si vede è già a un passo. */
-  bordoDelMuro(e) {
-    const ctx = this.ctx, W = this.larghezza, H = this.altezza
-    const q = e.vita / e.tot
-    const spessore = 26
-    ctx.globalAlpha = 0.55 * q * (0.6 + 0.4 * Math.sin(q * 25))
-    const r = e.rotta
-    let x0 = 0, y0 = 0, x1 = W, y1 = H, gx0 = 0, gy0 = 0, gx1 = 0, gy1 = 0
-    if (r.x > 0) { x1 = spessore; gx1 = spessore }
-    else if (r.x < 0) { x0 = W - spessore; gx0 = W; gx1 = W - spessore }
-    else if (r.y > 0) { y1 = spessore; gy1 = spessore }
-    else { y0 = H - spessore; gy0 = H; gy1 = H - spessore }
-    const g = ctx.createLinearGradient(gx0, gy0, gx1, gy1)
-    g.addColorStop(0, '#ff3b5c'); g.addColorStop(1, '#ff3b5c00')
-    ctx.fillStyle = g
-    ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
-    ctx.globalAlpha = 1
   }
 
   /* ═══════════ il fondo ═══════════
