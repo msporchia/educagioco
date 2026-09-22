@@ -20,7 +20,21 @@ Cosa c'è dentro
                    arredi, animaletti, vegetazione
   edifici.png      24 costruzioni del podere: fienili, silo, serra,
                    pollaio, stalla, forni, gazebo
+  edifici_2.png    le otto botteghe dell'albero della produzione:
+                   telaio, dispensa, panificio, caseificio, pentolone,
+                   cucina, sartoria, tintoria (settembre 2026)
+  edifici_3.png    la bancarella e il carretto del vicino, che
+                   sostituiscono i due pezzi rosa di edifici.png, più
+                   sei edifici disegnati **in anticipo** per la tappa 8
+                   dell'albero, che non è ancora scritta: zuccherificio,
+                   pastificio, pasticceria, rosticceria, merceria,
+                   sushi bar. Chi li prenderà sta scritto nel foglietto
+                   (settembre 2026)
   merci.jpg        le sei merci che si vendono (uova, lana, becchime…)
+  merci_2.png      altre sei: stoffa, farina, burro, formaggio,
+                   minestrone, polenta — il primo foglio di merci a
+                   fondo **trasparente** invece che magenta, da quando
+                   il generatore l'alfa la sa fare (settembre 2026)
   cane-beagle      \
   cane-bobtail      |  gli animali di casa, un foglio per bestia,
   cane-bobtail2     |  nel formato a tre versi di character.png
@@ -34,13 +48,31 @@ degli altri: chi lo vede tutti i giorni si accorge di un orecchio
 sbagliato. `cane-bobtail2.png` è il secondo tentativo — nell'atlante ci
 sono tutti e due, con nomi diversi.
 
-Perché non c'è il prompt
-------------------------
-Non è stato conservato, e andrebbe fatto: rigenerare un foglio nello
-stesso stile è la cosa che serve ogni volta che ne manca un pezzo. Il
-riferimento di stile da mettere davanti a un generatore è
-`poc/scatti/riferimento-stile.png`; il formato che i generatori
-restituiscono meglio è quello di `../armm1998/character.png`.
+Il prompt
+---------
+Dei fogli vecchi non è stato conservato, e andrebbe fatto: rigenerare
+un foglio nello stesso stile è la cosa che serve ogni volta che ne
+manca un pezzo. Il riferimento di stile da mettere davanti a un
+generatore è `poc/scatti/riferimento-stile.png`; il formato che i
+generatori restituiscono meglio è quello di `../armm1998/character.png`.
+
+Da settembre 2026 c'è il posto dove metterlo: il campo `prompt` nel
+foglietto (`strumenti/sprite/FORMATO.md`), con la scheda usata,
+l'immagine allegata, chi ha generato e il testo intero.
+
+E c'è una lezione, pagata: **il prompt si copia nel momento in cui si
+salva il PNG.** I fogli nascono in una finestra di chat che non lascia
+un file. Dei tre fogli di settembre se n'è conservato uno
+(`edifici_2.png`); gli altri due dicono «non conservato» nel foglietto,
+ed è vero.
+
+Le due schede da cui si parte stanno qui accanto — PROMPT-edificio.md e
+PROMPT-merce.md — e portano dentro quello che si è imparato
+sbagliando: niente terreno sotto un edificio (una riga del prompt
+faceva disegnare un prato più largo della casa), fondo trasparente e
+non magenta, 1536x1024 come misura che torna esatta, «nessuna parola
+scritta» in maiuscolo, e l'ultimo foglio buono come immagine allegata
+invece dell'originale.
 
 coniglio.jpg — il primo foglio nato da una scheda di prompt (PROMPT-bestia.md), col foglio del bobtail allegato come base; il prompt sta nel foglietto coniglio.json. Generatore: Grok, 20 settembre 2026.
 

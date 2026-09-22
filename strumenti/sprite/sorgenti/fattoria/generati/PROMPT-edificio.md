@@ -7,16 +7,23 @@ appoggio, griglia. Il perché sta in
 [`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md), §6.
 
 Il prompt usato **si conserva nel foglietto** del foglio che ne esce
-(campo `prompt`, proposto in `FORMATO.md`): copiarlo e cambiare la riga
-dell'oggetto è il modo di rigenerare un pezzo nello stesso stile.
+(campo `prompt`, vedi `FORMATO.md`): copiarlo e cambiare la riga
+dell'oggetto è il modo di rigenerare un pezzo nello stesso stile. E si
+copia **nello stesso momento in cui si salva il PNG** — rimandarlo vuol
+dire perderlo, ed è già successo: di questa tornata si è conservato un
+prompt su cinque.
 
-## Cosa allegare
+## Cosa allegare — **l'ultimo foglio buono**, non `edifici.png`
 
-`edifici.png` intero (1536×1024): ha il fienile, il mulino a vento e il
-silo, cioè gli edifici accanto a cui i nuovi devono stare. Se il
-generatore accetta un'immagine sola piccola, il ritaglio col fienile
-(`fienile0`, riga in alto, terzo da sinistra) e il mulino a vento
-(`mulino_vento`, terza riga, primo).
+Il primo foglio si allega a `edifici.png` intero (1536×1024), che ha il
+fienile, il mulino a vento e il silo: gli edifici accanto a cui i nuovi
+devono stare.
+
+**Dal secondo in poi si allega il foglio buono precedente.** Non è la
+stessa cosa: `edifici_2.png` porta con sé, gratis, la disciplina che nel
+testo costa cinque righe — niente terreno sotto, niente ombra, il
+disegno che finisce sul muro. Un'immagine dice quelle cose meglio di un
+paragrafo, e il generatore le copia senza che gliele si spieghi.
 
 ## Il prompt
 
@@ -24,9 +31,9 @@ Le parti fra parentesi quadre si riempiono; il resto si manda così.
 
 > Disegna un foglio di sprite in pixel art **nello stesso stile di questa
 > immagine**: stessa tavolozza (legno caldo, tegole rosse e blu, pietra
-> grigia, verde dei cespugli ai piedi), stesso contorno scuro di un pixel,
-> stessa vista — facciata frontale vista da tre quarti dall'alto, come gli
-> edifici allegati — e stessa luce da in alto a sinistra.
+> grigia), stesso contorno scuro di un pixel, stessa vista — facciata
+> frontale vista da tre quarti dall'alto, come gli edifici allegati — e
+> stessa luce da in alto a sinistra.
 >
 > Il foglio è 1536×1024 px, su **fondo trasparente** (PNG). Disponi
 > **[N] edifici** su una griglia dichiarata di [4] colonne × [2] righe,
@@ -36,73 +43,84 @@ Le parti fra parentesi quadre si riempiono; il resto si manda così.
 > fra 220 e 290 px (nel gioco diventa 64×56–72 px: una cella del gioco
 > sono 16 px, l'edificio occupa 4 celle di larghezza).
 >
-> Ogni edificio è **appoggiato a terra** sul proprio bordo inferiore, con
-> un filo d'erba o di fiori ai piedi come negli originali. **Niente ombra
-> proiettata**, niente macchia scura sotto, niente terreno disegnato:
-> l'ombra la fa il gioco. Niente scritte né insegne con parole.
+> **Il disegno finisce dove l'edificio tocca terra**: la soglia della
+> porta, il gradino di pietra, il piede dei pali. Sotto e di fianco è
+> tutto trasparente. **Niente prato, niente terra battuta, niente
+> aiuola, niente ciuffi d'erba, niente ombra proiettata e nessuna
+> macchia sotto**: il terreno e l'ombra li mette il gioco, e un edificio
+> che se li porta addosso si vede perché ha una chiazza verde sotto
+> mentre tutti gli altri no.
+>
+> **NESSUNA PAROLA SCRITTA, da nessuna parte**: né insegne con testo, né
+> cartelli, né numeri, né lettere sui muri. Dove serve un'insegna è **un
+> oggetto**: un cupcake, un gomitolo con l'ago, un paio di forbici, una
+> pagnotta.
+>
+> Quello che appartiene a un edificio dev'essere **attaccato al suo
+> disegno in un pezzo solo**: il fumo tocca il comignolo, le briciole
+> toccano il davanzale, il vapore tocca la pentola. Niente pezzetti
+> staccati che galleggiano nel vuoto.
 >
 > Da sinistra a destra, riga per riga:
 > 1. [descrizione in una riga]
 > 2. [descrizione in una riga]
 > …
 
-## Quello che manca oggi, già scritto
+## Le due righe che erano sbagliate, e cosa hanno prodotto
 
-Otto edifici, cioè **due fogli da quattro**: sopra i quattro per riga
-di 1536 px ognuno scende sotto i 256 px di larghezza e i dettagli del
-mestiere — il telaio sotto la tettoia, le forme sulla mensola — non si
-leggono più a sessantaquattro pixel. La lista intera, con i ripieghi che
-usano intanto, sta in
-[`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md), §6.
+Restano scritte perché il difetto che hanno fatto non si vede finché
+non si guarda il foglio con l'occhio giusto.
 
-**Primo foglio** (`edifici_2.png`, 4 colonne × 1 riga, celle 384×1024 —
-oppure 2×2 con celle 768×512 se il generatore non regge una riga sola):
+**«con un filo d'erba o di fiori ai piedi come negli originali».** Era
+falsa: fienile, stalla, pollaio e serra di `edifici.png` finiscono di
+netto sul muro, senza niente sotto. Il generatore ha fatto quello che
+c'era scritto e ha disegnato un prato con la terra battuta sotto ogni
+edificio — e il pezzo più largo dello sprite non era l'edificio, era
+l'ellisse d'erba. Al suo posto adesso c'è una regola che dice **dove
+finisce il disegno**.
 
-> Da sinistra a destra:
-> 1. una tettoia di legno a un solo spiovente, sotto un telaio a mano
->    con la stoffa a righe tesa e una matassa di lana appesa alla trave
-> 2. una casetta col tetto rosso e un forno di pietra a cupola incassato
->    nella facciata, il fuoco acceso dentro, uno sbuffo di fumo dal
->    comignolo e tre pagnotte sul davanzale
-> 3. una casetta bianca col tetto verde, tre forme di formaggio gialle
->    su una mensola davanti alla porta e un bidone del latte di metallo
->    appoggiato accanto
-> 4. una casetta bassa di pietra col tetto grigio e la porta doppia
->    aperta, dentro si vedono scaffali con sacchi e barattoli — questa è
->    **più piccola delle altre**: larga circa 128 px invece di 256
+**«Niente scritte né insegne con parole»**, in tondo, in fondo a un
+paragrafo. È il punto in cui ogni generatore scrive qualcosa lo stesso.
+Va in maiuscolo, e le insegne vanno **dichiarate come oggetti**: dire
+cosa disegnare funziona, dire cosa non disegnare no.
 
-**Secondo foglio** (`edifici_3.png`, stessa griglia):
+## Come si guarda se è venuto bene
 
-> Da sinistra a destra:
-> 1. una tettoia aperta di pali con un grande pentolone di rame sul
->    fuoco, il vapore che sale e un mestolo di legno appoggiato al bordo
-> 2. una tettoia aperta di legno con un piano di lavoro, due fornelli a
->    fuoco vivo, pentole e mestoli appesi a una trave e un ceppo con le
->    verdure tagliate
-> 3. una casetta col tetto blu e una vetrina, dentro la vetrina un
->    manichino con un maglione crema, e sopra la porta un'insegna con
->    delle forbici (nessuna parola)
-> 4. una casetta col tetto viola, davanti due tinozze di legno piene
->    d'acqua color lavanda e un filo teso con due stoffe viola stese ad
->    asciugare
+Tre controlli, in quest'ordine — e nessuno dei tre è «sembra carino».
 
-## Le misure, spiegate
+1. **Dov'è la riga più larga.** Si ritaglia ogni sprite dall'alfa e si
+   guarda a che quota dell'altezza sta la riga con più pixel pieni. Se
+   sta al **76–85%** c'è un prato: la cosa più larga del disegno è
+   l'erba sotto. Se sta al **44–58%** è l'edificio, cioè il corpo della
+   casa. È il controllo che ha trovato il difetto, e costa dieci righe
+   di Python.
+2. **La misura di gioco, che è la prova vera.** Si rimpicciolisce ogni
+   pezzo alla misura a cui si vedrà — **63–70 px** per un edificio — e
+   si guarda se il mestiere si distingue ancora. Un foglio bello che a
+   sessantacinque pixel non dice niente è inutile: il bambino non vede
+   mai il foglio.
+3. **Accanto a quelli che ci sono già.** Il fienile è 78×54, il mulino a
+   vento 44×70: un edificio nuovo che venisse 90 px sarebbe la cosa più
+   grande del podere senza che nessuno l'abbia deciso.
 
-- **1536×1024 e scala 4** è la forma di `edifici.png`: il foglietto
-  dichiara `"scala": 4` e `"foglio": [384, 256]`, e i ritagli si scrivono
-  già divisi per quattro.
-- **256 px di larghezza** diventano 64 px, cioè quattro celle da 16: il
-  piede che `piedeDalDisegno` ricava è `[4, 2]`, lo stesso del fienile.
-  Per un edificio da due celle (la dispensa) si chiede largo 128 px.
-- **La griglia dichiarata** serve al foglietto: con le celle regolari
-  `da` e `cella` si scrivono senza misurare, e se il generatore non la
-  rispetta lo si vede subito col banco dei ritagli (`npm run mondo`).
-- **Niente ombra** è la richiesta che finora nessun generatore ha
-  rispettato: se la disegna lo stesso, `"ombra": true` nel foglietto la
-  toglie — ma solo su fondo magenta, non su fondo trasparente. Per gli
-  edifici il fondo trasparente è preferibile perché i cespugli ai piedi
-  hanno il verde che sul magenta si scontorna male; se l'ombra arriva, si
-  corregge con `cancella`.
+**La scala non si dà per scontata, si misura.** `edifici_2.png` è
+tornato 1248×832 e va a scala 4; `edifici_3.png` 1536×1024 e va a scala
+5 — due fogli dallo stesso generatore, a due settimane di distanza, con
+misure diverse. `python3 strumenti/sprite/misura.py <png> --figure`
+stampa il rettangolo di ogni macchia, e da lì si sceglie il divisore che
+porta i pezzi nella fascia giusta.
+
+## Ritoccare o rifare
+
+**Il ritocco è la via più economica quando il disegno è buono e sbaglia
+una cosa sola.** «Togli il prato e la terra battuta sotto ogni edificio,
+non toccare altro» ha funzionato al primo colpo, e ha salvato un foglio
+che era giusto in tutto il resto.
+
+Ma **l'editing di un'immagine ha un tetto di passaggi**: dopo un po' il
+generatore smette di correggere e ricomincia a reinventare. Esaurito il
+tetto si riparte da zero — e allora si allega **l'ultimo foglio buono**,
+non l'originale.
 
 ## Il foglietto che ne esce
 
@@ -111,22 +129,30 @@ oppure 2×2 con celle 768×512 se il generatore non regge una riga sola):
   "__": "Gli edifici delle botteghe: telaio, panificio, caseificio…",
   "prompt": {
     "scheda": "PROMPT-edificio.md",
-    "base": "edifici.png",
+    "base": "edifici_2.png",
     "generatore": "[quale, e quando]",
     "testo": "[il prompt intero, così com'è stato mandato]"
   },
   "scala": 4,
   "fondo": "trasparente",
-  "foglio": [384, 256],
-  "cella": [96, 128],
+  "foglio": [312, 208],
+  "cella": [1, 1],
   "famiglia": "figura",
   "sprite": {
-    "telaio":     { "da": [0, 0] },
-    "panificio":  { "da": [1, 0] }
+    "telaio":   {"da": [7, 26], "cella": [65, 65]},
+    "dispensa": {"da": [85, 20], "cella": [61, 67], "misura": [45, 49]}
   }
 }
 ```
 
-Con la griglia rispettata `cella` è la cella della griglia (divisa per
-quattro) e `da` si conta in celle. Se il generatore l'ha ignorata si torna
-a `"cella": [1, 1]` e a coordinate in pixel, come in `edifici.json`.
+`"cella": [1, 1]` e coordinate in pixel del foglio ridotto: è quello che
+serve quando il generatore la griglia non la rispetta fino in fondo, ed
+è il caso normale. `misura` rimette in riga il pezzo che dal fattore
+comune esce sbagliato — la dispensa era stata chiesta a 128 px ed è
+venuta grande come le altre.
+
+**`misura` non è solo estetica**: il piede di una voce di catalogo lo
+ricava `piedeDalDisegno` dalla larghezza dello sprite, quindi un pezzo
+più largo **occupa più celle**. Sostituire il disegno di una cosa che i
+bambini hanno già posato in mappa senza rimetterla alla sua misura vuol
+dire allargarle l'ingombro sotto i piedi.

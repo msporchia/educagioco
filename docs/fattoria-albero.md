@@ -1,15 +1,20 @@
 # 🌳 L'albero della produzione — progetto
 
 > **Stato: fatte le tappe da 0 a 7, meno la coda (8)** — dal 22 settembre
-> 2026. Nel gioco ci sono le fondamenta (`PROFONDITA`, `dati/usi.js`, la
+> 2026, con gli sprite degli edifici e le prime sei merci. Nel gioco ci sono le fondamenta (`PROFONDITA`, `dati/usi.js`, la
 > dispensa), il telaio e la stoffa, il panificio col pane e la farina, lo
 > sdoppiamento del fienile, la sartoria col maglione, la pagina
 > dell'albero, **il caseificio con burro, formaggio e torta** (4) e **la
 > lavanda con la tintoria** (7): tintura, maglione alla lavanda, sapone.
-> Manca la coda (8) — sciarpa e berretto — e mancano **tutti gli
-> sprite**: ogni voce nata qui dichiara in `aspetta` il pezzo che il
-> foglio le porterà e usa intanto un ripiego; l'elenco completo, da
-> spuntare, è in §6. Le tre decisioni in fondo sono state prese: sì al
+> Manca la coda (8) — sciarpa e berretto.
+>
+> **Gli sprite sono arrivati a metà**, e la lista da spuntare resta §6:
+> ci sono gli **otto edifici** (`edifici_2.png`), le **due bancarelle**
+> (`edifici_3.png`) e le **prime sei merci** (`merci_2.png`); mancano
+> dieci merci e i sette stadi della lavanda. Chi ancora aspetta lo
+> dichiara in `aspetta` e usa intanto un ripiego, e
+> `guastiDelCatalogo` diventa rosso il giorno che il pezzo c'è e la
+> riga non l'ha preso. Le tre decisioni in fondo sono state prese: sì al
 > terzo magazzino, sì allo sdoppiamento, sì alla merenda nel panificio.
 >
 > Due scostamenti dal progetto, tutti e due presi strada facendo e
@@ -528,39 +533,79 @@ si vede col ripiego scritto accanto — e il giorno che il foglio arriva,
 `guastiDelCatalogo` e `guastiDelleColture` diventano rossi finché la
 riga non prende il pezzo vero. Nessuno deve andarsele a cercare.
 
-### Edifici → `edifici_2.png` (8 pezzi, due prompt da quattro)
+### Edifici → `edifici_2.png` ✅ (8 pezzi, un foglio 4×2)
 
-| ✓ | pezzo | ripiego di oggi | dove |
+Fatti il 22 settembre 2026, in un foglio solo da otto e non in due da
+quattro: a 1248×832 con la griglia 4×2 gli edifici vengono 241–271 px,
+che a scala 4 fanno 60–68 px di gioco — il fienile ne fa 78. I ripieghi
+non li usa più nessuno.
+
+| ✓ | pezzo | ripiego di prima | dove |
 |:-:|:--|:--|:--|
-| ☐ | `dispensa` | `casetta_tetto_lungo` | catalogo, il terzo silo |
-| ☐ | `telaio` | `tettoia_fieno` | catalogo |
-| ☐ | `panificio` | `forno_pizza` | catalogo |
-| ☐ | `caseificio` | `casetta` | catalogo |
-| ☐ | `pentolone` | `calderone0` (animato) | catalogo |
-| ☐ | `cucina` | `forno_legna` | catalogo |
-| ☐ | `sartoria` | `dehors_rosa` | catalogo |
-| ☐ | `tintoria` | `dehors_azzurro` | catalogo |
+| ✅ | `dispensa` | `casetta_tetto_lungo` | catalogo, il terzo silo |
+| ✅ | `telaio` | `tettoia_fieno` | catalogo |
+| ✅ | `panificio` | `forno_pizza` | catalogo |
+| ✅ | `caseificio` | `casetta` | catalogo |
+| ✅ | `pentolone` | `calderone0` (animato) | catalogo |
+| ✅ | `cucina` | `forno_legna` | catalogo |
+| ✅ | `sartoria` | `dehors_rosa` | catalogo |
+| ✅ | `tintoria` | `dehors_azzurro` | catalogo |
 
-### Merci → `merci_2.png` e `merci_3.png` (16 pezzi, sei per foglio)
+Due cose non erano nel piano e stanno nel foglietto
+(`generati/edifici_2.json`):
+
+- **la dispensa è rimessa a 45 px con `misura`.** Era stata chiesta a
+  128 px ed è venuta grande come le altre (61 px). A 61 il piede che
+  `piedeDalDisegno` ricava sarebbe `[4, 2]`, e una fattoria che l'ha
+  già posata si ritroverebbe l'ingombro cresciuto sotto una cosa ferma:
+  a 45 resta `[3, 2]`, che è quello del ripiego. Il progetto diceva
+  `[2, 1]`, ma a 32 px è una casupola e non un magazzino da 🪙120.
+- **il pentolone perde l'animazione** (`anima: ['calderone0',
+  'calderone1']`): il paiolo dell'arredo aveva due fotogrammi, la
+  tettoia col pentolone ne ha uno.
+
+### E due bancarelle → `edifici_3.png` ✅
+
+`mercato` e `carretto_mercato` usavano i due pezzi rosa di
+`edifici.png`, che accanto alle botteghe nuove erano gli unici fuori
+stile. Adesso prendono `bancarella` e `carretto`, rimessi con `misura`
+ai 53 e 41 px di prima — **per non far crescere il piede** di due cose
+già posate nelle fattorie salvate.
+
+Nello stesso foglio ci sono **sei edifici disegnati in anticipo per la
+tappa 8** (zuccherificio, pastificio, pasticceria, rosticceria,
+merceria, sushi bar). Stanno nell'atlante e nessuna riga li nomina: il
+perché, e il nome della voce che prenderà ognuno, stanno nel campo `__`
+di `edifici_3.json`.
+
+### Merci → `merci_2.png` ✅, poi `merci_3.png` e `merci_4.png`
+
+Le prime sei sono fatte (22 settembre 2026), ed è il primo foglio di
+merci a **fondo trasparente** invece che magenta: il magenta era il
+rimedio a un generatore che l'alfa non la sapeva fare, e si portava
+dietro il vincolo che nessun oggetto potesse essere di quella tinta —
+cioè il viola della lavanda. Griglia 3×2 su 1536×1024, celle da 512, un
+oggetto largo ~380 px: quasi il doppio dei pixel per oggetto rispetto
+alla scheda vecchia, e restano sei per foglio, che era il vincolo vero.
 
 | ✓ | pezzo | ripiego di oggi | merce |
 |:-:|:--|:--|:--|
-| ☐ | `merce_stoffa` | solo l'emoji 🧵 | stoffa |
-| ☐ | `merce_farina` | solo l'emoji 🌾 | farina |
+| ✅ | `merce_stoffa` | solo l'emoji 🧵 | stoffa |
+| ✅ | `merce_farina` | solo l'emoji 🌾 | farina |
 | ☐ | `merce_pane` | `pane` (l'arredo) | pane |
 | ☐ | `merce_maglione` | solo l'emoji 🧥 | maglione |
-| ☐ | `merce_burro` | solo l'emoji 🧈 | burro |
-| ☐ | `merce_formaggio` | solo l'emoji 🧀 | formaggio |
+| ✅ | `merce_burro` | solo l'emoji 🧈 | burro |
+| ✅ | `merce_formaggio` | solo l'emoji 🧀 | formaggio |
 | ☐ | `merce_torta` | `torta0` (l'arredo) | torta |
 | ☐ | `merce_crostata` | `crostatina` (l'arredo) | crostata |
 | ☐ | `merce_tintura` | solo l'emoji 🫙 | tintura |
 | ☐ | `merce_maglione_lavanda` | solo l'emoji 💜 | maglione alla lavanda |
 | ☐ | `merce_sapone` | solo l'emoji 🧼 | sapone |
 | ☐ | `merce_sacchetto` | `sacco_iuta` (l'arredo) | sacchetto profumato |
-| ☐ | `merce_minestrone` | solo l'emoji 🍜 | minestrone |
+| ✅ | `merce_minestrone` | solo l'emoji 🍜 | minestrone |
 | ☐ | `merce_salsa` | `marmellata0` (l'arredo) | salsa |
 | ☐ | `merce_conserva` | solo l'emoji 🥗 | conserva d'orto |
-| ☐ | `merce_polenta` | solo l'emoji 🍛 | polenta |
+| ✅ | `merce_polenta` | solo l'emoji 🍛 | polenta |
 
 E quando arriva la coda (tappa 8): `merce_sciarpa` e `merce_berretto`.
 
@@ -593,7 +638,8 @@ porta** che si legge da lontano. Larghi quattro celle, alti tre e mezzo.
 ### Merci (`merci_2.png`)
 
 Nello stile di `merci.jpg`: un oggetto solo per riquadro, di fronte e un
-po' dall'alto, su fondo magenta, senza ombra a macchia.
+po' dall'alto, **su fondo trasparente**, senza ombra a macchia. (Il
+magenta era di quando l'alfa non tornava pulita: vedi `PROMPT-merce.md`.)
 
 | pezzo | descrizione |
 |:--|:--|

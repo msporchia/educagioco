@@ -133,6 +133,36 @@ basta: l'attrezzo non cambia.
   fiocco e una mantellina proprio lì, con la stessa formula del gioco),
   e «salva il foglietto» li scrive. Un provino di tutte le bestie, tre
   versi ciascuna, sta in `poc/scatti/agganci-fattoria.png`.
+- **`prompt`** — **come è stato generato questo foglio**, per poterne
+  rigenerare un pezzo. Facoltativo, e lo ignora `atlante.py`: è una
+  carta, non una coordinata.
+
+  ```json
+  "prompt": {
+    "scheda": "PROMPT-merce.md",
+    "base": "merci_2.png",
+    "generatore": "Grok, settembre 2026",
+    "testo": "Disegna un foglio di oggetti in pixel art nello stesso stile…"
+  }
+  ```
+
+  `scheda` è quale delle schede accanto ai fogli si è usata, `base`
+  l'immagine allegata, `generatore` chi e quando, `testo` il prompt
+  intero **così com'è stato mandato** — non ripulito, non riassunto: se
+  conteneva una riga sbagliata, quella riga è la spiegazione del difetto
+  che il foglio si porta dietro, e riscriverla la cancella.
+
+  Serve perché **manca sempre un pezzo**. Un foglio da sei oggetti ne
+  rende cinque buoni e uno storto, e rigenerare quello lì nello stesso
+  stile vuol dire rimandare lo stesso prompt con una riga cambiata.
+  Senza, si rifà tutto il foglio e gli altri cinque cambiano misura.
+
+  ⚠ **Si scrive nel momento in cui si salva il PNG.** I fogli nascono in
+  una finestra di chat che non lascia un file, e «lo copio dopo» vuol
+  dire perderlo: della tornata di settembre 2026 — tre fogli — si è
+  conservato un prompt solo, e infatti due foglietti su tre qui sotto
+  dicono «non conservato».
+
 - **`famiglie`** — di che famiglia è un pezzo, **per prefisso**:
   `{"muro": "tessera", "suolo": "tessera"}` dice che ogni nome che comincia
   per `muro` o per `suolo` è di quella famiglia. Le famiglie ammesse sono
