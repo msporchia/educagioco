@@ -73,6 +73,23 @@ export const CFG = {
     vicino: 140, lontano: 260,
     grosso: 5,                                  // vita base da cui un mostro è «grosso»
     daiGrossi: 0.3,                             // quante volte su cento ne lascia uno
+    /* ── la cassa è rara, e il tetto è un conto e non un peso ──
+       Una cassa è un'offerta intera: una domanda in più con una carta
+       in palio, come una salita di livello che non si è sudata. Il
+       `peso` in `oggetti.js` dice solo quanto spesso esce *fra* i tre,
+       e con la marea gli oggetti arrivano ogni sette secondi: senza un
+       tetto, alla tana le casse erano quasi un quarto delle offerte, e
+       i livelli — cioè le gemme, cioè l'andare in giro — contavano di
+       meno. Tre limiti, e valgono anche per quella lasciata da un
+       mostro grosso: mai nei primi `primaDi` secondi (prima si vede
+       com'è fatta la partita), **mai due in campo insieme**, e in tutto
+       non più di una ogni `ogni` secondi di partita — un tetto che
+       cresce col tempo, così è lo stesso conto per una tappa da 45
+       secondi (una cassa) e per la Sopravvivenza al decimo minuto. Il
+       banco (`unita/survivors`, sezione 5) conta quante offerte in più
+       dà una tappa intera al pilota rispetto ai livelli, e le tiene
+       sotto un terzo. */
+    cassa: { primaDi: 10, ogni: 45 },
   },
 
   /* ── i muri ──
@@ -345,6 +362,14 @@ export function guastiDellaTaratura(cfg = CFG) {
     guasti.push('gli oggetti non arrivano più spesso con la marea, o arrivano a raffica')
   if (!(o.massimo >= 2 && o.massimo <= 8)) guasti.push(`al massimo ${o.massimo} oggetti in campo`)
   if (!(o.daiGrossi > 0 && o.daiGrossi <= 0.6)) guasti.push(`i grossi lasciano un oggetto ${o.daiGrossi} volte`)
+  /* la cassa: non subito, e non più di una ogni tre quarti di minuto —
+     abbastanza rada perché in una tappa corta ne esca una sola, non
+     tanto da sparire dalla Sopravvivenza */
+  const ca = o.cassa || {}
+  if (!(ca.primaDi >= 8 && ca.primaDi <= 20))
+    guasti.push(`la prima cassa può uscire dopo ${ca.primaDi} secondi`)
+  if (!(ca.ogni >= 40 && ca.ogni <= 60))
+    guasti.push(`una cassa ogni ${ca.ogni} secondi: o troppo fitte o non si vedono mai`)
 
   /* ── i muri ──
      Il varco deve essere più largo dell'eroe con un margine da dito, e

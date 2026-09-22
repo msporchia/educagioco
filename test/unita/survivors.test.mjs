@@ -514,6 +514,7 @@ controlla('il riassunto conta le stelle',
 {
   /* ── la cassa apre un'offerta, pagata come sempre ── */
   const p = new Partita(new Regole(CAMPAGNA[4]), { rnd: caso(46), campo })
+  p.tempo = 30
   const livello = p.livello, xp = p.xp
   p.oggetti.push({ tipo: 'cassa', x: p.eroe.x, y: p.eroe.y, resta: 5, fase: 0 })
   p.avanza(1 / 30)
@@ -540,6 +541,43 @@ controlla('il riassunto conta le stelle',
   pieno.oggetti.push({ tipo: 'cassa', x: 0, y: 0, resta: 5, fase: 0 })
   pieno.avanza(1 / 30)
   controlla('col mazzo finito la cassa è vuota e non ferma la partita', !pieno.inPausa)
+}
+{
+  /* ── la cassa è rara, e il tetto è un conto ──
+     Una cassa è un'offerta intera che non si è sudata: non deve
+     arrivare subito, non ce ne possono essere due in campo, e in tutto
+     non più di una ogni `ogni` secondi (`CFG.oggetti.cassa`). Vale
+     anche per quella lasciata da un mostro grosso. */
+  const { primaDi, ogni } = CFG.oggetti.cassa
+  const p = new Partita(new Regole(CAMPAGNA[8]), { rnd: caso(60), campo })
+  controlla('nei primi secondi una cassa non esce', !p.cassaAmmessa(), `a ${p.tempo}s`)
+  let uscite = 0
+  for (let i = 0; i < 40; i++) { const o = p.lasciaOggetto(); if (o?.tipo === 'cassa') uscite++; p.oggetti = [] }
+  uguale('nemmeno pescando quaranta volte', uscite, 0)
+  p.tempo = primaDi + 0.1
+  let quante = 0
+  for (let i = 0; i < 40; i++) { const o = p.lasciaOggetto(); if (o?.tipo === 'cassa') quante++; p.oggetti = [] }
+  uguale('passati i primi secondi ne esce una, e una sola', quante, 1)
+  p.oggetti = [{ tipo: 'cassa', x: 300, y: 0, resta: 5, fase: 0 }]
+  p.tempo = primaDi + ogni * 5
+  controlla('con una cassa già in campo non ne esce un\'altra', !p.cassaAmmessa())
+  p.oggetti = []
+  controlla('tolta quella, il tetto è salito col tempo', p.cassaAmmessa())
+  /* il conto cresce col tempo e non con la tappa: a un quarto d'ora di
+     Sopravvivenza sono venti, non venti volte tanto */
+  const q = new Partita(new Regole(LIBERO), { rnd: caso(61), campo })
+  q.tempo = 900
+  let tot = 0
+  for (let i = 0; i < 400; i++) { const o = q.lasciaOggetto(); if (o?.tipo === 'cassa') tot++; q.oggetti = [] }
+  uguale('in un quarto d\'ora di Sopravvivenza il tetto è uno ogni tre quarti di minuto',
+         tot, Math.floor((900 - primaDi) / ogni) + 1)
+  /* e un colosso morto non scavalca il tetto */
+  const g = new Partita(new Regole(CAMPAGNA[8]), { rnd: () => 0.001, campo })
+  g.nemici.push({ tipo: 'colosso', x: 200, y: 50, r: 27, vita: 0, vitaMax: 10, passo: 30,
+                  massa: 1, spx: 0, spy: 0, lampo: 0, gelato: 0, freno: 1, attesa: 0, fase: 0 })
+  g.raccogliMorti()
+  controlla('un colosso morto nei primi secondi non lascia una cassa',
+            g.oggetti[0] && g.oggetti[0].tipo !== 'cassa', g.oggetti[0]?.tipo)
 }
 {
   /* ── quanti ce ne possono essere, e chi li lascia ── */
@@ -780,7 +818,17 @@ for (const [i, t] of CAMPAGNA.entries()) {
        `${(bimbo.quota * 100).toFixed(0).padStart(9)}%` +
        `${(fermo.quota * 100).toFixed(0).padStart(8)}%` +
        `${sa.livelloMedio.toFixed(1).padStart(10)}` +
-       `${sa.domandeMedie.toFixed(1).padStart(9)}`)
+       `${sa.domandeMedie.toFixed(1).padStart(9)}` +
+       `${sa.casseMedie.toFixed(2).padStart(7)}` +
+       `${centro.livelloMedio.toFixed(1).padStart(12)}`)
+
+  /* ── la cassa resta un di più, non una seconda fonte ──
+     Ogni cassa è un'offerta in più di quelle che hanno pagato le gemme:
+     sotto un terzo, o le carte si prendono girando in tondo ad aspettare
+     che ne compaia una invece di raccogliere (`CFG.oggetti.cassa`) */
+  controlla(`tappa ${i + 1} (${t.nome}): le casse restano meno di un terzo delle offerte`,
+            sa.casseMedie <= (sa.domandeMedie - sa.casseMedie) / 3 + 0.05,
+            `${sa.casseMedie.toFixed(2)} casse su ${sa.domandeMedie.toFixed(1)} offerte`)
 
   /* ── quanto deve essere dura ──
      Le soglie sono per scalino: il primo insegna e si vince quasi sempre,

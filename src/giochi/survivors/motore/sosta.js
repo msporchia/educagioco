@@ -100,6 +100,9 @@ export function scrivi(partita, tappa) {
     xp: p.xp,
     uccisi: p.uccisi,
     ferite: p.ferite,
+    /* il conto delle casse comparse: è il tetto (`cassaAmmessa`), e
+       senza di lui uscire e rientrare lo azzererebbe */
+    casse: p.casse,
     eroe: { x: arrotonda(e.x), y: arrotonda(e.y), cuori: e.cuori,
             cuoriMax: e.cuoriMax, guarda: e.guarda, passi: arrotonda(e.passi),
             rotta: Math.round(e.rotta * 100) / 100 },
@@ -153,6 +156,7 @@ export function leggi(dato, tappa, { rnd = Math.random, campo = null, mazzo } = 
     p.xp = Math.max(0, Math.min(dato.xp || 0, p.prossima))
     p.uccisi = dato.uccisi || 0
     p.ferite = dato.ferite || 0
+    p.casse = dato.casse || 0
 
     const e = dato.eroe
     Object.assign(p.eroe, {

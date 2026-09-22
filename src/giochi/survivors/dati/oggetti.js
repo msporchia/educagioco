@@ -20,7 +20,15 @@
 
    `peso` è quanto spesso esce fra i tre. Il cuore ha un peso suo solo
    quando manca un cuore: a cuori pieni non uscirebbe per niente, e un
-   oggetto che non fa niente è una corsa a vuoto.
+   oggetto che non fa niente è una corsa a vuoto. La cassa ha un tetto
+   suo, ed è un conto e non un peso (`CFG.oggetti.cassa` in
+   `taratura.js`): mai nei primi secondi, mai due in campo, e non più
+   di una ogni tre quarti di minuto — chi pesca lo dice con `cassa:
+   false`, e allora escono solo gli altri due.
+
+   Da quando le gemme si prendono a contatto (la calamita di base non
+   c'è più: solo la carta), la calamita trovata a terra vale di più di
+   prima — senza la carta è l'unico risucchio che esiste.
 
    Da dove arrivano: **a tempo** (`CFG.oggetti.ogni`, in `taratura.js`) e
    **dai mostri grossi** — cinghiale, roccia e colosso ne lasciano uno
@@ -41,10 +49,12 @@ export const OGGETTI = {
 
 export const CHIAVI_OGGETTI = Object.keys(OGGETTI)
 
-/* Quale oggetto esce, dato il caso e se manca un cuore: il cuore non si
-   offre a chi li ha tutti, o si corre per niente. */
-export function pescaOggetto(rnd, { feribile = true } = {}) {
-  const buoni = CHIAVI_OGGETTI.filter(k => feribile || k !== 'cuore')
+/* Quale oggetto esce, dato il caso, se manca un cuore e se una cassa è
+   ammessa: il cuore non si offre a chi li ha tutti, o si corre per
+   niente; la cassa non si offre oltre il suo tetto (lo tiene il motore,
+   `cassaAmmessa`). */
+export function pescaOggetto(rnd, { feribile = true, cassa = true } = {}) {
+  const buoni = CHIAVI_OGGETTI.filter(k => (feribile || k !== 'cuore') && (cassa || k !== 'cassa'))
   let totale = 0
   for (const k of buoni) totale += OGGETTI[k].peso
   let s = rnd() * totale
@@ -75,5 +85,11 @@ export function guastiDegliOggetti(tabella = OGGETTI) {
   for (let i = 0; i < 40; i++) { senza.add(pescaOggetto(() => s, { feribile: false })); s = (s + 0.0249) % 1 }
   if (senza.has('cuore')) guasti.push('a cuori pieni esce lo stesso un cuore')
   if (senza.size < 2) guasti.push('a cuori pieni resta un oggetto solo da trovare')
+  /* e oltre il tetto delle casse non ne esce nessuna, ma esce qualcosa */
+  const tetto = new Set()
+  s = 0.01
+  for (let i = 0; i < 40; i++) { tetto.add(pescaOggetto(() => s, { cassa: false })); s = (s + 0.0249) % 1 }
+  if (tetto.has('cassa')) guasti.push('oltre il tetto esce lo stesso una cassa')
+  if (!tetto.size) guasti.push('senza cassa non esce niente')
   return guasti
 }

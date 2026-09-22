@@ -161,6 +161,9 @@ export class Partita {
     this.risucchio = 0
     this.tOggetto = CFG.oggetti.primo
     this.tMuro = CFG.muro.primo
+    /* quante casse sono comparse finora: è il conto del tetto
+       (`cassaAmmessa`), e la sosta se lo porta dietro */
+    this.casse = 0
 
     this.tempo = 0
     this.uccisi = 0
@@ -812,7 +815,8 @@ export class Partita {
   lasciaOggetto(x, y) {
     if (this.oggetti.length >= CFG.oggetti.massimo) return null
     const e = this.eroe
-    const tipo = pescaOggetto(this.rnd, { feribile: e.cuori < e.cuoriMax })
+    const tipo = pescaOggetto(this.rnd, { feribile: e.cuori < e.cuoriMax, cassa: this.cassaAmmessa() })
+    if (tipo === 'cassa') this.casse++
     if (x === undefined) {
       const { vicino, lontano } = CFG.oggetti
       const mx = this.campo.larghezza / 2 - 30, my = this.campo.altezza / 2 - 40
@@ -829,6 +833,19 @@ export class Partita {
     this.oggetti.push(o)
     this.segnala('oggetto')
     return o
+  }
+
+  /* ── il tetto delle casse (`CFG.oggetti.cassa`) ──
+     Una cassa è un'offerta intera, e le offerte le devono dare le gemme:
+     mai nei primi secondi, mai due in campo insieme, e in tutto non più
+     di una ogni `ogni` secondi di partita. Il conto cresce col tempo e
+     non con la tappa, così è lo stesso in campagna e in Sopravvivenza.
+     Vale anche per quella che lascerebbe un mostro grosso. */
+  cassaAmmessa() {
+    const { primaDi, ogni } = CFG.oggetti.cassa
+    return this.tempo >= primaDi
+      && !this.oggetti.some(o => o.tipo === 'cassa')
+      && this.casse < Math.floor((this.tempo - primaDi) / ogni) + 1
   }
 
   raccogliOggetti(dt) {
