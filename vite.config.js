@@ -88,9 +88,25 @@ function scriviVersione () {
 // tutte. Niente confronti di data, niente file da tenere allineati.
 //
 // In lettura è cache-first, che è ciò che rende l'app giocabile senza
-// rete: si risponde da lì e in parallelo si va a vedere se c'è di nuovo,
-// così l'aggiornamento arriva al caricamento dopo invece di far
-// aspettare quello in corso.
+// rete. **E nella cache non entra niente di quello che passa**: quella
+// di una versione la scrive l'installazione, una volta sola, e dopo
+// soltanto «cerca aggiornamenti», che la pagina la controlla prima di
+// mettercela. Il nuovo arriva con un service worker nuovo — il build
+// cambia sempre `sw.js`, perché dentro c'è la versione — che si fa la
+// sua cache e butta quella di prima.
+//
+// Fino al 23 settembre 2026 ci provava anche il `fetch`: un `put` dopo
+// ogni pagina presa dalla rete, e un rinfresco del resto «per la volta
+// dopo». Il `clone()` girava dentro un `.then`, cioè dopo che
+// `respondWith` si era già preso il corpo, e il `put` falliva in
+// silenzio: riusciva solo dove la risposta non la voleva nessuno — la
+// pagina arrivata oltre la pazienza, manifest e icone. Nessuno se n'è
+// accorto, perché la copia dell'installazione bastava, e si sono tolti
+// invece di ripararli: riparati avrebbero riscritto sette megabyte e
+// mezzo a ogni apertura, fatto una copia per ogni indirizzo con una coda
+// diversa, e messo la pagina presa dalla rete — che nessuno controlla, e
+// per dieci minuti può arrivare dalla cache del browser — sopra quella
+// che il tasto aveva appena controllato.
 //
 // CON UN'ECCEZIONE: LA PAGINA. Per il documento si prova prima la rete,
 // con pochi secondi di pazienza e la cache pronta dietro. Cache-first
@@ -126,9 +142,8 @@ function scriviVersione () {
 //
 // E due cose per «cerca aggiornamenti» (`src/aggiornamento.js`), che la
 // pagina nuova la scarica da sé, contando i megabyte: le sue richieste
-// `no-store` passano senza fermarsi in cache — la pagina buona la mette
-// a posto lei, e qui ne resterebbe una seconda copia da sette megabyte e
-// mezzo — e la pagina che mette nella cache della versione nuova, già
+// `no-store` vanno dritte al sito, perché a chi chiede così la cache non
+// risponde, e la pagina che mette nella cache della versione nuova, già
 // controllata, qui non si riscarica. Il nome di quella cache lo sa anche
 // lei (`CASSETTO`).
 function scriviServiceWorker () {
@@ -173,7 +188,9 @@ self.addEventListener('activate', e => {
 })
 
 // la rete, ma con un tetto all'attesa: passato quello si va di cache,
-// perché una pagina che tarda è indistinguibile da una che non arriva
+// perché una pagina che tarda è indistinguibile da una che non arriva.
+// E quello che arriva non si mette da parte: nella cache scrivono solo
+// l'installazione e «cerca aggiornamenti» (src/aggiornamento.js)
 const PAZIENZA = 2500
 function conRete (req) {
   return new Promise((si, no) => {
@@ -181,7 +198,6 @@ function conRete (req) {
     fetch(req).then(r => {
       clearTimeout(scaduta)
       if (!r || !r.ok) return no(new Error('storta'))
-      caches.open(CACHE).then(c => c.put(req, r.clone())).catch(() => {})
       si(r)
     }).catch(x => { clearTimeout(scaduta); no(x) })
   })
@@ -202,18 +218,13 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request).then(t => t || caches.match(PAGINA))))
     return
   }
-  // chi chiede di non passare da nessuna cache non ci passa, e non ci
-  // lascia niente: «cerca aggiornamenti» la pagina nuova la mette a posto
-  // da sé, sotto il nome giusto, e qui ne resterebbe una seconda copia
-  // sotto un indirizzo che nessuno usa
+  // chi chiede «no-store» vuole il sito, e la cache non gli risponde:
+  // risponderebbe al posto del sito. Oggi lo chiede solo «cerca
+  // aggiornamenti», per un indirizzo che la cache comunque non ha: la
+  // regola è per chi un giorno chiederà così una cosa che la cache ha
   if (e.request.cache === 'no-store') return
-  e.respondWith(caches.match(e.request).then(trovato => {
-    const dalla_rete = fetch(e.request).then(r => {
-      if (r && r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()))
-      return r
-    }).catch(() => trovato)
-    return trovato || dalla_rete
-  }))
+  // il resto: la cache, e se non ce l'ha la rete
+  e.respondWith(caches.match(e.request).then(t => t || fetch(e.request)))
 })
 `,
       })

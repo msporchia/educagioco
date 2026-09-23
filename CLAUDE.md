@@ -854,6 +854,16 @@ committate: non è ricostruibile da git.
   (il service worker in `vite.config.js`). Cache-first anche sul
   documento vuol dire che una versione con un guasto si ripresenta
   identica a ogni avvio, e dal telefono non c'è ricarica che la smuova.
+  **E nella cache non entra niente di quello che passa**: quella di una
+  versione la scrivono l'installazione e «cerca aggiornamenti», che la
+  pagina la controlla prima di mettercela. Il `fetch` ci provava anche
+  lui, con un `put` dopo ogni risposta presa dalla rete, e non ci
+  riusciva quasi mai: il `clone()` arrivava quando `respondWith` si era
+  già preso il corpo. Si è tolto invece di ripararlo — riparato
+  riscriverebbe sette megabyte e mezzo a ogni apertura, e metterebbe la
+  pagina presa dalla rete, che nessuno controlla, sopra quella che il
+  tasto aveva controllato — e `integrazione/aggiornamento` (passo 10)
+  guarda che resti tolto.
 - **La pronuncia non usa `speechSynthesis`**: le clip sono incise a monte e
   concatenate in sprite (`src/data/voci.js`, `voci-es.js`). `src/voce.js` è
   l'unico punto che le riproduce.
