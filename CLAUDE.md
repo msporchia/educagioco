@@ -572,6 +572,35 @@ committate: non è ricostruibile da git.
   merce già scelta** e le sue righe eseguono le azioni del consiglio:
   bersagli `[data-albero]`, `[data-albero-riga="<merce>"]`,
   `[data-albero-macchina="<id>"]`, `[data-albero-apri="<merce>"]`.
+- **`src/giochi/costruttore/`** — *in prova.* Un robot costruisce, visto di
+  lato, quello che il bambino programma: **progetti** (funzioni) con le loro
+  **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti
+  finché. Pagina per chi arriva da fuori: [`docs/costruttore.md`](docs/costruttore.md).
+  Quattro cose da non rompere. **La sfida sono gli ordini**: un livello
+  dichiara più situazioni (3 gradini e 5) e vince solo il programma che le
+  regge tutte — è l'idea delle scene del Generale, ed è quella che rende
+  necessari i parametri; ogni livello porta le sue `fragili` (il numero del
+  primo ordine scritto a mano, la colonna a righe) e `unita/costruttore`
+  pretende che ognuna perda almeno un ordine. **Una scelta non nasce fatta**:
+  i numeri di una riga nuova sono `{ vuoto: true }`, scritti **N**, la scelta
+  si apre da sola e ▶ non parte con una N dentro — «vai a destra 1» di
+  partenza si leggeva come l'unico verso possibile (è la prima cosa vista
+  giocandolo). **Il robot cammina e cade** (`motore/esecutore.js`, `passo`,
+  `cadi`): sale mettendosi un mattone sotto i piedi e posa anche in basso a
+  destra/sinistra, dove andrà il piede; era un drone che volava, e un robot
+  per aria non dava nessun ordine alle cose. **I programmi stanno fuori dal
+  profilo**, in archivio sotto `costruttore:<id>` con una `v` sua: quando la
+  lingua cambia (come col passaggio alla gravità) si alza la `v` e i programmi
+  vecchi si lasciano andare, l'avanzamento resta nel profilo. **Le stelle
+  stanno sotto l'indice del livello** (è la forma di tutte le campagne), quindi
+  riordinare la fila vuole una voce in `FILE` di `dati/campagna.js`: il profilo
+  dice quale fila conosce (`cfg.fila`) e `riordina` rimette le stelle per
+  chiave. **Numeri e colori sono due specie di valori**: una misura può essere
+  un colore (`tipi: { tinta: 'colore' }`), un ordine può portare colori
+  (`{ sinistra: 'verde' }`), e una casella offre solo la specie giusta. L'esecutore è
+  un generatore che srotola il programma **un fatto per volta**
+  (`riga`, `muovi`, `metti`, `entra`…), e `regia.js` li anima: è così che la
+  scheda di un progetto si apre con le misure di *quella* chiamata.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni

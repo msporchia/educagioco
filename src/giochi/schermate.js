@@ -19,6 +19,7 @@ import Fattoria from './fattoria/Gioco.vue'
 import Sotterraneo from './sotterraneo/Gioco.vue'
 import Castello from './castello/Gioco.vue'
 import Pozioni from './pozioni/Gioco.vue'
+import Costruttore from './costruttore/Gioco.vue'
 
 export const SCHERMATE = {
   codice: CodiceSegreto,
@@ -31,4 +32,5 @@ export const SCHERMATE = {
   sotterraneo: Sotterraneo,
   castello: Castello,
   pozioni: Pozioni,
+  costruttore: Costruttore,
 }

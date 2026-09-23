@@ -1,0 +1,296 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL COSTRUTTORE — L'ASPETTO
+
+   Un file solo, ogni classe comincia per `cst-` (il perché sta in
+   `codice-segreto/stile.css`: due fogli che si contendono lo stesso
+   nome si rompono a distanza di mesi).
+
+   Lo schermo è diviso in due: **sopra** l'ordine, il cantiere e i
+   comandi, fermi; **sotto** il programma, che scorre da solo. Un
+   programma lungo non deve portarsi via il cantiere: è guardando il
+   robot mentre si legge la riga accesa che si capisce cosa fa.
+
+   Il giallo è quello dei cantieri: il robot, la riga che gira, il tasto
+   ▶. Il rosso è solo per quello che non va.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cst {
+  --cst-fondo: #f7f1e8;
+  --cst-carta: #fffdf9;
+  --cst-inchiostro: #2d2a26;
+  --cst-tenue: #857a6c;
+  --cst-bordo: #e4d8c6;
+  --cst-giallo: #f5b82e;
+  --cst-giallo-chiaro: #fff1c9;
+  --cst-rosso: #c0262d;
+  --cst-rosso-chiaro: #fde4e4;
+  --cst-verde: #2f9e44;
+  --cst-casella: #eef2fb;
+  --cst-casella-bordo: #b9c8ec;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 560px; margin: 0 auto;
+  background: var(--cst-fondo);
+  color: var(--cst-inchiostro);
+  position: relative;
+}
+.cst button { font: inherit; color: inherit; cursor: pointer }
+.cst-piccolo { font-size: 13px; color: var(--cst-tenue); margin: 2px 0 8px }
+.cst-ico { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; line-height: 1 }
+
+/* ═══════════ la mappa ═══════════ */
+.cst-mappa { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 24px }
+.cst-capitolo { margin-bottom: 18px }
+.cst-capitolo h3 { margin: 6px 0 0; font-size: 18px; display: flex; align-items: center; gap: 8px }
+.cst-livelli { display: flex; flex-direction: column; gap: 8px }
+.cst-livello {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  padding: 10px 12px; border-radius: 14px;
+  background: var(--cst-carta); border: 1.5px solid var(--cst-bordo);
+}
+.cst-livello:active { transform: scale(.98) }
+.cst-livello.cst-adesso { border-color: var(--cst-giallo); box-shadow: 0 0 0 3px var(--cst-giallo-chiaro) }
+.cst-livello.cst-chiuso { opacity: .55 }
+.cst-livello.cst-libero { width: 100%; margin-bottom: 14px; background: #fff7df; border-color: var(--cst-giallo) }
+.cst-livello .cst-faccia { font-size: 30px; width: 40px; text-align: center }
+.cst-testo-livello { flex: 1; display: flex; flex-direction: column; min-width: 0 }
+.cst-testo-livello i { font-style: normal; font-size: 13px; color: var(--cst-tenue) }
+.cst-stelline { font-size: 14px; white-space: nowrap }
+
+/* ═══════════ il cantiere: sopra fermo, sotto scorre ═══════════ */
+.cst-cantiere { flex: 1; min-height: 0; display: flex; flex-direction: column }
+.cst-sopra { flex: 0 0 auto; padding: 6px 10px 4px; display: flex; flex-direction: column; gap: 6px }
+
+.cst-ordine { display: flex; flex-direction: column; gap: 6px }
+.cst-chi { display: flex; gap: 8px; align-items: flex-start }
+.cst-chi .cst-faccia { font-size: 28px; line-height: 1 }
+.cst-chi p { margin: 0; font-size: 14px; line-height: 1.35 }
+.cst-gettoni { display: flex; gap: 6px; flex-wrap: wrap }
+.cst-gettone {
+  display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px;
+  border-radius: 999px; border: 1.5px solid var(--cst-bordo); background: var(--cst-carta); font-size: 13px;
+}
+.cst-gettone small { color: var(--cst-tenue); font-size: 12px }
+.cst-gettone small i { font-style: normal; margin-left: 4px }
+.cst-gettone .cst-segno {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--cst-bordo); font-weight: 700; font-size: 12px;
+}
+.cst-gettone.cst-su { border-color: var(--cst-giallo); background: var(--cst-giallo-chiaro) }
+.cst-gettone.cst-vinto .cst-segno { background: var(--cst-verde); color: #fff }
+.cst-gettone.cst-perso .cst-segno { background: var(--cst-rosso); color: #fff }
+
+.cst-montaggio {
+  text-align: center; font-weight: 600; font-size: 14px; padding: 4px;
+  background: var(--cst-giallo-chiaro); border-radius: 10px;
+}
+
+.cst-campo { display: flex; justify-content: center; width: 100% }
+.cst-campo canvas { display: block; border-radius: 10px; image-rendering: auto; touch-action: manipulation }
+
+.cst-comandi { display: flex; flex-direction: column; gap: 6px }
+.cst-fila-comandi { display: flex; gap: 8px; align-items: center }
+.cst-via {
+  flex: 1; min-height: 46px; border-radius: 14px; border: none; font-weight: 700; font-size: 18px;
+  background: var(--cst-giallo); color: #3a2a00; box-shadow: 0 3px 0 #c98d10;
+}
+.cst-via:active { transform: translateY(2px); box-shadow: 0 1px 0 #c98d10 }
+.cst-via.cst-stop { background: #e9e2d6; color: var(--cst-inchiostro); box-shadow: 0 3px 0 #bdb3a3 }
+.cst-velocita { display: flex; border: 1.5px solid var(--cst-bordo); border-radius: 12px; overflow: hidden; background: var(--cst-carta) }
+.cst-velocita button { border: none; background: none; min-width: 40px; min-height: 42px; font-size: 18px }
+.cst-velocita button.cst-su { background: var(--cst-giallo-chiaro) }
+.cst-lampadina {
+  min-width: 46px; min-height: 46px; border-radius: 14px; border: 1.5px solid var(--cst-bordo);
+  background: var(--cst-carta); font-size: 20px; position: relative;
+}
+.cst-lampadina small { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cst-tenue) }
+
+.cst-lavagnette { display: flex; gap: 6px; flex-wrap: wrap }
+.cst-lavagnetta {
+  font-size: 13px; padding: 3px 10px; border-radius: 8px;
+  background: #2f4a3a; color: #eef6ee; border: none; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.cst-lavagnetta b { font-size: 15px; margin-left: 4px; color: #ffe89a }
+.cst-lavagnetta.cst-bloccata { background: #5b5347 }
+.cst-valore-colore { display: inline-flex; align-items: center; gap: 4px }
+.cst-valore-colore .cst-quadretto { width: 12px; height: 12px }
+.cst-tipo-misura { font-size: 18px }
+.cst-lavagnetta.cst-nuova { background: transparent; color: var(--cst-tenue); border: 1.5px dashed var(--cst-bordo); font-family: inherit }
+
+.cst-messaggio { margin: 0; font-size: 14px; padding: 8px 10px; border-radius: 10px; line-height: 1.35 }
+.cst-messaggio.cst-errore { background: var(--cst-rosso-chiaro); color: #7c1116 }
+.cst-messaggio.cst-sbagliato { background: #fff1e0; color: #7a4100 }
+.cst-messaggio.cst-fatto { background: #e5f5e8; color: #1f5f2c }
+.cst-messaggio.cst-fisso { margin: 0 10px 8px }
+
+/* ═══════════ l'editor ═══════════ */
+.cst-editor {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  padding: 6px 10px 90px; border-top: 1.5px solid var(--cst-bordo); background: var(--cst-carta);
+}
+.cst-pila { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--cst-tenue); margin: 4px 0 6px }
+.cst-carta-pila { background: var(--cst-giallo-chiaro); color: var(--cst-inchiostro); padding: 2px 8px; border-radius: 8px }
+.cst-carta-pila i { font-style: normal; margin-left: 4px; font-family: ui-monospace, Menlo, monospace }
+.cst-sep { opacity: .6 }
+
+.cst-testa-editor { position: sticky; top: -6px; z-index: 2; background: var(--cst-carta); padding-top: 2px }
+.cst-schede { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 8px }
+.cst-valore-misura { font-style: normal; font-size: 12px; margin-left: 4px; padding: 0 6px; border-radius: 6px;
+                     border: 1.5px dashed #6b7fb8; background: #fff; font-family: ui-monospace, Menlo, monospace }
+.cst-scheda {
+  flex: 0 0 auto; padding: 6px 12px; border-radius: 10px; border: 1.5px solid var(--cst-bordo);
+  background: var(--cst-fondo); font-size: 14px; white-space: nowrap;
+}
+.cst-scheda small { color: var(--cst-tenue) }
+.cst-scheda.cst-su { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
+.cst-scheda.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
+
+.cst-testa-progetto { display: flex; align-items: center; gap: 8px; padding: 6px 4px; font-size: 15px }
+.cst-misure { font-size: 13px; color: var(--cst-tenue) }
+.cst-misure i { font-style: normal; border: 1.5px dashed var(--cst-casella-bordo); border-radius: 6px; padding: 0 6px; margin-left: 4px; font-family: ui-monospace, Menlo, monospace }
+.cst-matita { margin-left: auto; border: 1.5px solid var(--cst-bordo); background: var(--cst-fondo); border-radius: 8px; min-width: 36px; min-height: 32px }
+.cst-vuoto { color: var(--cst-tenue); font-size: 14px; margin: 6px 4px }
+
+.cst-righe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px }
+.cst-righe.cst-dentro { margin: 4px 0 2px 16px; padding-left: 8px; border-left: 3px solid var(--cst-bordo) }
+.cst-riga {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  padding: 6px 8px; border-radius: 10px; min-height: 40px;
+  background: #fff; border: 1.5px solid var(--cst-bordo); font-size: 15px;
+  transition: background .12s, border-color .12s;
+}
+.cst-riga.cst-blocco { background: #f5f0ff; border-color: #d6c9f2 }
+.cst-riga .cst-ico { font-size: 17px }
+.cst-riga.cst-sel { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
+.cst-riga.cst-accesa { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); box-shadow: 0 0 0 3px #ffe29a }
+.cst-riga.cst-guasta { background: var(--cst-rosso-chiaro); border-color: var(--cst-rosso) }
+.cst-riga.cst-problema { border-style: dashed; border-color: var(--cst-rosso) }
+.cst-testo.cst-nome-prog { font-weight: 700 }
+.cst-testo.cst-misura { color: var(--cst-tenue); font-size: 13px }
+.cst-giro { margin-left: auto; font-size: 12px; background: var(--cst-giallo); color: #3a2a00; border-radius: 8px; padding: 1px 7px }
+
+.cst-casella {
+  min-height: 30px; padding: 2px 10px; border-radius: 8px;
+  background: var(--cst-casella); border: 1.5px solid var(--cst-casella-bordo); font-weight: 600; font-size: 14px;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.cst-casella.cst-aperta { background: #dbe6fd; border-color: #5b8def }
+/* quello che resta da scegliere: la N, il ?, i puntini — si vede senza
+   leggerlo, e pulsa piano finché non è scelto */
+.cst-casella.cst-manca { border-style: dashed; border-color: #e08a00; background: #fff4dc; color: #8a4b00;
+                         animation: cst-manca 1.6s ease-in-out infinite }
+@keyframes cst-manca { 50% { box-shadow: 0 0 0 3px #ffe2a8 } }
+.cst-casella.cst-lav { background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a; font-family: ui-monospace, Menlo, monospace }
+.cst-quadretto { display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: var(--cst-tinta, #999); box-shadow: inset -2px -2px 0 rgba(0,0,0,.2) }
+
+.cst-tasti-riga { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 2px 2px }
+.cst-tasti-riga button {
+  min-width: 40px; min-height: 36px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: var(--cst-fondo); font-size: 15px;
+}
+.cst-tasti-riga .cst-agg { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
+.cst-tasti-riga .cst-via { flex: 0 0 auto; min-height: 36px; font-size: 15px; background: var(--cst-rosso-chiaro); box-shadow: none; color: var(--cst-rosso) }
+
+.cst-altrimenti { margin: 4px 0 0 18px; font-size: 13px; font-weight: 600; color: #6b4fb0 }
+.cst-piu {
+  align-self: flex-start; min-height: 34px; padding: 4px 12px; border-radius: 10px;
+  border: 1.5px dashed var(--cst-bordo); background: transparent; color: var(--cst-tenue); font-size: 15px;
+}
+.cst-piu span { font-size: 13px }
+.cst-piede-editor { margin-top: 18px; display: flex; justify-content: flex-end }
+.cst-ricomincia { border: none; background: none; color: var(--cst-tenue); font-size: 13px; text-decoration: underline }
+
+/* ── la scelta di una casella, attaccata alla riga ── */
+.cst-scelta {
+  position: relative; margin: 4px 0 6px; padding: 10px 10px 8px; border-radius: 12px;
+  background: #f4f7fe; border: 1.5px solid #b9c8ec; display: flex; flex-direction: column; gap: 8px;
+}
+.cst-fila { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.cst-chip {
+  min-height: 36px; min-width: 36px; padding: 4px 10px; border-radius: 10px;
+  border: 1.5px solid var(--cst-bordo); background: #fff; font-size: 15px;
+}
+.cst-chip.cst-su { background: #5b8def; border-color: #5b8def; color: #fff }
+.cst-chip.cst-grosso { min-height: 44px; font-size: 16px; flex: 1 }
+.cst-chip.cst-nome { font-family: ui-monospace, Menlo, monospace; background: #2f4a3a; color: #eef6ee; border-color: #2f4a3a }
+.cst-chip.cst-nome.cst-su { background: #5b8def; border-color: #5b8def }
+.cst-chip.cst-misura-chip { background: #fff; color: var(--cst-inchiostro); border-style: dashed; border-color: #6b7fb8 }
+.cst-chip.cst-ordine-chip { background: #5b5347; border-color: #5b5347 }
+.cst-chip.cst-colore { display: inline-flex; align-items: center; gap: 6px }
+.cst-chip.cst-colore .cst-quadretto { width: 18px; height: 18px }
+.cst-chip.cst-nuova { border-style: dashed; color: var(--cst-tenue) }
+.cst-chip.cst-via-chip { color: var(--cst-rosso) }
+.cst-cifre .cst-chip { min-width: 34px; padding: 4px 6px }
+.cst-passo { display: inline-flex; gap: 6px; margin-left: 4px }
+.cst-conto { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px }
+.cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: ui-monospace, Menlo, monospace }
+.cst-pezzo.cst-su { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
+.cst-segni .cst-piccolo { margin: 0 }
+.cst-fatto { align-self: flex-end; min-height: 38px; padding: 4px 18px; border-radius: 10px; border: none; background: #5b8def; color: #fff; font-weight: 700 }
+
+/* ═══════════ i fogli ═══════════ */
+.cst-velo {
+  position: fixed; inset: 0; z-index: 30; background: rgba(40, 30, 20, .45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.cst-foglio {
+  width: 100%; max-width: 560px; max-height: 86vh; overflow: auto;
+  background: var(--cst-carta); border-radius: 18px 18px 0 0; padding: 0 16px 22px; position: relative;
+}
+.cst-foglio h3 { margin: 0 0 6px; font-size: 19px }
+.cst-foglio h4 { margin: 12px 0 6px; font-size: 14px; color: var(--cst-tenue) }
+.cst-chiudi {
+  position: sticky; top: 8px; float: right; z-index: 4; margin: 8px -6px 0 8px;
+  width: 40px; height: 40px; border-radius: 50%; border: none; background: #efe7da; font-size: 18px;
+}
+.cst-chiudi:active { transform: scale(.92) }
+.cst-chiudi.cst-chiudi-piccola { position: absolute; top: 4px; right: 4px; float: none; margin: 0; width: 32px; height: 32px; font-size: 14px }
+.cst-foglio h3:first-of-type { padding-top: 16px }
+.cst-gruppo { margin-bottom: 4px }
+.cst-blocco-nuovo {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 10px 12px; margin-bottom: 6px; border-radius: 12px; border: 1.5px solid var(--cst-bordo); background: #fff; font-size: 15px;
+}
+.cst-blocco-nuovo small { color: var(--cst-tenue); font-size: 12px; margin-left: auto }
+.cst-blocco-nuovo.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
+.cst-figurine { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 8px 0 }
+.cst-figurina { font-size: 22px; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: #fff }
+.cst-figurina.cst-su { border-color: var(--cst-giallo); background: var(--cst-giallo-chiaro) }
+.cst-campo-testo { display: flex; align-items: center; gap: 10px; margin: 8px 0 }
+.cst-campo-testo span { color: var(--cst-tenue); font-size: 14px }
+.cst-campo-testo input, .cst-misura-riga input {
+  flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); padding: 4px 10px; font-size: 16px;
+  font-family: ui-monospace, Menlo, monospace; background: #fff; color: var(--cst-inchiostro);
+}
+.cst-misura-riga { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap }
+.cst-misura-riga input { flex: 0 1 110px; min-width: 80px }
+.cst-avviso { color: var(--cst-rosso); font-size: 13px; margin: 4px 0 }
+.cst-tasti-foglio { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px }
+.cst-primario, .cst-secondario, .cst-pericolo {
+  min-height: 44px; padding: 6px 18px; border-radius: 12px; font-weight: 700; font-size: 15px; border: none;
+}
+.cst-primario { background: var(--cst-giallo); color: #3a2a00 }
+.cst-primario:disabled { opacity: .45 }
+.cst-secondario { background: #efe7da }
+.cst-pericolo { background: var(--cst-rosso); color: #fff }
+.cst-importa { background: #fff7df }
+.cst-codice {
+  margin: 8px 0 0; padding: 12px; border-radius: 12px; background: #1f2430; color: #e6edf3;
+  font: 13px/1.5 ui-monospace, "SF Mono", Menlo, monospace; overflow-x: auto; white-space: pre;
+}
+.cst-foglio code { font-family: ui-monospace, Menlo, monospace; background: #efe7da; padding: 0 4px; border-radius: 4px }
+.cst-piede-editor { gap: 14px }
+.cst-aiuti { padding-left: 20px; margin: 6px 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4 }
+
+/* ── il cartello di fine ── */
+.cst-velo-fine { align-items: center; padding: 16px }
+.cst-cartello {
+  position: relative; width: 100%; max-width: 380px; text-align: center;
+  background: var(--cst-carta); border-radius: 20px; padding: 20px 18px;
+}
+.cst-cartello h2 { margin: 6px 0 }
+.cst-faccia-grande { font-size: 46px }
+.cst-stelle-grandi { font-size: 30px; letter-spacing: 4px }
+.cst-spenta { filter: grayscale(1); opacity: .3 }
+.cst-monete { font-size: 20px; font-weight: 700 }
+.cst-cartello .cst-tasti-foglio { justify-content: center }

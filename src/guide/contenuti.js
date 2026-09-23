@@ -592,6 +592,27 @@ export const AIUTI = {
     ],
   },
 
+  costruttore: {
+    emoji: '🏗️', titolo: 'Il costruttore',
+    blocchi: [
+      'Qualcuno ordina una cosa — un muro, una scala, un castello — e tu scrivi **il programma** con cui il robot la costruisce. Poi premi ▶ e guardi.',
+      { titolo: 'Come si scrive', righe: [
+        'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole. Una **N** è un numero ancora da scegliere.',
+        'Il robot cammina e cade: per salire si mette un mattone ↓ sotto i piedi e ci sale sopra. I mattoni si posano anche ↘ ↙ in basso, dove andrà il piede: è così che si fa un ponte.',
+        'Un **progetto** è un pezzo di programma con un nome, che si scrive una volta e si chiama quante volte vuoi. Le sue **misure** sono i numeri che riceve.',
+        'Una **lavagnetta** è un numero con un nome, che il robot legge e cambia mentre lavora. Quelle col lucchetto le scrive chi ha ordinato.',
+        '«**Se**» fa quello che ha dentro solo quando la domanda è vera: il robot guarda cosa ha sotto i piedi o accanto, e di che colore è.',
+      ] },
+      'Quasi ogni livello ha **più ordini** — tre gradini, poi cinque — e il programma deve reggerli tutti: scrivere il numero del primo ordine al posto della lavagnetta vince una volta e perde la seconda.',
+      { titolo: 'Se non va', righe: [
+        'Il robot si ferma sulla riga sbagliata e dice perché.',
+        'Il 💡 dà un aiuto per volta, gratis; in fondo c\'è «mostrami come», che scrive la soluzione e costa la seconda stella.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Programmare davvero: funzioni con i loro parametri, variabili, cicli, condizioni. Il tasto «🐍 com\'è in Python» mostra lo stesso programma come lo scrive chi programma di mestiere.',
+      ] },
+    ],
+  },
   generale: {
     emoji: '🎖️', titolo: 'Il generale',
     blocchi: [
