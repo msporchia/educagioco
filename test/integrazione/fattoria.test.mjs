@@ -889,15 +889,27 @@ await chiudi()
 
   /* Dov'è a schermo non si calcola: si cerca, come si cerca il pezzo di
      terra al punto 2. La vista dipende da quanto è grande lo schermo, e
-     un numero scritto a mano qui sarebbe vero su un telefono solo. */
+     un numero scritto a mano qui sarebbe vero su un telefono solo.
+
+     Si cerca però **dal centro in fuori**, non dall'angolo in alto: la
+     bancarella è posata in mezzo alla terra di partenza, che è dove la
+     telecamera si apre, e riga per riga dall'alto la si trovava al
+     centosessantaseiesimo tocco — più di un minuto, la metà di tutto il
+     file, passato a toccare erba. La griglia è la stessa e la si copre
+     tutta se serve: cambia solo da dove si comincia. */
   const tela = await page.locator('.fa-tela').boundingBox()
+  const punti = []
+  for (let y = tela.y + 16; y < tela.y + tela.height - 16; y += 24)
+    for (let x = tela.x + 20; x < tela.x + tela.width - 20; x += 36) punti.push({ x, y })
+  const mezzo = { x: tela.x + tela.width / 2, y: tela.y + tela.height / 2 }
+  const lontano = p => Math.hypot(p.x - mezzo.x, p.y - mezzo.y)
+  punti.sort((a, b) => lontano(a) - lontano(b))
   let banco = null
-  for (let y = tela.y + 16; y < tela.y + tela.height - 16 && !banco; y += 24)
-    for (let x = tela.x + 20; x < tela.x + tela.width - 20 && !banco; x += 36) {
-      await dito(Math.round(x), Math.round(y))
-      if (await page.locator('[data-mercato]').count()) banco = { x, y }
-      else await chiudi()
-    }
+  for (const { x, y } of punti) {
+    await dito(Math.round(x), Math.round(y))
+    if (await page.locator('[data-mercato]').count()) { banco = { x, y }; break }
+    await chiudi()
+  }
   controlla('col dito si arriva alla bancarella del mercato', !!banco)
 
   if (banco) {

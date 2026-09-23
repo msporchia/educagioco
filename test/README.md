@@ -1,10 +1,10 @@
 # I test
 
 ```
-npm test                 il giro di ogni giorno: senza browser — una decina di secondi
+npm test                 il giro di ogni giorno: senza browser — una ventina di secondi
 npm run test:unita       lo stesso comando, per esteso
-npm run test:svelto      solo quelli sotto il secondo — mentre si scrive
-npm run test:browser     solo quelli nel browser — Chrome, ~5 minuti e mezzo
+npm run test:svelto      solo quelli sotto il secondo — mentre si scrive, quattro secondi
+npm run test:browser     solo quelli nel browser — Chrome, un minuto e mezzo
 npm run test:tutto       tutto: unità e browser, ricompila prima — prima di pubblicare
 
 node test/esegui.mjs pozioni        solo i file che contengono "pozioni"
@@ -12,25 +12,65 @@ node test/esegui.mjs --niente-build non ricompilare (se hai appena compilato)
 node test/esegui.mjs --tempo=600    alza il tempo massimo per test
 node test/esegui.mjs --svelti       solo i test sotto il secondo
 node test/esegui.mjs torri --scatti lascia anche le foto (test/scatti/)
+node test/esegui.mjs --alla-volta=1 uno alla volta, come una volta (vedi sotto)
 ```
 
 **Quale lanciare, e quando.** `npm test` è il comando di ogni riga scritta:
 niente browser, niente build, un risultato prima di aver tolto le dita
-dalla tastiera. `test/integrazione/` non ci entra mai — apre Chrome, e da
-sola vale 327 dei 340 secondi dell'intera suite (misurato in
+dalla tastiera. `test/integrazione/` non ci entra mai — apre Chrome, e in
+fila vale più del novanta per cento dell'intera suite (misurato in
 [`docs/tempi-dei-test.md`](../docs/tempi-dei-test.md)) — quindi si chiede
 solo per «estrema necessità»: si è appena toccata *quella* schermata e si
 vuole esserne sicuri prima di committare. In quel caso il modo giusto non
-è `npm run test:browser` (tutti e 15, ~5 minuti e mezzo) ma **un file
-solo**: `node test/esegui.mjs pozioni` prova solo `integrazione/pozioni` (e
-`unita/pozioni`, se esiste un file con lo stesso nome — vedi più sotto).
-`npm run test:tutto` è il giro completo, lento apposta: prima di
+è `npm run test:browser` (tutti insieme, un minuto e mezzo anche otto
+alla volta) ma **un file solo**: `node test/esegui.mjs pozioni` prova solo
+`integrazione/pozioni` (e `unita/pozioni`, se esiste un file con lo stesso
+nome — vedi più sotto). `npm run test:tutto` è il giro completo: prima di
 pubblicare, o quando si vuole la certezza di prima che questo file
 esistesse.
 
+## Otto alla volta
+
+I test girano **insieme**, otto per volta — o la metà dei processori, su
+una macchina che ne ha meno di sedici, e mai più di uno per ogni giga di
+memoria libera alla partenza: se un'altra sessione ha già la sua
+chiusura in corso, la seconda parte con meno corsie e lo scrive invece
+di mandare la macchina in swap. Ognuno era già un processo a sé, col suo
+Chrome e il suo archivio vuoto, quindi nessun test deve saperlo: è solo
+il lanciatore che non aspetta più la fine di uno per far partire il
+successivo. E conviene molto più di quanto sembri, perché un test di
+integrazione passa quasi tutta la sua vita **fermo** — aspetta
+un'animazione, un salvataggio a scatto ritardato, un cliente che arriva
+— e in fila quelle attese si sommano: la suite intera costa più di
+dieci minuti, otto alla volta uno e mezzo, e la CPU resta libera per due
+terzi.
+
+Tre cose cambiano a vederlo girare:
+
+- **l'uscita arriva a blocchi.** Otto test che scrivono sullo stesso
+  terminale sarebbero un'insalata: quella di ognuno si tiene da parte e
+  si stampa intera quando il test finisce, nell'ordine in cui finiscono.
+  Il riepilogo in fondo torna in ordine alfabetico.
+- **i lunghi partono per primi.** Il lanciatore si ricorda quanto ci ha
+  messo ogni test (`node_modules/.cache/educagioco/tempi-dei-test.json`,
+  fuori da git) e la volta dopo li mette in fila da lì: un test da un
+  minuto partito per ultimo allungherebbe il giro di un minuto intero.
+- **il giro non finisce prima del suo test più lungo.** Oggi sono i
+  file di integrazione attorno al minuto (`torri`, `genitori`,
+  `fattoria`), e per `npm test` è `unita/survivors`, che da
+  solo vale quanto tutte le altre unità insieme. Un test che si allunga
+  lì si sente subito sul totale, ed è il primo posto dove guardare: la
+  fattoria era a due minuti, e metà li passava a cercare la bancarella
+  partendo dall'angolo sbagliato.
+
+`--alla-volta=N` sceglie quanti. `--alla-volta=1` è il lanciatore di
+prima, con l'uscita dal vivo: serve quando un test si comporta male solo
+in compagnia, per sapere se è lui o la folla. Un file solo (`node
+test/esegui.mjs pozioni`) scorre sempre dal vivo.
+
 ## I lenti si dichiarano, non si scoprono
 
-`npm test` costa una decina di secondi, e non è colpa di tutti: un pugno
+`npm test` costa una ventina di secondi, e non è colpa di tutti: un pugno
 di test giocano una campagna intera con un finto giocatore — il castello
 tappa per tappa, il tower defense, il dungeon a bivi, i livelli del
 Generale — e da soli si mangiano la maggior parte del tempo. Sono giusti
@@ -161,6 +201,15 @@ si chiede *almeno tanto* invece di *esattamente tanto*.
 **Un `goto` che cambia solo il frammento non ricarica niente.** È una
 navigazione dentro lo stesso documento: l'applicazione non riparte. Per
 riaprire davvero bisogna passare da `about:blank`.
+
+**Un ciclo che aspetta una cosa deve sapere quando non arriverà più.** In
+`integrazione/survivors` si giocava finché l'orologio della partita non
+scendeva a un certo punto; ma se l'eroe muore l'orologio si ferma sotto
+il cartello finale, e il ciclo faceva i suoi trecento giri a vuoto — un
+minuto e mezzo per chiamata, e il test **passava lo stesso**, quindi
+nessuno lo vedeva. Si è visto quando i test hanno cominciato a girare
+insieme: un giro di 90 secondi ne è durato 206, tutti per lui. Chi aspetta
+lo stato di una partita guarda anche se la partita c'è ancora.
 
 ## Cosa resta da fare
 

@@ -20,7 +20,7 @@ che si scopre quando il build non passa più.
 
 ```bash
 npm run dev            # il server di sviluppo, ricarica da sé
-npm test               # 83 prove senza browser, una decina di secondi
+npm test               # le prove senza browser, una ventina di secondi
 npm run build          # produce dist/index.html, il file unico
 ```
 
@@ -42,24 +42,28 @@ Se serve solo controllare che il build passi, mandalo altrove:
 | comando | cosa fa | quanto costa |
 |---|---|---|
 | `npm run dev` | server di sviluppo su `localhost:5173` | — |
-| `npm test` | le prove senza browser (= `test:unita`) | ~10 s |
-| `npm run test:svelto` | solo quelle sotto il secondo, e non ricostruisce | ~2 s |
+| `npm test` | le prove senza browser (= `test:unita`) | ~25 s |
+| `npm run test:svelto` | solo quelle sotto il secondo, e non ricostruisce | ~4 s |
 | `npm run build` | `dist/index.html`, il file unico offline | ~3 s |
 
 ### Si lanciano quando serve
 
 | comando | cosa fa | quanto costa |
 |---|---|---|
-| `npm run test:browser` | apre Chrome su `dist/index.html` e gioca col dito | ~5 min |
-| `npm run test:tutto` | tutto, browser compreso — prima di pubblicare | ~5,5 min |
+| `npm run test:browser` | apre Chrome su `dist/index.html` e gioca col dito | ~1,5 min |
+| `npm run test:tutto` | tutto, browser compreso — prima di pubblicare | ~1,5 min |
 | `node test/esegui.mjs <nome>` | **un file solo**: `pozioni`, `fattoria`, `torri`… | secondi |
 | `node test/esegui.mjs <nome> --scatti` | ...e lascia anche le foto in `test/scatti/` | |
+| `node test/esegui.mjs --alla-volta=1` | uno alla volta, con l'uscita dal vivo | più di 10 min |
 
-La cartella `test/integrazione/` da sola vale 327 dei 340 secondi della
-suite intera. La CI lancia **solo** `npm run test:unita` — Chrome non lo
-scarica, non l'ha mai fatto — quindi un guasto che vive solo lì lo trova
-chi lo lancia a mano, non la pipeline. È un motivo in più per chiederlo
-quando si è toccata una schermata.
+I test girano **otto alla volta**, e ogni test stampa il suo blocco
+quando finisce: in fila la cartella `test/integrazione/` varrebbe più
+di dieci minuti, quasi tutti passati ad aspettare un'animazione (vedi
+[`test/README.md`](test/README.md)). La CI lancia
+**solo** `npm run test:unita` — Chrome non lo scarica, non l'ha mai
+fatto — quindi un guasto che vive solo lì lo trova chi lo lancia a mano,
+non la pipeline. È un motivo in più per chiederlo quando si è toccata
+una schermata.
 
 ### Gli attrezzi che scrivono nei sorgenti
 

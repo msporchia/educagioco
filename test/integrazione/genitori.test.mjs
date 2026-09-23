@@ -10,7 +10,7 @@
    dopo un ripristino il gioco mostri i dati rimessi e non quelli che
    aveva in memoria un attimo prima.
    ═══════════════════════════════════════════════════════════════════ */
-import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { apriBrowser, apriGioco, semina, azzera, scatto, leggiProfilo,
@@ -202,8 +202,11 @@ controlla('il seme si è preso le medaglie che gli spettano', moneteVere >= 777,
 const scaricato = page.waitForEvent('download', { timeout: 8000 })
 await page.click('.carta >> text="Salva su file"')
 const dl = await scaricato
-// tenuto da parte: al punto 6 lo si rimette dentro
-const salvataggio = resolve(tmpdir(), 'giochi-progressi-prova.json')
+// tenuto da parte: al punto 6 lo si rimette dentro. La cartella è sua
+// e non un nome fisso in /tmp: due giri di test insieme, da due
+// worktree, si porterebbero via il file a vicenda
+const cartella = mkdtempSync(resolve(tmpdir(), 'giochi-genitori-'))
+const salvataggio = resolve(cartella, 'giochi-progressi-prova.json')
 await dl.saveAs(salvataggio)
 let dati = null
 try { dati = JSON.parse(readFileSync(salvataggio, 'utf8')) } catch (e) { /* sotto */ }
@@ -275,7 +278,7 @@ uguale('le monete sono tornate quelle salvate', monete2, moneteVere)
 
 /* Un file qualsiasi non deve entrare: sovrascriverebbe i progressi con
    spazzatura, ed è irreversibile. */
-const finto = resolve(tmpdir(), 'giochi-non-mio.json')
+const finto = resolve(cartella, 'giochi-non-mio.json')
 writeFileSync(finto, JSON.stringify({ ciao: 'mondo' }))
 await vaiAiGenitori()
 await digita('0000')
@@ -1203,8 +1206,7 @@ controlla('e in home restano solo i giochi per i piccoli',
    cancella niente di quello che è stato guadagnato. */
 uguale('i progressi non si sono mossi', (await leggiProfilo(page)).coins, monetePrima)
 
-rmSync(salvataggio, { force: true })
-rmSync(finto, { force: true })
+rmSync(cartella, { recursive: true, force: true })
 
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))
