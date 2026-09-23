@@ -49,7 +49,7 @@ import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
 import { TAPPE as GENERALE } from '../../src/data/generale.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
-import { aperta, chiusaPerEta } from '../../src/giochi/campagne.js'
+import { aperta, chiusaPerEta, adesso, completa } from '../../src/giochi/campagne.js'
 import { init, creaGiocatore, accendiTuttoAperto } from '../../src/store/profile.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -207,7 +207,11 @@ uguale('e senza fila c\'è solo chi si dichiara un posto',
    niente, perché andando avanti non si apre
    (`prima-dopo/viste/Mappa.vue`). Il motivo lo dà `chiusaPerEta`, e
    non deve mai dire «per età» di una tappa che il lucchetto lascia
-   aperta. */
+   aperta.
+
+   E per la stessa ragione il segno della tappa di adesso non cade su
+   una tappa chiusa: finite quelle alla sua portata, per quel bambino il
+   gioco è finito lì, e il segno non indica niente. */
 await init()
 await creaGiocatore('Prova', true, 4)
 const righe = TAPPE_DEL_GIOCO.prima.map((_, i) =>
@@ -216,8 +220,14 @@ uguale('a quattro anni «Tutto mescolato» è chiusa per età', righe[9].perEta,
 controlla('la seconda è chiusa perché non ci è ancora arrivato, non per età',
           !righe[1].aperta && !righe[1].perEta)
 controlla('chiusa per età vuol dire chiusa', righe.every(t => !t.perEta || !t.aperta))
+controlla('il segno di adesso sta sulla prima', adesso('prima', 0))
+const muro = righe.findIndex(t => t.perEta)       // la prima chiusa per età
+completa('prima', muro - 1, TAPPE_DEL_GIOCO.prima.length)
+controlla('finite quelle alla sua portata, il segno non sta su nessuna tappa',
+          TAPPE_DEL_GIOCO.prima.every((_, i) => !adesso('prima', i)))
 accendiTuttoAperto(true)
 controlla('coi lucchetti tolti dai grandi non è chiuso niente, per nessun motivo',
           TAPPE_DEL_GIOCO.prima.every((_, i) => aperta('prima', i) && !chiusaPerEta('prima', i)))
+controlla('e il segno torna sulla prossima', adesso('prima', muro))
 
 riassunto('la portata delle tappe')

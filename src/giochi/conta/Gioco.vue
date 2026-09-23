@@ -16,7 +16,7 @@ import { ref, computed } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa } from '../campagne.js'
+import { aperta, adesso, stelleDi, completa } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { MONDI, facciaDi } from './dati/mondi.js'
@@ -41,7 +41,6 @@ const erroreSegnale = ref(0)        // sale a ogni risposta sbagliata: lo guarda
 const monete = ref(0)               // le monete raccolte in questa tappa
 const serie = ref(0)                // risposte giuste di fila
 
-const avanza = progresso(CHIAVE)
 const tappaCorrente = computed(() => tappaIdx.value >= 0 ? CAMPAGNA[tappaIdx.value] : null)
 
 /* ═══════════ la mappa ═══════════ */
@@ -53,7 +52,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     accento: MONDI[t.mondo].accento,
     mondoNome: MONDI[t.mondo].nome,
     aperta: aperta(CHIAVE, t.indice),
-    adesso: t.indice === avanza.tappa,
+    adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
   })),
 })))

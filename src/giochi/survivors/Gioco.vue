@@ -21,7 +21,7 @@ import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, primatoDi, segnaPrimato,
+import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 import { fraseDiFine, recordInParole } from '../primati.js'
 import { SENZA_FINE } from './gioco.js'
@@ -198,7 +198,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     accento: scenario(t.scenario).accento,
     scenarioNome: scenario(t.scenario).nome,
     aperta: aperta(CHIAVE, t.indice),
-    adesso: t.indice === avanza.tappa,
+    adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
   })),
 })))

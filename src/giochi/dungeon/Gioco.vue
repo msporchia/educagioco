@@ -24,7 +24,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda } from '../campagne.js'
 import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
@@ -147,7 +147,7 @@ const scalini = computed(() => SCALINI.map(s => ({
     accento: AMBIENTI[t.ambiente].accento,
     ambienteNome: AMBIENTI[t.ambiente].nome,
     aperta: aperta(CHIAVE, t.indice),
-    adesso: t.indice === avanza.tappa,
+    adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
   })),
 })))

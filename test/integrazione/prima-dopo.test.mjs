@@ -127,6 +127,11 @@ uguale('la domanda dopo si lascia toccare davvero',
 await semina(page, { campagne: { prima: { tappa: 9, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="prima"]').click()
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
+/* la prossima sarebbe la decima, che a cinque anni è chiusa per età:
+   per lui il gioco finisce qui, e il segno di adesso non va da nessuna
+   parte */
+uguale('al muro dell\'età nessuna tappa porta il segno di adesso',
+       await page.locator('.pd-adesso').count(), 0)
 await page.locator('.pd-tappa[data-tappa="3"]').click()
 await page.waitForSelector('.pd-storia', { timeout: 5000 })
 await attendi(page, 400)

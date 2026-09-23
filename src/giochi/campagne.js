@@ -62,6 +62,14 @@ export const aperta = (chiave, indice) => tappaApertaQui(chiave, indice, progres
    (`prima-dopo/viste/Mappa.vue`). */
 export const chiusaPerEta = (chiave, indice) => tappaChiusaPerEtaQui(chiave, indice)
 
+/* La tappa di adesso, col suo segno sulla mappa: la prossima da giocare,
+   **se si può giocare**. Sopra la mira dell'età la prossima è chiusa, e
+   per quel bambino il gioco finisce lì: un segno su una tappa chiusa
+   indicherebbe una strada che non c'è. Otto mappe lo chiedono, e la
+   regola sta qui per la ragione di sempre. */
+export const adesso = (chiave, indice) =>
+  indice === progresso(chiave).tappa && aperta(chiave, indice)
+
 export const stelleDi = (chiave, indice) => progresso(chiave).stelle[indice] || 0
 
 export const stelleInTutto = chiave =>
