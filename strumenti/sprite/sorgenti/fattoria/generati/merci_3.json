@@ -1,0 +1,109 @@
+{
+  "__": "Il forno, lo zucchero e la gelateria: pane, torta, zucchero, succo, gelato, pasta (§8 di docs/fattoria-albero.md).\n\nCome edifici_4 è tornato con un alone rossastro attorno a ogni figura, anche se il prompt lo vietava: lo toglie `\"alone\": 128`. Le misure hanno un divisore solo per tutto il foglio, 16 — le figure sono venute più grandi di quelle di merci_2, e con 16 stanno fra 15 e 30 px come le altre.",
+  "prompt": {
+    "scheda": "PROMPT-merce.md",
+    "base": "merci_2.png",
+    "generatore": "settembre 2026",
+    "testo": "Disegna un foglio di oggetti in pixel art nello stesso stile di questa immagine: stessa tavolozza calda, stesso contorno scuro, stessa vista — di fronte e un po' dall'alto — stessa luce da in alto a sinistra.\n\nIl foglio è 1536×1024 px su fondo trasparente (PNG). Disponi 6 oggetti su una griglia dichiarata di 3 colonne × 2 righe, celle di 512×512 px, ognuno centrato nella sua cella. Ogni oggetto è largo circa 380 px (nel gioco diventa 25–30 px: un oggetto solo, grande, che si riconosca anche a venti pixel).\n\nOgni oggetto è appoggiato, visto da chi lo guarda dal banco, con la base che si vede. Nessuna ombra sotto l'oggetto, nemmeno leggera, nessun piano d'appoggio disegnato, nessun fondo dietro: sotto e attorno è tutto trasparente. Nessun alone o bagliore attorno agli oggetti: i bordi sono netti e pieni.\n\nNESSUNA PAROLA SCRITTA, da nessuna parte: né etichette sui barattoli, né lettere, né numeri.\n\nQuello che appartiene a un oggetto dev'essere attaccato al suo disegno in un pezzo solo. Niente briciole che galleggiano lontane.\n\nDa sinistra a destra, riga per riga:\n1. due pagnotte tonde e dorate con il taglio a croce sopra, una appoggiata all'altra\n2. una torta rotonda a due piani con la glassa rosa, una fragola in cima e un filo di panna sul bordo\n3. un sacchetto di carta bianca aperto, pieno di zucchero bianco a granelli che trabocca un poco sul bordo, con due zollette appoggiate contro il sacchetto\n4. un bicchiere alto di vetro pieno di succo arancione e rosso, con una cannuccia a strisce e una rondella di carota sul bordo\n5. una coppetta di cialda con tre palline di gelato — rosa, crema e marrone — e un cucchiaino di legno piantato sopra\n6. un mazzetto di spaghetti gialli legati con uno spago, accanto a un mucchietto di farfalle di pasta"
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglia": "oggetto",
+  "trasforma": {
+    "merce": {
+      "giri": 1,
+      "specchia": false
+    }
+  },
+  "sprite": {
+    "merce_pane": {
+      "da": [
+        61,
+        108
+      ],
+      "cella": [
+        407,
+        398
+      ],
+      "misura": [
+        25,
+        25
+      ]
+    },
+    "merce_torta": {
+      "da": [
+        529,
+        37
+      ],
+      "cella": [
+        444,
+        479
+      ],
+      "misura": [
+        28,
+        30
+      ]
+    },
+    "merce_zucchero": {
+      "da": [
+        1064,
+        66
+      ],
+      "cella": [
+        408,
+        451
+      ],
+      "misura": [
+        25,
+        28
+      ]
+    },
+    "merce_succo": {
+      "da": [
+        152,
+        541
+      ],
+      "cella": [
+        246,
+        430
+      ],
+      "misura": [
+        15,
+        27
+      ]
+    },
+    "merce_gelato": {
+      "da": [
+        568,
+        549
+      ],
+      "cella": [
+        359,
+        422
+      ],
+      "misura": [
+        22,
+        26
+      ]
+    },
+    "merce_pasta": {
+      "da": [
+        1032,
+        579
+      ],
+      "cella": [
+        447,
+        397
+      ],
+      "misura": [
+        28,
+        25
+      ]
+    }
+  }
+}
