@@ -61,7 +61,6 @@ npm run voci           # incide la pronuncia (solo dopo aver aggiunto parole)
 npm run voci -- --lingua es
 npm run simula         # gioca il tower defense senza browser
 npm run tara           # rimisura la vita dei nemici e riscrive i dati
-npm run mappe          # valida i livelli del Generale
 npm run quiz:banco     # prova tutti i moduli di quiz senza browser
 npm run quiz:eta       # chi vede cosa: la calibrazione per età, e i buchi
 npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
@@ -326,10 +325,31 @@ committate: non è ricostruibile da git.
   non si segnala lì: le tiene tutte «Come va», che è dove porta il
   tasto dell'avviso. Nei test il bersaglio è `[data-va-male]` sulla
   testata e `[data-male-frase]` sotto.
-- **`strumenti/mappe/`** — il banco da lavoro dei livelli del Generale, che
-  sono dato puro (ASCII art + metadati). `FORMATO.md` è la specifica,
-  `nucleo.js` l'unica copia delle regole, `editor.html` si apre col doppio
-  click. `campagne.js` è **generato** da `estrai-campagne.mjs`.
+- **`src/data/livelli/`** — i livelli del Generale, dato puro: una mappa a
+  token e la sua legenda, scritte con le fabbriche di `scrivi.js`
+  (`cose`, `chi`, `fai`, `se`, `aiuto`). **Come si scrive un livello — il metodo,
+  le regole del mondo, il linguaggio, il materiale, le misure e le prove
+  — sta in [`src/data/livelli/GUIDA.md`](src/data/livelli/GUIDA.md)**: si
+  legge quella e non il motore, e quello che manca si verifica e si
+  aggiunge lì. Il simulatore per provare i piani è
+  `strumenti/generale/piani.mjs`. La fila che si gioca sta in
+  `data/generale.js`, e **i progressi stanno sotto l'`id` del livello**,
+  non sotto la posizione: la fila si riordina senza toccare le stelle di
+  nessuno. Il banco è uno per tutti (`unita/livelli`). C'era anche un
+  editor di mappe in `strumenti/mappe/`, fermo a un formato che nessun
+  livello usava più: è stato tolto insieme ai livelli non pubblicati.
+  **I token di serie sono tre**: `..` pavimento, `##` muro, due spazi
+  **il fuori** (come il muro per il gioco, nero per chi dipinge). Il
+  muro vero si mette solo dove serve — fra due stanze, attorno a una
+  porta — e la forma del posto la dà il fuori: una cornice di mattoni
+  intorno a tutto fa sembrare ogni mappa un edificio solo (`docs/mappe.md`).
+  Dopo il tutorial vengono **storie a puntate** (`livelli/torta/`): pagine
+  nello stesso posto, ognuna comincia da come l'ha lasciata quella prima,
+  e ognuna si vince in più modi.
+  **Chi è ostile e ti vede, ti viene addosso**, qualunque cosa stia
+  facendo: è l'istinto che il motore mette in testa alle reazioni di ogni
+  nemico (`conIstinto` in `motore/generale/allestimento.js`), e vedere
+  scavalca sentire (`VISTA` in `motore/generale/filo.js`).
 - **`strumenti/banco/`** — il banco degli sprite (`npm run mondo`), una
   pagina sola con due metà: **il mondo** guarda l'atlante generato — si
   posa, si stende il fondo col pennello, si traccia una strada che compone
