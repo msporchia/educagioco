@@ -4,8 +4,8 @@
 
    Un capitolo per concetto, e sotto i suoi livelli: ognuno dice accanto
    al nome **cosa si impara** («ripeti», «un progetto con una misura»),
-   come le prove del Generale. Riceve tutto già deciso — cosa è aperto,
-   quante stelle — e sceglie dove andare.
+   come le prove del Generale. Riceve tutto già deciso — cosa è aperto
+   e cosa è chiuso per età, quante stelle — e sceglie dove andare.
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
   capitoli: { type: Array, required: true },   // [{ chiave, nome, icona, dice, livelli: [] }]
@@ -34,7 +34,10 @@ defineEmits(['gioca', 'libero'])
           <span class="cst-faccia">{{ l.aperta ? l.icona : '🔒' }}</span>
           <span class="cst-testo-livello">
             <b>{{ l.indice + 1 }}. {{ l.nome }}</b>
-            <i>{{ l.aperta ? l.impara : l.dopo ? 'arriva più avanti' : 'finisci quello prima' }}</i>
+            <!-- chiuso per età non si scrive niente: andando avanti non si
+                 apre, e per questo bambino il gioco finisce lì -->
+            <i v-if="l.aperta">{{ l.impara }}</i>
+            <i v-else-if="!l.perEta">finisci quello prima</i>
           </span>
           <span class="cst-stelline">{{ l.stelle ? '⭐'.repeat(l.stelle) : '' }}</span>
         </button>

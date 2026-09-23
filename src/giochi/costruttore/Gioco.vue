@@ -26,7 +26,7 @@ import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna } from '../../store/profile.js'
 import { load, save } from '../../store/storage.js'
-import { progresso, aperta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
 
 import { CAPITOLI, QUANTE_TAPPE, FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
 import { LIVELLI } from './dati/livelli.js'
@@ -99,10 +99,11 @@ const capitoli = computed(() => CAPITOLI.map(c => ({
   livelli: LIVELLI.map((l, i) => ({ ...l, indice: i })).filter(l => l.capitolo === c.chiave).map(l => ({
     ...l,
     aperta: aperta(CHIAVE, l.indice),
-    adesso: l.indice === avanza.tappa,
+    adesso: adesso(CHIAVE, l.indice),
     stelle: stelleDi(CHIAVE, l.indice),
-    /* chiuso anche se il progresso ci arriverebbe: è l'età che lo tiene */
-    dopo: l.indice <= avanza.tappa,
+    /* chiuso per età: andare avanti non lo apre, quindi sotto non si
+       promette niente */
+    perEta: chiusaPerEta(CHIAVE, l.indice),
   })),
 })))
 
