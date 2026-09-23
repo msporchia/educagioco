@@ -143,29 +143,35 @@ export const PRODOTTI = {
   fragole:    { nome: 'Fragole',    emoji: '🍓', silo: 'terra', pezzo: 'raccolto_fragole' },
   /* La lavanda è l'unica coltura che non finisce in nessuna bocca: va
      in tintoria, e da lì esce il colore. Sta nel silo del raccolto
-     perché esce da un campo — il criterio è quello, non cosa se ne fa.
-     Il vaso di lavanda del giardino le fa da faccia finché il foglio
-     dei campi non porta la cassetta coi mazzi legati. */
-  lavanda:    { nome: 'Lavanda',    emoji: '💐', silo: 'terra', pezzo: 'vaso_lavanda',
-                aspetta: 'raccolto_lavanda' },
+     perché esce da un campo — il criterio è quello, non cosa se ne fa. */
+  lavanda:    { nome: 'Lavanda',    emoji: '💐', silo: 'terra', pezzo: 'raccolto_lavanda' },
+  /* Le due colture dell'albero nuovo (§8 di docs/fattoria-albero.md),
+     nello stesso foglio della lavanda: `campi_3.png`. */
+  barbabietola: { nome: 'Barbabietola', emoji: '🍠', silo: 'terra', pezzo: 'raccolto_barbabietola' },
+  riso:         { nome: 'Riso',         emoji: '🍚', silo: 'terra', pezzo: 'raccolto_riso' },
   /* il mangime delle bestie del cortile: esce dal fienile e non si
      mangia in casa — è la riga di mezzo della catena */
-  becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', pezzo: 'merce_becchime' },
-  foraggio: { nome: 'Foraggio', emoji: '🥬', silo: 'stalla', pezzo: 'balla_fieno_tonda' },
-  zuppa:    { nome: 'Zuppa',    emoji: '🥘', silo: 'stalla', pezzo: 'merce_zuppa' },
+  /* `mangime: true` è **il cibo delle bestie**: le otto merci che si
+     danno a un recinto o nella ciotola, e che dalla fattoria non
+     escono. La mongolfiera non le chiede (`dati/mongolfiera.js`): una
+     nave si carica di cose finite, non del foraggio della stalla. Il
+     banco sì, perché lì le vuole la veterinaria. */
+  becchime: { nome: 'Becchime', emoji: '🌰', silo: 'stalla', mangime: true, pezzo: 'merce_becchime' },
+  foraggio: { nome: 'Foraggio', emoji: '🥬', silo: 'stalla', mangime: true, pezzo: 'balla_fieno_tonda' },
+  zuppa:    { nome: 'Zuppa',    emoji: '🥘', silo: 'stalla', mangime: true, pezzo: 'merce_zuppa' },
   /* e i tre che escono dall'orto, uno per bocca nuova. Hanno una
      faccia che c'era già nell'atlante e che non nominava nessuno — la
      cassetta piena, la cesta di verdure, il cesto di fiori — che è la
      prima cosa da guardare prima di far disegnare qualcosa di nuovo. */
-  beverone: { nome: 'Beverone', emoji: '🪣', silo: 'stalla', pezzo: 'cassetta_raccolto' },
-  pastura:  { nome: 'Pastura',  emoji: '🍃', silo: 'stalla', pezzo: 'cesta_verdure' },
-  fiori:    { nome: 'Fiori',    emoji: '🌼', silo: 'stalla', pezzo: 'cesto_fiori_misti0' },
+  beverone: { nome: 'Beverone', emoji: '🪣', silo: 'stalla', mangime: true, pezzo: 'cassetta_raccolto' },
+  pastura:  { nome: 'Pastura',  emoji: '🍃', silo: 'stalla', mangime: true, pezzo: 'cesta_verdure' },
+  fiori:    { nome: 'Fiori',    emoji: '🌼', silo: 'stalla', mangime: true, pezzo: 'cesto_fiori_misti0' },
   /* quello che mangiano il cane e il gatto di casa: esce dal mulino */
-  mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', pezzo: 'merce_mangime' },
+  mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', mangime: true, pezzo: 'merce_mangime' },
   /* Il calderone e non la ciotola rosa dei gatti: in una fila di nove
      scomparti di legno e iuta quella era l'unica cosa fucsia, e si
      leggeva come un errore. Un pastone sta in una pentola. */
-  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', pezzo: 'calderone0' },
+  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', mangime: true, pezzo: 'calderone0' },
   /* la merenda di casa: esce dal mulino come il mangime e il pastone,
      ed è l'unica pappa che non nasce da un cereale — fragole e miele. */
   merenda: { nome: 'Merenda', emoji: '🥧', silo: 'stalla', pezzo: 'cesta_picnic' },
@@ -175,6 +181,10 @@ export const PRODOTTI = {
   tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla', pezzo: 'merce_tartufi' },
   lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla', pezzo: 'merce_lana' },
   miele:   { nome: 'Miele',   emoji: '🍯', silo: 'stalla', pezzo: 'marmellata1' },
+  /* Il pesce esce dalla peschiera (§8.1): un recinto come gli altri, ma
+     nessun foglio ha ancora un pesce da mostrare — nemmeno un ripiego
+     che somigli, quindi resta l'emoji finché il foglio non arriva. */
+  pesce:   { nome: 'Pesce',   emoji: '🐟', silo: 'stalla', aspetta: 'merce_pesce' },
   /* **Il concime è un prodotto come gli altri**, e non una battuta: gli
      asini sono le uniche bestie del cortile che non danno da mangiare a
      nessuno, e quello che rendono torna alla terra — il prato fiorito
@@ -205,9 +215,7 @@ export const PRODOTTI = {
      (`pezzo: 'pane'` per il pane) e dichiara lo stesso cosa aspetta. */
   stoffa: { nome: 'Stoffa', emoji: '🧵', silo: 'bottega', pezzo: 'merce_stoffa' },
   farina: { nome: 'Farina', emoji: '🌾', silo: 'bottega', pezzo: 'merce_farina' },
-  /* Il pane ha un disegno nell'atlante già oggi — le due pagnotte del
-     foglio dell'arredo — e lo usa intanto. */
-  pane:   { nome: 'Pane',   emoji: '🍞', silo: 'bottega', pezzo: 'pane', aspetta: 'merce_pane' },
+  pane:   { nome: 'Pane',   emoji: '🍞', silo: 'bottega', pezzo: 'merce_pane' },
   /* Il maglione è la fine della catena del filo: lo vuole la sarta al
      mercato (`dati/mercato.js`). Era anche un addobbo sulla schiena
      pagato col granaio, ed è stato sospeso con gli altri della schiena
@@ -221,9 +229,7 @@ export const PRODOTTI = {
      ingrediente insieme (la polenta). */
   burro:     { nome: 'Burro',     emoji: '🧈', silo: 'bottega', pezzo: 'merce_burro' },
   formaggio: { nome: 'Formaggio', emoji: '🧀', silo: 'bottega', pezzo: 'merce_formaggio' },
-  /* La torta ha già una faccia nell'atlante — quella dell'arredo — e
-     la usa intanto, come il pane. */
-  torta:     { nome: 'Torta',     emoji: '🎂', silo: 'bottega', pezzo: 'torta0', aspetta: 'merce_torta' },
+  torta:     { nome: 'Torta',     emoji: '🎂', silo: 'bottega', pezzo: 'merce_torta' },
   /* ── LA TINTORIA ─────────────────────────────────────────────────
      La lavanda sta **nel silo del raccolto** perché esce da un campo
      (il rosso è dei campi, e `unita/coltivazioni` lo pretende); tutto
@@ -261,6 +267,35 @@ export const PRODOTTI = {
                aspetta: 'merce_crostata' },
   sacchetto: { nome: 'Sacchetto profumato', emoji: '👝', silo: 'bottega',
                pezzo: 'sacco_iuta', aspetta: 'merce_sacchetto' },
+
+  /* ── L'ALBERO NUOVO: LO ZUCCHERIFICIO, LA GELATERIA, IL PASTIFICIO,
+       LA FRIGGITORIA, IL SUSHI BAR (§8 di docs/fattoria-albero.md) ────
+     Diciassette merci nuove, e nessuna ha ancora un foglio: `aspetta`
+     dice `merce_<id>` e basta, com'è la regola di default — la
+     eccezione è la marmellata, che ha già un vasetto viola nell'atlante
+     (lo stesso ripiego della salsa) e lo usa intanto. */
+  zucchero:   { nome: 'Zucchero',   emoji: '🧂', silo: 'bottega', pezzo: 'merce_zucchero' },
+  caramelle:  { nome: 'Caramelle',  emoji: '🍬', silo: 'bottega', aspetta: 'merce_caramelle' },
+  marmellata: { nome: 'Marmellata', emoji: '🫙', silo: 'bottega', pezzo: 'marmellata0',
+                aspetta: 'merce_marmellata' },
+  succo:      { nome: 'Succo',      emoji: '🧃', silo: 'bottega', pezzo: 'merce_succo' },
+  gelato:     { nome: 'Gelato',     emoji: '🍨', silo: 'bottega', pezzo: 'merce_gelato' },
+  frullato:   { nome: 'Frullato',   emoji: '🥤', silo: 'bottega', aspetta: 'merce_frullato' },
+  pasta:      { nome: 'Pasta',      emoji: '🍝', silo: 'bottega', pezzo: 'merce_pasta' },
+  biscotti:   { nome: 'Biscotti',   emoji: '🍪', silo: 'bottega', aspetta: 'merce_biscotti' },
+  pizza:      { nome: 'Pizza',      emoji: '🍕', silo: 'bottega', aspetta: 'merce_pizza' },
+  lasagne:    { nome: 'Lasagne',    emoji: '🍱', silo: 'bottega', aspetta: 'merce_lasagne' },
+  /* `sciarpa_lana` e non `sciarpa`: la stessa ragione del maglione alla
+     lavanda contro il maglione — `sciarpa` è già l'addobbo comprato a
+     🪙14 (`dati/addobbi.js`, sospeso), questa è tessuta. */
+  sciarpa_lana: { nome: 'Sciarpa di lana', emoji: '🧣', silo: 'bottega',
+                  aspetta: 'merce_sciarpa_lana' },
+  berretto:   { nome: 'Berretto',   emoji: '🧢', silo: 'bottega', aspetta: 'merce_berretto' },
+  patatine:   { nome: 'Patatine',   emoji: '🍟', silo: 'bottega', aspetta: 'merce_patatine' },
+  fritto:     { nome: 'Fritto',     emoji: '🍤', silo: 'bottega', aspetta: 'merce_fritto' },
+  arancini:   { nome: 'Arancini',   emoji: '🍙', silo: 'bottega', aspetta: 'merce_arancini' },
+  sushi:      { nome: 'Sushi',      emoji: '🍣', silo: 'bottega', aspetta: 'merce_sushi' },
+  maki:       { nome: 'Maki',       emoji: '🍥', silo: 'bottega', aspetta: 'merce_maki' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette
@@ -407,18 +442,27 @@ export const COLTURE = [
        ALTRO ─────────────────────────────────────────────────────────
      Arriva al 52 **con la tintoria**, che è la bocca che la mangia:
      l'unica coltura della fattoria che non finisce in una ciotola né
-     in una mangiatoia.
-
-     Gli stadi sono quelli delle melanzane, ed è un ripiego dichiarato:
-     il foglio `campi_3.png` non c'è ancora, e un campo che cresce
-     senza vedersi crescere sembra rotto — meglio un cespuglio viola
-     che assomiglia, dicendo qui quale sarà il suo. `aspetta` è il
-     **prefisso** dei sette riquadri (`campo_lavanda0..6`) e
-     `guastiDelleColture` diventa rosso il giorno che il primo c'è. */
+     in una mangiatoia. */
   {
     id: 'lavanda', liv: 52, nome: 'Lavanda', emoji: '💐',
     semina: 0, raccolta: 1, minuti: 9, resa: 1, da: 'lavanda',
-    stadi: CRESCE('melanzane'), aspetta: 'campo_lavanda',
+    stadi: CRESCE('lavanda'),
+  },
+
+  /* ── LE DUE COLTURE DELL'ALBERO NUOVO ──────────────────────────────
+     Arrivano tardi e sole, ognuna con la propria bottega ad
+     aspettarla: la barbabietola con lo zuccherificio (27), il riso col
+     la peschiera e la friggitoria (57–60). Nel riso il primo stadio è
+     già l'aiuola allagata: è una risaia, e si vede dal seme. */
+  {
+    id: 'barbabietola', liv: 27, nome: 'Barbabietola', emoji: '🍠',
+    semina: 0, raccolta: 1, minuti: 10, resa: 1, da: 'barbabietola',
+    stadi: CRESCE('barbabietola'),
+  },
+  {
+    id: 'riso', liv: 60, nome: 'Riso', emoji: '🍚',
+    semina: 0, raccolta: 1, minuti: 12, resa: 1, da: 'riso',
+    stadi: CRESCE('riso'),
   },
 ]
 
@@ -879,6 +923,113 @@ export const RICETTE = [
     dove: 'panificio', liv: 44,
     prende: { farina: 1, fragole: 1, burro: 1 }, costo: 2, minuti: 7,
     da: 'crostata', resa: 1,
+  },
+
+  /* ═══════════ L'ALBERO NUOVO: PIÙ VICINO A HAY DAY ═══════════
+     Due colture, un recinto, cinque botteghe (`docs/fattoria-albero.md`
+     §8.1). Ogni riga arriva **con la bocca che la mangia**, come tutto
+     il resto del file, e ogni bottega sta sotto le quattro ricette. Una
+     ricetta senza `liv` prende quello della sua macchina — è il
+     ripiego di `ricetteDi` — e si scrive `liv` solo quando la tabella
+     del progetto anticipa un livello più alto (fra parentesi lì).
+
+     I livelli sono scelti perché ogni ingrediente arrivi **non dopo**
+     la ricetta che lo chiede: `guastiDegliSblocchi` lo pretende, ed è
+     il motivo per cui qui sotto compaiono più numeri che nella tabella
+     del progetto — quella lascia il ripiego dove basta, qui va scritto
+     quando l'ingrediente arriva più tardi della macchina. */
+
+  /* ── lo zuccherificio: al 27, con la barbabietola ── */
+  {
+    id: 'zucchero', nome: 'Zucchero', emoji: '🧂', dove: 'zuccherificio',
+    prende: { barbabietola: 2 }, costo: 1, minuti: 6, da: 'zucchero', resa: 1,
+  },
+  {
+    id: 'caramelle', nome: 'Caramelle', emoji: '🍬', dove: 'zuccherificio', liv: 39,
+    prende: { zucchero: 1, miele: 1 }, costo: 1, minuti: 6, da: 'caramelle', resa: 1,
+  },
+  {
+    id: 'marmellata', nome: 'Marmellata', emoji: '🫙', dove: 'zuccherificio', liv: 45,
+    prende: { fragole: 2, zucchero: 1 }, costo: 1, minuti: 8, da: 'marmellata', resa: 1,
+  },
+
+  /* ── la gelateria: al 30, con lo zucchero appena arrivato ── */
+  {
+    id: 'succo', nome: 'Succo', emoji: '🧃', dove: 'gelateria',
+    prende: { carote: 1, barbabietola: 1 }, costo: 1, minuti: 4, da: 'succo', resa: 1,
+  },
+  {
+    id: 'gelato', nome: 'Gelato', emoji: '🍨', dove: 'gelateria',
+    prende: { latte: 2, zucchero: 1 }, costo: 2, minuti: 8, da: 'gelato', resa: 1,
+  },
+  {
+    id: 'frullato', nome: 'Frullato', emoji: '🥤', dove: 'gelateria', liv: 46,
+    prende: { fragole: 2, latte: 1 }, costo: 1, minuti: 5, da: 'frullato', resa: 1,
+  },
+
+  /* ── il pastificio: al 31, con la pasta che apre la bottega ── */
+  {
+    id: 'pasta', nome: 'Pasta', emoji: '🍝', dove: 'pastificio',
+    prende: { farina: 2, uova: 1 }, costo: 1, minuti: 7, da: 'pasta', resa: 1,
+  },
+  {
+    id: 'biscotti', nome: 'Biscotti', emoji: '🍪', dove: 'pastificio', liv: 32,
+    prende: { farina: 1, burro: 1, zucchero: 1 }, costo: 1, minuti: 6, da: 'biscotti', resa: 1,
+  },
+  /* La pizza vuole la salsa (cucina, 38) e non arriva prima: 39 è il
+     primo livello in cui tutti e tre gli ingredienti ci sono già. */
+  {
+    id: 'pizza', nome: 'Pizza', emoji: '🍕', dove: 'pastificio', liv: 39,
+    prende: { farina: 1, salsa: 1, formaggio: 1 }, costo: 2, minuti: 9, da: 'pizza', resa: 1,
+  },
+  {
+    id: 'lasagne', nome: 'Lasagne', emoji: '🍱', dove: 'pastificio', liv: 40,
+    prende: { pasta: 1, salsa: 1, formaggio: 1 }, costo: 2, minuti: 12, da: 'lasagne', resa: 1,
+  },
+
+  /* ── la sartoria: le due ultime ricette, anticipate ──
+     La sartoria c'è già dal 36: qui arrivano solo due ricette in più,
+     tessute con la stessa stoffa del maglione. */
+  {
+    id: 'sciarpa_lana', nome: 'Sciarpa di lana', emoji: '🧣', dove: 'sartoria', liv: 42,
+    prende: { stoffa: 1, lana: 1 }, costo: 1, minuti: 6, da: 'sciarpa_lana', resa: 1,
+  },
+  {
+    id: 'berretto', nome: 'Berretto', emoji: '🧢', dove: 'sartoria', liv: 55,
+    prende: { stoffa: 1 }, costo: 1, minuti: 5, da: 'berretto', resa: 1,
+  },
+
+  /* ── la peschiera: il recinto del pesce, al 57 ──
+     È una macchina come gli altri recinti (avvia, aspetta, ritira), ma
+     nessuna specie da mangiare a orari fissi: dentro ci va il becchime
+     e basta, come un settimo recinto del cortile arrivato tardi. */
+  {
+    id: 'pesce', nome: 'Pesce', emoji: '🐟', dove: 'pesci',
+    prende: { becchime: 2 }, costo: 1, minuti: 15, da: 'pesce', resa: 1,
+  },
+
+  /* ── la friggitoria: al 57, col pesce appena pescato ── */
+  {
+    id: 'patatine', nome: 'Patatine', emoji: '🍟', dove: 'friggitoria',
+    prende: { patate: 2 }, costo: 1, minuti: 5, da: 'patatine', resa: 1,
+  },
+  {
+    id: 'fritto', nome: 'Fritto', emoji: '🍤', dove: 'friggitoria',
+    prende: { pesce: 1, farina: 1 }, costo: 1, minuti: 7, da: 'fritto', resa: 1,
+  },
+  {
+    id: 'arancini', nome: 'Arancini', emoji: '🍙', dove: 'friggitoria', liv: 60,
+    prende: { riso: 2, formaggio: 1 }, costo: 1, minuti: 9, da: 'arancini', resa: 1,
+  },
+
+  /* ── il sushi bar: al 63, l'ultima bottega dell'albero ── */
+  {
+    id: 'sushi', nome: 'Sushi', emoji: '🍣', dove: 'sushi_bar',
+    prende: { riso: 1, pesce: 1 }, costo: 2, minuti: 8, da: 'sushi', resa: 1,
+  },
+  {
+    id: 'maki', nome: 'Maki', emoji: '🍥', dove: 'sushi_bar', liv: 64,
+    prende: { riso: 1, carote: 1, peperoni: 1 }, costo: 1, minuti: 6, da: 'maki', resa: 1,
   },
 ]
 

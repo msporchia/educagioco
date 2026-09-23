@@ -176,19 +176,37 @@ function iCampi(f, ora) {
   }
 }
 
-/* Le macchine di un tipo, divise allo stesso modo: ferma vuol dire che
-   ci si può mettere qualcosa, pronta che c'è da ritirare. */
+/* Le macchine di un tipo, divise allo stesso modo: `ferme` sono quelle
+   dove ci si può mettere qualcosa — con la fila (`dati/coda.js`) anche
+   una che macina, se ha un posto libero — pronte quelle con qualcosa da
+   ritirare. Fra le libere vengono prima le vuote: mandare a mettere in
+   fila dietro a un pezzo lungo, con un mulino fermo accanto, fa
+   aspettare per niente. */
 function leMacchine(f, quale, ora) {
   const tutte = f.cose.filter(c => macchinaDi(c) === quale)
+  const stato = c => f.statoMacchina(c, ora) || {}
   return {
     tutte,
-    ferme: tutte.filter(c => (f.statoMacchina(c, ora) || {}).ferma),
-    pronte: tutte.filter(c => (f.statoMacchina(c, ora) || {}).pronto),
-    /* quella che finirà prima: è il numero da dire, non «fra un po'» */
-    prima: tutte.map(c => f.statoMacchina(c, ora))
-      .filter(s => s && !s.ferma && !s.pronto)
+    ferme: tutte.filter(c => stato(c).libera)
+      .sort((a, b) => stato(a).coda.length - stato(b).coda.length),
+    pronte: tutte.filter(c => stato(c).pronto),
+    /* fra quelle con la fila piena, quella che finirà prima il pezzo
+       che ha per le mani: è il numero da dire, non «fra un po'» */
+    prima: tutte.map(stato)
+      .filter(s => s.lavora && !s.libera && !s.pronto)
       .sort((a, b) => a.manca - b.manca)[0] || null,
   }
+}
+
+/* Il pezzo di **questa** ricetta che arriverà prima, su tutte le
+   macchine del suo tipo — quello che lavora o quello in fila. Serve a
+   non mandare a raccogliere del grano per un mangime che esce da solo
+   fra due minuti. */
+function inArrivo(f, ricetta, ora) {
+  return f.cose.filter(c => macchinaDi(c) === ricetta.dove)
+    .flatMap(c => (f.statoMacchina(c, ora) || { coda: [] }).coda)
+    .filter(p => !p.pronto && p.ricetta.da === ricetta.da)
+    .sort((a, b) => a.manca - b.manca)[0] || null
 }
 
 /* Quale voce di catalogo comprare per avere una macchina di quel tipo.
@@ -361,14 +379,30 @@ function dallaMacchina(f, ricetta, ora, giri) {
                     ' qualcosa da ritirare.',
              azione: { che: 'apri', cosa: pronte[0] } }
 
+  const manca = Object.keys(ricetta.prende)
+    .filter(k => f.quantoHo(k) < ricetta.prende[k])
+  if (ferme.length && !manca.length) {
+    /* Con la fila «fai» vuol dire anche «metti dietro a quello che sta
+       facendo»: la frase lo dice, se no chi apre il foglio e vede la
+       macchina che macina crede di aver letto male. */
+    const occupata = !(f.statoMacchina(ferme[0], ora) || {}).ferma
+    return { testo: `Hai tutto: ${occupata ? 'metti in fila' : 'fai'}` +
+                    ` ${ricetta.nome.toLowerCase()} ${dentroA(voce)}.`,
+             azione: { che: 'apri', cosa: ferme[0] } }
+  }
+
+  /* Ne sta già arrivando uno, e presto: si aspetta. Viene prima di
+     risalire agli ingredienti — mandare a seminare del grano per un
+     mangime che esce da solo fra tre minuti è un consiglio che fa
+     lavorare per niente. */
+  const arriva = inArrivo(f, ricetta, ora)
+  if (arriva && arriva.manca <= 5)
+    return { testo: `${ricetta.emoji ? ricetta.emoji + ' ' : ''}${ricetta.nome}` +
+                    ` è in arrivo: pronto fra ${arriva.manca} min.`,
+             azione: null }
+
   if (ferme.length) {
     /* Libera: manca qualcosa da metterci dentro? Si risale a quello. */
-    const manca = Object.keys(ricetta.prende)
-      .filter(k => f.quantoHo(k) < ricetta.prende[k])
-    if (!manca.length)
-      return { testo: `Hai tutto: fai ${ricetta.nome.toLowerCase()}` +
-                      ` ${dentroA(voce)}.`,
-               azione: { che: 'apri', cosa: ferme[0] } }
     const k = manca[0]
     const quanti = ricetta.prende[k] - f.quantoHo(k)
     const sotto = comeAvere(f, k, ora, giri - 1)
@@ -377,12 +411,14 @@ function dallaMacchina(f, ricetta, ora, giri) {
              azione: sotto.azione }
   }
 
-  /* Tutte occupate. Due risposte diverse: se ne finisce una presto si
-     aspetta, se no se ne fa un'altra — che è la cosa che l'utente
-     chiede di proporre invece di lasciare fermi. */
+  /* Tutte con la fila piena. Due risposte diverse: se ne finisce una
+     presto si aspetta, se no se ne fa un'altra — che è la cosa che
+     l'utente chiede di proporre invece di lasciare fermi. Non si
+     propone di allungare la fila: un posto in più lascia caricare di
+     più, non fa andare più svelti, e chi chiede una cosa la vuole prima. */
   const quante = tutte.length === 1
-    ? `${Su(laCosa(voce))} ${concorda(voce, 'sta', 'stanno')} lavorando`
-    : `${Su(leTue(voce))} stanno lavorando`
+    ? `${Su(laCosa(voce))} ${concorda(voce, 'ha', 'hanno')} la fila piena`
+    : `${Su(leTue(voce))} hanno la fila piena`
   if (prima && prima.manca <= 5)
     return { testo: `${quante}: pronto fra ${prima.manca} min.`, azione: null }
   const a = acquisto(f, voce)

@@ -115,11 +115,27 @@ const posa = (f, id, x, y) => {
   /* Un lavoro lungo è un'altra cosa: lì il secondo mulino si propone,
      ed è il caso che l'utente chiede di coprire. La soglia è a cinque
      minuti — sotto si aspetta, perché spendere 🪙150 per risparmiare
-     tre minuti è un consiglio che fa perdere monete a chi si fida. */
+     tre minuti è un consiglio che fa perdere monete a chi si fida.
+
+     Con la fila (`dati/coda.js`) «occupato» vuol dire **la fila
+     piena**: un mulino che macina ma ha un posto libero non è occupato,
+     ci si mette in fila — e il consiglio lo dice. */
   const t1 = fra(PER_RICETTA.mangime.minuti + 2)
-  f.ritira(f.cose.find(c => c.id === 'mulino'), t1)
-  f.metti('mais', 4)
-  f.avvia(f.cose.find(c => c.id === 'mulino'), 'pastone', t1)
+  const mulino = f.cose.find(c => c.id === 'mulino')
+  f.ritira(mulino, t1)
+  const pastone = PER_RICETTA.pastone
+  f.metti('mais', pastone.prende.mais)
+  f.avvia(mulino, 'pastone', t1)
+  f.metti('grano', PER_RICETTA.mangime.prende.grano)
+  const inFila = comeAvere(f, 'mangime', t1)
+  uguale('un mulino che macina con un posto libero manda a metterlo in fila',
+         inFila.azione && inFila.azione.cosa, mulino)
+  controlla('e lo dice', /in fila/.test(inFila.testo), inFila.testo)
+  /* il pastone in fila fino a riempirla */
+  while (f.statoMacchina(mulino, t1).libera) {
+    f.metti('mais', pastone.prende.mais)
+    f.avvia(mulino, 'pastone', t1)
+  }
   const lungo = comeAvere(f, 'mangime', t1)
   uguale('un mulino occupato a lungo fa proporre il secondo',
          lungo.azione && lungo.azione.che, 'compra')
@@ -182,8 +198,11 @@ const posa = (f, id, x, y) => {
   uguale('col mulino fermo si manda a usarne un po\'', conMulino.azione.che, 'apri')
   uguale('proprio in quel mulino', conMulino.azione.cosa, mulino)
 
-  /* Mulino occupato: allora sì, si allarga. */
-  f.avvia(mulino, 'mangime', T0)
+  /* Mulino occupato: allora sì, si allarga. «Occupato» con la fila
+     vuol dire **pieno**: finché ha un posto, metterci il grano libera lo
+     scomparto — e riempirlo lo svuota, quindi lo si rimette colmo. */
+  while (f.statoMacchina(mulino, T0).libera) f.avvia(mulino, 'mangime', T0)
+  f.metti('grano', f.capienzaDi('terra'))
   const occupato = comeFarePosto(f, 'grano', T0)
   uguale('col mulino occupato torna l\'ingrandimento', occupato.azione.che, 'ingrandisci')
 }
@@ -441,7 +460,7 @@ const posa = (f, id, x, y) => {
 
   nota('come li nomina il consiglio:')
   for (const v of conArticolo)
-    nota(`  si fa ${dentroA(v)} · ${laCosa(v)} ${concorda(v, 'sta', 'stanno')} lavorando` +
+    nota(`  si fa ${dentroA(v)} · ${laCosa(v)} ${concorda(v, 'ha', 'hanno')} la fila piena` +
          ` · ${leTue(v)}`)
 }
 

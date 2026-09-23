@@ -49,7 +49,7 @@ import { PRODOTTI } from '../dati/coltivazioni.js'
 import { eMercato } from '../dati/catalogo.js'
 import {
   CLIENTI, POSTI, MERCI_MAX, PEZZI_MAX, RIPOSO_MIN,
-  merciDelLivello, premioPer, minutiPer, clientiPer,
+  merciDelLivello, premioPer, minutiPer, clientiPer, pesoDellaMerce,
 } from '../dati/mercato.js'
 
 const MINUTO = 60000
@@ -70,6 +70,17 @@ export const merciOrdinabili = f =>
 
 const pesca = (rnd, quante) => Math.min(quante - 1, Math.floor(rnd() * quante))
 
+/* Come `pesca`, ma una merce pesa quanto dice `pesoDellaMerce`: la
+   torta esce più spesso del grano, e quello che è appena arrivato più
+   spesso di tutti. Un'estrazione sola di `rnd`, come prima, così una
+   partita seminata si rifà identica. */
+function pescaPesata(rnd, merci, livello) {
+  const pesi = merci.map(p => pesoDellaMerce(p, livello))
+  let x = rnd() * pesi.reduce((s, w) => s + w, 0)
+  for (let i = 0; i < merci.length; i++) if ((x -= pesi[i]) < 0) return i
+  return merci.length - 1
+}
+
 /* Un ordine nuovo. Quante merci diverse: quasi sempre una o due — tre
    solo ogni tanto, e mai più di quante se ne possano produrre. «Tre
    grano» è un ordine che un bambino di sei anni legge tutto; «due
@@ -85,7 +96,7 @@ export function componiOrdine(f, rnd = Math.random, id = 1) {
   const resta = merci.slice()
   const chiede = {}
   for (let i = 0; i < quante; i++) {
-    const [p] = resta.splice(pesca(rnd, resta.length), 1)
+    const [p] = resta.splice(pescaPesata(rnd, resta, f.livello), 1)
     chiede[p] = 1 + Math.floor(rnd() * PEZZI_MAX)
   }
   /* **Prima la roba, poi chi la vuole.** Il cliente era pescato fra

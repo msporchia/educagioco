@@ -23,7 +23,7 @@
    di tutto il gioco: la fattoria è il posto dove si *spende* quello che
    si è guadagnato facendo esercizi altrove, non un'altra lezione.
    ═══════════════════════════════════════════════════════════════════ */
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
@@ -33,6 +33,14 @@ import { comeAvere, comeFarePosto } from './motore/consiglio.js'
 import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
 import { aggiornaIlMercato, bancoDi, consegna, rifiuta } from './motore/mercato.js'
+import { aggiornaLaBottega, aggiornaLeBotteghe, bottegaDi, consegnaInBottega,
+         rifiutaInBottega } from './motore/botteghe.js'
+import { postoDi } from './dati/catalogo.js'
+import Bottega from './viste/Bottega.vue'
+import { aggiornaLaMongolfiera, caricaLaCassa, naveDi, parti as partiLaMongolfiera }
+  from './motore/mongolfiera.js'
+import { eMongolfiera } from './dati/catalogo.js'
+import Mongolfiera from './viste/Mongolfiera.vue'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { spintaAlBordo, conIlResto } from './scena/spinta.js'
@@ -42,7 +50,7 @@ import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
 import { animale, siDisegna, IN_VENDITA, BOB, puntiDi } from './dati/animali.js'
 import { addobbo } from './dati/addobbi.js'
 import { BISOGNI, CHIAVI, foto } from './dati/bisogni.js'
-import { PRODOTTI, SILI, COLTURE, ricetteDi } from './dati/coltivazioni.js'
+import { PRODOTTI, SILI, COLTURE, ricetteDi, MINUTO } from './dati/coltivazioni.js'
 import { RIPOSO_MIN } from './dati/mercato.js'
 import { sogliaDi, chiaveDi, zonaDi } from './dati/livelli.js'
 import { pezzoAttore, PEZZI } from './dati/atlante.js'
@@ -143,6 +151,7 @@ let scena = null                    // la Tela (disegno)
 let attori = []
 let bambino = null
 let salvaFra = 0, orologio = 0, ultimo = 0, giro = 0, bisogniFra = 0, alberoFra = 0
+let bottegheFra = 0
 
 /* ── LA STAGIONE ──────────────────────────────────────────────────
    Che periodo dell'anno è lo dice `dati/stagioni.js` guardando la
@@ -479,7 +488,15 @@ function passo(ora) {
   stagioneFra -= dt
   if (stagioneFra <= 0) { stagioneFra = 4; aggiornaLaStagione() }
   alberoFra -= dt
-  if (alberoFra <= 0) { alberoFra = 5; rinfrescaLAlbero() }
+  if (alberoFra <= 0) { alberoFra = 5; rinfrescaLAlbero(); rinfrescaLaMacchina(); rinfrescaLaMongolfiera() }
+  /* Le botteghe si rimettono a posto anche a foglio chiuso: il cliente
+     dopo arriva fra dieci e venti minuti, e il fumetto sopra la bottega
+     deve comparire senza che nessuno la apra. */
+  bottegheFra -= dt
+  if (bottegheFra <= 0) {
+    bottegheFra = 7
+    if (aggiornaLeBotteghe(mondo, Date.now(), Math.random)) salva()
+  }
   scorriDalBordo(dt)
   scena.mostra({
     fattoria: mondo, attori, scelto: scelto.value, preso, anello,
@@ -1022,7 +1039,7 @@ function almeno(r, lato) {
    panchina no, e infatti al tocco mostra i suoi attrezzi e basta. */
 function haFoglio(cosa) {
   return eCampo(cosa) || !!macchinaDi(cosa) || eSilo(cosa) || eVicino(cosa) ||
-         eMercato(cosa)
+         eMercato(cosa) || !!postoDi(cosa) || eMongolfiera(cosa)
 }
 
 /* Le bestie si guardano dal rettangolo davvero disegnato, non dalla
@@ -1289,8 +1306,8 @@ function attrezzo(chiave) {
            e non avrebbe detto perché. */
         ? `Mettere via costa 🪙${r.costo}: ti ${r.costo - monete.value === 1 ? 'serve' : 'servono'} ` +
           `🪙${r.costo - monete.value} in più.`
-        : `${(PER_ID[s.id] || {}).nome || 'La macchina'} sta lavorando: ` +
-          'ritira quello che ha fatto, prima.')
+        : `${(PER_ID[s.id] || {}).nome || 'La macchina'} ha della roba in fila: ` +
+          'aspetta che finisca e ritirala, prima.')
     scelto.value = null
     salva()
   }
@@ -1321,6 +1338,89 @@ function apriLavoro(cosa, con = '') {
      quarta cosa che si tocca e apre un foglio, e si riconosce come le
      altre tre. */
   if (eMercato(cosa)) return apriMercato()
+  /* Una bottega del paese: chiede anche lei, ma dal suo elenco. */
+  if (postoDi(cosa)) return apriBottega(cosa.id)
+  /* La mongolfiera: le casse da riempire, o il cielo vuoto. */
+  if (eMongolfiera(cosa)) return apriMongolfiera()
+}
+
+/* ═══════════ la mongolfiera ═══════════
+   Come il banco: il pallone si rimette a posto **aprendo** (e dal
+   battito della scena, per il fumetto e per quello che atterra mentre
+   si guarda il prato), il caso arriva da qui, e il foglio si
+   ricompone a ogni gesto e resta aperto — chi ha tre casse pronte le
+   carica una dopo l'altra. */
+function apriMongolfiera() {
+  if (aggiornaLaMongolfiera(mondo, Date.now(), Math.random)) salva()
+  pannello.value = { tipo: 'mongolfiera', nave: naveDi(mondo, Date.now()) }
+}
+
+function caricaCassa({ fila, cassa }) {
+  const r = caricaLaCassa(mondo, fila, cassa, Math.random)
+  if (!r.ok) return avvisa(r.motivo === 'manca-roba'
+    ? 'Ti manca ancora qualcosa: guarda le caselle vuote.'
+    : 'Quella cassa non c\'è più.')
+  avvisa(r.tutto
+    ? `🎈 Tutto pieno! ⭐ ${r.xp}, e nel baule c'è una sorpresa: ${(PER_ID[r.sorpresa] || {}).nome || 'un regalo'}.`
+    : r.bonusFila ? `📦 Fila piena! ⭐ ${r.xp} di esperienza.`
+    : `📦 Caricata! ⭐ ${r.xp} di esperienza.`)
+  /* Una mongolfiera piena conta come un ordine consegnato nell'albo:
+     una cassa sola no, se no un pallone varrebbe nove ordini. */
+  if (r.tutto) segna('fattoriaOrdini', 1)
+  salva()
+  apriMongolfiera()
+}
+
+function partiMongolfiera() {
+  const r = partiLaMongolfiera(mondo, Date.now())
+  if (!r.ok) return
+  avvisa(`🎈 È partita! La prossima arriva fra ${r.minuti} minuti.`)
+  salva()
+  apriMongolfiera()
+}
+
+/* Dal battito: un pallone che atterra mentre si guarda il prato, e il
+   foglio aperto che conta i minuti del cielo vuoto. */
+function rinfrescaLaMongolfiera() {
+  if (aggiornaLaMongolfiera(mondo, Date.now(), Math.random)) salva()
+  const p = pannello.value
+  if (p && p.tipo === 'mongolfiera')
+    pannello.value = { tipo: 'mongolfiera', nave: naveDi(mondo, Date.now()) }
+}
+
+/* ═══════════ le botteghe del paese ═══════════
+   Come il mercato: il foglio si ricompone a ogni gesto, e la bottega
+   si rimette a posto aprendola (oltre che dal battito, per il fumetto).
+   Dopo una consegna si resta dentro — se la fama ha appena aperto un
+   bancone, il cliente nuovo è lì. */
+function apriBottega(id) {
+  if (aggiornaLaBottega(mondo, id, Date.now(), Math.random)) salva()
+  pannello.value = { tipo: 'bottega', bottega: bottegaDi(mondo, id, Date.now()) }
+}
+
+function consegnaAllaBottega(n) {
+  const id = pannello.value && pannello.value.bottega && pannello.value.bottega.id
+  if (!id) return
+  const r = consegnaInBottega(mondo, id, n, Date.now(), Math.random)
+  if (!r.ok) return avvisa(r.motivo === 'manca-roba'
+    ? 'Ti manca ancora qualcosa: guarda le caselle vuote.'
+    : 'Quel cliente non c\'è più.')
+  segna('fattoriaOrdini', 1)
+  avvisa(r.cresciuta
+    ? `✅ ⭐ ${r.xp} — e la bottega cresce: c'è un bancone in più!`
+    : `✅ Consegnato! ⭐ ${r.xp} di esperienza.`)
+  salva()
+  apriBottega(id)
+}
+
+function rifiutaAllaBottega(n) {
+  const id = pannello.value && pannello.value.bottega && pannello.value.bottega.id
+  if (!id) return
+  const r = rifiutaInBottega(mondo, id, n, Date.now(), Math.random)
+  if (!r.ok) return avvisa('Quel cliente non c\'è più.')
+  avvisa(`Va bene: il prossimo arriva fra ${r.attesa} minuti.`)
+  salva()
+  apriBottega(id)
 }
 
 /* ═══════════ il mercato ═══════════
@@ -1617,6 +1717,7 @@ function quantoNeResta(r) {
 function apriMacchina(cosa) {
   const stato = mondo.statoMacchina(cosa)
   if (!stato) return
+  const { siRitira, fuori } = quantiSiRitirano(stato)
   pannello.value = {
     tipo: 'macchina', cosa, stato,
     /* Il nome viene dal catalogo e non dal pannello: le macchine adesso
@@ -1645,18 +1746,51 @@ function apriMacchina(cosa) {
       return { ricetta, ...m, hai,
                passo: primo ? comeAvere(mondo, primo.prodotto) : null }
     }),
-    ciSta: stato.ricetta ? mondo.quantoCiSta(stato.ricetta.da) : 99,
-    /* Quale silo tocca a quello che sta uscendo, e se c'è: il pollaio
-       riempie quello della stalla, il mulino quello del raccolto, e
-       «metti un silo» senza dire *quale* manderebbe a comprare quello
-       sbagliato — che costa 120 monete. */
-    ...(stato.ricetta ? nomeDelSilo(stato.ricetta.da) : {}),
+    siRitira, nonCiSta: fuori ? fuori.da : '',
+    /* Quale silo tocca a quello che è rimasto fuori, e se c'è: il
+       pollaio riempie quello della stalla, il mulino quello del
+       raccolto, e «metti un silo» senza dire *quale* manderebbe a
+       comprare quello sbagliato — che costa 120 monete. */
+    ...(fuori ? nomeDelSilo(fuori.da) : stato.ricetta ? nomeDelSilo(stato.ricetta.da) : {}),
     /* E se quello che è pronto non ha dove finire, dove andarlo a
        mettere: stessa domanda del campo maturo, stessa risposta. */
-    passo: stato.ricetta && stato.pronto &&
-           mondo.quantoCiSta(stato.ricetta.da) < stato.ricetta.resa
-      ? comeFarePosto(mondo, stato.ricetta.da) : null,
+    passo: fuori ? comeFarePosto(mondo, fuori.da) : null,
   }
+}
+
+/* Quanti pezzi pronti entrerebbero adesso, e il primo che resterebbe
+   fuori: lo stesso giro di `ritira` nel motore, fatto sulla carta. Con
+   la fila i pronti possono essere di merci diverse, e il tasto «Ritira»
+   deve sapere se prende qualcosa prima di essere premuto. */
+function quantiSiRitirano(stato) {
+  const posto = {}
+  let siRitira = 0, fuori = null
+  for (const p of stato.coda) {
+    if (!p.pronto) continue
+    const k = p.ricetta.da
+    if (!(k in posto)) posto[k] = mondo.quantoCiSta(k)
+    if (posto[k] >= p.ricetta.resa) { posto[k] -= p.ricetta.resa; siRitira++ }
+    else fuori = fuori || p.ricetta
+  }
+  return { siRitira, fuori }
+}
+
+/* Il foglio della macchina **resta aperto** dopo ogni gesto e si rifà:
+   con la fila il gesto naturale è metterne tre di fila, e un foglio che
+   si chiude a ogni tocco fa riaprire la macchina tre volte. Si rifà
+   anche dal battito della scena, come l'albero: una barra che non
+   avanza e un pezzo che non diventa pronto sono numeri che mentono. */
+function rinfrescaLaMacchina() {
+  const p = pannello.value
+  if (!p || p.tipo !== 'macchina') return
+  /* `toRaw`: il pannello è un `ref`, e quello che ci sta dentro esce
+     avvolto nel proxy di Vue — mai uguale, per identità, alla cosa vera
+     in `mondo.cose`. Senza, il controllo «c'è ancora?» diceva sempre di
+     no, e il foglio di una macchina si chiudeva da solo al primo
+     rinfresco, cinque secondi dopo averlo aperto. */
+  const cosa = toRaw(p.cosa)
+  if (!mondo.cose.includes(cosa)) return chiudi()
+  apriMacchina(cosa)
 }
 
 /* Come si chiama il silo di questo prodotto, se è costruito e quanto
@@ -1671,8 +1805,10 @@ function avvia(ricetta) {
   const { cosa } = pannello.value
   const r = mondo.avvia(cosa, ricetta.id)
   if (!r.ok) return avvisa(r.motivo === 'poche-monete'
-    ? `Ti servono 🪙${r.costo - monete.value} in più.` : 'Non c\'è abbastanza roba.')
-  chiudi()
+    ? `Ti servono 🪙${r.costo - monete.value} in più.`
+    : r.motivo === 'fila-piena' ? 'La fila è piena: ritira quello che è pronto, o allungala.'
+    : 'Non c\'è abbastanza roba.')
+  apriMacchina(cosa)
   /* Diceva «Il mulino è partito» anche sopra un pollaio — la stessa
      bugia che il pannello aveva già smesso di dire. Il nome della
      macchina però non si può infilare in questa frase: «la conigliera
@@ -1680,7 +1816,36 @@ function avvia(ricetta) {
      hanno tre generi fra loro. Quindi si dice **quello che sta
      arrivando**, che è l'unica cosa che chi ha appena premuto non sa
      già — la macchina ce l'ha sotto il dito. */
-  avvisa(`${ricetta.emoji} ${ricetta.nome} fra ${ricetta.minuti} minuti.`)
+  /* In fila dietro a un altro, i minuti da dire sono **fino alla fine
+     di questo**, non la sua durata: «fra 4 minuti» detto di un pezzo
+     che parte fra dieci è una promessa che non si mantiene. */
+  const fra = r.subito ? ricetta.minuti : Math.max(1, Math.ceil((r.fine - Date.now()) / MINUTO))
+  avvisa(r.subito ? `${ricetta.emoji} ${ricetta.nome} fra ${fra} minuti.`
+                  : `${ricetta.emoji} ${ricetta.nome} in fila: pronto fra ${fra} minuti.`)
+  salva()
+}
+
+/* Togliere dalla fila un pezzo non ancora partito: torna tutto, roba e
+   monete, e lo si dice — se no la ✕ sembra un cestino. */
+function togliDallaFila(indice) {
+  const { cosa } = pannello.value
+  const r = mondo.togliDallaFila(cosa, indice)
+  if (!r.ok) return avvisa(r.motivo === 'silo-manca' || r.motivo === 'silo-pieno'
+    ? `${PRODOTTI[r.prodotto].emoji} non ci sta più nel silo: lo lascio in fila.`
+    : 'Quello è già partito: si può solo aspettare.')
+  apriMacchina(cosa)
+  const roba = Object.entries(r.reso).map(([k, n]) => `${PRODOTTI[k].emoji} ${n}`).join(' ')
+  avvisa(`Tolto dalla fila: tornano ${roba}${r.monete ? ` e 🪙${r.monete}` : ''}.`)
+  salva()
+}
+
+function ingrandisciLaFila() {
+  const { cosa } = pannello.value
+  const r = mondo.ingrandisciLaFila(cosa)
+  if (!r.ok) return avvisa(r.motivo === 'poche-monete'
+    ? `Ti servono 🪙${r.costo - monete.value} in più.` : 'La fila è già lunga quanto si può.')
+  apriMacchina(cosa)
+  avvisa(`Adesso la fila ha ${r.posti} posti.`)
   salva()
 }
 
@@ -1690,8 +1855,14 @@ function ritira() {
   if (!r.ok) return avvisa(r.motivo === 'silo-manca' || r.motivo === 'silo-pieno'
     ? nonCiSta(r) : `Manca ancora ${r.manca} min.`)
   segna('fattoriaRitiri')
-  chiudi()
-  avvisa(`${PRODOTTI[r.prodotto].emoji} +${r.quanto} nel silo!` + quantoNeResta(r))
+  apriMacchina(cosa)
+  /* Tutto quello che è entrato, merce per merce, e se qualcosa è
+     rimasto sulla macchina lo si dice: «+3 nel silo» con un quarto
+     pezzo ancora lì farebbe credere di averlo perso. */
+  const presi = r.presi.map(p => `${PRODOTTI[p.prodotto].emoji} +${p.quanto}`).join(' ')
+  avvisa(`${presi} nel silo!` +
+         (r.restano ? ` ${r.restano === 1 ? 'Uno resta' : `${r.restano} restano`} qui: non ci ${r.restano === 1 ? 'sta' : 'stanno'}.`
+                    : quantoNeResta(r)))
   salva()
 }
 
@@ -2006,10 +2177,21 @@ function tiraVoce({ voce, x, y }) {
               @scegli="apriVicino" @scambia="alVicino" @regala="alVicino(null)"
               @chiudi="chiudi()" />
 
+      <Mongolfiera v-else-if="pannello.tipo === 'mongolfiera'"
+                   :nave="pannello.nave" @albero="apriAlbero"
+                   @carica="caricaCassa" @parti="partiMongolfiera"
+                   @chiudi="chiudi()" />
+
       <Mercato v-else-if="pannello.tipo === 'mercato'"
                :ordini="pannello.ordini" :riposi="pannello.riposi"
                @albero="apriAlbero"
                @consegna="consegnaOrdine" @rifiuta="rifiutaOrdine"
+               @chiudi="chiudi()" />
+
+      <Bottega v-else-if="pannello.tipo === 'bottega'"
+               :bottega="pannello.bottega"
+               @albero="apriAlbero"
+               @consegna="consegnaAllaBottega" @rifiuta="rifiutaAllaBottega"
                @chiudi="chiudi()" />
 
       <Granaio v-else-if="pannello.tipo === 'granaio'"
@@ -2026,9 +2208,11 @@ function tiraVoce({ voce, x, y }) {
       <Macchina v-else-if="pannello.tipo === 'macchina'"
                 :stato="pannello.stato" :ricette="pannello.ricette"
                 :nome="pannello.nome" :bestie="pannello.bestie"
-                :ci-sta="pannello.ciSta" :silo="pannello.silo" :passo="pannello.passo"
+                :si-ritira="pannello.siRitira" :non-ci-sta="pannello.nonCiSta"
+                :silo="pannello.silo" :passo="pannello.passo"
                 :senza-silo="pannello.senzaSilo" :prezzo-silo="pannello.prezzoSilo"
-                @avvia="avvia" @ritira="ritira" @passo="faiIlPasso"
+                @avvia="avvia" @ritira="ritira" @togli="togliDallaFila"
+                @ingrandisci="ingrandisciLaFila" @passo="faiIlPasso"
                 @albero="apriAlbero" @chiudi="chiudi()" />
 
       <Battesimo v-else-if="pannello.tipo === 'battesimo'"

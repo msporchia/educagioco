@@ -584,6 +584,36 @@
   font-size: 10px; color: #8fa691; line-height: 1.3; white-space: nowrap }
 .fa-freccia { font-size: 17px; color: #8fa691; padding-bottom: 12px }
 
+/* ── LA FILA DI UNA MACCHINA ─────────────────────────────────────
+   Una casella per posto (`dati/coda.js`), stessa famiglia delle caselle
+   di una ricetta: piena col bordo verde, vuota tratteggiata. Quella che
+   lavora ha la barra, la pronta il bordo oro — l'oro è «c'è da fare
+   qualcosa» in tutto il gioco — e quella in attesa la ✕ nell'angolo. */
+.fa-fila-posti { display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 6px; margin: 4px 0 10px }
+.fa-posto { position: relative; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  width: 54px; min-height: 58px; padding: 4px 3px; border-radius: 11px;
+  background: #16261a; border: 2px solid #9fd3a8; color: #e8efe6; font: inherit }
+.fa-posto em { font-style: normal; font-size: 10.5px; font-weight: 700;
+  color: #d8e4d6; line-height: 1.1; white-space: nowrap }
+.fa-posto .fa-livello { width: 100%; height: 6px }
+.fa-posto.pronto { border-color: #ffd98a }
+.fa-posto.pronto em { color: #ffd98a; font-size: 14px }
+.fa-posto.vuoto { border-style: dashed; border-color: #3d5c42; background: #0b120d }
+.fa-posto.vuoto b { font-size: 20px; color: #3d5c42 }
+.fa-posto.vuoto.suo { cursor: pointer; border-color: #9fd3a8 }
+.fa-posto.vuoto.suo b { color: #9fd3a8; font-size: 16px }
+.fa-posto.vuoto.suo .fa-merce { opacity: .7 }
+.fa-posto.vuoto.suo:active, .fa-posto-piu:active { transform: scale(.94) }
+.fa-posto-via { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
+  border-radius: 50%; border: 2px solid #0d160f; background: #7a3b2e; color: #fff;
+  font-size: 11px; line-height: 1; padding: 0; cursor: pointer }
+.fa-posto-piu { width: 54px; min-height: 58px; border-radius: 11px; cursor: pointer;
+  border: 2px dashed #c9a227; background: transparent; color: #d8e4d6;
+  font: inherit; font-size: 10.5px; line-height: 1.3 }
+.fa-posto-piu b { color: #ffd98a; font-size: 12px }
+
 /* «È pronto!» con addosso la figura di quello che è pronto: la riga più
    importante del pannello, e l'unica in cui la merce si vede grande. */
 .fa-pronto { display: flex; align-items: center; gap: 10px; text-align: left }
@@ -630,6 +660,12 @@
   justify-content: center; margin-bottom: 8px }
 .fa-ordine .fa-fila { justify-content: flex-end }
 .fa-ordine .fa-manca { text-align: center; margin-top: 6px }
+/* La fama di una bottega (`viste/Bottega.vue`): i cuori in fila sotto
+   il nome, e accanto cosa succede quando sono pieni. */
+.fa-fama { display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 4px 10px; margin: -2px 0 6px }
+.fa-cuori { display: inline-flex; gap: 2px; font-size: 17px; line-height: 1 }
+.fa-cuore:not(.pieno) { opacity: .55 }
 
 /* ── vestire una bestia ──────────────────────────────────────────
    Stessa forma della sua scheda — un blocco per aggancio, dentro i
@@ -716,3 +752,27 @@
   margin-top: 2px }
 .fa-ramo-testo .fa-ramo-perche { color: #ffd98a; opacity: .9 }
 .fa-ramo-testo .fa-ramo-altrove { color: #8fa691; font-style: italic }
+
+/* ── la mongolfiera: le casse, una per tasto ─────────────────────
+   Stesso riquadro del banco (`.fa-ordine`), perché è la stessa domanda
+   fatta un po' alla volta. Una cassa è un tasto con dentro le sue
+   caselle: quella che si può caricare ha il bordo oro (l'oro è «c'è da
+   fare qualcosa» in tutto il gioco), quella caricata il verde. A
+   scorrere è l'elenco delle file e non il foglio: il conto sopra e
+   «Parti!» sotto restano fermi. */
+.fa-mongolfiera .fa-casse { flex: 0 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain }
+.fa-ordine.fatta { border-color: #3d5c42; opacity: .8 }
+.fa-cassa { display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 6px 5px; border-radius: 12px; cursor: pointer; font: inherit;
+  background: #0b120d; border: 2px dashed #3d5c42; color: #e8efe6 }
+.fa-cassa.pronta { border: 2px solid #c9a227; background: #2a2a14 }
+.fa-cassa.piena { border: 2px solid #9fd3a8; background: #16261a; cursor: default }
+.fa-cassa:disabled:not(.piena) { cursor: default }
+.fa-cassa:not(:disabled):active { transform: scale(.95) }
+.fa-cassa u { text-decoration: none; font-size: 11.5px; font-weight: 700; color: #ffd98a }
+.fa-cassa.piena u { color: #9fd3a8 }
+.fa-foglio p.fa-conto { margin: 0 0 6px; font-size: 13px; opacity: 1 }
+.fa-conferma-parti { border: 2px solid #c9a227; border-radius: 14px;
+  padding: 8px 10px 10px; background: #2a2a1488; margin-top: 4px }
+.fa-foglio .fa-conferma-parti p { margin: 0 0 8px; font-size: 13.5px }

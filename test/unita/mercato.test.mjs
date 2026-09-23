@@ -20,10 +20,10 @@ import {
 } from '../../src/giochi/fattoria/motore/mercato.js'
 import {
   guastiDelMercato, CLIENTI, POSTI, PEZZI_MAX, MERCI_MAX, RIPOSO_MIN,
-  merciDelLivello, valoreDi, minutiDi, premioPer, PREMIO_BASE, PER_VALORE,
+  merciDelLivello, valoreDi, minutiDi, premioPer, PREMIO_BASE, premioDelPezzo, gestiDi, pesoDellaMerce,
   MONETE_AL_MINUTO, clientiPer,
 } from '../../src/giochi/fattoria/dati/mercato.js'
-import { PRODOTTI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
+import { PRODOTTI, RICETTE, COLTURE } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { ULTIMO, sogliaDi, livelloDelProdotto }
   from '../../src/giochi/fattoria/dati/livelli.js'
 import { PER_ID } from '../../src/giochi/fattoria/dati/catalogo.js'
@@ -224,12 +224,87 @@ uguale('i posti al banco sono tre', POSTI, 3)
   controlla('con un ordine diverso da quello appena consegnato',
             !ordineDi(f, o.id))
 
-  /* La formula, scritta una volta e provata qui: base più quattro volte
-     quello che la roba è costata a produrre. */
-  uguale('il premio è base + 4 × il costo della roba',
-         premioPer({ grano: 3 }), PREMIO_BASE + PER_VALORE * 3)
-  uguale('e cresce con la roba che chiede',
-         premioPer({ tartufi: 1 }), PREMIO_BASE + PER_VALORE * 9)
+  /* La formula, scritta una volta e provata qui: base più i gesti,
+     con un bonus per ogni fase oltre la prima. */
+  uguale('il premio è base + 2 × i gesti, per il crudo',
+         premioPer({ grano: 3 }), PREMIO_BASE + 2 * 3)
+  uguale('una torta sono diciotto gesti in cinque fasi', gestiDi('torta'), 18)
+  uguale('e rende 71', premioPer({ torta: 1 }), 71)
+}
+
+/* ── LA CATENA LUNGA NON PUÒ RENDERE MENO ─────────────────────────
+   È il difetto per cui il premio è stato rifatto: pagava le monete
+   spese e non il lavoro, e un raccolto crudo rendeva il triplo per
+   gesto di un maglione alla lavanda. Qui si pretende il verso giusto:
+   per ogni ricetta, un pezzo rende **per gesto** almeno quanto il più
+   generoso dei suoi ingredienti — sulla strada che il premio conta,
+   cioè quella coi gesti minimi. Le altre possono rendere meno, ed è
+   giusto: il fiorume col concime è l'anello che torna alla terra, e
+   passarci costa più lavoro di quanto paghi. */
+{
+  for (const p of Object.keys(PRODOTTI)) {
+    const g = gestiDi(p)
+    if (!Number.isFinite(g) || g <= 1) continue
+    const suo = premioDelPezzo(p) / g
+    const gestiDella = r => Object.entries(r.prende).reduce((n, [k, q]) => n + q * gestiDi(k), 1)
+    const ricette = RICETTE.filter(r => r.da === p && gestiDella(r) === g)
+    for (const r of ricette)
+      for (const k of Object.keys(r.prende)) {
+        const loro = premioDelPezzo(k) / gestiDi(k)
+        controlla(`${p} rende per gesto almeno quanto ${k}`, suo >= loro - 1e-9,
+                  `${suo.toFixed(2)} contro ${loro.toFixed(2)}`)
+      }
+  }
+}
+
+/* ── IL RITMO DEI LIVELLI NON ACCELERA ────────────────────────────
+   Il premio nuovo paga i gesti e non le monete, e sopra ci sono le
+   botteghe (+25%), la mongolfiera coi suoi bonus e la fila nelle
+   macchine. Con `PER_GESTO = 3` un raccolto portato al banco rendeva
+   il 20–30% in più di prima, e tutto insieme la roba nuova sarebbe
+   arrivata prima di aver giocato con quella che c'era. Qui si tiene
+   fermo il tetto: **al banco, in media, un raccolto non rende più di
+   ⭐6,8** (prima erano ⭐7,2–7,4; il resto lo mettono botteghe e
+   mongolfiera). La media è pesata come la pesca vera, su un ordine da
+   due pezzi, e i raccolti si contano lungo la strada dei gesti minimi.
+   È un conto su una tabella, non su una partita: se un giorno si vuole
+   misurare davvero, questo è il numero da confrontare. */
+{
+  const racc = {}
+  const raccolti = p => {
+    if (p in racc) return racc[p]
+    racc[p] = Infinity
+    let meglio = Infinity, n = Infinity
+    if (COLTURE.some(c => c.da === p)) { meglio = 1; n = 1 }
+    for (const r of RICETTE.filter(r => r.da === p)) {
+      let g = 1, k = 0
+      for (const [q, m] of Object.entries(r.prende)) { g += m * gestiDi(q); k += m * raccolti(q) }
+      if (g < meglio) { meglio = g; n = k }
+    }
+    return (racc[p] = n)
+  }
+  let peggio = 0, dove = 0
+  for (let l = 5; l <= ULTIMO; l += 5) {
+    const merci = merciDelLivello(l).filter(p => Number.isFinite(raccolti(p)))
+    let xp = 0, rc = 0, pesi = 0
+    for (const p of merci) {
+      const w = pesoDellaMerce(p, l)
+      xp += w * (premioPer({ [p]: 2 }) - PREMIO_BASE * (1 - 1 / 1.75))
+      rc += w * 2 * raccolti(p); pesi += w
+    }
+    const media = xp / rc
+    if (media > peggio) { peggio = media; dove = l }
+  }
+  controlla(`al banco un raccolto rende al più ⭐6,8 (il massimo è ${peggio.toFixed(1)}, al ${dove})`,
+            peggio <= 6.8)
+}
+
+/* La pesca pesa: una merce profonda esce più di una cruda, e una
+   appena arrivata più di tutte. */
+{
+  controlla('la torta pesa più del grano', pesoDellaMerce('torta', 40) > pesoDellaMerce('grano', 40))
+  controlla('una merce appena arrivata pesa di più',
+            pesoDellaMerce('torta', 20) > pesoDellaMerce('torta', 40))
 }
 
 /* Il tetto: quattro volte il costo in monete non può superare quello

@@ -115,8 +115,8 @@ stanno sulla stessa scala delle monete perché si sommano a quelle spese:
 
 | cosa | rende | il freno |
 |---|---|---|
-| un ordine del mercato | ⭐ 6 + 4·(quanto è costata la roba) — da 18 a 114 | mai più del tempo di campo che chiede (`guastiDelMercato`) |
-| una bestia di casa rimessa a posto (pancia, pelo e gioco tutti nella fascia «sta benissimo») | ⭐ un decimo del suo prezzo: 9 il cane, 8 il gatto, 12 il pappagallo | **una volta per ciclo** — non torna finché un bisogno non è risceso sotto «sta bene», cioè non prima di tre ore |
+| un ordine del mercato | ⭐ 6 + 2·(i gesti che ci sono voluti), con +20% per ogni fase oltre la prima — da 8 (un grano) a 110 (una lasagna); in bottega +25%, nella mongolfiera i bonus di fila e di pallone | mai più del tempo di campo che chiede (`guastiDelMercato`) |
+| una bestia di casa rimessa a posto (pancia, pelo e gioco tutti nella fascia «sta benissimo») | ⭐ un quindicesimo del suo prezzo: 6 il cane, 5 il gatto, 8 il pappagallo | **una volta per ciclo** — non torna finché un bisogno non è risceso sotto «sta bene», cioè non prima di tre ore |
 
 Il numero della bestia sta sotto l'ordine più piccolo del mercato apposta:
 tre gesti da 🪙1–14 e le ore che ci mette la pancia a scendere non sono un

@@ -561,7 +561,12 @@ export class Tela {
          dietro ci sparisce dentro. */
       if (a && a.sopra && a.alto)
         scena.push({ nome: a.sopra, x: c.x, y: c.y, piede, verso, fondo: c.y + piede[1] })
-      if (a && a.fumetto) fumetti.push({ x: c.x, y: c.y, piede, testo: a.fumetto })
+      /* `pronti`: quanti pezzi aspettano sulla macchina (la fila, in
+         `dati/coda.js`). Il numerino va sul 🧺 da due in su — uno lo
+         dice già il cestino — e sulla faccia di chi lavora da uno. */
+      if (a && a.fumetto)
+        fumetti.push({ x: c.x, y: c.y, piede, testo: a.fumetto,
+                       pronti: a.pronti > 1 ? a.pronti : 0 })
       /* «ho fame, e voglio *questo*»: un fumetto con dentro una faccia
          già decisa dal mondo (`{ pezzo, testo }`). Sta nella stessa
          fila degli altri fumetti perché va disegnato insieme a loro,
@@ -572,7 +577,8 @@ export class Tela {
          nell'angolo. La clessidra da sola era tutto quello che una
          macchina al lavoro sapeva dire, e con quattro ricette non
          basta più. */
-      if (a && a.fa) fumetti.push({ x: c.x, y: c.y, piede, vuole: a.fa, attesa: true })
+      if (a && a.fa)
+        fumetti.push({ x: c.x, y: c.y, piede, vuole: a.fa, attesa: true, pronti: a.pronti || 0 })
     }
     for (const a of quadro.attori || []) scena.push({ attore: a, fondo: a.corpo.y + 1 })
     scena.sort((a, b) => a.fondo - b.fondo)
@@ -745,6 +751,32 @@ export class Tela {
     ctx.fillText(f.testo, x, y)
     ctx.restore()
     ctx.textAlign = 'left'
+    if (f.pronti) this.numerino(f.pronti, x + 9 + this.scala * 2, y - 12 - this.scala * 2,
+                                Math.round(14 + this.scala * 3))
+  }
+
+  /* ── QUANTI SONO PRONTI ─────────────────────────────────────────
+     Un tondino oro col numero, nell'angolo del fumetto: con la fila una
+     macchina può averne tre da ritirare mentre macina il quarto, e il
+     fumetto mostra la faccia del quarto. L'oro è il colore di «c'è da
+     fare qualcosa» (il bordo delle caselle pronte nel foglio), e il
+     numero basta: che siano pronti lo dice il posto in cui sta. */
+  numerino(n, cx, cy, lato) {
+    const ctx = this.ctx
+    const r = Math.max(7, lato / 2)
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, 7)
+    ctx.fillStyle = '#ffd98a'
+    ctx.strokeStyle = '#2a1c12'
+    ctx.lineWidth = 2
+    ctx.fill(); ctx.stroke()
+    ctx.fillStyle = '#2a1c12'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = `700 ${Math.round(r * 1.25)}px system-ui,sans-serif`
+    ctx.fillText(String(n), cx, cy + 1)
+    ctx.restore()
   }
 
   /* ── COSA VUOLE QUELLA BESTIA ─────────────────────────────────────
@@ -829,6 +861,9 @@ export class Tela {
       ctx.fillText('⏳', x + lato - lato * .16, y + lato * .16)
       ctx.restore()
     }
+    /* i pronti stanno nell'angolo opposto alla clessidra: sono due
+       notizie diverse, e una sopra l'altra non se ne legge nessuna */
+    if (f.pronti) this.numerino(f.pronti, x + lato * .08, y + lato * .1, Math.round(lato * .5))
     ctx.restore()
   }
 

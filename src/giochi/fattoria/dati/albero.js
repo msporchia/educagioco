@@ -24,7 +24,7 @@
      via = {
        che: 'coltura' | 'ricetta', id, nome, minuti, costo,
        macchina: null | { id, nome, stato: 'ok'|'lavora'|'compra'|'premio',
-                          manca, prezzo, arriva },
+                          manca, ne, piena, prezzo, arriva },
        campo:    null | { stato: 'libero'|'cresce'|'pronto'|'nessuno', manca },
        alternative: [{ id, nome, dove: {nome, la, plurale} | null }, …]
        azione: null | { che: 'apri'|'compra'|'premio'|'ingrandisci', … },
@@ -138,11 +138,21 @@ const altraStrada = v => {
   }
 }
 
-function statoMacchina(f, dove, ora) {
+/* ── LA MACCHINA DI UNA RIGA, CON LA FILA ──
+   `lavora` adesso vuol dire due cose, e la riga le dice diverse: **ne
+   sta facendo** di questa merce (`ne`, quanti fra quello che macina e
+   quello in fila, e `manca` del primo che esce) — «⏳ ne fa 2, pronto
+   fra 4 min» — oppure ha **la fila piena** di altro (`piena`), e allora
+   `manca` è quando esce il prossimo pezzo, che è quando si libera un
+   posto a ritirarlo. Una macchina che fa altro ma ha un posto è `ok`:
+   ci si mette in fila. */
+function statoMacchina(f, r, ora) {
+  const dove = r.dove
   const voce = laMacchina(dove)
   if (!voce) return null
   const tutte = f.cose.filter(c => macchinaDi(c) === dove)
-  const base = { id: voce.id, nome: voce.nome, manca: 0, prezzo: null, arriva: null }
+  const base = { id: voce.id, nome: voce.nome, manca: 0, ne: 0, piena: false,
+                 prezzo: null, arriva: null }
   if (!tutte.length) {
     const liv = livelloDellaVoce(voce)
     if (liv > f.livello) return { ...base, stato: 'compra', arriva: liv }
@@ -150,9 +160,13 @@ function statoMacchina(f, dove, ora) {
     return { ...base, stato: 'compra', prezzo: f.quantoCosta(voce.id) }
   }
   const stati = tutte.map(c => f.statoMacchina(c, ora)).filter(Boolean)
-  if (stati.some(s => s.ferma || s.pronto)) return { ...base, stato: 'ok' }
-  const prima = stati.slice().sort((a, b) => a.manca - b.manca)[0]
-  return { ...base, stato: 'lavora', manca: prima ? prima.manca : 0 }
+  if (stati.some(s => s.pronto)) return { ...base, stato: 'ok' }
+  const suoi = stati.flatMap(s => s.coda).filter(p => !p.pronto && p.ricetta.da === r.da)
+    .sort((a, b) => a.manca - b.manca)
+  if (suoi.length) return { ...base, stato: 'lavora', ne: suoi.length, manca: suoi[0].manca }
+  if (stati.some(s => s.libera)) return { ...base, stato: 'ok' }
+  const prima = stati.filter(s => s.lavora).sort((a, b) => a.manca - b.manca)[0]
+  return { ...base, stato: 'lavora', piena: true, manca: prima ? prima.manca : 0 }
 }
 
 function statoCampo(f, coltura, ora) {
@@ -226,7 +240,7 @@ function ramoDi(f, prodotto, ora, servono, giri, resto) {
   }
   const r = scelta.r
   nodo.via = { che: 'ricetta', id: r.id, nome: r.nome, minuti: r.minuti, costo: r.costo,
-               macchina: statoMacchina(f, r.dove, ora), campo: null,
+               macchina: statoMacchina(f, r, ora), campo: null,
                alternative: vie.slice(1).map(altraStrada),
                azione: consiglio ? consiglio.azione : null,
                testo: consiglio ? consiglio.testo : '' }

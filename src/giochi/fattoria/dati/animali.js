@@ -64,11 +64,11 @@ export const ANIMALI = {
 
 /* ── QUANTO PAGA UNA BESTIA RIMESSA A POSTO ───────────────────────
    Esperienza, mai monete (`dati/bisogni.js`, `CALIBRAZIONE.md`), e
-   **un decimo del suo prezzo**: 🪙90 → ⭐9 per un cane, ⭐8 per un
-   gatto, ⭐12 per il pappagallo. Tre ragioni per questo numero.
+   **un quindicesimo del suo prezzo**: 🪙90 → ⭐6 per un cane, ⭐5 per
+   un gatto, ⭐8 per il pappagallo. Tre ragioni per questo numero.
 
      · È dell'ordine di un ordine piccolo del mercato (tre grano
-       rendono ⭐18, `dati/mercato.js`), e sta sotto: un ordine chiede
+       rendono ⭐12, `dati/mercato.js`), e sta sotto: un ordine chiede
        un quarto d'ora di campo, rimettere a posto una bestia chiede
        tre gesti e le ore che ci mette la pancia a scendere.
      · Cresce col prezzo perché una bestia cara è un impegno più
@@ -78,12 +78,18 @@ export const ANIMALI = {
      · Il ciclo non si ripete prima di tre ore (la pancia cala di 1 in
        14 ore, e da «benissimo» a «sotto bene» c'è un quarto di barra):
        anche con tutte e sei le bestie in casa e due giri al giorno
-       sono poco più di cento ⭐, cioè un ottavo del gradino di livello
+       sono una settantina di ⭐, cioè un decimo del gradino di livello
        a cui si arriva con la sesta.
+
+   Era un decimo, quando tre grano rendevano ⭐18. Il premio del
+   mercato è sceso di un terzo col secondo albero (`PER_GESTO = 2`), e
+   questo è sceso della stessa misura: se no il pappagallo avrebbe
+   reso quanto un ordine di tre grano, e la regola «sotto l'ordine più
+   piccolo» sarebbe diventata falsa senza che nessuno la toccasse.
 
    Chi non è in tabella prende il prezzo più basso: meglio un premio
    piccolo che una riga che non paga. */
-export const QUOTA_BENESSERE = 0.1
+export const QUOTA_BENESSERE = 1 / 15
 const PREZZO_MINIMO = Math.min(...Object.values(ANIMALI).map(a => a.prezzo))
 export const premioBenessere = chi =>
   Math.max(1, Math.round(((ANIMALI[chi] || {}).prezzo || PREZZO_MINIMO) * QUOTA_BENESSERE))

@@ -3,9 +3,19 @@
    LE MACCHINE: LA ROBA DEL GRANAIO CHE DIVENTA UN'ALTRA ROBA
 
    Stessa forma di `Campo.vue` e per la stessa ragione: si tocca una cosa
-   propria e si vede cosa ci si può fare. Tre stati — ferma (cosa faccio),
-   sta lavorando (quanto manca), pronto (ritira) — e i costi a schermo
-   prima di premere.
+   propria e si vede cosa ci si può fare. In cima **la fila**, sotto le
+   ricette da metterci, in fondo il ritiro — e i costi a schermo prima
+   di premere.
+
+   ── LA FILA SI GUARDA, NON SI LEGGE ───────────────────────────────
+   Una casella per posto (`dati/coda.js`), come le caselle di una
+   ricetta: quella che lavora con la sua barra, quelle che aspettano con
+   la ✕ per toglierle (e rendono tutto), le pronte col ✓, e i posti
+   vuoti col ＋. Tre posti pieni e tre vuoti non si contano: si vede il
+   buco. Il ＋ mette in fila **solo quando non c'è niente da scegliere**
+   — la ricetta dell'ultimo pezzo, o l'unica che si può fare — se no
+   sarebbe un tasto che decide al posto di chi preme; negli altri casi
+   è un posto vuoto e basta, e si sceglie dalle ricette qui sotto.
 
    ── PERCHÉ UNA MACCHINA E NON UN TASTO IN UN MENÙ ─────────────────
    Perché è **una cosa che si compra e si mette dove si vuole**, e costa
@@ -50,8 +60,11 @@ const props = defineProps({
      manca) ma a **«mi serve?»**, che è la domanda vera davanti a una
      macchina con quattro ricette. */
   ricette: { type: Array, default: () => [] },
-  ciSta: { type: Number, default: 99 },
-  /* dove finisce quello che esce di qui: come si chiama, se c'è, e
+  /* quanti dei pezzi pronti **entrano adesso** nel silo, e quale merce
+     è rimasta fuori per prima (vuoto: nessuna) */
+  siRitira: { type: Number, default: 0 },
+  nonCiSta: { type: String, default: '' },
+  /* dove finisce quello che è rimasto fuori: come si chiama, se c'è, e
      quanto costa. Un «metti un silo» che non dice quale manda a
      comprare quello sbagliato, e sono 120 monete. */
   silo: { type: String, default: 'silo' },
@@ -60,13 +73,33 @@ const props = defineProps({
   /* Il prossimo passo quando quello che è pronto non ha dove andare */
   passo: { type: Object, default: null },
 })
-const emit = defineEmits(['avvia', 'ritira', 'chiudi', 'passo', 'albero'])
+const emit = defineEmits(['avvia', 'ritira', 'togli', 'ingrandisci', 'chiudi', 'passo',
+                         'albero'])
 
-const r = computed(() => props.stato.ricetta)
-const pieno = computed(() => !props.stato.ferma && props.stato.pronto &&
-                            props.ciSta < (r.value ? r.value.resa : 0))
 const prodotto = k => PRODOTTI[k] || { nome: k, emoji: '📦' }
 const puo = v => !v.manca.length && !v.monete
+
+/* I posti della fila, pieni e vuoti, nell'ordine in cui escono. */
+const posti = computed(() => {
+  const coda = props.stato.coda || []
+  return [...coda, ...Array.from({ length: props.stato.liberi || 0 }, () => null)]
+})
+
+/* Cosa mette in fila il ＋, se c'è una risposta sola: la ricetta
+   dell'ultimo pezzo messo, se si può rifare, o l'unica che si può fare.
+   Due o più possibili e nessun ultimo: il ＋ non sceglie. */
+const ancora = computed(() => {
+  const coda = props.stato.coda || []
+  const ultima = coda.length ? coda[coda.length - 1].ricetta.id : null
+  const buone = props.ricette.filter(puo)
+  return buone.find(v => v.ricetta.id === ultima) || (buone.length === 1 ? buone[0] : null)
+})
+
+/* la faccia grande del ritiro: il primo pezzo pronto, che è il primo
+   che esce — non quello che lavora, che può essere un'altra cosa */
+const primoPronto = computed(() => (props.stato.coda || []).find(p => p.pronto) || null)
+
+const minuti = n => `${n} ${n === 1 ? 'minuto' : 'minuti'}`
 
 /* ── LE CASELLE ───────────────────────────────────────────────────
    *Ribalta il disegno di prima*, che era «3 → 2»: due numeri e una
@@ -90,12 +123,70 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>{{ nome }}</h2>
 
-    <!-- ── ferma: cosa faccio ── -->
-    <template v-if="stato.ferma">
-      <p v-if="bestie">Hanno fame. Dai loro il mangime che hai
-         preparato, e dopo un po' ti danno qualcosa in cambio.</p>
-      <p v-else>Metti dentro quello che hai raccolto e ne esce da
-         mangiare per i tuoi animali. <b>Scegli cosa preparare.</b></p>
+    <p v-if="stato.ferma && bestie">Hanno fame. Dai loro il mangime che hai
+       preparato, e dopo un po' ti danno qualcosa in cambio.</p>
+    <p v-else-if="stato.ferma">Metti dentro quello che hai raccolto e ne esce da
+       mangiare per i tuoi animali. <b>Scegli cosa preparare.</b></p>
+    <p v-else-if="stato.lavora">{{ bestie ? 'Ci stanno pensando' : 'Sta lavorando' }}:
+       il prossimo è pronto fra <b>{{ minuti(stato.manca) }}</b>.
+       <span v-if="stato.liberi">Puoi metterne altri in fila.</span></p>
+
+    <!-- ── LA FILA ── -->
+    <div class="fa-fila-posti" data-fila>
+      <template v-for="(p, i) in posti" :key="p ? 'p' + p.i : 'v' + i">
+        <div v-if="p" :class="['fa-posto', { lavora: p.lavora, pronto: p.pronto }]"
+             :data-fila-posto="p.i">
+          <Merce :merce="p.ricetta.da" :lato="30" />
+          <span v-if="p.lavora" class="fa-livello">
+            <i :style="{ width: Math.round(p.quanto * 100) + '%', background: '#e0a33c' }"></i>
+          </span>
+          <em v-if="p.pronto">✓</em>
+          <em v-else-if="p.lavora">{{ p.manca }} min</em>
+          <em v-else>⏳ {{ p.manca }} min</em>
+          <!-- In fila e non partito: si toglie, e rende tutto. Quello
+               che lavora no — è già dentro — e quello pronto si ritira. -->
+          <button v-if="p.aspetta" type="button" class="fa-posto-via"
+                  :data-fila-togli="p.i" aria-label="togli dalla fila"
+                  @click="emit('togli', p.i)">✕</button>
+        </div>
+        <button v-else-if="ancora" type="button" class="fa-posto vuoto suo"
+                data-fila-aggiungi @click="emit('avvia', ancora.ricetta)">
+          <b>＋</b><Merce :merce="ancora.ricetta.da" :lato="18" />
+        </button>
+        <div v-else class="fa-posto vuoto"><b>＋</b></div>
+      </template>
+      <!-- Allungare la fila: il prezzo sta sul tasto, e al tetto il tasto
+           non c'è più. -->
+      <button v-if="stato.prezzoFila" type="button" class="fa-posto-piu"
+              data-fila-ingrandisci @click="emit('ingrandisci')">
+        +1 posto<br><b>🪙{{ stato.prezzoFila }}</b>
+      </button>
+    </div>
+
+    <!-- ── pronti: si ritira quello che ci sta ── -->
+    <template v-if="primoPronto">
+      <!-- Cosa sia lo dice la figura, quindi la frase non lo ripete:
+           «c'è 1 uovo» e «c'è 1 lana» vogliono due articoli diversi, e
+           una frase che si compone da sola sbaglia il genere di
+           qualcosa. -->
+      <p class="fa-pronto"><Merce :merce="primoPronto.ricetta.da" :lato="48" />
+         <b>{{ stato.pronti > 1 ? `Ce ne sono ${stato.pronti} pronti!` : 'È pronto!' }}</b>
+         Ritirare non costa niente.</p>
+      <p v-if="nonCiSta && senzaSilo" class="fa-piccolo">Non hai ancora il
+         <b>{{ silo.toLowerCase() }}</b> (🪙{{ prezzoSilo }}): senza, non c'è
+         dove metterlo. Non si butta via niente, e la fila intanto lavora.</p>
+      <template v-else-if="nonCiSta">
+        <p class="fa-piccolo">{{ siRitira ? 'Qualcosa non ci sta nel silo' : 'Nel silo non c\'è posto' }}:
+           ti aspetta qui, e la fila intanto lavora.</p>
+        <Passo :passo="passo" @fai="a => emit('passo', a)" />
+      </template>
+    </template>
+
+    <p v-if="!stato.liberi" class="fa-piccolo">La fila è piena: ritira quello
+       che è pronto{{ stato.prezzoFila ? ', o allungala' : '' }}.</p>
+
+    <!-- ── cosa metterci ── -->
+    <template v-if="stato.liberi">
       <!-- Nessuna ricetta: non dev'essere mai possibile — una macchina
            che arriva prima del suo primo lavoro è un tasto rotto che si
            è pagato, e `guastiDegliSblocchi` lo rifiuta — ma se succede
@@ -162,45 +253,11 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
       </template>
     </template>
 
-    <!-- ── sta lavorando ── -->
-    <template v-else-if="!stato.pronto">
-      <p>{{ bestie ? 'Ci stanno pensando' : 'Sta lavorando' }}. Finisce fra
-         <b>{{ stato.manca }} {{ stato.manca === 1 ? 'minuto' : 'minuti' }}</b>.</p>
-      <div class="fa-bisogni">
-        <div class="fa-bisogno">
-          <Merce :merce="r.da" :lato="26" />
-          <span class="fa-livello">
-            <i :style="{ width: Math.round(stato.quanto * 100) + '%', background: '#e0a33c' }"></i>
-          </span>
-          <em>{{ Math.round(stato.quanto * 100) }}%</em>
-        </div>
-      </div>
-      <p class="fa-piccolo">Va avanti anche a gioco chiuso, e quando ha
-         finito ti aspetta.</p>
-    </template>
-
-    <!-- ── pronto ── -->
-    <template v-else>
-      <!-- Cosa sia lo dice la figura, quindi la frase non lo ripete:
-           «c'è 1 uovo» e «c'è 1 lana» vogliono due articoli diversi, e
-           una frase che si compone da sola sbaglia il genere di
-           qualcosa. -->
-      <p class="fa-pronto"><Merce :merce="r.da" :lato="48" />
-         <b>È pronto!</b> Puoi portarlo via, e ritirare non costa
-         niente.</p>
-      <p v-if="pieno && senzaSilo" class="fa-piccolo">Non hai ancora il
-         <b>{{ silo.toLowerCase() }}</b> (🪙{{ prezzoSilo }}): senza, non c'è
-         dove metterlo. Non si butta via niente.</p>
-      <template v-else-if="pieno">
-        <p class="fa-piccolo">Ti aspetta lì: non si butta via niente.</p>
-        <Passo :passo="passo" @fai="a => emit('passo', a)" />
-      </template>
-    </template>
-
     <div class="fa-fila">
       <button class="fa-bot piano" @click="emit('chiudi')">Chiudi</button>
-      <button v-if="!stato.ferma && stato.pronto" class="fa-bot forte"
-              :disabled="pieno" @click="emit('ritira')">Ritira</button>
+      <button v-if="stato.pronto" class="fa-bot forte" data-ritira
+              :disabled="!siRitira" @click="emit('ritira')">Ritira{{
+                siRitira > 1 ? ` (${siRitira})` : '' }}</button>
     </div>
   </div>
 </template>
