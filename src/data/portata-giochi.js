@@ -25,7 +25,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { giocoDaOffrire, filaConPortata, primaDaGiocare, arcoDelGioco,
          statoDellaTappa, PASSATA, AVANTI } from './portata.js'
-import { state, etaDelBambino, saperiSpenti, tappaAperta, tuttoAperto } from '../store/profile.js'
+import { state, etaDelBambino, saperiSpenti, tappaAperta, tuttoAperto,
+         giocoAcceso, giocoForzato } from '../store/profile.js'
 import { misure } from '../store/progressi.js'
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
@@ -106,6 +107,17 @@ export function giocoDaVedere (chiave, { provato = null, fatte = 0 } = {}) {
   const gia = provato == null ? giaProvato(chiave) : provato
   return giocoDaOffrire(tappe, { ...regole(), provato: gia, fatte })
 }
+
+/* ── e la domanda intera: questo gioco, ce l'ha in home? ──
+   Acceso da un grande (e giocabile coi saperi che ci sono), e poi o
+   tenuto in casa a mano contro l'età, o dentro la portata. La fanno in
+   due — le carte della home e le novità dei bambini
+   (`guide/novita-bambini.js`) — e sta qui perché due copie della stessa
+   domanda prima o poi rispondono due cose diverse: una riga sul
+   castello a chi in home il castello non ce l'ha. Il perché dei pezzi
+   sta accanto alle carte, in `views/HomeView.vue`. */
+export const inCasa = chiave =>
+  giocoAcceso(chiave) && (giocoForzato(chiave) || giocoDaVedere(chiave))
 
 /* ── e le due che serviranno alle mappe ──
    Da dove comincia chi apre adesso, e come sta messa la fila. Non le usa

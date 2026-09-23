@@ -4,7 +4,7 @@ import { state, selectPlayer, level, countMastered,
          miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
          mateProgresso, engProgresso, espProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
-         giocoAcceso, giocoForzato, quantiGiochiAccesi,
+         quantiGiochiAccesi,
          sperimentaliAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
@@ -20,7 +20,7 @@ import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
-import { giocoDaVedere } from '../data/portata-giochi.js'
+import { inCasa } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
 
@@ -124,8 +124,10 @@ const oggetti = computed(() => state.profile.owned.length)
    è quel dissenso scritto, e vince sull'età. Non vince su
    `giocoAcceso`, che dentro ha anche i saperi spenti — quella non è
    una questione di età ma di domande da indovinare. */
-const acceso = chiave =>
-  giocoAcceso(chiave) && (giocoForzato(chiave) || giocoDaVedere(chiave))
+/* la domanda sta in `data/portata-giochi.js` e non qui: la fanno anche
+   le novità dei bambini, e una riga su un gioco che la home non mostra
+   sarebbe una riga su niente */
+const acceso = inCasa
 const nessunGioco = computed(() => quantiGiochiAccesi() === 0)
 
 /* ═══════════ le carte, che adesso si costruiscono da sole ═══════════

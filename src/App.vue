@@ -14,6 +14,7 @@ import GeneraleGame from './views/GeneraleGame.vue'
 import AlboView from './views/AlboView.vue'
 import GenitoriView from './views/GenitoriView.vue'
 import Guide from './guide/Guide.vue'
+import Novita from './guide/Novita.vue'
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import { SCHERMATE } from './giochi/schermate.js'
@@ -36,6 +37,9 @@ const viste = { home: HomeView, cameretta: CamerettaView, animali: CamerettaView
                    apposta — la prima guida è come si installa, e la
                    legge chi ha appena ricevuto il link (`guide/Guide.vue`) */
                 guide: Guide,
+                /* le novità per i bambini: ci porta il nastro in home, e
+                   si legge soltanto (`guide/novita-bambini.js`) */
+                novita: Novita,
                 /* i giochi scritti con la convenzione nuova (`src/giochi/`)
                    si registrano da soli: una riga in `schermate.js` e sono
                    raggiungibili da qui e dall'indirizzo, senza toccare
@@ -109,11 +113,11 @@ function vai(v) { vista.value = v }
    dimenticherebbe — come si erano dimenticati il `:key` della domanda
    in quattro su cinque.
 
-   Contano solo i **giochi**: home, impostazioni, albo e guide non sono
-   tempo passato a giocare, e metterle nel conto direbbe a un genitore
-   che suo figlio ha passato dieci minuti sul gioco quando li ha passati
-   a scegliere. */
-const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide']
+   Contano solo i **giochi**: home, impostazioni, albo, guide e novità
+   non sono tempo passato a giocare, e metterle nel conto direbbe a un
+   genitore che suo figlio ha passato dieci minuti sul gioco quando li
+   ha passati a scegliere. */
+const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita']
 const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
 
 function apriSessione(v) {

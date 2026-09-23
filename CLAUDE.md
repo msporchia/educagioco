@@ -1397,3 +1397,31 @@ bambino di quell'età — serve a poter dire «tuo figlio» invece di «gli
 utenti». Senza nessuna età conosciuta la nota si mostra lo stesso: non
 sapere non è un motivo per nascondere. La scelta è pura (`scegli`) e
 provata a parte: le note cambiano, la regola no.
+
+**Per i bambini c'è il contrario: un changelog vero**
+(`guide/novita-bambini.js`, la pagina `guide/Novita.vue`). Le cose
+fatte bene — il laboratorio rifatto, dieci mostri nuovi — non
+arrivavano a nessuno: si entra nel gioco che si conosce, e gli altri
+non si riaprono per vedere se sono cambiati. Lì la notizia è proprio
+quella che la posta dei grandi scarta, e la regola è un'altra: **si
+scrive se un bambino che ci va apposta se ne accorge**, in una riga,
+dicendo cosa c'è adesso e non cosa si è cambiato. Tre cose la tengono
+semplice:
+
+- **l'elenco cresce e non si pota**: il tetto lo mette la pagina, che
+  di ogni gioco mostra le ultime quattro (`PER_GIOCO`), quindi chi
+  torna dopo un anno trova al massimo quattro righe per gioco;
+- **il segno è uno per bambino** (`settings.novitaLette`, l'id più alto
+  al momento di «Letto»), e un bambino nuovo nasce all'ultima — «è
+  tutto nuovo», detto a chi il prima non l'ha visto, è falso. Si scrive
+  in `creaGiocatore` e **non in `blank()`**, che `selectPlayer` usa per
+  riempire i buchi: un bambino di ieri nascerebbe già in fondo, e le
+  novità scritte per lui non le vedrebbe mai;
+- **una riga su un gioco che non ha in home non gli arriva**: la
+  domanda è `inCasa` di `data/portata-giochi.js`, la stessa delle carte.
+
+Ci si arriva da un nastro in home che dice già la più fresca, e che
+non ha la ✕: si spegne con «Letto», dentro. Le righe le decide il
+proprietario, come le note dei grandi. Nei test i bersagli sono
+`[data-nastro="novita"]`, `[data-novita-pagina]`, `[data-novita-gioco]`,
+`[data-novita]` e `[data-azione="novita-letto"]`.

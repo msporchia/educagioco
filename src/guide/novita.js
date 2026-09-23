@@ -17,6 +17,10 @@
    acceso: non sono note. Diluiscono le tre che contano e insegnano a
    ignorare il pallino. Ne escono tre o quattro l'anno, ed è giusto così.
 
+   Il changelog c'è, ma parla ai bambini: `guide/novita-bambini.js`. Lì
+   il laboratorio rifatto è proprio la notizia, perché chi legge è
+   quello che ci gioca.
+
    COME ARRIVA A DESTINAZIONE. Il grande in questa pagina non ci entra
    mai da solo, quindi il richiamo sta fuori: un nastro in home che parla
    al **bambino** e gli chiede di chiamare un grande (`guide/Nastri.vue`)

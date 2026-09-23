@@ -20,6 +20,7 @@ import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
 import { finestraDi } from '../quiz/nucleo/classi.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
+import { ULTIMA as ULTIMA_NOVITA } from '../guide/novita-bambini.js'
 import { SCALETTA, campagneDaFila, filaDaCampagne, filaDopo } from '../data/asteroidi.js'
 import { allineaCalcolo } from './calcolo.js'
 import { cestina, voceCestinata } from './cestino.js'
@@ -301,11 +302,19 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
   // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere
   // sul primo disponibile alla lettura che salvare un aspetto fantasma
   if (aspetto && PERSONE.includes(aspetto)) fresco.aspetto = aspetto
+  /* Le novità partono dall'ultima: chi nasce adesso il prima non l'ha
+     mai visto, e «il laboratorio è tutto nuovo» detto a lui è falso
+     (`guide/novita-bambini.js`). Sta qui e non in `blank()` apposta:
+     `selectPlayer` riempie coi difetti quello che un profilo non ha, e
+     un bambino di ieri si ritroverebbe il segno già all'ultima — le
+     novità scritte proprio per lui non le vedrebbe mai. */
+  fresco.settings.novitaLette = ULTIMA_NOVITA
   if (entra) {
     await selectPlayer(id)
     if (partenza != null && partenza !== '') state.profile.settings = fresco.settings
+    else state.profile.settings.novitaLette = ULTIMA_NOVITA
     if (fresco.aspetto) state.profile.aspetto = fresco.aspetto
-    if ((partenza != null && partenza !== '') || fresco.aspetto) persist()
+    persist()
   }
   else save(KEY(id), fresco)      // il suo profilo esiste da subito
   /* Subito su disco, senza aspettare il salvataggio a scatto ritardato:
@@ -1003,6 +1012,23 @@ export function segnaGuidaVista(chiave) {
   persist()
 }
 
+/* ── LE NOVITÀ, LETTE FIN QUI ──
+   Il segno della pagina delle novità (`guide/novita-bambini.js`): l'id
+   più alto che c'era quando si è premuto «Letto». Per bambino, come le
+   guide viste — due fratelli non se le leggono a vicenda — e chi non
+   l'ha mai scritto parte da zero, cioè le vede tutte, col tetto della
+   pagina. `flush()` subito, come per il nastro «installalo»: chi preme
+   «Letto» e chiude l'app un attimo dopo se le ritroverebbe davanti. */
+export const novitaLette = () => {
+  const n = state.profile.settings.novitaLette
+  return typeof n === 'number' ? n : 0
+}
+export function segnaNovitaLette() {
+  state.profile.settings.novitaLette = ULTIMA_NOVITA
+  persist()
+  return flush()
+}
+
 /* i lucchetti delle campagne: spento vuol dire «una tappa per volta»,
    che è il comportamento di sempre. Acceso, tutte le tappe di tutti i
    giochi si aprono subito. */
@@ -1041,6 +1067,9 @@ export async function resetPlayer() {
      davanti adesso. */
   await cestina(state.player, nomeCorrente(), state.profile, 'cancellati')
   state.profile = blank()
+  /* è lo stesso bambino, e i giochi li ha già visti: le novità di prima
+     non tornano solo perché si ricomincia dalla prima tappa */
+  state.profile.settings.novitaLette = ULTIMA_NOVITA
   state.festa = []
   await remove(KEY(state.player))
   apriGiornata()
