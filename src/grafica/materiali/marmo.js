@@ -55,8 +55,18 @@ export function marmoLiscio(c, reg, A, lato, tinte, scoperto, opz = {}) {
    tessere sono tirate verso il fondo chiaro (poche tinte, smorzate) e
    l'oro torna in diagonale di riga in riga, non in colonna: una
    griglia dritta si sarebbe rivista come i «cubetti». */
-function cornice(c, reg, A, lato, banda, opz = {}) {
+function cornice(c, reg, A, lato, banda, opz = {}, tinte) {
   const modo = opz.modo || 'normale', sm = (opz.seme || 0) * 83
+  /* ── LE TESSERE DI CHI NON NE HA ──
+     La tavolozza della cornice (`tessere`) ce l'hanno solo gli ambienti
+     di marmo, cioè i due in cui questo pavimento era nato. Da quando un
+     livello mette il mosaico **cella per cella** (`suoli.mosaico`) lo si
+     posa anche in una cucina o in un camminamento, dove quella tavolozza
+     non c'è: si rompeva il fondale intero, e la mappa restava nera. Chi
+     non ne ha se le ricava dalla coppia della posa, con l'oro che è la
+     firma del mosaico. */
+  const T = A.tessere || (tinte ? [tinte[0], tinte[1], '#c9b06a', mescola(tinte[1], '#4a86e8', 0.3)]
+                                : ['#cdc4ad', '#8f96ad', '#c9b06a', '#8e9db4'])
   // `mancante`: le tessere cadute lasciano un vuoto nella cornice;
   // `consumato` non le perde, le sbiadisce verso il fondo del marmo
   const salta = modo === 'mancante' ? 0.24 : 0
@@ -73,12 +83,12 @@ function cornice(c, reg, A, lato, banda, opz = {}) {
       const vicinoVert = cx - reg.x0 < banda || reg.x1 - cx < banda
       if ((vicinoOrizz || vicinoVert) && x + w > reg.x0 - lato) {
         if (salta && r(9) < salta) { x += w; continue }
-        let base = A.tessere[0]
-        if (Math.abs((chiave + k * 3) % 11) < 2) base = A.tessere[2]
-        else if (r(2) > 0.985) base = A.tessere[3]
-        let col = mescola(mescola(base, A.tessere[0], 0.3),
+        let base = T[0]
+        if (Math.abs((chiave + k * 3) % 11) < 2) base = T[2]
+        else if (r(2) > 0.985) base = T[3]
+        let col = mescola(mescola(base, T[0], 0.3),
                           r(3) > 0.5 ? '#ffffff' : '#000000', r(4) * 0.05)
-        if (modo === 'consumato') col = mescola(col, A.tessere[0], 0.35)
+        if (modo === 'consumato') col = mescola(col, T[0], 0.35)
         lastra(c, x + g, k * h + g, w - g * 2, h - g * 2, col,
                mescola(col, '#ffffff', 0.16), mescola(col, '#000000', 0.14),
                m => dado(chiave + m, k, 400 + sm))
@@ -92,7 +102,7 @@ function cornice(c, reg, A, lato, banda, opz = {}) {
 export function mosaico(c, reg, A, lato, tinte, scoperto, opz = {}) {
   const modo = opz.modo || 'normale'
   marmoLiscio(c, reg, A, lato, tinte, scoperto, opz)
-  cornice(c, reg, A, lato, lato * (modo === 'consumato' ? 0.85 : 1.15), opz)
+  cornice(c, reg, A, lato, lato * (modo === 'consumato' ? 0.85 : 1.15), opz, tinte)
 }
 mosaico.modi = ['normale', 'consumato', 'mancante']
 
@@ -190,8 +200,12 @@ export function marmo(c, reg, A, lato, tinte, dentro, opz = {}) {
   for (let f = Math.floor(reg.y0 / passo) - 1; f < Math.ceil(reg.y1 / passo); f++) {
     if (modo === 'crepata' && dado(f, 3, 770 + sm) > 0.82) continue
     const y = f * passo + passo * 0.58
-    rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.1, A.oro)
-    rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.035, mescola(A.oro, '#ffffff', 0.45))
+    /* lo stesso ripiego del tappeto: il muro di marmo si può scrivere
+       cella per cella (`muri.marmo`) anche dove l'ambiente l'oro non ce
+       l'ha */
+    const oro = A.oro || '#e8c569'
+    rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.1, oro)
+    rett(c, reg.x0, y, reg.x1 - reg.x0, lato * 0.035, mescola(oro, '#ffffff', 0.45))
   }
 }
 marmo.modi = ['normale', 'venato', 'crepata']

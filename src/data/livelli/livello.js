@@ -36,11 +36,21 @@
    la forma, lì la sostanza.
    ═══════════════════════════════════════════════════════════════════ */
 
+/* ── I TRE TOKEN CHE NON HANNO BISOGNO DI LEGENDA ──
+   Muro, pavimento e fuori: sono i tre elementi di ogni mappa, e si
+   scrivono senza dichiararli — `##`, `..` e due spazi. Stanno qui, nel
+   formato, e li legge sia il controllo dei refusi qui sotto sia chi
+   trasforma la mappa in campo (`motore/generale/campo.js`): un elenco
+   solo, perché due elenchi dello stesso formato prima o poi dicono due
+   cose diverse. */
+export const DI_SERIE = { muro: '##', pavimento: '..', fuori: '  ' }
+
 /**
  * @typedef {Object} Livello
  * @property {string} id            la chiave dei progressi: NON si rinomina mai
  * @property {string} nome          come si chiama a schermo
  * @property {string} [idea]        cosa insegna, in una riga
+ * @property {string} [impara]      cosa si impara, in due parole («l'inventario»)
  * @property {string} [dritta]      la riga sotto la scena
  * @property {string} [racconto]    la spiegazione lunga del 💡
  * @property {string[]} [aiuti]     i suggerimenti a scalare
@@ -72,6 +82,13 @@
    `undefined` vuol dire «ammesso, ma non si mette se non serve». */
 const CAMPI = {
   id: undefined, nome: undefined, idea: undefined,
+  /* ── COSA SI IMPARA, IN DUE PAROLE ──
+     «azioni base», «aprire le porte», «l'inventario»: l'etichetta che la
+     fila dei livelli scrive accanto al nome, per chi guarda l'elenco e
+     vuole sapere a cosa serve quella prova. Sta a parte dal `nome` perché
+     il nome va anche nella barra del gioco, dove sul telefono ci stanno
+     venti lettere; e non è l'`idea`, che è la frase del cartello. */
+  impara: undefined,
   dritta: undefined, racconto: undefined, aiuti: undefined,
   scena: undefined,
   /* ── `intera` NON ESISTE PIÙ ──
@@ -215,7 +232,7 @@ export function livello (d) {
       ...Object.keys((v.scena && v.scena.legenda) || {}),
       ...Object.keys(v.metti || {}),
     ]),
-    '##', '..',
+    ...Object.values(DI_SERIE),
   ])
   const orfani = new Set()
   for (const riga of celle)

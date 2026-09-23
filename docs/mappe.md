@@ -16,6 +16,31 @@ un muro. Adesso c'è: `motore/generale/stanze.js`.
 
 ---
 
+## 0. Tre token che non chiedono legenda
+
+Ogni mappa è fatta di tre cose prima di tutto il resto, e si scrivono
+senza dichiararle:
+
+| token | cos'è | per il gioco | per chi dipinge |
+|---|---|---|---|
+| `..` | pavimento | ci si cammina | il suolo dell'ambiente |
+| `##` | muro | non ci si passa, la vista si ferma | conci, spessore, ombra, torce |
+| due spazi | **il fuori** | come il muro | nero, fino al filo del pavimento |
+
+Il fuori è arrivato per ultimo (settembre 2026), ed è quello che cambia
+di più come si legge una mappa. Prima tutto quello che non era
+pavimento era muro, e una cella di muro che tocca un pavimento si
+dipinge a conci: ogni mappa finiva chiusa in una **cornice di
+mattoni**, sembrava un edificio solo, e il nero che compariva dove i
+muri erano spessi si leggeva come un buco. Adesso la regola è: **il
+muro vero solo dove serve** — fra due stanze, attorno a una porta, dove
+qualcosa ci sta appeso — e il resto è fuori. La forma del posto la dà
+il nero: una cucina con la sua nicchia, un corridoio che gira.
+
+I tre token stanno in un posto solo, `DI_SERIE` in
+`data/livelli/livello.js`: li legge il controllo dei refusi e li legge
+chi trasforma la mappa in campo (`motore/generale/campo.js`).
+
 ## 1. Tre famiglie in legenda, e sono già due
 
 La legenda dichiara già chi cammina (`chi.*`) e cosa c'è (`cose.*`). Da

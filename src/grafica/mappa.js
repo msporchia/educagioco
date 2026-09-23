@@ -43,14 +43,14 @@ export function leggiMappa(mappa, larghezza, altezza) {
    che vogliono sapere se ci stanno dentro. Ed è **lo stesso conto**,
    non due che si somigliano: se domani le torce cambiassero passo, un
    orco continuerebbe ad accendersi dove il pavimento si accende. */
-export function torceDi(A, larghezza, altezza, muro) {
+export function torceDi(A, larghezza, altezza, muro, vuoto = () => false) {
   const torce = []
   if (!A.torce) return torce
   for (let k = 0; k < altezza; k++)
     for (let i = 0; i < larghezza; i++)
       // `k + 1 < altezza`: una torcia sull'ultima fila illuminerebbe
       // fuori dalla mappa, e in gioco sarebbe un lume sprecato
-      if (muro(i, k) && k + 1 < altezza && !muro(i, k + 1) &&
+      if (muro(i, k) && !vuoto(i, k) && k + 1 < altezza && !muro(i, k + 1) &&
           i % 6 === 3 && dado(i, k, 800) > 0.3)
         torce.push([i, k])
   return torce
@@ -71,6 +71,10 @@ export function dipingiMappa(ctx, opz) {
      è esattamente com'era finché l'arredo stava in `scenografia`. */
   const arredi = opz.arredi || {}
   const muro = (i, k) => muroVero(i, k) && !arredi[i + ',' + k]
+  /* il fuori: pieno come un muro, ma senza facce (due spazi nella
+     mappa, `dipingiMuri` per come si vede) */
+  const vuoti = new Set(opz.vuoti || [])
+  const vuoto = (i, k) => vuoti.has(i + ',' + k)
   const W = larghezza * lato, H = altezza * lato
   const s = lato / 20                                   // l'unità di disegno
   const reg = { x0: 0, y0: 0, x1: W, y1: H }
@@ -256,11 +260,11 @@ export function dipingiMappa(ctx, opz) {
            (x, y, r) => fn(c, x, y, s, A, r))
   }
 
-  /* 5 ─ dove sono appese le torce */
-  const torce = torceDi(A, larghezza, altezza, muro)
+  /* 5 ─ dove sono appese le torce: sui muri veri, non sul fuori */
+  const torce = torceDi(A, larghezza, altezza, muro, vuoto)
 
   /* 6 ─ i muri */
-  dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto: T })
+  dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto: T, vuoto })
 
   /* 6b ─ l'arredo: sta fermo come un muro, quindi si dipinge nel
           fondale e non nella scena di ogni fotogramma. Dopo le
@@ -323,7 +327,9 @@ export function creaFondale(opz) {
        qui e non da chi mette in scena perché è **la stessa** che il
        fondale si è appena dipinto addosso: le torce sono quelle, e
        nessuno le deve contare una seconda volta. */
-    luce: creaLuce({ ambiente: A, torce: torceDi(A, larghezza, altezza, muro), lato }),
+    luce: creaLuce({ ambiente: A, lato,
+                     torce: torceDi(A, larghezza, altezza, muro,
+                                    (i, k) => (opz.vuoti || []).includes(i + ',' + k)) }),
     /* La finestra che si vede adesso, ricopiata di netto.
 
        `scala` serve a una cosa sola, ed è il pinch: mentre due dita

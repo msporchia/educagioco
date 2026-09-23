@@ -34,9 +34,12 @@
    separatore libero: con token di lunghezza diversa le righe si
    disallineano e la forma della stanza sparisce.
 
-   `##` è muro e `..` è pavimento: sono gli unici due token che il
-   lettore conosce da sé, perché sono l'unica cosa che il **gioco**
-   deve sapere del terreno (si passa o non si passa). Tutto il resto è
+   `##` è muro, `..` è pavimento e due spazi sono **il fuori**: sono i
+   tre token che il lettore conosce da sé, perché sono i tre elementi di
+   ogni mappa — dove si cammina, cosa separa, e cosa non c'è. Per il
+   gioco il fuori è come il muro (non ci si passa, la vista si ferma);
+   per chi disegna è nero, senza conci e senza torce, e dà alla stanza
+   la sua forma invece di una cornice di mattoni. Tutto il resto è
    vestito, e lo decide `grafica/`.
 
    ── cosa esce di qui ──
@@ -49,9 +52,11 @@
 import { mappaPiena } from './stanze.js'
 import { arreda } from './arreda.js'
 import { ARREDAMENTO } from '../../data/arredamento.js'
+import { DI_SERIE } from '../../data/livelli/livello.js'
 
-const MURO = '##'
-const VUOTO = '..'
+/* i tre token di serie stanno nel formato (`data/livelli/livello.js`);
+   il fuori si scrive come si vede, cioè con niente */
+const { muro: MURO, pavimento: PAVIMENTO, fuori: FUORI } = DI_SERIE
 
 /* una riga di token: si tolgono le barre e si taglia a coppie */
 export function tokenDi (riga) {
@@ -85,10 +90,11 @@ const stanzeLette = new Map()
 function decomprimi (griglia, opz) {
   const chiave = griglia.join('|') + '¦' + opz.ambiente + '¦' + opz.seme + '¦' +
     JSON.stringify(opz.suoli) + JSON.stringify(opz.muri) + JSON.stringify(opz.arredi) + '¦' +
-    opz.occupate.join(' ') + '¦' + opz.liberi.join(' ')
+    opz.occupate.join(' ') + '¦' + opz.liberi.join(' ') + '¦' + (opz.vuoti || []).join(' ')
   if (stanzeLette.has(chiave)) return stanzeLette.get(chiave)
   const piena = mappaPiena(griglia, {
-    suoli: opz.suoli, muri: opz.muri, arredi: opz.arredi, riempi: opz.occupate })
+    suoli: opz.suoli, muri: opz.muri, arredi: opz.arredi, riempi: opz.occupate,
+    vuoti: opz.vuoti })
   /* ── E LA STANZA SI ARREDA DA SÉ ──
      Quello che il livello non ha detto, se l'ambiente sa metterlo.
      Quello che nasce qui non entra mai in gioco — le solide occupano
@@ -124,7 +130,7 @@ export function leggiCampo (livello) {
   /* muro per il MOTORE: `##`, la muratura dichiarata, e **l'arredo** —
      una botte è un ostacolo, non un disegno. Di lì non ci si passa e
      la vista si ferma, che è quello che si vede guardandola. */
-  const eMuro = t => t === MURO || genereDi(t) === 'muro' || genereDi(t) === 'arredo'
+  const eMuro = t => t === MURO || t === FUORI || genereDi(t) === 'muro' || genereDi(t) === 'arredo'
   const griglia = celle.map(r => r.map(t => (eMuro(t) ? '#' : '.')).join(''))
 
   const posti = {}, porte = {}, leve = {}, totem = {}
@@ -153,11 +159,14 @@ export function leggiCampo (livello) {
   const occupate = []
   /* e quelle che il livello vuole vuote per forza */
   const liberi = []
+  /* e il fuori: muro per il motore, nero per chi dipinge */
+  const vuoti = []
 
   for (let y = 0; y < celle.length; y++)
     for (let x = 0; x < w; x++) {
       const t = celle[y][x]
-      if (t === MURO || t === VUOTO) continue
+      if (t === MURO || t === PAVIMENTO) continue
+      if (t === FUORI) { vuoti.push(x + ',' + y); continue }
       const dichiarata = legenda[t]
       if (!dichiarata)
         throw new Error(`livello «${livello.id}»: il token «${t}» (riga ${y}, cella ${x}) ` +
@@ -249,7 +258,7 @@ export function leggiCampo (livello) {
      decidere *dove va una cosa*, e prima non ce l'aveva nessuno.
      Il riempimento dei buchi lasciati dalle cose sta lì dentro. */
   const { piena, auto } = decomprimi(griglia, {
-    suoli, muri, arredi, occupate, liberi,
+    suoli, muri, arredi, occupate, liberi, vuoti,
     ambiente: livello.ambiente,
     /* il seme è l'id del livello: la stessa stanza si riapre uguale */
     seme: [...String(livello.id || '')].reduce((s, c) => s * 31 + c.charCodeAt(0), 7) >>> 0,
@@ -259,7 +268,7 @@ export function leggiCampo (livello) {
   /* i nomi scritti a mano vincono su quelli dedotti: servono per le
      cose che non stanno sulla mappa, come i segnali */
   return { griglia, posti, porte, leve, totem, oggetti, unita, attese,
-           suoli: piena.suoli, muri, arredi, piena,
+           suoli: piena.suoli, muri, arredi, vuoti, piena,
            scenografia: [...(livello.scenografia || []), ...auto.scenografia],
            fazioni: schiere, nomi: { ...nomi, ...(livello.nomi || {}) } }
 }

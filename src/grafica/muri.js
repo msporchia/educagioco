@@ -35,13 +35,49 @@ import { tessuto as filaturaDi } from './tessuto.js'
    accorgersi delle celle. Chi non dichiara `sotto` passa esattamente
    da dove passava prima.
    ═══════════════════════════════════════════════════════════════════ */
-export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
+export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto, vuoto = () => false }) {
   const T = tessuto || filaturaDi({ larghezza, altezza, muro, A })
   const sp = lato * 0.34                       // lo spessore che si vede
   const s = lato / 20
+  /* ── IL FUORI NON È UN MURO ──
+     Le celle del fuori (due spazi nella mappa, vedi `motore/generale/
+     campo.js`) sono piene per il motore ma qui non sono muratura: niente conci, niente spessore,
+     niente ombra, niente torce. Si dipingono col nero della massa, fino
+     al filo del pavimento, e il bordo della stanza lo disegna il
+     pavimento stesso. È quello che toglie la cornice di mattoni intorno
+     a tutto: senza, ogni mappa sembrava un edificio solo, e il nero in
+     mezzo si leggeva come un buco invece che come il fuori. */
+  const nero = mescola(A.muro[1], '#000000', 0.8)
+  const vuote = []
+  for (let k = 0; k < altezza; k++)
+    for (let i = 0; i < larghezza; i++) if (muro(i, k) && vuoto(i, k)) vuote.push([i, k])
+  for (const [i, k] of vuote) rett(c, i * lato, k * lato, lato, lato, nero)
+  /* e il pavimento che finisce sul nero ha un labbro: un filo d'ombra
+     dentro la cella e un filo di luce sull'orlo, se no la stanza è un
+     ritaglio incollato sul buio */
+  for (const [i, k] of vuote)
+    for (const [di, dk] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+      const a = i + di, b = k + dk
+      if (a < 0 || b < 0 || a >= larghezza || b >= altezza || muro(a, b)) continue
+      const x0 = di > 0 ? a * lato : di < 0 ? (a + 1) * lato : a * lato
+      const y0 = dk > 0 ? b * lato : dk < 0 ? (b + 1) * lato : b * lato
+      const fondo = lato * 0.2
+      const g = di
+        ? c.createLinearGradient(x0, 0, x0 + (di > 0 ? fondo : -fondo), 0)
+        : c.createLinearGradient(0, y0, 0, y0 + (dk > 0 ? fondo : -fondo))
+      g.addColorStop(0, '#00000070'); g.addColorStop(1, '#00000000')
+      c.fillStyle = g
+      if (di) c.fillRect(di > 0 ? x0 : x0 - fondo, b * lato, fondo, lato)
+      else c.fillRect(a * lato, dk > 0 ? y0 : y0 - fondo, lato, fondo)
+      velo(c, 0.35, () => {
+        c.fillStyle = '#ffffff'
+        if (di) c.fillRect(di > 0 ? x0 : x0 - lato * 0.03, b * lato, lato * 0.03, lato)
+        else c.fillRect(a * lato, dk > 0 ? y0 : y0 - lato * 0.03, lato, lato * 0.03)
+      })
+    }
   const celle = []
   for (let k = 0; k < altezza; k++)
-    for (let i = 0; i < larghezza; i++) if (muro(i, k)) celle.push([i, k])
+    for (let i = 0; i < larghezza; i++) if (muro(i, k) && !vuoto(i, k)) celle.push([i, k])
   if (!celle.length) return
 
   /* ── il bordo e la massa ──
@@ -87,7 +123,16 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
 
   /* 2b ─ la massa: piatta, scura, con appena un fiato di macchia
           perché non sembri un buco di vernice. Niente conci, niente
-          giunti: qui non c'è una superficie da guardare. */
+          giunti: qui non c'è una superficie da guardare.
+          ── E QUASI NERA ──
+          Era il tono scuro del muro mescolato al nero per meno della
+          metà: un grigio-marrone che da lontano si leggeva ancora come
+          muratura, e le stanze restavano rettangoli dentro un
+          rettangolo di mattoni. Quasi nera, la massa diventa il fuori:
+          la stanza è quello che è stato scavato nel buio, e la sua
+          forma — una nicchia, un corridoio che gira — si legge a colpo
+          d'occhio. Il colore del muro resta, appena, perché due ambienti
+          diversi non abbiano lo stesso buio. */
   if (massa.length) {
     const dentroMassa = new Path2D()
     for (const [i, k] of massa) dentroMassa.rect(i * lato, k * lato - sp, lato, lato + sp)
@@ -96,9 +141,9 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
     const y0 = Math.min(...massa.map(m => m[1])) * lato - sp
     const x1 = Math.max(...massa.map(m => m[0])) * lato + lato
     const y1 = Math.max(...massa.map(m => m[1])) * lato + lato
-    rett(c, x0, y0, x1 - x0, y1 - y0, mescola(A.muro[1], '#000000', 0.42))
+    rett(c, x0, y0, x1 - x0, y1 - y0, nero)
     semina({ x0, y0, x1, y1 }, lato * 2.6, 51, 1, null, (x, y, r) => {
-      velo(c, 0.05 + r(1) * 0.05, () => {
+      velo(c, 0.03 + r(1) * 0.03, () => {
         c.fillStyle = r(2) > 0.5 ? A.muro[0] : '#000000'
         c.beginPath()
         c.ellipse(x, y, lato * (0.8 + r(3) * 1.4), lato * (0.5 + r(4) * 0.8), r(5) * 3, 0, 6.29)
@@ -219,9 +264,10 @@ export function dipingiMuri(c, { A, lato, larghezza, altezza, muro, tessuto }) {
     c.restore()
   }
 
-  /* 5 ─ il filo di luce in cima, dove il muro si affaccia sul vuoto */
+  /* 5 ─ il filo di luce in cima, dove il muro si affaccia sul vuoto —
+         e sul fuori, che per la luce è come il pavimento */
   for (const [i, k] of celle) {
-    if (muro(i, k - 1)) continue
+    if (muro(i, k - 1) && !vuoto(i, k - 1)) continue
     const x = i * lato, y = k * lato - sp
     velo(c, 0.5, () => rett(c, x, y, lato, lato * 0.05, mescola(A.muro[0], '#ffffff', 0.6)))
   }

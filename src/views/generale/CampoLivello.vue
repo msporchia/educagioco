@@ -190,6 +190,7 @@ async function misura () {
                           suoli: (mondo() && mondo().campo.suoli) || {},
                           muri: (mondo() && mondo().campo.muri) || {},
                           arredi: (mondo() && mondo().campo.arredi) || {},
+                          vuoti: (mondo() && mondo().campo.vuoti) || [],
                           ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   limita(); rifaiFondale()
@@ -212,6 +213,7 @@ function ridipingiStanza () {
                           suoli: (mondo() && mondo().campo.suoli) || {},
                           muri: (mondo() && mondo().campo.muri) || {},
                           arredi: (mondo() && mondo().campo.arredi) || {},
+                          vuoti: (mondo() && mondo().campo.vuoti) || [],
                           ambiente: props.liv.ambiente, lato, seme: props.liv.id })
   latoFondale = lato
   tela = creaTela(telaEl.value, PITTORI, { unita: 420, minimo: lato / 20, massimo: lato / 20 })

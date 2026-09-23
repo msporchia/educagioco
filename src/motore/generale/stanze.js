@@ -35,7 +35,7 @@ const K = (i, k) => i + ',' + k
 const PASSI = [[0, -1], [1, 0], [0, 1], [-1, 0]]
 
 export function mappaPiena (griglia, { suoli: detti = {}, muri = {}, arredi = {},
-                                       riempi = [] } = {}) {
+                                       riempi = [], vuoti = [] } = {}) {
   const h = griglia.length
   const w = h ? griglia[0].length : 0
   const dentro = (i, k) => i >= 0 && k >= 0 && i < w && k < h
@@ -165,9 +165,12 @@ export function mappaPiena (griglia, { suoli: detti = {}, muri = {}, arredi = {}
      Un muro che dà su un pavimento, e da che parte: è dove si appende
      una torcia o una ragnatela. Il verso conta — una torcia sulla
      faccia sbagliata è una torcia dentro la roccia. */
+  /* il fuori (due spazi nella mappa) è pieno per chi cammina, ma non è
+     una parete: ci si appenderebbe una torcia al nero */
+  const fuori = new Set(vuoti)
   const facce = []
   for (let k = 0; k < h; k++) for (let i = 0; i < w; i++) {
-    if (!muro(i, k) || !dentro(i, k)) continue
+    if (!muro(i, k) || !dentro(i, k) || fuori.has(K(i, k))) continue
     for (const [a, b] of PASSI)
       if (!muro(i + a, k + b) && dentro(i + a, k + b))
         facce.push({ x: i, y: k, versoX: a, versoY: b, stanza: diChi[K(i + a, k + b)] ?? null })
@@ -177,6 +180,7 @@ export function mappaPiena (griglia, { suoli: detti = {}, muri = {}, arredi = {}
     w, h, dentro, muro,
     suoli, suolo,
     muratura: (i, k) => muri[K(i, k)] || null,
+    vuoto: (i, k) => fuori.has(K(i, k)),
     arredo: (i, k) => arredi[K(i, k)] || null,
     soglia, bordo, angolo,
     obbligata: (i, k) => !!obbligate[K(i, k)],
