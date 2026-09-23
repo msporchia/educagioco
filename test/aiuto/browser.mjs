@@ -11,9 +11,10 @@
    test lo rende eseguibile su un computer solo.
    ═══════════════════════════════════════════════════════════════════ */
 import { chromium } from 'playwright'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { dirname, resolve, join } from 'node:path'
 
 export const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 /* Di regola si prova `dist/index.html`, che è quello che esce dal build.
@@ -47,11 +48,38 @@ export async function apriBrowser() {
   return chromium.launch(exe ? { executablePath: exe } : {})
 }
 
+/* ── UN TELEFONO, CON LA SUA CACHE SU DISCO ──
+   `apriBrowser()` apre ogni pagina in un contesto in incognito, e
+   l'incognito tiene la cache in memoria: lì dentro un file da otto
+   megabyte non ci sta, quindi la pagina non si tiene mai e ogni apertura
+   va in rete. Per quasi tutti i test è meglio così. Per l'aggiornamento
+   no: il guasto da rifare è proprio **la pagina vecchia che il telefono
+   si tiene da parte**, e un banco che non se la tiene lo nasconde.
+
+   Qui il profilo è vero, su disco in una cartella temporanea che se ne
+   va con `close()`. Si passa ad `apriGioco` al posto del browser — il
+   contesto sa fare `newPage()` come lui — ma misura e tocco li decide
+   lui, una volta per tutte le pagine. */
+export async function apriTelefono({ viewport = TELEFONO } = {}) {
+  if (!existsSync(COSTRUITO))
+    throw new Error('manca dist/index.html — lancia prima `npm run build`')
+  const cartella = mkdtempSync(join(tmpdir(), 'educagioco-telefono-'))
+  const exe = trovaChrome()
+  const contesto = await chromium.launchPersistentContext(cartella, {
+    ...(exe ? { executablePath: exe } : {}), viewport, deviceScaleFactor: 2, hasTouch: true })
+  const chiudi = contesto.close.bind(contesto)
+  contesto.close = async () => {
+    await chiudi()
+    rmSync(cartella, { recursive: true, force: true })
+  }
+  return contesto
+}
+
 /* Apre il gioco e restituisce la pagina insieme all'elenco degli errori,
    che continua a riempirsi da solo mentre il test va avanti. */
 export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attesa = '.carte',
                                            giocatori = [GIOCATORE], userAgent,
-                                           spiegazioni = false } = {}) {
+                                           spiegazioni = false, indirizzo = GIOCO } = {}) {
   /* `userAgent` serve a una cosa sola, ma non c'è altro modo di provarla:
      alcune schermate cambiano a seconda del telefono che si ha in mano —
      il nastro «installalo» compare su Android e iPhone e non sul
@@ -98,7 +126,10 @@ export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attes
     })
   }
 
-  await page.goto(GIOCO + (hash ? '#' + hash : ''))
+  /* `indirizzo` è per l'unica cosa che da `file://` non esiste: il
+     service worker. Lo apre `aiuto/sito.mjs`, che serve `dist/` come lo
+     serve GitHub Pages. */
+  await page.goto(indirizzo + (hash ? '#' + hash : ''))
   if (attesa) await page.waitForSelector(attesa, { timeout: 10000 })
   return { page, errori }
 }

@@ -119,14 +119,17 @@ const altre = computed(() => novita.value.length - 1)
     </div>
 
     <!-- ══ è vecchio ══
-         Non ricarica da sé, e non compare dentro un gioco: si ricarica
-         quando lo decide chi ha in mano il telefono. -->
+         Non ricarica da sé, e non compare dentro un gioco: si aggiorna
+         quando lo decide chi ha in mano il telefono. Il tasto era
+         «Ricarica», e ricaricare non bastava — con la rete lenta tornava
+         la copia di prima (`aggiornamento.js`). Adesso fa lo stesso giro
+         di «cerca aggiornamenti»: scarica, controlla, e solo poi riparte. -->
     <div v-if="versioneNuova" class="nastro nuovo" data-nastro="versione">
       <div class="dentro">
         <b>✨ C'è una versione nuova</b>
-        <i>Ricarica per prenderla: i progressi non si toccano</i>
+        <i>È quella del {{ versioneNuova.etichetta }}: i progressi non si toccano</i>
       </div>
-      <button class="ora" data-azione="aggiorna" @click="aggiornaOra">Ricarica</button>
+      <button class="ora" data-azione="aggiorna" @click="aggiornaOra()">Aggiorna</button>
     </div>
   </div>
 </template>
