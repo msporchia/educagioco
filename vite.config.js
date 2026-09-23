@@ -50,14 +50,25 @@ const INDIRIZZO = process.env.INDIRIZZO || 'https://msporchia.github.io/educagio
 // Accanto all'HTML esce anche versione.json: e' il modo di chiedere al NAS
 // cosa sta servendo davvero (`curl <indirizzo>/versione.json`) senza aprire il
 // browser, e lo usa pubblica.sh per confermare che il deploy sia arrivato.
+//
+// Lo legge anche il gioco (`src/aggiornamento.js`): e' da qui che sa se il
+// sito ha una versione piu' nuova di quella a schermo, e `peso` — i byte
+// della pagina — e' quello che gli fa dire «3,1 di 7,6 MB» mentre scarica.
+// Il sito manda la pagina compressa, e la lunghezza che dichiara e' quella
+// compressa: contando i byte veri non si arriverebbe mai in fondo.
 function scriviVersione () {
   return {
     name: 'scrivi-versione',
-    generateBundle () {
+    // dopo `viteSingleFile`, che e' `post` anche lui e sta prima nella fila:
+    // solo a quel punto la pagina ha dentro tutto, e pesa quello che pesa
+    enforce: 'post',
+    generateBundle (_opzioni, bundle) {
+      const sorgente = bundle['index.html']?.source
+      const peso = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
       this.emitFile({
         type: 'asset',
         fileName: 'versione.json',
-        source: JSON.stringify({ ...VERSIONE, costruito: new Date().toISOString() }, null, 2),
+        source: JSON.stringify({ ...VERSIONE, peso, costruito: new Date().toISOString() }, null, 2),
       })
     },
   }
@@ -89,6 +100,37 @@ function scriviVersione () {
 // resta il menu del browser, che è esattamente dove un bambino non
 // arriva. Offline non cambia niente: `fetch` fallisce subito e risponde
 // la cache, come prima.
+//
+// E L'INSTALLAZIONE, CHE È DOVE LA VERSIONE VECCHIA SI NASCONDEVA.
+// Tre difetti, che da fuori sembravano uno solo — «a volte l'aggiornamento
+// non arriva»:
+//
+// 1. la pagina si chiedeva **passando dalla cache del browser**, e GitHub
+//    Pages dice a tutti di tenersela dieci minuti. Chi aveva aperto il
+//    gioco poco prima di una pubblicazione si ritrovava un service worker
+//    nuovo con dentro la pagina vecchia: e siccome il service worker era
+//    nuovo, nessuno diceva più niente. Adesso la si chiede `no-cache`, che
+//    vuol dire «chiedi al sito se è cambiata»: se non lo è costa una
+//    domanda, e la pagina arriva dalla cache del browser senza riscaricarla;
+// 2. si scaricava **due volte**, come `./` e come `./index.html`: quindici
+//    megabyte invece di sette e mezzo, su una rete lenta il doppio del
+//    tempo prima di poter dire «c'è una versione nuova». La seconda non
+//    serviva: a chi apre `index.html` risponde già `./` (vedi sotto);
+// 3. se la pagina non arrivava si installava lo stesso — «un'icona mancante
+//    non è un buon motivo per restare senza offline», ed era vero per le
+//    icone. Per la pagina no: il service worker nuovo all'attivazione butta
+//    la cache vecchia, e al suo posto non aveva niente. Il primo avvio senza
+//    rete dava la pagina d'errore del browser. Adesso senza pagina
+//    l'installazione fallisce, resta quello di prima con la sua copia
+//    intera, e il browser riprova al controllo dopo.
+//
+// E due cose per «cerca aggiornamenti» (`src/aggiornamento.js`), che la
+// pagina nuova la scarica da sé, contando i megabyte: le sue richieste
+// `no-store` passano senza fermarsi in cache — la pagina buona la mette
+// a posto lei, e qui ne resterebbe una seconda copia da sette megabyte e
+// mezzo — e la pagina che mette nella cache della versione nuova, già
+// controllata, qui non si riscarica. Il nome di quella cache lo sa anche
+// lei (`CASSETTO`).
 function scriviServiceWorker () {
   return {
     name: 'scrivi-service-worker',
@@ -99,15 +141,27 @@ function scriviServiceWorker () {
         fileName: 'sw.js',
         source: `/* generato dal build — non si modifica a mano (vite.config.js) */
 const CACHE = ${JSON.stringify(cache)}
-const ROBA = ['./', './index.html', './manifest.webmanifest', './icona.svg',
-              './icona-192.png', './icona-512.png', './icona-maskable.png',
-              './apple-touch-icon.png']
+const PAGINA = './'
+const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
+              './icona-512.png', './icona-maskable.png', './apple-touch-icon.png']
+
+// «no-cache»: si chiede al sito se è cambiata, anche quando il browser la
+// crede fresca. Senza, il service worker nuovo può mettersi in casa la
+// pagina vecchia che il browser si teneva da parte.
+const fresca = u => new Request(u, { cache: 'no-cache' })
 
 self.addEventListener('install', e => {
-  // addAll fallisce tutto se un file solo non c'è: qui si va a uno a uno,
-  // perché un'icona mancante non è un buon motivo per restare senza offline
   e.waitUntil(caches.open(CACHE)
-    .then(c => Promise.all(ROBA.map(u => c.add(u).catch(() => {}))))
+    .then(c => Promise.all([
+      // la pagina è obbligatoria: se non arriva l'installazione fallisce, e
+      // resta il service worker di prima con la sua copia intera. Se c'è
+      // già ce l'ha messa «cerca aggiornamenti», che l'ha appena scaricata
+      // e controllata: non si riscarica
+      c.match(PAGINA).then(gia => gia || c.add(fresca(PAGINA))),
+      // il resto a uno a uno: un'icona mancante non è un buon motivo per
+      // restare senza offline
+      ...ROBA.map(u => c.add(fresca(u)).catch(() => {})),
+    ]))
     .then(() => self.skipWaiting()))
 })
 
@@ -141,12 +195,18 @@ self.addEventListener('fetch', e => {
   // la cache direbbe sempre la versione di questo service worker, cioè
   // proprio la domanda a cui deve rispondere
   if (url.pathname.endsWith('versione.json')) return
-  // la pagina: prima la rete, e la cache resta la rete di sicurezza
+  // la pagina: prima la rete, e la cache resta la rete di sicurezza. Chi
+  // chiede index.html, o la radice con qualcosa in coda, riceve la radice
   if (e.request.mode === 'navigate') {
     e.respondWith(conRete(e.request)
-      .catch(() => caches.match(e.request).then(t => t || caches.match('./'))))
+      .catch(() => caches.match(e.request).then(t => t || caches.match(PAGINA))))
     return
   }
+  // chi chiede di non passare da nessuna cache non ci passa, e non ci
+  // lascia niente: «cerca aggiornamenti» la pagina nuova la mette a posto
+  // da sé, sotto il nome giusto, e qui ne resterebbe una seconda copia
+  // sotto un indirizzo che nessuno usa
+  if (e.request.cache === 'no-store') return
   e.respondWith(caches.match(e.request).then(trovato => {
     const dalla_rete = fetch(e.request).then(r => {
       if (r && r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()))
