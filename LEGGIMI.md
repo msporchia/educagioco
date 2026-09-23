@@ -547,6 +547,27 @@ mestieri a pari difficoltà. `unita/asteroidi` cammina la fila con un finto
 bambino e controlla le due facce dell'ordine sbagliato: nessuna tappa
 arriva prima di quello che le serve, nessuna arriva quando è già saputa.
 
+**Il secondo criterio era scritto e non applicato.** Dalla tappa 5 alla 16
+la fila alternava a turno una tabellina e una stazione, e la stazione — due
+pezzi in testa contro uno — era sempre la più dura delle due vicine:
+giocando si sentiva (settembre 2026). Adesso da «Passa la decina», la prima
+stazione che pesa due, **le tabelline stanno un passo avanti** (due pianeti
+e una stazione), i conti col riporto arrivano con tutte e nove in mano, e il
+Sole apre il capitolo del moltiplicare a mente invece di stare in fondo
+accanto alla prova. `unita/asteroidi` lo tiene fermo: all'arrivo di ogni
+stazione che pesa due le tabelline fatte sono più delle stazioni fatte.
+
+**La fila e l'età dicono la stessa cosa.** Il cancello per età legge la
+`portata` voce per voce, e la prima voce troppo avanti chiude la fila anche
+se dietro c'è una stazione che l'età darebbe. Anticipando le tabelline,
+«Due cifre» e «Riporti e prestiti» si sarebbero dichiarate più facili del
+pianeta che le precede, e sono salite da 48 e 53 a 55 e 58: in colonna si
+fanno in seconda, a mente in terza. Dentro la fila la portata non scende mai
+più di cinque punti da una voce alla dopo, e lo controlla lo stesso test.
+Riordinare non ha voluto nessuna migrazione nuova: `sincronizzaAsteroidi`
+rilegge la posizione dai due specchi e tiene la più avanzata, quindi chi era
+a metà fila non ritrova chiuso niente — al massimo qualche tappa regalata.
+
 **Il contatore è uno** (`mate.fila`): quante voci della scaletta sono state
 superate, e basta. Ne sono stati due per un po' — `mate.tappa` per i pianeti
 e `calc.tappa` per le stazioni — ed era la fusione fatta a metà: la fila era

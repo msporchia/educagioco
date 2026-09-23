@@ -648,11 +648,18 @@ const TAPPE = [
   { emoji: '🌓', nome: 'Passa la decina', esempio: '26+7 · 43−7',
     portata: 45, scuola: 'decine',
     nuovi: ['unita-riporto', 'unita-prestito'] },
+  /* Queste due stavano a 48 e 53, cioè in seconda: è dove si fanno
+     **sulla carta**, in colonna. A mente, col sasso che cade, sono roba di
+     terza — e la fila degli asteroidi le mette dopo il pianeta del 7 e
+     dopo quello del 9. Con i numeri di prima si sarebbero dichiarate più
+     facili delle tabelline che le precedono, e il cancello per età avrebbe
+     chiuso la fila su un pianeta con dietro una stazione aperta. Il perché
+     dell'ordine sta in `data/asteroidi.js`. */
   { emoji: '🌗', nome: 'Due cifre', esempio: '23+45 · 68−25',
-    portata: 48, scuola: 'decine',
+    portata: 55, scuola: 'decine',
     nuovi: ['due-somma', 'due-meno'] },
   { emoji: '☄️', nome: 'Riporti e prestiti', esempio: '27+38 · 52−27',
-    portata: 53, scuola: 'decine',
+    portata: 58, scuola: 'decine',
     nuovi: ['somma-riporto', 'meno-prestito'] },
   { emoji: '💫', nome: 'I quasi tondi', esempio: '47+29 · 63−29',
     portata: 60, scuola: 'stima',

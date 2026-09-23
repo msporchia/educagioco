@@ -648,6 +648,39 @@ const PROFILI = T => ({
   })
   nota(`la quarta tabellina passa alla posizione ${soglia + 1} di ${SCALETTA.length}:`,
        'prima di lì «4×23» e «56:8» non hanno di che campare')
+
+  /* ── LE TABELLINE STANNO UN PASSO AVANTI ──
+     Il secondo criterio di `data/asteroidi.js`, che la prima fusione
+     dichiarava e non applicava: dalla tappa 5 alla 16 alternava a turno,
+     e la stazione — due pezzi in testa contro uno — era sempre la più
+     dura delle due vicine. Giocando si sentiva (settembre 2026). Adesso
+     all'arrivo di ogni stazione che pesa due le tabelline già fatte sono
+     più delle stazioni già fatte, oppure sono finite. Le stazioni leggere
+     (3+4, 30+40, 12+6) restano dove il ritmo le vuole. */
+  const pesoDi = S => Math.max(1, ...S.nuovi.map(id => CONCETTI_PER_ID[id].peso || 1))
+  const tutte = CAMPAGNA.filter(T => T.nuova).length
+  for (const v of SCALETTA.filter(v => v.tipo === 'mente' && pesoDi(v.T) >= 2)) {
+    const prima = SCALETTA.slice(0, v.pos)
+    const tab = prima.filter(x => x.tipo === 'pianeta' && x.T.nuova).length
+    const sta = prima.filter(x => x.tipo === 'mente').length
+    controlla(`${v.T.emoji} ${v.T.nome}: arriva con le tabelline avanti`,
+              tab > sta || tab === tutte, `${tab} tabelline fatte e ${sta} stazioni`)
+  }
+
+  /* ── LA FILA E L'ETÀ DICONO LA STESSA COSA ──
+     Il cancello per età (`data/portata-giochi.js`) legge la portata voce
+     per voce, e la prima voce troppo avanti chiude la fila anche se
+     dietro c'è una stazione che l'età darebbe. `unita/portata` tollera
+     scalini in giù fino a dodici punti in tutte le campagne; dentro
+     questa fila si sta più stretti, a cinque — lo scarto delle stazioni
+     leggere messe lì per ritmo («Amici e decine» dopo il 10). È il
+     controllo che ha fatto salire «Due cifre» e «Riporti e prestiti»
+     quando le tabelline sono passate avanti. */
+  const scesi = SCALETTA.slice(1)
+    .filter((v, i) => v.T.portata < SCALETTA[i].T.portata - 5)
+    .map(v => `${SCALETTA[v.pos - 1].T.nome} (${SCALETTA[v.pos - 1].T.portata}) → ${v.T.nome} (${v.T.portata})`)
+  controlla('lungo la fila la portata non scende mai più di cinque punti', !scesi.length,
+            scesi.join(' · '))
 }
 
 /* ═══════════ 8. LA CAMMINATA ═══════════
@@ -773,6 +806,32 @@ const PROFILI = T => ({
   uguale('e chi non aveva giocato resta a zero', filaDaCampagne(0, 0), 0)
   nota(`chi era al quinto pianeta e alla seconda stazione finisce alla posizione ` +
        `${filaDaCampagne(5, 2)} di ${SCALETTA.length}`)
+
+  /* ── E UN RIORDINO NON RICHIUDE NIENTE ──
+     Nel settembre 2026 la fila è stata riordinata (le tabelline un passo
+     avanti, vedi `data/asteroidi.js`), e il contatore è una posizione:
+     chi l'aveva scritto con l'ordine di prima si ritrova dietro altre
+     tappe. Nessun numero di versione: lo assorbe `sincronizzaAsteroidi`,
+     che a ogni avvio rilegge la posizione dai due specchi — quanti
+     pianeti, quante stazioni — e tiene la più avanzata. Qui si prende
+     ogni posizione della fila di prima e si guarda che niente di quello
+     che era superato si richiuda. Il prezzo è qualche tappa regalata, e
+     va bene così. */
+  const FILA_DI_PRIMA = 'm0 m1 p0 p1 m2 p2 m3 p3 m4 p4 m5 p5 m6 p6 m7 p7 p8 m8 m9 m10 p9 m11'.split(' ')
+  const richiuse = [], regalate = []
+  for (let f = 0; f <= FILA_DI_PRIMA.length; f++) {
+    const pianeti = FILA_DI_PRIMA.slice(0, f).filter(c => c[0] === 'p').length
+    const p = { mate: { tappa: pianeti, fila: f, libera: false },
+                calc: { tappa: f - pianeti, libera: false } }
+    sincronizzaAsteroidi(p)
+    const ora = campagneDaFila(p.mate.fila)
+    if (ora.pianeta < pianeti || ora.mente < f - pianeti) richiuse.push(f)
+    if (p.mate.fila > f) regalate.push(`${f}→${p.mate.fila}`)
+  }
+  uguale('la fila di prima era lunga quanto questa', FILA_DI_PRIMA.length, SCALETTA.length)
+  controlla('un salvataggio scritto con la fila di prima non ritrova chiuso niente',
+            !richiuse.length, `richiuse alle posizioni ${richiuse.join(', ')}`)
+  nota('col riordino si avanzano di qualche tappa:', regalate.join(' · ') || 'nessuno')
 
   /* ── I DUE VOLI INFINITI SI APRONO INSIEME ──
      Aspettavano ognuno la sua campagna, e siccome i pianeti finiscono

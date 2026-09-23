@@ -22,8 +22,18 @@ guardando cosa chiede davvero ogni tappa, e il perché di ogni giunzione è
 scritto in testa a [`src/data/asteroidi.js`](../src/data/asteroidi.js). In
 due parole: si comincia dai conti entro il dieci (la tabellina del 2 sono i
 doppi, e senza 7+7 non c'è nessun 2×7), le decine tonde arrivano dopo la
-tabellina del 10, e **moltiplicare e dividere a mente vengono dopo tutte le
-tabelline** — 56:8 è la tabellina dell'8 girata.
+tabellina del 10, **da «Passa la decina» in poi le tabelline stanno un passo
+avanti** — due pianeti e una stazione — e **moltiplicare e dividere a mente
+vengono dopo il Sole**, cioè dopo tutte le tabelline insieme: 56:8 è la
+tabellina dell'8 girata.
+
+Per un po' la fila alternava a turno, una tabellina e una stazione, e
+giocandola si sentiva che era squilibrata: la tabellina scorreva, la
+stazione dopo si incagliava. È il peso: 7×8 è un fatto solo, o lo sai o
+no, mentre 27+38 sono tre passaggi da tenere in testa mentre il sasso
+cade. Adesso i conti col riporto arrivano con tutte e nove le tabelline in
+mano. Chi era già a metà fila non ha perso niente: qualche tappa che il
+riordino ha anticipato risulta passata senza essere stata giocata.
 
 La fila è una anche **sotto**: un solo avanzamento, una sola tappa aperta —
 quella dopo l'ultima superata, che sia un pianeta o una stazione — e **un

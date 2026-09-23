@@ -1383,11 +1383,12 @@ export function sincronizzaAsteroidi(p) {
   calc.tappa = specchio.mente
   /* IL VOLO INFINITO SI APRE QUANDO LA FILA È FINITA, ed è uno —
      tabelline e calcolo a mente insieme (`data/asteroidi.js`). Erano
-     due, uno per campagna, e siccome i pianeti finiscono alla posizione
-     20 e le stazioni alla 22 c'erano due sere in cui la mappa ne offriva
-     uno solo: una metà del gioco che finiva prima dell'altra, dentro
-     una fila che è una. `calc.libera` resta scritto per chi lo legge
-     ancora. `libera` non torna mai indietro: un volo aperto resta aperto. */
+     due, uno per campagna, e siccome i pianeti finiscono prima delle
+     stazioni (il Sole apre il capitolo del moltiplicare, la prova chiude
+     la fila) c'erano delle sere in cui la mappa ne offriva uno solo: una
+     metà del gioco che finiva prima dell'altra, dentro una fila che è
+     una. `calc.libera` resta scritto per chi lo legge ancora. `libera`
+     non torna mai indietro: un volo aperto resta aperto. */
   if (mate.fila >= SCALETTA.length) { mate.libera = true; calc.libera = true }
   return mate
 }

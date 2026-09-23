@@ -33,12 +33,32 @@
       suo `peso` (1..3, «quanto costa in testa»), una tabellina è un
       fatto solo da ricordare — il gioco infatti le dà `peso` 1 — la cui
       fatica sta in quanti dei due fattori vanno saputi a memoria
-      (`durezza` in `store/tabelline.js`).
+      (`durezza` in `store/tabelline.js`). Da «Passa la decina» in poi
+      ogni stazione pesa due, e allora **le tabelline stanno un passo
+      avanti**: all'arrivo di una stazione così, le tabelline già fatte
+      sono più delle stazioni già fatte (`unita/asteroidi` lo tiene
+      fermo).
    3. **IL RITMO.** A pari difficoltà si alterna, perché dieci pianeti di
       fila prima di un conto a mente sono di nuovo due campagne
       appiccicate, e perché passare dalla memoria (una tabellina) al
       ragionamento (una strategia) e ritorno è il modo in cui le due cose
-      si sostengono a vicenda invece di farsi concorrenza.
+      si sostengono a vicenda invece di farsi concorrenza. Ma la pari
+      difficoltà si legge nel peso, non a occhio: dove i pesi sono
+      diversi il ritmo diventa due tabelline e una stazione.
+
+   ── IL SECONDO CRITERIO ERA SCRITTO, E NON APPLICATO ──
+   La prima fusione lo dichiarava e poi, dalla tappa 5 alla 16, alternava
+   lo stesso a turno: una tabellina e una stazione, con la frase che il
+   riporto e i pianeti del 7 e dell'8 «costano uguale». Non costavano
+   uguale, e giocando si sentiva (settembre 2026): la tabellina
+   scorreva, la stazione dopo si incagliava, e la fila sembrava
+   squilibrata senza che nessun numero lo dicesse. Il perché è il peso:
+   7×8 è un fatto solo — o lo sai o no, e se lo sai è un attimo — mentre
+   27+38 sono tre passaggi da tenere in testa mentre il sasso cade. E le
+   tabelline di mezzo portano meno roba nuova di quanto sembri: al
+   pianeta del 7, delle sue dieci caselle ne restano da imparare tre
+   (7×7, 7×8, 7×9), perché le altre sono già arrivate girate dai pianeti
+   di prima.
 
    Voce per voce, il perché delle giunzioni — che è la parte che non si
    ricava rileggendo la fila:
@@ -59,33 +79,57 @@
      3 saldi si arriva a quattro tabelline, che è la soglia dichiarata da
      `spezza-prodotto` e `divide-tabellina`: da qui in poi il grafo non
      sbarra più niente, e l'ordine lo decidono i pezzi da tenere a mente.
-   · **«Passa la decina» (26+7) prima di «Due cifre» (23+45).** È la
-     scelta già presa dentro le stazioni e regge anche qui: 26+7 è 6+7
-     con davanti una decina che si muove di uno, 23+45 sono due colonne
-     che non si parlano. Fra i due si infilano i pianeti del 4 e del 6,
-     che sono raddoppi di roba già saputa (4 è il 2 due volte, 6 è il 3
-     raddoppiato) e non chiedono niente di nuovo alla testa.
-   · **«Riporti e prestiti» (27+38) e i pianeti del 7 e dell'8 nello
-     stesso capitolo.** Sono i quattro gradini più alti dei rispettivi
-     mestieri: il riporto è la prima volta che due colonne si parlano, il
-     7 e l'8 sono le uniche tabelline che non hanno una regola da dire a
-     voce. Vanno insieme perché costano uguale, alternati perché
-     costano tanto.
-   · **«I quasi tondi» (47+29) dopo il riporto e prima di moltiplicare.**
-     Non porta numeri più grandi, porta una furbizia: si arrotonda e si
-     aggiusta. Ha senso solo dopo aver fatto 27+38 alla maniera lunga, se
-     no non c'è nessuna scorciatoia da riconoscere.
-   · **Moltiplicare e dividere a mente dopo TUTTE le tabelline.** Il grafo
-     ne chiederebbe quattro; quattro bastano a non sbagliare, non a
-     imparare. 4×23 e 56:8 pescano il fattore fra le tabelline che
-     reggono (`tabVera` in `data/calcolo.js`): con quattro esce sempre lo
-     stesso pugno di numeri, con nove escono tutte. E 56:8 è
-     letteralmente la tabellina dell'8 girata: chiederla prima del
+   · **Il pianeta del 4 prima di «Passa la decina».** È da lì che le
+     stazioni pesano due: 26+7 è 6+7 con davanti una decina che si muove
+     di uno, cioè già due pezzi in testa. Il 4 invece è il 2 raddoppiato
+     — roba saputa, rifatta due volte — e passa davanti, così le
+     tabelline sono avanti dal primo momento in cui conta.
+   · **«Passa la decina» (26+7) prima di «Due cifre» (23+45), e in mezzo
+     il 6 e il 7.** L'ordine delle due stazioni è quello già scelto
+     dentro le stazioni: 23+45 sono due colonne che non si parlano, cioè
+     due conti al posto di uno. Fra le due si infilano due pianeti: il 6,
+     che è il 3 raddoppiato, e il 7, che è il più ostico ma porta solo
+     tre caselle nuove.
+   · **L'8 e il 9 prima dei conti che si portano.** «Riporti e prestiti»
+     (27+38) è il gradino più alto della salita additiva: la prima volta
+     che due colonne si parlano, tre passaggi da tenere a mente. Arriva
+     con tutte e nove le tabelline in mano, così quando la testa è piena
+     di riporti non c'è un secondo fronte di memoria aperto accanto.
+     Stava nello stesso capitolo del 7 e dell'8, «perché costano
+     uguale»: era la giunzione sbagliata.
+   · **«I quasi tondi» (47+29) subito dopo il riporto.** Non porta numeri
+     più grandi, porta una furbizia: si arrotonda e si aggiusta. Ha senso
+     solo dopo aver fatto 27+38 alla maniera lunga, se no non c'è nessuna
+     scorciatoia da riconoscere — e adesso le due tappe si toccano.
+   · **Il Sole apre il moltiplicare a mente.** Moltiplicare e dividere a
+     mente vengono dopo TUTTE le tabelline, e adesso anche dopo il loro
+     esame. Il grafo ne chiederebbe quattro; quattro bastano a non
+     sbagliare, non a imparare. 4×23 e 56:8 pescano il fattore fra le
+     tabelline che reggono (`tabVera` in `data/calcolo.js`): con quattro
+     esce sempre lo stesso pugno di numeri, con nove escono tutte. E 56:8
+     è letteralmente la tabellina dell'8 girata: chiederla prima del
      pianeta dell'8 vorrebbe dire insegnare il contrario di una cosa che
-     non si sa ancora.
-   · **«Fino a mille» in fondo, con i due esami.** 497+298 è il riporto
-     con una cifra in più, e il Sole e «La prova» non portano niente di
-     nuovo: sono le due verifiche, una per mestiere.
+     non si sa ancora. Il Sole stava in fondo, accanto alla prova — «le
+     due verifiche, una per mestiere» — cioè dopo le stazioni che le
+     tabelline le usano: la verifica serve prima di chi le usa, non dopo.
+   · **«Fino a mille» in fondo, con la prova.** 497+298 è il riporto con
+     una cifra in più, e «La prova» non porta niente di nuovo: è la
+     verifica di tutto il calcolo a mente.
+
+   ── LA FILA E L'ETÀ DICONO LA STESSA COSA ──
+   Ogni voce porta anche la sua `portata` — a che età sta, sulla scala
+   0-100 di `data/portata.js` — e il cancello per età la legge voce per
+   voce: la prima che a quell'età risulta troppo avanti chiude la fila,
+   anche se dietro c'è una stazione che l'età darebbe. Se l'ordine e la
+   portata si contraddicono, è lì che si vede. Anticipando le tabelline,
+   due stazioni si sarebbero dichiarate più facili del pianeta che le
+   precede: «Due cifre» (48) dopo il 7 (56), «Riporti e prestiti» (53)
+   dopo il 9 (60). Sono salite a 55 e 58 — sulla carta, in colonna, si
+   fanno in seconda; a mente e col cielo che cade sono roba di terza — e
+   `unita/asteroidi` controlla che lungo la fila la portata non scenda
+   mai più di cinque punti da una voce alla dopo: è lo scarto che la fila
+   tollerava già per le stazioni leggere messe lì per ritmo («Amici e
+   decine» dopo il 10).
 
    ═══════════ UN CONTATORE SOLO, SU UNA FILA SOLA ═══════════
 
@@ -119,6 +163,19 @@
    La migrazione si riconosce da sé — un profilo senza `mate.fila` viene
    da prima — e scatta anche su una copia rimessa dal cestino, che è
    l'altra strada da cui un salvataggio vecchio torna in circolo.
+
+   ── E RIORDINARE LA FILA NON RICHIUDE NIENTE ──
+   Il contatore è una posizione, quindi cambiare l'ordine cambia cosa
+   c'è dietro di lui. Lo assorbe la stessa migrazione, e senza nessun
+   numero di versione: i due specchi dicono quanti pianeti e quante
+   stazioni erano passati, e `sincronizzaAsteroidi` a ogni avvio ricava
+   da loro la posizione nella fila di adesso e tiene la più avanzata.
+   Siccome dentro la fila le due campagne restano ognuna in ordine, quei
+   due numeri bastano a dire *quali* tappe erano passate: nessuna di
+   quelle si richiude, e in cambio qualche tappa che il riordino ha
+   anticipato risulta passata senza essere stata giocata (è successo col
+   riordino del settembre 2026, e `unita/asteroidi` lo prova sulla fila
+   di prima).
 
    ── E DA QUI IN POI NON SI PERDE PIÙ NIENTE ──
    A fila unica il contatore cammina di una voce per volta e non scavalca
@@ -161,7 +218,7 @@ import { CAMPAGNA } from './tabelline.js'
 import { STAZIONI, CONCETTI } from './calcolo.js'
 
 /* I capitoli. Servono a due cose insieme: raccontare la salita («adesso
-   si fanno le decine») e spezzare ventidue righe in blocchi da tre o
+   si fanno le decine») e spezzare ventidue righe in blocchi da due a
    quattro, che su un telefono stretto è la differenza fra una lista che
    si scorre e un muro. Le voci sono codici: `p` + indice del pianeta in
    `CAMPAGNA`, `m` + indice della stazione in `STAZIONI`. */
@@ -172,18 +229,21 @@ const CAPITOLI_ORDINE = [
   { emoji: '🌑', titolo: 'Le decine',
     che: 'Le decine tonde, gli amici del dieci, e le tabelline che si contano.',
     voci: ['m2', 'p2', 'm3', 'p3'] },
-  { emoji: '🌓', titolo: 'Due cifre',
-    che: 'I numeri diventano grandi, ma le colonne non si parlano ancora.',
-    voci: ['m4', 'p4', 'm5', 'p5'] },
+  { emoji: '🌓', titolo: 'Le tabelline di mezzo',
+    che: 'Il 4 e il 6 si fanno raddoppiando, il 7 è il più tosto. E la prima decina da scavalcare.',
+    voci: ['p4', 'm4', 'p5', 'p6'] },
+  { emoji: '🌗', titolo: 'Due cifre',
+    che: 'I numeri diventano grandi, ma le colonne non si parlano ancora. E le ultime due tabelline.',
+    voci: ['m5', 'p7', 'p8'] },
   { emoji: '☄️', titolo: 'I conti che si portano',
-    che: 'Il riporto e il prestito, e le due tabelline senza scorciatoie.',
-    voci: ['m6', 'p6', 'm7', 'p7'] },
+    che: 'Il riporto e il prestito, e poi la scorciatoia dei quasi tondi.',
+    voci: ['m6', 'm7'] },
   { emoji: '🌠', titolo: 'Moltiplicare e dividere a mente',
-    che: 'Adesso che le tabelline ci sono tutte, si può moltiplicare in grande.',
-    voci: ['p8', 'm8', 'm9'] },
+    che: 'Prima il sole, con tutte le tabelline insieme: poi si moltiplica e si divide in grande.',
+    voci: ['p9', 'm8', 'm9'] },
   { emoji: '⭐', titolo: 'Fino a mille, e la prova',
-    che: 'I numeri grandi, e poi le due verifiche: niente di nuovo, nessuno sconto.',
-    voci: ['m10', 'p9', 'm11'] },
+    che: 'I numeri grandi, e poi la prova: niente di nuovo, nessuno sconto.',
+    voci: ['m10', 'm11'] },
 ]
 
 const daCodice = c => {
