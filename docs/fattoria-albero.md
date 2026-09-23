@@ -8,6 +8,11 @@
 > lavanda con la tintoria** (7): tintura, maglione alla lavanda, sapone.
 > Manca la coda (8) — sciarpa e berretto.
 >
+> **Il secondo albero è in §8** (23 settembre 2026): il premio che paga
+> il lavoro invece delle monete, la coda nelle macchine, cinque
+> botteghe nuove, e tre modi di chiedere — la bancarella, le botteghe
+> del paese, la mongolfiera. Solo progetto, tappe A–E in fondo a §8.
+>
 > **Gli sprite sono arrivati a metà**, e la lista da spuntare resta §6:
 > ci sono gli **otto edifici** (`edifici_2.png`), le **due bancarelle**
 > (`edifici_3.png`) e le **prime sei merci** (`merci_2.png`); mancano
@@ -653,11 +658,11 @@ alla scheda vecchia, e restano sei per foglio, che era il vincolo vero.
 |:-:|:--|:--|:--|
 | ✅ | `merce_stoffa` | solo l'emoji 🧵 | stoffa |
 | ✅ | `merce_farina` | solo l'emoji 🌾 | farina |
-| ☐ | `merce_pane` | `pane` (l'arredo) | pane |
+| ✅ | `merce_pane` | `pane` (l'arredo) | pane |
 | ☐ | `merce_maglione` | solo l'emoji 🧥 | maglione |
 | ✅ | `merce_burro` | solo l'emoji 🧈 | burro |
 | ✅ | `merce_formaggio` | solo l'emoji 🧀 | formaggio |
-| ☐ | `merce_torta` | `torta0` (l'arredo) | torta |
+| ✅ | `merce_torta` | `torta0` (l'arredo) | torta |
 | ☐ | `merce_crostata` | `crostatina` (l'arredo) | crostata |
 | ☐ | `merce_tintura` | solo l'emoji 🫙 | tintura |
 | ☐ | `merce_maglione_lavanda` | solo l'emoji 💜 | maglione alla lavanda |
@@ -674,8 +679,8 @@ E quando arriva la coda (tappa 8): `merce_sciarpa` e `merce_berretto`.
 
 | ✓ | pezzo | ripiego di oggi | |
 |:-:|:--|:--|:--|
-| ☐ | `campo_lavanda0..6` | i sette stadi delle melanzane | sette riquadri in fila |
-| ☐ | `raccolto_lavanda` | `vaso_lavanda` (il giardino) | la cassetta |
+| ✅ | `campo_lavanda0..6` | i sette stadi delle melanzane | sette riquadri in fila |
+| ✅ | `raccolto_lavanda` | `vaso_lavanda` (il giardino) | la cassetta |
 
 Sotto, com'è fatto ognuno e il foglio a cui somigliare.
 
@@ -855,104 +860,310 @@ Dopo ogni tappa con sprite: `python3 strumenti/sprite/atlante.py fattoria`,
 `npm run mondo` per guardare i ritagli, e il foglietto con il campo
 `prompt` compilato.
 
-## 8. La seconda iterazione: più catene, e i posti dove si consegna
+## 8. Il secondo albero: più vicino a Hay Day
 
-> Solo progetto, senza sprite e senza codice: si scrive dopo la tappa 8.
+> **Progetto, 23 settembre 2026.** Prende il posto della «seconda
+> iterazione» abbozzata qui prima, e parte da un'ipotesi dichiarata:
+> **gli sprite si generano**, quindi non sono un vincolo. Quello che
+> resta vincolo è tutto il resto — N → 1, gli id che non si rinominano,
+> quattro ricette per bottega, il premio in esperienza e mai in monete,
+> niente marcisce.
 
-Due cose che l'albero di sopra non fa, dette da chi ci gioca: **le
-ricette più interessanti nascono da ingredienti che si incrociano** —
-miele, zucchero, uova, farina — e **il mercato è un banco solo**, mentre
-in un gioco di fattoria ci sono posti diversi dove le persone chiedono
-cose: la pasticceria, la rosticceria, la scuola.
+Tre cose non andavano, e sono state misurate sui dati prima di
+scriverle.
 
-### Le catene in più
+1. **Il premio puniva le catene lunghe.** Un ordine rendeva `6 +
+   4·valoreDi`, e `valoreDi` è quello che la roba è costata *in
+   monete*: un raccolto costa 🪙1, una lavorazione 🪙0–2, quindi il
+   lavoro di trasformare quasi non contava. Risultato: ⭐10–14 per
+   gesto per un raccolto crudo, ⭐3,7 per un maglione alla lavanda (23
+   gesti, due ore). La mossa giusta era rifiutare la torta e aspettare
+   il grano — il contrario di Hay Day.
+2. **Il banco pescava uniforme** fra tutte le merci ottenibili: a
+   livello 52 sono quarantacinque, e metà sono colture o mangimi a un
+   passo. Le merci profonde, che sono quelle che tengono impegnati,
+   uscivano di rado.
+3. **I nodi di mezzo erano stretti.** In Hay Day uova, latte, zucchero,
+   formaggio entrano in dieci ricette; qui le uova ne avevano una (la
+   torta), il formaggio una, il miele una, e lo zucchero non esisteva.
+   I prodotti della cucina erano vicoli ciechi a due fasi — la salsa,
+   che è l'ingrediente della pizza, non entrava in niente, e il
+   pizzaiolo al banco non aveva una pizza.
 
-Stessa regola di tutto il resto: N → 1, ogni edificio un mestiere, mai
-più di quattro ricette, ogni coltura con la bocca che la mangia. Quattro
-catene, in ordine di dove entrano.
+E due richieste nuove: **i posti che chiedono** (non un banco solo, ma
+posti con una struttura diversa, come la nave di Hay Day) e **la coda
+nelle macchine**, per dare ai bambini un po' di autonomia.
 
-| catena | fasi | dove si incontra |
-|:--|:--|:--|
-| **Lo zucchero** | 🌱 barbabietola (campo) → 🍬 zucchero (**zuccherificio**) | entra nella torta, nei biscotti, nella marmellata |
-| **La pasta** | farina ✚ uova → 🍝 pasta (**pastificio**) → 🍲 lasagne (pasta ✚ pomodori ✚ formaggio, **cucina**) | ✚ col pane e col latte |
-| **Il pesce** | 🌰 becchime → 🐟 pesce (**stagno dei pesci**, un recinto: si dà da mangiare, si ritira) | ✚ col riso |
-| **Il sushi** | 🌾 riso (campo, un cereale nuovo) ✚ pesce → 🍣 sushi (**cucina**) | è la catena più lunga: sei fasi |
+### 8.1 Le catene nuove
 
-- **La barbabietola e non la canna**: cresce in un campo dell'orto come
-  le altre, e il foglio dei campi ha già la forma «cartello, sette
-  aiuole, cassetta».
-- **Lo stagno dei pesci è un recinto**, con i suoi tre ritratti e il
-  fumetto che dice cosa vuole: non è una meccanica nuova. Mangia becchime
-  come le galline e gli asini, perché tre bocche sullo stesso mangime
-  sono tre scomparti in meno.
-- **La cucina** è l'ottavo edificio (lasagne, sushi, e più avanti le
-  cose che si fanno con due merci cotte): arriva dopo la tintoria, nella
-  coda del gioco che oggi non ha niente che lavori.
-- Quello che esce (zucchero, pasta, pesce, sushi, lasagne) va nella
-  dispensa: sono tutte cose che escono da una bottega. Il pesce esce da
-  un recinto e va nel silo bianco, con le uova.
+Due colture, un recinto, cinque botteghe. Ogni riga arriva **con la
+bocca che la mangia**, e ogni bottega sta sotto le quattro ricette.
 
-I numeri — prezzi nella fascia «una struttura», tempi, il rapporto della
-pasta e delle lasagne come pappe contro il cibo comprato — si fanno con
-lo stesso conto di §3 quando si scrive la tappa, non prima.
+| bottega | liv | 🪙 | ricette (prende → fa · min · 🪙) |
+|:--|--:|--:|:--|
+| 🏭 `zuccherificio` | 27 | 230 | `zucchero` 2 barbabietola · 6 · 1 — `caramelle` (39) 1 zucchero + 1 miele · 6 · 1 — `marmellata` (45) 2 fragole + 1 zucchero · 8 · 1 |
+| 🍦 `gelateria` | 30 | 240 | `succo` 1 carote + 1 barbabietola · 4 · 1 — `gelato` 2 latte + 1 zucchero · 8 · 2 — `frullato` (46) 2 fragole + 1 latte · 5 · 1 |
+| 🍝 `pastificio` | 31 | 260 | `pasta` 2 farina + 1 uova · 7 · 1 — `biscotti` (32) 1 farina + 1 burro + 1 zucchero · 6 · 1 — `pizza` (39) 1 farina + 1 salsa + 1 formaggio · 9 · 2 — `lasagne` (40) 1 pasta + 1 salsa + 1 formaggio · 12 · 2 |
+| 🧥 `sartoria` (c'è) | — | — | + `sciarpa_lana` (42) 1 stoffa + 1 lana · 6 · 1 — `berretto` (55) 1 stoffa · 5 · 1 (è la tappa 8, anticipata) |
+| 🐟 `peschiera` (recinto; `laghetto` è già una decorazione) | 57 | 360 | `pesce` 2 becchime · 15 · 1 |
+| 🍟 `friggitoria` | 57 | 300 | `patatine` 2 patate · 5 · 1 — `fritto` 1 pesce + 1 farina · 7 · 1 — `arancini` (60) 2 riso + 1 formaggio · 9 · 1 |
+| 🍣 `sushi_bar` | 63 | 340 | `sushi` 1 riso + 1 pesce · 8 · 2 — `maki` (64) 1 riso + 1 carote + 1 peperoni · 6 · 1 |
 
-### I posti di consegna al posto del banco unico
+Colture: 🟣 `barbabietola` (27, 10 min — zucchero e succo) e 🍚 `riso`
+(60, 12 min — arancini, sushi, maki). Tutto quello che esce dalle
+botteghe va in dispensa, il pesce nel silo della stalla con le uova.
 
-Il mercato di oggi è **una bancarella che chiede a caso** fra tutte le
-merci ottenibili, con una faccia scelta dopo. Il verso da girare è
-l'opposto: **un posto chiede il suo mestiere**, e la faccia dice prima
-cosa aspettarsi.
+**Cosa cambia nei nodi di mezzo** — quante ricette prendono una merce:
 
-**Come si dichiara un posto.** Una voce di catalogo con `posto: {…}` al
-posto di `mercato: true` — stessa forma dei recinti, che sono macchine
-con una faccia:
+| merce | prima | dopo |
+|:--|--:|--:|
+| 🥚 uova | 1 | 2 (torta, pasta) |
+| 🥛 latte | 2 | 4 (burro, formaggio, gelato, frullato) |
+| 🧀 formaggio | 1 | 4 (polenta, pizza, lasagne, arancini) |
+| 🌾 farina | 3 | 7 |
+| 🧈 burro | 3 | 4 |
+| 🍯 miele | 1 | 2 (merenda, caramelle) |
+| 🥫 salsa | 0 | 2 (pizza, lasagne) |
+| 🍬 zucchero | — | 4 (caramelle, marmellata, gelato, biscotti) |
+| 🌰 becchime | 2 | 3 (+ pesce) |
+| 🍓 fragole | 2 | 4 |
 
-```js
-V('pasticceria', 'pasticceria', 'Pasticceria', 200, {
-  posto: { chiede: ['torta', 'biscotti', 'miele', 'merenda', 'uova'],
-           clienti: ['pasticcera', 'maestra'] },
-  liv: 20, unico: true,
-})
+La cima dell'albero diventa: **lasagne** (5 fasi, 29 gesti — la
+confluenza di grano, uova, orto e stalla), **pizza** (20 gesti), il
+**maglione alla lavanda** (23). La profondità massima resta 6:
+`PROFONDITA = 8` regge.
+
+Una cosa non torna nemmeno dopo, e resta scritta: **il fienile ha
+cinque ricette** (sopra il tetto di quattro). È così da quando c'è il
+fiorume col concime, e spostarlo è un'altra migrazione: si lascia.
+
+### 8.2 Il premio: si paga il lavoro, e un po' di più la catena
+
+Il premio smette di guardare le monete e guarda **i gesti** — raccolti
+più lavorazioni, lungo la strada più corta — con un bonus per ogni fase
+oltre la prima:
+
+```
+⭐ di un pezzo = PER_GESTO · gesti · (1 + BONUS_FASE · (fasi − 1))
+⭐ di un ordine = PREMIO_BASE + Σ pezzi
+PER_GESTO = 2 · BONUS_FASE = 0,2 · PREMIO_BASE = 6
 ```
 
-- `chiede` è **l'elenco chiuso** delle merci che quel posto ordina: si
-  pesca da lì e non da `merciDelLivello`. Il filtro sul livello resta
-  (non si chiede una torta a chi non ha il caseificio), ma dentro
-  l'elenco del posto.
-- `clienti` sono i mestieri che si vedono al banco di quel posto, presi
-  da `CLIENTI`: la pasticcera in pasticceria, l'oste in rosticceria. Il
-  campo `vuole` dei clienti resta per il ripiego — la nonna e il
-  bottegaio stanno alla bancarella di sempre, che non sparisce.
-- Ogni posto ha **i suoi tre ordini** (`f.ordini` diventa
-  `f.ordini[postoId]`, con la bancarella che tiene la chiave `mercato`
-  per i salvataggi di ieri) e il suo riposo dopo un rifiuto.
+`gestiDi(prodotto)` è pura e sta in `dati/mercato.js` accanto a
+`valoreDi`, che resta: serve a `megliaDi` per scegliere la strada.
 
-**Quali posti, e cosa chiedono.**
+| merce | fasi | gesti | ⭐ oggi | ⭐ nuovo | ⭐/gesto |
+|:--|--:|--:|--:|--:|--:|
+| 1 grano | 1 | 1 | 10 | 8 | 2,0 |
+| 3 grano | 1 | 3 | 18 | 12 | 2,0 |
+| 1 pane | 3 | 7 | 34 | 26 | 2,8 |
+| 1 torta | 5 | 18 | 82 | 71 | 3,6 |
+| 1 maglione alla lavanda | 6 | 23 | 86 | 98 | 4,0 |
+| 1 lasagne | 5 | 29 | — | 110 | 3,6 |
 
-| posto | liv | chiede | chi |
+Il verso adesso è quello giusto: **a parità di gesti la catena lunga
+rende di più** — dal 2 al 4 per gesto. Il tetto di `guastiDelMercato`
+(`⭐ ≤ 6·minuti`) resta, e non morde.
+
+**Perché 2 e non 3.** Il primo giro aveva `PER_GESTO = 3`, e il conto
+fatto dopo (esperienza media per raccolto portato al banco, con la
+pesca pesata, livello per livello) diceva: il 20–30% in più di prima.
+Sopra ci sono le botteghe (+25%), i bonus della mongolfiera e la fila
+nelle macchine, che fa lavorare di più: tutto insieme i livelli
+sarebbero arrivati molto più in fretta, cioè roba nuova prima di aver
+giocato con quella che c'era. A 2 il banco da solo rende ⭐6 per
+raccolto contro i 7 di prima, e con botteghe e mongolfiera si torna
+alla media di prima: **cambia dove sta l'esperienza, non quanta**. Nei
+primi livelli, dove botteghe e mongolfiera non ci sono ancora, gli
+ordini rendono un po' meno di prima: lì il livello lo fanno le monete
+spese, com'è sempre stato.
+
+### 8.3 Chi chiede: tre forme diverse
+
+Hay Day ha tre modi di chiedere, e ognuno fa un mestiere diverso: il
+**camion** (tanti ordini piccoli, sempre), la **nave** (un ordine
+grosso che si riempie un po' alla volta), i **visitatori** (qualcuno
+che vuole una cosa sua). Qui diventano:
+
+#### La bancarella (c'è già, liv 4) — il camion
+
+Tre posti, ordini da 1–3 merci per 1–3 pezzi, qualunque merce. Resta
+com'è, con **una pesca pesata** invece che uniforme:
+
+```
+peso(merce) = 1 + 0,5·(fasi − 1) + (2 se è arrivata negli ultimi 6 livelli)
+```
+
+Un grano pesa 1, una torta 3, la pasta appena sbloccata 4,5. Il crudo
+continua a uscire (è l'ordine che si fa subito, e serve), ma non è più
+metà del banco.
+
+#### Le botteghe del paese — i visitatori
+
+Quattro posti, ognuno col **suo elenco chiuso** e i suoi clienti. La
+struttura è diversa dal banco apposta:
+
+- **un cliente alla volta per bancone, una merce sola, 2–4 pezzi**
+  («la pasticcera vuole 3 biscotti») — un ordine che si legge in
+  un'occhiata e dice da solo cosa produrre;
+- **il cliente dopo non arriva subito**: fra 10 e 20 minuti. È il
+  motivo per tornare, non una punizione — e un cliente che aspetta
+  aspetta per sempre, come tutto il resto;
+- **rende il 25% in più** del banco, perché è merce di mestiere;
+- **la fama della bottega**: ogni consegna riempie un cuore, e a cinque
+  cuori la bottega **cresce** — un bancone in più (fino a tre), cioè
+  due clienti insieme. È la progressione per posto che il banco unico
+  non può avere, e si vede a schermo sulla bottega stessa.
+
+| bottega | liv | chiede | chi |
 |:--|--:|:--|:--|
-| 🏪 la bancarella (c'è già) | 4 | di tutto: è il ripiego | nonna, bottegaio, e chi non ha un posto suo |
-| 🧁 pasticceria | 20 | torta, biscotti, miele, merenda, uova, burro, zucchero | pasticcera, maestra |
-| 🍽 rosticceria | 26 | pane, formaggio, lasagne, tartufi, latte, pasta | oste, cuoco |
-| 🧵 merceria | 36 | lana, stoffa, maglione, sciarpa, berretto, sapone | sarta, lavandaia |
-| 🍣 il sushi bar | 60 | sushi, pesce, riso | un cliente nuovo |
+| 🧁 `pasticceria` | 20 | torta, burro, uova, latte, merenda, crostata, biscotti, gelato, frullato, marmellata, caramelle | pasticcera, maestra |
+| 🍝 `osteria` | 26 | pane, formaggio, minestrone, polenta, tartufi, salsa, conserva, pasta, pizza, lasagne, patatine, fritto, arancini, sushi, maki | oste, cuoco, pizzaiolo |
+| 🏫 `mensa` (la scuola) | 30 | pane, succo, latte, carote, fragole, minestrone, pasta, biscotti, frullato, gelato | la maestra, il bidello |
+| 🧵 `merceria` | 36 | lana, stoffa, maglione, maglione alla lavanda, sciarpa, berretto, sacchetto, sapone | sarta, lavandaia |
 
-**Come si sblocca.** Un posto arriva col livello e **con la sua prima
-merce**, come una macchina arriva con la sua prima ricetta: la
-pasticceria al 20 con la torta, non prima — `guastiDegliSblocchi` lo
-controlla con la stessa regola delle macchine. È un premio nella pagina
-dei livelli e si compra nel baule, `unico` come la bancarella.
+Ognuna arriva con almeno tre merci già consegnabili (la regola delle
+macchine con la prima ricetta: `guastiDegliSblocchi` la estende ai
+posti). La **mensa** è il posto dei bambini: è la loro scuola che
+chiede la merenda, ed è il primo posto dove si porta un succo.
+L'osteria usa lo sprite `rosticceria` già disegnato; la voce si chiama
+`osteria` perché è il mestiere dell'oste, che c'è già fra i clienti.
 
-**Cosa cambia nel motore.** `componiOrdine` prende il posto e pesca da
-`chiede`; `clientiPer` guarda prima i `clienti` del posto; `bancoDi`
-riceve l'id del posto. Il premio resta esperienza, mai monete, con lo
-stesso tetto `6·minuti·pezzi`. La pagina dell'albero si apre da ogni
-posto, come dalla bancarella.
+#### La mongolfiera — la nave
 
-**Perché non subito.** Un posto che chiede solo torte a chi ha una torta
-ogni due ore è un banco fermo: i posti hanno senso quando ogni catena
-ha tre o quattro merci consegnabili, cioè dopo la tappa 8 e le catene di
-sopra.
+Arriva dal livello 25 e **atterra nella fattoria** (una piazzola sua,
+`unica`): è la cosa più grande che si vede da lontano, e il fumetto
+sopra è il suo cesto che aspetta. Il carro della fiera era l'alternativa
+e resta scritta, ma un pallone che scende dal cielo si nota in un modo
+in cui un carro fermo non si nota.
+
+- **Tre file di casse**, una merce per fila, solo merci con **due fasi o
+  più**; ogni fila ha 2 o 3 casse e ogni cassa chiede 1–3 pezzi. Nove
+  casse al massimo, come la nave.
+- **Si riempie un po' alla volta**: ogni cassa si consegna da sola e
+  rende subito il suo premio. È la cosa che la rende diversa da un
+  ordine — non serve avere tutto, serve tornare.
+- **Una fila piena** rende il 25% in più; **tutto pieno** un altro 50%
+  e una **sorpresa**: una decorazione della fiera (bandierine,
+  giostrina, lanterne, lo spaventapasseri in festa — un set da otto,
+  che non si compra nel baule). È il premio che non sono monete, e che
+  si colleziona.
+- **Non ha fretta**, perché niente scade: resta finché non si preme
+  «Parti!». Chi la manda via a metà si tiene il premio delle casse
+  consegnate e basta. Dopo la partenza il cielo resta vuoto **un'ora**,
+  poi ne scende un'altra.
+- Al 66 arriva **la mongolfiera grande** (quattro file): è l'ultima
+  cosa che lavora, e chiude il buco fra il sushi (63) e la fine del
+  catalogo (69).
+
+Il tetto vale anche qui, sul totale col bonus: `⭐ ≤ 6·minuti`. Il caso
+più stretto (tre casse di maglione alla lavanda con tutti i bonus) sta
+a ⭐2,0 al minuto contro 6.
+
+#### E il carretto del vicino resta com'è
+
+Scambia roba con roba, mai monete: è il posto dove si svuota lo
+scomparto pieno, non un cliente.
+
+### 8.4 La coda nelle macchine
+
+Come in Hay Day: **una macchina lavora un pezzo alla volta e ne tiene
+altri in fila**, così si caricano tre pasti prima di andare a dormire.
+
+- **Tre posti di partenza** (uno lavora, due aspettano), **+1 per
+  ingrandimento** fino a sei, a 🪙30 · 50 · 80 — per macchina, e fanno
+  parte del money pit: la curva è corta apposta, la terza volta costa
+  poco più di un quarto d'ora di esercizi (`CALIBRAZIONE.md`).
+- **La roba e le monete si prendono mettendo in fila**, come adesso
+  all'avvio: una fila è una scorta, non una promessa. Un pezzo in fila
+  e non ancora partito **si toglie** e rende tutto.
+- **Il pronto aspetta sulla macchina**, e la fila continua a lavorare:
+  si ritira tutto insieme, quello che ci sta nel silo. Niente marcisce,
+  e un silo pieno non ferma la macchina — ferma solo il ritiro.
+- **Anche i recinti**: sono macchine, e dar da mangiare tre volte alle
+  galline prima di uscire è esattamente il gesto che si vuole.
+- Il tempo è per pezzo e in fila: il secondo parte quando il primo
+  finisce, anche a telefono spento (si ricalcola dall'ora, come i
+  campi).
+
+**Il salvataggio**: `cosa.lavoro = { ricetta, da }` diventa `cosa.coda
+= [{ ricetta, da }]`, e `deserializza` legge ancora `lavoro` come una
+coda di uno — un mulino che stava macinando ieri continua a macinare.
+
+A schermo: il foglio della macchina mostra la fila come caselle (quella
+che lavora con la barra, le altre in attesa, quelle vuote col ＋), il
+fumetto sopra la macchina dice la faccia di quello che sta facendo e un
+numerino per quanti ne sono pronti. L'albero dice «⏳ ne fa 2, pronto
+fra 4 min».
+
+### 8.5 L'albero: le merci future no
+
+Deciso: l'albero **non mostra quello che non è ancora arrivato**,
+nemmeno il livello dopo in grigio — l'albero diventerebbe grande e
+confonderebbe. Resta com'è (si ferma su «arriva al livello N») e
+riceve le merci nuove da solo, perché legge `RICETTE`, `COLTURE` e
+`CATALOGO`. Cambiano solo gli ingressi, che diventano quattro: il silo,
+la bancarella, **le botteghe** e **le casse della mongolfiera**, cioè
+ogni posto dove si vede una merce che manca.
+
+### 8.6 Quando arriva cosa
+
+```
+   20  Il caseificio          + la pasticceria
+   24  La cucina
+   25  La mongolfiera
+   26  I maiali               + l'osteria
+   27  Lo zuccherificio       barbabietola, zucchero
+   29  La zuppa d'orto
+   30  La gelateria           succo, gelato  + la mensa
+   31  Il pastificio          pasta · 32 i biscotti
+   33  Le capre
+   36  La sartoria            + la merceria
+   38  Le api
+   39  La pizza               pizza, caramelle
+   40  Le lasagne
+   41  Gli alpaca
+   42  La sciarpa
+   44  Le fragole             · 45 la marmellata · 46 il frullato
+   47  Gli asini
+   52  La lavanda e la tintoria
+   55  Il berretto
+   57  La peschiera          pesce, friggitoria, patatine, fritto
+   60  Il riso                riso, arancini
+   63  Il sushi bar           sushi · 64 i maki
+   66  La mongolfiera grande
+```
+
+Fra due cose che lavorano non passano mai più di cinque livelli, e il
+buco 52–69 si chiude.
+
+### 8.7 Gli sprite da generare
+
+Tutti in più rispetto alla lista di §6, che resta da spuntare.
+
+| foglio | pezzi |
+|:--|:--|
+| **colture** | ✅ `campi_3.png`: barbabietola, riso (e la lavanda), sette stadi più la cassetta ciascuno |
+| **merci** (tre fogli da sei) | ✅ `merci_3.png`: pane, torta, zucchero, succo, gelato, pasta — ☐ caramelle, marmellata, frullato, biscotti, pizza, lasagne, sciarpa, berretto · pesce, patatine, fritto, arancini, sushi, maki |
+| **edifici** | ✅ `edifici_4.png`: `mongolfiera`, `mongolfiera_partita`, `gelateria`, `mensa` — ☐ `friggitoria`, `peschiera` coi suoi ritratti da recinto (calmo, mangia, pronto…) |
+| **la fiera** | otto decorazioni della sorpresa |
+
+Già disegnati e mai usati (`edifici_3.png`): `zuccherificio`,
+`pastificio`, `pasticceria`, `rosticceria` (→ `osteria`), `merceria`,
+`sushi_bar`. I clienti nuovi sono emoji come gli altri.
+
+### 8.8 Le tappe
+
+| # | tappa | cosa |
+|--:|:--|:--|
+| A | **Il premio e la pesca** | `gestiDi`, la formula nuova, la pesca pesata; `unita/mercato` |
+| B | **La coda** | motore, salvataggio, `Macchina.vue`, fumetto, consiglio, albero |
+| C | **Le catene nuove** | colture, ricette, catalogo, clienti, nomi dei livelli; `unita/coltivazioni` (1b-bis vale per barbabietola e riso) |
+| D | **Le botteghe del paese** | `posto:` nel catalogo, `f.botteghe`, la fama, la vista |
+| E | **La mongolfiera** | le casse, la partenza, la sorpresa, la versione grande |
+
+A, B e C sono indipendenti; D ed E vogliono A (il premio) e C (le merci
+da chiedere).
 
 ## Le decisioni da confermare prima di scrivere codice
 
