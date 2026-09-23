@@ -5,7 +5,6 @@ import { initPosta } from './store/posta.js'
 import { entra as entraNelGioco, esci as esciDalGioco } from './store/sessioni.js'
 import { controlla } from './aggiornamento.js'
 import HomeView from './views/HomeView.vue'
-import CamerettaView from './views/CamerettaView.vue'
 import LinguaGame from './views/LinguaGame.vue'
 import MathGame from './views/MathGame.vue'
 import TowerDefense from './views/TowerDefense.vue'
@@ -24,10 +23,11 @@ const pronto = ref(false)
 /* `verbi` esiste ancora e porta a English: i verbi sono una tappa della
    campagna, ma un vecchio rimando alla schermata separata non deve
    finire su una pagina bianca. */
-/* `animali` porta alla cameretta come `cameretta`: la stanza, il negozio
-   e gli amici sono un posto solo, ma i vecchi rimandi devono continuare
-   ad arrivare da qualche parte. */
-const viste = { home: HomeView, cameretta: CamerettaView, animali: CamerettaView,
+/* La cameretta non c'è più, e con lei `#cameretta` e `#animali`: un
+   frammento che non è una schermata viene ignorato (`dallIndirizzo`,
+   qui sotto), e un vecchio rimando resta in home invece di finire su
+   una pagina bianca. */
+const viste = { home: HomeView,
                 inglese: LinguaGame, verbi: LinguaGame, spagnolo: LinguaGame,
                 mate: MathGame, torri: TowerDefense,
                 bancarella: BancarellaGame,

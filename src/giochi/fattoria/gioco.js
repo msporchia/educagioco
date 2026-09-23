@@ -37,14 +37,16 @@ export default {
   tappe: 0,
 
   /* ── NON È PIÙ IN PROVA, ED È UNA DECISIONE DI PRODOTTO ──
-     Stava dietro «i giochi in prova» perché incompleta. Adesso esce allo
-     scoperto non perché sia finita, ma perché **prende il posto della
-     cameretta**: il money pit dev'essere uno solo — un bambino che può
-     spendere le monete in due posti non sceglie, si dimentica dell'altro
-     — e fra i due questo è quello che si può far crescere. La cameretta
-     passa dall'altra parte del cancello (`views/HomeView.vue`), e i suoi
-     salvataggi restano dove sono: nascondere una carta non è cancellare
-     niente.
+     Stava dietro «i giochi in prova» perché incompleta. È uscita allo
+     scoperto non perché fosse finita, ma perché **prendeva il posto
+     della cameretta**: il money pit dev'essere uno solo — un bambino che
+     può spendere le monete in due posti non sceglie, si dimentica
+     dell'altro — e fra i due questo era quello che si poteva far
+     crescere. La cameretta è passata prima dall'altra parte del
+     cancello, e un mese dopo, quando i bambini avevano smesso di
+     aprirla, è stata tolta del tutto, salvataggi compresi
+     (`sgomberaLaCameretta` in `store/profile.js`): adesso le monete si
+     spendono solo qui.
      Quello che manca — gli animali da accudire, i prezzi che nessun
      bambino ha ancora provato — resta da fare con la carta accesa, che è
      l'unico modo per cui qualcuno se ne accorga. */

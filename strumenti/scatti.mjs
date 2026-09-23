@@ -46,9 +46,9 @@ const PROFILO = {
   settings: { tables: [2, 3, 4, 5], sound: true, music: true,
               giochi: {}, sa: {}, tuttoAperto: true, sperimentali: true },
   totals: { math: 260, mente: 90, en: 140, verbi: 40, frasi: 25, es: 60,
-            td: 45, pasti: 18, partiteMath: 22, torri: 30, perfette: 7,
+            td: 45, partiteMath: 22, torri: 30, perfette: 7,
             ondate: 40, misure: 30, pozioni: 12, clienti: 26, mercati: 4,
-            missioni: 9, stelle: 14, ordini: 60, capsule: 5, monete: 900 },
+            missioni: 9, stelle: 14, ordini: 60, monete: 900 },
   best: { math: 24, serieMath: 15, onda: 12, serieGiorni: 6, pozioni: 9, clienti: 11 },
   td: { tappa: 6, libera: true, v: 2 },
   mate: { tappa: 5, libera: true },
@@ -63,33 +63,6 @@ const PROFILO = {
   lab: { tappa: 5, libera: false, v: 2 },
   gen: { tappa: 8, libera: false, ordini: {}, stelle: {} },
   giorni: { ultimo: '', serie: 4, record: 9, totali: 30 },
-  /* Un animale adottato e **vestito**: la cameretta fotografata vuota non
-     racconta a cosa servono le monete, ed è quello il suo mestiere. Gli
-     accessori sono quattro perché i posti addosso sono quattro. */
-  accessori: ['🧢', '🕶️', '🧣', '🎒'],
-  /* Quattro amici di quattro specie diverse: la cameretta fotografata con
-     un cane solo non racconta né i quattro posti né che ognuno mangia le
-     sue cose, che sono le due cose da guardare.
-
-     `t` è quando ogni bisogno è stato soddisfatto l'ultima volta: senza,
-     le barre risultano scariche da sempre e si fotografa un animale
-     trascurato. Qui è adesso, così si vedono animali accuditi. */
-  pets: {
-    watson: { adottato: 1, nome: 'Watson', pasti: 24,
-              addosso: { testa: '🧢', occhi: '🕶️', collo: '🧣', schiena: '🎒' },
-              val: { fame: 82, gioco: 74, pulizia: 90, forma: 95 },
-              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
-    luna:   { adottato: 1, nome: 'Luna', pasti: 12, addosso: {},
-              val: { fame: 88, gioco: 80, pulizia: 92, forma: 96 },
-              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
-    kiwi:   { adottato: 1, nome: 'Kiwi', pasti: 9, addosso: {},
-              val: { fame: 76, gioco: 88, pulizia: 94, forma: 90 },
-              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
-    brace:  { adottato: 1, nome: 'Brace', pasti: 6, addosso: {},
-              val: { fame: 84, gioco: 79, pulizia: 88, forma: 93 },
-              t: { fame: ADESSO, gioco: ADESSO, pulizia: ADESSO, forma: ADESSO } },
-  },
-  casa: ['watson', 'luna', 'kiwi', 'brace'],
   /* Una fattoria già cominciata. Non si scrive a mano: la si **gioca** col
      motore vero, qui in Node, e si fotografa quello che ne esce. Una
      fattoria appena nata è un prato vuoto — è deciso così, la prima
@@ -302,11 +275,6 @@ const RICETTE = [
   { file: 'fattoria-gioco', dove: 'fattoria', attesa: '.fa-tela',
     passi: [['.fa-tela', 1500]] },
 
-  { file: 'cameretta', dove: 'cameretta', attesa: '.stanza, .posto, .porta' },
-  /* l'animale con addosso quello che è uscito dalle capsule: è la risposta
-     alla domanda «a cosa servono le monete» */
-  { file: 'cameretta-animale', dove: 'cameretta', attesa: '.stanza, .posto',
-    passi: [['.posto:not(.libero)', 1200]] },
   { file: 'albo', dove: 'albo', attesa: '.testata' },
   { file: 'eta', dove: '', vuoto: true, attesa: '.benvenuto', passi: [manopolaEta] },
   { file: 'genitori', dove: 'genitori', attesa: '.tastierino', passi: [...PIN] },

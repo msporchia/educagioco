@@ -18,7 +18,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          sapereAcceso, accendiSapere, saperiSpenti,
          spostaLEta, etaDelBambino, ETA_DIFETTO,
          ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco, fissaSapere,
-         rimettiAiDifetti, migraGenerale } from '../../src/store/profile.js'
+         rimettiAiDifetti, migraGenerale, livelloOra } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
@@ -213,6 +213,71 @@ uguale('e uno che c\'era passa di qui con la sua versione',
      riscriverebbe sopra le scelte fatte nel frattempo. */
   await selectPlayer('g1')
   uguale('un profilo appena letto porta la versione di oggi', state.profile.v, 7)
+}
+
+/* ── 7c. LA CAMERETTA SE NE VA, CON I SUOI SALVATAGGI ──
+   Al primo caricamento un profilo di ieri perde animali, oggetti,
+   dispensa e capsule: è stato deciso così, e qui si prova che succede
+   davvero e che arriva fino al disco. Le due cose da non sbagliare si
+   vedrebbero solo sul telefono di un bambino, e tardi: **il livello non
+   scende** — la cameretta dava esperienza, e il livello è il
+   moltiplicatore delle monete — e **ripassarci non cambia i conti**,
+   perché per riscrivere `pets` vuoto sopra un profilo già contato basta
+   una build vecchia rimasta aperta su un telefono. */
+{
+  const ieri = () => ({
+    ...profiloFinto(300), v: 7, badgeInit: 0,
+    totals: { math: 100, monete: 900, pasti: 20, preferiti: 4, cure: 9, capsule: 3 },
+    owned: ['🧸', '🪴', '💡'], layout: [['🧸'], ['🪴'], ['💡']],
+    pets: { watson: { adottato: 1, nome: 'Watson', val: {}, t: {}, pasti: 12, addosso: {} },
+            sherlock: { adottato: 1, nome: 'Nuvola', val: {}, t: {}, pasti: 8, addosso: {} } },
+    casa: ['watson', 'sherlock'], dispensa: { '🍗': 2 }, accessori: ['🧢'], serie: 1,
+    badge: { 'pets-pasti': { g: 1, t: 1 }, 'room-oggetti': { g: 1, t: 1 },
+             'room-monete': { g: 2, t: 1 }, 'mate-giuste': { g: 1, t: 1 } },
+  })
+  /* lo stesso bambino, se la cameretta non l'avesse mai aperta */
+  const maiEntrato = () => ({ ...profiloFinto(300), v: 7, badgeInit: 0,
+                              totals: { math: 100, monete: 900 } })
+
+  await pulisci()
+  save('giocatori', [{ id: 'g1', nome: 'Ieri' }, { id: 'g2', nome: 'Mai' }])
+  save('profilo:g1', ieri())
+  save('profilo:g2', maiEntrato())
+  await flush()
+  await init()
+
+  await selectPlayer('g2')
+  const xpSenza = livelloOra().xp
+  await selectPlayer('g1')
+  const p = state.profile
+  stessaLista('le collezioni della cameretta non ci sono più',
+    ['owned', 'layout', 'pets', 'casa', 'dispensa', 'accessori', 'serie'].filter(k => k in p), [])
+  uguale('degli animali resta quanti erano', p.totals.camerettaAnimali, 2)
+  uguale('e degli oggetti pure', p.totals.camerettaOggetti, 3)
+  uguale('i pasti restano dove stavano', p.totals.pasti, 20)
+  stessaLista('gli altri contatori se ne vanno con lei',
+    ['preferiti', 'cure', 'capsule'].filter(k => k in p.totals), [])
+  uguale('il livello conta ancora quello che la cameretta aveva dato',
+    livelloOra().xp, xpSenza + 20 * 3 + 2 * 30 + 3 * 12)
+  stessaLista('le medaglie delle due famiglie tolte se ne vanno',
+    ['pets-pasti', 'room-oggetti'].filter(id => id in p.badge), [])
+  controlla('e restano quelle che una famiglia ce l\'hanno ancora',
+    'room-monete' in p.badge && 'mate-giuste' in p.badge, Object.keys(p.badge).join(','))
+  uguale('nessun rimborso: le monete sono quelle di prima', p.coins, 300)
+
+  await flush()
+  const scritto = await load('profilo:g1')
+  controlla('lo sgombero arriva fino al disco',
+    !('pets' in scritto) && !('owned' in scritto) && scritto.totals.camerettaAnimali === 2)
+
+  /* la build vecchia: rilegge il profilo sgomberato e lo riscrive con
+     le sue collezioni vuote e il suo `v` */
+  save('profilo:g1', { ...scritto, v: 7, pets: {}, owned: [], casa: [], accessori: [] })
+  await flush()
+  await selectPlayer('g1')
+  uguale('ripassarci non azzera i conti', state.profile.totals.camerettaAnimali, 2)
+  uguale('e non li raddoppia', state.profile.totals.camerettaOggetti, 3)
+  controlla('le collezioni vuote se ne vanno anche loro', !('pets' in state.profile))
 }
 
 /* ── 8. il salvataggio da portare via ── */

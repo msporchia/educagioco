@@ -35,8 +35,8 @@ const props = defineProps({
   guida: { type: String, default: '' },
   /* ── IL ⏸ ──
      Stessa regola del `?`: compare solo se il gioco lo chiede, perché
-     un tasto di pausa dove non scorre niente (la fattoria, la
-     cameretta) è un tasto che non fa niente. Chi lo passa ascolta
+     un tasto di pausa dove non scorre niente (la fattoria) è un tasto
+     che non fa niente. Chi lo passa ascolta
      `@pausa` e si ferma — il pezzo che lo fa per tutti è
      `giochi/pausa.js`, e non si riscrive in casa. */
   pausa: { type: Boolean, default: false },

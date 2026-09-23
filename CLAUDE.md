@@ -591,7 +591,7 @@ committate: non è ricostruibile da git.
   campi di un motore in `shallowRef` (`p.finita`, `p.inPausa`) non lo sono e
   si guardano dentro il battito. Il ⏸ compare solo dove il gioco lo chiede,
   come il `?`. **Non si mette in pausa** quello che non ha un orologio (la
-  fattoria, la cameretta: un ⏸ lì è un tasto che non fa niente), il
+  fattoria: un ⏸ lì è un tasto che non fa niente), il
   Generale (ha il suo Via/Stop, e lì fermare il tempo *è* una mossa), **il
   Dungeon** (è a turni: la stanza aspetta, e quello che c'è da fermare lì è
   un `setTimeout` — vedi la voce dopo) e la
@@ -901,6 +901,14 @@ committate: non è ricostruibile da git.
 - **Gli id dei contenuti non si rinominano** (`en:dog`, `math:7x8`,
   `frase:…`): sono le chiavi dello stato SRS, e cambiarli fa tornare una
   parola «mai vista».
+- **Togliere un gioco non abbassa il livello.** Il livello è la somma
+  dell'esperienza di tutti i giochi ed è il moltiplicatore delle monete:
+  un gioco che se ne va lascia la sua riga in `XP_AREA`, letta da
+  contatori che nessuno fa più salire, e quello che «Tuttofare» contava
+  resta nel conto. La cameretta se n'è andata così, salvataggi compresi
+  (`sgomberaLaCameretta` in `store/profile.js`): prima di cancellare le
+  collezioni se ne contano gli elementi in `totals`, e le sue medaglie
+  sono uscite dall'albo senza portarsi via l'esperienza che avevano dato.
 - **Nell'archivio non si salva `true` da solo.** `load()` scarta quel
   valore quando lo rilegge (`fromIdb !== true`: è il segnale di
   «scrittura riuscita» di `idbRun`), quindi un `save(chiave, true)`
@@ -1282,8 +1290,8 @@ Survivors si perde. I due meccanismi si affiancano: le partenze
 accendono alla creazione, la portata filtra in continuo, e non si
 contraddicono.
 
-Fuori dal giudizio restano i giochi **senza campagna** — la fattoria, la
-cameretta: sono posti, non scalette, e l'assenza vuol dire «non si
+Fuori dal giudizio restano i giochi **senza campagna** — oggi la
+fattoria: sono posti, non scalette, e l'assenza vuol dire «non si
 giudica», non «si nasconde». La stessa cosa va detta **anche alle
 partenze**, che ragionano per bandierine e non per portata: `posto:
 true` nel manifesto (vedi sopra), se no il prato sparirebbe a un

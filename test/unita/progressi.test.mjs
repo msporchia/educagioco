@@ -8,8 +8,6 @@ import { livelloDa, xpPerLivello, titoloDi, segnaGiorno, serieViva, giornoDi,
 import { CAMPAGNA, calcoliTabellina } from '../../src/data/tabelline.js'
 import { SRS, MAX_S } from '../../src/store/srs.js'
 import { WORDS } from '../../src/data/words.js'
-import { BISOGNI } from '../../src/data/pets.js'
-import { SERIE } from '../../src/data/capsule.js'
 
 const GIORNO = 86400000
 let falliti = 0
@@ -21,10 +19,9 @@ const titolo = t => console.log('\n' + t)
 
 /* profilo finto, la stessa forma di store/profile.js */
 const nuovo = () => ({
-  coins: 0, owned: [], items: {}, pets: {}, dispensa: {},
-  accessori: [], serie: 0,
-  totals: { math: 0, en: 0, verbi: 0, td: 0, pasti: 0, partiteMath: 0, torri: 0,
-            perfette: 0, ondate: 0, preferiti: 0, monete: 0, cure: 0, capsule: 0 },
+  coins: 0, items: {},
+  totals: { math: 0, en: 0, verbi: 0, td: 0, partiteMath: 0, torri: 0,
+            perfette: 0, ondate: 0, monete: 0 },
   best: { math: 0, serieMath: 0, onda: 0, serieGiorni: 0 },
   td: { tappa: 0, libera: false },
   mate: { tappa: 0, libera: false },
@@ -155,48 +152,41 @@ titolo('Traguardi')
   q.items['en:' + WORDS.filter(w => w[3] === 'f')[0][0]] = sicuro(now)
   ok(misure(q, now).categorieEn(3) === 1, 'una parola sparsa non ne fa un\'altra')
 
-  /* i bisogni degli animali */
-  const pieno = (quando, k) => {
-    const a = { adottato: quando, val: {}, t: {}, pasti: 1, addosso: {} }
-    for (const b of BISOGNI) { a.val[b.k] = 100; a.t[b.k] = quando }
-    if (k) a.val[k] = 0
-    return a
-  }
-  const casa = nuovo()
-  ok(misure(casa, now).tuttiSazi() === 0, 'senza animali non è un traguardo')
-  ok(misure(casa, now).tuttiContenti() === 0, 'e nemmeno l\'altro')
-  casa.pets.watson = pieno(now)
-  ok(misure(casa, now).tuttiSazi() === 1, 'un animale appena nutrito è sazio')
-  ok(misure(casa, now).tuttiContenti() === 1, 'ed è contento su tutto')
-  ok(misure(casa, now + 8 * 3600e3).tuttiSazi() === 0, 'dopo otto ore ha fame')
-
-  /* la pancia piena non basta per "Al settimo cielo": è il senso di
-     avere quattro barre invece di una */
-  const trascurato = nuovo()
-  trascurato.pets.watson = pieno(now, 'gioco')
-  ok(misure(trascurato, now).tuttiSazi() === 1, 'la pancia può essere piena')
-  ok(misure(trascurato, now).tuttiContenti() === 0, 'e l\'animale non essere contento lo stesso')
-
-  /* la collezione delle sorprese */
-  const collezione = nuovo()
-  ok(misure(collezione, now).accessori() === 0, 'si parte senza accessori')
-  ok(misure(collezione, now).serieComplete() === 0, 'e senza serie finite')
-  collezione.accessori = SERIE[0].pezzi.map(x => x.e)
-  collezione.serie = 1
-  ok(misure(collezione, now).accessori() === 12, 'gli accessori si contano')
-  ok(misure(collezione, now).serieComplete() === 1, 'e la serie finita pure')
-  collezione.serie = 99
-  ok(misure(collezione, now).serieComplete() === SERIE.length,
-     'ma non si possono finire più serie di quante ne esistono')
-  collezione.pets.watson = pieno(now)
-  ok(misure(collezione, now).vestiti() === 0, 'un accessorio in casa non è addosso')
-  collezione.pets.watson.addosso = { testa: SERIE[0].pezzi[0].e }
-  ok(misure(collezione, now).vestiti() === 1, 'addosso invece sì')
-
   /* i giochi provati */
   const giro = nuovo()
   giro.totals.math = 1; giro.totals.en = 1; giro.totals.torri = 1
   ok(misure(giro, now).giochiProvati() === 3, 'si contano i giochi toccati davvero')
+  /* la cameretta non c'è più, ma chi ci ha dato da mangiare a un
+     animale l'ha provata: «Tuttofare» non deve tornare indietro */
+  giro.totals.pasti = 12
+  ok(misure(giro, now).giochiProvati() === 4, 'e un gioco che se n\'è andato resta nel conto')
+}
+
+/* ═══════════ la cameretta, che non c'è più ═══════════
+   Tolta con i suoi salvataggi: le collezioni sono diventate tre numeri
+   (`sgomberaLaCameretta` in store/profile.js, provata in
+   `unita/profilo`), e qui si guarda l'altra metà — che l'albo non ne
+   parli più e che il livello li legga con la formula di prima. */
+titolo('La cameretta se n\'è andata, il livello no')
+{
+  const now = Date.now()
+  ok(!AREE.some(a => a.id === 'animali' || a.id === 'cameretta'),
+     'nell\'albo non c\'è più la sua famiglia')
+  ok(!TRAGUARDI.some(t => t.area === 'animali' || t.area === 'cameretta'),
+     'né un suo traguardo')
+  const salvadanaio = TRAGUARDI.find(t => t.id === 'room-monete')
+  ok(salvadanaio && salvadanaio.area === 'tutti',
+     '«Salvadanaio» resta, fra i traguardi di tutti i giochi, con l\'id di prima')
+
+  const prima = nuovo()
+  prima.totals.math = 300
+  const dopo = nuovo()
+  dopo.totals.math = 300
+  dopo.totals.pasti = 20
+  dopo.totals.camerettaAnimali = 2
+  dopo.totals.camerettaOggetti = 3
+  ok(livelloTotale(dopo, now).xp === livelloTotale(prima, now).xp + 20 * 3 + 2 * 30 + 3 * 12,
+     'pasti, animali e oggetti valgono l\'esperienza di quando c\'erano')
 }
 
 /* ═══════════ esperienza per gioco ═══════════ */

@@ -1,4 +1,4 @@
-import { apriBrowser, apriGioco, semina, scatto, GIOCATORE, ALTRO } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, scatto, GIOCATORE, ALTRO } from '../aiuto/browser.mjs'
 
 const browser = await apriBrowser()
 const errors = []
@@ -77,62 +77,9 @@ const dopoInglese = await page.evaluate(giuste => ({
   giuste,
 }), giusteEn)
 
-/* ══════════ 3. CAMERETTA condivisa: le monete dell'inglese si spendono ══════════ */
-// dalla mappa dell'inglese alla home: il tasto indietro è quello della barra,
-// uguale in ogni schermata
-await page.click('.barra-app button[aria-label="indietro"]')
-await page.waitForSelector('.carte')
-/* La cameretta sta dietro «i giochi in prova» da quando il money pit è
-   la fattoria (`views/HomeView.vue`): senza il flag la sua carta non c'è.
-   Si accende **qui** e non all'apertura per una ragione che è costata un
-   test rosso: `semina()` scrive anche il roster, e a pagina appena aperta
-   l'elenco dei giocatori sta ancora solo in localStorage — seminare
-   troppo presto lo riscrive in IndexedDB con il solo `GIOCATORE`, e il
-   secondo bambino sparisce. Più avanti l'app l'ha già salvato da sé, e la
-   semina lo trova e lo lascia in pace. */
-await semina(page, { settings: { sperimentali: true } })
-// la cameretta è una stanza disegnata: al negozio ci si va dalla porta,
-// e quello che si compra si ritrova da solo sulle mensole
-await page.click('.carta.room')
-await page.waitForSelector('#scaffali')
-await page.click('.porta')
-await page.waitForSelector('.scorte')
-const negozio = await page.evaluate(async () => {
-  const attivi = [...document.querySelectorAll('.scheda')].filter(b => !b.disabled)
-  const primaMonete = +document.querySelector('.gettone b').textContent
-  attivi.slice(0, 2).forEach(b => b.click())
-  await new Promise(r => setTimeout(r, 60))
-  const dopoMonete = +document.querySelector('.gettone b').textContent
-  document.querySelector('.barra-app button[aria-label="indietro"]').click()
-  await new Promise(r => setTimeout(r, 120))
-  return { acquistabili: attivi.length, primaMonete, dopoMonete,
-           oggettiSuMensole: document.querySelectorAll('.ogg').length }
-})
-
-/* riordino con mouse vero */
-const box = await page.evaluate(() => {
-  const it = document.querySelector('.ogg')
-  const righe = [...document.getElementById('scaffali').children]
-  if (!it) return null
-  const r = it.getBoundingClientRect(), s = righe[2].getBoundingClientRect()
-  return { emoji: it.textContent, sx: r.left + r.width / 2, sy: r.top + r.height / 2,
-           tx: s.right - 16, ty: s.top + s.height / 2 }
-})
-let riordino = 'nessun oggetto'
-if (box) {
-  await page.mouse.move(box.sx, box.sy)
-  await page.mouse.down()
-  await page.mouse.move(box.tx, box.ty, { steps: 14 })
-  await page.mouse.up()
-  await page.waitForTimeout(250)
-  riordino = await page.evaluate(e => {
-    const righe = [...document.getElementById('scaffali').children]
-    return { spostato: [...righe[2].querySelectorAll('.ogg')].some(x => x.textContent === e),
-             totale: document.querySelectorAll('.ogg').length }
-  }, box.emoji)
-}
-
-/* ══════════ 4. MATEMATICA ══════════ */
+/* ══════════ 3. MATEMATICA ══════════
+   Dalla mappa dell'inglese alla home: il tasto indietro è quello della
+   barra, uguale in ogni schermata. */
 await page.click('.barra-app button[aria-label="indietro"]')
 await page.waitForSelector('.carte')
 await page.click('.carta.mate')
@@ -149,7 +96,7 @@ const mate = await page.evaluate(async () => {
 await page.waitForTimeout(400)
 await scatto(page, 'app-mate')
 
-/* ══════════ 5. persistenza attraverso un reload ══════════
+/* ══════════ 4. persistenza attraverso un reload ══════════
    La riga da guardare è quella della carta delle tabelline: dice a che
    pianeta è arrivato QUESTO bambino, ed è quindi anche la prova che i
    due profili non si mescolano. */
@@ -160,9 +107,9 @@ const dopoReload = await page.evaluate(() => ({
   giocatore: document.querySelector('.gioc.on')?.textContent,
 }))
 
-/* ══════════ 6. profili separati ══════════
-   Si guardano le monete: il primo giocatore ha giocato e speso, il
-   secondo no, quindi se i due numeri sono uguali i profili si stanno
+/* ══════════ 5. profili separati ══════════
+   Si guardano le monete: il primo giocatore ha giocato, il secondo
+   no, quindi se i due numeri sono uguali i profili si stanno
    mescolando. La riga dei pianeti da sola non basterebbe — a inizio
    partita sono entrambi al primo. */
 const separati = await page.evaluate(async ([primo, secondo]) => {
@@ -181,6 +128,6 @@ const separati = await page.evaluate(async ([primo, secondo]) => {
 }, [GIOCATORE, ALTRO])
 
 for (const elenco of raccolti) errors.push(...elenco)
-console.log(JSON.stringify({ avvio, mappaEn, inglese, dopoInglese, negozio, riordino, mate,
+console.log(JSON.stringify({ avvio, mappaEn, inglese, dopoInglese, mate,
                              dopoReload, separati, errori: errors }, null, 1))
 await browser.close()

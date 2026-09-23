@@ -31,7 +31,7 @@ lavoro.
 Corollario, e non è una crudeltà: **un tasto premuto a caso non è
 esercizio**, quindi non vale dieci secondi e non vale una moneta. Survivors
 dava una monetina a chi sbagliava la domanda del potenziamento — un «ci hai
-provato» che valeva in cameretta e non in campo — e sembrava innocua finché
+provato» che valeva in fattoria e non in campo — e sembrava innocua finché
 non si guarda cosa un bambino sta davvero cercando: **le monete**, perché
 quelle si spendono. Con quella regola il modo più veloce di farne era
 chiedere una carta e premere a caso; nella partita libera, dove non si vince
@@ -43,8 +43,8 @@ vuole, a costo zero.
 
 ## Il cambio: giocare costa il doppio di studiare
 
-La fattoria, la cameretta, tutto quello che si compra con le monete è **il
-posto dove si spende**. Il rapporto scelto è:
+La fattoria — tutto quello che si compra con le monete — è **il posto dove
+si spende**. Il rapporto scelto è:
 
 > **cinque minuti passati a spendere costano dieci minuti di esercizi.**
 
@@ -131,7 +131,6 @@ una zecca — non di monete, di livelli.
   quelle che rincarano
 - `src/giochi/fattoria/dati/mondo.js` — il pezzo di terra e il suo rincaro
 - `src/giochi/*/dati/campagna.js` — i premi delle tappe, gioco per gioco
-- `src/data/shop.js`, `src/data/arredamento.js` — quello che si compra fuori
 
 ## Quello che ancora non torna
 

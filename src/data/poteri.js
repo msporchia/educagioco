@@ -13,7 +13,7 @@
    tasca. Il gettone resta lì fra una partita e l'altra finché non lo si
    preme, e il momento in cui lo si preme è la sola cosa che conta —
    quando la domanda è difficile, quando il cielo è troppo fitto, quando
-   la nave è messa male. È lo stesso patto delle monete della cameretta:
+   la nave è messa male. È lo stesso patto delle monete della fattoria:
    si guadagnano facendo, si spendono scegliendo.
 
    Cade con questo anche la vecchia regola «un potenziamento non

@@ -364,7 +364,7 @@ function scegliCarta(chiave) {
 
 /* ── IL POTENZIAMENTO SI VINCE RISPONDENDO, E SBAGLIARE NON PAGA ──
    Qui c'era una monetina di consolazione: «niente carta, ma ci hai
-   provato». Sembrava innocua — vale in cameretta, non in campo, non
+   provato». Sembrava innocua — vale in fattoria, non in campo, non
    falsa la partita — ed era il buco più grosso di tutto il gioco, per
    una ragione che il codice non poteva sapere: **quello che un bambino
    vuole sono le monete**. Non la carta, non la tappa: le monete, perché

@@ -21,7 +21,7 @@ ragionevole a prima vista rompe qualcosa che non si vede subito.
 src/
   store/storage.js   archivio a tre livelli: IndexedDB → localStorage → memoria
   store/srs.js       motore di apprendimento: forza, decadimento, distanza minima
-  store/profile.js   profilo condiviso: monete, cameretta, animali, apprendimento
+  store/profile.js   profilo condiviso: monete, campagne, apprendimento
   store/progressi.js livelli, giorni di fila, padronanza per materia, traguardi
   data/traguardi.js  l'elenco dei traguardi, uno per riga
   data/words.js      496 vocaboli inglesi, con emoji dove ha senso
@@ -38,20 +38,12 @@ src/
   data/lingue.js     tutto ciò che distingue una lingua dall'altra
   data/voci.js       la pronuncia inglese incisa, in sprite (generata, vedi sotto)
   data/voci-es.js    la pronuncia spagnola, voce boliviana (generata)
-  data/shop.js       30 oggetti della cameretta
   data/ops.js        operazioni in colonna: riporti, prestiti, divisione
   data/tabelline.js  i dieci pianeti della campagna delle tabelline
   data/asteroidi.js  la scaletta unica: pianeti e stazioni in una fila sola
-  data/pets.js       i ventinove amici, le diete, i bisogni e cosa li sazia
-  data/capsule.js    le sei serie di accessori della macchina delle sorprese
   components/ColumnOp.vue   tastierino e caselle, cifra per cifra
-  components/PetSprite.vue  la cornice del disegno; le sagome stanno in sagome/
   components/MappaTabelline.vue  la tavola dei calcoli che si sanno e no
-  components/Stanza.vue          la cameretta disegnata: mensole, porta, tappeto
-  components/SchedaAnimale.vue   un animale per volta, grande, con lo slider
-  components/Negozio.vue         un negozio solo: banco cameretta e banco animali
-  components/Sorprese.vue        la macchina delle capsule
-  views/             HomeView, CamerettaView, LinguaGame, MathGame,
+  views/             HomeView, LinguaGame, MathGame,
                      TowerDefense, AlboView
   audio.js           suoni sintetizzati, nessun file audio
   voce.js            riproduce la pronuncia incisa, inglese o spagnola
@@ -208,7 +200,7 @@ gesto che conta.
 
 I traguardi stanno tutti in `data/traguardi.js`, una riga ciascuno, e si
 misurano su grandezze che salgono e basta (risposte giuste, tappe superate,
-pasti serviti). Sono quindi **retroattivi**: guardano quello che c'è nel
+clienti serviti). Sono quindi **retroattivi**: guardano quello che c'è nel
 profilo, non serve che qualcuno li segni mentre si gioca. La prima volta che
 un profilo li incontra, quelli già meritati vengono registrati in silenzio —
 senza monete e senza festa: regalarne duemila per cose fatte il mese scorso
@@ -524,7 +516,7 @@ con quattro o sei sassi in cielo toglierne uno sbagliato lascia il calcolo
 da fare — quello che non deve succedere è che un aiuto *indichi* la
 giusta, e si porta via una sbagliata a caso. Possono dare più tempo a chi è
 in difficoltà, non di più. Per lo stesso motivo **non si comprano**: le
-monete sono la valuta della cameretta, e un hangar che le succhia sposterebbe
+monete sono la valuta della fattoria, e un hangar che le succhia sposterebbe
 l'equilibrio di un gioco che non c'entra niente. Qui si paga con le risposte
 giuste. I numeri e le ragioni stanno in `src/data/potenziamenti.js`; il
 disegno — nave, pianeta, sassi, raggi — in `src/grafica/spazio.js`, che di
@@ -1249,156 +1241,37 @@ che serve per comporlo**: cinque fasce, da `bancarella:euro` a
 `bancarella:centesimi`. Si scoprono andando avanti, perché nelle prime giornate
 i prezzi vanno a scatti di 10c e i centesimi non compaiono proprio.
 
-### La cameretta
-Una stanza sola, disegnata, invece di tre elenchi. Prima erano due schermate
-separate con **due negozi** e un salvadanaio solo: la cameretta con le mensole
-da una parte, gli animali con la loro vetrina dall'altra, e in tutte e due una
-fila di banchi in cima da cui scegliere dove andare. Adesso c'è una camera —
-carta da parati, finestra, letto, tappeto — e la navigazione **è il disegno**:
+### La cameretta, che non c'è più
+C'era una stanza disegnata — trenta oggetti da mettere sulle mensole,
+ventinove animali da adottare con quattro bisogni ciascuno, una macchina di
+capsule con sei serie di accessori — ed era il posto dove si spendevano le
+monete. Il 16 agosto 2026 è passata dietro «i giochi in prova», quando la
+fattoria ha preso il suo posto (il money pit dev'essere uno, se no un
+bambino si dimentica di uno dei due), e il 23 settembre è stata tolta del
+tutto: i bambini non la aprivano più.
 
-| cosa si tocca | dove porta |
-|---|---|
-| 🚪 la porta con l'insegna | il negozio |
-| 🐾 un animale sul tappeto | la sua scheda |
-| 🛏️ un posto libero, con la sagoma di chi potrebbe starci | il negozio, banco animali |
-| 🎁 la macchina delle capsule | le sorprese |
+**Coi suoi salvataggi**, e la scelta è stata fatta apposta. Gli animali coi
+loro nomi, gli oggetti, la dispensa e le capsule spariscono dal profilo al
+primo caricamento (`sgomberaLaCameretta` in `store/profile.js`): nessun
+rimborso in monete e nessun travaso in fattoria. Delle dodici medaglie delle
+sue due famiglie nell'albo ne è rimasta una, «Salvadanaio», che contava le
+monete guadagnate in tutti i giochi e adesso sta fra i trasversali.
 
-Gli oggetti comprati stanno sulle **tre mensole** e si trascinano col dito da
-una mensola all'altra; la loro grandezza la decide la mensola più piena, così
-trenta oggetti ci stanno come tre — solo più piccoli. Sopra un animale compare
-**una sola icona** quando gli manca qualcosa (🍽️ 🎾 🫧 💪) e nient'altro: le
-quattro barre e le parole stanno nella sua scheda, e quattro animali con
-quattro barrette ciascuno sarebbero sedici numeri appiccicati a un disegno.
+**Il livello invece non scende.** La cameretta dava esperienza per ogni
+pasto servito, animale adottato e oggetto comprato, e il livello è il
+moltiplicatore delle monete: prima di buttare le collezioni se ne contano
+gli elementi, e `XP_AREA.cameretta` li legge da `totals` con la formula di
+prima. Il contatore dei pasti c'era già, e resta dov'era: oltre al livello
+lo legge «Tuttofare», che fra i giochi provati conta chi ha dato da mangiare
+a un animale, e una medaglia non deve tornare indietro sotto gli occhi di
+chi l'ha presa.
 
-La stanza **non scorre mai**: si adatta allo schermo che trova, perché un
-disegno che scorre a metà non è più una stanza. Le misure sono in `cqw`
-(centesimi della larghezza della stanza), non in pixel.
-
-**Ventinove amici da adottare, quattro posti in casa.** Il catalogo è
-diviso in cinque famiglie, e in ognuna c'è da scegliere per davvero:
-
-| famiglia | chi c'è | da |
-|---|---|---|
-| 🐶 cani | bobtail, chihuahua, bassotto, golden retriever, barboncino, pastore tedesco, husky | 60 |
-| 🐱 gatti | nero, soriano, rosso, tuxedo, arancione e nero, siamese, persiano | 75 |
-| 🦜 uccelli | canarino, cocorita, parrocchetto, ara, gufetto | 90 |
-| 🐠 pesciolini | rosso, tropicale, pagliaccio, chirurgo, combattente (nella boccia) | 55 |
-| 🐲 bestie speciali | cucciolo di dinosauro, draghetto, triceratopo, stegosauro, drago di ghiaccio | 195 |
-
-Non sono emoji ma disegni in SVG: le emoji di gatto disponibili sono tre
-volte lo stesso gatto, e un bobtail non c'è affatto. Le sagome sono cinque
-(`components/sagome/`) e le razze sono varianti della stessa: cambiano le
-orecchie, il pelo e la coda, che sono le tre cose da cui un bambino
-riconosce un cane. Ogni specie fa il suo verso — bau, miao, cip, uhu,
-blub, e un ruggito con la voce da cucciolo.
-
-Il **drago di ghiaccio** a 300 monete è il traguardo lontano, e il
-pesciolino rosso a 55 il primo amico possibile con pochi spiccioli.
-
-**Il nome lo dà chi adotta.** Il catalogo ne propone uno, ma si scrive quello
-che si vuole e si cambia quando si vuole toccandolo nella scheda: è l'unica
-cosa di un animale che appartiene al bambino, e sta nel profilo
-(`pets[id].nome`) e non nel catalogo.
-
-**In cameretta ce ne stanno quattro** (`POSTI`), e il quinto entra solo se uno
-esce. Non esiste «abbandona»: chi esce va **al rifugio**, dove resta con il suo
-nome, i suoi pasti e quello che aveva addosso, e si riprende dal negozio
-pagando una quota piccola (un decimo del prezzo, minimo 5 monete) invece del
-prezzo pieno. Torna anche riposato, perché al rifugio l'hanno tenuto bene:
-`curato()` rimette le barre al valore di partenza. La cosa che si paga è il
-nuovo arrivato, mai il saluto — e nel cartello dell'adozione **chi esce non è
-mai preselezionato**, così un tocco distratto non manda via nessuno.
-
-Ognuno ha **quattro barre** che si svuotano da sole, a velocità diverse:
-
-| barra | si svuota in | cosa la rimette su |
-|---|---|---|
-| 🍽️ pancia | 7 ore | **quello che quella specie mangia**: ciotola, sushi, orto, semi, acquario o roba da draghi |
-| 🎾 allegria | 16 ore | gomitolo, palloncino, yo-yo, palla, osso, specchietto, piumino, boomerang |
-| 🫧 pulito | 40 ore | spazzola, sapone, shampoo |
-| 💪 forma | 90 ore | carota, vitamine, controllo |
-
-Calano anche a gioco chiuso: è la stessa idea del decadimento del motore di
-apprendimento, applicata a una pancia. Quando qualcuno ha bisogno di qualcosa
-lo dice già dalla schermata iniziale — *"Watson vuole giocare"* — ed è lì il
-motivo per riaprire il gioco domani. Ognuno ha due cose preferite, una da
-mangiare e una no, che rendono un terzo in più.
-
-**Ognuno mangia le sue cose.** La dieta è della *specie* (`DIETE`), i preferiti
-dell'*individuo*: tutti i gatti mangiano pesce, ma il sushi lo adora solo
-Sherlock. Il cane sta su carne, croccantini e verdura; il gatto su carne,
-croccantini e pesce; gli uccelli su semi, frutta e verdura; il pesciolino su
-fiocchi, vermetti e verdura; i draghi su carne, carbone e peperoncini — e i
-**dinosauri erbivori** solo su frutta e verdura, che è il posto dove la
-regola smette di essere una questione di gusti: il triceratopo rifiuta la
-bistecca perché è un erbivoro, e vederselo rifiutare vale più di una
-scheda.
-Offrire a qualcuno una cosa che non mangia lo fa **storcere il naso**: la barra
-non sale e **la porzione resta in dispensa**. È la sola garanzia che rende la
-scoperta gratis — provare cosa mangia un pappagallo non deve costare monete —
-e nella scheda i cibi sbagliati si vedono lo stesso, spenti e con scritto
-«no», perché nasconderli vorrebbe dire non insegnare niente. Nel negozio gli
-scaffali che non servono a nessuno dei tuoi restano da parte, dietro un tasto:
-con due cani in casa non si scorrono i fiocchi per pesci.
-
-Toccando un animale si apre **la sua scheda**: uno per volta, grande mezza
-schermata, e si passa da un amico all'altro con le frecce, i pallini o una
-strisciata del dito. Prima erano tre riquadri da un terzo di schermo l'uno: ci
-stava tutto — disegno, barrette, frase — ma piccolo al punto che il cappellino
-appena messo non si vedeva, ed è il motivo per cui uno lo mette.
-
-Sotto il disegno ci sono **quattro riquadri**, uno per bisogno, che dicono a
-parole come sta (*"ha fame!"*, *"si annoia un po'"*, *"è in gran forma"*) e
-mostrano lì accanto cosa dargli fra quello che c'è in dispensa — o dove
-comprarlo, se non c'è niente. Le quattro barrette sul cartellino servono a
-vedere in un colpo d'occhio quale sta peggio; le tre frasi di ogni bisogno
-stanno in `data/pets.js` accanto alle soglie, così si vede subito se il testo e
-il numero dicono la stessa cosa.
-
-In coda ai quattro c'è un **quinto riquadro, i vestiti**: una riga per posto
-(in testa, sugli occhi, al collo, sulla schiena) con gli accessori che si
-hanno, e si tocca di nuovo un capo per toglierlo. Prima era un interruttore
-*"vestilo"* che **nascondeva i quattro bisogni**, e per rivederli bisognava
-ricordarsi di rispegnerlo: vestire e accudire sono la risposta alla stessa
-domanda — *cosa faccio con lui adesso?* — e stanno nello stesso posto.
-
-Il negozio è **uno solo**, con due banchi: 🛏️ Cameretta (i trenta oggetti da
-mettere sulle mensole) e 🐾 Animali (le adozioni, il rifugio e i nove
-reparti). Le monete
-sono sempre le stesse, e due negozi in due stanze diverse volevano dire
-ricordarsi in quale delle due si comprava cosa. I banchi sono **appiccicati in
-cima** e restano a portata di pollice anche in fondo a cinque scaffali;
-cambiando banco si riparte dall'alto. La freccia `←` torna indietro di **un
-passo**, non a casa: da una schermata si torna alla stanza, e solo dalla stanza
-si esce.
-
-Tenere contenti tutti e tre costa circa **100 monete al giorno**, poco più di
-una sessione di gioco: è il rubinetto che regge l'economia, e
-`node test/esegui.mjs animali` stampa il conto ogni volta che si toccano i
-prezzi.
-
-Nessun animale si ammala, scappa o muore di fame: quando una barra è a zero
-l'animale lo fa presente e basta. Nemmeno la `forma` è la salute — vuol dire
-"un po' fiacco, gli andrebbe una carota". E a chi sta già bene la porzione non
-viene tolta dalla dispensa: una distrazione non deve costare monete.
-
-### La macchina delle sorprese
-Sei serie di dodici accessori — 🏅 Sportivi, 🚀 Spaziali, 🌊 Mare, 🎉 Festa,
-🍂 Bosco, 🌙 Notte — da mettere addosso agli animali: uno in testa, uno sugli
-occhi, uno al collo e uno sulla schiena. Una capsula per volta, dalla serie a
-cui si è arrivati; finita una serie si apre la successiva e il prezzo sale, da
-30 a 230 monete. Completarle tutte costa **8.280 monete**, sedici volte
-l'intero negozio della cameretta: è il posto dove finiscono le monete che
-avanzano, e non finisce mai in una sera.
-
-Due regole valgono più di qualsiasi bilanciamento. **Niente doppioni**: la
-capsula pesca fra i pezzi che ancora mancano, quindi esce sempre qualcosa di
-nuovo — è la sorpresa dell'ovetto, non una slot machine, e non si buttano mai
-via le monete. E **la prima è offerta dalla casa**: una macchina di cui non hai
-mai visto l'effetto non la provi, mentre un cappello che compare su Watson
-spiega tutto da solo.
-
-Aggiungere una serie è aggiungere una riga a `data/capsule.js`.
+Lo sgombero gira a ogni caricamento e non una volta sola: su un profilo già
+pulito non fa niente, e i conti sono un `Math.max`. Serve alle copie che
+arrivano da prima — il cestino, un salvataggio importato, una build vecchia
+rimasta aperta su un telefono. `unita/profilo` prova le tre cose da non
+sbagliare: che le collezioni spariscano fino al disco, che il livello resti
+dov'era, e che un secondo passaggio non cambi i conti.
 
 ### Come si torna indietro
 Uguale in ogni schermata: il tasto `←` in alto a sinistra, sempre lì, sempre lo

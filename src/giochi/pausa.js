@@ -68,8 +68,8 @@
 
    ── COSA NON SI METTE IN PAUSA ───────────────────────────────────
 
-   I giochi senza orologio: la fattoria e la cameretta sono posti dove
-   non scorre niente, e un ⏸ lì è un tasto che non fa niente. Il
+   I giochi senza orologio: la fattoria è un posto dove non scorre
+   niente, e un ⏸ lì è un tasto che non fa niente. Il
    Generale ha il suo Via/Stop dentro la partita, che è un'altra cosa —
    lì fermare il tempo È una mossa. E la domanda di quiz non si copre
    mai col velo: è già un velo sopra il gioco, e due veli uno sull'altro

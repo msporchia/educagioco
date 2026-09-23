@@ -33,8 +33,6 @@ import { FRASI } from '../data/frasi.js'
 import { PAROLE_ES } from '../data/parole-es.js'
 import { VERBI_ES } from '../data/verbi-es.js'
 import { FRASI_ES } from '../data/frasi-es.js'
-import { PETS, SOGLIE, sazietaDi, contento } from '../data/pets.js'
-import { SERIE } from '../data/capsule.js'
 import { FASCE } from '../data/bancarella.js'
 
 export { AREE, MEDAGLIE, PREMI, TRAGUARDI }
@@ -137,8 +135,14 @@ export const XP_AREA = {
      la stella, il tipo di ordine capito. */
   generale: m => Math.floor(m.tot('ordini') / 4) + m.stelleGen() * 5
                  + m.imparati('gen:') * 10 + m.tappeGen() * 40,
-  animali:   m => m.tot('pasti') * 3 + m.animali() * 30,
-  cameretta: m => m.oggetti() * 12,
+  /* La cameretta non c'è più, e nell'albo non ha più una famiglia sua:
+     la sua esperienza però resta nel livello, letta dai numeri in cui
+     `sgomberaLaCameretta` (store/profile.js) ha contato quello che c'era
+     — pasti serviti, animali adottati, oggetti comprati — con la formula
+     di quando esisteva. Nessuno li fa più salire: da qui il livello non
+     scende e non sale più. */
+  cameretta: m => m.tot('pasti') * 3 + m.tot('camerettaAnimali') * 30
+                  + m.tot('camerettaOggetti') * 12,
   /* i giochi nuovi (`src/giochi/`) portano la loro formula nel manifesto:
      qui non c'è una riga per ognuno, e aggiungerne uno non si fa più qui */
   ...XP_GIOCHI,
@@ -146,10 +150,10 @@ export const XP_AREA = {
 
 /* ATTENZIONE prima di aggiungere una voce qui sopra: il livello totale è
    il MOLTIPLICATORE DELLE MONETE (vedi store/profile.js). Dare esperienza
-   anche alle cure, alle capsule o agli accessori vorrebbe dire aprire il
-   rubinetto proprio mentre si scava lo scarico: più si spende, più si
-   guadagna, e l'economia torna a sgonfiarsi. Le cose che si comprano
-   danno traguardi, non esperienza. */
+   a ogni gesto che costa monete — una bestia nutrita, una spazzolata —
+   vorrebbe dire aprire il rubinetto proprio mentre si scava lo scarico:
+   più si spende, più si guadagna, e l'economia torna a sgonfiarsi. Le
+   cose che si comprano danno traguardi, non esperienza. */
 
 /* ═══════════ 2. QUANTO SO ADESSO ═══════════ */
 export const GRADI = [
@@ -246,15 +250,6 @@ export function misure(p, now = Date.now()) {
     tot: k => (p.totals && p.totals[k]) || 0,
     best: k => (p.best && p.best[k]) || 0,
     imparati: conta,
-    oggetti: () => (p.owned || []).length,
-    /* gli animali ADOTTATI, non quelli in cameretta adesso: chi è al
-       rifugio è stato scelto e pagato lo stesso, e una medaglia già
-       presa non si toglie perché si è fatto posto a un altro */
-    animali: () => PETS.filter(x => p.pets && p.pets[x.id]).length,
-    /* quante specie diverse: è il traguardo che spinge a provare il
-       pappagallo invece del quarto gatto */
-    specie: () => new Set(PETS.filter(x => p.pets && p.pets[x.id])
-      .map(x => x.specie)).size,
     tappe: () => (p.td && p.td.tappa) || 0,
     tappeMate: () => (p.mate && p.mate.tappa) || 0,
     tappeMente: () => (p.calc && p.calc.tappa) || 0,
@@ -300,44 +295,14 @@ export function misure(p, now = Date.now()) {
     categorieEn: (k = 3) => m.categorieDi(WORDS, 'en:', k),
     categorieEs: (k = 3) => m.categorieDi(PAROLE_ES, 'es:', k),
 
-    /* Chi sta in CAMERETTA adesso: i bisogni li ha solo lui. Di quelli
-       al rifugio se ne occupano là, e farli pesare sui traguardi
-       vorrebbe dire punire chi ha adottato tanti amici. */
-    inCasa: () => (Array.isArray(p.casa) ? p.casa : Object.keys(p.pets || {}))
-      .filter(id => p.pets && p.pets[id]),
-
-    /* tutti gli animali di casa sopra la soglia della fame, adesso.
-       Vale 1 solo se un animale ce l'hai: a casa vuota nessuno ha fame,
-       ma non è un traguardo. */
-    tuttiSazi: () => {
-      const casa = m.inCasa()
-      if (!casa.length) return 0
-      return casa.every(id => sazietaDi(p.pets[id], now) >= SOGLIE.basso) ? 1 : 0
-    },
-
-    /* più difficile del precedente: tutte e quattro le barre in alto, per
-       tutti gli animali di casa. Vuol dire essere passati oggi e aver
-       pensato a tutto, non solo alla ciotola. */
-    tuttiContenti: () => {
-      const casa = m.inCasa()
-      if (!casa.length) return 0
-      return casa.every(id => contento(p.pets[id], now)) ? 1 : 0
-    },
-
-    accessori: () => (p.accessori || []).length,
-    serieComplete: () => Math.min((p.serie || 0), SERIE.length),
-    /* vestiti addosso adesso, contati una volta sola anche se lo stesso
-       posto è occupato su animali diversi */
-    vestiti: () => PETS.reduce((n, x) => {
-      const a = p.pets && p.pets[x.id]
-      return n + (a && a.addosso ? Object.values(a.addosso).filter(Boolean).length : 0)
-    }, 0),
-
     /* i giochi vecchi si riconoscono dal loro contatore, uno per uno; i
        nuovi lo dichiarano nel manifesto (`albo.provato`) e si contano da
        soli. Le soglie del traguardo «Tuttofare» NON si alzano quando
        arriva un gioco: la medaglia mostrata si ricalcola ogni volta, e
-       chi ha l'oro se lo vedrebbe tornare indietro sotto gli occhi. */
+       chi ha l'oro se lo vedrebbe tornare indietro sotto gli occhi.
+       Per lo stesso motivo un gioco che se ne va **resta nel conto**:
+       `pasti` sono gli animali della cameretta, che non c'è più, e il
+       contatore è rimasto apposta (`sgomberaLaCameretta`). */
     giochiProvati: () => {
       const t = p.totals || {}
       return [t.math > 0, t.en > 0 || t.verbi > 0, t.es > 0, t.torri > 0, t.pasti > 0,

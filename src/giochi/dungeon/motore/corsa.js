@@ -2,7 +2,7 @@
    UNA CORSA — una discesa dall'ingresso al guardiano, in tre piani
 
    Le regole, a classi e **senza schermo**: qui dentro non si sa cosa sia
-   un canvas, un componente Vue o una moneta della cameretta. Non si sa
+   un canvas, un componente Vue o una moneta della fattoria. Non si sa
    nemmeno cosa sia una domanda: la corsa dice *quanto dev'essere
    difficile* (`sfida.difficolta`, da 0 a 1) e poi aspetta un `sì` o un
    `no`. Chi la domanda la va a prendere davvero — e sa che esistono le
@@ -525,7 +525,8 @@ export class Corsa {
 
   /* ═══════ com'è finita ═══════ */
   get stelle() { return this.vinta ? stellePerVita(this.vita, this.vitaMax) : 0 }
-  /* le monete vere della cameretta: le porta la tappa, non il bottino */
+  /* le monete vere, quelle che si spendono in fattoria: le porta la
+     tappa, non il bottino */
   get monete() { return this.vinta ? this.tappa.premio * this.stelle : 0 }
 
   /* ═══════ quello che serve a chi disegna ═══════

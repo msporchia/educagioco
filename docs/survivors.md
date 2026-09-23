@@ -113,7 +113,7 @@ Se rispondi giusto, prendi il potenziamento. Se sbagli, niente carta: il
 giro dopo arriva presto, perché le gemme continuano a cadere.
 
 Al posto di «niente» c'era una monetina — un «ci hai provato» che valeva in
-cameretta e non in campo, e che sembrava innocua. Era il buco più grosso del
+fattoria e non in campo, e che sembrava innocua. Era il buco più grosso del
 gioco, per una ragione che il codice non poteva sapere: **quello che un
 bambino vuole sono le monete**, perché quelle si spendono. Una moneta per
 ogni risposta sbagliata non è un premio di consolazione, è il modo più

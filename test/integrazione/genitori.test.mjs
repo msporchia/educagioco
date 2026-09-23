@@ -28,8 +28,7 @@ await azzera(page)
    imparata a metà e due campagne a mezza strada, che sono le cose che il
    salvataggio deve riportare indietro e che nessuno stava controllando. */
 await semina(page, { coins: 777, totals: { math: 42, en: 0, verbi: 0, frasi: 0, td: 0,
-  pasti: 0, partiteMath: 0, torri: 0, perfette: 0, ondate: 0, preferiti: 0, monete: 0,
-  cure: 0, capsule: 0 },
+  partiteMath: 0, torri: 0, perfette: 0, ondate: 0, monete: 0 },
   items: { 'en:dog': { n: 3, ef: 2.2, i: 4, due: Date.now() + 3 * 86400000, r: 3, w: 1 } },
   td: { tappa: 4, libera: false, v: 2 },
   campagne: { dungeon: { tappa: 2, libera: false, stelle: {}, cfg: {} } } })

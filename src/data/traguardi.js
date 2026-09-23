@@ -2,18 +2,18 @@
    I TRAGUARDI — l'elenco, non il motore.
 
    Ogni traguardo si misura su una sola grandezza che cresce e non torna
-   mai indietro (risposte giuste, tappe superate, pasti serviti...), e ha
+   mai indietro (risposte giuste, tappe superate, clienti serviti...), e ha
    fino a tre soglie: 🥉 🥈 🥇. Il valore si legge dal profilo tramite
    l'oggetto `m` delle misure (vedi store/progressi.js): qui dentro non
    c'è logica, così aggiungere un traguardo è aggiungere una riga.
 
    Conseguenza importante: i traguardi sono RETROATTIVI. Chi ha già
-   servito 60 pasti prima che questa pagina esistesse si trova il badge
+   servito 60 clienti prima che questa pagina esistesse si trova il badge
    sbloccato al primo avvio, perché il valore si ricalcola dal profilo e
    non viene contato a partire da oggi.
 
    `come(n)` è la frase che legge il bambino, con dentro la soglia del
-   grado a cui sta puntando: "Servi 60 pasti" e non "Servi tanti pasti".
+   grado a cui sta puntando: "Servi 60 clienti" e non "Servi tanti clienti".
 
    Qui sotto ci sono **i giochi vecchi**, uno per uno. I giochi nuovi
    (`src/giochi/`) portano i propri traguardi nel loro manifesto e si
@@ -48,8 +48,12 @@ const AREE_TUTTE = [
   { id: 'torri',    nome: 'Difendi il Castello', emoji: '🏰', classe: 'td' },
   { id: 'bancarella', nome: 'La bancarella',       emoji: '🛒', classe: 'banco' },
   { id: 'generale', nome: 'Il generale',           emoji: '🎖️', classe: 'gen' },
-  { id: 'animali',  nome: 'Watson, Sherlock & Irene', emoji: '🐾', classe: 'pets' },
-  { id: 'cameretta',nome: 'Cameretta & Negozio', emoji: '🛏️', classe: 'room' },
+  /* Qui c'erano due famiglie, «Watson, Sherlock & Irene» e «Cameretta &
+     Negozio»: sono andate via con la cameretta, dodici traguardi in
+     tutto. Le medaglie prese le ha cancellate `sgomberaLaCameretta`
+     (store/profile.js), e l'esperienza che la cameretta aveva dato resta
+     nel livello. Il dodicesimo, «Salvadanaio», non parlava della
+     cameretta e sta coi trasversali, in fondo. */
   { id: 'tutti',    nome: 'Tutti i giochi',      emoji: '🌈', classe: 'tutti' },
 ]
 
@@ -240,50 +244,6 @@ const TRAGUARDI_TUTTI = [
     come: () => 'Finisci tutti i livelli della campagna',
     soglie: [1], valore: m => m.campagnaGen() },
 
-  /* ---------- Animali ---------- */
-  /* Le soglie sono [1, 3, 8] e non [1, 4, 8] apposta: chi aveva già
-     adottato i tre animali di quando ce n'erano tre si tiene l'oro di
-     allora, e la medaglia mostrata si ricalcola ogni volta — alzare il
-     secondo gradino gliela farebbe tornare indietro sotto gli occhi. */
-  { id: 'pets-adozioni', area: 'animali', emoji: '🐾', nome: 'Famiglia',
-    come: n => n === 1 ? 'Adotta il primo amico' : `Adotta ${n} amici`,
-    soglie: [1, 3, 8], valore: m => m.animali() },
-  { id: 'pets-specie', area: 'animali', emoji: '🦜', nome: 'Che varietà',
-    come: n => `Adotta amici di ${n} specie diverse`,
-    soglie: [2, 3, 5], valore: m => m.specie() },
-  { id: 'pets-pasti', area: 'animali', emoji: '🍖', nome: 'Cuoco di casa',
-    come: n => `Servi ${n} pasti`,
-    soglie: [10, 60, 250], valore: m => m.tot('pasti') },
-  { id: 'pets-preferiti', area: 'animali', emoji: '💛', nome: 'Il piatto giusto',
-    come: n => `Azzecca ${n} volte quello che preferiscono`,
-    soglie: [5, 25, 100], valore: m => m.tot('preferiti') },
-  { id: 'pets-sazi', area: 'animali', emoji: '😻', nome: 'Nessuno ha fame',
-    come: () => 'Tieni tutti i tuoi amici con la pancia piena',
-    soglie: [1], valore: m => m.tuttiSazi() },
-  { id: 'pets-cure', area: 'animali', emoji: '🫧', nome: 'Che coccole',
-    come: n => `Lava, spazzola e fai giocare ${n} volte`,
-    soglie: [10, 60, 250], valore: m => m.tot('cure') },
-  { id: 'pets-contenti', area: 'animali', emoji: '🌟', nome: 'Al settimo cielo',
-    come: () => 'Tieni tutti i tuoi amici contenti su tutto',
-    soglie: [1], valore: m => m.tuttiContenti() },
-  { id: 'pets-capsule', area: 'animali', emoji: '🎁', nome: 'Che sorpresa!',
-    come: n => `Apri ${n} capsule`,
-    soglie: [5, 25, 100], valore: m => m.tot('capsule') },
-  { id: 'pets-guardaroba', area: 'animali', emoji: '🎩', nome: 'Guardaroba',
-    come: n => `Colleziona ${n} accessori`,
-    soglie: [6, 24, 72], valore: m => m.accessori() },
-  { id: 'pets-serie', area: 'animali', emoji: '🏅', nome: 'Collezione completa',
-    come: n => n === 1 ? 'Completa una serie di sorprese' : `Completa ${n} serie di sorprese`,
-    soglie: [1, 3, 6], valore: m => m.serieComplete() },
-
-  /* ---------- Cameretta ---------- */
-  { id: 'room-oggetti', area: 'cameretta', emoji: '🛏️', nome: 'Arredatore',
-    come: n => `Compra ${n} oggetti per la cameretta`,
-    soglie: [5, 15, 30], valore: m => m.oggetti() },
-  { id: 'room-monete', area: 'cameretta', emoji: '🪙', nome: 'Salvadanaio',
-    come: n => `Guadagna ${n} monete in tutto`,
-    soglie: [100, 500, 2000], valore: m => m.tot('monete') },
-
   /* ---------- trasversali ---------- */
   { id: 'all-serie', area: 'tutti', emoji: '🔥', nome: 'Ogni giorno',
     come: n => `Gioca ${n} giorni di fila`,
@@ -300,6 +260,15 @@ const TRAGUARDI_TUTTI = [
   { id: 'all-livello', area: 'tutti', emoji: '🎓', nome: 'Si sale',
     come: n => `Arriva al livello ${n}`,
     soglie: [3, 6, 12], valore: m => m.livello() },
+  /* Stava fra i traguardi della cameretta perché era lì che le monete si
+     spendevano, ma conta quelle **guadagnate**, in tutti i giochi: è
+     rimasto quando la cameretta se n'è andata. L'id è quello di allora:
+     è la chiave della medaglia nei profili, e con un id nuovo chi l'ha
+     già presa se la vedrebbe consegnare una seconda volta, festa e
+     monete comprese. */
+  { id: 'room-monete', area: 'tutti', emoji: '🪙', nome: 'Salvadanaio',
+    come: n => `Guadagna ${n} monete in tutto`,
+    soglie: [100, 500, 2000], valore: m => m.tot('monete') },
 ]
 
 /* Quello che il resto del programma vede: se il generale è spento, la

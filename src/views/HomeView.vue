@@ -1,11 +1,10 @@
 <script setup>
 import { computed } from 'vue'
 import { state, selectPlayer, level, countMastered,
-         miei, daCurare, chiede, traguardi, serieGiorni, livelloOra,
+         traguardi, serieGiorni, livelloOra,
          mateProgresso, engProgresso, espProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
-         quantiGiochiAccesi,
-         sperimentaliAccesi } from '../store/profile.js'
+         quantiGiochiAccesi } from '../store/profile.js'
 import { daLeggere } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNA as TAPPE_EN } from '../data/campagna-inglese.js'
@@ -76,23 +75,6 @@ const badge = computed(() => traguardi().filter(t => t.preso).length)
 const serie = computed(() => serieGiorni())
 const salita = computed(() => livelloOra())
 
-/* I bisogni degli animali sono la sola cosa che cambia da sola mentre il
-   gioco è chiuso: dirlo qui è metà del motivo per riaprirlo. Si nomina
-   chi sta peggio e cosa vuole — "Watson vuole giocare" riporta al gioco
-   molto più di "qualcuno ha bisogno di te". */
-const animali = computed(() => miei().length)
-const bisognosi = computed(() => daCurare())
-const richiesta = computed(() => {
-  const chi = bisognosi.value
-  if (!chi.length) return ''
-  const nomi = chi.map(p => p.nome)
-  if (chi.length === 1) return `${nomi[0]} ${chiede(chi[0].id).def.chiede}`
-  // da tre in su i nomi in fila diventano una filastrocca: si conta e basta
-  if (chi.length > 2) return `${chi.length} amici hanno bisogno di te`
-  return `${nomi.join(' e ')} hanno bisogno di te`
-})
-const oggetti = computed(() => state.profile.owned.length)
-
 /* Azzerare i progressi non sta più qui: era un tocco solo, e un tocco solo
    prima o poi arriva per sbaglio. Ora vive dietro il PIN in GenitoriView,
    insieme a salvataggio e ripristino. */
@@ -101,7 +83,7 @@ const oggetti = computed(() => state.profile.owned.length)
    bambino (`settings.giochi`). Un gioco spento sparisce dalla home ma
    resta raggiungibile dall'indirizzo (`#torri`): il frammento è roba da
    grandi e da test, non una strada che un bambino trova per caso.
-   Cameretta e albo non si spengono: sono le monete e i progressi. */
+   L'albo non si spegne: è dove stanno i progressi. */
 /* ── e poi c'è l'età ──
    Un gioco acceso non è ancora un gioco da mettere in home: se ogni
    tappa della sua campagna sta fuori dalla portata di questo bambino,
@@ -292,44 +274,6 @@ function aChePunto (chiave) {
         <p v-if="nessunGioco" class="mini vuoto">I giochi sono spenti.
           Si riaccendono da <b>Impostazioni</b>, qui sotto.</p>
 
-        <!-- ═══ quello che non è una materia ═══
-             La cameretta non insegna niente e non sta in nessun gruppo:
-             è il posto delle monete e degli animali, e il commento in
-             `data/giochi.js` lo dice da sempre.
-
-             ── ADESSO STA DIETRO «I GIOCHI IN PROVA» ──
-             Non perché sia rotta, ma perché **il money pit dev'essere
-             uno solo**: la fattoria fa la stessa cosa e si può far
-             crescere, e un bambino che può spendere le monete in due
-             posti non sceglie fra i due — si dimentica di quello meno
-             vivo. Passa dietro lo stesso cancello dei giochi non finiti,
-             che è il posto giusto per una cosa che si sta togliendo ma
-             non si vuole ancora buttare: **niente viene cancellato**,
-             `pets`, `casa`, `accessori` e `owned` restano nel profilo, e
-             riaccendendo il flag la cameretta torna com'era.
-
-             Il cancello lo legge qui e non `giocoAcceso()` perché la
-             cameretta non è un gioco e non sta in `data/giochi.js`:
-             registrarcela per poi nasconderla la farebbe comparire fra
-             le carte da accendere una per una, che è l'opposto di quello
-             che si sta facendo.
-
-             Col titolo sopra vale la regola dei gruppi vuoti: se la
-             cameretta non c'è, «A casa» non si disegna — un titolo su una
-             fila vuota promette qualcosa che non c'è, e il lucchetto sta
-             benissimo da solo in fondo. -->
-        <template v-if="sperimentaliAccesi()">
-          <h2 class="area">🏡 A casa</h2>
-          <button class="carta room" @click="$emit('vai','cameretta')">
-            <span class="ico">🛏️</span>
-            <b>La cameretta</b>
-            <i v-if="!animali">cani, gatti, pappagalli e un draghetto ti aspettano</i>
-            <i v-else-if="richiesta" class="fame">{{ richiesta }}</i>
-            <i v-else>{{ animali }} {{ animali > 1 ? 'animali' : 'animale' }} ·
-              {{ oggetti }} {{ oggetti === 1 ? 'oggetto' : 'oggetti' }} sugli scaffali</i>
-          </button>
-        </template>
-
       </div>
 
       <div v-if="state.regalo.n" :key="state.regalo.k" class="regalo">
@@ -423,7 +367,6 @@ function aChePunto (chiave) {
 .carta.td   { background:linear-gradient(120deg,#e6f7e2,#fffffff0) }
 .carta.banco{ background:linear-gradient(120deg,#fff0dc,#fffffff0) }
 .carta.gen  { background:linear-gradient(120deg,#e4f0e8,#fffffff0) }
-.carta.room { background:linear-gradient(120deg,#ffeede,#fff6e0 45%,#fffffff0) }
 
 /* ── il titolo di un gruppo ──
    Non è una carta e non si tocca: sta fuori dal riquadro, in piccolo e
@@ -456,7 +399,6 @@ function aChePunto (chiave) {
 .numeri { flex:none; font-size:13px; font-weight:900; color:var(--viola-scuro); text-align:right;
           line-height:1.35 }
 .numeri em { font-style:normal; font-size:11.5px; color:var(--tenue) }
-.carta .fame { color:var(--rosso); font-weight:800 }
 .vuoto { text-align:center; padding:6px 0 2px }
 /* le monete regalate dall'indirizzo: si vedono e poi se ne vanno */
 .regalo { position:fixed; left:50%; top:21%; z-index:60; pointer-events:none;

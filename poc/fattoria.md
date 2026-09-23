@@ -222,30 +222,16 @@ base ai vicini (dritto / angolo / T / fine), e `imageSmoothingEnabled = false`
 per non impastare i pixel. Dettagli in `SPRITE.md`.
 
 ### 2. Diventare l'unico posto dove si spendono le monete
-Decisione presa: **la fattoria sostituisce la cameretta**, che va eliminata.
-Non è una riga di codice — questi sono i pezzi da smontare o migrare:
-
-- **Il profilo**: `pets` (animali adottati, con nome, pasti e accessori),
-  `casa` (i quattro posti), `accessori` (le capsule uscite), `owned` e
-  `layout` (gli oggetti comprati e come stanno sulle mensole). Sono
-  **salvataggi veri di bambini veri**: o si migrano in oggetti della fattoria,
-  o si accetta di perderli — e va deciso apposta, non per omissione.
-- **Le schermate**: `views/CamerettaView.vue`, `components/Stanza.vue`,
-  `SchedaAnimale.vue`, `Negozio.vue`, `Sorprese.vue`, `PetSprite.vue` e le
-  sagome.
-- **I dati**: `data/pets.js`, `data/capsule.js`, `data/shop.js`.
-- **L'albo**: i traguardi della cameretta in `data/traguardi.js` e la sua riga
-  in `XP_AREA` (`store/progressi.js`). Occhio alle soglie di «Tuttofare», che
-  non devono abbassarsi sotto gli occhi di chi ha già l'oro.
-- **I test**: `test/unita/animali.test.mjs`,
-  `test/integrazione/animali.test.mjs`, e i pezzi di `app.test.mjs` e
-  `genitori.test.mjs` che passano dalla cameretta.
-- **La documentazione**: `docs/cameretta.md`, i richiami in `README.md` e
-  `LEGGIMI.md`.
-
-Prima di toccare qualsiasi cosa qui, la fattoria deve aver superato la prova
-dei bambini: si smonta una stanza che funziona solo quando c'è qualcosa di
-meglio, già in piedi.
+**Fatto.** La cameretta è passata dietro «i giochi in prova» il 16 agosto
+2026, ed è stata tolta del tutto il 23 settembre, quando i bambini avevano
+smesso di aprirla e la fattoria aveva passato la loro prova. **Coi suoi
+salvataggi**, e la scelta è stata fatta apposta: animali, oggetti, dispensa
+e capsule spariscono dal profilo, senza rimborso e senza travaso in
+fattoria. Il livello dei bambini non scende — prima di cancellare le
+collezioni se ne contano gli elementi (`sgomberaLaCameretta` in
+`src/store/profile.js`) — e le sue medaglie sono uscite dall'albo. Il
+racconto intero sta in `LEGGIMI.md`, alla voce «La cameretta, che non c'è
+più».
 
 ### 3. Le cose piccole viste negli scatti
 - Un oggetto piazzato sul bordo si **sovrappone alla staccionata** invece di

@@ -120,11 +120,11 @@ console, semina un profilo già pronto, azzera l'archivio, salva screenshot.
 Il percorso di Chrome si forza con la variabile d'ambiente `CHROME`; senza,
 lo cerca nei posti soliti.
 
-Seminare un profilo è la cosa che fa la differenza: provare la fame di domani
-senza aspettare domani.
+Seminare un profilo è la cosa che fa la differenza: provare la terza tappa
+senza giocarsi le prime due.
 
 ```js
-await semina(page, { coins: 200, pets: { watson: { /* ... */ } } })
+await semina(page, { coins: 200, campagne: { dungeon: { tappa: 2 /* ... */ } } })
 ```
 
 ## Regole imparate a spese nostre

@@ -15,6 +15,12 @@ nome in `unita/` e in `integrazione/` (`animali`, `bancarella`, `calcolo`,
 `codice-segreto`, `generale`, `inglese`, `pozioni`, `spagnolo`) — passare
 solo il nome li lancia insieme, e la misura ne uscirebbe falsata.
 
+> **Dopo la misura**: il 23 settembre 2026 se n'è andata la cameretta, e
+> con lei `integrazione/animali.test.mjs` (60,2 s, il secondo più lento
+> della tabella qui sotto) e `unita/capsule.test.mjs`. I numeri restano
+> quelli del 13 agosto: la cartella `integrazione/` adesso costa un minuto
+> in meno di quanto è scritto.
+
 `dist/index.html` è stato ricompilato una volta sola all'inizio, poi ogni
 misura è passata con `--niente-build` (concettualmente: la build non è
 un costo del test, è un costo del lanciatore, e non va contato 65 volte).

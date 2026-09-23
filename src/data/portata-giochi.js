@@ -46,9 +46,9 @@ import { CAMPAGNA as CORSA } from '../giochi/corsa/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
 
 /* La fila di tappe di ogni gioco, per la chiave con cui la home lo
-   conosce. Chi non è qui dentro non ha una campagna — la fattoria e la
-   cameretta sono posti, non scalette — e resta sempre alla portata di
-   tutti: l'assenza vuol dire «non si giudica», non «si nasconde». */
+   conosce. Chi non è qui dentro non ha una campagna — la fattoria è un
+   posto, non una scaletta — e resta sempre alla portata di tutti:
+   l'assenza vuol dire «non si giudica», non «si nasconde». */
 export const TAPPE_DEL_GIOCO = {
   /* Gli asteroidi sono una fila sola, e adesso lo sono anche sotto: un
      contatore unico su questa scaletta qui (`mate.fila`). Le due file
@@ -99,8 +99,8 @@ export function giaProvato (chiave) {
 }
 
 /* ── la domanda che fa la home ──
-   Un gioco senza campagna (la fattoria, la cameretta) non si giudica: è
-   un posto, non una scaletta, e resta a disposizione di tutti. */
+   Un gioco senza campagna (la fattoria) non si giudica: è un posto,
+   non una scaletta, e resta a disposizione di tutti. */
 export function giocoDaVedere (chiave, { provato = null, fatte = 0 } = {}) {
   const tappe = TAPPE_DEL_GIOCO[chiave]
   if (!tappe) return true

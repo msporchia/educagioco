@@ -4,10 +4,11 @@
 domande, e non ce ne saranno: è il posto dove si spende, e per questo è il
 motivo per cui si torna a fare esercizi.
 
-Ha preso il posto della [cameretta](cameretta.md) il 16 agosto 2026, per una
+Ha preso il posto della cameretta — nascosta il 16 agosto 2026, e tolta del
+tutto il 23 settembre, quando i bambini avevano smesso di aprirla — per una
 ragione sola: **il money pit dev'essere uno**. Un bambino che può spendere le
 monete in due posti non sceglie, si dimentica dell'altro — e fra i due questo
-è quello che si può far crescere.
+era quello che si poteva far crescere.
 
 ## Cosa si fa
 

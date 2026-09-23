@@ -7,12 +7,9 @@
    riga qui che non ha lo sprite non compare in negozio, e non fa
    chiedere a un bambino perché la sua gallina è invisibile.
 
-   Vale anche al contrario, ed è la regola che rende il travaso
-   indolore: una bestia **già comprata** che oggi non si sa disegnare
-   viene semplicemente **ignorata** — non sparisce dal salvataggio, non
-   fa cadere niente, semplicemente non entra in scena. Finché non si
-   pubblica, il travaso dalla cameretta è a senso unico e non c'è niente
-   da riportare indietro.
+   Vale anche al contrario: una bestia **già comprata** che oggi non si
+   sa disegnare viene semplicemente **ignorata** — non sparisce dal
+   salvataggio, non fa cadere niente, semplicemente non entra in scena.
 
    ── UNA BESTIA SI SPOSTA COME UN OGGETTO ──────────────────────────
    *Questa riga ribalta quella di prima*, che diceva «una bestia non si

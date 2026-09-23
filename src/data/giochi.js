@@ -5,8 +5,10 @@
    ancora visto le divisioni, o che davanti a nove carte non ne apre
    nessuna, deve poter trovare in home solo quello che gli serve adesso.
 
-   Fuori dall'elenco restano di proposito la cameretta — è il posto delle
-   monete e degli animali, non una materia — e l'albo dei progressi.
+   Fuori dall'elenco resta di proposito l'albo dei progressi. Ci stava
+   anche la cameretta, finché è esistita: era il posto delle monete e
+   degli animali, non una materia — un posto come la fattoria, che però
+   la sua carta ce l'ha e si spegne come le altre.
 
    ── I GIOCHI IN PROVA ────────────────────────────────────────────
    `sperimentale: true` non è un interruttore in più: è un **cancello**.

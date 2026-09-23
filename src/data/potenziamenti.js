@@ -27,7 +27,7 @@
    guarda impara che il conto va fatto comunque.
 
    Nessuna moneta, nessun negozio: le monete sono la valuta della
-   cameretta e un hangar che le succhia sposterebbe l'equilibrio di un
+   fattoria e un hangar che le succhia sposterebbe l'equilibrio di un
    gioco che non c'entra niente. Qui si paga con le risposte giuste.
    ═══════════════════════════════════════════════════════════════════ */
 

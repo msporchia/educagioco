@@ -800,17 +800,6 @@ export const AIUTI = {
       ] },
     ],
   },
-
-  cameretta: {
-    emoji: '🛏️', titolo: 'La cameretta',
-    blocchi: [
-      'Il posto degli animali: si comprano coi soldi guadagnati negli altri giochi, e poi hanno bisogno di qualcosa — mangiare, giocare, essere lavati.',
-      { titolo: 'Cosa allena', righe: [
-        'Niente: è la ricompensa, come la fattoria. Serve a dare un motivo per esercitarsi.',
-        'Prendersene cura è l\'unica cosa che chiede, e non si può sbagliare.',
-      ] },
-    ],
-  },
 }
 
 export const guida = id => GUIDE.find(g => g.id === id) || null
