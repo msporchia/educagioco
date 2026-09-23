@@ -20,10 +20,18 @@ import { AContatto } from './distanze/a-contatto.js'
 import { InAria } from './distanze/in-aria.js'
 
 export class Arma {
-  constructor ({ nome, danno, raggio } = {}) {
+  /* ── E IL GESTO, CHE È SUO ──
+     «attacca» è il verbo del piano, uguale per tutti; come si vede
+     farlo dipende da chi lo fa. L'orco mena, il cuoco prende a
+     mestolate, la segretaria sgrida: è lo stesso ostacolo — ti vede, ti
+     ferma — con un'altra faccia, e la faccia sta nell'arma, che è già
+     il posto dove sta «come colpisce questo personaggio». Chi non lo
+     dichiara colpisce, come ha sempre fatto. */
+  constructor ({ nome, danno, raggio, gesto } = {}) {
     this.nome = nome || 'la spada'
     this.danno = danno ?? 1
     this.raggio = raggio || new AContatto(1)
+    this.gesto = gesto || null
   }
 
   puoiColpire (mondo, chi, preda) { return this.raggio.arriva(mondo, chi, preda) }
@@ -35,8 +43,8 @@ export class Arma {
    misura è in linea d'aria. Ma serve vedere il bersaglio, se no si
    colpisce attraverso una parete. */
 export class Arco extends Arma {
-  constructor ({ nome, danno, portata } = {}) {
-    super({ nome: nome || "l'arco", danno, raggio: new InAria(portata ?? 5) })
+  constructor ({ nome, danno, portata, gesto } = {}) {
+    super({ nome: nome || "l'arco", danno, raggio: new InAria(portata ?? 5), gesto })
   }
   puoiColpire (mondo, chi, preda) {
     return super.puoiColpire(mondo, chi, preda) && chi.vede(mondo, preda)
@@ -51,6 +59,6 @@ export function armaDa (dato) {
   if (dato instanceof Arma) return dato
   if (!dato) return new Arma()
   return dato.tira ? new Arco(dato) : new Arma({
-    nome: dato.nome, danno: dato.danno, raggio: new AContatto(dato.portata ?? 1),
+    nome: dato.nome, danno: dato.danno, raggio: new AContatto(dato.portata ?? 1), gesto: dato.gesto,
   })
 }

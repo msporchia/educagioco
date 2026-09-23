@@ -45,6 +45,7 @@
    perché l'ordine era un dato inerte. Adesso ce l'ha.
    ═══════════════════════════════════════════════════════════════════ */
 import { Esito } from './esiti.js'
+import { ALLA } from '../registro.js'
 
 export class Azione {
   /* `via` è dove stava nel piano da cui è nata — `[3]`, `[3,'vero',0]`.
@@ -102,7 +103,7 @@ export class Azione {
      limite: lì a fermare la scena ci pensa lo stallo. */
   aspettando (contesto, penso, quanto = 25) {
     if (++this.attese > quanto) return this.siRompe(contesto, penso)
-    contesto.chi.attesa = penso
+    contesto.chi.attesa = ALLA(penso)
     contesto.registro.aspetta(contesto, this, penso)
     return Esito.inAttesa()
   }

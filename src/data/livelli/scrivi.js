@@ -281,6 +281,7 @@ export const arredo = Object.fromEntries(NOMI_ARREDO.map(
    l'arredamento automatico si può lasciare acceso. */
 arredo.niente = () => ({ genere: 'libero', id: 'niente' })
 
+
 /* ═══════════ chi — le unità ═══════════
 
    ── l'emoji viene dal corpo ──
@@ -462,9 +463,10 @@ export const se = {
    Un ordine sta nel piano e lo scrive chi gioca. Una reazione sta nella
    SCHEDA e dice com'è fatto quel personaggio: il carceriere corre al
    rumore perché è un carceriere, non perché qualcuno gliel'ha ordinato.
-   La differenza che si vede giocando è una sola: un «quando senti»
-   aspetta educatamente che tu sia libero, una reazione **ti interrompe**
-   e poi ti restituisce dov'eri.
+   Si comportano allo stesso modo di un «quando senti» del bambino: **ti
+   interrompono**, fanno la loro fila e poi ti restituiscono dov'eri.
+   La differenza è chi le scrive, e il fatto che quello che vedi passa
+   davanti a quello che senti.
 
    Dentro `fai:` ci sono ORDINI NORMALI, gli stessi che scrive il
    bambino. Il motore non sa cosa facciano — sa solo quando farli

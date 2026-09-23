@@ -15,11 +15,14 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { VERBI, eCondizione, eRipeti, eRoutine, ramoDi, corpoDi } from './vocabolario.js'
 import { domandaDa } from './domande/indice.js'
+import { ALLA } from './registro.js'
 
 /* una domanda scritta come dato, letta in italiano */
 export function testoCond (mondo, dato) {
   const domanda = domandaDa(dato)
-  return domanda ? domanda.testo(mondo) : '…'
+  /* «è a la ciotola» → «è alla ciotola»: le domande compongono le
+     preposizioni come gli ordini, e passano dalla stessa correzione */
+  return domanda ? ALLA(domanda.testo(mondo)) : '…'
 }
 
 /* un ordine scritto come dato, letto in italiano. `secco` è per quando

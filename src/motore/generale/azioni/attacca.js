@@ -87,7 +87,11 @@ export class Attacca extends Ordine {
       this.dice(contesto, `${preda.comeSiChiama} è caduto`, `abbatte ${preda.comeSiChiama}`)
       return Esito.finito()
     }
-    this.dice(contesto, `colpisco ${preda.comeSiChiama}`, `colpisce ${preda.comeSiChiama}`)
+    /* chi ha un gesto suo lo racconta con quello: «prende a mestolate
+       la ladra» invece di «colpisce la ladra» (`Arma.gesto`) */
+    const gesto = chi.arma && chi.arma.gesto
+    this.dice(contesto, gesto ? `${gesto} ${preda.comeSiChiama}` : `colpisco ${preda.comeSiChiama}`,
+              gesto ? `${gesto} ${preda.comeSiChiama}` : `colpisce ${preda.comeSiChiama}`)
     return Esito.inCorso()
   }
 

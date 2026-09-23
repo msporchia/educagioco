@@ -34,9 +34,19 @@ const ladra = chi.nostro('ladra', 'la ladra', { corpo: 'ladra', emoji: '🥷', v
    più**: restava sul portone, e la ladra gli camminava addosso su tutte
    e tre le scene. Il livello che insegna il rumore era l'unico in cui
    il rumore non faceva niente. */
+/* ── E SE TI VEDE, TI PRENDE: ANCHE MENTRE CORRE ──
+   Non sta più scritto nel suo piano (`aspetta di vedere, poi attacca`):
+   è l'istinto di chiunque stia dall'altra parte, e il motore lo mette in
+   testa alle sue reazioni (`conIstinto` in `motore/generale/allestimento.js`)
+   — si legge nella scheda come l'altra. E conta PIÙ del rumore. Prima
+   no: la corsa verso il rumore lo rendeva cieco, e la soluzione di
+   questo livello era chiamarlo e passargli attraverso — lui arrivava
+   per la stessa strada che lei faceva al contrario, la guardava in
+   faccia a un passo e tirava dritto. Un bambino l'ha visto giocando, e
+   aveva ragione lui: una guardia che ti vede e non fa niente non è una
+   regola, è un buco. */
 const carce = chi.orco('carce', 'il carceriere', { vista: 2, vita: 44,
-  reagisce: [reagisce.alRumore('richiamo')],
-  fa: [fai.aspettaDiVedere('nostri'), fai.attacca('nostri')] })
+  reagisce: [reagisce.alRumore('richiamo')] })
 
 const richiamo = cose.segnale('richiamo', 'un rumore', { em: '🔔', col: '#e8a33f' })
 const chiave = cose.chiave()
@@ -62,24 +72,30 @@ const MURA = campo([
      k1: dove, k2: dove, k3: dove })
 
 export const RICHIAMO = livello({
-  id: 'richiamo', nome: 'Il richiamo', idea: 'Fai rumore lontano da dove devi passare',
+  id: 'richiamo', nome: 'Il richiamo', impara: 'il rumore', idea: 'Fai rumore lontano da dove devi passare',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano alla ladra</b>. Il carceriere non si batte.",
-  racconto: "Con quella corazza il carceriere non lo butta giù nessuno, e la ladra cade al primo colpo. Ma lui è fatto in un modo solo, e sta scritto nella sua scheda.",
+  racconto: "Con quella corazza il carceriere non lo butta giù nessuno, e se vede la ladra la prende. Ma lui è fatto in un modo solo, e sta scritto nella sua scheda.",
   /* ── LA SCALA, SCRITTA A MANO ──
      Qui i gradini non sono solo parole: in mezzo ce n'è uno che
      **scrive nel piano** la prima metà — prendi la chiave, e chiamalo
-     da dove sei — e poi si torna a parlare per la seconda, che è la
+     da lontano — e poi si torna a parlare per la seconda, che è la
      parte in cui sta la lezione. Chi arriva a quel punto ha già davanti
      agli occhi come si dice «fai rumore»; quello che gli resta da
      capire è *dove conviene farlo*, e quello non glielo scrive nessuno.
      È il motivo per cui la scala si può comporre invece di essere
      sempre «tre frasi, poi tutto». */
+  /* ── LA LEZIONE HA DUE METÀ, E LA SECONDA È NUOVA ──
+     Da quando il carceriere ti prende anche mentre corre, chiamarlo non
+     basta più: lui arriva **per la strada più corta**, che è la stessa
+     che faresti tu per tornare al portone. Quindi lo chiami da una parte
+     del giro e passi dall'altra — che è la frase con cui il livello era
+     stato raccontato fin dall'inizio, e che adesso è anche vera. */
   aiuti: [
     aiuto.dice('Una scheda si legge come un piano: tocca il carceriere e guarda a cosa reagisce.'),
-    aiuto.dice('Corre dove sente il rumore, e ci mette un pezzo ad andare e tornare.'),
-    aiuto.scrive({ ladra: [fai.prendi('chiave'), fai.suona('richiamo')] },
-                 'Ecco le prime due mosse: prendi la chiave e chiamalo. Il resto è tuo.'),
-    aiuto.dice('Adesso lui sta correndo dove ti ha sentita. Il portone, in quel momento, è libero: il rumore lo puoi fare dove vuoi — ma non dove devi passare tu.'),
+    aiuto.dice('Corre dove sente il rumore, per la strada più corta. E se ti trova su quella strada, ti prende.'),
+    aiuto.scrive({ ladra: [fai.prendi('chiave'), fai.vai('3,1'), fai.suona('richiamo')] },
+                 'Ecco le prime tre mosse: prendi la chiave, e chiamalo da lassù, lontano dal portone.'),
+    aiuto.dice('Adesso lui arriva di qua, dalla parte più corta. Tu passa dall\'altra: tocca una casella del giro che lui non fa.'),
     aiuto.svela(),
   ],
   ambiente: 'camminamento',
@@ -108,23 +124,29 @@ export const RICHIAMO = livello({
   ],
 
   soluzioni: [
-    /* QUATTRO ORDINI, e non ce n'è uno di troppo: la chiave sta sempre
-       lontana dal portone, quindi il punto in cui ti trovi dopo averla
-       raccolta è già un buon posto da cui chiamarlo. Suonare è un
-       ordine come gli altri — quello che conta è DOVE ti trova. */
-    { nome: 'lo chiama e passa', piano: { ladra: [
-      fai.prendi(chiave), fai.suona(richiamo),
-      fai.apri(portone), fai.prendi(tesoro),
+    /* SEI ORDINI, e non ce n'è uno di troppo: la chiave, il posto da cui
+       chiamarlo, il rumore, il posto da cui passare, il portone, il
+       tesoro. I due `vai` sono il livello — chi toglie il primo lo
+       chiama da dove capita, chi toglie il secondo gli torna incontro —
+       e le caselle le sceglie il bambino: qualunque punto in cima a
+       ponente per chiamarlo e qualunque punto del lato di levante per
+       passare regge le tre scene, e anche il contrario — chiamarlo in
+       cima a levante (9,1) e passare da ponente. Provato: quello che non
+       regge è chiamarlo dal mezzo (6,1), dove le due strade sono lunghe
+       uguali e non si sa da che parte arriverà. */
+    { nome: 'lo chiama da una parte, passa dall\'altra', piano: { ladra: [
+      fai.prendi(chiave), fai.vai('3,1'), fai.suona(richiamo),
+      fai.vai('11,7'), fai.apri(portone), fai.prendi(tesoro),
     ] } },
-    /* FRAGILE: e questa è la trappola vera. Andare a chiamarlo vicino
-       al portone sembra la mossa furba — «così lo tolgo di lì» — ma il
-       carceriere corre DOVE STAI TU, e la strada per tornare al portone
-       è la stessa su cui lui sta arrivando. Due volte su tre te lo
-       ritrovi addosso; la terza la chiave era così lontana che quando
-       arrivi lui è già ripartito. */
-    { nome: 'lo chiama proprio lì', fragile: true, piano: { ladra: [
-      fai.prendi(chiave), fai.vai('9,7'), fai.suona(richiamo),
-      fai.apri(portone), fai.prendi(tesoro),
+    /* FRAGILE: chiamarlo da dove si è appena presa la chiave, e poi
+       girare dall'altra parte. Regge solo quando la chiave stava già in
+       cima a ponente — le altre due volte il rumore parte dal giro di
+       sotto, lui arriva in cinque passi, e dall'altra parte non si fa
+       in tempo. Il punto da cui chiamarlo è una scelta, non il posto
+       dove ti trovi. */
+    { nome: 'lo chiama da dove si trova', fragile: true, piano: { ladra: [
+      fai.prendi(chiave), fai.suona(richiamo),
+      fai.vai('11,4'), fai.apri(portone), fai.prendi(tesoro),
     ] } },
   ],
 })

@@ -126,7 +126,8 @@ export function allestisci (livello, variante) {
 
   sigilli(porte, oggetti)
 
-  const unita = campo.unita.map(u => new Unita(u))
+  const mia = Object.keys(campo.fazioni).find(f => campo.fazioni[f].autore === 'giocatore')
+  const unita = campo.unita.map(u => new Unita(conIstinto(u, campo.fazioni, mia)))
   const perId = {}
   unita.forEach(u => { perId[u.id] = u })
 
@@ -182,8 +183,35 @@ export function allestisci (livello, variante) {
     vocabolario: Object.fromEntries((livello.segnali || [])
       .filter(s => s && typeof s === 'object')
       .map(s => [s.id, { nome: s.nome, em: s.em, col: s.col, voce: s.voce }])),
-    mia: Object.keys(campo.fazioni).find(f => campo.fazioni[f].autore === 'giocatore'),
+    mia,
   }
+}
+
+/* ── CHI È OSTILE, SE TI VEDE, TI VIENE ADDOSSO ──
+   Non lo deve scrivere ogni livello, ed è il punto: finché stava nel
+   piano di ciascun nemico (`aspetta di vedere, poi attacca`) bastava
+   una scheda scritta in un altro modo — un carceriere che fa la ronda,
+   o che corre a un rumore — per avere una guardia che ti guarda in
+   faccia e ti lascia passare. Un mondo dove questo capita una volta su
+   tre non si può prevedere, e un piano si scrive prevedendo.
+   Quindi è l'istinto di chiunque stia dall'altra parte: si aggiunge in
+   testa alle sue reazioni **come dato**, così la scheda lo mostra come
+   mostra le altre («👁 quando vede i nostri: attacca i nostri») e non è
+   una regola nascosta nel motore. Chi deve fare altro quando vede — la
+   sentinella che dà l'allarme invece di menare — lo dichiara con una
+   reazione `vedi` sua, e allora l'istinto non si aggiunge. E vale solo
+   per chi è davvero contro: il gatto del mulino e la papera del cortile
+   stanno in una schiera che non è ostile, e a vederti non fanno niente.
+   Si costruisce un oggetto nuovo invece di scrivere su quello del
+   campo: `campoDi` è letto una volta sola per livello e condiviso, e
+   un'aggiunta fatta lì si ripeterebbe a ogni partita. */
+function conIstinto (u, fazioni, mia) {
+  const suaFazione = fazioni[u.fazione]
+  if (!mia || u.fazione === mia || !suaFazione || !suaFazione.ostile) return u
+  const sue = Array.isArray(u.reagisce) ? u.reagisce : []
+  if (sue.some(r => r && r.quando === 'vedi')) return u
+  const assale = { quando: 'vedi', chi: mia, fai: [{ verbo: 'attacca', complemento: mia }] }
+  return { ...u, reagisce: [assale, ...sue] }
 }
 
 /* ── UN SIGILLO PROMETTE UNA CHIAVE, QUINDI LA CHIAVE DEVE ESISTERE ──

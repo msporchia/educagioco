@@ -14,6 +14,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { Ordine } from './ordine.js'
 import { Esito } from './esiti.js'
+import { ASCOLTO } from '../filo.js'
 
 export class Ascolta extends Ordine {
   static parola = 'quando'
@@ -33,11 +34,13 @@ export class Ascolta extends Ordine {
      Non del mondo: il mondo propaga i messaggi e basta, e chi decide
      se un messaggio lo riguarda è chi lo riceve. Da qui in poi il
      personaggio ha un filo in più — che parte quando quel segnale
-     arriva, e solo se in quel momento è libero. */
+     arriva, anche se sta facendo altro: lo interrompe, fa la sua fila,
+     e poi si torna dov'eri (`ASCOLTO` in `filo.js`, la stessa priorità
+     di una reazione). */
   fa (contesto, cosa) {
     if (this.armato) return Esito.finitoSubito()
     this.armato = true
-    contesto.chi.mettiInAscolto(cosa.id, this.allora, `quando «${cosa.nome}»`)
+    contesto.chi.mettiInAscolto(cosa.id, this.allora, `quando «${cosa.nome}»`, ASCOLTO)
     this.dice(contesto, `sto in ascolto di «${cosa.nome}»`, 'resta in ascolto')
     return Esito.finitoSubito()
   }

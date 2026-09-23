@@ -130,9 +130,11 @@ function caselle (o) {
         </div>
         <div class="uscita">
           <i class="giunto">smetti quando</i>
-          <button class="casella" :class="{ manca: !E.frase(o.finche) }"
+          <!-- in sola lettura un giro senza uscita non ha una casella da
+               riempire: gira per sempre, ed è quello che si deve leggere -->
+          <button class="casella" :class="{ manca: !E.frase(o.finche) && !E.sola }"
                   @click.stop="E.tocca(via(perc, i), { campo: 'finche' }, $event)">
-            {{ E.frase(o.finche) || '＋ la domanda' }}</button>
+            {{ E.frase(o.finche) || (E.sola ? 'mai: gira per sempre' : '＋ la domanda') }}</button>
         </div>
       </div>
 

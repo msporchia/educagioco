@@ -32,6 +32,7 @@ import { VERBI, BLOCCHI, eCondizione, eRipeti, eRoutine, eBlocco, ilSegnale, tes
 import { aggiungiIn, togliIn, spostaIn, ordineIn, listaIn, partiDaCapo, partiParallele,
          partiChiamate, nomeLibero, stessaVia } from './piano.js'
 import { suMappa, cosePer, nomeDi, emDi } from './bersagli.js'
+import { DOVE_HO_SENTITO, DOV_ERO } from '../../motore/generale/reazioni/reazione.js'
 import { suono } from '../../audio.js'
 
 const props = defineProps({
@@ -52,6 +53,16 @@ const props = defineProps({
      `GeneraleGame.vue`, ed è l'unico che sappia se questa è la prima
      partita della vita. */
   indica: { type: Boolean, default: false },
+  /* ── E COM'È FATTO, SOTTO IL SUO PIANO ──
+     Le reazioni di un personaggio del livello (`reazioniDi` del motore):
+     «quando sente «Grugno!»: corre lì», «quando vede la ladra: le tira il
+     mestolo». Stavano solo nella scheda che si apre toccandolo sulla
+     mappa, e chi lo sceglieva dalla fila in alto vedeva il giro e
+     nient'altro — cioè non trovava proprio la cosa che l'aiuto gli
+     diceva di leggere. Si mostrano solo in lettura, e con la stessa
+     forma degli ascolti del bambino: sono la stessa cosa, tranne che
+     interrompono. */
+  reazioni: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['mira'])
 
@@ -357,10 +368,18 @@ function perche (via) {
 }
 
 /* ═══════════ le parole ═══════════ */
-const comeSiChiama = id => `${emDi(mondo(), id)} ${nomeDi(mondo(), id)}`
+/* i due bersagli che scrive l'evento, e non il livello: dentro una
+   reazione si leggono come nella scheda */
+const RISERVATI = { [DOVE_HO_SENTITO]: '👂 dove ha sentito', [DOV_ERO]: "↩️ dov'era" }
+const comeSiChiama = id => RISERVATI[id] || `${emDi(mondo(), id)} ${nomeDi(mondo(), id)}`
 /* una condizione a metà non si legge: finché non dice anche SU COSA si
    mostra la casella vuota invece di «vedi undefined» */
-const frase = c => (mondo() && c && c.cond && c.complemento ? testoCond(mondo(), c) : '')
+/* una domanda si legge anche senza una cosa di cui parlare: «passano
+   due momenti» ha un numero, «oppure» ha le sue domande dentro. Col solo
+   `complemento` il giro di un personaggio del livello mostrava un
+   «aspetta che [＋ la domanda]» vuoto, cioè un buco nel piano da leggere */
+const frase = c => (mondo() && c && c.cond && (c.complemento || c.n != null || c.fra)
+  ? testoCond(mondo(), c) : '')
 const gruppi = computed(() => {
   props.tic
   if (!mondo()) return []
@@ -487,6 +506,20 @@ defineExpose({ posaBersaglio, nienteMira })
       </div>
     </div>
 
+    <!-- ═════ LE REAZIONI ═════ solo in lettura, per chi non prendi
+         ordini: com'è fatto, sotto quello che fa -->
+    <div v-for="(r, k) in (sola ? reazioni : [])" :key="'r' + k" class="ascolto reazione"
+         :data-reazione="r.che">
+      <div class="testa">
+        <span class="ico">{{ r.em }}</span>
+        <span class="lab">{{ r.quando }}</span>
+      </div>
+      <p class="interrompe">lascia quello che sta facendo, e poi ci torna</p>
+      <div class="dentro">
+        <FilaOrdini :voci="(r.ordini || []).map((oo, j) => ({ o: oo, i: j }))" :perc="['r', k]" />
+      </div>
+    </div>
+
     <!-- ═════ LE AZIONI ═════ un pezzo di piano con un nome, che parte
          solo se qualcuno lo chiama. Si vede come un ascolto — un
          riquadro a parte con la sua testa — perché è la stessa cosa
@@ -537,7 +570,7 @@ defineExpose({ posaBersaglio, nienteMira })
               class="pezzo-nuovo ascolto-nuovo" @click="scegliAscolto">
         <span class="e">{{ VERBI.quando.et }}</span>
         <span class="n">{{ VERBI.quando.nome }}…
-          <i>parte da sé quando arriva un segnale, anche mentre stai facendo altro</i></span>
+          <i>parte da sé quando arriva un segnale, anche mentre stai facendo altro — e poi si torna a quello</i></span>
       </button>
       <button v-if="conAzioni" class="pezzo-nuovo azione-nuova" @click="scegliAzione">
         <span class="e">{{ BLOCCHI.routine.et }}</span>
@@ -572,6 +605,10 @@ defineExpose({ posaBersaglio, nienteMira })
 .ascolto .testa .ico { font-size:15px; flex:none }
 .ascolto .testa .lab { flex:none; font-size:12px; font-weight:800; color:var(--tenue) }
 .ascolto .dentro { margin:0 0 4px 14px; padding:1px 4px 0; border-left:2px dashed #f0c2bc }
+/* una reazione è un ascolto che interrompe: la testa porta la frase
+   intera («quando vede la ladra») invece della casella da riempire */
+.reazione .testa .lab { flex:1; font-size:12.5px; color:var(--viola-scuro); white-space:normal }
+.reazione .interrompe { margin:2px 0 2px 14px; font-size:11px; font-style:italic; color:var(--tenue) }
 .casella { flex:1; min-width:0; min-height:32px; padding:4px 9px; border-radius:10px;
            background:#ffffffcc; box-shadow:inset 0 0 0 1.5px #f0cfca; font-size:12.5px;
            font-weight:900; color:var(--viola-scuro); text-align:left; white-space:nowrap;

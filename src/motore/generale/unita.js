@@ -23,7 +23,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ACammino } from './distanze/a-cammino.js'
 import { armaDa } from './arma.js'
-import { Filo, Ascoltatore } from './filo.js'
+import { Filo, Ascoltatore, ASCOLTO } from './filo.js'
 import { Contesto } from './contesto.js'
 import { Reazione } from './reazioni/reazione.js'
 
@@ -254,8 +254,9 @@ export class Unita {
   }
 
   /* «se arriva questo segnale, fai questa fila». Non parte adesso: sta
-     appeso finché il segnale non arriva. */
-  mettiInAscolto (segnale, fila, comeSiChiama, priorita) {
+     appeso finché il segnale non arriva, e allora interrompe come una
+     reazione (`ASCOLTO`). */
+  mettiInAscolto (segnale, fila, comeSiChiama, priorita = ASCOLTO) {
     if (this.ascoltatori.some(a => a.segnale === segnale && a.filo.fila === fila)) return
     this.ascoltatori.push(new Ascoltatore(segnale, fila, comeSiChiama, priorita))
   }
@@ -280,12 +281,12 @@ export class Unita {
       /* già in ballo: sentirlo di nuovo non fa partire una seconda
          esecuzione in parallelo */
       if (this.fili.includes(a.filo) && !a.filo.finito) continue
-      /* ── UN ASCOLTO NON INTERROMPE, UNA REAZIONE SÌ ──
-         Un ascolto è una cosa che hai scritto tu, e se ti prendesse a
-         metà strada il tuo piano non si spiegherebbe più: aspetta che
-         il personaggio sia libero. Una reazione è come sei fatto, e ti
-         prende mentre fai altro. */
-      if (a.filo.priorita === 0 && this.eImpegnata()) continue
+      /* ── E INTERROMPE, CHE SIA UN ASCOLTO O UNA REAZIONE ──
+         Qui c'era la riga che lasciava cadere un ascolto arrivato mentre
+         il personaggio era occupato: il segnale andava perso, e il
+         bambino non lo vedeva da nessuna parte. Adesso un ascolto ha la
+         priorità di una reazione (`ASCOLTO` in `filo.js`): passa davanti
+         al piano, e quando finisce il puntatore torna dov'era. */
       /* c'è chi scrive la sua fila solo adesso, perché dipende da dove
          è successo (chi corre al rumore) */
       if (typeof a.preparaPer === 'function') a.preparaPer(messaggio, this)
@@ -332,8 +333,7 @@ export class Unita {
   }
 
   /* sta ancora facendo qualcosa? Serve al battito per capire se la
-     scena può ancora cambiare, e a chi manda un segnale per sapere se
-     questo è libero di ascoltarlo. */
+     scena può ancora cambiare. */
   eImpegnata () { return this.fili.some(f => !f.finito) }
   get sonoInAscolto () { return this.ascoltatori.length > 0 }
 

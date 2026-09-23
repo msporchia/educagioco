@@ -26,10 +26,12 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { allestisci } from './allestimento.js'
 import { scegliFra } from './scelte.js'
-import { VERBI, saFare, nonRiesce } from './vocabolario.js'
+import { VERBI, saFare, nonRiesce, eCondizione } from './vocabolario.js'
 import { Rumore } from './messaggi/rumore.js'
 import { Voce } from './messaggi/voce.js'
 import { compilaFila } from './azioni/indice.js'
+import { descrivi, testoCond } from './parole.js'
+import { DOVE_HO_SENTITO, DOV_ERO } from './reazioni/reazione.js'
 
 /* ── QUANTO LONTANO SI SENTE ──
    `voce` è il raggio in linea d'aria. Una parola detta a voce alta
@@ -102,7 +104,11 @@ export class Mondo {
      diventerebbero pezzi di ricambio. */
   perdute () { return this.unita.filter(u => !u.eInPiedi() && u.fazione === this.mia).length }
   mio (id) { const u = this.perId[id]; return !!u && u.fazione === this.mia }
-  nomeDi (id) { return (this.perId[id] && this.perId[id].comeSiChiama) || id }
+  /* chi cammina ha il suo nome, e anche una cosa: «l'osso è alla ciotola»,
+     non «osso è alla ciotola» */
+  nomeDi (id) {
+    return (this.perId[id] && this.perId[id].comeSiChiama) || (this.cose[id] && this.cose[id].nome) || id
+  }
 
   /* ═══════════ il buio e la luce ═══════════
      Il TETTO SULLA VISTA di questo livello: quanto lontano si vede
@@ -326,18 +332,53 @@ export class Mondo {
      stessi che il bambino sa già leggere perché li scrive lui. È quello
      che rende vero l'aiuto del livello — «una scheda si legge come un
      piano» — invece di una promessa. */
+  /* ── E SI LEGGONO PER DAVVERO ──
+     La scheda disegnava `r.testo`, che questa funzione non ha mai dato da
+     quando il motore è stato spezzato in moduli: sotto «com'è fatto»
+     comparivano un 👁 e un 👂 e nient'altro. Proprio nel livello il cui
+     primo aiuto dice «tocca il carceriere e guarda a cosa reagisce».
+     Adesso la frase la compone il motore, con le stesse parole con cui
+     si legge un ordine del piano (`descrivi`); i due complementi che si
+     risolvono solo quando la reazione parte si dicono a parole. */
   reazioniDi (id) {
     const u = this.perId[id]
     if (!u) return []
-    return (u.reagisce || []).map(r => ({
-      che: r.quando,
-      segnale: r.segnale || null,
-      em: r.quando === 'senti' ? '👂' : r.quando === 'vedi' ? '👁' : '🛡',
-      quando: r.quando === 'senti' ? `quando sente «${this.nomeDelSegnale(r.segnale)}»`
-            : r.quando === 'vedi' ? `quando vede ${(this.cose[r.chi] || {}).nome || r.chi}`
-            : 'quando le prende',
-      ordini: r.fai || [],
-    }))
+    const RISERVATI = { [DOVE_HO_SENTITO]: 'dove ha sentito', [DOV_ERO]: "dov'era" }
+    /* e l'attacco si legge col gesto di chi lo fa (`Arma.gesto`): nella
+       scheda del cuoco «quando vede la ladra: prende a mestolate [la
+       ladra]», non un «attacca» uguale per tutti */
+    const gesto = u.arma && u.arma.gesto
+    /* ── E UNA REAZIONE CON DENTRO UN «SE» SI LEGGE COI SUOI DUE RAMI ──
+       «quando vede la ladra: condizione [hai l'osso]» non diceva cosa
+       fa nei due casi, che è tutta la regola (il lupo che non morde a
+       bocca piena). La domanda è scritta per chi gioca («hai»), e qui
+       parla di lei: si volta in terza persona. */
+    const inTerza = t => t.replace(/^(non )?hai /, '$1ha ').replace(/^(non )?vedi /, '$1vede ')
+    const leggi = o => {
+      if (eCondizione(o)) {
+        const ramo = r => (Array.isArray(o[r]) ? o[r] : []).map(leggi).join(', ') || 'niente'
+        return `se ${inTerza(testoCond(this, o.cond))}: ${ramo('vero')}; se no: ${ramo('falso')}`
+      }
+      return (o && RISERVATI[o.complemento] && VERBI[o.verbo])
+        ? `${VERBI[o.verbo].nome} [${RISERVATI[o.complemento]}]`
+        : (gesto && o && o.verbo === 'attacca')
+          ? descrivi(this, o, true).replace(/^attacca /, gesto + ' ')
+          : descrivi(this, o, true)
+    }
+    return (u.reagisce || []).map(r => {
+      const quando = r.quando === 'senti' ? `quando sente «${this.nomeDelSegnale(r.segnale)}»`
+                   : r.quando === 'vedi' ? `quando vede ${(this.cose[r.chi] || {}).nome || r.chi}`
+                   : 'quando le prende'
+      const ordini = r.fai || []
+      return {
+        che: r.quando,
+        segnale: r.segnale || null,
+        em: r.quando === 'senti' ? '👂' : r.quando === 'vedi' ? '👁' : '🛡',
+        quando,
+        ordini,
+        testo: `${quando}: ${ordini.map(leggi).join(', ') || 'niente'}`,
+      }
+    })
   }
 
   /* ── LE FAMIGLIE, PER CHI DISEGNA ──

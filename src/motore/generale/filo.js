@@ -14,18 +14,33 @@
    lo spiega nessuno dei due piani. Con un puntatore solo non può
    succedere.
 
-   ── LA PRIORITÀ È LA DIFFERENZA FRA ASCOLTARE E REAGIRE ──
-   Un ascolto è una cosa che **hai scritto tu**: aspetta educatamente
-   che il personaggio sia libero, perché se ti interrompesse a metà
-   strada il tuo piano non si spiegherebbe più. Una reazione è **come
-   sei fatto**: ti prende mentre stai facendo altro, ti fa fare la sua
-   cosa e poi ti restituisce dov'eri. Sono la stessa struttura con un
-   numero diverso.
+   ── ASCOLTARE E REAGIRE SONO LA STESSA REGOLA ──
+   Una reazione è **come sei fatto**, un ascolto è una cosa che **hai
+   scritto tu**; tutte e due ti prendono mentre stai facendo altro, ti
+   fanno fare la loro cosa e poi ti restituiscono dov'eri. Un ascolto
+   aspettava educatamente che il personaggio fosse libero — e in pratica
+   il segnale arrivato mentre camminava andava perso, mentre la cassetta
+   prometteva al bambino il contrario. Deciso dall'utente il 23
+   settembre 2026: «concettualmente dovrebbe interrompere, è su questo
+   che si basa il "vedi un nemico mentre cammini"». La priorità resta la
+   differenza fra il piano e tutto il resto, non fra chi l'ha scritto.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* chi può togliere il posto a chi */
 export const NORMALE = 0
 export const REAZIONE = 10
+/* il «quando senti» del bambino: interrompe come una reazione */
+export const ASCOLTO = REAZIONE
+/* ── E VEDERE UN AVVERSARIO SCAVALCA TUTTO IL RESTO ──
+   Le reazioni erano tutte alla pari, e a parità vince chi sta già
+   girando: un carceriere che correva verso un rumore **passava
+   attraverso la ladra** senza fermarsi, perché la corsa era partita
+   prima e «non si cambia cavallo per niente». Era la soluzione ufficiale
+   del «Richiamo», e un bambino l'ha vista: l'orco ti passa davanti e non
+   succede niente. La regola che uno si aspetta è quella dei giochi di
+   guardie di sempre — prima quello che vedi, poi quello che senti, poi
+   il tuo giro — e sta tutta in questo numero. */
+export const VISTA = 20
 
 export class Filo {
   constructor (fila, nome, priorita = NORMALE) {

@@ -23,8 +23,11 @@
    male. Qui dentro c'è anche l'unico posto che decide chi ha sbagliato.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* le preposizioni articolate, che nessuna riga deve comporre a mano */
-const ALLA = t => (t || '')
+/* le preposizioni articolate, che nessuna riga deve comporre a mano.
+   Si esporta perché non tutte le frasi passano da una riga: quella su cui
+   un personaggio resta piantato (`Azione.aspettando`) finisce dritta nel
+   messaggio di fine partita, e diceva «non riesco ad arrivare a le uova» */
+export const ALLA = t => (t || '')
   .replace(/\ba la /g, 'alla ').replace(/\ba il /g, 'al ').replace(/\ba l'/g, "all'").replace(/\ba le /g, 'alle ')
   .replace(/\bdi la /g, 'della ').replace(/\bdi il /g, 'del ').replace(/\bdi l'/g, "dell'")
   .replace(/\bda la /g, 'dalla ').replace(/\bda il /g, 'dal ').replace(/\bda l'/g, "dall'")

@@ -1163,17 +1163,17 @@ controlla('giocare non sporca i livelli', scritta(LIVELLI) === IMPRONTA_DATI,
 /* ═══════════ 12. il cancello dei livelli in prova ═══════════
    I livelli non ancora approvati si vedono solo con i giochi in prova
    accesi. La cosa che qui si difende non è QUANTI se ne vedono — quello
-   cambia ogni volta che uno viene promosso — ma che il cancello non
-   sposti niente: la posizione di un livello nella fila piena è la chiave
-   dei suoi progressi (`gen.stelle[i]`), e dev'essere la stessa col
-   cancello aperto o chiuso. Se un giorno i livelli in prova venissero
-   spostati in coda «per comodità», questo diventerebbe rosso — e
-   giustamente: le stelle già prese si rimescolerebbero addosso a chi
-   accende l'interruttore. */
+   cambia ogni volta che uno viene promosso, e oggi sono approvati tutti
+   — ma che il cancello non sposti niente: la posizione di un livello
+   nella fila piena è quella con cui lo si apre, e dev'essere la stessa
+   col cancello aperto o chiuso. (Le stelle no: da quando la fila è
+   passata da ventisei livelli a sei stanno sotto l'`id`, proprio perché
+   una posizione cambia.) */
 {
   const chiusa = dati.fila(false), aperta = dati.fila(true)
   controlla('col cancello chiuso restano solo i livelli approvati',
-            chiusa.length > 0 && chiusa.length < aperta.length,
+            chiusa.length > 0 && chiusa.length <= aperta.length &&
+            chiusa.every(r => !dati.inProva(r.liv)),
             `${chiusa.length} di ${aperta.length}`)
   uguale('col cancello aperto ci sono tutti', aperta.length, LIVELLI.length)
   controlla('e il primo della fila è uno di quelli approvati',
@@ -1197,6 +1197,34 @@ controlla('giocare non sporca i livelli', scritta(LIVELLI) === IMPRONTA_DATI,
          chiusa.filter(r => r.titolo).length, conRighe)
   nota(`${chiusa.length} livelli approvati su ${aperta.length}: ` +
        chiusa.map(r => r.liv.id).join(', '))
+}
+
+/* ═══════════ 13. la scheda di chi non comandi si legge ═══════════
+   «Una scheda si legge come un piano» è il primo aiuto del Richiamo, e
+   per mesi la scheda ha mostrato un 👁 e un 👂 e nient'altro: la vista
+   leggeva una frase che il motore non dava più. Qui si pretende la frase,
+   per ogni reazione di ogni personaggio di ogni livello — compreso
+   l'istinto che il motore aggiunge da sé a chi è ostile, che è una
+   regola del mondo solo se si può leggere. */
+{
+  const reazioniDi = motore.reazioniDi
+  let lette = 0
+  for (const liv of LIVELLI) {
+    const m = creaMondo(liv, (liv.varianti || [])[0])
+    for (const u of m.unita) {
+      for (const r of reazioniDi(m, u.id)) {
+        lette++
+        controlla(`${liv.id} · ${u.id}: la reazione si legge («${r.testo}»)`,
+                  typeof r.testo === 'string' && r.testo.length > r.quando.length + 2 &&
+                  !/undefined|dove-ho-sentito|dov-ero|\?/.test(r.testo))
+      }
+      const ostile = u.fazione !== m.mia && m.livello && campoDi(liv).fazioni[u.fazione]?.ostile
+      if (ostile && u.vista > 0)
+        controlla(`${liv.id} · ${u.id}: chi è ostile dice nella scheda che, se ti vede, ti viene addosso`,
+                  reazioniDi(m, u.id).some(r => r.che === 'vedi'))
+    }
+  }
+  nota(`reazioni lette nelle schede: ${lette}`)
 }
 
 riassunto('il generale')

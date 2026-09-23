@@ -6,13 +6,12 @@
    scheda che il bambino apre col dito la mostra — perché una reazione
    che non si può leggere non è una regola del mondo: è una sorpresa.
 
-   ── LA DIFFERENZA CON UN «QUANDO SENTI» È UNA SOLA ──
-   Un ascolto è una cosa che **hai scritto tu**: aspetta educatamente
-   che il personaggio sia libero, perché se ti interrompesse a metà
-   strada il tuo piano non si spiegherebbe più. Una reazione **ti
-   prende mentre stai facendo altro**, ti fa fare la sua cosa e poi ti
-   restituisce dov'eri. Nel codice sono la stessa struttura con un
-   numero diverso: la priorità.
+   ── LA DIFFERENZA CON UN «QUANDO SENTI» È CHI L'HA SCRITTO ──
+   Un ascolto lo scrive il bambino nel piano, una reazione sta nella
+   scheda. Per il resto è la stessa regola: tutti e due **ti prendono
+   mentre stai facendo altro**, ti fanno fare la loro cosa e poi ti
+   restituiscono dov'eri. L'unica priorità diversa è quella di chi
+   vede (`VISTA`): quello che vedi passa davanti a quello che senti.
 
    ── QUI DENTRO NON C'È NESSUN COMPORTAMENTO ──
    E questa è la cosa importante. La sequenza — «corri dove hai sentito,
@@ -31,7 +30,7 @@
    momento in cui la reazione parte, e da lì in poi sono ordini come
    tutti gli altri — nel registro si legge «vado a (11,6)».
    ═══════════════════════════════════════════════════════════════════ */
-import { Ascoltatore, REAZIONE } from '../filo.js'
+import { Ascoltatore, REAZIONE, VISTA } from '../filo.js'
 import { Fila } from '../azioni/fila.js'
 import { compilaFila } from '../azioni/indice.js'
 
@@ -46,8 +45,12 @@ export class Reazione extends Ascoltatore {
        { quando:'vedi',  chi:'nostri',       fai:[ …ordini… ] }
        { quando:'colpito',                   fai:[ …ordini… ] } */
   constructor (dato) {
+    /* quello che si vede passa davanti a quello che si sente: chi corre
+       verso un rumore e ti trova sulla strada si ferma e ti prende
+       (`VISTA` in `filo.js`, con la storia di perché) */
     super(dato.segnale || null, new Fila([]),
-          `reagisce a «${dato.segnale || dato.chi || 'un colpo'}»`, REAZIONE)
+          `reagisce a «${dato.segnale || dato.chi || 'un colpo'}»`,
+          dato.quando === 'vedi' ? VISTA : REAZIONE)
     this.evento = dato.quando
     this.chi = dato.chi || null
     this.ordini = Array.isArray(dato.fai) ? dato.fai : []

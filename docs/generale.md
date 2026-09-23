@@ -8,12 +8,15 @@ squadretta, si preme play, e si guarda cosa succede.
 <img src="img/generale-gioco.png" width="230"> <img src="img/generale-mappa.png" width="230">
 
 > [!NOTE]
-> Il gioco è in home come gli altri, ma **non tutti i livelli sono
-> approvati**: se ne giocano sei, quelli guardati giocare da vicino. Gli
-> altri sono scritti e stanno dietro l'interruttore *giochi in prova* nei
-> settaggi — chi lo accende li vede tutti, segnati con 🧪. Promuoverne uno
-> è una riga in `data/generale.js` (`APPROVATI`) e **non sposta le stelle
-> già prese**: la fila è sempre quella, cambia solo quanto se ne vede.
+> I livelli sono **sei**, quelli guardati giocare da vicino. Ce n'erano
+> altri venti — le campagne di consolidamento, il cortile di Rosa — più
+> cinque avventure a capitoli mai aperte: scritti a tavolino, e giocati si
+> sono rivelati noiosi, stanzette con una decisione sola e la stessa
+> missione in venti vestiti. A settembre 2026 sono stati tolti tutti. Un
+> livello nuovo nasce dietro l'interruttore *giochi in prova* nei settaggi
+> (segnato con 🧪), e promuoverlo è una riga in `data/generale.js`
+> (`APPROVATI`). Le stelle stanno sotto l'`id` del livello, quindi
+> promuovere, riordinare o togliere **non sposta le stelle già prese**.
 
 ## Come è fatto
 
@@ -26,29 +29,11 @@ funziona si guarda dove si è rotto e si corregge la fila.
 
 ## Prima il tutorial, poi il resto
 
-Entrando si cade dritti nelle **prove**, che sono una fila di livelli sciolti,
-uno per idea, e vanno fatte in fila perché ognuna dà per scontata quella
-prima. Quelle approvate oggi sono sei — *il primo ordine, la chiave e il
-portone, lo sgombero del castello, due strade, mettetevi d'accordo, il
-richiamo* — e coprono **un ordine, una fila, una decisione, un segnale, il
-rumore**.
-
-Le altre venti sono scritte e si vedono col cancello aperto (la nota qui
-sopra): i drill di consolidamento per ogni costrutto, e il cortile di Rosa,
-che è la prima campagna con una storia sola dentro.
-
-Più avanti le idee **si mescolano**: non è allenamento su cose già viste, è la
-somma di due o tre di quelle in una situazione che nessuna di loro copriva da
-sola. *Da una parte e dall'altra*, per dire, chiede di **origliare il nemico**
-— l'evento e la decisione insieme, su un'informazione che arriva da chi ti sta
-dando la caccia. Quella parte lì è ancora dietro il cancello.
-
-> [!NOTE]
-> Le cinque **avventure a capitoli** (`data/storie-generale.js`) sono scritte
-> ma **spente**: nessuno le ha ancora provate, e il linguaggio del gioco sta
-> ancora cambiando sotto. Non compaiono da nessuna parte finché
-> `AVVENTURE_APERTE` non torna `true` — niente lucchetto, che sarebbe una
-> promessa. Restano le prove.
+Entrando si cade dritti nelle **prove**, che sono una fila di livelli, uno
+per idea, e vanno fatte in fila perché ognuna dà per scontata quella prima.
+Sono sei — *il primo ordine, la chiave e il portone, lo sgombero del mulino,
+due strade, mettetevi d'accordo, il richiamo* — e coprono **un ordine, una
+fila, un lavoro lungo con due mani, una decisione, un segnale, il rumore**.
 
 Nel tutorial **si comanda sempre dalla parte dei buoni**: il cavaliere che
 difende, non l'orco che assale. Il ribaltamento delle parti è un'idea buona,
@@ -155,26 +140,25 @@ Un bambino che ha capito questo ha già in testa il modello mentale che serve
 per le callback, gli eventi e le promise.
 
 Con una regola che vale la pena dire ad alta voce: **un personaggio fa una
-cosa alla volta**. Un segnale sveglia solo chi è libero — se sta già
-eseguendo qualcosa, quel segnale gli scivola addosso e il registro lo scrive
-(*«arriva «tutto libero», ma l'eroe sta ancora facendo quello di prima»*).
-Niente code, niente ordini troncati a metà, e soprattutto mai due file che
-comandano lo stesso personaggio nello stesso istante: una scena così non si
-spiegherebbe più con nessuno dei due piani.
+cosa alla volta, e un segnale lo interrompe**. Se arriva mentre sta
+camminando, lascia quello che fa, esegue quello che l'ascolto dice, e poi
+torna al punto del piano in cui era: la stessa regola per cui un nemico che
+ti vede mentre fa il suo giro si ferma e ti viene addosso. Mai due file che
+comandano lo stesso personaggio nello stesso istante: ne gira sempre una, e
+le altre aspettano il loro turno.
 
 ### 6. Il rumore, cioè un mondo che risponde
 
 L'ultima tappa del tutorial non aggiunge una struttura: aggiunge una **regola
-del mondo**, e senza quella dal settimo livello in poi metà di quello che si
-vede sullo schermo non si spiega. `suona` fa rumore *da dove sei*, chi è fatto
-per accorrere ci corre, e quindi **dove fai rumore decide dove lui non è**. Il
-seguito è in [Il rumore è una cosa vera](#il-rumore-è-una-cosa-vera).
+del mondo**, e senza quella metà di quello che si vede sullo schermo non si
+spiega. `suona` fa rumore *da dove sei*, chi è fatto per accorrere ci corre, e
+quindi **dove fai rumore decide dove lui non è**. Il seguito è in [Il rumore è
+una cosa vera](#il-rumore-è-una-cosa-vera).
 
 E siccome un segnale non ha destinatari, vale anche al contrario: quello che
 dicono **loro** lo senti anche tu. Una ronda che a ogni giro si dice «tutto
 libero» sta dando a te il suo orologio — e sapere che chi parla è lontano non
-dice niente sull'altra sentinella. Da lì nasce il primo livello dopo il
-tutorial: *ascolta, poi guarda, e solo dopo muoviti*.
+dice niente sull'altra sentinella.
 
 ## Nessuno è onnisciente
 
@@ -192,6 +176,16 @@ strada, e chi sta dall'altra parte di una cinta è a due celle in linea d'aria
 ma a dodici passi di cammino, quindi non lo vedi. Ne segue che i punti ciechi
 sono un fatto della mappa, non una regola in più da imparare.
 
+E vale al contrario, senza eccezioni: **chi è contro di te e ti vede, ti viene
+addosso** — qualunque cosa stia facendo, anche mentre corre verso un rumore.
+Prima non era così: la corsa verso il rumore lo rendeva cieco, e nel
+*Richiamo* il carceriere passava attraverso la ladra guardandola in faccia.
+Un bambino l'ha notato giocando, e aveva ragione: una guardia che ti vede e
+non fa niente non è una regola, è un buco. L'ordine è quello dei giochi di
+guardie di sempre — **prima quello che vedi, poi quello che senti, poi il tuo
+giro** — e l'istinto si legge nella scheda del nemico come le altre sue
+reazioni.
+
 ## Il rumore è una cosa vera
 
 Chi le prende **grida**, e quel grido è un segnale come tutti gli altri:
@@ -201,8 +195,10 @@ esattamente come quello di un compagno.
 
 Da qui viene anche il contrario: **fare rumore apposta**. `suona` fa rumore
 *da dove sei*, e un nemico fatto per accorrere ci corre — quindi lascia il
-posto che stava sorvegliando. Chiamarlo lontano da dove devi passare è una
-mossa; chiamarlo dove devi passare tu è il modo di ritrovarselo addosso.
+posto che stava sorvegliando. Ma ci corre **per la strada più corta**, che è
+la stessa che faresti tu per tornare indietro: chiamarlo e poi andargli
+incontro è il modo di ritrovarselo addosso. Lo si chiama da una parte e si
+passa dall'altra.
 
 E una porta può dichiarare di essere **sfondabile**: chi non ha la chiave la
 apre lo stesso, ma ci mette venti spallate e **fa fracasso**. Quel tempo è la

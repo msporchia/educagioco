@@ -20,8 +20,17 @@ import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
    in faccia sembrerebbe un guasto. Che ci vada e ci rimetta la pelle è
    proprio la lezione. */
 const eroe = chi.nostro('eroe', "l'eroe", { corpo: 'ladra', emoji: '🦸', vista: 6, vita: 2 })
+/* ── DIECI VITE, PERCHÉ ADESSO L'ORCO RISPONDE ──
+   Erano sei, e bastavano per una ragione sbagliata: l'orco aspettava di
+   vedere l'EROE e basta, quindi il cavaliere gli menava addosso e lui
+   stava fermo a prenderle. Da quando chi è ostile attacca chiunque veda
+   dei tuoi (`conIstinto` in `motore/generale/allestimento.js`) lo
+   scontro è vero — otto colpi contro otto — e con sei il cavaliere
+   cadeva al sesto. Il racconto diceva già «il cavaliere regge i colpi,
+   ma ci mette un po'»: adesso è vero tutte e due le metà, e a fine
+   scontro gliene restano tre. */
 const cava = chi.nostro('cava', 'il cavaliere', { corpo: 'cavaliere', emoji: '🛡️',
-  vista: 12, vita: 6, nonRiesce: { prendi: 'ho le mani occupate: scudo e spada' } })
+  vista: 12, vita: 10, nonRiesce: { prendi: 'ho le mani occupate: scudo e spada' } })
 const orco = chi.orco({ vista: 3, vita: 8,
   fa: [fai.aspettaDiVedere(eroe), fai.attacca(eroe)] })
 
@@ -44,7 +53,7 @@ const CORTI = campo([
      t1: dove, t2: dove, t3: dove })
 
 export const ATTESA = livello({
-  id: 'attesa', nome: 'Mettetevi d\'accordo', idea: 'Quello che non vedi te lo deve dire qualcuno',
+  id: 'attesa', nome: 'Mettetevi d\'accordo', impara: 'i segnali', idea: 'Quello che non vedi te lo deve dire qualcuno',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano all'eroe</b>.",
   racconto: "L'eroe non regge i colpi dell'orco; il cavaliere sì, ma ci mette un po'. E da dov'è l'eroe, quello che succede laggiù non si vede.",
   aiuti: ['Chi parte troppo presto trova l\'orco ancora in piedi.',
