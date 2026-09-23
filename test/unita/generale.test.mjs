@@ -507,7 +507,10 @@ nota('ordini della soluzione più corta: ' + LIVELLI.map(l => {
    Il piano vuoto non vince mai — se no la tappa è una schermata da
    guardare. E ogni ordine di una soluzione deve servire a qualcosa:
    togliendone uno, quel piano non è più una soluzione (può ancora
-   cavarsela in una variante fortunata, ma non in tutte e tre). */
+   cavarsela in una variante fortunata, ma non in tutte e tre). Tranne
+   la strada lunga (`lunga: true`), che è dichiarata apposta per far
+   vedere che il gioco non la vieta: da lì un ordine si può togliere, e
+   il banco dei livelli (`test/aiuto/livello.mjs`) la esenta già. */
 for (const [i, liv] of LIVELLI.entries()) {
   const n = nomeDi(liv, i)
   const modello = soluzioniDi(liv)[0].piano
@@ -516,7 +519,7 @@ for (const [i, liv] of LIVELLI.entries()) {
   controlla(`${n}: il piano vuoto non vince su nessuna variante`, !vuoti.some(vinta),
             vuoti.map((r, k) => `${k + 1}:${vinta(r) ? 'vinta' : 'persa'}`).join(' '))
 
-  for (const s of soluzioniDi(liv).filter(x => !x.fragile)) {
+  for (const s of soluzioniDi(liv).filter(x => !x.fragile && !x.lunga)) {
     for (const v of vociDi(s.piano)) {
       const monco = senza(s.piano, v.via)
       const tutte = VARIANTI(liv).every(iv => vinta(prova(liv, iv, monco)))

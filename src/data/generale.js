@@ -99,7 +99,7 @@ import RICHIAMO from './livelli/tutorial/6-il-richiamo.js'
    hanno già fatto le sei prove — e ogni pagina si vince in più modi.
    Nascono dietro il cancello dei giochi in prova, come ogni livello
    nuovo. */
-import TORTA from './livelli/torta/1-dalla-cucina-al-forno.js'
+import TORTA from './livelli/torta/1-andata-e-ritorno.js'
 
 /* ── LA FILA È FATTA DI TRATTI, E I TRATTI HANNO UN NOME ──
    Il tratto si dichiara QUI, accanto all'ordine, perché è la stessa
