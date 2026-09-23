@@ -45,7 +45,12 @@
    - `testo`   una riga di testo semplice: niente HTML e niente `**`.
 
    Le decide il proprietario del gioco: chi lavora al codice propone la
-   riga nel resoconto, e la si aggiunge quando viene detto sì.
+   riga nel resoconto, e la si aggiunge quando viene detto sì. La riga
+   va col lavoro che racconta, mai prima — pubblicata prima, manda un
+   bambino a cercare una cosa che non c'è — e un gioco ancora in prova
+   si annuncia il giorno che esce dal cancello: prima `inCasa` la
+   scarta, e chi preme «Letto» intanto la salta per sempre. Il quando e
+   il perché, per esteso, stanno in CLAUDE.md.
    ═══════════════════════════════════════════════════════════════════ */
 export const NOVITA = [
   { id: 1, quando: '2026-08-24', gioco: 'sotterraneo',

@@ -1421,7 +1421,32 @@ semplice:
   domanda è `inCasa` di `data/portata-giochi.js`, la stessa delle carte.
 
 Ci si arriva da un nastro in home che dice già la più fresca, e che
-non ha la ✕: si spegne con «Letto», dentro. Le righe le decide il
-proprietario, come le note dei grandi. Nei test i bersagli sono
+non ha la ✕: si spegne con «Letto», dentro. Nei test i bersagli sono
 `[data-nastro="novita"]`, `[data-novita-pagina]`, `[data-novita-gioco]`,
 `[data-novita]` e `[data-azione="novita-letto"]`.
+
+**Quando si scrive una riga, e chi la scrive.** Le righe le decide il
+proprietario, come le note dei grandi — ma qui chi lavora al codice
+**la propone**, ed è la differenza che conta: nella posta il difetto
+da evitare era parlare troppo, qui era che non scriveva nessuno, e le
+cose fatte bene restavano senza che un bambino lo sapesse. Quindi alla
+fine di ogni lavoro che un bambino vedrebbe — un gioco, un livello o
+una modalità nuovi, un posto ridisegnato, una bestia, una cosa nuova da
+comprare, una festa — nel resoconto va la riga già scritta («per i
+bambini: «🐰 Alla fattoria è arrivato il coniglio» — la metto?»), e la
+si aggiunge solo dopo il sì. Non si propone per un guasto riparato, una
+taratura, un prezzo, le schermate dei grandi o i documenti. Due cose
+da non sbagliare:
+
+- **la riga va col lavoro che racconta, mai prima**: nello stesso
+  commit o in uno dopo. Pubblicata prima, manda un bambino a cercare
+  una cosa che sul telefono non c'è ancora;
+- **un gioco in prova si annuncia il giorno che esce dal cancello**:
+  prima la riga non la vede quasi nessuno (`inCasa` la scarta), e chi
+  preme «Letto» nel frattempo la salta per sempre, perché il segno è
+  uno solo.
+
+`id` è quello dopo il più alto, `quando` il giorno in cui esce, e il
+testo sta sotto i 70 caratteri con l'emoji della cosa in testa:
+`unita/novita-bambini` controlla la lunghezza, il gioco e che non ci
+sia HTML.
