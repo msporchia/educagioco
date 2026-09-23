@@ -248,6 +248,19 @@ Il numero di versione lo genera il build. Il **`+`** in coda al commit
 (`922257a+`) vuol dire che è stato costruito con modifiche non committate:
 non è ricostruibile da git.
 
+**Prenderla sul telefono, subito.** Da solo il telefono se ne accorge
+all'apertura, al ritorno in primo piano e tornando in home, e lo dice col
+nastro «✨ C'è una versione nuova». Se hai fretta, o il nastro non compare:
+in fondo alla home, accanto a «aggiornato il …», c'è **«↻ cerca
+aggiornamenti»**. Chiede al sito che versione ha, la scarica contando i
+megabyte, controlla che sia davvero quella e solo allora riparte; se il
+sito ha la stessa, lo dice. Non tocca i progressi, e se la rete cade a
+metà il gioco resta com'era. Due cose che sembrano un suo guasto e non lo
+sono: **«hai già l'ultima» subito dopo un push** vuol dire che il sito
+non la serve ancora (la action non è finita, o non è verde), e **«il sito
+sta ancora cambiando versione»** è la rete di GitHub che distribuisce la
+copia di prima per qualche minuto.
+
 ---
 
 ## Quando qualcosa va storto
@@ -259,10 +272,13 @@ quello rotto, un componente Vue non comparirebbe). I guasti si rileggono
 **dalla pagina dei grandi**, ed è così che si diagnostica un telefono che
 non è il proprio.
 
-**`#ripara`** nell'indirizzo (o il tasto nella pagina dei grandi) butta
-cache e service worker e ricarica. **Non tocca IndexedDB né localStorage**,
-ed è tutta la differenza con «cancella i dati del sito»: i progressi
-restano.
+**`#ripara`** nell'indirizzo (o il tasto nella pagina dei grandi, che
+compare quando il gioco si è annotato un guasto) butta cache e service
+worker e ricarica. **Non tocca IndexedDB né localStorage**, ed è tutta la
+differenza con «cancella i dati del sito»: i progressi restano. Per una
+copia **vecchia** e non rotta la strada giusta è «↻ cerca aggiornamenti»:
+`#ripara` butta via tutto prima di avere il nuovo, e senza rete lascia il
+telefono senza gioco finché la rete non torna.
 
 **Il codice dei genitori** è quattro cifre, di partenza `0000`. Si rimette
 dall'indirizzo con `#pin=1234`. Lì accanto vive anche il cheat delle monete,

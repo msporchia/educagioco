@@ -451,16 +451,52 @@ committate: non è ricostruibile da git.
 - **`src/aggiornamento.js`** — «c'è una versione nuova». Il service
   worker si aggiorna da sé, ma **la pagina già aperta resta quella di
   prima**, e su un telefono installato può restare aperta per giorni:
-  qui si sorveglia (`reg.update()` ogni mezz'ora) e si accende un ref.
-  Due cose che non fa, ed è deliberato: **non ricarica da solo** (un
-  reload in mezzo a un'ondata butta via la partita) e **non si mostra
-  dentro un gioco** — il nastro vive solo in home, dove non c'è niente
-  da perdere. Il cartello sta in `guide/Nastri.vue` insieme a quello
-  dell'installazione: parlano tutti e due al grande e vivono nello
-  stesso posto. La regola dei tre `serveIlNastro` (non installata ·
-  telefono · non già rifiutato) è una funzione pura in `guide/aiuto.js`
-  perché altrimenti non si potrebbe provare senza un telefono in mano —
-  `apriGioco(browser, { userAgent })` è nato per questo.
+  qui si sorveglia (all'apertura, al ritorno in primo piano, al ritorno
+  in home, ogni mezz'ora) e si accende un ref. Due cose che non fa, ed è
+  deliberato: **non ricarica da solo** (un reload in mezzo a un'ondata
+  butta via la partita) e **non si mostra dentro un gioco** — il nastro
+  vive solo in home, dove non c'è niente da perdere. Il cartello sta in
+  `guide/Nastri.vue` insieme a quello dell'installazione: parlano tutti
+  e due al grande e vivono nello stesso posto. La regola dei tre
+  `serveIlNastro` (non installata · telefono · non già rifiutato) è una
+  funzione pura in `guide/aiuto.js` perché altrimenti non si potrebbe
+  provare senza un telefono in mano — `apriGioco(browser, { userAgent })`
+  è nato per questo.
+  **Il nastro lo decide il sito, non il service worker**:
+  `versione.json` (letto `no-store`) contro `__VERSIONE__`. Si accendeva
+  quando se ne installava uno nuovo, cioè quando cambiava chi tiene la
+  copia, e sbagliava nei due versi: lo diceva a chi aveva la pagina già
+  fresca dalla rete, e taceva per sempre con chi aveva un service worker
+  nuovo con dentro la pagina vecchia.
+  **E quando l'automatico non basta c'è il tasto**: «↻ cerca
+  aggiornamenti» accanto alla versione in fondo alla home, e lo stesso
+  giro dietro «Aggiorna» del nastro (`aggiornaOra`, il foglio è
+  `guide/Aggiorna.vue`). Chiede al sito, scarica la pagina **a mano**
+  contando i megabyte (il totale è `peso` in `versione.json`: la
+  lunghezza che dichiara il sito è quella compressa), controlla che dentro
+  ci sia l'id promesso, la mette **al posto della vecchia** nelle cache del
+  service worker e in quella della versione nuova, e solo allora riparte.
+  Tre cose che si sbagliano: la pagina si chiede a `./?aggiorna=<id>` e
+  `no-store`, perché anche questa `fetch` passa dal service worker, che
+  fuori dalle navigazioni risponde prima dalla cache — cioè con la copia
+  vecchia; la cache della versione nuova si chiama come la chiama lui
+  (`CASSETTO` + id, e `unita/aggiornamento` guarda che i due nomi
+  combacino), ed è così che sette megabyte e mezzo si scaricano una volta
+  sola; e **niente si butta prima di avere in mano il nuovo** — è la
+  differenza con «Riscarica il gioco» (`ripara()`), che butta tutto e poi
+  ricarica, giusto per una copia rotta e sbagliato per una vecchia.
+  **L'installazione del service worker** (`vite.config.js`) chiede la
+  pagina `no-cache`, una volta sola e obbligatoria: GitHub Pages fa tenere
+  la pagina dieci minuti, e il service worker nuovo si metteva in casa
+  quella vecchia che il browser si teneva da parte. Si prova con un sito
+  vero: `integrazione/aggiornamento` apre `aiuto/sito.mjs` (`dist/` servito
+  come Pages, con `pubblica()` e i giorni storti a comando) in un
+  `apriTelefono()` — un profilo su disco, perché quello in incognito la
+  pagina da otto megabyte non se la tiene, e senza la pagina tenuta il
+  guasto non si vede. Nei test i bersagli sono
+  `[data-azione="cerca-versione"]`, `[data-aggiorna][data-fase=…]`,
+  `[data-scaricati]`, `[data-azione="aggiorna"]` sul nastro e
+  `[data-azione="riprova"]`.
 - **`src/incidenti.js`** — la rete di sicurezza: un errore, ovunque
   scatti, finisce in archivio sotto `incidenti` (fuori dai profili, come
   il codice dei genitori) e mette a schermo un cartello in DOM puro —
