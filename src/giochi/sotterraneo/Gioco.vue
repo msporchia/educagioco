@@ -28,7 +28,7 @@ import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } fr
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa, sosta, salvaSosta, buttaSosta,
+import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta,
          scelta, ricorda } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
@@ -212,7 +212,7 @@ function riprendiDiscesa() {
 const tappe = computed(() => CAMPAGNA.map((t, i) => ({
   ...t, indice: i,
   aperta: aperta(CHIAVE, i),
-  adesso: i === avanza.tappa,
+  adesso: adesso(CHIAVE, i),
   stelle: stelleDi(CHIAVE, i),
 })))
 

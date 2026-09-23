@@ -28,6 +28,12 @@ import { CAMPAGNA } from '../../src/giochi/prima-dopo/dati/campagna.js'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
+/* un bambino di cinque anni. Senza età un profilo vale nove anni
+   (`ETA_DIFETTO`), e a nove le tappe di Prima e dopo sono tutte già
+   passate: la carta in home non c'è, come quella di Conta gli animali.
+   A cinque anni è chiusa per età solo l'ultima, e le tre che si toccano
+   qui (0, 3, 8) seguono il lucchetto di sempre. */
+await semina(page, { settings: { eta: 5 } })
 
 /* ---------- 1. si entra dalla home ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="prima"]')
@@ -35,6 +41,14 @@ controlla('la carta del gioco è in home', await carta.count() === 1)
 await carta.click()
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pd-tappa').count(), CAMPAGNA.length)
+/* a cinque anni l'ultima tappa è chiusa per età, e sotto non c'è
+   scritto niente: andando avanti non si aprirebbe. La seconda è chiusa
+   solo perché non ci è ancora arrivato, e lo dice */
+uguale('chiusa per età, sotto il nome non c\'è scritto niente',
+       await page.locator('.pd-tappa[data-tappa="9"] .pd-testo i').count(), 0)
+uguale('chiusa perché non ci è ancora arrivato, dice come si apre',
+       (await page.locator('.pd-tappa[data-tappa="1"] .pd-testo i').innerText()).trim(),
+       'continua per aprirla')
 
 /* ---------- 2. le vignette sono grosse quanto lo schermo permette ---------- */
 await page.locator('.pd-tappa[data-tappa="0"]').click()
@@ -113,6 +127,11 @@ uguale('la domanda dopo si lascia toccare davvero',
 await semina(page, { campagne: { prima: { tappa: 9, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="prima"]').click()
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
+/* la prossima sarebbe la decima, che a cinque anni è chiusa per età:
+   per lui il gioco finisce qui, e il segno di adesso non va da nessuna
+   parte */
+uguale('al muro dell\'età nessuna tappa porta il segno di adesso',
+       await page.locator('.pd-adesso').count(), 0)
 await page.locator('.pd-tappa[data-tappa="3"]').click()
 await page.waitForSelector('.pd-storia', { timeout: 5000 })
 await attendi(page, 400)

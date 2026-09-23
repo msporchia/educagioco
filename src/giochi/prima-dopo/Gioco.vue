@@ -20,7 +20,7 @@ import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa } from '../campagne.js'
+import { aperta, adesso, chiusaPerEta, stelleDi, completa } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { verbo as datiVerbo } from './dati/verbi.js'
@@ -55,7 +55,6 @@ const fase = ref('gioca')           // gioca | vinta | spiega
 const cieco = ref(false)            // la domanda è appena comparsa: non si tocca
 const serie = ref(0)                // storie filate senza un errore, di fila
 
-const avanza = progresso(CHIAVE)
 const quesito = computed(() => corsa.value?.quesito || null)
 const verboAttuale = computed(() => quesito.value ? datiVerbo(quesito.value.verbo) : null)
 
@@ -65,7 +64,8 @@ const scalini = computed(() => SCALINI.map(s => ({
   tappe: tappeDelloScalino(s.chiave).map(t => ({
     ...t,
     aperta: aperta(CHIAVE, t.indice),
-    adesso: t.indice === avanza.tappa,
+    perEta: chiusaPerEta(CHIAVE, t.indice),
+    adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
   })),
 })))
