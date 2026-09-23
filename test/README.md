@@ -127,6 +127,24 @@ senza aspettare domani.
 await semina(page, { coins: 200, pets: { watson: { /* ... */ } } })
 ```
 
+`aiuto/sito.mjs` — per l'unica cosa che da `file://` non esiste: il service
+worker. Serve `dist/` su una porta a caso di `127.0.0.1` come lo serve GitHub
+Pages (`Cache-Control: max-age=600`, ETag e 304), mette in linea una versione
+nuova senza ricompilare (`pubblica({ id, etichetta })`) e fa a comando i giorni
+storti: `lento`, `rotto`, `muto`, `swFermo`, `goccia`. Tiene il registro di
+ogni richiesta (`richieste`), con chi l'ha fatta e se era una rivalutazione.
+Si apre in un **`apriTelefono()`** (`aiuto/browser.mjs`) e non in un
+`apriBrowser()`: un profilo con la cache su disco, perché l'incognito tiene la
+cache in memoria, la pagina da otto megabyte non ci sta, e il guasto da rifare
+— la pagina vecchia che il telefono si tiene da parte — sparisce.
+
+```js
+const sito = await apriSito()
+const telefono = await apriTelefono()
+const { page } = await apriGioco(telefono, { indirizzo: sito.indirizzo })
+sito.pubblica({ id: '2099.10.01.0900-b', etichetta: '1 ottobre alle 09:00' })
+```
+
 ## Regole imparate a spese nostre
 
 **`avvio.test.mjs` esiste per un motivo.** È già capitato di distribuire un
