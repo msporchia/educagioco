@@ -44,6 +44,8 @@ import { CAMPAGNA as DUNGEON } from '../giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../giochi/survivors/dati/campagna.js'
 import { CAMPAGNA as CORSA } from '../giochi/corsa/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
+import { CAMPAGNA as PASSO_PASSO } from '../giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA as COSTRUTTORE } from '../giochi/costruttore/dati/campagna.js'
 
 /* La fila di tappe di ogni gioco, per la chiave con cui la home lo
    conosce. Chi non è qui dentro non ha una campagna — la fattoria è un
@@ -70,6 +72,8 @@ export const TAPPE_DEL_GIOCO = {
   survivors: SURVIVORS,
   corsa: CORSA,
   sotterraneo: SOTTERRANEO,
+  passo: PASSO_PASSO,
+  costruttore: COSTRUTTORE,
 }
 
 /* le regole che dipendono da questo bambino, lette una volta sola */

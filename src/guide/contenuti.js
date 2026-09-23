@@ -592,6 +592,47 @@ export const AIUTI = {
     ],
   },
 
+  passo: {
+    emoji: '🐇', titolo: 'Passo passo',
+    blocchi: [
+      'Il coniglio deve tornare nella sua tana. Non si guida col dito: si scrive una fila di frecce, si preme ▶, e il coniglio la fa tutta, dall\'inizio alla fine.',
+      { titolo: 'Come si gioca', righe: [
+        'Ogni tasto aggiunge una freccia dove lampeggia la sbarra arancione. Toccando una freccia della fila la sbarra si sposta lì dopo; ⌫ toglie quella prima.',
+        '▶ riparte **sempre dalla partenza**, e la fila resta. Mentre il coniglio corre si accende la freccia che sta facendo.',
+        'Se sbatte o finisce in acqua lampeggia la freccia sbagliata, e il coniglio torna indietro: si cambia quella e si riprova. Non si perde mai.',
+        'Le frecce arancioni sono il **salto**: due caselle, scavalcando l\'acqua, i tronchi e le staccionate. I sassi e gli alberi no.',
+      ] },
+      { titolo: 'Le stelle', righe: [
+        'Una per essere arrivato a casa, una per la **carota**, una per averlo fatto **senza 💡**.',
+        'Il 💡 non dà la soluzione: indica la prossima freccia giusta, e la mette il bambino. Costa la terza stella, e lo dice prima.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Il primo passo della programmazione: un programma è una fila di ordini, si esegue da capo, e quando va storto si cerca **quale** ordine era sbagliato.',
+        'Poi, col ghiaccio, pensare prima di scrivere: una freccia sola può valere sei caselle.',
+      ] },
+    ],
+  },
+  costruttore: {
+    emoji: '🏗️', titolo: 'Il costruttore',
+    blocchi: [
+      'Qualcuno ordina una cosa — un muro, una scala, un castello — e tu scrivi **il programma** con cui il robot la costruisce. Poi premi ▶ e guardi.',
+      { titolo: 'Come si scrive', righe: [
+        'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole. Una **N** è un numero ancora da scegliere.',
+        'Il robot cammina e cade: per salire si mette un mattone ↓ sotto i piedi e ci sale sopra. I mattoni si posano anche ↘ ↙ in basso, dove andrà il piede: è così che si fa un ponte.',
+        'Un **progetto** è un pezzo di programma con un nome, che si scrive una volta e si chiama quante volte vuoi. Le sue **misure** sono i numeri che riceve.',
+        'Una **lavagnetta** è un numero con un nome, che il robot legge e cambia mentre lavora. Quelle col lucchetto le scrive chi ha ordinato.',
+        '«**Se**» fa quello che ha dentro solo quando la domanda è vera: il robot guarda cosa ha sotto i piedi o accanto, e di che colore è.',
+      ] },
+      'Quasi ogni livello ha **più ordini** — tre gradini, poi cinque — e il programma deve reggerli tutti: scrivere il numero del primo ordine al posto della lavagnetta vince una volta e perde la seconda.',
+      { titolo: 'Se non va', righe: [
+        'Il robot si ferma sulla riga sbagliata e dice perché.',
+        'Il 💡 dà un aiuto per volta, gratis; in fondo c\'è «mostrami come», che scrive la soluzione e costa la seconda stella.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Programmare davvero: funzioni con i loro parametri, variabili, cicli, condizioni. Il tasto «🐍 com\'è in Python» mostra lo stesso programma come lo scrive chi programma di mestiere.',
+      ] },
+    ],
+  },
   generale: {
     emoji: '🎖️', titolo: 'Il generale',
     blocchi: [

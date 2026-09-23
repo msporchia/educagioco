@@ -1,0 +1,202 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PASSO PASSO — L'ASPETTO
+
+   Un file solo, e **ogni classe comincia per `pp-`**, la radice
+   compresa: il CSS di tutti i giochi finisce in un file unico, e due
+   giochi che si contendono lo stesso nome si rompono a vicenda a mesi
+   di distanza.
+
+   I tasti sono grossi apposta: a cinque anni il dito è largo e la mira
+   corta. Due colori e basta per le frecce — blu il passo, arancio il
+   salto — e la tessera nella fila ha il colore del tasto che l'ha
+   messa: si vede a colpo d'occhio dove sono i salti.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pp {
+  --pp-carta: #fffdf7;
+  --pp-inchiostro: #24331f;
+  --pp-tenue: #6d7a62;
+  --pp-bordo: #d9e6cc;
+  --pp-passo: #4f6bd0;
+  --pp-passo-scuro: #33498f;
+  --pp-salto: #ee8436;
+  --pp-salto-scuro: #b0561c;
+  --pp-via: #2fae47;
+  --pp-via-scuro: #1c7a2e;
+  --pp-luce: #ffc21a;
+  --pp-tessera: 40px;
+  --pp-spazio: 6px;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 520px; margin: 0 auto;
+  position: relative;
+  color: var(--pp-inchiostro);
+}
+.pp .pp-em { font-family: system-ui, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji",
+                          "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* ═══════════ la mappa della campagna ═══════════ */
+.pp-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+            gap: 18px; padding: 10px 12px 28px }
+.pp-scalino > h3 { display: flex; align-items: baseline; gap: 7px; font-size: 15px;
+                   color: var(--pp-tenue); margin-bottom: 8px }
+.pp-scalino > h3 .pp-em { font-size: 20px; align-self: center }
+.pp-scalino > h3 b { color: var(--pp-inchiostro); font-size: 16px; white-space: nowrap }
+.pp-scalino > h3 i { font-style: normal; font-size: 11.5px; flex: 1; text-align: right; line-height: 1.2 }
+.pp-tappe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+
+.pp-tappa { position: relative; min-height: 92px; padding: 16px 3px 7px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            gap: 3px; background: var(--pp-carta); border-radius: 15px;
+            box-shadow: 0 3px 0 var(--pp-bordo); color: var(--pp-inchiostro);
+            transition: transform .12s }
+.pp-tappa:active { transform: scale(.96) }
+.pp-tappa .pp-numero { position: absolute; top: 5px; left: 7px; font-size: 11px; font-weight: 800;
+                       color: var(--pp-tenue) }
+.pp-tappa .pp-faccia { font-size: 30px }
+.pp-tappa .pp-nome { font-size: 11px; line-height: 1.15; text-align: center; color: var(--pp-tenue);
+                     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                     overflow: hidden; min-height: 2.3em }
+.pp-tappa .pp-stelle { font-size: 11px; letter-spacing: 1px }
+.pp-spenta { opacity: .22; filter: grayscale(1) }
+.pp-tappa.pp-chiusa { opacity: .5; box-shadow: none }
+/* la prossima da giocare respira con la luce, non con la misura: un
+   bersaglio che cambia grandezza è un bersaglio che scappa al dito */
+.pp-tappa.pp-adesso { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 0 var(--pp-bordo);
+                      animation: pp-respira 1.8s ease-in-out infinite }
+@keyframes pp-respira { 50% { box-shadow: 0 0 0 6px rgba(255,194,26,.55), 0 3px 0 var(--pp-bordo) } }
+
+.pp-sentiero { display: flex; align-items: center; gap: 12px; text-align: left; padding: 14px 16px;
+               border-radius: 18px; background: linear-gradient(135deg, #fff6d8, #ffe7b8);
+               box-shadow: 0 3px 0 #efd08a; color: var(--pp-inchiostro) }
+.pp-sentiero > .pp-em { font-size: 32px; flex: none }
+.pp-sentiero b { display: block; font-size: 16px }
+.pp-sentiero i { display: block; font-style: normal; font-size: 12.5px; color: var(--pp-tenue) }
+.pp-sentiero.pp-chiusa { opacity: .55; box-shadow: none }
+
+/* ═══════════ il campo ═══════════ */
+.pp-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;
+            padding: 4px 12px calc(10px + env(safe-area-inset-bottom)) }
+/* la mappa prende quello che resta, e la tela ci si adatta a
+   ingrandimenti interi: il riquadro non dipende da lei, lei da lui */
+.pp-scena { flex: 1 1 0; min-height: 120px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center }
+.pp-tela { display: block; flex: none; image-rendering: pixelated; image-rendering: crisp-edges }
+
+/* ═══════════ la fila ═══════════ */
+/* Alta due righe di tessere, sempre: se crescesse con la fila la mappa
+   sopra cambierebbe misura a ogni freccia, e ballerebbe sotto gli occhi.
+   Oltre le due righe scorre, e la tessera che conta resta a vista. */
+.pp-fila { flex: none; height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 14px);
+           overflow-y: auto; overscroll-behavior: contain;
+           display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center;
+           gap: var(--pp-spazio); padding: 7px 8px;
+           background: var(--pp-carta); border-radius: 16px;
+           box-shadow: inset 0 2px 6px rgba(0,0,0,.08), 0 1px 0 #fff }
+.pp-inizio { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 50%;
+             background: #eef4e6; display: grid; place-items: center; font-size: 22px;
+             box-shadow: inset 0 0 0 2px var(--pp-bordo) }
+.pp-tessera { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
+              background: var(--pp-passo); color: #fff; display: grid; place-items: center;
+              box-shadow: 0 2px 0 var(--pp-passo-scuro); transition: transform .12s, opacity .2s }
+.pp-tessera.pp-salto { background: var(--pp-salto); box-shadow: 0 2px 0 var(--pp-salto-scuro) }
+.pp-tessera .pp-icona { width: 26px; height: 26px }
+/* la tessera che sta girando: è la cosa più importante dello schermo */
+.pp-tessera.pp-corrente { transform: scale(1.14); box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25);
+                          z-index: 1 }
+.pp-tessera.pp-fatta { opacity: .5 }
+.pp-tessera.pp-guasto { box-shadow: 0 0 0 3px #ff8a00; animation: pp-guasto .45s ease-in-out 5 }
+@keyframes pp-guasto { 50% { transform: scale(1.18) rotate(-6deg); box-shadow: 0 0 0 5px #ffb020 } }
+.pp-tessera.pp-sospetta { opacity: .4 }
+.pp-in-corsa .pp-inizio { opacity: .6 }
+
+/* il cursore: dove entra la freccia nuova */
+.pp-cursore { width: 5px; height: calc(var(--pp-tessera) + 4px); flex: none; margin: 0 -2px;
+              border-radius: 3px; background: #ff8a00; animation: pp-cursore 1.1s steps(2, jump-none) infinite }
+@keyframes pp-cursore { 0% { opacity: 1 } 100% { opacity: .25 } }
+.pp-posto { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
+            border: 2px dashed #c7d6b8 }
+
+/* ═══════════ le frecce e i tasti ═══════════ */
+.pp-tasti { flex: none; display: flex; flex-direction: column; gap: 8px }
+.pp-riga { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+.pp-tasto { height: 58px; border-radius: 16px; display: grid; place-items: center;
+            background: var(--pp-passo); color: #fff; box-shadow: 0 4px 0 var(--pp-passo-scuro);
+            transition: transform .08s, box-shadow .08s, opacity .2s; position: relative }
+.pp-tasto:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 transparent }
+.pp-tasto:disabled { opacity: .45 }
+.pp-tasto svg { width: 36px; height: 36px }
+.pp-tasto.pp-salto { height: 52px; background: var(--pp-salto); box-shadow: 0 4px 0 var(--pp-salto-scuro) }
+.pp-riga.pp-azioni { grid-template-columns: 1fr 2fr 1fr }
+.pp-tasto.pp-via { background: var(--pp-via); box-shadow: 0 4px 0 var(--pp-via-scuro); height: 60px }
+.pp-tasto.pp-ferma { background: #7d8a9c; box-shadow: 0 4px 0 #56616f; height: 60px }
+.pp-tasto.pp-cancella { background: #e7edf3; color: #5b6878; box-shadow: 0 4px 0 #c5cfda; height: 60px }
+.pp-tasto.pp-aiuto { background: #fff3cc; box-shadow: 0 4px 0 #e6cf86; height: 60px; font-size: 28px }
+/* il prezzo del 💡, detto prima: una stella col meno */
+.pp-costo { position: absolute; top: -7px; right: -5px; display: flex; align-items: center; gap: 1px;
+            background: #fff; border-radius: 12px; padding: 2px 6px 2px 4px; font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.2) }
+.pp-costo b { color: #c2410c; font-size: 15px; line-height: 1 }
+
+/* l'aiuto accende una freccia: pulsa finché non la si tocca */
+.pp-brilla { animation: pp-brilla .9s ease-in-out infinite; z-index: 1 }
+@keyframes pp-brilla {
+  0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 0 0 3px var(--pp-luce) }
+  50% { box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 0 0 9px rgba(255,194,26,.5) }
+}
+
+/* la manina della prima volta: indica e basta — non prende i tocchi */
+.pp-manina { position: absolute; left: 50%; top: 62%; font-size: 34px; pointer-events: none;
+             filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); animation: pp-manina 1.1s ease-in-out infinite }
+@keyframes pp-manina { 0%, 100% { transform: translate(-30%, 0) } 50% { transform: translate(-30%, -9px) } }
+
+/* le icone disegnate, piene del colore del tasto */
+.pp-icona { display: block; overflow: visible }
+.pp-icona-pieno { fill: currentColor }
+.pp-tasto .pp-icona-segno { fill: none; stroke: #e7edf3; stroke-width: 3.6; stroke-linecap: round }
+
+/* ═══════════ il cartello di fine ═══════════ */
+.pp-velo { position: absolute; inset: 0; z-index: 5; padding: 18px;
+           background: rgba(30,45,25,.7); display: flex; flex-direction: column;
+           align-items: center; justify-content: center; animation: pp-entra .25s }
+@keyframes pp-entra { from { opacity: 0 } to { opacity: 1 } }
+.pp-cartello { width: 100%; max-width: 380px; background: var(--pp-carta); border-radius: 26px;
+               padding: 20px 18px 18px; display: flex; flex-direction: column; align-items: center;
+               gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: pp-sale .35s }
+@keyframes pp-sale { from { transform: translateY(24px) scale(.94) } }
+.pp-cartello .pp-faccia { font-size: 52px }
+.pp-cartello h2 { font-size: 22px; text-align: center; color: var(--pp-inchiostro) }
+.pp-tre { display: flex; gap: 16px; margin: 2px 0 4px }
+.pp-una { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 18px;
+          animation: pp-stella .4s backwards }
+.pp-una:nth-child(2) { animation-delay: .15s }
+.pp-una:nth-child(3) { animation-delay: .3s }
+@keyframes pp-stella { from { transform: scale(0) } 70% { transform: scale(1.25) } }
+.pp-una .pp-grande { font-size: 40px }
+.pp-una.pp-spenta { opacity: .3; filter: grayscale(1) }
+.pp-barrato { position: relative }
+.pp-barrato::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 3px;
+                     background: #c2410c; transform: rotate(-35deg); border-radius: 2px }
+.pp-frase { font-size: 16px; font-weight: 700; text-align: center }
+.pp-frase.pp-record { color: #c2410c }
+.pp-monete { font-size: 18px; font-weight: 800 }
+.pp-racconto { font-size: 13px; color: var(--pp-tenue); text-align: center; line-height: 1.3 }
+.pp-scelte { display: flex; gap: 10px; margin-top: 6px; align-items: center }
+.pp-piccolo { width: 60px; height: 60px; border-radius: 18px; background: #eef2e8; font-size: 28px;
+              display: grid; place-items: center; box-shadow: 0 4px 0 #d3dcc8 }
+.pp-grosso { width: 120px; height: 64px; border-radius: 20px; background: var(--pp-via); color: #fff;
+             display: grid; place-items: center; box-shadow: 0 4px 0 var(--pp-via-scuro) }
+.pp-grosso svg { width: 38px; height: 38px; fill: currentColor }
+.pp-piccolo:active:not(:disabled), .pp-grosso:active:not(:disabled) { transform: translateY(4px); box-shadow: none }
+.pp-piccolo:disabled, .pp-grosso:disabled { opacity: .5 }
+
+/* sugli schermi bassi le tessere e i tasti si stringono un poco: la
+   mappa deve restare grande abbastanza da vedere il coniglio */
+@media (max-height: 700px) {
+  .pp { --pp-tessera: 34px; --pp-spazio: 5px }
+  .pp-tessera .pp-icona { width: 22px; height: 22px }
+  .pp-tasto { height: 50px }
+  .pp-tasto.pp-salto { height: 44px }
+  .pp-tasto.pp-via, .pp-tasto.pp-ferma, .pp-tasto.pp-cancella, .pp-tasto.pp-aiuto { height: 52px }
+}

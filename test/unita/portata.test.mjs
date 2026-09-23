@@ -41,6 +41,8 @@ import { CAMPAGNA as DUNGEON } from '../../src/giochi/dungeon/dati/campagna.js'
 import { CAMPAGNA as SURVIVORS } from '../../src/giochi/survivors/dati/campagna.js'
 import { CAMPAGNA as CORSA } from '../../src/giochi/corsa/dati/campagna.js'
 import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA as COSTRUTTORE } from '../../src/giochi/costruttore/dati/campagna.js'
 import { CAMPAGNA as INGLESE } from '../../src/data/campagna-inglese.js'
 import { CAMPAGNA as SPAGNOLO } from '../../src/data/campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from '../../src/data/campagne-castello.js'
@@ -105,6 +107,7 @@ const CAMPAGNE = [
   ['conta gli animali', CONTA], ['prima e dopo', PRIMA_DOPO],
   ['codice segreto', CODICE], ['dungeon', DUNGEON], ['survivors', SURVIVORS],
   ['la corsa', CORSA], ['il sotterraneo', SOTTERRANEO],
+  ['passo passo', PASSO_PASSO], ['il costruttore', COSTRUTTORE],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],
