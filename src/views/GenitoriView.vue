@@ -1272,7 +1272,10 @@ async function rimetti(v) {
                 data-flag="tuttoAperto" @click="cambiaAperto">
           <span class="ico">🔓</span>
           <b>Sblocca tutti i livelli</b>
-          <i>{{ aperto ? 'Segnato — nessun gioco lo legge ancora: per ora non cambia niente'
+          <!-- diceva «nessun gioco lo legge ancora», ed era vecchio: lo
+               leggono il Generale, il castello, le lingue, la bancarella
+               e gli asteroidi (`tappaAperta`/`tuttoAperto` in profile.js) -->
+          <i>{{ aperto ? 'Segnato: nei giochi a tappe si apre tutto, anche quello che non ha ancora fatto'
                        : 'Le tappe si aprono una per volta, come adesso' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
