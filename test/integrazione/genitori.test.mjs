@@ -934,7 +934,7 @@ uguale('chi entra la prima volta parte da zero, non con le monete dell\'altro',
 controlla('a chi comincia a otto anni i giochi per i piccoli non compaiono',
   !(await page.isVisible('.carta[data-gioco="conta"]')))
 controlla('e nemmeno il secondo dei due',
-  !(await page.isVisible('.carta[data-gioco="prima-dopo"]')))
+  !(await page.isVisible('.carta[data-gioco="prima"]')))
 controlla('ma il castello c\'è', await page.isVisible('.carta.td'))
 controlla('e gli asteroidi pure', await page.isVisible('.carta.mate'))
 

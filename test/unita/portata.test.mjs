@@ -7,7 +7,7 @@
    Prima le campagne non lo sapevano: la fila era una sola per tutti, e
    chi arrivava grande si macinava le prime tappe per delle sere.
 
-   Qui si controllano due cose diverse:
+   Qui si controllano tre cose:
 
    1. **Il conto** (`data/portata.js`), che è dato puro e si prova con
       tappe finte: la mira, i tre stati, e le due asimmetrie che si
@@ -19,6 +19,10 @@
       nella fila e ci resta — semplicemente non viene mai tolta a
       nessuno, che è esattamente il difetto di partenza tornato indietro
       in silenzio.
+
+   3. **Il ponte** (`data/portata-giochi.js`), cioè sotto quale chiave
+      sta la fila di ogni gioco. Stesso difetto, più a monte: una chiave
+      sbagliata non trova mai la sua fila, e il gioco vale per un posto.
    ═══════════════════════════════════════════════════════════════════ */
 import { miraDi, statoDellaTappa, filaConPortata, primaDaGiocare,
          restaQualcosa, giocoDaOffrire, arcoDelGioco, livelloDegliAnni,
@@ -39,6 +43,8 @@ import { RACCONTO as CASTELLO } from '../../src/data/campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../../src/giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
 import { TAPPE as GENERALE } from '../../src/data/generale.js'
+import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
+import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -171,5 +177,21 @@ for (const [nome, tappe] of CAMPAGNE) {
   const a = arcoDelGioco(tappe)
   if (a) nota(nome.padEnd(18), `${a.anniDa.toFixed(1)}–${a.anniA.toFixed(1)} anni`)
 }
+
+/* ═══════════ 3. IL PONTE ═══════════
+   La home, le mappe e il quadro dell'età chiedono la fila con la chiave
+   del gioco, e una chiave che non è quella non dà nessun errore: il
+   gioco non trova la sua fila e vale per un posto — offerto a tutti, e
+   nessuna tappa aperta o chiusa per età. È successo a Prima e dopo e
+   al Codice Segreto, scritti col nome della cartella (`prima-dopo`,
+   `codice-segreto`) invece che con la chiave (`prima`, `codice`), e
+   nessun test lo vedeva: le campagne qui sopra si importano per conto
+   loro, non passano dalla tabella. Il controllo va nei due versi,
+   perché anche una riga dimenticata fa di un gioco un posto: senza fila
+   può stare solo chi lo dichiara (`posto: true`). */
+uguale('ogni fila sta sotto la chiave di un gioco',
+       Object.keys(TAPPE_DEL_GIOCO).filter(k => !CHIAVI_GIOCHI.includes(k)).join(','), '')
+uguale('e senza fila c\'è solo chi si dichiara un posto',
+       GIOCHI.filter(g => !g.posto && !TAPPE_DEL_GIOCO[g.chiave]).map(g => g.chiave).join(','), '')
 
 riassunto('la portata delle tappe')

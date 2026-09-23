@@ -28,6 +28,12 @@ import { CAMPAGNA } from '../../src/giochi/prima-dopo/dati/campagna.js'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
+/* un bambino di cinque anni. Senza età un profilo vale nove anni
+   (`ETA_DIFETTO`), e a nove le tappe di Prima e dopo sono tutte già
+   passate: la carta in home non c'è, come quella di Conta gli animali.
+   A cinque anni è chiusa per età solo l'ultima, e le tre che si toccano
+   qui (0, 3, 8) seguono il lucchetto di sempre. */
+await semina(page, { settings: { eta: 5 } })
 
 /* ---------- 1. si entra dalla home ---------- */
 const carta = page.locator('.carta.gioco[data-gioco="prima"]')

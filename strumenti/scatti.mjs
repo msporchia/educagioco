@@ -112,7 +112,7 @@ function fattoriaGiocata() {
 PROFILO.campagne = {
   dungeon: { tappa: 7, libera: true, stelle: {}, cfg: {} },
   survivors: { tappa: 6, libera: true, stelle: {}, cfg: {} },
-  'codice-segreto': { tappa: 5, libera: true, stelle: {}, cfg: {} },
+  codice: { tappa: 5, libera: true, stelle: {}, cfg: {} },
   corsa: { tappa: 5, libera: false, stelle: {}, cfg: {} },
   fattoria: { tappa: 0, libera: false, stelle: {}, cfg: { stato: fattoriaGiocata() } },
 }
