@@ -592,6 +592,26 @@ export const AIUTI = {
     ],
   },
 
+  passo: {
+    emoji: '🐇', titolo: 'Passo passo',
+    blocchi: [
+      'Il coniglio deve tornare nella sua tana. Non si guida col dito: si scrive una fila di frecce, si preme ▶, e il coniglio la fa tutta, dall\'inizio alla fine.',
+      { titolo: 'Come si gioca', righe: [
+        'Ogni tasto aggiunge una freccia dove lampeggia la sbarra arancione. Toccando una freccia della fila la sbarra si sposta lì dopo; ⌫ toglie quella prima.',
+        '▶ riparte **sempre dalla partenza**, e la fila resta. Mentre il coniglio corre si accende la freccia che sta facendo.',
+        'Se sbatte o finisce in acqua lampeggia la freccia sbagliata, e il coniglio torna indietro: si cambia quella e si riprova. Non si perde mai.',
+        'Le frecce arancioni sono il **salto**: due caselle, scavalcando l\'acqua, i tronchi e le staccionate. I sassi e gli alberi no.',
+      ] },
+      { titolo: 'Le stelle', righe: [
+        'Una per essere arrivato a casa, una per la **carota**, una per averlo fatto **senza 💡**.',
+        'Il 💡 non dà la soluzione: indica la prossima freccia giusta, e la mette il bambino. Costa la terza stella, e lo dice prima.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Il primo passo della programmazione: un programma è una fila di ordini, si esegue da capo, e quando va storto si cerca **quale** ordine era sbagliato.',
+        'Poi, col ghiaccio, pensare prima di scrivere: una freccia sola può valere sei caselle.',
+      ] },
+    ],
+  },
   costruttore: {
     emoji: '🏗️', titolo: 'Il costruttore',
     blocchi: [

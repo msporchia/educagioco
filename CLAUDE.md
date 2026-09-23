@@ -572,6 +572,22 @@ committate: non è ricostruibile da git.
   merce già scelta** e le sue righe eseguono le azioni del consiglio:
   bersagli `[data-albero]`, `[data-albero-riga="<merce>"]`,
   `[data-albero-macchina="<id>"]`, `[data-albero-apri="<merce>"]`.
+- **`src/giochi/passo-passo/`** — *in prova*, per i piccoli (chiave `passo`).
+  Un coniglio su una griglia vista dall'alto torna alla tana eseguendo **una
+  fila di frecce**: il «segui le istruzioni» che viene prima del Generale.
+  Pagina: [`docs/passo-passo.md`](docs/passo-passo.md). Le frecce sono
+  **assolute** (← ↑ → ↓ come sullo schermo, mai «gira a destra»: le svolte
+  relative chiedono di ruotare la figura a mente, che a cinque anni non c'è),
+  ▶ **riparte sempre dalla partenza** e la fila resta — è un programma, non un
+  telecomando — e mentre corre si accende la freccia che sta facendo. Le
+  regole del mondo arrivano una per gradino e valgono sempre: il salto, il
+  **ghiaccio** (si scivola fino a un ostacolo: il sasso diventa un freno, ed è
+  il motore della difficoltà), i massi da spingere, le buche collegate. Lo
+  stato è piccolo, quindi un **risolutore** a ricerca in ampiezza
+  (`motore/risolutore.js`) dà gli aiuti (la prossima freccia giusta, mai la
+  soluzione intera), controlla in `unita/passo-passo` che ogni livello abbia
+  bisogno della regola del suo gradino, e con `motore/generatore.js` fa i
+  sentieri della modalità senza fine. Stelle: arrivato, la carota, senza 💡.
 - **`src/giochi/costruttore/`** — *in prova.* Un robot costruisce, visto di
   lato, quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti
