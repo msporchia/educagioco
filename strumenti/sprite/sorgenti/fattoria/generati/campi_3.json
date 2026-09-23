@@ -1,0 +1,409 @@
+{
+  "__": "Il terzo foglio dei campi: barbabietola, lavanda e riso (§8 di docs/fattoria-albero.md). Stessa forma di `campi_2.png`: il cartello, l'aiuola nuda (che non entra), sette stadi dal seminato al maturo, la cassetta. Nel riso il primo stadio è l'aiuola allagata con le piantine: è la risaia, non la terra.\n\nÈ trasparente ma con un alone forte attorno a ogni pezzo (un terzo dei pixel del foglio): `\"alone\": 128`.\n\n«misura» si ricava come in `campi_2.json`: ogni stadio è riportato a un letto di 32×27. La larghezza del letto è misurata stadio per stadio (i pixel color terra); l'altezza è quella dei primi stadi della fila, perché negli ultimi le barbabietole e il fogliame rosso si confondono con la terra e il letto risulterebbe più alto di com'è. Le cassette sono disegnate più grandi di quelle di `campi_2` rispetto all'aiuola, e sono rimesse a 25 di larghezza come le altre.",
+  "prompt": {
+    "scheda": "PROMPT-secondo-albero.md",
+    "base": "campi_2.png",
+    "generatore": "settembre 2026",
+    "testo": "Disegna un foglio di sprite in pixel art nello stesso stile di questa\nimmagine, riga per riga identico nella forma: a sinistra il\ncartello di legno con il disegno della pianta, poi otto aiuole in\nfila dalla terra appena arata ai semi, al germoglio, alla pianta\nche cresce, fino al raccolto maturo, e in fondo a destra la\ncassetta di legno piena del raccolto. Stessa misura delle aiuole,\nstessa terra, stesso bordo, stessa luce.\n\nIl foglio è 1536×1024 px. Tre righe, con la stessa spaziatura\ndelle righe allegate e il resto del foglio vuoto:\n1. barbabietola da zucchero: ciuffi di grandi foglie verde scuro\n   con le coste rosse, e alla fine le radici tonde viola-rossastre\n   che spuntano dalla terra; la cassetta piena di barbabietole con\n   le foglie\n2. lavanda: cespuglietti grigioverdi che crescono, poi le spighe\n   viola chiaro sempre più fitte; la cassetta coi mazzi di lavanda\n   legati con lo spago\n3. riso: l'aiuola allagata con un filo d'acqua che luccica, le\n   piantine verdi in file, poi le spighe che si piegano e diventano\n   dorate; la cassetta piena di pannocchie di riso dorate\n\nIl cartello porta il disegno della pianta e nient'altro: nessuna\nparola scritta sul cartello (quelle dell'immagine allegata non vanno\ncopiate).\n\nNessun alone o bagliore attorno ai pezzi: i bordi sono netti."
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglia": "oggetto",
+  "trasforma": {
+    "campo": {
+      "giri": 1
+    },
+    "cartello": {
+      "giri": 1,
+      "specchia": false
+    },
+    "raccolto": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "cartello_barbabietola": {
+      "da": [
+        25,
+        282
+      ],
+      "cella": [
+        148,
+        127
+      ],
+      "misura": [
+        33,
+        28
+      ]
+    },
+    "campo_barbabietola0": {
+      "da": [
+        350,
+        288
+      ],
+      "cella": [
+        137,
+        119
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_barbabietola1": {
+      "da": [
+        498,
+        288
+      ],
+      "cella": [
+        131,
+        119
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_barbabietola2": {
+      "da": [
+        639,
+        288
+      ],
+      "cella": [
+        128,
+        119
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_barbabietola3": {
+      "da": [
+        778,
+        283
+      ],
+      "cella": [
+        130,
+        124
+      ],
+      "misura": [
+        32,
+        29
+      ]
+    },
+    "campo_barbabietola4": {
+      "da": [
+        918,
+        273
+      ],
+      "cella": [
+        131,
+        134
+      ],
+      "misura": [
+        32,
+        31
+      ]
+    },
+    "campo_barbabietola5": {
+      "da": [
+        1061,
+        272
+      ],
+      "cella": [
+        140,
+        135
+      ],
+      "misura": [
+        32,
+        31
+      ]
+    },
+    "campo_barbabietola6": {
+      "da": [
+        1212,
+        264
+      ],
+      "cella": [
+        154,
+        143
+      ],
+      "misura": [
+        32,
+        33
+      ]
+    },
+    "raccolto_barbabietola": {
+      "da": [
+        1375,
+        269
+      ],
+      "cella": [
+        148,
+        143
+      ],
+      "misura": [
+        25,
+        24
+      ]
+    },
+    "cartello_lavanda": {
+      "da": [
+        25,
+        461
+      ],
+      "cella": [
+        149,
+        138
+      ],
+      "misura": [
+        33,
+        30
+      ]
+    },
+    "campo_lavanda0": {
+      "da": [
+        350,
+        477
+      ],
+      "cella": [
+        137,
+        120
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_lavanda1": {
+      "da": [
+        498,
+        477
+      ],
+      "cella": [
+        131,
+        120
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_lavanda2": {
+      "da": [
+        639,
+        477
+      ],
+      "cella": [
+        128,
+        120
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_lavanda3": {
+      "da": [
+        778,
+        468
+      ],
+      "cella": [
+        130,
+        129
+      ],
+      "misura": [
+        32,
+        30
+      ]
+    },
+    "campo_lavanda4": {
+      "da": [
+        918,
+        459
+      ],
+      "cella": [
+        132,
+        138
+      ],
+      "misura": [
+        33,
+        32
+      ]
+    },
+    "campo_lavanda5": {
+      "da": [
+        1061,
+        451
+      ],
+      "cella": [
+        140,
+        146
+      ],
+      "misura": [
+        32,
+        34
+      ]
+    },
+    "campo_lavanda6": {
+      "da": [
+        1212,
+        441
+      ],
+      "cella": [
+        154,
+        156
+      ],
+      "misura": [
+        32,
+        36
+      ]
+    },
+    "raccolto_lavanda": {
+      "da": [
+        1377,
+        459
+      ],
+      "cella": [
+        146,
+        138
+      ],
+      "misura": [
+        25,
+        24
+      ]
+    },
+    "cartello_riso": {
+      "da": [
+        25,
+        653
+      ],
+      "cella": [
+        148,
+        139
+      ],
+      "misura": [
+        33,
+        31
+      ]
+    },
+    "campo_riso0": {
+      "da": [
+        350,
+        668
+      ],
+      "cella": [
+        137,
+        124
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_riso1": {
+      "da": [
+        497,
+        668
+      ],
+      "cella": [
+        132,
+        124
+      ],
+      "misura": [
+        33,
+        27
+      ]
+    },
+    "campo_riso2": {
+      "da": [
+        639,
+        668
+      ],
+      "cella": [
+        128,
+        124
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_riso3": {
+      "da": [
+        778,
+        665
+      ],
+      "cella": [
+        130,
+        127
+      ],
+      "misura": [
+        32,
+        28
+      ]
+    },
+    "campo_riso4": {
+      "da": [
+        919,
+        665
+      ],
+      "cella": [
+        131,
+        127
+      ],
+      "misura": [
+        32,
+        28
+      ]
+    },
+    "campo_riso5": {
+      "da": [
+        1061,
+        666
+      ],
+      "cella": [
+        141,
+        126
+      ],
+      "misura": [
+        32,
+        27
+      ]
+    },
+    "campo_riso6": {
+      "da": [
+        1213,
+        665
+      ],
+      "cella": [
+        153,
+        128
+      ],
+      "misura": [
+        32,
+        28
+      ]
+    },
+    "raccolto_riso": {
+      "da": [
+        1374,
+        664
+      ],
+      "cella": [
+        144,
+        130
+      ],
+      "misura": [
+        25,
+        22
+      ]
+    }
+  }
+}

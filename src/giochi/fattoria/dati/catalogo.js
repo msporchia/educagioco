@@ -429,6 +429,24 @@ export const CATEGORIE = [
        peggio di uno che non si può comprare. */
     V('mercato',       'bancarella',        'Mercato',            40,
       { mercato: true, liv: 4, unico: true }),
+    /* ── LA MONGOLFIERA ──────────────────────────────────────────
+       La nave di Hay Day (`docs/fattoria-albero.md` §8.3): tre file di
+       casse che si riempiono un po' alla volta, e cosa fa sta in
+       `motore/mongolfiera.js`. Qui c'è **la piazzola dove atterra**, ed
+       è `unica` come la bancarella — una seconda non farebbe scendere
+       un secondo pallone.
+
+       Ha **due facce** (`edifici_4.png`): il pallone a terra, e la
+       piazzola vuota quando è partito — in `partita`, che sceglie
+       `aspettoDellaCosa` e che `guastiDelCatalogo` guarda come la
+       prima. Il piede si scrive a mano, [3, 2], ed è **il cesto**: il
+       pallone sopra è largo quattro celle e alto otto, e sborda in su
+       come il mais maturo, ma quello che tocca terra è il cesto — e la
+       piazzola, rimessa alla sua larghezza nel foglietto, prende lo
+       stesso posto quando il pallone se ne va. */
+    V('mongolfiera',   'mongolfiera',       'Mongolfiera',       250,
+      { mongolfiera: true, liv: 25, unico: true, la: true, piede: [3, 2],
+        partita: { pezzo: 'mongolfiera_partita' } }),
     /* Al 3 e non al 4, **insieme al mulino**: da quando il mangime è
        roba da animali finisce qui dentro, e un mulino che macina un
        livello prima che esista il posto dove mettere quello che fa
@@ -501,6 +519,67 @@ export const CATEGORIE = [
     V('cucina',        'cucina',            'Cucina',           210,
       { macchina: 'cucina', liv: 24, cresce: RINCARO, la: true }),
 
+    /* ── L'ALBERO NUOVO: CINQUE BOTTEGHE IN PIÙ ──────────────────
+       `docs/fattoria-albero.md` §8. Tre hanno già la loro facciata,
+       disegnata in anticipo nello stesso foglio delle due bancarelle
+       (`edifici_3.png`, campo `__`): lo zuccherificio, il pastificio,
+       il sushi bar. La gelateria è arrivata dopo, con la mongolfiera
+       (`edifici_4.png`). La friggitoria prende ancora in prestito un
+       disegno che somiglia, come facevano tutte le botteghe di sopra
+       prima che arrivasse il loro foglio (§6): `aspetta` dice il nome
+       vero, e `guastiDelCatalogo` diventa rosso il giorno che quel
+       pezzo c'è. */
+    V('zuccherificio', 'zuccherificio',     'Zuccherificio',    230,
+      { macchina: 'zuccherificio', liv: 27, cresce: RINCARO }),
+    V('gelateria',     'gelateria',         'Gelateria',        240,
+      { macchina: 'gelateria', liv: 30, cresce: RINCARO, la: true }),
+    V('pastificio',    'pastificio',        'Pastificio',       260,
+      { macchina: 'pastificio', liv: 31, cresce: RINCARO }),
+    V('friggitoria',   'gazebo_cena',       'Friggitoria',      300,
+      { macchina: 'friggitoria', liv: 57, cresce: RINCARO, la: true, aspetta: 'friggitoria' }),
+    V('sushi_bar',     'sushi_bar',         'Sushi bar',        340,
+      { macchina: 'sushi_bar', liv: 63, cresce: RINCARO }),
+
+    /* ── LE BOTTEGHE DEL PAESE ───────────────────────────────────
+       Non trasformano e non contengono: **chiedono**, come la
+       bancarella, ma ognuna il suo elenco chiuso e coi suoi clienti
+       (`docs/fattoria-albero.md` §8.3, le regole in
+       `motore/botteghe.js`, i numeri in `dati/botteghe.js`). L'elenco
+       sta qui, sulla voce, perché è la cosa che si compra: chi
+       aggiunge una merce all'osteria la aggiunge dove l'osteria si
+       vede.
+
+       `unico` come la bancarella: la fama e i banconi sono della
+       bottega, e una seconda pasticceria non ne aggiungerebbe nessuno.
+       Ognuna arriva con almeno tre merci già consegnabili, e lo
+       pretende `guastiDegliSblocchi` — una bottega che il giorno in cui
+       compare non ha niente da chiedere è un posto vuoto comprato.
+
+       Tre hanno la facciata dal foglio delle bancarelle
+       (`edifici_3.png`); l'osteria usa la `rosticceria`, che è lo
+       stesso mestiere. La mensa — la scuola, il posto dei bambini —
+       ha la sua scuoletta col campanile in `edifici_4.png`. */
+    V('pasticceria',   'pasticceria',       'Pasticceria',      180,
+      { liv: 20, unico: true, la: true, posto: {
+        chiede: ['torta', 'burro', 'uova', 'latte', 'merenda', 'crostata',
+                 'biscotti', 'gelato', 'frullato', 'marmellata', 'caramelle'],
+        clienti: ['pasticcera', 'maestra'] } }),
+    V('osteria',       'rosticceria',       'Osteria',          220,
+      { liv: 26, unico: true, la: true, posto: {
+        chiede: ['pane', 'formaggio', 'minestrone', 'polenta', 'tartufi', 'salsa',
+                 'conserva', 'pasta', 'pizza', 'lasagne', 'patatine', 'fritto',
+                 'arancini', 'sushi', 'maki'],
+        clienti: ['oste', 'cuoco', 'pizzaiolo', 'sushi'] } }),
+    V('mensa',         'mensa',             'Mensa della scuola', 200,
+      { liv: 30, unico: true, la: true, posto: {
+        chiede: ['pane', 'succo', 'latte', 'carote', 'fragole', 'minestrone',
+                 'pasta', 'biscotti', 'frullato', 'gelato'],
+        clienti: ['maestra', 'bidello'] } }),
+    V('merceria',      'merceria',          'Merceria',         240,
+      { liv: 36, unico: true, la: true, posto: {
+        chiede: ['lana', 'stoffa', 'maglione', 'maglione_lavanda', 'sciarpa_lana',
+                 'berretto', 'sacchetto', 'sapone'],
+        clienti: ['sarta', 'lavandaia'] } }),
 
     /* ── IL CORTILE: DOVE FINISCE LA CATENA ──────────────────────
        Il fienile e cinque recinti, e non sono arredo: sono macchine
@@ -583,6 +662,27 @@ export const CATEGORIE = [
       { macchina: 'alpaca', stati: RECINTO('alpaca'), piede: [4, 3], liv: 41, cresce: RINCARO }),
     V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,
       { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 47, cresce: RINCARO }),
+
+    /* ── LA PESCHIERA: IL SETTIMO RECINTO, TARDI E DA SOLO ────────
+       **Non si chiama «laghetto»**, che è già la decorazione da 🪙26
+       qui sopra fra le siepi (`sotto: true`, un pezzo di terreno):
+       stessa regola delle arnie contro l'apiario — quando si ha un
+       disegno apposta non si riusa una decorazione, si riusa solo
+       quando il disegno è lo stesso.
+
+       Niente foglio ancora (`docs/fattoria-albero.md` §8.7 vuole «i
+       suoi ritratti da recinto: calmo, mangia, pronto…»), e un ripiego
+       fatto di tessere di terreno prese a caso ('laghetto0'…) non
+       supererebbe il controllo che vuole un vero `recinto_<specie>_…`
+       dietro ogni ritratto (`unita/fattoria`, «i ritratti di un
+       recinto»). Il ripiego che regge — e che assomiglia davvero, non
+       solo di nome — è **lo stagno delle anatre**: un recinto d'acqua
+       è un recinto d'acqua, e finché il pesce non ha la sua faccia
+       prende in prestito quella intera, sei stati compresi. `aspetta`
+       dice il nome vero. */
+    V('peschiera',      'recinto_anatre_calmo', 'Peschiera',      360,
+      { macchina: 'pesci', stati: RECINTO('anatre'),
+        piede: [4, 3], liv: 57, cresce: RINCARO, la: true, aspetta: 'recinto_pesci_calmo' }),
   ] },
 
 
@@ -793,6 +893,44 @@ export const CATEGORIE = [
     V('teschio',       'teschio',           'Teschio',            6, { stagione: 'halloween' }),
     V('albero_natale', 'albero_verde',      'Albero con le lucine', 24,
       { stagione: 'natale', luci: true }),
+  ] },
+
+  /* ── LA FIERA: NON SI COMPRA, SI VINCE ────────────────────────────
+     Le otto sorprese della mongolfiera (`motore/mongolfiera.js`): una
+     arriva **nel baule**, come una cosa comprata, ogni volta che le
+     casse si riempiono tutte. `fiera: true` vuol dire tre cose insieme,
+     come `stagione:` qui sopra: la voce **non si vende** (il baule la
+     mostra solo a chi ne ha una in mano da posare, e `compra` la
+     rifiuta), non è un premio di nessun livello (fuori dalla fila di
+     `dati/livelli.js`, e fuori dalla pagina dei livelli) e non chiede
+     di essere reclamata — la apre averla (`Fattoria.sbloccata`).
+
+     È il premio che non sono monete e che si colleziona: una
+     decorazione che si compra con le monete non direbbe niente di
+     come la si è avuta. Il `prezzo` non si paga mai; c'è perché ogni
+     voce ne ha uno (`guastiDelCatalogo`) e dice quanto vale, per chi
+     un giorno stimasse lo speso da quello che si ha.
+
+     Sono nate prima del loro foglio (`fiera.png`,
+     `generati/PROMPT-secondo-albero.md` §4): il pezzo è un ripiego dal
+     giardino che somiglia, e `aspetta` il nome vero. */
+  { chiave: 'fiera', zona: 'bello', nome: 'La fiera', icona: '🎪', fiera: true, voci: [
+    V('fiera_bandierine', 'festone_bandierine', 'Bandierine della fiera', 30,
+      { fiera: true, aspetta: 'fiera_bandierine' }),
+    V('fiera_giostra', 'gazebo',            'Giostrina',          30,
+      { fiera: true, la: true, aspetta: 'fiera_giostra' }),
+    V('fiera_zucchero_filato', 'carretto_fiori1', 'Zucchero filato', 30,
+      { fiera: true, aspetta: 'fiera_zucchero_filato' }),
+    V('fiera_lanterne', 'lampione1',        'Lanterne di carta',  30,
+      { fiera: true, plurale: true, la: true, aspetta: 'fiera_lanterne' }),
+    V('fiera_barattoli', 'carretto_frutta', 'Tiro al barattolo',  30,
+      { fiera: true, aspetta: 'fiera_barattoli' }),
+    V('fiera_girasole', 'vaso_girasoli2',   'Girasole di legno',  30,
+      { fiera: true, aspetta: 'fiera_girasole' }),
+    V('fiera_spaventapasseri', 'spaventapasseri', 'Spaventapasseri in festa', 30,
+      { fiera: true, aspetta: 'fiera_spaventapasseri' }),
+    V('fiera_palco',   'arco_rose',         'Palco della banda',  30,
+      { fiera: true, aspetta: 'fiera_palco' }),
   ] },
 
   /* Si chiamava «Banco», che diceva dov'era finita la roba e non cos'è.
@@ -1011,6 +1149,13 @@ export const eVicino = cosa => !!(PER_ID[cosa && cosa.id] || {}).vicino
    carretto **prende** quello che avanza, il mercato **chiede** quello
    che serve. */
 export const eMercato = cosa => !!(PER_ID[cosa && cosa.id] || {}).mercato
+/* La piazzola della mongolfiera: la terza cosa che **chiede**, dopo il
+   banco e le botteghe (`motore/mongolfiera.js`). */
+export const eMongolfiera = cosa => !!(PER_ID[cosa && cosa.id] || {}).mongolfiera
+/* Una bottega del paese: chiede come il mercato, ma dal suo elenco
+   (`motore/botteghe.js`). Torna il `posto` della voce e non un sì/no,
+   perché chi la tocca vuole sapere cosa chiede. */
+export const postoDi = cosa => (PER_ID[cosa && cosa.id] || {}).posto || null
 export const statiDi = cosa => (PER_ID[cosa && cosa.id] || {}).stati || null
 
 /* ── SI PARTE DA ZERO ─────────────────────────────────────────────
@@ -1033,6 +1178,15 @@ export function guastiDelCatalogo() {
        col disegno vero a due righe di distanza. */
     if (v.aspetta && PEZZI[v.aspetta])
       g.push(`${v.id}: aspetta «${v.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
+    /* La seconda faccia della mongolfiera (partita) vale come la prima:
+       un ripiego che c'è, e un `aspetta` che diventa rosso il giorno
+       che il foglio porta il pezzo vero. */
+    if (v.partita) {
+      if (!PEZZI[v.partita.pezzo])
+        g.push(`${v.id}: la faccia «partita» (${v.partita.pezzo}) non è nell'atlante`)
+      if (v.partita.aspetta && PEZZI[v.partita.aspetta])
+        g.push(`${v.id}: aspetta «${v.partita.aspetta}», che nell'atlante c'è già — scrivilo come pezzo`)
+    }
     if (!(v.prezzo > 0)) g.push(`${v.id}: prezzo impossibile`)
     if (!Array.isArray(v.piede) || v.piede.length !== 2 || v.piede.some(n => n < 1))
       g.push(`${v.id}: piede impossibile`)
@@ -1097,6 +1251,13 @@ export function guastiDelCatalogo() {
     for (const v of c.voci)
       if (!!v.stagione !== !!c.stagionale)
         g.push(`${v.id}: ${v.stagione ? 'è stagionale' : 'non è stagionale'} e sta in «${c.chiave}»`)
+    /* Stessa regola per la fiera: una sorpresa fra le panchine
+       diventerebbe un premio di livello, e una panchina fra le
+       sorprese non si comprerebbe mai. */
+    for (const v of c.voci)
+      if (!!v.fiera !== !!c.fiera)
+        g.push(`${v.id}: ${v.fiera ? 'è della fiera' : 'non è della fiera'} e sta in «${c.chiave}»`)
+    if (c.fiera && c.stagionale) g.push(`${c.chiave}: fiera e stagionale insieme`)
   }
   /* `animali` è una linguetta che `viste/Roba.vue` aggiunge da sé — le
      bestie di casa — e una categoria di catalogo che si chiamasse così la

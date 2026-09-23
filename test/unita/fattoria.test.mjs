@@ -926,10 +926,10 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   const gioca = per('gioca'), spazzola = per('spazzola')
   const chi = 'cane-bobtail'
 
-  /* quanto: un decimo del prezzo, e mai più di un ordine piccolo */
-  uguale('un cane da 90 rimesso a posto paga 9', premioBenessere('cane-bobtail'), 9)
-  uguale('un gatto da 75 paga 8', premioBenessere('gatto-nero'), 8)
-  uguale('il pappagallo da 120 paga 12', premioBenessere('pappagallo'), 12)
+  /* quanto: un quindicesimo del prezzo, e mai più di un ordine piccolo */
+  uguale('un cane da 90 rimesso a posto paga 6', premioBenessere('cane-bobtail'), 6)
+  uguale('un gatto da 75 paga 5', premioBenessere('gatto-nero'), 5)
+  uguale('il pappagallo da 120 paga 8', premioBenessere('pappagallo'), 8)
   controlla('e chi non è in tabella paga come il più economico',
             premioBenessere('drago') === premioBenessere('gatto-nero'))
   const treGrano = premioPer({ grano: 3 })
@@ -959,8 +959,8 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   uguale('e l\'esperienza non si è mossa', f.guadagnato || 0, primaXp)
   const terzo = f.nutri(chi, bistecca)
   controlla('la bistecca è il terzo su tre, e si premia', !!terzo.premio, JSON.stringify(terzo))
-  uguale('con nove stelle, un decimo del prezzo', terzo.premio && terzo.premio.xp, 9)
-  uguale('sommate all\'esperienza guadagnata, come un ordine', f.guadagnato, primaXp + 9)
+  uguale('con sei stelle, un quindicesimo del prezzo', terzo.premio && terzo.premio.xp, 6)
+  uguale('sommate all\'esperienza guadagnata, come un ordine', f.guadagnato, primaXp + premioBenessere(chi))
   uguale('e la bestia è segnata come premiata', f.laBestia(chi).premiato, true)
 
   /* non due volte nello stesso ciclo */
@@ -968,7 +968,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   const ancora = f.coccola(chi, spazzola)
   controlla('un\'altra spazzolata si fa', ancora.ok)
   uguale('ma non si ripaga: è lo stesso ciclo', ancora.premio, null)
-  uguale('e l\'esperienza è ferma', f.guadagnato, primaXp + 9)
+  uguale('e l\'esperienza è ferma', f.guadagnato, primaXp + premioBenessere(chi))
 
   /* il ciclo si riarma quando un bisogno scende sotto «sta bene»: si
      sposta l'orologio di sette ore, che alla pancia bastano */
@@ -980,7 +980,7 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   uguale('nemmeno la spazzola', f.coccola(chi, spazzola).premio, null)
   const giro = f.coccola(chi, gioca)
   controlla('la pallina chiude il secondo giro, e si ripaga', !!giro.premio, JSON.stringify(giro))
-  uguale('altre nove', f.guadagnato, primaXp + 18)
+  uguale('e altrettante', f.guadagnato, primaXp + 2 * premioBenessere(chi))
 
   /* il salvataggio regge, in tutti e due i versi */
   const salvato = JSON.parse(JSON.stringify(f.serializza()))

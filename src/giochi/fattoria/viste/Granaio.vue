@@ -113,6 +113,7 @@ const dice = u => {
      mercato. (C'era anche «si mette addosso a una bestia», il maglione:
      torna il giorno che gli addobbi della schiena sono sprite.) */
   if (u.che === 'ordine') return `${u.emoji} ${u.nome.toLowerCase()} la chiede al mercato`
+  if (u.che === 'bottega') return `${u.emoji} la vuole ${u.la ? 'la' : 'il'} ${u.nome.toLowerCase()}`
   return `${u.nome.toLowerCase()}, per il ${u.bisogno.toLowerCase()}`
 }
 </script>

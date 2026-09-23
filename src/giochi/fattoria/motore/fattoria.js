@@ -85,14 +85,16 @@ import {
   CELLE, PRIMA, ULTIMA, COSTO_SPOSTARE, LIMITI_VECCHI, celleDi, dentroI,
   limitiPer, piazzolaDi, DENSITA_BOSCO, caso, chiave, prezzoPiazzola,
 } from '../dati/mondo.js'
-import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, eMercato, siloDi, macchinaDi,
+import { PER_ID, PARTENZA, piedeDi, eCampo, eSilo, eMercato, eMongolfiera, siloDi, macchinaDi,
          laMacchina, statiDi, prezzoDellaVoce, quantiVersi, puoSpecchiare }
   from '../dati/catalogo.js'
 import {
   PER_COLTURA, PER_RICETTA, PRODOTTI, SILI, COLTURE, RICETTE,
   ricetteDi, postiPerMerce, costoIngrandimento,
   merciDi, siloDelProdotto, quantoCresciuto, stadioDi, minutiCheMancano, PROFONDITA,
+  MINUTO,
 } from '../dati/coltivazioni.js'
+import { postiDellaFila, prezzoDellaFila, PREZZI_DELLA_FILA } from '../dati/coda.js'
 import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi, ULTIMO,
          premiDi, premioDi, chiaveDi } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
@@ -102,6 +104,9 @@ import { nuovo as bisogniNuovi, scendi, gradisce, tuttoAPosto, premiaSeStaBene }
 import { ANIMALI, famigliaDi, premioBenessere } from '../dati/animali.js'
 import { PER_ID as ADDOBBI_PER_ID, staA, addossoA, addobbiPer } from '../dati/addobbi.js'
 import { qualcosaDaConsegnare } from './mercato.js'
+import { daConsegnareIn, leggiLeBotteghe } from './botteghe.js'
+import { aspettoDellaMongolfiera, leggiLaMongolfiera } from './mongolfiera.js'
+import { postoDi } from '../dati/catalogo.js'
 import { primaLibera } from '../../../motore/passi.js'
 
 /* Quanto è grosso l'ostacolo più grosso del bosco. Serve a trovare chi
@@ -156,6 +161,12 @@ export class Fattoria {
        volte. */
     this.ordini = []
     this.prossimoOrdine = 1
+    /* Le botteghe del paese, per id: i banconi e la fama
+       (`motore/botteghe.js`). Vuoto finché non se ne posa una. */
+    this.botteghe = {}
+    /* Il pallone della mongolfiera (`motore/mongolfiera.js`): `null`
+       finché non ne è mai atterrato uno. */
+    this.mongolfiera = null
     /* Gli addobbi comprati e **non addosso a nessuno**: il guardaroba.
        È il magazzino delle bestie, ed è la stessa regola — niente si
        perde mai: toglierlo lo rimette qui, e da qui torna addosso a chi
@@ -163,6 +174,11 @@ export class Fattoria {
        addosso** invece viaggia dentro la bestia (`addobbi`), come la
        coltura viaggia dentro il campo. */
     this.guardaroba = {}
+    /* Le file ingrandite delle macchine **messe via** (`mettiVia`): nel
+       baule una macchina è un numero, e il numero non si ricorda di aver
+       pagato due posti in più. Si tengono qui, per voce, e la prima che
+       torna giù dal baule si riprende la più lunga (`posa`). */
+    this.fileRiposte = {}
     /* I premi già presi. Quelli del livello 1 si prendono d'ufficio: la
        fattoria appena nata deve avere in mano il campo, il silo e un
        seme, e chiedere di reclamarli prima ancora di aver visto il prato
@@ -232,8 +248,9 @@ export class Fattoria {
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
              speso: this.speso, reclamati: this.reclamati,
              guadagnato: this.guadagnato, ordini: this.ordini,
+             botteghe: this.botteghe, mongolfiera: this.mongolfiera,
              prossimoOrdine: this.prossimoOrdine, guardaroba: this.guardaroba,
-             terreno: this.terreno,
+             terreno: this.terreno, fileRiposte: this.fileRiposte,
              limiti: this.limiti, bestie: this.bestie, prossimo: this.prossimo }
   }
 
@@ -297,7 +314,7 @@ export class Fattoria {
         .filter(([k, n]) => PRODOTTI[k] && n > 0)
         .map(([k, n]) => [k, Math.floor(n)]))
     /* Quello che un campo o una macchina ha per le mani viaggia **dentro
-       la cosa** (`coltura`/`seminato`, `lavoro`), e va rimesso qui: la
+       la cosa** (`coltura`/`seminato`, `coda`, `fila`), e va rimesso qui: la
        riga qui sotto ricopia campo per campo, e chi ne aggiunge uno senza
        nominarlo lo perde a ogni riapertura senza che niente sembri rotto.
        Una coltura o una ricetta che oggi non c'è più si scorda — il campo
@@ -313,8 +330,21 @@ export class Fattoria {
           cosa.coltura = c.coltura
           cosa.seminato = c.seminato
         }
-        if (c.lavoro && PER_RICETTA[c.lavoro.ricetta] && c.lavoro.da > 0)
-          cosa.lavoro = { ricetta: c.lavoro.ricetta, da: c.lavoro.da }
+        /* ── LA FILA, E IL `lavoro` DI IERI ─────────────────────────
+           Una macchina lavorava un pezzo alla volta e lo teneva in
+           `lavoro: { ricetta, da }`; adesso ne tiene una fila. Un
+           salvataggio di ieri si rilegge come **una fila di uno**: un
+           mulino che stava macinando continua a macinare, e non c'è
+           nessuna migrazione da scrivere perché `da` voleva già dire
+           «quando è partito». Se ci fossero tutti e due vince la fila,
+           che è il dato di oggi. Un pezzo di una ricetta che non esiste
+           più si scorda, come la coltura sparita qui sopra. */
+        const fila = Array.isArray(c.coda) ? c.coda : c.lavoro ? [c.lavoro] : []
+        const coda = fila
+          .filter(p => p && PER_RICETTA[p.ricetta] && p.da > 0)
+          .map(p => ({ ricetta: p.ricetta, da: p.da }))
+        if (coda.length) cosa.coda = coda
+        if (c.fila > 0) cosa.fila = Math.min(PREZZI_DELLA_FILA.length, Math.floor(c.fila))
         return cosa
       })
     this.prossimo = Math.max(1, (d && d.prossimo) || 0,
@@ -358,6 +388,12 @@ export class Fattoria {
     })
     this.prossimoOrdine = Math.max(1, (d && d.prossimoOrdine) || 0,
                                    ...this.ordini.map(o => ((o && o.id) || 0) + 1))
+    /* Le botteghe: una fattoria di prima non ne ha, e nasce vuota. Le
+       regole di cosa si rilegge stanno accanto a chi le scrive. */
+    this.botteghe = leggiLeBotteghe(d && d.botteghe)
+    /* La mongolfiera: una fattoria di prima non ce l'ha, e nasce col
+       cielo libero. */
+    this.mongolfiera = leggiLaMongolfiera(d && d.mongolfiera)
     /* Il guardaroba: solo addobbi che esistono ancora, in quantità sane.
        Ci rientra anche quello che una bestia non può più portare — vedi
        sopra: niente si perde mai. */
@@ -365,6 +401,12 @@ export class Fattoria {
     for (const [id, n] of Object.entries((d && d.guardaroba) || {}))
       if (ADDOBBI_PER_ID[id] && n > 0) this.guardaroba[id] = Math.floor(n)
     for (const id of persi) this.guardaroba[id] = (this.guardaroba[id] || 0) + 1
+    this.fileRiposte = {}
+    for (const [id, lista] of Object.entries((d && d.fileRiposte) || {})) {
+      const buone = (Array.isArray(lista) ? lista : [])
+        .map(n => Math.min(PREZZI_DELLA_FILA.length, Math.floor(n) || 0)).filter(n => n > 0)
+      if (PER_ID[id] && buone.length) this.fileRiposte[id] = buone
+    }
     /* ── I PREMI PRESI ──────────────────────────────────────────────
        Una fattoria salvata prima che i premi si reclamassero non ce li
        ha, e i suoi livelli sono già passati: si considerano **presi
@@ -520,7 +562,12 @@ export class Fattoria {
        (`viste/Roba.vue`, con `stagioneDi`). Il motore non sa che
        giorno è — e non deve: un salvataggio con una zucca posata a
        ottobre si riapre a marzo senza che niente la rifiuti. */
-    return !!v && (!!v.stagione || this.reclamato(chiaveDi('cosa', id)))
+    if (!v) return false
+    /* Una sorpresa della fiera non è un premio e non si vende: la apre
+       **averla nel baule**, dove l'ha messa la mongolfiera. Una già
+       posata si sposta lo stesso — spostare non chiede di sbloccare. */
+    if (v.fiera) return this.quantiNe(id) > 0
+    return !!v.stagione || this.reclamato(chiaveDi('cosa', id))
   }
 
   /* Le stesse due domande per le altre due specie di premio. */
@@ -732,6 +779,15 @@ export class Fattoria {
       this.magazzino[id]--
       if (!this.magazzino[id]) delete this.magazzino[id]
       const cosa = { i: this.prossimo++, id, g: finto.g, x: cx, y: cy }
+      /* Una macchina che torna dal baule si riprende la fila più lunga
+         fra quelle messe via con lei: i posti comprati non si perdono
+         per averla spostata passando dal baule. */
+      const riposte = this.fileRiposte[id]
+      if (riposte && riposte.length) {
+        riposte.sort((a, b) => b - a)
+        cosa.fila = riposte.shift()
+        if (!riposte.length) delete this.fileRiposte[id]
+      }
       this.cose.push(cosa)
       return { ok: true, costo: 0, dalMagazzino: true, cosa }
     }
@@ -1281,23 +1337,68 @@ export class Fattoria {
 
   /* ═══════════ le macchine ═══════════
      Stesso orologio dei campi, mestiere diverso: prende roba dal granaio
-     e dopo un po' ne rende un'altra. `lavoro` è `{ ricetta, da }` e sta
-     dentro la cosa, così un mulino spostato si porta dietro quello che
-     stava macinando.
+     e dopo un po' ne rende un'altra.
 
-     La roba si prende **al momento di avviare**, non a lavoro finito: se
-     no si potrebbe far partire dieci volte lo stesso mulino con lo stesso
-     grano, e il granaio sarebbe una promessa invece di una scorta. */
+     ── UN PEZZO ALLA VOLTA, E GLI ALTRI IN FILA ─────────────────────
+     Come in Hay Day (`dati/coda.js`): la macchina ne lavora uno e ne
+     tiene altri che aspettano, così si caricano tre pasti prima di
+     uscire. La fila sta **dentro la cosa** (`coda: [{ ricetta, da }]`,
+     più `fila`, quante volte è stata ingrandita), così un mulino
+     spostato si porta dietro quello che stava macinando e quello che
+     aspettava.
+
+     `da` è **quando quel pezzo parte**, non quando è stato messo in
+     fila: si decide mettendolo, ed è la fine dell'ultimo che c'era (o
+     adesso, se non c'era niente). Così ogni pezzo sa da sé quando
+     finisce, e il tempo si **legge** dall'ora come per i campi — a
+     telefono spento il secondo parte quando il primo finisce, senza
+     nessun orologio da tenere in vita. E ritirare quello che è pronto
+     non sposta gli altri: nessuno dipende da chi gli stava davanti.
+
+     La roba si prende **al momento di mettere in fila**, non a lavoro
+     finito: se no si potrebbe caricare dieci volte lo stesso grano, e il
+     granaio sarebbe una promessa invece di una scorta. Per lo stesso
+     motivo un pezzo che non è ancora partito si toglie e rende tutto —
+     roba e monete — perché è ancora la scorta di prima, solo spostata.
+
+     Il pronto **aspetta sulla macchina** e occupa il suo posto: niente
+     marcisce, e la fila dietro continua a lavorare. Un silo pieno
+     ferma il ritiro, non la macchina. */
   statoMacchina(cosa, ora = Date.now()) {
     const quale = macchinaDi(cosa)
     if (!quale) return null
-    const l = cosa.lavoro
-    const r = l && PER_RICETTA[l.ricetta]
-    if (!r) return { macchina: quale, ferma: true, ricetta: null, quanto: 0, pronto: false }
-    const quanto = quantoCresciuto(l.da, r.minuti, ora)
+    const posti = postiDellaFila(cosa.fila)
+    const coda = (cosa.coda || []).map((p, i) => {
+      const r = PER_RICETTA[p.ricetta]
+      if (!r) return null
+      const fine = p.da + r.minuti * MINUTO
+      const pronto = ora >= fine
+      const partito = ora >= p.da
+      return { i, ricetta: r, da: p.da, fine, pronto,
+               lavora: partito && !pronto, aspetta: !partito,
+               quanto: quantoCresciuto(p.da, r.minuti, ora),
+               manca: pronto ? 0 : Math.max(1, Math.ceil((fine - ora) / MINUTO)) }
+    }).filter(Boolean)
+    const lavora = coda.find(p => p.lavora) || null
+    const pronti = coda.filter(p => p.pronto)
+    const primo = lavora || pronti[0] || null
     return {
-      macchina: quale, ferma: false, ricetta: r, quanto, pronto: quanto >= 1,
-      manca: minutiCheMancano(l.da, r.minuti, ora),
+      macchina: quale, coda, posti, liberi: Math.max(0, posti - coda.length),
+      /* quante volte è stata ingrandita, e quanto costa la prossima */
+      fila: cosa.fila || 0, prezzoFila: prezzoDellaFila(cosa.fila),
+      lavora, pronti: pronti.length,
+      /* in fila e non ancora partiti */
+      inAttesa: coda.filter(p => p.aspetta).length,
+      /* Le quattro parole di prima, rilette sulla fila. `ferma` è la
+         macchina **vuota** — niente dentro, né da fare né da ritirare —
+         e `libera` quella dove si può mettere qualcosa, che adesso è
+         un'altra domanda: un mulino che macina ha ancora due posti. */
+      ferma: !coda.length,
+      libera: coda.length < posti,
+      pronto: pronti.length > 0,
+      ricetta: primo ? primo.ricetta : null,
+      quanto: lavora ? lavora.quanto : pronti.length ? 1 : 0,
+      manca: lavora ? lavora.manca : 0,
     }
   }
 
@@ -1313,12 +1414,14 @@ export class Fattoria {
     return { manca, monete: Math.max(0, r.costo - this.borsa.quante()) }
   }
 
+  /* Mettere in fila. Si chiama ancora `avvia` perché a macchina vuota
+     è esattamente quello: il pezzo parte subito. */
   avvia(cosa, ricettaId, ora = Date.now()) {
     const s = this.statoMacchina(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
-    if (!s.ferma) return { ok: false, motivo: 'sta-lavorando' }
     const r = PER_RICETTA[ricettaId]
     if (!r || r.dove !== s.macchina) return { ok: false, motivo: 'non-esiste' }
+    if (!s.libera) return { ok: false, motivo: 'fila-piena', posti: s.posti }
     const che = this.cheMancaPer(ricettaId)
     if (che.manca.length) return { ok: false, motivo: 'manca-roba', manca: che.manca }
     if (this.borsa.quante() < r.costo)
@@ -1329,24 +1432,107 @@ export class Fattoria {
        cintura di sicurezza. */
     for (const [k, n] of Object.entries(r.prende)) this.togli(k, n)
     if (r.costo) this.spendi(r.costo)
-    cosa.lavoro = { ricetta: r.id, da: ora }
-    return { ok: true, costo: r.costo, ricetta: r }
+    /* Parte quando finisce **l'ultimo** che c'è, pronto o no: un pezzo
+       pronto e non ritirato ha già finito, quindi non fa aspettare
+       nessuno. */
+    const da = Math.max(ora, ...s.coda.map(p => p.fine))
+    cosa.coda = [...(cosa.coda || []), { ricetta: r.id, da }]
+    return { ok: true, costo: r.costo, ricetta: r, da,
+             fine: da + r.minuti * MINUTO, subito: da === ora }
   }
 
-  /* Ritirare è gratis: si è già pagato avviando. E come il campo, quello
-     che è pronto **aspetta** — una macchina finita non butta via niente
-     se nessuno passa a prenderlo. */
+  /* Togliere dalla fila un pezzo che non è ancora partito: rende tutto,
+     roba e monete. Quello che lavora no — è già dentro la macina — e
+     quello pronto nemmeno: quello si ritira.
+
+     Chi veniva dopo **si fa avanti** di quanto durava il pezzo tolto: i
+     pezzi in attesa sono uno attaccato all'altro, quindi basta rifare la
+     catena da lì, ognuno che parte alla fine di chi gli sta davanti.
+
+     La roba torna nel silo, e se lì nel frattempo non c'è più posto il
+     pezzo **resta in fila**: rendere a metà, o sopra il tetto dello
+     scomparto, sarebbe perdere qualcosa o regalarlo. Meglio un no che
+     dice perché, e il pezzo che intanto si fa lo stesso.
+
+     Le monete tornano, e con loro **l'esperienza che avevano dato**: se
+     no mettere e togliere lo stesso pezzo sarebbe un modo gratis di
+     salire di livello. Senza però far scendere il livello — quello non
+     torna mai indietro, e un premio già preso non si ridà. */
+  togliDallaFila(cosa, indice, ora = Date.now()) {
+    const s = this.statoMacchina(cosa, ora)
+    if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
+    const p = s.coda.find(q => q.i === indice)
+    if (!p) return { ok: false, motivo: 'non-in-fila' }
+    if (!p.aspetta) return { ok: false, motivo: p.pronto ? 'e-pronto' : 'sta-lavorando' }
+    const r = p.ricetta
+    for (const [k, n] of Object.entries(r.prende))
+      if (this.quantoCiSta(k) < n) return { ok: false, ...this.perchePieno(k), prodotto: k, quanto: n }
+    for (const [k, n] of Object.entries(r.prende)) this.metti(k, n)
+    if (r.costo) {
+      const tieni = Math.max(0, sogliaDi(this.livello) - (this.guadagnato || 0))
+      this.speso = Math.max(Math.min(this.speso, tieni), (this.speso || 0) - r.costo)
+      this.borsa.paga(-r.costo)
+    }
+    const coda = cosa.coda.filter((_, i) => i !== indice)
+    /* la catena da rifare: chi aspettava dopo il pezzo tolto */
+    for (let i = indice; i < coda.length; i++) {
+      if (coda[i].da <= ora) continue
+      const prima = coda[i - 1]
+      const rp = prima && PER_RICETTA[prima.ricetta]
+      coda[i] = { ...coda[i],
+                  da: rp ? Math.max(ora, prima.da + rp.minuti * MINUTO) : ora }
+    }
+    if (coda.length) cosa.coda = coda
+    else delete cosa.coda
+    return { ok: true, ricetta: r, reso: { ...r.prende }, monete: r.costo }
+  }
+
+  /* Ritirare è gratis: si è già pagato mettendo in fila. Si prende
+     **tutto quello che ci sta**, pezzo per pezzo e in ordine: un pezzo
+     che non entra resta sulla macchina e aspetta, e quelli dopo di lui
+     si prendono lo stesso se il loro scomparto ha posto — il mais colmo
+     non deve tenere fermo il mangime. Un pezzo non si spezza: esce
+     intero o resta. */
   ritira(cosa, ora = Date.now()) {
     const s = this.statoMacchina(cosa, ora)
     if (!s) return { ok: false, motivo: 'non-e-una-macchina' }
     if (s.ferma) return { ok: false, motivo: 'non-sta-lavorando' }
     if (!s.pronto) return { ok: false, motivo: 'non-e-pronto', manca: s.manca }
-    const r = s.ricetta
-    if (this.quantoCiSta(r.da) < r.resa)
-      return { ok: false, ...this.perchePieno(r.da), prodotto: r.da, quanto: r.resa }
-    this.metti(r.da, r.resa)
-    delete cosa.lavoro
-    return { ok: true, costo: 0, prodotto: r.da, quanto: r.resa }
+    const presi = [], via = new Set()
+    let fermo = null
+    for (const p of s.coda) {
+      if (!p.pronto) continue
+      const r = p.ricetta
+      if (this.quantoCiSta(r.da) < r.resa) { fermo = fermo || r; continue }
+      this.metti(r.da, r.resa)
+      via.add(p.i)
+      const gia = presi.find(x => x.prodotto === r.da)
+      if (gia) gia.quanto += r.resa
+      else presi.push({ prodotto: r.da, quanto: r.resa })
+    }
+    if (!presi.length)
+      return { ok: false, ...this.perchePieno(fermo.da), prodotto: fermo.da, quanto: fermo.resa }
+    const coda = cosa.coda.filter((_, i) => !via.has(i))
+    if (coda.length) cosa.coda = coda
+    else delete cosa.coda
+    /* `prodotto` e `quanto` sono il primo preso, per chi scrive una riga
+       sola; `presi` è tutto, e `restano` i pronti rimasti perché non ci
+       stavano. */
+    return { ok: true, costo: 0, prodotto: presi[0].prodotto, quanto: presi[0].quanto,
+             presi, restano: s.pronti - via.size,
+             ...(fermo ? { fermo: fermo.da, ...this.perchePieno(fermo.da) } : {}) }
+  }
+
+  /* Un posto in più nella fila di **questa** macchina. Il tetto e i
+     prezzi stanno in `dati/coda.js`. */
+  ingrandisciLaFila(cosa) {
+    if (!macchinaDi(cosa)) return { ok: false, motivo: 'non-e-una-macchina' }
+    const costo = prezzoDellaFila(cosa.fila)
+    if (costo === null) return { ok: false, motivo: 'al-massimo' }
+    if (this.borsa.quante() < costo) return { ok: false, motivo: 'poche-monete', costo }
+    this.spendi(costo)
+    cosa.fila = (cosa.fila || 0) + 1
+    return { ok: true, costo, posti: postiDellaFila(cosa.fila) }
   }
 
   /* ═══════════ quello che la scena deve sapere ═══════════
@@ -1366,6 +1552,13 @@ export class Fattoria {
        resta muta: un invito che c'è sempre non è un invito. */
     if (eMercato(cosa))
       return qualcosaDaConsegnare(this) ? { sopra: null, fumetto: '📋' } : null
+    /* Una bottega del paese, lo stesso: il fumetto c'è quando uno dei
+       suoi clienti ha già tutto quello che chiede. */
+    if (postoDi(cosa))
+      return daConsegnareIn(this, cosa.id) ? { sopra: null, fumetto: '📋' } : null
+    /* La mongolfiera: il fumetto c'è quando una cassa si può riempire,
+       e partita cambia faccia (`motore/mongolfiera.js`). */
+    if (eMongolfiera(cosa)) return aspettoDellaMongolfiera(this, cosa, ora)
     const c = this.statoCampo(cosa, ora)
     if (c) {
       if (c.vuoto) return null
@@ -1390,6 +1583,9 @@ export class Fattoria {
       return {
         invece: stati[posa],
         fumetto: m.pronto ? '🧺' : null,
+        /* quanti ce ne sono da ritirare: il 🧺 dice che c'è da fare,
+           il numerino quanto — con la fila possono essere tre */
+        pronti: m.pronti,
         /* ── COSA VUOLE, QUANDO HA FAME ─────────────────────────
            Il fumetto **non è più dipinto dentro lo sprite**, e il
            motivo è che due bestie che vogliono la stessa cosa la
@@ -1416,15 +1612,21 @@ export class Fattoria {
 
        Il pronto resta il 🧺: quello non dice cosa c'è dentro, dice
        **che c'è da fare qualcosa**, ed è l'unico caso in cui serve un
-       gesto. Chi vuole sapere cosa apre. */
-    if (!m.ferma) {
-      if (m.pronto) return { sopra: null, fumetto: '🧺' }
-      const p = PRODOTTI[m.ricetta.da]
+       gesto. Chi vuole sapere cosa apre.
+
+       Con la fila le due cose possono stare insieme — un pezzo pronto
+       che aspetta e il prossimo che macina — e allora vince **la faccia
+       di quello che sta facendo**, con accanto il numerino dei pronti:
+       il numero dice già che c'è da ritirare, e la faccia dice quello
+       che il 🧺 non saprebbe dire. */
+    if (m.lavora) {
+      const r = m.lavora.ricetta
+      const p = PRODOTTI[r.da]
       return { sopra: null,
-               fa: p ? { prodotto: m.ricetta.da, pezzo: p.pezzo || null, testo: p.emoji }
-                     : null,
-               fumetto: p ? null : '⏳' }
+               fa: p ? { prodotto: r.da, pezzo: p.pezzo || null, testo: p.emoji } : null,
+               fumetto: p ? null : '⏳', pronti: m.pronti }
     }
+    if (m.pronto) return { sopra: null, fumetto: '🧺', pronti: m.pronti }
     return null
   }
 
@@ -1436,12 +1638,17 @@ export class Fattoria {
      Ferma vuol dire **ha fame**, non «è tranquilla»: un recinto che non
      sta lavorando è un recinto che aspetta da mangiare, ed è esattamente
      quello che si vuole far vedere. Il `calmo` resta il ritratto del
-     baule, dove non c'è nessuno stato da raccontare. */
+     baule, dove non c'è nessuno stato da raccontare.
+
+     Con la fila conta **chi sta lavorando adesso**. Una gallina che ha
+     un uovo pronto e un'altra pappa davanti sta mangiando, non
+     aspettando — il pronto lo dice il fumetto sopra. Ha fame solo il
+     recinto dove non c'è niente né da fare né da ritirare. */
   posaDelRecinto(m) {
-    if (m.ferma) return 'fame'
-    if (m.pronto) return 'pronto'
-    if (m.quanto < 0.34) return 'mangia'
-    if (m.quanto < 0.7) return 'felice'
+    const l = m.lavora
+    if (!l) return m.pronto ? 'pronto' : 'fame'
+    if (l.quanto < 0.34) return 'mangia'
+    if (l.quanto < 0.7) return 'felice'
     return 'dorme'
   }
 
@@ -1513,11 +1720,12 @@ export class Fattoria {
        vorrebbe dire buttare quello che si sta aspettando. Niente si
        perde — nemmeno per distrazione — quindi si dice no e si aspetta. */
     if (cosa.coltura) return { ok: false, motivo: 'campo-seminato' }
-    if (cosa.lavoro) return { ok: false, motivo: 'sta-lavorando' }
+    if (cosa.coda && cosa.coda.length) return { ok: false, motivo: 'sta-lavorando' }
     if (this.borsa.quante() < COSTO_SPOSTARE)
       return { ok: false, motivo: 'poche-monete', costo: COSTO_SPOSTARE }
     this.spendi(COSTO_SPOSTARE)
     this.cose.splice(i, 1)
+    if (cosa.fila > 0) (this.fileRiposte[cosa.id] = this.fileRiposte[cosa.id] || []).push(cosa.fila)
     this.magazzino[cosa.id] = this.quantiNe(cosa.id) + 1
     return { ok: true, costo: COSTO_SPOSTARE, id: cosa.id }
   }
@@ -1529,6 +1737,8 @@ export class Fattoria {
   compra(id) {
     const v = PER_ID[id]
     if (!v) return { ok: false, motivo: 'non-esiste' }
+    /* La fiera non si vende: si vince (`motore/mongolfiera.js`). */
+    if (v.fiera) return { ok: false, motivo: 'non-in-vendita' }
     if (!this.sbloccata(id))
       return { ok: false, motivo: 'non-sbloccato', liv: livelloDellaVoce(v) }
     if (v.unico && this.quanteNeHo(id) > 0) return { ok: false, motivo: 'ne-hai-gia' }

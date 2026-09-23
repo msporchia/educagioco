@@ -143,8 +143,11 @@ const FILA = CATALOGO
   /* Le voci stagionali non stanno in fila: si comprano solo nella
      loro finestra (`dati/stagioni.js`) e non sono un premio di nessun
      livello — se ci stessero, una zucca comprabile due settimane
-     l'anno occuperebbe uno dei due-tre posti di un livello. */
-  .filter(v => !v.liv && !v.stagione && zonaDi(v.id) === 'bello')
+     l'anno occuperebbe uno dei due-tre posti di un livello. Le
+     sorprese della fiera nemmeno: non si comprano, si vincono con la
+     mongolfiera — e otto voci in più nella fila sposterebbero di
+     livello tutte le decorazioni che vengono dopo. */
+  .filter(v => !v.liv && !v.stagione && !v.fiera && zonaDi(v.id) === 'bello')
   .slice()
   .sort((a, b) => a.prezzo - b.prezzo || (a.id < b.id ? -1 : 1))
   .map(v => v.id)
@@ -213,10 +216,23 @@ export const NOMI = {
      beverone, cioè appena l'orto ha aperto e il caseificio c'è. */
   24: 'La cucina',
   26: 'I maiali',
+  /* Lo zuccherificio arriva insieme alla barbabietola, la sua unica
+     coltura: è la prima bottega dell'albero nuovo (`docs/fattoria-
+     albero.md` §8). */
+  27: 'Lo zuccherificio',
   29: 'La zuppa d\'orto',
+  30: 'La gelateria',
+  31: 'Il pastificio',
   33: 'Le capre',
   36: 'La sartoria',
   38: 'Le api',
+  /* La pizza vuole la salsa della cucina (38): è il primo livello in
+     cui tutti e tre gli ingredienti ci sono già. */
+  39: 'La pizza',
+  40: 'Le lasagne',
+  /* La sciarpa di lana, anticipata rispetto al berretto: la tappa 8 la
+     mette qui apposta (`docs/fattoria-albero.md` §8.1). */
+  42: 'La sciarpa',
   44: 'Le fragole',
   /* Erano al 50 e al 57 — troppo in là: provato a mano, chi arriva
      alle api aveva davanti dodici livelli di sole decorazioni prima
@@ -228,6 +244,12 @@ export const NOMI = {
      l'ultima cosa che lavorasse: da qui in avanti il gioco aveva
      diciassette livelli di sole decorazioni. */
   52: 'La lavanda e la tintoria',
+  55: 'Il berretto',
+  /* La peschiera e la friggitoria arrivano insieme: il pesce che
+     l'una pesca è il primo ingrediente nuovo dell'altra. */
+  57: 'La peschiera',
+  60: 'Il riso',
+  63: 'Il sushi bar',
 }
 
 export function nomeDi(livello) {
@@ -262,10 +284,11 @@ export function roba(livello) {
     /* Una linguetta che si apre per la prima volta è una notizia («si
        apre uno scaffale nuovo»), e le sue voci di quel livello si
        elencano lo stesso: adesso sono due o tre, non novanta. */
-    schede: CATEGORIE.filter(c => !c.stagionale && livelloDellaScheda(c) === l),
+    schede: CATEGORIE.filter(c => !c.stagionale && !c.fiera && livelloDellaScheda(c) === l),
     /* le stagionali non arrivano con un livello: compaiono con la
-       loro finestra, e non sono un premio da reclamare */
-    cose: CATALOGO.filter(v => !v.stagione && livelloDellaVoce(v) === l),
+       loro finestra, e non sono un premio da reclamare. La fiera
+       neppure: arriva col pallone, non col livello */
+    cose: CATALOGO.filter(v => !v.stagione && !v.fiera && livelloDellaVoce(v) === l),
     colture: COLTURE.filter(c => (c.liv || 1) === l),
     animali: Object.entries(ANIMALI).filter(([, a]) => (a.liv || 1) === l)
       .map(([chi, a]) => ({ chi, ...a })),
@@ -473,6 +496,27 @@ export function guastiDegliSblocchi() {
       g.push(`${v.id}: si compra al livello ${quando} e la sua prima ricetta ` +
              `arriva al ${prima} — sarebbe una macchina vuota per ` +
              `${prima - quando} livell${prima - quando === 1 ? 'o' : 'i'}`)
+  }
+  /* ── E UNA BOTTEGA NON ARRIVA PRIMA DI AVERE DA CHIEDERE ─────────
+     La stessa domanda della macchina, girata sulle botteghe del paese
+     (`posto:` nel catalogo): il giorno in cui compare devono esserci
+     già **tre** merci del suo elenco che si possono consegnare. Una
+     sola vorrebbe dire lo stesso cliente con la stessa roba per dieci
+     livelli; nessuna, un bancone vuoto comprato.
+
+     E ogni merce dell'elenco deve esistere: una che non c'è non dà
+     nessun errore, fa solo sì che quella bottega non la chieda mai. */
+  for (const v of CATALOGO) {
+    if (!v.posto) continue
+    const quando = livelloDellaVoce(v)
+    const chiede = v.posto.chiede || []
+    for (const p of chiede)
+      if (!Number.isFinite(livelloDelProdotto(p)))
+        g.push(`${v.id}: chiede «${p}», che non è una merce che si produca`)
+    const subito = chiede.filter(p => livelloDelProdotto(p) <= quando)
+    if (subito.length < 3)
+      g.push(`${v.id}: arriva al livello ${quando} e ha solo ${subito.length} ` +
+             `merc${subito.length === 1 ? 'e' : 'i'} da chiedere (${subito.join(', ') || 'nessuna'})`)
   }
   for (const r of RICETTE) {
     const quando = r.liv || 1

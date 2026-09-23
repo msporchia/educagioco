@@ -207,6 +207,25 @@ def alla_misura_vera(im, fg):
     return im
 
 
+def senza_alone(im, fg):
+    """Toglie l'alone che certi generatori mettono attorno alle figure su
+    un fondo già trasparente: un bagliore colorato a alfa bassa, che non
+    si vede finché il foglio sta su un fondo chiaro e che, ridotto alla
+    misura vera, si impasta nei pixel del bordo e li tinge. Si fa **prima**
+    della riduzione, sui pixel grandi: dopo, alone e bordo sono già la
+    stessa media. Sotto la soglia il pixel sparisce, sopra diventa pieno —
+    le figure di questi fogli sono opache, e un corpo a alfa 252 lascia
+    trasparire il prato di un filo."""
+    soglia = fg.get('alone')
+    if not soglia:
+        return im
+    a = im.getchannel('A').point(lambda v: 255 if v >= soglia else 0)
+    vuoto = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    im = Image.composite(im, vuoto, a)
+    im.putalpha(a)
+    return im
+
+
 def pulisci(im, fg):
     """Toglie il fondo, se il foglietto dice che ce n'è uno da togliere."""
     fondo = fg.get('fondo', 'trasparente')
@@ -827,7 +846,7 @@ def costruisci(bers, fogli, con_provini):
         if not utili and not fg.get('ritagli'):
             print(f'  {f.name}: foglietto senza sprite, da calibrare — saltato')
             continue
-        im = pulisci(alla_misura_vera(Image.open(f).convert('RGBA'), fg), fg)
+        im = pulisci(alla_misura_vera(senza_alone(Image.open(f).convert('RGBA'), fg), fg), fg)
         prima = len(ritagli)
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         cose_di(fg, cose, f.name)

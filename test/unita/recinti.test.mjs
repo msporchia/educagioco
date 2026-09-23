@@ -338,7 +338,9 @@ for (const v of RECINTI) {
   f.cose.push(fienile)
   const g = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })
   const ieri = g.cose.find(c => c.i === 1)
-  uguale('la zuppa partita ieri nel fienile si rilegge', (ieri.lavoro || {}).ricetta, 'zuppa')
+  /* rilegge come una fila di uno: `lavoro` è il nome di prima della
+     fila (`unita/coda-fattoria`) */
+  uguale('la zuppa partita ieri nel fienile si rilegge', ((ieri.coda || [])[0] || {}).ricetta, 'zuppa')
   const s = g.statoMacchina(ieri, fra(PER_RICETTA.zuppa.minuti))
   controlla('e finisce lo stesso', s.pronto)
   controlla('e si ritira', g.ritira(ieri, fra(PER_RICETTA.zuppa.minuti)).ok)

@@ -1,0 +1,67 @@
+{
+  "__": "La mongolfiera (a terra e partita), la gelateria e la mensa della scuola: il secondo albero della fattoria, §8 di docs/fattoria-albero.md.\n\nÈ il primo foglio consegnato **con un alone**: attorno a ogni figura un bagliore rossastro ad alfa 1–50, e il corpo ad alfa 252–253 invece che pieno. `\"alone\": 128` lo toglie sul foglio grande, prima della riduzione (FORMATO.md).\n\nLa piazzola è rimessa con `misura` alla larghezza del cesto (52 px e non 68): le due facce si danno il cambio sullo stesso piede, e un pallone che parte non deve lasciare dietro una cosa più larga di lui.",
+  "prompt": {
+    "scheda": "PROMPT-secondo-albero.md",
+    "base": "edifici_3.png",
+    "generatore": "settembre 2026",
+    "testo": "Disegna un foglio di sprite in pixel art **nello stesso stile di questa\nimmagine**: stessa tavolozza (legno caldo, tegole rosse e blu, pietra\ngrigia), stesso contorno scuro di un pixel, stessa vista — facciata\nfrontale vista da tre quarti dall'alto, come gli edifici allegati — e\nstessa luce da in alto a sinistra.\n\nIl foglio è 1536×1024 px, su **fondo trasparente** (PNG). Disponi\n**4 soggetti** su una griglia dichiarata di 4 colonne × 1 riga, celle\ndi 384×1024 px, ognuno centrato nella sua cella e appoggiato al bordo\ndi sotto della cella lasciando 32 px di margine. Nessun soggetto\ntocca il bordo della cella. Gli edifici sono larghi circa 256 px e\nalti fra 220 e 290 px; la mongolfiera è larga circa 256 px e alta\ncirca 600 px.\n\n**Il disegno finisce dove il soggetto tocca terra**: la soglia della\nporta, il gradino, il fondo del cesto. Sotto e di fianco è tutto\ntrasparente. **Niente prato, niente terra, niente ciuffi d'erba,\nniente ombra proiettata e nessuna macchia sotto.**\n\n**NESSUNA PAROLA SCRITTA, da nessuna parte**: né insegne con testo, né\ncartelli, né numeri, né lettere. Dove serve un'insegna è **un\noggetto**.\n\nQuello che appartiene a un soggetto dev'essere **attaccato al suo\ndisegno in un pezzo solo**: le corde toccano il cesto, il fumo tocca\nil comignolo. Niente pezzetti staccati che galleggiano nel vuoto.\n\nDa sinistra a destra:\n1. una **mongolfiera atterrata**: un grande pallone a spicchi rossi e\n   crema con una fascia di bandierine colorate, legato con corde a un\n   cesto di vimini largo e basso appoggiato a terra; dentro il cesto\n   si vedono tre casse di legno vuote impilate\n2. **la piazzola della mongolfiera quando è partita**: un cerchio di\n   assi di legno appoggiato a terra, con quattro sacchetti di zavorra\n   ai lati e una corda arrotolata, niente pallone — larga come il\n   cesto, bassa\n3. una **gelateria**: casetta col tetto a strisce rosa e bianche come\n   una tenda, un bancone aperto sul davanti con tre vaschette di\n   gelato colorate dietro il vetro, e un grande cono gelato di legno\n   come insegna sopra la porta\n4. una **scuoletta di campagna** (la mensa): edificio basso color\n   giallo tenue col tetto rosso, un campanile piccolo con la campana\n   sul colmo, finestre con le tendine a quadretti, e davanti alla\n   porta una lavagnetta e un cestino di mele"
+  },
+  "scala": 5,
+  "fondo": "trasparente",
+  "alone": 128,
+  "foglio": [
+    307,
+    205
+  ],
+  "cella": [
+    1,
+    1
+  ],
+  "famiglia": "figura",
+  "sprite": {
+    "mongolfiera": {
+      "da": [
+        5,
+        35
+      ],
+      "cella": [
+        71,
+        125
+      ]
+    },
+    "mongolfiera_partita": {
+      "da": [
+        76,
+        114
+      ],
+      "cella": [
+        69,
+        47
+      ],
+      "misura": [
+        52,
+        35
+      ]
+    },
+    "gelateria": {
+      "da": [
+        149,
+        65
+      ],
+      "cella": [
+        74,
+        96
+      ]
+    },
+    "mensa": {
+      "da": [
+        225,
+        46
+      ],
+      "cella": [
+        80,
+        115
+      ]
+    }
+  }
+}

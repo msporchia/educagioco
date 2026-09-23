@@ -36,20 +36,41 @@
    in `dati/livelli.js`, sotto ESPERIENZA.
 
    ── QUANTO RENDE ──────────────────────────────────────────────────
-   Un ordine rende `PREMIO_BASE` più `PER_VALORE` volte quello che la
-   roba è **costata a produrre in monete** (`valoreDi`, che risale la
-   catena da sola). Cioè:
+   Un ordine rende `PREMIO_BASE` più, per ogni pezzo, **i gesti che ci
+   sono voluti** — raccolti più lavorazioni, lungo la strada più corta
+   (`gestiDi`) — per `PER_GESTO`, con un bonus di `BONUS_FASE` per ogni
+   fase oltre la prima (`profonditaDi`). Cioè:
 
-     3 🌾 grano                  6 + 4·3  =  18
-     2 🥣 mangime + 2 🌾 grano   6 + 4·8  =  38
-     3 🌾 grano + 2 🥚 uova      6 + 4·13 =  58
-     3 🍄 tartufi                6 + 4·27 = 114
+     3 🌾 grano                  6 + 3·2              =  12
+     2 🥣 mangime + 2 🌾 grano   6 + 2·7,2 + 2·2      =  24
+     3 🌾 grano + 2 🥚 uova      6 + 3·2 + 2·14       =  40
+     3 🍄 tartufi                6 + 3·19,6           =  65
+     1 🎂 torta                  6 + 2·18·1,8         =  71
+
+   *Ribalta la scelta di prima.* Il premio era `6 + 4·valoreDi`, cioè
+   quello che la roba era costata **in monete** — e un raccolto costa
+   🪙1 mentre una lavorazione 🪙0–2, quindi il lavoro di trasformare
+   quasi non contava, e ogni ricetta che prende due pezzi per farne uno
+   raddoppiava il lavoro senza raddoppiare il premio. Misurato: ⭐10–14
+   per gesto su un raccolto crudo, ⭐3,7 su un maglione alla lavanda. La
+   mossa giusta era rifiutare la torta e aspettare il grano: il
+   contrario di un gioco di fattoria, dove la catena lunga è quella che
+   vale. Adesso, a parità di gesti, la catena lunga rende un po' di più
+   — da ⭐2 a ⭐4 per gesto (`docs/fattoria-albero.md` §8.2).
+
+   **E in media non rende di più di prima**, ed è voluto. Il primo giro
+   aveva `PER_GESTO = 3`, e un raccolto portato al banco rendeva il
+   20–30% in più di prima; sopra ci sono le botteghe (+25%), i bonus
+   della mongolfiera e la fila nelle macchine, che fa lavorare di più.
+   Tutto insieme la fattoria sarebbe salita di livello molto più in
+   fretta, cioè sarebbe arrivata roba nuova prima di aver giocato con
+   quella che c'era. A 2 il banco da solo rende un po' meno di prima
+   (⭐6 per raccolto contro 7), e con botteghe e mongolfiera si torna
+   alla media di prima. Cambia **dove** sta l'esperienza, non quanta.
 
    Il metro è quello di sempre: 🪙1 = dieci secondi di esercizio, 🪙6 =
-   un minuto. Un ordine da 18 vale tre minuti di esercizi e chiede
-   quindici minuti veri di campo (`minutiDi`); uno da 114 ne chiede più
-   di tre ore. **Non rende mai più di quanto costa il tempo di
-   produrlo** — il conto è `PER_VALORE·valore ≤ 🪙6·minuti`, e
+   un minuto. **Un ordine non rende mai più di quanto costa il tempo di
+   produrlo** — il conto è `premio ≤ 🪙6·minuti` (`minutiDi`), e
    `guastiDelMercato()` diventa rosso se una tabella ritoccata lo
    rompesse. È il freno che impedisce al mercato di diventare la
    scorciatoia per salire di livello senza fare esercizi: il livello
@@ -58,7 +79,7 @@
    Un ordine **non regala mai monete** e non toglie mai niente oltre
    alla merce che chiede: consegnare non può far male.
    ═══════════════════════════════════════════════════════════════════ */
-import { COLTURE, RICETTE, PRODOTTI, PROFONDITA } from './coltivazioni.js'
+import { COLTURE, RICETTE, PRODOTTI, PROFONDITA, profonditaDi } from './coltivazioni.js'
 import { livelloDelProdotto } from './livelli.js'
 
 /* ── CHI ORDINA ───────────────────────────────────────────────────
@@ -80,45 +101,61 @@ import { livelloDelProdotto } from './livelli.js'
    dimenticata da tutti non la chiederebbe più nessuno. */
 export const CLIENTI = [
   { id: 'fornaio',     nome: 'Il fornaio',     emoji: '🥖',
-    vuole: ['grano', 'uova', 'latte', 'patate', 'farina', 'pane'] },
+    vuole: ['grano', 'uova', 'latte', 'patate', 'farina', 'pane', 'biscotti'] },
   { id: 'pasticcera',  nome: 'La pasticcera',  emoji: '🧁',
     vuole: ['uova', 'latte', 'fragole', 'miele', 'merenda', 'burro', 'torta',
-            'crostata'] },
+            'crostata', 'biscotti', 'gelato', 'frullato', 'marmellata',
+            'caramelle', 'zucchero'] },
   { id: 'nonna',       nome: 'La nonna',       emoji: '👵' },
   { id: 'cuoco',       nome: 'Il cuoco',       emoji: '👨‍🍳',
     vuole: ['tartufi', 'patate', 'melanzane', 'peperoni', 'cavolfiori', 'aglio',
-            'formaggio', 'burro', 'minestrone', 'conserva', 'salsa'] },
+            'formaggio', 'burro', 'minestrone', 'conserva', 'salsa',
+            'pasta', 'lasagne', 'fritto', 'arancini'] },
   { id: 'maestra',     nome: 'La maestra',     emoji: '🍎',
     vuole: ['fragole', 'carote', 'latte', 'uova', 'merenda', 'pane', 'torta',
-            'crostata'] },
+            'crostata', 'succo', 'biscotti', 'frullato'] },
   { id: 'bottegaio',   nome: 'Il bottegaio',   emoji: '🏪' },
   { id: 'veterinaria', nome: 'La veterinaria', emoji: '🩺',
     vuole: ['mangime', 'pastone', 'becchime', 'foraggio', 'beverone', 'pastura'] },
   { id: 'giardiniere', nome: 'Il giardiniere', emoji: '🌻',
     vuole: ['concime', 'fiori', 'zucche', 'lavanda', 'fieno'] },
+  /* Il bidello è il secondo cliente della mensa (`dati/catalogo.js`,
+     le botteghe del paese): porta in tavola la merenda che la maestra
+     non chiede — il minestrone, la pasta, il gelato del giovedì — e
+     col sapone tiene pulita la scuola, che è il suo mestiere vero e
+     il modo di farlo passare anche al banco. */
+  { id: 'bidello',     nome: 'Il bidello',     emoji: '🧹',
+    vuole: ['pane', 'succo', 'latte', 'minestrone', 'pasta', 'biscotti',
+            'gelato', 'sapone'] },
   /* I quattro mestieri dell'orto. Sono qui perché una merce nuova
      senza nessuno che la chieda per mestiere finisce sempre in mano al
      bottegaio, che è il modo di dire «non ci ho pensato». */
   { id: 'pizzaiolo',   nome: 'Il pizzaiolo',   emoji: '🍕',
     vuole: ['pomodori', 'cipolle', 'aglio', 'melanzane', 'peperoni', 'grano',
-            'salsa', 'farina'] },
+            'salsa', 'farina', 'pizza'] },
   { id: 'fruttivendola', nome: 'La fruttivendola', emoji: '🥕',
     vuole: ['pomodori', 'patate', 'cipolle', 'cavolfiori', 'carote', 'fragole',
-            'zucche', 'mais'] },
+            'zucche', 'mais', 'barbabietola'] },
   { id: 'apicoltore',  nome: 'L\'apicoltore',  emoji: '🐝',
     vuole: ['miele', 'fiori', 'cipolle'] },
   { id: 'sarta',       nome: 'La sarta',       emoji: '🧵',
-    vuole: ['lana', 'stoffa', 'maglione', 'maglione_lavanda', 'sacchetto'] },
+    vuole: ['lana', 'stoffa', 'maglione', 'maglione_lavanda', 'sacchetto',
+            'sciarpa_lana', 'berretto'] },
   /* L'oste vuole quello che si mette in tavola: è il mestiere che
      tiene il pane fuori dalle mani del solo fornaio. */
   { id: 'oste',        nome: 'L\'oste',        emoji: '🍽️',
     vuole: ['pane', 'tartufi', 'uova', 'latte', 'formaggio', 'polenta',
-            'minestrone', 'salsa'] },
+            'minestrone', 'salsa', 'pizza', 'lasagne', 'patatine', 'arancini'] },
   /* La lavandaia è il mestiere della tintoria, e **non chiede solo il
      sapone**: prende anche la lavanda cruda e la stoffa, che è il modo
      di dare un banco a chi la tintoria non ce l'ha ancora. */
   { id: 'lavandaia',   nome: 'La lavandaia',   emoji: '🧼',
     vuole: ['sapone', 'lavanda', 'stoffa', 'sacchetto'] },
+  /* Il settimo mestiere dell'albero nuovo, per la catena che nessun
+     altro cliente citava: riso e pesce sono crudi da consegnare, sushi
+     e maki sono la bottega che li chiude. */
+  { id: 'sushi',       nome: 'Il cuoco del sushi', emoji: '🍣',
+    vuole: ['riso', 'pesce', 'sushi', 'maki'] },
 ]
 
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
@@ -162,10 +199,12 @@ export const RIPOSO_MIN = 5
 
 /* ── IL PREMIO ────────────────────────────────────────────────────
    Il ragionamento sta in testa al file. `PREMIO_BASE` è il disturbo di
-   portare la roba al banco (uguale per tutti gli ordini), `PER_VALORE`
-   è quante volte si ripaga quello che la merce è costata. */
+   portare la roba al banco (uguale per tutti gli ordini), `PER_GESTO`
+   quanto vale un raccolto o una lavorazione, `BONUS_FASE` quanto in
+   più vale ogni passaggio della catena oltre il primo. */
 export const PREMIO_BASE = 6
-export const PER_VALORE = 4
+export const PER_GESTO = 2
+export const BONUS_FASE = 0.2
 
 /* 🪙6 = un minuto di esercizio (`CALIBRAZIONE.md`): è il cambio con cui
    si controlla che un ordine non renda più del tempo che chiede. */
@@ -217,6 +256,34 @@ export function minutiDi(prodotto, giri = PROFONDITA) {
   return min
 }
 
+/* Quanti gesti ci vogliono, al minimo, per avere **un** pezzo: un
+   raccolto è un gesto, una ricetta è un gesto più i gesti dei suoi
+   ingredienti moltiplicati per quanti ne prende. È il lavoro vero, e
+   lo paga il premio: il costo in monete no, perché i gesti costano
+   quasi tutti uguale e la differenza fra una torta e un grano sta nel
+   numero di volte che si è toccato lo schermo. */
+export function gestiDi(prodotto, giri = PROFONDITA) {
+  if (giri <= 0 || !PRODOTTI[prodotto]) return Infinity
+  let min = Infinity
+  for (const c of COLTURE) if (c.da === prodotto) min = menoDi(min, 1)
+  for (const r of RICETTE) {
+    if (r.da !== prodotto) continue
+    let n = 1
+    for (const [k, q] of Object.entries(r.prende || {})) n += q * gestiDi(k, giri - 1)
+    min = menoDi(min, n)
+  }
+  return min
+}
+
+/* Quanto rende **un pezzo** di questa merce, senza la base dell'ordine.
+   Sta a parte perché la mongolfiera e le botteghe pagano pezzo per
+   pezzo, e il conto dev'essere lo stesso del banco. */
+export function premioDelPezzo(prodotto) {
+  const g = gestiDi(prodotto), f = profonditaDi(prodotto)
+  if (!Number.isFinite(g) || !Number.isFinite(f)) return 0
+  return PER_GESTO * g * (1 + BONUS_FASE * (f - 1))
+}
+
 /* ── QUANTO COSTA **UNA** STRADA, E QUAL È LA MIGLIORE ────────────
    `valoreDi` e `minutiDi` dicono quanto costa una *merce* per la
    strada più economica. Queste due dicono quanto costa **quella
@@ -251,10 +318,28 @@ export const megliaDi = haTutto => (a, b) =>
    ritocca l'economia lo ritocca leggendo il ragionamento in testa al
    file, non frugando dentro le regole. */
 export function premioPer(chiede) {
-  let valore = 0
-  for (const [k, n] of Object.entries(chiede || {})) valore += n * valoreDi(k)
-  if (!Number.isFinite(valore)) return PREMIO_BASE
-  return PREMIO_BASE + PER_VALORE * valore
+  let pezzi = 0
+  for (const [k, n] of Object.entries(chiede || {})) pezzi += n * premioDelPezzo(k)
+  return Math.round(PREMIO_BASE + pezzi)
+}
+
+/* ── QUALE MERCE SI CHIEDE ────────────────────────────────────────
+   La pesca era **uniforme** fra tutte le merci ottenibili, e al livello
+   52 sono quarantacinque: metà colture e mangimi a un passo. Le merci
+   profonde — quelle che tengono impegnati, e che adesso rendono di più
+   — uscivano di rado, e quelle appena arrivate si perdevano nel mucchio
+   proprio quando sono la novità.
+
+   Adesso ogni merce ha un peso: mezzo punto per ogni fase oltre la
+   prima, e due punti se è arrivata negli ultimi `NOVITA` livelli. Un
+   grano pesa 1, una torta 3, la pasta appena sbloccata 4,5. Il crudo
+   continua a uscire — è l'ordine che si fa subito, e serve — ma non è
+   più metà del banco. */
+export const NOVITA = 6
+export function pesoDellaMerce(prodotto, livello) {
+  const f = profonditaDi(prodotto)
+  const nuova = livelloDelProdotto(prodotto) > Math.max(1, livello | 0) - NOVITA
+  return 1 + 0.5 * (Math.max(1, Number.isFinite(f) ? f : 1) - 1) + (nuova ? 2 : 0)
 }
 
 /* Quanti minuti veri costa produrre quello che un ordine chiede, con

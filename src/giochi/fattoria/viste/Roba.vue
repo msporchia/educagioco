@@ -135,6 +135,7 @@ const DICE = {
   case: 'Le cose grandi: costano tanto e si vedono da lontano.',
   arredo: 'Panchine, tavoli e lampioni, da sedersi e da guardare.',
   feste: 'Solo in questi giorni. Quello che compri resta tutto l\'anno.',
+  fiera: 'Le sorprese della mongolfiera: non si comprano, si vincono riempiendo le casse.',
 }
 
 /* ── APERTO SU UNA COSA PRECISA ───────────────────────────────────
@@ -178,7 +179,10 @@ const eMia = chi => props.bestie.some(b => (b.chi || b) === chi)
 const vociDi = chiave => {
   const c = CATEGORIE.find(c => c.chiave === chiave)
   if (!c) return []
-  return c.voci.filter(v => (v.stagione
+  /* La fiera non si vende: sullo scaffale c'è solo quello che la
+     mongolfiera ha lasciato nel baule, da posare. */
+  return c.voci.filter(v => (v.fiera ? quantiNe(v.id)
+      : v.stagione
       ? v.stagione === props.stagione || quantiNe(v.id)
       : preso('cosa', v.id))
     && !(v.unico && props.posati.includes(v.id) && !quantiNe(v.id)))

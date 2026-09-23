@@ -28,6 +28,7 @@
 import { PRODOTTI } from './coltivazioni.js'
 import { serveA as ciotolaEMacchine } from './bisogni.js'
 import { CLIENTI } from './mercato.js'
+import { CATALOGO } from './catalogo.js'
 
 export function serveA(prodotto) {
   const usi = ciotolaEMacchine(prodotto)
@@ -37,6 +38,12 @@ export function serveA(prodotto) {
   for (const c of CLIENTI)
     if ((c.vuole || []).includes(prodotto))
       usi.push({ che: 'ordine', emoji: c.emoji, nome: c.nome })
+  /* E le botteghe del paese, che chiedono per elenco chiuso: «la
+     vuole la pasticceria» dice dove portarla, che il mestiere del
+     cliente da solo non dice. */
+  for (const v of CATALOGO)
+    if (v.posto && v.posto.chiede.includes(prodotto))
+      usi.push({ che: 'bottega', emoji: '🏪', nome: v.nome, la: !!v.la })
   return usi
 }
 

@@ -80,6 +80,11 @@ const dice = n => {
 const macchina = n => n.via && n.via.macchina
 const diceMacchina = m => {
   if (m.stato === 'ok') return '✓ ce l\'hai'
+  /* Con la fila (`dati/albero.js`): quanti ne sta facendo, o che è
+     piena di altro. «ne fa 1» non si scrive — è quello che si capisce
+     già da «pronto fra». */
+  if (m.stato === 'lavora' && m.piena) return `⏳ fila piena · si libera fra ${m.manca} min`
+  if (m.stato === 'lavora' && m.ne > 1) return `⏳ ne fa ${m.ne}, pronto fra ${m.manca} min`
   if (m.stato === 'lavora') return `⏳ pronto fra ${m.manca} min`
   if (m.stato === 'premio') return '🎁 ti aspetta nei premi'
   if (m.arriva) return `arriva al livello ${m.arriva}`

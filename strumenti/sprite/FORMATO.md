@@ -42,6 +42,13 @@ basta: l'attrezzo non cambia.
   colore esplicito `[255, 255, 255]`. Dichiararlo evita il caso peggiore:
   un cane bianco a cui si aprono buchi nella schiena perché il bianco della
   carta e il bianco del cane sono lo stesso colore.
+- **`alone`** — una soglia d'alfa, per esempio `128`, per i fogli **già
+  trasparenti** che il generatore consegna con un bagliore attorno a
+  ogni figura (alfa 1–50, di solito rossastro) e il corpo appena sotto
+  il pieno (alfa 252). Sotto la soglia il pixel sparisce, sopra diventa
+  pieno, e si fa sul foglio grande **prima** della riduzione: dopo,
+  l'alone è già impastato nei pixel del bordo. Il primo foglio così è
+  `edifici_4.png`.
 - **`ombra`** — `true` toglie anche **l'ombra che il fondo si porta
   dietro**. Un generatore a cui si chiede «gli oggetti su un fondo
   piatto» quasi sempre disegna una macchia d'ombra sotto ognuno: non è

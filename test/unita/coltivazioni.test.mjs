@@ -498,8 +498,12 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   controlla('con la roba parte', f.avvia(mulino, 'mangime', T0).ok)
   uguale('la roba se n\'è andata dal granaio subito', f.quantoHo('grano'), 0)
   uguale('e ha pagato il suo', b.saldo(), saldo - r.costo)
-  uguale('due lavori insieme non si possono',
-         f.avvia(mulino, 'mangime', T0).motivo, 'sta-lavorando')
+  /* Un secondo pezzo non lavora insieme al primo: si mette **in fila**
+     e parte quando il primo finisce (`dati/coda.js`, e la prova intera
+     della fila in `unita/coda-fattoria`). Senza roba, però, nemmeno in
+     fila. */
+  uguale('un secondo pezzo senza roba non entra nemmeno in fila',
+         f.avvia(mulino, 'mangime', T0).motivo, 'manca-roba')
   uguale('e ritirarlo prima non si può',
          f.ritira(mulino, fra(1)).motivo, 'non-e-pronto')
 
@@ -663,7 +667,7 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   const mulino2 = g.cose.find(c => c.i === mulino.i)
   uguale('il campo si ricorda cosa ha dentro', campo2.coltura, 'mais')
   uguale('e da quando', campo2.seminato, T0)
-  uguale('il mulino si ricorda cosa sta facendo', mulino2.lavoro.ricetta, 'mangime')
+  uguale('il mulino si ricorda cosa sta facendo', mulino2.coda[0].ricetta, 'mangime')
   uguale('il granaio si rilegge', g.quantoHo('grano'), 0)
 
   /* Un salvataggio di ieri con una coltura che oggi non esiste più non

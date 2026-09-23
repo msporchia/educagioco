@@ -566,7 +566,7 @@ export const AIUTI = {
       { titolo: 'La catena', righe: [
         'Il raccolto non si mangia così com\'è: al **fienile** diventa mangime, e il mangime si dà ai recinti.',
         'Un recinto che ha fame lo dice da solo: sopra gli galleggia **proprio quello che aspetta**.',
-        'Quello che ne torna — uova, latte, lana — finisce nella ciotola o addosso a un animale di casa.',
+        'Quello che ne torna — uova, latte, lana — finisce nella ciotola, oppure **al mercato**: lì c\'è sempre qualcuno che chiede qualcosa, e consegnarglielo fa crescere la fattoria.',
         'Se una cosa non si può fare, il foglio dice **cosa fare adesso** e porta il tasto per farlo.',
       ] },
       { titolo: 'Cosa allena', righe: [
