@@ -41,6 +41,14 @@ controlla('la carta del gioco è in home', await carta.count() === 1)
 await carta.click()
 await page.waitForSelector('.pd-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pd-tappa').count(), CAMPAGNA.length)
+/* a cinque anni l'ultima tappa è chiusa per età, e sotto non c'è
+   scritto niente: andando avanti non si aprirebbe. La seconda è chiusa
+   solo perché non ci è ancora arrivato, e lo dice */
+uguale('chiusa per età, sotto il nome non c\'è scritto niente',
+       await page.locator('.pd-tappa[data-tappa="9"] .pd-testo i').count(), 0)
+uguale('chiusa perché non ci è ancora arrivato, dice come si apre',
+       (await page.locator('.pd-tappa[data-tappa="1"] .pd-testo i').innerText()).trim(),
+       'continua per aprirla')
 
 /* ---------- 2. le vignette sono grosse quanto lo schermo permette ---------- */
 await page.locator('.pd-tappa[data-tappa="0"]').click()

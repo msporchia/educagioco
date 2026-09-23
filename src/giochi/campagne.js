@@ -22,7 +22,7 @@
    si cambia qui, e nessun gioco se ne accorge.
    ═══════════════════════════════════════════════════════════════════ */
 import { state, persist, flushNow, tappaAperta } from '../store/profile.js'
-import { tappaApertaQui } from '../data/portata-giochi.js'
+import { tappaApertaQui, tappaChiusaPerEtaQui } from '../data/portata-giochi.js'
 /* tutti i giochi e non solo i nuovi: la partita libera del castello ha un
    record come la corsa infinita, e la tabella li vuole insieme */
 import { GIOCHI } from '../data/giochi.js'
@@ -56,6 +56,11 @@ export function progresso(chiave) {
    giochi per la stessa ragione di sempre — sette copie della stessa riga
    si scollano. */
 export const aperta = (chiave, indice) => tappaApertaQui(chiave, indice, progresso(chiave).tappa)
+
+/* Chiusa per età: sopra la mira, dove andare avanti non la apre. È la
+   domanda di chi deve decidere cosa scrivere sotto una tappa chiusa
+   (`prima-dopo/viste/Mappa.vue`). */
+export const chiusaPerEta = (chiave, indice) => tappaChiusaPerEtaQui(chiave, indice)
 
 export const stelleDi = (chiave, indice) => progresso(chiave).stelle[indice] || 0
 

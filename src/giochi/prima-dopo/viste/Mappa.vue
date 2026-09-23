@@ -6,9 +6,9 @@
    grandi: qui legge un bambino di quattro anni, e l'unica cosa che deve
    riconoscere da sola è «questa è aperta, questa no».
 
-   Riceve tutto già deciso — cosa è aperto, quante stelle, il colore
-   della tappa — e non sa niente di profili o motore: qui dentro si
-   sceglie dove andare e basta.
+   Riceve tutto già deciso — cosa è aperto e cosa è chiuso per età,
+   quante stelle, il colore della tappa — e non sa niente di profili o
+   motore: qui dentro si sceglie dove andare e basta.
    ═══════════════════════════════════════════════════════════════════ */
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
@@ -33,7 +33,10 @@ defineEmits(['gioca'])
           <span class="pd-faccia em">{{ t.aperta ? t.icona : '🔒' }}</span>
           <span class="pd-testo">
             <b>{{ t.nome }}</b>
-            <i>{{ t.aperta ? t.racconto : 'continua per aprirla' }}</i>
+            <!-- chiusa per età non si scrive niente: andando avanti non si
+                 apre, e per questo bambino il gioco finisce lì -->
+            <i v-if="t.aperta">{{ t.racconto }}</i>
+            <i v-else-if="!t.perEta">continua per aprirla</i>
           </span>
           <span class="pd-stelle em">{{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.quante} 📖` }}</span>
         </button>

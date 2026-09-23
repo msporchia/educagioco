@@ -152,10 +152,14 @@ export const arcoDi = chiave => arcoDelGioco(TAPPE_DEL_GIOCO[chiave] || [])
    qualcosa: chi ha già superato quelle tappe le rivede chiuse. Ma
    `tuttoAperto()` (il lucchetto dei grandi) passa davanti a tutto e
    resta la scappatoia, ed è la stessa che c'era prima. */
+/* sopra la mira, coi lucchetti dei grandi al loro posto: l'unico caso in
+   cui una tappa resta chiusa per quanto si vada avanti */
+const oltreLEta = stato => stato === AVANTI && !tuttoAperto()
+
 export function apertaQui (tappa, i, fatte) {
   const stato = tappa ? statoDellaTappa(tappa, regole()) : null
   if (stato === PASSATA) return true
-  if (stato === AVANTI && !tuttoAperto()) return false
+  if (oltreLEta(stato)) return false
   return tappaAperta(i, fatte)
 }
 
@@ -163,3 +167,15 @@ export function apertaQui (tappa, i, fatte) {
    tappa: le campagne dei giochi nuovi passano tutte da `giochi/campagne.js` */
 export const tappaApertaQui = (chiave, i, fatte) =>
   apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)
+
+/* ── e se è chiusa, perché ──
+   Due lucchetti che a schermo si somigliano e non dicono la stessa cosa:
+   quello di sempre si apre andando avanti, questo no — a quattro anni
+   «Tutto mescolato» resta chiusa per quanto si giochi. Serve a
+   chi scrive qualcosa sotto una tappa chiusa: «continua per aprirla» è
+   vero per il primo e falso per il secondo. Il predicato è lo stesso del
+   lucchetto, così le due risposte non possono scollarsi. */
+export const tappaChiusaPerEtaQui = (chiave, i) => {
+  const tappa = (TAPPE_DEL_GIOCO[chiave] || [])[i]
+  return !!tappa && oltreLEta(statoDellaTappa(tappa, regole()))
+}

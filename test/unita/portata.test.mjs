@@ -7,7 +7,7 @@
    Prima le campagne non lo sapevano: la fila era una sola per tutti, e
    chi arrivava grande si macinava le prime tappe per delle sere.
 
-   Qui si controllano tre cose:
+   Qui si controllano quattro cose:
 
    1. **Il conto** (`data/portata.js`), che è dato puro e si prova con
       tappe finte: la mira, i tre stati, e le due asimmetrie che si
@@ -23,6 +23,10 @@
    3. **Il ponte** (`data/portata-giochi.js`), cioè sotto quale chiave
       sta la fila di ogni gioco. Stesso difetto, più a monte: una chiave
       sbagliata non trova mai la sua fila, e il gioco vale per un posto.
+
+   4. **Chiusa per età**, con un bambino vero: il lucchetto e la mappa
+      devono dire la stessa cosa. Una tappa sopra la mira non si apre
+      andando avanti, e la mappa non deve prometterlo.
    ═══════════════════════════════════════════════════════════════════ */
 import { miraDi, statoDellaTappa, filaConPortata, primaDaGiocare,
          restaQualcosa, giocoDaOffrire, arcoDelGioco, livelloDegliAnni,
@@ -45,6 +49,8 @@ import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
 import { TAPPE as GENERALE } from '../../src/data/generale.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
+import { aperta, chiusaPerEta } from '../../src/giochi/campagne.js'
+import { init, creaGiocatore, accendiTuttoAperto } from '../../src/store/profile.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -193,5 +199,25 @@ uguale('ogni fila sta sotto la chiave di un gioco',
        Object.keys(TAPPE_DEL_GIOCO).filter(k => !CHIAVI_GIOCHI.includes(k)).join(','), '')
 uguale('e senza fila c\'è solo chi si dichiara un posto',
        GIOCHI.filter(g => !g.posto && !TAPPE_DEL_GIOCO[g.chiave]).map(g => g.chiave).join(','), '')
+
+/* ═══════════ 4. CHIUSA PER ETÀ, CON UN BAMBINO VERO ═══════════
+   Una tappa chiusa lo è per due motivi, e a schermo non si dicono allo
+   stesso modo: non ci si è ancora arrivati, e sotto c'è scritto
+   «continua per aprirla»; oppure è sopra la mira, e lì non si scrive
+   niente, perché andando avanti non si apre
+   (`prima-dopo/viste/Mappa.vue`). Il motivo lo dà `chiusaPerEta`, e
+   non deve mai dire «per età» di una tappa che il lucchetto lascia
+   aperta. */
+await init()
+await creaGiocatore('Prova', true, 4)
+const righe = TAPPE_DEL_GIOCO.prima.map((_, i) =>
+  ({ aperta: aperta('prima', i), perEta: chiusaPerEta('prima', i) }))
+uguale('a quattro anni «Tutto mescolato» è chiusa per età', righe[9].perEta, true)
+controlla('la seconda è chiusa perché non ci è ancora arrivato, non per età',
+          !righe[1].aperta && !righe[1].perEta)
+controlla('chiusa per età vuol dire chiusa', righe.every(t => !t.perEta || !t.aperta))
+accendiTuttoAperto(true)
+controlla('coi lucchetti tolti dai grandi non è chiuso niente, per nessun motivo',
+          TAPPE_DEL_GIOCO.prima.every((_, i) => aperta('prima', i) && !chiusaPerEta('prima', i)))
 
 riassunto('la portata delle tappe')

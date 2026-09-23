@@ -20,7 +20,7 @@ import { ref, computed, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { addCoins, segna, segnaBest } from '../../store/profile.js'
-import { progresso, aperta, stelleDi, completa } from '../campagne.js'
+import { progresso, aperta, chiusaPerEta, stelleDi, completa } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
 import { verbo as datiVerbo } from './dati/verbi.js'
@@ -65,6 +65,7 @@ const scalini = computed(() => SCALINI.map(s => ({
   tappe: tappeDelloScalino(s.chiave).map(t => ({
     ...t,
     aperta: aperta(CHIAVE, t.indice),
+    perEta: chiusaPerEta(CHIAVE, t.indice),
     adesso: t.indice === avanza.tappa,
     stelle: stelleDi(CHIAVE, t.indice),
   })),
