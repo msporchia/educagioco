@@ -196,7 +196,7 @@ export const GUIDE = [
       ] },
       { titolo: 'Come fa a funzionare senza rete', chiuso: true, testo: [
         'Perché non c\'è nessun server con cui parlare: il gioco **è** una pagina sola, e dentro c\'è tutto — il codice, i disegni, e anche le voci che pronunciano le parole inglesi e spagnole, che sono registrate e non chieste a un servizio. Alla prima apertura il telefono se la tiene, e da lì in poi la rete non serve più.',
-        'Serve solo per prendere le versioni nuove, e succede da sé quando c\'è: in fondo alla schermata iniziale è scritto di quando è quella in uso, così due telefoni si confrontano a colpo d\'occhio.',
+        'Serve solo per prendere le versioni nuove, e succede da sé quando c\'è: in fondo alla schermata iniziale è scritto di quando è quella in uso, così due telefoni si confrontano a colpo d\'occhio. Accanto c\'è «↻ cerca aggiornamenti», per quando non si vuole aspettare.',
       ] },
     ],
   },
@@ -434,11 +434,12 @@ export const GUIDE = [
     blocchi: [
       { titolo: 'Nell\'ordine', passi: [
         'Chiudi il gioco e riaprilo: la maggior parte delle volte basta.',
-        'Impostazioni → «Riscarica il gioco»: lo riscarica da internet e riparte pulito. Ci vuole la connessione, e **i progressi restano dove sono.**',
+        'In fondo alla schermata dei giochi, **«↻ cerca aggiornamenti»**: chiede al sito se c\'è una versione più nuova e, se c\'è, la scarica e riparte. Magari quello che non va è già stato aggiustato. **I progressi restano dove sono.**',
+        'Se il gioco si è annotato un guasto, in Impostazioni compare anche **«Riscarica il gioco»**: butta via la copia che c\'è e la riprende da internet. Ci vuole la connessione, e anche qui i progressi non si toccano.',
         'Se ancora non va, segnalalo: Impostazioni → «Dimmelo».',
       ] },
       { titolo: 'Il numero in fondo alla home', righe: [
-        'È la versione. Serve a sapere se il telefono ha preso l\'aggiornamento: se due telefoni mostrano numeri diversi, uno dei due è indietro e basta riaprirlo.',
+        'È la versione. Serve a sapere se il telefono ha preso l\'aggiornamento: se due telefoni mostrano numeri diversi, uno dei due è indietro — lì accanto c\'è «↻ cerca aggiornamenti», che lo porta in pari.',
       ] },
       { titolo: 'Se hai dimenticato il codice', righe: [
         'Di partenza è **0000**. Se l\'hai cambiato e non te lo ricordi, sul tastierino c\'è **«Non ricordi il codice?»** — tutto scritto nella guida **«Il codice dei genitori»**. **I progressi non si toccano.**',

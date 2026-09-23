@@ -23,6 +23,8 @@ import { GIOCHI } from '../data/giochi.js'
 import { inCasa } from '../data/portata-giochi.js'
 import { AREE, MODI } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
+import Aggiorna from '../guide/Aggiorna.vue'
+import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
 
 defineEmits(['vai'])
 
@@ -30,6 +32,9 @@ defineEmits(['vai'])
    l'aggiornamento?" guardando lo schermo, senza doverlo indovinare.
    La stringa la mette il build (vite.config.js). */
 const versione = __VERSIONE__
+/* e il tasto che va a prendere quella dopo, dove c'è un sito a cui
+   chiederla: dal file aperto col doppio click non c'è nessuno */
+const siCerca = daUnSito()
 
 /* English è un gioco solo: parole, verbi e frasi stanno nella stessa
    campagna, quindi il numero da mostrare è quanto se ne sa in tutto. */
@@ -387,12 +392,22 @@ function aChePunto (chiave) {
         <i>cos'è, chi l'ha fatto, installarlo sul telefono, l'età, le domande</i>
       </button>
       <!-- la versione serve a rispondere «il telefono ha preso
-           l'aggiornamento?» guardando lo schermo, e non è da toccare. -->
+           l'aggiornamento?» guardando lo schermo. E accanto c'è la
+           risposta quando è no: la domanda e il tasto nello stesso
+           posto, perché è qui che ci si accorge di essere indietro.
+           Grigio e piccolo come la versione — è roba da grandi — ma non
+           chiuso col codice: il nastro «c'è una versione nuova» fa la
+           stessa cosa e sta già fuori, e premerlo per sbaglio al più
+           dice «hai già l'ultima». -->
       <p class="piede">
         <span class="versione">aggiornato il {{ versione.etichetta
           }}<span v-if="versione.commit"> · {{ versione.commit }}</span></span>
+        <button v-if="siCerca" type="button" class="cerca" data-azione="cerca-versione"
+                @click="aggiornaOra()">↻ cerca aggiornamenti</button>
       </p>
     </div>
+
+    <Aggiorna v-if="aggiornando" />
   </div>
 </template>
 
@@ -492,4 +507,9 @@ function aChePunto (chiave) {
 .piede { display:flex; align-items:baseline; justify-content:center; gap:9px;
          flex-wrap:wrap; margin-top:10px }
 .versione { font-size:11px; opacity:.42; letter-spacing:.3px }
+/* la stessa pelle piatta di «Impostazioni», in piccolo: si legge senza
+   occhiali e si prende col pollice, ma non chiama nessuno */
+.cerca { padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:800;
+         color:var(--tenue); background:#ffffff66; box-shadow:inset 0 0 0 1px #d7dfea }
+.cerca:active { background:#ffffffaa }
 </style>
