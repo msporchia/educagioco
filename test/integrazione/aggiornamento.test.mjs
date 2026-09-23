@@ -32,11 +32,15 @@
       il browser si teneva da parte;
    8. senza la pagina il service worker nuovo non si installa, e la copia
       di prima resta intera;
-   9. il sito muto si dice, e «Riprova» riprova.
+   9. il sito muto si dice, e «Riprova» riprova;
+   10. quello che arriva dalla rete nella cache non entra — né la pagina
+       veloce, né quella lenta, né una coda nell'indirizzo — e manifest e
+       icone non si richiedono al sito «per la volta dopo»: la cache la
+       scrivono l'installazione e il tasto.
    ═══════════════════════════════════════════════════════════════════ */
 import { apriTelefono, apriGioco, scatto } from '../aiuto/browser.mjs'
 import { apriSito } from '../aiuto/sito.mjs'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const sito = await apriSito()
 const telefono = await apriTelefono()
@@ -45,7 +49,7 @@ const PRIMA = { ...sito.versione }
 const versione = (lettera, giorno) =>
   ({ id: `2099.10.${giorno}.0900-${lettera}`, etichetta: `${Number(giorno)} ottobre alle 09:00` })
 const B = versione('b', '01'), C = versione('c', '02'), D = versione('d', '03')
-const E = versione('e', '04'), F = versione('f', '05')
+const E = versione('e', '04'), F = versione('f', '05'), G = versione('g', '06')
 const cassettoDi = v => 'educagioco-' + v.id
 
 try {
@@ -71,9 +75,9 @@ try {
   /* riaprire l'app come la riapre un telefono: da un'altra pagina, e non
      con la ricarica — che per il browser è un'altra cosa, e rivaluta la
      pagina col sito invece di prenderla dalla sua cache */
-  const riapri = async () => {
+  const riapri = async (coda = '') => {
     await page.goto('about:blank')
-    await page.goto(sito.indirizzo)
+    await page.goto(sito.indirizzo + coda)
     await page.waitForSelector('.carte', { timeout: 15000 })
   }
   /* Il service worker si aggiorna quando decide il browser — dopo una
@@ -287,6 +291,67 @@ try {
     await page.waitForSelector('.carte', { timeout: 15000 })
     controlla('sull\'ultima pubblicata', await dice(F), await scritta())
   }
+
+  /* ══════════ 10. quello che arriva dalla rete, nella cache non entra ══════════
+     La cache di una versione la scrivono l'installazione e il tasto, e
+     nessun altro. Il service worker ci provava anche lui, dopo ogni
+     risposta presa dalla rete, e non ci riusciva quasi mai: il `clone()`
+     arrivava quando la pagina si era già presa il corpo, e riusciva solo
+     dove la risposta non la voleva nessuno — la pagina arrivata oltre la
+     pazienza, e il rinfresco di manifest e icone. È stato tolto
+     (`vite.config.js`), e qui si guarda che resti tolto: si pubblica la G
+     col service worker fermo, la si apre veloce, lenta e con una coda
+     nell'indirizzo, e nelle cache deve restare esattamente quello che
+     c'era. */
+  const tutteLeChiavi = () => page.evaluate(async () => {
+    const tutte = []
+    for (const k of await caches.keys())
+      for (const q of await (await caches.open(k)).keys()) {
+        const u = new URL(q.url)
+        tutte.push(`${k} ${u.pathname}${u.search}`)
+      }
+    return tutte.sort()
+  })
+  {
+    const esito = await aggiornaIlServiceWorker()
+    controlla('prima si assesta il service worker della F', nuovo(esito), esito)
+  }
+  controlla('e prende casa', await assestato(F))
+  const primaDellaG = await tutteLeChiavi()
+  sito.swFermo = true
+  sito.pubblica(G)
+
+  /* veloce: la G arriva dalla rete in tempo, ed è lei che si vede */
+  await svuotaLaCacheDelBrowser()
+  {
+    const da = sito.richieste.length
+    await riapri()
+    controlla('veloce, la G arriva dalla rete', await dice(G), await scritta())
+    controlla('e nella cache resta la F', await tiene(F, F))
+    uguale('manifest e icone li dà la cache, e al sito non si richiedono «per la volta dopo»',
+      sito.richieste.slice(da).filter(r => /\.(webmanifest|png|svg)$/.test(r.percorso)).length, 0)
+  }
+
+  /* lenta, e con una coda: risponde la cache, e la G che arriva dopo non
+     deve entrarci — né al posto della F, né come copia sua sotto `?via=`.
+     Si guarda solo quando la G è arrivata davvero, cioè quando il `put`
+     di prima ci riusciva: prima si guarderebbe il vuoto */
+  sito.lento = 4000
+  await svuotaLaCacheDelBrowser()
+  {
+    const partita = Date.now()
+    await riapri('?via=lenta')
+    controlla('lenta, risponde la cache: la F', await dice(F), await scritta())
+    await page.waitForTimeout(Math.max(0, partita + sito.lento + 2500 - Date.now()))
+    controlla('e la G arrivata dopo non ci entra', await tiene(F, F))
+  }
+  sito.lento = 0
+
+  /* e una `fetch` qualunque, che la cache non ha: va al sito, e basta */
+  await page.evaluate(() => fetch('./?prova=x').then(r => r.text()))
+  stessaLista('dopo tutto questo, nelle cache c\'è quello che c\'era prima della G',
+    await tutteLeChiavi(), primaDellaG)
+  sito.swFermo = false
 
   const js = errori.filter(e => e.startsWith('errore JS'))
   uguale('nessun errore di JavaScript', js.length, 0)
