@@ -263,7 +263,7 @@ insieme al banco degli sprite e a come si pubblica.
 
 ```bash
 npm test            # il giro di ogni giorno: solo quelle senza browser, secondi
-npm run test:tutto  # tutto: ricostruisce, poi unità e browser (~5 minuti e mezzo)
+npm run test:tutto  # tutto: ricostruisce, poi unità e browser (un minuto e mezzo)
 ```
 
 Sono di due tipi, e la differenza conta.

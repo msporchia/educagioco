@@ -1,5 +1,89 @@
 # I tempi dei test — un censimento
 
+## Settembre 2026: il doppio dei file, e otto alla volta
+
+Il censimento più sotto è di quando i file erano 65, ed è rimasto come
+storia. Rimisurata a fine settembre 2026, in fila come allora, la suite
+fa **142 file** e costa **751 secondi** (12 min 31 s): 46 s le 110 unità,
+704 s i 32 file di integrazione. I «cinque minuti e mezzo» scritti in
+giro erano già falsi prima di toccare qualcosa.
+
+In quei dodici minuti la macchina è quasi sempre ferma: un test di
+integrazione aspetta un'animazione, un salvataggio a scatto ritardato,
+un cliente che arriva. Da qui la scelta di farli girare **insieme**
+(`test/esegui.mjs`, «quanti alla volta») senza toccare i test: ognuno era
+già un processo a sé, col suo Chrome e il suo archivio vuoto. Prima si è
+cercato cosa potessero pestarsi — porte, file, cartelle — e l'unica cosa
+era in `integrazione/genitori`, due file in `/tmp` con un nome fisso:
+dentro un giro non si incrociano (lo stesso test non gira due volte), ma
+due giri lanciati insieme da due worktree sì, e adesso ha una cartella
+sua.
+
+| | in fila | 4 alla volta | 8 alla volta | 12 alla volta |
+|---|---|---|---|---|
+| `npm run test:tutto` (142 file) | 751 s → 682 s | 178 s | **89–91 s** | 66 s |
+| `npm run test:browser` (32 file) | 704 s → 635 s | | 85 s | |
+| `npm test` (110 unità) | 48 s | 24 s | 25 s | 24 s |
+| `npm run test:svelto` (104 file) | 15 s | | 4 s | |
+| memoria al massimo (PSS) | | 2,1 GB | 3,9–4,3 GB | 5,2 GB |
+| CPU occupata, media e picco | | 22% · 58% | 34–38% · 75–80% | 71% · 93% |
+
+La CPU è in percento dei venti thread di un i5-13600KF con 30 GB, e la
+memoria è quella di tutto l'albero dei processi, Chrome compresi. Le
+colonne in parallelo sono misurate dopo le due correzioni qui sotto;
+quella in fila, prima e dopo — la fattoria da sola vale i settanta
+secondi di differenza.
+
+**Otto è il punto in cui il giro è già sette volte e mezzo più corto e
+la macchina resta usabile per altro** — l'editor, un altro worktree, un
+altro giro di test. A dodici si guadagnano altri venti secondi, ma la
+CPU arriva al 93% e la memoria a cinque giga: si chiede a mano
+(`--alla-volta=12`) quando non si sta facendo nient'altro. Sotto i
+sedici processori le corsie sono la metà di quelli che ci sono (la CI,
+che ne ha quattro, ne usa due).
+
+### Il pavimento è il test più lungo
+
+In parallelo il totale non è più la somma: è il più grande fra il test
+più lungo e la somma divisa per le corsie. Il primo giro a otto è
+durato 126 secondi, e 120 li faceva un file solo:
+
+- **`integrazione/fattoria`, da 126 a 54 s.** Per arrivare alla
+  bancarella del mercato provava la tela riga per riga dall'angolo in
+  alto a sinistra, un tocco da 300 ms ogni 36×24 pixel — e la bancarella
+  è posata al centro della terra di partenza, dove la telecamera si
+  apre: la trovava al 166° tocco, dopo 69 secondi. La griglia è la
+  stessa, percorsa dal centro in fuori, e la trova al primo.
+- **`integrazione/survivors`, 24 s — ma una volta su qualche giro 206.**
+  La sezione delle foto gioca finché l'orologio della partita non scende
+  a un certo punto; se l'eroe muore, l'orologio si ferma sotto il
+  cartello finale e il ciclo faceva trecento giri a vuoto per chiamata.
+  Il test passava lo stesso, quindi in fila non se n'era accorto nessuno.
+  Adesso si ferma a partita finita.
+
+Tolti quei due, il giro a otto lo decide la somma (circa 715 secondi di
+test su otto corsie) più che un file solo, e i quattro più lunghi sono
+`torri`, `genitori`, `animali` e `fattoria`, attorno al minuto. Per
+`npm test` il pavimento è `unita/survivors` — 22–25 secondi, quanto
+tutte le altre 109 unità insieme — e 13 di quei secondi sono la sezione
+che gioca le nove tappe: in un file suo, `npm test` scenderebbe verso i
+13 secondi.
+
+### Due rossi che non dipendono dalle corsie
+
+- `integrazione/bancarella` è caduto una volta, **in fila**, su «in
+  fondo alla campagna qualcuno vuole due o tre cose uguali»: i clienti
+  si pescano a caso, e quella volta nessuno dei dieci ne voleva più di
+  una.
+- `integrazione/sotterraneo` cade circa una volta su cinquanta su «dopo
+  un tocco l'eroe si è mosso». Tocca a 70 pixel dall'eroe nei quattro
+  versi, e la mappa è a caso: in 48 giri si sono viste fino a tre
+  direzioni chiuse su quattro. Non è il carico — un tocco buono sposta la
+  scena in 200 ms anche con otto test insieme, contro gli 800 che il
+  test concede.
+
+## Il censimento di prima
+
 Questo file misura, non giudica a occhio. Ogni test del progetto (65 file,
 50 in `test/unita/`, 15 in `test/integrazione/`) è stato lanciato **tre
 volte**, prendendo il minimo: la stessa macchina fa altro mentre gira una
@@ -19,7 +103,7 @@ solo il nome li lancia insieme, e la misura ne uscirebbe falsata.
 misura è passata con `--niente-build` (concettualmente: la build non è
 un costo del test, è un costo del lanciatore, e non va contato 65 volte).
 
-## Il costo fisso di avviare Node
+### Il costo fisso di avviare Node
 
 `node -e ""` ripetuto cinque volte, minimo: **14 ms**. È il pavimento
 sotto cui nessun file può scendere qualunque cosa faccia. Per i test più
@@ -39,7 +123,7 @@ trascurabile solo sopra i cento millisecondi scarsi: da `codice-segreto`
 integrazione (il più svelto, `campagna-mate.test.mjs`, ci mette 1,55 s),
 è rumore nel rumore.
 
-## Il totale
+### Il totale
 
 | | file | somma dei minimi |
 |---|---|---|
@@ -59,7 +143,7 @@ sotto i 50. La lunghissima coda sotto il decimo di secondo è tutta in
 perché aprire Chrome — non i secondi passati dentro — è già più caro di
 qualunque cosa un test unitario faccia.
 
-## I cinque più lenti
+### I cinque più lenti
 
 Tutti e cinque sono test di integrazione: nessun test unitario avvicina
 anche solo il più svelto dei cinque.
@@ -75,7 +159,7 @@ anche solo il più svelto dei cinque.
 Da soli, i primi tre (pozioni, animali, torri) valgono **193 s su 327**,
 il **59%** dell'intera cartella `integrazione/`.
 
-## Legittimo o accidentale
+### Legittimo o accidentale
 
 **Legittimo**, e non c'è molto da stringere: `pozioni` e `bancarella`
 giocano tappe vere attraverso l'API dell'app, non a colpi di dito, ma
@@ -106,7 +190,7 @@ test che si è già preso cura di sé stesso.
   da riscrivere, ma se un giorno deve tornare più svelto è il primo
   posto dove guardare.
 
-## La soglia di `--svelti`
+### La soglia di `--svelti`
 
 `--svelti` tiene fuori `test/integrazione/` a prescindere — corretto,
 nessun file di quella cartella scende mai sotto 1,5 s — e, dentro
@@ -138,7 +222,7 @@ avrebbero nessun motivo pratico di stare fuori dal giro veloce. Solo
 (5,3 s): la sua esclusione è l'unica delle sette, oggi, che fa quello per
 cui `--svelti` esiste.
 
-### Il bug: la regex legge la prosa, non solo la dichiarazione
+#### Il bug: la regex legge la prosa, non solo la dichiarazione
 
 `livelli.test.mjs` è un caso a parte, ed è quello che l'utente aveva già
 notato. Il file **non dichiara più** `tempo: 600` — il commento in testa
@@ -183,7 +267,7 @@ stretta — non attraversare gli a capo, e magari pretendere che
 sette dichiarazioni vere esattamente come oggi e smetterebbe di leggere
 la prosa.
 
-## Un dettaglio del lanciatore
+### Un dettaglio del lanciatore
 
 Il filtro per nome di `test/esegui.mjs` include un test se il gruppo
 combacia *esattamente* oppure se il nome lo contiene — ma non incrocia
@@ -198,7 +282,7 @@ tempi molto diversi (`unita/animali` 444 ms, `integrazione/animali` 60,2
 s): un `node test/esegui.mjs animali --niente-build` lanciato pensando di
 provare solo i dati sembra restare appeso, e in realtà ha aperto Chrome.
 
-## Le categorie di oggi, e quella che arriva
+### Le categorie di oggi, e quella che arriva
 
 Oggi la suite conosce due generi: `unita/`, senza schermo, e
 `integrazione/`, dentro Chrome. La soglia che li separa nella pratica non
@@ -232,7 +316,7 @@ contenuto — quello sì può essere un `unita/pittori.test.mjs` da pochi
 millisecondi, ma è un test diverso con uno scopo diverso, non lo stesso
 strumento con due cappelli.
 
-## Proposte, con i numeri sopra
+### Proposte, con i numeri sopra
 
 **Restituire sei file a `--svelti`.** Dei sette file che oggi dichiarano
 un `tempo:`, sei possono rientrare nel giro veloce. Cinque per una
@@ -275,7 +359,7 @@ soglia.
 sopra: uno script con `npm run`, non un file raccolto da
 `test/esegui.mjs`.
 
-## Una nota, non un guasto da inseguire
+### Una nota, non un guasto da inseguire
 
 Tre file falliscono nello stato attuale del repository:
 `test/unita/generale.test.mjs`, `test/unita/livelli.test.mjs` e

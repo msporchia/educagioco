@@ -21,21 +21,23 @@ potenziamento che rincara.
 npm ci                 # installazione pulita (non npm install)
 npm run dev            # server di sviluppo
 npm run build          # produce dist/index.html, il file unico
-npm test               # il giro di sempre: senza browser, una decina di secondi
+npm test               # il giro di sempre: senza browser, una ventina di secondi
 npm run test:svelto    # solo i test sotto il secondo, mentre si scrive
-npm run test:browser   # solo dentro Chrome, ~5 minuti e mezzo — vedi sotto
+npm run test:browser   # solo dentro Chrome, un minuto e mezzo — vedi sotto
 npm run test:tutto     # tutto, browser compreso: prima di pubblicare
 node test/esegui.mjs animali            # solo i file che contengono "animali"
 node test/esegui.mjs --niente-build     # non ricompilare prima
 node test/esegui.mjs torri --scatti     # e lascia anche le foto
+node test/esegui.mjs --alla-volta=1     # uno alla volta: di solito sono otto insieme
 ```
 
 `npm test` (= `npm run test:unita`) è il comando di ogni giorno: nessun
 browser, nessuna build, un risultato in secondi. La cartella
-`test/integrazione/` apre Chrome e da sola vale 327 dei 340 secondi
-dell'intera suite (misurato in
-[`docs/tempi-dei-test.md`](docs/tempi-dei-test.md)) — costa un caffè, non
-va lanciata a ogni riga scritta. Si chiede quando serve davvero: tutta con
+`test/integrazione/` apre Chrome e in fila varrebbe più del novanta per
+cento dell'intera suite (misurato in
+[`docs/tempi-dei-test.md`](docs/tempi-dei-test.md)): otto alla volta
+costa un minuto e mezzo, che è poco ma non è niente — non va lanciata a
+ogni riga scritta. Si chiede quando serve davvero: tutta con
 `npm run test:tutto` o `npm run test:browser`, o **un file solo** con
 `node test/esegui.mjs <nome>` — il modo giusto quando si è appena toccata
 una schermata (`node test/esegui.mjs pozioni`, per dire, prova solo il
@@ -47,12 +49,12 @@ tocca lo schermo, non solo quando si scrive la logica sotto.
 
 **La cadenza, detta in due righe.** Le unità girano a ogni commit — costano
 secondi, e non c'è nessun motivo di risparmiarle. **Il browser gira prima
-del push, non prima di ogni commit**: cinque minuti e mezzo moltiplicati per
-i commit di un pomeriggio sono un'ora buttata, e non comprano niente, perché
-quello che finisce sui telefoni è la **punta** e non i passaggi intermedi. È
-la stessa regola dei commit a blocchi applicata alle prove: un commit
-raggruppa un concetto e può anche non stare in piedi da solo, la coerenza si
-verifica dove si pubblica.
+del push, non prima di ogni commit**: un minuto e mezzo moltiplicato per
+i commit di un pomeriggio è comunque un quarto d'ora, e non compra niente,
+perché quello che finisce sui telefoni è la **punta** e non i passaggi
+intermedi. È la stessa regola dei commit a blocchi applicata alle prove:
+un commit raggruppa un concetto e può anche non stare in piedi da solo,
+la coerenza si verifica dove si pubblica.
 
 Strumenti che si usano di rado:
 
@@ -108,7 +110,7 @@ dello scenario, e il banco lo esegue: il contratto sta in testa a
 `test/aiuto/livello.mjs`, e una chiave sconosciuta è un guasto.
 
 **`npm run test:svelto` è quello da tenere acceso mentre si scrive.** La
-suite unità intera costa una decina di secondi, e gran parte li spende un
+suite unità intera costa una ventina di secondi, e gran parte li spende un
 pugno di test che giocano una campagna intera per davvero (il castello
 tappa per tappa, la bancarella, i saperi citati e non). Sono giusti così —
 è il prezzo di provare sul serio invece che a occhio — ma quel prezzo non
@@ -120,6 +122,20 @@ fuori da `--svelti`; chi non dice niente resta dentro, ed è la maggioranza.
 I test di integrazione non ci entrano mai, dichiarino o no: aprono Chrome,
 e Chrome da solo costa più di un secondo. Il contratto è in testa a
 `test/esegui.mjs`.
+
+**I test girano otto alla volta** (la metà dei processori, se sono meno
+di sedici, e non più di uno per giga di memoria libera: due sessioni che
+chiudono insieme non si mandano in swap a vicenda). Ognuno era già un
+processo a sé col suo Chrome e il suo archivio, quindi un test non deve
+sapere niente: un test di integrazione passa quasi tutto il suo tempo ad
+aspettare un'animazione, e in fila quelle attese si sommano — più di
+dieci minuti contro uno e mezzo. L'uscita di ogni test si stampa
+intera quando finisce, i lunghi partono per primi (il lanciatore si
+ricorda i tempi in `node_modules/.cache/`), e **il giro non finisce
+prima del suo test più lungo**: è lì che si guarda quando il totale
+cresce. `--alla-volta=1` è il lanciatore di prima, con l'uscita dal vivo
+— serve quando un test si comporta male solo in compagnia. I dettagli
+sono in [`test/README.md`](test/README.md).
 
 ### In un ambiente pulito
 
