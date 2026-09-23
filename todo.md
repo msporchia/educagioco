@@ -40,10 +40,15 @@ talento come scassinare una serratura: la lista dovrebbe dire chi **non** può.
 ## Gli attriti: cosa hanno sbattuto contro quattro campagne
 
 Ogni agente ha annotato ogni volta che ha pensato «qui mi servirebbe dire X e
-non posso»: **1244 righe in `tmp/attriti-{fondi,nido,sale,torre}.md`**, con
-capitolo, cosa voleva dire, come si è arrangiato e quanto è costato. Sono la
-parte più preziosa del lavoro, perché non sono opinioni: sono livelli veri che
-hanno dovuto piegarsi. Qui sotto per tema, con quante campagne l'hanno colpito.
+non posso»: 1244 righe, oggi perse con `tmp/`, con capitolo, cosa voleva dire,
+come si è arrangiato e quanto è costato. **Le quattro campagne sono state tolte
+a settembre 2026** insieme a tutti i livelli non pubblicati (giocati erano
+noiosi), ma gli attriti restano veri: sono il mondo che manca al Generale per
+scrivere situazioni ricche invece di stanzette. Qui sotto per tema, con quante
+campagne l'hanno colpito. Alcuni sono già caduti: passare una cosa (`posa`),
+rompere (`attacca` sulle cose), partire con qualcosa in mano (`zaino`),
+aspettare che uno se ne vada (`aspetta che [non vedi …]`), gli ordini nemici
+diversi per scena (`ordini` nella variante).
 
 ### A. Aspettare e sincronizzare — **4 campagne su 4**
 - **Non ci si può fermare in mezzo a un piano ad aspettare un messaggio**
@@ -116,31 +121,13 @@ non si disegna a occhio.**
 
 ---
 
-## Difetti visti guardando i livelli veri
-
-Restano due cose, e **stanno tutte e due di là dai livelli spenti**
-(`src/data/livelli/todo/`, formato vecchio, mai provati da nessuno): si toccano
-quando quei capitoli si riaccendono, non prima.
-
-1. **Le dritte lunghe.** Su `torre-5` la dritta è di dieci righe e dice
-   esattamente cosa fare: non è un indizio, è la risposta — e gli aiuti a
-   pagamento (⭐) diventano inutili. Va accorciata a una riga, e quello che dice
-   adesso va spostato in `aiuti`. Nei livelli vivi la dritta più lunga è di 108
-   caratteri, quindi il debito è tutto lì.
-2. **Le figure non nominate.** I pittori che mancavano adesso ci sono (`falena`,
-   `topo`, i personaggi variabili in taglia, spalle, tinta ed elmo), ma nei
-   livelli spenti Marta la sarta è ancora dichiarata come un mago e le falene
-   come goblin. A un bambino che deve distinguere quattro dei suoi a colpo
-   d'occhio, la figura è metà del gioco.
-
----
-
 ## Cosa resta, in ordine
 
-1. **I capitoli da riscrivere coi verbi nuovi** — la lanterna dei Fondi che si
-   posa, il tamburo del nido che si sfonda, l'obiettivo «o l'uno o l'altro» che
-   adesso si scrive. Il motore e il formato ci sono già; sono i livelli a
-   parlare ancora la lingua di prima.
+1. **I livelli, da capo** — dopo che a settembre 2026 sono stati tolti tutti
+   quelli non pubblicati. Restano i sei; il resto è da ripensare partendo da
+   quello che rende un livello un posto dove valga la pena entrare, non da
+   quello che il banco sa misurare (gli attriti qui sopra sono il mondo che
+   manca per farlo).
 2. **Quattro righe in `src/data/livelli/scrivi.js`**, l'unico posto rimasto
    fuori: `resistenza` fra le `OPZIONI` di un oggetto e di un congegno, `quale`
    fra quelle di un ordine, e le due scorciatoie `se.rotto(x)` e
@@ -152,25 +139,15 @@ quando quei capitoli si riaccendono, non prima.
    rompibile.
 4. **`sa` da girare in lista di divieti**, così `suona` non va dichiarato ogni
    volta (vedi la sezione sul vocabolario).
-5. **Da tarare giocando, non a tavolino**: `VOLTE_STATUE` (la nona tappa del
-   dungeon, parametrica: provarla a 8, 12 e 22), e il livello finale intrecciato
-   con tre o quattro unità e segnali che si incatenano, che non è mai riuscito.
 
 ### Design ancora rimandato
 
-- **I fatti che passano fra capitoli.** `eredita`/`lascia` sono scritti nei dati
-  ma non li legge nessuno. Forma decisa: non un inventario ma un **insieme di
-  fatti** (`lanterna-presa`, `pozzo-aperto`) che un capitolo vinto lascia. Il
-  posto nel profilo è già pronto (`storie.*.fatti`). **Se un fatto manca, il
-  capitolo si adatta — non si blocca**: senza lanterna la miniera è buia, non
-  chiusa.
-- **Il grafo delle storie**: `richiede: [fatti]`, rami **a diamante** che
-  divergono e riconvergono, non ad albero, se no il contenuto esplode.
+- **I fatti che passano fra capitoli** (non un inventario ma un insieme di
+  fatti che un capitolo vinto lascia, e **se un fatto manca il capitolo si
+  adatta, non si blocca**) e **il grafo delle storie** a diamante: la forma
+  era decisa, ma le storie a cui serviva sono state tolte, e con loro il posto
+  nel profilo (`storie`). Si riprende con le storie nuove, se torneranno.
 - **PvP**: due autori umani. L'astrazione `fazioni.*.autore` non lo preclude.
-- **`scappa`** esiste nel formato delle mappe (`strumenti/mappe/nucleo.js`) ma
-  **non nel motore**: o si aggiunge o si toglie dalla tabella. (`posa` era
-  nella stessa riga, ed era un falso allarme: c'è in tutti e due, e adesso ha
-  anche il suo test.)
 
 ---
 

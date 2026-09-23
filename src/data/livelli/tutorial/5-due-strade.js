@@ -57,7 +57,7 @@ const DUE_CORTI = campo([
      oa: dove, ob: dove, t1: dove, t2: dove, t3: dove })
 
 export const DUE_STRADE = livello({
-  id: 'due-strade', nome: 'Due strade', idea: 'Guarda prima di scegliere',
+  id: 'due-strade', nome: 'Due strade', impara: 'le scelte', idea: 'Guarda prima di scegliere',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano all'eroe</b>. E l'eroe cade al primo colpo.",
   racconto: "L'orco sta a una delle due porte, e <b>cambia a ogni battaglia</b>. Da dove parti ne vedi una sola.",
   aiuti: ['Da qui vedi solo la strada di sopra. Guardala.',

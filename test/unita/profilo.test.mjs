@@ -18,7 +18,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          sapereAcceso, accendiSapere, saperiSpenti,
          spostaLEta, etaDelBambino, ETA_DIFETTO,
          ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco, fissaSapere,
-         rimettiAiDifetti } from '../../src/store/profile.js'
+         rimettiAiDifetti, migraGenerale } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
@@ -516,6 +516,34 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
   uguale('e le monete non si toccano', state.profile.coins, monete)
   uguale('rimettere due volte non ha più niente da fare',
          rimettiAiDifetti(), null)
+}
+
+/* ── IL GENERALE: DALLE POSIZIONI AGLI ID ──
+   Le stelle stavano sotto la posizione nella fila di ventisei livelli;
+   i sei che restano si ritrovano le loro sotto l'id, quelli tolti le
+   perdono, e una seconda lettura non ritraduce niente (un id non è una
+   posizione). */
+{
+  const VUOTO = { tappa: 0, libera: false, ordini: {}, stelle: {}, v: 2 }
+  const vecchio = { tappa: 20, libera: false,
+                    stelle: { 0: 2, 1: 1, 3: 2, 6: 2, 14: 1, 19: 2, 21: 1 },
+                    ordini: { 0: 1, 6: 3, 21: 9 } }
+  const g = migraGenerale(VUOTO, vecchio)
+  stessaLista('le stelle dei sei pubblicati passano sotto il loro id',
+              Object.keys(g.stelle).sort(),
+              ['attesa', 'chiave', 'due-strade', 'primo', 'richiamo'])
+  uguale('e restano quelle che erano', g.stelle['due-strade'], 2)
+  uguale('i record degli ordini pure', g.ordini['due-strade'], 3)
+  controlla('quelle dei livelli tolti se ne vanno', !('3' in g.stelle) && !('21' in g.stelle))
+  uguale('«tappa» diventa quanti ne sono stati superati', g.tappa, 5)
+  uguale('e il salvataggio dice su quale fila è scritto', g.v, 2)
+  const due = migraGenerale(VUOTO, g)
+  uguale('una seconda lettura non ritraduce niente', JSON.stringify(due), JSON.stringify(g))
+  const nuovo = migraGenerale(VUOTO, null)
+  uguale('un profilo nuovo parte vuoto', Object.keys(nuovo.stelle).length, 0)
+  const rotto = migraGenerale(VUOTO, { stelle: 'boh', ordini: [1, 2] })
+  controlla('uno rovinato a mano riparte da vuoto, non da rotto',
+            Object.keys(rotto.stelle).length === 0 && !Array.isArray(rotto.ordini))
 }
 
 nota('l\'archivio qui è quello in memoria: fuori dal browser è il ripiego previsto')

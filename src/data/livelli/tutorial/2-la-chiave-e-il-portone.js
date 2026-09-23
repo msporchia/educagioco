@@ -21,7 +21,7 @@ const portone = cose.porta('portone', 'il portone', { chiave: 'chiave' })
 const tesoro = cose.forziere()
 
 export const CHIAVE = livello({
-  id: 'chiave', nome: 'La chiave e il portone', idea: 'Prima la chiave, poi il portone',
+  id: 'chiave', nome: 'La chiave e il portone', impara: 'aprire le porte', idea: 'Prima la chiave, poi il portone',
   dritta: 'Obiettivo: <b>il forziere deve essere aperto</b>. Sta dietro il portone.',
   racconto: "Alla chiave e al portone l'eroe ci va da solo: quello che gli manca, se gli manca, non è la strada.",
   aiuti: ['Un ordine può fallire anche stando nel posto giusto.',

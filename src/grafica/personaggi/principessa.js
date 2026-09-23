@@ -8,9 +8,8 @@
    Prima di questo file il livello del tutorial la disegnava con
    `corpo: 'elfo'` — comodo perché già disegnato, ma sbagliato: quel
    pittore ha in mano un arco, e un arco in mano dice «combatte».
-   L'elfo resta il pittore di chi tira con l'arco davvero (gli
-   abitanti nei livelli non ancora attivi in `data/livelli/todo/`),
-   e la principessa ha adesso un pittore suo. */
+   L'elfo resta il pittore di chi tira con l'arco davvero, e la
+   principessa ha adesso un pittore suo. */
 import { poligono, tondo } from '../comune.js'
 import { occhi } from '../segni.js'
 

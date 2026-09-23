@@ -39,8 +39,6 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import Barra from '../components/Barra.vue'
-import SceltaAvventura from './generale/SceltaAvventura.vue'
-import MappaCapitoli from './generale/MappaCapitoli.vue'
 import ElencoProve from './generale/ElencoProve.vue'
 import CartelloScena from './generale/CartelloScena.vue'
 import CampoLivello from './generale/CampoLivello.vue'
@@ -51,7 +49,6 @@ import { bersagliDi } from './generale/bersagli.js'
 import { cosaCambia, nomiScene } from './generale/scene.js'
 import { creaNavigazione } from './generale/navigazione.js'
 import { genProgresso, genCompleta, daSolo } from '../store/profile.js'
-import { superaCapitolo, stelleDi } from '../store/storie.js'
 import { suono } from '../audio.js'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
@@ -59,19 +56,18 @@ import { creaMondo, avvia, passo, esegui, pianoCompleto, mieUnita, altruiUnita, 
          contaOrdini, VERBI, ilSegnale, testoCond, laCosa, eOstile,
          registro, eAvanzato, libera, perdute,
          manca, eCondizione, eRipeti, eRoutine, eBlocco, ramoDi, corpoDi, dentroA,
-         RAMI, BLOCCHI, raccogliRoutine }
+         RAMI, BLOCCHI, raccogliRoutine, reazioniDi }
        from '../motore/generale.js'
 
 const emit = defineEmits(['vai'])
 const NOME = 'Il generale'
 
 /* ── dove si è ──
-   Le quattro schermate e il modo di passare dall'una all'altra stanno
-   in `generale/navigazione.js`: qui si gioca un livello, e da quale
-   schermata sia arrivato non è affare di questo file. */
+   Le due schermate e il modo di passare dall'una all'altra stanno in
+   `generale/navigazione.js`: qui si gioca un livello, e da dove sia
+   arrivato non è affare di questo file. */
 const nav = creaNavigazione({ avvia: avviaLivello, aCasa: () => emit('vai', 'home'), nome: NOME })
-const { fase, storiaOra, contesto, L, apri, apriCapitolo, apriStoria,
-        indietro, dopo, titolo } = nav
+const { fase, L, apri, indietro, dopo, titolo } = nav
 const livOra = ref(null)           // il livello in corso, da qualunque parte venga
 const piano = ref({})              // gli ordini firmati: { unità: [ordini] }
 const unitaOra = ref('')           // di chi stiamo scrivendo il piano
@@ -138,9 +134,10 @@ const progresso = computed(() => genProgresso())
 const liv = computed(() => livOra.value || LIVELLI[L.value])
 const quantiOrdini = computed(() => contaOrdini(piano.value))
 const prove = computed(() => proveDi(liv.value))
-const stelle = computed(() => nav.inStoria()
-  ? stelleDi(contesto.value.storia, contesto.value.capId)
-  : progresso.value.stelle[L.value] || 0)
+/* le stelle stanno sotto l'`id` del livello, non sotto la sua posizione:
+   la fila si accorcia, si allunga e si riordina, e un voto scritto per
+   posizione finirebbe addosso al livello sbagliato */
+const stelle = computed(() => progresso.value.stelle[liv.value.id] || 0)
 
 /* il mondo è un oggetto grosso e mutabile: non lo mettiamo in reattivo,
    lo si guarda attraverso `tic` (che batte a ogni passo). È la stessa
@@ -159,9 +156,8 @@ const campo = ref(null)
 const mondoOra = () => mondo
 
 /* ═══════════ preparare la partita ═══════════
-   Il livello arriva già scelto: da qui in giù non conta se venga da una
-   prova o da un capitolo di storia — la partita è la stessa, e questa
-   vista non ha due modi di giocare. */
+   Il livello arriva già scelto: da qui in giù la partita non sa da dove
+   venga, e questa vista non ha due modi di giocare. */
 function avviaLivello (l) {
   livOra.value = l
   piano.value = Object.fromEntries(mieUnita(l).map(id => [id, []]))
@@ -396,11 +392,7 @@ function vittoria () {
      qui si dice solo cosa è successo. */
   const caduti = Math.max(mondo ? perdute(mondo) : 0, caduttiFondo)
   const conto = { ordini: n, svelato: !!svelato.value, caduti, avanzato }
-  /* la vittoria va segnata dove è stata presa: le prove hanno la loro
-     fila, un capitolo ha la sua storia. Il metro è lo stesso. */
-  if (nav.inStoria())
-    superaCapitolo(contesto.value.storia, contesto.value.n, conto)
-  else genCompleta(L.value, { ...conto, finita: filaFinita(L.value) })
+  genCompleta(liv.value.id, { ...conto, finita: filaFinita(liv.value.id) })
   finito.value = { ordini: n, daSolo: daSolo(conto), caduti, svelato: svelato.value }
 }
 
@@ -555,6 +547,10 @@ const ordiniAltrui = computed(() => {
   if (!scoperte.value.includes(letta.value)) return null
   return pianoCompleto(mondo || liv.value, {})[letta.value] || []
 })
+/* e com'è fatto: le sue reazioni, che si leggono sotto il suo piano
+   (`EditorPiano`, `reazioni`) solo se il piano si legge */
+const reazioniAltrui = computed(() => (letta.value && mondo && ordiniAltrui.value
+  ? reazioniDi(mondo, letta.value) : []))
 /* gli ordini di un altro, appiattiti per essere LETTI: un bivio diventa
    la sua domanda e poi le due strade rientrate, che è come si racconta a
    parole. Qui non si tocca niente — si deduce. */
@@ -706,8 +702,8 @@ function torna () { auto.value = false; pannello.value = ''; indietro() }
 onMounted(() => {
   raf = requestAnimationFrame(giro)
   window.addEventListener('resize', ridimensiona)
-  window.__gen = { apri, apriStoria, apriCapitolo, via, unPasso, ferma, riavvolgi,
-                   piano, LIVELLI, fase, L, storiaOra, contesto, esiti, finito, cambio,
+  window.__gen = { apri, via, unPasso, ferma, riavvolgi,
+                   piano, LIVELLI, fase, L, esiti, finito, cambio,
                    montaggio, saltaMontaggio, serieI,
                    mondo: () => mondo, scegliendo, unitaOra,
                    /* dove sta una cella sullo schermo: serve ai test per
@@ -766,16 +762,8 @@ async function ridimensiona () {
       </template>
     </Barra>
 
-    <!-- ════════ SCEGLI L'AVVENTURA ════════ -->
-    <SceltaAvventura v-if="fase === 'avventure'"
-                     @apri="apriStoria" @prove="fase = 'prove'" />
-
-    <!-- ════════ I CAPITOLI DI UNA STORIA ════════ -->
-    <MappaCapitoli v-else-if="fase === 'capitoli'" :storia-id="storiaOra"
-                   @apri="apriCapitolo" />
-
-    <!-- ════════ LE PROVE, I QUATTORDICI SCIOLTI ════════ -->
-    <ElencoProve v-else-if="fase === 'prove'" @apri="apri" />
+    <!-- ════════ LE PROVE ════════ -->
+    <ElencoProve v-if="fase === 'prove'" @apri="apri" />
 
     <!-- ════════ IL GIOCO ════════ -->
     <template v-else>
@@ -903,7 +891,7 @@ async function ridimensiona () {
           leggi — il livello si vince anche senza spenderne nessuno.</template></div>
       </section>
       <EditorPiano v-else sola :ordini="ordiniAltrui" :mondo-ora="mondoOra"
-                   :tic="tic" :unita-ora="letta" />
+                   :tic="tic" :unita-ora="letta" :reazioni="reazioniAltrui" />
 
       <!-- ═════ I FOGLI ═════
            Registro, spiegazione, scheda ed elenco dei nomi: si aprono
@@ -965,9 +953,8 @@ async function ridimensiona () {
 <style scoped>
 .generale { background:linear-gradient(180deg,#eef2f8,#e6ecf6) }
 
-/* le tre schermate di prima del gioco — scelta dell'avventura, capitoli
-   di una storia, prove sciolte — hanno il loro file in `views/generale/`,
-   e si portano dietro il loro stile */
+/* la schermata di prima del gioco — l'elenco delle prove — ha il suo
+   file in `views/generale/`, e si porta dietro il suo stile */
 
 /* la striscia di quando si sta mirando un bersaglio */
 /* la striscia del montaggio: sta SOPRA la mappa e non la spinge in giù —

@@ -5,8 +5,8 @@
    nome sbagliato, un rettangolo da cancellare — e quella correzione deve
    finire nel file, non negli appunti di chi guarda. La convenzione di
    casa per gli attrezzi che si aprono col doppio click è la clipboard
-   (`strumenti/mappe/editor.html`), e lì è l'unica strada possibile: da
-   `file://` non c'è nessuno dall'altra parte.
+   (la usava il vecchio editor delle mappe del Generale), e lì è l'unica
+   strada possibile: da `file://` non c'è nessuno dall'altra parte.
 
    Il banco dei mondi passa da Vite comunque — importa i moduli veri dei
    giochi, e senza server non partirebbe — quindi dall'altra parte c'è

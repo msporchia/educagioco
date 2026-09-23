@@ -35,7 +35,7 @@ import { CAMPAGNA as SPAGNOLO } from './campagna-spagnolo.js'
 import { RACCONTO as CASTELLO } from './campagne-castello.js'
 import { CAMPAGNA as POZIONI } from '../giochi/pozioni/dati/campagna.js'
 import { FILA as BANCARELLA } from './bancarella.js'
-import { CAMPAGNE as GENERALE } from './campagne-generale.js'
+import { TAPPE as GENERALE } from './generale.js'
 import { CAMPAGNA as CONTA } from '../giochi/conta/dati/campagna.js'
 import { CAMPAGNA as PRIMA_DOPO } from '../giochi/prima-dopo/dati/campagna.js'
 import { CAMPAGNA as CODICE } from '../giochi/codice-segreto/dati/campagna.js'
@@ -61,7 +61,7 @@ export const TAPPE_DEL_GIOCO = {
   castello: CASTELLO,
   pozioni: POZIONI,
   bancarella: BANCARELLA,
-  generale: GENERALE.flatMap(c => c.tappe),
+  generale: GENERALE,
   conta: CONTA,
   'prima-dopo': PRIMA_DOPO,
   'codice-segreto': CODICE,

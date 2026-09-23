@@ -287,12 +287,14 @@ const RICETTE = [
   { file: 'codice-gioco', dove: 'codice', attesa: '.tappe, .mappa, .cs-tappe',
     passi: [['.tappa:not(.chiusa), .cs-tappa', 3000]] },
 
-  { file: 'generale-mappa', dove: 'generale', attesa: '.scelta-avv' },
-  /* il Generale ha tre porte prima del gioco vero: scegli l'avventura,
-     apri il capitolo, premi «gioca». Fermarsi alla prima fotografa un
-     menù, che è la cosa meno interessante che ha da mostrare. */
-  { file: 'generale-gioco', dove: 'generale', attesa: '.scelta-avv',
-    passi: [['.avventura', 1200], ['.capitolo', 900], ['.gioca', 2200], ['button:has-text("✕")', 900]] },
+  { file: 'generale-mappa', dove: 'generale', attesa: '.tappa' },
+  /* il Generale si entra dall'elenco delle prove: si apre la prima e si
+     chiude il cartello che la spiega, se no la foto è un menù, che è la
+     cosa meno interessante che ha da mostrare. (Qui c'erano la scelta
+     dell'avventura e il capitolo, schermate che non si sono mai aperte:
+     la foto aspettava un selettore che non compariva.) */
+  { file: 'generale-gioco', dove: 'generale', attesa: '.tappa',
+    passi: [['.tappa:not(.chiusa)', 2200], ['.foglio .capo button', 900]] },
 
   /* La fattoria si fotografa **giocata** (vedi `fattoriaGiocata()`): un
      campo di grano pronto col cestino sopra, uno che cresce, il mulino al

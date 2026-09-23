@@ -16,7 +16,17 @@
 
    Quindi il lucchetto si legge dalle STELLE, che stanno per livello e
    non contano le posizioni: si scorre la fila visibile e ci si ferma
-   alla prima senza stelle — quella è aperta, le dopo no. La regola
+   alla prima senza stelle — quella è aperta, le dopo no.
+
+   ── E LE STELLE STANNO SOTTO L'ID, NON SOTTO LA POSIZIONE ──
+   Per un pezzo la chiave era `i`, il posto nella fila piena, e c'era un
+   avviso in testa a `data/generale.js`: «cambiare quest'ordine sposta le
+   stelle già prese». Era vero, ed è successo: quando la fila è passata
+   da ventisei livelli ai sei pubblicati, «Due strade» sarebbe scivolata
+   dal settimo posto al quarto e si sarebbe presa il voto di un livello
+   cancellato. Adesso la chiave è l'`id`, che non si rinomina mai, e la
+   fila si può riordinare, accorciare e allungare senza toccare i voti
+   di nessuno. `i` resta, ma solo per sapere quale livello aprire. La regola
    dell'interruttore dei genitori resta quella comune (`tappaAperta`),
    perché «apri tutto» deve continuare ad aprire tutto.
 
@@ -29,17 +39,18 @@ import { fila } from '../../data/generale.js'
 import { genProgresso, sperimentaliAccesi, tappaAperta } from '../../store/profile.js'
 
 /* le righe da mostrare: `{ liv, i, titolo, prova, campagna }`, dove `i`
-   è la posizione nella fila piena — cioè la chiave dei progressi */
+   è la posizione nella fila piena — serve ad aprire il livello, mentre
+   i progressi stanno sotto `liv.id` */
 export const FILA = computed(() => fila(sperimentaliAccesi()))
 
-const stelleDi = i => genProgresso().stelle[i] || 0
+const stelleDi = id => genProgresso().stelle[id] || 0
 
 /* fin dove si è arrivati NELLA FILA VISIBILE: quante righe di seguito,
    dalla prima, sono già state vinte. È l'indice della prima da fare. */
 export const avanzamento = computed(() => {
   const righe = FILA.value
   let n = 0
-  while (n < righe.length && stelleDi(righe[n].i) > 0) n++
+  while (n < righe.length && stelleDi(righe[n].liv.id) > 0) n++
   return n
 })
 
@@ -48,12 +59,8 @@ export const apribile = k => tappaAperta(k, avanzamento.value)
 
 /* quante ne sono state vinte in tutto (anche saltando, se i genitori
    hanno aperto tutto) e quante ce ne sono: la riga «3 di 6» */
-export const fatte = computed(() => FILA.value.filter(r => stelleDi(r.i) > 0).length)
+export const fatte = computed(() => FILA.value.filter(r => stelleDi(r.liv.id) > 0).length)
 export const quante = computed(() => FILA.value.length)
-
-/* il tutorial è tutto quello che non è una campagna — e col cancello
-   chiuso è più corto, perché le prove non ancora approvate non ci sono */
-export const quanteTutorial = computed(() => FILA.value.filter(r => !r.campagna).length)
 
 /* quella dopo, e non è «l'indice dopo»: è la prossima riga VISIBILE.
    Torna la posizione nella fila piena, che è quella con cui si apre un
@@ -64,8 +71,9 @@ export function dopoDi (i) {
   return k >= 0 && k + 1 < righe.length ? righe[k + 1].i : null
 }
 
-/* la campagna è finita: contando anche il livello appena vinto, ogni
-   riga visibile ha almeno una stella. Sta qui e non nel profilo perché
-   «tutti» dipende da quali si vedono, e quello lo sa questa fila. */
-export const filaFinita = i =>
-  FILA.value.every(r => r.i === i || stelleDi(r.i) > 0)
+/* la campagna è finita: contando anche il livello appena vinto (`id`),
+   ogni riga visibile ha almeno una stella. Sta qui e non nel profilo
+   perché «tutti» dipende da quali si vedono, e quello lo sa questa
+   fila. */
+export const filaFinita = id =>
+  FILA.value.every(r => r.liv.id === id || stelleDi(r.liv.id) > 0)

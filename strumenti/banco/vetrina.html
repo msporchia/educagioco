@@ -16,9 +16,9 @@
      `src/grafica/personaggi/` e `src/grafica/oggetti/`, in ogni stato che
      sa disegnare, etichettato col nome con cui si nomina nei dati.
 
-     A DIFFERENZA di `strumenti/mappe/editor.html` **non si apre col
-     doppio click**. Quello ci riesce perché tira dentro le regole con
-     un <script> normale, senza `import`; qui servono i moduli veri di
+     **Non si apre col doppio click**, come si apriva il vecchio editor
+     delle mappe del Generale (che tirava dentro le regole con un
+     <script> normale, senza `import`): qui servono i moduli veri di
      `src/grafica/` — la stessa scelta già fatta da
      `catalogo.html`, per lo stesso motivo: da `file://` i moduli non si
      caricano (Chrome rifiuta anche `fetch` fra due file locali). Quindi

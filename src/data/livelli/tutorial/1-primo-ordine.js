@@ -35,7 +35,7 @@ const eroe = chi.eroe()
 const tesoro = cose.forziere()
 
 export const PRIMO = livello({
-  id: 'primo', nome: 'Il primo ordine', idea: 'Un verbo, una cosa, e via',
+  id: 'primo', nome: 'Il primo ordine', impara: 'azioni base', idea: 'Un verbo, una cosa, e via',
   dritta: 'Obiettivo: <b>il forziere deve essere aperto</b>.',
   racconto: "Camminare lo sa fare da solo: intorno ai muri ci gira senza che glielo dica nessuno. Tu gli dici <b>cosa</b> fare, non come.",
   aiuti: ['Un ordine è fatto di due cose: un verbo, e la cosa su cui vale.',

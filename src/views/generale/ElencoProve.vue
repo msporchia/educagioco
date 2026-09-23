@@ -9,11 +9,10 @@
    false, perché di là non cambiava niente. Erano otto prove tutte
    tutorial, e una divisione che promette un cambio di passo inesistente
    è peggio di nessuna divisione.
-   Adesso i tratti ci sono per davvero: dopo le sette prove comincia il
-   consolidamento, una campagna per costrutto, e in fondo il cortile,
-   dove c'è qualcuno che non comandi. Ventisei righe di fila senza dire
-   dove finisce una cosa e comincia l'altra non si leggono più.
-   I titoli non stanno qui: vengono da `data/generale.js`, dallo stesso
+   Adesso i tratti dicono l'idea che il pezzo di fila insegna — i primi
+   ordini, la scelta, mettersi d'accordo, il rumore — e quando la fila
+   si allungherà di nuovo diranno anche dove finisce una cosa e comincia
+   l'altra. I titoli non stanno qui: vengono da `data/generale.js`, dallo stesso
    dato che decide l'ordine — perché sono la stessa decisione, e
    separati si scollerebbero.
 
@@ -46,16 +45,16 @@ const progresso = computed(() => genProgresso())
     <template v-for="(r, k) in FILA" :key="r.liv.id">
       <div v-if="r.titolo" class="riga-titolo">{{ r.titolo }}</div>
       <button class="tappa"
-              :class="{ chiusa: !apribile(k), fatta: (progresso.stelle[r.i] || 0) > 0 }"
+              :class="{ chiusa: !apribile(k), fatta: (progresso.stelle[r.liv.id] || 0) > 0 }"
               :disabled="!apribile(k)" @click="$emit('apri', r.i)">
-        <span class="num">{{ apribile(k) ? (progresso.stelle[r.i] ? '✓' : k + 1) : '🔒' }}</span>
-        <span class="che"><b>{{ r.liv.nome }}<template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i></span>
+        <span class="num">{{ apribile(k) ? (progresso.stelle[r.liv.id] ? '✓' : k + 1) : '🔒' }}</span>
+        <span class="che"><b>{{ r.liv.nome }}<span v-if="r.liv.impara" class="impara"> — {{ r.liv.impara }}</span><template v-if="r.prova"> 🧪</template></b><i>{{ r.liv.idea }}</i></span>
         <!-- le stelle prese, e niente altro: qui sotto c'era «par 4»,
              cioè un compito annunciato prima ancora di aprire il
              livello. Chi non l'ha ancora fatto vede due stelle spente,
              che dicono quello che c'è da prendere senza dire come -->
-        <span class="voto">{{ '⭐'.repeat(progresso.stelle[r.i] || 0)
-                           }}<small v-if="!progresso.stelle[r.i]">☆☆</small></span>
+        <span class="voto">{{ '⭐'.repeat(progresso.stelle[r.liv.id] || 0)
+                           }}<small v-if="!progresso.stelle[r.liv.id]">☆☆</small></span>
       </button>
     </template>
   </div>
@@ -76,6 +75,7 @@ const progresso = computed(() => genProgresso())
 .tappa .voto { flex:none; font-size:13px; text-align:right }
 .tappa .voto small { display:block; font-size:10px; color:var(--tenue); font-weight:800 }
 .tappa.chiusa { opacity:.55; box-shadow:none }
+.che .impara { font-weight:700; color:var(--tenue) }
 .riga-titolo { font-size:10px; font-weight:900; letter-spacing:.7px; text-transform:uppercase;
                color:var(--tenue); margin:10px 2px 7px }
 </style>

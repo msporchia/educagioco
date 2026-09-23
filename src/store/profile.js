@@ -138,24 +138,14 @@ const blank = () => ({
      stesso posto di un «4» scritto oggi. Vedi `migraMercato`. */
   mercato: { tappa: 0, libera: false, v: 2 },
   /* Il generale ha la stessa forma delle altre campagne — `tappa` è quanti
-     livelli sono stati superati ed è l'indice del prossimo — più due cose
-     sue, tenute per livello e non in totale: `ordini` è il RECORD (il
-     minor numero di ordini con cui quel livello è stato chiuso) e `stelle`
-     quante stelle vale adesso, una o due. Stanno per livello perché
-     rigiocarne uno già fatto non deve gonfiare il totale: le stelle sono
-     la somma dei propri primati, non delle partite. */
-  gen: { tappa: 0, libera: false, ordini: {}, stelle: {} },
-  /* LE AVVENTURE DEL GENERALE — una voce per storia, e le storie non si
-     mescolano fra loro: `fondi` non sa niente di `torre`. Dentro ognuna:
-       capitolo  quanti capitoli sono stati superati (indice del prossimo)
-       stelle    per CAPITOLO, con la chiave del capitolo e non il numero:
-                 quando arriveranno i rami l'ordine dei capitoli cambierà,
-                 le stelle già prese no
-       fatti     quello che i capitoli lasciano dietro («lanterna-presa»,
-                 «pozzo-aperto»). Oggi non li legge nessuno: il posto c'è
-                 e la funzione che li aggiunge pure, l'interpretazione no.
-     Chi le muove è `store/storie.js`, non questo file. */
-  storie: {},                       // 'fondi' -> { capitolo, stelle:{}, fatti:[] }
+     livelli sono stati superati — più due cose sue, tenute per livello e
+     non in totale: `ordini` è il RECORD (il minor numero di ordini con cui
+     quel livello è stato chiuso) e `stelle` quante stelle vale adesso, una
+     o due. Stanno per livello perché rigiocarne uno già fatto non deve
+     gonfiare il totale: le stelle sono la somma dei propri primati, non
+     delle partite. **La chiave è l'`id` del livello** (`v: 2`), non la sua
+     posizione nella fila: vedi `migraGenerale`. */
+  gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, v: 2 },
   /* I GIOCHI NUOVI (`src/giochi/`) stanno tutti qui, con una forma sola:
      'codice' -> { tappa, libera, stelle:{}, cfg:{} }. Sopra si vede il
      contrario — otto campi che dicono la stessa cosa in otto modi — ed è
@@ -564,19 +554,12 @@ export async function selectPlayer(id) {
      residuo degli aiuti di prima non dicono più niente a nessuno */
   delete p.lab
   if (p.settings) delete p.settings.misureNuove
-  p.gen = { ...vuoto.gen, ...(p.gen || {}) }
+  p.gen = migraGenerale(vuoto.gen, raw && raw.gen)
   p.giorni = { ...vuoto.giorni, ...(p.giorni || {}) }
-  /* i due dizionari del generale: un profilo salvato prima che il gioco
-     esistesse non ce li ha, e uno rovinato a mano potrebbe averli di un
-     altro tipo. In tutti e due i casi si riparte da vuoto, non da rotto. */
-  if (!p.gen.ordini || typeof p.gen.ordini !== 'object') p.gen.ordini = {}
-  if (!p.gen.stelle || typeof p.gen.stelle !== 'object') p.gen.stelle = {}
-  /* le avventure: un profilo di ieri non ha `storie`, e uno rovinato a
-     mano potrebbe averle di un altro tipo. In tutti e due i casi si
-     riparte da vuoto — e vuoto qui vuol dire «nessuna storia cominciata»,
-     che è esattamente quello che era vero prima che esistessero. */
-  if (!p.storie || typeof p.storie !== 'object' || Array.isArray(p.storie)) p.storie = {}
-  for (const k of Object.keys(p.storie)) p.storie[k] = normalizzaStoria(p.storie[k])
+  /* le avventure a capitoli del Generale non ci sono più (non si sono mai
+     aperte), e con loro il posto dove tenevano i progressi: nessuno lo
+     scriveva, perché nessuno ci poteva giocare */
+  delete p.storie
   if (!p.items || typeof p.items !== 'object') p.items = {}
   if (!p.pets || typeof p.pets !== 'object') p.pets = {}
   if (!p.dispensa || typeof p.dispensa !== 'object') p.dispensa = {}
@@ -1473,6 +1456,46 @@ export function mercatoCompleta(indice, quanteGiornate) {
   return m
 }
 
+/* ═══════════ il generale: dai vecchi indici agli id ═══════════
+   Fino al settembre 2026 le stelle e i record del Generale stavano sotto
+   la POSIZIONE del livello nella fila (`gen.stelle[6]`), e c'era un
+   avviso scritto in testa alla fila: riordinarla sposta i voti. È
+   arrivato il giorno: la fila è passata da ventisei livelli ai sei
+   pubblicati, e «Due strade» sarebbe scivolata dal settimo posto al
+   quarto portandosi via il voto di un livello che non c'è più.
+   Adesso la chiave è l'`id`, e questa è la tabella per tradurre: dove
+   stavano i sei che restano, nella fila di allora. Gli altri venti sono
+   stati tolti, e i loro voti se ne vanno con loro — li vedeva solo chi
+   aveva acceso i giochi in prova. I contatori (`totals`) non si toccano:
+   salgono e non scendono mai, e raccontano quanto si è giocato, non
+   cosa c'è adesso in elenco. */
+const GEN_DA_POSIZIONE = { 0: 'primo', 1: 'chiave', 2: 'parole-due-chiavi',
+                           6: 'due-strade', 14: 'attesa', 19: 'richiamo' }
+export function migraGenerale(vuoto, salvato) {
+  const dati = salvato && typeof salvato === 'object' ? salvato : {}
+  const dizionario = x => (x && typeof x === 'object' && !Array.isArray(x) ? { ...x } : {})
+  /* i due dizionari: un profilo salvato prima che il gioco esistesse non
+     ce li ha, e uno rovinato a mano potrebbe averli di un altro tipo. In
+     tutti e due i casi si riparte da vuoto, non da rotto. */
+  const g = { ...vuoto, ...dati, ordini: dizionario(dati.ordini), stelle: dizionario(dati.stelle) }
+  // il `v` che conta è quello del salvataggio: fondendo per primo il
+  // vuoto, la sua versione coprirebbe l'assenza
+  if (dati.v === vuoto.v) return g
+  const perId = voti => {
+    const out = {}
+    for (const k in voti) {
+      const id = GEN_DA_POSIZIONE[k]
+      if (id && voti[k]) out[id] = voti[k]
+    }
+    return out
+  }
+  g.stelle = perId(g.stelle)
+  g.ordini = perId(g.ordini)
+  g.tappa = Object.keys(g.stelle).length
+  g.v = vuoto.v
+  return g
+}
+
 /* ═══════════ campagna del generale ═══════════
    Stessa forma delle altre campagne, con due cose in più che il gioco non
    deve tenersi in tasca: il record di ordini per livello e le stelle
@@ -1488,6 +1511,13 @@ export function mercatoCompleta(indice, quanteGiornate) {
 
    I contatori li muove questa funzione, con `segna()`: così il gioco non
    deve ricordarsi cinque nomi e non c'è modo di contare due volte.
+
+   ── E SI SEGNA SOTTO L'ID DEL LIVELLO ──
+   Non sotto la sua posizione nella fila: la fila si accorcia e si
+   riordina (è passata da ventisei livelli a sei in un colpo), e un voto
+   scritto per posizione finirebbe addosso al livello sbagliato. `tappa`
+   allora non è più una punta nella fila ma quello che il suo nome ha
+   sempre promesso: quanti livelli sono stati superati.
 
    ── `finita` LA DECIDE CHI CHIAMA, E NON È UN CONTO DI POSIZIONI ──
    Prima qui arrivava «quanti livelli ci sono» e la campagna era finita
@@ -1513,28 +1543,27 @@ export const genProgresso = () => state.profile.gen
    un compagno a morire sarebbe gratis. */
 export const daSolo = ({ svelato = false, caduti = 0 } = {}) => !svelato && !caduti
 
-export function genCompleta(indice, conto = {}) {
+export function genCompleta(id, conto = {}) {
   const { ordini = 0, avanzato = false, finita = false } = conto
   const g = state.profile.gen
-  const primaVolta = indice + 1 > (g.tappa || 0)
-  /* la punta toccata nella fila piena: non apre più i lucchetti — quelli
-     si leggono dalle stelle — ma resta quello che guardano i contatori
-     e la riga in home */
-  g.tappa = Math.max(g.tappa || 0, indice + 1)
+  const primaVolta = !g.stelle[id]
   if (finita) g.libera = true
 
   // il record è il MINORE: chiudere con meno ordini vuol dire aver capito
   // meglio, non aver giocato di più
-  const rec = g.ordini[indice] || 0
-  if (ordini > 0 && (!rec || ordini < rec)) g.ordini[indice] = ordini
+  const rec = g.ordini[id] || 0
+  if (ordini > 0 && (!rec || ordini < rec)) g.ordini[id] = ordini
 
   // due stelle a chi ci è arrivato da solo, una a chi ce la fa e basta.
   // Si tiene la migliore: una partita storta non toglie la stella già
   // guadagnata.
   const solo = daSolo(conto)
   const stelle = solo ? 2 : 1
-  const prima = g.stelle[indice] || 0
-  if (stelle > prima) g.stelle[indice] = stelle
+  const prima = g.stelle[id] || 0
+  if (stelle > prima) g.stelle[id] = stelle
+  /* quanti livelli sono stati superati: non apre i lucchetti — quelli si
+     leggono dalle stelle — ma è quello che guardano i contatori */
+  g.tappa = Math.max(g.tappa || 0, Object.keys(g.stelle).length)
 
   if (primaVolta) segna('missioni')
   if (ordini > 0) segna('ordini', ordini)
@@ -1551,31 +1580,6 @@ export function genCompleta(indice, conto = {}) {
   persist()
   flush()          // un livello si vince di rado: non deve perdersi
   return g
-}
-
-/* ═══════════ le avventure del generale ═══════════
-   Qui c'è solo il POSTO dove stanno e la garanzia che sia sano: chi le
-   legge e chi le muove è `store/storie.js`, che di profili non sa
-   niente e resta un modulo di funzioni. */
-export function normalizzaStoria(s) {
-  const r = s && typeof s === 'object' ? s : {}
-  return {
-    capitolo: Number.isFinite(r.capitolo) && r.capitolo > 0 ? Math.floor(r.capitolo) : 0,
-    stelle: r.stelle && typeof r.stelle === 'object' && !Array.isArray(r.stelle) ? { ...r.stelle } : {},
-    fatti: Array.isArray(r.fatti) ? r.fatti.filter(f => typeof f === 'string') : [],
-  }
-}
-
-/* la voce di una storia, creata al primo bisogno: leggere non deve
-   scrivere niente, ma chi scrive vuole trovarla già lì */
-export function storiaProfilo(id, crea = false) {
-  const p = state.profile
-  if (!p.storie || typeof p.storie !== 'object') p.storie = {}
-  if (!p.storie[id]) {
-    if (!crea) return normalizzaStoria(null)
-    p.storie[id] = normalizzaStoria(null)
-  }
-  return p.storie[id]
 }
 
 /* i due nomi di prima, che la home e i test usano ancora */

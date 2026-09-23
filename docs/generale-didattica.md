@@ -7,12 +7,18 @@ regole si giudica se un livello insegna qualcosa**. Serve quando si scrive
 una campagna nuova, quando si decide dove mettere un concetto, e soprattutto
 quando un livello «funziona» ma alla prova dei fatti non lascia niente.
 
-Gli altri tre parlano d'altro: [`generale.md`](generale.md) racconta il gioco
+Gli altri due parlano d'altro: [`generale.md`](generale.md) racconta il gioco
 a chi arriva da fuori, [`generale_improvements.md`](generale_improvements.md)
-è lo stato del motore, [`campagne-generale.md`](campagne-generale.md) e
-[`storie-generale.md`](storie-generale.md) sono progetti di contenuto scritti
-prima di questa messa a fuoco, e oggi spenti. Dove divergono da qui, vale
-qui.
+è lo stato del motore. (C'erano anche due progetti di contenuto, le campagne e
+le storie a capitoli: sono stati tolti a settembre 2026 insieme a tutti i
+livelli non pubblicati.)
+
+> **Una nota scritta dopo, e vale per tutto il file.** Queste regole dicono
+> quando un livello *insegna*, e i livelli scritti seguendole hanno passato
+> tutti i controlli. Giocati, erano noiosi: stanzette con una decisione sola,
+> la stessa missione in venti vestiti. Quello che qui non c'è è l'altra metà —
+> **perché valga la pena entrarci** — e un livello che la salta passa il banco
+> e perde il bambino.
 
 ---
 

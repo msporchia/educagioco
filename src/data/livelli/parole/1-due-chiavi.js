@@ -100,6 +100,7 @@ export const DUE_CHIAVI = livello({
      stesso posto, e quello sbagliato era il titolo, cioè la prima cosa
      che si legge. L'`id` resta `parole-due-chiavi`: è una chiave. */
   id: 'parole-due-chiavi', nome: 'Lo sgombero del mulino',
+  impara: "l'inventario",
   idea: 'Tre cose da portare via, e due mani',
   /* ── E IL GIOCO NON PROMETTE QUELLO CHE NON FA ──
      Qui c'era scritto «prima che arrivi l'acqua», e l'acqua non arriva

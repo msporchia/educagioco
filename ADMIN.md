@@ -73,7 +73,6 @@ Questi **rigenerano dei file versionati**. Vedi [Roba generata](#roba-generata).
 | `npm run scatti` | le immagini di `docs/img/` | quando una schermata cambia aspetto |
 | `python3 strumenti/sprite/atlante.py` | `src/giochi/*/dati/atlante.js` | dopo aver corretto un ritaglio |
 | `python3 strumenti/sprite/terreni.py` | l'atlante del castello (tessere a griglia) | idem, per i terreni |
-| `node strumenti/mappe/estrai-campagne.mjs` | `strumenti/mappe/campagne.js` | dopo aver cambiato un livello del Generale |
 
 `npm run voci` è incrementale (cache in `.voci-cache/`) ma **vuole rete e
 ffmpeg**. Se in coda dice «non incise: …», rilancia lo stesso comando.
@@ -87,7 +86,6 @@ ffmpeg**. Se in coda dice «non incise: …», rilancia lo stesso comando.
 | `npm run storie` | le scene di «Prima e dopo» |
 | `npm run simula` | il tower defense giocato a mente, senza browser |
 | `npm run quiz:banco` | tutti i moduli di quiz, mille domande a testa |
-| `npm run mappe` | valida i livelli del Generale |
 
 I primi tre sono pagine e **vogliono un server**: importano i moduli veri
 dei giochi, e da `file://` Chrome non carica i moduli. Per questo passano
@@ -213,7 +211,6 @@ l'attrezzo, e allora la modifica sparisce senza che niente sembri rotto.
 | `src/giochi/fattoria/dati/atlante.js` | `atlante.py` |
 | `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
 | `src/giochi/castello/dati/atlante.js` | `terreni.py` |
-| `strumenti/mappe/campagne.js` | `estrai-campagne.mjs` |
 
 Per la taratura c'è una rete: un test confronta una firma e diventa rosso
 se `taratura-castello.js` è stantio rispetto ai prezzi. Per gli altri no —
@@ -290,6 +287,6 @@ sovrascritti e non c'è nessun avviso a schermo. Su desktop non si riproduce.
 | [`test/README.md`](test/README.md) | come sono fatte le prove |
 | [`strumenti/sprite/FORMATO.md`](strumenti/sprite/FORMATO.md) | il foglietto di una sorgente, campo per campo |
 | [`strumenti/sprite/LEGGIMI.md`](strumenti/sprite/LEGGIMI.md) | il giro degli atlanti, e il banco per esteso |
-| [`strumenti/mappe/FORMATO.md`](strumenti/mappe/FORMATO.md) | i livelli del Generale |
+| [`docs/generale_improvements.md`](docs/generale_improvements.md) | i livelli del Generale: com'è fatto un livello, oggi (§2) |
 | [`src/quiz/LEGGIMI.md`](src/quiz/LEGGIMI.md) | il contratto di un modulo di quiz |
 | [`docs/`](docs/) | una pagina per gioco, con le immagini |

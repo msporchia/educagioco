@@ -20,10 +20,10 @@ codice che le applica.
 | **Il formato dei livelli** — mappa a token, legenda, fabbriche | ✅ fatto, tutorial convertito |
 | **Il terreno** — tessiture al plurale, modi, cuciture, contesti | ✅ fatto |
 | **`Unita extends Elemento`** | ❌ da fare — è il pezzo grosso rimasto |
-| **La prima campagna** — il cortile di Rosa, cinque capitoli | ✅ fatta e in gioco, in coda alle sette prove |
+| **I livelli** — i sei pubblicati | ✅ gli altri venti, il cortile di Rosa e le cinque storie vecchie tolti a settembre 2026 (giocati erano noiosi) |
+| **Chi ti vede ti viene addosso** — l'istinto dei nemici, e vedere che scavalca sentire | ✅ fatto (`conIstinto`, `VISTA`) |
 | **L'arredo che il tema piazza da sé** | ◐ a metà: i contesti ci sono, il tema non li usa ancora |
-| **L'editor e il validatore delle mappe** | ❌ fermi a due formati fa |
-| **Le cinque storie vecchie** | ❌ in `todo/`, fuori dal gioco |
+| **L'editor e il validatore delle mappe** | ❌ tolti: erano fermi a due formati fa |
 
 ---
 
@@ -252,13 +252,11 @@ quindi o si riallinea al formato a token o si dichiara storico. È anche
 l'occasione per cui il formato a token è nato: **disegnare un livello col
 mouse** invece di contare celle.
 
-### 5.3 Le cinque storie in `todo/`
+### 5.3 Le cinque storie vecchie, e tutto il resto
 
-`bibi`, `fondi`, `nido`, `sale`, `torre` — venticinque file nel formato
-vecchio, fuori dal gioco e fuori dal banco. Vanno riscritte una per una:
-convertirle in automatico si può, ma si perderebbe la prosa che spiega ogni
-scelta, che è la parte che vale. Il giorno che una viene rifatta esce da
-quella cartella e torna in gioco da sé.
+Tolte a settembre 2026 insieme a tutti i livelli non pubblicati: non le aveva
+mai provate nessuno, e i livelli scritti nello stesso modo, giocati, erano
+noiosi. Stanno in git per chi volesse riguardarne la prosa.
 
 ### 5.4 Il contratto delle tessiture, per tre pittori
 
@@ -293,10 +291,10 @@ Due guasti distinti, scoperti costruendo `strumenti/banco/vetrina.html`:
   (`scena()`, riga ~387) costruisce la lista da disegnare guardando
   `m.porte` e `m.oggetti`, mai `m.cose` — che è dove `allestimento.js`
   mette leve e totem (`cose[k] = new Leva(...)`, `cose[k] = new Totem(...)`).
-  `.faccia()` oggi si chiama solo sulle `Porta`. Il livello «Il totem»
-  (`data/livelli/tutorial/8-il-totem.js`) e la «Prova dei congegni»
-  giocano quindi con un totem e una leva del tutto invisibili sullo
-  schermo, indipendentemente dal pittore che manca.
+  `.faccia()` oggi si chiama solo sulle `Porta`. Il livello «Il totem» e
+  la «Prova dei congegni» (tolti a settembre 2026 con gli altri livelli
+  non pubblicati) giocavano quindi con un totem e una leva del tutto
+  invisibili sullo schermo, indipendentemente dal pittore che mancava.
 
 Due lavori diversi: il primo è un file nuovo in `src/grafica/oggetti/` più
 una riga in `PITTORI_OGGETTI`; il secondo è far chiedere a `CampoLivello.vue`

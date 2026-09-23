@@ -23,7 +23,6 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
    le avventure sono spente non c'è nessuna scelta da fare e si cade
    dritti nelle prove. Il test legge lo stesso flag del gioco, così il
    giorno che si riaccendono non c'è niente da riscrivere qui. */
-import { AVVENTURE_APERTE } from '../../src/data/storie-generale.js'
 /* quante prove ci sono lo dicono i dati. Era cablato («almeno dieci») e
    diventava rosso ogni volta che l'elenco cambiava — cioè diceva una
    cosa sui livelli mentre voleva dirne una sulla schermata.
@@ -69,21 +68,13 @@ if (entrata) {
   controlla('la barra dice dove si è', !!titolo, JSON.stringify(titolo))
 
   /* ---------- 3. da dove si entra ----------
-     Con le avventure accese si sceglie una STORIA, e le prove stanno
-     sotto in una voce loro. Con le avventure spente quella schermata
-     non esiste: una scelta con una voce sola è una porta girevole. */
-  if (AVVENTURE_APERTE) {
-    uguale('entrando si sceglie l\'avventura', await page.locator('.scelta-avv').count(), 1)
-    controlla('le storie sono in elenco', await page.locator('.avventura:not(.prove)').count() >= 4,
-              String(await page.locator('.avventura:not(.prove)').count()))
-    await scatto(page, 'generale-avventure')
-    await page.locator('.avventura.prove').click()
-  } else {
-    uguale('senza avventure non c\'è niente da scegliere',
-           await page.locator('.scelta-avv').count(), 0)
-    uguale('e nessuna storia si affaccia da nessuna parte',
-           await page.locator('.avventura').count(), 0)
-  }
+     Dritti nelle prove. C'era una schermata per scegliere un'avventura,
+     ma le avventure non si sono mai aperte e sono state tolte: una
+     scelta con una voce sola è una porta girevole. */
+  uguale('non c\'è nessuna scelta da fare prima delle prove',
+         await page.locator('.scelta-avv').count(), 0)
+  uguale('e nessuna storia si affaccia da nessuna parte',
+         await page.locator('.avventura').count(), 0)
   await page.waitForSelector('.tappa', { timeout: 5000 })
 
   /* ---------- 3b. la sala delle mappe ----------
@@ -207,7 +198,9 @@ if (entrata) {
   const profilo = await leggiProfilo(page)
   controlla('il livello superato è nel profilo', (profilo.gen || {}).tappa >= 1,
             JSON.stringify(profilo.gen))
-  controlla('e con le sue stelle', ((profilo.gen || {}).stelle || {})['0'] >= 1,
+  /* sotto l'id del livello, non sotto la sua posizione nella fila: la
+     fila si riordina, i voti restano di chi li ha presi */
+  controlla('e con le sue stelle', ((profilo.gen || {}).stelle || {}).primo >= 1,
             JSON.stringify((profilo.gen || {}).stelle))
   controlla('il contatore delle missioni è salito', (profilo.totals || {}).missioni >= 1,
             JSON.stringify((profilo.totals || {}).missioni))
@@ -308,16 +301,8 @@ if (entrata) {
   controlla('il livello dopo si è aperto',
             await page.locator('.tappa:not(.chiusa)').count() >= 2,
             String(await page.locator('.tappa:not(.chiusa)').count()))
-  /* e da lì fuori: con le avventure accese c'è la scelta in mezzo, con
-     le avventure spente si esce dritti in home — una schermata in meno,
-     non un passo saltato */
+  /* e da lì fuori, dritti in home: non c'è nessuna schermata in mezzo */
   await page.locator('button[aria-label="indietro"]').click()
-  if (AVVENTURE_APERTE) {
-    let allaScelta = true
-    try { await page.waitForSelector('.scelta-avv', { timeout: 5000 }) } catch (e) { allaScelta = false }
-    controlla('dalla sala delle mappe si torna alla scelta', allaScelta)
-    await page.locator('button[aria-label="indietro"]').click()
-  }
   let tornato = true
   try { await page.waitForSelector('.carte', { timeout: 5000 }) } catch (e) { tornato = false }
   controlla('e si torna alla home', tornato)

@@ -10,14 +10,14 @@
    più vera va tolta, non alzata.
 
    Un test solo, non uno per scenario. Raccoglie i livelli da dove
-   stanno — i sei (e più) scenari delle storie in `src/data/livelli/` e
-   quelli di prova in `src/data/generale.js` — e li passa al
-   verificatore, che è uguale per tutti (`test/aiuto/livello.mjs`).
+   stanno — i file in `src/data/livelli/`, e l'ordine della fila in
+   `src/data/generale.js` — e li passa al verificatore, che è uguale per
+   tutti (`test/aiuto/livello.mjs`).
 
-   I file non si elencano a mano: si leggono dalla cartella, come fa
-   `data/mappe-storie.js` col glob di Vite. Uno scenario nuovo entra nel
-   banco di prova il giorno in cui il suo file compare, senza che
-   nessuno debba ricordarsi di aggiungere una riga qui.
+   I file non si elencano a mano: si leggono dalla cartella. Uno
+   scenario nuovo entra nel banco di prova il giorno in cui il suo file
+   compare, anche prima di entrare nella fila — senza che nessuno debba
+   ricordarsi di aggiungere una riga qui.
 
    Quello che uno scenario ha di suo — «senza la chiavetta non si
    vince», «non basta mandarli avanti in fila» — non sta qui: sta nel
@@ -36,15 +36,14 @@ const CARTELLA = resolve(RADICE, 'src/data/livelli')
 const PROVA = resolve(RADICE, 'src/data/generale.js')
 
 /* un modulo può esportare il livello come default o con un nome: si
-   prende il primo oggetto che assomiglia a un livello — la stessa
-   regola di `data/mappe-storie.js`, che è quella che vale nel gioco */
+   prende il primo oggetto che assomiglia a un livello */
 const estrai = mod => [mod.default, mod.LIVELLO, mod.livello, ...Object.values(mod)]
   .find(v => v && typeof v === 'object' && !Array.isArray(v) && (v.scena || v.griglia || v.unita)) || null
 
 const livelli = []
 
 /* si scende anche nelle cartelle: da quando ogni campagna ha la sua
-   (`tutorial/`, `todo/`), i livelli non stanno più tutti in fila */
+   (`tutorial/`, `parole/`), i livelli non stanno più tutti in fila */
 const tuttiIFile = dove => existsSync(dove)
   ? readdirSync(dove).sort().flatMap(x => {
       const pieno = resolve(dove, x)
@@ -52,20 +51,16 @@ const tuttiIFile = dove => existsSync(dove)
          giusto che non lo siano: stanno in questo elenco perché il
          banco non li scambi per uno scenario rotto.
          ── E NON SONO SOLO QUELLI DELLA RADICE ──
-         Una campagna può avere il suo **mondo** in un file a parte —
-         `cortile/casa.js` è la mappa di Rosa più le fabbriche di chi ci
-         abita, e la importano tutti i suoi episodi. Non esporta uno
-         scenario perché non è uno scenario, e il banco lo bocciava con
-         «non esporta niente che assomigli a un livello»: un guasto che
-         non era un guasto, cioè la cosa peggiore che un banco possa
-         dire. Un file così lo si riconosce da quello che dichiara di
-         sé (`export const mondo = true`), non dal nome — il nome
-         cambia con la prossima campagna. */
-      const SUPPORTO = new Set(['scorciatoie.js', 'livello.js', 'scrivi.js'])
-      /* `todo/` è la cartella delle cinque storie vecchie, che aspettano
-         di essere riscritte nel formato nuovo: il banco non le prova,
-         perché non sono in gioco */
-      if (x === 'todo') return []
+         Una campagna può avere il suo **mondo** in un file a parte — la
+         mappa di un posto più le fabbriche di chi ci abita, importato
+         da tutti i suoi episodi (era `cortile/casa.js`, per il cortile
+         di Rosa). Non esporta uno scenario perché non è uno scenario, e
+         il banco lo bocciava con «non esporta niente che assomigli a un
+         livello»: un guasto che non era un guasto, cioè la cosa peggiore
+         che un banco possa dire. Un file così lo si riconosce da quello
+         che dichiara di sé (`export const mondo = true`), non dal nome
+         — il nome cambia con la prossima campagna. */
+      const SUPPORTO = new Set(['livello.js', 'scrivi.js'])
       return statSync(pieno).isDirectory() ? tuttiIFile(pieno)
            : x.endsWith('.js') && !SUPPORTO.has(x) ? [pieno] : []
     })

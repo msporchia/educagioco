@@ -293,7 +293,6 @@ npm run voci       # incide la pronuncia inglese (solo se aggiungi parole)
 npm run voci -- --lingua es    # la stessa cosa per lo spagnolo
 npm run simula     # gioca il tower defense senza browser: quanto è duro davvero
 npm run tara       # ritrova la vita dei nemici ondata per ondata e riscrive i dati
-npm run mappe      # controlla i livelli del Generale
 npm run quiz:banco # prova i moduli di quiz senza browser: forma, varietà, doppioni
 npm run quiz:eta   # chi vede cosa: la calibrazione per età, e i buchi che restano
 npm run mondo      # il banco degli sprite: guardarli, e correggere i ritagli
