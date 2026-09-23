@@ -121,7 +121,17 @@ storia dietro; la più importante è la prima.
   manopola da provare quando una strada vince per caso. Quando la storia
   le fissa (una pagina che parte da dove ha finito l'altra), restano le
   soste (`aspettaUnPo`), la vista, la voce dei segnali e dove stanno le
-  cose; e si prova con `--confronta` (§7.1) se una manopola conta.
+  cose; e si prova con `--confronta` o `--manopole` (§7.1) se una
+  manopola conta.
+- **Un guardiano che si può far chiamare a ogni battito del suo orologio
+  è via metà del tempo**, e un piano fatto a metà (la ladra che non
+  aspetta niente) vince per caso una volta su tre. La torta l'ha risolto
+  mettendo il suo giro **sulla strada** (il pentolone accanto al
+  corridoio della camera): nessun momento del giro è libero, si passa
+  solo chiamandolo.
+- **«Chiama subito» e «chiama solo al mestolo» hanno fasi diverse**: una
+  griglia le prova tutte e due, se no i piani fortunati cadono nella fase
+  che non si è provata.
 
 ### Cosa sa già chi arriva
 
@@ -176,7 +186,10 @@ insieme.
   una porta chiusa: si ferma accanto. A una casella `'x,y'`: ci va (le
   caselle si toccano sulla mappa; `celle: true` è di serie).
 - Verso un personaggio si va solo se lo si vede, o lo si è visto: allora
-  si va dove lo si è visto l'ultima volta.
+  si va dove lo si è visto l'ultima volta. Verso uno **mai visto**
+  l'ordine si rifiuta («non so dov'è») e la fila va avanti.
+- `vai` a una porta **aperta** sale sulla sua casella (su una chiusa ci si
+  ferma accanto): «vai alla porticina» è un posto dove aspettare.
 
 ### 2.3 Vedere
 
@@ -240,6 +253,14 @@ insieme.
   nuovo, quel segnale non lo fa ripartire: va perso (lo strumento lo
   segnala, §7.1). Due ascolti **diversi** invece si mettono in fila: il
   secondo aspetta che il primo finisca.
+- ⚠ **La trappola dei piani in due tempi.** Due ascolti armati sullo
+  stesso segnale partono **tutti e due** alla stessa chiamata: il secondo
+  si mette in fila e gira dopo, con un segnale ormai vecchio. E un
+  ascolto finito riparte al segnale dopo **rifacendo tutti i suoi
+  ordini**. Per «alla prima chiamata vai, alla seconda torna» si scrive
+  la prima parte nel piano (`aspetta che è arrivata la chiamata`, poi
+  l'andata) e **in fondo** l'ascolto del ritorno: si arma quando la fila
+  ci arriva, quindi sente solo le chiamate dopo (è la strada della torta).
 - **Un ascolto si arma quando la fila ci arriva.** `quando senti` è un
   ordine come gli altri: finché la fila non ci passa, quel segnale non lo
   ascolta nessuno, e quelli arrivati prima non contano. Messo dopo
@@ -273,6 +294,10 @@ insieme.
   (dove stava quando l'hanno interrotto). `reagisce.alRumore(segnale,
   { sosta, torna })` è la scorciatoia «corre al rumore, si guarda
   intorno `sosta` battiti, torna».
+- ⚠ **Una reazione a vista tiene occupato anche quando non fa niente.**
+  Si riarma a ogni battito finché il bersaglio resta in vista: Zanna con
+  l'osso in bocca («se ha l'osso: niente») resta ferma a guardare la
+  ladra, e smette perfino di mangiare, finché la vede.
 - **Una reazione fa solo i suoi ordini.** Interrompe il piano e lo
   riprende dopo, ma non fa le cose del piano: Zanna che al mestolo va
   alla ciotola **non raccoglie** l'osso che c'è, perché raccoglierlo è del
@@ -339,7 +364,8 @@ insieme.
   `cose.forziere` (una porta che non si attraversa: si apre).
 - `apri` si fa da accanto, e chi ha la chiave apre subito. `chiudi` pure,
   ma non con qualcuno sulla soglia. Una porta chiusa ferma la vista, non
-  il suono.
+  il suono. Anche un personaggio del livello può chiudere e aprire nel
+  suo piano, e chiedersi `se.aperto(porta)` (provato, non ancora usato).
 - `cose.leva({ collegata: [id] })`: `premi` apre le porte collegate al
   battito dopo, **una volta sola**. `cose.totem({ tacche: n,
   collegata })`: apre alla n-esima pressione, e `se.almeno(totem, n)` ne
@@ -466,7 +492,7 @@ export default MIO
 ```
 
 L'esempio completo, con la storia della taratura in testa, è la torta:
-`livelli/torta/1-dalla-cucina-al-forno.js`.
+`livelli/torta/1-andata-e-ritorno.js`.
 
 ### 4.3 La mappa
 
@@ -546,7 +572,8 @@ bambino: `fai.vai(forno)`, `fai.vai('11,6')`, `fai.quando(chiamata, …)`,
 
 - Una soluzione normale deve vincere su tutte le scene, e **ogni suo
   ordine dev'essere necessario**: togliendone uno qualsiasi, perde.
-- `lunga: true`: vince ma costa di più; lì un ordine si può togliere.
+- `lunga: true`: vince ma costa di più — **più ordini** della soluzione
+  normale più corta, non più battiti — e lì un ordine si può togliere.
 - `fragile: true`: la tentazione, che vince una scena e ne perde un'altra.
 - **La prima soluzione normale è quella che l'ultimo aiuto svela.**
   Mettici quella che vuoi mostrare.
@@ -645,7 +672,7 @@ Un nome cambiato fa già metà del lavoro (l'orco diventa il cuoco Grugno).
 ### 7.1 Il simulatore
 
 ```bash
-node strumenti/generale/piani.mjs src/data/livelli/torta/1-dalla-cucina-al-forno.js --mappa
+node strumenti/generale/piani.mjs src/data/livelli/torta/1-andata-e-ritorno.js --mappa
 node strumenti/generale/piani.mjs <livello.js>                      # le soluzioni dichiarate
 node strumenti/generale/piani.mjs <livello.js> <piani.mjs>          # i tuoi piani
 node strumenti/generale/piani.mjs <livello.js> <piani.mjs> --traccia mestolo
@@ -668,8 +695,16 @@ node strumenti/generale/piani.mjs <livello.js> <piani.mjs> --traccia mestolo
   girando».
 - `--confronta NOME=a,b` gioca gli stessi piani con la manopola della
   bozza (`process.env.NOME`, vedi sotto) in due posizioni, e stampa solo
-  quelli che cambiano esito: è la risposta a «questa abitudine conta?».
-  Il secondo agente ci ha perso un giro a mano; così sono due secondi.
+  quelli che cambiano **esito** (vince o perde, e per colpa di chi; i
+  battiti diversi si contano a parte): è la risposta a «questa abitudine
+  conta?». Il secondo agente ci ha perso un giro a mano; così sono due
+  secondi.
+- `--manopole "A=1 B=2" "A=0 B=2" …` gioca la griglia una volta per
+  combinazione e mette il riassunto per famiglia in una tabella, una
+  colonna per combinazione: è la taratura di una bozza. Il terzo agente
+  se l'era scritta a mano (`giro.sh`).
+- `--solo =nome` gioca il piano con quel nome esatto (senza `=`, ogni
+  nome che lo contiene).
 
 Il file dei piani esporta una lista `[{ nome, piano, famiglia }]` o una
 funzione `({ fai, se }) => [...]`, che è il modo di provare **una
@@ -773,7 +808,7 @@ prova col browser di un file solo: `node test/esegui.mjs generale
   quello che si aveva in tasca sta per terra sulla casella del
   personaggio. Le stanze già viste restano uguali, casella per casella.
 - La prima storia è **la torta del re**, in un livello solo:
-  `torta/1-dalla-cucina-al-forno.js` (id `torta-tutto`). Domani è il
+  `torta/1-andata-e-ritorno.js` (id `torta-tutto`). Domani è il
   compleanno del re e la principessa vuole fargli una torta a sorpresa:
   la ladra prende la chiave della dispensa e un osso nella cucina di
   Grugno, la farina nella dispensa dove dorme Zanna, le uova nel pollaio
@@ -830,7 +865,7 @@ in `[…]` sono da riempire):
 > meccanismi del §12 dicono come si scrive un'abitudine, non quali usare:
 > il livello deve averne almeno una che lì non c'è. Come
 > esempio puoi leggere il livello che la guida cita
-> (`src/data/livelli/torta/1-dalla-cucina-al-forno.js`) e `scrivi.js`
+> (`src/data/livelli/torta/1-andata-e-ritorno.js`) e `scrivi.js`
 > per le firme delle fabbriche. **Non leggere il motore**
 > (`src/motore/`), né altri livelli. Se ti serve una regola che la guida
 > non dice, provala col simulatore; se neanche così la ricavi, fanne a
@@ -866,6 +901,14 @@ griglie; gli sprechi rimasti erano la rilettura del banco, una sonda per
 sapere se il cigolio contava (adesso `--confronta`) e una per sapere se
 un pavimento sta in lista con un oggetto (adesso al §4.3). Le sue otto
 lacune sono qui.
+
+**Il terzo giro** (andata e ritorno): circa 80 minuti e 110 mosse, con una
+pausa in mezzo per il limite d'uso, circa 420 mila token di risposta. Il
+tempo è andato quasi tutto nel **tarare la mappa** per togliere una banda
+di piani fortunati (circa 44 mila piani su una bozza a otto manopole,
+girati con un ciclo scritto a mano: adesso `--manopole`). Le sue dieci
+lacune sono qui; una era un test che rifiutava le soluzioni `lunga` che la
+guida ammette, ed è stato corretto.
 
 ---
 
@@ -963,3 +1006,12 @@ Ognuno sta in un livello che il banco gioca.
     ci pensa la ladra' }`); il gatto non prende niente (`nonRiesce: {
     prendi: 'sono un gatto: le zampe non prendono niente' }`) e serve a
     farsi guardare.
+12. **Due tempi con lo stesso orologio** (la torta): il mestolo fa
+    partire la chiamata, la chiamata fa partire la ladra, e l'ascolto del
+    ritorno si arma solo dopo l'andata (§2.5, la trappola dei piani in
+    due tempi).
+    ```js
+    principessa: [fai.vai(sala), fai.quando(mestolo, fai.suona(chiamata))],
+    ladra: [fai.aspettaChe(se.sentito(chiamata)), /* …l'andata… */,
+            fai.vai(porticina), fai.quando(chiamata, fai.vai(camera))],
+    ```

@@ -19,13 +19,21 @@
                              cade, che rumori partono (solo i piani il
                              cui nome contiene [nome], se c'è)
      … --solo [nome]         gioca solo i piani il cui nome contiene [nome]
+                             (`--solo =nome` vuole il nome esatto)
      … --zitto               niente riga per piano: solo il riassunto
      … --scena N             gioca la variante N (di serie la prima)
      … --confronta NOME=a,b  gioca gli stessi piani due volte, con la
                              manopola `process.env.NOME` a `a` e a `b`
                              (la bozza la legge, vedi sotto), e stampa solo
-                             i piani che cambiano esito: è il modo di
-                             sapere se un'abitudine conta davvero
+                             i piani che cambiano esito (vince o perde, e
+                             per colpa di chi; i battiti diversi si
+                             contano a parte): è il modo di sapere se
+                             un'abitudine conta davvero
+     … --manopole "A=1 B=2" "A=0 B=2" …
+                             gioca gli stessi piani una volta per ogni
+                             combinazione di manopole, e mette il riassunto
+                             per famiglia in una tabella: una colonna per
+                             combinazione. È la taratura di una bozza
 
    Un `quando senti` interrompe quello che il personaggio sta facendo
    (§2.5 della guida), ma se lo stesso ascolto sta ancora girando il
@@ -147,7 +155,8 @@ if (file[1]) {
     nome: s.nome + (s.fragile ? ' (fragile)' : '') + (s.lunga ? ' (lunga)' : ''), piano: s.piano }))
 }
 const solo = opzione('--solo')
-if (typeof solo === 'string') piani = (piani || []).filter(p => p.nome.includes(solo))
+if (typeof solo === 'string')
+  piani = (piani || []).filter(p => solo.startsWith('=') ? p.nome === solo.slice(1) : p.nome.includes(solo))
 if (!piani || !piani.length) {
   if (!opzione('--mappa')) console.log('nessun piano da giocare')
   process.exit(0)
@@ -212,15 +221,68 @@ if (typeof confronta === 'string') {
     const l = livelloDi(await carica(file[0], `?${nomeVar}=${encodeURIComponent(v)}`))
     esiti[v] = piani.map(p => gioca(l, p))
   }
-  let cambiano = 0
-  const dire = e => e.rifiutato ? `⛔ ${e.rifiutato}` : e.m.vinto ? `✅ ${e.m.passi}` : `❌ ${e.causa}`
+  /* conta l'esito, non il tempo: un piano che vince in 61 battiti invece
+     che in 59 non è cambiato, e contarlo seppelliva i cambi veri */
+  let cambiano = 0, soloBattiti = 0
+  const esito = e => e.rifiutato ? `⛔ ${e.rifiutato}` : e.m.vinto ? '✅' : `❌ ${e.causa}`
+  const dire = e => e.rifiutato || !e.m.vinto ? esito(e) : `✅ ${e.m.passi}`
   piani.forEach((p, i) => {
     const [ea, eb] = [esiti[a][i], esiti[b][i]]
-    if (dire(ea) === dire(eb)) return
+    if (esito(ea) === esito(eb)) {
+      if (!ea.rifiutato && ea.m.passi !== eb.m.passi) soloBattiti++
+      return
+    }
     cambiano++
     if (!zitto) console.log(`${p.nome}: ${nomeVar}=${a} → ${dire(ea)} · ${nomeVar}=${b} → ${dire(eb)}`)
   })
-  console.log(`\n${nomeVar}=${a} contro ${nomeVar}=${b}: cambiano ${cambiano} piani su ${piani.length}`)
+  console.log(`\n${nomeVar}=${a} contro ${nomeVar}=${b}: cambiano esito ${cambiano} piani su ${piani.length}` +
+              (soloBattiti ? ` (e ${soloBattiti} vincono uguale, in battiti diversi)` : ''))
+  process.exit(0)
+}
+
+/* ── LE MANOPOLE ──
+   Il `giro.sh` che l'agente della torta si era scritto a mano: la stessa
+   griglia, una volta per combinazione di manopole, e il riassunto per
+   famiglia in colonne. Le manopole sono variabili d'ambiente che la
+   bozza legge; fra una combinazione e l'altra si rimettono com'erano. */
+const iManopole = arg.indexOf('--manopole')
+if (iManopole >= 0) {
+  const combinazioni = []
+  for (const a of arg.slice(iManopole + 1)) {
+    if (a.startsWith('--') || eFile(a)) break
+    combinazioni.push(Object.fromEntries(a.split(/\s+/).filter(Boolean).map(kv => kv.split('='))))
+  }
+  const chiavi = [...new Set(combinazioni.flatMap(c => Object.keys(c)))]
+  const prima = Object.fromEntries(chiavi.map(k => [k, process.env[k]]))
+  const colonne = []
+  for (const [i, c] of combinazioni.entries()) {
+    for (const k of chiavi) {
+      if (k in c) process.env[k] = c[k]
+      else if (prima[k] === undefined) delete process.env[k]
+      else process.env[k] = prima[k]
+    }
+    const l = livelloDi(await carica(file[0], `?manopole=${i}`))
+    const per = new Map(), tot = { v: 0, n: 0 }
+    for (const p of piani) {
+      const e = gioca(l, p)
+      const f = p.famiglia || '(senza famiglia)'
+      const x = per.get(f) || { v: 0, n: 0 }
+      x.n++; tot.n++
+      if (!e.rifiutato && e.m.vinto) { x.v++; tot.v++ }
+      per.set(f, x)
+    }
+    colonne.push({ nome: Object.entries(c).map(([k, v]) => `${k}=${v}`).join(' ') || '(di serie)', per, tot })
+  }
+  const famiglie = [...new Set(colonne.flatMap(c => [...c.per.keys()]))]
+  const largo = Math.max(8, ...famiglie.map(f => f.length))
+  const cella = (x, w) => String(x).padEnd(w)
+  const larghe = colonne.map(c => Math.max(c.nome.length, 9))
+  console.log(cella('', largo) + ' | ' + colonne.map((c, k) => cella(c.nome, larghe[k])).join(' | '))
+  for (const f of famiglie)
+    console.log(cella(f, largo) + ' | ' + colonne.map((c, k) => {
+      const x = c.per.get(f); return cella(x ? `${x.v}/${x.n}` : '—', larghe[k])
+    }).join(' | '))
+  console.log(cella('in tutto', largo) + ' | ' + colonne.map((c, k) => cella(`${c.tot.v}/${c.tot.n}`, larghe[k])).join(' | '))
   process.exit(0)
 }
 
