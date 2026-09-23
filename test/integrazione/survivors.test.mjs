@@ -64,10 +64,19 @@ async function sbrigaLeCarte() {
 /* Si va avanti finché il cronometro non dice `restano`, muovendosi con
    `passo` fra una lettura e l'altra. Due passi: `corri` scappa a destra
    (l'eroe fa 152 pixel al secondo, le melme 62: chi corre le semina),
-   `traccheggia` fa un passetto di qua e uno di là e resta nei paraggi. */
+   `traccheggia` fa un passetto di qua e uno di là e resta nei paraggi.
+
+   E ci si ferma anche se la partita è finita: l'eroe può morire — una
+   domanda sbagliata non dà la carta, e traccheggiando in mezzo alle
+   melme i cuori se ne vanno — e allora il cruscotto resta sotto il
+   cartello finale con l'orologio fermo. Aspettando solo l'orologio
+   erano trecento giri a vuoto, un minuto e mezzo per chiamata: il test
+   passava lo stesso, ma una volta su qualche giro ci metteva 206
+   secondi invece di 24. */
 async function finoA(restano, passo) {
   for (let i = 0; i < 300; i++) {
     await sbrigaLeCarte()
+    if (await page.locator('.sv-fine').count()) return
     if (await secondi() <= restano) return
     await passo()
   }
