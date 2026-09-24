@@ -678,7 +678,8 @@ export const CATEGORIE = [
        solo di nome — è **lo stagno delle anatre**: un recinto d'acqua
        è un recinto d'acqua, e finché il pesce non ha la sua faccia
        prende in prestito quella intera, sei stati compresi. `aspetta`
-       dice il nome vero. */
+       dice il nome vero, e il foglio si chiede accanto ai recinti
+       (`animali_3.png`, `generati/PROMPT-secondo-albero.md` §6). */
     V('peschiera',      'recinto_anatre_calmo', 'Peschiera',      360,
       { macchina: 'pesci', stati: RECINTO('anatre'),
         piede: [4, 3], liv: 57, cresce: RINCARO, la: true, aspetta: 'recinto_pesci_calmo' }),

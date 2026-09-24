@@ -46,7 +46,11 @@
    pagato che sparisce è una cosa comprata che non si vede più. Si
    rimettono in vendita il giorno che arrivano come sprite disegnati
    per una bestia (gli agganci `collo` e `schiena` nei foglietti e in
-   `atlante.py` restano per quello).
+   `atlante.py` restano per quello). Il foglio si chiede in tre viste,
+   una per verso (`generati/PROMPT-secondo-albero.md` §7), e prima di
+   rimetterli in vendita la scena deve imparare a posare un pezzo al
+   posto dell'emoji: oggi `addosso()` in `scena/tela.js` sa solo
+   scrivere.
 
    ── I PREZZI ──────────────────────────────────────────────────────
    Sono tutti nella fascia **«una cosetta»** di

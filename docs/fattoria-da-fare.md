@@ -6,7 +6,7 @@ quello che è stato deciso di *non* fare, con il perché. Si aggiorna
 quando una riga si chiude, e una riga chiusa si cancella: la storia sta
 in git e nel progetto.
 
-Aggiornata il 23 settembre 2026.
+Aggiornata il 24 settembre 2026.
 
 ## Prima di pubblicare
 
@@ -29,18 +29,20 @@ dichiara in `aspetta` quello vero: il gioco è intero anche senza, e
 che il pezzo arriva e la riga non l'ha preso. I prompt stanno in
 [`PROMPT-secondo-albero.md`](../strumenti/sprite/sorgenti/fattoria/generati/PROMPT-secondo-albero.md).
 
-- [ ] **`merci_4.png`** — le ventidue merci che mancano, un foglio solo
-      6×4: maglione, maglione alla lavanda, tintura, sapone, sacchetto,
-      sciarpa, berretto, crostata, salsa, conserva, marmellata,
-      caramelle, frullato, biscotti, pizza, lasagne, patatine, fritto,
-      pesce, arancini, sushi, maki.
-- [ ] **`edifici_5.png`** — la friggitoria, i tre ritratti della
-      peschiera e le otto decorazioni della fiera (la sorpresa della
-      mongolfiera).
+- [ ] **`animali_3.png`** — i tre ritratti della peschiera. Stava in
+      `edifici_5`, ed è uscita: è un recinto, e si chiede accanto ai
+      recinti, col prato che hanno tutti.
+- [ ] **`addobbi.png`** — fuori dall'albero: fiocco, sciarpa,
+      campanella, mantellina e zainetto, sospesi finché non sono
+      sprite, in tre viste ciascuno. È l'unico foglio che vuole anche
+      del codice: `addosso()` in `scena/tela.js` oggi sa scrivere solo
+      un'emoji.
 
 Fatti: `edifici_4` (mongolfiera, piazzola, gelateria, mensa), `merci_3`
 (pane, torta, zucchero, succo, gelato, pasta), `campi_3` (barbabietola,
-lavanda, riso).
+lavanda, riso), `merci_4` (le ventidue merci che mancavano, più il
+pastone e il miele: adesso nessuna merce usa un ripiego) ed
+`edifici_5` (la friggitoria e le otto decorazioni della fiera).
 
 ## Da provare giocando
 

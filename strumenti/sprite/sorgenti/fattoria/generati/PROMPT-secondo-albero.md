@@ -2,9 +2,12 @@
 
 Il progetto è [`docs/fattoria-albero.md`](../../../../../docs/fattoria-albero.md)
 §8. I primi tre fogli (✅) sono quelli che arrivano entro il livello 30;
-gli ultimi due chiudono il resto — **tutte** le merci che mancano in un
-foglio solo, e tutto quello che non è una merce in un altro. La lista
-di quello che manca, sprite e non, sta in
+gli altri chiudono il resto — **tutte** le merci che mancano in un
+foglio solo, la friggitoria e la fiera in un altro, e la peschiera in
+un terzo, perché è un recinto e si chiede accanto ai recinti. In fondo
+c'è l'unica cosa che non è dell'albero: gli addobbi al collo e sulla
+schiena, sospesi finché non sono sprite. La lista di quello che manca,
+sprite e non, sta in
 [`docs/fattoria-da-fare.md`](../../../../../docs/fattoria-da-fare.md).
 
 Zuccherificio, pastificio, pasticceria, osteria (`rosticceria`),
@@ -156,7 +159,12 @@ Pezzi: `campo_barbabietola0..6` + `raccolto_barbabietola`, e lo stesso
 per `lavanda` e `riso`. **Sette stadi e non otto**: la prima aiuola
 della fila è la terra arata, che il gioco ha già (`campo_vuoto`).
 
-## 4. `merci_4.png` — tutte le merci che mancano, in un foglio solo
+## 4. `merci_4.png` — tutte le merci che mancano, in un foglio solo ✅
+
+Fatto il 24 settembre 2026: tutte e ventiquattro, nell'ordine chiesto,
+una macchia sola ciascuna. È tornato a 1248×832 invece che a
+1536×1024 (stesse proporzioni) e con un alone chiaro e leggero, tolto
+dallo stesso `"alone": 128`. Le misure hanno un divisore solo, 7,25.
 
 **Allegare:** `merci_3.png`.
 
@@ -164,28 +172,34 @@ I fogli da sei erano una prudenza: si temeva che sopra i sei il
 generatore stringesse gli oggetti fino a perdere i dettagli. Ma una
 merce nel gioco è larga 25–30 px, e una cella da 256 px del foglio ne
 dà quasi otto per ogni pixel del gioco: c'è posto per tutto. Quindi le
-**ventidue** che mancano in un colpo solo, su una griglia 6×4.
+**ventidue** che mancano in un colpo solo, su una griglia 6×4 — e nelle
+due celle che avanzavano i due ripieghi che non lo dichiaravano: il
+pastone, che è ancora il calderone grigio del set CC0 in mezzo a merci
+dipinte, e il miele, che è un vasetto rosso di marmellata (lo stesso
+che marmellata e salsa smettono di usare con questo foglio, e che a
+quel punto direbbe «marmellata» da solo).
 
-> Disegna un foglio di oggetti in pixel art **nello stesso stile di questa
-> immagine**: stessa tavolozza calda, stesso contorno scuro, stessa vista
+> Disegna un foglio di oggetti in pixel art nello stesso stile di questa
+> immagine: stessa tavolozza calda, stesso contorno scuro, stessa vista
 > — di fronte e un po' dall'alto — stessa luce da in alto a sinistra.
 >
-> Il foglio è **1536×1024 px** su **fondo trasparente** (PNG). Disponi
-> **22 oggetti** su una griglia dichiarata di **6 colonne × 4 righe**,
-> celle di **256×256 px**, ognuno centrato nella sua cella; le **ultime
-> due celle** dell'ultima riga restano **vuote**. Ogni oggetto è largo
-> circa **190 px** e nessuno tocca il bordo della sua cella.
+> Il foglio è 1536×1024 px su fondo trasparente (PNG). Disponi 24
+> oggetti su una griglia dichiarata di 6 colonne × 4 righe, celle di
+> 256×256 px, ognuno centrato nella sua cella. Ogni oggetto è largo
+> circa 190 px e nessuno tocca il bordo della sua cella (nel gioco
+> diventa 25–30 px: un oggetto solo, grande, che si riconosca anche a
+> venti pixel).
 >
-> Ogni oggetto è **appoggiato**, visto da chi lo guarda dal banco, con la
-> base che si vede. **Nessuna ombra**, nessun piano d'appoggio, nessun
-> fondo dietro, e **nessun alone o bagliore** attorno agli oggetti: i
-> bordi sono netti e pieni, e fuori dall'oggetto è tutto trasparente.
+> Ogni oggetto è appoggiato, visto da chi lo guarda dal banco, con la
+> base che si vede. Nessuna ombra, nessun piano d'appoggio, nessun fondo
+> dietro, e nessun alone o bagliore attorno agli oggetti: i bordi sono
+> netti e pieni, e fuori dall'oggetto è tutto trasparente.
 >
-> **NESSUNA PAROLA SCRITTA, da nessuna parte**: né etichette, né
-> lettere, né numeri.
+> NESSUNA PAROLA SCRITTA, da nessuna parte: né etichette, né lettere,
+> né numeri.
 >
-> Quello che appartiene a un oggetto dev'essere **attaccato al suo
-> disegno in un pezzo solo**. Niente briciole che galleggiano lontane.
+> Quello che appartiene a un oggetto dev'essere attaccato al suo disegno
+> in un pezzo solo. Niente briciole che galleggiano lontane.
 >
 > Da sinistra a destra, riga per riga:
 >
@@ -213,76 +227,193 @@ dà quasi otto per ogni pixel del gioco: c'è posto per tutto. Quindi le
 > 17. un cono di carta a righe rosse e bianche pieno di patatine fritte dorate
 > 18. due pesci fritti dorati e croccanti su un foglio di carta paglia, con uno spicchio di limone
 >
-> Riga 4 — la peschiera e il riso:
+> Riga 4 — la peschiera, il riso e la stalla:
 > 19. un pesce intero argentato e azzurro, appena pescato, appoggiato su un letto di foglie
 > 20. tre arancini dorati a forma di pera, impilati, uno spezzato che mostra il riso giallo dentro
 > 21. un piattino di legno con quattro pezzi di sushi: riso bianco con sopra una fetta di salmone arancione
 > 22. tre maki tondi con l'alga verde scuro fuori, il riso bianco e le verdure colorate al centro
-> 23. (vuota)
-> 24. (vuota)
+> 23. una scodella smaltata bianca col bordo blu, colma di pastone di mais giallo, denso e a grumi, con una pannocchia appoggiata contro la scodella
+> 24. un vasetto di vetro basso e panciuto pieno di miele dorato, col tappo di legno e il mestolino da miele di legno appoggiato sopra, e una goccia di miele che cola lungo il vetro
 
 Merci: `merce_maglione`, `merce_maglione_lavanda`, `merce_tintura`,
-`merce_sapone`, `merce_sacchetto`, `merce_sciarpa`, `merce_berretto`,
-`merce_crostata`, `merce_salsa`, `merce_conserva`, `merce_marmellata`,
-`merce_caramelle`, `merce_frullato`, `merce_biscotti`, `merce_pizza`,
-`merce_lasagne`, `merce_patatine`, `merce_fritto`, `merce_pesce`,
-`merce_arancini`, `merce_sushi`, `merce_maki`.
+`merce_sapone`, `merce_sacchetto`, `merce_sciarpa_lana`,
+`merce_berretto`, `merce_crostata`, `merce_salsa`, `merce_conserva`,
+`merce_marmellata`, `merce_caramelle`, `merce_frullato`,
+`merce_biscotti`, `merce_pizza`, `merce_lasagne`, `merce_patatine`,
+`merce_fritto`, `merce_pesce`, `merce_arancini`, `merce_sushi`,
+`merce_maki`, `merce_pastone`, `merce_miele`. **`merce_sciarpa_lana` e
+non `merce_sciarpa`**: `sciarpa` è l'addobbo da 🪙14, e `aspetta` in
+`dati/coltivazioni.js` dice già il nome lungo.
 
-## 5. `edifici_5.png` — friggitoria, peschiera e la fiera
+## 5. `edifici_5.png` — la friggitoria e la fiera ✅
 
-**Allegare:** `edifici_4.png`, e se il generatore accetta due immagini
-anche `giardino.png` (la fiera sono decorazioni, e devono stare accanto
-a quelle).
+Fatto il 24 settembre 2026, anche lui a 1248×832 e con l'alone
+leggero. Due divisori, uno per famiglia: la friggitoria sta accanto
+alle botteghe (3,3), la fiera accanto alle decorazioni (5,6, preso
+dallo spaventapasseri di tutti i giorni).
 
-Tutto quello che non è una merce e manca ancora, in un foglio: la
-friggitoria, i quattro ritratti della peschiera (un recinto **cambia
-disegno** a seconda di come sta, come la stalla e lo stagno delle
-anatre) e le otto decorazioni della sorpresa della mongolfiera.
+**Allegare:** `edifici_4.png` e `giardino.png` (la fiera sono
+decorazioni, e devono stare accanto a quelle).
 
-> Disegna un foglio di sprite in pixel art **nello stesso stile di questa
-> immagine**: stessa tavolozza (legno caldo, tegole rosse e blu, pietra
-> grigia), stesso contorno scuro di un pixel, stessa vista da tre
-> quarti dall'alto, stessa luce da in alto a sinistra.
+La peschiera stava in questo foglio e ne è uscita: è un recinto, e un
+recinto si chiede accanto ai recinti (§6). Qui la regola «niente prato»
+le avrebbe tolto il prato che hanno tutti gli altri, e in mappa sarebbe
+sembrata una decorazione in mezzo a dieci macchine.
+
+> Disegna un foglio di sprite in pixel art nello stesso stile di queste
+> immagini: stessa tavolozza (legno caldo, tegole rosse e blu, pietra
+> grigia), stesso contorno scuro di un pixel, stessa vista da tre quarti
+> dall'alto, stessa luce da in alto a sinistra. La prima immagine sono
+> gli edifici e la seconda le decorazioni del giardino: la friggitoria
+> va accanto ai primi, le cose della fiera accanto alle seconde.
 >
-> Il foglio è 1536×1024 px, su **fondo trasparente** (PNG). Disponi
-> **12 soggetti** su una griglia dichiarata di **4 colonne × 3 righe**,
-> celle di 384×341 px, ognuno centrato nella sua cella e appoggiato al
-> bordo di sotto lasciando 16 px di margine. Nessun soggetto tocca il
-> bordo della cella.
+> Il foglio è 1536×1024 px, su fondo trasparente (PNG). Disponi 9
+> soggetti su una griglia dichiarata di 3 colonne × 3 righe, celle di
+> 512×341 px, ognuno centrato nella sua cella e appoggiato al bordo di
+> sotto lasciando 16 px di margine. Nessun soggetto tocca il bordo della
+> cella.
 >
-> **Il disegno finisce dove il soggetto tocca terra.** Sotto e di fianco
-> è tutto trasparente: **niente prato, niente terra, niente ciuffi
-> d'erba, niente ombra proiettata, nessun alone o bagliore**.
+> Il disegno finisce dove il soggetto tocca terra. Sotto e di fianco è
+> tutto trasparente: niente prato, niente terra, niente ciuffi d'erba,
+> niente ombra proiettata, nessun alone o bagliore.
 >
-> **NESSUNA PAROLA SCRITTA, da nessuna parte.** Dove serve un'insegna è
-> un oggetto.
+> NESSUNA PAROLA SCRITTA, da nessuna parte. Dove serve un'insegna è un
+> oggetto.
+>
+> Quello che appartiene a un soggetto dev'essere attaccato al suo disegno
+> in un pezzo solo: il vapore tocca il pentolone, le bandierine toccano
+> il filo. Niente pezzetti staccati che galleggiano nel vuoto.
 >
 > Da sinistra a destra, riga per riga:
+> 1. una friggitoria: chiosco di legno col tetto a spiovente a strisce gialle e bianche, un bancone aperto sul davanti con un grande pentolone d'olio e un filo di vapore, e un cono di patatine di legno come insegna sopra il tetto
 >
-> Riga 1 — la friggitoria e la peschiera:
-> 1. una **friggitoria**: chiosco di legno col tetto a spiovente giallo e bianco, un bancone aperto sul davanti con un grande pentolone d'olio fumante e un cono di patatine di legno come insegna
-> 2. la **peschiera, tranquilla**: un laghetto rotondo bordato di sassi e da una staccionata bassa di legno, con l'acqua azzurra e tre pesci arancioni che nuotano, una ninfea, un secchio di legno sulla riva
-> 3. la **stessa peschiera mentre mangia**: identica, ma i tre pesci sono venuti a galla tutti insieme con la bocca aperta verso dei granelli di becchime che galleggiano
-> 4. la **stessa peschiera che dorme**: identica, l'acqua più scura e ferma, i pesci fermi sul fondo, una lucciola sulla ninfea
->
-> Riga 2 e 3 — la fiera, otto decorazioni allegre di una fiera di paese, con gli stessi colori ricorrenti (rosso, giallo, azzurro, crema) perché sono una collezione:
-> 5. un filo di bandierine triangolari colorate teso fra due pali di legno
-> 6. una piccola giostra a cavalli di legno col tettuccio a spicchi
-> 7. un carretto dello zucchero filato con una nuvola rosa sul bastoncino
-> 8. un palo con tre lanterne di carta colorate appese
-> 9. un tiro al barattolo: un bancone di legno con una piramide di barattoli colorati
-> 10. un grande girasole di legno dipinto su un piedistallo
-> 11. uno spaventapasseri vestito a festa, col cappello a punta e i nastri colorati
-> 12. un piccolo palco di legno con un tamburo e una tromba appoggiati
+> Gli altri otto sono le decorazioni di una fiera di paese, allegre, con
+> gli stessi colori ricorrenti — rosso, giallo, azzurro e crema — perché
+> sono una collezione:
+> 2. un filo di bandierine triangolari colorate teso fra due pali di legno
+> 3. una piccola giostra a cavalli di legno col tettuccio a spicchi
+> 4. un carretto dello zucchero filato con una nuvola rosa sul bastoncino
+> 5. un palo con tre lanterne di carta colorate appese
+> 6. un tiro al barattolo: un bancone di legno con una piramide di barattoli colorati
+> 7. un grande girasole di legno dipinto su un piedistallo
+> 8. uno spaventapasseri vestito a festa, col cappello a punta a strisce e i nastri colorati sulle braccia
+> 9. un piccolo palco di legno con un tamburo e una tromba appoggiati
 
-La peschiera deve essere **uguale nei tre ritratti** tranne quello che
-cambia: è lo stesso recinto visto in tre momenti, e se cambia la forma
-del laghetto sembra che la cosa si sposti.
-
-Pezzi: `friggitoria`, `recinto_pesci_calmo`, `recinto_pesci_mangia`,
-`recinto_pesci_dorme`, `fiera_bandierine`, `fiera_giostra`,
+Pezzi: `friggitoria`, `fiera_bandierine`, `fiera_giostra`,
 `fiera_zucchero_filato`, `fiera_lanterne`, `fiera_barattoli`,
-`fiera_girasole`, `fiera_spaventapasseri`, `fiera_palco`.
+`fiera_girasole`, `fiera_spaventapasseri`, `fiera_palco`. Il
+foglietto come `edifici_4.json` (`scala`, `"alone": 128`), e per le
+decorazioni una `misura` a testa: stanno accanto a quelle del giardino,
+non agli edifici.
 
-Con questi due fogli **non manca più nessuno sprite** del secondo
-albero.
+## 6. `animali_3.png` — la peschiera
+
+**Allegare:** `animali_2.png` (lo stagno delle anatre è il recinto
+d'acqua da imitare).
+
+Tre ritratti e non sei, come le specie di `animali_2`: `RECINTO()` in
+`dati/catalogo.js` manda gli stati che mancano su quello calmo. Si
+chiede **una riga sola**, come si era fatto per `campi_3`: il foglio
+allegato fa da misura, e i tre riquadri escono della taglia degli altri
+recinti. `animali_2.png` è RGB con la scacchiera **dipinta**, e un
+generatore tende a ricopiarla: il prompt chiede l'alfa vero, e se torna
+lo stesso con la scacchiera si ritaglia con `"fondo": "auto"`, come quello.
+
+> Disegna un foglio di sprite in pixel art nello stesso stile di questa
+> immagine, riquadro per riquadro identico nella forma: stessa
+> staccionata di legno, stesso prato alla base coi fiorellini agli
+> angoli, stessa misura dei riquadri, stessa vista dall'alto di tre
+> quarti, stessa luce.
+>
+> Il foglio è 1536×1024 px su fondo trasparente vero (PNG con l'alfa),
+> non una scacchiera disegnata. Una riga sola di tre riquadri, grandi e
+> distanziati come quelli allegati, e il resto del foglio vuoto.
+>
+> È un recinto nuovo, la peschiera: dentro la staccionata, al posto
+> degli animali, un laghetto rotondo d'acqua azzurra bordato di sassi,
+> con tre pesci arancioni, una ninfea e un secchio di legno sulla riva.
+> I tre riquadri sono lo stesso recinto in tre momenti, identici in
+> tutto — la forma del laghetto, i sassi, la ninfea, il secchio — tranne
+> quello che cambia:
+> 1. tranquilla: i tre pesci nuotano sparsi nell'acqua
+> 2. mangia: i tre pesci sono venuti a galla tutti insieme con la bocca aperta, verso dei granelli di becchime che galleggiano
+> 3. dorme: l'acqua più scura e ferma, i pesci fermi sul fondo, una lucciola sulla ninfea, e la piccola Z azzurra in alto a destra come negli altri recinti che dormono
+>
+> NESSUN FUMETTO sopra i primi due riquadri: quelli dell'immagine
+> allegata non vanno copiati. NESSUNA PAROLA SCRITTA. Nessun alone o
+> bagliore attorno ai riquadri: i bordi sono netti, e fuori dal
+> riquadro è tutto trasparente.
+
+Pezzi: `recinto_pesci_calmo`, `recinto_pesci_mangia`,
+`recinto_pesci_dorme`, con la `misura` dello stagno delle anatre
+(72×56, e il riquadro che dorme più basso se torna senza fumetto sopra,
+come i suoi). Poi `peschiera` in `dati/catalogo.js` passa a
+`RECINTO('pesci')`, e `aspetta` diventa il pezzo.
+
+## 7. Fuori dall'albero: `addobbi.png` — il collo e la schiena
+
+**Allegare:** `cane-bobtail2.png` (il cane di casa, nelle tre viste).
+
+Fiocco, sciarpa, campanella, mantellina e zainetto sono sospesi
+(`sospeso: true` in `dati/addobbi.js`): un'emoji è disegnata per una
+persona vista di fronte, e sul collo o sulla schiena di una bestia a
+quattro zampe non si aggancia. Si rifanno **in tre viste** — di fronte,
+di lato e di spalle, cioè i tre versi in cui la scena disegna una
+bestia (`giu`, `lato`, `su`) — perché una mantellina di lato e una di
+spalle sono due disegni diversi. Di fronte, che è la vista che si
+guarda di più (`unita/addobbi` pretende un punto lì per ogni aggancio),
+si disegna solo quello che spunta: un addobbo della schiena disegnato
+intero sopra il petto sarebbe peggio dell'emoji.
+
+**È l'unico foglio che vuole anche del codice**, oltre al foglietto:
+`addosso()` in `scena/tela.js` oggi sa scrivere un'emoji e nient'altro.
+Una riga di `ADDOBBI` dichiarerà un pezzo per verso al posto
+dell'emoji, la scena lo posa col suo centro sul punto dell'aggancio, e
+il di lato si ribalta insieme alla bestia, dentro la stessa
+trasformazione. Cappelli e occhiali restano emoji: lì reggono (un punto
+solo da rispettare), e metterli qui avrebbe più che raddoppiato un
+foglio già difficile.
+
+> Disegna un foglio di sprite in pixel art nello stesso stile del cane di
+> questa immagine: stesso contorno scuro, stessa luce da in alto a
+> sinistra, colori pieni e forme semplici.
+>
+> Sono cinque addobbi per le bestie di casa — cani, gatti, un coniglio —
+> e ognuno va disegnato in tre viste, come starebbe addosso al cane
+> dell'immagine: di fronte, di lato (guarda a destra) e di spalle. IL
+> CANE NON SI DISEGNA: si disegna solo l'addobbo, come se lo portasse
+> un cane invisibile, e la parte che resterebbe nascosta dietro il corpo
+> non c'è.
+>
+> Il foglio è 1536×1024 px su fondo trasparente (PNG). Griglia
+> dichiarata di 5 colonne × 3 righe, celle di 307×341 px, ogni addobbo
+> centrato nella sua cella: una colonna per addobbo, e le righe sono le
+> viste — in alto di fronte, in mezzo di lato, in basso di spalle. Ogni
+> addobbo è grande, fra 150 e 250 px, e le sue tre viste sono alla
+> stessa scala fra loro (nel gioco diventa largo 8–12 px: niente
+> dettagli minuti, conta la sagoma).
+>
+> Nessuna ombra, nessun alone o bagliore, nessun fondo: fuori
+> dall'addobbo è tutto trasparente. NESSUNA PAROLA SCRITTA. Quello che
+> appartiene a un addobbo è attaccato al suo disegno in un pezzo solo.
+>
+> Da sinistra a destra, le colonne:
+> 1. un fiocco di nastro rosa acceso. Di fronte: il fiocco a due anse con le code, sotto il mento, sul nastrino che gira attorno al collo. Di lato: il nastrino attorno al collo visto di fianco, col fiocco che sporge davanti. Di spalle: solo il nastrino che passa dietro il collo.
+> 2. una sciarpa di lana rossa con le frange. Di fronte: avvolta attorno al collo, coi due capi che pendono sul petto, uno più lungo dell'altro. Di lato: avvolta attorno al collo, coi capi che pendono e svolazzano un poco indietro. Di spalle: il giro morbido della sciarpa dietro il collo.
+> 3. un collarino verde con una campanella dorata. Di fronte: il collarino ad arco con la campanella tonda appesa al centro. Di lato: il collarino visto di fianco, con la campanella appesa davanti. Di spalle: solo il collarino, con la fibbia.
+> 4. una mantellina blu col bordo dorato, allacciata al collo con un fermaglio d'oro. Di fronte: il fermaglio al collo e i due lembi blu che spuntano ai lati delle spalle. Di lato: stesa sulla schiena dal collo fino alla coda, che ricade morbida sul fianco. Di spalle: copre tutta la schiena, più larga in fondo.
+> 5. uno zainetto giallo con la patta rossa. Di fronte: le due cinghie che scendono ai lati del petto e la cima dello zainetto che spunta dietro la testa. Di lato: lo zainetto appoggiato sulla schiena, con una cinghia che gira sotto la pancia. Di spalle: lo zainetto visto da dietro, con la patta, la tasca e le due cinghie.
+
+Pezzi: `addobbo_<id>_giu`, `addobbo_<id>_lato`, `addobbo_<id>_su` per
+`fiocco`, `sciarpa`, `campanella`, `mantellina` e `zainetto` — gli id
+di `dati/addobbi.js`, che sono chiavi dei salvataggi e non si
+rinominano. Se il di lato torna girato a sinistra, lo raddrizza
+`specchia` nel foglietto come per `cane-bobtail2`.
+
+Con questi quattro fogli **nessuna voce della fattoria aspetta più un
+disegno**: le `aspetta` del catalogo e delle merci sono tutte qui, e
+gli addobbi sospesi pure. Restano emoji i cappelli e gli occhiali, per
+scelta; e restano i ripieghi scelti apposta fra i disegni che l'atlante
+aveva già (il beverone nella cassetta, la pastura nella cesta, il
+concime nel sacco), che non dichiarano niente perché non aspettano
+niente.
