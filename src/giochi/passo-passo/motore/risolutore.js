@@ -24,6 +24,7 @@
    di bello.
    ═══════════════════════════════════════════════════════════════════ */
 import { PASSI, SALTI } from '../dati/mondo.js'
+import { carteDi, daScegliere, eApri, eFine, volteDi } from '../dati/carte.js'
 import { Mondo, esegui, TANA, eErrore } from './mondo.js'
 
 /* un tetto di sicurezza, non di gioco: una mappa da 63 celle con tre
@@ -87,8 +88,11 @@ function strada(nodo) {
                                        giusta è questa (la tocca il bambino)
      { che: 'via' }                    la fila vince già: manca solo ▶
      null                              non c'è niente da dire (non capita
-                                       in un livello che si vince) */
+                                       in un livello che si vince)
+   Con lo zaino l'aiuto è un altro, e sta più sotto
+   (`suggerisciNelloZaino`). */
 export function suggerisci(liv, fila = []) {
+  if (liv.zaino) return suggerisciNelloZaino(liv, fila)
   const mete = risolvi(liv, { carota: true }) ? [true, false] : [false]
   for (const carota of mete) {
     for (let k = fila.length; k >= 0; k--) {
@@ -103,6 +107,72 @@ export function suggerisci(liv, fila = []) {
     }
   }
   return null
+}
+
+/* ── L'AIUTO, CON LO ZAINO ──
+   Qui la strada più corta non basta: scritta freccia per freccia nello
+   zaino non ci sta, ed è proprio il punto del livello. Quindi l'aiuto
+   guarda due cose, in quest'ordine:
+
+     1. **quello che manca ci sta ancora sciolto?** Se la fila del bambino
+        non sbaglia e la strada da dove arriva fino a casa (con la carota)
+        entra nei posti rimasti, si consiglia la prossima freccia in fondo.
+        È il bambino quasi arrivato, col suo programma che non somiglia a
+        nessuna soluzione scritta: non lo si rimanda indietro;
+     2. **la soluzione scritta più simile**: quella che ha in comune col
+        bambino il pezzo di testa più lungo, e da lì la prima differenza.
+        Una differenza può essere di quattro specie, e ognuna dice al
+        bambino una cosa diversa:
+          { che: 'mossa', cursore, mossa }  qui ci va questa freccia
+          { che: 'ciclo', cursore, volte }  qui ci va un 🔁, di tante volte
+          { che: 'volte', apri, volte }     questo 🔁 va ripetuto tante volte
+          { che: 'togli', cursore }         la carta prima del cursore è di
+                                            troppo (⌫)
+
+   Una fila che vince già con la carota dice solo ▶ (`{ che: 'via' }`).
+   Un livello senza soluzioni scritte (non ce n'è, oggi) si accontenta
+   della tana. */
+function suggerisciNelloZaino(liv, fila) {
+  const r = esegui(liv, fila, { eventi: false })
+  if (r.esito === TANA && r.carota) return { che: 'via' }
+  const buona = !eErrore(r.esito) && r.esito !== TANA
+  const sciolta = carota => {
+    if (!buona || daScegliere(fila).length) return null
+    const s = risolvi(liv, { carota, da: r.mondo })
+    return s && s.length && s.length <= liv.zaino - carteDi(fila)
+      ? { che: 'mossa', cursore: fila.length, mossa: s[0] } : null
+  }
+
+  const quasi = sciolta(true)
+  if (quasi) return quasi
+
+  let meglio = null
+  for (const sol of liv.soluzioni) {
+    let k = 0
+    while (k < fila.length && k < sol.length && fila[k] === sol[k]) k++
+    if (!meglio || k > meglio.k) meglio = { sol, k }
+  }
+  if (meglio && meglio.k < meglio.sol.length) {
+    const { sol, k } = meglio
+    const loro = fila[k], nostra = sol[k]
+    if (eApri(nostra) && eApri(loro)) return { che: 'volte', apri: k, volte: volteDi(nostra) }
+    if (eFine(nostra)) return { che: 'togli', cursore: k + 1 }
+    if (eApri(nostra)) return { che: 'ciclo', cursore: k, volte: volteDi(nostra) }
+    return { che: 'mossa', cursore: k, mossa: nostra }
+  }
+  return sciolta(false)
+}
+
+/* ── LA CARTA DEL GRADINO SERVE DAVVERO? ──
+   È la domanda di `serveLaRegola`, fatta a una carta: il ripeti serve se
+   la strada più corta fino a casa — anche senza la carota, che è la più
+   corta di tutte — scritta freccia per freccia non sta nello zaino. Se ci
+   stesse, il bambino che non ha capito il ciclo vincerebbe lo stesso, e
+   il livello insegnerebbe a contare le frecce. */
+export function serveLaCarta(liv) {
+  if (!liv.zaino) return false
+  const corta = risolvi(liv, { carota: false })
+  return !!corta && corta.length > liv.zaino
 }
 
 /* ── LA REGOLA DEL GRADINO SERVE DAVVERO? ──

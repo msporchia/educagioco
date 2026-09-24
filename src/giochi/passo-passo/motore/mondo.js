@@ -59,13 +59,25 @@
    (`motore/risolutore.js`, `serveLaRegola`). Nel gioco non si usa mai.
    ═══════════════════════════════════════════════════════════════════ */
 import { MOSSE } from '../dati/mondo.js'
+import { albero, conCicli, eFine } from '../dati/carte.js'
 
 export const TANA = 'tana'
 export const SBATTE = 'sbatte'
 export const SPLASH = 'splash'
+export const STANCO = 'stanco'
 export const FINITA = 'finita'
 /* un errore ferma la fila; la tana la chiude vincendo */
-export const eErrore = esito => esito === SBATTE || esito === SPLASH
+export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO
+
+/* ── QUANTI PASSI PRIMA DI STANCARSI ──
+   Coi cicli un programma corto può fare un sacco di strada, e anche
+   girare a vuoto: `🔁9 (🔁9 (→ ←))` sono centosessantadue passi avanti e
+   indietro, un minuto e mezzo di coniglio che fa la spola senza sbattere
+   mai. Oltre questo numero gli gira la testa, e la fila si ferma lì
+   come contro un sasso. Nessuna strada vera ci arriva vicino: una mappa
+   da sette per nove ha sessantatré celle, e un livello che ne chiede
+   più di cinquanta è un livello da rifare. */
+export const PASSI_MAX = 90
 
 /* le regole che si possono spegnere col `senza` di `Mondo` (e le
    chiavi che i gradini della campagna dichiarano in `regola`) */
@@ -254,26 +266,69 @@ export class Mondo {
 
 /* ═══════════ una fila intera ═══════════
    Si gioca la fila del bambino dall'inizio, sempre: è un programma, non
-   un telecomando. Torna com'è finita e, per ogni freccia, i fatti che
-   ha prodotto.
+   un telecomando. Torna com'è finita e, per ogni passo, i fatti che ha
+   prodotto.
 
-     esito   TANA · SBATTE · SPLASH · FINITA (le frecce sono finite prima
-             della tana: non è un errore, è un programma non finito)
-     dove    l'indice della freccia su cui è finita
+     esito   TANA · SBATTE · SPLASH · STANCO · FINITA (le frecce sono
+             finite prima della tana: non è un errore, è un programma
+             non finito)
+     dove    l'indice, nella fila, della carta su cui è finita
      carota  se l'ha presa
-     passi   [{ i, mossa, eventi }]
+     passi   [{ i, mossa, eventi, giri }] — uno per freccia eseguita.
+             Senza cicli sono le carte della fila una per una; con i
+             cicli la stessa carta torna a ogni giro, e `giri` dice a
+             che giro è ogni ciclo aperto, dal più esterno:
+             [[indice dell'apertura, giro, di quanti]]
      mondo   com'è rimasto il mondo alla fine */
+const NESSUN_GIRO = Object.freeze([])
+
 export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
   const w = new Mondo(liv, { senza, eventi })
   const passi = []
-  for (let i = 0; i < fila.length; i++) {
+  const esce = (esito, dove) => ({ esito, dove, carota: w.presa, passi, mondo: w })
+
+  /* la fila di sempre, senza cicli: la strada svelta, perché il
+     risolutore degli aiuti ci passa migliaia di volte */
+  if (!conCicli(fila)) {
+    for (let i = 0; i < fila.length; i++) {
+      if (eFine(fila[i])) continue
+      if (passi.length >= PASSI_MAX) return esce(STANCO, i)
+      if (eventi) w.traccia = []
+      const esito = w.mossa(fila[i])
+      passi.push({ i, mossa: fila[i], eventi: w.traccia || [], giri: NESSUN_GIRO })
+      if (esito) return esce(esito, i)
+    }
     if (eventi) w.traccia = []
-    const esito = w.mossa(fila[i])
-    passi.push({ i, mossa: fila[i], eventi: w.traccia || [] })
-    if (esito) return { esito, dove: i, carota: w.presa, passi, mondo: w }
+    return esce(FINITA, fila.length - 1)
   }
+
+  /* coi cicli: si cammina l'albero, e una carta dentro un ciclo si
+     esegue tante volte quanti sono i giri. Una N non scelta vale zero
+     giri — ▶ non parte, ma gli aiuti una fila così la possono leggere */
+  const giri = []
+  let fine = null
+  const corri = nodi => {
+    for (const nodo of nodi) {
+      if (nodo.che === 'ripeti') {
+        const qui = giri.length
+        for (let g = 1; g <= (nodo.volte || 0); g++) {
+          giri[qui] = [nodo.i, g, nodo.volte]
+          if (corri(nodo.corpo)) return true
+        }
+        giri.length = qui
+        continue
+      }
+      if (passi.length >= PASSI_MAX) { fine = esce(STANCO, nodo.i); return true }
+      if (eventi) w.traccia = []
+      const esito = w.mossa(nodo.m)
+      passi.push({ i: nodo.i, mossa: nodo.m, eventi: w.traccia || [], giri: giri.map(g => g.slice()) })
+      if (esito) { fine = esce(esito, nodo.i); return true }
+    }
+    return false
+  }
+  if (corri(albero(fila))) return fine
   if (eventi) w.traccia = []
-  return { esito: FINITA, dove: fila.length - 1, carota: w.presa, passi, mondo: w }
+  return esce(FINITA, passi.length ? passi.at(-1).i : -1)
 }
 
 /* le stelle di una tappa vinta: arrivato, con la carota, senza aiuti */

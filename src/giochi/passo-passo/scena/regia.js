@@ -4,9 +4,10 @@
    Tiene il giro dei fotogrammi e fa scorrere il tempo di una proiezione
    (`scena/proiezione.js`): a ogni fotogramma chiede alla proiezione dove
    sta ogni cosa, lo passa alla tela, e avvisa chi guida il gioco di tre
-   cose — una battuta è cominciata (per i suoni), la freccia che gira è
-   cambiata (per la striscia), la proiezione è finita (per le regole).
-   Non sa cosa voglia dire nessuna delle tre.
+   cose — una battuta è cominciata (per i suoni), il passo che gira è
+   cambiato (per la striscia: quale carta, e a che giro sono i cicli), la
+   proiezione è finita (per le regole). Non sa cosa voglia dire nessuna
+   delle tre.
 
    ── IL TEMPO È QUELLO DEI FOTOGRAMMI ──────────────────────────────
    Si conta con `requestAnimationFrame`, e il passo più lungo che si
@@ -28,7 +29,7 @@ const PASSO_MAX = 0.05
 
 export class Regia {
   constructor(avvisi = {}) {
-    this.avvisi = avvisi       // { battuta(b), corrente(i), guasto(), fine(pro, f) }
+    this.avvisi = avvisi       // { battuta(b), corrente(i, passo, giri), guasto(), fine(pro, f) }
     this.tela = null
     this.liv = null
     this.pro = null            // la proiezione in corso, o l'ultima finita
@@ -37,7 +38,7 @@ export class Regia {
     this.orologio = 0
     this.raf = 0
     this.prima = 0
-    this.ultimaCorrente = -1
+    this.ultimoPasso = -1
     this.guastoDetto = false
   }
 
@@ -53,7 +54,7 @@ export class Regia {
     this.tema = tema
     this.pro = null
     this.chiusa = false
-    this.ultimaCorrente = -1
+    this.ultimoPasso = -1
     if (this.tela) this.tela.prepara(liv, tema)
   }
 
@@ -62,7 +63,7 @@ export class Regia {
     this.pro = pro
     this.t = 0
     this.chiusa = false
-    this.ultimaCorrente = -1
+    this.ultimoPasso = -1
     this.guastoDetto = false
   }
 
@@ -70,7 +71,7 @@ export class Regia {
   ferma() {
     this.pro = null
     this.chiusa = false
-    this.ultimaCorrente = -1
+    this.ultimoPasso = -1
   }
 
   get inCorsa() { return !!this.pro && !this.chiusa }
@@ -107,9 +108,11 @@ export class Regia {
       }
       f = this.pro.fotogramma(this.t)
       if (!this.chiusa) {
-        if (f.corrente !== this.ultimaCorrente) {
-          this.ultimaCorrente = f.corrente
-          this.avvisi.corrente?.(f.corrente)
+        /* il passo e non la carta: dentro un ciclo la stessa carta torna
+           a ogni giro, e il contagiri della scatola deve cambiare lo stesso */
+        if (f.passo !== this.ultimoPasso) {
+          this.ultimoPasso = f.passo
+          this.avvisi.corrente?.(f.corrente, f.passo, f.giri)
         }
         if (f.guasto && !this.guastoDetto) {
           this.guastoDetto = true

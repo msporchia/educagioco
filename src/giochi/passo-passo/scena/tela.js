@@ -156,7 +156,7 @@ export class Tela {
 
     for (const e of f.effetti) this.effetto(e, f.t)
     if (f.fumetto) this.fumetto(c, f.t - f.fumetto.t0)
-    if (f.scenetta === 'sbatte') this.stelleInTesta(c, orologio)
+    if (f.scenetta === 'sbatte' || f.scenetta === 'stanco') this.stelleInTesta(c, orologio)
   }
 
   /* da cella a pixel dello sprite: il centro della cella, e il fondo */

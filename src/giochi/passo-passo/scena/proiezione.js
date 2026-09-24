@@ -20,11 +20,19 @@
    funzione chiamata con un altro numero.
 
    ── LA PARTE GIÀ VISTA VA VELOCE ─────────────────────────────────
-   `veloci` è quante frecce, in testa alla fila, sono identiche al giro
-   di prima e allora erano andate bene: quelle scorrono a tre volte la
-   velocità. Senza, chi aggiunge una freccia in fondo a una fila di dieci
-   si riguarda dieci passi già visti per vedere l'undicesimo — e a sei
-   anni, dopo la terza volta, smette di guardare.
+   `veloci` è quanti passi, dall'inizio, sono identici al giro di prima
+   e allora erano andati bene: quelli scorrono a tre volte la velocità.
+   Senza, chi aggiunge una freccia in fondo a una fila di dieci si
+   riguarda dieci passi già visti per vedere l'undicesimo — e a sei
+   anni, dopo la terza volta, smette di guardare. Si contano i passi e
+   non le carte perché coi cicli non sono la stessa cosa: portare un
+   🔁 da 5 a 6 fa correre veloci i primi cinque giri, e lento il sesto.
+
+   ── A CHE GIRO SIAMO ─────────────────────────────────────────────
+   Ogni battuta si porta dietro il suo passo (`n`) e i giri dei cicli
+   aperti (`giri`, da `esegui`): il fotogramma li ripete, e la regia li
+   passa a chi disegna la fila, che li scrive sulla testa di ogni
+   scatola. È la cosa che fa capire un ciclo guardandolo girare.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* quanto dura ogni battuta, in secondi, a velocità normale */
@@ -66,16 +74,19 @@ export class Proiezione {
     let t = 0
     const ultimo = esito.passi.length - 1
     for (const [n, passo] of esito.passi.entries()) {
-      const k = passo.i < veloci ? 1 / VELOCE : 1
+      const k = n < veloci ? 1 / VELOCE : 1
       for (const e of passo.eventi) {
         const d = (DURATE[e.che] ?? 0.2) * k
-        this.battute.push({ i: passo.i, e, t0: t, t1: t + d, veloce: k < 1 })
+        this.battute.push({ i: passo.i, n, giri: passo.giri || null, e, t0: t, t1: t + d, veloce: k < 1 })
         t += d
       }
       if (n < ultimo) t += PAUSA * k
     }
     this.fineMosse = t
-    this.errore = this.esito === 'sbatte' || this.esito === 'splash'
+    /* `stanco` è la fila che si ferma perché al coniglio gira la testa
+       (troppi passi: `PASSI_MAX` in `motore/mondo.js`). Si racconta come
+       una botta, con le stelline, ma senza niente contro cui sbattere */
+    this.errore = this.esito === 'sbatte' || this.esito === 'splash' || this.esito === 'stanco'
     if (this.errore) {
       this.tScenetta = t
       t += SCENETTA
@@ -98,6 +109,8 @@ export class Proiezione {
       const k = b.t1 > b.t0 ? Math.min(1, (t - b.t0) / (b.t1 - b.t0)) : 1
       applica(f, b, k)
       f.corrente = b.i
+      f.passo = b.n
+      f.giri = b.giri
       if (k < 1) return f
     }
 
@@ -105,7 +118,7 @@ export class Proiezione {
     if (this.errore) {
       if (t < this.tRitorno) {
         f.scenetta = this.esito
-        if (this.esito === 'sbatte') {
+        if (this.esito === 'sbatte' || this.esito === 'stanco') {
           f.coniglio.posa = 'stordito'
         } else {
           /* a galla, girato verso chi guarda: si vede la faccia */
@@ -158,6 +171,8 @@ export function fotogrammaIniziale(liv) {
     carota: liv.carota >= 0 ? { ...liv.xy(liv.carota), presa: false, t0: 0 } : null,
     effetti: [],
     corrente: -1,
+    passo: -1,
+    giri: null,
     guasto: null,
     fumetto: null,
     scenetta: null,

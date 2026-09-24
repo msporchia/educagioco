@@ -17,16 +17,23 @@ import { LEGENDA, OSTACOLI } from '../dati/mondo.js'
 
 export class Livello {
   /* `tappa` è una voce della campagna (o un livello generato): basta
-     che abbia `mappa` e, se il livello usa i salti, `salti: true` */
+     che abbia `mappa` e, se il livello usa i salti, `salti: true`. Dal
+     gradino del ripeti anche lo `zaino` (quante carte tiene la fila),
+     le `carte` che mette in mano oltre alle frecce, e le `soluzioni`
+     scritte, da cui partono gli aiuti (`motore/risolutore.js`) */
   static da(tappa) {
-    return new Livello(tappa.mappa, { salti: !!tappa.salti })
+    return new Livello(tappa.mappa, { salti: !!tappa.salti, zaino: tappa.zaino || null,
+                                      carte: tappa.carte || [], soluzioni: tappa.soluzioni || [] })
   }
 
-  constructor(mappa, { salti = false } = {}) {
+  constructor(mappa, { salti = false, zaino = null, carte = [], soluzioni = [] } = {}) {
     this.mappa = mappa.slice()
     this.righe = mappa.length
     this.colonne = mappa[0].length
     this.salti = salti
+    this.zaino = zaino
+    this.carte = carte
+    this.soluzioni = soluzioni
     const n = this.righe * this.colonne
     this.n = n
     this.terreno = new Array(n)
