@@ -29,7 +29,7 @@
    mette nel programma da sé (`motore/attrezzi.js`): non stanno nella
    soluzione, e non si salvano come roba del bambino.
    ═══════════════════════════════════════════════════════════════════ */
-import { fai, progetto, meno, guarda, tinta } from './scrivi.js'
+import { fai, progetto, meno, guarda, tinta, confronta, leggi } from './scrivi.js'
 
 /* un attrezzo da un progetto: quelli qui sotto, e quelli che un livello
    si scrive da sé perché valgono solo sulla sua mappa (le strade di un
@@ -93,6 +93,18 @@ export const scambia = () => attrezzo(progetto('scambia', { nome: 'scambia', ico
   fai.prendi('giu'), fai.vai('sinistra', 1), fai.posa('su'),
   fai.vai('destra', 1),
 ]), { da: 'due-lettere', finisce: 'dove aveva cominciato' })
+
+/* il postino: la lettera in cima al sacco (a sinistra) va nella buca del
+   suo numero, e il robot torna accanto al sacco. Il numero letto in mano
+   è già i passi fino alla buca, e al ritorno basta guardare: si torna
+   finché a sinistra non c'è il sacco — così non serve una lavagnetta,
+   che un attrezzo non si porta dietro */
+export const imbuca = () => attrezzo(progetto('imbuca', { nome: 'imbuca', icona: '📮' }, [
+  fai.prendi('sinistra'),
+  fai.vai('destra', leggi('mano')),
+  fai.posa('su'),
+  fai.finche(guarda('sinistra', 'cassone'), [fai.vai('sinistra', 1)]),
+]), { da: 'postino', finisce: 'accanto al sacco, dove aveva cominciato' })
 
 /* ── i controlli ── */
 export function guastiDegliAttrezzi(elenco, dove, chiaviPrima = []) {
