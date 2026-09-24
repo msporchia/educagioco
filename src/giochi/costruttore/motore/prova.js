@@ -9,25 +9,40 @@
    dice «gradini» vince il primo e perde il secondo, e lo vede: la scala
    si ferma a metà e l'omino resta sotto.
 
-   Due modi di vincere un ordine, dichiarati dal livello (`prova`):
+   Nel porto un ordine è **una giornata**: altri clienti, altri colori,
+   la gru che cala più casse. Il programma non le vede prima, e deve
+   reggerle tutte lo stesso.
+
+   Come si vince un ordine lo dichiara il livello (`prova`):
      disegno     a programma finito i mattoni sono esattamente il disegno
      passaggio   a programma finito l'omino arriva alla bandiera
-     libero      niente da vincere: è il cantiere libero, si costruisce e basta
+     libero      niente da vincere: è il cantiere libero
+     giornata    il porto: a sera, gli obiettivi del livello
+                 (`motore/porto/esito.js`)
 
    Questo file gioca d'un fiato: serve ai test, al banco e alla vista per
    sapere l'esito prima di animarlo. Chi anima usa `Esecuzione` a passi.
    ═══════════════════════════════════════════════════════════════════ */
 import { Mondo, camminaOmino } from './mondo.js'
+import { Porto } from './porto/mondo.js'
+import { esitoDelPorto } from './porto/esito.js'
 import { Esecuzione } from './esecutore.js'
+
+export const nelPorto = livello => livello.mondo === 'porto'
 
 export const mondoDellOrdine = (livello, i) => {
   const o = livello.ordini[i]
+  if (nelPorto(livello)) return Porto.daOrdine(o, livello)
   return Mondo.daMappa(o.mappa, { robot: o.robot || null })
 }
 
 /* Il verdetto su un mondo già costruito: serve alla vista, che il
    programma lo anima a passi e alla fine chiede solo «è venuto?». */
 export function verdetto(livello, mondo) {
+  if (nelPorto(livello)) {
+    const e = esitoDelPorto(mondo)
+    return { vinto: e.vinto, giornata: e }
+  }
   /* il cantiere libero non ha niente da confrontare: finire è riuscire */
   if (livello.prova === 'libero') return { vinto: true, libero: true, mattoni: mondo.mattoni.size }
   if (livello.prova === 'passaggio') {
