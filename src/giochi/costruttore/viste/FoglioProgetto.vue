@@ -8,13 +8,15 @@
    («🏛️ → colonna»), e le misure hanno i loro nomi pronti (alta, larga,
    lunga…).
 
-   Le misure (i parametri) ci sono solo nei livelli che le insegnano.
+   Le misure (i parametri) ci sono solo nei livelli che le insegnano, e
+   sono al massimo quattro: la torre del casaro ne vuole tante — quanto è
+   alta, e le tre assi da, a e via.
    Una misura rinominata porta con sé le righe che la usano, e toglierne
    una sistema tutte le chiamate: lo fa `aggiornaProgetto`, qui si
    raccoglie soltanto cosa vuole il bambino.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed } from 'vue'
-import { ICONE_PROGETTI, NOMI_MISURE } from './frasi.js'
+import { ICONE_PROGETTI, NOMI_MISURE, NOMI_MISURE_COLORE } from './frasi.js'
 
 const props = defineProps({
   progetto: { type: Object, default: null },     // null = nuovo
@@ -33,6 +35,7 @@ const misure = ref(props.progetto
   ? props.progetto.misure.map(m => ({ nome: m, da: m, tipo: (props.progetto.tipi || {})[m] === 'colore' ? 'colore' : 'numero' }))
   : [])
 const conferma = ref(false)
+const MISURE_MAX = 4
 
 function figurina([e, n]) {
   const prima = ICONE_PROGETTI.find(x => x[0] === icona.value)
@@ -87,12 +90,11 @@ function salva() {
         <div v-for="(m, k) in misure" :key="k" class="cst-misura-riga">
           <span class="cst-tipo-misura">{{ m.tipo === 'colore' ? '🎨' : '🔢' }}</span>
           <input v-model="m.nome" maxlength="10" autocomplete="off" autocapitalize="none" :data-misura="k">
-          <template v-if="m.tipo !== 'colore'">
-            <button v-for="s in NOMI_MISURE.slice(0, 4)" :key="s" type="button" class="cst-chip" @click="m.nome = s">{{ s }}</button>
-          </template>
+          <button v-for="s in (m.tipo === 'colore' ? NOMI_MISURE_COLORE : NOMI_MISURE).slice(0, 4)" :key="s" type="button"
+                  class="cst-chip" @click="m.nome = s">{{ s }}</button>
           <button type="button" class="cst-chip cst-via-chip" aria-label="togli la misura" @click="misure.splice(k, 1)">✕</button>
         </div>
-        <div v-if="misure.length < 2" class="cst-fila">
+        <div v-if="misure.length < MISURE_MAX" class="cst-fila">
           <button type="button" class="cst-chip cst-nuova" data-azione="aggiungi-misura"
                   @click="aggiungiMisura('numero')">＋ 🔢 una misura che è un numero</button>
           <button v-if="conColori" type="button" class="cst-chip cst-nuova" data-azione="aggiungi-colore"

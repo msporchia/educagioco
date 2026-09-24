@@ -22,7 +22,11 @@
    Metà del lavoro, e mai il nodo. Tre casi, nell'ordine:
      · il livello ha **progetti suoi** (non gli attrezzi): il
        pezzo sono i progetti, interi. Il programma principale che li usa
-       resta del bambino — ed è lì che stanno le misure dell'ordine;
+       resta del bambino — ed è lì che stanno le misure dell'ordine.
+       Tranne quando un progetto **chiama sé stesso** (la torre del
+       casaro): lì il nodo è proprio la chiamata, e il pezzo è il
+       progetto senza — le misure, il fermo, quello che fa lui — mentre
+       le chiamate a sé stesso, e cosa passargli, restano da scrivere;
      · il programma principale ha **più righe in cima**: la prima metà
        (per difetto), intera;
      · il programma è **un blocco solo** (un «ripeti», un «ripeti
@@ -56,6 +60,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { conIPrezzi, RAGIONA, INDIZIO, PEZZO, FORMA, SVELA } from '../../aiuti.js'
 import { copia, numera } from '../dati/scrivi.js'
+import { chiamaSeStesso } from './zaino.js'
 
 /* due istruzioni sono la stessa se sono uguali a parte gli id, che il
    programma assegna da sé */
@@ -106,6 +111,18 @@ export function pezzoDi(liv) {
   const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
   const suoi = (sol.progetti || []).filter(p => !attrezzi.has(p.id) && !p.attrezzo)
   const lavagnette = [...(sol.lavagnette || [])]
+  if (suoi.length && chiamaSeStesso({ progetti: suoi })) {
+    const loro = new Set(suoi.map(p => p.id))
+    const senzaChiamate = fila => (fila || []).filter(i => !(i.tipo === 'chiama' && loro.has(i.progetto))).map(i => {
+      const q = copia(i)
+      for (const r of RAMI) if (Array.isArray(q[r])) q[r] = senzaChiamate(q[r])
+      return q
+    })
+    const pezzi = suoi.map(p => ({ ...copia(p), corpo: senzaChiamate(p.corpo) }))
+    return { sostituisce: 'progetti', programma: { principale: [], progetti: pezzi, lavagnette },
+             dati: pezzi.flatMap(p => p.corpo),
+             testo: `Ti ho scritto il progetto «${suoi[0].nome}» con le sue misure e quello che fa lui. Dove chiama sé stesso, e con quali misure, lo scrivi tu.` }
+  }
   if (suoi.length)
     return { sostituisce: 'progetti', programma: { principale: [], progetti: copia(suoi), lavagnette },
              dati: suoi.map(p => ({ progetto: p.id })),
@@ -151,7 +168,11 @@ export function formaDi(liv, dati = []) {
   const sol = liv.soluzione
   const conColori = (liv.colori || []).length > 1
   const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
-  const interi = new Set([...attrezzi, ...dati.filter(d => d.progetto).map(d => d.progetto)])
+  /* `dati` tiene due specie: i segni dei progetti dati interi
+     (`{ progetto }`, senza `tipo`) e le righe date — che a loro volta
+     possono essere chiamate, e avere un `progetto` anche loro */
+  const eSegno = d => !!d.progetto && !d.tipo
+  const interi = new Set([...attrezzi, ...dati.filter(eSegno).map(d => d.progetto)])
   /* Si confronta **riga per riga**: la testa di un'istruzione (quello
      che ha di suo, senza i rami) già data resta intera, e i rami si
      guardano uno per uno. Confrontando i blocchi interi, un «ripeti 8»
@@ -160,7 +181,7 @@ export function formaDi(liv, dati = []) {
      che toglie quello che uno più economico aveva dato.
      Una testa data ne tiene intera una sola della soluzione, la prima
      uguale non ancora presa. */
-  const date = tutte(dati.filter(d => !d.progetto)).map(testa)
+  const date = tutte(dati.filter(d => !eSegno(d))).map(testa)
   const svuota = i => {
     const k = date.indexOf(testa(i))
     if (k < 0) return vuota(i, conColori, svuota)

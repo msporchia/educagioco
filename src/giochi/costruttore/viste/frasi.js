@@ -243,4 +243,7 @@ export const ICONE_PROGETTI = [
    una lavagnetta con lo stesso nome farebbe due cose diverse con una
    lettera sola */
 export const NOMI_MISURE = ['alta', 'larga', 'lunga', 'quanti', 'lato']
+/* le misure che sono colori: la tinta di una bandiera, e le assi della
+   torre del casaro — da dove, a dove, e quella libera per passare */
+export const NOMI_MISURE_COLORE = ['tinta', 'da', 'a', 'via']
 export const NOMI_LAVAGNETTE = ['h', 'conta', 'quanti', 'l', 'passi', 'quante', 'colore', 'voglio']

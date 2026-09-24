@@ -82,6 +82,39 @@ function srotolaFila(fila, prog, misure, profondo) {
   return out
 }
 
+/* Un progetto del bambino che, prima o poi, chiama sé stesso — da solo
+   o passando da un altro. Un programma così non si srotola: la torre di
+   Hanoi con la sua misura «alta» srotolata sarebbe un'altra per ogni
+   altezza, ed è proprio per questo che la ricorsione serve. Il banco lo
+   chiede prima di srotolare. */
+export function chiamaSeStesso(prog) {
+  const suoi = (prog.progetti || []).filter(p => !p.attrezzo)
+  const chiamati = corpo => {
+    const ids = new Set()
+    const giro = fila => {
+      for (const i of fila || []) {
+        if (i.tipo === 'chiama') ids.add(i.progetto)
+        for (const r of RAMI) giro(i[r])
+      }
+    }
+    giro(corpo)
+    return ids
+  }
+  const archi = new Map(suoi.map(p => [p.id, chiamati(p.corpo)]))
+  for (const p of suoi) {
+    const visti = new Set()
+    const fila = [...(archi.get(p.id) || [])]
+    while (fila.length) {
+      const q = fila.pop()
+      if (q === p.id) return true
+      if (visti.has(q) || !archi.has(q)) continue
+      visti.add(q)
+      fila.push(...archi.get(q))
+    }
+  }
+  return false
+}
+
 /* il programma senza i progetti del bambino (gli attrezzi restano) */
 export function srotola(prog) {
   return {
