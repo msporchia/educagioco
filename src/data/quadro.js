@@ -139,7 +139,7 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
       const statoCon = spentoQui => {
         if ((manca && !mancaPerEta) || (spentoQui && !dEta.has(g.chiave))) return SPENTO
         if (manca || spentoQui || !inPortata)
-          return (g.piccoli || (arco && arco.anniA < eta)) ? PASSATO : AVANTI
+          return ((g.piccoli && !g.cresce) || (arco && arco.anniA < eta)) ? PASSATO : AVANTI
         return QUI
       }
       let stato = statoCon(off.has(g.chiave))

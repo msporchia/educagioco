@@ -20,6 +20,10 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)
 const PICCOLI = GIOCHI.filter(g => g.piccoli).map(g => g.chiave)
+/* chi comincia dai piccoli e cresce (Passo passo, che dopo le buche ha i
+   cicli) si accende coi piccoli ma non si spegne coi grandi */
+const CRESCONO = GIOCHI.filter(g => g.piccoli && g.cresce).map(g => g.chiave)
+const SOLO_PICCOLI = PICCOLI.filter(k => !CRESCONO.includes(k))
 const GRANDI = GIOCHI.filter(g => g.grandi).map(g => g.chiave)
 
 /* ── I MODULI DI QUIZ, PER LE SOTTOVOCI ──
@@ -217,15 +221,20 @@ uguale('ma spegne i cubetti nascosti, che no', terza.sa['geo:cubetti'], false)
 uguale('e le viste dall\'alto', terza.sa['geo:viste'], false)
 controlla('lasciando acceso il gruppo «I solidi»', terza.sa.solidi === undefined)
 controlla('e «Girare le figure con la mente»', terza.sa['spazio-mente'] === undefined)
-for (const k of PICCOLI) uguale(`«terza» spegne il gioco per i piccoli ${k}`, terza.giochi[k], false)
+for (const k of SOLO_PICCOLI) uguale(`«terza» spegne il gioco per i piccoli ${k}`, terza.giochi[k], false)
+for (const k of CRESCONO) controlla(`«terza» LASCIA acceso ${k}, che comincia dai piccoli e cresce`,
+  terza.giochi[k] === undefined)
 const spentiTerza = CHIAVI_GIOCHI.filter(k => terza.giochi[k] === false)
 uguale('e non spegne nessun altro gioco',
-       spentiTerza.slice().sort().join(','), PICCOLI.slice().sort().join(','))
+       spentiTerza.slice().sort().join(','), SOLO_PICCOLI.slice().sort().join(','))
 
 /* ── la quarta ── */
 const quarta = eccezioniDi('quarta')
 uguale('«quarta» non spegne nessun sapere', Object.keys(quarta.sa).length, 0)
-for (const k of PICCOLI) uguale(`«quarta» spegne il gioco per i piccoli ${k}`, quarta.giochi[k], false)
+for (const k of SOLO_PICCOLI) uguale(`«quarta» spegne il gioco per i piccoli ${k}`, quarta.giochi[k], false)
+for (const k of CRESCONO) controlla(`«quarta» LASCIA acceso ${k}, che comincia dai piccoli e cresce`,
+  quarta.giochi[k] === undefined)
+controlla('c\'è almeno un gioco che comincia dai piccoli e cresce', CRESCONO.length >= 1)
 controlla('«quarta» lascia acceso il castello', quarta.giochi.torri === undefined)
 
 /* ── l'età ──

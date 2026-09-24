@@ -51,6 +51,12 @@ export default {
 
   /* per i quattro-sei anni: niente da leggere, e non si perde mai */
   piccoli: true,
+  /* …ma non finisce lì: dopo le buche vengono i gradini dello zaino,
+     coi cicli, che sono da otto anni. Senza questa riga le partenze dei
+     grandi (`data/partenze.js`) lo spegnerebbero a nove anni come si
+     spengono i giochi dei piccoli, e a chi ha l'età dei cicli il gioco
+     dei cicli non arriverebbe mai */
+  cresce: true,
 
   /* dietro «giochi in prova» finché un grande non decide che è pronto */
   sperimentale: true,

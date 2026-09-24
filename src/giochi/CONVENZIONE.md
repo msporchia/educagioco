@@ -56,7 +56,10 @@ le **due estremità della scala**, `piccoli: true` e `grandi: true`.
 iconica, niente da leggere, non si può perdere. `grandi` dice il
 contrario — questo gioco dà per scontato che il bambino legga da solo, o
 la matematica delle classi alte. Chi non dichiara né l'uno né l'altro sta
-in mezzo, ed è il caso normale.
+in mezzo, ed è il caso normale. `cresce: true`, accanto a `piccoli`, è
+per chi comincia da lì e non finisce lì (Passo passo): le partenze dei
+grandi non lo spengono, e fin dove arriva lo dice la portata delle sue
+tappe.
 
 Non sono interruttori: le legge `src/data/partenze.js`, che al momento in
 cui un bambino si aggiunge accende il set giusto senza che nessuno debba

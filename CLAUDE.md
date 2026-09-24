@@ -1331,11 +1331,15 @@ parte giusta**: si consegna la casa più piccola e la taratura più
 prudente. Con un valore in mezzo no, e quello era il difetto di
 partenza.
 
-Quali giochi tenere lo dicono i manifesti, e sono **tre** dichiarazioni:
+Quali giochi tenere lo dicono i manifesti, e sono **quattro** dichiarazioni:
 `piccoli: true` e `grandi: true` sono le due estremità della scala,
 `posto: true` è chi sulla scala non ci sta affatto (la fattoria: un
 prato dove si spende, non una fila da macinare) e non si spegne mai per
-età, in nessuna delle due direzioni. Nessun elenco da mantenere a mano.
+età, in nessuna delle due direzioni, e `cresce: true` accanto a `piccoli`
+è chi comincia dai piccoli e non finisce lì (Passo passo, che dopo le
+buche ha i cicli): si accende coi piccoli e le partenze dei grandi non
+lo spengono — fin dove arriva lo dice la portata. Nessun elenco da
+mantenere a mano.
 
 **La portata non sostituisce `piccoli`, ed è misurato.** Verrebbe da
 pensare che un grado di difficoltà 0–100 basti a decidere chi vede

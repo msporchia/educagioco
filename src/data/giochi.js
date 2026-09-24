@@ -43,6 +43,12 @@
    maggioranza silenziosa che nessuna partenza spegne tranne quella dei
    piccolissimi.
 
+   `cresce: true` sta accanto a `piccoli` e dice che il gioco comincia
+   da lì ma non finisce lì: Passo passo è per chi non legge fino alle
+   buche, e poi arrivano i cicli, che sono da otto anni. Le partenze dei
+   grandi non lo spengono come spengono i giochi dei piccoli — a
+   decidere fin dove arriva è la portata delle sue tappe, come per tutti.
+
    ── E POI C'È `posto`, CHE NON STA SULLA SCALA ───────────────────
    La fattoria non è né facile né difficile: è il prato dove si spende
    quello che si guadagna altrove. Non ha una campagna, non si vince,
@@ -186,7 +192,7 @@ export const GIOCHI = [
      store, e non si chiude nessun anello di import. */
   ...GIOCHI_NUOVI.map(g => ({ chiave: g.chiave, ico: g.icona, nome: g.nome, che: g.che,
                               area: g.area, come: g.come, piccoli: !!g.piccoli,
-                              grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
+                              cresce: !!g.cresce, grandi: !!g.grandi, posto: !!g.posto, quiz: !!g.quiz,
                               tinta: g.tinta,
                               sperimentale: !!g.sperimentale, serve: g.serve || [],
                               chiede: g.chiede || [],

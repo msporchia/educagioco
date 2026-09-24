@@ -485,8 +485,10 @@ export function eccezioniDi (chiave) {
   for (const g of GIOCHI) {
     /* un posto non si giudica per età, in nessuna direzione: vedi
        `posto` in `data/giochi.js` */
+    /* chi comincia dai piccoli e cresce (`cresce` in `data/giochi.js`)
+       non si spegne ai grandi: fin dove arriva lo dice la portata */
     const spegni = !g.posto &&
-      ((p.soloPiccoli && !g.piccoli) || (p.nientePiccoli && g.piccoli) ||
+      ((p.soloPiccoli && !g.piccoli) || (p.nientePiccoli && g.piccoli && !g.cresce) ||
        (p.nienteGrandi && g.grandi))
     if (spegni) giochi[g.chiave] = false
   }
