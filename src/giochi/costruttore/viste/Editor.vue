@@ -17,6 +17,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, provide } from 'vue'
 import { nomiLeggibili } from '../motore/modifica.js'
+import { DOVE_PORTO, LATI } from '../dati/scrivi.js'
 import Righe from './Righe.vue'
 
 const props = defineProps({
@@ -54,10 +55,15 @@ provide('editore', {
   sola: computed(() => props.sola),
   contesto: computed(() => {
     const nomi = nomiLeggibili(props.programma, props.tab, lavagnetteOrdine.value)
+    /* il porto: quattro frecce, la mano, le cose del livello, e la lettura
+       se il livello la offre */
+    const porto = props.livello.mondo === 'porto'
     return {
       colori: props.livello.colori,
       nomi,
       confronta: nomi.misure.length + nomi.lavagnette.length + nomi.ordine.length > 0,
+      ...(porto ? { porto: true, versi: LATI, dove: DOVE_PORTO, cose: props.livello.cose || [],
+                    leggere: !!props.livello.leggere } : {}),
     }
   }),
   seleziona: id => emit('seleziona', id),

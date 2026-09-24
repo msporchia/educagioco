@@ -9,9 +9,13 @@
 
    I progetti sono del bambino: compaiono qui uno per uno, e chiamarli è
    metterli nel programma come un blocco qualunque.
+
+   Il porto ha una cassetta sua (`GRUPPI_PORTO`): quattro frecce per tre
+   gesti, e le frecce di un gesto stanno su una riga sola (`fila`),
+   perché dodici tasti uno sotto l'altro sono un elenco da scorrere.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { GRUPPI, ICONE } from './frasi.js'
+import { GRUPPI, GRUPPI_PORTO, ICONE } from './frasi.js'
 
 const props = defineProps({
   cassetta: { type: Array, required: true },
@@ -23,14 +27,16 @@ const props = defineProps({
   dentroProgetto: { type: String, default: null },   // la scheda aperta: il progetto che si sta scrivendo
   /* i progetti scritti negli altri livelli: [{ chiave, nomeLivello, progetto }] */
   altri: { type: Array, default: () => [] },
+  /* il cantiere di lato o il porto dall'alto: i blocchi non sono gli stessi */
+  porto: { type: Boolean, default: false },
 })
 const emit = defineEmits(['scegli', 'nuovo-progetto', 'importa', 'chiudi'])
 
-const gruppi = computed(() => GRUPPI
+const gruppi = computed(() => (props.porto ? GRUPPI_PORTO : GRUPPI)
   .map(g => ({ ...g, blocchi: g.blocchi.filter(b => props.cassetta.includes(b.blocco) &&
                                                     (!b.dove || props.posti.includes(b.dove))) }))
   .filter(g => g.blocchi.length))
-const chiaveDi = b => [b.blocco, b.verso, b.dove].filter(Boolean).join(':')
+const chiaveDi = b => [b.blocco, b.verso, b.dove, b.lato].filter(Boolean).join(':')
 
 /* la finestra cieca di sempre: la cassetta nasce sotto il dito che ha
    appena premuto «＋», e un secondo tocco di troppo sceglierebbe un
@@ -51,7 +57,14 @@ const conProgetti = computed(() => props.cassetta.includes('progetti'))
       <h3>Cosa deve fare il robot?</h3>
       <section v-for="g in gruppi" :key="g.nome" class="cst-gruppo">
         <h4>{{ g.nome }}</h4>
-        <button v-for="b in g.blocchi" :key="chiaveDi(b)" type="button" class="cst-blocco-nuovo"
+        <!-- le frecce del porto: una riga per gesto, un tasto per freccia -->
+        <div v-if="g.fila" class="cst-fila-frecce">
+          <span class="cst-ico">{{ ICONE[g.blocchi[0].blocco] }}</span>
+          <button v-for="b in g.blocchi" :key="chiaveDi(b)" type="button" class="cst-blocco-nuovo cst-freccia"
+                  :data-blocco="chiaveDi(b)" :aria-label="b.esempio"
+                  @click="scegli({ blocco: b.blocco, verso: b.verso, lato: b.lato })">{{ b.freccia }}</button>
+        </div>
+        <button v-for="b in (g.fila ? [] : g.blocchi)" :key="chiaveDi(b)" type="button" class="cst-blocco-nuovo"
                 :data-blocco="chiaveDi(b)" @click="scegli({ blocco: b.blocco, verso: b.verso, dove: b.dove })">
           <span class="cst-ico">{{ ICONE[b.blocco] }}</span> {{ b.esempio }}
           <small v-if="b.nota">{{ b.nota }}</small>

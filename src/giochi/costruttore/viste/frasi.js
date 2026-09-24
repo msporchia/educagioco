@@ -12,9 +12,16 @@ import { colore } from '../dati/colori.js'
 
 export const ICONE = {
   vai: '🚶', metti: '🧱', ripeti: '🔁', finche: '🔁', se: '❓', assegna: '📝',
+  prendi: '✋', posa: '📥', aspetta: '⏳', sempre: '♾️',
 }
 
-export const VERSI_IN_PAROLE = { destra: '→ a destra', sinistra: '← a sinistra' }
+export const VERSI_IN_PAROLE = { destra: '→ a destra', sinistra: '← a sinistra', su: '↑ su', giu: '↓ giù' }
+/* nel porto il robot prende e posa di fianco a sé: la freccia dice da
+   che parte */
+export const LATI_PRENDI = { su: '↑ da sopra', giu: '↓ da sotto', sinistra: '← da sinistra', destra: '→ da destra' }
+export const LATI_POSA = { su: '↑ sopra', giu: '↓ sotto', sinistra: '← a sinistra', destra: '→ a destra' }
+/* dove si legge: la freccia sola, perché sta dentro una casella */
+export const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→', mano: '✋' }
 /* dove va un mattone: sotto i piedi (e ci si sale), o dove andrà il piede */
 export const POSTI_IN_PAROLE = {
   sotto: '↓ sotto i piedi', 'giu-destra': '↘ in basso a destra', 'giu-sinistra': '↙ in basso a sinistra',
@@ -22,11 +29,18 @@ export const POSTI_IN_PAROLE = {
 export const DOVE_IN_PAROLE = {
   sotto: '↓ sotto i piedi', 'giu-destra': '↘ in basso a destra', 'giu-sinistra': '↙ in basso a sinistra',
   destra: '→ a destra', sinistra: '← a sinistra', sopra: '↑ sopra la testa',
+  /* il porto, dall'alto */
+  su: '↑ sopra', giu: '↓ sotto', mano: '✋ in mano',
 }
 export const COSE_IN_PAROLE = {
   vuoto: 'il vuoto', mattone: 'un mattone', terreno: 'il terreno', acqua: 'l\'acqua',
   pieno: 'qualcosa', bordo: 'il bordo',
+  cassa: 'una cassa', niente: 'niente', libero: 'posto per passare', cliente: 'un cliente',
+  biglietto: 'un biglietto', bancone: 'il bancone', scaffale: 'uno scaffale', cassone: 'un cassone',
+  nastro: 'il nastro', muro: 'il muro', mare: 'il mare',
 }
+/* «una cassa rossa», «un cassone rosso»: il colore si accorda */
+const AL_FEMMINILE = { rosso: 'rossa', giallo: 'gialla', bianco: 'bianca', grigio: 'grigia', nero: 'nera' }
 export const CONFRONTI_IN_PAROLE = { '<': 'è minore di', '=': 'è uguale a', '>': 'è maggiore di' }
 
 /* un numero, come si vede nella casella: la N è quello che resta da
@@ -36,6 +50,7 @@ export function numeroInParole(e) {
   if (typeof e === 'string') return (colore(e) || {}).nome || e
   if (typeof e.n === 'number') return String(e.n)
   if (typeof e.v === 'string') return e.v
+  if (e.leggi) return `📖 ${FRECCE[e.leggi] || '?'}`
   if (e.op) return `${numeroInParole(e.a)} ${e.op === '-' ? '−' : e.op} ${numeroInParole(e.b)}`
   return '?'
 }
@@ -44,14 +59,21 @@ export function condizioneInParole(c) {
   if (!c) return '…?'
   if (c.tipo === 'confronta')
     return `${numeroInParole(c.a)} ${CONFRONTI_IN_PAROLE[c.cmp] || c.cmp} ${numeroInParole(c.b)}`
-  const cosa = c.cosa === 'mattone' && c.colore
-    ? `un mattone ${(colore(c.colore) || {}).nome || c.colore}` : (COSE_IN_PAROLE[c.cosa] || c.cosa)
+  const cosa = c.colore && ['mattone', 'cassa', 'cassone'].includes(c.cosa)
+    ? `${COSE_IN_PAROLE[c.cosa]} ${nomeDelColore(c.colore, c.cosa === 'cassa')}` : (COSE_IN_PAROLE[c.cosa] || c.cosa)
   return `${DOVE_IN_PAROLE[c.dove] || c.dove} ${c.c === false ? 'non c\'è' : 'c\'è'} ${cosa}`
+}
+
+/* il colore di una domanda: scritto («rossa», se è una cassa), o il nome
+   di chi lo porta, o quello che il robot legge */
+function nomeDelColore(c, femminile) {
+  if (typeof c === 'string') return femminile ? (AL_FEMMINILE[c] || (colore(c) || {}).nome || c) : ((colore(c) || {}).nome || c)
+  return numeroInParole(c)
 }
 
 /* un numero che nomina una lavagnetta (o una misura) si disegna come
    la lavagnetta che è, non come una cifra */
-export const nominaQualcosa = e => !!e && (typeof e.v === 'string' || (e.op && (nominaQualcosa(e.a) || nominaQualcosa(e.b))))
+export const nominaQualcosa = e => !!e && (typeof e.v === 'string' || !!e.leggi || (e.op && (nominaQualcosa(e.a) || nominaQualcosa(e.b))))
 
 /* quello che in una riga resta da scegliere: la N di un numero, il ?
    di un colore, i puntini di una domanda. Un conto vale da scegliere se
@@ -89,6 +111,19 @@ export function pezzi(i, programma) {
       { campo: 'dove', tipo: 'posto', mostra: POSTI_IN_PAROLE[i.dove || 'sotto'] },
       casellaColore('colore', i.colore),
     ]
+    case 'prendi': return [
+      { testo: 'prendi' },
+      { campo: 'lato', tipo: 'lato', mostra: LATI_PRENDI[i.lato] || '?', manca: !LATI_PRENDI[i.lato] },
+    ]
+    case 'posa': return [
+      { testo: 'posa' },
+      { campo: 'lato', tipo: 'lato', mostra: LATI_POSA[i.lato] || '?', manca: !LATI_POSA[i.lato] },
+    ]
+    case 'aspetta': return [
+      { testo: 'aspetta che' },
+      { campo: 'cond', tipo: 'cond', mostra: condizioneInParole(i.cond), manca: !i.cond },
+    ]
+    case 'sempre': return [{ testo: 'ripeti per sempre' }]
     case 'ripeti': return [
       { testo: 'ripeti' },
       { campo: 'volte', tipo: 'numero', mostra: numeroInParole(i.volte), numero: i.volte,
@@ -103,11 +138,15 @@ export function pezzi(i, programma) {
       { testo: 'se' },
       { campo: 'cond', tipo: 'cond', mostra: condizioneInParole(i.cond), manca: !i.cond },
     ]
+    /* il valore di una lavagnetta è di qualunque specie: un numero, un
+       conto, un nome — e nel porto un colore, o quello che si legge */
     case 'assegna': return [
       { campo: 'nome', tipo: 'lavagnetta', mostra: i.nome || '?', lavagnetta: !!i.nome, manca: !i.nome },
       { testo: 'diventa' },
-      { campo: 'valore', tipo: 'numero', mostra: numeroInParole(i.valore), numero: i.valore,
-        lavagnetta: nominaQualcosa(i.valore), manca: daScegliere(i.valore) },
+      typeof i.valore === 'string'
+        ? { campo: 'valore', tipo: 'valore', mostra: '', colore: i.valore, etichetta: `colore ${(colore(i.valore) || {}).nome}` }
+        : { campo: 'valore', tipo: 'valore', mostra: numeroInParole(i.valore), numero: i.valore,
+            lavagnetta: nominaQualcosa(i.valore), manca: daScegliere(i.valore) },
     ]
     case 'chiama': {
       const p = ((programma && programma.progetti) || []).find(q => q.id === i.progetto)
@@ -166,14 +205,37 @@ export const GRUPPI = [
   { nome: 'Lavagnette', blocchi: [{ blocco: 'assegna', esempio: '[ ] diventa N' }] },
 ]
 
+/* La cassetta del porto. Le frecce sono quattro per tre gesti — dodici
+   tasti — e in fila come i blocchi del cantiere sarebbero un elenco da
+   scorrere: stanno su una riga per gesto (`fila`), ognuno con la sua
+   freccia. Un tasto per freccia resta la regola: la scelta si fa qui,
+   e la riga nasce già con il suo verso, senza un verso di comodo. */
+const quattro = (blocco, parole) => ['su', 'giu', 'sinistra', 'destra'].map(l => ({
+  blocco, [blocco === 'vai' ? 'verso' : 'lato']: l, freccia: FRECCE[l], esempio: `${blocco} ${parole[l]}`,
+}))
+export const GRUPPI_PORTO = [
+  { nome: 'Camminare', fila: true, blocchi: quattro('vai', { su: '↑ su N passi', giu: '↓ giù N passi', sinistra: '← a sinistra N passi', destra: '→ a destra N passi' }) },
+  { nome: 'Prendere di fianco', fila: true, blocchi: quattro('prendi', LATI_PRENDI) },
+  { nome: 'Posare di fianco', fila: true, blocchi: quattro('posa', LATI_POSA) },
+  { nome: 'Ripetere', blocchi: [
+    { blocco: 'ripeti', esempio: 'ripeti N volte' },
+    { blocco: 'finche', esempio: 'ripeti · smetti quando …' },
+    { blocco: 'sempre', esempio: 'ripeti per sempre', nota: 'finché la giornata non finisce' },
+  ] },
+  { nome: 'Aspettare', blocchi: [{ blocco: 'aspetta', esempio: 'aspetta che …', nota: 'intanto il porto lavora' }] },
+  { nome: 'Decidere', blocchi: [{ blocco: 'se', esempio: 'se … allora' }] },
+  { nome: 'Lavagnette', blocchi: [{ blocco: 'assegna', esempio: '[ ] diventa …' }] },
+]
+
 /* le figurine per i progetti, e il nome che suggeriscono */
 export const ICONE_PROGETTI = [
   ['🏛️', 'colonna'], ['🗼', 'torre'], ['🧱', 'muro'], ['🌳', 'albero'], ['🏠', 'casa'],
   ['🪜', 'scala'], ['➖', 'riga'], ['🌉', 'ponte'], ['🔺', 'tetto'], ['⬛', 'quadrato'],
   ['🌸', 'fiore'], ['⭐', 'stella'], ['🚪', 'porta'], ['🏰', 'castello'], ['🔷', 'forma'], ['🎁', 'regalo'],
+  ['🔎', 'cerca'], ['📦', 'carica'], ['🚚', 'consegna'], ['↩️', 'torna'],
 ]
 /* niente «n» fra i nomi proposti: la N è già il numero da scegliere, e
    una lavagnetta con lo stesso nome farebbe due cose diverse con una
    lettera sola */
 export const NOMI_MISURE = ['alta', 'larga', 'lunga', 'quanti', 'lato']
-export const NOMI_LAVAGNETTE = ['h', 'conta', 'quanti', 'l', 'passi']
+export const NOMI_LAVAGNETTE = ['h', 'conta', 'quanti', 'l', 'passi', 'quante', 'colore', 'voglio']
