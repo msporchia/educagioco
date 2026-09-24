@@ -11,17 +11,23 @@
         ordini, e **ogni mossa ingenua ne perde almeno uno** — è questo
         che dice che il livello insegna quello che dichiara;
      5. le modifiche dell'editor non lasciano mai un programma rotto;
-     6. i traguardi scattano.
+     6. i traguardi scattano;
+     7. i progetti servono davvero: dove un livello li insegna, la sua
+        soluzione srotolata — le chiamate sostituite dal corpo — non sta
+        nello zaino, e gli attrezzi entrano chiusi e non si contano.
    `node test/esegui.mjs costruttore` */
 import { COLORI, guastiDeiColori } from '../../src/giochi/costruttore/dati/colori.js'
 import { LIVELLI, CAPITOLI, guastiDeiLivelli } from '../../src/giochi/costruttore/dati/livelli.js'
-import { CAMPAGNA, guastiDellaCampagna, FILE, riordina } from '../../src/giochi/costruttore/dati/campagna.js'
+import { CAMPAGNA, guastiDellaCampagna, FILE, FILA_ATTUALE, riordina } from '../../src/giochi/costruttore/dati/campagna.js'
 import { fai, guarda, confronta, piu, meno, N, tinta, progetto, programma, istruzioni, copia }
   from '../../src/giochi/costruttore/dati/scrivi.js'
 import { Mondo, camminaOmino } from '../../src/giochi/costruttore/motore/mondo.js'
 import { Esecuzione, TETTO_PILA, fraseDi, PERCHE } from '../../src/giochi/costruttore/motore/esecutore.js'
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
 import * as mod from '../../src/giochi/costruttore/motore/modifica.js'
+import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
+import { righeDi, righeScritte, srotola, ciSta } from '../../src/giochi/costruttore/motore/zaino.js'
+import { torre } from '../../src/giochi/costruttore/dati/attrezzi.js'
 import manifesto from '../../src/giochi/costruttore/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -37,8 +43,8 @@ uguale('il «se» arriva subito dopo il cantiere', CAPITOLI[1].chiave, 'guardare
 stessaLista('il porto viene dopo le lavagnette, poi le sfide, e in fondo le giornate del porto',
             CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'sfide', 'giornate'])
 controlla('nel porto almeno quattordici sfide, contando le giornate', LIVELLI.filter(l => l.mondo === 'porto').length >= 14)
-controlla('le giornate stanno in fondo: le stelle di prima non si spostano',
-          LIVELLI.slice(0, FILE[3].length).map(l => l.chiave).join() === FILE[3].join())
+controlla('la fila di adesso è scritta in FILE: chi aggiunge un livello in mezzo alza la versione',
+          LIVELLI.slice(0, FILE[FILA_ATTUALE].length).map(l => l.chiave).join() === FILE[FILA_ATTUALE].join())
 controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un colore',
           CAPITOLI.slice(1).every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
@@ -219,9 +225,12 @@ for (const l of LIVELLI) {
   controlla(`«${l.nome}»: la soluzione vince tutti gli ordini`, s.vinto,
             s.esiti.map((e, i) => `${l.ordini[i].nome}: ${e.esito}${e.errore ? ' — ' + e.errore.frase : ''}`).join(' · '))
 
+  /* una mossa ingenua perde un ordine, o non sta nello zaino: tutte e due
+     vogliono dire che il livello non si vince senza quello che insegna */
   for (const f of l.fragili || []) {
     const r = provaLivello(l, f.programma)
-    controlla(`«${l.nome}»: la mossa «${f.nome}» perde almeno un ordine`, !r.vinto)
+    controlla(`«${l.nome}»: la mossa «${f.nome}» perde almeno un ordine, o non sta nello zaino`,
+              !r.vinto || !ciSta(conAttrezzi(f.programma, l), l.zaino))
   }
   if (l.ordini.length > 1)
     controlla(`«${l.nome}»: con più ordini c'è almeno una mossa ingenua da far perdere`, (l.fragili || []).length > 0)
@@ -229,7 +238,11 @@ for (const l of LIVELLI) {
   /* la soluzione si scrive con la pulsantiera del livello: un blocco
      che il livello non offre è una soluzione che il bambino non può
      scrivere */
-  const usati = new Set([...istruzioni(l.soluzione)].map(i => TIPI_DEI_BLOCCHI[i.tipo]))
+  /* chiamare un attrezzo non vuole «progetti» nella cassetta: gli
+     attrezzi hanno un gruppo loro, anche dove un progetto non si scrive */
+  const attrezzi = new Set((l.attrezzi || []).map(a => a.id))
+  const usati = new Set([...istruzioni(l.soluzione)]
+    .filter(i => !(i.tipo === 'chiama' && attrezzi.has(i.progetto))).map(i => TIPI_DEI_BLOCCHI[i.tipo]))
   const fuori = [...usati].filter(b => !l.cassetta.includes(b))
   controlla(`«${l.nome}»: la soluzione usa solo i blocchi del livello`, fuori.length === 0, fuori.join(', '))
   /* i colori scritti per esteso; quelli per nome (la «tinta» di una
@@ -239,8 +252,20 @@ for (const l of LIVELLI) {
   const posti = new Set([...istruzioni(l.soluzione)].filter(i => i.tipo === 'metti').map(i => i.dove || 'sotto'))
   controlla(`«${l.nome}»: e solo i posti dei mattoni che offre`,
             [...posti].every(q => (l.posti || ['sotto']).includes(q)), [...posti].join(','))
-  if ((l.soluzione.progetti || []).some(p => p.misure.length))
-    controlla(`«${l.nome}»: le misure ci sono se il livello le offre`, l.misure === true || (l.regalo || []).length > 0)
+  const suoi = (l.soluzione.progetti || []).filter(p => !attrezzi.has(p.id))
+  if (suoi.some(p => p.misure.length))
+    controlla(`«${l.nome}»: le misure ci sono se il livello le offre`, l.misure === true)
+
+  /* ── lo zaino, e i progetti che servono davvero ── */
+  const sol = conAttrezzi(l.soluzione, l)
+  if (l.zaino) controlla(`«${l.nome}»: la soluzione sta nello zaino`, ciSta(sol, l.zaino), `${righeScritte(sol)} righe su ${l.zaino}`)
+  if (suoi.length) {
+    const piatta = conAttrezzi(programma(srotola(sol)), l)
+    controlla(`«${l.nome}»: srotolata, la soluzione vince ancora (il conto delle righe è onesto)`, provaLivello(l, piatta).vinto)
+    if (l.capitolo === 'progetti')
+      controlla(`«${l.nome}»: insegna i progetti, e senza non ci sta — ha uno zaino più stretto della soluzione srotolata`,
+                !!l.zaino && righeScritte(piatta) > l.zaino, `srotolata ${righeScritte(piatta)} righe, zaino ${l.zaino}`)
+  }
   const passi = s.esiti.map(e => e.passi)
   nota(`${l.nome}: ${l.ordini.length} ordini, ${passi.join('/')} passi`)
 }
@@ -330,6 +355,28 @@ for (const l of LIVELLI) {
   controlla('ma un colore per nome che non esiste sì', mod.problemi(ignoto).some(g => g.motivo === 'lavagnetta-sconosciuta' && g.nome === 'boh'))
 }
 
+/* ══════════ 5-ter. gli attrezzi e lo zaino ══════════ */
+{
+  const liv = { attrezzi: [torre()] }
+  /* un programma di ieri con una «torre» sua, aperta: l'attrezzo le
+     prende il posto (era un regalo, adesso è chiuso) */
+  const ieri = programma({ progetti: [{ id: 'torre', nome: 'torre', icona: '🗼', misure: ['alta'], corpo: [fai.metti('blu')] }],
+                           principale: [fai.chiama('torre', 3)] })
+  const oggi = conAttrezzi(ieri, liv)
+  uguale('un attrezzo prende il posto del progetto con lo stesso id', oggi.progetti.filter(p => p.id === 'torre').length, 1)
+  controlla('ed è chiuso, con scritto dove lascia il robot', oggi.progetti[0].attrezzo === true && /cima/.test(oggi.progetti[0].finisce))
+  uguale('lo zaino conta le righe del bambino e non quelle degli attrezzi', righeScritte(oggi), 1)
+  uguale('rimettere gli attrezzi due volte non ne raddoppia nessuno', conAttrezzi(oggi, liv).progetti.length, 1)
+  const ids = [...istruzioni(oggi)].map(i => i.id)
+  uguale('le righe degli attrezzi hanno id tutti loro', new Set(ids).size, ids.length)
+  uguale('un blocco conta la testa e quello che ha dentro', righeDi([fai.ripeti(3, [fai.metti('rosso'), fai.vai('destra', 1)])]), 3)
+  const srotolato = srotola(programma({
+    progetti: [progetto('col', { misure: ['alta'] }, [fai.ripeti('alta', [fai.metti('rosso')])])],
+    principale: [fai.chiama('col', 2), fai.chiama('col', piu('h', 1))], lavagnette: ['h'] }))
+  uguale('srotolare mette il corpo al posto della chiamata, con la misura sostituita', srotolato.principale[1].volte.op, '+')
+  uguale('e dei progetti del bambino non resta niente', srotolato.progetti.length, 0)
+}
+
 /* ══════════ 5-bis. quando la fila cambia ordine ══════════ */
 {
   /* un bambino che con la fila di prima aveva vinto il cantiere e i
@@ -350,8 +397,17 @@ for (const l of LIVELLI) {
   const conPorto = riordina(tutti, FILE[2])
   uguale('ogni livello della seconda fila esiste ancora', FILE[2].filter(k => indice(k) < 0).length, 0)
   uguale('le stelle della scacchiera restano alla scacchiera', conPorto.stelle[indice('scacchiera')], 2)
-  uguale('e la tappa si ferma al primo livello del porto', conPorto.tappa, indice('primo-carico'))
+  const nuovo = CAMPAGNA.findIndex(t => !FILE[2].includes(t.chiave))
+  uguale('e la tappa si ferma al primo livello che quella fila non aveva', conPorto.tappa, nuovo)
   controlla('nessuna stella sul porto, che non ha mai giocato', !conPorto.stelle[indice('bottega')])
+
+  /* la cinta, arrivata davanti al bosco: chi aveva finito tutta la fila
+     3 ritrova le stelle dov'erano, e si ferma alla cinta */
+  const fila3 = { tappa: FILE[3].length, stelle: Object.fromEntries(FILE[3].map((_, i) => [i, 2])) }
+  const conCinta = riordina(fila3, FILE[3])
+  uguale('le stelle del bosco restano al bosco anche con la cinta davanti', conCinta.stelle[indice('bosco')], 2)
+  uguale('e la tappa si ferma alla cinta', conCinta.tappa, indice('cinta'))
+  controlla('che non ha stelle', !conCinta.stelle[indice('cinta')])
 }
 
 /* ══════════ 6. i traguardi ══════════ */

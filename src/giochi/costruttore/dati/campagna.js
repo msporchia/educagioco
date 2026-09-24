@@ -55,8 +55,18 @@ export const FILE = {
       'scala', 'piramide', 'candele',
       'primo-carico', 'stiva', 'rosse-e-blu', 'bolla', 'gru', 'nastro', 'smistamento', 'bottega',
       'muro-gemello', 'conta-rossi', 'scacchiera'],
+  /* il 24 settembre 2026 i progetti si imparano usandoli prima di
+     scriverli: «la cinta», con gli attrezzi del capomastro, apre il
+     capitolo davanti al bosco */
+  4: ['primo-muretto', 'torretta', 'muro-lungo', 'quanto-lungo', 'muro-alto', 'torta',
+      'sui-rossi', 'rosso-su-rosso', 'buchi', 'strisce', 'ponte',
+      'cinta', 'bosco', 'tempio', 'castello', 'bandiere', 'villaggio',
+      'scala', 'piramide', 'candele',
+      'primo-carico', 'stiva', 'rosse-e-blu', 'bolla', 'gru', 'nastro', 'smistamento', 'bottega',
+      'muro-gemello', 'conta-rossi', 'scacchiera',
+      'primo-camion', 'postino', 'frigo', 'pesce-fresco', 'due-lavori', 'giornata-porto'],
 }
-export const FILA_ATTUALE = 3
+export const FILA_ATTUALE = 4
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}

@@ -24,6 +24,7 @@
    nel magazzino, e il magazzino è abbastanza grande.
    ═══════════════════════════════════════════════════════════════════ */
 import { fai, guarda, leggi, tinta, progetto, programma } from '../scrivi.js'
+import { cerca as attrezzoCerca } from '../attrezzi.js'
 
 /* il camion sotto il robot: finché c'è, una cassa per volta */
 const carica = (daDove, prima = []) => fai.finche(guarda('giu', 'camion', false), [...prima, fai.prendi(daDove), fai.posa('giu')])
@@ -277,7 +278,7 @@ export const GIORNATE = [
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'pausa', 'sempre', 'assegna', 'progetti'],
     colori: ['rosso', 'arancio', 'giallo', 'verde', 'blu', 'viola'],
     cose: ['camion', 'cliente', 'bancone', 'cassa', 'niente', 'libero'], leggere: true, misure: true,
-    regalo: [cerca()],
+    attrezzi: [attrezzoCerca()],
     ...consigli([
       'Dallo stesso posto arrivano due lavori: i camion da caricare sotto, i clienti al bancone a sinistra. Se ne fai uno solo, l\'altro aspetta finché si stufa.',
       'A ogni giro chiediti: c\'è qualcuno che aspetta? Chi? E se non c\'è nessuno, cosa fa il robot perché il tempo passi?',

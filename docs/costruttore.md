@@ -57,13 +57,36 @@ Il primo ordine si gioca alla velocità scelta; se regge, gli altri si giocano
 a schermo, accelerati. Niente par e niente tetto alle righe: vale il
 programma che funziona.
 
+## Gli attrezzi, e le righe contate
+
+Un progetto non serve perché il racconto lo chiede: serve quando senza
+non ci si sta. Due pezzi del gioco lo rendono vero.
+
+- **Gli attrezzi del capomastro** 🔒: progetti già scritti, quasi sempre
+  cose che il bambino ha costruito in un livello prima — la torre della
+  torretta, il muro del muro lungo, l'albero del bosco. Si chiamano dalla
+  cassetta con le loro misure, si aprono per leggerli e non si cambiano, e
+  sotto il nome dicono **dove lasciano il robot** («finisce in cima alla
+  torre»): la riga dopo comincia da lì. Il capitolo dei progetti comincia
+  così, usando una funzione prima di scriverne una.
+- **Le righe contate** 📝: in certi livelli il programma sta in un numero
+  di righe (gli attrezzi non si contano). Tre alberi scritti a mano non ci
+  stanno; scritti una volta in un progetto e chiamati tre volte sì. Non è un
+  punteggio — meno righe non vale di più — è il vincolo che fa scoprire a
+  cosa serve un progetto. Le prove automatiche pretendono che in ogni
+  livello dei progetti la soluzione **srotolata**, con le chiamate
+  sostituite dal loro corpo, non ci stia.
+
+Nell'editor c'è anche **↶ annulla**, dieci passi indietro: una riga tolta
+per sbaglio, col blocco e tutto quello che aveva dentro, torna com'era.
+
 ## I capitoli
 
 | capitolo | cosa si impara |
 |---|---|
 | 🧱 Il cantiere | mettere e camminare, salire sui propri mattoni, **ripeti N volte**, la misura dell'ordine, ripeti dentro ripeti, tanti colori in una colonna (la torta) |
 | 👀 Guardare e decidere | **se** c'è un mattone rosso (i nidi), **se… altrimenti** (il mosaico), i buchi nel muro, il mattone di prima (le strisce), **ripeti finché** (il ponte) |
-| 📐 I progetti | un **progetto** (una funzione), con **una misura**, con **due**, con una misura che è **un colore** (le bandiere), e **progetti fatti di progetti** (il villaggio) |
+| 📐 I progetti | **chiamare gli attrezzi** e sapere dove lasciano il robot (la cinta), il **primo progetto** tuo quando a mano non ci sta (il bosco), con **una misura**, con **due**, con una misura che è **un colore** (le bandiere), e **progetti fatti di progetti** (il villaggio) |
 | 📝 Le lavagnette | una **variabile** che cresce (la scala), una che cala (la piramide), una che conta alla rovescia (le candeline) |
 | ⚓ Il porto | la seconda parte, vista dall'alto: **leggere**, **aspettare**, **ripetere per sempre**, cercare — mentre il mondo lavora da solo (vedi sotto) |
 | 🏆 Le sfide | **contare** camminando (il muro gemello), contare quello che si vede (conta i rossi), e **un se dentro un se** (la scacchiera) |

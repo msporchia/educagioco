@@ -24,8 +24,13 @@
                            ↓ sotto i piedi; i lati (↘ ↙) nei livelli che
                            li chiedono — il bosco, il ponte
      misure                se i progetti possono avere misure
-     regalo                progetti già scritti che il livello dà in
-                           mano (si possono aprire e cambiare)
+     attrezzi              progetti già scritti e chiusi, quasi sempre
+                           cose che il bambino ha costruito in un livello
+                           prima (`dati/attrezzi.js`): si chiamano, si
+                           leggono, non si cambiano, e lo zaino non li conta
+     zaino                 quante righe può scrivere il bambino (vedi
+                           `motore/zaino.js`): dove c'è, il lavoro scritto
+                           riga per riga non ci sta, e il banco lo pretende
      ragiona               due frasi gratis, che fanno pensare invece di
                            suggerire: la prima dice cosa chiede il
                            livello e cosa lo rende difficile, la seconda
@@ -67,6 +72,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { fai, guarda, piu, meno, tinta, progetto, programma, POSTI } from './scrivi.js'
 import { CHIAVI_COLORI } from './colori.js'
+import { torre, muro, albero, colonna, riga, guastiDegliAttrezzi } from './attrezzi.js'
 import { LIVELLI_PORTO } from './porto/livelli.js'
 import { GIORNATE } from './porto/giornate.js'
 
@@ -93,21 +99,11 @@ export const CAPITOLI = [
 
 const CAPOMASTRO = { emoji: '👷', nome: 'Il capomastro' }
 
-/* ── i progetti che i livelli regalano già scritti ──
-   Sono gli stessi che il bambino ha scritto qualche livello prima: il
-   regalo toglie la fatica di riscriverli, non la lezione — la lezione
-   del livello è un'altra, e un progetto da rifare distrarrebbe da lei.
-   Col robot che cade, una colonna è solo «metti, metti, metti»: a
-   riportarlo giù ci pensa il passo dopo. */
-const colonna = colore => progetto('colonna', { nome: 'colonna', icona: '🏛️', misure: ['alta'] }, [
-  fai.ripeti('alta', [fai.metti(colore)]),
-])
-/* la riga torna indietro camminandoci sopra: finisce sul suo primo
-   mattone, e il piano dopo comincia da lì */
-const riga = colore => progetto('riga', { nome: 'riga', icona: '➖', misure: ['lunga'] }, [
-  fai.ripeti('lunga', [fai.metti(colore), fai.vai('destra', 1)]),
-  fai.vai('sinistra', 'lunga'),
-])
+/* Gli attrezzi — la torre della torretta, la colonna del muro alto, la
+   riga che torna al primo mattone — stanno in `dati/attrezzi.js`: sono
+   gli stessi in tutti i livelli che li danno, e un livello li elenca in
+   `attrezzi`. La lezione del livello è un'altra, e un pezzo da rifare
+   distrarrebbe da lei. */
 
 const DEL_CANTIERE = [
   /* ═══════════ 1. IL CANTIERE ═══════════ */
@@ -581,43 +577,109 @@ const DEL_CANTIERE = [
         fai.ripeti(6, [fai.metti('marrone', 'giu-destra'), fai.vai('destra', 1)])] }) },
     ],
   },
-  /* ═══════════ 3. I PROGETTI ═══════════ */
+  /* ═══════════ 3. I PROGETTI ═══════════
+     Prima si usano, poi si scrivono. Il capitolo comincia con gli
+     attrezzi del capomastro — la torre della torretta, il muro del muro
+     lungo, già scritti — e il bambino impara a chiamarli con le misure
+     dell'ordine e a sapere dove lasciano il robot. Poi il suo primo
+     progetto, dove lo zaino lo rende necessario: tre alberi scritti a
+     mano non ci stanno. Poi le misure, e infine una casa fatta di pezzi
+     che si ripetono. Ogni livello ha il suo `zaino`, e il banco pretende
+     che la soluzione srotolata — le chiamate sostituite dal corpo del
+     progetto — non ci stia: se ci sta, il progetto era un di più. */
   {
-    chiave: 'bosco', nome: 'Il bosco', icona: '🌳', capitolo: 'progetti',
-    impara: 'un progetto', portata: 70, premio: 15,
-    chi: { emoji: '🧚', nome: 'La guardiana del bosco' },
-    racconto: 'Piantami gli alberi: tutti uguali, quanti ne dice «alberi». Un albero si scrive una volta sola: fanne un progetto, e chiamalo.',
+    chiave: 'cinta', nome: 'La cinta', icona: '🏯', capitolo: 'progetti',
+    impara: 'chiamare un attrezzo', portata: 69, premio: 12,
+    chi: { emoji: '🤴', nome: 'Il barone' },
+    racconto: 'Voglio la cinta del castello: tre torri alte «torri», e fra una torre e l\'altra un muro lungo «muro». I mattoni li mettono gli attrezzi del capomastro: tu dici quale, dove e quanto.',
     prova: 'disegno',
     ordini: [
-      { nome: '3 alberi', lavagnette: { alberi: 3 }, robot: [2, 5], mappa: [
+      { nome: 'torri 3 · muro 2', lavagnette: { torri: 3, muro: 2 }, robot: [1, 6], mappa: [
+        '............',
+        '............',
+        '............',
+        '............',
+        '.g..g..g....',
+        '.r..r..r....',
+        '.rrrrrrr....',
+        '############',
+      ] },
+      { nome: 'torri 5 · muro 3', lavagnette: { torri: 5, muro: 3 }, robot: [1, 6], mappa: [
+        '............',
+        '............',
+        '.g...g...g..',
+        '.r...r...r..',
+        '.r...r...r..',
+        '.r...r...r..',
+        '.rrrrrrrrr..',
+        '############',
+      ] },
+    ],
+    /* niente «metti»: qui si costruisce solo con gli attrezzi */
+    cassetta: ['vai', 'ripeti'], colori: ['rosso', 'giallo'],
+    attrezzi: [torre(), muro()],
+    ragiona: [
+      'Qui i mattoni non li metti tu: la torre e il muro sono attrezzi già scritti, e costruiscono da soli. Tu decidi quale chiamare, con quali misure — e da dove parte il robot, perché ogni attrezzo, finito il lavoro, lo lascia in un posto preciso.',
+      'Chiama una torre e premi ▶: dove resta il robot quando la torre è finita? E il muro, che mette il primo mattone sotto i piedi del robot, da lì dove lo metterebbe?',
+    ],
+    indizi: [
+      'La torre lascia il robot in cima: un passo a destra, e il robot scende da solo accanto alla torre, dove comincia il muro.',
+      'Il muro invece lascia il robot a terra subito dopo l\'ultimo mattone: proprio dove va la torre dopo.',
+      'Ripeti 2 volte: torre «torri», un passo a destra, muro «muro». E in fondo l\'ultima torre.',
+    ],
+    soluzione: programma({ principale: [
+      fai.ripeti(2, [fai.chiama('torre', 'torri'), fai.vai('destra', 1), fai.chiama('muro', 'muro')]),
+      fai.chiama('torre', 'torri'),
+    ] }),
+    fragili: [
+      /* la falsa pista: il muro parte dalla cima della torre, e il primo
+         mattone finisce sopra il giallo */
+      { nome: 'senza il passo dopo la torre', programma: programma({ principale: [
+        fai.ripeti(2, [fai.chiama('torre', 'torri'), fai.chiama('muro', 'muro')]), fai.chiama('torre', 'torri')] }) },
+      { nome: 'le misure del primo barone', programma: programma({ principale: [
+        fai.ripeti(2, [fai.chiama('torre', 3), fai.vai('destra', 1), fai.chiama('muro', 2)]), fai.chiama('torre', 3)] }) },
+    ],
+  },
+  {
+    chiave: 'bosco', nome: 'Il bosco', icona: '🌳', capitolo: 'progetti',
+    impara: 'un progetto tuo', portata: 70, premio: 15,
+    chi: { emoji: '🧚', nome: 'La guardiana del bosco' },
+    racconto: 'Piantami tre alberi, come nel disegno: due vicini, poi la torre di guardia alta «torre», e un altro albero. La torre è un attrezzo del capomastro. L\'albero no: quello lo scrivi tu, una volta sola.',
+    prova: 'disegno',
+    ordini: [
+      { nome: 'la torre bassa', lavagnette: { torre: 4 }, robot: [2, 6], mappa: [
         '...............',
         '...............',
-        '..v...v...v....',
-        '.vvv.vvv.vvv...',
-        '..m...m...m....',
-        '..m...m...m....',
+        '...............',
+        '..v...v..g..v..',
+        '.vvv.vvv.r.vvv.',
+        '..m...m..r..m..',
+        '..m...m..r..m..',
         '###############',
       ] },
-      { nome: '2 alberi', lavagnette: { alberi: 2 }, robot: [2, 5], mappa: [
+      { nome: 'la torre alta', lavagnette: { torre: 6 }, robot: [2, 6], mappa: [
         '...............',
-        '...............',
-        '..v...v........',
-        '.vvv.vvv.......',
-        '..m...m........',
-        '..m...m........',
+        '.........g.....',
+        '.........r.....',
+        '..v...v..r..v..',
+        '.vvv.vvv.r.vvv.',
+        '..m...m..r..m..',
+        '..m...m..r..m..',
         '###############',
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['marrone', 'verde'],
     posti: ['sotto', 'giu-destra', 'giu-sinistra'],
+    attrezzi: [torre()],
+    zaino: 14,
     ragiona: [
-      'Gli alberi sono tutti uguali, ma quanti sono cambia: 3 in un ordine, 2 nell\'altro. E un albero è già un lavoro lungo: il tronco, e una chioma che sporge ai lati, dove il robot non ha i piedi.',
-      'Costruisci un albero solo, e fallo girare: dove finisce il robot? Da lì, quanti passi mancano al tronco del prossimo albero, e cosa va ripetuto?',
+      'Tre alberi uguali, ma non in fila: fra il secondo e il terzo c\'è la torre. E qui il programma sta in 14 righe, mentre un albero scritto a mano ne prende sei.',
+      'La torre non l\'hai dovuta riscrivere: è un attrezzo, lo chiami col suo nome. Potresti fare lo stesso con l\'albero?',
     ],
     indizi: [
-      'Tocca «＋ progetto», chiamalo «albero» e scrivici dentro un albero solo: il tronco sono due mattoni sotto i piedi.',
-      'La chioma: un mattone sotto i piedi, poi uno ↙ in basso a sinistra e uno ↘ in basso a destra — dove andrebbero i piedi — e in cima un altro sotto i piedi.',
-      'Poi nel programma principale: ripeti «alberi» volte — l\'albero, e quattro passi a destra.',
+      'Tocca «＋ progetto» e chiamalo «albero»: dentro ci scrivi un albero solo, una volta per tutte.',
+      'L\'albero: due mattoni marroni sotto i piedi, poi un verde, uno ↙ e uno ↘ in basso ai lati, e in cima un altro verde.',
+      'Nel principale: albero, 4 passi a destra, albero, 3 passi, torre «torre», 3 passi, albero.',
     ],
     soluzione: programma({
       progetti: [progetto('albero', { nome: 'albero', icona: '🌳' }, [
@@ -625,61 +687,73 @@ const DEL_CANTIERE = [
         fai.metti('verde'), fai.metti('verde', 'giu-sinistra'), fai.metti('verde', 'giu-destra'),
         fai.metti('verde'),
       ])],
-      principale: [fai.ripeti('alberi', [fai.chiama('albero'), fai.vai('destra', 4)])],
+      principale: [
+        fai.chiama('albero'), fai.vai('destra', 4), fai.chiama('albero'), fai.vai('destra', 3),
+        fai.chiama('torre', 'torre'), fai.vai('destra', 3), fai.chiama('albero'),
+      ],
     }),
     fragili: [
       { nome: 'la chioma senza i lati', programma: programma({
         progetti: [progetto('albero', { nome: 'albero', icona: '🌳' }, [
           fai.metti('marrone'), fai.metti('marrone'), fai.metti('verde'), fai.metti('verde')])],
-        principale: [fai.ripeti('alberi', [fai.chiama('albero'), fai.vai('destra', 4)])] }) },
-      { nome: 'sempre tre alberi', programma: programma({
+        principale: [
+          fai.chiama('albero'), fai.vai('destra', 4), fai.chiama('albero'), fai.vai('destra', 3),
+          fai.chiama('torre', 'torre'), fai.vai('destra', 3), fai.chiama('albero')] }) },
+      { nome: 'la torre del primo giorno', programma: programma({
         progetti: [progetto('albero', { nome: 'albero', icona: '🌳' }, [
           fai.metti('marrone'), fai.metti('marrone'),
           fai.metti('verde'), fai.metti('verde', 'giu-sinistra'), fai.metti('verde', 'giu-destra'),
           fai.metti('verde')])],
-        principale: [fai.ripeti(3, [fai.chiama('albero'), fai.vai('destra', 4)])] }) },
+        principale: [
+          fai.chiama('albero'), fai.vai('destra', 4), fai.chiama('albero'), fai.vai('destra', 3),
+          fai.chiama('torre', 4), fai.vai('destra', 3), fai.chiama('albero')] }) },
     ],
   },
   {
     chiave: 'tempio', nome: 'Il tempio', icona: '🏛️', capitolo: 'progetti',
     impara: 'un progetto con una misura', portata: 71, premio: 15,
     chi: { emoji: '🧝', nome: 'La sacerdotessa' },
-    racconto: 'Il tempio vuole tre colonne, alte quanto dicono «prima», «seconda» e «terza». Tre colonne, un progetto solo: dagli una misura, «alta».',
+    racconto: 'Il tempio vuole tre colonne: ognuna con la base grigia, il fusto bianco e il capitello giallo in cima. I fusti sono alti quanto dicono «prima», «seconda» e «terza». Tre colonne, un progetto solo: dagli una misura, «alta».',
     prova: 'disegno',
     ordini: [
-      { nome: '2 · 4 · 3', lavagnette: { prima: 2, seconda: 4, terza: 3 }, robot: [1, 6], mappa: [
+      { nome: '2 · 4 · 3', lavagnette: { prima: 2, seconda: 4, terza: 3 }, robot: [1, 7], mappa: [
         '........',
         '........',
-        '........',
-        '...w....',
-        '...w.w..',
+        '...g....',
+        '...w.g..',
+        '.g.w.w..',
         '.w.w.w..',
         '.w.w.w..',
+        '.k.k.k..',
         '########',
       ] },
-      { nome: '5 · 1 · 3', lavagnette: { prima: 5, seconda: 1, terza: 3 }, robot: [1, 6], mappa: [
+      { nome: '5 · 1 · 3', lavagnette: { prima: 5, seconda: 1, terza: 3 }, robot: [1, 7], mappa: [
         '........',
-        '........',
+        '.g......',
         '.w......',
-        '.w......',
+        '.w...g..',
         '.w...w..',
-        '.w...w..',
+        '.w.g.w..',
         '.w.w.w..',
+        '.k.k.k..',
         '########',
       ] },
     ],
-    cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['bianco'], misure: true,
+    cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['grigio', 'bianco', 'giallo'], misure: true,
+    zaino: 10,
     ragiona: [
-      'Le colonne del tempio sono alte diverse, e le altezze cambiano da un ordine all\'altro: 2, 4 e 3, poi 5, 1 e 3. Il progetto è uno solo, e deve saperle fare tutte.',
-      'Quando chiami la colonna, come fa il progetto a sapere quanto deve venire alta proprio questa? Chi lo decide: il progetto, o chi lo chiama?',
+      'Le tre colonne sono fatte allo stesso modo, ma i fusti sono alti diversi, e le altezze cambiano da un tempio all\'altro: 2, 4 e 3, poi 5, 1 e 3. E il programma sta in 10 righe.',
+      'Quando chiami la colonna, come fa il progetto a sapere quanto deve venire alto il fusto proprio questa volta? Chi lo decide: il progetto, o chi lo chiama?',
     ],
     indizi: [
-      'Crea il progetto «colonna» e dagli una misura: «alta». Dentro, al posto di N, usa «alta».',
-      'Una colonna è: ripeti «alta» volte, metti un mattone sotto i piedi. A scenderne ci pensa il passo dopo.',
-      'Nel programma principale la colonna si chiama tre volte, ognuna con la sua misura — «prima», «seconda», «terza» — e fra una e l\'altra due passi a destra.',
+      'Crea il progetto «colonna» e dagli una misura: «alta». È il numero che il progetto riceve ogni volta che lo chiami.',
+      'Dentro: un mattone grigio, poi ripeti «alta» volte un mattone bianco, e in cima il giallo. A scendere ci pensa il passo dopo.',
+      'Nel principale la colonna si chiama tre volte, con «prima», «seconda» e «terza», e fra una e l\'altra due passi a destra.',
     ],
     soluzione: programma({
-      progetti: [colonna('bianco')],
+      progetti: [progetto('colonna', { nome: 'colonna', icona: '🏛️', misure: ['alta'] }, [
+        fai.metti('grigio'), fai.ripeti('alta', [fai.metti('bianco')]), fai.metti('giallo'),
+      ])],
       principale: [
         fai.chiama('colonna', 'prima'), fai.vai('destra', 2),
         fai.chiama('colonna', 'seconda'), fai.vai('destra', 2),
@@ -688,13 +762,15 @@ const DEL_CANTIERE = [
     }),
     fragili: [
       { nome: 'colonne attaccate', programma: programma({
-        progetti: [colonna('bianco')],
+        progetti: [progetto('colonna', { nome: 'colonna', icona: '🏛️', misure: ['alta'] }, [
+          fai.metti('grigio'), fai.ripeti('alta', [fai.metti('bianco')]), fai.metti('giallo')])],
         principale: [
           fai.chiama('colonna', 'prima'), fai.vai('destra', 1),
           fai.chiama('colonna', 'seconda'), fai.vai('destra', 1),
           fai.chiama('colonna', 'terza')] }) },
       { nome: 'le altezze del primo tempio', programma: programma({
-        progetti: [colonna('bianco')],
+        progetti: [progetto('colonna', { nome: 'colonna', icona: '🏛️', misure: ['alta'] }, [
+          fai.metti('grigio'), fai.ripeti('alta', [fai.metti('bianco')]), fai.metti('giallo')])],
         principale: [
           fai.chiama('colonna', 2), fai.vai('destra', 2),
           fai.chiama('colonna', 4), fai.vai('destra', 2),
@@ -732,8 +808,9 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['grigio'], misure: true,
+    zaino: 9,
     ragiona: [
-      'Il re vuole due torri e un muro, e le misure cambiano da un ordine all\'altro: torri alte 5 o 6, muro largo 4 o 6. Scritti uno per uno, sono tre pezzi di programma quasi uguali.',
+      'Il re vuole due torri e un muro, e le misure cambiano da un ordine all\'altro: torri alte 5 o 6, muro largo 4 o 6. Scritti uno per uno sono tre pezzi quasi uguali, e qui il programma sta in 9 righe.',
       'Guarda i tre pezzi uno accanto all\'altro: che forma hanno? Cosa cambia da un pezzo all\'altro, e quanti numeri servono per dire com\'è fatto ognuno?',
     ],
     indizi: [
@@ -798,8 +875,9 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['verde', 'bianco', 'rosso', 'blu', 'arancio'], misure: true,
+    zaino: 9,
     ragiona: [
-      'Italia, Francia, Irlanda: le bande hanno sempre la stessa forma, e cambiano solo i colori. Il programma è uno, e i colori non li sa finché non arriva il paese.',
+      'Italia, Francia, Irlanda: le bande hanno sempre la stessa forma, e cambiano solo i colori. Il programma è uno, sta in 9 righe, e i colori non li sa finché non arriva il paese.',
       'Dentro il progetto della banda, i mattoni di che colore li metti, se il colore giusto ancora non lo sai? E chi lo sa, quando la banda viene chiamata?',
     ],
     indizi: [
@@ -824,65 +902,76 @@ const DEL_CANTIERE = [
     chiave: 'villaggio', nome: 'Il villaggio', icona: '🏘️', capitolo: 'progetti',
     impara: 'progetti fatti di progetti', portata: 76, premio: 20,
     chi: { emoji: '🧓', nome: 'Il sindaco' },
-    racconto: 'Il villaggio vuole «case» case, tutte uguali: muri rossi, la porta marrone, il tetto arancio con la punta. Una casa è fatta di pareti: prima il progetto della parete, poi quello della casa.',
+    racconto: 'Il villaggio vuole due case uguali, e in mezzo un albero — quello del bosco, già pronto. Le case hanno i muri rossi, due finestre gialle, la porta marrone e il tetto del colore che dice «tetto», con la punta sopra la porta.',
     prova: 'disegno',
     ordini: [
-      { nome: '3 case', lavagnette: { case: 3 }, robot: [1, 5], mappa: [
-        '..............',
-        '..............',
-        '..a...a...a...',
-        '.aaa.aaa.aaa..',
-        '.rrr.rrr.rrr..',
-        '.rmr.rmr.rmr..',
-        '##############',
+      { nome: 'i tetti arancio', lavagnette: { tetto: 'arancio' }, robot: [1, 6], mappa: [
+        '.................',
+        '.................',
+        '...a.........a...',
+        '.aaaaa..v..aaaaa.',
+        '.rrrrr.vvv.rrrrr.',
+        '.rgmgr..m..rgmgr.',
+        '.rrmrr..m..rrmrr.',
+        '#################',
       ] },
-      { nome: '2 case', lavagnette: { case: 2 }, robot: [1, 5], mappa: [
-        '..............',
-        '..............',
-        '..a...a.......',
-        '.aaa.aaa......',
-        '.rrr.rrr......',
-        '.rmr.rmr......',
-        '##############',
+      { nome: 'i tetti viola', lavagnette: { tetto: 'viola' }, robot: [1, 6], mappa: [
+        '.................',
+        '.................',
+        '...l.........l...',
+        '.lllll..v..lllll.',
+        '.rrrrr.vvv.rrrrr.',
+        '.rgmgr..m..rgmgr.',
+        '.rrmrr..m..rrmrr.',
+        '#################',
       ] },
     ],
-    cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['rosso', 'marrone', 'arancio'],
+    cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['rosso', 'giallo', 'marrone'],
+    attrezzi: [albero()],
+    /* 28 e non di più: la casa tutta in un progetto solo, anche stretta
+       coi ripeti, ne vuole 29 (è la mossa ingenua qui sotto) */
+    zaino: 28,
     ragiona: [
-      'Case tutte uguali, 3 in un ordine e 2 nell\'altro, con un vicolo vuoto in mezzo. E una casa da sola è già tre colonne di colori: a scriverla tutta ogni volta non si finisce più.',
-      'Smonta una casa colonna per colonna, dal basso in su: quali sono uguali? Un pezzo che torna due volte, quante volte vuoi scriverlo?',
+      'Due case uguali e un albero, che è già scritto. Ma una casa sola, scritta a mano, sono venticinque righe, e qui il programma ne tiene 28 in tutto: nemmeno un progetto «casa» scritto tutto di fila ci sta.',
+      'Guarda una casa colonna per colonna, dal basso in su: quante colonne sono uguali fra loro? E un progetto, dentro, può chiamare un altro progetto?',
     ],
     indizi: [
-      'Una casa ha tre colonne: due pareti uguali (rosso, rosso, arancio) e quella di mezzo, marrone, rosso, arancio, arancio: la porta e la punta del tetto.',
-      'Fai il progetto «parete», poi il progetto «casa» che chiama «parete» due volte: un progetto può chiamarne un altro.',
-      'Nel programma principale: ripeti «case» volte la casa. Fra una casa e l\'altra resta una colonna vuota: due passi a destra, non uno.',
+      'Le colonne della casa sono di tre tipi: la parete ai lati, la finestra, e la porta in mezzo, con la punta del tetto.',
+      'Fai un progetto per la parete e uno per la finestra, e la casa li chiama: parete, un passo, finestra, un passo, porta, un passo, finestra, un passo, parete, un passo.',
+      'Il tetto è del colore che dice «tetto»: nei mattoni del tetto, al posto di un colore scritto, scegli 🔒 tetto. Nel principale: casa, 2 passi, albero, 3 passi, casa.',
     ],
     soluzione: programma({
       progetti: [
-        progetto('parete', { nome: 'parete', icona: '🧱' }, [fai.metti('rosso'), fai.metti('rosso'), fai.metti('arancio')]),
-        progetto('mezzo', { nome: 'mezzo', icona: '🚪' }, [fai.metti('marrone'), fai.metti('rosso'), fai.metti('arancio'), fai.metti('arancio')]),
+        progetto('parete', { nome: 'parete', icona: '🧱' }, [fai.metti('rosso'), fai.metti('rosso'), fai.metti('rosso'), fai.metti(tinta('tetto'))]),
+        progetto('finestra', { nome: 'finestra', icona: '🪟' }, [fai.metti('rosso'), fai.metti('giallo'), fai.metti('rosso'), fai.metti(tinta('tetto'))]),
         progetto('casa', { nome: 'casa', icona: '🏠' }, [
-          fai.chiama('parete'), fai.vai('destra', 1), fai.chiama('mezzo'), fai.vai('destra', 1),
-          fai.chiama('parete'), fai.vai('destra', 2)]),
+          fai.chiama('parete'), fai.vai('destra', 1), fai.chiama('finestra'), fai.vai('destra', 1),
+          fai.metti('marrone'), fai.metti('marrone'), fai.metti('rosso'), fai.metti(tinta('tetto')), fai.metti(tinta('tetto')),
+          fai.vai('destra', 1), fai.chiama('finestra'), fai.vai('destra', 1), fai.chiama('parete'), fai.vai('destra', 1)]),
       ],
-      principale: [fai.ripeti('case', [fai.chiama('casa')])],
+      principale: [fai.chiama('casa'), fai.vai('destra', 2), fai.chiama('albero'), fai.vai('destra', 3), fai.chiama('casa')],
     }),
     fragili: [
-      { nome: 'sempre tre case', programma: programma({
+      { nome: 'sempre il tetto arancio', programma: programma({
         progetti: [
-          progetto('parete', { nome: 'parete', icona: '🧱' }, [fai.metti('rosso'), fai.metti('rosso'), fai.metti('arancio')]),
-          progetto('mezzo', { nome: 'mezzo', icona: '🚪' }, [fai.metti('marrone'), fai.metti('rosso'), fai.metti('arancio'), fai.metti('arancio')]),
+          progetto('parete', { nome: 'parete', icona: '🧱' }, [fai.metti('rosso'), fai.metti('rosso'), fai.metti('rosso'), fai.metti('arancio')]),
+          progetto('finestra', { nome: 'finestra', icona: '🪟' }, [fai.metti('rosso'), fai.metti('giallo'), fai.metti('rosso'), fai.metti('arancio')]),
           progetto('casa', { nome: 'casa', icona: '🏠' }, [
-            fai.chiama('parete'), fai.vai('destra', 1), fai.chiama('mezzo'), fai.vai('destra', 1),
-            fai.chiama('parete'), fai.vai('destra', 2)])],
-        principale: [fai.ripeti(3, [fai.chiama('casa')])] }) },
-      { nome: 'le case attaccate', programma: programma({
-        progetti: [
-          progetto('parete', { nome: 'parete', icona: '🧱' }, [fai.metti('rosso'), fai.metti('rosso'), fai.metti('arancio')]),
-          progetto('mezzo', { nome: 'mezzo', icona: '🚪' }, [fai.metti('marrone'), fai.metti('rosso'), fai.metti('arancio'), fai.metti('arancio')]),
-          progetto('casa', { nome: 'casa', icona: '🏠' }, [
-            fai.chiama('parete'), fai.vai('destra', 1), fai.chiama('mezzo'), fai.vai('destra', 1),
-            fai.chiama('parete'), fai.vai('destra', 1)])],
-        principale: [fai.ripeti('case', [fai.chiama('casa')])] }) },
+            fai.chiama('parete'), fai.vai('destra', 1), fai.chiama('finestra'), fai.vai('destra', 1),
+            fai.metti('marrone'), fai.metti('marrone'), fai.metti('rosso'), fai.metti('arancio'), fai.metti('arancio'),
+            fai.vai('destra', 1), fai.chiama('finestra'), fai.vai('destra', 1), fai.chiama('parete'), fai.vai('destra', 1)])],
+        principale: [fai.chiama('casa'), fai.vai('destra', 2), fai.chiama('albero'), fai.vai('destra', 3), fai.chiama('casa')] }) },
+      /* la casa fatta tutta in un progetto solo, stretta coi ripeti: vince
+         il disegno, ma non sta nello zaino — ed è lì che si scopre che
+         anche un progetto può chiamarne un altro */
+      { nome: 'la casa in un progetto solo', programma: programma({
+        progetti: [progetto('casa', { nome: 'casa', icona: '🏠' }, [
+          fai.ripeti(3, [fai.metti('rosso')]), fai.metti(tinta('tetto')), fai.vai('destra', 1),
+          fai.metti('rosso'), fai.metti('giallo'), fai.metti('rosso'), fai.metti(tinta('tetto')), fai.vai('destra', 1),
+          fai.metti('marrone'), fai.metti('marrone'), fai.metti('rosso'), fai.metti(tinta('tetto')), fai.metti(tinta('tetto')), fai.vai('destra', 1),
+          fai.metti('rosso'), fai.metti('giallo'), fai.metti('rosso'), fai.metti(tinta('tetto')), fai.vai('destra', 1),
+          fai.ripeti(3, [fai.metti('rosso')]), fai.metti(tinta('tetto')), fai.vai('destra', 1)])],
+        principale: [fai.chiama('casa'), fai.vai('destra', 2), fai.chiama('albero'), fai.vai('destra', 3), fai.chiama('casa')] }) },
     ],
   },
   /* ═══════════ 4. LE LAVAGNETTE ═══════════ */
@@ -917,19 +1006,18 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti', 'assegna'], colori: ['giallo'], misure: true,
-    regalo: [colonna('giallo')],
+    attrezzi: [colonna('giallo')],
     ragiona: [
       'Visto che i gradini salgono, nessuna colonna è uguale a un\'altra. Però un «ripeti» rifà sempre le stesse righe, e i gradini sono 3 in un ordine e 5 nell\'altro.',
       'Scrivila a mano per 3 gradini, e guarda le righe: cosa cambia da una all\'altra? Quel numero che cambia, dove lo puoi tenere mentre il robot lavora?',
     ],
     indizi: [
-      'La colonna c\'è già: è il tuo progetto del tempio. Il primo gradino è una colonna alta 1, il secondo alta 2: quel numero lo tiene una lavagnetta.',
+      'La colonna c\'è già: è l\'attrezzo che la costruisce, alta quanto le dici. Il primo gradino è una colonna alta 1, il secondo alta 2: quel numero lo tiene una lavagnetta.',
       'Crea una lavagnetta, per esempio «h»: all\'inizio «h diventa 1», e dopo ogni gradino «h diventa h + 1».',
       'Ripeti «gradini» volte: colonna alta «h», un passo a destra, h diventa h + 1.',
     ],
     soluzione: programma({
       lavagnette: ['h'],
-      progetti: [colonna('giallo')],
       principale: [
         fai.assegna('h', 1),
         fai.ripeti('gradini', [fai.chiama('colonna', 'h'), fai.vai('destra', 1), fai.assegna('h', piu('h', 1))]),
@@ -937,12 +1025,11 @@ const DEL_CANTIERE = [
     }),
     fragili: [
       { nome: 'la scala del primo ordine, a mano', programma: programma({
-        progetti: [colonna('giallo')],
         principale: [
           fai.chiama('colonna', 1), fai.vai('destra', 1), fai.chiama('colonna', 2), fai.vai('destra', 1),
           fai.chiama('colonna', 3)] }) },
       { nome: 'h non cresce mai', programma: programma({
-        lavagnette: ['h'], progetti: [colonna('giallo')],
+        lavagnette: ['h'],
         principale: [
           fai.assegna('h', 1),
           fai.ripeti('gradini', [fai.chiama('colonna', 'h'), fai.vai('destra', 1)])] }) },
@@ -975,7 +1062,7 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti', 'assegna'], colori: ['arancio'], misure: true,
-    regalo: [riga('arancio')],
+    attrezzi: [riga('arancio')],
     ragiona: [
       'Da un piano all\'altro la riga si accorcia, e la base cambia: 5 in un ordine, 7 nell\'altro. La lunghezza giusta cambia mentre il robot lavora, e ogni piano comincia un po\' più in là.',
       'Metti in fila le lunghezze dei piani: 5, 3, 1. Da dove parte quel numero, e cosa gli succede a ogni piano? E il piano dopo, da quale mattone comincia?',
@@ -987,7 +1074,6 @@ const DEL_CANTIERE = [
     ],
     soluzione: programma({
       lavagnette: ['l'],
-      progetti: [riga('arancio')],
       principale: [
         fai.assegna('l', 'base'),
         fai.ripeti('piani', [fai.chiama('riga', 'l'), fai.vai('destra', 1), fai.assegna('l', meno('l', 2))]),
@@ -995,12 +1081,11 @@ const DEL_CANTIERE = [
     }),
     fragili: [
       { nome: 'la piramide del primo ordine, a mano', programma: programma({
-        progetti: [riga('arancio')],
         principale: [
           fai.chiama('riga', 5), fai.vai('destra', 1), fai.chiama('riga', 3), fai.vai('destra', 1),
           fai.chiama('riga', 1)] }) },
       { nome: 'cala di uno invece che di due', programma: programma({
-        lavagnette: ['l'], progetti: [riga('arancio')],
+        lavagnette: ['l'],
         principale: [
           fai.assegna('l', 'base'),
           fai.ripeti('piani', [fai.chiama('riga', 'l'), fai.vai('destra', 1), fai.assegna('l', meno('l', 1))])] }) },
@@ -1098,7 +1183,7 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'finche', 'progetti', 'assegna'], colori: ['blu'], misure: true,
-    regalo: [riga('blu')],
+    attrezzi: [riga('blu')],
     ragiona: [
       'Per copiare un muro bisogna sapere quanto è lungo, e qui nessuna lavagnetta lo dice: 3 in un ordine, 5 nell\'altro. Il robot deve prima scoprirlo, e solo dopo costruire.',
       'Se dovessi contarlo tu camminandoci sopra, cosa faresti a ogni passo? E da cosa capiresti che il muro è finito?',
@@ -1110,7 +1195,6 @@ const DEL_CANTIERE = [
     ],
     soluzione: programma({
       lavagnette: ['quanti'],
-      progetti: [riga('blu')],
       principale: [
         fai.assegna('quanti', 0),
         fai.vai('destra', 1),
@@ -1121,7 +1205,6 @@ const DEL_CANTIERE = [
     }),
     fragili: [
       { nome: 'il muro del primo ordine', programma: programma({
-        progetti: [riga('blu')],
         principale: [fai.vai('destra', 6), fai.chiama('riga', 3)] }) },
     ],
   },
@@ -1154,7 +1237,7 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se', 'progetti', 'assegna'], colori: ['giallo'], misure: true,
-    regalo: [colonna('giallo')],
+    attrezzi: [colonna('giallo')],
     ragiona: [
       'La torre dev\'essere alta quanti sono i rossi: 4 in un pavimento, 5 nell\'altro, sparsi in posti diversi. Quel numero il robot lo scopre solo camminando, e gli serve alla fine.',
       'Camminando il robot vede un mattone alla volta: quando deve aggiungere uno al conto, e quando no? E il conto, dove lo tiene fino alla torre?',
@@ -1166,7 +1249,6 @@ const DEL_CANTIERE = [
     ],
     soluzione: programma({
       lavagnette: ['quanti'],
-      progetti: [colonna('giallo')],
       principale: [
         fai.assegna('quanti', 0),
         fai.ripeti(8, [fai.vai('destra', 1),
@@ -1177,10 +1259,9 @@ const DEL_CANTIERE = [
     }),
     fragili: [
       { nome: 'la torre del primo pavimento', programma: programma({
-        progetti: [colonna('giallo')],
         principale: [fai.vai('destra', 10), fai.chiama('colonna', 4)] }) },
       { nome: 'conta tutti i mattoni', programma: programma({
-        lavagnette: ['quanti'], progetti: [colonna('giallo')],
+        lavagnette: ['quanti'],
         principale: [
           fai.assegna('quanti', 0),
           fai.ripeti(8, [fai.vai('destra', 1), fai.assegna('quanti', piu('quanti', 1))]),
@@ -1285,6 +1366,11 @@ export function guastiDeiLivelli(livelli = LIVELLI) {
        ragionare, e poi da uno a tre indizi da dieci monete: il resto lo
        aggiunge il gioco dalla soluzione (`motore/aiuti.js`) */
     if ((l.ragiona || []).length !== 2) guasti.push(`${dove}: «ragiona» vuole due frasi`)
+    /* gli attrezzi vengono da un livello che sta prima: «l'hai costruito
+       nella torretta» detto prima della torretta sarebbe falso */
+    if ('regalo' in l) guasti.push(`${dove}: «regalo» non c'è più, adesso sono «attrezzi» (\`dati/attrezzi.js\`)`)
+    guasti.push(...guastiDegliAttrezzi(l.attrezzi, dove, livelli.slice(0, n).map(x => x.chiave)))
+    if ('zaino' in l && !(Number.isInteger(l.zaino) && l.zaino > 0)) guasti.push(`${dove}: lo zaino è un numero di righe`)
     if (!((l.indizi || []).length >= 1 && l.indizi.length <= 3)) guasti.push(`${dove}: gli indizi vanno da uno a tre`)
     if ('aiuti' in l) guasti.push(`${dove}: «aiuti» non c'è più, sono «ragiona» e «indizi»`)
     if (!l.soluzione) guasti.push(`${dove}: nessuna soluzione`)

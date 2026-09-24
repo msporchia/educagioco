@@ -8,7 +8,8 @@
    del ripeti prende la lavagnetta dell'ordine e il programma deve
    reggere tutti e tre; poi un errore apposta, che deve accendere la
    riga dove il robot si è fermato. E il programma scritto deve
-   ritrovarsi dopo una ricarica.
+   ritrovarsi dopo una ricarica, e una riga tolta per sbaglio tornare
+   con «annulla».
 
    E le scelte non si fanno da sole: una riga nuova nasce con la N, la
    scelta del numero si apre da sola, e ▶ con una N vuota non parte ma
@@ -23,6 +24,10 @@ import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { LIVELLI } from '../../src/giochi/costruttore/dati/livelli.js'
+import { FILA_ATTUALE } from '../../src/giochi/costruttore/dati/campagna.js'
+import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
+import { srotola } from '../../src/giochi/costruttore/motore/zaino.js'
+import { programma } from '../../src/giochi/costruttore/dati/scrivi.js'
 
 /* L'archivio dei programmi sta fuori dal profilo (`costruttore:<id>`):
    per provarne la lettura lo si scrive a mano, come fa `semina` coi
@@ -128,7 +133,7 @@ await scatto(page, 'costruttore-errore')
 
 /* ---------- 6. tre ordini, una lavagnetta ---------- */
 await semina(page, { settings: { sperimentali: true, eta: 10 },
-                     campagne: { costruttore: { tappa: 3, libera: false, stelle: { 0: 2, 1: 2, 2: 2 }, cfg: { velocita: 'veloce', fila: 2 } } } })
+                     campagne: { costruttore: { tappa: 3, libera: false, stelle: { 0: 2, 1: 2, 2: 2 }, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
 await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
 await page.waitForSelector('.cst-mappa', { timeout: 5000 })
 await tocca('[data-livello="3"]')
@@ -154,7 +159,7 @@ uguale('il programma regge tutti e tre gli ordini', await page.locator('[data-ge
 /* il tempio vinto con la sua colonna: dal cantiere libero la si riprende */
 await scriviArchivio(page, { v: 2, programmi: { tempio: JSON.parse(JSON.stringify(LIVELLI.find(l => l.chiave === 'tempio').soluzione)) } })
 await semina(page, { settings: { sperimentali: true, eta: 10 },
-                     campagne: { costruttore: { tappa: 7, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: 2 } } } })
+                     campagne: { costruttore: { tappa: 7, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
 await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
 await page.waitForSelector('.cst-mappa', { timeout: 5000 })
 uguale('finito il primo capitolo il cantiere libero è aperto', await page.locator('[data-libero]:not([disabled])').count(), 1)
@@ -167,14 +172,72 @@ uguale('nella cassetta ci sono i progetti degli altri cantieri', await page.loca
 await tocca('[data-importa="colonna"]')
 uguale('ripreso, il progetto ha la sua scheda', await page.locator('[data-scheda="colonna"]').count(), 1)
 await tocca('[data-scheda="principale"]')
-await tocca('[data-azione="codice"]')
-await page.waitForSelector('[data-foglio-codice]', { timeout: 3000 })
+
+/* ---------- 7-bis. gli attrezzi, annulla e lo zaino ---------- */
+/* la cinta: si costruisce solo con gli attrezzi del capomastro, e un
+   blocco tolto per sbaglio torna con «annulla» */
 {
-  const codice = await page.locator('[data-foglio-codice] pre').innerText()
-  controlla('e in Python è una def con la sua misura', codice.includes('def colonna(alta):'), codice)
+  const cinta = LIVELLI.findIndex(l => l.chiave === 'cinta')
+  await semina(page, { settings: { sperimentali: true, eta: 10 },
+                       campagne: { costruttore: { tappa: cinta, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
+  await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+  await tocca(`[data-livello="${cinta}"]`)
+  await page.waitForSelector('[data-editor]', { timeout: 5000 })
+  await tocca('[data-aggiungi="principale"]')
+  await page.waitForSelector('[data-cassetta]', { timeout: 3000 })
+  await attendi(page, 350)
+  uguale('nella cinta la cassetta dà la torre e il muro, già scritti', await page.locator('[data-attrezzi] [data-blocco^="chiama:"]').count(), 2)
+  uguale('e nessun «metti»: si costruisce con gli attrezzi', await page.locator('[data-cassetta] [data-blocco^="metti"]').count(), 0)
+  await tocca('[data-cassetta] [data-chiudi]')
+  await aggiungi('principale', 'ripeti')
+  await tocca('[data-scelta="numero"] [data-cifra="2"]')
+  await tocca('[data-scelta="numero"] [data-azione="fatto"]')
+  const rip = await page.locator('[data-editor] .cst-riga').first().getAttribute('data-riga')
+  for (const [blocco, valore] of [['chiama:torre', '[data-nome="torri"]'], ['vai:destra', '[data-cifra="1"]'], ['chiama:muro', '[data-nome="muro"]']]) {
+    await aggiungi(`${rip}:corpo`, blocco)
+    await tocca(`[data-scelta="numero"] ${valore}`)
+    await tocca('[data-scelta="numero"] [data-azione="fatto"]')
+  }
+  await aggiungi('principale', 'chiama:torre')
+  await tocca('[data-scelta="numero"] [data-nome="torri"]')
+  await tocca('[data-scelta="numero"] [data-azione="fatto"]')
+  await tocca('[data-scheda="torre"]')
+  controlla('la scheda di un attrezzo si legge e dice dove lascia il robot', /Finisce in cima alla torre/.test(await page.locator('[data-attrezzo]').innerText()))
+  uguale('e non si cambia: niente «＋»', await page.locator('.cst-piu').count(), 0)
+  await tocca('[data-scheda="principale"]')
+  await tocca(`[data-riga="${rip}"]`)
+  await tocca('[data-azione="togli-riga"]')
+  uguale('il 🗑 sul ripeti porta via il blocco con quello che ha dentro', await page.locator('[data-editor] .cst-riga').count(), 1)
+  await tocca('[data-azione="annulla"]')
+  uguale('e «annulla» lo rimette tutto', await page.locator('[data-editor] .cst-riga').count(), 5)
+  await scatto(page, 'costruttore-attrezzi')
+  await tocca('[data-azione="via"]')
+  await page.waitForSelector('[data-fine="livello"]', { timeout: 20000 })
+  uguale('la cinta regge tutti e due i baroni', await page.locator('[data-gettone].cst-vinto').count(), 2)
 }
-await scatto(page, 'costruttore-python')
-await tocca('[data-foglio-codice] [data-chiudi]')
+/* il bosco: il programma srotolato non sta nello zaino, e il robot non
+   parte — la frase dice cosa fare */
+{
+  const b = LIVELLI.find(l => l.chiave === 'bosco')
+  const piatta = conAttrezzi(programma(srotola(conAttrezzi(b.soluzione, b))), b)
+  await scriviArchivio(page, { v: 2, programmi: { bosco: JSON.parse(JSON.stringify(piatta)) } })
+  const bosco = LIVELLI.indexOf(b)
+  await semina(page, { settings: { sperimentali: true, eta: 10 },
+                       campagne: { costruttore: { tappa: bosco, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
+  await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+  await tocca(`[data-livello="${bosco}"]`)
+  await page.waitForSelector('[data-zaino]', { timeout: 5000 })
+  controlla('lo zaino dice quante righe ci sono e quante ne stanno', /22\/14/.test(await page.locator('[data-zaino]').innerText()))
+  await tocca('[data-azione="via"]')
+  await page.waitForSelector('[data-messaggio]', { timeout: 3000 })
+  controlla('con troppe righe il robot non parte, e dice di fare un progetto',
+            /ne stanno 14/.test(await page.locator('[data-messaggio]').innerText()))
+  await tocca('[data-aggiungi="principale"]')
+  controlla('e il «＋» non apre la cassetta: dice che lo zaino è pieno',
+            await page.locator('[data-cassetta]').count() === 0 && /progetto/.test(await page.locator('[data-messaggio]').innerText()))
+}
 
 /* ---------- 8. il porto ---------- */
 /* la gru con la sua soluzione: la tela dall'alto, la regia coi turni del
@@ -184,7 +247,7 @@ await tocca('[data-foglio-codice] [data-chiudi]')
   const gru = LIVELLI.findIndex(l => l.chiave === 'gru')
   await scriviArchivio(page, { v: 2, programmi: { gru: JSON.parse(JSON.stringify(LIVELLI[gru].soluzione)) } })
   await semina(page, { settings: { sperimentali: true, eta: 10 },
-                       campagne: { costruttore: { tappa: gru, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: 3 } } } })
+                       campagne: { costruttore: { tappa: gru, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
   await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
   await page.waitForSelector('.cst-mappa', { timeout: 5000 })
   controlla('il porto sta nella mappa, dopo le lavagnette', LIVELLI[primo - 1].capitolo === 'lavagnette' &&
@@ -210,7 +273,7 @@ await tocca('[data-foglio-codice] [data-chiudi]')
   const camion = LIVELLI.findIndex(l => l.chiave === 'primo-camion')
   await scriviArchivio(page, { v: 2, programmi: { 'primo-camion': JSON.parse(JSON.stringify(LIVELLI[camion].soluzione)) } })
   await semina(page, { settings: { sperimentali: true, eta: 10 },
-                       campagne: { costruttore: { tappa: camion, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: 3 } } } })
+                       campagne: { costruttore: { tappa: camion, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
   await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
   await page.waitForSelector('.cst-mappa', { timeout: 5000 })
   await tocca(`[data-livello="${camion}"]`)
