@@ -20,12 +20,20 @@
    sarebbe fatta senza le partenze.
 
    Questo ha una conseguenza che va detta, perché è il rovescio della
-   stessa medaglia: **un gioco aggiunto dopo nasce acceso per tutti**,
-   anche per chi era partito da «piccoli». È il patto di sempre di
-   `settings.giochi` (acceso è l'assenza) e qui non si cambia — se un
-   gioco nuovo non va bene per un bambino, si spegne come tutti gli
-   altri. L'alternativa sarebbe congelare la partenza nel profilo, e a
-   quel punto sarebbe una modalità e non un punto di partenza.
+   stessa medaglia: un gioco aggiunto dopo, nel profilo, non c'è.
+   **Vale quello che la partenza di quest'età scriverebbe oggi**, e non
+   perché lo si scriva: si legge ogni volta (`spentoDallEta` in
+   `data/portata-giochi.js`, e il quadro dei grandi fa la stessa
+   lettura). Congelare la partenza nel profilo la farebbe diventare una
+   modalità invece di un punto di partenza; leggerla al momento no.
+
+   Il patto era il contrario — acceso è l'assenza, e un gioco nuovo
+   nasceva acceso per tutti — e voleva dire due home diverse per due
+   bambini della stessa età: la carta compariva a quello nato prima del
+   gioco e non a quello nato dopo, e nel quadro la riga diceva «c'è»
+   con la tacca su «come dice l'età: arriva più avanti». Un gioco che
+   il bambino ha già aperto però non sparisce: è la regola della
+   portata, e vale anche qui.
 
    PERCHÉ I GIOCHI SI CALCOLANO E I SAPERI SI ELENCANO. I giochi escono
    da due dichiarazioni nel manifesto — `piccoli: true` e `grandi: true`,
@@ -394,7 +402,9 @@ const quanteDiverse = (mia, difetto) => {
    lui, mentre la partenza di oggi gli scrive `costruttore: false`. Il
    tasto diceva «1 gioco messo a mano» e nessuna riga era colorata.
    Oggi la mano scrive sempre per esteso (`fissaGioco`), quindi quel
-   buco non l'ha lasciato un grande.
+   buco non l'ha lasciato un grande — e siccome un gioco che il profilo
+   non nomina vale quello che l'età scriverebbe (vedi in testa al
+   file), rimettendo non cambia nemmeno niente a schermo.
 
    ── I PEZZI DI SCUOLA NO, E NON È UNA SVISTA ──
    Per loro l'assenza contro un `false` atteso è proprio **la mano**:
@@ -497,8 +507,9 @@ export function rimettendoLEta ({ eta, giochi = {}, sa = {}, ritocchi = {} }) {
 }
 
 /* Le eccezioni da scrivere nel profilo appena creato, nella forma che
-   `settings` usa già: solo quello che va SPENTO, perché acceso è
-   l'assenza. Una partenza sconosciuta non spegne niente — un profilo con
+   `settings` usa già: solo quello che va SPENTO. Per i giochi è anche
+   quello che vale al posto di una voce che manca (vedi in testa al
+   file). Una partenza sconosciuta non spegne niente — un profilo con
    tutto acceso è com'era prima che questo file esistesse, ed è il
    fallimento giusto: si vede subito e non perde nessun dato. */
 export function eccezioniDi (chiave) {

@@ -736,6 +736,29 @@ for (const eta of [6, 8, 10]) {
   uguale('il tasto conta tanti giochi quante sono le righe ambra', storti.join(' · '), '')
 }
 
+/* ── UN GIOCO CHE IL PROFILO NON NOMINA STA DOVE LO METTE L'ETÀ ──
+   L'assenza voleva dire acceso, e a un bambino nato prima di un gioco
+   la riga diceva «c'è» — la carta era davvero in home — mentre la tacca,
+   ferma su «come dice l'età», diceva «arriva più avanti». Adesso vale
+   quello che la partenza di oggi scriverebbe, e la riga dice quello che
+   dice la tacca: lo stato è il suo difetto, e non è colorata. */
+{
+  const contraddette = []
+  for (let eta = 4; eta <= 12; eta += 0.5) {
+    const d = eccezioniPerEta(eta)
+    for (const k of Object.keys(d.giochi).filter(x => d.giochi[x] === false)) {
+      const nato = { ...d.giochi }
+      delete nato[k]
+      const riga = giochiDiUnEta({ eta, giochi: nato, sa: d.sa, sperimentali: true })
+        .find(g => g.chiave === k)
+      if (riga.stato !== riga.difetto || riga.aMano)
+        contraddette.push(`${eta}a ${k}: ${riga.stato} contro ${riga.difetto}`)
+    }
+  }
+  uguale('la riga di un gioco nato dopo il profilo dice quello che dice la tacca',
+         contraddette.join(' · '), '')
+}
+
 /* ── E I PEZZI DI SCUOLA, NELLO STESSO MODO ──
    Le righe dei blocchi si coloravano se erano spente, e basta: la
    partenza della terza spegne sette pezzi di scuola da sola, e a otto

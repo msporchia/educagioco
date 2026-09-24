@@ -72,7 +72,6 @@ export const SPENTO = 'spento'      // l'ha spento un grande, non l'età
 
 export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false } = {}) {
   const spenti = spente(sa)
-  const off = new Set(spente(giochi))
   /* ── E QUELLO CHE UN GRANDE HA VOLUTO COMUNQUE ──
      `settings.giochi[k] === true` non si scriveva mai: acceso era
      l'assenza, e `accendiGioco(k, true)` cancellava la voce. Adesso
@@ -89,6 +88,14 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
   const attese = eccezioniPerEta(eta)
   const dEta = new Set(spente(attese.giochi))
   const saDEta = new Set(spente(attese.sa))
+  /* spenti in questo profilo: quelli scritti per esteso, e quelli che
+     il profilo non nomina e che l'età spegne — la stessa lettura della
+     home (`spentoDallEta` in `data/portata-giochi.js`). Senza, un
+     bambino nato prima di un gioco risultava averlo in casa («c'è»)
+     con la tacca ferma su «come dice l'età: arriva più avanti». */
+  const off = new Set([...spente(giochi),
+    ...[...dEta].filter(k => typeof (giochi || {})[k] !== 'boolean')])
+
   return GIOCHI
     /* i giochi in prova sono un interruttore di casa, non una cosa che
        dipende dall'età: si passa com'è messo, e di partenza è spento

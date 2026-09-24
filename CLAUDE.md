@@ -1155,7 +1155,13 @@ Tre interruttori diversi, e la differenza conta:
 
 1. **Un gioco** (`settings.giochi`) — sparisce la carta in home, i progressi
    restano. Per bambino, come elenco di **eccezioni** (`{ torri: false }`),
-   così un gioco nuovo nasce acceso anche per chi ha il profilo di ieri.
+   e un gioco che l'elenco non nomina **vale quello che la partenza di
+   quell'età scriverebbe oggi** (`spentoDallEta` in
+   `data/portata-giochi.js`, e il quadro fa la stessa lettura): un gioco
+   nuovo arriva come dice l'età anche a chi ha il profilo di ieri, e uno
+   che il bambino ha già aperto non sparisce. Era il contrario — l'assenza
+   voleva dire acceso — e due bambini della stessa età avevano due home
+   diverse secondo il giorno in cui erano nati.
    Da qui si dice anche il contrario: `{ dungeon: true }` lo **tiene in
    casa contro l'età** (`fissaGioco`), e la home lo rispetta
    (`giocoForzato` vince su `giocoDaVedere`). Si sceglie dalla ✎ della
@@ -1399,10 +1405,10 @@ riga** — i giochi, i pezzi di scuola dei blocchi (`manoSu` in
 quando l'età li spegne) e quelli appesi a un gioco — **e per il conto
 del tasto** (`messeAMano` in `data/partenze.js`): il contatore dice
 quante, il colore dice quali, e `unita/quadro` pretende che siano le
-stesse. Con un'asimmetria voluta: per un gioco l'assenza dove l'età
-scrive `false` non è di nessuno (un profilo nato prima di quel gioco),
-per un pezzo di scuola è la mano stessa, perché riaccenderlo cancella
-la voce.
+stesse. Con un'asimmetria voluta: per un gioco l'assenza vale quello
+che l'età scriverebbe (un profilo nato prima di quel gioco non ha
+detto niente), per un pezzo di scuola è la mano stessa, perché
+riaccenderlo cancella la voce.
 
 **E in fondo al quadro c'è il tasto che rimette tutto ai valori di
 quell'età** (`rimettendoLEta` in `data/partenze.js`, `rimettiAiDifetti`
@@ -1533,7 +1539,8 @@ sono due assi diversi. La portata dice *quanto è difficile*; `piccoli`
 dice *non chiede di leggere e non si può perdere*. Un bambino di cinque
 anni sta dentro la portata di Survivors — schivare si sa fare — ma
 Survivors si perde. I due meccanismi si affiancano: le partenze
-accendono alla creazione, la portata filtra in continuo, e non si
+scrivono alla creazione (e per un gioco che il profilo non nomina si
+rileggono all'età di oggi), la portata filtra in continuo, e non si
 contraddicono.
 
 Fuori dal giudizio restano i giochi **senza campagna** — oggi la

@@ -20,6 +20,7 @@ import { state, init, creaGiocatore, selectPlayer, nomeDi, migraProfilo,
          ritoccoSapere, ritocca, giocoAcceso, giocoForzato, fissaGioco, fissaSapere,
          rimettiAiDifetti, migraGenerale, livelloOra } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
+import { inCasa } from '../../src/data/portata-giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { PERSONE } from '../../src/giochi/fattoria/dati/atlante.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -510,6 +511,39 @@ uguale('e un numero assurdo non entra', etaDelBambino(), 7)
   uguale('e «come dice l\'età» non lascia nessuna voce',
          state.profile.settings.giochi.dungeon, undefined)
   controlla('né una forzatura', !giocoForzato('dungeon'))
+}
+
+/* ── UN GIOCO CHE IL PROFILO NON NOMINA ──
+   La partenza scrive le sue eccezioni coi giochi del giorno in cui il
+   bambino nasce, e uno arrivato dopo nel profilo non c'è. Vale quello
+   che l'età scriverebbe oggi: a cinque anni l'inglese è dei grandi, e
+   la sua carta non compare a un bambino nato prima che esistesse. Prima
+   compariva — l'assenza voleva dire acceso, e i primi livelli a cinque
+   anni ci stanno — mentre a uno aggiunto il giorno dopo no.
+
+   Tranne che l'abbia già aperto: **un gioco cominciato non sparisce
+   mai**, qui come con la portata. */
+{
+  spostaLEta(5)
+  const s = state.profile.settings
+  const t = state.profile.totals
+  const prima = { en: t.en, verbi: t.verbi }
+  t.en = 0
+  t.verbi = 0
+  uguale('a cinque anni la partenza spegne l\'inglese', s.giochi.inglese, false)
+  delete s.giochi.inglese
+  controlla('e se il profilo non lo nomina vale lo stesso: la carta non c\'è', !inCasa('inglese'))
+  controlla('senza che l\'interruttore dei grandi sia giù', giocoAcceso('inglese'))
+  t.en = 3
+  controlla('ma chi l\'aveva già aperto se lo tiene', inCasa('inglese'))
+  t.en = 0
+  fissaGioco('inglese', 'si')
+  controlla('e tenuto a mano c\'è, contro l\'età', inCasa('inglese'))
+  fissaGioco('inglese', 'no')
+  controlla('spento a mano non c\'è', !inCasa('inglese'))
+  controlla('mentre uno che l\'età lascia, senza voce, c\'è',
+            s.giochi.conta === undefined && inCasa('conta'))
+  Object.assign(t, prima)
 }
 
 /* ── E LE TRE POSIZIONI DI UN PEZZO DI SCUOLA ──

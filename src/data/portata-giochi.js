@@ -27,6 +27,7 @@ import { giocoDaOffrire, filaConPortata, primaDaGiocare, arcoDelGioco,
          statoDellaTappa, PASSATA, AVANTI } from './portata.js'
 import { state, etaDelBambino, saperiSpenti, tappaAperta, tuttoAperto,
          giocoAcceso, giocoForzato } from '../store/profile.js'
+import { eccezioniPerEta } from './partenze.js'
 import { misure } from '../store/progressi.js'
 import { GIOCHI_NUOVI } from '../giochi/indice.js'
 
@@ -102,13 +103,42 @@ export function giaProvato (chiave) {
   try { return !!g.albo.provato(misure(state.profile)) } catch { return false }
 }
 
+/* ── QUELLO CHE IL PROFILO NON DICE, LO DICE L'ETÀ ──
+   `settings.giochi` è un elenco di eccezioni, e la partenza ne scrive
+   una per ogni gioco che quell'età non deve vedere — ma solo per i
+   giochi che esistono il giorno in cui il bambino nasce. Un gioco
+   arrivato dopo, nel suo profilo, non c'è, e fin qui «non c'è» voleva
+   dire acceso: a un bambino di cinque anni nato prima di un gioco per i
+   grandi coi primi livelli facili la carta compariva, e a uno aggiunto
+   il giorno dopo no. Stessa età, due home diverse — e nel quadro dei
+   grandi una riga che diceva «c'è» con la tacca su «come dice l'età:
+   arriva più avanti».
+
+   Adesso un gioco che il profilo non nomina vale **quello che la
+   partenza di quest'età scriverebbe oggi**. Non si scrive niente: si
+   legge, così un gioco nuovo arriva a tutti come dice l'età, e il
+   quadro fa la stessa lettura (`giochiDiUnEta` in `data/quadro.js`).
+   Chi vuole il contrario lo dice per esteso — «ce l'ha» è `true`, e
+   `giocoForzato` vince come sempre. */
+const spentoDallEta = chiave => {
+  const scelto = ((state.profile && state.profile.settings.giochi) || {})[chiave]
+  return typeof scelto !== 'boolean' &&
+    eccezioniPerEta(etaDelBambino()).giochi[chiave] === false
+}
+
 /* ── la domanda che fa la home ──
    Un gioco senza campagna (la fattoria) non si giudica: è un posto,
-   non una scaletta, e resta a disposizione di tutti. */
+   non una scaletta, e resta a disposizione di tutti.
+
+   E quello che l'età spegne da sola segue la regola della portata:
+   **un gioco cominciato non sparisce mai**. Il bambino nato prima che
+   l'ha già aperto se lo tiene, come se lo tiene chi l'ha superato. */
 export function giocoDaVedere (chiave, { provato = null, fatte = 0 } = {}) {
   const tappe = TAPPE_DEL_GIOCO[chiave]
-  if (!tappe) return true
+  const dallEta = spentoDallEta(chiave)
+  if (!tappe && !dallEta) return true
   const gia = provato == null ? giaProvato(chiave) : provato
+  if (dallEta) return gia
   return giocoDaOffrire(tappe, { ...regole(), provato: gia, fatte })
 }
 
