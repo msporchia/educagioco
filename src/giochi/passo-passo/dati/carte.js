@@ -28,53 +28,101 @@
    Si contano le carte che si toccano — una freccia, un salto, un 🔁 — e
    la chiusura no: è il bordo della scatola, non una carta.
 
+   ── LE TESTE DELLE SCATOLE ────────────────────────────────────────
+   Le scatole sono due, e la loro testa dice tutto:
+     ripeti-5        🔁 5 volte
+     ripeti-rosso    🔁 fino al rosso: si fa un giro, e alla fine di
+                     ogni giro il coniglio guarda cosa ha sotto i piedi —
+                     «vai su fino alla cella rossa». Almeno un giro sempre:
+                     in un angolo ci sei già sopra, e «fino al rosso» vuol
+                     dire il prossimo
+     ripeti-casa     🔁 fino a casa: finché non si arriva alla tana (che
+                     vince, come sempre, dovunque si arrivi)
+     se-rosso        ❓ se sei sul rosso: quello che ha dentro si fa una
+                     volta, o non si fa
+   Il colore è quello di una lastra (`LASTRE` in `dati/mondo.js`).
+
    ── NIENTE VALORI DI COMODO ───────────────────────────────────────
-   Un 🔁 nuovo nasce `ripeti-N`: la N è da scegliere, e ▶ non parte
-   finché ne resta una (vedi il costruttore, dove la regola è nata). Un
-   numero già scritto si legge come l'unico possibile.
+   Una scatola nuova nasce con la N (`ripeti-N`, `se-N`): il valore è da
+   scegliere, e ▶ non parte finché ne resta una (vedi il costruttore,
+   dove la regola è nata). Un numero già scritto si legge come l'unico
+   possibile.
    ═══════════════════════════════════════════════════════════════════ */
+import { LASTRE } from './mondo.js'
 
 export const APRI = 'ripeti-'
+export const SE = 'se-'
 export const FINE = 'fine'
 export const N = 'N'
+export const CASA = 'casa'
 /* quante volte si può ripetere: da due (una volta sola non è un ciclo)
-   a nove, che su una mappa da sette per nove basta e avanza */
+   a nove, che su una mappa da nove per undici basta e avanza */
 export const VOLTE = [2, 3, 4, 5, 6, 7, 8, 9]
+export const COLORI = Object.keys(LASTRE)
 
-/* le carte che un livello può mettere in mano oltre alle frecce */
+/* le carte che un livello può mettere in mano oltre alle frecce. Le
+   prime tre sono tre teste della stessa scatola: un livello le accende
+   una per una, e la scelta della testa offre solo quelle accese */
 export const CARTE = {
-  ripeti: { icona: '🔁', nome: 'ripeti' },
+  ripeti: { icona: '🔁', nome: 'ripeti tante volte' },
+  fino:   { icona: '🚩', nome: 'ripeti fino a un colore' },
+  casa:   { icona: '🏠', nome: 'ripeti fino a casa' },
+  se:     { icona: '❓', nome: 'se' },
 }
 
-export const apri = n => APRI + (n == null ? N : n)
-export const eApri = t => typeof t === 'string' && t.startsWith(APRI)
+export const apri = v => APRI + (v == null ? N : v)
+export const apriSe = v => SE + (v == null ? N : v)
+export const eRipeti = t => typeof t === 'string' && t.startsWith(APRI)
+export const eSe = t => typeof t === 'string' && t.startsWith(SE)
+export const eApri = t => eRipeti(t) || eSe(t)
 export const eFine = t => t === FINE
-/* il numero di un ciclo, o `null` se è ancora la N */
-export function volteDi(t) {
+/* il valore di una testa: un numero, un colore, `casa` — o `null`, se
+   è ancora la N */
+export function valoreDi(t) {
   if (!eApri(t)) return null
-  const v = t.slice(APRI.length)
-  return v === N ? null : Number(v)
+  const v = t.slice(eSe(t) ? SE.length : APRI.length)
+  if (v === N) return null
+  return /^\d+$/.test(v) ? Number(v) : v
 }
+/* il numero di un ciclo, o `null` se non è un numero */
+export function volteDi(t) {
+  const v = valoreDi(t)
+  return typeof v === 'number' ? v : null
+}
+/* la stessa testa con un altro valore */
+export const conValore = (t, v) => (eSe(t) ? apriSe(v) : apri(v))
 
 /* quante carte occupa una fila nello zaino: tutto tranne le chiusure */
 export const carteDi = (fila = []) => fila.reduce((n, t) => n + (eFine(t) ? 0 : 1), 0)
 export const conCicli = (fila = []) => fila.some(eApri)
 
-/* le N ancora da scegliere: gli indici delle aperture senza numero */
+/* le N ancora da scegliere: gli indici delle teste senza valore */
 export const daScegliere = (fila = []) =>
-  fila.reduce((l, t, i) => (eApri(t) && volteDi(t) == null ? [...l, i] : l), [])
+  fila.reduce((l, t, i) => (eApri(t) && valoreDi(t) == null ? [...l, i] : l), [])
+
+/* i valori che una testa può prendere: il ripeti un numero, un colore o
+   la casa, il se solo un colore */
+export function valoreBuono(t, v) {
+  if (v == null) return true
+  if (eSe(t)) return COLORI.includes(v)
+  return VOLTE.includes(v) || COLORI.includes(v) || v === CASA
+}
 
 /* ── scrivere un programma nei dati ──
    Le soluzioni dei livelli si scrivono così, e si leggono:
-     programma('destra', ripeti(4, 'destra', 'giu'), 'destra') */
-export const ripeti = (n, ...corpo) => [apri(n), ...corpo.flat(Infinity), FINE]
+     programma('destra', ripeti(4, 'destra', 'giu'), 'destra')
+     programma(ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'))) */
+export const ripeti = (v, ...corpo) => [apri(v), ...corpo.flat(Infinity), FINE]
+export const se = (colore, ...corpo) => [apriSe(colore), ...corpo.flat(Infinity), FINE]
 export const programma = (...pezzi) => pezzi.flat(Infinity)
 
 /* ── l'albero ──
    Ogni nodo sa dove sta nella fila piatta (`i`), così chi disegna e chi
    esegue possono dire «questa carta» con lo stesso numero:
      { che: 'mossa', i, m }
-     { che: 'ripeti', i, fine, volte, corpo: [nodi] }
+     { che: 'ripeti', i, fine, volte, fino, corpo: [nodi] }
+                         `volte` un numero, o `fino` un colore o `casa`
+     { che: 'se', i, fine, colore, corpo: [nodi] }
    Una fila scritta male non fa esplodere niente: una chiusura senza
    apertura si salta, un'apertura senza chiusura si chiude in fondo (lo
    dice `guastiDellaFila`, ma chi gioca non deve accorgersene). */
@@ -84,7 +132,11 @@ export function albero(fila = []) {
   for (let i = 0; i < fila.length; i++) {
     const t = fila[i]
     if (eApri(t)) {
-      const nodo = { che: 'ripeti', i, fine: -1, volte: volteDi(t), corpo: [] }
+      const v = valoreDi(t)
+      const nodo = eSe(t)
+        ? { che: 'se', i, fine: -1, colore: v, corpo: [] }
+        : { che: 'ripeti', i, fine: -1, volte: typeof v === 'number' ? v : null,
+            fino: typeof v === 'string' ? v : null, corpo: [] }
       pila.at(-1).corpo.push(nodo)
       pila.push(nodo)
     } else if (eFine(t)) {
@@ -125,8 +177,7 @@ export function guastiDellaFila(fila, { mosse = null, dove = 'fila' } = {}) {
   for (const [i, t] of fila.entries()) {
     if (eApri(t)) {
       d++
-      const v = volteDi(t)
-      if (v != null && !VOLTE.includes(v)) guasti.push(`${dove}: «${t}» in ${i}, si ripete da 2 a 9 volte`)
+      if (!valoreBuono(t, valoreDi(t))) guasti.push(`${dove}: «${t}» in ${i} non è una testa che esiste`)
     } else if (eFine(t)) {
       if (--d < 0) { guasti.push(`${dove}: una chiusura senza apertura in ${i}`); d = 0 }
     } else if (mosse && !mosse.includes(t)) {

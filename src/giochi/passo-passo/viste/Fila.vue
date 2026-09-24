@@ -2,11 +2,15 @@
 /* ═══════════════════════════════════════════════════════════════════
    LA FILA — il programma del bambino, una tessera per carta
 
-   Una striscia che va a capo. In testa c'è il coniglio: è da lì che si
-   parte, sempre. Il cursore è una sbarra che lampeggia fra due tessere:
-   una carta nuova entra lì. Toccare una tessera mette il cursore
-   subito dopo di lei; toccare il coniglio lo mette all'inizio. Niente
-   trascinamento — si tocca e basta.
+   Una striscia che va a capo. Il cursore è una sbarra che lampeggia fra
+   due tessere: una carta nuova entra lì. Toccare una tessera mette il
+   cursore subito dopo di lei, e toccarla di nuovo subito prima: è così
+   che si arriva anche all'inizio della fila. Niente trascinamento — si
+   tocca e basta.
+
+   In testa c'era un coniglio da toccare per andare all'inizio: sembrava
+   un tasto che non faceva niente, e rubava il posto a una tessera. Il
+   secondo tocco fa la stessa cosa senza aggiungere niente da capire.
 
    Mentre il coniglio corre la tessera che sta girando si accende: è la
    cosa più importante che questo gioco insegna, sapere **a che punto
@@ -66,6 +70,8 @@ provide('fila', {
     piatta: !conCicli(props.fila),
   })),
   tocca: p => { if (!props.inCorsa) emit('cursore', p) },
+  /* una tessera: il cursore dopo di lei, o prima se c'era già */
+  toccaTessera: i => { if (!props.inCorsa) emit('cursore', props.cursore === i + 1 ? i : i + 1) },
   testa: i => { if (!props.inCorsa) emit('testa', i) },
   metti: t => { if (!props.inCorsa) emit('freccia', t) },
 })
@@ -88,12 +94,6 @@ const tocca = i => { if (!props.inCorsa) emit('cursore', i) }
 
 <template>
   <div ref="scatola" class="pp-fila" :class="{ 'pp-in-corsa': inCorsa, 'pp-con-zaino': !!zaino }" data-fila>
-    <button class="pp-inizio" data-inizio aria-label="all'inizio della fila" @click="tocca(0)">
-      <span class="pp-em">🐇</span>
-    </button>
-    <!-- il programma va a capo nella sua colonna, accanto al coniglio: se
-         il coniglio andasse a capo con lui, una scatola più larga dello
-         spazio che resta lo lascerebbe da solo su una riga -->
     <div class="pp-programma">
       <Carte :nodi="nodi" :fine="fila.length" />
       <!-- vuota, la fila mostra dove andrà la prima freccia: un posto

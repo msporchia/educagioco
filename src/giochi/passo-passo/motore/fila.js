@@ -18,7 +18,7 @@
        🔁 e basta. Le frecce che aveva dentro restano dove sono, fuori:
        si è tolta la carta del ripeti, non le altre.
    ═══════════════════════════════════════════════════════════════════ */
-import { apri, eApri, eFine, FINE, chiusuraDi, aperturaDi } from '../dati/carte.js'
+import { apri, conValore, eApri, eFine, FINE, chiusuraDi, aperturaDi } from '../dati/carte.js'
 
 const dentro = (fila, c) => Math.max(0, Math.min(fila.length, c))
 
@@ -31,14 +31,15 @@ export function mettiCarta(fila, cursore, carta) {
 }
 
 /* una scatola nuova dove sta il cursore, col cursore dentro: la carta
-   dopo entra nel ciclo. La N nasce da scegliere, a meno che non la dica
-   un aiuto */
-export function mettiCiclo(fila, cursore, volte = null) {
+   dopo entra nella scatola. `testa` è la sua testa (`ripeti-N`, `se-N`):
+   la N nasce da scegliere, a meno che non la dica un aiuto */
+export function mettiScatola(fila, cursore, testa) {
   const c = dentro(fila, cursore)
   const f = fila.slice()
-  f.splice(c, 0, apri(volte), FINE)
+  f.splice(c, 0, testa, FINE)
   return { fila: f, cursore: c + 1, apertura: c }
 }
+export const mettiCiclo = (fila, cursore, volte = null) => mettiScatola(fila, cursore, apri(volte))
 
 export function togliPrima(fila, cursore) {
   const c = dentro(fila, cursore)
@@ -61,13 +62,14 @@ export function togliPrima(fila, cursore) {
   return { fila: f, cursore: c - 1 }
 }
 
-/* il numero di un ciclo */
-export function scegliVolte(fila, i, volte) {
+/* il valore di una testa: il numero, il colore, la casa */
+export function scegliTesta(fila, i, valore) {
   if (!eApri(fila[i])) return fila.slice()
   const f = fila.slice()
-  f[i] = apri(volte)
+  f[i] = conValore(fila[i], valore)
   return f
 }
+export const scegliVolte = scegliTesta
 
 /* ── seguire un aiuto ──
    Quello che fa un bambino che tocca proprio la cosa che l'aiuto ha
@@ -78,8 +80,8 @@ export function seguiConsiglio(fila, cursore, s) {
   if (!s) return { fila, cursore }
   switch (s.che) {
     case 'mossa': return mettiCarta(fila, s.cursore, s.mossa)
-    case 'ciclo': return mettiCiclo(fila, s.cursore, s.volte)
-    case 'volte': return { fila: scegliVolte(fila, s.apri, s.volte), cursore }
+    case 'scatola': return mettiScatola(fila, s.cursore, s.testa)
+    case 'testa': return { fila: scegliTesta(fila, s.apri, s.valore), cursore }
     case 'togli': return togliPrima(fila, s.cursore)
     default: return { fila, cursore }
   }

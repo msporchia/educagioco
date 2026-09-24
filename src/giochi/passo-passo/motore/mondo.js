@@ -59,7 +59,7 @@
    (`motore/risolutore.js`, `serveLaRegola`). Nel gioco non si usa mai.
    ═══════════════════════════════════════════════════════════════════ */
 import { MOSSE } from '../dati/mondo.js'
-import { albero, conCicli, eFine } from '../dati/carte.js'
+import { albero, conCicli, eFine, CASA } from '../dati/carte.js'
 
 export const TANA = 'tana'
 export const SBATTE = 'sbatte'
@@ -124,16 +124,21 @@ export class Mondo {
      `guastiDellaMappa`) resta una buca in cui non si cade */
   eBuca(i) { return this.senza !== 'buche' && this.liv.terreno[i] === 'buca' && this.liv.gemella[i] >= 0 }
   eTana(i) { return i === this.liv.tana }
+  /* la lastra che il coniglio ha sotto i piedi, se ce n'è una: è tutto
+     quello che il «fino a» e il «se» guardano */
+  lastra() { return this.liv.lastra ? this.liv.lastra[this.p] : null }
   haCarota(i) { return !this.presa && i === this.liv.carota }
   masso(i) { return this.massi.indexOf(i) }
   ostacolo(i) { return this.liv.ostacolo[i] }
 
   /* dove può andare a finire un masso: dappertutto dove c'è terra o
-     acqua libera. Non copre la tana, la carota o una buca — sarebbero
-     sparite sotto un sasso, e un livello non deve potersi rompere così */
+     acqua libera. Non copre la tana, la carota, una buca o una lastra —
+     sarebbero sparite sotto un sasso, e un livello non deve potersi
+     rompere così */
   liberoPerMasso(i) {
     return i >= 0 && !this.ostacolo(i) && this.masso(i) < 0 &&
-           !this.eTana(i) && !this.haCarota(i) && !this.eBuca(i)
+           !this.eTana(i) && !this.haCarota(i) && !this.eBuca(i) &&
+           !(this.liv.lastra && this.liv.lastra[i])
   }
 
   segna(fatto) { if (this.traccia) this.traccia.push(fatto) }
@@ -304,18 +309,39 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
 
   /* coi cicli: si cammina l'albero, e una carta dentro un ciclo si
      esegue tante volte quanti sono i giri. Una N non scelta vale zero
-     giri — ▶ non parte, ma gli aiuti una fila così la possono leggere */
+     giri — ▶ non parte, ma gli aiuti una fila così la possono leggere.
+
+     Il «fino a» fa un giro e poi guarda sotto i piedi, e smette se è sul
+     colore giusto: almeno un giro sempre. «Fino a casa» non smette mai
+     da sé — ci pensa la tana. Un giro che non ha mosso il coniglio non
+     cambierà mai quello che ha sotto i piedi: la fila si ferma lì come
+     quando gira la testa, invece di aspettare per sempre. Il «se» guarda
+     una volta, e fa quello che ha dentro o lo salta. */
   const giri = []
   let fine = null
   const corri = nodi => {
     for (const nodo of nodi) {
       if (nodo.che === 'ripeti') {
         const qui = giri.length
-        for (let g = 1; g <= (nodo.volte || 0); g++) {
-          giri[qui] = [nodo.i, g, nodo.volte]
-          if (corri(nodo.corpo)) return true
+        if (nodo.fino) {
+          for (let g = 1; ; g++) {
+            giri[qui] = [nodo.i, g, nodo.fino]
+            const prima = passi.length
+            if (corri(nodo.corpo)) return true
+            if (nodo.fino !== CASA && w.lastra() === nodo.fino) break
+            if (passi.length === prima) { fine = esce(STANCO, nodo.i); return true }
+          }
+        } else {
+          for (let g = 1; g <= (nodo.volte || 0); g++) {
+            giri[qui] = [nodo.i, g, nodo.volte]
+            if (corri(nodo.corpo)) return true
+          }
         }
         giri.length = qui
+        continue
+      }
+      if (nodo.che === 'se') {
+        if (nodo.colore && w.lastra() === nodo.colore && corri(nodo.corpo)) return true
         continue
       }
       if (passi.length >= PASSI_MAX) { fine = esce(STANCO, nodo.i); return true }

@@ -605,6 +605,16 @@ committate: non è ricostruibile da git.
   non il programma più corto, e il 💡 parte da quella scritta. Il sentiero
   senza fine si apre alla fine delle tappe dei piccoli (`TAPPE_PICCOLE`),
   non della campagna: è il loro.
+  **Le condizioni guardano per terra**: le lastre colorate (`r u g`, con
+  la forma oltre al colore). La testa di una scatola 🔁 può essere un
+  numero, un colore — «fino al rosso»: un giro, e alla fine di ogni giro
+  si guarda sotto i piedi — o la casa; la scatola ❓ fa quello che ha
+  dentro una volta sola, se il coniglio è sul colore giusto. Il «fino a»
+  serve dove la stessa scatola fa strade lunghe diverse (una scatola
+  dentro l'altra), il se dove la strada gira in tre versi: è quello che
+  lo zaino pretende nei loro gradini. Un giro che non muove il coniglio
+  ferma la fila (`STANCO`). Le mappe dei grandi arrivano a nove per
+  undici.
 - **`src/giochi/costruttore/`** — *in prova.* Un robot costruisce, visto di
   lato, quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti

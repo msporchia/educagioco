@@ -24,7 +24,7 @@
    di bello.
    ═══════════════════════════════════════════════════════════════════ */
 import { PASSI, SALTI } from '../dati/mondo.js'
-import { carteDi, daScegliere, eApri, eFine, volteDi } from '../dati/carte.js'
+import { carteDi, daScegliere, eApri, eFine, eSe, valoreDi } from '../dati/carte.js'
 import { Mondo, esegui, TANA, eErrore } from './mondo.js'
 
 /* un tetto di sicurezza, non di gioco: una mappa da 63 celle con tre
@@ -123,11 +123,14 @@ export function suggerisci(liv, fila = []) {
         bambino il pezzo di testa più lungo, e da lì la prima differenza.
         Una differenza può essere di quattro specie, e ognuna dice al
         bambino una cosa diversa:
-          { che: 'mossa', cursore, mossa }  qui ci va questa freccia
-          { che: 'ciclo', cursore, volte }  qui ci va un 🔁, di tante volte
-          { che: 'volte', apri, volte }     questo 🔁 va ripetuto tante volte
-          { che: 'togli', cursore }         la carta prima del cursore è di
-                                            troppo (⌫)
+          { che: 'mossa', cursore, mossa }    qui ci va questa freccia
+          { che: 'scatola', cursore, testa }  qui ci va una scatola, con
+                                              questa testa (`ripeti-5`,
+                                              `ripeti-rosso`, `se-blu`…)
+          { che: 'testa', apri, valore }      questa scatola vuole un altro
+                                              valore in testa
+          { che: 'togli', cursore }           la carta prima del cursore è
+                                              di troppo (⌫)
 
    Una fila che vince già con la carota dice solo ▶ (`{ che: 'via' }`).
    Un livello senza soluzioni scritte (non ce n'è, oggi) si accontenta
@@ -155,9 +158,13 @@ function suggerisciNelloZaino(liv, fila) {
   if (meglio && meglio.k < meglio.sol.length) {
     const { sol, k } = meglio
     const loro = fila[k], nostra = sol[k]
-    if (eApri(nostra) && eApri(loro)) return { che: 'volte', apri: k, volte: volteDi(nostra) }
+    /* la stessa scatola con un altro valore in testa: si cambia quello;
+       una scatola d'un'altra specie (un ❓ dove ci va un 🔁) no — lì ci va
+       la scatola giusta, e quella sbagliata resta dietro, spenta */
+    if (eApri(nostra) && eApri(loro) && eSe(nostra) === eSe(loro))
+      return { che: 'testa', apri: k, valore: valoreDi(nostra) }
     if (eFine(nostra)) return { che: 'togli', cursore: k + 1 }
-    if (eApri(nostra)) return { che: 'ciclo', cursore: k, volte: volteDi(nostra) }
+    if (eApri(nostra)) return { che: 'scatola', cursore: k, testa: nostra }
     return { che: 'mossa', cursore: k, mossa: nostra }
   }
   return sciolta(false)

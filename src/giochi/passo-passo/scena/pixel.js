@@ -212,6 +212,50 @@ export const STELLINA = [
   '..y..',
 ]
 
+/* ── le lastre colorate ──
+   Una pietra piatta posata sul prato, con dentro la forma del suo colore:
+   il cerchio rosso, il quadrato blu, il triangolo giallo. La forma dice il
+   colore anche a chi i colori non li distingue tutti — ed è la stessa che
+   sta sulle carte (`viste/Lastra.vue`). La luce viene da sinistra in alto,
+   come per il masso. */
+const lastra = (forma, tavolozza) => ({ tavolozza, righe: [
+  '.oooooooooooo.',
+  'oLLLLLLLLLLLDo',
+  ...forma.map(r => `oL${r}Do`),
+  'oLFFFFFFFFFFDo',
+  'oDDDDDDDDDDDDo',
+  '.oooooooooooo.',
+] })
+export const LASTRE_DISEGNI = {
+  rosso: lastra([
+    'FFFFFFFFFF',
+    'FFFFSSFFFF',
+    'FFFSSSSFFF',
+    'FFSSSSSSFF',
+    'FFSSSSSSFF',
+    'FFFSSSSFFF',
+    'FFFFSSFFFF',
+  ], { o: '#5a1a14', L: '#ff9a86', F: '#e0483a', D: '#a52a20', S: '#ffffff' }),
+  blu: lastra([
+    'FFFFFFFFFF',
+    'FFFFFFFFFF',
+    'FFFSSSSFFF',
+    'FFFSSSSFFF',
+    'FFFSSSSFFF',
+    'FFFSSSSFFF',
+    'FFFFFFFFFF',
+  ], { o: '#14285a', L: '#9cc4ff', F: '#3a78de', D: '#22489a', S: '#ffffff' }),
+  giallo: lastra([
+    'FFFFFFFFFF',
+    'FFFFSSFFFF',
+    'FFFFSSFFFF',
+    'FFFSSSSFFF',
+    'FFFSSSSFFF',
+    'FFSSSSSSFF',
+    'FFSSSSSSFF',
+  ], { o: '#5a4208', L: '#fff0a0', F: '#f4c430', D: '#b8860e', S: '#6a4a06' }),
+}
+
 /* un palo e mezza traversa per lato: la staccionata si compone cella
    per cella guardando le vicine (`scena/tela.js`), come le strade */
 export const PALO = [

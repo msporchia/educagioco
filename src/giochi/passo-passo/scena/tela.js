@@ -32,7 +32,8 @@
 import { ATLANTE, PEZZI, TESSERA } from '../../fattoria/dati/atlante.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
-         CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA } from './pixel.js'
+         CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA,
+         LASTRE_DISEGNI } from './pixel.js'
 import { COPPIE } from '../dati/mondo.js'
 
 /* il colore dell'anello di una buca: lo dice il vocabolario del mondo,
@@ -631,6 +632,14 @@ function dipingiFondo(liv, tema) {
         g.fillRect(px, py, 4, 2); g.fillRect(px + 1, py - 1, 2, 1)
       }
     }
+  }
+
+  /* le lastre: posate sul prato, e ferme per sempre — si dipingono col
+     fondo, una volta sola */
+  for (let y = 0; y < liv.righe; y++) for (let x = 0; x < liv.colonne; x++) {
+    const c = liv.lastra ? liv.lastra[liv.indice(x, y)] : null
+    if (!c || !LASTRE_DISEGNI[c]) continue
+    g.drawImage(pezzo('lastra-' + c, LASTRE_DISEGNI[c]), LATO + x * T + 1, TESTA + y * T + 2)
   }
 
   /* lo spessore della plancia: terra sotto il prato, acqua scura sotto

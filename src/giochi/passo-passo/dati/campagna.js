@@ -67,7 +67,7 @@
    deve scrivere un livello nuovo, stanno in `docs/passo-passo.md`.
    ═══════════════════════════════════════════════════════════════════ */
 import { guastiDellaMappa, MOSSE } from './mondo.js'
-import { CARTE, carteDi, guastiDellaFila, programma, ripeti } from './carte.js'
+import { CARTE, carteDi, guastiDellaFila, programma, ripeti, se } from './carte.js'
 
 export const SCALINI = [
   { chiave: 'passi', nome: 'Primi passi', icona: '🐾', regola: null,
@@ -83,6 +83,14 @@ export const SCALINI = [
   /* da qui la lingua, e non il mondo: il gradino porta una carta */
   { chiave: 'ripeti', nome: 'Il ripeti', icona: '🔁', carta: 'ripeti',
     dritta: 'Nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro.' },
+  { chiave: 'fino', nome: 'Fino a', icona: '🚩', carta: 'fino',
+    dritta: 'Una scatola che non conta: ripete finché il coniglio non arriva sulla lastra del colore giusto.' },
+  { chiave: 'se', nome: 'Il se', icona: '❓', carta: 'se',
+    dritta: 'Il coniglio guarda cosa ha sotto i piedi, e decide: la scatola ❓ si fa solo sul colore giusto.' },
+  /* e l'ultimo rimette insieme tutto: il ghiaccio, i massi, i salti, le
+     lastre, con le scatole in mano */
+  { chiave: 'mondo', nome: 'Tutto il mondo', icona: '🌍', carta: 'ripeti',
+    dritta: 'Il ghiaccio, i massi, i salti e i segnali, con tutte le scatole in mano.' },
 ]
 
 /* I temi sono solo vestito: cambiano l'erba, le foglie per terra, la
@@ -443,6 +451,181 @@ export const CAMPAGNA = [
     ],
     soluzioni: [programma(ripeti(3, ripeti(6, 'destra'), ripeti(2, 'giu'),
                                     ripeti(6, 'sinistra'), ripeti(2, 'giu')))] },
+
+  /* ── gradino 7: fino a ──
+     La scatola che non conta. Serve dove la stessa scatola deve fare
+     strade lunghe diverse — i gradini storti, le file del campo, i lati
+     della spirale — perché lì un numero va bene una volta sola: è la
+     scatola dentro la scatola a renderla necessaria, e lo zaino la
+     pretende. Le lastre rosse dicono dove girare. */
+  { chiave: 'gradini-storti', nome: 'I gradini storti', icona: '🪜', scalino: 'fino',
+    portata: 60, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 4,
+    racconto: 'Tre gradini, uno diverso dall\'altro: contarli non serve, il coniglio va avanti finché non arriva sulla lastra rossa, e scende.',
+    mappa: [
+      'PrAAAAA',
+      'A.c.rAA',
+      'AAAA..r',
+      'AAAAAA@',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), 'giu'))],
+    fragili: [programma(ripeti(3, ripeti(2, 'destra'), 'giu'))] },
+  { chiave: 'pianerottoli', nome: 'Scale e pianerottoli', icona: '🏛️', scalino: 'fino',
+    portata: 62, premio: 16, tema: 'primavera', carte: ['ripeti', 'fino'], zaino: 7,
+    racconto: 'Due colori: la scala scende fino al rosso, il pianerottolo va avanti fino al blu. Due volte, e ogni volta le scale sono lunghe diverse.',
+    mappa: [
+      'P.AAAAAAA',
+      'A..AAAAAA',
+      'AAr.u.AAA',
+      'AAAAA.cAA',
+      'AAAAAA..A',
+      'AAAAAAAru',
+      'AAAAAAAA@',
+    ],
+    soluzioni: [programma(ripeti(2, ripeti('rosso', 'destra', 'giu'), ripeti('blu', 'destra')), 'giu')],
+    fragili: [programma(ripeti(2, ripeti(2, 'destra', 'giu'), ripeti(2, 'destra')), 'giu')] },
+  { chiave: 'campo-storto', nome: 'Il campo storto', icona: '🌾', scalino: 'fino',
+    portata: 64, premio: 16, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 9,
+    racconto: 'Il campo arato, ma storto: ogni solco è lungo diverso. Il programma del campo dritto qui non va, e quello con la lastra rossa sì.',
+    mappa: [
+      'P....rAAA',
+      'BBBBB.BBB',
+      'Ar....AAA',
+      'B.BBBBBBB',
+      'A...c..rA',
+      'BBBBBBB.B',
+      'AAr.....A',
+      'BB.BBBBBB',
+      'AA......@',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), ripeti(2, 'giu'),
+                                    ripeti('rosso', 'sinistra'), ripeti(2, 'giu')))],
+    fragili: [programma(ripeti(3, ripeti(5, 'destra'), ripeti(2, 'giu'),
+                                  ripeti(4, 'sinistra'), ripeti(2, 'giu')))] },
+  { chiave: 'spirale', nome: 'La spirale', icona: '🐌', scalino: 'fino',
+    portata: 66, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 9,
+    racconto: 'La tana è in fondo alla chiocciola. Ogni lato è più corto di quello prima, ma le lastre rosse agli angoli dicono sempre dove girare.',
+    mappa: [
+      'P.....r',
+      'AAAAAA.',
+      'r...rA.',
+      '.AAA.A.',
+      '.A@.rA.',
+      '.AAAAA.',
+      'r..c..r',
+    ],
+    soluzioni: [programma(ripeti(2, ripeti('rosso', 'destra'), ripeti('rosso', 'giu'),
+                                    ripeti('rosso', 'sinistra'), ripeti('rosso', 'su')))],
+    fragili: [programma(ripeti(2, ripeti(6, 'destra'), ripeti(6, 'giu'),
+                                  ripeti(6, 'sinistra'), ripeti(4, 'su')))] },
+
+  /* ── gradino 8: il se ──
+     Il coniglio decide guardando per terra. Serve dove la strada gira in
+     tre versi: «fino a» sa dire quando smettere, non da che parte andare
+     dopo. Il «fino a casa» c'è da qui: con il se, si ripete finché non si
+     è arrivati. */
+  { chiave: 'colline', nome: 'Le colline', icona: '⛰️', scalino: 'se',
+    portata: 67, premio: 18, tema: 'estate', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 6,
+    racconto: 'Avanti sempre: se il prato diventa rosso si scende, se diventa giallo si sale. Una scatola sola, e le colline sono tutte diverse.',
+    mappa: [
+      'AAAAAAAAA',
+      'AAAAAAAAA',
+      'AA.crAA.@',
+      'P.gA.r.gA',
+      'AAAAA.gAA',
+      'AAAAAAAAA',
+    ],
+    soluzioni: [programma(ripeti('casa', 'destra', se('rosso', 'giu'), se('giallo', 'su')))],
+    fragili: [programma(ripeti('casa', 'destra', ripeti('rosso', 'giu')))] },
+  { chiave: 'segni', nome: 'Il sentiero dei segni', icona: '🪧', scalino: 'se',
+    portata: 68, premio: 18, tema: 'primavera', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 9,
+    racconto: 'Ogni lastra dice dove andare: il rosso giù, il blu avanti, il giallo su. Il coniglio le legge una per una, e il programma è lo stesso per tutto il sentiero.',
+    mappa: [
+      'AAAAAAAAA',
+      'AAAAuurAA',
+      'AAAAgArAA',
+      'PcrAgAurA',
+      'AAuugAArA',
+      'AAAAAAAu@',
+      'AAAAAAAAA',
+    ],
+    soluzioni: [programma('destra', 'destra',
+                          ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'), se('giallo', 'su')))],
+    fragili: [programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
+
+  /* ── gradino 9: tutto il mondo ──
+     Le regole del mondo e le scatole insieme: sul ghiaccio sono i sassi a
+     fermare una scatola che gira, nell'acqua sono i massi a fare il
+     ponte a ogni giro, nel fiume si ripete un salto finché non si arriva
+     al sasso rosso, e nel bosco ghiacciato si scivola da un segnale
+     all'altro leggendoli. */
+  { chiave: 'spirale-ghiaccio', nome: 'La spirale di ghiaccio', icona: '🌀', scalino: 'mondo',
+    portata: 70, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'Sul ghiaccio non servono le lastre: a fermare il coniglio negli angoli ci pensano i sassi. Quattro frecce, e a ogni giro il cerchio si stringe.',
+    mappa: [
+      'P********',
+      'O********',
+      '*******O*',
+      '**O******',
+      '****@O***',
+      '*********',
+      '*O*******',
+      '******O**',
+      '***C*****',
+    ],
+    soluzioni: [programma(ripeti(3, 'destra', 'giu', 'sinistra', 'su'))] },
+  { chiave: 'pozze', nome: 'Le pozze', icona: '🪨', scalino: 'mondo',
+    portata: 71, premio: 20, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'A ogni gradino c\'è una pozza, e sopra la pozza un masso: spinto giù, fa il ponte. La stessa scatola spinge, attraversa e va avanti, quattro volte.',
+    mappa: [
+      'PAAAAAAAA',
+      'mAAAAAAAA',
+      '~..AAAAAA',
+      'AAmAAAAAA',
+      'AA~c.AAAA',
+      'AAAAmAAAA',
+      'AAAA~..AA',
+      'AAAAAAmAA',
+      'AAAAAA~.@',
+    ],
+    soluzioni: [programma(ripeti(4, 'giu', 'giu', 'destra', 'destra'))],
+    fragili: [programma(ripeti(4, 'destra', 'destra', 'giu', 'giu'))] },
+  { chiave: 'fiume-sassi', nome: 'Il fiume dei sassi', icona: '🐸', scalino: 'mondo',
+    portata: 72, premio: 20, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 7, salti: true,
+    racconto: 'Di sasso in sasso fino a quello rosso, e da lì un salto giù oltre la siepe. Ogni fila ha i suoi sassi, e nessuna è lunga come l\'altra.',
+    mappa: [
+      'P~.~.~r~~',
+      'AAAAAA~AA',
+      '~~r~.~.~~',
+      'AA~AAAAAA',
+      '~~.~c~r~~',
+      'AAAAAA~AA',
+      'r~.~.~.~~',
+      '~AAAAAAAA',
+      '@AAAAAAAA',
+    ],
+    soluzioni: [programma(ripeti(2, ripeti('rosso', 'salto-destra'), 'salto-giu',
+                                    ripeti('rosso', 'salto-sinistra'), 'salto-giu'))],
+    fragili: [programma(ripeti(2, ripeti(3, 'salto-destra'), 'salto-giu',
+                                  ripeti(2, 'salto-sinistra'), 'salto-giu'))] },
+  { chiave: 'bosco-ghiacciato', nome: 'Il bosco ghiacciato', icona: '❄️', scalino: 'mondo',
+    portata: 74, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
+    racconto: 'I sentieri del bosco sono ghiaccio, e si scivola fino alla prossima lastra: è lei che ferma, ed è lei che dice dove andare dopo. Quattordici scivolate, e un programma solo che le legge tutte.',
+    mappa: [
+      'AAAu*urAA',
+      'AAA*AA*AA',
+      'AAugAA*AA',
+      'AA*AAArAA',
+      'AA*AAACAA',
+      'P*gAAArAA',
+      'AAAAAArAA',
+      'AAAAAAurA',
+      'AAAAAAArA',
+      'AAAAAAA*A',
+      'AAAAAAAu@',
+    ],
+    soluzioni: [programma('destra',
+                          ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'), se('giallo', 'su')))],
+    fragili: [programma('destra', ripeti('casa', ripeti('giallo', 'destra'), ripeti('blu', 'su')))] },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length

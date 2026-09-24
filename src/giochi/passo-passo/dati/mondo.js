@@ -18,6 +18,8 @@
      O  sasso piantato nel ghiaccio                   (alto)
      t  tronco      -  staccionata                    (bassi)
      1 2 3  le buche collegate: la stessa cifra, la stessa coppia
+     r u g  le lastre colorate: rossa, blu (u, perché B è il
+            cespuglio), gialla
 
    Perché la carota e il masso hanno due lettere e l'albero una sola:
    sotto la carota e sotto il masso il terreno **conta per le regole**
@@ -31,13 +33,25 @@
    salto: uno basso (il tronco, la staccionata) si scavalca, uno alto no.
    Sono disegni diversi apposta — il bambino deve poterlo dire guardando,
    senza provarlo — e la differenza sta in questa tabella e basta.
+
+   ── LE LASTRE ─────────────────────────────────────────────────────
+   Una lastra colorata per terra non fa niente: si cammina come il prato
+   (e come il prato ferma chi scivola). Serve a **guardarla**: dal
+   gradino del «fino a» il coniglio può ripetere finché non ci arriva
+   sopra, e dal «se» può decidere cosa fare a seconda del colore che ha
+   sotto i piedi (`dati/carte.js`). Ogni colore ha anche la sua forma —
+   il rosso un cerchio, il blu un quadrato, il giallo un triangolo — perché
+   un bambino su dodici i colori non li distingue tutti, e la carta deve
+   potersi leggere lo stesso.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* quanto è grande una mappa, al massimo: su un telefono da 390 px la
    mappa deve stare intera in larghezza e in circa metà dell'altezza, a
-   ingrandimento intero (vedi `scena/tela.js`) */
-export const COLONNE_MAX = 7
-export const RIGHE_MAX = 9
+   ingrandimento intero (vedi `scena/tela.js`). Sette per nove bastava ai
+   piccoli; i gradini dei grandi mescolano più regole e vogliono più
+   posto, e a nove per undici una cella resta sui trenta pixel */
+export const COLONNE_MAX = 9
+export const RIGHE_MAX = 11
 /* e al minimo: sotto le tre celle per lato non c'è un posto, c'è un
    corridoio */
 export const LATO_MIN = 3
@@ -55,6 +69,14 @@ export const OSTACOLI = {
   sasso:       { alto: true },
   tronco:      { alto: false },
   staccionata: { alto: false },
+}
+
+/* le lastre: il colore, la forma che lo dice a chi i colori non li
+   distingue, e le tinte per il disegno (`scena/pixel.js`) e per le carte */
+export const LASTRE = {
+  rosso:  { nome: 'rossa',  forma: 'cerchio',   colore: '#e0483a', scuro: '#a52a20' },
+  blu:    { nome: 'blu',    forma: 'quadrato',  colore: '#3a78de', scuro: '#22489a' },
+  giallo: { nome: 'gialla', forma: 'triangolo', colore: '#f4c430', scuro: '#b8860e' },
 }
 
 export const LEGENDA = {
@@ -76,6 +98,9 @@ export const LEGENDA = {
   '1': { terreno: 'buca', coppia: 1 },
   '2': { terreno: 'buca', coppia: 2 },
   '3': { terreno: 'buca', coppia: 3 },
+  'r': { terreno: 'prato', lastra: 'rosso' },
+  'u': { terreno: 'prato', lastra: 'blu' },
+  'g': { terreno: 'prato', lastra: 'giallo' },
 }
 
 /* i colori degli anelli delle buche, uno per coppia: stanno qui e non
@@ -157,6 +182,7 @@ export function guastiDelMondo() {
     if (d.ostacolo && !OSTACOLI[d.ostacolo]) guasti.push(`legenda «${ch}»: ostacolo «${d.ostacolo}» sconosciuto`)
     if (d.coppia && !COPPIE[d.coppia]) guasti.push(`legenda «${ch}»: la coppia ${d.coppia} non ha un colore`)
     if (d.coppia && d.terreno !== 'buca') guasti.push(`legenda «${ch}»: una coppia che non è una buca`)
+    if (d.lastra && !LASTRE[d.lastra]) guasti.push(`legenda «${ch}»: la lastra «${d.lastra}» non ha un colore`)
     /* sopra un ostacolo non ci sta nient'altro: una carota dentro un
        cespuglio non la prende nessuno */
     if (d.ostacolo && (d.carota || d.masso || d.partenza))

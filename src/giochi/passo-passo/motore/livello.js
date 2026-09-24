@@ -40,6 +40,7 @@ export class Livello {
     this.ostacolo = new Array(n).fill(null)
     this.coppia = new Array(n).fill(0)
     this.gemella = new Array(n).fill(-1)
+    this.lastra = new Array(n).fill(null)
     this.partenza = -1
     this.tana = -1
     this.carota = -1
@@ -56,6 +57,7 @@ export class Livello {
       if (d.terreno === 'tana') this.tana = i
       if (d.carota) this.carota = i
       if (d.masso) this.massi.push(i)
+      if (d.lastra) this.lastra[i] = d.lastra
       if (d.coppia) {
         this.coppia[i] = d.coppia
         ;(buche[d.coppia] = buche[d.coppia] || []).push(i)
