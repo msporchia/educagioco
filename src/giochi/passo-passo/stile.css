@@ -97,10 +97,13 @@
    Oltre le due righe scorre, e la tessera che conta resta a vista. */
 .pp-fila { flex: none; height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 14px);
            overflow-y: auto; overscroll-behavior: contain;
-           display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center;
+           display: flex; align-items: flex-start;
            gap: var(--pp-spazio); padding: 7px 8px;
            background: var(--pp-carta); border-radius: 16px;
            box-shadow: inset 0 2px 6px rgba(0,0,0,.08), 0 1px 0 #fff }
+/* il coniglio sta nella sua colonna, e il programma va a capo accanto */
+.pp-programma { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-content: flex-start;
+                align-items: center; gap: var(--pp-spazio) }
 /* con lo zaino una riga può essere una scatola dentro una scatola, e il
    bordo di ognuna la fa più alta di una tessera: due righe così devono
    stare intere, se no il programma giusto scorre di tre pixel */

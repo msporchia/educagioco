@@ -91,15 +91,20 @@ const tocca = i => { if (!props.inCorsa) emit('cursore', i) }
     <button class="pp-inizio" data-inizio aria-label="all'inizio della fila" @click="tocca(0)">
       <span class="pp-em">🐇</span>
     </button>
-    <Carte :nodi="nodi" :fine="fila.length" />
-    <!-- vuota, la fila mostra dove andrà la prima freccia: un posto
-         tratteggiato, non una frase (e col consiglio del 💡 quel posto
-         ce l'ha già dentro). Con lo zaino i posti sono tutti quelli che
-         restano, e toccarne uno porta il cursore in fondo -->
-    <template v-if="zaino">
-      <button v-for="n in liberi" :key="'z' + n" class="pp-posto" data-libero
-              :aria-label="n === 1 ? 'in fondo alla fila' : null" @click="tocca(fila.length)"></button>
-    </template>
-    <span v-else-if="!fila.length && !fantasma" class="pp-posto" aria-hidden="true"></span>
+    <!-- il programma va a capo nella sua colonna, accanto al coniglio: se
+         il coniglio andasse a capo con lui, una scatola più larga dello
+         spazio che resta lo lascerebbe da solo su una riga -->
+    <div class="pp-programma">
+      <Carte :nodi="nodi" :fine="fila.length" />
+      <!-- vuota, la fila mostra dove andrà la prima freccia: un posto
+           tratteggiato, non una frase (e col consiglio del 💡 quel posto
+           ce l'ha già dentro). Con lo zaino i posti sono tutti quelli che
+           restano, e toccarne uno porta il cursore in fondo -->
+      <template v-if="zaino">
+        <button v-for="n in liberi" :key="'z' + n" class="pp-posto" data-libero
+                :aria-label="n === 1 ? 'in fondo alla fila' : null" @click="tocca(fila.length)"></button>
+      </template>
+      <span v-else-if="!fila.length && !fantasma" class="pp-posto" aria-hidden="true"></span>
+    </div>
   </div>
 </template>
