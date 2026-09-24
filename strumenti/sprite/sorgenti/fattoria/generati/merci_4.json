@@ -1,0 +1,361 @@
+{
+ "__": "Tutte le merci che mancavano al secondo albero, e le due che avevano un ripiego senza dirlo: il pastone (il calderone del set CC0) e il miele (un vasetto rosso da marmellata) — §4 di `PROMPT-secondo-albero.md`.\n\nÈ tornato a 1248×832 invece che a 1536×1024: stesse proporzioni, griglia 6×4 di celle da 208, figure un po' più piccole del chiesto. L'alone c'è ma è chiaro e leggero, non il rossastro di `edifici_4`: `\"alone\": 128` lo stesso, perché i bordi escano netti dopo la riduzione. Ogni merce è **una macchia sola** di pixel attaccati, quindi i rettangoli sono quelli di `misura.py --figure` così come li stampa, assegnati alla cella dal loro centro.\n\nLe misure hanno un divisore solo per tutto il foglio, 7,25: le ventiquattro stanno fra 14 e 32 px come le altre merci (`Provino.vue` ingrandisce di un intero solo sotto i 17, quindi qui le misure relative si vedono così come sono). Il più largo è il fritto, 32.",
+ "prompt": {
+  "scheda": "PROMPT-secondo-albero.md",
+  "base": "merci_3.png",
+  "generatore": "settembre 2026",
+  "testo": "Disegna un foglio di oggetti in pixel art nello stesso stile di questa immagine: stessa tavolozza calda, stesso contorno scuro, stessa vista — di fronte e un po' dall'alto — stessa luce da in alto a sinistra.\n\nIl foglio è 1536×1024 px su fondo trasparente (PNG). Disponi 24 oggetti su una griglia dichiarata di 6 colonne × 4 righe, celle di 256×256 px, ognuno centrato nella sua cella. Ogni oggetto è largo circa 190 px e nessuno tocca il bordo della sua cella (nel gioco diventa 25–30 px: un oggetto solo, grande, che si riconosca anche a venti pixel).\n\nOgni oggetto è appoggiato, visto da chi lo guarda dal banco, con la base che si vede. Nessuna ombra, nessun piano d'appoggio, nessun fondo dietro, e nessun alone o bagliore attorno agli oggetti: i bordi sono netti e pieni, e fuori dall'oggetto è tutto trasparente.\n\nNESSUNA PAROLA SCRITTA, da nessuna parte: né etichette, né lettere, né numeri.\n\nQuello che appartiene a un oggetto dev'essere attaccato al suo disegno in un pezzo solo. Niente briciole che galleggiano lontane.\n\nDa sinistra a destra, riga per riga:\n\nRiga 1 — il filo e il colore:\n1. un maglione piegato color crema con le trecce, le maniche ripiegate sopra\n2. lo stesso maglione piegato, tinto di viola lavanda chiaro\n3. un vasetto di vetro col tappo di sughero, pieno di tintura viola lavanda\n4. tre saponette impilate, due color lavanda e una crema, con una bollicina di schiuma sopra\n5. un sacchettino di tela grezza chiuso da un nastro, con tre steli di lavanda che escono dalla bocca\n6. una sciarpa di lana a righe crema e rosse, arrotolata a spirale\n\nRiga 2 — il forno e la dispensa:\n7. un berretto di lana crema col pompon, a coste\n8. una crostata rotonda con la griglia di pasta sopra e la confettura di fragole rossa fra le strisce\n9. un barattolo di vetro con la salsa di pomodoro rossa e il tappo di metallo, un pomodorino appoggiato contro\n10. un vaso di vetro largo con gli ortaggi a pezzi sott'olio, a strati viola, rossi e arancio\n11. un vasetto di marmellata di fragole col tappo coperto da un quadrato di stoffa a quadretti bianchi e rossi legato con lo spago\n12. tre caramelle incartate in carta colorata a fiocco, una rossa, una gialla, una azzurra, appoggiate l'una sull'altra\n\nRiga 3 — la pasticceria e la cucina:\n13. un bicchiere alto con il frullato rosa di fragole, la panna in cima e una fragola sul bordo\n14. una pila di quattro biscotti tondi con le gocce di cioccolato\n15. una pizza intera tonda con il pomodoro, la mozzarella bianca a chiazze e due foglie di basilico\n16. una teglia rettangolare di lasagne vista un po' dall'alto, con gli strati di pasta, il sugo rosso e la crosta dorata\n17. un cono di carta a righe rosse e bianche pieno di patatine fritte dorate\n18. due pesci fritti dorati e croccanti su un foglio di carta paglia, con uno spicchio di limone\n\nRiga 4 — la peschiera, il riso e la stalla:\n19. un pesce intero argentato e azzurro, appena pescato, appoggiato su un letto di foglie\n20. tre arancini dorati a forma di pera, impilati, uno spezzato che mostra il riso giallo dentro\n21. un piattino di legno con quattro pezzi di sushi: riso bianco con sopra una fetta di salmone arancione\n22. tre maki tondi con l'alga verde scuro fuori, il riso bianco e le verdure colorate al centro\n23. una scodella smaltata bianca col bordo blu, colma di pastone di mais giallo, denso e a grumi, con una pannocchia appoggiata contro la scodella\n24. un vasetto di vetro basso e panciuto pieno di miele dorato, col tappo di legno e il mestolino da miele di legno appoggiato sopra, e una goccia di miele che cola lungo il vetro"
+ },
+ "fondo": "trasparente",
+ "alone": 128,
+ "colori": 0,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "oggetto",
+ "trasforma": {
+  "merce": {
+   "giri": 1,
+   "specchia": false
+  }
+ },
+ "sprite": {
+  "merce_maglione": {
+   "da": [
+    31,
+    46
+   ],
+   "cella": [
+    194,
+    150
+   ],
+   "misura": [
+    27,
+    21
+   ]
+  },
+  "merce_maglione_lavanda": {
+   "da": [
+    245,
+    42
+   ],
+   "cella": [
+    190,
+    158
+   ],
+   "misura": [
+    26,
+    22
+   ]
+  },
+  "merce_tintura": {
+   "da": [
+    488,
+    29
+   ],
+   "cella": [
+    102,
+    167
+   ],
+   "misura": [
+    14,
+    23
+   ]
+  },
+  "merce_sapone": {
+   "da": [
+    650,
+    47
+   ],
+   "cella": [
+    169,
+    151
+   ],
+   "misura": [
+    23,
+    21
+   ]
+  },
+  "merce_sacchetto": {
+   "da": [
+    867,
+    7
+   ],
+   "cella": [
+    125,
+    191
+   ],
+   "misura": [
+    17,
+    26
+   ]
+  },
+  "merce_sciarpa_lana": {
+   "da": [
+    1026,
+    38
+   ],
+   "cella": [
+    187,
+    171
+   ],
+   "misura": [
+    26,
+    24
+   ]
+  },
+  "merce_berretto": {
+   "da": [
+    42,
+    220
+   ],
+   "cella": [
+    142,
+    162
+   ],
+   "misura": [
+    20,
+    22
+   ]
+  },
+  "merce_crostata": {
+   "da": [
+    236,
+    250
+   ],
+   "cella": [
+    188,
+    133
+   ],
+   "misura": [
+    26,
+    18
+   ]
+  },
+  "merce_salsa": {
+   "da": [
+    482,
+    224
+   ],
+   "cella": [
+    132,
+    164
+   ],
+   "misura": [
+    18,
+    23
+   ]
+  },
+  "merce_conserva": {
+   "da": [
+    672,
+    223
+   ],
+   "cella": [
+    118,
+    162
+   ],
+   "misura": [
+    16,
+    22
+   ]
+  },
+  "merce_marmellata": {
+   "da": [
+    860,
+    226
+   ],
+   "cella": [
+    133,
+    159
+   ],
+   "misura": [
+    18,
+    22
+   ]
+  },
+  "merce_caramelle": {
+   "da": [
+    1035,
+    243
+   ],
+   "cella": [
+    171,
+    146
+   ],
+   "misura": [
+    24,
+    20
+   ]
+  },
+  "merce_frullato": {
+   "da": [
+    54,
+    397
+   ],
+   "cella": [
+    106,
+    187
+   ],
+   "misura": [
+    15,
+    26
+   ]
+  },
+  "merce_biscotti": {
+   "da": [
+    240,
+    425
+   ],
+   "cella": [
+    132,
+    149
+   ],
+   "misura": [
+    18,
+    21
+   ]
+  },
+  "merce_pizza": {
+   "da": [
+    418,
+    430
+   ],
+   "cella": [
+    203,
+    144
+   ],
+   "misura": [
+    28,
+    20
+   ]
+  },
+  "merce_lasagne": {
+   "da": [
+    632,
+    434
+   ],
+   "cella": [
+    211,
+    146
+   ],
+   "misura": [
+    29,
+    20
+   ]
+  },
+  "merce_patatine": {
+   "da": [
+    865,
+    413
+   ],
+   "cella": [
+    127,
+    167
+   ],
+   "misura": [
+    18,
+    23
+   ]
+  },
+  "merce_fritto": {
+   "da": [
+    1007,
+    438
+   ],
+   "cella": [
+    231,
+    139
+   ],
+   "misura": [
+    32,
+    19
+   ]
+  },
+  "merce_pesce": {
+   "da": [
+    16,
+    623
+   ],
+   "cella": [
+    208,
+    145
+   ],
+   "misura": [
+    29,
+    20
+   ]
+  },
+  "merce_arancini": {
+   "da": [
+    236,
+    612
+   ],
+   "cella": [
+    172,
+    162
+   ],
+   "misura": [
+    24,
+    22
+   ]
+  },
+  "merce_sushi": {
+   "da": [
+    429,
+    632
+   ],
+   "cella": [
+    190,
+    138
+   ],
+   "misura": [
+    26,
+    19
+   ]
+  },
+  "merce_maki": {
+   "da": [
+    651,
+    630
+   ],
+   "cella": [
+    163,
+    134
+   ],
+   "misura": [
+    22,
+    18
+   ]
+  },
+  "merce_pastone": {
+   "da": [
+    847,
+    617
+   ],
+   "cella": [
+    171,
+    153
+   ],
+   "misura": [
+    24,
+    21
+   ]
+  },
+  "merce_miele": {
+   "da": [
+    1062,
+    600
+   ],
+   "cella": [
+    135,
+    170
+   ],
+   "misura": [
+    19,
+    23
+   ]
+  }
+ }
+}

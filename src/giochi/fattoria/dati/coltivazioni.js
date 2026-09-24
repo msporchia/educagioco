@@ -168,10 +168,11 @@ export const PRODOTTI = {
   fiori:    { nome: 'Fiori',    emoji: '🌼', silo: 'stalla', mangime: true, pezzo: 'cesto_fiori_misti0' },
   /* quello che mangiano il cane e il gatto di casa: esce dal mulino */
   mangime: { nome: 'Mangime', emoji: '🥣', silo: 'stalla', mangime: true, pezzo: 'merce_mangime' },
-  /* Il calderone e non la ciotola rosa dei gatti: in una fila di nove
-     scomparti di legno e iuta quella era l'unica cosa fucsia, e si
-     leggeva come un errore. Un pastone sta in una pentola. */
-  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', mangime: true, pezzo: 'calderone0' },
+  /* Una scodella smaltata e non la ciotola rosa dei gatti: in una fila
+     di nove scomparti di legno e iuta quella era l'unica cosa fucsia, e
+     si leggeva come un errore. Fino a `merci_4` era il calderone del
+     set CC0, l'unico pezzo a sedici pixel in mezzo a merci dipinte. */
+  pastone: { nome: 'Pastone', emoji: '🍲', silo: 'stalla', mangime: true, pezzo: 'merce_pastone' },
   /* la merenda di casa: esce dal mulino come il mangime e il pastone,
      ed è l'unica pappa che non nasce da un cereale — fragole e miele. */
   merenda: { nome: 'Merenda', emoji: '🥧', silo: 'stalla', pezzo: 'cesta_picnic' },
@@ -180,11 +181,13 @@ export const PRODOTTI = {
   latte:   { nome: 'Latte',   emoji: '🥛', silo: 'stalla', pezzo: 'latte' },
   tartufi: { nome: 'Tartufi', emoji: '🍄', silo: 'stalla', pezzo: 'merce_tartufi' },
   lana:    { nome: 'Lana',    emoji: '🧶', silo: 'stalla', pezzo: 'merce_lana' },
-  miele:   { nome: 'Miele',   emoji: '🍯', silo: 'stalla', pezzo: 'marmellata1' },
-  /* Il pesce esce dalla peschiera (§8.1): un recinto come gli altri, ma
-     nessun foglio ha ancora un pesce da mostrare — nemmeno un ripiego
-     che somigli, quindi resta l'emoji finché il foglio non arriva. */
-  pesce:   { nome: 'Pesce',   emoji: '🐟', silo: 'stalla', aspetta: 'merce_pesce' },
+  /* Il vasetto dorato col mestolino. Fino a `merci_4` era uno rosso
+     dell'arredo, gemello di quello che faceva da salsa e da marmellata:
+     arrivate le loro facce, avrebbe detto «marmellata» da solo. */
+  miele:   { nome: 'Miele',   emoji: '🍯', silo: 'stalla', pezzo: 'merce_miele' },
+  /* Il pesce esce dalla peschiera (§8.1): un recinto come gli altri, e
+     fino a `merci_4` l'unica merce che non aveva nemmeno un ripiego. */
+  pesce:   { nome: 'Pesce',   emoji: '🐟', silo: 'stalla', pezzo: 'merce_pesce' },
   /* **Il concime è un prodotto come gli altri**, e non una battuta: gli
      asini sono le uniche bestie del cortile che non danno da mangiare a
      nessuno, e quello che rendono torna alla terra — il prato fiorito
@@ -220,7 +223,7 @@ export const PRODOTTI = {
      mercato (`dati/mercato.js`). Era anche un addobbo sulla schiena
      pagato col granaio, ed è stato sospeso con gli altri della schiena
      — un'emoji di maglione non sta su una bestia (`dati/addobbi.js`). */
-  maglione: { nome: 'Maglione', emoji: '🧥', silo: 'bottega', aspetta: 'merce_maglione' },
+  maglione: { nome: 'Maglione', emoji: '🧥', silo: 'bottega', pezzo: 'merce_maglione' },
   /* ── IL CASEIFICIO: IL LATTE CHE DIVENTA DUE COSE ────────────────
      Il latte aveva un'uscita sola — la ciotola — ed era l'unico
      prodotto di recinto che non portava da nessuna parte. Qui si
@@ -237,10 +240,10 @@ export const PRODOTTI = {
      dispensa. Il maglione alla lavanda è una **merce**, non un
      addobbo: la tintoria prende un maglione e ne rende un altro, e chi
      lo vuole è la sarta al banco. */
-  tintura:   { nome: 'Tintura',   emoji: '🫙', silo: 'bottega', aspetta: 'merce_tintura' },
+  tintura:   { nome: 'Tintura',   emoji: '🫙', silo: 'bottega', pezzo: 'merce_tintura' },
   maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', silo: 'bottega',
-                      aspetta: 'merce_maglione_lavanda' },
-  sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', aspetta: 'merce_sapone' },
+                      pezzo: 'merce_maglione_lavanda' },
+  sapone:    { nome: 'Sapone',    emoji: '🧼', silo: 'bottega', pezzo: 'merce_sapone' },
 
   /* ── LA CUCINA: DOVE LE COLTURE SI INCONTRANO ────────────────────
      Quattro merci che nascono **da colture diverse messe insieme**, e
@@ -254,48 +257,38 @@ export const PRODOTTI = {
      costano più di quanto una ciotola possa valere (la polenta 🪙15),
      e il loro sbocco è il banco del mercato. */
   minestrone: { nome: 'Minestrone', emoji: '🍜', silo: 'bottega', pezzo: 'merce_minestrone' },
-  /* Il vasetto rosso dell'arredo fa da salsa finché il foglio non
-     porta il suo — è lo stesso ripiego che il miele usa da sempre. */
-  salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'marmellata0',
-               aspetta: 'merce_salsa' },
-  conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega',
-               aspetta: 'merce_conserva' },
+  salsa:     { nome: 'Salsa',     emoji: '🥫', silo: 'bottega', pezzo: 'merce_salsa' },
+  conserva:  { nome: 'Conserva d\'orto', emoji: '🥗', silo: 'bottega', pezzo: 'merce_conserva' },
   polenta:   { nome: 'Polenta',   emoji: '🍛', silo: 'bottega', pezzo: 'merce_polenta' },
-  /* La crostatina dell'arredo e il sacco di iuta: due facce che
-     l'atlante ha già e che non nominava nessuno. */
-  crostata:  { nome: 'Crostata',  emoji: '🍰', silo: 'bottega', pezzo: 'crostatina',
-               aspetta: 'merce_crostata' },
-  sacchetto: { nome: 'Sacchetto profumato', emoji: '👝', silo: 'bottega',
-               pezzo: 'sacco_iuta', aspetta: 'merce_sacchetto' },
+  crostata:  { nome: 'Crostata',  emoji: '🍰', silo: 'bottega', pezzo: 'merce_crostata' },
+  sacchetto: { nome: 'Sacchetto profumato', emoji: '👝', silo: 'bottega', pezzo: 'merce_sacchetto' },
 
   /* ── L'ALBERO NUOVO: LO ZUCCHERIFICIO, LA GELATERIA, IL PASTIFICIO,
        LA FRIGGITORIA, IL SUSHI BAR (§8 di docs/fattoria-albero.md) ────
-     Diciassette merci nuove, e nessuna ha ancora un foglio: `aspetta`
-     dice `merce_<id>` e basta, com'è la regola di default — la
-     eccezione è la marmellata, che ha già un vasetto viola nell'atlante
-     (lo stesso ripiego della salsa) e lo usa intanto. */
+     Diciassette merci nuove, nate prima del loro foglio con `aspetta`
+     (vedi sopra): le facce sono arrivate tutte insieme, con quelle
+     della tintoria e della cucina, in `merci_4.png`. */
   zucchero:   { nome: 'Zucchero',   emoji: '🧂', silo: 'bottega', pezzo: 'merce_zucchero' },
-  caramelle:  { nome: 'Caramelle',  emoji: '🍬', silo: 'bottega', aspetta: 'merce_caramelle' },
-  marmellata: { nome: 'Marmellata', emoji: '🫙', silo: 'bottega', pezzo: 'marmellata0',
-                aspetta: 'merce_marmellata' },
+  caramelle:  { nome: 'Caramelle',  emoji: '🍬', silo: 'bottega', pezzo: 'merce_caramelle' },
+  marmellata: { nome: 'Marmellata', emoji: '🫙', silo: 'bottega', pezzo: 'merce_marmellata' },
   succo:      { nome: 'Succo',      emoji: '🧃', silo: 'bottega', pezzo: 'merce_succo' },
   gelato:     { nome: 'Gelato',     emoji: '🍨', silo: 'bottega', pezzo: 'merce_gelato' },
-  frullato:   { nome: 'Frullato',   emoji: '🥤', silo: 'bottega', aspetta: 'merce_frullato' },
+  frullato:   { nome: 'Frullato',   emoji: '🥤', silo: 'bottega', pezzo: 'merce_frullato' },
   pasta:      { nome: 'Pasta',      emoji: '🍝', silo: 'bottega', pezzo: 'merce_pasta' },
-  biscotti:   { nome: 'Biscotti',   emoji: '🍪', silo: 'bottega', aspetta: 'merce_biscotti' },
-  pizza:      { nome: 'Pizza',      emoji: '🍕', silo: 'bottega', aspetta: 'merce_pizza' },
-  lasagne:    { nome: 'Lasagne',    emoji: '🍱', silo: 'bottega', aspetta: 'merce_lasagne' },
+  biscotti:   { nome: 'Biscotti',   emoji: '🍪', silo: 'bottega', pezzo: 'merce_biscotti' },
+  pizza:      { nome: 'Pizza',      emoji: '🍕', silo: 'bottega', pezzo: 'merce_pizza' },
+  lasagne:    { nome: 'Lasagne',    emoji: '🍱', silo: 'bottega', pezzo: 'merce_lasagne' },
   /* `sciarpa_lana` e non `sciarpa`: la stessa ragione del maglione alla
      lavanda contro il maglione — `sciarpa` è già l'addobbo comprato a
      🪙14 (`dati/addobbi.js`, sospeso), questa è tessuta. */
   sciarpa_lana: { nome: 'Sciarpa di lana', emoji: '🧣', silo: 'bottega',
-                  aspetta: 'merce_sciarpa_lana' },
-  berretto:   { nome: 'Berretto',   emoji: '🧢', silo: 'bottega', aspetta: 'merce_berretto' },
-  patatine:   { nome: 'Patatine',   emoji: '🍟', silo: 'bottega', aspetta: 'merce_patatine' },
-  fritto:     { nome: 'Fritto',     emoji: '🍤', silo: 'bottega', aspetta: 'merce_fritto' },
-  arancini:   { nome: 'Arancini',   emoji: '🍙', silo: 'bottega', aspetta: 'merce_arancini' },
-  sushi:      { nome: 'Sushi',      emoji: '🍣', silo: 'bottega', aspetta: 'merce_sushi' },
-  maki:       { nome: 'Maki',       emoji: '🍥', silo: 'bottega', aspetta: 'merce_maki' },
+                  pezzo: 'merce_sciarpa_lana' },
+  berretto:   { nome: 'Berretto',   emoji: '🧢', silo: 'bottega', pezzo: 'merce_berretto' },
+  patatine:   { nome: 'Patatine',   emoji: '🍟', silo: 'bottega', pezzo: 'merce_patatine' },
+  fritto:     { nome: 'Fritto',     emoji: '🍤', silo: 'bottega', pezzo: 'merce_fritto' },
+  arancini:   { nome: 'Arancini',   emoji: '🍙', silo: 'bottega', pezzo: 'merce_arancini' },
+  sushi:      { nome: 'Sushi',      emoji: '🍣', silo: 'bottega', pezzo: 'merce_sushi' },
+  maki:       { nome: 'Maki',       emoji: '🍥', silo: 'bottega', pezzo: 'merce_maki' },
 }
 
 /* I sette stati di una coltura, scritti una volta: sono i sette

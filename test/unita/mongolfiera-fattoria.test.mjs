@@ -108,15 +108,15 @@ function riempi(f, i, c) {
             premiDi(25).some(p => p.id === 'mongolfiera'))
 }
 
-/* Le otto sorprese: gli id del foglio che verrà, e **nessuna** in
-   vendita o fra i premi. */
+/* Le otto sorprese: gli id del foglio della fiera (`edifici_5.png`),
+   ognuna col suo disegno, e **nessuna** in vendita o fra i premi. */
 {
   uguale('le sorprese sono otto', SORPRESE.length, 8)
   const attese = ['fiera_bandierine', 'fiera_giostra', 'fiera_zucchero_filato',
     'fiera_lanterne', 'fiera_barattoli', 'fiera_girasole', 'fiera_spaventapasseri', 'fiera_palco']
   uguale('con gli id del foglio della fiera', SORPRESE.slice().sort().join(' '), attese.sort().join(' '))
   for (const id of SORPRESE)
-    controlla(`${id} aspetta il suo disegno`, PER_ID[id].aspetta === id)
+    controlla(`${id} ha il suo disegno`, PER_ID[id].pezzo === id && !PER_ID[id].aspetta)
   let inPremio = 0
   for (let l = 1; l <= ULTIMO; l++) {
     inPremio += premiDi(l).filter(p => SORPRESE.includes(p.id)).length

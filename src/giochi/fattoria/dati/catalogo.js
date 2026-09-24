@@ -524,19 +524,18 @@ export const CATEGORIE = [
        disegnata in anticipo nello stesso foglio delle due bancarelle
        (`edifici_3.png`, campo `__`): lo zuccherificio, il pastificio,
        il sushi bar. La gelateria è arrivata dopo, con la mongolfiera
-       (`edifici_4.png`). La friggitoria prende ancora in prestito un
-       disegno che somiglia, come facevano tutte le botteghe di sopra
-       prima che arrivasse il loro foglio (§6): `aspetta` dice il nome
-       vero, e `guastiDelCatalogo` diventa rosso il giorno che quel
-       pezzo c'è. */
+       (`edifici_4.png`), e la friggitoria per ultima, con la fiera
+       (`edifici_5.png`): fino ad allora prendeva in prestito il gazebo
+       della cena, come facevano tutte le botteghe di sopra prima che
+       arrivasse il loro foglio (§6). */
     V('zuccherificio', 'zuccherificio',     'Zuccherificio',    230,
       { macchina: 'zuccherificio', liv: 27, cresce: RINCARO }),
     V('gelateria',     'gelateria',         'Gelateria',        240,
       { macchina: 'gelateria', liv: 30, cresce: RINCARO, la: true }),
     V('pastificio',    'pastificio',        'Pastificio',       260,
       { macchina: 'pastificio', liv: 31, cresce: RINCARO }),
-    V('friggitoria',   'gazebo_cena',       'Friggitoria',      300,
-      { macchina: 'friggitoria', liv: 57, cresce: RINCARO, la: true, aspetta: 'friggitoria' }),
+    V('friggitoria',   'friggitoria',       'Friggitoria',      300,
+      { macchina: 'friggitoria', liv: 57, cresce: RINCARO, la: true }),
     V('sushi_bar',     'sushi_bar',         'Sushi bar',        340,
       { macchina: 'sushi_bar', liv: 63, cresce: RINCARO }),
 
@@ -911,26 +910,26 @@ export const CATEGORIE = [
      voce ne ha uno (`guastiDelCatalogo`) e dice quanto vale, per chi
      un giorno stimasse lo speso da quello che si ha.
 
-     Sono nate prima del loro foglio (`fiera.png`,
-     `generati/PROMPT-secondo-albero.md` §4): il pezzo è un ripiego dal
-     giardino che somiglia, e `aspetta` il nome vero. */
+     Sono nate prima del loro foglio, con un ripiego dal giardino che
+     somigliava e il nome vero in `aspetta`; il foglio è arrivato con la
+     friggitoria (`edifici_5.png`). */
   { chiave: 'fiera', zona: 'bello', nome: 'La fiera', icona: '🎪', fiera: true, voci: [
-    V('fiera_bandierine', 'festone_bandierine', 'Bandierine della fiera', 30,
-      { fiera: true, aspetta: 'fiera_bandierine' }),
-    V('fiera_giostra', 'gazebo',            'Giostrina',          30,
-      { fiera: true, la: true, aspetta: 'fiera_giostra' }),
-    V('fiera_zucchero_filato', 'carretto_fiori1', 'Zucchero filato', 30,
-      { fiera: true, aspetta: 'fiera_zucchero_filato' }),
-    V('fiera_lanterne', 'lampione1',        'Lanterne di carta',  30,
-      { fiera: true, plurale: true, la: true, aspetta: 'fiera_lanterne' }),
-    V('fiera_barattoli', 'carretto_frutta', 'Tiro al barattolo',  30,
-      { fiera: true, aspetta: 'fiera_barattoli' }),
-    V('fiera_girasole', 'vaso_girasoli2',   'Girasole di legno',  30,
-      { fiera: true, aspetta: 'fiera_girasole' }),
-    V('fiera_spaventapasseri', 'spaventapasseri', 'Spaventapasseri in festa', 30,
-      { fiera: true, aspetta: 'fiera_spaventapasseri' }),
-    V('fiera_palco',   'arco_rose',         'Palco della banda',  30,
-      { fiera: true, aspetta: 'fiera_palco' }),
+    V('fiera_bandierine', 'fiera_bandierine', 'Bandierine della fiera', 30,
+      { fiera: true }),
+    V('fiera_giostra', 'fiera_giostra',     'Giostrina',          30,
+      { fiera: true, la: true }),
+    V('fiera_zucchero_filato', 'fiera_zucchero_filato', 'Zucchero filato', 30,
+      { fiera: true }),
+    V('fiera_lanterne', 'fiera_lanterne',   'Lanterne di carta',  30,
+      { fiera: true, plurale: true, la: true }),
+    V('fiera_barattoli', 'fiera_barattoli', 'Tiro al barattolo',  30,
+      { fiera: true }),
+    V('fiera_girasole', 'fiera_girasole',   'Girasole di legno',  30,
+      { fiera: true }),
+    V('fiera_spaventapasseri', 'fiera_spaventapasseri', 'Spaventapasseri in festa', 30,
+      { fiera: true }),
+    V('fiera_palco',   'fiera_palco',       'Palco della banda',  30,
+      { fiera: true }),
   ] },
 
   /* Si chiamava «Banco», che diceva dov'era finita la roba e non cos'è.

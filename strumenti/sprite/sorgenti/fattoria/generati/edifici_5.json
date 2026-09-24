@@ -1,0 +1,144 @@
+{
+ "__": "La friggitoria e le otto decorazioni della fiera, la sorpresa della mongolfiera — §5 di `PROMPT-secondo-albero.md`. La peschiera stava in questo foglio ed è uscita: è un recinto e si chiede accanto ai recinti (§6).\n\nTornato a 1248×832 come `merci_4`, con un alone leggero: `\"alone\": 128`. Nove figure, **una macchia sola ciascuna**, quindi i rettangoli sono quelli di `misura.py --figure`, assegnati alla cella 3×3 dal loro centro.\n\nDue divisori e non uno, perché nel foglio ci sono due famiglie che nel gioco stanno accanto a cose diverse. La friggitoria è una bottega: 3,3, che la mette a 68×85 come la rosticceria e la pasticceria (68×83, 68×80). La fiera sono decorazioni: 5,6, preso dallo spaventapasseri, che deve venire alto quanto quello di tutti i giorni (34×46) — questo è lo stesso, vestito a festa. Il piede lo ricava `piedeDalDisegno` dalla larghezza, e rispetto ai ripieghi di prima cambia solo alle lanterne (da 1 a 2 celle: prima erano un lampione sottile); le altre restano uguali o si stringono, quindi nessuna cosa già posata finisce sopra un'altra.",
+ "prompt": {
+  "scheda": "PROMPT-secondo-albero.md",
+  "base": "edifici_4.png, giardino.png",
+  "generatore": "settembre 2026",
+  "testo": "Disegna un foglio di sprite in pixel art nello stesso stile di queste immagini: stessa tavolozza (legno caldo, tegole rosse e blu, pietra grigia), stesso contorno scuro di un pixel, stessa vista da tre quarti dall'alto, stessa luce da in alto a sinistra. La prima immagine sono gli edifici e la seconda le decorazioni del giardino: la friggitoria va accanto ai primi, le cose della fiera accanto alle seconde.\n\nIl foglio è 1536×1024 px, su fondo trasparente (PNG). Disponi 9 soggetti su una griglia dichiarata di 3 colonne × 3 righe, celle di 512×341 px, ognuno centrato nella sua cella e appoggiato al bordo di sotto lasciando 16 px di margine. Nessun soggetto tocca il bordo della cella.\n\nIl disegno finisce dove il soggetto tocca terra. Sotto e di fianco è tutto trasparente: niente prato, niente terra, niente ciuffi d'erba, niente ombra proiettata, nessun alone o bagliore.\n\nNESSUNA PAROLA SCRITTA, da nessuna parte. Dove serve un'insegna è un oggetto.\n\nQuello che appartiene a un soggetto dev'essere attaccato al suo disegno in un pezzo solo: il vapore tocca il pentolone, le bandierine toccano il filo. Niente pezzetti staccati che galleggiano nel vuoto.\n\nDa sinistra a destra, riga per riga:\n1. una friggitoria: chiosco di legno col tetto a spiovente a strisce gialle e bianche, un bancone aperto sul davanti con un grande pentolone d'olio e un filo di vapore, e un cono di patatine di legno come insegna sopra il tetto\n\nGli altri otto sono le decorazioni di una fiera di paese, allegre, con gli stessi colori ricorrenti — rosso, giallo, azzurro e crema — perché sono una collezione:\n2. un filo di bandierine triangolari colorate teso fra due pali di legno\n3. una piccola giostra a cavalli di legno col tettuccio a spicchi\n4. un carretto dello zucchero filato con una nuvola rosa sul bastoncino\n5. un palo con tre lanterne di carta colorate appese\n6. un tiro al barattolo: un bancone di legno con una piramide di barattoli colorati\n7. un grande girasole di legno dipinto su un piedistallo\n8. uno spaventapasseri vestito a festa, col cappello a punta a strisce e i nastri colorati sulle braccia\n9. un piccolo palco di legno con un tamburo e una tromba appoggiati"
+ },
+ "fondo": "trasparente",
+ "alone": 128,
+ "cella": [
+  1,
+  1
+ ],
+ "famiglia": "figura",
+ "sprite": {
+  "friggitoria": {
+   "da": [
+    147,
+    14
+   ],
+   "cella": [
+    225,
+    280
+   ],
+   "misura": [
+    68,
+    85
+   ]
+  },
+  "fiera_bandierine": {
+   "da": [
+    487,
+    77
+   ],
+   "cella": [
+    279,
+    192
+   ],
+   "misura": [
+    50,
+    34
+   ]
+  },
+  "fiera_giostra": {
+   "da": [
+    881,
+    8
+   ],
+   "cella": [
+    217,
+    286
+   ],
+   "misura": [
+    39,
+    51
+   ]
+  },
+  "fiera_zucchero_filato": {
+   "da": [
+    166,
+    305
+   ],
+   "cella": [
+    150,
+    229
+   ],
+   "misura": [
+    27,
+    41
+   ]
+  },
+  "fiera_lanterne": {
+   "da": [
+    510,
+    317
+   ],
+   "cella": [
+    218,
+    213
+   ],
+   "misura": [
+    39,
+    38
+   ]
+  },
+  "fiera_barattoli": {
+   "da": [
+    907,
+    322
+   ],
+   "cella": [
+    166,
+    216
+   ],
+   "misura": [
+    30,
+    39
+   ]
+  },
+  "fiera_girasole": {
+   "da": [
+    178,
+    559
+   ],
+   "cella": [
+    130,
+    224
+   ],
+   "misura": [
+    23,
+    40
+   ]
+  },
+  "fiera_spaventapasseri": {
+   "da": [
+    512,
+    545
+   ],
+   "cella": [
+    198,
+    247
+   ],
+   "misura": [
+    35,
+    44
+   ]
+  },
+  "fiera_palco": {
+   "da": [
+    866,
+    614
+   ],
+   "cella": [
+    234,
+    170
+   ],
+   "misura": [
+    42,
+    30
+   ]
+  }
+ }
+}
