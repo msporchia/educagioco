@@ -13,6 +13,8 @@
      libera   la campagna è finita: il gioco libero è aperto
      stelle   il PRIMATO per tappa (non la somma): rigiocare non gonfia
      cfg      quello che il bambino ha scelto e va ricordato
+     aiuti    i gradini degli aiuti comprati, per livello — c'è solo in
+              chi ha una scala (`aiutiPresi`, più sotto)
 
    Il record si tiene sempre al meglio: una partita storta non toglie la
    stella già guadagnata. È l'unica regola con cui un bambino va d'accordo.
@@ -85,6 +87,30 @@ export function completa(chiave, indice, quante, { stelle = 0 } = {}) {
   persist()
   flushNow()     // una tappa si vince di rado: non deve perdersi
   return c
+}
+
+/* ═══════════ gli aiuti comprati ═══════════
+   Quanti gradini della scala degli aiuti (`giochi/aiuti.js`) sono stati
+   scesi in un livello. Si paga in monete, e **quello che si è pagato
+   resta**: chi esce e rientra ritrova le frasi comprate, e un pezzo di
+   programma pagato si rimette gratis — senza, un tocco di troppo su ←
+   dopo duecento monete sarebbero duecento monete buttate.
+
+   Sotto la **chiave** del livello e non sotto la sua posizione, come i
+   programmi del costruttore: la fila si riordina, un aiuto comprato
+   resta del livello per cui lo si è comprato. Non è un campo nuovo del
+   profilo: sta nella campagna del gioco, accanto alle stelle. */
+export const aiutiPresi = (chiave, livello) =>
+  ((progresso(chiave).aiuti || {})[livello]) || 0
+
+export function segnaAiutiPresi(chiave, livello, n) {
+  const c = progresso(chiave)
+  if (!c.aiuti || typeof c.aiuti !== 'object') c.aiuti = {}
+  if (!(n > (c.aiuti[livello] || 0))) return c.aiuti[livello] || 0
+  c.aiuti[livello] = n
+  persist()
+  flushNow()     // un gradino si paga: non deve perdersi
+  return n
 }
 
 /* Le scelte del bambino che vanno ricordate fra una sera e l'altra: la

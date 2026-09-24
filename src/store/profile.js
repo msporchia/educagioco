@@ -132,8 +132,11 @@ const blank = () => ({
      o due. Stanno per livello perché rigiocarne uno già fatto non deve
      gonfiare il totale: le stelle sono la somma dei propri primati, non
      delle partite. **La chiave è l'`id` del livello** (`v: 2`), non la sua
-     posizione nella fila: vedi `migraGenerale`. */
-  gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, v: 2 },
+     posizione nella fila: vedi `migraGenerale`. `aiuti` è quanti gradini
+     della scala degli aiuti sono stati scesi in ogni livello: si pagano
+     in monete, e un gradino pagato resta di chi l'ha comprato
+     (`giochi/aiuti.js`). */
+  gen: { tappa: 0, libera: false, ordini: {}, stelle: {}, aiuti: {}, v: 2 },
   /* I GIOCHI NUOVI (`src/giochi/`) stanno tutti qui, con una forma sola:
      'codice' -> { tappa, libera, stelle:{}, cfg:{} }. Sopra si vede il
      contrario — otto campi che dicono la stessa cosa in otto modi — ed è
@@ -1239,6 +1242,21 @@ export function addCoins(n) {
   return state.profile.coins
 }
 
+/* ── spendere, se ci sono ──
+   `addCoins(-n)` si ferma a zero, e per la fattoria va bene: lì il prezzo
+   si guarda prima di mostrare il tasto. Chi vende una cosa sola e subito
+   — un gradino degli aiuti — ha bisogno della domanda e della spesa in
+   un colpo: **o paga tutto, o non paga niente**, e dice quale delle due.
+   Una spesa si scrive subito su disco, come una tappa vinta: un aiuto
+   pagato e perso chiudendo l'app sarebbe un furto. */
+export function spendi(n) {
+  if (!(n > 0)) return true
+  if ((state.profile.coins || 0) < n) return false
+  addCoins(-n)
+  flush()
+  return true
+}
+
 /* ═══════════ contatori e traguardi ═══════════
    I giochi non toccano `totals` e `best` a mano: chiamano queste due, che
    sanno anche far scattare i traguardi. Un contatore che nessuno guarda
@@ -1524,7 +1542,8 @@ export function migraGenerale(vuoto, salvato) {
   /* i due dizionari: un profilo salvato prima che il gioco esistesse non
      ce li ha, e uno rovinato a mano potrebbe averli di un altro tipo. In
      tutti e due i casi si riparte da vuoto, non da rotto. */
-  const g = { ...vuoto, ...dati, ordini: dizionario(dati.ordini), stelle: dizionario(dati.stelle) }
+  const g = { ...vuoto, ...dati, ordini: dizionario(dati.ordini), stelle: dizionario(dati.stelle),
+              aiuti: dizionario(dati.aiuti) }
   // il `v` che conta è quello del salvataggio: fondendo per primo il
   // vuoto, la sua versione coprirebbe l'assenza
   if (dati.v === vuoto.v) return g
@@ -1583,12 +1602,32 @@ export const genProgresso = () => state.profile.gen
    chiede di risolvere in poche mosse, chiede di risolvere — e quel
    numero diceva al bambino che il piano che funziona, il suo, non era
    quello giusto. Adesso la seconda stella dice una cosa che il gioco
-   intende davvero: **ci sei arrivato da solo**. La perde chi si è fatto
-   dare la struttura o la soluzione (i due gradini grossi della scala
-   degli aiuti — il suggerimento leggero resta gratis e non toglie
-   niente) e chi lascia qualcuno sul campo, perché se no mandare avanti
-   un compagno a morire sarebbe gratis. */
+   intende davvero: **ci sei arrivato da solo**. La perde chi lascia
+   qualcuno sul campo, perché se no mandare avanti un compagno a morire
+   sarebbe gratis, e chi ha fatto girare **la soluzione intera** scritta
+   dal gioco (`svelato`).
+
+   Gli altri gradini degli aiuti non la toccano più: costavano la stella,
+   e una stella è un prezzo che un bambino non sente — adesso si pagano
+   in monete (`giochi/aiuti.js`), e pagarli due volte sarebbe una
+   punizione. La soluzione intera è un'altra cosa: non è un prezzo, è un
+   fatto — quel piano non l'hai pensato tu. */
 export const daSolo = ({ svelato = false, caduti = 0 } = {}) => !svelato && !caduti
+
+/* ── i gradini degli aiuti scesi, livello per livello ──
+   Si tengono perché si pagano: chi esce e rientra ritrova le frasi che
+   ha comprato, e un pezzo di piano pagato si rimette gratis. Si tiene il
+   massimo, come le stelle: una scala non si risale. */
+export const genAiutiPresi = id => ((state.profile.gen || {}).aiuti || {})[id] || 0
+export function genSegnaAiuti(id, n) {
+  const g = state.profile.gen
+  if (!g.aiuti || typeof g.aiuti !== 'object') g.aiuti = {}
+  if (!(n > (g.aiuti[id] || 0))) return g.aiuti[id] || 0
+  g.aiuti[id] = n
+  persist()
+  flush()
+  return n
+}
 
 export function genCompleta(id, conto = {}) {
   const { ordini = 0, avanzato = false, finita = false } = conto
