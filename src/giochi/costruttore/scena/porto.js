@@ -90,6 +90,19 @@ const STRADA = { asfalto: '#4f5358', chiaro: '#5d6167', scuro: '#44484d', riga: 
    vorrebbe dire «prende solo casse rosse», e il numero sopra è già
    tutto quello che serve sapere */
 const BUCA = { corpo: '#2f6d67', coperchio: '#428d85', bordo: '#1b4440', fessura: '#0e1d1b', ottone: '#caa24b' }
+/* le forme di formaggio della torre del casaro: la crosta, la pasta, e
+   la luce sul piatto di sopra. Viste dall'alto una pila è una serie di
+   anelli uno dentro l'altro — la più piccola in cima, al centro — e ogni
+   forma sta un filo più in alto di quella sotto */
+const FORMAGGIO = { crosta: '#c98a1b', scura: '#9a6512', pasta: '#f3c95a', luce: '#fbe39a', ombra: 'rgba(60,35,5,.28)' }
+const ALZO_FORMA = 0.02
+/* il raggio di una forma, in celle, rispetto alla più grande della
+   giornata: la 1 si vede ancora bene, la più grande riempie la sua asse.
+   Con tre forme o con sette la torre occupa lo stesso posto, e la
+   differenza fra una forma e la vicina si vede sempre */
+const raggioForma = (numero, massima) => 0.13 + (0.29 * (Math.max(1, numero) - 1)) / Math.max(1, massima - 1)
+/* quello che dice un cliente che chiede una qualità, in due righe */
+const QUALITA_IN_NUVOLA = { massimo: ['la più', 'grande'], minimo: ['la più', 'piccola'] }
 
 /* I tre pavimenti. Stanno tutti sul chiaro e sul caldo: sopra ci devono
    leggersi dieci colori di casse, e un pavimento saturo se ne mangerebbe
@@ -370,6 +383,9 @@ export class TelaPorto {
   disegna(q, t) {
     const { ctx, dpr, cella: c } = this
     const p = q.porto
+    /* le forme della torre sono 1, 2, … n: la più grande è quante sono */
+    this.formeMax = p.pile.reduce((n, pila) => n + pila.filter(x => x.tipo === 'forma').length, 0) +
+      (p.mano && p.mano.tipo === 'forma' ? 1 : 0)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     /* ogni fotogramma parte dallo stesso stato: un tratteggio o una
        trasparenza dimenticati da un pittore non passano al successivo */
@@ -1191,6 +1207,7 @@ export class TelaPorto {
     /* nella buca le lettere non si vedono: sono dentro. Si vede solo che
        ce n'è qualcuna, da un foglio che spunta dalla fessura */
     if (figura === 'buca') return this.buca(x, y, !!cima)
+    if (figura === 'pila') return this.pila(x, y, a, pila.filter(q => !inVolo.has(q.id)))
     if (figura === 'camion') this.camion(p, x, y, col)
     else if (figura === 'stiva') this.stiva(x, y, col)
     else if (figura === 'magazzino') this.portaMagazzino(p, x, y, col)
@@ -1226,6 +1243,8 @@ export class TelaPorto {
     }
     /* nella buca si entra dalla fessura, e la lettera ci sparisce dentro */
     if (figura === 'buca') return { x: cx, y: y * c + c * 0.21, s: 0.42 }
+    /* sulla pila, in cima: un filo più in alto per ogni forma di sotto */
+    if (figura === 'pila') return { x: cx, y: cy - c * ALZO_FORMA * Math.max(0, p.pile[y * p.w + x].length - 1), s: 1 }
     return { x: cx, y: cy + (figura === 'cassone' ? c * 0.01 : 0), s: figura === 'stiva' ? 0.7 : 0.8 }
   }
 
@@ -1524,7 +1543,77 @@ export class TelaPorto {
   cosa(x, y, scala, cosa, ombra = true) {
     if (!cosa) return
     if (cosa.tipo === 'biglietto') this.biglietto(x, y, scala, cosa.numero, cosa.id || 0, ombra)
+    else if (cosa.tipo === 'forma') this.forma(x, y, scala, cosa.numero, ombra)
     else this.cassa(x, y, LATO_CASSA * this.cella * scala, cosa.colore, ombra)
+  }
+
+  /* La forma di formaggio vista dall'alto: un tondo con la crosta, la
+     pasta e la luce. La grandezza è il suo numero, ed è la regola della
+     pila: una più grande sopra una più piccola la schiaccia — quindi si
+     deve vedere a colpo d'occhio quale è più grande, anche in mano. */
+  forma(cx, cy, scala, numero, ombra = true) {
+    const { ctx, cella: c } = this
+    const r = raggioForma(numero, this.formeMax || numero) * c * scala
+    if (ombra) {
+      ctx.fillStyle = FORMAGGIO.ombra
+      ctx.beginPath()
+      ctx.arc(cx + c * 0.03, cy + c * 0.045, r, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.fillStyle = FORMAGGIO.crosta
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = FORMAGGIO.pasta
+    ctx.beginPath()
+    ctx.arc(cx, cy, r * 0.8, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = FORMAGGIO.luce
+    ctx.lineWidth = Math.max(1, r * 0.1)
+    ctx.beginPath()
+    ctx.arc(cx, cy, r * 0.6, Math.PI * 1.05, Math.PI * 1.6)
+    ctx.stroke()
+    ctx.strokeStyle = FORMAGGIO.scura
+    ctx.lineWidth = Math.max(0.8, c * 0.022)
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+
+  /* L'asse della torre: un tagliere tondo col bordo del suo colore — il
+     colore è il nome dell'asse («l'asse rossa»), quello che il programma
+     passa a «sposta» — e sopra le forme, dalla più grande in giù. Ogni
+     forma ha la sua ombra sulla forma di sotto: è quella che fa vedere
+     la pila come una pila e non come un bersaglio dipinto. */
+  pila(x, y, a, forme) {
+    const { ctx, cella: c } = this
+    const cx = (x + 0.5) * c, cy = (y + 0.5) * c
+    const col = colore(a.tinta) || colore('grigio')
+    ctx.fillStyle = 'rgba(35,25,15,.22)'
+    ctx.beginPath()
+    ctx.arc(cx + c * 0.03, cy + c * 0.05, c * 0.47, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = col.tinta
+    ctx.beginPath()
+    ctx.arc(cx, cy, c * 0.47, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = '#c9a26b'
+    ctx.beginPath()
+    ctx.arc(cx, cy, c * 0.4, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(110,75,35,.35)'
+    ctx.lineWidth = Math.max(0.8, c * 0.015)
+    for (const k of [0.3, 0.2]) {
+      ctx.beginPath()
+      ctx.arc(cx, cy, c * k, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    ctx.strokeStyle = col.ombra
+    ctx.lineWidth = Math.max(1, c * 0.03)
+    ctx.beginPath()
+    ctx.arc(cx, cy, c * 0.47, 0, Math.PI * 2)
+    ctx.stroke()
+    forme.forEach((f, i) => this.forma(cx, cy - c * ALZO_FORMA * i, 1, f.numero, i === 0))
   }
 
   /* La cassa vista dall'alto: il telaio del colore, la luce sugli spigoli
@@ -2214,6 +2303,7 @@ export class TelaPorto {
   /* mezza altezza di una cosa, a una scala: il gancio della gru e il cavo
      prendono una cassa e un biglietto dal loro bordo di sopra */
   mezzaAltezza(cosa, s) {
+    if (cosa && cosa.tipo === 'forma') return raggioForma(cosa.numero, this.formeMax || cosa.numero) * this.cella * s
     return cosa && cosa.tipo === 'biglietto' ? this.cella * 0.28 * s : (LATO_CASSA * this.cella * s) / 2
   }
 
@@ -2378,7 +2468,10 @@ export class TelaPorto {
     const { ctx, cella: c } = this
     const d = this.disposizione(p)
     const P = this.postoCliente(p, t)
-    const bw = c * 1.04, bh = c * 1.16
+    /* quando il cliente parla a parole («la più grande», «di meno!») la
+       nuvoletta si allarga un poco: una cassa ci stava, una frase no */
+    const aParole = p.clienti.indovina || !!QUALITA_IN_NUVOLA[cl.chiede]
+    const bw = c * (aParole ? 1.26 : 1.04), bh = c * 1.16
     let bx = P.x, by = P.y - c * 1.3
     if (d.nuvola === 'giu') by = P.y + c * 1.05
     else if (d.nuvola === 'destra' || d.nuvola === 'sinistra') {
@@ -2387,6 +2480,10 @@ export class TelaPorto {
       bx = P.x + DIREZIONI[d.nuvola][0] * c * 1.08
       by = P.y + (d.verso === 'su' ? c * 0.02 : -c * 0.55)
     }
+    /* la nuvoletta resta dentro il porto: un cliente in fondo a sinistra
+       la tirerebbe fuori dallo schermo a metà, e «di meno!» diventerebbe
+       «li meno!». La coda continua a indicare chi parla */
+    bx = fra(bx, bw / 2 + c * 0.06, p.w * c - bw / 2 - c * 0.06)
     const e = this.cliente && this.cliente.id === cl.id ? fra((t - this.cliente.dal) / 300, 0, 1) : 1
     const s = e < 1 ? tuffo(e) : 1
     ctx.save()
@@ -2395,7 +2492,9 @@ export class TelaPorto {
     ctx.translate(-bx, -by)
     this.nuvoletta(bx, by, bw, bh, P.x, P.y - c * 0.25)
     const cy = by - bh * 0.1
-    if (typeof cl.chiede === 'number') this.biglietto(bx, cy, 1.05, cl.chiede, 0, false)
+    if (p.clienti.indovina) this.indovinello(p, cl, bx, cy, bw, bh)
+    else if (QUALITA_IN_NUVOLA[cl.chiede]) this.scritta(bx, cy, QUALITA_IN_NUVOLA[cl.chiede], c * 0.25)
+    else if (typeof cl.chiede === 'number') this.biglietto(bx, cy, 1.05, cl.chiede, 0, false)
     else this.cassa(bx, cy, c * 0.7, cl.chiede, false)
     const max = cl.max || cl.pazienza || 1
     const k = fra((cl.pazienza ?? max) / max, 0, 1)
@@ -2410,6 +2509,34 @@ export class TelaPorto {
     ctx.fill()
     ctx.globalAlpha = 1
     ctx.restore()
+  }
+
+  /* Chi fa indovinare: finché non ha visto una lettera, un biglietto col
+     punto di domanda; dopo, la sua risposta, grande — è l'unica cosa che
+     il programma può sapere. Sotto, un pallino per ogni lettera che
+     guarderà ancora: quando finiscono se ne va. */
+  indovinello(p, cl, bx, cy, bw, bh) {
+    const { ctx, cella: c } = this
+    if (cl.risposta) this.scritta(bx, cy - c * 0.04, cl.risposta === 'di-piu' ? ['di più!', '▲'] : ['di meno!', '▼'], c * 0.2)
+    else this.biglietto(bx, cy - c * 0.06, 0.95, '?', 0, false)
+    const restano = Math.max(0, p.clienti.tentativi - (cl.sbagliate || 0))
+    const passo = c * 0.16, y = cy + bh * 0.28
+    for (let i = 0; i < p.clienti.tentativi; i++) {
+      ctx.fillStyle = i < restano ? INCHIOSTRO : '#d8cfbf'
+      ctx.beginPath()
+      ctx.arc(bx + (i - (p.clienti.tentativi - 1) / 2) * passo, y, c * 0.045, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+
+  /* una o due righe di parole in una nuvoletta, in inchiostro */
+  scritta(cx, cy, righe, corpo) {
+    const { ctx } = this
+    ctx.fillStyle = INCHIOSTRO
+    ctx.font = `800 ${Math.max(8, Math.round(corpo))}px system-ui, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    righe.forEach((r, i) => ctx.fillText(r, cx, cy + (i - (righe.length - 1) / 2) * corpo * 1.1))
   }
 
   /* una nuvoletta con la coda verso chi parla: prima la coda, poi il
@@ -2564,8 +2691,10 @@ export class TelaPorto {
       }
       /* un camion ha fretta: sotto il conto, la sua pazienza */
       const pazienza = a.max ? (a.pazienza ?? a.max) / a.max : null
+      /* un'asse della torre si chiama col suo colore: la pastiglia lo porta */
+      const tinta = a.colore || (a.figura === 'pila' ? a.tinta : null)
       this.pastiglia(ex, ey, testo, Math.max(10, Math.round(c * 0.31)),
-                     { col: a.colore ? colore(a.colore) : null, largo: p.w * c, alto: p.h * c, pazienza, t })
+                     { col: tinta ? colore(tinta) : null, largo: p.w * c, alto: p.h * c, pazienza, t })
     }
   }
 

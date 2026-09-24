@@ -45,6 +45,15 @@ export const VELOCITA = { lenta: 560, normale: 230, veloce: 45 }
 const PESO = { riga: 0.55, metti: 0.9, giro: 0.25, guarda: 0.9, legge: 0.7,
                assegna: 0.9, entra: 0.8, esce: 0.35, prendi: 0.9, posa: 0.9 }
 
+/* Dentro un attrezzo quello che **pensa** passa di corsa, e quello che
+   **fa** col suo passo. Un attrezzo è chiuso, e il bambino lo guarda da
+   fuori: conta la torre che sale, non le righe che la decidono. Era la
+   torre del casaro a chiederlo — «sposta» sceglie l'asse con sei «se», e
+   a velocità normale una forma spostata durava tre secondi di righe che
+   si accendevano, per un gesto di mezzo secondo. */
+const PENSA = new Set(['riga', 'guarda', 'giro', 'assegna', 'legge', 'entra'])
+const DENTRO_ATTREZZO = 0.2
+
 /* il quadro di un ordine fermo, prima di partire: quello che si guarda
    mentre si scrive il programma */
 export function quadroFermo(livello, i) {
@@ -112,6 +121,13 @@ export class Regia {
   }
 
   cambiaVelocita(v) { this.velocita = v }
+
+  /* la carta in cima alla pila è un attrezzo? */
+  inAttrezzo() {
+    const pila = this.es && this.es.pila
+    const cima = pila && pila.length > 1 ? pila[pila.length - 1].progetto : null
+    return !!cima && !!((this.programma.progetti || []).find(p => p.id === cima) || {}).attrezzo
+  }
 
   proveDa(i) {
     if (!this.vivo) return
@@ -207,6 +223,7 @@ export class Regia {
       case 'fine':
         return this.verifica()
     }
+    if (PENSA.has(e.tipo) && this.inAttrezzo()) peso *= DENTRO_ATTREZZO
     this.stato.tic = (this.stato.tic || 0) + 1
     this.timer = setTimeout(() => this.avanti(), this.passo * peso)
   }
