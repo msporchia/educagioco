@@ -19,6 +19,9 @@ defineProps({
   valori: { type: Object, default: () => ({}) },        // i loro valori, se sta girando
   conLavagnette: { type: Boolean, default: false },     // si possono creare
   aiuti: { type: Number, default: 0 },                  // quanti aiuti ha già visto
+  /* nel porto il mondo ha un orologio: mentre gira si vede il turno che
+     passa, ed è metà della lezione — aspettare costa tempo, pensare no */
+  turno: { type: Number, default: null },
 })
 import { colore } from '../dati/colori.js'
 const emit = defineEmits(['via', 'stop', 'velocita', 'aiuto', 'nuova-lavagnetta'])
@@ -34,6 +37,7 @@ const VELOCITA = [['lenta', '🐢'], ['normale', '🐇'], ['veloce', '🚀']]
         <button v-for="[v, e] in VELOCITA" :key="v" type="button" :class="{ 'cst-su': velocita === v }"
                 :data-velocita="v" :aria-label="v" @click="emit('velocita', v)">{{ e }}</button>
       </div>
+      <span v-if="turno !== null" class="cst-turno" data-turno>🕘 {{ turno }}</span>
       <!-- `suggerimento` e non `aiuto`: quello è il ? della barra, che c'è in tutti i giochi -->
       <button type="button" class="cst-lampadina" data-azione="suggerimento" aria-label="suggerimento" @click="emit('aiuto')">
         💡

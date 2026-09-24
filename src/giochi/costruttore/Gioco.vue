@@ -148,7 +148,11 @@ const altriProgetti = computed(() => {
   if (!liv.value || !prog.value) return []
   const qui = new Set((prog.value.progetti || []).map(p => p.nome))
   const visti = new Map()
-  const fonti = [...LIVELLI.map((l, i) => [l.chiave, l.nome, i]), [LIBERO.chiave, LIBERO.nome, 999]]
+  /* solo dallo stesso mondo: una colonna di mattoni nel porto non
+     saprebbe cosa fare, e prendere una cassa nel cantiere nemmeno */
+  const mondo = liv.value.mondo || 'cantiere'
+  const fonti = [...LIVELLI.filter(l => (l.mondo || 'cantiere') === mondo).map(l => [l.chiave, l.nome, LIVELLI.indexOf(l)]),
+                 ...(mondo === 'cantiere' ? [[LIBERO.chiave, LIBERO.nome, 999]] : [])]
   for (const [chiave, nomeLiv, ordine] of fonti) {
     if (chiave === liv.value.chiave) continue
     const p = archivio.programmi[chiave]
@@ -192,7 +196,7 @@ function aggiungi(posto) {
   aperta_.value = null
 }
 
-function sceltoBlocco({ blocco, progetto, verso, dove: posto }) {
+function sceltoBlocco({ blocco, progetto, verso, dove: posto, lato }) {
   const p = prog.value
   if (blocco === 'assegna' && !(p.lavagnette || []).length) {
     attesaLavagnetta.value = { inserisci: dove.value }
@@ -202,7 +206,7 @@ function sceltoBlocco({ blocco, progetto, verso, dove: posto }) {
   const pr = progetto ? (p.progetti || []).find(q => q.id === progetto) : null
   const colori = liv.value.colori
   const colore = colori.length === 1 ? colori[0] : (ultimoColore.value || colori[0])
-  const riga = mod.rigaNuova(blocco, { colore, verso, dove: posto, lavagnette: p.lavagnette, progetto: pr })
+  const riga = mod.rigaNuova(blocco, { colore, verso, dove: posto, lato, lavagnette: p.lavagnette, progetto: pr })
   const id = modifica(q => mod.inserisci(q, dove.value, riga))
   foglio.value = null
   apriLaPrimaScelta(id, riga)
@@ -338,6 +342,11 @@ const suoni = {
   errore: () => suono.nota(300, 200, 0.25, 'triangle', 0.1),
   splash: () => suono.blub(),
   ok: () => suono.nota(660, 880, 0.12, 'triangle', 0.08),
+  /* il porto: prendere è un colpetto più alto del posare, la gru un
+     tonfo basso e morbido, il cliente servito un «ding» */
+  prendi: () => { if (!stato.montaggio) suono.nota(420, 520, 0.06, 'square', 0.05) },
+  cala: () => { if (!stato.montaggio) suono.nota(180, 140, 0.12, 'triangle', 0.06) },
+  servito: () => suono.nota(880, 1320, 0.1, 'triangle', 0.07),
 }
 
 const tabDellaRiga = id => {
@@ -413,6 +422,8 @@ function fine(esito) {
     tab.value = tabDellaRiga(esito.errore.id)
     messaggio.value = { tipo: 'errore', testo: prefisso + esito.errore.frase }
   } else if (esito.confronto) messaggio.value = { tipo: 'sbagliato', testo: prefisso + fraseConfronto(esito.confronto) }
+  /* il porto: a sera, cosa non torna — con i numeri, non «riprova» */
+  else if (esito.giornata) messaggio.value = { tipo: 'sbagliato', testo: prefisso + esito.giornata.frasi.join(' ') }
   else if (esito.omino) messaggio.value = { tipo: 'sbagliato', testo: prefisso + (FRASI_OMINO[esito.omino.esito] || 'L\'omino non arriva.') }
 }
 
@@ -494,6 +505,7 @@ const progettoAperto = computed(() =>
                    :ordine="liv.ordini[ordineVisto].lavagnette || {}"
                    :lavagnette="prog.lavagnette || []" :valori="stato.inCorso || stato.guasto ? stato.valori : {}"
                    :con-lavagnette="liv.cassetta.includes('assegna')" :aiuti="aiutiVisti"
+                   :turno="liv.mondo === 'porto' && stato.inCorso ? (stato.turno || 0) : null"
                    @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="foglio = 'aiuto'"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
@@ -509,6 +521,7 @@ const progettoAperto = computed(() =>
       </div>
 
       <Cassetta v-if="foglio === 'cassetta'" :cassetta="liv.cassetta" :posti="liv.posti || ['sotto']"
+                :porto="liv.mondo === 'porto'"
                 :progetti="prog.progetti || []"
                 :lavagnette="prog.lavagnette || []" :dentro-progetto="dove && dove.progetto"
                 :altri="altriProgetti"

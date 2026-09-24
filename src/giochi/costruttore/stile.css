@@ -105,6 +105,13 @@
   background: var(--cst-carta); font-size: 20px; position: relative;
 }
 .cst-lampadina small { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cst-tenue) }
+/* il turno del porto: un numero che corre, largo fisso perché non faccia
+   ballare i tasti accanto */
+.cst-turno {
+  min-width: 58px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: var(--cst-carta); border: 1.5px solid var(--cst-bordo);
+  font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px;
+}
 
 .cst-lavagnette { display: flex; gap: 6px; flex-wrap: wrap }
 .cst-lavagnetta {
