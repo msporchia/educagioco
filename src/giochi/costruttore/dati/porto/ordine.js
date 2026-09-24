@@ -29,18 +29,18 @@ const POSTINO = { emoji: '📮', nome: 'Il postino' }
 
 /* L'ufficio postale: in alto lo scaffale con le lettere da mettere in
    ordine, sotto il corridoio del robot, più giù i banchi dove appoggiare
-   una lettera mentre si scambia. A destra, dietro un muro, gli scaffali
-   dei pacchi: non c'entrano, ma un ufficio vero non ha solo quello che
-   serve alla lezione. */
+   una lettera mentre si scambia. E nient'altro: c'erano anche gli scaffali
+   dei pacchi, a destra dietro un muro, e a chi l'ha provato «fanno solo
+   confusione» — casse che non c'entrano sembrano cose da spostare. */
 export function ufficio(numeri, robot = 1) {
   const n = numeri.length
   const corridoio = Array.from({ length: n }, (_, i) => (i + 1 === robot ? '.@' : '..')).join('')
   return [
-    '##'.repeat(n + 6),
-    '##' + numeri.map(x => '=' + x).join('') + '##=R=G=B##',
-    '##' + corridoio + '##......##',
-    '##' + '=='.repeat(n) + '##=V=A=L##',
-    '##'.repeat(n + 6),
+    '##'.repeat(n + 2),
+    '##' + numeri.map(x => '=' + x).join('') + '##',
+    '##' + corridoio + '##',
+    '##' + '=='.repeat(n) + '##',
+    '##'.repeat(n + 2),
   ]
 }
 const inOrdine = n => ({ inOrdine: { y: 1, da: 1, a: n } })
