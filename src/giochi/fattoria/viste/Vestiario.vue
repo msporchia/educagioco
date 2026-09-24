@@ -20,7 +20,7 @@
    perde mai, come nel baule.
 
    ── QUELLO CHE NON HAI SI COMPRA PREMENDOLO ───────────────────────
-   Un gesto solo, come nel baule dove premere è già posare: si preme e
+   Un gesto solo, come nel baule dove toccare è già posare: si preme e
    si paga, e la bestia se lo ritrova addosso. Il prezzo sta scritto sul
    tasto e chi non ce l'ha vede **di quanto** manca, che è il numero che
    rimanda a fare esercizi.

@@ -213,15 +213,18 @@
   flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   touch-action: pan-y; padding: 2px }
 
-/* `touch-action: none` sulla CARTA e non sul contenitore. Senza, il
-   browser legge il trascinamento come uno scorrimento della lista e
-   **annulla il puntatore** a metà gesto: la roba non si riusciva a tirare
-   fuori, e solo col dito — col mouse sembrava tutto a posto. Così invece
-   il dito che parte da una carta è nostro, e la lista si scorre lo stesso
-   partendo da uno spazio vuoto. */
+/* `touch-action: pan-y` anche sulla CARTA, ed era `none`. Con `none` il
+   dito che partiva da una carta era tutto nostro, e la lista si doveva
+   scorrere «partendo da uno spazio vuoto»: otto pixel fra una carta e
+   l'altra, che il telefono per giunta rimanda alla carta più vicina.
+   Cioè non si scorreva, e quello che stava sotto lo schermo non si
+   poteva comprare. Adesso in su e in giù il dito è del browser, che
+   scorre e **annulla il puntatore**: è proprio quello che si vuole, e
+   `viste/Roba.vue` lo prende per «non è successo niente». Di lato il
+   dito resta nostro, ed è lì che una carta si tira fuori. */
 .fa-voce { position: relative; border-radius: 12px; background: #0d160fcc;
   border: 2px solid #2b4430; padding: 4px 3px 5px; text-align: center;
-  cursor: grab; touch-action: none; display: flex; flex-direction: column;
+  cursor: grab; touch-action: pan-y; display: flex; flex-direction: column;
   align-items: center; gap: 2px }
 .fa-voce:active { transform: scale(.95) }
 /* La roba dentro un silo: **si preme e dice chi la usa**, non si posa.

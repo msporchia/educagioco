@@ -44,6 +44,7 @@ import Mongolfiera from './viste/Mongolfiera.vue'
 import { Camminatore } from './motore/camminata.js'
 import { Tela, Attore } from './scena/tela.js'
 import { spintaAlBordo, conIlResto } from './scena/spinta.js'
+import { SCARTO_DITO, SCARTO_MOUSE } from './scena/dito.js'
 import { CATALOGO, PER_ID, ZONE, ANIMALI_ZONA, piedeDi, pezzoDi, assettoDi,
          puoGirare, puoSpecchiare, eCampo, eSilo, eVicino, eMercato, siloDi,
          macchinaDi, statiDi } from './dati/catalogo.js'
@@ -611,21 +612,8 @@ let dovePosare = null
 let aggancio = null
 
 /* Da quanto in là comincia lo scorrimento — cioè quando il tocco smette
-   di essere un tocco. Un mouse sta fermo dove lo lasci; un dito no: si
-   appoggia largo, e mentre preme il punto che il telefono chiama «il
-   dito» si sposta di qualche pixel da solo. Con la stessa misura per
-   tutti e due, sul computer andava sempre e sul telefono si perdevano
-   i tocchi — quelli di chi preme con più forza, cioè i bambini.
-   Sedici pixel restano sotto quello che Android e iOS considerano
-   ancora fermo, quindi non si ruba niente allo scorrimento.
-
-   Ed è una **distanza vera**, non la somma dei due lati come prima: un
-   dito che deriva di 9 px in diagonale ne fa 12,7 di distanza, ma 18 di
-   somma, e veniva buttato via da una soglia che sulla verticale ne
-   perdonava 16. Cioè: il tocco storto — quello dei bambini — si perdeva,
-   e si perdeva più di quanto dicesse il numero scritto qui. */
-const SCARTO_DITO = 16
-const SCARTO_MOUSE = 6
+   di essere un tocco: `SCARTO_DITO` e `SCARTO_MOUSE`, in `scena/dito.js`
+   col perché, perché lo stesso metro lo usa lo scaffale del baule. */
 
 /* Quanto si perdona a un dito che ha sbagliato mira, e quanto grande
    dev'essere come minimo un bersaglio. I 44 px sono la misura che
@@ -1895,13 +1883,13 @@ function sgombra() {
    «il cane» per sempre, perché quel dopo non arriva mai — e il posto è
    arrivato davanti a tutto da quando anche una bestia si posa: comprarla
    e trovarsela in mezzo al prato vorrebbe dire spostarla subito. */
-function prendiUnaBestia({ bestia, x, y }) {
+function prendiUnaBestia({ bestia, x, y, trascina }) {
   pannello.value = null
   if (mondo.hoLaBestia(bestia.chi)) return avvisa(`${bestia.nome} è già tuo.`)
   if (bestia.prezzo > monete.value)
     return avvisa(`Ti servono ${bestia.prezzo - monete.value} monete in più.`)
   prendi(null, null, { x: x - riquadro().left, y: y - riquadro().top },
-         { bestia: { chi: bestia.chi, compra: bestia }, pronto: false, clic: { x, y } })
+         { bestia: { chi: bestia.chi, compra: bestia }, pronto: !!trascina, clic: { x, y } })
 }
 
 /* Toccare una bestia mostra **come sta**, non chiede il nome: il nome
@@ -2059,7 +2047,7 @@ function battezza(nome) {
   salva()
 }
 
-/* Premuta una cosa nel baule, la posa comincia lì: il foglio si toglie
+/* Toccata una cosa nel baule, la posa comincia lì: il foglio si toglie
    di mezzo e l'anteprima è già agganciata alla griglia. Chi non ce l'ha
    la compra posandola — un gesto solo, e il prezzo si paga quando si sa
    già dove va. Le coordinate arrivano in pagina e la tela comincia sotto
@@ -2091,10 +2079,14 @@ function giaPosati() {
   return CATALOGO.filter(v => v.unico && mondo.quantiInMappa(v.id) > 0).map(v => v.id)
 }
 
-function tiraVoce({ voce, x, y }) {
+/* `trascina` vuol dire che il dito è uscito dalla carta di lato ed è
+   ancora giù: è il trascinamento, e si posa dove si alza (`pronto`).
+   Senza, la carta è stata toccata e il dito è già su: la cosa resta
+   appesa e si posa col tocco dopo. */
+function tiraVoce({ voce, x, y, trascina }) {
   pannello.value = null
   const r = riquadro()
-  prendi(voce, null, { x: x - r.left, y: y - r.top }, { pronto: false, clic: { x, y } })
+  prendi(voce, null, { x: x - r.left, y: y - r.top }, { pronto: !!trascina, clic: { x, y } })
 }
 </script>
 

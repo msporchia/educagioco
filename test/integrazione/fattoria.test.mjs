@@ -288,8 +288,8 @@ const dopoIlBaule = await page.evaluate(
 uguale('aprire il baule non compra niente da solo', dopoIlBaule, primaDelBaule)
 await chiudi()
 
-/* ---------- 7. premere nel baule è già posare ----------
-   Un gesto solo: si preme una cosa, il foglio si toglie di mezzo e
+/* ---------- 7. toccare nel baule è già posare ----------
+   Un gesto solo: si tocca una cosa, il foglio si toglie di mezzo e
    l'anteprima resta appesa al dito; il tocco dopo la posa. Chi non ce
    l'ha la compra posandola, e paga quando ha già visto dove va. */
 {

@@ -66,6 +66,8 @@ await entra()
 const cdp = await page.context().newCDPSession(page)
 const giu = (x, y) => cdp.send('Input.dispatchTouchEvent',
                                { type: 'touchStart', touchPoints: [{ x, y }] })
+const trascina = (x, y) => cdp.send('Input.dispatchTouchEvent',
+                                    { type: 'touchMove', touchPoints: [{ x, y }] })
 const su = () => cdp.send('Input.dispatchTouchEvent',
                           { type: 'touchEnd', touchPoints: [] })
 
@@ -96,13 +98,77 @@ async function chiudi() {
 const box = await page.locator('.fa-tela').boundingBox()
 const mezzo = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) }
 
+/* Una voce del baule si tocca **dove si vede**, e prima si guarda che
+   sotto il dito ci sia proprio quella: se è finita sotto lo schermo, o
+   qualcosa la copre, il guasto lo dice qui. Senza questa riga il dito
+   toccava il vuoto e il tocco dopo — quello che doveva posarla —
+   premeva la voce che c'era lì a baule ancora aperto: il giorno del
+   secondo albero il test comprava un silo della stalla, e diceva che la
+   conigliera non si pagava. */
+async function toccaVoce(nome) {
+  const voce = page.locator('.fa-voce', { hasText: nome }).first()
+  const b = await voce.count() ? await voce.boundingBox() : null
+  const x = b && Math.round(b.x + b.width / 2), y = b && Math.round(b.y + b.height / 2)
+  const sotto = b && await page.evaluate(([x, y]) => {
+    const v = document.elementFromPoint(x, y)?.closest('.fa-voce')
+    return v ? v.innerText.replace(/\s+/g, ' ').trim() : ''
+  }, [x, y])
+  if (controlla(`il dito arriva alla voce «${nome}»`, !!sotto && sotto.includes(nome),
+                b ? `sotto il dito c'è «${sotto}»` : 'il baule non è aperto'))
+    await dito(x, y)
+}
+
+/* Lo scaffale si scorre **col dito**, come lo scorre un bambino: e non
+   con `scrollIntoViewIfNeeded`, che scorre da programma e avrebbe
+   nascosto proprio il guasto di quel giorno — col dito lo scaffale non
+   si scorreva affatto. Il dito si appoggia **su una carta**, che è
+   dove si appoggia davvero (l'ultima tutta in vista), sale, si ferma e
+   si stacca: fermarsi prima di staccare toglie lo slancio, e lo
+   scaffale resta dove lo si è portato. Torna da che carta è partito,
+   quanto ha scorso e se la voce ormai si vede tutta — o che il baule
+   si è chiuso, che è come si presentava il guasto: la carta sotto il
+   dito presa e comprata al posto dello scorrimento. */
+async function scorriFinoA(nome) {
+  const misura = () => page.evaluate(nome => {
+    const scaffale = document.querySelector('.fa-scaffale')
+    if (!scaffale) return null
+    const s = scaffale.getBoundingClientRect()
+    const carte = [...document.querySelectorAll('.fa-voce')]
+    const v = carte.find(c => c.innerText.includes(nome)).getBoundingClientRect()
+    const piena = carte.filter(c => {
+      const r = c.getBoundingClientRect()
+      return r.top >= s.top && r.bottom <= s.bottom
+    }).pop()
+    const r = piena.getBoundingClientRect()
+    return { cima: s.top, sotto: v.bottom - s.bottom, scorso: scaffale.scrollTop,
+             carta: piena.querySelector('.fa-nome').innerText,
+             x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) }
+  }, nome)
+  let m = await misura()
+  const partenza = m ? m.scorso : 0, carta = m ? m.carta : ''
+  for (let volta = 0; volta < 4 && m && m.sotto > 0; volta++) {
+    const corsa = Math.min(m.sotto + 30, m.y - m.cima - 20)
+    await giu(m.x, m.y)
+    for (let i = 1; i <= 10; i++) {
+      await trascina(m.x, Math.round(m.y - corsa * i / 10))
+      await attendi(page, 16)
+    }
+    await attendi(page, 150)
+    await su()
+    await attendi(page, 300)
+    m = await misura()
+  }
+  if (!m) return { carta, chiuso: true, scorso: 0, siVede: false }
+  return { carta, chiuso: false, scorso: m.scorso - partenza, siVede: m.sotto <= 0 }
+}
+
 /* Il baule adesso ha **tre tasti**, uno per metà — la fattoria, le
    decorazioni, gli animali — e quello che serve qui è sempre il primo:
    campi, silos e recinti stanno tutti sotto «la fattoria». Prima ce
    n'era uno solo e bastava la classe. */
 
 /* ---------- 1. il campo si compra dal baule ----------
-   Premere una voce del baule **è** cominciare a posarla, e il tocco dopo
+   Toccare una voce del baule **è** cominciare a posarla, e il tocco dopo
    la posa: è lo stesso gesto di ogni altra cosa, e il campo non fa
    eccezione. */
 await page.locator('[data-baule="lavoro"]').click()
@@ -126,9 +192,8 @@ for (const che of ['Campo', 'Mulino', 'Silo'])
             await page.locator('.fa-voce', { hasText: che }).count() > 0)
 await scatto(page, 'campi-baule')
 
-const vCampo = await page.locator('.fa-voce', { hasText: 'Campo' }).first().boundingBox()
 const primaDelCampo = await monete()
-await dito(Math.round(vCampo.x + vCampo.width / 2), Math.round(vCampo.y + vCampo.height / 2))
+await toccaVoce('Campo')
 /* posato in basso a destra del centro: lontano dal bosco e da quello che
    il gioco potrebbe aver messo in mezzo */
 const dove = { x: mezzo.x + 24, y: mezzo.y + 48 }
@@ -145,12 +210,11 @@ nota(`campo pagato ${primaDelCampo - dopoIlCampo} monete`)
    è zero, non piccola, e il campo resta pronto ad aspettare. Quindi si
    compra prima, che è anche l'ordine in cui il gioco lo chiede — la
    scheda del campo vuoto lo dice prima di seminare. */
-/* Posare chiude il baule — premere è già mettere giù — quindi per la
+/* Posare chiude il baule — toccare è già mettere giù — quindi per la
    cosa dopo lo si riapre. */
 await page.locator('[data-baule="lavoro"]').click()
 await page.waitForSelector('.fa-voce', { timeout: 3000 })
-const vSilo = await page.locator('.fa-voce', { hasText: 'Silo' }).first().boundingBox()
-await dito(Math.round(vSilo.x + vSilo.width / 2), Math.round(vSilo.y + vSilo.height / 2))
+await toccaVoce('Silo')
 /* lontano dal campo e da dove finirà il recinto, che è largo quattro
    celle: due cose che si sovrappongono non si posano, e il test
    fallirebbe dicendo una cosa che non c'entra */
@@ -323,10 +387,25 @@ for (const che of ['Campo', 'Fienile', 'Conigliera', 'Pollaio', 'Stalla'])
             await page.locator('.fa-voce', { hasText: che }).count() > 0)
 await scatto(page, 'campi-cortile')
 
-const vRecinto = await page.locator('.fa-voce', { hasText: 'Conigliera' }).first().boundingBox()
+/* ── E PER ARRIVARCI SI SCORRE ──
+   Contarle non vuol dire vederle: col secondo albero sotto «la
+   fattoria» ci sono trentasei voci, e a questo livello la conigliera
+   sta alla settima riga di nove, **sotto lo schermo**. Il dito ci arriva
+   solo scorrendo, e scorrere partendo da una carta la prendeva al
+   primo contatto — e la comprava, se il dito si alzava su un posto
+   libero. Quindi si guarda che lo scaffale si sia mosso, che il baule
+   sia ancora lì e che le monete no. */
+const primaDiScorrere = await monete()
+const giro = await scorriFinoA('Conigliera')
+controlla('strisciando in su da una carta lo scaffale scorre', giro.scorso > 0,
+          giro.chiuso ? `il baule si è chiuso: «${giro.carta}» è stata presa` : `scorso ${giro.scorso}`)
+uguale('e strisciare non compra niente', await monete(), primaDiScorrere)
+controlla('finché la conigliera non si vede tutta', giro.siVede)
+nota(`strisciata partita da «${giro.carta}», scaffale scorso di ${Math.round(giro.scorso)} px`)
+await scatto(page, 'campi-cortile-scorso')
+
 const primaDelRecinto = await monete()
-await dito(Math.round(vRecinto.x + vRecinto.width / 2),
-           Math.round(vRecinto.y + vRecinto.height / 2))
+await toccaVoce('Conigliera')
 const dovePen = { x: mezzo.x - 30, y: mezzo.y - 70 }
 await dito(dovePen.x, dovePen.y)
 await attendi(page, 500)

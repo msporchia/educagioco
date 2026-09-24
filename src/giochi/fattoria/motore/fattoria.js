@@ -1731,7 +1731,7 @@ export class Fattoria {
   }
 
   /* Comprarne uno senza metterlo giù. Dal baule non ci passa più
-     nessuno — lì premere è già posare, e si paga posando — ma resta
+     nessuno — lì toccare è già posare, e si paga posando — ma resta
      perché comprare e piazzare sono due cose diverse e il magazzino
      esiste lo stesso: chi mette via una panchina la ritrova qui. */
   compra(id) {

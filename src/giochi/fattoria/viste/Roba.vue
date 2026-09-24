@@ -7,12 +7,14 @@
    stessa domanda fatta due volte. Ogni oggetto c'è sempre, e sopra c'è
    scritto o il prezzo o quanti ne hai.
 
-   **Premere è già mettere giù.** Un gesto solo: si preme una cosa e la
+   **Toccare è già mettere giù.** Un gesto solo: si tocca una cosa e la
    posa comincia — il foglio si toglie di mezzo e l'anteprima è già
    agganciata alla griglia, col suo ingombro vero. Se la cosa è già tua
    esce dal baule, se non lo è la si compra posandola: comprare e
    piazzare erano due gesti diversi, e il primo lasciava il bambino con
    una panchina invisibile in un magazzino che non aveva mai visto.
+   Toccare e non premere: lo scaffale deve poter scorrere sotto il dito
+   (vedi `premi`, più giù).
 
    Si chiamava «la roba», ed era il nome sbagliato per due motivi: non
    dice niente a un bambino, e detto ad alta voce suona male. «Il baule»
@@ -53,6 +55,7 @@ import { computed, ref } from 'vue'
 import { CATEGORIE, ZONE, ANIMALI_ZONA } from '../dati/catalogo.js'
 import { chiaveDi } from '../dati/livelli.js'
 import { IN_VENDITA } from '../dati/animali.js'
+import { SCARTO_DITO, SCARTO_MOUSE } from '../scena/dito.js'
 import Provino from './Provino.vue'
 import Chiudi from './Chiudi.vue'
 
@@ -197,24 +200,84 @@ const costa = v => props.prezzi[v.id] ?? v.prezzo
    il numero che sta al posto del tasto spento senza perché. */
 const manca = v => Math.max(0, costa(v) - props.monete)
 
-/* Premere **è** cominciare a posare: non si aspetta che il dito si
+/* Toccare **è** cominciare a posare: non si aspetta che il dito si
    sposti, perché quell'attesa era un gesto da imparare e nessuno l'ha
    imparato da solo. Chi si è appoggiato per sbaglio non ha comprato
    niente: la cosa resta appesa al dito e si posa dove la si vuole (o non
-   si posa affatto, se la si lascia dove non ci sta). */
+   si posa affatto, se la si lascia dove non ci sta).
+
+   ── TOCCARE PRENDE, STRISCIARE SCORRE ─────────────────────────────
+   Era «premere»: la cosa si prendeva al primo contatto, e lo scaffale
+   col dito **non si scorreva più**. Il dito che partiva da una carta se
+   la portava via — e una strisciata la comprava, perché si posava dove
+   il dito si alzava. Restavano gli spazi fra le carte, otto pixel, e
+   nemmeno quelli: il telefono sposta il tocco sulla carta più vicina.
+   Finché uno scaffale stava in uno schermo non se n'è accorto nessuno;
+   col secondo albero «la fattoria» ha trentasei voci, e la conigliera
+   era finita alla settima riga, dove nessun dito arrivava.
+
+   Adesso decide il movimento, come sul prato (`Gioco.vue`):
+     · il dito che si stacca **fermo** ha toccato: la cosa si prende, e
+       resta appesa al dito come prima;
+     · il dito che va **in su o in giù** sta scorrendo: lo scorrimento
+       lo fa il browser (`touch-action: pan-y` sulla carta) e qui non si
+       prende niente;
+     · il dito che va **di lato** la tira fuori e la posa dove si alza:
+       il trascinamento di prima, nel solo verso che non è uno
+       scorrimento.
+   Il mouse non scorre trascinando — ha la rotella — e trascinare in
+   qualunque verso tira fuori. Le soglie sono quelle del prato
+   (`scena/dito.js`), per la stessa ragione: un dito non sta fermo come
+   un mouse. */
+let dito = null
+
+function premi(e, prendi) {
+  dito = { id: e.pointerId, x: e.clientX, y: e.clientY, prendi,
+           scarto: e.pointerType === 'mouse' ? SCARTO_MOUSE : SCARTO_DITO }
+  /* Quello che fa questo puntatore arriva alla carta anche fuori da
+     lei: un mouse che si stacca sopra lo spazio fra due carte non deve
+     lasciarne una «premuta» per il prossimo passaggio. */
+  try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) { /* niente */ }
+}
+
+function muovi(e) {
+  if (!dito || e.pointerId !== dito.id) return
+  const dx = e.clientX - dito.x, dy = e.clientY - dito.y
+  if (Math.hypot(dx, dy) <= dito.scarto) return
+  const { prendi } = dito
+  dito = null
+  if (e.pointerType !== 'mouse' && Math.abs(dy) >= Math.abs(dx)) return
+  prendi(e, true)
+}
+
+function lascia(e) {
+  if (!dito || e.pointerId !== dito.id) return
+  const { prendi } = dito
+  dito = null
+  prendi(e, false)
+}
+
+/* Il browser si è preso il dito per scorrere: non è successo niente. */
+function annulla() { dito = null }
+
 function giu(e, v) {
   if (!quantiNe(v.id) && manca(v)) return
-  emit('tira', { voce: v, x: e.clientX, y: e.clientY })
+  premi(e, (ev, trascina) =>
+    emit('tira', { voce: v, x: ev.clientX, y: ev.clientY, trascina }))
 }
 
 function giuBestia(e, a) {
   if (eMia(a.chi) || a.prezzo > props.monete) return
-  emit('tiraBestia', { bestia: a, x: e.clientX, y: e.clientY })
+  premi(e, (ev, trascina) =>
+    emit('tiraBestia', { bestia: a, x: ev.clientX, y: ev.clientY, trascina }))
 }
 </script>
 
 <template>
-  <div class="fa-baule">
+  <div class="fa-baule" @pointermove="muovi" @pointerup="lascia" @pointercancel="annulla">
+    <!-- Il resto del gesto di una carta — muoversi, staccarsi, lasciarlo
+         al browser — sale fin qui: la carta si tiene il puntatore
+         (`premi`), e da un posto solo si sente per tutte e due le metà. -->
     <Chiudi @chiudi="$emit('chiudi')" />
     <h2>Il baule</h2>
 

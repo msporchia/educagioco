@@ -889,6 +889,17 @@ committate: non è ricostruibile da git.
   puntatore: sotto quella misura Android e iOS considerano il dito ancora
   fermo, e un gioco più severo del telefono butta via i tocchi di chi
   preme forte — cioè dei bambini.
+- **Un elenco che scorre non agisce alla pressione.** Il baule della
+  fattoria prendeva una voce al `pointerdown`, e col dito lo scaffale
+  non si scorreva più: la strisciata partiva da una carta e se la
+  portava via — comprandola — e gli spazi fra le carte non servono,
+  perché il telefono sposta il tocco sull'elemento toccabile più
+  vicino. Dove si scorre decide il movimento (`fattoria/viste/Roba.vue`,
+  soglie in `fattoria/scena/dito.js`): fermo è un tocco, in su e in giù
+  è del browser (`touch-action: pan-y`, e il `pointercancel` vuol dire
+  «non è successo niente»), di lato si trascina. Lo vede solo un test
+  che scorre **col dito** (`integrazione/campi`): `scrollIntoViewIfNeeded`
+  scorre da programma, e il guasto non lo incontra mai.
 - **Il dito non seleziona, e la regola è in un posto solo**
   (`src/style.css`). Su iPhone tenere premuto dentro un gioco accendeva
   l'evidenziazione blu e il callout «Copia»: c'era `user-select:none` e

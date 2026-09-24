@@ -761,7 +761,7 @@ indossano. Un aggancio tiene una cosa sola, e mettere un cilindro a chi ha già
 un cappellino **cambia** il cappellino invece di dire di no: chi preme il
 secondo cappello sta chiedendo di cambiarlo, non di indossarne due.
 
-Comprarlo si fa **premendolo**, come nel baule dove premere è già posare: un
+Comprarlo si fa **premendolo**, come nel baule dove toccare è già posare: un
 tasto che dicesse «prima compralo, poi mettiglielo» sarebbero due gesti per
 una cosa sola. Il prezzo sta sul tasto, e chi non ce l'ha vede di quanto
 manca.
@@ -1408,6 +1408,24 @@ lo stesso, perché 44vh è l'elenco ma sopra e sotto c'è dell'altro che in
 vh non si conta. Adesso **ogni foglio è una colonna**: titolo e tasti
 stanno fermi, l'elenco in mezzo si stringe di quanto serve e scorre lui
 (`flex: 0 1 auto; min-height: 0`), e nessuno dichiara più un'altezza.
+
+### Lo scaffale si scorre col dito (dal 23 settembre 2026)
+
+Lo scaffale del baule scorreva, ma **non col dito**. Una voce si prendeva
+al primo contatto, quindi il dito che partiva da una carta per scorrere se
+la portava via — e una strisciata la *comprava*, perché la cosa si posa
+dove il dito si alza. Restavano gli spazi fra le carte, otto pixel, e
+nemmeno quelli: il telefono sposta il tocco sulla carta più vicina. Finché
+uno scaffale stava in uno schermo non se n'è accorto nessuno; col secondo
+albero «la fattoria» ha trentasei voci, e da livello 40 in su i recinti
+stavano sotto lo schermo, dove nessun dito arrivava. Se n'è accorto
+`integrazione/campi`, che non trovava più la conigliera.
+
+Adesso decide il movimento, come sul prato: **toccare** una carta la prende
+(e resta appesa al dito come prima), **strisciare in su o in giù** scorre
+e non prende niente, **strisciare di lato** la tira fuori e la posa dove il
+dito si alza. Col mouse si scorre con la rotella, e trascinare in qualunque
+verso tira fuori.
 
 ## Cosa manca ancora
 
