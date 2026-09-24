@@ -6,7 +6,8 @@
    - **la regola**: dopo il segno, solo i giochi che ha in home, e al
      massimo `PER_GIOCO` righe per gioco — chi torna dopo un anno non
      viene sommerso, e il file non va potato a mano;
-   - **le righe**: una riga di testo semplice, su un gioco che esiste;
+   - **le righe**: una riga di testo semplice, su un gioco che esiste e
+     che è già uscito dal cancello dei giochi in prova;
    - **il segno**: un bambino nuovo parte dall'ultima, uno di ieri da
      zero, e «Letto» lo porta in fondo.
 
@@ -14,7 +15,7 @@
    memoria, che qui è un archivio come un altro.
    ═══════════════════════════════════════════════════════════════════ */
 import { NOVITA, ULTIMA, PER_GIOCO, daLeggere } from '../../src/guide/novita-bambini.js'
-import { CHIAVI_GIOCHI } from '../../src/data/giochi.js'
+import { CHIAVI_GIOCHI, eSperimentale } from '../../src/data/giochi.js'
 import { state, init, creaGiocatore, selectPlayer, resetPlayer,
          novitaLette, segnaNovitaLette } from '../../src/store/profile.js'
 import { save, load, remove, chiavi, flush } from '../../src/store/storage.js'
@@ -75,6 +76,12 @@ for (const n of NOVITA) {
             /^\d{4}-\d{2}-\d{2}$/.test(n.quando || '') && !isNaN(Date.parse(n.quando)), n.quando)
   controlla(`${chi} parla di un gioco che esiste`,
             n.gioco == null || CHIAVI_GIOCHI.includes(n.gioco), n.gioco)
+  /* un gioco in prova si annuncia il giorno che esce dal cancello:
+     prima `inCasa` scarta la riga a chi non ha acceso i giochi in
+     prova, e il suo «Letto» la salta per sempre — il segno è l'id
+     più alto, non l'elenco delle righe viste */
+  controlla(`${chi} non parla di un gioco ancora in prova`,
+            n.gioco == null || !eSperimentale(n.gioco), n.gioco)
   controlla(`${chi} è una riga, non un papiro`,
             typeof n.testo === 'string' && n.testo.length > 0 && n.testo.length <= LUNGA,
             `${n.testo?.length} caratteri, il tetto è ${LUNGA}`)

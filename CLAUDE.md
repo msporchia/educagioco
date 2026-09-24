@@ -572,7 +572,7 @@ committate: non è ricostruibile da git.
   merce già scelta** e le sue righe eseguono le azioni del consiglio:
   bersagli `[data-albero]`, `[data-albero-riga="<merce>"]`,
   `[data-albero-macchina="<id>"]`, `[data-albero-apri="<merce>"]`.
-- **`src/giochi/passo-passo/`** — *in prova*, per i piccoli (chiave `passo`).
+- **`src/giochi/passo-passo/`** — per i piccoli (chiave `passo`).
   Un coniglio su una griglia vista dall'alto torna alla tana eseguendo **una
   fila di frecce**: il «segui le istruzioni» che viene prima del Generale.
   Pagina: [`docs/passo-passo.md`](docs/passo-passo.md). Le frecce sono
@@ -616,8 +616,8 @@ committate: non è ricostruibile da git.
   lo zaino pretende nei loro gradini. Un giro che non muove il coniglio
   ferma la fila (`STANCO`). Le mappe dei grandi arrivano a nove per
   undici.
-- **`src/giochi/costruttore/`** — *in prova.* Un robot costruisce, visto di
-  lato, quello che il bambino programma: **progetti** (funzioni) con le loro
+- **`src/giochi/costruttore/`** — un robot costruisce, visto di lato,
+  quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti
   finché. Pagina per chi arriva da fuori: [`docs/costruttore.md`](docs/costruttore.md).
   Quattro cose da non rompere. **La sfida sono gli ordini**: un livello
@@ -1292,14 +1292,14 @@ stretto, cioè quello che tiene meno domande.
 
 **E se in casa non c'è nessun gioco che le chieda, le domande non si
 elencano affatto.** Da quattro a cinque anni e mezzo i giochi accesi
-sono tre — Conta gli animali, Prima e dopo, la fattoria — e nessuno
-pesca dai moduli di quiz: i quattro blocchi elencavano lo stesso undici
-classi col tastino per provarle, e un grande le leggeva come «ecco cosa
-gli chiederemo». Al loro posto una riga sola, che dice anche da quando
-cambia («arrivano a 6 anni, con Survivors, il Dungeon e il
-sotterraneo»). Chi le chiede lo dichiara nel manifesto con `quiz: true`
-— non «fa domande», che le fa anche Conta gli animali, ma **passa da
-`src/quiz/`**.
+sono quattro — Conta gli animali, Prima e dopo, Passo passo, la
+fattoria — e nessuno pesca dai moduli di quiz: i quattro blocchi
+elencavano lo stesso undici classi col tastino per provarle, e un
+grande le leggeva come «ecco cosa gli chiederemo». Al loro posto una
+riga sola, che dice anche da quando cambia («arrivano a 6 anni, con
+Survivors, il Dungeon e il sotterraneo»). Chi le chiede lo dichiara
+nel manifesto con `quiz: true` — non «fa domande», che le fa anche
+Conta gli animali, ma **passa da `src/quiz/`**.
 
 **Non c'è nessuna riga che dice cosa è cambiato**, ed era la prima cosa
 che si era scritta. «＋ arriva La bancarella» raccontava il movimento a

@@ -37,9 +37,6 @@ export default {
   /* si legge: le righe del programma sono frasi, e le lavagnette hanno
      un nome. Sotto la terza elementare non si comincia da qui */
   grandi: true,
-  /* in prova: dietro «giochi in prova» finché non l'ha visto giocare
-     un bambino vero */
-  sperimentale: true,
   /* la fila si apre per merito: chi ha vinto un livello apre il
      successivo anche oltre la mira dell'età (`data/portata-giochi.js`).
      Ogni livello è il passo dopo di quello prima, e averlo vinto è la

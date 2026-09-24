@@ -1,6 +1,6 @@
 [← torna al README](../README.md)
 
-# 🏗️ Il costruttore *(in prova)*
+# 🏗️ Il costruttore
 
 *Programmare davvero, senza scrivere codice.* Qualcuno ordina una cosa —
 un muro, una scala, un castello — e il bambino scrive il programma con cui

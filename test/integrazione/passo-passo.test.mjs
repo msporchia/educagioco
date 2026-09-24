@@ -3,7 +3,8 @@
 
    Le cose che il motore non può dire, e che si vedono solo qui:
 
-   · **si entra dalla home** (è un gioco in prova: senza il flag non c'è);
+   · **si entra dalla home**, senza accendere niente: dai quattro anni la
+     carta c'è da sé;
    · **la mappa sta nello schermo**: intera in larghezza e in circa metà
      dell'altezza di un telefono da 390×844, anche la più grande;
    · **si gioca col dito**: la fila si compone toccando i tasti, ▶ la fa
@@ -54,16 +55,18 @@ async function allaMappa() {
   await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 }
 
-/* ---------- 1. senza il flag dei giochi in prova, in home non c'è ---------- */
-await semina(page, { settings: { eta: 6 } })
-uguale('senza «giochi in prova» la carta non c\'è',
-       await page.locator('.carta.gioco[data-gioco="passo"]').count(), 0)
+/* ---------- 1. a quattro anni la carta c'è già ----------
+   È uscito dai giochi in prova: non c'è niente da accendere, e i più
+   piccoli lo trovano in home da soli */
+await semina(page, { settings: { eta: 4 } })
+uguale('a quattro anni la carta è in home, senza accendere niente',
+       await page.locator('.carta.gioco[data-gioco="passo"]').count(), 1)
 
-/* ---------- 2. col flag si entra dalla home ----------
+/* ---------- 2. si entra dalla home ----------
    Con delle monete in tasca: il 💡 si paga, e il test lo scende tutto */
-await semina(page, { settings: { sperimentali: true, eta: 6 }, coins: 2000 })
+await semina(page, { settings: { eta: 6 }, coins: 2000 })
 const carta = page.locator('.carta.gioco[data-gioco="passo"]')
-uguale('con «giochi in prova» la carta è in home', await carta.count(), 1)
+uguale('a sei anni la carta è in home', await carta.count(), 1)
 await carta.click()
 await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 uguale('la mappa elenca tutte le tappe', await page.locator('.pp-tappa').count(), CAMPAGNA.length)
@@ -252,7 +255,7 @@ controlla('e l\'aiuto prenotato arriva', await page.locator('[data-in-coda]').co
 
 /* ---------- 8. i salti ci sono solo dove servono ---------- */
 await allaMappa()
-await semina(page, { settings: { sperimentali: true, eta: 6 },
+await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: 6, stelle: { 0: 3, 1: 1 }, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
@@ -273,7 +276,7 @@ await page.waitForSelector('.pp-mappa')
 /* «Tutto insieme» è sette per nove: la più grande che la campagna
    permette. Deve stare intera in larghezza e in poco più di metà
    dell'altezza, con tessere e tasti sotto. */
-await semina(page, { settings: { sperimentali: true, eta: 8, tuttoAperto: true } })
+await semina(page, { settings: { eta: 8, tuttoAperto: true } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(CAMPAGNA.length - 1)
@@ -293,7 +296,7 @@ await scatto(page, 'passo-grande')
 
 /* ---------- 10. uscire mentre il coniglio entra in casa non butta la tana ---------- */
 await allaMappa()
-await semina(page, { settings: { sperimentali: true, eta: 6 }, campagne: {} })
+await semina(page, { settings: { eta: 6 }, campagne: {} })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
 await entraNellaTappa(0)
@@ -309,7 +312,7 @@ await page.waitForSelector('.pp-mappa', { timeout: 5000 })
 }
 
 /* ---------- 11. il sentiero senza fine, a campagna finita ---------- */
-await semina(page, { settings: { sperimentali: true, eta: 8 },
+await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: CAMPAGNA.length, libera: true, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
@@ -349,7 +352,7 @@ await scatto(page, 'passo-sentiero')
 await allaMappa()
 
 /* ---------- 12. lo zaino, col dito ---------- */
-await semina(page, { settings: { sperimentali: true, eta: 8 },
+await semina(page, { settings: { eta: 8 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
@@ -435,7 +438,7 @@ await scatto(page, 'passo-zaino-aiuto')
 
 /* ---------- 13. a sei anni lo zaino è chiuso, e il sentiero no ---------- */
 await allaMappa()
-await semina(page, { settings: { sperimentali: true, eta: 6 },
+await semina(page, { settings: { eta: 6 },
                      campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')
@@ -468,7 +471,7 @@ async function vinci(chiave) {
   await page.waitForSelector('[data-fine="tappa"]', { timeout: 40000 })
   return page.locator('[data-stelle-prese]').getAttribute('data-quante')
 }
-await semina(page, { settings: { sperimentali: true, eta: 10, tuttoAperto: true },
+await semina(page, { settings: { eta: 10, tuttoAperto: true },
                      campagne: { passo: { tappa: CAMPAGNA.length - 1, stelle: {}, cfg: {} } } })
 await page.locator('.carta.gioco[data-gioco="passo"]').click()
 await page.waitForSelector('.pp-mappa')

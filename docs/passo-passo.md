@@ -8,9 +8,6 @@ tana. Il bambino non lo guida col dito: gli scrive una **fila di frecce**,
 preme ▶, e il coniglio la esegue dall'inizio alla fine. Se qualcosa va
 storto si guarda *quale* freccia era sbagliata, la si cambia, e si riprova.
 
-È un gioco **in prova**: si vede solo con «giochi in prova» acceso nella
-pagina dei grandi.
-
 ## Come è fatto
 
 Dall'alto in basso: il posto (una mappa vista dall'alto, in pixel art), la

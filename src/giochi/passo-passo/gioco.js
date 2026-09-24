@@ -59,9 +59,6 @@ export default {
      dei cicli non arriverebbe mai */
   cresce: true,
 
-  /* dietro «giochi in prova» finché un grande non decide che è pronto */
-  sperimentale: true,
-
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''

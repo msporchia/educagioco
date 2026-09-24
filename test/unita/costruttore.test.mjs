@@ -52,7 +52,6 @@ controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un col
 controlla('le lettere in ordine usano il confronto fra due numeri, che prima non usava nessuno',
           LIVELLI.filter(l => l.capitolo === 'ordine').every(l => [...istruzioni(l.soluzione)].some(i => i.cond && i.cond.tipo === 'confronta')))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
-controlla('il gioco è in prova', manifesto.sperimentale === true)
 
 /* ══════════ 2. il mondo: il robot cammina e cade ══════════ */
 const esegui = (prog, righe, opz = {}) => {

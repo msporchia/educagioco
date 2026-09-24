@@ -288,11 +288,12 @@ export function saperiDiUnEta (sa = {}, { classi = [], eta = null } = {}) {
 /* ── CHI, IN CASA, PESCA DAVVERO DAI MODULI DI QUIZ ──
    Il difetto che questa funzione ripara è il più costoso che un
    riassunto possa avere: **dire una cosa che non succede**. Da quattro
-   a cinque anni e mezzo in casa ci sono Conta gli animali, Prima e dopo
-   e la fattoria — e nessuno dei tre passa da `src/quiz/`. I quattro
-   blocchi delle domande elencavano lo stesso undici classi, con nomi,
-   livelli e tastini per provarle: un genitore le leggeva come «ecco
-   cosa gli chiederemo», e non gliele avremmo chieste mai.
+   a cinque anni e mezzo in casa ci sono Conta gli animali, Prima e
+   dopo, Passo passo e la fattoria — e nessuno dei quattro passa da
+   `src/quiz/`. I quattro blocchi delle domande elencavano lo stesso
+   undici classi, con nomi, livelli e tastini per provarle: un genitore
+   le leggeva come «ecco cosa gli chiederemo», e non gliele avremmo
+   chieste mai.
 
    Il primo gioco che le pesca arriva a sei anni, tutto insieme
    (Survivors, il Dungeon, il sotterraneo). Dirlo è utile — è la

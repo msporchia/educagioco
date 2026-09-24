@@ -69,6 +69,10 @@ export const NOVITA = [
     testo: '⏳ Alla fattoria puoi mettere in fila più cose in ogni macchina' },
   { id: 8, quando: '2026-09-24', gioco: 'fattoria',
     testo: '🎈 Alla fattoria, salendo di livello, arrivano botteghe e mongolfiera' },
+  { id: 9, quando: '2026-09-24', gioco: 'passo',
+    testo: '🐇 Nuovo gioco: Passo passo, il coniglio va a casa con le frecce' },
+  { id: 10, quando: '2026-09-24', gioco: 'costruttore',
+    testo: '🏗️ Nuovo gioco: Il costruttore, programma un robot che costruisce' },
 ]
 
 /* quante righe per gioco, al massimo: è il tetto di chi torna dopo

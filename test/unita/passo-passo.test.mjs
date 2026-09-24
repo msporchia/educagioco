@@ -64,8 +64,7 @@ const dove = (r) => r.mondo.pos
   dentro('e almeno sei con lo zaino', TAPPE_ZAINO, 6, 30)
   uguale('il manifesto conta le tappe giuste', manifesto.tappe, QUANTE_TAPPE)
   uguale('la chiave è «passo»', CHIAVE, 'passo')
-  controlla('il gioco è per i piccoli, e sta fra quelli in prova',
-            manifesto.piccoli === true && manifesto.sperimentale === true)
+  controlla('il gioco è per i piccoli', manifesto.piccoli === true)
   controlla('ma cresce: le partenze dei grandi non lo spengono', manifesto.cresce === true)
   controlla('il gioco sta nell\'area «logica» e si gioca pensando',
             manifesto.area === 'logica' && manifesto.come === 'pensare')
