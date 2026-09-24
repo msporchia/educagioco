@@ -34,8 +34,16 @@
      · nell'acqua non entra nessuno: né il robot né l'omino;
      · l'omino cammina verso la bandiera, sale un gradino alto uno, cade
        giù per tre al massimo.
+
+   ── IL MONDO E L'ESECUTORE ─────────────────────────────────────────
+   L'esecutore sa ripetere, decidere, chiamare un progetto e fare i
+   conti; **cosa voglia dire camminare, mettere un mattone o guardare
+   lo sa il mondo** (`fai`, `guarda`). È il taglio che ha permesso al
+   porto, visto dall'alto e con un orologio, di usare lo stesso
+   esecutore: le regole di qui stavano scritte dentro di lui.
    ═══════════════════════════════════════════════════════════════════ */
 import { leggiSimbolo } from '../dati/legenda.js'
+import { Inciampo } from './inciampo.js'
 
 /* dove guarda una condizione, e dove si posa un mattone, rispetto al
    robot: `sotto` sono i piedi, `giu-destra` il posto dove andrà il piede
@@ -133,6 +141,97 @@ export class Mondo {
     if (this.suoloDi(x, y) === 'terreno') return 'terreno'
     this.mattoni.set(this.k(x, y), colore)
     return null
+  }
+
+  /* ═══════════ quello che il robot fa, e guarda ═══════════
+     L'esecutore passa qui le righe che non sono sue (`vai`, `metti`) e
+     le domande (`guarda`); `es` è l'esecuzione, per i numeri e i colori
+     (`valuta`, `valutaColore`) e per contare i passi. I fatti che escono
+     sono quelli di sempre: la regia li anima, i test li contano. */
+  *fai(i, es) {
+    switch (i.tipo) {
+      case 'vai': {
+        if (i.verso !== 'destra' && i.verso !== 'sinistra') throw new Inciampo('verso-da-scegliere', i.id)
+        const n = es.valuta(i.quanto, i.id)
+        if (n < 0) throw new Inciampo('negativo', i.id, { quanto: n })
+        for (let k = 0; k < n; k++) {
+          if (k > 0) es.conta(i.id)
+          yield* this.passo(i.verso === 'destra' ? 1 : -1, i.id)
+        }
+        break
+      }
+      case 'metti': {
+        const colore = es.valutaColore(i.colore, i.id)
+        const r = this.robot
+        const dove = i.dove || 'sotto'
+        if (dove === 'sotto') {
+          /* il mattone va dove il robot ha i piedi, e il robot ci sale
+             sopra: serve posto sopra la testa */
+          if (!this.libera(r.x, r.y - 1)) throw new Inciampo('testa', i.id, { x: r.x, y: r.y - 1 })
+          const no = this.metti(r.x, r.y, colore)
+          if (no) throw new Inciampo(no, i.id, { x: r.x, y: r.y })
+          yield { tipo: 'metti', x: r.x, y: r.y, colore, dove }
+          const a = { x: r.x, y: r.y - 1 }
+          this.robot = a
+          yield { tipo: 'muovi', da: { ...r }, a: { ...a }, come: 'sale' }
+        } else {
+          const [dx, dy] = SPOSTAMENTI[dove] || [0, 1]
+          const x = r.x + dx, y = r.y + dy
+          const no = this.metti(x, y, colore)
+          if (no) throw new Inciampo(no, i.id, { x, y })
+          yield { tipo: 'metti', x, y, colore, dove }
+        }
+        break
+      }
+      default:
+        break
+    }
+  }
+
+  /* ── camminare, salire, cadere ──
+     Un passo: se davanti c'è posto si va, e poi si cade finché si ha
+     qualcosa sotto; se davanti c'è un gradino alto uno (e sopra la testa
+     c'è posto) si sale; se no è un muro. È la stessa regola dell'omino,
+     tranne che il robot da qualunque altezza cade senza farsi male. */
+  *passo(dx, id) {
+    const r = this.robot
+    const nx = r.x + dx
+    if (!this.dentro(nx, r.y)) throw new Inciampo('fuori', id, { x: nx, y: r.y })
+    if (!this.solido(nx, r.y)) {
+      const a = { x: nx, y: r.y }
+      this.robot = a
+      yield { tipo: 'muovi', da: { ...r }, a: { ...a }, come: 'passo' }
+      if (this.suoloDi(a.x, a.y) === 'acqua' && !this.mattoneDi(a.x, a.y)) throw new Inciampo('splash', id, a)
+      yield* this.cadi(id)
+    } else if (this.libera(nx, r.y - 1) && this.libera(r.x, r.y - 1)) {
+      const a = { x: nx, y: r.y - 1 }
+      this.robot = a
+      yield { tipo: 'muovi', da: { ...r }, a: { ...a }, come: 'sale' }
+    } else throw new Inciampo('muro', id, { x: nx, y: r.y })
+  }
+
+  *cadi(id) {
+    while (!this.solido(this.robot.x, this.robot.y + 1)) {
+      const r = this.robot
+      if (!this.dentro(r.x, r.y + 1)) throw new Inciampo('fuori', id, { x: r.x, y: r.y + 1 })
+      const a = { x: r.x, y: r.y + 1 }
+      this.robot = a
+      yield { tipo: 'muovi', da: { ...r }, a: { ...a }, come: 'cade' }
+      if (this.suoloDi(a.x, a.y) === 'acqua' && !this.mattoneDi(a.x, a.y)) throw new Inciampo('splash', id, a)
+    }
+  }
+
+  /* «[sotto i piedi] c'è [un mattone rosso]»: la risposta, e la cella
+     guardata (la regia ci mette l'occhio sopra). Il colore può essere
+     scritto o il nome di chi lo porta: lo valuta l'esecuzione. */
+  guarda(c, es, id) {
+    const [dx, dy] = SPOSTAMENTI[c.dove] || [0, 0]
+    const x = this.robot.x + dx, y = this.robot.y + dy
+    const cosa = this.cosaC(x, y)
+    let trovato = c.cosa === 'pieno' ? (cosa === 'mattone' || cosa === 'terreno') : cosa === c.cosa
+    /* «un mattone rosso»: il mattone c'è, ed è di quel colore */
+    if (trovato && c.cosa === 'mattone' && c.colore) trovato = this.mattoneDi(x, y) === es.valutaColore(c.colore, id)
+    return { esito: c.c === false ? !trovato : trovato, x, y, cosa }
   }
 
   copia() {
