@@ -77,6 +77,8 @@ import { LIVELLI_PORTO } from './porto/livelli.js'
 import { LIVELLI_POSTI } from './porto/posti.js'
 import { GIORNATE } from './porto/giornate.js'
 import { IN_ORDINE } from './porto/ordine.js'
+import { CERCARE } from './porto/cercare.js'
+import { PILE } from './porto/pile.js'
 
 /* L'ordine dei capitoli: il «se» viene subito dopo il cantiere. Stava in
    fondo, dopo progetti e lavagnette, e a metà gioco il papà ha notato che
@@ -101,6 +103,10 @@ export const CAPITOLI = [
     dice: 'Il porto lavora tutto insieme: camion, lettere, frighi e clienti. Dalla giornata piccola a quella più larga dello schermo.' },
   { chiave: 'ordine', nome: 'Mettere in ordine', icona: '🔢',
     dice: 'Le lettere del postino, dalla più piccola alla più grande: confrontare due numeri, scambiarli, e ripetere finché la fila è in ordine.' },
+  { chiave: 'cercare', nome: 'Cercare', icona: '🔎',
+    dice: 'Trovare senza guardare tutto due volte: il record che cambia solo quando serve, il conto che trova quello che manca, e il cliente che dice solo «di più» o «di meno».' },
+  { chiave: 'pile', nome: 'Le pile', icona: '🧀',
+    dice: 'Una cosa sopra l\'altra, e si prende solo quella in cima: la fila che si capovolge, e la torre delle forme di formaggio — fino al progetto che chiama sé stesso.' },
 ]
 
 const CAPOMASTRO = { emoji: '👷', nome: 'Il capomastro' }
@@ -1345,6 +1351,8 @@ export const LIVELLI = [
   ...DEL_CANTIERE.filter(l => l.capitolo === 'sfide'),
   ...GIORNATE,
   ...IN_ORDINE,
+  ...CERCARE,
+  ...PILE,
 ]
 
 /* ═══════════ i controlli sul dato ═══════════ */

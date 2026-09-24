@@ -17,7 +17,9 @@
 
    Poi il porto, la seconda parte: la cassetta con le frecce, e la gru
    giocata con la sua soluzione su tutte e due le giornate — la tela
-   dall'alto, i turni del mondo e il verdetto della sera.
+   dall'alto, i turni del mondo e il verdetto della sera. E in fondo la
+   torre del casaro, la ricorsione: le forme di formaggio sulle tre assi,
+   e la fila delle carte che si allunga mentre il progetto chiama sé stesso.
    `node test/esegui.mjs integrazione/costruttore`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo }
@@ -283,6 +285,33 @@ await tocca('[data-scheda="principale"]')
   await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
   uguale('il primo camion: tutte e due le giornate, tutti i camion pieni', await page.locator('[data-gettone].cst-vinto').count(), 2)
   await scatto(page, 'costruttore-camion')
+}
+
+/* ---------- 8-ter. la torre del casaro: la ricorsione ---------- */
+/* la soluzione chiama sé stessa: mentre gira, la fila delle carte aperte
+   deve mostrare le torri una dentro l'altra — è così che la ricorsione si
+   vede invece di spiegarsi — e tutti e quattro i giorni si vincono, fino
+   alla torre di sei forme */
+{
+  const torre = LIVELLI.findIndex(l => l.chiave === 'quante-forme')
+  await scriviArchivio(page, { v: 2, programmi: { 'quante-forme': JSON.parse(JSON.stringify(LIVELLI[torre].soluzione)) } })
+  await semina(page, { settings: { sperimentali: true, eta: 10 },
+                       campagne: { costruttore: { tappa: torre, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
+  await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+  await tocca(`[data-livello="${torre}"]`)
+  await page.waitForSelector('[data-editor]', { timeout: 5000 })
+  await tocca('[data-azione="via"]')
+  /* la terza carta aperta vuol dire tre torri una dentro l'altra */
+  let fondo = 0
+  for (let k = 0; k < 40 && fondo < 3; k++) {
+    await attendi(page, 50)
+    fondo = await page.locator('[data-pila] .cst-carta-pila').count()
+  }
+  controlla('mentre gira, le torri si vedono una dentro l\'altra nella fila delle carte', fondo >= 3, `al massimo ${fondo}`)
+  await page.waitForSelector('[data-fine="livello"]', { timeout: 150000 })
+  uguale('la torre del casaro: tutti e quattro i giorni, fino a sei forme', await page.locator('[data-gettone].cst-vinto').count(), 4)
+  await scatto(page, 'costruttore-torre')
 }
 
 /* ---------- 9. niente errori ---------- */

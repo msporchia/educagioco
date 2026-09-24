@@ -26,7 +26,7 @@ import { Esecuzione, TETTO_PILA, fraseDi, PERCHE } from '../../src/giochi/costru
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
 import * as mod from '../../src/giochi/costruttore/motore/modifica.js'
 import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
-import { righeDi, righeScritte, srotola, ciSta } from '../../src/giochi/costruttore/motore/zaino.js'
+import { righeDi, righeScritte, srotola, ciSta, chiamaSeStesso } from '../../src/giochi/costruttore/motore/zaino.js'
 import { torre } from '../../src/giochi/costruttore/dati/attrezzi.js'
 import manifesto from '../../src/giochi/costruttore/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -38,19 +38,25 @@ for (const [nome, g] of [['colori', guastiDeiColori()], ['livelli', guastiDeiLiv
                          ['campagna', guastiDellaCampagna()], ['albo', guastiDellAlbo([manifesto])]])
   controlla(`${nome}: nessun guasto`, g.length === 0, g.join(' · '))
 controlla('almeno venti livelli', LIVELLI.length >= 20, `sono ${LIVELLI.length}`)
-uguale('nove capitoli', CAPITOLI.length, 9)
+uguale('undici capitoli', CAPITOLI.length, 11)
 uguale('il «se» arriva subito dopo il cantiere', CAPITOLI[1].chiave, 'guardare')
-stessaLista('il porto viene dopo le lavagnette, coi suoi posti; poi le sfide, le giornate, e in fondo le lettere in ordine',
-            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'posti', 'sfide', 'giornate', 'ordine'])
+stessaLista('il porto viene dopo le lavagnette, coi suoi posti; poi le sfide, le giornate, e in fondo gli algoritmi: ordinare, cercare, le pile',
+            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'posti', 'sfide', 'giornate', 'ordine', 'cercare', 'pile'])
 controlla('nel porto almeno quattordici sfide, contando le giornate', LIVELLI.filter(l => l.mondo === 'porto').length >= 14)
 controlla('la fila di adesso è scritta in FILE: chi aggiunge un livello in mezzo alza la versione',
           LIVELLI.slice(0, FILE[FILA_ATTUALE].length).map(l => l.chiave).join() === FILE[FILA_ATTUALE].join())
 /* le lettere del postino sono numeri, e lì i colori non c'entrano */
 controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un colore',
-          CAPITOLI.slice(1).filter(c => c.chiave !== 'ordine')
+          CAPITOLI.slice(1).filter(c => !['ordine', 'cercare'].includes(c.chiave))
             .every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
+/* tranne il casellario, che è la lezione opposta: si ordina senza
+   confrontare niente, e la buca di ogni lettera la dice il suo numero */
 controlla('le lettere in ordine usano il confronto fra due numeri, che prima non usava nessuno',
-          LIVELLI.filter(l => l.capitolo === 'ordine').every(l => [...istruzioni(l.soluzione)].some(i => i.cond && i.cond.tipo === 'confronta')))
+          LIVELLI.filter(l => l.capitolo === 'ordine' && l.chiave !== 'casellario')
+            .every(l => [...istruzioni(l.soluzione)].some(i => i.cond && i.cond.tipo === 'confronta')))
+controlla('e il casellario, apposta, non confronta niente',
+          LIVELLI.filter(l => l.chiave === 'casellario')
+            .every(l => ![...istruzioni(l.soluzione)].some(i => i.cond && i.cond.tipo === 'confronta')))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
 
 /* ══════════ 2. il mondo: il robot cammina e cade ══════════ */
@@ -262,7 +268,12 @@ for (const l of LIVELLI) {
   /* ── lo zaino, e i progetti che servono davvero ── */
   const sol = conAttrezzi(l.soluzione, l)
   if (l.zaino) controlla(`«${l.nome}»: la soluzione sta nello zaino`, ciSta(sol, l.zaino), `${righeScritte(sol)} righe su ${l.zaino}`)
-  if (suoi.length) {
+  /* un progetto che chiama sé stesso non si srotola: è la lezione della
+     torre del casaro, e il livello la dichiara (`ricorsione`) */
+  if (suoi.length && chiamaSeStesso(sol))
+    controlla(`«${l.nome}»: la soluzione chiama sé stessa, e il livello dice che la ricorsione è la sua lezione`,
+              l.ricorsione === true)
+  else if (suoi.length) {
     const piatta = conAttrezzi(programma(srotola(sol)), l)
     controlla(`«${l.nome}»: srotolata, la soluzione vince ancora (il conto delle righe è onesto)`, provaLivello(l, piatta).vinto)
     /* nei capitoli che insegnano i progetti — e dovunque ci sia uno zaino —
