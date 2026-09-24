@@ -67,6 +67,7 @@ programma che funziona.
 | 📝 Le lavagnette | una **variabile** che cresce (la scala), una che cala (la piramide), una che conta alla rovescia (le candeline) |
 | ⚓ Il porto | la seconda parte, vista dall'alto: **leggere**, **aspettare**, **ripetere per sempre**, cercare — mentre il mondo lavora da solo (vedi sotto) |
 | 🏆 Le sfide | **contare** camminando (il muro gemello), contare quello che si vede (conta i rossi), e **un se dentro un se** (la scacchiera) |
+| 🌅 Le giornate del porto | il porto che lavora tutto insieme: camion, lettere, frighi e clienti, dalla giornata piccola a quella più larga dello schermo |
 
 Il «se» arriva subito dopo il cantiere, prima delle funzioni: una decisione
 è più semplice di un progetto, e coi colori ha qualcosa da decidere fin da
@@ -133,6 +134,24 @@ giornata invece di guardarla perde la seconda.
 | 🐟 Il nastro | il mondo non aspetta: prenderle prima che cadano in mare |
 | 🧺 Lo smistamento | un colore letto, e il cesto di quel colore da cercare |
 | 🛍️ La bottega dei colori | un progetto che cerca: i clienti chiedono, il robot trova e porta |
+
+### Le giornate del porto
+
+In fondo alla fila, dopo le sfide del cantiere, i pezzi del porto lavorano
+tutti insieme, in scene piene: la gru scarica sul nastro, il nastro riempie
+il magazzino da solo, i camion arrivano alla loro ora e **ripartono appena
+sono pieni**, le lettere vanno ognuna alla buca del suo numero, i clienti
+entrano in bottega. Il robot ha un blocco in più, **aspetta un turno**,
+per quando ha due lavori e in quel momento non ce n'è nessuno.
+
+| giornata | quanto è grande | cosa si impara |
+|---|---|---|
+| 🚚 Il primo camion | piccola | si carica finché il camion c'è: quando è pieno riparte da solo |
+| ✉️ Il postino | media | il numero letto su una lettera diventa i passi fino alla sua buca, all'andata e al ritorno |
+| 🧊 Il frigo | media | aspettare dentro un ripeti: il camion è lì, ma il pesce arriva un po' per volta |
+| 🦐 Pesce fresco | difficile | cercare il frigo del colore giusto, e tornare in fondo al nastro prima che la cassa dopo cada in mare |
+| 🔀 Due lavori | difficile | camion sotto e clienti a sinistra, dallo stesso posto: chi c'è si serve, e se non c'è nessuno si aspetta un turno |
+| ⚓ La giornata del porto | grande, oltre lo schermo | tutto insieme: il magazzino lo riempie il nastro, e lo scaffale corre fin dove la telecamera deve seguire il robot |
 
 Il porto è costruito come **un motore con tante sfide sopra**, non come
 otto livelli fatti a mano uno per uno: gli attori sono pochi comportamenti

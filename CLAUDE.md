@@ -665,7 +665,15 @@ committate: non è ricostruibile da git.
   in `dati/porto/legenda.js`; un guaio del mondo (una cassa in mare, un
   cliente arrabbiato) ferma la giornata dove succede, e a sera
   `motore/porto/esito.js` dice cosa manca coi numeri. Banco in
-  `unita/costruttore-porto`.
+  `unita/costruttore-porto`. **Quello che lavora intorno non deve poter
+  far perdere** chi non l'ha ancora imparato: nelle giornate
+  (`dati/porto/giornate.js`, in fondo alla fila) la gru scarica su un
+  nastro che finisce in un cassone e lo riempie da sola; i camion
+  (`camion`, sulla piazzola `&`) ripartono appena pieni e sono l'attore
+  che il livello mette apposta. E una scena si scrive **piena, come un
+  posto vero**, non una striscia con solo quello che serve a provare la
+  lezione: è il difetto dei primi otto livelli, segnalato dall'utente
+  guardando la scena di prova della tela.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni
