@@ -630,6 +630,8 @@ export const AIUTI = {
         'Si tocca «＋», si sceglie un blocco dalla cassetta, e si riempiono le caselle toccandole. Una **N** è un numero ancora da scegliere.',
         'Il robot cammina e cade: per salire si mette un mattone ↓ sotto i piedi e ci sale sopra. I mattoni si posano anche ↘ ↙ in basso, dove andrà il piede: è così che si fa un ponte.',
         'Un **progetto** è un pezzo di programma con un nome, che si scrive una volta e si chiama quante volte vuoi. Le sue **misure** sono i numeri che riceve.',
+        'Gli **attrezzi** 🔒 sono progetti già scritti — la torre, il muro, l\'albero — che si chiamano come gli altri e non si cambiano. Sotto il nome dicono dove lasciano il robot.',
+        'In certi livelli il programma sta in poche righe (📝): quello che si ripete va scritto una volta, in un progetto. Il tasto ↶ torna indietro di un passo, fino a dieci.',
         'Una **lavagnetta** è un numero con un nome, che il robot legge e cambia mentre lavora. Quelle col lucchetto le scrive chi ha ordinato.',
         '«**Se**» fa quello che ha dentro solo quando la domanda è vera: il robot guarda cosa ha sotto i piedi o accanto, e di che colore è.',
       ] },

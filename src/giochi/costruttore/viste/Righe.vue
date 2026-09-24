@@ -25,17 +25,21 @@ const props = defineProps({
   righe: { type: Array, required: true },
   dove: { type: Object, required: true },     // { progetto, dentro, ramo } di questo elenco
   profondita: { type: Number, default: 0 },
+  /* le righe di un attrezzo: si leggono e basta */
+  bloccata: { type: Boolean, default: false },
 })
 
 const ed = inject('editore')
 const conCorpo = i => ['ripeti', 'finche', 'sempre', 'se'].includes(i.tipo)
+/* ferme mentre il programma gira, e sempre in un attrezzo */
+const ferma = () => ed.sola.value || props.bloccata
 
 function tocca(i) {
-  if (ed.sola.value) return
+  if (ferma()) return
   ed.seleziona(ed.sel.value === i.id ? null : i.id)
 }
 function casella(i, p) {
-  if (ed.sola.value || !p.campo) return
+  if (ferma() || !p.campo) return
   ed.apri(i.id, p.campo, p.tipo)
 }
 const aperta = (i, p) => ed.aperta.value && ed.aperta.value.id === i.id && ed.aperta.value.campo === p.campo
@@ -74,7 +78,7 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
               @chiudi="ed.apri(null)" @nuova-lavagnetta="ed.nuovaLavagnetta(i.id)" />
 
       <!-- i tasti della riga selezionata -->
-      <div v-if="ed.sel.value === i.id && !ed.sola.value" class="cst-tasti-riga">
+      <div v-if="ed.sel.value === i.id && !ferma()" class="cst-tasti-riga">
         <button type="button" data-azione="sopra" aria-label="sposta su" @click="ed.azione('su', i.id)">↑</button>
         <button type="button" data-azione="sotto" aria-label="sposta giù" @click="ed.azione('giu', i.id)">↓</button>
         <button type="button" data-azione="doppia" aria-label="duplica" @click="ed.azione('duplica', i.id)">⧉</button>
@@ -86,16 +90,16 @@ const apertaQui = i => ed.aperta.value && ed.aperta.value.id === i.id
 
       <!-- i corpi dei blocchi -->
       <template v-if="conCorpo(i)">
-        <Righe :righe="i.corpo || i.allora || []" :profondita="profondita + 1"
+        <Righe :righe="i.corpo || i.allora || []" :profondita="profondita + 1" :bloccata="bloccata"
                :dove="{ progetto: dove.progetto, dentro: i.id, ramo: i.tipo === 'se' ? 'allora' : 'corpo' }" />
         <template v-if="i.tipo === 'se' && i.altrimenti">
           <div class="cst-altrimenti">altrimenti</div>
-          <Righe :righe="i.altrimenti" :profondita="profondita + 1"
+          <Righe :righe="i.altrimenti" :profondita="profondita + 1" :bloccata="bloccata"
                  :dove="{ progetto: dove.progetto, dentro: i.id, ramo: 'altrimenti' }" />
         </template>
       </template>
     </li>
-    <li v-if="!ed.sola.value" class="cst-riga-posto">
+    <li v-if="!ferma()" class="cst-riga-posto">
       <button type="button" class="cst-piu" :data-aggiungi="dove.dentro ? `${dove.dentro}:${dove.ramo}` : (dove.progetto || 'principale')"
               @click="ed.aggiungi(dove.dentro ? { dentro: dove.dentro, ramo: dove.ramo, inFondo: true } : { progetto: dove.progetto })">
         ＋ <span>{{ profondita > 0 ? 'qui dentro' : 'aggiungi' }}</span>

@@ -152,6 +152,27 @@
 .cst-scheda small { color: var(--cst-tenue) }
 .cst-scheda.cst-su { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo); font-weight: 600 }
 .cst-scheda.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
+/* gli attrezzi: già scritti, chiusi. Il lucchetto è piccolo e sta
+   davanti: si chiamano come gli altri progetti, cambia solo che non si
+   toccano */
+.cst-scheda.cst-attrezzo { background: #eef3ee; border-color: #c7d9c7 }
+.cst-scheda.cst-attrezzo.cst-su { background: #dff0df; border-color: #6aa86a }
+.cst-lucchetto { font-size: 11px; margin-right: 3px; vertical-align: 1px }
+.cst-testa-attrezzo b { color: #2f6b2f }
+.cst-nota-attrezzo { margin: 0 4px 8px; padding: 7px 10px; border-radius: 10px; background: #eef6ee;
+                     color: #2f4a2f; font-size: 13px; line-height: 1.4 }
+
+/* in fondo alla riga delle schede: lo zaino e «annulla», fermi mentre le
+   schede scorrono */
+.cst-barra-schede { display: flex; align-items: center; gap: 6px }
+.cst-barra-schede .cst-schede { flex: 1 1 auto; min-width: 0 }
+.cst-zaino { flex: none; font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+             background: var(--cst-fondo); border: 1.5px solid var(--cst-bordo); margin-bottom: 4px }
+.cst-zaino.cst-quasi { background: var(--cst-giallo-chiaro); border-color: var(--cst-giallo) }
+.cst-zaino.cst-troppe { background: var(--cst-rosso-chiaro); border-color: var(--cst-rosso); color: var(--cst-rosso) }
+.cst-annulla { flex: none; width: 40px; height: 36px; border-radius: 10px; margin-bottom: 4px;
+               border: 1.5px solid var(--cst-bordo); background: #fff; font-size: 20px; font-weight: 700; line-height: 1 }
+.cst-annulla:disabled { opacity: .4 }
 
 .cst-testa-progetto { display: flex; align-items: center; gap: 8px; padding: 6px 4px; font-size: 15px }
 .cst-misure { font-size: 13px; color: var(--cst-tenue) }
@@ -260,6 +281,9 @@
 }
 .cst-blocco-nuovo small { color: var(--cst-tenue); font-size: 12px; margin-left: auto }
 .cst-blocco-nuovo.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
+.cst-blocco-nuovo.cst-blocco-attrezzo { flex-wrap: wrap; background: #f4faf4; border-color: #c7d9c7 }
+.cst-blocco-nuovo .cst-finisce { flex-basis: 100%; margin: 0 0 0 30px; font-style: italic }
+.cst-foglio h4 small { font-weight: 400; margin-left: 4px }
 /* il porto: una riga per gesto, quattro frecce grosse da toccare col pollice */
 .cst-fila-frecce { display: flex; align-items: center; gap: 6px; margin-bottom: 6px }
 .cst-fila-frecce > .cst-ico { font-size: 20px; width: 28px; text-align: center; flex: none }

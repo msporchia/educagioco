@@ -41,6 +41,8 @@ import { LIBERO, APRE_DOPO } from './dati/libero.js'
 import { copia, programma as scriviProgramma } from './dati/scrivi.js'
 import * as mod from './motore/modifica.js'
 import { fraseDi } from './motore/esecutore.js'
+import { conAttrezzi } from './motore/attrezzi.js'
+import { righeDi, righeScritte } from './motore/zaino.js'
 import { Regia, quadroFermo } from './regia.js'
 
 import Mappa from './viste/Mappa.vue'
@@ -94,7 +96,10 @@ function salvaOra() {
 }
 const salvaPresto = () => { clearTimeout(salvaTimer); salvaTimer = setTimeout(salvaOra, 500) }
 
-const inizio = l => ({ ...scriviProgramma({ principale: [], progetti: copia(l.regalo || []), lavagnette: [] }), svelato: false })
+/* un programma nuovo è vuoto, con dentro gli attrezzi del livello: li
+   rimette `conAttrezzi` ogni volta che il livello si apre, così un
+   programma salvato ieri ha gli attrezzi di oggi */
+const inizio = l => ({ ...conAttrezzi(scriviProgramma({ principale: [], progetti: [], lavagnette: [] }), l), svelato: false })
 const prog = computed(() => (liv.value ? archivio.programmi[liv.value.chiave] : null))
 const lavagnetteOrdine = computed(() => (liv.value ? liv.value.ordini[0].lavagnette || {} : {}))
 const nomiOrdine = computed(() => Object.keys(lavagnetteOrdine.value))
@@ -118,8 +123,10 @@ const liberoAperto = computed(() => (avanza.tappa || 0) >= APRE_DOPO)
 async function apriLivello(i) {
   await pronto
   const l = i === LIBERO_IDX ? LIBERO : LIVELLI[i]
-  if (!archivio.programmi[l.chiave]) archivio.programmi[l.chiave] = inizio(l)
+  const salvato = archivio.programmi[l.chiave]
+  archivio.programmi[l.chiave] = salvato ? conAttrezzi(salvato, l) : inizio(l)
   idx.value = i
+  passiIndietro.value = storia(l.chiave).length
   vista.value = 'cantiere'
   tab.value = null
   sel.value = null
@@ -165,7 +172,7 @@ const altriProgetti = computed(() => {
     if (chiave === liv.value.chiave) continue
     const p = archivio.programmi[chiave]
     for (const q of (p && p.progetti) || []) {
-      if (qui.has(q.nome) || !q.corpo.length) continue
+      if (q.attrezzo || qui.has(q.nome) || !q.corpo.length) continue
       const prima = visti.get(q.nome)
       if (!prima || prima.ordine < ordine)
         visti.set(q.nome, { chiave, nomeLivello: nomeLiv, ordine, progetto: q })
@@ -176,32 +183,97 @@ const altriProgetti = computed(() => {
 function importa({ chiave, progetto }) {
   const sorgente = archivio.programmi[chiave]
   if (!sorgente) return
-  const id = modifica(p => mod.importaProgetto(p, sorgente, progetto))
   foglio.value = null
+  const prova = copia(prog.value)
+  mod.importaProgetto(prova, sorgente, progetto)
+  if (troppoPerLoZaino(righeScritte(prova))) return
+  const id = modifica(p => mod.importaProgetto(p, sorgente, progetto))
   if (id) tab.value = id
 }
 
 const problemi = computed(() => new Set(prog.value ? mod.problemi(prog.value, lavagnetteOrdine.value).map(p => p.id) : []))
 
-function modifica(fn) {
+/* Ogni modifica passa da qui, e qui si ricorda com'era prima: è quello
+   che «annulla» rimette. `casella` è la casella che si sta cambiando:
+   i tocchi di fila sulla stessa casella — le cifre di un numero, i
+   pezzi di una domanda — sono un passo solo, se no per tornare indietro
+   di un numero ci vorrebbero tre «annulla». */
+function modifica(fn, casella = null) {
   if (stato.inCorso || !prog.value) return null
+  const prima = JSON.stringify(prog.value)
   const r = fn(prog.value)
+  if (JSON.stringify(prog.value) !== prima) ricordaPrima(prima, casella)
   resetRisultato()
   salvaPresto()
   return r
 }
 
+/* ═══════════ annulla ═══════════
+   Dieci passi indietro, per livello: una riga tolta per sbaglio (col
+   blocco e tutto quello che aveva dentro), un «ricomincia» di troppo, un
+   pezzo di programma comprato al posto del proprio. I passi stanno in
+   memoria e non nell'archivio: sono di questa partita, e un programma è
+   un oggetto piccolo — dieci copie non pesano niente. */
+const PASSI_INDIETRO = 10
+const storie = new Map()
+const storia = chiave => { if (!storie.has(chiave)) storie.set(chiave, []); return storie.get(chiave) }
+const passiIndietro = ref(0)
+let ultimaCasella = null
+function ricordaPrima(json, casella = null) {
+  if (casella && casella === ultimaCasella) return
+  ultimaCasella = casella
+  const s = storia(liv.value.chiave)
+  s.push(json)
+  if (s.length > PASSI_INDIETRO) s.shift()
+  passiIndietro.value = s.length
+}
+function annulla() {
+  if (stato.inCorso || !liv.value) return
+  const s = storia(liv.value.chiave)
+  if (!s.length) return
+  const prima = JSON.parse(s.pop())
+  passiIndietro.value = s.length
+  ultimaCasella = null
+  /* la soluzione vista resta vista: annullarla non riaccende la
+     seconda stella, lo fa solo «ricomincia da capo» */
+  prima.svelato = !!(prima.svelato || (prog.value && prog.value.svelato))
+  archivio.programmi[liv.value.chiave] = conAttrezzi(prima, liv.value)
+  sel.value = null
+  aperta_.value = null
+  if (tab.value && !(prima.progetti || []).some(p => p.id === tab.value)) tab.value = null
+  resetRisultato()
+  salvaPresto()
+}
+
+/* ═══════════ lo zaino ═══════════
+   Un livello può dire quante righe tiene il programma (`zaino`): gli
+   attrezzi non si contano. Pieno, il «＋» non apre la cassetta ma dice
+   cosa fare — è lì che il bambino scopre che un progetto scritto una
+   volta si chiama tante. */
+const zaino = computed(() => (liv.value && liv.value.zaino) || null)
+const righe = computed(() => (prog.value ? righeScritte(prog.value) : 0))
+function troppoPerLoZaino(quante) {
+  if (!zaino.value || quante <= zaino.value) return false
+  messaggio.value = { tipo: 'errore', testo: fraseZainoPieno() }
+  return true
+}
+const fraseZainoPieno = () => `Qui il programma sta in ${zaino.value} righe, e sono tutte prese. ` +
+  (liv.value.cassetta.includes('progetti')
+    ? 'Cosa si ripete? Scrivilo una volta in un progetto, e chiamalo tutte le volte che serve.'
+    : 'Cosa si ripete? Un «ripeti» fa la stessa cosa tante volte in una riga sola.')
+
 function seleziona(id) { sel.value = id; aperta_.value = null }
-function apri(a) { aperta_.value = a; if (a) sel.value = null }
+function apri(a) { aperta_.value = a; ultimaCasella = null; if (a) sel.value = null }
 function imposta({ id, campo, valore }) {
   if (campo === 'colore') ultimoColore.value = valore
-  modifica(p => mod.imposta(p, id, campo, valore))
+  modifica(p => mod.imposta(p, id, campo, valore), `${id}:${campo}`)
 }
 
 function aggiungi(posto) {
+  aperta_.value = null
+  if (troppoPerLoZaino(righe.value + 1)) return
   dove.value = { progetto: tab.value, ...posto }
   foglio.value = 'cassetta'
-  aperta_.value = null
 }
 
 function sceltoBlocco({ blocco, progetto, verso, dove: posto, lato }) {
@@ -229,6 +301,10 @@ function apriLaPrimaScelta(id, riga) {
 }
 
 function azione({ tipo, id }) {
+  if (tipo === 'duplica') {
+    const t = prog.value && mod.trova(prog.value, id)
+    if (t && troppoPerLoZaino(righe.value + righeDi([t.nodo]))) return
+  }
   modifica(p => {
     if (tipo === 'su') mod.sposta(p, id, -1)
     else if (tipo === 'giu') mod.sposta(p, id, +1)
@@ -293,6 +369,7 @@ function ricomincia() {
   }
   ricominciaArmato.value = false
   if (stato.inCorso) return
+  ricordaPrima(JSON.stringify(prog.value))
   archivio.programmi[liv.value.chiave] = inizio(liv.value)
   tab.value = null
   sel.value = null
@@ -338,7 +415,8 @@ function rimetti(k) {
 function scriviAiuto(p) {
   if (stato.inCorso) stop()
   const prima = prog.value
-  archivio.programmi[liv.value.chiave] = { ...applica(prima, p),
+  if (prima) ricordaPrima(JSON.stringify(prima))
+  archivio.programmi[liv.value.chiave] = { ...conAttrezzi(applica(prima, p), liv.value),
                                            svelato: !!(prima && prima.svelato) || p.che === SVELA }
   tab.value = null
   sel.value = null
@@ -403,6 +481,11 @@ function via() {
   aperta_.value = null
   sel.value = null
   foglio.value = null
+  if (zaino.value && righe.value > zaino.value) {
+    messaggio.value = { tipo: 'errore', testo: `Il programma ha ${righe.value} righe, e qui ne stanno ${zaino.value}. ` +
+      'Cosa si ripete? Scrivilo una volta sola, e chiamalo.' }
+    return
+  }
   const guai = mod.problemi(prog.value, lavagnetteOrdine.value)
   if (guai.length) {
     const g = guai[0]
@@ -557,10 +640,10 @@ const progettoAperto = computed(() =>
         <Editor :programma="prog" :livello="liv" :tab="tabMostrato" :sel="sel" :aperta="aperta_"
                 :accesa="stato.inCorso ? stato.riga : null" :guasto="stato.guasto" :problemi="problemi"
                 :giro="stato.inCorso ? stato.giro : null" :sola="stato.inCorso" :pila="stato.pila"
+                :indietro="passiIndietro" :zaino="zaino" :scritte="righe" :livelli="LIVELLI"
                 @tab="t => { tab = t; sel = null; aperta_ = null }" @seleziona="seleziona" @apri="apri"
-                @imposta="imposta" @aggiungi="aggiungi" @azione="azione"
-                @nuova-lavagnetta="nuovaLavagnetta" @progetto="apriProgetto" @ricomincia="ricomincia"
-                @codice="foglio = 'codice'" />
+                @imposta="imposta" @aggiungi="aggiungi" @azione="azione" @annulla="annulla"
+                @nuova-lavagnetta="nuovaLavagnetta" @progetto="apriProgetto" @ricomincia="ricomincia" />
         <p v-if="ricominciaArmato" class="cst-messaggio cst-errore cst-fisso">Tocca ancora «ricomincia» per cancellare tutto il programma di questo livello.</p>
       </div>
 

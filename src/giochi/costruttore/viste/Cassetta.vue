@@ -8,7 +8,10 @@
    bambino si fa senza nessuno a cui farla.
 
    I progetti sono del bambino: compaiono qui uno per uno, e chiamarli è
-   metterli nel programma come un blocco qualunque.
+   metterli nel programma come un blocco qualunque. Gli **attrezzi**
+   (`dati/attrezzi.js`) stanno in un gruppo loro, anche nei livelli dove
+   un progetto non si può ancora scrivere: si chiamano e basta, e sotto
+   il nome dicono dove lasciano il robot — la riga dopo comincia da lì.
 
    Il porto ha una cassetta sua (`GRUPPI_PORTO`): quattro frecce per tre
    gesti, e le frecce di un gesto stanno su una riga sola (`fila`),
@@ -48,6 +51,8 @@ onUnmounted(() => clearTimeout(timer))
 const scegli = x => { if (!cieco.value) emit('scegli', x) }
 const importa = x => { if (!cieco.value) emit('importa', x) }
 const conProgetti = computed(() => props.cassetta.includes('progetti'))
+const attrezzi = computed(() => props.progetti.filter(p => p.attrezzo))
+const suoi = computed(() => props.progetti.filter(p => !p.attrezzo))
 </script>
 
 <template>
@@ -71,9 +76,18 @@ const conProgetti = computed(() => props.cassetta.includes('progetti'))
           <small v-if="b.blocco === 'assegna' && !lavagnette.length">(prima crea una lavagnetta)</small>
         </button>
       </section>
+      <section v-if="attrezzi.length" class="cst-gruppo" data-attrezzi>
+        <h4>Gli attrezzi <small>già scritti: li chiami e costruiscono</small></h4>
+        <button v-for="p in attrezzi" :key="p.id" type="button" class="cst-blocco-nuovo cst-blocco-attrezzo"
+                :data-blocco="'chiama:' + p.id" @click="scegli({ blocco: 'chiama', progetto: p.id })">
+          <span class="cst-ico">{{ p.icona }}</span> {{ p.nome }}
+          <small v-if="p.misure.length">{{ p.misure.join(', ') }}</small>
+          <small class="cst-finisce">finisce {{ p.finisce }}</small>
+        </button>
+      </section>
       <section v-if="conProgetti" class="cst-gruppo">
         <h4>I tuoi progetti</h4>
-        <button v-for="p in progetti" :key="p.id" type="button" class="cst-blocco-nuovo"
+        <button v-for="p in suoi" :key="p.id" type="button" class="cst-blocco-nuovo"
                 :data-blocco="'chiama:' + p.id" @click="scegli({ blocco: 'chiama', progetto: p.id })">
           <span class="cst-ico">{{ p.icona }}</span> {{ p.nome }}
           <small v-if="p.misure.length">{{ p.misure.join(', ') }}</small>

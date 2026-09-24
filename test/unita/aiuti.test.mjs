@@ -29,6 +29,7 @@ import { LIBERO } from '../../src/giochi/costruttore/dati/libero.js'
 import { istruzioni } from '../../src/giochi/costruttore/dati/scrivi.js'
 import { scalaDi as scalaDelCostruttore, applica } from '../../src/giochi/costruttore/motore/aiuti.js'
 import { problemi } from '../../src/giochi/costruttore/motore/modifica.js'
+import { conAttrezzi } from '../../src/giochi/costruttore/motore/attrezzi.js'
 import { provaLivello } from '../../src/giochi/costruttore/motore/prova.js'
 import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { carteDi } from '../../src/giochi/passo-passo/dati/carte.js'
@@ -91,11 +92,12 @@ for (const l of LIVELLI) {
   uguale(`«${l.nome}»: due gradini che fanno ragionare`, scala.filter(p => p.che === RAGIONA).length, 2)
   /* ogni gradino che scrive, scritto su un programma nuovo, lascia un
      programma che si apre e si modifica: id unici, progetti col nome, e
-     nessun problema che non sia «da scegliere» */
-  let prog = { principale: [], progetti: JSON.parse(JSON.stringify(l.regalo || [])), lavagnette: [] }
+     nessun problema che non sia «da scegliere». Gli attrezzi li rimette
+     il gioco dopo ogni gradino, come fa `Gioco.vue` */
+  let prog = conAttrezzi({ principale: [], progetti: [], lavagnette: [] }, l)
   let date = 0
   for (const p of scala.filter(p => p.programma)) {
-    prog = applica(prog, p)
+    prog = conAttrezzi(applica(prog, p), l)
     const guai = sano(prog, l)
     controlla(`«${l.nome}»: il gradino «${p.che}» scrive un programma sano`, !guai.length, guai.join(' · '))
     /* un gradino più caro non dà meno di quello prima */

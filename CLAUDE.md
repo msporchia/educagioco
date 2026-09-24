@@ -645,6 +645,21 @@ committate: non è ricostruibile da git.
   un generatore che srotola il programma **un fatto per volta**
   (`riga`, `muovi`, `metti`, `entra`…), e `regia.js` li anima: è così che la
   scheda di un progetto si apre con le misure di *quella* chiamata.
+  **I progetti devono servire, non solo esistere.** Misurato il 24 settembre
+  2026: tutti e quattordici i livelli con un progetto si vincevano
+  srotolando le chiamate, e in undici il programma srotolato era più corto.
+  Due pezzi lo tengono fermo. Gli **attrezzi** (`dati/attrezzi.js`): progetti
+  già scritti e chiusi, quasi sempre cose che il bambino ha costruito in un
+  livello prima (la torre della torretta, l'albero del bosco), che si
+  chiamano, si leggono e dicono dove lasciano il robot (`finisce`) — si
+  impara a usare una funzione prima di scriverla; li rimette nel programma
+  `motore/attrezzi.js` a ogni apertura, e non si salvano come roba del
+  bambino. E lo **zaino** (`motore/zaino.js`, `zaino` nel livello): quante
+  righe scrive il bambino, attrezzi esclusi — non è un par, è il vincolo che
+  Passo passo ha già. Il banco pretende che in un livello dei progetti la
+  soluzione **srotolata** non ci stia, e che ogni mossa ingenua perda un
+  ordine o non ci stia. **L'editor ha dieci passi di «annulla»**, in memoria
+  per livello: un 🗑 su un blocco porta via tutto quello che ha dentro.
   **La seconda parte è il porto** (`motore/porto/`, `dati/porto/`,
   `scena/porto.js`): un mondo **visto dall'alto che lavora da solo** — la
   gru cala, il nastro porta verso il mare, i clienti chiedono al bancone —

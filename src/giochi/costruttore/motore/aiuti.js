@@ -20,7 +20,7 @@
 
    ── IL PEZZO ────────────────────────────────────────────────────────
    Metà del lavoro, e mai il nodo. Tre casi, nell'ordine:
-     · il livello ha **progetti suoi** (non quelli che regala): il
+     · il livello ha **progetti suoi** (non gli attrezzi): il
        pezzo sono i progetti, interi. Il programma principale che li usa
        resta del bambino — ed è lì che stanno le misure dell'ordine;
      · il programma principale ha **più righe in cima**: la prima metà
@@ -45,7 +45,8 @@
    Il verso di un passo e il posto di un mattone restano: si scelgono
    dalla cassetta, sono la forma. Quello che il pezzo aveva già dato —
    comprato, cinquanta monete — resta intero, e anche i progetti che il
-   livello regala: un gradino più caro non dà meno di quello prima.
+   livello dà già fatti (gli attrezzi): un gradino più caro non dà meno
+   di quello prima.
 
    ── LA SOLUZIONE ────────────────────────────────────────────────────
    Tutta, al posto del programma. È l'unico gradino che segna il
@@ -102,8 +103,8 @@ export function scalaDi(liv) {
    istruzioni già date, che la forma terrà intere. */
 export function pezzoDi(liv) {
   const sol = liv.soluzione
-  const regalati = new Set((liv.regalo || []).map(p => p.id))
-  const suoi = (sol.progetti || []).filter(p => !regalati.has(p.id))
+  const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
+  const suoi = (sol.progetti || []).filter(p => !attrezzi.has(p.id) && !p.attrezzo)
   const lavagnette = [...(sol.lavagnette || [])]
   if (suoi.length)
     return { sostituisce: 'progetti', programma: { principale: [], progetti: copia(suoi), lavagnette },
@@ -149,8 +150,8 @@ function tutte(fila) {
 export function formaDi(liv, dati = []) {
   const sol = liv.soluzione
   const conColori = (liv.colori || []).length > 1
-  const regalati = new Set((liv.regalo || []).map(p => p.id))
-  const interi = new Set([...regalati, ...dati.filter(d => d.progetto).map(d => d.progetto)])
+  const attrezzi = new Set((liv.attrezzi || []).map(p => p.id))
+  const interi = new Set([...attrezzi, ...dati.filter(d => d.progetto).map(d => d.progetto)])
   /* Si confronta **riga per riga**: la testa di un'istruzione (quello
      che ha di suo, senza i rami) già data resta intera, e i rami si
      guardano uno per uno. Confrontando i blocchi interi, un «ripeti 8»

@@ -27,6 +27,7 @@ import { Mondo, camminaOmino } from './mondo.js'
 import { Porto } from './porto/mondo.js'
 import { esitoDelPorto } from './porto/esito.js'
 import { Esecuzione } from './esecutore.js'
+import { conAttrezzi } from './attrezzi.js'
 
 export const nelPorto = livello => livello.mondo === 'porto'
 
@@ -53,10 +54,12 @@ export function verdetto(livello, mondo) {
   return { vinto: confronto.giusto, confronto }
 }
 
-/* Un ordine solo: `{ esito: 'vinto'|'sbagliato'|'errore', errore?, ... }` */
+/* Un ordine solo: `{ esito: 'vinto'|'sbagliato'|'errore', errore?, ... }`.
+   Gli attrezzi del livello ci sono sempre, anche se il programma che
+   arriva non li porta (la soluzione scritta nel livello, per esempio). */
 export function provaOrdine(livello, i, programma) {
   const mondo = mondoDellOrdine(livello, i)
-  const es = new Esecuzione(programma, mondo, { lavagnette: livello.ordini[i].lavagnette || {} })
+  const es = new Esecuzione(conAttrezzi(programma, livello), mondo, { lavagnette: livello.ordini[i].lavagnette || {} })
   const ultimo = es.finoInFondo()
   if (ultimo.tipo === 'errore') return { esito: 'errore', errore: ultimo, mondo, passi: es.passi }
   const v = verdetto(livello, mondo)
