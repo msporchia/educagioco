@@ -1,10 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LA CAMPAGNA — ventiquattro posti in cinque gradini
+   LA CAMPAGNA — i posti dei piccoli, e poi lo zaino
 
    Ogni gradino porta **una regola nuova**, e da lì in poi quella regola
    c'è sempre: il mondo non cambia da un livello all'altro, si allarga.
    Prima si cammina e basta, poi si salta, poi si scivola, poi si spinge,
    poi si cade nelle buche — e l'ultimo livello le mette tutte insieme.
+
+   Dopo le buche il mondo smette di crescere e cresce **la lingua**: i
+   gradini dei grandi portano una carta nuova invece che una regola del
+   mondo — 🔁 ripeti, per cominciare (`dati/carte.js`) — e con la carta
+   lo **zaino**, quante carte tiene la fila. La strada scritta freccia
+   per freccia nello zaino non ci sta: il ciclo è l'unico modo di farla
+   stare, e il test lo pretende (`serveLaCarta`). Il mondo resta quello
+   di prima, con tutte le sue regole: un ciclo di salti, un ciclo sul
+   ghiaccio.
 
    ── UN LIVELLO È UN POSTO, NON UNA STANZA ─────────────────────────
    La mappa è scritta a mano, una lettera per cella (la legenda sta in
@@ -41,12 +50,24 @@
    le usa: una fila di tasti che non servono a niente è una fila di
    tasti da provare a caso.
 
+   ── I LIVELLI CON LO ZAINO ────────────────────────────────────────
+   Dichiarano tre cose in più: `carte` (quali tasti oltre alle frecce:
+   `['ripeti']`), `zaino` (quante carte tiene la fila) e `soluzioni`,
+   scritte con `programma()` e `ripeti()`. Qui la soluzione si scrive,
+   non si misura: il risolutore trova la strada più corta, non il
+   programma più corto, e gli aiuti partono da quella scritta
+   (`suggerisciNelloZaino`). Le `fragili` sono le mosse ingenue — la
+   scatola con le frecce nell'ordine sbagliato, la scalinata presa dal
+   lato comodo — e il test pretende che nessuna vinca con la carota: se
+   una vincesse, la carota non chiederebbe di pensare.
+
    Quanto è lunga la strada più corta e se la regola del gradino serve
    davvero **non si scrive qui**: lo misura il risolutore, e il test
    (`test/unita/passo-passo`) lo pretende. Le misure di oggi, per chi
    deve scrivere un livello nuovo, stanno in `docs/passo-passo.md`.
    ═══════════════════════════════════════════════════════════════════ */
-import { guastiDellaMappa } from './mondo.js'
+import { guastiDellaMappa, MOSSE } from './mondo.js'
+import { CARTE, carteDi, guastiDellaFila, programma, ripeti } from './carte.js'
 
 export const SCALINI = [
   { chiave: 'passi', nome: 'Primi passi', icona: '🐾', regola: null,
@@ -59,6 +80,9 @@ export const SCALINI = [
     dritta: 'Un masso si spinge: sul ghiaccio scivola, nell\'acqua fa un ponte.' },
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', regola: 'buche',
     dritta: 'Si entra in una buca e si esce dalla sua gemella, dello stesso colore.' },
+  /* da qui la lingua, e non il mondo: il gradino porta una carta */
+  { chiave: 'ripeti', nome: 'Il ripeti', icona: '🔁', carta: 'ripeti',
+    dritta: 'Nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro.' },
 ]
 
 /* I temi sono solo vestito: cambiano l'erba, le foglie per terra, la
@@ -315,9 +339,119 @@ export const CAMPAGNA = [
       'AAAAAAA',
       '1..t..@',
     ] },
+
+  /* ── gradino 6: il ripeti ──
+     Le monete salgono a 14 e poi a 16: un livello con lo zaino chiede
+     di trovare lo schema prima di scriverlo, e ci si sta più di un
+     minuto. La portata va dai 7 anni e mezzo agli 8 e mezzo. */
+  { chiave: 'viale', nome: 'Il viale', icona: '🌳', scalino: 'ripeti',
+    portata: 46, premio: 14, tema: 'autunno', carte: ['ripeti'], zaino: 3,
+    racconto: 'Il viale è lungo cinque passi e nello zaino ci stanno tre carte: la scatola 🔁 ripete la freccia che ha dentro, tante volte quante dice il suo numero.',
+    mappa: [
+      'AAAAAAA',
+      'P..c..A',
+      'AAAAA@A',
+    ],
+    soluzioni: [programma(ripeti(5, 'destra'), 'giu')],
+    fragili: [programma(ripeti(6, 'destra'), 'giu'), programma(ripeti(4, 'destra'), 'giu')] },
+  { chiave: 'stagno-grande', nome: 'Lo stagno grande', icona: '🦆', scalino: 'ripeti',
+    portata: 47, premio: 14, tema: 'estate', carte: ['ripeti'], zaino: 4,
+    racconto: 'Due strade attorno allo stagno, e una scatola per ogni lato. La carota sta da una parte sola: da che lato si comincia?',
+    mappa: [
+      'P......',
+      '.~~~~~.',
+      '.~~~~~.',
+      '.~~~~~.',
+      '.~~~~~.',
+      '...c..@',
+    ],
+    soluzioni: [programma(ripeti(5, 'giu'), ripeti(6, 'destra'))],
+    fragili: [programma(ripeti(6, 'destra'), ripeti(5, 'giu'))] },
+  { chiave: 'scala', nome: 'La scala', icona: '🪜', scalino: 'ripeti',
+    portata: 48, premio: 14, tema: 'autunno', carte: ['ripeti'], zaino: 3,
+    racconto: 'In una scatola ci stanno anche due frecce: un gradino è «→ ↓». Ma l\'ordine conta, e la carota sta su un gradino solo.',
+    mappa: [
+      'P.AAAAA',
+      '...AAAA',
+      'A...AAA',
+      'AAc..AA',
+      'AAA...A',
+      'AAAA...',
+      'AAAAA.@',
+    ],
+    soluzioni: [programma(ripeti(6, 'giu', 'destra'))],
+    fragili: [programma(ripeti(6, 'destra', 'giu'))] },
+  { chiave: 'sassi-fiume', nome: 'Di sasso in sasso', icona: '🪨', scalino: 'ripeti',
+    portata: 50, premio: 14, tema: 'estate', carte: ['ripeti'], zaino: 3, salti: true,
+    racconto: 'Anche un salto si ripete: di sasso in sasso giù per il fiume, sempre con lo stesso passo.',
+    mappa: [
+      'P~.~~~~',
+      '~~.~.~~',
+      '~~~~c~.',
+      '~~~~~~@',
+    ],
+    soluzioni: [programma(ripeti(3, 'salto-destra', 'giu'))],
+    fragili: [programma(ripeti(3, 'destra', 'giu'))] },
+  { chiave: 'lago-gradini', nome: 'Il lago a gradini', icona: '⛸️', scalino: 'ripeti',
+    portata: 52, premio: 14, tema: 'inverno', carte: ['ripeti'], zaino: 3,
+    racconto: 'Sul ghiaccio la stessa freccia fa strade diverse — una casella, poi tre, poi due — e il ciclo va bene lo stesso: a fermare il coniglio ci pensano i sassi e il bordo.',
+    mappa: [
+      'P*OAAAA',
+      'A.*C*OA',
+      'AAAA.**',
+      'AAAAAA@',
+    ],
+    soluzioni: [programma(ripeti(3, 'destra', 'giu'))] },
+  { chiave: 'collina', nome: 'La collina', icona: '⛰️', scalino: 'ripeti',
+    portata: 54, premio: 16, tema: 'primavera', carte: ['ripeti'], zaino: 6,
+    racconto: 'Su per la collina e giù dall\'altra parte: due scatole diverse, una dopo l\'altra. La strada di mezzo è più corta, ma non si ripete, e nello zaino non ci sta.',
+    mappa: [
+      'AAA.cAA',
+      'AA....A',
+      'A..AA..',
+      'P.AAAA@',
+    ],
+    soluzioni: [programma(ripeti(3, 'destra', 'su'), ripeti(3, 'destra', 'giu'))],
+    fragili: [programma(ripeti(3, 'destra', 'su'), ripeti(3, 'giu', 'destra'))] },
+  { chiave: 'terrazze', nome: 'Le terrazze', icona: '🍇', scalino: 'ripeti',
+    portata: 56, premio: 16, tema: 'autunno', carte: ['ripeti'], zaino: 5,
+    racconto: 'Un gradino grande è fatto di passi piccoli: una scatola dentro l\'altra. E si scende per due strade, ma la carota è su una sola.',
+    mappa: [
+      'P...AAA',
+      '.AA.AAA',
+      '.AA.AAA',
+      '.......',
+      'AAA.AA.',
+      'AAAcAA.',
+      'AAA...@',
+    ],
+    soluzioni: [programma(ripeti(2, ripeti(3, 'giu'), ripeti(3, 'destra')))],
+    fragili: [programma(ripeti(2, ripeti(3, 'destra'), ripeti(3, 'giu')))] },
+  { chiave: 'campo-arato', nome: 'Il campo arato', icona: '🌾', scalino: 'ripeti',
+    portata: 58, premio: 16, tema: 'primavera', carte: ['ripeti'], zaino: 9,
+    racconto: 'Avanti e indietro fra le siepi, come l\'aratro: una riga all\'andata e una al ritorno, e poi di nuovo. Quattro scatole dentro una.',
+    mappa: [
+      'P......',
+      'BBBBBB.',
+      '.......',
+      '.BBBBBB',
+      '.......',
+      'BBBBBB.',
+      '.......',
+      '.BBBBBB',
+      'c.....@',
+    ],
+    soluzioni: [programma(ripeti(3, ripeti(6, 'destra'), ripeti(2, 'giu'),
+                                    ripeti(6, 'sinistra'), ripeti(2, 'giu')))] },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
+/* le tappe dei piccoli: tutte quelle senza zaino, che vengono per prime.
+   Il sentiero senza fine si apre alla fine di queste e non della
+   campagna intera — è il sentiero dei piccoli, e chiuderlo dietro a
+   otto tappe da otto anni vorrebbe dire toglierlo a chi l'aveva già */
+export const TAPPE_PICCOLE = CAMPAGNA.findIndex(t => t.zaino)
+export const TAPPE_ZAINO = QUANTE_TAPPE - TAPPE_PICCOLE
 
 export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
@@ -327,6 +461,28 @@ export const tappeDelloScalino = chiave =>
    leggibili, gli scalini in fila, i premi e la portata che salgono. Se
    un livello **si vince**, e se ha bisogno della sua regola, lo dice il
    risolutore nel test — il dato non sa niente del motore. */
+/* Lo zaino e le carte di un livello, senza giocarlo: le carte esistono,
+   lo zaino è un numero sensato, e ogni soluzione scritta è una fila ben
+   fatta, con le mosse che il livello mette in mano, e ci sta. Se una
+   soluzione **vince**, e se il ciclo **serve**, lo dice il test. */
+function guastiDelloZaino(t, dove) {
+  const guasti = []
+  if (!t.zaino && !t.carte && !t.soluzioni) return guasti
+  if (!Number.isInteger(t.zaino) || t.zaino < 2 || t.zaino > 12)
+    guasti.push(`${dove}: lo zaino ${t.zaino} non è un numero da 2 a 12`)
+  for (const c of t.carte || [])
+    if (!CARTE[c]) guasti.push(`${dove}: la carta «${c}» non esiste`)
+  if (!(t.soluzioni || []).length) guasti.push(`${dove}: con lo zaino servono le soluzioni scritte`)
+  const mosse = Object.keys(MOSSE).filter(m => t.salti || !m.startsWith('salto-'))
+  for (const [k, sol] of [...(t.soluzioni || []).entries(), ...(t.fragili || []).map((f, k) => [`fragile ${k + 1}`, f])]) {
+    const qui = `${dove}, ${typeof k === 'number' ? `soluzione ${k + 1}` : k}`
+    guasti.push(...guastiDellaFila(sol, { mosse, dove: qui }))
+    if (typeof k === 'number' && carteDi(sol) > t.zaino)
+      guasti.push(`${qui}: ${carteDi(sol)} carte, e lo zaino ne tiene ${t.zaino}`)
+  }
+  return guasti
+}
+
 export function guastiDellaCampagna(campagna = CAMPAGNA) {
   const guasti = []
   const viste = new Set()
@@ -347,6 +503,7 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
        gioca, e il risolutore lo direbbe solo come «non si vince» */
     if (!t.salti && t.mappa.some(r => /[t-]/.test(r)))
       guasti.push(`${dove}: ha ostacoli bassi ma non accende i salti`)
+    guasti.push(...guastiDelloZaino(t, dove))
   }
 
   /* gli scalini arrivano in fila, nessuno resta vuoto, e la portata e il
@@ -357,6 +514,19 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
     guasti.push('gli scalini non sono in fila: una tappa di un gradino viene dopo una del gradino dopo')
   for (const s of SCALINI)
     if (!campagna.some(t => t.scalino === s.chiave)) guasti.push(`lo scalino «${s.chiave}» non ha nemmeno una tappa`)
+  /* lo zaino arriva una volta e resta: dopo il primo livello che ce
+     l'ha, ce l'hanno tutti, e gli scalini delle carte vengono dopo
+     quelli delle regole */
+  const primo = campagna.findIndex(t => t.zaino)
+  if (primo >= 0 && campagna.slice(primo).some(t => !t.zaino))
+    guasti.push('dopo il primo livello con lo zaino, un livello senza')
+  for (const [i, t] of campagna.entries()) {
+    const s = SCALINI.find(x => x.chiave === t.scalino)
+    if (s && !!s.carta !== !!t.zaino)
+      guasti.push(`tappa ${i + 1}: lo scalino «${t.scalino}» ${s.carta ? 'vuole' : 'non vuole'} lo zaino`)
+    if (s && s.carta && !(t.carte || []).includes(s.carta))
+      guasti.push(`tappa ${i + 1}: è del gradino «${s.carta}», e non mette in mano la sua carta`)
+  }
   for (let i = 1; i < campagna.length; i++) {
     if (campagna[i].portata < campagna[i - 1].portata)
       guasti.push(`tappa ${i + 1}: la portata scende (${campagna[i - 1].portata} → ${campagna[i].portata})`)

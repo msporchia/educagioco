@@ -21,7 +21,7 @@
      viste/    la mappa, il campo, la fila, il cartello di fine
      Gioco.vue il coordinatore, l'unico che sa che esistono le monete
    ═══════════════════════════════════════════════════════════════════ */
-import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO } from './dati/campagna.js'
 import { apriQuaderno, primatoInParole } from '../primati.js'
 
 export const CHIAVE = 'passo'
@@ -64,21 +64,32 @@ export default {
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)
     const coda = stelle ? ` · ⭐ ${stelle}` : ''
-    if ((av.tappa || 0) >= QUANTE_TAPPE) {
-      const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+    const record = primatoInParole(apriQuaderno(av), SENZA_FINE.misura)
+    if ((av.tappa || 0) >= QUANTE_TAPPE)
       return record ? `sentiero senza fine · record ${record}${coda}` : `tutte le tane${coda}`
-    }
     const i = Math.min(av.tappa || 0, QUANTE_TAPPE - 1)
-    return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${coda}`
+    /* il sentiero si apre a metà campagna, alla fine delle tappe dei
+       piccoli: chi ci è arrivato ma non ha l'età dello zaino gioca lì */
+    const sentiero = i >= TAPPE_PICCOLE && record ? ` · sentiero ${record}` : ''
+    return `tappa ${i + 1} di ${QUANTE_TAPPE} · ${CAMPAGNA[i].nome}${sentiero}${coda}`
   },
 
   /* ═══════════ quello che il gioco porta all'albo ═══════════
+     I traguardi di prima contano le **tappe dei piccoli**, e non la
+     campagna intera: quando sono arrivati i gradini dello zaino la
+     campagna si è allungata, e una soglia legata alla sua lunghezza
+     avrebbe fatto tornare d'argento l'oro di chi le aveva finite tutte
+     (il grado a schermo si ricalcola dai numeri, non si legge dal
+     salvataggio). Lo zaino ha il suo traguardo.
+
      I contatori li muove `Gioco.vue` con `segna()`/`segnaBest()`:
        ppProve    le file fatte partire col ▶
        ppTane     le volte che il coniglio è arrivato a casa
        ppCarote   le volte che ci è arrivato con la carota
        ppDaSolo   le volte che ci è arrivato senza aiuti
-       ppFila     (primato) i sentieri senza fine di fila, senza aiuti */
+       ppFila     (primato) i sentieri senza fine di fila, senza aiuti
+     Nessun contatore nuovo per lo zaino: le sue tappe si contano da
+     `tappeDi`, che sono in fila dopo quelle dei piccoli. */
   albo: {
     area: { nome: 'Passo passo', emoji: '🐇' },
 
@@ -89,10 +100,15 @@ export default {
       { id: 'pp-tappe', emoji: '🏡', nome: 'Tutti a casa',
         come: n => n === 1 ? 'Porta il coniglio a casa nella prima tappa di Passo passo'
                            : `Supera ${n} tappe di Passo passo`,
-        soglie: [1, 10, QUANTE_TAPPE], valore: m => m.tappeDi(CHIAVE) },
+        soglie: [1, 10, TAPPE_PICCOLE], valore: m => Math.min(m.tappeDi(CHIAVE), TAPPE_PICCOLE) },
       { id: 'pp-stelle', emoji: '⭐', nome: 'Le stelle del coniglio',
         come: n => `Raccogli ${n} stelle in Passo passo`,
-        soglie: [15, 40, QUANTE_TAPPE * 3], valore: m => m.stelleDi(CHIAVE) },
+        soglie: [15, 40, TAPPE_PICCOLE * 3], valore: m => m.stelleDi(CHIAVE) },
+      /* i gradini dei grandi: quante tappe con lo zaino */
+      { id: 'pp-zaino', emoji: '🎒', nome: 'Lo zaino del coniglio',
+        come: n => n === 1 ? 'Supera la prima tappa con lo zaino in Passo passo'
+                           : `Supera ${n} tappe con lo zaino in Passo passo`,
+        soglie: [1, 4, TAPPE_ZAINO], valore: m => Math.max(0, m.tappeDi(CHIAVE) - TAPPE_PICCOLE) },
       /* la carota non serve per vincere: prenderla è la deviazione
          pensata, e questo traguardo conta chi se la va a cercare */
       { id: 'pp-carote', emoji: '🥕', nome: 'L\'orto del coniglio',
@@ -105,8 +121,8 @@ export default {
         come: n => `Fai ${n} sentieri di fila senza aiuti`,
         soglie: [3, 6, 12], valore: m => m.best('ppFila') },
       { id: 'pp-campagna', emoji: '🏁', nome: 'La strada di casa',
-        come: () => 'Finisci tutte le tappe di Passo passo',
-        soglie: [1], valore: m => m.finita(CHIAVE) },
+        come: () => 'Finisci le tappe dei primi cinque gradini di Passo passo',
+        soglie: [1], valore: m => (m.tappeDi(CHIAVE) >= TAPPE_PICCOLE ? 1 : 0) },
     ],
   },
 }

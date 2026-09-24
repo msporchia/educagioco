@@ -11,6 +11,11 @@
    tana il coniglio si ferma e si chiede «e adesso?»: non è un errore, è
    un programma non finito.
 
+   Dal gradino del ripeti la fila ha le **scatole** dei cicli e lo
+   **zaino**: le modifiche col dito passano da `motore/fila.js` (pure:
+   una scatola si toglie intera, la N nasce da scegliere), e mentre il
+   coniglio corre la testa di ogni scatola dice a che giro è (`giri`).
+
    Questo file decide **quando** succedono le cose e cosa valgono: è
    l'unico che sa che esistono le monete, le stelle salvate e i
    contatori dell'albo. Le regole stanno in `motore/`, il disegno e i
@@ -25,15 +30,17 @@
 import { ref, shallowRef, computed, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest } from '../../store/profile.js'
+import { addCoins, segna, segnaBest, tappaAperta } from '../../store/profile.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, tappeDelloScalino } from './dati/campagna.js'
 import { MASSIMO_FILA } from './dati/mondo.js'
+import { apri, carteDi, conCicli, daScegliere, eApri, volteDi } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
-import { esegui, stelleDellaVittoria, TANA, eErrore } from './motore/mondo.js'
+import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, eErrore } from './motore/mondo.js'
+import { mettiCarta, mettiCiclo, togliPrima, scegliVolte } from './motore/fila.js'
 import { suggerisci } from './motore/risolutore.js'
 import { generaSentiero, caso } from './motore/generatore.js'
 import { Proiezione } from './scena/proiezione.js'
@@ -68,6 +75,15 @@ const inCorsa = ref(false)
 const aiutato = ref(false)          // in questo giro si è chiesto un aiuto
 const brilla = ref(null)            // la freccia (o ▶) che l'aiuto accende
 const sospette = ref(false)         // l'aiuto ha messo il cursore in mezzo alla fila
+const aiutoInCoda = ref(false)      // il 💡 premuto mentre il coniglio corre
+const colpo = ref(0)                // quante volte si è premuto il 💡: ogni volta risponde
+const consiglio = ref(null)         // la carta che l'aiuto propone, in trasparenza nella fila
+/* lo zaino e le scatole */
+const scelta = ref(null)            // la scatola di cui si sta scegliendo il numero
+const consiglioVolte = ref(null)    // il numero che l'aiuto accende nella scelta
+const consiglioTesta = ref(null)    // la scatola a cui l'aiuto cambia il numero
+const giri = ref(null)              // a che giro sono le scatole: mentre corre, o dove si è fermata
+const scossa = ref(0)               // ▶ fermato da una N ancora da scegliere
 const finale = ref(null)
 const partito = ref(false)          // in questo livello si è già premuto ▶
 
@@ -76,6 +92,7 @@ let cieco = false
 let sbarra = 0
 let esitoInCorsa = null
 let partitoAlle = 0
+let passoCorrente = -1              // il passo che sta girando (coi cicli non è la carta)
 /* il coniglio sta entrando nella tana: la partita è vinta anche se la
    festa non è finita. Un ■ in quel secondo non risponde, e un ← scrive
    la vittoria prima di uscire — una tana che il bambino ha appena visto
@@ -84,7 +101,7 @@ let partitoAlle = 0
    metà festa coprirebbe il coniglio che entra in casa. */
 let inTana = false
 /* il giro di prima: serve a far correre veloce la parte già vista */
-let ultimoGiro = null               // { fila, riuscite }
+let ultimoGiro = null               // { passi: [{ i, mossa }], riusciti }
 
 /* il sentiero senza fine */
 const sentieri = ref(0)             // quanti in questa seduta
@@ -94,6 +111,16 @@ let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la s
 
 const avanza = progresso(CHIAVE)
 const sentiero = computed(() => tappaIdx.value < 0)
+/* quante carte tiene la fila: lo zaino, dove c'è, se no il tetto tecnico */
+const piena = computed(() => (tappa.value && tappa.value.zaino
+  ? carteDi(fila.value) >= tappa.value.zaino : fila.value.length >= MASSIMO_FILA))
+const volteOra = computed(() => (scelta.value != null ? volteDi(fila.value[scelta.value]) : null))
+/* Il sentiero senza fine si apre alla fine delle tappe dei piccoli, e
+   senza guardare l'età: è il loro, e le tappe dello zaino che vengono
+   dopo sono chiuse fino agli otto anni. Legarlo alla campagna intera,
+   come quando la campagna finiva alle buche, l'avrebbe chiuso proprio a
+   chi l'aveva già aperto. */
+const sentieroAperto = () => tappaAperta(TAPPE_PICCOLE, avanza.tappa)
 
 /* ═══════════ la mappa ═══════════ */
 const scalini = computed(() => SCALINI.map(s => ({
@@ -107,10 +134,12 @@ const scalini = computed(() => SCALINI.map(s => ({
 })))
 
 const statoSentiero = computed(() => ({
-  aperto: aperta(CHIAVE, QUANTE_TAPPE),
+  aperto: sentieroAperto(),
   record: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
-  quante: QUANTE_TAPPE,
-  fatte: Math.min(avanza.tappa, QUANTE_TAPPE),
+  quante: TAPPE_PICCOLE,
+  fatte: Math.min(avanza.tappa, TAPPE_PICCOLE),
+  /* sulla mappa sta dopo l'ultimo gradino dei piccoli */
+  dopo: CAMPAGNA[TAPPE_PICCOLE - 1].scalino,
 }))
 
 /* ── la manina della prima volta ──
@@ -120,8 +149,13 @@ const statoSentiero = computed(() => ({
    più: da lì in poi si impara giocando. È la riga dei primi passi del
    castello, detta a chi non legge. */
 const manina = computed(() => {
-  if (tappaIdx.value !== 0 || avanza.tappa > 0 || partito.value) return null
   if (inCorsa.value || finale.value) return null
+  /* e la prima scatola: chi arriva allo zaino non sa che il 🔁 esiste,
+     e lo scopre con lo zaino pieno. La manina lo indica finché nella
+     fila non c'è una scatola */
+  if (tappaIdx.value === TAPPE_PICCOLE && stelleDi(CHIAVE, TAPPE_PICCOLE) === 0)
+    return conCicli(fila.value) || scelta.value != null ? null : 'ripeti'
+  if (tappaIdx.value !== 0 || avanza.tappa > 0 || partito.value) return null
   return fila.value.length ? 'via' : 'destra'
 })
 
@@ -166,7 +200,11 @@ const regia = new Regia({
     suonaBattuta(b)
     if (b.e.che === 'tana') inTana = true
   },
-  corrente: i => { corrente.value = i },
+  corrente: (i, n, g) => {
+    corrente.value = i
+    passoCorrente = n
+    giri.value = g && g.length ? g : null
+  },
   guasto: () => { if (esitoInCorsa) guasto.value = esitoInCorsa.dove },
   fine: () => fineGiro(),
 })
@@ -196,9 +234,16 @@ function entra(t, indice) {
   aiutato.value = false
   brilla.value = null
   sospette.value = false
+  aiutoInCoda.value = false
+  consiglio.value = null
+  scelta.value = null
+  consiglioVolte.value = null
+  consiglioTesta.value = null
+  giri.value = null
   finale.value = null
   partito.value = false
   ultimoGiro = null
+  passoCorrente = -1
   esitoInCorsa = null
   inTana = false
   chiusaDallAiuto = null
@@ -213,20 +258,62 @@ function entra(t, indice) {
 
 const avviaTappa = i => entra(CAMPAGNA[i], i)
 
-/* ═══════════ comporre la fila ═══════════ */
-function freccia(m) {
-  if (inCorsa.value || cieco || finale.value) return
-  if (fila.value.length >= MASSIMO_FILA) return
-  fila.value.splice(cursore.value, 0, m)
-  cursore.value++
+/* ═══════════ comporre la fila ═══════════
+   Ogni tocco passa da `motore/fila.js`, che dice com'è la fila dopo: è
+   lì che sta scritto cosa toglie ⌫ quando prima del cursore c'è una
+   scatola (tutta) o la sua testa (il 🔁 e basta). */
+const metti = r => { fila.value = r.fila; cursore.value = r.cursore }
+
+/* una freccia, un salto — o, dal consiglio del 💡, una scatola già col
+   suo numero */
+function freccia(t) {
+  if (inCorsa.value || cieco || finale.value || piena.value) return
+  if (eApri(t)) return ciclo(volteDi(t))
+  metti(mettiCarta(fila.value, cursore.value, t))
+  scelta.value = null
   cambiata()
-  suono.nota(m.startsWith('salto-') ? 587 : 523, m.startsWith('salto-') ? 587 : 523, 0.06, 'triangle', 0.05)
+  suono.nota(t.startsWith('salto-') ? 587 : 523, t.startsWith('salto-') ? 587 : 523, 0.06, 'triangle', 0.05)
+}
+
+/* 🔁: una scatola dove sta il cursore, col cursore dentro. La N nasce da
+   scegliere e la scelta si apre da sola; se il 💡 aveva acceso il 🔁,
+   nella scelta resta acceso il suo numero */
+function ciclo(volte = null) {
+  if (inCorsa.value || cieco || finale.value || piena.value) return
+  const suggerito = brilla.value === 'ripeti' ? consiglioVolte.value : null
+  const r = mettiCiclo(fila.value, cursore.value, volte)
+  metti(r)
+  cambiata()
+  scelta.value = volte == null ? r.apertura : null
+  consiglioVolte.value = volte == null ? suggerito : null
+  suono.nota(494, 659, 0.1, 'triangle', 0.05)
+}
+
+/* il numero di una scatola */
+function sceltaVolte(n) {
+  if (inCorsa.value || cieco || finale.value || scelta.value == null) return
+  fila.value = scegliVolte(fila.value, scelta.value, n)
+  scelta.value = null
+  cambiata()
+  suono.nota(587, 784, 0.08, 'triangle', 0.05)
+}
+
+/* toccare la testa di una scatola: si riapre la scelta del numero, e il
+   cursore va in cima al suo corpo */
+function testa(i) {
+  if (inCorsa.value || cieco || finale.value) return
+  const suggerito = consiglioTesta.value === i ? consiglioVolte.value : null
+  cursore.value = i + 1
+  cambiata()
+  scelta.value = i
+  consiglioVolte.value = suggerito
+  suono.nota(660, 660, 0.03, 'triangle', 0.03)
 }
 
 function cancella() {
   if (inCorsa.value || cieco || finale.value || cursore.value === 0) return
-  fila.value.splice(cursore.value - 1, 1)
-  cursore.value--
+  metti(togliPrima(fila.value, cursore.value))
+  scelta.value = null
   cambiata()
   suono.nota(330, 300, 0.07, 'sine', 0.05)
 }
@@ -234,26 +321,47 @@ function cancella() {
 function spostaCursore(i) {
   if (inCorsa.value || cieco || finale.value) return
   cursore.value = Math.max(0, Math.min(fila.value.length, i))
+  scelta.value = null
   suono.nota(660, 660, 0.03, 'triangle', 0.03)
 }
 
 /* una fila che cambia non ha più il suo guasto: quella tessera magari
-   non c'è più. E l'aiuto acceso si spegne al primo tocco. */
+   non c'è più. E l'aiuto acceso si spegne al primo tocco, e con lui il
+   giro scritto sulla scatola dove la fila si era fermata. */
 function cambiata() {
   guasto.value = null
   brilla.value = null
   sospette.value = false
+  consiglio.value = null
+  consiglioVolte.value = null
+  consiglioTesta.value = null
+  giri.value = null
 }
 
 /* ═══════════ ▶ e ■ ═══════════ */
 function via() {
   if (inCorsa.value || cieco || finale.value) return
+  /* una N ancora da scegliere: ▶ non parte, e apre la scelta che manca
+     (che sobbalza, se era già aperta) */
+  const manca = daScegliere(fila.value)
+  if (manca.length) {
+    scelta.value = manca[0]
+    cursore.value = manca[0] + 1
+    scossa.value++
+    suono.nota(330, 262, 0.12, 'triangle', 0.06)
+    return
+  }
+  scelta.value = null
   const esito = esegui(liv, fila.value)
-  const pro = new Proiezione(liv, esito, { veloci: giaVisti(fila.value) })
+  const pro = new Proiezione(liv, esito, { veloci: giaVisti(esito) })
   esitoInCorsa = esito
   guasto.value = null
   brilla.value = null
   sospette.value = false
+  consiglio.value = null
+  consiglioTesta.value = null
+  giri.value = null
+  passoCorrente = -1
   corrente.value = -1
   inCorsa.value = true
   partito.value = true
@@ -263,12 +371,16 @@ function via() {
   segna('ppProve')
 }
 
-/* quante frecce in testa sono uguali al giro di prima, e allora erano
-   andate bene: quelle scorrono veloci */
-function giaVisti(f) {
+/* quanti passi dall'inizio sono uguali al giro di prima, e allora erano
+   andati bene: quelli scorrono veloci. Passi e non carte: coi cicli la
+   stessa carta si esegue a ogni giro */
+const passiDi = esito => esito.passi.map(p => ({ i: p.i, mossa: p.mossa }))
+function giaVisti(esito) {
   if (!ultimoGiro) return 0
+  const ora = esito.passi, prima = ultimoGiro.passi
   let n = 0
-  while (n < f.length && n < ultimoGiro.riuscite && f[n] === ultimoGiro.fila[n]) n++
+  while (n < ora.length && n < ultimoGiro.riusciti &&
+         ora[n].i === prima[n].i && ora[n].mossa === prima[n].mossa) n++
   return n
 }
 
@@ -282,23 +394,32 @@ function giaVisti(f) {
 const FERMA_DOPO = 500
 function ferma() {
   if (!inCorsa.value || performance.now() - partitoAlle < FERMA_DOPO || inTana) return
-  ultimoGiro = { fila: [...fila.value], riuscite: Math.max(0, corrente.value) }
+  if (esitoInCorsa) ultimoGiro = { passi: passiDi(esitoInCorsa), riusciti: Math.max(0, passoCorrente) }
+  giri.value = null
   regia.ferma()
   inCorsa.value = false
   corrente.value = -1
   esitoInCorsa = null
   suono.nota(440, 330, 0.1, 'sine', 0.05)
+  aiutoPrenotato()
 }
 
 function fineGiro() {
   const esito = esitoInCorsa
   esitoInCorsa = null
   inCorsa.value = false
-  if (!esito) return
+  if (!esito) return aiutoPrenotato()
   const errore = eErrore(esito.esito)
-  ultimoGiro = { fila: [...fila.value], riuscite: errore ? esito.dove : fila.value.length }
+  /* riusciti: tutti i passi tranne quello che ha sbattuto o fatto
+     splash. Quando gira la testa (troppi passi) nessun passo è andato
+     male: è la fila a non finire mai */
+  const cattivo = esito.esito === SBATTE || esito.esito === SPLASH ? 1 : 0
+  ultimoGiro = { passi: passiDi(esito), riusciti: esito.passi.length - cattivo }
   corrente.value = -1
   if (esito.esito === TANA) {
+    /* a casa non c'è niente da consigliare: l'aiuto prenotato si lascia
+       cadere, e non costa la stella */
+    aiutoInCoda.value = false
     inTana = false
     finale.value = vittoria(esito)
     suono.livello()
@@ -310,19 +431,45 @@ function fineGiro() {
        al suo posto */
     guasto.value = esito.dove
     cursore.value = esito.dove + 1
+    /* dentro una scatola il giro dove si è fermata resta scritto sulla
+       sua testa: «al terzo giro» è mezza soluzione */
+    const ultimo = esito.passi.at(-1)
+    giri.value = ultimo && ultimo.giri && ultimo.giri.length ? ultimo.giri : null
+  } else {
+    giri.value = null
   }
+  aiutoPrenotato()
 }
 
 /* ═══════════ 💡 ═══════════
    Non dice la soluzione: trova il pezzo più lungo della fila che va
-   ancora bene, ci mette il cursore, e fa brillare la freccia giusta.
-   La tocca il bambino. Costa la stella «senza aiuti» — il tasto lo dice
-   prima di essere toccato — e da lì gli aiuti di questo giro sono
-   gratis. */
+   ancora bene, ci mette il cursore, e fa vedere la freccia giusta in
+   due posti — in trasparenza **dentro la fila**, dove andrà, e sul suo
+   tasto, che brilla. La mette il bambino, toccando l'una o l'altro.
+   Costa la stella «senza aiuti» — il tasto lo dice prima di essere
+   toccato — e da lì gli aiuti di questo giro sono gratis.
+
+   ── IL 💡 RISPONDE SEMPRE ─────────────────────────────────────────
+   Era spento mentre il coniglio correva, cioè anche nei due secondi
+   della scenetta dopo uno sbaglio: il momento esatto in cui lo si
+   cerca. E premuto una seconda volta riaccendeva la stessa freccia, e
+   a schermo non cambiava niente. Tutte e due le volte, da fuori, era un
+   tasto rotto: «ci premi e non fa nulla». Adesso durante la corsa si
+   prenota — si accende, e il consiglio arriva quando il coniglio si
+   ferma — e ogni tocco fa sobbalzare la lampadina (`colpo`). E il
+   consiglio sta dentro la fila perché è lì che si guarda: l'anello
+   attorno a un tasto della pulsantiera, da solo, non lo vedeva
+   nessuno. */
 function aiuto() {
-  if (inCorsa.value || cieco || finale.value) return
+  if (cieco || finale.value) return
+  if (inCorsa.value) {
+    if (!aiutoInCoda.value) suono.nota(660, 880, 0.08, 'sine', 0.04)
+    aiutoInCoda.value = true
+    return
+  }
   const s = suggerisci(liv, fila.value)
   if (!s) return
+  colpo.value++
   if (!aiutato.value) {
     aiutato.value = true
     if (sentiero.value) {
@@ -331,15 +478,50 @@ function aiuto() {
     }
   }
   guasto.value = null
+  consiglio.value = null
+  consiglioVolte.value = null
+  consiglioTesta.value = null
+  scelta.value = null
+  sospette.value = false
   suono.nota(880, 1175, 0.14, 'sine', 0.06)
-  if (s.che === 'via') {
-    brilla.value = 'via'
-    sospette.value = false
-    return
+  switch (s.che) {
+    case 'via':
+      brilla.value = 'via'
+      return
+    /* con lo zaino un aiuto può dire anche altre tre cose: qui ci va una
+       scatola (il 🔁 brilla, e la scatola sta in trasparenza nella fila),
+       questa scatola va ripetuta tante volte (brilla la sua testa), e
+       questa carta è di troppo (brilla ⌫, e lei lampeggia) */
+    case 'ciclo':
+      cursore.value = s.cursore
+      brilla.value = 'ripeti'
+      consiglio.value = apri(s.volte)
+      consiglioVolte.value = s.volte
+      break
+    case 'volte':
+      cursore.value = s.apri + 1
+      brilla.value = null
+      consiglioTesta.value = s.apri
+      consiglioVolte.value = s.volte
+      return
+    case 'togli':
+      cursore.value = s.cursore
+      brilla.value = 'cancella'
+      guasto.value = s.cursore - 1
+      return
+    default:
+      cursore.value = s.cursore
+      brilla.value = s.mossa
+      consiglio.value = s.mossa
   }
-  cursore.value = s.cursore
-  brilla.value = s.mossa
   sospette.value = s.cursore < fila.value.length
+}
+
+/* il 💡 premuto durante la corsa: adesso che il coniglio è fermo */
+function aiutoPrenotato() {
+  if (!aiutoInCoda.value) return
+  aiutoInCoda.value = false
+  aiuto()
 }
 
 /* ═══════════ a casa ═══════════ */
@@ -371,9 +553,10 @@ function vittoria(esito) {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,
     carota: esito.carota, aiutato: aiutato.value, monete,
     racconto: CAMPAGNA[i].racconto,
-    /* dopo l'ultima tappa ▶ porta sul sentiero senza fine, che si è
-       appena aperto: finire la campagna non è una porta chiusa */
-    prossima: aperta(CHIAVE, i + 1),
+    /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine,
+       che si è appena aperto, a chi non ha ancora l'età dello zaino:
+       finire non è una porta chiusa */
+    prossima: aperta(CHIAVE, i + 1) || (i + 1 === TAPPE_PICCOLE && sentieroAperto()),
   }
 }
 
@@ -424,7 +607,7 @@ function avanti() {
   if (sentiero.value) return prossimoSentiero()
   const i = tappaIdx.value + 1
   if (i < QUANTE_TAPPE && aperta(CHIAVE, i)) avviaTappa(i)
-  else if (i >= QUANTE_TAPPE && aperta(CHIAVE, QUANTE_TAPPE)) avviaSentiero()
+  else if (i === TAPPE_PICCOLE && sentieroAperto()) avviaSentiero()
   else allaMappa()
 }
 
@@ -449,6 +632,7 @@ function allaMappa() {
   regia.spegni()
   finale.value = null
   inCorsa.value = false
+  aiutoInCoda.value = false
   esitoInCorsa = null
   vista.value = 'mappa'
   tappaIdx.value = -1
@@ -472,10 +656,14 @@ function indietro() {
       <Campo v-else ref="campo"
              :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
              :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :brilla="brilla"
-             :costa="!aiutato" :sospette="sospette" :piena="fila.length >= MASSIMO_FILA"
-             :manina="manina"
+             :costa="!aiutato" :sospette="sospette" :piena="piena"
+             :manina="manina" :consiglio="consiglio" :colpo="colpo" :in-coda="aiutoInCoda"
+             :carte="(tappa && tappa.carte) || []" :zaino="(tappa && tappa.zaino) || null"
+             :giri="giri" :scelta="scelta" :volte-ora="volteOra" :consiglio-volte="consiglioVolte"
+             :consiglio-testa="consiglioTesta" :scossa="scossa"
              @freccia="freccia" @cancella="cancella" @via="via" @ferma="ferma"
-             @aiuto="aiuto" @cursore="spostaCursore" />
+             @aiuto="aiuto" @cursore="spostaCursore" @ciclo="ciclo()" @volte="sceltaVolte"
+             @testa="testa" />
 
       <Finale v-if="finale" v-bind="finale"
               @avanti="avanti" @rigioca="rigioca" @mappa="allaMappa" />

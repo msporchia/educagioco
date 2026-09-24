@@ -24,6 +24,13 @@
   --pp-via: #2fae47;
   --pp-via-scuro: #1c7a2e;
   --pp-luce: #ffc21a;
+  /* il ripeti ha il suo colore, che non è né il passo né il salto: una
+     scatola si deve riconoscere a colpo d'occhio anche in mezzo a dieci
+     frecce */
+  --pp-ciclo: #8a5cd6;
+  --pp-ciclo-scuro: #5f3b9e;
+  --pp-ciclo-fondo: #f1eafd;
+  --pp-ciclo-dentro: #e3d6fa;
   --pp-tessera: 40px;
   --pp-spazio: 6px;
 
@@ -94,6 +101,10 @@
            gap: var(--pp-spazio); padding: 7px 8px;
            background: var(--pp-carta); border-radius: 16px;
            box-shadow: inset 0 2px 6px rgba(0,0,0,.08), 0 1px 0 #fff }
+/* con lo zaino una riga può essere una scatola dentro una scatola, e il
+   bordo di ognuna la fa più alta di una tessera: due righe così devono
+   stare intere, se no il programma giusto scorre di tre pixel */
+.pp-fila.pp-con-zaino { height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 38px) }
 .pp-inizio { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 50%;
              background: #eef4e6; display: grid; place-items: center; font-size: 22px;
              box-shadow: inset 0 0 0 2px var(--pp-bordo) }
@@ -116,10 +127,51 @@
               border-radius: 3px; background: #ff8a00; animation: pp-cursore 1.1s steps(2, jump-none) infinite }
 @keyframes pp-cursore { 0% { opacity: 1 } 100% { opacity: .25 } }
 .pp-posto { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
-            border: 2px dashed #c7d6b8 }
+            border: 2px dashed #c7d6b8; background: none; padding: 0 }
+
+/* ═══════════ lo zaino e le scatole ═══════════
+   Una scatola è una fila dentro la fila: il fondo viola chiaro, la testa
+   col numero (o, mentre gira, il giro: «3/5»), e il bordo in fondo, che
+   si tocca per uscire. Una scatola dentro un'altra ha il fondo più
+   scuro, così le due si distinguono senza contare le parentesi. */
+.pp-scatola { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--pp-spazio);
+              max-width: 100%; padding: 3px 0 3px 3px; border-radius: 13px;
+              background: var(--pp-ciclo-fondo); box-shadow: inset 0 0 0 2px var(--pp-ciclo);
+              transition: opacity .2s }
+.pp-scatola.pp-dentro { background: var(--pp-ciclo-dentro) }
+.pp-scatola.pp-sospetta { opacity: .45 }
+.pp-testa { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
+            background: var(--pp-ciclo); color: #fff; padding: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            line-height: 1; box-shadow: 0 2px 0 var(--pp-ciclo-scuro); transition: transform .12s }
+.pp-testa .pp-ciclo-icona { font-size: 12px }
+.pp-testa b { font-size: 18px; font-weight: 900 }
+/* la N ancora da scegliere: gialla e tratteggiata, come un posto vuoto */
+.pp-testa.pp-manca { outline: 2px dashed var(--pp-luce); outline-offset: -4px }
+.pp-testa.pp-manca b { color: #ffe27a }
+.pp-testa.pp-aperta { box-shadow: 0 0 0 3px var(--pp-luce), 0 2px 0 var(--pp-ciclo-scuro) }
+/* mentre gira: il giro al posto del numero, e la testa che si accende */
+.pp-testa.pp-gira { transform: scale(1.1); box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
+.pp-testa.pp-gira b { font-size: 14px }
+/* fermata male dentro la scatola: il giro resta scritto, arancione */
+.pp-testa.pp-fermo { transform: none; background: #ff8a00; box-shadow: 0 2px 0 #b35f00 }
+.pp-coda { width: 18px; align-self: stretch; min-height: var(--pp-tessera); flex: none; padding: 0;
+           margin: -3px 0; border-radius: 0 12px 12px 0; background: var(--pp-ciclo); position: relative }
+/* il bordo è stretto a vedersi ma non al dito */
+.pp-coda::after { content: ''; position: absolute; inset: -4px -8px -4px -6px }
+.pp-in-corsa .pp-scatola { opacity: 1 }
+
+/* il consiglio di una scatola: il 🔁 col suo numero, in trasparenza */
+.pp-tessera.pp-fantasma.pp-fantasma-ciclo { color: var(--pp-ciclo); display: flex; flex-direction: column;
+                                            align-items: center; justify-content: center; line-height: 1 }
+.pp-fantasma-ciclo .pp-ciclo-icona { font-size: 12px }
+.pp-fantasma-ciclo b { font-size: 17px; font-weight: 900 }
 
 /* ═══════════ le frecce e i tasti ═══════════ */
 .pp-tasti { flex: none; display: flex; flex-direction: column; gap: 8px }
+/* le righe delle carte: la scelta del numero ci si mette sopra, e non le
+   sposta — la pulsantiera non cambia altezza, la mappa non balla */
+.pp-pulsantiera { position: relative; display: flex; flex-direction: column; gap: 8px }
 .pp-riga { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
 .pp-tasto { height: 58px; border-radius: 16px; display: grid; place-items: center;
             background: var(--pp-passo); color: #fff; box-shadow: 0 4px 0 var(--pp-passo-scuro);
@@ -129,6 +181,19 @@
 .pp-tasto svg { width: 36px; height: 36px }
 .pp-tasto.pp-salto { height: 52px; background: var(--pp-salto); box-shadow: 0 4px 0 var(--pp-salto-scuro) }
 .pp-riga.pp-azioni { grid-template-columns: 1fr 2fr 1fr }
+.pp-riga.pp-carte { grid-template-columns: 1fr }
+.pp-tasto.pp-ripeti { height: 52px; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
+                      display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 24px }
+.pp-parola { font-size: 19px; font-weight: 800; letter-spacing: .02em }
+.pp-scelta-volte { position: absolute; inset: 0; z-index: 2; display: grid; gap: 8px;
+                   grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr;
+                   background: var(--pp-carta); border-radius: 16px }
+.pp-tasto.pp-volte { height: auto; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
+                     font-size: 26px; font-weight: 900; color: #fff }
+/* il numero che la scatola ha già: chi riapre la scelta lo ritrova */
+.pp-tasto.pp-volte.pp-ora { box-shadow: inset 0 0 0 3px #fff, 0 4px 0 var(--pp-ciclo-scuro) }
+.pp-scelta-volte.pp-scossa { animation: pp-scossa .42s ease-in-out }
+@keyframes pp-scossa { 20%, 60% { transform: translateX(-7px) } 40%, 80% { transform: translateX(7px) } }
 .pp-tasto.pp-via { background: var(--pp-via); box-shadow: 0 4px 0 var(--pp-via-scuro); height: 60px }
 .pp-tasto.pp-ferma { background: #7d8a9c; box-shadow: 0 4px 0 #56616f; height: 60px }
 .pp-tasto.pp-cancella { background: #e7edf3; color: #5b6878; box-shadow: 0 4px 0 #c5cfda; height: 60px }
@@ -145,6 +210,25 @@
   0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 0 0 3px var(--pp-luce) }
   50% { box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 0 0 9px rgba(255,194,26,.5) }
 }
+/* e la stessa freccia compare nella fila, dove andrà: il posto vuoto
+   col suo contenuto in trasparenza. Tratteggiata e senza ombra, perché
+   non c'è ancora — ▶ non la esegue finché non la si tocca */
+.pp-tessera.pp-fantasma { background: #fff6d6; color: var(--pp-passo); box-shadow: none;
+                          outline: 3px dashed var(--pp-luce); outline-offset: -3px;
+                          animation: pp-fantasma 1s ease-in-out infinite; z-index: 1 }
+.pp-tessera.pp-fantasma.pp-salto { background: #fff6d6; color: var(--pp-salto); box-shadow: none }
+.pp-tessera.pp-fantasma .pp-icona { opacity: .8 }
+/* pulsa di luce, come il tasto che brilla, e non di misura: una tessera
+   che si gonfia e si sgonfia non sta mai ferma, e il banco di prova non
+   tocca un bersaglio che si muove */
+@keyframes pp-fantasma {
+  50% { background: #ffe39a; outline-color: #ffa000; box-shadow: 0 0 0 5px rgba(255,194,26,.4) }
+}
+/* il 💡 prenotato durante la corsa: acceso finché il coniglio non si ferma */
+.pp-tasto.pp-aiuto.pp-in-coda { animation: pp-brilla .9s ease-in-out infinite }
+/* ogni tocco sul 💡 risponde, anche quando il consiglio è lo stesso di prima */
+.pp-sobbalza { display: inline-block; animation: pp-sobbalza .45s ease-out }
+@keyframes pp-sobbalza { 35% { transform: scale(1.35) rotate(-10deg) } }
 
 /* la manina della prima volta: indica e basta — non prende i tocchi */
 .pp-manina { position: absolute; left: 50%; top: 62%; font-size: 34px; pointer-events: none;
@@ -199,4 +283,5 @@
   .pp-tasto { height: 50px }
   .pp-tasto.pp-salto { height: 44px }
   .pp-tasto.pp-via, .pp-tasto.pp-ferma, .pp-tasto.pp-cancella, .pp-tasto.pp-aiuto { height: 52px }
+  .pp-tasto.pp-ripeti { height: 44px }
 }

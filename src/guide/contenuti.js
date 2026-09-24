@@ -602,6 +602,11 @@ export const AIUTI = {
         'Se sbatte o finisce in acqua lampeggia la freccia sbagliata, e il coniglio torna indietro: si cambia quella e si riprova. Non si perde mai.',
         'Le frecce arancioni sono il **salto**: due caselle, scavalcando l\'acqua, i tronchi e le staccionate. I sassi e gli alberi no.',
       ] },
+      { titolo: 'Lo zaino e il ripeti', righe: [
+        'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
+        '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',
+        'Toccando il bordo in fondo alla scatola si esce; toccando la testa si cambia il numero. Mentre il coniglio corre la testa dice a che giro è.',
+      ] },
       { titolo: 'Le stelle', righe: [
         'Una per essere arrivato a casa, una per la **carota**, una per averlo fatto **senza 💡**.',
         'Il 💡 non dà la soluzione: indica la prossima freccia giusta, e la mette il bambino. Costa la terza stella, e lo dice prima.',

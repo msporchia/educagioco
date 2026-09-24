@@ -2,11 +2,11 @@
 
 # 🐇 Passo passo
 
-*Il primo gradino della programmazione, per chi non sa ancora leggere.* Un
-coniglio deve tornare nella sua tana. Il bambino non lo guida col dito: gli
-scrive una **fila di frecce**, preme ▶, e il coniglio la esegue dall'inizio
-alla fine. Se qualcosa va storto si guarda *quale* freccia era sbagliata, la
-si cambia, e si riprova.
+*Il primo gradino della programmazione, per chi non sa ancora leggere — e
+poi i cicli, per chi ha otto anni.* Un coniglio deve tornare nella sua
+tana. Il bambino non lo guida col dito: gli scrive una **fila di frecce**,
+preme ▶, e il coniglio la esegue dall'inizio alla fine. Se qualcosa va
+storto si guarda *quale* freccia era sbagliata, la si cambia, e si riprova.
 
 È un gioco **in prova**: si vede solo con «giochi in prova» acceso nella
 pagina dei grandi.
@@ -79,6 +79,51 @@ si atterra su un masso (lo si spinge solo camminando); un masso non si
 spinge sulla tana, sulla carota o su una buca, che sparirebbero sotto un
 sasso.
 
+## Lo zaino e il ripeti
+
+Dopo le buche il mondo smette di crescere e cresce **la lingua**. I gradini
+dei grandi portano una carta nuova — per ora 🔁 **ripeti**, dai sette anni e
+mezzo — e con la carta lo **zaino**: la fila tiene un numero fisso di carte,
+e dopo l'ultima si vedono i posti che restano, tratteggiati.
+
+La strada, scritta freccia per freccia, nello zaino **non ci sta**. Il viale
+è lungo cinque passi e lo zaino tiene tre carte: per arrivare bisogna dire
+«ripeti 5 volte →», e poi ↓. Il ciclo non è una comodità che si può saltare
+scrivendo più frecce: è l'unico modo di farcela, e un test lo pretende da
+ogni livello. **Non è un par**: le stelle restano le stesse tre, e usare meno
+carte del necessario non vale niente di più.
+
+- **Una scatola.** 🔁 mette una scatola dove sta il cursore, col cursore
+  dentro, e sopra le frecce compare la scelta del numero, da 2 a 9. Il
+  numero nasce **N**, da scegliere: un valore già scritto si leggerebbe
+  come l'unico possibile. ▶ con una N ancora dentro non parte, e riapre la
+  scelta che manca.
+- **Dentro e fuori.** Le frecce messe col cursore dentro la scatola si
+  ripetono; il bordo in fondo alla scatola, toccato, mette il cursore
+  subito fuori. Toccare la testa della scatola riapre la scelta del numero.
+  ⌫ subito dopo una scatola la toglie intera; in cima al suo corpo toglie
+  il 🔁 e lascia le frecce che aveva dentro.
+- **A che giro siamo.** Mentre il coniglio corre, la testa della scatola dice
+  il giro — «3/5» — e la freccia che sta girando si accende. Se sbatte
+  dentro un ciclo il giro resta scritto, arancione: «al sesto giro» è mezza
+  soluzione.
+- **Scatole dentro scatole.** Un gradino grande è fatto di passi piccoli:
+  nelle terrazze e nel campo arato il ciclo sta dentro un altro ciclo.
+
+Le regole del mondo restano tutte: un ciclo di salti per passare il fiume, e
+un ciclo sul ghiaccio, dove la stessa freccia fa strade lunghe diverse e il
+ciclo va bene lo stesso — a fermare il coniglio ci pensano i sassi. Oltre i
+novanta passi al coniglio gira la testa e la fila si ferma: un ciclo che va
+avanti e indietro per sempre non è un programma che finisce.
+
+Qui il 💡 non parte dalla strada più corta, che nello zaino non ci sta, ma
+dalla **soluzione scritta** nel livello più simile al programma del bambino,
+e dice una di quattro cose: qui ci va questa freccia, qui ci va una scatola
+(in trasparenza, col suo numero), questa scatola va ripetuta tante volte (la
+sua testa pulsa), questa carta è di troppo (⌫ brilla). Se il programma del
+bambino è quasi arrivato e il pezzo che manca ci sta sciolto, gli dice
+quello, e non lo rimanda indietro.
+
 ## Le stelle, le monete, gli aiuti
 
 Tre stelle per tappa, per tre cose diverse: ⭐ **arrivato**, ⭐ **con la
@@ -92,19 +137,25 @@ poi chiede una deviazione, poi una deviazione **pensata**: sul ghiaccio,
 dall'altra parte di un buco, al di là della buca giusta.
 
 Una tappa paga le sue monete **una volta sola**, alla prima vittoria (🪙4
-nei primi passi, fino a 🪙12 alle buche): il livello è fisso, e rigiocarlo è
+nei primi passi, 🪙12 alle buche, 🪙14 e 🪙16 con lo zaino): il livello è fisso, e rigiocarlo è
 ricordarlo, non esercitarsi. Il sentiero senza fine paga 🪙3 per sentiero,
 perché lì ogni sentiero è nuovo.
 
-Il 💡 **non dice la soluzione**. Trova il pezzo più lungo della fila che va
-ancora bene, ci mette il cursore, e fa brillare la freccia giusta sulla
-pulsantiera: la tocca il bambino. Le frecce dopo il cursore, se ci sono, si
-spengono un poco. Il tasto dice **prima** di essere toccato cosa costa — un
-⭐ col meno sopra — e una volta speso, gli aiuti di quel giro sono gratis.
+Il 💡 **non dice la soluzione** (con lo zaino, vedi sopra). Trova il pezzo più lungo della fila che va
+ancora bene, ci mette il cursore, e mostra la freccia giusta in due posti:
+**dentro la fila**, tratteggiata, nel punto dove va, e sulla pulsantiera,
+col suo tasto che brilla. La mette il bambino, toccando l'una o l'altro. Le
+frecce dopo il cursore, se ci sono, si spengono un poco. Il tasto dice
+**prima** di essere toccato cosa costa — un ⭐ col meno sopra — e una volta
+speso, gli aiuti di quel giro sono gratis. E non si spegne mai: premuto
+mentre il coniglio corre si accende e aspetta, e il consiglio arriva quando
+il coniglio si ferma — è proprio mentre lo si vede sbattere che lo si
+cerca.
 
 ## Le tappe
 
-Ventiquattro posti in cinque gradini, ognuno con la sua forma — un prato,
+Ventiquattro posti in cinque gradini per i piccoli, e otto con lo zaino.
+Ognuno ha la sua forma — un prato,
 un bosco, un fiume con le isole, un lago ghiacciato col buco — e ognuno con
 il suo piccolo «aha». Le mappe sono scritte a mano, al massimo sette celle
 per nove, così stanno intere su un telefono.
@@ -140,16 +191,27 @@ per nove, così stanno intere su un telefono.
 | 22. La buca nel ghiaccio | la tana è su un'isola, e ci porta la buca in mezzo al lago | 5 |
 | 23. Le buche colorate | la rosa porta alla carota, la viola alla tana | 7 |
 | 24. Tutto insieme | la staccionata, il masso nel fiume, il lago, la buca | 12 |
+| **🔁 Il ripeti** | *nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro* | zaino |
+| 25. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
+| 26. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |
+| 27. La scala | due frecce in una scatola, e l'ordine conta: la carota è su un gradino solo | 3 |
+| 28. Di sasso in sasso | anche un salto si ripete | 3 |
+| 29. Il lago a gradini | la stessa freccia fa una, tre, due caselle, e il ciclo regge | 3 |
+| 30. La collina | su e giù: due scatole diverse; la strada di mezzo è più corta ma non si ripete | 6 |
+| 31. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
+| 32. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
 
 La colonna «frecce» è la strada più corta **con la carota**, misurata dal
-risolutore. La regola di ogni gradino **deve servire**, ed è un test a
+risolutore; per i livelli con lo zaino è quante carte tiene lo zaino. La regola di ogni gradino **deve servire**, ed è un test a
 dirlo: un livello del ghiaccio che si vince anche col ghiaccio trattato da
 prato, o uno dei massi che si vince girando attorno al masso, insegnerebbe
 un'altra cosa.
 
 ## Il sentiero senza fine
 
-Finita la campagna si apre il **sentiero senza fine**: livelli fatti al
+Finite le tappe dei piccoli si apre il **sentiero senza fine** (sulla mappa
+sta subito dopo le buche, e non in fondo: è il loro, e chi non ha ancora
+l'età dello zaino gioca lì): livelli fatti al
 momento, a caso, e tenuti solo se il risolutore dice che si vincono, che la
 strada è lunga quanto il gradino chiede, che la carota vuole una deviazione
 e che la regola nuova serve davvero. Ogni due sentieri se ne aggiunge una,
@@ -180,7 +242,8 @@ Una mappa è un elenco di righe, un carattere per cella (la legenda sta in
     1 2 3  le buche, a coppie
 
 Una tappa dichiara anche il gradino, la `portata` (la scala di tutto il
-repo: dal 4 del prato al 44 dell'ultima), il premio della prima vittoria, la
+repo: dal 4 del prato al 44 di «Tutto insieme», e dal 46 al 58 con lo
+zaino), il premio della prima vittoria, la
 stagione (è solo il vestito) e `salti: true` se usa la seconda fila di
 frecce. Il test `test/unita/passo-passo` fa il resto: controlla che si vinca
 con la carota, che la strada giocata dal motore vinca davvero con tre
@@ -195,8 +258,10 @@ arrivi a casa.
   quando il coniglio è a casa.
 - **Gli aiuti non risolvono**: indicano la prossima freccia, e la mette il
   bambino.
-- **Da quattro a sette anni e mezzo**: la campagna va dal 4 al 44 della
-  scala delle tappe — a sei anni sono aperte tutte, a cinque le prime
-  quattordici — e dietro non c'è un pezzo di scuola, quindi a un bambino più
-  grande non si chiude niente: vedi [come l'età decide cosa si
-  vede](genitori.md#quanti-anni-ha).
+- **Da quattro a sette anni e mezzo, e poi i cicli**: le tappe dei piccoli
+  vanno dal 4 al 44 della scala delle tappe — a sei anni sono aperte tutte,
+  a cinque le prime quattordici — e quelle dello zaino dal 46 al 58, cioè
+  dai sette anni e mezzo in su. Dietro non c'è un pezzo di scuola, quindi a
+  un bambino più grande non si chiude niente: vedi [come l'età decide cosa
+  si vede](genitori.md#quanti-anni-ha). Per lo stesso motivo il gioco non si
+  spegne a otto anni come i giochi dei piccoli: comincia da lì, ma cresce.

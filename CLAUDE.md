@@ -588,6 +588,23 @@ committate: non è ricostruibile da git.
   soluzione intera), controlla in `unita/passo-passo` che ogni livello abbia
   bisogno della regola del suo gradino, e con `motore/generatore.js` fa i
   sentieri della modalità senza fine. Stelle: arrivato, la carota, senza 💡.
+  **Dopo le buche cresce la lingua e non il mondo**: i gradini dei grandi
+  (da sette anni e mezzo) portano una carta — 🔁 ripeti N volte, per ora —
+  e con lei lo **zaino**, quante carte tiene la fila. Scritta freccia per
+  freccia la strada nello zaino non ci sta, ed è la regola scelta apposta:
+  il ciclo è l'unico modo di farla stare, non una comodità (`serveLaCarta`
+  lo pretende da ogni livello). **Non è un par**: le stelle restano quelle,
+  meno carte non vale di più. La fila resta un elenco piatto (`dati/carte.js`:
+  un ciclo è `ripeti-4 … fine`, e il cursore resta un numero), le modifiche
+  col dito sono pure (`motore/fila.js`: ⌫ dopo una scatola la toglie
+  intera, in cima al suo corpo toglie il 🔁 e basta), la N nasce da
+  scegliere e ▶ non parte finché ne resta una, e mentre gira la testa della
+  scatola dice **a che giro è** («3/5»), che resta scritto dove sbatte. Lì
+  la soluzione **si scrive** nel livello (`soluzioni`, e le `fragili` che
+  non devono prendere la carota): il risolutore trova la strada più corta,
+  non il programma più corto, e il 💡 parte da quella scritta. Il sentiero
+  senza fine si apre alla fine delle tappe dei piccoli (`TAPPE_PICCOLE`),
+  non della campagna: è il loro.
 - **`src/giochi/costruttore/`** — *in prova.* Un robot costruisce, visto di
   lato, quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti

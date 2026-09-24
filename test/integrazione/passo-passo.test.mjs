@@ -10,16 +10,22 @@
      partire, e il cartello di fine arriva con le stelle giuste;
    · **uno sbaglio accende la tessera giusta** (`data-guasto`), e ⌫ la
      toglie;
-   · il 💡 accende una freccia, e da lì non costa più;
+   · il 💡 accende una freccia, sul tasto e dentro la fila, e da lì non
+     costa più; e mentre il coniglio corre non si spegne, si prenota;
    · ■ ferma tutto a metà, e la fila resta dov'è;
    · i salti ci sono solo dove servono;
+   · lo zaino: il 🔁 c'è solo dai suoi gradini, la fila si riempie e poi
+     non tiene più, una scatola nasce con la N e ▶ non parte finché non
+     si sceglie, mentre gira dice a che giro è, e dove sbatte il giro
+     resta scritto; il 💡 lì consiglia una scatola intera;
+   · a sei anni lo zaino è chiuso, e il sentiero dei piccoli no;
    · e nessun errore in console.
    `DIST=… node test/esegui.mjs passo-passo --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo, TELEFONO }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
-import { CAMPAGNA } from '../../src/giochi/passo-passo/dati/campagna.js'
+import { CAMPAGNA, TAPPE_PICCOLE } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { risolvi } from '../../src/giochi/passo-passo/motore/risolutore.js'
 
@@ -67,6 +73,7 @@ await scatto(page, 'passo-mappa')
 /* ---------- 3. la prima tappa, giocata col dito ---------- */
 await entraNellaTappa(0)
 controlla('nella prima tappa non ci sono i salti', await page.locator('[data-salto]').count() === 0)
+controlla('né il ripeti, né lo zaino', await page.locator('[data-carta], [data-libero]').count() === 0)
 /* la manina della prima volta: indica la freccia, poi ▶, poi se ne va */
 controlla('la prima volta una manina indica la freccia',
           await page.locator('[data-freccia="destra"] [data-manina]').count() === 1)
@@ -151,6 +158,23 @@ await attendi(page, 200)
 controlla('l\'aiuto accende una freccia', await page.locator('.pp-brilla').count() === 1)
 controlla('e da lì non costa più', await page.locator('[data-costa]').count() === 0)
 await scatto(page, 'passo-aiuto')
+/* Il consiglio sta anche dentro la fila, dove andrà: l'anello attorno al
+   tasto, da solo, non lo vedeva nessuno («ci premi e non fa nulla»).
+   È la stessa freccia del tasto che brilla, e toccarla la mette. */
+{
+  const consiglio = await page.locator('[data-consiglio]').getAttribute('data-consiglio')
+  const tasto = page.locator('.pp-brilla').first()
+  const sulTasto = consiglio && consiglio.startsWith('salto-')
+    ? 'salto-' + await tasto.getAttribute('data-salto') : await tasto.getAttribute('data-freccia')
+  uguale('nella fila compare la freccia che brilla sul tasto', consiglio, sulTasto)
+  const prima = await page.locator('[data-tessera]').count()
+  await page.locator('[data-consiglio]').click()
+  uguale('toccata nella fila, la freccia ci entra', await page.locator('[data-tessera]').count(), prima + 1)
+  controlla('e il consiglio se ne va', await page.locator('[data-consiglio], .pp-brilla').count() === 0)
+  await page.locator('[data-azione="suggerimento"]').click()
+  await attendi(page, 150)
+  controlla('ripremuto, il 💡 risponde ancora', await page.locator('[data-consiglio], .pp-brilla').count() >= 1)
+}
 
 /* ---------- 7. ■ ferma a metà, e la fila resta ---------- */
 await page.locator('[data-azione="cancella"]').click()
@@ -164,11 +188,17 @@ await page.locator('[data-azione="via"]').dblclick()
 await attendi(page, 150)
 controlla('un doppio tocco su ▶ non ferma la corsa', await page.locator('[data-azione="ferma"]').count() === 1)
 await attendi(page, 550)
+/* il 💡 non si spegne mentre il coniglio corre — è lì, mentre lo si vede
+   sbattere, che lo si cerca: si prenota, e arriva quando si ferma */
+await page.locator('[data-azione="suggerimento"]').click()
+controlla('premuto durante la corsa, il 💡 si prenota', await page.locator('[data-in-coda]').count() === 1)
 await page.locator('[data-azione="ferma"]').click()
 await attendi(page, 150)
 controlla('■ ferma la corsa: torna ▶', await page.locator('[data-azione="via"]').count() === 1)
 uguale('e la fila resta dov\'era', await page.locator('[data-tessera]').count(), quante)
 controlla('niente tessera accesa', await page.locator('[data-corrente]').count() === 0)
+controlla('e l\'aiuto prenotato arriva', await page.locator('[data-in-coda]').count() === 0 &&
+          await page.locator('.pp-brilla').count() === 1)
 
 /* ---------- 8. i salti ci sono solo dove servono ---------- */
 await allaMappa()
@@ -263,6 +293,100 @@ await scatto(page, 'passo-sentiero')
   controlla('▶ porta al sentiero dopo', titolo.includes('2'), titolo)
 }
 await allaMappa()
+
+/* ---------- 12. lo zaino, col dito ---------- */
+await semina(page, { settings: { sperimentali: true, eta: 8 },
+                     campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
+await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await page.waitForSelector('.pp-mappa')
+controlla('a otto anni la prima tappa dello zaino è aperta',
+          await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled())
+await entraNellaTappa(TAPPE_PICCOLE)
+const viale = CAMPAGNA[TAPPE_PICCOLE]
+uguale('c\'è il tasto del ripeti', await page.locator('[data-carta="ripeti"]').count(), 1)
+controlla('e la prima volta la manina lo indica',
+          await page.locator('[data-carta="ripeti"] [data-manina]').count() === 1)
+uguale('lo zaino mostra i suoi posti vuoti', await page.locator('[data-libero]').count(), viale.zaino)
+await componi(['destra', 'destra', 'destra'])
+controlla('pieno lo zaino, le frecce non entrano più',
+          await page.locator('[data-freccia="destra"]').isDisabled() &&
+          await page.locator('[data-carta="ripeti"]').isDisabled())
+for (let k = 0; k < 3; k++) await page.locator('[data-azione="cancella"]').click()
+await page.locator('[data-carta="ripeti"]').click()
+await attendi(page, 150)
+uguale('🔁 mette una scatola', await page.locator('[data-scatola]').count(), 1)
+controlla('che nasce con la N da scegliere, e la scelta aperta',
+          await page.locator('[data-testa][data-volte="N"]').count() === 1 &&
+          await page.locator('[data-scelta-volte]').count() === 1)
+controlla('nessun numero è già scelto', await page.locator('[data-scelta-volte] .pp-ora').count() === 0)
+await page.locator('[data-azione="via"]').click()
+await attendi(page, 200)
+controlla('con una N ▶ non parte', await page.locator('[data-azione="ferma"]').count() === 0 &&
+          await page.locator('[data-scelta-volte]').count() === 1)
+await page.locator('[data-volte-scegli="5"]').click()
+await attendi(page, 150)
+controlla('scelto il numero, la scelta si chiude e la testa lo dice',
+          await page.locator('[data-scelta-volte]').count() === 0 &&
+          await page.locator('[data-testa][data-volte="5"]').count() === 1)
+await componi(['destra'])
+uguale('la freccia dopo entra nella scatola', await page.locator('[data-scatola] [data-tessera]').count(), 1)
+await page.locator('[data-coda]').click()
+await componi(['giu'])
+uguale('toccato il bordo, la freccia dopo sta fuori', await page.locator('[data-scatola] [data-tessera]').count(), 1)
+uguale('e lo zaino è pieno', await page.locator('[data-libero]').count(), 0)
+await scatto(page, 'passo-zaino')
+await page.locator('[data-azione="via"]').click()
+await attendi(page, 1200)
+{
+  const giro = await page.locator('[data-testa]').getAttribute('data-giro')
+  controlla('mentre corre, la testa della scatola dice a che giro è', /^[1-5]\/5$/.test(giro || ''), giro)
+}
+await scatto(page, 'passo-zaino-corre')
+await page.waitForSelector('[data-fine="tappa"]', { timeout: 15000 })
+uguale('il viale col ripeti vale tre stelle',
+       await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '3')
+await attendi(page, 500)
+await page.locator('[data-azione="rigioca"]').click()
+await page.waitForSelector('.pp-campo')
+await attendi(page, 450)
+
+/* dove sbatte dentro una scatola, il giro resta scritto */
+await page.locator('[data-carta="ripeti"]').click()
+await page.locator('[data-volte-scegli="6"]').click()
+await componi(['destra'])
+await page.locator('[data-azione="via"]').click()
+await page.waitForSelector('[data-tessera][data-guasto]', { timeout: 8000 })
+await page.waitForSelector('[data-azione="via"]', { timeout: 8000 })
+uguale('sbattuto al sesto giro, la testa lo dice', await page.locator('[data-testa]').getAttribute('data-giro'), '6/6')
+await scatto(page, 'passo-zaino-sbatte')
+
+/* il 💡 con lo zaino: a fila vuota consiglia una scatola intera */
+await page.locator('[data-azione="cancella"]').click()
+await page.locator('[data-coda]').click()
+await page.locator('[data-azione="cancella"]').click()
+uguale('⌫ dopo la scatola la toglie intera', await page.locator('[data-scatola]').count(), 0)
+await page.locator('[data-azione="suggerimento"]').click()
+await attendi(page, 150)
+controlla('il 💡 consiglia una scatola, e il 🔁 brilla',
+          (await page.locator('[data-consiglio]').getAttribute('data-consiglio')) === 'ripeti-5' &&
+          await page.locator('[data-carta="ripeti"].pp-brilla').count() === 1)
+await page.locator('[data-consiglio]').click()
+controlla('toccata, la scatola entra già col suo numero',
+          await page.locator('[data-testa][data-volte="5"]').count() === 1 &&
+          await page.locator('[data-scelta-volte]').count() === 0)
+await scatto(page, 'passo-zaino-aiuto')
+
+/* ---------- 13. a sei anni lo zaino è chiuso, e il sentiero no ---------- */
+await allaMappa()
+await semina(page, { settings: { sperimentali: true, eta: 6 },
+                     campagne: { passo: { tappa: TAPPE_PICCOLE, stelle: {}, cfg: {} } } })
+await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await page.waitForSelector('.pp-mappa')
+controlla('a sei anni la prima tappa dello zaino è chiusa',
+          !(await page.locator(`.pp-tappa[data-tappa="${TAPPE_PICCOLE}"]`).isEnabled()))
+controlla('e il sentiero senza fine, alla fine delle tappe dei piccoli, è aperto',
+          await page.locator('[data-tappa="senza-fine"]').isEnabled())
+await scatto(page, 'passo-zaino-chiuso')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
