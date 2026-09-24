@@ -69,6 +69,8 @@
      posa     { lato }                           quella in mano, di fianco
      aspetta  { cond }                           «aspetta che [cond]»: un
                                                  turno alla volta
+     pausa    {}                                 «aspetta un turno»: fermo,
+                                                 mentre il mondo va avanti
      sempre   { corpo }                          «ripeti per sempre»: la
                                                  giornata la chiude il livello
 
@@ -89,8 +91,8 @@ export const VERSI = ['destra', 'sinistra']
    e posa di fianco a sé, verso una di loro */
 export const LATI = ['su', 'giu', 'sinistra', 'destra']
 export const DOVE_PORTO = [...LATI, 'mano']
-export const COSE_PORTO = ['cassa', 'niente', 'libero', 'cliente', 'biglietto', 'bancone',
-                           'scaffale', 'cassone', 'nastro', 'muro', 'mare', 'bordo']
+export const COSE_PORTO = ['cassa', 'niente', 'libero', 'cliente', 'camion', 'biglietto', 'bancone',
+                           'scaffale', 'cassone', 'nastro', 'strada', 'muro', 'mare', 'bordo']
 /* dove si posa un mattone: sotto i piedi, o dove appoggerà il piede */
 export const POSTI = ['sotto', 'giu-destra', 'giu-sinistra']
 /* dove guarda una condizione: i posti del mattone, più i tre dove si va */
@@ -126,6 +128,7 @@ export const fai = {
   prendi: lato => ({ tipo: 'prendi', lato }),
   posa: lato => ({ tipo: 'posa', lato }),
   aspetta: cond => ({ tipo: 'aspetta', cond }),
+  pausa: () => ({ tipo: 'pausa' }),
   sempre: (corpo = []) => ({ tipo: 'sempre', corpo }),
   ripeti: (volte, corpo = []) => ({ tipo: 'ripeti', volte: numero(volte), corpo }),
   finche: (cond, corpo = []) => ({ tipo: 'finche', cond, corpo }),

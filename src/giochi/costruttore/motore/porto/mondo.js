@@ -40,7 +40,16 @@
      · i clienti si mettono in fila e vengono al bancone uno per volta;
        chiedono una cassa di un colore e aspettano finché hanno
        pazienza. Chi riceve quello che voleva se ne va contento; chi
-       riceve un'altra cosa, o aspetta troppo, fa perdere la giornata.
+       riceve un'altra cosa, o aspetta troppo, fa perdere la giornata;
+     · un nastro che finisce contro un cassone ci scarica dentro, finché
+       c'è posto: è così che il porto lavora anche da solo, e la gru
+       riempie il magazzino senza che nessuno la aiuti;
+     · i camion arrivano alla loro ora sulla piazzola, vogliono un certo
+       numero di casse (a volte di un colore) e **ripartono appena sono
+       pieni**; un camion che aspetta troppo riparte mezzo vuoto, e la
+       giornata è persa. Sulla strada il robot non ci va;
+     · un cassone con un `numero` è una buca delle lettere: prende solo
+       i biglietti con quel numero.
 
    ── LA GIORNATA ──────────────────────────────────────────────────
    Finisce quando l'orologio arriva a `durata`, oppure quando il robot
@@ -54,7 +63,7 @@
    test giocano giornate intere.
    ═══════════════════════════════════════════════════════════════════ */
 import { Inciampo, Sera } from '../inciampo.js'
-import { leggiCasella, cassaDaLettera } from '../../dati/porto/legenda.js'
+import { leggiCasella, cosaDaLettera } from '../../dati/porto/legenda.js'
 import { colore as coloreDi } from '../../dati/colori.js'
 
 export const LATI = { su: [0, -1], giu: [0, 1], destra: [1, 0], sinistra: [-1, 0] }
@@ -64,6 +73,12 @@ export const DURATA = 300
 export const TETTO_PASSI_PORTO = 60000
 
 const NOMI_ARREDI = { scaffale: 'lo scaffale', bancone: 'il bancone', cassone: 'il cassone', nastro: 'il nastro' }
+
+/* un cassone prende questa cosa? il colore di una cassa, il numero di
+   una lettera: quello che dice di prendere, e basta */
+const accetta = (a, cosa) =>
+  (!a.colore || (cosa.tipo === 'cassa' && cosa.colore === a.colore)) &&
+  (a.numero == null || (cosa.tipo === 'biglietto' && cosa.numero === a.numero))
 
 /* «una cassa rossa»: i colori stanno scritti al maschile (il rosso), la
    cassa è femmina; e «prende solo casse rosse», al plurale */
@@ -129,10 +144,11 @@ export class Porto {
             a.capienza = spec.capienza ?? 99
             a.colore = spec.colore || null
             a.figura = spec.figura || 'cassone'
+            a.numero = spec.numero ?? null
             for (const l of spec.dentro || '') {
-              const cassa = cassaDaLettera(l)
-              if (!cassa) throw new Error(`porto: nel cassone «${a.id}» la lettera «${l}» non è una cassa`)
-              p.pile[k].push(p.nuovaCosa(cassa))
+              const cosa = cosaDaLettera(l)
+              if (!cosa) throw new Error(`porto: nel cassone «${a.id}» la lettera «${l}» non è una cassa né un biglietto`)
+              p.pile[k].push(p.nuovaCosa(cosa))
             }
           }
           if (a.tipo === 'nastro') p.celleNastro.push(k)
@@ -143,6 +159,7 @@ export class Porto {
         if (c.robot) p.robot = { x, y }
         if (c.gru) p.puntoGru = { x, y }
         if (c.clienti) p.puntoClienti = { x, y }
+        if (c.piazzola) p.piazzole.push(k)
       }
     })
     if (!p.robot) throw new Error('porto: nella mappa manca il robot (@)')
@@ -151,9 +168,9 @@ export class Porto {
     if (ordine.gru) {
       if (!p.puntoGru) throw new Error('porto: c\'è la gru ma nella mappa manca il suo punto (*)')
       const casse = [...(ordine.gru.casse || '')].map(l => {
-        const cassa = cassaDaLettera(l)
-        if (!cassa) throw new Error(`porto: la gru ha una lettera «${l}» che non è una cassa`)
-        return p.nuovaCosa(cassa)
+        const cosa = cosaDaLettera(l)
+        if (!cosa) throw new Error(`porto: la gru ha una lettera «${l}» che non è una cassa né un biglietto`)
+        return p.nuovaCosa(cosa)
       })
       p.gru = { ...p.puntoGru, casse, ogni: ordine.gru.ogni || 6, prossimo: ordine.gru.primo ?? 1, calate: 0 }
     }
@@ -163,6 +180,12 @@ export class Porto {
       const fila = (ordine.clienti.fila || []).map(([arriva, chiede], n) => ({ id: n + 1, arriva, chiede }))
       p.clienti = { fila, alBancone: null, pazienza: ordine.clienti.pazienza || 120,
                     serviti: 0, arrabbiati: 0, totale: fila.length }
+    }
+    /* i camion: `fila` è [[arriva, vuole, colore?], …] */
+    if (ordine.camion) {
+      if (!p.piazzole.length) throw new Error('porto: ci sono i camion ma nella mappa manca la piazzola (&)')
+      const fila = (ordine.camion.fila || []).map(([arriva, vuole, colore = null], n) => ({ id: n + 1, arriva, vuole, colore }))
+      p.camion = { fila, pazienza: ordine.camion.pazienza || 120, partiti: 0, totale: fila.length }
     }
     return p
   }
@@ -185,6 +208,8 @@ export class Porto {
     this.clienti = null
     this.puntoGru = null
     this.puntoClienti = null
+    this.camion = null
+    this.piazzole = []
     this.t = 0
     this.durata = DURATA
     this.passoNastro = 2
@@ -213,6 +238,7 @@ export class Porto {
     if (this.suolo[k] === 'mare') return { motivo: 'porto-mare' }
     const a = this.arredo[k]
     if (a) return { motivo: 'porto-arredo', nome: a.tipo === 'cassone' ? a.nome : NOMI_ARREDI[a.tipo] }
+    if (this.suolo[k] === 'strada') return { motivo: 'porto-strada' }
     if (this.eClienti(x, y)) return { motivo: 'porto-clienti' }
     if (this.pile[k].length) return { motivo: 'porto-cassa', cosa: this.pile[k][0].tipo }
     return null
@@ -269,6 +295,7 @@ export class Porto {
         if (this.suolo[k] === 'mare') throw new Inciampo('nel-mare', i.id, { x, y })
         if (this.eClienti(x, y)) throw new Inciampo('porto-clienti', i.id, { x, y })
         const a = this.arredo[k]
+        if (!a && this.suolo[k] === 'strada') throw new Inciampo('niente-camion', i.id, { x, y })
         const cosa = this.mano
         let servito = null
         if (a && a.tipo === 'bancone') {
@@ -276,6 +303,9 @@ export class Porto {
         } else if (a && a.tipo === 'cassone') {
           if (a.colore && !(cosa.tipo === 'cassa' && cosa.colore === a.colore))
             throw new Inciampo('colore-sbagliato', i.id, { x, y, nome: a.nome, colore: coloreAlPlurale(a.colore) })
+          if (a.numero != null && !(cosa.tipo === 'biglietto' && cosa.numero === a.numero))
+            throw new Inciampo('numero-sbagliato', i.id, { x, y, nome: a.nome, numero: a.numero,
+                                                          dato: cosa.tipo === 'biglietto' ? `questa è per il ${cosa.numero}` : `questa è ${cosaInParole(cosa)}` })
           if (this.pile[k].length >= a.capienza)
             throw new Inciampo('pieno', i.id, { x, y, nome: a.nome, femminile: eFemminile(a.nome) })
           this.pile[k].push(cosa)
@@ -338,6 +368,12 @@ export class Porto {
       case 'cliente': return !!(this.arredo[k] && this.arredo[k].tipo === 'bancone' && this.clienti && this.clienti.alBancone)
       case 'muro': return this.suolo[k] === 'muro'
       case 'mare': return this.suolo[k] === 'mare'
+      case 'strada': return this.suolo[k] === 'strada'
+      /* «↓ c'è un camion»: un cassone che viaggia, fermo sulla piazzola */
+      case 'camion': {
+        const a = this.arredo[k]
+        return !!(a && a.tipo === 'cassone' && a.figura === 'camion') && (!c.colore || a.colore === es.valutaColore(c.colore, id))
+      }
       /* «un cassone rosso»: quello che prende solo casse rosse */
       case 'cassone': {
         const a = this.arredo[k]
@@ -391,6 +427,7 @@ export class Porto {
     this.nastri(eventi)
     this.lavoroDellaGru(eventi)
     this.lavoroDeiClienti(eventi)
+    this.lavoroDeiCamion(eventi)
     yield { tipo: 'turno', t: this.t, come, eventi }
     const guaio = eventi.find(e => e.guaio)
     if (guaio) throw new Inciampo(guaio.guaio, null, guaio)
@@ -414,6 +451,7 @@ export class Porto {
   quieto() {
     if (this.gru && this.gru.casse.length) return false
     if (this.clienti && (this.clienti.alBancone || this.clienti.fila.length)) return false
+    if (this.camion && (this.camion.fila.length || this.piazzole.some(k => this.arredo[k]))) return false
     return !this.celleNastro.some(k => this.pile[k].length && this.puoScorrere(k))
   }
 
@@ -426,6 +464,10 @@ export class Porto {
     const nk = this.k(nx, ny)
     const na = this.arredo[nk]
     if (na && na.tipo === 'nastro' && !this.pile[nk].length) return { x: nx, y: ny, k: nk }
+    /* in fondo al nastro un cassone: ci scarica dentro, se c'è posto e
+       se la cosa è di quelle che prende */
+    if (na && na.tipo === 'cassone' && this.pile[nk].length < na.capienza && accetta(na, this.cimaDi(k)))
+      return { x: nx, y: ny, k: nk, dentro: true }
     return null
   }
   puoScorrere(k) { return !!this.destinoSulNastro(k) }
@@ -494,6 +536,46 @@ export class Porto {
       const nuovo = c.fila.shift()
       c.alBancone = { ...nuovo, pazienza: c.pazienza, max: c.pazienza }
       eventi.push({ che: 'cliente', cliente: nuovo.id, chiede: nuovo.chiede })
+    }
+  }
+
+  /* I camion: arrivano alla loro ora sulla prima piazzola libera,
+     vogliono `vuole` casse (di un colore, se lo dicono) e ripartono
+     appena sono pieni. Si guarda prima chi arriva e poi chi parte: un
+     camion appena arrivato è vuoto, e una piazzola lasciata libera in
+     questo turno si riempie al prossimo — due camion nello stesso
+     istante nella stessa casella non si vedrebbero. */
+  lavoroDeiCamion(eventi) {
+    const c = this.camion
+    if (!c) return
+    const liberate = new Set()
+    for (const k of this.piazzole) {
+      const a = this.arredo[k]
+      if (!a) continue
+      const { x, y } = this.xy(k)
+      if (this.pile[k].length >= a.capienza) {
+        eventi.push({ che: 'camion-parte', x, y, contento: true, colore: a.colore, carico: this.pile[k].map(q => ({ ...q })) })
+        this.arredo[k] = null
+        this.pile[k] = []
+        c.partiti++
+        liberate.add(k)
+        continue
+      }
+      if (--a.pazienza <= 0) {
+        eventi.push({ che: 'camion-parte', x, y, contento: false, colore: a.colore, carico: this.pile[k].map(q => ({ ...q })),
+                      guaio: 'camion-vuoto', dentro: this.pile[k].length, vuole: a.capienza })
+        this.arredo[k] = null
+        this.pile[k] = []
+        liberate.add(k)
+      }
+    }
+    for (const k of this.piazzole) {
+      if (this.arredo[k] || liberate.has(k) || !c.fila.length || c.fila[0].arriva > this.t) continue
+      const m = c.fila.shift()
+      this.arredo[k] = { tipo: 'cassone', figura: 'camion', nome: 'il camion', id: `camion-${m.id}`,
+                         capienza: m.vuole, colore: m.colore, numero: null, pazienza: c.pazienza, max: c.pazienza, mezzo: m.id }
+      const { x, y } = this.xy(k)
+      eventi.push({ che: 'camion-arriva', x, y, vuole: m.vuole, colore: m.colore })
     }
   }
 

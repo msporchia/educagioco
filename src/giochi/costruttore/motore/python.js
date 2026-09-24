@@ -41,7 +41,8 @@ export function condizionePy(c) {
   if (c.tipo === 'confronta') return `${numeroPy(c.a)} ${c.cmp === '=' ? '==' : c.cmp} ${numeroPy(c.b)}`
   let s
   if (DOVE_PORTO.has(c.dove) || !DOVE[c.dove] || ['cassa', 'cassone', 'cliente', 'niente', 'libero', 'bancone',
-                                                    'scaffale', 'nastro', 'biglietto', 'muro', 'mare'].includes(c.cosa))
+                                                    'scaffale', 'nastro', 'biglietto', 'muro', 'mare', 'camion',
+                                                    'strada'].includes(c.cosa))
     s = `c_e("${c.dove}", "${c.cosa}"${c.colore ? `, ${colorePy(c.colore)}` : ''})`
   else s = `${DOVE[c.dove] || c.dove}() == "${c.cosa === 'mattone' && c.colore ? `mattone ${c.colore}` : c.cosa}"`
   return c.c === false ? `not ${s}` : s
@@ -55,6 +56,7 @@ function righe(corpo, prog, rientro, fuori) {
     switch (i.tipo) {
       case 'vai': out.push(`${r}${i.verso === 'su' || i.verso === 'giu' ? `vai_${i.verso}` : `vai_a_${i.verso || '???'}`}(${numeroPy(i.quanto)})`); break
       case 'prendi': out.push(`${r}prendi("${i.lato || '???'}")`); break
+      case 'pausa': out.push(`${r}aspetta()`); break
       case 'posa': out.push(`${r}posa("${i.lato || '???'}")`); break
       case 'sempre':
         out.push(`${r}while True:`, ...righe(i.corpo, prog, rientro + 4, fuori))

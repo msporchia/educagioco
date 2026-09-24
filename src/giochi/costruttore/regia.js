@@ -70,7 +70,7 @@ function quadroDelPorto(p, livello) {
     mondo: 'porto', porto: p, tema: livello.tema || 'molo',
     w: p.w, h: p.h,
     robot: { ...p.robot }, robotDa: null, dal: 0, durata: 0, verso: p.verso,
-    voli: [], guarda: null, legge: null, fermo: null, guaio: null,
+    voli: [], mezzi: [], guarda: null, legge: null, fermo: null, guaio: null,
     mancano: null, sbagliati: null, umore: null, nastroDal: 0,
     passo: VELOCITA.normale, seguiRobot: false,
   })
@@ -219,6 +219,14 @@ export class Regia {
     q.voli.push({ cosa, da, a, dal: ora, durata: this.passo * durata })
   }
 
+  /* un camion in viaggio sulla strada: come i voli, se ne scorda la tela
+     quando è arrivato o uscito */
+  mezzo(m, ora) {
+    const q = this.quadro
+    q.mezzi = (q.mezzi || []).filter(v => ora < v.dal + v.durata + 50)
+    q.mezzi.push({ ...m, dal: ora, durata: this.passo * 1.8 })
+  }
+
   /* Un turno del mondo: cosa ha fatto da sé mentre il robot lavorava.
      Torna quanto aspettare: poco dopo un gesto (il turno si vede insieme
      al gesto), di più mentre il robot aspetta — ma sempre meno se
@@ -239,6 +247,16 @@ export class Regia {
         case 'arrabbiato':
           q.umore = { come: 'arrabbiato', dal: ora }
           if (this.mondo.puntoClienti) q.guaio = { ...this.mondo.puntoClienti, dal: ora }
+          break
+        /* i camion entrano e escono lungo la strada: la tela li fa
+           viaggiare, il porto li ha già messi (o tolti) dalla piazzola */
+        case 'camion-arriva':
+          this.mezzo({ come: 'arriva', x: ev.x, y: ev.y, colore: ev.colore, capienza: ev.vuole, carico: [] }, ora)
+          break
+        case 'camion-parte':
+          this.mezzo({ come: 'parte', x: ev.x, y: ev.y, colore: ev.colore, carico: ev.carico, contento: ev.contento }, ora)
+          if (ev.contento) this.su.suono('servito')
+          else q.guaio = { x: ev.x, y: ev.y, dal: ora }
           break
         default: break
       }

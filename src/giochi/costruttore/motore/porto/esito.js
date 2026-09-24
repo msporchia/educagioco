@@ -15,6 +15,8 @@
                  se nella giornata ci sono clienti
      gru         la gru ha calato tutte le sue casse, e sotto di lei non
                  ne è rimasta nessuna. Vale da sé se c'è la gru
+     camion      tutti i camion della giornata sono ripartiti pieni. Vale
+                 da sé se ci sono i camion
      mani        a sera il robot non ha niente in mano: una cassa in
                  mano non è consegnata. Vale sempre
 
@@ -30,6 +32,10 @@ import { coloreAlFemminile, eFemminile, nel } from './mondo.js'
 
 const maiuscola = s => (s ? s[0].toUpperCase() + s.slice(1) : s)
 const casse = n => (n === 1 ? '1 cassa' : `${n} casse`)
+/* quello che c'è in un cassone, contato: nel sacco della posta sono
+   lettere, e «3 casse» sarebbe falso */
+const cose = pila => (pila.length && pila.every(c => c.tipo === 'biglietto')
+  ? (pila.length === 1 ? '1 lettera' : `${pila.length} lettere`) : casse(pila.length))
 
 export function esitoDelPorto(porto) {
   const frasi = []
@@ -57,7 +63,7 @@ export function esitoDelPorto(porto) {
     const n = porto.pile[k].length
     const ci = n === 1 ? 'c\'è' : 'ci sono'
     if (voglio.vuoto && n)
-      frasi.push(`${maiuscola(a.nome)} doveva restare ${eFemminile(a.nome) ? 'vuota' : 'vuoto'}, e ${ci} ancora ${casse(n)}.`)
+      frasi.push(`${maiuscola(a.nome)} a sera doveva essere ${eFemminile(a.nome) ? 'vuota' : 'vuoto'}, e ${ci} ancora ${cose(porto.pile[k])}.`)
     if (typeof voglio.quante === 'number' && n !== voglio.quante)
       frasi.push(n === 0 ? `${maiuscola(nel(a.nome))} non c'è nessuna cassa, e ne volevano ${voglio.quante}.`
         : n < voglio.quante ? `${maiuscola(nel(a.nome))} ${ci} ${casse(n)}, e ne volevano ${voglio.quante}.`
@@ -79,6 +85,13 @@ export function esitoDelPorto(porto) {
     else if (porto.pile[porto.k(g.x, g.y)].length)
       frasi.push('Sotto la gru è rimasta una cassa: nessuno l\'ha portata via.')
   }
+
+  /* i camion: tutti partiti pieni */
+  const cm = porto.camion
+  if (cm && obiettivo.camion !== false && cm.partiti < cm.totale)
+    frasi.push(cm.partiti === 0
+      ? `Nessun camion è ripartito pieno: ne sono arrivati ${cm.totale}.`
+      : `Sono ripartiti pieni ${cm.partiti} camion su ${cm.totale}.`)
 
   /* a sera le mani sono vuote: una cassa in mano non è consegnata */
   if (porto.mano && obiettivo.mani !== false)

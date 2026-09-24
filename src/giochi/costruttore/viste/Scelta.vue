@@ -103,7 +103,7 @@ const letture = [...LATI, 'mano']
    robot lo legge su una cassa e lo tiene da parte */
 const nomiColore = computed(() => [...nomi.value.misureColore, ...nomi.value.ordineColore,
                                    ...(props.contesto.porto ? nomi.value.lavagnette : [])])
-const colorato = c => ['mattone', 'cassa', 'cassone'].includes(c)
+const colorato = c => ['mattone', 'cassa', 'cassone', 'camion'].includes(c)
 
 /* ── le condizioni ──
    Una domanda nuova non ha un posto né una cosa già scelti: si scrive

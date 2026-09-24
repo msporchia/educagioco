@@ -113,6 +113,10 @@ export const PERCHE = {
   'letto-numero': () => 'Il robot ha letto un numero, e qui ci va un colore.',
   'in-mare': () => 'Splash! Una cassa è arrivata in fondo al nastro ed è caduta in mare.',
   'cliente-arrabbiato': d => `Il cliente ha aspettato troppo, e se n'è andato arrabbiato: voleva ${d.chiede}.`,
+  'porto-strada': () => 'Lì passano i camion: il robot resta sul marciapiede.',
+  'niente-camion': () => 'Lì non c\'è nessun camion da caricare: prima aspetta che arrivi.',
+  'numero-sbagliato': d => `${maiuscola(d.nome)} prende solo le lettere per il ${d.numero}: ${d.dato}.`,
+  'camion-vuoto': d => `Il camion ha aspettato troppo ed è ripartito ${d.dentro === 0 ? 'vuoto' : `con ${d.dentro === 1 ? 'una cassa sola' : `${d.dentro} casse`}`}: ne voleva ${d.vuole}.`,
 }
 
 function maiuscola(s) { return s ? s[0].toUpperCase() + s.slice(1) : s }
@@ -255,6 +259,14 @@ export class Esecuzione {
           if (g.esito) break
           yield* this.mondo.attendi(this, i.id)
         }
+        break
+      }
+      /* «aspetta un turno»: il robot sta fermo, il mondo va avanti. Serve
+         a chi ha due lavori e in quel momento non ce n'è nessuno: un
+         «ripeti per sempre» che guarda e basta girerebbe a vuoto */
+      case 'pausa': {
+        if (!this.mondo.attendi) throw new Inciampo('niente-tempo', i.id)
+        yield* this.mondo.attendi(this, i.id)
         break
       }
       case 'se': {

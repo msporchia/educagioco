@@ -12,7 +12,7 @@ import { colore } from '../dati/colori.js'
 
 export const ICONE = {
   vai: '🚶', metti: '🧱', ripeti: '🔁', finche: '🔁', se: '❓', assegna: '📝',
-  prendi: '✋', posa: '📥', aspetta: '⏳', sempre: '♾️',
+  prendi: '✋', posa: '📥', aspetta: '⏳', sempre: '♾️', pausa: '⏸️',
 }
 
 export const VERSI_IN_PAROLE = { destra: '→ a destra', sinistra: '← a sinistra', su: '↑ su', giu: '↓ giù' }
@@ -37,7 +37,7 @@ export const COSE_IN_PAROLE = {
   pieno: 'qualcosa', bordo: 'il bordo',
   cassa: 'una cassa', niente: 'niente', libero: 'posto per passare', cliente: 'un cliente',
   biglietto: 'un biglietto', bancone: 'il bancone', scaffale: 'uno scaffale', cassone: 'un cassone',
-  nastro: 'il nastro', muro: 'il muro', mare: 'il mare',
+  nastro: 'il nastro', muro: 'il muro', mare: 'il mare', camion: 'un camion', strada: 'la strada',
 }
 /* «una cassa rossa», «un cassone rosso»: il colore si accorda */
 const AL_FEMMINILE = { rosso: 'rossa', giallo: 'gialla', bianco: 'bianca', grigio: 'grigia', nero: 'nera' }
@@ -59,7 +59,7 @@ export function condizioneInParole(c) {
   if (!c) return '…?'
   if (c.tipo === 'confronta')
     return `${numeroInParole(c.a)} ${CONFRONTI_IN_PAROLE[c.cmp] || c.cmp} ${numeroInParole(c.b)}`
-  const cosa = c.colore && ['mattone', 'cassa', 'cassone'].includes(c.cosa)
+  const cosa = c.colore && ['mattone', 'cassa', 'cassone', 'camion'].includes(c.cosa)
     ? `${COSE_IN_PAROLE[c.cosa]} ${nomeDelColore(c.colore, c.cosa === 'cassa')}` : (COSE_IN_PAROLE[c.cosa] || c.cosa)
   return `${DOVE_IN_PAROLE[c.dove] || c.dove} ${c.c === false ? 'non c\'è' : 'c\'è'} ${cosa}`
 }
@@ -124,6 +124,7 @@ export function pezzi(i, programma) {
       { campo: 'cond', tipo: 'cond', mostra: condizioneInParole(i.cond), manca: !i.cond },
     ]
     case 'sempre': return [{ testo: 'ripeti per sempre' }]
+    case 'pausa': return [{ testo: 'aspetta un turno' }]
     case 'ripeti': return [
       { testo: 'ripeti' },
       { campo: 'volte', tipo: 'numero', mostra: numeroInParole(i.volte), numero: i.volte,
@@ -222,7 +223,10 @@ export const GRUPPI_PORTO = [
     { blocco: 'finche', esempio: 'ripeti · smetti quando …' },
     { blocco: 'sempre', esempio: 'ripeti per sempre', nota: 'finché la giornata non finisce' },
   ] },
-  { nome: 'Aspettare', blocchi: [{ blocco: 'aspetta', esempio: 'aspetta che …', nota: 'intanto il porto lavora' }] },
+  { nome: 'Aspettare', blocchi: [
+    { blocco: 'aspetta', esempio: 'aspetta che …', nota: 'intanto il porto lavora' },
+    { blocco: 'pausa', esempio: 'aspetta un turno', nota: 'quando non c\'è niente da fare' },
+  ] },
   { nome: 'Decidere', blocchi: [{ blocco: 'se', esempio: 'se … allora' }] },
   { nome: 'Lavagnette', blocchi: [{ blocco: 'assegna', esempio: '[ ] diventa …' }] },
 ]

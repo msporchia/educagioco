@@ -19,6 +19,8 @@
      <   … a sinistra                 1…9 un biglietto con quel numero
      ^   … in su                      *   qui cala la gru
      v   … in giù                     %   qui si mettono i clienti
+     _   la strada dei camion         &   la piazzola: qui si ferma il
+         (il robot non ci va)             camion (sopra `.` o `_`)
      C   un cassone: il secondo carattere è il suo nome, e la sua
          descrizione sta nei `cassoni` dell'ordine («C1», «Cs»)
 
@@ -41,7 +43,13 @@ export const POSTI = {
   '<': { suolo: 'pavimento', arredo: { tipo: 'nastro', verso: 'sinistra' } },
   '^': { suolo: 'pavimento', arredo: { tipo: 'nastro', verso: 'su' } },
   'v': { suolo: 'pavimento', arredo: { tipo: 'nastro', verso: 'giu' } },
+  '_': { suolo: 'strada' },
 }
+
+/* una lettera di una mappa o di un cassone: una cassa (la maiuscola del
+   colore) o un biglietto (una cifra) */
+export const cosaDaLettera = l =>
+  /^[1-9]$/.test(l) ? { tipo: 'biglietto', numero: Number(l) } : cassaDaLettera(l)
 
 /* una cassa, dalla maiuscola del suo colore: `R` → rossa */
 export const cassaDaLettera = l => {
@@ -72,6 +80,9 @@ export function leggiCasella(coppia, extra = null) {
   if (c === '@') return casella.suolo === 'pavimento' && !casella.arredo ? { ...casella, robot: true } : null
   if (c === '*') return casella.suolo === 'pavimento' ? { ...casella, gru: true } : null
   if (c === '%') return casella.suolo === 'pavimento' && !casella.arredo ? { ...casella, clienti: true } : null
+  /* la piazzola del camion è strada anche quando il camion non c'è */
+  if (c === '&') return (casella.suolo === 'pavimento' || casella.suolo === 'strada') && !casella.arredo
+    ? { suolo: 'strada', piazzola: true } : null
   if (/^[1-9]$/.test(c)) return { ...casella, cosa: { tipo: 'biglietto', numero: Number(c) } }
   const cassa = cassaDaLettera(c)
   if (cassa) return casella.suolo === 'pavimento' ? { ...casella, cosa: cassa } : null

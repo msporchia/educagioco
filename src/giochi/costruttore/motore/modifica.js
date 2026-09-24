@@ -80,6 +80,7 @@ export function rigaNuova(tipo, { colore = null, verso = null, dove = 'sotto', l
     case 'finche': return fai.finche(null, [])
     case 'sempre': return fai.sempre([])
     case 'aspetta': return fai.aspetta(null)
+    case 'pausa': return fai.pausa()
     case 'se': return fai.se(null, [], null)
     case 'assegna': return fai.assegna(lavagnette[0] || null, N())
     case 'chiama': {

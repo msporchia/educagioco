@@ -167,6 +167,57 @@ const dove = p => `${p.robot.x},${p.robot.y}`
          'nessun-cliente')
 }
 
+/* ══════════ 4-bis. i camion, il nastro che scarica, le buche ══════════ */
+{
+  /* la strada: il robot non ci va, e senza camion non si carica */
+  const strada = ['Ca.@....', '___&____']
+  uguale('sulla strada il robot non ci va', gioca({ principale: [fai.vai('giu', 1)] }, strada,
+    { cassoni: { a: { nome: 'la catasta', dentro: 'RR' } } }).ultimo.motivo, 'porto-strada')
+  uguale('e sulla piazzola vuota non si posa niente', gioca({ principale: [fai.prendi('sinistra'), fai.posa('giu')] }, strada,
+    { cassoni: { a: { nome: 'la catasta', dentro: 'RR' } } }).ultimo.motivo, 'niente-camion')
+
+  /* il camion arriva alla sua ora, e riparte appena pieno */
+  const carica = { principale: [fai.sempre([fai.aspetta(guarda('giu', 'camion')),
+    fai.finche(guarda('giu', 'camion', false), [fai.prendi('sinistra'), fai.posa('giu')])])] }
+  const due = gioca(carica, strada, { cassoni: { a: { nome: 'la catasta', dentro: 'RRBBB' } },
+                                      camion: { pazienza: 30, fila: [[2, 2], [9, 3]] } })
+  uguale('due camion, caricati finché ci sono: la giornata finisce', due.ultimo.tipo, 'fine')
+  uguale('e sono ripartiti tutti e due, pieni', due.p.camion.partiti, 2)
+  uguale('la piazzola è di nuovo vuota', due.p.arredo[due.p.k(1, 1)], null)
+  const partenze = due.fatti.filter(f => f.tipo === 'turno').flatMap(f => f.eventi).filter(e => e.che === 'camion-parte')
+  controlla('e ognuno è ripartito col suo carico', partenze.map(e => e.carico.length).join() === '2,3', partenze.map(e => e.carico.length).join())
+  const lento = gioca({ principale: [fai.aspetta(guarda('giu', 'camion'))] }, strada,
+                      { cassoni: { a: { nome: 'la catasta', dentro: 'RR' } }, camion: { pazienza: 4, fila: [[1, 2]] } })
+  uguale('un camion che aspetta troppo riparte mezzo vuoto, e la giornata è persa', lento.ultimo.motivo, 'camion-vuoto')
+  controlla('e lo dice: «è ripartito vuoto»', /ripartito vuoto: ne voleva 2/.test(lento.ultimo.frase), lento.ultimo.frase)
+  const colorato = gioca(carica, strada, { cassoni: { a: { nome: 'la catasta', dentro: 'RB' } },
+                                           camion: { pazienza: 30, fila: [[1, 2, 'rosso']] } })
+  uguale('un camion col colore prende solo quelle', colorato.ultimo.motivo, 'colore-sbagliato')
+
+  /* il nastro che finisce in un cassone ci scarica dentro */
+  const nastro = gioca({ principale: [] }, ['>*>.Cm', '.@....'],
+                       { gru: { casse: 'RBR', ogni: 2, primo: 1 }, cassoni: { m: { nome: 'il magazzino', capienza: 2 } } })
+  uguale('il nastro scarica nel magazzino finché c\'è posto', nastro.p.pile[nastro.p.k(2, 0)].length, 2)
+  controlla('pieno il magazzino, il nastro si ferma: la terza cassa resta sul nastro, e niente cade',
+            nastro.ultimo.tipo === 'fine' && nastro.p.celleNastro.some(k => nastro.p.pile[k].length), JSON.stringify(nastro.ultimo))
+
+  /* le buche delle lettere */
+  const buca = gioca({ principale: [fai.prendi('sinistra'), fai.posa('su')] }, ['..C3', 'Cp.@'],
+                     { cassoni: { p: { nome: 'il sacco', dentro: '5' }, 3: { nome: 'la buca del 3', numero: 3 } } })
+  uguale('la buca del 3 prende solo le lettere per il 3', buca.ultimo.motivo, 'numero-sbagliato')
+  controlla('e la frase dice per chi era', /questa è per il 5/.test(buca.ultimo.frase), buca.ultimo.frase)
+  const giusta = gioca({ principale: [fai.prendi('sinistra'), fai.posa('su')] }, ['..C3', 'Cp.@'],
+                       { cassoni: { p: { nome: 'il sacco', dentro: '3' }, 3: { nome: 'la buca del 3', numero: 3 } } })
+  uguale('quella giusta ci entra', giusta.ultimo.tipo, 'fine')
+
+  /* aspettare un turno */
+  const pausa = gioca({ principale: [fai.pausa(), fai.pausa(), fai.pausa()] }, ['.*.@'], { gru: { casse: 'RRRR', ogni: 1, primo: 5 } })
+  uguale('«aspetta un turno»: il robot sta fermo, il mondo va avanti — tre pause, tre turni d\'attesa',
+         pausa.fatti.filter(f => f.tipo === 'turno' && f.come === 'attesa').length, 3)
+  const sera = gioca({ principale: [fai.sempre([fai.pausa()])] }, ['.@..'])
+  controlla('e se non può più succedere niente, è sera', sera.ultimo.tipo === 'fine' && sera.ultimo.sera === true)
+}
+
 /* ══════════ 5. la bottega vera, e le frasi della sera ══════════ */
 {
   const mappa = ['########', '####=B=R', '.%B..@..', '########']
@@ -196,7 +247,7 @@ const dove = p => `${p.robot.x},${p.robot.y}`
   const stiva = porto(['Cs.@Ct'], { cassoni: { s: { nome: 'la stiva', dentro: 'RR' }, t: { nome: 'il camion' } },
                                    obiettivo: { cassoni: { t: { quante: 2 }, s: { vuoto: true } } } })
   stessaLista('a sera: cosa manca, con i numeri', esitoDelPorto(stiva).frasi,
-              ['Nel camion non c\'è nessuna cassa, e ne volevano 2.', 'La stiva doveva restare vuota, e ci sono ancora 2 casse.'])
+              ['Nel camion non c\'è nessuna cassa, e ne volevano 2.', 'La stiva a sera doveva essere vuota, e ci sono ancora 2 casse.'])
 
   const py = inPython(programma(prog))
   controlla('in Python: «ripeti per sempre» è while True', py.includes('while True:'), py)
