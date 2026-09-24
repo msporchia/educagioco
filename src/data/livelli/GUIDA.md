@@ -595,12 +595,30 @@ bambino: `fai.vai(forno)`, `fai.vai('11,6')`, `fai.quando(chiamata, …)`,
   sola**: con più guardie le nomina tutte («Grugno col mestolo, Zanna coi
   denti o Berta col becco»); chi ha preso chi il bambino lo legge nel
   registro, e chi scrive il livello con `--perche` (§7.1).
-- `aiuti`: **una scala sola**, a gradini. `aiuto.dice('…')` non costa;
-  `aiuto.scrive({ id: [ordini] }, '…')`, `aiuto.forma()` e `aiuto.svela()`
-  scrivono nel piano e costano la seconda stella (il tasto lo dice prima).
-  Se non ne dichiari uno che scrive, il gioco aggiunge in coda `forma` e
-  `svela` da sé. Scala tipica: guarda questo → nota quest'abitudine →
-  domanda che porta alla regola → un pezzo di piano → tutto.
+- `aiuti`: **una scala sola**, a gradini, e si paga in monete
+  (`src/giochi/aiuti.js`):
+  - `aiuto.ragiona('…')` — **gratis**, e ce ne vogliono **due**, in testa.
+    Fanno ragionare e non dicono la risposta: il primo dice cosa chiede
+    il livello e cosa lo rende difficile («Il forziere sta dietro il
+    portone, e il portone è chiuso a chiave: il livello chiede tre cose,
+    e ognuna ha bisogno di quella prima»), il secondo la domanda giusta
+    da farsi, o come provarci («Per ogni cosa chiediti: cosa serve per
+    farla? E quando ci arriva, ce l'ha già?»). Se leggendolo si potesse
+    scrivere il piano senza pensare, è un indizio;
+  - `aiuto.dice('…')` — un **indizio**, 🪙10: una cosa concreta da
+    guardare o da fare. Da largo a stretto;
+  - `aiuto.scrive({ id: [ordini] }, '…')`, `aiuto.forma()`, `aiuto.svela()`
+    — scrivono nel piano, a 🪙50 · 100 · 200 (l'ultimo costa sempre 200).
+    La frase che spiega un pezzo appena comparso va **dentro il pezzo**, non
+    in un gradino dopo: la scala sale e non scende.
+  Se non dichiari nessun gradino che scrive, il gioco aggiunge da sé un
+  pezzo (la prima metà di ogni fila della soluzione), la forma e la
+  soluzione. Se la prima metà della soluzione è già tutta la lezione
+  (come in «Due strade», dove è il bivio), dichiara `aiuto.forma()`: così
+  il pezzo di serie non c'è. Scala tipica: cosa chiede → la domanda →
+  guarda questo → nota quest'abitudine → un pezzo di piano → la forma →
+  tutto. Il banco (`unita/piano-generale`) pretende due `ragiona` in
+  testa e una scala che sale.
 
 ### 4.8 Più scene (le varianti)
 
@@ -775,7 +793,8 @@ prova col browser di un file solo: `node test/esegui.mjs generale
 - **Non si mette in `APPROVATI`**: un livello nuovo nasce dietro 🧪, e lo
   promuove solo l'utente dopo averlo fatto giocare.
 - Le stelle stanno sotto l'`id`: una se lo si vince, due se lo si vince
-  **da soli** (senza gradini d'aiuto che scrivono e senza nostri caduti).
+  **da soli** (senza farsi scrivere il piano intero e senza nostri
+  caduti: gli altri aiuti si pagano in monete, e la stella non la toccano).
   Riordinare la fila non tocca le stelle di nessuno.
 - Le note per i grandi (`guide/novita.js`) le decide l'utente, mai chi
   scrive il livello.

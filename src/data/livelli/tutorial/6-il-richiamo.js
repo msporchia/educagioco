@@ -76,14 +76,12 @@ export const RICHIAMO = livello({
   dritta: "Obiettivo: <b>il tesoro deve finire in mano alla ladra</b>. Il carceriere non si batte.",
   racconto: "Con quella corazza il carceriere non lo butta giù nessuno, e se vede la ladra la prende. Ma lui è fatto in un modo solo, e sta scritto nella sua scheda.",
   /* ── LA SCALA, SCRITTA A MANO ──
-     Qui i gradini non sono solo parole: in mezzo ce n'è uno che
-     **scrive nel piano** la prima metà — prendi la chiave, e chiamalo
-     da lontano — e poi si torna a parlare per la seconda, che è la
-     parte in cui sta la lezione. Chi arriva a quel punto ha già davanti
-     agli occhi come si dice «fai rumore»; quello che gli resta da
-     capire è *dove conviene farlo*, e quello non glielo scrive nessuno.
-     È il motivo per cui la scala si può comporre invece di essere
-     sempre «tre frasi, poi tutto». */
+     Il pezzo che scrive nel piano è la prima metà — prendi la chiave, e
+     chiamalo da lontano — e la sua frase dice già la seconda, che è la
+     parte in cui sta la lezione: chi arriva lì ha davanti agli occhi
+     come si dice «fai rumore», e quello che gli resta da capire è *da
+     dove passare*. Dopo il pezzo il gioco mette da sé la forma (con le
+     prime tre mosse intere, già pagate) e la soluzione. */
   /* ── LA LEZIONE HA DUE METÀ, E LA SECONDA È NUOVA ──
      Da quando il carceriere ti prende anche mentre corre, chiamarlo non
      basta più: lui arriva **per la strada più corta**, che è la stessa
@@ -91,11 +89,15 @@ export const RICHIAMO = livello({
      del giro e passi dall'altra — che è la frase con cui il livello era
      stato raccontato fin dall'inizio, e che adesso è anche vera. */
   aiuti: [
-    aiuto.dice('Una scheda si legge come un piano: tocca il carceriere e guarda a cosa reagisce.'),
+    aiuto.ragiona('Il tesoro sta oltre il portone, e davanti al portone c\'è il carceriere: non si batte, e ti prende appena ti vede. Il portone si passa quando lui non c\'è.'),
+    aiuto.ragiona('Tocca il carceriere e leggi la sua scheda come si legge un piano: a cosa reagisce? Se sai cosa lo fa muovere, sai anche come toglierlo da lì.'),
     aiuto.dice('Corre dove sente il rumore, per la strada più corta. E se ti trova su quella strada, ti prende.'),
+    aiuto.dice('Il posto da cui fai rumore è una scelta, non il posto dove ti trovi: chiamalo da lontano, da una parte sola del giro.'),
+    /* la frase che seguiva il pezzo — «adesso lui arriva di qua, tu
+       passa dall'altra» — adesso sta dentro il pezzo: un gradino da
+       dieci dopo uno da cinquanta sarebbe una scala che scende */
     aiuto.scrive({ ladra: [fai.prendi('chiave'), fai.vai('3,1'), fai.suona('richiamo')] },
-                 'Ecco le prime tre mosse: prendi la chiave, e chiamalo da lassù, lontano dal portone.'),
-    aiuto.dice('Adesso lui arriva di qua, dalla parte più corta. Tu passa dall\'altra: tocca una casella del giro che lui non fa.'),
+                 'Ecco le prime tre mosse: prendi la chiave, e chiamalo da lassù, lontano dal portone. Adesso lui arriva di qua, dalla parte più corta: tu passa dall\'altra, da una casella del giro che lui non fa.'),
     aiuto.svela(),
   ],
   ambiente: 'camminamento',

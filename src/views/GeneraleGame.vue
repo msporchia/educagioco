@@ -44,11 +44,13 @@ import CartelloScena from './generale/CartelloScena.vue'
 import CampoLivello from './generale/CampoLivello.vue'
 import FogliLivello from './generale/FogliLivello.vue'
 import EditorPiano from './generale/EditorPiano.vue'
-import { ogniVoce, laSoluzione, soloLaForma, scalaDi } from './generale/piano.js'
+import { ogniVoce, scalaDi } from './generale/piano.js'
 import { bersagliDi } from './generale/bersagli.js'
 import { cosaCambia, nomiScene } from './generale/scene.js'
 import { creaNavigazione } from './generale/navigazione.js'
-import { genProgresso, genCompleta, daSolo } from '../store/profile.js'
+import { state, genProgresso, genCompleta, daSolo, genAiutiPresi, genSegnaAiuti, spendi }
+  from '../store/profile.js'
+import { scrive as scriveNelPiano, SVELA } from '../giochi/aiuti.js'
 import { suono } from '../audio.js'
 import { LIVELLI, proveDi } from '../data/generale.js'
 import { filaFinita } from './generale/fila.js'
@@ -77,11 +79,15 @@ const pannello = ref('')           // '' | 'registro' | 'cartello' | 'scheda'
 const scheda = ref(null)
 /* ── LA SCALA DEGLI AIUTI ──
    `aiuti` è a che gradino si è scesi — la scala la compone
-   `generale/piano.js` mettendo in fila quello che il livello dichiara.
-   `svelato` è il gradino PIÙ GROSSO fra quelli che hanno scritto nel
-   piano (`scrive`, `forma`, `svela`): serve alla stella, e a dire alla
-   fine cosa è stato dato invece che trovato. */
+   `generale/piano.js` mettendo in fila quello che il livello dichiara —
+   e si ritrova rientrando: i gradini si pagano in monete, e quello che
+   si è pagato resta (`genAiutiPresi`).
+   `svelato` è il gradino PIÙ GROSSO fra quelli che in questa partita
+   hanno scritto nel piano (`pezzo`, `forma`, `svela`): serve a dire alla
+   fine cosa è stato dato invece che trovato, e — solo se è la soluzione
+   intera — alla stella. */
 const aiuti = ref(0), svelato = ref('')
+const PESO = { pezzo: 1, forma: 2, svela: 3 }
 const auto = ref(false)
 /* ── UNA VELOCITÀ SOLA, E SVELTA ──
    C'erano tre andature e un tasto per girarle (🐢 🐇 🐌). Non era una
@@ -165,7 +171,7 @@ function avviaLivello (l) {
   letta.value = null; scegliendo.value = null
   gettoni.value = l.gettoni || 0
   scoperte.value = l.mostraNemici === true ? altriInCampo(l) : []
-  aiuti.value = 0; svelato.value = ''; finito.value = null; andato.value = null
+  aiuti.value = genAiutiPresi(l.id); svelato.value = ''; finito.value = null; andato.value = null
   guidaFinita.value = false
   cambio.value = null; fermaAttesa(); montaggio.value = false
   serieI.value = 0; esiti.value = []; auto.value = false; caduttiFondo = 0
@@ -382,16 +388,17 @@ function vittoria () {
     ? [o, ...dentroA(o).flatMap(dentroTutto)]
     : [o, ...dentroTutto(o.allora)])
   const avanzato = dentroTutto(Object.values(piano.value).flat()).some(eAvanzato)
-  /* Due cose costano il vanto, non il passaggio: essersi fatti svelare
-     la struttura o la soluzione, e un compagno lasciato sul campo. Si
-     vince lo stesso — l'esca a volte è la mossa giusta — ma con una
-     stella invece di due, se no mandare avanti qualcuno a morire
-     sarebbe gratis. Quanti ordini siano non c'entra più niente: il
-     gioco non chiede di risolvere in poche mosse, chiede di risolvere.
-     La regola sta in un posto solo (`daSolo` in `store/profile.js`) —
-     qui si dice solo cosa è successo. */
+  /* Due cose costano il vanto, non il passaggio: aver fatto girare la
+     soluzione intera scritta dal gioco, e un compagno lasciato sul
+     campo. Si vince lo stesso — l'esca a volte è la mossa giusta — ma
+     con una stella invece di due, se no mandare avanti qualcuno a morire
+     sarebbe gratis. Un pezzo o la forma non la toccano: si sono pagati
+     in monete, e il resto l'ha trovato il bambino. Quanti ordini siano
+     non c'entra niente: il gioco non chiede di risolvere in poche mosse,
+     chiede di risolvere. La regola sta in un posto solo (`daSolo` in
+     `store/profile.js`) — qui si dice solo cosa è successo. */
   const caduti = Math.max(mondo ? perdute(mondo) : 0, caduttiFondo)
-  const conto = { ordini: n, svelato: !!svelato.value, caduti, avanzato }
+  const conto = { ordini: n, svelato: svelato.value === SVELA, caduti, avanzato }
   genCompleta(liv.value.id, { ...conto, finita: filaFinita(liv.value.id) })
   finito.value = { ordini: n, daSolo: daSolo(conto), caduti, svelato: svelato.value }
 }
@@ -637,35 +644,48 @@ const dritta = computed(() => {
    cosa che uno bloccato non sa. Si scende di un gradino, e il gradino
    dopo è quello che il livello ha messo lì.
 
-   I gradini si mescolano: due parole, poi il pezzo di piano che quelle
-   parole descrivevano, poi altre due parole, e alla fine tutto. La
-   scala la compone `scalaDi()` in `generale/piano.js`, che è anche
-   quello che ci attacca in coda la via d'uscita quando il livello non
-   se l'è scritta.
+   Prima i gradini che fanno ragionare, poi gli indizi, poi quelli che
+   scrivono nel piano. La scala la compone `scalaDi()` in
+   `generale/piano.js`, che è anche quello che ci attacca in coda la via
+   d'uscita quando il livello non se l'è scritta.
 
-   Le parole non costano niente — un suggerimento che si paga è un
-   suggerimento che chi ne ha bisogno non prende. I gradini che
-   SCRIVONO NEL PIANO costano la seconda stella, e il tasto lo dice
-   prima di essere premuto. */
+   ── E SI PAGANO IN MONETE ──
+   I gradini che fanno ragionare sono gratis; gli indizi costano 🪙10,
+   quelli che scrivono 🪙50 · 100 · 200 (`giochi/aiuti.js`). Costavano
+   la seconda stella, e una stella è un prezzo che un bambino non sente:
+   il 💡 diventava il modo di finire un livello senza pensarci. Il tasto
+   dice il prezzo prima, e senza monete non dà niente — il cartello lo
+   dice (`FogliLivello.vue`), e qui la spesa si rifiuta lo stesso: chi
+   compra è questa funzione, non il tasto. */
 const scala = computed(() => scalaDi(liv.value))
 /* quelli già scesi, in ordine: sono quello che si legge nel cartello */
 const fatti = computed(() => scala.value.slice(0, aiuti.value))
 /* e il prossimo, che è quello che il tasto promette */
 const prossimo = computed(() => scala.value[aiuti.value] || null)
+const monete = computed(() => state.profile.coins || 0)
 
 function chiediAiuto () {
   const p = prossimo.value
   if (!p) return
+  if (!spendi(p.prezzo)) return
   aiuti.value++
-  if (p.aiuto === 'dice') { suono.nota(700, 700, 0.1); return }
+  genSegnaAiuti(liv.value.id, aiuti.value)
+  if (!scriveNelPiano(p)) { suono.nota(700, 700, 0.1); return }
   scrivi(p)
 }
+/* un gradino che scrive, già pagato, si rimette quante volte si vuole:
+   il piano si cambia, si butta, si esce e si rientra — e quello che si
+   è comprato non si ricompra */
+function rimetti (k) {
+  const p = scala.value[k]
+  if (k < aiuti.value && scriveNelPiano(p)) scrivi(p)
+}
 /* ── SCRIVERE NEL PIANO ──
-   Un gradino può portarsi dietro il suo pezzo di piano (`aiuto.scrive`)
-   oppure ricavarlo dalla soluzione dichiarata dal livello — che è la
-   stessa che il banco di prova gioca a ogni build: se comparisse a
+   Ogni gradino che scrive arriva col suo piano già fatto (`scalaDi`):
+   il pezzo che il livello ha scritto, o la prima metà della soluzione;
+   la forma, coi bersagli da trovare; la soluzione. Vengono tutti da
+   quella che il banco di prova gioca a ogni build: se comparisse a
    schermo un piano che non vince, il banco sarebbe già rosso.
-   `soloLaForma` toglie i bersagli e lascia la disposizione.
 
    SOSTITUISCE LE FILE CHE NOMINA e lascia stare le altre: un pezzo
    scritto per la ladra non cancella quello che hai dato al cavaliere.
@@ -673,16 +693,12 @@ function chiediAiuto () {
    Si ferma la scena, perché il piano non si cambia mentre gira: è la
    regola del gioco, e vale anche quando a cambiarlo è il gioco stesso. */
 function scrivi (passo) {
-  const s = laSoluzione(liv.value)
-  const dato = passo.piano || (s && s.piano)
-  if (!dato) return
+  if (!passo.piano) return
   ferma()
-  const pezzo = JSON.parse(JSON.stringify(dato))
-  piano.value = { ...piano.value,
-                  ...(passo.aiuto === 'forma' ? soloLaForma(pezzo) : pezzo) }
-  /* «svela» vince su tutto il resto: chi ha visto la soluzione intera
-     l'ha vista, e nessun gradino più piccolo dopo la rimette in gioco */
-  if (svelato.value !== 'svela') svelato.value = passo.aiuto
+  piano.value = { ...piano.value, ...JSON.parse(JSON.stringify(passo.piano)) }
+  /* si tiene il più grosso: chi ha visto la soluzione intera l'ha vista,
+     e un pezzo rimesso dopo non la rimette in gioco */
+  if ((PESO[passo.che] || 0) > (PESO[svelato.value] || 0)) svelato.value = passo.che
   /* si va a guardare quello che è comparso: il cartello sta sopra la
      lista degli ordini, cioè proprio sopra la cosa che è cambiata */
   pannello.value = ''
@@ -899,10 +915,10 @@ async function ridimensiona () {
            verbi è un avviso che ti impedisce di fare la cosa che ti sta
            suggerendo. Il disegno sta tutto in `FogliLivello.vue`. -->
       <FogliLivello :quale="pannello" :liv="liv" :mondo-ora="mondoOra"
-                    :righe="righeRegistro" :fatti="fatti" :prossimo="prossimo"
+                    :righe="righeRegistro" :fatti="fatti" :prossimo="prossimo" :monete="monete"
                     :scheda="scheda || ''" :mia="!!piano[scheda]"
                     @chiudi="pannello = ''" @riavvolgi="riavvolgi"
-                    @aiuto="chiediAiuto" />
+                    @aiuto="chiediAiuto" @rimetti="rimetti" />
 
       <!-- ═════ NON HA RETTO ═════
            Si dice cosa è andato storto e si riparte con un tocco: le
@@ -938,9 +954,9 @@ async function ridimensiona () {
           {{ finito.caduti ? (finito.caduti === 1 ? 'Ma uno dei tuoi è rimasto sul campo: questa vale una stella. Portali a casa tutti, e sono due.'
                                                   : `Ma ${finito.caduti} dei tuoi sono rimasti sul campo: questa vale una stella. Portali a casa tutti, e sono due.`)
              : finito.svelato === 'svela' ? 'Questa volta il piano te l’ho scritto io: vale una stella. Adesso che l’hai visto girare, riprova a scriverlo tu — e sono due.'
-             : finito.svelato === 'forma' ? 'La forma te l’ho data io, i bersagli li hai trovati tu: vale una stella. Rifallo dal foglio bianco, e sono due.'
-             : finito.svelato ? 'Un pezzo di piano te l’ho scritto io: vale una stella. Rifallo tutto tu, e sono due.'
-             : 'Nessuno ti ha detto niente: questo piano l’hai pensato tu.' }}</p>
+             : finito.svelato === 'forma' ? 'La forma te l’ho data io, i bersagli li hai trovati tu.'
+             : finito.svelato ? 'Un pezzo di piano te l’ho scritto io, il resto l’hai trovato tu.'
+             : 'Questo piano l’hai scritto tutto tu.' }}</p>
         <div class="due">
           <button class="grigio" @click="finito = null; ferma()">Riprova</button>
           <button @click="avanti">{{ dopo ? 'Avanti →' : 'Torna alla mappa' }}</button>

@@ -13,9 +13,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { controlla, uguale, riassunto, nota } from '../aiuto/verifica.mjs'
 import { stessaVia, inRamo, listaIn, listaDi, ordineIn, aggiungiIn, togliIn,
-         spostaIn, partiDaCapo, partiParallele, ogniVoce, laSoluzione, soloLaForma, scalaDi }
+         spostaIn, partiDaCapo, partiParallele, ogniVoce, laSoluzione, soloLaForma, scalaDi,
+         primaMeta, formaCon }
        from '../../src/views/generale/piano.js'
 import { LIVELLI } from '../../src/data/generale.js'
+import { guastiDellaScala } from '../../src/giochi/aiuti.js'
 
 const o = (verbo, complemento) => ({ verbo, complemento })
 const quando = (segnale, ...allora) => ({ verbo: 'quando', complemento: segnale, allora })
@@ -141,7 +143,7 @@ controlla('uno che finisce con un numero no', !inRamo([2, 1]))
 }
 
 /* ---------- 8. la scala degli aiuti ----------
-   Gli ultimi due gradini scrivono nel piano, e quello che scrivono
+   Gli ultimi tre gradini scrivono nel piano, e quello che scrivono
    viene dalle soluzioni dichiarate dal livello. Due cose vanno provate
    qui, perché sbagliate non si notano finché un bambino non preme quel
    tasto: che la FORMA sia davvero solo la forma (niente bersagli, ma
@@ -181,46 +183,101 @@ controlla('uno che finisce con un numero no', !inRamo([2, 1]))
   controlla('ogni livello ha una soluzione da svelare, se serve',
             !senza.length,
             'senza: ' + senza.map(l => l.id).join(', ') +
-            ' — lì i due gradini grossi degli aiuti non compaiono')
+            ' — lì i gradini degli aiuti che scrivono non compaiono')
 }
 
 /* ---------- 9. la scala degli aiuti ----------
    Una lista mista di stringhe e gradini diventa una scala sola, e la
    via d'uscita c'è sempre: chi non se l'è scritta se la trova in coda.
    È la cosa che, sbagliata, lascia un bambino chiuso dentro un livello
-   con un tasto che non fa niente. */
+   con un tasto che non fa niente. E ogni gradino sa quanto costa: gratis
+   quelli che fanno ragionare, 🪙10 gli indizi, 🪙50 · 100 · 200 quelli
+   che scrivono nel piano (`giochi/aiuti.js`). */
 {
-  const finti = { soluzioni: [{ nome: 'x', piano: { eroe: [o('vai', 'a')] } }] }
+  const finti = { soluzioni: [{ nome: 'x', piano: { eroe: [o('vai', 'a'), o('prendi', 'b'), o('apri', 'c')] } }] }
+  const che = s => s.map(a => a.che).join(' ')
+  const prezzi = s => s.map(a => a.prezzo).join(' ')
 
   const vecchio = scalaDi({ ...finti, aiuti: ['uno', 'due'] })
-  uguale('le stringhe di ieri restano gradini a parole', vecchio[0].aiuto, 'dice')
-  uguale('e in coda arrivano forma e soluzione', vecchio.length, 4)
-  uguale('la forma prima', vecchio[2].aiuto, 'forma')
-  uguale('e la soluzione ultima', vecchio[3].aiuto, 'svela')
+  uguale('le stringhe di ieri restano gradini a parole, cioè indizi', vecchio[0].che, 'indizio')
+  uguale('e in coda arrivano pezzo, forma e soluzione', che(vecchio),
+         'indizio indizio pezzo forma svela')
+  uguale('e costano 10 · 10 · 50 · 100 · 200', prezzi(vecchio), '10 10 50 100 200')
+
+  const nuovo = scalaDi({ ...finti, aiuti: [
+    { aiuto: 'ragiona', testo: 'cosa chiede?' }, { aiuto: 'dice', testo: 'guarda lì' }] })
+  uguale('i gradini che fanno ragionare non costano niente', nuovo[0].prezzo, 0)
+  uguale('e la scala sale', prezzi(nuovo), '0 10 50 100 200')
+  uguale('una scala scritta bene non ha guasti', guastiDellaScala(nuovo).join('; '), '')
+
+  /* il pezzo di serie è la prima metà, per difetto: di tre ordini uno */
+  uguale('il pezzo di serie è la prima metà di ogni fila, per difetto',
+         JSON.stringify(nuovo[2].piano), JSON.stringify({ eroe: [o('vai', 'a')] }))
+  uguale('una fila di un ordine solo non ha una metà', primaMeta({ eroe: [o('vai', 'a')] }), null)
+  /* e la forma non si riprende quello che il pezzo ha dato */
+  const forma = nuovo[3].piano.eroe
+  uguale('la forma tiene intero l\'ordine già pagato', forma[0].complemento, 'a')
+  controlla('e lascia vuoti gli altri', !forma[1].complemento && !forma[2].complemento)
+  uguale('la soluzione è la soluzione', nuovo[4].piano.eroe[2].complemento, 'c')
+  /* uno per uno: un ordine del pezzo ne tiene intero uno solo */
+  const doppi = formaCon({ eroe: [o('vai', 'x'), o('prendi', 'y'), o('vai', 'x')] }, { eroe: [o('vai', 'x')] })
+  controlla('un ordine del pezzo tiene intero un ordine solo della soluzione',
+            doppi.eroe[0].complemento === 'x' && !doppi.eroe[2].complemento)
 
   const misto = scalaDi({ ...finti, aiuti: [
+    { aiuto: 'ragiona', testo: 'cosa chiede?' },
     { aiuto: 'dice', testo: 'guarda dov’è' },
-    { aiuto: 'scrive', piano: { eroe: [o('vai', 'a')] } },
-    { aiuto: 'dice', testo: 'e adesso passa' },
+    { aiuto: 'scrive', piano: { eroe: [o('vai', 'a')] }, testo: 'e adesso passa' },
     { aiuto: 'svela' },
   ] })
-  uguale('una scala scritta a mano resta com’è', misto.length, 4)
-  uguale('e i gradini restano nell’ordine dichiarato', misto.map(a => a.aiuto).join(' '),
-         'dice scrive dice svela')
+  /* chi scrive un pezzo suo non riceve quello di serie, ma la forma sì:
+     sta fra il pezzo e la soluzione */
+  uguale('una scala scritta a mano resta com’è, con la forma prima della soluzione', che(misto),
+         'ragiona indizio pezzo forma svela')
+  uguale('e i prezzi li decide il tipo di gradino, non chi scrive il livello',
+         prezzi(misto), '0 10 50 100 200')
+
+  /* chi dichiara la forma ha deciso i suoi gradini: niente pezzo di serie
+     («Due strade», dove la prima metà sarebbe tutta la lezione) */
+  const soloForma = scalaDi({ ...finti, aiuti: [{ aiuto: 'ragiona', testo: '?' }, { aiuto: 'forma' }] })
+  uguale('chi dichiara la forma non riceve il pezzo di serie', che(soloForma), 'ragiona forma svela')
+  uguale('e con due gradini che scrivono si paga 100 e 200', prezzi(soloForma), '0 100 200')
 
   /* chi scrive di suo ma si dimentica la fine se la trova in coda: un
      livello non deve poter diventare un vicolo cieco per distrazione */
-  const senzaFine = scalaDi({ ...finti, aiuti: [{ aiuto: 'scrive', piano: {} }] })
-  uguale('a chi scrive senza svelare, lo svelamento si aggiunge', senzaFine.length, 2)
-  uguale('ed è l’ultimo', senzaFine[1].aiuto, 'svela')
-
-  controlla('le parole non costano niente', misto[0].costa === false)
-  controlla('quello che scrive nel piano sì', misto[1].costa === true)
+  const senzaFine = scalaDi({ ...finti, aiuti: [{ aiuto: 'scrive', piano: { eroe: [o('vai', 'a')] } }] })
+  uguale('a chi scrive senza svelare, la forma e lo svelamento si aggiungono', che(senzaFine), 'pezzo forma svela')
 
   /* un livello senza soluzione dichiarata non promette una via
      d'uscita che non ha */
   uguale('senza soluzione la scala è solo quello che c’è scritto',
          scalaDi({ aiuti: ['uno'] }).length, 1)
+
+  /* e la scala di un livello non si prende il dato del livello: il pezzo
+     che scrive è una copia */
+  const liv = { ...finti, aiuti: [{ aiuto: 'scrive', piano: { eroe: [o('vai', 'a')] } }] }
+  scalaDi(liv)[0].piano.eroe[0].complemento = 'sporco'
+  uguale('il pezzo scritto nel livello non si sporca', liv.aiuti[0].piano.eroe[0].complemento, 'a')
+}
+
+/* ---------- 10. le scale dei livelli veri ----------
+   Ogni livello che si gioca: comincia gratis con un gradino che fa
+   ragionare, sale senza mai scendere, e finisce con la soluzione. Una
+   scala che comincia da dieci monete lascia chi è bloccato senza niente
+   da leggere; una che scende vende a dieci quello che dopo costa
+   cinquanta. */
+for (const l of LIVELLI) {
+  const scala = scalaDi(l)
+  const guasti = guastiDellaScala(scala, l.id)
+  controlla(`«${l.nome}»: la scala degli aiuti comincia gratis, sale e finisce con la soluzione`,
+            !guasti.length, guasti.join('; '))
+  controlla(`«${l.nome}»: e i gradini che fanno ragionare sono almeno due`,
+            scala.filter(a => a.che === 'ragiona').length >= 2)
+  /* un gradino che scrive porta con sé il piano da scrivere, e il
+     piano nomina solo unità del livello */
+  const mie = new Set(Object.keys(laSoluzione(l).piano))
+  controlla(`«${l.nome}»: ogni gradino che scrive sa cosa scrivere, e per chi`,
+            scala.filter(a => a.piano).every(a => Object.keys(a.piano).every(id => mie.has(id))))
 }
 
 nota('il piano si regge senza Vue, senza canvas e senza mondo: sono liste e vie')

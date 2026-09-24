@@ -3,7 +3,7 @@
       ed è il messaggio al posto della variabile globale, cioè come si
       mettono d'accordo davvero due che non si vedono. */
 
-import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, aiuto } from '../scrivi.js'
 
 /* ── CHI SA COSA, E PERCHÉ ──
    UN SOLO DIVIETO, E CON LA SUA RAGIONE. L'eroe sa tutto, attaccare
@@ -56,9 +56,15 @@ export const ATTESA = livello({
   id: 'attesa', nome: 'Mettetevi d\'accordo', impara: 'i segnali', idea: 'Quello che non vedi te lo deve dire qualcuno',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano all'eroe</b>.",
   racconto: "L'eroe non regge i colpi dell'orco; il cavaliere sì, ma ci mette un po'. E da dov'è l'eroe, quello che succede laggiù non si vede.",
-  aiuti: ['Chi parte troppo presto trova l\'orco ancora in piedi.',
-          'L\'eroe non vede il cavaliere: da solo non può accorgersi che ha finito.',
-          'Quello che uno non può vedere, qualcun altro glielo può dire.'],
+  /* la metà di serie qui è il cavaliere che attacca, e basta (la fila
+     dell'eroe è un ordine solo, e resta fuori): la parte ovvia, e il
+     segnale — che è la lezione — ancora da trovare */
+  aiuti: [
+    aiuto.ragiona('Il tesoro deve finire all\'eroe, ma l\'eroe cade subito: prima l\'orco va tolto di mezzo. E chi ci riesce ci mette un tempo che cambia a ogni battaglia.'),
+    aiuto.ragiona('Da dov\'è, l\'eroe non vede quando il cavaliere ha finito. Chiediti: chi lo sa, quel momento? E come fa a farlo sapere all\'altro?'),
+    aiuto.dice('Chi parte troppo presto trova l\'orco ancora in piedi, e aspettare un po\' a caso non basta: l\'orco sta ogni volta in un posto diverso.'),
+    aiuto.dice('Quello che uno non può vedere, qualcun altro glielo può dire: un segnale si suona da una parte e si sente dall\'altra.'),
+  ],
   ambiente: 'cortile',
 
   scena: CORTI,

@@ -25,7 +25,7 @@
       darebbe tre volte la stessa prova. Le varianti cominciano dove
       comincia la possibilità di sbagliare. */
 
-import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, aiuto } from '../scrivi.js'
 
 /* Chi c'è in questa storia. Si dichiarano qui una volta, e da qui in
    poi si passano — `fai.apri(tesoro)`, non `fai.apri('tesoro')`: un
@@ -38,9 +38,17 @@ export const PRIMO = livello({
   id: 'primo', nome: 'Il primo ordine', impara: 'azioni base', idea: 'Un verbo, una cosa, e via',
   dritta: 'Obiettivo: <b>il forziere deve essere aperto</b>.',
   racconto: "Camminare lo sa fare da solo: intorno ai muri ci gira senza che glielo dica nessuno. Tu gli dici <b>cosa</b> fare, non come.",
-  aiuti: ['Un ordine è fatto di due cose: un verbo, e la cosa su cui vale.',
-          'Stare accanto a una cosa non vuol dire averla aperta.',
-          "Guarda i verbi che hai: uno ti porta lì e basta, l'altro fa succedere qualcosa."],
+  /* ── LA SCALA ──
+     Le due frasi gratis non dicono il verbo: dicono dove guardare per
+     trovarlo — cosa chiede il livello, e che un ordine è un verbo e una
+     cosa. L'indizio da dieci dice il perché dello sbaglio più comune
+     («vai» e basta), e in fondo il gioco mette da sé la forma e la
+     soluzione: un ordine solo non ha una metà da scrivere. */
+  aiuti: [
+    aiuto.ragiona("Il livello non chiede di arrivare al forziere: chiede che il forziere sia aperto. Camminare, l'eroe lo sa fare da solo."),
+    aiuto.ragiona('Un ordine è un verbo e una cosa. Guarda i verbi che hai: quale fa succedere proprio quello che chiede il livello?'),
+    aiuto.dice('Stare accanto a una cosa non vuol dire averla aperta: «vai» ti porta lì, e basta.'),
+  ],
   /* ── E QUI SI IMPARA ANCHE DOVE SI TOCCA ──
      È il primo schermo del gioco: prima ancora di «cosa gli dico»
      c'è «dove metto il dito». La riga in fondo lo dice, indica il

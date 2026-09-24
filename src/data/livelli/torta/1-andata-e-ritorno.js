@@ -282,6 +282,8 @@ export const TORTA = livello({
   dritta: 'Obiettivo: <b>la ladra deve riportare in camera la farina e le uova</b>.',
   racconto: 'Domani è il compleanno del re: la ladra prende la farina nella dispensa di Zanna e le uova nel pollaio di Berta, e le riporta in camera ripassando dalla cucina, perché dal cortile non si esce. Grugno intanto torna al suo giro, e la ladra cade al primo colpo.',
   aiuti: [
+    aiuto.ragiona('Il livello chiede due viaggi: fuori a prendere la farina e le uova, e poi di nuovo in camera. Tutti e due passano dalla cucina, dove il giro di Grugno guarda la strada.'),
+    aiuto.ragiona('Per passare, Grugno deve essere lontano: due volte, all\'andata e al ritorno. Chiediti chi lo può far spostare, e quando. E la ladra, da dove aspetta, come fa a sapere che è il momento?'),
     aiuto.dice('Tocca Grugno, Zanna e Berta per leggere le loro abitudini. Il pentolone di Grugno sta accanto al corridoio della camera: il suo giro guarda sempre la strada fra la dispensa e il corridoio, e dopo una chiamata Grugno ci torna. Per rientrare in camera va chiamato un\'altra volta.'),
     aiuto.dice('La principessa dalla sala non vede la ladra, ma sente il mestolo, e al mestolo Grugno è al pentolone. Se lo chiama ogni volta che lo sente, la cucina si svuota una volta per l\'andata e una per il ritorno.'),
     aiuto.dice('La porticina del cortile sta sotto la cuccia di Zanna, e la ladra ci passa due volte: Zanna non morde solo se ha l\'osso in bocca.'),

@@ -250,13 +250,15 @@ export function livello (d) {
      viene da lì è quasi sempre un refuso — `{ testo: '…' }` invece di
      `aiuto.dice('…')` — e senza questo controllo sparirebbe in
      silenzio, cioè il bambino chiederebbe un aiuto e non succederebbe
-     niente. */
-  const TIPI = ['dice', 'scrive', 'forma', 'svela']
+     niente. Che la scala salga e cominci gratis lo guarda il banco
+     (`unita/piano-generale`): qui si controlla solo che ogni gradino
+     sia un gradino. */
+  const TIPI = ['ragiona', 'dice', 'scrive', 'forma', 'svela']
   for (const [i, a] of (d.aiuti || []).entries()) {
     if (typeof a === 'string') continue
     if (!a || !TIPI.includes(a.aiuto))
-      throw new Error(`livello ${chi}: l'aiuto ${i + 1} non è un gradino — ` +
-                      'scrivilo con aiuto.dice / aiuto.scrive / aiuto.forma / aiuto.svela')
+      throw new Error(`livello ${chi}: l'aiuto ${i + 1} non è un gradino — scrivilo con ` +
+                      'aiuto.ragiona / aiuto.dice / aiuto.scrive / aiuto.forma / aiuto.svela')
     if (a.aiuto === 'scrive' && (!a.piano || typeof a.piano !== 'object'))
       throw new Error(`livello ${chi}: l'aiuto ${i + 1} scrive nel piano ` +
                       'ma non dice cosa scrivere')

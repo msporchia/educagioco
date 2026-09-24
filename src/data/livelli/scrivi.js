@@ -406,25 +406,42 @@ export const fai = {
    poi tornare a parlare, e alla fine svelare tutto.
 
        aiuti: [
-         aiuto.dice('Guarda dove sta il carceriere: se fai rumore lontano, corre lì.'),
-         aiuto.scrive({ ladra: [fai.prendi(chiave), fai.suona(richiamo)] }),
-         aiuto.dice('Adesso il portone è libero: passa mentre lui è dall’altra parte.'),
+         aiuto.ragiona('Il livello chiede di uscire dal portone, e davanti c’è il carceriere…'),
+         aiuto.ragiona('Guarda la sua scheda: a cosa reagisce? Chi ti ascolta, lo puoi spostare.'),
+         aiuto.dice('Se fai rumore lontano dal portone, lui corre lì.'),
+         aiuto.scrive({ ladra: [fai.prendi(chiave), fai.suona(richiamo)] },
+                      'Eccoti la chiave e il richiamo: adesso lui corre di là, e tu passa di qua.'),
          aiuto.svela(),
        ]
 
-   Una STRINGA vale `aiuto.dice(…)`, e i livelli scritti prima che
-   questa scala esistesse restano com'erano. A chi non dichiara nessun
-   gradino che scriva nel piano, il gioco aggiunge in coda `forma()` e
-   `svela()` da sé: la via d'uscita c'è sempre, e nessuno resta chiuso
-   dentro un livello perché l'autore non ci ha pensato.
-
    ── QUANTO COSTA ──
-   Le parole non costano niente: sono la frase che direbbe chi ti sta
-   accanto, e un suggerimento che si paga è un suggerimento che chi ne
-   ha bisogno non prende. Quelli che SCRIVONO NEL PIANO costano la
-   seconda stella, e lo dicono prima di essere premuti. */
+   Il prezzo lo decide il tipo di gradino, e sta scritto in un posto
+   solo per i tre giochi che hanno una scala (`giochi/aiuti.js`):
+
+     ragiona  gratis   fa ragionare: cosa chiede il livello, cosa lo rende
+                       difficile, la domanda giusta da farsi. È la frase
+                       che direbbe chi ti sta accanto e non vuole darti
+                       la risposta — e ogni livello ne ha almeno una
+     dice     🪙10     un indizio: una cosa concreta da guardare o da fare
+     scrive, forma, svela   🪙50 · 100 · 200 — scrivono nel piano; il
+                       prezzo lo decide la posizione, e l'ultimo (tutta
+                       la soluzione) costa sempre 200
+
+   La scala sale e non scende: prima le `ragiona`, poi le `dice`, poi
+   quelli che scrivono. Una frase che spiega un pezzo appena comparso si
+   scrive **nel pezzo** (il secondo argomento di `scrive`), non in un
+   gradino dopo.
+
+   Una STRINGA vale `aiuto.dice(…)`. In fondo il gioco aggiunge da sé
+   quello che manca dei tre gradini che scrivono — un pezzo (la prima
+   metà di ogni fila della soluzione), la forma e la soluzione — quindi
+   la via d'uscita c'è sempre, e nessuno resta chiuso dentro un livello
+   perché l'autore non ci ha pensato (`scalaDi` in
+   `views/generale/piano.js`). */
 export const aiuto = {
-  /* una frase, e basta */
+  /* una frase che fa ragionare, e non costa niente */
+  ragiona: testo => ({ aiuto: 'ragiona', testo }),
+  /* un indizio: una frase, e basta */
   dice: testo => ({ aiuto: 'dice', testo }),
   /* un pezzo di piano già scritto: `{ unità: [ordini] }`, con gli
      stessi `fai.*` di una soluzione. Sostituisce la fila delle unità

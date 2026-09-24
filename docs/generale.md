@@ -229,10 +229,12 @@ finire in mano all'eroe»*, *«l'orco non deve arrivare alla principessa»*. Il
 💡 racconta la situazione — chi c'è, com'è fatto, cosa non si può fare — e
 non nomina mai la mossa.
 
-Se serve, ci sono **tre aiuti a scalare**: il primo è gratis, gli altri
-costano una stella. Sono suggerimenti, non istruzioni — si passa da «un
-ordine è un verbo e una cosa» a «stare accanto a una cosa non vuol dire
-averla» senza mai scrivere *prendi il tesoro*.
+Se serve, gli aiuti sono **una scala**: i primi due gradini sono gratis e
+non danno la risposta — dicono cosa chiede il livello e qual è la domanda
+giusta da farsi («il portone è chiuso a chiave: cosa serve prima di
+arrivarci?») — poi vengono gli indizi, che costano monete. Si passa da
+ragionare sul livello a «stare accanto a una cosa non vuol dire averla»
+senza mai scrivere *prendi il tesoro*.
 
 ## Un vincolo che i giochi a blocchi non hanno
 
@@ -251,18 +253,22 @@ fondo è il modo di accorgersi di cosa non si era previsto.
 - È il gioco più difficile della raccolta e il meno finito.
 - **Non conta quanto è corto il piano.** Un livello si chiude in tutti i modi
   che funzionano: quello che vale la seconda stella è **esserci arrivati da
-  soli** — senza farsi svelare la struttura o la soluzione, e senza lasciare
-  compagni sul campo. (Per un pezzo c'è stato un «par», un numero di ordini da
+  soli** — senza farsi scrivere il piano intero, e senza lasciare compagni
+  sul campo. (Per un pezzo c'è stato un «par», un numero di ordini da
   rispettare; diceva a chi aveva appena vinto che il suo piano non era quello
   giusto, ed è stato tolto.)
-- **Gli aiuti sono una scala, e il primo gradino è gratis.** Dal 💡 si chiede
-  un aiuto per volta: prima suggerimenti a parole — che non costano niente e
-  non tolgono niente, sono la frase che direbbe chi gli sta accanto — e poi,
-  per chi resta bloccato, il gioco gli scrive nel piano un pezzo, la struttura
-  (gli ordini al loro posto, con le caselle da riempire) e infine la soluzione
-  intera, da guardare girare. Questi ultimi costano la seconda stella, e il
-  tasto lo dice prima di essere premuto. Nessuno resta chiuso dentro un
-  livello.
+- **Gli aiuti sono una scala, si pagano in monete, e i primi gradini sono
+  gratis.** Dal 💡 si chiede un aiuto per volta: prima due frasi che fanno
+  ragionare — cosa chiede il livello, e la domanda giusta da farsi — che non
+  costano niente; poi gli indizi, a 10 monete; poi, per chi resta bloccato,
+  il gioco gli scrive nel piano un pezzo (50), la struttura con le caselle
+  da riempire (100) e infine la soluzione intera, da guardare girare (200).
+  Il prezzo sta sul tasto prima di premerlo, e senza monete non si compra
+  niente. Costavano la seconda stella, e una stella non la sente nessuno: il
+  💡 diventava il modo di finire un livello senza pensarci. Quello che si è
+  pagato resta — rientrando i gradini letti sono ancora lì, e un pezzo di
+  piano si rimette gratis — e solo la soluzione intera toglie la seconda
+  stella.
 - Le prove automatiche giocano davvero tutti i livelli, e verificano anche
   che le soluzioni *sbagliate ma plausibili* perdano almeno una delle scene:
   un livello che si lascia vincere dalla fila di passi non insegna quello che

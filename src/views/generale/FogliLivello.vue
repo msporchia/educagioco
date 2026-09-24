@@ -13,9 +13,11 @@
 
    Qui dentro non si decide niente: si legge quello che il gioco passa e
    si dice cosa ha toccato il dito. Il registro non riavvolge — chiede
-   di riavvolgere; il cartello non paga la stella — chiede l'aiuto.
+   di riavvolgere; il cartello non spende le monete — chiede l'aiuto.
    ═══════════════════════════════════════════════════════════════════ */
+import { ref, watch, onUnmounted } from 'vue'
 import { VERBI, reazioniDi, verbiPer, nonSa, scusaDi } from '../../motore/generale.js'
+import { mancano, chiedeConferma, scrive } from '../../giochi/aiuti.js'
 
 const props = defineProps({
   quale: { type: String, default: '' },        // '' | 'registro' | 'cartello' | 'scheda'
@@ -28,13 +30,14 @@ const props = defineProps({
      tutto quello che serve per scriverci sopra un tasto onesto. */
   fatti: { type: Array, default: () => [] },
   prossimo: { type: Object, default: null },
+  monete: { type: Number, default: 0 },        // quante ne ha: il tasto dice se bastano
   scheda: { type: String, default: '' },       // di chi è la scheda aperta
   mia: { type: Boolean, default: false },      // ...e se lo comanda il giocatore
   /* l'elenco dei nomi ha una vita sua: non è uno dei tre pannelli, si
      apre quando un verbo cerca una cosa che sulla mappa non si tocca */
   elenco: { type: Object, default: null },     // { verbo, cose, scelto }
 })
-const emit = defineEmits(['chiudi', 'riavvolgi', 'aiuto', 'scegli-nome', 'chiudi-elenco'])
+const emit = defineEmits(['chiudi', 'riavvolgi', 'aiuto', 'rimetti', 'scegli-nome', 'chiudi-elenco'])
 
 /* ── COME SI PRESENTA UN GRADINO ──
    Prima di essere premuto dice cosa farà e quanto costa; dopo, dice
@@ -42,19 +45,48 @@ const emit = defineEmits(['chiudi', 'riavvolgi', 'aiuto', 'scegli-nome', 'chiudi
    (`aiuto.scrive(piano, 'ti metto il giro di ronda')`); se non lo fa,
    queste sono buone per tutti. */
 const FACCIA = {
-  dice: { em: '💡', tasto: 'Dammi un suggerimento', ancora: 'Un altro suggerimento',
-          sotto: 'non costa niente', fatto: 'Suggerimento' },
-  scrive: { em: '🧩', tasto: 'Scrivimelo tu', ancora: 'Scrivimene un altro pezzo',
+  ragiona: { em: '🧠', tasto: 'Aiutami a ragionare', ancora: 'Ragioniamoci ancora',
+             sotto: 'non ti dico la risposta: ti aiuto a trovarla', fatto: 'Ragioniamo' },
+  dice: { em: '💡', tasto: 'Dammi un indizio', ancora: 'Un altro indizio',
+          sotto: 'una cosa da guardare, o da fare', fatto: 'Indizio' },
+  scrive: { em: '🧩', tasto: 'Scrivimi un pezzo', ancora: 'Scrivimene un altro pezzo',
             sotto: 'ti metto nel piano un pezzo già fatto',
             fatto: 'Te l’ho scritto io' },
   forma: { em: '🧩', tasto: 'Mettimi la struttura', ancora: 'Mettimi la struttura',
-           sotto: 'ti scrivo quali ordini e in che disposizione, con le caselle da riempire',
+           sotto: 'ti scrivo quali ordini e in che disposizione: i bersagli li trovi tu',
            fatto: 'La struttura è nel piano' },
   svela: { em: '✅', tasto: 'Svelami la soluzione', ancora: 'Svelami la soluzione',
            sotto: 'ti scrivo il piano intero: premi ▶ e guardalo girare',
            fatto: 'Il piano è scritto' },
 }
 const faccia = p => (p && FACCIA[p.aiuto]) || FACCIA.dice
+
+/* ── IL PREZZO, E IL SECONDO TOCCO ──
+   Il tasto dice quanto costa prima di essere premuto. Se le monete non
+   bastano lo dice e non fa niente — quanto manca, non «non puoi». Dai
+   cinquanta in su chiede un secondo tocco: il primo lo arma e il tasto
+   dice «sì, pago», e se il secondo non arriva entro qualche secondo si
+   disarma da solo. Un gradino che scrive toglie anche quello che hai
+   scritto tu, e lo dice. */
+const armato = ref(false)
+let disarma = 0
+const povero = () => mancano(props.monete, props.prossimo) > 0
+function premi () {
+  const p = props.prossimo
+  if (!p || povero()) return
+  if (chiedeConferma(p) && !armato.value) {
+    armato.value = true
+    clearTimeout(disarma)
+    disarma = setTimeout(() => { armato.value = false }, 4000)
+    return
+  }
+  armato.value = false
+  clearTimeout(disarma)
+  emit('aiuto')
+}
+/* cambiando gradino (o chiudendo il cartello) il tasto riparte disarmato */
+watch(() => [props.prossimo, props.quale], () => { armato.value = false; clearTimeout(disarma) })
+onUnmounted(() => clearTimeout(disarma))
 
 const unita = () => {
   const m = props.mondoOra()
@@ -95,9 +127,15 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
            è già sceso resta scritto qui: i suggerimenti si rileggono, e
            quelli che hanno scritto nel piano si vedono nel piano — qui
            ne resta la riga che dice cos'è successo. -->
-      <div v-for="(a, k) in fatti" :key="k" class="aiuto" :class="{ scritto: a.aiuto !== 'dice' }">
-        <b>{{ faccia(a).em }} {{ a.aiuto === 'dice' ? 'Suggerimento' : faccia(a).fatto }}</b>
-        {{ a.testo || (a.aiuto === 'dice' ? '' : faccia(a).sotto) }}</div>
+      <!-- un gradino che scrive, già pagato, si rimette gratis: il piano
+           si cambia e si butta, e quello che si è comprato non si ricompra -->
+      <div v-for="(a, k) in fatti" :key="k" class="aiuto" :class="[a.aiuto, { scritto: scrive(a) }]"
+           :data-aiuto-fatto="a.aiuto">
+        <b>{{ faccia(a).em }} {{ faccia(a).fatto }}</b>
+        {{ a.testo || (scrive(a) ? faccia(a).sotto : '') }}
+        <button v-if="scrive(a)" class="rimetti" data-azione="rimetti-aiuto"
+                @click="emit('rimetti', k)">↺ rimettilo nel piano <small>già pagato</small></button>
+      </div>
 
       <!-- e il prossimo, che dice cosa farà PRIMA di essere premuto: il
            prezzo si annuncia, non si scopre dopo -->
@@ -105,14 +143,22 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
            pezzo scritto nel piano il tasto diceva «scrivimene un altro
            pezzo» perché prima erano stati letti due suggerimenti, che
            sono un'altra cosa -->
-      <button v-if="prossimo" class="chiedi" :class="prossimo.costa ? 'grosso' : 'gratis'"
-              @click="emit('aiuto')">
-        {{ faccia(prossimo).em }}
-        {{ fatti.some(a => a.aiuto === prossimo.aiuto)
-             ? faccia(prossimo).ancora : faccia(prossimo).tasto }}
-        <small>{{ faccia(prossimo).sotto
-                }}<template v-if="prossimo.costa"> · il piano che hai adesso viene sostituito, e
-          questa battaglia varrà ⭐ invece di ⭐⭐</template></small>
+      <button v-if="prossimo" class="chiedi"
+              :class="[prossimo.prezzo ? 'grosso' : 'gratis', { povero: povero(), armato }]"
+              :disabled="povero()" data-azione="chiedi-aiuto" :data-prezzo="prossimo.prezzo"
+              @click="premi">
+        <span class="riga-tasto">
+          <span>{{ faccia(prossimo).em }}
+            {{ armato ? `Sì, pago ${prossimo.prezzo} monete`
+                      : fatti.some(a => a.aiuto === prossimo.aiuto)
+                          ? faccia(prossimo).ancora : faccia(prossimo).tasto }}</span>
+          <span class="prezzo" :class="{ zero: !prossimo.prezzo }">{{ prossimo.prezzo ? `🪙 ${prossimo.prezzo}` : 'gratis' }}</span>
+        </span>
+        <small v-if="povero()" data-mancano>Ti servono {{ prossimo.prezzo }} monete e ne hai {{ monete }}:
+          le monete si guadagnano finendo i livelli, qui e negli altri giochi.</small>
+        <small v-else-if="armato">Tocca ancora per confermare.<template v-if="scrive(prossimo)"> Il piano
+          che hai adesso viene sostituito.</template></small>
+        <small v-else>{{ faccia(prossimo).sotto }}<template v-if="prossimo.prezzo"> · hai 🪙 {{ monete }}</template></small>
       </button>
       <div v-else class="aiuto muto">Non ho altro da dirti: il resto è tuo.</div>
     </div>
@@ -198,26 +244,48 @@ const nonSaFare = () => (nonSa(props.mondoOra(), props.scheda) || [])
 .rr.no .tt { color:#a8322c }
 .rr .tk { flex:none; font-size:10px; color:var(--tenue); font-weight:800 }
 
-/* il cartello: il racconto, e gli aiuti che si pagano a stelle */
+/* il cartello: il racconto, e gli aiuti — gratis quelli che fanno
+   ragionare, in monete gli altri */
 .racconto { margin:2px 0 10px; font-size:13px; line-height:1.5; color:var(--viola-scuro) }
 .aiuto { background:#f4f7fb; border-left:4px solid var(--giallo); border-radius:10px;
          padding:7px 9px; margin-bottom:6px; font-size:12.5px; line-height:1.4 }
 .aiuto b { display:block; font-size:10px; letter-spacing:.5px; text-transform:uppercase;
            color:#b5891f }
 .aiuto.muto { border-left-color:#c6cfdd; color:var(--tenue) }
+/* i gradini che fanno ragionare hanno il colore del tasto gratis: si
+   riconoscono a colpo d'occhio da quelli pagati */
+.aiuto.ragiona { border-left-color:#3aa76d; background:#effaf3 }
+.aiuto.ragiona b { color:#237a4b }
 .chiedi { display:block; width:100%; min-height:52px; border-radius:12px; padding:8px 12px;
           text-align:left; background:#f4f7fb; font-size:13.5px; font-weight:900;
           color:var(--viola-scuro); box-shadow:0 2px 0 #dde3ea }
+.chiedi .riga-tasto { display:flex; align-items:center; gap:8px }
+.chiedi .riga-tasto > span:first-child { flex:1; min-width:0 }
+.chiedi .prezzo { flex:none; border-radius:999px; padding:3px 9px; font-size:12.5px;
+                  background:#fff3c4; color:#7a5a00; box-shadow:inset 0 0 0 1.5px #f0d77a }
+.chiedi .prezzo.zero { background:#c9efd6; color:#1c6b3f; box-shadow:none }
 .chiedi small { display:block; font-size:11px; font-weight:700; color:var(--tenue);
                 line-height:1.35; margin-top:2px }
 .chiedi small b { color:var(--viola-scuro) }
 .chiedi.gratis { background:#dff5e6 }
-/* un gradino che scrive nel piano si vede che è un'altra cosa da un
-   suggerimento — bordo pieno invece del verde — e il prezzo sta dentro */
+/* un gradino che si paga si vede che è un'altra cosa da uno gratis —
+   bordo pieno invece del verde — e il prezzo sta dentro */
 .chiedi.grosso { background:#fff; box-shadow:inset 0 0 0 1.5px #d6def0, 0 2px 0 #dde3ea }
+/* armato: il secondo tocco paga. Un sobbalzo solo, quando si arma: un
+   tasto che pulsa senza fine è un tasto che chiede di essere premuto */
+.chiedi.armato { background:#fff7d6; box-shadow:inset 0 0 0 2px #e0a800, 0 2px 0 #dde3ea;
+                 animation:armato .28s ease-out }
+@keyframes armato { 50% { transform:scale(1.02) } }
+/* senza monete il tasto c'è, spento, e dice quanto manca */
+.chiedi.povero { opacity:.75; background:#f4f5f8; box-shadow:inset 0 0 0 1.5px #e2e6ee }
+.chiedi.povero .prezzo { background:#eceef3; color:#8a93a6; box-shadow:none }
+.chiedi.povero small { color:#a8322c }
 /* e quando è già sceso, la riga che lo racconta ha il suo colore */
 .aiuto.scritto { border-left-color:#8a63d2; background:#f6f2ff }
 .aiuto.scritto b { color:#6b52ab }
+.aiuto .rimetti { display:block; margin-top:6px; min-height:34px; border-radius:10px; padding:0 10px;
+                  background:#ebe4fb; color:#4d3a86; font-size:12px; font-weight:900 }
+.aiuto .rimetti small { font-weight:700; color:#7d6bb0; margin-left:4px }
 
 /* la scheda: come è fatto uno che sta in campo */
 .dati { display:flex; gap:10px; flex-wrap:wrap; font-size:12.5px; color:var(--tenue);

@@ -13,7 +13,7 @@
       tesoro» e non c'è niente da indovinare — spostare la chiave
       cambierebbe la strada, non il ragionamento. */
 
-import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, aiuto } from '../scrivi.js'
 
 const eroe = chi.eroe()
 const chiave = cose.chiave()
@@ -24,9 +24,12 @@ export const CHIAVE = livello({
   id: 'chiave', nome: 'La chiave e il portone', impara: 'aprire le porte', idea: 'Prima la chiave, poi il portone',
   dritta: 'Obiettivo: <b>il forziere deve essere aperto</b>. Sta dietro il portone.',
   racconto: "Alla chiave e al portone l'eroe ci va da solo: quello che gli manca, se gli manca, non è la strada.",
-  aiuti: ['Un ordine può fallire anche stando nel posto giusto.',
-          'Se dice «non ce l\'ho», vuol dire che gli manca un ordine PRIMA di quello.',
-          'Tre cose in fila, e l\'ordine in cui le metti è tutto.'],
+  aiuti: [
+    aiuto.ragiona('Il forziere sta dietro il portone, e il portone è chiuso a chiave. Il livello chiede tre cose, e ognuna ha bisogno di quella prima.'),
+    aiuto.ragiona('Per ogni cosa chiediti: cosa serve per farla? E quando l\'eroe ci arriva, ce l\'ha già? Se un ordine dice «non ce l\'ho», il guaio sta in un ordine prima.'),
+    aiuto.dice('Un ordine può fallire anche nel posto giusto: al portone l\'eroe ci arriva, ma senza la chiave non lo apre.'),
+    aiuto.dice('Tre cose in fila, e l\'ordine in cui le metti è tutto.'),
+  ],
   ambiente: 'cortile', prove: 1,
 
   /* le stesse due corti della prima prova, e in mezzo il portone: la

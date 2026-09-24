@@ -13,7 +13,7 @@
       che l'orco NON è qui dice dov'è — ed è il primo ragionamento del
       gioco che non è un'osservazione ma una deduzione. */
 
-import { livello, campo, cose, chi, fai, se } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, aiuto } from '../scrivi.js'
 
 const eroe = chi.nostro('eroe', "l'eroe", { corpo: 'ladra', emoji: '🦸', vista: 6, vita: 1 })
 /* L'ORCO GUARDA LA SUA PORTA, e non un metro più in là: con la vista
@@ -60,9 +60,18 @@ export const DUE_STRADE = livello({
   id: 'due-strade', nome: 'Due strade', impara: 'le scelte', idea: 'Guarda prima di scegliere',
   dritta: "Obiettivo: <b>il tesoro deve finire in mano all'eroe</b>. E l'eroe cade al primo colpo.",
   racconto: "L'orco sta a una delle due porte, e <b>cambia a ogni battaglia</b>. Da dove parti ne vedi una sola.",
-  aiuti: ['Da qui vedi solo la strada di sopra. Guardala.',
-          'Sapere che l\'orco NON è qui dice dov\'è.',
-          'C\'è un blocco che guarda una volta sola e poi prende una delle due strade.'],
+  /* ── E NIENTE PEZZO DI SERIE ──
+     La prima metà della soluzione qui è il bivio, cioè tutta la
+     lezione: venduta per cinquanta monete, il livello sarebbe finito lì.
+     Dichiarando la forma, i gradini che scrivono sono due — la forma, e
+     la soluzione — e la domanda da mettere nel bivio resta da trovare. */
+  aiuti: [
+    aiuto.ragiona('Il livello chiede il tesoro, e l\'orco sta a una delle due porte: a ogni battaglia a una diversa. Il piano è uno solo, e lo firmi prima di sapere quale tocca.'),
+    aiuto.ragiona('Da dove parti vedi una strada sola. Cosa ti dice quella che vedi, anche di quella che non vedi? Se l\'orco non è qui, dov\'è?'),
+    aiuto.dice('Guarda la strada di sopra prima di muoverti: se l\'orco c\'è, la strada buona è l\'altra.'),
+    aiuto.dice('C\'è un blocco che guarda una volta sola e poi prende una delle due strade.'),
+    aiuto.forma(),
+  ],
   /* ── E SI VEDE, PERCHÉ QUI LA MAPPA È LA DOMANDA ──
      Era una `cripta`, che ha un velo di buio al 42%: bello, e sbagliato
      proprio qui. Questo livello si vince GUARDANDO la mappa — dov'è

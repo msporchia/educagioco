@@ -41,7 +41,7 @@
       Tredici ordini è più del solito, ed è voluto: è un lavoro, e un
       lavoro si vede che è lungo. */
 
-import { livello, campo, cose, chi, fai, se, suoli, arredo } from '../scrivi.js'
+import { livello, campo, cose, chi, fai, se, suoli, arredo, aiuto } from '../scrivi.js'
 
 /* due mani, come tutti: quello che cambia è che qui le cose da portare
    sono tre */
@@ -115,9 +115,15 @@ export const DUE_CHIAVI = livello({
      davvero, sarà una regola del mondo e non una riga di testo. */
   dritta: 'Obiettivo: <b>il libro, la farina, il secchio e il gatto sul carro</b>.',
   racconto: "Il fiume è in piena e il mulino va sgomberato. Da portare via ci sono il libro del nonno, chiuso in camera, il sacco di farina, chiuso in dispensa, il secchio del pozzo e il gatto. Le due chiavi stanno in due stanze diverse — ma quelle vanno in tasca. <b>Le mani sono due, e le cose tre</b>: al carro ci si torna.",
-  aiuti: ['Guarda la tua scheda: ✋ due mani. Le cose da portare sono tre.',
-          'Le chiavi stanno in tasca e non pesano: quelle non ti fermano mai.',
-          'Il gatto non pesa: cammina da sé, e ti viene dietro appena aperto il cesto.'],
+  /* la metà di serie qui è giusta: le chiavi, le porte e la farina in
+     mano — un inizio che funziona, e i due viaggi al carro da trovare */
+  aiuti: [
+    aiuto.ragiona('Il livello chiede quattro cose sul carro: il libro, la farina, il secchio e il gatto. Due stanno dietro una porta chiusa, e la bimba ha due mani sole.'),
+    aiuto.ragiona('Prima di scrivere fai la lista: cosa serve per prendere ogni cosa, e quante ne tieni insieme? Da lì si vede quante volte tocca tornare al carro.'),
+    aiuto.dice('Le chiavi stanno in tasca e non pesano: le mani si contano solo per il libro, la farina e il secchio.'),
+    aiuto.dice('Il gatto non si porta: ti viene dietro appena apri il suo cesto, e sul carro ci salta da solo.'),
+    aiuto.dice('Due viaggi: al primo il libro e la farina, al secondo il secchio.'),
+  ],
   ambiente: 'cortile', prove: 1,
 
   /* ── L'ARREDO STA SU CASELLE DI MURO DENTRO LE STANZE ──

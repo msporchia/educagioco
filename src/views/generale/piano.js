@@ -39,6 +39,7 @@
    mano ogni volta.
    ═══════════════════════════════════════════════════════════════════ */
 import { eBlocco, dentroA } from '../../motore/generale.js'
+import { conIPrezzi, RAGIONA, INDIZIO, PEZZO, FORMA, SVELA } from '../../giochi/aiuti.js'
 
 /* due vie sono la stessa via? */
 export const stessaVia = (a, b) =>
@@ -153,7 +154,7 @@ export function spostaIn (ordini, via, d) {
 }
 
 /* ═══════════ la scala degli aiuti ═══════════
-   Gli ultimi due gradini non sono parole: sono ordini che compaiono nel
+   Gli ultimi tre gradini non sono parole: sono ordini che compaiono nel
    piano. Il dato c'è già ed è quello che il banco di prova gioca per
    davvero — `liv.soluzioni` — quindi qui non si scrive nessuna
    soluzione a mano, e non ce n'è nessuna che possa diventare stantia:
@@ -171,28 +172,112 @@ export const laSoluzione = liv =>
    Quello che il livello dichiara in `aiuti` non è ancora una scala: è
    una lista mista di stringhe (i livelli scritti prima), gradini a
    parole e gradini che scrivono nel piano. Qui diventa una lista sola,
-   ordinata, dove ogni voce sa **cosa fa** e **quanto costa** — e il
-   gioco non deve sapere niente di come è stata scritta.
+   ordinata, dove ogni voce sa **cosa fa**, **quanto costa** e — se
+   scrive — **cosa scrive**: il gioco non deve sapere niente di come è
+   stata composta.
 
-   In coda ci vanno da sé i due gradini finali, se il livello non ne ha
-   già uno che scrive: la via d'uscita esiste sempre, e non dipende dal
-   fatto che l'autore del livello ci abbia pensato. Vengono dalla
-   soluzione dichiarata — quella che il banco di prova gioca a ogni
-   build — quindi non c'è nessuna seconda soluzione da tenere
-   aggiornata. */
+   I gradini sono quelli di tutti i giochi che si sbloccano pensando
+   (`giochi/aiuti.js`), e qui si chiamano come li scrive un livello:
+
+     ragiona  gratis   `aiuto.ragiona('…')`: cosa chiede il livello, e la
+                       domanda giusta da farsi
+     dice     🪙10     `aiuto.dice('…')`, o una stringa: un indizio
+     scrive   ┐        `aiuto.scrive({ unità: [ordini] }, '…')`: un pezzo
+     forma    ├ 🪙50 · 100 · 200 — la struttura, coi bersagli da trovare
+     svela    ┘        tutto il piano
+
+   ── QUELLO CHE SI AGGIUNGE DA SÉ ──
+   Dove c'è una soluzione dichiarata, in fondo ci sono sempre la forma e
+   la soluzione: se il livello non le scrive, si aggiungono — la forma
+   prima della soluzione, la soluzione in fondo. La via d'uscita esiste
+   sempre, e non dipende dal fatto che l'autore ci abbia pensato.
+   A un livello che non dichiara **nessun** gradino che scrive si
+   aggiunge anche il pezzo: **la prima metà di ogni fila** della
+   soluzione (le file di un ordine solo restano fuori: la metà di un
+   ordine non c'è). Chi dichiara anche solo `aiuto.forma()` ha deciso lui
+   i suoi gradini, e il pezzo di serie non glieli cambia — serve dove la
+   metà della soluzione sarebbe già tutta la lezione («Due strade»: la
+   prima metà è il bivio). Vengono tutti dalla soluzione — quella che il
+   banco di prova gioca a ogni build — quindi non c'è nessuna seconda
+   soluzione da tenere aggiornata.
+
+   ── LA FORMA NON RIPRENDE QUELLO CHE HAI GIÀ PAGATO ──
+   La forma svuota i bersagli; ma gli ordini che un pezzo comprato prima
+   ha già scritto uguali alla soluzione restano interi. Senza, i
+   cinquanta pagati per il pezzo sparirebbero sotto le caselle vuote
+   della forma, e un gradino più caro darebbe meno di quello prima. */
+const CHE = { ragiona: RAGIONA, dice: INDIZIO, scrive: PEZZO, forma: FORMA, svela: SVELA }
+const copia = x => JSON.parse(JSON.stringify(x))
+
 export function scalaDi (liv) {
   const grezzi = (liv && liv.aiuti) || []
-  const passi = grezzi.map(a => (typeof a === 'string' ? { aiuto: 'dice', testo: a } : a))
-    .filter(a => a && a.aiuto)
-  if (laSoluzione(liv)) {
-    const scrive = passi.some(a => a.aiuto !== 'dice')
-    if (!scrive) passi.push({ aiuto: 'forma' }, { aiuto: 'svela' })
-    else if (!passi.some(a => a.aiuto === 'svela')) passi.push({ aiuto: 'svela' })
+  /* copie, e non i gradini del livello: qui ci si attacca il piano da
+     scrivere, e il dato del livello non si tocca */
+  const passi = grezzi.map(a => (typeof a === 'string' ? { aiuto: 'dice', testo: a } : { ...a }))
+    .filter(a => a && CHE[a.aiuto])
+  const s = laSoluzione(liv)
+  if (s) {
+    const ha = k => passi.some(a => a.aiuto === k)
+    const prima = k => { const i = passi.findIndex(a => k.includes(a.aiuto)); return i < 0 ? passi.length : i }
+    if (!ha('scrive') && !ha('forma') && !ha('svela')) {
+      const meta = primaMeta(s.piano)
+      if (meta) passi.push({ aiuto: 'scrive', piano: meta })
+    }
+    if (!ha('forma')) passi.splice(prima(['svela']), 0, { aiuto: 'forma' })
+    if (!ha('svela')) passi.push({ aiuto: 'svela' })
+
+    /* ogni gradino che scrive si porta dietro il suo piano, già fatto */
+    let dati = {}
+    for (const a of passi) {
+      if (a.aiuto === 'scrive') { a.piano = copia(a.piano || {}); dati = { ...dati, ...a.piano } }
+      else if (a.aiuto === 'forma') a.piano = formaCon(s.piano, dati)
+      else if (a.aiuto === 'svela') a.piano = copia(s.piano)
+    }
+    /* una forma che non lascia niente da trovare è la soluzione con un
+       altro nome, e la si pagherebbe due volte */
+    const sol = JSON.stringify(s.piano)
+    for (let i = passi.length - 1; i >= 0; i--)
+      if (passi[i].aiuto === 'forma' && JSON.stringify(passi[i].piano) === sol) passi.splice(i, 1)
   }
-  /* il costo non lo decide chi scrive il livello: lo decide che tipo di
-     gradino è. Se no lo stesso gesto costerebbe una stella in un
-     livello e niente in quello dopo. */
-  return passi.map(a => ({ ...a, costa: a.aiuto !== 'dice' }))
+  return conIPrezzi(passi.map(a => ({ ...a, che: CHE[a.aiuto] })))
+}
+
+/* ── IL PEZZO DI SERIE ──
+   La prima metà di ogni fila della soluzione, arrotondata **per
+   difetto**: un inizio che funziona, e il resto da trovare. Per eccesso,
+   in un piano di tre ordini il pezzo ne scriveva due e alla forma — che
+   costa il doppio — restava da aggiungere una casella sola. Le file di
+   un ordine solo restano fuori (la loro metà non c'è), e se non ne resta
+   nessuna il pezzo non c'è: `null`. */
+export function primaMeta (piano) {
+  const out = {}
+  for (const id in piano) {
+    const l = piano[id] || []
+    if (l.length >= 2) out[id] = copia(l.slice(0, Math.floor(l.length / 2)))
+  }
+  return Object.keys(out).length ? out : null
+}
+
+/* ── LA FORMA, SENZA TOGLIERE QUELLO CHE C'ERA ──
+   La forma di tutta la soluzione, ma in ogni fila gli ordini che un
+   pezzo già dato ha scritto uguali a quelli della soluzione restano
+   interi. Uno per uno: un ordine del pezzo ne tiene intero **uno** della
+   soluzione (il primo uguale non ancora preso), così due «vai al carro»
+   nella soluzione e uno nel pezzo non ne svelano due. */
+export function formaCon (soluzione, dati = {}) {
+  const forma = soloLaForma(soluzione)
+  const out = {}
+  for (const id in soluzione) {
+    const tutto = soluzione[id] || []
+    const dati_ = (dati[id] || []).map(o => JSON.stringify(o))
+    out[id] = tutto.map((o, i) => {
+      const k = dati_.indexOf(JSON.stringify(o))
+      if (k < 0) return forma[id][i]
+      dati_.splice(k, 1)
+      return copia(o)
+    })
+  }
+  return out
 }
 
 /* ── SOLO LA FORMA ──

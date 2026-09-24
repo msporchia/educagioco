@@ -207,66 +207,128 @@ if (entrata) {
 
   /* ---------- 7b. la scala degli aiuti ----------
      Un tasto solo, e ogni volta che lo premi scendi di un gradino:
-     prima le parole, poi quello che scrive nel piano. È la cosa più
-     rischiosa dell'intero foglio — sostituisce quello che il bambino ha
-     scritto — e sbagliata non si nota finché qualcuno non preme quel
-     tasto: qui si preme, fino in fondo.
+     prima quelli che fanno ragionare, gratis; poi gli indizi, a 🪙10;
+     poi quelli che scrivono nel piano, a 🪙50 · 100 · 200. È la cosa più
+     rischiosa dell'intero foglio — spende le monete e sostituisce quello
+     che il bambino ha scritto — e sbagliata non si nota finché qualcuno
+     non preme quel tasto: qui si preme, fino in fondo, e si conta.
      Si va sul SECONDO livello perché la sua soluzione ha tre ordini in
      fila: un piano che compare vuol dire tre righe, non una, e un solo
      ordine non distinguerebbe «ha svelato» da «era già lì». */
-  await page.locator('.velo .grigio').click()          // via il velo
-  await page.evaluate(() => window.__gen.apri(1))
-  await page.waitForTimeout(400)
+  const entraNelSecondo = async () => {
+    await page.locator('.carta.gen').click()
+    await page.waitForSelector('.tappa', { timeout: 5000 })
+    await page.evaluate(() => window.__gen.apri(1))
+    await page.waitForTimeout(400)
+  }
+  const monete = async () => (await leggiProfilo(page)).coins || 0
+  const tasto = () => page.locator('.cartello .chiedi')
+  const prezzo = async () => Number(await tasto().getAttribute('data-prezzo'))
+
+  /* cinque monete: i gradini gratis si leggono, l'indizio da dieci no */
+  await semina(page, { coins: 5 })
+  await entraNelSecondo()
   /* il cartello si apre da sé all'inizio di ogni livello: la
      spiegazione è la prima cosa, e non costa niente */
   uguale('entrando in un livello il cartello è già aperto',
          await page.locator('.cartello').count(), 1)
   uguale('e non c\'è ancora nessun gradino sceso',
-         await page.locator('.cartello .aiuto').count(), 0)
-  const primoTasto = await page.evaluate(() =>
-    document.querySelector('.cartello .chiedi').innerText)
-  controlla('il primo gradino è un suggerimento, e non costa niente',
-            /non costa niente/.test(primoTasto), JSON.stringify(primoTasto))
-
-  /* si scende finché il tasto non promette di scrivere nel piano: i
-     livelli hanno scale diverse, e il test non deve sapere quanto è
-     lunga quella di questo — deve sapere che si arriva in fondo */
-  let giri = 0
-  while (giri < 8 && await page.evaluate(() =>
-      !/⭐/.test((document.querySelector('.cartello .chiedi') || {}).innerText || ''))) {
-    await page.locator('.cartello .chiedi').click()
+         await page.locator('.cartello .aiuto:not(.muto)').count(), 0)
+  uguale('il primo gradino è gratis', await prezzo(), 0)
+  let gratis = 0
+  while (gratis < 6 && await prezzo() === 0) {
+    await tasto().click()
     await page.waitForTimeout(150)
-    giri++
+    gratis++
   }
-  controlla('scendendo si arriva al gradino che scrive nel piano', giri < 8, `${giri} gradini`)
-  controlla('e i suggerimenti letti restano scritti',
-            await page.locator('.cartello .aiuto').count() === giri,
-            `${await page.locator('.cartello .aiuto').count()} letti, ${giri} chiesti`)
+  controlla('i gradini gratis fanno ragionare, e sono almeno due',
+            gratis >= 2 && await page.locator('.cartello .aiuto.ragiona').count() === gratis,
+            `${gratis} gratis`)
+  uguale('e non hanno speso niente', await monete(), 5)
+  uguale('il gradino dopo è un indizio, e costa dieci', await prezzo(), 10)
+  controlla('con cinque monete il tasto è spento, e dice quanto manca',
+            await tasto().isDisabled() && await page.locator('.cartello [data-mancano]').count() === 1)
+  await tasto().click({ force: true })
+  await page.waitForTimeout(150)
+  uguale('e premerlo non spende niente e non dà niente', await monete(), 5)
+  uguale('niente di nuovo nel cartello', await page.locator('.cartello .aiuto:not(.muto)').count(), gratis)
 
-  /* il gradino che scrive: qui è la forma, senza i bersagli */
-  await page.locator('.cartello .chiedi').click()
+  /* le monete arrivano; i gradini già scesi restano scesi */
+  await page.locator('button[aria-label="indietro"]').click()
+  await page.locator('button[aria-label="indietro"]').click()
+  await semina(page, { coins: 1000 })
+  await entraNelSecondo()
+  uguale('rientrando, i gradini letti sono ancora lì',
+         await page.locator('.cartello .aiuto:not(.muto)').count(), gratis)
+  uguale('e il tasto riparte da dove era', await prezzo(), 10)
+
+  /* gli indizi: un tocco, dieci monete */
+  let spese = 0
+  while (await prezzo() === 10) {
+    await tasto().click()
+    await page.waitForTimeout(150)
+    spese += 10
+  }
+  controlla('ogni indizio costa dieci monete', await monete() === 1000 - spese && spese >= 10,
+            `${await monete()} monete dopo ${spese}`)
+
+  /* il pezzo: cinquanta, e due tocchi — il primo arma */
+  uguale('il primo gradino che scrive costa cinquanta', await prezzo(), 50)
+  await tasto().click()
+  await page.waitForTimeout(150)
+  controlla('il primo tocco arma il tasto e non spende',
+            await page.locator('.cartello .chiedi.armato').count() === 1 && await monete() === 1000 - spese)
+  await tasto().click()
   await page.waitForTimeout(300)
-  uguale('la struttura scrive nel piano le righe della soluzione',
-         await page.locator('.lista .riga').count(), 3)
-  const vuote = await page.evaluate(() =>
-    [...document.querySelectorAll('.lista .casella')].every(c => c.classList.contains('manca')))
-  controlla('e le lascia tutte da riempire', vuote)
+  spese += 50
+  uguale('il secondo tocco paga', await monete(), 1000 - spese)
+  uguale('e il pezzo è nel piano: la prima metà della soluzione',
+         await page.locator('.lista .riga').count(), 1)
 
-  /* e l'ultimo: tutto, e si guarda girare */
+  /* la forma: cento, e tiene intero il pezzo già pagato */
   await page.locator('.tasto.q[aria-label="spiegazione"]').click()
   await page.waitForTimeout(200)
-  await page.locator('.cartello .chiedi').click()
+  uguale('la forma costa cento', await prezzo(), 100)
+  await tasto().click(); await page.waitForTimeout(120); await tasto().click()
   await page.waitForTimeout(300)
+  spese += 100
+  uguale('la forma scrive nel piano le righe della soluzione',
+         await page.locator('.lista .riga').count(), 3)
+  const vuote = await page.evaluate(() =>
+    [...document.querySelectorAll('.lista .casella')].filter(c => c.classList.contains('manca')).length)
+  controlla('e lascia da riempire i bersagli che il pezzo non aveva dato', vuote === 2, String(vuote))
+
+  /* e l'ultimo: tutto, duecento, e si guarda girare */
+  await page.locator('.tasto.q[aria-label="spiegazione"]').click()
+  await page.waitForTimeout(200)
+  uguale('la soluzione costa duecento', await prezzo(), 200)
+  await tasto().click(); await page.waitForTimeout(120); await tasto().click()
+  await page.waitForTimeout(300)
+  spese += 200
+  uguale('e alla fine la scala è costata quello che diceva', await monete(), 1000 - spese)
   const piene = await page.evaluate(() =>
     [...document.querySelectorAll('.lista .casella')].filter(c => !c.classList.contains('manca')).length)
   controlla('la soluzione riempie anche i bersagli', piene >= 3, String(piene))
   await scatto(page, 'generale-svelato')
-  /* e la scala è finita: non c'è più niente da chiedere */
+
+  /* quello che si è pagato si rimette gratis */
   await page.locator('.tasto.q[aria-label="spiegazione"]').click()
   await page.waitForTimeout(200)
-  uguale('finita la scala, il tasto sparisce',
-         await page.locator('.cartello .chiedi').count(), 0)
-  await page.locator('.cartello .capo button').click()
+  uguale('finita la scala, il tasto sparisce', await tasto().count(), 0)
+  uguale('e ogni gradino che ha scritto si può rimettere',
+         await page.locator('.cartello [data-azione="rimetti-aiuto"]').count(), 3)
+  await page.locator('.cartello [data-azione="rimetti-aiuto"]').first().click()
+  await page.waitForTimeout(300)
+  uguale('rimettere il pezzo riscrive il pezzo', await page.locator('.lista .riga').count(), 1)
+  await page.locator('.tasto.q[aria-label="spiegazione"]').click()
+  await page.waitForTimeout(200)
+  await page.locator('.cartello [data-azione="rimetti-aiuto"]').last().click()
+  await page.waitForTimeout(300)
+  uguale('e la soluzione, la soluzione — senza pagarla due volte', await monete(), 1000 - spese)
+  const profiloAiuti = await leggiProfilo(page)
+  controlla('i gradini scesi stanno nel profilo, sotto l\'id del livello',
+            ((profiloAiuti.gen || {}).aiuti || {}).chiave >= 5,
+            JSON.stringify((profiloAiuti.gen || {}).aiuti))
 
   await page.locator('.tasto.via').click()
   let chiuso = false
@@ -277,7 +339,7 @@ if (entrata) {
   controlla('il piano svelato vince davvero', chiuso)
   if (chiuso) {
     const velo2 = await page.evaluate(() => document.querySelector('.velo').innerText)
-    controlla('e vale una stella sola, perché non ci sei arrivato da solo',
+    controlla('e vale una stella sola, perché la soluzione intera l\'ha scritta il gioco',
               /⭐/.test(velo2) && !/⭐⭐/.test(velo2), JSON.stringify(velo2))
   }
 

@@ -333,9 +333,10 @@ sei anni: metà del giro di correzione è, di fatto, non disponibile.
 > **Fatto il 15 agosto 2026.** Il campo `par` non esiste più: né nei livelli,
 > né nella barra, né nel velo di fine, né nel banco di prova, né nei
 > traguardi. La seconda stella la dà **esserci arrivati da soli** — senza
-> farsi svelare la struttura o la soluzione, e senza lasciare compagni sul
-> campo (`daSolo()` in `store/profile.js`, uguale per le prove e per i
-> capitoli). Quello che il par teneva onesto — una soluzione dichiarata non
+> farsi scrivere il piano intero, e senza lasciare compagni sul campo
+> (`daSolo()` in `store/profile.js`, uguale per le prove e per i capitoli).
+> Dal 24 settembre 2026 gli altri gradini degli aiuti non la toccano più:
+> si pagano in monete (`giochi/aiuti.js`), e i primi due sono gratis. Quello che il par teneva onesto — una soluzione dichiarata non
 > deve avere ordini di troppo — resta nel banco senza numeri scritti a mano:
 > ogni ordine di una soluzione stretta deve essere necessario (§3 di
 > `test/aiuto/livello.mjs`), e una `lunga` deve costare più della stretta più
