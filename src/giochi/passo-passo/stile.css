@@ -29,13 +29,12 @@
      frecce */
   --pp-ciclo: #8a5cd6;
   --pp-ciclo-scuro: #5f3b9e;
-  --pp-ciclo-fondo: #f1eafd;
-  --pp-ciclo-dentro: #e3d6fa;
+  --pp-ciclo-chiaro: #b99ef0;
   /* e il se il suo: una scatola che si fa una volta o niente non deve
      sembrare una che si ripete */
   --pp-se: #17998a;
   --pp-se-scuro: #0f6a5f;
-  --pp-se-fondo: #e0f5f1;
+  --pp-se-chiaro: #7fcfc4;
   --pp-tessera: 40px;
   --pp-spazio: 6px;
 
@@ -129,15 +128,13 @@
 /* con lo zaino una riga può essere una scatola dentro una scatola, e il
    bordo di ognuna la fa più alta di una tessera: due righe così devono
    stare intere, se no il programma giusto scorre di tre pixel */
-.pp-fila.pp-con-zaino { height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 38px) }
+.pp-fila.pp-con-zaino { height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 46px) }
 /* e le tessere un poco più piccole, come sugli schermi bassi: un «se»
    dentro un «ripeti» sono tre scatole in fila, e a quaranta pixel non
    stavano su due righe */
 .pp-fila.pp-con-zaino { --pp-tessera: 34px; --pp-spazio: 5px }
 .pp-con-zaino .pp-tessera .pp-icona { width: 22px; height: 22px }
-.pp-con-zaino .pp-coda { width: 12px }
-.pp-con-zaino .pp-testa b { font-size: 15px }
-.pp-con-zaino .pp-testa .pp-lastra { width: 15px; height: 15px }
+
 .pp-tessera { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
               background: var(--pp-passo); color: #fff; display: grid; place-items: center;
               box-shadow: 0 2px 0 var(--pp-passo-scuro); transition: transform .12s, opacity .2s }
@@ -165,61 +162,73 @@
             border: 2px dashed #c7d6b8; background: none; padding: 0 }
 
 /* ═══════════ lo zaino e le scatole ═══════════
-   Una scatola è una fila dentro la fila: il fondo viola chiaro, la testa
-   col numero (o, mentre gira, il giro: «3/5»), e il bordo in fondo, che
-   si tocca per uscire. Una scatola dentro un'altra ha il fondo più
-   scuro, così le due si distinguono senza contare le parentesi. */
-.pp-scatola { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--pp-spazio);
-              max-width: 100%; padding: 3px 0 3px 3px; border-radius: 13px;
-              background: var(--pp-ciclo-fondo); box-shadow: inset 0 0 0 2px var(--pp-ciclo);
+   Una scatola è una **cornice**: il bordo del suo colore racchiude la
+   testa e le carte che ha dentro, e dentro non c'è nessun fondo — si
+   vede la fila, come fuori. Le carte dentro sono un poco più piccole di
+   quelle fuori, così la cornice le abbraccia con un filo d'aria invece di
+   stringerle. Il bordo in fondo si tocca per uscire. Una scatola dentro
+   un'altra ha il bordo più chiaro, e le due si distinguono senza contare
+   le parentesi.
+
+   Era una fila dentro la fila, col fondo viola chiaro e una barra piena
+   in fondo: un rettangolo chiaro dentro un altro, e nessuno dei due
+   racchiudeva davvero niente. */
+.pp-scatola { --pp-piccola: calc(var(--pp-tessera) - 6px);
+              display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px;
+              max-width: 100%; padding: 3px 3px 3px 3px; border-radius: 12px;
+              border: 2.5px solid var(--pp-ciclo); background: none;
               transition: opacity .2s }
-.pp-scatola.pp-dentro { background: var(--pp-ciclo-dentro) }
+.pp-scatola .pp-scatola { border-color: var(--pp-ciclo-chiaro) }
+.pp-scatola .pp-tessera { width: var(--pp-piccola); height: var(--pp-piccola); border-radius: 8px }
+.pp-scatola .pp-tessera .pp-icona { width: 18px; height: 18px }
 .pp-scatola.pp-sospetta { opacity: .45 }
-.pp-testa { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
+.pp-testa { width: var(--pp-piccola); height: var(--pp-piccola); flex: none; border-radius: 8px;
             background: var(--pp-ciclo); color: #fff; padding: 0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             line-height: 1; box-shadow: 0 2px 0 var(--pp-ciclo-scuro); transition: transform .12s }
-.pp-testa .pp-ciclo-icona { font-size: 12px }
-.pp-testa b { font-size: 18px; font-weight: 900 }
+.pp-testa .pp-ciclo-icona { font-size: 10px }
+.pp-testa b { font-size: 15px; font-weight: 900 }
 /* la N ancora da scegliere: gialla e tratteggiata, come un posto vuoto */
 .pp-testa.pp-manca { outline: 2px dashed var(--pp-luce); outline-offset: -4px }
 .pp-testa.pp-manca b { color: #ffe27a }
 .pp-testa.pp-aperta { box-shadow: 0 0 0 3px var(--pp-luce), 0 2px 0 var(--pp-ciclo-scuro) }
 /* mentre gira: il giro al posto del numero, e la testa che si accende */
-.pp-testa.pp-gira { transform: scale(1.1); box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
+.pp-testa.pp-gira { transform: scale(1.06); box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
 .pp-testa.pp-gira b { font-size: 14px }
 /* fermata male dentro la scatola: il giro resta scritto, arancione */
 .pp-testa.pp-fermo { transform: none; background: #ff8a00; box-shadow: 0 2px 0 #b35f00 }
-.pp-coda { width: 18px; align-self: stretch; min-height: var(--pp-tessera); flex: none; padding: 0;
-           margin: -3px 0; border-radius: 0 12px 12px 0; background: var(--pp-ciclo); position: relative }
-/* il bordo è stretto a vedersi ma non al dito */
-.pp-coda::after { content: ''; position: absolute; inset: -4px -8px -4px -6px }
+/* il bordo in fondo: si vede la cornice, e al dito basta toccarla */
+.pp-coda { width: 6px; align-self: stretch; flex: none; padding: 0; background: none; position: relative }
+.pp-coda::after { content: ''; position: absolute; inset: -6px -12px -6px -6px }
 .pp-in-corsa .pp-scatola { opacity: 1 }
 
-/* la scatola ❓: stessa forma, un altro colore */
-.pp-scatola.pp-se { background: var(--pp-se-fondo); box-shadow: inset 0 0 0 2px var(--pp-se) }
+/* la scatola ❓: stessa cornice, un altro colore */
+.pp-scatola.pp-se { border-color: var(--pp-se) }
+.pp-scatola .pp-scatola.pp-se { border-color: var(--pp-se-chiaro) }
 .pp-scatola.pp-se > .pp-testa { background: var(--pp-se); box-shadow: 0 2px 0 var(--pp-se-scuro) }
 .pp-scatola.pp-se > .pp-testa.pp-gira { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
-.pp-scatola.pp-se > .pp-coda { background: var(--pp-se) }
-.pp-testa .pp-lastra { width: 17px; height: 17px; margin-top: 1px }
+.pp-testa .pp-lastra { width: 14px; height: 14px; margin-top: 1px }
 
-/* ── una lastra in piccolo: un quadratino chiaro con la forma del suo
-   colore. La forma c'è per chi i colori non li distingue ── */
-.pp-lastra { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none;
-             border-radius: 5px; background: #fffaf0; box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.25) }
-.pp-lastra i { display: block; width: 62%; height: 62% }
-.pp-lastra-rosso i { background: #e0483a; border-radius: 50% }
-.pp-lastra-blu i { background: #3a78de; width: 54%; height: 54%; border-radius: 1px }
-.pp-lastra-giallo i { background: #e0a810; clip-path: polygon(50% 4%, 98% 96%, 2% 96%) }
-.pp-lastra-casa { background: none; box-shadow: none; font-size: 16px }
+/* ── una lastra in piccolo: la forma del suo colore, e basta — il
+   cerchio rosso, il quadrato blu, il triangolo giallo. La forma c'è per
+   chi i colori non li distingue; l'alone bianco la stacca dal viola
+   della testa e dei tasti. Stava dentro un quadratino chiaro, che in una
+   testa grande quanto una tessera era un rettangolo dentro l'altro ── */
+.pp-lastra { display: inline-grid; place-items: center; width: 20px; height: 20px; flex: none;
+             filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) }
+.pp-lastra i { display: block; width: 76%; height: 76% }
+.pp-lastra-rosso i { background: #e84a3c; border-radius: 50% }
+.pp-lastra-blu i { background: #3a7ee6; width: 66%; height: 66%; border-radius: 2px }
+.pp-lastra-giallo i { background: #f2b91e; clip-path: polygon(50% 6%, 97% 94%, 3% 94%) }
+.pp-lastra-casa { filter: none; font-size: 15px }
 
 /* il consiglio di una scatola: il 🔁 col suo numero, in trasparenza */
 .pp-tessera.pp-fantasma.pp-fantasma-ciclo { color: var(--pp-ciclo); display: flex; flex-direction: column;
                                             align-items: center; justify-content: center; line-height: 1 }
-.pp-fantasma-ciclo .pp-ciclo-icona { font-size: 12px }
+.pp-fantasma-ciclo .pp-ciclo-icona { font-size: 10px }
 .pp-tessera.pp-fantasma.pp-fantasma-se { color: var(--pp-se) }
-.pp-fantasma-ciclo .pp-lastra { width: 16px; height: 16px }
-.pp-fantasma-ciclo b { font-size: 17px; font-weight: 900 }
+.pp-fantasma-ciclo .pp-lastra { width: 14px; height: 14px }
+.pp-fantasma-ciclo b { font-size: 15px; font-weight: 900 }
 
 /* ═══════════ le frecce e i tasti ═══════════ */
 .pp-tasti { flex: none; display: flex; flex-direction: column; gap: 8px }

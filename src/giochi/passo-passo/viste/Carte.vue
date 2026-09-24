@@ -33,7 +33,6 @@ defineOptions({ name: 'Carte' })
 const props = defineProps({
   nodi: { type: Array, required: true },
   fine: { type: Number, required: true },     // il posto in fondo a questo elenco
-  dentro: { type: Number, default: 0 },       // quante scatole ci sono attorno
 })
 
 const f = inject('fila')
@@ -105,7 +104,7 @@ const numero = t => typeof valoreDi(t) === 'number'
       <Icona :mossa="x.nodo.m" />
     </button>
 
-    <div v-else class="pp-scatola" :class="{ 'pp-dentro': dentro % 2 === 1, 'pp-se': x.nodo.che === 'se',
+    <div v-else class="pp-scatola" :class="{ 'pp-se': x.nodo.che === 'se',
                                              'pp-sospetta': f.s.value.sospette && x.nodo.i >= f.s.value.cursore }"
          :data-scatola="x.nodo.i" :data-tipo="x.nodo.che">
       <button class="pp-testa"
@@ -119,7 +118,7 @@ const numero = t => typeof valoreDi(t) === 'number'
           {{ giroDi(x.nodo.i) || (valoreNodo(x.nodo) ?? 'N') }}</b>
         <Lastra v-else :colore="valoreNodo(x.nodo)" />
       </button>
-      <Carte :nodi="x.nodo.corpo" :fine="x.nodo.fine" :dentro="dentro + 1" />
+      <Carte :nodi="x.nodo.corpo" :fine="x.nodo.fine" />
       <!-- il bordo della scatola: toccarlo mette il cursore subito fuori -->
       <button class="pp-coda" :data-coda="x.nodo.fine" aria-label="dopo la scatola"
               @click="f.tocca(x.nodo.fine + 1)"></button>
