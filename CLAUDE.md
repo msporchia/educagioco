@@ -587,7 +587,8 @@ committate: non è ricostruibile da git.
   (`motore/risolutore.js`) dà gli aiuti (la prossima freccia giusta, mai la
   soluzione intera), controlla in `unita/passo-passo` che ogni livello abbia
   bisogno della regola del suo gradino, e con `motore/generatore.js` fa i
-  sentieri della modalità senza fine. Stelle: arrivato, la carota, senza 💡.
+  sentieri della modalità senza fine. Stelle: arrivato, la carota, e la
+  strada trovata da te (🧠: la spegne solo la strada intera comprata col 💡).
   **Dopo le buche cresce la lingua e non il mondo**: i gradini dei grandi
   (da sette anni e mezzo) portano una carta — 🔁 ripeti N volte, per ora —
   e con lei lo **zaino**, quante carte tiene la fila. Scritta freccia per
@@ -924,6 +925,30 @@ committate: non è ricostruibile da git.
   arrivando in fondo a una tappa. Vedi `CALIBRAZIONE.md`: una moneta
   vale dieci secondi di esercizio, e un tasto premuto a caso non è
   esercizio.
+- **Gli aiuti che sbloccano si pagano in monete, e i primi fanno
+  ragionare** (`giochi/aiuti.js`). Il 💡 del Generale, di Passo passo e
+  del costruttore è **una scala sola** con un tasto solo: due gradini
+  **gratis** che non dicono la risposta — cosa chiede il livello e cosa
+  lo rende difficile, poi la domanda giusta da farsi («visto che il
+  livello chiede…») — poi gli **indizi a 🪙10**, poi i gradini che
+  **scrivono nel programma** a 🪙50 · 100 · 200 (il prezzo lo decide la
+  posizione: l'ultimo, la soluzione intera, costa sempre 200). Costavano
+  la stella «da solo», e una stella è un prezzo che un bambino non
+  sente: il 💡 diventava il modo di finire un livello senza pensarci, e
+  un livello svelato è bruciato. Tre cose che si sbagliano: **il prezzo
+  si dice prima**, sul tasto, e senza monete non si dà niente (nessun
+  credito, nessuno sconto: se no conviene spendere tutto altrove e poi
+  farsi svelare); **dai 50 in su ci vuole un secondo tocco**; e **quello
+  che si è pagato resta** — nel Generale e nel costruttore i gradini
+  scesi stanno nel profilo (`gen.aiuti`, `campagne[k].aiuti`, via
+  `segnaAiutiPresi`) e un pezzo di programma si rimette gratis; in
+  Passo passo la scala riparte a ogni ingresso perché ogni gradino
+  guarda la fila di adesso. La stella «da solo» la toglie **solo la
+  soluzione intera**: non è più un prezzo, è un fatto. I gradini che
+  scrivono **non si scrivono a mano**: escono dalla soluzione che il
+  banco gioca (`scalaDi` di ogni gioco), e `unita/aiuti` pretende che
+  la soluzione svelata vinca e che un gradino più caro non tolga niente
+  di quello che uno più economico aveva dato.
 - **Una schermata appena comparsa non si lascia toccare subito**, e
   **l'attesa si vede.** Le due metà del contorno dello stesso guasto: dopo
   uno sbaglio si resta fermi un paio di secondi per leggere il perché, e

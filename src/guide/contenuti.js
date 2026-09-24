@@ -606,10 +606,15 @@ export const AIUTI = {
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
         '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',
         'Toccando il bordo in fondo alla scatola si esce; toccando la testa si cambia il numero. Mentre il coniglio corre la testa dice a che giro è.',
+        'Più avanti la testa può essere un **colore**: «fino al rosso» ripete finché il coniglio non arriva sulla lastra rossa. E la scatola ❓ **se** fa quello che ha dentro solo quando il coniglio sta sul colore giusto.',
+      ] },
+      { titolo: 'Il 💡', righe: [
+        'I primi due tocchi sono **gratis**: il primo aiuta a ragionare — cosa chiede questo posto, e cosa guardare — il secondo dice **dove** la fila comincia a sbagliare, ma non con quale freccia.',
+        'Poi si paga in monete, e il prezzo è scritto sul tasto prima di toccarlo: 🪙10 la freccia giusta (la mette il bambino), 🪙50 e 🪙100 un pezzo di strada scritto nella fila, 🪙200 la strada intera. Dai 50 in su ci vuole un secondo tocco. Senza monete, niente aiuto.',
       ] },
       { titolo: 'Le stelle', righe: [
-        'Una per essere arrivato a casa, una per la **carota**, una per averlo fatto **senza 💡**.',
-        'Il 💡 non dà la soluzione: indica la prossima freccia giusta, e la mette il bambino. Costa la terza stella, e lo dice prima.',
+        'Una per essere arrivato a casa, una per la **carota**, una per aver trovato la strada **da solo** 🧠.',
+        'Quella da solo la spegne solo la strada intera scritta dal 💡: gli altri aiuti si pagano in monete, e basta.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Il primo passo della programmazione: un programma è una fila di ordini, si esegue da capo, e quando va storto si cerca **quale** ordine era sbagliato.',
@@ -631,7 +636,8 @@ export const AIUTI = {
       'Quasi ogni livello ha **più ordini** — tre gradini, poi cinque — e il programma deve reggerli tutti: scrivere il numero del primo ordine al posto della lavagnetta vince una volta e perde la seconda.',
       { titolo: 'Se non va', righe: [
         'Il robot si ferma sulla riga sbagliata e dice perché.',
-        'Il 💡 dà un aiuto per volta, gratis; in fondo c\'è «mostrami come», che scrive la soluzione e costa la seconda stella.',
+        'Il 💡 è una scala: i primi due gradini sono **gratis** e aiutano a ragionare — cosa chiede il livello, e la domanda giusta da farsi.',
+        'Poi si paga in monete: 🪙10 un indizio; 🪙50 un pezzo di programma, 🪙100 tutti i blocchi al loro posto coi valori da scegliere, 🪙200 la soluzione — che vince, ma lascia spenta la seconda stella. Quello che si è pagato resta, e un pezzo di programma si rimette gratis. Senza monete, niente aiuto.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Programmare davvero: funzioni con i loro parametri, variabili, cicli, condizioni. Il tasto «🐍 com\'è in Python» mostra lo stesso programma come lo scrive chi programma di mestiere.',
@@ -648,6 +654,10 @@ export const AIUTI = {
         'Se finisce male, non hai perso niente: cambia un ordine e rilancia.',
       ] },
       'Le prime prove insegnano una cosa per volta. Non c\'è fretta e non c\'è punteggio a tempo.',
+      { titolo: 'Se ti blocchi', righe: [
+        'Il 💡 apre il cartello del livello. I primi aiuti sono **gratis** e fanno ragionare: cosa chiede il livello, e la domanda giusta da farsi.',
+        'Poi si pagano in monete: 🪙10 un indizio, e 🪙50 · 100 · 200 quelli che scrivono nel piano — un pezzo, la struttura coi bersagli da trovare, il piano intero. Il piano intero vince, ma vale una stella sola. Senza monete, niente aiuto.',
+      ] },
       { titolo: 'Cosa allena', righe: [
         'Pensare per passi e prevedere le conseguenze: è programmare, senza chiamarlo così.',
         'E l\'idea che un errore si legge — «è andata storta qui» — invece di riprovare a caso.',

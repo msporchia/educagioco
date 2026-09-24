@@ -76,6 +76,36 @@ Sopra le due ore non ci va **niente**. Un bambino gioca venti o trenta minuti
 al giorno: due ore sono già una settimana, e una settimana per una cosa sola
 è il punto in cui si smette di provarci.
 
+## Gli aiuti che si comprano
+
+Il 💡 del Generale, di Passo passo e del costruttore vende gradini
+(`src/giochi/aiuti.js`). I primi due sono **gratis** — fanno ragionare, e
+non dicono la risposta — e gli altri si pagano:
+
+| gradino | prezzo | in esercizio | cos'è |
+|---|---|---|---|
+| un indizio | 🪙10 | 1 min 40 s | una frase concreta, o la carta giusta in un posto |
+| il primo gradino che scrive | 🪙50 | 8 min | un pezzo di programma, o di strada |
+| il penultimo | 🪙100 | 17 min | la forma coi valori da scegliere, o metà strada |
+| la soluzione intera | 🪙200 | 33 min | tutto il programma |
+
+Questi prezzi **non sono un mercato**: sono un freno. Un livello di quei
+giochi rende 🪙4–30 la prima volta, e scendere tutta la scala costa
+🪙350–390 — dieci livelli. È voluto, e la domanda da farsi non è «quanto
+vale una soluzione» ma «cosa succede se un bambino preme il 💡 finché il
+livello non si risolve da solo»: con la stella come prezzo succedeva ogni
+volta, perché una stella in meno non si sente, e il livello era bruciato.
+Chi invece è bloccato davvero ha due gradini gratis che lo fanno ragionare,
+e un indizio costa meno di una tappa di qualunque gioco.
+
+Due conseguenze da non perdere. Nessun aiuto rende monete — il premio del
+livello si paga lo stesso alla prima vittoria, ma è sempre molto meno di
+quello che la scala è costata, quindi comprarsi la strada non è mai un
+modo di guadagnare. E un gradino pagato **resta** (nel Generale e nel
+costruttore): pagarlo due volte per un tocco di troppo su ← sarebbe una
+moneta tolta senza niente in cambio, cioè il contrario del premio di
+consolazione, e sbagliato per la stessa ragione.
+
 ## Le curve: mai esponenziali
 
 Una cosa che si compra più volte deve rincarare — se no la strategia è
