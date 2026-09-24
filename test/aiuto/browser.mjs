@@ -167,6 +167,14 @@ function scriviRoster(page, ids, chi) {
 /* Scrive un profilo già pronto e ricarica: provare la fame di domani
    senza aspettare domani è metà del lavoro di questi test. */
 export async function semina(page, profilo, giocatore = GIOCATORE) {
+  /* Prima si lascia finire quello che l'app ha in coda: l'archivio rimanda
+     le scritture di 350 ms (`store/storage.js`), e al `pagehide` della
+     ricarica qui sotto le scrive tutte. Un gioco appena usato col profilo
+     cambiato un attimo prima scriveva così il suo profilo **dopo** quello
+     seminato, e se lo mangiava: nel costruttore la gru si apriva chiusa,
+     perché la tappa era rimasta quella del bosco — una volta sì e una no,
+     a seconda di quanto era durato il passo prima. */
+  await attendi(page, 400)
   await page.evaluate(([p, chi]) => new Promise((ok, ko) => {
     const r = indexedDB.open('giochi-bambini', 1)
     r.onerror = () => ko(new Error('IndexedDB non si apre'))
