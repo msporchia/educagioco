@@ -295,7 +295,7 @@ await tocca('[data-scheda="principale"]')
 {
   const torre = LIVELLI.findIndex(l => l.chiave === 'quante-forme')
   await scriviArchivio(page, { v: 2, programmi: { 'quante-forme': JSON.parse(JSON.stringify(LIVELLI[torre].soluzione)) } })
-  await semina(page, { settings: { sperimentali: true, eta: 10 },
+  await semina(page, { settings: { eta: 10 },
                        campagne: { costruttore: { tappa: torre, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: FILA_ATTUALE } } } })
   await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
   await page.waitForSelector('.cst-mappa', { timeout: 5000 })
