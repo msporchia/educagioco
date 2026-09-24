@@ -70,8 +70,9 @@ lavanda, riso).
 - **Il consiglio non sa niente di botteghe e mongolfiera**, per lo
   stesso motivo: insegna la catena, non tutti i posti dove portarla.
 - **Nessuna nota nella posta dei grandi** per il secondo albero: una
-  nota obbliga un grande a leggerla, e il posto giusto è il changelog,
-  che è in preparazione.
+  nota obbliga un grande a leggerla, e il posto giusto è il changelog
+  dei bambini (`guide/novita-bambini.js`), dove ha le sue due righe —
+  la fila delle macchine, e botteghe e mongolfiera salendo di livello.
 - **La mongolfiera non chiede mangime** (`mangime: true` in
   `dati/coltivazioni.js`): solo prodotti finiti, come la nave di Hay
   Day. Il banco sì, perché lì li vuole la veterinaria.

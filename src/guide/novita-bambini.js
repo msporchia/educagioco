@@ -64,7 +64,11 @@ export const NOVITA = [
   { id: 5, quando: '2026-09-21', gioco: 'mate',
     testo: '🚀 Il volo infinito ha il suo record: fin dove arrivi?' },
   { id: 6, quando: '2026-09-22', gioco: 'fattoria',
-    testo: '🐰 Alla fattoria sono arrivati il coniglio e le botteghe' },
+    testo: '🐰 Alla fattoria ci sono il coniglio e tante macchine nuove' },
+  { id: 7, quando: '2026-09-24', gioco: 'fattoria',
+    testo: '⏳ Alla fattoria puoi mettere in fila più cose in ogni macchina' },
+  { id: 8, quando: '2026-09-24', gioco: 'fattoria',
+    testo: '🎈 Alla fattoria, salendo di livello, arrivano botteghe e mongolfiera' },
 ]
 
 /* quante righe per gioco, al massimo: è il tetto di chi torna dopo
