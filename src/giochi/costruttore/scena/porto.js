@@ -12,6 +12,8 @@
        tema: 'molo'|'magazzino'|'bottega',  // la tavolozza del pavimento
        robot, robotDa, dal, durata, verso,  // il passo in corso, come nel cantiere
        voli: [{ cosa, da, a, dal, durata }],  // le cose in viaggio
+       mezzi: [{ come: 'arriva'|'parte', x, y, dal, durata,
+                 colore, capienza, carico, contento }],  // i camion sulla strada
        guarda, legge, fermo, guaio,         // l'occhio, la nuvoletta, i guai
        mancano, sbagliati, umore,           // la sera, e il cliente appena andato
        nastroDal, passo, seguiRobot,
@@ -22,7 +24,11 @@
    ci è arrivato**, e per questo il quadro porta gli orari: finché un
    volo è in corso la cosa si disegna in viaggio e non al suo posto, e
    quando atterra il porto la ritrova da solo dove il motore l'aveva già
-   messa. Così qui non c'è niente da tenere in pari con il motore.
+   messa. Così qui non c'è niente da tenere in pari con il motore. I
+   camion sono la stessa cosa in grande: mentre arriva, il camion è già
+   un arredo sulla piazzola, ma si disegna sulla strada; quando riparte
+   l'arredo non c'è più, e il camion se ne va col carico che il mezzo
+   si porta dietro.
 
    ── DRITTO E DI SBIECO ───────────────────────────────────────────────
    Pavimento, arredi e casse si vedono dritti dall'alto: sono loro che si
@@ -79,6 +85,11 @@ const ROSSO = '#c0262d', VERDE = '#2f9e44', GRIGIO = '#868e96'
 const GIALLO = '#f5b82e', GIALLO_BORDO = '#8a6112'
 const MARE = { fondo: '#3f8ecf', onda: 'rgba(190,228,250,.6)', ombra: 'rgba(12,40,80,.3)' }
 const MURO = { fondo: '#8d8880', chiaro: '#a9a39a', scuro: '#7f7a72', giunto: '#615c55', faccia: '#6b665f', bordo: '#4f4b45' }
+const STRADA = { asfalto: '#4f5358', chiaro: '#5d6167', scuro: '#44484d', riga: 'rgba(242,240,230,.92)', cordolo: '#cfc9bd', cordoloScuro: '#8f897e' }
+/* la buca delle lettere è verde scuro: il rosso delle buche vere qui
+   vorrebbe dire «prende solo casse rosse», e il numero sopra è già
+   tutto quello che serve sapere */
+const BUCA = { corpo: '#2f6d67', coperchio: '#428d85', bordo: '#1b4440', fessura: '#0e1d1b', ottone: '#caa24b' }
 
 /* I tre pavimenti. Stanno tutti sul chiaro e sul caldo: sopra ci devono
    leggersi dieci colori di casse, e un pavimento saturo se ne mangerebbe
@@ -99,6 +110,14 @@ const fra = (v, a, b) => Math.max(a, Math.min(b, v))
 const morbido = f => (f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2)
 const frena = f => 1 - Math.pow(1 - f, 3)
 const tuffo = f => 1 + 2.2 * Math.pow(f - 1, 3) + 1.2 * Math.pow(f - 1, 2)
+/* a metà strada fra due angoli, per la via più corta: una curva a destra
+   non deve diventare tre quarti di giro a sinistra */
+const mescola = (a, b, k) => {
+  let d = b - a
+  while (d > Math.PI) d -= Math.PI * 2
+  while (d < -Math.PI) d += Math.PI * 2
+  return a + d * k
+}
 /* un numero fisso fra 0 e 1 per ogni cella: i sassolini, le venature e
    le onde stanno sempre allo stesso posto — niente tremola */
 const caso = (a, b, n = 0) => {
@@ -137,6 +156,7 @@ export class TelaPorto {
     this.dito = null
     this.trascinatoAlle = -Infinity
     this.schizzi = new Map()
+    this.inPartenza = new Map()
     this.cliente = null
     this.portoVisto = null
     this.nuovo = true
@@ -372,6 +392,12 @@ export class TelaPorto {
     /* le cose in viaggio: finché volano non stanno al loro posto */
     const inVolo = new Set()
     for (const v of q.voli || []) if (v && v.cosa && t < v.dal + (v.durata || 0)) inVolo.add(v.cosa.id)
+    /* e i camion che stanno arrivando: sono già sulla piazzola per il
+       motore, ma sullo schermo sono ancora per strada */
+    const inArrivo = new Set()
+    for (const m of q.mezzi || [])
+      if (m && m.come === 'arriva' && t < m.dal + (m.durata || 0) && p.dentro(m.x, m.y)) inArrivo.add(m.y * p.w + m.x)
+    this.inPartenza = new Map()
     const tema = PAVIMENTI[q.tema] || PAVIMENTI.molo
     const cl = p.clienti && p.clienti.alBancone
     const idCliente = cl ? cl.id : null
@@ -379,13 +405,16 @@ export class TelaPorto {
       this.cliente = { id: idCliente, dal: this.nuovo ? -Infinity : t }
 
     this.pavimento(p, tema, vis)
+    this.strade(p, vis)
     this.mare(p, vis, t)
     this.muri(p, vis)
     this.griglia(p, vis, tema)
     this.segniPerTerra(p)
-    this.arredi(p, q, t, vis, inVolo)
+    this.arredi(p, q, t, vis, inVolo, inArrivo)
+    this.scivoli(p, vis)
     this.fantasmi(p, q, t, vis, inVolo)
     this.cose(p, vis, inVolo)
+    this.mezzi(p, q, t, inVolo)
     /* gli schizzi dopo gli arredi: una cassa caduta oltre il bordo della
        mappa fa gli anelli sul bordo, che può essere la fine di un nastro */
     this.acqua(t)
@@ -399,7 +428,7 @@ export class TelaPorto {
     this.segnali(p, q, t)
     this.umore(p, q, t)
     this.richiesta(p, t)
-    this.etichette(p, vis, inVolo)
+    this.etichette(p, vis, inVolo, inArrivo, t)
     this.lettura(p, q, t)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     if (this.telecamera) this.bordi(p)
@@ -541,6 +570,190 @@ export class TelaPorto {
     ctx.fill()
   }
 
+  /* ── la strada dei camion ──
+     Asfalto, la riga tratteggiata dove la strada va — la si ricava dalle
+     caselle-strada vicine, quindi viene da sé dritta, in curva o a
+     incrocio — e il cordolo chiaro verso tutto quello che strada non è:
+     è il confine che il robot non passa. La piazzola ha le strisce del
+     parcheggio, e si vede anche vuota: lì si ferma qualcuno. */
+  strade(p, vis) {
+    const { ctx, cella: c } = this
+    const asfalto = []
+    this.celle(p, vis, 'strada', (x, y, px, py) => asfalto.push([x, y, px, py]))
+    if (!asfalto.length) return
+    const strada = (x, y) => this.suoloDi(p, x, y) === 'strada'
+    ctx.fillStyle = STRADA.asfalto
+    ctx.beginPath()
+    for (const [, , px, py] of asfalto) ctx.rect(px, py, c, c)
+    ctx.fill()
+    /* la grana, fissa come i sassolini del cemento */
+    const g = Math.max(1, c * 0.045)
+    for (const [tono, da] of [[STRADA.chiaro, 60], [STRADA.scuro, 70]]) {
+      ctx.fillStyle = tono
+      ctx.beginPath()
+      for (const [x, y, px, py] of asfalto)
+        for (let i = 0; i < 4; i++) ctx.rect(px + c * (0.08 + 0.84 * caso(x, y, da + i)), py + c * (0.08 + 0.84 * caso(x, y, da + 5 + i)), g, g)
+      ctx.fill()
+    }
+    /* la riga di mezzo: da ogni casella un braccio verso ogni strada
+       vicina (e verso fuori, dove la strada esce dalla mappa); due bracci
+       in fila fanno un trattino, due ad angolo una curva */
+    ctx.strokeStyle = STRADA.riga
+    ctx.lineWidth = Math.max(1.5, c * 0.065)
+    ctx.lineCap = 'square'
+    ctx.beginPath()
+    for (const [x, y, px, py] of asfalto) {
+      if (this.ePiazzola(p, x, y)) continue
+      const cx = px + c / 2, cy = py + c / 2
+      const esce = this.uscita(p, x, y)
+      for (const d of ['su', 'giu', 'sinistra', 'destra']) {
+        const [dx, dy] = DIREZIONI[d]
+        if (!(esce === d || (strada(x + dx, y + dy) && !this.ePiazzola(p, x + dx, y + dy)))) continue
+        ctx.moveTo(cx, cy)
+        ctx.lineTo(cx + dx * c * 0.24, cy + dy * c * 0.24)
+      }
+    }
+    ctx.stroke()
+    ctx.lineCap = 'butt'
+    /* il cordolo, dentro la casella di strada, verso quello che strada
+       non è; verso il bordo della mappa no, perché di là continua */
+    const b = c * 0.12
+    const fuori = (x, y) => p.dentro(x, y) && !strada(x, y)
+    ctx.fillStyle = STRADA.cordolo
+    ctx.beginPath()
+    for (const [x, y, px, py] of asfalto) {
+      if (fuori(x, y - 1)) ctx.rect(px, py, c, b)
+      if (fuori(x, y + 1)) ctx.rect(px, py + c - b, c, b)
+      if (fuori(x - 1, y)) ctx.rect(px, py, b, c)
+      if (fuori(x + 1, y)) ctx.rect(px + c - b, py, b, c)
+    }
+    ctx.fill()
+    ctx.strokeStyle = STRADA.cordoloScuro
+    ctx.lineWidth = Math.max(1, c * 0.03)
+    ctx.beginPath()
+    for (const [x, y, px, py] of asfalto) {
+      if (fuori(x, y - 1)) { ctx.moveTo(px, py + b); ctx.lineTo(px + c, py + b) }
+      if (fuori(x, y + 1)) { ctx.moveTo(px, py + c - b); ctx.lineTo(px + c, py + c - b) }
+      if (fuori(x - 1, y)) { ctx.moveTo(px + b, py); ctx.lineTo(px + b, py + c) }
+      if (fuori(x + 1, y)) { ctx.moveTo(px + c - b, py); ctx.lineTo(px + c - b, py + c) }
+    }
+    ctx.stroke()
+    /* le strisce del parcheggio */
+    ctx.strokeStyle = STRADA.riga
+    ctx.lineWidth = Math.max(1.5, c * 0.055)
+    ctx.setLineDash([c * 0.13, c * 0.08])
+    for (const [x, y, px, py] of asfalto) {
+      if (!this.ePiazzola(p, x, y)) continue
+      const m = c * 0.17
+      ctx.strokeRect(px + m, py + m, c - 2 * m, c - 2 * m)
+    }
+    ctx.setLineDash([])
+  }
+
+  ePiazzola(p, x, y) {
+    const m = this.memo(p)
+    if (!m.piazzole) m.piazzole = new Set(p.piazzole || [])
+    return p.dentro(x, y) && m.piazzole.has(y * p.w + x)
+  }
+
+  /* Da che parte una casella di strada esce dalla mappa, se esce. Sta sul
+     bordo non basta: una strada che corre lungo il bordo non esce di
+     lato. Esce se la strada arriva dritta contro il bordo (ha una strada
+     dalla parte opposta), o se è una casella sola. Le piazzole non contano
+     come strada qui: una piazzola sopra la strada del bordo non la fa
+     uscire di sotto. E una piazzola non è mai un'uscita, se ha una strada
+     vicino: in fondo a una strada, contro il bordo, è un parcheggio, e i
+     camion ci arrivano dalla strada — non dal niente oltre il bordo. */
+  uscita(p, x, y) {
+    const m = this.memo(p)
+    if (!m.uscite) m.uscite = new Map()
+    const k = y * p.w + x
+    if (m.uscite.has(k)) return m.uscite.get(k)
+    const strada = (ax, ay) => this.suoloDi(p, ax, ay) === 'strada' && !this.ePiazzola(p, ax, ay)
+    const vicini = ['su', 'giu', 'sinistra', 'destra'].filter(d => strada(x + DIREZIONI[d][0], y + DIREZIONI[d][1]))
+    let esce = null
+    if (!(this.ePiazzola(p, x, y) && vicini.length)) {
+      for (const d of ['giu', 'destra', 'sinistra', 'su']) {
+        const [dx, dy] = DIREZIONI[d]
+        if (p.dentro(x + dx, y + dy)) continue
+        if (!vicini.length || vicini.includes(OPPOSTO[d])) { esce = d; break }
+      }
+    }
+    m.uscite.set(k, esce)
+    return esce
+  }
+
+  /* ── la strada di un camion ──
+     Dalla piazzola al bordo più vicino, lungo la strada (una ricerca in
+     ampiezza sulle caselle di strada), e poi fuori dalla mappa quanto
+     basta a sparire. Se la strada non esce da nessuna parte il camion
+     arriva dal basso, dritto. È la stessa strada all'andata e al
+     ritorno: il camion ha sempre la cabina verso l'uscita — entra in
+     retromarcia, come ai moli di carico, ed esce col muso avanti — così
+     non deve mai girarsi su se stesso in una casella sola. */
+  percorso(p, x, y) {
+    const m = this.memo(p)
+    if (!m.percorsi) m.percorsi = new Map()
+    const k0 = y * p.w + x
+    if (m.percorsi.has(k0)) return m.percorsi.get(k0)
+    const prima = new Map([[k0, -1]])
+    const coda = [k0]
+    let fine = -1
+    for (let i = 0; i < coda.length; i++) {
+      const k = coda[i]
+      const cx = k % p.w, cy = (k - cx) / p.w
+      if (this.uscita(p, cx, cy)) { fine = k; break }
+      for (const d of ['giu', 'destra', 'sinistra', 'su']) {
+        const [dx, dy] = DIREZIONI[d]
+        const nx = cx + dx, ny = cy + dy
+        if (this.suoloDi(p, nx, ny) !== 'strada') continue
+        const nk = ny * p.w + nx
+        if (prima.has(nk)) continue
+        prima.set(nk, k)
+        coda.push(nk)
+      }
+    }
+    let punti
+    if (fine >= 0 && this.suoloDi(p, x, y) === 'strada') {
+      const celle = []
+      for (let k = fine; k >= 0; k = prima.get(k)) celle.unshift(k)
+      punti = celle.map(k => [(k % p.w) + 0.5, Math.floor(k / p.w) + 0.5])
+      const [ux, uy] = DIREZIONI[this.uscita(p, fine % p.w, Math.floor(fine / p.w))]
+      const [lx, ly] = punti[punti.length - 1]
+      punti.push([lx + ux * 1.7, ly + uy * 1.7])
+    } else {
+      punti = [[x + 0.5, y + 0.5], [x + 0.5, p.h + 1.2]]
+    }
+    const tratti = []
+    let lung = 0
+    for (let i = 1; i < punti.length; i++) {
+      const [ax, ay] = punti[i - 1], [bx, by] = punti[i]
+      const l = Math.hypot(bx - ax, by - ay)
+      tratti.push({ ax, ay, bx, by, l, da: lung, angolo: Math.atan2(bx - ax, -(by - ay)) })
+      lung += l
+    }
+    const r = { punti, tratti, lung }
+    m.percorsi.set(k0, r)
+    return r
+  }
+
+  /* dove sta, e da che parte guarda la cabina, un camion a `s` celle
+     dalla piazzola lungo la sua strada; nelle curve la cabina gira un po'
+     prima e un po' dopo l'angolo, invece che di scatto */
+  lungoLaStrada(r, s) {
+    s = fra(s, 0, r.lung)
+    let i = r.tratti.findIndex(t => s <= t.da + t.l)
+    if (i < 0) i = r.tratti.length - 1
+    const t = r.tratti[i]
+    const f = t.l ? (s - t.da) / t.l : 0
+    const R = 0.32
+    let angolo = t.angolo
+    const dentro = s - t.da, resto = t.l - dentro
+    if (resto < R && i + 1 < r.tratti.length) angolo = mescola(angolo, r.tratti[i + 1].angolo, (1 - resto / R) / 2)
+    else if (dentro < R && i > 0) angolo = mescola(angolo, r.tratti[i - 1].angolo, (1 - dentro / R) / 2)
+    return { x: t.ax + (t.bx - t.ax) * f, y: t.ay + (t.by - t.ay) * f, angolo }
+  }
+
   /* ── il mare ──
      Onde lente e fisse al loro posto: si muovono avanti e indietro di
      poco, con periodi di secondi. Un'acqua che tremola a sessanta
@@ -654,7 +867,9 @@ export class TelaPorto {
     ctx.stroke()
     ctx.fillStyle = 'rgba(35,28,20,.17)'
     ctx.beginPath()
-    this.celle(p, vis, 'pavimento', (x, y, px, py) => {
+    this.celle(p, vis, null, (x, y, px, py) => {
+      const s = p.suolo[y * p.w + x]
+      if (s !== 'pavimento' && s !== 'strada') return
       if (this.suoloDi(p, x - 1, y) === 'muro') ctx.rect(px, py, c * 0.14, c)
       if (this.suoloDi(p, x, y - 1) === 'muro') ctx.rect(px, py, c, c * 0.14)
     })
@@ -756,10 +971,10 @@ export class TelaPorto {
   }
 
   /* ═══════════ gli arredi ═══════════ */
-  arredi(p, q, t, vis, inVolo) {
+  arredi(p, q, t, vis, inVolo, inArrivo) {
     for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
       const a = p.arredo[y * p.w + x]
-      if (!a) continue
+      if (!a || inArrivo.has(y * p.w + x)) continue
       if (a.tipo === 'scaffale') this.scaffale(x, y)
       else if (a.tipo === 'bancone') this.bancone(p, x, y)
       else if (a.tipo === 'nastro') this.nastro(p, x, y, a, q, t)
@@ -848,7 +1063,9 @@ export class TelaPorto {
     const { ctx, cella: c } = this
     const [dx, dy] = DIREZIONI[a.verso] || DIREZIONI.destra
     const eNastro = (nx, ny) => p.dentro(nx, ny) && !!p.arredo[ny * p.w + nx] && p.arredo[ny * p.w + nx].tipo === 'nastro'
-    const avanti = eNastro(x + dx, y + dy)
+    /* davanti c'è un altro nastro, o un cassone in cui scaricare: in tutti
+       e due i casi il nastro non finisce nel vuoto, e il rullo non c'è */
+    const avanti = eNastro(x + dx, y + dy) || this.scaricaIn(p, x, y, a)
     let dietro = false
     for (const d of Object.keys(DIREZIONI)) {
       const [ex, ey] = DIREZIONI[d]
@@ -911,6 +1128,55 @@ export class TelaPorto {
     ctx.lineCap = 'butt'
   }
 
+  /* il cassone in fondo a un nastro, se c'è: è lì che il nastro scarica */
+  scaricaIn(p, x, y, a) {
+    const [dx, dy] = DIREZIONI[a.verso] || DIREZIONI.destra
+    const nx = x + dx, ny = y + dy
+    const b = p.dentro(nx, ny) && p.arredo[ny * p.w + nx]
+    return b && b.tipo === 'cassone' ? b : null
+  }
+
+  /* ── gli scivoli ──
+     Dove un nastro scarica in un cassone, la fine del nastro diventa uno
+     scivolo che entra oltre il bordo del cassone: si vede che le casse
+     finiscono lì dentro. Si disegnano dopo tutti gli arredi, perché il
+     cassone può venire prima o dopo il nastro nel giro delle caselle, e
+     lo scivolo deve stargli sopra in tutti e due i casi. */
+  scivoli(p, vis) {
+    const { ctx, cella: c } = this
+    const h = c / 2, larga = c * 0.34
+    for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
+      const a = p.arredo[y * p.w + x]
+      if (!a || a.tipo !== 'nastro' || !this.scaricaIn(p, x, y, a)) continue
+      ctx.save()
+      ctx.translate((x + 0.5) * c, (y + 0.5) * c)
+      ctx.rotate(DA_DESTRA[a.verso] || 0)
+      const fondo = h + c * 0.22
+      ctx.fillStyle = 'rgba(30,30,35,.25)'
+      ctx.fillRect(h, -larga + c * 0.05, c * 0.24, 2 * larga)
+      ctx.fillStyle = '#80878f'
+      ctx.beginPath()
+      ctx.moveTo(h - c * 0.02, -larga - c * 0.05)
+      ctx.lineTo(fondo, -larga * 0.82)
+      ctx.lineTo(fondo, larga * 0.82)
+      ctx.lineTo(h - c * 0.02, larga + c * 0.05)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = '#3b4047'
+      ctx.beginPath()
+      ctx.moveTo(h - c * 0.02, -larga)
+      ctx.lineTo(fondo - c * 0.04, -larga * 0.7)
+      ctx.lineTo(fondo - c * 0.04, larga * 0.7)
+      ctx.lineTo(h - c * 0.02, larga)
+      ctx.closePath()
+      ctx.fill()
+      /* il labbro dello scivolo, lucido */
+      ctx.fillStyle = '#c9ced4'
+      ctx.fillRect(fondo - c * 0.04, -larga * 0.82, c * 0.04, larga * 1.64)
+      ctx.restore()
+    }
+  }
+
   /* ── i cassoni ──
      Quattro figure per la stessa cosa: un posto che tiene tante casse.
      Se accetta un colore solo, quel colore lo porta addosso in grande — il
@@ -922,6 +1188,9 @@ export class TelaPorto {
     for (let i = pila.length - 1; i >= 0; i--) if (!inVolo.has(pila[i].id)) { cima = pila[i]; break }
     const col = a.colore ? colore(a.colore) : null
     const figura = a.figura || 'cassone'
+    /* nella buca le lettere non si vedono: sono dentro. Si vede solo che
+       ce n'è qualcuna, da un foglio che spunta dalla fessura */
+    if (figura === 'buca') return this.buca(x, y, !!cima)
     if (figura === 'camion') this.camion(p, x, y, col)
     else if (figura === 'stiva') this.stiva(x, y, col)
     else if (figura === 'magazzino') this.portaMagazzino(p, x, y, col)
@@ -946,12 +1215,25 @@ export class TelaPorto {
     const cx = (x + 0.5) * c, cy = (y + 0.5) * c
     if (!a || a.tipo !== 'cassone') return { x: cx, y: cy, s: 1 }
     const figura = a.figura || 'cassone'
-    if (figura === 'camion' || figura === 'magazzino') {
-      const [ux, uy] = DIREZIONI[this.latoEsterno(p, x, y)]
-      const d = figura === 'camion' ? 0.155 : 0.13
-      return { x: cx - ux * c * d, y: cy - uy * c * d, s: figura === 'camion' ? 0.7 : 0.72 }
+    if (figura === 'camion') {
+      /* il pianale sta dietro la cabina, che guarda dalla parte di `angolo` */
+      const angolo = this.angoloCabina(p, x, y)
+      return { x: cx - Math.sin(angolo) * c * 0.155, y: cy + Math.cos(angolo) * c * 0.155, s: 0.7 }
     }
+    if (figura === 'magazzino') {
+      const [ux, uy] = DIREZIONI[this.latoEsterno(p, x, y)]
+      return { x: cx - ux * c * 0.13, y: cy - uy * c * 0.13, s: 0.72 }
+    }
+    /* nella buca si entra dalla fessura, e la lettera ci sparisce dentro */
+    if (figura === 'buca') return { x: cx, y: y * c + c * 0.21, s: 0.42 }
     return { x: cx, y: cy + (figura === 'cassone' ? c * 0.01 : 0), s: figura === 'stiva' ? 0.7 : 0.8 }
+  }
+
+  /* da che parte guarda la cabina di un camion: sulla piazzola verso
+     l'uscita della sua strada, altrove verso il muro o il bordo */
+  angoloCabina(p, x, y) {
+    if (this.suoloDi(p, x, y) === 'strada') return this.percorso(p, x, y).tratti[0].angolo
+    return DA_SU[this.latoEsterno(p, x, y)]
   }
 
   /* il lato «di fuori» di una cella: dove c'è un muro, il mare o il bordo.
@@ -1023,14 +1305,25 @@ export class TelaPorto {
 
   /* il camion: cabina dalla parte di fuori, pianale verso il pavimento */
   camion(p, x, y, col) {
+    const c = this.cella
+    this.figuraCamion((x + 0.5) * c, (y + 0.5) * c, this.angoloCabina(p, x, y), col)
+  }
+
+  /* il camion visto da sopra, con la cabina verso `angolo` (0 = in su):
+     lo stesso fermo sulla piazzola e in viaggio sulla strada */
+  figuraCamion(cx, cy, angolo, col) {
     const { ctx, cella: c } = this
-    const lato = this.latoEsterno(p, x, y)
+    /* l'ombra cade sempre in basso a destra, anche quando il camion gira */
     ctx.save()
-    ctx.translate((x + 0.5) * c, (y + 0.5) * c)
-    ctx.rotate(DA_SU[lato])
+    ctx.translate(cx + c * 0.05, cy + c * 0.07)
+    ctx.rotate(angolo)
     ctx.fillStyle = 'rgba(30,25,20,.25)'
-    rett(ctx, -c * 0.36, -c * 0.43, c * 0.8, c * 0.93, c * 0.08)
+    rett(ctx, -c * 0.41, -c * 0.5, c * 0.82, c * 0.98, c * 0.09)
     ctx.fill()
+    ctx.restore()
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(angolo)
     /* le ruote sporgono appena dai fianchi */
     ctx.fillStyle = '#22262c'
     for (const wy of [-0.33, 0.3]) for (const wx of [-0.47, 0.39]) ctx.fillRect(wx * c, wy * c - c * 0.09, c * 0.08, c * 0.18)
@@ -1140,6 +1433,77 @@ export class TelaPorto {
     ctx.fillStyle = '#caa26c'
     for (let i = 0; i < 3; i++) ctx.fillRect(-c * 0.36 + i * c * 0.255, -c * 0.17, c * 0.21, c * 0.6)
     ctx.restore()
+  }
+
+  /* La buca delle lettere, in piedi e un po' di sbieco come il robot:
+     vista proprio da sopra sarebbe una scatola qualunque, ed è il davanti
+     — la fessura, il numero — che la fa buca. Sopra il coperchio con la
+     fessura e la sua linguetta d'ottone, davanti il posto per il numero:
+     quello, che è l'indirizzo e va letto prima di tutto il resto, lo
+     mette `etichette`, grande. */
+  buca(x, y, piena) {
+    const { ctx, cella: c } = this
+    const px = x * c, py = y * c
+    const X = px + c * 0.13, W = c * 0.74
+    const cima = py + c * 0.06, spigolo = py + c * 0.33, fondo = py + c * 0.94
+    ctx.fillStyle = 'rgba(30,25,20,.25)'
+    rett(ctx, X + c * 0.06, cima + c * 0.1, W, fondo - cima, c * 0.12)
+    ctx.fill()
+    /* il davanti, più scuro */
+    ctx.fillStyle = BUCA.corpo
+    rett(ctx, X, cima, W, fondo - cima, c * 0.12)
+    ctx.fill()
+    ctx.strokeStyle = BUCA.bordo
+    ctx.lineWidth = Math.max(1, c * 0.04)
+    ctx.stroke()
+    /* il coperchio, tondo davanti, con la luce sopra */
+    ctx.fillStyle = BUCA.coperchio
+    ctx.beginPath()
+    ctx.moveTo(X, spigolo)
+    ctx.lineTo(X, cima + c * 0.12)
+    ctx.quadraticCurveTo(X, cima, X + c * 0.12, cima)
+    ctx.lineTo(X + W - c * 0.12, cima)
+    ctx.quadraticCurveTo(X + W, cima, X + W, cima + c * 0.12)
+    ctx.lineTo(X + W, spigolo)
+    ctx.quadraticCurveTo(X + W / 2, spigolo + c * 0.07, X, spigolo)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+    const fx = X + W * 0.2, fw = W * 0.6, fh = Math.max(2, c * 0.07), fy = cima + c * 0.12
+    ctx.fillStyle = BUCA.fessura
+    rett(ctx, fx, fy, fw, fh, fh / 2)
+    ctx.fill()
+    ctx.fillStyle = BUCA.ottone
+    ctx.fillRect(fx + c * 0.02, fy + fh + c * 0.015, fw - c * 0.04, Math.max(1, c * 0.03))
+    if (piena) {
+      /* una lettera che spunta dalla fessura: dentro c'è posta */
+      ctx.save()
+      ctx.translate(px + c * 0.5, fy + fh / 2)
+      ctx.rotate(-0.1)
+      ctx.fillStyle = '#fffdf6'
+      ctx.fillRect(-c * 0.12, -c * 0.09, c * 0.24, c * 0.09)
+      ctx.strokeStyle = '#a79f90'
+      ctx.lineWidth = Math.max(0.8, c * 0.02)
+      ctx.strokeRect(-c * 0.12, -c * 0.09, c * 0.24, c * 0.09)
+      ctx.restore()
+    }
+  }
+
+  /* il numero di un cassone che prende solo lettere: la targhetta bianca
+     col numero grosso, come il civico di una casa */
+  targa(cx, cy, numero, lato) {
+    const { ctx } = this
+    ctx.fillStyle = CARTA
+    ctx.strokeStyle = INCHIOSTRO
+    ctx.lineWidth = Math.max(1.2, lato * 0.07)
+    rett(ctx, cx - lato / 2, cy - lato / 2, lato, lato, lato * 0.22)
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = INCHIOSTRO
+    ctx.font = `900 ${Math.round(lato * 0.8)}px system-ui, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(String(numero), cx, cy + lato * 0.05)
   }
 
   /* ═══════════ le cose ═══════════ */
@@ -1301,6 +1665,57 @@ export class TelaPorto {
     ctx.stroke()
     ctx.globalAlpha = 1
     ctx.lineCap = 'butt'
+  }
+
+  /* ═══════════ i camion per strada ═══════════
+     Un mezzo è un camion che arriva o che riparte, lungo la sua strada
+     (`percorso`): arrivando frena in fondo, ripartendo prende la rincorsa.
+     Chi riparte si porta il carico, e se riparte mezzo vuoto se ne va
+     sotto la nuvola scura del cliente arrabbiato. Dietro lascia due
+     sbuffi di fumo, che dicono da che parte sta andando. Mentre riparte,
+     il suo pianale si ricorda in `inPartenza`: l'ultima cassa, se è
+     ancora in volo, ci atterra sopra invece che sulla piazzola vuota. */
+  mezzi(p, q, t, inVolo) {
+    const { ctx, cella: c } = this
+    for (const m of q.mezzi || []) {
+      if (!m || !Number.isFinite(m.x) || !Number.isFinite(m.y)) continue
+      const fine = m.dal + (m.durata || 0)
+      if (t >= fine) continue
+      const f = fra((t - m.dal) / Math.max(1, m.durata || 1), 0, 1)
+      const r = this.percorso(p, m.x, m.y)
+      const parte = m.come === 'parte'
+      const s = parte ? f * f * r.lung : (1 - frena(f)) * r.lung
+      const P = this.lungoLaStrada(r, s)
+      const x = P.x * c, y = P.y * c
+      if (f > 0 && f < 1) this.fumo(r, s, parte ? -1 : 1, t)
+      this.figuraCamion(x, y, P.angolo, m.colore ? colore(m.colore) : null)
+      const pianale = { x: x - Math.sin(P.angolo) * c * 0.155, y: y + Math.cos(P.angolo) * c * 0.155, s: 0.7 }
+      if (parte && p.dentro(m.x, m.y)) this.inPartenza.set(m.y * p.w + m.x, pianale)
+      const carico = (m.carico || []).filter(k => k && !inVolo.has(k.id))
+      if (carico.length > 1) this.cosa(pianale.x + c * 0.05, pianale.y + c * 0.05, 0.62, carico[carico.length - 2], false)
+      if (carico.length) this.cosa(pianale.x, pianale.y, 0.7, carico[carico.length - 1], false)
+      if (parte && m.contento === false) {
+        ctx.globalAlpha = f < 0.7 ? 1 : 1 - (f - 0.7) / 0.3
+        this.nuvolaScura(x, y - c * 0.85 - f * c * 0.2, c * 0.3)
+        ctx.globalAlpha = 1
+      }
+    }
+  }
+
+  /* gli sbuffi dietro al camion, presi lungo la sua strada: dove è appena
+     passato, non dove punta la marmitta — è la scia che dice il verso */
+  fumo(r, s, verso, t) {
+    const { ctx, cella: c } = this
+    for (let i = 0; i < 3; i++) {
+      const d = s + verso * (0.6 + i * 0.3)
+      if (d < 0 || d > r.lung) continue
+      const P = this.lungoLaStrada(r, d)
+      const dondola = Math.sin(t / 170 + i * 1.7) * c * 0.04
+      ctx.fillStyle = `rgba(112,114,120,${0.34 - i * 0.1})`
+      ctx.beginPath()
+      ctx.arc(P.x * c + dondola, P.y * c - dondola, c * (0.09 + i * 0.045), 0, Math.PI * 2)
+      ctx.fill()
+    }
   }
 
   /* ═══════════ la gru ═══════════
@@ -1497,7 +1912,7 @@ export class TelaPorto {
       const ultimo = f.primo + f.passo * Math.max(0, f.quanti - 1)
       const [sx, sy] = DIREZIONI[d.lato]
       this.pastiglia(bx + fx * c * ultimo + sx * c * 0.55, by + fy * c * ultimo + sy * c * 0.5 - c * 0.08,
-                     `+${attesa.length - f.quanti}`, Math.max(10, c * 0.3), null, p.w * c)
+                     `+${attesa.length - f.quanti}`, Math.max(10, c * 0.3), { largo: p.w * c })
     }
   }
 
@@ -1699,7 +2114,7 @@ export class TelaPorto {
     if (capo === 'gru' && p.puntoGru) {
       /* appesa sotto il carrello, e più grande perché è più in alto */
       const T = this.carrello(p)
-      return { x: T.x, y: T.y + c * 0.1 + (LATO_CASSA * c * IN_ALTO) / 2, s: IN_ALTO }
+      return { x: T.x, y: T.y + c * 0.1 + this.mezzaAltezza(volo && volo.cosa, IN_ALTO), s: IN_ALTO }
     }
     if (capo === 'cliente' && p.puntoClienti) {
       const P = this.postoCliente(p, t)
@@ -1711,7 +2126,12 @@ export class TelaPorto {
       const m = this.puntoMare(p, q, volo)
       return { x: fra((m.x + 0.5) * c, c * 0.2, (p.w - 0.2) * c), y: fra((m.y + 0.5) * c, c * 0.2, (p.h - 0.2) * c), s: 0.5 }
     }
-    if (capo && typeof capo === 'object') return this.contenuto(p, capo.x, capo.y)
+    if (capo && typeof capo === 'object') {
+      /* l'ultima cassa di un camion che si riempie: il camion riparte
+         mentre lei è ancora in volo, e lei ci atterra sopra lo stesso */
+      const via = p.dentro(capo.x, capo.y) && this.inPartenza.get(capo.y * p.w + capo.x)
+      return via || this.contenuto(p, capo.x, capo.y)
+    }
     const R = this.posRobot(q, p, t)
     return { x: R.x, y: R.y, s: 1 }
   }
@@ -1752,12 +2172,14 @@ export class TelaPorto {
       let e = morbido(f), arco = 0, alfa = 1
       if (v.da === 'gru') {
         /* scende piano e frena in fondo, come si posa un carico; l'ombra
-           per terra si stringe e si scurisce mentre la cassa si avvicina */
+           per terra si stringe e si scurisce mentre la cosa si avvicina */
         e = frena(f)
         alfa = f < 0.12 ? f / 0.12 : 1
-        const l = LATO_CASSA * c * (1.25 - 0.25 * e)
+        const g = 1.25 - 0.25 * e
+        const lw = (v.cosa.tipo === 'biglietto' ? c * 0.7 : LATO_CASSA * c) * g
+        const lh = (v.cosa.tipo === 'biglietto' ? c * 0.56 : LATO_CASSA * c) * g
         ctx.fillStyle = `rgba(35,25,15,${0.05 + 0.17 * e})`
-        rett(ctx, B.x - l / 2 + c * 0.05, B.y - l / 2 + c * 0.07, l, l, l * 0.09)
+        rett(ctx, B.x - lw / 2 + c * 0.05, B.y - lh / 2 + c * 0.07, lw, lh, Math.min(lw, lh) * 0.09)
         ctx.fill()
       } else if (v.a === 'mare') {
         e = f * f
@@ -1771,7 +2193,7 @@ export class TelaPorto {
       const x = A.x + (B.x - A.x) * e
       const y = A.y + (B.y - A.y) * e - arco
       const s = A.s + (B.s - A.s) * e
-      const cima = y - (LATO_CASSA * c * s) / 2
+      const cima = y - this.mezzaAltezza(v.cosa, s)
       if (v.da === 'gru') {
         const T = this.carrello(p)
         ctx.strokeStyle = '#2b2f36'
@@ -1787,6 +2209,12 @@ export class TelaPorto {
       /* il gancio che la tiene, sopra la cassa */
       if (v.da === 'gru') this.gancio(x, cima - c * 0.1)
     }
+  }
+
+  /* mezza altezza di una cosa, a una scala: il gancio della gru e il cavo
+     prendono una cassa e un biglietto dal loro bordo di sopra */
+  mezzaAltezza(cosa, s) {
+    return cosa && cosa.tipo === 'biglietto' ? this.cella * 0.28 * s : (LATO_CASSA * this.cella * s) / 2
   }
 
   schizzo(v, p, q, t, fine) {
@@ -1896,39 +2324,48 @@ export class TelaPorto {
     const y = (p.puntoClienti.y + 0.5) * c - c * 0.45 - f * c * 0.7
     ctx.globalAlpha = f < 0.6 ? 1 : 1 - (f - 0.6) / 0.4
     const s = c * (0.3 + 0.08 * Math.sin(Math.min(1, f * 3) * Math.PI))
-    if (u.come === 'arrabbiato') {
-      ctx.fillStyle = '#4b5058'
-      for (const [dx, dy, r] of [[-0.5, 0.1, 0.42], [0, -0.12, 0.55], [0.5, 0.08, 0.42], [0, 0.2, 0.45]]) {
-        ctx.beginPath()
-        ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      ctx.fillStyle = '#ffd23f'
+    if (u.come === 'arrabbiato') this.nuvolaScura(x, y, s)
+    else this.cuore(x, y, s)
+    ctx.globalAlpha = 1
+  }
+
+  /* la nuvola scura col fulmine: il cliente andato via arrabbiato, il
+     camion ripartito mezzo vuoto */
+  nuvolaScura(x, y, s) {
+    const { ctx } = this
+    ctx.fillStyle = '#4b5058'
+    for (const [dx, dy, r] of [[-0.5, 0.1, 0.42], [0, -0.12, 0.55], [0.5, 0.08, 0.42], [0, 0.2, 0.45]]) {
       ctx.beginPath()
-      ctx.moveTo(x + s * 0.08, y + s * 0.3)
-      ctx.lineTo(x - s * 0.18, y + s * 0.75)
-      ctx.lineTo(x + s * 0.02, y + s * 0.72)
-      ctx.lineTo(x - s * 0.1, y + s * 1.08)
-      ctx.lineTo(x + s * 0.22, y + s * 0.6)
-      ctx.lineTo(x + s * 0.02, y + s * 0.62)
-      ctx.closePath()
-      ctx.fill()
-    } else {
-      ctx.fillStyle = '#e8456b'
-      ctx.strokeStyle = '#a8243f'
-      ctx.lineWidth = Math.max(1, c * 0.035)
-      ctx.beginPath()
-      ctx.moveTo(x, y + s * 0.7)
-      ctx.bezierCurveTo(x - s * 1.1, y + s * 0.05, x - s * 0.55, y - s * 0.75, x, y - s * 0.22)
-      ctx.bezierCurveTo(x + s * 0.55, y - s * 0.75, x + s * 1.1, y + s * 0.05, x, y + s * 0.7)
-      ctx.fill()
-      ctx.stroke()
-      ctx.fillStyle = 'rgba(255,255,255,.6)'
-      ctx.beginPath()
-      ctx.ellipse(x - s * 0.35, y - s * 0.12, s * 0.13, s * 0.08, -0.6, 0, Math.PI * 2)
+      ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2)
       ctx.fill()
     }
-    ctx.globalAlpha = 1
+    ctx.fillStyle = '#ffd23f'
+    ctx.beginPath()
+    ctx.moveTo(x + s * 0.08, y + s * 0.3)
+    ctx.lineTo(x - s * 0.18, y + s * 0.75)
+    ctx.lineTo(x + s * 0.02, y + s * 0.72)
+    ctx.lineTo(x - s * 0.1, y + s * 1.08)
+    ctx.lineTo(x + s * 0.22, y + s * 0.6)
+    ctx.lineTo(x + s * 0.02, y + s * 0.62)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  cuore(x, y, s) {
+    const { ctx, cella: c } = this
+    ctx.fillStyle = '#e8456b'
+    ctx.strokeStyle = '#a8243f'
+    ctx.lineWidth = Math.max(1, c * 0.035)
+    ctx.beginPath()
+    ctx.moveTo(x, y + s * 0.7)
+    ctx.bezierCurveTo(x - s * 1.1, y + s * 0.05, x - s * 0.55, y - s * 0.75, x, y - s * 0.22)
+    ctx.bezierCurveTo(x + s * 0.55, y - s * 0.75, x + s * 1.1, y + s * 0.05, x, y + s * 0.7)
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,.6)'
+    ctx.beginPath()
+    ctx.ellipse(x - s * 0.35, y - s * 0.12, s * 0.13, s * 0.08, -0.6, 0, Math.PI * 2)
+    ctx.fill()
   }
 
   /* ── la nuvoletta del cliente ──
@@ -2092,36 +2529,80 @@ export class TelaPorto {
      Stanno sul bordo in alto del cassone e sopra tutto il resto: è un
      numero che il programma legge, e il bambino deve poterlo leggere
      con lui ── */
-  etichette(p, vis, inVolo) {
+  etichette(p, vis, inVolo, inArrivo, t) {
     const c = this.cella
     for (let y = vis.y0; y <= vis.y1; y++) for (let x = vis.x0; x <= vis.x1; x++) {
-      const a = p.arredo[y * p.w + x]
-      if (!a || a.tipo !== 'cassone') continue
+      const k = y * p.w + x
+      const a = p.arredo[k]
+      if (!a || a.tipo !== 'cassone' || inArrivo.has(k)) continue
       /* si contano quelle arrivate: una cassa ancora in volo non c'è ancora */
-      const n = p.pile[y * p.w + x].filter(k => !inVolo.has(k.id)).length
+      const n = p.pile[k].filter(q => !inVolo.has(q.id)).length
       const testo = a.capienza < 99 ? `${n}/${a.capienza}` : String(n)
-      const sopra = y > 0 ? y * c + c * 0.02 : (y + 1) * c - c * 0.02
-      this.pastiglia((x + 0.5) * c, sopra, testo, Math.max(10, Math.round(c * 0.31)), a.colore ? colore(a.colore) : null, p.w * c)
+      /* un cassone con un numero è un indirizzo: il numero va grande,
+         da leggere a colpo d'occhio («la buca del 5»), e il conto delle
+         lettere passa piccolo in un angolo */
+      if (a.numero != null || a.figura === 'buca') {
+        const buca = a.figura === 'buca'
+        if (a.numero != null) {
+          if (buca) this.targa((x + 0.5) * c, y * c + c * 0.64, a.numero, c * 0.5)
+          else this.targa(x * c + c * 0.24, y * c + c * 0.24, a.numero, c * 0.44)
+        }
+        this.pastiglia(x * c + c * (buca ? 0.86 : 0.8), y * c + c * (buca ? 0.1 : 0.92), testo,
+                       Math.max(9, Math.round(c * 0.25)), { largo: p.w * c })
+        continue
+      }
+      /* sopra il cassone; un camion invece l'etichetta la porta sulla
+         cabina, dalla parte della strada, così il pianale col carico resta
+         scoperto */
+      let ex = (x + 0.5) * c, ey = y > 0 ? y * c + c * 0.02 : (y + 1) * c - c * 0.02
+      if (a.figura === 'camion') {
+        const angolo = this.angoloCabina(p, x, y)
+        const dx = Math.round(Math.sin(angolo)), dy = Math.round(-Math.cos(angolo))
+        if (dy > 0) ey = (y + 1) * c + c * 0.04
+        else if (dy < 0) ey = y * c - c * 0.08
+        else { ex = (x + 0.5 + dx * 0.62) * c; ey = (y + 0.5) * c - c * 0.12 }
+      }
+      /* un camion ha fretta: sotto il conto, la sua pazienza */
+      const pazienza = a.max ? (a.pazienza ?? a.max) / a.max : null
+      this.pastiglia(ex, ey, testo, Math.max(10, Math.round(c * 0.31)),
+                     { col: a.colore ? colore(a.colore) : null, largo: p.w * c, alto: p.h * c, pazienza, t })
     }
   }
 
-  /* una pastiglia bianca con un testo corto (e un quadretto di colore);
-     se sporgerebbe dalla mappa si sposta dentro */
-  pastiglia(cx, cy, testo, corpo, col = null, largo = Infinity) {
+  /* Una pastiglia bianca con un testo corto (e un quadretto di colore);
+     se sporgerebbe dalla mappa si sposta dentro. Con `pazienza` (da 0 a 1)
+     sotto il testo c'è la barretta, la stessa dei clienti: dal verde al
+     rosso, e sotto un quarto lampeggia. */
+  pastiglia(cx, cy, testo, corpo, { col = null, largo = Infinity, alto = Infinity, pazienza = null, t = 0 } = {}) {
     const { ctx } = this
     ctx.font = `800 ${Math.round(corpo)}px system-ui, sans-serif`
     const tw = ctx.measureText(testo).width
-    const h = corpo * 1.35, q = col ? corpo * 0.8 : 0, gap = col ? corpo * 0.3 : 0
-    const w = tw + q + gap + corpo * 0.8
+    const alta = corpo * 1.35, q = col ? corpo * 0.8 : 0, gap = col ? corpo * 0.3 : 0
+    const barra = pazienza != null ? corpo * 0.5 : 0
+    const w = Math.max(tw + q + gap + corpo * 0.8, barra ? corpo * 3 : 0)
+    const h = alta + barra
     cx = fra(cx, w / 2 + 1, largo - w / 2 - 1)
-    const x = cx - w / 2, y = cy - h / 2
+    cy = fra(cy, alta / 2 + 1, alto - alta / 2 - barra - 1)
+    const x = cx - w / 2, y = cy - alta / 2
     ctx.fillStyle = CARTA
     ctx.strokeStyle = INCHIOSTRO
     ctx.lineWidth = Math.max(1, corpo * 0.1)
-    rett(ctx, x, y, w, h, h / 2)
+    rett(ctx, x, y, w, h, barra ? corpo * 0.5 : h / 2)
     ctx.fill()
     ctx.stroke()
-    let tx = x + corpo * 0.4
+    if (barra) {
+      const k = fra(pazienza, 0, 1), bw = w - corpo * 0.7, bh = Math.max(2.5, corpo * 0.28)
+      const bx = cx - bw / 2, by = y + alta - corpo * 0.08
+      ctx.fillStyle = '#e6ded0'
+      rett(ctx, bx, by, bw, bh, bh / 2)
+      ctx.fill()
+      ctx.globalAlpha = k < 0.25 ? 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(t / 130)) : 1
+      ctx.fillStyle = `hsl(${Math.round(120 * k)}, 72%, 42%)`
+      rett(ctx, bx, by, Math.max(bh, bw * k), bh, bh / 2)
+      ctx.fill()
+      ctx.globalAlpha = 1
+    }
+    let tx = cx - (tw + q + gap) / 2
     if (col) {
       ctx.fillStyle = col.tinta
       rett(ctx, tx, cy - q / 2, q, q, q * 0.2)
