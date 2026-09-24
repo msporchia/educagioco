@@ -131,22 +131,25 @@ export const GIORNATE = [
     ], [
       'Il numero scritto sulla lettera è anche il numero di passi fino alla sua buca.',
       'Tieni il numero in una lavagnetta appena prendi la lettera: ti serve due volte, all\'andata e al ritorno.',
-      '«n diventa 📖 ✋», poi «vai → n passi», «posa ↑», «vai ← n passi». E ripeti finché ← nel sacco non c\'è niente.',
+      '«numero diventa 📖 ✋», poi «vai → numero passi», «posa ↑», «vai ← numero passi». E ripeti finché ← nel sacco non c\'è niente.',
     ]),
     soluzione: programma({
-      lavagnette: ['n'],
+      /* «numero» e non «n»: la N maiuscola è il numero ancora da
+         scegliere, e «vai → n passi» accanto a «vai → N passi» sono due
+         cose diverse con la stessa lettera */
+      lavagnette: ['numero'],
       principale: [fai.finche(guarda('sinistra', 'niente'), [
-        fai.prendi('sinistra'), fai.assegna('n', leggi('mano')),
-        fai.vai('destra', 'n'), fai.posa('su'), fai.vai('sinistra', 'n'),
+        fai.prendi('sinistra'), fai.assegna('numero', leggi('mano')),
+        fai.vai('destra', 'numero'), fai.posa('su'), fai.vai('sinistra', 'numero'),
       ])],
     }),
     fragili: [
       { nome: 'sempre alla buca del 3', programma: programma({ principale: [fai.finche(guarda('sinistra', 'niente'), [
         fai.prendi('sinistra'), fai.vai('destra', 3), fai.posa('su'), fai.vai('sinistra', 3)])] }) },
       { nome: 'si dimentica di tornare', programma: programma({
-        lavagnette: ['n'],
+        lavagnette: ['numero'],
         principale: [fai.finche(guarda('sinistra', 'niente'), [
-          fai.prendi('sinistra'), fai.assegna('n', leggi('mano')), fai.vai('destra', 'n'), fai.posa('su')])] }) },
+          fai.prendi('sinistra'), fai.assegna('numero', leggi('mano')), fai.vai('destra', 'numero'), fai.posa('su')])] }) },
     ],
   },
 

@@ -112,7 +112,7 @@ const colorato = c => ['mattone', 'cassa', 'cassone', 'camion'].includes(c)
    sembra l'unico possibile. */
 const condVuota = () => ({ tipo: 'guarda', dove: null, cosa: null, c: true })
 const cond = ref(copia(valoreDi()) || condVuota())
-const completa = c => c.tipo === 'confronta' || (c.dove && c.cosa)
+const completa = c => (c.tipo === 'confronta' ? !!(c.a && c.cmp && c.b) : !!(c.dove && c.cosa))
 function cambiaCond(campo, v) {
   cond.value = { ...cond.value, [campo]: v }
   if (!cond.value.colore) delete cond.value.colore
@@ -127,9 +127,9 @@ function cambiaCosa(c) {
 }
 function genere(t) {
   if (cond.value.tipo === t) return
-  cond.value = t === 'guarda'
-    ? condVuota()
-    : { tipo: 'confronta', a: { v: tuttiNomi.value[0] || 'h' }, cmp: '<', b: { n: 1 } }
+  /* un confronto nuovo non ha niente di scelto: «h è minore di 1» già
+     scritto sarebbe il valore di comodo che sembra l'unico possibile */
+  cond.value = t === 'guarda' ? condVuota() : { tipo: 'confronta', a: null, cmp: null, b: null }
   if (completa(cond.value)) emit('scegli', copia(cond.value))
 }
 const tuttiNomi = computed(() => [...nomi.value.misure, ...nomi.value.lavagnette, ...nomi.value.ordine])
