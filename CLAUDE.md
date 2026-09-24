@@ -617,6 +617,27 @@ committate: non è ricostruibile da git.
   un generatore che srotola il programma **un fatto per volta**
   (`riga`, `muovi`, `metti`, `entra`…), e `regia.js` li anima: è così che la
   scheda di un progetto si apre con le misure di *quella* chiamata.
+  **La seconda parte è il porto** (`motore/porto/`, `dati/porto/`,
+  `scena/porto.js`): un mondo **visto dall'alto che lavora da solo** — la
+  gru cala, il nastro porta verso il mare, i clienti chiedono al bancone —
+  e il bambino programma sempre un robot solo, che non sa cosa arriverà
+  né quando. Il taglio che lo regge: **l'esecutore sa il controllo del
+  flusso, il mondo sa i gesti** (`fai`, `guarda`, `leggi`, e se ha un
+  orologio `attendi` e `finoASera`); il cantiere di lato è diventato un
+  mondo come l'altro. Tre regole da non rompere: **agire costa un turno,
+  pensare no** (un programma giusto con tanti «se» non deve essere lento
+  senza motivo); **gli attori sono pochi comportamenti con tanti
+  costumi** (una sorgente, un nastro, un cliente: una sfida nuova è una
+  mappa, qualche attore e un `obiettivo` dichiarato, mai una meccanica
+  scritta apposta — è la cosa che l'utente ha chiesto, un motore che
+  regga tante sfide); e **niente eventi nel linguaggio**, solo `aspetta
+  che` e `ripeti per sempre`: gli eventi e i personaggi che reagiscono
+  sono del Generale. Le mappe sono a **coppie di caratteri**, posto +
+  cosa (`=R` uno scaffale con una cassa rossa, `.@` il robot), legenda
+  in `dati/porto/legenda.js`; un guaio del mondo (una cassa in mare, un
+  cliente arrabbiato) ferma la giornata dove succede, e a sera
+  `motore/porto/esito.js` dice cosa manca coi numeri. Banco in
+  `unita/costruttore-porto`.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni

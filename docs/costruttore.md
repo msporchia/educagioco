@@ -65,6 +65,7 @@ programma che funziona.
 | 👀 Guardare e decidere | **se** c'è un mattone rosso (i nidi), **se… altrimenti** (il mosaico), i buchi nel muro, il mattone di prima (le strisce), **ripeti finché** (il ponte) |
 | 📐 I progetti | un **progetto** (una funzione), con **una misura**, con **due**, con una misura che è **un colore** (le bandiere), e **progetti fatti di progetti** (il villaggio) |
 | 📝 Le lavagnette | una **variabile** che cresce (la scala), una che cala (la piramide), una che conta alla rovescia (le candeline) |
+| ⚓ Il porto | la seconda parte, vista dall'alto: **leggere**, **aspettare**, **ripetere per sempre**, cercare — mentre il mondo lavora da solo (vedi sotto) |
 | 🏆 Le sfide | **contare** camminando (il muro gemello), contare quello che si vede (conta i rossi), e **un se dentro un se** (la scacchiera) |
 
 Il «se» arriva subito dopo il cantiere, prima delle funzioni: una decisione
@@ -82,6 +83,63 @@ insegnerebbe quello che dichiara.
 Finito il primo capitolo si apre **il cantiere libero**: un cantiere grande,
 tutti i blocchi e tutti i colori, e i progetti scritti nei livelli da
 riprendere dalla cassetta. Non si vince e non paga: si costruisce.
+
+## La seconda parte: il porto
+
+Il cantiere è fatto di materia: mattoni e forme. Il porto è fatto di
+**lavoro che arriva**. Si vede dall'alto, e il mondo lavora da solo: la gru
+cala una cassa, il nastro la porta verso il mare, un cliente al bancone
+chiede una cassa di un colore. Il bambino programma sempre un robot solo, ma
+il programma non sa cosa arriverà né quando: deve guardare, aspettare e
+decidere. Nel cantiere gli ordini cambiavano fra una prova e l'altra; qui
+arrivano **mentre il programma gira**.
+
+Le regole, che valgono in tutti i livelli del porto:
+
+- **il mondo va a turni.** Ogni gesto del robot — un passo, prendere,
+  posare, un turno d'attesa — costa un turno, e a ogni turno la gru, i nastri
+  e i clienti fanno la loro mossa. Pensare invece è gratis: guardare,
+  leggere, decidere e fare i conti non fanno passare il tempo;
+- il robot va ↑ ↓ ← → e **non passa sopra le cose**: una cassa per terra si
+  prende o si gira intorno;
+- **porta una cosa alla volta**, e prende e posa **di fianco a sé**, verso
+  una delle quattro frecce;
+- per terra, su uno scaffale, sul bancone e su un nastro ci sta una cosa
+  sola; un cassone ne tiene tante, e se ha un colore prende solo quelle;
+- **legge** quello che ha di fianco o in mano: il colore di una cassa, il
+  numero di un biglietto, cosa chiede il cliente, quante casse ci sono in
+  un cassone;
+- una cassa che arriva in fondo al nastro cade in mare; un cliente che
+  aspetta troppo, o che riceve un'altra cosa, se ne va arrabbiato. Tutte e
+  due fanno perdere la giornata, nel momento in cui succede.
+
+Il linguaggio è quello del cantiere, più tre blocchi: **prendi** e
+**posa** (una freccia ciascuno), **aspetta che …** e **ripeti per sempre**.
+La giornata finisce da sola quando non può più succedere niente, ed è così
+che un «per sempre» si ferma. E c'è un valore nuovo, **📖 leggi**: «voglio
+diventa 📖 ←» mette in una lavagnetta il colore che il cliente ha chiesto.
+
+Ogni ordine è **una giornata**: un'altra nave con più casse, i cesti messi
+in un altro ordine, altri clienti. Il programma che ha ricordato la prima
+giornata invece di guardarla perde la seconda.
+
+| sfida | cosa si impara |
+|---|---|
+| 📦 Il primo carico | prendere e posare, di fianco, nelle quattro direzioni |
+| 🚢 La stiva | ripeti, dall'alto: dalla nave al camion |
+| 🍅 Rosse e blu | se in mano c'è una cassa rossa… altrimenti… |
+| 📋 La bolla | leggere un numero: quante casse caricare |
+| 🏗️ La gru | aspetta che…, ripeti per sempre: le casse arrivano quando vogliono |
+| 🐟 Il nastro | il mondo non aspetta: prenderle prima che cadano in mare |
+| 🧺 Lo smistamento | un colore letto, e il cesto di quel colore da cercare |
+| 🛍️ La bottega dei colori | un progetto che cerca: i clienti chiedono, il robot trova e porta |
+
+Il porto è costruito come **un motore con tante sfide sopra**, non come
+otto livelli fatti a mano uno per uno: gli attori sono pochi comportamenti
+(una sorgente come la gru, il nastro, il cliente) con tanti costumi, e un
+livello è una mappa, qualche attore e un obiettivo dichiarato («nel camion
+cinque casse», «tutti i clienti serviti»). Le sfide nuove si scrivono come
+dati, e il banco le gioca tutte.
 
 ## Vedere la macchina che lavora
 
