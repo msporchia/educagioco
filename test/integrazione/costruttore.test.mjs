@@ -13,6 +13,10 @@
    E le scelte non si fanno da sole: una riga nuova nasce con la N, la
    scelta del numero si apre da sola, e ▶ con una N vuota non parte ma
    apre la scelta che manca.
+
+   Poi il porto, la seconda parte: la cassetta con le frecce, e la gru
+   giocata con la sua soluzione su tutte e due le giornate — la tela
+   dall'alto, i turni del mondo e il verdetto della sera.
    `node test/esegui.mjs integrazione/costruttore`
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, scatto, semina, attendi, leggiProfilo }
@@ -172,7 +176,34 @@ await page.waitForSelector('[data-foglio-codice]', { timeout: 3000 })
 await scatto(page, 'costruttore-python')
 await tocca('[data-foglio-codice] [data-chiudi]')
 
-/* ---------- 8. niente errori ---------- */
+/* ---------- 8. il porto ---------- */
+/* la gru con la sua soluzione: la tela dall'alto, la regia coi turni del
+   mondo, e il verdetto a sera — tutte e due le giornate */
+{
+  const primo = LIVELLI.findIndex(l => l.mondo === 'porto')
+  const gru = LIVELLI.findIndex(l => l.chiave === 'gru')
+  await scriviArchivio(page, { v: 2, programmi: { gru: JSON.parse(JSON.stringify(LIVELLI[gru].soluzione)) } })
+  await semina(page, { settings: { sperimentali: true, eta: 10 },
+                       campagne: { costruttore: { tappa: gru, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: 3 } } } })
+  await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+  controlla('il porto sta nella mappa, dopo le lavagnette', LIVELLI[primo - 1].capitolo === 'lavagnette' &&
+            await page.locator(`[data-livello="${primo}"]`).count() === 1)
+  await tocca(`[data-livello="${gru}"]`)
+  await page.waitForSelector('[data-editor]', { timeout: 5000 })
+  await tocca('[data-aggiungi="principale"]')
+  await page.waitForSelector('[data-cassetta]', { timeout: 3000 })
+  await attendi(page, 350)
+  uguale('la cassetta del porto ha una riga di quattro frecce per prendere',
+         await page.locator('[data-cassetta] [data-blocco^="prendi:"]').count(), 4)
+  await tocca('[data-cassetta] [data-chiudi]')
+  await tocca('[data-azione="via"]')
+  await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
+  uguale('la gru: tutte e due le navi scaricate', await page.locator('[data-gettone].cst-vinto').count(), 2)
+  await scatto(page, 'costruttore-porto')
+}
+
+/* ---------- 9. niente errori ---------- */
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 nota(`errori raccolti: ${errori.length}`)
 

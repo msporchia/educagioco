@@ -60,11 +60,37 @@
 
    Gli id qui dentro si possono omettere: `numera()` li mette tutti prima
    che il programma arrivi a una vista o all'esecutore.
+
+   ── IL PORTO ───────────────────────────────────────────────────────
+   Il porto si vede dall'alto e ha un orologio, e aggiunge poche cose:
+
+     vai      il verso può essere anche su | giu
+     prendi   { lato: su|giu|destra|sinistra }   la cosa di fianco, in mano
+     posa     { lato }                           quella in mano, di fianco
+     aspetta  { cond }                           «aspetta che [cond]»: un
+                                                 turno alla volta
+     sempre   { corpo }                          «ripeti per sempre»: la
+                                                 giornata la chiude il livello
+
+   un valore in più, `{ leggi: lato }` — quello che il robot legge di
+   fianco o in mano (`lato` può essere anche `mano`): un colore o un
+   numero, a seconda di cosa c'è scritto; e la domanda
+     { tipo: 'guarda', dove: su|giu|destra|sinistra|mano,
+       cosa: cassa|niente|libero|cliente|biglietto|bancone|scaffale|
+             cassone|nastro|muro|mare|bordo, c, colore? }
+   dove il colore di una cassa può essere anche un nome (`{ v: 'tinta' }`):
+   «smetti quando ↑ c'è una cassa [tinta]» è il cuore di «cerca».
    ═══════════════════════════════════════════════════════════════════ */
 
 import { CHIAVI_COLORI } from './colori.js'
 
 export const VERSI = ['destra', 'sinistra']
+/* il porto si vede dall'alto: le frecce sono quattro, e il robot prende
+   e posa di fianco a sé, verso una di loro */
+export const LATI = ['su', 'giu', 'sinistra', 'destra']
+export const DOVE_PORTO = [...LATI, 'mano']
+export const COSE_PORTO = ['cassa', 'niente', 'libero', 'cliente', 'biglietto', 'bancone',
+                           'scaffale', 'cassone', 'nastro', 'muro', 'mare', 'bordo']
 /* dove si posa un mattone: sotto i piedi, o dove appoggerà il piede */
 export const POSTI = ['sotto', 'giu-destra', 'giu-sinistra']
 /* dove guarda una condizione: i posti del mattone, più i tre dove si va */
@@ -91,13 +117,23 @@ export const guarda = (dove, cosa, c = true, colore = null) =>
 export const tinta = nome => ({ v: nome })
 export const confronta = (a, cmp, b) => ({ tipo: 'confronta', a: numero(a), cmp, b: numero(b) })
 
+/* quello che il robot legge di fianco (o in mano): `leggi('sinistra')` */
+export const leggi = lato => ({ leggi: lato })
+
 export const fai = {
   vai: (verso, quanto = 1) => ({ tipo: 'vai', verso, quanto: numero(quanto) }),
   metti: (colore, dove = 'sotto') => ({ tipo: 'metti', dove, colore }),
+  prendi: lato => ({ tipo: 'prendi', lato }),
+  posa: lato => ({ tipo: 'posa', lato }),
+  aspetta: cond => ({ tipo: 'aspetta', cond }),
+  sempre: (corpo = []) => ({ tipo: 'sempre', corpo }),
   ripeti: (volte, corpo = []) => ({ tipo: 'ripeti', volte: numero(volte), corpo }),
   finche: (cond, corpo = []) => ({ tipo: 'finche', cond, corpo }),
   se: (cond, allora = [], altrimenti = null) => ({ tipo: 'se', cond, allora, altrimenti }),
-  assegna: (nome, valore) => ({ tipo: 'assegna', nome, valore: numero(valore) }),
+  /* nel porto una lavagnetta può tenere anche un colore: il nome di un
+     colore resta un colore, ogni altra stringa è una lavagnetta */
+  assegna: (nome, valore) => ({ tipo: 'assegna', nome,
+    valore: typeof valore === 'string' && CHIAVI_COLORI.includes(valore) ? valore : numero(valore) }),
   /* un argomento che è il nome di un colore resta una stringa (è un
      colore scritto per esteso); ogni altra stringa è il nome di una
      misura o di una lavagnetta */

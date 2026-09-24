@@ -21,9 +21,16 @@ export function numeroPy(e) {
   if (typeof e === 'string') return `"${e}"`
   if (typeof e.n === 'number') return String(e.n)
   if (typeof e.v === 'string') return nome(e.v)
+  if (e.leggi) return `leggi("${e.leggi}")`
   if (e.op) return `${numeroPy(e.a)} ${e.op === '×' ? '*' : e.op} ${numeroPy(e.b)}`
   return '0'
 }
+
+/* il porto guarda di fianco e in mano: `c_e("su", "cassa", "rosso")`,
+   una funzione sola invece di una per casella, perché le cose da
+   guardare sono tante e le frecce quattro */
+const DOVE_PORTO = new Set(['su', 'giu', 'mano'])
+const colorePy = c => (typeof c === 'string' ? `"${c}"` : numeroPy(c))
 
 const DOVE = { sotto: 'sotto_i_piedi', 'giu-destra': 'in_basso_a_destra', 'giu-sinistra': 'in_basso_a_sinistra',
                destra: 'a_destra', sinistra: 'a_sinistra', sopra: 'sopra_la_testa' }
@@ -32,7 +39,11 @@ const POSTO = { sotto: 'sotto', 'giu-destra': 'in_basso_a_destra', 'giu-sinistra
 export function condizionePy(c) {
   if (!c) return '???'
   if (c.tipo === 'confronta') return `${numeroPy(c.a)} ${c.cmp === '=' ? '==' : c.cmp} ${numeroPy(c.b)}`
-  const s = `${DOVE[c.dove] || c.dove}() == "${c.cosa === 'mattone' && c.colore ? `mattone ${c.colore}` : c.cosa}"`
+  let s
+  if (DOVE_PORTO.has(c.dove) || !DOVE[c.dove] || ['cassa', 'cassone', 'cliente', 'niente', 'libero', 'bancone',
+                                                    'scaffale', 'nastro', 'biglietto', 'muro', 'mare'].includes(c.cosa))
+    s = `c_e("${c.dove}", "${c.cosa}"${c.colore ? `, ${colorePy(c.colore)}` : ''})`
+  else s = `${DOVE[c.dove] || c.dove}() == "${c.cosa === 'mattone' && c.colore ? `mattone ${c.colore}` : c.cosa}"`
   return c.c === false ? `not ${s}` : s
 }
 
@@ -42,7 +53,16 @@ function righe(corpo, prog, rientro, fuori) {
   const out = []
   for (const i of corpo) {
     switch (i.tipo) {
-      case 'vai': out.push(`${r}vai_a_${i.verso || '???'}(${numeroPy(i.quanto)})`); break
+      case 'vai': out.push(`${r}${i.verso === 'su' || i.verso === 'giu' ? `vai_${i.verso}` : `vai_a_${i.verso || '???'}`}(${numeroPy(i.quanto)})`); break
+      case 'prendi': out.push(`${r}prendi("${i.lato || '???'}")`); break
+      case 'posa': out.push(`${r}posa("${i.lato || '???'}")`); break
+      case 'sempre':
+        out.push(`${r}while True:`, ...righe(i.corpo, prog, rientro + 4, fuori))
+        break
+      /* «aspetta che»: un giro che non fa niente, e il mondo va avanti */
+      case 'aspetta':
+        out.push(`${r}while not (${condizionePy(i.cond)}):`, `${r}    aspetta()`)
+        break
       case 'metti': {
         const c = typeof i.colore === 'string' ? `"${i.colore}"` : i.colore && i.colore.v ? nome(i.colore.v) : '???'
         out.push(`${r}metti_${POSTO[i.dove || 'sotto']}(${c})`)

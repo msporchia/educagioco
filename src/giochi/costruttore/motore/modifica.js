@@ -69,12 +69,17 @@ function cercaIn(elenco, id, genitore = null, ramo = null) {
    Il colore è l'eccezione, ed è voluta: con un colore solo nel livello
    non c'è niente da scegliere, e con più colori si propone quello usato
    per ultimo (`colore`), che è una scelta del bambino e non nostra. */
-export function rigaNuova(tipo, { colore = null, verso = null, dove = 'sotto', lavagnette = [], progetto = null } = {}) {
+export function rigaNuova(tipo, { colore = null, verso = null, dove = 'sotto', lato = null, lavagnette = [], progetto = null } = {}) {
   switch (tipo) {
     case 'vai': return fai.vai(verso, N())
     case 'metti': return fai.metti(colore, dove)
+    /* nel porto il lato lo sceglie la cassetta, un tasto per freccia */
+    case 'prendi': return fai.prendi(lato)
+    case 'posa': return fai.posa(lato)
     case 'ripeti': return fai.ripeti(N(), [])
     case 'finche': return fai.finche(null, [])
+    case 'sempre': return fai.sempre([])
+    case 'aspetta': return fai.aspetta(null)
     case 'se': return fai.se(null, [], null)
     case 'assegna': return fai.assegna(lavagnette[0] || null, N())
     case 'chiama': {
@@ -93,10 +98,14 @@ export function primaDaScegliere(riga, prog = null) {
   if (riga.tipo === 'vai') return !riga.verso ? { campo: 'verso', tipo: 'verso' }
     : vuoto(riga.quanto) ? { campo: 'quanto', tipo: 'numero' } : null
   if (riga.tipo === 'metti') return !riga.colore || riga.colore.vuoto ? { campo: 'colore', tipo: 'colore' } : null
+  if (riga.tipo === 'prendi' || riga.tipo === 'posa') return !riga.lato ? { campo: 'lato', tipo: 'lato' } : null
   if (riga.tipo === 'ripeti') return vuoto(riga.volte) ? { campo: 'volte', tipo: 'numero' } : null
-  if (riga.tipo === 'finche' || riga.tipo === 'se') return !riga.cond ? { campo: 'cond', tipo: 'cond' } : null
+  if (riga.tipo === 'finche' || riga.tipo === 'se' || riga.tipo === 'aspetta')
+    return !riga.cond ? { campo: 'cond', tipo: 'cond' } : null
+  /* il valore di una lavagnetta è di qualunque specie: nel porto ci va
+     anche un colore, o quello che il robot legge */
   if (riga.tipo === 'assegna') return !riga.nome ? { campo: 'nome', tipo: 'lavagnetta' }
-    : vuoto(riga.valore) ? { campo: 'valore', tipo: 'numero' } : null
+    : vuoto(riga.valore) ? { campo: 'valore', tipo: 'valore' } : null
   if (riga.tipo === 'chiama') {
     const k = (riga.argomenti || []).findIndex(a => typeof a !== 'string' && vuoto(a))
     if (k < 0) return null
@@ -279,17 +288,21 @@ function rinominaNumero(corpo, da, a) {
     if (i.tipo === 'metti' && i.colore && typeof i.colore === 'object') i.colore = cambia(i.colore)
     if (i.argomenti) i.argomenti = i.argomenti.map(cambia)
     if (i.cond && i.cond.tipo === 'confronta') { i.cond.a = cambia(i.cond.a); i.cond.b = cambia(i.cond.b) }
+    if (i.cond && i.cond.colore && typeof i.cond.colore === 'object') i.cond.colore = cambia(i.cond.colore)
     if (i.tipo === 'assegna' && i.nome === da) i.nome = a
   }
 }
 
 /* I nomi che si possono leggere in un punto del programma: dentro un
    progetto le sue misure, dappertutto le lavagnette del bambino e i
-   numeri dell'ordine. È l'elenco che la casella di un numero offre. */
+   numeri dell'ordine. È l'elenco che la casella di un numero offre.
+   Le lavagnette del bambino non hanno una specie fissa: nel cantiere ci
+   finiscono solo numeri, nel porto anche i colori letti su una cassa, e
+   quali caselle le offrono lo decide la vista. */
 /* `lavagnetteOrdine` sono i numeri (o i colori) di un ordine, come li
    dichiara il livello: `{ lungo: 7 }`, `{ sinistra: 'verde' }`. Qui se ne
    guarda la specie, perché una casella di numeri offre solo numeri e una
-   di colori solo colori. Le lavagnette del bambino sono sempre numeri. */
+   di colori solo colori. */
 export function nomiLeggibili(prog, progetto, lavagnetteOrdine = {}) {
   const p = progetto ? (prog.progetti || []).find(q => q.id === progetto) : null
   const tipi = (p && p.tipi) || {}
@@ -316,7 +329,9 @@ export function problemi(prog, lavagnetteOrdine = {}) {
   for (const { progetto, corpo } of corpi) {
     const noti = nomiLeggibili(prog, progetto, lavagnetteOrdine)
     const numeri = new Set([...noti.misure, ...noti.lavagnette, ...noti.ordine])
-    const colori = new Set([...noti.misureColore, ...noti.ordineColore])
+    /* una lavagnetta del bambino può portare un colore (nel porto lo
+       legge su una cassa): di lei si sa la specie solo mentre gira */
+    const colori = new Set([...noti.misureColore, ...noti.ordineColore, ...noti.lavagnette])
     const nomi = e => !e || typeof e !== 'object' ? [] : e.v ? [e.v] : e.op ? [...nomi(e.a), ...nomi(e.b)] : []
     /* un nome dove ci va un numero deve essere un numero, e viceversa */
     const controlla = (lista, giusti, altri, sbaglio, id) => {
@@ -338,7 +353,8 @@ export function problemi(prog, lavagnetteOrdine = {}) {
         ...(i.cond && i.cond.tipo === 'confronta' ? [...nomi(i.cond.a), ...nomi(i.cond.b)] : []),
       ]
       controlla(letti, numeri, colori, 'non-un-numero', i.id)
-      const lettiColori = [...(i.tipo === 'metti' ? nomi(i.colore) : []), ...argColori.flatMap(nomi)]
+      const lettiColori = [...(i.tipo === 'metti' ? nomi(i.colore) : []), ...argColori.flatMap(nomi),
+                           ...(i.cond && i.cond.tipo === 'guarda' ? nomi(i.cond.colore) : [])]
       controlla(lettiColori, colori, numeri, 'non-un-colore', i.id)
       if (i.tipo === 'assegna' && !i.nome) trovati.push({ id: i.id, motivo: 'lavagnetta-mancante' })
       if (i.tipo === 'assegna' && i.nome && !noti.lavagnette.includes(i.nome))
@@ -350,8 +366,8 @@ export function problemi(prog, lavagnetteOrdine = {}) {
       /* quello che resta da scegliere: la N, il colore, la domanda */
       const scelta = primaDaScegliere(i, prog)
       if (scelta) trovati.push({ id: i.id, motivo: {
-        numero: 'n-da-scegliere', colore: 'colore-da-scegliere', cond: 'condizione-da-scegliere',
-        verso: 'verso-da-scegliere', lavagnetta: 'lavagnetta-mancante' }[scelta.tipo], ...scelta })
+        numero: 'n-da-scegliere', valore: 'n-da-scegliere', colore: 'colore-da-scegliere', cond: 'condizione-da-scegliere',
+        verso: 'verso-da-scegliere', lato: 'verso-da-scegliere', lavagnetta: 'lavagnetta-mancante' }[scelta.tipo], ...scelta })
     }
   }
   return trovati

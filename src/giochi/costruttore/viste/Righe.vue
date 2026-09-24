@@ -28,7 +28,7 @@ const props = defineProps({
 })
 
 const ed = inject('editore')
-const conCorpo = i => ['ripeti', 'finche', 'se'].includes(i.tipo)
+const conCorpo = i => ['ripeti', 'finche', 'sempre', 'se'].includes(i.tipo)
 
 function tocca(i) {
   if (ed.sola.value) return

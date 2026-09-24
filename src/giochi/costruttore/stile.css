@@ -105,6 +105,13 @@
   background: var(--cst-carta); font-size: 20px; position: relative;
 }
 .cst-lampadina small { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cst-tenue) }
+/* il turno del porto: un numero che corre, largo fisso perché non faccia
+   ballare i tasti accanto */
+.cst-turno {
+  min-width: 58px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: var(--cst-carta); border: 1.5px solid var(--cst-bordo);
+  font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px;
+}
 
 .cst-lavagnette { display: flex; gap: 6px; flex-wrap: wrap }
 .cst-lavagnetta {
@@ -253,6 +260,13 @@
 }
 .cst-blocco-nuovo small { color: var(--cst-tenue); font-size: 12px; margin-left: auto }
 .cst-blocco-nuovo.cst-nuovo { border-style: dashed; color: var(--cst-tenue) }
+/* il porto: una riga per gesto, quattro frecce grosse da toccare col pollice */
+.cst-fila-frecce { display: flex; align-items: center; gap: 6px; margin-bottom: 6px }
+.cst-fila-frecce > .cst-ico { font-size: 20px; width: 28px; text-align: center; flex: none }
+.cst-blocco-nuovo.cst-freccia {
+  width: auto; flex: 1 1 0; justify-content: center; margin: 0; min-height: 46px;
+  font-size: 24px; font-weight: 700; padding: 6px 0;
+}
 .cst-figurine { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 8px 0 }
 .cst-figurina { font-size: 22px; min-height: 40px; border-radius: 10px; border: 1.5px solid var(--cst-bordo); background: #fff }
 .cst-figurina.cst-su { border-color: var(--cst-giallo); background: var(--cst-giallo-chiaro) }
