@@ -5,9 +5,11 @@
    prende sempre quella in cima: il cassone del porto lo era da sempre,
    e nessun livello lo faceva lavorare.
 
-     · il carico al contrario: la fila di sopra rifatta sotto,
-       rovesciata. Il cassone la capovolge da solo — dentro in un verso,
-       fuori nell'altro — e il programma non ha niente che capovolga;
+     · il carico al contrario: le casse del nastro della nave vanno sul
+       nastro del camion rovesciate, e il robot non ha nessun posto dove
+       appoggiarle tranne il cassone. Il cassone la capovolge da solo —
+       dentro in un verso, fuori nell'altro — e il programma non ha niente
+       che capovolga;
      · la torre del casaro (Hanoi): le forme di formaggio stanno in pila
        sulle tre assi, e una grande sopra una più piccola la schiaccia
        (`figura: 'pila'` in `motore/porto/mondo.js`). Due forme a mano;
@@ -42,74 +44,75 @@ import { sposta, torreDiDue } from '../attrezzi.js'
 
 const CAPITANO = { emoji: '👩‍✈️', nome: 'La capitana' }
 
-/* Sopra la fila caricata, sotto lo scaffale del camion col disegno da
-   fare in trasparenza (la fila rovesciata), e a sinistra del robot il
-   cassone. Il robot parte sotto la prima cassa. */
-function stiva(casse) {
+/* Il robot sta fermo in un buco nel muro, e intorno ha solo tre cose: a
+   destra il nastro della nave, che porta le casse verso di lui e se le
+   tiene in fila (finisce contro il robot, quindi è una coda); sopra il
+   cassone; sotto il nastro del camion, che le porta a sinistra e le mette
+   in fila da solo contro il muro, nell'ordine in cui le posi — col disegno
+   della fila rovesciata in trasparenza.
+
+   Nessun posto per terra dove appoggiarne una, ed è la regola del
+   livello. La prima versione aveva sotto uno scaffale libero, e con dei
+   posti liberi la pila non serve: si porta ogni cassa dritta al suo posto
+   (l'ha detto l'utente guardandola). Qui l'unico modo di rovesciare la
+   fila è quello della pila: dentro tutte, poi fuori tutte. */
+function banchina(casse) {
   const n = casse.length
-  const rovescia = [...casse].reverse().map(l => '=' + l.toLowerCase()).join('')
+  const rx = n + 1                       /* la colonna del robot: a sinistra c'è posto per la fila d'arrivo */
+  const w = rx + n + 2
+  const riga = f => Array.from({ length: w }, (_, x) => f(x)).join('')
+  const rovescia = [...casse].reverse()
   return [
-    '##'.repeat(n + 2),
-    '##' + [...casse].map(l => '=' + l).join('') + '##',
-    'Cc.@' + '..'.repeat(n - 1) + '##',
-    '##' + rovescia + '##',
-    '##'.repeat(n + 2),
+    riga(x => (x === rx ? 'Cc' : '##')),
+    riga(x => (x === rx ? '.@' : x > rx && x <= rx + n ? '<' + casse[x - rx - 1] : '##')),
+    riga(x => (x === rx ? 'v.' : '##')),
+    riga(x => (x >= 1 && x <= n ? '<' + rovescia[x - 1].toLowerCase() : x > n && x <= rx ? '<.' : '##')),
+    riga(() => '##'),
   ]
 }
 const carico = (nome, casse) => ({
-  nome, mappa: stiva(casse), lavagnette: { casse: casse.length },
-  cassoni: { c: { nome: 'il cassone', capienza: 9 } },
+  nome, mappa: banchina(casse), lavagnette: { casse: casse.length }, nastro: { passo: 1 },
+  cassoni: { c: { nome: 'il cassone', capienza: casse.length } },
 })
-
-/* le due strade del robot, scritte una volta: fino alla prima cassa di
-   sopra, e di nuovo accanto al cassone */
-const allaCassa = () => fai.finche(guarda('su', 'cassa'), [fai.vai('destra', 1)])
-const alCassone = () => fai.finche(guarda('sinistra', 'cassone'), [fai.vai('sinistra', 1)])
 
 const AL_CONTRARIO = {
   chiave: 'al-contrario', nome: 'Il carico al contrario', icona: '🔄', capitolo: 'pile',
   impara: 'la pila capovolge', portata: 99, premio: 35,
-  mondo: 'porto', tema: 'magazzino', prova: 'giornata',
+  mondo: 'porto', tema: 'molo', prova: 'giornata',
   chi: CAPITANO,
-  racconto: 'Abbiamo caricato la nave al contrario! Le casse di sopra vanno rifatte sullo scaffale di sotto nell\'ordine rovesciato: l\'ultima diventa la prima. Ti presto il cassone: dentro ci stanno una sull\'altra, e si prende sempre quella in cima.',
+  racconto: 'Abbiamo caricato la nave al contrario! Le casse arrivano sul nastro nell\'ordine sbagliato, e il camion le vuole rovesciate: l\'ultima deve diventare la prima. Da lì non ti muovi, e per terra non c\'è posto: ti presto il cassone qui sopra, dove stanno una sull\'altra.',
   ordini: [
     carico('lunedì', ['R', 'V', 'R']),
     carico('martedì', ['R', 'V', 'B', 'G']),
     carico('mercoledì', ['G', 'B', 'R', 'V', 'A']),
   ],
-  cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'finche', 'se'],
+  cassetta: ['prendi', 'posa', 'ripeti', 'finche', 'se'],
   colori: ['rosso', 'verde', 'blu', 'giallo', 'arancio'],
   cose: ['cassa', 'niente', 'cassone'], leggere: false,
   ragiona: [
-    'Tre giorni, tre file: la prima cassa di sopra deve finire ultima sotto, e l\'ultima prima. Il robot porta una cassa alla volta, e il programma non sa quante sono né di che colore.',
-    'Nel cassone si prende sempre quella in cima, cioè l\'ultima che ci hai messo. Se ci metti dentro tutta la fila e poi la tiri fuori, in che ordine escono?',
+    'Le casse arrivano in un ordine, e il camion le vuole al contrario: la prima deve andare per ultima. Il robot non si muove, e non c\'è un posto per terra dove lasciarne una: ha le mani, il cassone sopra e il nastro del camion sotto.',
+    'Nel cassone le casse stanno una sull\'altra, e si prende sempre quella in cima. Quale esce per prima: la prima che ci è entrata, o l\'ultima?',
   ],
   indizi: [
-    'Due giri: nel primo tutte le casse di sopra vanno nel cassone, una alla volta; nel secondo escono, una alla volta, e vanno sotto.',
-    'Per arrivare alla prima cassa rimasta: vai a destra finché sopra c\'è una cassa. Per tornare: vai a sinistra finché a sinistra c\'è il cassone.',
-    'Nel secondo giro la cassa va nel primo posto libero di sotto: vai a destra finché sotto non c\'è niente, e posa ↓.',
+    'Due giri: nel primo tutte le casse del nastro vanno nel cassone, una alla volta; nel secondo escono dal cassone e scendono sul nastro del camion.',
+    'Il primo: prendi →, posa ↑, finché a destra non c\'è più niente. Il secondo: prendi ↑, posa ↓, finché nel cassone non c\'è più niente.',
   ],
   soluzione: programma({ principale: [
-    fai.ripeti('casse', [allaCassa(), fai.prendi('su'), alCassone(), fai.posa('sinistra')]),
-    fai.ripeti('casse', [
-      fai.prendi('sinistra'),
-      fai.finche(guarda('giu', 'niente'), [fai.vai('destra', 1)]),
-      fai.posa('giu'),
-      alCassone(),
-    ]),
+    fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('su')]),
+    fai.finche(guarda('su', 'niente'), [fai.prendi('su'), fai.posa('giu')]),
   ] }),
   fragili: [
     /* la falsa pista: lunedì la fila è rosso-verde-rosso, e rovesciarla
        o no è lo stesso */
-    { nome: 'dritte giù, senza cassone', programma: programma({ principale: [
-      fai.ripeti(meno('casse', 1), [fai.prendi('su'), fai.posa('giu'), fai.vai('destra', 1)]),
-      fai.prendi('su'), fai.posa('giu'),
+    { nome: 'dritte sul camion, senza cassone', programma: programma({ principale: [
+      fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('giu')]),
     ] }) },
     { nome: 'dentro e subito fuori', programma: programma({ principale: [
-      fai.ripeti('casse', [
-        allaCassa(), fai.prendi('su'), alCassone(), fai.posa('sinistra'), fai.prendi('sinistra'),
-        fai.finche(guarda('giu', 'niente'), [fai.vai('destra', 1)]), fai.posa('giu'), alCassone(),
-      ]),
+      fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('su'), fai.prendi('su'), fai.posa('giu')]),
+    ] }) },
+    { nome: 'fuori una sola', programma: programma({ principale: [
+      fai.finche(guarda('destra', 'niente'), [fai.prendi('destra'), fai.posa('su')]),
+      fai.prendi('su'), fai.posa('giu'),
     ] }) },
   ],
 }

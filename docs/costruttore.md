@@ -229,7 +229,7 @@ metà che serve a chi cerca dimezzando.
 | 🏆 Il campione | la lettera più grande, con una lavagnetta che cambia solo quando arriva un record |
 | 🕳️ La lettera che manca | tutte meno quelle che ci sono: la somma trova la lettera mancante senza cercarla |
 | 🎯 Indovina la lettera | quattro tentativi per nove lettere: si prova sempre quella a metà, e ogni risposta butta via metà scaffale. È la risposta a «a cosa serve mettere in ordine?» |
-| 🔄 Il carico al contrario | la fila dentro il cassone e poi fuori: esce rovesciata, perché si prende sempre quella in cima |
+| 🔄 Il carico al contrario | il robot non si muove e l'unico appoggio è il cassone: la fila ci entra tutta e ne esce rovesciata, perché si prende sempre quella in cima |
 | 🧀 Le due forme · Tre forme · Quattro forme | la torre di Hanoi, un gradino alla volta (vedi sotto) |
 | 🗼 La torre del casaro | quante forme vuoi: il progetto che chiama sé stesso |
 
