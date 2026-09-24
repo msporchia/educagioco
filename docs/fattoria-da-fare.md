@@ -10,7 +10,6 @@ Aggiornata il 23 settembre 2026.
 
 ## Prima di pubblicare
 
-- [ ] **Rivedere e committare** il branch `fattoria-hayday` (`/review`).
 - [ ] **La suite intera nel browser** — `npm run test:tutto` — prima del
       push. Finora sono girati i test della fattoria e dell'albero.
 - [ ] **La prova col dito su un telefono vero** delle tre schermate

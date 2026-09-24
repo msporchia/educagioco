@@ -10,11 +10,6 @@ di quello che manca, sprite e non, sta in
 Zuccherificio, pastificio, pasticceria, osteria (`rosticceria`),
 merceria e sushi bar sono già in `edifici_3.png`.
 
-**Finché il secondo albero sta sul branch `fattoria-hayday`, i fogli
-vanno nel suo worktree** (`../games-hayday`), non nella cartella del
-repo principale: `merci_3` e `campi_3` sono arrivati là, e sono stati
-copiati a mano.
-
 Il metodo è quello delle schede `PROMPT-edificio.md` e
 `PROMPT-merce.md`: si allega **l'ultimo foglio buono** e si dice «nello
 stesso stile di questa». Il prompt si copia nel campo `prompt` del
