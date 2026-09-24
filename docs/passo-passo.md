@@ -151,6 +151,17 @@ Un giro che non muove il coniglio (un se che non scatta mai, dentro un
 «fino a») non cambierà mai quello che ha sotto i piedi: la fila si ferma lì
 come quando gli gira la testa, invece di aspettare per sempre.
 
+**Le false piste.** In questi gradini chi sbaglia non sbatte al primo passo
+contro un albero: prosegue su una strada che sembrava buona, e finisce in
+un fosso, in uno stagno o fermo in un angolo. I gradini storti e i solchi
+del campo continuano oltre la lastra rossa, e sotto ci sono i fossi: chi
+conta invece di guardare va avanti e ci cade. Nelle colline e nel sentiero
+dei segni chi legge un colore al contrario trova una stradina (con i suoi
+segni) che porta allo stagno; nel bosco ghiacciato scivola dritto nel buco
+del ghiaccio. È lì che si vede *quale* scatola era sbagliata. Il test lo
+pretende dalle mosse ingenue di ogni livello: almeno due passi prima di
+fermarsi.
+
 L'ultimo gradino, **tutto il mondo**, rimette le regole del mondo insieme
 alle scatole: sul ghiaccio sono i sassi a fermare una scatola che gira (la
 spirale di ghiaccio si fa con quattro frecce, senza lastre), nell'acqua è
@@ -252,9 +263,9 @@ per nove, così stanno intere su un telefono.
 | 31. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
 | 32. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
 | **🚩 Fino a** | *una scatola che non conta: ripete finché il coniglio non arriva sulla lastra del colore giusto* | zaino |
-| 33. I gradini storti | tre gradini diversi: si va fino al rosso, e si scende | 4 |
+| 33. I gradini storti | tre gradini diversi sopra i fossi: si va fino al rosso, e si scende | 5 |
 | 34. Scale e pianerottoli | due colori: la scala fino al rosso, il pianerottolo fino al blu | 7 |
-| 35. Il campo storto | il campo arato con i solchi lunghi diversi | 9 |
+| 35. Il campo storto | i passaggi fra i fossi sono ogni volta in un posto diverso | 9 |
 | 36. La spirale | ogni lato più corto del prima, e agli angoli le lastre rosse | 9 |
 | **❓ Il se** | *il coniglio guarda cosa ha sotto i piedi, e decide* | zaino |
 | 37. Le colline | avanti sempre: sul rosso si scende, sul giallo si sale | 6 |

@@ -380,6 +380,12 @@ for (const [i, t] of CAMPAGNA.entries()) {
       const rf = esegui(liv, fr)
       controlla(`${qui}: la mossa ingenua ${inFrecce(fr)} non vince con la carota`,
                 !(rf.esito === TANA && rf.carota), rf.esito)
+      /* le false piste: nei gradini delle condizioni chi sbaglia non sbatte
+         al primo passo, prosegue su una strada che sembrava buona — ed è
+         lì che vede quale scatola era sbagliata */
+      if (['fino', 'se', 'mondo'].includes(t.scalino))
+        controlla(`${qui}: e chi la prova prosegue un poco prima di fermarsi`,
+                  rf.passi.length >= 2, `${rf.esito} dopo ${rf.passi.length} passi`)
     }
     nota(`${String(i + 1).padStart(2)}. ${t.nome.padEnd(26)} zaino ${String(t.zaino).padStart(2)}, ` +
          `sciolta ${String(m.corta).padStart(2)}   ${inFrecce(t.soluzioni[0])}`)

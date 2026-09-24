@@ -457,18 +457,32 @@ export const CAMPAGNA = [
      strade lunghe diverse — i gradini storti, le file del campo, i lati
      della spirale — perché lì un numero va bene una volta sola: è la
      scatola dentro la scatola a renderla necessaria, e lo zaino la
-     pretende. Le lastre rosse dicono dove girare. */
+     pretende. Le lastre rosse dicono dove girare.
+
+     ── LE FALSE PISTE ──
+     Chi sbaglia non deve sbattere al primo passo contro un albero: deve
+     proseguire su una strada che sembrava buona, e finire in un fosso, in
+     uno stagno o fermo in un angolo. È lì che si capisce *quale* scatola
+     era sbagliata — e il test lo pretende dalle `fragili`: almeno due
+     passi prima di fermarsi. Per questo i gradini e i solchi continuano
+     oltre la lastra rossa, e sotto ci sono i fossi: chi conta invece di
+     guardare va avanti e ci cade. */
   { chiave: 'gradini-storti', nome: 'I gradini storti', icona: '🪜', scalino: 'fino',
-    portata: 60, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 4,
-    racconto: 'Tre gradini, uno diverso dall\'altro: contarli non serve, il coniglio va avanti finché non arriva sulla lastra rossa, e scende.',
+    portata: 60, premio: 16, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'Tre gradini sopra i fossi, ognuno lungo diverso: contarli non serve, il coniglio va avanti finché non arriva sulla lastra rossa, e scende sul sasso. Chi scende prima, o dopo, finisce nel fosso.',
     mappa: [
-      'PrAAAAA',
-      'A.c.rAA',
-      'AAAA..r',
-      'AAAAAA@',
+      'P.r..AAAA',
+      '~~.~~~~~~',
+      'AA..c.r.A',
+      '~~~~~~.~~',
+      'AAAAAA.r.',
+      '~~~~~~~.~',
+      'AAAAAAA@A',
     ],
-    soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), 'giu'))],
-    fragili: [programma(ripeti(3, ripeti(2, 'destra'), 'giu'))] },
+    soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), 'giu', 'giu'))],
+    fragili: [programma(ripeti(3, ripeti(2, 'destra'), 'giu', 'giu')),
+              programma(ripeti(3, ripeti(4, 'destra'), 'giu', 'giu')),
+              programma(ripeti(3, ripeti('rosso', 'destra'), 'giu'))] },
   { chiave: 'pianerottoli', nome: 'Scale e pianerottoli', icona: '🏛️', scalino: 'fino',
     portata: 62, premio: 16, tema: 'primavera', carte: ['ripeti', 'fino'], zaino: 7,
     racconto: 'Due colori: la scala scende fino al rosso, il pianerottolo va avanti fino al blu. Due volte, e ogni volta le scale sono lunghe diverse.',
@@ -485,17 +499,17 @@ export const CAMPAGNA = [
     fragili: [programma(ripeti(2, ripeti(2, 'destra', 'giu'), ripeti(2, 'destra')), 'giu')] },
   { chiave: 'campo-storto', nome: 'Il campo storto', icona: '🌾', scalino: 'fino',
     portata: 64, premio: 16, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 9,
-    racconto: 'Il campo arato, ma storto: ogni solco è lungo diverso. Il programma del campo dritto qui non va, e quello con la lastra rossa sì.',
+    racconto: 'Il campo arato, ma storto: i solchi sono lunghi uguali e il passaggio fra un fosso e l\'altro è ogni volta in un posto diverso. Il programma del campo dritto qui cade nel fosso, e quello con la lastra rossa passa.',
     mappa: [
-      'P....rAAA',
-      'BBBBB.BBB',
-      'Ar....AAA',
-      'B.BBBBBBB',
-      'A...c..rA',
-      'BBBBBBB.B',
-      'AAr.....A',
-      'BB.BBBBBB',
-      'AA......@',
+      'P....r...',
+      '~~~~~.~~~',
+      '.r.......',
+      '~.~~~~~~~',
+      '....c..r.',
+      '~~~~~~~.~',
+      '..r......',
+      '~~.~~~~~~',
+      '~~......@',
     ],
     soluzioni: [programma(ripeti(3, ripeti('rosso', 'destra'), ripeti(2, 'giu'),
                                     ripeti('rosso', 'sinistra'), ripeti(2, 'giu')))],
@@ -525,32 +539,37 @@ export const CAMPAGNA = [
      è arrivati. */
   { chiave: 'colline', nome: 'Le colline', icona: '⛰️', scalino: 'se',
     portata: 67, premio: 18, tema: 'estate', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 6,
-    racconto: 'Avanti sempre: se il prato diventa rosso si scende, se diventa giallo si sale. Una scatola sola, e le colline sono tutte diverse.',
+    racconto: 'Avanti sempre: se il prato diventa rosso si scende, se diventa giallo si sale. Una scatola sola, e le colline sono tutte diverse. Chi sbaglia verso trova una stradina che sembra buona, e porta allo stagno.',
     mappa: [
       'AAAAAAAAA',
-      'AAAAAAAAA',
+      'AAAA...~A',
       'AA.crAA.@',
       'P.gA.r.gA',
-      'AAAAA.gAA',
-      'AAAAAAAAA',
+      'AA....gAA',
+      'AAAAAA~AA',
     ],
     soluzioni: [programma(ripeti('casa', 'destra', se('rosso', 'giu'), se('giallo', 'su')))],
-    fragili: [programma(ripeti('casa', 'destra', ripeti('rosso', 'giu')))] },
+    fragili: [programma(ripeti('casa', 'destra', se('rosso', 'su'), se('giallo', 'giu'))),
+              programma(ripeti('casa', 'destra', se('rosso', 'su'), se('giallo', 'su'))),
+              programma(ripeti('casa', 'destra', se('rosso', 'giu')))] },
   { chiave: 'segni', nome: 'Il sentiero dei segni', icona: '🪧', scalino: 'se',
     portata: 68, premio: 18, tema: 'primavera', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 9,
-    racconto: 'Ogni lastra dice dove andare: il rosso giù, il blu avanti, il giallo su. Il coniglio le legge una per una, e il programma è lo stesso per tutto il sentiero.',
+    racconto: 'Ogni lastra dice dove andare: il rosso giù, il blu avanti, il giallo su. Il coniglio le legge una per una, e il programma è lo stesso per tutto il sentiero. Ma ci sono anche segni che portano fuori strada: chi li legge al contrario sale sulla collina sbagliata, e finisce nello stagno.',
     mappa: [
-      'AAAAAAAAA',
-      'AAAAuurAA',
-      'AAAAgArAA',
+      'AAuu~AAAA',
+      'AArAuurAA',
+      'AArAgArAA',
       'PcrAgAurA',
       'AAuugAArA',
-      'AAAAAAAu@',
-      'AAAAAAAAA',
+      'AArAAAAu@',
+      'AA~AAAAAA',
     ],
     soluzioni: [programma('destra', 'destra',
                           ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'), se('giallo', 'su')))],
-    fragili: [programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
+    fragili: [programma('destra', 'destra', ripeti('casa', se('rosso', 'su'), se('blu', 'destra'), se('giallo', 'giu'))),
+              programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'giu'), se('giallo', 'su'))),
+              programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'))),
+              programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
 
   /* ── gradino 9: tutto il mondo ──
      Le regole del mondo e le scatole insieme: sul ghiaccio sono i sassi a
@@ -577,8 +596,8 @@ export const CAMPAGNA = [
     portata: 71, premio: 20, tema: 'autunno', carte: ['ripeti', 'fino'], zaino: 5,
     racconto: 'A ogni gradino c\'è una pozza, e sopra la pozza un masso: spinto giù, fa il ponte. La stessa scatola spinge, attraversa e va avanti, quattro volte.',
     mappa: [
-      'PAAAAAAAA',
-      'mAAAAAAAA',
+      'P..AAAAAA',
+      'mA~AAAAAA',
       '~..AAAAAA',
       'AAmAAAAAA',
       'AA~c.AAAA',
@@ -609,7 +628,7 @@ export const CAMPAGNA = [
                                   ripeti(2, 'salto-sinistra'), 'salto-giu'))] },
   { chiave: 'bosco-ghiacciato', nome: 'Il bosco ghiacciato', icona: '❄️', scalino: 'mondo',
     portata: 74, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
-    racconto: 'I sentieri del bosco sono ghiaccio, e si scivola fino alla prossima lastra: è lei che ferma, ed è lei che dice dove andare dopo. Quattordici scivolate, e un programma solo che le legge tutte.',
+    racconto: 'I sentieri del bosco sono ghiaccio, e si scivola fino alla prossima lastra: è lei che ferma, ed è lei che dice dove andare dopo. Quattordici scivolate, e un programma solo che le legge tutte. Chi legge il giallo al contrario scivola giù, dritto nel buco del ghiaccio.',
     mappa: [
       'AAAu*urAA',
       'AAA*AA*AA',
@@ -617,15 +636,16 @@ export const CAMPAGNA = [
       'AA*AAArAA',
       'AA*AAACAA',
       'P*gAAArAA',
-      'AAAAAArAA',
-      'AAAAAAurA',
-      'AAAAAAArA',
+      'AA*AAArAA',
+      'AA*AAAurA',
+      'AA~AAAArA',
       'AAAAAAA*A',
       'AAAAAAAu@',
     ],
     soluzioni: [programma('destra',
                           ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'), se('giallo', 'su')))],
-    fragili: [programma('destra', ripeti('casa', ripeti('giallo', 'destra'), ripeti('blu', 'su')))] },
+    fragili: [programma('destra', ripeti('casa', se('rosso', 'su'), se('blu', 'destra'), se('giallo', 'giu'))),
+              programma('destra', ripeti('casa', ripeti('giallo', 'destra'), ripeti('blu', 'su')))] },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
