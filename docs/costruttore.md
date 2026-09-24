@@ -168,10 +168,6 @@ progetto si apre la sua scheda, con le misure di **quella** chiamata scritte
 sopra («rettangolo · largo 2 · alto 5»), e un ripeti dice a che giro è. È la
 pila delle chiamate fatta vedere invece che spiegata.
 
-Il tasto **🐍 com'è in Python** mostra lo stesso programma scritto come lo
-scrive chi programma di mestiere: i progetti diventano `def`, le lavagnette
-variabili, «ripeti» un `for`. Solo da leggere.
-
 ## Note per i genitori
 
 - **Le monete arrivano una volta sola** per livello, alla prima vittoria:

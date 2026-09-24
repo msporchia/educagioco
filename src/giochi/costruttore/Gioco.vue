@@ -52,7 +52,6 @@ import Cassetta from './viste/Cassetta.vue'
 import FoglioProgetto from './viste/FoglioProgetto.vue'
 import FoglioLavagnetta from './viste/FoglioLavagnetta.vue'
 import FoglioAiuto from './viste/FoglioAiuto.vue'
-import FoglioCodice from './viste/FoglioCodice.vue'
 import Finale from './viste/Finale.vue'
 import './stile.css'
 
@@ -579,8 +578,6 @@ const progettoAperto = computed(() =>
                         @crea="creaLavagnetta" @chiudi="foglio = null; attesaLavagnetta = null" />
       <FoglioAiuto v-if="foglio === 'aiuto'" :fatti="aiutiFatti" :prossimo="prossimoAiuto" :monete="monete"
                    @altro="scendi" @rimetti="rimetti" @chiudi="foglio = null" />
-      <FoglioCodice v-if="foglio === 'codice'" :programma="prog" :ordine="liv.ordini[ordineVisto].lavagnette || {}"
-                    @chiudi="foglio = null" />
       <Finale v-if="finale" v-bind="finale" @avanti="avanti" @mappa="allaMappa" @resta="finale = null" />
     </div>
   </div>

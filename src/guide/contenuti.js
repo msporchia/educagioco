@@ -640,7 +640,7 @@ export const AIUTI = {
         'Poi si paga in monete: 🪙10 un indizio; 🪙50 un pezzo di programma, 🪙100 tutti i blocchi al loro posto coi valori da scegliere, 🪙200 la soluzione — che vince, ma lascia spenta la seconda stella. Quello che si è pagato resta, e un pezzo di programma si rimette gratis. Senza monete, niente aiuto.',
       ] },
       { titolo: 'Cosa allena', righe: [
-        'Programmare davvero: funzioni con i loro parametri, variabili, cicli, condizioni. Il tasto «🐍 com\'è in Python» mostra lo stesso programma come lo scrive chi programma di mestiere.',
+        'Programmare davvero: funzioni con i loro parametri, variabili, cicli, condizioni.',
       ] },
     ],
   },

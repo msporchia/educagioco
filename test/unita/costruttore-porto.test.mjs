@@ -22,7 +22,6 @@ import { leggiCasella } from '../../src/giochi/costruttore/dati/porto/legenda.js
 import { Porto, nel, coloreAlPlurale } from '../../src/giochi/costruttore/motore/porto/mondo.js'
 import { esitoDelPorto } from '../../src/giochi/costruttore/motore/porto/esito.js'
 import { Esecuzione, TETTO_PENSIERI } from '../../src/giochi/costruttore/motore/esecutore.js'
-import { inPython } from '../../src/giochi/costruttore/motore/python.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* una giornata di prova: la mappa, e quello che serve dell'ordine */
@@ -248,11 +247,6 @@ const dove = p => `${p.robot.x},${p.robot.y}`
                                    obiettivo: { cassoni: { t: { quante: 2 }, s: { vuoto: true } } } })
   stessaLista('a sera: cosa manca, con i numeri', esitoDelPorto(stiva).frasi,
               ['Nel camion non c\'è nessuna cassa, e ne volevano 2.', 'La stiva a sera doveva essere vuota, e ci sono ancora 2 casse.'])
-
-  const py = inPython(programma(prog))
-  controlla('in Python: «ripeti per sempre» è while True', py.includes('while True:'), py)
-  controlla('«aspetta che» è un giro che aspetta', /while not \(c_e\("sinistra", "cliente"\)\):\n\s+aspetta\(\)/.test(py), py)
-  controlla('e leggere è leggi()', py.includes('voglio = leggi("sinistra")'), py)
 }
 
 nota('il porto: legenda, regole, letture, orologio, attori e frasi')
