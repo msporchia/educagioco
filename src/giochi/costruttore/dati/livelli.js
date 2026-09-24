@@ -57,6 +57,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { fai, guarda, piu, meno, tinta, progetto, programma, POSTI } from './scrivi.js'
 import { CHIAVI_COLORI } from './colori.js'
+import { LIVELLI_PORTO } from './porto/livelli.js'
 
 /* L'ordine dei capitoli: il «se» viene subito dopo il cantiere. Stava in
    fondo, dopo progetti e lavagnette, e a metà gioco il papà ha notato che
@@ -71,6 +72,8 @@ export const CAPITOLI = [
     dice: 'Una cosa si scrive una volta e si usa tante: i progetti, con le loro misure — numeri e colori.' },
   { chiave: 'lavagnette', nome: 'Le lavagnette', icona: '📝',
     dice: 'Un numero con un nome, che cambia mentre il robot lavora.' },
+  { chiave: 'porto', nome: 'Il porto', icona: '⚓',
+    dice: 'Visto dall\'alto: il robot prende, posa, legge e aspetta, mentre la gru cala, il nastro scorre e i clienti arrivano.' },
   { chiave: 'sfide', nome: 'Le sfide', icona: '🏆',
     dice: 'Tutto insieme: contare, decidere, e un «se» dentro un «se».' },
 ]
@@ -93,7 +96,7 @@ const riga = colore => progetto('riga', { nome: 'riga', icona: '➖', misure: ['
   fai.vai('sinistra', 'lunga'),
 ])
 
-export const LIVELLI = [
+const DEL_CANTIERE = [
   /* ═══════════ 1. IL CANTIERE ═══════════ */
   {
     chiave: 'primo-muretto', nome: 'Il primo muretto', icona: '🧱', capitolo: 'cantiere',
@@ -1143,8 +1146,19 @@ export const LIVELLI = [
   },
 ]
 
+/* ═══════════ la fila ═══════════
+   Il porto viene dopo le lavagnette — leggere un biglietto vuol dire
+   scriverlo in una lavagnetta — e le sfide del cantiere vanno in fondo,
+   come finale di tutte e due le parti. Chi aveva giocato con la fila di
+   prima ritrova le stelle al loro posto (`FILE` in `dati/campagna.js`). */
+export const LIVELLI = [
+  ...DEL_CANTIERE.filter(l => l.capitolo !== 'sfide'),
+  ...LIVELLI_PORTO,
+  ...DEL_CANTIERE.filter(l => l.capitolo === 'sfide'),
+]
+
 /* ═══════════ i controlli sul dato ═══════════ */
-const BLOCCHI = ['vai', 'metti', 'ripeti', 'finche', 'se', 'assegna', 'progetti']
+const BLOCCHI = ['vai', 'metti', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'sempre', 'assegna', 'progetti']
 
 export function guastiDeiLivelli(livelli = LIVELLI) {
   const guasti = []
@@ -1158,7 +1172,10 @@ export function guastiDeiLivelli(livelli = LIVELLI) {
     if (!CAPITOLI.some(c => c.chiave === l.capitolo)) guasti.push(`${dove}: il capitolo «${l.capitolo}» non esiste`)
     if (!(l.portata >= 0 && l.portata <= 100)) guasti.push(`${dove}: portata fuori scala`)
     if (!(l.premio > 0)) guasti.push(`${dove}: senza premio`)
-    if (!['disegno', 'passaggio'].includes(l.prova)) guasti.push(`${dove}: prova «${l.prova}» sconosciuta`)
+    const porto = l.mondo === 'porto'
+    if (!(porto ? ['giornata'] : ['disegno', 'passaggio']).includes(l.prova)) guasti.push(`${dove}: prova «${l.prova}» sconosciuta`)
+    if (porto && !['molo', 'magazzino', 'bottega'].includes(l.tema)) guasti.push(`${dove}: il tema «${l.tema}» non esiste`)
+    if (porto && !Array.isArray(l.cose)) guasti.push(`${dove}: un livello del porto dice quali cose offrono le domande (\`cose\`)`)
     if (!Array.isArray(l.ordini) || !l.ordini.length) guasti.push(`${dove}: nessun ordine`)
     for (const b of l.cassetta || []) if (!BLOCCHI.includes(b)) guasti.push(`${dove}: il blocco «${b}» non esiste`)
     for (const p of l.posti || []) if (!POSTI.includes(p)) guasti.push(`${dove}: il posto «${p}» non esiste`)
@@ -1181,6 +1198,12 @@ export function guastiDeiLivelli(livelli = LIVELLI) {
     for (const o of l.ordini || []) {
       const larghe = new Set(o.mappa.map(r => r.length))
       if (larghe.size !== 1) guasti.push(`${dove}, ordine «${o.nome}»: le righe della mappa non sono lunghe uguali`)
+      /* il porto si scrive a coppie di caratteri, e le coppie le legge
+         il motore: una mappa che non si legge la trova il banco */
+      if (porto) {
+        if ([...larghe].some(n => n % 2)) guasti.push(`${dove}, ordine «${o.nome}»: una mappa del porto va a coppie di caratteri`)
+        continue
+      }
       if (l.prova === 'passaggio' && !(o.mappa.join('').includes('P') && o.mappa.join('').includes('F')))
         guasti.push(`${dove}, ordine «${o.nome}»: un passaggio vuole l'omino (P) e la bandiera (F)`)
       if (l.prova === 'disegno' && !/[a-z]/.test(o.mappa.join('')))

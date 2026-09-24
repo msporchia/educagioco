@@ -32,8 +32,11 @@ for (const [nome, g] of [['colori', guastiDeiColori()], ['livelli', guastiDeiLiv
                          ['campagna', guastiDellaCampagna()], ['albo', guastiDellAlbo([manifesto])]])
   controlla(`${nome}: nessun guasto`, g.length === 0, g.join(' · '))
 controlla('almeno venti livelli', LIVELLI.length >= 20, `sono ${LIVELLI.length}`)
-uguale('cinque capitoli', CAPITOLI.length, 5)
+uguale('sei capitoli', CAPITOLI.length, 6)
 uguale('il «se» arriva subito dopo il cantiere', CAPITOLI[1].chiave, 'guardare')
+stessaLista('il porto viene dopo le lavagnette, e le sfide chiudono tutte e due le parti',
+            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'sfide'])
+controlla('il porto ha almeno otto sfide', LIVELLI.filter(l => l.mondo === 'porto').length >= 8)
 controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un colore',
           CAPITOLI.slice(1).every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
@@ -207,7 +210,8 @@ const fatti = (prog, righe) => {
 
 /* ══════════ 4. i livelli ══════════ */
 const TIPI_DEI_BLOCCHI = { vai: 'vai', metti: 'metti', togli: 'togli', ripeti: 'ripeti', finche: 'finche',
-                           se: 'se', assegna: 'assegna', chiama: 'progetti' }
+                           se: 'se', assegna: 'assegna', chiama: 'progetti',
+                           prendi: 'prendi', posa: 'posa', aspetta: 'aspetta', sempre: 'sempre' }
 for (const l of LIVELLI) {
   const s = provaLivello(l, l.soluzione)
   controlla(`«${l.nome}»: la soluzione vince tutti gli ordini`, s.vinto,
@@ -306,6 +310,22 @@ for (const l of LIVELLI) {
   const presa = copia(originale)
   presa.principale.pop()
   controlla('la copia di un programma non tocca il dato del livello', originale.principale.length === 7)
+
+  /* il porto: il lato lo sceglie la cassetta, e la domanda nasce vuota */
+  const prendi = mod.rigaNuova('prendi', { lato: 'su' })
+  uguale('un «prendi» nasce col lato scelto dalla cassetta', prendi.lato, 'su')
+  uguale('senza lato, la prima cosa da scegliere è quella', mod.primaDaScegliere(mod.rigaNuova('posa')).tipo, 'lato')
+  uguale('un «aspetta che» nasce senza domanda', mod.primaDaScegliere(mod.rigaNuova('aspetta')).campo, 'cond')
+  controlla('un «ripeti per sempre» non ha niente da scegliere', mod.primaDaScegliere(mod.rigaNuova('sempre')) === null)
+  const valore = mod.primaDaScegliere(mod.rigaNuova('assegna', { lavagnette: ['voglio'] }))
+  uguale('il valore di una lavagnetta si sceglie nella casella dei valori', valore.tipo, 'valore')
+  const porto = programma({ lavagnette: ['voglio'],
+    progetti: [progetto('cerca', { misure: ['tinta'], tipi: { tinta: 'colore' } }, [])],
+    principale: [fai.chiama('cerca', 'voglio'), fai.se(guarda('su', 'cassa', true, tinta('voglio')), [])] })
+  controlla('una lavagnetta del bambino può portare un colore: non è un problema prima di partire',
+            !mod.problemi(porto).some(g => g.motivo === 'non-un-colore'), JSON.stringify(mod.problemi(porto)))
+  const ignoto = programma({ principale: [fai.se(guarda('su', 'cassa', true, tinta('boh')), [])] })
+  controlla('ma un colore per nome che non esiste sì', mod.problemi(ignoto).some(g => g.motivo === 'lavagnetta-sconosciuta' && g.nome === 'boh'))
 }
 
 /* ══════════ 5-bis. quando la fila cambia ordine ══════════ */
@@ -321,6 +341,15 @@ for (const l of LIVELLI) {
   controlla('nessuna stella finisce su un livello mai giocato', !dopo.stelle[indice('sui-rossi')])
   uguale('ogni livello della fila vecchia esiste ancora', FILE[1].filter(k => indice(k) < 0).length, 0)
   uguale('una tappa raggiunta senza stelle non torna a zero', riordina({ tappa: 3, stelle: {} }, FILE[1]).tappa, 3)
+
+  /* il porto, arrivato fra le lavagnette e le sfide: chi aveva finito
+     tutti e ventidue i livelli del cantiere */
+  const tutti = { tappa: 22, stelle: Object.fromEntries(FILE[2].map((_, i) => [i, 2])) }
+  const conPorto = riordina(tutti, FILE[2])
+  uguale('ogni livello della seconda fila esiste ancora', FILE[2].filter(k => indice(k) < 0).length, 0)
+  uguale('le stelle della scacchiera restano alla scacchiera', conPorto.stelle[indice('scacchiera')], 2)
+  uguale('e la tappa si ferma al primo livello del porto', conPorto.tappa, indice('primo-carico'))
+  controlla('nessuna stella sul porto, che non ha mai giocato', !conPorto.stelle[indice('bottega')])
 }
 
 /* ══════════ 6. i traguardi ══════════ */

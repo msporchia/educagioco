@@ -40,8 +40,14 @@ export const QUANTE_TAPPE = CAMPAGNA.length
 export const FILE = {
   1: ['primo-muretto', 'torretta', 'muro-lungo', 'quanto-lungo', 'muro-alto', 'bosco', 'tempio',
       'castello', 'scala', 'piramide', 'buchi', 'ponte', 'muro-gemello'],
+  /* il 24 settembre 2026 è arrivato il porto, fra le lavagnette e le
+     sfide: chi aveva finito le sfide le ritrova vinte in fondo */
+  2: ['primo-muretto', 'torretta', 'muro-lungo', 'quanto-lungo', 'muro-alto', 'torta',
+      'sui-rossi', 'rosso-su-rosso', 'buchi', 'strisce', 'ponte',
+      'bosco', 'tempio', 'castello', 'bandiere', 'villaggio',
+      'scala', 'piramide', 'candele', 'muro-gemello', 'conta-rossi', 'scacchiera'],
 }
-export const FILA_ATTUALE = 2
+export const FILA_ATTUALE = 3
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}
