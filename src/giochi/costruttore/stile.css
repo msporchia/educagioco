@@ -52,6 +52,8 @@
 .cst-livello:active { transform: scale(.98) }
 .cst-livello.cst-adesso { border-color: var(--cst-giallo); box-shadow: 0 0 0 3px var(--cst-giallo-chiaro) }
 .cst-livello.cst-chiuso { opacity: .55 }
+/* un livello vinto resta com'è, col bordo appena verde: le stelle dicono il resto */
+.cst-livello.cst-livello-vinto { border-color: #bfe3c6 }
 .cst-livello.cst-libero { width: 100%; margin-bottom: 14px; background: #fff7df; border-color: var(--cst-giallo) }
 .cst-livello .cst-faccia { font-size: 30px; width: 40px; text-align: center }
 .cst-testo-livello { flex: 1; display: flex; flex-direction: column; min-width: 0 }
@@ -254,7 +256,10 @@
 .cst-pezzo { min-width: 48px; min-height: 40px; padding: 2px 12px; border-radius: 10px; border: 1.5px solid #b9c8ec; background: #fff; text-align: center; font-weight: 700; font-family: ui-monospace, Menlo, monospace }
 .cst-pezzo.cst-su { border-color: #5b8def; box-shadow: 0 0 0 2px #dbe6fd }
 .cst-segni .cst-piccolo { margin: 0 }
-.cst-fatto { align-self: flex-end; min-height: 38px; padding: 4px 18px; border-radius: 10px; border: none; background: #5b8def; color: #fff; font-weight: 700 }
+/* «cst-scelta-fatto» e non «cst-fatto»: quel nome era anche la classe dei
+   livelli vinti nella mappa e del messaggio del cantiere libero, e li
+   vestiva da tasto blu spinto a destra */
+.cst-scelta-fatto { align-self: flex-end; min-height: 38px; padding: 4px 18px; border-radius: 10px; border: none; background: #5b8def; color: #fff; font-weight: 700 }
 
 /* ═══════════ i fogli ═══════════ */
 .cst-velo {

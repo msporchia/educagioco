@@ -234,7 +234,7 @@ const scegli = v => { emit('scegli', v); emit('chiudi') }
                 :class="{ 'cst-su': expr.op === op }" @click="conto(op)">{{ op === '-' ? '−' : op }}</button>
         <button v-if="expr.op" type="button" class="cst-chip" data-operazione="niente" @click="senzaConto">niente conto</button>
       </div>
-      <button type="button" class="cst-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
+      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
     </template>
 
     <!-- una condizione -->
@@ -287,7 +287,7 @@ const scegli = v => { emit('scegli', v); emit('chiudi') }
                   :class="{ 'cst-su': cond.b && cond.b.v === n }" @click="cambiaCond('b', { v: n })">{{ n }}</button>
         </div>
       </template>
-      <button type="button" class="cst-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
+      <button type="button" class="cst-scelta-fatto" data-azione="fatto" @click="emit('chiudi')">fatto</button>
     </template>
 
     <!-- quale lavagnetta scrivere -->

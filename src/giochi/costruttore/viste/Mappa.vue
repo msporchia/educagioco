@@ -29,7 +29,7 @@ defineEmits(['gioca', 'libero'])
       <p class="cst-piccolo">{{ c.dice }}</p>
       <div class="cst-livelli">
         <button v-for="l in c.livelli" :key="l.chiave" type="button" class="cst-livello"
-                :class="{ 'cst-chiuso': !l.aperta, 'cst-adesso': l.adesso, 'cst-fatto': l.stelle > 0 }"
+                :class="{ 'cst-chiuso': !l.aperta, 'cst-adesso': l.adesso, 'cst-livello-vinto': l.stelle > 0 }"
                 :data-livello="l.indice" :disabled="!l.aperta" @click="$emit('gioca', l.indice)">
           <span class="cst-faccia">{{ l.aperta ? l.icona : '🔒' }}</span>
           <span class="cst-testo-livello">
