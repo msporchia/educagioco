@@ -203,6 +203,24 @@ await tocca('[data-foglio-codice] [data-chiudi]')
   await scatto(page, 'costruttore-porto')
 }
 
+/* ---------- 8-bis. le giornate del porto: i camion ---------- */
+/* il primo camion con la sua soluzione: i camion che arrivano, si
+   caricano e ripartono sulla strada, con la gru che lavora intorno */
+{
+  const camion = LIVELLI.findIndex(l => l.chiave === 'primo-camion')
+  await scriviArchivio(page, { v: 2, programmi: { 'primo-camion': JSON.parse(JSON.stringify(LIVELLI[camion].soluzione)) } })
+  await semina(page, { settings: { sperimentali: true, eta: 10 },
+                       campagne: { costruttore: { tappa: camion, libera: false, stelle: {}, cfg: { velocita: 'veloce', fila: 3 } } } })
+  await page.locator('.carta.gioco[data-gioco="costruttore"]').click()
+  await page.waitForSelector('.cst-mappa', { timeout: 5000 })
+  await tocca(`[data-livello="${camion}"]`)
+  await page.waitForSelector('[data-editor]', { timeout: 5000 })
+  await tocca('[data-azione="via"]')
+  await page.waitForSelector('[data-fine="livello"]', { timeout: 40000 })
+  uguale('il primo camion: tutte e due le giornate, tutti i camion pieni', await page.locator('[data-gettone].cst-vinto').count(), 2)
+  await scatto(page, 'costruttore-camion')
+}
+
 /* ---------- 9. niente errori ---------- */
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 nota(`errori raccolti: ${errori.length}`)

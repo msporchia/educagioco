@@ -46,6 +46,15 @@ export const FILE = {
       'sui-rossi', 'rosso-su-rosso', 'buchi', 'strisce', 'ponte',
       'bosco', 'tempio', 'castello', 'bandiere', 'villaggio',
       'scala', 'piramide', 'candele', 'muro-gemello', 'conta-rossi', 'scacchiera'],
+  /* la fila col porto: le giornate del porto si sono aggiunte in fondo,
+     e non spostano niente — la fila resta la 3, questa serve solo a
+     ricordare com'era */
+  3: ['primo-muretto', 'torretta', 'muro-lungo', 'quanto-lungo', 'muro-alto', 'torta',
+      'sui-rossi', 'rosso-su-rosso', 'buchi', 'strisce', 'ponte',
+      'bosco', 'tempio', 'castello', 'bandiere', 'villaggio',
+      'scala', 'piramide', 'candele',
+      'primo-carico', 'stiva', 'rosse-e-blu', 'bolla', 'gru', 'nastro', 'smistamento', 'bottega',
+      'muro-gemello', 'conta-rossi', 'scacchiera'],
 }
 export const FILA_ATTUALE = 3
 

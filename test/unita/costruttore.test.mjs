@@ -32,11 +32,13 @@ for (const [nome, g] of [['colori', guastiDeiColori()], ['livelli', guastiDeiLiv
                          ['campagna', guastiDellaCampagna()], ['albo', guastiDellAlbo([manifesto])]])
   controlla(`${nome}: nessun guasto`, g.length === 0, g.join(' · '))
 controlla('almeno venti livelli', LIVELLI.length >= 20, `sono ${LIVELLI.length}`)
-uguale('sei capitoli', CAPITOLI.length, 6)
+uguale('sette capitoli', CAPITOLI.length, 7)
 uguale('il «se» arriva subito dopo il cantiere', CAPITOLI[1].chiave, 'guardare')
-stessaLista('il porto viene dopo le lavagnette, e le sfide chiudono tutte e due le parti',
-            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'sfide'])
-controlla('il porto ha almeno otto sfide', LIVELLI.filter(l => l.mondo === 'porto').length >= 8)
+stessaLista('il porto viene dopo le lavagnette, poi le sfide, e in fondo le giornate del porto',
+            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'sfide', 'giornate'])
+controlla('nel porto almeno quattordici sfide, contando le giornate', LIVELLI.filter(l => l.mondo === 'porto').length >= 14)
+controlla('le giornate stanno in fondo: le stelle di prima non si spostano',
+          LIVELLI.slice(0, FILE[3].length).map(l => l.chiave).join() === FILE[3].join())
 controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un colore',
           CAPITOLI.slice(1).every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
@@ -211,7 +213,7 @@ const fatti = (prog, righe) => {
 /* ══════════ 4. i livelli ══════════ */
 const TIPI_DEI_BLOCCHI = { vai: 'vai', metti: 'metti', togli: 'togli', ripeti: 'ripeti', finche: 'finche',
                            se: 'se', assegna: 'assegna', chiama: 'progetti',
-                           prendi: 'prendi', posa: 'posa', aspetta: 'aspetta', sempre: 'sempre' }
+                           prendi: 'prendi', posa: 'posa', aspetta: 'aspetta', sempre: 'sempre', pausa: 'pausa' }
 for (const l of LIVELLI) {
   const s = provaLivello(l, l.soluzione)
   controlla(`«${l.nome}»: la soluzione vince tutti gli ordini`, s.vinto,

@@ -68,6 +68,7 @@
 import { fai, guarda, piu, meno, tinta, progetto, programma, POSTI } from './scrivi.js'
 import { CHIAVI_COLORI } from './colori.js'
 import { LIVELLI_PORTO } from './porto/livelli.js'
+import { GIORNATE } from './porto/giornate.js'
 
 /* L'ordine dei capitoli: il «se» viene subito dopo il cantiere. Stava in
    fondo, dopo progetti e lavagnette, e a metà gioco il papà ha notato che
@@ -86,6 +87,8 @@ export const CAPITOLI = [
     dice: 'Visto dall\'alto: il robot prende, posa, legge e aspetta, mentre la gru cala, il nastro scorre e i clienti arrivano.' },
   { chiave: 'sfide', nome: 'Le sfide', icona: '🏆',
     dice: 'Tutto insieme: contare, decidere, e un «se» dentro un «se».' },
+  { chiave: 'giornate', nome: 'Le giornate del porto', icona: '🌅',
+    dice: 'Il porto lavora tutto insieme: camion, lettere, frighi e clienti. Dalla giornata piccola a quella più larga dello schermo.' },
 ]
 
 const CAPOMASTRO = { emoji: '👷', nome: 'Il capomastro' }
@@ -1243,17 +1246,20 @@ const DEL_CANTIERE = [
 
 /* ═══════════ la fila ═══════════
    Il porto viene dopo le lavagnette — leggere un biglietto vuol dire
-   scriverlo in una lavagnetta — e le sfide del cantiere vanno in fondo,
-   come finale di tutte e due le parti. Chi aveva giocato con la fila di
-   prima ritrova le stelle al loro posto (`FILE` in `dati/campagna.js`). */
+   scriverlo in una lavagnetta — e le sfide del cantiere dopo il porto.
+   Chi aveva giocato con la fila di prima ritrova le stelle al loro posto
+   (`FILE` in `dati/campagna.js`). Le giornate del porto, dove i pezzi
+   lavorano tutti insieme, chiudono: stanno in fondo anche per non
+   spostare le stelle di nessuno. */
 export const LIVELLI = [
   ...DEL_CANTIERE.filter(l => l.capitolo !== 'sfide'),
   ...LIVELLI_PORTO,
   ...DEL_CANTIERE.filter(l => l.capitolo === 'sfide'),
+  ...GIORNATE,
 ]
 
 /* ═══════════ i controlli sul dato ═══════════ */
-const BLOCCHI = ['vai', 'metti', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'sempre', 'assegna', 'progetti']
+const BLOCCHI = ['vai', 'metti', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'pausa', 'sempre', 'assegna', 'progetti']
 
 export function guastiDeiLivelli(livelli = LIVELLI) {
   const guasti = []
