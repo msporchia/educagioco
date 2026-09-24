@@ -698,7 +698,30 @@ committate: non è ricostruibile da git.
   linguaggio aveva e nessun livello usava), scambiare passando dal banco,
   ripetere la passata — il bubble sort. Si vince con l'obiettivo
   `inOrdine` di `motore/porto/esito.js`, che guarda la fila e non la
-  strada fatta per arrivarci.
+  strada fatta per arrivarci (e che sa anche l'ordine dei colori,
+  `colori`, e quello dentro un sacco, `cassone`).
+  **Poi gli algoritmi** (`ordine.js`, `cercare.js`, `pile.js`, tre
+  capitoli): **lo scaffale è la memoria** — la casella del robot è
+  l'indice, la mano un registro, il banco la variabile d'appoggio — e
+  siccome pensare non costa e muoversi sì, il bubble sort qui è lento per
+  la ragione vera (misurato: 488 turni contro i 144 di una selezione, su
+  nove lettere al contrario; il banco guarda il risultato, quindi non è
+  vietato niente). Tre pezzi di mondo e nessuna meccanica su misura: il
+  cliente che chiede **una qualità** (`massimo`/`minimo`: leggerla ferma
+  il robot, si capisce guardando le lettere), quello che **fa
+  indovinare** (`clienti.indovina`: rimette la lettera sul bancone e dice
+  «di più!»/«di meno!», che si guardano come `di-piu`/`di-meno`, fino a
+  `tentativi`), e la **pila** (`figura: 'pila'`, forme di formaggio: una
+  grande sopra una più piccola la schiaccia). Più il `÷` nei conti, per la
+  metà della ricerca binaria. In fondo **la torre del casaro** (Hanoi),
+  una scala di quattro livelli fino alla **ricorsione**, che era stata
+  rimandata finché non avesse dei guardrail: la fila delle carte la fa
+  vedere mentre gira («torre alta 3 › torre alta 2 › …»), senza il fermo
+  il robot si ferma a `TETTO_PILA` dicendolo, e il 💡 da 50 per un
+  progetto che chiama sé stesso scrive tutto tranne le chiamate
+  (`pezzoDi`). Un livello la cui soluzione chiama sé stessa dichiara
+  `ricorsione: true`, e il banco non la srotola (`chiamaSeStesso` in
+  `motore/zaino.js`: srotolarla non finirebbe mai).
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni

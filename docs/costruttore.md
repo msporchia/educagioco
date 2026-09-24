@@ -92,7 +92,9 @@ per sbaglio, col blocco e tutto quello che aveva dentro, torna com'era.
 | 🏆 Le sfide | **contare** camminando (il muro gemello), contare quello che si vede (conta i rossi), e **un se dentro un se** (la scacchiera) |
 | 🗺️ I posti del porto | **un lavoro per ogni colore**, con le strade già scritte come attrezzi (le strade del porto), poi **le strade scritte una volta sola** e chiamate da più colori, in un porto più largo dello schermo (il porto grande) |
 | 🌅 Le giornate del porto | il porto che lavora tutto insieme: camion, lettere, frighi e clienti, dalla giornata piccola a quella più larga dello schermo |
-| 🔢 Mettere in ordine | **confrontare due numeri** e scambiarli passando dal banco (due lettere), **una passata** che porta la lettera più grande in fondo (la passata), e **ripetere la passata** finché la fila è in ordine: il bubble sort (in ordine) |
+| 🔢 Mettere in ordine | **confrontare due numeri** e scambiarli passando dal banco (due lettere), **una passata** che porta la lettera più grande in fondo (la passata), **ripetere la passata** finché la fila è in ordine: il bubble sort (in ordine); poi l'ordine lo decidi tu (il tricolore), **ordinare senza confrontare** (il casellario), **infilare al suo posto** quello che arriva (fare posto) e **unire due file già in ordine** (la cerniera) |
+| 🔎 Cercare | il **record** che cambia solo quando serve (il campione), **un conto che trova** quello che manca (la lettera che manca), e **cercare dimezzando**: la ricerca binaria (indovina la lettera) |
+| 🧀 Le pile | la **pila che capovolge** (il carico al contrario), e la **torre del casaro** — la torre di Hanoi, in quattro gradini fino al **progetto che chiama sé stesso** |
 
 Il «se» arriva subito dopo il cantiere, prima delle funzioni: una decisione
 è più semplice di un progetto, e coi colori ha qualcosa da decidere fin da
@@ -185,13 +187,95 @@ livello è una mappa, qualche attore e un obiettivo dichiarato («nel camion
 cinque casse», «tutti i clienti serviti»). Le sfide nuove si scrivono come
 dati, e il banco le gioca tutte.
 
+## Gli algoritmi
+
+In fondo alla fila, dopo le giornate, tre capitoli dove il porto diventa il
+posto per i primi algoritmi. Funziona per una ragione precisa: **lo
+scaffale è la memoria**. La casella sotto cui sta il robot è l'indice, la
+mano è un registro, il banco di sotto è la variabile d'appoggio dello
+scambio — e una regola piccola fra due lettere vicine fa venire fuori,
+davanti agli occhi, l'ordine di tutta la fila.
+
+C'è una differenza col libro di testo che decide quali algoritmi stanno
+bene qui: **nel porto confrontare non costa, muoversi sì** (pensare non fa
+passare turni). Misurato col motore, su nove lettere al contrario il bubble
+sort di «In ordine» impiega 488 turni, e un ordinamento per selezione —
+cerca la più piccola guardando, poi portala davanti con uno scambio solo —
+144. È la ragione vera per cui chi sposta casse pesanti non fa il bubble
+sort. Il banco guarda il risultato e non la strada, quindi nessuno dei due
+è vietato: il posto dove la differenza si farebbe sentire è un turno di
+notte col record, non un livello.
+
+Il mondo ha tre pezzi nuovi, e nessuna meccanica scritta per un livello
+solo:
+
+- il **cliente che chiede una qualità** invece di una cosa — «la lettera
+  più grande che c'è»: non si legge al bancone, si capisce guardando;
+- il **cliente che fa indovinare**: gli porti una lettera, e lui la
+  rimette sul bancone dicendo solo «di più!» o «di meno!». Guarda al
+  massimo quattro lettere;
+- la **pila delle forme di formaggio**: una forma grande sopra una più
+  piccola la schiaccia.
+
+E un segno nuovo nei conti, **÷**, quello della scuola senza la virgola: la
+metà che serve a chi cerca dimezzando.
+
+| livello | cosa si impara |
+|---|---|
+| 🇮🇹 Il tricolore | la passata di prima con un'altra domanda dentro: verdi, bianche, rosse. L'algoritmo non cambia, cambia cosa vuol dire «fuori posto» (è la bandiera olandese di Dijkstra, all'italiana) |
+| 📬 Il casellario | ogni lettera nella buca del suo numero, poi le buche svuotate in fila: il sacco torna in ordine senza aver confrontato niente |
+| ↔️ Fare posto | le lettere arrivano dalla gru, e ognuna scivola a sinistra finché trova il suo posto: come si ordinano le carte in mano |
+| 🤐 La cerniera | due nastri di lettere già in ordine diventano una fila sola: delle due in testa, la più piccola. È il cuore del merge sort |
+| 🏆 Il campione | la lettera più grande, con una lavagnetta che cambia solo quando arriva un record |
+| 🕳️ La lettera che manca | tutte meno quelle che ci sono: la somma trova la lettera mancante senza cercarla |
+| 🎯 Indovina la lettera | quattro tentativi per nove lettere: si prova sempre quella a metà, e ogni risposta butta via metà scaffale. È la risposta a «a cosa serve mettere in ordine?» |
+| 🔄 Il carico al contrario | la fila dentro il cassone e poi fuori: esce rovesciata, perché si prende sempre quella in cima |
+| 🧀 Le due forme · Tre forme · Quattro forme | la torre di Hanoi, un gradino alla volta (vedi sotto) |
+| 🗼 La torre del casaro | quante forme vuoi: il progetto che chiama sé stesso |
+
+### La torre del casaro
+
+Il casaro tiene le forme di formaggio in pila su tre assi — la rossa, la
+verde e la blu — e la regola del magazzino è una sola: una forma grande
+sopra una più piccola la schiaccia. Ogni giorno la torre va portata
+dall'asse «da» all'asse «a», e «via» è quella libera: le assi si chiamano
+col loro colore, quindi un programma scritto coi colori di lunedì perde
+martedì. Il robot sta fermo in mezzo, e «sposta» porta una forma da
+un'asse all'altra: la lezione è la torre, non la strada.
+
+La ricorsione non si spiega: si arriva a vederla. Per questo la torre è
+una scala, e ogni gradino dà già fatto quello che il bambino ha scritto
+nel gradino prima:
+
+1. **due forme**, a mano: la piccola sull'asse libera, la grande al suo
+   posto, la piccola sopra;
+2. **tre forme**, con la «torre di due» già pronta: la torre di due via,
+   la grande, la torre di due sopra — e nello zaino i sette spostamenti
+   scritti a mano non ci stanno;
+3. **quattro forme**: la «torre di tre» la scrive il bambino, come
+   progetto, con dentro la torre di due. Il principale è lo stesso disegno
+   una volta più in alto;
+4. **la torre del casaro**: torri di tre, quattro, cinque e sei forme, e
+   solo «sposta». Una torre alta N è due torri alte N − 1 e la grande in
+   mezzo, e il progetto «torre» chiama sé stesso. Una torre alta zero non
+   si sposta: senza quel fermo il robot non smetterebbe mai.
+
+Mentre gira, la fila delle carte aperte fa vedere quello che succede:
+«torre alta 5 › torre alta 4 › torre alta 3 › … › sposta da verde a
+rosso». Se il bambino dimentica il fermo, il robot si ferma alla
+quarantesima carta e lo dice. È il livello più difficile del gioco: il
+💡 da 50 monete scrive il progetto con le sue misure, il fermo e lo
+spostamento, ma le due chiamate a sé stesso restano da scrivere.
+
 ## Vedere la macchina che lavora
 
 Mentre il programma gira, la riga che sta eseguendo si accende e le
 lavagnette cambiano valore sotto gli occhi. Quando il robot entra in un
 progetto si apre la sua scheda, con le misure di **quella** chiamata scritte
 sopra («rettangolo · largo 2 · alto 5»), e un ripeti dice a che giro è. È la
-pila delle chiamate fatta vedere invece che spiegata.
+pila delle chiamate fatta vedere invece che spiegata, e con la torre del
+casaro diventa la ricorsione fatta vedere: le carte della stessa torre,
+una dentro l'altra, ognuna con la sua altezza e le sue assi.
 
 ## Note per i genitori
 
