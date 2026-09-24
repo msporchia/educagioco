@@ -533,10 +533,13 @@ const inLettere = anniInLettere
 function ritoccaDalQuadro({ chiave, ritocco = 0, spenta = false }) {
   if (!chiave) return
   if (spenta) accendiSapere(chiave, false)
-  else {
-    if (saperiSpenti().includes(chiave)) accendiSapere(chiave, true)
-    ritocca(chiave, ritocco)
-  }
+  else if (saperiSpenti().includes(chiave)) accendiSapere(chiave, true)
+  /* Il ritocco si scrive in tutti e due i casi. Spegnendo con «Toglila»
+     arriva quello di prima, e riscriverlo non cambia niente; ma
+     «rimettila com'era», su un pezzo che l'età spegne, arriva con lo
+     zero **insieme** allo spegnimento — e senza questa riga il ritocco
+     vecchio resterebbe lì a tenerla ambra. */
+  ritocca(chiave, ritocco)
   giroEta.value++
 }
 

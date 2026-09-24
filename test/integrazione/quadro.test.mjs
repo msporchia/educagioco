@@ -26,12 +26,18 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, semina, leggiProfilo, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { eccezioniPerEta } from '../../src/data/partenze.js'
 
 const CIECA = 400          // la finestra cieca di Domanda.vue, con margine
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await semina(page, { coins: 100, settings: { eta: 8 } })
+/* Un bambino di otto anni come lo fa nascere la manopola, con le
+   eccezioni della terza. Senza, sette pezzi di scuola risultano accesi
+   contro l'età — il tasto che rimette tutto li conta — e da quando il
+   quadro li colora «guardare non tara» non si potrebbe più dire con
+   zero righe ambra. */
+await semina(page, { coins: 100, settings: eccezioniPerEta(8) })
 
 /* ── dentro la pagina dei grandi, scheda dove si tara ── */
 await page.click('[data-azione="grandi"]')
@@ -195,6 +201,44 @@ if (settings) {
          Object.keys(settings.ritocchi || {}).length, 0)
 }
 uguale('e nessuna riga si è colorata',
+       await page.locator('[data-manopola] .voce-riga.ritoccata').count(), 0)
+
+/* ── 6b. «rimettila com'era» torna dove la mette l'età ──
+   A otto anni la partenza spegne le divisioni: la loro riga sta fra
+   quelle non ancora spiegate, senza ambra e senza niente da rimettere.
+   Riaccese a mano salgono fra le domande e si colorano, e «rimettila
+   com'era» le deve **rispegnere** — prima le riaccendeva, cioè
+   scriveva una scelta a mano col tasto che doveva toglierne una. */
+await apriBlocco('spenta')
+const tolte = page.locator('[data-manopola] [data-apri="spenta"] [data-riga="divisioni"]')
+uguale('a otto anni le divisioni stanno fra quelle non ancora spiegate', await tolte.count(), 1)
+uguale('senza ambra, perché le ha tolte l\'età',
+       await tolte.locator('.voce-riga.ritoccata').count(), 0)
+const detto = (await tolte.locator('.testo i').first().innerText()).trim()
+controlla('e la riga lo dice, invece di «l\'hai tolta tu»',
+          detto.includes('a quest\'età') && !detto.includes('l\'hai tolta tu'), detto)
+
+await tolte.locator('[data-tara-apri="divisioni"]').click()
+await page.waitForSelector('[data-taratura="divisioni"]', { timeout: 5000 })
+uguale('aperta la tacca, non c\'è niente da rimettere',
+       await page.locator('[data-tara="rimetti"]').count(), 0)
+await page.click('[data-tara="giu"]')
+await page.click('[data-tara="applica"]')
+await page.waitForTimeout(800)
+uguale('un passo indietro dall\'ultimo scatto le riaccende',
+       (await leggiProfilo(page)).settings.sa?.divisioni, undefined)
+
+await apriBlocco('medie')
+const riaccese = page.locator('[data-manopola] [data-riga="divisioni"]')
+controlla('e la loro riga, fra le domande, adesso è ambra',
+          (await riaccese.locator('.voce-riga.ritoccata').count()) > 0)
+await riaccese.locator('[data-tara-apri="divisioni"]').first().click()
+await page.waitForSelector('[data-tara="rimetti"]', { timeout: 5000 })
+await page.click('[data-tara="rimetti"]')
+await page.waitForTimeout(800)
+uguale('«rimettila com\'era» le rispegne, com\'è di partenza a otto anni',
+       (await leggiProfilo(page)).settings.sa?.divisioni, false)
+uguale('e non resta niente di colorato',
        await page.locator('[data-manopola] .voce-riga.ritoccata').count(), 0)
 
 /* ── 7. IL PEZZO DI SCUOLA CHE VIVE DENTRO UN GIOCO ──

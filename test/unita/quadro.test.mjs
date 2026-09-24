@@ -736,6 +736,75 @@ for (const eta of [6, 8, 10]) {
   uguale('il tasto conta tanti giochi quante sono le righe ambra', storti.join(' · '), '')
 }
 
+/* ── E I PEZZI DI SCUOLA, NELLO STESSO MODO ──
+   Le righe dei blocchi si coloravano se erano spente, e basta: la
+   partenza della terza spegne sette pezzi di scuola da sola, e a otto
+   anni «Non ancora spiegate» era tutto ambra — «l'hai tolta tu» — col
+   tasto che rimette tutto che diceva zero. Nell'altro verso un pezzo
+   riacceso contro l'età si contava e non si colorava. Il colore adesso
+   si misura sull'atteso, come quello delle righe `chiede`, e le chiavi
+   colorate devono essere quelle che il tasto conta.
+
+   Due eccezioni, dette qui invece di saltarle in silenzio. Sono i casi
+   in cui la riga non c'è, perché a quell'età quel pezzo non porta
+   nessuna domanda; il tasto lo conta lo stesso, perché rimettendo lo
+   riscrive.
+     · dove in casa nessun gioco fa domande (fino a cinque anni e
+       mezzo) i blocchi non si mostrano affatto;
+     · un pezzo riacceso le cui domande sono tutte troppo difficili, o
+       tenute fuori da un altro pezzo ancora spento — le conversioni in
+       terza stanno sotto «Metri, litri e chili» — non cade in nessun
+       blocco. */
+{
+  const colorate = q => {
+    const k = new Set()
+    for (const b of q.gruppi) for (const s of b.saperi) {
+      if (s.aMano) k.add(s.chiave)
+      for (const c of s.classi) if (c.riaccesa) k.add(c.tipo)
+    }
+    for (const g of q.giochi) for (const s of g.chiedeQui) if (s.aMano) k.add(s.chiave)
+    return k
+  }
+  /* nessuna delle sue domande arriva: sono oltre il tetto, o spente da
+     un'altra chiave */
+  const nonPorta = (q, k) => q.righe.filter(r => r.sa.includes(k) || r.tipo === k)
+    .every(r => r.dove === 'sopra' || r.dove === 'spenta')
+  const storti = []
+  const senzaRiga = []
+  for (let eta = 4; eta <= 12; eta += 0.5) {
+    const d = eccezioniPerEta(eta)
+    const dallEta = Object.keys(d.sa).filter(k => d.sa[k] === false)
+    const liberi = SAPERI.filter(s => s.difetto !== false && d.sa[s.chiave] !== false)
+      .map(s => s.chiave)
+    const profili = [
+      [null, d.sa],
+      ...dallEta.map(k => { const sa = { ...d.sa }; delete sa[k]; return [k, sa] }),
+      ...liberi.map(k => [k, { ...d.sa, [k]: false }]),
+    ]
+    for (const [k, sa] of profili) {
+      const q = quadroDi({ eta, giochi: d.giochi, sa, sperimentali: true }, { classi })
+      const conto = rimettendoLEta({ eta, giochi: d.giochi, sa, ritocchi: {} }).perde.sa
+      const viste = colorate(q)
+      const riacceso = !!k && sa[k] === undefined
+      const come = k ? `${eta}a ${riacceso ? 'riacceso' : 'spento'} ${k}` : `${eta}a ai difetti`
+      if (conto === viste.size && (!k || viste.has(k))) continue
+      if (k && conto === 1 && !viste.size &&
+          (!q.gruppi.length || (riacceso && nonPorta(q, k)))) { senzaRiga.push(come); continue }
+      storti.push(`${come}: conto ${conto}, colorate ${[...viste].join(' ') || 'nessuna'}`)
+    }
+  }
+  uguale('il tasto conta i pezzi di scuola che il quadro colora', storti.join(' · '), '')
+  nota(`senza una riga da colorare, perché a quell'età non portano domande: ${senzaRiga.length} casi`)
+
+  /* il caso da cui è partito, detto per esteso */
+  const tolti = quadroDi({ eta: 8, ...eccezioniPerEta(8) }, { classi })
+    .gruppi.find(b => b.chiave === 'spenta')
+  controlla('a otto anni la partenza toglie dei pezzi di scuola', (tolti?.saperi || []).length > 0)
+  uguale('e nessuno si colora: li ha tolti l\'età, non un grande',
+         tolti.saperi.filter(s => s.aMano).map(s => s.chiave).join(' '), '')
+  controlla('e ognuno lo sa, per dirlo nella riga', tolti.saperi.every(s => s.attesoSpento))
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    E DOVE STA QUELLO CHE NON FUNZIONA
 

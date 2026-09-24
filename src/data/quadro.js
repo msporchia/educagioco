@@ -89,7 +89,6 @@ export function giochiDiUnEta ({ eta, giochi = {}, sa = {}, sperimentali = false
   const attese = eccezioniPerEta(eta)
   const dEta = new Set(spente(attese.giochi))
   const saDEta = new Set(spente(attese.sa))
-
   return GIOCHI
     /* i giochi in prova sono un interruttore di casa, non una cosa che
        dipende dall'età: si passa com'è messo, e di partenza è spento
@@ -344,6 +343,34 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
   const spenti = spente(sa)
   const dove = doveCadeCon(eta)
 
+  /* ── DI CHI È LA MANO, SU UN PEZZO DI SCUOLA ──
+     La stessa regola delle righe `chiede` di `giochiDiUnEta`, e per la
+     stessa ragione: il paragone è con quello che la partenza di
+     quest'età scriverebbe, non con «nessuna eccezione». Qui la riga si
+     colorava se era spenta e basta, e la partenza della terza spegne
+     sette pezzi di scuola da sola: a otto anni il blocco «Non ancora
+     spiegate» era tutto ambra e diceva «l'hai tolta tu» a un grande che
+     non aveva toccato niente, mentre il tasto che rimette tutto non
+     compariva nemmeno. Al contrario, un pezzo riacceso contro l'età —
+     che il tasto conta — non si colorava da nessuna parte: il contatore
+     diceva quante, e il colore non diceva quali.
+
+     Riacceso vuol dire **assente** dove l'età scrive `false`, perché
+     riaccendere cancella la voce (`accendiSapere`). Non si distingue da
+     un profilo nato prima che la sua fascia spegnesse quel pezzo, e non
+     serve: in tutti e due i casi le sue domande arrivano, e l'età da
+     sola non le manderebbe. */
+  const saDEta = new Set(spente(eccezioniPerEta(eta).sa))
+  const manoSu = (chiave, spento) => {
+    const attesoSpento = saDEta.has(chiave)
+    const ritocco = ritocchi[chiave] || 0
+    return { ritocco, spento, attesoSpento, aMano: spento !== attesoSpento || !!ritocco }
+  }
+  /* una tipologia che l'età spegne e che nel profilo è accesa: non ha
+     una riga sua fuori da «Non ancora spiegate» — le sue domande stanno
+     sotto il loro pezzo di scuola — quindi il colore va sulle domande */
+  const riaccesa = tipo => !!tipo && saDEta.has(tipo) && !spenti.includes(tipo)
+
   const righe = classi.map(c => ({
     chiave: c.chiave,
     nome: c.nome,
@@ -380,6 +407,11 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
        metterla fra le «troppo facili» direbbe una cosa falsa */
     dove: (c.sa || []).some(s => spenti.includes(s)) || spenti.includes(c.tipo)
       ? 'spenta' : dove(c.livello - ritoccoDi(c, ritocchi) * PASSO),
+    /* colorata se un grande l'ha spostata, o se la sua tipologia è
+       accesa contro l'età; `riaccesa` serve anche alla tacca, che
+       rimettendola com'era la deve rispegnere */
+    riaccesa: riaccesa(c.tipo),
+    aMano: !!ritoccoDi(c, ritocchi) || riaccesa(c.tipo),
   }))
 
   /* ── LE DOMANDE, IN QUATTRO GRUPPI COI NOMI DENTRO ──
@@ -482,8 +514,8 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
              dov'erano. `ritocco` è di quanto l'ha già spostato un
              grande — il numero da cui riparte la tacca aprendosi. */
           livelli: classi.map(c => c.livello),
-          ritocco: ritocchi[chiave] || 0,
-          spento: spenti.includes(chiave),
+          /* `ritocco`, `spento`, e se è roba dell'età o di un grande */
+          ...manoSu(chiave, spenti.includes(chiave)),
           classi,
         }
       })
@@ -515,8 +547,7 @@ export function quadroDi ({ eta, giochi = {}, sa = {}, sperimentali = false,
     const gia = new Set(fila.map(x => x.chiave))
     const nudi = spenti.filter(k => !gia.has(k) && sapereDi(k))
       .map(k => ({ chiave: k, nome: sapereDi(k).nome, ico: sapereDi(k).ico || '•',
-                   quante: 0, livello: 0, livelli: [], ritocco: ritocchi[k] || 0,
-                   spento: true, classi: [] }))
+                   quante: 0, livello: 0, livelli: [], ...manoSu(k, true), classi: [] }))
     return [...fila, ...nudi]
   }
   /* L'ordine è quello in cui si leggono: dal già saputo al non ancora,

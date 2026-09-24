@@ -308,15 +308,24 @@ const fascia = computed(() => partenzaPerEta(anniVisti.value))
 const QUANTO = ['', 'mezzo anno', 'un anno', 'un anno e mezzo']
 const scartoDi = n => n ? `${QUANTO[Math.min(Math.abs(n), 3)]} più ${n > 0 ? 'facile' : 'difficile'}` : ''
 
+/* Chi l'ha spenta cambia la frase, e sbagliarla è una bugia: la
+   partenza della terza spegne da sola sette pezzi di scuola, e «l'hai
+   tolta tu» detto a chi non ha toccato niente lo manda a cercare un
+   interruttore che non ha mai premuto. Nell'altro verso la riga dice
+   perché è ambra: un pezzo che l'età terrebbe spento e che qui è
+   acceso, a guardarlo, non si distingue da nessun altro. */
 const sottoDelSapere = s => s.spento
-  ? 'l\'hai tolta tu: non gliele chiediamo più'
+  ? (s.attesoSpento ? 'a quest\'età non l\'ha ancora fatto: non gliele chiediamo'
+                    : 'l\'hai tolta tu: non gliele chiediamo più')
   : (s.quante === 1 ? '1 domanda' : `${s.quante} domande`) +
+    (s.attesoSpento ? ' · l\'età le terrebbe spente' : '') +
     (s.ritocco ? ` · ${scartoDi(s.ritocco)}` : '')
 /* gli anni sono quelli **visti**: se un grande l'ha spostata, la riga
    deve dire il numero che vale per suo figlio, non quello che avevamo
    scritto noi — se no la riga cambia blocco e continua a dichiarare
    l'età di prima */
 const sottoDellaClasse = r => etaDella(r.anniOra ?? r.anni) +
+  (r.riaccesa ? ' · l\'età la terrebbe spenta' : '') +
   (r.ritocco ? ` · ${scartoDi(r.ritocco)}` : '')
 
 /* ── E SOTTO UN GIOCO, QUELLO CHE GLI MANCA ──
@@ -588,7 +597,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
                   :sotto="sottoDelSapere(s)" :stato="allarmeDelSapere(s)"
                   :prova="!!s.quante" :tara="siPuoTarare"
                   :tarando="tarando === `sapere:${g.chiave}:${s.chiave}`"
-                  :ritoccata="!!s.ritocco || s.spento"
+                  :ritoccata="s.aMano"
                   apribile :aperto="eAperto(`${g.chiave}:${s.chiave}`)"
                   @prova="provaSapere(s)" @tara="apriTara(`sapere:${g.chiave}:${s.chiave}`)"
                   @apri="apri(`${g.chiave}:${s.chiave}`)">
@@ -599,7 +608,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
               <Taratura v-if="tarando === `sapere:${g.chiave}:${s.chiave}`"
                         :livello="s.livello" :livelli="s.livelli" :eta="anniVisti"
                         :ritocco="s.ritocco" :spenta="s.spento" :chiave="s.chiave"
-                        puo-spegnere
+                        :attesa-spenta="s.attesoSpento" puo-spegnere
                         @applica="ritocca(s.chiave, $event)" @chiudi="tarando = ''" />
             </Riga>
             <!-- sotto una domanda va **a che età serve**, non il nome del
@@ -613,7 +622,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
                   :stato="allarmeDi(r.tipo)"
                   prova :tara="siPuoTarare && !!r.tipo"
                   :tarando="tarando === `classe:${g.chiave}:${r.chiave}`"
-                  :ritoccata="!!r.ritocco"
+                  :ritoccata="r.aMano"
                   @prova="provaClasse(r)" @tara="apriTara(`classe:${g.chiave}:${r.chiave}`)">
               <!-- e qui la tacca si ferma agli scatti: una domanda non ha
                    un pezzo di scuola da spegnere — quello sta un gradino
@@ -622,6 +631,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
               <Taratura v-if="tarando === `classe:${g.chiave}:${r.chiave}`"
                         :livello="r.livello" :eta="anniVisti"
                         :ritocco="r.ritocco" :chiave="r.chiave"
+                        :attesa-spenta="r.riaccesa"
                         @applica="ritocca(r.tipo, $event)" @chiudi="tarando = ''" />
             </Riga>
           </template>

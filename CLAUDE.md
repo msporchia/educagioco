@@ -1393,7 +1393,16 @@ non riusciva a toglierla, perché rimettere scriveva esattamente quelle
 eccezioni lì. `aMano` e la posizione della tacca si misurano su
 `eccezioniPerEta(eta)`, e `fissaGioco(k, 'difetto')` scrive l'eccezione
 attesa invece di cancellare: se no «rimetti questa riga» e «rimetti
-tutto» lascerebbero due profili diversi.
+tutto» lascerebbero due profili diversi. **Vale per le tre specie di
+riga** — i giochi, i pezzi di scuola dei blocchi (`manoSu` in
+`data/quadro.js`, e la «casa» di `eta/Taratura.vue` è l'ultimo scatto
+quando l'età li spegne) e quelli appesi a un gioco — **e per il conto
+del tasto** (`messeAMano` in `data/partenze.js`): il contatore dice
+quante, il colore dice quali, e `unita/quadro` pretende che siano le
+stesse. Con un'asimmetria voluta: per un gioco l'assenza dove l'età
+scrive `false` non è di nessuno (un profilo nato prima di quel gioco),
+per un pezzo di scuola è la mano stessa, perché riaccenderlo cancella
+la voce.
 
 **E in fondo al quadro c'è il tasto che rimette tutto ai valori di
 quell'età** (`rimettendoLEta` in `data/partenze.js`, `rimettiAiDifetti`

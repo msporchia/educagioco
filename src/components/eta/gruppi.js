@@ -32,10 +32,14 @@ export const GRUPPI = {
   toste: { nome: 'Difficili, ma ce la può fare', corto: 'Difficili',
            che: 'un gradino sopra, quando il gioco chiede molto' },
   /* Non è una fascia di difficoltà ed è l'ultima apposta: qui dentro
-     non ci finisce quello che è troppo difficile, ma quello che un
-     grande ha tolto dicendo «a scuola non l'hanno ancora fatto». */
+     non ci finisce quello che è troppo difficile, ma quello che a
+     scuola non si è ancora fatto. Lo toglie la partenza dell'età — la
+     terza spegne da sola sette pezzi di scuola — o un grande che lo
+     dice, e **chi dei due lo dice la riga** (`Manopola.vue`): «le hai
+     tolte tu» scritto sopra tutto il blocco lo diceva anche a chi non
+     aveva toccato niente. */
   spenta: { nome: 'Non ancora spiegate', corto: 'Non ancora spiegate',
-            che: 'le hai tolte tu: spariscono dalle domande di tutti i giochi' },
+            che: 'tolte dall\'età o da te: spariscono dalle domande di tutti i giochi' },
 }
 
 /* L'ordine in cui si leggono: dal già saputo al non ancora, poi quello

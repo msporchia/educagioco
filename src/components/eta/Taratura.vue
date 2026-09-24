@@ -63,6 +63,13 @@ const props = defineProps({
      positivo = «per lui è più facile» */
   ritocco: { type: Number, default: 0 },
   spenta: { type: Boolean, default: false },
+  /* ── DOV'È LA CASA ──
+     `true` quando la partenza di quest'età la spegne da sola: allora
+     «com'era» è spenta, non lo zero. Il cerchietto di casa va
+     sull'ultimo scatto, rimettendola si rispegne, e da spenta non c'è
+     niente da rimettere. È la stessa regola di `fissaSapere` in
+     `store/profile.js`, dall'altra parte del quadro. */
+  attesaSpenta: { type: Boolean, default: false },
   /* l'ultimo scatto c'è solo dove c'è un pezzo di scuola da spegnere */
   puoSpegnere: { type: Boolean, default: false },
   chiave: { type: String, default: '' },
@@ -145,15 +152,21 @@ const cambiata = computed(() => via.value !== props.spenta
    quello che uno si aspetta da un interruttore. */
 const applica = () => emit('applica', { ritocco: via.value ? props.ritocco : -d.value,
                                         spenta: via.value })
-const rimetti = () => emit('applica', { ritocco: 0, spenta: false })
+/* «com'era» è com'è di partenza a quest'età. Riaccendeva sempre, e su
+   un pezzo che l'età spegne — le divisioni a otto anni — scriveva una
+   scelta a mano col tasto che doveva toglierne una: la riga restava
+   ambra, e «rimetti questa riga» e «rimetti tutto» lasciavano due
+   profili diversi. */
+const rimetti = () => emit('applica', { ritocco: 0, spenta: props.attesaSpenta })
 
 const puntini = computed(() => {
   const fila = []
   for (let i = -TETTO; i <= TETTO; i++)
-    fila.push({ k: `p${i}`, cls: !via.value && i === d.value ? 'ora' : (i === 0 ? 'casa' : '') })
+    fila.push({ k: `p${i}`, cls: !via.value && i === d.value ? 'ora'
+      : (i === 0 && !props.attesaSpenta ? 'casa' : '') })
   if (props.puoSpegnere) {
     fila.push({ k: 'tacchetta', cls: 'tacchetta' })
-    fila.push({ k: 'via', cls: 'via' + (via.value ? ' ora' : '') })
+    fila.push({ k: 'via', cls: 'via' + (via.value ? ' ora' : props.attesaSpenta ? ' casa' : '') })
   }
   return fila
 })
@@ -193,7 +206,8 @@ const puntini = computed(() => {
               :disabled="!cambiata" @click="applica">{{ via ? 'Toglila' : 'Conferma' }}</button>
     </div>
 
-    <button v-if="ritocco || spenta" type="button" class="rimetti" data-tara="rimetti"
+    <button v-if="ritocco || spenta !== attesaSpenta" type="button" class="rimetti"
+            data-tara="rimetti"
             @click="rimetti">rimettila com'era</button>
   </div>
 </template>
@@ -224,6 +238,8 @@ const puntini = computed(() => {
 .puntini span.ora { background:var(--viola); transform:scale(1.35) }
 .puntini span.tacchetta { width:2px; height:12px; border-radius:1px; background:#e6cfa0 }
 .puntini span.via { background:#efdcb4 }
+/* e quando la casa è spenta, il cerchietto vuoto sta di là */
+.puntini span.via.casa { background:#fff; box-shadow:inset 0 0 0 2px #e0b25c }
 .puntini span.via.ora { background:#d99a26 }
 
 .finisce { margin:0; font-size:10.5px; color:#7a7a8a; text-align:center; line-height:1.3 }
