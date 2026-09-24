@@ -288,6 +288,15 @@ telefono senza gioco finché la rete non torna.
 dall'indirizzo con `#pin=1234`. Lì accanto vive anche il cheat delle monete,
 `#monete=500`.
 
+**Tutti i trucchi stanno in una pagina sola: `#admin`.** Nessun codice e
+nessuna carta in home — ci si arriva solo scrivendo l'indirizzo — e dentro
+c'è un tasto per ogni cheat (monete, fattoria di prova, livello e feste
+della fattoria, il sotterraneo equipaggiato, l'abisso), uno per aprire
+qualunque gioco anche se in home non c'è, il bambino di prova, i due
+interruttori dei grandi (giochi in prova, tutte le tappe aperte), il codice
+rimesso a `0000` e, in fondo, l'elenco dei cheat da scrivere a mano. I tasti
+scrivono nell'indirizzo il cheat che esiste già: la pagina non rifà niente.
+
 **Per provare la fattoria di un livello alto** c'è `#fattoria-tipo=30` (o
 qualunque livello da 1 a 99): apre la fattoria e ci mette una fattoria già
 giocata di quel livello, coi campi posati, le macchine al lavoro e i silos

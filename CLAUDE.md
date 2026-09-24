@@ -1452,7 +1452,11 @@ una **già giocata** di quel livello (`giochi/fattoria/motore/tipo.js`,
 costruita col motore e non scritta a mano) dopo averne messo il profilo nel
 cestino: si usa con un bambino di prova, perché sul server di casa quella
 che si butta è vera. I cheat si sommano (`#fattoria-tipo=30&monete=2000`):
-quello delle monete toglie dall'indirizzo solo il suo pezzo.
+quello delle monete toglie dall'indirizzo solo il suo pezzo. **Stanno tutti
+in `#admin`** (`views/AdminView.vue`), una pagina senza codice e senza
+carta in home, un tasto per cheat: i tasti scrivono l'indirizzo e portano
+dove il cheat si legge, quindi un cheat nuovo si aggiunge lì con una riga —
+se no torna a essere una cosa da ricordare a memoria.
 
 **La porta non si nasconde, si rende noiosa.** In home è un tasto piatto
 nel piede — «⚙︎ Impostazioni · giochi visibili, chi gioca, salvataggio dei

@@ -14,6 +14,7 @@ import AlboView from './views/AlboView.vue'
 import GenitoriView from './views/GenitoriView.vue'
 import Guide from './guide/Guide.vue'
 import Novita from './guide/Novita.vue'
+import AdminView from './views/AdminView.vue'
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import { SCHERMATE } from './giochi/schermate.js'
@@ -40,6 +41,9 @@ const viste = { home: HomeView,
                 /* le novità per i bambini: ci porta il nastro in home, e
                    si legge soltanto (`guide/novita-bambini.js`) */
                 novita: Novita,
+                /* i trucchi di casa, tutti insieme (`#admin`): nessuna
+                   carta ci porta, ci si arriva solo dall'indirizzo */
+                admin: AdminView,
                 /* i giochi scritti con la convenzione nuova (`src/giochi/`)
                    si registrano da soli: una riga in `schermate.js` e sono
                    raggiungibili da qui e dall'indirizzo, senza toccare
@@ -104,7 +108,10 @@ onMounted(async () => {
     /* la sessione è di **chi** stava giocando: si chiude prima di
        cambiare, se no i minuti finirebbero addosso al bambino dopo */
     esciDalGioco()
-    vista.value = 'home'
+    /* tranne la pagina dei trucchi: cambiare bambino è una delle cose
+       che ci si viene a fare (il bambino di prova), e quello che mostra
+       lo rilegge dal bambino nuovo — la `:key` la rimonta */
+    if (vista.value !== 'admin') vista.value = 'home'
   })
   guardaLoSchermo()
 })
@@ -122,7 +129,7 @@ function vai(v) { vista.value = v }
    non sono tempo passato a giocare, e metterle nel conto direbbe a un
    genitore che suo figlio ha passato dieci minuti sul gioco quando li
    ha passati a scegliere. */
-const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita']
+const NON_GIOCHI = ['home', 'albo', 'genitori', 'guide', 'novita', 'admin']
 const gioca = v => !!viste[v] && !NON_GIOCHI.includes(v)
 
 function apriSessione(v) {
