@@ -26,12 +26,22 @@
      misure                se i progetti possono avere misure
      regalo                progetti già scritti che il livello dà in
                            mano (si possono aprire e cambiare)
-     aiuti                 frasi, dalla più vaga alla più stretta: sono
-                           gratis. Dopo l'ultima c'è «mostrami come»,
-                           che costa la seconda stella
+     ragiona               due frasi gratis, che fanno pensare invece di
+                           suggerire: la prima dice cosa chiede il
+                           livello e cosa lo rende difficile, la seconda
+                           la domanda giusta da farsi (o come provarci).
+                           Non nominano il blocco che risolve e non
+                           contengono la soluzione, nemmeno a metà
+     indizi                da una a tre frasi concrete, 🪙10 l'una, dalla
+                           più larga alla più stretta; l'ultima può
+                           nominare blocchi, lavagnette e misure. Dopo
+                           gli indizi il gioco aggiunge da sé i gradini
+                           che scrivono nel programma, ricavati dalla
+                           `soluzione` (🪙50 · 100 · 200): non si
+                           scrivono qui
      soluzione             un programma che vince tutti gli ordini: lo
-                           gioca il banco a ogni giro, e lo mostra
-                           «mostrami come»
+                           gioca il banco a ogni giro, e da lui escono i
+                           gradini degli aiuti che scrivono nel programma
      fragili               le mosse ingenue e plausibili, ognuna con il
                            suo nome: il banco pretende che **ognuna perda
                            almeno un ordine**. Se una vince, il livello
@@ -112,9 +122,13 @@ const DEL_CANTIERE = [
       '#########',
     ] }],
     cassetta: ['vai', 'metti'], colori: ['rosso'],
-    aiuti: [
-      'Il robot mette il mattone sotto i piedi, e ci sale sopra.',
-      'Poi un passo a destra: dal mattone scende da solo, ed è pronto per il prossimo.',
+    ragiona: [
+      'Quattro mattoni in fila, sul disegno. Il robot però un mattone lo sa mettere solo sotto i suoi piedi, e poi ci resta sopra: per il prossimo deve spostarsi.',
+      'Prova con un mattone solo, e premi ▶: dove si trova il robot? E da lassù, come arriva al posto del secondo mattone?',
+    ],
+    indizi: [
+      'Un passo a destra, e il robot scende dal mattone da solo: è già al posto giusto per il prossimo.',
+      'Metti, un passo a destra, metti, un passo a destra… finché i mattoni sono quattro.',
     ],
     soluzione: programma({ principale: [
       fai.metti('rosso'), fai.vai('destra', 1), fai.metti('rosso'), fai.vai('destra', 1),
@@ -143,9 +157,13 @@ const DEL_CANTIERE = [
       '#######',
     ] }],
     cassetta: ['vai', 'metti'], colori: ['rosso', 'giallo'],
-    aiuti: [
+    ragiona: [
+      'Stavolta si costruisce in alto: cinque mattoni uno sopra l\'altro, e l\'ultimo di un altro colore. Il robot però non vola, e una scala non ce l\'ha.',
+      'Pensa a dove resta il robot dopo aver messo un mattone. Da lì, come fa ad arrivare più in alto? E il giallo, lo mette per primo o per ultimo?',
+    ],
+    indizi: [
       'Per salire il robot si mette un mattone sotto i piedi: una torre è metti, metti, metti…',
-      'Il colore di un mattone si cambia toccandolo nella riga.',
+      'Quattro rossi, e per ultimo il giallo: il colore di un mattone si cambia toccando il quadratino nella sua riga.',
     ],
     soluzione: programma({ principale: [
       fai.metti('rosso'), fai.metti('rosso'), fai.metti('rosso'), fai.metti('rosso'), fai.metti('giallo'),
@@ -171,9 +189,13 @@ const DEL_CANTIERE = [
       '##############',
     ] }],
     cassetta: ['vai', 'metti', 'ripeti'], colori: ['rosso'],
-    aiuti: [
+    ragiona: [
+      'Dieci mattoni, come il muretto ma più lungo: a mano sono venti righe, e a metà si perde il conto. Il lavoro è tanto, ma è fatto di un pezzetto che torna sempre uguale.',
+      'Qual è il pezzetto più piccolo che, rifatto tante volte, dà tutto il muro? E quante volte va rifatto, né una di più né una di meno?',
+    ],
+    indizi: [
       'Quello che fai per un mattone è sempre uguale: metti, e un passo a destra.',
-      '«Ripeti N volte» esegue quello che ha dentro N volte: al posto di N scegli il numero.',
+      '«Ripeti N volte» esegue quello che ha dentro N volte: mettici dentro il mattone e il passo, e al posto di N scegli 10.',
     ],
     soluzione: programma({ principale: [
       fai.ripeti(10, [fai.metti('rosso'), fai.vai('destra', 1)]),
@@ -213,8 +235,12 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti'], colori: ['blu'],
-    aiuti: [
-      'Il programma deve andare bene per tutti e tre i clienti: tocca i numeri in alto per vedere gli altri muri.',
+    ragiona: [
+      'Tre clienti, tre muri lunghi 4, 7 e 10 — e il programma è uno solo: deve farli tutti e tre. Un numero scritto a mano va bene per un muro solo.',
+      'Scrivilo per il primo muro, poi tocca gli altri due ordini in alto: cosa cambia fra uno e l\'altro? E dove sta scritto quanto è lungo il muro di adesso?',
+    ],
+    indizi: [
+      'Un muro è sempre «metti un mattone, un passo a destra», ripetuto: cambia solo quante volte.',
       'Al posto di N, nella casella di «ripeti», non serve un numero: ci va la lavagnetta «lungo».',
     ],
     soluzione: programma({ principale: [
@@ -254,7 +280,11 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti'], colori: ['rosso'],
-    aiuti: [
+    ragiona: [
+      '«largo» e «alto» cambiano tutti e due: il muro è 6 × 3 in un ordine e 4 × 5 nell\'altro. E il lavoro si ripete in due direzioni: in su, e verso destra.',
+      'Comincia da una colonna sola e falla girare: quale lavagnetta dice quanti mattoni ha, e dove finisce il robot? Poi guarda il muro intero: cosa si ripete, e quante volte?',
+    ],
+    indizi: [
       'Una colonna è «ripeti alto volte: metti un mattone sotto i piedi».',
       'Finita una colonna, un passo a destra: il robot scende da solo accanto, pronto per la prossima.',
       'Dentro un «ripeti» ci può stare un altro «ripeti»: ripeti «largo» volte la colonna e il passo.',
@@ -298,9 +328,12 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti'], colori: ['marrone', 'bianco', 'rosso'],
-    aiuti: [
-      'Una fetta di torta è una colonna: marrone, bianco, rosso, dal basso in su.',
-      'Il colore di un mattone si sceglie toccando il quadratino nella riga.',
+    ragiona: [
+      'Una torta larga 4 in un ordine e 7 nell\'altro, e ogni fetta ha tre colori. Il disegno si guarda dall\'alto in giù, ma il robot costruisce dal basso in su.',
+      'Prendi una fetta sola: quale mattone mette per primo il robot, e quale per ultimo? E quante fette servono: dove sta scritto?',
+    ],
+    indizi: [
+      'Una fetta è una colonna, e il robot la fa dal basso: marrone, bianco, rosso. Il colore si sceglie toccando il quadratino nella riga.',
       'Ripeti «larga» volte: i tre mattoni della fetta, e un passo a destra.',
     ],
     soluzione: programma({ principale: [
@@ -337,7 +370,11 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['giallo'],
-    aiuti: [
+    ragiona: [
+      'Nei due pavimenti i rossi stanno in posti diversi: un programma che si ricorda dov\'erano nel primo sbaglia il secondo. Il robot deve capirlo da solo, mattone per mattone.',
+      'Fai finta di essere il robot, un mattone alla volta: cosa ti serve sapere, in ogni posto, per decidere se mettere il giallo? E il robot, da dove lo può sapere?',
+    ],
+    indizi: [
       'Il robot cammina sul pavimento: dopo ogni passo può guardare cosa ha sotto i piedi.',
       '«Se» fa quello che ha dentro solo quando la domanda è vera: «se sotto i piedi c\'è un mattone rosso».',
       'Ripeti 8 volte: un passo a destra, e se sotto i piedi c\'è un mattone rosso, metti un mattone giallo.',
@@ -376,10 +413,13 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso', 'blu'],
-    aiuti: [
-      'Stavolta si fa sempre qualcosa: un mattone rosso OPPURE uno blu. Tocca la riga del «se» e aggiungi «altrimenti».',
-      '«Se sotto i piedi c\'è un mattone rosso: metti rosso — altrimenti: metti blu».',
-      'Tutto dentro un «ripeti 8 volte», dopo un passo a destra.',
+    ragiona: [
+      'Qui su ogni mattone del pavimento ne va uno, sempre: la domanda non è più «lo metto o no?» ma «di che colore?». E ogni stanza ha i colori in un ordine suo.',
+      'Nei nidi il «se» lavorava solo quando la risposta era sì, e col no stava fermo. Qui cosa deve fare il robot quando la risposta è no?',
+    ],
+    indizi: [
+      'Tocca la riga del «se» e premi «＋ altrimenti»: è la strada per quando la risposta è no.',
+      '«Se sotto i piedi c\'è un mattone rosso: metti rosso — altrimenti: metti blu». Tutto dentro un «ripeti 8 volte», dopo un passo a destra.',
     ],
     soluzione: programma({ principale: [
       fai.ripeti(8, [fai.vai('destra', 1),
@@ -415,9 +455,13 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso'],
-    aiuti: [
-      'Camminando sul muro, dove c\'è un buco il robot ci cade dentro: sotto i piedi allora ha il terreno, non un mattone.',
-      '«Se» fa quello che ha dentro solo quando la domanda è vera: «se sotto i piedi c\'è il terreno».',
+    ragiona: [
+      'Ogni muro ha i buchi in posti diversi, e un mattone messo dove il buco non c\'è finisce sopra il muro, fuori dal disegno. Il programma deve accorgersi dei buchi camminando.',
+      'Cosa cambia per il robot quando cade in un buco? Guarda cosa ha sotto i piedi mentre cammina sul muro, e cosa quando è giù, dentro un buco.',
+    ],
+    indizi: [
+      'Sul muro il robot ha sotto i piedi un mattone; caduto in un buco, sotto i piedi ha il terreno.',
+      '«Se sotto i piedi c\'è il terreno»: è lì che manca un mattone, e lì lo metti.',
       'Ripeti 10 volte: un passo a destra, e se sotto i piedi c\'è il terreno metti un mattone.',
     ],
     soluzione: programma({ principale: [
@@ -454,8 +498,12 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se'], colori: ['rosso', 'giallo'],
-    aiuti: [
-      'Quale colore tocca adesso dipende da quello prima: il robot, a terra accanto al muro, lo vede «a sinistra».',
+    ragiona: [
+      'I muri sono lunghi 7 e 10, e 7 è dispari: a coppie rosso-giallo non torna mai. Ogni mattone deve scegliere da solo il suo colore, e il robot non si ricorda quello di prima.',
+      'Fai girare piano 🐢 un programma di prova e guarda il robot prima di ogni mattone: cosa ha accanto, che gli dica il colore giusto? E al primo mattone di tutti, lì accanto cosa c\'è?',
+    ],
+    indizi: [
+      'Dopo il passo, il mattone appena messo il robot ce l\'ha ← a sinistra: basta guardarlo per sapere quale colore tocca.',
       'Se a sinistra c\'è un mattone rosso tocca il giallo; altrimenti — anche all\'inizio, quando a sinistra non c\'è niente — il rosso.',
       'Ripeti «lungo» volte: il «se… altrimenti», e un passo a destra.',
     ],
@@ -512,8 +560,11 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'finche'], colori: ['marrone'],
     posti: ['sotto', 'giu-destra', 'giu-sinistra'],
-    aiuti: [
-      'Quanto è largo il fiume non lo dice nessuno: il robot lo deve scoprire guardando.',
+    ragiona: [
+      'Il ponte deve attraversare il fiume, e il fiume ogni giorno è largo diverso: 3, 5 o 6. Il programma è uno, e non sa quale giorno gli tocca.',
+      'Chi costruisce un ponte vero non conta le onde: guarda dove mette il piede. Cosa vede il robot, in basso davanti a sé, quando il fiume è finito?',
+    ],
+    indizi: [
       'Un mattone ↘ in basso a destra va proprio dove appoggerà il piede: un pezzo di ponte.',
       '«Ripeti · smetti quando ↘ in basso a destra c\'è il terreno»: dentro, metti un mattone in basso a destra e fai un passo.',
     ],
@@ -556,7 +607,11 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['marrone', 'verde'],
     posti: ['sotto', 'giu-destra', 'giu-sinistra'],
-    aiuti: [
+    ragiona: [
+      'Gli alberi sono tutti uguali, ma quanti sono cambia: 3 in un ordine, 2 nell\'altro. E un albero è già un lavoro lungo: il tronco, e una chioma che sporge ai lati, dove il robot non ha i piedi.',
+      'Costruisci un albero solo, e fallo girare: dove finisce il robot? Da lì, quanti passi mancano al tronco del prossimo albero, e cosa va ripetuto?',
+    ],
+    indizi: [
       'Tocca «＋ progetto», chiamalo «albero» e scrivici dentro un albero solo: il tronco sono due mattoni sotto i piedi.',
       'La chioma: un mattone sotto i piedi, poi uno ↙ in basso a sinistra e uno ↘ in basso a destra — dove andrebbero i piedi — e in cima un altro sotto i piedi.',
       'Poi nel programma principale: ripeti «alberi» volte — l\'albero, e quattro passi a destra.',
@@ -611,7 +666,11 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['bianco'], misure: true,
-    aiuti: [
+    ragiona: [
+      'Le colonne del tempio sono alte diverse, e le altezze cambiano da un ordine all\'altro: 2, 4 e 3, poi 5, 1 e 3. Il progetto è uno solo, e deve saperle fare tutte.',
+      'Quando chiami la colonna, come fa il progetto a sapere quanto deve venire alta proprio questa? Chi lo decide: il progetto, o chi lo chiama?',
+    ],
+    indizi: [
       'Crea il progetto «colonna» e dagli una misura: «alta». Dentro, al posto di N, usa «alta».',
       'Una colonna è: ripeti «alta» volte, metti un mattone sotto i piedi. A scenderne ci pensa il passo dopo.',
       'Nel programma principale la colonna si chiama tre volte, ognuna con la sua misura — «prima», «seconda», «terza» — e fra una e l\'altra due passi a destra.',
@@ -670,8 +729,12 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['grigio'], misure: true,
-    aiuti: [
-      'Una torre e il muro sono lo stesso pezzo: un rettangolo. Cambiano solo le misure.',
+    ragiona: [
+      'Il re vuole due torri e un muro, e le misure cambiano da un ordine all\'altro: torri alte 5 o 6, muro largo 4 o 6. Scritti uno per uno, sono tre pezzi di programma quasi uguali.',
+      'Guarda i tre pezzi uno accanto all\'altro: che forma hanno? Cosa cambia da un pezzo all\'altro, e quanti numeri servono per dire com\'è fatto ognuno?',
+    ],
+    indizi: [
+      'Una torre e il muro sono lo stesso pezzo: un rettangolo. Cambiano solo quanto è largo e quanto è alto.',
       'Crea «rettangolo» con due misure, «largo» e «alto»: dentro, il muro alto a colonne del primo capitolo.',
       'Finito un rettangolo il robot è già al posto giusto per il pezzo dopo: rettangolo 2 × «torri», rettangolo «muro» × 3, rettangolo 2 × «torri».',
     ],
@@ -732,9 +795,13 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['verde', 'bianco', 'rosso', 'blu', 'arancio'], misure: true,
-    aiuti: [
+    ragiona: [
+      'Italia, Francia, Irlanda: le bande hanno sempre la stessa forma, e cambiano solo i colori. Il programma è uno, e i colori non li sa finché non arriva il paese.',
+      'Dentro il progetto della banda, i mattoni di che colore li metti, se il colore giusto ancora non lo sai? E chi lo sa, quando la banda viene chiamata?',
+    ],
+    indizi: [
       'I colori li decide il paese: sono lavagnette, come «lungo» — ma dentro c\'è un colore invece di un numero.',
-      'Crea il progetto «banda» con una misura 🎨 di tipo colore, «tinta»: dentro, i mattoni sono del colore «tinta». Una banda è larga 2 e alta 4.',
+      'Crea il progetto «banda» con una misura che è un colore 🎨, «tinta»: dentro, i mattoni sono del colore «tinta». Una banda è larga 2 e alta 4.',
       'Poi: banda con «sinistra», banda con «centro», banda con «destra».',
     ],
     soluzione: programma({
@@ -777,10 +844,14 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti'], colori: ['rosso', 'marrone', 'arancio'],
-    aiuti: [
-      'Una casa ha tre colonne: due pareti uguali (rosso, rosso, arancio) e quella di mezzo con la porta e la punta del tetto.',
+    ragiona: [
+      'Case tutte uguali, 3 in un ordine e 2 nell\'altro, con un vicolo vuoto in mezzo. E una casa da sola è già tre colonne di colori: a scriverla tutta ogni volta non si finisce più.',
+      'Smonta una casa colonna per colonna, dal basso in su: quali sono uguali? Un pezzo che torna due volte, quante volte vuoi scriverlo?',
+    ],
+    indizi: [
+      'Una casa ha tre colonne: due pareti uguali (rosso, rosso, arancio) e quella di mezzo, marrone, rosso, arancio, arancio: la porta e la punta del tetto.',
       'Fai il progetto «parete», poi il progetto «casa» che chiama «parete» due volte: un progetto può chiamarne un altro.',
-      'Nel programma principale: ripeti «case» volte la casa. Fra una casa e l\'altra c\'è una colonna vuota.',
+      'Nel programma principale: ripeti «case» volte la casa. Fra una casa e l\'altra resta una colonna vuota: due passi a destra, non uno.',
     ],
     soluzione: programma({
       progetti: [
@@ -844,9 +915,13 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti', 'assegna'], colori: ['giallo'], misure: true,
     regalo: [colonna('giallo')],
-    aiuti: [
-      'La colonna c\'è già (è il tuo progetto del tempio). Il primo gradino è una colonna alta 1, il secondo alta 2…',
-      'Crea una lavagnetta, per esempio «h»: all\'inizio scrivici 1, e dopo ogni gradino «h diventa h + 1».',
+    ragiona: [
+      'Visto che i gradini salgono, nessuna colonna è uguale a un\'altra. Però un «ripeti» rifà sempre le stesse righe, e i gradini sono 3 in un ordine e 5 nell\'altro.',
+      'Scrivila a mano per 3 gradini, e guarda le righe: cosa cambia da una all\'altra? Quel numero che cambia, dove lo puoi tenere mentre il robot lavora?',
+    ],
+    indizi: [
+      'La colonna c\'è già: è il tuo progetto del tempio. Il primo gradino è una colonna alta 1, il secondo alta 2: quel numero lo tiene una lavagnetta.',
+      'Crea una lavagnetta, per esempio «h»: all\'inizio «h diventa 1», e dopo ogni gradino «h diventa h + 1».',
       'Ripeti «gradini» volte: colonna alta «h», un passo a destra, h diventa h + 1.',
     ],
     soluzione: programma({
@@ -898,10 +973,14 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti', 'assegna'], colori: ['arancio'], misure: true,
     regalo: [riga('arancio')],
-    aiuti: [
+    ragiona: [
+      'Da un piano all\'altro la riga si accorcia, e la base cambia: 5 in un ordine, 7 nell\'altro. La lunghezza giusta cambia mentre il robot lavora, e ogni piano comincia un po\' più in là.',
+      'Metti in fila le lunghezze dei piani: 5, 3, 1. Da dove parte quel numero, e cosa gli succede a ogni piano? E il piano dopo, da quale mattone comincia?',
+    ],
+    indizi: [
       'La riga c\'è già: fa una fila di mattoni e torna indietro camminandoci sopra, fino al primo.',
-      'Una lavagnetta per quanto è lunga la riga: comincia da «base», e a ogni piano cala di 2.',
-      'Dopo ogni riga il piano sopra comincia un passo più a destra: ripeti «piani» volte — riga, un passo a destra, l diventa l − 2.',
+      'Una lavagnetta, per esempio «l», tiene quanto è lunga la riga: comincia da «base», e a ogni piano cala di 2.',
+      'Dopo ogni riga il piano sopra comincia un passo più a destra: ripeti «piani» volte — riga lunga «l», un passo a destra, l diventa l − 2.',
     ],
     soluzione: programma({
       lavagnette: ['l'],
@@ -955,9 +1034,13 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'progetti', 'assegna'], colori: ['bianco', 'arancio'], misure: true,
-    aiuti: [
+    ragiona: [
+      'Il numero «alta» fa due lavori: quante candeline e quanto è alta la prima, 4 o 6. Ma ha il lucchetto 🔒: il robot lo legge e non lo può cambiare, e le candeline devono venire sempre più basse.',
+      'Da sinistra a destra, cosa resta uguale fra una candelina e l\'altra, e cosa cambia? Quel numero che cala, da dove parte — e se «alta» non si tocca, dove lo tieni?',
+    ],
+    indizi: [
       'Una candelina è una colonna bianca con la fiamma arancio in cima: fanne un progetto con una misura.',
-      'Una lavagnetta «h» parte da «alta», e dopo ogni candelina cala di uno.',
+      'Crea una lavagnetta tua, per esempio «h»: parte da «alta», e dopo ogni candelina cala di uno.',
       'Ripeti «alta» volte: candelina alta «h», due passi a destra, h diventa h − 1.',
     ],
     soluzione: programma({
@@ -1013,10 +1096,14 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'finche', 'progetti', 'assegna'], colori: ['blu'], misure: true,
     regalo: [riga('blu')],
-    aiuti: [
-      'Prima si conta, poi si costruisce. Per contare serve una lavagnetta: «quanti», che parte da 0.',
-      'Il robot sale sul muro e ci cammina sopra: finché sotto i piedi non c\'è il terreno, quanti diventa quanti + 1, e un passo.',
-      'Scesi dal muro: due passi a destra, e la riga lunga «quanti».',
+    ragiona: [
+      'Per copiare un muro bisogna sapere quanto è lungo, e qui nessuna lavagnetta lo dice: 3 in un ordine, 5 nell\'altro. Il robot deve prima scoprirlo, e solo dopo costruire.',
+      'Se dovessi contarlo tu camminandoci sopra, cosa faresti a ogni passo? E da cosa capiresti che il muro è finito?',
+    ],
+    indizi: [
+      'Per contare serve una lavagnetta, «quanti», che parte da 0 e cresce di uno a ogni mattone.',
+      'Un passo a destra e il robot è sul muro; poi «ripeti · smetti quando ↓ sotto i piedi c\'è il terreno»: dentro, quanti diventa quanti + 1, e un passo a destra.',
+      'Sceso dal muro: due passi a destra, e la riga lunga «quanti».',
     ],
     soluzione: programma({
       lavagnette: ['quanti'],
@@ -1065,9 +1152,13 @@ const DEL_CANTIERE = [
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se', 'progetti', 'assegna'], colori: ['giallo'], misure: true,
     regalo: [colonna('giallo')],
-    aiuti: [
+    ragiona: [
+      'La torre dev\'essere alta quanti sono i rossi: 4 in un pavimento, 5 nell\'altro, sparsi in posti diversi. Quel numero il robot lo scopre solo camminando, e gli serve alla fine.',
+      'Camminando il robot vede un mattone alla volta: quando deve aggiungere uno al conto, e quando no? E il conto, dove lo tiene fino alla torre?',
+    ],
+    indizi: [
       'Serve una lavagnetta che conta, «quanti», che parte da 0.',
-      'Camminando sul pavimento: se sotto i piedi c\'è un mattone rosso, quanti diventa quanti + 1.',
+      'Ripeti 8 volte: un passo a destra, e se sotto i piedi c\'è un mattone rosso, quanti diventa quanti + 1.',
       'Finito il pavimento, due passi a destra e la colonna alta «quanti».',
     ],
     soluzione: programma({
@@ -1120,8 +1211,12 @@ const DEL_CANTIERE = [
       ] },
     ],
     cassetta: ['vai', 'metti', 'ripeti', 'se', 'progetti'], colori: ['bianco', 'nero'],
-    aiuti: [
-      'Ogni casella è il contrario di quella accanto: di quella a sinistra, se c\'è; se no — nella prima colonna — di quella sotto.',
+    ragiona: [
+      'Bianco e nero si alternano in tutte e due le direzioni, e le misure cambiano: 4 × 3 e 5 × 4. Il robot costruisce a colonne dal basso, e nella prima colonna a sinistra non ha niente da guardare.',
+      'Colorala tu, una casella alla volta nell\'ordine del robot: per ognuna, quale vicina hai guardato per decidere? È sempre la stessa, o dipende da dove sei?',
+    ],
+    indizi: [
+      'Ogni casella è il contrario di quella a sinistra, se c\'è; se no — nella prima colonna — di quella sotto.',
       'Serve un «se» dentro un altro «se»: fuori «se a sinistra c\'è un mattone», dentro la scelta del colore.',
       'Mettilo in un progetto «casella», e poi: ripeti «larga» volte — ripeti «alta» volte la casella, e un passo a destra.',
     ],
@@ -1180,7 +1275,12 @@ export function guastiDeiLivelli(livelli = LIVELLI) {
     for (const b of l.cassetta || []) if (!BLOCCHI.includes(b)) guasti.push(`${dove}: il blocco «${b}» non esiste`)
     for (const p of l.posti || []) if (!POSTI.includes(p)) guasti.push(`${dove}: il posto «${p}» non esiste`)
     if (!(l.colori || []).length) guasti.push(`${dove}: nessun colore in pulsantiera`)
-    if (!(l.aiuti || []).length) guasti.push(`${dove}: nessun aiuto`)
+    /* la scala degli aiuti comincia con due gradini gratis che fanno
+       ragionare, e poi da uno a tre indizi da dieci monete: il resto lo
+       aggiunge il gioco dalla soluzione (`motore/aiuti.js`) */
+    if ((l.ragiona || []).length !== 2) guasti.push(`${dove}: «ragiona» vuole due frasi`)
+    if (!((l.indizi || []).length >= 1 && l.indizi.length <= 3)) guasti.push(`${dove}: gli indizi vanno da uno a tre`)
+    if ('aiuti' in l) guasti.push(`${dove}: «aiuti» non c'è più, sono «ragiona» e «indizi»`)
     if (!l.soluzione) guasti.push(`${dove}: nessuna soluzione`)
     /* tutti gli ordini dicono le stesse lavagnette: il programma è uno,
        e una lavagnetta che c'è in un ordine e non nell'altro sarebbe un

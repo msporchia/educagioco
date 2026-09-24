@@ -157,8 +157,19 @@ variabili, «ripeti» un `for`. Solo da leggere.
 
 - **Le monete arrivano una volta sola** per livello, alla prima vittoria:
   rifarlo è ricordarsi il programma, non scriverlo.
-- **Le stelle sono due**: fatto, e fatto senza farsi mostrare la soluzione.
-  Gli aiuti a parole del 💡 sono gratis.
+- **Le stelle sono due**: fatto, e fatto senza farsi scrivere la soluzione
+  intera.
+- **Gli aiuti del 💡 sono una scala, e si pagano in monete.** I primi due
+  gradini sono gratis e fanno ragionare: cosa chiede il livello e cosa lo
+  rende difficile, poi la domanda giusta da farsi. Poi gli indizi, a 10
+  monete; poi il gioco scrive nel programma un pezzo (50: i progetti, o il
+  lavoro di un giro fuori dal suo blocco), la forma — tutti i blocchi al
+  loro posto, coi numeri, i colori e le domande da scegliere (100) — e la
+  soluzione (200, e la seconda stella resta spenta). Il prezzo sta sul tasto
+  prima di premerlo, e senza monete non si compra niente. Quello che si è
+  pagato resta, e un pezzo di programma si rimette gratis. I gradini che
+  scrivono escono dalla soluzione del livello (`motore/aiuti.js`), e un
+  test pretende che quella svelata vinca davvero.
 - **Il programma di ogni livello si tiene**, anche uscendo a metà: sta in
   archivio fuori dal profilo, sotto `costruttore:<id>`.
 - Il gioco dà per scontato che il bambino legga da solo: è pensato dai nove

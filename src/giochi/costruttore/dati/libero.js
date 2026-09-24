@@ -39,9 +39,9 @@ export const LIBERO = {
   posti: ['sotto', 'giu-destra', 'giu-sinistra'],
   colori: CHIAVI_COLORI,
   misure: true,
-  aiuti: [
-    'Qui si costruisce quello che si vuole: una casa, un castello, una piramide a colori.',
-    'Dalla cassetta, sotto «dai tuoi altri cantieri», riprendi i progetti che hai già scritto nei livelli.',
+  ragiona: [
+    'Qui non si vince e non si perde: scegli tu cosa costruire — una casa, un castello, una piramide a colori — e pensa prima a quali pezzi si ripetono.',
+    'Nella cassetta, sotto «Dai tuoi altri cantieri», ci sono i progetti che hai scritto nei livelli: riprendili, e cambiali come vuoi.',
     'Un progetto può chiamare un altro progetto: una casa fatta di muri, un villaggio fatto di case.',
   ],
 }

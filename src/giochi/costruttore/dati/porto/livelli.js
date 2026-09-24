@@ -53,10 +53,14 @@ export const LIVELLI_PORTO = [
       '.@..............',
     ] }],
     cassetta: ['vai', 'prendi', 'posa'], colori: ['rosso', 'blu', 'giallo'], cose: [],
-    aiuti: [
-      'Il robot prende la cassa che ha di fianco: per prendere quella rossa deve mettersi sotto di lei, e prenderla ↑ da sopra.',
-      'Una cassa alla volta: prendila, e posala dove c\'è il suo disegno — anche quella, di fianco a sé.',
-      'Due passi su e uno a destra: il robot è sotto la cassa rossa. Prendila da sopra, e posala sotto.',
+    ragiona: [
+      'Tre casse e tre disegni, e un robot che non allunga le braccia: prende e posa solo quello che ha proprio accanto, e sopra le casse non ci passa.',
+      'Per ogni cassa fatti due domande: dove deve stare il robot per averla accanto? E dove, per avere accanto il suo disegno?',
+    ],
+    indizi: [
+      'Per prendere la cassa rossa il robot deve mettersi proprio sotto di lei, e prenderla ↑ da sopra.',
+      'Due passi su e uno a destra: il robot è sotto la cassa rossa. Prendila ↑ da sopra, e posala ↓ sotto: lì c\'è il suo disegno.',
+      'Le altre due allo stesso modo, ma guarda bene i disegni: la blu va posata un passo più a destra di dove l\'hai presa, e la gialla → a destra, non sotto.',
     ],
     soluzione: programma({ principale: [
       fai.vai('su', 2), fai.vai('destra', 1), fai.prendi('su'), fai.posa('giu'),
@@ -95,9 +99,13 @@ export const LIVELLI_PORTO = [
       }, obiettivo: { cassoni: { t: { quante: 7 }, s: { vuoto: true } } } },
     ],
     cassetta: ['vai', 'prendi', 'posa', 'ripeti'], colori: ['rosso', 'blu', 'giallo'], cose: [],
-    aiuti: [
-      'Per ogni cassa il lavoro è sempre lo stesso: prendila dalla stiva, portala, posala nel camion, torna indietro.',
-      '«Ripeti casse volte», e dentro i quattro pezzi del viaggio.',
+    ragiona: [
+      'Il robot porta una cassa sola per volta: per ogni cassa un viaggio intero, dalla stiva al camion. E quanti viaggi fare lo decide il giorno, non il programma.',
+      'Fai il viaggio della prima cassa e guarda dove finisce il robot: è pronto per la seconda? Cosa deve fare, prima di ricominciare?',
+    ],
+    indizi: [
+      'Il viaggio di una cassa ha quattro pezzi: prendila ← dalla stiva, portala fino al camion, posala → dentro, torna indietro.',
+      'Ripeti «casse» volte, e dentro i quattro pezzi del viaggio: cinque passi fino al camion, e cinque per tornare.',
     ],
     soluzione: programma({ principale: [fai.ripeti('casse', viaggio(5))] }),
     fragili: [
@@ -137,9 +145,13 @@ export const LIVELLI_PORTO = [
       }, obiettivo: { cassoni: { s: { vuoto: true }, r: { quante: 4 }, b: { quante: 4 } } } },
     ],
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'se'], colori: ['rosso', 'blu'], cose: ['cassa', 'niente'],
-    aiuti: [
-      'Il camion rosso sta sopra la strada, quello blu sotto: arrivato in fondo, il robot sceglie da che parte posare.',
-      '«Se ✋ in mano c\'è una cassa rossa: posa ↑ sopra, altrimenti posa ↓ sotto».',
+    ragiona: [
+      'Nella stiva rosse e blu sono mescolate, lunedì in un ordine e martedì in un altro: il programma non sa quale cassa gli tocca. Il viaggio è sempre lo stesso, tranne l\'ultimo gesto.',
+      'Arrivato in fondo, il robot ha un camion sopra e uno sotto. Cosa deve guardare per scegliere dove posare, e cosa fa in un caso e cosa nell\'altro?',
+    ],
+    indizi: [
+      'Il viaggio è quello della stiva: prendi ← dalla stiva, cinque passi a destra, posa, e torna. Cambia solo da che parte posare.',
+      '«Se ✋ in mano c\'è una cassa rossa: posa ↑ sopra, altrimenti posa ↓ sotto». Tutto il viaggio va ripetuto «casse» volte.',
     ],
     soluzione: programma({ principale: [fai.ripeti('casse', [
       fai.prendi('sinistra'), fai.vai('destra', 5),
@@ -184,8 +196,13 @@ export const LIVELLI_PORTO = [
     ],
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'assegna'], colori: ['rosso', 'blu', 'giallo'], cose: [],
     leggere: true,
-    aiuti: [
-      'Serve una lavagnetta, «quante», che prende il numero della bolla: «quante diventa 📖 ↑».',
+    ragiona: [
+      'Quante casse caricare cambia ogni giorno, 3 o 6, e nella stiva ce ne sono di più. Nessuna lavagnetta col lucchetto 🔒 porta quel numero: il programma lo deve trovare da sé.',
+      'La bolla il robot la sa leggere: ma in quale casella del programma ti serve quel numero? E quando conviene leggerla, visto che poi il robot va avanti e indietro?',
+    ],
+    indizi: [
+      'La bolla il robot ce l\'ha ↑ sopra proprio dove parte: leggila una volta sola, prima di cominciare a caricare.',
+      'Il numero letto mettilo in una lavagnetta, «quante»: «quante diventa 📖 ↑».',
       'Poi il viaggio di sempre — prendi, porta, posa, torna — ripetuto «quante» volte.',
     ],
     soluzione: programma({
@@ -221,7 +238,11 @@ export const LIVELLI_PORTO = [
     ],
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'aspetta', 'sempre'], colori: ['rosso', 'blu', 'giallo'],
     cose: ['cassa', 'niente'],
-    aiuti: [
+    ragiona: [
+      'Ogni giorno una nave diversa: 3 casse con la barca, 8 con la nave, e la gru le cala quando vuole lei. Se il robot prova a prendere una cassa che non è ancora arrivata, si ferma.',
+      'Cosa fai tu alla fermata, quando l\'autobus non è ancora arrivato? E il robot, come fa a sapere quando smettere, se nessuno gli dice quante casse sono?',
+    ],
+    indizi: [
       'Il robot non sa quando arriva la prossima cassa: «aspetta che ← a sinistra c\'è una cassa».',
       'E quante ne arrivano non si sa: «ripeti per sempre». La giornata finisce da sola, quando la gru è vuota.',
       'Dentro il ripeti per sempre: aspetta, prendi, porta in magazzino, torna accanto alla gru.',
@@ -261,9 +282,13 @@ export const LIVELLI_PORTO = [
     ],
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'se', 'aspetta', 'sempre'], colori: ['rosso', 'blu'],
     cose: ['cassa', 'niente'],
-    aiuti: [
-      'Il robot sta già in fondo al nastro: lì aspetta che arrivi una cassa ↑ sopra di lui.',
-      'Presa la cassa: se è rossa la posa ← a sinistra, se no → a destra. E si ricomincia ad aspettare, per sempre.',
+    ragiona: [
+      'Il nastro non si ferma per nessuno: ogni gesto del robot costa un turno, e intanto le casse avanzano verso il mare. La mattina ne arrivano 4, il pomeriggio 10, e più fitte.',
+      'Ogni passo è un turno regalato al nastro. Dove conviene che stia il robot per non perderne nemmeno una, e quanti passi gli servono davvero per arrivare ai frigo?',
+    ],
+    indizi: [
+      'Il robot sta già in fondo al nastro, con un frigo per parte: lì aspetta che arrivi una cassa ↑ sopra di lui.',
+      'Presa la cassa ↑ da sopra: se è rossa la posa ← a sinistra, se no → a destra. E si ricomincia ad aspettare, per sempre.',
     ],
     soluzione: programma({ principale: [fai.sempre([
       fai.aspetta(guarda('su', 'cassa')), fai.prendi('su'),
@@ -308,10 +333,14 @@ export const LIVELLI_PORTO = [
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'sempre', 'assegna'],
     colori: ['rosso', 'blu', 'giallo', 'verde'], cose: ['cassa', 'cassone', 'muro', 'niente', 'libero'],
     leggere: true,
-    aiuti: [
+    ragiona: [
+      'Lunedì i cesti stanno in un ordine, martedì in un altro, e le casse scendono dalla gru mescolate: un programma che si ricorda dov\'erano i cesti sbaglia. E dopo ogni cassa si torna sotto la gru.',
+      'Come cerchi un cesto senza sapere dov\'è? E mentre cammini, come fa il robot a ricordarsi di che colore è il cesto che sta cercando?',
+    ],
+    indizi: [
       'Una lavagnetta «colore» prende il colore della cassa che il robot ha in mano: «colore diventa 📖 ✋».',
-      'Poi si cammina finché ↓ sotto c\'è il cesto di quel colore: «ripeti · smetti quando ↓ c\'è un cassone [colore]».',
-      'Posata la cassa, si torna indietro finché ← a sinistra c\'è il muro: lì sopra cala la gru.',
+      'Poi si cammina a destra fino al cesto giusto: «ripeti · smetti quando ↓ sotto c\'è un cassone [colore]», e lì si posa ↓.',
+      'Posata la cassa, si torna a sinistra fino al muro — «smetti quando ← a sinistra c\'è il muro»: lì sopra cala la gru.',
     ],
     soluzione: programma({
       lavagnette: ['colore'],
@@ -368,10 +397,14 @@ export const LIVELLI_PORTO = [
     cassetta: ['vai', 'prendi', 'posa', 'ripeti', 'finche', 'se', 'aspetta', 'sempre', 'assegna', 'progetti'],
     colori: ['rosso', 'arancio', 'giallo', 'verde', 'blu', 'viola'], cose: ['cassa', 'cliente', 'bancone', 'niente', 'libero'],
     leggere: true, misure: true,
-    aiuti: [
+    ragiona: [
+      'I clienti arrivano quando vogliono, e nessuno sa prima cosa chiederanno. Sullo scaffale poi una cassa presa non c\'è più: la prossima dello stesso colore sta più in là.',
+      'Delle cose da fare per ogni cliente, qual è quella che cambia col colore chiesto? Come la scriveresti una volta sola, perché vada bene per tutti i colori?',
+    ],
+    indizi: [
       'Si aspetta che al bancone ← ci sia un cliente, e si legge cosa chiede: «voglio diventa 📖 ←».',
-      'Un progetto «cerca», con una misura che è un colore: il robot cammina finché ↑ sopra non c\'è una cassa di quel colore.',
-      'Presa la cassa, si torna finché ← a sinistra c\'è il bancone, e la si posa lì. Il tutto, per sempre.',
+      'Un progetto «cerca», con una misura che è un colore: il robot cammina a destra finché ↑ sopra non ha una cassa di quel colore.',
+      'Presa la cassa, si torna a sinistra fino al bancone e la si posa ← lì. Tutto dentro «ripeti per sempre», e «cerca» si chiama con «voglio».',
     ],
     soluzione: programma({
       lavagnette: ['voglio'],

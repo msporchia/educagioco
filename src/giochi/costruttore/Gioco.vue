@@ -19,14 +19,21 @@
    Un livello paga **la prima volta** che si vince (`premio` in
    `dati/livelli.js`). Rifarlo è ricordarsi il programma, non scriverlo:
    non è esercizio, e non vale niente (vedi `CALIBRAZIONE.md`). Le
-   stelle sono due: vinto, e vinto senza farsi mostrare la soluzione.
+   stelle sono due: vinto, e vinto senza farsi scrivere la soluzione
+   intera. E gli aiuti si pagano in monete: i primi due gradini, che
+   fanno ragionare, sono gratis; poi gli indizi a 🪙10, e i gradini che
+   scrivono nel programma a 🪙50 · 100 · 200 (`motore/aiuti.js`,
+   `giochi/aiuti.js`).
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, reactive, computed, shallowRef, watch, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { state, addCoins, segna } from '../../store/profile.js'
+import { state, addCoins, segna, spendi } from '../../store/profile.js'
 import { load, save } from '../../store/storage.js'
-import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, scelta, ricorda } from '../campagne.js'
+import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, scelta, ricorda,
+         aiutiPresi, segnaAiutiPresi } from '../campagne.js'
+import { scrive as scriveNelProgramma, SVELA } from '../aiuti.js'
+import { scalaDi, applica } from './motore/aiuti.js'
 
 import { CAPITOLI, QUANTE_TAPPE, FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
 import { LIVELLI } from './dati/livelli.js'
@@ -120,7 +127,7 @@ async function apriLivello(i) {
   aperta_.value = null
   foglio.value = null
   finale.value = null
-  aiutiVisti.value = 1
+  aiutiVisti.value = aiutiPresi(CHIAVE, l.chiave)
   ordineVisto.value = 0
   resetRisultato()
 }
@@ -133,7 +140,9 @@ const foglio = ref(null)               // cassetta | progetto | lavagnetta | aiu
 const dove = ref(null)                 // dove andrà la riga scelta in cassetta
 const progettoInModifica = ref(null)
 const attesaLavagnetta = ref(null)     // { riga } o { inserisci: dove }
-const aiutiVisti = ref(1)
+/* quanti gradini della scala degli aiuti sono stati scesi in questo
+   livello: si pagano, e quello che si è pagato resta (`aiutiPresi`) */
+const aiutiVisti = ref(0)
 /* il colore di partenza di un mattone nuovo: con un colore solo nel
    livello è quello, con più colori è l'ultimo scelto dal bambino */
 const ultimoColore = ref(null)
@@ -292,10 +301,46 @@ function ricomincia() {
   salvaPresto()
 }
 
-/* ═══════════ gli aiuti ═══════════ */
-function svela() {
-  const s = { ...copia(liv.value.soluzione), svelato: true }
-  archivio.programmi[liv.value.chiave] = s
+/* ═══════════ gli aiuti ═══════════
+   Una scala sola e un tasto solo: prima i gradini che fanno ragionare
+   (gratis), poi gli indizi (🪙10), poi quelli che scrivono nel programma
+   — il pezzo, la forma coi valori da scegliere, la soluzione — a 🪙50 ·
+   100 · 200. La compone `motore/aiuti.js` dal livello; qui si compra, e
+   si scrive. Chi compra è `scendi`, non il foglio: senza monete la
+   spesa si rifiuta anche se un tasto spento venisse premuto lo stesso. */
+const scala = computed(() => (liv.value ? scalaDi(liv.value) : []))
+const aiutiFatti = computed(() => scala.value.slice(0, aiutiVisti.value))
+const prossimoAiuto = computed(() => scala.value[aiutiVisti.value] || null)
+const monete = computed(() => state.profile.coins || 0)
+
+/* il 💡: il primo gradino, gratis, si scende da sé — chi tocca la
+   lampadina vuole una mano, e fargli toccare un altro tasto per leggere
+   una frase che non costa niente è una schermata in più */
+function apriAiuti() {
+  if (!aiutiVisti.value && prossimoAiuto.value && !prossimoAiuto.value.prezzo) scendi()
+  foglio.value = 'aiuto'
+}
+function scendi() {
+  const p = prossimoAiuto.value
+  if (!p || !spendi(p.prezzo)) return
+  aiutiVisti.value++
+  segnaAiutiPresi(CHIAVE, liv.value.chiave, aiutiVisti.value)
+  if (scriveNelProgramma(p)) scriviAiuto(p)
+}
+/* un gradino che scrive, già pagato, si rimette gratis */
+function rimetti(k) {
+  const p = scala.value[k]
+  if (k < aiutiVisti.value && scriveNelProgramma(p)) scriviAiuto(p)
+}
+/* Il programma nuovo lo fa `applica`: il pezzo dei progetti si aggiunge
+   a quello del bambino, gli altri prendono il posto del programma
+   principale o di tutto. `svelato` lo accende solo la soluzione intera,
+   ed è quello che tiene spenta la seconda stella. */
+function scriviAiuto(p) {
+  if (stato.inCorso) stop()
+  const prima = prog.value
+  archivio.programmi[liv.value.chiave] = { ...applica(prima, p),
+                                           svelato: !!(prima && prima.svelato) || p.che === SVELA }
   tab.value = null
   sel.value = null
   foglio.value = null
@@ -506,7 +551,7 @@ const progettoAperto = computed(() =>
                    :lavagnette="prog.lavagnette || []" :valori="stato.inCorso || stato.guasto ? stato.valori : {}"
                    :con-lavagnette="liv.cassetta.includes('assegna')" :aiuti="aiutiVisti"
                    :turno="liv.mondo === 'porto' && stato.inCorso ? (stato.turno || 0) : null"
-                   @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="foglio = 'aiuto'"
+                   @via="via" @stop="stop" @velocita="cambiaVelocita" @aiuto="apriAiuti"
                    @nuova-lavagnetta="nuovaLavagnetta(null)" />
           <p v-if="messaggio" class="cst-messaggio" :class="'cst-' + messaggio.tipo" data-messaggio>{{ messaggio.testo }}</p>
         </div>
@@ -532,8 +577,8 @@ const progettoAperto = computed(() =>
                       @salva="salvaProgetto" @elimina="eliminaProgetto" @chiudi="foglio = null" />
       <FoglioLavagnetta v-if="foglio === 'lavagnetta'" :prese="nomiPresi"
                         @crea="creaLavagnetta" @chiudi="foglio = null; attesaLavagnetta = null" />
-      <FoglioAiuto v-if="foglio === 'aiuto'" :aiuti="liv.aiuti" :visti="aiutiVisti" :svelato="!!prog.svelato"
-                   @altro="aiutiVisti++" @svela="svela" @chiudi="foglio = null" />
+      <FoglioAiuto v-if="foglio === 'aiuto'" :fatti="aiutiFatti" :prossimo="prossimoAiuto" :monete="monete"
+                   @altro="scendi" @rimetti="rimetti" @chiudi="foglio = null" />
       <FoglioCodice v-if="foglio === 'codice'" :programma="prog" :ordine="liv.ordini[ordineVisto].lavagnette || {}"
                     @chiudi="foglio = null" />
       <Finale v-if="finale" v-bind="finale" @avanti="avanti" @mappa="allaMappa" @resta="finale = null" />
