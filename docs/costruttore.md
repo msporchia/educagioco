@@ -238,9 +238,9 @@ metà che serve a chi cerca dimezzando.
 Il casaro tiene le forme di formaggio in pila su tre assi — la rossa, la
 verde e la blu — e la regola del magazzino è una sola: una forma grande
 sopra una più piccola la schiaccia. Ogni giorno la torre va portata
-dall'asse «da» all'asse «a», e «via» è quella libera: le assi si chiamano
-col loro colore, quindi un programma scritto coi colori di lunedì perde
-martedì. Il robot sta fermo in mezzo, e «sposta» porta una forma da
+dall'asse di «partenza» a quella di «arrivo», e quella libera è
+l'«appoggio». Le assi si chiamano col loro colore, quindi un programma
+scritto coi colori di lunedì perde martedì. Il robot sta fermo in mezzo, e «sposta» porta una forma da
 un'asse all'altra: la lezione è la torre, non la strada.
 
 La ricorsione non si spiega: si arriva a vederla. Per questo la torre è

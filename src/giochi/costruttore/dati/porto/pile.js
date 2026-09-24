@@ -31,9 +31,9 @@
    Il robot sta fermo fra le tre assi — la rossa a sinistra, la verde
    sopra, la blu a destra — e l'attrezzo «sposta» porta una forma da
    un'asse all'altra: la lezione è la torre, non la strada. Le assi si
-   chiamano col loro colore, ed è così che un ordine dice «da», «a» e
-   «via»: tre colori, che cambiano da un giorno all'altro, e un
-   programma scritto coi colori di lunedì perde martedì.
+   chiamano col loro colore, ed è così che un ordine dice «partenza»,
+   «arrivo» e «appoggio»: tre colori, che cambiano da un giorno
+   all'altro, e un programma scritto coi colori di lunedì perde martedì.
    ═══════════════════════════════════════════════════════════════════ */
 import { fai, guarda, confronta, meno, progetto, programma } from '../scrivi.js'
 import { sposta, torreDiDue } from '../attrezzi.js'
@@ -133,15 +133,15 @@ const MAGAZZINO = [
    va portata sull'asse `a`. L'asse libera (`via`) la dice l'ordine: è
    quella che resta. `conForme` mette anche l'altezza fra le lavagnette,
    dove i giorni non sono tutti alti uguali. */
-function giorno(nome, forme, da, a, { conForme = false } = {}) {
-  const via = COLORI_ASSI.find(c => c !== da && c !== a)
+function giorno(nome, forme, partenza, arrivo, { conForme = false } = {}) {
+  const appoggio = COLORI_ASSI.find(c => c !== partenza && c !== arrivo)
   const cassoni = {}
   for (const c of COLORI_ASSI)
-    cassoni[ASSE[c]] = { nome: NOME_ASSE[c], figura: 'pila', tinta: c, forme: c === da ? forme : 0, capienza: 99 }
+    cassoni[ASSE[c]] = { nome: NOME_ASSE[c], figura: 'pila', tinta: c, forme: c === partenza ? forme : 0, capienza: 99 }
   return {
     nome, mappa: MAGAZZINO, cassoni,
-    lavagnette: conForme ? { forme, da, a, via } : { da, a, via },
-    obiettivo: { cassoni: { [ASSE[a]]: { quante: forme } } },
+    lavagnette: conForme ? { forme, partenza, arrivo, appoggio } : { partenza, arrivo, appoggio },
+    obiettivo: { cassoni: { [ASSE[arrivo]]: { quante: forme } } },
   }
 }
 
@@ -153,13 +153,18 @@ const TORRE = {
   cose: ['forma', 'niente'], leggere: false,
 }
 
-const colori = ['da', 'a', 'via']
-const tipiColori = { da: 'colore', a: 'colore', via: 'colore' }
+/* le tre assi di una torre, per il ruolo che hanno: da dove parte, dove
+   arriva, e quella libera dove si appoggia intanto. Sono nomi e non
+   preposizioni perché dentro la torre il progetto passa a sé stesso le
+   sue misure: con «da», «a» e «via» la riga si leggeva «torre da da a via
+   via a», e non si capiva niente */
+const ruoli = ['partenza', 'arrivo', 'appoggio']
+const tipiRuoli = { partenza: 'colore', arrivo: 'colore', appoggio: 'colore' }
 
 const DUE_FORME = {
   ...TORRE,
   chiave: 'due-forme', nome: 'Le due forme', icona: '🧀', impara: 'la regola della pila', portata: 99, premio: 30,
-  racconto: 'Nel mio magazzino le forme di formaggio stanno in pila sulle tre assi: la rossa, la verde e la blu. La regola è una sola: una forma grande sopra una più piccola la schiaccia. Oggi due forme vanno portate dall\'asse «da» all\'asse «a»; «via» è l\'asse libera. «Sposta» porta la forma in cima da un\'asse all\'altra.',
+  racconto: 'Nel mio magazzino le forme di formaggio stanno in pila sulle tre assi: la rossa, la verde e la blu. La regola è una sola: una forma grande sopra una più piccola la schiaccia. Oggi due forme vanno portate dall\'asse di «partenza» a quella di «arrivo», e quella libera è l\'«appoggio». «Sposta» porta la forma in cima da un\'asse all\'altra.',
   ordini: [
     giorno('lunedì', 2, 'rosso', 'blu'),
     giorno('martedì', 2, 'verde', 'rosso'),
@@ -172,17 +177,17 @@ const DUE_FORME = {
   ],
   indizi: [
     'Tre spostamenti: la piccola sull\'asse libera, la grande dove deve andare, la piccola sopra la grande.',
-    'Le assi non si scrivono coi colori: si scrivono con quello che dice l\'ordine — «sposta da via», «sposta da a», «sposta via a».',
+    'Le assi non si scrivono coi colori: si scrivono con quello che dice l\'ordine — «sposta da partenza a appoggio», «sposta da partenza a arrivo», «sposta da appoggio a arrivo».',
   ],
   soluzione: programma({ principale: [
-    fai.chiama('sposta', 'da', 'via'), fai.chiama('sposta', 'da', 'a'), fai.chiama('sposta', 'via', 'a'),
+    fai.chiama('sposta', 'partenza', 'appoggio'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('sposta', 'appoggio', 'arrivo'),
   ] }),
   fragili: [
     { nome: 'i colori di lunedì', programma: programma({ principale: [
       fai.chiama('sposta', 'rosso', 'verde'), fai.chiama('sposta', 'rosso', 'blu'), fai.chiama('sposta', 'verde', 'blu'),
     ] }) },
     { nome: 'tutte e due dritte', programma: programma({ principale: [
-      fai.chiama('sposta', 'da', 'a'), fai.chiama('sposta', 'da', 'a'),
+      fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'),
     ] }) },
   ],
 }
@@ -204,29 +209,29 @@ const TRE_FORME = {
   ],
   indizi: [
     'Tre righe: la torre di due via dalla grande, la grande al suo posto, la torre di due di nuovo sopra.',
-    'La torre di due va sull\'asse libera: «torre di due da via a» — e l\'ultima misura dice da dove passa.',
-    'Poi «sposta da a» per la grande, e «torre di due via a da» per rimetterle sopra.',
+    'La torre di due va sull\'asse d\'appoggio: la sua partenza è la tua partenza, e il suo arrivo è il tuo appoggio.',
+    'Poi «sposta da partenza a arrivo» per la grande, e una torre di due che parte dall\'appoggio e arriva all\'arrivo, per rimetterle sopra.',
   ],
   soluzione: programma({ principale: [
-    fai.chiama('torre2', 'da', 'via', 'a'), fai.chiama('sposta', 'da', 'a'), fai.chiama('torre2', 'via', 'a', 'da'),
+    fai.chiama('torre2', 'partenza', 'appoggio', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre2', 'appoggio', 'arrivo', 'partenza'),
   ] }),
   fragili: [
     { nome: 'la torre di due dritta dove va', programma: programma({ principale: [
-      fai.chiama('torre2', 'da', 'a', 'via'), fai.chiama('sposta', 'da', 'a'), fai.chiama('torre2', 'via', 'a', 'da'),
+      fai.chiama('torre2', 'partenza', 'arrivo', 'appoggio'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre2', 'appoggio', 'arrivo', 'partenza'),
     ] }) },
     /* giusto, ma sono sette righe: lo zaino ne tiene quattro */
     { nome: 'a mano, sette spostamenti', programma: programma({ principale: [
-      fai.chiama('sposta', 'da', 'a'), fai.chiama('sposta', 'da', 'via'), fai.chiama('sposta', 'a', 'via'),
-      fai.chiama('sposta', 'da', 'a'),
-      fai.chiama('sposta', 'via', 'da'), fai.chiama('sposta', 'via', 'a'), fai.chiama('sposta', 'da', 'a'),
+      fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('sposta', 'partenza', 'appoggio'), fai.chiama('sposta', 'arrivo', 'appoggio'),
+      fai.chiama('sposta', 'partenza', 'arrivo'),
+      fai.chiama('sposta', 'appoggio', 'partenza'), fai.chiama('sposta', 'appoggio', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'),
     ] }) },
   ],
 }
 
 /* la torre di tre del bambino: è la soluzione di «Tre forme» diventata
    un progetto, con le sue tre misure */
-const torreDiTre = () => progetto('torre3', { nome: 'torre di tre', icona: '🗼', misure: colori, tipi: tipiColori }, [
-  fai.chiama('torre2', 'da', 'via', 'a'), fai.chiama('sposta', 'da', 'a'), fai.chiama('torre2', 'via', 'a', 'da'),
+const torreDiTre = () => progetto('torre3', { nome: 'torre di tre', icona: '🗼', misure: ruoli, tipi: tipiRuoli }, [
+  fai.chiama('torre2', 'partenza', 'appoggio', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre2', 'appoggio', 'arrivo', 'partenza'),
 ])
 
 const QUATTRO_FORME = {
@@ -246,24 +251,24 @@ const QUATTRO_FORME = {
     'Se avessi una «torre di tre» che funziona da qualunque asse a qualunque asse, come sposteresti quattro forme? E una torre di tre, com\'è fatta dentro?',
   ],
   indizi: [
-    'Un progetto «torre di tre» con tre misure che sono colori: da, a, via. Dentro, le tre righe di «Tre forme», con le sue misure al posto delle lavagnette dell\'ordine.',
+    'Un progetto «torre di tre» con tre misure che sono colori: partenza, arrivo, appoggio. Dentro, le tre righe di «Tre forme», con le sue misure al posto delle lavagnette dell\'ordine.',
     'Il programma principale è lo stesso disegno una volta più in alto: la torre di tre via, la grande al suo posto, la torre di tre sopra.',
-    '«torre di tre da via a», «sposta da a», «torre di tre via a da».',
+    'Il principale: una torre di tre da partenza ad appoggio, «sposta da partenza a arrivo», e una torre di tre da appoggio ad arrivo.',
   ],
   soluzione: programma({
     progetti: [torreDiTre()],
-    principale: [fai.chiama('torre3', 'da', 'via', 'a'), fai.chiama('sposta', 'da', 'a'), fai.chiama('torre3', 'via', 'a', 'da')],
+    principale: [fai.chiama('torre3', 'partenza', 'appoggio', 'arrivo'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre3', 'appoggio', 'arrivo', 'partenza')],
   }),
   fragili: [
     { nome: 'la torre di tre dritta dove va', programma: programma({
       progetti: [torreDiTre()],
-      principale: [fai.chiama('torre3', 'da', 'a', 'via'), fai.chiama('sposta', 'da', 'a'), fai.chiama('torre3', 'via', 'a', 'da')],
+      principale: [fai.chiama('torre3', 'partenza', 'arrivo', 'appoggio'), fai.chiama('sposta', 'partenza', 'arrivo'), fai.chiama('torre3', 'appoggio', 'arrivo', 'partenza')],
     }) },
     /* giusto, ma sono sette righe: senza il progetto non ci si sta */
     { nome: 'senza progetto, torri di due', programma: programma({ principale: [
-      fai.chiama('torre2', 'da', 'a', 'via'), fai.chiama('sposta', 'da', 'via'), fai.chiama('torre2', 'a', 'via', 'da'),
-      fai.chiama('sposta', 'da', 'a'),
-      fai.chiama('torre2', 'via', 'da', 'a'), fai.chiama('sposta', 'via', 'a'), fai.chiama('torre2', 'da', 'a', 'via'),
+      fai.chiama('torre2', 'partenza', 'arrivo', 'appoggio'), fai.chiama('sposta', 'partenza', 'appoggio'), fai.chiama('torre2', 'arrivo', 'appoggio', 'partenza'),
+      fai.chiama('sposta', 'partenza', 'arrivo'),
+      fai.chiama('torre2', 'appoggio', 'partenza', 'arrivo'), fai.chiama('sposta', 'appoggio', 'arrivo'), fai.chiama('torre2', 'partenza', 'arrivo', 'appoggio'),
     ] }) },
   ],
 }
@@ -274,11 +279,11 @@ const QUATTRO_FORME = {
 const torre = ({ fermo = true, dritta = false } = {}) => {
   const giu = meno('alta', 1)
   const corpo = [
-    dritta ? fai.chiama('torre', giu, 'da', 'a', 'via') : fai.chiama('torre', giu, 'da', 'via', 'a'),
-    fai.chiama('sposta', 'da', 'a'),
-    fai.chiama('torre', giu, 'via', 'a', 'da'),
+    dritta ? fai.chiama('torre', giu, 'partenza', 'arrivo', 'appoggio') : fai.chiama('torre', giu, 'partenza', 'appoggio', 'arrivo'),
+    fai.chiama('sposta', 'partenza', 'arrivo'),
+    fai.chiama('torre', giu, 'appoggio', 'arrivo', 'partenza'),
   ]
-  return progetto('torre', { nome: 'torre', icona: '🗼', misure: ['alta', ...colori], tipi: tipiColori },
+  return progetto('torre', { nome: 'torre', icona: '🗼', misure: ['alta', ...ruoli], tipi: tipiRuoli },
     fermo ? [fai.se(confronta('alta', '>', 0), corpo)] : corpo)
 }
 
@@ -300,18 +305,18 @@ const QUANTE_FORME = {
     'Una torre alta 5 è una torre alta 4, la grande, e di nuovo una torre alta 4. E una torre alta 4? E una alta 1 — e una alta 0?',
   ],
   indizi: [
-    'Un progetto «torre» con quattro misure: «alta», che è un numero, e da, a, via, che sono colori. Il programma principale lo chiama una volta: torre forme da a via.',
+    'Un progetto «torre» con quattro misure: «alta», che è un numero, e partenza, arrivo e appoggio, che sono colori. Il programma principale lo chiama una volta, con «forme» e le tre assi dell\'ordine.',
     'Dentro «torre» ci sono due torri alte «alta − 1» — e la torre è proprio lei: un progetto può chiamare sé stesso.',
     'Ma una torre alta 0 non si sposta: tutto il lavoro va dentro «se alta è maggiore di 0», se no il robot non smette mai.',
   ],
-  soluzione: programma({ progetti: [torre()], principale: [fai.chiama('torre', 'forme', 'da', 'a', 'via')] }),
+  soluzione: programma({ progetti: [torre()], principale: [fai.chiama('torre', 'forme', 'partenza', 'arrivo', 'appoggio')] }),
   fragili: [
     { nome: 'senza il fermo', programma: programma({ progetti: [torre({ fermo: false })],
-      principale: [fai.chiama('torre', 'forme', 'da', 'a', 'via')] }) },
+      principale: [fai.chiama('torre', 'forme', 'partenza', 'arrivo', 'appoggio')] }) },
     { nome: 'le torri dritte dove vanno', programma: programma({ progetti: [torre({ dritta: true })],
-      principale: [fai.chiama('torre', 'forme', 'da', 'a', 'via')] }) },
+      principale: [fai.chiama('torre', 'forme', 'partenza', 'arrivo', 'appoggio')] }) },
     { nome: 'sempre alta quattro', programma: programma({ progetti: [torre()],
-      principale: [fai.chiama('torre', 4, 'da', 'a', 'via')] }) },
+      principale: [fai.chiama('torre', 4, 'partenza', 'arrivo', 'appoggio')] }) },
   ],
 }
 

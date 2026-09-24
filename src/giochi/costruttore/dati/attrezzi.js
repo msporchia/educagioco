@@ -109,7 +109,7 @@ export const imbuca = () => attrezzo(progetto('imbuca', { nome: 'imbuca', icona:
 /* ── la torre del casaro (Hanoi) ──
    Il robot sta fermo fra tre assi: la rossa a sinistra, la verde sopra,
    la blu a destra. Le assi si chiamano col loro colore, ed è così che
-   un ordine può dire «da», «a» e «via»: tre colori. */
+   un ordine può dire «partenza», «arrivo» e «appoggio»: tre colori. */
 const LATO_DELL_ASSE = { rosso: 'sinistra', verde: 'su', blu: 'destra' }
 
 /* una forma, da un'asse all'altra: prende da una e posa sull'altra */
@@ -121,13 +121,16 @@ export const sposta = () => attrezzo(progetto('sposta', {
 ]), { da: null, finisce: 'dove aveva cominciato: il robot non si muove' })
 
 /* la torre di due, scritta nelle «due forme»: la piccola sull'asse
-   libera, la grande dove deve andare, e la piccola sopra la grande */
+   d'appoggio, la grande dove deve arrivare, e la piccola sopra la grande.
+   Le sue misure sono nomi di ruolo, e quelle di «sposta» preposizioni:
+   così una chiamata si legge «sposta da [partenza] a [appoggio]» */
 export const torreDiDue = () => attrezzo(progetto('torre2', {
-  nome: 'torre di due', icona: '🗼', misure: ['da', 'a', 'via'], tipi: { da: 'colore', a: 'colore', via: 'colore' },
+  nome: 'torre di due', icona: '🗼', misure: ['partenza', 'arrivo', 'appoggio'],
+  tipi: { partenza: 'colore', arrivo: 'colore', appoggio: 'colore' },
 }, [
-  fai.chiama('sposta', 'da', 'via'),
-  fai.chiama('sposta', 'da', 'a'),
-  fai.chiama('sposta', 'via', 'a'),
+  fai.chiama('sposta', 'partenza', 'appoggio'),
+  fai.chiama('sposta', 'partenza', 'arrivo'),
+  fai.chiama('sposta', 'appoggio', 'arrivo'),
 ]), { da: 'due-forme', finisce: 'dove aveva cominciato: il robot non si muove' })
 
 /* ── i controlli ── */

@@ -10,7 +10,7 @@
 
    Le misure (i parametri) ci sono solo nei livelli che le insegnano, e
    sono al massimo quattro: la torre del casaro ne vuole tante — quanto è
-   alta, e le tre assi da, a e via.
+   alta, e le tre assi di partenza, arrivo e appoggio.
    Una misura rinominata porta con sé le righe che la usano, e toglierne
    una sistema tutte le chiamate: lo fa `aggiornaProgetto`, qui si
    raccoglie soltanto cosa vuole il bambino.

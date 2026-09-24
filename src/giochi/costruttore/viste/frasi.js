@@ -244,6 +244,8 @@ export const ICONE_PROGETTI = [
    lettera sola */
 export const NOMI_MISURE = ['alta', 'larga', 'lunga', 'quanti', 'lato']
 /* le misure che sono colori: la tinta di una bandiera, e le assi della
-   torre del casaro — da dove, a dove, e quella libera per passare */
-export const NOMI_MISURE_COLORE = ['tinta', 'da', 'a', 'via']
+   torre del casaro per il ruolo che hanno. Nomi e non preposizioni: dentro
+   la torre il progetto passa a sé stesso le sue misure, e con «da», «a» e
+   «via» la riga si leggeva «torre da [da] a [via] via [a]» */
+export const NOMI_MISURE_COLORE = ['tinta', 'partenza', 'arrivo', 'appoggio']
 export const NOMI_LAVAGNETTE = ['h', 'conta', 'quanti', 'l', 'passi', 'quante', 'colore', 'voglio']
