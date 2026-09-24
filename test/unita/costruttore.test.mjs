@@ -38,15 +38,19 @@ for (const [nome, g] of [['colori', guastiDeiColori()], ['livelli', guastiDeiLiv
                          ['campagna', guastiDellaCampagna()], ['albo', guastiDellAlbo([manifesto])]])
   controlla(`${nome}: nessun guasto`, g.length === 0, g.join(' · '))
 controlla('almeno venti livelli', LIVELLI.length >= 20, `sono ${LIVELLI.length}`)
-uguale('sette capitoli', CAPITOLI.length, 7)
+uguale('nove capitoli', CAPITOLI.length, 9)
 uguale('il «se» arriva subito dopo il cantiere', CAPITOLI[1].chiave, 'guardare')
-stessaLista('il porto viene dopo le lavagnette, poi le sfide, e in fondo le giornate del porto',
-            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'sfide', 'giornate'])
+stessaLista('il porto viene dopo le lavagnette, coi suoi posti; poi le sfide, le giornate, e in fondo le lettere in ordine',
+            CAPITOLI.slice(3).map(c => c.chiave), ['lavagnette', 'porto', 'posti', 'sfide', 'giornate', 'ordine'])
 controlla('nel porto almeno quattordici sfide, contando le giornate', LIVELLI.filter(l => l.mondo === 'porto').length >= 14)
 controlla('la fila di adesso è scritta in FILE: chi aggiunge un livello in mezzo alza la versione',
           LIVELLI.slice(0, FILE[FILA_ATTUALE].length).map(l => l.chiave).join() === FILE[FILA_ATTUALE].join())
+/* le lettere del postino sono numeri, e lì i colori non c'entrano */
 controlla('e ogni capitolo dopo il primo ha almeno un livello con più di un colore',
-          CAPITOLI.slice(1).every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
+          CAPITOLI.slice(1).filter(c => c.chiave !== 'ordine')
+            .every(c => LIVELLI.some(l => l.capitolo === c.chiave && l.colori.length > 1)))
+controlla('le lettere in ordine usano il confronto fra due numeri, che prima non usava nessuno',
+          LIVELLI.filter(l => l.capitolo === 'ordine').every(l => [...istruzioni(l.soluzione)].some(i => i.cond && i.cond.tipo === 'confronta')))
 uguale('la campagna è i livelli, in fila', CAMPAGNA.map(t => t.chiave).join(), LIVELLI.map(l => l.chiave).join())
 controlla('il gioco è in prova', manifesto.sperimentale === true)
 
@@ -262,7 +266,9 @@ for (const l of LIVELLI) {
   if (suoi.length) {
     const piatta = conAttrezzi(programma(srotola(sol)), l)
     controlla(`«${l.nome}»: srotolata, la soluzione vince ancora (il conto delle righe è onesto)`, provaLivello(l, piatta).vinto)
-    if (l.capitolo === 'progetti')
+    /* nei capitoli che insegnano i progetti — e dovunque ci sia uno zaino —
+       senza progetti non ci si sta */
+    if (l.capitolo === 'progetti' || l.zaino)
       controlla(`«${l.nome}»: insegna i progetti, e senza non ci sta — ha uno zaino più stretto della soluzione srotolata`,
                 !!l.zaino && righeScritte(piatta) > l.zaino, `srotolata ${righeScritte(piatta)} righe, zaino ${l.zaino}`)
   }

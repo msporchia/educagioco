@@ -74,7 +74,9 @@ import { fai, guarda, piu, meno, tinta, progetto, programma, POSTI } from './scr
 import { CHIAVI_COLORI } from './colori.js'
 import { torre, muro, albero, colonna, riga, guastiDegliAttrezzi } from './attrezzi.js'
 import { LIVELLI_PORTO } from './porto/livelli.js'
+import { LIVELLI_POSTI } from './porto/posti.js'
 import { GIORNATE } from './porto/giornate.js'
+import { IN_ORDINE } from './porto/ordine.js'
 
 /* L'ordine dei capitoli: il «se» viene subito dopo il cantiere. Stava in
    fondo, dopo progetti e lavagnette, e a metà gioco il papà ha notato che
@@ -91,10 +93,14 @@ export const CAPITOLI = [
     dice: 'Un numero con un nome, che cambia mentre il robot lavora.' },
   { chiave: 'porto', nome: 'Il porto', icona: '⚓',
     dice: 'Visto dall\'alto: il robot prende, posa, legge e aspetta, mentre la gru cala, il nastro scorre e i clienti arrivano.' },
+  { chiave: 'posti', nome: 'I posti del porto', icona: '🗺️',
+    dice: 'Un porto grande, e ogni cassa ha il suo posto: un lavoro per ogni colore, e una strada che si scrive una volta sola.' },
   { chiave: 'sfide', nome: 'Le sfide', icona: '🏆',
     dice: 'Tutto insieme: contare, decidere, e un «se» dentro un «se».' },
   { chiave: 'giornate', nome: 'Le giornate del porto', icona: '🌅',
     dice: 'Il porto lavora tutto insieme: camion, lettere, frighi e clienti. Dalla giornata piccola a quella più larga dello schermo.' },
+  { chiave: 'ordine', nome: 'Mettere in ordine', icona: '🔢',
+    dice: 'Le lettere del postino, dalla più piccola alla più grande: confrontare due numeri, scambiarli, e ripetere finché la fila è in ordine.' },
 ]
 
 const CAPOMASTRO = { emoji: '👷', nome: 'Il capomastro' }
@@ -1335,8 +1341,10 @@ const DEL_CANTIERE = [
 export const LIVELLI = [
   ...DEL_CANTIERE.filter(l => l.capitolo !== 'sfide'),
   ...LIVELLI_PORTO,
+  ...LIVELLI_POSTI,
   ...DEL_CANTIERE.filter(l => l.capitolo === 'sfide'),
   ...GIORNATE,
+  ...IN_ORDINE,
 ]
 
 /* ═══════════ i controlli sul dato ═══════════ */

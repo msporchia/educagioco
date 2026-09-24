@@ -90,7 +90,9 @@ per sbaglio, col blocco e tutto quello che aveva dentro, torna com'era.
 | 📝 Le lavagnette | una **variabile** che cresce (la scala), una che cala (la piramide), una che conta alla rovescia (le candeline) |
 | ⚓ Il porto | la seconda parte, vista dall'alto: **leggere**, **aspettare**, **ripetere per sempre**, cercare — mentre il mondo lavora da solo (vedi sotto) |
 | 🏆 Le sfide | **contare** camminando (il muro gemello), contare quello che si vede (conta i rossi), e **un se dentro un se** (la scacchiera) |
+| 🗺️ I posti del porto | **un lavoro per ogni colore**, con le strade già scritte come attrezzi (le strade del porto), poi **le strade scritte una volta sola** e chiamate da più colori, in un porto più largo dello schermo (il porto grande) |
 | 🌅 Le giornate del porto | il porto che lavora tutto insieme: camion, lettere, frighi e clienti, dalla giornata piccola a quella più larga dello schermo |
+| 🔢 Mettere in ordine | **confrontare due numeri** e scambiarli passando dal banco (due lettere), **una passata** che porta la lettera più grande in fondo (la passata), e **ripetere la passata** finché la fila è in ordine: il bubble sort (in ordine) |
 
 Il «se» arriva subito dopo il cantiere, prima delle funzioni: una decisione
 è più semplice di un progetto, e coi colori ha qualcosa da decidere fin da

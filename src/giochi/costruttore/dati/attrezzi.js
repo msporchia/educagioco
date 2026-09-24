@@ -31,7 +31,10 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { fai, progetto, meno, guarda, tinta } from './scrivi.js'
 
-const attrezzo = (p, { da = null, finisce }) => ({ ...p, attrezzo: true, da, finisce })
+/* un attrezzo da un progetto: quelli qui sotto, e quelli che un livello
+   si scrive da sé perché valgono solo sulla sua mappa (le strade di un
+   porto: `dati/porto/posti.js`) */
+export const attrezzo = (p, { da = null, finisce }) => ({ ...p, attrezzo: true, da, finisce })
 
 /* ── il cantiere ── */
 

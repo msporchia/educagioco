@@ -65,8 +65,19 @@ export const FILE = {
       'primo-carico', 'stiva', 'rosse-e-blu', 'bolla', 'gru', 'nastro', 'smistamento', 'bottega',
       'muro-gemello', 'conta-rossi', 'scacchiera',
       'primo-camion', 'postino', 'frigo', 'pesce-fresco', 'due-lavori', 'giornata-porto'],
+  /* lo stesso giorno, i posti del porto (le strade e i lavori per
+     colore) dopo il porto, e in fondo le lettere da mettere in ordine */
+  5: ['primo-muretto', 'torretta', 'muro-lungo', 'quanto-lungo', 'muro-alto', 'torta',
+      'sui-rossi', 'rosso-su-rosso', 'buchi', 'strisce', 'ponte',
+      'cinta', 'bosco', 'tempio', 'castello', 'bandiere', 'villaggio',
+      'scala', 'piramide', 'candele',
+      'primo-carico', 'stiva', 'rosse-e-blu', 'bolla', 'gru', 'nastro', 'smistamento', 'bottega',
+      'strade', 'porto-grande',
+      'muro-gemello', 'conta-rossi', 'scacchiera',
+      'primo-camion', 'postino', 'frigo', 'pesce-fresco', 'due-lavori', 'giornata-porto',
+      'due-lettere', 'passata', 'in-ordine'],
 }
-export const FILA_ATTUALE = 4
+export const FILA_ATTUALE = 5
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}

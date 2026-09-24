@@ -19,6 +19,10 @@
                  da sé se ci sono i camion
      mani        a sera il robot non ha niente in mano: una cassa in
                  mano non è consegnata. Vale sempre
+     inOrdine    { y, da, a } — sulla riga `y`, dalla casella `da` alla
+                 `a`, una lettera per casella e i numeri che non scendono
+                 mai: le lettere del postino messe in fila. Non dice come
+                 ci si arriva, e un altro modo di ordinarle vince lo stesso
 
    Quello che va storto **durante** la giornata — una cassa in mare, un
    cliente arrabbiato, una cassa del colore sbagliato — non arriva fin
@@ -92,6 +96,23 @@ export function esitoDelPorto(porto) {
     frasi.push(cm.partiti === 0
       ? `Nessun camion è ripartito pieno: ne sono arrivati ${cm.totale}.`
       : `Sono ripartiti pieni ${cm.partiti} camion su ${cm.totale}.`)
+
+  /* le lettere in fila, dalla più piccola alla più grande */
+  if (obiettivo.inOrdine) {
+    const { y, da, a } = obiettivo.inOrdine
+    const numeri = []
+    for (let x = da; x <= a; x++) {
+      const cima = porto.cimaDi(porto.k(x, y))
+      numeri.push(cima && cima.tipo === 'biglietto' ? cima.numero : null)
+    }
+    const vuote = numeri.filter(n => n == null).length
+    if (vuote) frasi.push(vuote === 1 ? 'Sullo scaffale manca una lettera: è rimasta da qualche altra parte.'
+      : `Sullo scaffale mancano ${vuote} lettere: sono rimaste da qualche altra parte.`)
+    else {
+      const k = numeri.findIndex((n, i) => i > 0 && n < numeri[i - 1])
+      if (k > 0) frasi.push(`Le lettere non sono in ordine: il ${numeri[k - 1]} viene prima del ${numeri[k]}.`)
+    }
+  }
 
   /* a sera le mani sono vuote: una cassa in mano non è consegnata */
   if (porto.mano && obiettivo.mani !== false)

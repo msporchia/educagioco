@@ -689,6 +689,16 @@ committate: non è ricostruibile da git.
   posto vero**, non una striscia con solo quello che serve a provare la
   lezione: è il difetto dei primi otto livelli, segnalato dall'utente
   guardando la scena di prova della tela.
+  Dopo il porto, **i posti** (`dati/porto/posti.js`): un lavoro diverso
+  per ogni colore di cassa, con le strade prima date come attrezzi e poi
+  scritte dal bambino su una mappa più larga dello schermo — le strade di
+  una mappa sono attrezzi di quella mappa (`attrezzo` di
+  `dati/attrezzi.js`), non del catalogo. E in fondo **le lettere in
+  ordine** (`dati/porto/ordine.js`): confrontare due numeri (il ⚖️ che il
+  linguaggio aveva e nessun livello usava), scambiare passando dal banco,
+  ripetere la passata — il bubble sort. Si vince con l'obiettivo
+  `inOrdine` di `motore/porto/esito.js`, che guarda la fila e non la
+  strada fatta per arrivarci.
 - **`docs/`** — la documentazione per chi arriva da fuori, e le immagini.
 
 ## Convenzioni
