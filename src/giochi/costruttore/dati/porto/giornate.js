@@ -40,11 +40,11 @@ const servi = () => [
 
 const GRU_DI_SFONDO = { casse: 'GRB', ogni: 8, primo: 2 }
 
-/* I consigli nella forma nuova degli aiuti: `ragiona`, due frasi gratis
-   (il nodo del livello, e la domanda giusta da farsi), e `indizi`, da uno
-   a tre, dal più largo al più stretto. `aiuti` ne è la somma, per il 💡
-   di prima: il giorno che il sistema nuovo è su main non serve più. */
-const consigli = (ragiona, indizi) => ({ ragiona, indizi, aiuti: [...ragiona, ...indizi] })
+/* I consigli del 💡: `ragiona`, due frasi gratis (il nodo del livello, e
+   la domanda giusta da farsi), e `indizi`, da uno a tre a 10 monete, dal
+   più largo al più stretto. I gradini che scrivono nel programma li
+   ricava il gioco dalla `soluzione` (`motore/aiuti.js`). */
+const consigli = (ragiona, indizi) => ({ ragiona, indizi })
 /* a sera il sacco è vuoto: una lettera rimasta dentro non è consegnata */
 const SACCO_VUOTO = { cassoni: { p: { vuoto: true } } }
 
