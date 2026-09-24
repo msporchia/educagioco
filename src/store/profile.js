@@ -407,7 +407,13 @@ export function riscuotiCheat() {
   const m = /(?:^#?|&)monete=(-?\d{1,7})(?=&|$)/i.exec(location.hash || '')
   if (!m) return 0
   const n = parseInt(m[1], 10)
-  try { location.hash = '' } catch (e) { /* pazienza: al massimo si ripete */ }
+  /* Si toglie **solo il suo pezzo**: il resto del frammento può essere
+     un altro cheat che aspetta la sua schermata — `#fattoria-tipo=30&
+     monete=2000` — e buttarlo via qui voleva dire perderlo prima che la
+     fattoria lo leggesse. Da solo, il frammento resta vuoto come prima. */
+  const resto = (location.hash || '').replace(/^#/, '').split('&')
+    .filter(p => !/^monete=/i.test(p)).join('&')
+  try { location.hash = resto } catch (e) { /* pazienza: al massimo si ripete */ }
   if (!n) return 0
   addCoins(n)
   // chi usa il cheat spesso chiude subito la scheda: senza questo il
