@@ -393,4 +393,63 @@ nota('in home con «prima o seconda»:', accesiPrima.join(', '))
   uguale('l\'età non si tocca', sporco.eta, 8)
 }
 
+/* ── UN PROFILO NATO PRIMA DI UN GIOCO ──
+   La partenza enumera i giochi del giorno in cui il bambino nasce, e
+   uno arrivato dopo nel suo profilo non c'è, mentre la partenza di oggi
+   gli scrive `false`. Misurato il 24 settembre 2026 col costruttore, a
+   un bambino di quattro anni nato prima: il tasto che rimette tutto
+   diceva «1 gioco messo a mano», la conferma dell'età lo contava fra
+   quello che si perde, e nel quadro nessuna riga era colorata. Non l'ha
+   messo nessuno, e non si conta (che il numero e il colore coincidano
+   lo controlla `unita/quadro`).
+
+   Si prova con **ogni** gioco che una fascia spegne, a ogni tacca della
+   manopola, e non col costruttore solo: il prossimo gioco nuovo sarà un
+   altro. */
+{
+  const contati = []
+  let casi = 0
+  for (let eta = 4; eta <= 12; eta += 0.5) {
+    const d = difettiDi(eta)
+    /* una fascia qualunque diversa dalla sua: la conferma conta dai
+       difetti di quella da cui si parte */
+    const altrove = eta < 7.5 ? 12 : 4
+    for (const k of Object.keys(d.giochi).filter(x => d.giochi[x] === false)) {
+      const nato = { ...d.giochi }
+      delete nato[k]
+      casi++
+      const rimessa = rimettendoLEta({ eta, giochi: nato, sa: d.sa, ritocchi: {} })
+      const mossa = spostandoLEta({ da: eta, a: altrove, giochi: nato, sa: d.sa, ritocchi: {} })
+      if (rimessa.cambia || rimessa.perde.giochi) contati.push(`${eta}a senza ${k}: il tasto`)
+      if (!mossa.riscrive || mossa.chiede || mossa.perde.giochi)
+        contati.push(`${eta}a senza ${k}: la conferma`)
+    }
+  }
+  controlla('ci sono giochi spenti da una fascia su cui provarlo', casi > 0, `${casi} casi`)
+  uguale('un gioco arrivato dopo il profilo non è roba messa a mano', contati.join(' · '), '')
+
+  /* Ma la regola è stretta, e la mano vera si conta ancora: lo stesso
+     gioco **tenuto** in casa contro l'età (`true` per esteso,
+     `fissaGioco`) è una scelta del grande, e rimettere tutto la butta. */
+  const d4 = difettiDi(4)
+  const spentoA4 = Object.keys(d4.giochi).find(k => d4.giochi[k] === false)
+  const tenuto = rimettendoLEta({ eta: 4, giochi: { ...d4.giochi, [spentoA4]: true },
+                                  sa: d4.sa, ritocchi: {} })
+  uguale(`«${spentoA4}» tenuto a mano a quattro anni si conta`, tenuto.perde.giochi, 1)
+
+  /* ── E I PEZZI DI SCUOLA NO ──
+     Per loro l'assenza contro un `false` atteso è la mano stessa:
+     «L'ha già fatto» cancella la voce, perché `accendiSapere` non scrive
+     il difetto del catalogo — ed è la riga che il quadro colora
+     (`scelto: 'si'`). Se il conto smettesse di vederla, «rimetti tutto»
+     la butterebbe in silenzio. */
+  const d8 = difettiDi(8)
+  const spentoA8 = Object.keys(d8.sa).find(k => d8.sa[k] === false)
+  const riacceso = { ...d8.sa }
+  delete riacceso[spentoA8]
+  const rimessoSa = rimettendoLEta({ eta: 8, giochi: d8.giochi, sa: riacceso, ritocchi: {} })
+  uguale(`«${spentoA8}» riacceso a mano a otto anni si conta ancora`, rimessoSa.perde.sa, 1)
+  uguale('e il tasto si mostra', rimessoSa.cambia, true)
+}
+
 riassunto('le quattro partenze')

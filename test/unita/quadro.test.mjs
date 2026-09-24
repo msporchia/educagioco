@@ -25,7 +25,8 @@ import { dirname, resolve } from 'node:path'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { quadroDi, giochiDiUnEta, differenzaFra, vannoMale } from '../../src/data/quadro.js'
 import { classiDelModulo, FASCE_ETA, doveCadeCon } from '../../src/quiz/nucleo/catalogo.js'
-import { PARTENZE, partenzaPerEta, eccezioniPerEta, eccezioniDi } from '../../src/data/partenze.js'
+import { PARTENZE, partenzaPerEta, eccezioniPerEta, eccezioniDi,
+         rimettendoLEta } from '../../src/data/partenze.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { giocoDaOffrire } from '../../src/data/portata.js'
 import { GIOCHI } from '../../src/data/giochi.js'
@@ -694,6 +695,45 @@ for (const eta of [6, 8, 10]) {
            chiuso.stato, 'spento')
     uguale('e la riga dice cosa gli manca', chiuso.manca.length > 0, true, chiuso.manca)
   }
+}
+
+/* ── IL CONTATORE DICE QUANTE, IL COLORE DICE QUALI ──
+   Il tasto che rimette tutto scrive «2 giochi messi a mano», e le righe
+   ambra del blocco «In casa» devono essere quelle due. Erano due conti
+   in due file, e a un bambino nato prima di un gioco davano due
+   risposte: la partenza di oggi gli spegne il costruttore, il suo
+   profilo non ne sa niente, e il tasto contava quell'assenza come roba
+   messa a mano mentre nessuna riga era colorata. Qui si pretende che i
+   due numeri coincidano su ogni forma di profilo che si sa costruire —
+   ai difetti, nato prima di un gioco, nato prima di tutti, con un gioco
+   tenuto e uno spento a mano.
+
+   Coi giochi in prova accesi, perché il conto non sa del cancello: una
+   forzatura su un gioco in prova resta una scelta del grande anche a
+   cancello chiuso, solo che a cancello chiuso la sua riga non si vede. */
+{
+  const storti = []
+  for (let eta = 4; eta <= 12; eta += 0.5) {
+    const d = eccezioniPerEta(eta)
+    const dallEta = Object.keys(d.giochi).filter(k => d.giochi[k] === false)
+    const liberi = GIOCHI.map(g => g.chiave).filter(k => d.giochi[k] !== false)
+    const senza = k => { const g = { ...d.giochi }; delete g[k]; return g }
+    const profili = [
+      ['ai difetti', d.giochi],
+      ['nato prima di tutti', {}],
+      ...dallEta.map(k => [`nato prima di ${k}`, senza(k)]),
+      ...(dallEta.length && liberi.length
+        ? [['con un gioco tenuto e uno spento a mano',
+            { ...d.giochi, [dallEta[0]]: true, [liberi[0]]: false }]] : []),
+    ]
+    for (const [come, giochi] of profili) {
+      const conto = rimettendoLEta({ eta, giochi, sa: d.sa, ritocchi: {} }).perde.giochi
+      const ambra = giochiDiUnEta({ eta, giochi, sa: d.sa, sperimentali: true })
+        .filter(g => g.aMano).length
+      if (conto !== ambra) storti.push(`${eta}a ${come}: conto ${conto}, ambra ${ambra}`)
+    }
+  }
+  uguale('il tasto conta tanti giochi quante sono le righe ambra', storti.join(' · '), '')
 }
 
 /* ═══════════════════════════════════════════════════════════════════

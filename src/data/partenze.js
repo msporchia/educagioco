@@ -357,8 +357,6 @@ export const eccezioniPerEta = anni => {
   return p ? { ...eccezioniDi(p.chiave), eta: Number(anni) } : { giochi: {}, sa: {}, eta: null }
 }
 
-/* due mappe di eccezioni dicono la stessa cosa se spengono le stesse
-   chiavi: l'ordine non conta e l'assenza vuol dire acceso */
 /* ── LE ECCEZIONI SONO TRE STATI, NON DUE ──
    `false` è spento e l'assenza è acceso — è il patto di `settings` — ma
    `true` scritto per esteso vuol dire una terza cosa: **tienilo
@@ -367,22 +365,57 @@ export const eccezioniPerEta = anni => {
    se ne andava in silenzio cambiando fascia: il grande l'aveva messa a
    mano, e la conferma gli diceva che non c'era niente da perdere. */
 const segno = v => v === false ? 'no' : v === true ? 'si' : '—'
-const messeAMano = m => Object.keys(m || {})
-  .filter(k => m[k] === false || m[k] === true)
-  .sort().map(k => `${k}${segno(m[k])}`).join(',')
-const stesseEccezioni = (a, b) =>
-  messeAMano(a.giochi) === messeAMano(b.giochi) && messeAMano(a.sa) === messeAMano(b.sa)
 
 /* Quante voci il grande ha messo diversamente dal difetto della sua
    fascia: è il numero che rende la conferma una domanda vera invece di
-   un «sei sicuro?». Si contano le differenze nei due versi — un gioco
-   spento a mano e uno riacceso a mano se ne vanno tutti e due. */
+   un «sei sicuro?». Per i pezzi di scuola si contano le differenze nei
+   due versi — uno spento a mano e uno riacceso a mano se ne vanno
+   tutti e due. */
 const quanteDiverse = (mia, difetto) => {
   const chiavi = new Set([...Object.keys(mia || {}), ...Object.keys(difetto || {})])
   let n = 0
   for (const k of chiavi) if (segno(mia?.[k]) !== segno(difetto?.[k])) n++
   return n
 }
+
+/* ── UN GIOCO SI CONTA COME SI COLORA ──
+   Questo numero finisce sul tasto che rimette tutto («1 gioco messo a
+   mano») e le righe ambra stanno nel quadro (`aMano` in
+   `data/quadro.js`): il contatore dice quante, il colore dice quali, e
+   devono essere la stessa cosa. Il quadro chiama «a mano» un gioco in
+   due casi soli — un `true` scritto per esteso, o un `false` dove l'età
+   non spegneva — e il conto di sopra ne vedeva un terzo: **l'assenza
+   dove la partenza di oggi scrive `false`**.
+
+   Quella non è una scelta di nessuno. La partenza enumera i giochi del
+   giorno in cui il bambino nasce, e un gioco arrivato dopo nel suo
+   profilo non c'è: un bambino di quattro anni nato prima del
+   costruttore (arrivato il 23 settembre 2026) non ha nessuna voce per
+   lui, mentre la partenza di oggi gli scrive `costruttore: false`. Il
+   tasto diceva «1 gioco messo a mano» e nessuna riga era colorata.
+   Oggi la mano scrive sempre per esteso (`fissaGioco`), quindi quel
+   buco non l'ha lasciato un grande.
+
+   ── I PEZZI DI SCUOLA NO, E NON È UNA SVISTA ──
+   Per loro l'assenza contro un `false` atteso è proprio **la mano**:
+   riaccendere un pezzo di scuola che l'età spegne cancella la voce
+   (`accendiSapere` non scrive il difetto del catalogo), cioè «L'ha già
+   fatto» lascia nel profilo esattamente quel buco — e il quadro lo
+   colora (`scelto: 'si'`). Smettere di contarlo qui vorrebbe dire
+   buttarlo in silenzio al primo «rimetti tutto», che è il guasto per
+   cui questo conto esiste. */
+const giochiAMano = (mia, difetto) => Object.keys(mia || {})
+  .filter(k => mia[k] === true || (mia[k] === false && difetto?.[k] !== false)).length
+
+/* Le tre voci insieme. Un conto solo decide se la conferma dell'età
+   chiede e cosa dice chiedendo: erano due funzioni, e due funzioni
+   possono dare due risposte — una conferma che chiede per zero voci, o
+   che ne annuncia una e non chiede. */
+const messeAMano = ({ giochi, sa, ritocchi }, difetti) => ({
+  giochi: giochiAMano(giochi, difetti.giochi),
+  sa: quanteDiverse(sa, difetti.sa),
+  ritocchi: Object.keys(ritocchi || {}).length,
+})
 
 /* ── COSA SUCCEDE SPOSTANDO LA MANOPOLA ──
    Una manopola che riscrive le scelte fatte a mano senza dirlo è una
@@ -414,18 +447,13 @@ export function spostandoLEta ({ da, a, giochi = {}, sa = {}, ritocchi = {} }) {
      conto sparirebbero in silenzio nell'unico caso in cui un grande
      aveva toccato solo quelli. */
   const difetti = prima ? eccezioniDi(prima.chiave) : { giochi: {}, sa: {} }
-  const suMisura = !!prima &&
-    (!stesseEccezioni({ giochi, sa }, difetti) ||
-     Object.keys(ritocchi || {}).length > 0)
+  const aMano = messeAMano({ giochi, sa, ritocchi }, difetti)
+  const suMisura = !!prima && aMano.giochi + aMano.sa + aMano.ritocchi > 0
 
   /* Cosa se ne va, voce per voce. Dentro la stessa fascia non se ne va
      niente, e dirlo con degli zeri invece che con un `null` risparmia a
      chi lo mostra di sapere quale dei due casi è. */
-  const perde = stessaFascia ? { giochi: 0, sa: 0, ritocchi: 0 } : {
-    giochi: quanteDiverse(giochi, difetti.giochi),
-    sa: quanteDiverse(sa, difetti.sa),
-    ritocchi: Object.keys(ritocchi || {}).length,
-  }
+  const perde = stessaFascia ? { giochi: 0, sa: 0, ritocchi: 0 } : aMano
 
   return {
     eta: Number(a),
@@ -457,11 +485,7 @@ export function spostandoLEta ({ da, a, giochi = {}, sa = {}, ritocchi = {} }) {
 export function rimettendoLEta ({ eta, giochi = {}, sa = {}, ritocchi = {} }) {
   const fascia = partenzaPerEta(eta)
   const difetti = fascia ? eccezioniDi(fascia.chiave) : { giochi: {}, sa: {} }
-  const perde = {
-    giochi: quanteDiverse(giochi, difetti.giochi),
-    sa: quanteDiverse(sa, difetti.sa),
-    ritocchi: Object.keys(ritocchi || {}).length,
-  }
+  const perde = messeAMano({ giochi, sa, ritocchi }, difetti)
   return {
     eta: Number(eta),
     giochi: difetti.giochi,
