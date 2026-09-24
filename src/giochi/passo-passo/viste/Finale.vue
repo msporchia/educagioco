@@ -6,9 +6,12 @@
    riprova e basta. Questo compare solo quando il coniglio è nella tana.
 
    Le tre stelle si guadagnano per tre cose diverse, e sotto ognuna c'è
-   il disegno di **cosa** l'ha data: la tana, la carota, «senza 💡».
-   Una stella spenta con sotto la carota dice da sola cosa manca, e che
-   rigiocando la si può prendere — senza una riga da leggere.
+   il disegno di **cosa** l'ha data: la tana, la carota, 🧠 — la strada
+   l'hai trovata tu. Una stella spenta con sotto la carota dice da sola
+   cosa manca, e che rigiocando la si può prendere — senza una riga da
+   leggere. La terza era «senza 💡», e la toglieva qualunque aiuto: gli
+   aiuti adesso si pagano in monete, e la terza se ne va solo se la
+   strada intera l'ha scritta il gioco.
 
    Il racconto del posto sta in fondo, piccolo: è per il grande che
    guarda da sopra la spalla, e dice cosa si è appena imparato.
@@ -25,7 +28,7 @@ defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 1 },
   carota: { type: Boolean, default: false },
-  aiutato: { type: Boolean, default: false },
+  svelato: { type: Boolean, default: false },     // la strada l'ha scritta tutta il gioco
   monete: { type: Number, default: 0 },
   racconto: { type: String, default: '' },
   prossima: { type: Boolean, default: false },    // c'è una tappa dopo, ed è aperta
@@ -57,8 +60,8 @@ onUnmounted(() => clearTimeout(sveglia))
         <span class="pp-una" :class="{ 'pp-spenta': !carota }">
           <span class="pp-em pp-grande">⭐</span><span class="pp-em">🥕</span>
         </span>
-        <span class="pp-una" :class="{ 'pp-spenta': aiutato }">
-          <span class="pp-em pp-grande">⭐</span><span class="pp-em pp-barrato">💡</span>
+        <span class="pp-una" :class="{ 'pp-spenta': svelato }" data-stella-pensata>
+          <span class="pp-em pp-grande">⭐</span><span class="pp-em">🧠</span>
         </span>
       </div>
 

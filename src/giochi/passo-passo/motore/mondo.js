@@ -357,6 +357,10 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
   return esce(FINITA, passi.length ? passi.at(-1).i : -1)
 }
 
-/* le stelle di una tappa vinta: arrivato, con la carota, senza aiuti */
-export const stelleDellaVittoria = ({ carota = false, aiutato = false } = {}) =>
-  1 + (carota ? 1 : 0) + (aiutato ? 0 : 1)
+/* Le stelle di una tappa vinta: arrivato, con la carota, e la strada
+   trovata da te. La terza la toglieva qualunque 💡, ed era il prezzo
+   dell'aiuto; adesso gli aiuti si pagano in monete (`motore/aiuti.js`),
+   e la stella se ne va solo se la strada te l'ha scritta tutta il gioco
+   (`svelato`): non è un prezzo, è un fatto. */
+export const stelleDellaVittoria = ({ carota = false, svelato = false } = {}) =>
+  1 + (carota ? 1 : 0) + (svelato ? 0 : 1)

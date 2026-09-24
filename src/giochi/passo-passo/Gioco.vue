@@ -30,18 +30,20 @@
 import { ref, shallowRef, computed, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { addCoins, segna, segnaBest, tappaAperta } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, tappaAperta, spendi } from '../../store/profile.js'
 import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, tappeDelloScalino } from './dati/campagna.js'
-import { MASSIMO_FILA } from './dati/mondo.js'
-import { apri, carteDi, conCicli, daScegliere, eApri, volteDi } from './dati/carte.js'
+import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
+import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
 import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, eErrore } from './motore/mondo.js'
-import { mettiCarta, mettiCiclo, togliPrima, scegliVolte } from './motore/fila.js'
+import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila.js'
 import { suggerisci } from './motore/risolutore.js'
+import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
+import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
 import { generaSentiero, caso } from './motore/generatore.js'
 import { Proiezione } from './scena/proiezione.js'
 import { Regia } from './scena/regia.js'
@@ -72,7 +74,16 @@ const cursore = ref(0)
 const corrente = ref(-1)            // la tessera che sta girando
 const guasto = ref(null)            // dove la fila si è fermata male
 const inCorsa = ref(false)
-const aiutato = ref(false)          // in questo giro si è chiesto un aiuto
+/* la scala del 💡 (`motore/aiuti.js`): a che gradino si è, se in questo
+   ingresso si è pagato qualcosa (la serie del sentiero e «Ci penso io»
+   contano chi non ha comprato niente), e se la strada intera l'ha scritta
+   il gioco (la terza stella) */
+const presi = ref(0)
+const pagato = ref(false)
+const svelato = ref(false)
+const pensiero = ref(null)          // la frase del gradino, sopra la mappa
+const armato = ref(false)           // un gradino caro aspetta il secondo tocco
+const poveroScossa = ref(0)         // 💡 senza monete: il prezzo sobbalza
 const brilla = ref(null)            // la freccia (o ▶) che l'aiuto accende
 const sospette = ref(false)         // l'aiuto ha messo il cursore in mezzo alla fila
 const aiutoInCoda = ref(false)      // il 💡 premuto mentre il coniglio corre
@@ -80,7 +91,7 @@ const colpo = ref(0)                // quante volte si è premuto il 💡: ogni 
 const consiglio = ref(null)         // la carta che l'aiuto propone, in trasparenza nella fila
 /* lo zaino e le scatole */
 const scelta = ref(null)            // la scatola di cui si sta scegliendo il numero
-const consiglioVolte = ref(null)    // il numero che l'aiuto accende nella scelta
+const consiglioValore = ref(null)   // il numero (o il colore) che l'aiuto accende nella scelta
 const consiglioTesta = ref(null)    // la scatola a cui l'aiuto cambia il numero
 const giri = ref(null)              // a che giro sono le scatole: mentre corre, o dove si è fermata
 const scossa = ref(0)               // ▶ fermato da una N ancora da scegliere
@@ -114,7 +125,15 @@ const sentiero = computed(() => tappaIdx.value < 0)
 /* quante carte tiene la fila: lo zaino, dove c'è, se no il tetto tecnico */
 const piena = computed(() => (tappa.value && tappa.value.zaino
   ? carteDi(fila.value) >= tappa.value.zaino : fila.value.length >= MASSIMO_FILA))
-const volteOra = computed(() => (scelta.value != null ? volteDi(fila.value[scelta.value]) : null))
+const valoreOra = computed(() => (scelta.value != null ? valoreDi(fila.value[scelta.value]) : null))
+const sceltaTipo = computed(() => (scelta.value != null && eSe(fila.value[scelta.value]) ? 'se' : 'ripeti'))
+/* i colori delle lastre che ci sono in questa mappa: la scelta della
+   testa offre solo quelli, un colore che non c'è non si può aspettare */
+const colori = computed(() => {
+  const qui = new Set(((tappa.value && tappa.value.mappa) || []).join('').split('')
+    .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
+  return COLORI.filter(c => qui.has(c))
+})
 /* Il sentiero senza fine si apre alla fine delle tappe dei piccoli, e
    senza guardare l'età: è il loro, e le tappe dello zaino che vengono
    dopo sono chiuse fino agli otto anni. Legarlo alla campagna intera,
@@ -211,6 +230,7 @@ const regia = new Regia({
 onUnmounted(() => {
   regia.spegni()
   clearTimeout(sbarra)
+  clearTimeout(timerArmato)
   vintaAMeta()
   if (sentiero.value) chiudiLaSerie()
 })
@@ -231,13 +251,18 @@ function entra(t, indice) {
   corrente.value = -1
   guasto.value = null
   inCorsa.value = false
-  aiutato.value = false
+  presi.value = 0
+  pagato.value = false
+  svelato.value = false
+  pensiero.value = null
+  disarma()
+  ultimaCarta = null
   brilla.value = null
   sospette.value = false
   aiutoInCoda.value = false
   consiglio.value = null
   scelta.value = null
-  consiglioVolte.value = null
+  consiglioValore.value = null
   consiglioTesta.value = null
   giri.value = null
   finale.value = null
@@ -264,49 +289,51 @@ const avviaTappa = i => entra(CAMPAGNA[i], i)
    scatola (tutta) o la sua testa (il 🔁 e basta). */
 const metti = r => { fila.value = r.fila; cursore.value = r.cursore }
 
-/* una freccia, un salto — o, dal consiglio del 💡, una scatola già col
-   suo numero */
+/* una freccia, un salto — o, dal consiglio del 💡, una scatola già con
+   la sua testa */
 function freccia(t) {
   if (inCorsa.value || cieco || finale.value || piena.value) return
-  if (eApri(t)) return ciclo(volteDi(t))
+  if (eApri(t)) return scatola(eSe(t) ? 'se' : 'ripeti', t)
   metti(mettiCarta(fila.value, cursore.value, t))
   scelta.value = null
   cambiata()
   suono.nota(t.startsWith('salto-') ? 587 : 523, t.startsWith('salto-') ? 587 : 523, 0.06, 'triangle', 0.05)
 }
 
-/* 🔁: una scatola dove sta il cursore, col cursore dentro. La N nasce da
-   scegliere e la scelta si apre da sola; se il 💡 aveva acceso il 🔁,
-   nella scelta resta acceso il suo numero */
-function ciclo(volte = null) {
+/* 🔁 o ❓: una scatola dove sta il cursore, col cursore dentro. La testa
+   nasce da scegliere e la scelta si apre da sola; se il 💡 aveva acceso
+   quel tasto, nella scelta resta acceso il suo valore. Dal consiglio
+   nella fila la scatola arriva già con la sua testa (`gia`) */
+function scatola(tipo, gia = null) {
   if (inCorsa.value || cieco || finale.value || piena.value) return
-  const suggerito = brilla.value === 'ripeti' ? consiglioVolte.value : null
-  const r = mettiCiclo(fila.value, cursore.value, volte)
+  const suggerito = brilla.value === tipo ? consiglioValore.value : null
+  const r = mettiScatola(fila.value, cursore.value, gia || (tipo === 'se' ? apriSe(null) : apri(null)))
   metti(r)
   cambiata()
-  scelta.value = volte == null ? r.apertura : null
-  consiglioVolte.value = volte == null ? suggerito : null
+  const daScegliere = valoreDi(r.fila[r.apertura]) == null
+  scelta.value = daScegliere ? r.apertura : null
+  consiglioValore.value = daScegliere ? suggerito : null
   suono.nota(494, 659, 0.1, 'triangle', 0.05)
 }
 
-/* il numero di una scatola */
-function sceltaVolte(n) {
+/* la testa di una scatola: un numero, un colore, la casa */
+function sceltaTesta(v) {
   if (inCorsa.value || cieco || finale.value || scelta.value == null) return
-  fila.value = scegliVolte(fila.value, scelta.value, n)
+  fila.value = scegliTesta(fila.value, scelta.value, v)
   scelta.value = null
   cambiata()
   suono.nota(587, 784, 0.08, 'triangle', 0.05)
 }
 
-/* toccare la testa di una scatola: si riapre la scelta del numero, e il
-   cursore va in cima al suo corpo */
+/* toccare la testa di una scatola: si riapre la scelta, e il cursore va
+   in cima al suo corpo */
 function testa(i) {
   if (inCorsa.value || cieco || finale.value) return
-  const suggerito = consiglioTesta.value === i ? consiglioVolte.value : null
+  const suggerito = consiglioTesta.value === i ? consiglioValore.value : null
   cursore.value = i + 1
   cambiata()
   scelta.value = i
-  consiglioVolte.value = suggerito
+  consiglioValore.value = suggerito
   suono.nota(660, 660, 0.03, 'triangle', 0.03)
 }
 
@@ -330,10 +357,14 @@ function spostaCursore(i) {
    giro scritto sulla scatola dove la fila si era fermata. */
 function cambiata() {
   guasto.value = null
+  /* la frase di un 🔎 o di un pezzo parla della fila di prima; quella
+     che fa pensare parla del posto, e resta finché non la si tocca */
+  if (pensiero.value && !pensiero.value.resta) pensiero.value = null
+  disarma()
   brilla.value = null
   sospette.value = false
   consiglio.value = null
-  consiglioVolte.value = null
+  consiglioValore.value = null
   consiglioTesta.value = null
   giri.value = null
 }
@@ -352,6 +383,8 @@ function via() {
     return
   }
   scelta.value = null
+  pensiero.value = null
+  disarma()
   const esito = esegui(liv, fila.value)
   const pro = new Proiezione(liv, esito, { veloci: giaVisti(esito) })
   esitoInCorsa = esito
@@ -442,24 +475,50 @@ function fineGiro() {
 }
 
 /* ═══════════ 💡 ═══════════
-   Non dice la soluzione: trova il pezzo più lungo della fila che va
-   ancora bene, ci mette il cursore, e fa vedere la freccia giusta in
-   due posti — in trasparenza **dentro la fila**, dove andrà, e sul suo
-   tasto, che brilla. La mette il bambino, toccando l'una o l'altro.
-   Costa la stella «senza aiuti» — il tasto lo dice prima di essere
-   toccato — e da lì gli aiuti di questo giro sono gratis.
+   Una scala, e ogni tocco scende di un gradino (`motore/aiuti.js`, i
+   prezzi in `giochi/aiuti.js`):
+
+     🧠  gratis   cosa chiede questo posto, e la domanda giusta
+     🔎  gratis   dove la fila comincia a sbagliare: il posto, non la carta
+     💡  🪙10 ×3  la carta giusta in quel posto — in trasparenza **dentro
+                  la fila**, dove andrà, e sul suo tasto, che brilla. La
+                  mette il bambino, toccando l'una o l'altro
+     🧩  🪙50     un pezzo di strada scritto nella fila: un terzo di quello
+     🧩  🪙100    che manca, poi la metà
+     ✅  🪙200    tutta la strada — e la terza stella resta spenta
+
+   Costava la stella «senza aiuti», e una stella è un prezzo che un
+   bambino non sente: il 💡 diventava il modo di finire un livello
+   seguendo la lampadina. Il prezzo sta sul tasto **prima** di toccarlo;
+   senza monete il prezzo sobbalza e non succede niente; dai cinquanta in
+   su ci vuole un secondo tocco. La scala riparte a ogni ingresso: ogni
+   gradino guarda la fila di adesso, e la fila riparte vuota.
+
+   Due cose che il 💡 fa gratis a qualunque gradino: dire ▶ se la fila
+   vince già, e riaccendere la carta di prima se la fila è rimasta
+   com'era — pagare due volte la stessa carta perché non la si è ancora
+   toccata sarebbe un furto.
 
    ── IL 💡 RISPONDE SEMPRE ─────────────────────────────────────────
    Era spento mentre il coniglio correva, cioè anche nei due secondi
    della scenetta dopo uno sbaglio: il momento esatto in cui lo si
-   cerca. E premuto una seconda volta riaccendeva la stessa freccia, e
-   a schermo non cambiava niente. Tutte e due le volte, da fuori, era un
-   tasto rotto: «ci premi e non fa nulla». Adesso durante la corsa si
-   prenota — si accende, e il consiglio arriva quando il coniglio si
-   ferma — e ogni tocco fa sobbalzare la lampadina (`colpo`). E il
-   consiglio sta dentro la fila perché è lì che si guarda: l'anello
-   attorno a un tasto della pulsantiera, da solo, non lo vedeva
-   nessuno. */
+   cerca. Adesso durante la corsa si prenota — si accende, e il gradino
+   arriva quando il coniglio si ferma (se è un gradino caro, arriva
+   armato: il secondo tocco resta del bambino) — e ogni tocco fa
+   sobbalzare la lampadina (`colpo`). */
+const SCALA = scalaDi()
+const prossimo = computed(() => SCALA[presi.value] || null)
+const monete = computed(() => state.profile.coins || 0)
+/* il prezzo che il tasto mostra: niente quando la scala è finita (da lì
+   il 💡 rimette gratis la strada già pagata) */
+const prezzoDelProssimo = computed(() => (prossimo.value ? prossimo.value.prezzo : null))
+const povero = computed(() => mancano(monete.value, prossimo.value) > 0)
+
+let ultimaCarta = null              // la fila di quando si è comprata l'ultima carta
+let timerArmato = 0
+function disarma() { armato.value = false; clearTimeout(timerArmato) }
+const firma = () => JSON.stringify([fila.value, cursore.value])
+
 function aiuto() {
   if (cieco || finale.value) return
   if (inCorsa.value) {
@@ -470,39 +529,85 @@ function aiuto() {
   const s = suggerisci(liv, fila.value)
   if (!s) return
   colpo.value++
-  if (!aiutato.value) {
-    aiutato.value = true
+  /* la fila vince già: lo si dice, e non costa niente */
+  if (s.che === 'via') { spegniConsigli(); brilla.value = 'via'; disarma(); suona(); return }
+  const p = prossimo.value
+  /* la carta di prima, con la fila com'era: si riaccende gratis — ma
+     solo se quello che si comprerebbe è un'altra carta, che sarebbe la
+     stessa. Se dopo viene un pezzo di strada si va avanti: il pezzo
+     parte da dove la fila va bene, e quella carta ce la mette lui */
+  if (ultimaCarta && ultimaCarta === firma() && p && p.cosa === 'carta') { mostraCarta(s); suona(); return }
+  /* la scala è finita: quello che si è pagato si rimette */
+  if (!p) { scriviPezzo(SCALA[SCALA.length - 1]); return }
+  if (povero.value) { poveroScossa.value++; suono.nota(330, 262, 0.12, 'triangle', 0.06); return }
+  if (chiedeConferma(p) && !armato.value) {
+    armato.value = true
+    clearTimeout(timerArmato)
+    timerArmato = setTimeout(() => { armato.value = false }, 4000)
+    suono.nota(660, 660, 0.05, 'triangle', 0.05)
+    return
+  }
+  disarma()
+  if (!spendi(p.prezzo)) return
+  presi.value++
+  if (p.prezzo && !pagato.value) {
+    pagato.value = true
+    /* la serie del sentiero conta i sentieri fatti senza comprare aiuti:
+       si chiude al primo gradino pagato, non a quelli che fanno pensare */
     if (sentiero.value) {
       const esito = chiudiLaSerie()
       chiusaDallAiuto = esito ? fraseDiFine(esito, SENZA_FINE.misura) : null
     }
   }
+  if (p.cosa === 'pensa') { pensiero.value = { testo: pensieroDi(liv).join(' '), che: 'pensa', resta: true }; suona(); return }
+  if (p.cosa === 'dove') { mostraDove(); suona(); return }
+  if (p.cosa === 'carta') { mostraCarta(s); ultimaCarta = firma(); suona(); return }
+  scriviPezzo(p)
+}
+const suona = () => suono.nota(880, 1175, 0.14, 'sine', 0.06)
+
+function spegniConsigli() {
   guasto.value = null
   consiglio.value = null
-  consiglioVolte.value = null
+  consiglioValore.value = null
   consiglioTesta.value = null
   scelta.value = null
   sospette.value = false
-  suono.nota(880, 1175, 0.14, 'sine', 0.06)
+  brilla.value = null
+}
+
+/* 🔎 il posto, e non la carta */
+function mostraDove() {
+  spegniConsigli()
+  const d = dove(liv, fila.value)
+  if (!d) return
+  pensiero.value = { testo: d.testo, che: 'dove' }
+  if (d.che === 'via') brilla.value = 'via'
+  else if (d.che === 'testa') { cursore.value = d.apri + 1; consiglioTesta.value = d.apri }
+  else if (d.che === 'togli') { cursore.value = d.carta + 1; guasto.value = d.carta }
+  else { cursore.value = d.cursore; sospette.value = d.sospette }
+}
+
+/* 💡 la carta giusta, dove va: il consiglio di sempre */
+function mostraCarta(s) {
+  spegniConsigli()
+  pensiero.value = null
   switch (s.che) {
-    case 'via':
-      brilla.value = 'via'
-      return
     /* con lo zaino un aiuto può dire anche altre tre cose: qui ci va una
-       scatola (il 🔁 brilla, e la scatola sta in trasparenza nella fila),
-       questa scatola va ripetuta tante volte (brilla la sua testa), e
-       questa carta è di troppo (brilla ⌫, e lei lampeggia) */
-    case 'ciclo':
+       scatola (il suo tasto brilla, e la scatola sta in trasparenza nella
+       fila, con la sua testa), questa scatola vuole un'altra testa (brilla
+       la testa, e nella scelta il valore giusto), e questa carta è di
+       troppo (brilla ⌫, e lei lampeggia) */
+    case 'scatola':
       cursore.value = s.cursore
-      brilla.value = 'ripeti'
-      consiglio.value = apri(s.volte)
-      consiglioVolte.value = s.volte
+      brilla.value = eSe(s.testa) ? 'se' : 'ripeti'
+      consiglio.value = s.testa
+      consiglioValore.value = valoreDi(s.testa)
       break
-    case 'volte':
+    case 'testa':
       cursore.value = s.apri + 1
-      brilla.value = null
       consiglioTesta.value = s.apri
-      consiglioVolte.value = s.volte
+      consiglioValore.value = s.valore
       return
     case 'togli':
       cursore.value = s.cursore
@@ -515,6 +620,20 @@ function aiuto() {
       consiglio.value = s.mossa
   }
   sospette.value = s.cursore < fila.value.length
+}
+
+/* 🧩 ✅ un pezzo di strada, scritto nella fila */
+function scriviPezzo(p) {
+  const r = pezzoDiStrada(liv, fila.value, p.quota)
+  if (!r) return
+  fila.value = r.fila
+  cursore.value = r.cursore
+  cambiata()
+  if (p.che === SVELA) svelato.value = true
+  pensiero.value = { che: p.che, testo: r.resto
+    ? 'Ti ho scritto un pezzo di strada: il resto è tuo.'
+    : 'Ecco la strada fino a casa: premi ▶ e guarda.' }
+  suono.compra()
 }
 
 /* il 💡 premuto durante la corsa: adesso che il coniglio è fermo */
@@ -533,12 +652,12 @@ function aiutoPrenotato() {
 function contaLaVittoria(esito) {
   segna('ppTane')
   if (esito.carota) segna('ppCarote')
-  if (!aiutato.value) segna('ppDaSolo')
+  if (!pagato.value) segna('ppDaSolo')
 }
 
 /* scrive la vittoria e torna il cartello da mostrare alla fine */
 function vittoria(esito) {
-  const stelle = stelleDellaVittoria({ carota: esito.carota, aiutato: aiutato.value })
+  const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value })
   if (sentiero.value) return vittoriaSentiero(esito)
 
   const i = tappaIdx.value
@@ -551,7 +670,7 @@ function vittoria(esito) {
   contaLaVittoria(esito)
   return {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,
-    carota: esito.carota, aiutato: aiutato.value, monete,
+    carota: esito.carota, svelato: svelato.value, monete,
     racconto: CAMPAGNA[i].racconto,
     /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine,
        che si è appena aperto, a chi non ha ancora l'età dello zaino:
@@ -590,7 +709,7 @@ function vittoriaSentiero(esito) {
   contaLaVittoria(esito)
   let frase = chiusaDallAiuto || ''
   let record = false
-  if (!aiutato.value) {
+  if (!pagato.value) {
     serie.value++
     segnaBest('ppFila', serie.value)
     const prima = primatoDi(CHIAVE).best
@@ -656,14 +775,16 @@ function indietro() {
       <Campo v-else ref="campo"
              :fila="fila" :cursore="cursore" :corrente="corrente" :guasto="guasto"
              :in-corsa="inCorsa" :salti="!!(tappa && tappa.salti)" :brilla="brilla"
-             :costa="!aiutato" :sospette="sospette" :piena="piena"
+             :prezzo="prezzoDelProssimo" :povero="povero" :armato="armato" :povero-scossa="poveroScossa"
+             :pensiero="pensiero" :sospette="sospette" :piena="piena"
              :manina="manina" :consiglio="consiglio" :colpo="colpo" :in-coda="aiutoInCoda"
              :carte="(tappa && tappa.carte) || []" :zaino="(tappa && tappa.zaino) || null"
-             :giri="giri" :scelta="scelta" :volte-ora="volteOra" :consiglio-volte="consiglioVolte"
-             :consiglio-testa="consiglioTesta" :scossa="scossa"
+             :giri="giri" :scelta="scelta" :scelta-tipo="sceltaTipo" :valore-ora="valoreOra"
+             :consiglio-valore="consiglioValore" :consiglio-testa="consiglioTesta" :scossa="scossa"
+             :colori="colori"
              @freccia="freccia" @cancella="cancella" @via="via" @ferma="ferma"
-             @aiuto="aiuto" @cursore="spostaCursore" @ciclo="ciclo()" @volte="sceltaVolte"
-             @testa="testa" />
+             @aiuto="aiuto" @cursore="spostaCursore" @scatola="t => scatola(t)" @testa-scelta="sceltaTesta"
+             @testa="testa" @chiudi-pensiero="pensiero = null" />
 
       <Finale v-if="finale" v-bind="finale"
               @avanti="avanti" @rigioca="rigioca" @mappa="allaMappa" />

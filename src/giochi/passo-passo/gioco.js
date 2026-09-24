@@ -29,13 +29,14 @@ export const CHIAVE = 'passo'
 /* Il sentiero senza fine: livelli fatti al momento e controllati dal
    risolutore, che si apre a campagna finita. Quello che si migliora lì
    è **quanti sentieri di fila si fanno da soli** — la serie si chiude
-   quando si chiede un aiuto (o quando si torna alla mappa). Sbagliare
-   una fila non la chiude: qui sbagliare è riprovare, non perdere. */
+   quando si compra un aiuto (o quando si torna alla mappa). I due
+   gradini gratis del 💡, che fanno pensare, non la chiudono; sbagliare
+   una fila nemmeno: qui sbagliare è riprovare, non perdere. */
 export const SENZA_FINE = {
   nome: 'Il sentiero senza fine',
   icona: '♾️',
   misura: 'fila',
-  che: 'quanti sentieri di fila, senza aiuti',
+  che: 'quanti sentieri di fila, senza comprare aiuti',
 }
 
 export default {
@@ -86,8 +87,8 @@ export default {
        ppProve    le file fatte partire col ▶
        ppTane     le volte che il coniglio è arrivato a casa
        ppCarote   le volte che ci è arrivato con la carota
-       ppDaSolo   le volte che ci è arrivato senza aiuti
-       ppFila     (primato) i sentieri senza fine di fila, senza aiuti
+       ppDaSolo   le volte che ci è arrivato senza comprare aiuti
+       ppFila     (primato) i sentieri senza fine di fila, senza comprare aiuti
      Nessun contatore nuovo per lo zaino: le sue tappe si contano da
      `tappeDi`, che sono in fila dopo quelle dei piccoli. */
   albo: {
@@ -115,10 +116,10 @@ export default {
         come: n => `Porta a casa ${n} carote`,
         soglie: [5, 20, 50], valore: m => m.tot('ppCarote') },
       { id: 'pp-da-solo', emoji: '🧠', nome: 'Ci penso io',
-        come: n => `Porta il coniglio a casa ${n} volte senza aiuti`,
+        come: n => `Porta il coniglio a casa ${n} volte senza comprare aiuti`,
         soglie: [5, 20, 60], valore: m => m.tot('ppDaSolo') },
       { id: 'pp-sentiero', emoji: '♾️', nome: 'Il sentiero senza fine',
-        come: n => `Fai ${n} sentieri di fila senza aiuti`,
+        come: n => `Fai ${n} sentieri di fila senza comprare aiuti`,
         soglie: [3, 6, 12], valore: m => m.best('ppFila') },
       { id: 'pp-campagna', emoji: '🏁', nome: 'La strada di casa',
         come: () => 'Finisci le tappe dei primi cinque gradini di Passo passo',

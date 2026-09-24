@@ -15,15 +15,15 @@ import { LEGENDA, MOSSE, MASSIMO_FILA, COLONNE_MAX, RIGHE_MAX, guastiDelMondo, g
   from '../../src/giochi/passo-passo/dati/mondo.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TEMI, guastiDellaCampagna }
   from '../../src/giochi/passo-passo/dati/campagna.js'
-import { CARTE, albero, carteDi, conCicli, daScegliere, guastiDellaFila, programma, ripeti, apri,
-         FINE, chiusuraDi, aperturaDi }
+import { CARTE, albero, carteDi, conCicli, daScegliere, guastiDellaFila, programma, ripeti, se, apri,
+         apriSe, FINE, chiusuraDi, aperturaDi }
   from '../../src/giochi/passo-passo/dati/carte.js'
 import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
 import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, STANCO, FINITA, REGOLE, PASSI_MAX }
   from '../../src/giochi/passo-passo/motore/mondo.js'
 import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi }
   from '../../src/giochi/passo-passo/motore/risolutore.js'
-import { mettiCarta, mettiCiclo, togliPrima, scegliVolte, seguiConsiglio }
+import { mettiCarta, mettiCiclo, mettiScatola, togliPrima, scegliVolte, scegliTesta, seguiConsiglio }
   from '../../src/giochi/passo-passo/motore/fila.js'
 import { generaSentiero, caso, GRADINI } from '../../src/giochi/passo-passo/motore/generatore.js'
 import { Proiezione, fotogrammaIniziale } from '../../src/giochi/passo-passo/scena/proiezione.js'
@@ -36,7 +36,9 @@ import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mj
 const L = (mappa, salti = false) => new Livello(mappa, { salti })
 const FRECCE = { su: '↑', giu: '↓', sinistra: '←', destra: '→',
                  'salto-su': '⇑', 'salto-giu': '⇓', 'salto-sinistra': '⇐', 'salto-destra': '⇒' }
-const inFrecce = f => (f || []).map(m => FRECCE[m] || (m === FINE ? ')' : `🔁${m.slice(7)}(`)).join(' ')
+const SEGNO = { rosso: '🔴', blu: '🔵', giallo: '🟡', casa: '🏠' }
+const inFrecce = f => (f || []).map(m => FRECCE[m] || (m === FINE ? ')'
+  : m.startsWith('se-') ? `❓${SEGNO[m.slice(3)] || m.slice(3)}(` : `🔁${SEGNO[m.slice(7)] || m.slice(7)}(`)).join(' ')
 const dove = (r) => r.mondo.pos
 
 /* ══════════ 1. i dati stanno in piedi ══════════ */
@@ -78,7 +80,7 @@ const dove = (r) => r.mondo.pos
             CAMPAGNA.slice(TAPPE_PICCOLE).every(t => t.portata > 44 && t.portata <= 75),
             CAMPAGNA.slice(TAPPE_PICCOLE).map(t => t.portata).join(' '))
   controlla('nessuna tappa dichiara un pezzo di scuola', CAMPAGNA.every(t => !t.scuola))
-  controlla('ogni mappa sta in sette per nove', CAMPAGNA.every(t =>
+  controlla(`ogni mappa sta in ${COLONNE_MAX} per ${RIGHE_MAX}`, CAMPAGNA.every(t =>
     t.mappa.length <= RIGHE_MAX && t.mappa[0].length <= COLONNE_MAX))
   controlla('ogni tappa ha un tema che esiste', CAMPAGNA.every(t => TEMI.includes(t.tema)))
   controlla('il tetto della fila è alto: non è un par', MASSIMO_FILA >= 30)
@@ -90,7 +92,7 @@ const dove = (r) => r.mondo.pos
   controlla('una lettera sconosciuta è un guasto', guastiDellaMappa(['P.X', '..@', 'c..']).length > 0)
   controlla('una buca senza gemella è un guasto', guastiDellaMappa(['P1.', '..@', 'c..']).length > 0)
   controlla('due tane sono un guasto', guastiDellaMappa(['P.@', '..@', 'c..']).length > 0)
-  controlla('una mappa troppo larga è un guasto', guastiDellaMappa(['P......c', '.......@', '........']).length > 0)
+  controlla('una mappa troppo larga è un guasto', guastiDellaMappa(['P........c', '.........@', '..........']).length > 0)
   controlla('una mappa giusta non ha guasti', guastiDellaMappa(['P.c', '...', '..@']).length === 0)
 }
 
@@ -219,10 +221,12 @@ const dove = (r) => r.mondo.pos
             r.esito === SBATTE && r.dove === 1)
 
   /* le stelle */
-  uguale('arrivato, con la carota, senza aiuti: tre stelle', stelleDellaVittoria({ carota: true, aiutato: false }), 3)
-  uguale('senza la carota: due', stelleDellaVittoria({ carota: false, aiutato: false }), 2)
-  uguale('con un aiuto: due', stelleDellaVittoria({ carota: true, aiutato: true }), 2)
-  uguale('senza niente: una, e basta arrivare', stelleDellaVittoria({ carota: false, aiutato: true }), 1)
+  /* la terza è «la strada l'hai trovata tu»: la toglie solo la strada
+     intera scritta dal gioco (gli altri aiuti si pagano in monete) */
+  uguale('arrivato, con la carota, la strada tua: tre stelle', stelleDellaVittoria({ carota: true, svelato: false }), 3)
+  uguale('senza la carota: due', stelleDellaVittoria({ carota: false, svelato: false }), 2)
+  uguale('con la strada scritta dal gioco: due', stelleDellaVittoria({ carota: true, svelato: true }), 2)
+  uguale('senza niente: una, e basta arrivare', stelleDellaVittoria({ carota: false, svelato: true }), 1)
 }
 
 /* ══════════ 2b. le carte: i cicli, e la fila modificata col dito ══════════ */
@@ -291,6 +295,55 @@ const dove = (r) => r.mondo.pos
   controlla('⌫ col cursore all\'inizio non toglie niente', t.fila.length === 1 && t.cursore === 0)
 }
 
+/* ══════════ 2c. le lastre, il «fino a» e il «se» ══════════ */
+{
+  /* le lastre: si camminano come il prato, fermano chi scivola, e un
+     masso non ci va sopra */
+  let r = esegui(L(['P**r*.', 'c....@']), ['destra'])
+  controlla('una lastra ferma chi scivola sul ghiaccio, come il prato', r.esito === FINITA && dove(r).x === 3,
+            JSON.stringify(dove(r)))
+  uguale('un masso non si spinge su una lastra', esegui(L(['Pmr.', 'c..@']), ['destra']).esito, SBATTE)
+
+  /* il «fino a»: si fa un giro, e alla fine di ogni giro si guarda sotto */
+  r = esegui(L(['P..r.@', 'c.....']), programma(ripeti('rosso', 'destra')))
+  controlla('🔁 fino al rosso (→) va avanti finché non arriva sulla lastra rossa',
+            r.esito === FINITA && dove(r).x === 3 && r.passi.length === 3, JSON.stringify(dove(r)))
+  controlla('e il giro si sa, ma senza totale', JSON.stringify(r.passi.map(p => p.giri[0][1])) === '[1,2,3]' &&
+            r.passi[0].giri[0][2] === 'rosso')
+  r = esegui(L(['r..r.@', 'P.....']), ['su', ...programma(ripeti('rosso', 'destra'))])
+  controlla('almeno un giro sempre: chi parte dal rosso va al rosso dopo',
+            dove(r).x === 3 && r.passi.length === 4, JSON.stringify(dove(r)))
+  r = esegui(L(['P..r.@', 'c.....']), programma(ripeti('rosso', 'destra', 'destra')))
+  controlla('guarda alla fine del giro, non a metà: due passi per giro scavalcano il rosso',
+            r.esito === TANA && r.passi.length === 5, `${r.esito} dopo ${r.passi.length} passi`)
+  r = esegui(L(['P....A', 'c...@.']), programma(ripeti('rosso', 'destra')))
+  uguale('senza il rosso davanti si va finché si sbatte', r.esito, SBATTE)
+  r = esegui(L(['P.....', 'c....@']), programma('giu', ripeti('casa', 'destra')))
+  uguale('🔁 fino a casa (→) arriva a casa', r.esito, TANA)
+
+  /* il «se»: si guarda una volta, e si fa o si salta */
+  r = esegui(L(['Pr..@', 'c....']), programma('destra', se('rosso', 'destra'), 'destra'))
+  controlla('❓ sul rosso: fa quello che ha dentro', r.esito === FINITA && dove(r).x === 3, JSON.stringify(dove(r)))
+  r = esegui(L(['Pu..@', 'c....']), programma('destra', se('rosso', 'giu'), 'destra'))
+  controlla('❓ non sul rosso: lo salta', r.esito === FINITA && dove(r).x === 2 && dove(r).y === 0,
+            JSON.stringify(dove(r)))
+  r = esegui(L(['Pur.@', 'c....']), programma('destra', ripeti('casa', se('blu', 'destra'), se('rosso', 'destra', 'destra'))))
+  uguale('il coniglio legge le lastre una per una, fino a casa', r.esito, TANA)
+  r = esegui(L(['P...@', 'c....']), programma(ripeti('casa', se('rosso', 'destra'))))
+  controlla('un giro che non muove il coniglio non lo muoverà mai: la fila si ferma',
+            r.esito === STANCO && r.passi.length === 0, r.esito)
+
+  /* le teste nuove si scrivono, si leggono e si scelgono */
+  controlla('le teste che non esistono sono un guasto',
+            guastiDellaFila([apriSe(5), 'destra', FINE]).length > 0 &&
+            guastiDellaFila([apri('verde'), 'destra', FINE]).length > 0 &&
+            guastiDellaFila(programma(ripeti('casa', se('giallo', 'su')))).length === 0)
+  const m = mettiScatola(['destra'], 1, apriSe(null))
+  controlla('❓ nasce da scegliere, come il 🔁', m.fila.join(' ') === 'destra se-N fine' && daScegliere(m.fila)[0] === 1)
+  uguale('e il colore si sceglie', scegliTesta(m.fila, 1, 'blu').join(' '), 'destra se-blu fine')
+  uguale('come il fino a di un 🔁', scegliTesta(['ripeti-N', 'destra', FINE], 0, 'rosso').join(' '), 'ripeti-rosso destra fine')
+}
+
 /* ══════════ 3. la campagna si vince, e ogni gradino insegna la sua regola ══════════ */
 nota('tappa                        mosse  senza carota  la regola')
 for (const [i, t] of CAMPAGNA.entries()) {
@@ -303,7 +356,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const r = esegui(liv, m.conCarota)
   controlla(`${qui}: la strada del risolutore, giocata, vince con la carota`,
             r.esito === TANA && r.carota, `${r.esito} in ${inFrecce(m.conCarota)}`)
-  uguale(`${qui}: e senza aiuti vale tre stelle`, stelleDellaVittoria({ carota: r.carota, aiutato: false }), 3)
+  uguale(`${qui}: e trovata da soli vale tre stelle`, stelleDellaVittoria({ carota: r.carota, svelato: false }), 3)
   controlla(`${qui}: si vince anche senza la carota, e non più lunga`,
             !!m.senzaCarota && m.corta <= m.lunga)
   if (s.carta) {
@@ -396,10 +449,10 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const viale = Livello.da(CAMPAGNA[TAPPE_PICCOLE])
   let z = suggerisci(viale, [])
   controlla('a fila vuota, nel viale, l\'aiuto dice: qui ci va un 🔁 da cinque',
-            z && z.che === 'ciclo' && z.volte === 5 && z.cursore === 0, JSON.stringify(z))
+            z && z.che === 'scatola' && z.testa === 'ripeti-5' && z.cursore === 0, JSON.stringify(z))
   z = suggerisci(viale, programma(ripeti(4, 'destra')))
   controlla('con la scatola da quattro, dice di cambiarne il numero',
-            z && z.che === 'volte' && z.apri === 0 && z.volte === 5, JSON.stringify(z))
+            z && z.che === 'testa' && z.apri === 0 && z.valore === 5, JSON.stringify(z))
   z = suggerisci(viale, programma(ripeti(5, 'destra', 'destra')))
   controlla('con una freccia di troppo nella scatola, dice di toglierla',
             z && z.che === 'togli' && z.cursore === 3, JSON.stringify(z))
@@ -407,9 +460,17 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('con la scatola giusta, la freccia che manca, fuori dalla scatola',
             z && z.che === 'mossa' && z.mossa === 'giu' && z.cursore === 3, JSON.stringify(z))
   uguale('e a fila giusta, ▶', suggerisci(viale, CAMPAGNA[TAPPE_PICCOLE].soluzioni[0]).che, 'via')
+  /* e coi colori: nei gradini storti la seconda scatola va «fino al rosso» */
+  const storti = Livello.da(CAMPAGNA.find(t => t.chiave === 'gradini-storti'))
+  z = suggerisci(storti, programma(ripeti(3)))
+  controlla('dentro la scatola, l\'aiuto consiglia una scatola «fino al rosso»',
+            z && z.che === 'scatola' && z.testa === 'ripeti-rosso' && z.cursore === 1, JSON.stringify(z))
+  z = suggerisci(storti, programma(ripeti(3, ripeti(2, 'destra'), 'giu')))
+  controlla('e una scatola da due, lì, la fa diventare «fino al rosso»',
+            z && z.che === 'testa' && z.apri === 1 && z.valore === 'rosso', JSON.stringify(z))
   z = suggerisci(viale, [apri(null), 'destra', FINE])
   controlla('una N lasciata vuota: l\'aiuto dice quale numero',
-            z && z.che === 'volte' && z.volte === 5, JSON.stringify(z))
+            z && z.che === 'testa' && z.valore === 5, JSON.stringify(z))
 
   /* un aiuto a metà di una fila sbagliata: il cursore va dove la fila
      smette di andare bene, non in fondo */

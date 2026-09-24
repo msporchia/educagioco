@@ -31,6 +31,11 @@
   --pp-ciclo-scuro: #5f3b9e;
   --pp-ciclo-fondo: #f1eafd;
   --pp-ciclo-dentro: #e3d6fa;
+  /* e il se il suo: una scatola che si fa una volta o niente non deve
+     sembrare una che si ripete */
+  --pp-se: #17998a;
+  --pp-se-scuro: #0f6a5f;
+  --pp-se-fondo: #e0f5f1;
   --pp-tessera: 40px;
   --pp-spazio: 6px;
 
@@ -87,8 +92,25 @@
             padding: 4px 12px calc(10px + env(safe-area-inset-bottom)) }
 /* la mappa prende quello che resta, e la tela ci si adatta a
    ingrandimenti interi: il riquadro non dipende da lei, lei da lui */
-.pp-scena { flex: 1 1 0; min-height: 120px; overflow: hidden;
+.pp-scena { flex: 1 1 0; min-height: 120px; overflow: hidden; position: relative;
             display: flex; align-items: center; justify-content: center }
+/* la frase di un gradino del 💡: in cima alla mappa, e non sposta
+   niente — se entrasse fra la mappa e la fila, la tela cambierebbe
+   misura. In cima perché lì c'è quasi sempre aria (la plancia sta al
+   centro, e sopra ha il cielo delle orecchie): in fondo copriva l'ultima
+   riga, cioè spesso la tana o la carota di cui la frase parlava. Si
+   chiude toccandola; quella che fa pensare ha il verde dei gradini
+   gratis */
+.pp-pensiero { position: absolute; left: 6px; right: 6px; top: 6px; z-index: 2;
+               display: flex; align-items: flex-start; gap: 8px; text-align: left;
+               padding: 8px 10px; border-radius: 14px; background: rgba(255,255,255,.94);
+               box-shadow: 0 3px 10px rgba(0,0,0,.18); border-left: 5px solid var(--pp-luce);
+               font-size: 14px; font-weight: 700; line-height: 1.35; color: #3b3a4a;
+               animation: pp-pensiero .22s ease-out }
+.pp-pensiero .pp-em { flex: none; font-size: 20px; line-height: 1.1 }
+.pp-pensiero-pensa, .pp-pensiero-dove { border-left-color: #3aa76d }
+.pp-pensiero-pezzo, .pp-pensiero-svela { border-left-color: #8a63d2 }
+@keyframes pp-pensiero { from { opacity: 0; transform: translateY(-6px) } }
 .pp-tela { display: block; flex: none; image-rendering: pixelated; image-rendering: crisp-edges }
 
 /* ═══════════ la fila ═══════════ */
@@ -101,16 +123,21 @@
            gap: var(--pp-spazio); padding: 7px 8px;
            background: var(--pp-carta); border-radius: 16px;
            box-shadow: inset 0 2px 6px rgba(0,0,0,.08), 0 1px 0 #fff }
-/* il coniglio sta nella sua colonna, e il programma va a capo accanto */
+/* il programma va a capo dentro la fila */
 .pp-programma { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-content: flex-start;
                 align-items: center; gap: var(--pp-spazio) }
 /* con lo zaino una riga può essere una scatola dentro una scatola, e il
    bordo di ognuna la fa più alta di una tessera: due righe così devono
    stare intere, se no il programma giusto scorre di tre pixel */
 .pp-fila.pp-con-zaino { height: calc(2 * var(--pp-tessera) + var(--pp-spazio) + 38px) }
-.pp-inizio { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 50%;
-             background: #eef4e6; display: grid; place-items: center; font-size: 22px;
-             box-shadow: inset 0 0 0 2px var(--pp-bordo) }
+/* e le tessere un poco più piccole, come sugli schermi bassi: un «se»
+   dentro un «ripeti» sono tre scatole in fila, e a quaranta pixel non
+   stavano su due righe */
+.pp-fila.pp-con-zaino { --pp-tessera: 34px; --pp-spazio: 5px }
+.pp-con-zaino .pp-tessera .pp-icona { width: 22px; height: 22px }
+.pp-con-zaino .pp-coda { width: 12px }
+.pp-con-zaino .pp-testa b { font-size: 15px }
+.pp-con-zaino .pp-testa .pp-lastra { width: 15px; height: 15px }
 .pp-tessera { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
               background: var(--pp-passo); color: #fff; display: grid; place-items: center;
               box-shadow: 0 2px 0 var(--pp-passo-scuro); transition: transform .12s, opacity .2s }
@@ -123,11 +150,16 @@
 .pp-tessera.pp-guasto { box-shadow: 0 0 0 3px #ff8a00; animation: pp-guasto .45s ease-in-out 5 }
 @keyframes pp-guasto { 50% { transform: scale(1.18) rotate(-6deg); box-shadow: 0 0 0 5px #ffb020 } }
 .pp-tessera.pp-sospetta { opacity: .4 }
-.pp-in-corsa .pp-inizio { opacity: .6 }
 
-/* il cursore: dove entra la freccia nuova */
-.pp-cursore { width: 5px; height: calc(var(--pp-tessera) + 4px); flex: none; margin: 0 -2px;
-              border-radius: 3px; background: #ff8a00; animation: pp-cursore 1.1s steps(2, jump-none) infinite }
+/* il cursore: dove entra la freccia nuova. Largo zero per la fila — la
+   sbarra si disegna nello spazio fra due tessere — perché una sbarretta
+   di cinque pixel che va a capo da sola, dopo una scatola larga quanto la
+   riga, si prendeva una riga intera e faceva scorrere la fila */
+.pp-cursore { width: 0; height: calc(var(--pp-tessera) + 4px); flex: none; position: relative;
+              margin-right: calc(-1 * var(--pp-spazio));
+              animation: pp-cursore 1.1s steps(2, jump-none) infinite }
+.pp-cursore::before { content: ''; position: absolute; top: 0; bottom: 0; width: 5px;
+                      left: calc(var(--pp-spazio) / -2 - 2.5px); border-radius: 3px; background: #ff8a00 }
 @keyframes pp-cursore { 0% { opacity: 1 } 100% { opacity: .25 } }
 .pp-posto { width: var(--pp-tessera); height: var(--pp-tessera); flex: none; border-radius: 10px;
             border: 2px dashed #c7d6b8; background: none; padding: 0 }
@@ -164,10 +196,29 @@
 .pp-coda::after { content: ''; position: absolute; inset: -4px -8px -4px -6px }
 .pp-in-corsa .pp-scatola { opacity: 1 }
 
+/* la scatola ❓: stessa forma, un altro colore */
+.pp-scatola.pp-se { background: var(--pp-se-fondo); box-shadow: inset 0 0 0 2px var(--pp-se) }
+.pp-scatola.pp-se > .pp-testa { background: var(--pp-se); box-shadow: 0 2px 0 var(--pp-se-scuro) }
+.pp-scatola.pp-se > .pp-testa.pp-gira { box-shadow: 0 0 0 3px var(--pp-luce), 0 3px 8px rgba(0,0,0,.25) }
+.pp-scatola.pp-se > .pp-coda { background: var(--pp-se) }
+.pp-testa .pp-lastra { width: 17px; height: 17px; margin-top: 1px }
+
+/* ── una lastra in piccolo: un quadratino chiaro con la forma del suo
+   colore. La forma c'è per chi i colori non li distingue ── */
+.pp-lastra { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none;
+             border-radius: 5px; background: #fffaf0; box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.25) }
+.pp-lastra i { display: block; width: 62%; height: 62% }
+.pp-lastra-rosso i { background: #e0483a; border-radius: 50% }
+.pp-lastra-blu i { background: #3a78de; width: 54%; height: 54%; border-radius: 1px }
+.pp-lastra-giallo i { background: #e0a810; clip-path: polygon(50% 4%, 98% 96%, 2% 96%) }
+.pp-lastra-casa { background: none; box-shadow: none; font-size: 16px }
+
 /* il consiglio di una scatola: il 🔁 col suo numero, in trasparenza */
 .pp-tessera.pp-fantasma.pp-fantasma-ciclo { color: var(--pp-ciclo); display: flex; flex-direction: column;
                                             align-items: center; justify-content: center; line-height: 1 }
 .pp-fantasma-ciclo .pp-ciclo-icona { font-size: 12px }
+.pp-tessera.pp-fantasma.pp-fantasma-se { color: var(--pp-se) }
+.pp-fantasma-ciclo .pp-lastra { width: 16px; height: 16px }
 .pp-fantasma-ciclo b { font-size: 17px; font-weight: 900 }
 
 /* ═══════════ le frecce e i tasti ═══════════ */
@@ -185,6 +236,8 @@
 .pp-tasto.pp-salto { height: 52px; background: var(--pp-salto); box-shadow: 0 4px 0 var(--pp-salto-scuro) }
 .pp-riga.pp-azioni { grid-template-columns: 1fr 2fr 1fr }
 .pp-riga.pp-carte { grid-template-columns: 1fr }
+.pp-riga.pp-carte.pp-due { grid-template-columns: 1fr 1fr }
+.pp-tasto.pp-tasto-se { background: var(--pp-se); box-shadow: 0 4px 0 var(--pp-se-scuro) }
 .pp-tasto.pp-ripeti { height: 52px; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
                       display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 24px }
 .pp-parola { font-size: 19px; font-weight: 800; letter-spacing: .02em }
@@ -193,6 +246,19 @@
                    background: var(--pp-carta); border-radius: 16px }
 .pp-tasto.pp-volte { height: auto; background: var(--pp-ciclo); box-shadow: 0 4px 0 var(--pp-ciclo-scuro);
                      font-size: 26px; font-weight: 900; color: #fff }
+/* numeri e colori insieme: i numeri stanno su una riga sola, i colori
+   (e la casa) sotto, larghi quanto serve */
+.pp-scelta-volte.pp-con-colori { grid-template-columns: repeat(24, 1fr) }
+.pp-scelta-volte.pp-con-colori .pp-volte { grid-column: span 3; font-size: 22px }
+.pp-scelta-volte.pp-con-colori .pp-colore { grid-column: span 6 }
+.pp-scelta-volte.pp-solo-colori { grid-template-columns: none; grid-template-rows: 1fr;
+                                  grid-auto-flow: column; grid-auto-columns: 1fr }
+.pp-tasto.pp-colore { display: flex; align-items: center; justify-content: center; gap: 6px }
+.pp-colore .pp-lastra { width: 30px; height: 30px }
+.pp-colore .pp-lastra-casa { font-size: 26px }
+.pp-fino { font-size: 13px; font-weight: 800; letter-spacing: .02em; opacity: .9 }
+/* nella scelta del se i tasti hanno il colore del se */
+.pp-scelta-volte.pp-scelta-se .pp-volte { background: var(--pp-se); box-shadow: 0 4px 0 var(--pp-se-scuro) }
 /* il numero che la scatola ha già: chi riapre la scelta lo ritrova */
 .pp-tasto.pp-volte.pp-ora { box-shadow: inset 0 0 0 3px #fff, 0 4px 0 var(--pp-ciclo-scuro) }
 .pp-scelta-volte.pp-scossa { animation: pp-scossa .42s ease-in-out }
@@ -201,11 +267,18 @@
 .pp-tasto.pp-ferma { background: #7d8a9c; box-shadow: 0 4px 0 #56616f; height: 60px }
 .pp-tasto.pp-cancella { background: #e7edf3; color: #5b6878; box-shadow: 0 4px 0 #c5cfda; height: 60px }
 .pp-tasto.pp-aiuto { background: #fff3cc; box-shadow: 0 4px 0 #e6cf86; height: 60px; font-size: 28px }
-/* il prezzo del 💡, detto prima: una stella col meno */
-.pp-costo { position: absolute; top: -7px; right: -5px; display: flex; align-items: center; gap: 1px;
+/* il prezzo del 💡, detto prima: una moneta col suo numero */
+.pp-costo { position: absolute; top: -8px; right: -6px; display: flex; align-items: center; gap: 2px;
             background: #fff; border-radius: 12px; padding: 2px 6px 2px 4px; font-size: 13px;
             box-shadow: 0 1px 3px rgba(0,0,0,.2) }
-.pp-costo b { color: #c2410c; font-size: 15px; line-height: 1 }
+.pp-costo b { color: #7a5a00; font-size: 14px; line-height: 1 }
+/* senza monete: spento, e al tocco scuote la testa */
+.pp-costo.pp-povero { background: #eceef2; opacity: .85 }
+.pp-costo.pp-povero b { color: #8a93a6 }
+.pp-costo.pp-scossa { animation: pp-scossa .42s ease-in-out }
+/* armato: il gradino caro aspetta il secondo tocco, e il bollino chiede */
+.pp-tasto.pp-aiuto.pp-armato { background: #ffe39a; box-shadow: 0 4px 0 #e0a800, 0 0 0 3px #e0a800 }
+.pp-costo .pp-chiede { color: #c2410c }
 
 /* l'aiuto accende una freccia: pulsa finché non la si tocca */
 .pp-brilla { animation: pp-brilla .9s ease-in-out infinite; z-index: 1 }
@@ -262,9 +335,6 @@
 @keyframes pp-stella { from { transform: scale(0) } 70% { transform: scale(1.25) } }
 .pp-una .pp-grande { font-size: 40px }
 .pp-una.pp-spenta { opacity: .3; filter: grayscale(1) }
-.pp-barrato { position: relative }
-.pp-barrato::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 3px;
-                     background: #c2410c; transform: rotate(-35deg); border-radius: 2px }
 .pp-frase { font-size: 16px; font-weight: 700; text-align: center }
 .pp-frase.pp-record { color: #c2410c }
 .pp-monete { font-size: 18px; font-weight: 800 }

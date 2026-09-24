@@ -10,8 +10,11 @@
      partire, e il cartello di fine arriva con le stelle giuste;
    · **uno sbaglio accende la tessera giusta** (`data-guasto`), e ⌫ la
      toglie;
-   · il 💡 accende una freccia, sul tasto e dentro la fila, e da lì non
-     costa più; e mentre il coniglio corre non si spegne, si prenota;
+   · il 💡 è una scala: due gradini gratis (fa ragionare, poi dice dove
+     si sbaglia), poi la carta giusta a 🪙10 — sul tasto e dentro la fila
+     — poi i pezzi di strada a 🪙50 · 100 · 200 con due tocchi, e la
+     strada intera spegne la terza stella; mentre il coniglio corre non
+     si spegne, si prenota;
    · ■ ferma tutto a metà, e la fila resta dov'è;
    · i salti ci sono solo dove servono;
    · lo zaino: il 🔁 c'è solo dai suoi gradini, la fila si riempie e poi
@@ -56,8 +59,9 @@ await semina(page, { settings: { eta: 6 } })
 uguale('senza «giochi in prova» la carta non c\'è',
        await page.locator('.carta.gioco[data-gioco="passo"]').count(), 0)
 
-/* ---------- 2. col flag si entra dalla home ---------- */
-await semina(page, { settings: { sperimentali: true, eta: 6 } })
+/* ---------- 2. col flag si entra dalla home ----------
+   Con delle monete in tasca: il 💡 si paga, e il test lo scende tutto */
+await semina(page, { settings: { sperimentali: true, eta: 6 }, coins: 2000 })
 const carta = page.locator('.carta.gioco[data-gioco="passo"]')
 uguale('con «giochi in prova» la carta è in home', await carta.count(), 1)
 await carta.click()
@@ -145,18 +149,35 @@ uguale('⌫ toglie una tessera', await page.locator('[data-tessera]').count(), 2
 controlla('e il segno del guasto se ne va con la fila che cambia',
           await page.locator('[data-guasto]').count() === 0)
 
-/* toccare una tessera sposta il cursore subito dopo di lei */
-await page.locator('[data-inizio]').click()
+/* toccare una tessera sposta il cursore subito dopo di lei, e toccarla
+   di nuovo subito prima: è così che si arriva all'inizio */
+await page.locator('[data-tessera="0"]').click()
+await page.locator('[data-tessera="0"]').click()
 await componi(['giu'])
 uguale('col cursore all\'inizio la freccia nuova entra in testa',
        await page.locator('[data-tessera="0"]').getAttribute('data-mossa'), 'giu')
 
-/* ---------- 6. il 💡 ---------- */
-controlla('il 💡 dice prima quanto costa', await page.locator('[data-costa]').count() === 1)
-await page.locator('[data-azione="suggerimento"]').click()
-await attendi(page, 200)
-controlla('l\'aiuto accende una freccia', await page.locator('.pp-brilla').count() === 1)
-controlla('e da lì non costa più', await page.locator('[data-costa]').count() === 0)
+/* ---------- 6. il 💡: una scala, e i primi due gradini sono gratis ---------- */
+const moneteQui = async () => (await leggiProfilo(page)).coins
+const suggerimento = async (ms = 200) => { await page.locator('[data-azione="suggerimento"]').click(); await attendi(page, ms) }
+const m0 = await moneteQui()
+uguale('il primo gradino del 💡 è gratis: nessun bollino', await page.locator('[data-costa]').count(), 0)
+await suggerimento()
+controlla('il primo tocco fa ragionare: una frase sopra la mappa, e niente di acceso',
+          await page.locator('[data-pensiero][data-che="pensa"]').count() === 1 &&
+          await page.locator('.pp-brilla, [data-consiglio]').count() === 0)
+await suggerimento()
+controlla('il secondo dice dove si sbaglia, e non quale carta',
+          await page.locator('[data-pensiero][data-che="dove"]').count() === 1 &&
+          await page.locator('[data-consiglio]').count() === 0)
+uguale('i due gradini gratis non spendono niente', await moneteQui(), m0)
+uguale('il terzo costa dieci, e il bollino lo dice prima',
+       await page.locator('[data-costa]').getAttribute('data-prezzo'), '10')
+await suggerimento()
+controlla('la carta da dieci accende una freccia', await page.locator('.pp-brilla').count() === 1)
+uguale('e costa dieci monete', await moneteQui(), m0 - 10)
+await suggerimento(150)
+uguale('ripremuto con la fila com\'era, la stessa carta si riaccende gratis', await moneteQui(), m0 - 10)
 await scatto(page, 'passo-aiuto')
 /* Il consiglio sta anche dentro la fila, dove andrà: l'anello attorno al
    tasto, da solo, non lo vedeva nessuno («ci premi e non fa nulla»).
@@ -171,9 +192,9 @@ await scatto(page, 'passo-aiuto')
   await page.locator('[data-consiglio]').click()
   uguale('toccata nella fila, la freccia ci entra', await page.locator('[data-tessera]').count(), prima + 1)
   controlla('e il consiglio se ne va', await page.locator('[data-consiglio], .pp-brilla').count() === 0)
-  await page.locator('[data-azione="suggerimento"]').click()
-  await attendi(page, 150)
+  await suggerimento(150)
   controlla('ripremuto, il 💡 risponde ancora', await page.locator('[data-consiglio], .pp-brilla').count() >= 1)
+  uguale('e la carta nuova si paga', await moneteQui(), m0 - 20)
 }
 
 /* ---------- 7. ■ ferma a metà, e la fila resta ---------- */
@@ -199,6 +220,35 @@ uguale('e la fila resta dov\'era', await page.locator('[data-tessera]').count(),
 controlla('niente tessera accesa', await page.locator('[data-corrente]').count() === 0)
 controlla('e l\'aiuto prenotato arriva', await page.locator('[data-in-coda]').count() === 0 &&
           await page.locator('.pp-brilla').count() === 1)
+
+/* ---------- 7b. i pezzi di strada: due tocchi, e la terza stella ----------
+   Finite le tre carte, il 💡 scrive la strada nella fila: un pezzo a
+   cinquanta, un altro a cento, tutta a duecento. Il primo tocco arma e
+   non spende; la strada intera vince, ma la stella «l'hai trovata tu»
+   resta spenta. */
+{
+  uguale('dopo tre carte il gradino costa cinquanta',
+         await page.locator('[data-costa]').getAttribute('data-prezzo'), '50')
+  const prima = await moneteQui()
+  await suggerimento(150)
+  controlla('il primo tocco arma il 💡 e non spende',
+            await page.locator('[data-armato]').count() === 1 && await moneteQui() === prima)
+  await suggerimento()
+  controlla('il secondo scrive un pezzo di strada',
+            await page.locator('[data-pensiero][data-che="pezzo"]').count() === 1 &&
+            await moneteQui() === prima - 50)
+  await suggerimento(150); await suggerimento()
+  uguale('il secondo pezzo costa cento', await moneteQui(), prima - 150)
+  await suggerimento(150); await suggerimento()
+  controlla('e tutta la strada duecento',
+            await page.locator('[data-pensiero][data-che="svela"]').count() === 1 &&
+            await moneteQui() === prima - 350, `${await moneteQui()} su ${prima}`)
+  await page.locator('[data-azione="via"]').click()
+  await page.waitForSelector('[data-fine="tappa"]', { timeout: 12000 })
+  controlla('la strada scritta dal gioco vince, e la stella «l\'hai trovata tu» resta spenta',
+            await page.locator('[data-stella-pensata].pp-spenta').count() === 1)
+  await scatto(page, 'passo-strada-svelata')
+}
 
 /* ---------- 8. i salti ci sono solo dove servono ---------- */
 await allaMappa()
@@ -271,18 +321,22 @@ await attendi(page, 450)
 controlla('il sentiero ha una mappa', (await page.locator('.pp-tela').boundingBox()).width > 100)
 await scatto(page, 'passo-sentiero')
 /* Il sentiero è fatto a caso: la soluzione il test non la sa. La sa il
-   💡 — e seguire solo lui deve bastare ad arrivare a casa: si tocca il
-   💡, si tocca la freccia che brilla, finché non brilla ▶. */
+   💡 — e scendere solo lui deve bastare ad arrivare a casa: si tocca il
+   💡, si tocca quello che brilla (e un gradino caro si conferma col
+   secondo tocco), finché non brilla ▶. È la scala intera, pagata. */
 {
   let giri = 0
-  for (; giri < 30; giri++) {
+  for (; giri < 40; giri++) {
     await page.locator('[data-azione="suggerimento"]').click()
     await attendi(page, 80)
     if (await page.locator('[data-azione="via"].pp-brilla').count()) break
-    await page.locator('.pp-brilla').first().click()
-    await attendi(page, 60)
+    if (await page.locator('[data-armato]').count()) continue
+    if (await page.locator('.pp-brilla').count()) {
+      await page.locator('.pp-brilla').first().click()
+      await attendi(page, 60)
+    }
   }
-  controlla('seguendo il 💡 la fila si compone', giri < 30, `${giri} giri`)
+  controlla('scendendo il 💡 la fila si compone', giri < 40, `${giri} giri`)
   await page.locator('[data-azione="via"]').click()
   await page.waitForSelector('[data-fine="sentiero"]', { timeout: 20000 })
   controlla('il sentiero si vince seguendo gli aiuti', true)
@@ -365,6 +419,9 @@ await page.locator('[data-azione="cancella"]').click()
 await page.locator('[data-coda]').click()
 await page.locator('[data-azione="cancella"]').click()
 uguale('⌫ dopo la scatola la toglie intera', await page.locator('[data-scatola]').count(), 0)
+/* i due gradini gratis, poi la carta */
+await page.locator('[data-azione="suggerimento"]').click()
+await page.locator('[data-azione="suggerimento"]').click()
 await page.locator('[data-azione="suggerimento"]').click()
 await attendi(page, 150)
 controlla('il 💡 consiglia una scatola, e il 🔁 brilla',
@@ -387,6 +444,75 @@ controlla('a sei anni la prima tappa dello zaino è chiusa',
 controlla('e il sentiero senza fine, alla fine delle tappe dei piccoli, è aperto',
           await page.locator('[data-tappa="senza-fine"]').isEnabled())
 await scatto(page, 'passo-zaino-chiuso')
+
+/* ---------- 14. il «fino a» e il «se», col dito ---------- */
+/* compone un programma qualunque come lo compone un bambino: le frecce
+   coi loro tasti, una scatola col suo tasto e la sua testa nella scelta,
+   e la fine di una scatola toccandone il bordo */
+async function scrivi(programma) {
+  let cursore = 0
+  for (const t of programma) {
+    if (t === 'fine') await page.locator(`[data-coda="${cursore}"]`).click()
+    else if (t.startsWith('ripeti-') || t.startsWith('se-')) {
+      await page.locator(t.startsWith('se-') ? '[data-carta="se"]' : '[data-carta="ripeti"]').click()
+      await page.locator(`[data-volte-scegli="${t.slice(t.indexOf('-') + 1)}"]`).click()
+    } else await page.locator(tasto(t)).click()
+    cursore++
+    await attendi(page, 50)
+  }
+}
+async function vinci(chiave) {
+  const t = CAMPAGNA.find(x => x.chiave === chiave)
+  await scrivi(t.soluzioni[0])
+  await page.locator('[data-azione="via"]').click()
+  await page.waitForSelector('[data-fine="tappa"]', { timeout: 40000 })
+  return page.locator('[data-stelle-prese]').getAttribute('data-quante')
+}
+await semina(page, { settings: { sperimentali: true, eta: 10, tuttoAperto: true },
+                     campagne: { passo: { tappa: CAMPAGNA.length - 1, stelle: {}, cfg: {} } } })
+await page.locator('.carta.gioco[data-gioco="passo"]').click()
+await page.waitForSelector('.pp-mappa')
+await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'gradini-storti'))
+controlla('nel «fino a» c\'è il 🔁 e non ancora il ❓',
+          await page.locator('[data-carta="ripeti"]').count() === 1 && await page.locator('[data-carta="se"]').count() === 0)
+await page.locator('[data-carta="ripeti"]').click()
+controlla('la scelta della testa offre i numeri e il colore della mappa',
+          await page.locator('[data-volte-scegli="3"]').count() === 1 &&
+          await page.locator('[data-volte-scegli="rosso"]').count() === 1 &&
+          await page.locator('[data-volte-scegli="blu"], [data-volte-scegli="casa"]').count() === 0)
+await scatto(page, 'passo-fino-scelta')
+await page.locator('[data-azione="cancella"]').click()
+uguale('i gradini storti si fanno col «fino al rosso»', await vinci('gradini-storti'), '3')
+await attendi(page, 500)
+await page.locator('[data-azione="mappa"]').click()
+await page.waitForSelector('.pp-mappa')
+
+await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'segni'))
+uguale('nel «se» c\'è anche il ❓', await page.locator('[data-carta="se"]').count(), 1)
+await page.locator('[data-carta="se"]').click()
+controlla('la scelta del ❓ offre solo i colori, tutti e tre',
+          await page.locator('[data-volte-scegli="3"]').count() === 0 &&
+          await page.locator('[data-volte-scegli="rosso"], [data-volte-scegli="blu"], [data-volte-scegli="giallo"]').count() === 3)
+await page.locator('[data-azione="cancella"]').click()
+uguale('il sentiero dei segni si fa leggendo le lastre', await vinci('segni'), '3')
+await scatto(page, 'passo-se')
+await attendi(page, 500)
+await page.locator('[data-azione="mappa"]').click()
+await page.waitForSelector('.pp-mappa')
+
+/* la mappa più grande di tutte, nove per undici, sta nello schermo */
+await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'bosco-ghiacciato'))
+{
+  const tela = await page.locator('.pp-tela').boundingBox()
+  const sotto = await page.locator('[data-azione="via"]').boundingBox()
+  controlla('la mappa nove per undici sta intera in larghezza', tela.x >= 0 && tela.x + tela.width <= TELEFONO.width,
+            JSON.stringify(tela))
+  controlla('e i tasti sono tutti sullo schermo', sotto.y + sotto.height <= TELEFONO.height, JSON.stringify(sotto))
+  const cella = tela.width / 9
+  dentro('una cella resta grande abbastanza da vedere il coniglio', Math.round(cella), 26, 60)
+  nota(`mappa 9×11: ${Math.round(tela.width)}×${Math.round(tela.height)} px, cella ${cella.toFixed(1)} px`)
+}
+uguale('il bosco ghiacciato si fa leggendo i segnali sul ghiaccio', await vinci('bosco-ghiacciato'), '3')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()
