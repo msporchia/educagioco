@@ -90,6 +90,7 @@ export const PERCHE = {
   pila: () => `Troppi progetti uno dentro l'altro (più di ${TETTO_PILA}): forse un progetto chiama sé stesso senza fermarsi mai?`,
   'a-vuoto': () => 'Il robot gira a vuoto: ripete e ripete senza fare niente, e il tempo non passa. Forse manca un «aspetta che»?',
   'confronto-colori': () => 'Due colori si confrontano solo con «è uguale a»: uno non è più grande dell\'altro.',
+  'diviso-zero': () => 'Diviso zero non si può fare: in zero parti uguali non si divide niente.',
   'niente-tempo': () => 'Qui non c\'è niente da aspettare: questo cantiere non ha un orologio.',
   /* ── il porto ── */
   'porto-fuori': () => 'Il robot non può uscire dal porto.',
@@ -116,6 +117,11 @@ export const PERCHE = {
   'porto-strada': () => 'Lì passano i camion: il robot resta sul marciapiede.',
   'niente-camion': () => 'Lì non c\'è nessun camion da caricare: prima aspetta che arrivi.',
   'numero-sbagliato': d => `${maiuscola(d.nome)} prende solo le lettere per il ${d.numero}: ${d.dato}.`,
+  'solo-forme': () => 'Sulla pila ci vanno solo le forme di formaggio.',
+  schiaccia: d => `Una forma grande sopra una più piccola la schiaccia: sulla pila c'è la ${d.sotto}, e la ${d.sopra} è più grande.`,
+  'tentativi-finiti': d => `Il cliente ha guardato ${d.tentativi} lettere e nessuna era la sua: se n'è andato arrabbiato. Voleva il ${d.chiede}.`,
+  'richiesta-segreta': () => 'Il cliente non dice quale lettera vuole: dagliene una, e ti dirà «di più!» o «di meno!».',
+  'richiesta-qualita': d => `Il cliente non chiede un numero: vuole ${d.chiede}. Quale sia, lo devi scoprire tu.`,
   'camion-vuoto': d => `Il camion ha aspettato troppo ed è ripartito ${d.dentro === 0 ? 'vuoto' : `con ${d.dentro === 1 ? 'una cassa sola' : `${d.dentro} casse`}`}: ne voleva ${d.vuole}.`,
 }
 
@@ -342,6 +348,11 @@ export class Esecuzione {
       if (e.op === '+') return a + b
       if (e.op === '-') return a - b
       if (e.op === '×') return a * b
+      /* il diviso della scuola: senza virgola, e il resto si lascia */
+      if (e.op === '÷') {
+        if (b === 0) throw new Inciampo('diviso-zero', id)
+        return Math.trunc(a / b)
+      }
     }
     throw new Inciampo('numero-mancante', id)
   }

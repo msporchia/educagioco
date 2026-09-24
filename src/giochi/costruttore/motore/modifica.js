@@ -348,12 +348,14 @@ export function problemi(prog, lavagnetteOrdine = {}) {
         ? (((prog.progetti || []).find(q => q.id === i.progetto) || {}).misure || []) : []
       const argNumeri = (i.argomenti || []).filter((_, k) => tipiChiamato[misureChiamato[k]] !== 'colore')
       const argColori = (i.argomenti || []).filter((_, k) => tipiChiamato[misureChiamato[k]] === 'colore')
-      const letti = [
-        ...nomi(i.quanto), ...nomi(i.volte), ...nomi(i.valore),
-        ...argNumeri.flatMap(nomi),
-        ...(i.cond && i.cond.tipo === 'confronta' ? [...nomi(i.cond.a), ...nomi(i.cond.b)] : []),
-      ]
+      const letti = [...nomi(i.quanto), ...nomi(i.volte), ...nomi(i.valore), ...argNumeri.flatMap(nomi)]
       controlla(letti, numeri, colori, 'non-un-numero', i.id)
+      /* in un confronto «è uguale a» ci stanno anche due colori («da è
+         uguale a rosso», dentro «sposta»); minore e maggiore vogliono numeri */
+      if (i.cond && i.cond.tipo === 'confronta') {
+        const confrontati = [...nomi(i.cond.a), ...nomi(i.cond.b)]
+        controlla(confrontati, i.cond.cmp === '=' ? new Set([...numeri, ...colori]) : numeri, colori, 'non-un-numero', i.id)
+      }
       const lettiColori = [...(i.tipo === 'metti' ? nomi(i.colore) : []), ...argColori.flatMap(nomi),
                            ...(i.cond && i.cond.tipo === 'guarda' ? nomi(i.cond.colore) : [])]
       controlla(lettiColori, colori, numeri, 'non-un-colore', i.id)

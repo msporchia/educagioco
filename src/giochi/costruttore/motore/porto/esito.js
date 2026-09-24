@@ -22,7 +22,12 @@
      inOrdine    { y, da, a } — sulla riga `y`, dalla casella `da` alla
                  `a`, una lettera per casella e i numeri che non scendono
                  mai: le lettere del postino messe in fila. Non dice come
-                 ci si arriva, e un altro modo di ordinarle vince lo stesso
+                 ci si arriva, e un altro modo di ordinarle vince lo stesso.
+                 Con `colori: ['verde', 'bianco', 'rosso']` guarda casse
+                 invece di lettere, e l'ordine è quello dell'elenco (il
+                 tricolore). Con `cassone: 'p'` invece della riga guarda
+                 dentro un cassone, dal fondo alla cima: il sacco del
+                 postino riempito in ordine
 
    Quello che va storto **durante** la giornata — una cassa in mare, un
    cliente arrabbiato, una cassa del colore sbagliato — non arriva fin
@@ -97,26 +102,45 @@ export function esitoDelPorto(porto) {
       ? `Nessun camion è ripartito pieno: ne sono arrivati ${cm.totale}.`
       : `Sono ripartiti pieni ${cm.partiti} camion su ${cm.totale}.`)
 
-  /* le lettere in fila, dalla più piccola alla più grande */
-  if (obiettivo.inOrdine) {
-    const { y, da, a } = obiettivo.inOrdine
-    const numeri = []
-    for (let x = da; x <= a; x++) {
-      const cima = porto.cimaDi(porto.k(x, y))
-      numeri.push(cima && cima.tipo === 'biglietto' ? cima.numero : null)
-    }
-    const vuote = numeri.filter(n => n == null).length
-    if (vuote) frasi.push(vuote === 1 ? 'Sullo scaffale manca una lettera: è rimasta da qualche altra parte.'
-      : `Sullo scaffale mancano ${vuote} lettere: sono rimaste da qualche altra parte.`)
-    else {
-      const k = numeri.findIndex((n, i) => i > 0 && n < numeri[i - 1])
-      if (k > 0) frasi.push(`Le lettere non sono in ordine: il ${numeri[k - 1]} viene prima del ${numeri[k]}.`)
-    }
-  }
+  /* le lettere in fila, dalla più piccola alla più grande (o le casse,
+     nell'ordine dei loro colori) */
+  if (obiettivo.inOrdine) frasi.push(...inOrdine(porto, obiettivo.inOrdine))
 
   /* a sera le mani sono vuote: una cassa in mano non è consegnata */
   if (porto.mano && obiettivo.mani !== false)
     frasi.push(`Il robot ha ancora in mano ${porto.mano.tipo === 'cassa' ? 'una cassa' : 'un biglietto'}: non è arrivata da nessuna parte.`)
 
   return { vinto: frasi.length === 0, frasi, mancano, sbagliati }
+}
+
+/* In ordine: una riga dello scaffale, o la pila di un cassone dal fondo
+   alla cima. Con `colori` le cose sono casse, e il loro posto in fila è
+   quello del colore nell'elenco; senza, sono lettere col loro numero. */
+function inOrdine(porto, { y, da, a, cassone = null, colori = null }) {
+  const frasi = []
+  const cose = []
+  if (cassone != null) {
+    const k = porto.cassone(cassone)
+    if (k < 0) return [`Il cassone «${cassone}» non c'è.`]
+    cose.push(...porto.pile[k])
+  } else {
+    for (let x = da; x <= a; x++) cose.push(porto.cimaDi(porto.k(x, y)))
+  }
+  const giuste = c => (colori ? c && c.tipo === 'cassa' && colori.includes(c.colore) : c && c.tipo === 'biglietto')
+  const vuote = cose.filter(c => !giuste(c)).length
+  const nome = colori ? ['cassa', 'casse'] : ['lettera', 'lettere']
+  if (cassone == null && vuote) {
+    frasi.push(vuote === 1 ? `Sullo scaffale manca una ${nome[0]}: è rimasta da qualche altra parte.`
+      : `Sullo scaffale mancano ${vuote} ${nome[1]}: sono rimaste da qualche altra parte.`)
+    return frasi
+  }
+  const posto = c => (colori ? colori.indexOf(c.colore) : c.numero)
+  const fila = cose.filter(giuste)
+  const k = fila.findIndex((c, i) => i > 0 && posto(c) < posto(fila[i - 1]))
+  if (k > 0) {
+    const di = c => (colori ? `una ${coloreAlFemminile(c.colore)}` : `il ${c.numero}`)
+    const dove = cassone != null ? 'Nel sacco le lettere non sono in ordine, dal fondo in su' : `Le ${nome[1]} non sono in ordine`
+    frasi.push(`${dove}: ${di(fila[k - 1])} viene prima ${colori ? 'di' : 'del'} ${colori ? di(fila[k]) : fila[k].numero}.`)
+  }
+  return frasi
 }

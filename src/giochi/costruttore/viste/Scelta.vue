@@ -11,7 +11,7 @@
      colore       i quadratini dei colori del livello
      numero       un numero, o una lavagnetta, o un conto con una sola
                   operazione («h + 1»): le cifre da 0 a 10 e un ± per
-                  andare oltre, i nomi da toccare, e i tre segni
+                  andare oltre, i nomi da toccare, e i quattro segni
      cond         «[sotto] c'è [il vuoto]», oppure «[h] è minore di [5]»
      lavagnetta   quale lavagnetta scrivere (o una nuova)
      lato         nel porto: da che parte prendere o posare, le quattro frecce
@@ -76,7 +76,8 @@ function conto(op) {
   else {
     /* dalla N si parte scegliendo il primo pezzo, da un numero il secondo */
     const primo = expr.value.vuoto
-    expr.value = { op, a: expr.value, b: { n: op === '×' ? 2 : 1 } }
+    /* per e diviso partono da 2 (il doppio, la metà), più e meno da 1 */
+    expr.value = { op, a: expr.value, b: { n: op === '×' || op === '÷' ? 2 : 1 } }
     lato.value = primo ? 'a' : 'b'
   }
   emit('scegli', copia(expr.value))

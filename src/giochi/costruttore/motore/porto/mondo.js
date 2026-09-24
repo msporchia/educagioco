@@ -49,7 +49,18 @@
        pieni**; un camion che aspetta troppo riparte mezzo vuoto, e la
        giornata è persa. Sulla strada il robot non ci va;
      · un cassone con un `numero` è una buca delle lettere: prende solo
-       i biglietti con quel numero.
+       i biglietti con quel numero;
+     · una **pila** (`figura: 'pila'`) tiene le forme di formaggio una
+       sull'altra, e una forma grande sopra una più piccola la schiaccia:
+       ci si posa solo una forma più piccola di quella in cima. È la torre
+       di Hanoi, e la regola è tutta qui;
+     · un cliente può chiedere **una qualità** invece di una cosa
+       (`massimo`, `minimo`: «la lettera più grande che c'è»): allora non
+       si legge cosa vuole, lo si capisce guardando le lettere;
+     · e un cliente che **fa indovinare** (`clienti.indovina`) non dice
+       quale lettera vuole: a ogni lettera sbagliata la rimette sul
+       bancone e dice solo «di più!» o «di meno!», e dopo `tentativi`
+       lettere sbagliate se ne va arrabbiato.
 
    ── LA GIORNATA ──────────────────────────────────────────────────
    Finisce quando l'orologio arriva a `durata`, oppure quando il robot
@@ -98,12 +109,21 @@ export function nel(nome) {
   return `in ${nome}`
 }
 
+/* le qualità che un cliente può chiedere al posto di una cosa */
+export const QUALITA = {
+  massimo: 'la lettera più grande che c\'è',
+  minimo: 'la lettera più piccola che c\'è',
+}
+export const eQualita = chiede => typeof chiede === 'string' && Object.prototype.hasOwnProperty.call(QUALITA, chiede)
+
 export function cosaInParole(x) {
   if (x === null || x === undefined) return 'niente'
+  if (eQualita(x)) return QUALITA[x]
   if (typeof x === 'string') return `una cassa ${coloreAlFemminile(x)}`
   if (typeof x === 'number') return `il numero ${x}`
   if (x.tipo === 'cassa') return `una cassa ${coloreAlFemminile(x.colore)}`
   if (x.tipo === 'biglietto') return `un biglietto col ${x.numero}`
+  if (x.tipo === 'forma') return `la forma ${x.numero === 1 ? 'più piccola' : `grande ${x.numero}`}`
   return 'qualcosa'
 }
 
@@ -111,10 +131,8 @@ export function cosaInParole(x) {
    un biglietto */
 export const valoreDi = cosa => (cosa.tipo === 'cassa' ? cosa.colore : cosa.numero)
 
-/* quello che il cliente voleva è quello che ha ricevuto? */
-const combacia = (cosa, chiede) =>
-  typeof chiede === 'string' ? cosa.tipo === 'cassa' && cosa.colore === chiede
-    : cosa.tipo === 'biglietto' && cosa.numero === chiede
+/* le forme di una pila, dal basso: la più grande sotto, fino alla 1 */
+const formeDa = n => Array.from({ length: n }, (_, i) => ({ tipo: 'forma', numero: n - i }))
 
 export class Porto {
   /* Un ordine (una giornata) diventa un porto: la mappa a coppie di
@@ -145,6 +163,13 @@ export class Porto {
             a.colore = spec.colore || null
             a.figura = spec.figura || 'cassone'
             a.numero = spec.numero ?? null
+            /* la pila delle forme: il suo colore è il nome del posto
+               («la pila rossa»), non un colore che filtra quello che
+               prende — per questo sta in `tinta` e non in `colore` */
+            if (a.figura === 'pila') {
+              a.tinta = spec.tinta || null
+              for (const f of formeDa(spec.forme || 0)) p.pile[k].push(p.nuovaCosa(f))
+            }
             for (const l of spec.dentro || '') {
               const cosa = cosaDaLettera(l)
               if (!cosa) throw new Error(`porto: nel cassone «${a.id}» la lettera «${l}» non è una cassa né un biglietto`)
@@ -179,7 +204,11 @@ export class Porto {
       if (!p.arredi('bancone').length) throw new Error('porto: ci sono i clienti ma non c\'è il bancone (B)')
       const fila = (ordine.clienti.fila || []).map(([arriva, chiede], n) => ({ id: n + 1, arriva, chiede }))
       p.clienti = { fila, alBancone: null, pazienza: ordine.clienti.pazienza || 120,
-                    serviti: 0, arrabbiati: 0, totale: fila.length }
+                    serviti: 0, arrabbiati: 0, totale: fila.length,
+                    /* chi fa indovinare, e quante lettere sbagliate sopporta */
+                    indovina: !!ordine.clienti.indovina, tentativi: ordine.clienti.tentativi || 4 }
+      if (p.clienti.indovina && fila.some(f => typeof f.chiede !== 'number'))
+        throw new Error('porto: chi fa indovinare pensa a una lettera, cioè a un numero')
     }
     /* i camion: `fila` è [[arriva, vuole, colore?], …] */
     if (ordine.camion) {
@@ -297,9 +326,23 @@ export class Porto {
         const a = this.arredo[k]
         if (!a && this.suolo[k] === 'strada') throw new Inciampo('niente-camion', i.id, { x, y })
         const cosa = this.mano
-        let servito = null
+        let servito = null, risposta = null
         if (a && a.tipo === 'bancone') {
+          /* sul bancone ci sta una cosa sola: la lettera che il cliente
+             ha rimesso lì va ripresa, prima di dargliene un'altra */
+          if (this.pile[k].length) throw new Inciampo('posto-occupato', i.id, { x, y })
           servito = this.servi(cosa, i.id)
+          if (servito && servito.torna) {
+            this.pile[k].push(cosa)
+            risposta = servito.risposta
+            servito = null
+          }
+        } else if (a && a.tipo === 'cassone' && a.figura === 'pila') {
+          if (cosa.tipo !== 'forma') throw new Inciampo('solo-forme', i.id, { x, y })
+          const cima = this.cimaDi(k)
+          if (cima && cima.numero < cosa.numero)
+            throw new Inciampo('schiaccia', i.id, { x, y, sotto: cima.numero, sopra: cosa.numero })
+          this.pile[k].push(cosa)
         } else if (a && a.tipo === 'cassone') {
           if (a.colore && !(cosa.tipo === 'cassa' && cosa.colore === a.colore))
             throw new Inciampo('colore-sbagliato', i.id, { x, y, nome: a.nome, colore: coloreAlPlurale(a.colore) })
@@ -314,7 +357,7 @@ export class Porto {
           this.pile[k].push(cosa)
         }
         this.mano = null
-        yield { tipo: 'posa', x, y, cosa: { ...cosa }, su: a ? a.tipo : 'pavimento', servito }
+        yield { tipo: 'posa', x, y, cosa: { ...cosa }, su: a ? a.tipo : 'pavimento', servito, risposta }
         yield* this.turno('gesto')
         break
       }
@@ -329,11 +372,35 @@ export class Porto {
   servi(cosa, id) {
     const c = this.clienti && this.clienti.alBancone
     if (!c) throw new Inciampo('nessun-cliente', id)
-    if (!combacia(cosa, c.chiede))
+    /* chi fa indovinare: una lettera sbagliata non è un guaio, è una
+       domanda — la rimette sul bancone e risponde «di più» o «di meno».
+       Il guaio è finire i tentativi */
+    if (this.clienti.indovina && cosa.tipo === 'biglietto' && cosa.numero !== c.chiede) {
+      c.sbagliate = (c.sbagliate || 0) + 1
+      if (c.sbagliate >= this.clienti.tentativi)
+        throw new Inciampo('tentativi-finiti', id, { chiede: c.chiede, tentativi: this.clienti.tentativi })
+      c.risposta = cosa.numero < c.chiede ? 'di-piu' : 'di-meno'
+      return { torna: true, risposta: c.risposta }
+    }
+    if (!this.combacia(cosa, c.chiede))
       throw new Inciampo('cliente-sbagliato', id, { chiede: cosaInParole(c.chiede), dato: cosaInParole(cosa) })
     this.clienti.alBancone = null
     this.clienti.serviti++
     return { ...c }
+  }
+
+  /* quello che il cliente voleva è quello che ha ricevuto? Una qualità
+     («la più grande») si controlla contro tutte le lettere che ci sono
+     ancora nel porto, dovunque stiano: sugli scaffali, per terra, nei
+     cassoni. Quella consegnata è già fuori, in mano al robot. */
+  combacia(cosa, chiede) {
+    if (eQualita(chiede)) {
+      if (cosa.tipo !== 'biglietto') return false
+      const altre = this.pile.flat().filter(q => q.tipo === 'biglietto').map(q => q.numero)
+      return chiede === 'massimo' ? altre.every(n => n <= cosa.numero) : altre.every(n => n >= cosa.numero)
+    }
+    return typeof chiede === 'string' ? cosa.tipo === 'cassa' && cosa.colore === chiede
+      : cosa.tipo === 'biglietto' && cosa.numero === chiede
   }
 
   /* ═══════════ quello che il robot guarda, e legge ═══════════ */
@@ -355,6 +422,7 @@ export class Porto {
     if (!cosa) return false
     if (c.cosa === 'cassa') return cosa.tipo === 'cassa' && (!c.colore || cosa.colore === es.valutaColore(c.colore, id))
     if (c.cosa === 'biglietto') return cosa.tipo === 'biglietto'
+    if (c.cosa === 'forma') return cosa.tipo === 'forma'
     return false
   }
 
@@ -363,9 +431,14 @@ export class Porto {
     if (!this.dentro(x, y)) return false
     const k = this.k(x, y)
     switch (c.cosa) {
-      case 'cassa': case 'biglietto': case 'niente': return this.eCosa(this.cimaDi(k), c, es, id)
+      case 'cassa': case 'biglietto': case 'forma': case 'niente': return this.eCosa(this.cimaDi(k), c, es, id)
       case 'libero': return !this.ostacolo(x, y)
       case 'cliente': return !!(this.arredo[k] && this.arredo[k].tipo === 'bancone' && this.clienti && this.clienti.alBancone)
+      /* la risposta di chi fa indovinare, all'ultima lettera che ha avuto */
+      case 'di-piu': case 'di-meno': {
+        const cl = this.arredo[k] && this.arredo[k].tipo === 'bancone' && this.clienti && this.clienti.alBancone
+        return !!cl && cl.risposta === c.cosa
+      }
       case 'muro': return this.suolo[k] === 'muro'
       case 'mare': return this.suolo[k] === 'mare'
       case 'strada': return this.suolo[k] === 'strada'
@@ -409,8 +482,12 @@ export class Porto {
     if (a && a.tipo === 'cassone') return { x, y, valore: this.pile[k].length }
     const cima = this.cimaDi(k)
     if (cima) return { x, y, valore: valoreDi(cima) }
-    if (a && a.tipo === 'bancone' && this.clienti && this.clienti.alBancone)
-      return { x, y, valore: this.clienti.alBancone.chiede }
+    if (a && a.tipo === 'bancone' && this.clienti && this.clienti.alBancone) {
+      const cl = this.clienti.alBancone
+      if (this.clienti.indovina) throw new Inciampo('richiesta-segreta', id, { x, y })
+      if (eQualita(cl.chiede)) throw new Inciampo('richiesta-qualita', id, { x, y, chiede: QUALITA[cl.chiede] })
+      return { x, y, valore: cl.chiede }
+    }
     throw new Inciampo('niente-da-leggere', id, { x, y })
   }
 

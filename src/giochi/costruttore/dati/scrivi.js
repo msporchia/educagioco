@@ -37,7 +37,9 @@
      chiama   { progetto, argomenti: [numero] }
 
    Un **numero** è `{ n: 3 }`, `{ v: 'h' }` (una lavagnetta, una misura o
-   un numero dell'ordine) o `{ op: '+', a, b }` con `+ - ×`. Un'operazione
+   un numero dell'ordine) o `{ op: '+', a, b }` con `+ - × ÷`. Il diviso è
+   quello della scuola, senza la virgola: 9 ÷ 2 fa 4, col resto di 1 — è
+   la metà che serve a chi cerca dimezzando (la ricerca binaria). Un'operazione
    sola per numero: `h + 1` sì, `h + 1 - k` no — a dieci anni un'espressione
    si legge tutta d'un colpo o non si legge. E c'è `{ vuoto: true }`, la
    **N**: il numero ancora da scegliere, con cui nasce ogni riga nuova.
@@ -79,7 +81,8 @@
    numero, a seconda di cosa c'è scritto; e la domanda
      { tipo: 'guarda', dove: su|giu|destra|sinistra|mano,
        cosa: cassa|niente|libero|cliente|biglietto|bancone|scaffale|
-             cassone|nastro|muro|mare|bordo, c, colore? }
+             cassone|nastro|muro|mare|bordo|forma|di-piu|di-meno, c, colore? }
+   («← c'è «di più!»»: la risposta del cliente che fa indovinare)
    dove il colore di una cassa può essere anche un nome (`{ v: 'tinta' }`):
    «smetti quando ↑ c'è una cassa [tinta]» è il cuore di «cerca».
    ═══════════════════════════════════════════════════════════════════ */
@@ -92,14 +95,17 @@ export const VERSI = ['destra', 'sinistra']
 export const LATI = ['su', 'giu', 'sinistra', 'destra']
 export const DOVE_PORTO = [...LATI, 'mano']
 export const COSE_PORTO = ['cassa', 'niente', 'libero', 'cliente', 'camion', 'biglietto', 'bancone',
-                           'scaffale', 'cassone', 'nastro', 'strada', 'muro', 'mare', 'bordo']
+                           'scaffale', 'cassone', 'nastro', 'strada', 'muro', 'mare', 'bordo',
+                           /* le forme di formaggio della torre, e la risposta di chi
+                              fa indovinare una lettera */
+                           'forma', 'di-piu', 'di-meno']
 /* dove si posa un mattone: sotto i piedi, o dove appoggerà il piede */
 export const POSTI = ['sotto', 'giu-destra', 'giu-sinistra']
 /* dove guarda una condizione: i posti del mattone, più i tre dove si va */
 export const DOVE = ['sotto', 'giu-destra', 'giu-sinistra', 'destra', 'sinistra', 'sopra']
 export const COSE = ['mattone', 'terreno', 'acqua', 'vuoto', 'pieno', 'bordo']
 export const CONFRONTI = ['<', '=', '>']
-export const OPERAZIONI = ['+', '-', '×']
+export const OPERAZIONI = ['+', '-', '×', '÷']
 
 /* un numero scritto comodo: 3 → {n:3}, 'h' → {v:'h'}, un oggetto resta com'è */
 export const numero = x =>
@@ -111,13 +117,18 @@ export const N = () => ({ vuoto: true })
 export const piu = (a, b) => ({ op: '+', a: numero(a), b: numero(b) })
 export const meno = (a, b) => ({ op: '-', a: numero(a), b: numero(b) })
 export const per = (a, b) => ({ op: '×', a: numero(a), b: numero(b) })
+export const diviso = (a, b) => ({ op: '÷', a: numero(a), b: numero(b) })
 
 export const guarda = (dove, cosa, c = true, colore = null) =>
   (colore ? { tipo: 'guarda', dove, cosa, c, colore } : { tipo: 'guarda', dove, cosa, c })
 
 /* il nome di un colore che sta in una misura o in una lavagnetta: `metti(tinta('t'))` */
 export const tinta = nome => ({ v: nome })
-export const confronta = (a, cmp, b) => ({ tipo: 'confronta', a: numero(a), cmp, b: numero(b) })
+/* un confronto può avere un colore scritto per esteso da una parte («da
+   è uguale a rosso»): il nome di un colore resta un colore, ogni altra
+   stringa è una lavagnetta — la stessa regola di `assegna` */
+const valoreScritto = x => (typeof x === 'string' && CHIAVI_COLORI.includes(x) ? x : numero(x))
+export const confronta = (a, cmp, b) => ({ tipo: 'confronta', a: valoreScritto(a), cmp, b: valoreScritto(b) })
 
 /* quello che il robot legge di fianco (o in mano): `leggi('sinistra')` */
 export const leggi = lato => ({ leggi: lato })

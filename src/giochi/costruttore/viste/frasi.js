@@ -38,6 +38,7 @@ export const COSE_IN_PAROLE = {
   cassa: 'una cassa', niente: 'niente', libero: 'posto per passare', cliente: 'un cliente',
   biglietto: 'un biglietto', bancone: 'il bancone', scaffale: 'uno scaffale', cassone: 'un cassone',
   nastro: 'il nastro', muro: 'il muro', mare: 'il mare', camion: 'un camion', strada: 'la strada',
+  forma: 'una forma', 'di-piu': '«di più!»', 'di-meno': '«di meno!»',
 }
 /* «una cassa rossa», «un cassone rosso»: il colore si accorda */
 const AL_FEMMINILE = { rosso: 'rossa', giallo: 'gialla', bianco: 'bianca', grigio: 'grigia', nero: 'nera' }

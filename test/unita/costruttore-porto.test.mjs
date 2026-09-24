@@ -12,12 +12,17 @@
         punto libero; il nastro porta in mare; i clienti hanno pazienza;
      5. aspettare e «per sempre»: la giornata finisce da sola quando non
         può più succedere niente, e un giro che non fa niente si ferma; le
-        frasi della sera dicono cosa manca, con i numeri.
+        frasi della sera dicono cosa manca, con i numeri;
+     6. i pezzi degli algoritmi: la pila delle forme che non si lascia
+        schiacciare, il cliente che chiede la più grande, quello che fa
+        indovinare, il diviso, e l'ordine anche coi colori e in un sacco.
    Le mappe del porto sono a coppie di caratteri: `.@` è il robot, `.R`
    una cassa rossa per terra, `=B` uno scaffale con una cassa blu.
    I livelli del porto si giocano in `unita/costruttore`, con tutti gli
    altri. `node test/esegui.mjs porto` */
-import { fai, guarda, leggi, tinta, progetto, programma } from '../../src/giochi/costruttore/dati/scrivi.js'
+import { fai, guarda, leggi, tinta, progetto, programma, confronta, piu, meno, diviso }
+  from '../../src/giochi/costruttore/dati/scrivi.js'
+import { chiamaSeStesso } from '../../src/giochi/costruttore/motore/zaino.js'
 import { leggiCasella } from '../../src/giochi/costruttore/dati/porto/legenda.js'
 import { Porto, nel, coloreAlPlurale } from '../../src/giochi/costruttore/motore/porto/mondo.js'
 import { esitoDelPorto } from '../../src/giochi/costruttore/motore/porto/esito.js'
@@ -250,4 +255,85 @@ const dove = p => `${p.robot.x},${p.robot.y}`
 }
 
 nota('il porto: legenda, regole, letture, orologio, attori e frasi')
+/* ══════════ 6. i pezzi degli algoritmi ══════════ */
+{
+  /* la pila delle forme: la grande sotto, e sopra solo una più piccola */
+  const assi = (sinistra, destra) => ({ cassoni: {
+    s: { nome: 'l\'asse rossa', figura: 'pila', tinta: 'rosso', forme: sinistra },
+    d: { nome: 'l\'asse blu', figura: 'pila', tinta: 'blu', forme: destra },
+  } })
+  const due = gioca({ principale: [fai.prendi('sinistra'), fai.posa('destra'), fai.prendi('sinistra'), fai.posa('destra')] },
+                    ['Cs.@Cd'], assi(2, 0))
+  uguale('una forma grande sopra una più piccola la schiaccia: il robot si ferma', due.ultimo.motivo, 'schiaccia')
+  controlla('e la frase dice quale sta sotto e quale sopra', /la 1.*la 2/.test(due.ultimo.frase), due.ultimo.frase)
+  const giusta = gioca({ principale: [fai.prendi('destra'), fai.posa('sinistra')] }, ['Cs.@Cd'], assi(2, 1))
+  uguale('una piccola sopra una grande sì', giusta.p.pile[giusta.p.cassone('s')].map(f => f.numero).join(), '2,1,1')
+  const cassa = gioca({ principale: [fai.prendi('su'), fai.posa('sinistra')] }, ['...R..', 'Cs.@Cd'], assi(0, 0))
+  uguale('e sulla pila ci vanno solo le forme', cassa.ultimo.motivo, 'solo-forme')
+  uguale('una forma si legge come la sua grandezza',
+         gioca({ lavagnette: ['g'], principale: [fai.prendi('sinistra'), fai.assegna('g', leggi('mano'))] },
+               ['Cs.@Cd'], assi(3, 0)).es.valori.g, 1)
+
+  /* il cliente che chiede la più grande: non si legge, si capisce */
+  /* lo scaffale sopra il corridoio, il bancone a sinistra del robot */
+  const bottega = ['######=5=9=2##', '.%B..@......##', '##############']
+  const clienti = chiede => ({ clienti: { pazienza: 200, fila: [[1, chiede]] } })
+  const letta = gioca({ lavagnette: ['v'], principale: [fai.aspetta(guarda('sinistra', 'cliente')), fai.assegna('v', leggi('sinistra'))] },
+                      bottega, clienti('massimo'))
+  uguale('chi chiede la più grande non dice un numero: leggerlo ferma il robot', letta.ultimo.motivo, 'richiesta-qualita')
+  const porta = (quale, chiede) => gioca({ principale: [
+    fai.vai('destra', quale), fai.prendi('su'), fai.vai('sinistra', quale), fai.aspetta(guarda('sinistra', 'cliente')), fai.posa('sinistra'),
+  ] }, bottega, clienti(chiede))
+  controlla('la 9 è la più grande: il cliente se ne va contento', porta(2, 'massimo').p.clienti.serviti === 1)
+  uguale('la 5 no, finché sullo scaffale c\'è la 9', porta(1, 'massimo').ultimo.motivo, 'cliente-sbagliato')
+  controlla('e chi chiede la più piccola vuole la 2', porta(3, 'minimo').p.clienti.serviti === 1)
+
+  /* il cliente che fa indovinare: «di più», «di meno», e i tentativi */
+  const scaffale = ['######=1=2=3=4=5##', '.%B..@..........##', '##################']
+  const indovina = (numero, tentativi = 3) => ({ clienti: { indovina: true, tentativi, pazienza: 300, fila: [[1, numero]] } })
+  const prova = quale => [fai.vai('destra', quale), fai.prendi('su'), fai.vai('sinistra', quale), fai.posa('sinistra')]
+  const rimetti = quale => [fai.prendi('sinistra'), fai.vai('destra', quale), fai.posa('su'), fai.vai('sinistra', quale)]
+  const segreto = gioca({ lavagnette: ['v'], principale: [fai.aspetta(guarda('sinistra', 'cliente')), fai.assegna('v', leggi('sinistra'))] },
+                        scaffale, indovina(4))
+  uguale('chi fa indovinare non dice quale vuole', segreto.ultimo.motivo, 'richiesta-segreta')
+  const piuGrande = gioca({ lavagnette: ['piu', 'meno'], principale: [fai.aspetta(guarda('sinistra', 'cliente')), ...prova(2),
+    fai.se(guarda('sinistra', 'di-piu'), [fai.assegna('piu', 1)]), fai.se(guarda('sinistra', 'di-meno'), [fai.assegna('meno', 1)])] },
+    scaffale, indovina(4))
+  uguale('la 2 per chi vuole la 4: «di più!», e non «di meno!»', `${piuGrande.es.valori.piu} ${piuGrande.es.valori.meno}`, '1 0')
+  controlla('e la lettera torna sul bancone', (piuGrande.p.cimaDi(piuGrande.p.k(1, 1)) || {}).numero === 2)
+  uguale('sul bancone occupato non se ne posa un\'altra', gioca({ principale: [
+    fai.aspetta(guarda('sinistra', 'cliente')), ...prova(1), ...prova(2)] }, scaffale, indovina(4)).ultimo.motivo, 'posto-occupato')
+  const trovata = gioca({ principale: [fai.aspetta(guarda('sinistra', 'cliente')), ...prova(2), ...rimetti(2), ...prova(4)] },
+                        scaffale, indovina(4))
+  controlla('alla lettera giusta se ne va contento', trovata.p.clienti.serviti === 1 && trovata.ultimo.tipo === 'fine')
+  const finiti = gioca({ principale: [fai.aspetta(guarda('sinistra', 'cliente')),
+    ...prova(1), ...rimetti(1), ...prova(2), ...rimetti(2), ...prova(3)] }, scaffale, indovina(5, 3))
+  uguale('alla terza sbagliata su tre tentativi se ne va arrabbiato', finiti.ultimo.motivo, 'tentativi-finiti')
+  controlla('e la frase dice quale voleva', /il 5/.test(finiti.ultimo.frase), finiti.ultimo.frase)
+
+  /* il diviso della scuola: senza virgola, e mai per zero */
+  const conti = gioca({ lavagnette: ['m', 'z'], principale: [fai.assegna('m', diviso(piu(3, 6), 2))] }, ['.@'])
+  uguale('9 ÷ 2 fa 4: la metà della scuola, senza virgola', conti.es.valori.m, 4)
+  uguale('e diviso zero ferma il robot', gioca({ lavagnette: ['m'], principale: [fai.assegna('m', diviso(5, 0))] }, ['.@']).ultimo.motivo,
+         'diviso-zero')
+  uguale('un colore scritto per esteso in un confronto resta un colore', confronta('tinta', '=', 'rosso').b, 'rosso')
+
+  /* in ordine coi colori, e in un sacco dal fondo in su */
+  const tricolore = colori => esitoDelPorto(porto(['##' + colori.map(c => '=' + c).join('') + '##', '##.@' + '..'.repeat(colori.length - 1) + '##'],
+    { obiettivo: { inOrdine: { y: 0, da: 1, a: colori.length, colori: ['verde', 'bianco', 'rosso'] } } }))
+  controlla('verde, bianco, rosso: in ordine', tricolore(['V', 'V', 'W', 'R']).vinto)
+  controlla('una bianca prima di una verde no, e la frase lo dice',
+            /una bianca viene prima di una verde/.test(tricolore(['W', 'V', 'R']).frasi.join(' ')), tricolore(['W', 'V', 'R']).frasi.join(' '))
+  const sacco = dentro => esitoDelPorto(porto(['Cp.@'], { cassoni: { p: { nome: 'il sacco', dentro } }, obiettivo: { inOrdine: { cassone: 'p' } } }))
+  controlla('il sacco dal fondo in su: 1, 1, 2, 3', sacco('1123').vinto)
+  controlla('e al contrario no', !sacco('3211').vinto)
+
+  /* un progetto che chiama sé stesso, anche passando da un altro */
+  controlla('la ricorsione si riconosce, anche a giro largo', chiamaSeStesso(programma({ progetti: [
+    progetto('a', {}, [fai.chiama('b')]), progetto('b', {}, [fai.se(confronta(1, '>', 0), [fai.chiama('a')])])] })))
+  controlla('e un progetto che ne chiama un altro e basta non è ricorsione', !chiamaSeStesso(programma({ progetti: [
+    progetto('a', {}, [fai.chiama('b')]), progetto('b', {}, [fai.vai('destra', 1)])] })))
+  controlla('né lo è chiamare un attrezzo', !chiamaSeStesso({ progetti: [{ id: 'sposta', attrezzo: true, corpo: [fai.chiama('sposta')] }] }))
+}
+
 riassunto('costruttore-porto')
