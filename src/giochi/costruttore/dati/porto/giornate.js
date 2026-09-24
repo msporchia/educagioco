@@ -104,7 +104,7 @@ export const GIORNATE = [
   /* ═══════════ media: un numero letto che diventa dei passi ═══════════ */
   {
     chiave: 'postino', nome: 'Il postino', icona: '✉️', capitolo: 'giornate',
-    impara: 'un numero letto, fatto passi', portata: 91, premio: 25,
+    impara: 'un numero letto, fatto passi', portata: 90, premio: 25,
     mondo: 'porto', tema: 'bottega', prova: 'giornata',
     chi: { emoji: '📮', nome: 'Il postino' },
     racconto: 'Le lettere del porto sono nel sacco. Ogni lettera ha il numero della sua casa, e le buche stanno in fila lungo la via: la buca del 1 subito a destra del robot, poi il 2, il 3… Tutte le lettere alle loro buche!',
@@ -152,7 +152,7 @@ export const GIORNATE = [
   /* ═══════════ media: aspettare dentro un ripeti ═══════════ */
   {
     chiave: 'frigo', nome: 'Il frigo', icona: '🧊', capitolo: 'giornate',
-    impara: 'aspettare dentro un ripeti', portata: 92, premio: 30,
+    impara: 'aspettare dentro un ripeti', portata: 91, premio: 30,
     mondo: 'porto', tema: 'molo', prova: 'giornata',
     chi: { emoji: '🐟', nome: 'La pescivendola' },
     racconto: 'Il pesce arriva dal nastro dritto nel frigo, una cassa ogni tanto. I camion del mercato lo aspettano sotto il robot. Ma il frigo non è mai pieno quando serve: bisogna caricare quello che c\'è, e aspettare il resto.',
@@ -194,7 +194,7 @@ export const GIORNATE = [
   /* ═══════════ difficile: cercare in fretta ═══════════ */
   {
     chiave: 'pesce-fresco', nome: 'Pesce fresco', icona: '🦐', capitolo: 'giornate',
-    impara: 'cercare, e tornare in tempo', portata: 93, premio: 30,
+    impara: 'cercare, e tornare in tempo', portata: 92, premio: 30,
     mondo: 'porto', tema: 'molo', prova: 'giornata',
     chi: { emoji: '🦐', nome: 'Il pescatore' },
     racconto: 'Il nastro porta il pesce: rosso, blu, giallo. Ognuno va nel suo frigo, e i frighi ogni giorno li spostano. Il robot aspetta in fondo al nastro, prende la cassa, cerca il frigo del suo colore, e torna in fondo prima che arrivi la prossima — se no cade in mare.',
@@ -252,7 +252,7 @@ export const GIORNATE = [
   /* ═══════════ difficile: due lavori da un posto solo ═══════════ */
   {
     chiave: 'due-lavori', nome: 'Due lavori', icona: '🔀', capitolo: 'giornate',
-    impara: 'decidere cosa fare prima', portata: 94, premio: 35,
+    impara: 'decidere cosa fare prima', portata: 93, premio: 35,
     mondo: 'porto', tema: 'bottega', prova: 'giornata',
     chi: { emoji: '🛍️', nome: 'La bottegaia' },
     racconto: 'Il robot fa due lavori dallo stesso posto: sotto di lui si fermano i camion, da caricare col magazzino che ha sopra; a sinistra c\'è il bancone, coi clienti che vogliono una cassa dallo scaffale. Chi c\'è, si serve. E quando non c\'è nessuno, si aspetta un turno.',
@@ -312,7 +312,7 @@ export const GIORNATE = [
   /* ═══════════ grande: tutto il porto ═══════════ */
   {
     chiave: 'giornata-porto', nome: 'La giornata del porto', icona: '⚓', capitolo: 'giornate',
-    impara: 'tutto insieme, più largo dello schermo', portata: 96, premio: 40,
+    impara: 'tutto insieme, più largo dello schermo', portata: 94, premio: 40,
     mondo: 'porto', tema: 'molo', prova: 'giornata',
     chi: { emoji: '⚓', nome: 'La capitana del porto' },
     racconto: 'Il porto intero. La gru scarica la nave sul nastro, e il nastro riempie il magazzino sopra il robot. I camion si fermano sotto di lui, i clienti vengono al bancone a sinistra, e lo scaffale corre lungo il molo fin dove lo schermo non arriva. Una giornata piena: niente deve restare indietro.',
