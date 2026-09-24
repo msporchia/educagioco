@@ -1427,6 +1427,10 @@ e non prende niente, **strisciare di lato** la tira fuori e la posa dove il
 dito si alza. Col mouse si scorre con la rotella, e trascinare in qualunque
 verso tira fuori.
 
+E un baule aperto da un consiglio («ti serve un ovile») **porta la voce
+accesa dentro lo scaffale**: prima si apriva in cima, e la voce che doveva
+risparmiare la ricerca stava sotto lo schermo.
+
 ## Cosa manca ancora
 
 I primi tre punti di questa lista — gli sprite veri dei campi, gli animali da

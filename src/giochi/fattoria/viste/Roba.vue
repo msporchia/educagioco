@@ -51,7 +51,7 @@
    Non sa niente del profilo né delle monete vere: riceve `monete` e
    `magazzino` e manda fuori `tira`. Chi paga è `Gioco.vue`.
    ═══════════════════════════════════════════════════════════════════ */
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { CATEGORIE, ZONE, ANIMALI_ZONA } from '../dati/catalogo.js'
 import { chiaveDi } from '../dati/livelli.js'
 import { IN_VENDITA } from '../dati/animali.js'
@@ -150,6 +150,24 @@ const DICE = {
    doveva togliere di mezzo. */
 const laCategoriaDi = id => (CATEGORIE.find(c => c.voci.some(v => v.id === id)) || null)
 const suPunta = CATEGORIE.length ? laCategoriaDi(props.punta) : null
+
+/* E aperto lì, **la voce si deve vedere**. Metà e linguetta giuste non
+   bastano più: col secondo albero «la fattoria» ha trentasei voci, e la
+   voce accesa poteva stare sotto lo schermo — a livello 40 l'ovile che
+   serve alla lana ne mostrava quindici pixel, a 60 il recinto degli
+   alpaca niente del tutto. Un consiglio che apre il baule su una cosa
+   che non si vede è un baule aperto a caso. Si scorre **lo scaffale e
+   basta**, non con `scrollIntoView`, che si porterebbe dietro anche il
+   foglio e il gioco sotto: la voce va a metà, dove l'occhio la trova. */
+const scaffale = ref(null)
+onMounted(() => {
+  const s = scaffale.value
+  const v = s && s.querySelector('.fa-voce.indicata')
+  if (!v) return
+  const rs = s.getBoundingClientRect(), rv = v.getBoundingClientRect()
+  if (rv.top < rs.top || rv.bottom > rs.bottom)
+    s.scrollTop += rv.top - rs.top - (rs.height - rv.height) / 2
+})
 
 const zona = ref(suPunta ? (suPunta.zona || 'bello') : (props.zonaIniziale || 'lavoro'))
 const categoria = ref(suPunta ? suPunta.chiave : CATEGORIE[0].chiave)
@@ -326,7 +344,7 @@ function giuBestia(e, a) {
       </div>
     </div>
 
-    <div v-else class="fa-scaffale">
+    <div v-else ref="scaffale" class="fa-scaffale">
       <div v-for="v in vociDi(scheda)" :key="v.id"
            :class="['fa-voce', { tua: quantiNe(v.id),
                                  cara: !quantiNe(v.id) && manca(v),

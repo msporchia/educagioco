@@ -253,6 +253,31 @@ if (trovata) {
   uguale('e niente si ferma dicendo «arriva più avanti»',
          await page.locator('[data-albero-riga][data-stato="arriva"]').count(), 0)
   await scatto(page, 'albero-maglione-lavanda')
+
+  /* ── E LA VOCE INDICATA SI VEDE ──
+     Nel primo atto il telaio sta alla seconda riga dello scaffale, e
+     che la voce accesa ci sia basta a dire che si vede. Qui no: la lana
+     manda a chi la fa, che a livello 60 è un recinto, e i recinti
+     stanno in fondo a «la fattoria» — trentasei voci, sotto lo schermo.
+     Il baule deve aprirsi **con la voce dentro lo scaffale**, dove
+     l'occhio la trova (`punta` in `viste/Roba.vue`): prima si apriva in
+     cima, e la voce accesa non la vedeva nessuno. */
+  const compra2 = riga2('lana').locator('[data-albero-azione="compra"]')
+  uguale('la riga della lana ha il tasto del baule', await compra2.count(), 1)
+  await compra2.click()
+  await attendi(page, 400)
+  const vista = await page.evaluate(() => {
+    const s = document.querySelector('.fa-scaffale')
+    const v = document.querySelector('.fa-voce.indicata')
+    if (!s || !v) return null
+    const rs = s.getBoundingClientRect(), rv = v.getBoundingClientRect()
+    return { nome: v.querySelector('.fa-nome').innerText, scorso: Math.round(s.scrollTop),
+             dentro: rv.top >= rs.top && rv.bottom <= rs.bottom }
+  })
+  controlla('il baule si apre con la voce indicata dove si vede',
+            !!vista && vista.dentro, JSON.stringify(vista))
+  nota(`la lana manda a «${vista && vista.nome}», scaffale scorso di ${vista && vista.scorso} px`)
+  await scatto(page, 'albero-baule-in-fondo')
 }
 
 nota(`errori in console: ${errori.length}`)
