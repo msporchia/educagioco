@@ -40,6 +40,11 @@ export default {
   /* in prova: dietro «giochi in prova» finché non l'ha visto giocare
      un bambino vero */
   sperimentale: true,
+  /* la fila si apre per merito: chi ha vinto un livello apre il
+     successivo anche oltre la mira dell'età (`data/portata-giochi.js`).
+     Ogni livello è il passo dopo di quello prima, e averlo vinto è la
+     prova che il bambino ci arriva */
+  perMerito: true,
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

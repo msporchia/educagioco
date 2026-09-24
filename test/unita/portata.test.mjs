@@ -233,4 +233,24 @@ controlla('coi lucchetti tolti dai grandi non è chiuso niente, per nessun motiv
           TAPPE_DEL_GIOCO.prima.every((_, i) => aperta('prima', i) && !chiusaPerEta('prima', i)))
 controlla('e il segno torna sulla prossima', adesso('prima', muro))
 
+/* ═══════════ 5. PER MERITO ═══════════
+   Il costruttore dichiara `perMerito`: chi ha vinto un livello apre il
+   successivo anche oltre la mira dell'età. A nove anni la fila si
+   fermava alla piramide, con le candeline chiuse davanti a chi aveva
+   appena vinto la scala e la piramide; adesso la mira decide solo se la
+   carta si offre in home. */
+accendiTuttoAperto(false)
+await creaGiocatore('Nove', true, 9)
+{
+  const fila = TAPPE_DEL_GIOCO.costruttore
+  const oltre = fila.findIndex(t => statoDellaTappa(t, { eta: 9 }) === 'avanti')
+  controlla('a nove anni c\'è un livello del costruttore oltre la mira', oltre > 0, `indice ${oltre}`)
+  controlla('finché non ci si arriva è chiuso, ma non «per età»', !aperta('costruttore', oltre) && !chiusaPerEta('costruttore', oltre))
+  completa('costruttore', oltre - 1, fila.length)
+  controlla('vinto quello prima, si apre', aperta('costruttore', oltre))
+  controlla('e il segno di adesso ci sta sopra', adesso('costruttore', oltre))
+  controlla('gli altri giochi restano come prima: a nove anni «Tutto mescolato» non è chiusa, ma una tappa oltre la mira sì',
+            TAPPE_DEL_GIOCO.prima.every((t, i) => statoDellaTappa(t, { eta: 9 }) !== 'avanti' || chiusaPerEta('prima', i)))
+}
+
 riassunto('la portata delle tappe')

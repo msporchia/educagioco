@@ -1471,6 +1471,15 @@ gentilezza: `profile.campagne[<chiave>]` è **un indice**, e una fila che
 si accorcia in testa sposta l'avanzamento di tutti senza che scatti
 niente.
 
+**Un gioco può aprirsi per merito** (`perMerito: true` nel manifesto,
+`data/portata-giochi.js`): lì `AVANTI` non ferma chi ci arriva vincendo la
+tappa prima — ogni tappa è il passo dopo di quella che ha appena salito da
+solo, e averla vinta è la prova che ci arriva. L'età resta quello che
+decide se la carta si offre in home. Per ora lo dice solo il costruttore
+(a nove anni si fermava alla piramide): se valga per tutti i giochi è una
+domanda aperta, e nei giochi di scuola la risposta non è ovvia — una tappa
+lì è anche un pezzo di programma che il bambino non ha ancora fatto.
+
 **La testa si taglia solo a quello che la scuola ha già dato.** `2×2` a
 nove anni è tempo perso; `dog` a dieci anni no — nessuna scuola gliel'ha
 data e il gioco è l'unica fonte. Il confine è `scuola: '<chiave di

@@ -167,10 +167,23 @@ export function apertaQui (tappa, i, fatte) {
   return tappaAperta(i, fatte)
 }
 
+/* ── o per merito ──
+   Un gioco può dire nel manifesto che la sua fila si apre **per
+   merito** (`perMerito: true`): chi ha vinto la tappa prima va avanti
+   anche oltre la mira dell'età. Lì una tappa non è un pezzo di scuola
+   che il bambino non ha ancora fatto, è il passo dopo di una scala che
+   ha salito da solo — e avere vinto quella di prima è la prova che ci
+   arriva. L'età resta quello che decide se la carta si offre in home
+   (`giocoDaVedere`) e cosa nasce già aperto in testa; non ferma chi sta
+   salendo. Il costruttore è il primo a dirlo: a nove anni si fermava
+   alla piramide, con le candeline chiuse davanti a un bambino che aveva
+   appena fatto la scala e la piramide. */
+const perMerito = chiave => !!(GIOCHI_NUOVI.find(g => g.chiave === chiave) || {}).perMerito
+
 /* la stessa cosa per chi ha in mano la chiave del gioco invece della
    tappa: le campagne dei giochi nuovi passano tutte da `giochi/campagne.js` */
 export const tappaApertaQui = (chiave, i, fatte) =>
-  apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)
+  (perMerito(chiave) && tappaAperta(i, fatte)) || apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)
 
 /* ── e se è chiusa, perché ──
    Due lucchetti che a schermo si somigliano e non dicono la stessa cosa:
@@ -181,5 +194,5 @@ export const tappaApertaQui = (chiave, i, fatte) =>
    lucchetto, così le due risposte non possono scollarsi. */
 export const tappaChiusaPerEtaQui = (chiave, i) => {
   const tappa = (TAPPE_DEL_GIOCO[chiave] || [])[i]
-  return !!tappa && oltreLEta(statoDellaTappa(tappa, regole()))
+  return !!tappa && !perMerito(chiave) && oltreLEta(statoDellaTappa(tappa, regole()))
 }

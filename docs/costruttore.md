@@ -187,5 +187,8 @@ pila delle chiamate fatta vedere invece che spiegata.
   test pretende che quella svelata vinca davvero.
 - **Il programma di ogni livello si tiene**, anche uscendo a metà: sta in
   archivio fuori dal profilo, sotto `costruttore:<id>`.
+- **Un livello vinto apre il successivo**, anche oltre l'età per cui il
+  gioco è pensato: averlo vinto è la prova che il bambino ci arriva. L'età
+  decide solo se il gioco compare fra quelli di casa.
 - Il gioco dà per scontato che il bambino legga da solo: è pensato dai nove
   anni in su.
