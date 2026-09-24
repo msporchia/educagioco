@@ -659,6 +659,20 @@ li prende da sé — sessanta quadratini da premere non sono quello che si sta
 andando a guardare — e lascia da prendere quelli **del livello a cui porta**,
 cioè la situazione esatta di chi ci è arrivato spendendo.
 
+**`#fattoria-tipo=30`** fa di più (dal 24 settembre 2026): butta la fattoria
+del bambino attivo e ne mette una **già giocata** di quel livello, costruita
+col motore (`motore/tipo.js`) come la costruirebbe chi gioca con un po'
+d'ordine — il giardino in cima, poi campi e silos, macchine, fienile e
+recinti, e il paese in fondo, con una cella d'erba attorno a ogni cosa. È
+già in moto: campi pronti e a metà, macchine con qualcosa da ritirare e
+qualcosa al lavoro, silos pieni, clienti al banco e in bottega, la
+mongolfiera a terra. L'indirizzo porta dritto dentro la fattoria, e si somma
+alle monete (`#fattoria-tipo=30&monete=2000`). **Il profilo di prima va nel
+cestino**, e si rimette da «Cancellati di recente» — ma sul server di casa la
+fattoria che si butta è quella vera: si usa con un bambino di prova. Le prove
+sono `unita/fattoria-tipo` (la fattoria sta in piedi a ogni livello) e
+`integrazione/fattoria-tipo` (la strada dall'indirizzo).
+
 ### Vestire le bestie (dal 6 settembre 2026)
 
 Una bestia comprata si nutre, si spazzola e cammina, e da lì in poi è uguale

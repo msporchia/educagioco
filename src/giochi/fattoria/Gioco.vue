@@ -25,10 +25,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, segnaBest, aspettoDi } from '../../store/profile.js'
+import { state, addCoins, segna, segnaBest, aspettoDi, cestinaOra } from '../../store/profile.js'
 import { scelta, ricorda } from '../campagne.js'
 
 import { Fattoria } from './motore/fattoria.js'
+import { fattoriaTipo } from './motore/tipo.js'
 import { comeAvere, comeFarePosto } from './motore/consiglio.js'
 import { carrettoIn, cosaPuoiDare, cosaOffre, scambia, scompartiColmi, DAI }
   from './motore/vicino.js'
@@ -321,6 +322,24 @@ onMounted(() => {
   if (stagioneCheat && FINESTRE[stagioneCheat[1].toLowerCase()]) {
     stagioneForzata = stagioneCheat[1].toLowerCase()
     try { location.hash = '' } catch (e) { /* pazienza */ }
+  }
+  /* `#fattoria-tipo=30` butta la fattoria di adesso e ne mette una **già
+     giocata** di quel livello (`motore/tipo.js`): campi, macchine,
+     recinti e botteghe al loro posto, i silos pieni, i clienti al banco.
+     È per provare col telefono una cosa che arriverebbe dopo settimane
+     di gioco senza passare un'ora a posare campi. **Prima il cestino**:
+     il profilo com'era si rimette dalla schermata dei grandi, come dopo
+     un «cancella i progressi» fatto per sbaglio — perché sul server di
+     casa la fattoria che si butta è quella vera, e va usato con un
+     bambino di prova. Le monete non le tocca: `#fattoria-tipo=30&monete=2000`. */
+  const tipo = /(?:^#?|&)fattoria-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
+  if (tipo) {
+    try { location.hash = '' } catch (e) { /* pazienza */ }
+    cestinaOra('fattoria tipo')          // la copia si prende subito, prima di qualunque attesa
+    mondo = fattoriaTipo(parseInt(tipo[1], 10))
+    mondo.borsa = borsa
+    salvaOra()
+    avvisa(`🧪 Fattoria di prova al livello ${mondo.livello}: quella di prima è nel cestino.`)
   }
   const cheat = /(?:^#?|&)fattoria=(\d{1,2})(?=&|$)/i.exec(frammento)
   if (cheat) {

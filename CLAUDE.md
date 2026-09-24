@@ -1446,7 +1446,13 @@ bambino. Si rimette dall'indirizzo con `#pin=1234`, dove stanno già i cheat
 delle monete (`#monete=500`) e del livello della fattoria (`#fattoria=9`, che
 alza e non fa mai scendere: serve a guardare col telefono una cosa che
 arriverebbe dopo tremila monete spese) e della stagione della fattoria
-(`#stagione=natale|halloween`, per vedere la neve a settembre).
+(`#stagione=natale|halloween`, per vedere la neve a settembre). E
+`#fattoria-tipo=30`, che mette al posto della fattoria del bambino attivo
+una **già giocata** di quel livello (`giochi/fattoria/motore/tipo.js`,
+costruita col motore e non scritta a mano) dopo averne messo il profilo nel
+cestino: si usa con un bambino di prova, perché sul server di casa quella
+che si butta è vera. I cheat si sommano (`#fattoria-tipo=30&monete=2000`):
+quello delle monete toglie dall'indirizzo solo il suo pezzo.
 
 **La porta non si nasconde, si rende noiosa.** In home è un tasto piatto
 nel piede — «⚙︎ Impostazioni · giochi visibili, chi gioca, salvataggio dei

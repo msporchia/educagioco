@@ -288,6 +288,15 @@ telefono senza gioco finché la rete non torna.
 dall'indirizzo con `#pin=1234`. Lì accanto vive anche il cheat delle monete,
 `#monete=500`.
 
+**Per provare la fattoria di un livello alto** c'è `#fattoria-tipo=30` (o
+qualunque livello da 1 a 99): apre la fattoria e ci mette una fattoria già
+giocata di quel livello, coi campi posati, le macchine al lavoro e i silos
+pieni. Sostituisce quella del bambino attivo — il profilo di prima finisce
+nel cestino, in fondo alla scheda dei bambini — quindi si usa **con un
+bambino di prova**. Dal telefono si scrive nel browser, non nell'app
+installata (che la barra dell'indirizzo non ce l'ha), e si somma alle monete:
+`#fattoria-tipo=30&monete=2000`.
+
 **Il guasto noto che nessuno vede.** In `src/store/storage.js` c'è un
 timeout di 2,5 s su `openDb()`. Su un telefono lento IndexedDB non risponde
 in tempo, l'app gioca su localStorage per tutta la vita della pagina, e al

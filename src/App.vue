@@ -66,6 +66,11 @@ function dallIndirizzo() {
   if (typeof location === 'undefined') return
   const chiave = (location.hash || '').replace(/^#/, '')
   if (Object.prototype.hasOwnProperty.call(viste, chiave)) vista.value = chiave
+  /* Il cheat della fattoria di prova si legge **entrando** nella
+     fattoria (`giochi/fattoria/Gioco.vue`), quindi l'indirizzo ci porta
+     anche: `#fattoria-tipo=30` da solo lascerebbe in home, con la
+     fattoria da aprire a mano e il frammento lì ad aspettarla. */
+  else if (/(?:^|&)fattoria-tipo=\d/i.test(chiave)) vista.value = 'fattoria'
 }
 
 onMounted(async () => {
