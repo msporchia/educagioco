@@ -498,12 +498,12 @@ uguale('e pronto vuol dire zero', minutiCheMancano(T0, 10, fra(10)), 0)
   controlla('con la roba parte', f.avvia(mulino, 'mangime', T0).ok)
   uguale('la roba se n\'è andata dal granaio subito', f.quantoHo('grano'), 0)
   uguale('e ha pagato il suo', b.saldo(), saldo - r.costo)
-  /* Un secondo pezzo non lavora insieme al primo: si mette **in fila**
-     e parte quando il primo finisce (`dati/coda.js`, e la prova intera
-     della fila in `unita/coda-fattoria`). Senza roba, però, nemmeno in
-     fila. */
-  uguale('un secondo pezzo senza roba non entra nemmeno in fila',
-         f.avvia(mulino, 'mangime', T0).motivo, 'manca-roba')
+  /* Un secondo pezzo non lavora insieme al primo, e un mulino appena
+     posato non lo tiene nemmeno in fila: nasce con un posto solo, e gli
+     altri si comprano (`dati/coda.js`, e la prova intera della fila in
+     `unita/coda-fattoria`). */
+  uguale('un secondo pezzo non trova posto: la fila di partenza è di uno',
+         f.avvia(mulino, 'mangime', T0).motivo, 'fila-piena')
   uguale('e ritirarlo prima non si può',
          f.ritira(mulino, fra(1)).motivo, 'non-e-pronto')
 

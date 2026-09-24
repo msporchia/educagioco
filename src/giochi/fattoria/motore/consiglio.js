@@ -415,10 +415,16 @@ function dallaMacchina(f, ricetta, ora, giri) {
      presto si aspetta, se no se ne fa un'altra — che è la cosa che
      l'utente chiede di proporre invece di lasciare fermi. Non si
      propone di allungare la fila: un posto in più lascia caricare di
-     più, non fa andare più svelti, e chi chiede una cosa la vuole prima. */
+     più, non fa andare più svelti, e chi chiede una cosa la vuole prima.
+
+     Con un posto solo — ed è così che nasce ogni macchina (`dati/coda.js`)
+     — «ha la fila piena» detto di una fila da uno non si capisce: si
+     dice che sta lavorando, che è quello che si vede toccandola. */
+  const unPosto = tutte.every(c => (f.statoMacchina(c, ora) || {}).posti === 1)
   const quante = tutte.length === 1
-    ? `${Su(laCosa(voce))} ${concorda(voce, 'ha', 'hanno')} la fila piena`
-    : `${Su(leTue(voce))} hanno la fila piena`
+    ? `${Su(laCosa(voce))} ${unPosto ? concorda(voce, 'sta', 'stanno') + ' lavorando'
+                                     : concorda(voce, 'ha', 'hanno') + ' la fila piena'}`
+    : `${Su(leTue(voce))} ${unPosto ? 'stanno lavorando' : 'hanno la fila piena'}`
   if (prima && prima.manca <= 5)
     return { testo: `${quante}: pronto fra ${prima.manca} min.`, azione: null }
   const a = acquisto(f, voce)

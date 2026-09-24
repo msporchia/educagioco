@@ -127,6 +127,15 @@ const posa = (f, id, x, y) => {
   f.metti('mais', pastone.prende.mais)
   f.avvia(mulino, 'pastone', t1)
   f.metti('grano', PER_RICETTA.mangime.prende.grano)
+  /* Col posto solo con cui nasce ogni mulino (`dati/coda.js`) il
+     pastone lo occupa tutto: il mulino **sta lavorando**, e «ha la fila
+     piena» detto di una fila da uno non si capirebbe. */
+  const unoSolo = comeAvere(f, 'mangime', t1)
+  controlla('col posto solo occupato dice che sta lavorando',
+            /sta lavorando/.test(unoSolo.testo), unoSolo.testo)
+  controlla('e non parla di file', !/fila/.test(unoSolo.testo), unoSolo.testo)
+  /* Con un posto comprato, invece, dietro al pastone c'è posto. */
+  controlla('un posto in più si compra', f.ingrandisciLaFila(mulino).ok)
   const inFila = comeAvere(f, 'mangime', t1)
   uguale('un mulino che macina con un posto libero manda a metterlo in fila',
          inFila.azione && inFila.azione.cosa, mulino)

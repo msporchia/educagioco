@@ -24,7 +24,7 @@
      via = {
        che: 'coltura' | 'ricetta', id, nome, minuti, costo,
        macchina: null | { id, nome, stato: 'ok'|'lavora'|'compra'|'premio',
-                          manca, ne, piena, prezzo, arriva },
+                          manca, ne, piena, unPosto, prezzo, arriva },
        campo:    null | { stato: 'libero'|'cresce'|'pronto'|'nessuno', manca },
        alternative: [{ id, nome, dove: {nome, la, plurale} | null }, …]
        azione: null | { che: 'apri'|'compra'|'premio'|'ingrandisci', … },
@@ -145,14 +145,17 @@ const altraStrada = v => {
    fra 4 min» — oppure ha **la fila piena** di altro (`piena`), e allora
    `manca` è quando esce il prossimo pezzo, che è quando si libera un
    posto a ritirarlo. Una macchina che fa altro ma ha un posto è `ok`:
-   ci si mette in fila. */
+   ci si mette in fila. `unPosto` dice che quella fila piena è **da
+   uno** — com'è la fila di ogni macchina finché non si comprano altri
+   posti (`dati/coda.js`) — e allora la riga dice che sta facendo
+   altro: «fila piena» detto di un posto solo non si capisce. */
 function statoMacchina(f, r, ora) {
   const dove = r.dove
   const voce = laMacchina(dove)
   if (!voce) return null
   const tutte = f.cose.filter(c => macchinaDi(c) === dove)
   const base = { id: voce.id, nome: voce.nome, manca: 0, ne: 0, piena: false,
-                 prezzo: null, arriva: null }
+                 unPosto: false, prezzo: null, arriva: null }
   if (!tutte.length) {
     const liv = livelloDellaVoce(voce)
     if (liv > f.livello) return { ...base, stato: 'compra', arriva: liv }
@@ -166,7 +169,8 @@ function statoMacchina(f, r, ora) {
   if (suoi.length) return { ...base, stato: 'lavora', ne: suoi.length, manca: suoi[0].manca }
   if (stati.some(s => s.libera)) return { ...base, stato: 'ok' }
   const prima = stati.filter(s => s.lavora).sort((a, b) => a.manca - b.manca)[0]
-  return { ...base, stato: 'lavora', piena: true, manca: prima ? prima.manca : 0 }
+  return { ...base, stato: 'lavora', piena: true, manca: prima ? prima.manca : 0,
+           unPosto: stati.every(s => s.posti === 1) }
 }
 
 function statoCampo(f, coltura, ora) {

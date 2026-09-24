@@ -82,8 +82,10 @@ const diceMacchina = m => {
   if (m.stato === 'ok') return '✓ ce l\'hai'
   /* Con la fila (`dati/albero.js`): quanti ne sta facendo, o che è
      piena di altro. «ne fa 1» non si scrive — è quello che si capisce
-     già da «pronto fra». */
-  if (m.stato === 'lavora' && m.piena) return `⏳ fila piena · si libera fra ${m.manca} min`
+     già da «pronto fra». Una fila da un posto solo non si dice piena:
+     sta facendo altro, ed è quello che si vede toccando la macchina. */
+  if (m.stato === 'lavora' && m.piena)
+    return `⏳ ${m.unPosto ? 'fa altro' : 'fila piena'} · si libera fra ${m.manca} min`
   if (m.stato === 'lavora' && m.ne > 1) return `⏳ ne fa ${m.ne}, pronto fra ${m.manca} min`
   if (m.stato === 'lavora') return `⏳ pronto fra ${m.manca} min`
   if (m.stato === 'premio') return '🎁 ti aspetta nei premi'

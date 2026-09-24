@@ -7,11 +7,13 @@
    profilo dopo ogni gesto — non dal DOM, che potrebbe dire la stessa
    bugia della logica che lo scrive.
 
-   Il mulino nasce con **tre pezzi**: uno messo in fila dieci minuti fa
-   (già pronto), uno messo adesso (sta lavorando) e uno messo subito
-   dopo (aspetta che finisca chi lo precede) — `f.avvia(cosa, ricetta,
-   ora)` con `ora` passata fa esattamente questo, perché è da `ora` che
-   il motore calcola quando parte il pezzo.
+   Il mulino ha **tre posti** — i due oltre quello con cui nasce si
+   comprano col motore, come farebbe il dito (`dati/coda.js`) — e **tre
+   pezzi**: uno messo in fila dieci minuti fa (già pronto), uno messo
+   adesso (sta lavorando) e uno messo subito dopo (aspetta che finisca
+   chi lo precede) — `f.avvia(cosa, ricetta, ora)` con `ora` passata fa
+   esattamente questo, perché è da `ora` che il motore calcola quando
+   parte il pezzo.
 
    ── PERCHÉ SI RITOCCA IL FOGLIO PRIMA DI OGNI GESTO ────────────────
    Il foglio di una macchina si rifà da solo ogni 5 secondi
@@ -67,6 +69,10 @@ f.metti('grano', 6)   // tre pezzi da 2 grano l'uno
 
 const cosaMulino = f.cose.find(c => c.id === 'mulino')
 controlla('il mulino è in mappa', !!cosaMulino)
+/* Un mulino nasce con un posto solo: per tenerne tre se ne comprano due. */
+for (let k = 0; k < 2; k++)
+  controlla(`il posto ${k + 2} si compra`, f.ingrandisciLaFila(cosaMulino).ok)
+const comprati = cosaMulino.fila
 
 /* Tre avvii, a tre momenti diversi: il primo lontano nel passato è già
    pronto quando si apre il foglio, il secondo parte adesso (lavora), il
@@ -160,6 +166,13 @@ if (trovato) {
   /* la prima e la seconda non hanno la ✕: non sono in attesa */
   uguale('la prima non si toglie', await page.locator('[data-fila-togli="0"]').count(), 0)
   uguale('la seconda non si toglie', await page.locator('[data-fila-togli="1"]').count(), 0)
+  /* Tre posti e tre pezzi: la fila è piena, e uno è pronto. La riga
+     manda a ritirarlo, o a comprare un posto — non «ritira» e basta
+     quando di pronto non c'è niente (`viste/Macchina.vue`). */
+  const piena = await page.locator('[data-fila-piena]').innerText()
+  controlla('la fila piena manda a ritirare quello che è pronto',
+            /ritira quello che è pronto/.test(piena), piena)
+  controlla('o ad aggiungere un posto', /aggiungi un posto/.test(piena), piena)
 
   /* ---------- 1. togliere un pezzo in attesa rende la roba ---------- */
   const primaDiTogliere = await leggiProfilo(page)
@@ -173,8 +186,10 @@ if (trovato) {
   const mulinoDopoTogliere = statoDopoTogliere.cose.find(c => c.id === 'mulino')
   uguale('in fila restano due pezzi', (mulinoDopoTogliere.coda || []).length, 2)
 
-  /* ---------- 2. allungare la fila costa e aggiunge un posto ---------- */
-  const prezzo = PREZZI_DELLA_FILA[0]
+  /* ---------- 2. allungare la fila costa e aggiunge un posto ----------
+     Il prezzo sul tasto è quello del **prossimo** posto: due sono già
+     comprati, quindi il terzo della curva che raddoppia. */
+  const prezzo = PREZZI_DELLA_FILA[comprati]
   controlla('il mulino è aperto', await assicuraIlMulinoAperto())
   const moneteAssert = page.locator('[data-fila-ingrandisci]')
   uguale('il tasto per allungare la fila c\'è', await moneteAssert.count(), 1)
@@ -186,7 +201,8 @@ if (trovato) {
   const dopoIngrandire = await leggiProfilo(page)
   const statoDopoIngrandire = dopoIngrandire.campagne.fattoria.cfg.stato
   const mulinoDopoIngrandire = statoDopoIngrandire.cose.find(c => c.id === 'mulino')
-  uguale('la fila del mulino è stata ingrandita una volta', mulinoDopoIngrandire.fila, 1)
+  uguale('la fila del mulino è stata ingrandita un\'altra volta',
+         mulinoDopoIngrandire.fila, comprati + 1)
   uguale('costa 🪙 quanto dichiarato', dopoIngrandire.coins, moneteCoinsPrima - prezzo)
 
   /* ---------- 3. ritirare mette il pronto nel silo ---------- */

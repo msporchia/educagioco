@@ -130,6 +130,17 @@ Le due forme buone:
 Il controllo da fare a mente su ogni curva nuova: **quanto costa la decima
 volta, in ore?** Se la risposta è «più di due», la curva è sbagliata.
 
+**L'eccezione è una curva col tetto vicino.** La fila delle macchine della
+fattoria raddoppia — 🪙20 · 40 · 80 · 160 · 320, un posto alla volta sopra
+l'unico di partenza (`giochi/fattoria/dati/coda.js`) — e va bene perché si
+ferma al quinto: la decima volta non esiste, e l'ultima costa meno di
+un'ora. Lì il raddoppio è la forma giusta e non un incidente: il primo
+posto è quasi regalato, gli ultimi sono un lusso che si sceglie, e chi
+vuole andare più svelto trova più conveniente una seconda macchina.
+Deciso da lui il 24 settembre 2026. Il tetto delle due ore lo controlla
+`guastiDellaFila`, così chi un giorno allungasse la fila lo scopre da un
+test e non da un bambino.
+
 ## Il livello di un gioco che si spende
 
 La fattoria ha un livello che sale **con le monete spese lì dentro**

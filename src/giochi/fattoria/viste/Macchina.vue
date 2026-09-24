@@ -99,6 +99,24 @@ const ancora = computed(() => {
    che esce — non quello che lavora, che può essere un'altra cosa */
 const primoPronto = computed(() => (props.stato.coda || []).find(p => p.pronto) || null)
 
+/* Perché non ci si può mettere altro, e cosa fare. Diceva sempre «la
+   fila è piena: ritira quello che è pronto», e da quando una macchina
+   nasce con un posto solo (`dati/coda.js`) il caso di tutti i giorni è
+   un pezzo che lavora e niente di pronto: la frase mandava a ritirare
+   una cosa che non c'era, e «fila piena» detto di una fila da uno non
+   si capisce. Adesso dice quello che è vero, e il posto in più solo se
+   c'è ancora da comprarne. */
+const perchePiena = computed(() => {
+  const s = props.stato
+  const oPosto = s.prezzoFila ? ', o aggiungi un posto' : ''
+  if (s.pronto) return `Per metterci altro, ritira quello che è pronto${oPosto}.`
+  if (s.posti === 1)
+    return props.bestie
+      ? 'Mangiano una pappa alla volta: per dargliene un\'altra intanto, aggiungi un posto.'
+      : 'Fa una cosa alla volta: per metterci altro mentre lavora, aggiungi un posto.'
+  return `La fila è piena: aspetta che finisca il primo${oPosto}.`
+})
+
 const minuti = n => `${n} ${n === 1 ? 'minuto' : 'minuti'}`
 
 /* ── LE CASELLE ───────────────────────────────────────────────────
@@ -182,8 +200,7 @@ const caselle = v => Object.entries(v.ricetta.prende).flatMap(([k, n]) =>
       </template>
     </template>
 
-    <p v-if="!stato.liberi" class="fa-piccolo">La fila è piena: ritira quello
-       che è pronto{{ stato.prezzoFila ? ', o allungala' : '' }}.</p>
+    <p v-if="!stato.liberi" class="fa-piccolo" data-fila-piena>{{ perchePiena }}</p>
 
     <!-- ── cosa metterci ── -->
     <template v-if="stato.liberi">

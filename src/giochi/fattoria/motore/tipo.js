@@ -281,13 +281,20 @@ function semina(f, ora) {
    da mezza giornata (niente marcisce), così quello al lavoro parte
    quando si vuole e non quando finisce l'altro: è davvero a metà, e
    non appena partito. Una ricetta si sceglie fra quelle che il livello
-   ha aperto e la dispensa sa già fare. */
+   ha aperto e la dispensa sa già fare.
+
+   Le macchine del primo modo hanno **un posto comprato**: una macchina
+   nasce con un posto solo (`dati/coda.js`), e senza il secondo il pezzo
+   al lavoro non entrerebbe dietro a quello da ritirare. Chi arriva a
+   quel livello un posto l'ha comprato di sicuro — il primo costa tre
+   minuti di esercizi — e una fila di due è la cosa da guardare. */
 const MEZZA_GIORNATA = 12 * 60 * MINUTO
 function accendi(f, liv, ora) {
   const buone = m => ricetteDi(macchinaDi(m), liv).filter(r => !f.cheMancaPer(r.id).manca.length)
   const una = (m, k) => { const l = buone(m); return l.length ? l[k % l.length] : null }
   f.cose.filter(c => macchinaDi(c)).forEach((m, i) => {
     const modo = i % 3
+    if (modo === 0) f.ingrandisciLaFila(m)
     const r1 = modo !== 1 ? una(m, i) : null
     if (r1) f.avvia(m, r1.id, ora - MEZZA_GIORNATA - r1.minuti * MINUTO)
     const r2 = modo !== 2 ? una(m, i + 1) : null

@@ -14,8 +14,12 @@
        si fa avanti;
      · un silo pieno ferma il ritiro, **non la macchina**;
      · un `lavoro` di ieri si legge come una fila di uno;
-     · i posti si comprano a 🪙30 · 50 · 80, e non si perdono passando
-       dal baule.
+     · si parte da **un posto solo**, e gli altri si comprano a
+       🪙20 · 40 · 80 · 160 · 320 — raddoppiano — e non si perdono
+       passando dal baule;
+     · una fila caricata quando i posti di partenza erano tre **lavora
+       fino in fondo**: i posti di oggi fermano solo quello che si
+       mette dopo.
 
    Nessun numero di ricetta è scritto a mano: si legge dalle tabelle.
    `node test/esegui.mjs coda --niente-build`
@@ -23,7 +27,7 @@
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
 import { PER_RICETTA, PRODOTTI, MINUTO, SILI } from '../../src/giochi/fattoria/dati/coltivazioni.js'
 import { statiDi } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DELLA_FILA, postiDellaFila,
+import { POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DELLA_FILA, PRIMO_POSTO, postiDellaFila,
          prezzoDellaFila, guastiDellaFila } from '../../src/giochi/fattoria/dati/coda.js'
 import { alberoDi } from '../../src/giochi/fattoria/dati/albero.js'
 import { sogliaDi } from '../../src/giochi/fattoria/dati/livelli.js'
@@ -43,14 +47,22 @@ const GRANO = MANGIME.prende.grano
 
 /* Una fattoria cresciuta coi due silos larghi, un mulino e un pollaio.
    Il livello si mette spendendo per finta, e i premi si prendono tutti:
-   qui si prova la fila, non gli sblocchi. */
-function fattoria(monete = 1000, larghi = 4) {
+   qui si prova la fila, non gli sblocchi.
+
+   Mulino e pollaio hanno **tre posti** se non si dice altro — due
+   comprati sopra quello di partenza — perché quasi tutto quello che si
+   prova qui è una fila di più pezzi. Chi vuole la macchina appena
+   posata chiede `{ fila: 0 }`. Gli ingrandimenti si scrivono sulla
+   cosa e non si comprano: la borsa resta quella chiesta, e i blocchi
+   che contano le monete non devono sottrarre niente. */
+function fattoria(monete = 1000, larghi = 4, { fila = 2 } = {}) {
   const b = borsaTracciata(monete)
   const f = new Fattoria({ borsa: b })
   f.speso = 100000
   f.reclamaTutto()
-  const mulino = { i: 901, id: 'mulino', g: 0, x: 14, y: 17 }
-  const pollaio = { i: 902, id: 'pollaio', g: 0, x: 20, y: 20 }
+  const comprata = fila ? { fila } : {}
+  const mulino = { i: 901, id: 'mulino', g: 0, x: 14, y: 17, ...comprata }
+  const pollaio = { i: 902, id: 'pollaio', g: 0, x: 20, y: 20, ...comprata }
   f.cose.push(mulino, pollaio,
     { i: 903, id: SILI.terra.cosa, g: 0, x: 18, y: 14 },
     { i: 904, id: SILI.stalla.cosa, g: 0, x: 20, y: 14 })
@@ -58,16 +70,46 @@ function fattoria(monete = 1000, larghi = 4) {
   return { f, b, mulino, pollaio }
 }
 
-/* ══════════ 1. i numeri della fila stanno in piedi ══════════ */
+/* ══════════ 1. i numeri della fila stanno in piedi ══════════
+   Un posto di partenza, e i prezzi che raddoppiano fino al sesto: è la
+   decisione del 24 settembre 2026, e questi sono i numeri che la
+   dicono. Il tetto delle due ore lo guarda `guastiDellaFila`. */
 {
   const g = guastiDellaFila()
   uguale('la fila non ha guasti', g.join(' · '), '')
-  uguale('si parte con tre posti', postiDellaFila(0), 3)
+  uguale('si parte con un posto solo', postiDellaFila(0), 1)
   uguale('e si arriva a sei', postiDellaFila(PREZZI_DELLA_FILA.length), POSTI_MASSIMI)
-  stessaLista('a 🪙30 · 50 · 80', PREZZI_DELLA_FILA, [30, 50, 80])
-  uguale('al tetto non c\'è un prossimo prezzo', prezzoDellaFila(3), null)
+  stessaLista('a 🪙20 · 40 · 80 · 160 · 320', PREZZI_DELLA_FILA, [20, 40, 80, 160, 320])
+  controlla('ogni posto costa il doppio di quello prima',
+            PREZZI_DELLA_FILA.every((p, i) => !i || p === 2 * PREZZI_DELLA_FILA[i - 1]))
+  uguale('il primo è il primo prezzo', prezzoDellaFila(0), PRIMO_POSTO)
+  uguale('al tetto non c\'è un prossimo prezzo', prezzoDellaFila(PREZZI_DELLA_FILA.length), null)
   uguale('un numero storto da un salvataggio non regala posti', postiDellaFila(99), POSTI_MASSIMI)
   uguale('né ne toglie', postiDellaFila(-4), POSTI_DI_PARTENZA)
+  const tutti = PREZZI_DELLA_FILA.reduce((a, p) => a + p, 0)
+  nota(`una fila lunga al massimo costa 🪙${tutti}, cioè ${Math.round(tutti / 6)} minuti di esercizi`)
+}
+
+/* ══════════ 1b. la macchina appena posata ══════════
+   Un pezzo lavora, e il secondo non trova posto finché non se ne compra
+   uno: il primo costa 🪙20, e da lì il secondo pezzo entra in fila. */
+{
+  const { f, b, mulino } = fattoria(1000, 4, { fila: 0 })
+  f.metti('grano', GRANO * 2)
+  uguale('un mulino appena posato ha un posto', f.statoMacchina(mulino, T0).posti, 1)
+  controlla('il primo pezzo parte', f.avvia(mulino, 'mangime', T0).ok)
+  const no = f.avvia(mulino, 'mangime', T0)
+  uguale('il secondo non ci sta', no.motivo, 'fila-piena')
+  uguale('e non prende niente', f.quantoHo('grano'), GRANO)
+  uguale('il prossimo posto costa il primo prezzo', f.statoMacchina(mulino, T0).prezzoFila, PRIMO_POSTO)
+  const saldo = b.saldo()
+  const piu = f.ingrandisciLaFila(mulino)
+  controlla('il posto si compra', piu.ok, piu.motivo)
+  uguale('e costa quello', b.saldo(), saldo - PRIMO_POSTO)
+  uguale('i posti sono due', piu.posti, 2)
+  const si = f.avvia(mulino, 'mangime', T0)
+  controlla('adesso il secondo entra', si.ok, si.motivo)
+  uguale('e aspetta la fine del primo', si.da, fra(M))
 }
 
 /* ══════════ 2. in fila, e in ordine ══════════
@@ -233,16 +275,18 @@ function fattoria(monete = 1000, larghi = 4) {
   f.metti('grano', GRANO * 2)
   f.avvia(mulino, 'mangime', T0)
   f.avvia(mulino, 'mangime', T0)
+  const posti = f.statoMacchina(mulino, T0).posti
   f.ingrandisciLaFila(mulino)
   const k = new Fattoria({ dato: JSON.parse(JSON.stringify(f.serializza())) })
   const m3 = k.cose.find(c => c.i === mulino.i)
   stessaLista('la fila si rilegge com\'era', m3.coda.map(p => p.da), [T0, fra(M)])
-  uguale('e anche i posti comprati', k.statoMacchina(m3, T0).posti, POSTI_DI_PARTENZA + 1)
+  uguale('e anche i posti comprati', k.statoMacchina(m3, T0).posti, posti + 1)
 }
 
 /* ══════════ 7. ingrandire la fila ══════════ */
 {
-  const { f, b, mulino } = fattoria(200)
+  const tutti = PREZZI_DELLA_FILA.reduce((a, p) => a + p, 0)
+  const { f, b, mulino } = fattoria(1000 + tutti, 4, { fila: 0 })
   const pagati = []
   for (let k = 0; k < PREZZI_DELLA_FILA.length; k++) {
     const saldo = b.saldo()
@@ -250,7 +294,8 @@ function fattoria(monete = 1000, larghi = 4) {
     controlla(`ingrandimento ${k + 1}`, r.ok, r.motivo)
     pagati.push(saldo - b.saldo())
   }
-  stessaLista('si paga 30, 50, 80', pagati, PREZZI_DELLA_FILA)
+  stessaLista('si paga 20, 40, 80, 160, 320', pagati, PREZZI_DELLA_FILA)
+  uguale('e la fila intera costa la somma', b.saldo(), 1000)
   uguale('e i posti sono sei', f.statoMacchina(mulino, T0).posti, POSTI_MASSIMI)
   uguale('oltre non si va', f.ingrandisciLaFila(mulino).motivo, 'al-massimo')
   uguale('e il foglio non ha più un prezzo da dire', f.statoMacchina(mulino, T0).prezzoFila, null)
@@ -260,13 +305,13 @@ function fattoria(monete = 1000, larghi = 4) {
   while (f.avvia(mulino, 'mangime', T0).ok) dentro++
   uguale('ci stanno sei pezzi', dentro, POSTI_MASSIMI)
 
-  /* Per macchina: il secondo mulino nasce coi suoi tre. */
+  /* Per macchina: il secondo mulino nasce col suo posto solo. */
   const altro = { i: 950, id: 'mulino', g: 0, x: 24, y: 24 }
   f.cose.push(altro)
   uguale('un altro mulino ha la fila sua', f.statoMacchina(altro, T0).posti, POSTI_DI_PARTENZA)
 
   /* Senza monete non si ingrandisce, e non si paga niente. */
-  const { f: g, b: poca, mulino: m } = fattoria(10)
+  const { f: g, b: poca, mulino: m } = fattoria(10, 4, { fila: 0 })
   const r = g.ingrandisciLaFila(m)
   uguale('con poche monete no', r.motivo, 'poche-monete')
   uguale('dice quanto costa', r.costo, PREZZI_DELLA_FILA[0])
@@ -277,7 +322,7 @@ function fattoria(monete = 1000, larghi = 4) {
    Nel baule una macchina è un numero: la fila lunga si tiene da parte e
    torna con la prima che si rimette giù. */
 {
-  const { f, mulino } = fattoria()
+  const { f, mulino } = fattoria(1000, 4, { fila: 0 })
   f.ingrandisciLaFila(mulino)
   f.ingrandisciLaFila(mulino)
   f.metti('grano', GRANO)
@@ -335,11 +380,58 @@ function fattoria(monete = 1000, larghi = 4) {
   /* Pieno di altro: la riga dice che la fila è piena. */
   const { f: g, mulino: m } = fattoria()
   const pastone = PER_RICETTA.pastone
-  for (const [k, n] of Object.entries(pastone.prende)) g.metti(k, n * POSTI_DI_PARTENZA)
+  const posti = g.statoMacchina(m, T0).posti
+  for (const [k, n] of Object.entries(pastone.prende)) g.metti(k, n * posti)
   while (g.avvia(m, 'pastone', T0).ok);
   const b = alberoDi(g, 'mangime', fra(1))
   uguale('pieno di pastone, per il mangime la fila è piena', b.via.macchina.piena, true)
   uguale('e non ne fa nessuno', b.via.macchina.ne, 0)
+  uguale('con tre posti la fila si dice piena', b.via.macchina.unPosto, false)
+
+  /* Un posto solo, occupato da altro: è piena anche lei, ma la riga
+     dice che la macchina fa altro — «fila piena» di un posto solo non
+     si capisce. */
+  const { f: h, mulino: uno } = fattoria(1000, 4, { fila: 0 })
+  for (const [k, n] of Object.entries(pastone.prende)) h.metti(k, n)
+  controlla('il pastone parte', h.avvia(uno, 'pastone', T0).ok)
+  const c = alberoDi(h, 'mangime', fra(1))
+  uguale('con un posto solo occupato, per il mangime è piena', c.via.macchina.piena, true)
+  uguale('ed è la fila da uno', c.via.macchina.unPosto, true)
+}
+
+/* ══════════ 11. la fila di ieri, più lunga dei posti di oggi ══════════
+   Fino al 24 settembre 2026 una macchina nasceva con tre posti, e un
+   mulino caricato ieri sera ne ha tre in fila anche se oggi i posti di
+   partenza sono uno. Niente si perde e niente si butta: i pezzi lavorano
+   fino in fondo e si ritirano, e solo dopo la fila torna quella pagata.
+   Nessuna migrazione: `fila` conta gli ingrandimenti comprati, e quelli
+   restano. */
+{
+  const { f, mulino } = fattoria(1000, 4, { fila: 0 })
+  const dato = JSON.parse(JSON.stringify(f.serializza()))
+  const ieri = dato.cose.find(c => c.i === mulino.i)
+  ieri.coda = [0, 1, 2].map(k => ({ ricetta: 'mangime', da: fra(k * M) }))
+  const g = new Fattoria({ dato })
+  const m = g.cose.find(c => c.i === mulino.i)
+  const s = g.statoMacchina(m, fra(1))
+  uguale('i tre pezzi sono ancora lì', s.coda.length, 3)
+  uguale('i posti sono quelli di adesso', s.posti, POSTI_DI_PARTENZA)
+  uguale('nessun posto libero', s.liberi, 0)
+  uguale('e il primo sta lavorando', !!s.lavora, true)
+  g.metti('grano', GRANO)
+  uguale('dietro non ci si mette altro', g.avvia(m, 'mangime', fra(1)).motivo, 'fila-piena')
+  const fine = fra(3 * M)
+  const preso = g.ritira(m, fine)
+  controlla('a fila finita si ritira tutto', preso.ok, preso.motivo)
+  uguale('tutti e tre i mangimi', g.quantoHo('mangime'), 3 * MANGIME.resa)
+  uguale('e adesso la macchina è libera', g.statoMacchina(m, fine).libera, true)
+
+  /* E gli ingrandimenti comprati allora restano: uno vale un posto
+     sopra quello di partenza, come oggi. */
+  ieri.fila = 1
+  const k = new Fattoria({ dato })
+  uguale('un ingrandimento di ieri vale un posto di oggi',
+         k.statoMacchina(k.cose.find(c => c.i === mulino.i), fra(1)).posti, POSTI_DI_PARTENZA + 1)
 }
 
 riassunto('la fila nelle macchine')

@@ -1070,10 +1070,15 @@ scomparto pieno, non un cliente.
 Come in Hay Day: **una macchina lavora un pezzo alla volta e ne tiene
 altri in fila**, così si caricano tre pasti prima di andare a dormire.
 
-- **Tre posti di partenza** (uno lavora, due aspettano), **+1 per
-  ingrandimento** fino a sei, a 🪙30 · 50 · 80 — per macchina, e fanno
-  parte del money pit: la curva è corta apposta, la terza volta costa
-  poco più di un quarto d'ora di esercizi (`CALIBRAZIONE.md`).
+- **Un posto di partenza** (quello che lavora), **+1 per ingrandimento**
+  fino a sei, a 🪙20 · 40 · 80 · 160 · 320 — ogni posto il doppio del
+  precedente, per macchina. Erano tre posti regalati e tre ingrandimenti
+  a 🪙30 · 50 · 80; il 24 settembre 2026 ha deciso lui che di base se ne
+  dà uno e gli altri si pagano sempre di più: la fila è autonomia, e
+  l'autonomia si compra. Il primo costa tre minuti di esercizi, il
+  quinto meno di un'ora, e il tetto a sei è quello che rende ammissibile
+  una curva che raddoppia (`CALIBRAZIONE.md`, le curve). Gli
+  ingrandimenti comprati prima restano, e valgono un posto a testa.
 - **La roba e le monete si prendono mettendo in fila**, come adesso
   all'avvio: una fila è una scorta, non una promessa. Un pezzo in fila
   e non ancora partito **si toglie** e rende tutto.

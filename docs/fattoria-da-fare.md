@@ -52,8 +52,13 @@ lavanda, riso).
       fa produrre di più a chi gioca, e quanto non l'ha misurato
       nessuno. Se la roba nuova arriva troppo in fretta, la leva è
       `PER_GESTO`.
-- [ ] **La fila**: tre posti bastano per l'autonomia che si voleva, o
-      servono a tutti gli ingrandimenti subito?
+- [ ] **La fila da un posto.** Deciso il 24 settembre 2026: di base
+      un posto, e gli altri a prezzi che raddoppiano. I numeri —
+      🪙20 · 40 · 80 · 160 · 320 — sono una proposta sulla sua
+      richiesta di un rincaro esponenziale: da guardare se il secondo
+      posto lo comprano tutti subito (allora 🪙20 è una formalità) e se
+      oltre il terzo ci arriva qualcuno. Le leve sono `PRIMO_POSTO` e
+      `RINCARO_DELLA_FILA` in `dati/coda.js`.
 
 ## Deciso di non fare
 
