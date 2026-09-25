@@ -65,7 +65,7 @@ Arrivano una per volta, un gradino per regola, e da lì in poi restano.
 | **i massi** | camminandoci contro si spingono di una cella. Sul ghiaccio scivolano finché non si fermano; nell'acqua affondano e diventano un **ponte**. Se non possono muoversi, si sbatte |
 | **le buche** | a coppie, con l'anello dello stesso colore: si entra da una e si esce dall'altra, e il movimento finisce lì, anche scivolando |
 | **le lastre** | rossa col cerchio, blu col quadrato, gialla col triangolo: si camminano come il prato (e come il prato fermano chi scivola), e un masso non ci va sopra. Non fanno niente: servono a **guardarle**, dal gradino del «fino a» in là. La forma c'è per chi i colori non li distingue tutti |
-| **le pecore** | nei livelli del cane: quando il cane si ferma accanto a una pecora, lei fa un passo dall'altra parte. Se lì c'è un ostacolo, l'acqua, un'altra pecora o il bordo, non si muove; sul ghiaccio scivola, e nell'acqua non ci va. Il cane contro una pecora sbatte |
+| **le pecore** | nei livelli del cane: quando il cane si ferma sulla riga o sulla colonna di una pecora, a una o due caselle e senza niente di alto in mezzo, lei fa un passo dall'altra parte. Se lì c'è un ostacolo, l'acqua, un'altra pecora o il bordo, non si muove; sul ghiaccio scivola, e nell'acqua non ci va. Il cane contro una pecora sbatte |
 | **il recinto** | una pecora che ci entra ci resta; il cane non ci entra mai. Quando dentro ci sono tutte, il livello è vinto |
 
 E la **tana**: arrivarci, in qualunque modo e in qualunque momento, vince
@@ -89,12 +89,18 @@ non deve andare da nessuna parte, è **la pecora** che deve arrivare. E una
 pecora si sposta solo scappando dal cane, quindi la fila si scrive pensando
 a dove andrà a finire lei.
 
-- **Si scappa dalla parte opposta.** Il cane si ferma accanto a una pecora
-  — sopra, sotto, a destra o a sinistra — e lei fa un passo dall'altra
-  parte. Per mandarla a destra il cane le va a sinistra; per girarle
-  attorno passa in diagonale, perché fermandosi accanto la spingerebbe.
-  Scappa quando il cane **si ferma**: una scivolata lunga sei celle la
-  spaventa solo dove finisce.
+- **Si scansa prima.** Il cane si ferma sulla riga o sulla colonna di una
+  pecora, a una o due caselle, e lei fa un passo dall'altra parte: non
+  aspetta che le arrivi addosso, e il cane la porta da lontano, come un
+  cane da pastore vero. Per mandarla a destra il cane le va a sinistra;
+  per girarle attorno passa in diagonale, perché fermandosi sulla sua riga
+  o sulla sua colonna la spingerebbe. Scappa quando il cane **si ferma**:
+  una scivolata lunga sei celle la spaventa solo dove finisce. Vede sopra
+  l'acqua e le cose basse, non attraverso un albero, un masso o un'altra
+  pecora.
+  Era «accanto», all'inizio: con la vista a due caselle (un'idea venuta
+  guardando la prima prova, il 25 settembre 2026) il cane non tocca mai
+  una pecora, e i posti sono gli stessi — cambia da dove si spinge.
 - **Una pecora con qualcosa alle spalle non scappa.** Un albero, l'acqua,
   un'altra pecora: resta lì e fa «bee», e il cane che le cammina contro
   sbatte. Due pecore in fila si spingono una alla volta, separandole prima.
@@ -298,12 +304,12 @@ per nove, così stanno intere su un telefono.
 | 23. Le buche colorate | la rosa porta alla carota, la viola alla tana | 7 |
 | 24. Tutto insieme | la staccionata, il masso nel fiume, il lago, la buca | 12 |
 | **🐑 Il cane pastore** | *le pecore scappano dal cane: portale tutte nel recinto* | |
-| 25. Il primo gregge | dietro alla pecora, e lei va nel recinto; l'osso chiede un giro che non le passi sotto | 7 |
-| 26. Dall'altra parte | per mandarla giù il cane le sta sopra, e per arrivarci le gira attorno in diagonale | 7 |
-| 27. La curva | prima a destra, poi giù: chi la spinge troppo in là la incastra contro il bordo | 14 |
+| 25. Il primo gregge | il cane parte a tre caselle: la pecora si scansa prima che arrivi, fino al recinto. L'osso chiede un giro che non le passi sotto | 7 |
+| 26. Dall'altra parte | per mandarla giù il cane le sta sopra, e per arrivarci le gira attorno in diagonale, mai sulla sua riga | 8 |
+| 27. La curva | prima a destra, poi giù: chi la spinge troppo in là la incastra contro il bordo | 15 |
 | 28. La pecora sul ghiaccio | scivola finché il sasso non la ferma, proprio sopra il cancello | 8 |
-| 29. Due in fila | una pecora con un'altra alle spalle non scappa: prima si separano | 13 |
-| 30. Il gregge | tre pecore e un cancello solo: quale per prima, e da che parte | 21 |
+| 29. Due in fila | quella dietro non vede il cane, e quella davanti non ha dove scappare: prima si separano | 11 |
+| 30. Il gregge | tre pecore e un cancello solo: quale per prima, e da che parte | 19 |
 | **🔁 Il ripeti** | *nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro* | zaino |
 | 31. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
 | 32. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |

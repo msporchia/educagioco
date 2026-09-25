@@ -14,7 +14,7 @@
    finito e non a profilo vuoto, e nessuno torna indietro quando la
    campagna si allunga.
    `node test/esegui.mjs passo-passo --niente-build` */
-import { LEGENDA, MOSSE, MASSIMO_FILA, COLONNE_MAX, RIGHE_MAX, guastiDelMondo, guastiDellaMappa }
+import { LEGENDA, MOSSE, MASSIMO_FILA, COLONNE_MAX, RIGHE_MAX, VISTA, guastiDelMondo, guastiDellaMappa }
   from '../../src/giochi/passo-passo/dati/mondo.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME, TEMI, guastiDellaCampagna,
          FILE, FILA_ATTUALE, riordina }
@@ -370,6 +370,17 @@ const dove = (r) => r.mondo.pos
   controlla('passarle accanto la sposta di lato', r.esito === FINITA && in_(r, 2, 2), JSON.stringify(pecore(r)))
   r = esegui(L(['P.....', '..p...', '......', '.c...#']), ['destra'])
   controlla('in diagonale non si accorge del cane', in_(r, 2, 1), JSON.stringify(pecore(r)))
+  uguale('la pecora vede il cane fino a due caselle', VISTA, 2)
+  r = esegui(L(['......', 'P..p..', '......', '.c...#']), ['destra'])
+  controlla('a due caselle si scansa prima che il cane le arrivi accanto',
+            r.esito === FINITA && in_(r, 4, 1) && dove(r).x === 1, JSON.stringify(pecore(r)))
+  r = esegui(L(['......', 'PAp...', '......', '.c...#']), ['su', 'giu'])
+  controlla('dietro a un albero non lo vede', r.esito === FINITA && in_(r, 2, 1), JSON.stringify(pecore(r)))
+  r = esegui(L(['......', 'P~p...', '......', '.c...#']), ['su', 'giu'])
+  controlla('sopra l\'acqua sì', r.esito === FINITA && in_(r, 3, 1), JSON.stringify(pecore(r)))
+  r = esegui(L(['.......', 'P..pp..', '.......', '.c....#']), ['destra'])
+  controlla('e quella dietro a un\'altra pecora non lo vede: nessuna delle due si muove',
+            in_(r, 3, 1) && in_(r, 4, 1), JSON.stringify(pecore(r)))
   r = esegui(L(['......', 'P.pA..', '......', '..c..#']), ['destra', 'destra'])
   controlla('se dietro c\'è un albero non scappa, e il cane le sbatte contro',
             r.esito === SBATTE && r.dove === 1 && in_(r, 2, 1), `${r.esito} ${JSON.stringify(pecore(r))}`)

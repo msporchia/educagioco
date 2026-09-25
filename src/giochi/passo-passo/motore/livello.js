@@ -17,7 +17,7 @@
    Un livello con le pecore è **del cane**: `cane` lo dice a chi disegna
    e a chi consiglia, e la meta non è la tana ma il recinto.
    ═══════════════════════════════════════════════════════════════════ */
-import { LEGENDA, OSTACOLI } from '../dati/mondo.js'
+import { LEGENDA, OSTACOLI, VISTA } from '../dati/mondo.js'
 
 export class Livello {
   /* `tappa` è una voce della campagna (o un livello generato): basta
@@ -129,7 +129,15 @@ export function celleIncastro(liv) {
     for (let c = 0; c < n; c++) {
       if (salva[c] || !perPecora(c)) continue
       for (const [dx, dy] of VERSI) {
-        if (!perCane(liv.vicino(c, -dx, -dy))) continue
+        /* il cane dietro di lei, a una casella o fin dove lei lo vede */
+        let dietro = false
+        for (let q = c, passo = 1; passo <= VISTA; passo++) {
+          q = liv.vicino(q, -dx, -dy)
+          if (q < 0) break
+          if (perCane(q)) { dietro = true; break }
+          if (liv.alto(q)) break
+        }
+        if (!dietro) continue
         let r = liv.vicino(c, dx, dy)
         if (!perPecora(r)) continue
         while (liv.terreno[r] === 'ghiaccio') {

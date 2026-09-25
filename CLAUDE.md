@@ -622,8 +622,9 @@ committate: non è ricostruibile da git.
   undici.
   **Fra le buche e lo zaino c'è il cane pastore** (sei tappe, ancora dei
   piccoli, portata 44): il bobtail al posto del coniglio, le pecore (`p`)
-  scappano di un passo quando il cane si ferma accanto, e la meta è il
-  recinto (`#`), non la tana. Una pecora **incastrata** — su una cella da
+  scappano di un passo quando il cane si ferma sulla loro riga o colonna
+  a una o due caselle (`VISTA`: si scansano prima che arrivi, e non le
+  tocca mai), e la meta è il recinto (`#`), non la tana. Una pecora **incastrata** — su una cella da
   cui nessuna spinta la riporta al recinto, `celleIncastro` in
   `motore/livello.js`, calcolata una volta dal recinto all'indietro —
   ferma la fila come un albero (`PERSA`): senza, il bambino aggiungeva

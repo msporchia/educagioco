@@ -44,7 +44,8 @@
    attorno — e il disegno mette la staccionata proprio lì, così quello
    che si vede e quello che vale sono la stessa cosa. La carota, in un
    livello del cane, si disegna come un osso: per il motore è la stessa
-   cosa da prendere.
+   cosa da prendere. Quanto lontano vede una pecora lo dice `VISTA`, qui
+   sotto.
 
    ── LE LASTRE ─────────────────────────────────────────────────────
    Una lastra colorata per terra non fa niente: si cammina come il prato
@@ -67,6 +68,13 @@ export const RIGHE_MAX = 11
 /* e al minimo: sotto le tre celle per lato non c'è un posto, c'è un
    corridoio */
 export const LATO_MIN = 3
+
+/* quanto lontano una pecora vede il cane: sulla sua riga o sulla sua
+   colonna, fino a `VISTA` caselle, se in mezzo non c'è niente di alto
+   (un albero, un cespuglio, un sasso, un masso, un'altra pecora — sopra
+   l'acqua e le cose basse si vede). A due il cane non le va mai addosso:
+   le fa spostare da lontano, come un cane da pastore vero */
+export const VISTA = 2
 
 /* quante frecce può tenere la fila: non è un tetto di gioco (qui non
    c'è un numero di mosse da battere), è il massimo tecnico perché la

@@ -30,10 +30,11 @@
      7. entrando in una buca si esce dalla sua gemella (stesso anello),
         e il movimento finisce lì, anche scivolando. Ripassarci sopra
         rifà il viaggio;
-     8. **le pecore scappano dal cane.** Quando il cane si ferma accanto
-        a una pecora — sopra, sotto, a destra o a sinistra, dopo un
-        passo, una scivolata, un salto o una buca — lei fa un passo
-        dalla parte opposta. Se lì c'è un ostacolo, l'acqua, un masso,
+     8. **le pecore scappano dal cane.** Quando il cane si ferma sulla
+        riga o sulla colonna di una pecora, a una o due caselle da lei
+        (`VISTA`) e senza niente di alto in mezzo — dopo un passo, una
+        scivolata, un salto o una buca — lei fa un passo dalla parte
+        opposta: si scansa prima che il cane le arrivi addosso. Se lì c'è un ostacolo, l'acqua, un masso,
         un'altra pecora, la tana o una buca, o se lì finisce la mappa,
         resta dov'è (e fa «bee»). Sul ghiaccio scivola, come un masso,
         e si ferma sull'ultima cella prima di quello che la fermerebbe:
@@ -64,7 +65,9 @@
        recinto in mezzo a un salto invece si scavalca, è terra;
      · le pecore scappano **una volta per freccia**, quando il cane si
        è fermato: una scivolata lunga sei celle accanto a un gregge le
-       spaventa solo dove finisce. E scappano tutte insieme, ognuna
+       spaventa solo dove finisce. Vedono sopra l'acqua e le cose basse,
+       non attraverso un albero, un masso o un'altra pecora: quella
+       dietro a una pecora il cane non lo vede. E scappano tutte insieme, ognuna
        dalla sua parte, in un ordine fisso (su, giù, sinistra, destra)
        che conta solo quando una scivola dove un'altra voleva andare;
      · la pecora passa sopra la carota (l'osso, per il cane) e la
@@ -83,7 +86,7 @@
    vince anche col ghiaccio trattato da prato non insegna il ghiaccio
    (`motore/risolutore.js`, `serveLaRegola`). Nel gioco non si usa mai.
    ═══════════════════════════════════════════════════════════════════ */
-import { MOSSE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
+import { MOSSE, VERSI, CHIAVI_VERSI, VISTA } from '../dati/mondo.js'
 import { albero, conCicli, eFine, CASA } from '../dati/carte.js'
 
 export const TANA = 'tana'
@@ -305,8 +308,8 @@ export class Mondo {
   }
 
   /* ── le pecore ──
-     Il cane si è fermato: chi gli sta accanto scappa dalla parte
-     opposta. Ogni pecora lascia **un fatto solo**, con tutta la strada
+     Il cane si è fermato: chi lo vede — sulla sua riga o sulla sua
+     colonna, fin dove arriva la vista — scappa dalla parte opposta. Ogni pecora lascia **un fatto solo**, con tutta la strada
      che ha fatto (il passo, la scivolata, il recinto) o con `ferma` se
      non ha potuto muoversi: la scena le fa scappare tutte insieme, e il
      «bee» di quella ferma dice al bambino che ci ha provato. */
@@ -315,8 +318,16 @@ export class Mondo {
     const cane = this.p
     for (const v of CHIAVI_VERSI) {
       const { dx, dy } = VERSI[v]
-      const k = this.pecora(this.liv.vicino(cane, dx, dy))
-      if (k >= 0) this.fuggi(k, dx, dy)
+      /* la prima pecora sulla linea, fin dove si vede: quelle dietro a
+         lei il cane non lo vedono */
+      let c = cane
+      for (let passo = 1; passo <= VISTA; passo++) {
+        c = this.liv.vicino(c, dx, dy)
+        if (c < 0) break
+        const k = this.pecora(c)
+        if (k >= 0) { this.fuggi(k, dx, dy); break }
+        if (this.liv.alto(c) || this.masso(c) >= 0) break
+      }
     }
     if (!this.pecore.length) {
       this.segna({ che: 'gregge', dove: this.xy(cane) })

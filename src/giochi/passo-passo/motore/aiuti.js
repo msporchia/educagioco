@@ -81,9 +81,9 @@ export function pensieroDi(liv) {
     return [prima, seconda]
   }
   if (liv.cane) {
-    const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventare nessuna pecora dalla parte sbagliata.' : ''
-    return ['Le pecore 🐑 scappano dal cane: quando si ferma accanto a una pecora, lei fa un passo dall\'altra parte. Le devi portare tutte nel recinto.',
-            'Da che parte deve andare la pecora? Il cane si mette dall\'altra parte. E per girarle attorno, passa in diagonale: se ti fermi accanto a lei, scappa.' + osso]
+    const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventarle.' : ''
+    return ['Le pecore 🐑 scappano dal cane: se si ferma sulla loro riga o colonna, a una o due caselle, fanno un passo dall\'altra parte. Portale tutte nel recinto.',
+            'Da che parte deve andare la pecora? Il cane si mette dall\'altra parte. Per girarle attorno passa in diagonale: sulla sua riga o colonna, scappa.' + osso]
   }
   if ((liv.coppia || []).some(k => k > 0))
     return ['Il coniglio deve arrivare alla tana 🏡, e ci sono delle buche 🕳️: si entra in una e si esce da quella dello stesso colore.',

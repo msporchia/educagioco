@@ -96,7 +96,7 @@ export const SCALINI = [
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', regola: 'buche',
     dritta: 'Si entra in una buca e si esce dalla sua gemella, dello stesso colore.' },
   { chiave: 'pecore', nome: 'Il cane pastore', icona: '🐑', regola: 'pecore',
-    dritta: 'Le pecore scappano dal cane: quando le si ferma accanto, fanno un passo dall\'altra parte. Portale tutte nel recinto.' },
+    dritta: 'Le pecore scappano dal cane: quando si ferma sulla loro riga o colonna, a due passi, si scansano dall\'altra parte. Portale tutte nel recinto.' },
   /* da qui la lingua, e non il mondo: il gradino porta una carta */
   { chiave: 'ripeti', nome: 'Il ripeti', icona: '🔁', carta: 'ripeti',
     dritta: 'Nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro.' },
@@ -366,7 +366,10 @@ export const CAMPAGNA = [
     ] },
 
   /* ── gradino 6: il cane pastore ──
-     Il bobtail al posto del coniglio, le pecore al posto della tana. Un
+     Il bobtail al posto del coniglio, le pecore al posto della tana. Le
+     pecore vedono il cane a due caselle, e si scansano prima che arrivi:
+     nei primi posti il cane parte a tre caselle dalla pecora, così dalla
+     prima freccia la spinge da lontano e non le va mai addosso. Un
      gradino di regola del mondo come gli altri cinque, ma è quello dove
      la strada si pensa di più: il cane non va da nessuna parte, è la
      pecora che deve arrivare. Da una pecora a tre; la carota è un osso,
@@ -376,34 +379,35 @@ export const CAMPAGNA = [
      sei anni e ha finito le buche. */
   { chiave: 'primo-gregge', nome: 'Il primo gregge', icona: '🐕', scalino: 'pecore',
     portata: 44, premio: 12, tema: 'primavera',
-    racconto: 'Il cane non tocca mai le pecore: gli basta fermarsi accanto, e loro fanno un passo dall\'altra parte. Dietro alla pecora, verso il recinto, e lei ci entra da sola. L\'osso chiede un giro: chi ci arriva passandole sotto la manda contro il bosco, e lì si incastra.',
+    racconto: 'Il cane non tocca mai le pecore: gli basta fermarsi a due passi, e loro si scansano dall\'altra parte. Dietro alla pecora, verso il recinto, e lei ci entra da sola. L\'osso chiede un giro: chi ci arriva passandole sotto la manda contro il bosco, e lì si incastra.',
     mappa: [
-      'AB...BB',
-      'P.p..##',
-      '....BBB',
-      '~.c...A',
+      'AB....BB',
+      'P..p..##',
+      '.....BBB',
+      '~.c....A',
     ],
-    trappole: [['giu', 'destra', 'destra']] },
+    trappole: [['giu', 'destra', 'destra', 'destra']] },
   { chiave: 'altra-parte', nome: 'Dall\'altra parte', icona: '🌾', scalino: 'pecore',
     portata: 44, premio: 12, tema: 'estate',
-    racconto: 'Il recinto è in basso, e la pecora ci va solo se il cane le sta sopra. Chi le va incontro dritto la spinge in su: per girarle attorno si passa in diagonale, mai accanto.',
+    racconto: 'Il recinto è in basso, e la pecora ci va solo se il cane le sta sopra. Chi le va incontro dritto la spinge in su, e chi le passa accanto sulla sua riga la spinge di lato: per girarle attorno si passa in diagonale.',
     mappa: [
-      '..c..A',
-      '.....A',
-      '..p...',
-      'P.....',
-      'BB##BB',
+      '..c..AA',
+      '......A',
+      '...p...',
+      'P......',
+      '.......',
+      'BB.##BB',
     ],
-    trappole: [['destra', 'destra', 'su'], ['su', 'destra', 'destra', 'destra']] },
+    trappole: [['su', 'destra', 'destra', 'destra']] },
   { chiave: 'curva', nome: 'La curva', icona: '🌳', scalino: 'pecore',
     portata: 44, premio: 13, tema: 'autunno',
     racconto: 'Prima a destra, poi giù: fra una spinta e l\'altra il cane le gira attorno. Chi la spinge troppo in là la mette contro il bordo del prato, e da lì non torna più.',
     mappa: [
-      'A......',
-      'P.p....',
-      '.......',
-      'BBB.B..',
-      '~~~cB#B',
+      'A.......',
+      'P..p....',
+      '........',
+      'BBB.B...',
+      '~~~cB.#B',
     ],
     trappole: [['destra', 'destra', 'destra', 'destra']] },
   { chiave: 'pecora-ghiaccio', nome: 'La pecora sul ghiaccio', icona: '🧊', scalino: 'pecore',

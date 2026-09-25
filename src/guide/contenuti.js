@@ -604,7 +604,7 @@ export const AIUTI = {
       ] },
       { titolo: 'Il cane pastore', righe: [
         'Dopo le buche al posto del coniglio c\'è il **bobtail**, e al posto della tana il recinto: le pecore ci vanno tutte, e il livello è fatto.',
-        'Il cane non tocca le pecore: quando si ferma **accanto** a una, lei fa un passo dall\'altra parte. Per mandarla a destra il cane le va a sinistra; per girarle attorno passa in diagonale.',
+        'Il cane non tocca le pecore: quando si ferma sulla riga o sulla colonna di una pecora, **a una o due caselle**, lei si scansa di un passo dall\'altra parte. Per mandarla a destra il cane le va a sinistra; per girarle attorno passa in diagonale. Dietro a un albero, o a un\'altra pecora, il cane non si vede.',
         'Una pecora spinta in un angolo, o contro il bordo, non si recupera più: la fila si ferma lì, lampeggia la freccia che ce l\'ha mandata, e si riprova. L\'osso vale la seconda stella, come la carota.',
       ] },
       { titolo: 'Lo zaino e il ripeti', righe: [
