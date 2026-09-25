@@ -111,23 +111,6 @@ const INDIZI_CLASSE = {
   ],
 }
 
-/* ── curiosità vere, una frase, dette dopo aver sbagliato ──
-   Non su tutti gli animali: solo dove ne conosciamo una controllata, e
-   solo per aggiungere qualcosa oltre alla regola, mai al posto sua. */
-const CURIOSITA = {
-  'il pipistrello': 'è l\'unico mammifero che riesce davvero a volare, non solo a planare',
-  'il delfino': 'dorme con un occhio aperto, tenendo mezzo cervello sveglio per respirare',
-  'la balena': 'respira aria e sale in superficie a soffiare, come una fontana',
-  'la foca': 'può restare sott\'acqua diversi minuti senza tornare a respirare',
-  'il pinguino': 'non vola in aria, ma sott\'acqua nuota usando le ali come pinne',
-  'la tartaruga': 'alcune tartarughe di mare vivono più di cent\'anni',
-  'il coccodrillo': 'se sta fermo può restare sott\'acqua anche un\'ora, trattenendo il respiro',
-  'il canguro': 'la mamma porta il piccolo in una tasca sulla pancia finché non è grande',
-  'il polpo': 'ha otto tentacoli e il sangue blu',
-  'il ragno': 'ha otto zampe e spesso anche otto occhi: è un aracnide, non un insetto',
-  'lo scorpione': 'ha otto zampe come il ragno: è un aracnide, non un insetto',
-}
-
 /* ── la tabella degli animali ──
    `trappola` è la classe SBAGLIATA in cui un bambino metterebbe questo
    animale, con la frase che smonta proprio quell'idea. `classe: 'altro'`
@@ -293,8 +276,6 @@ const senzaArticolo = nome => nome.replace(/^(il |la |lo |l')/, '')
 const bestia = a => conNome({ emoji: a.em }, senzaArticolo(a.nome))
 const CLASSI_CHIAVI = Object.keys(CLASSI)
 
-/* la curiosità, se ne conosciamo una vera per questo animale */
-const curiositaDi = nome => CURIOSITA[nome] ? ` Curiosità: ${CURIOSITA[nome]}.` : ''
 
 class ClassiAnimali extends Modulo {
   constructor() {
@@ -344,7 +325,7 @@ class ClassiAnimali extends Modulo {
         perche: `${Cap(senzaArticolo(a.nome))} ${CLASSI[classe].contro}: è un ${CLASSI[a.classe].nome}.`,
       })),
       chiave: 'zoo:indizio-classe',
-      aiuto: CLASSI[classe].cosE + curiositaDi(buonaAnimale.nome),
+      aiuto: CLASSI[classe].cosE,
       sorte,
     })
   }
@@ -375,7 +356,7 @@ class ClassiAnimali extends Modulo {
       buona: testo(CLASSI[classeCorretta].nome),
       falsi: classiFalse.map(c => testo(CLASSI[c].nome, percheDi(c))),
       chiave: 'zoo:che-classe',
-      aiuto: CLASSI[classeCorretta].cosE + curiositaDi(animale.nome),
+      aiuto: CLASSI[classeCorretta].cosE,
       sorte,
     })
   }
@@ -404,8 +385,7 @@ class ClassiAnimali extends Modulo {
       })),
       chiave: 'zoo:intruso',
       aiuto: (fuori.trappola === c ? fuori.percheTrappola
-        : `${Cap(senzaArticolo(fuori.nome))} ${CLASSI[fuori.classe]?.contro ?? 'non è di questa famiglia'}: non è un ${CLASSI[c].nome}.`) +
-        curiositaDi(fuori.nome),
+        : `${Cap(senzaArticolo(fuori.nome))} ${CLASSI[fuori.classe]?.contro ?? 'non è di questa famiglia'}: non è un ${CLASSI[c].nome}.`),
       sorte,
     })
   }
@@ -424,7 +404,7 @@ class ClassiAnimali extends Modulo {
       buona: testo(r.buona),
       falsi: falsi.map(f => testo(f, dritta)),
       chiave: 'zoo:regola',
-      aiuto: CLASSI[r.classe].cosE + curiositaDi(r.nome),
+      aiuto: CLASSI[r.classe].cosE,
       sorte,
     })
   }
@@ -446,7 +426,7 @@ class ClassiAnimali extends Modulo {
       buona: testo(giusta),
       falsi: [testo(sbagliata, spiegazione)],
       chiave: 'zoo:vertebrati',
-      aiuto: 'i vertebrati hanno una spina dorsale dentro il corpo, come noi; gli invertebrati no' + curiositaDi(a.nome),
+      aiuto: 'i vertebrati hanno una spina dorsale dentro il corpo, come noi; gli invertebrati no',
       sorte,
     })
   }

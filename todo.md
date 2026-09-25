@@ -11,10 +11,29 @@ file, se no in tre giorni non si distingue più il lavoro dal diario.
 
 ## I quiz
 
-La coda è vuota: tutti i moduli previsti sono in `src/quiz/moduli/`, i problemi
-a parole compresi.
+Il 25 settembre 2026 sono arrivati sette moduli nuovi (frazioni, grafici e
+tabelle, soldi e decimali, bilance, capire un testo, connettivi, classi degli
+animali) e i mazzi piccoli si sono allargati, perché i bambini che giocano da
+un po' trovavano le domande «trite». Resta in coda:
+
+- **la tabella degli indizi** — tre bambini, tre animali, due indizi: chi ha il
+  gatto? Il seguito delle implicazioni di `logica`, con i falsi calcolati
+  togliendo un indizio. In lavorazione.
+
+### Idee da portare avanti, non adesso
+
+- **«Lo sapevi che…»** — ogni tanto, fuori da una domanda, una curiosità vera
+  (il pipistrello è l'unico mammifero che vola davvero, il delfino dorme con
+  mezzo cervello). Non dentro l'aiuto dopo un errore: lì l'aiuto insegna il
+  metodo, e una curiosità diventa un fatto da imparare a memoria legato a una
+  domanda sbagliata. Il modulo `classi-animali` ne aveva una tabella, tolta:
+  sta nella storia di git (`git log -S CURIOSITA`).
+- **«Non si può sapere» giusta** nelle bilance: oggi è solo un falso, e un
+  bambino può imparare a scartarla a occhio.
 
 ### Deciso di NON portare, e perché
+
+- **le catene alimentari** (25 settembre 2026) — proposte, non convincono.
 
 - **spaziale** (poliomini girati) — `geometria` grado 4 lo fa già, e meglio: i
   pezzi sono filtrati perché le otto orientazioni siano tutte diverse.
