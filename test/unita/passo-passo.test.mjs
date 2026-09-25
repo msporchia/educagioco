@@ -441,11 +441,17 @@ const dove = (r) => r.mondo.pos
   const r = riordina({ tappa: vecchia.indexOf('viale') + 2, stelle: { 0: 3, [vecchia.indexOf('viale')]: 2 } }, vecchia)
   controlla('chi era allo zaino ritrova le stelle del viale sul viale', r.stelle[viale] === 2 && r.stelle[0] === 3,
             JSON.stringify(r.stelle))
-  uguale('e resta alla tappa dov\'era, dopo le pecore', r.tappa, viale + 2)
+  uguale('e resta alla tappa dov\'era, dopo le pecore', CAMPAGNA[r.tappa].chiave, vecchia[vecchia.indexOf('viale') + 2])
   const b = riordina({ tappa: vecchia.indexOf('viale'), stelle: {} }, vecchia)
   uguale('chi aveva appena finito le buche resta davanti al viale, con le pecore aperte alle spalle', b.tappa, viale)
   uguale('e chi era a metà dei piccoli resta dov\'era', riordina({ tappa: 5, stelle: {} }, vecchia).tappa, 5)
   controlla('chi aveva finito tutto ha finito tutto', riordina({ tappa: vecchia.length, stelle: {} }, vecchia).libera)
+  /* e dalla fila delle prime prove del cane: il gregge era la trentesima */
+  const due = FILE[2]
+  const g = riordina({ tappa: due.indexOf('gregge') + 1, stelle: { [due.indexOf('gregge')]: 3 } }, due)
+  const qui = CAMPAGNA.findIndex(t => t.chiave === 'gregge')
+  controlla('chi aveva provato le prime tappe del cane ritrova le stelle del gregge sul gregge',
+            g.stelle[qui] === 3, JSON.stringify(g.stelle))
 }
 
 /* ══════════ 3. la campagna si vince, e ogni gradino insegna la sua regola ══════════ */
@@ -546,6 +552,15 @@ for (const [i, t] of CAMPAGNA.entries()) {
             CAMPAGNA.filter(t => t.scalino === 'pecore').every(t => misura(Livello.da(t)).usa.fugge > 0))
   controlla('e il cane arriva fino a tre pecore',
             Math.max(...CAMPAGNA.filter(t => t.scalino === 'pecore').map(t => Livello.da(t).pecore.length)) >= 3)
+  /* il cane non è un'isola: il suo gradino rifà le regole di prima, e
+     lui torna in ogni gradino dello zaino con la carta di quel gradino */
+  const usaDelCane = CAMPAGNA.filter(t => t.scalino === 'pecore').map(t => misura(Livello.da(t)).usa)
+  controlla('il gradino del cane rifà le regole di prima: il salto, il ghiaccio, il masso nell\'acqua, la buca',
+            usaDelCane.some(u => u.salto) && usaDelCane.some(u => u.scivola) &&
+            usaDelCane.some(u => u.affonda) && usaDelCane.some(u => u.buca))
+  for (const s of SCALINI.filter(x => x.carta))
+    controlla(`il cane torna nel gradino «${s.nome}»`,
+              CAMPAGNA.some(t => t.scalino === s.chiave && Livello.da(t).cane))
   controlla('l\'ultima tappa delle buche mescola tutto: salto, ghiaccio, spinta, buca', (() => {
     const u = misura(Livello.da(CAMPAGNA[TAPPE_PRIME - 1])).usa
     return u.salto > 0 && u.scivola > 0 && u.spinta > 0 && u.buca > 0

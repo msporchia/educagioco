@@ -374,7 +374,14 @@ export const CAMPAGNA = [
      la strada si pensa di più: il cane non va da nessuna parte, è la
      pecora che deve arrivare. Da una pecora a tre; la carota è un osso,
      e prenderlo chiede un giro che non spaventi nessuno — chi ci passa
-     accanto male incastra la pecora, e la fila si ferma lì. Monete fra le
+     accanto male incastra la pecora, e la fila si ferma lì.
+
+     Dopo i primi quattro, il cane rifà le regole che il bambino ha già:
+     il ghiaccio (due volte), la buca che sbuca alle spalle della pecora,
+     il fiume che il cane salta e la pecora no, il masso che fa il ponte
+     per lei. Un posto del cane che non usa niente di quello che c'era
+     prima è un posto staccato dal gioco, e il cane poi **torna** in ogni
+     gradino dello zaino, con la carta di quel gradino. Monete fra le
      buche e lo zaino (12–14), portata 44: è il gradino dopo per chi ha
      sei anni e ha finito le buche. */
   { chiave: 'primo-gregge', nome: 'Il primo gregge', icona: '🐕', scalino: 'pecore',
@@ -400,7 +407,7 @@ export const CAMPAGNA = [
     ],
     trappole: [['su', 'destra', 'destra', 'destra']] },
   { chiave: 'curva', nome: 'La curva', icona: '🌳', scalino: 'pecore',
-    portata: 44, premio: 13, tema: 'autunno',
+    portata: 44, premio: 12, tema: 'autunno',
     racconto: 'Prima a destra, poi giù: fra una spinta e l\'altra il cane le gira attorno. Chi la spinge troppo in là la mette contro il bordo del prato, e da lì non torna più.',
     mappa: [
       'A.......',
@@ -410,6 +417,16 @@ export const CAMPAGNA = [
       '~~~cB.#B',
     ],
     trappole: [['destra', 'destra', 'destra', 'destra']] },
+  { chiave: 'due-in-fila', nome: 'Due in fila', icona: '🐏', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'primavera',
+    racconto: 'Una pecora con un\'altra alle spalle non ha dove scappare, e il cane ci sbatte contro. Prima si separano, poi dentro una per volta.',
+    mappa: [
+      'A....BA',
+      'P.pp.##',
+      '.....##',
+      'A..c.BA',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
   { chiave: 'pecora-ghiaccio', nome: 'La pecora sul ghiaccio', icona: '🧊', scalino: 'pecore',
     portata: 44, premio: 13, tema: 'inverno',
     racconto: 'Sul ghiaccio la pecora scivola finché qualcosa non la ferma: qui è il sasso, proprio sopra il cancello del recinto. Chi la rincorre sul ghiaccio ci sbatte contro.',
@@ -421,16 +438,47 @@ export const CAMPAGNA = [
       'B...c.B',
     ],
     trappole: [['giu', 'destra', 'destra', 'destra']] },
-  { chiave: 'due-in-fila', nome: 'Due in fila', icona: '🐏', scalino: 'pecore',
-    portata: 44, premio: 14, tema: 'primavera',
-    racconto: 'Una pecora con un\'altra alle spalle non ha dove scappare, e il cane ci sbatte contro. Prima si separano, poi dentro una per volta.',
+  { chiave: 'galleria', nome: 'La galleria', icona: '🕳️', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'autunno',
+    racconto: 'Di qua dalla siepe c\'è il cane, di là la pecora e il recinto. La buca passa sotto la siepe: il cane sbuca alle spalle della pecora, e da lì la porta dentro. L\'osso sta dalla parte sbagliata, e ci si torna.',
     mappa: [
-      'A....BA',
-      'P.pp.##',
-      '.....##',
-      'A..c.BA',
+      'P.1...A',
+      '....c..',
+      'BBBBBBB',
+      '#.p..1.',
+      'A.....A',
+    ] },
+  { chiave: 'guado', nome: 'Il guado', icona: '💧', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'estate', salti: true,
+    racconto: 'La pecora non salta e non nuota: il fiume la tiene di là, e il recinto è di là. Il cane il fiume lo salta — ma dove atterra conta, perché lei lo vede anche da sopra l\'acqua.',
+    mappa: [
+      'A.~....',
+      '..~..p.',
+      'P.~....',
+      '..~....',
+      'A.~c.B#',
+    ] },
+  { chiave: 'lago-gelato', nome: 'Il lago gelato', icona: '⛸️', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'inverno',
+    racconto: 'Sul lago scivolano tutti e due: la pecora fino all\'erba, il cane fino al sasso. Prima di spingerla, guarda dove si fermerà lei, e dove ti fermerai tu.',
+    mappa: [
+      'B.....B',
+      'P.p****',
+      '.****O*',
+      '.******',
+      'B...c#B',
+    ] },
+  { chiave: 'ponte-pecore', nome: 'Il ponte per le pecore', icona: '🌉', scalino: 'pecore',
+    portata: 44, premio: 14, tema: 'autunno',
+    racconto: 'La pecora non passa l\'acqua, e il recinto è di là. Prima il masso nel fosso — due spinte — e il ponte c\'è; poi la pecora si porta sopra il ponte, e di là la aspetta il recinto. Chi spinge la pecora prima del masso la mette contro l\'acqua.',
+    mappa: [
+      'A.c...A',
+      'P..m...',
+      '....p..',
+      '~~~~~~~',
+      'A..#..A',
     ],
-    trappole: [['destra', 'destra', 'destra']] },
+    trappole: [['giu', 'destra', 'destra', 'destra']] },
   { chiave: 'gregge', nome: 'Il gregge', icona: '🐑', scalino: 'pecore',
     portata: 44, premio: 14, tema: 'estate',
     racconto: 'Tre pecore, e il recinto ha il cancello da una parte sola. Quale per prima, e da che parte? Quella in basso è la più lontana, e le due in fila si devono separare.',
@@ -457,6 +505,20 @@ export const CAMPAGNA = [
     ],
     soluzioni: [programma(ripeti(5, 'destra'), 'giu')],
     fragili: [programma(ripeti(6, 'destra'), 'giu'), programma(ripeti(4, 'destra'), 'giu')] },
+  /* il cane torna: la stessa scatola, e ogni pecora che il cane passa
+     scende nella sua stalla */
+  { chiave: 'stalle', nome: 'Le stalle', icona: '🛖', scalino: 'ripeti',
+    portata: 46, premio: 14, tema: 'primavera', carte: ['ripeti'], zaino: 2,
+    racconto: 'Il cane passa lungo il corridoio, e ogni pecora che gli sta accanto, sopra o sotto, scende nella sua stalla. Nello zaino ci stanno due carte: una scatola, e la freccia da ripetere.',
+    mappa: [
+      'A#A#A#A#A',
+      '.p.p.p.p.',
+      'Pc.......',
+      '..p...p..',
+      'AA#AAA#AA',
+    ],
+    soluzioni: [programma(ripeti(7, 'destra'))],
+    fragili: [programma(ripeti(5, 'destra'))] },
   { chiave: 'stagno-grande', nome: 'Lo stagno grande', icona: '🦆', scalino: 'ripeti',
     portata: 47, premio: 14, tema: 'estate', carte: ['ripeti'], zaino: 4,
     racconto: 'Due strade attorno allo stagno, e una scatola per ogni lato. La carota sta da una parte sola: da che lato si comincia?',
@@ -578,6 +640,23 @@ export const CAMPAGNA = [
     fragili: [programma(ripeti(3, ripeti(2, 'destra'), 'giu', 'giu')),
               programma(ripeti(3, ripeti(4, 'destra'), 'giu', 'giu')),
               programma(ripeti(3, ripeti('rosso', 'destra'), 'giu'))] },
+  /* il cane torna: due corridoi di stalle lunghi diversi, e nessun
+     numero va bene per tutti e due */
+  { chiave: 'stalle-gradini', nome: 'Le stalle a gradini', icona: '🪜', scalino: 'fino',
+    portata: 61, premio: 16, tema: 'estate', carte: ['ripeti', 'fino'], zaino: 5,
+    racconto: 'Due corridoi di stalle, uno più lungo dell\'altro: il cane va avanti finché non arriva sulla lastra rossa, e scende al corridoio dopo. Con un numero, uno dei due corridoi va storto: nel primo si sbatte, nel secondo si scende troppo presto.',
+    mappa: [
+      'A#A#AAAAA',
+      'Ap.pAAAAA',
+      'P.crAAAAA',
+      'AAA.AAAAA',
+      'AAA.....r',
+      'AAAAApAp.',
+      'AAAAA#A#.',
+    ],
+    soluzioni: [programma(ripeti(2, ripeti('rosso', 'destra'), 'giu', 'giu'))],
+    fragili: [programma(ripeti(2, ripeti(3, 'destra'), 'giu', 'giu')),
+              programma(ripeti(2, ripeti(4, 'destra'), 'giu', 'giu'))] },
   { chiave: 'pianerottoli', nome: 'Scale e pianerottoli', icona: '🏛️', scalino: 'fino',
     portata: 62, premio: 16, tema: 'primavera', carte: ['ripeti', 'fino'], zaino: 7,
     racconto: 'Due colori: la scala scende fino al rosso, il pianerottolo va avanti fino al blu. Due volte, e ogni volta le scale sono lunghe diverse.',
@@ -665,6 +744,23 @@ export const CAMPAGNA = [
               programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'giu'), se('giallo', 'su'))),
               programma('destra', 'destra', ripeti('casa', se('rosso', 'giu'), se('blu', 'destra'))),
               programma('destra', 'destra', ripeti('casa', ripeti('rosso', 'destra'), ripeti('blu', 'giu')))] },
+  /* il cane torna: le lastre dicono dove c'è una pecora da spingere in
+     fondo alla sua nicchia */
+  { chiave: 'nicchie', nome: 'Le nicchie', icona: '🧱', scalino: 'se',
+    portata: 68, premio: 18, tema: 'autunno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
+    racconto: 'Nel corridoio le lastre dicono dove c\'è una pecora da spingere in fondo alla sua nicchia: il rosso sotto, il blu sopra. Passandole davanti lei fa un passo, ma la stalla è più in fondo: il cane ci entra, e torna. Un programma solo per tutto il corridoio; chi scambia i colori infila il muso nella siepe.',
+    mappa: [
+      'AAA#AAAA#',
+      'AAA.AAAA.',
+      'AAApAAAAp',
+      'P.cu.r.ru',
+      'AAAAApAp.',
+      'AAAAA.A.A',
+      'AAAAA#A#A',
+    ],
+    soluzioni: [programma(ripeti('casa', 'destra', se('rosso', 'giu', 'su'), se('blu', 'su', 'giu')))],
+    fragili: [programma(ripeti('casa', 'destra', se('rosso', 'su', 'giu'), se('blu', 'giu', 'su'))),
+              programma(ripeti('casa', 'destra', se('rosso', 'giu', 'su')))] },
 
   /* ── gradino 9: tutto il mondo ──
      Le regole del mondo e le scatole insieme: sul ghiaccio sono i sassi a
@@ -721,6 +817,23 @@ export const CAMPAGNA = [
                                     ripeti('rosso', 'salto-sinistra'), 'salto-giu'))],
     fragili: [programma(ripeti(2, ripeti(3, 'salto-destra'), 'salto-giu',
                                   ripeti(2, 'salto-sinistra'), 'salto-giu'))] },
+  /* il cane torna: tre lastre di ghiaccio, e a ogni giro due spinte —
+     la seconda gliela dà il cane scivolandole dietro */
+  { chiave: 'lago-stalle', nome: 'Il lago delle stalle', icona: '🧊', scalino: 'mondo',
+    portata: 73, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino'], zaino: 7,
+    racconto: 'Tre pecore, tre strisce di ghiaccio con un\'isola d\'erba in mezzo. La prima spinta la manda sull\'isola; la seconda gliela dà il cane scivolandole dietro, e lei arriva nella stalla. Poi il cane torna indietro e scende: tre volte la stessa cosa.',
+    mappa: [
+      'P.......',
+      '.p**.**#',
+      '.AAAAAAA',
+      '.p**.**#',
+      'cAAAAAAA',
+      '.p**.**#',
+      'A......A',
+    ],
+    soluzioni: [programma(ripeti(3, 'giu', 'destra', 'destra', 'sinistra', 'sinistra', 'giu'))],
+    fragili: [programma(ripeti(3, 'giu', 'giu')),
+              programma(ripeti(3, 'giu', 'destra', 'sinistra', 'giu'))] },
   { chiave: 'bosco-ghiacciato', nome: 'Il bosco ghiacciato', icona: '❄️', scalino: 'mondo',
     portata: 74, premio: 20, tema: 'inverno', carte: ['ripeti', 'fino', 'casa', 'se'], zaino: 8,
     racconto: 'I sentieri del bosco sono ghiaccio, e si scivola fino alla prossima lastra: è lei che ferma, ed è lei che dice dove andare dopo. Quattordici scivolate, e un programma solo che le legge tutte. Chi legge il giallo al contrario scivola giù, dritto nel buco del ghiaccio.',
@@ -780,8 +893,16 @@ export const FILE = {
       'colline', 'segni',
       'spirale-ghiaccio', 'pozze', 'fiume-sassi', 'bosco-ghiacciato'],
 }
-FILE[2] = CAMPAGNA.map(t => t.chiave)
-export const FILA_ATTUALE = 2
+/* la fila delle prime prove del cane (25 settembre 2026, due build mai
+   pubblicate): sei tappe del cane dopo le buche, e lo zaino com'era */
+FILE[2] = [...FILE[1].slice(0, 24),
+  'primo-gregge', 'altra-parte', 'curva', 'pecora-ghiaccio', 'due-in-fila', 'gregge',
+  ...FILE[1].slice(24)]
+/* lo stesso giorno il cane si è intrecciato col resto: il ghiaccio, la
+   buca, il fiume e il masso nel suo gradino, e una tappa sua in ogni
+   gradino dello zaino */
+FILE[3] = CAMPAGNA.map(t => t.chiave)
+export const FILA_ATTUALE = 3
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}

@@ -620,11 +620,18 @@ committate: non è ricostruibile da git.
   lo zaino pretende nei loro gradini. Un giro che non muove il coniglio
   ferma la fila (`STANCO`). Le mappe dei grandi arrivano a nove per
   undici.
-  **Fra le buche e lo zaino c'è il cane pastore** (sei tappe, ancora dei
+  **Fra le buche e lo zaino c'è il cane pastore** (dieci tappe, ancora dei
   piccoli, portata 44): il bobtail al posto del coniglio, le pecore (`p`)
   scappano di un passo quando il cane si ferma sulla loro riga o colonna
   a una o due caselle (`VISTA`: si scansano prima che arrivi, e non le
-  tocca mai), e la meta è il recinto (`#`), non la tana. Una pecora **incastrata** — su una cella da
+  tocca mai), e la meta è il recinto (`#`), non la tana. **Il cane non
+  è un'isola**, ed è la correzione che l'ha rifatto: il suo gradino rifà
+  il ghiaccio, la buca, il fiume da saltare e il masso che fa il ponte, e
+  lui torna in ogni gradino dello zaino con la carta di quel gradino (le
+  stalle, le nicchie, il lago delle stalle); `unita/passo-passo` lo
+  pretende. Siccome l'ultima pecora nel recinto chiude la fila, un 🔁 con
+  un numero troppo alto non costa niente: dove il numero deve contare, i
+  pezzi da ripetere sono lunghi diversi. Una pecora **incastrata** — su una cella da
   cui nessuna spinta la riporta al recinto, `celleIncastro` in
   `motore/livello.js`, calcolata una volta dal recinto all'indietro —
   ferma la fila come un albero (`PERSA`): senza, il bambino aggiungeva
