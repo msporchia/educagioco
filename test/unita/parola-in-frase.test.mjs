@@ -116,18 +116,21 @@ uguale('e la parola della frase è quella che la consegna nomina', fuoriConsegna
 uguale('nessuna porta più il disegno che regalava «nome»', conEmoji, 0)
 uguale('il perché di uno sbaglio non ripete l\'aiuto', ripetute, 0)
 nota(`${viste.size} parole diverse in ${VOLTE} tiri`)
-controlla('e prima o poi escono tutte e trentasei', viste.size === 36, `${viste.size}`)
+controlla('e prima o poi escono tutte e sessantacinque', viste.size === 65, `${viste.size}`)
 
-/* Il caso che ha fatto nascere tutto: «lo» non compare più da solo. */
+/* Il caso che ha fatto nascere tutto: «lo» non compare più da solo.
+   Il mazzo ne porta più di una frase — ognuna deve comunque metterlo
+   davanti a un nome, con l'aiuto che parla di QUELLA frase. */
 const conLo = [...Array(VOLTE).keys()]
   .map(i => grammatica.chiedi(3, new Sorte(31 * i + 7)))
   .filter(d => d.testo.includes('«lo»'))
 controlla('«lo» esce, e non è sparito insieme al difetto', conLo.length > 0)
 for (const d of conLo) {
+  const nome = (d.soggetto.testo.match(/\blo (\w+)/) || [])[1]
   controlla('«lo» arriva dentro una frase che lo rende un articolo',
-            d.soggetto.testo === 'Metto lo zaino in spalla.', d.soggetto.testo)
+            !!nome, d.soggetto.testo)
   controlla('e l\'aiuto parla di quella frase, non della regola in astratto',
-            d.aiuto.includes('zaino'), d.aiuto)
+            !!nome && d.aiuto.includes(nome), d.aiuto)
 }
 
 /* ══════════ 4. LA FRASE SI CONTA FRA LE COSE DA LEGGERE ══════════
