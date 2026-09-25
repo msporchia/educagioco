@@ -67,6 +67,7 @@ npm run quiz:banco     # prova tutti i moduli di quiz senza browser
 npm run quiz:eta       # chi vede cosa: la calibrazione per età, e i buchi
 npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
 npm run scatti         # rifà le immagini di docs/img/
+npm run scatti clip    # solo le clip animate del README (strumenti/clip/)
 node strumenti/icone.mjs   # i PNG delle icone e l'anteprima del link, da public/icona.svg
 ```
 

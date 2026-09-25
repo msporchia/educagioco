@@ -74,12 +74,24 @@ Questi **rigenerano dei file versionati**. Vedi [Roba generata](#roba-generata).
 | `npm run tara` | `src/data/taratura-castello.js` | dopo aver toccato prezzi, torri o tappe del castello |
 | `npm run voci` | `src/data/voci.js`, `voci-es.js` | dopo aver aggiunto parole da pronunciare |
 | `npm run voci -- --lingua es` | idem, per lo spagnolo | |
-| `npm run scatti` | le immagini di `docs/img/` | quando una schermata cambia aspetto |
+| `npm run scatti` | le immagini di `docs/img/`, foto e clip | quando una schermata cambia aspetto |
+| `npm run scatti clip` | solo le clip animate del README (`docs/img/clip-*.webp`) | quando un gioco cambia faccia |
 | `python3 strumenti/sprite/atlante.py` | `src/giochi/*/dati/atlante.js` | dopo aver corretto un ritaglio |
 | `python3 strumenti/sprite/terreni.py` | l'atlante del castello (tessere a griglia) | idem, per i terreni |
 
 `npm run voci` è incrementale (cache in `.voci-cache/`) ma **vuole rete e
 ffmpeg**. Se in coda dice «non incise: …», rilancia lo stesso comando.
+
+**Le clip del README si rifanno, non si ritoccano.** Ognuna è una ricetta
+in `strumenti/clip/<gioco>.mjs`: dove entrare, e una partita giocata
+davanti alla telecamera (`durante`). Chrome registra lo schermo e
+`strumenti/clip.py` monta il WebP — vuole Python con Pillow, niente
+ffmpeg. Le ricette leggono le risposte dal gioco e non le scrivono a mano,
+quindi un gioco cambiato si rifotografa col comando e basta; se una clip
+esce storta, lo strumento lo dice in coda e il commento in testa alla
+ricetta dice da cosa dipende. Un gioco nuovo nel README è un file nuovo lì
+dentro, sul calco di `passo.mjs`. Vogliono `dist/` fresco: prima
+`npm run build`.
 
 ### I banchi di prova
 
