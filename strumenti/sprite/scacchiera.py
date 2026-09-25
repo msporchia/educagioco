@@ -2,6 +2,10 @@
 """Gli schemi da allegare ai prompt di uno scenario del castello.
 
     python3 strumenti/sprite/scacchiera.py
+    python3 strumenti/sprite/scacchiera.py --carte carte.json uscita.png
+
+(la seconda forma la lancia `carte-castello.mjs`, che le carte le fa col
+generatore vero del gioco)
 
 È il fratello di `scenario.py`, che fa la stessa cosa per il sotterraneo.
 Scrive, accanto alla scheda `sorgenti/castello/generati/PROMPT-scenario.md`,
@@ -126,22 +130,25 @@ def fondo(d, x0, y0, c, w=1, h=1):
 
 
 def strada(d, x0, y0, vv):
-    """Una cella di strada: il fondo della strada fino ai bordi della
-    cella, e l'orlo sui lati da cui la strada non prosegue. Negli angoli
-    interni — dove la strada gira o si innesta — l'orlo fa un gomito."""
-    rett(d, x0, y0, x0 + C, y0 + C, COLORE['strada'])
-    o = 8
-    if 'N' not in vv:
-        rett(d, x0, y0, x0 + C, y0 + o, COLORE['orlo'])
-    if 'S' not in vv:
-        rett(d, x0, y0 + C - o, x0 + C, y0 + C, COLORE['orlo'])
-    if 'O' not in vv:
-        rett(d, x0, y0, x0 + o, y0 + C, COLORE['orlo'])
-    if 'E' not in vv:
-        rett(d, x0 + C - o, y0, x0 + C, y0 + C, COLORE['orlo'])
-    for a, b, dx, dy in (('N', 'O', 0, 0), ('N', 'E', C - o, 0), ('S', 'O', 0, C - o), ('S', 'E', C - o, C - o)):
-        if a in vv and b in vv:
-            rett(d, x0 + dx, y0 + dy, x0 + dx + o, y0 + dy + o, COLORE['orlo'])
+    """Una cella di strada: una striscia larga metà cella nel mezzo, coi
+    bracci verso i lati da cui la strada prosegue, e l'orlo attorno. Il
+    fondo della cella resta com'è: ai lati della strada c'è un quarto di
+    cella di prato."""
+    q, o = C // 4, 5
+    bracci = {'N': (q, 0, 3 * q, 2 * q), 'S': (q, 2 * q, 3 * q, C),
+              'O': (0, q, 2 * q, 3 * q), 'E': (2 * q, q, C, 3 * q)}
+    pezzi = [(q, q, 3 * q, 3 * q)] + [bracci[v] for v in vv]
+    # prima l'orlo, allargato di traverso al braccio; poi la strada sopra
+    for v, (a, b, c, e) in zip(' ' + vv, pezzi):
+        if v in 'NS':
+            a, c = a - o, c + o
+        elif v in 'OE':
+            b, e = b - o, e + o
+        else:
+            a, b, c, e = a - o, b - o, c + o, e + o
+        rett(d, x0 + a, y0 + b, x0 + c, y0 + e, COLORE['orlo'])
+    for a, b, c, e in pezzi:
+        rett(d, x0 + a, y0 + b, x0 + c, y0 + e, COLORE['strada'])
 
 
 def piazzola(d, x0, y0):
@@ -170,24 +177,38 @@ def bocca(d, x0, y0):
 
 def castello(d, x0, y0, piede=3):
     """Il castello: cinque celle di larghezza, `piede` di pianta, e le torri
-    che salgono di una cella sopra. Il portone guarda in su, dove arriva
-    la strada."""
+    che salgono di una cella sopra. Si vede di fronte, col portone verso
+    chi guarda: la strada arriva alle sue mura da sopra."""
     top = y0 + (4 - piede - 1) * C
-    rett(d, x0 + 8, top + C, x0 + 5 * C - 8, y0 + 4 * C - 4, COLORE['muro'])
+    fondo_y = y0 + 4 * C - 4
+    rett(d, x0 + C + 16, top + C, x0 + 4 * C - 16, top + 2 * C, COLORE['pietra'])     # il mastio, dietro
+    rett(d, x0 + 8, top + 2 * C - 8, x0 + 5 * C - 8, fondo_y, COLORE['muro'])
     for tx in (0, 4):
-        rett(d, x0 + tx * C + 4, top + 12, x0 + tx * C + C - 4, y0 + 4 * C - 4, COLORE['pietra'])
+        rett(d, x0 + tx * C + 4, top + 12, x0 + tx * C + C - 4, fondo_y, COLORE['pietra'])
         d.polygon([(x0 + tx * C + 2, top + 16), (x0 + tx * C + C // 2, top - 26),
                    (x0 + tx * C + C - 2, top + 16)], fill=COLORE['tetto'])
-    # il mastio sta dietro, nella riga di sotto: davanti al portone la
-    # cella è della strada, e una torre lì sopra la coprirebbe
-    rett(d, x0 + C + 20, top + 2 * C - 10, x0 + 4 * C - 20, y0 + 4 * C - 12, COLORE['pietra'])
-    # il portone, in alto nel mezzo: la strada arriva da lì
-    rett(d, x0 + 2 * C + 16, top + C, x0 + 3 * C - 16, top + C + 34, COLORE['buio'])
+    d.polygon([(x0 + C + 12, top + C + 4), (x0 + 5 * C // 2, top + 10),
+               (x0 + 4 * C - 12, top + C + 4)], fill=COLORE['tetto'])
+    # il portone, in basso nel mezzo
+    rett(d, x0 + 2 * C + 12, fondo_y - 56, x0 + 3 * C - 12, fondo_y, COLORE['buio'])
 
 
 def stagno(d, x0, y0, w, h):
     d.ellipse([x0 + 2, y0 + 2, x0 + w * C - 3, y0 + h * C - 3], fill=COLORE['riva'])
     d.ellipse([x0 + 12, y0 + 12, x0 + w * C - 13, y0 + h * C - 13], fill=COLORE['~'])
+
+
+def lago_dal_bordo(d, x0, y0, w, h):
+    """Un lago che entra dal bordo destro del campo: la riva frastagliata
+    verso il prato, e il lato del bordo tagliato dritto."""
+    d.ellipse([x0 + 2, y0 + 2, x0 + 2 * w * C, y0 + h * C - 3], fill=COLORE['riva'])
+    d.ellipse([x0 + 14, y0 + 14, x0 + 2 * w * C, y0 + h * C - 15], fill=COLORE['~'])
+    rett(d, x0 + w * C, y0, x0 + 2 * w * C + 4, y0 + h * C, (255, 255, 255))
+
+
+def masso(d, x0, y0, w=2, h=2):
+    d.ellipse([x0 + 10, y0 + 18, x0 + w * C - 10, y0 + h * C - 8], fill=COLORE['sasso'])
+    d.ellipse([x0 + 18, y0 + 14, x0 + w * C - 40, y0 + h * C // 2], fill=COLORE['cespuglio'])
 
 
 def per_terra(d, x0, y0):
@@ -196,7 +217,11 @@ def per_terra(d, x0, y0):
 
 # ── la pianta ────────────────────────────────────────────────────────
 
-def disegna_pianta(righe, uscita):
+def disegna_pianta(righe, uscita=None):
+    """Una pianta qualunque, grande quanto è: quella della scheda (16×24)
+    o la carta di una tappa (12×22). Torna l'immagine, e se c'è
+    un'uscita la scrive."""
+    ALTO, LARGO = len(righe), len(righe[0])
     im = Image.new('RGB', (LARGO * C, ALTO * C))
     d = ImageDraw.Draw(im)
     a = lettore(righe)
@@ -233,7 +258,33 @@ def disegna_pianta(righe, uscita):
                 bocca(d, x * C, y * C)
             if a(x, y) == CASTELLO and a(x - 1, y) != CASTELLO and a(x, y - 1) != CASTELLO:
                 castello(d, x * C, (y - 1) * C)
-    im.save(uscita)
+    if uscita:
+        im.save(uscita)
+    return im
+
+
+# ── le carte delle tappe ─────────────────────────────────────────────
+
+def disegna_carte(carte, uscita, per_riga=6, largo=256):
+    """Tutte le carte in un foglio solo, col nome sotto e un bordo rosso
+    su quelle che non rispettano la scacchiera. Le carte le scrive
+    `carte-castello.mjs` col generatore vero del gioco."""
+    alto = largo * 22 // 12
+    righe = (len(carte) + per_riga - 1) // per_riga
+    foglio = Image.new('RGB', (per_riga * (largo + 16) + 16, righe * (alto + 40) + 16), (24, 26, 24))
+    d = ImageDraw.Draw(foglio)
+    for i, c in enumerate(carte):
+        x0 = 16 + (i % per_riga) * (largo + 16)
+        y0 = 16 + (i // per_riga) * (alto + 40)
+        im = disegna_pianta(c['righe']).resize((largo, alto), Image.LANCZOS)
+        foglio.paste(im, (x0, y0))
+        g = guasti(c['righe']) + c.get('guasti', [])
+        if g:
+            d.rectangle([x0 - 3, y0 - 3, x0 + largo + 2, y0 + alto + 2], outline=(230, 40, 40), width=3)
+        d.text((x0, y0 + alto + 6), f"{c['campagna']} · {c['nome']}" + (f'  -- {len(g)} fuori regola' if g else ''),
+               fill=(230, 230, 220))
+    foglio.save(uscita)
+    return foglio
 
 
 # ── il foglio ────────────────────────────────────────────────────────
@@ -249,27 +300,27 @@ def disegna_foglio(uscita):
     """Le quattro fasce del prompt 2, dall'alto in basso, su 24×16 celle."""
     im = Image.new('RGB', (24 * C, 16 * C), (255, 255, 255))
     d = ImageDraw.Draw(im)
-    # 1 — i tre fondi da 4×4 celle; a destra i due stagni e le due piazzole
+    # 1 — i tre fondi da 4×4 celle; a destra le due piazzole e i due stagni
     for i, c in enumerate('.,^'):
         fondo(d, i * 5 * C, 0, c, 4, 4)
-    stagno(d, 15 * C, 0, 3, 3)
-    stagno(d, 19 * C, 0, 2, 2)
-    piazzola(d, 22 * C, 0)
-    piazzola(d, 22 * C, 2 * C)
-    # 2 — la finestra, la bocca, il castello
+    piazzola(d, 15 * C, 0)
+    piazzola(d, 15 * C, 2 * C)
+    stagno(d, 17 * C, 0, 2, 2)
+    stagno(d, 20 * C, 0, 3, 3)
+    # 2 — la finestra, la bocca, il castello, il lago dal bordo, tre decori grandi
     a = lettore(FINESTRA)
+    fondo(d, 0, 5 * C, '.', 5, 5)
     for y in range(5):
         for x in range(5):
-            x0, y0 = x * C, (5 + y) * C
             if a(x, y) == STRADA:
-                # fuori dalla finestra non c'è strada: il giro ha l'orlo
-                # anche verso l'esterno
                 vv = ''.join(v for v, (dx, dy) in PASSI.items() if a(x + dx, y + dy) == STRADA)
-                strada(d, x0, y0, vv)
-            else:
-                fondo(d, x0, y0, '.')
-    bocca(d, 6 * C, 6 * C)
-    castello(d, 10 * C, 5 * C)
+                strada(d, x * C, (5 + y) * C, vv)
+    bocca(d, 6 * C, 5 * C)
+    castello(d, 10 * C, 6 * C)
+    lago_dal_bordo(d, 16 * C, 5 * C, 3, 5)
+    masso(d, 20 * C, 5 * C)
+    masso(d, 20 * C, 8 * C)
+    masso(d, 6 * C, 8 * C)
     # 3 — sei pezzi del fitto, alti due celle, e sei decori da una cella
     for k in range(6):
         albero(d, k * 2 * C, 11 * C)
@@ -281,6 +332,13 @@ def disegna_foglio(uscita):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--carte':
+        import json
+        carte = json.loads(Path(sys.argv[2]).read_text())
+        disegna_carte(carte, sys.argv[3])
+        rotte = [c['nome'] for c in carte if guasti(c['righe']) or c.get('guasti')]
+        print(f'{len(carte)} carte in {sys.argv[3]}' + (f'; fuori regola: {", ".join(rotte)}' if rotte else ''))
+        return
     righe = pianta_dalla_scheda()
     g = guasti(righe)
     if g:

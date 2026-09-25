@@ -35,6 +35,11 @@ diventano a squadra su una scacchiera, e con loro le tessere a etichette
 che `terreni.py` misura non servono più. Quando il foglio nuovo c'è e il
 gioco lo usa, questo va in `../non-usati/`.
 
+Le scene generate con quella scheda, finora: td_1.png (il bosco),
+td_2.png (la neve) e td_3.png (la lava) — lo stesso campo con tre
+vestiti. Sono bersagli, non si ritagliano: com'è andata ognuna lo dice
+la scheda, in fondo.
+
 Il resto della cartella
 -----------------------
 `../non-usati/` tiene otto `Gemini_Generated_Image_*.jpeg` (quelli sì

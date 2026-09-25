@@ -31,7 +31,7 @@ dopo (in fondo, «Dopo il terreno»).
 ## La scacchiera
 
 È la decisione che rende tutto il resto semplice: **le strade vanno solo
-a squadra, e sono larghe esattamente una cella.** Allora ogni cella del
+a squadra, e ogni cella di strada ne porta una sola.** Allora ogni cella del
 campo è una cosa sola — fondo, strada, piazzola, acqua, fitto — e una
 cella di strada ha solo da sapere **da quali lati prosegue**: dritta,
 gomito, innesto a T, incrocio. Sono undici casi in tutto, e ci stanno
@@ -39,11 +39,17 @@ dentro un solo pezzo di strada dipinto tutto insieme (la «finestra» del
 prompt 2): non c'è più niente da comporre come un sudoku e niente che
 possa non chiudersi.
 
-In più l'orlo della strada cade **sul bordo della cella**: la strada
-occupa la cella intera, e i suoi bordi (sassi, ciuffi, assi) stanno
-dentro la cella di strada, sul lato da cui la strada non prosegue. Così
-fra una cella di strada e una di fondo c'è un bordo vero — dove finisce
-la strada — e non una cucitura in mezzo al prato.
+**La strada è larga mezza cella, centrata nella cella**: ai lati resta
+un quarto di cella di fondo, e dove la strada non prosegue c'è il suo
+orlo. Era scritta larga una cella intera, coi bordi sui bordi delle
+celle; `td_1.png` l'ha disegnata larga la metà, da sé, e viene meglio —
+lascia respiro attorno alle piazzole e si legge come un sentiero invece
+che come un nastro. Deciso il 25 settembre 2026. Il gioco non cambia: si
+cammina da centro a centro di cella, e la finestra ha gli stessi undici
+casi. Il prezzo è che una cella di strada ha del fondo dentro, e quel
+fondo deve cucirsi con le celle di fondo vicine: per questo il fondo si
+chiede spento e uniforme, e per questo la finestra si dipinge col fondo
+nei buchi, nello stesso colpo.
 
 Quello che la scacchiera cambia nel gioco è in «Come si monta nel
 gioco», in fondo.
@@ -68,12 +74,12 @@ dopo la scena, copia la scena.
 | prompt | allegati |
 |---|---|
 | 1, la scena | [`PROMPT-scenario-pianta.png`](PROMPT-scenario-pianta.png) (dove sta ogni cosa) e, per il primo scenario, [`../../sotterraneo/generati/sotterraneo_1.png`](../../sotterraneo/generati/sotterraneo_1.png) come STILE — la mano delle cantine, così i due giochi sembrano dello stesso posto |
-| 2, il foglio | la scena buona del prompt 1 e [`PROMPT-scenario-foglio.png`](PROMPT-scenario-foglio.png) (dove va ogni pezzo) |
+| 2, il foglio | la scena buona del prompt 1 — per il bosco [`td_1.png`](td_1.png) — e [`PROMPT-scenario-foglio.png`](PROMPT-scenario-foglio.png) (dove va ogni pezzo) |
 | uno scenario nuovo | la scena buona dello scenario di prima al posto delle cantine, così la mano resta la stessa |
 
 I due schemi li disegna `python3 strumenti/sprite/scacchiera.py`, e la
 pianta **la legge da questa scheda** — dal prompt 1 — e controlla che
-rispetti la regola della scacchiera: strada larga una cella (mai quattro
+rispetti la regola della scacchiera: una strada per cella (mai quattro
 celle di strada in quadrato), nessun vicolo cieco, ogni piazzola accanto
 alla strada, tutta la strada che arriva al castello. Se si cambia la
 pianta qui, lo schema la segue. Colori piatti e nessuna linea di griglia,
@@ -93,12 +99,12 @@ L'immagine è 1024×1536 px, verticale, su una griglia invisibile di 16 colonne 
 
 COME È FATTA LA STRADA — vale ovunque, senza eccezioni:
 - la strada va solo in orizzontale e in verticale, mai in diagonale e mai in curva morbida: gira ad angolo retto, dentro una cella;
-- è larga esattamente una cella, sempre: i suoi bordi cadono esattamente sui bordi delle celle, dritti come un righello;
-- l'orlo della strada (quello che la separa dal fondo) sta dentro la cella di strada, largo un pixel o due del disegno, e c'è solo sui lati da cui la strada non prosegue; dove la strada gira o si innesta in un'altra, l'orlo fa l'angolo;
-- dove due strade si incontrano la cella è un innesto a T, dove si attraversano è un incrocio: la strada resta larga una cella anche lì, non si allarga mai in una piazza;
+- è larga esattamente metà cella, sempre, e corre nel mezzo delle celle: ai suoi lati resta un quarto di cella di fondo, e i suoi bordi sono dritti come un righello;
+- ha un orlo (quello che la separa dal fondo), largo un pixel o due del disegno, sui due fianchi; dove la strada gira o si innesta in un'altra, gira o si innesta nel mezzo della cella e l'orlo fa l'angolo;
+- dove due strade si incontrano la cella è un innesto a T, dove si attraversano è un incrocio: la strada resta larga metà cella anche lì, non si allarga mai in una piazza;
 - due tratti di strada vicini hanno sempre almeno una cella di fondo in mezzo.
 
-Le piazzole sono i posti dove il giocatore costruirà le torri: una cella ciascuna, vuote, piatte, ben distinguibili dal fondo, tutte uguali fra loro. Le bocche sono da dove arrivano i mostri: larghe tre celle e alte due, in cima al campo, con la strada che esce dal mezzo della loro riga di sotto. Il castello è in fondo: largo cinque celle, e la strada arriva al suo portone, che sta nel mezzo del muro di sopra — quello che guarda la strada.
+Le piazzole sono i posti dove il giocatore costruirà le torri: una cella ciascuna, vuote, piatte, ben distinguibili dal fondo, tutte uguali fra loro. Le bocche sono da dove arrivano i mostri: larghe tre celle e alte due, in cima al campo, con la strada che esce dal mezzo della loro riga di sotto. Il castello è in fondo: largo cinque celle, visto di fronte col portone verso chi guarda, e la strada arriva fino alle sue mura.
 
 La luce è piatta e uguale dappertutto: niente pozze di luce, niente angoli in ombra, niente vignettatura, niente nebbia. Il terreno è il fondo: colori più spenti e meno contrastati di tutto quello che ci camminerà sopra e ci verrà costruito sopra. La strada si deve leggere da lontano: più chiara o più scura del fondo, mai dello stesso tono.
 
@@ -153,11 +159,11 @@ Il foglio è ORIZZONTALE, 1536×1024 px (più largo che alto), su FONDO TRASPARE
 
 Dall'alto in basso:
 
-1. I tre fondi, ognuno un quadrato di 4×4 celle che si ripete SENZA CUCITURE — il bordo destro continua nel sinistro, quello di sotto in quello di sopra — senza bordi e senza linee di griglia: il fondo, il fondo con qualcosa in più, e il fitto visto da sopra, pieno, senza un buco. A destra: i due specchi d'acqua della scena, interi con la loro riva e trasparenti attorno, uno di 3×3 celle e uno di 2×2; e due piazzole vuote, una cella ciascuna, uguali fra loro ma non identiche.
+1. I tre fondi, ognuno un quadrato di 4×4 celle che si ripete SENZA CUCITURE — il bordo destro continua nel sinistro, quello di sotto in quello di sopra — senza bordi e senza linee di griglia: il fondo, il fondo con qualcosa in più, e il fitto visto da sopra, pieno, senza un buco. A destra: due piazzole vuote, una cella ciascuna, uguali fra loro ma non identiche; e due specchi d'acqua interi con la loro riva frastagliata, trasparenti attorno, uno di 2×2 celle e uno di 3×3.
 
-2. La finestra di strada: un pezzo di 5×5 celle col fondo nei buchi, dove la strada fa il giro di tutto il quadrato e una croce di strada lo divide in quattro. Contiene, nello stesso disegno, i quattro gomiti negli angoli, i quattro innesti a T a metà dei lati, l'incrocio nel mezzo e i dritti nei due versi: la strada è larga una cella, i bordi cadono sui bordi delle celle, e l'orlo sta dentro le celle di strada solo sui lati da cui non prosegue — sia verso l'esterno del quadrato, sia verso i quattro buchi. Accanto, la bocca da cui arrivano i mostri, tre celle per due, com'è nella scena. Accanto ancora, il castello: largo cinque celle e alto quattro — tre di pianta e una per le torri che salgono — col portone nel mezzo del muro di sopra.
+2. La finestra di strada: un pezzo di 5×5 celle col fondo nei buchi, dove la strada fa il giro di tutto il quadrato e una croce di strada lo divide in quattro. Contiene, nello stesso disegno, i quattro gomiti negli angoli, i quattro innesti a T a metà dei lati, l'incrocio nel mezzo e i dritti nei due versi: la strada è larga metà cella e corre nel mezzo delle celle, come nella scena, con un quarto di cella di fondo ai lati — anche verso l'esterno del quadrato, che quindi ha un bordo di fondo tutto intorno largo un quarto di cella. Accanto, la bocca da cui arrivano i mostri, tre celle per due, com'è nella scena. Accanto ancora, il castello: largo cinque celle e alto quattro — tre di pianta e una per le torri che salgono — col portone verso chi guarda, com'è nella scena. Poi un lago che entra dal bordo del campo, tre celle di larghezza per cinque di altezza: la riva frastagliata a sinistra, verso il prato, e il lato destro tagliato dritto, dove il campo finisce. In fondo a destra, tre decori grandi due celle per due: un gruppo di alberi, un masso grande col muschio, e uno a tua scelta.
 
-3. Sei pezzi del fitto, ognuno largo una cella e alto due — da mettere lungo il suo bordo, dove il fitto confina col fondo: la parte di sotto poggia a terra, quella di sopra sale sulla cella di sopra. Poi sei decori sparsi, grandi una cella ciascuno: prima quelli che ci sono nella scena allegata, uno per tipo, poi altri a tua scelta dalla riga «Il decoro sparso» dello scenario.
+3. Sei pezzi del fitto, ognuno largo una cella e alto due — da mettere lungo il suo bordo, dove il fitto confina col fondo: la parte di sotto poggia a terra, quella di sopra sale sulla cella di sopra. Accanto, sei decori sparsi grandi una cella: prima quelli che ci sono nella scena allegata, uno per tipo (un albero isolato, un cespuglio, un masso, un gruppo di sassi), poi altri a tua scelta dalla riga «Il decoro sparso» dello scenario.
 
 4. Dodici cose per terra, ognuna dentro una cella, piatte sul fondo e SENZA NESSUN QUADRATO DI FONDO SOTTO: il trasparente arriva fino al bordo della cosa. Prese dalla riga «Per terra» dello scenario. Niente che si possa scambiare per una cosa da raccogliere.
 ```
@@ -179,6 +185,10 @@ scambiare per una cosa da raccogliere, e qui anche **niente che sembri
 una torre** — un bambino legge ogni cosa in scena come parte del
 problema, e un campanile di decoro accanto a una piazzola è una torre
 che non spara.
+
+Oltre a queste quattro, le scene `td_2.png` (la neve) e `td_3.png` (la
+lava) sono uscite da blocchi scritti a mano nella chat: vanno copiati
+qui, con le stesse quattordici righe.
 
 ### Il bosco — si parte da qui
 
@@ -261,16 +271,18 @@ Per terra: fango, ninfee secche, sassi coperti di muschio, un ramo, fiori lilla,
 Quattro controlli, in quest'ordine — e nessuno dei quattro è «è bello»:
 
 1. **La scacchiera.** Sovrapposta una griglia da 64 px (sul foglio
-   ridotto, e a occhio sulla scena), i bordi della strada cadono sui
-   bordi delle celle, e la strada è larga una cella anche negli innesti e
-   nell'incrocio. Dove si rompe di solito: la strada che si allarga
-   negli incroci, i gomiti arrotondati che escono dalla cella, la strada
-   che sbanda di mezza cella. Se sbanda la scena resta buona come
+   ridotto, e a occhio sulla scena), la strada corre nel mezzo delle
+   celle ed è larga metà cella anche negli innesti e nell'incrocio. Dove
+   si rompe di solito: la strada che si allarga negli incroci, i gomiti
+   arrotondati, la strada che corre sulla riga fra due celle invece che
+   nel mezzo (in `td_1.png` succede a tratti). Se sbanda la scena resta buona come
    bersaglio, ma i pezzi si prendono dal foglio.
-2. **L'orlo.** Nella finestra ogni cella di strada ha l'orlo solo dove
-   non prosegue: è quello che permette di prenderne una qualsiasi e
-   metterla accanto a un'altra. Un orlo in mezzo a un dritto, o un gomito
-   senza l'angolo interno, e quella cella non si può usare.
+2. **L'orlo.** Nella finestra la strada tocca il bordo della cella solo
+   dove prosegue, e lì arriva sempre allo stesso punto — il mezzo — con
+   la stessa larghezza: è quello che permette di prendere una cella
+   qualsiasi e metterla accanto a un'altra. Una strada che arriva al
+   bordo spostata di qualche pixel fa un gradino, e quella cella non si
+   può usare.
 3. **Il fondo non è una tabella**: nessuna linea regolare ogni 64 px.
 4. **La prova dei trenta pixel.** Ridotta come in partita — una cella a
    una trentina di pixel dello schermo, cioè il campo largo quanto un
@@ -384,6 +396,33 @@ e ridotta a 480 px di larghezza, cioè a misura di telefono.
   un moncone fino al bordo. In gioco basta che la strada finisca contro
   il castello.
 
-Da decidere prima del prompt 2, che la allega e quindi la copierà: se
-la strada resta larga mezza cella, centrata nella cella, o se si
-pretende la cella intera come dice la parte fissa.
+Mandata **senza la pianta** (non c'erano i gettoni per l'allegato): il
+campo l'ha inventato da sé, e il concetto — strade a squadra, bocche in
+cima, castello in fondo, piazzole ai lati — l'ha capito lo stesso.
+Deciso dopo averla vista: la strada resta larga mezza cella, centrata
+nella cella, e la parte fissa dei due prompt adesso dice così.
+
+### `td_2.png` e `td_3.png` — la stessa scena, la neve e la lava ✅
+
+25 settembre 2026, ChatGPT: `td_1.png` rivestita con due scenari che la
+scheda non ha ancora (la neve e la lava — il testo mandato va ricopiato
+qui, e diventa due blocchi in «Gli scenari»). 1024×1536, RGB.
+
+- **La geometria non si muove**: i bordi della strada sulla riga 200
+  cadono a 496/533 px in `td_1`, 490/537 in `td_2`, 493/533 in `td_3` —
+  meno di due pixel del disegno. Strada, piazzole, bocche e castello
+  stanno al loro posto in tutte e tre. Vuol dire che **uno scenario
+  nuovo si fa rivestendo quello di prima**, e che con buona probabilità
+  il foglio si misura una volta sola: il foglietto del secondo foglio
+  sarà quello del primo, ritoccato di qualche pixel (da verificare
+  quando i fogli ci sono).
+- **Il vestito cambia tutto il resto, e bene**: il fitto diventa abeti
+  innevati o rupi nere con le colate, l'acqua diventa ghiaccio con i
+  lastroni o laghi di lava, i decori diventano cespugli con le bacche o
+  vulcanelli. Le «distrazioni» attorno sono metà della bellezza, ed è il
+  motivo per cui il generatore delle carte le mette da sé.
+- **La strada si legge in tutte e due**, anche se sulla neve il grigio
+  è più vicino al fondo: lì la prova dei trenta pixel è la più stretta.
+- **Nella lava ci sono cristalli rossi**, a mucchi, sparsi sul campo: in
+  un gioco sembrano gemme da raccogliere. Nel foglio della lava vanno
+  chiesti senza, o scartati al ritaglio.
