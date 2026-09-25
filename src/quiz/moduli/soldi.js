@@ -22,10 +22,12 @@
    «quanto costano N cose» (si moltiplicano euro e centesimi a parte).
    Non sono tre errori: è lo stesso, vestito da tre domande diverse.
 
-   L'ALTRO FALSO VERO, dal grado 3 in su, è la cifra che inganna:
+   L'ALTRO FALSO VERO, dal grado 4 in su, è la cifra che inganna:
    «3,45 è più di 3,5» perché 45 sembra più grande di 5 — e non è
    vero, perché il decimo conta più del centesimo. `trappolaCifre()`
-   lo costruisce apposta, con e senza il simbolo dell'euro.
+   lo costruisce apposta, sui numeri nudi: un prezzo vero ha sempre due
+   cifre dopo la virgola, e sui cartellini l'errore vero è un altro —
+   guardare i centesimi prima degli euro (vedi `confronto`).
 
    DUE SAPERI, PERCHÉ SONO DUE COSE DIVERSE. `denaro` (riconoscere le
    monete, contare, dare il resto: nasce spento e si accende in terza,
@@ -252,25 +254,67 @@ function trappolaCifre(sorte, interoMax) {
   }
 }
 
-/* quale prezzo è più alto */
+/* ── quale prezzo è più alto ──
+   Un prezzo vero ha sempre due cifre dopo la virgola, quindi la
+   trappola del «3,45 contro 3,5» qui non esiste: sta nel grado 4, sui
+   numeri nudi. Quella dei cartellini è un'altra, ed è vera: **guardare
+   i centesimi prima degli euro**. 2,90 € contro 3,05 € — novanta è più
+   di cinque, e chi legge da destra compra la cosa sbagliata. La sua
+   sorella è «5 €» contro «4,95 €», dove il numero più lungo sembra il
+   più grande. Tutte e due si costruiscono attorno a un euro tondo: la
+   cosa che costa meno sta poco sotto, con tanti centesimi, quella che
+   costa di più poco sopra, con pochi o nessuno.
+
+   I prezzi restano quelli di un negozio vero (`FASCE`): una caramella
+   non costa quindici euro, e una domanda con un prezzo assurdo fa
+   ridere invece di far pensare. Si scelgono due cose le cui fasce
+   hanno un euro tondo in comune, con il margine per starci sotto e
+   sopra. */
+const FASCE = {
+  'un cornetto': [80, 250], 'un quaderno': [100, 400], 'una mela': [40, 120],
+  'un gelato': [150, 400], 'un pallone': [600, 2500], 'un fumetto': [300, 800],
+  'una bibita': [100, 300], 'un adesivo': [30, 200], 'una matita': [50, 200],
+  'una caramella': [10, 100], 'un palloncino': [50, 300], 'un peluche': [600, 3000],
+}
+
+/* gli euro tondi dove due cose si possono incontrare: la più economica
+   deve poter costare fino a 45 centesimi meno, la più cara 20 in più */
+function eurTondiComuni(a, b) {
+  const [la, ha] = FASCE[a.singolare], [lb, hb] = FASCE[b.singolare]
+  const lo = Math.max(la, lb) + 45, hi = Math.min(ha, hb) - 20
+  const out = []
+  /* da 2 € in su: sotto, la cosa economica costerebbe «0 euro e qualche
+     centesimo», e il confronto fra euro non c'è più */
+  for (let e = Math.max(200, Math.ceil(lo / 100) * 100); e <= hi; e += 100) out.push(e)
+  return out
+}
+
 function confronto(sorte) {
-  const { intero, maggiore, minore } = trappolaCifre(sorte, 25)
-  const [itemA, itemB] = sorte.alcuni(COSE, 2)
-  const aMaggiore = sorte.forse(0.5)
-  const prezzoA = aMaggiore ? maggiore : minore
-  const prezzoB = aMaggiore ? minore : maggiore
-  const vincente = aMaggiore ? itemA : itemB
-  const perdente = aMaggiore ? itemB : itemA
-  const prezzoPerdente = aMaggiore ? prezzoB : prezzoA
+  const coppie = []
+  for (const a of COSE) for (const b of COSE)
+    if (a !== b && eurTondiComuni(a, b).length) coppie.push([a, b])
+  const [itemA, itemB] = sorte.uno(coppie)
+  const tondo = sorte.uno(eurTondiComuni(itemA, itemB))
+  const basso = tondo - sorte.fra(5, 45)
+  /* una volta su tre la cosa cara costa l'euro tondo e basta: «5 €»
+     contro «4,95 €», il più corto che vale di più */
+  const alto = sorte.forse(1 / 3) ? tondo : tondo + sorte.fra(1, 20)
+  const aCara = sorte.forse(0.5)
+  const cara = aCara ? itemA : itemB, economica = aCara ? itemB : itemA
+  const prezzoDi = it => euro(it === cara ? alto : basso)
+  const nome = it => capitalizza(conArticolo(it.singolare))
+  const euroInteri = c => Math.floor(c / 100)
 
   return domanda({
-    testo: `${capitalizza(conArticolo(itemA.singolare))} costa ${intero},${prezzoA} €, `
-         + `${conArticolo(itemB.singolare)} costa ${intero},${prezzoB} €. Quale costa di più?`,
-    buona: testo(capitalizza(conArticolo(vincente.singolare))),
-    falsi: [testo(capitalizza(conArticolo(perdente.singolare)),
-      `${capitalizza(conArticolo(perdente.singolare))} costa ${intero},${prezzoPerdente} €: ha più cifre dopo la virgola, ma la prima cifra dopo la virgola conta più delle altre`)],
+    testo: `${nome(itemA)} costa ${prezzoDi(itemA)}, `
+         + `${conArticolo(itemB.singolare)} costa ${prezzoDi(itemB)}. Quale costa di più?`,
+    buona: testo(nome(cara)),
+    falsi: [testo(nome(economica),
+      alto % 100 === 0
+        ? `${prezzoDi(economica)} sembra più lungo, ma non arriva a ${prezzoDi(cara)}: ${conArticolo(cara.singolare)} sì`
+        : `hai guardato i centesimi: prima si guardano gli euro, e ${euroInteri(alto)} è più di ${euroInteri(basso)}`)],
     chiave: 'sol:confronto',
-    aiuto: 'guarda la prima cifra dopo la virgola: chi ce l\'ha più grande costa di più, anche se il numero dell\'altro sembra più lungo',
+    aiuto: 'prima guarda gli euro, il numero prima della virgola: chi ne ha di più costa di più. I centesimi contano solo quando gli euro sono uguali',
     sorte,
   })
 }
