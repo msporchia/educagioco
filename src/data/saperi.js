@@ -150,6 +150,20 @@ export const SAPERI = [
     esempio: '«Nina ha 4 mele e poi ne raccoglie ancora 3: quante mele ha adesso?»',
     spegne: 'tutti i problemi a parole; i conti restano, chiesti come conti',
   },
+  /* L'algebra prima dell'algebra: il numero nascosto (□ + 7 = 15) e le
+     bilance in pari. Il nascosto nei più e nei meno è di seconda e
+     terza, le bilance vere sono di quarta e quinta, e le due incognite
+     il programma della primaria non le chiede affatto. Si insegnano in
+     una carta — «togli la stessa cosa da tutte e due le parti» — e per
+     questo restano accese; il gruppo c'è perché un grande che le vede
+     arrivare prima del tempo le possa togliere tutte insieme, senza
+     portarsi via le divisioni che ci stanno dentro. */
+  {
+    chiave: 'bilance', nome: 'Le bilance e il numero nascosto', ico: '⚖️', materia: 'matematica',
+    che: 'trovare il numero che manca in un conto, e quanto pesa una cosa guardando una bilancia in pari',
+    esempio: '«tre 🍎 pesano come un peso da 12: quanto pesa una 🍎?»',
+    spegne: 'le domande col numero nascosto e con le bilance; i conti restano, chiesti come conti',
+  },
 
   /* ── spazio ── */
   {
