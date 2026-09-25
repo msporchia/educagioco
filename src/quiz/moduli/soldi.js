@@ -2,13 +2,28 @@
    SOLDI E DECIMALI — gli euro sono il modo in cui un bambino incontra
    i numeri con la virgola, prima ancora di sapere che esistono.
 
-   SEI GRADI, e non è un crescendo di una sola cosa:
+   UNDICI GRADI, e non è un crescendo di una sola cosa:
      1. quanto fanno queste monete e banconote (i conti tondi);
      2. il resto — pagare con una banconota e capire quanto torna;
      3. quanto costano più cose, e quale costa di più;
      4. lo stesso confronto, ma sui numeri con la virgola senza euro;
      5. il valore delle cifre dopo la virgola (decimi, centesimi);
-     6. i decimali in ordine — sulla linea, e arrotondare.
+     6. i decimali in ordine — sulla linea, e arrotondare;
+     7. quanto costa una sola cosa, dal prezzo di più (la divisione);
+     8. quanto costano tante cose, dal prezzo di poche (la proporzione);
+     9. cosa conviene comprare, a parità di quantità o di soldi;
+     10. lo stesso confronto quando il peso è in grammi e non in chili;
+     11. quale offerta conviene — «prendi 3 paghi 2» contro uno sconto.
+
+   LA SPESA FURBA (7-11) è un salto: non basta più sapere fare il conto,
+   bisogna scegliere QUALE conto fare. «2 kg a 5 €» contro «1 kg a 3 €»
+   non è un'operazione — è capire che il numero da guardare è il prezzo
+   per kg, non quello scritto sul cartellino né la quantità. Per questo
+   dal grado 9 in su tre risposte sono sempre le stesse forme — la prima
+   confezione, la seconda, «costano uguale» — e **«costano uguale» è la
+   giusta una volta su cinque circa**: se non capitasse mai, un bambino
+   imparerebbe a scartarla senza guardare i numeri, come già visto con
+   «non si può sapere» nelle bilance.
 
    NIENTE VIRGOLA MOBILE. Ogni conto è fatto in centesimi (interi):
    `340` e non `3.4`. Si divide per 100 **solo per scrivere** il
@@ -518,6 +533,237 @@ function arrotonda(sorte) {
   })
 }
 
+/* ══════════════ grado 7-11 — la spesa furba ══════════════
+   Le cose di prima (`COSE`) si comprano a pezzo: una caramella, un
+   pallone. Qui si comprano a peso o a numero di confezioni — le mele a
+   kg, le uova a scatola — perché «cosa conviene» ha senso solo quando
+   la stessa cosa si vende in quantità diverse, e i prezzi sono quelli
+   di un negozio vero: mele e banane 1,50-3 €/kg, formaggio 10-20 €/kg,
+   pane 2-5 €/kg, pasta 1-2,50 €/kg, latte 1-2 €/l, uova 25-50 cent
+   l'una, yogurt 40-90 cent l'uno. */
+const AL_PESO = [
+  { nome: 'le mele', un: 'kg', fascia: [150, 300] },
+  { nome: 'le banane', un: 'kg', fascia: [150, 250] },
+  { nome: 'il formaggio', un: 'kg', fascia: [1000, 2000] },
+  { nome: 'il pane', un: 'kg', fascia: [200, 500] },
+  { nome: 'la pasta', un: 'kg', fascia: [100, 250] },
+  { nome: 'il latte', un: 'litro', fascia: [100, 200] },
+]
+const A_PEZZO = [
+  { nome: 'le uova', pezzo: 'un uovo', confezioni: [6, 10, 12], fascia: [25, 50] },
+  { nome: 'gli yogurt', pezzo: 'uno yogurt', confezioni: [4, 6, 8], fascia: [40, 90] },
+]
+
+/* «2 kg» o «1 litro» / «2 litri»: il chilo non cambia forma al plurale,
+   il litro sì */
+function pesoLabel(item, n) {
+  if (item.un === 'litro') return n === 1 ? '1 litro' : `${n} litri`
+  return `${n} kg`
+}
+const pesoUnitLabel = item => item.un === 'litro' ? 'un litro' : 'un kg'
+
+/* «le uova» → «uova»: il nome senza l'articolo, per metterlo dopo un
+   numero («6 uova») o dopo «di» («di formaggio») */
+const senzaArticolo = nome => nome.replace(/^(le|gli|i|il|la)\s+/, '')
+
+/* un prezzo diverso da `base` di almeno il 5%, dalla stessa fascia:
+   sotto quella soglia nessuno dei due verdetti («questa conviene») è
+   onesto — sarebbe un pareggio presentato come se non lo fosse. Un
+   tetto ai tentativi invece di un ciclo che confida sempre di trovarlo:
+   con una fascia stretta (le uova, 25 centesimi di ampiezza) è più
+   pulito arrendersi che girare a vuoto. */
+function prezzoDiverso(sorte, base, lo, hi) {
+  for (let i = 0; i < 20; i++) {
+    const p = sorte.fra(lo, hi)
+    if (Math.abs(base - p) / Math.min(base, p) >= 0.05) return p
+  }
+  return Math.min(hi, base + Math.max(2, Math.round(base * 0.1)))
+}
+
+/* ── grado 7: quanto costa una sola cosa ──
+   Si dà il totale di N pezzi o di N kg, e si chiede il prezzo di uno
+   solo: la divisione all'incontrario di «costo» qui sopra. */
+function unitario(sorte) {
+  const usaPezzo = sorte.forse(0.5)
+  const item = usaPezzo ? sorte.uno(A_PEZZO) : sorte.uno(AL_PESO)
+  const [lo, hi] = item.fascia
+  const prezzoUnitario = sorte.fra(lo, hi)
+  const n = usaPezzo ? sorte.uno(item.confezioni) : sorte.uno([2, 3, 4, 5])
+  const totale = prezzoUnitario * n
+  const buonaStr = euro(prezzoUnitario)
+  const nomeCosa = senzaArticolo(item.nome)
+
+  const testoDomanda = usaPezzo
+    ? `Una confezione da ${n} ${nomeCosa} costa ${euro(totale)}: quanto costa ${item.pezzo}?`
+    : `${pesoLabel(item, n)} di ${nomeCosa} costano ${euro(totale)}: quanto costa ${pesoUnitLabel(item)}?`
+
+  const candidati = [
+    [euro(totale * n), 'hai moltiplicato per il numero invece di dividere'],
+    [euro(Math.round(totale / (n + 1))), `hai diviso per ${n + 1}, non per ${n}`],
+  ]
+  if (n > 2) candidati.push([euro(Math.round(totale / (n - 1))), `hai diviso per ${n - 1}, non per ${n}`])
+  candidati.push([euro(prezzoUnitario + (sorte.forse(0.5) ? 10 : -10)),
+    'hai sbagliato il conto dei centesimi nella divisione'])
+
+  return domanda({
+    testo: testoDomanda,
+    buona: testo(buonaStr),
+    falsi: scartaDoppi(candidati, buonaStr, 2),
+    chiave: 'sol:unitario',
+    aiuto: `dividi il prezzo totale per il numero: ${euro(totale)} diviso ${n} fa ${buonaStr}`,
+    sorte,
+  })
+}
+
+/* ── grado 8: quanto costano tanti, dal prezzo di pochi ──
+   IL FALSO PIÙ VERO: aggiungere la differenza di quantità al prezzo
+   invece di moltiplicare — «2 kg costano 5 €, quindi 6 kg (4 in più)
+   costano 5 + 4 = 9 €» — che confonde una quantità di kg con una di
+   euro, e non è un caso raro: è la reazione naturale di chi non ha
+   ancora capito che il prezzo cresce proporzionalmente. */
+function tanti(sorte) {
+  const usaPezzo = sorte.forse(0.5)
+  const item = usaPezzo ? sorte.uno(A_PEZZO) : sorte.uno(AL_PESO)
+  const [lo, hi] = item.fascia
+  const prezzoUnitario = sorte.fra(lo, hi)
+  const confPossibili = usaPezzo ? item.confezioni.filter(c => c <= 6) : [1, 2, 3]
+  const m = sorte.uno(confPossibili)
+  const k = usaPezzo ? sorte.uno([2, 3]) : sorte.uno([2, 3, 4])
+  const n = m * k
+  const totaleM = prezzoUnitario * m
+  const totaleN = totaleM * k
+  const buonaStr = euro(totaleN)
+  const nomeCosa = senzaArticolo(item.nome)
+  const descM = usaPezzo ? `${m} ${nomeCosa}` : `${pesoLabel(item, m)} di ${nomeCosa}`
+  const descN = usaPezzo ? `${n} ${nomeCosa}` : `${pesoLabel(item, n)} di ${nomeCosa}`
+
+  const falsi = scartaDoppi([
+    [euro(totaleM + (n - m) * 100), `hai aggiunto ${n - m} al prezzo invece di moltiplicarlo per ${k}`],
+    [euro(Math.round(totaleM / k)), 'hai diviso invece di moltiplicare'],
+    [euro(totaleM * (k + 1)), `hai moltiplicato per ${k + 1}, non per ${k}`],
+  ], buonaStr, 2)
+
+  return domanda({
+    testo: `${capitalizza(descM)} costano ${euro(totaleM)}. Quanto costano ${descN}?`,
+    buona: testo(buonaStr),
+    falsi,
+    chiave: 'sol:tanti',
+    aiuto: `${descN} sono ${k} volte ${descM}: moltiplica ${euro(totaleM)} per ${k}, non aggiungere la differenza`,
+    sorte,
+  })
+}
+
+/* ── grado 9-10: cosa conviene ──
+   Tre risposte sempre delle stesse tre forme — la confezione A, la B,
+   «costano uguale» — e la scelta sbagliata non è mai a caso: chi
+   guarda il totale scritto prende quella che costa meno in tutto anche
+   se costa più al kg, chi guarda la quantità prende quella più grande
+   anche se costa più al kg. `grammi` sceglie i pesi in grammi invece
+   che in kg interi (grado 10, e dichiara anche `conversioni`). */
+function conviene(sorte, grammi = false) {
+  const usaPezzo = !grammi && sorte.forse(0.5)
+  const item = usaPezzo ? sorte.uno(A_PEZZO)
+    : sorte.uno(grammi ? AL_PESO.filter(it => it.un === 'kg') : AL_PESO)
+  const [lo, hi] = item.fascia
+  const quantitaPossibili = usaPezzo ? item.confezioni : grammi ? [250, 500, 750, 1000, 1500] : [1, 2, 3]
+  const qA = sorte.uno(quantitaPossibili)
+  const qB = sorte.uno(quantitaPossibili.filter(q => q !== qA))
+  const pA = sorte.fra(lo, hi)
+  const uguale = sorte.forse(0.2)
+  const pB = uguale ? pA : prezzoDiverso(sorte, pA, lo, hi)
+  const arrotonda2 = c => Math.round(c)
+  const totA = arrotonda2(grammi ? pA * qA / 1000 : pA * qA)
+  const totB = arrotonda2(grammi ? pB * qB / 1000 : pB * qB)
+  const nomeCosa = senzaArticolo(item.nome)
+  const gramLabel = g => g % 1000 === 0 ? `${g / 1000} kg` : `${g} g`
+  const descrivi = q => usaPezzo ? `${q} ${nomeCosa}` : grammi ? gramLabel(q) : pesoLabel(item, q)
+  const descA = `${descrivi(qA)} a ${euro(totA)}`
+  const descB = `${descrivi(qB)} a ${euro(totB)}`
+  const unitaLbl = usaPezzo ? (item.pezzo || 'a pezzo') : `al ${item.un}`
+
+  const esito = uguale ? 'uguale' : pA < pB ? 'A' : 'B'
+  const opz = { A: descA, B: descB, uguale: 'Costano uguale' }
+  const buonaStr = opz[esito]
+
+  const falsi = []
+  for (const k of ['A', 'B', 'uguale']) {
+    if (k === esito) continue
+    let perche
+    if (k === 'uguale') {
+      perche = `non costano uguale: dividi ogni prezzo per la quantità e confronta quanto costa ${unitaLbl}`
+    } else {
+      const suaTot = k === 'A' ? totA : totB, altraTot = k === 'A' ? totB : totA
+      const suaQ = k === 'A' ? qA : qB, altraQ = k === 'A' ? qB : qA
+      perche = suaTot < altraTot
+        ? `${opz[k]} costa meno in tutto, ma è il prezzo per ${item.pezzo ? 'pezzo' : item.un} che conta, non il totale scritto`
+        : suaQ > altraQ
+          ? `${opz[k]} è di più, ma non è la quantità che conta: guarda quanto costa ${unitaLbl}`
+          : `guarda quanto costa ${unitaLbl}, non il totale`
+    }
+    falsi.push(testo(opz[k], perche))
+  }
+
+  return domanda({
+    testo: `${capitalizza(item.nome)}: ${descA} oppure ${descB}. Cosa conviene?`,
+    buona: testo(buonaStr),
+    falsi,
+    chiave: grammi ? 'sol:conviene-grammi' : 'sol:conviene',
+    aiuto: uguale
+      ? `dividi ogni prezzo per la quantità: sono tutti e due ${euro(pA)} ${unitaLbl}, quindi costano uguale`
+      : `dividi ogni prezzo per la quantità: ${descA} è ${euro(pA)} ${unitaLbl}, ${descB} è ${euro(pB)} ${unitaLbl}`,
+    sorte,
+  })
+}
+
+/* ── grado 11: quale offerta conviene ──
+   «Prendi N, paghi M» (M = N-1: un pezzo gratis ogni tanti) contro uno
+   sconto in euro sul totale. Le due promesse si confrontano solo
+   calcolando quanto si paga davvero — non c'è una cifra scritta più
+   grande o più piccola da cui indovinare, ed è quello che le rende
+   oneste anche senza un «perché» per ogni singola scelta sbagliata. */
+function offerta(sorte) {
+  const item = sorte.uno(COSE)
+  const [lo, hi] = FASCE[item.singolare]
+  const p = sorte.fra(lo, hi)
+  const [N, M] = sorte.uno([[2, 1], [3, 2], [4, 3]])
+  const totaleA = p * M
+  const uguale = sorte.forse(0.2)
+  let D
+  if (uguale) {
+    D = p
+  } else {
+    const scarti = [-0.4, -0.2, 0.2, 0.4].map(f => Math.round(p + p * f))
+    const validi = scarti.filter(d => d >= 5 && Math.abs(p - d) / totaleA >= 0.05)
+    D = sorte.uno(validi.length ? validi : [Math.max(5, p - Math.round(p * 0.3))])
+  }
+  const totaleB = p * N - D
+  const esito = uguale ? 'uguale' : totaleA < totaleB ? 'A' : 'B'
+  const descA = `«Prendi ${N}, paghi ${M}»`
+  const descB = `${euro(D)} di sconto sul totale`
+  const opz = { A: descA, B: descB, uguale: 'Costano uguale' }
+  const buonaStr = opz[esito]
+
+  const falsi = []
+  for (const k of ['A', 'B', 'uguale']) {
+    if (k === esito) continue
+    falsi.push(testo(opz[k], k === 'uguale'
+      ? 'non è uguale: calcola quanto paghi davvero in tutti e due i casi'
+      : `con questa scelta paghi ${euro(k === 'A' ? totaleA : totaleB)}: calcola quanto paghi davvero in tutti e due i casi, e confronta`))
+  }
+
+  return domanda({
+    testo: `Compri ${N} ${senzaArticolo(item.plurale)} da ${euro(p)} ${pezzoDi(item.singolare)}. `
+         + `C'è l'offerta ${descA}, oppure ${descB}. Quale conviene?`,
+    buona: testo(buonaStr),
+    falsi,
+    chiave: 'sol:offerta',
+    aiuto: uguale
+      ? `calcola quanto paghi davvero: in tutti e due i casi sono ${euro(totaleA)}`
+      : `calcola quanto paghi davvero: «prendi ${N} paghi ${M}» costa ${euro(totaleA)}, lo sconto lascia ${euro(totaleB)}`,
+    sorte,
+  })
+}
+
 /* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
   'quanto fanno queste monete e banconote',
@@ -526,12 +772,19 @@ const SCALETTA = [
   'i numeri con la virgola: quale è più grande',
   'il valore delle cifre dopo la virgola',
   'i decimali in ordine, e arrotondare',
+  'quanto costa una sola cosa, dal prezzo di più',
+  'quanto costano tante cose, dal prezzo di poche',
+  'cosa conviene comprare',
+  'cosa conviene, quando il peso è in grammi',
+  'quale offerta conviene',
 ]
 
 /* Le tipologie. `denaro` e `decimali` sono due sapere diversi apposta
    (vedi il cappello del file): le prime quattro chiedono di saper
-   maneggiare i soldi, le ultime quattro di sapere cos'è un numero con
-   la virgola — e un bambino può avere l'uno senza l'altro. */
+   maneggiare i soldi, le quattro dopo di sapere cos'è un numero con
+   la virgola — e un bambino può avere l'uno senza l'altro. La spesa
+   furba (7-11) torna sul denaro: chiede di dividere (`divisioni`), e
+   nel grado 10 anche di passare dai grammi ai chili (`conversioni`). */
 const TIPI = [
   { chiave: 'sol:conta', nome: 'Quanto fanno monete e banconote', sa: 'denaro', gradi: { 1: 1, 2: 0.3 } },
   { chiave: 'sol:resto', nome: 'Il resto', sa: 'denaro', gradi: { 2: 0.7, 3: 0.3 } },
@@ -541,6 +794,11 @@ const TIPI = [
   { chiave: 'sol:cifre', nome: 'Il valore delle cifre dopo la virgola', sa: 'decimali', gradi: { 5: 0.65, 6: 0.2 } },
   { chiave: 'sol:linea', nome: 'I decimali sulla linea e in ordine', sa: 'decimali', gradi: { 6: 0.45 } },
   { chiave: 'sol:arrotonda', nome: "Arrotondare all'euro o al decimo", sa: 'decimali', gradi: { 6: 0.35 } },
+  { chiave: 'sol:unitario', nome: 'Quanto costa una sola cosa', sa: ['denaro', 'divisioni'], gradi: { 7: 1 } },
+  { chiave: 'sol:tanti', nome: 'Quanto costano tante cose', sa: ['denaro', 'divisioni'], gradi: { 8: 1 } },
+  { chiave: 'sol:conviene', nome: 'Cosa conviene comprare', sa: ['denaro', 'divisioni'], gradi: { 9: 1 } },
+  { chiave: 'sol:conviene-grammi', nome: 'Cosa conviene, coi grammi', sa: ['denaro', 'divisioni', 'conversioni'], gradi: { 10: 1 } },
+  { chiave: 'sol:offerta', nome: 'Quale offerta conviene', sa: ['denaro', 'divisioni'], gradi: { 11: 1 } },
 ]
 
 class Soldi extends Modulo {
@@ -550,7 +808,7 @@ class Soldi extends Modulo {
       nome: 'Soldi e decimali',
       icona: '💶',
       materia: 'matematica',
-      chiaro: 'contare le monete, dare il resto, confrontare prezzi, e i numeri con la virgola',
+      chiaro: 'contare le monete, dare il resto, confrontare prezzi, i numeri con la virgola, e la spesa furba',
       scaletta: SCALETTA,
       /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la scala è una
          sola per tutte le materie. Zero è il primo giorno di materna,
@@ -558,8 +816,11 @@ class Soldi extends Modulo {
          Il conto tondo delle monete è di seconda-terza (38-44), il
          resto e i confronti di terza-quarta (50-57), i numeri con la
          virgola senza euro di quarta-quinta (57-72) — la stessa
-         scaletta di cui parla `CLAUDE.md` per questo modulo. */
-      livelli: [38, 44, 50, 57, 64, 72],
+         scaletta di cui parla `CLAUDE.md` per questo modulo. La spesa
+         furba (76-94) viene dopo: non è più complicato dividere o
+         moltiplicare, è capire QUALE conto fare, e quello arriva più
+         tardi dei conti stessi. */
+      livelli: [38, 44, 50, 57, 64, 72, 76, 81, 85, 90, 94],
       tipi: TIPI,
       pittori: PITTORI_SOLDI,
     })
@@ -575,6 +836,11 @@ class Soldi extends Modulo {
       case 'sol:cifre': return cifre(sorte)
       case 'sol:linea': return sorte.forse(0.5) ? linea(sorte) : ordina(sorte)
       case 'sol:arrotonda': return arrotonda(sorte)
+      case 'sol:unitario': return unitario(sorte)
+      case 'sol:tanti': return tanti(sorte)
+      case 'sol:conviene': return conviene(sorte)
+      case 'sol:conviene-grammi': return conviene(sorte, true)
+      case 'sol:offerta': return offerta(sorte)
       default: return conta(sorte, grado)
     }
   }
