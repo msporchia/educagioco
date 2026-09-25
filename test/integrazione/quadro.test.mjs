@@ -228,8 +228,14 @@ await page.waitForTimeout(800)
 uguale('un passo indietro dall\'ultimo scatto le riaccende',
        (await leggiProfilo(page)).settings.sa?.divisioni, undefined)
 
-await apriBlocco('medie')
-const riaccese = page.locator('[data-manopola] [data-riga="divisioni"]')
+/* in quale blocco risalgono dipende da chi altro dichiara le divisioni
+   (il gruppo di una domanda è il più specifico che dichiara): si
+   aprono i blocchi delle domande finché la riga non compare */
+const riaccese = page.locator('[data-manopola] [data-apri]:not([data-apri="spenta"]) [data-riga="divisioni"]')
+for (const k of ['medie', 'toste', 'facili', 'sotto']) {
+  if (await riaccese.count()) break
+  await apriBlocco(k)
+}
 controlla('e la loro riga, fra le domande, adesso è ambra',
           (await riaccese.locator('.voce-riga.ritoccata').count()) > 0)
 await riaccese.locator('[data-tara-apri="divisioni"]').first().click()

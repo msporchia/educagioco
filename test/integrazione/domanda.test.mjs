@@ -145,9 +145,11 @@ const BERSAGLIO = '[data-prova="griglia:1:gri:coordinate"]'
 for (const k of ['facili', 'medie', 'toste', 'sotto']) {
   if (await page.locator(BERSAGLIO).count()) break
   await apriQuadro(k)
-  for (const riga of await page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`).all()) {
-    if (await page.locator(BERSAGLIO).count()) break
-    await riga.click()
+  /* sempre la prima ancora chiusa, e non un elenco preso prima: aprendo
+     una riga le altre scalano, e l'n-esima di prima non esiste più */
+  const chiuse = page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`)
+  while (!(await page.locator(BERSAGLIO).count()) && await chiuse.count()) {
+    await chiuse.first().click()
     await page.waitForTimeout(60)
   }
 }
@@ -249,9 +251,9 @@ const ARROTONDA = '[data-prova="numero:6:num:arrotonda"]'
 for (const k of ['toste', 'medie', 'facili', 'sotto']) {
   if (await page.locator(ARROTONDA).count()) break
   await apriQuadro(k)
-  for (const riga of await page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`).all()) {
-    if (await page.locator(ARROTONDA).count()) break
-    await riga.click()
+  const chiuse = page.locator(`[data-manopola] [data-apri="${k}"] .voce-riga.apribile:not(.aperta)`)
+  while (!(await page.locator(ARROTONDA).count()) && await chiuse.count()) {
+    await chiuse.first().click()
     await page.waitForTimeout(60)
   }
 }
