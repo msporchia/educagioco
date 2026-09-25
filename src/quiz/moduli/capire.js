@@ -857,7 +857,7 @@ function titolo(sorte) {
 const SCALETTA = [
   'chi, dove e che cosa, in due frasi',
   'chi, dove e che cosa, in un testo più lungo',
-  'prima e dopo, e il perché',
+  'prima e dopo, il perché, e quello che si capisce senza leggerlo',
   'di chi parla un pronome, e quello che si capisce senza leggerlo',
   'quello che si capisce senza leggerlo, e il titolo giusto',
 ]
@@ -876,12 +876,14 @@ const SCALETTA = [
      un testo — il prima e il dopo, la causa — è un obiettivo di fine
      terza. Il perché sta un poco più su perché i ponti con il motivo
      scritto PRIMA («così», «per questo») chiedono di rigirare la frase.
-   · PRONOME 63, INDIZIO 66. Tenere il filo dei riferimenti e ricavare
-     quello che non è scritto («cogliere indizi utili a risolvere i nodi
-     della comprensione») sono obiettivi di fine quinta, e sono le due
-     cose che le prove nazionali di quinta chiedono di più. Si mettono
-     all'inizio della quarta: l'indizio è sempre uno e chiaro, e il
-     pronome univoco per grammatica.
+   · INDIZIO 50. Ricavare quello che non è scritto è un obiettivo di fine
+     quinta, ma i nostri indizi sono uno solo e quotidiano (pigiama,
+     denti lavati, la storia prima di dormire: è sera), e a otto anni si
+     leggono — l'aveva messo a 66, e guardando gli esempi il proprietario
+     l'ha riportato qui. Esce già dal grado 3, accanto al prima-e-dopo.
+   · PRONOME 63. Tenere il filo dei riferimenti è un obiettivo di fine
+     quinta, e una delle cose che le prove nazionali chiedono di più: si
+     mette all'inizio della quarta, univoco per grammatica.
    · TITOLO 72. Scegliere fra il titolo giusto, il pezzetto e quello
      troppo largo vuol dire distinguere l'argomento dall'idea principale:
      da fine quarta. */
@@ -895,7 +897,7 @@ const TIPI = [
   { chiave: 'capire:pronome', nome: 'Di chi parla «lei», «lo», «gli»', sa: SA,
     livello: 63, gradi: { 4: 0.5 } },
   { chiave: 'capire:indizio', nome: 'Quello che non è scritto ma si capisce', sa: SA,
-    livello: 66, gradi: { 4: 0.5, 5: 0.4 } },
+    livello: 50, gradi: { 3: 0.35, 4: 0.5, 5: 0.4 } },
   { chiave: 'capire:titolo', nome: 'Il titolo giusto per tutto il testo', sa: SA,
     livello: 72, gradi: { 5: 0.6 } },
 ]
@@ -911,7 +913,7 @@ class Capire extends Modulo {
       scaletta: SCALETTA,
       /* QUANTO È COMPLICATO OGNI GRADO, da 0 a 100 — la media delle sue
          tipologie, scritte una per una qui sopra con il perché */
-      livelli: [31, 40, 51, 64, 70],
+      livelli: [31, 40, 51, 57, 63],
       tipi: TIPI,
     })
   }
