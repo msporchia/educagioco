@@ -4,8 +4,11 @@
    i cicli girano e la fila si modifica come dice `motore/fila.js`; ogni
    livello della campagna si vince con la carota, e la strada del
    risolutore giocata dal motore vince davvero con tre stelle; ogni
-   livello dei gradini 2–5 ha bisogno della sua regola (se no insegna
-   un'altra cosa), e ogni livello dello zaino ha bisogno del ciclo; chi
+   livello dei gradini 2–6 ha bisogno della sua regola (se no insegna
+   un'altra cosa), e ogni livello dello zaino ha bisogno del ciclo; le
+   pecore scappano come dice la regola, si incastrano dove non si
+   recuperano, e chi aveva giocato la fila di prima ritrova le sue
+   stelle al posto giusto; chi
    segue solo gli aiuti arriva a casa, e nello zaino ci sta; il sentiero
    senza fine fa livelli che si vincono; i traguardi scattano a profilo
    finito e non a profilo vuoto, e nessuno torna indietro quando la
@@ -13,13 +16,14 @@
    `node test/esegui.mjs passo-passo --niente-build` */
 import { LEGENDA, MOSSE, MASSIMO_FILA, COLONNE_MAX, RIGHE_MAX, guastiDelMondo, guastiDellaMappa }
   from '../../src/giochi/passo-passo/dati/mondo.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TEMI, guastiDellaCampagna }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_ZAINO, TAPPE_PRIME, TEMI, guastiDellaCampagna,
+         FILE, FILA_ATTUALE, riordina }
   from '../../src/giochi/passo-passo/dati/campagna.js'
 import { CARTE, albero, carteDi, conCicli, daScegliere, guastiDellaFila, programma, ripeti, se, apri,
          apriSe, FINE, chiusuraDi, aperturaDi }
   from '../../src/giochi/passo-passo/dati/carte.js'
-import { Livello } from '../../src/giochi/passo-passo/motore/livello.js'
-import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, STANCO, FINITA, REGOLE, PASSI_MAX }
+import { Livello, celleIncastro } from '../../src/giochi/passo-passo/motore/livello.js'
+import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, STANCO, FINITA, PERSA, REGOLE, PASSI_MAX }
   from '../../src/giochi/passo-passo/motore/mondo.js'
 import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi }
   from '../../src/giochi/passo-passo/motore/risolutore.js'
@@ -54,13 +58,16 @@ const dove = (r) => r.mondo.pos
 
   uguale('otto mosse: quattro passi e quattro salti', Object.keys(MOSSE).length, 8)
   const REGOLA = SCALINI.filter(s => !s.carta), CARTA = SCALINI.filter(s => s.carta)
-  uguale('cinque gradini di regole del mondo', REGOLA.length, 5)
+  uguale('sei gradini di regole del mondo: i cinque del coniglio e il cane pastore', REGOLA.length, 6)
   controlla('ogni gradino dopo il primo porta una regola che il motore sa spegnere',
             REGOLA.slice(1).every(s => REGOLE.includes(s.regola)) && !REGOLA[0].regola)
   controlla('e dopo, i gradini delle carte: ognuno porta una carta che esiste',
             CARTA.length >= 1 && CARTA.every(s => CARTE[s.carta] && !s.regola) &&
             SCALINI.findIndex(s => s.carta) === REGOLA.length)
-  dentro('circa ventiquattro livelli per i piccoli', TAPPE_PICCOLE, 22, 26)
+  dentro('circa ventiquattro livelli fino alle buche', TAPPE_PRIME, 22, 26)
+  dentro('e fra le buche e lo zaino, il cane pastore', TAPPE_PICCOLE - TAPPE_PRIME, 4, 12)
+  controlla('le tappe del cane stanno tutte fra le buche e lo zaino',
+            CAMPAGNA.every((t, i) => (t.scalino === 'pecore') === (i >= TAPPE_PRIME && i < TAPPE_PICCOLE)))
   dentro('e almeno sei con lo zaino', TAPPE_ZAINO, 6, 30)
   uguale('il manifesto conta le tappe giuste', manifesto.tappe, QUANTE_TAPPE)
   uguale('la chiave è «passo»', CHIAVE, 'passo')
@@ -343,6 +350,93 @@ const dove = (r) => r.mondo.pos
   uguale('come il fino a di un 🔁', scegliTesta(['ripeti-N', 'destra', FINE], 0, 'rosso').join(' '), 'ripeti-rosso destra fine')
 }
 
+/* ══════════ 2d. il cane e le pecore ══════════ */
+{
+  const pecore = r => r.mondo.pecore.map(i => r.mondo.xy(i))
+  const in_ = (r, x, y) => pecore(r).some(p => p.x === x && p.y === y)
+  controlla('le pecore senza recinto sono un guasto', guastiDellaMappa(['P.p', '...', '.c.']).length > 0)
+  controlla('un recinto senza pecore è un guasto', guastiDellaMappa(['P.#', '..@', '.c.']).length > 0)
+  controlla('le pecore e la tana insieme sono un guasto', guastiDellaMappa(['P.p', '.@#', '.c.']).length > 0)
+  controlla('pecore, recinto e osso: una mappa giusta', guastiDellaMappa(['P.p.#', '.....', '..c..']).length === 0)
+
+  /* scappano dal cane */
+  let r = esegui(L(['P.p..#', '......', '.c....']), ['destra'])
+  controlla('il cane si ferma accanto alla pecora, e lei fa un passo dall\'altra parte',
+            r.esito === FINITA && in_(r, 3, 0), JSON.stringify(pecore(r)))
+  r = esegui(L(['P.p.#', '.....', '..c..']), ['destra', 'destra'])
+  controlla('una pecora che entra nel recinto ci resta, e con l\'ultima si vince subito',
+            r.esito === TANA && r.dove === 1 && !r.mondo.pecore.length, r.esito)
+  r = esegui(L(['P....', '..p..', '.....', '..c.#']), ['destra', 'destra'])
+  controlla('passarle accanto la sposta di lato', r.esito === FINITA && in_(r, 2, 2), JSON.stringify(pecore(r)))
+  r = esegui(L(['P.....', '..p...', '......', '.c...#']), ['destra'])
+  controlla('in diagonale non si accorge del cane', in_(r, 2, 1), JSON.stringify(pecore(r)))
+  r = esegui(L(['......', 'P.pA..', '......', '..c..#']), ['destra', 'destra'])
+  controlla('se dietro c\'è un albero non scappa, e il cane le sbatte contro',
+            r.esito === SBATTE && r.dove === 1 && in_(r, 2, 1), `${r.esito} ${JSON.stringify(pecore(r))}`)
+  controlla('e il suo fatto dice che ci ha provato',
+            r.passi[0].eventi.some(e => e.che === 'fugge' && e.ferma))
+  r = esegui(L(['P.pp.#', '......', '..c...']), ['destra'])
+  controlla('una pecora con un\'altra alle spalle non ha dove scappare', in_(r, 2, 0) && in_(r, 3, 0),
+            JSON.stringify(pecore(r)))
+  r = esegui(L(['.....#', '......', '..p...', 'P.....', '..p...', '......', '.c....']), ['destra', 'destra'])
+  controlla('due pecore accanto al cane scappano insieme, ognuna dalla sua parte',
+            r.esito === FINITA && in_(r, 2, 1) && in_(r, 2, 5), JSON.stringify(pecore(r)))
+
+  /* il ghiaccio, l'acqua, il recinto per il cane */
+  r = esegui(L(['P.p**..#', '........', '.c......']), ['destra'])
+  controlla('sul ghiaccio la pecora scivola, e si ferma sul primo prato',
+            in_(r, 5, 0), JSON.stringify(pecore(r)))
+  r = esegui(L(['P.p**~.#', '........', '.c......']), ['destra'])
+  controlla('e nell\'acqua non ci va: si ferma sull\'ultimo ghiaccio', in_(r, 4, 0), JSON.stringify(pecore(r)))
+  r = esegui(L(['P.p*#', '.....', '..c..']), ['destra'])
+  controlla('scivolando entra nel recinto', r.esito === TANA, r.esito)
+  r = esegui(L(['P#..p', '.....', '.c..#']), ['destra'])
+  controlla('nel recinto il cane non entra: sbatte', r.esito === SBATTE && r.dove === 0, r.esito)
+  r = esegui(L(['......', 'P***p.', '......', '.c...#']), ['destra'])
+  controlla('e il cane che scivola si ferma davanti a una pecora', r.esito === FINITA && dove(r).x === 3,
+            JSON.stringify(dove(r)))
+  controlla('che scappa lei, dall\'altra parte', in_(r, 5, 1), JSON.stringify(pecore(r)))
+  r = esegui(L(['P.pc.#', '......', '......']), ['destra', 'destra', 'destra'])
+  controlla('la pecora passa sopra l\'osso e lo lascia lì: il cane lo prende dopo',
+            r.carota && in_(r, 5, 0) === false, `${r.esito} osso ${r.carota}`)
+
+  /* l'incastro: un angolo non ha un «dietro» dove il cane possa mettersi */
+  const angoli = celleIncastro(L(['P...', '..p.', '....', '.c.#']))
+  controlla('gli angoli sono incastro, il prato in mezzo no',
+            angoli[0] === true && angoli[3] === true && angoli[5] === false, JSON.stringify(angoli))
+  r = esegui(L(['.....', 'P.p..', '.....', '.c..#']), ['giu', 'destra', 'destra'])
+  controlla('la pecora spinta contro il bordo, dove non si recupera, si incastra: la fila si ferma lì',
+            r.esito === PERSA && r.dove === 2, `${r.esito} ${r.dove}`)
+  controlla('e il fatto dice quale', r.passi.at(-1).eventi.some(e => e.che === 'incastrata' && e.dove.x === 2 && e.dove.y === 0))
+  controlla('una pecora incastrata è un errore: le stelle non contano, si riprova', r.esito !== TANA)
+
+  /* senza la regola le pecore non scappano, e nel recinto non entra nessuno */
+  const primo = Livello.da(CAMPAGNA[TAPPE_PRIME])
+  controlla('senza la regola delle pecore il primo gregge non si vince', !risolvi(primo, { carota: false, senza: 'pecore' }))
+  controlla('nessuna pecora della campagna parte già incastrata',
+            CAMPAGNA.filter(t => t.scalino === 'pecore').every(t => {
+              const liv = Livello.da(t)
+              return liv.pecore.every(i => !liv.incastro[i])
+            }))
+}
+
+/* ══════════ 2e. la fila di prima: le stelle al loro posto ══════════ */
+{
+  const vecchia = FILE[1]
+  uguale('la fila di oggi è l\'ultima scritta', FILA_ATTUALE, Math.max(...Object.keys(FILE).map(Number)))
+  controlla('la fila di oggi è la campagna', FILE[FILA_ATTUALE].join() === CAMPAGNA.map(t => t.chiave).join())
+  controlla('nessun livello della fila vecchia è sparito', vecchia.every(k => FILE[FILA_ATTUALE].includes(k)))
+  const viale = CAMPAGNA.findIndex(t => t.chiave === 'viale')
+  const r = riordina({ tappa: vecchia.indexOf('viale') + 2, stelle: { 0: 3, [vecchia.indexOf('viale')]: 2 } }, vecchia)
+  controlla('chi era allo zaino ritrova le stelle del viale sul viale', r.stelle[viale] === 2 && r.stelle[0] === 3,
+            JSON.stringify(r.stelle))
+  uguale('e resta alla tappa dov\'era, dopo le pecore', r.tappa, viale + 2)
+  const b = riordina({ tappa: vecchia.indexOf('viale'), stelle: {} }, vecchia)
+  uguale('chi aveva appena finito le buche resta davanti al viale, con le pecore aperte alle spalle', b.tappa, viale)
+  uguale('e chi era a metà dei piccoli resta dov\'era', riordina({ tappa: 5, stelle: {} }, vecchia).tappa, 5)
+  controlla('chi aveva finito tutto ha finito tutto', riordina({ tappa: vecchia.length, stelle: {} }, vecchia).libera)
+}
+
 /* ══════════ 3. la campagna si vince, e ogni gradino insegna la sua regola ══════════ */
 nota('tappa                        mosse  senza carota  la regola')
 for (const [i, t] of CAMPAGNA.entries()) {
@@ -393,6 +487,18 @@ for (const [i, t] of CAMPAGNA.entries()) {
   if (s.chiave === 'passi') {
     dentro(`${qui}: nei primi passi la strada va da 2 a 8 frecce`, m.lunga, 2, 8)
     controlla(`${qui}: nei primi passi non ci sono salti`, !t.salti)
+  } else if (s.chiave === 'pecore') {
+    controlla(`${qui}: ha bisogno della sua regola («pecore»)`, serveLaRegola(liv, 'pecore'))
+    /* le false piste: la mossa ingenua di ogni posto non vince, e chi la
+       prova prosegue un poco prima di fermarsi — contro la pecora, o con
+       la pecora incastrata — ed è lì che vede dove ha sbagliato */
+    for (const tr of t.trappole || []) {
+      const rt = esegui(liv, tr)
+      controlla(`${qui}: la trappola ${inFrecce(tr)} non vince`, rt.esito !== TANA, rt.esito)
+      controlla(`${qui}: e chi la prova prosegue un poco prima di fermarsi`,
+                rt.passi.length >= 2 && (rt.esito === PERSA || rt.esito === SBATTE || rt.esito === SPLASH),
+                `${rt.esito} dopo ${rt.passi.length} passi`)
+    }
   } else {
     controlla(`${qui}: ha bisogno della sua regola («${s.regola}»)`, serveLaRegola(liv, s.regola),
               `la strada ${inFrecce(m.conCarota)} regge anche senza`)
@@ -401,7 +507,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
      che non servono è una fila di tasti da provare a caso */
   if (t.salti) controlla(`${qui}: accende i salti, e la strada giusta salta`,
                          m.conCarota.some(x => x.startsWith('salto-')))
-  dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, 16)
+  /* col cane la strada si pensa più di quanto si tracci: può essere
+     più lunga, ed è l'unico gradino dei piccoli che lo fa */
+  dentro(`${qui}: la strada sta nella fila senza scorrere troppo`, m.lunga, 2, s.chiave === 'pecore' ? 24 : 16)
   nota(`${String(i + 1).padStart(2)}. ${t.nome.padEnd(26)} ${String(m.lunga).padStart(3)}  ${String(m.corta).padStart(8)}      ` +
        `${s.regola || '—'}   ${inFrecce(m.conCarota)}`)
 }
@@ -423,8 +531,12 @@ for (const [i, t] of CAMPAGNA.entries()) {
             CAMPAGNA.filter(t => t.scalino === 'buche').every(t => misura(Livello.da(t)).usa.buca > 0))
   controlla('almeno un masso diventa un ponte',
             CAMPAGNA.some(t => misura(Livello.da(t)).usa.affonda > 0))
-  controlla('l\'ultima tappa dei piccoli mescola tutto: salto, ghiaccio, spinta, buca', (() => {
-    const u = misura(Livello.da(CAMPAGNA[TAPPE_PICCOLE - 1])).usa
+  controlla('il gradino del cane fa scappare davvero le pecore',
+            CAMPAGNA.filter(t => t.scalino === 'pecore').every(t => misura(Livello.da(t)).usa.fugge > 0))
+  controlla('e il cane arriva fino a tre pecore',
+            Math.max(...CAMPAGNA.filter(t => t.scalino === 'pecore').map(t => Livello.da(t).pecore.length)) >= 3)
+  controlla('l\'ultima tappa delle buche mescola tutto: salto, ghiaccio, spinta, buca', (() => {
+    const u = misura(Livello.da(CAMPAGNA[TAPPE_PRIME - 1])).usa
     return u.salto > 0 && u.scivola > 0 && u.spinta > 0 && u.buca > 0
   })())
 }
@@ -600,7 +712,7 @@ for (const [i, t] of CAMPAGNA.entries()) {
   uguale('a mani vuote l\'esperienza vale zero', manifesto.albo.xp(mVuoto), 0)
 
   const finito = {
-    totals: { ppProve: 400, ppTane: 120, ppCarote: 60, ppDaSolo: 80 },
+    totals: { ppProve: 400, ppTane: 120, ppCarote: 60, ppDaSolo: 80, ppPecore: 60 },
     best: { ppFila: 14 }, items: {},
     campagne: { passo: { tappa: QUANTE_TAPPE, libera: true,
                          stelle: Object.fromEntries(CAMPAGNA.map((_, i) => [i, 3])) } },
@@ -612,19 +724,21 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('il gioco risulta provato', manifesto.albo.provato(mFinito) === true)
   controlla('e l\'area vale esperienza', manifesto.albo.xp(mFinito) > 0)
   uguale('le stelle sono la somma dei primati per tappa', mFinito.stelleDi(CHIAVE), QUANTE_TAPPE * 3)
-  /* le stelle dell'ultima medaglia sono tutte quelle delle tappe dei
-     piccoli: la campagna si è allungata, e chi le aveva prese tutte
-     non deve vedersi l'oro diventare d'argento */
-  uguale('le stelle dell\'oro sono tre per ogni tappa dei piccoli', manifesto.albo.traguardi
-    .find(t => t.id === 'pp-stelle').soglie.at(-1), TAPPE_PICCOLE * 3)
+  /* le stelle dell'ultima medaglia sono tutte quelle delle tappe fino
+     alle buche: la campagna si è allungata (lo zaino, poi il cane), e chi
+     le aveva prese tutte non deve vedersi l'oro diventare d'argento */
+  uguale('le stelle dell\'oro sono tre per ogni tappa fino alle buche', manifesto.albo.traguardi
+    .find(t => t.id === 'pp-stelle').soglie.at(-1), TAPPE_PRIME * 3)
+  /* chi aveva finito le buche ieri, dopo il travaso: la tappa è davanti
+     al viale, e le stelle stanno sui primi ventiquattro */
   const diIeri = {
     totals: { ppProve: 90, ppTane: 30, ppCarote: 20, ppDaSolo: 25 }, best: {}, items: {},
-    campagne: { passo: { tappa: TAPPE_PICCOLE, libera: true,
-                         stelle: Object.fromEntries(CAMPAGNA.slice(0, TAPPE_PICCOLE).map((_, i) => [i, 3])) } },
+    campagne: { passo: { tappa: TAPPE_PICCOLE, libera: false,
+                         stelle: Object.fromEntries(CAMPAGNA.slice(0, TAPPE_PRIME).map((_, i) => [i, 3])) } },
   }
   const mIeri = misure(diIeri)
   for (const id of ['pp-tappe', 'pp-stelle', 'pp-campagna'])
-    controlla(`chi aveva finito le tappe dei piccoli tiene l'oro di «${id}»`,
+    controlla(`chi aveva finito le buche tiene l'oro di «${id}»`,
               statoTraguardo(traguardi.find(t => t.id === id), mIeri).finito)
   uguale('e lo zaino comincia da zero', statoTraguardo(traguardi.find(t => t.id === 'pp-zaino'), mIeri).grado, 0)
 

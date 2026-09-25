@@ -6,7 +6,15 @@
    Prima si cammina e basta, poi si salta, poi si scivola, poi si spinge,
    poi si cade nelle buche — e l'ultimo livello le mette tutte insieme.
 
-   Dopo le buche il mondo smette di crescere e cresce **la lingua**: i
+   Dopo le buche arriva il **cane pastore**: l'ultima regola del mondo,
+   e l'unica in cui chi corre non va da nessuna parte — porta le pecore
+   nel recinto, e le pecore si spostano solo scappando da lui. È ancora
+   un gradino dei piccoli (niente carte, niente zaino), ma è quello dove
+   si pensa di più: una pecora spinta nel posto sbagliato si incastra, e
+   la strada si scrive pensando a dove andrà a finire lei, non a dove va
+   il cane.
+
+   Dopo il cane il mondo smette di crescere e cresce **la lingua**: i
    gradini dei grandi portano una carta nuova invece che una regola del
    mondo — 🔁 ripeti, per cominciare (`dati/carte.js`) — e con la carta
    lo **zaino**, quante carte tiene la fila. La strada scritta freccia
@@ -36,7 +44,9 @@
    insieme a sette e mezzo. L'ultima sta a 44 e non a 45 apposta: la mira
    di un bambino di sei anni arriva a 44, e un punto in più chiudeva col
    lucchetto l'ultima tappa (e il sentiero senza fine dietro) proprio a
-   chi ha l'età giusta per giocarla. Nessuna tappa dichiara `scuola`: dietro non
+   chi ha l'età giusta per giocarla. Le pecore stanno a 44 anche loro,
+   per la stessa ragione: sono il gradino dopo di chi ha sei anni e ha
+   finito le buche, e lo zaino a quell'età resta chiuso. Nessuna tappa dichiara `scuola`: dietro non
    c'è un pezzo di programma scolastico, e la testa della fila non si
    taglia mai.
 
@@ -45,6 +55,11 @@
    `CALIBRAZIONE.md`). Sale col gradino perché col gradino sale il tempo
    che un livello chiede: un minuto il prato, cinque il labirinto di
    ghiaccio.
+
+   `trappole`, nei livelli del cane, sono le mosse ingenue di quel posto
+   — passare sotto la pecora per prendere l'osso, spingerla troppo in
+   là — e il test pretende che non vincano e che prima di fermarsi
+   facciano un pezzo di strada: è lì che si vede dove si è sbagliato.
 
    `salti: true` accende la seconda fila di frecce. Solo dove il livello
    le usa: una fila di tasti che non servono a niente è una fila di
@@ -80,6 +95,8 @@ export const SCALINI = [
     dritta: 'Un masso si spinge: sul ghiaccio scivola, nell\'acqua fa un ponte.' },
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', regola: 'buche',
     dritta: 'Si entra in una buca e si esce dalla sua gemella, dello stesso colore.' },
+  { chiave: 'pecore', nome: 'Il cane pastore', icona: '🐑', regola: 'pecore',
+    dritta: 'Le pecore scappano dal cane: quando le si ferma accanto, fanno un passo dall\'altra parte. Portale tutte nel recinto.' },
   /* da qui la lingua, e non il mondo: il gradino porta una carta */
   { chiave: 'ripeti', nome: 'Il ripeti', icona: '🔁', carta: 'ripeti',
     dritta: 'Nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro.' },
@@ -348,7 +365,81 @@ export const CAMPAGNA = [
       '1..t..@',
     ] },
 
-  /* ── gradino 6: il ripeti ──
+  /* ── gradino 6: il cane pastore ──
+     Il bobtail al posto del coniglio, le pecore al posto della tana. Un
+     gradino di regola del mondo come gli altri cinque, ma è quello dove
+     la strada si pensa di più: il cane non va da nessuna parte, è la
+     pecora che deve arrivare. Da una pecora a tre; la carota è un osso,
+     e prenderlo chiede un giro che non spaventi nessuno — chi ci passa
+     accanto male incastra la pecora, e la fila si ferma lì. Monete fra le
+     buche e lo zaino (12–14), portata 44: è il gradino dopo per chi ha
+     sei anni e ha finito le buche. */
+  { chiave: 'primo-gregge', nome: 'Il primo gregge', icona: '🐕', scalino: 'pecore',
+    portata: 44, premio: 12, tema: 'primavera',
+    racconto: 'Il cane non tocca mai le pecore: gli basta fermarsi accanto, e loro fanno un passo dall\'altra parte. Dietro alla pecora, verso il recinto, e lei ci entra da sola. L\'osso chiede un giro: chi ci arriva passandole sotto la manda contro il bosco, e lì si incastra.',
+    mappa: [
+      'AB...BB',
+      'P.p..##',
+      '....BBB',
+      '~.c...A',
+    ],
+    trappole: [['giu', 'destra', 'destra']] },
+  { chiave: 'altra-parte', nome: 'Dall\'altra parte', icona: '🌾', scalino: 'pecore',
+    portata: 44, premio: 12, tema: 'estate',
+    racconto: 'Il recinto è in basso, e la pecora ci va solo se il cane le sta sopra. Chi le va incontro dritto la spinge in su: per girarle attorno si passa in diagonale, mai accanto.',
+    mappa: [
+      '..c..A',
+      '.....A',
+      '..p...',
+      'P.....',
+      'BB##BB',
+    ],
+    trappole: [['destra', 'destra', 'su'], ['su', 'destra', 'destra', 'destra']] },
+  { chiave: 'curva', nome: 'La curva', icona: '🌳', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'autunno',
+    racconto: 'Prima a destra, poi giù: fra una spinta e l\'altra il cane le gira attorno. Chi la spinge troppo in là la mette contro il bordo del prato, e da lì non torna più.',
+    mappa: [
+      'A......',
+      'P.p....',
+      '.......',
+      'BBB.B..',
+      '~~~cB#B',
+    ],
+    trappole: [['destra', 'destra', 'destra', 'destra']] },
+  { chiave: 'pecora-ghiaccio', nome: 'La pecora sul ghiaccio', icona: '🧊', scalino: 'pecore',
+    portata: 44, premio: 13, tema: 'inverno',
+    racconto: 'Sul ghiaccio la pecora scivola finché qualcosa non la ferma: qui è il sasso, proprio sopra il cancello del recinto. Chi la rincorre sul ghiaccio ci sbatte contro.',
+    mappa: [
+      'B.....A',
+      'P......',
+      '.p****O',
+      '~~~~.#B',
+      'B...c.B',
+    ],
+    trappole: [['giu', 'destra', 'destra', 'destra']] },
+  { chiave: 'due-in-fila', nome: 'Due in fila', icona: '🐏', scalino: 'pecore',
+    portata: 44, premio: 14, tema: 'primavera',
+    racconto: 'Una pecora con un\'altra alle spalle non ha dove scappare, e il cane ci sbatte contro. Prima si separano, poi dentro una per volta.',
+    mappa: [
+      'A....BA',
+      'P.pp.##',
+      '.....##',
+      'A..c.BA',
+    ],
+    trappole: [['destra', 'destra', 'destra']] },
+  { chiave: 'gregge', nome: 'Il gregge', icona: '🐑', scalino: 'pecore',
+    portata: 44, premio: 14, tema: 'estate',
+    racconto: 'Tre pecore, e il recinto ha il cancello da una parte sola. Quale per prima, e da che parte? Quella in basso è la più lontana, e le due in fila si devono separare.',
+    mappa: [
+      'A.....B',
+      'P.pp.##',
+      '......#',
+      '..p..BB',
+      'A.c...A',
+    ],
+    trappole: [['giu', 'giu', 'destra', 'destra', 'su'], ['destra', 'destra', 'destra']] },
+
+  /* ── gradino 7: il ripeti ──
      Le monete salgono a 14 e poi a 16: un livello con lo zaino chiede
      di trovare lo schema prima di scriverlo, e ci si sta più di un
      minuto. La portata va dai 7 anni e mezzo agli 8 e mezzo. */
@@ -649,12 +740,59 @@ export const CAMPAGNA = [
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
-/* le tappe dei piccoli: tutte quelle senza zaino, che vengono per prime.
-   Il sentiero senza fine si apre alla fine di queste e non della
-   campagna intera — è il sentiero dei piccoli, e chiuderlo dietro a
-   otto tappe da otto anni vorrebbe dire toglierlo a chi l'aveva già */
+/* le tappe dei piccoli: tutte quelle senza zaino, che vengono per prime */
 export const TAPPE_PICCOLE = CAMPAGNA.findIndex(t => t.zaino)
 export const TAPPE_ZAINO = QUANTE_TAPPE - TAPPE_PICCOLE
+/* le tappe dei primi cinque gradini, fino alle buche. Il sentiero senza
+   fine si apre alla fine di queste — non dopo le pecore, e non a campagna
+   finita: è il sentiero dei piccoli, e chiuderlo dietro a un gradino
+   nuovo vorrebbe dire toglierlo a chi l'aveva già. Per lo stesso motivo
+   ci si fermano i traguardi di prima: una soglia che si allunga con la
+   campagna fa tornare d'argento l'oro di chi le aveva finite tutte */
+export const TAPPE_PRIME = CAMPAGNA.findIndex(t => t.scalino === 'pecore')
+
+/* ═══════════ quando la fila cambia ═══════════
+   Le stelle stanno sotto **l'indice** della tappa (è la forma di tutte
+   le campagne, `giochi/campagne.js`), e il 25 settembre 2026 fra le buche
+   e lo zaino sono arrivate le pecore: senza travaso le stelle del viale
+   sarebbero finite sul primo gregge. Ogni fila che è stata giocata resta
+   scritta qui, e il profilo dice quale conosce (`cfg.fila`).
+
+   Il travaso rimette le stelle al loro livello per chiave, e la tappa
+   raggiunta **resta la stessa tappa**: chi era allo zaino resta allo
+   zaino, e le pecore gli si aprono alle spalle, da giocare quando vuole.
+   È il contrario del costruttore, dove un livello nuovo in mezzo si fa
+   prima di andare avanti: lì un bambino che stava giocando il viale se
+   lo ritroverebbe chiuso dietro a sei livelli nuovi, e un livello che
+   ieri c'era e oggi no è la cosa che non deve succedere. */
+export const FILE = {
+  1: ['prato', 'cespuglio', 'stagno', 'bosco', 'orto',
+      'ruscello', 'tronco', 'fosso', 'recinto', 'fiume',
+      'laghetto', 'freno', 'rotto', 'fiume-gelato', 'labirinto', 'crepa',
+      'masso', 'ponte', 'masso-ghiaccio', 'due-massi',
+      'buche', 'buca-ghiaccio', 'colori', 'tutto',
+      'viale', 'stagno-grande', 'scala', 'sassi-fiume', 'lago-gradini', 'collina', 'terrazze', 'campo-arato',
+      'gradini-storti', 'pianerottoli', 'campo-storto', 'spirale',
+      'colline', 'segni',
+      'spirale-ghiaccio', 'pozze', 'fiume-sassi', 'bosco-ghiacciato'],
+}
+FILE[2] = CAMPAGNA.map(t => t.chiave)
+export const FILA_ATTUALE = 2
+
+export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
+  const stelle = {}
+  for (const [i, s] of Object.entries((av && av.stelle) || {})) {
+    const j = nuova.indexOf(vecchia[Number(i)])
+    if (j >= 0 && s > 0) stelle[j] = s
+  }
+  /* la prossima da giocare era questa: resta lei. Finita la fila vecchia,
+     si è arrivati dopo il suo ultimo livello */
+  const fatte = Math.max(0, Math.min((av && av.tappa) || 0, vecchia.length))
+  const qui = fatte < vecchia.length ? nuova.indexOf(vecchia[fatte])
+    : nuova.indexOf(vecchia[vecchia.length - 1]) + 1
+  const tappa = qui >= 0 ? qui : fatte
+  return { stelle, tappa, libera: tappa >= nuova.length }
+}
 
 export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)

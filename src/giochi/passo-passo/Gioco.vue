@@ -31,15 +31,16 @@ import { ref, shallowRef, computed, nextTick, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, segnaBest, tappaAperta, spendi } from '../../store/profile.js'
-import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, primatoDi, segnaPrimato, ricorda } from '../campagne.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
 import { SENZA_FINE } from './gioco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, tappeDelloScalino } from './dati/campagna.js'
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_PRIME, tappeDelloScalino,
+         FILE, FILA_ATTUALE, riordina } from './dati/campagna.js'
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
-import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, eErrore } from './motore/mondo.js'
+import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, PERSA, eErrore } from './motore/mondo.js'
 import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila.js'
 import { suggerisci } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
@@ -121,6 +122,15 @@ let semeSeduta = 1
 let chiusaDallAiuto = null          // la frase di quando l'aiuto ha chiuso la serie
 
 const avanza = progresso(CHIAVE)
+/* chi ha giocato con la fila di prima (senza le pecore) ritrova le
+   stelle sui livelli giusti, e resta alla tappa dov'era: le pecore gli si
+   aprono alle spalle (`riordina` in `dati/campagna.js`) */
+if (avanza.cfg.fila !== FILA_ATTUALE) {
+  const vecchia = FILE[avanza.cfg.fila || 1]
+  if (vecchia && ((avanza.tappa || 0) > 0 || Object.keys(avanza.stelle || {}).length))
+    Object.assign(avanza, riordina(avanza, vecchia))
+  ricorda(CHIAVE, 'fila', FILA_ATTUALE)
+}
 const sentiero = computed(() => tappaIdx.value < 0)
 /* quante carte tiene la fila: lo zaino, dove c'è, se no il tetto tecnico */
 const piena = computed(() => (tappa.value && tappa.value.zaino
@@ -134,12 +144,12 @@ const colori = computed(() => {
     .map(ch => (LEGENDA[ch] || {}).lastra).filter(Boolean))
   return COLORI.filter(c => qui.has(c))
 })
-/* Il sentiero senza fine si apre alla fine delle tappe dei piccoli, e
-   senza guardare l'età: è il loro, e le tappe dello zaino che vengono
-   dopo sono chiuse fino agli otto anni. Legarlo alla campagna intera,
-   come quando la campagna finiva alle buche, l'avrebbe chiuso proprio a
-   chi l'aveva già aperto. */
-const sentieroAperto = () => tappaAperta(TAPPE_PICCOLE, avanza.tappa)
+/* Il sentiero senza fine si apre alla fine delle buche, e senza
+   guardare l'età: è dei piccoli, e le tappe dello zaino che vengono dopo
+   sono chiuse fino agli otto anni. Legarlo alla campagna intera, come
+   quando la campagna finiva alle buche, o alla fine delle pecore arrivate
+   dopo, l'avrebbe chiuso proprio a chi l'aveva già aperto. */
+const sentieroAperto = () => tappaAperta(TAPPE_PRIME, avanza.tappa)
 
 /* ═══════════ la mappa ═══════════ */
 const scalini = computed(() => SCALINI.map(s => ({
@@ -155,10 +165,10 @@ const scalini = computed(() => SCALINI.map(s => ({
 const statoSentiero = computed(() => ({
   aperto: sentieroAperto(),
   record: primatoInParole(primatoDi(CHIAVE), SENZA_FINE.misura),
-  quante: TAPPE_PICCOLE,
-  fatte: Math.min(avanza.tappa, TAPPE_PICCOLE),
-  /* sulla mappa sta dopo l'ultimo gradino dei piccoli */
-  dopo: CAMPAGNA[TAPPE_PICCOLE - 1].scalino,
+  quante: TAPPE_PRIME,
+  fatte: Math.min(avanza.tappa, TAPPE_PRIME),
+  /* sulla mappa sta dopo le buche */
+  dopo: CAMPAGNA[TAPPE_PRIME - 1].scalino,
 }))
 
 /* ── la manina della prima volta ──
@@ -201,15 +211,22 @@ const SUONI = {
   sbatte: () => suono.nota(210, 160, 0.14, 'triangle', 0.09),
   tuffo: () => suono.rumore(0.4, 0.07, 1500, 250),
   tana: () => suono.ok(),
+  /* la pecora che scappa fa un saltello; quella che non può, un «bee»
+     che trema; quella incastrata un «bee» che scende */
+  fugge: b => (b.e.ferma ? suono.nota(520, 500, 0.18, 'sawtooth', 0.025)
+    : b.e.dentro ? suono.nota(784, 1047, 0.12, 'triangle', 0.06)
+    : suono.nota(460, 620, 0.08, 'triangle', 0.04)),
+  incastrata: () => suono.nota(480, 300, 0.4, 'sawtooth', 0.03),
+  gregge: () => suono.ok(),
 }
 function suonaBattuta(b) {
   const che = b.e.che
   const prima = ultimoSuono
   ultimoSuono = che
-  if (b.veloce && (che === 'passo' || che === 'scivola')) return
+  if (b.veloce && (che === 'passo' || che === 'scivola' || che === 'fugge')) return
   /* una scivolata è una fila di celle: suona la prima e basta */
   if (che === 'scivola' && prima === 'scivola') return
-  SUONI[che]?.()
+  SUONI[che]?.(b)
 }
 
 /* ═══════════ la regia ═══════════ */
@@ -446,7 +463,7 @@ function fineGiro() {
   /* riusciti: tutti i passi tranne quello che ha sbattuto o fatto
      splash. Quando gira la testa (troppi passi) nessun passo è andato
      male: è la fila a non finire mai */
-  const cattivo = esito.esito === SBATTE || esito.esito === SPLASH ? 1 : 0
+  const cattivo = esito.esito === SBATTE || esito.esito === SPLASH || esito.esito === PERSA ? 1 : 0
   ultimoGiro = { passi: passiDi(esito), riusciti: esito.passi.length - cattivo }
   corrente.value = -1
   if (esito.esito === TANA) {
@@ -652,6 +669,7 @@ function aiutoPrenotato() {
 function contaLaVittoria(esito) {
   segna('ppTane')
   if (esito.carota) segna('ppCarote')
+  if (liv && liv.cane) segna('ppPecore', liv.pecore.length)
   if (!pagato.value) segna('ppDaSolo')
 }
 
@@ -670,7 +688,7 @@ function vittoria(esito) {
   contaLaVittoria(esito)
   return {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,
-    carota: esito.carota, svelato: svelato.value, monete,
+    carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
     racconto: CAMPAGNA[i].racconto,
     /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine,
        che si è appena aperto, a chi non ha ancora l'età dello zaino:
