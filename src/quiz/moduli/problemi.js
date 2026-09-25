@@ -167,6 +167,18 @@ const COSE = [
 /* con chi si divide, al grado delle parti uguali */
 const COMPAGNI = ['amici', 'cugini', 'compagni', 'fratelli']
 
+/* i colori del dato inutile «di che colore sono» — con le due forme,
+   perché l'aggettivo deve concordare con `c.tanti` (mele rosse, sassi
+   rossi) */
+const COLORI = [
+  { f: 'rosse', m: 'rossi' },
+  { f: 'blu', m: 'blu' },
+  { f: 'verdi', m: 'verdi' },
+  { f: 'gialle', m: 'gialli' },
+  { f: 'viola', m: 'viola' },
+]
+const coloreDi = (col, c) => (c.f ? col.f : col.m)
+
 /* ── la lingua, in tre righe ──
    Sono le uniche concordanze che restano: il resto delle frasi è
    scritto apposta per non averne bisogno. */
@@ -327,11 +339,17 @@ function volte(sorte) {
   const quanti = sorte.fra(2, 9)
   const dentro = sorte.fra(2, 9)
   const catena = { base: dentro, passi: [{ segno: '×', n: quanti }] }
+  /* due ordini della stessa storia — «ha N gruppi» prima o «in ogni
+     gruppo ci sono» prima — se no la tipologia ha solo dodici stampi
+     (uno per cosa), sotto la soglia dei venti. */
+  const primaHa = sorte.forse(0.5)
+  const testoDomanda = primaHa
+    ? `${chi(sorte)} ha ${quanti} ${g.tanti} di ${c.tanti}. In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`
+    : `In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${chi(sorte)} ne compra ${quanti} ${g.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`
   return {
     chiave: 'prob:volte',
     cosa: c,
-    testo: `${chi(sorte)} ha ${quanti} ${g.tanti} di ${c.tanti}. ` +
-           `In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`,
+    testo: testoDomanda,
     catena,
     inutili: [],
     candidati: [
@@ -517,10 +535,12 @@ function treVolte(sorte) {
 
 /* ── prob:inutili — i dati che non servono ──
    È la cosa che davvero si impara, e l'unica del modulo che non si può
-   allenare col conto: **capire cosa serve e cosa no**. Tre storie, e in
-   tutte e tre il numero in più è plausibile — l'età di chi racconta,
-   un'altra specie di cose nello stesso cesto, il giorno del mese — se
-   no si scarta senza nemmeno leggerlo, e la lezione non c'è.
+   allenare col conto: **capire cosa serve e cosa no**. Sei storie, e in
+   tutte il numero in più è plausibile — l'età di chi racconta, un'altra
+   specie di cose nello stesso cesto, il giorno del mese, il colore di
+   una parte del mucchio, il prezzo di una cosa, i giorni passati da
+   quando l'ha comprata — se no si scarta senza nemmeno leggerlo, e la
+   lezione non c'è.
 
    Due regole tenute a mano qui dentro, perché sono quelle che rendono
    la domanda onesta:
@@ -540,7 +560,7 @@ function fuoriDaiPiedi(sorte, da, a, usati) {
 }
 function inutili(sorte) {
   const c = cosa(sorte)
-  const quale = sorte.fra(1, 3)
+  const quale = sorte.fra(1, 6)
   const nome = chi(sorte)
 
   /* 1. l'età di chi racconta: il classico dei quaderni di seconda */
@@ -600,26 +620,108 @@ function inutili(sorte) {
 
   /* 3. il dato in più dentro un problema a gruppi: il numero dei giorni
      passati, che sembra parte della storia e non lo è */
-  const g = c.gruppo
-  const dentro = sorte.fra(2, 6)
-  const quanti = sorte.fra(2, 5)
-  const catena = { base: dentro, passi: [{ segno: '×', n: quanti }] }
+  if (quale === 3) {
+    const g = c.gruppo
+    const dentro = sorte.fra(2, 6)
+    const quanti = sorte.fra(2, 5)
+    const catena = { base: dentro, passi: [{ segno: '×', n: quanti }] }
+    const buona = esito(catena)
+    const giorni = fuoriDaiPiedi(sorte, 2, 9, new Set([dentro, quanti, buona]))
+    if (giorni === null) return inutiliDiRipiego(sorte, c, nome)
+    return {
+      chiave: 'prob:inutili',
+      cosa: c,
+      testo: `${nome} ha ${quanti} ${g.tanti} di ${c.tanti}, ${g.f ? 'comprate' : 'comprati'} ${giorni} giorni fa. ` +
+             `In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`,
+      catena,
+      inutili: [giorni],
+      candidati: [
+        { n: dentro * quanti * giorni, perche: 'I giorni non moltiplicano niente: le cose sono sempre quelle.' },
+        { n: dentro * quanti + giorni, perche: 'I giorni non si sommano alle cose: quel numero va lasciato dov\'è.' },
+        { n: dentro + quanti, perche: `Non è una somma: ${g.uno} per ${g.uno}, quelle di dentro si contano ogni volta da capo.` },
+      ],
+      aiuto: 'un numero della storia non serve al conto: trova prima cosa si chiede',
+      buona,
+    }
+  }
+
+  /* 4. una data: il giorno del mese in cui è successo, che non è un
+     numero della storia ma un'etichetta buttata lì sopra */
+  if (quale === 4) {
+    const a = sorte.fra(8, 30)
+    const via = sorte.fra(2, a - 2)
+    const catena = { base: a, passi: [{ segno: '-', n: via }] }
+    const buona = esito(catena)
+    const giorno = fuoriDaiPiedi(sorte, 1, 28, new Set([a, via, buona]))
+    if (giorno === null) return inutiliDiRipiego(sorte, c, nome)
+    return {
+      chiave: 'prob:inutili',
+      cosa: c,
+      testo: `Il ${giorno} del mese, ${nome} ha ${a} ${c.tanti}. ${maiuscola(sorte.uno(c.meno))} ${via}. ` +
+             `${Q(c)} gliene restano?`,
+      catena,
+      inutili: [giorno],
+      candidati: [
+        { n: a - via + giorno, perche: 'Il giorno del mese non si somma alle cose che ha: quel numero va lasciato dov\'è.' },
+        { n: a - via - giorno, perche: 'Il giorno del mese non c\'entra niente con le cose che ha: non si toglie.' },
+        { n: a - giorno, perche: 'Hai tolto il giorno del mese invece di quelle andate via: rileggi cosa chiede la domanda.' },
+        { n: a + via, perche: 'Quelle se ne vanno: alla fine ne ha di meno, non di più.' },
+      ],
+      aiuto: 'nella storia c\'è un numero che non serve: cerca prima cosa chiede la domanda',
+      buona,
+    }
+  }
+
+  /* 5. un colore: una parte del mucchio ha un colore diverso, ma la
+     domanda chiede il totale — non «quante di quel colore» */
+  if (quale === 5) {
+    const colore = sorte.uno(COLORI)
+    const a = sorte.fra(10, 30)
+    const via = sorte.fra(2, a - 2)
+    const catena = { base: a, passi: [{ segno: '-', n: via }] }
+    const buona = esito(catena)
+    const colorate = fuoriDaiPiedi(sorte, 2, a - 2, new Set([a, via, buona]))
+    if (colorate === null) return inutiliDiRipiego(sorte, c, nome)
+    const agg = coloreDi(colore, c)
+    return {
+      chiave: 'prob:inutili',
+      cosa: c,
+      testo: `${nome} ha ${a} ${c.tanti}, e ${colorate} sono ${agg}. ` +
+             `${maiuscola(sorte.uno(c.meno))} ${via}. ${Q(c)} gliene restano in tutto?`,
+      catena,
+      inutili: [colorate],
+      candidati: [
+        { n: buona - colorate, perche: `Quante sono ${agg} non conta: la domanda chiede il totale che resta.` },
+        { n: colorate, perche: `Quelle sono solo quelle ${agg}: la domanda chiede tutte quelle che restano.` },
+        { n: a + via, perche: 'Quelle se ne vanno: alla fine ne restano di meno, non di più.' },
+      ],
+      aiuto: 'nella storia c\'è un numero che non serve: cerca prima cosa chiede la domanda',
+      buona,
+    }
+  }
+
+  /* 6. un prezzo che non serve: la domanda chiede quante ne restano,
+     non quanto costano — e il prezzo si lascia dov'è */
+  const a = sorte.fra(8, 30)
+  const via = sorte.fra(2, a - 2)
+  const catena = { base: a, passi: [{ segno: '-', n: via }] }
   const buona = esito(catena)
-  const giorni = fuoriDaiPiedi(sorte, 2, 9, new Set([dentro, quanti, buona]))
-  if (giorni === null) return inutiliDiRipiego(sorte, c, nome)
+  const prezzo = fuoriDaiPiedi(sorte, 1, 9, new Set([a, via, buona]))
+  if (prezzo === null) return inutiliDiRipiego(sorte, c, nome)
   return {
     chiave: 'prob:inutili',
     cosa: c,
-    testo: `${nome} ha ${quanti} ${g.tanti} di ${c.tanti}, ${g.f ? 'comprate' : 'comprati'} ${giorni} giorni fa. ` +
-           `In ogni ${g.uno} ci sono ${dentro} ${c.tanti}. ${Q(c)} ${c.tanti} ha in tutto?`,
+    testo: `Ogni ${c.uno} costa ${prezzo} euro. ${nome} ha ${a} ${c.tanti}. ` +
+           `${maiuscola(sorte.uno(c.meno))} ${via}. ${Q(c)} gliene restano?`,
     catena,
-    inutili: [giorni],
+    inutili: [prezzo],
     candidati: [
-      { n: dentro * quanti * giorni, perche: 'I giorni non moltiplicano niente: le cose sono sempre quelle.' },
-      { n: dentro * quanti + giorni, perche: 'I giorni non si sommano alle cose: quel numero va lasciato dov\'è.' },
-      { n: dentro + quanti, perche: `Non è una somma: ${g.uno} per ${g.uno}, quelle di dentro si contano ogni volta da capo.` },
+      { n: a - via + prezzo, perche: 'Il prezzo non si somma alle cose che ha: quel numero va lasciato dov\'è.' },
+      { n: a - via - prezzo, perche: 'Il prezzo non c\'entra niente con quante ne restano: non si toglie.' },
+      { n: prezzo, perche: 'Quello è il prezzo di una, non quante gliene restano.' },
+      { n: a + via, perche: 'Quelle se ne vanno: alla fine ne ha di meno, non di più.' },
     ],
-    aiuto: 'un numero della storia non serve al conto: trova prima cosa si chiede',
+    aiuto: 'nella storia c\'è un numero che non serve: cerca prima cosa chiede la domanda',
     buona,
   }
 }

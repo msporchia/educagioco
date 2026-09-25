@@ -66,36 +66,87 @@ const OGGETTI = [
   // con l'articolo del nome (una porta → alta, un nastro → lungo).
   { emoji: '🐜', nome: 'una formica', tipo: 'lunghezza', valore: 5, unita: 'mm', agg: 'lunga' },
   { emoji: '🍚', nome: 'un chicco di riso', tipo: 'lunghezza', valore: 6, unita: 'mm', agg: 'lungo' },
+  { emoji: '💅', nome: 'un\'unghia', tipo: 'lunghezza', valore: 12, unita: 'mm', agg: 'lunga' },
+  { emoji: '📎', nome: 'una graffetta', tipo: 'lunghezza', valore: 28, unita: 'mm', agg: 'lunga' },
   { emoji: '✏️', nome: 'una matita', tipo: 'lunghezza', valore: 15, unita: 'cm', agg: 'lunga' },
   { emoji: '🍌', nome: 'una banana', tipo: 'lunghezza', valore: 18, unita: 'cm', agg: 'lunga' },
   { emoji: '👟', nome: 'una scarpa da bambino', tipo: 'lunghezza', valore: 20, unita: 'cm', agg: 'lunga' },
   { emoji: '📓', nome: 'un quaderno', tipo: 'lunghezza', valore: 24, unita: 'cm', agg: 'alto' },
+  { emoji: '🔑', nome: 'una chiave', tipo: 'lunghezza', valore: 5, unita: 'cm', agg: 'lunga' },
+  { emoji: '🍴', nome: 'una forchetta', tipo: 'lunghezza', valore: 20, unita: 'cm', agg: 'lunga' },
+  { emoji: '🖊️', nome: 'una penna', tipo: 'lunghezza', valore: 14, unita: 'cm', agg: 'lunga' },
+  { emoji: '🎒', nome: 'uno zaino di scuola', tipo: 'lunghezza', valore: 45, unita: 'cm', agg: 'alto' },
+  { emoji: '☂️', nome: 'un ombrello chiuso', tipo: 'lunghezza', valore: 60, unita: 'cm', agg: 'lungo' },
+  { emoji: '🏓', nome: 'una racchetta da ping pong', tipo: 'lunghezza', valore: 25, unita: 'cm', agg: 'lunga' },
+  { emoji: '🛹', nome: 'uno skateboard', tipo: 'lunghezza', valore: 80, unita: 'cm', agg: 'lungo' },
   { emoji: '🚪', nome: 'una porta di casa', tipo: 'lunghezza', valore: 2, unita: 'm', agg: 'alta' },
+  { emoji: '🚲', nome: 'una bicicletta', tipo: 'lunghezza', valore: 1.7, unita: 'm', agg: 'lunga' },
+  { emoji: '🚐', nome: 'un furgone', tipo: 'lunghezza', valore: 5, unita: 'm', agg: 'lungo' },
   { emoji: '🦒', nome: 'una giraffa', tipo: 'lunghezza', valore: 5, unita: 'm', agg: 'alta' },
+  { emoji: '🏀', nome: 'un canestro da basket', tipo: 'lunghezza', valore: 3, unita: 'm', agg: 'alto' },
+  { emoji: '⚽', nome: 'una porta da calcio', tipo: 'lunghezza', valore: 2.4, unita: 'm', agg: 'alta' },
   { emoji: '🏊', nome: 'una piscina olimpionica', tipo: 'lunghezza', valore: 50, unita: 'm', agg: 'lunga' },
+  { emoji: '🚌', nome: 'un autobus', tipo: 'lunghezza', valore: 12, unita: 'm', agg: 'lungo' },
   { emoji: '⚽', nome: 'un campo da calcio', tipo: 'lunghezza', valore: 100, unita: 'm', agg: 'lungo' },
+  { emoji: '✈️', nome: 'un aereo di linea', tipo: 'lunghezza', valore: 40, unita: 'm', agg: 'lungo' },
+  { emoji: '🚢', nome: 'una nave da crociera', tipo: 'lunghezza', valore: 300, unita: 'm', agg: 'lunga' },
+  { emoji: '🚶', nome: 'una passeggiata al parco', tipo: 'lunghezza', valore: 2, unita: 'km', agg: 'lunga' },
+  { emoji: '🏫', nome: 'un tragitto casa-scuola', tipo: 'lunghezza', valore: 1, unita: 'km', agg: 'lungo' },
   { emoji: '🏃', nome: 'una maratona', tipo: 'lunghezza', valore: 42, unita: 'km', agg: 'lunga' },
   { emoji: '🚗', nome: 'un viaggio da Roma a Milano', tipo: 'lunghezza', valore: 600, unita: 'km', agg: 'lungo' },
   // ── peso ──
   { emoji: '🪶', nome: 'una piuma', tipo: 'peso', valore: 1, unita: 'g' },
   { emoji: '🪙', nome: 'una moneta', tipo: 'peso', valore: 5, unita: 'g' },
+  { emoji: '🎾', nome: 'una pallina da tennis', tipo: 'peso', valore: 58, unita: 'g' },
+  { emoji: '🍰', nome: 'una fetta di torta', tipo: 'peso', valore: 80, unita: 'g' },
   { emoji: '🍎', nome: 'una mela', tipo: 'peso', valore: 150, unita: 'g' },
+  { emoji: '🍊', nome: 'un\'arancia', tipo: 'peso', valore: 200, unita: 'g' },
+  { emoji: '📗', nome: 'un libro', tipo: 'peso', valore: 300, unita: 'g' },
+  { emoji: '⚽', nome: 'un pallone da calcio', tipo: 'peso', valore: 450, unita: 'g' },
   { emoji: '🍞', nome: 'un pane', tipo: 'peso', valore: 500, unita: 'g' },
+  { emoji: '🏀', nome: 'un pallone da basket', tipo: 'peso', valore: 600, unita: 'g' },
+  { emoji: '🍚', nome: 'un pacco di riso', tipo: 'peso', valore: 1, unita: 'kg' },
+  { emoji: '🎸', nome: 'una chitarra', tipo: 'peso', valore: 3, unita: 'kg' },
+  { emoji: '🧳', nome: 'una valigia vuota', tipo: 'peso', valore: 3, unita: 'kg' },
   { emoji: '🐈', nome: 'un gatto', tipo: 'peso', valore: 4, unita: 'kg' },
+  { emoji: '🎒', nome: 'uno zaino pieno di libri', tipo: 'peso', valore: 5, unita: 'kg' },
   { emoji: '🐕', nome: 'un cane', tipo: 'peso', valore: 15, unita: 'kg' },
+  { emoji: '🎒', nome: 'uno zaino da montagna pieno', tipo: 'peso', valore: 12, unita: 'kg' },
   { emoji: '🧒', nome: 'un bambino di otto anni', tipo: 'peso', valore: 25, unita: 'kg' },
+  { emoji: '🛋️', nome: 'un divano', tipo: 'peso', valore: 50, unita: 'kg' },
+  { emoji: '🧳', nome: 'una valigia piena', tipo: 'peso', valore: 20, unita: 'kg' },
   { emoji: '🧑', nome: 'un adulto', tipo: 'peso', valore: 70, unita: 'kg' },
+  { emoji: '🏍️', nome: 'una moto', tipo: 'peso', valore: 150, unita: 'kg' },
+  { emoji: '🐴', nome: 'un cavallo', tipo: 'peso', valore: 500, unita: 'kg' },
   { emoji: '🚙', nome: 'un\'automobile', tipo: 'peso', valore: 1, unita: 't' },
+  { emoji: '🦈', nome: 'uno squalo bianco', tipo: 'peso', valore: 1, unita: 't' },
+  { emoji: '🐳', nome: 'una balena', tipo: 'peso', valore: 30, unita: 't' },
   { emoji: '🐘', nome: 'un elefante', tipo: 'peso', valore: 5, unita: 't' },
   // ── capacità ──
   { emoji: '🥄', nome: 'un cucchiaino', tipo: 'capacita', valore: 5, unita: 'ml' },
+  { emoji: '🥄', nome: 'un cucchiaio', tipo: 'capacita', valore: 15, unita: 'ml' },
+  { emoji: '☕', nome: 'una tazzina da caffè', tipo: 'capacita', valore: 60, unita: 'ml' },
+  { emoji: '🥣', nome: 'un vasetto di yogurt', tipo: 'capacita', valore: 125, unita: 'ml' },
+  { emoji: '🧃', nome: 'un tetrapak di succo', tipo: 'capacita', valore: 200, unita: 'ml' },
   { emoji: '🥛', nome: 'un bicchiere', tipo: 'capacita', valore: 200, unita: 'ml' },
-  { emoji: '🥤', nome: 'una lattina di bibita', tipo: 'capacita', valore: 330, unita: 'ml' },
+  { emoji: '🍼', nome: 'un biberon', tipo: 'capacita', valore: 250, unita: 'ml' },
   { emoji: '☕', nome: 'una tazza di tè', tipo: 'capacita', valore: 250, unita: 'ml' },
+  { emoji: '🥤', nome: 'una lattina di bibita', tipo: 'capacita', valore: 330, unita: 'ml' },
+  { emoji: '🧴', nome: 'un thermos', tipo: 'capacita', valore: 500, unita: 'ml' },
+  { emoji: '🧴', nome: 'una borraccia sportiva', tipo: 'capacita', valore: 750, unita: 'ml' },
+  { emoji: '🫗', nome: 'una brocca d\'acqua', tipo: 'capacita', valore: 1, unita: 'l' },
   { emoji: '🧴', nome: 'una bottiglia d\'acqua', tipo: 'capacita', valore: 1.5, unita: 'l' },
+  { emoji: '💧', nome: 'un annaffiatoio', tipo: 'capacita', valore: 5, unita: 'l' },
+  { emoji: '🍲', nome: 'una pentola', tipo: 'capacita', valore: 4, unita: 'l' },
   { emoji: '🪣', nome: 'un secchio', tipo: 'capacita', valore: 10, unita: 'l' },
-  { emoji: '🛁', nome: 'una vasca da bagno', tipo: 'capacita', valore: 150, unita: 'l' },
+  { emoji: '🛢️', nome: 'una tanica d\'acqua', tipo: 'capacita', valore: 20, unita: 'l' },
   { emoji: '🐠', nome: 'un acquario da tavolo', tipo: 'capacita', valore: 20, unita: 'l' },
+  { emoji: '🐠', nome: 'una vasca per i pesci', tipo: 'capacita', valore: 50, unita: 'l' },
+  { emoji: '⛽', nome: 'un serbatoio d\'automobile', tipo: 'capacita', valore: 50, unita: 'l' },
+  { emoji: '🛢️', nome: 'un barile', tipo: 'capacita', valore: 200, unita: 'l' },
+  { emoji: '🏊', nome: 'una piscina gonfiabile', tipo: 'capacita', valore: 300, unita: 'l' },
+  { emoji: '🛁', nome: 'una vasca da bagno', tipo: 'capacita', valore: 150, unita: 'l' },
+  { emoji: '💧', nome: 'una cisterna per l\'acqua piovana', tipo: 'capacita', valore: 1000, unita: 'l' },
   { emoji: '🏊', nome: 'una piscina da giardino', tipo: 'capacita', valore: 1000, unita: 'l' },
 ]
 
@@ -108,11 +159,20 @@ const CONVERSIONI = {
     { du: 'km', a: 'm', fattore: 1000, aiuto: 'un chilometro sono mille metri: sposta la virgola di tre posti' },
     { du: 'cm', a: 'mm', fattore: 10, aiuto: 'un centimetro sono dieci millimetri: sposta la virgola di un posto' },
   ],
+  /* due contesti in più oltre a kg→g: il quintale e la tonnellata sono
+     le altre due tappe della stessa scala (`UNITA.peso`), e senza di
+     loro «convertire i pesi» voleva dire sempre la stessa coppia. */
   peso: [
     { du: 'kg', a: 'g', fattore: 1000, aiuto: 'un chilo sono mille grammi: sposta la virgola di tre posti' },
+    { du: 'q', a: 'kg', fattore: 100, aiuto: 'un quintale sono cento chili: sposta la virgola di due posti' },
+    { du: 't', a: 'kg', fattore: 1000, aiuto: 'una tonnellata sono mille chili: sposta la virgola di tre posti' },
   ],
+  /* stessa idea per la capacità: litro→centilitro e centilitro→
+     millilitro sono i due gradini che restavano scoperti. */
   capacita: [
     { du: 'l', a: 'ml', fattore: 1000, aiuto: 'un litro sono mille millilitri: sposta la virgola di tre posti' },
+    { du: 'l', a: 'cl', fattore: 100, aiuto: 'un litro sono cento centilitri: sposta la virgola di due posti' },
+    { du: 'cl', a: 'ml', fattore: 10, aiuto: 'un centilitro sono dieci millilitri: sposta la virgola di un posto' },
   ],
 }
 
@@ -204,7 +264,10 @@ function conversione(sorte, quale) {
   const coppia = sorte.uno(CONVERSIONI[tipo])
   const giu = sorte.forse(0.6) // du → a (il verso più intuitivo)
   const frazionario = sorte.forse(0.3)
-  const k = frazionario ? sorte.uno([0.5, 1.5, 2.5, 3.5]) : sorte.fra(1, 9)
+  // più valori possibili di k: con una sola coppia per grandezza (com'era
+  // prima per peso e capacità) 13 valori × 2 versi facevano esattamente
+  // 26 domande diverse — adesso, con più coppie e più k, se ne superano 80.
+  const k = frazionario ? sorte.uno([0.5, 1.5, 2.5, 3.5, 4.5, 5.5]) : sorte.fra(1, 12)
 
   const unitaDa = giu ? coppia.du : coppia.a
   const unitaA = giu ? coppia.a : coppia.du
@@ -320,162 +383,144 @@ function confrontoTre(sorte) {
 }
 
 /* ═══════════ grado 5 — i problemi corti ═══════════
-   Cinque forme diverse, non una sola travestita da tanti numeri: due
-   grandezze (capacità/lunghezza/peso) incrociate con due operazioni
-   (quanto resta dopo aver tolto, quanto fa in tutto dopo aver
-   moltiplicato) — chi gioca non può imparare uno schema solo e
-   applicarlo a occhi chiusi. */
+   Trenta storie, non una sola travestita da tanti numeri: le tre
+   grandezze (capacità/lunghezza/peso) incrociate con due strutture di
+   conto (quanto resta dopo aver tolto N porzioni uguali, quanto fa in
+   tutto dopo aver moltiplicato e convertito) e vestite con le
+   situazioni di ogni giorno — la merenda, lo sport, la cucina, i
+   compiti, il giardino, il viaggio — così che chi gioca non impari uno
+   schema solo e lo applichi a occhi chiusi riconoscendo la bottiglia
+   coi bicchieri sotto ai numeri cambiati. */
 
-/* un contenitore grande, alcune porzioni tolte: quanto resta */
-function problemaRestaCapacita(sorte) {
-  const grandeL = sorte.uno([1, 1.5, 2, 2.5])
-  const piccoloMl = sorte.uno([200, 250, 330])
-  const n = sorte.fra(2, 4)
-  const totMl = grandeL * 1000
-  let restoMl = totMl - n * piccoloMl
+/* ── struttura RESTO — una quantità grande da cui si toglie via, N
+   volte, una porzione uguale: quanto avanza. Generica per le tre
+   grandezze, perché il conto (sottrazione più eventuale riconversione)
+   è sempre lo stesso: cambia solo il vestito che passa `cfg`. */
+function storiaResto(sorte, cfg) {
+  const grandeVal = sorte.uno(cfg.grandi)
+  const piccoloVal = sorte.uno(cfg.piccoli)
+  const n = sorte.fra(cfg.nMin, cfg.nMax)
+  const totBase = arrotonda(grandeVal * 1000, 4) // grandi/kg/l sono sempre mille unità-base
+  const piccoloBase = arrotonda(piccoloVal * (cfg.fattorePiccolo || 1), 4)
+  let restoBase = totBase - n * piccoloBase
   let nUsato = n
-  if (restoMl <= 0) { nUsato = 1; restoMl = totMl - piccoloMl }
+  if (restoBase <= 0) { nUsato = 1; restoBase = totBase - piccoloBase }
 
-  const buonaObj = esprimi(restoMl, 'capacita')
+  const buonaObj = esprimi(restoBase, cfg.tipo)
   const buonaStr = formattaMisura(buonaObj.valore, buonaObj.unita)
 
-  const f1 = esprimi(totMl - piccoloMl, 'capacita') // dimentica di moltiplicare per n
-  const f2 = esprimi(totMl + nUsato * piccoloMl, 'capacita') // somma invece di sottrarre
-  const f3valore = buonaObj.unita === 'l' ? arrotonda(restoMl / 100, 2) : arrotonda(restoMl * 10, 2)
+  const f1 = esprimi(totBase - piccoloBase, cfg.tipo) // dimentica le altre volte
+  const f2 = esprimi(totBase + nUsato * piccoloBase, cfg.tipo) // somma invece di sottrarre
+  const f3valore = buonaObj.unita === cfg.unitaGrande
+    ? arrotonda(restoBase / 100, 2)
+    : arrotonda(restoBase * 10, 2)
 
   const candidati = [
-    { s: formattaMisura(f1.valore, f1.unita), perche: `Hai tolto un solo bicchiere: sono ${nUsato}, non uno.` },
-    { s: formattaMisura(f2.valore, f2.unita), perche: 'Qui si toglie, non si aggiunge: il resto è quello che avanza.' },
-    { s: formattaMisura(f3valore, buonaObj.unita), perche: 'La conversione è sbagliata: un litro sono mille millilitri, non cento.' },
+    { s: formattaMisura(f1.valore, f1.unita), perche: cfg.perche1(nUsato) },
+    { s: formattaMisura(f2.valore, f2.unita), perche: cfg.percheAggiunta },
+    { s: formattaMisura(f3valore, buonaObj.unita), perche: cfg.percheConversione },
   ]
   const viste = new Set([buonaStr])
   const falsi = []
   for (const c of candidati) { if (!viste.has(c.s)) { viste.add(c.s); falsi.push(testo(c.s, c.perche)) } }
 
-  const bicchieri = nUsato > 1 ? `${nUsato} bicchieri da ${piccoloMl} ml l'uno` : `un bicchiere da ${piccoloMl} ml`
   return domanda({
-    testo: `Hai una bottiglia da ${formattaNumero(grandeL)} l e versi ${bicchieri}: quanta acqua resta?`,
+    testo: cfg.testo(grandeVal, nUsato, piccoloVal),
     buona: testo(buonaStr),
     falsi,
     chiave: 'mis:problema',
-    aiuto: 'porta tutto in millilitri, sottrai, e poi riconverti se serve.',
+    aiuto: cfg.aiuto,
     sorte,
   })
 }
 
-/* un nastro, un pezzo tagliato via: quanto resta — stessa domanda
-   della bottiglia, ma sottrazione di lunghezza invece che di capacità */
-function problemaRestaLunghezza(sorte) {
-  const totM = sorte.uno([1, 1.5, 2, 2.5, 3, 4])
-  const tagliCm = sorte.uno([20, 25, 40, 50, 75, 100])
-  const n = sorte.fra(1, 3)
-  // `esprimi()` vuole il valore nell'unità più piccola della grandezza
-  // (mm per la lunghezza, non cm): lavorare in cm e passarlo diretto
-  // era il bug che faceva uscire «0,1 m» invece di «1 m».
-  const totMm = totM * 1000
-  const tagliMm = tagliCm * 10
-  let restoMm = totMm - n * tagliMm
-  let nUsato = n
-  if (restoMm <= 0) { nUsato = 1; restoMm = totMm - tagliMm }
+const PERCHE_TOGLIE = 'Qui si toglie, non si aggiunge: il resto è quello che avanza.'
+const PERCHE_BEVE = 'Qui si beve, non si aggiunge: il resto è quello che avanza.'
+const PERCHE_TAGLIA = 'Qui si taglia via, non si aggiunge: il resto è quello che avanza.'
+const PERCHE_CONV_L = 'La conversione è sbagliata: un litro sono mille millilitri, non cento.'
+const PERCHE_CONV_KG = 'La conversione è sbagliata: un chilo sono mille grammi, non cento.'
+const PERCHE_CONV_M = 'La conversione è sbagliata: un metro sono cento centimetri, non dieci.'
+const AIUTO_ML = 'porta tutto in millilitri, sottrai, e poi riconverti se serve.'
+const AIUTO_G = 'porta tutto in grammi, sottrai, e poi riconverti se serve.'
+const AIUTO_CM = 'porta tutto in centimetri, sottrai, e poi riconverti se serve.'
 
-  const buonaObj = esprimi(restoMm, 'lunghezza')
-  const buonaStr = formattaMisura(buonaObj.valore, buonaObj.unita)
+/* i quindici vestiti della struttura RESTO — lunghezze, pesi e
+   capacità, incrociati con la merenda, lo sport, la cucina, i compiti,
+   il giardino e il viaggio. */
+const SCENARI_RESTO = [
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [1, 1.5, 2, 2.5], piccoli: [200, 250, 330], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una bottiglia da ${formattaNumero(g)} l e versi ${n > 1 ? `${n} bicchieri da ${p} ml l'uno` : `un bicchiere da ${p} ml`}: quanta acqua resta?`,
+    perche1: n => `Hai versato un solo bicchiere: sono ${n}, non uno.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+  { tipo: 'lunghezza', unitaGrande: 'm', grandi: [2, 3, 4], piccoli: [30, 40, 50], fattorePiccolo: 10, nMin: 3, nMax: 5,
+    testo: (g, n, p) => `Hai un rotolo di scotch lungo ${formattaNumero(g)} m: per foderare i quaderni ne usi ${n > 1 ? `${n} pezzi da ${p} cm l'uno` : `${p} cm`}. Quanto scotch resta?`,
+    perche1: n => `Hai usato un solo pezzo: sono ${n}, non uno.`, percheAggiunta: PERCHE_TAGLIA, percheConversione: PERCHE_CONV_M, aiuto: AIUTO_CM },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [1, 1.5, 2, 2.5, 3], piccoli: [200, 250, 300, 400, 500], nMin: 1, nMax: 3,
+    testo: (g, n, p) => `Hai un sacco di riso da ${formattaNumero(g)} kg: ne usi ${n > 1 ? `${n} volte ${p} g` : `${p} g`} per la ricetta. Quanto ne resta?`,
+    perche1: n => `Hai tolto una sola volta: sono ${n}, non una.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [1, 1.5, 2], piccoli: [150, 200, 250], nMin: 3, nMax: 5,
+    testo: (g, n, p) => `Hai una borraccia da ${formattaNumero(g)} l e durante l'allenamento bevi ${n > 1 ? `${n} sorsate da ${p} ml l'una` : `una sorsata da ${p} ml`}. Quanta acqua resta nella borraccia?`,
+    perche1: n => `Hai bevuto una sola sorsata: sono ${n}, non una.`, percheAggiunta: PERCHE_BEVE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+  { tipo: 'lunghezza', unitaGrande: 'm', grandi: [8, 10, 12], piccoli: [60, 80, 100], fattorePiccolo: 10, nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una corda per l'arrampicata lunga ${formattaNumero(g)} m: per fissare i nodi ne tagli ${n > 1 ? `${n} pezzi da ${p} cm l'uno` : `${p} cm`}. Quanta corda resta?`,
+    perche1: n => `Hai tagliato un solo pezzo: sono ${n}, non uno.`, percheAggiunta: PERCHE_TAGLIA, percheConversione: PERCHE_CONV_M, aiuto: AIUTO_CM },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [2, 3], piccoli: [400, 500, 600], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una scatola di pesetti da ${formattaNumero(g)} kg: per allenarti ne usi ${n > 1 ? `${n} da ${p} g l'uno` : `uno da ${p} g`}. Quanto resta nella scatola?`,
+    perche1: n => `Ne hai usato uno solo: sono ${n}, non uno.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'lunghezza', unitaGrande: 'm', grandi: [4, 5, 6], piccoli: [30, 40, 50], fattorePiccolo: 10, nMin: 4, nMax: 6,
+    testo: (g, n, p) => `Hai un rotolo di spago lungo ${formattaNumero(g)} m: per legare le piante ne tagli ${n > 1 ? `${n} pezzi da ${p} cm l'uno` : `${p} cm`}. Quanto spago resta?`,
+    perche1: n => `Hai tagliato un solo pezzo: sono ${n}, non uno.`, percheAggiunta: PERCHE_TAGLIA, percheConversione: PERCHE_CONV_M, aiuto: AIUTO_CM },
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [4, 5, 6], piccoli: [600, 800, 1000], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una tanica d'acqua da ${formattaNumero(g)} l per annaffiare: usi ${n > 1 ? `${n} annaffiatoi da ${p} ml l'uno` : `un annaffiatoio da ${p} ml`}. Quanta acqua resta nella tanica?`,
+    perche1: n => `Hai usato un solo annaffiatoio: sono ${n}, non uno.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [4, 5, 6], piccoli: [500, 600, 800], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai un sacco di terriccio da ${formattaNumero(g)} kg: per i vasi ne usi ${n > 1 ? `${n} palate da ${p} g l'una` : `una palata da ${p} g`}. Quanto terriccio resta nel sacco?`,
+    perche1: n => `Hai usato una sola palata: sono ${n}, non una.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [3, 4, 5], piccoli: [300, 400, 500], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una scatola di provviste da ${formattaNumero(g)} kg per il viaggio: nel primo giorno mangi ${n > 1 ? `${n} pacchi da ${p} g l'uno` : `un pacco da ${p} g`}. Quanto ne resta per gli altri giorni?`,
+    perche1: n => `Hai mangiato un solo pacco: sono ${n}, non uno.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [2, 3, 4], piccoli: [250, 330], nMin: 3, nMax: 5,
+    testo: (g, n, p) => `Hai una borsa frigo con ${formattaNumero(g)} l di bibite per il viaggio: fermata dopo fermata bevi ${n > 1 ? `${n} lattine da ${p} ml l'una` : `una lattina da ${p} ml`}. Quanta bibita resta?`,
+    perche1: n => `Hai bevuto una sola lattina: sono ${n}, non una.`, percheAggiunta: PERCHE_BEVE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [1, 1.5], piccoli: [100, 150, 200], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una confezione di pongo da ${formattaNumero(g)} kg: per un lavoretto ne usi ${n > 1 ? `${n} palline da ${p} g l'una` : `una pallina da ${p} g`}. Quanto pongo resta?`,
+    perche1: n => `Hai usato una sola pallina: sono ${n}, non una.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [0.5, 0.75, 1], piccoli: [40, 60, 80], nMin: 3, nMax: 5,
+    testo: (g, n, p) => `Hai un flacone di colla da ${formattaNumero(g)} l: durante i lavoretti ne usi ${n > 1 ? `${n} volte ${p} ml` : `${p} ml`}. Quanta colla resta?`,
+    perche1: n => `Ne hai usata una volta sola: sono ${n}, non una.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+  { tipo: 'peso', unitaGrande: 'kg', grandi: [0.4, 0.5, 0.6], piccoli: [50, 60, 80], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai un sacchetto di biscotti da ${formattaNumero(g)} kg: per la merenda ne mangi ${n > 1 ? `${n} porzioni da ${p} g l'una` : `una porzione da ${p} g`}. Quanto ne resta?`,
+    perche1: n => `Hai mangiato una sola porzione: sono ${n}, non una.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_KG, aiuto: AIUTO_G },
+  { tipo: 'capacita', unitaGrande: 'l', grandi: [1.5, 2, 2.5], piccoli: [200, 250, 300], nMin: 2, nMax: 4,
+    testo: (g, n, p) => `Hai una pentola con ${formattaNumero(g)} l di brodo: ne versi ${n > 1 ? `${n} mestoli da ${p} ml l'uno` : `un mestolo da ${p} ml`} nelle scodelle. Quanto brodo resta in pentola?`,
+    perche1: n => `Hai versato un solo mestolo: sono ${n}, non uno.`, percheAggiunta: PERCHE_TOGLIE, percheConversione: PERCHE_CONV_L, aiuto: AIUTO_ML },
+]
 
-  const f1 = esprimi(totMm - tagliMm, 'lunghezza') // dimentica gli altri tagli
-  const f2 = esprimi(totMm + nUsato * tagliMm, 'lunghezza') // somma invece di sottrarre
-  const f3valore = buonaObj.unita === 'm' ? arrotonda(restoMm / 100, 2) : arrotonda(restoMm * 10, 2)
-
-  const candidati = [
-    { s: formattaMisura(f1.valore, f1.unita), perche: `Hai tagliato un solo pezzo: sono ${nUsato}, non uno.` },
-    { s: formattaMisura(f2.valore, f2.unita), perche: 'Qui si taglia via, non si aggiunge: il resto è quello che avanza.' },
-    { s: formattaMisura(f3valore, buonaObj.unita), perche: 'La conversione è sbagliata: un metro sono cento centimetri, non dieci.' },
-  ]
-  const viste = new Set([buonaStr])
-  const falsi = []
-  for (const c of candidati) { if (!viste.has(c.s)) { viste.add(c.s); falsi.push(testo(c.s, c.perche)) } }
-
-  const tagli = nUsato > 1 ? `${nUsato} pezzi da ${tagliCm} cm l'uno` : `${tagliCm} cm`
-  return domanda({
-    testo: `Hai un nastro lungo ${formattaNumero(totM)} m: ne tagli ${tagli}. Quanto ne resta?`,
-    buona: testo(buonaStr),
-    falsi,
-    chiave: 'mis:problema',
-    aiuto: 'porta tutto in centimetri, sottrai, e poi riconverti se serve.',
-    sorte,
-  })
-}
-
-/* un sacco, una parte usata: quanto resta — la stessa sottrazione, in peso */
-function problemaRestaPeso(sorte) {
-  const totKg = sorte.uno([1, 1.5, 2, 2.5, 3])
-  const usoG = sorte.uno([200, 250, 300, 400, 500])
-  const n = sorte.fra(1, 3)
-  const totG = totKg * 1000
-  let restoG = totG - n * usoG
-  let nUsato = n
-  if (restoG <= 0) { nUsato = 1; restoG = totG - usoG }
-
-  const buonaObj = esprimi(restoG, 'peso')
-  const buonaStr = formattaMisura(buonaObj.valore, buonaObj.unita)
-
-  const f1 = esprimi(totG - usoG, 'peso') // dimentica le altre volte
-  const f2 = esprimi(totG + nUsato * usoG, 'peso') // somma invece di sottrarre
-  const f3valore = buonaObj.unita === 'kg' ? arrotonda(restoG / 100, 2) : arrotonda(restoG * 10, 2)
-
-  const candidati = [
-    { s: formattaMisura(f1.valore, f1.unita), perche: `Hai tolto una sola volta: sono ${nUsato}, non una.` },
-    { s: formattaMisura(f2.valore, f2.unita), perche: 'Qui si toglie, non si aggiunge: il resto è quello che avanza.' },
-    { s: formattaMisura(f3valore, buonaObj.unita), perche: 'La conversione è sbagliata: un chilo sono mille grammi, non cento.' },
-  ]
-  const viste = new Set([buonaStr])
-  const falsi = []
-  for (const c of candidati) { if (!viste.has(c.s)) { viste.add(c.s); falsi.push(testo(c.s, c.perche)) } }
-
-  const volte = nUsato > 1 ? `${nUsato} volte ${usoG} g` : `${usoG} g`
-  return domanda({
-    testo: `Hai un sacco di riso da ${formattaNumero(totKg)} kg: ne usi ${volte} per la ricetta. Quanto ne resta?`,
-    buona: testo(buonaStr),
-    falsi,
-    chiave: 'mis:problema',
-    aiuto: 'porta tutto in grammi, sottrai, e poi riconverti se serve.',
-    sorte,
-  })
-}
-
-/* tante copie uguali: quanto pesano o sono lunghe in tutto */
-function problemaTotale(sorte) {
-  const peso = sorte.forse(0.5)
-  const pezzo = peso ? sorte.uno([200, 250, 300, 400, 500, 600]) : sorte.uno([25, 50, 75, 100])
-  const n = sorte.fra(2, 6)
+/* ── struttura TOTALE — tante copie uguali: quanto pesano, sono lunghe
+   o contengono in tutto, con la conversione dentro. Generica come la
+   struttura resto: cambia solo cosa si moltiplica e in che unità. */
+function storiaTotale(sorte, cfg) {
+  const pezzo = sorte.uno(cfg.pezzi)
+  const n = sorte.fra(cfg.nMin, cfg.nMax)
   const tot = pezzo * n
-  const unitaFinale = peso ? 'kg' : 'm'
-  const fattore = peso ? 1000 : 100 // g→kg è mille, cm→m è cento: non sono lo stesso salto
-  const buonaValore = arrotonda(tot / fattore, 2)
-  const buonaStr = formattaMisura(buonaValore, unitaFinale)
+  const buonaValore = arrotonda(tot / cfg.fattore, 2)
+  const buonaStr = formattaMisura(buonaValore, cfg.unitaFinale)
 
-  const dimenticato = formattaMisura(tot, unitaFinale) // numero giusto, unità sbagliata
-  const fattoreSbagliato = formattaMisura(arrotonda(tot / (fattore / 10), 2), unitaFinale) // un ordine di grandezza in meno
-  const nSbagliato = n > 2 ? n - 1 : n + 1
-  const contoSbagliato = formattaMisura(arrotonda((pezzo * nSbagliato) / fattore, 2), unitaFinale)
-  const perecheFattore = peso
-    ? 'Si divide per mille, non per cento: mille grammi fanno un chilo.'
-    : 'Si divide per cento, non per dieci: cento centimetri fanno un metro.'
+  const dimenticato = formattaMisura(tot, cfg.unitaFinale) // numero giusto, unità sbagliata
+  const fattoreSbagliato = formattaMisura(arrotonda(tot / (cfg.fattore / 10), 2), cfg.unitaFinale) // un ordine di grandezza in meno
+  const nSbagliato = n > cfg.nMin ? n - 1 : n + 1
+  const contoSbagliato = formattaMisura(arrotonda((pezzo * nSbagliato) / cfg.fattore, 2), cfg.unitaFinale)
 
   const candidati = [
-    { s: dimenticato, perche: `Ti sei dimenticato di convertire: ${tot} ${peso ? 'g' : 'cm'} non sono ${tot} ${unitaFinale}.` },
-    { s: fattoreSbagliato, perche: perecheFattore },
-    { s: contoSbagliato, perche: `Sono ${n} pezzi, non ${nSbagliato}: contali di nuovo.` },
+    { s: dimenticato, perche: `Ti sei dimenticato di convertire: ${tot} ${cfg.unitaBase} non sono ${tot} ${cfg.unitaFinale}.` },
+    { s: fattoreSbagliato, perche: cfg.percheFattore },
+    { s: contoSbagliato, perche: `Sono ${n} ${cfg.pluraleOggetto}, non ${nSbagliato}: contali di nuovo.` },
   ]
   const viste = new Set([buonaStr])
   const falsi = []
   for (const c of candidati) { if (!viste.has(c.s)) { viste.add(c.s); falsi.push(testo(c.s, c.perche)) } }
 
-  const testoDomanda = peso
-    ? `${n} pacchi da ${pezzo} g: quanti kg pesano in tutto?`
-    : `${n} nastri da ${pezzo} cm: quanto sono lunghi in tutto, in metri?`
-
   return domanda({
-    testo: testoDomanda,
+    testo: cfg.testo(n, pezzo),
     buona: testo(buonaStr),
     falsi,
     chiave: 'mis:problema',
@@ -484,11 +529,56 @@ function problemaTotale(sorte) {
   })
 }
 
-/* i cinque modi di chiedere un problema corto, pescati con pari
+const PERCHE_FATTORE_MILLE_M = 'Si divide per mille, non per cento: mille metri fanno un chilometro.'
+const PERCHE_FATTORE_MILLE_ML = 'Si divide per mille, non per cento: mille millilitri fanno un litro.'
+const PERCHE_FATTORE_MILLE_G = 'Si divide per mille, non per cento: mille grammi fanno un chilo.'
+const PERCHE_FATTORE_CENTO_CM = 'Si divide per cento, non per dieci: cento centimetri fanno un metro.'
+
+/* i quindici vestiti della struttura TOTALE, sulle stesse sei
+   situazioni di vita vera. */
+const SCENARI_TOTALE = [
+  { pezzi: [150, 200, 250, 300, 400], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'm', unitaFinale: 'km', pluraleOggetto: 'giri',
+    testo: (n, p) => `Corri ${n} giri da ${p} m: quanti km fai in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_M },
+  { pezzi: [250, 330, 500], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'ml', unitaFinale: 'l', pluraleOggetto: 'bottigliette',
+    testo: (n, p) => `Per il viaggio porti ${n} bottigliette da ${p} ml l'una: quanti litri porti in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_ML },
+  { pezzi: [50, 60, 75, 80, 90], nMin: 3, nMax: 8, fattore: 100, unitaBase: 'cm', unitaFinale: 'm', pluraleOggetto: 'file',
+    testo: (n, p) => `Pianti ${n} file di fiori, ogni fila lunga ${p} cm: quanti metri di aiuola sono in tutto?`, percheFattore: PERCHE_FATTORE_CENTO_CM },
+  { pezzi: [150, 200, 250, 300], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'quaderni',
+    testo: (n, p) => `Hai ${n} quaderni da ${p} g l'uno nello zaino: quanti kg pesano in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [70, 80, 90, 100], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'porzioni',
+    testo: (n, p) => `Prepari ${n} porzioni di pasta da ${p} g l'una: quanti kg cucini in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [250, 300, 350], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'pacchetti',
+    testo: (n, p) => `Compri ${n} pacchetti di biscotti da ${p} g l'uno per la festa: quanti kg sono in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [500, 600, 700, 800], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'pesetti',
+    testo: (n, p) => `In palestra usi ${n} pesetti da ${p} g l'uno: quanti kg pesano tutti insieme?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [100, 150, 200], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'sacchetti',
+    testo: (n, p) => `Compri ${n} sacchetti di semi da ${p} g l'uno: quanti kg hai comprato in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [200, 250, 300, 350], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'm', unitaFinale: 'km', pluraleOggetto: 'giri',
+    testo: (n, p) => `Il trenino del parco fa ${n} giri di pista da ${p} m l'uno: quanti km percorre in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_M },
+  { pezzi: [30, 40, 50], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'ml', unitaFinale: 'l', pluraleOggetto: 'provette',
+    testo: (n, p) => `Per un esperimento di scienze usi ${n} provette da ${p} ml l'una: quanti litri usi in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_ML },
+  { pezzi: [150, 200, 250], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'ml', unitaFinale: 'l', pluraleOggetto: 'tazze',
+    testo: (n, p) => `Versi ${n} tazze da ${p} ml l'una in una pentola: quanti litri versi in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_ML },
+  { pezzi: [200, 250, 300], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'ml', unitaFinale: 'l', pluraleOggetto: 'borracce',
+    testo: (n, p) => `Riempi ${n} borracce da ${p} ml l'una per la gita: quanti litri porti in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_ML },
+  { pezzi: [700, 800, 900], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'g', unitaFinale: 'kg', pluraleOggetto: 'sacchi a pelo',
+    testo: (n, p) => `Per il campeggio porti ${n} sacchi a pelo da ${p} g l'uno: quanti kg pesano in tutto?`, percheFattore: PERCHE_FATTORE_MILLE_G },
+  { pezzi: [200, 250, 300], nMin: 3, nMax: 8, fattore: 1000, unitaBase: 'ml', unitaFinale: 'l', pluraleOggetto: 'vasi',
+    testo: (n, p) => `Riempi ${n} vasi con ${p} ml d'acqua l'uno: quanti litri usi in tutto per annaffiare?`, percheFattore: PERCHE_FATTORE_MILLE_ML },
+  { pezzi: [30, 40, 50], nMin: 3, nMax: 8, fattore: 100, unitaBase: 'cm', unitaFinale: 'm', pluraleOggetto: 'nastri',
+    testo: (n, p) => `Tagli ${n} nastri da ${p} cm l'uno per i lavoretti: quanti metri di nastro usi in tutto?`, percheFattore: PERCHE_FATTORE_CENTO_CM },
+]
+
+/* i trenta modi di chiedere un problema corto, pescati con pari
    probabilità: senza questo elenco esplicito il grado 5 rischia di
    somigliare sempre alla stessa bottiglia coi bicchieri, cambiati solo
-   i numeri — e dopo tre partite si applica lo schema senza leggere */
-const PROBLEMI = [problemaRestaCapacita, problemaTotale, problemaRestaLunghezza, problemaRestaPeso]
+   i numeri — e dopo tre partite si applica lo schema senza leggere.
+   Nessuna storia pesa più di 1/30 dei tiri (circa il 3%): ben sotto il
+   10% che farebbe risuonare sempre la stessa situazione. */
+const PROBLEMI = [
+  ...SCENARI_RESTO.map(cfg => s => storiaResto(s, cfg)),
+  ...SCENARI_TOTALE.map(cfg => s => storiaTotale(s, cfg)),
+]
 
 /* ── che cosa si chiede a ogni grado ── */
 const SCALETTA = [
