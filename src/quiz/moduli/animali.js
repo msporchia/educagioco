@@ -162,17 +162,77 @@ export const BESTIE = [
    Ognuno è scritto per essere **vero di quel posto e falso degli
    altri nove**: «ha il pelo folto» da solo andrebbe bene per la
    montagna e per il bosco, e allora il pelo folto non basta. */
+/* Quattro frasi per posto e non una: la prima versione ne aveva una
+   sola, e siccome l'impronta di una domanda parte dal `testo`, quel
+   posto lì usciva sempre con la stessa consegna — dieci frasi in
+   tutto, per quanto vario fosse il resto. Le altre tre dicono la
+   stessa cosa **con un altro indizio**, sempre vero di quel posto e
+   falso degli altri nove: non è la stessa frase scritta diversa, è un
+   secondo (e un terzo, e un quarto) fatto vero sullo stesso animale.
+   `sorte.uno` ne pesca una a caso, e il numero di domande diverse di
+   questa tipologia passa da dieci a quaranta senza toccare la chiave
+   né il livello. */
 const INDIZI = {
-  banchisa: 'ha il pelo bianco e uno strato di grasso sotto la pelle, per non sentire il gelo',
-  deserto: 'sopporta giorni senza bere e cammina sulla sabbia bollente senza scottarsi',
-  mare: 'non ha zampe, respira in superficie e non esce mai dall\'acqua salata',
-  giungla: 'sta sugli alberi di un posto dove piove quasi ogni giorno e non fa mai freddo',
-  savana: 'vive nell\'erba alta e gialla, dove piove solo in una stagione e l\'acqua è lontana',
-  montagna: 'si arrampica sulle rocce ripide e respira bene anche dove l\'aria è sottile',
-  bosco: 'fa la scorta di ghiande e nocciole per l\'inverno fra gli alberi che perdono le foglie',
-  stagno: 'ha le zampe palmate e non si allontana mai dall\'acqua dolce e ferma',
-  fattoria: 'lo nutre l\'uomo, che in cambio prende il suo latte, le sue uova o la sua lana',
-  citta: 'vive fra le case e le strade, e mangia quello che le persone lasciano indietro',
+  banchisa: [
+    'ha il pelo bianco e uno strato di grasso sotto la pelle, per non sentire il gelo',
+    'ha le zampe larghe e pelose, per non affondare quando cammina sulla neve',
+    'nuota in un\'acqua così fredda che senza uno strato di grasso sotto la pelle si congelerebbe',
+    'vive dove per metà dell\'anno il sole non tramonta quasi mai, e per l\'altra metà è quasi sempre buio',
+  ],
+  deserto: [
+    'sopporta giorni senza bere e cammina sulla sabbia bollente senza scottarsi',
+    'ha la gobba piena di grasso, per resistere tanti giorni senza mangiare né bere',
+    'ha le zampe larghe che non si affondano nella sabbia',
+    'vive dove di giorno il caldo è fortissimo e di notte fa freddo, e la pioggia è rarissima',
+  ],
+  mare: [
+    'non ha zampe, respira in superficie e non esce mai dall\'acqua salata',
+    'nuota per tutta la vita in acqua salata e non tocca mai la terra, perché non ha le zampe',
+    'ha il corpo fatto per nuotare veloce, senza mai uscire dall\'acqua profonda e salata',
+    'vive in un\'acqua così grande che non se ne vede la fine, e piena di sale',
+  ],
+  giungla: [
+    'sta sugli alberi di un posto dove piove quasi ogni giorno e non fa mai freddo',
+    'vive fra alberi altissimi e foglie enormi, dove l\'aria è calda e umida tutto l\'anno',
+    'si arrampica e salta da un albero all\'altro in un posto dove piove quasi tutti i giorni',
+    'vive in un posto così caldo e umido che non nevica mai, nemmeno una volta l\'anno',
+  ],
+  savana: [
+    'vive nell\'erba alta e gialla, dove piove solo in una stagione e l\'acqua è lontana',
+    'vive in una pianura d\'erba gialla con pochi alberi, dove per metà dell\'anno non piove quasi mai',
+    'deve camminare a lungo per trovare l\'acqua, in un posto pieno d\'erba alta e con pochi alberi',
+    'vive in un posto caldo con l\'erba gialla, dove piove forte solo in una stagione dell\'anno',
+  ],
+  montagna: [
+    'si arrampica sulle rocce ripide e respira bene anche dove l\'aria è sottile',
+    'si arrampica su rocce ripide dove l\'aria è fredda e sottile, e in cima nevica anche d\'estate',
+    'vive in alto, dove fa più freddo che in basso e ci sono più rocce che erba',
+    'ha zampe forti per arrampicarsi su pendii ripidi che farebbero paura a chiunque altro',
+  ],
+  bosco: [
+    'fa la scorta di ghiande e nocciole per l\'inverno fra gli alberi che perdono le foglie',
+    'vive fra alberi che d\'inverno restano spogli, e fa la scorta di cibo prima del freddo',
+    'si nasconde fra tronchi e foglie cadute, in un posto dove d\'inverno può nevicare',
+    'vive in una foresta come le nostre, dove le foglie cadono in autunno e la neve arriva d\'inverno',
+  ],
+  stagno: [
+    'ha le zampe palmate e non si allontana mai dall\'acqua dolce e ferma',
+    'non si allontana mai da un\'acqua dolce e ferma, circondata da canne e piante',
+    'ha le zampe fatte apposta per nuotare in un\'acqua dolce che non scorre, vicino alle canne',
+    'vive in un\'acqua dolce e ferma, piccola, con le canne intorno e niente sale',
+  ],
+  fattoria: [
+    'lo nutre l\'uomo, che in cambio prende il suo latte, le sue uova o la sua lana',
+    'vive vicino alle persone, che lo nutrono ogni giorno e prendono qualcosa da lui in cambio',
+    'sta in un recinto o in una stalla, e ogni giorno arriva qualcuno a portargli da mangiare',
+    'non deve cercarsi il cibo da solo: ci pensa l\'uomo, in cambio di latte, uova o lana',
+  ],
+  citta: [
+    'vive fra le case e le strade, e mangia quello che le persone lasciano indietro',
+    'vive fra i palazzi e le strade, e trova da mangiare vicino alle persone senza essere allevato da loro',
+    'gira per le strade e i cortili, e si arrangia con quello che trova vicino alle case',
+    'vive in mezzo al traffico e alle case, senza un padrone che lo nutra apposta',
+  ],
 }
 
 /* ── che cos'è un posto, detto a un bambino ──
@@ -361,8 +421,9 @@ class Animali extends Modulo {
     const posti = postiDi(grado).filter(a => INDIZI[a.id])
     const a = sorte.uno(posti)
     const falsi = sorte.distrattori(posti.map(x => x.id), 3, id => id === a.id)
+    const indizio = sorte.uno(INDIZI[a.id])
     return domanda({
-      testo: `Un animale ${INDIZI[a.id]}.\nDove vive?`,
+      testo: `Un animale ${indizio}.\nDove vive?`,
       buona: posto(a.id),
       falsi: falsi.map(id => ({ ...posto(id), perche: `${NOMI_AMBIENTI[id]}: ${COS_E[id].split(' è ')[1] || 'non torna'}` })),
       chiave: 'bio:adattamento',
