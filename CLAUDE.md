@@ -620,11 +620,14 @@ committate: non è ricostruibile da git.
   lo zaino pretende nei loro gradini. Un giro che non muove il coniglio
   ferma la fila (`STANCO`). Le mappe dei grandi arrivano a nove per
   undici.
-  **Fra le buche e lo zaino c'è il cane pastore** (dieci tappe, ancora dei
+  **Fra le buche e lo zaino c'è il cane pastore** (undici tappe, ancora dei
   piccoli, portata 44): il bobtail al posto del coniglio, le pecore (`p`)
   scappano di un passo quando il cane si ferma sulla loro riga o colonna
   a una o due caselle (`VISTA`: si scansano prima che arrivi, e non le
-  tocca mai), e la meta è il recinto (`#`), non la tana. **Il cane non
+  tocca mai), e la meta è il recinto (`#`), non la tana. **Le pecore
+  non sono sassi**: una che scappa spinge quella che ha davanti, e si
+  muove tutta la fila (se in fondo c'è un ostacolo, nessuna); i prati
+  partono con le pecore sparse, da riunire. **Il cane non
   è un'isola**, ed è la correzione che l'ha rifatto: il suo gradino rifà
   il ghiaccio, la buca, il fiume da saltare e il masso che fa il ponte, e
   lui torna in ogni gradino dello zaino con la carta di quel gradino (le

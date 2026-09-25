@@ -65,7 +65,7 @@ Arrivano una per volta, un gradino per regola, e da lì in poi restano.
 | **i massi** | camminandoci contro si spingono di una cella. Sul ghiaccio scivolano finché non si fermano; nell'acqua affondano e diventano un **ponte**. Se non possono muoversi, si sbatte |
 | **le buche** | a coppie, con l'anello dello stesso colore: si entra da una e si esce dall'altra, e il movimento finisce lì, anche scivolando |
 | **le lastre** | rossa col cerchio, blu col quadrato, gialla col triangolo: si camminano come il prato (e come il prato fermano chi scivola), e un masso non ci va sopra. Non fanno niente: servono a **guardarle**, dal gradino del «fino a» in là. La forma c'è per chi i colori non li distingue tutti |
-| **le pecore** | nei livelli del cane: quando il cane si ferma sulla riga o sulla colonna di una pecora, a una o due caselle e senza niente di alto in mezzo, lei fa un passo dall'altra parte. Se lì c'è un ostacolo, l'acqua, un'altra pecora o il bordo, non si muove; sul ghiaccio scivola, e nell'acqua non ci va. Il cane contro una pecora sbatte |
+| **le pecore** | nei livelli del cane: quando il cane si ferma sulla riga o sulla colonna di una pecora, a una o due caselle e senza niente di alto in mezzo, lei fa un passo dall'altra parte, e spinge quella che ha davanti — si muovono insieme. Se in fondo alla fila c'è un ostacolo, l'acqua o il bordo, non si muove nessuna; sul ghiaccio scivolano, e nell'acqua non ci vanno. Il cane contro una pecora sbatte |
 | **il recinto** | una pecora che ci entra ci resta; il cane non ci entra mai. Quando dentro ci sono tutte, il livello è vinto |
 
 E la **tana**: arrivarci, in qualunque modo e in qualunque momento, vince
@@ -82,7 +82,7 @@ sasso.
 
 ## Il cane pastore
 
-Dopo le buche, per dieci tappe, al posto del coniglio c'è il **bobtail** e al
+Dopo le buche, per undici tappe, al posto del coniglio c'è il **bobtail** e al
 posto della tana il **recinto**. Le frecce sono le stesse, le regole del
 mondo pure — il ghiaccio, l'acqua, i salti — ma la domanda cambia: il cane
 non deve andare da nessuna parte, è **la pecora** che deve arrivare. E una
@@ -101,9 +101,18 @@ a dove andrà a finire lei.
   Era «accanto», all'inizio: con la vista a due caselle (un'idea venuta
   guardando la prima prova, il 25 settembre 2026) il cane non tocca mai
   una pecora, e i posti sono gli stessi — cambia da dove si spinge.
-- **Una pecora con qualcosa alle spalle non scappa.** Un albero, l'acqua,
-  un'altra pecora: resta lì e fa «bee», e il cane che le cammina contro
-  sbatte. Due pecore in fila si spingono una alla volta, separandole prima.
+- **Le pecore non sono sassi: una spinge l'altra.** Una pecora che scappa
+  e ha davanti un'altra pecora la spinge, e si spostano insieme — una fila
+  intera, se c'è: è il gregge che si muove a pezzetti, e il modo di
+  riunirlo è proprio questo, mettere le pecore in fila e poi spingerle
+  tutte. Se in fondo alla fila c'è un albero, l'acqua o il bordo, non si
+  muove nessuna: la prima fa «bee», e il cane che le cammina contro
+  sbatte. Sul ghiaccio la testa della fila scivola, e una pecora che
+  scivola si ferma contro quella che trova, senza spingerla.
+  Era diverso, all'inizio: le pecore si comportavano da massi, una fila
+  non si spingeva, e i prati partivano con le pecore già in fila. Il 25
+  settembre 2026 le pecore sono diventate un gregge, e i posti prati da
+  riunire.
 - **Una pecora incastrata ferma la fila.** Una pecora in un angolo, o contro
   un bordo lungo che non ha un «dietro» dove il cane possa mettersi, non si
   recupera più. Il gioco lo sa già (si calcola una volta per livello, dal
@@ -279,7 +288,7 @@ coniglio si ferma — è proprio mentre lo si vede sbattere che lo si cerca.
 
 ## Le tappe
 
-Ventiquattro posti in cinque gradini per i piccoli, dieci per il cane
+Ventiquattro posti in cinque gradini per i piccoli, undici per il cane
 pastore, e ventidue con lo zaino in quattro gradini — quattro di questi
 sono ancora del cane.
 Ognuno ha la sua forma — un prato,
@@ -321,40 +330,41 @@ per nove, così stanno intere su un telefono.
 | **🐑 Il cane pastore** | *le pecore scappano dal cane: portale tutte nel recinto* | |
 | 25. Il primo gregge | il cane parte a tre caselle: la pecora si scansa prima che arrivi, fino al recinto. L'osso chiede un giro che non le passi sotto | 7 |
 | 26. Dall'altra parte | per mandarla giù il cane le sta sopra, e per arrivarci le gira attorno in diagonale, mai sulla sua riga | 8 |
-| 27. La curva | prima a destra, poi giù: chi la spinge troppo in là la incastra contro il bordo | 15 |
-| 28. Due in fila | quella dietro non vede il cane, e quella davanti non ha dove scappare: prima si separano | 11 |
+| 27. Una spinge l'altra | prima la si mette accanto all'altra, poi si spingono tutte e due: entrano una dietro l'altra | 8 |
+| 28. La curva | prima a destra, poi giù: chi la spinge troppo in là la incastra contro il bordo | 15 |
 | 29. La pecora sul ghiaccio | scivola finché il sasso non la ferma, proprio sopra il cancello | 8 |
 | 30. La galleria | la buca passa sotto la siepe: il cane sbuca alle spalle della pecora | 10 |
-| 31. Il guado | la pecora non salta e non nuota: il cane salta il fiume, e dove atterra conta | 10 |
+| 31. Il guado | due pecore di là dal fiume: il cane lo salta, e dove atterra conta | 10 |
 | 32. Il lago gelato | scivolano tutti e due, la pecora fino all'erba e il cane fino al sasso | 11 |
-| 33. Il ponte per le pecore | prima il masso nel fosso, poi la pecora sopra il ponte | 16 |
-| 34. Il gregge | tre pecore e un cancello solo: quale per prima, e da che parte | 19 |
+| 33. Riunire il gregge | tre pecore sparse per il prato: in fila, e poi dentro tutte insieme | 17 |
+| 34. Il ponte per le pecore | prima il masso nel fosso, poi la pecora sopra il ponte | 16 |
+| 35. Il gregge | quattro pecore sparse e un cancello solo: a coppie e a file, fino al recinto | 18 |
 | **🔁 Il ripeti** | *nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro* | zaino |
-| 35. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
-| 36. Le stalle | il cane passa lungo il corridoio, e ogni pecora scende nella sua stalla | 2 |
-| 37. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |
-| 38. La scala | due frecce in una scatola, e l'ordine conta: la carota è su un gradino solo | 3 |
-| 39. Di sasso in sasso | anche un salto si ripete | 3 |
-| 40. Il lago a gradini | la stessa freccia fa una, tre, due caselle, e il ciclo regge | 3 |
-| 41. La collina | su e giù: due scatole diverse; la strada di mezzo è più corta ma non si ripete | 6 |
-| 42. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
-| 43. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
+| 36. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
+| 37. Le stalle | il cane passa lungo il corridoio, e ogni pecora scende nella sua stalla | 2 |
+| 38. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |
+| 39. La scala | due frecce in una scatola, e l'ordine conta: la carota è su un gradino solo | 3 |
+| 40. Di sasso in sasso | anche un salto si ripete | 3 |
+| 41. Il lago a gradini | la stessa freccia fa una, tre, due caselle, e il ciclo regge | 3 |
+| 42. La collina | su e giù: due scatole diverse; la strada di mezzo è più corta ma non si ripete | 6 |
+| 43. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
+| 44. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
 | **🚩 Fino a** | *una scatola che non conta: ripete finché il coniglio non arriva sulla lastra del colore giusto* | zaino |
-| 44. I gradini storti | tre gradini diversi sopra i fossi: si va fino al rosso, e si scende | 5 |
-| 45. Le stalle a gradini | due corridoi di stalle lunghi diversi: con un numero, uno dei due va storto | 5 |
-| 46. Scale e pianerottoli | due colori: la scala fino al rosso, il pianerottolo fino al blu | 7 |
-| 47. Il campo storto | i passaggi fra i fossi sono ogni volta in un posto diverso | 9 |
-| 48. La spirale | ogni lato più corto del prima, e agli angoli le lastre rosse | 9 |
+| 45. I gradini storti | tre gradini diversi sopra i fossi: si va fino al rosso, e si scende | 5 |
+| 46. Le stalle a gradini | due corridoi di stalle lunghi diversi: con un numero, uno dei due va storto | 5 |
+| 47. Scale e pianerottoli | due colori: la scala fino al rosso, il pianerottolo fino al blu | 7 |
+| 48. Il campo storto | i passaggi fra i fossi sono ogni volta in un posto diverso | 9 |
+| 49. La spirale | ogni lato più corto del prima, e agli angoli le lastre rosse | 9 |
 | **❓ Il se** | *il coniglio guarda cosa ha sotto i piedi, e decide* | zaino |
-| 49. Le colline | avanti sempre: sul rosso si scende, sul giallo si sale | 6 |
-| 50. Il sentiero dei segni | ogni lastra dice dove andare, in tre versi | 9 |
-| 51. Le nicchie | le lastre dicono dove c'è una pecora da spingere in fondo alla sua nicchia, sopra o sotto | 8 |
+| 50. Le colline | avanti sempre: sul rosso si scende, sul giallo si sale | 6 |
+| 51. Il sentiero dei segni | ogni lastra dice dove andare, in tre versi | 9 |
+| 52. Le nicchie | le lastre dicono dove c'è una pecora da spingere in fondo alla sua nicchia, sopra o sotto | 8 |
 | **🌍 Tutto il mondo** | *il ghiaccio, i massi, i salti e i segnali, con le scatole* | zaino |
-| 52. La spirale di ghiaccio | quattro frecce e a ogni giro il cerchio si stringe: fermano i sassi | 5 |
-| 53. Le pozze | a ogni gradino un masso nella pozza, e la stessa scatola lo spinge | 5 |
-| 54. Il fiume dei sassi | di sasso in sasso fino al rosso, e un salto giù oltre la siepe | 7 |
-| 55. Il lago delle stalle | due spinte a pecora: la seconda gliela dà il cane scivolandole dietro | 7 |
-| 56. Il bosco ghiacciato | quattordici scivolate, e un programma solo che legge i segnali | 8 |
+| 53. La spirale di ghiaccio | quattro frecce e a ogni giro il cerchio si stringe: fermano i sassi | 5 |
+| 54. Le pozze | a ogni gradino un masso nella pozza, e la stessa scatola lo spinge | 5 |
+| 55. Il fiume dei sassi | di sasso in sasso fino al rosso, e un salto giù oltre la siepe | 7 |
+| 56. Il lago delle stalle | due spinte a pecora: la seconda gliela dà il cane scivolandole dietro | 7 |
+| 57. Il bosco ghiacciato | quattordici scivolate, e un programma solo che legge i segnali | 8 |
 
 La colonna «frecce» è la strada più corta **con la carota**, misurata dal
 risolutore; per i livelli con lo zaino è quante carte tiene lo zaino. La regola di ogni gradino **deve servire**, ed è un test a
@@ -373,7 +383,8 @@ e che la regola nuova serve davvero. Ogni due sentieri se ne aggiunge una,
 nello stesso ordine della campagna, poi si mescola. Chi ha portato il
 gregge nel recinto (l'ultima tappa del cane) trova anche **le pecore**: un
 sentiero sì e uno no è un pascolo, con una scala sua — una pecora, poi il
-ghiaccio, poi due — fatto e controllato allo stesso modo, e con le pecore
+ghiaccio, poi due, e in cima tre pecore sparse da riunire — fatto e
+controllato allo stesso modo, e con le pecore
 mai incastrate in partenza. Quello che si
 migliora è **quanti sentieri di fila si fanno senza comprare aiuti**:
 sbagliare non chiude la serie, e nemmeno i due gradini gratis del 💡;

@@ -379,16 +379,32 @@ const dove = (r) => r.mondo.pos
   r = esegui(L(['......', 'P~p...', '......', '.c...#']), ['su', 'giu'])
   controlla('sopra l\'acqua sì', r.esito === FINITA && in_(r, 3, 1), JSON.stringify(pecore(r)))
   r = esegui(L(['.......', 'P..pp..', '.......', '.c....#']), ['destra'])
-  controlla('e quella dietro a un\'altra pecora non lo vede: nessuna delle due si muove',
-            in_(r, 3, 1) && in_(r, 4, 1), JSON.stringify(pecore(r)))
+  controlla('quella dietro a un\'altra pecora il cane non lo vede, ma la prima la spinge: si spostano insieme',
+            in_(r, 4, 1) && in_(r, 5, 1), JSON.stringify(pecore(r)))
+  const spinta = r.passi[0].eventi.filter(e => e.che === 'fugge')
+  controlla('e i fatti dicono chi è stata spinta, dalla testa della fila',
+            spinta.length === 2 && spinta[0].spinta && !spinta[1].spinta && spinta[0].da.x === 4,
+            JSON.stringify(spinta))
   r = esegui(L(['......', 'P.pA..', '......', '..c..#']), ['destra', 'destra'])
   controlla('se dietro c\'è un albero non scappa, e il cane le sbatte contro',
             r.esito === SBATTE && r.dove === 1 && in_(r, 2, 1), `${r.esito} ${JSON.stringify(pecore(r))}`)
   controlla('e il suo fatto dice che ci ha provato',
             r.passi[0].eventi.some(e => e.che === 'fugge' && e.ferma))
   r = esegui(L(['P.pp.#', '......', '..c...']), ['destra'])
-  controlla('una pecora con un\'altra alle spalle non ha dove scappare', in_(r, 2, 0) && in_(r, 3, 0),
+  controlla('le pecore non sono sassi: una spinge quella che ha davanti', in_(r, 3, 0) && in_(r, 4, 0),
             JSON.stringify(pecore(r)))
+  r = esegui(L(['P.pp.#', '......', '..c...']), ['destra', 'destra'])
+  controlla('e la fila entra nel recinto una dietro l\'altra', r.esito === FINITA && r.mondo.pecore.length === 1 &&
+            in_(r, 4, 0), `${r.esito} ${JSON.stringify(pecore(r))}`)
+  r = esegui(L(['......', 'P.ppA.', '......', '..c..#']), ['destra'])
+  controlla('ma se in fondo alla fila c\'è un albero non si muove nessuna', in_(r, 2, 1) && in_(r, 3, 1) &&
+            r.passi[0].eventi.some(e => e.che === 'fugge' && e.ferma), JSON.stringify(pecore(r)))
+  r = esegui(L(['........', 'P.pp**..', '........', '..c....#']), ['destra'])
+  controlla('la testa della fila scivola sul ghiaccio, e quella dietro fa il suo passo sull\'erba',
+            in_(r, 6, 1) && in_(r, 3, 1), JSON.stringify(pecore(r)))
+  r = esegui(L(['........', 'P.p**p..', '........', '..c....#']), ['destra'])
+  controlla('e una pecora che scivola si ferma contro un\'altra, senza spingerla',
+            in_(r, 4, 1) && in_(r, 5, 1), JSON.stringify(pecore(r)))
   r = esegui(L(['.....#', '......', '..p...', 'P.....', '..p...', '......', '.c....']), ['destra', 'destra'])
   controlla('due pecore accanto al cane scappano insieme, ognuna dalla sua parte',
             r.esito === FINITA && in_(r, 2, 1) && in_(r, 2, 5), JSON.stringify(pecore(r)))
@@ -452,6 +468,14 @@ const dove = (r) => r.mondo.pos
   const qui = CAMPAGNA.findIndex(t => t.chiave === 'gregge')
   controlla('chi aveva provato le prime tappe del cane ritrova le stelle del gregge sul gregge',
             g.stelle[qui] === 3, JSON.stringify(g.stelle))
+  /* e dalla fila di prima che le pecore si spingessero: «Due in fila»
+     non c'è più, e le sue stelle se ne vanno con lei */
+  const tre = FILE[3]
+  const d = riordina({ tappa: tre.indexOf('stalle') + 1,
+                       stelle: { [tre.indexOf('due-in-fila')]: 3, [tre.indexOf('stalle')]: 2 } }, tre)
+  controlla('dalla fila con «Due in fila»: le stalle restano stelle delle stalle, e «Due in fila» non lascia niente',
+            d.stelle[CAMPAGNA.findIndex(t => t.chiave === 'stalle')] === 2 && Object.keys(d.stelle).length === 1,
+            JSON.stringify(d.stelle))
 }
 
 /* ══════════ 3. la campagna si vince, e ogni gradino insegna la sua regola ══════════ */
@@ -744,8 +768,8 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('il posto di riserva del cane si vince anche lui', !!misura(Livello.da(RISERVA_CANE)).conCarota)
   controlla('senza il cane, niente pecore nel sentiero',
             Array.from({ length: 12 }, (_, f) => Livello.da(generaSentiero(f, caso(f + 1))).cane).every(c => !c))
-  controlla('col cane si arriva a due pecore',
-            Livello.da(generaSentiero(1 + 4 * (GRADINI_CANE.length - 1), caso(5), { cane: true })).pecore.length === 2)
+  controlla('col cane si arriva al gregge da riunire: tre pecore',
+            Livello.da(generaSentiero(1 + 4 * (GRADINI_CANE.length - 1), caso(5), { cane: true })).pecore.length === 3)
 }
 
 /* ══════════ 7. quello che il gioco porta all'albo ══════════ */

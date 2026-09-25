@@ -96,7 +96,7 @@ export const SCALINI = [
   { chiave: 'buche', nome: 'Le buche', icona: '🕳️', regola: 'buche',
     dritta: 'Si entra in una buca e si esce dalla sua gemella, dello stesso colore.' },
   { chiave: 'pecore', nome: 'Il cane pastore', icona: '🐑', regola: 'pecore',
-    dritta: 'Le pecore scappano dal cane: quando si ferma sulla loro riga o colonna, a due passi, si scansano dall\'altra parte. Portale tutte nel recinto.' },
+    dritta: 'Le pecore scappano dal cane: quando si ferma sulla loro riga o colonna, a due passi, si scansano dall\'altra parte, e una spinge l\'altra. Portale tutte nel recinto.' },
   /* da qui la lingua, e non il mondo: il gradino porta una carta */
   { chiave: 'ripeti', nome: 'Il ripeti', icona: '🔁', carta: 'ripeti',
     dritta: 'Nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro.' },
@@ -376,6 +376,11 @@ export const CAMPAGNA = [
      e prenderlo chiede un giro che non spaventi nessuno — chi ci passa
      accanto male incastra la pecora, e la fila si ferma lì.
 
+     Le pecore non sono sassi: una che scappa spinge quella che ha
+     davanti, e si muovono a pezzetti di gregge — «Una spinge l'altra» lo
+     insegna, e da lì i posti sono prati con le pecore **sparse**, da
+     riunire prima di portarle dentro, non file già pronte.
+
      Dopo i primi quattro, il cane rifà le regole che il bambino ha già:
      il ghiaccio (due volte), la buca che sbuca alle spalle della pecora,
      il fiume che il cane salta e la pecora no, il masso che fa il ponte
@@ -406,6 +411,17 @@ export const CAMPAGNA = [
       'BB.##BB',
     ],
     trappole: [['su', 'destra', 'destra', 'destra']] },
+  { chiave: 'una-spinge', nome: 'Una spinge l\'altra', icona: '🐏', scalino: 'pecore',
+    portata: 44, premio: 12, tema: 'primavera',
+    racconto: 'Le pecore non sono sassi: una che scappa spinge quella che ha davanti, e si spostano insieme. Prima mettile in fila, poi spingile tutte e due verso il recinto.',
+    mappa: [
+      'P....B',
+      '.p~..#',
+      '..p..#',
+      'c..B.B',
+      '..BB..',
+    ],
+    trappole: [['giu', 'giu', 'destra']] },
   { chiave: 'curva', nome: 'La curva', icona: '🌳', scalino: 'pecore',
     portata: 44, premio: 12, tema: 'autunno',
     racconto: 'Prima a destra, poi giù: fra una spinta e l\'altra il cane le gira attorno. Chi la spinge troppo in là la mette contro il bordo del prato, e da lì non torna più.',
@@ -417,16 +433,6 @@ export const CAMPAGNA = [
       '~~~cB.#B',
     ],
     trappole: [['destra', 'destra', 'destra', 'destra']] },
-  { chiave: 'due-in-fila', nome: 'Due in fila', icona: '🐏', scalino: 'pecore',
-    portata: 44, premio: 13, tema: 'primavera',
-    racconto: 'Una pecora con un\'altra alle spalle non ha dove scappare, e il cane ci sbatte contro. Prima si separano, poi dentro una per volta.',
-    mappa: [
-      'A....BA',
-      'P.pp.##',
-      '.....##',
-      'A..c.BA',
-    ],
-    trappole: [['destra', 'destra', 'destra']] },
   { chiave: 'pecora-ghiaccio', nome: 'La pecora sul ghiaccio', icona: '🧊', scalino: 'pecore',
     portata: 44, premio: 13, tema: 'inverno',
     racconto: 'Sul ghiaccio la pecora scivola finché qualcosa non la ferma: qui è il sasso, proprio sopra il cancello del recinto. Chi la rincorre sul ghiaccio ci sbatte contro.',
@@ -450,14 +456,15 @@ export const CAMPAGNA = [
     ] },
   { chiave: 'guado', nome: 'Il guado', icona: '💧', scalino: 'pecore',
     portata: 44, premio: 13, tema: 'estate', salti: true,
-    racconto: 'La pecora non salta e non nuota: il fiume la tiene di là, e il recinto è di là. Il cane il fiume lo salta — ma dove atterra conta, perché lei lo vede anche da sopra l\'acqua.',
+    racconto: 'Due pecore di là dal fiume, e il recinto è di là. Loro non saltano e non nuotano; il cane il fiume lo salta — ma dove atterra conta, perché lo vedono anche da sopra l\'acqua.',
     mappa: [
       'A.~....',
       '..~..p.',
       'P.~....',
-      '..~....',
+      '..~.p..',
       'A.~c.B#',
-    ] },
+    ],
+    trappole: [['destra', 'salto-destra', 'destra']] },
   { chiave: 'lago-gelato', nome: 'Il lago gelato', icona: '⛸️', scalino: 'pecore',
     portata: 44, premio: 13, tema: 'inverno',
     racconto: 'Sul lago scivolano tutti e due: la pecora fino all\'erba, il cane fino al sasso. Prima di spingerla, guarda dove si fermerà lei, e dove ti fermerai tu.',
@@ -467,7 +474,20 @@ export const CAMPAGNA = [
       '.****O*',
       '.******',
       'B...c#B',
-    ] },
+    ],
+    trappole: [['giu', 'destra', 'sinistra', 'su']] },
+  { chiave: 'riunire', nome: 'Riunire il gregge', icona: '🌾', scalino: 'pecore',
+    portata: 44, premio: 14, tema: 'estate',
+    racconto: 'Tre pecore sparse per il prato, ognuna per conto suo. Il cane le riunisce: una spinta le mette in fila, e una fila entra tutta insieme. Da quale cominci?',
+    mappa: [
+      'cA....P',
+      '.....p.',
+      '.p....B',
+      '...p..#',
+      '......#',
+      'B..A..B',
+    ],
+    trappole: [['sinistra', 'giu', 'giu', 'giu']] },
   { chiave: 'ponte-pecore', nome: 'Il ponte per le pecore', icona: '🌉', scalino: 'pecore',
     portata: 44, premio: 14, tema: 'autunno',
     racconto: 'La pecora non passa l\'acqua, e il recinto è di là. Prima il masso nel fosso — due spinte — e il ponte c\'è; poi la pecora si porta sopra il ponte, e di là la aspetta il recinto. Chi spinge la pecora prima del masso la mette contro l\'acqua.',
@@ -481,15 +501,16 @@ export const CAMPAGNA = [
     trappole: [['giu', 'destra', 'destra', 'destra']] },
   { chiave: 'gregge', nome: 'Il gregge', icona: '🐑', scalino: 'pecore',
     portata: 44, premio: 14, tema: 'estate',
-    racconto: 'Tre pecore, e il recinto ha il cancello da una parte sola. Quale per prima, e da che parte? Quella in basso è la più lontana, e le due in fila si devono separare.',
+    racconto: 'Quattro pecore sparse, e un recinto col cancello da una parte sola. Il cane le mette insieme a coppie e a file, e le porta dentro: ogni spinta sposta un pezzetto di gregge.',
     mappa: [
-      'A.....B',
-      'P.pp.##',
-      '......#',
-      '..p..BB',
-      'A.c...A',
+      '.BA.A.P',
+      '.....p.',
+      '..p..cB',
+      '...p..#',
+      '.p....#',
+      '......B',
     ],
-    trappole: [['giu', 'giu', 'destra', 'destra', 'su'], ['destra', 'destra', 'destra']] },
+    trappole: [['giu', 'sinistra', 'sinistra', 'sinistra', 'sinistra']] },
 
   /* ── gradino 7: il ripeti ──
      Le monete salgono a 14 e poi a 16: un livello con lo zaino chiede
@@ -901,8 +922,16 @@ FILE[2] = [...FILE[1].slice(0, 24),
 /* lo stesso giorno il cane si è intrecciato col resto: il ghiaccio, la
    buca, il fiume e il masso nel suo gradino, e una tappa sua in ogni
    gradino dello zaino */
-FILE[3] = CAMPAGNA.map(t => t.chiave)
-export const FILA_ATTUALE = 3
+FILE[3] = [...FILE[1].slice(0, 24),
+  'primo-gregge', 'altra-parte', 'curva', 'due-in-fila', 'pecora-ghiaccio', 'galleria', 'guado',
+  'lago-gelato', 'ponte-pecore', 'gregge',
+  'viale', 'stalle', ...FILE[1].slice(25, 33), 'stalle-gradini', ...FILE[1].slice(33, 38),
+  'nicchie', ...FILE[1].slice(38, 41), 'lago-stalle', FILE[1][41]]
+/* e ancora lo stesso giorno le pecore hanno smesso di essere sassi: una
+   spinge l'altra, «Due in fila» se n'è andata, e i prati hanno le pecore
+   sparse da riunire */
+FILE[4] = CAMPAGNA.map(t => t.chiave)
+export const FILA_ATTUALE = 4
 
 export function riordina(av, vecchia, nuova = CAMPAGNA.map(t => t.chiave)) {
   const stelle = {}

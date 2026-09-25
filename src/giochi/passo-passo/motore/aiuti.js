@@ -82,7 +82,7 @@ export function pensieroDi(liv) {
   }
   if (liv.cane) {
     const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventarle.' : ''
-    return ['Le pecore 🐑 scappano dal cane: se si ferma sulla loro riga o colonna, a una o due caselle, fanno un passo dall\'altra parte. Portale tutte nel recinto.',
+    return ['Le pecore 🐑 scappano dal cane: se si ferma sulla loro riga o colonna, a una o due caselle, fanno un passo dall\'altra parte, e spingono quella che hanno davanti. Portale tutte nel recinto.',
             'Da che parte deve andare la pecora? Il cane si mette dall\'altra parte. Per girarle attorno passa in diagonale: sulla sua riga o colonna, scappa.' + osso]
   }
   if ((liv.coppia || []).some(k => k > 0))

@@ -34,9 +34,12 @@
         riga o sulla colonna di una pecora, a una o due caselle da lei
         (`VISTA`) e senza niente di alto in mezzo — dopo un passo, una
         scivolata, un salto o una buca — lei fa un passo dalla parte
-        opposta: si scansa prima che il cane le arrivi addosso. Se lì c'è un ostacolo, l'acqua, un masso,
-        un'altra pecora, la tana o una buca, o se lì finisce la mappa,
-        resta dov'è (e fa «bee»). Sul ghiaccio scivola, come un masso,
+        opposta: si scansa prima che il cane le arrivi addosso. E se
+        davanti ha un'altra pecora la spinge, e quella si sposta con lei:
+        le pecore non sono sassi, si muovono a pezzetti di gregge. Se in
+        fondo alla fila c'è un ostacolo, l'acqua, un masso, la tana o una
+        buca, o se lì finisce la mappa, non si muove nessuna (e la prima
+        fa «bee»). Sul ghiaccio scivola, come un masso,
         e si ferma sull'ultima cella prima di quello che la fermerebbe:
         nell'acqua non ci va. Una pecora che entra nel recinto ci resta,
         e non occupa più il posto. Il cane contro una pecora sbatte, e
@@ -339,26 +342,46 @@ export class Mondo {
     return PERSA
   }
 
+  /* ── la fuga, e il gregge ──
+     Le pecore non sono sassi: una che scappa spinge quella che ha
+     davanti, e quella la sua — si muove tutta la fila, un passo, come un
+     pezzetto di gregge. Se in fondo alla fila c'è qualcosa che non la
+     lascia passare (l'acqua, un albero, il bordo) non si muove nessuna,
+     e la prima fa «bee». Poi ognuna fa quello che fa il terreno dove è
+     finita: sul ghiaccio scivola, nel recinto entra. Si parte dalla
+     testa della fila, così chi scivola dietro si ferma contro chi è
+     davanti, e i fatti escono nello stesso ordine: la scena le muove
+     tutte insieme. */
   fuggi(k, dx, dy) {
-    const da = this.pecore[k]
-    let r = this.liv.vicino(da, dx, dy)
+    const fila = [this.pecore[k]]
+    let r = this.liv.vicino(fila[0], dx, dy)
+    while (r >= 0 && this.pecora(r) >= 0) {
+      fila.push(r)
+      r = this.liv.vicino(r, dx, dy)
+    }
     if (!this.liberoPerPecora(r)) {
-      this.segna({ che: 'fugge', da: this.xy(da), a: this.xy(da), via: [], ferma: true, verso: { dx, dy } })
+      const da = this.xy(fila[0])
+      this.segna({ che: 'fugge', da, a: da, via: [], ferma: true, verso: { dx, dy } })
       return
     }
-    const via = [this.xy(r)]
-    /* sul ghiaccio si scivola finché la cella dopo si può entrare; nel
-       recinto ci si ferma e si resta */
-    while (!this.liv.eRecinto(r) && this.eGhiaccio(r)) {
-      const n = this.liv.vicino(r, dx, dy)
-      if (!this.liberoPerPecora(n)) break
-      r = n
-      via.push(this.xy(r))
+    for (let j = fila.length - 1; j >= 0; j--) {
+      const da = fila[j]
+      const q = this.pecora(da)
+      let c = this.liv.vicino(da, dx, dy)
+      const via = [this.xy(c)]
+      /* sul ghiaccio si scivola finché la cella dopo si può entrare; nel
+         recinto ci si ferma e si resta */
+      while (!this.liv.eRecinto(c) && this.eGhiaccio(c)) {
+        const n = this.liv.vicino(c, dx, dy)
+        if (!this.liberoPerPecora(n)) break
+        c = n
+        via.push(this.xy(c))
+      }
+      const dentro = this.liv.eRecinto(c)
+      if (dentro) this.pecore.splice(q, 1)
+      else this.pecore[q] = c
+      this.segna({ che: 'fugge', da: this.xy(da), a: this.xy(c), via, dentro, verso: { dx, dy }, spinta: j > 0 })
     }
-    const dentro = this.liv.eRecinto(r)
-    if (dentro) this.pecore.splice(k, 1)
-    else this.pecore[k] = r
-    this.segna({ che: 'fugge', da: this.xy(da), a: this.xy(r), via, dentro, verso: { dx, dy } })
   }
 
   sbatte(p, verso, contro, salto = false) {

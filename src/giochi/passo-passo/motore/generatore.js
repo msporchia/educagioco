@@ -22,7 +22,8 @@
    pecora, poi il ghiaccio, poi due — che sale come quella del coniglio,
    un gradino ogni due. Il resto è uguale: si costruisce a caso e si
    tiene solo quello che il risolutore dice che si vince, lungo quanto il
-   gradino chiede, con l'osso che vuole un giro. Con due pecore i posti
+   gradino chiede, con l'osso che vuole un giro. In cima tre pecore
+   sparse da riunire, che si spingono l'una con l'altra. Con più pecore i posti
    costano di più da risolvere, quindi il risolutore ha un tetto
    (`LIMITE_CANE`): un posto che non si risolve in fretta si butta, e se
    ne prova un altro.
@@ -79,10 +80,12 @@ export const GRADINI_CANE = [
   { lato: [7, 5], pecore: 1, lunga: [5, 11],  dev: 2, ostacoli: 0.08, ghiaccio: 0.7 },
   { lato: [6, 5], pecore: 2, lunga: [7, 15],  dev: 1, ostacoli: 0.05 },
   { lato: [7, 6], pecore: 2, lunga: [9, 18],  dev: 2, ostacoli: 0.06, ghiaccio: 0.5 },
+  /* in cima, il gregge da riunire: tre pecore sparse, che si spingono */
+  { lato: [6, 6], pecore: 3, lunga: [10, 20], dev: 1, ostacoli: 0.05 },
 ]
 /* quanti stati guarda il risolutore su un posto del cane, prima di
    lasciarlo stare: un bambino non se ne accorge, un telefono sì */
-export const LIMITE_CANE = 40000
+export const LIMITE_CANE = 20000
 const NOMI_CANE = ['Il pascolo', 'Il trifoglio', 'L\'ovile', 'Il prato alto', 'La radura',
                    'Il campo di papaveri', 'La collinetta', 'Il pascolo lungo']
 
