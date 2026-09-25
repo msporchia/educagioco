@@ -29,7 +29,7 @@ function pezzo(p, cx, cy, mz) {
   }
   const grande = mz.cents >= 100
   p.cerchio(cx, cy, grande ? 16 : 12.5, grande ? COLORI_MONETA.grande : COLORI_MONETA.piccola)
-  p.testo(mz.testo, cx, cy, '#5a3d10', grande ? 8 : 7, 800)
+  p.testo(mz.sulla ?? mz.testo, cx, cy, '#5a3d10', grande ? 8 : 7, 800)
 }
 
 export function monete(p, { pezzi = [] }) {
@@ -45,7 +45,10 @@ export function monete(p, { pezzi = [] }) {
 }
 
 export function lineaNumeri(p, { da = 0, a = 1, punti = [] }) {
-  const x0 = 8, x1 = 92, y = 55
+  const x0 = 12, x1 = 88, y = 52
+  /* il foglio chiaro sotto, come i grafici: la carta della domanda è
+     scura, e i numeri degli estremi scritti scuri ci sparivano sopra */
+  p.rett(4, 22, 92, 56, '#f4f6fb')
   p.linea([{ x: x0, y }, { x: x1, y }], '#7d8cb4', 2)
 
   /* undici tacche: gli estremi più marcati, i decimi in mezzo */
@@ -55,8 +58,8 @@ export function lineaNumeri(p, { da = 0, a = 1, punti = [] }) {
     p.linea([{ x, y: y - (capo ? 9 : 5) }, { x, y: y + (capo ? 9 : 5) }],
       capo ? '#22304f' : '#a9b6da', capo ? 2 : 1)
   }
-  p.testo(String(da), x0, y + 20, '#22304f', 11, 800)
-  p.testo(String(a), x1, y + 20, '#22304f', 11, 800)
+  p.testo(String(da), x0, y + 18, '#22304f', 13, 800)
+  p.testo(String(a), x1, y + 18, '#22304f', 13, 800)
 
   /* i punti, ognuno con la sua lettera sopra un pallino colorato */
   const TINTE = ['#d8574f', '#3d7a3d', '#3d5aa8']

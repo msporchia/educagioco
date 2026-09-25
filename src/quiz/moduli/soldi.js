@@ -109,18 +109,40 @@ const COSE = [
   { emoji: '🧸', singolare: 'un peluche', plurale: 'i peluche' },
 ]
 
+/* quanto costa davvero ogni cosa, in centesimi: la fascia di un negozio
+   vero. Serve a tutte le domande che mettono un prezzo accanto a una
+   cosa — una caramella da quindici euro, o un peluche da dieci
+   centesimi, fanno ridere invece di far pensare. */
+const FASCE = {
+  'un cornetto': [80, 250], 'un quaderno': [100, 400], 'una mela': [40, 120],
+  'un gelato': [150, 400], 'un pallone': [600, 2500], 'un fumetto': [300, 800],
+  'una bibita': [100, 300], 'un adesivo': [30, 200], 'una matita': [50, 200],
+  'una caramella': [10, 100], 'un palloncino': [50, 300], 'un peluche': [600, 3000],
+}
+
+/* un prezzo per `item` fra `da` e `a` (oltre alla sua fascia), a passi
+   di `passo` centesimi; `null` se la sua fascia non ci entra */
+function prezzoPer(sorte, item, da, a, passo = 1) {
+  const [lo, hi] = FASCE[item.singolare]
+  const min = Math.ceil(Math.max(lo, da) / passo), max = Math.floor(Math.min(hi, a) / passo)
+  return min <= max ? sorte.fra(min, max) * passo : null
+}
+
 /* prezzi tipici di una cosa piccola, in centesimi: né due centesimi né
    duecento euro, quello che costa davvero una merenda o un fumetto */
 const PREZZI = [60, 75, 80, 90, 95, 110, 120, 130, 150, 175, 180, 199, 220, 250, 280, 300]
 
 /* ══════════════ grado 1-2 — le monete e il resto ══════════════ */
 
-/* i tagli di monete e banconote che esistono davvero. `facile` è il
+/* i tagli di monete e banconote che esistono davvero. `testo` è come
+   si scrive nella domanda («20 cent», come sui cartellini: «20 c» non lo
+   scrive nessuno), `sulla` quello che c'è stampato sulla moneta, dove
+   una parola in più non ci sta. `facile` è il
    sottoinsieme del grado 1: niente centesimi piccoli, che è quello che
    fa sballare i conti tondi promessi da quel grado. */
 const TAGLI = [
-  { cents: 1, testo: '1 c' }, { cents: 2, testo: '2 c' }, { cents: 5, testo: '5 c' },
-  { cents: 10, testo: '10 c' }, { cents: 20, testo: '20 c' }, { cents: 50, testo: '50 c' },
+  { cents: 1, testo: '1 cent', sulla: '1' }, { cents: 2, testo: '2 cent', sulla: '2' }, { cents: 5, testo: '5 cent', sulla: '5' },
+  { cents: 10, testo: '10 cent', sulla: '10' }, { cents: 20, testo: '20 cent', sulla: '20' }, { cents: 50, testo: '50 cent', sulla: '50' },
   { cents: 100, testo: '1 €' }, { cents: 200, testo: '2 €' },
   { cents: 500, testo: '5 €' }, { cents: 1000, testo: '10 €' }, { cents: 2000, testo: '20 €' },
 ]
@@ -154,7 +176,7 @@ function conta(sorte, grado) {
 
   const elenco = pezzi.map(t => t.testo).join(' + ')
   return domanda({
-    testo: sorte.forse(0.5) ? 'Quanto fanno in tutto?' : 'Quante monete e banconote hai in mano: quanto fanno?',
+    testo: sorte.forse(0.5) ? 'Quanto fanno in tutto?' : 'Hai in mano questi soldi: quanto fanno in tutto?',
     soggetto: sorte.forse(0.5)
       ? { testo: elenco }
       : scena({ che: 'monete', pezzi }),
@@ -168,14 +190,15 @@ function conta(sorte, grado) {
 
 /* il resto: si paga con una banconota, e torna la differenza */
 function resto(sorte, grado) {
-  const item = sorte.uno(COSE)
   const paid = sorte.uno(grado <= 2 ? [5, 10] : [5, 10, 20])
-  const costEuro = sorte.fra(0, paid - 1)
-  /* mai una cosa gratis: se il grado facile pesca 0 € e 0 c insieme, il
-     prezzo sarebbe zero e la domanda non ha più senso */
-  let costCent = grado <= 2 ? sorte.uno([0, 10, 20, 25, 50, 75]) : sorte.fra(1, 99)
-  if (costEuro === 0 && costCent === 0) costCent = sorte.uno([10, 20, 25, 50, 75])
-  const costoCents = costEuro * 100 + costCent
+  /* la cosa costa quello che costa nel suo negozio, e meno della
+     banconota; nel grado facile i centesimi vanno a decine, che è il
+     conto tondo promesso lì */
+  const passo = grado <= 2 ? 10 : 1
+  const buone = COSE.filter(c => prezzoPer(sorte, c, 10, paid * 100 - 10, passo) !== null)
+  const item = sorte.uno(buone)
+  const costoCents = prezzoPer(sorte, item, 10, paid * 100 - 10, passo)
+  const costEuro = Math.floor(costoCents / 100), costCent = costoCents % 100
   const restoCents = paid * 100 - costoCents
   const buonaStr = euro(restoCents)
 
@@ -208,8 +231,11 @@ function resto(sorte, grado) {
 
 /* quanto costano N cose */
 function costo(sorte, grado) {
-  const item = sorte.uno(COSE)
-  const prezzo = sorte.uno(PREZZI)
+  /* i prezzi tondi di `PREZZI`, ma solo quelli che la cosa può avere
+     davvero: niente fumetti da sessanta centesimi */
+  const nella = c => PREZZI.filter(x => x >= FASCE[c.singolare][0] && x <= FASCE[c.singolare][1])
+  const item = sorte.uno(COSE.filter(c => nella(c).length))
+  const prezzo = sorte.uno(nella(item))
   const n = sorte.fra(2, grado <= 3 ? 4 : 6)
   const totale = prezzo * n
   const buonaStr = euro(totale)
@@ -270,12 +296,6 @@ function trappolaCifre(sorte, interoMax) {
    ridere invece di far pensare. Si scelgono due cose le cui fasce
    hanno un euro tondo in comune, con il margine per starci sotto e
    sopra. */
-const FASCE = {
-  'un cornetto': [80, 250], 'un quaderno': [100, 400], 'una mela': [40, 120],
-  'un gelato': [150, 400], 'un pallone': [600, 2500], 'un fumetto': [300, 800],
-  'una bibita': [100, 300], 'un adesivo': [30, 200], 'una matita': [50, 200],
-  'una caramella': [10, 100], 'un palloncino': [50, 300], 'un peluche': [600, 3000],
-}
 
 /* gli euro tondi dove due cose si possono incontrare: la più economica
    deve poter costare fino a 45 centesimi meno, la più cara 20 in più */
