@@ -78,6 +78,14 @@ Questi **rigenerano dei file versionati**. Vedi [Roba generata](#roba-generata).
 | `npm run scatti clip` | solo le clip animate del README (`docs/img/clip-*.webp`) | quando un gioco cambia faccia |
 | `python3 strumenti/sprite/atlante.py` | `src/giochi/*/dati/atlante.js` | dopo aver corretto un ritaglio |
 | `python3 strumenti/sprite/terreni.py` | l'atlante del castello (tessere a griglia) | idem, per i terreni |
+| `python3 strumenti/sprite/scenario.py` | gli schemi da allegare ai prompt di uno scenario del sotterraneo | dopo aver toccato la pianta in `PROMPT-scenario.md` |
+| `python3 strumenti/sprite/scacchiera.py` | idem, per il castello a scacchiera | idem |
+| `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png` e `castello-battaglia*.png`, le carte delle tappe sulla scacchiera, vestite, e una battaglia finta | dopo aver toccato il generatore delle carte, una forma o il bestiario |
+| `python3 strumenti/sprite/vesti.py --atlante` | `src/giochi/castello/dati/vestiti.js` e `figure.js`, i pezzi e le figure del castello a sprite | quando arriva un'immagine (foglio del terreno, torri, mostri che camminano: nomi e prompt in `strumenti/sprite/DA-GENERARE.md`) o cambia il bestiario |
+| `python3 strumenti/sprite/righe.py <foglio.png> <provino.png>` | niente: conta righe e figure di un foglio a righe, e ne fa il provino | prima di `--atlante`, per un foglio di torri o di mostri che camminano appena arrivato |
+| `python3 strumenti/sprite/vesti.py --provino-foglio bosco <provino.png>` | niente: il foglio del terreno, già scontornato, coi rettangoli del suo foglietto sopra | per ritoccare `terreno-<vestito>.json` quando arriva il foglio |
+| `python3 strumenti/sprite/vesti.py --provino bosco <provino.png>` | niente: i pezzi di un vestito in fila (accetta anche una scena, per esempio `td_1.png`) | per guardare cosa entra nell'atlante |
+| `strumenti/sprite/sorgenti/castello/generati/torri-1.json`, poi `vesti.py --atlante` | quale figura del foglio è quale torre, la scala per stadio e le correzioni (`erba`, `pieno`, `chiudi`) | quando una torre esce storta o fuori misura |
 
 `npm run voci` è incrementale (cache in `.voci-cache/`) ma **vuole rete e
 ffmpeg**. Se in coda dice «non incise: …», rilancia lo stesso comando.
@@ -101,6 +109,7 @@ dentro, sul calco di `passo.mjs`. Vogliono `dist/` fresco: prima
 | `npm run vetrina` | i personaggi disegnati a poligoni del Generale |
 | `npm run storie` | le scene di «Prima e dopo» |
 | `npm run simula` | il tower defense giocato a mente, senza browser |
+| `npm run dps` | quanto fa male davvero ogni torre del castello, per livello e ramo, col motore vero — e quanto rende un ⚡ speso (un minuto) |
 | `npm run quiz:banco` | tutti i moduli di quiz, mille domande a testa |
 
 I primi tre sono pagine e **vogliono un server**: importano i moduli veri
@@ -227,6 +236,7 @@ l'attrezzo, e allora la modifica sparisce senza che niente sembri rotto.
 | `src/giochi/fattoria/dati/atlante.js` | `atlante.py` |
 | `src/giochi/sotterraneo/dati/atlante.js` | `atlante.py` |
 | `src/giochi/castello/dati/atlante.js` | `terreni.py` |
+| `src/giochi/castello/dati/vestiti.js`, `figure.js` | `vesti.py --atlante` |
 
 Per la taratura c'è una rete: un test confronta una firma e diventa rosso
 se `taratura-castello.js` è stantio rispetto ai prezzi. Per gli altri no —
