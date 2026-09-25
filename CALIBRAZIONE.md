@@ -147,9 +147,18 @@ La fattoria ha un livello che sale **con le monete spese lì dentro**
 (`giochi/fattoria/dati/livelli.js`), e la forma è riusabile: soglia
 `A·(n-1)² + B·(n-1)`, tanti livelli che danno poco, e quello che non è ancora
 arrivato mostrato in una pagina dei livelli invece che spento dentro il
-negozio. I numeri da tenere a mente: il secondo livello a dieci minuti di
-esercizi, il decimo a tre ore, l'ultimo a un centinaio — e mai un livello che
-non porta niente.
+negozio — e mai un livello che non porta niente.
+
+**La roba di un livello non deve pagare il livello dopo.** Se il livello
+sale spendendo, quello che un livello apre è anche la spesa più ovvia da
+fare subito, e se costa quanto il salto successivo il livello si paga da
+sé: si compra, si sale, arriva altro da comprare. Nella fattoria succedeva
+al 3, al 5, al 20, al 22 e al 26. Perciò ogni salto è **il passo della
+formula più il costo di quello che il livello apre** (`costoDelLivello`):
+comprare tutto paga la sua parte, il passo si fa giocando. Il controllo da
+fare a mente su un gioco nuovo che si livella spendendo: *comprato tutto
+quello che è appena arrivato, quanto manca al prossimo?* Se la risposta è
+«quasi niente», il livello non misura più il gioco, misura il listino.
 
 Le altre due sorgenti del livello pagano **esperienza e mai monete**, e
 stanno sulla stessa scala delle monete perché si sommano a quelle spese:

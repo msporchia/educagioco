@@ -523,25 +523,25 @@ Quello che **lavora** non segue quella fila — lì il momento è una decisione
 di gioco:
 
 ```
-   1   🪙0        il campo, il silo del raccolto, il grano
-   2   🪙210      il primo amico (il bobtail)
-   3   🪙430      il mulino, e il silo della stalla
-   4   🪙670      il mercato, cioè gli ordini
-   5   🪙930      il fienile, la conigliera, le carote e il foraggio
-   8   🪙1790     il pollaio
-  10   🪙2450     il mais, cioè il pastone
-  12   🪙3170     l'ovile, e l'erba medica
-  18   🪙5710     la stalla
-  22   🪙7730     le anatre, le patate e i cavolfiori
-  26   🪙10000    il porcile, e le zucche
-  29   🪙11870    i pomodori, cioè la zuppa d'orto
-  33   🪙14590    le capre, le melanzane e i peperoni
-  38   🪙18350    le api, le cipolle e l'aglio
-  41   🪙20800    gli alpaca
-  42   🪙21650    il pappagallo
-  44   🪙23390    le fragole, cioè la merenda
-  47   🪙26130    gli asini, e il prato fiorito
-  69   🪙50590    l'ultima cosa del catalogo (~140 ore di esercizi)
+   1   ⭐0         il campo, il silo del raccolto, il grano
+   2   ⭐260       il primo amico (il bobtail)
+   3   ⭐671       il mulino, e il silo della stalla
+   4   ⭐1250      il mercato, cioè gli ordini
+   5   ⭐1621      il fienile, la conigliera, le carote e il foraggio
+   8   ⭐3057      il pollaio
+  10   ⭐4037      il mais, cioè il pastone
+  12   ⭐5052      l'ovile, e l'erba medica
+  18   ⭐9088      la stalla
+  22   ⭐12357     le anatre, le patate e i cavolfiori
+  26   ⭐16136     il porcile, e le zucche
+  29   ⭐19258     i pomodori, cioè la zuppa d'orto
+  33   ⭐23537     le capre, le melanzane e i peperoni
+  38   ⭐29142     le api, le cipolle e l'aglio
+  41   ⭐32583     gli alpaca
+  42   ⭐34001     il pappagallo
+  44   ⭐36361     le fragole, cioè la merenda
+  47   ⭐39878     gli asini, e il prato fiorito
+  69   ⭐74781     l'ultima cosa del catalogo (~200 ore di esercizi)
 ```
 
 **Ogni coltura arriva con la bocca che la mangia**, e da quando c'è il
@@ -577,6 +577,21 @@ e raccolto: **il tempo di capire come gira**, che è la cosa che il primo
 livello deve comprare. In tempo di esercizi: il livello 2 è mezz'ora, il 10 sei
 ore, l'ultimo centoquaranta, spalmate su mesi
 ([`CALIBRAZIONE.md`](../CALIBRAZIONE.md)).
+
+**La roba di un livello non paga il livello dopo** (25 settembre 2026). La
+regola del passo sopra l'attrezzatura valeva per tutti i livelli, ed era
+scritta solo per il primo. Al 3 arrivavano mulino e silo della stalla
+(🪙270) e il salto al 4 ne chiedeva 240: si costruiva quello che era appena
+arrivato e si era già al livello dopo, che apriva altro da costruire — un
+bersaglio che si sposta mentre lo si insegue, e bambini con la schermata
+piena di cose mai usate. Al 5, al 20, al 22 e al 26 lo stesso. Adesso ogni
+salto è **il passo di sempre, allungato di un quarto, più quello che costa
+comprare la roba che il livello apre** (`costoDelLivello` in
+`dati/livelli.js`): comprarla paga la sua parte, e il resto si fa giocando —
+raccolti, consegne, una decorazione in più. Spendere continua a far salire.
+Le soglie non sono più una formula pura, e la tabella qui sopra le riporta
+nuove; chi aveva una fattoria col metro di prima si riapre al livello che
+aveva (`soglie` nel salvataggio, `livelloVecchioPer`).
 
 **Il baule ha tre metà, e stanno in alto.** 🌾 *La fattoria* è quello che fa
 qualcosa — campi, macchine, silos, recinti — 🌸 *Decorazioni* è quello che sta

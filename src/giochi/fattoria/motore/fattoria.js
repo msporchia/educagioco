@@ -96,7 +96,7 @@ import {
 } from '../dati/coltivazioni.js'
 import { postiDellaFila, prezzoDellaFila, PREZZI_DELLA_FILA } from '../dati/coda.js'
 import { livelloPer, avanzamento, livelloDellaVoce, sogliaDi, ULTIMO,
-         premiDi, premioDi, chiaveDi } from '../dati/livelli.js'
+         premiDi, premioDi, chiaveDi, SOGLIE_ORA, livelloVecchioPer } from '../dati/livelli.js'
 import { OSTACOLI, TIPI } from '../dati/ostacoli.js'
 import { BASE, prezzoDi, siPassa } from '../dati/terreni.js'
 import { nuovo as bisogniNuovi, scendi, gradisce, tuttoAPosto, premiaSeStaBene }
@@ -154,6 +154,10 @@ export class Fattoria {
        comprata, questa è roba portata al banco — e sommarle qui
        vorrebbe dire non poter più dire quanto vale ciascuna. */
     this.guadagnato = 0
+    /* Con quali soglie è stato misurato il livello di questa fattoria
+       (`SOGLIE_ORA` in `dati/livelli.js`). Una nata oggi nasce con
+       quelle di oggi, e non c'è niente da rimettere a posto. */
+    this.soglie = SOGLIE_ORA
     /* I tre posti del banco. Vuoti finché non c'è una bancarella:
        chi non ce l'ha non ha nessun ordine, e il conto degli id serve
        a non riusare mai lo stesso — un ordine consegnato e uno nuovo
@@ -247,7 +251,7 @@ export class Fattoria {
     return { piazzole: this.piazzole, cose: this.cose, ostacoli: this.ostacoli,
              magazzino: this.magazzino, granaio: this.granaio, silos: this.silos,
              speso: this.speso, reclamati: this.reclamati,
-             guadagnato: this.guadagnato, ordini: this.ordini,
+             guadagnato: this.guadagnato, soglie: this.soglie, ordini: this.ordini,
              botteghe: this.botteghe, mongolfiera: this.mongolfiera,
              prossimoOrdine: this.prossimoOrdine, guardaroba: this.guardaroba,
              terreno: this.terreno, fileRiposte: this.fileRiposte,
@@ -376,6 +380,21 @@ export class Fattoria {
        un posto occupato da un tasto rotto. */
     this.guadagnato = Number.isFinite(d && d.guadagnato) && d.guadagnato > 0
       ? Math.floor(d.guadagnato) : 0
+    /* ── LE SOGLIE SONO CAMBIATE, IL LIVELLO NO ─────────────────────
+       Le soglie si sono allungate (`dati/livelli.js`, «LA ROBA DI UN
+       LIVELLO NON PAGA IL LIVELLO DOPO»), e la stessa esperienza misurata
+       col metro nuovo vale un livello più basso. Chi era al 20 non deve
+       ritrovarsi al 16 con quattro livelli di roba in mappa che non
+       potrebbe più ricomprare: si aggiunge a `speso` quello che manca
+       per restare dov'era. Una volta sola — dopo, la fattoria dice di
+       essere misurata col metro nuovo. Non è un regalo: è il livello
+       che aveva già. */
+    if (!(d && d.soglie >= SOGLIE_ORA)) {
+      const era = livelloVecchioPer(this.speso + this.guadagnato)
+      const manca = sogliaDi(era) - (this.speso + this.guadagnato)
+      if (manca > 0) this.speso += manca
+    }
+    this.soglie = SOGLIE_ORA
     this.ordini = ((d && d.ordini) || []).map(o => {
       if (!o) return null
       if (!o.chiede) return o.dal > 0 ? { dal: o.dal } : null

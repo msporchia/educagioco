@@ -64,49 +64,123 @@ import { COLTURE, RICETTE, PROFONDITA } from './coltivazioni.js'
 import { ANIMALI } from './animali.js'
 
 /* ── LE SOGLIE ────────────────────────────────────────────────────
-   Quanto bisogna aver **speso in tutto** per arrivare a un livello.
-   Una formula e non una tabella, così i livelli non finiscono mai: chi
-   ha giocato per mesi deve avere ancora un gradino davanti, se no la
-   ragione di spendere sparisce proprio a chi ne ha spese di più.
+   Quanta esperienza serve **in tutto** — spesa più consegne — per
+   arrivare a un livello. Una formula e non una tabella, così i livelli
+   non finiscono mai: chi ha giocato per mesi deve avere ancora un
+   gradino davanti, se no la ragione di spendere sparisce proprio a chi
+   ne ha spese di più.
 
    ── IL PRIMO LIVELLO DURA QUANTO SERVE A IMPARARE ─────────────────
    Il passo minimo (`SOGLIA_B`) è **più alto di tutta l'attrezzatura di
    partenza**, e non è un caso: campo e silo insieme costano 🪙142, e con
    un passo piccolo bastavano loro a far scattare tre livelli di fila —
    si comprava il silo e si sbloccava mezzo baule senza aver ancora
-   raccolto niente. Adesso per il livello 2 servono 🪙210: l'attrezzatura,
+   raccolto niente. Adesso per il livello 2 servono ⭐260: l'attrezzatura,
    un secondo campo e qualche giro di semina e raccolto. Cioè **il
    tempo di capire come gira**, che è la cosa che il primo livello deve
    comprare.
 
-   In tempo di esercizi (🪙6 al minuto, `CALIBRAZIONE.md`): il livello 2
-   sono 35 minuti, il 10 sei ore, il 30 quaranta, l'ultimo del catalogo
-   centoquaranta — spalmate su mesi, che è la scala giusta per un
-   posto che si guarda cinque minuti al giorno.
+   In tempo di esercizi (🪙6 al minuto, `CALIBRAZIONE.md`), contando
+   solo la spesa: il livello 2 sono 45 minuti, il 10 undici ore, il 30
+   cinquantasei, l'ultimo del catalogo duecento. Le consegne ne fanno
+   una parte, quindi il tempo vero è meno — spalmato su mesi, che è la
+   scala giusta per un posto che si guarda cinque minuti al giorno.
 
    *Ribalta due volte la scelta di prima.* Erano dieci livelli con le
    soglie scritte a mano, e ogni livello apriva **una linguetta intera**
    del baule: al primo minuto c'erano trentanove piante fra melo,
    topiaria e due tipi di siepe, e dopo tre acquisti si era già al terzo
    livello senza aver fatto niente. Adesso i livelli sono tanti e
-   ognuno dà poco. */
-export const SOGLIA_A = 8, SOGLIA_B = 200
+   ognuno dà poco.
 
-export const sogliaDi = livello =>
-  Math.round((SOGLIA_A * (Math.max(1, livello | 0) - 1) ** 2 +
-              SOGLIA_B * (Math.max(1, livello | 0) - 1)) / 10) * 10
+   ── LA ROBA DI UN LIVELLO NON PAGA IL LIVELLO DOPO ────────────────
+   La regola del primo livello valeva **per tutti**, e scritta solo per
+   il primo non lo diceva nessuno. Il livello 3 apre il mulino e il silo
+   della stalla (🪙270) e il salto al 4 ne chiedeva 240: si costruiva
+   quello che era appena arrivato e si era già al livello dopo, che
+   apriva altro da costruire, che portava al livello dopo ancora. Un
+   bersaglio che si sposta mentre lo si insegue — i bambini finivano
+   con la schermata piena di cose appena comprate e mai usate. Al 5,
+   al 20, al 22 e al 26 la stessa cosa: quello che il livello apre
+   costava fra il 76% e il 116% del salto. Misurato con un giocatore
+   finto sul motore vero, fra i sette e i quattordici giorni di gioco
+   erano bruciati così.
+
+   Adesso **il salto è il passo di sempre più quello che costa la roba
+   che il livello apre** (`costoDelLivello`): comprarla tutta paga
+   esattamente la sua parte, e il resto del salto si fa giocando — i
+   raccolti, le consegne al banco, alle botteghe e alla mongolfiera,
+   una decorazione in più. Spendere continua a far salire (senza, i
+   primi livelli, che arrivano prima del mercato, non si aprirebbero
+   mai); quello che non succede più è salire **solo** spendendo in
+   quello che il livello ha appena dato.
+
+   Il passo di sempre è anche **un quarto più lungo** (`ALLUNGA`): era
+   tarato quando le consegne non esistevano, e da quando ci sono il
+   banco, le botteghe e la mongolfiera l'esperienza arriva da due parti.
+   Col giocatore finto che viene tre volte al giorno con 🪙150 di
+   esercizi, il 10 arriva al giorno 22 invece che al 15; chi gioca il
+   doppio ci arriva all'11 invece che al 7.
+
+   Il primo livello non aggiunge il suo costo: campo e silo sono già
+   dentro `SOGLIA_B`, scelta apposta sopra i loro 🪙142. */
+export const SOGLIA_A = 8, SOGLIA_B = 200
+export const ALLUNGA = 1.25
+
+/* Il passo di sempre, da solo: la forma di prima, allungata. */
+const passiFinoA = livello =>
+  ALLUNGA * (SOGLIA_A * (livello - 1) ** 2 + SOGLIA_B * (livello - 1))
+
+/* Quanto costa comprare **una volta** quello che il livello apre: le
+   cose e le bestie, al prezzo di listino (le colture non costano). È
+   la parte del salto che si paga comprando. Dal secondo livello in su:
+   vedi in testa, sul primo. */
+export const costoDelLivello = livello =>
+  livello < 2 ? 0 : premiDi(livello).reduce((n, p) => n + (p.prezzo || 0), 0)
+
+/* La somma dei costi fino a un livello, tenuta da parte: si chiede a
+   ogni ridisegno del gettone, e i premi non cambiano mai durante una
+   partita. Oltre l'ultimo livello che porta qualcosa non cresce più. */
+let costi = null
+function costiFinoA(livello) {
+  if (!costi) {
+    costi = [0, 0]
+    for (let l = 1; l <= ULTIMO; l++) costi[l + 1] = costi[l] + costoDelLivello(l)
+  }
+  return costi[Math.min(livello, costi.length - 1)]
+}
+
+export function sogliaDi(livello) {
+  const l = Math.max(1, livello | 0)
+  return Math.round(passiFinoA(l) / 10) * 10 + costiFinoA(l)
+}
 
 export function livelloPer(speso = 0) {
   const s = Math.max(0, speso || 0)
-  /* l'inversa della soglia: si risolve invece di scorrere una tabella,
-     perché la tabella non c'è */
-  const x = (-SOGLIA_B + Math.sqrt(SOGLIA_B ** 2 + 4 * SOGLIA_A * s)) / (2 * SOGLIA_A)
-  let liv = 1 + Math.floor(x + 1e-9)
-  /* l'arrotondamento a dieci può spostare il confine di qualche moneta:
-     si aggiusta guardando la soglia vera */
-  while (sogliaDi(liv + 1) <= s) liv++
-  while (liv > 1 && sogliaDi(liv) > s) liv--
-  return liv
+  /* La soglia non ha più un'inversa scritta: si cerca. Il tetto è il
+     livello che si avrebbe col passo da solo, che è sempre più in là
+     di quello vero perché i costi aggiungono e non tolgono. */
+  let giu = 1, su = 2
+  while (sogliaDi(su) <= s) su *= 2
+  while (su - giu > 1) {
+    const m = (giu + su) >> 1
+    if (sogliaDi(m) <= s) giu = m
+    else su = m
+  }
+  return giu
+}
+
+/* ── LE SOGLIE DI PRIMA ───────────────────────────────────────────
+   Servono a una cosa sola: sapere a che livello era una fattoria
+   salvata prima che le soglie cambiassero, per non farla scendere
+   (`Fattoria.deserializza`). Il livello non torna mai indietro, nemmeno
+   il giorno in cui cambia la regola. */
+export const SOGLIE_ORA = 2
+const sogliaVecchia = l => Math.round((8 * (l - 1) ** 2 + 200 * (l - 1)) / 10) * 10
+export function livelloVecchioPer(esperienza = 0) {
+  let l = 1
+  while (sogliaVecchia(l + 1) <= esperienza) l++
+  return l
 }
 
 /* ── COSA ARRIVA, E QUANDO ────────────────────────────────────────
@@ -384,6 +458,19 @@ export function guastiDeiLivelli() {
     if (livelloPer(sogliaDi(l)) !== l) g.push(`chi ha speso la soglia del ${l} non è al ${l}`)
     if (l > 1 && livelloPer(sogliaDi(l) - 1) !== l - 1)
       g.push(`una moneta prima della soglia del ${l} si è già al ${l}`)
+  }
+  /* ── LA ROBA DI UN LIVELLO NON PAGA IL LIVELLO DOPO ──────────────
+     Il difetto per cui le soglie hanno la forma che hanno (vedi
+     `costoDelLivello`): comprare tutto quello che un livello apre deve
+     lasciare da fare almeno il passo di sempre. Oggi è vero per
+     costruzione; diventa rosso il giorno che qualcuno torna a una
+     formula sola. */
+  for (let l = 2; l <= ULTIMO; l++) {
+    const salto = sogliaDi(l + 1) - sogliaDi(l)
+    const resta = salto - costoDelLivello(l)
+    if (resta < SOGLIA_B)
+      g.push(`al livello ${l} comprare quello che arriva (🪙${costoDelLivello(l)}) ` +
+             `lascia solo ${resta} del salto di ${salto}: il livello si paga da sé`)
   }
   /* Un livello che non porta niente è un livello che a schermo si
      presenta come «hai fatto qualcosa, ecco: niente». */

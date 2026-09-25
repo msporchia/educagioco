@@ -10,12 +10,17 @@
      2. **non si scende mai**, per nessun motivo, nemmeno mettendo via
         quello che si è comprato;
      3. **al primo livello si può cominciare la catena** — un campo, un
-        silo, qualcosa da seminare — e tutto il resto arriva dopo.
+        silo, qualcosa da seminare — e tutto il resto arriva dopo;
+     4. **la roba di un livello non paga il livello dopo** — comprare
+        quello che è appena arrivato lascia da fare il passo di sempre,
+        se no si insegue un bersaglio che si sposta;
+     5. **cambiare le soglie non fa scendere nessuno**.
    `node test/esegui.mjs livelli-fattoria --niente-build` */
 import { Fattoria, borsaInfinita } from '../../src/giochi/fattoria/motore/fattoria.js'
 import {
   guastiDeiLivelli, ULTIMO, DECORI_PER_LIVELLO, livelloPer, sogliaDi, avanzamento,
   roba, vuoto, livelloDellaVoce, livelloDellaScheda, zonaDi, premiDi,
+  costoDelLivello, livelloVecchioPer, SOGLIA_B, SOGLIE_ORA,
 } from '../../src/giochi/fattoria/dati/livelli.js'
 import { CATALOGO, CATEGORIE, PER_ID, prezzoDellaVoce }
   from '../../src/giochi/fattoria/dati/catalogo.js'
@@ -237,6 +242,53 @@ for (let l = 1; l <= ULTIMO; l++)
   controlla('e il mulino resta sbloccato', g.sbloccata('mulino'))
   uguale('e non c\'è niente da reclamare: era già tutto suo',
          g.daReclamare().length, 0)
+}
+
+/* ══════════ 6b. la roba di un livello non paga il livello dopo ══════════
+   Il difetto trovato giocando: al 3 arrivano mulino e silo della stalla
+   (🪙270) e il salto al 4 era di 240. Si costruiva quello che era appena
+   arrivato e si era già al livello dopo, che apriva altro da costruire.
+   Qui si gioca per davvero: una fattoria appena salita compra **tutto**
+   quello che il livello le ha dato, e deve restare dov'è. */
+{
+  for (const l of [3, 5, 20, 22, 26]) {
+    const f = new Fattoria({ borsa: borsaInfinita() })
+    f.speso = sogliaDi(l)
+    f.reclamaTutto()
+    let spesa = 0
+    for (const p of premiDi(l)) {
+      if (!p.prezzo) continue
+      const prima = f.speso
+      if (p.tipo === 'bestia') f.compraBestia(p.id, p.prezzo, '', f.cellaLibera(14, 14))
+      else f.compra(p.id)
+      spesa += f.speso - prima
+    }
+    uguale(`al ${l}, comprato tutto quello che è arrivato si è ancora al ${l}`, f.livello, l)
+    controlla(`e al ${l + 1} manca ancora almeno il passo di sempre`,
+              sogliaDi(l + 1) - f.esperienza >= SOGLIA_B,
+              `speso ${spesa} (listino ${costoDelLivello(l)}), mancano ${sogliaDi(l + 1) - f.esperienza}`)
+  }
+}
+
+/* ══════════ 6c. le soglie cambiano, il livello no ══════════
+   Una fattoria salvata col metro di prima (senza `soglie`) si riapre al
+   livello che aveva, anche se la stessa esperienza oggi varrebbe meno.
+   Il livello non torna mai indietro, nemmeno il giorno della regola. */
+{
+  for (const [speso, guadagnato] of [[430, 0], [2450, 0], [6000, 690], [20000, 5000]]) {
+    const era = livelloVecchioPer(speso + guadagnato)
+    const f = new Fattoria({ borsa: borsaInfinita() })
+    const dato = { ...JSON.parse(JSON.stringify(f.serializza())), speso, guadagnato }
+    delete dato.soglie
+    const g = new Fattoria({ dato })
+    uguale(`chi era al ${era} col metro di prima ci resta`, g.livello, era)
+    uguale('e la fattoria adesso dice il metro nuovo', g.serializza().soglie, SOGLIE_ORA)
+    /* riaperta una seconda volta non sale ancora: la toppa è una sola */
+    const h = new Fattoria({ dato: JSON.parse(JSON.stringify(g.serializza())) })
+    uguale('e riaperta di nuovo non si sposta', h.esperienza, g.esperienza)
+  }
+  const nuova = new Fattoria({ borsa: borsaInfinita() })
+  uguale('una fattoria nata oggi nasce col metro nuovo', nuova.serializza().soglie, SOGLIE_ORA)
 }
 
 /* ══════════ 7. l'avanzamento è quello che la pagina mostra ══════════ */
