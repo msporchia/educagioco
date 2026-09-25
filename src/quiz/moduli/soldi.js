@@ -722,20 +722,24 @@ function conviene(sorte, grammi = false) {
    grande o più piccola da cui indovinare, ed è quello che le rende
    oneste anche senza un «perché» per ogni singola scelta sbagliata. */
 function offerta(sorte) {
+  /* Un cartellino vero: il prezzo a decine di centesimi, e lo sconto
+     tondo — «1 € di sconto», non «0,42 €» né «29,78 €», che nessun
+     negozio scrive. Il pezzo regalato dall'offerta vale il prezzo di
+     una cosa, quindi «costano uguale» è lo sconto pari a quel prezzo. */
   const item = sorte.uno(COSE)
   const [lo, hi] = FASCE[item.singolare]
-  const p = sorte.fra(lo, hi)
-  const [N, M] = sorte.uno([[2, 1], [3, 2], [4, 3]])
+  const p = prezzoPer(sorte, item, Math.max(lo, 20), hi, 10)
+  const [N, M] = sorte.uno([[2, 1], [3, 2], [3, 2], [4, 3]])
   const totaleA = p * M
-  const uguale = sorte.forse(0.2)
-  let D
-  if (uguale) {
-    D = p
-  } else {
-    const scarti = [-0.4, -0.2, 0.2, 0.4].map(f => Math.round(p + p * f))
-    const validi = scarti.filter(d => d >= 5 && Math.abs(p - d) / totaleA >= 0.05)
-    D = sorte.uno(validi.length ? validi : [Math.max(5, p - Math.round(p * 0.3))])
-  }
+  const TONDI = [20, 30, 50, 100, 150, 200, 300, 500, 1000]
+  const validi = TONDI.filter(d => d !== p && d < p * N * 0.6 &&
+                                   Math.abs(p - d) / totaleA >= 0.05)
+  const uguale = !validi.length || sorte.forse(0.2)
+  /* metà delle volte vince lo sconto: se vincesse quasi sempre l'offerta,
+     «prendi e paghi» diventerebbe la risposta da dare senza contare */
+  const sopra = validi.filter(d => d > p), sotto = validi.filter(d => d < p)
+  const lato = sopra.length && (!sotto.length || sorte.forse(0.5)) ? sopra : sotto
+  const D = uguale ? p : sorte.uno(lato)
   const totaleB = p * N - D
   const esito = uguale ? 'uguale' : totaleA < totaleB ? 'A' : 'B'
   const descA = `«Prendi ${N}, paghi ${M}»`
