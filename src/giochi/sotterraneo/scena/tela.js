@@ -229,6 +229,28 @@ export class Tela {
        con lo zoom, o a ×5 coprirebbe mezzo telefono */
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     this.minimappa(corsa)
+    this.dovEroe(corsa)
+  }
+
+  /* ── dov'è l'eroe, detto fuori dalla tela ──
+     Un canvas non ha figli da cercare, e dove sta una figura a schermo
+     lo sa solo chi la disegna. La prova col dito lo chiedeva ai pixel —
+     toccava attorno al centro della tela e guardava se il centro
+     cambiava — e sbagliava due volte: la telecamera si ferma sul bordo
+     della mappa, quindi una stanza di partenza in cima lasciava l'eroe
+     lontano dal centro e i tocchi cadevano sulla roccia; e da quando le
+     torce tremano, il centro cambia anche con l'eroe fermo. Qui lo si
+     scrive: la cella, e il punto in pixel della tela. Solo quando cambia,
+     perché è un attributo del DOM e non un disegno. */
+  dovEroe(corsa) {
+    const e = corsa.eroe
+    if (!e) return
+    const cella = `${Math.floor(e.x)},${Math.floor(e.y)}`
+    const schermo = `${Math.round((e.x * T - this.vista.x) * this.scala)},` +
+                    `${Math.round((e.y * T - this.vista.y) * this.scala)}`
+    const d = this.canvas.dataset
+    if (d.eroe !== cella) d.eroe = cella
+    if (d.eroeSchermo !== schermo) d.eroeSchermo = schermo
   }
 
   /* uno sprite più alto di una cella — un personaggio, una porta ad arco

@@ -85,20 +85,28 @@ async function tocca(x, y) {
 
 /* Attorno all'eroe, e da più parti: un tocco solo può cadere sulla
    roccia — di là non si passa, e non si è mosso niente senza che niente
-   sia rotto. Si prova in quattro versi e basta che uno cambi la
-   scena, che è quello che farebbe anche un bambino. */
-const attorno = () => page.evaluate(() => {
-  const c = document.querySelector('.sot-tela')
-  return c.getContext('2d').getImageData(c.width / 2 - 60, c.height / 2 - 60, 120, 120).data.join()
-})
-const prima = await attorno()
+   sia rotto. Si prova in quattro versi e basta che uno lo sposti, che è
+   quello che farebbe anche un bambino.
+
+   Dov'è l'eroe lo dice la tela (`data-eroe-schermo`, e la cella in
+   `data-eroe`), e non il centro dei pixel: il piano nasce a caso, e con
+   la stanza di partenza in cima alla mappa la telecamera si ferma sul
+   bordo e l'eroe non sta al centro — i tocchi attorno al centro cadevano
+   sul buio, e la prova passava o no secondo il seme. E lo spostamento si
+   legge dalla cella, non dai pixel, che le torce fanno tremare anche con
+   l'eroe fermo. */
+const tela = page.locator('.sot-tela')
+const cellaEroe = () => tela.getAttribute('data-eroe')
+const prima = await cellaEroe()
+controlla('la tela dice dov\'è l\'eroe', !!prima && !!(await tela.getAttribute('data-eroe-schermo')))
 let mosso = false
 for (const [dx, dy] of [[0, -70], [70, 0], [0, 70], [-70, 0]]) {
-  await tocca(box.x + box.width / 2 + dx, box.y + box.height / 2 + dy)
+  const [ex, ey] = (await tela.getAttribute('data-eroe-schermo')).split(',').map(Number)
+  await tocca(box.x + ex + dx, box.y + ey + dy)
   await attendi(page, 800)
-  if (await attorno() !== prima) { mosso = true; break }
+  if (await cellaEroe() !== prima) { mosso = true; break }
 }
-controlla('dopo un tocco l\'eroe si è mosso', mosso)
+controlla('dopo un tocco l\'eroe si è mosso', mosso, `sempre in ${prima}`)
 
 /* ---------- 4. lo zaino si apre in mezzo, e si chiude ----------
    In mezzo e non in fondo: mentre è aperto il gioco sta fermo, e un
