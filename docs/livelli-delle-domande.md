@@ -100,7 +100,6 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g2 — Perché: la causa
 - 🧵 **Connettivi** g2 — Quale frase ha senso
 - 🧵 **Connettivi** g2 — Quindi e così: la conseguenza
-- 🍕 **Frazioni** g1 — Che parte è colorata
 - ⚑ 📐 **Geometria** g1 — I quadrilateri (quadrato, rombo, trapezio)
 - 📐 **Geometria** g4 — Girare una figura di un quarto
 - 📐 **Geometria** g4 — La figura allo specchio
@@ -126,7 +125,6 @@ diverso da quello del suo grado.
 
 ## 41  ·  circa 7.3 anni
 
-- 🍕 **Frazioni** g1 — Il disegno di una frazione (e i pezzi non uguali)
 - 📊 **Grafici e tabelle** g2 — Il pittogramma con la legenda
 
 ## 42  ·  circa 7.4 anni
@@ -152,7 +150,6 @@ diverso da quello del suo grado.
 
 ## 47  ·  circa 7.8 anni
 
-- 🍕 **Frazioni** g2 — Che parte è colorata
 - 📊 **Grafici e tabelle** g3 — Leggere il grafico a barre
 - 📊 **Grafici e tabelle** g3 — Quanti in tutto
 
@@ -170,8 +167,7 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g3 — Quale frase ha senso
 - 🧵 **Connettivi** g3 — Quando e mentre: il tempo
 - 🧵 **Connettivi** g3 — Quindi e così: la conseguenza
-- 🍕 **Frazioni** g2 — Chi è più grande, con lo stesso numero sotto
-- 🍕 **Frazioni** g2 — Il disegno di una frazione (e i pezzi non uguali)
+- 🍕 **Frazioni** g1 — Che parte è colorata
 - 📊 **Grafici e tabelle** g3 — Il pittogramma con la legenda
 - 📊 **Grafici e tabelle** g3 — Quanti in più, quanti in meno
 - ⚑ 🔎 **Indizi** g4 — La tabella: chi ha cosa
@@ -186,20 +182,19 @@ diverso da quello del suo grado.
 
 ## 52  ·  circa 8.2 anni
 
+- 🍕 **Frazioni** g1 — Il disegno di una frazione (e i pezzi non uguali)
 - 🔢 **Senso del numero** g5 — Fare i conti in fila
 
 ## 53  ·  circa 8.2 anni
 
 - ⚑ 📚 **Capire un testo** g3 — Il perché scritto nel testo
-- 🍕 **Frazioni** g3 — Che parte è colorata
 
 ## 54  ·  circa 8.3 anni
 
-- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sotto
+- 🍕 **Frazioni** g2 — Che parte è colorata
 
 ## 55  ·  circa 8.4 anni
 
-- 🍕 **Frazioni** g3 — Il disegno di una frazione (e i pezzi non uguali)
 - 📊 **Grafici e tabelle** g4 — Quanti in tutto
 
 ## 56  ·  circa 8.5 anni
@@ -210,7 +205,8 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g3 — Essere o avere nel passato prossimo
 - 🗣️ **Coniugazione** g3 — I participi irregolari (preso, scritto)
 - 🗣️ **Coniugazione** g3 — Il participio passato regolare
-- 🍕 **Frazioni** g3 — Quanto manca per fare un intero
+- 🍕 **Frazioni** g2 — Chi è più grande, con lo stesso numero sotto
+- 🍕 **Frazioni** g2 — Il disegno di una frazione (e i pezzi non uguali)
 - ⚑ 📐 **Geometria** g2 — Gli angoli: retto, acuto, ottuso
 - 📐 **Geometria** g5 — Come si vede un solido dall'alto
 - 📐 **Geometria** g5 — Contare le facce
@@ -247,18 +243,19 @@ diverso da quello del suo grado.
 - 💶 **Soldi e decimali** g4 — Quale prezzo è più alto
 - 💶 **Soldi e decimali** g4 — Quanto costano più cose
 
+## 58  ·  circa 8.6 anni
+
+- 🍕 **Frazioni** g3 — Che parte è colorata
+
 ## 59  ·  circa 8.7 anni
 
-- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sopra
+- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sotto
 
 ## 60  ·  circa 8.8 anni
 
-- 🍕 **Frazioni** g4 — La frazione di un numero (1/4 di 20)
+- 🍕 **Frazioni** g3 — Il disegno di una frazione (e i pezzi non uguali)
+- 🍕 **Frazioni** g3 — Quanto manca per fare un intero
 - 🔢 **Senso del numero** g6 — Fare i conti in fila
-
-## 61  ·  circa 8.9 anni
-
-- 🍕 **Frazioni** g4 — Quanto manca per fare un intero
 
 ## 62  ·  circa 9 anni
 
@@ -270,7 +267,7 @@ diverso da quello del suo grado.
 - ⚑ 📚 **Capire un testo** g4 — Di chi parla «lei», «lo», «gli»
 - 🗣️ **Coniugazione** g4 — Il futuro
 - 🗣️ **Coniugazione** g4 — L'imperfetto
-- 🍕 **Frazioni** g4 — Chi è più grande, con lo stesso numero sopra
+- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sopra
 - 📊 **Grafici e tabelle** g5 — La tabella a doppia entrata
 - 📊 **Grafici e tabelle** g5 — Quanti in più, quanti in meno
 - 📊 **Grafici e tabelle** g5 — Quanti in tutto
@@ -295,20 +292,19 @@ diverso da quello del suo grado.
 
 ## 64  ·  circa 9.1 anni
 
+- 🍕 **Frazioni** g4 — La frazione di un numero (1/4 di 20)
+- 🍕 **Frazioni** g4 — Quanto manca per fare un intero
 - 💶 **Soldi e decimali** g5 — Il valore delle cifre dopo la virgola
 - 💶 **Soldi e decimali** g5 — Quale numero con la virgola è più grande
 
-## 65  ·  circa 9.2 anni
-
-- 🍕 **Frazioni** g4 — Le frazioni equivalenti (2/4 = 1/2)
-
 ## 66  ·  circa 9.3 anni
 
-- 🍕 **Frazioni** g5 — Quanto manca per fare un intero
+- 🍕 **Frazioni** g4 — Chi è più grande, con lo stesso numero sopra
 
 ## 68  ·  circa 9.4 anni
 
-- 🍕 **Frazioni** g5 — La frazione di un numero (1/4 di 20)
+- 🍕 **Frazioni** g4 — Le frazioni equivalenti (2/4 = 1/2)
+- 🍕 **Frazioni** g5 — Quanto manca per fare un intero
 
 ## 69  ·  circa 9.5 anni
 
@@ -320,13 +316,20 @@ diverso da quello del suo grado.
 - ⚖️ **Le bilance** g3 — Togliere la stessa cosa dai due piatti
 - ⚖️ **Le bilance** g4 — Quanto pesa uno, sulla bilancia in pari
 
+## 70  ·  circa 9.6 anni
+
+- 🍕 **Frazioni** g5 — La frazione di un numero (1/4 di 20)
+
 ## 72  ·  circa 9.8 anni
 
 - ⚑ 📚 **Capire un testo** g5 — Il titolo giusto per tutto il testo
-- 🍕 **Frazioni** g5 — Le frazioni equivalenti (2/4 = 1/2)
 - 💶 **Soldi e decimali** g6 — Arrotondare all'euro o al decimo
 - 💶 **Soldi e decimali** g6 — I decimali sulla linea e in ordine
 - 💶 **Soldi e decimali** g6 — Il valore delle cifre dopo la virgola
+
+## 74  ·  circa 9.9 anni
+
+- 🍕 **Frazioni** g5 — Le frazioni equivalenti (2/4 = 1/2)
 
 ## 75  ·  circa 10 anni
 

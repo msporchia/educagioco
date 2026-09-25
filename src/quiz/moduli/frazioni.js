@@ -187,45 +187,50 @@ const SCALETTA = [
    quindi la seconda elementare sta a 37,5, la terza a 50, la quarta a
    62,5 e la quinta a 75. Il programma (Indicazioni nazionali, e i libri
    di testo che le seguono) dice:
-     · in SECONDA la metà e il quarto si incontrano sul disegno, senza
-       ancora la scrittura con la barra — per questo il primo gradino è
-       a 38 e sta tutto sulla figura, e l'aiuto insegna anche come si
+     · in SECONDA le frazioni non ci sono. Sulla carta le Indicazioni
+       fanno incontrare la metà e il quarto sul disegno già lì, e il
+       primo gradino stava a 38; in classe (la seconda di casa, settembre
+       2026) non si sono viste, e arrivano in terza. Si guarda la classe
+       e non il libro: il primo gradino è a 50, cioè il primo giorno di
+       terza, e sta tutto sulla figura — l'aiuto insegna anche come si
        legge «1/4»;
-     · in TERZA arriva la frazione vera: l'unità frazionaria, più pezzi
+     · in TERZA la frazione vera: l'unità frazionaria, più pezzi
        colorati, la figura da riconoscere e il confronto quando il numero
-       sotto è lo stesso (che si vede contando) — da 47 a 55;
+       sotto è lo stesso (che si vede contando) — da 50 a 59;
      · a FINE TERZA la complementare («quanto manca per fare l'intero»,
-       sul disegno 56) e il confronto con lo stesso numero sopra, che è
-       il primo che chiede di ragionare sulla grandezza dei pezzi (59);
-     · in QUARTA la frazione di un numero (60 l'unitaria, 68 quella con
+       sul disegno 60) e il confronto con lo stesso numero sopra, che è
+       il primo che chiede di ragionare sulla grandezza dei pezzi (63);
+     · in QUARTA la frazione di un numero (64 l'unitaria, 70 quella con
        più pezzi, che chiede due passi), le equivalenti viste sul disegno
-       (65) e il complementare senza disegno (61–66);
-     · a cavallo fra QUARTA e QUINTA le equivalenti col conto (72):
+       (68) e il complementare senza disegno (64–68);
+     · a cavallo fra QUARTA e QUINTA le equivalenti col conto (74):
        moltiplicare sopra e sotto per lo stesso numero.
+   Spostando il primo gradino di dodici punti gli altri si sono stretti
+   invece di scorrere tutti: la fine resta in quinta, dov'era.
    La frazione di un numero dà per scontate anche le divisioni: 1/4 di
    20 è 20 : 4, e a chi non divide ancora quella domanda arriva muta. I
    numeri restano dentro le tabelline, ma il gesto è quello. */
 const TIPI = [
   { chiave: 'fraz:leggi', nome: 'Che parte è colorata', sa: 'frazioni',
-    livello: { 1: 38, 2: 47, 3: 53 },
+    livello: { 1: 50, 2: 54, 3: 58 },
     gradi: { 1: 0.6, 2: 0.4, 3: 0.25 } },
   { chiave: 'fraz:disegno', nome: 'Il disegno di una frazione (e i pezzi non uguali)', sa: 'frazioni',
-    livello: { 1: 41, 2: 50, 3: 55 },
+    livello: { 1: 52, 2: 56, 3: 60 },
     gradi: { 1: 0.4, 2: 0.35, 3: 0.2 } },
   { chiave: 'fraz:confronta-den', nome: 'Chi è più grande, con lo stesso numero sotto', sa: 'frazioni',
-    livello: { 2: 50, 3: 54 },
+    livello: { 2: 56, 3: 59 },
     gradi: { 2: 0.25, 3: 0.2 } },
   { chiave: 'fraz:confronta-num', nome: 'Chi è più grande, con lo stesso numero sopra', sa: 'frazioni',
-    livello: { 3: 59, 4: 63 },
+    livello: { 3: 63, 4: 66 },
     gradi: { 3: 0.2, 4: 0.25 } },
   { chiave: 'fraz:intero', nome: 'Quanto manca per fare un intero', sa: 'frazioni',
-    livello: { 3: 56, 4: 61, 5: 66 },
+    livello: { 3: 60, 4: 64, 5: 68 },
     gradi: { 3: 0.15, 4: 0.2, 5: 0.25 } },
   { chiave: 'fraz:di-numero', nome: 'La frazione di un numero (1/4 di 20)', sa: ['frazioni', 'divisioni'],
-    livello: { 4: 60, 5: 68 },
+    livello: { 4: 64, 5: 70 },
     gradi: { 4: 0.35, 5: 0.35 } },
   { chiave: 'fraz:equivalenti', nome: 'Le frazioni equivalenti (2/4 = 1/2)', sa: 'frazioni',
-    livello: { 4: 65, 5: 72 },
+    livello: { 4: 68, 5: 74 },
     gradi: { 4: 0.2, 5: 0.4 } },
 ]
 
@@ -242,7 +247,7 @@ class Frazioni extends Modulo {
          sola per tutte le materie (vedi `nucleo/classi.js`). Sono le
          medie delle tipologie qui sopra, che dicono ognuna il suo: il
          perché dei numeri sta in testa a `TIPI`. */
-      livelli: [39, 49, 55, 62, 69],
+      livelli: [51, 55, 60, 65, 71],
       tipi: TIPI,
       pittori: PITTORI_FRAZIONI,
     })
