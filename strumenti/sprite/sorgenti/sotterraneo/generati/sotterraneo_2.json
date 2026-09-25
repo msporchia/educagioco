@@ -1,0 +1,616 @@
+{
+  "__": "Il foglietto di sotterraneo_2.png (vedi ../../../FORMATO.md): il foglio dei pezzi dello scenario delle cantine, chiesto col prompt 2 di PROMPT-scenario.md allegando la scena sotterraneo_1.png. E' tornato VERTICALE, 1024x1536 invece del 1536x1024 chiesto, con le fasce nello stesso ordine, e coi pezzi ognuno alla sua scala: le facce della seconda fascia sono larghe 52 px per cella, le porte 63, i fondi 37 (un quadrato di 4x4 celle e' largo 150 px). Per questo non c'e' una `scala` di foglio: `cella: [1, 1]` e coordinate in pixel del foglio intero, e ogni pezzo dice la sua `misura` in pixel di gioco — una riduzione BOX sola per pezzo, invece di due. L'ALONE: il fondo trasparente e' tornato con un bagliore bruno a alfa 1-31 su tutto il foglio, e i pezzi stanno fra 224 e 254 (nessun pixel pieno): l'alfa ha due gobbe nette e `alone: 128` le separa senza toccare un bordo. QUELLO CHE NON SI RITAGLIA, e perche': il pilastro (col tetto disegnato come un pavimento di lastroni, cioe' la regola del muro sbagliata); la stanzetta intera, da cui si prendono solo i blocchi del bordo; la seconda fila di facce (e' la prima a un'altra scala); la porta a fasce di ferro, che nessuna pelle chiede; la cassa scura con le borchie della sesta fascia, che si scambia per un forziere; le cose per terra disegnate sopra un quadrato di pavimento (pozzanghera, paglia, cera, mattoni, muschio), che posate su un altro pavimento sarebbero una toppa; e tutto l'arredo, finche' il gioco non lo nomina. I BORDI sono tre blocchi di pietra della stanzetta per cella, presi da giunto a giunto (la colonna di sinistra e' il bordo a est di un tetto, quella di destra il bordo a ovest, la fila di sotto il bordo a nord): cosi' si ripetono senza cuciture per qualunque forma di muro. Le facce e le loro varianti sono tagliate dentro il contorno scuro che il generatore mette attorno a ogni tessera, se no in fila farebbero una riga nera ogni cella.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "base": "sotterraneo_1.png, PROMPT-scenario-foglio.png",
+    "generatore": "ChatGPT, 24 settembre 2026",
+    "testo": "Disegna il foglio dei pezzi (uno sprite sheet) con cui si costruisce ESATTAMENTE la scena allegata: stesso scenario, stessa tavolozza, stessi muri, stessi pavimenti, stesso tetto, stessa luce piatta, stessa misura. La seconda immagine allegata è lo SCHEMA del foglio: dice dove va ogni pezzo e quanto è grande, e i suoi colori piatti non vanno copiati.\n\nIl foglio è 1536×1024 px su FONDO TRASPARENTE (PNG), con la griglia della scena: celle da 64×64 px, e ogni pixel del disegno è un quadrato pieno di 4×4 px. Ogni pezzo sta staccato dagli altri da almeno mezza cella di trasparente. Nessuna ombra sotto i pezzi, nessun bagliore attorno, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.\n\nDall'alto in basso:\n\n1. I quattro fondi, ognuno un quadrato di 4×4 celle che si ripete SENZA CUCITURE — il bordo destro continua nel sinistro, quello di sotto in quello di sopra — senza bordi e senza linee di griglia: il pavimento delle stanze, quello dei corridoi, quello speciale, e il tetto com'è lontano dai bordi (senza il bordo chiaro e senza i sassi che lo accompagnano). A destra: due scale che scendono, una aperta e una chiusa da una grata di ferro col lucchetto; e due fontanelle alte una cella e mezza, una piena d'acqua e una asciutta, con la vasca vuota e crepata.\n\n2. Le facce del muro, alte una cella col loro coronamento: una fila lunga sei celle che si ripete senza cuciture; una fila lunga due celle che finisce ai due capi con uno spigolo di pietre squadrate; una faccia sola, larga una cella, con i due spigoli. Poi sei facce di una cella che si mettono in fila con le altre: con una torcia accesa nel suo sostegno, con una grata di ferro, con la pietra crepata, e le tre della riga «Sui muri» dello scenario.\n\n3. Due pezzi di sotterraneo interi, disegnati come nella scena. La stanzetta, 5×4 celle: il tetto tutto intorno, la fila di facce in alto, sotto una fila di pavimento. Il pilastro, 5×4 celle: un blocco di roccia largo tre celle in mezzo al pavimento, col tetto e il bordo chiaro sopra e ai lati, e sotto la sua fila di facce. Accanto, le porte: sei porte ad arco, ognuna una cella di faccia del muro con la porta dentro e l'arco che sale di mezza cella sopra il coronamento — semplice; rinforzata di ferro; ricca, con la cornice e le borchie d'oro; minacciosa, con un piccolo teschio sopra l'arco; chiara e accogliente; e la stessa porta aperta, che si vede aperta: l'anta girata contro lo stipite, e dentro l'arco il buio del passaggio. Sotto, le stesse sei come stanno in un muro laterale: viste da sopra, di taglio — l'anta è una tavola stretta in verticale in mezzo alla cella, trasparente attorno.\n\n4. Il mercante: un incappucciato dietro il suo banchetto, largo e alto una cella e mezza, in due pose (fermo, e che alza la mano per salutare). Poi l'arredo del posto, ogni pezzo da solo: prima quello che c'è nella scena allegata, uno per tipo, poi altri a tua scelta fino a sette pezzi; fissi, grandi da una a due celle.\n\n5. Dodici cose per terra, ognuna dentro una cella e piatta sul pavimento: due crepe, una pozzanghera, dei sassolini, una ragnatela per l'angolo in alto a sinistra e la stessa per l'angolo in alto a destra, e sei dalla riga «Per terra» dello scenario. Niente che si possa scambiare per una cosa da raccogliere.\n\nSCENARIO: LE CANTINE\nAtmosfera: la cantina sotto un vecchio castello, calda e un po' polverosa: il primo posto in cui si scende. Non fa paura, incuriosisce.\nTavolozza: mattoni bruno-rossicci, pietra grigio-beige, legno scuro, un filo di verde muschio.\nIl tetto: terra battuta bruno scura, quasi nera, con qualche sasso e qualche radice.\nLa faccia del muro: mattoni bruno-rossicci irregolari, qualcuno più chiaro o scheggiato; il coronamento è una fila di pietre grigio-beige.\nIl pavimento delle stanze: lastroni di pietra grigio-beige di misure diverse (due celle per due, una per due, una per una), con le fughe scure di un pixel.\nIl pavimento dei corridoi: mattoncini bruno chiaro a spina di pesce.\nIl pavimento speciale: un mosaico di tessere ocra e azzurre a cerchi.\nLe porte: quercia scura con le borchie di ferro.\nSui muri: il muschio che cola, un arco di mattoni murato, una mensola di legno vuota.\nPer terra: paglia, colature di cera, chiazze di muschio, schegge di mattone, polvere, una radice che spunta.\nL'arredo del posto: grandi botti coricate sul cavalletto, scaffali di legno vuoti, un tavolaccio con la panca, una pila di legna, una vecchia macina di pietra."
+  },
+  "fondo": "trasparente",
+  "alone": 128,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "cantine-pav": "fondo",
+    "cantine-tetto": "fondo",
+    "cantine-medaglione": "fondo",
+    "cantine-faccia": "tessera",
+    "cantine-capo": "tessera",
+    "cantine-bordo": "tessera",
+    "cantine-porta": "figura",
+    "cantine-mercante": "figura",
+    "cantine-fontana": "figura"
+  },
+  "trasforma": {
+    "cantine-faccia": {
+      "giri": 1
+    },
+    "cantine-capo": {
+      "giri": 1
+    },
+    "cantine-bordo": {
+      "giri": 1
+    },
+    "cantine-porta": {
+      "giri": 1
+    },
+    "cantine-fianco": {
+      "giri": 1,
+      "specchia": false
+    },
+    "cantine-scala": {
+      "giri": 1,
+      "specchia": false
+    },
+    "cantine-fontana": {
+      "giri": 1
+    },
+    "cantine-mercante": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "cantine-pav-stanze": {
+      "da": [
+        20,
+        116
+      ],
+      "cella": [
+        145,
+        147
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cantine-pav-corridoi": {
+      "da": [
+        187,
+        116
+      ],
+      "cella": [
+        146,
+        147
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cantine-tetto": {
+      "da": [
+        522,
+        115
+      ],
+      "cella": [
+        147,
+        148
+      ],
+      "misura": [
+        64,
+        64
+      ]
+    },
+    "cantine-medaglione": {
+      "da": [
+        353,
+        113
+      ],
+      "cella": [
+        148,
+        152
+      ],
+      "misura": [
+        48,
+        48
+      ]
+    },
+    "cantine-faccia-fila": {
+      "da": [
+        18,
+        326
+      ],
+      "cella": [
+        310,
+        70
+      ],
+      "misura": [
+        96,
+        20
+      ]
+    },
+    "cantine-faccia-torcia": {
+      "da": [
+        634,
+        327
+      ],
+      "cella": [
+        48,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-faccia-grata": {
+      "da": [
+        702,
+        327
+      ],
+      "cella": [
+        46,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-faccia-arco": {
+      "da": [
+        769,
+        327
+      ],
+      "cella": [
+        46,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-faccia-liscia": {
+      "da": [
+        835,
+        327
+      ],
+      "cella": [
+        46,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-faccia-toppa": {
+      "da": [
+        900,
+        327
+      ],
+      "cella": [
+        44,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-faccia-mensola": {
+      "da": [
+        963,
+        327
+      ],
+      "cella": [
+        44,
+        69
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    },
+    "cantine-capo-sx": {
+      "da": [
+        353,
+        328
+      ],
+      "cella": [
+        20,
+        69
+      ],
+      "misura": [
+        6,
+        20
+      ]
+    },
+    "cantine-capo-dx": {
+      "da": [
+        529,
+        328
+      ],
+      "cella": [
+        20,
+        69
+      ],
+      "misura": [
+        6,
+        20
+      ]
+    },
+    "cantine-bordo-e": {
+      "da": [
+        16,
+        697
+      ],
+      "cella": [
+        18,
+        64
+      ],
+      "misura": [
+        4,
+        16
+      ]
+    },
+    "cantine-bordo-o": {
+      "da": [
+        294,
+        697
+      ],
+      "cella": [
+        20,
+        64
+      ],
+      "misura": [
+        4,
+        16
+      ]
+    },
+    "cantine-bordo-n": {
+      "da": [
+        56,
+        869
+      ],
+      "cella": [
+        68,
+        18
+      ],
+      "misura": [
+        16,
+        4
+      ]
+    },
+    "cantine-bordo-angolo": {
+      "da": [
+        16,
+        867
+      ],
+      "cella": [
+        20,
+        20
+      ],
+      "misura": [
+        4,
+        4
+      ]
+    },
+    "cantine-porta-semplice": {
+      "da": [
+        475,
+        648
+      ],
+      "cella": [
+        61,
+        93
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cantine-porta-ferro": {
+      "da": [
+        552,
+        645
+      ],
+      "cella": [
+        61,
+        97
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cantine-porta-oro": {
+      "da": [
+        628,
+        645
+      ],
+      "cella": [
+        63,
+        97
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cantine-porta-teschio": {
+      "da": [
+        706,
+        645
+      ],
+      "cella": [
+        62,
+        97
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cantine-porta-chiara": {
+      "da": [
+        863,
+        645
+      ],
+      "cella": [
+        60,
+        97
+      ],
+      "misura": [
+        16,
+        24
+      ]
+    },
+    "cantine-porta-aperta": {
+      "da": [
+        935,
+        644
+      ],
+      "cella": [
+        67,
+        97
+      ],
+      "misura": [
+        18,
+        24
+      ]
+    },
+    "cantine-fianco-semplice": {
+      "da": [
+        494,
+        786
+      ],
+      "cella": [
+        47,
+        81
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-fianco-ferro": {
+      "da": [
+        585,
+        787
+      ],
+      "cella": [
+        45,
+        80
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-fianco-oro": {
+      "da": [
+        674,
+        786
+      ],
+      "cella": [
+        47,
+        82
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-fianco-teschio": {
+      "da": [
+        765,
+        787
+      ],
+      "cella": [
+        43,
+        81
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-fianco-chiara": {
+      "da": [
+        850,
+        787
+      ],
+      "cella": [
+        44,
+        81
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-fianco-aperta": {
+      "da": [
+        942,
+        787
+      ],
+      "cella": [
+        45,
+        81
+      ],
+      "misura": [
+        12,
+        16
+      ]
+    },
+    "cantine-scala-aperta": {
+      "da": [
+        693,
+        149
+      ],
+      "cella": [
+        69,
+        84
+      ],
+      "misura": [
+        16,
+        19
+      ]
+    },
+    "cantine-scala-chiusa": {
+      "da": [
+        783,
+        150
+      ],
+      "cella": [
+        68,
+        83
+      ],
+      "misura": [
+        16,
+        19
+      ]
+    },
+    "cantine-fontana-piena": {
+      "da": [
+        873,
+        177
+      ],
+      "cella": [
+        54,
+        85
+      ],
+      "misura": [
+        14,
+        22
+      ]
+    },
+    "cantine-fontana-asciutta": {
+      "da": [
+        952,
+        179
+      ],
+      "cella": [
+        56,
+        85
+      ],
+      "misura": [
+        14,
+        22
+      ]
+    },
+    "cantine-mercante-0": {
+      "da": [
+        18,
+        988
+      ],
+      "cella": [
+        97,
+        109
+      ],
+      "misura": [
+        24,
+        27
+      ]
+    },
+    "cantine-mercante-1": {
+      "da": [
+        138,
+        984
+      ],
+      "cella": [
+        100,
+        113
+      ],
+      "misura": [
+        25,
+        28
+      ]
+    },
+    "cantine-terriccio": {
+      "da": [
+        17,
+        1344
+      ],
+      "cella": [
+        67,
+        71
+      ],
+      "misura": [
+        15,
+        16
+      ]
+    },
+    "cantine-sassolini": {
+      "da": [
+        188,
+        1355
+      ],
+      "cella": [
+        55,
+        52
+      ],
+      "misura": [
+        11,
+        10
+      ]
+    },
+    "cantine-radice": {
+      "da": [
+        457,
+        1344
+      ],
+      "cella": [
+        83,
+        67
+      ],
+      "misura": [
+        16,
+        13
+      ]
+    },
+    "cantine-ragnatela-sx": {
+      "da": [
+        265,
+        1344
+      ],
+      "cella": [
+        72,
+        68
+      ],
+      "misura": [
+        14,
+        13
+      ]
+    },
+    "cantine-ragnatela-dx": {
+      "da": [
+        947,
+        1344
+      ],
+      "cella": [
+        61,
+        67
+      ],
+      "misura": [
+        12,
+        13
+      ]
+    }
+  }
+}

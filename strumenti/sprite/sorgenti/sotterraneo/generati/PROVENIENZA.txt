@@ -16,6 +16,12 @@ Cosa c'è dentro
                          col nome proprio e due ciondoli
   mostri-1.png           27 creature, quattro-cinque fotogrammi l'una
   mostri-2.png           altre 27, stessa mano
+  sotterraneo_1.png      la scena delle cantine: un pezzo di sotterraneo
+                         intero, il bersaglio dello scenario (non si
+                         ritaglia: e' il riferimento)
+  sotterraneo_2.png      il foglio dei pezzi delle cantine: pavimenti,
+                         tetto, facce, bordi, porte nei due versi, scala,
+                         fontana, mercante, cose per terra
 
 Dei 54 mostri ne sono ritagliati 11: quello che nessuno nomina non entra
 nel file unico, e ogni ritaglio si paga in base64 dentro
@@ -24,6 +30,11 @@ due foglietti.
 
 Perché non c'è il prompt
 ------------------------
-Non è stato conservato. Vale quello che vale per la fattoria: rigenerare
+Per sotterraneo_1.png e sotterraneo_2.png c'e': sta in
+PROMPT-scenario.md, che e' la scheda da cui si rifanno (con gli schemi
+da allegare, PROMPT-scenario-pianta.png e PROMPT-scenario-foglio.png), e
+il testo mandato per il foglio sta anche nel suo foglietto. Per gli
+altri fogli no:
+non è stato conservato. Vale quello che vale per la fattoria: rigenerare
 nello stesso stile è la cosa che serve ogni volta che manca un pezzo, e
 senza il prompt si riparte a occhio.

@@ -1,41 +1,10 @@
 {
-  "__": "Il foglietto di 0x72 (vedi ../../../FORMATO.md). Le coordinate non stanno qui: stanno in pezzi.json, che incrocia il tile_list_v1.7 dell'autore ed è l'unica copia che ne esiste. Per quale gioco sia questo foglio lo dice atlante.json, accanto.",
+  "__": "Il foglietto di 0x72 (vedi ../../../FORMATO.md). Le coordinate non stanno qui: stanno in pezzi.json, che incrocia il tile_list_v1.7 dell'autore ed è l'unica copia che ne esiste. Per quale gioco sia questo foglio lo dice atlante.json, accanto. Pavimenti, muri, porte e scala di questo set non si ritagliano piu' dal 24 settembre 2026: il terreno e' dello scenario (../generati/PROMPT-scenario.md, sotterraneo_2.png), e con i pezzi se ne sono andate anche le loro famiglie e i loro giri. Da qui vengono ancora gli eroi, i forzieri, le monete e i cuori.",
   "scala": 1,
   "fondo": "trasparente",
   "cella": [
     16,
     16
   ],
-  "ritagli": "pezzi.json",
-  "famiglie": {
-    "suolo": "fondo",
-    "muro": "tessera",
-    "pilastro": "tessera",
-    "grata": "tessera",
-    "buco": "tessera"
-  },
-  "trasforma": {
-    "suolo": {
-      "giri": 4
-    },
-    "buco": {
-      "giri": 4
-    },
-    "grata": {
-      "giri": 4
-    },
-    "muro": {
-      "giri": 1
-    },
-    "pilastro": {
-      "giri": 1
-    },
-    "porta": {
-      "giri": 1
-    },
-    "scala": {
-      "giri": 1,
-      "specchia": false
-    }
-  }
+  "ritagli": "pezzi.json"
 }
