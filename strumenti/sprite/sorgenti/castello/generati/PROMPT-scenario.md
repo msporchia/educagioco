@@ -79,8 +79,7 @@ alla strada, tutta la strada che arriva al castello. Se si cambia la
 pianta qui, lo schema la segue. Colori piatti e nessuna linea di griglia,
 apposta: una griglia disegnata tornerebbe come un prato a tabella.
 
-I fogli si salvano qui accanto numerati — `castello_1.png`,
-`castello_2.png` — e «Com'è andata», in fondo, dice di ognuno quale
+I fogli si salvano qui accanto numerati — `td_1.png`, `td_2.png` — e «Com'è andata», in fondo, dice di ognuno quale
 scenario è, con quale prompt, e cosa è venuto bene.
 
 ## Prompt 1 — la scena
@@ -356,7 +355,35 @@ Dalle schede della fattoria e del sotterraneo, che sono state pagate:
 
 ## Com'è andata
 
-Ancora niente: nessuna scena e nessun foglio generati. Quando arrivano,
-qui va scritto di ognuno quale scenario è, con quale prompt e quali
-allegati, e cosa è venuto bene e cosa no — com'è nella scheda del
-sotterraneo.
+### `td_1.png` — la scena del bosco ✅ come stile, ✗ come pianta
+
+25 settembre 2026, ChatGPT: il prompt 1 col blocco del bosco. Se il
+testo mandato o gli allegati sono diversi da quelli di questa scheda,
+va scritto qui. 1024×1536, RGB. Misurata con la griglia da 64 px sopra
+e ridotta a 480 px di larghezza, cioè a misura di telefono.
+
+- **La mano è quella giusta**: pixel art pulita, luce piatta, niente
+  scritte né figure, il castello e le bocche con gli stendardi molto
+  belli. Ridotta a telefono si leggono strada, piazzole, acqua e fitto.
+- **Le strade sono a squadra e di larghezza costante**, con gomiti,
+  innesti a T e un incrocio vero (a 545, 845). È la metà della regola
+  che conta di più, ed è venuta al primo colpo.
+- **La pianta è stata ignorata**: tre bocche invece di due (quella di
+  sinistra con un moncone di strada di una cella, quella di destra senza
+  strada), due laghi ai lati invece dello stagno, sedici piazzole invece
+  di nove, due anelli invece del cappio che si attraversa.
+- **La strada è larga mezza cella** (30–38 px invece di 64) e non sta
+  sulla griglia: certi tratti sono centrati nella cella, altri sulla
+  riga fra due celle, e i rettifili paralleli distano 171, 215, 180 px.
+  Come bersaglio va bene; per ritagliare no, e infatti i pezzi si
+  prendono dal foglio.
+- **Le piazzole** sono quadrati di terra battuta con l'orlo scuro,
+  grandi quasi una cella: si vedono subito, anche ridotte.
+- **Il castello ha il portone verso chi guarda**, non verso la strada:
+  la strada arriva di fianco alla torre destra, e sotto il portone esce
+  un moncone fino al bordo. In gioco basta che la strada finisca contro
+  il castello.
+
+Da decidere prima del prompt 2, che la allega e quindi la copierà: se
+la strada resta larga mezza cella, centrata nella cella, o se si
+pretende la cella intera come dice la parte fissa.
