@@ -195,6 +195,16 @@ const risposte = computed(() => props.domanda.risposte || [])
    lo mette la messa in scena. */
 const frase = computed(() =>
   evidenziando(props.domanda.soggetto?.testo, props.domanda.soggetto?.evidenzia))
+/* UN TESTO DA LEGGERE NON È UNA PAROLA DA GUARDARE. Il corpo grosso e
+   centrato del soggetto è tarato su «gomma» o su «□ + 7 = 15»; un
+   raccontino di trenta parole, messo così, esce su otto righe in
+   grassetto e non si legge — si scorre. Oltre qualche parola vera (le
+   cifre e i segni non contano: un'uguaglianza resta grossa) il soggetto
+   diventa un paragrafo, allineato a sinistra e col peso del testo. */
+const PAROLE_DA_PARAGRAFO = 6
+const daLeggere = computed(() =>
+  (props.domanda.soggetto?.testo || '').split(/\s+/)
+    .filter(w => /\p{L}/u.test(w)).length >= PAROLE_DA_PARAGRAFO)
 /* ═════ QUANTI TASTI IN RIGA, E PERCHÉ NON SI CONTANO I CARATTERI ═════
    Le risposte stanno affiancate finché ci stanno, e quando non ci stanno
    scendono una sotto l'altra. Prima la decisione era **una soglia a
@@ -544,7 +554,7 @@ onUnmounted(() => {
              in mezzo alla frase -->
         <span v-else-if="frase.parola" class="qz-frase"
         >{{ frase.prima }}<b class="qz-spicca">{{ frase.parola }}</b>{{ frase.dopo }}</span>
-        <span v-else>{{ domanda.soggetto.testo }}</span>
+        <span v-else :class="{ 'qz-testo': daLeggere }">{{ domanda.soggetto.testo }}</span>
         <span v-if="domanda.soggetto.nome" class="qz-nome grande">{{ domanda.soggetto.nome }}</span>
       </div>
 
@@ -718,6 +728,12 @@ onUnmounted(() => {
    telefoni al sole): sotto la parola c'è anche una riga. */
 .qz-frase {
   font-size: clamp(16px, 4.6vw, 22px); font-weight: 600; line-height: 1.4;
+}
+/* il raccontino da capire: si legge riga per riga, quindi a sinistra,
+   col peso del testo e con l'interlinea larga */
+.qz-testo {
+  font-size: clamp(15px, 4.3vw, 19px); font-weight: 500; line-height: 1.5;
+  text-align: left;
 }
 .qz-spicca {
   color: #ffd58a; font-weight: 800;
