@@ -14,15 +14,16 @@ e alle frasi intere. Il meccanismo è sempre lo stesso — un bersaglio e
 quattro possibilità — ma **il modo di chiedere cambia**, ed è lì che sta la
 difficoltà.
 
-## La pronuncia è incisa, non sintetizzata
+## La pronuncia è incisa a monte
 
-Ogni parola la dice **una voce vera registrata a monte**, non la voce del
-telefono. È una scelta precisa: la sintesi vocale del dispositivo è una
+Ogni parola la dice **una voce sintetica di qualità, incisa una volta sola e
+messa dentro il gioco**, non la voce del telefono: la stessa su ogni
+dispositivo, anche senza rete. È una scelta precisa: la sintesi vocale del dispositivo è una
 lotteria — su certi sistemi esce una voce incomprensibile — e a un bambino
 una pronuncia sbagliata fa più danno del silenzio.
 
 Lo spagnolo è **quello di casa**, cioè boliviano: `papa` e non `patata`,
-`palta`, `durazno`, `auto`, `celular`. La voce è boliviana anche lei.
+`palta`, `durazno`, `auto`, `celular`. Anche la voce ha l'accento boliviano.
 
 ## Quali domande escono, e come si fanno più difficili
 

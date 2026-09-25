@@ -859,7 +859,7 @@ export const AIUTI = {
         'Una parola sbagliata non è persa: torna più avanti, e più spesso di quelle che vanno bene.',
       ] },
       { titolo: 'Cosa allena', righe: [
-        'Vocaboli e frasi, con la pronuncia incisa da voci vere — non la voce del telefono.',
+        'Vocaboli e frasi, con la pronuncia già incisa dentro il gioco: la stessa voce su ogni telefono, anche senza rete.',
         'Le due lingue restano separate: quello che si impara in inglese non si mescola con lo spagnolo, e viceversa.',
       ] },
     ],
