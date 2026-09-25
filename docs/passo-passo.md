@@ -341,7 +341,11 @@ l'età dello zaino gioca lì): livelli fatti al
 momento, a caso, e tenuti solo se il risolutore dice che si vincono, che la
 strada è lunga quanto il gradino chiede, che la carota vuole una deviazione
 e che la regola nuova serve davvero. Ogni due sentieri se ne aggiunge una,
-nello stesso ordine della campagna, poi si mescola. Quello che si
+nello stesso ordine della campagna, poi si mescola. Chi ha portato il
+gregge nel recinto (l'ultima tappa del cane) trova anche **le pecore**: un
+sentiero sì e uno no è un pascolo, con una scala sua — una pecora, poi il
+ghiaccio, poi due — fatto e controllato allo stesso modo, e con le pecore
+mai incastrate in partenza. Quello che si
 migliora è **quanti sentieri di fila si fanno senza comprare aiuti**:
 sbagliare non chiude la serie, e nemmeno i due gradini gratis del 💡;
 comprarne uno sì. Il record sta sul tasto della mappa e

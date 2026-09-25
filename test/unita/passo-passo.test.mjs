@@ -29,7 +29,7 @@ import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi }
   from '../../src/giochi/passo-passo/motore/risolutore.js'
 import { mettiCarta, mettiCiclo, mettiScatola, togliPrima, scegliVolte, scegliTesta, seguiConsiglio }
   from '../../src/giochi/passo-passo/motore/fila.js'
-import { generaSentiero, caso, GRADINI } from '../../src/giochi/passo-passo/motore/generatore.js'
+import { generaSentiero, caso, GRADINI, GRADINI_CANE, RISERVA_CANE } from '../../src/giochi/passo-passo/motore/generatore.js'
 import { Proiezione, fotogrammaIniziale } from '../../src/giochi/passo-passo/scena/proiezione.js'
 import manifesto, { CHIAVE, SENZA_FINE } from '../../src/giochi/passo-passo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -696,6 +696,30 @@ for (const [i, t] of CAMPAGNA.entries()) {
   controlla('i salti compaiono solo dove il gradino li porta',
             GRADINI.every((g, i) => !!generaSentiero(i * 2, caso(7)).salti === !!g.salti))
   controlla('le mosse di un livello senza salti sono quattro', mosseDi(Livello.da(CAMPAGNA[0])).length === 4)
+
+  /* col cane: un sentiero sì e uno no ha le pecore, e si vince come gli
+     altri — con l'osso, senza pecore incastrate in partenza */
+  let pascoli = 0, pascoliBuoni = 0, conigli = 0, riserve = 0
+  for (let fatti = 0; fatti < 4 + GRADINI_CANE.length * 4; fatti++) {
+    for (let seme = 1; seme <= 3; seme++) {
+      const t = generaSentiero(fatti, caso(53 * fatti + seme), { cane: true })
+      const liv = Livello.da(t)
+      if (fatti % 2 === 0) { if (!liv.cane) conigli++; continue }
+      pascoli++
+      if (!t.misure) riserve++
+      const m = misura(liv)
+      if (!guastiDellaMappa(t.mappa).length && liv.cane && m.conCarota &&
+          esegui(liv, m.conCarota).esito === TANA && liv.pecore.every(i => !liv.incastro[i])) pascoliBuoni++
+    }
+  }
+  uguale('col cane, i sentieri pari restano del coniglio', conigli, (4 + GRADINI_CANE.length * 4) / 2 * 3)
+  uguale('e quelli dispari sono pascoli che si vincono con l\'osso', pascoliBuoni, pascoli)
+  controlla('quasi mai il posto di riserva', riserve <= pascoli * 0.1, `${riserve} su ${pascoli}`)
+  controlla('il posto di riserva del cane si vince anche lui', !!misura(Livello.da(RISERVA_CANE)).conCarota)
+  controlla('senza il cane, niente pecore nel sentiero',
+            Array.from({ length: 12 }, (_, f) => Livello.da(generaSentiero(f, caso(f + 1))).cane).every(c => !c))
+  controlla('col cane si arriva a due pecore',
+            Livello.da(generaSentiero(1 + 4 * (GRADINI_CANE.length - 1), caso(5), { cane: true })).pecore.length === 2)
 }
 
 /* ══════════ 7. quello che il gioco porta all'albo ══════════ */

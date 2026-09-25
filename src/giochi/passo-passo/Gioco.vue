@@ -705,8 +705,12 @@ function avviaSentiero() {
   prossimoSentiero()
 }
 
+/* chi ha portato il gregge nel recinto (l'ultima tappa del cane) trova
+   le pecore anche nel sentiero, un sentiero sì e uno no */
+const GREGGE = CAMPAGNA.findIndex(t => t.chiave === 'gregge')
 function prossimoSentiero() {
-  const t = generaSentiero(sentieri.value, caso(semeSeduta * 1009 + sentieri.value))
+  const cane = stelleDi(CHIAVE, GREGGE) > 0
+  const t = generaSentiero(sentieri.value, caso(semeSeduta * 1009 + sentieri.value), { cane })
   entra({ ...t, chiave: `sentiero-${sentieri.value}` }, -1)
 }
 

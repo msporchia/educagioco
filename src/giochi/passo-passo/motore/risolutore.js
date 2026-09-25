@@ -40,7 +40,10 @@ export const mosseDi = (liv, senza = null) =>
    `da` è un mondo già avviato (il punto a cui è arrivata la fila del
    bambino): senza, si parte dalla partenza. Torna l'elenco delle mosse,
    o `null` se da lì non si arriva. */
-export function risolvi(liv, { carota = true, senza = null, da = null } = {}) {
+/* `limite` è quanti stati guardare prima di arrendersi: il generatore
+   lo abbassa, perché un posto con due pecore che chiede centomila stati
+   per essere risolto è un posto che non gli serve */
+export function risolvi(liv, { carota = true, senza = null, da = null, limite = LIMITE } = {}) {
   const inizio = da ? da.clona() : new Mondo(liv, { senza, eventi: false })
   if (da) inizio.senza = senza ?? da.senza
   const mosse = mosseDi(liv, inizio.senza)
@@ -65,7 +68,7 @@ export function risolvi(liv, { carota = true, senza = null, da = null } = {}) {
         dopo.push({ w, su: nodo, m })
       }
     }
-    if (visti.size > LIMITE) return null
+    if (visti.size > limite) return null
     fronte = dopo
   }
   return null
@@ -209,9 +212,9 @@ export function serveLaRegola(liv, regola) {
    carota chiede), e cosa fa davvero la strada giusta — quante scivolate,
    salti, spinte, buche. È così che si vede se un livello «del ghiaccio»
    il ghiaccio lo usa, o ci passa accanto. */
-export function misura(liv) {
-  const conCarota = risolvi(liv, { carota: true })
-  const senzaCarota = risolvi(liv, { carota: false })
+export function misura(liv, { limite = LIMITE } = {}) {
+  const conCarota = risolvi(liv, { carota: true, limite })
+  const senzaCarota = conCarota ? risolvi(liv, { carota: false, limite }) : null
   const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0 }
   if (conCarota) {
     const r = esegui(liv, conCarota)
