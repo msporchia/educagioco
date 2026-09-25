@@ -45,10 +45,10 @@ aspettare che qualcuno se ne accorga.
   7 anni  52 ██████████████████████████ matematica 19 · italiano 17 · spazio 3 · tempo 6 · logica 4 · scienze 3
   8 anni  75 ██████████████████████████████████████ matematica 32 · italiano 22 · spazio 5 · tempo 5 · logica 8 · scienze 3
   9 anni  44 ██████████████████████ matematica 23 · italiano 12 · spazio 3 · tempo 1 · logica 5
- 10 anni  32 ████████████████     matematica 14 · italiano 8 · spazio 2 · tempo 4 · logica 4
- 11 anni  13 ███████              matematica 1 · italiano 11 · logica 1
+ 10 anni  35 ██████████████████   matematica 17 · italiano 8 · spazio 2 · tempo 4 · logica 4
+ 11 anni  15 ████████             matematica 3 · italiano 11 · logica 1
 
-   in tutto: 263 classi da 24 moduli
+   in tutto: 268 classi da 24 moduli
 
 ══ COSA VEDE UN BAMBINO ══
 
@@ -166,87 +166,87 @@ aspettare che qualcuno se ne accorga.
 
 ── 8.5 anni ──────────────────────────────────────────────
    ammesse 12–81 (5.0–10.5 anni)  ·  mira 44–81
-   114 classi · matematica 36 · italiano 36 · spazio 12 · tempo 10 · logica 17 · scienze 3
-   61 nella mira, 79 già alla sua portata
+   116 classi · matematica 38 · italiano 36 · spazio 12 · tempo 10 · logica 17 · scienze 3
+   63 nella mira, 79 già alla sua portata
    ┌ carta facile → mira 50 (8.0 anni)
    │ 📝 63  In ogni sacchetto ci sono 5 caramelle. Teo compra 4 sacchetti,
    │ 📖 63  Il nonno ___ seduto sulla riva.
    ┌ carta media → mira 63 (9.0 anni)
-   │ ➡️ 42  Tre figure hanno una cosa in comune. Qual è quella che non c'e
-   │ 🧵 71.1  Lo incorniceremo sul muro ___ riusciamo a finire il puzzle pri
+   │ ➡️ 56  Cosa viene dopo?
+   │ 📝 63  Gigi ha 18 mele. Ne regala 7, poi ne raccoglie ancora 2. Quant
    ┌ carta tosta → mira 76 (10.1 anni)
-   │ 🗣️ 75  Che tempo è «noi puliamo»?
-   │ 🧵 81  Leggi bene: cosa comunica «mentre» qui?
+   │ 🧵 71.1  Ci iscriveremo anche noi ___ restano ancora posti liberi.
+   │ 📐 75  Quale di questi ritagli, piegato, diventa un cubo?
 
 ── 9 anni ──────────────────────────────────────────────
    ammesse 19–88 (5.5–11.0 anni)  ·  mira 51–88
-   114 classi · matematica 36 · italiano 36 · spazio 12 · tempo 10 · logica 17 · scienze 3
-   54 nella mira, 84 già alla sua portata
+   117 classi · matematica 39 · italiano 36 · spazio 12 · tempo 10 · logica 17 · scienze 3
+   57 nella mira, 84 già alla sua portata
    ┌ carta facile → mira 56 (8.5 anni)
    │ ✏️ 56  Come si scrive?
    │ 📏 56  Quanto contiene, circa, una brocca d'acqua?
    ┌ carta media → mira 69 (9.5 anni)
-   │ 📝 63  Zoe ha 16 pastelli. Ne rompe 11, poi gliene regalano ancora 2.
+   │ 📝 75  Zoe ha 23 pastelli. Ne regala 10, poi ne compra ancora 2, poi 
    │ 🍕 69.1  Carla ha mangiato 1/12 della crostata. Quanta crostata è rimas
    ┌ carta tosta → mira 82 (10.6 anni)
    │ ⚖️ 64.8  I due piatti pesano uguale. Quanto pesa una 🧅?
-   │ 🧩 75  Tutti i murgoli sono sbrisi. Nessuno sbriso è verde. I murgoli
+   │ 📏 81  Per un esperimento di scienze usi 6 provette da 30 ml l'una: q
 
 ── 9.5 anni ──────────────────────────────────────────────
    ammesse 25–94 (6.0–11.5 anni)  ·  mira 57–94
-   112 classi · matematica 36 · italiano 36 · spazio 12 · tempo 9 · logica 16 · scienze 3
-   33 nella mira, 93 già alla sua portata
+   116 classi · matematica 40 · italiano 36 · spazio 12 · tempo 9 · logica 16 · scienze 3
+   37 nella mira, 93 già alla sua portata
    ┌ carta facile → mira 62 (9.0 anni)
    │ 📚 63.2  Qual è il titolo migliore per questo testo?
    │ 🗺️ 63  Quanto è lungo il bordo arancione?
    ┌ carta media → mira 75 (10.0 anni)
-   │ 🕰️ 75  Che ora sarà fra 7 minuti?
-   │ 🔢 73.2  Uno di questi conti è sbagliato di sicuro. Quale?
+   │ 📝 75  In ogni cestino ci sono 6 uova. Lea compra 2 cestini, poi ne t
+   │ 📊 72.9  I gusti di gelato scelti dai bambini. Qual è la moda, cioè il 
    ┌ carta tosta → mira 88 (11.1 anni)
-   │ 🧩 75  Tutti i bufigli sono grufoli. Tutti i grufoli hanno la coda a 
-   │ 📐 75  Quanti cubetti ci vogliono per fare questa costruzione?
+   │ 📝 81  Bruno ha 6 anni e 24 figurine. Ne regala 8. Quante gliene rest
+   │ 💶 85  Le uova: 6 uova a 1,92 € oppure 10 uova a 2,80 €. Cosa convien
 
 ── 10 anni ──────────────────────────────────────────────
    ammesse 31–100 (6.5–12.0 anni)  ·  mira 63–100
-   93 classi · matematica 34 · italiano 30 · spazio 9 · tempo 7 · logica 11 · scienze 2
-   31 nella mira, 86 già alla sua portata
+   98 classi · matematica 39 · italiano 30 · spazio 9 · tempo 7 · logica 11 · scienze 2
+   36 nella mira, 86 già alla sua portata
    ┌ carta facile → mira 69 (9.5 anni)
-   │ 🧵 71.1  Le porteremo alla nonna oggi ___ il fioraio ha ancora rose ros
-   │ 📐 56  Quanti lati ha questa figura?
+   │ 🧵 82.5  Leggi bene: cosa comunica «mentre» qui?
+   │ 🍕 55.2  Carla taglia una pizza in 5 fette uguali e ne mangia una. Brun
    ┌ carta media → mira 82 (10.5 anni)
-   │ 📏 81  Hai una pentola con 1,5 l di brodo: ne versi 2 mestoli da 200 
-   │ 📝 81  Nina ha 4 scaffali di libri, comprati 5 giorni fa. In ogni sca
+   │ 📝 75  In ogni astuccio ci sono 2 pastelli. Vera compra 2 astucci, po
+   │ ⚖️ 84.9  Le due bilance sono in pari. Quanto pesa una 🐔?
    ┌ carta tosta → mira 94 (11.6 anni)
-   │ 🧵 82.5  È stato gentilissimo con tutti ___ il nuovo compagno sembrava 
-   │ 📖 85  Cosa vuol dire la parola «ansioso»?
+   │ 🔎 79.3  Giulia, Gabriele e Lucia sono in fila, ma non in quest'ordine.
+   │ 🗣️ 95  Qual è il futuro di «gestire» con «noi»?
 
 ── 10.5 anni ──────────────────────────────────────────────
    ammesse 37–106 (7.0–12.5 anni)  ·  mira 69–106
-   90 classi · matematica 34 · italiano 28 · spazio 8 · tempo 7 · logica 11 · scienze 2
-   18 nella mira, 86 già alla sua portata
+   95 classi · matematica 39 · italiano 28 · spazio 8 · tempo 7 · logica 11 · scienze 2
+   23 nella mira, 88 già alla sua portata
    ┌ carta facile → mira 75 (10.0 anni)
-   │ 📏 81  Versi 3 tazze da 200 ml l'una in una pentola: quanti litri ver
-   │ 📝 81  Nina ha 2 scatole di biscotti, comprate 5 giorni fa. In ogni s
+   │ 🕰️ 75  Che ora segna?
+   │ 📅 63  Quanti giorni passano dal 5 al 29 aprile?
    ┌ carta media → mira 88 (11.0 anni)
-   │ 📏 81  In palestra usi 5 pesetti da 500 g l'uno: quanti kg pesano tut
-   │ 🔢 73.2  62 + 56 fa circa quanto?
+   │ 💶 81  3 kg di mele costano 6,33 €. Quanto costano 9 kg di mele?
+   │ 📐 75  Quale di questi ritagli, piegato, diventa un cubo?
    ┌ carta tosta → mira 101 (12.1 anni)
-   │ 📖 85  Cosa vuol dire «costare un occhio della testa»?
-   │ 🗣️ 95  Qual è il condizionale passato di «aiutare» con «lui»?
+   │ 📝 81  Lea ha 11 anni e 17 conchiglie. Ne perde 7. Quante gliene rest
+   │ 💶 81  6 uova costano 2,34 €. Quanto costano 12 uova?
 
 ── 11 anni ──────────────────────────────────────────────
    ammesse 44–113 (7.5–13.0 anni)  ·  mira 76–113
-   73 classi · matematica 29 · italiano 24 · spazio 6 · tempo 5 · logica 8 · scienze 1
-   7 nella mira, 72 già alla sua portata
+   78 classi · matematica 34 · italiano 24 · spazio 6 · tempo 5 · logica 8 · scienze 1
+   12 nella mira, 75 già alla sua portata
    ┌ carta facile → mira 81 (10.5 anni)
-   │ 🔎 79.3  Filippo, Samuele e Giulia sono in fila, ma non in quest'ordine
-   │ ⚖️ 84.9  Le due bilance sono in pari. Quanto pesa una 🍎?
+   │ 🧩 75  Tutti i murgoli sono sbrisi. Tutti gli sbrisi hanno le orecchi
+   │ 📏 81  Riempi 3 borracce da 200 ml l'una per la gita: quanti litri po
    ┌ carta media → mira 94 (11.5 anni)
-   │ ⚖️ 84.9  Guarda le due bilance. Quante 🍑 pesano come 3 🍉?
-   │ 🗣️ 95  Qual è il passato remoto di «decidere» con «tu»?
+   │ 🗣️ 75  Fra poco tu ___ (lavorare).
+   │ 📝 81  Lea ha 5 anni e 11 fiori. Ne perde 8. Quanti gliene restano?
    ┌ carta tosta → mira 107 (12.6 anni)
-   │ 📝 75  Bruno ha 30 libri. Ne presta 15, poi ne compra ancora 2, poi n
-   │ 📅 63  Quanti giorni passano dal 26 al 29 maggio?
+   │ 💶 94  Compri 4 caramelle da 0,70 € l'una. C'è l'offerta «Prendi 4, p
+   │ 📏 81  Hai una scatola di pesetti da 3 kg: per allenarti ne usi 4 da 
 
 ══ I BUCHI ══
    (non sono guasti: sono le cose da riempire quando servono a qualcuno)
@@ -258,11 +258,10 @@ aspettare che qualcuno se ne accorga.
    · 5.5 anni: tutto in salita — solo 6 classi su 53 sono alla sua portata, il mazzo comincia sopra di lui
    · 10 anni: scienze solo 2
    · 10.5 anni: scienze solo 2
-   · 11 anni: solo 7 classi nella mira (quelle che vede spesso)
    · 11 anni: scienze solo 1
 
    materie e dove arrivano:
-   · matematica   97 classi, da 4.0 a 11.0 anni
+   · matematica  102 classi, da 4.0 a 11.5 anni
    · italiano     85 classi, da 5.0 a 11.6 anni
    · spazio       21 classi, da 5.6 a 10.0 anni
    · tempo        21 classi, da 5.6 a 10.0 anni

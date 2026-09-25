@@ -358,6 +358,10 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g6 — Indovina il numero di partenza
 - 🔢 **Senso del numero** g6 — L'ordine di grandezza, e cosa è impossibile
 
+## 76  ·  circa 10.1 anni
+
+- 💶 **Soldi e decimali** g7 — Quanto costa una sola cosa
+
 ## 81  ·  circa 10.5 anni
 
 - ⚑ 🧵 **Connettivi** g4 — Anche se, contro se
@@ -366,15 +370,25 @@ diverso da quello del suo grado.
 - ⚖️ **Le bilance** g5 — Una cosa pesa come tante altre: lo scambio
 - 📏 **Misure** g5 — I problemi con le misure
 - 📝 **Problemi** g6 — I dati che non servono
+- 💶 **Soldi e decimali** g8 — Quanto costano tante cose
 
 ## 85  ·  circa 10.8 anni
 
 - ⚑ 🧵 **Connettivi** g5 — Il doppio senso di «mentre»
+- 💶 **Soldi e decimali** g9 — Cosa conviene comprare
 
 ## 88  ·  circa 11 anni
 
 - ⚑ 🔎 **Indizi** g5 — Due tabelle collegate
 - ⚑ ⚖️ **Le bilance** g5 — Due cose da pesare, con due bilance
+
+## 90  ·  circa 11.2 anni
+
+- 💶 **Soldi e decimali** g10 — Cosa conviene, coi grammi
+
+## 94  ·  circa 11.5 anni
+
+- 💶 **Soldi e decimali** g11 — Quale offerta conviene
 
 ## 95  ·  circa 11.6 anni
 
@@ -392,4 +406,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 263 classi su 24 moduli.
+Totale: 268 classi su 24 moduli.
