@@ -265,7 +265,7 @@ def disegna_pianta(righe, uscita=None):
 
 # ── le carte delle tappe ─────────────────────────────────────────────
 
-def disegna_carte(carte, uscita, per_riga=6, largo=256):
+def disegna_carte(carte, uscita, per_riga=6, largo=256, disegna=None):
     """Tutte le carte in un foglio solo, col nome sotto e un bordo rosso
     su quelle che non rispettano la scacchiera. Le carte le scrive
     `carte-castello.mjs` col generatore vero del gioco."""
@@ -276,7 +276,7 @@ def disegna_carte(carte, uscita, per_riga=6, largo=256):
     for i, c in enumerate(carte):
         x0 = 16 + (i % per_riga) * (largo + 16)
         y0 = 16 + (i // per_riga) * (alto + 40)
-        im = disegna_pianta(c['righe']).resize((largo, alto), Image.LANCZOS)
+        im = (disegna or disegna_pianta)(c['righe']).resize((largo, alto), Image.LANCZOS)
         foglio.paste(im, (x0, y0))
         g = guasti(c['righe']) + c.get('guasti', [])
         if g:
@@ -335,7 +335,14 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--carte':
         import json
         carte = json.loads(Path(sys.argv[2]).read_text())
-        disegna_carte(carte, sys.argv[3])
+        if '--vesti' in sys.argv:
+            # vestite con i ritagli di una scena generata: vedi vesti.py
+            import vesti
+            scena = Image.open(sys.argv[sys.argv.index('--vesti') + 1]).convert('RGB')
+            p = vesti.pezzi(scena)
+            disegna_carte(carte, sys.argv[3], largo=320, disegna=lambda r: vesti.vesti(r, p))
+        else:
+            disegna_carte(carte, sys.argv[3])
         rotte = [c['nome'] for c in carte if guasti(c['righe']) or c.get('guasti')]
         print(f'{len(carte)} carte in {sys.argv[3]}' + (f'; fuori regola: {", ".join(rotte)}' if rotte else ''))
         return

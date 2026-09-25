@@ -9,6 +9,9 @@
    `poc/scatti/castello-carte.png`, e in console quali carte non
    rispettano la scacchiera e perché.
 
+   Poi le rifà vestite con ognuna delle tre scene generate
+   (`castello-carte-bosco.png`, `-neve`, `-lava`): vedi `vesti.py`.
+
    Serve a guardare **la forma** dei campi prima di avere i pezzi del
    foglio: dove passa la strada, dove cadono le piazzole, quanto spazio
    si prendono laghetti, fitto e decori. Si rilancia ogni volta che si
@@ -24,6 +27,8 @@ import { cartaDi } from '../../src/giochi/castello/motore/carta.js'
 const QUI = dirname(fileURLToPath(import.meta.url))
 const RADICE = join(QUI, '..', '..')
 const USCITA = join(RADICE, 'poc', 'scatti', 'castello-carte.png')
+const GENERATI = join(QUI, 'sorgenti', 'castello', 'generati')
+const SCENE = [['td_1.png', 'bosco'], ['td_2.png', 'neve'], ['td_3.png', 'lava']]
 
 const carte = [...TAPPE, ...LIBERE].map(t => {
   const c = cartaDi(t)
@@ -33,3 +38,12 @@ const carte = [...TAPPE, ...LIBERE].map(t => {
 const file = join(mkdtempSync(join(tmpdir(), 'carte-')), 'carte.json')
 writeFileSync(file, JSON.stringify(carte))
 execFileSync('python3', [join(QUI, 'scacchiera.py'), '--carte', file, USCITA], { stdio: 'inherit' })
+
+/* e le stesse carte vestite con ogni scena generata, coi ritagli di
+   `vesti.py`: una tabella sola per tutte, perché le scene sono la stessa
+   rivestita. Il provvisorio finché non c'è il foglio dei pezzi. */
+for (const [scena, nome] of SCENE) {
+  const vestite = join(RADICE, 'poc', 'scatti', `castello-carte-${nome}.png`)
+  execFileSync('python3', [join(QUI, 'scacchiera.py'), '--carte', file, vestite,
+                           '--vesti', join(GENERATI, scena)], { stdio: 'inherit' })
+}

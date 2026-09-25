@@ -186,9 +186,10 @@ una torre** — un bambino legge ogni cosa in scena come parte del
 problema, e un campanile di decoro accanto a una piazzola è una torre
 che non spara.
 
-Oltre a queste quattro, le scene `td_2.png` (la neve) e `td_3.png` (la
-lava) sono uscite da blocchi scritti a mano nella chat: vanno copiati
-qui, con le stesse quattordici righe.
+Oltre a queste quattro ci sono la neve (`td_2.png`) e la lava
+(`td_3.png`), uscite senza blocco: nella stessa chat della scena buona è
+bastato scrivere «ora con la neve». I blocchi servono quando si parte da
+zero, o quando la riga sola non basta a dire cosa si vuole.
 
 ### Il bosco — si parte da qui
 
@@ -404,9 +405,10 @@ nella cella, e la parte fissa dei due prompt adesso dice così.
 
 ### `td_2.png` e `td_3.png` — la stessa scena, la neve e la lava ✅
 
-25 settembre 2026, ChatGPT: `td_1.png` rivestita con due scenari che la
-scheda non ha ancora (la neve e la lava — il testo mandato va ricopiato
-qui, e diventa due blocchi in «Gli scenari»). 1024×1536, RGB.
+25 settembre 2026, ChatGPT, nella stessa chat di `td_1.png`, con un
+prompt di una riga: «ora con la neve», «ora con la lava». Nessun blocco
+scenario: **uno scenario nuovo, una volta che c'è la scena buona, è una
+riga**. 1024×1536, RGB.
 
 - **La geometria non si muove**: i bordi della strada sulla riga 200
   cadono a 496/533 px in `td_1`, 490/537 in `td_2`, 493/533 in `td_3` —
@@ -423,6 +425,15 @@ qui, e diventa due blocchi in «Gli scenari»). 1024×1536, RGB.
   motivo per cui il generatore delle carte le mette da sé.
 - **La strada si legge in tutte e due**, anche se sulla neve il grigio
   è più vicino al fondo: lì la prova dei trenta pixel è la più stretta.
+- **Vestono le carte generate**: `strumenti/sprite/vesti.py` ritaglia
+  da `td_1` una tabella di pezzi — gli undici casi della strada (due
+  innesti girati di mezzo giro), sedici toppe di prato cercate da sole,
+  piazzole, decori, fitto, bocca, castello scontornato, stagno — e **la
+  stessa tabella** veste anche neve e lava. `node
+  strumenti/sprite/carte-castello.mjs` fa le ventiquattro carte vestite
+  in `poc/scatti/castello-carte-{bosco,neve,lava}.png`. È un
+  provvisorio: il fitto tagliato al bordo della cella si vede a
+  quadretti, ed è quello che i pezzi alti del foglio servono a coprire.
 - **Nella lava ci sono cristalli rossi**, a mucchi, sparsi sul campo: in
   un gioco sembrano gemme da raccogliere. Nel foglio della lava vanno
   chiesti senza, o scartati al ritaglio.
