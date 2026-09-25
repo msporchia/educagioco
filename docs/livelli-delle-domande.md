@@ -138,7 +138,6 @@ diverso da quello del suo grado.
 - 🔗 **Analogie** g3 — Le analogie fra figure
 - 🗣️ **Coniugazione** g2 — Il presente dei verbi irregolari
 - ⚖️ **Le bilance** g1 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
-- 🐋 **Le classi degli animali** g1 — Dagli indizi alla classe
 - 🕰️ **Orologio** g3 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g3 — Le ore intere
 - 🕰️ **Orologio** g3 — Trovare l'orologio che segna un'ora
@@ -164,6 +163,9 @@ diverso da quello del suo grado.
 - 🦁 **Animali e ambienti** g4 — Dove vive questo animale
 - 🦁 **Animali e ambienti** g4 — Il corpo dice il posto
 - ⚑ 📚 **Capire un testo** g3 — Prima e dopo: l'ordine in cui le cose succedono
+- ⚑ 📚 **Capire un testo** g3 — Quello che non è scritto ma si capisce
+- ⚑ 📚 **Capire un testo** g4 — Quello che non è scritto ma si capisce
+- ⚑ 📚 **Capire un testo** g5 — Quello che non è scritto ma si capisce
 - 🧵 **Connettivi** g3 — Cosa dice la parolina
 - 🧵 **Connettivi** g3 — Ma, però, invece: il contrasto
 - 🧵 **Connettivi** g3 — Quale frase ha senso
@@ -175,8 +177,6 @@ diverso da quello del suo grado.
 - 📊 **Grafici e tabelle** g3 — Quanti in più, quanti in meno
 - ⚑ 🔎 **Indizi** g4 — La tabella: chi ha cosa
 - ⚖️ **Le bilance** g2 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
-- 🐋 **Le classi degli animali** g2 — Che classe è questo animale
-- 🐋 **Le classi degli animali** g2 — Dagli indizi alla classe
 - ✏️ **Ortografia** g3 — Il suono sc (pesce, scienza)
 - ✏️ **Ortografia** g3 — Le doppie
 - 🔢 **Senso del numero** g4 — Indovina il numero di partenza
@@ -224,9 +224,6 @@ diverso da quello del suo grado.
 - 🔎 **Indizi** g4 — Indovinello: le cose del mondo
 - 🗺️ **La griglia** g4 — L'area: i quadretti dentro
 - ⚖️ **Le bilance** g2 — Il numero nascosto nelle tabelline (□ × 6 = 42)
-- 🐋 **Le classi degli animali** g3 — Che classe è questo animale
-- 🐋 **Le classi degli animali** g3 — Chi non è della famiglia
-- 🐋 **Le classi degli animali** g3 — Vertebrato o invertebrato
 - 📖 **Lessico** g3 — I sinonimi
 - 🧩 **Logica** g3 — La regola applicata dritta
 - 🧩 **Logica** g3 — La regola girata: non si può sapere
@@ -259,9 +256,6 @@ diverso da quello del suo grado.
 ## 60  ·  circa 8.8 anni
 
 - 🍕 **Frazioni** g4 — La frazione di un numero (1/4 di 20)
-- 🐋 **Le classi degli animali** g4 — Chi non è della famiglia
-- 🐋 **Le classi degli animali** g4 — Insetto o ragno: quante zampe
-- 🐋 **Le classi degli animali** g4 — Perché è di quella classe
 - 🔢 **Senso del numero** g6 — Fare i conti in fila
 
 ## 61  ·  circa 8.9 anni
@@ -309,14 +303,9 @@ diverso da quello del suo grado.
 ## 65  ·  circa 9.2 anni
 
 - 🍕 **Frazioni** g4 — Le frazioni equivalenti (2/4 = 1/2)
-- 🐋 **Le classi degli animali** g5 — Insetto o ragno: quante zampe
-- 🐋 **Le classi degli animali** g5 — Perché è di quella classe
-- 🐋 **Le classi degli animali** g5 — Vertebrato o invertebrato
 
 ## 66  ·  circa 9.3 anni
 
-- ⚑ 📚 **Capire un testo** g4 — Quello che non è scritto ma si capisce
-- ⚑ 📚 **Capire un testo** g5 — Quello che non è scritto ma si capisce
 - 🍕 **Frazioni** g5 — Quanto manca per fare un intero
 
 ## 68  ·  circa 9.4 anni
@@ -403,4 +392,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 274 classi su 25 moduli.
+Totale: 263 classi su 24 moduli.
