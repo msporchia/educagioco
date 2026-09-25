@@ -102,31 +102,44 @@ controlla('e la manina se n\'è andata', await page.locator('[data-manina]').cou
 controlla('e una tessera è accesa', await page.locator('[data-tessera][data-corrente]').count() === 1)
 await scatto(page, 'passo-corsa')
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 12000 })
-uguale('il cartello di fine dice tre stelle',
-       await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '3')
+uguale('il cartello di fine dice quattro stelle: la strada del risolutore è la più corta',
+       await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '4')
+uguale('e nessuna riga dice di accorciarla', await page.locator('[data-accorcia]').count(), 0)
 controlla('e dice le monete della prima vittoria', (await page.locator('.pp-monete').innerText()).includes('4'))
 await attendi(page, 900)          // le stelle entrano una dopo l'altra: la foto le vuole tutte
 await scatto(page, 'passo-fine')
 {
   const p = await leggiProfilo(page)
   const c = p.campagne && p.campagne.passo
-  controlla('la tappa è salvata', c && c.tappa === 1 && c.stelle[0] === 3, JSON.stringify(c))
+  controlla('la tappa è salvata', c && c.tappa === 1 && c.stelle[0] === 4, JSON.stringify(c))
   /* almeno quattro: il traguardo della prima tappa paga le sue a parte */
   controlla('le monete sono arrivate', p.coins >= 4, `sono ${p.coins}`)
   uguale('e il contatore delle tane è salito', p.totals.ppTane, 1)
 }
 const monetePrima = (await leggiProfilo(page)).coins
 
-/* ---------- 4. rigiocata non paga di nuovo ---------- */
+/* ---------- 4. rigiocata non paga di nuovo, e la strada lunga si dice ---------- */
 await attendi(page, 400)
 await page.locator('[data-azione="rigioca"]').click()
 await page.waitForSelector('.pp-campo')
 await attendi(page, 450)
-await componi(soluzione)
+/* un giro in giù e di nuovo su: arriva con la carota, ma con due frecce di troppo */
+await componi(['destra', 'giu', 'su', 'destra', 'destra'])
 await page.locator('[data-azione="via"]').click()
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 12000 })
 uguale('rigiocata, il cartello non promette monete', await page.locator('.pp-monete').count(), 0)
 uguale('e la tappa non paga di nuovo', (await leggiProfilo(page)).coins, monetePrima)
+uguale('per la strada lunga, tre stelle', await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '3')
+controlla('e la quarta, spenta', await page.locator('[data-stella-corta].pp-spenta').count() === 1)
+{
+  const riga = page.locator('[data-accorcia]')
+  controlla('una riga dice che si poteva fare con meno, coi due numeri',
+            await riga.getAttribute('data-minimo') === '3' && await riga.getAttribute('data-usate') === '5',
+            await riga.count() ? await riga.innerText() : 'nessuna riga')
+}
+await scatto(page, 'passo-fine-lunga')
+uguale('e le stelle salvate restano quattro: è il primato della tappa',
+       (await leggiProfilo(page)).campagne.passo.stelle[0], 4)
 await attendi(page, 400)
 await page.locator('[data-azione="avanti"]').click()
 await page.waitForSelector('.pp-campo')
@@ -400,8 +413,8 @@ await attendi(page, 1200)
 }
 await scatto(page, 'passo-zaino-corre')
 await page.waitForSelector('[data-fine="tappa"]', { timeout: 15000 })
-uguale('il viale col ripeti vale tre stelle',
-       await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '3')
+uguale('il viale col ripeti vale quattro stelle',
+       await page.locator('[data-stelle-prese]').getAttribute('data-quante'), '4')
 await attendi(page, 500)
 await page.locator('[data-azione="rigioca"]').click()
 await page.waitForSelector('.pp-campo')
@@ -485,7 +498,7 @@ controlla('la scelta della testa offre i numeri e il colore della mappa',
           await page.locator('[data-volte-scegli="blu"], [data-volte-scegli="casa"]').count() === 0)
 await scatto(page, 'passo-fino-scelta')
 await page.locator('[data-azione="cancella"]').click()
-uguale('i gradini storti si fanno col «fino al rosso»', await vinci('gradini-storti'), '3')
+uguale('i gradini storti si fanno col «fino al rosso»', await vinci('gradini-storti'), '4')
 await attendi(page, 500)
 await page.locator('[data-azione="mappa"]').click()
 await page.waitForSelector('.pp-mappa')
@@ -497,7 +510,7 @@ controlla('la scelta del ❓ offre solo i colori, tutti e tre',
           await page.locator('[data-volte-scegli="3"]').count() === 0 &&
           await page.locator('[data-volte-scegli="rosso"], [data-volte-scegli="blu"], [data-volte-scegli="giallo"]').count() === 3)
 await page.locator('[data-azione="cancella"]').click()
-uguale('il sentiero dei segni si fa leggendo le lastre', await vinci('segni'), '3')
+uguale('il sentiero dei segni si fa leggendo le lastre', await vinci('segni'), '4')
 await scatto(page, 'passo-se')
 await attendi(page, 500)
 await page.locator('[data-azione="mappa"]').click()
@@ -515,7 +528,7 @@ await entraNellaTappa(CAMPAGNA.findIndex(t => t.chiave === 'bosco-ghiacciato'))
   dentro('una cella resta grande abbastanza da vedere il coniglio', Math.round(cella), 26, 60)
   nota(`mappa 9×11: ${Math.round(tela.width)}×${Math.round(tela.height)} px, cella ${cella.toFixed(1)} px`)
 }
-uguale('il bosco ghiacciato si fa leggendo i segnali sul ghiaccio', await vinci('bosco-ghiacciato'), '3')
+uguale('il bosco ghiacciato si fa leggendo i segnali sul ghiaccio', await vinci('bosco-ghiacciato'), '4')
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()

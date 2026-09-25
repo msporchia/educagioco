@@ -119,7 +119,9 @@ export function dove(liv, fila) {
     return { che: 'togli', carta: s.cursore - 1, testo: 'Qui c\'è una carta di troppo: senza, la fila va meglio.' }
   const sospette = s.cursore < fila.length
   return { che: 'qui', cursore: s.cursore, sospette,
-           testo: sospette ? 'Fin qui la fila va bene. Il pezzo da cambiare comincia dove sta il cursore.'
+           testo: s.accorcia
+             ? 'La fila arriva già a casa! Ma si può fare con meno frecce: il pezzo da accorciare comincia dove sta il cursore.'
+             : sospette ? 'Fin qui la fila va bene. Il pezzo da cambiare comincia dove sta il cursore.'
              : fila.length ? 'Fin qui la fila va bene: continua da dove sta il cursore.'
                : 'Comincia dalla prima carta: da che parte deve andare il coniglio?' }
 }

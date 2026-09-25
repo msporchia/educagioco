@@ -40,9 +40,9 @@ import { CAMPAGNA, SCALINI, QUANTE_TAPPE, TAPPE_PICCOLE, TAPPE_PRIME, tappeDello
 import { MASSIMO_FILA, LEGENDA } from './dati/mondo.js'
 import { apri, apriSe, carteDi, conCicli, daScegliere, eApri, eSe, valoreDi, COLORI } from './dati/carte.js'
 import { Livello } from './motore/livello.js'
-import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, PERSA, eErrore } from './motore/mondo.js'
+import { esegui, stelleDellaVittoria, eCorta, TANA, SBATTE, SPLASH, PERSA, eErrore } from './motore/mondo.js'
 import { mettiCarta, mettiScatola, togliPrima, scegliTesta } from './motore/fila.js'
-import { suggerisci } from './motore/risolutore.js'
+import { suggerisci, minimoDi, carteUsate } from './motore/risolutore.js'
 import { scalaDi, pensieroDi, dove, pezzoDiStrada } from './motore/aiuti.js'
 import { mancano, chiedeConferma, SVELA } from '../aiuti.js'
 import { generaSentiero, caso } from './motore/generatore.js'
@@ -673,10 +673,26 @@ function contaLaVittoria(esito) {
   if (!pagato.value) segna('ppDaSolo')
 }
 
+/* La quarta stella, e cosa dire a chi non l'ha presa: quante carte ha
+   usato e quante ne bastavano. Il minimo si chiede adesso e non
+   all'ingresso: costa una ricerca (qualche centesimo di secondo nei
+   prati del cane), e chi esce senza vincere non l'avrebbe mai letto. */
+function misuraLaStrada(esito) {
+  const minimo = minimoDi(liv)
+  const usate = carteUsate(fila.value, esito)
+  const carota = esito.carota || (!!minimo && !minimo.carota)
+  return { minimo: minimo ? minimo.carte : 0, usate,
+           corta: eCorta({ usate, carota: esito.carota, minimo }),
+           /* la riga «si può fare con meno»: solo a carota presa — senza,
+              la stella della carota spenta dice già cosa manca */
+           lunga: !!minimo && carota && usate > minimo.carte }
+}
+
 /* scrive la vittoria e torna il cartello da mostrare alla fine */
 function vittoria(esito) {
-  const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value })
-  if (sentiero.value) return vittoriaSentiero(esito)
+  const strada = misuraLaStrada(esito)
+  const stelle = stelleDellaVittoria({ carota: esito.carota, svelato: svelato.value, corta: strada.corta })
+  if (sentiero.value) return vittoriaSentiero(esito, strada)
 
   const i = tappaIdx.value
   /* il premio si paga una volta sola, alla prima vittoria: il livello è
@@ -689,6 +705,7 @@ function vittoria(esito) {
   return {
     che: 'tappa', titolo: CAMPAGNA[i].nome, stelle,
     carota: esito.carota, cane: !!(liv && liv.cane), svelato: svelato.value, monete,
+    ...strada, zaino: !!liv.zaino,
     racconto: CAMPAGNA[i].racconto,
     /* dopo l'ultima tappa dei piccoli ▶ porta sul sentiero senza fine,
        che si è appena aperto, a chi non ha ancora l'età dello zaino:
@@ -725,7 +742,7 @@ function chiudiLaSerie() {
   return esito
 }
 
-function vittoriaSentiero(esito) {
+function vittoriaSentiero(esito, strada) {
   sentieri.value++
   addCoins(PREMIO_SENTIERO)
   contaLaVittoria(esito)
@@ -740,7 +757,10 @@ function vittoriaSentiero(esito) {
           : record ? `${serie.value} di fila · il tuo primo record`
           : `${serie.value} di fila · il record è ${prima}`
   }
-  return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete: PREMIO_SENTIERO }
+  /* nel sentiero non ci sono stelle, ma la strada lunga si dice lo
+     stesso: è lì che si vedevano le file da quaranta frecce */
+  return { che: 'sentiero', titolo: tappa.value.nome, frase, record, monete: PREMIO_SENTIERO,
+           ...strada }
 }
 
 /* ═══════════ dopo il cartello ═══════════ */

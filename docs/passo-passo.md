@@ -163,8 +163,9 @@ La strada, scritta freccia per freccia, nello zaino **non ci sta**. Il viale
 è lungo cinque passi e lo zaino tiene tre carte: per arrivare bisogna dire
 «ripeti 5 volte →», e poi ↓. Il ciclo non è una comodità che si può saltare
 scrivendo più frecce: è l'unico modo di farcela, e un test lo pretende da
-ogni livello. **Non è un par**: le stelle restano le stesse tre, e usare meno
-carte del necessario non vale niente di più.
+ogni livello. Lo zaino non è la quarta stella: è un tetto per arrivare.
+Oggi ogni zaino è largo quanto la sua soluzione, quindi lì la stella
+della strada più corta la dà già la carota.
 
 - **Una scatola.** 🔁 mette una scatola dove sta il cursore, col cursore
   dentro, e sopra le frecce compare la scelta del numero, da 2 a 9. Il
@@ -248,13 +249,31 @@ stare su due righe.
 
 ## Le stelle, le monete, gli aiuti
 
-Tre stelle per tappa, per tre cose diverse: ⭐ **arrivato** (per il cane:
+Quattro stelle per tappa, per quattro cose diverse: ⭐ **arrivato** (per il cane:
 il gregge nel recinto), ⭐ **con la carota** (l'osso), ⭐ **la strada l'hai
-trovata tu** (🧠). Sul cartello di fine, sotto
+trovata tu** (🧠) e ⭐ **la strada più corta** (🎯). Sul cartello di fine, sotto
 ogni stella c'è il disegno di cosa l'ha data: una stella spenta con sotto la
 carota dice da sola che rigiocando la si può prendere. La terza la spegne
-solo la strada intera comprata col 💡: gli altri aiuti si pagano in monete. Non c'è un numero di mosse da
-battere: arrivarci è arrivarci.
+solo la strada intera comprata col 💡: gli altri aiuti si pagano in monete.
+
+La quarta è arrivare **con la carota** usando meno carte possibile — non
+meno celle: una scivolata sul ghiaccio è una freccia sola. Sotto la
+stella c'è 🎯 col numero che basta, e chi ne ha usate di più legge coi
+due numeri che si poteva fare meglio («si può fare con 7 frecce: tu ne
+hai usate 12»); nel sentiero senza fine le stelle non ci sono, ma la
+riga sì. Le carte si contano fino a quella che ha portato a casa.
+Senza zaino il minimo lo misura il risolutore, ed è esatto; con lo zaino
+è la più corta delle soluzioni scritte, e siccome la stella chiede «al
+più» chi trova di meglio non perde niente. Che le soluzioni scritte
+siano davvero le più corte lo controlla `strumenti/passo-passo/minimi.mjs`,
+che cerca il programma più corto coi cicli (scatole fino a sei carte).
+
+Non c'era, all'inizio, e apposta: «arrivarci è arrivarci». È arrivata
+perché senza nessun incentivo si vedevano file da quaranta frecce su
+posti che se ne chiedono dodici. **Il 💡 porta sempre alla strada più
+corta**: se la fila arriva già ma è lunga, il 🔎 dice dove accorciarla,
+e chi segue gli aiuti prende anche la quarta — se no il gioco ti
+aiuterebbe e poi ti direbbe che si poteva fare meglio.
 
 La carota non serve mai per vincere. Nei primi livelli sta sulla strada,
 poi chiede una deviazione, poi una deviazione **pensata**: sul ghiaccio,
@@ -418,8 +437,8 @@ repo: dal 4 del prato al 44 di «Tutto insieme» e del cane, e dal 46 al
 74 con lo zaino), il premio della prima vittoria, la
 stagione (è solo il vestito) e `salti: true` se usa la seconda fila di
 frecce; quelle del cane anche le `trappole`. Il test `test/unita/passo-passo` fa il resto: controlla che si vinca
-con la carota, che la strada giocata dal motore vinca davvero con tre
-stelle, che la regola del gradino serva, e che chi segue soltanto gli aiuti
+con la carota, che la strada giocata dal motore vinca davvero con
+quattro stelle, che la regola del gradino serva, e che chi segue soltanto gli aiuti
 arrivi a casa.
 
 ## Note per i genitori

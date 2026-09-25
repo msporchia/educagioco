@@ -42,7 +42,7 @@ defineEmits(['gioca', 'senza-fine'])
             <span class="pp-faccia pp-em">{{ t.aperta ? t.icona : '🔒' }}</span>
             <span class="pp-nome">{{ t.nome }}</span>
             <span class="pp-stelle">
-              <span v-for="n in 3" :key="n" class="pp-em" :class="{ 'pp-spenta': n > t.stelle }">⭐</span>
+              <span v-for="n in 4" :key="n" class="pp-em" :class="{ 'pp-spenta': n > t.stelle }">⭐</span>
             </span>
           </button>
         </div>

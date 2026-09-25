@@ -69,7 +69,7 @@
 .pp-tappa .pp-nome { font-size: 11px; line-height: 1.15; text-align: center; color: var(--pp-tenue);
                      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
                      overflow: hidden; min-height: 2.3em }
-.pp-tappa .pp-stelle { font-size: 11px; letter-spacing: 1px }
+.pp-tappa .pp-stelle { font-size: 11px; letter-spacing: 0 }
 .pp-spenta { opacity: .22; filter: grayscale(1) }
 .pp-tappa.pp-chiusa { opacity: .5; box-shadow: none }
 /* la prossima da giocare respira con la luce, non con la misura: un
@@ -336,16 +336,21 @@
 @keyframes pp-sale { from { transform: translateY(24px) scale(.94) } }
 .pp-cartello .pp-faccia { font-size: 52px }
 .pp-cartello h2 { font-size: 22px; text-align: center; color: var(--pp-inchiostro) }
-.pp-tre { display: flex; gap: 16px; margin: 2px 0 4px }
+.pp-tre { display: flex; gap: 12px; margin: 2px 0 4px }
 .pp-una { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 18px;
           animation: pp-stella .4s backwards }
 .pp-una:nth-child(2) { animation-delay: .15s }
 .pp-una:nth-child(3) { animation-delay: .3s }
+.pp-una:nth-child(4) { animation-delay: .45s }
+/* sotto la quarta stella, quante frecce bastano: un numero lo legge
+   anche chi non legge ancora le parole */
+.pp-meta { display: flex; align-items: center; gap: 2px; font-weight: 800 }
 @keyframes pp-stella { from { transform: scale(0) } 70% { transform: scale(1.25) } }
 .pp-una .pp-grande { font-size: 40px }
 .pp-una.pp-spenta { opacity: .3; filter: grayscale(1) }
 .pp-frase { font-size: 16px; font-weight: 700; text-align: center }
 .pp-frase.pp-record { color: #c2410c }
+.pp-accorcia { font-size: 15px; font-weight: 700; text-align: center; line-height: 1.3 }
 .pp-monete { font-size: 18px; font-weight: 800 }
 .pp-racconto { font-size: 13px; color: var(--pp-tenue); text-align: center; line-height: 1.3 }
 .pp-scelte { display: flex; gap: 10px; margin-top: 6px; align-items: center }

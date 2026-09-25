@@ -5,13 +5,20 @@
    Qui non c'è un cartello di partita persa: una fila sbagliata si
    riprova e basta. Questo compare solo quando il coniglio è nella tana.
 
-   Le tre stelle si guadagnano per tre cose diverse, e sotto ognuna c'è
+   Le quattro stelle si guadagnano per quattro cose diverse, e sotto ognuna c'è
    il disegno di **cosa** l'ha data: la tana, la carota, 🧠 — la strada
    l'hai trovata tu. Una stella spenta con sotto la carota dice da sola
    cosa manca, e che rigiocando la si può prendere — senza una riga da
    leggere. La terza era «senza 💡», e la toglieva qualunque aiuto: gli
    aiuti adesso si pagano in monete, e la terza se ne va solo se la
    strada intera l'ha scritta il gioco.
+
+   La quarta è la strada più corta, con la carota: sotto c'è 🎯 e
+   quante frecce bastano, e se la fila era più lunga una riga lo dice
+   coi due numeri — «si può fare con 7 frecce: tu ne hai usate 12».
+   Senza la carota la riga non c'è: la stella della carota spenta dice
+   già cosa manca, e due cose da rifare insieme sono troppe. Nel
+   sentiero le stelle non ci sono, ma la riga sì.
 
    Il racconto del posto sta in fondo, piccolo: è per il grande che
    guarda da sopra la spalla, e dice cosa si è appena imparato.
@@ -20,10 +27,10 @@
    dito che ha appena premuto ▶ si lascia dietro un tocco, e quel tocco
    non deve premere «avanti» da solo.
    ═══════════════════════════════════════════════════════════════════ */
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Festa from '../../Festa.vue'
 
-defineProps({
+const props = defineProps({
   che: { type: String, default: 'tappa' },        // tappa | sentiero
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 1 },
@@ -37,8 +44,17 @@ defineProps({
   prossima: { type: Boolean, default: false },    // c'è una tappa dopo, ed è aperta
   frase: { type: String, default: '' },           // il sentiero: di fila, e il record
   record: { type: Boolean, default: false },
+  /* la strada più corta: quante carte bastavano, quante ne sono servite,
+     e se era la più corta (la quarta stella) */
+  minimo: { type: Number, default: 0 },
+  usate: { type: Number, default: 0 },
+  corta: { type: Boolean, default: false },
+  zaino: { type: Boolean, default: false },
+  lunga: { type: Boolean, default: false },       // si poteva fare con meno: la riga lo dice
 })
 defineEmits(['avanti', 'rigioca', 'mappa'])
+
+const parola = computed(() => props.zaino ? 'carte' : 'frecce')
 
 const CIECA = 320
 const pronto = ref(false)
@@ -66,8 +82,15 @@ onUnmounted(() => clearTimeout(sveglia))
         <span class="pp-una" :class="{ 'pp-spenta': svelato }" data-stella-pensata>
           <span class="pp-em pp-grande">⭐</span><span class="pp-em">🧠</span>
         </span>
+        <span class="pp-una" :class="{ 'pp-spenta': !corta }" data-stella-corta>
+          <span class="pp-em pp-grande">⭐</span>
+          <span class="pp-meta"><span class="pp-em">🎯</span>{{ minimo || '' }}</span>
+        </span>
       </div>
 
+      <p v-if="lunga" class="pp-accorcia" data-accorcia :data-minimo="minimo" :data-usate="usate">
+        Si può fare con {{ minimo }} {{ parola }}: tu ne hai usate {{ usate }}.
+      </p>
       <p v-if="frase" class="pp-frase" :class="{ 'pp-record': record }" data-primato>{{ frase }}</p>
       <p v-if="monete" class="pp-monete">+{{ monete }} 🪙</p>
       <p v-if="racconto" class="pp-racconto">{{ racconto }}</p>

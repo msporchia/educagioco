@@ -488,6 +488,18 @@ export function esegui(liv, fila, { senza = null, eventi = true } = {}) {
    trovata da te. La terza la toglieva qualunque 💡, ed era il prezzo
    dell'aiuto; adesso gli aiuti si pagano in monete (`motore/aiuti.js`),
    e la stella se ne va solo se la strada te l'ha scritta tutta il gioco
-   (`svelato`): non è un prezzo, è un fatto. */
-export const stelleDellaVittoria = ({ carota = false, svelato = false } = {}) =>
-  1 + (carota ? 1 : 0) + (svelato ? 0 : 1)
+   (`svelato`): non è un prezzo, è un fatto.
+
+   La quarta è la strada più corta (`corta`, vedi `eCorta`): era stata
+   tenuta fuori apposta — «arrivarci è arrivarci» — e c'è tornata perché
+   senza nessun incentivo si vedevano file da quaranta frecce su posti
+   che se ne chiedono dodici. */
+export const stelleDellaVittoria = ({ carota = false, svelato = false, corta = false } = {}) =>
+  1 + (carota ? 1 : 0) + (svelato ? 0 : 1) + (corta ? 1 : 0)
+
+/* La quarta stella: la carota presa (se si può prendere) e non più carte
+   del minimo (`minimoDi` in `motore/risolutore.js`). Si chiede «al più»:
+   chi trova una strada più corta di quella che il gioco conosce non
+   perde niente. */
+export const eCorta = ({ usate, carota, minimo }) =>
+  !!minimo && (carota || !minimo.carota) && usate <= minimo.carte

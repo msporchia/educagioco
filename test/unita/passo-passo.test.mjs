@@ -23,9 +23,9 @@ import { CARTE, albero, carteDi, conCicli, daScegliere, guastiDellaFila, program
          apriSe, FINE, chiusuraDi, aperturaDi }
   from '../../src/giochi/passo-passo/dati/carte.js'
 import { Livello, celleIncastro } from '../../src/giochi/passo-passo/motore/livello.js'
-import { esegui, stelleDellaVittoria, TANA, SBATTE, SPLASH, STANCO, FINITA, PERSA, REGOLE, PASSI_MAX }
+import { esegui, stelleDellaVittoria, eCorta, TANA, SBATTE, SPLASH, STANCO, FINITA, PERSA, REGOLE, PASSI_MAX }
   from '../../src/giochi/passo-passo/motore/mondo.js'
-import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi }
+import { risolvi, suggerisci, serveLaRegola, serveLaCarta, misura, mosseDi, minimoDi, carteUsate }
   from '../../src/giochi/passo-passo/motore/risolutore.js'
 import { mettiCarta, mettiCiclo, mettiScatola, togliPrima, scegliVolte, scegliTesta, seguiConsiglio }
   from '../../src/giochi/passo-passo/motore/fila.js'
@@ -233,6 +233,20 @@ const dove = (r) => r.mondo.pos
   uguale('senza la carota: due', stelleDellaVittoria({ carota: false, svelato: false }), 2)
   uguale('con la strada scritta dal gioco: due', stelleDellaVittoria({ carota: true, svelato: true }), 2)
   uguale('senza niente: una, e basta arrivare', stelleDellaVittoria({ carota: false, svelato: true }), 1)
+  /* la quarta è la strada più corta, con la carota */
+  uguale('e con la strada più corta: quattro', stelleDellaVittoria({ carota: true, svelato: false, corta: true }), 4)
+  const min = { carte: 7, carota: true }
+  controlla('più corta vuol dire al più il minimo', eCorta({ usate: 7, carota: true, minimo: min }) &&
+            eCorta({ usate: 6, carota: true, minimo: min }) && !eCorta({ usate: 8, carota: true, minimo: min }))
+  controlla('e senza la carota non vale, se la carota si poteva prendere',
+            !eCorta({ usate: 5, carota: false, minimo: min }))
+  controlla('se la carota non si può prendere, basta la tana',
+            eCorta({ usate: 5, carota: false, minimo: { carte: 5, carota: false } }))
+  /* le carte si contano fino a quella che porta a casa */
+  const prato = Livello.da(CAMPAGNA[0])
+  const via = risolvi(prato)
+  const coda = [...via, 'su', 'su']
+  uguale('le frecce rimaste in coda dopo la tana non contano', carteUsate(coda, esegui(prato, coda)), via.length)
 }
 
 /* ══════════ 2b. le carte: i cicli, e la fila modificata col dito ══════════ */
@@ -490,7 +504,16 @@ for (const [i, t] of CAMPAGNA.entries()) {
   const r = esegui(liv, m.conCarota)
   controlla(`${qui}: la strada del risolutore, giocata, vince con la carota`,
             r.esito === TANA && r.carota, `${r.esito} in ${inFrecce(m.conCarota)}`)
-  uguale(`${qui}: e trovata da soli vale tre stelle`, stelleDellaVittoria({ carota: r.carota, svelato: false }), 3)
+  /* la quarta stella: il minimo c'è, e la strada del risolutore (o la
+     soluzione scritta, con lo zaino) lo prende */
+  const minimo = minimoDi(liv)
+  controlla(`${qui}: il minimo si conosce, con la carota`, !!minimo && minimo.carota, JSON.stringify(minimo))
+  if (t.zaino) controlla(`${qui}: e sta nello zaino`, minimo && minimo.carte <= t.zaino)
+  const giusta = t.zaino ? t.soluzioni.find(f => carteDi(f) === minimo.carte) : m.conCarota
+  const rg = esegui(liv, giusta)
+  const corta = eCorta({ usate: carteUsate(giusta, rg), carota: rg.carota, minimo })
+  uguale(`${qui}: e trovata da soli, la più corta, vale quattro stelle`,
+         stelleDellaVittoria({ carota: rg.carota, svelato: false, corta }), 4)
   controlla(`${qui}: si vince anche senza la carota, e non più lunga`,
             !!m.senzaCarota && m.corta <= m.lunga)
   if (s.carta) {
@@ -608,6 +631,9 @@ for (const [i, t] of CAMPAGNA.entries()) {
     controlla(`tappa ${i + 1}: seguendo solo gli aiuti si arriva a casa con la carota`,
               ultimo && ultimo.che === 'via' && r.esito === TANA && r.carota,
               `${inFrecce(fila)} → ${r.esito}`)
+    controlla(`tappa ${i + 1}: e per la strada più corta: il 💡 dà anche la quarta stella`,
+              r.esito === TANA && eCorta({ usate: carteUsate(fila, r), carota: r.carota, minimo: minimoDi(liv) }),
+              `${carteUsate(fila, r)} carte, ne bastano ${minimoDi(liv)?.carte}`)
     if (t.zaino) controlla(`tappa ${i + 1}: e la fila degli aiuti non sfora mai lo zaino`, !sfora)
   }
 
@@ -649,6 +675,25 @@ for (const [i, t] of CAMPAGNA.entries()) {
             s && (s.mossa === 'giu' || s.mossa === 'su'), JSON.stringify(s))
   const sol = risolvi(liv)
   uguale('se la fila vince già con la carota, l\'aiuto dice solo ▶', suggerisci(liv, sol).che, 'via')
+  /* una fila che arriva, ma lunga: l'aiuto non dice ▶, dice dove si
+     accorcia — e chi lo segue arriva con le frecce giuste */
+  const orto = Livello.da(CAMPAGNA.find(t => t.chiave === 'bosco'))
+  const lunga = ['destra', 'sinistra', 'destra', 'sinistra', ...risolvi(orto)]
+  const rl = esegui(orto, lunga)
+  controlla('(la fila lunga arriva con la carota)', rl.esito === TANA && rl.carota, `${inFrecce(lunga)} → ${rl.esito}`)
+  const acc = suggerisci(orto, lunga)
+  controlla('a fila lunga che arriva, l\'aiuto dice di accorciarla',
+            acc && acc.che === 'mossa' && acc.accorcia && acc.cursore < lunga.length, JSON.stringify(acc))
+  {
+    let f = lunga.slice(0, acc.cursore), c = acc.cursore, u = null
+    for (let g = 0; g < 40; g++) {
+      u = suggerisci(orto, f)
+      if (!u || u.che === 'via') break
+      ;({ fila: f, cursore: c } = seguiConsiglio(f, c, u))
+    }
+    const rf = esegui(orto, f)
+    uguale('e seguendolo si arriva col minimo', carteUsate(f, rf), minimoDi(orto).carte)
+  }
   const parziale = suggerisci(liv, sol.slice(0, 2))
   controlla('a fila giusta ma incompleta, l\'aiuto mette il cursore in fondo',
             parziale && parziale.cursore === 2, JSON.stringify(parziale))

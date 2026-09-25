@@ -22,8 +22,10 @@
    (`zaino`), e la strada, scritta freccia per freccia, non ci sta: il
    ciclo non è una comodità, è l'unico modo di farcela stare. È la regola
    che l'ha fatto nascere, detta da chi l'ha chiesta: «senza i cicli non
-   riescono fisicamente a starci le freccine». Non è un par: le stelle
-   restano le tre di sempre, e meno carte non vale di più.
+   riescono fisicamente a starci le freccine». Lo zaino è un tetto per
+   arrivare, non la quarta stella: quella è la strada più corta
+   (`minimoDi` in `motore/risolutore.js`), e oggi ogni zaino è largo
+   quanto la sua soluzione.
 
    Si contano le carte che si toccano — una freccia, un salto, un 🔁 — e
    la chiusura no: è il bordo della scatola, non una carta.

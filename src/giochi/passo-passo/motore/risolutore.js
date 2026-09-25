@@ -80,11 +80,51 @@ function strada(nodo) {
   return fuori.reverse()
 }
 
+/* ── LA STRADA PIÙ CORTA, IN CARTE ──
+   La quarta stella: arrivare con la carota usando meno carte possibile.
+   Le carte si contano fino a quella che ha portato a casa — quelle
+   rimaste in coda non sono mai partite, e chi segue il 💡 da una fila
+   lunga se le troverebbe dietro senza colpa.
+
+   Senza zaino il minimo si **misura**: la fila è fatta solo di frecce, e
+   la strada più corta del risolutore (in frecce, non in celle) è il
+   programma più corto che esista. Con lo zaino no: il programma più
+   corto coi cicli non lo trova una ricerca in ampiezza, quindi il
+   minimo è la più corta delle `soluzioni` scritte — e un bambino che
+   fa meglio la stella la prende lo stesso, perché si chiede «al più».
+   Oggi ogni zaino è largo quanto la sua soluzione: lì la stella la dà
+   la carota, e lo zaino è già il par.
+
+   Torna `{ carte, carota }` (`carota` è falso solo se la carota non si
+   può prendere), o `null` se il livello non si vince. */
+export function minimoDi(liv) {
+  if (liv.zaino) {
+    const buone = liv.soluzioni.filter(s => {
+      const r = esegui(liv, s, { eventi: false })
+      return r.esito === TANA && r.carota
+    })
+    return buone.length ? { carte: Math.min(...buone.map(carteDi)), carota: true } : null
+  }
+  const conCarota = risolvi(liv, { carota: true })
+  if (conCarota) return { carte: conCarota.length, carota: true }
+  const senza = risolvi(liv, { carota: false })
+  return senza ? { carte: senza.length, carota: false } : null
+}
+
+/* le carte che una fila ha usato per arrivare: fino a quella dove il
+   giro è finito (`esito.dove`) */
+export const carteUsate = (fila, esito) => carteDi(fila.slice(0, esito.dove + 1))
+
 /* ── L'AIUTO ──
-   Il pezzo più lungo della fila del bambino che non sbaglia e da cui si
-   arriva ancora, e da lì la prima mossa di una strada più corta. Punta
-   alla tana **con la carota** se da qualche parte della fila si può
-   ancora prenderla; se no, alla tana e basta.
+   Il pezzo più lungo della fila del bambino che sta ancora **su una
+   strada più corta**, e da lì la prima mossa di quella strada. Punta
+   alla tana **con la carota** se si può prendere; se no, alla tana e
+   basta. Non «da cui si arriva ancora», come era prima della quarta
+   stella: chi seguiva il 💡 da una fila lunga arrivava a casa per la
+   strada lunga, e poi il cartello gli diceva che si poteva fare con
+   meno — il gioco che ti aiuta e poi ti rimprovera. Adesso seguire il
+   💡 porta sempre alla strada più corta; se la fila arriva già ma è
+   lunga, la mossa porta `accorcia` e il 🔎 lo dice.
 
    Torna una di tre cose:
      { che: 'mossa', cursore, mossa }  metti il cursore lì, e la freccia
@@ -96,17 +136,23 @@ function strada(nodo) {
    (`suggerisciNelloZaino`). */
 export function suggerisci(liv, fila = []) {
   if (liv.zaino) return suggerisciNelloZaino(liv, fila)
-  const mete = risolvi(liv, { carota: true }) ? [true, false] : [false]
-  for (const carota of mete) {
+  const intera = esegui(liv, fila, { eventi: false })
+  const vince = intera.esito === TANA
+  for (const carota of [true, false]) {
+    const corta = risolvi(liv, { carota })
+    if (!corta) continue
     for (let k = fila.length; k >= 0; k--) {
       const r = esegui(liv, fila.slice(0, k), { eventi: false })
       if (eErrore(r.esito)) continue
       if (r.esito === TANA) {
-        if (!carota || r.carota) return { che: 'via' }
+        if (carota && !r.carota) continue
+        if (carteUsate(fila, r) <= corta.length) return { che: 'via' }
         continue
       }
       const s = risolvi(liv, { carota, da: r.mondo })
-      if (s && s.length) return { che: 'mossa', cursore: k, mossa: s[0], resto: s.length }
+      if (s && s.length && k + s.length === corta.length)
+        return { che: 'mossa', cursore: k, mossa: s[0], resto: s.length,
+                 accorcia: vince && (!carota || intera.carota) }
     }
   }
   return null

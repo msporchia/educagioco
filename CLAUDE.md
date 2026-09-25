@@ -591,15 +591,20 @@ committate: non è ricostruibile da git.
   (`motore/risolutore.js`) dà gli aiuti (la prossima freccia giusta, mai la
   soluzione intera), controlla in `unita/passo-passo` che ogni livello abbia
   bisogno della regola del suo gradino, e con `motore/generatore.js` fa i
-  sentieri della modalità senza fine. Stelle: arrivato, la carota, e la
-  strada trovata da te (🧠: la spegne solo la strada intera comprata col 💡).
+  sentieri della modalità senza fine. Stelle: arrivato, la carota, la
+  strada trovata da te (🧠: la spegne solo la strada intera comprata col 💡)
+  e **la strada più corta** in carte, con la carota (🎯, `minimoDi`: esatta
+  senza zaino, la soluzione scritta più corta con lo zaino, messa alla
+  prova da `strumenti/passo-passo/minimi.mjs`). Chi ne usa di più legge
+  coi due numeri che si poteva fare meglio, e il 💡 porta sempre alla più
+  corta — se no il gioco ti aiuterebbe e poi ti rimprovererebbe.
   **Dopo le buche cresce la lingua e non il mondo**: i gradini dei grandi
   (da sette anni e mezzo) portano una carta — 🔁 ripeti N volte, per ora —
   e con lei lo **zaino**, quante carte tiene la fila. Scritta freccia per
   freccia la strada nello zaino non ci sta, ed è la regola scelta apposta:
   il ciclo è l'unico modo di farla stare, non una comodità (`serveLaCarta`
-  lo pretende da ogni livello). **Non è un par**: le stelle restano quelle,
-  meno carte non vale di più. La fila resta un elenco piatto (`dati/carte.js`:
+  lo pretende da ogni livello). Lo zaino è un tetto per arrivare, non la
+  quarta stella. La fila resta un elenco piatto (`dati/carte.js`:
   un ciclo è `ripeti-4 … fine`, e il cursore resta un numero), le modifiche
   col dito sono pure (`motore/fila.js`: ⌫ dopo una scatola la toglie
   intera, in cima al suo corpo toglie il 🔁 e basta), la N nasce da
