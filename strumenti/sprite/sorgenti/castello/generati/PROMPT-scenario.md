@@ -339,8 +339,11 @@ per tutti. Quante sono lo dice il gioco, non questa scheda:
 - **i colpi restano procedurali**, com'era deciso: nei fogli non c'è un
   proiettile, e lì il vettoriale è meglio.
 
-Le loro schede si scrivono quando c'è la scena del bosco, perché è lei
-che si allega.
+Il piano di cosa generare, in che ordine e con che prompt — torri,
+mostri che camminano, gli altri vestiti — sta in
+[`../../../DA-GENERARE.md`](../../../DA-GENERARE.md), ed è comune al
+sotterraneo: i mostri si prendono dai suoi fogli, che hanno la stessa
+grana delle scene.
 
 ## Le trappole già note
 

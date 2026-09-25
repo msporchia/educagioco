@@ -17,6 +17,8 @@ in posa, con tutto quello che c'è già in casa —
   · **i mostri** dai fogli generati del sotterraneo (`mostri-1.png`,
     `mostri-2.png`), coi loro foglietti: sei dei diciotto del castello ci
     sono già (`MOSTRI`), gli altri no, e la prova lo dice.
+
+Cosa manca e con che prompt generarlo: `DA-GENERARE.md`, qui accanto.
 """
 import json
 import sys
@@ -56,13 +58,20 @@ FIGURE = {
     ('bombe', 1, 'mortaio'): ('Artillery', 1), ('bombe', 2, 'mortaio'): ('Artillery', 2),
     ('bombe', 1, 'napalm'): ('Fire', 1), ('bombe', 2, 'napalm'): ('Fire', 2),
 }
-SCALA_TORRI = 0.72
+SCALA_TORRI = 1.0
 
 # ── i mostri: quelli del castello che il sotterraneo ha già ─────────
 # nome nel castello → nome nel foglietto del sotterraneo
 MOSTRI = {'slime': 'melma', 'pipistrello': 'pipistrello', 'lupo': 'lupo',
           'golem': 'golem', 'troll': 'troll', 'fantasma': 'fantasma'}
-SCALA_MOSTRI = 2.5
+# I fogli dei mostri sono dipinti a scala 4 — quattro pixel dello
+# schermo per pixel del disegno — e le scene pure: una cella da 64 px è
+# 16 pixel del disegno in tutti e due. Quindi i mostri si prendono **alla
+# misura del foglio**, senza ridurli né ingrandirli, ed è anche il
+# motivo per cui un foglio di mostri solo serve il sotterraneo e il
+# castello. Ingranditi di due e mezzo (la prima prova) avevano la grana
+# più fine della scena e sembravano appiccicati.
+SCALA_MOSTRI = 1
 
 
 def torre(foglio, colonna, riga):
@@ -88,8 +97,8 @@ def mostri():
                 continue
             (x, y), (w, h) = d['da'], d['cella']
             pz = im.crop((x * s, y * s, (x + w) * s, (y + h) * s))
-            pz = pz.resize((w, h), Image.NEAREST)        # alla misura vera, poi su
-            fuori[nostro] = pz.resize((round(w * SCALA_MOSTRI), round(h * SCALA_MOSTRI)), Image.NEAREST)
+            fuori[nostro] = pz.resize((round(pz.width * SCALA_MOSTRI), round(pz.height * SCALA_MOSTRI)),
+                                      Image.LANCZOS)
     return fuori
 
 
