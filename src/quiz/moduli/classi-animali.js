@@ -121,7 +121,7 @@ const CURIOSITA = {
   'la foca': 'può restare sott\'acqua diversi minuti senza tornare a respirare',
   'il pinguino': 'non vola in aria, ma sott\'acqua nuota usando le ali come pinne',
   'la tartaruga': 'alcune tartarughe di mare vivono più di cent\'anni',
-  'il coccodrillo': 'può restare sott\'acqua trattenendo il respiro per quasi un\'ora',
+  'il coccodrillo': 'se sta fermo può restare sott\'acqua anche un\'ora, trattenendo il respiro',
   'il canguro': 'la mamma porta il piccolo in una tasca sulla pancia finché non è grande',
   'il polpo': 'ha otto tentacoli e il sangue blu',
   'il ragno': 'ha otto zampe e spesso anche otto occhi: è un aracnide, non un insetto',
