@@ -57,11 +57,13 @@ export const LATO = 1                 // un filo ai lati, per l'ombra della plan
 const CELLA_MAX = 90                  // px CSS: oltre, un livello piccolo diventa un poster
 
 /* chi corre: il pezzo dell'atlante, quante righe vuote ha sotto i
-   piedi, e di quanto va spostato di lato perché stia in mezzo alla cella
-   (il bobtail di profilo è largo e non sta al centro del suo riquadro) */
+   piedi, e di quanto va spostato di lato perché stia in mezzo alla cella.
+   Il bobtail è ritagliato stretto e centrato sulla figura (il foglio
+   rifatto a settembre 2026): niente aria sotto e niente spostamento —
+   quello di prima ne voleva cinque e -2. */
 const CORRIDORI = {
   coniglio: { nome: 'coniglio', vuote: 3, lato: 0 },
-  cane: { nome: 'cane-bobtail', vuote: 5, lato: -2 },
+  cane: { nome: 'cane-bobtail', vuote: 0, lato: 0 },
 }
 
 /* un numero fisso per cella, per le decorazioni: lo stesso livello si
@@ -509,8 +511,8 @@ export class Tela {
     if (!c.immerso) ombra(ctx, cx, this.fy(c.y) - 1, Math.max(4, 11 - Math.round((c.su || 0) * 0.6)))
     if (!img || !p) return
     const [sx, sy, w, h] = p
-    /* Le ultime righe dello sprite sono vuote (tre per il coniglio,
-       cinque per il cane): i piedi finiscono lì sopra. Immerso —
+    /* Le ultime righe dello sprite possono essere vuote (tre per il
+       coniglio, nessuna per il cane): i piedi finiscono lì sopra. Immerso —
        nell'acqua, in una buca, dentro la tana — si vede solo la parte di
        sopra, appoggiata al pelo dell'acqua. */
     const pieno = h - chi.vuote

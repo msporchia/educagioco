@@ -1,44 +1,195 @@
 {
+  "scala": 8,
+  "fondo": "trasparente",
+  "alone": 128,
   "foglio": [
-    17,
-    8
+    156,
+    104
   ],
   "cella": [
-    16,
-    32
+    1,
+    1
   ],
-  "fondo": "auto",
   "tipo": "bestia",
-  "agganci": {
-    "giu": {"testa": [0.5, 0.28], "muso": [0.5, 0.39], "collo": [0.5, 0.58], "schiena": [0.5, 0.69]},
-    "lato": {"testa": [0.83, 0.25], "muso": [0.85, 0.34], "collo": [0.66, 0.44], "schiena": [0.48, 0.43]},
-    "su": {"testa": [0.5, 0.15], "collo": [0.5, 0.4], "schiena": [0.5, 0.56]}
+  "__nota": "Il primo foglio uscito dalla scheda PROMPT-bestia.md riscritta (25 settembre 2026): tre righe per quattro, di fronte / di lato a destra / di spalle, colonna 1 ferma e 2-4 la camminata. 1248x832 senza una griglia di pixel regolare, quindi `foglio`+`cella:[1,1]` lo riduce prima di ritagliare e ogni fotogramma e' dichiarato a se'. I quattro fotogrammi di un verso hanno la stessa cella e la stessa riga dei piedi, centrati su ogni figura: il gioco centra ogni fotogramma sulla sua larghezza e lo appoggia sul suo fondo, e ritagli di misure diverse lo farebbero ballare. `alone: 128` perche' il grigio del mantello arriva a alfa ~227 (lo scontorno l'ha fatto un secondo passaggio, non il generatore). Scala 8 e' una prima prova, da guardare accanto alla bambina. Ha preso il posto del bobtail di prima (cane-bobtail.jpeg, la fila di facce al posto della camminata, e i buchi della scacchiera nel muso) e di cane-bobtail2, che nessun gioco usava: stanno tutti e due in ../non-usati/. Il nome dello sprite e' rimasto `cane-bobtail` perche' e' la chiave dei salvataggi. Agganci calibrati a occhio sul fermo di ogni verso (il muso sono gli occhi: ci vanno gli occhiali).",
+  "prompt": {
+    "scheda": "PROMPT-bestia.md",
+    "base": "riferimento-bestia.png",
+    "generatore": "non annotato",
+    "testo": "non conservato: la scheda al 25 settembre 2026, blocco del bobtail, piu' una seconda richiesta per rifare la riga 1"
   },
-  "sprite": {
-    "cane-bobtail_giu": {
-      "da": [
-        0,
-        0
+  "agganci": {
+    "giu": {
+      "testa": [
+        0.5,
+        0.08
       ],
-      "quanti": 4
-    },
-    "cane-bobtail_lato": {
-      "da": [
-        0,
-        4
+      "muso": [
+        0.5,
+        0.26
       ],
-      "quanti": 4,
-      "cella": [
-        32,
-        32
+      "collo": [
+        0.5,
+        0.48
+      ],
+      "schiena": [
+        0.5,
+        0.62
       ]
     },
-    "cane-bobtail_su": {
-      "da": [
-        0,
-        2
+    "lato": {
+      "testa": [
+        0.7,
+        0.1
       ],
-      "quanti": 4
+      "muso": [
+        0.85,
+        0.27
+      ],
+      "collo": [
+        0.6,
+        0.55
+      ],
+      "schiena": [
+        0.32,
+        0.4
+      ]
+    },
+    "su": {
+      "testa": [
+        0.5,
+        0.1
+      ],
+      "collo": [
+        0.5,
+        0.36
+      ],
+      "schiena": [
+        0.5,
+        0.47
+      ]
+    }
+  },
+  "sprite": {
+    "cane-bobtail_giu0": {
+      "da": [
+        14,
+        6
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail_giu1": {
+      "da": [
+        52,
+        6
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail_giu2": {
+      "da": [
+        91,
+        6
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail_giu3": {
+      "da": [
+        128,
+        6
+      ],
+      "cella": [
+        15,
+        23
+      ]
+    },
+    "cane-bobtail_lato0": {
+      "da": [
+        9,
+        40
+      ],
+      "cella": [
+        23,
+        21
+      ]
+    },
+    "cane-bobtail_lato1": {
+      "da": [
+        47,
+        40
+      ],
+      "cella": [
+        23,
+        21
+      ]
+    },
+    "cane-bobtail_lato2": {
+      "da": [
+        85,
+        40
+      ],
+      "cella": [
+        23,
+        21
+      ]
+    },
+    "cane-bobtail_lato3": {
+      "da": [
+        123,
+        40
+      ],
+      "cella": [
+        23,
+        21
+      ]
+    },
+    "cane-bobtail_su0": {
+      "da": [
+        13,
+        72
+      ],
+      "cella": [
+        14,
+        25
+      ]
+    },
+    "cane-bobtail_su1": {
+      "da": [
+        52,
+        72
+      ],
+      "cella": [
+        14,
+        25
+      ]
+    },
+    "cane-bobtail_su2": {
+      "da": [
+        90,
+        72
+      ],
+      "cella": [
+        14,
+        25
+      ]
+    },
+    "cane-bobtail_su3": {
+      "da": [
+        127,
+        72
+      ],
+      "cella": [
+        14,
+        25
+      ]
     }
   }
 }

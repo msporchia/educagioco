@@ -37,16 +37,18 @@ Cosa c'è dentro
                    il generatore l'alfa la sa fare (settembre 2026)
   cane-beagle      \
   cane-bobtail      |  gli animali di casa, un foglio per bestia,
-  cane-bobtail2     |  nel formato a tre versi di character.png
-  gatto-giallo      |  (giù · lato · su)
-  gatto-nero        |
+  gatto-giallo      |  nel formato a tre versi di character.png
+  gatto-nero        |  (giù · lato · su)
   gatto-tuxedo      |
   pappagallo       /
 
 Il cane di casa è un bobtail, quindi quello si guarda più severamente
 degli altri: chi lo vede tutti i giorni si accorge di un orecchio
-sbagliato. `cane-bobtail2.png` è il secondo tentativo — nell'atlante ci
-sono tutti e due, con nomi diversi.
+sbagliato. `cane-bobtail.png` è il terzo tentativo (25 settembre 2026),
+il primo nato dalla scheda PROMPT-bestia.md riscritta: dodici figure e
+basta. I due di prima stanno in ../non-usati/ — il JPEG aveva per «di
+fronte» una fila di facce senza corpo e i buchi della scacchiera nel
+muso, `cane-bobtail2.png` non lo usava nessun gioco.
 
 Il prompt
 ---------
