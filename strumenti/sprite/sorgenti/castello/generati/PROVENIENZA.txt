@@ -24,6 +24,17 @@ oppure rifare il foglio con un generatore e buttare questo. Il secondo
 dall'alfa e gli attacchi dal disegno, quindi un foglio nuovo con la
 stessa disposizione entra senza toccare una riga di codice.
 
+Come si rifà
+------------
+La strada è scelta: si rifà con un generatore, e la scheda è
+PROMPT-scenario.md, qui accanto — due prompt (la scena, poi il foglio
+dei pezzi) con una parte fissa e un blocco per scenario, e i due schemi
+da allegare che disegna `python3 strumenti/sprite/scacchiera.py`.
+Il foglio nuovo NON ha la stessa disposizione di questo: le strade
+diventano a squadra su una scacchiera, e con loro le tessere a etichette
+che `terreni.py` misura non servono più. Quando il foglio nuovo c'è e il
+gioco lo usa, questo va in `../non-usati/`.
+
 Il resto della cartella
 -----------------------
 `../non-usati/` tiene otto `Gemini_Generated_Image_*.jpeg` (quelli sì
