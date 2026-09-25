@@ -12,6 +12,10 @@
    Poi le rifà vestite con ognuna delle tre scene generate
    (`castello-carte-bosco.png`, `-neve`, `-lava`): vedi `vesti.py`.
 
+   E una battaglia finta (`castello-battaglia.png`, più il catalogo
+   delle figure in `castello-battaglia-figure.png`): vedi
+   `prova-battaglia.py`.
+
    Serve a guardare **la forma** dei campi prima di avere i pezzi del
    foglio: dove passa la strada, dove cadono le piazzole, quanto spazio
    si prendono laghetti, fitto e decori. Si rilancia ogni volta che si
@@ -33,7 +37,7 @@ const SCENE = [['td_1.png', 'bosco'], ['td_2.png', 'neve'], ['td_3.png', 'lava']
 const carte = [...TAPPE, ...LIBERE].map(t => {
   const c = cartaDi(t)
   for (const g of c.guasti) console.log(`${t.nome}: ${g}`)
-  return { nome: t.nome, campagna: t.campagna, righe: c.righe, guasti: c.guasti }
+  return { nome: t.nome, campagna: t.campagna, righe: c.righe, vie: c.vie, guasti: c.guasti }
 })
 const file = join(mkdtempSync(join(tmpdir(), 'carte-')), 'carte.json')
 writeFileSync(file, JSON.stringify(carte))
@@ -47,3 +51,9 @@ for (const [scena, nome] of SCENE) {
   execFileSync('python3', [join(QUI, 'scacchiera.py'), '--carte', file, vestite,
                            '--vesti', join(GENERATI, scena)], { stdio: 'inherit' })
 }
+
+/* e una battaglia finta sulle fogne, nei tre vestiti: le torri di
+   agosto sulle piazzole e i mostri che ci sono già sulla strada — per
+   vedere l'effetto finale e cosa manca (`prova-battaglia.py`) */
+execFileSync('python3', [join(QUI, 'prova-battaglia.py'), file,
+                         join(RADICE, 'poc', 'scatti', 'castello-battaglia.png')], { stdio: 'inherit' })

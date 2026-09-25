@@ -277,14 +277,22 @@ def pezzi(scena):
     p['prato'] = [scena.crop((x, y, x + TOPPA, y + TOPPA)) for x, y in toppe_di_prato()]
     p['fitto'] = [scena.crop((x, y, x + TOPPA, y + TOPPA)) for x, y in toppe_di_fitto()]
 
+    # Due maschere, e la differenza conta. Le figure che il vestito
+    # **ridisegna** — un albero tondo nel bosco è un abete nella neve e
+    # un vulcanello nella lava — si scontornano col fondo di questa scena.
+    # Quelle che il vestito **lascia uguali** — il castello, la bocca, le
+    # piazzole — con quello del riferimento: sulla lava il fondo è viola-
+    # grigio come le pietre del castello, e la maschera della scena ci
+    # apriva dei buchi.
     fondo = maschera_del_fondo(scena)
+    fondo_rif = maschera_prato()
 
-    def figura(cx, cy, w, h):
+    def figura(cx, cy, w, h, maschera=fondo, piccole=40):
         x0, y0 = cx - w // 2, cy - h // 2
         im = scena.crop((x0, y0, x0 + w, y0 + h)).convert('RGBA')
-        im.putalpha(sagoma(fondo, cx, cy, w, h))
+        im.putalpha(sagoma(maschera, cx, cy, w, h, piccole))
         return im
-    p['piazzola'] = [figura(x, y, 64, 64) for x, y in PIAZZOLA]
+    p['piazzola'] = [figura(x, y, 64, 64, fondo_rif) for x, y in PIAZZOLA]
     p['albero'] = [figura(x, y, 112, 120) for x, y in ALBERI]
     p['decoro'] = [figura(x, y, 96, 96) for x, y in DECORI]
     p['bocca'] = scena.crop(BOCCA).convert('RGBA')
@@ -293,7 +301,7 @@ def pezzi(scena):
     # vedersi la strada che ci arriva, non una toppa d'erba
     p['castello'] = scena.crop(CASTELLO).convert('RGBA')
     x0, y0, x1, y1 = CASTELLO
-    p['castello'].putalpha(sagoma(fondo, (x0 + x1) // 2, (y0 + y1) // 2, x1 - x0, y1 - y0, 400))
+    p['castello'].putalpha(sagoma(fondo_rif, (x0 + x1) // 2, (y0 + y1) // 2, x1 - x0, y1 - y0, 400))
     p['stagno'] = scena.crop(STAGNO)
     return p
 
