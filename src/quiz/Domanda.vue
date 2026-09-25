@@ -560,8 +560,12 @@ onUnmounted(() => {
 
       <div class="qz-risposte"
            :style="{ '--qz-colonne': colonne, '--qz-min': minTasto }">
+        <!-- `data-giusta` è per chi gioca da script — le prove e le clip
+             del README, che devono poter rispondere giusto al primo
+             tocco invece di tirare a indovinare. A schermo non si vede,
+             come i ganci `window.__…` degli altri giochi. -->
         <button v-for="(r, i) in risposte" :key="i" type="button"
-                class="qz-tasto"
+                class="qz-tasto" :data-giusta="i === domanda.giusta ? '' : null"
                 :class="[classe(i), { emoji: r.emoji !== undefined, nominata: r.nome !== undefined }]"
                 @click="scegli(i)">
           <canvas v-if="r.scena" :ref="el => (tele[i] = el)" class="qz-telo" />
