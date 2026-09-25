@@ -441,7 +441,7 @@ class ClassiAnimali extends Modulo {
       buona: bestia(buonaAnimale),
       falsi: falsiAnimali.map(a => ({
         ...bestia(a),
-        perche: `${Cap(senzaArticolo(a.nome))} ${CLASSI[classe].contro}: è un ${CLASSI[a.classe].nome}.`,
+        perche: `${Cap(a.nome)} ${CLASSI[classe].contro}: è un ${CLASSI[a.classe].nome}.`,
       })),
       chiave: 'zoo:indizio-classe',
       aiuto: CLASSI[classe].cosE,
@@ -467,7 +467,7 @@ class ClassiAnimali extends Modulo {
 
     const percheDi = c => c === animale.trappola
       ? animale.percheTrappola
-      : `${Cap(senzaArticolo(animale.nome))} ${CLASSI[c].contro}: ${CLASSI[classeCorretta].tratto}, quindi è un ${CLASSI[classeCorretta].nome}.`
+      : `${Cap(animale.nome)} ${CLASSI[c].contro}: ${CLASSI[classeCorretta].tratto}, quindi è un ${CLASSI[classeCorretta].nome}.`
 
     return domanda({
       testo: 'A quale famiglia appartiene?',
@@ -500,11 +500,13 @@ class ClassiAnimali extends Modulo {
       buona: bestia(fuori),
       falsi: dentro.map(a => ({
         ...bestia(a),
-        perche: `${Cap(senzaArticolo(a.nome))} ${CLASSI[c].tratto}: è un ${CLASSI[c].nome}.`,
+        perche: `${Cap(a.nome)} ${CLASSI[c].tratto}: è un ${CLASSI[c].nome}.`,
       })),
       chiave: 'zoo:intruso',
       aiuto: (fuori.trappola === c ? fuori.percheTrappola
-        : `${Cap(senzaArticolo(fuori.nome))} ${CLASSI[fuori.classe]?.contro ?? 'non è di questa famiglia'}: non è un ${CLASSI[c].nome}.`),
+        : CLASSI[fuori.classe]
+          ? `${Cap(fuori.nome)} ${CLASSI[fuori.classe].tratto}: è un ${CLASSI[fuori.classe].nome}, non un ${CLASSI[c].nome}.`
+          : `${Cap(fuori.nome)} ${CLASSI[c].contro}: non è un ${CLASSI[c].nome}.`),
       sorte,
     })
   }
@@ -565,8 +567,8 @@ class ClassiAnimali extends Modulo {
     const giusta = vero ? 'vertebrato' : 'invertebrato'
     const sbagliata = vero ? 'invertebrato' : 'vertebrato'
     const spiegazione = vero
-      ? `${Cap(senzaArticolo(a.nome))} ha la spina dorsale dentro il corpo: è un vertebrato.`
-      : `${Cap(senzaArticolo(a.nome))} non ha la spina dorsale: è un invertebrato.`
+      ? `${Cap(a.nome)} ha la spina dorsale dentro il corpo: è un vertebrato.`
+      : `${Cap(a.nome)} non ha la spina dorsale: è un invertebrato.`
     return domanda({
       testo: 'È un vertebrato o un invertebrato?',
       soggetto: conNome({ emoji: a.em }, senzaArticolo(a.nome)),
@@ -608,10 +610,10 @@ class ClassiAnimali extends Modulo {
     const giusta = a.aracnide ? 8 : 6
     const opzioni = [6, 8, 4, 2].filter(n => n !== giusta)
     const spiegazioneDi = n => {
-      if (n === 8) return `Otto zampe le hanno i ragni e gli scorpioni: ${senzaArticolo(a.nome)} ne ha ${giusta}.`
-      if (n === 6) return `Sei zampe le hanno gli insetti: ${senzaArticolo(a.nome)} ne ha ${giusta}, è un aracnide.`
-      if (n === 4) return `Quattro zampe le hanno tanti mammiferi: ${senzaArticolo(a.nome)} ne ha ${giusta}.`
-      return `Due zampe le hanno gli uccelli e noi: ${senzaArticolo(a.nome)} ne ha ${giusta}.`
+      if (n === 8) return `Otto zampe le hanno i ragni e gli scorpioni: ${a.nome} ne ha ${giusta}.`
+      if (n === 6) return `Sei zampe le hanno gli insetti: ${a.nome} ne ha ${giusta}, è un aracnide.`
+      if (n === 4) return `Quattro zampe le hanno tanti mammiferi: ${a.nome} ne ha ${giusta}.`
+      return `Due zampe le hanno gli uccelli e noi: ${a.nome} ne ha ${giusta}.`
     }
     return domanda({
       testo: sorte.uno(frasi),

@@ -563,7 +563,9 @@ class Grafici extends Modulo {
     const parti = [...Array(intere).fill(V), ...(mezzo ? [V / 2] : [])]
     const aiuto = mezzo
       ? `guarda la legenda: ogni ${em} vale ${V}, e mezzo ${em} vale la metà, ${V / 2}. Nella fila ${v.di}: ${piu(parti)} = ${quanti}`
-      : `guarda la legenda: ogni ${em} vale ${V}. Nella fila ${v.di} ci sono ${intere} disegni: ${parti.length <= 6 ? piu(parti) : `${intere} × ${V}`} = ${quanti}`
+      : intere === 1
+        ? `guarda la legenda: ogni ${em} vale ${V}, e nella fila ${v.di} c'è un disegno solo: vale ${quanti}, non 1`
+        : `guarda la legenda: ogni ${em} vale ${V}. Nella fila ${v.di} ci sono ${intere} disegni: ${parti.length <= 6 ? piu(parti) : `${intere} × ${V}`} = ${quanti}`
     return domanda({
       testo: g.storia.quanti(v),
       soggetto: scena(g.scena),
