@@ -6,10 +6,21 @@
    ha smesso di insegnare: un bambino che legge 15:47 sul telefono non
    sa dire quanto manca alle quattro.
 
-   TRE MODI DI CHIEDERE la stessa ora, e cambiano di molto la fatica:
+   DUE MODI DI CHIEDERE la stessa ora, e cambiano di molto la fatica:
      · guarda il quadrante, scegli l'ora scritta in cifre;
-     · leggi l'ora in cifre, scegli il quadrante giusto fra quattro;
      · guarda il quadrante e dì che ora sarà fra un po'.
+
+   Ce n'era un terzo — leggi l'ora in cifre, scegli il quadrante giusto
+   fra quattro — e non si rifà: i quadranti nelle risposte sono piccoli
+   quanto un tasto, sul telefono non si ingrandiscono, e le 8:29 contro
+   le 8:34 non si distinguono. La domanda misurava la vista, non
+   l'orologio. Il quadrante sta sempre nel soggetto, dove è grande.
+
+   I NUMERI SUL QUADRANTE ci sono tutti fino ai cinque minuti — l'aiuto
+   di quei gradi dice «la lancetta è arrivata a 8», e l'8 dev'esserci —
+   e ai minuti spicci, dove le posizioni dei numeri si sanno già a
+   memoria, restano il 12, il 3, il 6 e il 9. Un quadrante
+   senza nessun numero non c'è più: per i piccoli era un muro.
 
    I FALSI SONO GLI ERRORI DELLE LANCETTE: le due scambiate (le 3:30
    lette come le 6:15), i minuti letti come numero della tacca (il 5
@@ -52,16 +63,17 @@ const MINUTI_DI = {
    solo le ore intere, al 5 quasi solo i minuti veri. */
 const TIPI = [
   { chiave: 'ora:intere', nome: 'Le ore intere', sa: 'orologio',
-    gradi: { 1: 1, 2: 0.54, 3: 0.19 } },
+    gradi: { 1: 1, 2: 0.54, 3: 0.25 } },
   { chiave: 'ora:quarti', nome: "Le mezze e i quarti d'ora", sa: 'orologio',
-    gradi: { 2: 0.46, 3: 0.5, 4: 0.1, 5: 0.03 } },
+    gradi: { 2: 0.46, 3: 0.75, 4: 0.15, 5: 0.05 } },
   { chiave: 'ora:minuti', nome: 'I minuti', sa: 'orologio',
-    gradi: { 4: 0.32, 5: 0.4 } },
-  { chiave: 'ora:riconosci', nome: "Trovare l'orologio che segna un'ora", sa: 'orologio',
-    gradi: { 3: 0.31, 4: 0.31, 5: 0.35 } },
+    gradi: { 4: 0.46, 5: 0.62 } },
   { chiave: 'ora:durata', nome: "Che ora sarà fra un po'", sa: 'orologio',
-    gradi: { 4: 0.27, 5: 0.22 } },
+    gradi: { 4: 0.39, 5: 0.33 } },
 ]
+
+/* i numeri sul quadrante, grado per grado (vedi in testa) */
+const numeriDel = grado => grado <= 4 ? true : 'quarti'
 
 /* i minuti buoni per quel tipo, fra quelli che il grado ammette. Se
    l'incrocio è vuoto — non capita, ma un grado nuovo potrebbe farlo — si
@@ -157,7 +169,6 @@ class Orologio extends Modulo {
     const passo = SCALETTA[grado - 1]
     const ore = sorte.fra(1, 12)
     const minuti = minutiPer(passo, tipo, sorte)
-    if (tipo === 'ora:riconosci') return this.quale(grado, ore, minuti, sorte)
     if (tipo === 'ora:durata') return this.dopo(passo, ore, minuti, sorte)
     return this.leggi(grado, ore, minuti, sorte)
   }
@@ -167,29 +178,11 @@ class Orologio extends Modulo {
     const falsi = sbagli(ore, minuti, sorte).slice(0, 3)
     return domanda({
       testo: 'Che ora segna?',
-      soggetto: scena({ che: 'orologio', ore, minuti, numeri: grado <= 3 }),
+      soggetto: scena({ che: 'orologio', ore, minuti, numeri: numeriDel(grado) }),
       buona: testo(scritta(ore, minuti)),
       falsi: falsi.map(([o, m]) => testo(scritta(o, m), 'la lancetta corta dice le ore, quella lunga i minuti')),
       chiave: minuti === 0 ? 'ora:intere' : minuti % 15 === 0 ? 'ora:quarti' : 'ora:minuti',
       aiuto: comeSiLegge(minuti),
-      sorte,
-    })
-  }
-
-  /* leggi l'ora scritta, scegli il quadrante */
-  quale(grado, ore, minuti, sorte) {
-    const falsi = sbagli(ore, minuti, sorte).slice(0, 3)
-    return domanda({
-      testo: `Quale orologio segna le ${scritta(ore, minuti)}?`,
-      buona: scena({ che: 'orologio', ore, minuti, numeri: grado <= 3 }),
-      falsi: falsi.map(([o, m]) => scena({ che: 'orologio', ore: o, minuti: m, numeri: grado <= 3 })),
-      chiave: 'ora:riconosci',
-      /* qui il quadrante è nelle risposte e non nel soggetto, quindi
-         l'aiuto non può parlare di una lancetta sola: dice l'ordine in
-         cui si guarda, e la cosa che a chi sbaglia manca sempre — che
-         un numero del quadrante vale cinque minuti */
-      aiuto: 'guarda prima dov\'è la lancetta corta, poi la lunga: '
-           + 'ogni numero del quadrante vale 5 minuti',
       sorte,
     })
   }

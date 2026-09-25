@@ -140,7 +140,6 @@ diverso da quello del suo grado.
 - ⚖️ **Le bilance** g1 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
 - 🕰️ **Orologio** g3 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g3 — Le ore intere
-- 🕰️ **Orologio** g3 — Trovare l'orologio che segna un'ora
 - ✏️ **Ortografia** g2 — Il suono gl (famiglia)
 - ✏️ **Ortografia** g2 — Il suono gn (montagna)
 - ✏️ **Ortografia** g2 — Il suono sc (pesce, scienza)
@@ -232,7 +231,6 @@ diverso da quello del suo grado.
 - 🕰️ **Orologio** g4 — Che ora sarà fra un po'
 - 🕰️ **Orologio** g4 — I minuti
 - 🕰️ **Orologio** g4 — Le mezze e i quarti d'ora
-- 🕰️ **Orologio** g4 — Trovare l'orologio che segna un'ora
 - ✏️ **Ortografia** g4 — Acqua e la sua famiglia (cqu, qu, cu)
 - ✏️ **Ortografia** g4 — cia, ce e cie
 - ✏️ **Ortografia** g4 — Le doppie
@@ -350,7 +348,6 @@ diverso da quello del suo grado.
 - 🕰️ **Orologio** g5 — Che ora sarà fra un po'
 - 🕰️ **Orologio** g5 — I minuti
 - 🕰️ **Orologio** g5 — Le mezze e i quarti d'ora
-- 🕰️ **Orologio** g5 — Trovare l'orologio che segna un'ora
 - 📝 **Problemi** g5 — Tre conti di fila
 - 📝 **Problemi** g5 — Tre conti, con i gruppi
 - 🔢 **Senso del numero** g6 — Arrotondare
@@ -406,4 +403,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 268 classi su 24 moduli.
+Totale: 265 classi su 24 moduli.

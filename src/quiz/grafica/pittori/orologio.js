@@ -6,9 +6,11 @@
 
      { che: 'orologio', ore: 3, minuti: 25, numeri: true }
 
-   `numeri: false` toglie le cifre e lascia le tacche — che è come sono
-   fatti gli orologi veri di casa, e è un gradino di difficoltà in più
-   quando il bambino ha imparato a leggerlo con le cifre.
+   `numeri: 'quarti'` lascia solo il 12, il 3, il 6 e il 9 — com'è
+   fatta metà degli orologi veri di casa, ed è il gradino in più per
+   chi ha imparato a leggerlo con tutte le cifre. `numeri: false` le
+   toglie tutte, e nessun grado lo usa più: un quadrante nudo, grande
+   quanto un riquadro sul telefono, non si legge, si indovina.
 
    La lancetta delle ore si muove anche coi minuti (alle 3 e mezza sta
    in mezzo fra il 3 e il 4): senza quel dettaglio l'orologio disegnato
@@ -36,6 +38,7 @@ export function orologio(p, { ore = 12, minuti = 0, numeri = true }) {
 
   if (numeri) {
     for (let n = 1; n <= 12; n++) {
+      if (numeri === 'quarti' && n % 3) continue
       const a = (n / 12) * GIRO
       p.testo(String(n), cx + Math.sin(a) * (r - 18), cy - Math.cos(a) * (r - 18), '#22304f', 9, 800)
     }
