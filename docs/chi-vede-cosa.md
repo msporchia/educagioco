@@ -43,12 +43,12 @@ aspettare che qualcuno se ne accorga.
   5 anni   9 █████                matematica 2 · italiano 1 · spazio 1 · tempo 1 · logica 3 · scienze 1
   6 anni  36 ██████████████████   matematica 4 · italiano 14 · spazio 7 · tempo 4 · logica 6 · scienze 1
   7 anni  53 ███████████████████████████ matematica 19 · italiano 17 · spazio 3 · tempo 6 · logica 4 · scienze 4
-  8 anni  79 ████████████████████████████████████████ matematica 32 · italiano 19 · spazio 5 · tempo 5 · logica 7 · scienze 11
-  9 anni  48 ████████████████████████ matematica 23 · italiano 14 · spazio 3 · tempo 1 · logica 4 · scienze 3
- 10 anni  31 ████████████████     matematica 14 · italiano 8 · spazio 2 · tempo 4 · logica 3
- 11 anni  12 ██████               matematica 1 · italiano 11
+  8 anni  80 ████████████████████████████████████████ matematica 32 · italiano 19 · spazio 5 · tempo 5 · logica 8 · scienze 11
+  9 anni  49 █████████████████████████ matematica 23 · italiano 14 · spazio 3 · tempo 1 · logica 5 · scienze 3
+ 10 anni  32 ████████████████     matematica 14 · italiano 8 · spazio 2 · tempo 4 · logica 4
+ 11 anni  13 ███████              matematica 1 · italiano 11 · logica 1
 
-   in tutto: 270 classi da 25 moduli
+   in tutto: 274 classi da 25 moduli
 
 ══ COSA VEDE UN BAMBINO ══
 
@@ -96,8 +96,8 @@ aspettare che qualcuno se ne accorga.
 
 ── 6 anni ──────────────────────────────────────────────
    ammesse -19–50 (2.5–8.0 anni)  ·  mira 13–50
-   72 classi · matematica 17 · italiano 24 · spazio 7 · tempo 6 · logica 12 · scienze 6
-   66 nella mira, 19 già alla sua portata
+   73 classi · matematica 17 · italiano 24 · spazio 7 · tempo 6 · logica 13 · scienze 6
+   67 nella mira, 19 già alla sua portata
    ┌ carta facile → mira 19 (5.5 anni)
    │ 🗺️ 29  Cosa c'è una casella a sinistra di ⭐?
    │ 🍕 39.2  Che parte della barretta è colorata?
@@ -113,7 +113,7 @@ aspettare che qualcuno se ne accorga.
    90 classi · matematica 22 · italiano 28 · spazio 9 · tempo 8 · logica 16 · scienze 7
    84 nella mira, 32 già alla sua portata
    ┌ carta facile → mira 25 (6.0 anni)
-   │ 🧵 31  Ieri ha chiesto tre libri sui dinosauri in biblioteca ___ è ap
+   │ 🧵 31  Stamattina ha voluto tre maglioni uno sopra l'altro ___ è molt
    │ 🕰️ 25  Che ora segna?
    ┌ carta media → mira 38 (7.0 anni)
    │ 📅 29.4  Quale mese viene dopo giugno?
@@ -127,8 +127,8 @@ aspettare che qualcuno se ne accorga.
    94 classi · matematica 25 · italiano 28 · spazio 9 · tempo 8 · logica 16 · scienze 8
    76 nella mira, 34 già alla sua portata
    ┌ carta facile → mira 31 (6.5 anni)
-   │ 🧵 31  Ieri ha finito tutta la tavoletta ___ è molto goloso di ciocco
-   │ 🍕 39.2  Quale frazione è colorata?
+   │ 🧵 31  Ieri ha nascosto la macchinina preferita sotto il letto ___ è 
+   │ 🍕 48.8  Quale frazione è colorata?
    ┌ carta media → mira 44 (7.5 anni)
    │ 🕰️ 38  Che ora segna?
    │ 📝 44  Teo ha 20 uova. Poi ne raccoglie ancora 3. Quante uova ha ades
@@ -159,7 +159,7 @@ aspettare che qualcuno se ne accorga.
    │ 🦁 38  Chi vive qui?
    ┌ carta media → mira 57 (8.5 anni)
    │ 🗣️ 56  Ieri Marta ___ (entrare) in classe.
-   │ 🐋 60  Perché lo squalo è un pesce?
+   │ 🐋 60  Perché il pavone è un uccello?
    ┌ carta tosta → mira 69 (9.6 anni)
    │ 🍕 69.1  In un recinto ci sono 54 pecore, e 8/9 sono nere. Quante sono 
    │ ⚖️ 73.5  I due piatti pesano uguale. Quanto pesa un 🍍?
@@ -167,10 +167,10 @@ aspettare che qualcuno se ne accorga.
 ── 8.5 anni ──────────────────────────────────────────────
    ammesse 12–81 (5.0–10.5 anni)  ·  mira 44–81
    119 classi · matematica 36 · italiano 36 · spazio 12 · tempo 10 · logica 17 · scienze 8
-   65 nella mira, 83 già alla sua portata
+   65 nella mira, 82 già alla sua portata
    ┌ carta facile → mira 50 (8.0 anni)
    │ 📝 56  Teo ha 28 caramelle e le divide in parti uguali fra 4 cugini. 
-   │ 🔎 56  Sono giallo. Mi puoi mangiare. Chi sono?
+   │ 🔎 56.3  Sono giallo. Mi puoi mangiare. Chi sono?
    ┌ carta media → mira 63 (9.0 anni)
    │ 📝 75  Zoe ha 29 fiori. Ne perde 6, poi ne coglie ancora 4, poi ne re
    │ 🗣️ 63  In quegli anni noi ___ (dire).
@@ -204,12 +204,12 @@ aspettare che qualcuno se ne accorga.
    │ ⚖️ 73.5  Ogni 🍑 pesa 11. Che numero va sul peso col «?» perché la bila
    ┌ carta tosta → mira 88 (11.1 anni)
    │ 🧩 75  Tutti i bufigli sono grufoli. Tutti i grufoli hanno la coda a 
-   │ 🍕 62  Quale frazione è più grande?
+   │ 🍕 69.1  Olga ha mangiato 6/7 della torta. Quanta torta è rimasta?
 
 ── 10 anni ──────────────────────────────────────────────
    ammesse 31–100 (6.5–12.0 anni)  ·  mira 63–100
    98 classi · matematica 34 · italiano 30 · spazio 9 · tempo 7 · logica 11 · scienze 7
-   33 nella mira, 92 già alla sua portata
+   33 nella mira, 91 già alla sua portata
    ┌ carta facile → mira 69 (9.5 anni)
    │ 🗣️ 63  Domani voi ___ (servire).
    │ 📏 63  3 q quanti kg sono?
@@ -217,8 +217,8 @@ aspettare che qualcuno se ne accorga.
    │ 📏 81  Hai una pentola con 1,5 l di brodo: ne versi 2 mestoli da 200 
    │ 📝 81  Nina ha 4 scaffali di libri, comprati 5 giorni fa. In ogni sca
    ┌ carta tosta → mira 94 (11.6 anni)
-   │ 🧵 71.1  Potremo entrare in casa ___ trovi le chiavi.
-   │ 📐 75  Quale di questi ritagli, piegato, diventa un cubo?
+   │ 🧵 71.1  Lo useremo di nuovo per Carnevale ___ il costume ti sta ancora
+   │ 📖 63  Il bambino ___ per la tristezza.
 
 ── 10.5 anni ──────────────────────────────────────────────
    ammesse 37–106 (7.0–12.5 anni)  ·  mira 69–106
@@ -237,16 +237,16 @@ aspettare che qualcuno se ne accorga.
 ── 11 anni ──────────────────────────────────────────────
    ammesse 44–113 (7.5–13.0 anni)  ·  mira 76–113
    78 classi · matematica 29 · italiano 24 · spazio 6 · tempo 5 · logica 8 · scienze 6
-   6 nella mira, 77 già alla sua portata
+   7 nella mira, 77 già alla sua portata
    ┌ carta facile → mira 81 (10.5 anni)
-   │ 🔎 75  Ce ne sono due. Non è grande. Chi sono io?
-   │ 📐 75  Quale di questi ritagli, piegato, diventa un cubo?
+   │ 🔎 79.3  Filippo, Samuele e Giulia sono in fila, ma non in quest'ordine
+   │ ⚖️ 84.9  Le due bilance sono in pari. Quanto pesa una 🍎?
    ┌ carta media → mira 94 (11.5 anni)
    │ ⚖️ 84.9  Guarda le due bilance. Quante 🍑 pesano come 3 🍉?
    │ 🗣️ 95  Qual è il passato remoto di «decidere» con «tu»?
    ┌ carta tosta → mira 107 (12.6 anni)
    │ 📝 75  Bruno ha 30 libri. Ne presta 15, poi ne compra ancora 2, poi n
-   │ 📅 63  Quanti giorni passano dal 26 al 29 maggio?
+   │ 📚 64.5  Di chi parla «Lui»?
 
 ══ I BUCHI ══
    (non sono guasti: sono le cose da riempire quando servono a qualcuno)
@@ -256,14 +256,14 @@ aspettare che qualcuno se ne accorga.
    · 5 anni: tutto in salita — solo 6 classi su 35 sono alla sua portata, il mazzo comincia sopra di lui
    · 5 anni: scienze solo 2
    · 5.5 anni: tutto in salita — solo 6 classi su 53 sono alla sua portata, il mazzo comincia sopra di lui
-   · 11 anni: solo 6 classi nella mira (quelle che vede spesso)
+   · 11 anni: solo 7 classi nella mira (quelle che vede spesso)
 
    materie e dove arrivano:
    · matematica   97 classi, da 4.0 a 11.0 anni
    · italiano     84 classi, da 5.0 a 11.6 anni
    · spazio       21 classi, da 5.6 a 10.0 anni
    · tempo        21 classi, da 5.6 a 10.0 anni
-   · logica       27 classi, da 5.0 a 10.0 anni
+   · logica       31 classi, da 5.0 a 11.0 anni
    · scienze      20 classi, da 5.0 a 9.2 anni
 ```
 

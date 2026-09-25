@@ -173,6 +173,7 @@ diverso da quello del suo grado.
 - 🍕 **Frazioni** g2 — Il disegno di una frazione (e i pezzi non uguali)
 - 📊 **Grafici e tabelle** g3 — Il pittogramma con la legenda
 - 📊 **Grafici e tabelle** g3 — Quanti in più, quanti in meno
+- ⚑ 🔎 **Indizi** g4 — La tabella: chi ha cosa
 - ⚖️ **Le bilance** g2 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
 - 🐋 **Le classi degli animali** g2 — Che classe è questo animale
 - 🐋 **Le classi degli animali** g2 — Dagli indizi alla classe
@@ -282,6 +283,7 @@ diverso da quello del suo grado.
 - 📊 **Grafici e tabelle** g5 — Quanti in più, quanti in meno
 - 📊 **Grafici e tabelle** g5 — Quanti in tutto
 - 🔤 **Grammatica** g4 — Il nome e il suo aggettivo
+- ⚑ 🔎 **Indizi** g4 — La tabella per esclusione: solo «non»
 - 🗺️ **La griglia** g5 — Il perimetro: il giro del bordo
 - ⚖️ **Le bilance** g3 — Il numero nascosto nelle tabelline (□ × 6 = 42)
 - ⚖️ **Le bilance** g3 — Quanto pesa uno, sulla bilancia in pari
@@ -349,6 +351,7 @@ diverso da quello del suo grado.
 - 📐 **Geometria** g6 — Lo sviluppo da piegare
 - ⚑ 📊 **Grafici e tabelle** g5 — La moda: quello che compare più volte
 - 🔎 **Indizi** g5 — Chi sono io: le figure
+- ⚑ 🔎 **Indizi** g5 — La fila: chi sta dove
 - ⚖️ **Le bilance** g4 — Togliere la stessa cosa dai due piatti
 - ⚖️ **Le bilance** g4 — Una cosa pesa come tante altre: lo scambio
 - 📖 **Lessico** g5 — I modi di dire
@@ -381,6 +384,7 @@ diverso da quello del suo grado.
 
 ## 88  ·  circa 11 anni
 
+- ⚑ 🔎 **Indizi** g5 — Due tabelle collegate
 - ⚑ ⚖️ **Le bilance** g5 — Due cose da pesare, con due bilance
 
 ## 95  ·  circa 11.6 anni
@@ -399,4 +403,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 270 classi su 25 moduli.
+Totale: 274 classi su 25 moduli.
