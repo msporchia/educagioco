@@ -602,6 +602,11 @@ export const AIUTI = {
         'Se sbatte o finisce in acqua lampeggia la freccia sbagliata, e il coniglio torna indietro: si cambia quella e si riprova. Non si perde mai.',
         'Le frecce arancioni sono il **salto**: due caselle, scavalcando l\'acqua, i tronchi e le staccionate. I sassi e gli alberi no.',
       ] },
+      { titolo: 'Il cane pastore', righe: [
+        'Dopo le buche al posto del coniglio c\'è il **bobtail**, e al posto della tana il recinto: le pecore ci vanno tutte, e il livello è fatto.',
+        'Il cane non tocca le pecore: quando si ferma **accanto** a una, lei fa un passo dall\'altra parte. Per mandarla a destra il cane le va a sinistra; per girarle attorno passa in diagonale.',
+        'Una pecora spinta in un angolo, o contro il bordo, non si recupera più: la fila si ferma lì, lampeggia la freccia che ce l\'ha mandata, e si riprova. L\'osso vale la seconda stella, come la carota.',
+      ] },
       { titolo: 'Lo zaino e il ripeti', righe: [
         'Dopo le buche la fila ha lo **zaino**: tiene poche carte, e la strada scritta freccia per freccia non ci sta.',
         '🔁 mette una **scatola**: le frecce che ha dentro si ripetono tante volte quante dice il suo numero. Il numero si sceglie, e finché è N ▶ non parte.',
@@ -613,7 +618,7 @@ export const AIUTI = {
         'Poi si paga in monete, e il prezzo è scritto sul tasto prima di toccarlo: 🪙10 la freccia giusta (la mette il bambino), 🪙50 e 🪙100 un pezzo di strada scritto nella fila, 🪙200 la strada intera. Dai 50 in su ci vuole un secondo tocco. Senza monete, niente aiuto.',
       ] },
       { titolo: 'Le stelle', righe: [
-        'Una per essere arrivato a casa, una per la **carota**, una per aver trovato la strada **da solo** 🧠.',
+        'Una per essere arrivato a casa (o per il gregge nel recinto), una per la **carota** (o l\'osso), una per aver trovato la strada **da solo** 🧠.',
         'Quella da solo la spegne solo la strada intera scritta dal 💡: gli altri aiuti si pagano in monete, e basta.',
       ] },
       { titolo: 'Cosa allena', righe: [

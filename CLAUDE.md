@@ -620,6 +620,22 @@ committate: non è ricostruibile da git.
   lo zaino pretende nei loro gradini. Un giro che non muove il coniglio
   ferma la fila (`STANCO`). Le mappe dei grandi arrivano a nove per
   undici.
+  **Fra le buche e lo zaino c'è il cane pastore** (sei tappe, ancora dei
+  piccoli, portata 44): il bobtail al posto del coniglio, le pecore (`p`)
+  scappano di un passo quando il cane si ferma accanto, e la meta è il
+  recinto (`#`), non la tana. Una pecora **incastrata** — su una cella da
+  cui nessuna spinta la riporta al recinto, `celleIncastro` in
+  `motore/livello.js`, calcolata una volta dal recinto all'indietro —
+  ferma la fila come un albero (`PERSA`): senza, il bambino aggiungeva
+  frecce a una partita già persa e nessuna gli diceva perché. Ogni tappa
+  del cane dichiara le sue `trappole` (le mosse ingenue, che devono fare
+  un pezzo di strada e poi fallire). Le stelle stanno sotto l'indice,
+  quindi l'arrivo in mezzo alla fila ha il suo travaso (`FILE`/`riordina`
+  in `dati/campagna.js`), che al contrario del costruttore **lascia la
+  tappa raggiunta dov'era**: a chi era già allo zaino le pecore si aprono
+  alle spalle, e niente si richiude. Il sentiero senza fine e i traguardi
+  di prima restano legati alle buche (`TAPPE_PRIME`), non alla fine dei
+  piccoli.
 - **`src/giochi/costruttore/`** — un robot costruisce, visto di lato,
   quello che il bambino programma: **progetti** (funzioni) con le loro
   **misure** (parametri), **lavagnette** (variabili), ripeti, se, ripeti

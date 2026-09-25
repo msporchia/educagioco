@@ -3,8 +3,8 @@
 # 🐇 Passo passo
 
 *Il primo gradino della programmazione, per chi non sa ancora leggere — e
-poi i cicli, per chi ha otto anni.* Un coniglio deve tornare nella sua
-tana. Il bambino non lo guida col dito: gli scrive una **fila di frecce**,
+poi un cane pastore da far pensare, e i cicli, per chi ha otto anni.* Un
+coniglio deve tornare nella sua tana. Il bambino non lo guida col dito: gli scrive una **fila di frecce**,
 preme ▶, e il coniglio la esegue dall'inizio alla fine. Se qualcosa va
 storto si guarda *quale* freccia era sbagliata, la si cambia, e si riprova.
 
@@ -65,9 +65,12 @@ Arrivano una per volta, un gradino per regola, e da lì in poi restano.
 | **i massi** | camminandoci contro si spingono di una cella. Sul ghiaccio scivolano finché non si fermano; nell'acqua affondano e diventano un **ponte**. Se non possono muoversi, si sbatte |
 | **le buche** | a coppie, con l'anello dello stesso colore: si entra da una e si esce dall'altra, e il movimento finisce lì, anche scivolando |
 | **le lastre** | rossa col cerchio, blu col quadrato, gialla col triangolo: si camminano come il prato (e come il prato fermano chi scivola), e un masso non ci va sopra. Non fanno niente: servono a **guardarle**, dal gradino del «fino a» in là. La forma c'è per chi i colori non li distingue tutti |
+| **le pecore** | nei livelli del cane: quando il cane si ferma accanto a una pecora, lei fa un passo dall'altra parte. Se lì c'è un ostacolo, l'acqua, un'altra pecora o il bordo, non si muove; sul ghiaccio scivola, e nell'acqua non ci va. Il cane contro una pecora sbatte |
+| **il recinto** | una pecora che ci entra ci resta; il cane non ci entra mai. Quando dentro ci sono tutte, il livello è vinto |
 
 E la **tana**: arrivarci, in qualunque modo e in qualunque momento, vince
-subito — le frecce dopo non contano.
+subito — le frecce dopo non contano. Per il cane vale lo stesso col
+recinto: l'ultima pecora che entra chiude il livello.
 
 Tre cose che le regole non dicevano, e che il gioco ha dovuto decidere:
 saltando non si prende la carota che sta **in mezzo** (si prende quello su
@@ -76,6 +79,49 @@ passare sopra è il modo più chiaro di capire che il salto è lungo due; non
 si atterra su un masso (lo si spinge solo camminando); un masso non si
 spinge sulla tana, sulla carota o su una buca, che sparirebbero sotto un
 sasso.
+
+## Il cane pastore
+
+Dopo le buche, per sei tappe, al posto del coniglio c'è il **bobtail** e al
+posto della tana il **recinto**. Le frecce sono le stesse, le regole del
+mondo pure — il ghiaccio, l'acqua, i salti — ma la domanda cambia: il cane
+non deve andare da nessuna parte, è **la pecora** che deve arrivare. E una
+pecora si sposta solo scappando dal cane, quindi la fila si scrive pensando
+a dove andrà a finire lei.
+
+- **Si scappa dalla parte opposta.** Il cane si ferma accanto a una pecora
+  — sopra, sotto, a destra o a sinistra — e lei fa un passo dall'altra
+  parte. Per mandarla a destra il cane le va a sinistra; per girarle
+  attorno passa in diagonale, perché fermandosi accanto la spingerebbe.
+  Scappa quando il cane **si ferma**: una scivolata lunga sei celle la
+  spaventa solo dove finisce.
+- **Una pecora con qualcosa alle spalle non scappa.** Un albero, l'acqua,
+  un'altra pecora: resta lì e fa «bee», e il cane che le cammina contro
+  sbatte. Due pecore in fila si spingono una alla volta, separandole prima.
+- **Una pecora incastrata ferma la fila.** Una pecora in un angolo, o contro
+  un bordo lungo che non ha un «dietro» dove il cane possa mettersi, non si
+  recupera più. Il gioco lo sa già (si calcola una volta per livello, dal
+  recinto all'indietro) e non lascia il bambino ad aggiungere frecce a una
+  partita persa: la fila si ferma lì come contro un albero, la pecora trema
+  nel suo angolo, la sua cella pulsa e lampeggia la freccia che ce l'ha
+  mandata. È il «posto dove non la puoi recuperare», detto nel momento in
+  cui succede.
+- **L'osso è la carota del cane**: la seconda stella, e il giro per
+  prenderlo è quasi sempre quello che rischia di spaventare la pecora dalla
+  parte sbagliata.
+
+Ogni tappa del cane porta le sue **trappole**: la mossa ingenua di quel
+posto — passare sotto la pecora per arrivare all'osso, spingerla troppo in
+là — che deve fare un pezzo di strada e poi fallire, contro la pecora o con
+la pecora incastrata. È lì che si vede dove si è sbagliato, ed è un test a
+pretenderlo.
+
+Il gradino sta fra le buche e lo zaino, a portata 44 come «Tutto insieme»:
+è il passo dopo per chi ha sei anni e ha finito le buche, e lo zaino a
+quell'età resta chiuso. Chi era già più avanti quando è arrivato (il 25
+settembre 2026) lo trova aperto alle spalle, e niente di quello che aveva
+vinto si richiude: il travaso della fila tiene la tappa raggiunta dov'era
+(`riordina` in `dati/campagna.js`).
 
 ## Lo zaino e il ripeti
 
@@ -173,8 +219,9 @@ stare su due righe.
 
 ## Le stelle, le monete, gli aiuti
 
-Tre stelle per tappa, per tre cose diverse: ⭐ **arrivato**, ⭐ **con la
-carota**, ⭐ **la strada l'hai trovata tu** (🧠). Sul cartello di fine, sotto
+Tre stelle per tappa, per tre cose diverse: ⭐ **arrivato** (per il cane:
+il gregge nel recinto), ⭐ **con la carota** (l'osso), ⭐ **la strada l'hai
+trovata tu** (🧠). Sul cartello di fine, sotto
 ogni stella c'è il disegno di cosa l'ha data: una stella spenta con sotto la
 carota dice da sola che rigiocando la si può prendere. La terza la spegne
 solo la strada intera comprata col 💡: gli altri aiuti si pagano in monete. Non c'è un numero di mosse da
@@ -212,8 +259,8 @@ coniglio si ferma — è proprio mentre lo si vede sbattere che lo si cerca.
 
 ## Le tappe
 
-Ventiquattro posti in cinque gradini per i piccoli, e diciotto con lo zaino
-in quattro gradini.
+Ventiquattro posti in cinque gradini per i piccoli, sei per il cane
+pastore, e diciotto con lo zaino in quattro gradini.
 Ognuno ha la sua forma — un prato,
 un bosco, un fiume con le isole, un lago ghiacciato col buco — e ognuno con
 il suo piccolo «aha». Le mappe sono scritte a mano, al massimo sette celle
@@ -250,28 +297,35 @@ per nove, così stanno intere su un telefono.
 | 22. La buca nel ghiaccio | la tana è su un'isola, e ci porta la buca in mezzo al lago | 5 |
 | 23. Le buche colorate | la rosa porta alla carota, la viola alla tana | 7 |
 | 24. Tutto insieme | la staccionata, il masso nel fiume, il lago, la buca | 12 |
+| **🐑 Il cane pastore** | *le pecore scappano dal cane: portale tutte nel recinto* | |
+| 25. Il primo gregge | dietro alla pecora, e lei va nel recinto; l'osso chiede un giro che non le passi sotto | 7 |
+| 26. Dall'altra parte | per mandarla giù il cane le sta sopra, e per arrivarci le gira attorno in diagonale | 7 |
+| 27. La curva | prima a destra, poi giù: chi la spinge troppo in là la incastra contro il bordo | 14 |
+| 28. La pecora sul ghiaccio | scivola finché il sasso non la ferma, proprio sopra il cancello | 8 |
+| 29. Due in fila | una pecora con un'altra alle spalle non scappa: prima si separano | 13 |
+| 30. Il gregge | tre pecore e un cancello solo: quale per prima, e da che parte | 21 |
 | **🔁 Il ripeti** | *nello zaino ci stanno poche carte: una scatola 🔁 ripete quello che ha dentro* | zaino |
-| 25. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
-| 26. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |
-| 27. La scala | due frecce in una scatola, e l'ordine conta: la carota è su un gradino solo | 3 |
-| 28. Di sasso in sasso | anche un salto si ripete | 3 |
-| 29. Il lago a gradini | la stessa freccia fa una, tre, due caselle, e il ciclo regge | 3 |
-| 30. La collina | su e giù: due scatole diverse; la strada di mezzo è più corta ma non si ripete | 6 |
-| 31. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
-| 32. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
+| 31. Il viale | una scatola, una freccia, il numero giusto: né sei né quattro | 3 |
+| 32. Lo stagno grande | una scatola per lato, e la carota sta da una parte sola | 4 |
+| 33. La scala | due frecce in una scatola, e l'ordine conta: la carota è su un gradino solo | 3 |
+| 34. Di sasso in sasso | anche un salto si ripete | 3 |
+| 35. Il lago a gradini | la stessa freccia fa una, tre, due caselle, e il ciclo regge | 3 |
+| 36. La collina | su e giù: due scatole diverse; la strada di mezzo è più corta ma non si ripete | 6 |
+| 37. Le terrazze | una scatola dentro l'altra, e si scende per due strade | 5 |
+| 38. Il campo arato | avanti e indietro fra le siepi: quattro scatole dentro una | 9 |
 | **🚩 Fino a** | *una scatola che non conta: ripete finché il coniglio non arriva sulla lastra del colore giusto* | zaino |
-| 33. I gradini storti | tre gradini diversi sopra i fossi: si va fino al rosso, e si scende | 5 |
-| 34. Scale e pianerottoli | due colori: la scala fino al rosso, il pianerottolo fino al blu | 7 |
-| 35. Il campo storto | i passaggi fra i fossi sono ogni volta in un posto diverso | 9 |
-| 36. La spirale | ogni lato più corto del prima, e agli angoli le lastre rosse | 9 |
+| 39. I gradini storti | tre gradini diversi sopra i fossi: si va fino al rosso, e si scende | 5 |
+| 40. Scale e pianerottoli | due colori: la scala fino al rosso, il pianerottolo fino al blu | 7 |
+| 41. Il campo storto | i passaggi fra i fossi sono ogni volta in un posto diverso | 9 |
+| 42. La spirale | ogni lato più corto del prima, e agli angoli le lastre rosse | 9 |
 | **❓ Il se** | *il coniglio guarda cosa ha sotto i piedi, e decide* | zaino |
-| 37. Le colline | avanti sempre: sul rosso si scende, sul giallo si sale | 6 |
-| 38. Il sentiero dei segni | ogni lastra dice dove andare, in tre versi | 9 |
+| 43. Le colline | avanti sempre: sul rosso si scende, sul giallo si sale | 6 |
+| 44. Il sentiero dei segni | ogni lastra dice dove andare, in tre versi | 9 |
 | **🌍 Tutto il mondo** | *il ghiaccio, i massi, i salti e i segnali, con le scatole* | zaino |
-| 39. La spirale di ghiaccio | quattro frecce e a ogni giro il cerchio si stringe: fermano i sassi | 5 |
-| 40. Le pozze | a ogni gradino un masso nella pozza, e la stessa scatola lo spinge | 5 |
-| 41. Il fiume dei sassi | di sasso in sasso fino al rosso, e un salto giù oltre la siepe | 7 |
-| 42. Il bosco ghiacciato | quattordici scivolate, e un programma solo che legge i segnali | 8 |
+| 45. La spirale di ghiaccio | quattro frecce e a ogni giro il cerchio si stringe: fermano i sassi | 5 |
+| 46. Le pozze | a ogni gradino un masso nella pozza, e la stessa scatola lo spinge | 5 |
+| 47. Il fiume dei sassi | di sasso in sasso fino al rosso, e un salto giù oltre la siepe | 7 |
+| 48. Il bosco ghiacciato | quattordici scivolate, e un programma solo che legge i segnali | 8 |
 
 La colonna «frecce» è la strada più corta **con la carota**, misurata dal
 risolutore; per i livelli con lo zaino è quante carte tiene lo zaino. La regola di ogni gradino **deve servire**, ed è un test a
@@ -281,8 +335,8 @@ un'altra cosa.
 
 ## Il sentiero senza fine
 
-Finite le tappe dei piccoli si apre il **sentiero senza fine** (sulla mappa
-sta subito dopo le buche, e non in fondo: è il loro, e chi non ha ancora
+Finite le buche si apre il **sentiero senza fine** (sulla mappa sta
+subito dopo di loro, e non in fondo: è dei piccoli, e chi non ha ancora
 l'età dello zaino gioca lì): livelli fatti al
 momento, a caso, e tenuti solo se il risolutore dice che si vincono, che la
 strada è lunga quanto il gradino chiede, che la carota vuole una deviazione
@@ -313,12 +367,13 @@ Una mappa è un elenco di righe, un carattere per cella (la legenda sta in
     A  albero     B  cespuglio   S  sasso   O  sasso nel ghiaccio   (alti)
     t  tronco     -  staccionata                                    (bassi)
     1 2 3  le buche, a coppie
+    p  una pecora   #  il recinto   (un livello con le pecore non ha la tana)
 
 Una tappa dichiara anche il gradino, la `portata` (la scala di tutto il
-repo: dal 4 del prato al 44 di «Tutto insieme», e dal 46 al 74 con lo
-zaino), il premio della prima vittoria, la
+repo: dal 4 del prato al 44 di «Tutto insieme» e del cane, e dal 46 al
+74 con lo zaino), il premio della prima vittoria, la
 stagione (è solo il vestito) e `salti: true` se usa la seconda fila di
-frecce. Il test `test/unita/passo-passo` fa il resto: controlla che si vinca
+frecce; quelle del cane anche le `trappole`. Il test `test/unita/passo-passo` fa il resto: controlla che si vinca
 con la carota, che la strada giocata dal motore vinca davvero con tre
 stelle, che la regola del gradino serva, e che chi segue soltanto gli aiuti
 arrivi a casa.
@@ -332,7 +387,8 @@ arrivi a casa.
 - **Gli aiuti non risolvono**: indicano la prossima freccia, e la mette il
   bambino.
 - **Da quattro a sette anni e mezzo, e poi i cicli**: le tappe dei piccoli
-  vanno dal 4 al 44 della scala delle tappe — a sei anni sono aperte tutte,
+  (il cane compreso) vanno dal 4 al 44 della scala delle tappe — a sei anni
+  sono aperte tutte,
   a cinque le prime quattordici — e quelle dello zaino dal 46 al 74, cioè
   dai sette anni e mezzo ai dieci. Dietro non c'è un pezzo di scuola, quindi a
   un bambino più grande non si chiude niente: vedi [come l'età decide cosa
