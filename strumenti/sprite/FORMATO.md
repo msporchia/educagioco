@@ -261,8 +261,8 @@ basta: l'attrezzo non cambia.
 
   1. **Unire obbliga a rinominare, e rinominare rompe in silenzio.** Il
      nome di un pezzo è la chiave dentro `PEZZI`, e certi giochi la
-     scrivono a mano (`sotterraneo/dati/tessere.js` cita `suolo-0` e
-     `muro-basso-centro`; il catalogo della fattoria cita duecento pezzi
+     scrivono a mano (`sotterraneo/dati/tessere.js` cita `cantine-faccia-fila`
+     e `cantine-bordo-n`; il catalogo della fattoria cita duecento pezzi
      uno per uno). Ribattezzare un pezzo per raggrupparlo lo fa sparire
      da lì, e sparisce senza errori: `drawImage` con un argomento non
      finito torna senza disegnare **e senza lanciare**.

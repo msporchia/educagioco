@@ -5,10 +5,11 @@
    chi scende. Dato puro: nessuna funzione che gioca, nessun canvas.
 
    ── LA CELLA È DI SEDICI PIXEL, E NON È UN NUMERO NOSTRO ──────────
-   È la misura del foglio di tessere (0x72, «16×16 DungeonTileset II»).
-   Cambiare set vuol dire cambiare questo numero **e** la geometria dei
-   muri in `scena/tela.js`, che è l'unico altro posto che sa come è
-   fatta una parete.
+   È la misura degli eroi di 0x72 («16×16 DungeonTileset II»), ed è
+   quella a cui si riducono i fogli generati — lo scenario, i mostri, le
+   cose — perché stiano tutti alla stessa scala. Cambiarla vuol dire
+   ritagliare di nuovo tutti i fogli; com'è fatta una parete invece non
+   dipende da lei, lo dice `scena/muri.js`.
 
    ── LO ZOOM È A NUMERI INTERI ─────────────────────────────────────
    A scala 2,3 i pixel verrebbero larghi due e altri tre, e da vicino si

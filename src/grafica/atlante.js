@@ -100,6 +100,25 @@ export function creaFoglio({ pezzi, immagine, tessera = 32 }) {
     return true
   }
 
+  /* Un pezzo di un pezzo: il rettangolo `rx, ry, rw, rh` — in pixel del
+     pezzo — con l'angolo in alto a sinistra in `x, y`. Serve a quello
+     che si disegna **a fette**: un fondo che è un quadrato di 4×4 celle,
+     da cui ogni cella prende la sua parte, e una fila di facce che è una
+     striscia sola. Tagliarli in sedici pezzi nell'atlante vorrebbe dire
+     sedici nomi per una cosa, e sedici occasioni di sbagliarne uno. */
+  function ritaglio(ctx, nome, rx, ry, rw, rh, x, y, { alfa = 1 } = {}) {
+    const p = pezzi[nome]
+    if (!p || !img) return false
+    const [sx, sy, w, h] = p
+    const lw = Math.min(rw, w - rx), lh = Math.min(rh, h - ry)
+    if (lw <= 0 || lh <= 0) return false
+    const prima = ctx.globalAlpha
+    if (alfa !== 1) ctx.globalAlpha = alfa
+    ctx.drawImage(img, sx + rx, sy + ry, lw, lh, Math.round(x), Math.round(y), lw, lh)
+    if (alfa !== 1) ctx.globalAlpha = prima
+    return true
+  }
+
   /* Appoggiato: `x` è il centro, `y` è dove tocca terra. È questa la
      firma che serve a un pittore, perché è quella che il gioco sa —
      una torre sta *in* quel punto lì, non ha un angolo in alto. */
@@ -171,7 +190,7 @@ export function creaFoglio({ pezzi, immagine, tessera = 32 }) {
   }
 
   const foglio = {
-    carica, misura, pezzo, posa, posaTessera, tessera, alone,
+    carica, misura, pezzo, ritaglio, posa, posaTessera, tessera, alone,
     get pronto() { return !!img },
     get immagine() { return img },
     ha: nome => !!pezzi[nome],

@@ -218,8 +218,12 @@ committate: non è ricostruibile da git.
   coi poligoni**: `atlante.js` (un foglio di figure e come si posano: il
   piede, lo specchio, la scala intera) e `tessere.js` (*quale* tessera va
   in una cella, ricavata dai vicini — strade, pozze, recinti; niente
-  canvas, gira in Node e si prova in `unita/tessere`). Li usa
-  `giochi/sotterraneo/scena/tela.js`, che è il calco da guardare: la
+  canvas, gira in Node e si prova in `unita/tessere`). Il calco da
+  guardare è `giochi/sotterraneo/scena/tela.js` — che però la forma dei
+  muri la prende da `scena/muri.js`, perché a tre quarti la faccia di un
+  muro non è il bordo di una zona: è una cella intera che si vede da una
+  parte sola (la regola, e gli scenari generati da un prompt, stanno in
+  `docs/sotterraneo.md`). La
   scala sta **nella trasformazione del contesto** (`dpr × scala`, una
   volta per fotogramma) e da lì in poi tutto è in pixel dello sprite —
   chi la moltiplica riga per riga prima o poi la moltiplica due volte, ed

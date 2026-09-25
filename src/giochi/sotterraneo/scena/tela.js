@@ -8,14 +8,16 @@
    differenza. Di regole non sa niente: non sa quanto costa un mostro né
    perché una porta è chiusa.
 
-   ── I DUE MOTORI CONDIVISI, FINALMENTE AGGANCIATI ─────────────────
-   `grafica/atlante.js` (`creaFoglio`, `netto`, `scalaIntera`) sa posare
-   uno sprite: il piede, lo specchio, i bordi netti. `grafica/tessere.js`
-   (`bordoOtto`, `pezzoPer`, `variante`) sa **quale** pezzo va in una
-   cella, ricavandolo dai vicini. Erano stati scritti per questo e sono
-   rimasti a lungo senza nessuno che li usasse; qui si aggancia riga per
-   riga, e quello che resta scritto a mano è soltanto la geometria di
-   questo set — che è la parte che cambia davvero cambiando foglio.
+   ── CHI SA COSA ─────────────────────────────────────────────────
+   `grafica/atlante.js` (`creaFoglio`, `netto`) sa posare uno sprite: il
+   piede, lo specchio, i bordi netti, e un pezzo di un pezzo (`ritaglio`)
+   per i fondi che si disegnano a fette. **Quale** pezzo va in una cella
+   di muro lo decide `scena/muri.js` guardando i vicini. Il muro prima lo
+   sceglieva `bordoOtto` di `grafica/tessere.js`, che però risponde a
+   un'altra domanda — che forma ha il bordo di una zona vista da sopra —
+   e a tre quarti la faccia di un muro non è un bordo: è una cella intera
+   che si vede solo da una parte. Se un altro mondo a tre quarti vorrà la
+   stessa regola, `muri.js` sale in `grafica/` quel giorno.
 
    ── LA SCALA STA NELLA TRASFORMAZIONE, NON NEI CONTI ──────────────
    Il contesto si scala una volta per fotogramma (`dpr × scala`), e da lì
@@ -27,22 +29,27 @@
    Lo zoom resta **a numeri interi** (`dati/mondo.js`): a scala 2,3 i
    pixel verrebbero larghi due e altri tre, e da vicino si vede.
 
-   ── I MURI SONO ALTI DUE CELLE, E NON È UN DETTAGLIO ──────────────
-   Questo set disegna la parete come la si vede di fronte: una fascia di
-   mattoni con sopra il suo coronamento. Quindi il muro a nord di una
-   stanza **occupa due celle** di roccia, non una: la cella subito sopra
-   il pavimento porta la faccia, quella ancora sopra porta la cima. È il
-   costo vero di un cambio di famiglia di sprite, e vive qui — un set con
-   i muri visti dall'alto vorrebbe un altro disegno, e nient'altro del
-   gioco se ne accorgerebbe.
+   ── IL MURO È ALTO UNA CELLA, E NON È UN DETTAGLIO ────────────────
+   La roccia si vede da sopra, col suo bordo; la faccia di mattoni c'è
+   solo dove sotto si cammina, ed è alta una cella (più il filo del
+   coronamento, che sale sulla cella di sopra). Così **qualunque muro sta
+   in una cella di spessore**, compreso quello fra due corridoi, che col
+   set di prima non ci stava e riempiva di mattoni tutta la roccia. La
+   regola sta in `scena/muri.js`, che gira in Node e si prova lì; qui si
+   mettono soltanto i pezzi.
+
+   ── LO SCENARIO ─────────────────────────────────────────────────
+   Pavimenti, tetto, facce, porte, scala, fontana e mercante vengono
+   dallo scenario (`SCENARI` in `dati/tessere.js`): tutte le voci hanno
+   le stesse chiavi, e questa tela non sa quale sta disegnando.
    ═══════════════════════════════════════════════════════════════════ */
 import { ATLANTE, PEZZI, TESSERA } from '../dati/atlante.js'
-import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA } from '../dati/mondo.js'
-import { SUOLI, MATTONI, FACCE, CIME, CORONA, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
+import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
+import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, SEGNI } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
-import { bordoOtto, pezzoPer, variante } from '../../../grafica/tessere.js'
+import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 
 export class Tela {
   constructor(canvas) {
@@ -177,27 +184,43 @@ export class Tela {
     const c1x = Math.min(liv.largo, c0x + Math.ceil(this.largoMondo / T) + 4)
     const c1y = Math.min(liv.alto, c0y + Math.ceil(this.altoMondo / T) + 4)
 
-    /* prima il suolo, poi i muri: i muri sono alti e devono poter coprire
-       il suolo della cella sopra la loro */
-    for (let x = c0x; x < c1x; x++) for (let y = c0y; y < c1y; y++) {
+    /* ── il terreno, in tre passate ──
+       Prima i pavimenti, poi il tetto coi suoi bordi, poi le facce: una
+       faccia sale di un filo sulla cella di sopra (è il coronamento), e
+       deve coprire il tetto o il pavimento che ci trova. Il velo del
+       ricordo va per ultimo e in una passata sola, così sulla striscia
+       dove una faccia sborda non se ne posano due. */
+    const sc = SCENARI[SCENARIO]
+    const forma = this.forma(liv, sc)
+    const pietra = (x, y) => liv.a(x, y) === ROCCIA
+    const alfaDi = luce => (luce === 2 ? 1 : 0.5)
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (!luce || liv.a(x, y) === ROCCIA) continue
-      this.tessera(variante(SUOLI, x, y, 3), x, y, luce === 2 ? 1 : 0.5)
-      if (luce === 1) this.velo(x, y)
+      if (luce && !pietra(x, y)) this.pavimento(sc, forma, x, y, alfaDi(luce))
     }
-    for (let x = c0x; x < c1x; x++) for (let y = c0y; y < c1y; y++) {
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (!luce || liv.a(x, y) !== ROCCIA) continue
-      this.muro(liv, x, y, luce)
+      if (luce && tetto(pietra, x, y)) this.tetto(sc, pietra, x, y, alfaDi(luce))
     }
+    const torce = []
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
+      const luce = corsa.luceDi(x, y)
+      if (!luce || !faccia(pietra, x, y)) continue
+      if (this.faccia(sc, liv, pietra, x, y, alfaDi(luce)) && luce === 2) torce.push([x, y])
+    }
+    for (const [x, y] of torce) this.fiamma(x, y, orologio)
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++)
+      if (corsa.luceDi(x, y) === 1) this.velo(x, y)
 
     for (const r of liv.robe) {
-      if (r.presa || r.morto) continue
+      /* la fonte bevuta resta dov'era, asciutta; tutto il resto che è
+         stato preso o battuto se ne va */
+      if (r.presa || (r.morto && r.che !== 'fonte')) continue
       const luce = corsa.luceDi(r.x, r.y)
       if (!luce) continue
       /* `toccabile` è un fatto già deciso dal motore, come `potenziabile`
          nel castello: qui non si ricalcola niente, si guarda. */
-      this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)))
+      this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)), sc, corsa)
     }
     this.eroe(corsa, orologio)
     if (corsa.bersaglio) this.bersaglio(corsa.bersaglio, orologio)
@@ -206,12 +229,6 @@ export class Tela {
        con lo zoom, o a ×5 coprirebbe mezzo telefono */
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     this.minimappa(corsa)
-  }
-
-  /* una tessera di terreno riempie il suo quadrato e basta: non sborda,
-     non si appoggia */
-  tessera(nome, cx, cy, alfa) {
-    return this.foglio.pezzo(this.ctx, nome, cx * T, cy * T, { alfa })
   }
 
   /* uno sprite più alto di una cella — un personaggio, una porta ad arco
@@ -231,44 +248,137 @@ export class Tela {
     ctx.fillRect(cx * T, cy * T, T + 0.5, T + 0.5)
   }
 
-  /* ── il muro ──
-     Prima si **riempie**: ogni cella di roccia che tocca il pavimento,
-     anche solo per un angolo, si dipinge di mattoni. Senza questo passo
-     restano buchi neri dentro le pareti — le celle che toccano il
-     pavimento solo in diagonale — e una parete bucata si legge come un
-     guasto, perché è quello che sembra.
-
-     Poi si rifinisce, e solo dove il foglio ha un pezzo apposta. La
-     chiave la dà `bordoOtto` guardando dove finisce la roccia; la tavola
-     è in `dati/tessere.js`, e quello che non c'è nella tavola non si
-     disegna. */
-  muro(liv, x, y, luce) {
-    const solido = (a, b) => liv.a(a, b) === ROCCIA
-    const alfa = luce === 2 ? 1 : 0.5
-    let tocca = false
-    for (let dx = -1; dx <= 1 && !tocca; dx++)
-      for (let dy = -1; dy <= 1; dy++)
-        if ((dx || dy) && !solido(x + dx, y + dy)) { tocca = true; break }
-
-    /* la roccia profonda non è un buco: è muro anche lei, solo più scuro.
-       Lasciarla nera spezzava le pareti in due. */
-    if (!tocca) return this.tessera(MATTONI, x, y, alfa * 0.45)
-    this.tessera(MATTONI, x, y, alfa)
-
-    const lati = bordoOtto(solido, x, y).split('-')[0]
-    if (lati.includes('S')) {
-      const faccia = pezzoPer(FACCE, lati)
-      this.tessera(faccia ? faccia.nome : FACCE.S, x, y, alfa)
-      if (solido(x, y - 1)) {
-        const cima = pezzoPer(CIME, lati)
-        this.tessera(cima ? cima.nome : CIME.S, x, y - 1, alfa)
-      }
-    } else if (lati.includes('N')) {
-      /* il lato di sotto della stanza: da qui si vede il coronamento del
-         muro, non la sua faccia */
-      this.tessera(CORONA, x, y, alfa)
+  /* ── la forma del piano, una volta per piano ──
+     Quale cella è di una stanza e quale di un corridoio, dove sta il
+     medaglione della fonte, cosa c'è per terra: cose che non cambiano
+     finché il piano è quello, e ricalcolarle a ogni fotogramma vorrebbe
+     dire rifare sessanta volte al secondo lo stesso conto. */
+  forma(liv, sc) {
+    if (this._forma && this._forma.liv === liv && this._forma.sc === sc) return this._forma
+    const L = liv.largo, A = liv.alto
+    const stanza = new Int16Array(L * A).fill(-1)
+    const medaglione = new Map(), perTerra = new Map()
+    const stanze = liv.stanze || []
+    const pietra = (x, y) => liv.a(x, y) === ROCCIA
+    for (const s of stanze)
+      for (let x = s.x; x < s.x + s.w; x++)
+        for (let y = s.y; y < s.y + s.h; y++) stanza[y * L + x] = s.id
+    for (const s of stanze) {
+      /* il medaglione sta sotto la fontana: la stanza della fonte si
+         riconosce da lontano, come dietro il teschio c'è la guardia */
+      if (s.ruolo === 'fonte')
+        for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+          const x = s.cx + i, y = s.cy + j
+          if (stanza[y * L + x] === s.id) medaglione.set(y * L + x, [i + 1, j + 1])
+        }
+      /* le ragnatele negli angoli in alto, dove la fila delle facce
+         incontra il muro di lato: una stanza su due, sempre la stessa */
+      if (sorteDi(s.x, s.y, 3) % 2) continue
+      if (pietra(s.x, s.y - 1) && pietra(s.x - 1, s.y))
+        perTerra.set(s.y * L + s.x, { nome: sc.ragnatele.sx, dove: 'no' })
+      const xd = s.x + s.w - 1
+      if (pietra(xd, s.y - 1) && pietra(xd + 1, s.y))
+        perTerra.set(s.y * L + xd, { nome: sc.ragnatele.dx, dove: 'ne' })
     }
-    if (luce === 1) this.velo(x, y)
+    /* qua e là per terra: poche, mai sul medaglione, sempre le stesse */
+    for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+      const k = y * L + x
+      if (liv.a(x, y) !== PAVIMENTO || perTerra.has(k) || medaglione.has(k)) continue
+      const h = sorteDi(x, y, 1)
+      const nome = h % 67 === 0 ? sc.perTerra[2] : h % 29 === 0 ? sc.perTerra[1]
+        : h % 17 === 0 ? sc.perTerra[0] : null
+      if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
+    }
+    this._forma = { liv, sc, stanza, medaglione, perTerra }
+    return this._forma
+  }
+
+  /* ── il pavimento ──
+     La stanza e il corridoio hanno due disegni, ed è la prima cosa che
+     dice dove si è. Ognuno è un quadrato di 4×4 celle da cui ogni cella
+     prende la sua parte: nessuna piastrella col suo bordo, quindi niente
+     tabella. */
+  pavimento(sc, forma, x, y, alfa) {
+    const ctx = this.ctx, f = this.foglio
+    const k = y * forma.liv.largo + x
+    const nome = forma.stanza[k] >= 0 ? sc.pavimento.stanza : sc.pavimento.corridoio
+    f.ritaglio(ctx, nome, (x & 3) * T, (y & 3) * T, T, T, x * T, y * T, { alfa })
+    const m = forma.medaglione.get(k)
+    if (m) f.ritaglio(ctx, sc.medaglione, m[0] * T, m[1] * T, T, T, x * T, y * T, { alfa })
+    const d = forma.perTerra.get(k)
+    if (!d) return
+    const w = f.misura(d.nome)
+    if (!w) return
+    const px = d.dove === 'no' ? 0 : d.dove === 'ne' ? T - w.w : (T - w.w) / 2
+    const py = d.dove === 'centro' ? (T - w.h) / 2 : 0
+    f.pezzo(ctx, d.nome, x * T + px, y * T + py, { alfa, specchia: d.specchia })
+  }
+
+  /* ── il tetto, e il suo bordo ──
+     La roccia vista da sopra: quasi piatta, e con la sua trama di sassi
+     e radici solo vicino a dove si cammina — piena a una cella, sfumata
+     a due, niente più in là. È com'è nella scena generata, ed è il
+     motivo per cui una stanza si stacca dal buio: ripetuta dappertutto,
+     la trama faceva carta da parati sui muri spessi. I bordi e gli
+     angoli li decide `bordiDelTetto`. */
+  tetto(sc, pietra, x, y, alfa) {
+    const ctx = this.ctx, f = this.foglio
+    const prima = ctx.globalAlpha
+    ctx.globalAlpha = prima * alfa
+    ctx.fillStyle = sc.colori.roccia
+    ctx.fillRect(x * T, y * T, T, T)
+    ctx.globalAlpha = prima
+    let vicino = 3
+    for (let dx = -2; dx <= 2; dx++)
+      for (let dy = -2; dy <= 2; dy++)
+        if (!pietra(x + dx, y + dy)) vicino = Math.min(vicino, Math.max(Math.abs(dx), Math.abs(dy)))
+    if (vicino <= 2)
+      f.ritaglio(ctx, sc.tetto, (x & 3) * T, (y & 3) * T, T, T, x * T, y * T,
+                 { alfa: alfa * (vicino === 1 ? 1 : 0.35) })
+    const b = bordiDelTetto(pietra, x, y)
+    if (b.n) f.pezzo(ctx, sc.bordi.n, x * T, y * T, { alfa })
+    if (b.o) f.pezzo(ctx, sc.bordi.o, x * T, y * T, { alfa })
+    if (b.e) f.pezzo(ctx, sc.bordi.e, x * T + T - f.misura(sc.bordi.e).w, y * T, { alfa })
+    const a = f.misura(sc.bordi.angolo)
+    for (const q of b.angoli)
+      f.pezzo(ctx, sc.bordi.angolo, x * T + (q[1] === 'o' ? 0 : T - a.w),
+              y * T + (q[0] === 'n' ? 0 : T - a.h), { alfa })
+  }
+
+  /* ── la faccia del muro ──
+     Una striscia di sei celle, e ogni tanto una variante di una cella
+     in mezzo: una torcia, una grata, un arco murato. Sale di un filo
+     sulla cella di sopra, ed è il coronamento. Torna `true` se ha messo
+     una torcia, perché la sua luce si disegna dopo, sopra tutto. */
+  faccia(sc, liv, pietra, x, y, alfa) {
+    const ctx = this.ctx, f = this.foglio
+    const h = sorteDi(x, y, 2)
+    const torcia = h % 9 === 0
+    let nome = sc.faccia, rx = (x % 6) * T
+    if (torcia) { nome = sc.torcia; rx = 0 }
+    else if (h % 5 === 1) { nome = sc.varianti[(h >>> 8) % sc.varianti.length]; rx = 0 }
+    const m = f.misura(nome)
+    if (!m) return false
+    const y0 = y * T + T - m.h
+    f.ritaglio(ctx, nome, rx, 0, T, m.h, x * T, y0, { alfa })
+    const c = capiDellaFaccia(pietra, (a, b) => liv.a(a, b) === PORTA, x, y)
+    if (c.sx) f.pezzo(ctx, sc.capi.sx, x * T, y0, { alfa })
+    if (c.dx) f.pezzo(ctx, sc.capi.dx, x * T + T - f.misura(sc.capi.dx).w, y0, { alfa })
+    return torcia
+  }
+
+  /* La luce di una torcia sul muro: la stessa del braciere, più piccola
+     — dice che la stanza ha qualcuno che la tiene accesa, e scalda il
+     muro invece di stare lì come un disegno. */
+  fiamma(x, y, t) {
+    const ctx = this.ctx
+    const px = x * T + T / 2, py = y * T + 3
+    const q = 0.2 + 0.06 * Math.sin(t * 7 + x * 1.3 + y)
+    const g = ctx.createRadialGradient(px, py, 1, px, py, T * 1.8)
+    g.addColorStop(0, `rgba(255,176,80,${q})`)
+    g.addColorStop(1, 'rgba(255,176,80,0)')
+    ctx.fillStyle = g
+    ctx.beginPath(); ctx.arc(px, py, T * 1.8, 0, 7); ctx.fill()
   }
 
   /* ── le cose ──
@@ -276,7 +386,7 @@ export class Tela {
      sull'orologio. Quello che nel foglio non c'è si disegna con l'emoji:
      un buco si nota, e un pezzo mancante non deve far sparire un
      forziere. */
-  roba(r, luce, t, tocca = false) {
+  roba(r, luce, t, tocca = false, sc = SCENARI[SCENARIO], corsa = null) {
     const ctx = this.ctx
     const px = r.fx != null ? r.fx : r.x + 0.5
     const py = r.fy != null ? r.fy : r.y + 0.5
@@ -355,8 +465,15 @@ export class Tela {
       ctx.fill()
     }
 
+    /* quello che il pezzo non può sapere da sé e la tela sì: da che
+       parte si vede una porta (dal muro in cui sta) e se la scala è
+       ancora chiusa (dalla chiave del piano) */
+    const liv = corsa && corsa.livello
+    const info = r.che === 'porta' && liv
+      ? { verso: versoDellaPorta((a, b) => liv.a(a, b) !== PAVIMENTO, r.x, r.y) }
+      : r.che === 'scala' && corsa ? { chiusa: !corsa.chiaveDelPiano } : {}
     const quale = PEZZO_DI[r.che]
-    const nome = r.che === 'cosa' ? (COSE[r.cosa] || {}).sprite : quale ? quale(r, t) : null
+    const nome = r.che === 'cosa' ? (COSE[r.cosa] || {}).sprite : quale ? quale(r, t, sc, info) : null
     /* ── il filo di luce su quello che si tocca ──
        Una lanterna a terra e un forziere sono lo stesso genere di
        disegno, e finché si somigliavano non c'era modo di sapere quale
@@ -364,10 +481,12 @@ export class Tela {
        senza scriverlo, ed è la convenzione di tutti i giochi di questo
        genere. Solo in piena luce, perché toccabile lo è solo lì. */
     if (tocca && nome) this.filo(nome, px - 0.5, py - 0.5 + su, t)
-    /* la fonte e il mercante sono emoji — il foglio non li disegna — e
-       un'emoji non ha una sagoma da contornare: lì il «questo si tocca»
-       lo dice un alone tondo dietro, che è la stessa luce con un'altra
-       forma */
+    /* quello che il foglio non disegna resta un'emoji, e un'emoji non ha
+       una sagoma da contornare: lì il «questo si tocca» lo dice un alone
+       tondo dietro, che è la stessa luce con un'altra forma. Oggi non
+       succede più a niente in scena — fonte e mercante hanno il loro
+       disegno — ma è il ripiego di un pezzo che manca, e un pezzo che
+       manca non deve far sparire una cosa da toccare. */
     if (tocca && !nome) this.aureola(px, py + su, t)
     if (!nome || !this.posa(nome, px - 0.5, py - 0.5 + su, { alfa }))
       this.emoji(r.em, px, py + su, alfa)
@@ -405,7 +524,8 @@ export class Tela {
 
   /* Le emoji le disegna il telefono, quindi non si tingono dell'ambiente
      e hanno lo stile di chi l'ha fatto: si usano **solo** per quello che
-     il foglio non ha (una fontana, un mercante), mai per un mostro. */
+     il foglio non ha — i segni sopra le porte, e il ripiego di un pezzo
+     che manca — mai per un mostro. */
   emoji(em, px, py, alfa, quanto = 0.8) {
     const ctx = this.ctx
     ctx.save()

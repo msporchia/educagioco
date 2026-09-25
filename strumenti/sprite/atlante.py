@@ -685,7 +685,7 @@ def catalogo_di(ritagli, famiglie, trasforma, provenienza, anima, cose):
     # differenza che conta: col nome, unire due pezzi vuol dire
     # ribattezzarli — e il nome di un pezzo è la chiave dentro `PEZZI`,
     # che certi giochi scrivono a mano (`sotterraneo/dati/tessere.js`
-    # nomina `suolo-0` e `muro-basso-centro`). Rinominare per raggruppare
+    # nomina `cantine-faccia-fila` e `cantine-bordo-n`). Rinominare per raggruppare
     # può quindi far sparire un pezzo dal gioco, e sparisce in silenzio:
     # `foglio.pezzo` non trova niente e non disegna, senza lanciare.
     #

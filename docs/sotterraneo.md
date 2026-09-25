@@ -594,11 +594,26 @@ leggere una riga.
 
 ## Come è disegnato
 
-Con due fogli: **0x72, «16×16 DungeonTileset II», CC-0** per il mondo, i
-mostri e i quattro eroi, e un foglio di oggetti per quello che si
-raccoglie — armi, pozioni, gioielli, e l'arredo delle stanze. L'atlante
-ritagliato su misura pesa 34 KB per 162 pezzi, incorporato in base64 —
-il build resta un file solo.
+**Il posto è uno scenario**: pavimenti, muri, porte, scala, fontana e
+mercante vengono da un foglio generato (`sotterraneo_2.png`, le
+cantine), chiesto col prompt che sta in
+`strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md` —
+diviso in una parte fissa e un blocco che si cambia per avere un altro
+posto (la cripta, la fornace, la grotta di cristallo). I mostri e le
+cose da raccogliere vengono da fogli generati della stessa famiglia;
+gli eroi, i forzieri e le monete ancora da **0x72, «16×16 DungeonTileset
+II», CC-0**. L'atlante ritagliato su misura è un PNG di circa 150 KB per
+232 pezzi, incorporato in base64 — il build resta un file solo.
+
+**Il muro è alto una cella.** La roccia si vede da sopra col suo bordo di
+pietra chiara, e la faccia di mattoni c'è solo dove sotto si cammina:
+così anche il muro spesso una cella fra due corridoi ha la sua forma. Il
+set di prima disegnava la parete alta due celle, e fra due corridoi non
+ci stava: si dipingeva di mattoni tutta la roccia, e non si capiva dove
+finisse una parete. La regola sta in `scena/muri.js` e si prova in
+`unita/muri-sotterraneo`; i pavimenti sono quadrati di 4×4 celle da cui
+ogni cella prende la sua parte, uno per le stanze e uno per i corridoi,
+e sotto la fontana c'è un medaglione di mosaico.
 
 Il foglio degli oggetti arriva **senza canale alfa e a tripla
 grandezza**: il fondo nero lo toglie `atlante.py` allagando dai bordi
@@ -621,8 +636,11 @@ diagramma, e un diagramma non fa venire voglia di girare l'angolo. Lo monta `str
 banco `strumenti/banco/mondo.html`, che legge lo stesso modulo: se i due si scollassero, quello che si
 prova sul prototipo non direbbe più niente sul gioco.
 
-Quello che i fogli **non hanno** resta emoji: la fontana e il mercante.
-Le tre armature ci sono state a lungo, e stonavano — è il tipo di buco
+Di emoji in scena restano solo i segni sopra le porte: la fontana e il
+mercante, che erano le ultime due, hanno il loro disegno dallo scenario —
+e la fonte bevuta resta al suo posto, asciutta, invece di sparire. La
+scala è chiusa da una grata col lucchetto finché la chiave del piano non
+è presa. Le tre armature ci sono state a lungo, e stonavano — è il tipo di buco
 che va guardato *prima* di innamorarsi di un set — finché non è arrivato
 un terzo foglio dello stesso autore (`armature-e-vesti.png`) che le disegna. Di
 quel foglio si ritagliano **sette figure su centotrentasei**: l'atlante
