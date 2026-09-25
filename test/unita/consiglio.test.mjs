@@ -286,19 +286,19 @@ const posa = (f, id, x, y) => {
   /* E chi chiede una cosa che non è ancora arrivata sente **quando**
      arriva, che è una cosa da aspettare, invece di «non si fa», che è
      un no. */
-  const { f } = fattoria(3)
+  const { f } = fattoria(4)
   posa(f, 'silo', 20, 14)
   posa(f, 'silo_bianco', 20, 17)
   posa(f, 'mulino', 14, 14)
   const presto = comeAvere(f, 'pastone', T0)
-  uguale('il pastone al livello 3 non manda a comprare niente', presto.azione, null)
-  controlla('e dice a che livello arriva', /livello 10/.test(presto.testo), presto.testo)
+  uguale('il pastone al livello 4 non manda a comprare niente', presto.azione, null)
+  controlla('e dice a che livello arriva', /livello 11/.test(presto.testo), presto.testo)
 
   /* Il mulino appena comprato mostra **una ricetta sola**: la stessa
      scelta del primo campo con una coltura sola. */
-  uguale('al livello 3 il mulino ha una ricetta sola',
-         ricetteDi('mulino', 3).length, 1)
-  controlla('e al 10 sono due', ricetteDi('mulino', 10).length === 2)
+  uguale('al livello 4 il mulino ha una ricetta sola',
+         ricetteDi('mulino', 4).length, 1)
+  controlla('e all\'11 sono due', ricetteDi('mulino', 11).length === 2)
 }
 
 /* ══════════ 6b. QUELLO CHE È ARRIVATO E NON È STATO PRESO ══════════
@@ -403,7 +403,7 @@ const posa = (f, id, x, y) => {
    dargli — che è lo stato esatto in cui si trova chi non l'aveva
    comprato per questo. */
 {
-  const { f } = fattoria(2, 100)
+  const { f } = fattoria(8, 100)
   const carretto = posa(f, 'carretto_mercato', 14, 14)
   controlla('un carretto comprato per bellezza è a tutti gli effetti il vicino',
             carrettoIn(f) === carretto)

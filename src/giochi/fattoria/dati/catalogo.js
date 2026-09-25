@@ -386,7 +386,7 @@ export const CATEGORIE = [
   { chiave: 'campi', zona: 'lavoro', nome: 'Il lavoro', icona: '🌾', voci: [
     V('orto',          'campo_vuoto',       'Campo',             22,
       { sotto: true, campo: true, piede: [2, 2], cresce: RINCARO }),
-    V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 3, cresce: RINCARO }),
+    V('mulino',        'mulino_vento',      'Mulino',           150, { macchina: 'mulino', liv: 4, cresce: RINCARO }),
     V('silo',          'silo_rosso',        'Silo del raccolto', 120, { silo: 'terra', unico: true }),
     /* ── IL CARRETTO DEL VICINO ──────────────────────────────────
        Era una decorazione fra le case, e adesso lavora: **è lo stesso
@@ -407,7 +407,7 @@ export const CATEGORIE = [
        cresce di una cella si ritroverebbe addosso il vicino in una
        fattoria già salvata. Vale uguale per il mercato qui sotto. */
     V('carretto_mercato', 'carretto',       'Carretto del vicino', 32,
-      { vicino: true, liv: 2, unico: true }),
+      { vicino: true, liv: 8, unico: true }),
     /* ── LA BANCARELLA DEL MERCATO ───────────────────────────────
        **Era una decorazione, adesso lavora**: stesso id, stesso pezzo,
        stesso prezzo — la quarta volta che succede qui dentro, dopo
@@ -420,15 +420,18 @@ export const CATEGORIE = [
        livello. È la cosa che mancava alla fine della catena — quello
        che si produce lo mangiavano solo il cane e il gatto.
 
-       **Al 4, cioè appena dopo il mulino.** Prima di lì l'unica merce
-       ottenibile è il grano, e un mercato che chiede sempre la stessa
-       cosa non è un mercato: col mulino al 3 diventano due, col fienile
-       al 5 diventano quattro. `unico` come i silos — tre posti al banco
+       **Al 2, prima ancora del mulino.** Stava al 4, perché un mercato
+       che chiede solo grano sembrava un mercato finto; ma è il banco a
+       far sì che una coltura arrivata prima della sua bocca non sia
+       roba ferma nel silo, e da quando le cose arrivano una per livello
+       (`dati/livelli.js`) quelle colture sono parecchie. E consegnare fa
+       salire: è bene che si impari presto. Col mulino al 4 le merci
+       diventano due, con le carote al 5 tre. `unico` come i silos — tre posti al banco
        sono tre, e una seconda bancarella non ne aggiungerebbe nessuno:
        un oggetto che si compra due volte e la seconda non fa niente è
        peggio di uno che non si può comprare. */
     V('mercato',       'bancarella',        'Mercato',            40,
-      { mercato: true, liv: 4, unico: true }),
+      { mercato: true, liv: 2, unico: true }),
     /* ── LA MONGOLFIERA ──────────────────────────────────────────
        La nave di Hay Day (`docs/fattoria-albero.md` §8.3): tre file di
        casse che si riempiono un po' alla volta, e cosa fa sta in
@@ -445,13 +448,13 @@ export const CATEGORIE = [
        piazzola, rimessa alla sua larghezza nel foglietto, prende lo
        stesso posto quando il pallone se ne va. */
     V('mongolfiera',   'mongolfiera',       'Mongolfiera',       250,
-      { mongolfiera: true, liv: 25, unico: true, la: true, piede: [3, 2],
+      { mongolfiera: true, liv: 26, unico: true, la: true, piede: [3, 2],
         partita: { pezzo: 'mongolfiera_partita' } }),
-    /* Al 3 e non al 4, **insieme al mulino**: da quando il mangime è
+    /* **Insieme al mulino**, e non dopo: da quando il mangime è
        roba da animali finisce qui dentro, e un mulino che macina un
        livello prima che esista il posto dove mettere quello che fa
        sarebbe un tasto che non si può premere. */
-    V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 3, unico: true }),
+    V('silo_bianco',   'silo_bianco',       'Silo della stalla', 120, { silo: 'stalla', liv: 4, unico: true }),
 
     /* ── LE BOTTEGHE, E IL TERZO SILO ────────────────────────────
        L'albero a più fasi (`docs/fattoria-albero.md`): macchine che
@@ -476,18 +479,18 @@ export const CATEGORIE = [
        tutti con `cresce: RINCARO` come il mulino; la dispensa costa
        quanto gli altri due silos ed è `unico` come loro. */
     V('dispensa',      'dispensa',          'Dispensa',         120,
-      { silo: 'bottega', liv: 14, unico: true, la: true }),
+      { silo: 'bottega', liv: 16, unico: true, la: true }),
     V('telaio',        'telaio',            'Telaio',           170,
-      { macchina: 'telaio', liv: 14, cresce: RINCARO }),
+      { macchina: 'telaio', liv: 16, cresce: RINCARO }),
     /* `panificio` e non `forno`: `forno` è già la decorazione «Forno a
        legna», e la regola delle arnie contro l'apiario vale anche qui —
        quando si ha un disegno apposta si fa una voce nuova. E ce l'ha:
        lo sbuffo di fumo sopra il camino sta **dentro il rettangolo del
        ritaglio**, perché è il pezzo che dice che il forno è acceso. */
     V('panificio',     'panificio',         'Panificio',        180,
-      { macchina: 'panificio', liv: 16, cresce: RINCARO }),
+      { macchina: 'panificio', liv: 17, cresce: RINCARO }),
     /* Il pentolone prende dal fienile le quattro cose che si scaldano
-       (`dati/coltivazioni.js`, «il fienile fa il secco»): arriva al 22
+       (`dati/coltivazioni.js`, «il fienile fa il secco»): arriva al 23
        col beverone. «Pentolone» e non «Cucina del cortile» era una
        scelta fatta **per aggirare una funzione**: i consigli lo
        nominano con `dentroA`, che sapeva «nel» e «nell'» e non
@@ -498,26 +501,26 @@ export const CATEGORIE = [
        (`la: true`, vedi `motore/consiglio.js`) e il nome si sceglie
        per come suona, non per come si declina. */
     V('pentolone',     'pentolone',         'Pentolone',        150,
-      { macchina: 'pentolone', liv: 22, cresce: RINCARO }),
+      { macchina: 'pentolone', liv: 23, cresce: RINCARO }),
     /* Il caseificio al 20, due livelli dopo le mucche: tetto verde,
        le forme di formaggio sulla mensola davanti, il bidone del latte
        accanto alla porta. */
     V('caseificio',    'caseificio',        'Caseificio',       200,
       { macchina: 'caseificio', liv: 20, cresce: RINCARO }),
     V('sartoria',      'sartoria',          'Sartoria',         250,
-      { macchina: 'sartoria', liv: 36, cresce: RINCARO, la: true }),
-    /* La sartoria al 36: la vetrina col manichino e l'insegna delle
-       forbici. La tintoria al 52, con la lavanda: le due tinozze
+      { macchina: 'sartoria', liv: 42, cresce: RINCARO, la: true }),
+    /* La sartoria al 42: la vetrina col manichino e l'insegna delle
+       forbici. La tintoria al 55, dopo la lavanda: le due tinozze
        davanti e le stoffe stese ad asciugare. */
     V('tintoria',      'tintoria',          'Tintoria',         300,
-      { macchina: 'tintoria', liv: 52, cresce: RINCARO, la: true }),
-    /* La cucina al 24, fra le anatre e i maiali: è la macchina dove le
+      { macchina: 'tintoria', liv: 55, cresce: RINCARO, la: true }),
+    /* La cucina al 25, fra le anatre e i maiali: è la macchina dove le
        colture si incontrano (`dati/coltivazioni.js`, le confluenze) e
        l'unica che prende roba di tre catene diverse per volta. Una
        tettoia coi fornelli accesi, le pentole appese alla trave e le
        verdure tagliate sul ceppo. */
     V('cucina',        'cucina',            'Cucina',           210,
-      { macchina: 'cucina', liv: 24, cresce: RINCARO, la: true }),
+      { macchina: 'cucina', liv: 25, cresce: RINCARO, la: true }),
 
     /* ── L'ALBERO NUOVO: CINQUE BOTTEGHE IN PIÙ ──────────────────
        `docs/fattoria-albero.md` §8. Tre hanno già la loro facciata,
@@ -529,15 +532,15 @@ export const CATEGORIE = [
        della cena, come facevano tutte le botteghe di sopra prima che
        arrivasse il loro foglio (§6). */
     V('zuccherificio', 'zuccherificio',     'Zuccherificio',    230,
-      { macchina: 'zuccherificio', liv: 27, cresce: RINCARO }),
+      { macchina: 'zuccherificio', liv: 31, cresce: RINCARO }),
     V('gelateria',     'gelateria',         'Gelateria',        240,
-      { macchina: 'gelateria', liv: 30, cresce: RINCARO, la: true }),
+      { macchina: 'gelateria', liv: 34, cresce: RINCARO, la: true }),
     V('pastificio',    'pastificio',        'Pastificio',       260,
-      { macchina: 'pastificio', liv: 31, cresce: RINCARO }),
+      { macchina: 'pastificio', liv: 37, cresce: RINCARO }),
     V('friggitoria',   'friggitoria',       'Friggitoria',      300,
-      { macchina: 'friggitoria', liv: 57, cresce: RINCARO, la: true }),
+      { macchina: 'friggitoria', liv: 58, cresce: RINCARO, la: true }),
     V('sushi_bar',     'sushi_bar',         'Sushi bar',        340,
-      { macchina: 'sushi_bar', liv: 63, cresce: RINCARO }),
+      { macchina: 'sushi_bar', liv: 62, cresce: RINCARO }),
 
     /* ── LE BOTTEGHE DEL PAESE ───────────────────────────────────
        Non trasformano e non contengono: **chiedono**, come la
@@ -559,23 +562,23 @@ export const CATEGORIE = [
        stesso mestiere. La mensa — la scuola, il posto dei bambini —
        ha la sua scuoletta col campanile in `edifici_4.png`. */
     V('pasticceria',   'pasticceria',       'Pasticceria',      180,
-      { liv: 20, unico: true, la: true, posto: {
+      { liv: 21, unico: true, la: true, posto: {
         chiede: ['torta', 'burro', 'uova', 'latte', 'merenda', 'crostata',
                  'biscotti', 'gelato', 'frullato', 'marmellata', 'caramelle'],
         clienti: ['pasticcera', 'maestra'] } }),
     V('osteria',       'rosticceria',       'Osteria',          220,
-      { liv: 26, unico: true, la: true, posto: {
+      { liv: 29, unico: true, la: true, posto: {
         chiede: ['pane', 'formaggio', 'minestrone', 'polenta', 'tartufi', 'salsa',
                  'conserva', 'pasta', 'pizza', 'lasagne', 'patatine', 'fritto',
                  'arancini', 'sushi', 'maki'],
         clienti: ['oste', 'cuoco', 'pizzaiolo', 'sushi'] } }),
     V('mensa',         'mensa',             'Mensa della scuola', 200,
-      { liv: 30, unico: true, la: true, posto: {
+      { liv: 36, unico: true, la: true, posto: {
         chiede: ['pane', 'succo', 'latte', 'carote', 'fragole', 'minestrone',
                  'pasta', 'biscotti', 'frullato', 'gelato'],
         clienti: ['maestra', 'bidello'] } }),
     V('merceria',      'merceria',          'Merceria',         240,
-      { liv: 36, unico: true, la: true, posto: {
+      { liv: 43, unico: true, la: true, posto: {
         chiede: ['lana', 'stoffa', 'maglione', 'maglione_lavanda', 'sciarpa_lana',
                  'berretto', 'sacchetto', 'sapone'],
         clienti: ['sarta', 'lavandaia'] } }),
@@ -607,28 +610,29 @@ export const CATEGORIE = [
        recinto: due macchine e due mestieri, e per questo non sono una
        sola con sette tasti.
 
-       Arriva **al 5, insieme al primo recinto e alla prima coltura che
-       ci va dentro**. Era al 4 — «prima la mangiatoia, poi chi mangia»,
-       che come racconto è giusto — e per un livello intero era una
-       macchina che si comprava e **non sapeva fare niente**: la sua
-       prima ricetta vuole le carote, che arrivano al 5. Aprendola c'era
+       Arriva **al 6, un livello dopo le carote e uno prima della
+       conigliera**: una cosa per livello (`dati/livelli.js`). Era stata
+       al 4 — «prima la mangiatoia, poi chi mangia», che come racconto è
+       giusto — e per un livello intero era una macchina che si comprava
+       e **non sapeva fare niente**: la sua prima ricetta vuole le
+       carote, che arrivavano dopo. Aprendola c'era
        la frase «metti dentro quello che hai raccolto» e sotto il
        vuoto. Una macchina senza ricette è un tasto rotto che costa 150
        monete, e adesso lo dice `guastiDegliSblocchi`. */
     V('fienile',       'fienile0',          'Fienile',         150,
-      { macchina: 'fienile', liv: 5, cresce: RINCARO }),
+      { macchina: 'fienile', liv: 6, cresce: RINCARO }),
     V('conigliera',    'recinto_conigli_calmo', 'Conigliera',    95,
-      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 5, cresce: RINCARO,
+      { macchina: 'conigliera', stati: RECINTO('conigli'), piede: [4, 3], liv: 7, cresce: RINCARO,
         la: true }),
     V('pollaio',       'recinto_galline_calmo', 'Pollaio',      130,
-      { macchina: 'pollaio', stati: RECINTO('galline'), piede: [4, 3], liv: 8, cresce: RINCARO }),
+      { macchina: 'pollaio', stati: RECINTO('galline'), piede: [4, 3], liv: 9, cresce: RINCARO }),
     V('ovile',         'recinto_pecore_calmo',  'Ovile',        190,
-      { macchina: 'ovile', stati: RECINTO('pecore'), piede: [4, 3], liv: 12, cresce: RINCARO }),
+      { macchina: 'ovile', stati: RECINTO('pecore'), piede: [4, 3], liv: 14, cresce: RINCARO }),
     V('stalla',        'recinto_mucche_calmo',  'Stalla',       220,
       { macchina: 'stalla', stati: RECINTO('mucche'), piede: [4, 3], liv: 18, cresce: RINCARO,
         la: true }),
     V('porcile',       'recinto_maiali_calmo',  'Porcile',      260,
-      { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 26, cresce: RINCARO }),
+      { macchina: 'porcile', stati: RECINTO('maiali'), piede: [4, 3], liv: 28, cresce: RINCARO }),
 
     /* ── LE CINQUE BOCCHE DELL'ORTO ──────────────────────────────
        Stessa forma dei cinque di sopra — macchine con dei ritratti,
@@ -645,9 +649,9 @@ export const CATEGORIE = [
        ore non ci va niente e una bestia non è un ingrandimento del
        silo. */
     V('stagno_anatre', 'recinto_anatre_calmo',  'Stagno delle anatre', 240,
-      { macchina: 'anatre', stati: RECINTO('anatre'), piede: [4, 3], liv: 22, cresce: RINCARO }),
+      { macchina: 'anatre', stati: RECINTO('anatre'), piede: [4, 3], liv: 24, cresce: RINCARO }),
     V('recinto_capre', 'recinto_capre_calmo',   'Recinto delle capre', 280,
-      { macchina: 'capre', stati: RECINTO('capre'), piede: [4, 3], liv: 33, cresce: RINCARO }),
+      { macchina: 'capre', stati: RECINTO('capre'), piede: [4, 3], liv: 40, cresce: RINCARO }),
     /* «Arnie» e non «apiario»: l'apiario è la decorazione da 🪙30 che
        sta fra le case da sempre, e questa è la macchina. Sono due
        cose diverse con due prezzi diversi, come il fienile che lavora
@@ -655,12 +659,12 @@ export const CATEGORIE = [
        non si riusa una decorazione, si riusa **quando il disegno è lo
        stesso** (l'orto, il carretto, il fienile, il mercato). */
     V('arnie',         'recinto_api_calmo',     'Arnie',               300,
-      { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 38, cresce: RINCARO,
+      { macchina: 'arnie', stati: RECINTO('api'), piede: [4, 3], liv: 45, cresce: RINCARO,
         la: true, plurale: true }),
     V('recinto_alpaca', 'recinto_alpaca_calmo', 'Recinto degli alpaca', 330,
-      { macchina: 'alpaca', stati: RECINTO('alpaca'), piede: [4, 3], liv: 41, cresce: RINCARO }),
+      { macchina: 'alpaca', stati: RECINTO('alpaca'), piede: [4, 3], liv: 47, cresce: RINCARO }),
     V('recinto_asini', 'recinto_asini_calmo',   'Recinto degli asini', 355,
-      { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 47, cresce: RINCARO }),
+      { macchina: 'asini', stati: RECINTO('asini'), piede: [4, 3], liv: 52, cresce: RINCARO }),
 
     /* ── LA PESCHIERA: IL SETTIMO RECINTO, TARDI E DA SOLO ────────
        **Non si chiama «laghetto»**, che è già la decorazione da 🪙26

@@ -174,8 +174,8 @@ uguale('i posti al banco sono tre', POSTI, 3)
   const f = conIlMercato(1)
   uguale('al livello 1 si può ordinare solo il grano',
          merciOrdinabili(f).join(' '), 'grano')
-  const g = conIlMercato(8)
-  controlla('al livello 8 ci sono le uova', merciOrdinabili(g).includes('uova'))
+  const g = conIlMercato(9)
+  controlla('al livello 9 ci sono le uova', merciOrdinabili(g).includes('uova'))
   controlla('ma non i tartufi', !merciOrdinabili(g).includes('tartufi'))
   nota(`livello 8: si può ordinare ${merciOrdinabili(g).join(', ')}`)
 }

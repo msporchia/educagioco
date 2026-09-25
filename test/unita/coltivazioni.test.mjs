@@ -23,7 +23,7 @@ import { CIBI, cibiPer } from '../../src/giochi/fattoria/dati/bisogni.js'
 import { CLIENTI } from '../../src/giochi/fattoria/dati/mercato.js'
 import { serveA, guastiDegliUsi } from '../../src/giochi/fattoria/dati/usi.js'
 import { PER_ID, laMacchina } from '../../src/giochi/fattoria/dati/catalogo.js'
-import { livelloDellaRicetta } from '../../src/giochi/fattoria/dati/livelli.js'
+import { livelloDellaRicetta, livelloDellaVoce } from '../../src/giochi/fattoria/dati/livelli.js'
 import { controlla, uguale, dentro, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* Una borsa che tiene il conto: qui l'economia È l'oggetto della prova,
@@ -115,30 +115,28 @@ controlla('c\'è almeno una ricetta', RICETTE.length > 0)
    non la controllava nessuno: si vedeva solo giocando, e la si vedeva
    male — una coltura senza bocca non dà nessun errore, riempie uno
    scomparto e non serve a niente, cioè fa sembrare rotto un gioco che
-   funziona. Con cinque colture si teneva a mente; con tredici no. */
+   funziona. Con cinque colture si teneva a mente; con tredici no.
+
+   La bocca può arrivare **dopo**, ma poco dopo e mai prima del banco:
+   una coltura che nessuno mangia ancora la chiede il mercato, e
+   consegnarla fa salire. Era «insieme, mai dopo», e voleva dire tre
+   cose da comprare nello stesso livello — il livello che si paga da
+   sé (`dati/livelli.js`). */
 {
+  const BANCO = livelloDellaVoce(PER_ID.mercato)
   for (const c of COLTURE) {
     const bocche = RICETTE.filter(r => (r.prende || {})[c.da])
     controlla(`${c.emoji} ${c.nome.toLowerCase()}: c'è chi la mangia`, bocche.length > 0)
-    /* E la bocca non arriva **dopo**: una coltura che si può seminare
-       mentre quello che la consuma è ancora chiuso è roba che occupa
-       il silo per dei livelli interi. Il verso giusto è l'opposto —
-       la ricetta può anche arrivare insieme, mai più tardi. */
     const quando = Math.min(...bocche.map(r => livelloDellaRicetta(r)))
-    /* **Il grano è l'eccezione, ed è il primo livello.** Si semina al
-       1 e il mulino arriva al 3: per due livelli il raccolto si
-       accumula senza servire a niente, ed è voluto — al livello 1 ci
-       dev'essere qualcosa da seminare (`guastiDeiLivelli`), e il grano
-       che aspetta è esattamente la ragione per cui si vuole il mulino.
-       Vale finché la roba in attesa è **una sola**: dalla seconda in
-       poi non è più un'attesa, è un magazzino. */
-    if ((c.liv || 1) === 1) {
-      uguale(`${c.nome.toLowerCase()}: è la coltura del primo livello`, quando <= 3, true)
-      continue
-    }
-    controlla(`e arriva col suo livello, non dopo (${c.liv || 1} → ${quando})`,
-              quando <= (c.liv || 1),
-              `${c.nome}: si semina al ${c.liv || 1} e si usa al ${quando}`)
+    const liv = c.liv || 1
+    controlla(`e chi la mangia arriva entro tre livelli (${liv} → ${quando})`,
+              quando <= liv + 3,
+              `${c.nome}: si semina al ${liv} e si usa al ${quando}`)
+    /* Il grano è l'eccezione, ed è il primo livello: al 1 ci dev'essere
+       qualcosa da seminare (`guastiDeiLivelli`) e il banco arriva
+       subito dopo. */
+    if (liv > 1 && quando > liv)
+      controlla(`e intanto la chiede il banco (mercato al ${BANCO})`, BANCO <= liv)
   }
   uguale('e la coltura del primo livello è una sola',
          COLTURE.filter(c => (c.liv || 1) === 1).length, 1)

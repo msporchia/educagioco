@@ -96,7 +96,7 @@ function riempi(f, i, c) {
   controlla('il catalogo non ha guasti', c.length === 0, c.join(' · '))
   const v = PER_ID.mongolfiera
   controlla('la mongolfiera è in catalogo', !!v)
-  uguale('arriva al livello 25', livelloDellaVoce(v), 25)
+  uguale('arriva al livello 26', livelloDellaVoce(v), 26)
   uguale('costa 🪙250', v.prezzo, 250)
   controlla('ed è unica', v.unico === true)
   /* I due disegni sono arrivati (`edifici_4.png`): il pallone e la
@@ -104,8 +104,8 @@ function riempi(f, i, c) {
      `guastiDelCatalogo`; qui si guarda che siano quelli giusti. */
   uguale('ha il suo disegno', v.pezzo, 'mongolfiera')
   uguale('e anche quello di quando è partita', v.partita && v.partita.pezzo, 'mongolfiera_partita')
-  controlla('ed è un premio del livello 25',
-            premiDi(25).some(p => p.id === 'mongolfiera'))
+  controlla('ed è un premio del livello 26',
+            premiDi(26).some(p => p.id === 'mongolfiera'))
 }
 
 /* Le otto sorprese: gli id del foglio della fiera (`edifici_5.png`),
@@ -134,7 +134,7 @@ function riempi(f, i, c) {
 {
   let palloni = 0, storte = 0, mangimi = 0, doppie = 0, fuori = 0, casseFuori = 0, pezziFuori = 0, disuguali = 0
   const viste = new Set()
-  for (let liv = 25; liv <= ULTIMO; liv++) {
+  for (let liv = 26; liv <= ULTIMO; liv++) {
     const f = conLaMongolfiera(liv)
     const lecite = new Set(merciOrdinabili(f))
     for (let s = 1; s <= 12; s++) {
@@ -158,7 +158,7 @@ function riempi(f, i, c) {
   }
   /* Il giorno che arriva, il pallone è già pieno di file: tre merci
      lavorate diverse, e non una fila sola scritta tre volte. */
-  dentro('al 25 ci sono merci per tre file', merciDaCassa(conLaMongolfiera(25)).length, FILE, Infinity)
+  dentro('al 26 ci sono merci per tre file', merciDaCassa(conLaMongolfiera(26)).length, FILE, Infinity)
   uguale(`solo merci a due fasi o più (${palloni} palloni)`, storte, 0)
   uguale('e mai il mangime delle bestie: solo prodotti finiti', mangimi, 0)
   uguale('solo merci ottenibili a quel livello', fuori, 0)

@@ -40,22 +40,22 @@ import { cibiPer } from './bisogni.js'
    alti rispetto agli oggetti apposta: una bestia è la cosa che si
    desidera per giorni, non quella che si compra per riempire un angolo. */
 export const ANIMALI = {
-  'cane-bobtail': { nome: 'Bobtail', emoji: '🐕', prezzo: 90, liv: 2 },
-  'cane-beagle':  { nome: 'Beagle',  emoji: '🐶', prezzo: 90, liv: 13 },
-  'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75, liv: 7 },
-  'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75, liv: 20 },
-  'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75, liv: 30 },
+  'cane-bobtail': { nome: 'Bobtail', emoji: '🐕', prezzo: 90, liv: 3 },
+  'cane-beagle':  { nome: 'Beagle',  emoji: '🐶', prezzo: 90, liv: 15 },
+  'gatto-tuxedo': { nome: 'Gatto bianco e nero', emoji: '🐈', prezzo: 75, liv: 10 },
+  'gatto-nero':   { nome: 'Gatto nero',   emoji: '🐈‍⬛', prezzo: 75, liv: 19 },
+  'gatto-giallo': { nome: 'Gatto rosso',  emoji: '🐈', prezzo: 75, liv: 35 },
   /* Il coniglio è la prima bestia nata da una scheda di prompt
      (`strumenti/sprite/.../PROMPT-bestia.md`) e non da un foglio capitato:
      il nome dello sprite è anche la famiglia, quindi `coniglio` e non
      `coniglio-bianco` finché ce n'è uno solo. */
-  coniglio:       { nome: 'Coniglio',     emoji: '🐰', prezzo: 85, liv: 10 },
+  coniglio:       { nome: 'Coniglio',     emoji: '🐰', prezzo: 85, liv: 12 },
   /* Un pappagallo **non porta niente sulla schiena**: ha le ali, e una
      copertina addosso a un uccello non si sa disegnare. È l'unica riga
      che si scosta dal ripiego, ed è il caso per cui `porta` esiste — se
      no il catalogo degli addobbi avrebbe dovuto tenere un elenco di
      eccezioni per specie, allineato a mano per sempre. */
-  pappagallo:     { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120, liv: 42,
+  pappagallo:     { nome: 'Pappagallo',   emoji: '🦜', prezzo: 120, liv: 49,
                     porta: ['testa', 'muso', 'collo'] },
 }
 
@@ -69,7 +69,7 @@ export const ANIMALI = {
        un quarto d'ora di campo, rimettere a posto una bestia chiede
        tre gesti e le ore che ci mette la pancia a scendere.
      · Cresce col prezzo perché una bestia cara è un impegno più
-       grosso — il pappagallo arriva al livello 42 — e perché così il
+       grosso — il pappagallo arriva al livello 49 — e perché così il
        numero non è scritto due volte: chi ritocca il prezzo ritocca
        anche questo.
      · Il ciclo non si ripete prima di tre ore (la pancia cala di 1 in

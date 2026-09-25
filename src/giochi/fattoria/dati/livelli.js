@@ -131,12 +131,21 @@ export const ALLUNGA = 1.25
 const passiFinoA = livello =>
   ALLUNGA * (SOGLIA_A * (livello - 1) ** 2 + SOGLIA_B * (livello - 1))
 
-/* Quanto costa comprare **una volta** quello che il livello apre: le
-   cose e le bestie, al prezzo di listino (le colture non costano). È
-   la parte del salto che si paga comprando. Dal secondo livello in su:
-   vedi in testa, sul primo. */
+/* Quanto costa comprare **una volta** quello che il livello apre di
+   produttivo: le cose che lavorano e le bestie di casa, al prezzo di
+   listino (le colture non costano). È la parte del salto che si paga
+   comprando. Dal secondo livello in su: vedi in testa, sul primo.
+
+   **Le decorazioni non contano.** Sono due o tre per livello e costano
+   poche monete: non sono loro il bersaglio che si sposta, e contarle
+   farebbe dipendere le soglie da quale vaso finisce in quale livello.
+   Le bestie sì, anche se non producono: costano quanto un recinto
+   piccolo e si comprano appena arrivano, cioè nel giro contano come
+   una struttura. */
 export const costoDelLivello = livello =>
-  livello < 2 ? 0 : premiDi(livello).reduce((n, p) => n + (p.prezzo || 0), 0)
+  livello < 2 ? 0 : premiDi(livello)
+    .filter(p => p.tipo === 'bestia' || p.zona === 'lavoro')
+    .reduce((n, p) => n + (p.prezzo || 0), 0)
 
 /* La somma dei costi fino a un livello, tenuta da parte: si chiede a
    ogni ridisegno del gettone, e i premi non cambiano mai durante una
@@ -252,83 +261,94 @@ export const ULTIMO = Math.max(
 
 /* ── I NOMI ───────────────────────────────────────────────────────
    Sessanta nomi scritti a mano sarebbero sessanta occasioni di scrivere
-   una parola vuota. Quelli che contano si dichiarano — sono i livelli
-   in cui arriva qualcosa che cambia il gioco — e tutti gli altri
+   una parola vuota. Quelli che contano si dichiarano — le cose che
+   cambiano il gioco quando arrivano — e tutti gli altri livelli
    prendono **il nome della cosa più bella che portano**, che è vera per
-   definizione e non va tenuta allineata a niente. */
+   definizione e non va tenuta allineata a niente.
+
+   **Il nome sta sulla cosa, non sul numero del livello.** Erano scritti
+   per livello (`4: 'Il mercato'`), e il giorno che il calendario si è
+   sparso — una cosa per livello invece di tre ogni tanto — ognuno di
+   quei numeri sarebbe diventato una bugia: «Il fienile e i conigli» su
+   un livello che porta solo il fienile. Adesso il nome va dove va la
+   cosa. L'ordine qui sotto è anche la precedenza: se due cose con un
+   nome arrivano insieme, vince la prima (il campo prima del silo). Le
+   ricette contano anche loro: un livello che porta solo la pizza si
+   chiama «La pizza», non come il vaso di fiori che arriva con lei. */
 export const NOMI = {
-  1: 'Il primo campo',
-  2: 'Il primo amico',
-  3: 'Il mulino',
-  4: 'Il mercato',
-  5: 'Il fienile e i conigli',
-  8: 'Le galline',
-  10: 'Il pastone',
-  12: 'Le pecore',
-  /* ── LE BOTTEGHE ─────────────────────────────────────────────────
-     L'albero a più fasi (`docs/fattoria-albero.md`): il 14 riempie il
-     buco 13–17 della prima metà col telaio e la dispensa, cioè con la
-     prima macchina che prende quello che esce da un'altra macchina. */
-  14: 'Il telaio',
-  16: 'Il panificio',
-  18: 'Le mucche',
+  orto: 'Il primo campo',
+  mercato: 'Il mercato',
+  'cane-bobtail': 'Il primo amico',
+  mulino: 'Il mulino',
+  carote: 'Le carote',
+  fienile: 'Il fienile',
+  conigliera: 'I conigli',
+  carretto_mercato: 'Il vicino',
+  pollaio: 'Le galline',
+  mais: 'Il mais',
+  erba: 'L\'erba medica',
+  ovile: 'Le pecore',
+  telaio: 'Il telaio',
+  panificio: 'Il panificio',
+  stalla: 'Le mucche',
   /* Il caseificio arriva due livelli dopo le mucche, e non insieme: il
      latte deve prima essere una cosa che si ha, se no si comprerebbe
      una macchina per una roba mai vista. */
-  20: 'Il caseificio',
-  /* ── DA QUI IN POI C'È L'ORTO ────────────────────────────────────
-     Fra il porcile (26) e l'ultima cosa del catalogo (64) non arrivava
-     **niente che lavorasse**: trentotto livelli di sole decorazioni,
-     cioè la metà del gioco in cui chi ha imparato la catena non ha più
-     niente da imparare. Adesso sette di quei livelli portano una bocca
-     nuova o una coltura nuova, scaglionati fino al 57 — e l'unico che
-     sta *prima* del porcile sono le anatre, messe nel buco fra le
-     mucche (18) e i maiali (26), che era il più lungo della prima
-     metà. */
-  22: 'Le anatre e il pentolone',
-  /* La cucina è dove le colture si incontrano: arriva appena dopo il
-     beverone, cioè appena l'orto ha aperto e il caseificio c'è. */
-  24: 'La cucina',
-  26: 'I maiali',
-  /* Lo zuccherificio arriva insieme alla barbabietola, la sua unica
-     coltura: è la prima bottega dell'albero nuovo (`docs/fattoria-
-     albero.md` §8). */
-  27: 'Lo zuccherificio',
-  29: 'La zuppa d\'orto',
-  30: 'La gelateria',
-  31: 'Il pastificio',
-  33: 'Le capre',
-  36: 'La sartoria',
-  38: 'Le api',
-  /* La pizza vuole la salsa della cucina (38): è il primo livello in
-     cui tutti e tre gli ingredienti ci sono già. */
-  39: 'La pizza',
-  40: 'Le lasagne',
-  /* La sciarpa di lana, anticipata rispetto al berretto: la tappa 8 la
-     mette qui apposta (`docs/fattoria-albero.md` §8.1). */
-  42: 'La sciarpa',
-  44: 'Le fragole',
-  /* Erano al 50 e al 57 — troppo in là: provato a mano, chi arriva
-     alle api aveva davanti dodici livelli di sole decorazioni prima
-     della bestia dopo. Adesso i buchi fra una bestia e l'altra restano
-     sotto i sei livelli. */
-  41: 'Gli alpaca',
-  47: 'Gli asini',
-  /* La lavanda e la tintoria stanno **dopo** gli asini, che erano
-     l'ultima cosa che lavorasse: da qui in avanti il gioco aveva
-     diciassette livelli di sole decorazioni. */
-  52: 'La lavanda e la tintoria',
-  55: 'Il berretto',
-  /* La peschiera e la friggitoria arrivano insieme: il pesce che
-     l'una pesca è il primo ingrediente nuovo dell'altra. */
-  57: 'La peschiera',
-  60: 'Il riso',
-  63: 'Il sushi bar',
+  caseificio: 'Il caseificio',
+  pasticceria: 'La pasticceria',
+  patate: 'Le patate e i cavolfiori',
+  pentolone: 'Il pentolone',
+  stagno_anatre: 'Le anatre',
+  cucina: 'La cucina',
+  mongolfiera: 'La mongolfiera',
+  zucche: 'Le zucche',
+  porcile: 'I maiali',
+  osteria: 'L\'osteria',
+  barbabietola: 'La barbabietola',
+  zuccherificio: 'Lo zuccherificio',
+  pomodori: 'La zuppa d\'orto',
+  gelateria: 'La gelateria',
+  mensa: 'La mensa',
+  pastificio: 'Il pastificio',
+  biscotti: 'I biscotti',
+  melanzane: 'Le melanzane e i peperoni',
+  recinto_capre: 'Le capre',
+  sartoria: 'La sartoria',
+  merceria: 'La merceria',
+  cipolle: 'Le cipolle e l\'aglio',
+  arnie: 'Le api',
+  /* La pizza vuole la salsa della cucina: è il primo livello in cui
+     tutti e tre gli ingredienti ci sono già. */
+  pizza: 'La pizza',
+  recinto_alpaca: 'Gli alpaca',
+  lasagne: 'Le lasagne',
+  /* La sciarpa di lana, anticipata rispetto al berretto
+     (`docs/fattoria-albero.md` §8.1). */
+  sciarpa_lana: 'La sciarpa',
+  fragole: 'Le fragole',
+  marmellata: 'La marmellata',
+  recinto_asini: 'Gli asini',
+  frullato: 'Il frullato',
+  lavanda: 'La lavanda',
+  tintoria: 'La tintoria',
+  berretto: 'Il berretto',
+  /* La peschiera e la friggitoria arrivano una dopo l'altra: il pesce
+     che l'una pesca è il primo ingrediente nuovo dell'altra. */
+  peschiera: 'La peschiera',
+  friggitoria: 'La friggitoria',
+  riso: 'Il riso',
+  arancini: 'Gli arancini',
+  sushi_bar: 'Il sushi bar',
+  maki: 'I maki',
 }
+
+/* Le ricette che arrivano a un livello: servono solo al nome. */
+const ricetteAl = l => RICETTE.filter(r => livelloDellaRicetta(r) === l).map(r => r.id)
 
 export function nomeDi(livello) {
   const l = Math.max(1, livello | 0)
-  if (NOMI[l]) return NOMI[l]
+  const qui = new Set([...premiDi(l).map(p => p.id), ...ricetteAl(l)])
+  for (const [id, nome] of Object.entries(NOMI)) if (qui.has(id)) return nome
   const r = roba(l)
   if (r.animali.length) return r.animali[0].nome
   if (r.colture.length) return r.colture[0].nome
@@ -449,8 +469,17 @@ export function guastiDeiLivelli() {
   const g = []
   for (let l = 2; l <= ULTIMO + 2; l++)
     if (!(sogliaDi(l) > sogliaDi(l - 1))) g.push(`la soglia del livello ${l} non sale`)
-  for (const l of Object.keys(NOMI))
-    if (!(l >= 1 && l <= ULTIMO)) g.push(`c'è un nome per il livello ${l}, che non esiste`)
+  /* Un nome dichiarato per una cosa che non arriva mai è un nome che
+     nessuno vede: di solito una cosa rinominata o tolta. */
+  {
+    const arrivano = new Set()
+    for (let l = 1; l <= ULTIMO; l++) {
+      for (const p of premiDi(l)) arrivano.add(p.id)
+      for (const id of ricetteAl(l)) arrivano.add(id)
+    }
+    for (const id of Object.keys(NOMI))
+      if (!arrivano.has(id)) g.push(`c'è un nome per «${id}», che non arriva a nessun livello`)
+  }
   /* Il livello si ricava dalla spesa risolvendo la formula: se
      l'inversa e la diretta si scostano, uno spende e non sale — o sale
      senza spendere, che è peggio. */

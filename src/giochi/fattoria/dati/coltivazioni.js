@@ -315,30 +315,41 @@ const CRESCE = coltura => Array.from({ length: 7 }, (_, i) => `campo_${coltura}$
    tutta l'economia: vedi `unita/coltivazioni`, che rifiuta una coltura
    che costa più del cibo che sostituisce. */
 /* `liv` è il livello della fattoria a cui la coltura si sblocca
-   (`dati/livelli.js`), e **ognuna arriva con la bocca che la mangia**:
+   (`dati/livelli.js`), e **la bocca che la mangia arriva poco dopo**:
 
-     grano       1   e al 3 c'è il mulino che ne fa mangime
-     carote      5   insieme alla conigliera, che mangia solo quelle
-     mais       10   per il pastone, quando il mulino gira da un pezzo
-     erba       12   insieme all'ovile: prima il fieno, poi le pecore
-     patate     22   col beverone e lo stagno delle anatre
+     grano       1   e al 4 c'è il mulino che ne fa mangime
+     carote      5   il fienile al 6, la conigliera al 7
+     mais       11   per il pastone, quando il mulino gira da un pezzo
+     erba       13   il fieno, e al 14 le pecore
+     patate     22   il pentolone al 23, le anatre al 24
      cavolfiori 22   nello stesso beverone: una coppia, una bocca
-     zucche     26   insieme al porcile, l'unico che le vuole
-     pomodori   29   la zuppa d'orto, più svelta di quella di zucca
-     melanzane  33   con la pastura e il recinto delle capre
-     peperoni   33   nella stessa pastura
-     cipolle    38   lasciate fiorire: il fiorume delle api
-     aglio      38   nello stesso fiorume
-     fragole    44   col miele fanno la merenda, al mulino
+     zucche     27   la zuppa, e al 28 il porcile
+     barbabietola 30 lo zuccherificio al 31
+     pomodori   33   la zuppa d'orto, più svelta di quella di zucca
+     melanzane  39   con la pastura, e al 40 le capre
+     peperoni   39   nella stessa pastura
+     cipolle    44   lasciate fiorire: il fiorume, e al 45 le api
+     aglio      44   nello stesso fiorume
+     fragole    50   col miele fanno la merenda
+     lavanda    54   la tintoria al 55
+     riso       60   gli arancini al 61
+
+   *Ribalta la regola di prima*, che voleva la coltura **insieme** alla
+   sua bocca: carote, fienile e conigliera arrivavano tutti al 5, e un
+   livello che dà tre cose da comprare è un livello che si paga da sé
+   (`dati/livelli.js`, «LA ROBA DI UN LIVELLO NON PAGA IL LIVELLO
+   DOPO»). Una coltura senza ancora chi la mangia non è più roba che
+   riempie il silo senza servire: **la chiede il banco del mercato**,
+   che c'è dal livello 2, e consegnarla fa salire. Quello che resta
+   della regola lo controlla `unita/coltivazioni`: la bocca arriva entro
+   tre livelli, e prima c'è il banco.
 
    Il primo campo ha **una scelta sola**, e non è una limitazione: a
    quattro anni cinque bottoni sono un elenco da leggere, uno è una cosa
-   da fare. Una coltura che arriva prima di quello che la consuma
-   sarebbe roba che riempie il silo senza servire a niente — che è il
-   modo di far sembrare rotto un gioco che funziona.
+   da fare.
 
    ── E TREDICI NON SONO CINQUE ─────────────────────────────────────
-   Le prime cinque arrivano entro il livello 26, cioè nella prima metà
+   Le prime cinque arrivano entro il livello 27, cioè nella prima metà
    del gioco; le altre otto stanno tutte oltre, ed è deliberato. Fra il
    porcile (26) e la fine del catalogo (64) non arrivava **più niente
    che lavorasse**: trentotto livelli di sole decorazioni, cioè la
@@ -349,7 +360,7 @@ export const COLTURE = [
      fienile, che è il modo di dire «prima il fieno, poi gli animali»
      senza scriverlo da nessuna parte. */
   {
-    id: 'erba', liv: 12, nome: 'Erba medica', emoji: '🌿',
+    id: 'erba', liv: 13, nome: 'Erba medica', emoji: '🌿',
     semina: 0, raccolta: 1, minuti: 4, resa: 1, da: 'fieno',
     stadi: CRESCE('erba'),
   },
@@ -364,14 +375,14 @@ export const COLTURE = [
     stadi: CRESCE('carote'),
   },
   {
-    id: 'mais', liv: 10, nome: 'Mais', emoji: '🌽',
+    id: 'mais', liv: 11, nome: 'Mais', emoji: '🌽',
     semina: 0, raccolta: 2, minuti: 8, resa: 1, da: 'mais',
     stadi: CRESCE('mais'),
   },
   /* La più lenta e la più cara, e l'unica che i maiali cercano: è la
      coltura che si semina quando si ha già tutto il resto. */
   {
-    id: 'zucche', liv: 26, nome: 'Zucche', emoji: '🎃',
+    id: 'zucche', liv: 27, nome: 'Zucche', emoji: '🎃',
     semina: 0, raccolta: 2, minuti: 10, resa: 1, da: 'zucche',
     stadi: CRESCE('zucche'),
   },
@@ -399,45 +410,45 @@ export const COLTURE = [
      maiali, e se i pomodori costassero 1 il tartufo verrebbe a metà
      prezzo del cibo che sostituisce (`unita/coltivazioni`). */
   {
-    id: 'pomodori', liv: 29, nome: 'Pomodori', emoji: '🍅',
+    id: 'pomodori', liv: 33, nome: 'Pomodori', emoji: '🍅',
     semina: 0, raccolta: 2, minuti: 8, resa: 1, da: 'pomodori',
     stadi: CRESCE('pomodori'),
   },
   {
-    id: 'melanzane', liv: 33, nome: 'Melanzane', emoji: '🍆',
+    id: 'melanzane', liv: 39, nome: 'Melanzane', emoji: '🍆',
     semina: 0, raccolta: 2, minuti: 9, resa: 1, da: 'melanzane',
     stadi: CRESCE('melanzane'),
   },
   {
-    id: 'peperoni', liv: 33, nome: 'Peperoni', emoji: '🫑',
+    id: 'peperoni', liv: 39, nome: 'Peperoni', emoji: '🫑',
     semina: 0, raccolta: 1, minuti: 7, resa: 1, da: 'peperoni',
     stadi: CRESCE('peperoni'),
   },
   {
-    id: 'cipolle', liv: 38, nome: 'Cipolle', emoji: '🧅',
+    id: 'cipolle', liv: 44, nome: 'Cipolle', emoji: '🧅',
     semina: 0, raccolta: 1, minuti: 6, resa: 1, da: 'cipolle',
     stadi: CRESCE('cipolle'),
   },
   /* La più lenta di tutte, e non per bilanciamento: l'aglio ci mette
      davvero mesi, ed è la coltura su cui si aspetta. */
   {
-    id: 'aglio', liv: 38, nome: 'Aglio', emoji: '🧄',
+    id: 'aglio', liv: 44, nome: 'Aglio', emoji: '🧄',
     semina: 0, raccolta: 1, minuti: 12, resa: 1, da: 'aglio',
     stadi: CRESCE('aglio'),
   },
   {
-    id: 'fragole', liv: 44, nome: 'Fragole', emoji: '🍓',
+    id: 'fragole', liv: 50, nome: 'Fragole', emoji: '🍓',
     semina: 0, raccolta: 1, minuti: 11, resa: 1, da: 'fragole',
     stadi: CRESCE('fragole'),
   },
 
   /* ── LA LAVANDA, E IL PRIMO CAMPO CHE CRESCE COL DISEGNO DI UN
        ALTRO ─────────────────────────────────────────────────────────
-     Arriva al 52 **con la tintoria**, che è la bocca che la mangia:
-     l'unica coltura della fattoria che non finisce in una ciotola né
-     in una mangiatoia. */
+     Arriva al 54, un livello prima della tintoria che la mangia (e
+     intanto la chiede la lavandaia al banco): l'unica coltura della
+     fattoria che non finisce in una ciotola né in una mangiatoia. */
   {
-    id: 'lavanda', liv: 52, nome: 'Lavanda', emoji: '💐',
+    id: 'lavanda', liv: 54, nome: 'Lavanda', emoji: '💐',
     semina: 0, raccolta: 1, minuti: 9, resa: 1, da: 'lavanda',
     stadi: CRESCE('lavanda'),
   },
@@ -448,7 +459,7 @@ export const COLTURE = [
      la peschiera e la friggitoria (57–60). Nel riso il primo stadio è
      già l'aiuola allagata: è una risaia, e si vede dal seme. */
   {
-    id: 'barbabietola', liv: 27, nome: 'Barbabietola', emoji: '🍠',
+    id: 'barbabietola', liv: 30, nome: 'Barbabietola', emoji: '🍠',
     semina: 0, raccolta: 1, minuti: 10, resa: 1, da: 'barbabietola',
     stadi: CRESCE('barbabietola'),
   },
@@ -470,7 +481,7 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    ── `liv`: QUANDO UNA RICETTA COMPARE ─────────────────────────────
    Il ripiego è il livello della sua macchina, ed è giusto per sei
    ricette su sette. Il pastone no, e il perché è il difetto che questo
-   campo esiste per riparare: il mulino arriva al livello 3, il mais al
+   campo esiste per riparare: il mulino arrivava al livello 3, il mais al
    10. Per sette livelli — 🪙2000 di esercizi, cinque ore e mezza — il
    mulino mostrava «Pastone: 4 🌽» a chi il mais non poteva nemmeno
    seminarlo. Un tasto spento per cinque ore non è un obiettivo, è una
@@ -530,14 +541,14 @@ export const PER_COLTURA = Object.fromEntries(COLTURE.map(c => [c.id, c]))
    riconosce a colpo d'occhio**, e mai più di quattro ricette: quattro
    tasti in un foglio si leggono, nove sono un elenco. Restano nel
    fienile i tagli a freddo; le quattro cose che si scaldano vanno nel
-   pentolone, che arriva al 22 col beverone — cioè quando la prima
+   pentolone, che arriva al 23 col beverone — cioè quando la prima
    ricetta cotta compariva già; la merenda va nel panificio.
 
    ── E UNA FATTORIA DI IERI NON SI ROMPE ───────────────────────────
    Una lavorazione in corso è `{ ricetta, da }` dentro la cosa, e il
    motore la legge per **id di ricetta**, non per macchina: una zuppa
    partita ieri nel fienile finisce e si ritira lo stesso, e solo la
-   *prossima* si fa nel pentolone. Chi è oltre il 22 con la zuppa nel
+   *prossima* si fa nel pentolone. Chi è oltre il 23 con la zuppa nel
    fienile deve comprare il pentolone (🪙150) per farla ancora, e il
    consiglio glielo dice («si fa nel pentolone, che non hai») — è
    l'unica tappa che toglie qualcosa a una fattoria di ieri, ed è
@@ -599,7 +610,7 @@ export const RICETTE = [
   },
   /* Col mais, non col mulino: è la ricetta per cui esiste `liv`. */
   {
-    id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino', liv: 10,
+    id: 'pastone', nome: 'Pastone', emoji: '🍲', dove: 'mulino', liv: 11,
     prende: { mais: 3 }, costo: 1, minuti: 6, da: 'pastone', resa: 1,
   },
 
@@ -609,19 +620,19 @@ export const RICETTE = [
      che occupa uno scomparto e non serve a niente. */
   {
     id: 'foraggio_carote', nome: 'Foraggio di carote', emoji: '🥬',
-    dove: 'fienile', liv: 5,
+    dove: 'fienile', liv: 6,
     prende: { carote: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
-    id: 'becchime', nome: 'Becchime', emoji: '🌰', dove: 'fienile', liv: 8,
+    id: 'becchime', nome: 'Becchime', emoji: '🌰', dove: 'fienile', liv: 9,
     prende: { grano: 2 }, costo: 0, minuti: 4, da: 'becchime', resa: 1,
   },
   {
-    id: 'foraggio', nome: 'Foraggio d\'erba', emoji: '🥬', dove: 'fienile', liv: 12,
+    id: 'foraggio', nome: 'Foraggio d\'erba', emoji: '🥬', dove: 'fienile', liv: 13,
     prende: { fieno: 2 }, costo: 0, minuti: 5, da: 'foraggio', resa: 1,
   },
   {
-    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'pentolone', liv: 26,
+    id: 'zuppa', nome: 'Zuppa di zucca', emoji: '🥘', dove: 'pentolone', liv: 27,
     prende: { zucche: 2 }, costo: 0, minuti: 6, da: 'zuppa', resa: 1,
   },
 
@@ -683,7 +694,7 @@ export const RICETTE = [
      costa una monetina perché si scalda — le altre ricette del fienile
      sono tagli a freddo e non costano niente. */
   {
-    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'pentolone', liv: 22,
+    id: 'beverone', nome: 'Beverone', emoji: '🪣', dove: 'pentolone', liv: 23,
     prende: { patate: 2, cavolfiori: 1 }, costo: 1, minuti: 4, da: 'beverone', resa: 1,
   },
   /* **La seconda strada per la zuppa dei maiali**, e la prima che non
@@ -691,11 +702,11 @@ export const RICETTE = [
      meno: chi ha aspettato risparmia, come per le due strade del
      foraggio. */
   {
-    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'pentolone', liv: 29,
+    id: 'zuppa_orto', nome: 'Zuppa d\'orto', emoji: '🥘', dove: 'pentolone', liv: 33,
     prende: { pomodori: 2 }, costo: 0, minuti: 4, da: 'zuppa', resa: 1,
   },
   {
-    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'pentolone', liv: 33,
+    id: 'pastura', nome: 'Pastura', emoji: '🍃', dove: 'pentolone', liv: 39,
     prende: { melanzane: 2, peperoni: 1 }, costo: 0, minuti: 5, da: 'pastura', resa: 1,
   },
   /* **Cipolle e aglio lasciati fiorire.** Non è una licenza: i fiori
@@ -705,7 +716,7 @@ export const RICETTE = [
      colture che non finiscono in nessuna ciotola trovano una bocca
      proprio perché non le si raccoglie per mangiarle. */
   {
-    id: 'fiorume', nome: 'Fiorume', emoji: '🌼', dove: 'fienile', liv: 38,
+    id: 'fiorume', nome: 'Fiorume', emoji: '🌼', dove: 'fienile', liv: 44,
     prende: { cipolle: 1, aglio: 1 }, costo: 0, minuti: 4, da: 'fiori', resa: 1,
   },
   /* ── E QUI L'ANELLO SI CHIUDE ──────────────────────────────────
@@ -719,7 +730,7 @@ export const RICETTE = [
      è la strada che **non chiede l'orto**. Chi ha i campi pieni di
      pomodori fa il miele col grano e con gli asini. */
   {
-    id: 'fiorume_concime', nome: 'Prato fiorito', emoji: '🌼', dove: 'fienile', liv: 47,
+    id: 'fiorume_concime', nome: 'Prato fiorito', emoji: '🌼', dove: 'fienile', liv: 52,
     prende: { concime: 1, fieno: 1 }, costo: 0, minuti: 5, da: 'fiori', resa: 1,
   },
 
@@ -729,7 +740,7 @@ export const RICETTE = [
      da un cereale, e la ragione per cui le api servono a qualcosa
      dentro casa e non solo al banco del mercato. */
   {
-    id: 'merenda', nome: 'Fragole al miele', emoji: '🥧', dove: 'panificio', liv: 44,
+    id: 'merenda', nome: 'Fragole al miele', emoji: '🥧', dove: 'panificio', liv: 50,
     prende: { fragole: 2, miele: 1 }, costo: 1, minuti: 6, da: 'merenda', resa: 1,
   },
 
@@ -778,35 +789,35 @@ export const RICETTE = [
      `docs/fattoria-albero.md`. */
 
   /* ── il telaio: la stoffa ──
-     Arriva al 14, due livelli dopo l'ovile: due lane fanno una stoffa,
+     Arriva al 16, due livelli dopo l'ovile: due lane fanno una stoffa,
      e la stoffa è il primo pezzo della catena che finisce alla sarta
      (il maglione, in sartoria). */
   {
-    id: 'stoffa', nome: 'Stoffa', emoji: '🧵', dove: 'telaio', liv: 14,
+    id: 'stoffa', nome: 'Stoffa', emoji: '🧵', dove: 'telaio', liv: 16,
     prende: { lana: 2 }, costo: 1, minuti: 8, da: 'stoffa', resa: 1,
   },
 
   /* ── il mulino macina la farina, il panificio la cuoce ──
-     La farina arriva al 16 **col panificio** e non prima: farina
+     La farina arriva al 17 **col panificio** e non prima: farina
      senza panificio è roba che riempie la dispensa e non serve. Il
      pane è un cibo (0,60 di pancia): 🪙7 contro 🪙10 comprato, il 70%,
      dentro la fascia di `unita/coltivazioni`. */
   {
-    id: 'farina', nome: 'Farina', emoji: '🌾', dove: 'mulino', liv: 16,
+    id: 'farina', nome: 'Farina', emoji: '🌾', dove: 'mulino', liv: 17,
     prende: { grano: 2 }, costo: 1, minuti: 5, da: 'farina', resa: 1,
   },
   {
-    id: 'pane', nome: 'Pane', emoji: '🍞', dove: 'panificio', liv: 16,
+    id: 'pane', nome: 'Pane', emoji: '🍞', dove: 'panificio', liv: 17,
     prende: { farina: 2 }, costo: 1, minuti: 6, da: 'pane', resa: 1,
   },
 
   /* ── la sartoria: il maglione ──
-     Due stoffe fanno un maglione, al 36: vale 🪙16 e un'ora e cinquanta
+     Due stoffe fanno un maglione, al 42: vale 🪙16 e un'ora e cinquanta
      di fattoria con un campo solo (`docs/fattoria-albero.md`, §3), e
      non si mangia — lo vuole la sarta — quindi non entra nel conto
      delle pappe: il suo freno è il tempo. */
   {
-    id: 'maglione', nome: 'Maglione', emoji: '🧥', dove: 'sartoria', liv: 36,
+    id: 'maglione', nome: 'Maglione', emoji: '🧥', dove: 'sartoria', liv: 42,
     prende: { stoffa: 2 }, costo: 2, minuti: 10, da: 'maglione', resa: 1,
   },
 
@@ -849,17 +860,17 @@ export const RICETTE = [
      è la sarta al banco. Il sapone invece è una coccola — il bagnetto
      — ed è la seconda cosa che si fa col burro. */
   {
-    id: 'tintura', nome: 'Tintura', emoji: '🫙', dove: 'tintoria', liv: 52,
+    id: 'tintura', nome: 'Tintura', emoji: '🫙', dove: 'tintoria', liv: 55,
     prende: { lavanda: 2 }, costo: 1, minuti: 5, da: 'tintura', resa: 1,
   },
   {
     id: 'maglione_lavanda', nome: 'Maglione alla lavanda', emoji: '💜',
-    dove: 'tintoria', liv: 52,
+    dove: 'tintoria', liv: 55,
     prende: { maglione: 1, tintura: 1 }, costo: 1, minuti: 6,
     da: 'maglione_lavanda', resa: 1,
   },
   {
-    id: 'sapone', nome: 'Sapone', emoji: '🧼', dove: 'tintoria', liv: 52,
+    id: 'sapone', nome: 'Sapone', emoji: '🧼', dove: 'tintoria', liv: 55,
     prende: { tintura: 1, burro: 1 }, costo: 1, minuti: 5, da: 'sapone', resa: 1,
   },
   /* La quarta della tintoria, e la seconda bocca della lavanda: due
@@ -868,7 +879,7 @@ export const RICETTE = [
      una bocca sola è una coltura che si semina una volta. */
   {
     id: 'sacchetto', nome: 'Sacchetto profumato', emoji: '👝',
-    dove: 'tintoria', liv: 52,
+    dove: 'tintoria', liv: 55,
     prende: { lavanda: 2, stoffa: 1 }, costo: 1, minuti: 5, da: 'sacchetto', resa: 1,
   },
 
@@ -882,10 +893,10 @@ export const RICETTE = [
 
      Le quattro ricette sono tutte **a confluenza**, cioè prendono roba
      di catene diverse, e nessuna prende meno di due ingredienti. La
-     cucina arriva al 24, fra le anatre e i maiali: è il primo livello
+     cucina arriva al 25, fra le anatre e i maiali: è il primo livello
      in cui il caseificio c'è già e l'orto ha aperto. */
   {
-    id: 'minestrone', nome: 'Minestrone', emoji: '🍜', dove: 'cucina', liv: 24,
+    id: 'minestrone', nome: 'Minestrone', emoji: '🍜', dove: 'cucina', liv: 25,
     prende: { patate: 1, carote: 1, cavolfiori: 1 }, costo: 1, minuti: 6,
     da: 'minestrone', resa: 1,
   },
@@ -893,18 +904,18 @@ export const RICETTE = [
      mais non è più la coltura che serve solo ai cani: costa 🪙15, cioè
      troppo per una ciotola — si porta al banco. */
   {
-    id: 'polenta', nome: 'Polenta e formaggio', emoji: '🍛', dove: 'cucina', liv: 24,
+    id: 'polenta', nome: 'Polenta e formaggio', emoji: '🍛', dove: 'cucina', liv: 25,
     prende: { mais: 2, formaggio: 1 }, costo: 1, minuti: 8, da: 'polenta', resa: 1,
   },
   {
-    id: 'conserva', nome: 'Conserva d\'orto', emoji: '🥗', dove: 'cucina', liv: 33,
+    id: 'conserva', nome: 'Conserva d\'orto', emoji: '🥗', dove: 'cucina', liv: 39,
     prende: { melanzane: 1, peperoni: 1, zucche: 1 }, costo: 1, minuti: 7,
     da: 'conserva', resa: 1,
   },
   /* Pomodori, cipolle e aglio: il soffritto, cioè le tre colture che
      al banco andavano solo crude. */
   {
-    id: 'salsa', nome: 'Salsa di pomodoro', emoji: '🥫', dove: 'cucina', liv: 38,
+    id: 'salsa', nome: 'Salsa di pomodoro', emoji: '🥫', dove: 'cucina', liv: 44,
     prende: { pomodori: 2, cipolle: 1, aglio: 1 }, costo: 1, minuti: 6,
     da: 'salsa', resa: 1,
   },
@@ -913,7 +924,7 @@ export const RICETTE = [
      fragole e burro, cioè tre catene di nuovo. */
   {
     id: 'crostata', nome: 'Crostata di fragole', emoji: '🍰',
-    dove: 'panificio', liv: 44,
+    dove: 'panificio', liv: 50,
     prende: { farina: 1, fragole: 1, burro: 1 }, costo: 2, minuti: 7,
     da: 'crostata', resa: 1,
   },
@@ -932,21 +943,21 @@ export const RICETTE = [
      del progetto — quella lascia il ripiego dove basta, qui va scritto
      quando l'ingrediente arriva più tardi della macchina. */
 
-  /* ── lo zuccherificio: al 27, con la barbabietola ── */
+  /* ── lo zuccherificio: al 31, dopo la barbabietola ── */
   {
     id: 'zucchero', nome: 'Zucchero', emoji: '🧂', dove: 'zuccherificio',
     prende: { barbabietola: 2 }, costo: 1, minuti: 6, da: 'zucchero', resa: 1,
   },
   {
-    id: 'caramelle', nome: 'Caramelle', emoji: '🍬', dove: 'zuccherificio', liv: 39,
+    id: 'caramelle', nome: 'Caramelle', emoji: '🍬', dove: 'zuccherificio', liv: 46,
     prende: { zucchero: 1, miele: 1 }, costo: 1, minuti: 6, da: 'caramelle', resa: 1,
   },
   {
-    id: 'marmellata', nome: 'Marmellata', emoji: '🫙', dove: 'zuccherificio', liv: 45,
+    id: 'marmellata', nome: 'Marmellata', emoji: '🫙', dove: 'zuccherificio', liv: 51,
     prende: { fragole: 2, zucchero: 1 }, costo: 1, minuti: 8, da: 'marmellata', resa: 1,
   },
 
-  /* ── la gelateria: al 30, con lo zucchero appena arrivato ── */
+  /* ── la gelateria: al 34, con lo zucchero appena arrivato ── */
   {
     id: 'succo', nome: 'Succo', emoji: '🧃', dove: 'gelateria',
     prende: { carote: 1, barbabietola: 1 }, costo: 1, minuti: 4, da: 'succo', resa: 1,
@@ -956,39 +967,39 @@ export const RICETTE = [
     prende: { latte: 2, zucchero: 1 }, costo: 2, minuti: 8, da: 'gelato', resa: 1,
   },
   {
-    id: 'frullato', nome: 'Frullato', emoji: '🥤', dove: 'gelateria', liv: 46,
+    id: 'frullato', nome: 'Frullato', emoji: '🥤', dove: 'gelateria', liv: 53,
     prende: { fragole: 2, latte: 1 }, costo: 1, minuti: 5, da: 'frullato', resa: 1,
   },
 
-  /* ── il pastificio: al 31, con la pasta che apre la bottega ── */
+  /* ── il pastificio: al 37, con la pasta che apre la bottega ── */
   {
     id: 'pasta', nome: 'Pasta', emoji: '🍝', dove: 'pastificio',
     prende: { farina: 2, uova: 1 }, costo: 1, minuti: 7, da: 'pasta', resa: 1,
   },
   {
-    id: 'biscotti', nome: 'Biscotti', emoji: '🍪', dove: 'pastificio', liv: 32,
+    id: 'biscotti', nome: 'Biscotti', emoji: '🍪', dove: 'pastificio', liv: 38,
     prende: { farina: 1, burro: 1, zucchero: 1 }, costo: 1, minuti: 6, da: 'biscotti', resa: 1,
   },
   /* La pizza vuole la salsa (cucina, 38) e non arriva prima: 39 è il
      primo livello in cui tutti e tre gli ingredienti ci sono già. */
   {
-    id: 'pizza', nome: 'Pizza', emoji: '🍕', dove: 'pastificio', liv: 39,
+    id: 'pizza', nome: 'Pizza', emoji: '🍕', dove: 'pastificio', liv: 46,
     prende: { farina: 1, salsa: 1, formaggio: 1 }, costo: 2, minuti: 9, da: 'pizza', resa: 1,
   },
   {
-    id: 'lasagne', nome: 'Lasagne', emoji: '🍱', dove: 'pastificio', liv: 40,
+    id: 'lasagne', nome: 'Lasagne', emoji: '🍱', dove: 'pastificio', liv: 48,
     prende: { pasta: 1, salsa: 1, formaggio: 1 }, costo: 2, minuti: 12, da: 'lasagne', resa: 1,
   },
 
   /* ── la sartoria: le due ultime ricette, anticipate ──
-     La sartoria c'è già dal 36: qui arrivano solo due ricette in più,
+     La sartoria c'è già dal 42: qui arrivano solo due ricette in più,
      tessute con la stessa stoffa del maglione. */
   {
-    id: 'sciarpa_lana', nome: 'Sciarpa di lana', emoji: '🧣', dove: 'sartoria', liv: 42,
+    id: 'sciarpa_lana', nome: 'Sciarpa di lana', emoji: '🧣', dove: 'sartoria', liv: 48,
     prende: { stoffa: 1, lana: 1 }, costo: 1, minuti: 6, da: 'sciarpa_lana', resa: 1,
   },
   {
-    id: 'berretto', nome: 'Berretto', emoji: '🧢', dove: 'sartoria', liv: 55,
+    id: 'berretto', nome: 'Berretto', emoji: '🧢', dove: 'sartoria', liv: 56,
     prende: { stoffa: 1 }, costo: 1, minuti: 5, da: 'berretto', resa: 1,
   },
 
@@ -1001,7 +1012,7 @@ export const RICETTE = [
     prende: { becchime: 2 }, costo: 1, minuti: 15, da: 'pesce', resa: 1,
   },
 
-  /* ── la friggitoria: al 57, col pesce appena pescato ── */
+  /* ── la friggitoria: al 58, col pesce appena pescato ── */
   {
     id: 'patatine', nome: 'Patatine', emoji: '🍟', dove: 'friggitoria',
     prende: { patate: 2 }, costo: 1, minuti: 5, da: 'patatine', resa: 1,
@@ -1011,17 +1022,17 @@ export const RICETTE = [
     prende: { pesce: 1, farina: 1 }, costo: 1, minuti: 7, da: 'fritto', resa: 1,
   },
   {
-    id: 'arancini', nome: 'Arancini', emoji: '🍙', dove: 'friggitoria', liv: 60,
+    id: 'arancini', nome: 'Arancini', emoji: '🍙', dove: 'friggitoria', liv: 61,
     prende: { riso: 2, formaggio: 1 }, costo: 1, minuti: 9, da: 'arancini', resa: 1,
   },
 
-  /* ── il sushi bar: al 63, l'ultima bottega dell'albero ── */
+  /* ── il sushi bar: al 62, l'ultima bottega dell'albero ── */
   {
     id: 'sushi', nome: 'Sushi', emoji: '🍣', dove: 'sushi_bar',
     prende: { riso: 1, pesce: 1 }, costo: 2, minuti: 8, da: 'sushi', resa: 1,
   },
   {
-    id: 'maki', nome: 'Maki', emoji: '🍥', dove: 'sushi_bar', liv: 64,
+    id: 'maki', nome: 'Maki', emoji: '🍥', dove: 'sushi_bar', liv: 63,
     prende: { riso: 1, carote: 1, peperoni: 1 }, costo: 1, minuti: 6, da: 'maki', resa: 1,
   },
 ]
@@ -1078,7 +1089,7 @@ export const SILI = {
   stalla: { cosa: 'silo_bianco', nome: 'Silo della stalla',  emoji: '🥛',
             vuoto: 'la roba degli animali' },
   /* Il terzo, per quello che esce dalle botteghe: il perché sta sopra
-     `PRODOTTI`, alla voce della stoffa. Arriva al 14 col telaio, che è
+     `PRODOTTI`, alla voce della stoffa. Arriva al 16 col telaio, che è
      la prima bottega, e costa quanto gli altri due. */
   bottega: { cosa: 'dispensa',   nome: 'Dispensa',           emoji: '📦', la: true,
              vuoto: 'quello che esce dalle botteghe' },

@@ -1001,22 +1001,22 @@ controlla('riassunto() regge una fattoria salvata per davvero', typeof manifesto
   vec.gioco = 0.4
   controlla('mentre rimetterla a posto sì', !!vecchia.coccola(chi, gioca).premio)
 
-  /* e il livello può scattare: cinque monete sotto la soglia del 3,
+  /* e il livello può scattare: cinque monete sotto la soglia del 4,
      nove stelle lo portano di là. La pappa è del granaio (zero monete),
      se no il livello salirebbe già col prezzo del cibo e il premio non
      avrebbe niente da far scattare. */
   const g = new Fattoria({ borsa: borsaInfinita() })
-  g.speso = sogliaDi(3) - 5
+  g.speso = sogliaDi(4) - 5
   g.reclamaTutto()
   g.compraBestia(chi, 0, 'Bobtail')
   g.granaio.pastone = 1
   const gb = g.stato(chi)
   gb.pancia = 0.4; gb.pelo = 0.9; gb.gioco = 0.9
-  uguale('prima è al livello 2', g.livello, 2)
+  uguale('prima è al livello 3', g.livello, 3)
   const scatto = g.nutri(chi, per('pastone'))
   controlla('il pastone rimette a posto e il premio dice che il livello è salito',
             !!(scatto.premio && scatto.premio.salito), JSON.stringify(scatto))
-  uguale('ed è al 3', g.livello, 3)
+  uguale('ed è al 4', g.livello, 4)
 }
 
 nota(`la fattoria parte con ${PIAZZOLE_INIZIALI} piazzole, ` +

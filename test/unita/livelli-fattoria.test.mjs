@@ -318,9 +318,9 @@ for (let l = 1; l <= ULTIMO; l++)
   uguale('appena nata non ha niente da prendere', f.daReclamare().length, 0)
   controlla('perché il livello 1 è già suo', f.sbloccata('orto'))
 
-  f.speso = sogliaDi(3)
+  f.speso = sogliaDi(4)
   const aspetta = f.daReclamare()
-  controlla('salita di due livelli, ha dei premi che aspettano', aspetta.length > 0)
+  controlla('salita di tre livelli, ha dei premi che aspettano', aspetta.length > 0)
   controlla('e sono tutti di livelli già raggiunti',
             aspetta.every(p => p.liv <= f.livello))
   controlla('il mulino è fra quelli', aspetta.some(p => p.chiave === 'cosa:mulino'))

@@ -523,48 +523,84 @@ Quello che **lavora** non segue quella fila — lì il momento è una decisione
 di gioco:
 
 ```
-   1   ⭐0         il campo, il silo del raccolto, il grano
-   2   ⭐260       il primo amico (il bobtail)
-   3   ⭐671       il mulino, e il silo della stalla
-   4   ⭐1250      il mercato, cioè gli ordini
-   5   ⭐1621      il fienile, la conigliera, le carote e il foraggio
-   8   ⭐3057      il pollaio
-  10   ⭐4037      il mais, cioè il pastone
-  12   ⭐5052      l'ovile, e l'erba medica
-  18   ⭐9088      la stalla
-  22   ⭐12357     le anatre, le patate e i cavolfiori
-  26   ⭐16136     il porcile, e le zucche
-  29   ⭐19258     i pomodori, cioè la zuppa d'orto
-  33   ⭐23537     le capre, le melanzane e i peperoni
-  38   ⭐29142     le api, le cipolle e l'aglio
-  41   ⭐32583     gli alpaca
-  42   ⭐34001     il pappagallo
-  44   ⭐36361     le fragole, cioè la merenda
-  47   ⭐39878     gli asini, e il prato fiorito
-  69   ⭐74781     l'ultima cosa del catalogo (~200 ore di esercizi)
+   1   ⭐0        campo, silo del raccolto, grano
+   2   ⭐260      mercato
+   3   ⭐580      bobtail
+   4   ⭐970      mulino, silo della stalla
+   5   ⭐1560     carote
+   6   ⭐1900     fienile
+   7   ⭐2410     conigliera
+   8   ⭐2885     carretto del vicino
+   9   ⭐3317     pollaio
+  10   ⭐3867     gatto bianco e nero
+  11   ⭐4382     mais
+  12   ⭐4842     coniglio
+  13   ⭐5407     erba medica
+  14   ⭐5907     ovile
+  15   ⭐6617     beagle
+  16   ⭐7247     dispensa, telaio
+  17   ⭐8097     panificio
+  18   ⭐8857     stalla
+  19   ⭐9677     gatto nero
+  20   ⭐10372    caseificio
+  21   ⭐11212    pasticceria
+  22   ⭐12052    patate, cavolfiori
+  23   ⭐12732    pentolone
+  24   ⭐13582    stagno delle anatre
+  25   ⭐14542    cucina
+  26   ⭐15492    mongolfiera
+  27   ⭐16502    zucche
+  28   ⭐17282    porcile
+  29   ⭐18342    osteria
+  30   ⭐19382    barbabietola
+  31   ⭐20222    zuccherificio
+  33   ⭐22192    pomodori
+  34   ⭐23092    gelateria
+  35   ⭐24252    gatto rosso
+  36   ⭐25267    mensa della scuola
+  37   ⭐26427    pastificio
+  39   ⭐28667    melanzane, peperoni
+  40   ⭐29687    recinto delle capre
+  42   ⭐32067    sartoria
+  43   ⭐33397    merceria
+  44   ⭐34737    cipolle, aglio
+  45   ⭐35857    arnie
+  47   ⭐38457    recinto degli alpaca
+  49   ⭐41167    pappagallo
+  50   ⭐42507    fragole
+  52   ⭐45007    recinto degli asini
+  54   ⭐47942    lavanda
+  55   ⭐49262    tintoria
+  57   ⭐52262    peschiera
+  58   ⭐54002    friggitoria
+  60   ⭐57122    riso
+  62   ⭐60022    sushi bar
+  69   ⭐71142    l'ultima cosa del catalogo (~198 ore di esercizi, contando solo la spesa)
 ```
 
-**Ogni coltura arriva con la bocca che la mangia**, e da quando c'è il
-fienile arriva anche **la ricetta che la trasforma**. Il primo campo ha una
-scelta sola — a quattro anni cinque bottoni sono un elenco da leggere, uno è
-una cosa da fare — e le altre arrivano quando serve: le carote con la
-conigliera e il foraggio che ne esce; il mais quando il mulino gira da un
-pezzo; l'erba medica con l'ovile (prima il fieno, poi le pecore); le zucche
-col porcile e la zuppa. Le otto dell'orto arrivano **a coppie**, ognuna col
-suo recinto — e la regola adesso la controlla un test invece di tenerla a
-mente (`unita/coltivazioni`, sezione 1b): con cinque colture si ricordava,
-con tredici no.
+**Una cosa per livello, non tre ogni tanto** (25 settembre 2026). Il
+calendario era a mucchi: al 5 fienile, conigliera e carote insieme, al 20
+caseificio, pasticceria e gatto, al 22 pentolone, anatre e due colture — e
+in mezzo livelli che non portavano niente di produttivo. Un livello che dà
+tre cose da costruire è un livello che si paga da sé (vedi sotto), e un
+livello che porta una cosa sola è più divertente di un regalo enorme ogni
+tanto. Adesso le cose arrivano **in fila, una per livello** dove la catena
+lo permette: le carote al 5, il fienile al 6, la conigliera al 7.
 
-Il fienile arriva **con la prima coltura che ci va dentro e con la prima
-bocca che la mangia**, tutti e tre al livello 5. Stava al 4 — «prima la
-mangiatoia, poi chi mangia», che come racconto è più bello — e per un livello
-intero era una macchina da 🪙150 che, aperta, diceva «metti dentro quello che
-hai raccolto» e sotto non aveva niente: la sua prima ricetta vuole le carote,
-che arrivavano al 5. Adesso `guastiDegliSblocchi` rifiuta **una macchina che
-arriva prima del suo primo lavoro**, che è il gemello del controllo sulle
-ricette in anticipo — e si era rotto proprio dove l'altro non guardava. Una coltura che arriva prima di quello che la consuma è roba che
-riempie il silo senza servire a niente, cioè il modo di far sembrare rotto un
-gioco che funziona.
+La regola che lo rende possibile è che **una coltura può arrivare prima
+della bocca che la mangia**, perché intanto la chiede il banco del mercato
+— che per questo è sceso al livello 2 — e consegnarla fa salire. Era il
+contrario («ogni coltura arriva *con* la bocca che la mangia»), e voleva dire
+tre cose nello stesso livello. Quello che resta, e lo controlla
+`unita/coltivazioni`: la bocca arriva entro tre livelli, e prima c'è il
+banco. Restano insieme solo le coppie che la catena lega davvero: il mulino
+e il silo della stalla (il mangime finisce lì), la dispensa e il telaio (la
+stoffa finisce lì). Una macchina non arriva prima del suo primo lavoro, come
+prima (`guastiDegliSblocchi`).
+
+I nomi dei livelli stanno **sulla cosa, non sul numero** (`NOMI` in
+`dati/livelli.js`): erano scritti per livello, e a ogni spostamento sarebbe
+toccato riscriverli tutti.
 
 Le soglie sono **una formula e non una tabella** (`8·(n-1)² + 200·(n-1)`),
 così i livelli non finiscono mai: chi ha giocato per mesi deve avere ancora un
