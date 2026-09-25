@@ -256,6 +256,82 @@ export const LASTRE_DISEGNI = {
   ], { o: '#5a4208', L: '#fff0a0', F: '#f4c430', D: '#b8860e', S: '#6a4a06' }),
 }
 
+/* ── le pecore ──
+   Non le ha l'atlante da sole: le ha dentro il recinto della fattoria
+   (`recinto_pecore_calmo` e `recinto_pecore_mangia`, dal foglio degli
+   animali generati), sull'erba. Sono state staccate dall'erba una volta,
+   ridotte a ventidue colori e scritte qui come gli altri disegni: così
+   hanno la stessa mano del bobtail che le rincorre, e non una seconda.
+   La prima guarda a destra (a sinistra si specchia), la seconda bruca a
+   testa bassa: è quella che sta nel recinto, tranquilla. */
+export const PECORA = { tavolozza: { a: '#f9f2e6', b: '#f8ecdd', c: '#f6e7d6', d: '#f4e3d0', e: '#f2decc', f: '#f0d9c6', g: '#ecd4c0', h: '#e8ceb6', i: '#e4c7af', j: '#dcbba0', k: '#d0ad92', l: '#e4a683', m: '#cd9d81', n: '#ba917b', o: '#cd8c6c', p: '#a8816d', q: '#b57157', r: '#936c58', s: '#7c5643', t: '#5d432a', u: '#3c2d19' }, righe: [
+  '...........u..........',
+  '.......u.usppgpst.....',
+  '..tttpnhjkcaaabbhpu...',
+  '...tnecejebbbabcehnt..',
+  '..rjfcaegcbcaddccffr..',
+  '.shccbafdcdifdaabafnt.',
+  '.ridbaacddiifgbdfggnos',
+  'tibcccbefimnjjdijkmru.',
+  'rhffdbbdhmfjpmlooooqu.',
+  'niffcbddhqpprmomlllls.',
+  'sjidfedbeimjnltsljhoq.',
+  'sjighfcdccffnloolljlou',
+  'skkijgdfeeeipomololo.u',
+  'urkjkhfiffefkrqomqoq..',
+  '.smjkjjjighhjptsqqs...',
+  '..pnmnjkmkjijmnrrru...',
+  '..rppsnnpjimmmnppr....',
+  '..ustutrsnknrnsss.....',
+  '...suuu..spruuutt.....',
+  '....u.....tt...tt.....',
+  '..........tsu.........',
+  '...........uu.........',
+] }
+
+export const PECORA_BRUCA = { tavolozza: { a: '#f9f0e3', b: '#f8ebdc', c: '#f6e7d7', d: '#f4e3d2', e: '#f2decb', f: '#efd8c5', g: '#ebd3bd', h: '#e9ceb7', i: '#e6c9af', j: '#debea3', k: '#d4b49a', l: '#d7ac8f', m: '#d79e7e', n: '#c7a288', o: '#c69375', p: '#b48b73', q: '#b98062', r: '#a27760', s: '#845f45', t: '#5d452c', u: '#3d3218' }, righe: [
+  '........tusssu......',
+  '......uskifegnru....',
+  '.....ujgdcbbadcns...',
+  '.....ngdbabbbdfegs..',
+  '....pfddcbababdegot.',
+  '...sifaaababcddfhip.',
+  '..tnjjhedcacceegiio.',
+  '..tnkjgfjifbbeghiins',
+  '..skddaadeihfeggjjkt',
+  '.rjgcbbbdcglgdiijknt',
+  '.rjhcabcfhkpiegjklp.',
+  'tppgfebegnhjnjjkllp.',
+  '.usnjjfjjophopknopu.',
+  '.usmmomooqrrronprru.',
+  '.utqilmsqqrnlpqtts..',
+  '..smlmosmorkptuutu..',
+  '.uqmjmmmosrps.......',
+  '..rolrmqstst........',
+  '..usqsqt.ust........',
+  '...uuuu.............',
+] }
+
+/* l'osso: in un livello del cane è quello che per il coniglio è la
+   carota — non serve per vincere, e prenderlo vale una stella */
+export const OSSO = { tavolozza: { o: '#6a5a4a', W: '#fbf6ea', D: '#d9cdb4' }, righe: [
+  '.oo.......oo.',
+  'oWWo.....oWWo',
+  'oWWWoooooWWDo',
+  '.oWWWWWWWWDo.',
+  'oWWDoooooWDDo',
+  'oWDo.....oDDo',
+  '.oo.......oo.',
+] }
+
+/* il recinto: paglia per terra, e i colori della sua staccionata (la
+   stessa legna di quella bassa, che però qui è più alta: il cane non la
+   salta, e si deve vedere) */
+export const RECINTO = {
+  paglia: ['#e2c46a', '#d8b85c'], pagliaFilo: '#b8963c', pagliaLuce: '#f4dc8c',
+  legno: '#b07a44', scuro: '#6a4424', luce: '#d49a5c',
+}
+
 /* un palo e mezza traversa per lato: la staccionata si compone cella
    per cella guardando le vicine (`scena/tela.js`), come le strade */
 export const PALO = [

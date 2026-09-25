@@ -28,6 +28,9 @@ defineProps({
   titolo: { type: String, required: true },
   stelle: { type: Number, default: 1 },
   carota: { type: Boolean, default: false },
+  /* una tappa del cane: la prima stella è il gregge nel recinto, la
+     seconda l'osso */
+  cane: { type: Boolean, default: false },
   svelato: { type: Boolean, default: false },     // la strada l'ha scritta tutta il gioco
   monete: { type: Number, default: 0 },
   racconto: { type: String, default: '' },
@@ -50,15 +53,15 @@ onUnmounted(() => clearTimeout(sveglia))
          sentiero sarebbero una festa che non vuol dire più niente -->
     <Festa v-if="che === 'tappa' || record" :quanti="che === 'tappa' ? 110 : 70" />
     <div class="pp-cartello">
-      <div class="pp-faccia pp-em">{{ che === 'tappa' ? '🏡' : '🥕' }}</div>
+      <div class="pp-faccia pp-em">{{ che === 'tappa' ? (cane ? '🐑' : '🏡') : cane ? '🦴' : '🥕' }}</div>
       <h2>{{ titolo }}</h2>
 
       <div v-if="che === 'tappa'" class="pp-tre" data-stelle-prese :data-quante="stelle">
         <span class="pp-una">
-          <span class="pp-em pp-grande">⭐</span><span class="pp-em">🏡</span>
+          <span class="pp-em pp-grande">⭐</span><span class="pp-em">{{ cane ? '🐑' : '🏡' }}</span>
         </span>
         <span class="pp-una" :class="{ 'pp-spenta': !carota }">
-          <span class="pp-em pp-grande">⭐</span><span class="pp-em">🥕</span>
+          <span class="pp-em pp-grande">⭐</span><span class="pp-em">{{ cane ? '🦴' : '🥕' }}</span>
         </span>
         <span class="pp-una" :class="{ 'pp-spenta': svelato }" data-stella-pensata>
           <span class="pp-em pp-grande">⭐</span><span class="pp-em">🧠</span>

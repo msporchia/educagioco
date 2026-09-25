@@ -23,6 +23,16 @@
    coniglio sbatte. Sopra la prima riga c'è un po' d'aria (`TESTA`),
    perché le orecchie e i salti ci passano.
 
+   ── IL CANE E LE PECORE ───────────────────────────────────────────
+   In un livello con le pecore chi corre è il bobtail, dallo stesso
+   atlante e con gli stessi fotogrammi del coniglio (tre versi, fermo e
+   tre passi): cambia solo il nome del pezzo e quanta aria ha sotto i
+   piedi. Le pecore sono un disegno a lettere (`scena/pixel.js`), e nel
+   recinto brucano. La staccionata del recinto non è una cella: sta sui
+   **lati** delle celle del recinto che non danno su un posto dove si
+   cammina — quello che si vede chiuso è chiuso, e da dove si vede
+   aperto le pecore entrano.
+
    ── DAVANTI E DIETRO ──────────────────────────────────────────────
    Tutto quello che sta in piedi — alberi, sassi, massi, la tana, la
    carota, il coniglio — si disegna in ordine di **dove tocca terra**:
@@ -33,7 +43,7 @@ import { ATLANTE, PEZZI, TESSERA } from '../../fattoria/dati/atlante.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { pezzo, COLORI, STAGIONI, CAROTA, ALBERO, ALBERO_NEVE, ALBERO_AUTUNNO, TANA, MASSO,
          CESPUGLIO, TAVOLOZZA_BACCHE, TAVOLOZZA_FIORI, PALO, FUMETTO, CUORE, STELLINA,
-         LASTRE_DISEGNI } from './pixel.js'
+         LASTRE_DISEGNI, PECORA, PECORA_BRUCA, OSSO, RECINTO } from './pixel.js'
 import { COPPIE } from '../dati/mondo.js'
 
 /* il colore dell'anello di una buca: lo dice il vocabolario del mondo,
@@ -45,6 +55,14 @@ export const TESTA = 10               // l'aria sopra la prima riga
 export const ZOCCOLO = 5              // lo spessore di terra sotto l'ultima
 export const LATO = 1                 // un filo ai lati, per l'ombra della plancia
 const CELLA_MAX = 90                  // px CSS: oltre, un livello piccolo diventa un poster
+
+/* chi corre: il pezzo dell'atlante, quante righe vuote ha sotto i
+   piedi, e di quanto va spostato di lato perché stia in mezzo alla cella
+   (il bobtail di profilo è largo e non sta al centro del suo riquadro) */
+const CORRIDORI = {
+  coniglio: { nome: 'coniglio', vuote: 3, lato: 0 },
+  cane: { nome: 'cane-bobtail', vuote: 5, lato: -2 },
+}
 
 /* un numero fisso per cella, per le decorazioni: lo stesso livello si
    disegna sempre uguale, e due celle vicine non si somigliano */
@@ -140,14 +158,21 @@ export class Tela {
       const x = liv.x(i), y = liv.y(i)
       figure.push({ piede: (y + 1) * T, disegna: () => this.ostacolo(o, x, y) })
     }
-    const tana = liv.xy(liv.tana)
-    figure.push({ piede: (tana.y + 1) * T - 0.5, disegna: () => this.tana(tana.x, tana.y, f) })
+    if (liv.tana >= 0) {
+      const tana = liv.xy(liv.tana)
+      figure.push({ piede: (tana.y + 1) * T - 0.5, disegna: () => this.tana(tana.x, tana.y, f) })
+    }
+    if (liv.cane) this.figureDelRecinto(figure, f, orologio)
     for (const m of f.massi) {
       if (m.alfa <= 0) continue
       figure.push({ piede: (m.y + 1) * T - 1, disegna: () => this.masso(m) })
     }
     if (f.carota && !f.carota.presa)
       figure.push({ piede: (f.carota.y + 1) * T - 1.5, disegna: () => this.carota(f.carota, orologio) })
+    for (const [k, p] of (f.pecore || []).entries()) {
+      if (p.alfa <= 0) continue
+      figure.push({ piede: (p.y + 1) * T - 0.8, disegna: () => this.pecora(p, orologio, k) })
+    }
     /* il coniglio sta davanti a quello che ha nella sua stessa riga: entra
        dalla porta della tana, e solo alla fine le scivola dietro */
     const c = f.coniglio
@@ -341,6 +366,93 @@ export class Tela {
     }
   }
 
+  /* ── il recinto ──
+     La staccionata sta sui lati chiusi delle celle del recinto: quello
+     in alto sta dietro a tutto quello che c'è nella cella, quelli di lato
+     e in basso davanti alle pecore che ci brucano dentro. Chiuso vuol
+     dire che di là non si cammina (un ostacolo, l'acqua, il bordo). */
+  figureDelRecinto(figure, f, t) {
+    const liv = this.liv
+    const aperto = (x, y) => {
+      if (!liv.dentro(x, y)) return false
+      const i = liv.indice(x, y)
+      return !liv.ostacolo[i] && liv.terreno[i] !== 'acqua'
+    }
+    for (let i = 0; i < liv.n; i++) {
+      if (!liv.eRecinto(i)) continue
+      const x = liv.x(i), y = liv.y(i)
+      /* un lato che dà su un'altra cella del recinto non ha niente */
+      const lato = (dx, dy) => {
+        if (!liv.dentro(x + dx, y + dy)) return true
+        if (liv.eRecinto(liv.indice(x + dx, y + dy))) return false
+        return !aperto(x + dx, y + dy)
+      }
+      if (lato(0, -1)) figure.push({ piede: y * T + 0.2, disegna: () => this.bordoRecinto(x, y, 'su') })
+      if (lato(-1, 0)) figure.push({ piede: (y + 1) * T + 0.6, disegna: () => this.bordoRecinto(x, y, 'sinistra') })
+      if (lato(1, 0)) figure.push({ piede: (y + 1) * T + 0.6, disegna: () => this.bordoRecinto(x, y, 'destra') })
+      if (lato(0, 1)) figure.push({ piede: (y + 1) * T + 0.7, disegna: () => this.bordoRecinto(x, y, 'giu') })
+    }
+    for (const r of f.recinto || [])
+      figure.push({ piede: (r.y + 1) * T - 0.9, disegna: () => this.pecoraNelRecinto(r, t) })
+  }
+
+  bordoRecinto(x, y, lato) {
+    const ctx = this.ctx
+    const x0 = LATO + x * T, y0 = TESTA + y * T
+    const { legno, scuro, luce } = RECINTO
+    const palo = (px, py, h) => {
+      ctx.fillStyle = scuro; ctx.fillRect(px, py, 3, h)
+      ctx.fillStyle = legno; ctx.fillRect(px, py, 2, h - 1)
+      ctx.fillStyle = luce; ctx.fillRect(px, py, 1, 1)
+    }
+    const traversa = (px, py, w) => {
+      ctx.fillStyle = scuro; ctx.fillRect(px, py + 1, w, 1)
+      ctx.fillStyle = legno; ctx.fillRect(px, py, w, 1)
+    }
+    if (lato === 'su' || lato === 'giu') {
+      /* di fronte: due traverse lunghe quanto la cella, e i pali agli angoli */
+      const base = lato === 'su' ? y0 + 1 : y0 + T - 1
+      traversa(x0, base - 7, T)
+      traversa(x0, base - 3, T)
+      palo(x0 - 1, base - 9, 10)
+      palo(x0 + T - 2, base - 9, 10)
+    } else {
+      /* di lato: la staccionata scende, e si vede di taglio */
+      const px = lato === 'sinistra' ? x0 : x0 + T - 2
+      ctx.fillStyle = scuro; ctx.fillRect(px + 1, y0 - 4, 1, T + 2)
+      ctx.fillStyle = legno; ctx.fillRect(px, y0 - 5, 1, T + 2)
+      ctx.fillStyle = scuro; ctx.fillRect(px + (lato === 'sinistra' ? 2 : -1), y0 - 1, 1, T + 1)
+      ctx.fillStyle = legno; ctx.fillRect(px + (lato === 'sinistra' ? 1 : 0), y0 - 2, 1, T + 1)
+      palo(px - 1, y0 - 8, 10)
+      palo(px - 1, y0 + T - 8, 10)
+    }
+  }
+
+  /* ── le pecore ──
+     Guardano da una parte (la sinistra è la destra allo specchio), e
+     quando stanno ferme respirano: un pixel su e giù, ognuna col suo
+     tempo, così un gregge non sembra un timbro. Quella che trema non
+     può scappare. */
+  pecora(p, t, k) {
+    const ctx = this.ctx
+    const d = pezzo('pecora', PECORA)
+    const cx = this.cx(p.x), fy = this.fy(p.y)
+    const respiro = p.su ? 0 : (Math.sin(t * 2.2 + k * 1.7) > 0.6 ? 1 : 0)
+    ombra(ctx, cx, fy - 1, 14)
+    specchiato(ctx, d, Math.round(cx - d.width / 2), Math.round(fy - d.height + 1 - (p.su || 0)) - respiro,
+               p.verso === 'sinistra')
+  }
+
+  pecoraNelRecinto(r, t) {
+    const ctx = this.ctx
+    const d = pezzo('pecora-bruca', PECORA_BRUCA)
+    const cx = this.cx(r.x), fy = this.fy(r.y)
+    /* bruca: la testa va giù e su, piano */
+    const giu = Math.sin(t * 1.3 + r.x * 2.1 + r.y) > 0.3 ? 1 : 0
+    ombra(ctx, cx, fy - 1, 13)
+    specchiato(ctx, d, Math.round(cx - d.width / 2), fy - d.height + giu, r.verso === 'sinistra')
+  }
+
   masso(m) {
     const ctx = this.ctx
     const cx = this.cx(m.x), fy = this.fy(m.y)
@@ -356,8 +468,15 @@ export class Tela {
   carota(c, t) {
     const ctx = this.ctx
     const cx = this.cx(c.x), fy = this.fy(c.y)
-    /* la carota respira: dice «prendimi» a chi guarda la mappa */
+    /* la carota respira: dice «prendimi» a chi guarda la mappa. Per il
+       cane è un osso, posato per terra */
     const su = Math.round(Math.sin(t * 3.2) * 1)
+    if (this.liv.cane) {
+      const d = pezzo('osso', OSSO)
+      ombra(ctx, cx, fy - 2, 11)
+      ctx.drawImage(d, Math.round(cx - d.width / 2), fy - 10 + su)
+      return
+    }
     ombra(ctx, cx, fy - 2, 7)
     ctx.drawImage(pezzo('carota', CAROTA), Math.round(cx - 4.5), fy - 14 + su)
   }
@@ -376,9 +495,10 @@ export class Tela {
     if (c.posa === 'cammina') fr = 1 + (Math.floor(c.fase * 6) % 3)
     else if (c.posa === 'spinge') fr = 1 + (Math.floor(c.fase * 4) % 3)
     else if (c.posa === 'salta') fr = 2
-    const nome = `coniglio_${verso}${fr}`
-    const p = PEZZI[nome] || PEZZI[`coniglio_${verso}0`]
-    const cx = this.cx(c.x)
+    const chi = CORRIDORI[this.liv.cane ? 'cane' : 'coniglio']
+    const nome = `${chi.nome}_${verso}${fr}`
+    const p = PEZZI[nome] || PEZZI[`${chi.nome}_${verso}0`]
+    const cx = this.cx(c.x) + (verso === 'lato' ? (specchia ? -chi.lato : chi.lato) : 0)
     const fy = this.fy(c.y) + 1
     let dx = 0
     /* stordito: trema di un pixel, a scatti. Girare uno sprite in pixel
@@ -389,15 +509,16 @@ export class Tela {
     if (!c.immerso) ombra(ctx, cx, this.fy(c.y) - 1, Math.max(4, 11 - Math.round((c.su || 0) * 0.6)))
     if (!img || !p) return
     const [sx, sy, w, h] = p
-    /* Le ultime tre righe dello sprite sono vuote: i piedi finiscono lì
-       sopra. Immerso — nell'acqua, in una buca, dentro la tana — si vede
-       solo la parte di sopra, appoggiata al pelo dell'acqua. */
-    const pieno = h - 3
+    /* Le ultime righe dello sprite sono vuote (tre per il coniglio,
+       cinque per il cane): i piedi finiscono lì sopra. Immerso —
+       nell'acqua, in una buca, dentro la tana — si vede solo la parte di
+       sopra, appoggiata al pelo dell'acqua. */
+    const pieno = h - chi.vuote
     const vis = c.immerso ? Math.round(pieno * (1 - c.immerso)) : h
     if (vis <= 0) return
     const x = Math.round(cx - w / 2) + dx
     const piedi = fy - 3 - Math.round(c.su || 0)
-    const y = c.immerso ? piedi - 2 - vis : piedi + 3 - h
+    const y = c.immerso ? piedi - 2 - vis : piedi + chi.vuote - h
     ctx.globalAlpha = c.alfa
     if (specchia) {
       ctx.save()
@@ -521,6 +642,28 @@ export class Tela {
         ctx.globalAlpha = 1
         return
       }
+      case 'cuore': {
+        /* una pecora è entrata nel recinto: un cuore solo, che sale */
+        if (eta > 0.9) return
+        const k = eta / 0.9
+        ctx.globalAlpha = 1 - k
+        ctx.drawImage(pezzo('cuore', CUORE), Math.round(cx - 3), Math.round(fy - 20 - k * 12))
+        ctx.globalAlpha = 1
+        return
+      }
+      case 'bee': {
+        /* la pecora che non può scappare: due trattini sopra la testa,
+           come quando si dice qualcosa — «bee» */
+        if (eta > 0.5) return
+        ctx.globalAlpha = 1 - eta / 0.5
+        ctx.fillStyle = '#ffffff'
+        const su = Math.round(eta * 8)
+        ctx.fillRect(Math.round(cx + 5), fy - 24 - su, 1, 3)
+        ctx.fillRect(Math.round(cx + 7), fy - 25 - su, 1, 4)
+        ctx.fillRect(Math.round(cx + 9), fy - 24 - su, 1, 3)
+        ctx.globalAlpha = 1
+        return
+      }
       case 'sbuffo': {
         if (eta > 0.45) return
         const k = eta / 0.45
@@ -631,6 +774,24 @@ function dipingiFondo(liv, tema) {
         const px = x0 + 1 + Math.floor(hash(x, y, 51) * 9), py = y0 + 2 + Math.floor(hash(x, y, 52) * 10)
         g.fillRect(px, py, 4, 2); g.fillRect(px + 1, py - 1, 2, 1)
       }
+    }
+  }
+
+  /* il recinto: paglia per terra, a fili, sempre gli stessi */
+  for (let y = 0; y < liv.righe; y++) for (let x = 0; x < liv.colonne; x++) {
+    if (!liv.eRecinto(liv.indice(x, y))) continue
+    const x0 = LATO + x * T, y0 = TESTA + y * T
+    g.fillStyle = RECINTO.paglia[(x + y) % 2]
+    g.fillRect(x0, y0, T, T)
+    g.fillStyle = RECINTO.pagliaFilo
+    for (let k = 0; k < 6; k++) {
+      const px = x0 + 1 + Math.floor(hash(x, y, 60 + k) * 12), py = y0 + 1 + Math.floor(hash(x, y, 70 + k) * 14)
+      g.fillRect(px, py, 3, 1)
+    }
+    g.fillStyle = RECINTO.pagliaLuce
+    for (let k = 0; k < 4; k++) {
+      const px = x0 + 1 + Math.floor(hash(x, y, 80 + k) * 13), py = y0 + 1 + Math.floor(hash(x, y, 90 + k) * 14)
+      g.fillRect(px, py, 2, 1)
     }
   }
 
