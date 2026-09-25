@@ -90,7 +90,7 @@ const CAUSALI = [
   { causa: 'ha una memoria pessima per i nomi', effetto: 'Stamattina ha chiamato la nuova compagna con un altro nome', emoji: '🤦' },
   { causa: 'è molto geloso dei suoi giocattoli', effetto: 'Ieri ha nascosto la macchinina preferita sotto il letto', emoji: '🚙' },
   { causa: 'adora aiutare in cucina', effetto: 'Ieri ha impastato la pizza da solo', emoji: '🍕' },
-  { causa: 'ha una paura folle dei clown', effetto: 'Ieri ha voluto lasciare la festa appena ne è arrivato uno', emoji: '🤡' },
+  { causa: 'ha una paura folle dei clown', effetto: 'Ieri ha voluto lasciare la festa appena è arrivato il pagliaccio', emoji: '🤡' },
   { causa: 'è molto testardo', effetto: 'Ieri non ha voluto cambiare idea nemmeno davanti alle prove', emoji: '😤' },
   { causa: 'ama guardare le stelle', effetto: 'Ieri sera è rimasto sveglio con il naso al telescopio', emoji: '🔭' },
   { causa: 'ha un debole per i dolci alla panna', effetto: 'Ieri ha scelto la torta più grande sul vassoio', emoji: '🍰' },
@@ -115,9 +115,9 @@ const CAUSALI = [
   { causa: 'adora osservare le nuvole e trovarci forme', effetto: "Ieri ha passato un'ora sdraiato a guardare il cielo", emoji: '☁️' },
   { causa: 'è molto bravo a fare le imitazioni', effetto: 'Ieri ha fatto ridere tutta la classe imitando la maestra', emoji: '🎭' },
   { causa: 'ha una grande paura di perdersi', effetto: 'Ieri ha tenuto la mano della mamma per tutto il centro commerciale', emoji: '🏬' },
-  { causa: 'è molto attaccato al suo peluche', effetto: 'Ieri ha voluto portarlo anche in piscina', emoji: '🧸' },
-  { causa: 'adora i puzzle difficili', effetto: 'Ieri ne ha finito uno da mille pezzi', emoji: '🧩' },
-  { causa: 'ha una passione per gli aquiloni', effetto: 'Ieri è rimasto al parco fino al tramonto per farlo volare', emoji: '🪁' },
+  { causa: 'è molto attaccato al suo peluche', effetto: 'Ieri ha voluto portare il suo peluche anche in piscina', emoji: '🧸' },
+  { causa: 'adora i puzzle difficili', effetto: 'Ieri ha finito un puzzle da mille pezzi', emoji: '🧩' },
+  { causa: 'ha una passione per gli aquiloni', effetto: 'Ieri è rimasto al parco fino al tramonto con il suo aquilone', emoji: '🪁' },
   { causa: 'è molto sensibile al freddo', effetto: 'Stamattina ha voluto tre maglioni uno sopra l\'altro', emoji: '🧣' },
   { causa: 'adora raccogliere sassi e conchiglie', effetto: 'Ieri ha riportato a casa un intero secchiello di conchiglie', emoji: '🐚' },
   { causa: 'è molto orgoglioso dei suoi disegni', effetto: 'Ieri ha voluto attaccarne uno su ogni porta di casa', emoji: '🖼️' },
@@ -222,7 +222,7 @@ const CONDIZIONI = [
   { condizione: "l'uovo di Pasqua contiene la sorpresa che aspetti", conseguenza: 'Lo scambierai con quello di tuo cugino', emoji: '🥚' },
   { condizione: 'riusciamo a costruire la tenda prima del buio', conseguenza: 'Dormiremo sotto le stelle', emoji: '⛺' },
   { condizione: 'il messaggio arriva prima di mezzanotte', conseguenza: 'Sapremo subito il risultato', emoji: '✉️' },
-  { condizione: 'la torre di carte non crolla al primo piano', conseguenza: 'Continueremo a costruire fino al quinto', emoji: '🃏' },
+  { condizione: 'la torre di carte non crolla al primo piano', conseguenza: 'Continueremo a costruire fino al quinto piano', emoji: '🃏' },
   { condizione: "il pesce abbocca entro un'ora", conseguenza: 'Torneremo a casa con qualcosa da cucinare', emoji: '🎣' },
   { condizione: 'riusciamo a raccogliere abbastanza firme', conseguenza: 'Organizzeremo la festa di classe', emoji: '✍️' },
   { condizione: 'il mago indovina la carta scelta', conseguenza: 'Gli applaudiremo per cinque minuti', emoji: '🎩' },
@@ -258,7 +258,9 @@ const CONDIZIONI = [
   { condizione: 'il pallone aerostatico si gonfia bene', conseguenza: 'Potremo salire a bordo per il volo di prova', emoji: '🎈' },
 ]
 const FALSI_CONDIZIONE = {
-  quando: '«quando» dà per certo che succederà; qui invece non si sa ancora',
+  /* «quando» non è un falso della condizione, anche se ci assomiglia:
+     «potrai fare la gara vera quando superi l'esame» è italiano buono
+     quanto il «se», e un falso che si può difendere non è un falso */
   'perché': "«perché» spiega un motivo già certo; qui invece non sappiamo se succederà",
   quindi: 'con «quindi» sembra che questo causi quello che sta scritto dopo: qui è al contrario',
 }
@@ -602,8 +604,8 @@ class Connettivi extends Modulo {
   concessione(sorte) {
     if (sorte.forse(0.5)) {
       const c = sorte.uno(CONDIZIONI)
-      const falsi = ['anche se', 'quando']
-      const perche = { 'anche se': "«anche se» si usa quando la cosa è già vera; qui invece non si sa ancora", quando: FALSI_CONDIZIONE.quando }
+      const falsi = ['anche se', 'perché']
+      const perche = { 'anche se': "«anche se» si usa quando la cosa è già vera; qui invece non si sa ancora", 'perché': FALSI_CONDIZIONE['perché'] }
       return domanda({
         testo: `${c.conseguenza} ___ ${c.condizione}.`,
         soggetto: { emoji: c.emoji },
