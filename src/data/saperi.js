@@ -251,6 +251,18 @@ export const SAPERI = [
     esempio: '«con che lettera comincia 🐝?»',
     spegne: 'le domande sulle lettere e sulle parole da leggere, quelle di chi comincia adesso',
   },
+  /* Il gradino sopra «Leggere le parole», e si spegne dall'altra parte:
+     quello si toglie a chi legge già bene, questo a chi legge ancora a
+     fatica — per lui un testo di tre frasi non è difficile, è muto. È
+     un gruppo a sé e non una tipologia di un altro perché è l'unico
+     che un grande ha motivo di spegnere da solo, lasciando accesa tutta
+     la grammatica: il bambino che scrive giusto e legge lento. */
+  {
+    chiave: 'comprensione', nome: 'Capire quello che si legge', ico: '📚', materia: 'italiano',
+    che: 'leggere due o tre frasi e ritrovarci chi, dove, prima e dopo, perché — e quello che si capisce senza che sia scritto',
+    esempio: '«Prima di uscire, Ugo chiude la finestra»: che cosa fa per prima?',
+    spegne: 'le domande su un testo breve da leggere; le altre domande di italiano restano',
+  },
   {
     chiave: 'suoni-difficili', nome: 'I suoni difficili', ico: '✏️', materia: 'italiano',
     che: 'le parole che si scrivono diverse da come si sentono: gn, gl, sc, le doppie, cqu',

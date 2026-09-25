@@ -210,7 +210,11 @@ export const PARTENZE = [
              'bilance',
              /* un pittogramma è contare, ma leggerlo come un grafico —
                 la fila di chi, la legenda sotto — è una cosa di scuola */
-             'dati'],
+             'dati',
+             /* un testo di due o tre frasi da leggere da solo: chi non
+                legge ancora non ha niente da ragionare, e in una carta
+                non gli si insegna a leggere */
+             'comprensione'],
     tiene: {
       numeri: 'contare fino a dieci e dire chi è di più si fa prima della scuola',
       figure: 'il cerchio e il quadrato si riconoscono dai libri illustrati',
@@ -259,6 +263,7 @@ export const PARTENZE = [
              'adattamento', 'classi-animali'],
     tiene: {
       lettura: 'in prima si impara a leggere: è esattamente quello che si sta facendo',
+      comprensione: 'due frasi con chi e dove si leggono a fine prima; i testi più lunghi li tiene lontani l\'età',
       sillabe: 'le sillabe e le rime sono il primo mese di prima',
       griglia: 'la casella B3 e le frecce si fanno sul quaderno a quadretti, in prima',
       calendario: 'i giorni e i mesi si appendono al muro il primo giorno di scuola',
