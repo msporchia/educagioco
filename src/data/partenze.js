@@ -191,6 +191,10 @@ export const PARTENZE = [
                 dai libri illustrati, non dalla scuola. */
              'lettura', 'sillabe', 'griglia', 'calendario', 'simmetria',
              'deduzione', 'incertezza', 'insiemi', 'confronti', 'analogie',
+             /* i soldi e i numeri con la virgola: a questa età non si è
+                mai vista una moneta contata da sola, figuriamoci un
+                decimo (vedi il cappello di `saperi.js`) */
+             'denaro', 'decimali',
              /* «il corpo dice il posto» — il pelo bianco vuol dire gelo,
                 le zampe palmate l'acqua — è un obiettivo di **fine
                 terza** (Indicazioni 2012: «Riconoscere in altri
@@ -258,6 +262,9 @@ export const PARTENZE = [
                 che non si sa leggere: è la stessa ragione che tiene
                 spente le decine e la stima. */
              'frazioni',
+             /* stesso motivo dei piccoli: i soldi contati sono di
+                seconda-terza, i decimali di quarta-quinta */
+             'denaro', 'decimali',
              /* stesso motivo dei piccoli: è di fine terza, e a sei anni
                 e mezzo mancano due anni buoni. Restano gli ambienti. */
              'adattamento', 'classi-animali'],
@@ -313,9 +320,15 @@ export const PARTENZE = [
        discorso sono di terza. La riga sopra dice «Moltiplicazioni sì,
        divisioni no» e resta vera. */
     saperi: ['divisioni', 'misure', 'conversioni',
-             'geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste'],
+             'geo:rotazione', 'geo:cubetti', 'geo:sviluppo', 'geo:viste',
+             /* i numeri con la virgola presi come numeri (il confronto
+                3,45 contro 3,5, i decimi e i centesimi, l'ordine e
+                l'arrotondamento) sono di quarta-quinta: qui restano
+                spenti, e li riaccende «quarta o quinta» qui sotto */
+             'decimali'],
     tiene: {
       moltiplicazioni: 'le tabelline sono di terza: è la riga che dà il nome a questa fascia',
+      denaro: 'contare monete e banconote, dare il resto e capire quanto costano più cose sono di seconda e terza',
       decine: 'il valore posizionale fino alle migliaia è di terza',
       stima: 'arrotondare arriva dopo, ma si spiega in una riga — e la spiegazione c\'è',
       problemi: 'due operazioni di fila e i dati che non servono sono di terza',
@@ -359,6 +372,7 @@ export const PARTENZE = [
       conversioni: 'le equivalenze sono di quarta',
       solidi: 'viste dall\'alto e facce sono di quinta, e da 8,75 anni in su ci siamo',
       'spazio-mente': 'le rotazioni sono di quarta, lo sviluppo del cubo di quinta',
+      decimali: 'il numero con la virgola come numero — decimi, centesimi, confronto e arrotondamento — è di quarta e quinta',
     },
   },
 ]

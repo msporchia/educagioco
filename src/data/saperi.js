@@ -177,6 +177,29 @@ export const SAPERI = [
     esempio: '«tre 🍎 pesano come un peso da 12: quanto pesa una 🍎?»',
     spegne: 'le domande col numero nascosto e con le bilance; i conti restano, chiesti come conti',
   },
+  /* DUE GRUPPI, NON UNO, e la ragione è che un bambino può avere l'uno
+     senza l'altro. `denaro` è riconoscere le monete e maneggiarle —
+     contare, dare il resto, capire quanto costano più cose — e a
+     scuola comincia con l'euro, seconda-terza. `decimali` è il numero
+     con la virgola preso come numero e non come prezzo: il valore
+     delle cifre dopo la virgola, il confronto (3,45 non è più di 3,5),
+     l'ordine, l'arrotondamento — roba di quarta-quinta. Un bambino di
+     terza sa già dare il resto ma non ha ancora sentito parlare di
+     decimi e centesimi; tenerli insieme spegnerebbe il resto per chi
+     ancora non li conosce, o li accenderebbe insieme a chi sa contare
+     le monete ma leggerebbe «3,45» come due numeri attaccati. */
+  {
+    chiave: 'denaro', nome: 'Le monete e gli euro', ico: '💰', materia: 'matematica',
+    che: 'riconoscere monete e banconote, contare quanto fanno insieme, dare il resto',
+    esempio: '«paghi con 5 €, quanto resto ricevi?»',
+    spegne: 'le domande sui soldi: quanto fanno le monete, il resto, quanto costano più cose, quale prezzo è più alto',
+  },
+  {
+    chiave: 'decimali', nome: 'I numeri con la virgola', ico: '🔟', materia: 'matematica',
+    che: 'il numero con la virgola come numero: il valore dei decimi e dei centesimi, confrontarli, metterli in ordine, arrotondarli',
+    esempio: '«in 4,37 quanto vale il 3?»',
+    spegne: 'le domande sui numeri decimali senza euro: valore delle cifre, confronto, ordine e arrotondamento',
+  },
 
   /* ── spazio ── */
   {
