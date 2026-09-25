@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    LE REGOLE DEL MONDO — cosa succede a ogni freccia
 
-   Sette regole, e **valgono sempre, uguali in ogni livello**: un mondo
+   Otto regole, e **valgono sempre, uguali in ogni livello**: un mondo
    che in un posto fa una cosa e in un altro un'altra non si può
    programmare, si può solo indovinare. Un livello non ne cambia
    nessuna: ne mette in scena qualcuna.
@@ -29,10 +29,26 @@
         coniglio entra nella cella che ha lasciato;
      7. entrando in una buca si esce dalla sua gemella (stesso anello),
         e il movimento finisce lì, anche scivolando. Ripassarci sopra
-        rifà il viaggio.
+        rifà il viaggio;
+     8. **le pecore scappano dal cane.** Quando il cane si ferma accanto
+        a una pecora — sopra, sotto, a destra o a sinistra, dopo un
+        passo, una scivolata, un salto o una buca — lei fa un passo
+        dalla parte opposta. Se lì c'è un ostacolo, l'acqua, un masso,
+        un'altra pecora, la tana o una buca, o se lì finisce la mappa,
+        resta dov'è (e fa «bee»). Sul ghiaccio scivola, come un masso,
+        e si ferma sull'ultima cella prima di quello che la fermerebbe:
+        nell'acqua non ci va. Una pecora che entra nel recinto ci resta,
+        e non occupa più il posto. Il cane contro una pecora sbatte, e
+        nel recinto non entra: sbatte anche lì. E una pecora che finisce
+        dove non si recupera più — in un angolo, contro un muro lungo
+        che non ha un «dietro» (`celleIncastro` in `motore/livello.js`)
+        — **si incastra**, e la fila si ferma lì come contro un albero:
+        la partita è già persa, e la freccia che l'ha persa lampeggia.
 
-   E la tana: arrivarci, in qualunque modo e in qualunque momento,
-   **vince subito** — le frecce dopo non contano.
+   E la meta. Il coniglio arriva alla tana: arrivarci, in qualunque modo
+   e in qualunque momento, **vince subito** — le frecce dopo non
+   contano. Il cane non ha una tana: vince quando l'ultima pecora entra
+   nel recinto, allo stesso modo, subito.
 
    ── TRE SCELTE CHE LE REGOLE NON DICEVANO ─────────────────────────
    Le ha dovute prendere il motore, e stanno scritte qui perché sono
@@ -43,7 +59,16 @@
        vedere che il salto è lungo due;
      · non si atterra su un masso: lo si spinge solo camminando. Un masso
        spinto dall'alto era un caso che nessun bambino si aspetta;
-     · una buca in mezzo a un salto si scavalca, come l'acqua.
+     · una buca in mezzo a un salto si scavalca, come l'acqua;
+     · una pecora no: è alta come un sasso, e contro si sbatte. Il
+       recinto in mezzo a un salto invece si scavalca, è terra;
+     · le pecore scappano **una volta per freccia**, quando il cane si
+       è fermato: una scivolata lunga sei celle accanto a un gregge le
+       spaventa solo dove finisce. E scappano tutte insieme, ognuna
+       dalla sua parte, in un ordine fisso (su, giù, sinistra, destra)
+       che conta solo quando una scivola dove un'altra voleva andare;
+     · la pecora passa sopra la carota (l'osso, per il cane) e la
+       lascia lì: il cane la prende quando la pecora se n'è andata.
 
    ── IL MOTORE NON SA DI ESSERE GUARDATO ───────────────────────────
    Ogni mossa lascia una **traccia**: una fila di fatti già decisi —
@@ -58,16 +83,17 @@
    vince anche col ghiaccio trattato da prato non insegna il ghiaccio
    (`motore/risolutore.js`, `serveLaRegola`). Nel gioco non si usa mai.
    ═══════════════════════════════════════════════════════════════════ */
-import { MOSSE } from '../dati/mondo.js'
+import { MOSSE, VERSI, CHIAVI_VERSI } from '../dati/mondo.js'
 import { albero, conCicli, eFine, CASA } from '../dati/carte.js'
 
 export const TANA = 'tana'
 export const SBATTE = 'sbatte'
 export const SPLASH = 'splash'
 export const STANCO = 'stanco'
+export const PERSA = 'persa'
 export const FINITA = 'finita'
-/* un errore ferma la fila; la tana la chiude vincendo */
-export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO
+/* un errore ferma la fila; la tana (o il recinto pieno) la chiude vincendo */
+export const eErrore = esito => esito === SBATTE || esito === SPLASH || esito === STANCO || esito === PERSA
 
 /* ── QUANTI PASSI PRIMA DI STANCARSI ──
    Coi cicli un programma corto può fare un sacco di strada, e anche
@@ -81,7 +107,7 @@ export const PASSI_MAX = 90
 
 /* le regole che si possono spegnere col `senza` di `Mondo` (e le
    chiavi che i gradini della campagna dichiarano in `regola`) */
-export const REGOLE = ['salto', 'ghiaccio', 'spinta', 'buche']
+export const REGOLE = ['salto', 'ghiaccio', 'spinta', 'buche', 'pecore']
 
 export class Mondo {
   constructor(liv, { senza = null, eventi = true } = {}) {
@@ -91,6 +117,9 @@ export class Mondo {
     this.presa = false
     this.massi = liv.massi.slice()
     this.ponti = []
+    /* le pecore ancora fuori dal recinto: quelle dentro non contano più,
+       non occupano un posto e non si muovono */
+    this.pecore = liv.pecore.slice()
     this.traccia = eventi ? [] : null
   }
 
@@ -102,17 +131,19 @@ export class Mondo {
     m.presa = this.presa
     m.massi = this.massi.slice()
     m.ponti = this.ponti.slice()
+    m.pecore = this.pecore.slice()
     m.traccia = null
     return m
   }
 
   /* lo stato in una parola, per il risolutore: due mondi con la stessa
      chiave sono lo stesso punto della partita. I massi si ordinano
-     perché due massi uguali scambiati di posto sono la stessa cosa. */
+     perché due massi uguali scambiati di posto sono la stessa cosa, e
+     lo stesso le pecore. */
   chiave() {
-    const massi = this.massi.length > 1 ? this.massi.slice().sort((a, b) => a - b) : this.massi
-    const ponti = this.ponti.length > 1 ? this.ponti.slice().sort((a, b) => a - b) : this.ponti
-    return `${this.p}|${this.presa ? 1 : 0}|${massi.join(',')}|${ponti.join(',')}`
+    const ordina = v => (v.length > 1 ? v.slice().sort((a, b) => a - b) : v)
+    const k = `${this.p}|${this.presa ? 1 : 0}|${ordina(this.massi).join(',')}|${ordina(this.ponti).join(',')}`
+    return this.liv.cane ? `${k}|${ordina(this.pecore).join(',')}` : k
   }
 
   get pos() { return this.liv.xy(this.p) }
@@ -129,6 +160,7 @@ export class Mondo {
   lastra() { return this.liv.lastra ? this.liv.lastra[this.p] : null }
   haCarota(i) { return !this.presa && i === this.liv.carota }
   masso(i) { return this.massi.indexOf(i) }
+  pecora(i) { return this.pecore.indexOf(i) }
   ostacolo(i) { return this.liv.ostacolo[i] }
 
   /* dove può andare a finire un masso: dappertutto dove c'è terra o
@@ -138,7 +170,16 @@ export class Mondo {
   liberoPerMasso(i) {
     return i >= 0 && !this.ostacolo(i) && this.masso(i) < 0 &&
            !this.eTana(i) && !this.haCarota(i) && !this.eBuca(i) &&
-           !(this.liv.lastra && this.liv.lastra[i])
+           !(this.liv.lastra && this.liv.lastra[i]) &&
+           this.pecora(i) < 0 && !this.liv.eRecinto(i)
+  }
+
+  /* dove può scappare una pecora: dove si cammina e nel recinto. Non
+     nell'acqua (un ponte sì), non contro un masso o un'altra pecora,
+     non sulla tana e non in una buca */
+  liberoPerPecora(i) {
+    return i >= 0 && !this.ostacolo(i) && this.masso(i) < 0 && this.pecora(i) < 0 &&
+           !this.eAcqua(i) && !this.eTana(i) && !this.eBuca(i)
   }
 
   segna(fatto) { if (this.traccia) this.traccia.push(fatto) }
@@ -151,7 +192,8 @@ export class Mondo {
   mossa(m) {
     const d = MOSSE[m]
     if (!d) throw new Error(`mossa sconosciuta: ${m}`)
-    return d.salto ? this.salta(d.dx, d.dy) : this.cammina(d.dx, d.dy)
+    const esito = d.salto ? this.salta(d.dx, d.dy) : this.cammina(d.dx, d.dy)
+    return esito || !this.liv.cane ? esito : this.spaventa()
   }
 
   cammina(dx, dy) {
@@ -159,6 +201,8 @@ export class Mondo {
     const q = this.liv.vicino(p, dx, dy)
     if (q < 0) return this.sbatte(p, this.oltre(p, dx, dy), 'bordo')
     if (this.ostacolo(q)) return this.sbatte(p, this.xy(q), this.ostacolo(q))
+    if (this.pecora(q) >= 0) return this.sbatte(p, this.xy(q), 'pecora')
+    if (this.liv.eRecinto(q)) return this.sbatte(p, this.xy(q), 'recinto')
     const k = this.masso(q)
     if (k >= 0) {
       if (this.senza === 'spinta' || !this.spingi(k, p, dx, dy))
@@ -178,10 +222,13 @@ export class Mondo {
     if (m < 0) return this.sbatte(p, this.oltre(p, dx, dy), 'bordo', true)
     if (this.liv.alto(m)) return this.sbatte(p, this.xy(m), this.ostacolo(m), true)
     if (this.masso(m) >= 0) return this.sbatte(p, this.xy(m), 'masso', true)
+    if (this.pecora(m) >= 0) return this.sbatte(p, this.xy(m), 'pecora', true)
     const q = this.liv.vicino(m, dx, dy)
     if (q < 0) return this.sbatte(p, this.oltre(m, dx, dy), 'bordo', true)
     if (this.ostacolo(q)) return this.sbatte(p, this.xy(q), this.ostacolo(q), true)
     if (this.masso(q) >= 0) return this.sbatte(p, this.xy(q), 'masso', true)
+    if (this.pecora(q) >= 0) return this.sbatte(p, this.xy(q), 'pecora', true)
+    if (this.liv.eRecinto(q)) return this.sbatte(p, this.xy(q), 'recinto', true)
     if (this.eAcqua(q)) return this.tuffo(p, q, 'salto')
     this.segna({ che: 'salto', da: this.xy(p), a: this.xy(q) })
     this.p = q
@@ -246,7 +293,7 @@ export class Mondo {
       }
       if (!this.eGhiaccio(c)) return null
       const n = this.liv.vicino(c, dx, dy)
-      if (n < 0 || this.ostacolo(n) || this.masso(n) >= 0) {
+      if (n < 0 || this.ostacolo(n) || this.masso(n) >= 0 || this.pecora(n) >= 0 || this.liv.eRecinto(n)) {
         this.segna({ che: 'frena', dove: this.xy(c), verso: this.oltre(c, dx, dy) })
         return null
       }
@@ -255,6 +302,52 @@ export class Mondo {
       this.p = n
       c = n
     }
+  }
+
+  /* ── le pecore ──
+     Il cane si è fermato: chi gli sta accanto scappa dalla parte
+     opposta. Ogni pecora lascia **un fatto solo**, con tutta la strada
+     che ha fatto (il passo, la scivolata, il recinto) o con `ferma` se
+     non ha potuto muoversi: la scena le fa scappare tutte insieme, e il
+     «bee» di quella ferma dice al bambino che ci ha provato. */
+  spaventa() {
+    if (this.senza === 'pecore') return null
+    const cane = this.p
+    for (const v of CHIAVI_VERSI) {
+      const { dx, dy } = VERSI[v]
+      const k = this.pecora(this.liv.vicino(cane, dx, dy))
+      if (k >= 0) this.fuggi(k, dx, dy)
+    }
+    if (!this.pecore.length) {
+      this.segna({ che: 'gregge', dove: this.xy(cane) })
+      return TANA
+    }
+    const persa = this.pecore.find(i => this.liv.incastro[i])
+    if (persa === undefined) return null
+    this.segna({ che: 'incastrata', dove: this.xy(persa) })
+    return PERSA
+  }
+
+  fuggi(k, dx, dy) {
+    const da = this.pecore[k]
+    let r = this.liv.vicino(da, dx, dy)
+    if (!this.liberoPerPecora(r)) {
+      this.segna({ che: 'fugge', da: this.xy(da), a: this.xy(da), via: [], ferma: true, verso: { dx, dy } })
+      return
+    }
+    const via = [this.xy(r)]
+    /* sul ghiaccio si scivola finché la cella dopo si può entrare; nel
+       recinto ci si ferma e si resta */
+    while (!this.liv.eRecinto(r) && this.eGhiaccio(r)) {
+      const n = this.liv.vicino(r, dx, dy)
+      if (!this.liberoPerPecora(n)) break
+      r = n
+      via.push(this.xy(r))
+    }
+    const dentro = this.liv.eRecinto(r)
+    if (dentro) this.pecore.splice(k, 1)
+    else this.pecore[k] = r
+    this.segna({ che: 'fugge', da: this.xy(da), a: this.xy(r), via, dentro, verso: { dx, dy } })
   }
 
   sbatte(p, verso, contro, salto = false) {

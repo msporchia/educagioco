@@ -20,6 +20,7 @@
      1 2 3  le buche collegate: la stessa cifra, la stessa coppia
      r u g  le lastre colorate: rossa, blu (u, perché B è il
             cespuglio), gialla
+     p  una pecora, su un prato   #  il recinto (dove vanno le pecore)
 
    Perché la carota e il masso hanno due lettere e l'albero una sola:
    sotto la carota e sotto il masso il terreno **conta per le regole**
@@ -33,6 +34,17 @@
    salto: uno basso (il tronco, la staccionata) si scavalca, uno alto no.
    Sono disegni diversi apposta — il bambino deve poterlo dire guardando,
    senza provarlo — e la differenza sta in questa tabella e basta.
+
+   ── LE PECORE E IL RECINTO ────────────────────────────────────────
+   Dove ci sono le pecore non c'è la tana: il livello è del **cane**,
+   e si vince quando le pecore sono tutte nel recinto. Il recinto è un
+   pezzo di terra (`#`), largo quanto si vuole: le pecore ci entrano da
+   qualunque lato che dia su un posto dove si cammina, e il cane non ci
+   entra mai. Quali lati sono chiusi lo dice la mappa, con gli ostacoli
+   attorno — e il disegno mette la staccionata proprio lì, così quello
+   che si vede e quello che vale sono la stessa cosa. La carota, in un
+   livello del cane, si disegna come un osso: per il motore è la stessa
+   cosa da prendere.
 
    ── LE LASTRE ─────────────────────────────────────────────────────
    Una lastra colorata per terra non fa niente: si cammina come il prato
@@ -61,7 +73,7 @@ export const LATO_MIN = 3
    striscia non esploda */
 export const MASSIMO_FILA = 40
 
-export const TERRENI = ['prato', 'acqua', 'ghiaccio', 'tana', 'buca']
+export const TERRENI = ['prato', 'acqua', 'ghiaccio', 'tana', 'buca', 'recinto']
 
 export const OSTACOLI = {
   albero:      { alto: true },
@@ -101,6 +113,8 @@ export const LEGENDA = {
   'r': { terreno: 'prato', lastra: 'rosso' },
   'u': { terreno: 'prato', lastra: 'blu' },
   'g': { terreno: 'prato', lastra: 'giallo' },
+  'p': { terreno: 'prato', pecora: true },
+  '#': { terreno: 'recinto' },
 }
 
 /* i colori degli anelli delle buche, uno per coppia: stanno qui e non
@@ -166,7 +180,16 @@ export function guastiDellaMappa(mappa, dove = 'mappa') {
   const quante = pred => Object.entries(conta)
     .filter(([ch]) => LEGENDA[ch] && pred(LEGENDA[ch])).reduce((n, [, k]) => n + k, 0)
   if (quante(d => d.partenza) !== 1) guasti.push(`${dove}: la partenza deve esserci una volta sola`)
-  if (quante(d => d.terreno === 'tana') !== 1) guasti.push(`${dove}: la tana deve esserci una volta sola`)
+  /* un livello del coniglio ha la sua tana e niente recinto; uno del
+     cane ha le pecore, il recinto, e nessuna tana: si vince quando sono
+     tutte dentro, e una tana lì sarebbe una seconda meta */
+  if (quante(d => d.pecora)) {
+    if (quante(d => d.terreno === 'tana')) guasti.push(`${dove}: con le pecore non c'è la tana, c'è il recinto`)
+    if (!quante(d => d.terreno === 'recinto')) guasti.push(`${dove}: ci sono le pecore e non c'è il recinto`)
+  } else {
+    if (quante(d => d.terreno === 'tana') !== 1) guasti.push(`${dove}: la tana deve esserci una volta sola`)
+    if (quante(d => d.terreno === 'recinto')) guasti.push(`${dove}: un recinto senza pecore`)
+  }
   if (quante(d => d.carota) !== 1) guasti.push(`${dove}: la carota deve esserci una volta sola`)
   for (const ch of Object.keys(LEGENDA).filter(ch => LEGENDA[ch].coppia))
     if (conta[ch] && conta[ch] !== 2)
@@ -185,7 +208,7 @@ export function guastiDelMondo() {
     if (d.lastra && !LASTRE[d.lastra]) guasti.push(`legenda «${ch}»: la lastra «${d.lastra}» non ha un colore`)
     /* sopra un ostacolo non ci sta nient'altro: una carota dentro un
        cespuglio non la prende nessuno */
-    if (d.ostacolo && (d.carota || d.masso || d.partenza))
+    if (d.ostacolo && (d.carota || d.masso || d.partenza || d.pecora))
       guasti.push(`legenda «${ch}»: un ostacolo con qualcosa sopra`)
   }
   if (Object.keys(MOSSE).length !== 8) guasti.push('le mosse non sono otto')

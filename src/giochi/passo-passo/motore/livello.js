@@ -9,9 +9,13 @@
 
    Quello che sta qui non cambia mai durante una partita: il terreno, gli
    ostacoli, le coppie di buche, dove si parte, dov'è la tana, dove stava
-   la carota e dove stavano i massi **all'inizio**. Quello che cambia —
-   il coniglio, la carota presa, i massi spinti, i ponti — sta nel mondo
+   la carota e dove stavano i massi e le pecore **all'inizio**. Quello
+   che cambia — il coniglio (o il cane), la carota presa, i massi
+   spinti, i ponti, le pecore che scappano — sta nel mondo
    (`motore/mondo.js`), che parte da qui e non lo tocca.
+
+   Un livello con le pecore è **del cane**: `cane` lo dice a chi disegna
+   e a chi consiglia, e la meta non è la tana ma il recinto.
    ═══════════════════════════════════════════════════════════════════ */
 import { LEGENDA, OSTACOLI } from '../dati/mondo.js'
 
@@ -45,6 +49,7 @@ export class Livello {
     this.tana = -1
     this.carota = -1
     this.massi = []
+    this.pecore = []
 
     const buche = {}
     for (let y = 0; y < this.righe; y++) for (let x = 0; x < this.colonne; x++) {
@@ -57,17 +62,20 @@ export class Livello {
       if (d.terreno === 'tana') this.tana = i
       if (d.carota) this.carota = i
       if (d.masso) this.massi.push(i)
+      if (d.pecora) this.pecore.push(i)
       if (d.lastra) this.lastra[i] = d.lastra
       if (d.coppia) {
         this.coppia[i] = d.coppia
         ;(buche[d.coppia] = buche[d.coppia] || []).push(i)
       }
     }
+    this.cane = this.pecore.length > 0
     for (const [a, b] of Object.values(buche)) {
       if (b === undefined) continue          // una buca sola: lo dice `guastiDellaMappa`
       this.gemella[a] = b
       this.gemella[b] = a
     }
+    this.incastro = this.cane ? celleIncastro(this) : null
   }
 
   x(i) { return i % this.colonne }
@@ -82,9 +90,56 @@ export class Livello {
     return this.dentro(x, y) ? this.indice(x, y) : -1
   }
 
+  eRecinto(i) { return this.terreno[i] === 'recinto' }
+
   /* un ostacolo alto non si scavalca col salto; uno basso sì */
   alto(i) {
     const o = this.ostacolo[i]
     return !!o && OSTACOLI[o].alto
   }
+}
+
+/* ── LE CELLE DOVE UNA PECORA SI INCASTRA ──
+   Una pecora si sposta solo scappando, cioè col cane dalla parte
+   opposta: una pecora in un angolo non ha più un «dietro» dove il cane
+   possa mettersi, e non si recupera più. Qui si trovano **una volta
+   per livello** tutte le celle da cui una pecora, anche col cane libero
+   di andare dove vuole e senza nessun'altra pecora in giro, non arriva
+   più al recinto: le altre celle si ricavano all'indietro dal recinto,
+   e quello che resta è incastro.
+
+   È il conto più largo possibile — nessun'altra pecora in mezzo, e se
+   il livello ha dei massi l'acqua conta come un ponte possibile — quindi
+   dice «incastrata» solo quando è vero in ogni caso. Il motore lo usa
+   per fermare la fila nel momento in cui succede (`motore/mondo.js`):
+   senza, il bambino aggiungerebbe frecce a una partita già persa, e
+   nessuna freccia gli direbbe perché. */
+export function celleIncastro(liv) {
+  const n = liv.n
+  const ponti = liv.massi.length > 0
+  const acqua = i => liv.terreno[i] === 'acqua' && !ponti
+  const perPecora = i => i >= 0 && !liv.ostacolo[i] && !acqua(i) &&
+    liv.terreno[i] !== 'tana' && liv.terreno[i] !== 'buca'
+  const perCane = i => i >= 0 && !liv.ostacolo[i] && !acqua(i) && liv.terreno[i] !== 'recinto'
+  const salva = new Array(n).fill(false)
+  for (let i = 0; i < n; i++) if (liv.terreno[i] === 'recinto') salva[i] = true
+  const VERSI = [[0, -1], [0, 1], [-1, 0], [1, 0]]
+  for (let cambiato = true; cambiato;) {
+    cambiato = false
+    for (let c = 0; c < n; c++) {
+      if (salva[c] || !perPecora(c)) continue
+      for (const [dx, dy] of VERSI) {
+        if (!perCane(liv.vicino(c, -dx, -dy))) continue
+        let r = liv.vicino(c, dx, dy)
+        if (!perPecora(r)) continue
+        while (liv.terreno[r] === 'ghiaccio') {
+          const q = liv.vicino(r, dx, dy)
+          if (!perPecora(q)) break
+          r = q
+        }
+        if (salva[r]) { salva[c] = true; cambiato = true; break }
+      }
+    }
+  }
+  return salva.map((s, i) => !s && perPecora(i))
 }

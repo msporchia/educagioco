@@ -61,7 +61,7 @@ export function scalaDi() {
    Si ricavano da quello che c'è sulla mappa e non da un testo scritto
    livello per livello: valgono per la campagna, per il sentiero senza
    fine e per i posti che verranno. Si guarda la cosa più nuova — lo
-   zaino, poi le buche, i massi, il ghiaccio, i salti — perché è quella
+   zaino, poi le pecore, le buche, i massi, il ghiaccio, i salti — perché è quella
    che il posto è venuto a insegnare. Le legge un grande a chi non sa
    ancora leggere: il pezzo che si vede è il gradino dopo. */
 export function pensieroDi(liv) {
@@ -79,6 +79,11 @@ export function pensieroDi(liv) {
         ? 'Guarda la strada: cosa si ripete uguale, e fino a quando? Quante volte, o fino a quale lastra?'
         : 'Guarda la strada: c\'è un pezzo che si ripete uguale? Quel pezzo si scrive una volta sola, dentro una scatola 🔁 — e quante volte?'
     return [prima, seconda]
+  }
+  if (liv.cane) {
+    const osso = liv.carota >= 0 ? ' E l\'osso 🦴: prendilo senza spaventare nessuna pecora dalla parte sbagliata.' : ''
+    return ['Le pecore 🐑 scappano dal cane: quando si ferma accanto a una pecora, lei fa un passo dall\'altra parte. Le devi portare tutte nel recinto.',
+            'Da che parte deve andare la pecora? Il cane si mette dall\'altra parte. E per girarle attorno, passa in diagonale: se ti fermi accanto a lei, scappa.' + osso]
   }
   if ((liv.coppia || []).some(k => k > 0))
     return ['Il coniglio deve arrivare alla tana 🏡, e ci sono delle buche 🕳️: si entra in una e si esce da quella dello stesso colore.',

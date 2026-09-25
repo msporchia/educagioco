@@ -187,7 +187,9 @@ export function serveLaCarta(liv) {
 
      · il salto e la spinta: **senza, non si arriva proprio** — né con la
        carota né senza. Un livello dei massi che si vince girando attorno
-       al masso è un livello del prato con un sasso in più;
+       al masso è un livello del prato con un sasso in più. Le pecore
+       stanno con loro: senza la loro regola non scappano, e nel recinto
+       non ci va nessuno;
      · il ghiaccio e le buche: la strada giusta, giocata in un mondo dove
        il ghiaccio è prato (o la buca è una buca qualsiasi), **non
        vince**. Col ghiaccio spento si arriva quasi sempre, ma per
@@ -195,7 +197,7 @@ export function serveLaCarta(liv) {
 export function serveLaRegola(liv, regola) {
   const vera = risolvi(liv, { carota: true })
   if (!vera) return false
-  if (regola === 'salto' || regola === 'spinta')
+  if (regola === 'salto' || regola === 'spinta' || regola === 'pecore')
     return !risolvi(liv, { carota: false, senza: regola })
   const r = esegui(liv, vera, { senza: regola, eventi: false })
   return !(r.esito === TANA && r.carota)
@@ -210,7 +212,7 @@ export function serveLaRegola(liv, regola) {
 export function misura(liv) {
   const conCarota = risolvi(liv, { carota: true })
   const senzaCarota = risolvi(liv, { carota: false })
-  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0 }
+  const usa = { scivola: 0, salto: 0, spinta: 0, affonda: 0, masso: 0, buca: 0, passo: 0, fugge: 0 }
   if (conCarota) {
     const r = esegui(liv, conCarota)
     for (const p of r.passi) for (const e of p.eventi) if (e.che in usa) usa[e.che]++
