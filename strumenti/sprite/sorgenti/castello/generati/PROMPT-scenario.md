@@ -432,8 +432,14 @@ riga**. 1024×1536, RGB.
   stessa tabella** veste anche neve e lava. `node
   strumenti/sprite/carte-castello.mjs` fa le ventiquattro carte vestite
   in `poc/scatti/castello-carte-{bosco,neve,lava}.png`. È un
-  provvisorio: il fitto tagliato al bordo della cella si vede a
-  quadretti, ed è quello che i pezzi alti del foglio servono a coprire.
+  provvisorio, e il primo giro ha insegnato tre cose che valgono anche
+  per il foglio: la strada ritagliata in punti diversi sbanda di cella
+  in cella (nella scena la striscia va da 29 a 38 px), quindi si
+  **ricompone da un rettilineo solo**; il prato a una piastrella per
+  cella si legge come una scacchiera, quindi va a toppe sfumate più
+  grandi della cella; e alberi e massi tagliati al bordo della cella
+  sono la cosa più brutta della mappa, quindi sono **figure
+  scontornate** — il fitto è fatto solo di alberi interi, tre per cella.
 - **Nella lava ci sono cristalli rossi**, a mucchi, sparsi sul campo: in
   un gioco sembrano gemme da raccogliere. Nel foglio della lava vanno
   chiesti senza, o scartati al ritaglio.
