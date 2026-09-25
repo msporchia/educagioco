@@ -52,6 +52,11 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g3 — Prima, dopo, in mezzo e in ordine
 - ✂️ **Sillabe** g1 — Quante sillabe ha la parola
 
+## 28  ·  circa 6.2 anni
+
+- ⚑ 📊 **Grafici e tabelle** g1 — Contare nel pittogramma
+- ⚑ 📊 **Grafici e tabelle** g2 — Contare nel pittogramma
+
 ## 29  ·  circa 6.3 anni
 
 - 📅 **Calendario** g3 — Le feste dell'anno
@@ -71,6 +76,12 @@ diverso da quello del suo grado.
 
 - 🔢 **Senso del numero** g3 — Fare i conti in fila
 
+## 31  ·  circa 6.5 anni
+
+- 📚 **Capire un testo** g1 — Chi, dove, che cosa: è scritto nel testo
+- 🧵 **Connettivi** g1 — Perché: la causa
+- 🧵 **Connettivi** g1 — Quindi e così: la conseguenza
+
 ## 33  ·  circa 6.6 anni
 
 - 🗺️ **La griglia** g3 — Dove si arriva seguendo le frecce
@@ -84,9 +95,16 @@ diverso da quello del suo grado.
 - 🦁 **Animali e ambienti** g3 — Dove vive questo animale
 - ⚑ 📅 **Calendario** g2 — Quanti giorni ha un mese
 - 🗣️ **Coniugazione** g1 — Il presente dei verbi regolari
+- 🧵 **Connettivi** g2 — Cosa dice la parolina
+- 🧵 **Connettivi** g2 — Ma, però, invece: il contrasto
+- 🧵 **Connettivi** g2 — Perché: la causa
+- 🧵 **Connettivi** g2 — Quale frase ha senso
+- 🧵 **Connettivi** g2 — Quindi e così: la conseguenza
+- 🍕 **Frazioni** g1 — Che parte è colorata
 - ⚑ 📐 **Geometria** g1 — I quadrilateri (quadrato, rombo, trapezio)
 - 📐 **Geometria** g4 — Girare una figura di un quarto
 - 📐 **Geometria** g4 — La figura allo specchio
+- 📊 **Grafici e tabelle** g2 — Leggere il grafico a barre
 - ⚑ 🔤 **Grammatica** g5 — Nomi propri e nomi comuni
 - 🔎 **Indizi** g3 — Chi sono io: le figure
 - 📏 **Misure** g1 — Con che cosa si misura
@@ -100,6 +118,16 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g4 — Leggere la linea dei numeri
 - 🔢 **Senso del numero** g4 — Mettere un numero al suo posto
 - ✂️ **Sillabe** g2 — Dividere in sillabe
+- 💶 **Soldi e decimali** g1 — Quanto fanno monete e banconote
+
+## 40  ·  circa 7.2 anni
+
+- 📚 **Capire un testo** g2 — Chi, dove, che cosa: è scritto nel testo
+
+## 41  ·  circa 7.3 anni
+
+- 🍕 **Frazioni** g1 — Il disegno di una frazione (e i pezzi non uguali)
+- 📊 **Grafici e tabelle** g2 — Il pittogramma con la legenda
 
 ## 42  ·  circa 7.4 anni
 
@@ -109,6 +137,8 @@ diverso da quello del suo grado.
 
 - 🔗 **Analogie** g3 — Le analogie fra figure
 - 🗣️ **Coniugazione** g2 — Il presente dei verbi irregolari
+- ⚖️ **Le bilance** g1 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
+- 🐋 **Le classi degli animali** g1 — Dagli indizi alla classe
 - 🕰️ **Orologio** g3 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g3 — Le ore intere
 - 🕰️ **Orologio** g3 — Trovare l'orologio che segna un'ora
@@ -119,20 +149,58 @@ diverso da quello del suo grado.
 - 📝 **Problemi** g2 — Quello che va via si toglie
 - 🔢 **Senso del numero** g4 — Fare i conti in fila
 - ✂️ **Sillabe** g3 — Le rime
+- 💶 **Soldi e decimali** g2 — Il resto
+- 💶 **Soldi e decimali** g2 — Quanto fanno monete e banconote
+
+## 47  ·  circa 7.8 anni
+
+- 🍕 **Frazioni** g2 — Che parte è colorata
+- 📊 **Grafici e tabelle** g3 — Leggere il grafico a barre
+- 📊 **Grafici e tabelle** g3 — Quanti in tutto
 
 ## 50  ·  circa 8 anni
 
 - 🦁 **Animali e ambienti** g4 — Chi non vive qui
 - 🦁 **Animali e ambienti** g4 — Dove vive questo animale
 - 🦁 **Animali e ambienti** g4 — Il corpo dice il posto
+- ⚑ 📚 **Capire un testo** g3 — Prima e dopo: l'ordine in cui le cose succedono
+- 🧵 **Connettivi** g3 — Cosa dice la parolina
+- 🧵 **Connettivi** g3 — Ma, però, invece: il contrasto
+- 🧵 **Connettivi** g3 — Quale frase ha senso
+- 🧵 **Connettivi** g3 — Quando e mentre: il tempo
+- 🧵 **Connettivi** g3 — Quindi e così: la conseguenza
+- 🍕 **Frazioni** g2 — Chi è più grande, con lo stesso numero sotto
+- 🍕 **Frazioni** g2 — Il disegno di una frazione (e i pezzi non uguali)
+- 📊 **Grafici e tabelle** g3 — Il pittogramma con la legenda
+- 📊 **Grafici e tabelle** g3 — Quanti in più, quanti in meno
+- ⚖️ **Le bilance** g2 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
+- 🐋 **Le classi degli animali** g2 — Che classe è questo animale
+- 🐋 **Le classi degli animali** g2 — Dagli indizi alla classe
 - ✏️ **Ortografia** g3 — Il suono sc (pesce, scienza)
 - ✏️ **Ortografia** g3 — Le doppie
 - 🔢 **Senso del numero** g4 — Indovina il numero di partenza
 - ✂️ **Sillabe** g4 — La sillaba che manca
+- 💶 **Soldi e decimali** g3 — Il resto
+- 💶 **Soldi e decimali** g3 — Quale prezzo è più alto
+- 💶 **Soldi e decimali** g3 — Quanto costano più cose
 
 ## 52  ·  circa 8.2 anni
 
 - 🔢 **Senso del numero** g5 — Fare i conti in fila
+
+## 53  ·  circa 8.2 anni
+
+- ⚑ 📚 **Capire un testo** g3 — Il perché scritto nel testo
+- 🍕 **Frazioni** g3 — Che parte è colorata
+
+## 54  ·  circa 8.3 anni
+
+- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sotto
+
+## 55  ·  circa 8.4 anni
+
+- 🍕 **Frazioni** g3 — Il disegno di una frazione (e i pezzi non uguali)
+- 📊 **Grafici e tabelle** g4 — Quanti in tutto
 
 ## 56  ·  circa 8.5 anni
 
@@ -142,13 +210,22 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g3 — Essere o avere nel passato prossimo
 - 🗣️ **Coniugazione** g3 — I participi irregolari (preso, scritto)
 - 🗣️ **Coniugazione** g3 — Il participio passato regolare
+- 🍕 **Frazioni** g3 — Quanto manca per fare un intero
 - ⚑ 📐 **Geometria** g2 — Gli angoli: retto, acuto, ottuso
 - 📐 **Geometria** g5 — Come si vede un solido dall'alto
 - 📐 **Geometria** g5 — Contare le facce
 - 📐 **Geometria** g5 — I solidi e i loro nomi
+- 📊 **Grafici e tabelle** g4 — Il pittogramma con la legenda
+- 📊 **Grafici e tabelle** g4 — La tabella a doppia entrata
+- 📊 **Grafici e tabelle** g4 — Leggere il grafico a barre
+- 📊 **Grafici e tabelle** g4 — Quanti in più, quanti in meno
 - 🔤 **Grammatica** g3 — Che parte del discorso è
 - 🔎 **Indizi** g4 — Indovinello: le cose del mondo
 - 🗺️ **La griglia** g4 — L'area: i quadretti dentro
+- ⚖️ **Le bilance** g2 — Il numero nascosto nelle tabelline (□ × 6 = 42)
+- 🐋 **Le classi degli animali** g3 — Che classe è questo animale
+- 🐋 **Le classi degli animali** g3 — Chi non è della famiglia
+- 🐋 **Le classi degli animali** g3 — Vertebrato o invertebrato
 - 📖 **Lessico** g3 — I sinonimi
 - 🧩 **Logica** g3 — La regola applicata dritta
 - 🧩 **Logica** g3 — La regola girata: non si può sapere
@@ -168,9 +245,27 @@ diverso da quello del suo grado.
 - ➡️ **Sequenze** g5 — Il passo che cresce o gira
 - ➡️ **Sequenze** g5 — Il ritmo che si ripete
 
+## 57  ·  circa 8.6 anni
+
+- 💶 **Soldi e decimali** g4 — Quale numero con la virgola è più grande
+- 💶 **Soldi e decimali** g4 — Quale prezzo è più alto
+- 💶 **Soldi e decimali** g4 — Quanto costano più cose
+
+## 59  ·  circa 8.7 anni
+
+- 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sopra
+
 ## 60  ·  circa 8.8 anni
 
+- 🍕 **Frazioni** g4 — La frazione di un numero (1/4 di 20)
+- 🐋 **Le classi degli animali** g4 — Chi non è della famiglia
+- 🐋 **Le classi degli animali** g4 — Insetto o ragno: quante zampe
+- 🐋 **Le classi degli animali** g4 — Perché è di quella classe
 - 🔢 **Senso del numero** g6 — Fare i conti in fila
+
+## 61  ·  circa 8.9 anni
+
+- 🍕 **Frazioni** g4 — Quanto manca per fare un intero
 
 ## 62  ·  circa 9 anni
 
@@ -179,10 +274,17 @@ diverso da quello del suo grado.
 ## 63  ·  circa 9 anni
 
 - 📅 **Calendario** g5 — Quanto dura una cosa
+- ⚑ 📚 **Capire un testo** g4 — Di chi parla «lei», «lo», «gli»
 - 🗣️ **Coniugazione** g4 — Il futuro
 - 🗣️ **Coniugazione** g4 — L'imperfetto
+- 🍕 **Frazioni** g4 — Chi è più grande, con lo stesso numero sopra
+- 📊 **Grafici e tabelle** g5 — La tabella a doppia entrata
+- 📊 **Grafici e tabelle** g5 — Quanti in più, quanti in meno
+- 📊 **Grafici e tabelle** g5 — Quanti in tutto
 - 🔤 **Grammatica** g4 — Il nome e il suo aggettivo
 - 🗺️ **La griglia** g5 — Il perimetro: il giro del bordo
+- ⚖️ **Le bilance** g3 — Il numero nascosto nelle tabelline (□ × 6 = 42)
+- ⚖️ **Le bilance** g3 — Quanto pesa uno, sulla bilancia in pari
 - 📖 **Lessico** g4 — La parola giusta nella frase
 - 🧩 **Logica** g4 — La regola applicata dritta
 - 🧩 **Logica** g4 — La regola girata: non si può sapere
@@ -197,11 +299,45 @@ diverso da quello del suo grado.
 - 📝 **Problemi** g4 — Due conti di fila
 - 📝 **Problemi** g4 — Due conti, con i gruppi
 
+## 64  ·  circa 9.1 anni
+
+- 💶 **Soldi e decimali** g5 — Il valore delle cifre dopo la virgola
+- 💶 **Soldi e decimali** g5 — Quale numero con la virgola è più grande
+
+## 65  ·  circa 9.2 anni
+
+- 🍕 **Frazioni** g4 — Le frazioni equivalenti (2/4 = 1/2)
+- 🐋 **Le classi degli animali** g5 — Insetto o ragno: quante zampe
+- 🐋 **Le classi degli animali** g5 — Perché è di quella classe
+- 🐋 **Le classi degli animali** g5 — Vertebrato o invertebrato
+
+## 66  ·  circa 9.3 anni
+
+- ⚑ 📚 **Capire un testo** g4 — Quello che non è scritto ma si capisce
+- ⚑ 📚 **Capire un testo** g5 — Quello che non è scritto ma si capisce
+- 🍕 **Frazioni** g5 — Quanto manca per fare un intero
+
+## 68  ·  circa 9.4 anni
+
+- 🍕 **Frazioni** g5 — La frazione di un numero (1/4 di 20)
+
 ## 69  ·  circa 9.5 anni
 
+- 🧵 **Connettivi** g4 — Quale frase ha senso
+- 🧵 **Connettivi** g4 — Se: la condizione
 - 🔤 **Grammatica** g5 — Soggetto e predicato
 - 🗺️ **La griglia** g6 — Il perimetro: il giro del bordo
 - 🗺️ **La griglia** g6 — L'area: i quadretti dentro
+- ⚖️ **Le bilance** g3 — Togliere la stessa cosa dai due piatti
+- ⚖️ **Le bilance** g4 — Quanto pesa uno, sulla bilancia in pari
+
+## 72  ·  circa 9.8 anni
+
+- ⚑ 📚 **Capire un testo** g5 — Il titolo giusto per tutto il testo
+- 🍕 **Frazioni** g5 — Le frazioni equivalenti (2/4 = 1/2)
+- 💶 **Soldi e decimali** g6 — Arrotondare all'euro o al decimo
+- 💶 **Soldi e decimali** g6 — I decimali sulla linea e in ordine
+- 💶 **Soldi e decimali** g6 — Il valore delle cifre dopo la virgola
 
 ## 75  ·  circa 10 anni
 
@@ -211,7 +347,10 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g5 — Scegliere il tempo che la frase chiede
 - 📐 **Geometria** g6 — I cubetti, anche quelli nascosti
 - 📐 **Geometria** g6 — Lo sviluppo da piegare
+- ⚑ 📊 **Grafici e tabelle** g5 — La moda: quello che compare più volte
 - 🔎 **Indizi** g5 — Chi sono io: le figure
+- ⚖️ **Le bilance** g4 — Togliere la stessa cosa dai due piatti
+- ⚖️ **Le bilance** g4 — Una cosa pesa come tante altre: lo scambio
 - 📖 **Lessico** g5 — I modi di dire
 - 🧩 **Logica** g5 — «Nessuno» vuol dire nessuno
 - 🧩 **Logica** g5 — Le catene di regole
@@ -229,8 +368,20 @@ diverso da quello del suo grado.
 
 ## 81  ·  circa 10.5 anni
 
+- ⚑ 🧵 **Connettivi** g4 — Anche se, contro se
+- ⚑ 🧵 **Connettivi** g5 — Anche se, contro se
+- ⚑ 📊 **Grafici e tabelle** g5 — La media
+- ⚖️ **Le bilance** g5 — Una cosa pesa come tante altre: lo scambio
 - 📏 **Misure** g5 — I problemi con le misure
 - 📝 **Problemi** g6 — I dati che non servono
+
+## 85  ·  circa 10.8 anni
+
+- ⚑ 🧵 **Connettivi** g5 — Il doppio senso di «mentre»
+
+## 88  ·  circa 11 anni
+
+- ⚑ ⚖️ **Le bilance** g5 — Due cose da pesare, con due bilance
 
 ## 95  ·  circa 11.6 anni
 
@@ -248,4 +399,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 173 classi su 18 moduli.
+Totale: 270 classi su 25 moduli.
