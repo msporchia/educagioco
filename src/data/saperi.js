@@ -139,6 +139,19 @@ export const SAPERI = [
     esempio: '«che parte della torta è colorata?»',
     spegne: 'tutte le domande sulle frazioni, disegnate e col conto',
   },
+  /* I grafici sono il quarto pezzo della matematica di scuola —
+     «relazioni, dati e previsioni» nelle Indicazioni — e un gruppo a
+     sé perché non sta dentro nessuno degli altri: un bambino che conta
+     benissimo può non aver mai visto una scala che va di due in due.
+     Nasce acceso ovunque tranne che nella fascia dei piccoli: leggere
+     un grafico si spiega in una riga («segui la cima fino ai numeri»),
+     e la riga c'è. */
+  {
+    chiave: 'dati', nome: 'Grafici e tabelle', ico: '📈', materia: 'matematica',
+    che: 'leggere un pittogramma, un grafico a barre e una tabella: quanti sono, chi ne ha di più, quanti in tutto, e in quinta moda e media',
+    esempio: '«nel grafico, quanti gelati ha venduto il gelataio giovedì?»',
+    spegne: 'le domande su pittogrammi, grafici a barre e tabelle, con la moda e la media',
+  },
   /* I problemi non sono un'operazione in più: sono il passo prima, e si
      spengono da soli perché sono l'unica domanda di matematica che
      bisogna saper LEGGERE. A un bambino che ancora decifra le parole

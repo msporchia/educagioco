@@ -207,7 +207,10 @@ export const PARTENZE = [
              /* il numero nascosto, anche il più facile (□ + 3 = 5), è
                 già un conto scritto da leggere al contrario: prima
                 della scuola non c'è un conto scritto nemmeno per dritto */
-             'bilance'],
+             'bilance',
+             /* un pittogramma è contare, ma leggerlo come un grafico —
+                la fila di chi, la legenda sotto — è una cosa di scuola */
+             'dati'],
     tiene: {
       numeri: 'contare fino a dieci e dire chi è di più si fa prima della scuola',
       figure: 'il cerchio e il quadrato si riconoscono dai libri illustrati',
@@ -266,6 +269,7 @@ export const PARTENZE = [
       confronti: 'mettere in fila tre bambini per altezza si fa in cortile',
       analogie: 'il cane sta all\'osso: si capisce a voce, senza saper leggere',
       bilance: 'il numero che manca (5 + □ = 8) si fa sul quaderno di prima; le bilance vere arrivano dopo, e senza divisioni restano spente da sole',
+      dati: 'il pittogramma della classe si fa in prima; le barre e la legenda si spiegano in una riga',
     },
   },
   {
