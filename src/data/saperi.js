@@ -127,6 +127,18 @@ export const SAPERI = [
     esempio: '«84 : 4»',
     spegne: 'le divisioni in colonna del castello — la torre Bombe chiede moltiplicazioni più difficili',
   },
+  /* Le frazioni sono un pezzo di scuola con una data precisa — arrivano
+     in terza — ed è la cosa che un genitore sa dire senza esitare: «le
+     frazioni non le ha ancora fatte». Il gioco però le spiega nella
+     carta (sotto quanti pezzi, sopra quanti colorati), quindi da terza
+     in su restano accese anche a chi a scuola è indietro: vedi
+     `data/partenze.js`. */
+  {
+    chiave: 'frazioni', nome: 'Le frazioni', ico: '🍕', materia: 'matematica',
+    che: 'dividere una cosa in pezzi uguali e dire quanti se ne prendono: 3/4 di torta, 1/3 di 12',
+    esempio: '«che parte della torta è colorata?»',
+    spegne: 'tutte le domande sulle frazioni, disegnate e col conto',
+  },
   /* I problemi non sono un'operazione in più: sono il passo prima, e si
      spengono da soli perché sono l'unica domanda di matematica che
      bisogna saper LEGGERE. A un bambino che ancora decifra le parole

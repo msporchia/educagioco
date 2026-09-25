@@ -164,6 +164,9 @@ export const PARTENZE = [
              'stima', 'problemi', 'orologio', 'date', 'area-perimetro', 'solidi',
              'spazio-mente', 'analisi', 'flessione', 'presente', 'tempi-verbali',
              'accenti', 'suoni-difficili',
+             /* le frazioni sono di terza, e prima della scuola non c'è
+                nemmeno la barra da leggere */
+             'frazioni',
              /* ── E QUESTI DIECI SONO ARRIVATI GUARDANDO L'ELENCO ──
                 Da quando la schermata dei grandi dice **al positivo**
                 cosa il gioco dà per scontato, la riga a quattro anni si
@@ -232,6 +235,13 @@ export const PARTENZE = [
              'stima', 'problemi', 'orologio', 'date', 'area-perimetro', 'solidi',
              'spazio-mente', 'analisi', 'flessione', 'presente', 'tempi-verbali',
              'accenti', 'suoni-difficili',
+             /* Le frazioni arrivano in terza. Il disegno le spiegherebbe
+                anche qui — ed è per questo che da terza in su restano
+                accese — ma a sei anni la metà di una torta si dice a
+                voce, e «1/2» scritto con la barra è ancora una scrittura
+                che non si sa leggere: è la stessa ragione che tiene
+                spente le decine e la stima. */
+             'frazioni',
              /* stesso motivo dei piccoli: è di fine terza, e a sei anni
                 e mezzo mancano due anni buoni. Restano gli ambienti. */
              'adattamento'],
@@ -302,6 +312,7 @@ export const PARTENZE = [
       accenti: 'accenti, apostrofi e la lettera h sono di seconda',
       'suoni-difficili': 'gn, gl, sc e le doppie sono di prima',
       adattamento: 'è l\'obiettivo di fine terza, e a otto anni ci siamo',
+      frazioni: 'la frazione come parte colorata di una figura è di terza, e il resto si spiega nella carta: sotto i pezzi, sopra i colorati',
     },
   },
   {
