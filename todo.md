@@ -26,14 +26,17 @@ un po' trovavano le domande «trite». Resta in coda:
   (il pipistrello è l'unico mammifero che vola davvero, il delfino dorme con
   mezzo cervello). Non dentro l'aiuto dopo un errore: lì l'aiuto insegna il
   metodo, e una curiosità diventa un fatto da imparare a memoria legato a una
-  domanda sbagliata. Il modulo `classi-animali` ne aveva una tabella, tolta:
-  sta nella storia di git (`git log -S CURIOSITA`).
+  domanda sbagliata. Il modulo `classi-animali` (tolto anche lui, vedi sotto)
+  ne aveva una tabella: sta nella storia di git (`git log -S CURIOSITA`).
 - **«Non si può sapere» giusta** nelle bilance: oggi è solo un falso, e un
   bambino può imparare a scartarla a occhio.
 
 ### Deciso di NON portare, e perché
 
 - **le catene alimentari** (25 settembre 2026) — proposte, non convincono.
+- **le classi degli animali** (mammifero, uccello, pesce… dagli indizi; 25
+  settembre 2026) — scritte e provate, poi tolte: non convincono. Stanno nella
+  storia di git (`git log -- src/quiz/moduli/classi-animali.js`).
 
 - **spaziale** (poliomini girati) — `geometria` grado 4 lo fa già, e meglio: i
   pezzi sono filtrati perché le otto orientazioni siano tutte diverse.

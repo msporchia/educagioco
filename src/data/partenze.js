@@ -203,11 +203,6 @@ export const PARTENZE = [
                 ambienti del mondo», che è il gradino sotto e non arriva
                 da scuola. */
              'adattamento',
-             /* le classi degli animali (mammifero, uccello, pesce…) sono
-                lo stesso obiettivo di fine terza dell'adattamento, un
-                gradino più su: qui restano gli animali coi loro posti,
-                non ancora le loro famiglie. */
-             'classi-animali',
              /* il numero nascosto, anche il più facile (□ + 3 = 5), è
                 già un conto scritto da leggere al contrario: prima
                 della scuola non c'è un conto scritto nemmeno per dritto */
@@ -267,7 +262,7 @@ export const PARTENZE = [
              'denaro', 'decimali',
              /* stesso motivo dei piccoli: è di fine terza, e a sei anni
                 e mezzo mancano due anni buoni. Restano gli ambienti. */
-             'adattamento', 'classi-animali'],
+             'adattamento'],
     tiene: {
       lettura: 'in prima si impara a leggere: è esattamente quello che si sta facendo',
       comprensione: 'due frasi con chi e dove si leggono a fine prima; i testi più lunghi li tiene lontani l\'età',
@@ -345,7 +340,6 @@ export const PARTENZE = [
       'suoni-difficili': 'gn, gl, sc e le doppie sono di prima',
       adattamento: 'è l\'obiettivo di fine terza, e a otto anni ci siamo',
       frazioni: 'la frazione come parte colorata di una figura è di terza, e il resto si spiega nella carta: sotto i pezzi, sopra i colorati',
-      'classi-animali': 'vertebrati, invertebrati e le classi degli animali sono di terza e quarta, e a otto anni la regola si può già applicare',
     },
   },
   {

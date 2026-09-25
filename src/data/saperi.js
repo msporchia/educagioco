@@ -433,22 +433,6 @@ export const SAPERI = [
     esempio: '«un animale ha il pelo bianco e il grasso sotto la pelle: dove vive?»',
     spegne: 'le domande in cui il posto si ricava dall\'indizio; restano quelle su chi vive dove',
   },
-  /* Un terzo pezzo di scienze, e non lo stesso di sopra con un nome
-     diverso: gli ambienti dicono DOVE vive un animale, l'adattamento
-     COME SI CAPISCE guardandolo — questo dice A CHE GRUPPO appartiene
-     (mammifero, uccello, pesce, anfibio, rettile, insetto), che è un
-     terzo asse e non un raffinamento dei primi due: un bambino può
-     sapere benissimo che il delfino vive in mare e non avere idea che
-     sia un mammifero. È materia di terza e quarta (vertebrati e
-     invertebrati, le classi degli animali): prima non si spiega in una
-     riga, perché senza aver visto la regola «perché la balena è un
-     mammifero?» è un ricordo, non un ragionamento. */
-  {
-    chiave: 'classi-animali', nome: 'Le classi degli animali', ico: '🐋', materia: 'scienze',
-    che: 'riconoscere se un animale è un mammifero, un uccello, un pesce, un anfibio, un rettile o un insetto applicando la regola (allatta, ha le piume, le squame, sei zampe…) invece di ricordarlo a memoria',
-    esempio: '«ha le piume e depone le uova: chi è?»',
-    spegne: 'le domande sulle classi degli animali, sugli intrusi della famiglia e su vertebrati e invertebrati',
-  },
 ]
 
 export const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)
