@@ -64,27 +64,28 @@
                   un quarto di strada libero all'ingresso e uno
                   all'uscita, su qualunque mappa;
 
-     resistenze   dove sono accese, ogni mostro deve resistere a una
-                  torre che la tappa mette a disposizione — dire «regge
-                  le bombe» dove le bombe sono chiuse non è un
-                  avvertimento, è rumore — e la tappa deve offrirne
-                  almeno **due** che sparano, se no la resistenza
-                  toglie l'unica difesa che c'è invece di indirizzarla.
-                  In un elenco devono comparire almeno due resistenze
-                  diverse. In più — ed è una richiesta di questo file,
-                  non una regola del gioco — due ondate di fila non
-                  devono chiudere la stessa torre.
+     immunità     ogni mostro si deve poter ferire con una torre che la
+                  tappa mette a disposizione, e dove le torri che
+                  feriscono sono più d'una **ognuna deve avere un mostro
+                  immune** — se no quella torre, da sola, vince la
+                  tappa. La prima ondata la ferisce l'arciere, e due
+                  ondate di fila non hanno le stesse immunità. Le regole
+                  sono scritte una volta sola, in `guastiDelleImmunita`
+                  (`data/mostri.js`), e le conta anche `unita/castello`.
+                  E le prime quattro ondate le devono ferire le torri
+                  con cui il giocatore modello apre, ognuna dalla sua
+                  strada (`coperturaApertura` in `data/castello.js`).
    ═══════════════════════════════════════════════════════════════════ */
 import { Percorso } from '../src/motore/castello/percorso.js'
 import { CAMPAGNE, RACCONTO, LIBERE_RACCONTO } from '../src/data/campagne-castello.js'
-import { MOSTRI, torreResistente } from '../src/data/mostri.js'
-import { TORRI } from '../src/data/ops.js'
+import { guastiDelleImmunita } from '../src/data/mostri.js'
 /* Quante piazzole avrà davvero la tappa lo decide l'economia, che sta
    in un altro file e in un altro cantiere. La si legge — non la si
    scrive — perché senza quel numero questo strumento controllerebbe
    una mappa che non esiste: gli stessi tracciati con otto torri e con
    tre non sono la stessa difesa. */
-import { postiDi, MONDO, LIBERE } from '../src/data/castello.js'
+import { postiDi, MONDO, LIBERE, TAPPE, coperturaApertura, APERTURA_COPRE }
+  from '../src/data/castello.js'
 
 /* ── i margini del campo ──
    Il campo è verticale: i mostri entrano dal bordo **alto** e scendono
@@ -522,36 +523,18 @@ function esaminaForma(t) {
   return { guasti, avvisi, misure }
 }
 
-/* ═══════════ chi arriva, e a che cosa resiste ═══════════ */
+/* ═══════════ chi arriva, e a che cosa è immune ═══════════ */
 function esaminaMostri(t) {
-  const guasti = []
   if (!t.mostri || !t.mostri.length) return ['nessun mostro']
-  for (const m of t.mostri) if (!MOSTRI[m]) guasti.push(`mostro sconosciuto: ${m}`)
-  if (!t.resistenze) {
-    if (t.torri.length > 1)
-      guasti.push(`ha ${t.torri.length} torri ma le resistenze spente: la scelta non conta`)
-    return guasti
-  }
-  /* Con una torre che spara sola, «resiste a quella» vuol dire «questa
-     ondata non la fermi»: non è un'informazione, è un muro. */
-  const sparano = t.torri.filter(k => TORRI[k].danno)
-  if (sparano.length < 2)
-    guasti.push(`ha ${sparano.length} torre che spara e le resistenze accese: ` +
-                'non resta niente da costruire al posto di quella')
-  const regge = t.mostri.map(m => torreResistente(m))
-  for (const [i, d] of regge.entries()) {
-    if (!d) { guasti.push(`${t.mostri[i]} non dichiara a cosa resiste`); continue }
-    if (!t.torri.includes(d))
-      guasti.push(`${t.mostri[i]} resiste a «${d}», che questa tappa non mette a ` +
-                  'disposizione: è un avvertimento su una torre che non si può comprare')
-  }
-  if (new Set(regge).size < 2)
-    guasti.push('una sola resistenza in tutto l\'elenco: basta non comprare mai quella torre')
-  if (regge.length > 1)
-    for (const [i, d] of regge.entries())
-      if (d && d === regge[(i + 1) % regge.length])
-        guasti.push(`${t.mostri[i]} e ${t.mostri[(i + 1) % regge.length]} ` +
-                    `chiudono la stessa torre in due ondate di fila (${d})`)
+  const guasti = guastiDelleImmunita(t)
+  /* la copertura dell'apertura guarda le torri che il giocatore modello
+     compra per prime, quindi vuole la tappa coi suoi numeri (le libere
+     li hanno già; le tappe si prendono da `TAPPE`) */
+  const vera = t.libera ? t : TAPPE.find(x => x.campagna === t.campagna && x.nome === t.nome) || t
+  const copre = coperturaApertura(vera)
+  if (copre < Math.min(APERTURA_COPRE, t.mostri.length * 2))
+    guasti.push(`l'apertura ferisce solo le prime ${copre} ondate, dalla loro strada: ` +
+                `ne servono ${APERTURA_COPRE}, perché prima non ci sono i soldi per una terza torre`)
   return guasti
 }
 
@@ -568,7 +551,7 @@ for (const c of CAMPAGNE) {
   console.log(`\n      ${c.emoji} ${c.nome.toUpperCase()}`)
   const presidi = []
   for (const tappa of c.tappe) {
-    const t = { ...tappa, campagna: c.id, resistenze: !!tappa.resistenze }
+    const t = { ...tappa, campagna: c.id }
     const { guasti, avvisi, misure } = esaminaForma(t)
     const tutti = [...guasti, ...esaminaMostri(t)]
     for (const a of avvisi) avvertimenti.push(`${t.nome}: ${a}`)
@@ -592,7 +575,7 @@ for (const c of CAMPAGNE) {
    Una per terreno, il tracciato più intricato del suo mondo: fuori dalla
    fascia della campagna (vedi `esaminaForma`), dentro tutto il resto.
    Mostri e torri arrivano dalla campagna (`LIBERE` in `data/castello.js`),
-   quindi il controllo delle resistenze qui guarda quello che il gioco
+   quindi il controllo delle immunità qui guarda quello che il gioco
    mette davvero in campo. */
 console.log('\n      ♾️ LE PARTITE LIBERE')
 for (const l of LIBERE) {

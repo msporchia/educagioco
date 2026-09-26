@@ -6,16 +6,17 @@
    partita e ripartire con lei, e chi disegna non tiene niente in mano
    fra un fotogramma e l'altro.
 
-   Ne esistono due, e devono restare diversi: l'esplosione si apre di
+   Ne esistono tre, e devono restare diversi: l'esplosione si apre di
    colpo e sparisce (`cresce` alto, `spegne` alto), la folata di gelo si
-   allarga piano e resta a sbiadire.
+   allarga piano e resta a sbiadire, e lo sbuffo di chi si è appena
+   diviso in due (`dividi`), che dice «non è morto: adesso sono due».
    ═══════════════════════════════════════════════════════════════════ */
 export class Schizzo {
-  constructor({ x, y, max, tipo, gelo = false, cresce = 5, spegne = 2.4 }) {
+  constructor({ x, y, max, tipo, gelo = false, dividi = false, cresce = 5, spegne = 2.4 }) {
     this.x = x; this.y = y
     this.r = 0; this.max = max        // l'onda si ferma al raggio d'azione
     this.vita = 1
-    this.tipo = tipo; this.gelo = gelo
+    this.tipo = tipo; this.gelo = gelo; this.dividi = dividi
     this.cresce = cresce; this.spegne = spegne
   }
 

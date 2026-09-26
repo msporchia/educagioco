@@ -9,17 +9,18 @@
    ── il preavviso ──
    Ed è tutto il punto. Chi arriva è deterministico — `mostroDiOnda`
    dipende solo dal numero dell'ondata — quindi «fra tre ondate arriva
-   il Golem, che regge la magia» si può dire *adesso*, mentre il campo è
-   pulito e si stanno facendo i conti per comprare. Prima la resistenza
-   si scopriva quando l'ondata era già partita, cioè quando non serviva
-   più a niente: era un dettaglio, non una decisione.
+   il Golem, e la magia non lo tocca» si può dire *adesso*, mentre il
+   campo è pulito e si stanno facendo i conti per comprare. Prima quello
+   che un mostro reggeva si scopriva quando l'ondata era già partita,
+   cioè quando non serviva più a niente: era un dettaglio, non una
+   decisione.
 
    `prossime()` è quello che l'interfaccia mette in un nastro, ed è il
    solo motivo per cui il motore espone il futuro invece del presente.
    ═══════════════════════════════════════════════════════════════════ */
-import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, ONDATE_TARATE }
-  from '../../data/castello.js'
-import { MOSTRI, mostroDiOnda, mostroLibero, torreResistente } from '../../data/mostri.js'
+import { nemiciDiOnda, intervalloDiOnda, vitaNemico, velocitaNemico, ONDATE_TARATE,
+         boccaDellOnda } from '../../data/castello.js'
+import { MOSTRI, CAPO, ABILITA, mostroDiOnda, mostroLibero, immuniDi } from '../../data/mostri.js'
 
 export class Ondate {
   constructor(tappa) { this.tappa = tappa }
@@ -31,51 +32,73 @@ export class Ondate {
 
   /* Chi arriva in questa ondata: un tipo solo, così la scheda in alto a
      destra parla di lui e scegliere la torre è una domanda con una
-     risposta. La resistenza c'è solo dove la tappa la prevede, e
-     nemmeno lì in tutte le ondate.
+     risposta.
 
-     ── da quando una tappa dice a cosa si resiste ──
-     Non dalla prima ondata, e per la stessa ragione per cui la prima
-     tappa non ha resistenze del tutto: finché in campo c'è **una torre
-     per strada**, «resiste a quella» non è una scelta, è un muro —
-     quella strada resta scoperta e non c'è nessun'altra mossa da fare.
-     Il gioco apre la tappa con una torre per ingresso, e ogni ondata
-     ne fa comprare grosso modo un'altra: quindi le resistenze
-     cominciano dopo tante ondate quante sono le bocche — dalla seconda
-     dove la strada è una, dalla terza dove sono due.
-     Misurato, non temuto. Senza, il Corridoio si perdeva alla prima
-     ondata anche spendendo tutto (il pipistrello che la apre regge
-     proprio le frecce, cioè la torre che si compra per prima); e il
-     Torrione, che di bocche ne ha due, usciva dalla taratura con i
-     primi nemici da dieci punti vita, perché l'ondata 2 spegneva
-     l'unica torre che guardava la seconda strada.
+     ── le immunità ci sono sempre ──
+     Prima una tappa accendeva le *resistenze* solo da una certa ondata in
+     poi e mai nell'ultima, perché un terzo del danno tolto alla torre
+     sbagliata faceva saltare la taratura in modi misurati. L'immunità è
+     un'altra cosa: è **com'è fatto il mostro**, e un pipistrello che
+     alla seconda ondata si prende le bombe e alla terza no sarebbe una
+     bugia. Quello che una tappa decide adesso è **chi manda e in che
+     ordine**: la prima ondata la ferisce sempre l'arciere, che è la
+     torre che si compra per prima (lo controlla il validatore), e il
+     giocatore modello costruisce prima le torri che servono a coprire la
+     fila (`sequenzaTorri` in `data/castello.js`).
 
-     ── e nemmeno l'ultima ──
-     L'ondata che chiude una tappa arriva con tutto, e tutto quello che
-     si è costruito vale per intero: è il momento in cui il campo che
-     si è messo insieme si vede per quello che è, senza che il gioco ne
-     spenga un pezzo. Non è solo gusto — è quello che rende le tappe
-     confrontabili fra loro. La taratura non lascia mai un'ondata più
-     dura di quella dopo, quindi l'**ultima** fissa il tetto di tutta
-     la tappa: se lì capita un mostro che chiude la torre più forte del
-     campo, l'intera tappa si abbassa dietro di lui, e due tappe
-     gemelle finiscono con vite diverse per il caso di quale bestia sia
-     toccata in fondo alla fila. Con l'ultima libera, il tetto torna a
-     misurare la tappa e non la sua coincidenza. */
-  /* quante bocche ha la tappa: è `forme` che le dichiara, e chi ne ha
-     una sola scrive `forma` al singolare */
-  get daQuandoResistono() { return this.tappa.forme?.length || 1 }
-
+     ── le abilità sì, le accende la tappa ──
+     Dividersi e rialzarsi arrivano dal Sotterraneo in poi (`abilita`):
+     nel Bosco si impara che cosa tocca chi, e un mostro che fa anche
+     un'altra cosa è una seconda lezione nella stessa tappa. Il mostro è
+     lo stesso; nel Bosco quella cosa non la fa, e il preavviso non la
+     dice. */
   bestiaDi(o) {
     const id = this.tappa.mostri ? mostroDiOnda(this.tappa.mostri, o) : mostroLibero(o)
-    const dice = this.tappa.resistenze && o > this.daQuandoResistono && !this.ultima(o)
-    return { id, ...MOSTRI[id], resiste: dice ? torreResistente(id) : null }
+    const m = MOSTRI[id] || {}
+    return { id, nome: m.nome, vola: !!m.vola, immune: immuniDi(id),
+             abilita: this.tappa.abilita ? m.abilita || null : null,
+             capo: this.eCapo(o) }
   }
 
-  quantiDi(o) { return nemiciDiOnda(o) }
-  intervalloDi(o) { return intervalloDiOnda(o) }
-  vitaDi(o) { return vitaNemico(this.tappa, o) }
-  velocitaDi(o) { return velocitaNemico(this.tappa, o) }
+  /* ── il capo ──
+     Nella partita infinita ogni `capi` ondate; nella campagna solo come
+     ultima ondata di una tappa che lo dichiara (`capo: true`). I numeri
+     del capo stanno in `CAPO` (`data/mostri.js`). */
+  eCapo(o) {
+    const t = this.tappa
+    return !!((t.capi && o > 0 && o % t.capi === 0) ||
+              (t.capo && this.campagna && o === this.quante))
+  }
+
+  /* Il capo è uno solo, con la vita di tutta l'ondata che sostituisce
+     (e un decimo in più), e cammina alla metà.
+     E chi ha un'abilità arriva in meno (`folla` in `ABILITA`): chi si
+     divide fa tre bersagli di uno, chi si rialza due, e un'ondata
+     intera di quelli non la ferma la vita — la ferma quante frecce si
+     tirano al secondo. Misurato: un'ondata piena di vermi passava anche
+     con cinque punti di vita a testa, perché ogni verme chiedeva tre
+     frecce e ne arrivava uno ogni secondo e un quarto. In meno, più
+     distanziati — l'ondata dura quanto le altre — e ognuno vale di più
+     (`pagaDi`): l'energia dell'ondata non cambia. */
+  follaDi(o) {
+    if (this.eCapo(o)) return 1
+    const b = this.bestiaDi(o)
+    return b.abilita ? ABILITA[b.abilita].folla : 1
+  }
+  quantiDi(o) {
+    if (this.eCapo(o)) return 1
+    return Math.max(1, Math.round(nemiciDiOnda(o) * this.follaDi(o)))
+  }
+  intervalloDi(o) { return intervalloDiOnda(o) / this.follaDi(o) }
+  vitaDi(o) {
+    const v = vitaNemico(this.tappa, o)
+    return this.eCapo(o) ? v * nemiciDiOnda(o) * CAPO.vita : v
+  }
+  velocitaDi(o) { return velocitaNemico(this.tappa, o) * (this.eCapo(o) ? CAPO.passo : 1) }
+  /* quanti nemici vale quando cade: il capo vale l'ondata intera, così
+     l'energia che l'ondata lascia è la stessa che si sia capo o no — ed
+     è quella che il modello dei `calcoli` conta */
+  pagaDi(o) { return nemiciDiOnda(o) / this.quantiDi(o) }
 
   /* ── da che ingresso arriva l'ondata `o` ──
      Con una strada sola non c'è niente da decidere. Con due, si
@@ -87,11 +110,7 @@ export class Ondate {
      essere annunciato tre ondate prima: sapere che fra due giri arrivano
      da sotto è quello che rende il trascinare una torre una mossa invece
      che una carezza. */
-  viaDi(o, quante = 1) {
-    if (quante < 2) return 0
-    if (o % 3 === 0 && o >= this.daQuandoInsieme) return -1
-    return Math.floor((o - 1 - Math.floor((o - 1) / 3)) % quante)
-  }
+  viaDi(o, quante = 1) { return boccaDellOnda(o, quante, this.daQuandoInsieme) }
 
   /* ── da quando arrivano da tutte le bocche insieme ──
      Non dalla terza ondata: con tre strade quello vuol dire dividere in
@@ -112,8 +131,9 @@ export class Ondate {
   /* ── il preavviso ──
      Le ondate che arrivano dopo la `dopo`-esima, al massimo `quante`.
      Ognuna sa fra quanto arriva, chi la compone, quanti sono, quanta
-     vita ha ciascuno e a quale torre resiste: tutto quello che serve
-     per decidere cosa costruire *prima* che serva. */
+     vita ha ciascuno, a quali torri è immune, se fa qualcosa quando
+     cade e se è un capo: tutto quello che serve per decidere cosa
+     costruire *prima* che serva. */
   prossime(dopo, quante = 3, vie = 1) {
     const out = []
     for (let i = 1; i <= quante; i++) {

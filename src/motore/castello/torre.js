@@ -68,13 +68,20 @@ export class Torre {
      `null` se non è successo niente; se no `{ colpi, schizzi, sparo }`.
      Chi prende di mira: i nemici più avanti, uno per salva. Le bombe
      alte ne lanciano due, e se il secondo bersaglio non c'è ripiegano
-     sul primo — due colpi sulla stessa testa, non un colpo sprecato. */
+     sul primo — due colpi sulla stessa testa, non un colpo sprecato.
+
+     ── e chi è immune va in fondo alla fila ──
+     Se a tiro c'è qualcuno che questa torre può ferire, spara a lui.
+     Se ci sono solo immuni spara lo stesso, e il colpo rimbalza: una
+     torre ferma sembrerebbe rotta, una che spara e non fa niente dice
+     esattamente quello che succede. Chi è a terra per rialzarsi non si
+     guarda proprio. */
   agisci(dt, { nemici, via, viaDi, S }) {
     this.ricarica -= dt
     if (this.ricarica > 0) return null
     const raggio = this.raggio(S)
     const dove = n => (viaDi ? viaDi(n) : via).puntoA(n.d)
-    const dentro = nemici.filter(n => dist(dove(n), this) <= raggio)
+    const dentro = nemici.filter(n => n.bersaglio && dist(dove(n), this) <= raggio)
     if (!dentro.length) return null
 
     // la cadenza è quella del livello e del ramo: l'arciere alto spara
@@ -88,12 +95,13 @@ export class Torre {
          non un'esplosione */
       const g = geloConDoni(this.lv, this.ramo, this.doni)
       const largo = raggio
-      for (const n of dentro) n.gela(g.durata, g.freno, g.fragile)
+      for (const n of dentro) n.gela(g.durata, g.freno, g.fragile, this.tipo)
       return { schizzi: [new Schizzo({ x: this.x, y: this.y, max: largo, tipo: this.tipo,
                                        gelo: true, cresce: 1.1, spegne: 0.8 })] }
     }
 
-    const inFila = [...dentro].sort((a, b) => b.d - a.d)
+    const inFila = [...dentro].sort((a, b) =>
+      (a.immuneA(this.tipo) - b.immuneA(this.tipo)) || (b.d - a.d))
     const colpi = []
     for (let k = 0; k < tiro.salve; k++) {
       const preso = inFila[Math.min(k, inFila.length - 1)]

@@ -7,7 +7,9 @@
    prendono tutti quelli dentro il cerchio.
 
    Il danno lo applica lui, il conto dei morti lo tiene la battaglia:
-   qui non esistono energia né punteggio.
+   qui non esistono energia né punteggio. E non sa niente di immunità:
+   colpisce chi prende, e chi è immune a quella torre se lo scrolla di
+   dosso da sé (`Nemico.ferisci`).
    ═══════════════════════════════════════════════════════════════════ */
 import { dist } from '../../grafica/geometria.js'
 import { Schizzo } from './schizzo.js'
@@ -48,12 +50,12 @@ export class Colpo {
     const presi = []
     if (this.area) {
       const centro = { x: this.tx, y: this.ty }
-      for (const n of nemici) if (dist(punto(n), centro) <= this.area) presi.push(n)
-    } else if (this.preso && this.preso.vivo) {
+      for (const n of nemici) if (n.bersaglio && dist(punto(n), centro) <= this.area) presi.push(n)
+    } else if (this.preso && this.preso.bersaglio) {
       presi.push(this.preso)
     }
     const morti = presi.filter(n => n.ferisci(this.danno, this.tipo))
-    for (const n of presi) n.avvelena(this.veleno, this.durata)
+    for (const n of presi) if (n.bersaglio) n.avvelena(this.veleno, this.durata, this.tipo)
     return {
       colpiti: presi.length, morti,
       /* i rimbalzi della catena: mezzo danno ciascuno, sul vivo più
@@ -68,6 +70,9 @@ export class Colpo {
     }
   }
 
+  /* La catena salta solo su chi può ferire: rimbalzare su un immune
+     sarebbe un colpo buttato, e la catena è l'unica torre che sceglie da
+     sola dove andare. */
   saltaAddosso(nemici, presi, punto) {
     const nuovi = []
     const toccati = new Set(presi)
@@ -76,7 +81,7 @@ export class Colpo {
     for (let k = 0; k < this.rimbalzi; k++) {
       let vicino = null, minima = RIMBALZO
       for (const n of nemici) {
-        if (!n.vivo || toccati.has(n)) continue
+        if (!n.bersaglio || toccati.has(n) || n.immuneA(this.tipo)) continue
         const d = dist(punto(n), da)
         if (d < minima) { minima = d; vicino = n }
       }

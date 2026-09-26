@@ -23,6 +23,7 @@ export class Tabellone {
   azzera(partenza) {
     const s = this.stato
     s.cuori = CFG.cuori; s.onda = 0; s.uccisi = 0; s.torri = 0; s.energia = partenza
+    this.resto = 0
   }
 
   get cuori() { return this.stato.cuori }
@@ -31,11 +32,25 @@ export class Tabellone {
 
   /* ── l'energia ── */
   paga(quanto) { this.stato.energia = Math.max(0, this.stato.energia - quanto) }
-  incassa(quanto) { this.stato.energia += quanto; return quanto }
+  /* L'energia a schermo è sempre un numero intero, ma quello che si
+     incassa può non esserlo: un nemico che arriva in un'ondata più
+     piccola (chi si divide, chi si rialza) vale un pezzo in più. I
+     pezzi si mettono da parte e si pagano quando fanno un punto intero,
+     così in fondo all'ondata torna esattamente quello che il modello
+     conta. */
+  incassa(quanto) {
+    this.resto = (this.resto || 0) + quanto
+    const intero = Math.floor(this.resto + 1e-9)
+    this.resto -= intero
+    this.stato.energia += intero
+    return intero
+  }
 
   /* `piu` è il regalo «vena d'energia» della partita libera: arriva da
-     fuori perché qui non si sa niente dei regali — si sa contare */
-  perNemico(piu = 0) { return this.incassa(CFG.perNemico + piu) }
+     fuori perché qui non si sa niente dei regali — si sa contare.
+     `quanti` è quanti nemici vale chi è caduto: un capo vale l'ondata,
+     il pezzo di uno che si è diviso ne vale una parte */
+  perNemico(piu = 0, quanti = 1) { return this.incassa(CFG.perNemico * quanti + (piu || 0)) }
   /* il premio di fine ondata, doppio se non è passato nessuno */
   perOnda(pulita) { return this.incassa(CFG.fineOnda + (pulita ? CFG.ondataPulita : 0)) }
   /* chi la chiama subito si prende il bonus: la fretta è una scelta che

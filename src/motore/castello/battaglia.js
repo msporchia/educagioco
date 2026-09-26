@@ -36,11 +36,13 @@
    colonna (chi compra dice quanto paga), non disegna, non salva niente.
    ═══════════════════════════════════════════════════════════════════ */
 import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO } from '../../data/castello.js'
+import { ABILITA, CAPO } from '../../data/mostri.js'
 import { Percorso } from './percorso.js'
 import { Ondate } from './ondate.js'
 import { Tabellone } from './tabellone.js'
 import { Nemico } from './nemico.js'
 import { Torre } from './torre.js'
+import { Schizzo } from './schizzo.js'
 
 /* niente da fare, ma senza far crollare chi chiama */
 const zitto = () => {}
@@ -74,6 +76,7 @@ export class Battaglia {
     this.moneta = eventi.moneta || zitto
 
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []
+    this.nati = []                     // i pezzi di chi si è diviso, in campo al prossimo passo
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0                    // quanti sono entrati: serve ad alternare gli ingressi
     this.ondaChiusa = true; this.ondataPulita = true
@@ -90,7 +93,7 @@ export class Battaglia {
   /* ── una partita da capo ── */
   inizia() {
     this.tabellone.azzera(this.tappa.partenza)
-    this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []
+    this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []; this.nati = []
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0
     this.ondaChiusa = true; this.ondataPulita = true
@@ -133,7 +136,8 @@ export class Battaglia {
     this.daGenerare = this.ondate.quantiDi(o)
     this.prossimo = 0; this.pausa = 0
     this.ondaChiusa = false; this.ondataPulita = true
-    this.avvisa((this.ondate.ultima(o) ? 'Ultima ondata!' : 'Ondata ' + o) + extra)
+    const chi = this.bestia.capo ? ` · arriva il capo: ${this.bestia.nome} gigante` : ''
+    this.avvisa((this.ondate.ultima(o) ? 'Ultima ondata!' : 'Ondata ' + o) + chi + extra)
     this.suona('livello')
   }
 
@@ -184,13 +188,43 @@ export class Battaglia {
     const scelta = this.ondate.viaDi(o, vie)
     const via = scelta < 0 ? this.usciti % vie : scelta
     this.usciti++
+    const b = this.bestia
     this.nemici.push(new Nemico({
       d: -this.caso() * 30,
-      via,
+      via, onda: o,
       vita: this.ondate.vitaDi(o),
       vel: this.ondate.velocitaDi(o) * this.misure.S,
-      bestia: this.bestia.id, vola: !!this.bestia.vola, resiste: this.bestia.resiste,
+      bestia: b.id, vola: !!b.vola, immune: b.immune, abilita: b.abilita,
+      capo: !!b.capo, taglia: b.capo ? CAPO.taglia : 1, paga: this.ondate.pagaDi(o),
     }))
+  }
+
+  /* ── chi cade ──
+     Paga quanto vale — un mostro uno, un capo l'ondata intera, un pezzo
+     la sua parte — e se si divide lascia in campo i suoi pezzi. I pezzi
+     non pagano di più del mostro intero: si spartiscono quello che lui
+     avrebbe pagato, così un'ondata di slime lascia l'energia di
+     qualunque altra ondata, e il conto dei `calcoli` non se ne accorge. */
+  caduto(n) {
+    const div = ABILITA.dividi
+    if (n.abilita === 'dividi' && !n.pezzo) {
+      for (let k = 0; k < div.quanti; k++) {
+        const scarto = (k - (div.quanti - 1) / 2) * 9 * this.misure.S
+        this.nati.push(new Nemico({
+          d: Math.max(0, n.d + scarto), via: n.via, onda: n.onda,
+          vita: n.vitaMax * div.vita, vel: n.vel, bestia: n.bestia, vola: n.vola,
+          immune: n.immune, paga: n.paga / div.quanti, taglia: n.taglia * div.taglia,
+          pezzo: true,
+        }))
+      }
+      const p = this.viaDi(n).puntoA(n.d)
+      this.schizzi.push(new Schizzo({ x: p.x, y: p.y, max: 16 * this.misure.S,
+                                      tipo: null, dividi: true, cresce: 6, spegne: 2.5 }))
+      this.suona('colpito')
+      return
+    }
+    this.tabellone.ucciso()
+    this.tabellone.perNemico(this.doni.perNemico, n.paga)
   }
 
   /* ═══════════ l'economia ═══════════
@@ -286,6 +320,7 @@ export class Battaglia {
 
     this.faiFuoco(dt)
     this.muoviColpi(dt)
+    if (this.nati.length) { this.nemici.push(...this.nati); this.nati = [] }
     this.schizzi = this.schizzi.filter(s => s.avanza(dt))
     return null
   }
@@ -300,7 +335,7 @@ export class Battaglia {
       }
       return null
     }
-    if (this.nemici.length || !this.torri.length) return null
+    if (this.nemici.length || this.nati.length || !this.torri.length) return null
 
     /* campo pulito: il gioco NON manda l'ondata da solo. Aspetta che sia
        il bambino a chiamarla, così i calcoli si fanno con tutto il tempo
@@ -334,14 +369,16 @@ export class Battaglia {
       if (!n.arrivato) continue
       this.ondataPulita = false
       this.suona('no')
-      if (this.tabellone.cuoreVia()) return this.chiudi('persa')
+      /* il capo se ne porta via di più: vedi `CAPO` */
+      for (let k = 0; k < (n.capo ? CAPO.cuori : 1); k++)
+        if (this.tabellone.cuoreVia()) return this.chiudi('persa')
     }
     /* chi è caduto camminando è caduto di veleno — o di fuoco, che è lo
        stesso male con un altro nome. Vale come un'uccisione: se no il
        ramo del veleno regalerebbe morti che non pagano energia, e
        sceglierlo sarebbe una punizione. */
     for (const n of this.nemici)
-      if (!n.vivo && !n.arrivato) { this.tabellone.ucciso(); this.tabellone.perNemico(this.doni.perNemico) }
+      if (!n.vivo && !n.arrivato) this.caduto(n)
     this.nemici = this.nemici.filter(n => n.vivo)
     return null
   }
@@ -366,7 +403,7 @@ export class Battaglia {
     for (const c of this.colpi) {
       if (!c.avanza(dt)) continue
       const { colpiti, morti, schizzo, rimbalzi } = c.impatto(this.nemici, this.percorso, dove)
-      for (const _ of morti) { this.tabellone.ucciso(); this.tabellone.perNemico(this.doni.perNemico) }
+      for (const n of morti) this.caduto(n)
       if (schizzo) this.schizzi.push(schizzo)
       if (rimbalzi && rimbalzi.length) nati.push(...rimbalzi)
       if (colpiti) this.suona('colpito')
@@ -394,7 +431,7 @@ export class Battaglia {
   riprendi(f) {
     this.tabellone.riprendi(f.stato)
     this.torri = f.torri.map(t => Torre.da({ ...t, doni: this.doni }))
-    this.nemici = []; this.colpi = []; this.schizzi = []
+    this.nemici = []; this.colpi = []; this.schizzi = []; this.nati = []
     this.daGenerare = 0; this.prossimo = 0
     this.pausa = f.pausa; this.tempo = f.tempo
     this.ondaChiusa = f.ondaChiusa; this.ondataPulita = f.ondataPulita
