@@ -9,6 +9,7 @@
     "voci": "node strumenti/incidi-voci.mjs",
     "simula": "node strumenti/simula-castello.mjs",
     "tara": "node strumenti/tara-castello.mjs",
+    "dps": "node strumenti/dps-castello.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
     "mondo": "vite --open /strumenti/banco/mondo.html",
     "storie": "vite --open /strumenti/banco/storie.html",
