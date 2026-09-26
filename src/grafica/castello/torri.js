@@ -151,8 +151,10 @@ function merli(p, x, cima, tx, quanti, s, stadio, tinta) {
 
 /* il gettone d'oro col livello e il ＋ verde per salire: appartengono
    al disegno della torre, non alle sue regole — il gioco dice soltanto
-   se si può salire e se l'energia basta */
-function targhe(p, x, y, lv, potenziabile, posso) {
+   se si può salire e se l'energia basta. Le usa anche la torre a
+   sprite (`giochi/castello/scena/pittori.js`): la figura cambia, quello
+   che dicono no */
+export function targhe(p, x, y, lv, potenziabile, posso) {
   const S = p.S
   p.cerchio(x + 13 * S, y - 6 * S, 7.5 * S, '#ffd76a')
   p.ctx.strokeStyle = '#c99a1e'; p.ctx.lineWidth = 1.2 * S; p.ctx.stroke()

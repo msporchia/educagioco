@@ -26,6 +26,20 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { costoSalita } from '../../data/castello.js'
 
+/* Da che parte guarda chi cammina: 1 a destra, -1 a sinistra, 0 se va
+   dritto in su o in giù per un bel pezzo. Si guarda un po' avanti, e non
+   solo il passo dopo, perché su una strada a squadra un mostro che
+   scende fra due svolte si girerebbe a ogni angolo. Ai pittori a
+   poligoni non serve — il corpo è di fronte — ma a una figura di
+   profilo sì (`giochi/castello/scena/pittori.js`). */
+function versoDi(via, d, p) {
+  for (let s = 10; s <= 60; s += 10) {
+    const dx = via.puntoA(d + s).x - p.x
+    if (Math.abs(dx) > 1) return Math.sign(dx)
+  }
+  return 0
+}
+
 export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
                                   occupato = false, costoNuova = Infinity, mira = null }) {
   const roba = []
@@ -81,9 +95,10 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
                 alone: !!(mira && mira.torre === t) })
 
   for (const n of motore.nemici) {
-    const p = motore.viaDi(n).puntoA(n.d)
+    const via = motore.viaDi(n)
+    const p = via.puntoA(n.d)
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
-                resiste: n.resiste, vita: n.quota, gelo: n.gelo })
+                resiste: n.resiste, vita: n.quota, gelo: n.gelo, verso: versoDi(via, n.d, p) })
   }
 
   const via = motore.via
