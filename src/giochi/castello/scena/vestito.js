@@ -26,7 +26,7 @@
    scelta dichiarata dell'utente («per il livello senza lo scenario
    giusto per ora puoi riutilizzarne un altro mettendo un todo»).
    ═══════════════════════════════════════════════════════════════════ */
-import { SCENE, PEZZI, CELLA as C, TOPPA, QUANTI } from '../dati/vestiti.js'
+import { SCENE, PEZZI as TUTTI, CELLA as C, TOPPA, QUANTI as QUANTE } from '../dati/vestiti.js'
 
 export const VESTITO_DI = {
   bosco: 'bosco',
@@ -88,6 +88,9 @@ export function componi(righe, nome) {
   const chiave = nome + '\n' + righe.join('\n')
   if (fatte.has(chiave)) return fatte.get(chiave)
 
+  /* i pezzi di questo vestito: dalla sua scena o dal suo foglio, e
+     allora con misure sue (`vesti.py --atlante`) */
+  const PEZZI = TUTTI[nome], QUANTI = QUANTE[nome]
   const h = righe.length, w = righe[0].length
   const cv = document.createElement('canvas')
   cv.width = w * C; cv.height = h * C
@@ -112,14 +115,19 @@ export function componi(righe, nome) {
   celle.sort((p, q) => caso(p[0], p[1], 997, 5) - caso(q[0], q[1], 997, 5))
   posa('fondo', 0, 0, w * C, h * C)
   for (const [x, y] of celle) toppa(`prato:${caso(x, y, QUANTI.prato)}`, x, y)
+  /* il fondo con qualcosa in più, dove la carta lo chiede e il foglio ce
+     l'ha (la scena no: lì le `,` restano prato) */
+  if (QUANTI.qua)
+    for (const [x, y] of celle) if (a(x, y) === ',') toppa(`qua:${caso(x, y, QUANTI.qua, 8)}`, x, y)
 
   /* 2 — sotto il fitto, il sottobosco */
   for (const [x, y] of celle)
     if (a(x, y) === '^') toppa(`fitto:${caso(x, y, QUANTI.fitto, 4)}`, x, y)
 
-  /* 3 — l'acqua: lo stagno intero su ogni specchio, girato verso il bordo
-     che tocca; in mezzo al campo la sua metà di destra e lo specchio di
-     quella, così la riva c'è da tutti e due i lati */
+  /* 3 — l'acqua: il lago dal bordo dove lo specchio tocca un bordo
+     (girato se è quello di sinistra); in mezzo al campo lo stagno del
+     foglio, e se non c'è la metà di sinistra del lago e il suo specchio,
+     così la riva c'è da tutti e due i lati. È `acqua()` di vesti.py */
   const visti = new Set()
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -136,18 +144,22 @@ export function componi(righe, nome) {
       }
       const x0 = Math.min(...cc.map(c => c[0])), x1 = Math.max(...cc.map(c => c[0])) + 1
       const y0 = Math.min(...cc.map(c => c[1])), y1 = Math.max(...cc.map(c => c[1])) + 1
-      const [sx, sy, sw, sh] = PEZZI.stagno
+      const [sx, sy, sw, sh] = PEZZI.lago
       const X = x0 * C, Y = y0 * C, W = (x1 - x0) * C, H = (y1 - y0) * C
       const specchiato = (fx, fy, fw, fh, dx, dw) => {
         ctx.save(); ctx.translate(dx + dw, Y); ctx.scale(-1, 1)
         ctx.drawImage(img, fx, fy, fw, fh, 0, 0, dw, H); ctx.restore()
       }
-      if (x1 === w) specchiato(sx, sy, sw, sh, X, W)
-      else if (x0 !== 0) {
+      if (x1 === w) ctx.drawImage(img, sx, sy, sw, sh, X, Y, W, H)
+      else if (x0 === 0) specchiato(sx, sy, sw, sh, X, W)
+      else if (PEZZI.stagno) {
+        const piccolo = x1 - x0 <= 2 && y1 - y0 <= 2 && PEZZI.stagnetto
+        posa(piccolo ? 'stagnetto' : 'stagno', X, Y, W, H)
+      } else {
         const m = Math.floor(sw / 2)
-        specchiato(sx + m, sy, sw - m, sh, X, W / 2)
-        ctx.drawImage(img, sx + m, sy, sw - m, sh, X + W / 2, Y, W / 2, H)
-      } else ctx.drawImage(img, sx, sy, sw, sh, X, Y, W, H)
+        ctx.drawImage(img, sx, sy, m, sh, X, Y, W / 2, H)
+        specchiato(sx, sy, m, sh, X + W / 2, W / 2)
+      }
     }
 
   /* 4 — la strada e le piazzole */

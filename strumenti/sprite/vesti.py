@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
-"""Vestire le carte del castello con una scena generata — il provvisorio.
+"""Vestire le carte del castello: coi ritagli di una scena generata (il
+provvisorio) o col foglio del terreno, quando c'è.
 
-    python3 strumenti/sprite/vesti.py --provino td_1.png uscita.png
     python3 strumenti/sprite/vesti.py --atlante
+    python3 strumenti/sprite/vesti.py --provino td_1.png uscita.png
+    python3 strumenti/sprite/vesti.py --provino-foglio bosco uscita.png
+    python3 strumenti/sprite/vesti.py --creature uscita.png
 
-Il secondo scrive i due moduli **generati** che il gioco `castello`
-compone nel browser (`src/giochi/castello/dati/vestiti.js`, i pezzi
-delle tre scene, e `figure.js`, torri e mostri): vedi `atlante()` in
-fondo. Il campo non si porta dietro ventiquattro mappe già vestite —
+`--atlante` scrive i due moduli **generati** che il gioco `castello`
+compone nel browser (`src/giochi/castello/dati/vestiti.js`, i pezzi dei
+tre vestiti, e `figure.js`, torri e mostri): vedi `atlante()` in fondo.
+Si rilancia ogni volta che arriva un'immagine: il foglio del terreno di
+un vestito (`terreno-bosco.png`…), il foglio delle torri (`torri-1.png`),
+un foglio di mostri che camminano (`mostri-cammino-A.png`…) — dove
+salvarli e con che prompt farli lo dice `DA-GENERARE.md`, qui accanto.
+Gli altri tre sono provini da guardare: i pezzi di una scena, il foglio
+del terreno coi rettangoli del suo foglietto sopra, tutte le creature. Il campo non si porta dietro ventiquattro mappe già vestite —
 peserebbero dieci volte tanto — ma i pezzi, e la composizione la rifà
 `src/giochi/castello/scena/vestito.js` con la stessa logica di `vesti()`
 qui sotto. **Chi cambia `vesti()` cambia anche quello**, se no la
@@ -49,6 +57,9 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
+
+sys.path.insert(0, str(Path(__file__).parent))
+import righe  # noqa: E402
 
 C = 64
 RIFERIMENTO = Path(__file__).parent / 'sorgenti' / 'castello' / 'generati' / 'td_1.png'
@@ -316,8 +327,137 @@ def pezzi(scena):
     p['castello'] = scena.crop(CASTELLO).convert('RGBA')
     x0, y0, x1, y1 = CASTELLO
     p['castello'].putalpha(sagoma(fondo_rif, (x0 + x1) // 2, (y0 + y1) // 2, x1 - x0, y1 - y0, 400))
-    p['stagno'] = scena.crop(STAGNO)
+    # l'acqua che entra dal bordo: nella scena è il lago di sinistra,
+    # aperto verso il bordo; qui si gira, così il lago ha la riva a
+    # sinistra e il taglio a destra come quello che il foglio promette
+    # (`lago` di `pezzi_dal_foglio`). Uno stagno in mezzo al campo la
+    # scena non ce l'ha: `vesti()` lo fa con la metà di sinistra del
+    # lago e il suo specchio
+    lago = scena.crop(STAGNO).transpose(Image.FLIP_LEFT_RIGHT).convert('RGBA')
+    lago.putalpha(sfumatura(*lago.size, 12))
+    p['lago'] = lago
+    p['fondo'] = p['prato'][0].convert('RGBA')
     return p
+
+
+# ── il foglio del terreno, quando c'è ────────────────────────────────
+#
+# Il prompt 2 della scheda (`sorgenti/castello/generati/PROMPT-scenario.md`)
+# chiede **il foglio dei pezzi**: fondi da 4×4 celle che si ripetono, la
+# finestra di strada 5×5, bocca, castello, acqua, fitto alto, decori. Quando
+# arriva si mette qui accanto alle scene come `terreno-<vestito>.png`
+# (`terreno-bosco.png`…) e da quel momento quel vestito si prende dal
+# foglio, e non più dai ritagli della scena: si rilancia
+# `vesti.py --atlante` e basta.
+#
+# Dove sta ogni pezzo lo dice il foglietto, `terreno-<vestito>.json`, nel
+# formato di `FORMATO.md` (`da` e `cella` in pixel del foglio, `misura`
+# quanto deve venire). **Ce n'è uno modello già scritto**,
+# `terreno-bosco.json`, sulle coordinate che lo schema allegato al prompt
+# promette (`PROMPT-scenario-foglio.png`, disegnato da `scacchiera.py`):
+# quando l'immagine vera arriva si guarda il provino
+# (`vesti.py --provino-foglio bosco provino.png`) e si ritoccano `da` e
+# `cella` dei pezzi che sono venuti altrove — `misura` no, quella è la
+# misura del gioco. Un vestito senza il suo foglietto usa quello del
+# bosco: la scheda si aspetta che neve e lava tornino ferme come le scene
+# (entro due pixel del disegno), e allora un foglietto vale per tutti.
+
+GENERATI = Path(__file__).parent / 'sorgenti' / 'castello' / 'generati'
+# la finestra dello schema: il giro intorno e la croce in mezzo
+FINESTRA = ['+++++', '+.+.+', '+++++', '+.+.+', '+++++']
+
+
+def foglio_del_terreno(vestito):
+    """(immagine, foglietto) del foglio di quel vestito, o None."""
+    png = GENERATI / f'terreno-{vestito}.png'
+    if not png.exists():
+        return None
+    fg = GENERATI / f'terreno-{vestito}.json'
+    if not fg.exists():
+        fg = GENERATI / 'terreno-bosco.json'
+    return png, json.loads(fg.read_text())
+
+
+def ritaglia(im, fg, nome):
+    """Un pezzo del foglio come dice il foglietto: il rettangolo, le
+    correzioni (`cancella`), e la misura del gioco."""
+    # `da` si conta in celle del foglietto, `cella` è la misura del pezzo,
+    # e tutti e due si moltiplicano per la scala: com'è in FORMATO.md
+    d = fg['sprite'][nome]
+    sc = fg.get('scala', 1)
+    gx, gy = fg.get('cella', [1, 1])
+    cw, ch = d.get('cella', [gx, gy])
+    x, y = d['da'][0] * gx * sc, d['da'][1] * gy * sc
+    w, h = cw * sc, ch * sc
+    pz = im.crop((x, y, x + w, y + h))
+    if d.get('cancella'):
+        dr = ImageDraw.Draw(pz)
+        for a, b, cw, ch in d['cancella']:
+            dr.rectangle([a, b, a + cw - 1, b + ch - 1], fill=(0, 0, 0, 0))
+    mw, mh = d.get('misura', [w, h])
+    if (mw, mh) != pz.size:
+        pz = pz.resize((mw, mh), Image.LANCZOS)
+    return pz
+
+
+def toppe_da_quadrato(quadrato, n, seme):
+    """`n` toppe da un fondo che si ripete senza cuciture: il quadrato si
+    mette due volte per due, e le toppe si prendono dove capita — anche a
+    cavallo del giunto, che in un fondo ripetibile non esiste."""
+    q = quadrato.convert('RGB')
+    doppio = Image.new('RGB', (q.width * 2, q.height * 2))
+    for i in range(2):
+        for j in range(2):
+            doppio.paste(q, (i * q.width, j * q.height))
+    return [doppio.crop((ox, oy, ox + TOPPA, oy + TOPPA))
+            for k in range(n)
+            for ox, oy in [((k * 67 + seme * 29) % q.width, (k * 41 + seme * 53) % q.height)]]
+
+
+def pezzi_dal_foglio(vestito):
+    """Gli stessi pezzi di `pezzi()`, presi dal foglio: stesse chiavi, e in
+    più quelle che la scena non ha (`stagno`, `stagnetto`, `qua`). None se
+    il foglio di quel vestito non c'è."""
+    trovato = foglio_del_terreno(vestito)
+    if not trovato:
+        return None
+    png, fg = trovato
+    im = Image.open(png).convert('RGBA')
+    if fg.get('alone'):
+        a = im.getchannel('A').point(lambda v, s=fg['alone']: v if v >= s else 0)
+        im.putalpha(a)
+    pz = lambda nome: ritaglia(im, fg, nome)
+    famiglia = lambda pref: [pz(k) for k in sorted(fg['sprite'], key=lambda s: (len(s), s))
+                             if k.startswith(pref + '-') and k[len(pref) + 1:].isdigit()]
+    p = {}
+    # la strada: ogni caso della finestra, coi lati da cui prosegue. I
+    # dritti ci sono sei volte per verso e se ne prendono tre diversi; gli
+    # altri casi ci sono una volta sola, e le tre varianti sono la stessa
+    finestra = pz('finestra')
+    celle = {}
+    for y in range(5):
+        for x in range(5):
+            if FINESTRA[y][x] != '+':
+                continue
+            vv = ''.join(v for v, (dx, dy) in (('N', (0, -1)), ('E', (1, 0)), ('S', (0, 1)), ('O', (-1, 0)))
+                         if 0 <= x + dx < 5 and 0 <= y + dy < 5 and FINESTRA[y + dy][x + dx] == '+')
+            celle.setdefault(vv, []).append(finestra.crop((x * C, y * C, (x + 1) * C, (y + 1) * C)))
+    p['strada'] = {vv: [celle[vv][g % len(celle[vv])] for g in range(3)] for vv in VERSI}
+    p['fondo'] = pz('fondo')
+    p['prato'] = toppe_da_quadrato(p['fondo'], 16, 1)
+    p['qua'] = toppe_da_quadrato(pz('fondo-qua'), 8, 2)
+    p['fitto'] = toppe_da_quadrato(pz('fitto'), 16, 3)
+    p['piazzola'] = famiglia('piazzola')
+    p['albero'] = famiglia('albero')
+    p['decoro'] = famiglia('decoro')
+    for nome in ('bocca', 'castello', 'lago', 'stagno', 'stagnetto'):
+        p[nome] = pz(nome)
+    return p
+
+
+def pezzi_del_vestito(vestito):
+    """I pezzi di un vestito: dal suo foglio se c'è, se no dalla scena."""
+    return pezzi_dal_foglio(vestito) or pezzi(Image.open(GENERATI / SCENE[vestito]).convert('RGB'))
 
 
 def caso(x, y, n, seme=0):
@@ -338,6 +478,26 @@ def versi(righe, x, y):
     return fuori
 
 
+def acqua(p, x0, x1, alto, w):
+    """Il pezzo d'acqua per uno specchio che va da `x0` a `x1`: il lago
+    dal bordo se tocca un bordo (girato se è quello di sinistra), lo
+    stagno del foglio se c'è, e se no la metà di sinistra del lago col
+    suo specchio — così la riva c'è da tutti e due i lati."""
+    if x1 == w:
+        return p['lago']
+    if x0 == 0:
+        return p['lago'].transpose(Image.FLIP_LEFT_RIGHT)
+    if 'stagno' in p:
+        piccolo = x1 - x0 <= 2 and alto <= 2 and 'stagnetto' in p
+        return p['stagnetto' if piccolo else 'stagno']
+    lago = p['lago']
+    m = lago.crop((0, 0, lago.width // 2, lago.height))
+    s = Image.new('RGBA', (m.width * 2, m.height))
+    s.paste(m, (0, 0))
+    s.paste(m.transpose(Image.FLIP_LEFT_RIGHT), (m.width, 0))
+    return s
+
+
 def vesti(righe, p):
     h, w = len(righe), len(righe[0])
     im = Image.new('RGB', (w * C, h * C))
@@ -352,9 +512,15 @@ def vesti(righe, p):
     # 1 — il prato dappertutto, a toppe sfumate che si sovrappongono,
     #     posate in un ordine mescolato perché non si veda la trama
     celle = sorted(((x, y) for y in range(h) for x in range(w)), key=lambda q: caso(*q, 997, 5))
-    im.paste(p['prato'][0].resize((w * C, h * C)), (0, 0))
+    im.paste(p['fondo'].convert('RGB').resize((w * C, h * C)), (0, 0))
     for x, y in celle:
         toppa(p['prato'][caso(x, y, len(p['prato']))], x, y)
+    # il fondo con qualcosa in più, dove la carta lo chiede e il foglio ce
+    # l'ha (la scena no: lì le `,` restano prato)
+    if p.get('qua'):
+        for x, y in celle:
+            if a(x, y) == ',':
+                toppa(p['qua'][caso(x, y, len(p['qua']), 8)], x, y)
     # 2 — sotto il fitto, un fondo scuro preso dal bosco della scena:
     #     fra un albero e l'altro deve vedersi sottobosco, non prato
     for x, y in celle:
@@ -379,16 +545,9 @@ def vesti(righe, p):
                         coda.append(q)
             x0, x1 = min(i for i, _ in cc), max(i for i, _ in cc) + 1
             y0, y1 = min(j for _, j in cc), max(j for _, j in cc) + 1
-            s = p['stagno']
-            if x1 == w:
-                s = s.transpose(Image.FLIP_LEFT_RIGHT)
-            elif x0 != 0:
-                m = s.crop((s.width // 2, 0, s.width, s.height))
-                s = Image.new('RGB', (m.width * 2, m.height))
-                s.paste(m.transpose(Image.FLIP_LEFT_RIGHT), (0, 0))
-                s.paste(m, (m.width, 0))
+            s = acqua(p, x0, x1, y1 - y0, w)
             s = s.resize(((x1 - x0) * C, (y1 - y0) * C), Image.LANCZOS)
-            im.paste(s, (x0 * C, y0 * C), sfumatura(*s.size, 12))
+            im.paste(s, (x0 * C, y0 * C), s)
     # 4 — la strada e le piazzole
     for y in range(h):
         for x in range(w):
@@ -451,7 +610,7 @@ def provino(scena, uscita):
     file = [('strada ' + k, v) for k, v in p['strada'].items()] + [
         ('prato', p['prato']), ('fitto', p['fitto']), ('piazzola', p['piazzola']),
         ('albero', p['albero']), ('decoro', p['decoro']),
-        ('bocca, castello, stagno', [p['bocca'], p['castello'], p['stagno']])]
+        ('bocca, castello, acqua', [p[k] for k in ('bocca', 'castello', 'lago', 'stagno', 'stagnetto') if k in p])]
     alto = sum(max(im.height for im in v) + 24 for _, v in file) + 8
     foglio = Image.new('RGB', (1900, alto), (60, 60, 64))
     d = ImageDraw.Draw(foglio)
@@ -489,6 +648,10 @@ REPO = Path(__file__).resolve().parents[2]
 DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
 SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png'}
 QUALITA = 85
+# Le figure si pagano di più: quaranta creature da quattro fotogrammi
+# sono quasi tutto il peso del castello. A 80 non si distingue da 85 alla
+# misura del campo, e il file scende di un settimo.
+QUALITA_FIGURE = 80
 
 
 def prova_battaglia():
@@ -517,41 +680,73 @@ def impacchetta(misure, largo=1024, spazio=2):
     return posti, y + riga
 
 
-def webp(im):
+def webp(im, qualita=QUALITA):
     buf = io.BytesIO()
-    im.save(buf, 'WEBP', quality=QUALITA, method=6)
+    im.save(buf, 'WEBP', quality=qualita, method=6)
     return buf.getvalue()
 
 
-def pezzi_da_atlante(scena):
-    """I pezzi di `pezzi()` come li vuole il gioco: con un nome ciascuno,
-    e l'alfa già dentro."""
-    p = pezzi(scena)
+def pezzi_da_atlante(vestito):
+    """I pezzi di un vestito come li vuole il gioco: con un nome ciascuno,
+    e l'alfa già dentro. Dal foglio del terreno se c'è, se no dalla scena
+    (`pezzi_del_vestito`)."""
+    p = pezzi_del_vestito(vestito)
     fuori = {}
     for vv, varianti in p['strada'].items():
         for g, im in enumerate(varianti):
-            fuori[f'strada:{vv}:{g}'] = im
-    for fam in ('prato', 'fitto'):
-        for i, im in enumerate(p[fam]):
+            fuori[f'strada:{vv}:{g}'] = im.convert('RGBA')
+    for fam in ('prato', 'fitto', 'qua'):
+        for i, im in enumerate(p.get(fam, [])):
             t = im.convert('RGBA')
             t.putalpha(sfumatura(TOPPA, TOPPA))
             fuori[f'{fam}:{i}'] = t
     for fam in ('piazzola', 'albero', 'decoro'):
         for i, im in enumerate(p[fam]):
             fuori[f'{fam}:{i}'] = im
-    fuori['bocca'] = p['bocca']
-    fuori['castello'] = p['castello']
-    st = p['stagno'].convert('RGBA')
-    st.putalpha(sfumatura(*st.size, 12))
-    fuori['stagno'] = st
-    # il primo strato, sotto tutte le toppe: una toppa senza sfumatura,
-    # tirata su tutto il campo
-    fuori['fondo'] = p['prato'][0].convert('RGBA')
-    quanti = {fam: len(p[fam]) for fam in ('prato', 'fitto', 'piazzola', 'albero', 'decoro')}
+    # l'acqua ha già la sua alfa: sfumata se viene dalla scena, la riva
+    # vera se viene dal foglio
+    for nome in ('bocca', 'castello', 'lago', 'stagno', 'stagnetto'):
+        if nome in p:
+            fuori[nome] = p[nome]
+    # il primo strato, sotto tutte le toppe, tirato su tutto il campo
+    fuori['fondo'] = p['fondo'].convert('RGBA')
+    quanti = {fam: len(p.get(fam, [])) for fam in ('prato', 'fitto', 'qua', 'piazzola', 'albero', 'decoro')}
     return fuori, quanti
 
 
-def figure_da_atlante():
+# ── le torri ─────────────────────────────────────────────────────────
+#
+# Dal foglio nuovo se c'è (`sorgenti/castello/generati/torri-1.png`, il
+# prompt 2 di `DA-GENERARE.md`), se no dal foglio di agosto `PVX1O.png`
+# con la tabella di `prova-battaglia.py`. Il foglio nuovo non ha un
+# foglietto: è fatto a righe apposta, quattro torri da cinque figure, e
+# `righe.py` lo legge da sé — se i conti non tornano si ferma e lo dice.
+
+TORRI_NUOVE = GENERATI / 'torri-1.png'
+# le righe del foglio, dall'alto, e i due rami di ogni torre nell'ordine
+# in cui il prompt li chiede: in ogni riga nata · primo ramo cresciuta e
+# al massimo · secondo ramo cresciuta e al massimo
+RIGHE_TORRI = [('arciere', 'cecchino', 'raffica'), ('magica', 'veleno', 'catena'),
+               ('ghiaccio', 'bufera', 'brina'), ('bombe', 'mortaio', 'napalm')]
+
+
+def torri_dal_foglio(png=TORRI_NUOVE):
+    im = righe.senza_alone(Image.open(png))
+    rr = righe.righe_di_figure(im)
+    righe.conta(rr, len(RIGHE_TORRI), 5, png)
+    fuori = {}
+    for (tipo, uno, due), riga in zip(RIGHE_TORRI, rr):
+        f = [im.crop((x, y, x + w, y + h)) for x, y, w, h in riga]
+        fuori[f'torre:{tipo}:0:'] = f[0]
+        fuori[f'torre:{tipo}:1:{uno}'], fuori[f'torre:{tipo}:2:{uno}'] = f[1], f[2]
+        fuori[f'torre:{tipo}:1:{due}'], fuori[f'torre:{tipo}:2:{due}'] = f[3], f[4]
+        # la torre salita senza aver preso un ramo (le tappe senza rami):
+        # il foglio nuovo non la disegna, e prende il primo
+        fuori[f'torre:{tipo}:1:'], fuori[f'torre:{tipo}:2:'] = f[1], f[2]
+    return fuori
+
+
+def torri_di_agosto():
     pb = prova_battaglia()
     foglio = Image.open(pb.FOGLIO_TORRI).convert('RGBA')
     fuori = {}
@@ -562,63 +757,204 @@ def figure_da_atlante():
     for tipo, col in (('arciere', 'Archer'), ('magica', 'Magic'), ('ghiaccio', 'Frost'), ('bombe', 'Bomb')):
         for stadio in (1, 2):
             fuori[f'torre:{tipo}:{stadio}:'] = pb.torre(foglio, col, stadio)
-    creature = []
+    return fuori
+
+
+# ── i mostri ─────────────────────────────────────────────────────────
+#
+# Le creature che il bestiario del castello nomina
+# (`src/giochi/castello/scena/bestiario.js`), coi fotogrammi del
+# respiro: quelle che il sotterraneo ha già dai suoi foglietti, le altre
+# da `creature-castello.json` qui accanto (perché lì e non nei foglietti
+# lo dice il suo `__`). `unita/castello-bestiario` pretende che le due
+# liste — chi il bestiario nomina e chi l'atlante porta — siano la
+# stessa.
+#
+# **I mostri che camminano** (prompt 5 di `DA-GENERARE.md`): quando c'è
+# un foglio `mostri-cammino-<lettera>.png` accanto ai fogli del
+# sotterraneo, le sue righe sono le creature di `CAMMINO[lettera]`, in
+# quell'ordine, ognuna coi quattro passi di lato e i quattro di fronte.
+# Chi cammina lascia a casa il respiro: i pittori lo usano solo dove i
+# passi non ci sono.
+
+MOSTRI_SOT = Path(__file__).parent / 'sorgenti' / 'sotterraneo' / 'generati'
+CREATURE_CASTELLO = Path(__file__).parent / 'creature-castello.json'
+CAMMINO = {
+    'A': ['melma', 'scheletro-scudo', 'pipistrello', 'fantasma', 'ragno', 'lupo'],
+    'B': ['golem', 'troll', 'scheletro', 'drago', 'grifone', 'pianta'],
+    'C': ['serpente', 'scorpione', 'tartaruga', 'diavoletto', 'zombie', 'pipistrello-occhio'],
+    'D': ['golem-magma', 'occhio', 'spirito-fuoco', 'granchio', 'bestia-cornuta', 'negromante'],
+    'E': ['golem-lava', 'draghetto', 'drago-lava', 'ombra', 'melma-viola', 'mostro-viola'],
+    'F': ['melma-rosa', 'mummia', 'fantasma-azzurro', 'cinghiale', 'golem-pietra', 'teschio-azzurro'],
+    'G': ['golem-ghiaccio', 'tornado', 'ent', 'spirito-elettrico'],
+}
+
+
+def foglio_del_cammino(lettera):
+    return MOSTRI_SOT / f'mostri-cammino-{lettera}.png'
+
+
+def cammino_dai_fogli():
+    """I passi di chi ha il suo foglio: `mostro:<creatura>:lato:<i>` e
+    `…:fronte:<i>`. Ogni metà si ritaglia con la sua altezza comune, così
+    i piedi restano sulla stessa linea da un passo all'altro."""
+    fuori, chi = {}, []
+    for lettera, elenco in CAMMINO.items():
+        png = foglio_del_cammino(lettera)
+        if not png.exists():
+            continue
+        im = righe.senza_alone(Image.open(png))
+        rr = righe.righe_di_figure(im)
+        righe.conta(rr, len(elenco), 8, png)
+        for creatura, riga in zip(elenco, rr):
+            for verso, passi in (('lato', riga[:4]), ('fronte', riga[4:])):
+                ya, yb = righe.banda(passi)
+                for i, (x, _, w, _) in enumerate(passi):
+                    fuori[f'mostro:{creatura}:{verso}:{i}'] = im.crop((x, ya, x + w, yb))
+            chi.append(creatura)
+    return fuori, chi
+
+
+# Sotto quest'alfa un pixel dei fogli del sotterraneo è il bagliore
+# colorato che il generatore ci ha messo dietro ogni riga, non la
+# creatura: il corpo sta quasi tutto sopra 128 e l'orlo morbido fra 64 e
+# 128. Tolto, non fa l'alone sul campo e il WebP pesa un sesto di meno.
+BAGLIORE = 64
+
+
+def creature_col_respiro(senza=()):
+    """{creatura: [fotogrammi]} del respiro, per chi non cammina."""
+    tab = json.loads(CREATURE_CASTELLO.read_text())
+    fogli = {n: righe.senza_alone(Image.open(MOSTRI_SOT / f'{n}.png'), BAGLIORE)
+             for n in ('mostri-1', 'mostri-2')}
+    fuori = {}
     for nome in ('mostri-1', 'mostri-2'):
-        f = json.loads((pb.MOSTRI_SOT / f'{nome}.json').read_text())
+        f = json.loads((MOSTRI_SOT / f'{nome}.json').read_text())
         sc = f['scala']
-        im = Image.open(pb.MOSTRI_SOT / f'{nome}.png').convert('RGBA')
-        for loro in sorted(set(pb.MOSTRI.values()) | {'serpente'}):
+        for loro in tab['dai_foglietti']:
+            quadri = []
             for i in range(8):
                 d = f['sprite'].get(f'{loro}-fermo-{i}')
                 if not d:
                     break
                 (x, y), (w, h) = d['da'], d['cella']
-                fuori[f'mostro:{loro}:{i}'] = im.crop((x * sc, y * sc, (x + w) * sc, (y + h) * sc))
-                if loro not in creature:
-                    creature.append(loro)
-    return fuori, creature
+                quadri.append(fogli[nome].crop((x * sc, y * sc, (x + w) * sc, (y + h) * sc)))
+            if quadri:
+                fuori[loro] = quadri
+    for loro, d in tab['creature'].items():
+        fuori[loro] = [fogli[d['foglio']].crop((x, y, x + w, y + h)) for x, y, w, h in d['fotogrammi']]
+    mancano = [k for k in tab['dai_foglietti'] if k not in fuori]
+    if mancano:
+        raise SystemExit(f'creature-castello.json: non nei foglietti del sotterraneo: {", ".join(mancano)}')
+    return {k: v for k, v in sorted(fuori.items()) if k not in senza}
 
 
-def js_tabella(posti):
-    righe = [f"  '{k}': [{x}, {y}, {w}, {h}]," for k, (x, y, w, h) in sorted(posti.items())]
-    return '{\n' + '\n'.join(righe) + '\n}'
+def figure_da_atlante():
+    torri = torri_dal_foglio() if TORRI_NUOVE.exists() else torri_di_agosto()
+    passi, camminano = cammino_dai_fogli()
+    fuori = dict(torri)
+    fuori.update(passi)
+    respiro = creature_col_respiro(senza=camminano)
+    for loro, quadri in respiro.items():
+        for i, im in enumerate(quadri):
+            fuori[f'mostro:{loro}:{i}'] = im
+    creature = sorted(set(respiro) | set(camminano))
+    return fuori, creature, {'torri': 'torri-1.png' if TORRI_NUOVE.exists() else 'PVX1O.png (agosto)',
+                             'camminano': len(camminano)}
+
+
+def provino_creature(uscita):
+    """Tutte le creature del castello coi loro fotogrammi, e il riquadro
+    di ognuno: è da qui che si vede un ritaglio che ha preso il vicino."""
+    tutte = creature_col_respiro()
+    passi, _ = cammino_dai_fogli()
+    for k, im in passi.items():
+        _, chi, verso, i = k.split(':')
+        tutte.setdefault(f'{chi} {verso}', []).append(im)
+    voci = list(tutte.items())
+    alto = sum(max(im.height for im in q) + 22 for q in voci[::2]) + 20
+    P = Image.new('RGBA', (1500, alto), (70, 74, 80, 255))
+    d = ImageDraw.Draw(P)
+    y = [10, 10]
+    for n, (chi, quadri) in enumerate(voci):
+        col = n % 2
+        x = 10 + col * 750
+        d.text((x, y[col]), chi, fill=(255, 255, 200))
+        for im in quadri:
+            d.rectangle([x - 1, y[col] + 13, x + im.width, y[col] + 14 + im.height], outline=(255, 80, 80))
+            P.alpha_composite(im, (x, y[col] + 14))
+            x += im.width + 6
+        y[col] += max(im.height for im in quadri) + 22
+    P.crop((0, 0, 1500, max(y))).convert('RGB').save(uscita)
+
+
+def provino_foglio(vestito, uscita):
+    """Il foglio del terreno coi rettangoli del foglietto sopra, e il nome
+    di ogni pezzo: si guarda questo per ritoccare `da` e `cella`."""
+    trovato = foglio_del_terreno(vestito)
+    if not trovato:
+        raise SystemExit(f'manca {GENERATI / f"terreno-{vestito}.png"}')
+    png, fg = trovato
+    im = Image.open(png).convert('RGBA')
+    fondo = Image.new('RGBA', im.size, (70, 74, 80, 255))
+    fondo.alpha_composite(im)
+    d = ImageDraw.Draw(fondo)
+    sc = fg.get('scala', 1)
+    gx, gy = fg.get('cella', [1, 1])
+    for nome, s in fg['sprite'].items():
+        x, y = s['da'][0] * gx * sc, s['da'][1] * gy * sc
+        w, h = s.get('cella', [gx, gy])
+        d.rectangle([x, y, x + w * sc - 1, y + h * sc - 1], outline=(255, 60, 60), width=2)
+        d.text((x + 3, y + 2), nome, fill=(255, 255, 120))
+    fondo.convert('RGB').save(uscita)
+
+
+def js_tabella(posti, rientro='  '):
+    righe_ = [f"{rientro}'{k}': [{x}, {y}, {w}, {h}]," for k, (x, y, w, h) in sorted(posti.items())]
+    return '{\n' + '\n'.join(righe_) + '\n' + rientro[:-2] + '}'
 
 
 def atlante():
     DATI.mkdir(parents=True, exist_ok=True)
     # ── i vestiti ──
-    immagini, pesi, posti, quanti = {}, {}, None, None
-    for nome, file in SCENE.items():
-        scena = Image.open(Path(RIFERIMENTO).parent / file).convert('RGB')
-        pz, q = pezzi_da_atlante(scena)
-        if posti is None:
-            posti, alto = impacchetta({k: im.size for k, im in pz.items()})
-            quanti = q
+    # Una tabella per vestito: finché vengono tutti dalle scene sono la
+    # stessa (la geometria è una, rivestita), ma il giorno che uno ha il
+    # suo foglio i suoi pezzi hanno altre misure e altri numeri.
+    immagini, pesi, tabelle, quanti, fonti = {}, {}, {}, {}, {}
+    for nome in SCENE:
+        pz, q = pezzi_da_atlante(nome)
+        posti, alto = impacchetta({k: im.size for k, im in pz.items()})
         foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
         for k, im in pz.items():
-            assert im.size == posti[k][2:], f'{nome}: {k} misura {im.size}, la tabella {posti[k][2:]}'
             foglio.paste(im, posti[k][:2])
         dati = webp(foglio)
         immagini[nome] = base64.b64encode(dati).decode()
         pesi[nome] = round(len(dati) / 1024)
+        tabelle[nome], quanti[nome] = posti, q
+        fonti[nome] = f'terreno-{nome}.png' if foglio_del_terreno(nome) else SCENE[nome]
     tot = sum(pesi.values())
     testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
 
    I pezzi con cui `scena/vestito.js` compone il campo del castello a
-   celle, presi dalle tre scene generate
-   (`strumenti/sprite/sorgenti/castello/generati/td_1.png`, `td_2`,
-   `td_3`) con i ritagli di `vesti.py`. È **il provvisorio**: quando c'è
-   il foglio dei pezzi (`strumenti/sprite/DA-GENERARE.md`) questo file si
-   rifà da quello.
+   celle, uno per vestito. Da dove vengono:
+{chr(10).join(f'     {k:6} {v}' for k, v in fonti.items())}
+   Una scena (`td_1.png`…) è **il provvisorio**, coi ritagli di
+   `vesti.py`; un foglio del terreno (`terreno-<vestito>.png`, il prompt
+   2 della scheda del castello) è quello vero. Tutti e due stanno in
+   `strumenti/sprite/sorgenti/castello/generati/`.
 
-   PEZZI    nome → [x, y, largo, alto], **uguale per le tre scene**: la
-            geometria è una sola, rivestita tre volte.
+   PEZZI    vestito → nome → [x, y, largo, alto]
               strada:<versi>:<variante>   una cella da {C} px, coi lati da
                                           cui la strada prosegue (N E S O)
-              prato:<n> fitto:<n>         toppe da {TOPPA} px, già sfumate
+              prato:<n> fitto:<n> qua:<n> toppe da {TOPPA} px, già sfumate
+                                          (`qua` solo dal foglio: il fondo
+                                          con qualcosa in più)
               piazzola:<n> albero:<n> decoro:<n>   figure scontornate
-              bocca castello stagno fondo
-   QUANTI   quante varianti ha ogni famiglia
+              bocca castello fondo
+              lago                        l'acqua che entra dal bordo,
+                                          riva a sinistra
+              stagno stagnetto            l'acqua in mezzo, solo dal foglio
+   QUANTI   vestito → quante varianti ha ogni famiglia
    SCENE    vestito → immagine WebP in base64. Pesano {' · '.join(f'{k} {v} KB' for k, v in pesi.items())},
             {tot} KB in tutto (in base64 un terzo di più).
 */
@@ -627,38 +963,43 @@ def atlante():
              f'export const CELLA = {C}\n'
              f'export const TOPPA = {TOPPA}\n'
              f'export const VERSI = {json.dumps(list(VERSI))}\n'
-             f'export const QUANTI = {json.dumps(quanti)}\n'
-             f'export const PEZZI = {js_tabella(posti)}\n'
+             'export const QUANTI = {\n' +
+             ''.join(f'  {k}: {json.dumps(v)},\n' for k, v in quanti.items()) + '}\n'
+             'export const PEZZI = {\n' +
+             ''.join(f'  {k}: {js_tabella(v, "    ")},\n' for k, v in tabelle.items()) + '}\n'
              'export const SCENE = {\n' +
              ''.join(f"  {k}: 'data:image/webp;base64,{v}',\n" for k, v in immagini.items()) +
              '}\n')
     (DATI / 'vestiti.js').write_text(corpo)
-    print(f'vestiti.js: {" · ".join(f"{k} {v} KB" for k, v in pesi.items())} di WebP')
+    print(f'vestiti.js: {" · ".join(f"{k} {v} KB da {fonti[k]}" for k, v in pesi.items())} di WebP')
 
     # ── le figure ──
-    pz, creature = figure_da_atlante()
+    pz, creature, fonte = figure_da_atlante()
     posti, alto = impacchetta({k: im.size for k, im in pz.items()}, largo=1024)
     foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
     for k, im in pz.items():
         foglio.paste(im, posti[k][:2])
-    dati = webp(foglio)
+    dati = webp(foglio, QUALITA_FIGURE)
     kb = round(len(dati) / 1024)
     testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
 
    Le torri e i mostri del castello a celle, alla misura dei loro fogli
    (una cella da {C} px è 16 pixel del disegno anche qui).
 
-     torre:<aspetto>:<stadio>:<ramo>   dal foglio di agosto
-                  `strumenti/sprite/sorgenti/castello/non-usati/PVX1O.png`,
-                  con la tabella `FIGURE` di `prova-battaglia.py`. Il ramo
-                  vuoto è la torre salita senza averne preso uno.
-                  ⚠ Quel foglio ha la provenienza non documentata: va
-                  rifatto col generatore prima di pubblicare il gioco.
-     mostro:<creatura>:<fotogramma>   i quattro fotogrammi del respiro,
-                  dai fogli del sotterraneo (`mostri-1.png`, `mostri-2.png`).
-                  Quale creatura per quale mostro lo dice `scena/figure.js`.
+     torre:<aspetto>:<stadio>:<ramo>   da {fonte['torri']}. Il ramo vuoto
+                  è la torre salita senza averne preso uno.
+                  ⚠ `PVX1O.png` (il foglio di agosto) ha la provenienza non
+                  documentata: va sostituito da `torri-1.png` prima di
+                  pubblicare il gioco (`strumenti/sprite/DA-GENERARE.md`).
+     mostro:<creatura>:<fotogramma>   il respiro, dai fogli del sotterraneo
+                  (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nei
+                  suoi foglietti e in `strumenti/sprite/creature-castello.json`.
+     mostro:<creatura>:lato:<passo>, …:fronte:<passo>   i passi, dai fogli
+                  `mostri-cammino-*.png` quando ci sono ({fonte['camminano']} creature oggi).
+                  Chi ha i passi non ha il respiro.
 
-   Il WebP pesa {kb} KB.
+   Quale creatura per quale mostro, vestito per vestito, lo dice
+   `scena/bestiario.js`. Il WebP pesa {kb} KB.
 */
 """
     corpo = (testa +
@@ -666,12 +1007,16 @@ def atlante():
              f'export const PEZZI = {js_tabella(posti)}\n'
              f"export const IMMAGINE = 'data:image/webp;base64,{base64.b64encode(dati).decode()}'\n")
     (DATI / 'figure.js').write_text(corpo)
-    print(f'figure.js: {len(pz)} figure, {kb} KB di WebP')
+    print(f'figure.js: {len(pz)} figure ({len(creature)} creature), {kb} KB di WebP; torri da {fonte["torri"]}')
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 4 and sys.argv[1] == '--provino':
         provino(Image.open(sys.argv[2]).convert('RGB'), sys.argv[3])
+    elif len(sys.argv) == 4 and sys.argv[1] == '--provino-foglio':
+        provino_foglio(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 3 and sys.argv[1] == '--creature':
+        provino_creature(sys.argv[2])
     elif len(sys.argv) == 2 and sys.argv[1] == '--atlante':
         atlante()
     else:

@@ -491,6 +491,10 @@ def main():
         if f.name == 'atlante.json':
             continue
         fg = json.loads(f.read_text())
+        # i foglietti che ritaglia un altro attrezzo — il foglio del
+        # terreno a scacchiera, che legge `vesti.py` — qui non c'entrano
+        if fg.get('attrezzo', 'terreni') != 'terreni':
+            continue
         sorgente = f.parent / fg['foglio']
         im = Image.open(sorgente).convert('RGBA')
         prima = len(ritagli)

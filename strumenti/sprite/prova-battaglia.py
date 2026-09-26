@@ -2,7 +2,7 @@
 """Una battaglia finta sulle carte vestite: torri e mostri, per vedere
 l'effetto finale e capire cosa manca.
 
-    python3 strumenti/sprite/prova-battaglia.py carte.json uscita.png
+    python3 strumenti/sprite/prova-battaglia.py carte.json uscita.png bestiario.json
 
 La lancia `carte-castello.mjs`, che le carte (con le loro vie) le fa col
 generatore vero del gioco. Niente qui è il gioco: è una fotografia messa
@@ -14,9 +14,10 @@ in posa, con tutto quello che c'è già in casa —
     ha la provenienza non documentata, come `terreni.png`: va rifatto col
     generatore prima di pubblicare, ed è anche l'occasione di farlo nella
     mano delle scene;
-  · **i mostri** dai fogli generati del sotterraneo (`mostri-1.png`,
-    `mostri-2.png`), coi loro foglietti: sei dei diciotto del castello ci
-    sono già (`MOSTRI`), gli altri no, e la prova lo dice.
+  · **i mostri** come li ritaglia `vesti.py` per il gioco, e in ogni
+    vestito quelli del suo bestiario (`scena/bestiario.js`).
+  · se c'è il foglio nuovo delle torri (`torri-1.png`), le torri sono le
+    sue: le prende `vesti.py` anche quelle.
 
 Cosa manca e con che prompt generarlo: `DA-GENERARE.md`, qui accanto.
 """
@@ -30,8 +31,6 @@ import vesti
 QUI = Path(__file__).parent
 C = vesti.C
 FOGLIO_TORRI = QUI / 'sorgenti' / 'castello' / 'non-usati' / 'PVX1O.png'
-MOSTRI_SOT = QUI / 'sorgenti' / 'sotterraneo' / 'generati'
-SCENE = QUI / 'sorgenti' / 'castello' / 'generati'
 
 # ── le torri: dove sta ognuna nel foglio ─────────────────────────────
 # Le colonne del foglio, misurate (i separatori sono righe verticali
@@ -60,18 +59,15 @@ FIGURE = {
 }
 SCALA_TORRI = 1.0
 
-# ── i mostri: quelli del castello che il sotterraneo ha già ─────────
-# nome nel castello → nome nel foglietto del sotterraneo
-MOSTRI = {'slime': 'melma', 'pipistrello': 'pipistrello', 'lupo': 'lupo',
-          'golem': 'golem', 'troll': 'troll', 'fantasma': 'fantasma'}
-# I fogli dei mostri sono dipinti a scala 4 — quattro pixel dello
-# schermo per pixel del disegno — e le scene pure: una cella da 64 px è
-# 16 pixel del disegno in tutti e due. Quindi i mostri si prendono **alla
-# misura del foglio**, senza ridurli né ingrandirli, ed è anche il
-# motivo per cui un foglio di mostri solo serve il sotterraneo e il
-# castello. Ingranditi di due e mezzo (la prima prova) avevano la grana
-# più fine della scena e sembravano appiccicati.
-SCALA_MOSTRI = 1
+# ── i mostri ─────────────────────────────────────────────────────────
+# Le creature le ritaglia `vesti.py` (il respiro dai fogli del
+# sotterraneo, i passi dai fogli del cammino), e quale fa le veci di
+# quale mostro in ogni vestito lo dice il bestiario del gioco, che
+# `carte-castello.mjs` passa qui come terzo argomento. Alla misura del
+# foglio, perché i fogli dei mostri sono dipinti a scala 4 come le scene:
+# una cella da 64 px è 16 pixel del disegno in tutti e due. Ingranditi di
+# due e mezzo (la prima prova) avevano la grana più fine della scena e
+# sembravano appiccicati.
 
 
 def torre(foglio, colonna, riga):
@@ -84,44 +80,27 @@ def torre(foglio, colonna, riga):
     return im.resize((round(im.width * SCALA_TORRI), round(im.height * SCALA_TORRI)), Image.LANCZOS)
 
 
-def mostri():
-    """Il primo fotogramma di ogni mostro che c'è, dai foglietti."""
-    fuori = {}
-    for nome in ('mostri-1', 'mostri-2'):
-        f = json.loads((MOSTRI_SOT / f'{nome}.json').read_text())
-        s = f['scala']
-        im = Image.open(MOSTRI_SOT / f'{nome}.png').convert('RGBA')
-        for nostro, loro in MOSTRI.items():
-            d = f['sprite'].get(f'{loro}-fermo-0')
-            if not d:
-                continue
-            (x, y), (w, h) = d['da'], d['cella']
-            pz = im.crop((x * s, y * s, (x + w) * s, (y + h) * s))
-            fuori[nostro] = pz.resize((round(pz.width * SCALA_MOSTRI), round(pz.height * SCALA_MOSTRI)),
-                                      Image.LANCZOS)
-    return fuori
-
-
-def in_posa(carta, scena, foglio, bestie):
+def in_posa(carta, vestito, torri, bestie):
+    """La carta vestita, con una torre per piazzola e i mostri in fila
+    sulle strade. `bestie` è la fila delle creature di quel vestito."""
     righe, vie = carta['righe'], carta['vie']
-    p = vesti.pezzi(scena)
+    p = vesti.pezzi_del_vestito(vestito)
     im = vesti.vesti(righe, p).convert('RGBA')
     figure = []
     # le torri: una varietà di tipi, stadi e rami, piazzola per piazzola
     piazzole = [(x, y) for y, r in enumerate(righe) for x, c in enumerate(r) if c == 'o']
-    scelte = list(FIGURE)
+    scelte = [k for k in torri if not k.endswith(':') or k.split(':')[2] == '0']
     ordine = [scelte[(k * 7) % len(scelte)] for k in range(len(piazzole))]
     for (x, y), chiave in zip(piazzole, ordine):
-        t = torre(foglio, *FIGURE[chiave])
+        t = torri[chiave]
         figure.append((y * C + C - 10, t, x * C + (C - t.width) // 2, y * C + C - 10 - t.height))
     # i mostri: in fila sulle strade, a passi di tre celle, e guardano
     # dove vanno — le pose sono a destra, la sinistra è specchiata
-    nomi = list(bestie)
     k = 0
     for via in vie:
         for i in range(2, len(via) - 1, 3):
             (x, y), (nx, ny) = via[i], via[i + 1]
-            b = bestie[nomi[k % len(nomi)]]
+            b = bestie[k % len(bestie)]
             k += 1
             if nx < x:
                 b = b.transpose(Image.FLIP_LEFT_RIGHT)
@@ -136,48 +115,56 @@ def in_posa(carta, scena, foglio, bestie):
     return im.convert('RGB')
 
 
-def catalogo(foglio, bestie, uscita):
-    """Le venti figure di torre come il gioco le chiede, e i mostri:
-    quelli che ci sono e i nomi di quelli che mancano."""
-    sys.path.insert(0, str(QUI))
-    im = Image.new('RGB', (1500, 560), (40, 42, 40))
+def catalogo(torri, bestiario, pose, uscita):
+    """Le venti figure di torre come il gioco le chiede, e sotto, un
+    vestito per riga, i diciotto mostri con la creatura che li fa."""
+    im = Image.new('RGB', (1900, 340 + 150 * len(bestiario)), (40, 42, 40))
     d = ImageDraw.Draw(im)
     x, y = 12, 12
-    for (tipo, stadio, ramo), (col, riga) in FIGURE.items():
-        t = torre(foglio, col, riga)
-        im.paste(t, (x, y + 90 - t.height), t)
-        d.text((x, y + 96), f'{tipo} {stadio}' + (f' {ramo}' if ramo else ''), fill=(230, 230, 220))
+    for chiave, t in torri.items():
+        if chiave.endswith(':') and chiave.split(':')[2] != '0':
+            continue
+        im.paste(t, (x, y + 120 - t.height), t)
+        d.text((x, y + 124), chiave[6:].rstrip(':'), fill=(230, 230, 220))
         x += 145
         if x > 1400:
-            x, y = 12, y + 130
-    y += 150
-    x = 12
-    for nome, b in bestie.items():
-        im.paste(b, (x, y + 70 - b.height), b)
-        d.text((x, y + 76), nome, fill=(230, 230, 220))
-        x += 90
-    mancano = ['goblin', 'ragno', 'orco', 'scheletro', 'arpia', 'drago', 'corvo', 'rovo',
-               'verme', 'blatta', 'corazziere', 'balestriere']
-    d.text((x + 20, y + 30), 'mancano: ' + ', '.join(m for m in mancano if m not in bestie),
-           fill=(240, 150, 120))
+            x, y = 12, y + 150
+    y += 20
+    for vestito, tab in bestiario.items():
+        d.text((12, y), vestito, fill=(250, 220, 120))
+        x = 80
+        for mostro, chi in tab.items():
+            b = pose[chi][0]
+            s = min(1, 96 / max(b.size))
+            b = b.resize((max(1, round(b.width * s)), max(1, round(b.height * s))), Image.LANCZOS)
+            im.paste(b, (x, y + 100 - b.height), b)
+            d.text((x, y + 104), mostro, fill=(230, 230, 220))
+            d.text((x, y + 116), chi, fill=(160, 170, 160))
+            x += 100
+        y += 150
     im.save(uscita)
 
 
 def main():
     carte = json.loads(Path(sys.argv[1]).read_text())
     uscita = Path(sys.argv[2])
-    foglio = Image.open(FOGLIO_TORRI).convert('RGBA')
-    bestie = mostri()
+    bestiario = json.loads(Path(sys.argv[3]).read_text())
+    pz, _, fonte = vesti.figure_da_atlante()
+    torri = {k: v for k, v in pz.items() if k.startswith('torre:')}
+    pose = {}
+    for k, v in pz.items():
+        if k.startswith('mostro:'):
+            pose.setdefault(k.split(':')[1], []).append(v)
     quale = next(c for c in carte if c['nome'] == 'Le fogne')
-    pose = [in_posa(quale, Image.open(SCENE / f).convert('RGB'), foglio, bestie)
-            for f in ('td_1.png', 'td_2.png', 'td_3.png')]
-    w, h = pose[0].size
+    vestiti = ('bosco', 'neve', 'lava')
+    tavole = [in_posa(quale, v, torri, [pose[c][0] for c in bestiario[v].values()]) for v in vestiti]
+    w, h = tavole[0].size
     tutte = Image.new('RGB', (w * 3 + 32, h), (20, 20, 20))
-    for i, im in enumerate(pose):
+    for i, im in enumerate(tavole):
         tutte.paste(im, (i * (w + 16), 0))
     tutte.save(uscita)
-    catalogo(foglio, bestie, uscita.with_name(uscita.stem + '-figure.png'))
-    print(f'{uscita.name} e {uscita.stem}-figure.png: {len(bestie)} mostri su 18')
+    catalogo(torri, bestiario, pose, uscita.with_name(uscita.stem + '-figure.png'))
+    print(f'{uscita.name} e {uscita.stem}-figure.png: torri da {fonte["torri"]}, {len(pose)} creature')
 
 
 if __name__ == '__main__':

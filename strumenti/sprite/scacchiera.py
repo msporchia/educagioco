@@ -336,10 +336,13 @@ def main():
         import json
         carte = json.loads(Path(sys.argv[2]).read_text())
         if '--vesti' in sys.argv:
-            # vestite con i ritagli di una scena generata: vedi vesti.py
+            # vestite coi pezzi di un vestito (`--vesti bosco`: dal suo
+            # foglio del terreno se c'è, se no dalla scena) o di una scena
+            # qualsiasi (`--vesti td_1.png`): vedi vesti.py
             import vesti
-            scena = Image.open(sys.argv[sys.argv.index('--vesti') + 1]).convert('RGB')
-            p = vesti.pezzi(scena)
+            quale = sys.argv[sys.argv.index('--vesti') + 1]
+            p = (vesti.pezzi_del_vestito(quale) if quale in vesti.SCENE
+                 else vesti.pezzi(Image.open(quale).convert('RGB')))
             disegna_carte(carte, sys.argv[3], largo=320, disegna=lambda r: vesti.vesti(r, p))
         else:
             disegna_carte(carte, sys.argv[3])
