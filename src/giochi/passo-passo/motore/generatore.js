@@ -2,31 +2,35 @@
    IL SENTIERO SENZA FINE — livelli fatti al momento
 
    Dopo la campagna i posti scritti a mano finiscono; il sentiero no. Qui
-   un livello si **costruisce a caso e poi si fa esaminare dal
-   risolutore**: si tiene solo se si vince, se la strada è lunga quanto
-   il gradino chiede, se la carota vuole una deviazione e se la regola
-   del gradino serve davvero. Un livello che si vince andando dritti non
-   è un sentiero, è un corridoio.
+   un livello si **fa al momento e poi si fa esaminare dal motore**: si
+   tiene solo se si vince, se la strada è lunga quanto il livello
+   chiede, se la carota vuole una deviazione e se le regole che mette in
+   scena servono davvero. Un livello che si vince andando dritti non è
+   un sentiero, è un corridoio.
 
-   ── IL GRADINO ────────────────────────────────────────────────────
-   Il gradino sale con i sentieri fatti in questa seduta, e ogni due ne
-   porta una cosa in più, nello stesso ordine della campagna: prima il
-   prato con gli stagni, poi il ghiaccio, poi i salti, poi i massi, poi
-   le buche; da lì si mescola, e cresce la strada. Il caso si passa da
-   fuori (`rnd`): lo stesso seme fa lo stesso sentiero, e i test
-   raccontano sempre la stessa storia.
+   ── COSA C'È DENTRO ───────────────────────────────────────────────
+   Il sentiero sta in fondo alla campagna, e mescola quello che il
+   bambino ha già imparato: a ogni posto si tira a caso **la famiglia**
+   — il coniglio sul prato, il cane con le pecore, un posto con lo zaino
+   col ripeti, col fino a o col se — e dentro la famiglia **le regole**
+   (le buche sì o no, il ghiaccio sì o no). Solo fra le cose sbloccate:
+   i gradini della campagna finiti (`INGREDIENTI`). Il caso è pesato
+   perché il posto non esca né banale né fuori portata: quanto è grande,
+   quanto è lunga la strada, quante regole insieme lo dice il livello
+   (`livelloDi`), che sale coi sentieri fatti nella seduta. Il caso si
+   passa da fuori (`rnd`): lo stesso seme fa lo stesso sentiero, e i
+   test raccontano sempre la stessa storia.
 
-   ── IL CANE NEL SENTIERO ──────────────────────────────────────────
-   Chi ha portato il gregge nel recinto (l'ultima tappa del cane) trova
-   le pecore anche qui: un sentiero sì e uno no, con una scala sua — una
-   pecora, poi il ghiaccio, poi due — che sale come quella del coniglio,
-   un gradino ogni due. Il resto è uguale: si costruisce a caso e si
-   tiene solo quello che il risolutore dice che si vince, lungo quanto il
-   gradino chiede, con l'osso che vuole un giro. In cima tre pecore
-   sparse da riunire, che si spingono l'una con l'altra. Con più pecore i posti
-   costano di più da risolvere, quindi il risolutore ha un tetto
-   (`LIMITE_CANE`): un posto che non si risolve in fretta si butta, e se
-   ne prova un altro.
+   ── DUE MODI DI FARE UN POSTO ─────────────────────────────────────
+   Il prato e il cane si costruiscono a caso e si tengono solo se il
+   risolutore dice che si vincono, lunghi quanto il livello chiede, con
+   la carota (l'osso) che vuole una deviazione, e con la regola
+   principale che serve davvero — e con due regole insieme anche la
+   seconda, finché il caso lo concede. Con più pecore i posti costano di
+   più da risolvere, quindi lì il risolutore ha un tetto (`LIMITE_CANE`).
+   I posti con lo zaino vanno al contrario: prima il programma, poi il
+   posto scavato attorno alla sua strada (`motore/sagome.js`), perché il
+   programma più corto coi cicli il risolutore non lo sa trovare.
 
    ── SE IL CASO NON AIUTA ──────────────────────────────────────────
    Si prova un certo numero di volte, poi si allarga la richiesta (una
@@ -36,11 +40,18 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { Livello, celleIncastro } from './livello.js'
 import { misura, serveLaRegola } from './risolutore.js'
+import { generaZaino, carteInMano } from './sagome.js'
 import { TEMI } from '../dati/campagna.js'
+import { programma, ripeti } from '../dati/carte.js'
 
-/* un generatore di numeri a seme: sempre la stessa fila per lo stesso seme */
+/* un generatore di numeri a seme: sempre la stessa fila per lo stesso seme.
+   Il seme si rimescola prima di cominciare: semi vicini (quelli di due
+   sentieri di fila) davano primi numeri quasi uguali e piccoli, e il
+   primo numero è quello che sceglie la famiglia del posto */
 export function caso(seme = 1) {
-  let s = (seme >>> 0) || 1
+  let s = Math.imul((seme >>> 0) ^ 0x9e3779b9, 0x85ebca6b) >>> 0
+  s = Math.imul(s ^ (s >>> 13), 0xc2b2ae35) >>> 0
+  s = (s ^ (s >>> 16)) >>> 0 || 1
   return () => {
     s ^= s << 13; s >>>= 0
     s ^= s >>> 17
@@ -49,54 +60,115 @@ export function caso(seme = 1) {
   }
 }
 
-/* ── cosa chiede ogni gradino ──
-   `regola` è la cosa nuova che deve servire; `lunga` la strada con la
-   carota, `dev` quanto deve costare prenderla. I primi sono corti
-   apposta: si entra nel sentiero col livello più facile della campagna. */
-export const GRADINI = [
-  { lato: [5, 4], regola: null,       lunga: [4, 6],  dev: 0, pozze: 1, ostacoli: 0.10 },
-  { lato: [5, 5], regola: null,       lunga: [5, 7],  dev: 2, pozze: 1, ostacoli: 0.14 },
-  { lato: [6, 5], regola: 'ghiaccio', lunga: [3, 5],  dev: 1, ghiaccio: 1, ostacoli: 0.08 },
-  { lato: [6, 6], regola: 'ghiaccio', lunga: [4, 6],  dev: 2, ghiaccio: 1, ostacoli: 0.08 },
-  { lato: [6, 5], regola: 'salto',    lunga: [4, 7],  dev: 1, fiume: 1, ostacoli: 0.10, salti: true },
-  { lato: [6, 6], regola: 'salto',    lunga: [5, 8],  dev: 2, fiume: 1, pozze: 1, ostacoli: 0.10, salti: true },
-  { lato: [6, 5], regola: 'spinta',   lunga: [4, 8],  dev: 1, massi: 1, fiume: 0.5, ostacoli: 0.12 },
-  { lato: [6, 6], regola: 'spinta',   lunga: [5, 9],  dev: 2, massi: 1, ghiaccio: 0.5, ostacoli: 0.10 },
-  { lato: [6, 6], regola: 'buche',    lunga: [4, 8],  dev: 1, buche: 1, ostacoli: 0.10 },
-  { lato: [7, 6], regola: 'buche',    lunga: [5, 9],  dev: 2, buche: 1, ghiaccio: 1, ostacoli: 0.08 },
-  { lato: [7, 7], regola: 'ghiaccio', lunga: [6, 9],  dev: 2, ghiaccio: 1, massi: 0.5, ostacoli: 0.08 },
-  { lato: [7, 7], regola: 'buche',    lunga: [7, 11], dev: 2, buche: 1, ghiaccio: 1, fiume: 0.5, ostacoli: 0.08, salti: true },
-]
+/* ═══════════ gli ingredienti ═══════════
+   Ogni gradino finito della campagna mette nel sentiero una cosa: una
+   regola del mondo, il cane, una carta. Si conta **finito** e non
+   visto: al primo livello del ghiaccio il ghiaccio si sta imparando, e
+   il sentiero è il posto dove si usa quello che si sa. Il gradino
+   «tutto il mondo» non porta niente di nuovo: le sagome mescolano già
+   le regole con le scatole. */
+export const INGREDIENTI = {
+  salto: 'salto', ghiaccio: 'ghiaccio', massi: 'massi', buche: 'buche',
+  pecore: 'cane', ripeti: 'ripeti', fino: 'fino', se: 'se',
+}
+/* le regole del mondo che un posto del prato sa mettere in scena, con
+   il nome che il risolutore usa per spegnerle (`serveLaRegola`) */
+const REGOLE = { salto: 'salto', ghiaccio: 'ghiaccio', massi: 'spinta', buche: 'buche' }
+/* il sentiero si apre alla fine delle buche: chi ci arriva ha già tutte
+   e quattro le regole del prato */
+export const DI_BASE = ['salto', 'ghiaccio', 'massi', 'buche']
 
-/* il gradino di un sentiero: ogni due fatti se ne sale uno, e in cima
-   si resta sull'ultimo — che mescola tutto */
-export const gradinoDi = fatti => GRADINI[Math.min(GRADINI.length - 1, Math.floor(fatti / 2))]
+/* ═══════════ il livello ═══════════
+   Da 0 a 9: sale di uno ogni due sentieri della seduta, e parte più in
+   alto per chi ha finito più gradini — chi ha finito la campagna non
+   deve rifarsi i prati da quattro frecce prima di trovare un posto che
+   lo impegni. Il livello non sceglie **cosa** c'è nel posto (lo sceglie
+   il caso, fra le cose sbloccate): sceglie quanto è lunga la strada,
+   quanto è grande il posto, quante regole insieme, quante pecore, e
+   quali sagome dello zaino si possono tirare. */
+export const LIVELLO_MAX = 9
+export const livelloDi = (fatti, sbloccati = DI_BASE) =>
+  Math.min(LIVELLO_MAX, Math.max(0, Math.floor((sbloccati.length - 4) / 2)) + Math.floor(fatti / 2))
 
-/* ── la scala del cane ──
-   `pecore` quante, e il resto come per il coniglio. Il recinto sta sul
-   bordo, con la siepe ai lati: il cancello guarda dentro al prato */
-export const GRADINI_CANE = [
-  { lato: [6, 5], pecore: 1, lunga: [4, 9],   dev: 1, ostacoli: 0.08 },
-  { lato: [7, 5], pecore: 1, lunga: [5, 11],  dev: 2, ostacoli: 0.08, ghiaccio: 0.7 },
-  { lato: [6, 5], pecore: 2, lunga: [7, 15],  dev: 1, ostacoli: 0.05 },
-  { lato: [7, 6], pecore: 2, lunga: [9, 18],  dev: 2, ostacoli: 0.06, ghiaccio: 0.5 },
-  /* in cima, il gregge da riunire: tre pecore sparse, che si spingono */
-  { lato: [6, 6], pecore: 3, lunga: [10, 20], dev: 1, ostacoli: 0.05 },
-]
+/* ═══════════ la famiglia ═══════════
+   Di che specie è il prossimo posto: il coniglio sul prato, il cane
+   con le pecore, o un posto con lo zaino (ripeti, fino a, se). Il caso
+   è pesato: ognuna delle cose sbloccate può uscire, e quella appena
+   giocata pesa meno — tre posti di fila dello stesso tipo sono il modo
+   in cui un sentiero senza fine diventa noioso. Lo zaino pesa un po' di
+   più col livello: è il posto dove si pensa di più. */
+export const FAMIGLIE = ['prato', 'cane', 'ripeti', 'fino', 'se']
+export function famigliaDi(rnd, sbloccati, lv = 0, prima = null) {
+  const zaino = 0.8 + lv * 0.06
+  const pesi = {
+    prato: 1,
+    cane: sbloccati.includes('cane') ? 0.8 : 0,
+    ripeti: sbloccati.includes('ripeti') ? zaino : 0,
+    fino: sbloccati.includes('fino') ? zaino : 0,
+    se: sbloccati.includes('se') ? zaino : 0,
+  }
+  if (prima && pesi[prima]) pesi[prima] *= 0.3
+  let t = rnd() * FAMIGLIE.reduce((n, f) => n + pesi[f], 0)
+  for (const f of FAMIGLIE) if (pesi[f] && (t -= pesi[f]) <= 0) return f
+  return 'prato'
+}
+
+/* ═══════════ la ricetta del prato ═══════════
+   Quante regole del mondo insieme (una ai primi livelli, due o tre più
+   su), quali (a caso fra quelle sbloccate), e le misure che il posto
+   deve avere per essere tenuto. La prima regola tirata è quella
+   principale: deve servire sempre. */
+export function ricettaDelPrato(sbloccati, lv, rnd) {
+  const poss = Object.keys(REGOLE).filter(r => sbloccati.includes(r))
+  const quante = Math.min(poss.length, lv < 3 ? 1 : lv < 6 ? 1 + (rnd() < 0.5 ? 1 : 0) : 2 + (rnd() < 0.3 ? 1 : 0))
+  const regole = []
+  while (regole.length < quante) {
+    const r = poss[Math.floor(rnd() * poss.length)]
+    if (!regole.includes(r)) regole.push(r)
+  }
+  const ha = r => regole.includes(r)
+  const k = regole.length
+  return {
+    regole,
+    lato: [Math.min(8, 5 + Math.floor(lv / 3) + (k > 1 ? 1 : 0)), Math.min(8, 4 + Math.floor((lv + 1) / 2))],
+    lunga: [Math.min(10, 3 + Math.floor(lv / 2) + k), Math.min(18, 6 + lv + 2 * k)],
+    dev: lv === 0 ? 0 : lv < 4 ? 1 : 2,
+    ostacoli: ha('ghiaccio') ? 0.08 : 0.11,
+    pozze: ha('salto') ? 0.5 : 1,
+    ghiaccio: ha('ghiaccio') ? 1 : 0,
+    fiume: ha('salto') ? 1 : 0,
+    salti: ha('salto'),
+    massi: ha('massi') ? 1 : 0,
+    buche: ha('buche') ? 1 : 0,
+  }
+}
+
+/* ── la ricetta del cane ──
+   Una pecora, poi due, poi tre sparse da riunire; il ghiaccio se lo si
+   conosce, una volta su due. Il recinto sta sul bordo, con la siepe ai
+   lati: il cancello guarda dentro al prato */
+export function ricettaDelCane(sbloccati, lv, rnd) {
+  const pecore = 1 + (lv >= 3 ? 1 : 0) + (lv >= 6 ? 1 : 0)
+  return {
+    pecore,
+    lato: pecore >= 3 ? [6, 6] : [6 + (lv >= 4 ? 1 : 0), 5 + (lv >= 2 ? 1 : 0)],
+    lunga: [Math.min(12, 4 + lv), Math.min(22, 9 + 2 * lv)],
+    dev: lv < 2 ? 1 : 2,
+    ostacoli: pecore >= 3 ? 0.05 : 0.07,
+    ghiaccio: sbloccati.includes('ghiaccio') && pecore < 3 && rnd() < 0.5 ? 0.7 : 0,
+  }
+}
+
 /* quanti stati guarda il risolutore su un posto del cane, prima di
    lasciarlo stare: un bambino non se ne accorge, un telefono sì */
 export const LIMITE_CANE = 20000
 const NOMI_CANE = ['Il pascolo', 'Il trifoglio', 'L\'ovile', 'Il prato alto', 'La radura',
                    'Il campo di papaveri', 'La collinetta', 'Il pascolo lungo']
 
-/* a che scala tocca il sentiero numero `fatti`: col cane, uno sì e uno
-   no; ognuna sale coi sentieri suoi, un gradino ogni due */
-export function scalaDi(fatti, cane) {
-  if (!cane) return { g: gradinoDi(fatti), cane: false }
-  const k = Math.floor(fatti / 2)
-  if (fatti % 2 === 0) return { g: GRADINI[Math.min(GRADINI.length - 1, Math.floor(k / 2))], cane: false }
-  return { g: GRADINI_CANE[Math.min(GRADINI_CANE.length - 1, Math.floor(k / 2))], cane: true }
-}
+/* quanto vale un sentiero vinto: mezzo minuto un posto del prato o del
+   cane, un minuto uno con lo zaino, che chiede di trovare lo schema
+   prima di scriverlo (una moneta, dieci secondi: `CALIBRAZIONE.md`) */
+export const premioDi = t => (t && t.zaino ? 6 : 3)
 
 const NOMI = ['Il sentiero', 'La radura', 'Il guado', 'Il campo', 'La collina', 'Il boschetto',
               'La palude', 'Il lago', 'La siepe', 'Il vallone', 'La conca', 'Il pianoro']
@@ -257,18 +329,29 @@ function bozzaCane(g, rnd) {
 
 /* ── un sentiero ──
    `fatti` è quanti ne ha già fatti in questa seduta; `rnd` il caso;
-   `cane` se ha già portato il gregge nel recinto. */
-export function generaSentiero(fatti, rnd, { prove = 260, cane = false } = {}) {
-  const scala = scalaDi(fatti, cane)
-  if (scala.cane) return generaPascolo(fatti, rnd, scala.g)
-  const g = scala.g
+   `sbloccati` gli ingredienti che conosce (`INGREDIENTI`); `prima` la
+   famiglia del sentiero di prima, che così pesa meno. */
+export function generaSentiero(fatti, rnd, { sbloccati = DI_BASE, prima = null, prove = 260 } = {}) {
+  const lv = livelloDi(fatti, sbloccati)
+  const famiglia = famigliaDi(rnd, sbloccati, lv, prima)
   const tema = TEMI[fatti % TEMI.length]
+  const base = { famiglia, livello: lv }
+  if (famiglia === 'ripeti' || famiglia === 'fino' || famiglia === 'se') {
+    const t = generaZaino(famiglia, sbloccati, lv, rnd)
+    if (t) return { ...t, ...base, tema: t.tema || tema, cane: !!Livello.da(t).cane, misure: { carte: t.zaino } }
+    return { ...RISERVA_ZAINO, carte: carteInMano(sbloccati), ...base, tema, nome: 'Il viale lungo', misure: null }
+  }
+  if (famiglia === 'cane') return generaPascolo(rnd, ricettaDelCane(sbloccati, lv, rnd), { ...base, tema })
+  const g = ricettaDelPrato(sbloccati, lv, rnd)
   const nome = NOMI[Math.floor(rnd() * NOMI.length)]
-  /* tre giri, sempre più di manica larga */
+  const principale = g.regole[0] ? REGOLE[g.regole[0]] : null
+  const altre = g.regole.slice(1).map(r => REGOLE[r])
+  /* tre giri, sempre più di manica larga: prima tutte le regole (fino a
+     due) che servono, poi solo la principale, poi basta che si vinca */
   const giri = [
-    { lunga: g.lunga, dev: g.dev, regola: g.regola },
-    { lunga: [Math.max(2, g.lunga[0] - 1), g.lunga[1] + 1], dev: Math.max(0, g.dev - 1), regola: g.regola },
-    { lunga: [2, g.lunga[1] + 2], dev: 0, regola: null },
+    { lunga: g.lunga, dev: g.dev, altre: Math.min(1, altre.length), principale },
+    { lunga: [Math.max(2, g.lunga[0] - 1), g.lunga[1] + 1], dev: Math.max(0, g.dev - 1), altre: 0, principale },
+    { lunga: [2, g.lunga[1] + 2], dev: 0, altre: 0, principale: null },
   ]
   for (const richiesta of giri) {
     for (let i = 0; i < prove; i++) {
@@ -280,19 +363,19 @@ export function generaSentiero(fatti, rnd, { prove = 260, cane = false } = {}) {
       if (!mis.lunga) continue
       if (mis.lunga < richiesta.lunga[0] || mis.lunga > richiesta.lunga[1]) continue
       if (mis.deviazione < richiesta.dev) continue
-      if (richiesta.regola && !serveLaRegola(liv, richiesta.regola)) continue
-      return { ...tappa, tema, nome, gradino: GRADINI.indexOf(g), misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
+      if (richiesta.principale && !serveLaRegola(liv, richiesta.principale)) continue
+      if (richiesta.altre && altre.filter(r => serveLaRegola(liv, r)).length < richiesta.altre) continue
+      return { ...tappa, ...base, tema, nome, regole: g.regole, cane: false,
+               misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
     }
   }
-  return { ...RISERVA, tema, nome, gradino: GRADINI.indexOf(g), misure: null }
+  return { ...RISERVA, ...base, tema, nome, regole: [], cane: false, misure: null }
 }
 
 /* un sentiero del cane: stessa strada del coniglio, meno prove (un
    posto con le pecore costa di più) e il risolutore col tetto */
-function generaPascolo(fatti, rnd, g, { prove = 90 } = {}) {
-  const tema = TEMI[fatti % TEMI.length]
+function generaPascolo(rnd, g, base, { prove = 90 } = {}) {
   const nome = NOMI_CANE[Math.floor(rnd() * NOMI_CANE.length)]
-  const gradino = GRADINI.length + GRADINI_CANE.indexOf(g)
   const giri = [
     { lunga: g.lunga, dev: g.dev },
     { lunga: [Math.max(3, g.lunga[0] - 2), g.lunga[1] + 2], dev: 0 },
@@ -307,10 +390,22 @@ function generaPascolo(fatti, rnd, g, { prove = 90 } = {}) {
       if (!mis.lunga || !mis.corta) continue
       if (mis.lunga < richiesta.lunga[0] || mis.lunga > richiesta.lunga[1]) continue
       if (mis.deviazione < richiesta.dev) continue
-      return { ...tappa, tema, nome, gradino, cane: true, misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
+      return { ...tappa, ...base, nome, cane: true, misure: { lunga: mis.lunga, deviazione: mis.deviazione } }
     }
   }
-  return { ...RISERVA_CANE, tema, nome, gradino, cane: true, misure: null }
+  return { ...RISERVA_CANE, ...base, nome, cane: true, misure: null }
+}
+
+/* il posto di riserva con lo zaino: un viale, una scatola */
+export const RISERVA_ZAINO = {
+  mappa: [
+    'AAAAAAAA',
+    'P..c...A',
+    'AAAAAA@A',
+  ],
+  salti: false,
+  zaino: 3,
+  soluzioni: [programma(ripeti(6, 'destra'), 'giu')],
 }
 
 /* il posto di riserva del cane: una pecora, il recinto davanti */
