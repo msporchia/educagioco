@@ -25,6 +25,7 @@
    «adesso puoi».
    ═══════════════════════════════════════════════════════════════════ */
 import { costoSalita } from '../../data/castello.js'
+import { RESPINTO } from '../../motore/castello/nemico.js'
 
 /* Da che parte guarda chi cammina: 1 a destra, -1 a sinistra, 0 se va
    dritto in su o in giù per un bel pezzo. Si guarda un po' avanti, e non
@@ -84,12 +85,12 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
 
   for (const s of motore.schizzi)
     roba.push({ che: 'schizzo', strato: -1, x: s.x, y: s.y, r: s.r,
-                vita: s.vita, tipo: s.tipo, gelo: s.gelo })
+                vita: s.vita, tipo: s.tipo, gelo: s.gelo, dividi: s.dividi })
 
   for (const t of motore.torri)
     roba.push({ che: 'torre', x: t.x, y: t.y, tipo: t.tipo, lv: t.lv, ramo: t.ramo,
                 potenziabile: t.lv < tetto && !occupato,
-                posso: energia >= costoSalita(t.lv),
+                posso: energia >= costoSalita(t.lv, t.tipo),
                 /* la torre di cui è aperta la scheda si stacca dal campo:
                    è quella di cui si sta parlando */
                 alone: !!(mira && mira.torre === t) })
@@ -97,8 +98,16 @@ export function scenaDi(motore, { S, trascino = null, tetto = 10, energia = 0,
   for (const n of motore.nemici) {
     const via = motore.viaDi(n)
     const p = via.puntoA(n.d)
+    /* Quello che il pittore deve sapere di più, adesso che i mostri
+       fanno cose: quanto è grande (il capo, i pezzi di chi si è diviso),
+       se è a terra per rialzarsi, e da quanto una torre gli è
+       rimbalzata addosso (`respinto`, da 1 a 0: il segno «immune» sopra
+       la testa sbiadisce con lui). Sono fatti già decisi: il pittore non
+       sa cos'è un'immunità. */
     roba.push({ che: 'mostro', x: p.x, y: p.y, bestia: n.bestia, vola: n.vola,
-                resiste: n.resiste, vita: n.quota, gelo: n.gelo, verso: versoDi(via, n.d, p) })
+                vita: n.quota, gelo: n.gelo, verso: versoDi(via, n.d, p),
+                taglia: n.taglia, capo: n.capo, aTerra: n.aTerra > 0,
+                respinto: n.respinto / RESPINTO })
   }
 
   const via = motore.via

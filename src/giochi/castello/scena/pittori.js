@@ -12,8 +12,10 @@
      mostro    la creatura che fa le sue veci in questo vestito
                (`bestiario.js`): coi passi di lato o di fronte se il suo
                foglio del cammino c'è, se no coi fotogrammi del respiro,
-               girata verso dove va, con la barra della vita, il gelo e
-               la resistenza di sempre
+               girata verso dove va, con la barra della vita, il gelo, il
+               segno «immune» e la corona del capo di sempre — il capo è
+               la stessa figura più grande, chi è a terra la stessa
+               figura stesa
      ritratto  la stessa creatura ferma, grande quanto il riquadro: per
                il nastro di chi arriva e per la scheda del mostro in campo
      castello  niente: è già nel fondale (`vestito.js`)
@@ -35,7 +37,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { PITTORI } from '../../../grafica/castello.js'
 import { targhe } from '../../../grafica/castello/torri.js'
-import { TINTA } from '../../../grafica/castello/tinte.js'
+import { segnoImmune, corona } from '../../../grafica/castello/mostro.js'
 import { TORRI, stadioDi } from '../../../data/ops.js'
 import { MONDO } from '../../../data/castello.js'
 import { COLONNE } from '../motore/carta.js'
@@ -102,10 +104,11 @@ export function caricaFigure() {
   return attesa
 }
 
-/* una figura col piede in (x, y), larga e alta quanto nel foglio */
-function figura(ctx, nome, x, y, { specchia = false } = {}) {
+/* una figura col piede in (x, y), larga e alta quanto nel foglio — per
+   `scala`, che è 1 per tutti tranne il capo e i pezzi di chi si è diviso */
+function figura(ctx, nome, x, y, { specchia = false, scala = 1 } = {}) {
   const [sx, sy, w, h] = PEZZI[nome]
-  const lw = w * UNITA, lh = h * UNITA
+  const lw = w * UNITA * scala, lh = h * UNITA * scala
   if (specchia) {
     ctx.save(); ctx.translate(x, y - lh); ctx.scale(-1, 1)
     ctx.drawImage(img, sx, sy, w, h, -lw / 2, 0, lw, lh); ctx.restore()
@@ -134,18 +137,30 @@ function torre(p, cosa) {
 const PIEDE_MOSTRO = 10 * UNITA
 function mostro(p, cosa) {
   if (!img) return PITTORI.mostro(p, cosa)
-  const { x, y, bestia, vita = 1, gelo = 0, vola = false, resiste = null, verso = 0 } = cosa
+  const { x, y, bestia, vita = 1, gelo = 0, vola = false, verso = 0,
+          taglia = 1, capo = false, aTerra = false, respinto = 0 } = cosa
   const S = p.S
   const { serie, passi } = serieDi(creaturaDi(bestia), verso)
   /* il respiro a cinque fotogrammi al secondo, i passi a otto; sfasati
      per posto, così una fila di melme non respira all'unisono */
   const n = serie[Math.floor(p.tempo * (passi ? 8 : 5) + x * 0.07 + y * 0.05) % serie.length]
   const piede = y + PIEDE_MOSTRO
-  const alto = vola ? -9 * S + Math.sin(p.tempo * 2.6 + x * 0.05) * 2.2 * S : 0
-  p.velo(vola ? 0.5 : 1, () => p.ellisse(x, piede - 1 * S, 9 * S, 3 * S, '#00000033'))
+  const alto = vola && !aTerra ? -9 * S + Math.sin(p.tempo * 2.6 + x * 0.05) * 2.2 * S : 0
+  p.velo(vola ? 0.5 : 1, () => p.ellisse(x, piede - 1 * S, 9 * S * taglia, 3 * S * taglia, '#00000033'))
+  if (aTerra) {
+    /* a terra: stesa di fianco, sbiadita, e tre stelline che girano
+       sopra — non è finita, fra un attimo si rialza */
+    p.velo(0.55, () => p.in(x, piede - 4 * S, () =>
+      figura(p.ctx, n, 0, 0, { scala: taglia }), Math.PI / 2))
+    for (let i = 0; i < 3; i++) {
+      const a = p.tempo * 4 + i * 2.09
+      p.cerchio(x + Math.cos(a) * 8 * S, piede - 14 * S + Math.sin(a) * 2.5 * S, 1.6 * S, '#ffe27a')
+    }
+    return
+  }
   /* le figure del foglio guardano a destra (o chi guarda, quelle di
      fronte): chi va a sinistra si specchia */
-  const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0 })
+  const { lh } = figura(p.ctx, n, x, piede + alto, { specchia: verso < 0, scala: taglia })
   const cima = piede + alto - lh
   if (gelo > 0) {
     // il gelo: un velo azzurro sul corpo e tre schegge, come nel castello a poligoni
@@ -160,17 +175,14 @@ function mostro(p, cosa) {
   }
   // la barra della vita sopra la testa, ferma anche se il mostro vola
   const sopra = Math.min(cima, piede - 16 * S) - 4 * S
-  const w = 15 * S, q = Math.max(0, Math.min(1, vita))
+  const w = 15 * S * Math.min(taglia, 1.6), q = Math.max(0, Math.min(1, vita))
   p.rett(x - w / 2 - 0.7 * S, sopra - 0.7 * S, w + 1.4 * S, 2.6 * S + 1.4 * S, '#00000055')
   p.rett(x - w / 2, sopra, w * q, 2.6 * S, q > 0.5 ? '#38c172' : q > 0.25 ? '#ffc93c' : '#ff5c7a')
-  /* la resistenza: il pallino sbarrato del colore della torre che non gli
-     fa male — lo stesso segno del castello a poligoni (`grafica/castello/mostro.js`) */
-  if (resiste && TINTA[resiste]) {
-    const cx = x + w / 2 + 3 * S, cy = sopra + 1.3 * S, r = 2.6 * S
-    p.cerchio(cx, cy, r, '#ffffffcc')
-    p.cerchio(cx, cy, 1.8 * S, TINTA[resiste].chiaro)
-    p.linea([{ x: cx - 1.9 * S, y: cy + 1.9 * S }, { x: cx + 1.9 * S, y: cy - 1.9 * S }], '#3a3348', 0.9 * S)
-  }
+  /* il capo ha la corona, e chi è immune alla torre che gli ha appena
+     sparato ha la sua pastiglia — gli stessi segni del castello a
+     poligoni (`grafica/castello/mostro.js`) */
+  if (capo) corona(p, x, sopra - 1.5 * S, S)
+  segnoImmune(p, x, sopra - (capo ? 8 : 2) * S, respinto)
 }
 
 /* ── il ritratto ──

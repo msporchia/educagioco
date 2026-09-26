@@ -2,27 +2,32 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL PREAVVISO — chi sta per arrivare, prima che serva.
 
-   Il difetto che chiude: le resistenze dei mostri esistevano, ma si
-   scoprivano quando l'ondata era già partita. A quel punto costruire la
-   torre giusta non serve più, e la resistenza smette di essere una
+   Il difetto che chiude: quello che un mostro non si fa fare si
+   scopriva quando l'ondata era già partita. A quel punto costruire la
+   torre giusta non serve più, e la cosa smette di essere una
    decisione: diventa un dettaglio che si legge dopo. La scelta della
    torre — che è il cuore del gioco, perché decide anche *quale
    operazione* si farà — si prendeva a caso.
 
    Qui le prossime tre ondate si vedono mentre si sta ancora
-   scegliendo: chi arriva, quanti sono, e l'emoji della torre che quel
-   mostro **regge**, sbarrata. «Fra due ondate arriva il Golem, e la
-   magia non lo scalfisce» vuol dire «per questo giro le
-   moltiplicazioni lasciale stare».
+   scegliendo: chi arriva, quanti sono, e le emoji delle torri a cui
+   quel mostro è **immune**, sbarrate. «Fra due ondate arriva il Golem,
+   e frecce e magia non lo toccano» vuol dire «per quel giro servono le
+   bombe». Con le immunità non è più un consiglio: un'ondata di golem
+   con due arcieri in campo passa intera.
 
-   ── perché sbarrata, e non colorata ──
-   Prima qui c'era il pallino della torre che faceva il doppio: un
-   segno che diceva «questa». Adesso dice «non questa», e i due segni
-   non possono somigliarsi, se no il nastro insegna l'opposto di
-   quello che dice — che è esattamente il difetto da cui questo giro è
-   partito. Quindi la pastiglia è spenta, grigia, con la barra sopra:
-   la stessa grammatica del divieto che un bambino conosce già dalla
+   ── perché sbarrate, e non colorate ──
+   Il segno dice «non questa», e non può somigliare a uno che dice
+   «questa», se no il nastro insegna l'opposto di quello che dice.
+   Quindi le pastiglie sono spente, grigie, con la barra sopra: la
+   stessa grammatica del divieto che un bambino conosce già dalla
    strada.
+
+   ── e cosa fa, e il capo ──
+   Chi si divide o si rialza porta la sua emoji in alto (✂️, 💫), e il
+   titolo del riquadro lo dice a parole. L'ondata del capo ha la corona
+   e il riquadro dorato: un mostro solo, gigante, e si vede tre ondate
+   prima.
 
    Sta in cima al campo, e solo fra un'ondata e l'altra: durante la
    battaglia quel posto è della scheda del mostro che si ha davanti, e
@@ -34,6 +39,7 @@
    giri scendono da destra» vuol dire «spostala adesso».
    ═══════════════════════════════════════════════════════════════════ */
 import { TORRI } from '../../data/ops.js'
+import { ABILITA } from '../../data/mostri.js'
 import RitrattoMostro from './RitrattoMostro.vue'
 
 /* da che ingresso arriva l'ondata, dove gli ingressi sono più d'uno.
@@ -42,28 +48,44 @@ import RitrattoMostro from './RitrattoMostro.vue'
 const FRECCE = { sinistra: '↙', destra: '↘', ambo: '↙↘' }
 
 defineProps({
-  /* [{ onda, fra, id, nome, quanti, vola, resiste }] — le dà il motore */
+  /* [{ onda, fra, id, nome, quanti, vola, immune, abilita, capo }] — le dà il motore */
   prossime: { type: Array, default: () => [] },
   /* i pittori della pelle, se il campo ne ha una: il ritratto è la figura
      che poi scende in campo */
   pittori: { type: Object, default: null },
 })
+
+/* la frase del titolo: chi è, a cosa è immune, cosa fa. Il riquadro è
+   piccolo e i segni sono emoji; chi ci tiene il dito sopra (o chi non
+   vede) si legge la frase intera */
+function frase(p) {
+  const parti = [p.capo ? `${p.nome} gigante: il capo` : p.nome]
+  if (p.immune && p.immune.length)
+    parti.push('immune a ' + p.immune.map(k => TORRI[k].nome.toLowerCase()).join(' e '))
+  if (p.abilita) parti.push(ABILITA[p.abilita].che)
+  return parti.join(' · ')
+}
 </script>
 
 <template>
   <div v-if="prossime.length" class="preavviso">
     <span class="titolo">In arrivo</span>
-    <div v-for="p in prossime" :key="p.onda" class="avviso" :class="{ subito: p.fra === 1 }">
+    <div v-for="p in prossime" :key="p.onda" class="avviso"
+         :class="{ subito: p.fra === 1, capo: p.capo }" :title="frase(p)"
+         :data-onda-preavviso="p.onda" :data-immune="(p.immune || []).join(',')"
+         :data-abilita="p.abilita || null" :data-capo="p.capo ? '' : null">
       <span class="faccia">
         <RitrattoMostro :bestia="p.id" :pittori="pittori" />
-        <!-- la resistenza sta *addosso* al mostro, non di fianco: è quella
-             che si deve leggere insieme alla faccia, non dopo -->
-        <span v-if="p.resiste" class="punto"
-              :title="'resiste a ' + TORRI[p.resiste].nome + ': gli fa un terzo del danno'"
-              >{{ TORRI[p.resiste].emoji }}</span>
+        <!-- le immunità stanno *addosso* al mostro, non di fianco: sono
+             quelle che si devono leggere insieme alla faccia, non dopo -->
+        <span v-if="p.immune && p.immune.length" class="immuni">
+          <span v-for="k in p.immune" :key="k" class="punto">{{ TORRI[k].emoji }}</span>
+        </span>
+        <span v-if="p.abilita" class="abilita">{{ ABILITA[p.abilita].emoji }}</span>
+        <span v-if="p.capo" class="corona">👑</span>
       </span>
       <span class="dati">
-        <b>{{ p.nome }}</b>
+        <b>{{ p.capo ? 'Capo!' : p.nome }}</b>
         <i>🌊{{ p.onda }} · ×{{ p.quanti }}<template v-if="p.lato"> ·
           <em :class="p.lato">{{ FRECCE[p.lato] }}</em></template></i>
       </span>

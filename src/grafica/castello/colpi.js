@@ -61,7 +61,19 @@ export function colpo(p, c) {
    resta lì a sbiadire, senza bordo acceso. Il freddo si vede addosso ai
    mostri, che è la cosa bella; qui basta suggerire da dove viene. */
 export function schizzo(p, s) {
-  const q = Math.max(0, Math.min(1, s.vita)), col = TINTA[s.tipo].chiaro
+  const q = Math.max(0, Math.min(1, s.vita))
+  /* chi si è appena diviso: uno sbuffo bianco con due palline che
+     schizzano via ai lati — «non è morto, adesso sono due» */
+  if (s.dividi) {
+    p.velo(q * 0.6, () => p.cerchio(s.x, s.y, s.r, '#ffffff'))
+    const via = (1 - q) * 10 * p.S
+    p.velo(q, () => {
+      p.cerchio(s.x - via, s.y - 2 * p.S, 2.2 * p.S, '#e9f7d8')
+      p.cerchio(s.x + via, s.y - 2 * p.S, 2.2 * p.S, '#e9f7d8')
+    })
+    return
+  }
+  const col = TINTA[s.tipo].chiaro
   if (s.gelo) {
     p.velo(q * 0.22, () => p.cerchio(s.x, s.y, s.r, col))
     p.velo(q * 0.4, () => {

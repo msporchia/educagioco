@@ -3,14 +3,14 @@
    LA SCHEDA DI CHI STA ARRIVANDO
 
    Un riquadro in alto a destra sul campo: il mostro dell'ondata
-   ingrandito, quanti ne restano da fermare, quanta vita ha ciascuno e
-   — se ce l'ha — a quale torre **resiste**.
+   ingrandito, quanti ne restano da fermare, quanta vita ha ciascuno, a
+   quali torri è **immune** e — se ce l'ha — cosa fa quando cade.
 
-   Serve a rendere la resistenza una cosa che si *legge*, non che si
-   indovina: sul campo il mostro è alto quindici pixel e il segno della
-   resistenza è un puntino. Qui è grande, fermo, e c'è posto per
-   scriverlo a parole — «resiste a 🏹 Arciere» — che è l'unico punto
-   dello schermo dove la frase sta per intero.
+   Serve a rendere l'immunità una cosa che si *legge*, non che si
+   indovina: sul campo il mostro è alto quindici pixel e il segno
+   «immune» compare solo quando una torre gli rimbalza addosso. Qui è
+   grande, fermo, e c'è posto per scriverlo a parole — «immune a 🏹 🔮»
+   — che è l'unico punto dello schermo dove la frase sta per intero.
 
    Il ritratto non è un'immagine: è lo stesso pittore che disegna i
    mostri sul campo, chiamato su una tela piccola. Un mostro nuovo si
@@ -20,9 +20,10 @@ import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../grafica/tela.js'
 import { PITTORI } from '../grafica/castello.js'
 import { TORRI } from '../data/ops.js'
+import { ABILITA } from '../data/mostri.js'
 
 const props = defineProps({
-  bestia: { type: Object, required: true },   // { id, nome, vola, resiste }
+  bestia: { type: Object, required: true },   // { id, nome, vola, immune, abilita, capo }
   vita: { type: Number, default: 0 },         // quanta ne ha uno solo
   quanti: { type: Number, default: 0 },       // quanti ne restano in campo
   /* i pittori di una pelle (il castello a sprite): lì il ritratto è la
@@ -57,11 +58,14 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
   <div class="scheda">
     <div class="faccia"><canvas ref="ritratto"></canvas></div>
     <div class="dati">
-      <b>{{ bestia.nome }}</b>
+      <b>{{ bestia.capo ? '👑 ' + bestia.nome + ' gigante' : bestia.nome }}</b>
       <i v-if="bestia.vola">vola</i>
       <span class="riga">❤️ {{ vita }} · ×{{ quanti }}</span>
-      <span v-if="bestia.resiste" class="resiste">
-        resiste a {{ TORRI[bestia.resiste].emoji }} ⅓
+      <span v-if="bestia.immune && bestia.immune.length" class="resiste" data-scheda-immune>
+        immune a {{ bestia.immune.map(k => TORRI[k].emoji).join(' ') }}
+      </span>
+      <span v-if="bestia.abilita" class="fa" data-scheda-abilita>
+        {{ ABILITA[bestia.abilita].emoji }} {{ ABILITA[bestia.abilita].nome }}
       </span>
     </div>
   </div>
@@ -83,4 +87,6 @@ watch(() => props.bestia.id, () => tela?.ridimensiona())
            background:#eceaf0; border-radius:999px;
            padding:1px 6px; margin-top:2px; white-space:nowrap; overflow:hidden;
            text-overflow:ellipsis }
+/* quello che fa quando cade: non è un divieto, è una cosa da aspettarsi */
+.fa { font-size:9px; font-weight:800; color:var(--viola-scuro); margin-top:1px; white-space:nowrap }
 </style>
