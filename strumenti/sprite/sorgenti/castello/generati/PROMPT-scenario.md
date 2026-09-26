@@ -155,7 +155,7 @@ il fitto sui bordi e intorno al castello.
 ```text
 Disegna il foglio dei pezzi (uno sprite sheet) con cui si costruisce ESATTAMENTE la scena allegata: stesso scenario, stessa tavolozza, stessa strada, stesso fondo, stessa luce piatta, stessa misura. La seconda immagine allegata è lo SCHEMA del foglio: dice dove va ogni pezzo e quanto è grande, e i suoi colori piatti non vanno copiati.
 
-Il foglio è ORIZZONTALE, 1536×1024 px (più largo che alto), su FONDO TRASPARENTE (PNG), con la griglia della scena: celle da 64×64 px, e ogni pixel del disegno è un quadrato pieno di 4×4 px. Ogni pezzo sta staccato dagli altri da almeno mezza cella di trasparente. Nessuna ombra sotto i pezzi, nessun bagliore attorno, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.
+Il foglio è ORIZZONTALE, 1536×1024 px (più largo che alto), su FONDO TRASPARENTE (PNG), con la griglia della scena: celle da 64×64 px, e ogni pixel del disegno è un quadrato pieno di 4×4 px. Ogni pezzo sta nel posto e nella misura che lo schema gli dà, col suo angolo in alto a sinistra sull'angolo di una cella della griglia: è da lì che verrà ritagliato, cella per cella. Ogni pezzo sta staccato dagli altri da almeno mezza cella di trasparente. Nessuna ombra sotto i pezzi, nessun bagliore attorno, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO.
 
 Dall'alto in basso:
 
@@ -293,12 +293,21 @@ Quattro controlli, in quest'ordine — e nessuno dei quattro è «è bello»:
 
 ## Come si monta nel gioco
 
-Il gioco va **rifatto** quando le immagini ci sono. La bozza in
-`src/giochi/castello/` (gioco sperimentale `castello`: mostra i campi
-delle venti tappe a tessere, non si gioca) è rimasta indietro rispetto
-al gioco vero `torri` — non ha le quattro partite libere, la palude, i
-regali, i rami — e soprattutto è costruita sulle strade curve. Cosa
-cambia con la scacchiera:
+**Montato il 26 settembre 2026, in attesa del foglio.** Il gioco
+sperimentale `castello` è il tower defense vero con un'altra pelle
+(`src/giochi/castello/scena/pelle.js`): le carte a scacchiera le fa
+`motore/carta.js`, e il vestito lo compone `scena/vestito.js` coi pezzi
+che scrive `strumenti/sprite/vesti.py --atlante`. Oggi i pezzi sono
+ritagliati dalle scene; **quando il foglio del prompt 2 arriva si salva
+come `terreno-bosco.png` qui accanto**, il foglietto modello
+`terreno-bosco.json` (scritto sulle coordinate dello schema) si ritocca
+guardando `vesti.py --provino-foglio bosco provino.png`, e
+`vesti.py --atlante` prende il foglio al posto della scena. Neve e lava
+fanno lo stesso con `terreno-neve.png` e `terreno-lava.png`, e senza un
+foglietto loro usano quello del bosco. Il piano intero, coi comandi, è
+in [`../../../DA-GENERARE.md`](../../../DA-GENERARE.md).
+
+Quello che segue è com'era stato pensato, e com'è andata:
 
 - **le strade delle tappe diventano spezzate a squadra sulla
   scacchiera** (12×22 celle): angoli in celle intere invece di punti
@@ -317,10 +326,12 @@ cambia con la scacchiera:
 - **uno scenario è una voce di `SCENARI`**, con le stesse chiavi per
   tutti, e la campagna dichiara il suo: com'è in
   `src/giochi/sotterraneo/dati/tessere.js`;
-- il foglio si ritaglia con `atlante.py` e un foglietto accanto
-  (`castello_2.json`, una `misura` per pezzo come `sotterraneo_2.json`):
-  `terreni.py` e le tessere a etichette (`sx`, `dx`, `c`) servono solo
-  alle strade curve, e con la scacchiera si possono lasciare andare.
+- il foglio si ritaglia con un foglietto accanto, una `misura` per
+  pezzo come `sotterraneo_2.json` — ma a leggerlo è `vesti.py`
+  (`pezzi_dal_foglio`), non `atlante.py`: il foglietto dice
+  `"attrezzo": "vesti"`, e `terreni.py` lo salta. `terreni.py` e le
+  tessere a etichette (`sx`, `dx`, `c`) servono solo alle strade curve,
+  e con la scacchiera si possono lasciare andare.
 
 ## Dopo il terreno: le figure
 
