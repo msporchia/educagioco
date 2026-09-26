@@ -29,6 +29,17 @@
 
    Vive anche a schermo cambiato: `ridimensiona` rifà strade e piazzole
    con le misure nuove, e il resto del motore non se ne accorge.
+
+   ── una strada a squadra, e le piazzole già decise ──
+   Il quarto argomento serve al campo disegnato a celle (il gioco
+   `castello`, `src/giochi/castello/`): lì la strada è una fila di celle
+   di una scacchiera, e le piazzole sono celle anche loro, messe dalla
+   carta. `spigoli: true` lascia la forma com'è, senza smussarla —
+   una strada a squadra smussata taglierebbe gli angoli e i mostri
+   camminerebbero sul prato — e `posti: [[fx, fy, via], …]` dice le
+   piazzole in coordinate 0–1, nell'ordine in cui si occupano, al posto
+   di quelle calcolate. Chi non lo passa ha il percorso di sempre: la
+   taratura e la sua firma non lo vedono.
    ═══════════════════════════════════════════════════════════════════ */
 import { smussa, tracciato } from '../../grafica/geometria.js'
 import { GEOMETRIA } from '../../data/castello.js'
@@ -39,10 +50,12 @@ import { GEOMETRIA } from '../../data/castello.js'
 const MINIMA_FRA_PIAZZOLE = 42
 
 export class Percorso {
-  constructor(forme, quante, misure) {
+  constructor(forme, quante, misure, { spigoli = false, posti = null } = {}) {
     // una forma sola o un elenco di forme: si accettano tutte e due
     this.forme = Array.isArray(forme[0][0]) ? forme : [forme]
     this.quante = quante
+    this.spigoli = spigoli
+    this.posti = posti
     this.ridimensiona(misure)
   }
 
@@ -51,8 +64,14 @@ export class Percorso {
      come strade vere. */
   ridimensiona({ W, H, S }) {
     this.W = W; this.H = H; this.S = S
-    this.vie = this.forme.map(f => tracciato(smussa(f.map(([x, y]) => ({ x: x * W, y: y * H })))))
-    this.postazioni = this.piazzole()
+    const liscia = this.spigoli ? punti => punti : smussa
+    this.vie = this.forme.map(f => tracciato(liscia(f.map(([x, y]) => ({ x: x * W, y: y * H })))))
+    /* le piazzole dichiarate si scalano e basta: le ha già messe chi ha
+       disegnato il campo, e sbrogliarle le sposterebbe fuori dalla loro
+       cella */
+    this.postazioni = this.posti
+      ? this.posti.map(([x, y, via = 0]) => ({ x: x * W, y: y * H, via }))
+      : this.piazzole()
     return this
   }
 

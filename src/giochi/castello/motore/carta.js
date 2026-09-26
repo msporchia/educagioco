@@ -236,6 +236,9 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
   const fila = []
   for (let i = 0; i < Math.max(...quote); i++) for (const p of perVia) if (p[i]) fila.push(p[i])
   let messe = 0
+  /* le piazzole nell'ordine in cui si sono messe, che è quello in cui
+     il motore le occupa: [x, y, quale via] */
+  const piazzole = []
   for (const { via, d, lato } of fila) {
     if (messe >= quante) break
     /* dalla cella a quel punto della strada, poi via via più lontano
@@ -249,7 +252,10 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
         const lati = v === 'N' || v === 'S' ? [[-1, 0], [1, 0]] : [[0, -1], [0, 1]]
         for (const [dx, dy] of lato ? lati : lati.slice().reverse()) {
           const [x, y] = [c[0] + dx, c[1] + dy]
-          if (libera(x, y) && !vicinaAPiazzola(x, y)) { metti(x, y, 'o'); messe++; fatto = true; break }
+          if (libera(x, y) && !vicinaAPiazzola(x, y)) {
+            metti(x, y, 'o'); piazzole.push([x, y, vie.indexOf(via)])
+            messe++; fatto = true; break
+          }
         }
         if (fatto) break
       }
@@ -328,6 +334,38 @@ export function cartaDi(tappa, { seme = tappa.chiave || tappa.nome, posti } = {}
 
   return {
     righe: griglia.map(r => r.join('')),
-    vie, guasti, piazzole: messe, modo,
+    vie, guasti, piazzole, modo,
   }
+}
+
+/* ── dalla carta al motore ──
+   Il motore (`motore/castello/percorso.js`) ragiona in coordinate 0–1 e
+   non sa niente di celle: qui le vie diventano spezzate che passano **per
+   il centro delle celle**, e le piazzole il centro della loro. La strada
+   comincia dentro la bocca e finisce dentro il castello, non sul loro
+   ciglio: un mostro che compare sul bordo della bocca sembra spuntare
+   dal prato. Dei vertici si tengono solo gli spigoli — una fila di
+   diciassette punti in riga è un segmento solo.
+
+   Torna i due pezzi di tappa che cambiano: `forme` e `percorso` (che il
+   motore passa a `Percorso` così com'è: strada senza smussare, piazzole
+   già messe). */
+export const DENTRO_LA_BOCCA = 0.3          // in celle, dal bordo di sopra
+export const DENTRO_IL_CASTELLO = ULTIMA + 1.4
+
+export function percorsoDi(carta) {
+  const centro = ([x, y]) => [(x + 0.5) / COLONNE, (y + 0.5) / RIGHE]
+  const forme = carta.vie.map(via => {
+    const [x0] = via[0], [xe] = via[via.length - 1]
+    const celle = [[x0, DENTRO_LA_BOCCA], ...via, [xe, DENTRO_IL_CASTELLO]]
+    const spigoli = celle.filter((c, i) => {
+      const a = celle[i - 1], b = celle[i + 1]
+      if (!a || !b) return true
+      // in riga con chi sta prima e dopo: non è uno spigolo
+      return !((a[0] === c[0] && c[0] === b[0]) || (a[1] === c[1] && c[1] === b[1]))
+    })
+    return spigoli.map(centro)
+  })
+  const posti = carta.piazzole.map(([x, y, via]) => [...centro([x, y]), via])
+  return { forme, percorso: { spigoli: true, posti } }
 }

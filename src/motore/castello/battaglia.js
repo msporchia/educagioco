@@ -61,7 +61,10 @@ export class Battaglia {
     this.doni = doniDi(this.regali)
     this.daScegliere = 0
 
-    this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure)
+    /* `tappa.percorso` c'è solo nel campo a celle (`giochi/castello/`):
+       strada a squadra e piazzole già messe. Le tappe vere non ce
+       l'hanno, e il percorso è quello di sempre. */
+    this.percorso = new Percorso(tappa.forme || tappa.forma, tappa.posti, misure, tappa.percorso)
     this.ondate = new Ondate(tappa)
     this.tabellone = new Tabellone(stato)
 
