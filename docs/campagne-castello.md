@@ -162,9 +162,30 @@ Le due cose che il validatore ha trovato e che a occhio non si vedono:
   disegnate una sopra l'altra. Le quindici di oggi stanno sopra le 47 unità
   nella fascia di postazioni che il gioco usa davvero.
 
-### Le resistenze
+### Le immunità *(settembre 2026: prendono il posto delle resistenze)*
 
-Ogni mostro dichiara **a che cosa resiste**: una torre che gli fa **un terzo**
+Le resistenze qui sotto sono la storia: dal 26 settembre 2026 ogni mostro
+dichiara le torri a cui è **immune** — zero danno, niente veleno, niente gelo
+— e le file delle tappe sono rifatte di conseguenza (le colonne «mostri» delle
+tabelle qui sopra dicono ancora la torre che ciascuno *chiudeva*; le file vere
+stanno in `data/campagne-castello.js`, col commento delle immunità accanto a
+ognuna). Le regole di una fila, controllate dal validatore e da
+`unita/immunita-castello`:
+
+1. ogni mostro si può **ferire** con almeno una torre della tappa;
+2. dove le torri che feriscono sono più d'una, **ognuna ha un mostro immune**:
+   nessuna torre vince la tappa da sola;
+3. la **prima ondata** la ferisce l'arciere, e le **prime quattro** le torri
+   con cui il giocatore modello apre, ognuna dalla sua strada;
+4. due ondate di fila non hanno le stesse immunità.
+
+L'immunità non si accende e non si spegne per ondata come faceva la
+resistenza: è com'è fatto il mostro. Quello che la tappa decide è chi manda,
+e in che ordine.
+
+### Le resistenze (com'erano)
+
+Ogni mostro dichiarava **a che cosa resiste**: una torre che gli fa **un terzo**
 del danno. Prima dichiarava una debolezza — una torre che gli faceva il doppio —
 e il nastro annunciava «il Golem, debole alle bombe»: letta da un bambino, quella
 frase dice il contrario di quello che vuol dire, e comunque l'informazione che

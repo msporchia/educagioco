@@ -44,35 +44,40 @@ di 4×4 px».
   copia da leggere — com'è descritta la creatura nel foglio, perché è
   così che la cercano i prompt del cammino:
 
-| castello | resiste a | bosco | lava | neve |
+| castello | immune a | bosco | lava | neve |
 |---|---|---|---|---|
-| slime | magica | la melma verde | il sasso di magma con le corna di fuoco | la melma rosa |
+| slime | magica · ✂️ | la melma verde | il sasso di magma con le corna di fuoco | la melma rosa |
 | goblin | arciere | lo scheletro con spada e scudo | il diavoletto rosso | la mummia |
-| pipistrello | arciere · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo |
-| fantasma | magica · vola | il fantasma verde acqua | lo spirito di fuoco | il fantasma azzurro |
+| pipistrello | bombe, ghiaccio · vola | il pipistrello viola | l'occhio volante rosso | il pipistrello con un occhio solo |
+| fantasma | bombe, ghiaccio, arciere · vola | il fantasma verde acqua | lo spirito di fuoco | il fantasma azzurro |
 | ragno | arciere | il ragno nero | il granchio rosso | il cinghiale |
 | orco | arciere | lo zombie verde | la bestia cornuta | il golem di pietra col muschio |
-| scheletro | bombe | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra |
-| golem | magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio |
-| arpia | bombe · vola | il grifone | il draghetto rosa con le ali | il tornado azzurro |
-| drago | bombe · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
-| lupo | arciere | il lupo grigio | il drago di lava senza ali | il lupo grigio |
-| corvo | arciere | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola |
-| rovo | bombe | la pianta carnivora | l'ombra viola con gli occhi gialli | l'uomo albero |
-| verme | bombe | il serpente verde | la melma viola | il serpente verde |
-| blatta | magica | lo scorpione viola | lo scorpione viola | lo spirito del fulmine giallo |
-| troll | magica | l'omone grigio con la clava | il mostro viola con la bocca grande | l'omone grigio con la clava |
-| corazziere | arciere | la tartaruga corazzata | la tartaruga corazzata | la tartaruga corazzata |
+| scheletro | magica, ghiaccio · 💫 | lo scheletro | il negromante col cappuccio viola | il teschio con la fiamma azzurra |
+| golem | arciere, magica | il golem di pietra bruna | il golem di lava | il golem di ghiaccio |
+| arpia | bombe, ghiaccio · vola | il grifone | il draghetto rosa con le ali | il tornado azzurro |
+| drago | bombe, ghiaccio, magica · vola | il drago rosso con le ali | il drago rosso con le ali | il drago rosso con le ali |
+| lupo | arciere, ghiaccio | il lupo grigio | il drago di lava senza ali | il lupo grigio |
+| corvo | bombe, ghiaccio · vola | il pipistrello con un occhio solo | il pipistrello viola | il pipistrello viola |
+| rovo | arciere, bombe | la pianta carnivora | l'ombra viola con gli occhi gialli | l'uomo albero |
+| verme | bombe · ✂️ | il serpente verde | la melma viola | il serpente verde |
+| blatta | bombe, magica | lo scorpione viola | lo scorpione viola | lo spirito del fulmine giallo |
+| troll | arciere, magica · 💫 | l'omone grigio con la clava | il mostro viola con la bocca grande | l'omone grigio con la clava |
+| corazziere | arciere, magica | la tartaruga corazzata | la tartaruga corazzata | la tartaruga corazzata |
 | balestriere | bombe | il diavoletto rosso | lo scheletro | lo scheletro con spada e scudo |
 
   Il nome che il castello dà al mostro resta quello del gioco (è la
-  chiave della sua resistenza); cambia la figura, e **il nome che il
-  bambino legge** sul nastro e sulla scheda è quello della figura
-  («Grifone», «Golem di magma»: `NOMI` nel bestiario). Chi vola nel
+  chiave delle sue immunità, `data/mostri.js`; ✂️ si divide, 💫 si
+  rialza); cambia la figura, e **il nome che il bambino legge** sul
+  nastro e sulla scheda è quello della figura («Grifone», «Golem di
+  magma»: `NOMI` nel bestiario). Chi vola nel
   gioco prende una figura che vola, e `unita/castello-bestiario` lo
-  pretende. Dove si poteva la resistenza si legge a occhio: il granchio
-  col carapace regge le frecce, lo spirito di fuoco la magia, il
-  tornado le bombe.
+  pretende. Il bestiario è stato scelto quando i mostri avevano una
+  resistenza sola, e dove si poteva si leggeva a occhio (il granchio col
+  carapace regge le frecce, il tornado le bombe); con le immunità
+  qualche figura dice il contrario del suo mostro — lo spirito di fuoco
+  «a cui la magia passa attraverso» fa il fantasma, che solo la magia
+  tocca; lo scheletro con lo scudo fa il balestriere della neve, che le
+  frecce le prende. Si sistema quando si ritocca il bestiario.
 
   **Il peso**: le quaranta creature col respiro sono 626 KB di WebP in
   `dati/figure.js` (864 KB col base64, 605 KB più di prima). È il

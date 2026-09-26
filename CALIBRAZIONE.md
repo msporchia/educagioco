@@ -141,6 +141,28 @@ Deciso da lui il 24 settembre 2026. Il tetto delle due ore lo controlla
 `guastiDellaFila`, così chi un giorno allungasse la fila lo scopre da un
 test e non da un bambino.
 
+## Dentro una partita: l'energia del castello
+
+Il castello ha una valuta sua, l'energia ⚡, che non esce mai dalla partita e
+non si cambia in monete: le monete di una tappa sono **i calcoli che la tappa
+promette** (una ogni dieci, per il livello), e restano quelle qualunque cosa
+costi una torre. Quando le torri hanno smesso di costare uguale — l'arciere
+24 ⚡, le bombe 56 — la domanda da farsi era proprio questa, e la risposta è che
+la promessa regge perché il piano dei calcoli conta i prezzi delle torri che il
+giocatore modello compra davvero (`sequenzaTorri`, `pianoDi`): chi compra solo
+bombe fa meno conti e più difficili, chi compra solo arcieri ne fa di più e più
+facili, e la tappa resta la stessa.
+
+Dentro la partita valgono due regole che somigliano a quelle di qui:
+
+- **un ⚡ rende lo stesso ovunque lo si spenda** (a meno di un premio per le
+  torri avanzate), come una moneta vale dieci secondi dappertutto — e lo misura
+  uno strumento (`npm run dps`), non l'occhio;
+- **la fretta si paga poco**: chiamare l'ondata prima del tempo rende al più
+  sei ⚡, cioè in tutta una tappa due acquisti in più. Un premio che valesse di
+  più diventerebbe un obbligo, esattamente come una moneta per un errore
+  diventa il modo più veloce di farne.
+
 ## Il livello di un gioco che si spende
 
 La fattoria ha un livello che sale **con le monete spese lì dentro**

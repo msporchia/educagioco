@@ -698,12 +698,23 @@ hanno in mano.
 Schermo diviso: sopra i nemici avanzano lungo il percorso, sotto si sceglie la
 torre e si risolve l'operazione che la costruisce.
 
-| torre | operazione | effetto |
-|---|---|---|
-| 🏹 Arciere | addizione | colpi rapidi su un nemico |
-| ❄️ Ghiaccio | sottrazione | non fa danno, congela chi passa vicino |
-| 🔮 Magica | moltiplicazione | onda che colpisce a zona |
-| 💣 Bombe | divisione | colpo lento e devastante |
+| torre | operazione | effetto | la prima costa |
+|---|---|---|---|
+| 🏹 Arciere | addizione | colpi rapidi su un nemico | 24 ⚡ |
+| 🔮 Magica | sottrazione | onda che colpisce a zona | 40 ⚡ |
+| ❄️ Ghiaccio | moltiplicazione | non fa danno, congela chi passa vicino | 20 ⚡ |
+| 💣 Bombe | divisione | colpo lento e devastante, a zona | 56 ⚡ |
+
+**Le torri non costano uguale**, ed è una scelta: tutto quello che riguarda
+una torre — costruirla e farla salire — costa il prezzo base per il suo
+listino (`CARATTERE` in `data/castello.js`). Le torri che arrivano dopo nella
+scuola sono più forti e più care già alla prima pietra: con una bomba si fanno
+due arcieri, o un arciere portato al livello tre. La regola che tiene i
+numeri: **un ⚡ speso rende lo stesso** a parità di livello, con un premio del
+dieci per cento per la magica e del venti per le bombe, che arrivano dopo e
+costano di più. Prima costavano uguale, e misurate col motore vero le bombe
+di livello alto valevano otto arcieri: `npm run dps` è lo strumento che lo ha
+detto, e che adesso tiene la regola.
 
 Si scrivono **solo le cifre del risultato**, da destra: i riporti si tengono a
 mente, perché scriverli sarebbe una stampella. Unica eccezione la
@@ -749,8 +760,24 @@ va salita tutta e in ordine.
 
 **Gli errori si pagano in energia, mai in vite**: la torre si costruisce lo
 stesso, ma il conto sbagliato costa qualche ⚡ in più. Sbagliare rallenta la
-difesa, non la fa crollare. La torre magica pesca il moltiplicatore fra le
-tabelline che gli asteroidi hanno trovato deboli.
+difesa, non la fa crollare. Il ghiaccio, che si compra con la moltiplicazione,
+pesca il moltiplicatore fra le tabelline che gli asteroidi hanno trovato deboli.
+
+**Ogni mostro è immune a qualcosa** (`data/mostri.js`): le torri che non lo
+toccano affatto — né danno, né veleno, né gelo. Chi vola passa sopra le bombe
+e il gelo, chi è corazzato si fa rimbalzare addosso frecce e magia, il
+fantasma lo prende solo la magia, il drago solo le frecce. Il nastro in cima
+lo dice tre ondate prima con le torri sbarrate, la carta della torre sbagliata
+dice «non lo tocca», e in campo il colpo che rimbalza lascia la scritta
+«immune» sopra la testa. Prima c'era la resistenza — un terzo del danno — ma
+un terzo di tanto è ancora tanto: la regola del gioco era «costruisci bombe».
+Le file delle tappe sono fatte perché nessuna torre, da sola, le vinca.
+
+Dal Sotterraneo in poi alcuni mostri **fanno qualcosa quando cadono**: lo slime
+e il verme si dividono in due più piccoli, lo scheletro e il troll si rialzano
+una volta. E ogni tanto arriva **il capo**: un mostro solo, gigante, con la
+vita di tutta l'ondata — nella partita libera ogni dieci ondate, nella
+campagna in fondo all'ultima tappa di ogni campagna.
 
 **La campagna** è una fila di sei tappe, ognuna col suo percorso, le sue
 ondate e le torri che mette a disposizione:
@@ -797,7 +824,12 @@ scaletta è la mossa *conveniente*, non quella virtuosa: la matematica difficile
 
 **L'ondata parte quando la chiami tu.** Fra un round e l'altro il gioco aspetta:
 il tempo per fare i conti è tutto del bambino, e la fretta è facoltativa — chi
-manda l'ondata entro pochi secondi si prende ⚡ di bonus. Aspettare all'infinito
+manda l'ondata prima del tempo si prende ⚡ di premio, tanto più quanto più
+tempo risparmia. Si può anche **mandare la prossima a battaglia in corso**,
+appena quella di adesso è uscita tutta: il premio è più grosso, e le due
+ondate arrivano insieme. Il modello delle tappe il premio non lo conta: è un
+cuscinetto per chi rischia, e in tutta una tappa non vale più di due
+acquisti. Aspettare all'infinito
 però non è una strategia: passato il tempo l'ondata parte da sola. Quanto tempo
 lo dice la tappa — 45 secondi nella prima, 20 nell'ultima: all'inizio si impara
 dove si tocca e ci vuole calma, dopo il ritmo è parte del gioco. Il conto alla
@@ -887,11 +919,16 @@ browser (di serie la prima tappa e l'ultima, tutte con `TAPPE_PROVA=tutte`) per
 controllare che il gioco vero e il simulatore raccontino la stessa partita.
 
 Il conto tiene dentro anche le cose che si dimenticano: **le torri non si
-equivalgono** — il ghiaccio non fa un danno che sia uno, magica e bombe
-colpiscono a zona — quindi una tappa che dà solo arcieri e una piena di ghiaccio
-non si misurano con lo stesso metro. Quello che deve crescere lungo la campagna
-non è la robustezza dei nemici ma la *fatica*: quanta vita arriva addosso diviso
-la potenza di fuoco che quella tappa lascia comprare.
+equivalgono e non costano uguale** — il giocatore modello compra una fila di
+torri precisa (`sequenzaTorri`: prima quelle che feriscono le prime ondate,
+ognuna dalla sua strada, poi quelle che coprono ogni mostro, poi a giro), e il
+piano dei calcoli conta i prezzi di *quelle* torri. Quello che deve crescere
+lungo la campagna non è la robustezza dei nemici ma la *fatica*: quanta vita
+arriva addosso diviso la potenza di fuoco che quella tappa lascia comprare. Con
+le immunità la fatica oscilla da una tappa all'altra — un golem che solo le
+bombe aprono ha meno vita di un pipistrello, e ce l'ha apposta — quindi la
+taratura spiana la vita **mostro per mostro**: lo stesso mostro, più avanti,
+non torna mai più debole.
 
 ### Il laboratorio delle pozioni
 Le misure — litri, chili, metri — col gesto giusto invece che con un esercizio.

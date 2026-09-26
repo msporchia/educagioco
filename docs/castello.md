@@ -46,7 +46,72 @@ prende più danno); le bombe diventano mortaio (arriva lontanissimo) o napalm
 La scelta **non costa un calcolo in più**: è quello che il calcolo del
 gradino compra, e si presenta dopo aver deciso di salire. E i due rami
 valgono lo stesso: cambia la forma del danno, non la quantità — nessuno dei
-due è la scelta sbagliata.
+due è la scelta sbagliata. Lo misura il motore, non la carta: finché il
+veleno era scritto «al secondo» il napalm valeva il triplo del mortaio.
+
+## Le torri non costano uguale *(settembre 2026)*
+
+L'arciere costa 24 ⚡, la magica 40, le bombe 56, il ghiaccio 20: ogni torre
+ha un **listino** che moltiplica tutto quello che costa, costruirla e farla
+salire. Le torri che arrivano dopo nella scuola sono più forti e più care già
+alla prima pietra, e con quello che costa una bomba si fanno due arcieri, o un
+arciere portato al livello tre: tre scelte che si pesano.
+
+La regola è che **un ⚡ speso rende lo stesso** qualunque torre si compri, a
+parità di livello, con un premio del dieci per cento per la magica e del venti
+per le bombe. Prima i prezzi erano uguali e un bambino lo aveva notato:
+misurate col motore vero, le bombe di livello alto valevano otto arcieri, e
+bastava costruire bombe. Adesso lo tiene fermo uno strumento, `npm run dps`,
+che mette ogni torre davanti a un'ondata vera e conta la vita che ferma —
+l'area, i rimbalzi, il veleno, e il ghiaccio come vita in più fermata dalle
+torri che gli stanno accanto. Una torre ad area prende in media due nemici per
+colpo, e per questo il suo colpo singolo è più debole di quello dell'arciere a
+parità di prezzo.
+
+| | liv. 1 | liv. 4 | liv. 7 | liv. 10 |
+|---|---|---|---|---|
+| prima: le bombe valevano | 2,8 arcieri | 4,2 | 8,2 | 7,9 |
+| adesso, per ⚡ speso | 1,2 | 1,05 | 1,4 | 1,2 |
+
+## Ogni mostro è immune a qualcosa *(settembre 2026)*
+
+Al posto della vecchia resistenza — un terzo del danno, che su una torre
+otto volte più forte era ancora tanto — ogni mostro dichiara le torri che
+**non lo toccano affatto**: zero danno, niente veleno, niente gelo. Chi vola
+passa sopra le bombe e il gelo, chi è corazzato si fa rimbalzare addosso
+frecce e magia, il fantasma lo prende solo la magia, il drago solo le
+frecce. Il nastro in cima lo dice tre ondate prima con le torri sbarrate, la
+carta di una torre che l'ondata ignora dice «non lo tocca», e in campo il
+colpo che rimbalza lascia la scritta «immune».
+
+Le file delle tappe sono fatte perché nessuna torre, da sola, le vinca, e
+perché la prima ondata la ferisca l'arciere e le prime quattro le torri con
+cui si apre.
+
+## Chi si divide, chi si rialza, e il capo *(settembre 2026)*
+
+Dal sottosuolo in poi, e sempre nelle partite libere, lo slime e il verme si
+dividono in due più piccoli quando cadono, e lo scheletro e il troll si
+rialzano una volta con metà della vita. E ogni tanto arriva **il capo**: al
+posto di un'ondata un mostro solo, grande due volte e mezzo, lento, con la
+vita di tutta l'ondata — nella partita libera ogni dieci ondate, nella
+campagna in fondo all'ultima tappa di ogni campagna. Se arriva al castello si
+porta via quattro cuori.
+
+## Chiamare la prossima prima del tempo *(settembre 2026)*
+
+Appena l'ondata di adesso è entrata tutta, il tasto in fondo manda **la
+prossima**, coi mostri di prima ancora in campo. Rende qualche ⚡ — tanto più
+quanto più tempo si risparmia — e porta due ondate addosso insieme: è una
+scommessa, non un obbligo, e in tutta una tappa non vale più di due acquisti.
+
+## I tuoi potenziamenti *(settembre 2026)*
+
+Il gettone ⬆️ in basso a sinistra sul campo conta i potenziamenti presi — i
+gradini saliti e i regali della partita libera — e toccandolo si apre il
+blocchetto: per ogni tipo di torre quante sono, quanti gradini hanno salito e
+quanto fanno in più di una torre appena costruita («Arcieri ×2 · 6
+potenziamenti · fanno +440%»), e sotto i regali coi loro gradi.
 
 ## Due porte da difendere
 
@@ -129,7 +194,7 @@ di partenza, quante postazioni ci sono.
 Per un genitore la domanda che conta non è «quanti mostri ci sono» ma
 **quanto esercizio chiede questa tappa**: sei conti sono dieci minuti, trenta
 sono un pomeriggio. Quel numero è scritto nel gioco, tappa per tappa, e il
-resto si adatta di conseguenza — compresa la resistenza dei mostri, che un
+resto si adatta di conseguenza — compresa la vita dei mostri, che un
 simulatore misura giocando la tappa migliaia di volte per assicurarsi che sia
 superabile senza essere una passeggiata.
 

@@ -505,10 +505,14 @@ export const AIUTI = {
         'Per costruire e potenziare servono soldi, e i soldi si prendono **facendo i conti**.',
       ] },
       { titolo: 'Le cose che si capiscono tardi', righe: [
+        'Certi mostri sono **immuni** a certe torri: chi vola se ne infischia delle bombe e del ghiaccio, chi ha la corazza delle frecce e della magia. Il nastro in cima lo dice prima che arrivino, con le torri sbarrate: una torre sola non basta mai.',
+        'Le torri **non costano uguale**: l\'arciere costa poco, le bombe tanto — ma fanno anche di più. Con una bomba si fanno due arcieri.',
         'Le torri sparano solo a chi passa **vicino a loro**: metterle tutte insieme all\'inizio lascia scoperto il resto.',
-        'Una torre potenziata vale più di due torri deboli.',
+        'Una torre potenziata vale più di due torri deboli. Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno.',
         'A metà scaletta una torre sceglie un mestiere: cambia **come** colpisce, non quanto. Nessuno dei due è quello sbagliato.',
         'Il campo non si ferma mentre fai i conti: i nemici camminano.',
+        'Appena un\'ondata è entrata tutta puoi mandare **la prossima** subito: ti danno qualche ⚡ in più, ma te le trovi addosso insieme.',
+        'Qualche mostro fa una cosa quando cade: **si divide** in due più piccoli ✂️, o **si rialza** 💫 una volta. E ogni tanto arriva il **capo** 👑: uno solo, gigante.',
         'Nella **partita libera** ogni cinque ondate arriva un 🎁 regalo: scegli un potenziamento, e quello resta anche nelle partite dopo.',
       ] },
       { titolo: 'Cosa allena', righe: [
@@ -528,8 +532,10 @@ export const AIUTI = {
         'Le torri si potenziano toccandole.',
       ] },
       { titolo: 'Consigli', righe: [
-        'Una torre sola tenuta forte regge più di quattro appena messe.',
+        'Una torre sola tenuta forte regge più di quattro appena messe — ma una torre sola non basta: certi mostri sono **immuni** a lei. Il nastro in cima dice a cosa.',
+        'L\'arciere costa poco e le bombe tanto: si sceglie anche col portafoglio.',
         'Guarda da dove entrano: in certe tappe gli ingressi sono due.',
+        'Il tasto ⬆️ sul campo dice quanti potenziamenti hai preso, e quanto fanno le tue torri.',
       ] },
       { titolo: 'Cosa allena', righe: [
         'Il calcolo in colonna, come il tower defense, ma dentro una mappa che si guarda dall\'alto.',

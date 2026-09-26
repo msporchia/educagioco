@@ -63,6 +63,7 @@ npm run voci           # incide la pronuncia (solo dopo aver aggiunto parole)
 npm run voci -- --lingua es
 npm run simula         # gioca il tower defense senza browser
 npm run tara           # rimisura la vita dei nemici e riscrive i dati
+npm run dps            # quanto fa male davvero ogni torre, e quanto rende un ⚡
 npm run quiz:banco     # prova tutti i moduli di quiz senza browser
 npm run quiz:eta       # chi vede cosa: la calibrazione per età, e i buchi
 npm run mondo          # il banco degli sprite: guardarli, e correggere i ritagli
@@ -1129,11 +1130,66 @@ committate: non è ricostruibile da git.
   in piedi apre la sua scheda, e il conto sale dal basso nello stesso
   foglio. Il campo **non si ferma** mentre si calcola — la telecamera si
   stringe di quanto il foglio copre, e la battaglia resta visibile.
+- **Le torri non valgono lo stesso, e non costano lo stesso.** Ogni
+  torre ha un listino (`CARATTERE` in `data/castello.js`) che moltiplica
+  tutto quello che costa: l'arciere è quello debole che costa poco (24
+  ⚡), le bombe le più forti e le più care (56), la magica in mezzo, il
+  ghiaccio il meno caro. La regola è **un ⚡ speso rende lo stesso** a
+  parità di livello, con un premio del dieci-venti per cento per le
+  torri che arrivano dopo nella scuola. Con i prezzi uguali le bombe di
+  livello alto valevano otto arcieri — il figlio l'aveva capito prima di
+  chi l'aveva scritto — e il numero giusto non si stima: lo misura
+  `npm run dps` col motore vero (vita fermata su un'ondata vera, area,
+  rimbalzi e veleno compresi), e `unita/castello` tiene la stima del
+  modello dentro la regola. Il modello conosce i tipi: che torre compra
+  il giocatore modello e su che strada lo dice `sequenzaTorri`, e
+  `prossimoAcquisto` è **la stessa mossa** per il piano dei calcoli, per
+  `difesaCon` e per il simulatore — se no la promessa dei calcoli con
+  prezzi diversi non regge.
 - **I due rami di una torre valgono lo stesso.** A metà scaletta una
   torre sceglie un mestiere (`RAMI` in `data/castello.js`): cambia la
-  *forma* del danno, mai la quantità. È la condizione perché il modello
-  che tara le tappe possa ignorarli, e `unita/rami-castello` la conta
-  ramo per ramo.
+  *forma* del danno, mai la quantità. Le torri si scelgono guardando il
+  listino, il ramo no — si prende allo stesso prezzo di un gradino — ed
+  è la condizione perché il modello che tara le tappe possa ignorarli.
+  `unita/rami-castello` la conta ramo per ramo con la stessa stima delle
+  torri; il veleno si scrive **in tutto**, non al secondo (scritto al
+  secondo, il napalm valeva il triplo del mortaio).
+- **Nel castello un mostro è immune, non resistente.** Ogni mostro
+  dichiara in `data/mostri.js` le torri che **non lo toccano affatto**
+  (`immune`: zero danno, niente veleno, niente gelo): chi vola ignora
+  bombe e ghiaccio, chi è corazzato frecce e magia, e ognuno ha il suo
+  profilo. Non si accende e non si spegne per tappa: è com'è fatto il
+  mostro, quindi a decidere è **la fila** della tappa, e le sue regole
+  stanno in `guastiDelleImmunita` (ogni mostro si può ferire con le
+  torri della tappa, ogni torre che ferisce ha un mostro immune, la
+  prima ondata la ferisce l'arciere) e in `coperturaApertura` (le prime
+  quattro ondate le feriscono le torri di apertura, ognuna dalla sua
+  strada). Le controllano il validatore e `unita/immunita-castello`. Il
+  colpo che rimbalza si vede (`respinto`, la pastiglia «immune»), e la
+  taratura spiana la vita **mostro per mostro**: un golem che solo le
+  bombe aprono ha meno vita di un pipistrello, e non è un errore.
+- **Abilità, capo e fretta sono del motore, e la taratura le conta da
+  sé.** Dal Sotterraneo in poi (e sempre nelle libere) slime e verme si
+  dividono quando cadono e scheletro e troll si rialzano una volta
+  (`ABILITA`); quelle ondate arrivano **in meno e più distanziate**,
+  perché la vita non è il problema — tre bersagli per mostro sono
+  troppe frecce al secondo — e ognuno paga di più: l'energia di
+  un'ondata non cambia mai (il tabellone mette da parte le frazioni).
+  Il capo (`CAPO`) è un mostro solo con la vita dell'ondata e un
+  decimo, ogni dieci ondate nelle libere e in fondo all'ultima tappa di
+  ogni campagna; paga come l'ondata e se arriva toglie quattro cuori. La
+  prossima ondata si chiama anche a battaglia in corso, e il premio è
+  il tempo risparmiato (`CFG.fretta`): il modello non lo conta, e
+  `unita/castello` tiene il tetto a due acquisti per tappa. Le ondate si
+  chiudono una per una (`aperte` nella battaglia), non a campo pulito.
+- **Il blocchetto dei potenziamenti** (`components/castello/Potenziamenti.vue`,
+  i numeri in `blocchettoDi`): il gettone ⬆️ sul campo, e un foglio con
+  la ✕ che dice per ogni tipo di torre quanti gradini ha salito e quanto
+  fa in più di una appena costruita, e i regali presi. Nei test i
+  bersagli sono `[data-azione="potenziamenti"]`, `[data-blocchetto]`,
+  `[data-blocchetto-torre]`, `[data-blocchetto-regalo]`; la chiamata
+  anticipata è `[data-azione="chiama-prossima"]`, il preavviso porta
+  `[data-immune]`, `[data-abilita]` e `[data-capo]`.
 - **I regali stanno nella partita libera, e solo lì** (`REGALI`,
   `OGNI_REGALO`, `doniDi` in `data/castello.js`; i gradi presi in
   `profile.campagne.torri.regali`, scritti da `regaloPreso` in

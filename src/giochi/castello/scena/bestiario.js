@@ -2,23 +2,28 @@
    IL BESTIARIO — quale creatura fa le veci di quale mostro, vestito
    per vestito
 
-   Per il gioco un mostro è tre cose: quanto resiste, se vola, e a quale
-   torre resiste (`data/mostri.js`). La figura non ci entra, e quindi può
+   Per il gioco un mostro è quanto resiste, se vola, a quali torri è
+   immune e cosa fa quando cade (`data/mostri.js`). La figura non ci entra, e quindi può
    cambiare da un vestito all'altro senza toccare niente dell'equilibrio:
    nel bosco lo slime è una melma verde, nella lava un sasso di magma
    con le corna di fuoco, nella neve una melma rosa. È la varietà che i
    due fogli del sotterraneo permettono gratis — hanno cinquantaquattro
-   creature — e le chiavi dei mostri restano quelle della resistenza e
+   creature — e le chiavi dei mostri restano quelle delle immunità e
    della taratura.
 
    Tre regole per scegliere, in quest'ordine:
      · **chi vola prende una figura che vola** (`vola: true`): l'ombra
        staccata da terra lo dice comunque, e una bestia a quattro zampe
        sospesa per aria è un guasto, non un mostro;
-     · **la resistenza si legge a occhio, dove si può**: corazzato, duro
+     · **l'immunità si legge a occhio, dove si può**: corazzato, duro
        o coperto (scudo, carapace, pelliccia) regge le frecce; pietra,
        fuoco vivo o spirito regge la magia; molle, d'ossa o d'aria regge
-       le bombe. Dove non si può, almeno non dice il contrario;
+       le bombe. Dove non si può, almeno non dice il contrario.
+       Le scelte qui sotto sono di quando ogni mostro resisteva a una
+       torre sola: con le immunità qualcuna dice il contrario (lo
+       spirito di fuoco fa il fantasma, che solo la magia tocca; lo
+       scudo del balestriere della neve non ferma le frecce), e si
+       sistemano quando si ritocca il bestiario;
      · **il bosco è la tabella di `strumenti/sprite/DA-GENERARE.md`**, che
        viene prima di questo file e dice anche in che foglio sta ognuna.
 
