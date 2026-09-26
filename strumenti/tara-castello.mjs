@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { TAPPE, LIBERE, ONDATE_TARATE, firmaEquilibrio, vitaDiOnda, chiaveTappa }
   from '../src/data/castello.js'
+import { Ondate } from '../src/motore/castello/ondate.js'
 import { gioca, PROFILI } from './simula-castello.mjs'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -140,13 +141,26 @@ function taraTappa(tappa, a) {
     // partita così com'è davvero quando l'ondata `o` sta per partire
     gioca(t, { ...PROFILI.misura, finoA: o - 1, istantanee })
     const foto = istantanee.get(o)
-    if (!foto) { righe.push({ onda: o, vita: t.vite[o - 2] || 42, cieca: true }); continue }
+    /* il metro non ci è arrivato vivo: l'ondata si tara «alla cieca»,
+       con la vita di quella prima — e la si scrive, se no la tabella
+       resta corta di un'ondata e la tappa ne ha una senza vita */
+    if (!foto) {
+      t.vite[o - 1] = t.vite[o - 2] || 42
+      righe.push({ onda: o, vita: t.vite[o - 1], cieca: true })
+      continue
+    }
     const r = vitaDiTaratura(t, o, foto, PROFILI.misura, a)
     t.vite[o - 1] = r.vita
     righe.push({ onda: o, ...r, torri: foto.torri.map(x => x.lv).join(''),
-                 energia: Math.round(foto.stato.energia) })
+                 energia: Math.round(foto.stato.energia), chi: chiDi(tappa, o) })
   }
-  return { vite: spiana(t.vite), righe }
+  return { vite: spiana(t.vite, tappa), righe }
+}
+
+/* chi arriva all'ondata `o`: il mostro, o «capo» se è l'ondata del capo */
+function chiDi(tappa, o) {
+  const b = new Ondate(tappa).bestiaDi(o)
+  return b.capo ? 'capo' : b.id
 }
 
 /* ── la curva non torna mai indietro ──
@@ -159,21 +173,28 @@ function taraTappa(tappa, a) {
    più mite che la segue: al rialzo si andrebbe sopra il limite trovato,
    cioè si chiederebbe una difesa che a quel punto non si può avere.
 
-   ── e da quando le resistenze tolgono danno, costa di più ──
-   Con le debolezze i salti del limite andavano tutti all'insù (la
-   torre giusta faceva il doppio), quindi il minimo della coda era un
-   numero ragionevole. Con le resistenze vanno all'ingiù, e un'ondata
-   sfortunata che capiti in fondo si porta dietro tutte quelle prima.
-   Si è provato a spianare **di un passo solo** invece che sulla coda
-   intera: le curve escono molto più vive, ma smettono di salire — e
-   che i nemici non si ammorbidiscano mai andando avanti è una
-   promessa che `unita/castello` conta, non un'opinione. Quindi resta
-   cumulativa, e il prezzo si paga a monte: le resistenze cominciano
-   quando in campo c'è più di una torre per strada (`Ondate.bestiaDi`),
-   che è dove nascevano gli avvallamenti peggiori. */
-function spiana(vite) {
+   ── e da quando c'è l'immunità, si spiana mostro per mostro ──
+   Con le immunità il limite di un'ondata dipende soprattutto da **chi
+   arriva**: un'ondata di golem la fermano solo le bombe, una di
+   pipistrelli solo arcieri e magia, e i loro limiti non stanno sulla
+   stessa scala — a parità di torri in campo possono stare a un fattore
+   tre l'uno dall'altro. Spianare tutta la fila sull'ondata più mite
+   voleva dire che un golem in fondo alla tappa ammorbidiva tutti quelli
+   prima di lui, pipistrelli compresi: la tappa intera tarata sul suo
+   mostro più scomodo.
+   Adesso si spiana **dentro ogni mostro**: il golem della sesta ondata
+   non è mai più molle di quello della terza, e così il pipistrello, e
+   così il capo. La promessa che `unita/castello` conta è quella che a
+   schermo si vede — lo stesso mostro, più avanti, non torna mai più
+   debole — e un golem con meno vita di un pipistrello non è un
+   errore: ce l'ha perché lo apre una torre sola. */
+function spiana(vite, tappa) {
   const out = vite.slice()
-  for (let i = out.length - 2; i >= 0; i--) out[i] = Math.min(out[i], out[i + 1])
+  const chi = vite.map((_, i) => chiDi(tappa, i + 1))
+  for (let i = out.length - 2; i >= 0; i--) {
+    const dopo = chi.indexOf(chi[i], i + 1)
+    if (dopo > 0) out[i] = Math.min(out[i], out[dopo])
+  }
   return out
 }
 
@@ -249,7 +270,10 @@ const libere = LIBERE.map(l => ({ ...l, ondate: ONDATE_LIBERE, regali: false }))
    dice, se dice di più. */
 const OLTRE_MINIMO = 1.3
 function passoOltre(righe) {
-  const meta = righe.filter(r => r.limite > 0 && r.onda > ONDATE_LIBERE / 2)
+  /* il capo non conta: la sua vita è scritta in nemici normali ma lo
+     ferma un'altra difesa (contro uno solo l'area non serve), e il suo
+     limite farebbe un gradino che la retta leggerebbe come pendenza */
+  const meta = righe.filter(r => r.limite > 0 && r.onda > ONDATE_LIBERE / 2 && r.chi !== 'capo')
   if (meta.length < 3) return 1.2
   const xs = meta.map(r => r.onda), ys = meta.map(r => Math.log(r.limite))
   const mx = xs.reduce((s, x) => s + x, 0) / xs.length
@@ -277,7 +301,7 @@ for (const [i, tappa] of [...TAPPE.entries(), ...libere.map((l, k) => [TAPPE.len
   if (reggono < SEMI.length)
     console.log(`   ⚠ il pasticcione la finisce solo ${reggono} volte su ${SEMI.length}`)
   for (const r of righe)
-    console.log(`   o${String(r.onda).padStart(2)}  vita ${String(r.vita).padStart(5)}` +
+    console.log(`   o${String(r.onda).padStart(2)} ${String(r.chi || '').padEnd(11)} vita ${String(r.vita).padStart(5)}` +
                 ` (era ${String(Math.round(vitaDiOnda(r.onda, tappa.durezza))).padStart(4)})` +
                 `  limite ${String(r.limite).padStart(5)} × ${(r.vicinanza * 100).toFixed(0)}%` +
                 `  torri [${r.torri || '—'}] ⚡${String(r.energia ?? '').padStart(3)}` +

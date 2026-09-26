@@ -260,7 +260,7 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
     await attesa(100)
     const senzaEnergia = (T.hud.energia = 0, T.scegliTorre('add'), T.op.value === null)
     T.hud.energia = 500
-    const prezzoNuova = T.costoNuova.value
+    const prezzoNuova = T.costoNuova('add')
     T.scegliTorre('add')
     const opNuova = await risolvi()
     const torre = T.torri()[0]
@@ -320,7 +320,7 @@ for (const [nome, size] of [['mobile', { width: 390, height: 844 }], ['desktop',
     const T = window.__td
     T.hud.energia = 500
     const cuoriPrima = T.hud.cuori, energiaPrima = T.hud.energia
-    const prezzo = T.costoNuova.value
+    const prezzo = T.costoNuova('add')
     T.scegliTorre('add')
     await attesa(80)
     const op = T.op.value

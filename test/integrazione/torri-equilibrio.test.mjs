@@ -47,7 +47,7 @@ async function gioca(tappa, strategia) {
        volte per fotogramma) ma la prova dura dieci volte meno. */
     T.velocita.value = 60                   // molto oltre il massimo del gioco
     await attesa(200)
-    const posti = T.TAPPE[tappa].posti, tipi = T.TAPPE[tappa].torri
+    /* i posti e i tipi li sa `mossaModello`, che legge la tappa da sé */
     const storia = []
     for (let giro = 0; giro < 5000 && T.fase.value === 'gioco'; giro++) {
       /* Il cartello di un traguardo **ferma il campo** finché sta davanti
@@ -58,27 +58,23 @@ async function gioca(tappa, strategia) {
          ogni traguardo e la prova finisce i giri prima delle ondate. */
       document.querySelector('.velo')?.click()
       if (!T.scelta.value) {
-        /* Cosa comprerebbe adesso: **la stessa regola del simulatore**
-           (`mossa()` in strumenti/simula-castello.mjs). Deve essere la
-           stessa, se no questo test non confronta più il gioco vero col
-           modello ma con un giocatore inventato qui. Le due righe che
-           contano: due torri prima di alzarne una — una torre sola al
-           massimo perde comunque, e con quattro postazioni sole ci si
-           arriva presto — e poi si sale la più bassa finché la salita
-           costa meno di una torre nuova. */
-        const torri = T.torri()
-        const cistanno = torri.length < posti
-        const bassa = torri.filter(t => t.lv < T.massimo.value).sort((a, b) => a.lv - b.lv)[0]
-        const prezzoSalita = bassa ? T.costoSalita(bassa) : Infinity
-        const prezzoNuova = T.costoNuova.value
-        const che = torri.length < 2 && cistanno ? 'nuova'
-          : strategia === 'costruisci' && cistanno ? 'nuova'
-          : !bassa ? (cistanno ? 'nuova' : null)
-          : !cistanno ? 'salita'
-          : prezzoSalita <= prezzoNuova ? 'salita' : 'nuova'
-        if (che === 'salita' && T.hud.energia >= prezzoSalita) T.potenzia(bassa)
-        else if (che === 'nuova' && T.hud.energia >= prezzoNuova)
-          T.scegliTorre(tipi[torri.length % tipi.length])
+        /* Cosa comprerebbe adesso: **la stessa regola del simulatore**,
+           che è la stessa funzione (`prossimoAcquisto` in
+           data/castello.js, esposta dal gancio come `mossaModello`).
+           Deve essere la stessa, se no questo test non confronta più il
+           gioco vero col modello ma con un giocatore inventato qui: che
+           torre costruire (le immunità dicono quale serve), su che
+           strada, e quando salire invece di allargarsi. Chi gioca
+           `costruisci` si allarga finché ci sono posti. */
+        const m = T.mossaModello(strategia === 'costruisci')
+        if (m && m.che === 'salita' && T.hud.energia >= m.costo) T.potenzia(m.torre)
+        else if (m && m.che === 'nuova' && T.hud.energia >= m.costo) {
+          /* sulla strada che la fila dice: si tocca la sua prima piazzola
+             libera, come farebbe il dito */
+          const posto = T.liberi().find(i => (T.postazioni()[i].via || 0) === (m.strada || 0))
+          if (posto != null) T.apriPiazzola(posto)
+          T.scegliTorre(m.tipo)
+        }
         if (T.op.value) {
           await attesa(25)
           const tasti = [...document.querySelectorAll('.tastiera button')]
