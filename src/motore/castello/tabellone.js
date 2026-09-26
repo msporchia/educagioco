@@ -53,9 +53,10 @@ export class Tabellone {
   perNemico(piu = 0, quanti = 1) { return this.incassa(CFG.perNemico * quanti + (piu || 0)) }
   /* il premio di fine ondata, doppio se non è passato nessuno */
   perOnda(pulita) { return this.incassa(CFG.fineOnda + (pulita ? CFG.ondataPulita : 0)) }
-  /* chi la chiama subito si prende il bonus: la fretta è una scelta che
-     rende, non un obbligo */
-  perFretta() { return this.incassa(CFG.bonusPronti) }
+  /* chi la chiama prima si prende il premio: la fretta è una scelta che
+     rende, non un obbligo. Quanto, lo decide chi chiama (è il tempo
+     risparmiato, vedi `premioDellaFretta`) */
+  perFretta(premio) { return this.incassa(premio) }
 
   /* ── il resto del tabellone ── */
   ondaNuova() { return ++this.stato.onda }

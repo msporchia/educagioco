@@ -143,6 +143,16 @@ function aggiornaVista(forza = false) {
   v.inAttesa = motore.inAttesa()
   v.pronti = motore.pronti()
   v.restaAttesa = motore.restaAttesa()
+  /* la prossima si può chiamare anche con questa in campo, e il tasto
+     dice quanto rende farlo adesso */
+  v.puoiChiamare = motore.puoiChiamare()
+  v.premio = motore.premioFretta()
+  /* quanti potenziamenti in tutto — gradini saliti e regali — per il
+     gettone ⬆️ sul campo: il blocchetto che si apre toccandolo li conta
+     per bene (`blocchettoDi`) */
+  let gradini = 0
+  for (const t of motore.torri) gradini += t.lv - 1
+  v.potenziamenti = gradini + motore.regaliPresi
   if (motore.bestia !== bestiaDa) { bestiaDa = motore.bestia; bestiaVista = conNome(bestiaDa) }
   v.bestia = bestiaVista
   v.inCampo = motore.nemici.length
@@ -176,7 +186,10 @@ function ciclo(ts) {
   campo?.disegna(scenaDi(motore, {
     S: campo.misure.S, trascino: dito, tetto: tappa ? tappa.cap : 10,
     energia: props.hud.energia, occupato: props.calcolando,
-    costoNuova: costoNuovaTorre(motore ? motore.torri.length : 0),
+    /* le piazzole si accendono se ci si può comprare almeno la torre
+       che costa meno, fra quelle che la tappa dà */
+    costoNuova: Math.min(...(tappa?.torri || ['add'])
+      .map(k => costoNuovaTorre(motore ? motore.torri.length : 0, k))),
     mira: props.mira,
   }), motore ? motore.tempo : 0)
   raf = requestAnimationFrame(ciclo)

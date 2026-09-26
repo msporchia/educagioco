@@ -51,7 +51,8 @@ import { fraseDiFine, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
 import VeloPausa from '../giochi/VeloPausa.vue'
 import { TORRI } from '../data/ops.js'
-import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali } from '../data/castello.js'
+import { CFG, TAPPE, LIBERE, liberaDi, premioTappa, quantiRegali,
+         prossimoAcquisto, sequenzaTorri } from '../data/castello.js'
 import ColumnOp from '../components/ColumnOp.vue'
 import Barra from '../components/Barra.vue'
 import GettoniCampo from '../components/castello/GettoniCampo.vue'
@@ -64,6 +65,7 @@ import RitrattoTorre from '../components/castello/RitrattoTorre.vue'
 import MappaTappe from '../components/castello/MappaTappe.vue'
 import FineTappa from '../components/castello/FineTappa.vue'
 import Regalo from '../components/castello/Regalo.vue'
+
 import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
@@ -112,7 +114,8 @@ const hud = reactive({ cuori: CFG.cuori, onda: 0, uccisi: 0, torri: 0, energia: 
 /* quello che il campo fa sapere alla schermata: si riempie a ogni fotogramma */
 const vista = reactive({ inAttesa: false, pronti: false, restaAttesa: 0, bestia: null,
                          inCampo: 0, vitaOnda: 0, prossime: [],
-                         regalo: 0, regaliPresi: 0 })
+                         regalo: 0, regaliPresi: 0,
+                         puoiChiamare: false, premio: 0, potenziamenti: 0 })
 const messaggio = reactive({ testo: '', n: 0 })
 
 /* ── il regalo ──
@@ -245,7 +248,9 @@ const dove = ref(null)             // su che piazzola nascerà
 const strada = ref(null)           // e che ramo prenderà, se è il gradino del bivio
 
 const massimo = computed(() => tappa.value.cap)
-const costoNuova = computed(() => cassa.costoNuova(hud.torri))
+/* ogni torre ha il suo listino: quanto costa costruire quella lì, adesso */
+const costoNuova = tipo => cassa.costoNuova(hud.torri, tipo)
+const costi = computed(() => Object.fromEntries(tappa.value.torri.map(k => [k, costoNuova(k)])))
 const costoSalita = torre => cassa.costoSalita(torre)
 const postiFiniti = computed(() => hud.torri >= tappa.value.posti)
 const livelloOp = (t, torre) => cassa.gradino(torre)
@@ -275,9 +280,10 @@ const mira = computed(() => {
            raggio: f.tipo ? TORRI[f.tipo].raggio * S() : 0 }
 })
 
-/* la torre che chi sta per arrivare regge: il preavviso, letto nel
+/* le torri a cui chi sta per arrivare è immune: il preavviso, letto nel
    momento in cui si sceglie che cosa costruire */
-const resiste = computed(() => (vista.prossime[0] && vista.prossime[0].resiste) || null)
+const immune = computed(() => (vista.prossime[0] && vista.prossime[0].immune) || [])
+
 
 /* ── aprire e chiudere ── */
 function apriPiazzola(i) {
@@ -336,10 +342,11 @@ function scegliTorre(t) {
   if (fase.value !== 'gioco' || scelta.value) return
   if (!tappa.value.torri.includes(t)) return
   if (postiFiniti.value) { avvisa('Posti finiti: potenzia una torre'); suono.no(); return }
-  if (hud.energia < costoNuova.value) { avvisa(`Servono ${costoNuova.value} ⚡`); suono.no(); return }
+  const costo = costoNuova(t)
+  if (hud.energia < costo) { avvisa(`Servono ${costo} ⚡`); suono.no(); return }
   const f = foglio.value
   dove.value = f && f.piazzola != null ? f.piazzola : (motore()?.liberi()[0] ?? null)
-  apriOperazione(t, null, costoNuova.value)
+  apriOperazione(t, null, costo)
 }
 
 /* toccare una torre già in campo apre il calcolo che la fa salire di
@@ -427,7 +434,10 @@ function cambiaVelocita() {
    di mandare i mostri: è il modo in cui «guardo prima il campo» non
    perde niente. Il motore rifiuta comunque (`chiamaOnda` guarda
    `daScegliere`), ma se qui non si riaprisse il velo il tasto
-   sembrerebbe rotto. */
+   sembrerebbe rotto.
+   Lo stesso tasto c'è anche **durante** l'ondata, appena è uscita tutta
+   dalla bocca: la prossima parte subito, con i mostri di adesso ancora
+   in campo, e il premio sul tasto dice quanto rende la fretta. */
 function chiamaOnda() {
   if (vista.regalo > 0) { rimandato.value = false; return }
   motore()?.chiamaOnda()
@@ -551,6 +561,18 @@ onMounted(() => {
   /* il gancio dei test: da fuori si gioca una partita senza toccare lo
      schermo. Non lo usa nessuna parte del gioco. */
   window.__td = { hud, fase, scelta, op, inizia, scegliTorre, operazioneFinita,
+                  vista,
+                  /* la mossa che farebbe il giocatore modello, con la stessa
+                     funzione del simulatore (`prossimoAcquisto`): la prova
+                     nel browser deve giocare come la taratura, non come un
+                     giocatore inventato dentro il test */
+                  mossaModello: (largo = false) => {
+                    const m = motore(), t = tappa.value
+                    if (!m) return null
+                    const mossa = prossimoAcquisto(m.torri.map(x => ({ tipo: x.tipo, lv: x.lv })), t,
+                      { posti: t.posti, largo, sequenza: sequenzaTorri(t, Math.max(32, t.posti)) })
+                    return mossa && mossa.che === 'salita' ? { ...mossa, torre: m.torri[mossa.indice] } : mossa
+                  },
                   nemici: () => motore().nemici, torri: () => motore().torri,
                   colpi: () => motore().colpi, livelloOp,
                   TAPPE, tappaIdx, postazioni: () => motore().postazioni,
@@ -613,6 +635,7 @@ onMounted(() => {
            fare adesso. Non blocca niente e se ne va da sé (`dritta`). -->
       <div v-if="dritta" class="primi-passi">{{ dritta }}</div>
 
+
       <button v-if="fase === 'gioco' && sposto" class="bottone chiaro stretto onda"
               @click="sposto = null">Tocca dove spostarla · annulla</button>
 
@@ -620,12 +643,19 @@ onMounted(() => {
         <div class="preavviso-alto"><NastroOndate :prossime="vista.prossime"
                                                    :pittori="pelle ? pelle.pittori : null" /></div>
         <button class="bottone stretto onda" :class="{ svelto: vista.pronti }"
-                @click="chiamaOnda">
+                data-azione="chiama-onda" @click="chiamaOnda">
           {{ hud.onda ? 'Manda l\'ondata' : 'Comincia la battaglia' }} ▶<template
-            v-if="vista.pronti"> · +{{ CFG.bonusPronti }} ⚡</template><template
+            v-if="vista.pronti"> · +{{ vista.premio }} ⚡</template><template
             v-else-if="vista.restaAttesa <= 9"> · fra {{ vista.restaAttesa }}</template>
         </button>
       </template>
+
+      <!-- a battaglia in corso, appena l'ondata è uscita tutta: la
+           prossima si può mandare subito, e il premio dice quanto rende -->
+      <button v-else-if="fase === 'gioco' && vista.puoiChiamare && !foglio"
+              class="bottone stretto onda svelto" data-azione="chiama-prossima" @click="chiamaOnda">
+        Manda la prossima ▶<template v-if="vista.premio"> · +{{ vista.premio }} ⚡</template>
+      </button>
 
       <!-- mappa della campagna · vinta · trionfo · sconfitta -->
       <div v-else class="banco">
@@ -648,8 +678,8 @@ onMounted(() => {
               :indietro="!!(foglio && foglio.che === 'conto')"
               @chiudi="chiudi" @indietro="indietro">
         <SceltaTorre v-if="foglio && foglio.che === 'costruisci'"
-                     :tappa="tappa" :energia="hud.energia" :costo="costoNuova"
-                     :divisioni="divisioni" :resiste="resiste" @scegli="scegliTorre" />
+                     :tappa="tappa" :energia="hud.energia" :costi="costi"
+                     :divisioni="divisioni" :immune="immune" @scegli="scegliTorre" />
 
         <SchedaTorre v-else-if="foglio && foglio.che === 'torre'"
                      :torre="foglio.torre" :cap="massimo" :costo="costoSalita(foglio.torre)"
@@ -671,6 +701,7 @@ onMounted(() => {
           <ColumnOp :op="op" @fatto="operazioneFinita" />
         </template>
       </Foglio>
+
 
       <!-- ════════ IL REGALO ════════
            Ogni cinque ondate della partita libera. Sta sopra il foglio e

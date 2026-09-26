@@ -35,7 +35,8 @@
    Quello che la battaglia NON fa: non sa cosa sia un'operazione in
    colonna (chi compra dice quanto paga), non disegna, non salva niente.
    ═══════════════════════════════════════════════════════════════════ */
-import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO } from '../../data/castello.js'
+import { CFG, doniDi, regaloDi, quantiRegali, OGNI_REGALO, premioDellaFretta }
+  from '../../data/castello.js'
 import { ABILITA, CAPO } from '../../data/mostri.js'
 import { Percorso } from './percorso.js'
 import { Ondate } from './ondate.js'
@@ -79,7 +80,11 @@ export class Battaglia {
     this.nati = []                     // i pezzi di chi si è diviso, in campo al prossimo passo
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0                    // quanti sono entrati: serve ad alternare gli ingressi
-    this.ondaChiusa = true; this.ondataPulita = true
+    /* le ondate ancora aperte, `{ onda: pulita }`: da quando la prossima
+       si può chiamare mentre questa è ancora in campo, «l'ondata è
+       finita» non vuol più dire «il campo è pulito» — un'ondata finisce
+       quando se n'è andato l'ultimo dei suoi */
+    this.aperte = new Map()
     this.finito = null                 // 'vinta' | 'persa' quando la partita è chiusa
     this.bestia = this.ondate.bestiaDi(1)
   }
@@ -96,7 +101,7 @@ export class Battaglia {
     this.nemici = []; this.torri = []; this.colpi = []; this.schizzi = []; this.nati = []
     this.daGenerare = 0; this.prossimo = 0; this.pausa = 0; this.tempo = 0
     this.usciti = 0
-    this.ondaChiusa = true; this.ondataPulita = true
+    this.aperte = new Map()
     this.finito = null
     this.daScegliere = 0
     this.bestia = this.ondate.bestiaDi(1)
@@ -135,7 +140,7 @@ export class Battaglia {
     this.segna('onda-massima', o)
     this.daGenerare = this.ondate.quantiDi(o)
     this.prossimo = 0; this.pausa = 0
-    this.ondaChiusa = false; this.ondataPulita = true
+    this.aperte.set(o, true)
     const chi = this.bestia.capo ? ` · arriva il capo: ${this.bestia.nome} gigante` : ''
     this.avvisa((this.ondate.ultima(o) ? 'Ultima ondata!' : 'Ondata ' + o) + chi + extra)
     this.suona('livello')
@@ -146,16 +151,44 @@ export class Battaglia {
     return !!this.torri.length && !this.nemici.length && this.daGenerare === 0 &&
            !this.finito && this.tabellone.onda < this.tappa.ondate
   }
-  /* il bonus della partenza svelta è ancora lì */
-  pronti() { return this.inAttesa() && this.pausa <= CFG.entroSecondi }
+
+  /* ── chiamare la prossima prima del tempo ──
+     Come in Kingdom Rush: finita di entrare l'ondata di adesso, la
+     prossima si può far partire subito — anche con i mostri ancora in
+     campo. Non mentre l'ondata sta ancora uscendo dalla bocca: le due
+     file si mescolerebbero all'ingresso, e il motore genera un'ondata
+     per volta. E mai con un regalo da scegliere, che ferma le ondate.
+
+     Il premio è **il tempo risparmiato**: quanto ci avrebbero messo i
+     mostri in campo ad arrivare in fondo, più l'attesa che non si fa
+     (`premioDellaFretta` in `data/castello.js`, dove stanno i numeri e
+     come li conta il modello). Chiamarla appena si può rende di più,
+     chiamarla a campo pulito dopo aver aspettato un po' rende meno. */
+  puoiChiamare() {
+    return !!this.torri.length && this.daGenerare === 0 && this.daScegliere === 0 &&
+           !this.finito && this.tabellone.onda < this.tappa.ondate
+  }
+  /* i secondi che si risparmiano chiamandola adesso */
+  risparmiati() {
+    const attesa = Math.max(0, this.tappa.attesa - (this.nemici.length ? 0 : this.pausa))
+    let camminare = 0
+    for (const n of this.nemici) {
+      const vel = Math.max(1, n.vel)
+      camminare = Math.max(camminare, (this.viaDi(n).lunghezza - n.d) / vel + n.aTerra)
+    }
+    return attesa + camminare
+  }
+  premioFretta() { return this.puoiChiamare() ? premioDellaFretta(this.risparmiati()) : 0 }
+  /* il premio è ancora lì: il tasto lo dice */
+  pronti() { return this.premioFretta() > 0 }
   /* i secondi prima che l'ondata parta da sola */
   restaAttesa() { return Math.max(0, Math.ceil(this.tappa.attesa - this.pausa)) }
 
   chiamaOnda() {
-    if (!this.inAttesa() || this.daScegliere > 0) return false
-    const subito = this.pronti()
-    if (subito) { this.tabellone.perFretta(); this.suona('moneta') }
-    this.nuovaOnda(subito ? ` · pronti +${CFG.bonusPronti} ⚡` : '')
+    if (!this.puoiChiamare()) return false
+    const premio = this.premioFretta()
+    if (premio) { this.tabellone.perFretta(premio); this.suona('moneta') }
+    this.nuovaOnda(premio ? ` · subito +${premio} ⚡` : '')
     return true
   }
 
@@ -325,7 +358,8 @@ export class Battaglia {
     return null
   }
 
-  /* la generazione dei nemici e la pausa fra un'ondata e l'altra */
+  /* la generazione dei nemici, la chiusura delle ondate e la pausa fra
+     un'ondata e l'altra */
   scorriIlTempo(dt, calcolando) {
     if (this.daGenerare > 0) {
       this.prossimo -= dt
@@ -333,26 +367,14 @@ export class Battaglia {
         this.generaNemico(); this.daGenerare--
         this.prossimo = this.ondate.intervalloDi(this.tabellone.onda)
       }
-      return null
     }
-    if (this.nemici.length || this.nati.length || !this.torri.length) return null
+    this.chiudiLeOndate()
+    if (this.daGenerare > 0 || this.nemici.length || this.nati.length || !this.torri.length) return null
 
     /* campo pulito: il gioco NON manda l'ondata da solo. Aspetta che sia
        il bambino a chiamarla, così i calcoli si fanno con tutto il tempo
        che servono; l'unica fretta è quella che sceglie lui, ed è pagata. */
     if (!calcolando) this.pausa += dt
-    if (!this.ondaChiusa) {
-      this.ondaChiusa = true
-      const premio = this.tabellone.perOnda(this.ondataPulita)
-      this.avvisa(this.ondataPulita ? `Ondata pulita +${premio} ⚡` : `Ondata finita +${premio} ⚡`)
-      this.suona('moneta')
-      // nella campagna le monete arrivano dal traguardo, non dal tempo passato:
-      // qui paga solo la partita libera, che un traguardo non ce l'ha
-      if (!this.ondate.campagna && this.tabellone.onda % CFG.perMoneta === 0) this.moneta()
-      // e ogni tanto un regalo, che è l'altra cosa che la partita libera
-      // ha da dare: un potenziamento che resta anche domani
-      if (this.tappa.regali && this.tabellone.onda % OGNI_REGALO === 0) this.daScegliere++
-    }
     if (this.tabellone.onda >= this.tappa.ondate && this.pausa > CFG.respiro) return this.chiudi('vinta')
     /* col regalo da scegliere l'ondata non parte, nemmeno da sola: chi
        lo rimanda per guardarsi il campo se lo ritrova prima della
@@ -363,11 +385,34 @@ export class Battaglia {
     return null
   }
 
+  /* ── quando un'ondata è finita ──
+     Quando se n'è andato l'ultimo dei suoi — fermato o arrivato — e non
+     ne devono più uscire. Di solito coincide col campo pulito; con la
+     prossima chiamata in anticipo no, e il premio di fine ondata, la
+     moneta della libera e il regalo arrivano lo stesso, al momento
+     giusto. */
+  chiudiLeOndate() {
+    for (const [o, pulita] of this.aperte) {
+      if (o === this.tabellone.onda && this.daGenerare > 0) continue
+      if (this.nemici.some(n => n.onda === o) || this.nati.some(n => n.onda === o)) continue
+      this.aperte.delete(o)
+      const premio = this.tabellone.perOnda(pulita)
+      this.avvisa(pulita ? `Ondata pulita +${premio} ⚡` : `Ondata finita +${premio} ⚡`)
+      this.suona('moneta')
+      // nella campagna le monete arrivano dal traguardo, non dal tempo passato:
+      // qui paga solo la partita libera, che un traguardo non ce l'ha
+      if (!this.ondate.campagna && o % CFG.perMoneta === 0) this.moneta()
+      // e ogni tanto un regalo, che è l'altra cosa che la partita libera
+      // ha da dare: un potenziamento che resta anche domani
+      if (this.tappa.regali && o % OGNI_REGALO === 0) this.daScegliere++
+    }
+  }
+
   muoviNemici(dt) {
     for (const n of this.nemici) n.cammina(dt, this.viaDi(n).lunghezza)
     for (const n of this.nemici) {
       if (!n.arrivato) continue
-      this.ondataPulita = false
+      if (this.aperte.has(n.onda)) this.aperte.set(n.onda, false)
       this.suona('no')
       /* il capo se ne porta via di più: vedi `CAPO` */
       for (let k = 0; k < (n.capo ? CAPO.cuori : 1); k++)
@@ -424,8 +469,7 @@ export class Battaglia {
      pulito, quindi non c'è niente in volo da salvare. */
   istantanea() {
     return { stato: this.tabellone.foto(), torri: this.torri.map(t => t.dati()),
-             pausa: this.pausa, tempo: this.tempo,
-             ondaChiusa: this.ondaChiusa, ondataPulita: this.ondataPulita }
+             pausa: this.pausa, tempo: this.tempo, aperte: [...this.aperte] }
   }
 
   riprendi(f) {
@@ -434,7 +478,7 @@ export class Battaglia {
     this.nemici = []; this.colpi = []; this.schizzi = []; this.nati = []
     this.daGenerare = 0; this.prossimo = 0
     this.pausa = f.pausa; this.tempo = f.tempo
-    this.ondaChiusa = f.ondaChiusa; this.ondataPulita = f.ondataPulita
+    this.aperte = new Map(f.aperte || [])
     this.finito = null
     this.bestia = this.ondate.bestiaDi(Math.max(1, this.tabellone.onda))
   }
@@ -461,5 +505,8 @@ export class Battaglia {
   /* quanti ne devono ancora uscire dall'ingresso: con questo e i nemici
      in campo si sa se il campo è pulito anche prima della prima torre */
   get inArrivo() { return this.daGenerare }
+  /* nessuna ondata aperta: vuol dire anche che premi e regali di quella
+     di prima sono già stati dati */
+  get ondaChiusa() { return this.aperte.size === 0 }
   get esito() { return this.finito }
 }
