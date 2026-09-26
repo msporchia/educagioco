@@ -24,11 +24,13 @@
        dice le immunità, il colpo che rimbalza su un immune lascia il
        segno, la prossima ondata si chiama a battaglia in corso, e il
        blocchetto dei potenziamenti si apre e si chiude con la ✕;
+     · il capo è la figura del bestiario di quel vestito, gigante: la
+       scheda lo chiama col nome della figura e «gigante»;
      · nessun errore in console, in tre vestiti diversi.
 
    Con `--scatti` lascia una foto per vestito (`castello-sprite-*`),
-   una della radura (`castello-sprite-radura`) e una del blocchetto
-   (`castello-sprite-blocchetto`).
+   una della radura (`castello-sprite-radura`), una del blocchetto
+   (`castello-sprite-blocchetto`) e una del capo (`castello-sprite-capo`).
    `node test/esegui.mjs castello-sprite`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -245,6 +247,46 @@ await scatto(page, 'castello-sprite-radura')
   await page.locator('.foglio:not(.via) button[aria-label="chiudi"]').click()
   await attendi(page, 400)
   uguale('e la ✕ lo chiude', await page.evaluate(() => window.__td.blocchetto.value), null)
+}
+
+/* ---------- 6. il capo ----------
+   L'ultima ondata della gola (vestita di lava) è un capo. Giocarle
+   tutte costerebbe minuti: il tabellone si porta alla penultima, e il
+   capo si chiama come un'ondata qualunque. */
+{
+  const i = TAPPE.findIndex(t => t.campagna === 'sotterraneo' && t.capo)
+  nota(`${TAPPE[i].nome}: il capo`)
+  await page.evaluate(i => window.__td.inizia(i), i)
+  await attendi(page, 900)
+  await costruisci('add')
+  await costruisci('div')
+  /* un cartello aperto ferma il campo: prima si chiudono */
+  await togliCartelli()
+  const capo = await page.evaluate(async () => {
+    const attesa = ms => new Promise(r => setTimeout(r, ms))
+    const T = window.__td, m = T.motore()
+    /* il campo pulito, se nel frattempo l'attesa ha mandato la prima */
+    m.nemici.length = 0; m.daGenerare = 0; m.prossimo = 0
+    m.tabellone.stato.onda = m.tappa.ondate - 1
+    T.chiamaOnda()
+    const fine = Date.now() + 8000
+    while (!T.nemici().some(n => n.capo) && Date.now() < fine) await attesa(100)
+    /* un pezzo di strada, così nella foto è tutto dentro il campo, con
+       la corona e la barra della vita sopra la testa */
+    const via = Date.now() + 8000
+    while ((T.nemici().find(n => n.capo)?.d ?? 999) < 220 && Date.now() < via) await attesa(100)
+    const n = T.nemici().find(n => n.capo)
+    return { capo: !!n, taglia: n ? n.taglia : 0, bestia: n && n.bestia,
+             onda: T.hud.onda }
+  })
+  controlla('il capo è in campo, grande', capo.capo && capo.taglia > 2, JSON.stringify(capo))
+  const scheda = await page.locator('.scheda .dati b').first().textContent().catch(() => '')
+  const { NOMI, figuraDi } = await import('../../src/giochi/castello/scena/bestiario.js')
+  uguale('la scheda lo chiama col nome della figura, gigante', scheda,
+         `👑 ${NOMI[figuraDi('lava', capo.bestia)]} gigante`)
+  await togliCartelli()
+  await attendi(page, 300)
+  await scatto(page, 'castello-sprite-capo')
 }
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))

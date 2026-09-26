@@ -591,6 +591,9 @@ onMounted(() => {
                     return mossa && mossa.che === 'salita' ? { ...mossa, torre: m.torri[mossa.indice] } : mossa
                   },
                   nemici: () => motore().nemici, torri: () => motore().torri,
+                  /* il motore stesso, per le prove che devono arrivare a
+                     un'ondata lontana (il capo) senza giocarle tutte */
+                  motore: () => motore(),
                   colpi: () => motore().colpi, livelloOp,
                   TAPPE, tappaIdx, postazioni: () => motore().postazioni,
                   velocita, cambiaVelocita, chiamaOnda, potenzia, potenziaIndice, bersaglio,
