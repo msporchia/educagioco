@@ -146,10 +146,10 @@ nota('il manifesto')
 
 uguale('la chiave è castello', manifesto.chiave, 'castello')
 controlla('sta dietro ai giochi in prova', manifesto.sperimentale === true,
-          'non si gioca ancora: è un campo da guardare')
+          'la pelle a sprite è a metà: finché non è finita resta in prova')
 controlla('il riassunto è una riga', typeof manifesto.riassunto() === 'string')
 controlla('non porta niente all\'albo', !manifesto.albo,
-          'giusto così finché non si gioca: un traguardo che non scatta mai è peggio di nessuno')
+          'i progressi sono quelli di torri, e i traguardi pure: due albi per la stessa campagna no')
 
 /* il catalogo si calcola una volta sola */
 controlla('il catalogo di un materiale è lo stesso oggetto',

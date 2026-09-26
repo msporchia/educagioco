@@ -16,6 +16,13 @@
    sono tre cose: `vista`, che è quello che il banco deve poter leggere
    (chi arriva, cosa si può potenziare, se l'ondata può partire);
    l'esito, quando la partita si chiude; e il tocco su una torre.
+
+   ── la pelle ──
+   Chi passa `pelle` cambia come il campo si vede e dove passa la
+   strada, e nient'altro: i pittori, la tappa come la legge il motore
+   (strada e piazzole), e il fondale. È il castello a celle
+   (`giochi/castello/scena/pelle.js`, il contratto è lì); senza, il campo
+   è quello di sempre, e questo file non importa niente di quel gioco.
    ═══════════════════════════════════════════════════════════════════ */
 import { ref, onMounted, onUnmounted } from 'vue'
 import { creaTela } from '../../grafica/tela.js'
@@ -41,6 +48,8 @@ const props = defineProps({
      e il raggio da mostrare. Entra da fuori perché è la schermata a
      saperlo, non il campo. */
   mira: { type: Object, default: null },
+  /* chi si veste in un altro modo: vedi «la pelle» qui in cima */
+  pelle: { type: Object, default: null },
 })
 const emit = defineEmits(['esito', 'potenzia', 'piazzola'])
 
@@ -69,7 +78,11 @@ const dito = new Trascino({
 function apparecchia(quale = tappa, s = seme, doni = regali) {
   if (!campo || !quale) return null
   tappa = quale; seme = s; regali = doni
-  motore = creaBattaglia({ tappa, misure: campo.misure, stato: props.hud,
+  /* il motore vede la tappa come la vuole la pelle; tutto il resto qui
+     (il tetto della scaletta, il terreno del fondale) resta quello della
+     tappa vera */
+  motore = creaBattaglia({ tappa: props.pelle ? props.pelle.tappa(tappa) : tappa,
+                           misure: campo.misure, stato: props.hud,
                            eventi: props.eventi, regali })
   dito.attacca(motore, campo.misure.S)
   dipingiFondale()
@@ -85,9 +98,20 @@ function avvia(quale, s, doni = null) {
   return motore
 }
 
-const dipingiFondale = () => campo.dipingiFondale(
-  disegnaCampo({ via: motore.via, vie: motore.percorso.vie, postazioni: motore.postazioni,
-                 ambiente: tappa && tappa.ambiente, seme }))
+function dipingiFondale() {
+  if (props.pelle) {
+    /* la pelle può non essere pronta (un'immagine da decodificare): dà
+       un fondale di ripiego e richiama quando lo è — se nel frattempo
+       non si è cambiata tappa */
+    const quella = tappa
+    return campo.dipingiFondale(props.pelle.fondale(tappa, () => {
+      if (campo && tappa === quella) dipingiFondale()
+    }))
+  }
+  campo.dipingiFondale(
+    disegnaCampo({ via: motore.via, vie: motore.percorso.vie, postazioni: motore.postazioni,
+                   ambiente: tappa && tappa.ambiente, seme }))
+}
 
 /* Della misura dello schermo il gioco tiene solo quello che gli serve
    per giocare — quanto è largo il campo e quanto vale un'unità, che è
@@ -223,12 +247,16 @@ onMounted(() => {
   /* il mondo non lo decide lo schermo: è dichiarato, ed è lo stesso per
      tutti (`data/castello.js`). Quello che cambia da un telefono a un
      computer è solo quanto lo si vede grande. */
-  campo = creaTela(tela.value, PITTORI, { mondo: MONDO })
+  campo = creaTela(tela.value, props.pelle ? props.pelle.pittori : PITTORI, { mondo: MONDO })
+  props.pelle?.prepara?.()
   ridimensiona()
   window.addEventListener('resize', ridimensiona)
   raf = requestAnimationFrame(ciclo)
 })
-onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('resize', ridimensiona) })
+onUnmounted(() => {
+  cancelAnimationFrame(raf); window.removeEventListener('resize', ridimensiona)
+  campo = null
+})
 
 
 defineExpose({ apparecchia, avvia, ridimensiona, motore: () => motore,

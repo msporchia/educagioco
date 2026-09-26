@@ -68,6 +68,15 @@ import { Cassa } from './castello/cassa.js'
 import { suono } from '../audio.js'
 
 defineEmits(['vai'])
+/* Il castello a celle (`giochi/castello/`) è questa stessa schermata con
+   un'altra pelle: la passa al campo, e si prende il suo titolo e il suo
+   `?`. Senza, è `torri` com'è sempre stato. Le tappe, i conti e il
+   salvataggio sono gli stessi: `castello` gioca la campagna di `torri`. */
+defineProps({
+  pelle: { type: Object, default: null },
+  titolo: { type: String, default: 'Castello' },
+  guida: { type: String, default: 'torri' },
+})
 
 const fase = ref('mappa')          // mappa | gioco | vinta | trionfo | fine
 
@@ -572,7 +581,7 @@ onMounted(() => {
     <!-- il ⏸ c'è solo dove il campo cammina: sulla mappa non c'è niente
          da fermare, e davanti al cartello di fine tappa (o a quello di un
          traguardo) il gioco è già fermo dietro un velo suo -->
-    <Barra titolo="Castello" guida="torri" @aiuto="aiuto"
+    <Barra :titolo="titolo" :guida="guida" @aiuto="aiuto"
            :pausa="fase === 'gioco' && !state.festa.length" @pausa="metti()"
            :monete="fase !== 'gioco'" @indietro="$emit('vai','home')">
       <GettoniCampo v-if="fase === 'gioco'" :hud="hud" :velocita="velocita"
@@ -590,7 +599,7 @@ onMounted(() => {
       <CampoDiBattaglia ref="campo" :hud="hud" :vista="vista" :eventi="eventi"
                         :attivo="!fermo" :calcolando="!!scelta"
                         :velocita="velocita" :messaggio="messaggio"
-                        :mira="mira"
+                        :mira="mira" :pelle="pelle"
                         @esito="finita" @potenzia="apriTorre" @piazzola="apriPiazzola" />
 
       <!-- Sopra il campo, e solo fra un'ondata e l'altra: chi sta
